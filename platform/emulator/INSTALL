@@ -59,3 +59,6 @@ The default is such that an optimized system is generated.a
 
 - At compile time 'make CUSR=...' can be used to set additional
   compiler switches (e.g. make CUSR="-DMM").
+
+- If -Werror option of gcc causes trouble use 'make OZ_WARN_ERROR=' to
+  avoid that warnings are treated as errors.
