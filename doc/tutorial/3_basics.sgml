@@ -46,11 +46,18 @@
   declaration of the same textual variables. <<X>>, <<Y>>, <<Z>> are
   global variables.</P>
 
-
+<!-- Use the same figure as in base..
   <SECTION><TITLE>Primary Oz Types</TITLE>
   <P><FIGURE ID="TypeHier" CLASS="Figure">
     <CAPTION>Oz Type Hierarchy</CAPTION>
     <P><PICTURE.EXTERN TO="image33.gif" TYPE=gif>
+  </FIGURE>
+-->
+
+  <SECTION><TITLE>Primary Oz Types</TITLE>
+  <FIGURE FLOAT ID="TypeHier" CLASS="Figure">  <!-- CLASS=MAXI -->
+    <CAPTION>Oz Type Hierarchy</CAPTION>
+    <P><PICTURE.EXTERN LATEX TO="primary-types.tex">
   </FIGURE>
 
   <P>Oz is a dynamically typed language. <PTR TO="TypeHier"> shows the
