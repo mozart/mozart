@@ -1155,7 +1155,7 @@ BIspec fdSpec[] = {
   {"fdTellConstraintCD", 3, BIfdTellConstraintCD},
 
 #ifndef FOREIGNFDPROPS
-  {"fdp_init", 0, fdp_init},
+  {"fdp_init", 1, fdp_init},
   {"fdp_sum", 3, fdp_sum},
   {"fdp_sumC", 4, fdp_sumC},
   {"fdp_sumCN", 4, fdp_sumCN},
