@@ -31,7 +31,7 @@ INSTALL_DLL     = $(INSTALL) -m 555
 
 LIBS            = -lc -lm
 
-CFLAGS          = -O3
+CFLAGS          = -Wall
 CFLAGS          += $(INCS)
 
 LDFLAGS         = -L$(VPATH)
