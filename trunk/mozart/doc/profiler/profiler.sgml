@@ -155,7 +155,7 @@ examined./
 
 	  <entry/<code/--emacs=?{FILE}//
 	  <item/Specifies the Emacs binary to run for option <code/-E/.
-The default is <var env/$OZEMACS/ if set, else <file/emacs/./
+The default is $<var env/OZEMACS/ if set, else <file/emacs/./
 	</list></p>
     </chapter>
 
