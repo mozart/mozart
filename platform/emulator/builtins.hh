@@ -47,33 +47,6 @@ TypeOfTerm tag;                                                               \
   if (isAnyVar(tag)) return SUSPEND;                                          \
 }
 
-
-/* -----------------------------------------------------------------------
- * The following macros are useful when hacking in suspending built-ins:
- *  --> for FD
- */
-
-#define CREATE_SUSP_SELF(S)                                                   \
-  Suspension *S = (Suspension *) OZ_makeSelfThread();
-
-#define CREATE_SUSP_SELF_IF(C, S)                                             \
-  Suspension *S=NULL;                                                         \
-  if (C) {                                                                    \
-    S = (Suspension *) OZ_makeSelfThread();                                   \
-  }
-
-#define CREATE_SUSP(S, F, X, A)                                               \
-  Suspension *S = (Suspension *) OZ_makeThread(F,X,A);
-
-
-
-#define CREATE_SUSP_IF(C, S, F, X, A)                                         \
-  Suspension *S=NULL;                                                         \
-  if (C) {                                                                    \
-    S = OZ_makeThread(F, X ,A);                                               \
-  }
-
-
 #define DECLAREBI_USEINLINEREL1(Name,InlineName)                              \
 OZ_C_proc_begin(Name,1)                                                       \
 {                                                                             \

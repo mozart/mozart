@@ -86,7 +86,7 @@ public:
     suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
   }
 
-  void addDetSusp(Suspension *susp);
+  void addDetSusp (Thread *thr);
   void dispose(void);
 };
 

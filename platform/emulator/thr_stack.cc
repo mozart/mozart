@@ -75,7 +75,7 @@ int TaskStack::getSeqSize()
 }
 
 #ifdef DEBUG_CHECK
-int TaskStack::hasJob()
+int TaskStack::hasJobDebug ()
 {
   TaskStackEntry *oldTos=tos;
 
@@ -113,7 +113,6 @@ int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
   case C_JOB:
-  case C_NERVOUS:
   case C_SOLVE:
   case C_LOCAL:
     return 1;
@@ -127,7 +126,7 @@ int TaskStack::frameSize(ContFlag cFlag)
   case C_CALL_CONT:
     return 3;
   case C_CFUNC_CONT:
-    return 4;
+    return 3;
 
   default:
     Assert(0);

@@ -19,7 +19,10 @@
 #include "constter.hh"
 #include "board.hh"
 
-#include "suspensi.hh"
+#include "stack.hh"
+#include "taskstk.hh"
+#include "thread.hh"
+#include "susplist.hh"
 #include "variable.hh"
 
 #include "bignum.hh"

@@ -85,7 +85,7 @@ STuple * tagged2STuple(OZ_Term);
 #include "genvar.hh"
 
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
-  if (isUnifyCurrentTaskSusp()) { \
+  if (isUnifyCurrentPropagator ()) { \
     OZ_getCArgDeref(0, x, xPtr, xTag); \
     OZ_getCArgDeref(1, y, yPtr, yTag); \
     if (xPtr == yPtr && isAnyVar(xTag)) { \
@@ -179,8 +179,8 @@ private:
 
   int global_vars;
 
-  void addResSusp(int i, Suspension * susp, FDPropState target);
-  void addResSusps(Suspension * susp, FDPropState target);
+  void addPropagator (int i, Thread *thr, FDPropState target);
+  void addPropagators (Thread *thr, FDPropState target);
 
 public:
   BIfdHeadManager(int s);
@@ -271,7 +271,7 @@ private:
   int backup_curr_num_of_vars1;
   OZ_Boolean backup_vars_left1;
   OZ_Boolean backup_only_local_vars1;
-  Suspension * backup_FDcurrentTaskSusp1;
+  Thread * backup_FDcurrentThread;
 
 // private methods
   OZ_Boolean isTouched(int i);

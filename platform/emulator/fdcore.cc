@@ -178,7 +178,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutLe, 2)
 {
-  Assert(!FDcurrentTaskSusp);
+  // Assert(!FDcurrentTaskSusp);
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,SmallInt");
 
@@ -217,7 +218,8 @@ OZ_C_proc_end // BIfdPutLe
 
 OZ_C_proc_begin(BIfdPutGe, 2)
 {
-  Assert(!FDcurrentTaskSusp);
+  // Assert(!FDcurrentTaskSusp);
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,SmallInt");
 
@@ -256,7 +258,8 @@ OZ_C_proc_end // BIfdPutGe
 
 OZ_C_proc_begin(BIfdPutList, 3)
 {
-  Assert(!FDcurrentTaskSusp);
+  // Assert(!FDcurrentTaskSusp);
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,List of SmallInts or Tuples,SmallInt");
 
@@ -292,7 +295,8 @@ OZ_C_proc_end // BIfdPutList
 
 OZ_C_proc_begin(BIfdPutInterval, 3)
 {
-  Assert(!FDcurrentTaskSusp);
+  // Assert(!FDcurrentTaskSusp);
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,SmallInt,SmallInt");
 
@@ -335,7 +339,8 @@ OZ_C_proc_end // BIfdPutInterval
 
 OZ_C_proc_begin(BIfdPutNot, 2)
 {
-  Assert(!FDcurrentTaskSusp);
+  // Assert(!FDcurrentTaskSusp);
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,SmallInt");
 

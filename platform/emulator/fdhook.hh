@@ -19,12 +19,9 @@
 #include "types.hh"
 
 #include "am.hh"
-#include "suspensi.hh"
-
-extern Suspension * FDcurrentTaskSusp;
 
 #ifdef DEBUG_CHECK
-//#define DEBUG_STABLE
+#define DEBUG_STABLE
 #endif
 
 #ifdef DEBUG_STABLE
@@ -33,26 +30,23 @@ void printBC(ostream &, Board *);
 void printBCDebug(Board * = NULL);
 #endif
 
-void reviveCurrentTaskSusp(void);
-void killPropagatedCurrentTaskSusp(void);
-
-
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 
-Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs);
+Thread * createPropagator (OZ_CFun func, int arity, RefsArray xregs);
 
 inline
-Bool isUnifyCurrentTaskSusp(void) {
-  return FDcurrentTaskSusp->isUnifySusp();
+Bool isUnifyCurrentPropagator () {
+  Assert (am.currentThread->isPropagator ());
+  return (am.currentThread->isUnifyThread ());
 }
 
 inline
-Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
-                                OZ_Term * args, int arity)
+Thread *makeHeadThread (OZ_Bool (*fun)(int, OZ_Term[]),
+                        OZ_Term *args, int arity)
 {
-  return new Suspension(am.currentBoard,
-                        ozconf.defaultPriority,
-                        fun, args, arity);
+  return (new Thread (am.currentBoard,
+                      ozconf.defaultPriority,
+                      fun, args, arity));
 }
 
 

@@ -101,14 +101,14 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
         if (ret_value & meta_det) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
-          term->addSuspension(new Suspension(am.currentBoard));
+          term->addSuspension(new Thread (am.currentBoard));
           doBind(vptr, result);
           am.doBindAndTrail(t, tptr, result);
         } else {
           setData(result);
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
-          term->addSuspension(new Suspension(am.currentBoard));
+          term->addSuspension(new Thread (am.currentBoard));
           am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term, prop);
         }
       } else {
@@ -125,14 +125,14 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
         if(ret_value & meta_det) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
-          addSuspension(new Suspension(am.currentBoard));
+          addSuspension(new Thread (am.currentBoard));
           doBind(tptr, result);
           am.doBindAndTrail(v, vptr, result);
         } else {
           term->setData(result);
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
-          addSuspension(new Suspension(am.currentBoard));
+          addSuspension(new Thread (am.currentBoard));
           am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this, prop);
         }
       } else {
@@ -163,9 +163,9 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
         am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term, prop);
       }
       if (prop) {
-        Suspension * susp = new Suspension(am.currentBoard);
-        term->addSuspension(susp);
-        addSuspension(susp);
+        Thread *thr = new Thread (am.currentBoard);
+        term->addSuspension (thr);
+        addSuspension (thr);
       }
       break;
 
@@ -194,7 +194,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     if (prop && am.isLocalSVar(this)) {
       doBind(vptr, result);
     } else {
-      addSuspension(new Suspension(am.currentBoard));
+      addSuspension(new Thread (am.currentBoard));
       am.doBindAndTrail(v, vptr, result);
     }
   }
@@ -257,12 +257,12 @@ OZ_Bool OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
 
 OZ_Bool OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
 {
-  OZ_Thread susp = OZ_makeThread(OZ_self, OZ_args, OZ_arity);
+  OZ_Thread thr = OZ_makeThread(OZ_self, OZ_args, OZ_arity);
   Bool suspNotAdded = TRUE;
 
   for (int i = OZ_arity; i--; )
     if (!OZ_isSingleValue(OZ_getCArg(i))) {
-      OZ_addThread(OZ_args[i], susp);
+      OZ_addThread(OZ_args[i], thr);
       suspNotAdded = FALSE;
     }
 

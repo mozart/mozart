@@ -705,10 +705,10 @@ TaggedRef GenOFSVariable::getArityList()
 
 
 /* add a suspension, that is only woken up, when we get bound */
-void GenOFSVariable::addDetSusp(Suspension *susp)
+void GenOFSVariable::addDetSusp (Thread *thr)
 {
   // not yet implemented --> use generic suspension mechanism
-  addSuspension(susp);
+  addSuspension (thr);
 }
 
 

@@ -363,8 +363,8 @@ Case(SETVOID)
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(atm)) {
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
-          Suspension *susp = e->mkSuspension();
-          addSusp(termPtr,susp);
+          Thread *thr = e->mkSuspThread ();
+          addSusp (termPtr, thr);
 
           /* Bug fix:
              declare Y Z
@@ -378,7 +378,7 @@ Case(SETVOID)
             TaggedRef lab = ((GenOFSVariable*)tagged2CVar(term))->getLabel();
             DEREF(lab,labPtr,labTag);
             if (isAnyVar(labTag)) {
-              addSusp(labPtr,susp);
+              addSusp (labPtr, thr);
             }
           }
           CHECK_CURRENT_THREAD;
@@ -403,8 +403,8 @@ Case(SETVOID)
 
         if (isAnyVar(term)) {
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
-          Suspension *susp=e->mkSuspension();
-          addSusp(termPtr,susp);
+          Thread *thr = e->mkSuspThread ();
+          addSusp (termPtr, thr);
           CHECK_CURRENT_THREAD;
         }
 
@@ -431,8 +431,8 @@ Case(SETVOID)
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(i)) {
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
-          Suspension *susp=e->mkSuspension();
-          addSusp(termPtr,susp);
+          Thread *thr = e->mkSuspThread ();
+          addSusp (termPtr, thr);
           CHECK_CURRENT_THREAD;
         }
 

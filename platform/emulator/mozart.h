@@ -194,8 +194,6 @@ extern int OZ_unprotect       _PROTOTYPE((OZ_Term *));
 
 OZ_Thread  OZ_makeThread   _PROTOTYPE((OZ_CFun, OZ_Term *, int));
 void       OZ_addThread    _PROTOTYPE((OZ_Term, OZ_Thread));
-OZ_Thread  OZ_makeSuspension   _PROTOTYPE((OZ_CFun, OZ_Term *, int));
-void       OZ_addSuspension    _PROTOTYPE((OZ_Term, OZ_Thread));
 
 /* for example
    OZ_Thread s = OZ_makeThread(BIplus,OZ_args,OZ_arity);
