@@ -231,8 +231,9 @@ void PrTabEntry::gCollectDispose(void) {
 
   while (pte) {
     PrTabEntry * n = pte->next;
-    
-    if (pte->getPC() == NOCODE || pte->getCodeBlock()->isReferenced()) {
+
+    Assert(pte->getPC() != NOCODE);
+    if (pte->getCodeBlock()->isReferenced()) {
       pte->next = allPrTabEntries;
       allPrTabEntries = pte;
     } else {

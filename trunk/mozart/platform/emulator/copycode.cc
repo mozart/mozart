@@ -112,20 +112,24 @@ PrTabEntry *checkPTE(PrTabEntry *pte, AddressHashTable *ht)
 {
   CheckHT(PrTabEntry *,pte);
   
-  aux = new PrTabEntry(pte->getName(),checkSRA(pte->getMethodArity(),ht),
+  aux = new PrTabEntry(pte->getName(), checkSRA(pte->getMethodArity(), ht),
 		       pte->getFile(), pte->getLine(), pte->getColumn(), 
 		       pte->getFlagsList(),
 		       pte->getMaxX());
-  ht->htAdd(ToInt32(pte),aux);
+  aux->setGSize(pte->getGSize()); // does not change;
+  ht->htAdd(ToInt32(pte), aux);
   return aux;
 }
 
 
 static
 inline
-void handlePredId(ProgramCounter PC, AddressHashTable *ht)
+void handlePredId(ProgramCounter PC, ProgramCounter defPC,
+		  AddressHashTable *ht)
 {
-  CodeArea::writeAddress(checkPTE(getPredArg(PC),ht),PC);
+  PrTabEntry *pte = checkPTE(getPredArg(PC), ht);
+  CodeArea::writeAddress(pte, PC);
+  pte->setPC(defPC);
 }
 
 
@@ -186,7 +190,7 @@ void handleHashTable(ProgramCounter PC, AddressHashTable * ht) {
 }
 
 
-#define COPY_PREDID(PCR)         handlePredId(PC+PCR,ht)
+#define COPY_PREDID(PCR,DEFO)    handlePredId(PC+PCR,PC+DEFO,ht)
 #define COPY_PROCEDUREREF(PCR)   handleProcedureRef(PC+PCR,ht,code)
 #define COPY_TAGGED(PCR)         handleTagged(PC+PCR,ht,code)
 #define COPY_RECORDARITY(PCR)    handleRecordArity(PC+PCR,ht)
@@ -194,9 +198,12 @@ void handleHashTable(ProgramCounter PC, AddressHashTable * ht) {
 #define COPY_CACHE(PCR)          handleCache(PC+PCR,code)
 #define COPY_IHASHTABLE(PCR)     handleHashTable(PC+PCR,ht)
 
-ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
+ProgramCounter copyCode(PrTabEntry *ope, PrTabEntry *pe,
+			ProgramCounter start, TaggedRef list)
 {
   AddressHashTable *ht = new AddressHashTable(100);
+  // kost@ : The entry for the whole thing is already known, so:
+  ht->htAdd(ToInt32(ope), pe);
   
   list = oz_deref(list);
 
@@ -220,7 +227,8 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
 
   Assert(OZ_isNil(list));
 
-  int sizeOfDef = sizeOf(DEFINITION);
+  const int sizeOfDef = 6;
+  Assert(sizeOf(DEFINITION) == 6);
   start -= sizeOfDef; // copy DEFINITION instructions as well (for debugging)
 
   XReg reg;
@@ -270,7 +278,8 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
       break;
     case DEFINITIONCOPY:
     case DEFINITION:
-      COPY_PREDID(3);
+      Assert(sizeOf(DEFINITIONCOPY) == 6);
+      COPY_PREDID(3, 6);
       COPY_PROCEDUREREF(4);
       PC += 6;
       break;
