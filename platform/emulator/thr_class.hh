@@ -60,6 +60,7 @@ enum ThreadFlag {
   T_G_trace= 0x010000,   // thread is being traced
   T_G_step = 0x020000,   // step mode turned on
   T_G_stop = 0x040000,   // no permission to run
+  T_G_cont = 0x080000,   // continue flag
 
   //
   T_max    = 0x800000      // MAXIMAL FLAG;
@@ -322,6 +323,16 @@ public:
   }
   void stop() {
     state.flags = state.flags | T_G_stop;
+  }
+
+  void setContFlag() {
+    state.flags = state.flags | T_G_cont;
+  }
+  void deleteContFlag() {
+    state.flags = state.flags & ~T_G_cont;
+  }
+  Bool contFlag() {
+    return (state.flags & T_G_cont);
   }
 
 #ifdef PERDIO

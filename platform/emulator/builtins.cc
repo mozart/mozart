@@ -7018,6 +7018,7 @@ BIspec allSpec[] = {
   // Debugging
   {"globalThreadStream",1,BIglobalThreadStream},
   {"currentThread",1,BIcurrentThread},
+  {"setContFlag",2,BIsetContFlag},
   {"setStepMode",2,BIsetStepMode},
   {"stopThread",1,BIstopThread},
   {"contThread",1,BIcontThread},
