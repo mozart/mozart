@@ -95,6 +95,16 @@ before running configure the following variables can be set
 
   - ./configure --no-recursion # create Makefile only in current directory
 
+  - create a config.site file and set env. variable CONFIG_SITE to this file
+
+        #!/bin/sh
+        # Example config.site
+
+        : ${oz_tk_lib_dir=/opt/tcl/lib}
+        : ${oz_tk_inc_dir=/opt/tcl/include}
+
+        : ${oz_x11_lib_dir=/opt/X11/lib}
+        : ${oz_x11_inc_dir=/opt/X11/include}
 
 * Generic configure info
 
