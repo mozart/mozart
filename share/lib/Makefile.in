@@ -136,6 +136,8 @@ Application.ozf: ap/ArgParser.oz init/Module.oz init/RURL.oz
 
 Application.ozf: $(PEANUTSFUNCTORS) module-Peanuts.oz
 
+Application.ozf: ../url-defaults.oz
+
 module-Peanuts.oz: 
 	echo "[$(PEANUTS:%='%')]" > module-Peanuts.oz
 
