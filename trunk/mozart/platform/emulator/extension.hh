@@ -62,8 +62,14 @@ enum OZ_Registered_Extension_Id {
 
 class Extension {
 public:
-  virtual ~Extension() {}
+  virtual ~Extension();
   Extension() {}
+  // must allocate on the heap
+  void* operator new(size_t n) {
+    return alignedMalloc(n,sizeof(double));
+  }
+  // implementation signals error and aborts
+  void operator delete(void*,size_t);
 
   virtual int           getIdV() = 0;
   virtual Extension *   gcV() = 0;
