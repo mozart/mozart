@@ -334,14 +334,14 @@ starts the emulator under gdb")
   "Start the debugger."
   (interactive)
   (oz-emacs-connect)
-  (oz-feed-file "/home/ps-home/lorenz/dipl/buggi.oz")
+  (oz-feed-file "$OZHOME/tools/debugger/buggi.oz")
   (setq oz-debug-mode t))
 
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
   (setq oz-debug-mode nil)
-  (oz-feed-file "/home/ps-home/lorenz/dipl/buggi-stop.oz"))
+  (oz-feed-file "$OZHOME/tools/debugger/buggi-stop.oz"))
 
 
 ;;------------------------------------------------------------
@@ -1033,20 +1033,20 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-mode-commands (map)
   (define-key map "\t"       'oz-indent-line)
 
-%   (define-key map "\C-c\C-f\C-b" 	'oz-feed-buffer)
-%   (define-key map "\C-c\C-f\C-r"	'oz-feed-region)
-%   (define-key map "\C-c\C-f\C-l"	'oz-feed-line)
-%   (define-key map "\C-c\C-f\C-f"	'oz-feed-file)
-%   (define-key map "\C-c\C-i"          'oz-feed-file)
-%   (define-key map "\C-c\C-f\C-p"	'oz-feed-paragraph)
+;   (define-key map "\C-c\C-f\C-b" 	'oz-feed-buffer)
+;   (define-key map "\C-c\C-f\C-r"	'oz-feed-region)
+;   (define-key map "\C-c\C-f\C-l"	'oz-feed-line)
+;   (define-key map "\C-c\C-f\C-f"	'oz-feed-file)
+;   (define-key map "\C-c\C-i"          'oz-feed-file)
+;   (define-key map "\C-c\C-f\C-p"	'oz-feed-paragraph)
 
-%   (define-key map "\C-c\C-p\C-f"	'oz-precompile-file)
+;   (define-key map "\C-c\C-p\C-f"	'oz-precompile-file)
 
-%   (define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
-%   (define-key map "\C-c\C-b\C-r"    	'oz-feed-region-browse)
-%   (define-key map "\M-n"   		'oz-next-buffer)
-%   (define-key map "\M-p"   		'oz-previous-buffer)
-%   (define-key map "\C-c\C-c"    	'oz-toggle-compiler)
+;   (define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
+;   (define-key map "\C-c\C-b\C-r"    	'oz-feed-region-browse)
+;   (define-key map "\M-n"   		'oz-next-buffer)
+;   (define-key map "\M-p"   		'oz-previous-buffer)
+;   (define-key map "\C-c\C-c"    	'oz-toggle-compiler)
 
   (define-key map "\M-\C-m"  'oz-feed-buffer)
   (define-key map "\M-r"     'oz-feed-region)
