@@ -62,9 +62,6 @@ void dumpRemoteMsgBuffer(MsgBuffer*);
 // Run this when starting;
 void initNetwork();
 
-//
-Bool openClosedConnection(int);
-int openclose(int);
 
 //
 // Usaed by distpane
