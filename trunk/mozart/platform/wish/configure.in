@@ -38,31 +38,25 @@ dnl *****************************************************************
 dnl windows cross compilation
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --enable-wincross)
-AC_ARG_ENABLE(wincross,
-  [--enable-wincross  Windows cross compilation (default=no)])
-if test "${enable_wincross}" = yes; then
-    if test -n "$oz_wincross_dir" && test -n "$oz_wincross_prefix"
-    then
-        AC_MSG_RESULT(yes)
-	CC=$oz_wincross_dir/$oz_wincross_prefix-gcc
+case "$target" in
+   NONE) 
+	SRCS="ozMain.c ozAppInit.c"
+   ;;
+   i386-mingw32) 
+        AC_MSG_RESULT(cross compiling for windows)
+	CC=${target}-gcc
 	EXTRALDFLAGS="-mwindows -s"
 	platform="win32-i486"
-	OZWISH="wif.exe"
 	SRCS="winMain.c"
 	oz_tcl_inc_dir=$oz_wincross_tcl_inc_dir
 	oz_tcl_lib_dir=$oz_wincross_tcl_lib_dir
-    else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR("oz_wincross_dir and oz_wincross_prefix must be set")
-    fi
-else
-    AC_MSG_RESULT(no)
-    OZWISH="wif.exe"
-    SRCS="ozMain.c ozAppInit.c"
-fi
+   ;;
 
-AC_SUBST(OZWISH)
+   *)
+	AC_MSG_ERROR("cannot cross-compile for target $target")
+    ;;
+esac
+
 AC_SUBST(SRCS)
 AC_SUBST(EXTRALDFLAGS)
 
@@ -154,7 +148,7 @@ fi
 oz_inc_path="$oz_x11_inc_dir $oz_inc_path"
 oz_lib_path="$oz_x11_lib_dir $oz_lib_path"
 
-if test "${enable_wincross}" != yes
+if test "$target" != i386-mingw32
 then
     OZ_CHECK_HEADER_PATH(X11/Xlib.h,,
 	    AC_MSG_ERROR(required X include files not found))
