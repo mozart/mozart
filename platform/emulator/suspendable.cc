@@ -87,10 +87,6 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	return NO;
       case B_DEAD:
 	setDead();
-
-	if (isExternal())
-	  sb->checkSolveThreads();
-
 	t->disposeStack();
 	return OK;
       }
@@ -119,8 +115,6 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	return NO;
       case B_DEAD:
 	setDead();
-	if (isExternal())
-	  sb->checkSolveThreads();
 	SuspToPropagator(this)->dispose();
 	return OK;
       }
