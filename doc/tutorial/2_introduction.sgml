@@ -3,9 +3,8 @@
   <P>The current Oz version is referred to as Oz 3. Oz 3 is largely
   compatible to the previous version Oz 2. Oz 2 is the successor Oz 1.
   Oz 3 and its programming system Mozart is developed mainly by the
-  research groups of Gert Smolka at DFKI (the German Research Center
+  research groups of Gert Smolka at Saarland university and DFKI (the German Research Center
   for Artificial Intelligent)
-<!-- DENYS: university of saarbruecken -->
  and Seif Haridi at SICS (the Swedish Institute
   of Computer Science).
 
@@ -209,15 +208,13 @@ any conflicts are resolved at definition time when building its method
 table.
 
 <SECTION><TITLE>Objects</TITLE> <P>An object is essentially a special
-record having a number of components. One component is a one-argument
-procedure that references a cell, which is hidden by lexical
-scoping. Another component is the object's class. The cell holds the
-object's state. Applying an object <<Obj>> to message <<M>> applies
-the object's procedure to <<M>>. The argument indexes into the method
-table.
-<!-- DENYS: this is no longer the correct model -->
-A method is a procedure that is given the message and the
-object state, and calculates the new state.
+record having a number of components. One component is the object's
+class. Another component is a one-argument procedure that references a
+cell, which is hidden by lexical scoping.  The cell holds the object's
+state. Applying an object <<Obj>> to message <<M>> applies the
+object's procedure to <<M>>. The argument indexes into the method
+table.  A method is a procedure that is given a reference to the state
+cell.  In general it modifies the state of the object.
 
 
 
