@@ -589,7 +589,7 @@
 	      <Q class=terminal/<<^>>//
 	    <Grammar.Alt/<Q class=terminal/<<==>>/ |
 	      <Q class=terminal/<<\=>>/ | <Q class=terminal/<<&lt;>>/ |
-	      <Q class=terminal/<<&lt;=>>/ | <Q class=terminal/<<&gt;>>/ |
+	      <Q class=terminal/<<=&lt;>>/ | <Q class=terminal/<<&gt;>>/ |
 	      <Q class=terminal/<<&gt;=>>//
 	    <Grammar.Alt><Q class=terminal/<<+>>/ |
 	      <Q class=terminal/<<->>/ | <Q class=terminal/<<*>>/ |
