@@ -136,7 +136,7 @@ in
 	    {Construct {NewPolygon G 6 P} {Arity Desc} Desc}
 	 [] image(parent: P image: I x: X y: Y width: W height: H anchor:A) then
 	    {NewImage P {UnwrapItem I} X Y W H A}
-	 else raise 'newItem: illegal item description' end
+	 else raise 'OzCanvasBase::newItem: illegal item description'#Desc end
 	 end
       end
       meth newWrappedItem(Args $)
