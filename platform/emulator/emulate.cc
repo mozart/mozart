@@ -612,12 +612,6 @@ STuple *newSTupleOutline(TaggedRef literal, int arity)
   return STuple::newSTuple(literal,arity);
 }
 
-static
-SRecord *newSRecordOutline(Arity *ff, TaggedRef label)
-{
-  return new SRecord(ff,label,-1,NO);
-}
-
 // aux debugging;
 #define VERBMSG(S,A1,A2)                                                   \
     fprintf(verbOut,"(em) %s (arg#1 0x%x, arg#2 0x%x) :%d\n",              \
