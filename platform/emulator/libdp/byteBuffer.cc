@@ -169,6 +169,10 @@ void ByteBuffer::getBegin() {
   posMB = getptr;
 }
 
+Bool ByteBuffer::getDebug() {
+  return canGet(1);
+};
+
 BYTE ByteBuffer::getNext() {
   Assert(posMB==endMB);
   BYTE b=*posMB;  // Must get last byte due to unsymmetry in msgbuffer.hh

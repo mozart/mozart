@@ -74,6 +74,7 @@ public:
 
   // NON-virtual!
   BYTE get() {
+    Assert(getDebug());
     if (posMB==endMB)          // AN, Why ==, that leaves the last byte
       return getNext();
     else
@@ -82,8 +83,7 @@ public:
   }
   void put(BYTE b) {
     Assert(posMB != 0);         // kost@ : used before for weird stuff!
-    Assert(putDebug()); // AN! this debugcheck might have to be removed also
-                        //     at debugtime
+    Assert(putDebug());
     if (posMB > endMB)
       putNext(b);
     else
@@ -97,6 +97,7 @@ public:
   // 'putDebug()' methods here, and define them in corresponding
   // subclasses!! No "dpInterface" methods here!!!
   virtual Bool putDebug() {return true;};
+  virtual Bool getDebug() {return true;};
 };
 
 #endif // __MBUFFER_HH

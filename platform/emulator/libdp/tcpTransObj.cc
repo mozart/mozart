@@ -259,8 +259,8 @@ inline unmarshalReturn TCPTransObj::unmarshal() {
   acknum=readBuffer->getInt();      // Ack
   comObj->msgAcked(acknum);
   framesize=readBuffer->getInt();   // Framesize
-  // -----------------------------------------
-  if(readBuffer->canGet(framesize)) { // Can all be read (no commit yet)?
+  // ----------------------------------------- // Must read read
+  if(readBuffer->canGet(framesize-mustRead)) { // Can all be read?
     b=readBuffer->get();           // MessageType
     GenCast(b,BYTE,type,MessageType);
     cf=readBuffer->get();          // CF
