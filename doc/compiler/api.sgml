@@ -101,7 +101,7 @@
           <<System.virtualStringToValue>>, it can also be much less
           efficient.  Rather, you should use pickling and unpickling
           of data structures (see <Ptr.Extern to="ozdoc:system"
-          key="Chapter.Pickle">).
+          key="chapter.pickle">).
 
         <Entry><<engine>>
         <Synopsis>
