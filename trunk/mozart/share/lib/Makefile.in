@@ -160,6 +160,7 @@ ALLSRCS = \
 
 DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
 DUMPINTRO = $(DUMPINTRO1:%=%) Base.ozc Standard.ozc
+STANDARD =  Base.ozc Standard.ozc Base.env Standard.env
 
 ENVS1 = \
 	SP.env OP.env AP.env CP.env WP.env DP.env \
@@ -230,7 +231,9 @@ Standard.ozc: $(STANDARDSRC) Base.env Standard.env
 	OZMAINIT="" $(EXEC) DumpInitial.oz
 
 OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc AP.ozc Compiler.env $(TYCS)
-	$(COMPILE) -l AP OPI.oz -o OPI.ozc 
+	$(COMPILE) -l AP OPI.oz -o OPI.ozc
+
+tycs: $(TYCS)
 
 install: install-main install-bitmaps
 
@@ -252,6 +255,7 @@ clean:
 	$(RM) ozbatch ozserver
 	$(RM) TAGS
 	$(RM) -r tyc
+	$(RM) compiler/*.ozc
 
 realclean: clean
 
@@ -321,8 +325,44 @@ WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
 
 Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
 
-Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) SP.env \
+#---------------------------------------------------------------------
+# COMPILER
+#---------------------------------------------------------------------
+
+compiler/FunCode.ozc: compiler/FunCode.oz SP.env compiler/Common.env \
+	compiler/RegSet.oz compiler/CodeEmitter.oz \
+	compiler/CodeStore.oz compiler/CodeGen.oz $(STANDARD)
+
+compiler/FunCore.ozc: compiler/FunCore.oz SP.env compiler/Common.env \
+	compiler/CoreLanguage.oz $(STANDARD)
+
+compiler/FunEnd.ozc: compiler/FunEnd.oz SP.env compiler/Common.env \
+	Gump.env compiler/Assembler.oz compiler-Opcodes.oz \
+	compiler/CompilerClass.oz compiler/GenericInterface.oz \
+	compiler/QuietInterface.oz $(STANDARD)
+
+compiler/FunMisc.ozc: compiler/FunMisc.oz SP.env CP.env Gump.env \
+	compiler/Common.env compiler-Version.oz \
+	compiler/FormatStrings.oz compiler/Reporter.oz \
+	compiler/ParseOz.oz compiler/TupleSyntax.oz \
+	compiler/BindingAnalysis.oz compiler/UnnestFD.oz \
+	compiler/Unnester.oz compiler/Interface.oz $(STANDARD)
+
+compiler/FunStat.ozc: compiler/FunStat.oz SP.env CP.env \
+	compiler/Common.env compiler/POTypes.oz \
+	compiler/StaticAnalysis.oz $(STANDARD)
+
+COMPILER_BIG = @COMPILER_BIG@
+COMPILER_FUN = @COMPILER_FUN@
+
+$(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env \
 	CP.env Gump.env Compiler.env Init.ozc
+
+$(COMPILER_FUN): NewCompiler.oz compiler/FunComp.oz compiler/FunMake.oz \
+	compiler/FunCode.ozc compiler/FunCore.ozc compiler/FunEnd.ozc \
+	compiler/FunMisc.ozc compiler/FunStat.ozc Init.ozc $(STANDARD)
+	$(OZBATCH) $(OZFLAGS) --include=compiler/FunMake.oz \
+	-c NewCompiler.oz -o Compiler.ozc
 
 compiler-Version.oz: $(COMPILERSRCNOVER) $(OZVERSION) compiler/Opcodes.m4oz
 	($(ECHO) 'OZVERSION = '\'`$(OZVERSION)`\'; \
@@ -421,3 +461,17 @@ check:
 realclean:
 	$(RM) -r $(STAGE1) $(STAGE2) $(STAGE3)
 
+denys: SP.ozc CP.ozc OP.ozc Compiler.ozc Gump.ozc AP.ozc tycs ozbatch
+
+install-denys:
+	-mkdir stage1
+	-mkdir stage1/lib
+	-mkdir stage1/bin
+	mv *ozc tyc/*tyc stage1/lib/
+	mv ozbatch stage1/bin/
+
+denys2:
+	make denys \
+	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/ \
+	OZBATCH=$(STAGE1)/bin/ozbatch \
+	OZINIT=$(STAGE1)/lib/Init.ozc
