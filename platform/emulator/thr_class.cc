@@ -67,14 +67,14 @@
 void Thread::setCompMode(int newMode) {
   Assert((compMode&1) != newMode);
   Assert(SEQMODE==1 && PARMODE==0);
-  if (taskStack.isEmpty()) {
+  if (TaskStack::isEmpty()) {
     if (newMode == SEQMODE) {
       compMode=ALLSEQMODE;
     } else {
       compMode=newMode;
     }
   } else {
-    taskStack.pushCompMode(compMode);
+    TaskStack::pushCompMode(compMode);
     compMode=newMode;
   }
 }
@@ -94,3 +94,33 @@ Bool Thread::isBelowFailed(Board *top)
   }
   return FALSE;
 }
+
+/*
+ * remove local tasks
+ * return OK, if done
+ * return NO, if no C_LOCAL/C_SOLVE found
+ */
+Bool Thread::discardLocalTasks()
+{
+  TaskStackEntry *tos = TaskStack::getTop();
+  while (!TaskStack::isEmpty()) {
+    TaskStackEntry entry=*(--tos);
+    ContFlag cFlag = getContFlag(ToInt32(entry));
+
+    switch (cFlag){
+    case C_COMP_MODE:
+      compMode=TaskStack::getCompMode(entry);
+      break;
+    case C_LOCAL:
+    case C_SOLVE:
+      TaskStack::setTop(tos);
+      return OK;
+    default:
+      tos = tos - TaskStack::frameSize(cFlag) + 1;
+      break;
+    }
+  }
+  TaskStack::setTop(tos);
+  return NO;
+}
+

@@ -1031,7 +1031,7 @@ PRINT(Thread)
   stream << indent(offset)
     << "Thread @" << this
     << " [ prio: " << priority;
-  stream << ", #" << taskStack.getUsed()-1;
+  stream << ", #" << TaskStack::getUsed()-1;
   switch (getCompMode()) {
   case PARMODE:
     stream << ", PARMODE";
@@ -1051,7 +1051,7 @@ PRINTLONG(Thread)
   CHECKDEPTHLONG;
   this->print(stream,depth,offset);
   stream << endl;
-  taskStack.printDebug(NOCODE,NO,depth);
+  TaskStack::printTaskStack(NOCODE,NO,depth);
 }
 
 PRINTLONG(Literal)
@@ -1320,7 +1320,7 @@ void printX(FILE *fd, RefsArray X)
   }
 }
 
-void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
+void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 {
   if (this == NULL) {
     message("TaskStack empty.\n");
@@ -1595,7 +1595,7 @@ void OZ_FiniteDomain::printDebugLong(void) const
 
 void CodeArea::writeInstr(void){
   FILE* ofile;
-  if(ofile = fopen(InstrDumpFile, "w")){
+  if((ofile = fopen(InstrDumpFile, "w"))){
     int i = fetchedInstr;
 //    ofile=stdout;
     do {
