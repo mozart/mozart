@@ -417,8 +417,16 @@ int cmpCVar(OzVariable *v1, OzVariable *v2)
   return t1-t2;
 }
 
+const StackEntry mark=(StackEntry)-1;
+class UnifyStack : public Stack {
+public:
+  UnifyStack() : Stack(100,Stack_WithMalloc) {}
+  void pushMark() { push(mark); }
+  Bool isMark() { return topElem()==mark; }
+};
+
 // global vars!!!
-static Stack unifyStack(100,Stack_WithMalloc);
+static UnifyStack unifyStack;
 static Stack rebindTrail(100,Stack_WithMalloc);
 
 inline
@@ -439,7 +447,7 @@ void rebind(TaggedRef *refPtr, TaggedRef term2)
 OZ_Return oz_unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 {
   Assert(am.checkShallow(scp));
-  Assert(unifyStack.isEmpty()); /* unify is not reentrant */
+  unifyStack.pushMark();
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
 
   OZ_Return result = FAILED;
@@ -621,7 +629,7 @@ loop:
  /*************/
 
 next:
-  if (unifyStack.isEmpty()) {
+  if (unifyStack.isMark()) {
     result = PROCEED;
     goto exit;
   }
@@ -644,10 +652,15 @@ push:
  
 fail:
   Assert(result!=PROCEED);
-  unifyStack.mkEmpty();
+  while (!unifyStack.isMark()) {
+    unifyStack.pop();
+  }
   // fall through
 
 exit:
+  Assert(unifyStack.isMark());
+  unifyStack.pop(); // pop mark
+
   while (!rebindTrail.isEmpty ()) {
     PopRebindTrail(value,refPtr);
     doBind(refPtr,value);
