@@ -80,6 +80,7 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
   if (hasEqualVars()) 
     goto failure;
 
+  {
   OZ_FSetValue u = _u;
   
   for (i = _vs_size; i--; ) { 
@@ -111,7 +112,7 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
       
     } while (doagain);
   }
-
+  }
   {
     OZ_Return r = P.leave();
     
