@@ -463,7 +463,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   Assert(0);
 
 bomb:
-  marshalNoGood(makeTaggedConst(t),bs,true);
+  marshalNoGood(makeTaggedConst(t),bs,OK);
   trailCycle(t,bs); 
 }
 
@@ -573,7 +573,7 @@ loop:
 	marshalDIF(bs,DIF_EXTENSION);
 	marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
 	if (!oz_tagged2Extension(t)->marshalV(bs)) {
-	  marshalNoGood(t,bs,false);
+	  marshalNoGood(t,bs,NO);
 	}
       }
       break;
@@ -612,7 +612,7 @@ loop:
 
   default:
   bomb:
-    marshalNoGood(t,bs, false);
+    marshalNoGood(t,bs, NO);
     break;
   }
 
