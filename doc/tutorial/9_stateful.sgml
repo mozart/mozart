@@ -1,7 +1,7 @@
 <CHAPTER ID="chapter.stateful">
 <TITLE>Stateful Data Types</TITLE>
 
-<P>Oz provides set of stateful data types. These include ports,
+<P>Oz provides a set of stateful data types. These include ports,
 objects, arrays, and dictionaries (hash tables). These data types are
 abstract in the sense that they are characterized only by the set of
 operations performed on the members of the type. Their implementation
@@ -16,22 +16,27 @@ longer accessible.
 
 
 <SECTION id=section.stateful.port><TITLE/Ports/
+
 <P>Port is such an abstract data-type. A Port <<P>> is an asynchronous
 communication channel that can be shared among several senders. A port
-has a stream associated with it. The operation: <<{NewPort S ?P}>>
+has a stream associated with it. The operation: <<{Port.new S ?P}>>
 creates a port <<P>> and initially connects it to the variable <<S>>
-taking the role of a stream. The operation: <<{Send P M}>> will append
-the message <<M>> to the end of the stream associated with <<P>>. The
-port keeps track of the end of the stream as its next insertion
-point. The operation <<{IsPort P ?B}>> checks whether <<P>> is a
-port. The following program shows a simple example using ports:
+taking the role of a stream. The operation: <<{Port.send P M}>> will
+append the message <<M>> to the end of the stream associated with
+<<P>>. The port keeps track of the end of the stream as its next
+insertion point. The operation <<{IsPort P ?B}>> checks whether <<P>>
+is a port. In order to protect the stream <<S>> from being bound by
+mistake <<S>> is actually a future.  The following program shows a
+simple example using ports:
 
 <<<
 declare S P
-P = {NewPort S}
+P = {Port.new S}
 {Browse S}
-{Send P 1}
-{Send P 2}
+>>>
+<<<
+{Port.send P 1}
+{Port.send P 2}
 >>>
 
 <P>If you enter the above statements incrementally you will observe that
@@ -44,90 +49,15 @@ S
 >>>
 
 <P>Ports are more expressive abstractions than pure stream
-communication that was discussed in
+communication, which was discussed in
 <ptr to=section.concurrency.stream>, since they can be shared
-among multiple thread, and can be embedded in other data
+among multiple threads, and can be embedded in other data
 structures. Ports are the main message passing mechanism between
 threads in Oz.
 
 
 <SECTION id=section.stateful.clientserver><TITLE/Server-Clients Communication/
-<!-- DENYS: I am replacing this example by a much simpler one
-     I am leaving the old stuff here, but commented out
 
-<P>The program shown in <PTR TO="concurrentQueue"> defines a thread
-that acts as FIFO queue server. Using single-assignment (logic)
-variables makes the server insensitive to the arrival order of <<get>>
-messages relative to <<put>> messages. <<get>> messages can arrive even
-when the queue is empty. A server is created by <<{NewQueueServer ?Q}>>.
-This procedure returns back a port <<Q>> to the server. A client
-thread having access to <<Q>> can request services by sending a
-message on the port. Notice how results are returned back through
-logic variables. A client requesting an Item in the queue will send
-the message <<{Send Q get(I)}>>. The server will eventually answer
-back by binding <<I>> to an item.
-
-<P><FIGURE ID="concurrentQueue" CLASS="Figure">
-<CAPTION>Concurrent Queue server</CAPTION>
-<<<
-declare NewQueueServer in
-local
-   fun {NewQueue}
-      X in q(front:X rear:X number:0)
-   end
-   fun {Put Q I}
-      X in
-      Q.rear = I|X
-      {AdjoinList Q [rear#X number#(Q.number+1)]}
-   end
-   proc {Get Q ?I ?NQ}
-      X in
-      Q.front = I|X
-      NQ = {AdjoinList Q [front#X number#(Q.number-1)]}
-   end
-   proc {Empty Q ?B ?NQ}
-      B = (Q.number == 0) NQ = Q
-   end
-   proc {QServer Xs Q}
-      case Xs of X|Xr then
-        NQ in
-        case X
-        of put(I) then NQ = {Put Q I}
-        [] get(I) then {Get Q I NQ}
-        [] empty(B) then {Empty Q B NQ}
-        else NQ = Q end
-        {QServer Xr NQ}
-      [] nil then skip
-      end
-   end
-   S P = {NewPort S}
-in fun {NewQueueServer}
-      thread {QServer S {NewQueue}} end
-      P
-   end
-end
->>>
-</FIGURE>
-
-<P>The following sequence of statement illustrates the working of the program.
-
-<<<
-declare
-Q = {NewQueueServer}
-{Send Q put(1)}
-{Browse {Send Q get($)}}
-{Browse {Send Q get($)}}
-{Browse {Send Q get($)}}
-{Send Q put(2)}
-{Send Q put(3)}
-{Browse {Send Q empty($)}}
->>>
--->
-<!-- DENYS: here is a much simpler definition of a concurrent queue
-I am not implementing the `empty' method.  it would not be hard, but
-it is not very meaningful in a concurrent setting (you need other
-invariants).
- -->
 <P>The program shown in <PTR TO="concurrentQueue"> defines a thread
 that acts as FIFO queue server. Using single-assignment (logic)
 variables makes the server insensitive to the relative arrival
