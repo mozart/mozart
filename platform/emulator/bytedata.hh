@@ -77,7 +77,6 @@ public:
     data = allocate(size);
     memset((void*)data,0,size);
   }
-  BitData(BitData&);
   Bool checkIndex(int i) { return i>=0 && i<width; }
   Bool equal(BitData*);
   void bitPrintStream(ostream &out);
@@ -157,7 +156,6 @@ public:
     data = allocate(w);
     memset((void*)data,0,w);
   }
-  ByteData(ByteData&);
   Bool checkIndex(int i) { return i>=0 && i<width; }
   Bool equal(ByteData*);
   void bytePrintStream(ostream& out);
