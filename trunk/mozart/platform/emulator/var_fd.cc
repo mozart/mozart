@@ -30,7 +30,6 @@
 
 #include "am.hh"
 #include "genvar.hh"
-#include "fdprofil.hh"
 #include "fdomn.hh"
 
 // unify expects either two GenFDVariables or at least one
@@ -51,8 +50,7 @@ OZ_Return GenFDVariable::unifyV(TaggedRef * vPtr, TaggedRef term,
 
   if (oz_isSmallInt(term)) {
     if (! finiteDomain.isIn(OZ_intToC(term))) {
-      PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
-	return FALSE;
+      return FALSE;
     }
 
     Bool isLocalVar = am.isLocalSVar(this);
@@ -72,10 +70,6 @@ OZ_Return GenFDVariable::unifyV(TaggedRef * vPtr, TaggedRef term,
       am.doBindAndTrail(vPtr, term);
     }
       
-    PROFILE_CODE1(if (FDVarsTouched.add(term))
-		  FDProfiles.inc_item(no_touched_vars);
-		  FDProfiles.inc_item(no_succ_fdunify_vars);
-		  );
     return TRUE;
   }
     
@@ -91,8 +85,7 @@ OZ_Return GenFDVariable::unifyV(TaggedRef * vPtr, TaggedRef term,
     OZ_FiniteDomain intsct;
 
     if ((intsct = finiteDomain & termDom) == fd_empty) {
-      PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
-	return FALSE;
+      return FALSE;
     }
 
     // bind - trail - propagate
