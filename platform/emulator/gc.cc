@@ -1788,7 +1788,7 @@ void TaskStack::gcRecurse()
     TaskStackEntry oldEntry=oldstack->pop();
     TaggedBoard tb = (TaggedBoard) ToInt32(oldEntry);
     ContFlag cFlag = getContFlag(tb);
-    if (cFlag == C_MODE) {
+    if (cFlag == C_COMP_MODE) {
       gcQueue(oldEntry);
       continue;
     }
@@ -1797,7 +1797,7 @@ void TaskStack::gcRecurse()
     if (newBB == NULL) {
       switch (cFlag){
       case C_NERVOUS:    continue;
-      case C_MODE:       Assert(0);
+      case C_COMP_MODE:       Assert(0);
       case C_XCONT:      oldstack->pop(4); continue;
       case C_CONT:       oldstack->pop(3); continue;
       case C_DEBUG_CONT: oldstack->pop(1); continue;
@@ -1813,7 +1813,7 @@ void TaskStack::gcRecurse()
     case C_NERVOUS:
       break;
 
-    case C_MODE:
+    case C_COMP_MODE:
       Assert(0);
       break;
 
