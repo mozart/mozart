@@ -5467,21 +5467,45 @@ OZ_C_proc_begin(BIshutdown,0)
 OZ_C_proc_end
 
 /* ------------------------------------------------------------
- * Sleep
+ * Alarm und Delay
  * ------------------------------------------------------------ */
 
-OZ_C_proc_begin(BIsleep,3)
-{
+OZ_C_proc_begin(BIalarm,2) {
   OZ_declareIntArg(0,t);
-  OZ_Term l=OZ_getCArg(1);
-  OZ_Term r=OZ_getCArg(2);
-  if (t <= 0) return OZ_unify(l,r);
+  OZ_Term out=OZ_getCArg(1);
 
   if (!am.isToplevel()) {
     return raiseKernel("globalState",1,OZ_atom("io"));
   }
 
-  am.insertUser(t,cons(l,r));
+  if (t <= 0)
+    return OZ_unify(NameUnit,out);
+
+  am.insertUser(t,cons(NameUnit,out));
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdelay,1) {
+  OZ_declareIntArg(0,t);
+
+  if (!am.isToplevel()) {
+    return raiseKernel("globalState",1,OZ_atom("io"));
+  }
+
+  if (t <= 0)
+    return PROCEED;
+
+  TaggedRef var = makeTaggedRef(newTaggedUVar(am.currentBoard));
+
+  am.insertUser(t,cons(NameUnit,var));
+  DEREF(var, var_ptr, var_tag);
+
+  if (isAnyVar(var_tag)) {
+    am.addSuspendVarList(var_ptr);
+    return SUSPEND;
+  }
   return PROCEED;
 }
 OZ_C_proc_end
@@ -7215,7 +7239,8 @@ BIspec allSpec2[] = {
   {"findFunction",   3, BIfindFunction,         0},
   {"shutdown",       0, BIshutdown,             0},
 
-  {"Sleep",          3, BIsleep,                0},
+  {"Alarm",          2, BIalarm,                0},
+  {"Delay",          1, BIdelay,                0},
 
   {"System.gcDo",    0, BIgarbageCollection,    0},
 
