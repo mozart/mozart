@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = 'May 10 1997'
+Version                = 'May 21 1997'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -196,7 +196,8 @@ MaxStackBrowseSize     = 15
 TimeoutToCalcTree      = 380 % ms
 TimeoutToBlock         = 720
 TimeoutToUpdateEnv     = 430
-TimeoutToUpdateScroll  = TimeoutToUpdateEnv
+TimeoutToUpdateBar     = TimeoutToUpdateEnv
+TimeoutToConfigBar     = 5
 TimeoutToSwitch        = 260
 TimeoutToStatus        = 240
 
@@ -213,15 +214,13 @@ DefaultBackground
 DefaultForeground
 SelectedBackground
 SelectedForeground
-ScrollbarApplColor
-ScrollbarBlockedColor
-ScrollbarStackColor
+RunnableThreadColor
 RunningThreadColor
 BlockedThreadColor
 DeadThreadColor
 ZombieThreadColor
 TrunkColor
-RunningThreadText
+RunnableThreadText
 BlockedThreadText
 DeadThreadText
 ProcColor
@@ -231,22 +230,20 @@ case Tk.isColor then
    %% main window
    DefaultBackground       = '#f0f0f0'
    DefaultForeground       = black
-   SelectedBackground      = ScrollbarStackColor
+   SelectedBackground      = '#7070c0'
    SelectedForeground      = white
    
-   %% source window
-   ScrollbarApplColor      = '#00a000'
-   ScrollbarBlockedColor   = BlockedThreadColor
-   ScrollbarStackColor     = '#7070c0'
-
    %% thread forest window
-   RunningThreadColor      = ScrollbarApplColor
+   RunnableThreadColor     = SelectedBackground
+   RunningThreadColor      = '#afafff'
+   
    BlockedThreadColor      = '#e07070'
    DeadThreadColor         = '#505050'
+
    ZombieThreadColor       = '#f000f0'
    TrunkColor              = black % '#a00000'
 
-   RunningThreadText       = nil
+   RunnableThreadText      = nil
    BlockedThreadText       = nil
    DeadThreadText          = nil
 
@@ -260,19 +257,15 @@ else
    SelectedBackground      = black
    SelectedForeground      = white
 
-   %% source window
-   ScrollbarApplColor      = '#010000'
-   ScrollbarBlockedColor   = '#000100'
-   ScrollbarStackColor     = '#000001'
-
    %% thread forest window
+   RunnableThreadColor     = black
    RunningThreadColor      = black
    BlockedThreadColor      = black
    DeadThreadColor         = black
    ZombieThreadColor       = black
    TrunkColor              = black
 
-   RunningThreadText       = nil
+   RunnableThreadText      = nil
    BlockedThreadText       = '(b)'
    DeadThreadText          = '(t)'
    
@@ -281,11 +274,6 @@ else
    BuiltinColor            = black
 end
 
-%% this is for the Emacs scrollbar function
-ColorMeaning            = cm(ScrollbarApplColor    : 'runnable'
-			     ScrollbarBlockedColor : 'blocked'
-			     ScrollbarStackColor   : 'stack')
-			     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% the config object to read/write changeable options
 %% first, some initial values... (read from a config file someday?)

@@ -141,16 +141,15 @@ in
 			  clear BlockedThreadColor)}
 	    
 	    StackManager,ReCalculate({Reverse S})
-	    {Ozcar scrollbar(file:C.file line:C.line
-			     color:ScrollbarBlockedColor what:appl)}
-	    
-	 else              % user exception
+	    {Ozcar bar(file:C.file line:C.line state:blocked)}
+
+	 else              % no stack available
 	    E = {T2VS X}
 	 in
-	    {Ozcar status(UserExcText # E # NoStackText
-			  clear BlockedThreadColor)}
+	    {ForAll
+	     [status(UserExcText # E # NoStackText clear BlockedThreadColor)
+	      removeBar] Ozcar}
 	    StackManager,ReCalculate(nil)
-	    {Ozcar scrollbar(file:'' line:0 color:undef what:both)}
 	 end
       end
       

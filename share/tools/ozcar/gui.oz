@@ -112,7 +112,6 @@ in
       attr
 	 LastSelectedFrame : 0
 	 EnvSync    : _
-	 ScrollSync : _
 	 StatusSync : _
 
 	 LastClicked : nil
@@ -351,24 +350,14 @@ in
 	 in
 	    {OzcarMessage 'Selecting frame #' # FrameNr}
 	    case Highlight then
-	       Gui,DelayedScrollbar(file:F.file line:{Abs F.line}
-				    color:ScrollbarStackColor what:stack)
+	       SourceManager,delayedBar(file:  F.file
+					line:  {Abs F.line}
+					state: runnable)
 	       Gui,SelectStackFrame(FrameNr)
 	    else
 	       Gui,SelectStackFrame(0)
 	    end
 	    Gui,printEnv(frame:FrameNr vars:Vars)
-	 end
-      end
-
-      meth DelayedScrollbar(file:F line:L color:C what:What)
-	 New in
-	 ScrollSync <- New = unit
-	 thread
-	    {WaitOr New {Alarm TimeoutToUpdateScroll}}
-	    case {IsDet New} then skip else
-	       SourceManager,scrollbar(file:F line:L color:C what:What)
-	    end
 	 end
       end
 
@@ -599,6 +588,9 @@ in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
 	       else
+		  % step never needs more time, does it?
+		  %Gui,markNode({Thread.id T} running)
+		  %SourceManager,configureBar(running)
 		  {Thread.resume @currentThread}
 	       end
 	       
@@ -626,12 +618,14 @@ in
 		     else
 			{Dbg.stepmode T false}
 		     end
+		     Gui,markNode(I running)
+		     SourceManager,configureBar(running)
 		     {Thread.resume T}
 		  end
 	       end
 	       
 	    [] ' finish' then
-	       {Browse 'not yet implemented'}
+	       {Show '\'finish\' not yet implemented'}
 	       skip
 		  
 	    [] ' cont' then
@@ -642,6 +636,9 @@ in
 	       else
 		  {Dbg.stepmode T false}
 		  {Dbg.contflag T true}
+		  
+		  Gui,markNode({Thread.id T} running)
+		  SourceManager,configureBar(running)
 		  {Thread.resume T}
 	       end
 	       

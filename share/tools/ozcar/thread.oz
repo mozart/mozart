@@ -125,7 +125,7 @@ in
 	    end
 
 	 [] exit(thr:T#I frame:Frame) then
-	    Found   = {Member Frame.1 # I @SkippedProcs}
+	    Found = {Member Frame.1 # I @SkippedProcs}
 	 in
 	    {OzcarShow @SkippedProcs # (Frame.1 # I) # Found}
 	    case Found orelse @SkippedThread == T then
@@ -135,14 +135,15 @@ in
 	       SkippedThread <- nil
 	       {Thread.resume T}
 	    else
-	       F L
-	       Stack   = {Dget self.ThreadDic I}
-	    in
-	       {ForAll [exit(Frame) getPos(file:F line:L)] Stack}
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
-	       SourceManager,scrollbar(file:F line:L
-				       color:ScrollbarApplColor what:appl)
-	       {Stack printTop}
+	       Gui,markNode(I runnable) % thread is not running anymore
+	       case T == @currentThread then
+		  F L
+		  Stack = {Dget self.ThreadDic I}
+	       in
+		  {ForAll [exit(Frame) getPos(file:F line:L)] Stack}
+		  SourceManager,bar(file:F line:L state:runnable)
+		  {Stack printTop}
+	       else skip end
 	    end
 	    
 	 [] thr(thr:T#I ...) then
@@ -248,8 +249,7 @@ in
 			{ForAll [rebuild(true) getPos(file:F line:L)
 				 print] StackObj}
 			Gui,status('Thread #' # I # ' is runnable again')
-			SourceManager,scrollbar(file:F line:L what:appl
-						color:ScrollbarApplColor)
+			SourceManager,bar(file:F line:L state:runnable)
 		     else skip end
 		  else skip end
 	       end
@@ -332,7 +332,7 @@ in
 	    case ThreadManager,EmptyTree($) then
 	       currentThread <- undef
 	       currentStack  <- undef
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
+	       SourceManager,removeBar
 	       Gui,selectNode(0)
 	       Gui,clearStack
 	       case Select then
@@ -353,7 +353,7 @@ in
 	       end
 	    else
 	       Gui,status('Thread #' # I # ' died')
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
+	       SourceManager,removeBar
 	       Gui,printStack(id:I frames:nil depth:0)
 	    end
 	 else skip end
@@ -399,17 +399,16 @@ in
 		builtin:B time:Time frame:FrameId)
 	 Stack = {Dget self.ThreadDic I}
       in
+	 Gui,markNode(I runnable) % thread is not running anymore
 	 {Stack step(name:N args:A builtin:B file:F line:L
 		     time:Time frame:FrameId)}
 	 case T == @currentThread then
 	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
+	       SourceManager,removeBar
 	       {Thread.resume T}
 	    else
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
-	       SourceManager,scrollbar(file:F line:L
-				       color:ScrollbarApplColor what:appl)
+	       SourceManager,bar(file:F line:L state:runnable)
 	       {Stack printTop}
 	    end
 	 else skip end
@@ -425,13 +424,9 @@ in
 	    case T == @currentThread then
 	       case {UnknownFile F} then
 		  {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
-		  SourceManager,scrollbar(file:'' line:0 color:undef what:both)
+		  SourceManager,removeBar
 	       else
-		  SourceManager,scrollbar(file:'' line:0
-					  color:undef what:stack)
-		  SourceManager,scrollbar(file:F line:L
-					  color:ScrollbarBlockedColor
-					  what:appl)
+		  SourceManager,bar(file:F line:L state:blocked)
 	       end
 	       Gui,status('Thread #' # I # ' is blocked')
 	       {Stack printTop} 
@@ -473,27 +468,20 @@ in
 	 case I == 1 then skip else
 	    Stack = {Dget self.ThreadDic I}
 	    T     = {Stack getThread($)}
-	    S     = {Thread.state T}
+	    S     = {Thread.state T} %% TODO: should differentiate between
+	                             %%       `running' and `runnable'
 	 in
 	    currentThread <- T
 	    currentStack  <- Stack
 
 	    case PrintStack then
 	       case S == terminated then
-		  SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
+		  SourceManager,removeBar
 		  Gui,printStack(id:I frames:nil depth:0)
 	       else
 		  {ForAll [print getPos(file:F line:L)] Stack}
-		  SourceManager,
-		  scrollbar(file:F line:L
-			    color:
-			       case S
-			       of runnable then ScrollbarApplColor
-			       [] blocked  then ScrollbarBlockedColor
-			       end
-			    what:appl)
+		  SourceManager,bar(file:F line:L state:S)
 	       end
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	    else skip end
 	 end
       end

@@ -48,9 +48,10 @@ local
    
    fun {GetColor State}
       case State
-      of runnable then RunningThreadColor # RunningThreadText
-      [] blocked  then BlockedThreadColor # BlockedThreadText
-      [] dead     then DeadThreadColor    # DeadThreadText
+      of runnable then RunnableThreadColor # RunnableThreadText
+      [] running  then RunningThreadColor  # RunnableThreadText
+      [] blocked  then BlockedThreadColor  # BlockedThreadText
+      [] dead     then DeadThreadColor     # DeadThreadText
       end
    end
    
