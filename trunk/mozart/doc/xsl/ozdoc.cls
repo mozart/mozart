@@ -804,7 +804,7 @@
   \multicolumn{2}{|l|}{#1 \GRAMDEF}\\\hline}
 \newcommand{\REWRITEFROM}[1]{#1&}
 \newcommand{\REWRITETO}[1]{#1\\\hline}
-\newcommand{\REWRITECONDITION}[1]{\multicolumn{2}{|@{\qqad}p{0.7\linewidth}|}{#1}\\\hline}
+\newcommand{\REWRITECONDITION}[1]{\multicolumn{2}{|@{\qquad}p{0.7\linewidth}|}{#1}\\\hline}
 
 \newcommand{\EOLN}{\\\mozartEMPTY}
 
