@@ -65,8 +65,8 @@ extern ostream * cpi_cout;
 #define _OZ_EM_INTMAX   "134 217 727"
 
 #define OZ_EM_LIT       "literal"
-#define OZ_EM_INT       "integer (~"_OZ_EM_INTMAX" <= integer <= "_OZ_EM_INTMAX")"
-#define OZ_EM_FD        "fd integer (fd integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"})"
+#define OZ_EM_INT       "integer in [~"_OZ_EM_INTMAX"\\,...\\,"_OZ_EM_INTMAX"]"
+#define OZ_EM_FD        "finite domain integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"}"
 #define OZ_EM_FDDESCR   "description of finite domain integer"
 #define OZ_EM_FSETVAL   "finite set of integers"
 #define OZ_EM_FSET      "finite set of integers constraint"
@@ -229,6 +229,7 @@ public:
   OZ_Boolean operator <= (const OZ_FSetConstraint &);
   OZ_Boolean operator >= (const OZ_FSetConstraint &);
   OZ_Boolean operator != (const OZ_FSetConstraint &);
+  OZ_Boolean operator == (const OZ_FSetConstraint &);
 };   
 
 
