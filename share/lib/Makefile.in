@@ -88,7 +88,7 @@ INITSRC = $(INITSRC1:%=init/%) Init.oz \
         ../url-defaults.oz ../functor-defaults.oz
 
 Init.ozf: URL.ozf $(INITSRC)
-        OZMAINIT="" $(COMPILE) -l URL Init.oz -o Init.ozf
+        $(COMPILE) -l URL=URL.ozf Init.oz -o Init.ozf
 
 #---------------------------------------------------------------------
 # Standard
