@@ -5714,11 +5714,59 @@ int loadFile(char *filename,OZ_Term out)
   return loadFD(fd,out);
 }
 
+// -------------------------------------------------------------------
+// URL Map Interface - Denys Duchier
+//
+// The idea is that there should be a record that maps urls to urls.
+// {GetURLMap Map}
+// {SetURLMap Map}
+//
+// loadURL effects this remapping before doing its actual job
+// -------------------------------------------------------------------
+
+static OZ_Term url_map=0;
+
+OZ_C_proc_begin(BIperdioGetURLMap,1)
+{
+  return OZ_unify(OZ_getCArg(0),(url_map==0)?OZ_unit():url_map);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIperdioSetURLMap,1)
+{
+  OZ_Term map = OZ_getCArg(0);
+  if (!OZ_onToplevel())
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("setURLMap"));
+  if (!OZ_isRecord(map))
+    return OZ_typeError(0,"Record");
+  url_map = map;
+}
+OZ_C_proc_end
 
 int loadURL(char *url, OZ_Term out)
 {
+  // perform translation through url_map:
+  // note that we leave currentURL untranslated in order to
+  // record the original symbolic dependency.  Only url is
+  // translated to obtain the actual location.
+
+  currentURL=oz_atom(url);
+  if (url_map!=0) {
+    OZ_Term oldURL=currentURL;
+    OZ_Term newURL;
+    int notTooMany = 100;
+    while (newURL=OZ_subtree(url_map,oldURL)) {
+      if (!OZ_isAtom(newURL))
+	return OZ_raiseC("loadURL",2,OZ_atom("badUrlInMap"),newURL);
+      oldURL=newURL;
+      if (!(notTooMany--))
+	return OZ_raiseC("loadURL",1,OZ_atom("tooManyRemaps"));
+    }
+    url=OZ_atomToC(oldURL);
+  }
+
   if (strchr(url,':')==NULL) { // no prefix --> local file name
-    currentURL = oz_atom(url);
+    //currentURL = oz_atom(url);
     return loadFile(url,out);
   }
 
@@ -5728,7 +5776,7 @@ int loadURL(char *url, OZ_Term out)
       const char *prefix = "file:";
       if (strncmp(url,prefix,strlen(prefix))!=0) goto bomb;
 
-      currentURL = oz_atom(url);
+      //currentURL = oz_atom(url);
       char *filename = url+strlen(prefix);
       return loadFile(filename,out);
     }
@@ -5806,7 +5854,7 @@ bomb:
 
   Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.currentBoard);
   RefsArray args = allocateRefsArray(2,NO);
-  args[0]=oz_atom(url);
+  args[0]=currentURL; //oz_atom(url);
   args[1]=out;
   tt->pushCall(loadHook, args, 2);
   am.scheduleThread (tt);
@@ -5935,6 +5983,8 @@ BIspec perdioSpec[] = {
   {"newGate",      2, BInewGate, 0},
 
   {"perdioStatistics",  1, BIperdioStatistics, 0},
+  {"getURLMap",1,BIperdioGetURLMap,0},
+  {"setURLMap",1,BIperdioSetURLMap,0},
 
 #ifdef DEBUG_PERDIO
   {"dvset",    2, BIdvset, 0},
@@ -5947,6 +5997,7 @@ void BIinitPerdio()
   BIaddSpec(perdioSpec);
   
   OZ_protect(&ozport);
+  OZ_protect(&url_map);
 
   refTable = new RefTable();
   refTrail = new RefTrail();
