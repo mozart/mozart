@@ -75,6 +75,22 @@ if (fclose(FILE_PTR)) {                                         \
 
 //-----------------------------------------------------------------------------
 
+inline
+OZ_Term add_list(char c, OZ_Term t = OZ_nil()) {
+  return OZ_cons(OZ_int(c), t);
+}
+
+inline
+OZ_Term close_list(OZ_Term rl) {
+  OZ_Term l = OZ_nil();
+  while (!OZ_isNil(rl)) {
+    l = OZ_cons(OZ_head(rl), l);
+    rl = OZ_tail(rl);
+  }
+}
+
+//-----------------------------------------------------------------------------
+
 #define INIT_FUNC(F_NAME) OZ_C_proc_interface * F_NAME(void)
 
 extern "C" INIT_FUNC(oz_init_module);
