@@ -62,7 +62,7 @@ install: all $(ELISPDIR) $(LIBFILES)
 $(ELISPDIR):
 	$(INSTALL_DIR) $@
 
-$(ELISPDIR)/%.el: $(SRCDIR)/%.el
+$(ELISPDIR)/%.el: %.el
 	$(INSTALL_FILE) $< $@
 
 $(ELISPDIR)/%.elc: %.elc
