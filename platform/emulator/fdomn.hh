@@ -46,7 +46,7 @@ const int fdMaxR = USHRT_MAX;
 const int fdMinR = 0;
 
 enum LeGeFull_e {em, le, ge, fu, no, bo, si};
-enum DFlag_e {empty, full, discrete, boolish, singleton};
+enum DFlag_e {empty, full, discrete, singleton};
 
 extern unsigned char numOfBitsInByte[];
 extern int toTheLowerEnd[];
@@ -60,13 +60,11 @@ public:
   USEHEAPMEMORY;
 
   BitArray() {};
-  BitArray(const BitArray *ba) {*this = *ba;}
+  BitArray(const BitArray * ba) {*this = *ba;}
 
   Bool contains(int i) const {
-    if (i > fdMaxBA || i < fdMinBA)
-      return NO;
-    else
-      return (array[i / bits] & (1 << (i % bits))) ? OK  :  NO;
+    return (i > fdMaxBA || i < fdMinBA)
+      ? FALSE : array[i / bits] & (1 << (i % bits));
   }
 
   void empty(void) {
@@ -99,9 +97,7 @@ public:
 
   void adjustSizeBy(int s) {size += s;}
 
-  int &operator [](int i) {
-    return array[i];
-  }
+  int &operator [](int i) {return array[i];}
 
   int operator <=(const int y_upper);
   int operator >=(const int y_lower);
@@ -124,9 +120,7 @@ protected:
   unsigned short upper;
   BitArray *bitArray;
 
-  Bool isRange(void) const {
-    return ((int)bitArray & RANGEFLAG) ? OK : NO;
-  }
+  Bool isRange(void) const {return ((int)bitArray & RANGEFLAG);}
 
   BitArray* setRange(BitArray *ba) const {
     return (BitArray*)((int)ba | RANGEFLAG);
@@ -136,8 +130,8 @@ protected:
     return (BitArray*)((int)ba & ~RANGEFLAG);
   }
 
-  void setEmpty(void) {
-    lower = 1; upper = 0; bitArray = setRange(bitArray);
+  int setEmpty(void) {
+    lower = 1; upper = 0; bitArray = setRange(bitArray); return 0;
   }
 
   void allocateBitArray(void) {
@@ -150,29 +144,24 @@ protected:
   BitArray * rangeToBitArray(BitArray * ba) const;
 
   int getRangeSize(void) const {
-    DebugCheck(isRange() == NO, error("Range expected."));
+    DebugCheck(!isRange(), error("Range expected."));
     return upper - lower + 1;
   }
 
-  Bool containsRange(int i) const {
-    return (i >= lower && i <= upper) ? OK : NO;
-  }
+  Bool containsRange(int i) const {return (i >= lower && i <= upper);}
 
   BitArray * becomeBitArray(void);
 public:
   USEHEAPMEMORY;
 
-  FiniteDomain(BitArray* ba = NULL) : bitArray(setRange(ba)) {
-    CHECK_POINTERLSB(ba);
-  };
+  FiniteDomain(BitArray* ba = NULL) : bitArray(setRange(ba)) {};
   FiniteDomain(const FiniteDomain &fd);
 
   const FiniteDomain &operator =(const FiniteDomain &fd) {
     if (this != &fd) {
-//    FiniteDomain(fd);
       lower = fd.lower;
       upper = fd.upper;
-      if (fd.isRange() == OK) {
+      if (fd.isRange()) {
         bitArray = setRange(bitArray);
       } else {
         if ((bitArray = resetRange(bitArray)) == NULL)
@@ -194,86 +183,75 @@ public:
   void init(int from, int to);
   void init(LeGeFull_e type, int n = -1);
 
+  // non-destructive operators
   FiniteDomain &operator &(const FiniteDomain &y) const; // intersection
   FiniteDomain &operator |(const FiniteDomain &y) const; // union
   FiniteDomain &operator ~(void) const;                  // inversion
 
-  FiniteDomain &operator <=(const int y_upper) const;
-  FiniteDomain &operator >=(const int y_lower) const;
-
-  int operator <(const int y_upper);
-  int operator >(const int y_lower);
+  // destructive operators
   int operator &=(const FiniteDomain &y);
-
-  FiniteDomain &operator -=(const int not_in);
-  FiniteDomain &operator +=(const int is_in);
-  FiniteDomain &operator &=(const int singl);
+  int operator &=(const int singl);
+  int operator -=(const int not_in);
+  int operator +=(const int is_in);
+  int operator <=(const int y_upper);
+  int operator >=(const int y_lower);
 
 
   int minElem(void) const {return lower;}
   int maxElem(void) const {return upper;}
-  void getMinMax(int &l, int &u) const {l = lower; u = upper;}
 
   int getSize(void) const {
-    return isRange() == OK ? getRangeSize() : bitArray->getSize();
+    return isRange() ? getRangeSize() : bitArray->getSize();
   }
 
   Bool contains(int i) const {
-    if (isRange() == OK)
-      return containsRange(i);
-    else
-      return bitArray->contains(i);
+    return isRange() ? containsRange(i) : bitArray->contains(i);
   }
-
 
   Bool operator == (const DFlag_e flag) const
   {
     switch (flag){
     case empty:
-      return getSize() == 0 ? OK : NO;
+      return (getSize() == 0);
     case full:
-      if (isRange() == OK)
-        return (lower == fdMinR && upper == fdMaxR) ? OK : NO;
+      if (isRange())
+        return (lower == fdMinR && upper == fdMaxR);
       return (lower == fdMinBA && upper == fdMaxBA &&
-              bitArray->getSize() == upper - lower + 1) ? OK : NO;
+              bitArray->getSize() == upper - lower + 1);
     case discrete:
-      if (isRange() == OK)
-        return (lower != fdMinR || upper != fdMaxR) ? OK : NO;
+      if (isRange())
+        return (lower != fdMinR || upper != fdMaxR);
       return (lower != fdMinBA || upper != fdMaxBA ||
-              bitArray->getSize() != upper - lower + 1) ? OK : NO;
+              bitArray->getSize() != upper - lower + 1);
     case singleton:
-      return (lower == upper) ? OK : NO;
-    case boolish:
-      return (contains(0) == OK || contains(1) == OK) ? OK : NO;
+      return (lower == upper);
     default:
       error("Unexpected case at %s:%d.", __FILE__, __LINE__);
-      return NO;
-    } //switch
+      return FALSE;
+    }
   }
 
   Bool operator != (const DFlag_e flag) const
   {
     switch (flag){
     case empty:
-      return getSize() ? OK : NO;
+      return (getSize() != 0);
     case full:
-      if (isRange() == OK)
-        return (lower != fdMinR || upper != fdMaxR) ? OK : NO;
+      if (isRange())
+        return (lower != fdMinR || upper != fdMaxR);
       return (lower != fdMinBA || upper != fdMaxBA ||
-              bitArray->getSize() != upper - lower + 1) ? OK : NO;
+              bitArray->getSize() != upper - lower + 1);
     case discrete:
-      if (isRange() == OK)
-        return (lower == fdMinR && upper == fdMaxR) ? NO : OK;
+      if (isRange())
+        return !(lower == fdMinR && upper == fdMaxR);
       return (lower == fdMinBA || upper == fdMaxBA ||
-              bitArray->getSize() == upper - lower + 1) ? OK : NO;
+              bitArray->getSize() == upper - lower + 1);
     case singleton:
-      return (lower == upper) ? NO : OK;
-    case boolish:
-      return (contains(0) == OK || contains(1) == OK) ? NO : OK;
+      return (lower != upper);
     default:
       error("Unexpected case at %s:%d.", __FILE__, __LINE__);
-      return NO;
-    } //switch
+      return FALSE;
+    }
   }
 
 
@@ -291,17 +269,11 @@ public:
     return lower;
   }
 
-  void constrainBool(void)
-  {
-#ifdef DEBUG_CHECK
-    if ((*this == boolish) == NO)
-      error("Boolish finite domain expected.");
-#endif
-    Bool zero = contains(0);
-    Bool one = contains(1);
+  int constrainBool(void) {
+    lower = contains(0) ? 0 : 1;
+    upper = contains(1) ? 1 : 0;
     bitArray = setRange(bitArray);
-    lower = (zero == OK) ? 0 : 1;
-    upper = (one == OK) ? 1 : 0;
+    return getRangeSize();
   }
 
   void print(ostream & = cout, int = 0) const;
@@ -309,10 +281,7 @@ public:
   void printDebug(void) const;
 
   void gc(void) {
-    if (isRange() == OK)
-      bitArray = setRange(NULL);
-    else
-      bitArray = new BitArray(bitArray);
+    bitArray = isRange() ? setRange(NULL) : new BitArray(bitArray);
   }
 
   static FDState leftDom;

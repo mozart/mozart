@@ -27,9 +27,9 @@ Suspension* FDcurrentTaskSusp = NULL;
 void reviveCurrentTaskSusp(void) {
   DebugCheck(FDcurrentTaskSusp == NULL,
              error("FDcurrentTaskSusp is NULL in reviveFDcurrentTaskSusp."));
-  DebugCheck(FDcurrentTaskSusp->isResistant() == NO,
+  DebugCheck(!FDcurrentTaskSusp->isResistant(),
              error("Cannot revive non-resistant suspension."));
-  DebugCheck(FDcurrentTaskSusp->isDead() == OK,
+  DebugCheck(FDcurrentTaskSusp->isDead(),
              error("Cannot revive dead suspension."));
   FDcurrentTaskSusp->unmarkPropagated();
   FDcurrentTaskSusp->setNode(am.currentBoard);
@@ -41,40 +41,30 @@ void reviveCurrentTaskSusp(void) {
 void killPropagatedCurrentTaskSusp(void) {
   if (FDcurrentTaskSusp == NULL) return;
 
-  DebugCheck(FDcurrentTaskSusp->isResistant() == NO,
+  DebugCheck(!FDcurrentTaskSusp->isResistant(),
              error("Cannot kill non-resistant suspension."));
-  DebugCheck(FDcurrentTaskSusp->isDead() == OK,
+  DebugCheck(FDcurrentTaskSusp->isDead(),
              error("Suspension already dead."));
 
-  if (FDcurrentTaskSusp->isPropagated() == NO) {
+  if (!FDcurrentTaskSusp->isPropagated()) {
     FDcurrentTaskSusp = NULL;
     return;
   }
 
   FDcurrentTaskSusp->markDead();
-  (void) am.checkExtSuspension(FDcurrentTaskSusp);
+  am.checkExtSuspension(FDcurrentTaskSusp);
   FDcurrentTaskSusp = NULL;
 };
 
 
 void dismissCurrentTaskSusp(void) {
-  DebugCheck(FDcurrentTaskSusp->isResistant() == NO,
+  DebugCheck(!FDcurrentTaskSusp->isResistant(),
              error("Cannot dismiss non-resistant suspension."));
-  DebugCheck(FDcurrentTaskSusp->isDead() == OK,
+  DebugCheck(FDcurrentTaskSusp->isDead(),
              error("Suspension is dead."));
 
   FDcurrentTaskSusp->cContToNode(am.currentBoard);
   FDcurrentTaskSusp = NULL;
-}
-
-
-void undoTrailing(int n) {
-  while(n--) {
-    TaggedRef * refPtr;
-    TaggedRef value;
-    am.trail.popRef(refPtr,value);
-    *refPtr = value;
-  }
 }
 
 
@@ -89,21 +79,9 @@ Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 }
 
 
-SuspList * addVirtualConstr(SuspList * list, SuspList * elem, Board * home)
+SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home)
 {
-  Suspension * susp = elem->getSusp ();
-  updateExtSuspension (home->getBoardDeref(), susp);
-
+  updateExtSuspension (home->getBoardDeref(), elem->getSusp());
   elem->setNext(list);
   return elem;
-}
-
-
-void addVirtualConstr(SVariable * var, SuspList * elem)
-{
-  Suspension * susp = elem->getSusp ();
-  updateExtSuspension (var->getHome(), susp);
-
-  elem->setNext(var->getSuspList());
-  var->setSuspList(elem);
 }
