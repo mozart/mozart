@@ -115,7 +115,7 @@ OZ_Return TaskIntervalsPropagator::propagate(void)
   int * dur = reg_offset;
 
   struct Set {
-    int low, up, dur, extSize;
+    int low, up, dur, extSize, lst, ect;
     int * ext;
     // extension for tasks inside task intervals
     int max, min;
@@ -169,11 +169,20 @@ tiloop:
       cset->low        = MinMax[left].min;
       cset->up         = MinMax[right].max + dur[right];
       
-      cset->max        = MinMax[left].max + dur[left];
-      cset->min        = MinMax[right].min;
+      if (left == right) {
+	cset->min = fd_sup;
+	cset->max = 0;
+      }
+      else {
+	cset->max        = MinMax[left].max + dur[left];
+	cset->min        = MinMax[right].min;
+      }
 
       int cdur = 0;
       int csize = 0;
+      int maxEct = 0;
+      int minLst = fd_sup;
+      int overlap = 0;
       if ( (cset->low <= MinMax[right].min)
 	   && (MinMax[left].max + dur[left] <= cset->up)
 	   ) 
@@ -187,19 +196,29 @@ tiloop:
 		 && (dueL <= cset->up) ) {
 	      cdur += durL;
 	      cset->ext[csize++] = l;
-
+	      maxEct = intMax(maxEct, releaseL+durL);
+	      minLst = intMin(minLst, dueL-durL);
+	    
 	      if ( (l!=left) && (l!=right) ) {
 		cset->max = intMax(cset->max, dueL);
 		cset->min = intMin(cset->min, releaseL);
 	      }
-
+	    }
+	    else {
+	      // add the overlapping amount of tasks
+	      int overlapTmp = intMin(intMax(0,releaseL+durL-cset->low),
+				      intMin(intMax(0,cset->up-dueL+durL),
+					     intMin(durL,cset->up-cset->low)));
+	      overlap += overlapTmp;
 	    }
 	  }
 	}
       cset->dur     = cdur;
       cset->extSize = csize;
-      
-      if ( (csize > 0) && (cset->up - cset->low < cdur) ) {
+      cset->lst     = minLst;
+      cset->ect     = maxEct;
+
+      if ( (csize > 0) && (cset->up - cset->low < cdur+overlap) ) {
 	goto failure;
       }
     }
@@ -223,22 +242,30 @@ tiloop:
 	  int releaseI = MinMax[i].min;
 	  int dueI     = maxI + durI;
 	  int durAll, tdurTI, treleaseTI, tdueTI;
+	  int inside = 0;
 	  if ( (releaseI >= releaseTI) && (dueI <= dueTI) ) {
 	    // I is in TI
- 	    durAll = durTI;
+ 	    inside = 1;
+	    durAll = durTI;
 	    tdurTI = durTI - durI; 
-	    if (i==left) {
+	    if ( (i==left) && (i==right) ) {
 	      treleaseTI = cset->min;
-	      tdueTI = dueTI;
+	      tdueTI = cset->max;
 	    }
 	    else {
-	      if (i==right) {
-		tdueTI = cset->max;
-		treleaseTI = releaseTI;
+	      if (i==left) {
+		treleaseTI = cset->min;
+		tdueTI = dueTI;
 	      }
 	      else {
-		treleaseTI = releaseTI;
-		tdueTI = dueTI;
+		if (i==right) {
+		  tdueTI = cset->max;
+		  treleaseTI = releaseTI;
+		}
+		else {
+		  treleaseTI = releaseTI;
+		  tdueTI = dueTI;
+		}
 	      }
 	    }
 	  }
@@ -250,6 +277,7 @@ tiloop:
 	    durAll     = durI + durTI;
 	  }
 	  
+	  int val = 0;
 	  int tmax = 0;
 	  int tmin = fd_sup;
 	  for (k=0; k<setSize; k++) {
@@ -304,9 +332,16 @@ tiloop:
 	  else {
 	    if (tdueTI - releaseI < durAll) {
 	      // I cannot be first and not inside --> I must be last
-	      if (releaseI < treleaseTI + tdurTI) {
+	      if (inside == 1) {
+		// we cannot use ect because this might come from I
+		val = treleaseTI + tdurTI;
+	      }
+	      else {
+		val = intMax(treleaseTI + tdurTI,cset->ect); 
+	      }
+	      if (releaseI < val) {
 		loopFlag = 1;
-		FailOnEmpty( *x[i] >= treleaseTI + tdurTI);
+		FailOnEmpty( *x[i] >= val);
 	      }
 	      // all others in TI must be finished before I starts
 	      for (j = 0; j < setSize; j++) {
@@ -330,9 +365,16 @@ tiloop:
 	    }
 	    if (dueI - treleaseTI < durAll) {
 	      // I cannot be last and not inside --> I must be first
-	      if (maxI > tdueTI - tdurTI - durI) {
+              if (inside == 1) {
+		// we cannot use lst because this might come from I
+                val = tdueTI - tdurTI - durI;
+	      }
+	      else {
+		val = intMin(tdueTI - tdurTI - durI, cset->lst);
+	      }
+	      if (maxI > val) {
 		loopFlag = 1;
-		FailOnEmpty( *x[i] <= tdueTI - tdurTI - durI);
+		FailOnEmpty( *x[i] <= val);
 	      }
 	      // all others in TI must start after I has finished
 	      for (j = 0; j < setSize; j++) {
@@ -644,7 +686,7 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
   }
 
   int set0Size;
-  int compSet0Size;
+ int compSet0Size;
   int outSideSize;
   int mysup = OZ_getFDSup();
   
