@@ -211,6 +211,7 @@ case $platform in
     irix*)
         TOOLLDCMD="ld -shared"
 	oz_enable_modules_static=yes
+	CPPFLAGS="-DINTERFACE $CPPFLAGS"
 	;;
     osf1*)
         TOOLLDCMD="gcc -shared -Wl,-expect_unresolved -Wl,*"
@@ -342,7 +343,16 @@ dnl Checks for libraries.
 dnl *****************************************************************
 
 
-if test "$platform" != "win32-i486" ; then 
+case "$platform" in
+win32-i486)
+    AC_CHECK_LIB(kernel32,main)
+    AC_CHECK_LIB(wsock32,main)
+;;
+irix6*)
+    AC_CHECK_LIB(m, fabs)
+    AC_CHECK_LIB(dl, dlopen)
+;;
+*)
     AC_CHECK_LIB(nsl, gethostbyaddr,,[
       AC_CHECK_LIB(c, gethostbyaddr)])
     OZ_NEEDS_FUNC(gethostbyaddr)
@@ -351,10 +361,8 @@ if test "$platform" != "win32-i486" ; then
     AC_CHECK_LIB(m, fabs)
     OZ_NEEDS_FUNC(fabs)
     AC_CHECK_LIB(dl, dlopen)
-else
-    AC_CHECK_LIB(kernel32,main)
-    AC_CHECK_LIB(wsock32,main)
-fi
+
+esac
 
 dnl *****************************************************************
 dnl Checks for library functions.
