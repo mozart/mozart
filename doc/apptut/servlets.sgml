@@ -114,9 +114,8 @@ in an extremely minimal user environment.
 The user is typically called <<nouser>>
 or <<www>> and has almost no rights.
 In particular you cannot expect the Mozart system
-to be in the path of <<nouser>>!
-This is the reason why you
-have to use an absolut pathname when compiling
+to be in the path of the user!
+This is why you need an absolute pathname when compiling
 the servlet.
 
 <P>The final step is to install the servlet
