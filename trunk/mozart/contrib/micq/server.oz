@@ -45,7 +45,9 @@ require
 	 messageAck:S_messageAck
 	 removeMessage:S_removeMessage
 	 getUserName:S_getUserName
-	 removeApplication:S_removeApplication) at 'methods.ozf'
+	 removeApplication:S_removeApplication
+	 getHistory: S_getHistory
+	 clearHistory: S_clearHistory) at 'methods.ozf'
 import
    Tk
    System(show showInfo)
@@ -90,6 +92,7 @@ define
       meth !InitServer(dbdir:D)
 	 self.dbdir=D
 	 self.watchers={Dictionary.new}
+	 {DB setDBdir( dir :D )}
       end
 
       %% Methods called from editapplicationgui.oz
@@ -129,6 +132,17 @@ define
 	 catch _ then {WriteLog "Could not return messageID("#GlobalMID#") and date to "#SID} end
       end
 
+      meth !S_clearHistory( id: ID friend: F)
+	 {DB clearHistory( id: ID friend: F)}
+      end
+      
+      meth !S_getHistory( id:ID history:History ) H in 
+	 H={DB getHistory( id: ID history: $ )}
+	 try
+	    History=H
+	 catch _ then {WriteLog "Could not return history to "#ID} end
+      end
+ 
       meth !S_logout(id:ID client:C<=nil)
 	 lock P={Dictionary.condGet self.watchers ID nil} in
 	    if P\=nil then
@@ -307,14 +321,11 @@ define
 		  {Delay 2500}
 	       end
 	       
-	       %% Initialize the client
-	       {C startgui(settings:E.settings) "Could not start client"}
-	       	       
 	       %% So that we can uninstall watcher
 	       {Dictionary.put self.watchers ID entry(port: CP procedure: WatcherProc )}
 	       
 	       lock
-		  {DB online(id:ID client:C)}
+		  {DB login(id:ID client:C)}
 		  local On Off in
 		     {DB getFriendsStatus(id:ID online:On offline:Off)}
 		     {C friends(online:On offline:Off) "Sending friends information failed"}
@@ -323,6 +334,9 @@ define
 		  {WriteLog E.name#" ("#ID#") logged on!"}
 	       end
 
+	       %% Initialize the client
+	       {C startgui(settings:E.settings) "Could not start client"}
+	       	       
 	       {C getInfo(info:{DB get(id:ID entry:$)}) "Send personal info to client failed"}
 
 	       %% Send stored messages to client
