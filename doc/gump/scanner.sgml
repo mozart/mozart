@@ -1,0 +1,588 @@
+<CHAPTER ID="chapter.scanner">
+  <Title>The Gump Scanner Generator
+<P>
+    This chapter describes the Gump Scanner Generator.  Its input consists
+    of an Oz source with embedded scanner specifications; the output realizes
+    each scanner as an Oz class.
+<PARA CLASS=apropos><TITLE/Definitions/
+    A <Def>scanner</Def> is a program that performs lexical analysis,
+    which means that it transforms a stream of characters into a stream of
+    <Def>tokens</Def>.  The text is read from left to right.  During this
+    process, sequences of characters are grouped into <Def>lexemes</Def>
+    according to user-defined rules, specified by so-called <Def>regular
+    expressions</Def> and associated <Def>semantic actions</Def>.  An
+    action computes tokens from a lexeme, each consisting of a <Def>token
+    class</Def> and an optional <Def>token value</Def>, which are appended
+    to the token stream.  The process is iterated until the end of the
+    character stream is reached.
+<P>
+    This chapter first describes the basic principles of the Gump Scanner
+    Generator by means of an example in <PTR TO="section.scanner.example"
+    CLASS="Section">.  A more detailed reference is then given
+    in <PTR TO="section.scanner.reference" CLASS="Section">.
+<SECTION ID="section.scanner.example">
+    <Title>Example
+<P>
+      As a running example we will specify, throughout the manual, a front-end
+      for a compiler or an interpreter for a small functional language
+      <Code>Lambda</Code>.  In this section we will define the scanner for
+      this language, in <PTR TO="section.parser.example" CLASS="Section">
+      we build a parser on top of this scanner.
+<SubSection><Title>Writing a Scanner Specification
+<P>
+        <PTR TO="program.scanner.example" CLASS="Program"> shows
+        the specification of the sample scanner we will consider in this
+        section.  In the following we will examine this example line by line.
+<FLOAT CLASS="program here" ID="program.scanner.example">
+<TITLE>The <Code proglang="oz">LambdaScanner</Code>
+scanner specification.</TITLE>
+<P><CODE.EXTERN DISPLAY proglang=gump
+        TO="LambdaScanner.ozg">
+</FLOAT>
+<PARA CLASS=apropos><TITLE/Class Descriptors/
+        At the first glance the scanner specification closely resembles a
+        class definition with some extra elements, introduced by the keyword
+        <Code proglang="gump">scanner</Code> instead of <Code proglang="gump"
+        >class</Code>.  This is intentional, since it will ultimately be
+        replaced by a class.  This is why all descriptors allowed in a
+        class definition are also allowed at the beginning of a scanner
+        specification.  Consider the <Code proglang="gump">from</Code>, <Code
+        proglang="gump">attr</Code> and <Code proglang="gump">meth</Code>
+        constructs
+        used in lines 2 to&nbsp;10.
+<PARA CLASS=apropos><TITLE/Lexical Abbreviations/
+        The scanner-specific declarations begin at line&nbsp;12.  Two kinds
+        of definition can be introduced by the keyword <Code proglang="gump"
+        >lex</Code>: the definition of a <Def>lexical abbreviation</Def>,
+        as seen in lines 12 to&nbsp;15, and the <Def>lexical rules</Def>
+        found from line&nbsp;17 to the end of the specification.  A lexical
+        abbreviation <Code proglang="gump">lex I = &lt;R&gt; end</Code> simply
+        associates an identifier&nbsp;<Code proglang="gump">I</Code> with a
+        given regular expression&nbsp;<Code proglang="gump">R</Code>.  The
+        construct&nbsp;<Code proglang="gump">I</Code> in other regular
+        expressions
+        is then expanded to&nbsp;<Code proglang="gump">(R)</Code>.
+<P>
+        Note that regular expressions use the same syntax as regular
+        expressions in <REF TO="paxson95" CLASS=bib><Cite>flex</Cite
+        ></REF>, with a few exceptions (detailed in
+        <PTR TO="section.scanner.syntax" CLASS="Section">).
+        Furthermore, we must either enclose them in angle brackets or give
+        them as Oz strings.  (This proves useful when the angle-bracketed
+        version confuses the Emacs fontification mode, but is a bit harder
+        to read, since more characters must be escaped.)
+<P>
+        The example defines four lexical abbreviations: <Code proglang="gump"
+        >digit</Code> stands for a decimal digit, <Code proglang="gump"
+        >letter</Code> for an uppercase or lowercase letter; <Code
+        proglang="gump">id</Code> defines the syntax of identifiers to consist
+        of a letter, followed by an arbitrary sequence of letters and digits;
+        and finally, <Code proglang="gump">int</Code> defines the syntax of
+        positive decimal integers as a nonempty sequence of digits.
+<PARA CLASS=apropos><TITLE/Lexical Rules/
+        Lexical rules of the form
+        <Code proglang="gump">lex &lt;R&gt; S end</Code>
+        are more interesting, since the set of these is the actual scanner
+        specification.  Upon a match of a prefix of the input character stream
+        with the regular expression&nbsp;<Code proglang="gump">R</Code>, the
+        statement&nbsp;<Code proglang="gump">S</Code> is executed as a method
+        body
+        (&IE;, the object state may be accessed and modified).
+        Two methods are provided by the mixin class <Code proglang="gump"
+        >GumpScanner</Code> (inherited from in line&nbsp;2) to append tokens
+        to the token stream: <Code proglang="gump">putToken1</Code>, which
+        appends
+        a token of a given class without a value (<Code
+        proglang="gump">unit</Code
+        > being used instead), and <Code proglang="gump">putToken</Code>, which
+        allows a specific token value to be provided.  Token classes may be
+        represented by arbitrary Oz values, but the parser generator in
+        <PTR TO="chapter.parser" CLASS="Chapter"> expects them
+        to be atoms.  In lines 18 and&nbsp;21 you can see how constants are
+        used as token classes.  In line&nbsp;33 the token class is computed
+        from the lexeme.
+<PARA CLASS=apropos><TITLE/Accessing the Lexeme/
+        The lexeme itself may be accessed in several ways.  The method
+        <Code proglang="gump">getAtom</Code> returns the lexeme as an atom,
+        which is the representation for identifier token values chosen in
+        line&nbsp;25.  The method <Code proglang="gump">getString</Code>
+        returns
+        the lexeme as a string, such as in line&nbsp;28, where it is
+        subsequently converted to an integer.
+<P>
+        The remaining lexical rules are easily explained.  Lines 36
+        and&nbsp;37 respectively describe that whitespace and comments are
+        to be ignored.  This stems from the fact that neither
+        <Code proglang="gump"
+        >putToken1</Code> nor <Code proglang="gump">putToken</Code> is
+        called.  (Note that an action can also invoke them several times
+        to append multiple tokens to the token stream, just as it may
+        chose not to invoke them at all to simply ignore the lexeme or only
+        produce side effects.)  The rule in line&nbsp;38 ignores any matched
+        newlines, but updates the line counter attribute <Code proglang="gump"
+        >LineNumber</Code> as it does so.  The rule in line&nbsp;41 reports
+        any remaining unmatched characters in the input as lexical errors and
+        returns the token <Code proglang="gump">'error'</Code> which the parser
+        can recognize as an erroneous token.
+<PARA CLASS=apropos><TITLE/End-of-File Rules/
+        The final rule, in line&nbsp;46, has the special syntax <Code
+        proglang="gump">&lt;&lt;EOF&gt;&gt;</Code> (it might also have been
+        written as <Code proglang="gump">"&lt;&lt;EOF&gt;&gt;"</Code>) and
+        only matches the end of the character stream.  It returns the token
+        <Code proglang="gump">'EOF'</Code> which can be recognized by the
+        parser
+        as the end of input.  Note that the action might just as well open
+        another file to read from.
+<P>
+        More information about acceptable sets of regular expressions in
+        scanner specifications, conflict resolution and grouping into
+        lexical modes is given in <PTR TO="section.scanner.syntax"
+        CLASS="Section">.
+    <SubSection><Title>Invoking Gump
+      <P>
+        Now that we have finished writing our specification, we want to
+        translate it into an Oz class definition that implements our scanner.
+        For this, we issue the compiler directive
+        <Code Display proglang=gump>\switch +gump</Code>
+        whereupon the compiler will accept Gump specifications.
+<PARA CLASS=apropos><TITLE/Running Gump/
+        Save the above specification in a file <Code>LambdaScanner.ozg</Code>.
+        The extension <Code>.ozg</Code> indicates that this file contains Oz
+        code with additional Gump definitions, so that Emacs will fontify
+        Gump definitions correctly.  Feeding <Code Display proglang=gump
+        >\insert LambdaScanner.ozg</Code> will process this file.
+        Switch to the Compiler buffer (via <KBD>C-c C-c</KBD>) to watch
+        Gump's status messages and any errors occurring during the
+        translation.  Some messages may also appear in the Emulator buffer
+        (accessible via <KBD>C-c C-e</KBD>).
+<PARA CLASS=apropos><TITLE/Output Files/
+        When the translation is finished, you will notice several new files
+        in the current working directory.  These will be named after your
+        <Code proglang="gump">scanner</Code> specification.  Suppose your
+        scanner
+        was called&nbsp;<Code proglang="gump">S</Code>, then you will find
+        files
+        <FILE/S.l/, <FILE/S.C/, <FILE/S.o/ and <FILE/S.dl/.  The first three
+        are intermediate results (respectively
+        the input file for <Cite>flex</Cite>, the <Cite>flex</Cite>-generated
+        C++&nbsp;file and the object code produced by the C++&nbsp;compiler)
+        and the last one is the resulting dynamic library used by the generated
+        scanner, loaded via <Code proglang="gump">Foreign.load</Code>.
+    <SubSection><Title>Using the Generated Scanner
+      <P>
+        <PTR TO="program.scanner.test" CLASS="Program"> shows a
+        sample program running our generated scanner.
+<FLOAT CLASS="program here" ID="program.scanner.test">
+<TITLE>A program making use of the generated scanner.</TITLE>
+<P><CODE.EXTERN proglang="gump" TO="TestScanner.ozg">
+</FLOAT>
+      <P>
+        The generated <Code proglang="gump">LambdaScanner</Code> class is
+        instantiated as <Code proglang="gump">MyScanner</Code>.  We have to
+        call the method <Code proglang="gump">init()</Code> first to initialize
+        the internal structures of the <Code
+        proglang="gump">GumpScanner</Code>.
+<PARA CLASS=apropos><TITLE/Requesting Tokens/
+        The procedure <Code proglang="gump">GetTokens</Code> repeatedly invokes
+        the <Code proglang="gump">GumpScanner</Code> method
+        <Code Display proglang="gump">getToken(?X ?Y)</Code>
+        which returns the next token's token class in&nbsp;<Code
+        proglang="gump"
+        >X</Code> and token value in&nbsp;<Code proglang="gump">Y</Code> and
+        removes it from the token stream.  <Code
+        proglang="gump">GetTokens</Code>
+        exits when the end of the token stream is reached, which is recognized
+        by the token class <Code proglang="gump">'EOF'</Code>.
+<PARA CLASS=apropos><TITLE/Providing Inputs/
+        To actually start scanning we have to provide an input character
+        stream.  This is done via one of the methods
+        <Code Display proglang="gump">scanFile(+FileName)</Code>
+        or
+        <Code Display proglang="gump">scanVirtualString(+V)</Code>
+        Each of these pushes the currently used buffer (if any) upon an
+        internal stack of buffers and builds a new buffer from the given
+        source.  Each time the end of a buffer is reached, the <Code
+        proglang="gump">&lt;&lt;EOF&gt;&gt;</Code> rule is matched.  This may
+        pop a buffer and continue scanning the next-outer buffer where it
+        left off, using the <Code proglang="gump">closeBuffer</Code> method
+        described in <PTR TO="section.scanner.class" CLASS="Section">.
+      <P>
+        When a scanner is not used anymore, it should be sent the message
+        <Code Display proglang="gump">close()</Code>
+        so that it can close any open files and release any allocated buffers.
+        (This is also necessary when scanning virtual strings due to the
+        underlying implementation in&nbsp;C.)
+      <P>
+        The following is a sample input for the scanner.  The above example
+        expects this to be placed in the file <Code>Lambda.in</Code> in the
+        current directory:
+<CODE.EXTERN DISPLAY PROGLANG="gump" TO="Lambda.in">
+  <Section ID="section.scanner.reference">
+    <Title>Reference
+    <P>
+      This section is intended to serve as a reference for the user of the
+      Gump Scanner Generator.  It details the syntax of the embedded scanner
+      specification language in <PTR TO="section.scanner.syntax"
+      CLASS="Section">, which options are supported
+      by the Generator and how they are specified in <PTR
+      TO="section.scanner.params" CLASS="Section"> and
+      finally the runtime part of the Scanner Generator, the mixin class
+      <Code proglang="gump">GumpScanner</Code>, in <PTR
+      TO="section.scanner.class" CLASS="Section">.
+    <SubSection ID="section.scanner.syntax">
+      <Title>Syntax of the Scanner Specification Language
+      <P>
+        The notation used here for specifying the syntax of the
+        specification language is a variant of BNF and is defined in <PTR
+        TO="appendix.notation" CLASS="Appendix">.
+      <P>
+        A scanner specification is allowed anywhere as an Oz statement.
+      <Grammar.Rule>?={phrase}
+        <Grammar.Alt type="add">?={scanner specification}</Grammar.Alt>
+      </Grammar.Rule>
+      <P>
+        It is similar to a class definition, except that it is introduced
+        by the keyword <Code proglang="gump">scanner</Code>, must be named by a
+        variable (and not an arbitrary term), since this is used for assigning
+        file names, and allows for additional descriptors after the usual
+        class descriptors.
+      <Grammar.Rule>?={scanner specification}
+        <Grammar.Alt type="def"
+          ><Code proglang="gump">scanner</Code>
+          ?={variable}</Grammar.Alt>
+        <Grammar.Alt>{ ?={class descriptor} }</Grammar.Alt>
+        <Grammar.Alt>{ ?={method} }</Grammar.Alt>
+        <Grammar.Alt>{ ?={scanner descriptor} }+</Grammar.Alt>
+        <Grammar.Alt><Code proglang="gump">end</Code></Grammar.Alt>
+      </Grammar.Rule>
+      <P>
+        A <Def>lexical abbreviation</Def> associates an identifier with a
+        regular expression, which can then be referenced in subsequent lexical
+        abbreviations or any lexical rules by enclosing the identifier in
+        curly brackets.  The regular expression is additionally parenthesized
+        when it is expanded.
+      <Grammar.Rule>?={lexical abbreviation}
+        <Grammar.Alt type="def"
+          ><Code proglang="gump">lex</Code> ?={atom} "=" ?={regex}
+          <Code proglang="gump">end</Code></Grammar.Alt>
+        <Grammar.Alt type="or"
+          ><Code proglang="gump">lex</Code> ?={variable} "=" ?={regex}
+          <Code proglang="gump">end</Code></Grammar.Alt>
+      <P>
+        The definition of a <Def>lexical rule</Def> is similar to the
+        definition of a method.  However, its head consists of a regular
+        expression; when this is matched, the body of the lexical rule is
+        executed (as a method).
+      <Grammar.Rule>?={lexical rule}
+        <Grammar.Alt type="def"
+        ><Code proglang="gump">lex</Code> ?={regex} [ ?={phrase}
+        <Code proglang="gump">in</Code> ] ?={phrase} <Code proglang="gump"
+        >end</Code></Grammar.Alt>
+      <P>
+        Regular expressions may be annotated with <Def>lexical modes</Def>.
+        Each lexical mode constitutes an independent sub-scanner:  At any time
+        a certain mode is active; in this mode only the regular expressions
+        annotated by it can be matched.  All lexical rules defined within
+        the scope of a lexical mode are annotated with this lexical mode.
+        A lexical mode may <Def>inherit</Def> from other lexical modes; all
+        regular expressions in these modes are then annotated with the
+        inheriting lexical mode as well.  Lexical modes inherit from all
+        lexical modes they are nested in.  Lexical rules written at top-level
+        are annotated with the implicitly declared mode <Code proglang="gump"
+        >INITIAL</Code>.
+      <Grammar.Rule>?={lexical mode}
+        <Grammar.Alt type="def"
+          ><Code proglang="gump">mode</Code> ?={variable} [ <Code
+          proglang="gump">from</Code> { ?={variable} }+ ]
+        { ?={mode descriptor} } <Code proglang="gump">end</Code></Grammar.Alt>
+      <Grammar.Rule>?={mode descriptor}
+        <Grammar.Alt type="def">?={lexical rule}</Grammar.Alt>
+        <Grammar.Alt type="or">?={lexical mode}</Grammar.Alt>
+      <SubSubSection><Title>Syntax of Regular Expressions
+        <P>
+          Regular expressions ?={regex} correspond to the regular
+          expressions used in <REF TO="paxson95" CLASS=bib><Cite>flex</Cite
+          ></Ref> Version&nbsp;2.5.2 with a few exceptions:
+          <LIST>
+            <Item>
+                Gump regular expressions are either enclosed in angle brackets
+                or given as Oz strings.
+            <Item>
+                The angle-bracket annotation with lexical modes is not
+                supported by Gump; use scopes of lexical modes instead.  Note
+                that several distinct lexical mode definitions may occur for
+                the same lexical mode name as long as no inheritance cycles are
+                created.
+          </LIST>
+        <P>
+          Due to the underlying use of <Cite>flex</Cite>, the names of
+          lexical abbreviations are restricted to the syntax allowed in
+          <Cite>flex</Cite> name definitions.
+      <SubSubSection><Title>Ambiguities and Errors in the Rule Set
+        <P>
+          Tokenization is performed by a left-to-right scan of the input
+          character stream.  If several rules match a prefix of the input,
+          then the rule matching the longest prefix is preferred.  If
+          several rules match the same (longest) prefix of the input,
+          then two rules may be applied to disambiguate the match (see
+          <PTR TO="section.scanner.params" CLASS="Section">
+          on how to select a rule):
+          <LIST>
+            <ENTRY>First-fit.
+            <Item>
+              <P>
+                The rule notated first in the scanner specification is
+                preferred.  In this case, every conflict can be uniquely
+                resolved.  Two errors in the rule set are possible: holes
+                and completely covered rules (see below).
+            <ENTRY>Best-fit.
+            <Item>
+              <P>
+                Suppose two conflicting rules are rule&nbsp;<Math>r_1</Math>
+                and rule&nbsp;<Math>r_2</Math>, which are annotated by sets
+                of lexical modes <Math>L_1</Math> and&nbsp;<Math>L_2</Math>
+                respectively.  Then <Math>r_1</Math> is preferred
+                over&nbsp;<Math>r_2</Math> if and only if the following
+                conditions hold:
+                <Math Display>
+                  S_1 \subseteq S_2 \; \wedge \; L(r_1) \subseteq L(r_2)
+                </Math>
+                where <Math>L(r)</Math> is the language generated by a regular
+                expression&nbsp;<Math>r</Math>, that is, the set of strings
+                that match&nbsp;<Math>r</Math>.  Intuitively, this rule
+                means that <Math>r_1</Math> is <Em>more specialized</Em>
+                than&nbsp;<Math>r_2</Math>.  Additionally to the errors
+                possible in the rule set in the first-fit case, here the
+                situation may arise that the rule set is not well-ordered
+                &wrt;. the <Cite>more specialized
+                than</Cite> relation.
+          </LIST>
+        <P>
+          The following errors in the rule set may occur:
+          <LIST>
+            <ENTRY>Holes in the rule set.
+            <Item>
+              <P>
+                For some input (in some mode), no true prefix is matched by
+                any rule.
+            <ENTRY>Completely covered rules.
+            <Item>
+              <P>
+                A rule&nbsp;<Math>r</Math> is never matched because for every
+                prefix in&nbsp;<Math>L(r)</Math> exists another rule&nbsp;<Math
+                >s</Math> which is preferred over&nbsp;<Math>r</Math>.
+            <ENTRY>Non well-orderedness.
+            <Item>
+              <P>
+                Two rules&nbsp;<Math>r_1</Math> and&nbsp;<Math>r_2</Math>
+                are in conflict in the best-fit case, but neither is
+                <Math>r_1</Math> more specialized than&nbsp;<Math>r_2</Math>
+                nor the other way round, and no rule or set of rules exists
+                that covers the intersection <Math>L(r_1) \cap L(r_2)</Math>.
+          </LIST>
+    <SubSection ID="section.scanner.params">
+      <Title>Parameters to Scanner Generation
+      <P>
+        The Gump Scanner Generator supports several configuration parameters,
+        which may be set on a per-scanner basis via the use of compiler
+        directives.
+      <P>
+        Due to the implementation of scanners in&nbsp;C, a unique prefix is
+        required for each scanner to avoid symbol conflicts when several
+        scanners reside at the same time in the Oz system.  The following
+        directive allows this prefix to be changed (the default <Code
+        proglang="gump">zy</Code> is all right if only a single scanner is
+        used at any time):
+        <Code Display proglang="gump">\gumpscannerprefix &lt;atom&gt;</Code>
+      <P>
+        <PTR TO="table.scanner.switches" CLASS="Table">
+        summarizes some compiler switches that control the Gump Scanner
+        Generator
+      <TABLE ID="table.scanner.switches">
+        <TITLE/Compiler switches for the Gump Scanner Generator./
+        <TR>
+          <TH>Switch
+          <TH>Effect
+        <TR>
+          <TD><Code proglang="gump">gumpscannerbestfit</Code>
+          <TD>Use best-fit instead of first-fit disambiguating
+        <TR>
+          <TD><Code proglang="gump">gumpscannercaseless</Code>
+          <TD>Generate a case-insensitive scanner
+        <TR>
+          <TD><Code proglang="gump">gumpscannernowarn</Code>
+          <TD>Suppress warnings by <Cite>flex</Cite>
+       </TABLE>
+    <SubSection ID="section.scanner.class">
+      <Title>The Mixin Class `GumpScanner'
+      <P>
+        The component <Code>GumpScanner</Code> defines the runtime support
+        needed by Gump-generated scanners.  All operations and data are
+        encapsulated in the mixin class <Code
+        proglang="gump">GumpScanner</Code>
+        that scanners have to inherit from in order to be executable.
+      <P>
+        The mixin class expects the following features and methods to be
+        defined by derivate classes.  (It is a good idea not to define any
+        class members whose name begins with <Code>lex</Code>&Ellipsis;
+        since these may be used for internals of the Scanner Generator.)
+        <LIST>
+          <ENTRY><Code proglang="gump">feat lexer</Code>
+          <Item>
+            <P>
+              This feature must contain the scanner-specific loaded foreign
+              functions, which includes the generated scanner tables.
+          <ENTRY><Code proglang="gump">meth lexExecuteAction(+I)</Code>
+          <Item>
+            <P>
+              This method is called each time a regular expression is matched.
+              Regular expressions are assigned unique integer IDs; the
+              parameter to this method indicates which rule's associated
+              action is to be run.
+        </LIST>
+        The <Code proglang="gump">GumpScanner</Code> class defines some user
+        functionality that is to be used either by users of the generated
+        scanner or by the semantic actions in the scanner itself.
+        <LIST>
+          <ENTRY><Code proglang="gump">meth init()</Code>
+          <Item>
+            <P>
+              Initializes the <Code proglang="gump">GumpScanner</Code> internal
+              structures.  This method must be called before any other.
+          <ENTRY><Code proglang="gump">meth setMode(+I)</Code>
+          <Item>
+            <P>
+              The operation mode of the scanner is set to the lexical
+              mode&nbsp;<Code proglang="gump">I</Code>.  Lexical modes are
+              represented internally as integers.  Since modes are identified
+              by variables, the class generation phase wraps a <Code
+              proglang="gump">local</Code> &Ellipsis; <Code
+              proglang="gump">end</Code>
+              around the class equating the mode variables to the assigned
+              unique integers.
+          <ENTRY><Code proglang="gump">meth currentMode(?I)</Code>
+          <Item>
+            <P>
+              This returns the integer identifying the lexical mode the scanner
+              currently operates in.
+          <ENTRY><Code proglang="gump">meth getAtom(?A)</Code>
+          <Item>
+            <P>
+              This method is used to access the lexeme last matched.  It is
+              returned as an atom in the variable&nbsp;<Code proglang="gump"
+              >A</Code>.  Note that if the lexeme contains a NUL character
+              (ISO&nbsp;0) then only the text up to the first NUL but
+              excluding it is returned.
+          <ENTRY><Code proglang="gump">meth getString(?S)</Code>
+          <Item>
+            <P>
+              This method returns the lexeme as a string in the
+              variable&nbsp;<Code proglang="gump">S</Code>.  The restrictions
+              concerning <Code proglang="gump">getAtom</Code> do not apply for
+              <Code proglang="gump">getString</Code>.
+          <ENTRY><Code proglang="gump">meth getLength(?I)</Code>
+          <Item>
+            <P>
+              This method returns the length of the lexeme (number of
+              characters matched).
+          <ENTRY><Code proglang="gump">meth putToken(+X Y)</Code>
+          <Item>
+            <P>
+              This method may be used to append a token with token
+              class&nbsp;<Code proglang="gump">X</Code> and value&nbsp;<Code
+              proglang="gump">Y</Code> to the token stream.  (Actually, the
+              token class may be any Oz value, but atoms and the integers
+              between 0 and&nbsp;255 are the only representations understood
+              by Gump-generated parsers.)
+          <ENTRY><Code proglang="gump">meth putToken1(+X)</Code>
+          <Item>
+            <P>
+              This method may be used to append a token with token
+              class&nbsp;<Code proglang="gump">X</Code> and value
+              <Code proglang="Gump"
+              >unit</Code> to the token stream.
+          <ENTRY><Code proglang="gump">meth getToken(?X Y)</Code>
+          <Item>
+            <P>
+              The next token is removed from the token stream and returned.
+              The token class is returned in&nbsp;<Code
+              proglang="gump">X</Code>
+              and its value in&nbsp;<Code proglang="gump">Y</Code>.
+          <ENTRY><Code proglang="gump">meth input(?C)</Code>
+          <Item>
+            <P>
+              The next (unmatched) character is removed from the character
+              stream and returned in&nbsp;<Code proglang="gump">C</Code>.
+          <ENTRY><Code proglang="gump">meth unput(+C)</Code>
+          <Item>
+            <P>
+              A character&nbsp;<Code proglang="gump">C</Code> is prepended
+              to the
+              input character stream.  This is next used by matching operations
+              or returned by <Code proglang="gump">input</Code>.
+          <ENTRY><Code proglang="gump">meth scanFile(+V)</Code>
+          <Item>
+            <P>
+              This method causes the currently scanned buffer (if any) to be
+              pushed on a stack of active buffers.  A new buffer is created
+              from the file with name&nbsp;<Code proglang="gump">V</Code> and
+              scanned.  If the file does not exist, the error exception <Code
+              proglang="gump">gump(fileNotFound V)</Code> with the filename
+              in&nbsp;<Code proglang="gump">V</Code> is raised; the default
+              treatment is the invocation of a custom error printer.
+          <ENTRY><Code proglang="gump">meth scanVirtualString(+V)</Code>
+          <Item>
+            <P>
+              Like <Code proglang="gump">scanFile</Code>, but scans a virtual
+              string&nbsp;<Code proglang="gump">V</Code>.  If&nbsp;<Code
+              proglang="gump">V</Code> contains NUL characters (ISO&nbsp;0)
+              then the virtual string is only scanned up to and excluding
+              the first NUL character.
+          <ENTRY><Code proglang="gump">meth setInteractive(+B)</Code>
+          <Item>
+            <P>
+              Each buffer may be either interactive or non-interactive.  An
+              interactive buffer only reads as many characters as are needed
+              to be considered to decide about a match; a non-interactive
+              buffer may read ahead.  This method allows the topmost buffer
+              on the stack to be set to interactive (<Code
+              proglang="gump">B</Code>
+              is <Code proglang="gump">true</Code>) or non-interactive (<Code
+              proglang="gump">B</Code> is <Code proglang="gump">false</Code>).
+              New buffers are always created as non-interactive buffers.
+          <ENTRY><Code proglang="gump">meth getInteractive(?B)</Code>
+          <Item>
+            <P>
+              Whether the topmost buffer on the buffer stack is interactive
+              is returned.
+          <ENTRY><Code proglang="gump">meth setBOL(+B)</Code>
+          <Item>
+            <P>
+              The beginning-of-line (BOL) flag indicates whether the
+              beginning-of-line regular expression <Code>^</Code> may be
+              matched.  This flag is true at the beginning of a buffer or
+              after a newline has been scanned.  The flag may be modified
+              at will by this method.
+          <ENTRY><Code proglang="gump">meth getBOL(?B)</Code>
+          <Item>
+            <P>
+              Returns the current state of the beginning-of-line flag.
+          <ENTRY><Code proglang="gump">meth closeBuffer()</Code>
+          <Item>
+            <P>
+              Closes the topmost buffer on the buffer stack and resumes
+              scanning from the buffer on the new stack top (if any).  If the
+              buffer stack is or becomes empty through this operation, only
+              tokens with class <Code proglang="gump">'EOF'</Code> and value
+              <Code proglang="gump">unit</Code> are returned subsequently
+              (until
+              a new buffer is created).
+          <ENTRY><Code proglang="gump">meth close()</Code>
+          <Item>
+            <P>
+              Closes all buffers on the buffer stack.  Before calling any
+              other methods, you should call
+              <Code proglang="gump">init()</Code>
+              again.
+        </LIST>
+</Chapter>
