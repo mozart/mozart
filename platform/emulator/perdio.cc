@@ -193,10 +193,10 @@ void domarshallTerm(Site* sd,OZ_Term t, ByteStream *bs, MarshallInfo *mi);
 void unmarshallTerm(ByteStream*,OZ_Term*);
 void marshallCode(Site*,ProgramCounter, ByteStream *, MarshallInfo *mi);
 OZ_Term unmarshallTerm(ByteStream *bs);
-inline void marshallNumber(unsigned int,ByteStream *);
+void marshallNumber(unsigned int,ByteStream *);
+int unmarshallNumber(ByteStream *bs);
 inline void marshallMySite(ByteStream* );
 inline void marshallCredit(Credit,ByteStream *);
-inline int unmarshallNumber(ByteStream *bs);
 
 void sendSurrender(BorrowEntry *be,OZ_Term val);
 void sendRedirect(Site* sd,int OTI,TaggedRef val);
@@ -2626,7 +2626,6 @@ inline void debtSendSimple(ByteStream *bs,Site *toS,int ID){
 
 #define SBit (1<<7)
 
-inline
 void marshallNumber(unsigned int i, ByteStream *bs)
 {
   while(i >= SBit) {
@@ -2638,7 +2637,6 @@ void marshallNumber(unsigned int i, ByteStream *bs)
 
 
 
-inline
 int unmarshallNumber(ByteStream *bs)
 {
   unsigned int ret = 0, shft = 0;
