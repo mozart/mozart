@@ -46,7 +46,7 @@
   answer is that, compared to other existing languages, it is magic! It
   provides the programmers and system developers with a wide range of
   programming abstractions to enable them to develop complex
-  applications quickly and robustly. Oz tries to merge several
+  applications quickly and robustly. Oz merges several
   directions of programming language designs into a single coherent
   one. Yet, Oz is a simple and coherent design. Most of us know the
   benefits of the various programming paradigms whether object-oriented,
