@@ -11,7 +11,7 @@ trap "rm -f $temp" 0 1 15
 echo "ozemacs/bin" > $temp
 
 #set -x
-#tar -X $temp -cvf - Oz/ozemacs | compress > $pwd/ozemacs-common.tar.Z
+tar -X $temp -cvf - Oz/ozemacs | compress > $pwd/ozemacs-common.tar.Z
 
 
 for plat in sunos-sparc--sparc-sun-sunos4.1.3 \
