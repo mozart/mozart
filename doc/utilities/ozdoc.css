@@ -100,3 +100,9 @@ SPAN.chunktitle {
 
 SPAN.chunktitle A:link    { color: slateblue; }
 SPAN.chunktitle A:visited { color: slateblue; }
+
+SPAN.entrycategory {
+  color:red;
+  position:absolute;
+  left:50pt;
+}
