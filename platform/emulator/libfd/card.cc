@@ -150,7 +150,7 @@ OZ_BI_define(fdp_sumCNR, 5, 0)
   // wait for linearity
   OZ_EXPECT(pe, 1, expectVectorLinearVector);
 
-  if (!strcmp(SUM_OP_EQ, op) || !strcmp(SUM_OP_NEQ, op)) {
+  if (strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorVectorIntVarAny);
     OZ_EXPECT(pe, 3, expectIntVarAny);
   } else {

@@ -55,6 +55,9 @@ failure:
 
 //-----------------------------------------------------------------------------
 
+//#define TMUELLER
+
+#ifdef TMUELLER
 OZ_BI_define(fdp_lessEqOff, 3, 0)
 {
   OZ_Expect pe;
@@ -63,9 +66,6 @@ OZ_BI_define(fdp_lessEqOff, 3, 0)
 }
 OZ_BI_end
 
-#define TMUELLER
-
-#ifdef TMUELLER
 OZ_Return LessEqOffPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
@@ -78,6 +78,19 @@ OZ_Return LessEqOffPropagator::propagate(void)
   return filter_lessEqOffset(s, x, y, c)();
 }
 #else
+OZ_BI_define(fdp_lessEqOff, 3, 0)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_INT);
+  //
+  OZ_Expect pe;
+  OZ_EXPECT(pe, 0, expectIntVarMinMax);
+  OZ_EXPECT(pe, 1, expectIntVarMinMax);
+  OZ_EXPECT(pe, 2, expectInt);
+  //
+  return pe.impose(new LessEqOffset(OZ_in(0), OZ_in(1), OZ_intToC(OZ_in(2))));
+}
+OZ_BI_end
+
 OZ_Return LessEqOffPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
