@@ -432,7 +432,7 @@ define(M4INSTRTWOREGS,``''
 		 DEREF(term,termPtr,tag);
 
 		 if (isNotCVar(tag)) {
-		   e->bind(termPtr, term, &i, NOFLATGUARD());
+		   e->bindToNonvar(termPtr, term, i, NOFLATGUARD());
 		   DISPATCH(3);
 		 }
 		 
