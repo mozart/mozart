@@ -33,7 +33,7 @@ SRCDIR= @srcdir@
 include Makefile.vars
 
 MODULE_NAMES =\
-        Wif FDP Schedule FSP Parser \
+        Wif Schedule FDP FSP Parser \
         CompilerSupport Browser Debug
 
 STATIC_MODULELIBS=      -L. ${MODULE_NAMES:%=-l%}
@@ -338,7 +338,7 @@ compiler.o: modCompilerSupport-if.cc
 boot-manager.o: $(MODINTERS)
 
 %-if.cc: %.spec
-        perl $(SRCDIR)/bidecl.perl -file $< -interface > $@
+        $(PERL) $(SRCDIR)/bidecl.perl -file $< -interface > $@
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
@@ -427,6 +427,12 @@ check-all: oz.emulator.bin
 ############################################################################
 
 include Makefile.rules
+
+atoms.cc: atoms.perl
+        $(PERL) $< -body > $@
+
+atoms.hh: atoms.perl
+        $(PERL) $< -header > $@
 
 # should be after make in subdirs (see Makefiles.rules)
 

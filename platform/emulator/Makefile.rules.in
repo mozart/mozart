@@ -41,13 +41,6 @@ clean::
 .m4hh.hh:
         $(M4) $(M4_S) $(M4_D) $< > $@ || (rm -f $@; exit 1)
 
-.perl.cc:
-        perl $< -body > $@
-
-.perl.hh:
-        perl $< -header > $@
-
-
 @oz_tmphack_target@:
         tmp=/tmp/ozobj$$$$.o; \
         trap "rm -f $$tmp; exit 1" 1 2 15; \
