@@ -104,7 +104,7 @@ $(PRINTDOCDIR):
 
 clean::
 	-rm -rf $(WHAT)-html
-	-rm -rf $(WHAT).{xml,tex,aux,dvi,ps,toc,log,idx,bbl,blg,ind,ilg,stamp,pics}
+	-rm -rf $(WHAT).{xml,tex,aux,dvi,ps,toc,log,idx,bbl,blg,ind,ilg,stamp,pics,hhc}
 	-rm -rf $(WHAT)-*.xml
 
 veryclean: clean
