@@ -331,12 +331,15 @@ class PendThread{
 public:
   PendThread *next;
   Thread *thread;
+  TaggedRef controlvar;
   TaggedRef nw;
   TaggedRef old;
   ExKind    exKind;
-  PendThread(Thread *th,PendThread *pt):next(pt), thread(th),old(0),nw(0), exKind(NOEX) {}
-  PendThread(Thread *th,PendThread *pt,TaggedRef o, TaggedRef n, ExKind e)
-    :next(pt), thread(th),old(o),nw(n), exKind(e) {}
+  PendThread(Thread *th,PendThread *pt):
+    next(pt), thread(th),old(0),nw(0), controlvar(0), exKind(NOEX) {}
+  PendThread(Thread *th,PendThread *pt,TaggedRef o, TaggedRef n, TaggedRef cv,
+	     ExKind e)
+    :next(pt), thread(th),old(o),nw(n), exKind(e), controlvar(cv) {}
   USEFREELISTMEMORY;
   void dispose(){freeListDispose(this,sizeof(PendThread));}
 };
@@ -2268,7 +2271,7 @@ inline Thread* pendThreadResumeFirst(PendThread **pt){
   Thread *t=tmp->thread;
   Assert(isRealThread(t));
   PD((THREAD_D,"start thread ResumeFirst %x",t));
-  oz_resumeFromNet(t);
+  ControlVarResume(tmp->controlvar);
   *pt=tmp->next;
   tmp->dispose();
   return t;}
@@ -2281,18 +2284,22 @@ inline void pendThreadRemoveFirst(PendThread **pt){
   tmp->dispose();}
   
 inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o, 
-			       TaggedRef n, ExKind e){
-  OZ_Return ret = PROCEED;
-  if(isRealThread(t)){
-    oz_suspendOnNet(t);
-    ret = BI_PREEMPT;
-    PD((THREAD_D,"stop thread addToEnd %x",t));}
+				    TaggedRef n, ExKind e, Board *home)
+{
   while(*pt!=NULL){pt= &((*pt)->next);}
-  *pt=new PendThread(t,NULL, o, n, e);
-  return ret;}
 
-inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t){
-  return pendThreadAddToEnd(pt,t,0,0,NOEX);}
+  if(isRealThread(t)) {
+    ControlVarNew(controlvar,home);
+    *pt=new PendThread(t,NULL,o,n,controlvar,e);
+    PD((THREAD_D,"stop thread addToEnd %x",t));
+    SuspendOnControlVar;
+  }
+  *pt=new PendThread(t,NULL,o,n,makeTaggedNULL(),e);
+  return PROCEED;
+}
+
+inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, Board *home){
+  return pendThreadAddToEnd(pt,t,0,0,NOEX,home);}
 
 inline Bool basicThreadIsPending(PendThread *pt,Thread*t){
   while(pt!=NULL){
@@ -2378,25 +2385,25 @@ void Tertiary::gcManager(){
 void gcPendThread(PendThread **pt){
   PendThread *tmp;
   while(*pt!=NULL){
-    if(((*pt)->thread == NULL) || ((*pt)->thread== (Thread*) 0x1)){
-      tmp=new PendThread((*pt)->thread,(*pt)->next);}
-    else{
-      if((*pt)->exKind!=REMOTEACCESS){
-	tmp=new PendThread((*pt)->thread->gcThread(),(*pt)->next);
-	tmp->exKind = (*pt)->exKind;
-	if((*pt)->old!=0)
-	  OZ_collectHeapTerm((*pt)->old,tmp->old);
-	if((*pt)->nw!=0)
-	  OZ_collectHeapTerm((*pt)->nw,tmp->nw);
-      }
-      else{
+    if(((*pt)->thread == MoveThread) || ((*pt)->thread==DummyThread)){
+      tmp=new PendThread((*pt)->thread,(*pt)->next);
+    } else {
+      if((*pt)->exKind==REMOTEACCESS) {
 	tmp=new PendThread((*pt)->thread,(*pt)->next);	
 	tmp->exKind = (*pt)->exKind;
 	tmp->nw = (*pt)->nw; 
 	tmp->old = (*pt)->old; 
 	((Site *)(*pt)->thread)->makeGCMarkSite();
 	((Site *)(*pt)->old)->makeGCMarkSite();
-      }}
+	OZ_collectHeapTerm((*pt)->controlvar,tmp->controlvar);
+      } else {
+	tmp=new PendThread((*pt)->thread->gcThread(),(*pt)->next);
+	tmp->exKind = (*pt)->exKind;
+	OZ_collectHeapTerm((*pt)->old,tmp->old);
+	OZ_collectHeapTerm((*pt)->nw,tmp->nw);
+	OZ_collectHeapTerm((*pt)->controlvar,tmp->controlvar);
+      }
+    }
     *pt=tmp;
     pt=&(tmp->next);}}
   
@@ -2406,7 +2413,7 @@ void gcPendBindingList(PendBinding **last){
   for (; bl; bl = bl->next) {
     newBL = new PendBinding();
     OZ_collectHeapTerm(bl->val,newBL->val);
-    newBL->thread = bl->thread->gcThread();
+    OZ_collectHeapTerm(bl->controlvar,newBL->controlvar);
     *last = newBL;
     last = &newBL->next;}
   *last=NULL;}
@@ -3847,7 +3854,7 @@ Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCo
 	  Assert(th == am.currentThread());
 	  am.prepareCall(BI_send,makeTaggedTert(t),msg);
 	}
-	w->invokeHandler(ec,this,th);}
+	w->invokeHandler(ec,this,th,0);}
       else{
 	w->invokeWatcher(ec,this);}
        if(!w->isPersistent()){
@@ -3874,7 +3881,7 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
     if(p->startHandlerPort(am.currentThread(), p, msg, PERM_BLOCKED|PERM_ME))
       return BI_REPLACEBICALL;
     /* no handler --> suspend forever: */
-    ControlVarNew(var);
+    ControlVarNew(var,p->getBoardInternal());
     SuspendOnControlVar;
   }
   case TEMP_BLOCKED|TEMP_ME:{
@@ -3968,12 +3975,8 @@ void PerdioVar::acknowledge(OZ_Term *p){
   PD((PD_VAR,"acknowledge"));
   OZ_Term val=u.bindings->val;
   primBind(p,val);
-  if (u.bindings->thread->isDeadThread()) {
-    PD((WEIRD,"dead thread acknowledge %x",u.bindings->thread));
-  } else {
-    PD((THREAD_D,"start thread ackowledge %x",u.bindings->thread));
-    oz_resumeFromNet(u.bindings->thread);
-  }
+  PD((THREAD_D,"start thread ackowledge"));
+  ControlVarResume(u.bindings->controlvar);
   PendBinding *tmp=u.bindings->next;
   u.bindings->dispose();
   u.bindings=tmp;
@@ -3983,16 +3986,9 @@ void PerdioVar::acknowledge(OZ_Term *p){
 void PerdioVar::redirect(OZ_Term val) {
   PD((PD_VAR,"redirect v:%s",toC(val)));
   while (u.bindings) {
-    if (u.bindings->thread->isDeadThread()) {
-      PD((WEIRD,"dead thread redirect %x",u.bindings->thread));
-      PD((THREAD_D,"dead thread redirect %x",u.bindings->thread));
-      PD((PD_VAR,"redirect pending unify =%s",toC(u.bindings->val)));
-      SiteUnify(val,u.bindings->val);} 
-    else {
-      PD((PD_VAR,"redirect pending unify =%s",toC(u.bindings->val)));
-      PD((THREAD_D,"start thread redirect %x",u.bindings->thread));
-      pushUnify(u.bindings->thread,val,u.bindings->val);
-      oz_resumeFromNet(u.bindings->thread);}
+    PD((PD_VAR,"redirect pending unify =%s",toC(u.bindings->val)));
+    PD((THREAD_D,"start thread redirect"));
+    ControlVarUnify(u.bindings->controlvar,val,u.bindings->val);
     PendBinding *tmp=u.bindings->next;
     u.bindings->dispose();
     u.bindings=tmp;}
@@ -4162,8 +4158,9 @@ Bool CellSec::secReceiveContents(TaggedRef val,Site* &toS,TaggedRef &outval){
     Assert(t!=MoveThread);
     if(isRealThread(t)){
       Assert(pending->old!=0 && pending->nw!=0);
-      exchangeVal(pending->old, pending->nw, t, pending->exKind);
-      oz_resumeFromNet(t);}
+      (void) exchangeVal(pending->old,pending->nw,t,
+			 pending->controlvar,pending->exKind);
+    }
     tmp=pending;
     pending=pending->next;
     tmp->dispose();}
@@ -4179,18 +4176,22 @@ Bool CellSec::secReceiveContents(TaggedRef val,Site* &toS,TaggedRef &outval){
 void CellSec::secReceiveReadAns(TaggedRef val){
   PendThread* pb=pendBinding;
   while(pb!=NULL){
-    if(pb->exKind==ACCESS)
-      pushUnify(pb->thread,pb->old,val);
-    else{
+    if(pb->exKind==ACCESS) {
+      ControlVarUnify(pb->controlvar,pb->old,val);
+    } else {
       val = deref(val);
       TaggedRef tr = tagged2SRecord(val)->getFeature(pb->nw);
-      if(tr) pushUnify(pb->thread,tr,pb->old);
-      else{
-	OZ_warning("Exception should be raised");
-	Assert(0);}}
-    oz_resumeFromNet(pb->thread);
-    pb=pb->next;}
-  pendBinding=NULL;}
+      if(tr) {
+	ControlVarUnify(pb->controlvar,tr,pb->old);
+      } else {
+	ControlVarRaise(pb->controlvar,
+			OZ_makeException(E_ERROR,E_OBJECT,"@",2,val,pb->nw));
+      }
+    }
+    pb=pb->next;
+  }
+  pendBinding=NULL;
+}
 
 Bool CellSec::secReceiveRemoteRead(Site* toS,Site* mS, int mI){
   switch(state){
@@ -4200,7 +4201,9 @@ Bool CellSec::secReceiveRemoteRead(Site* toS,Site* mS, int mI){
     cellSendReadAns(toS,mS,mI,contents);
     return TRUE;}
   case Cell_Lock_Requested:{
-    pendThreadAddToEnd(&pending,(Thread*)toS,(TaggedRef) mS,mI,REMOTEACCESS);
+    OZ_Return aux = pendThreadAddToEnd(&pending,(Thread*)toS,(TaggedRef) mS,
+				       mI,REMOTEACCESS,oz_rootBoard());
+    Assert(aux==PROCEED);
     return TRUE;}
   default: Assert(0);}
   return NO;}
@@ -4332,33 +4335,70 @@ void cellSendRead(BorrowEntry *be,Site *dS){
 /*   SECTION 30:: Cell protocol - basics                              */
 /**********************************************************************/
 
-void CellSec::exchangeVal(TaggedRef old, TaggedRef nw, Thread *th,ExKind exKind){
-  if(!isRealThread(th)) return;
+OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, Thread *th, 
+			       TaggedRef controlvar, ExKind exKind)
+{
+  if(!isRealThread(th)) 
+    return PROCEED;
+
+  TaggedRef exception;
+  Bool inplace = (th==am.currentThread());
   switch (exKind){
   case ASSIGN:{
     contents = deref(contents);
-    if (tagged2SRecord(contents)->replaceFeature(old,nw) == makeTaggedNULL()) {
-      OZ_warning("Exception should be raised");
-      Assert(0);}
-    return;}
+    if (!tagged2SRecord(contents)->replaceFeature(old,nw)) {
+      exception = OZ_makeException(E_ERROR,E_OBJECT,"<-",3,contents,old,nw);
+      goto exception;
+    }
+    goto exit;
+  }
   case AT:{
     contents = deref(contents);
     TaggedRef tr = tagged2SRecord(contents)->getFeature(old);
-    if(tr) pushUnify(th,tr,nw);
-    else{
-      OZ_warning("Exception should be raised");
-      Assert(0);}
-    return;}
+    if(tr) {
+      if (inplace) {
+	return oz_unify(tr,nw);
+      } else {
+	ControlVarUnify(controlvar,tr,nw);
+	return PROCEED;
+      }
+    }
+    exception = OZ_makeException(E_ERROR,E_OBJECT,"@",2, contents, old);
+    goto exception;
+  }
   case EXCHANGE:{
     Assert(old!=0 && nw!=0);
     TaggedRef tr=contents;
     contents = nw;
-    pushUnify(th,tr,old);
-    return;}
+    if (inplace) {
+      return oz_unify(tr,old);
+    } else {
+      ControlVarUnify(controlvar,tr,old);
+      return PROCEED;
+    }
+  }
   case REMOTEACCESS:{
     cellSendReadAns((Site*)th,(Site*)old,(int)nw,contents);
+    goto exit;
   }
-  default: Assert(0);}}
+  default: 
+    Assert(0);
+  }
+
+exception:
+  if (inplace) {
+    return OZ_raise(exception);
+  } else {
+    ControlVarRaise(controlvar,exception);
+    return PROCEED;
+  }
+
+exit:
+  if (!inplace) {
+    ControlVarResume(controlvar);
+  }
+  return PROCEED;
+}
 
 inline CellSec *getCellSecFromTert(Tertiary *c){
   if(c->isManager()){
@@ -4382,19 +4422,19 @@ OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th,Ex
   switch(state){
   case Cell_Lock_Valid:{
     PD((CELL,"CELL: exchange on valid"));
-    exchangeVal(old,nw,th,exKind);
-    return ret;}
+    return exchangeVal(old,nw,th,0,exKind);
+  }
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
     PD((CELL,"CELL: exchange on requested"));
-    ret = pendThreadAddToEnd(&pending,th,old,nw,exKind);
+    ret = pendThreadAddToEnd(&pending,th,old,nw,exKind,c->getBoardInternal());
     if(c->errorIgnore()) return ret;
     break;}
   case Cell_Lock_Invalid:{
     PD((CELL,"CELL: exchange on invalid"));
     state=Cell_Lock_Requested;
     Assert(isRealThread(th) || th==DummyThread);
-    ret = pendThreadAddToEnd(&pending,th,old,nw,exKind);
+    ret = pendThreadAddToEnd(&pending,th,old,nw,exKind,c->getBoardInternal());
     int index=c->getIndex();
     if(c->getTertType()==Te_Frame){
       BorrowEntry* be=BT->getBorrow(index);
@@ -4455,26 +4495,31 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
 
   int index=c->getIndex();
   Thread* th=am.currentThread();
-  Bool ask = (pendBinding==NULL);
+  ControlVarNew(controlvar,c->getBoardInternal());
   if(fea) 
-    pendBinding=new PendThread(th,pendBinding,val,fea,DEEPAT);
+    pendBinding=new PendThread(th,pendBinding,val,fea,controlvar,DEEPAT);
   else 
-    pendBinding=new PendThread(th,pendBinding,val,fea,ACCESS);
-  oz_suspendOnNet(th);
-  if(!ask) return BI_PREEMPT;
-  if(c->getTertType()==Te_Frame){
+    pendBinding=new PendThread(th,pendBinding,val,fea,controlvar,ACCESS);
+
+  if (pendBinding!=NULL) 
+    goto exit;
+  if(c->getTertType()==Te_Frame) {
     BorrowEntry *be=BT->getBorrow(index);
     be->getOneMsgCredit();
     cellSendRead(be,mySite);
-    return BI_PREEMPT;}
+    goto exit;
+  }
   sendPrepOwner(index);
-  cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),mySite,index,mySite);
+  cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
+		     mySite,index,mySite);
   if(!c->errorIgnore()) {
     if(maybeInvokeHandler(c,th)){// ERROR-HOOK
       genInvokeHandlerLockOrCell(c,th);
     }
   }
-  return BI_PREEMPT;
+
+exit:
+  SuspendOnControlVar;
 }
 
 static
@@ -4880,25 +4925,26 @@ void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
 
 void LockSec::lockComplex(Thread *th,Tertiary* t){
   PD((LOCK,"lockComplex in state:%d",state));
+  Board *home = t->getBoardInternal();
   switch(state){
   case Cell_Lock_Valid|Cell_Lock_Next:{
     Assert(getLocker()!=th);   
     Assert(getLocker()!=NULL);
     if(pending==NULL){
-      pendThreadAddToEnd(getPendBase(),MoveThread);}}
+      (void) pendThreadAddToEnd(getPendBase(),MoveThread,home);}}
   case Cell_Lock_Valid:{
     Assert(getLocker()!=th);  
     Assert(getLocker()!=NULL);
-    pendThreadAddToEnd(getPendBase(),th);
+    (void) pendThreadAddToEnd(getPendBase(),th,home);
     if(t->errorIgnore()) return; 
     break;}
   case Cell_Lock_Next|Cell_Lock_Requested:
   case Cell_Lock_Requested:{
-    pendThreadAddToEnd(getPendBase(),th);
+    (void) pendThreadAddToEnd(getPendBase(),th,home);
     if(t->errorIgnore()) return;
     break;}
   case Cell_Lock_Invalid:{
-    pendThreadAddToEnd(getPendBase(),th);
+    (void) pendThreadAddToEnd(getPendBase(),th,home);
     secLockGet(this,t,th);
     if(t->errorIgnore()) return;
     break;}
@@ -4912,7 +4958,7 @@ void LockLocal::unlockComplex(){
   return;}
 
 void LockLocal::lockComplex(Thread *t){
-  pendThreadAddToEnd(getPendBase(),t);}
+  (void) pendThreadAddToEnd(getPendBase(),t,getBoardInternal());}
 
 void LockSec::unlockPending(Thread *t){
   PendThread **pt=&pending;
@@ -5125,11 +5171,6 @@ void receiveUnAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
 /*   SECTION 37:: handlers/watchers                                   */
 /**********************************************************************/
 
-void Tertiary::restop(){
-  Thread *th=am.currentThread();
-  if(!maybeInvokeHandler(this,th)) return;
-  genInvokeHandlerLockOrCell(this,th);}
-
 Watcher** Tertiary::findWatcherBase(Thread* th,EntityCond ec){
   Watcher** def = NULL;
   Watcher** base=getWatcherBase();
@@ -5265,7 +5306,8 @@ Bool Tertiary::deinstallWatcher(EntityCond wc, TaggedRef proc){
     base= &((*base)->next);}
   return NO;}
   
-void Watcher::invokeHandler(EntityCond ec,Tertiary* entity, Thread * th)
+void Watcher::invokeHandler(EntityCond ec,Tertiary* entity, 
+			    Thread * th, TaggedRef controlvar)
 {
   Assert(isHandler());
   TaggedRef arg0 = makeTaggedTert(entity);
@@ -5274,8 +5316,7 @@ void Watcher::invokeHandler(EntityCond ec,Tertiary* entity, Thread * th)
     am.prepareCall(proc,arg0,arg1);
   } else {
     Assert(th!=am.currentThread());
-    th->pushCall(proc,arg0,arg1);
-    oz_resumeFromNet(th);
+    ControlVarApply(controlvar,proc,cons(arg0,cons(arg1,nil())));
   }
 }
 
@@ -5407,9 +5448,9 @@ void Tertiary::entityProblem(){
 	cThread->pushCall(BI_lockLock,makeTaggedTert(this));}
       
       if(obj)
-	w->invokeHandler(ec,obj,cThread);
+	w->invokeHandler(ec,obj,cThread,pd->controlvar);
       else
-	w->invokeHandler(ec,this,cThread);
+	w->invokeHandler(ec,this,cThread,pd->controlvar);
       if(!w->isPersistent()){
 	if(obj && other) other->deinstallHandler(cThread);
 	*ww = w->next;

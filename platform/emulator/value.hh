@@ -84,7 +84,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
 
 RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-  BI_portWait,BI_Unify,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp,
+  BI_portWait,BI_Unify,BI_Show,BI_send,BI_probe,BI_Delay,BI_startTmp,
   BI_load,BI_fail,BI_url_load,
   BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,
 BI_controlVarHandler;
@@ -191,7 +191,7 @@ public:
 
   void setNext(Watcher* w){next=w;}
   Watcher* getNext(){return next;}
-  void invokeHandler(EntityCond ec,Tertiary* t,Thread *);
+  void invokeHandler(EntityCond ec,Tertiary* t,Thread *,TaggedRef);
   void invokeWatcher(EntityCond ec,Tertiary* t);
   Thread* getThread(){Assert(thread!=NULL);return thread;}
   Bool isTriggered(EntityCond ec){
@@ -1011,7 +1011,6 @@ public:
   Bool startHandlerPort(Thread*,Tertiary* ,TaggedRef,EntityCond);
   void managerProbeFault(Site*,int);
   void proxyProbeFault(int);
-  void restop();
 
   Bool maybeHasInform(){
     if(info==NULL) return NO;
@@ -2271,7 +2270,7 @@ public:
   void gcCellSec();
   OZ_Return exchange(Tertiary*,TaggedRef,TaggedRef,Thread*,ExKind);
   OZ_Return access(Tertiary*,TaggedRef,TaggedRef);
-  void exchangeVal(TaggedRef,TaggedRef,Thread*,ExKind);
+  OZ_Return exchangeVal(TaggedRef,TaggedRef,Thread*,TaggedRef,ExKind);
   Bool cellRecovery(TaggedRef);
   Bool secReceiveRemoteRead(Site*,Site*,int);
   void secReceiveReadAns(TaggedRef);
@@ -2614,7 +2613,7 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(LockFrame);
   LockFrame() : OzLock(0,(TertType)0) {} // hack
 
-  Bool hasLock(Thread *t){if(t==sec->getLocker()) return TRUE;return FALSE;}
+  Bool hasLock(Thread *t){ return (t==sec->getLocker()) ? TRUE : FALSE;}
   
   Bool isAccessBit(){
     if(sec->state & Cell_Lock_Access_Bit) return TRUE;
@@ -2684,9 +2683,7 @@ public:
 
   void initOnGlobalize(int index,Chain* ch,LockSec *secX);
 
-  Bool hasLock(Thread *t){
-    if(sec->locker==t) return TRUE;
-    return FALSE;}
+  Bool hasLock(Thread *t) { return (sec->locker==t) ? TRUE : FALSE;}
 
   void lock(Thread *t){
     if(sec->secLockB(t)) return;

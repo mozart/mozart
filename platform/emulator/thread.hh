@@ -141,8 +141,6 @@ private:
   ThreadBodyItem item;		// NULL if it's a deep 'unify' suspension;
   PrTabEntry *abstr;            // for profiler
 
-  int stopCount;		// Thread.stop counter
-
 public:
   NO_DEFAULT_CONSTRUCTORS(Thread);
 
@@ -159,8 +157,6 @@ public:
 
     if (flags & T_stack)
       ozstat.createdThreads.incf();
-
-    stopCount=0;
   }
 
   Thread(int i, TertType tertType)
@@ -275,7 +271,7 @@ public:
     state.flags = state.flags | T_runnable;
   }
   void unmarkRunnable() { 
-    Assert((isRunnable () && !isDeadThread ()) || getStop() || getPStop());
+    Assert((isRunnable () && !isDeadThread ()) || getStop());
     state.flags &= ~T_runnable;
   }
 
@@ -328,22 +324,11 @@ public:
   }
 
   // ...and check them
-  Bool getTrace() {
-    return (state.flags & T_G_trace);
-  }
-  Bool getStep() {
-    return (state.flags & T_G_step);
-  }
-  Bool getStop() {
-    return (state.flags & T_G_stop);
-  }
+  Bool getTrace() { return (state.flags & T_G_trace); }
+  Bool getStep()  { return (state.flags & T_G_step); }
+  Bool getStop()  { return (state.flags & T_G_stop); }
 
   
-  int pStop() { return stopCount++; }
-  int pCont() { return --stopCount; }
-  int getPStop() { return stopCount; }
-  void zeroPStop() { stopCount=0; }
-
   int getThrType() { return (state.flags & S_TYPE_MASK); }
 
   // 

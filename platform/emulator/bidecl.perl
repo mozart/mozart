@@ -2005,11 +2005,6 @@ $builtins = {
 			     doesNotReturn=>1,
 			     native => true},
 
-    'perdioRestop'	=> { in  => ['+value'],
-			     out => [],
-			     BI  => BIrestop,
-			     native => true},
-
     'hwInstall'	=>         { in  => ['+value','+value','value'],
 			     out => [],
 			     BI  => BIhwInstall,
