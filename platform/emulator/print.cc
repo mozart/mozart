@@ -1474,9 +1474,14 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       out = cons(entry, out);
       continue;
     }
-    out = cons(CodeArea::dbgGetDef(PC,G,Y),out);
-  }
 
+    TaggedRef def = CodeArea::dbgGetDef(PC,G,Y);
+    if (def != nil())
+      out = cons(def,out);
+    else
+      // definitionStart(PC) == NOCODE_GLOBALVARNAME
+      ;
+  }
   return reverseC(out);
 }
 
