@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh 
 #
 #  Authors:
 #    Christian Schulte <schulte@ps.uni-sb.de>
@@ -37,8 +37,8 @@ TMPDIR=/tmp
 if test $# -lt 3
 then
    echo "usage: create-rpm <build-dir> <build-stdlib-dir> <dst-dir>" 1>&2;
-   echo <build-dir> is the place where Mozart has been built;
-   echo <build-stdlib-dir> is the place where Mozart Standard Library has been built;
+   echo "          <build-dir> is the place where Mozart has been built" 1>&2;
+   echo "          <build-stdlib-dir> is the place where Mozart Standard Library has been built" 1>&2;
    exit 1;
 fi
 BUILDDIR=$1
