@@ -572,7 +572,7 @@ public:
   //  TypeOfConst typeOf()  { return getType(); }
   char *getPrintName();
   int getArity();
-  void *getPtr()        { return tagValueOf(ctu.tagged); }
+  void *getPtr()        { return isNullPtr(ctu.tagged) ? NULL : tagValueOf(ctu.tagged); }
   void setPtr(void *p)  { setTagged(getType(),p); }
 
   OZPRINT;
