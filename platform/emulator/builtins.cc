@@ -1815,15 +1815,9 @@ LBLagain:
 
   case CVAR:
     {
-      if (tagged2CVar(term)->getType() == OFSVariable) {
-        GenOFSVariable *ofs=(GenOFSVariable *)tagged2CVar(term);
-        TaggedRef t = ofs->getFeatureValue(fea);
-        if (t == makeTaggedNULL()) return SUSPEND;
-        if (out) *out = t;
-        return PROCEED;
-      }
-      // mm2?
-      goto typeError0;
+      int ret = tagged2CVar(term)->hasFeature(fea,out);
+      if (ret == FAILED) goto typeError0;
+      return ret;
     }
 
   case LITERAL:

@@ -442,6 +442,12 @@ public:
     // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see GenFDVariable::valid)
     Bool valid(TaggedRef val);
 
+  int hasFeature(TaggedRef fea,TaggedRef *out) {
+    TaggedRef t = getFeatureValue(fea);
+    if (t == makeTaggedNULL()) return SUSPEND;
+    if (out) *out = t;
+    return PROCEED;
+  }
     // Hooks for indexing: the following two methods should return
     // OK iff "this" disentails its label being "l" or its
     // arity being "tupleArity"/"recordArity"
