@@ -26,9 +26,8 @@ local
 in
 
    class PanelManager
-      from UrObject
-
-      attr ThisPanelTop: unit
+      from BaseObject
+      attr ThisPanelTop:unit
       
       meth open
 	 case @ThisPanelTop==unit then
@@ -43,13 +42,6 @@ in
 	 ThisPanelTop <- unit
       end
 
-      meth close
-	 UrObject,close
-	 case @ThisPanelTop of unit then skip elseof T then
-	    thread {T close} end
-	 end
-      end
-      
    end
 
 end
