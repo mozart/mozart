@@ -112,10 +112,7 @@ OZ_Term makeMemRec(OZ_Term type, int size, int nr){
 
 
 			       
-/*
-
-Till Andreas::
-OZ_BI_define(BINetStuff,0,1)
+OZ_BI_define(BI_DistMemInfo,0,1)
 {
   initDP();
   int netmsgbSz, netmsgbNr, bytebSz, bytebNr,
@@ -135,9 +132,6 @@ OZ_BI_define(BINetStuff,0,1)
 					    oz_cons(makeMemRec(oz_atom("messa"),messSz, messNr),
 						    oz_cons(makeMemRec(oz_atom("remsi"),resiSz, resiNr),oz_nil())))))));
 } OZ_BI_end
-    
-
-*/
 
 
 //

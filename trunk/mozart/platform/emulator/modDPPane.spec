@@ -34,6 +34,10 @@
 			     out => ['+[value]'],
 			     BI  => BItablesExtract},
 
+     'getNetInfo'	=> { in  => [],
+			     out => ['+[value]'],
+			     BI  => BI_DistMemInfo},
+
      'perdioStatistics'	=> { in  => [],
 			     out => ['+record'],
 			     BI  => BIperdioStatistics},
