@@ -280,4 +280,5 @@ OZ_C_proc_proto(fdp_distanceEq)
 OZ_C_proc_proto(fdp_distanceLeq)
 OZ_C_proc_proto(fdp_distanceGeq)
 OZ_C_proc_proto(fdp_distanceNeq)
+OZ_C_proc_proto(fdp_cpIterate)
 #endif
