@@ -57,7 +57,7 @@ Bool globalRedirectFlag=AUT_REG;
 #define GET_ADDR(var,SD,OTI)                                            \
 DSite* SD;int OTI;                                                      \
 if (var->getIdV()==OZ_EVAR_PROXY) {                                     \
-  NetAddress *na=BT->getBorrow(var->getIndex())->getNetAddress();       \
+  NetAddress *na=BT->bi2borrow(var->getIndex())->getNetAddress();       \
   SD=na->site;                                                          \
   OTI=na->index;                                                        \
 } else {                                                                \
@@ -77,10 +77,10 @@ int compareNetAddress(ProxyManagerVar *lVar,ProxyManagerVar *rVar)
 }
 
 TaggedRef ProxyVar::getTaggedRef(){
-  return borrowTable->getBorrow(getIndex())->getRef();}
+  return borrowTable->bi2borrow(getIndex())->getRef();}
 
 TaggedRef ManagerVar::getTaggedRef(){
-  return OT->getEntry(getIndex())->getRef();}
+  return OT->index2entry(getIndex())->getRef();}
 
 inline
 OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
@@ -132,7 +132,7 @@ OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspendable * susp)
 {
   if(!errorIgnore()){
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
-  BorrowEntry *be=BT->getBorrow(getIndex());
+  BorrowEntry *be=BT->bi2borrow(getIndex());
   addSuspSVar(susp);
   return SUSPEND;
 }
@@ -141,7 +141,7 @@ void ProxyVar::gCollectRecurseV(void)
 {
   PD((GC,"ProxyVar b:%d",getIndex()));
   Assert(getIndex()!=BAD_BORROW_INDEX);
-  BT->getBorrow(getIndex())->gcPO();
+  BT->bi2borrow(getIndex())->gcPO();
   if (binding)
     oz_gCollectTerm(binding,binding);
   if (status)
@@ -219,7 +219,7 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
       if(isFuture()){
         return oz_addSuspendVarList(lPtr);
       }
-      BorrowEntry *be=BT->getBorrow(getIndex());
+      BorrowEntry *be=BT->bi2borrow(getIndex());
       sendSurrender(be,r);
       PD((THREAD_D,"stop thread proxy bind %x",oz_currentThread()));
       binding=r;
@@ -292,7 +292,7 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspendable * susp)
 void ManagerVar::gCollectRecurseV(void)
 {
   oz_gCollectTerm(origVar,origVar);
-  OT->getEntry(getIndex())->gcPO();
+  OT->index2entry(getIndex())->gcPO();
   PD((GC,"ManagerVar o:%d",getIndex()));
   ProxyList **last=&proxies;
   for (ProxyList *pl = proxies; pl; pl = pl->next) {
@@ -307,7 +307,7 @@ void ManagerVar::gCollectRecurseV(void)
 static void sendAcknowledge(DSite* sd,int OTI){
   PD((PD_VAR,"sendAck %s",sd->stringrep()));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
-  msgC->put_M_ACKNOWLEDGE(myDSite,OTI);
+  msgC->put_M_ACKNOWLEDGE(myDSite,OT->entry2odi(OTI));
 
   send(msgC);
 }
@@ -317,7 +317,7 @@ void sendRedirect(DSite* sd,int OTI,TaggedRef val)
 {
   PD((PD_VAR,"sendRedirect %s",sd->stringrep()));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
-  msgC->put_M_REDIRECT(myDSite,OTI,val);
+  msgC->put_M_REDIRECT(myDSite,OT->entry2odi(OTI),val);
 
   send(msgC);
 }
@@ -378,7 +378,7 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
     EntityInfo *ei=info;
     sendRedirectToProxies(r, s);
     oz_bindLocalVar(this,lPtr,r);
-    OT->getEntry(OTI)->changeToRef();
+    OT->index2entry(OTI)->changeToRef();
     maybeHandOver(ei,r);
     return PROCEED;
   } else {
@@ -396,10 +396,11 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r){
   return bindVInternal(lPtr,r,NULL);
 }
 
-void varGetStatus(DSite* site,int OTI, TaggedRef tr){
+
+void varGetStatus(DSite* site,int OTI, TaggedRef tr)
+{
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
   msgC->put_M_SENDSTATUS(myDSite,OTI,tr);
-
   send(msgC);
 }
 
@@ -422,7 +423,7 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
     sendRedirectToProxies(r, NULL);
     EntityInfo *ei=info;
     oz_bindLocalVar(this,lPtr,r);
-    OT->getEntry(OTI)->changeToRef();
+    OT->index2entry(OTI)->changeToRef();
     maybeHandOver(ei,r);
     return PROCEED;
   } else {
@@ -640,7 +641,7 @@ void sendGetStatus(BorrowEntry *be){
 OZ_Term ProxyVar::statusV()
 {
   if(status ==0){
-    BorrowEntry *be=BT->getBorrow(getIndex());
+    BorrowEntry *be=BT->bi2borrow(getIndex());
     sendGetStatus(be);
     status= oz_newVariable();}
   return status;
@@ -785,8 +786,8 @@ void ManagerVar::addEntityCond(EntityCond ec){
   if(info==NULL) info= new EntityInfo();
   if(!info->addEntityCond(ec)) return;
   int i=getIndex();
-  OwnerEntry* oe=OT->getEntry(i);
-  triggerInforms(&inform,oe,i,ec);
+  OwnerEntry* oe=OT->index2entry(i);
+  triggerInforms(&inform,oe,ec);
   wakeAll();
   info->dealWithWatchers(getTaggedRef(),ec);
 }
@@ -799,8 +800,8 @@ void ManagerVar::subEntityCond(EntityCond ec){
   if (info != NULL) {
     info->subEntityCond(ec);
     int i=getIndex();
-    OwnerEntry* oe=OT->getEntry(i);
-    triggerInforms(&inform,oe,i,ec);
+    OwnerEntry* oe=OT->index2entry(i);
+    triggerInforms(&inform,oe,ec);
   }
 }
 

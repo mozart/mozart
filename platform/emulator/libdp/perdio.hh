@@ -142,8 +142,33 @@ extern int  globalOSWriteCounter;
 extern int  globalOSReadCounter;
 extern int  globalContCounter;
 
+extern int  btResize;
+extern int  btCompactify;
+extern int  otResize;
+extern int  otCompactify;
+
+
 // Logging
 extern FILE *logfile;
+
+// Performance
+
+extern int sendJobbCntr;
+
+
+
+class SendJobb{
+public:
+  OZ_Term cntrlVar;
+  int id;
+  SendJobb *next;
+  SendJobb(int i, OZ_Term c, SendJobb* n):
+    id(i),cntrlVar(c),next(n){}
+
+};
+
+OZ_Return newSendJobb(int id);
+void ResumeSendJobb(int id);
 
 
 /* __PERDIOHH */

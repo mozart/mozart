@@ -34,6 +34,6 @@ void sendAskError(BorrowEntry*, EntityCond);
 void receiveTellError(BorrowEntry*, EntityCond, Bool);
 void receiveAskError(OwnerEntry *,DSite*,EntityCond);
 void receiveUnAskError(OwnerEntry *,DSite*,EntityCond);
-void sendTellError(OwnerEntry *,DSite*,int,EntityCond,Bool);
+void sendTellError(OwnerEntry *,DSite*,EntityCond,Bool);
 void sendUnAskError(BorrowEntry*,EntityCond);
 #endif

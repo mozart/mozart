@@ -44,20 +44,9 @@ OZ_BI_define(BItablesExtract,0,1)
   OZ_Term ownerlist;
   OZ_Term ret;
 
-  borrowlist = oz_nil();
-  int bt_size=BT->getSize();
-  for(int ctr=0; ctr<bt_size; ctr++){
-    BorrowEntry *be = BT->getEntry(ctr);
-    if(be==NULL){continue;}
-    Assert(be!=NULL);
-    borrowlist = oz_cons(be->extract_info(ctr), borrowlist);}
+  borrowlist = BT -> extract_info();
   ownerlist =OT->extract_info();
-  ret=oz_cons(OZ_recordInit(oz_atom("bt"),
-                            oz_cons(oz_pairAI("size", bt_size),
-                                    oz_cons(oz_pairA("list", borrowlist),
-                                            oz_nil()))),
-              oz_cons(ownerlist,
-                      oz_nil()));
+  ret=oz_cons(borrowlist,oz_cons(ownerlist, oz_nil()));
   OZ_RETURN(ret);
 } OZ_BI_end
 

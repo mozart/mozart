@@ -1614,15 +1614,16 @@ void marshalOwnHead(MarshalerBuffer *bs, int tag, int i)
   bs->put(tag);
   dif_counter[tag].send();
   myDSite->marshalDSite(bs);
-  marshalNumber(bs, i);
+  OwnerEntry *oe = OT->index2entry(i);
+  marshalNumber(bs, oe->getOdi());
   bs->put((BYTE)ENTITY_NORMAL);
-  marshalCredit(bs,OT->getEntry(i)->getCreditBig());
+  marshalCredit(bs,oe->getCreditBig());
 }
 
 //
 void saveMarshalOwnHead(int oti, RRinstance *&c)
 {
-  c = ownerTable->getEntry(oti)->getCreditBig();
+  c = ownerTable->index2entry(oti)->getCreditBig();
 }
 
 //
@@ -1632,7 +1633,8 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, RRinstance *c)
   bs->put(tag);
   dif_counter[tag].send();
   myDSite->marshalDSite(bs);
-  marshalNumber(bs, oti);
+  OwnerEntry *oe = OT->index2entry(oti);
+  marshalNumber(bs, oe->getOdi());
   bs->put((BYTE)ENTITY_NORMAL);
   marshalCredit(bs,c);
 }
@@ -1640,14 +1642,14 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, RRinstance *c)
 //
 void discardOwnHeadSaved(int oti, RRinstance *c)
 {
-  ownerTable->getEntry(oti)->mergeReference(c);
+  ownerTable->index2entry(oti)->mergeReference(c);
 }
 
 //
 void marshalToOwner(MarshalerBuffer *bs, int bi)
 {
   PD((MARSHAL,"toOwner"));
-  BorrowEntry *b = borrowTable->getBorrow(bi);
+  BorrowEntry *b = borrowTable->bi2borrow(bi);
   int OTI = b->getOTI();
   marshalCreditToOwner(bs,b->getSmallReference(),OTI);
 }
@@ -1659,7 +1661,7 @@ void marshalToOwner(MarshalerBuffer *bs, int bi)
 void saveMarshalToOwner(int bi, int &oti, RRinstance *&c)
 {
   PD((MARSHAL,"toOwner"));
-  BorrowEntry *b = borrowTable->getBorrow(bi);
+  BorrowEntry *b = borrowTable->bi2borrow(bi);
 
   //
   oti = b->getOTI();
@@ -1678,7 +1680,7 @@ void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi, BYTE ec)
 {
   PD((MARSHAL,"BorrowHead"));
   bs->put((BYTE)tag);
-  BorrowEntry *b = borrowTable->getBorrow(bi);
+  BorrowEntry *b = borrowTable->bi2borrow(bi);
   NetAddress *na = b->getNetAddress();
   na->site->marshalDSite(bs);
   marshalNumber(bs, na->index);
@@ -1692,7 +1694,7 @@ void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
 {
   PD((MARSHAL,"BorrowHead"));
 
-  BorrowEntry *b = borrowTable->getBorrow(bi);
+  BorrowEntry *b = borrowTable->bi2borrow(bi);
   NetAddress *na = b->getNetAddress();
 
   //
@@ -1761,7 +1763,7 @@ unmarshalBorrowRobust(MarshalerBuffer *bs,
   }
   else {
     bi=borrowTable->newBorrow(cred,sd,si);
-    b=borrowTable->getBorrow(bi);
+    b=borrowTable->bi2borrow(bi);
     ob=b;
     return 0;
   }
@@ -2036,7 +2038,7 @@ unmarshalOwnerRobust(MarshalerBuffer *bs, MarshalTag mt, int *error)
   RRinstance  *c = unmarshalCreditToOwnerRobust(bs, mt, OTI, error);
   if (*error) return ((OZ_Term) 0);
   PD((UNMARSHAL,"OWNER o:%d",OTI));
-  OwnerEntry* oe=ownerTable->getEntry(OTI);
+  OwnerEntry* oe=ownerTable->odi2entry(OTI);
   if (oe){
     oe->mergeReference(c);
     oz=oe->getValue();}
