@@ -91,7 +91,7 @@ local
 	    TimeOuter = {New TkTools.textframe tkInit(parent: self
 						      text:   'Update Time')}
 	    TimeLabel = {New Tk.label tkInit(parent: TimeOuter.inner
-					     text:   'Update every: ')}
+					     text:   'Update Every: ')}
 	    TimeScale = {New DiscreteScale init(parent: TimeOuter.inner
 						width:  ScaleWidth
 						values: UpdateTimes
@@ -104,7 +104,7 @@ local
 	    MouseButton = {New Tk.checkbutton
 			   tkInit(parent:   MouseOuter.inner
 				  variable: MouseVar
-				  text:     'Require mouse over panel')}
+				  text:     'Require Mouse over Panel')}
 	 in
 	    {Tk.batch [pack(TimeLabel TimeScale side:left fill:x)
 		       pack(MouseButton side:left fill:x)
@@ -131,7 +131,7 @@ local
 	    RangeOuter = {New TkTools.textframe tkInit(parent: self
 						       text:   'History Range')}
 	    RangeLabel = {New Tk.label tkInit(parent: RangeOuter.inner
-					     text:   'Range covers: ')}
+					     text:   'Range Covers: ')}
 	    RangeScale = {New DiscreteScale init(parent:  RangeOuter.inner
 						 width:   ScaleWidth
 						 values:  HistoryRanges
