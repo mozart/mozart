@@ -43,7 +43,7 @@ DECLAREBI_USEINLINEREL1(BIfdIs, BIfdIsInline);
 
 OZ_C_proc_begin(BIfdMin, 2)
 {
-  ExpectedTypes("FDish,SmallInt");
+  ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(0, var, varptr, vartag);
 
@@ -64,7 +64,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdMax,2)
 {
-  ExpectedTypes("FDish,SmallInt");
+  ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(0, var, varptr, vartag);
 
@@ -85,7 +85,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdGetAsList, 2)
 {
-  ExpectedTypes("FDish,List");
+  ExpectedTypes("FiniteDomain,List");
   
   OZ_getCArgDeref(0, var, varptr, vartag);
   
@@ -107,7 +107,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdGetCardinality,2)
 {
-  ExpectedTypes("FDish,SmallInt");
+  ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(0, var, varptr, vartag);
 
@@ -129,7 +129,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdNextTo, 3)
 {
-  ExpectedTypes("FDish,SmallInt,SmallInt or Tuple");
+  ExpectedTypes("FiniteDomain,SmallInt,SmallInt or Tuple");
   
   OZ_getCArgDeref(1, n, nptr, ntag);
 
@@ -161,7 +161,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutLe, 2)
 {
-  ExpectedTypes("FDish,SmallInt");
+  ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(1, n, nptr, ntag);
 
@@ -196,7 +196,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutGe, 2)
 {
-  ExpectedTypes("FDish,SmallInt");
+  ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(1, n, nptr, ntag);
 
@@ -231,7 +231,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutList, 3)
 {
-  ExpectedTypes("FDish,List of SmallInts or Tuples,SmallInt");
+  ExpectedTypes("FiniteDomain,List of SmallInts or Tuples,SmallInt");
   
   OZ_getCArgDeref(2, s, sptr, stag); // sign
 
@@ -335,7 +335,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutNot, 2)
 {
-  ExpectedTypes("FDish,SmallInt");
+  ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(1, n, nptr, ntag);
 
