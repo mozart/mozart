@@ -802,7 +802,7 @@ OZ_CFunHeader FSetSeqPropagator::header = fsp_seq;
 
 OZ_Return FSetSeqPropagator::propagate(void)
 {
-  OZ_DEBUGPRINTTHIS("in ");
+  _OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   PropagatorController_VS P(_vs_size, vs);
@@ -811,52 +811,57 @@ OZ_Return FSetSeqPropagator::propagate(void)
   for (i = _vs_size; i--; )
     vs[i].read(_vs[i]);
 
-  int glb_max = -1;
-  int lub_max = -1;
+  {
+    int lb_max = -1;
 
-  for (i = 0; i < _vs_size - 1; i += 1) {
-    int glb_max_tmp = max(vs[i]->getGlbMaxElem(),
-                          vs[i]->getLubMinElem());
-    glb_max = (glb_max_tmp == -1 ? glb_max : glb_max_tmp);
+    for (i = 0; i < _vs_size - 1; i += 1) {
+      int lb_max_tmp = vs[i]->getGlbMaxElem();
 
-    OZ_DEBUGPRINT(("%i", glb_max));
+      lb_max = max(lb_max, lb_max_tmp);
 
-    if (glb_max == -1) // there is no maximum
-      continue;
+      _OZ_DEBUGPRINT(("%d", lb_max));
 
-    FailOnInvalid(*vs[i+1] >= (glb_max + 1));
+      // there is no maximal element in the lower bound so far
+      if (lb_max == -1)
+        continue;
 
-    OZ_DEBUGPRINT(("%i %s > %i\n", i, vs[i]->toString(),glb_max));
+      FailOnInvalid(*vs[i+1] >= (lb_max + 1));
+
+      _OZ_DEBUGPRINT(("%d %s > %d\n", i, vs[i]->toString(), lb_max));
+    }
+
+    _OZ_DEBUGPRINTTHIS("after #1 ");
   }
 
-  OZ_DEBUGPRINTTHIS("after #1 ");
+  {
+    int sup1 = OZ_getFSetSup() + 1;
+    int lb_min = sup1;
 
-  for (i = _vs_size - 1; i > 0; i -= 1) {
-    // assumes min/max element of empty set to be sup+1
-    int lm = vs[i]->getLubMaxElem();
-    int gm = vs[i]->getGlbMinElem();
+    for (i = _vs_size - 1; i > 0; i -= 1) {
+      int lb_min_tmp = vs[i]->getGlbMinElem();
 
-    int lub_max_tmp = (lm == -1 && gm == -1 ? -1 :
-                       min(lm == -1 ? OZ_getFSetSup() + 1 : lm,
-                           (gm == -1 ? OZ_getFSetSup() + 1 : gm)));
-    lub_max = (lub_max_tmp == -1 ? lub_max : lub_max_tmp);
+      lb_min_tmp = (lb_min_tmp == -1 ? sup1 : lb_min_tmp);
 
-    OZ_DEBUGPRINT(("#2 %i", lub_max));
+      lb_min = min(lb_min, lb_min_tmp);
 
-    if (lub_max == -1) // there is no maximum
-      continue;
+      _OZ_DEBUGPRINT(("%d", lb_min));
 
-    FailOnInvalid(*vs[i-1] <= (lub_max - 1));
+      // there is no minimal element in the lower bound so far
+      if (lb_min == sup1)
+        continue;
 
-    OZ_DEBUGPRINT(("#2 %i %s < %i\n", i, vs[i]->toString(),lub_max));
+      FailOnInvalid(*vs[i-1] <= (lb_min - 1));
+
+     _OZ_DEBUGPRINT(("#2 %d %s < %d\n", i, vs[i]->toString(), lb_min));
+    }
   }
 
-  OZ_DEBUGPRINTTHIS("out ");
+  _OZ_DEBUGPRINTTHIS("out ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINTTHIS("failed");
+  _OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 }
 
