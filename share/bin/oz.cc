@@ -27,9 +27,9 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   char *progname = getProgname(buffer);
 
 #ifdef OZENGINE
-  const int depth = 3;
+  const int depth = 2;
 #else
-  const int depth = 1;
+  const int depth = 2;
 #endif
   char *ozhome   = getOzHome(buffer,depth);
 
