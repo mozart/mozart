@@ -84,11 +84,13 @@ BreakpointDynamicHelp  = {NewName}
 StatusHelp             = {NewName}
 
 fun {CheckState T}
-   S = {Thread.state T}
+   Stopped = try {Dbg.checkStopped T}
+	     catch error(kernel(deadThread ...) ...) then true end
+   State   = {Thread.state T}
 in
-   case     {Dbg.checkStopped T} then S
-   elsecase S == terminated      then S
-   else                               running end
+   if Stopped then State
+   else running
+   end
 end
 
 local
