@@ -18,12 +18,6 @@
 #include "actor.hh"
 #include "board.hh"
 
-#ifdef OUTLINE
-#define inline
-#endif
-
-
-
 /* class Actor:
      may be conditional or disjunction
      member data:
@@ -33,28 +27,8 @@
      */
 
 
-enum ActorFlags {
-  Ac_None	= 0,
-  Ac_Ask	= 1<<0,
-  Ac_Wait	= 1<<1,
-  Ac_Committed	= 1<<2,
-  Ac_WaitTop	= 1<<3,
-  Ac_DisWait	= 1<<4,
-};
 
 // ------------------------------------------------------------------------
-
-inline Actor::Actor(int type,Board *bb,int prio,ProgramCounter p,RefsArray y,
-		     RefsArray g,RefsArray x,int i)
-: ConstTerm(Co_Actor),flags(type),board(bb),priority(prio)
-{
-  childCount=0;
-  bb->addSuspension();
-  next.setPC(p);
-  next.setY(y);
-  next.setG(g);
-  next.setX(x,i);
-}
 
 Actor::~Actor()
 {
@@ -80,70 +54,7 @@ void Actor::failChild(Board *n) {
   }
 }
 
-inline Continuation *Actor::getNext()
-{
-  return &next;
-}
 
-inline int Actor::getPriority()
-{
-  return priority;
-}
-
-inline Board *Actor::getBoard()
-{
-  return board;
-}
-
-inline Bool Actor::hasNext()
-{
-  return next.getPC() == NOCODE ? NO : OK;
-}
-
-inline Bool Actor::isCommitted()
-{
-  return flags & Ac_Committed ? OK : NO;
-}
-
-inline Bool Actor::isAsk()
-{
-  return flags & Ac_Ask ? OK : NO;
-}
-
-inline Bool Actor::isLeaf()
-{
-  return childCount == 0 && next.getPC() == NOCODE ? OK : NO;
-}
-
-inline Bool Actor::isWait()
-{
-  return flags & Ac_Wait ? OK : NO;
-}
-
-inline Bool Actor::isDisWait()
-{
-  return flags & Ac_DisWait ? OK : NO;
-}
-
-inline void Actor::lastClause()
-{
-  next.setPC(NOCODE);
-}
-
-inline void Actor::nextClause(ProgramCounter pc)
-{
-  next.setPC(pc);
-}
-
-inline void Actor::setCommitted()
-{
-  flags |= Ac_Committed;
-}
-
-void Actor::setDisWait()
-{
-  flags |= Ac_DisWait;
-}
 
 // ------------------------------------------------------------------------
 
@@ -152,24 +63,6 @@ void Actor::setDisWait()
      elsePC: programm counter of else
      */
 
-AskActor::AskActor(Board *s,int prio,ProgramCounter elsepc,
-		   ProgramCounter p,RefsArray y,
-		   RefsArray g,RefsArray x,int i)
-: Actor(Ac_Ask,s,prio,p,y,g,x,i)
-{
-  elsePC = elsepc;
-}
-
-inline ProgramCounter AskActor::getElsePC()
-{
-  return elsePC;
-}
-
-AskActor *CastAskActor(Actor *a)
-{
-  DebugCheck(!a->isAsk(),error("CastAskActor"));
-  return (AskActor *) a;
-}
 
 // ------------------------------------------------------------------------
 
@@ -178,12 +71,6 @@ AskActor *CastAskActor(Actor *a)
       childs: list of childs
       */
 
-WaitActor::WaitActor(Board *s,int prio,ProgramCounter p,RefsArray y,
-		     RefsArray g,RefsArray x,int i)
-: Actor(Ac_Wait,s,prio,p,y,g,x,i)
-{
-  childs=NULL;
-}
 
 
 void WaitActor::addChildInternal(Board *bb)
@@ -242,15 +129,10 @@ Bool WaitActor::hasOneChild()
   return childCount == 1 && next.getPC() == NOCODE ? OK : NO;
 }
 
-WaitActor *CastWaitActor(Actor *a)
-{
-  DebugCheck(!a->isWait(),error("CastWaitActor"));
-  return (WaitActor *) a;
-}
-
 // ------------------------------------------------------------------------
 
 #ifdef OUTLINE
+#define inline
 #include "actor.icc"
 #undef inline
 #endif

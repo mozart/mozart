@@ -12,6 +12,9 @@
 #ifndef __fdgenvar_icc__
 #define __fdgenvar_icc__
 
+#ifndef OUTLINE
+#pragma interface
+#endif
 
 inline void GenFDVariable::propagate(TaggedRef var, FDState state,
 				     TaggedRef term)

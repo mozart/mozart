@@ -17,12 +17,6 @@
 
 #include "misc.hh"
 
-#ifdef OUTLINE 
-#define inline 
-#include "fdomn.icc"
-#undef inline 
-#endif
-
 
 #ifdef PROFILE_FD
 unsigned FiniteDomain::constrCalled = 0;
@@ -238,4 +232,8 @@ void  FiniteDomain::printLong(ostream &ofile, int offset) const
   }
 }
 
-
+#ifdef OUTLINE 
+#define inline 
+#include "fdomn.icc"
+#undef inline 
+#endif
