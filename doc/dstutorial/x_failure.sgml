@@ -364,13 +364,13 @@ as soon as the site finds out about the failure.
 Two operations are provided:
 <LIST>
 <ITEM> <<proc {Fault.installWatcher Entity FStates WatcherProc}>>
-<ITEM> <<proc {Fault.deinstallWatcher Entity WatcherProc}>>
+<ITEM> <<proc {Fault.deInstallWatcher Entity WatcherProc}>>
 </LIST>
 <P>The procedure <<Fault.installWatcher>> creates a new thread
 on the current site, in which <<WatcherProc>> will be invoked
 as soon as the site detects that
 a fault state in <<FStates>> occurs.
-The procedure <<Fault.deinstallWatcher>> removes the given
+The procedure <<Fault.deInstallWatcher>> removes the given
 watcher from the current site.
 
 <P>A watcher <<WatcherProc>> is a two-argument
