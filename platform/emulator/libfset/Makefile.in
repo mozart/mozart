@@ -53,6 +53,8 @@ Makefile: Makefile.in
 
 -include Makefile.deps
 
+first:
+
 veryclean::
 	-rm -f *.a *.so Makefile.deps
 
