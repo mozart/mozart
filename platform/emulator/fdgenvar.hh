@@ -76,6 +76,8 @@ public:
     return suspList->length() +
       fdSuspList[fd_det]->length() + fdSuspList[fd_bounds]->length();
   }
+
+  void installPropagators(GenFDVariable *, Board *);
 };
 
 inline Bool isGenFDVar(TaggedRef term);

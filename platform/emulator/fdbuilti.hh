@@ -200,7 +200,6 @@ OZ_C_proc_proto(BIfdGenNonLinNotEq)
 OZ_C_proc_proto(BIfdGenLinLessEq)
 OZ_C_proc_proto(BIfdGenNonLinLessEq)
 OZ_C_proc_proto(BIfdGenNonLinLessEq1)
-OZ_C_proc_proto(BIfdGenLinAbs)
 
 // fdcount.cc
 OZ_C_proc_proto(BIfdElement)
@@ -315,7 +314,6 @@ OZ_C_proc_proto(BIfdGenLinNotEq_body)
 OZ_C_proc_proto(BIfdGenNonLinNotEq_body)
 OZ_C_proc_proto(BIfdGenLinLessEq_body)
 OZ_C_proc_proto(BIfdGenNonLinLessEq_body)
-OZ_C_proc_proto(BIfdGenLinAbs_body)
 OZ_C_proc_proto(BIfdGenLinNotEq_body)
 OZ_C_proc_proto(BIfdGenLinLessEq_body)
 OZ_C_proc_proto(BIfdLessEqOff_body)
@@ -757,7 +755,7 @@ private:
 	bifdbm_domain[i] = tagged2GenFDVar(bifdbm_var[i])->getDom();
     }
   }
-  void addAnySuspToTouchedGlobalVars(void);
+  Bool addAnySuspToTouchedGlobalVars(void);
   int simplifyBody(int ts, STuple &a, STuple &x,
 		   Bool sign_bits[], float coeffs[]);
   void _propagate_unify_cd(int clauses, int variables, STuple &st);
@@ -767,6 +765,7 @@ public:
   BIfdBodyManager(int s) {
     DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many variables."));
     curr_num_of_vars = s;
+    Assert(FDcurrentTaskSusp);
     only_local_vars = FDcurrentTaskSusp->isLocalSusp();
   }
 
@@ -856,13 +855,21 @@ public:
   }
 
   OZ_Bool entailmentAndSuspOnAny(void) {
+    Assert(FDcurrentTaskSusp);
+    killPropagatedCurrentTaskSusp();
+
+    Bool a = FALSE;
+    
     if (only_local_vars) {
       processLocal();
     } else {
-      addAnySuspToTouchedGlobalVars();
+      a = addAnySuspToTouchedGlobalVars();
       process();
-      if (glob_vars_touched) activateCurrentTaskSusp(); 
     }
+
+    if (a) 
+      activateCurrentTaskSusp();
+
     return EntailFD;
   }
 
