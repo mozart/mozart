@@ -770,10 +770,14 @@ define
             [] samp then
                code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
             [] name then
-               case type of buffer then
+               case {CondSelect M type unit} of unit then
+                  span(COMMON: @Common 'class': [name]
+                       OzDocToHTML, Batch(M 1 $))
+               [] buffer then
                   code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
-               else
-                  span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+               elseof X then
+                  span(COMMON: @Common 'class': [X]
+                       OzDocToHTML, Batch(M 1 $))
                end
             [] q then
                %--** use different quotes, depending on class and/or lang?
