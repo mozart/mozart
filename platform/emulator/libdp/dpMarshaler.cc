@@ -75,6 +75,14 @@ static FILE *dbgout = (FILE *) 0;
 #define DBG_TRACE_CODE(C)
 #endif
 
+#if defined(DEBUG_CHECK)
+void DPMarshaler::appTCheck(OZ_Term term)
+{
+  Assert(mts);
+  mts->checkVar(term);
+}
+#endif
+
 // The count of marshaled diffs should be done for the distributed
 // messages and not for other marshaled structures. 
 // Erik
@@ -3397,6 +3405,7 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
 	break;
       }
     } else if (oz_isFree(v) || oz_isFuture(v)) {
+      Bool stillAVar = OK;
       Assert(perdioInitialized);
 
       // if it's a future, let's kick it now:
@@ -3407,16 +3416,18 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
 	if (oz_isVarOrRef(v)) {
 	  goto repeat;		// 'v' can be a var again;
 	} else {
-	  break;		// var is gone;
+	  stillAVar = NO;		// var is gone;
 	}
       }
 
       //
-      ManagerVar *mvp = globalizeFreeVariable(vp);
-      ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
-      OZ_Term emv = makeTaggedVar(emvp);
-      //
-      svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
+      if (stillAVar) {
+	ManagerVar *mvp = globalizeFreeVariable(vp);
+	ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
+	OZ_Term emv = makeTaggedVar(emvp);
+	//
+	svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
+      }
     } else { 
       //
 
@@ -3551,3 +3562,56 @@ void MsgTermSnapshotImpl::gc()
     l = l->getNextLoc();
   }
 }
+
+//
+#if defined(DEBUG_CHECK)
+void MsgTermSnapshotImpl::checkVar(OZ_Term t)
+{
+  DEREF(t, tPtr);
+  Assert(!oz_isRef(t));
+  if (oz_isVarOrRef(t)) {
+    if (oz_isExtVar(t)) {
+      ExtVarType evt = oz_getExtVar(t)->getIdV();
+      switch (evt) {
+      case OZ_EVAR_MANAGER:
+      case OZ_EVAR_PROXY:
+	OZ_error("An unexported manager/proxy var is found!");
+	break;
+
+      case OZ_EVAR_LAZY:
+	break;
+
+      case OZ_EVAR_EMANAGER:
+      case OZ_EVAR_EPROXY:
+	{
+	  SntVarLocation *l = locs;
+	  Bool found = NO;
+	  while(l) {
+	    OZ_Term vr = l->getLoc();
+	    OZ_Term *vp = tagged2Ref(vr);
+	    if (tPtr == vp) {
+	      Assert(t == l->getVar());
+	      found = OK;
+	      break;
+	    }
+	    l = l->getNextLoc();
+	  }
+	  if (!found)
+	    OZ_error("A foreign exported manager/proxy is found!");
+	}
+	break;
+
+      case OZ_EVAR_GCSTUB:
+	OZ_error("A gcstub var is found!");
+	break;
+
+      default:
+	Assert(0);
+	break;
+      }
+    } else if (oz_isFree(t) || oz_isFuture(t)) {
+      OZ_error("An unexported free variable/future is found!");
+    }
+  }
+}
+#endif

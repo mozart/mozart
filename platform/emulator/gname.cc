@@ -104,9 +104,8 @@ void addGName(GName *gn, TaggedRef t)
 void overwriteGName(GName *gn, TaggedRef t)
 {
   gn->setValue(t);
-  if(findGName(gn))
-    GT.remove(gn);
-  addGName(gn);
+  if (!findGName(gn))
+    addGName(gn);
 }
 
 GName *newGName(TaggedRef t, GNameType gt)
