@@ -86,7 +86,7 @@ static
 void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
 {
   OZ_Term e = OZ_subtree(value,OZ_int(1));
-  OZ_putArg(e,1,OZ_atom(fun));
+  OZ_putArg(e,1,OZ_atom((OZ_CONST char*)fun));
   OZ_putArg(e,2,args);
 }
 
@@ -292,6 +292,8 @@ fallback:
  * new builtins support
  */
 
+static OZ_Term *savedX = NULL;
+
 OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
 {
   Assert(am.isEmptySuspendVarList());
@@ -300,7 +302,10 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
   const int inAr = bi->getInArity();
   const int outAr = bi->getOutArity();
 
-  OZ_Term savedX[outAr];
+  if (savedX)
+    delete [] savedX;
+  savedX = new OZ_Term[outAr];
+
   int i;
   for (i=outAr; i--; ) savedX[i]=X[inAr+i];
 
@@ -515,7 +520,7 @@ Bool hookCheckNeeded()
        return T_PREEMPT;                        \
    }
 
-#define emulateHookPopTask(e) emulateHookCall(e,)
+#define emulateHookPopTask(e) emulateHookCall(e,;)
 
 
 #define ChangeSelf(obj)                         \
@@ -2923,13 +2928,16 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
 
   int maxX = CAP->getPred()->getMaxX();
   RefsArray savedX = maxX ? allocateRefsArray(maxX,NO) : 0;
-  for (int i = 0; i < maxX; i++)
-    savedX[i] = X[i];
-
+  {
+    for (int i = 0; i < maxX; i++)
+      savedX[i] = X[i];
+  }
   int maxY = Y ? getRefsArraySize(Y) : 0;
   RefsArray savedY = Y ? allocateRefsArray(maxY,NO) : 0;
-  for (int i = 0; i < maxY; i++)
-    savedY[i] = Y[i];
+  {
+    for (int i = 0; i < maxY; i++)
+      savedY[i] = Y[i];
+  }
 
   Bool firstCall = OK;
   while(1) {
@@ -3066,10 +3074,14 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
     }
   }
  exit:
-  for (int i = 0; i < maxX; i++)
-    X[i] = savedX[i];
-  for (int i = 0; i < maxY; i++)
-    Y[i] = savedY[i];
+  {
+    for (int i = 0; i < maxX; i++)
+      X[i] = savedX[i];
+  }
+  {
+    for (int i = 0; i < maxY; i++)
+      Y[i] = savedY[i];
+  }
 #endif
 }
 
