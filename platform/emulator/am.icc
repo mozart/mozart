@@ -223,7 +223,10 @@ void AM::addSuspendVarList(TaggedRef * t)
 inline
 Board *Name::getBoard()
 {
-  return (hasGName()) ? am.rootBoard : ((Board*)ToPointer(homeOrGName))->derefBoard();
+  if (hasGName() || isNamedName())
+    return am.rootBoard;
+
+  return ((Board*)ToPointer(homeOrGName))->derefBoard();
 }
 
 

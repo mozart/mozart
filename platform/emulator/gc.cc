@@ -555,7 +555,7 @@ Bool needsCollection(Literal *l)
 {
   if (l->isAtom()) return NO;
   Name *nm = (Name*) l;
-  return nm->isOnHeap() || nm->hasGName();
+  return nm->isOnHeap();
 }
 
 
