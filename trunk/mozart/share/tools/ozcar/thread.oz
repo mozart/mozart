@@ -25,6 +25,7 @@ in
 	 currentThread : undef
 	 SkippedProcs  : nil
 	 SkippedThread : nil
+	 Breakpoint    : false
       
       meth init
 	 self.Stream    = {Dbg.stream}
@@ -81,16 +82,18 @@ in
 		     ThreadManager,step(file:File line:Line thr:T id:I
 					name:Name args:Args frame:FrameId
 					builtin:IsBuiltin time:Time)
+		  elsecase File == '' andthen
+		     (Args.1 == off orelse {Label Args.1} == bpAt) then
+		     {OzcarMessage 'message from Emacs detected.'}
+		     {Dbg.trace T false}
+		     {Dbg.stepmode T false}
+		     {Thread.resume T}
 		  else
-		     case File == '' andthen
-			(Args.1 == off orelse {Label Args.1} == bpAt) then
-			{OzcarMessage 'message from Emacs detected.'}
-			{Dbg.trace T false}
-			{Dbg.stepmode T false}
-			{Thread.resume T}
+		     {OzcarMessage WaitForThread}
+		     {Delay 400} % thread should soon be added
+		     case @Breakpoint then
+			Breakpoint <- false
 		     else
-			{OzcarMessage WaitForThread}
-			{Delay 700} % thread should soon be added
 			ThreadManager,step(file:File line:Line thr:T id:I
 					   name:Name args:Args frame:FrameId
 					   builtin:IsBuiltin time:Time)
@@ -146,28 +149,38 @@ in
 	    case E then
 	       Stack = {Dget self.ThreadDic I}
 	    in
+	       Gui,rawStatus('Breakpoint reached by thread #' # I)
 	       {OzcarMessage KnownThread # {ID I}}
 	       {Stack rebuild(true)}
 	    else
 	       {OzcarMessage NewThread   # {ID I}}
-	       case Q == 1 andthen      %% toplevel query?
+	       case (Q == 0 orelse Q == 1) andthen
 		  {self.tkRunChildren tkReturnInt($)} == 0 then
-		  {OzcarMessage 'child of root thread will do one step'}
 		  thread
-		     SkippedThread <- T %% yes, so we want T to make
-		     {Thread.resume T}  %% the first step automatically
-		     {Delay 500}        %% short living threads which produce
-		                        %% no step messages are uninteresting
-		     SkippedThread <- nil
+		     case Q == 1 then
+			SkippedThread <- T
+			{Thread.resume T}
+		     else skip end
+		     
+		     {Delay 200}
+
+		     case Q == 1 then
+			SkippedThread <- nil
+		     else skip end
+
 		     case
 			{Thread.state T} == terminated then
 			{OzcarMessage EarlyThreadDeath}
 		     else
-			ThreadManager,add(T I Q)
+			case Q == 0 then
+			   ThreadManager,add(T I Q true)
+			else
+			   ThreadManager,add(T I Q false)
+			end
 		     end
 		  end
 	       else
-		  ThreadManager,add(T I Q)
+		  ThreadManager,add(T I Q false)
 	       end
 	    end
 	    
@@ -236,12 +249,24 @@ in
 	 %{OzcarShow 'after :' # @SkippedProcs}
       end
       
-      meth add(T I Q)
-	 {Dput self.ThreadDic I {New StackManager init(thr:T id:I)}}
+      meth add(T I Q R)
+	 Stack = {New StackManager init(thr:T id:I)}
+      in
+	 {Dput self.ThreadDic I Stack}
+	 case R then
+	    {Stack rebuild(true)}
+	    Breakpoint <- true
+	 else skip end
+	 
 	 Gui,addNode(I Q)
 	 case Q == 0 orelse Q == 1 then 
 	    ThreadManager,switch(I)       %% does Gui,displayTree
-	    Gui,rawStatus('Got new query, selecting thread #' # I)
+	    case Q == 1 then
+	       Gui,rawStatus('Got new query, selecting thread #' # I)
+	    else
+	       Gui,rawStatus('Breakpoint reached by thread #' # I #
+			     ', which has been added and selected')
+	    end
 	 else
 	    Gui,displayTree
 	 end
