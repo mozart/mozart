@@ -329,11 +329,7 @@ Bool Thread::QueueIsEmpty() {
 
 
 /* only usage in emulate */
-void Thread::Start() {
-  if (QueueIsEmpty()) {
-    IO::suspendEngine();
-  }
-
+Thread *Thread::GetFirst() {
   DebugCheck(Head==0,error("Thread::Start"));
   Thread *tt = Head;
   Head=tt->next;
@@ -346,15 +342,7 @@ void Thread::Start() {
   }
   tt->prev=tt->next=(Thread *) NULL;
 
-  am.currentThread = tt;
-
-  if (tt->isNormal()) {
-    am.currentTaskStack = am.currentThread->getTaskStack();
-  } else {
-    am.currentTaskStack = (TaskStack *) NULL;
-  }
-
-  Alarm::RestartProcess();
+  return tt;
 }
 
 TaskStack *Thread::makeTaskStack()
