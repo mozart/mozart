@@ -50,12 +50,16 @@ class MethodCache {
   int32 abstr;   // was Abstraction *
 
 public:
-  Abstraction *lookup(Object *obj, TaggedRef meth, SRecordArity arity)
+  Abstraction *lookup(Object *obj, TaggedRef meth, SRecordArity arity,RefsArray X)
   {
     ObjectClass *cla = obj->getClass();
     if (ToInt32(cla)!=cl) {
       cl    = ToInt32(cla);
-      abstr = ToInt32(obj->getMethod(meth,arity));  /* is ok even if we find no method */
+      Bool defaultsUsed;
+      Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);
+      if (!defaultsUsed)
+        abstr = ToInt32(ret);
+      return ret;
     }
     return (Abstraction*) ToPointer(abstr);
   }
@@ -72,7 +76,7 @@ extern TaggedRef methApplHdl;
 
 inline
 Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
-                           MethodCache *cache)
+                           MethodCache *cache, RefsArray X)
 {
   Assert(isFeature(label));
 
@@ -85,14 +89,25 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
 
   Assert(obj->getDeepness()==0 && !obj->isClosed() && !obj->isClass());
 
-  return cache->lookup(obj,label,arity);
+  return cache->lookup(obj,label,arity,X);
 }
 
 inline
-Abstraction *getApplyMethod(Object *obj, TaggedRef label, SRecordArity arity)
+Abstraction *getApplyMethod(Object *obj, TaggedRef label, SRecordArity arity,
+                            RefsArray X)
 {
   Assert(isFeature(label));
-  return obj->getMethod(label,arity);
+  Bool defaultsUsed;
+  return obj->getMethod(label,arity,X,defaultsUsed);
+}
+
+inline
+Abstraction *getApplyMethodForGenCall(Object *obj, TaggedRef label, SRecordArity arity)
+{
+  Assert(isFeature(label));
+  Bool defaultsUsed;
+  Abstraction *ret = obj->getMethod(label,arity,am.xRegs,defaultsUsed);
+  return defaultsUsed ? NULL : ret;
 }
 
 // -----------------------------------------------------------------------
@@ -323,8 +338,8 @@ void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
   Abstraction *abstr = NULL;
   if (gci->isMethAppl) {
     if (!isObject(pred) ||
-        NULL == (abstr = getApplyMethod((Object *) tagged2Const(pred),
-                                        gci->mn,gci->arity))) {
+        NULL == (abstr = getApplyMethodForGenCall((Object *) tagged2Const(pred),
+                                                  gci->mn,gci->arity))) {
       ApplMethInfoClass *ami = new ApplMethInfoClass(gci->mn,gci->arity);
       CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
       CodeArea::writeAddress(ami, PC+1);
@@ -2570,7 +2585,7 @@ LBLsuspendThread:
     DEREF(object,objectPtr,_2);
     if (isObject(object)) {
       Object *obj      = (Object *) tagged2Const(object);
-      Abstraction *def = getSendMethod(obj,label,arity,(MethodCache*)(PC+4));
+      Abstraction *def = getSendMethod(obj,label,arity,(MethodCache*)(PC+4),X);
       if (def == NULL) {
         goto bombSend;
       }
@@ -2624,7 +2639,7 @@ LBLsuspendThread:
     if (!isObject(object)) {
       goto bombApply;
     }
-    def = getApplyMethod((Object *) tagged2Const(object),ami->methName,arity);
+    def = getApplyMethod((Object *) tagged2Const(object),ami->methName,arity,X);
     if (def==NULL) {
       goto bombApply;
     }

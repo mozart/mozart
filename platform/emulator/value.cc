@@ -218,23 +218,92 @@ TaggedRef Object::attachThread()
   return head(*aux);
 }
 
-Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity)
-{
-  OzDictionary *methods = getMethods();
-  TaggedRef method;
 
-  if (methods->getArg(label,method)!=PROCEED)
+Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
+                               Bool &defaultsUsed)
+{
+  TaggedRef method;
+  if (getMethods()->getArg(label,method)!=PROCEED)
     return NULL;
 
   DEREF(method,_1,_2);
   Assert(isAbstraction(method));
 
   Abstraction *abstr = (Abstraction*) tagged2Const(method);
-  if (!sameSRecordArity(abstr->getMethodArity(),arity)) {
-    return NULL;
+  defaultsUsed = NO;
+  if (sameSRecordArity(abstr->getMethodArity(),arity))
+    return abstr;
+  defaultsUsed = OK;
+  return lookupDefault(label,arity,X) ? abstr : NULL;
+}
+
+Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
+{
+  TaggedRef def;
+  if (getDefMethods()->getArg(label,def)!=PROCEED)
+    return NO;
+
+  def = deref(def);
+  Assert(isSRecord(def));
+  SRecord *rec = tagged2SRecord(def);
+
+  if (rec->isTuple()) {
+    if (!sraIsTuple(arity)) {
+      return NO;
+    }
+    int widthDefault  = rec->getWidth();
+    int widthProvided = getTupleWidth(arity);
+    if (widthDefault < widthProvided ||
+        literalEq(deref(rec->getArg(widthProvided)),NameOoRequiredArg))
+      return NO;
+
+    for (int i=widthProvided; i<widthDefault; i++) {
+      if (literalEq(deref(rec->getArg(i)),NameOoDefaultVar)) {
+        X[i] = makeTaggedRef(newTaggedUVar(am.currentBoard));
+      } else {
+        X[i] = rec->getArg(i);
+      }
+    }
+    return OK;
   }
 
-  return abstr;
+  TaggedRef arityList = getRecordArity(arity)->getList();
+
+  TaggedRef auxX[100];
+  if (getWidth(arity)>=100)
+    return NO;
+
+  def = rec->getArityList();
+
+  int argno;
+  int argnoProvided = 0;
+  for (argno = 0; isCons(def); def = tail(def), argno++) {
+    TaggedRef feat  = head(def);
+    TaggedRef value = deref(rec->getArg(argno));
+
+    if (featureEq(head(arityList),feat)) {
+      arityList = tail(arityList);
+      auxX[argno] = X[argnoProvided];
+      argnoProvided++;
+    } else if (literalEq(value,NameOoDefaultVar)) {
+      auxX[argno] = makeTaggedRef(newTaggedUVar(am.currentBoard));
+    } else if (literalEq(value,NameOoRequiredArg)) {
+      return NO;
+    } else {
+      auxX[argno] = rec->getArg(argno);
+    }
+  }
+
+  /* overspecified? */
+  if (!isNil(arityList))
+    return NO;
+
+  while(argno>0) {
+    argno--;
+    X[argno] = auxX[argno];
+  }
+
+  return OK;
 }
 
 /*===================================================================

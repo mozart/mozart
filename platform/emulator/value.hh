@@ -1067,6 +1067,7 @@ private:
   OzDictionary *fastMethods;
   Literal *printName;
   OzDictionary *slowMethods;
+  OzDictionary *defaultMethods;
   Abstraction *send;
   SRecord *unfreeFeatures;
   TaggedRef ozclass;    /* the class as seen by the Oz user */
@@ -1077,7 +1078,8 @@ public:
   Bool hasFastBatch;    /* for optimized batches */
 
   ObjectClass(OzDictionary *fm, Literal *pn, OzDictionary *sm,
-              Abstraction *snd, Bool hfb, SRecord *uf)
+              Abstraction *snd, Bool hfb, SRecord *uf,
+              OzDictionary *dm)
   {
     fastMethods    = fm;
     printName      = pn;
@@ -1085,10 +1087,12 @@ public:
     send           = snd;
     hasFastBatch   = hfb;
     unfreeFeatures = uf;
+    defaultMethods = dm;
     ozclass        = AtomNil;
 
   }
   OzDictionary *getSlowMethods() { return slowMethods; }
+  OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
   Abstraction *getAbstraction()  { return send; }
   char *getPrintName()           { return printName->getPrintName(); }
@@ -1168,11 +1172,15 @@ public:
 
   char *getPrintName()          { return getClass()->getPrintName(); }
   OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
-  Abstraction *getMethod(TaggedRef label, SRecordArity arity);
+  Abstraction *getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
+                         Bool &defaultsUsed);
+
+  Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
   SRecord *getState()           { return (SRecord*) ToPointer(state); }
   void setState(SRecord *s)     { state = ToInt32(s); }
   Abstraction *getAbstraction() { return getClass()->getAbstraction(); }
   OzDictionary *getSlowMethods() { return getClass()->getSlowMethods(); }
+  OzDictionary *getDefMethods()  { return getClass()->getDefMethods(); }
   TaggedRef getOzClass()        { return getClass()->getOzClass(); }
   Board *getBoardFast();
   SRecord *getFreeRecord()          { return (SRecord *) getPtr(); }
