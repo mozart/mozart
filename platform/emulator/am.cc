@@ -290,10 +290,8 @@ void AM::init(int argc,char **argv)
   currentSolveBoard = (Board *) NULL;
   wasSolveSet = NO;
 
-  lastThreadID     = 0;
-  lastFrameID      = 0;
-  addEmacsThreads  = addSubThreads = OK;
-  threadStreamTail = OZ_newVariable();
+  lastThreadID    = 0;
+  debugStreamTail = OZ_newVariable();
 
   initThreads();
   toplevelQueue = (Toplevel *) NULL;
@@ -1841,8 +1839,8 @@ void AM::checkDebugOutline(Thread *tt)
 {
   Assert(debugmode());
   if (currentThread && tt->getThrType() == S_RTHREAD)
-    if (currentThread == rootThread && addEmacsThreads ||
-        currentThread->getTrace() && addSubThreads) {
+    if (currentThread == rootThread && ozconf.addEmacsThreads ||
+        currentThread->getTrace() && ozconf.addSubThreads) {
 
       debugStreamThread(tt,currentThread);
 

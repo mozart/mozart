@@ -2782,7 +2782,6 @@ OZ_C_proc_begin(BIthreadSuspend,1)
     return remoteSend(th,"Thread.suspend",nil());
   }
 
-
   th->setStop(OK);
   if (th == am.currentThread) {
     return BI_PREEMPT;
@@ -2864,6 +2863,82 @@ OZ_C_proc_begin(BIthreadPreempt,1)
     return BI_PREEMPT;
   }
   return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIthreadSetRaiseOnBlock,2)
+{
+  oz_declareThreadArg(0,thread);
+  oz_declareNonvarArg(1,yesno);
+
+  if (OZ_isTrue(yesno))
+    thread->setNoBlock(OK);
+  else if (OZ_isFalse(yesno))
+    thread->setNoBlock(NO);
+  else
+    oz_typeError(1,"Bool");
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIthreadGetRaiseOnBlock,2)
+{
+  oz_declareThreadArg(0,thread);
+  oz_declareArg(1,out);
+
+  return OZ_unify(out,thread->getNoBlock()? NameTrue: NameFalse);
+}
+OZ_C_proc_end
+
+// ------------------ explore a thread's taskstack ---------------------------
+
+OZ_C_proc_begin(BIthreadTaskStack,4)
+{
+  oz_declareThreadArg(0,thread);
+  oz_declareIntArg(1,depth);
+  oz_declareNonvarArg(2,verbose);
+  oz_declareArg(3,out);
+
+  if (thread->isDeadThread() || !thread->hasStack())
+    return OZ_unify(out, nil());
+
+  Bool doverbose;
+  if (OZ_isTrue(verbose))
+    doverbose = OK;
+  else if (OZ_isFalse(verbose))
+    doverbose = NO;
+  else
+    oz_typeError(2,"Bool");
+
+  TaskStack *taskstack = thread->getTaskStackRef();
+  return OZ_unify(out, taskstack->getTaskStack(thread,doverbose,depth+1));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIthreadFrameVariables,3)
+{
+  oz_declareThreadArg(0,thread);
+  oz_declareIntArg(1,frameId);
+  oz_declareArg(2,out);
+
+  if (thread->isDeadThread() || !thread->hasStack())
+    return OZ_unify(out, NameUnit);
+
+  TaskStack *taskstack = thread->getTaskStackRef();
+  return OZ_unify(out, taskstack->getFrameVariables(frameId));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIthreadLocation,2)
+{
+  oz_declareThreadArg(0,thread);
+  oz_declareArg(1,out);
+
+  if (thread->isDeadThread()) {
+    return OZ_unify(out, nil());
+  } else {
+    return OZ_unify(out, am.dbgGetLoc(GETBOARD(thread)));
+  }
 }
 OZ_C_proc_end
 
@@ -5577,9 +5652,10 @@ OZ_C_proc_end
  * Shutdown
  * ------------------------------------------------------------ */
 
-OZ_C_proc_begin(BIshutdown,0)
+OZ_C_proc_begin(BIshutdown,1)
 {
-  am.exitOz(0);
+  OZ_declareIntArg(0,status);
+  am.exitOz(status);
   return(PROCEED); /* not reached but anyway */
 }
 OZ_C_proc_end
@@ -6438,52 +6514,6 @@ OZ_C_proc_begin(BIaddr,2)
 OZ_C_proc_end
 
 // ---------------------------------------------------------------------------
-// Debugging: special builtins for Benni
-// ---------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIglobalThreadStream,1)
-{
-  return oz_unify(OZ_getCArg(0), am.getThreadStreamTail());
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIcurrentThread,1)
-{
-  return oz_unify(OZ_getCArg(0),
-                  makeTaggedConst(am.currentThread));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIstopThread,1)
-{
-  OZ_Term chunk  = deref(OZ_getCArg(0));
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-
-  thread->setStop(OK);
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIcontThread,1)
-{
-  OZ_Term chunk  = deref(OZ_getCArg(0));
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-
-  thread->setStop(NO);
-  am.scheduleThread(thread);
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_Return waitForArbiterInline(TaggedRef val)
-{
-  NONVAR( val, _1);
-  return PROCEED;
-}
-DECLAREBI_USEINLINEREL1(BIwaitForArbiter,waitForArbiterInline)
-
 
 #ifdef UNUSED
 OZ_C_proc_begin(BIindex2Tagged,2)
@@ -6532,13 +6562,6 @@ OZ_C_proc_begin(BIshowBuiltins,0)
 {
   builtinTab.print();
   return(PROCEED);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BItraceBack, 0)
-{
-  am.currentThread->printTaskStack(NOCODE);
-  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -7606,7 +7629,7 @@ BIspec allSpec[] = {
   {"EnvToTuple",2,      BIEnvToTuple,           0},
 
   {"findFunction",   3, BIfindFunction,         0},
-  {"shutdown",       0, BIshutdown,             0},
+  {"shutdown",       1, BIshutdown,             0},
 
   {"Alarm",          2, BIalarm,                0},
   {"Delay",          1, BIdelay,                0},
@@ -7665,39 +7688,46 @@ BIspec allSpec[] = {
   {"onToplevel",1,BIonToplevel},
   {"addr",2,BIaddr},
 
-  // Debugging
-  {"debugmode",1,BIdebugmode},
-  {"checkStopped",2,BIcheckStopped},
-  {"globalThreadStream",1,BIglobalThreadStream},
-  {"currentThread",1,BIcurrentThread},
-  {"setContFlag",2,BIsetContFlag},
-  {"setStepMode",2,BIsetStepMode},
-  {"stopThread",1,BIstopThread},
-  {"contThread",1,BIcontThread},
-  {"traceThread",2,BItraceThread},
-  {"Debug.breakpointAt",4,BIbreakpointAt},
-  {"Debug.breakpoint",0,BIbreakpoint},
+  // source level debugger
+  {"Debug.mode",            1, BIdebugmode},
+  {"Debug.addEmacsThreads", 1, BIaddEmacsThreads},
+  {"Debug.addSubThreads",   1, BIaddSubThreads},
+  {"Debug.getStream",       1, BIgetDebugStream},
+  {"Debug.setContFlag",     2, BIsetContFlag},
+  {"Debug.setStepFlag",     2, BIsetStepFlag},
+  {"Debug.setTraceFlag",    2, BIsetTraceFlag},
+  {"Debug.checkStopped",    2, BIcheckStopped},
+
+  // Debug module
+  {"Debug.dumpThreads", 0, BIdumpThreads},
+  {"Debug.listThreads", 1, BIlistThreads},
+  {"Debug.breakpointAt",4, BIbreakpointAt},
+  {"Debug.breakpoint",  0, BIbreakpoint},
   {"Debug.displayCode", 2, BIdisplayCode},
-  {"waitForArbiter", 1, BIwaitForArbiter, (IFOR) waitForArbiterInline},
 
 #ifdef UNUSED
-  {"index2Tagged",2,BIindex2Tagged},
+  {"index2Tagged",  2,BIindex2Tagged},
   {"time2localTime",2,BItime2localTime},
 #endif
 
-  //
+  // Builtins for the Thread module
 
-  {"Thread.is",2,BIthreadIs},
-  {"Thread.id",2,BIthreadID},
-  {"Thread.this",1,BIthreadThis},
-  {"Thread.suspend",1,BIthreadSuspend},
-  {"Thread.resume",1,BIthreadResume},
-  {"Thread.injectException",2,BIthreadRaise},
-  {"Thread.preempt",1,BIthreadPreempt},
-  {"Thread.setPriority",2,BIthreadSetPriority},
-  {"Thread.getPriority",2,BIthreadGetPriority},
-  {"Thread.isSuspended",2,BIthreadIsSuspended},
-  {"Thread.state",2,BIthreadState},
+  {"Thread.is",             2, BIthreadIs},
+  {"Thread.id",             2, BIthreadID},
+  {"Thread.this",           1, BIthreadThis},
+  {"Thread.suspend",        1, BIthreadSuspend},
+  {"Thread.resume",         1, BIthreadResume},
+  {"Thread.injectException",2, BIthreadRaise},
+  {"Thread.preempt",        1, BIthreadPreempt},
+  {"Thread.setPriority",    2, BIthreadSetPriority},
+  {"Thread.getPriority",    2, BIthreadGetPriority},
+  {"Thread.isSuspended",    2, BIthreadIsSuspended},
+  {"Thread.state",          2, BIthreadState},
+  {"Thread.setRaiseOnBlock",2, BIthreadSetRaiseOnBlock},
+  {"Thread.getRaiseOnBlock",2, BIthreadGetRaiseOnBlock},
+  {"Thread.taskStack",      4, BIthreadTaskStack},
+  {"Thread.frameVariables", 3, BIthreadFrameVariables},
+  {"Thread.location",       2, BIthreadLocation},
 
 #ifdef PRINT_LONG
   {"printLong",2,BIprintLong},
@@ -7716,32 +7746,16 @@ BIspec allSpec[] = {
   {"biPrint",   0, BIbiPrint},
 #endif
 
-  {"traceBack",0,BItraceBack},
-
-  {"taskstack",         3, BItaskStack},
-  {"debugEmacsThreads", 1, BIdebugEmacsThreads},
-  {"debugSubThreads",   1, BIdebugSubThreads},
-  {"frameVariables",    3, BIframeVariables},
-  {"location",          2, BIlocation},
-
 #ifdef DEBUG_TRACE
   {"halt",0,BIhalt},
 #endif
 
   {"System.printName",2,BIgetPrintName},
-
-  {"ozparser_parseFile",3,ozparser_parseFile},
-  {"ozparser_parseVirtualString",3,ozparser_parseVirtualString},
-  {"ozparser_fileExists",2,ozparser_fileExists},
-
   {"System.printInfo",1,BIprintInfo},
   {"System.printError",1,BIprintError},
   {"System.valueToVirtualString",4,BItermToVS},
   {"getTermSize",4,BIgetTermSize},
   {"heapUsed",1,BIheapUsed},
-
-  {"dumpThreads",0,BIdumpThreads},
-  {"listThreads",1,BIlistThreads},
 
   {"foreignFDProps", 1, BIforeignFDProps},
 
@@ -7798,6 +7812,11 @@ BIspec allSpec[] = {
   {"RegSet.subtract",            2, BIregSet_subtract,            0},
   {"RegSet.toList",              2, BIregSet_toList,              0},
   {"RegSet.complementToList",    2, BIregSet_complementToList,    0},
+
+  // Oz parser
+  {"ozparser_parseFile",         3, ozparser_parseFile},
+  {"ozparser_parseVirtualString",3, ozparser_parseVirtualString},
+  {"ozparser_fileExists",        2, ozparser_fileExists},
 
   {0,0,0,0}
 };

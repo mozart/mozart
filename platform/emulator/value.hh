@@ -31,6 +31,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
        AtomMin, AtomMax, AtomMid, AtomLow,
        AtomNaive, AtomSize, AtomNbSusps,
+       AtomDebugCall, AtomDebugCond, AtomDebugHandler, AtomDebugLock,
 
        NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
        NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
@@ -1613,7 +1614,6 @@ class PrTabEntry {
 private:
   TaggedRef printname;
   unsigned short arity;
-  unsigned short spyFlag;
   SRecordArity methodArity;
   TaggedRef fileName;
   int lineno;
@@ -1633,7 +1633,7 @@ public:
   ProgramCounter PC;
 
   PrTabEntry (TaggedRef name, SRecordArity arityInit,TaggedRef file, int line)
-  : printname(name), spyFlag(NO), fileName(file), lineno(line)
+  : printname(name), fileName(file), lineno(line)
   {
     Assert(isLiteral(name));
     methodArity = arityInit;
@@ -1657,9 +1657,6 @@ public:
   TaggedRef getName () { return printname; }
   ProgramCounter getPC() { return PC; }
   void setPC(ProgramCounter pc) { PC = pc; }
-  Bool getSpyFlag()   { return (Bool) spyFlag; }
-  void setSpyFlag()   { spyFlag = OK; }
-  void unsetSpyFlag() { spyFlag = NO; }
 
   void setInfo(TaggedRef t) { info = t; }
   TaggedRef getInfo()       { return info; }
@@ -1754,7 +1751,6 @@ Abstraction *tagged2Abstraction(TaggedRef term)
 
 class BuiltinTabEntry: public ConstTerm {
 friend void ConstTerm::gcConstRecurse(void);
-  friend class Debugger;
 private:
   TaggedRef printname; //must be atom
   int arity;

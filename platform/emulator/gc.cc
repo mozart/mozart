@@ -278,7 +278,7 @@ public:
         s = "blocked";
       message("Thread: id = %d, state: %s\n",aux->elem->getID(),s);
       message("----------------------------------------\n");
-      aux->elem->printTaskStack(NOCODE,NO);
+      aux->elem->printTaskStack();
     }
   }
 
@@ -1651,7 +1651,7 @@ void AM::gc(int msgLevel)
 
   gcTagged(defaultExceptionHdl,defaultExceptionHdl);
   gcTagged(opiCompiler,opiCompiler);
-  gcTagged(threadStreamTail,threadStreamTail);
+  gcTagged(debugStreamTail,debugStreamTail);
 
   gc_tcl_sessions();
 
@@ -2806,7 +2806,11 @@ OzDebug *OzDebug::gcOzDebug()
 {
   OzDebug *ret = (OzDebug*) gcRealloc(this,sizeof(OzDebug));
 
-  gcTagged(ret->info,ret->info);
+  ret->Y = gcRefsArray(ret->Y);
+  ret->G = gcRefsArray(ret->G);
+  gcTagged(ret->data,ret->data);
+  ret->arguments = gcRefsArray(ret->arguments);
+
   return ret;
 }
 

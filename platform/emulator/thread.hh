@@ -27,17 +27,17 @@
 // 0x1000. Flags up to 0x1000 and above 0x1000 should not be mixed,
 // because then three instructions are required (for testing, i mean);
 enum ThreadFlag {
-  T_null   = 0x000000, // no flag is set;
+  T_null   = 0x000000,   // no flag is set;
   T_dead   = 0x000001,   // the thread is dead;
   T_runnable=0x000002,   // the thread is runnable;
   T_p_thr  = 0x000004,   // 'real' propagators by Tobias;
   T_stack  = 0x000008,   // it has an (allocated) stack;
   T_catch  = 0x000010,   // has or has had an exception handler
   T_solve  = 0x000020,   // it was created in a search CS
-                          // (former notificationBoard);
+                         // (former notificationBoard);
   T_ext    = 0x000040,   // an external suspension wrt current search problem;
   T_unif   = 0x000080,   // the thread is due to a (proper) unification
-                           // of fd variables;
+                         // of fd variables;
   T_loca   = 0x000100,   // all variables of this propagator are local;
   T_tag    = 0x000200,   // a special stuff for fd (Tobias, please comment?);
   T_ofs    = 0x000400,   // the OFS thread (needed for DynamicArity);
@@ -45,14 +45,15 @@ enum ThreadFlag {
   T_ltq    = 0x000800,   // designates local thread queue
   T_nmo    = 0x001000,   // designates nonmonotonic propagator
 
+  T_noblock= 0x002000,   // if this thread blocks, raise an exception
+
   // debugger
   T_G_trace= 0x010000,   // thread is being traced
   T_G_step = 0x020000,   // step mode turned on
   T_G_stop = 0x040000,   // no permission to run
   T_G_cont = 0x080000,   // continue flag
 
-  //
-  T_max    = 0x800000      // MAXIMAL FLAG;
+  T_max    = 0x800000    // MAXIMAL FLAG;
 };
 
 
@@ -280,7 +281,14 @@ public:
     return state.flags & T_nmo;
   }
 
-  // debugger
+  void setNoBlock(Bool yesno) {
+    state.flags = yesno ? state.flags | T_noblock : state.flags & ~T_noblock;
+  }
+  Bool getNoBlock() {
+    return (state.flags & T_noblock);
+  }
+
+  // source level debugger
   // set/delete some bits...
   void setTrace(Bool yesno) {
     state.flags = yesno ? state.flags | T_G_trace : state.flags & ~T_G_trace;
@@ -414,8 +422,19 @@ public:
   void pushLTQ(SolveActor * sa) {
     item.threadBody->taskStack.pushLTQ(sa);
   }
-  void pushDebug(OzDebug *d) {
-    item.threadBody->taskStack.pushDebug (d);
+  void pushDebug(OzDebug *dbg, OzDebugDoit dothis) {
+    item.threadBody->taskStack.pushDebug(dbg,dothis);
+  }
+  void popDebug(OzDebug *&dbg, OzDebugDoit &dothis) {
+    PopFrame(&item.threadBody->taskStack,pc,y,g);
+    if (pc == C_DEBUG_CONT_Ptr) {
+      dbg = (OzDebug *) y;
+      dothis = (OzDebugDoit) (int) g;
+    } else {
+      item.threadBody->taskStack.restoreFrame();
+      dbg = (OzDebug *) NULL;
+      dothis = DBG_EXIT;
+    }
   }
   void pushCall(TaggedRef pred, RefsArray  x, int n) {
     item.threadBody->taskStack.pushCall(pred, x, n);
@@ -435,19 +454,12 @@ public:
     return hasStack() ? item.threadBody->taskStack.isEmpty() : NO;
   }
 
-  void printTaskStack(ProgramCounter pc,
-                      Bool verbose = NO, int depth = 10000) {
+  void printTaskStack(Bool verbose = NO, int depth = 10000) {
     if (hasStack()) {
-      item.threadBody->taskStack.printTaskStack(pc, verbose, depth);
+      item.threadBody->taskStack.printTaskStack(verbose, depth);
     }
   }
 
-
-  TaggedRef dbgGetTaskStack(ProgramCounter pc, int depth = 10000) {
-    return hasStack()
-      ? item.threadBody->taskStack.dbgGetTaskStack(pc, depth)
-      : nil();
-  }
 
   TaskStack *getTaskStackRef() {
     Assert(hasStack());

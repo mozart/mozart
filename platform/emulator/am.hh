@@ -88,11 +88,10 @@ public:
   Board *rootBoard;
   Board *currentSolveBoard;       // current 'solve' board or NULL if none;
 
-  // debugger
-  TaggedRef threadStreamTail;
-  Bool addEmacsThreads, addSubThreads;
-
 private:
+  // source level debugger
+  TaggedRef debugStreamTail;
+
   int statusReg;
   Trail trail;
   TaggedRef xRegs[NumberOfXRegisters];
@@ -139,9 +138,8 @@ private:
 
   TaggedRef opiCompiler;
 
-  // debugger
   unsigned int lastThreadID;
-  unsigned int lastFrameID;
+
   Toplevel *toplevelQueue;
 
   Bool installingScript;  // ask TM
@@ -193,7 +191,19 @@ public:
     return OK;
   }
 
-  TaggedRef getThreadStreamTail() { return threadStreamTail; }
+  TaggedRef getDebugStreamTail() { return debugStreamTail; }
+  void debugStreamMessage(TaggedRef message) {
+    Board *bb = currentBoard;
+    currentBoard = rootBoard;
+
+    TaggedRef newTail = OZ_newVariable();
+    OZ_Return ret     = OZ_unify(debugStreamTail,cons(message,newTail));
+    debugStreamTail   = newTail;
+    Assert(ret == PROCEED);
+
+    currentBoard = bb;
+  }
+
 
   void setException(TaggedRef val, TaggedRef inf, Bool d) {
     exception.value = val;
@@ -313,7 +323,7 @@ public:
   void reduceTrailOnShallow(Thread *);
 
   // in emulate.cc
-  Bool emulateHookOutline(ProgramCounter PC, Abstraction *def,TaggedRef *arguments);
+  Bool emulateHookOutline();
   Bool hookCheckNeeded();
   Bool isNotPreemptiveScheduling(void);
 

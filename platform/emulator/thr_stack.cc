@@ -56,7 +56,7 @@ loop:
       printf("\nOptions:\n");
       printf(  "=======\n");
       printf("y = yes, increase stack maxsize\n");
-      printf("n = no (will exit Oz !!)\n");
+      printf("n = no (will exit Oz)\n");
       printf("b = print a stack dump\n");
       printf("u = unlimited stack size (no further questions)\n");
 
@@ -73,18 +73,144 @@ loop:
   resize(n);
 }
 
-Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
+static Bool isUninterestingTask(ProgramCounter PC) {
+  return
+    PC == C_XCONT_Ptr ||
+    PC == C_CALL_CONT_Ptr ||
+    PC == C_LOCK_Ptr ||
+    PC == C_SET_SELF_Ptr ||
+    PC == C_SET_ABSTR_Ptr ||
+    PC == C_LTQ_Ptr ||
+    PC == C_ACTOR_Ptr ||
+    PC == C_CATCH_Ptr ||
+    PC == C_EMPTY_STACK;
+}
+
+TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
+{
+  int frameId = verbose? -1: getFrameId(frame);
+  GetFrame(frame,PC,Y,G);
+
+  if (PC == C_EMPTY_STACK) {
+    frame = NULL;
+    return makeTaggedNULL();
+  }
+
+  if (PC == C_DEBUG_CONT_Ptr) {
+    OzDebug *dbg = (OzDebug *) Y;
+    OzDebugDoit dothis = (OzDebugDoit) (int) G;
+    if (dothis == DBG_EXIT)
+      return dbg->toRecord("exit",thread,frameId);
+    else
+      return dbg->toRecord("entry",thread,frameId);
+  }
+
+  if (PC == C_CATCH_Ptr) {
+    GetFrame(frame,auxPC,auxY,auxG);   // ignore the handler continuation
+    return makeTaggedNULL();
+  }
+
+  if (PC == C_CFUNC_CONT_Ptr) {
+    // Alas, this frame is not pushed for builtins called as
+    // inline-builtins (inlineFun, inlineRel), so if the examined
+    // code was not executed with debug information and in debugmode,
+    // it will not be shown on the stack.
+    Frame *auxframe = frame, *lastframe;
+    GetFrame(auxframe,auxPC,auxY,auxG);
+    while (isUninterestingTask(auxPC))
+      GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
+    // now we also ignore the frame with the next normal continuation,
+    // to see whether it is followed by a debug frame:
+    lastframe = auxframe;
+    GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
+    while (isUninterestingTask(auxPC)) {
+      lastframe = auxframe;
+      GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
+    }
+    if (auxPC == C_DEBUG_CONT_Ptr) {
+      // the OzDebug in the next stack frame has more to tell than
+      // this builtin-application frame:
+      frame = lastframe;
+      return makeTaggedNULL();
+    } else {
+      frame = auxframe;
+
+      RefsArray X = (RefsArray) G;
+      TaggedRef args = nil();
+      if (X) {
+        for (int i = getRefsArraySize(X) - 1; i >= 0; i--)
+          args = cons(X[i],args);
+      }
+
+      TaggedRef pairlist =
+        cons(OZ_pairA("args",args),
+             cons(OZ_pairA("kind",AtomDebugCall),
+                  cons(OZ_pairA("thr",makeTaggedConst(thread)),
+                       cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
+                            cons(OZ_pairA("origin",OZ_atom("builtinFrame")),
+                                 nil())))));
+      if (frameId != -1)
+        pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
+      BuiltinTabEntry *biTabEntry = builtinTab.getEntry((void *) Y);
+      Assert(biTabEntry != NULL);
+      pairlist = cons(OZ_pairA("data",makeTaggedConst(biTabEntry)),pairlist);
+
+      return OZ_recordInit(OZ_atom("entry"), pairlist);
+    }
+  }
+
+  ProgramCounter definitionPC = CodeArea::definitionStart(PC);
+  if (definitionPC == NOCODE)
+    return makeTaggedNULL();
+
+  Frame *auxframe = frame, *lastframe = frame;
+  GetFrame(auxframe,auxPC,auxY,auxG);
+  while (isUninterestingTask(auxPC)) {
+    lastframe = auxframe;
+    GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
+  }
+  if (auxPC == C_DEBUG_CONT_Ptr) {
+    // the OzDebug in the next stack frame has more to tell than
+    // this builtin frame:
+    frame = lastframe;
+    return makeTaggedNULL();
+  } else {
+    frame = auxframe;
+    return CodeArea::dbgGetDef(PC,definitionPC,verbose);
+  }
+}
+
+Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
 {
   Assert(this);
 
-  if (out) *out = nil();
+  if (out) {
+    *out = nil();
+    if (PC != NOCODE) {
+      ProgramCounter definitionPC = CodeArea::definitionStart(PC);
+      if (definitionPC != NOCODE) {
+        TaggedRef frameRec = CodeArea::dbgGetDef(PC,definitionPC);
+        if (frameRec != makeTaggedNULL())
+          *out = cons(frameRec,*out);
+      }
+    }
+  }
 
   while (!isEmpty()) {
-    PopFrame(this,PC,Y,G);
+    if (out) {
+      Frame *frame = getTop();
+      TaggedRef frameRec = frameToRecord(frame,am.currentThread,verbose);
+      if (frameRec != makeTaggedNULL())
+        *out = cons(frameRec,*out);
+    }
 
+    PopFrame(this,PC,Y,G);
     if (PC==C_CATCH_Ptr) {
       if (out) *out = reverseC(*out);
       return TRUE;
+    } else if (PC==C_DEBUG_CONT_Ptr) {
+      OzDebug *dbg = (OzDebug *) Y;
+      dbg->dispose();
     } else if (PC==C_ACTOR_Ptr) {
       Actor *ac = (Actor *) Y;
       ac->discardActor();
@@ -102,194 +228,63 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
     } else if (PC==C_SET_ABSTR_Ptr) {
       ozstat.leaveCall((PrTabEntry*)Y);
     }
-    if (out) {
-      if (verbose) {
-        if (PC==C_DEBUG_CONT_Ptr) {
-          OzDebug *ozdeb = (OzDebug *) Y;
-          *out = cons(OZ_mkTupleC("debug",1,ozdeb->info), *out);
-          continue;
-        }
-        if (PC==C_CFUNC_CONT_Ptr) {
-          OZ_CFun biFun    = (OZ_CFun) (void*) Y;
-          RefsArray X      = (RefsArray) G;
-          TaggedRef args   = nil();
-
-          if (X)
-            for (int i=getRefsArraySize(X)-1; i>=0; i--)
-              args = cons(X[i],args);
-          else
-            args = nil();
-
-          TaggedRef pairlist =
-            cons(OZ_pairA("name", OZ_atom(builtinTab.getName((void *) biFun))),
-                 cons(OZ_pairA("args", args),
-                      nil()));
-          TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
-          *out = cons(entry, *out);
-          continue;
-        }
-      }
-      TaggedRef tt=CodeArea::dbgGetDef(PC);
-      if (tt!=nil()) { // NOCODE_GLOBALVARNAME
-        if (verbose)
-          tt = OZ_adjoinAt(tt,OZ_atom("vars"),CodeArea::varNames(PC,G,Y));
-        *out = cons(tt,*out);
-      }
-    }
   }
   if (out) *out = reverseC(*out);
   return FALSE;
 }
 
-
+// for debugging:
 void printStack()
 {
-  am.currentThread->getTaskStackRef()->printTaskStack(NOCODE,OK,1000);
+  am.currentThread->getTaskStackRef()->printTaskStack(OK);
 }
 
-void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
+void TaskStack::printTaskStack(Bool verbose, int depth)
 {
-  message("\n");
-  message("Stack dump:\n");
-  message("-----------\n");
-
   Assert(this);
-  if (pc == NOCODE && isEmpty()) {
+  if (isEmpty()) {
     message("\tEMPTY\n");
+    message("\n");
     return;
   }
 
-  if (pc != NOCODE) {
-    CodeArea::printDef(pc);
-  }
-
   Frame *auxtos = getTop();
-
   while (depth-- > 0) {
     GetFrame(auxtos,PC,Y,G);
     if (PC==C_EMPTY_STACK)
       return;
     CodeArea::printDef(PC);
-    if (verbose) { message("\t\tPC=0x%x, Y=0x%x, G=0x%x\n",PC, Y, G); }
+    if (verbose)
+      message("\t\tPC=%p, Y=%p, G=%p\n",PC,Y,G);
   }
   message("\t ...\n");
 }
 
 
-TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth, Thread *tt)
-{
+TaggedRef TaskStack::getTaskStack(Thread *tt, Bool verbose, int depth) {
   Assert(this);
 
   TaggedRef out = nil();
-
-  if (pc != NOCODE) {
-    out = cons(CodeArea::dbgGetDef(pc),out);
-  }
-
   Frame *auxtos = getTop();
-
-  while (depth-- > 0) {
-    GetFrame(auxtos,PC,Y,G);
-    if (PC==C_EMPTY_STACK)
-      break;
-
-    if (PC==C_DEBUG_CONT_Ptr) {
-      OzDebug *ozdeb = (OzDebug *) Y;
-      out = cons(OZ_mkTupleC("debug",1,ozdeb->info), out);
-      continue;
+  while (auxtos != NULL && depth-- > 0) {
+    TaggedRef frameRec = frameToRecord(auxtos,tt,verbose);
+    if (frameRec != makeTaggedNULL()) {
+      out = cons(frameRec,out);
     }
-
-    if (PC==C_CFUNC_CONT_Ptr) {
-      OZ_CFun biFun    = (OZ_CFun) (void*) Y;
-      RefsArray X      = (RefsArray) G;
-      TaggedRef args = nil();
-
-      if (X)
-        for (int i=getRefsArraySize(X)-1; i>=0; i--)
-          args = cons(X[i],args);
-      else
-        args = nil();
-
-      TaggedRef pairlist =
-        cons(OZ_pairA("name", OZ_atom(builtinTab.getName((void *) biFun))),
-             cons(OZ_pairA("args", args),
-                  nil()));
-      TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
-      out = cons(entry, out);
-      continue;
-    }
-
-    if (PC==C_ACTOR_Ptr) {
-      ProgramCounter DebugPC = CodeArea::nextDebugInfo((ProgramCounter) G);
-      if (DebugPC != NOCODE) {
-        TaggedRef def = CodeArea::dbgGetDef(DebugPC);
-        if (!OZ_isNil(def)) {
-          TaggedRef pairlist =
-            cons(OZ_pairA("name", OZ_atom("actor")),
-                 cons(OZ_pairA("args", nil()),
-                      nil()));
-          TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
-          out = cons(entry, out);
-
-          time_t feedtime = CodeArea::findTimeStamp(DebugPC);
-          TaggedRef dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
-          out = cons(OZ_mkTupleC("debug",1,dinfo), out);
-
-          out = cons(def,out);
-        }
-      }
-      continue;
-    }
-
-    if (PC==C_XCONT_Ptr && tt && !tt->isRunnable()) {
-      TaggedRef pairlist =
-        cons(OZ_pairA("name", OZ_atom("xcont")),
-             cons(OZ_pairA("args", nil()),
-                  nil()));
-      TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
-      out = cons(entry, out);
-
-      time_t feedtime = (time_t) 0;
-      TaggedRef dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
-      out = cons(OZ_mkTupleC("debug",1,dinfo), out);
-
-      continue;
-    }
-
-    TaggedRef def = CodeArea::dbgGetDef(PC);
-    if (!OZ_isNil(def))
-      out = cons(def,out);
-    else
-      // definitionStart(PC) == NOCODE_GLOBALVARNAME
-      ;
   }
+
   return reverseC(out);
 }
 
-TaggedRef TaskStack::dbgFrameVariables(int frameId)
-{
-  int     depth = 10000;
-  Bool    match = NO;
-
-  Frame *auxtos = getTop();
-
-  while (depth-- > 0) {
-    GetFrame(auxtos,PC,Y,G);
-
-    if (PC==C_EMPTY_STACK)
-      break;
-
-    if (PC==C_DEBUG_CONT_Ptr) {
-      if (match) continue;
-      OzDebug *ozdeb = (OzDebug *) Y;
-      int curId = OZ_intToC(OZ_head(ozdeb->info));
-      if (frameId == curId)
-        match = OK;
-      continue;
-    }
-
-    if (match)
-      return CodeArea::varNames(PC,G,Y);
-  }
-  return nil();
+TaggedRef TaskStack::getFrameVariables(int frameId) {
+  if (frameId < 0 || frameId % frameSz != 0)   // incorrect frame ID
+    return NameUnit;
+  Frame *frame = array + frameId;
+  if (frame > tos)   // the frame does not exist any longer
+    return NameUnit;
+  GetFrame(frame,PC,Y,G);
+  if (PC != C_DEBUG_CONT_Ptr)   // inconsistency detected
+    return NameUnit;
+  OzDebug *dbg = (OzDebug *) Y;
+  return dbg->getFrameVariables();
 }
