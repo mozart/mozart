@@ -17,15 +17,15 @@
         <Synopsis>
           <<{Procedure.is ?+{X} ??{B}}>>
         <Item>
-          tests whether <<X>> is a procedure.
+          tests whether ?_{X} is a procedure.
 
         <Entry><Span class=index/<<ProcedureArity>>/
           <Index class=tails/<<Procedure>><And><<arity>>/
         <Synopsis>
           <<{Procedure.arity ?+{P} ??{I}}>>
         <Item>
-          returns the procedure arity of&nbsp;<<P>>, &ie;, the number of
-          arguments which <<P>> takes.
+          returns the procedure arity of&nbsp;?_{P}, &ie;, the number of
+          arguments which ?_{P} takes.
       </List>
 
   <Section>
@@ -39,34 +39,34 @@
         <Synopsis>
           <<{Cell.is ?+{X} ??{B}}>>
         <Item>
-          tests whether <<X>> is a cell.
+          tests whether ?_{X} is a cell.
 
         <Entry><Span class=index/<<NewCell>>/
           <Index class=tails/<<Cell>><And><<new>>/
         <Synopsis>
-          <<{Cell.new X ??{Cell}}>>
+          <<{Cell.new ?_{X} ??{Cell}}>>
         <Item>
-          returns a new cell with initial content&nbsp;<<X>>.
+          returns a new cell with initial content&nbsp;?_{X}.
 
         <Entry><Span class=index/<<Exchange>>/
           <Index/<<Cell>><And><<exchange>>/
         <Synopsis>
           <<{Cell.exchange ?+{Cell} ?_{X} ?_{Y}}>>
         <Item>
-          returns the current content of <<Cell>> in&nbsp;<<X>>, and sets the
-          content of <<Cell>> to&nbsp;<<Y>>.
+          returns the current content of ?_{Cell} in&nbsp;?_{X}, and sets the
+          content of ?_{Cell} to&nbsp;?_{Y}.
 
         <Entry><Span class=index/<<Access>>/
           <Index/<<Cell>><And><<access>>/
         <Synopsis>
           <<{Cell.access ?+{Cell} ?_{X}}>>
         <Item>
-          returns the current content of <<Cell>> in&nbsp;<<X>>.
+          returns the current content of ?_{Cell} in&nbsp;?_{X}.
 
         <Entry><Span class=index/<<Assign>>/
         <Synopsis>
           <<{Cell.assign ?+{Cell} ?_{X}}>>
         <Item>
-          sets the content of <<Cell>> to&nbsp;<<X>>.
+          sets the content of ?_{Cell} to&nbsp;?_{X}.
       </List>
 </Chapter>

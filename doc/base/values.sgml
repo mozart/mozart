@@ -17,14 +17,14 @@
         <Synopsis>
           <<{Value.'=' ?_{X} ?_{Y}}>>
         <Item>
-          unifies the values of the variables <<X>> and&nbsp;<<Y>>.
+          unifies the values of the variables ?_{X} and&nbsp;?_{Y}.
 
         <Entry><Span class=index/<<==>>/
           <Index/<<Value>><And><<'=='>>/
         <Synopsis>
           <<{Value.'==' ?_{X} ?_{Y} ??{B}}>>
         <Item>
-          tests whether <<X>> is equal to&nbsp;<<Y>>.
+          tests whether ?_{X} is equal to&nbsp;?_{Y}.
           The test may suspend.
 
         <Entry><Span class=index/<<\=>>/
@@ -32,7 +32,7 @@
         <Synopsis>
           <<{Value.'\\=' ?_{X} ?_{Y} ??{B}}>>
         <Item>
-          tests whether <<X>> is not equal to&nbsp;<<Y>>.
+          tests whether ?_{X} is not equal to&nbsp;?_{Y}.
           The test may suspend.
       </List>
   <Section>
@@ -45,21 +45,21 @@
         <Synopsis>
           <<{Value.isFree ?_{X} ??{B}}>>
         <Item>
-          tests whether <<X>> is currently free.
+          tests whether ?_{X} is currently free.
 
         <Entry><Span class=index/<<IsDet>>/
           <Index/<<Value>><And><<isDet>>/
         <Synopsis>
           <<{Value.isDet ?_{X} ??{B}}>>
         <Item>
-          tests whether <<X>> is determined.
+          tests whether ?_{X} is determined.
 
         <Entry><Span class=index/<<IsKinded>>/
           <Index/<<Value>><And><<isKinded>>/
         <Synopsis>
           <<{Value.isKinded ?_{X} ??{B}}>>
         <Item>
-          tests whether <<X>> is currently kinded, &ie;, neither determined
+          tests whether ?_{X} is currently kinded, &ie;, neither determined
           nor free.
 
         <Entry><<Value.status>>
@@ -67,12 +67,12 @@
         <Synopsis>
           <<{Value.status ?_{X} ??T}>>
         <Item>
-          returns status and type information on&nbsp;<<X>>.  If <<X>> is
-          free, the atom <<free>> is returned.  If <<X>> is kinded, the
+          returns status and type information on&nbsp;?_{X}.  If ?_{X} is
+          free, the atom <<free>> is returned.  If ?_{X} is kinded, the
           tuple <<kinded(?{Y})>> is returned, where <Var type=meta/Y/ is
-          bound to an atom depending on the type of&nbsp;<<X>>.  If <<X>>
+          bound to an atom depending on the type of&nbsp;?_{X}.  If ?_{X}
           is determined, the tuple <<det(?{Y})>> is returned, where <Var
-          type=meta/Y/ is bound to an atom depending on the type of&nbsp;<<X>>.
+          type=meta/Y/ is bound to an atom depending on the type of&nbsp;?_{X}.
           <!--** what atoms are returned for what type? -->
 
         <!--** Value.type -->
@@ -90,41 +90,41 @@
         <Synopsis>
           <<{Value.'=&lt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
         <Item>
-          tests whether <<AFI1>> is less than or equal to <<AFI2>>.
+          tests whether ?_{AFI1} is less than or equal to ?_{AFI2}.
 
         <Entry><Span class=index/<<&lt;>>/
           <Index/<<Value>><And><<'&lt;'>>/
         <Synopsis>
           <<{Value.'&lt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
         <Item>
-          tests whether <<AFI1>> is less than <<AFI2>>.
+          tests whether ?_{AFI1} is less than ?_{AFI2}.
 
         <Entry><Span class=index/<<&gt;=>>/
           <Index/<<Value>><And><<'&gt;='>>/
         <Synopsis>
           <<{Value.'&gt;=' ?+{AFI1} ?+{AFI2} ??{B}}>>
         <Item>
-          tests whether <<AFI1>> is greater than or equal to <<AFI2>>.
+          tests whether ?_{AFI1} is greater than or equal to ?_{AFI2}.
 
         <Entry><Span class=index/<<&gt;>>/
           <Index/<<Value>><And><<'&gt;'>>/
         <Synopsis>
           <<{Value.'&gt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
         <Item>
-          tests whether <<AFI1>> is greater than <<AFI2>>.
+          tests whether ?_{AFI1} is greater than ?_{AFI2}.
 
         <Entry><Span class=index/<<Max>>/
           <Index/<<Value>><And><<max>>/
         <Synopsis>
           <<{Value.max ?+{AFI1} ?+{AFI2} ??{AFI3}}>>
         <Item>
-          returns the maximum of <<AFI1>> and <<AFI2>>.
+          returns the maximum of ?_{AFI1} and ?_{AFI2}.
 
         <Entry><Span class=index/<<Min>>/
           <Index/<<Value>><And><<min>>/
         <Synopsis>
           <<{Value.min ?+{AFI1} ?+{AFI2} ??{AFI3}}>>
         <Item>
-          returns the minimum of <<AFI1>> and <<AFI2>>.
+          returns the minimum of ?_{AFI1} and ?_{AFI2}.
       </List>
 </Chapter>

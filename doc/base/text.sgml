@@ -41,7 +41,7 @@
         <Synopsis>
           <<{Char.is ?+{X} ??{B}}>>
         <Item>
-          tests whether <<X>> is a character, &ie;, an integer between <<0>>
+          tests whether ?_{X} is a character, &ie;, an integer between <<0>>
           and&nbsp;<<255>> inclusively.
 
         <Entry><<isLower>>
@@ -49,28 +49,28 @@
         <Synopsis>
           <<{Char.isLower ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes a lower-case letter.
+          tests whether ?_{Char} encodes a lower-case letter.
 
         <Entry><<isUpper>>
           <Index class=tails/<<Char>><And><<isUpper>>/
         <Synopsis>
           <<{Char.isUpper ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes an upper-case letter.
+          tests whether ?_{Char} encodes an upper-case letter.
 
         <Entry><<isDigit>>
           <Index class=tails/<<Char>><And><<isDigit>>/
         <Synopsis>
           <<{Char.isDigit ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes a digit.
+          tests whether ?_{Char} encodes a digit.
 
         <Entry><<isSpace>>
           <Index class=tails/<<Char>><And><<isSpace>>/
         <Synopsis>
           <<{Char.isSpace ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes a white space character, &ie;, either
+          tests whether ?_{Char} encodes a white space character, &ie;, either
           a space, a form feed (<<&\f>>), a newline (<<&\n>>), a carriage
           return (<<&\r>>), a tab (<<&\t>>), a vertical tab (<<&\v>>) or
           a non-breaking space (<<&\240>>).
@@ -80,7 +80,7 @@
         <Synopsis>
           <<{Char.isPunct ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes a punctuation character, &ie;, a
+          tests whether ?_{Char} encodes a punctuation character, &ie;, a
           visible character, which is not a space, a digit, or a letter.
 
         <Entry><<isCntrl>>
@@ -88,35 +88,35 @@
         <Synopsis>
           <<{Char.isCntrl ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes a control character.
+          tests whether ?_{Char} encodes a control character.
 
         <Entry><<isAlpha>>
           <Index class=tails/<<Char>><And><<isAlpha>>/
         <Synopsis>
           <<{Char.isAlpha ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes a letter.
+          tests whether ?_{Char} encodes a letter.
 
         <Entry><<isAlNum>>
           <Index class=tails/<<Char>><And><<isAlNum>>/
         <Synopsis>
           <<{Char.isAlNum ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes a letter or a digit.
+          tests whether ?_{Char} encodes a letter or a digit.
 
         <Entry><<isGraph>>
           <Index class=tails/<<Char>><And><<isGraph>>/
         <Synopsis>
           <<{Char.isGraph ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> encodes a visible character.
+          tests whether ?_{Char} encodes a visible character.
 
         <Entry><<isPrint>>
           <Index class=tails/<<Char>><And><<isPrint>>/
         <Synopsis>
           <<{Char.isPrint ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> is a visible character or either the space
+          tests whether ?_{Char} is a visible character or either the space
           or non-breaking space character.
 
         <Entry><<isXDigit>>
@@ -124,14 +124,14 @@
         <Synopsis>
           <<{Char.isXDigit ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<Char>> is a hexadecimal digit.
+          tests whether ?_{Char} is a hexadecimal digit.
 
         <Entry><<type>>
           <Index class=tails/<<Char>><And><<type>>/
         <Synopsis>
           <<{Char.type ?+{Char} ??{A}}>>
         <Item>
-          maps <<Char>> to its simple type&nbsp;<<A>>, &ie;, one of the
+          maps ?_{Char} to its simple type&nbsp;?_{A}, &ie;, one of the
           atoms <<lower>>, <<upper>>, <<digit>>, <<space>>, <<punct>>, or
           <<other>>.
 
@@ -140,23 +140,23 @@
         <Synopsis>
           <<{Char.toLower ?+{Char1} ??{Char2}}>>
         <Item>
-          returns the corresponding lower-case letter if <<Char1>> is an
-          upper-case letter, otherwise <<Char1>> itself.
+          returns the corresponding lower-case letter if ?_{Char1} is an
+          upper-case letter, otherwise ?_{Char1} itself.
 
         <Entry><<toUpper>>
           <Index class=tails/<<Char>><And><<toUpper>>/
         <Synopsis>
           <<{Char.toUpper ?+{Char1} ??{Char2}}>>
         <Item>
-          returns the corresponding upper-case letter if <<Char1>> is a
-          lower-case letter, otherwise <<Char1>> itself.
+          returns the corresponding upper-case letter if ?_{Char1} is a
+          lower-case letter, otherwise ?_{Char1} itself.
 
         <Entry><<toAtom>>
         <Synopsis>
           <<{Char.toAtom ?+{Char} ??{A}}>>
         <Item>
-          maps <<Char>> to the corresponding atom&nbsp;<<A>>.  If <<Char>>
-          is zero, <<A>>&nbsp;will be the empty atom&nbsp;<<''>>.
+          maps ?_{Char} to the corresponding atom&nbsp;?_{A}.  If ?_{Char}
+          is zero, ?_{A}&nbsp;will be the empty atom&nbsp;<<''>>.
       </List>
 
   <Section>
@@ -171,14 +171,14 @@
         <Synopsis>
           <<{String.is ?+{X} ??{B}}>>
         <Item>
-          tests whether <<X>> is string.
+          tests whether ?_{X} is string.
 
         <Entry><Span class=index/<<StringToAtom>>/
           <Index class=tails/<<String>><And><<toAtom>>/
         <Synopsis>
           <<{String.toAtom ?+{S} ??{A}}>>
         <Item>
-          converts a string&nbsp;<<S>> to an atom&nbsp;<<A>>.  <<S>>&nbsp;must
+          converts a string&nbsp;?_{S} to an atom&nbsp;?_{A}.  ?_{S}&nbsp;must
           not contain NUL characters.  This is the inverse of <<Atom.toString>>
           (which see).
 
@@ -187,14 +187,14 @@
         <Synopsis>
           <<{String.isAtom ?+{S} ??{B}}>>
         <Item>
-          tests whether the string&nbsp;<<S>> can be converted to an atom.
+          tests whether the string&nbsp;?_{S} can be converted to an atom.
 
         <Entry><Span class=index/<<StringToInt>>/
           <Index class=tails/<<String>><And><<toInt>>/
         <Synopsis>
           <<{String.toInt ?+{S} ??{I}}>>
         <Item>
-          converts a string&nbsp;<<S>> to an integer&nbsp;<<I>>, according to
+          converts a string&nbsp;?_{S} to an integer&nbsp;?_{I}, according to
           &Oz; concrete syntax.  See also <<IntToString>>.
 
         <Entry><<isInt>>
@@ -202,14 +202,14 @@
         <Synopsis>
           <<{String.isInt ?+{S} ??{B}}>>
         <Item>
-          tests whether the string&nbsp;<<S>> can be converted to an integer.
+          tests whether the string&nbsp;?_{S} can be converted to an integer.
 
         <Entry><Span class=index/<<StringToFloat>>/
           <Index class=tails/<<String>><And><<toFloat>>/
         <Synopsis>
           <<{String.toFloat ?+{S} ??{F}}>>
         <Item>
-          converts a string&nbsp;<<S>> to a float&nbsp;<<F>>, according to
+          converts a string&nbsp;?_{S} to a float&nbsp;?_{F}, according to
           &Oz; concrete syntax.  See also <<FloatToString>>.
 
         <Entry><<isFloat>>
@@ -217,18 +217,18 @@
         <Synopsis>
           <<{String.isFloat ?+{S} ??{B}}>>
         <Item>
-          tests whether the string&nbsp;<<S>> can be converted to a float.
+          tests whether the string&nbsp;?_{S} can be converted to a float.
 
         <Entry><<token>>
           <Index class=tails/<<String>><And><<token>>/
         <Synopsis>
           <<{String.token ?+{S1} ?_{X} ??{S2} ??{S3}}>>
         <Item>
-          splits the string&nbsp;<<S1>> into two substrings <<S2>>
-          and&nbsp;<<S3>>.  <<S2>> will contain all characters before the
-          first occurence of&nbsp;<<X>>, <<S3>> all remaining characters
-          with&nbsp;<<X>> excluded.  If <<X>> does not occur in&nbsp;<<S1>>,
-          then <<S2>> will be equal to&nbsp;<<S1>> and <<S3>> will be the
+          splits the string&nbsp;?_{S1} into two substrings ?_{S2}
+          and&nbsp;?_{S3}.  ?_{S2} will contain all characters before the
+          first occurence of&nbsp;?_{X}, ?_{S3} all remaining characters
+          with&nbsp;?_{X} excluded.  If ?_{X} does not occur in&nbsp;?_{S1},
+          then ?_{S2} will be equal to&nbsp;?_{S1} and ?_{S3} will be the
           empty string.
         <P>
           For example,
@@ -240,10 +240,10 @@
         <Synopsis>
           <<{String.tokens ?+{S} ?_{X} ??{Ss}}>>
         <Item>
-          splits the string&nbsp;<<S>> into substrings&nbsp;<<Ss>> delimited
-          by occurrences of&nbsp;<<X>> in&nbsp;<<S>>.  Note that the final
-          empty string will be omitted if the last element of&nbsp;<<S>> is
-          an&nbsp;<<X>>.
+          splits the string&nbsp;?_{S} into substrings&nbsp;?_{Ss} delimited
+          by occurrences of&nbsp;?_{X} in&nbsp;?_{S}.  Note that the final
+          empty string will be omitted if the last element of&nbsp;?_{S} is
+          an&nbsp;?_{X}.
         <P>
           For example,
           <<<{String.tokens "a:bb:cc:d:" &:}>>>
@@ -265,7 +265,7 @@
         <Synopsis>
           <<{VirtualString.is ?+{X} ??{B}}>>
         <Item>
-          tests whether <<X>> is a virtual string.  Virtual strings are
+          tests whether ?_{X} is a virtual string.  Virtual strings are
           defined recursively as the set of all integers, floats, atoms,
           strings, byte strings, and tuples with label&nbsp;<<'#'>> whose
           subtrees are virtual strings.
@@ -275,7 +275,7 @@
         <Synopsis>
           <<{VirtualString.toString ?+{V} ??{S}}>>
         <Item>
-          converts a virtual string&nbsp;<<V>> to a string&nbsp;<<S>>.
+          converts a virtual string&nbsp;?_{V} to a string&nbsp;?_{S}.
         <P>
           The transformation is straightforward:  Atoms (except <<nil>>
           and&nbsp;<<'#'>>), integers, floats and byte strings are
@@ -300,7 +300,7 @@
         <Synopsis>
           <<{VirtualString.toAtom ?+{V} ??{A}}>>
         <Item>
-          converts a virtual string&nbsp;<<V>> to an atom&nbsp;<<A>>.
+          converts a virtual string&nbsp;?_{V} to an atom&nbsp;?_{A}.
         <P>
           This procedure can be defined as:
 <<<fun {VirtualString.toAtom V}
@@ -312,7 +312,7 @@ end>>>
         <Synopsis>
           <<{VirtualString.toByteString ?+{V} ??{ByteString}}>>
         <Item>
-          converts a virtual string&nbsp;<<V>> to a byte string <<ByteString>>.
+          converts a virtual string&nbsp;?_{V} to a byte string <<ByteString>>.
         <P>
           This procedure is a synonym of <<ByteString.make>> (which see).
 
@@ -323,15 +323,15 @@ end>>>
         <Item>
           returns the length of a virtual string in characters.
           Can be defined as:
-          <<<{Length {VirtualString.toString V} I}>>>
+          <<<{Length {VirtualString.toString ?_{V}} ?_{I}}>>>
 
         <Entry><<changeSign>>
           <Index class=tails/<<VirtualString>><And><<changeSign>>/
         <Synopsis>
           <<{VirtualString.changeSign ?+{V1} ?_{X} ??{V2}}>>
         <Item>
-          returns a virtual string derived from&nbsp;<<V1>> where all
+          returns a virtual string derived from&nbsp;?_{V1} where all
           occurrences of the unary minus sign for integers and floats
-          are replaced by&nbsp;<<X>>.
+          are replaced by&nbsp;?_{X}.
       </List>
 </Chapter>
