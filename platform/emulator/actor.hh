@@ -33,7 +33,7 @@ enum ActorFlags {
   Ac_Solve      = 0x04,
   Ac_Committed  = 0x08,
   Ac_Debug      = 0x10, // in disjunction with Ac_Solve
-  Ac_Choice     = 0x20, // in disjunction with Ac_Wait
+  Ac_Choice     = 0x20  // in disjunction with Ac_Wait
 };
 
 class Actor : public ConstTerm {

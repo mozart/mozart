@@ -1161,9 +1161,9 @@ class DeepObject: public Object {
 private:
   Board *home;
 public:
-  DeepObject(SRecord *s,ObjectClass *aclass,
+  DeepObject(SRecord *s,ObjectClass *cl,
              SRecord *feat,Bool iscl, Board *bb):
-    Object(s,aclass,feat,iscl)
+    Object(s,cl,feat,iscl)
   {
     setIsDeep();
     home=bb;
