@@ -183,6 +183,8 @@ in its own thread as soon as the site detects a fault.
 <entry/<code/{Fault.deInstallWatcher Entity WatcherProc}//
 <item>Deinstall the given watcher on a given entity.
 This call always succeeds.
+If there is more than one instance of <<WatcherProc>>
+installed on the entity, then exactly one is deinstalled.
 
 </list>
 On a given entity at the <<global>> level,
