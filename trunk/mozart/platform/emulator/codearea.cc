@@ -225,7 +225,7 @@ void CodeArea::printDef(ProgramCounter PC)
 	  toC(file),line,PC);
 }
 
-TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
+TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
 {
   TaggedRef file, comment;
   int line, abspos;
@@ -235,27 +235,55 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
   if (pc == NOCODE) {
     return OZ_atom("toplevel");
   }
-    
+
+  TaggedRef globals, locals;
+
+  if (G)
+    globals = globalVars(PC,G);
+  else
+    globals = OZ_atom("unknown");
+
+  if (Y)
+    locals = localVars(PC,Y);
+  else
+    locals = OZ_atom("unknown");
+  
   Reg reg;
   ProgramCounter next;
   PrTabEntry *pred;
   
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
-  return OZ_mkTupleC("proc",4,OZ_atom(pred ? pred->getPrintName() : "???"),
-		     file,OZ_int(line),OZ_int((int) PC));
+  TaggedRef pairlist = 
+    OZ_cons(OZ_pairA("G", globals),
+	    OZ_cons(OZ_pairAA("Y", "unknown"),
+		    OZ_cons(OZ_pairA("PC", OZ_int((int) PC)),
+    OZ_cons(OZ_pairA("name", OZ_atom(pred ? pred->getPrintName() : "???")),
+	    OZ_cons(OZ_pairA("file", file),
+		    OZ_cons(OZ_pairA("line", OZ_int(line)),
+			    OZ_nil()))))));
+  
+  return OZ_recordInit(OZ_atom("proc"), pairlist);
 }
 
-TaggedRef CodeArea::globalVarNames(ProgramCounter PC)
+TaggedRef CodeArea::globalVars(ProgramCounter PC, RefsArray G)
 {
   ProgramCounter aux = definitionEnd(PC);
-  aux += sizeof(getOP(aux));
+  aux += sizeOf(getOP(aux));
   TaggedRef ret = nil();
-  while (getOP(aux) == GLOBALVARNAME) {
+  for (int i=0; adressToOpcode(getOP(aux)) == GLOBALVARNAME; i++) {
     TaggedRef aux1 = getLiteralArg(aux+1);
-    ret = cons(aux1, ret);
-    aux += sizeof(getOP(aux));
+    ret = cons(OZ_mkTupleC("#", 2, aux1, G[i]), ret);
+    aux += sizeOf(getOP(aux));
   }
+  return reverseC(ret);
+}
+
+TaggedRef CodeArea::localVars(ProgramCounter PC, RefsArray Y)
+{
+  TaggedRef ret = nil();
+  for(int i=getRefsArraySize(Y)-1; i>=0; i--)
+    ret = cons(Y[i], ret);
   return ret;
 }
 
