@@ -91,7 +91,7 @@ dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
-PATH=$TOPDIRA/bin:$TOPDIRA:$PATH
+PATH=$PATH:$TOPDIRA/bin:$TOPDIRA:$prefix/bin
 
 AC_MSG_CHECKING(for --with-pgcc)
 AC_ARG_WITH(pgcc,
@@ -160,7 +160,7 @@ AC_PROG_RANLIB
 
 AC_CHECK_PROGS(M4, gm4 m4, true)
 AC_CHECK_PROGS(RM, rm, true)
-AC_CHECK_PROGS(SH, sh bash, true)
+AC_CHECK_PROGS(SH, sh bash ksh, true)
 AC_CHECK_PROGS(MV, mv, true)
 AC_CHECK_PROGS(ECHO, echo, true)
 AC_CHECK_PROGS(SED, gnused sed, true)
@@ -223,7 +223,6 @@ if test "${GXX}" = yes; then
       if test -n "${PGXX}"
       then
 	CFLAGS="$CFLAGS -fno-exceptions -fno-rtti -Wno-sign-compare"
-	LIBS="$LIBS -lstdc++"
 	O_OPT="$O_OPT -frisc"
       else
 	O_OPT="$O_OPT -m486"
@@ -272,7 +271,10 @@ then
 fi
 AC_SUBST(LD)
 
-AC_CHECK_LIB(intl, main)
+
+dnl mm2: don't know what libintl is needed for
+dnl AC_CHECK_LIB(intl, main)
+
 AC_CHECK_LIB(nsl, gethostbyaddr)
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(m, fabs)
@@ -515,16 +517,30 @@ dnl *****************************************************************
 
 dnl rs: Have to use our own malloc/free: brain dead libc 5.12 returns
 dnl both pointers in which top most bits are set and not set.
-if test "${platform}" = linux-i486
+
+if test -z "${with_malloc}" && test "${platform}" = linux-i486
 then
-    AC_MSG_CHECKING(if local gmalloc.o found)
-    if test -r $PSDIR/lib/$platform/gmalloc.o
+    with_malloc=$PSDIR/lib/$platform/gmalloc.o
+fi
+
+AC_MSG_CHECKING(for --with-malloc)
+AC_ARG_WITH(malloc,
+    [--with-malloc=<dir>
+        search malloc library <dir> (default: NONE)])
+
+if test -n "${with_malloc}"
+then
+    AC_MSG_RESULT(yes)
+    AC_MSG_CHECKING(if $with_malloc found)
+    if test -r $with_malloc
     then
 	AC_MSG_RESULT(yes)
-	LIBS="$LIBS $PSDIR/lib/$platform/gmalloc.o"
+	LIBS="$LIBS $with_malloc"
     else
 	AC_MSG_RESULT(no)
     fi
+else
+    AC_MSG_RESULT(no)
 fi
 
 dnl *****************************************************************
