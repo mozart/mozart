@@ -108,7 +108,7 @@ OZ_Return DisjunctivePropagatorStream::propagate(void)
 
   while (!st.isEostr()) {
     OZ_Term e = st.get();
-    if (OZ_isTuple(e)) {
+    if (OZ_isTuple(e) && ! OZ_isLiteral(e)) {
       char * label = OZ_atomToC(OZ_label(e));
       if (! strcmp("#", label)) {
         OZ_Term new_fd  = OZ_getArg(e, 0);

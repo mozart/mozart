@@ -390,7 +390,7 @@ OZ_Return Counter::propagate(void)
       } else {
         goto failure;
       }
-    } else if (OZ_isTuple(e)) {
+    } else if (OZ_isTuple(e) && ! OZ_isLiteral(e)) {
       char * l = OZ_atomToC(OZ_label(e));
 
       if (! strcmp("get", l)) {
@@ -472,7 +472,7 @@ OZ_Return FirstFail::propagate(void)
 
   while (!st.isEostr()) {
     OZ_Term e = st.get();
-    if (OZ_isTuple(e)) {
+    if (OZ_isTuple(e) && ! OZ_isLiteral(e)) {
       char * l = OZ_atomToC(OZ_label(e));
       if (! strcmp("dist", l)) {
         int last = 0;

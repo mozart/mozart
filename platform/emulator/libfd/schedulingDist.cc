@@ -313,7 +313,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 
   while (!st.isEostr()) {
     OZ_Term e = st.get();
-    if (OZ_isTuple(e)) {
+    if (OZ_isTuple(e) && ! OZ_isLiteral(e)) {
       char * label = OZ_atomToC(OZ_label(e));
       if (! strcmp("dist", label)) {
 
@@ -338,7 +338,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 
 
 
-        if (OZ_isTuple(old_out)) {
+        if (OZ_isTuple(old_out) && ! OZ_isLiteral(old_out)) {
           char * old_label = OZ_atomToC(OZ_label(old_out));
           // fill in order
           if (!strcmp("#", old_label)) {
