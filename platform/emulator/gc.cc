@@ -1271,11 +1271,13 @@ void processUpdateStack(void)
 
       TaggedRef newVar = gcVariable(auxTerm);
 
+//      Assert(tagTypeOf(newVar) == tagTypeOf(auxTerm));
+      
       if (newVar == makeTaggedNULL()) {
 	*Term = newVar;
 	setHeapCell((int*) auxTermPtr,newVar);
       } else {
-	switch(tagTypeOf(auxTerm)){
+	switch(tagTypeOf(newVar)){
 	case UVAR:
 	  *Term = makeTaggedRef(newTaggedUVar(tagged2VarHome(newVar)));
 	  break;
