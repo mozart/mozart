@@ -123,6 +123,23 @@ space this is incorrect.
 The number of alternatives of a choice point must be
 less than <math/2^{27}-2/ (i.e., 134217726).
 
+<section class=unnumbered><title/Constraint Variables Across Spaces/
+
+<p>
+The following restriction is very, very, very small!  The
+implementation does currently not support that a so-far
+unconstrained variable is locally (inside a local computation
+space or inside a guard of a combinator) constrained to a
+constraint-variable (for example, a finite domain variable). This
+can be avoided by constraining the variable globally to a
+constraint-variable.
+
+<p>
+For example, instead of
+<<<local X in or X::1#2 [] X::3#4 end end>>>
+one should always use
+<<<local X={FD.decl} in or X::1#2 [] X::3#4 end end>>>
+
 <section class=unnumbered><title/Record Arities/
 
 <p>
