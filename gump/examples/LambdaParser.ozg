@@ -1,5 +1,5 @@
 declare
-parser LambdaParser from GumpParser BaseObject
+parser LambdaParser from GumpParser
    meth error(VS) Scanner in
       GumpParser, getScanner(?Scanner)
       {System.showInfo 'line '#{Scanner getLineNumber($)}#': '#VS}
