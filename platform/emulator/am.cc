@@ -86,8 +86,9 @@ ConfigData::ConfigData() {
   defaultPriority	= DEFAULT_PRIORITY;
   systemPriority	= SYSTEM_PRIORITY;
   taskStackSize		= TASK_STACK_SIZE;
-  errorVerbosity          = ERROR_VERBOSITY;
+  errorVerbosity        = ERROR_VERBOSITY;
 }
+
 extern "C" int runningUnderEmacs; // mm2
 extern void version(); // mm2
 
@@ -98,6 +99,20 @@ void usage(int /* argc */,char **argv) {
 	  argv[0]);
   exit(1);
 }
+
+
+char *getOptArg(int &i, int argc, char **argv)
+{
+  i++;
+  if (i == argc) {
+    usage(argc,argv);
+    return NULL;
+  }
+
+  return argv[i];
+}
+
+
 
 void AM::init(int argc,char **argv)
 {  
@@ -177,33 +192,42 @@ void AM::init(int argc,char **argv)
   char *comPath = NULL;  // path name where to create AF_UNIX socket
   char *queryFileName = NULL;
 
-  while ((c = getopt(argc, argv, "Eds:S:f:Pc:i:I:")) != -1)
-    switch (c) {
-    case 'E':
+  /* process command line arguments */
+  conf.argV = 0;
+  conf.argC = NULL;
+  for (int i=1; i<argc; i++) {
+    if (strcmp(argv[i],"-E")==0) {
       runningUnderEmacs = 1;
-      break;
-    case 'd':
+      continue;
+    }
+    if (strcmp(argv[i],"-d")==0) {
       tracerOn();
-      break;
-    case 's':
-      port = atoi(optarg);
+      continue;
+    }
+    if (strcmp(argv[i],"-s")==0) {
+      port = atoi(getOptArg(i,argc,argv));
       compilerFile = (char *) NULL;
-      break;
-    case 'c':
-      compilerFile = optarg;
-      break;
-    case 'S':
-      comPath = optarg;
-      break;
-    case 'f':
-      queryFileName = optarg;
-      break;
-
-    default:
-      usage(argc,argv);
+      continue;
+    }    
+    if (strcmp(argv[i],"-c")==0) {
+      compilerFile = getOptArg(i,argc,argv);
+      continue;
+    }
+    if (strcmp(argv[i],"-S")==0) {
+      comPath = getOptArg(i,argc,argv);
+      continue;
+    }
+    if (strcmp(argv[i],"-f")==0) {
+      queryFileName = getOptArg(i,argc,argv);
+      continue;
     }
 
-  if (optind < argc) {
+    if (strcmp(argv[i],"-a")==0) {
+      conf.argC = argc-i-1;
+      conf.argV = argv+i+1;
+      break;
+    }
+
     usage(argc,argv);
   }
 
