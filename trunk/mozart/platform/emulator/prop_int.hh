@@ -155,7 +155,7 @@ OZ_Return oz_runPropagator(Propagator * p)
     prop->incHeap(heapUsed);
     ozstat.leaveProp();
     if (ozstat.currAbstr)
-      ozstat.currAbstr->heapUsed -= heapUsed;
+      ozstat.currAbstr->getProfile()->heapUsed -= heapUsed;
     return ret;
   } else {
 
