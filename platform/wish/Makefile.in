@@ -54,21 +54,20 @@ provide-link: $(PLATFORMDIR)
 	rm -rf $(PLATFORMDIR)/wish
 	$(INSTALL_DIR) $(PLATFORMDIR)/wish
 	(cd $(PLATFORMDIR)/wish; \
-		rm -rf tcl; \
-		rm -rf tk; \
 		$(LN_S) $(TCLLIBTCLDIR) tcl; \
 		$(LN_S) $(TKLIBTCLDIR) tk)
 
 provide-copy: $(PLATFORMDIR)
 	rm -rf $(PLATFORMDIR)/wish
-	$(INSTALL_DIR) $(PLATFORMDIR)/wish
-	(cd $(PLATFORMDIR)/wish; \
-		rm -rf tcl; \
-		rm -rf tk; \
-		cp -r $(TCLLIBTCLDIR) .; \
-		cp -r $(TKLIBTCLDIR) .; \
-		$(LN_S) tcl8.0 tcl; \
-		$(LN_S) tk8.0 tk)
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tcl
+	for i in $(TCLLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tcl; fi;\
+	done
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tk
+	for i in $(TKLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tk; fi;\
+	done
+
 
 check:
 
