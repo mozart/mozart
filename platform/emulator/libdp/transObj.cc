@@ -40,6 +40,10 @@ TransController::TransController():
   timer=NULL;
 }
 
+int TransController::getUsed() {
+  return used;
+}
+
 Bool transController_closeOne(void *arg) {
   return ((TransController *) arg)->closeOne();
 }

@@ -148,6 +148,10 @@ int getTransControllerInfo(int &size) {
   return tcptransController->getInfo(size);
 }
 
+int getTransControllerUsed() {
+  return tcptransController->getUsed();
+}
+
 int getMsgContainerManagerInfo(int &size) {
   size = sizeof(MsgContainer);
   return msgContainerManager->getCTR();

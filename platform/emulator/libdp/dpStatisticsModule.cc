@@ -137,18 +137,21 @@ OZ_BI_define(BI_DistMemInfo,0,1)
 {
   initDP();
   int comObjNr, comObjSz, transObjNr, transObjSz,
-      msgContainerNr, msgContainerSz;
+      msgContainerNr, msgContainerSz, transObjUsed;
 
   comObjNr = getComControllerInfo(comObjSz);
   transObjNr = getTransControllerInfo(transObjSz);
+  transObjUsed = getTransControllerUsed();
   msgContainerNr = getMsgContainerManagerInfo(msgContainerSz);
 
   OZ_RETURN(oz_cons(makeMemRec(oz_atom("ComObjects"),comObjSz,comObjNr),
               oz_cons(makeMemRec(oz_atom("TransObjects"),transObjSz,
                                  transObjNr),
+               oz_cons(makeMemRec(oz_atom("UsedTransObjects"),0,
+                                  transObjUsed),
                 oz_cons(makeMemRec(oz_atom("MsgContainers"),msgContainerSz,
                                    msgContainerNr),
-                  oz_nil()))));
+                  oz_nil())))));
 } OZ_BI_end
 
 

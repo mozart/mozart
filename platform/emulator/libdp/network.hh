@@ -60,6 +60,7 @@ int getLastRTT_ComObj(ComObj*);
 
 int getComControllerInfo(int &size);
 int getTransControllerInfo(int &size);
+int getTransControllerUsed();
 int getMsgContainerManagerInfo(int &size);
 
 //

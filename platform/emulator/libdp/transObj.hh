@@ -75,6 +75,8 @@ public:
   TransController();
   virtual ~TransController() {}
 
+  // For statistics
+  int getUsed();
   // The receiver side: If resources are available a fresh transObj
   // to be used at accept procedure is returned, else NULL
   TransObj *getTransObj();
