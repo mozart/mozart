@@ -864,18 +864,6 @@ char *getMemFromOS(size_t sz) {
   return heapTop;
 }
 
-void * freeListMallocOutline(size_t chunk_size)
-{
-  return freeListMalloc(chunk_size);
-}
-
-void freeListDisposeOutline(void *addr, size_t chunk_size)
-{
-  freeListDispose(addr,chunk_size);
-}
-
-
-
 
 #ifdef OUTLINE
 #define inline

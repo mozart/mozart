@@ -449,10 +449,8 @@ public:
 
 #ifdef __GNUC__
 #define USE_GCCALLOCA
-#elif defined(_MSC_VER)
-#define USE_INTVAR_NEW
 #else
-#define USE_TEMPLATE_ARRAY
+#define USE_INTVAR_NEW
 #endif
 
 
@@ -512,28 +510,6 @@ inline void * operator new(size_t, void * p) { return p; }
      }
 #endif
 
-
-/* this one is really slooow */
-#ifdef USE_TEMPLATE_ARRAY
-
-#define _DECL_DYN_ARRAY(Type,Var,Size) _DynArray<Type> Var(Size)
-
-void * freeListMallocOutline(size_t chunk_size);
-void freeListDisposeOutline(void *addr, size_t chunk_size);
-
-template <class T>
-class _DynArray {
-private:
-  T * array;
-  int size;
-public:
-  _DynArray(int sz) { size = sz; array = (T*) freeListMallocOutline(sz*sizeof(T)); };
-  ~_DynArray() { freeListDisposeOutline(array,size*sizeof(T)); }
-  T &operator[] (int i) { return array[i]; }
-  operator T * () { return array; }
-};
-
-#endif
 #endif /* DEBUG_INDICES */
 
 /* cannot handle sometimes arrays of size 0 correctly */
