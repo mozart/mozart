@@ -1235,9 +1235,9 @@ loop:
     {
       char *name = unmarshalString(bs); // ATTENTION deletion
       PD((UNMARSHAL,"builtin: %s",name));
-      Builtin *found = builtinTab.find(name);
+      Builtin * found = string2Builtin(name);
 
-      if (found == htEmpty) {
+      if (!found) {
 	warning("Builtin '%s' not in table.", name);
 	*ret = oz_nil();
 	return;
