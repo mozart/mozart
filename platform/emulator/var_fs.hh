@@ -115,7 +115,6 @@ public:
                        int offset = 0) {
     printStream(out,depth); out << endl;
   }
-#ifdef TMUELLER
   //
   void dropPropagator(Propagator * prop) {
     for (int i = fs_prop_any; i--; ) {
@@ -132,7 +131,6 @@ public:
   //
   // end of tagging ...
   //
-#endif
 };
 
 void addSuspFSetVar(OZ_Term, SuspList *, OZ_FSetPropState = fs_prop_any);

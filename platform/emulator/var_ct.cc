@@ -213,8 +213,6 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
   return FAILED;
 }
 
-#define TMUELLER
-#ifdef TMUELLER
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
 {
   DEBUG_CONSTRAIN_CVAR(("tellBasicConstraintCT "));
@@ -333,127 +331,6 @@ failed:
 proceed:
   return PROCEED;
 }
-#else
-OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
-{
-#ifdef TELLCONSTRAINTS_BY_UNIFICATION
-  // create appropriate constrained variable
-  OzCtVariable * cv = (constr
-                       ?  new OzCtVariable(constr, def, oz_currentBoard())
-                       :  new OzCtVariable(def->leastConstraint(), def,
-                                           oz_currentBoard()));
-
-  OZ_Term *  tcv = newTaggedCVar(cv);
-
-  return OZ_unify(v, makeTaggedRef(tcv));
-#else
-
-  DEREF(v, vptr, vtag);
-
-
-  // a constraint has to be valid
-  if (constr && ! constr->isValid())
-    goto failed;
-
-  // tell constraint to unconstrained variable
-  if (oz_isFree(v)) {
-    if (! constr) goto ctvariable;
-
-    // constr denotes a value --> v becomes value
-    if (constr->isValue()) {
-      if (oz_isLocalVariable(vptr)) {
-        if (!oz_isUVar(v))
-          oz_checkSuspensionListProp(tagged2CVar(v));
-        DoBind(vptr, constr->toValue());
-      } else {
-        DoBindAndTrail(vptr, constr->toValue());
-      }
-      goto proceed;
-    } else {
-    ctvariable:
-      OzCtVariable * ctv =
-        constr
-        ? new OzCtVariable(constr, def, oz_currentBoard())
-        :  new OzCtVariable(def->leastConstraint(), def, oz_currentBoard());
-
-      OZ_Term *  tctv = newTaggedCVar(ctv);
-
-      if (oz_isLocalVariable(vptr)) {
-        if (!oz_isUVar(v)) {
-          oz_checkSuspensionListProp(tagged2CVar(v));
-          ctv->setSuspList(tagged2CVar(v)->unlinkSuspList());
-        }
-        DoBind(vptr, makeTaggedRef(tctv));
-      } else {
-        DoBindAndTrail(vptr, makeTaggedRef(tctv));
-      }
-      goto proceed;
-    }
-  } else if (isGenCtVar(v)) {
-    // tell constraint to constrained variable
-    if (! constr) goto proceed;
-
-    OzCtVariable * ctvar = tagged2GenCtVar(v);
-    OZ_Ct * old_constr = ctvar->getConstraint();
-    OZ_CtProfile * old_constr_prof = old_constr->getProfile();
-    OZ_Ct * new_constr = old_constr->unify(constr);
-
-    if (! new_constr->isValid())
-      goto failed;
-
-    if (! ctvar->getConstraint()->isWeakerThan(new_constr))
-      goto proceed;
-
-    if (new_constr->isValue()) {
-      // `new_constr' designates a value
-
-      ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
-
-      if (oz_isLocalVar(ctvar)) {
-        DoBind(vptr, new_constr->toValue());
-      } else {
-        DoBindAndTrail(vptr, new_constr->toValue());
-      }
-    } else {
-      // `new_constr' does not designate a value
-      ctvar->propagate(new_constr->getWakeUpDescriptor(old_constr_prof),
-                       pc_propagator);
-
-      if (oz_isLocalVar(ctvar)) {
-        ctvar->copyConstraint(new_constr);
-      } else {
-        OzCtVariable * locctvar = new OzCtVariable(new_constr, def,
-                                                     oz_currentBoard());
-        OZ_Term * loctaggedctvar = newTaggedCVar(locctvar);
-        DoBindAndTrailAndIP(vptr, makeTaggedRef(loctaggedctvar),
-                            locctvar, ctvar);
-      }
-    }
-    goto proceed;
-  } else if (! oz_isVariable(vtag)) {
-    // trying to constrain a value, i.e., check if constraint is
-    // consistent with value
-    if (! constr) goto proceed;
-
-    if (constr->unify(v))
-      goto proceed;
-    goto failed;
-  } else {
-    Assert(oz_isVariable(v));
-    TaggedRef newVar = oz_newVariable();
-    OZ_Return ret = tellBasicConstraint(newVar, constr, def);
-    Assert(ret == PROCEED);
-    return oz_unify(makeTaggedRef(vptr), newVar);
-  }
-
-failed:
-  return FAILED;
-
-proceed:
-  return PROCEED;
-#endif /* TELLCONSTRAINTS_BY_UNIFICATION */
-}
-#endif
 
 void OzCtVariable::propagate(OZ_CtWakeUp descr, PropCaller caller)
 {

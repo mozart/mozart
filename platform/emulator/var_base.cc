@@ -44,7 +44,6 @@
 
 int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
 
-#ifdef TMUELLER
 void OzVariable::dropPropagator(Propagator * prop)
 {
   switch (getType()){
@@ -55,7 +54,6 @@ void OzVariable::dropPropagator(Propagator * prop)
   ExhaustiveSwitch();
   }
 }
-#endif
 
 Bool oz_var_valid(OzVariable *ov,TaggedRef val) {
   switch (ov->getType()){

@@ -63,7 +63,6 @@
 //  Bool<<FD
 // see int cmpCVar(OzVariable *, OzVariable *)
 
-#ifdef TMUELLER
 enum TypeOfVariable {
   OZ_VAR_FD      = 0,
   OZ_VAR_BOOL    = 1,
@@ -74,29 +73,6 @@ enum TypeOfVariable {
   OZ_VAR_FUTURE  = 6,
   OZ_VAR_OF      = 7
 };
-#else
-enum TypeOfVariable {
-  OZ_VAR_FD      = 0,
-  OZ_VAR_BOOL    = 1,
-  OZ_VAR_FS      = 2,
-  OZ_VAR_CT      = 3,
-  OZ_VAR_EXT     = 4,
-  OZ_VAR_SIMPLE  = 5,
-  OZ_VAR_FUTURE  = 6,
-  OZ_VAR_OF      = 7
-
-  /*
-  OZ_VAR_EXT     = 0,
-  OZ_VAR_SIMPLE  = 1,
-  OZ_VAR_FUTURE  = 2,
-  OZ_VAR_BOOL    = 3,
-  OZ_VAR_FD      = 4,
-  OZ_VAR_OF      = 5,
-  OZ_VAR_FS      = 6,
-  OZ_VAR_CT      = 7
-  */
-};
-#endif
 
 #ifdef DEBUG_CHECK
 #define OZ_VAR_INVALID ((TypeOfVariable) -1)
@@ -138,7 +114,6 @@ private:
     void        * cpi_raw;
   } u;
 
-#ifdef TMUELLER
   // these enumerables have to be comaptible!
   // tmueller: they have to be unified with TypeOfVariable
   enum u_mask_t {u_fd   = OZ_VAR_FD,
@@ -146,9 +121,6 @@ private:
                  u_fset = OZ_VAR_FS,
                  u_ct   = OZ_VAR_CT,
                  u_mask = 3};
-#else
-  enum u_mask_t {u_fd = 0, u_bool = 1, u_fset = 2, u_ct = 3, u_mask = 3};
-#endif
 
   unsigned int homeAndFlags;
 protected:
@@ -156,11 +128,9 @@ protected:
 
 public:
 
-#ifdef TMUELLER
   TypeOfVariable getTypeMasked(void) {
     return TypeOfVariable(u.var_type & u_mask);
   }
-#endif
 
   TypeOfVariable getType(void) {
     return u.var_type;
@@ -266,7 +236,6 @@ public:
     return ((long)suspList) & STORE_FLAG;
   }
   OZ_Boolean testResetStoreFlag(void) {
-    EXPLODE;
     OZ_Boolean r = testStoreFlag();
     resetStoreFlag();
     return r;
@@ -282,12 +251,10 @@ public:
     return ((long)suspList) & REIFIED_FLAG;
   }
   OZ_Boolean testResetReifiedFlag(void) {
-    EXPLODE;
     OZ_Boolean r = testReifiedFlag();
     resetReifiedFlag();
     return r;
   }
-#ifdef TMUELLER
   //
   void dropPropagator(Propagator *);
   //
@@ -341,7 +308,6 @@ public:
   void putRawTag(void * raw_tag) {
     u.cpi_raw = raw_tag;
   }
-#endif
   //
   // end of tagging ...
   //
@@ -364,7 +330,6 @@ public:
 
   // needed to catch multiply occuring reified vars in propagators
   void patchReified(OZ_FiniteDomain * d, Bool isBool) {
-    EXPLODE;
     u.patchDomain = d;
     if (isBool) {
       u.patchDomain =
@@ -373,29 +338,23 @@ public:
     setReifiedFlag();
   }
   void unpatchReified(Bool isBool) {
-    EXPLODE;
     setType(isBool ? OZ_VAR_BOOL : OZ_VAR_FD);
     resetReifiedFlag();
   }
   OZ_Boolean isBoolPatched(void) {
-    EXPLODE;
     return (u.var_type & u_mask) == u_bool;
   }
   OZ_Boolean isFDPatched(void) {
-    EXPLODE;
     return (u.var_type & u_mask) == u_fd;
   }
   OZ_Boolean isFSetPatched(void) {
-    EXPLODE;
     return (u.var_type & u_mask) == u_fset;
   }
   OZ_Boolean isCtPatched(void) {
-    EXPLODE;
     return (u.var_type & u_mask) == u_ct;
   }
 
   OZ_FiniteDomain * getReifiedPatch(void) {
-    EXPLODE;
     return (OZ_FiniteDomain *)  (u.var_type & ~u_mask);
   }
 };

@@ -51,8 +51,6 @@ int staticSuspendVarsNumber = 0;
 #undef inline
 #endif
 
-#ifdef TMUELLER
-
 void OZ_CPIVar::dropParameter(void)
 {
   OzVariable * cvar    = tagged2CVar(var);
@@ -142,8 +140,6 @@ void OZ_CPIVar::operator delete[](void * p, size_t s)
 {
   // deliberately left empty
 }
-#endif
-
 #endif
 
 // End of File
