@@ -1171,7 +1171,7 @@ Bool AM::isStableSolve(SolveActor *sa)
  * toplevel: rootThread and toplevelQueue
  * ------------------------------------------------------------------------ */
 
-void AM::pushDebug(Chunk *def, int arity, RefsArray args)
+void AM::pushDebug(TaggedRef def, int arity, RefsArray args)
 {
   currentThread->pushDebug(new OzDebug(def,arity,args));
 }
