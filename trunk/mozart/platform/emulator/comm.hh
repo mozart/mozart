@@ -311,6 +311,7 @@ private:
   Bool connect(){
     unsigned int t=getType();
     PD((SITE,"connect, the type of this site: %d",t));
+    Assert(!(t & MY_SITE));
     if(t & CONNECTED) return OK;
     if(t & (PERM_SITE)) return NO;
     if(t & REMOTE_SITE){
