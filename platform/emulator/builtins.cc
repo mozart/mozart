@@ -3214,9 +3214,10 @@ OZ_C_proc_begin(BIadjoinAt,4)
     }
     TypeErrorT(1,"Feature");
 
+  case LTUPLE:
   case SRECORD:
     {
-      SRecord *rec1 = tagged2SRecord(rec);
+      SRecord *rec1 = makeRecord(rec);
       if (isAnyVar(tag1)) {
         OZ_suspendOn(makeTaggedRef(feaPtr));
       }
