@@ -512,7 +512,7 @@ enum TypeOfConst {
   Co_Chunk,
   Co_Array,
   Co_Dictionary,
-  Co_Group,
+  Co_Group
 };
 
 
@@ -581,7 +581,7 @@ private:
   TaggedRef exceptionHandler;
   TaggedRef parent;
 public:
-  Group(TaggedRef parent) : ConstTerm(Co_Group), parent(parent)
+  Group(TaggedRef p) : ConstTerm(Co_Group), parent(p)
   { Assert(!parent || isGroup(parent)); exceptionHandler = 0; }
 
   void setExceptionHandler(TaggedRef hdl) { exceptionHandler = hdl; }

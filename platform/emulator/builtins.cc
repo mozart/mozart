@@ -5474,8 +5474,8 @@ TaggedRef SuspList::DBGmakeList() {
     return nil();
   }
 
-  Thread *thr = getElem ();
-  Board *b = thr->getBoardFast ();
+  Thread *t = getElem();
+  Board *b = t->getBoardFast ();
   return cons(makeTaggedConst(b),getNext()->DBGmakeList());
 }
 

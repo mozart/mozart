@@ -569,8 +569,8 @@ unsigned int intlog(unsigned int i)
  *      different successive indices.
  */
 
-Arity::Arity ( TaggedRef entrylist , Bool isTupleFlag )
-  : isTupleFlag(isTupleFlag)
+Arity::Arity ( TaggedRef entrylist , Bool itf)
+  : isTupleFlag(itf)
 {
   next = NULL;
   list = entrylist;
