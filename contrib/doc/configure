@@ -888,6 +888,8 @@ echo "configure:887: checking for --with-inc-dir" >&5
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
   oz_cv_with_inc_dirs=$with_inc_dir
+else
+  : ${oz_cv_with_inc_dirs=$oz_with_inc_dir}
 fi
 
   echo "$ac_t""$with_inc_dir" 1>&6
@@ -923,11 +925,13 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:927: checking for --with-lib-dir" >&5
+echo "configure:929: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
   oz_cv_with_lib_dirs=$with_lib_dir
+else
+  : ${oz_cv_with_lib_dirs=$oz_with_lib_dir}
 fi
 
   echo "$ac_t""$with_lib_dir" 1>&6
@@ -974,7 +978,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:978: checking for $ac_word" >&5
+echo "configure:982: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1021,7 +1025,7 @@ fi
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1025: checking for $ac_word" >&5
+echo "configure:1029: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1067,7 +1071,7 @@ fi
     # Extract the first word of "ozl", so it can be a program name with args.
 set dummy ozl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1071: checking for $ac_word" >&5
+echo "configure:1075: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1113,7 +1117,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1117: checking for $ac_word" >&5
+echo "configure:1121: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
