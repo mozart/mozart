@@ -652,9 +652,12 @@ the GDB commands `cd DIR' and `directory'."
 
 (defconst oz-begin-pattern
       (oz-make-keywords-for-match 
-	         '("local" "class" "meth" "create" "or" "if" "pred" "proc"
-		   "fun"
-		   "handle" "seq" "exists" "declare" "case" "begin" "process" "not"
+	         '(
+		   "pred" "proc" "fun"
+		   "local" "declare" 
+		   "if" "or" "case"
+		   "class" "create" "meth"
+		   "not" "process"
 		   )))
 
 (defconst oz-end-pattern
@@ -662,7 +665,7 @@ the GDB commands `cd DIR' and `directory'."
 
 (defconst oz-middle-pattern 
       (concat (oz-make-keywords-for-match
-	       '("in" "then" "else" "elseif" "by" "of"))
+	       '("in" "then" "else" "elseif" "of" "elseof"))
 	      "\\|" "\\[\\]"))
 
 (defconst oz-key-pattern
@@ -984,11 +987,13 @@ the GDB commands `cd DIR' and `directory'."
    (concat
     (oz-make-keywords-for-match
      '(
-       "pred" "proc" "fun" "true" "false" "local" "begin" "end"
-       "in" "not" "process" "det" "if" "then" "else" "elseif" 
-       "fi" "or" "ro" "meth" "create" "class" "from" "with" 
-       "exists" "declare" "case" "of"
-       "wait" "div" "mod" "self"
+       "pred" "proc" "fun"
+       "local" "declare"
+       "if" "or" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro"
+       "class" "create" "meth" "from" "with"  "self"
+       "true" "false"
+       "div" "mod"
+       "not" "process" "in"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
     ))
