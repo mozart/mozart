@@ -26,6 +26,9 @@
 %%%
 
 functor
+require
+   DefaultURL(functorNames: Modules)
+   
 import
    Application(getCmdArgs)
    Module(manager)
@@ -37,15 +40,6 @@ import
    Emacs(interface)
 prepare
    Spec = record(host(single type: string default: unit))
-
-   %% List of all functors
-   local
-      ModuleDefs = \insert '../functor-defaults'
-   in
-      Modules = {FoldL [ModuleDefs.lib
-			ModuleDefs.tools
-			ModuleDefs.volatile] Append nil}
-   end
 
    ShortCuts = [%% Library
 		'Pickle'('Load': [load]
