@@ -251,13 +251,16 @@ void TaskStack::printTaskStack(Bool verbose, int depth)
   Frame *auxtos = getTop();
   while (depth-- > 0) {
     GetFrame(auxtos,PC,Y,G);
-    if (PC==C_EMPTY_STACK)
+    if (PC==C_EMPTY_STACK) {
+      message("\n");
       return;
+    }
     CodeArea::printDef(PC);
     if (verbose)
       message("\t\tPC=%p, Y=%p, G=%p\n",PC,Y,G);
   }
   message("\t ...\n");
+  message("\n");
 }
 
 
