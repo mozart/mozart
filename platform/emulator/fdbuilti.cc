@@ -1936,6 +1936,10 @@ BIspec fdSpec[] = {
   {"fdp_distinctOffset", 2, fdp_distinctOffset},
   {"fdp_disjoint", 4, fdp_disjoint},
   {"fdp_disjointC", 5, fdp_disjointC},
+  {"fdp_distanceEq", 3, fdp_distanceEq},
+  {"fdp_distanceLeq", 3, fdp_distanceLeq},
+  {"fdp_distanceGeq", 3, fdp_distanceGeq},
+  {"fdp_distanceNeq", 3, fdp_distanceNeq},
 #endif
 #ifdef DEBUG_STABLE
   {"debugStable", 0, debugStable},

@@ -707,17 +707,20 @@ OZ_C_proc_begin(BIfdCDSched_body, 4)
                                               OZ_int(-xd));
   }
 
-  OZ_FiniteDomain la, lb, lc, ld, l1, l2;
+  int lowx = yu-xd+1, lowy = xu-yd+1;
+  int upx = yl+yd-1, upy = xl+xd-1;
+  if (lowx <= upx) {
+    OZ_FiniteDomain la;
+    la.init(lowx,upx);
+    FailOnEmpty(a[x] -= la);
 
-  la.init(0, yu - xd);
-  lb.init(yl + yd, fd_sup);
-  lc.init(0, xu - yd);
-  ld.init(xl + xd, fd_sup);
+  }
+  if (lowy <= upy) {
+    OZ_FiniteDomain la;
+    la.init(lowy,upy);
+    FailOnEmpty(a[y] -= la);
 
-  l1 = (la | lb);
-  l2 = (lc | ld);
-  FailOnEmpty(a[x] &= l1);
-  FailOnEmpty(a[y] &= l2);
+  }
 
   return a.release();
 }
@@ -793,18 +796,21 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
     }
   }
 
+  int lowx = yu-xd+1, lowy = xu-yd+1;
+  int upx = yl+yd-1, upy = xl+xd-1;
+  if (lowx <= upx) {
+    OZ_FiniteDomain la;
+    la.init(lowx,upx);
+    FailOnEmpty(a[x] -= la);
 
-  OZ_FiniteDomain la, lb, lc, ld, l1, l2;
+  }
+  if (lowy <= upy) {
+    OZ_FiniteDomain la;
+    la.init(lowy,upy);
+    FailOnEmpty(a[y] -= la);
 
-  la.init(0, yu - xd);
-  lb.init(yl + yd, fd_sup);
-  lc.init(0, xu - yd);
-  ld.init(xl + xd, fd_sup);
+  }
 
-  l1 = (la | lb);
-  l2 = (lc | ld);
-  FailOnEmpty(a[x] &= l1);
-  FailOnEmpty(a[y] &= l2);
 
   return a.release();
 }
