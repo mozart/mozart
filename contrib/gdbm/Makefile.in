@@ -2,11 +2,9 @@
 BUILDTOP        = @BUILDTOP@
 SRCDIR          = @srcdir@
 VPATH           = @srcdir@
-prefix          = @prefix@
+PREFIX          = @prefix@
 PLATFORM        = @PLATFORM@
-PACKAGE         = @PACKAGE@
-PROTOCOL        = @PROTOCOL@
-LIB_DIR         = $(prefix)/contrib
+LIB_DIR         = $(PREFIX)/contrib
 
 OZC             = @OZC@
 COMPILE         = $(OZC) -c
