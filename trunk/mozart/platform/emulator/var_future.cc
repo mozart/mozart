@@ -56,8 +56,9 @@ Bool Future::kick(TaggedRef *ptr)
 {
   if (!function) return FALSE;
 
+  Board* bb      = GETBOARD(this);
+  
   if (oz_isProcedure(function)) {
-    Board* bb      = GETBOARD(this);
     Thread* thr    = oz_newThreadInject(bb);
     OZ_Term newvar = oz_newVar(bb);
     OZ_Term BI_ByNeedAssign=
@@ -68,7 +69,7 @@ Bool Future::kick(TaggedRef *ptr)
     Assert(oz_isTuple(function) && oz_eq(OZ_label(function),AtomDot));
     OZ_Term fut=oz_arg(function,0);
     OZ_Term fea=oz_arg(function,1);
-    Board *bb = GETBOARD(this);
+
     if (oz_currentBoard()==bb) {
       OZ_Term aux=0;
       OZ_Term save=am.getSuspendVarList();

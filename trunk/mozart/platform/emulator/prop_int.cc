@@ -57,6 +57,8 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
     aux = aux->getNext();
   }
 
+  glob_home = glob_home->derefBoard();
+
   // create references to suspensions of global variable
   aux = glob_list;
   while (aux) {
