@@ -29,6 +29,13 @@
 #include "threadInterface.hh"
 
 inline
+void unBind(TaggedRef *p, TaggedRef t)
+{
+  Assert(oz_isVariable(t));
+  *p = t;
+}
+
+inline
 // static
 Bool oz_installScriptOPT(Script &script)
 {
