@@ -84,6 +84,7 @@ enum EmulatorPropertyIndex {
   // PRINT
   PROP_PRINT_DEPTH,
   PROP_PRINT_WIDTH,
+  PROP_PRINT_VERBOSE,
   PROP_PRINT,
   // FD
   PROP_FD_VARIABLES,
@@ -337,9 +338,11 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     // PRINT
     CASE_INT(PROP_PRINT_DEPTH,ozconf.printDepth);
     CASE_INT(PROP_PRINT_WIDTH,ozconf.printWidth);
-    CASE_REC(PROP_PRINT,"print",(2,AtomDepth,AtomWidth),
+    CASE_BOOL(PROP_PRINT_VERBOSE,ozconf.printVerbose);
+    CASE_REC(PROP_PRINT,"print",(3,AtomDepth,AtomWidth,AtomVerbose),
              SET_INT(AtomDepth, ozconf.printDepth);
-             SET_INT(AtomWidth, ozconf.printWidth););
+             SET_INT(AtomWidth, ozconf.printWidth);
+             SET_BOOL(AtomVerbose, ozconf.printVerbose););
     // FD
     CASE_INT(PROP_FD_VARIABLES,ozstat.fdvarsCreated.total);
     CASE_INT(PROP_FD_PROPAGATORS,ozstat.propagatorsCreated.total);
@@ -717,9 +720,11 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     // PRINT
     CASE_NAT(PROP_PRINT_WIDTH,ozconf.printWidth);
     CASE_NAT(PROP_PRINT_DEPTH,ozconf.printDepth);
+    CASE_BOOL(PROP_PRINT_VERBOSE,ozconf.printVerbose);
     CASE_REC(PROP_PRINT,
              SET_NAT(AtomWidth,ozconf.printWidth);
-             SET_NAT(AtomDepth,ozconf.printDepth););
+             SET_NAT(AtomDepth,ozconf.printDepth);
+             SET_BOOL(AtomVerbose,ozconf.printVerbose););
     // FD
     CASE_NAT_DO(PROP_FD_THRESHOLD,reInitFDs(INT__));
     CASE_REC(PROP_FD,
@@ -1035,6 +1040,7 @@ static const struct prop_entry prop_entries[] = {
   // PRINT
   {"print.depth",PROP_PRINT_DEPTH},
   {"print.width",PROP_PRINT_WIDTH},
+  {"print.verbose",PROP_PRINT_VERBOSE},
   {"print",PROP_PRINT},
   // FD
   {"fd.variables",PROP_FD_VARIABLES},
