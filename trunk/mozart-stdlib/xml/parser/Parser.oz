@@ -317,8 +317,10 @@ prepare
 	 end
 	 TAG <- unit
 	 CONTENTS <- L
+	 {self onStartDocument}
 	 Parser,PARSE()
 	 @CONTENTS=nil
+	 {self onEndDocument}
       end
 
       %% =============================================================
@@ -907,7 +909,9 @@ prepare
 	 CONTENTS<-L
       end
 	 
-      meth onElement(Tag Alist Children)
+      meth onStartDocument() skip end
+      meth onEndDocument() skip end
+      meth onStartElement(Tag Alist Children)
 	 {self append(
 		  element(
 		     prefix     : Tag.prefix
@@ -915,6 +919,7 @@ prepare
 		     attributes : Alist
 		     children   : Children))}
       end
+      meth onEndElement(Tag) skip end
       meth onProcessingInstruction(Name Data Coord)
 	 {self append(
 		  pi(name : Name
@@ -956,7 +961,7 @@ prepare
 		      coord    : Coord
 		      endCoord : _)
 	 in
-	    {self onElement(Tag Alist2 Children)}
+	    {self onStartElement(Tag Alist2 Children)}
 	    if Empty then
 	       Children = nil
 	       Tag.endCoord=Coord
@@ -982,6 +987,7 @@ prepare
 		  @CONTENTS = nil
 		  CONTENTS <- Tail
 		  @TAG.endCoord=Coord
+		  {self onEndElement(@TAG)}
 		  TAG <- Tag
 		  Parser,UnTrail()
 		  Parser,PARSE()
