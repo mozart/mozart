@@ -7,25 +7,22 @@
 
 %% Global default settings
 
-DefLayoutOptions = o(hide:   !True
-		     update: 10)
-
-DefSearchOptions = o(dist:        1
-		     customDist:  5)
-
-DefInfoOptions   = o(dist:       5
-		     customDist: 5)
-
 FactorsToCm      =cTo(i: 2.54
 		      c: 1.00
 		      m: 10.0
 		      p: 0.035277778)
 
-DefPostscriptOptions = o(width:  6.5 * FactorsToCm.i
-			 height: 9.5 * FactorsToCm.i
-			 size:   '6.5ix9i'
-			 color:  case Tk.isColor then color else mono end
-			 orient: 0)
+Options = o(drawing:    o(hide:   !True
+			  scale:  !False
+			  update: 10)
+	    search:     o(search:      1
+			  information: 5
+			  order:       !False)
+	    postscript: o(color:       case Tk.isColor then color else mono end
+			  width:       6.5 * FactorsToCm.i
+			  height:      9.5 * FactorsToCm.i
+			  size:        '6.5ix9i'
+			  orientation: !False))
 
 ErrorAspect     = 250
 StatusUpdateCnt = 50

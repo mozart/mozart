@@ -5,38 +5,21 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-[add(information:
-	proc {$ N S}
-	   {Show N#{Space.merge S}}
-	end
+[add(information proc {$ N X} {Show N#X} end
      label: 'Show')
- add(information:
-	proc {$ N S}
-	   {Browse N#{Space.merge S}}
-	end
+ add(information proc {$ N X} {Browse N#X} end
      label: 'Browse')
- add(information:separator)
 
- add(compare:
-	proc {$ N1 S1 N2 S2}
-	   {Show N1#N2#{Space.merge S1}#{Space.merge S2}}
-	end
+ add(compare proc {$ N1 X1 N2 X2} {Show N1#N2#X1#X2} end
      label: 'Show')
- add(compare:
-	proc {$ N1 S1 N2 S2}
-	   {Browse N1#N2#{Space.merge S1}#{Space.merge S2}}
-	end
+ add(compare proc {$ N1 X1 N2 X2} {Browse N1#N2#X1#X2} end
      label: 'Browse')
- add(compare:separator)
 
- add(statistics:
-	proc {$ N S}
-	   {Show N#{Record.subtract S shape}}
-	end
+ add(statistics proc {$ N S}
+		   {Show N#{Record.subtract S shape}}
+		end
      label: 'Show')
- add(statistics:
-	proc {$ N S}
-	   {Browse N#{Record.subtract S shape}}
-	end
-     label: 'Browse')
- add(statistics:separator)]
+ add(statistics proc {$ N S}
+		   {Browse N#{Record.subtract S shape}}
+		end
+     label: 'Browse')]

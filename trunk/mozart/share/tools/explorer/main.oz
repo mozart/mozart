@@ -7,6 +7,15 @@
 
 local
  
+   proc {OpiError V M}
+      E = {System.get errors}
+   in
+      {System.showError '*** Explorer Configuration Error'} 
+      {System.showError ('*** '# V # ': ' #
+			 {System.valueToVirtualString M E.depth E.width})}
+      {System.showError ''}
+   end
+
    \insert misc.oz
    
    \insert configure.oz
@@ -17,30 +26,22 @@ local
    MyManager     = {NewName}
    ManagerClosed = {NewName}
    
-   Actions = [information compare statistics]
-
+   ActionKinds   = [information compare statistics]
+   ActionTypes   = [root space procedure]
    ActionArities = a(information: [2 3]
 		     compare:     [4 5]
 		     statistics:  [2 3])
 
-   Options = {Sort [search information drawing postscript] Value.'<'}
-
-   proc {MethodError O M}
-      {Show M}
+   fun {SpaceToProcedure S}
+      fun {$}
+	 {Space.merge {Space.clone S}}
+      end
    end
 
-   fun {GetAction M W}
-      case {Width M}==W then
-	 case {List.subtract {Arity M} label} of [What] then
-	    case {Member What Actions} then What else False end
-	 else False end
-      else False end
-   end
+   fun {SpaceToSpace S} S end
 
-   fun {IfAtThen T F P}
-      case {HasSubtreeAt T F} then {P T.F} else True end
-   end
-
+   SpaceToRoot = Space.merge
+   
 in
 
    class ExplorerClass
@@ -70,7 +71,8 @@ in
       
       meth solver(Solver Order <=False)
 	 <<ExplorerClass Init>>
-	 {@MyManager query(Solver Order)}
+	 {@MyManager query(proc {$ X} {Solver X} end
+			   Order)}
       end
 
       meth one(Solver Order <=False)
@@ -84,97 +86,158 @@ in
       end
 
 
-      meth add(label:Label<=NoLabel ...) = Add
-	 case @MyManager==False then
-	    Stacked <- Add|@Stacked
-	 else
-	    case {GetAction Add case Label==NoLabel then 1 else 2 end}
-	    of !False then
-	       {MethodError self Add}
-	    elseof ActionKind then
-	       case Add.ActionKind
-	       of separator then
-		  {New Tk.menuentry.separator
-		   tkInit(parent: @MyManager.menu.nodes.
-			  case ActionKind
-			  of information then infoAction
-			  [] compare then cmpAction
-			  [] statistics then statAction
-			  end.menu) _}
-	       elseof Action then
-		  case
-		     {Procedure.is Action} andthen
-		     {Member {Procedure.arity Action}
-		      ActionArities.ActionKind}
-		  then
-		     MenuLabel = case Label==NoLabel then
-				    {System.printName Action}
-				 else Label
-				 end
-		  in
-		     {@MyManager.case ActionKind
-				 of information then infoAction
-				 [] statistics  then statAction
-				 [] compare     then cmpAction
-				 end
-		      add(label:MenuLabel value:Action)} 
-		  else
-		     {MethodError self Add}
-		  end
+      meth add(Kind What
+	       label: Label <=NoLabel
+	       type:  Type  <=root) = Add
+	 case @MyManager==False then Stacked <- Add|@Stacked
+	 elsecase
+	    case {Member Kind ActionKinds} then
+	       ActionMenu = @MyManager.case Kind
+				       of information then infoAction
+				       [] compare then cmpAction
+				       [] statistics then statAction
+				       end
+	    in
+	       case What==separator then
+		  {ActionMenu addSeparator} True
+	       elsecase
+		  {IsProcedure What} andthen
+		  {Member {ProcedureArity What} ActionArities.Kind} andthen
+		  {Member Type ActionTypes} andthen
+		  (Label==NoLabel orelse {IsVirtualString Label}) 
+	       then
+		  MenuLabel   = case Label==NoLabel then
+				   {System.printName What}
+			        else Label
+				end
+		  SpaceToType = case Type
+				of root then SpaceToRoot
+				[] procedure then SpaceToProcedure
+				[] space then SpaceToSpace
+				end
+	       in
+		  {ActionMenu add(label: MenuLabel
+				  value: What
+				  type:  SpaceToType)}
+		  True
+	       else False
 	       end
+	    else False
 	    end
+	 then true
+	 else {OpiError 'Action adding' Add}
 	 end
       end
 
-      meth delete(...) = Del
-	 case @MyManager==False then
-	    Stacked <- Del|@Stacked
-	 else
-	    case {GetAction Del 1} of !False then
-	       {MethodError self Del}
-	    elseof ActionKind then
-	       {@MyManager.case ActionKind
-			   of information then infoAction
-			   [] statistics  then statAction
-			   [] compare     then cmpAction
-			   end
-		delete(value:Del.ActionKind)}
+      meth delete(Kind What) = Del
+	 case @MyManager==False then Stacked <- Del|@Stacked
+	 elsecase
+	    case {Member Kind ActionKinds} then
+	       ActionMenu = @MyManager.case Kind
+				       of information then infoAction
+				       [] compare then cmpAction
+				       [] statistics then statAction
+				       end
+	    in
+	       case What
+	       of all then {ActionMenu deleteAll} True
+	       elsecase {IsProcedure What} then {ActionMenu delete(What)} True
+	       else False
+	       end
+	    else False
 	    end
+	 then true
+	 else {OpiError 'Action deletion' Del}
 	 end
       end
 
-      meth option(...) = Opt
-	 case @MyManager==False then
-	    Stacked <- Opt|@Stacked
-	 else Opts={Arity Opt} in
+      meth option(What ...) = OM
+	 case @MyManager==False then Stacked <- OM|@Stacked
+	 elsecase
 	    case
-	       {List.sub Opts Options} andthen
-	       {Record.allInd Opt
-		fun {$ ON O}
-		   case ON
-		   of search  then
-		      {IfAtThen O recomputation IsInt}
-		   [] information  then
-		      {IfAtThen O recomputation IsInt} andthen
-		      {IfAtThen O solutions IsBool}
-		   [] drawing then
-		      {IfAtThen O hide   IsBool} andthen
-		      {IfAtThen O update IsNat}
-		   [] postscript then
-		      {IfAtThen O mode
-		       fun {$ C} {Member C [color grayscale bw]} end} andthen
-		      {IfAtThen O orientation
-		       fun {$ C} {Member C [portrait landscape]} end} andthen
-		      {IfAtThen O size
-		       fun {$ C}
-			  {IsVirtualString C} andthen
-			  {Misc.check {VirtualString.toString C}}\=False
-		       end}
-		   end
-		end}
-	    then {@MyManager setOptions(Opt)}
-	    else {MethodError self Opt}
+	       What==postscript andthen
+	       {List.sub {Arity OM} [1 color orientation size]}
+	    then O=@MyManager.options.postscript in
+	       case {HasFeature OM size} then
+		  case {Misc.check {VirtualString.toString OM.size}}
+		  of !False then False
+		  elseof S then
+		     {Dictionary.put O width  S.width}
+		     {Dictionary.put O height S.height}
+		     {Dictionary.put O size   OM.size}
+		     True
+		  end
+	       else True end
+	       andthen
+	       case {HasFeature OM color} then
+		  case OM.color
+		  of full      then {Dictionary.put O color color} True
+		  [] grayscale then {Dictionary.put O color grey} True
+		  [] bw        then {Dictionary.put O color mono} True
+		  else False
+		  end
+	       else True end
+	       andthen
+	       case {HasFeature OM orientation} then
+		  case OM.orientation
+		  of portrait  then {Dictionary.put O orientation False} True
+		  [] landscape then {Dictionary.put O orientation True} True
+		  else False
+		  end
+	       else True end
+	    elsecase
+	       What==search andthen
+	       {List.sub {Arity OM} [1 information order search]}
+	    then O=@MyManager.options.search in
+	       case {HasFeature OM search} then S=OM.search in
+		  case S
+		  of none then {Dictionary.put O search 1} True
+		  [] full then {Dictionary.put O search ~1} True
+		  elsecase {IsInt S} then {Dictionary.put O search S} True
+		  else False
+		  end
+	       else True end
+	       andthen
+	       case {HasFeature OM information} then I=OM.information in
+		  case I
+		  of none then {Dictionary.put O information 1} True
+		  [] full then {Dictionary.put O information ~1} True
+		  elsecase {IsInt I} then {Dictionary.put O information I} True
+		  else False
+		  end
+	       else True end
+	       andthen
+	       case {HasFeature OM order} then OO=OM.order in
+		  case {IsBool OO} then {Dictionary.put O order OO} True
+		  else False
+		  end
+	       else True end
+	    elsecase
+	       What==drawing andthen
+	       {List.sub {Arity OM} [1 hide scale update]}
+	    then O=@MyManager.options.drawing in
+	       case {HasFeature OM hide} then H=OM.hide in
+		  case {IsBool H} then {Dictionary.put O hide H} True
+		  else False
+		  end
+	       else True end
+	       andthen
+	       case {HasFeature OM scale} then S=OM.scale in
+		  case {IsBool S} then {Dictionary.put O scale S} True
+		  else False
+		  end
+	       else True end
+	       andthen
+	       case {HasFeature OM update} then U=OM.update in
+		  case {IsInt U} andthen {IsNat U} then
+		     {Dictionary.put O update U} True
+		  else False
+		  end
+	       else True end
+	    else False
 	    end
+	 then {@MyManager updateAfterOptions}
+	 else {OpiError 'Option configuration' OM}
 	 end
       end
       

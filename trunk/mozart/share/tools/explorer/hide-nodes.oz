@@ -114,14 +114,11 @@ local
       meth hide
 	 <<TkNodes.choose deleteTree>>
 	 <<Inner          dirtyUp>>
+	 isDrawn  <- False
 	 case @isHidden then
-	    isDirty  <- True
-	    isDrawn  <- False
 	    isHidden <- False
 	 else
 	    isHidden <- True
-	    isDirty  <- True
-	    isDrawn  <- False
 	    {HideKids @kids}
 	 end
       end
