@@ -27,6 +27,7 @@
 #define GOZ_DECLARE_GTKOBJECT(i, val)            OZ_declareForeignType (i, val, GtkObject*)
 
 OZ_Term signal_port;
+OZ_Term signal_port_sml;
 
 OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
 {
@@ -94,6 +95,24 @@ OZ_BI_define (ozgtk_signal_emit_by_name, 2, 0)
   return OZ_ENTAILED;
 } OZ_BI_end
 
+/*****************************************************************************
+ * Bruni's Corner
+ * Until Thorsten has his own backend we need these functions
+ *****************************************************************************/
+
+OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
+{
+  OZ_declareTerm (0, port);
+  signal_port_sml = port;
+  OZ_protect(&signal_port); /* prevent GC of port anchor */
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+
+/*****************************************************************************
+ * Convertions
+ *****************************************************************************/
+
 GList *
 goz_oz_list_to_g_list(OZ_Term ozlist)
 {
@@ -114,10 +133,6 @@ goz_oz_list_to_g_list(OZ_Term ozlist)
 
   return glist;
 }
-
-/*****************************************************************************
- * Convertions
- *****************************************************************************/
 
 /* gdkEvent to Oz record (OZ_term *) */
 OZ_Term
