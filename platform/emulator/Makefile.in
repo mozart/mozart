@@ -364,15 +364,9 @@ emulator.dll: $(PRGDEP)
         tail +3 emulator.def | \
         awk '{ print "++'\''"$$1"'\''.'\''emulator.dll'\''" }' \
         > emulator.cmd && \
-        $(DLLWRAP) -mno-cygwin \
-        --driver-name $(CXX) --dlltool-name $(DLLTOOL) --as $(AS) \
+        $(DLLWRAP) --target i386-mingw32 \
+        --driver-name "$(CXX)" --dlltool-name $(DLLTOOL) --as $(AS) \
         $(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator0.def $(OBJS) $(LIBS)
-
-#--** Apparently, when building under cygwin, we need to do the following:
-#       $(DLLWRAP) -mno-cygwin -e _DllMainCRTStartup@12 \
-#       --driver-name $(CXX) --dlltool-name $(DLLTOOL) --as $(AS) \
-#       $(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator0.def $(OBJS) \
-#       -L/usr/lib/mingw $(LIBS) /usr/lib/mingw/dllcrt1.o
 
 text2pickle.exe: $(TEXT2PICKLEOBJS)
         $(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
