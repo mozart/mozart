@@ -1386,7 +1386,7 @@ LBLsuspendThread:
         debugStreamSuspend(debuginfoPC,CTT,name,args,1);
       }
       else {
-        debugStreamSuspend(debugPC,CTT,name,args,0);
+        debugStreamSuspend(debuginfoPC,CTT,name,args,0);
       }
     }
 
