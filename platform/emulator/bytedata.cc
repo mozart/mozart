@@ -452,7 +452,9 @@ OZ_BI_define(BIBitString_make,2,1)
     OZ_Term elt = OZ_head(tail);
     int i;
     if (!OZ_isSmallInt(elt) || (i=OZ_intToC(elt))<0 || i>=w) {
-      oz_typeError(1,"list of small ints");
+      char buffer[100];
+      sprintf(buffer,"list of small ints in range [0,%d)",w);
+      oz_typeError(1,buffer);
     }
     else {
       bs->put(i,OK);
