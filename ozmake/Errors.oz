@@ -12,6 +12,7 @@ prepare
    TITLE_MOGUL     = 'ozmake [mogul package] error'
    TITLE_CONTACT   = 'ozmake [mogul contact] error'
    TITLE_CONFIG    = 'ozmake [config] error'
+   TITLE_DEPENDS   = 'ozmake [depends] error'
    fun {OzMakeErrorFormatter E}
       case E
       of ozmake(get_uri) then
@@ -571,6 +572,10 @@ prepare
       [] ozmake(build:fast) then
 	 error(kind : TITLE_BUILD
 	       msg  : 'there were errors during compilation')
+      [] ozmake(depends:parseOzFile(S Err)) then
+	 error(kind : TITLE_DEPENDS
+	       msg  : 'syntax error discovered while extracting dependencies'
+	       items: [line(Err.msg) Err.coord])
       end
    end
 define

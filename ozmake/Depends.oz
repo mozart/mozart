@@ -93,7 +93,7 @@ define
 	       end
 	    end
 	 catch parseOzFile(Msg) then
-	    raise parseOzFile(SRC Msg) end
+	    raise ozmake(depends:parseOzFile(SRC Msg)) end
 	 end
 	 %%
 	 %% add SRC's base to all the collected deps

@@ -8,6 +8,7 @@ import
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
    URL
+   Fixes at 'Fixes.ozf'
 prepare
    DB_OZMAKE = 'apps/ozmake/ozmake.db'
    DB_MOGUL  = 'apps/ozmake/mogul.db'
@@ -70,7 +71,12 @@ define
 	 GNU        : unit
 	 Package    : unit
 	 PackageGiven:false
-	 Archive    : 'http://www.mozart-oz.org/mogul/pkg'
+	 Archive    :
+	    if {Fixes.condGet '>=1.3.0' false} then
+	       'http://www.mozart-oz.org/mogul/pkg'
+	    else
+	       'http://www.mozart-oz.org/mogul/pkg/1.2.5/source'
+	    end
 	 LineWidth  : 70
 	 NoMakefile : true
 	 Local      : false

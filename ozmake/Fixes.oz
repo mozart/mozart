@@ -25,4 +25,7 @@ define
    Table = {NewDictionary}
    fun {CondGet K D} {CondSelect Table K D} end
    Table.gumpdir := false%{VersionIsAtLeast '1.2.6'}
+   if {VersionIsAtLeast '1.3.0'} then
+      Table.'>=1.3.0' := true
+   end
 end
