@@ -1439,7 +1439,7 @@ void engine() {
 
 
   /* det(X) wait until X will be ground */
-#define DETBUGGY
+  //#define DETBUGGY
 #ifdef DETBUGGY
   Case(DETX): ONREG(WeakDet,X);
   Case(DETY): ONREG(WeakDet,Y);
