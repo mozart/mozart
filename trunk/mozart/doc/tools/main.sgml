@@ -6,7 +6,6 @@
 <!ENTITY % input.local.2 SYSTEM "tools.extra">
 <!ENTITY % p.mix.local "|Em|note.gui|menu">
 <!ELEMENT Em - - (#PCDATA)>
-<!ENTITY % proglang.values.local "|lambda">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>
@@ -25,6 +24,9 @@
 <!ENTITY explorer.tree      SYSTEM "e-tree.sgml">
 
 <!ENTITY linker             SYSTEM "linker.sgml">
+<!ENTITY compiler	    SYSTEM "compiler.sgml">
+<!ENTITY debugger	    SYSTEM "debugger.sgml">
+<!ENTITY profiler	    SYSTEM "profiler.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -46,6 +48,9 @@
 
 <Book proglang=oz>
   <Front>
+    <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
+    <meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+    <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
     <!-- Splitting the document into different HTML nodes -->
 
     <Meta name="html.split"       value="chapter.explorer">
@@ -74,6 +79,14 @@
     <Meta name="html.split"       value="section.panel.menu">
     <Meta name="html.split"       value="section.panel.object">
 
+    <Meta name="html.split"       value="chapter.compiler">
+    <Meta name="html.split"       value="section.compiler.modes">
+    <Meta name="html.split"       value="section.compiler.options">
+    <Meta name="html.split"       value="section.compiler.switches">
+
+    <Meta name="html.split"       value="chapter.debugger">
+    <Meta name="html.split"       value="chapter.profiler">
+
     <Meta name="html.split"       value="chapter.linker">
     <Meta name="html.split"       value="section.linker.basic">
     <Meta name="html.split"       value="section.linker.include">
@@ -88,6 +101,7 @@
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
     <Title/Tools/
+    <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Konstantin.Popov">
     <Author.Extern to="author.db" key="Christian.Schulte">
     <Abstract>
@@ -127,7 +141,10 @@
   <Part id="Part.Cmd">
     <Title/Commandline Tools/
 
+      &compiler;
       &linker;
+      &debugger;
+      &profiler;
 
   </Part>
 
