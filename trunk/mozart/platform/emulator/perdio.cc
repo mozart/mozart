@@ -1300,7 +1300,7 @@ void ProcProxy::localize(RefsArray g, ProgramCounter pc)
 typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, LITERALTAG, 
 	      RECORDTAG, TUPLETAG, LISTTAG, REFTAG, 
 	      OWNERTAG, 
-	      PORTTAG, PROCTAG, VARTAG} MarshallTag;
+	      PORTTAG, PROCTAG, VARTAG, BUILTINTAG} MarshallTag;
 
 int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t);
 void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t);
@@ -1641,16 +1641,17 @@ int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t){
 /**********************************************************************/
 
 
-#define CheckCycle(expr)				\
-  {							\
-    OZ_Term _t = expr;					\
-    if (!isRef(_t) && tagTypeOf(_t)==GCTAG) {		\
-      PERDIO_DEBUG(MARSHALL,"MARSHALL:circular");	\
-      bs->put(REFTAG);					\
-      marshallNumber(_t>>tagSize,bs);			\
-      return;						\
-    }							\
+inline 
+Bool checkCycle(OZ_Term t, ByteStream *bs)
+{
+  if (!isRef(t) && tagTypeOf(t)==GCTAG) {
+    PERDIO_DEBUG(MARSHALL,"MARSHALL:circular");
+    bs->put(REFTAG);
+    marshallNumber(t>>tagSize,bs);
+    return OK;
   }
+  return NO;
+}
 
 inline
 void trailCycle(OZ_Term *t)
@@ -1674,15 +1675,9 @@ void marshallTertiary(int sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
 
   int tag;
   switch (t->getType()) {
-  case Co_Port:
-    tag = PORTTAG;
-    break;
-  case Co_Abstraction:
-    tag = PROCTAG;
-    break;
-  default:
-    Assert(0);
-    tag=0;
+  case Co_Port:        tag = PORTTAG;    break;
+  case Co_Abstraction: tag = PROCTAG;    break;
+  default: Assert(0);  tag=0;
   }
 
   if (t->isProxy()) {
@@ -1694,7 +1689,7 @@ void marshallTertiary(int sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
       t->globalize();
     } else {
       PERDIO_DEBUG(MARSHALL,"MARSHALL:proxy manager");
-      CheckCycle(*(t->getRef()));}
+    }
     marshallOwnHead(tag,t->getIndex(),bs);
   }
 
@@ -1759,7 +1754,7 @@ loop:
   case LTUPLE:
     {
       LTuple *l = tagged2LTuple(t);
-      CheckCycle(*l->getRef());
+      if (checkCycle(*l->getRef(),bs)) return;
       bs->put(LISTTAG);
       argno = 2;
       args  = l->getRef();
@@ -1770,7 +1765,7 @@ loop:
   case SRECORD:
     {
       SRecord *rec = tagged2SRecord(t);
-      CheckCycle(*rec->getRef()); /* TODO mark instead of getRef ??*/
+      if (checkCycle(*rec->getRef(),bs)) return; /* TODO mark instead of getRef ??*/
       if (rec->isTuple()) {
 	bs->put(TUPLETAG);
 	marshallNumber(rec->getTupleWidth(),bs);
@@ -1788,13 +1783,20 @@ loop:
   case OZCONST:
     {
       PERDIO_DEBUG(MARSHALL,"MARSHALL:constterm");
+      if (checkCycle(*(tagged2Const(t)->getRef()),bs))
+	break;
+
+      if (isBuiltin(t)) {
+	bs->put(BUILTINTAG);
+	marshallTerm(sd,tagged2Builtin(t)->getName(),bs,dr);
+	break;
+      }
       if (!isProcedure(t) && !isPort(t))
 	goto bomb;
 
       marshallTertiary(sd,tagged2Tert(t),bs,dr);
       break;
     }
-    // no break here
 
   case UVAR:
     {
@@ -1973,6 +1975,7 @@ loop:
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port miss");
       Tertiary *tert = new PortProxy(bi);
       *ret= makeTaggedConst(tert);
+      refTable->set(refCounter++,*ret);
       ProtocolObject po(tert);
       ((BorrowEntry *)ob)->setBorrowObject(po);
       return;
@@ -2011,10 +2014,27 @@ loop:
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port miss");
       Tertiary *tert = new ProcProxy(bi,name,arity);
       *ret= makeTaggedConst(tert);
+      refTable->set(refCounter++,*ret);
       ProtocolObject po(tert);
       ((BorrowEntry *)ob)->setBorrowObject(po);
       return;
     }
+
+  case BUILTINTAG:
+    {
+      char *name = tagged2Literal(unmarshallTerm(bs))->getPrintName();
+      BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.htFind(name);
+
+      if (found == htEmpty) {
+	warning("Builtin '%s' not in table.", name);
+	*ret = nil();
+	return;
+      }
+
+      *ret = makeTaggedConst(new Builtin(found, 0));
+      return;
+    }
+
   default:
     printf("unmarshall: unexpected tag: %d\n",tag); 
     Assert(0);

@@ -375,8 +375,8 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
   reg  = regToInt(getRegArg(PC+1));
   next = getLabelArg(PC+2);
   pred = getPredArg(PC+3);
-  file = pred->getFileName();
-  line = pred->getLine();
+  file = pred ? pred->getFileName() : nil();
+  line = pred ? pred->getLine() : 0;
 }
 
 void CodeArea::getDebugInfoArgs(ProgramCounter PC,
@@ -925,6 +925,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case GENCALL:
       {
 	fprintf(ofile, "(0x%x,%d)\n", getAdressArg(PC+1),getPosIntArg(PC+2));
+	DISPATCH();
+      }
+
+    case MARSHALLEDFASTCALL:
+      {
+	fprintf(ofile, "(%s,%d)\n", toC(getTaggedArg(PC+1)),getPosIntArg(PC+2));
 	DISPATCH();
       }
 
