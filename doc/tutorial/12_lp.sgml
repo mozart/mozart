@@ -534,9 +534,131 @@ end
 
 
 <SUBSECTION><TITLE/Dis Construct/
+<P>
 
+<<<
+declare Edge
+proc {Connected X Y}
+   dis
+      {Edge X Y}
+   [] Z in {Edge X Z}  {Connected Z Y}
+   end
+end
+proc {Edge X Y}
+   dis
+      X = 1 Y = 2
+   [] X = 2 Y = 1
+   [] X = 2 Y = 3
+   [] X = 3 Y = 4
+   [] X = 2 Y = 5
+   [] X = 5 Y = 6
+   [] X = 4 Y = 6
+   [] X = 6 Y = 7
+   [] X = 6 Y = 8
+   [] X = 1 Y = 5
+   [] X = 5 Y = 1
+   end
+end
+
+{ExploreOne
+ proc {$ L}
+    X Y in
+    X#Y = L {Connected X Y}
+ end
+}
+{Browse
+ {SearchAll
+  proc {$ L}
+     X Y in
+     X#Y = L {Connected X Y}
+  end
+ }}
+>>>
+<SUBSECTION><TITLE/Negation/
+<P>
+<<<
+proc {NotP P}
+   {SearchOne proc {$ L} {P} L=unit end $} = nil
+end
+>>>
+
+<<<
+proc {ConnectedEnh X Y Visited}
+   dis
+      {Edge X Y}
+   [] Z in
+      {Edge X Z}
+      {NotP proc{$} {Member Z Visited} end}
+      {ConnectedEnh Z Y Z|Visited}
+   end
+end
+>>>
 
 <SUBSECTION><TITLE/Dynamic Predicates/
+<P>
+<<<
+proc {DisMember X Ys}
+   dis Ys = X|_ [] Yr in Ys = _|Yr {DisMember X Yr} end
+end
+>>>
+
+<<<
+class DataBase from BaseObject
+   attr d
+   meth init
+      d <- {NewDictionary}
+   end
+   meth dic($) @d end
+   meth tell(I)
+      case {IsFree I.1} then
+         raise database(nonground(I)) end
+      else
+         Is = {Dictionary.condGet @d I.1 nil} in
+         {Dictionary.put @d I.1 {Append Is [I]}}
+      end
+   end
+   meth ask(I)
+      case {IsFree I} orelse {IsFree I.1} then
+         {DisMember I {Flatten {Dictionary.items @d}}}
+      else
+         {DisMember I {Dictionary.condGet @d I.1 nil}}
+      end
+   end
+   meth entries($)
+      {Dictionary.entries @d}
+   end
+end
+
+declare
+proc {Dynamic ?Pred}
+   Pred = {New DataBase init}
+end
+proc {Assert P I}
+   {P tell(I)}
+end
+proc {Query P I}
+   {P ask(I)}
+end
+>>>
+
+<<<
+EdgeP = {Dynamic}
+{ForAll
+[edge(1 2)
+ edge(2 1)   % Cycle
+ edge(2 3)
+ edge(3 4)
+ edge(2 5)
+ edge(5 6)
+ edge(4 6)
+ edge(6 7)
+ edge(6 8)
+ edge(1 5)
+ edge(5 1)  % Cycle
+]
+proc {$ I} {Assert EdgeP I} end
+}
+>>>
 
 <SUBSECTION><TITLE/The Basic Space Library/
 
