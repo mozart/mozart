@@ -58,7 +58,6 @@ APSRC   = Application
 CPSRC   = Search FD Schedule FS
 DPSRC   = Connection Remote RemoteServer Fault URL
 WPSRC   = Tk TkTools
-MISCSRC = Misc
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL
 
 RUNFUNCTORS = \
@@ -73,7 +72,6 @@ FUNCTORS = \
 	$(DPSRC:%=%.ozf) \
 	$(WPSRC:%=%.ozf) \
 	$(SUPPSRC:%=%.ozf) \
-	$(MISCSRC:%=%.ozf) \
 	Compiler.ozf
 
 SYSLETS = ozc ozl
@@ -151,9 +149,6 @@ CpSupport.ozf: cp/CpSupport.oz Base.ozf
 %.ozf: wp/%.oz Base.ozf
 	$(COMPILE) $< -o $@
 
-%.ozf: misc/%.oz Base.ozf
-	$(COMPILE) $< -o $@
-
 %.ozf: %.oz Base.ozf
 	$(COMPILE) $< -o $@
 
@@ -220,7 +215,9 @@ Builtins.ozf: compiler/Builtins.oz compiler-Builtins.oz
 Unnester.ozf: compiler/Unnester.oz compiler/TupleSyntax.oz \
 	compiler/BindingAnalysis.oz compiler/UnnestFD.oz
 
-Core.ozf: compiler/Core.oz compiler/Annotate.oz
+Annotate.ozf: compiler/Annotate.oz
+
+Core.ozf: compiler/Core.oz Annotate.ozf
 
 StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
 	Search.ozf FD.ozf FS.ozf
