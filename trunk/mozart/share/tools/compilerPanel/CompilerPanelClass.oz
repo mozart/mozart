@@ -1005,6 +1005,15 @@ in
 				font: SwitchFont
 				variable: WarnUnused
 				action: {MkAction Switch(warnunused)})}
+	 WarnUnusedFormals = {New Tk.variable tkInit(false)}
+	 WarnUnusedFormalsSw = {New Tk.checkbutton
+				tkInit(parent: WarningsFrame
+				       text: ('Warn about unused variables '#
+					      'and formals')
+				       font: SwitchFont
+				       variable: WarnUnusedFormals
+				       action: {MkAction
+						Switch(warnunusedformals)})}
 	 WarnForward = {New Tk.variable tkInit(false)}
 	 WarnForwardSw = {New Tk.checkbutton
 			  tkInit(parent: WarningsFrame
@@ -1225,8 +1234,8 @@ in
 		    %% "Switches" note:
 		    pack(Column1 Column2 Column3 side: left fill: y)
 		    pack(GlobalFrame WarningsFrame padx: 8 pady: 8 anchor: w)
-		    pack(WarningsLabel WarnRedeclSw WarnUnusedSw WarnForwardSw
-			 anchor: w)
+		    pack(WarningsLabel WarnRedeclSw WarnUnusedSw
+			 WarnUnusedFormals WarnForwardSw anchor: w)
 		    pack(GlobalLabel CompilerPassesSw ShowInsertSw
 			 EchoQueriesSw ErrorsFrame anchor: w)
 		    pack(DoMaxErrors self.MaxNumberOfErrors ErrorsLabel
@@ -1278,6 +1287,7 @@ in
 				   echoqueries: EchoQueries
 				   warnredecl: WarnRedecl
 				   warnunused: WarnUnused
+				   warnunusedformals: WarnUnusedFormals
 				   warnforward: WarnForward
 				   expression: Expression
 				   system: System
@@ -1299,12 +1309,12 @@ in
 			self.MaxNumberOfErrors.inc self.MaxNumberOfErrors.dec
 			self.MaxNumberOfErrors.entry DoMaxErrors
 			CompilerPassesSw ShowInsertSw EchoQueriesSw
-			WarnRedeclSw WarnUnusedSw WarnForwardSw ExpressionSw
-			SystemSw GumpSw StaticAnalysisSw CoreSw RealCoreSw
-			DebugValueSw DebugTypeSw CodeGenSw OutputCodeSw
-			FeedToEmulatorSw ThreadedQueriesSw ProfileSw
-			RunWithDebuggerSw DebugInfoControlSw
-			DebugInfoVarnamesSw]
+			WarnRedeclSw WarnUnusedSw WarnUnusedFormalsSw
+			WarnForwardSw ExpressionSw SystemSw GumpSw
+			StaticAnalysisSw CoreSw RealCoreSw DebugValueSw
+			DebugTypeSw CodeGenSw OutputCodeSw FeedToEmulatorSw
+			ThreadedQueriesSw ProfileSw RunWithDebuggerSw
+			DebugInfoControlSw DebugInfoVarnamesSw]
 	 self.InterruptMenuItem = Menu.compiler.interrupt
 	 ValueDict <- {NewDictionary}
 	 TagDict <- {NewDictionary}
