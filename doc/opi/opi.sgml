@@ -990,13 +990,13 @@
 	      The default value of this variable is taken from the
 	      environment variable <Var type=env/OZ_LOAD/ if it is set,
 	      else it is set to
-<<<prefix=http\\://www.ps.uni-sb.de/ozhome/=~/mozart/share/lib/stage1/:
-prefix=http\\://www.ps.uni-sb.de/ozhome/=~/mozart/share/tools/stage1/:
+<<<prefix=http\\://mozart.ps.uni-sb.de/home/=~/mozart/share/lib/stage1/:
+prefix=http\\://mozart.ps.uni-sb.de/home/=~/mozart/share/tools/stage1/:
 cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	      where <<$OZHOME>> stands for the value of the environment
 	      variable <Var type=env/OZHOME/.
 	    <Entry class=useroption><Span class=index/<<oz-root-functor>>/
-	      (default: <<"http://www.ps.uni-sb.de/ozhome/share/OPI.ozf">>)
+	      (default: <<"http://mozart.ps.uni-sb.de/home/share/OPI.ozf">>)
 	    <Item>
 	      Name of the <Index/functor<And>root/<Span class=index
 	      /root functor/ to load on startup.

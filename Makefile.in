@@ -38,11 +38,11 @@ SHAREDIR=	$(PREFIX)/share
 TOOLSDIR=	$(SHAREDIR)/tools
 ELISPDIR=	$(SHAREDIR)/elisp
 IMAGESDIR=	$(SHAREDIR)/images
-CACHEDIR= 	$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
+CACHEDIR= 	$(PREFIX)/cache/http/mozart.ps.uni-sb.de/home
 CACHETOOLS= 	$(CACHEDIR)/tools
 CACHEBIN=	$(CACHEDIR)/bin
 SHARECACHE=	$(CACHEDIR)/share
-URL=		http\\://www.ps.uni-sb.de/ozhome
+URL=		http\\://mozart.ps.uni-sb.de/home
 
 ######################################################################
 # programs
@@ -79,7 +79,7 @@ DEMOFILES=	demo examples
 
 COMPRESS=	gzip -9
 
-WINCACHEDIR=	oz/cache/http/www.ps.uni-sb.de/ozhome
+WINCACHEDIR=	oz/cache/http/mozart.ps.uni-sb.de/home
 
 # sub directories for recursive makes
 SUBDIRS=	@oz_subdirs@

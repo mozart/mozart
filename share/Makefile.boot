@@ -4,7 +4,7 @@
 #	use the local emulator and local libraries
 #---------------------------------------------------------------------
 
-URL=http\\://www.ps.uni-sb.de/ozhome
+URL=http\\://mozart.ps.uni-sb.de/home
 BUILDSHARE=$(BUILDTOP)/share
 BUILDLIB=$(BUILDSHARE)/lib
 BUILDTOOLS=$(BUILDSHARE)/tools

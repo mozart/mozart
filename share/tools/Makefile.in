@@ -245,8 +245,8 @@ $(OZCARIMAGESDIR)/%: ozcar/images/%
 $(INSPECTORIMAGESDIR)/%: inspector/images/%
 	$(INSTALL_FILE) $< $@
 
-CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
-CACHELINK = $(CACHEDIR)/ozhome
+CACHEDIR  = $(PREFIX)/cache/http/mozart.ps.uni-sb.de
+CACHELINK = $(CACHEDIR)/home
 
 install-cache: $(CACHEDIR) $(CACHELINK)
 
