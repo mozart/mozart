@@ -235,8 +235,8 @@
       <Section>
 	<Title/Stack View/
 	<Para class=apropos><Title/Stack Frames/
-	  On the top right, the pane labeled <Samp/Stack/ or <Samp/Stack of
-	  Thread /?{id} displays the stack of the currently selected thread.
+	  On the top right, the pane labeled <Samp/Stack/ or <Samp/Stack of Thread/
+          ?{id} displays the stack of the currently selected thread.
 	  The <Def/stack/ is a sequence of <Def/frames/, where each frame
 	  describes a nested construct or procedure activation.  The stack
 	  provides a trace of how the computation reached its current point
@@ -265,8 +265,8 @@
       <Section>
 	<Title/Environment Views/
 	<P>
-	  Below the Stack View, there are two panes labeled <Samp/Local
-	  Variables/ and <Samp/Global Variables/, displaying the values
+	  Below the Stack View, there are two panes labeled <Samp/Local Variables/ 
+          and <Samp/Global Variables/, displaying the values
 	  of local and global variables of the selected stack frame (or
 	  the topmost frame if no frame is selected).  The variables of
 	  the local environment are sorted by order of introduction in the
@@ -515,9 +515,9 @@ end>>>
 	  <Para class=apropos><Title/Setting Breakpoints/
 	    Dynamic breakpoints can easily be set from within Emacs:
 	    Position the cursor on the line where you want to set or reset
-	    breakpoints and press <Key/C-x space/ to set or <Key/C-u C-x
-	    space/ to delete breakpoints.  Note that this will affect <Em/all
-	    entry points/ on the corresponding line (there may be several,
+	    breakpoints and press <Key/C-x space/ to set or <Key/C-u C-x space/ 
+            to delete breakpoints.  Note that this will affect 
+            <Em/all entry points/ on the corresponding line (there may be several,
 	    or none).
 	  <P>
 	    Currently, there is no way to list all currently defined
@@ -681,8 +681,8 @@ end>>>
 	  There are two ways to start a server: using the user interface or
 	  the API.
 	<Para class=apropos><Title/Using the Menus/
-	  In the <Samp/Ozcar/ menu, you'll find an entry called <Samp/Start
-	  Server/.  Activating this will cause Ozcar to open a port where it
+	  In the <Samp/Ozcar/ menu, you'll find an entry called <Samp/Start Server/.  
+          Activating this will cause Ozcar to open a port where it
 	  listens for clients that want to connect.  This port is identified
 	  by a <Def/ticket/: a string describing the server's location on
 	  the net.  Clients will need this ticket in order to connect.
@@ -918,8 +918,9 @@ end>>>
 	      <Entry><Menu key="C-s"/Status/
 	      <Item>
 		Print some useful information about the currently attached
-		threads, for example:  <Samp>2 attached threads, currently
-		selected: 58/1 (stopped, runnable)</Samp>.  The two numbers
+		threads, for example:  
+                <Samp>2 attached threads, currently selected: 58/1 (stopped, runnable)</Samp>.  
+                The two numbers
 		associated with the selected thread are the thread ID and
 		the parent's thread ID.  In parentheses, the thread's state
 		is given.
