@@ -245,7 +245,10 @@ Makefile: Makefile.in ../config.status
 
 include $(SRCDIR)/../Makefile.boot
 
+# disabled because this file is a hack (mm)
 bootstrap:
+
+bootstrap-maybe:
 	@mkdir constraints 2> /dev/null || true
 	@mkdir concurrent 2> /dev/null || true
 	@mkdir distributed 2> /dev/null || true
