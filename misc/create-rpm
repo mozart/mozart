@@ -253,12 +253,13 @@ for e in \$dynlib ; do
     fi
 done
 if [ "\$found" != "" ]; then
-    for e in `echo \$found | tr '/' ' '` ; do
+    lib=""
+    for e in \`echo \$found | tr '/' ' '\` ; do
 	lib=\$e
     done
     mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
     /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
-    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib/\$found
+    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
     unset lib
 fi
 unset found
@@ -273,12 +274,13 @@ for e in \$dynlib ; do
     fi
 done
 if [ "\$found" != "" ]; then
-    for e in `echo \$found | tr '/' ' '` ; do
+    lib=""
+    for e in \`echo \$found | tr '/' ' '\` ; do
 	lib=\$e
     done
     mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
     /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
-    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib/\$found
+    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
     unset lib
 fi
 unset found

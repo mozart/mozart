@@ -127,12 +127,13 @@ for e in $dynlib ; do
     fi
 done
 if [ "$found" != "" ]; then
+    lib=""
     for e in `echo $found | tr '/' ' '` ; do
 	lib=$e
     done
     mkdir -p $PREFIX/install/platform/$PLAT/lib
     /bin/cp $found $PREFIX/install/platform/$PLAT/lib/$lib
-    /bin/chmod a+x $PREFIX/install/platform/$PLAT/lib/$lib/$found
+    /bin/chmod a+x $PREFIX/install/platform/$PLAT/lib/$lib
     unset lib
 fi
 unset found 
@@ -147,12 +148,13 @@ for e in $dynlib ; do
     fi
 done
 if [ "$found" != "" ]; then
+    lib=""
     for e in `echo $found | tr '/' ' '` ; do
 	lib=$e
     done
     mkdir -p $PREFIX/install/platform/$PLAT/lib
     /bin/cp $found $PREFIX/install/platform/$PLAT/lib/$lib
-    /bin/chmod a+x $PREFIX/install/platform/$PLAT/lib/$lib/$found
+    /bin/chmod a+x $PREFIX/install/platform/$PLAT/lib/$lib
     unset lib
 fi
 unset found 
@@ -171,4 +173,4 @@ make install
 # src, doc & std are used by make-mozart-rpm.sh
 cd $PREFIX
 cd $build
-make src doc std ${PLAT}
+(USER=root; make src doc std ${PLAT})
