@@ -33,4 +33,37 @@
 			     out => ['+record'],
 			     BI  => BIprocedureCoord},
 
+ 'getId'		  => { in  => ['+thread'],
+			       out => ['+int'],
+			       BI  => BIthreadID},
+
+ 'setId'	          => { in  => ['+thread','+int'],
+			       out => [],
+			       BI  => BIsetThreadID},
+
+ 'getParentId'	  => { in  => ['+thread'],
+			       out => ['+int'],
+			       BI  => BIparentThreadID},
+
+ 'setRaiseOnBlock' => { in  => ['+thread','+bool'],
+			       out => [],
+			       BI  => BIthreadSetRaiseOnBlock},
+
+ 'getRaiseOnBlock' => { in  => ['+thread'],
+			       out => ['+bool'],
+			       BI  => BIthreadGetRaiseOnBlock},
+
+ 'getTaskStack'	 => { in  => ['+thread','+int','+bool'],
+			      out => ['+[record]'],
+			      BI  => BIthreadTaskStack},
+
+ 'getFrameVariables' => { in  => ['+thread','+int'],
+			      out => ['+record'],
+			      BI  => BIthreadFrameVariables},
+
+ 'getLocation'	 => { in  => ['+thread'],
+			      out => ['+[atom]'],
+			      BI  => BIthreadLocation},
+
+
  );
