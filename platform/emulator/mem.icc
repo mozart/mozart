@@ -37,11 +37,6 @@ void * freeListMalloc(size_t chunk_size)
 {
   Assert(((chunk_size & 3) == 0) && (chunk_size > 0));
 
-  int mod = chunk_size%WordSize;
-  if (mod) {
-    chunk_size += WordSize-mod;
-  }
-
   void **freeListCache = FreeList;
   void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : NULL;
 
@@ -62,15 +57,10 @@ inline
 void freeListDispose(void * addr, size_t chunk_size)
 {
   Assert((chunk_size & 3) == 0);
-
-  int mod = chunk_size%WordSize;
-  if (mod) {
-    chunk_size += WordSize-mod;
-  }
+  Assert(chunk_size > 0);
 
   DebugCode(memset((char *)addr,0x5A,chunk_size));
 
-  Assert(chunk_size > 0);
   if (chunk_size < freeListMaxSize) {
 #ifdef DEBUG_MEM
     void * aux = FreeList[chunk_size];

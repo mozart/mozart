@@ -148,7 +148,6 @@ public:
 
   Bool gcIsMarked(void);
   void gcMark(Board *);
-  void ** gcGetMarkField(void);
   Board * gcGetFwd(void);
   Board *gcBoard();
   void gcRecurse(void);
