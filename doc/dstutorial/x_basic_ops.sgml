@@ -45,7 +45,7 @@ This is done lazily, i.e., the class is only
 copied when the object is called for the first time.
 Once the class is on the site, no further copies are done.
 
-<ITEM> <EM>Stationary object</EM>:
+<ITEM> <EM>Stationary object (full server)</EM>:
 A stationary object remains on the site at which it was created.
 Each method invocation uses one message to start the method
 and one message to synchronize with the caller
@@ -57,8 +57,9 @@ This is reasonable
 since threads in Mozart are extremely lightweight 
 (millions can be created on one machine).
 
-<ITEM> <EM>Server (sequential asynchronous object)</EM>:
-A server is a stripped-down stationary object.
+<ITEM> <EM>Sequential asynchronous stationary object (basic server)</EM>:
+A basic server is a stripped-down stationary object
+that provides
 Each method invocation uses one message only and does not
 wait until the method is finished.
 All method invocations execute in the same thread,
@@ -467,8 +468,7 @@ you have to specify the base URL for the resources.
 
 <SECTION><TITLE>Servers</TITLE>
 
-A server is a computation that provides a service to clients.
-In
+<P> A server is a computation that provides a service to clients.
 
 
 </CHAPTER>
