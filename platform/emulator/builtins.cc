@@ -3178,11 +3178,12 @@ OZ_BI_define(BIcharToLower,1,1) {
   OZ_RETURN_INT(iso_tolower((unsigned char) i));
 } OZ_BI_end
 
+// mm2: should use iso_tolower directly
 OZ_Return INLINE__BIcharToLower(TaggedRef arg1,TaggedRef& out)
 {
   OZ_Term X[2];
   X[0]=arg1;
-  int ret= BI__BIcharToLower(X,OZ_ID_MAP);
+  int ret= BIcharToLower(X,OZ_ID_MAP);
   out = X[1];
   return ret;
 }

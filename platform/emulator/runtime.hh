@@ -423,6 +423,13 @@ OZ_Return typeError(int pos, char *comment, char *typeString);
 
 OZ_Term oz_getLocation(Board *bb);
 
+OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X);
+
+#ifdef DEBUG_CHECK
+extern int checkBIArity(OZ_CFun f);
+#endif
+
+
 /* -----------------------------------------------------------------------
  * BuiltinTab
  * -----------------------------------------------------------------------*/
