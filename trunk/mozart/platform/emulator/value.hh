@@ -672,8 +672,8 @@ public:
   USEHEAPMEMORY;
   OZPRINTLONG;
   NO_DEFAULT_CONSTRUCTORS(ConstTerm);
-  ConstTerm(TypeOfConst t) { tag = t<<1; }
-
+  ConstTerm(TypeOfConst t) { init(t); }
+  void init(TypeOfConst t) { tag = t<<1; }
   Bool gcIsMarked(void)        { return tag&1; }
   void gcMark(ConstTerm * fwd) { tag |= 1; }
   void ** gcGetMarkField(void) { return (void **) &tag; }
@@ -714,7 +714,9 @@ private:
   }
 public:
   NO_DEFAULT_CONSTRUCTORS(ConstTermWithHome);
-  ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t) { setBoard(b);  }
+  ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
+
+  void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
 
   Board *getBoardInternal() {
     return hasGName() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
@@ -2018,7 +2020,7 @@ private:
   int lineno;
   TaggedRef info;
   int flags;
-
+  int gSize;
 public:
   PrTabEntry *next;
   unsigned int numClosures, numCalled, heapUsed, samples, lastHeap;
@@ -2045,8 +2047,11 @@ public:
     numClosures = numCalled = heapUsed = samples = lastHeap = 0;
     next = allPrTabEntries;     
     allPrTabEntries = this;
+    gSize=0;
   }
 
+  void setGSize(int n) { gSize = n; }
+  int getGSize() { return gSize; }
   int getArity () { return (int) arity; }
   TaggedRef getFileName() { return fileName; }
   int getLine() { return lineno; }
@@ -2074,20 +2079,37 @@ class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
   PrTabEntry *pred;
-  RefsArray gRegs;
+  TaggedRef globals[1];
 public:
   OZPRINTLONG;
   NO_DEFAULT_CONSTRUCTORS(Abstraction);
-  Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
-    : ConstTermWithHome(b,Co_Abstraction), pred(prd), gRegs(gregs)
-  { }
+  static Abstraction *Abstraction::newAbstraction(PrTabEntry *prd,
+						  Board *bb)
+  {
+    int sz=sizeof(Abstraction)+sizeof(TaggedRef)*(prd->getGSize()-1);
+    Abstraction *ab = (Abstraction *) int32Malloc(sz);
+    ab->ConstTermWithHome::init(bb,Co_Abstraction);
+    ab->pred=prd;
+    DebugCheckT(for (int i=prd->getGSize(); i--; ) ab->globals[i]=0);
+    return ab;
+  }
+
+  void initG(int i, TaggedRef val) {
+    Assert(i>=0 && i<getPred()->getGSize());
+    globals[i]=val;
+  }
+  TaggedRef getG(int i) {
+    Assert(i>=0 && i<getPred()->getGSize());
+    return globals[i];
+  }
+  TaggedRef *getGRef() { return globals; }
 
   PrTabEntry *getPred()  { return pred; }
-  RefsArray &getGRegs()  { return gRegs; }
+  // RefsArray &getGRegs()  { return gRegs; }
+  // int getGSize()         { return getRefsArraySize(gRegs); }
   ProgramCounter getPC() { return getPred()->getPC(); }
   int getArity()         { return getPred()->getArity(); }
   SRecordArity getMethodArity()   { return getPred()->getMethodArity(); }
-  int getGSize()         { return getRefsArraySize(gRegs); }
   const char *getPrintName()   { return getPred()->getPrintName(); }
   TaggedRef getName()    { return getPred()->getName(); }
 
@@ -2097,12 +2119,6 @@ public:
   GName *getGName() {
     GName *gn = getGName1();
     return gn ? gn : globalize();
-  }
-  void import(RefsArray g, ProgramCounter pc) {
-    gRegs = g;
-    if (pc!=NOCODE) {
-      getPred()->setPC(pc);
-    }
   }
 };
 

@@ -144,7 +144,8 @@ public:
   TaggedRef frameToRecord(Frame *&frame, Thread *thread, Bool verbose);
 
   Bool findCatch(Thread *thr,
-		 ProgramCounter PC=NOCODE, RefsArray Y=NULL, RefsArray G=NULL,
+		 ProgramCounter PC=NOCODE, RefsArray Y=NULL,
+		 Abstraction *G=NULL,
 		 TaggedRef *traceBack=0, Bool verbose=NO);
 
 
@@ -179,14 +180,13 @@ public:
 	      i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL);
   }
   
-  void pushCont(ProgramCounter pc,RefsArray y,RefsArray g)
+  void pushCont(ProgramCounter pc,RefsArray y,Abstraction *cap)
   {
     Assert(!isFreedRefsArray(y));
 
     Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
-    Assert(!g || MemChunks::areRegsInHeap(g,getRefsArraySize(g)));
 	       
-    pushFrame(pc,y,g);
+    pushFrame(pc,y,cap);
   }
 
   void pushCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1, 
@@ -218,37 +218,39 @@ public:
   int tasks();
 };
 
-#define GetFrameNoDecl(top,pc,y,g)		\
+#define GetFrameNoDecl(top,pc,y,cap)		\
 {						\
   pc   = (ProgramCounter) *(top-1);		\
   y    = (RefsArray) *(top-2);			\
-  g    = (RefsArray) *(top-3);			\
+  cap    = (Abstraction *) *(top-3);		\
   top -= frameSz;				\
 }
 
-#define ReplaceFrame(frame,pc,y,g)              \
+#define ReplaceFrame(frame,pc,y,cap)            \
 {                                               \
   *(frame+2) = (void *) pc;                     \
   *(frame+1) = (void *) y;                      \
-  *frame     = (void *) g;                      \
+  *frame     = (void *) cap;                    \
 }
 
-#define PopFrameNoDecl(ts,pc,y,g)		\
+#define PopFrameNoDecl(ts,pc,y,cap)		\
 {						\
   TaskStack *__ts = ts;				\
   Frame *__top = __ts->getTop();		\
-  GetFrameNoDecl(__top,pc,y,g)			\
+  GetFrameNoDecl(__top,pc,y,cap)		\
   __ts->setTop(__top);				\
 }
 
 #endif
 
-#define PopFrame(ts,pc,y,g)			\
+#define PopFrame(ts,pc,y,cap)			\
     ProgramCounter pc;				\
-    RefsArray y,g;				\
-    PopFrameNoDecl(ts,pc,y,g)
+    RefsArray y;				\
+    Abstraction *cap;				\
+    PopFrameNoDecl(ts,pc,y,cap)
 
-#define GetFrame(top,pc,y,g)			\
+#define GetFrame(top,pc,y,cap)			\
     ProgramCounter pc;				\
-    RefsArray y,g;				\
-    GetFrameNoDecl(top,pc,y,g)
+    RefsArray y;				\
+    Abstraction *cap;				\
+    GetFrameNoDecl(top,pc,y,cap)

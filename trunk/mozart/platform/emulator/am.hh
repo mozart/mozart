@@ -142,7 +142,7 @@ private:
     TaggedRef info;
     ProgramCounter pc;
     RefsArray y;
-    RefsArray g;
+    Abstraction *cap;
   } exception;
 
   Bool criticalFlag;  // if this is true we will NOT set Sflags

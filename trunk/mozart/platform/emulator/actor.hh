@@ -112,7 +112,7 @@ protected:
 public:
   NO_DEFAULT_CONSTRUCTORS(AWActor);
   AWActor(int typ,Board *bb,Thread *tt,
-	  ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
+	  ProgramCounter p=NOCODE,RefsArray y=0,Abstraction *cap=0,
 	  RefsArray x=0,int i=0)
     : Actor (typ, bb)
   {
@@ -120,7 +120,7 @@ public:
     childCount=0;
     next.setPC(p);
     next.setY(y);
-    next.setG(g);
+    next.setCAP(cap);
     next.setX(x,i);
   }
 
@@ -157,8 +157,8 @@ public:
   NO_DEFAULT_CONSTRUCTORS(AskActor);
   AskActor(Board *s,Thread *tt,
 	   ProgramCounter elsepc,
-	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i)
-    : AWActor(Ac_Ask,s,tt,p,y,g,x,i)
+	   ProgramCounter p, RefsArray y,Abstraction *cap, RefsArray x, int i)
+    : AWActor(Ac_Ask,s,tt,p,y,cap,x,i)
   {
     elsePC = elsepc;
   }
@@ -193,10 +193,10 @@ public:
   NO_DEFAULT_CONSTRUCTORS(WaitActor);
 
   WaitActor(Board *s,Thread *tt,
-	    ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i,
+	    ProgramCounter p,RefsArray y,Abstraction *cap,RefsArray x, int i,
 	    Bool d)
     : AWActor((d ? (ActorFlags)(Ac_Wait | Ac_Choice) : Ac_Wait),s,tt,
-	      p,y,g,x,i)
+	      p,y,cap,x,i)
   {
     children  = NULL;
     cpb       = NULL;

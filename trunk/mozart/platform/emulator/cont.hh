@@ -36,25 +36,26 @@
 class Continuation {
 protected:
   ProgramCounter pc;
-  RefsArray yRegs, gRegs, xRegs;
+  RefsArray xRegs,yRegs;
+  Abstraction *cap;
 public:
   USEFREELISTMEMORY
 
   Continuation(void)
-  : pc(NOCODE), yRegs(NULL), gRegs(NULL) , xRegs(NULL) {}
+  : pc(NOCODE), xRegs(NULL), yRegs(NULL) , cap(NULL) {}
 
-  Continuation(ProgramCounter p, RefsArray y, RefsArray g=0,
+  Continuation(ProgramCounter p, RefsArray y, Abstraction *cap=0,
 	       RefsArray x=0, int i=0)
-    : pc(p), yRegs(y), gRegs(g)
+    : pc(p), yRegs(y), cap(cap)
   {
     setX (x, i);
   }
 
-  void init(ProgramCounter p, RefsArray y, RefsArray g=0,
+  void init(ProgramCounter p, RefsArray y, Abstraction *CAP=0,
 	    RefsArray x=0, int i=0) {
     pc = p;
     yRegs = y;
-    gRegs = g;
+    cap = CAP;
     setX (x, i);
   }
 
@@ -64,8 +65,8 @@ public:
   void setPC(ProgramCounter p) { pc = p; }
   RefsArray getY(void)         { return yRegs; }
   void setY(RefsArray Y)       { yRegs = Y; }
-  RefsArray getG(void)         { return gRegs; }
-  void setG(RefsArray G)       { gRegs = G; }
+  Abstraction *getCAP(void)    { return cap; }
+  void setCAP(Abstraction *CAP)  { cap = CAP; }
   int getXSize(void)           { return xRegs ? getRefsArraySize(xRegs) : 0; }
   RefsArray getX(void)         { return xRegs; }
   void getX(RefsArray x) {

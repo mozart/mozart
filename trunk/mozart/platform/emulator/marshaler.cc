@@ -543,15 +543,6 @@ inline void trailCycle(LTuple *l, MsgBuffer *bs)
 #endif
 }
 
-void marshalClosure(Abstraction *a,MsgBuffer *bs) {
-  PD((MARSHAL,"closure"));
-  RefsArray globals = a->getGRegs();
-  int gs = globals ? a->getGSize() : 0;
-  marshalNumber(gs,bs);
-  for (int i=0; i<gs; i++) {
-    marshalTerm(globals[i],bs);
-  }}
-
 void marshalSRecord(SRecord *sr, MsgBuffer *bs)
 {
   TaggedRef t = nil();
@@ -674,8 +665,13 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       marshalTerm(pp->getName(),bs);
       marshalNumber(pp->getArity(),bs);
       ProgramCounter pc = pp->getPC();
+      int gs = pp->getPred()->getGSize();
+      marshalNumber(gs,bs);
       trailCycle(t->getCycleRef(),bs);
-      marshalClosure(pp,bs);
+      for (int i=0; i<gs; i++) {
+	marshalTerm(pp->getG(i),bs);
+      }
+
       PD((MARSHAL,"code begin"));
       marshalCode(pc,bs);
       PD((MARSHAL,"code end"));
@@ -941,16 +937,6 @@ void unmarshalClass(ObjectClass *cl, MsgBuffer *bs)
 	     tagged2Dictionary(feat->getFeature(NameOoDefaults)),
 	     locking);
 }
-
-RefsArray unmarshalClosure(MsgBuffer *bs) {
-  int gsize = unmarshalNumber(bs);
-  RefsArray globals = gsize==0 ? 0 : allocateRefsArray(gsize);
-      
-  for (int i=0; i<gsize; i++) {
-    globals[i] = unmarshalTerm(bs);
-  }
-  return globals;
-}    
 
 OZ_Term unmarshalTerm(MsgBuffer *bs)
 {
@@ -1224,31 +1210,30 @@ loop:
       GName *gname  = unmarshalGName(ret,bs);
       OZ_Term name  = unmarshalTerm(bs);
       int arity     = unmarshalNumber(bs);
+      int gsize     = unmarshalNumber(bs);
 
-      Abstraction *pp;
       if (gname) {
 	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0,NO);
 	Assert(am.onToplevel());
-	pp = new Abstraction(pr,0,am.currentBoard());
+	pr->setGSize(gsize);
+	Abstraction *pp = Abstraction::newAbstraction(pr,am.currentBoard());
 	*ret = makeTaggedConst(pp);
 	pp->setGName(gname);
 	addGName(gname,*ret);
+	gotRef(bs,*ret);
+	for (int i=0; i<gsize; i++) {
+	  pp->initG(i, unmarshalTerm(bs));
+	}
+	pr->PC=unmarshalCode(bs,NO);
+	pr->patchFileAndLine();
       } else {
 	Assert(oz_isAbstraction(oz_deref(*ret)));
-	pp=0;
-      }
-
-      gotRef(bs,*ret);
-
-      RefsArray globals = unmarshalClosure(bs);
-      PD((UNMARSHAL,"code begin"));
-      if (pp) {
-	pp->import(globals,unmarshalCode(bs,NO));
-	pp->getPred()->patchFileAndLine();
-      } else {
+	gotRef(bs,*ret);
+	for (int i=0; i<gsize; i++) {
+	  (void) unmarshalTerm(bs);
+	}
 	(void) unmarshalCode(bs,OK);
       }
-      PD((UNMARSHAL,"code end"));
       return;
     }
 

@@ -489,11 +489,10 @@ OZ_BI_define(BIprocedureEnvironment,1,1)
   } else {
     Abstraction *a=tagged2Abstraction(p);
 
-    RefsArray &g=a->getGRegs();
-    if (g) {
-      int len=a->getGSize();
+    int len=a->getPred()->getGSize();
+    if (len>0) {
       t = OZ_tuple(OZ_atom("environment"),len);
-      for (int i=0; i<len; i++) OZ_putArg(t,i,g[i]);
+      for (int i=0; i<len; i++) OZ_putArg(t,i,a->getG(i));
     } else {
       t = OZ_atom("environment");
     }
@@ -5730,10 +5729,10 @@ NEW_DECLAREBI_USEINLINEREL1(BIshow,showInline)
 // ---------------------------------------------------------------------------
 
 TaggedRef Abstraction::DBGgetGlobals() {
-  int n = getGSize();
+  int n = getPred()->getGSize();
   OZ_Term t = OZ_tuple(oz_atom("globals"),n);
   for (int i = 0; i < n; i++) {
-    OZ_putArg(t,i,gRegs[i]);
+    OZ_putArg(t,i,getG(i));
   }
   return t;
 }
