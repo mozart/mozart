@@ -214,7 +214,8 @@ main(int argc, char **argv)
 
     tty = isatty(0);
     Tcl_SetVar(interp, "tcl_interactive",
-            ((fileName == NULL) && tty) ? "1" : "0", TCL_GLOBAL_ONLY);
+               ((char *) (((fileName == NULL) && tty) ? "1" : "0")),
+               TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -410,7 +411,7 @@ static void
 Prompt(Tcl_Interp *interp, int partial)
 {
     char *promptCmd = Tcl_GetVar(interp,
-        partial ? "tcl_prompt2" : "tcl_prompt1", TCL_GLOBAL_ONLY);
+        (char *) (partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY);
     if (promptCmd == NULL) {
         defaultPrompt:
         if (!partial) {

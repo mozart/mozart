@@ -326,7 +326,7 @@ char *VAR;                                      \
  * exceptions
  * -----------------------------------------------------------------------*/
 
-int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
+int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
 
 #define oz_typeError(pos,type)                  \
 {                                               \

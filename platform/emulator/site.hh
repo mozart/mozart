@@ -67,14 +67,15 @@ protected:
   port_t port;
 
 public:
+#ifdef DEBUG_CHECK
   // never create these...
   void* operator new(size_t) {
-    DebugCode(OZ_error("BaseSite is created???")); return (0);
+    OZ_error("BaseSite is created???"); return (void *) 1;
   }
   void* operator new(size_t, void *) {
-    DebugCode(OZ_error("BaseSite is created???")); return (0);
+    OZ_error("BaseSite is created???"); return (void *) 1;
   }
-
+#endif
   //
   BaseSite() {}                 // ... just allocating space for it;
   BaseSite(ip_address a, port_t p, TimeStamp &t)

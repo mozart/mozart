@@ -38,13 +38,13 @@ OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t)
 }
 
 // from marshaler.cc
-OZ_Return export(OZ_Term t);
+OZ_Return oz_export(OZ_Term t);
 
 OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr)
 {
   // mm2
   if (isExported()) {
-    OZ_Return aux = export(makeTaggedRef(tPtr));
+    OZ_Return aux = oz_export(makeTaggedRef(tPtr));
     if (aux!=PROCEED) return aux;
   }
 

@@ -43,7 +43,7 @@ void gCollectWeakDictionaries()
   // now gcLinkedList==0 again
 }
 
-int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
+int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
 
 OZ_BI_define(weakdict_new,0,2)
 {

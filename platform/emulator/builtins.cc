@@ -3920,7 +3920,7 @@ OZ_BI_define(BIfinalize_setHandler,1,0)
  * Exceptions
  */
 
-int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
+int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...)
 {
   Assert(!oz_isRef(cat));
   OZ_Term exc=OZ_tuple(key,arity+1);

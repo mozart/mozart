@@ -342,7 +342,7 @@ void AM::init(int argc,char **argv)
   if (initFile) {
     TaggedRef functor   = oz_newVariable();
     TaggedRef procedure = oz_newVariable();
-    TaggedRef export    = oz_newVariable();
+    TaggedRef expo      = oz_newVariable();
 
     // Construct import for functor:
     TaggedRef boot_module =
@@ -354,7 +354,7 @@ void AM::init(int argc,char **argv)
                     oz_mklist(oz_pair2(AtomBoot,   boot_module)));
 
     // Task3: execute functor's code
-    tt->pushCall(procedure,boot_import,export);
+    tt->pushCall(procedure,boot_import,expo);
 
     // Task2: lookup functor's code
     tt->pushCall(BI_dot,functor,AtomApply,procedure);
