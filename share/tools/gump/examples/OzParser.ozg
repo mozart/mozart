@@ -247,11 +247,11 @@ parser OzParser from GP
       => fNot(S {MakeLongPos C1 C2})
    [] 'cond'(C) CondMain(C $)
    [] 'or'(C1) OrClauseList(Cs) 'end'(C2)
-      => fOr(Cs for {MakeLongPos C1 C2})
+      => fOr(Cs {MakeLongPos C1 C2})
    [] 'dis'(C1) OrClauseList(Cs) 'end'(C2)
-      => fOr(Cs fdis {MakeLongPos C1 C2})
+      => fDis(Cs {MakeLongPos C1 C2})
    [] 'choice'(C1) ChoiceClauseList(Cs) 'end'(C2)
-      => fOr(Cs fchoice {MakeLongPos C1 C2})
+      => fChoice(Cs {MakeLongPos C1 C2})
    [] 'condis'(C1) CondisClauseList(Cs) 'end'(C2)
       => fCondis(Cs {MakeLongPos C1 C2})
    [] ScannerSpecification($)
@@ -521,17 +521,7 @@ parser OzParser from GP
    end
 
    syn ChoiceClauseList($)
-      ( ChoiceClause($) // '[]' )+
-   end
-   syn ChoiceClause($)
-      Sequence(S) ThisCoord(C)
-      => fClause(fSkip(C) fSkip(C) S)
-   [] Sequence(S1) ThisCoord(C) 'in' Sequence(S2)
-      => fClause(fSkip(C) fSkip(C) fLocal(S1 S2 C))
-   [] Sequence(S1) ThisCoord(C) 'then' InSequence(S2)
-      => fClause(fSkip(C) S1 S2)
-   [] Sequence(S1) ThisCoord(_) 'in' Sequence(S2) 'then' InSequence(S3)
-      => fClause(S1 S2 S3)
+      ( InSequence($) // '[]' )+
    end
 
    %--------------------------------------------------------------------
