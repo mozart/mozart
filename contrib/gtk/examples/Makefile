@@ -4,6 +4,7 @@ OZCFLAGS = -z9
 SRCS = HelloGTK.oz \
        HelloText.oz \
        HelloCanvas.oz \
+       HelloArgs.oz \
        CanvasEvents.oz \
        CanvasMove.oz \
        CanvasScramble.oz \
