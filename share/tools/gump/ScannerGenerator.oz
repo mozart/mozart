@@ -549,7 +549,7 @@ in
 	       {Rep startSubPhase('building class definition')}
 	       case MakeLexer of continue then From in
 		  From = {VirtualString.toAtom
-			  './'#{MakeFileName T ".so" Dir}#'{native}'}
+			  {MakeFileName T ".so" unit}#'{native}'}
 		  case ImportFV of unit then New Message in
 		     Imports = nil
 		     New = fApply(fVar('New' unit)
