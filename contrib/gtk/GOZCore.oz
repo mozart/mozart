@@ -254,21 +254,22 @@ define
             Children = @children
          in
             children <- nil
-            OzBase, CloseObject(Children)
+            OzBase, CloseObject(1 Children)
          end
-         meth !CloseObject(Childs)
+         meth !CloseObject(I Childs)
             case Childs
             of Child|Cr then
                {Child close}
-               OzBase, CloseObject(Cr)
+               OzBase, CloseObject((I + 1) Cr)
             [] nil then
                Object = @object
             in
+               %% Removal of OZ Handlers is sufficient (due to destroy handling below)
                {ForAll @signals proc {$ SignalId}
                                    {Dispatcher unregisterHandler(SignalId)}
                                 end}
                {RemoveObject Object}
-               {GOZSignal.freeData Object}
+               %% Eliminate Pointer reference (allows tracing of programming errors)
                object <- unit
             end
          end
