@@ -41,6 +41,7 @@
 #include "vs_mailbox.hh"
 #include "vs_msgbuffer.hh"
 #include "vs_comm.hh"
+#include "builtins.hh"
 
 #ifdef VIRTUALSITES
 

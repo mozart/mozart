@@ -26,6 +26,7 @@
 
 #include "fdbuilti.hh"
 #include "lps.hh"
+#include "threadInterface.hh"
 
 //#define DEBUG_FDCD
 

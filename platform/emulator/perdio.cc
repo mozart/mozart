@@ -94,7 +94,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <strings.h>
-#include "runtime.hh"
+#include "threadInterface.hh"
 #include "codearea.hh"
 #include "indexing.hh"
  
@@ -2058,7 +2058,7 @@ OZ_BI_define(BIsetNetBufferSize,1,0)
 
 OZ_BI_define(BIgetNetBufferSize,0,1)
 {
-  OZ_RETURN(makeInt(PortSendTreash / 20000));
+  OZ_RETURN(oz_int(PortSendTreash / 20000));
 } OZ_BI_end
 
 #ifdef DEBUG_PERDIO
@@ -6120,7 +6120,7 @@ OZ_BI_define(BIstartTmp,2,0)
 OZ_BI_define(BIcloseCon,1,1)
 {
   OZ_declareIntIN(0,what);
-  OZ_RETURN(makeInt(openclose(what)));
+  OZ_RETURN(oz_int(openclose(what)));
 } OZ_BI_end
 
 OZ_BI_define(BIportWait,2,0)

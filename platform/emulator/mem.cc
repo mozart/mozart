@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include "mem.hh"
+#include "os.hh"
 #include "am.hh"
 
 #ifdef CS_PROFILE

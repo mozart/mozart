@@ -32,34 +32,30 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
 #include "wsock.hh"
+
 #include "builtins.hh"
+
 #include "perdio.hh"
 #include "os.hh"
 #include "codearea.hh"
+#include "threadInterface.hh"
 #include "debug.hh"
-
 #include "iso-ctype.hh"
-#include <string.h>
-#include <time.h>
-#include <errno.h>
-#include <ctype.h>
-#include <math.h>
-
-#include "runtime.hh"
-
 #include "genvar.hh"
-
 #include "ofgenvar.hh"
 #include "fdbuilti.hh"
 #include "fdhook.hh"
 #include "solve.hh"
 #include "oz_cpi.hh"
 #include "dictionary.hh"
+
+#include <string.h>
+#include <time.h>
+#include <errno.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdarg.h>
 
 /********************************************************************
  * `builtin`
@@ -376,6 +372,60 @@ OZ_DECLAREBOOLFUN1(BIisPortB,isPortInline)
   Space *space = (Space *) tagged2Const(tagged_space);
 
 
+
+inline
+void oz_solve_inject(TaggedRef var, int prio, TaggedRef proc,
+		     Board *solveBoard)
+{
+  // thread creation for {proc root}
+  RefsArray args = allocateRefsArray(1, NO);
+  args[0] = var;
+
+  Thread *it = oz_mkRunnableThread(prio, solveBoard);
+  it->pushCall(proc, args, 1);
+  am.threadsPool.scheduleThread(it);
+}
+
+inline
+OZ_Term oz_solve_merge(SolveActor *solveActor, Board *bb, int sibling)
+{
+  Board *solveBoard=solveActor->getSolveBoard();
+  oz_merge(solveBoard,bb,solveBoard->getSuspCount());
+
+  if (!oz_installScript(solveBoard->getScriptRef())) {
+    return makeTaggedNULL();
+  }
+  
+  Assert(oz_isCurrentBoard(bb));
+  
+  solveActor->mergeCPB(bb,sibling);
+  solveActor->mergeNonMono(am.currentSolveBoard());
+  return solveActor->getSolveVar();
+}
+
+inline
+Board *oz_solve_clone(SolveActor *sa, Board *bb) {
+  ozstat.incSolveCloned();
+  Bool testGround;
+  Board *copy = (Board *) am.copyTree(sa->getSolveBoard(), &testGround);
+  SolveActor *ca = SolveActor::Cast(copy->getActor());
+ 
+  ca->setBoard(bb);
+
+  if (testGround == OK) {
+    ca->setGround();
+    sa->setGround();
+  }
+
+#ifdef CS_PROFILE
+  ca->orig_start = sa->orig_start;
+  ca->copy_start = sa->copy_start;
+  ca->copy_size  = sa->copy_size;
+#endif 
+
+  return copy;
+}
+
 OZ_BI_define(BInewSpace, 1,1) {
   OZ_Term proc = OZ_in(0);
 
@@ -393,7 +443,8 @@ OZ_BI_define(BInewSpace, 1,1) {
   SolveActor *sa = new SolveActor(CBB);
 
   // thread creation for {proc root}
-  sa->inject(DEFAULT_PRIORITY, proc);
+  oz_solve_inject(sa->getSolveVar(),DEFAULT_PRIORITY, proc,
+		  sa->getSolveBoard());
     
   // create space
   OZ_result(makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
@@ -441,6 +492,11 @@ OZ_BI_define(BIaskSpace, 1,1) {
 } OZ_BI_end
 
 
+Bool oz_solve_isBlocked(SolveActor *sa)
+{
+  return ((sa->getThreads()==0) && !oz_isStableSolve(sa));
+}
+
 OZ_BI_define(BIaskVerboseSpace, 2,0) {
   declareSpace();
   oz_declareIN(1,out);
@@ -455,7 +511,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
   if (space->isMerged())
     return oz_unify(out, AtomMerged);
 
-  if (space->getSolveActor()->isBlocked()) {
+  if (oz_solve_isBlocked(space->getSolveActor())) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, am.currentUVarPrototype());
 
@@ -546,7 +602,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
   }
 
 
-  TaggedRef root = space->getSolveActor()->merge(CBB, isSibling);
+  TaggedRef root = oz_solve_merge(space->getSolveActor(), CBB, isSibling);
   space->merge();
 
   if (root == makeTaggedNULL())
@@ -578,7 +634,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
   if (isVariableTag(result_tag)) 
     oz_suspendOn(makeTaggedRef(result_ptr));
 
-  OZ_RETURN(makeTaggedConst(new Space(CBB,space->getSolveActor()->clone(CBB))));
+  OZ_RETURN(makeTaggedConst(new Space(CBB,oz_solve_clone(space->getSolveActor(),CBB))));
 
 } OZ_BI_end
 
@@ -704,7 +760,8 @@ OZ_BI_define(BIinjectSpace, 2,0)
   sa->clearResult(GETBOARD(space));
 
   // inject
-  sa->inject(DEFAULT_PRIORITY, proc);
+  oz_solve_inject(sa->getSolveVar(),DEFAULT_PRIORITY, proc,
+		  sa->getSolveBoard());
     
   return BI_PREEMPT;
 } OZ_BI_end
@@ -2733,7 +2790,7 @@ OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,_22);
 
   if ( oz_isSmallInt(A) && oz_isSmallInt(B) ) {
-    out = makeInt(smallIntValue(A) - smallIntValue(B));
+    out = oz_int(smallIntValue(A) - smallIntValue(B));
     return PROCEED;
   } 
 
@@ -2755,7 +2812,7 @@ OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,_22);
 
   if ( oz_isSmallInt(A) && oz_isSmallInt(B) ) {
-    out = makeInt(smallIntValue(A) + smallIntValue(B));
+    out = oz_int(smallIntValue(A) + smallIntValue(B));
     return PROCEED;
   } 
 
@@ -3169,7 +3226,7 @@ OZ_Return BIfloatToIntInline(TaggedRef A, TaggedRef &out) {
     if (ff > INT_MAX || ff < INT_MIN) {
       OZ_warning("float to int: truncated to signed 32 Bit\n");
     }
-    out = makeInt((int) ff);
+    out = oz_int((int) ff);
     return PROCEED;
   }
 
@@ -3594,7 +3651,7 @@ OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
   if (!oz_isArray(term)) {
     oz_typeError(0,"Array");
   }
-  out = makeInt(tagged2Array(term)->getLow());
+  out = oz_int(tagged2Array(term)->getLow());
   return PROCEED;
 }
 OZ_DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
@@ -3605,7 +3662,7 @@ OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
   if (!oz_isArray(term)) {
     oz_typeError(0,"Array");
   }
-  out = makeInt(tagged2Array(term)->getHigh());
+  out = oz_int(tagged2Array(term)->getHigh());
   return PROCEED;
 }
 
@@ -5210,3 +5267,86 @@ OZ_BI_define(BIinspect, 1, 1)
 } OZ_BI_end
 
 #endif
+
+/*
+ * Exceptions
+ */
+
+int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
+{
+  Assert(!oz_isRef(cat));
+  OZ_Term exc=OZ_tuple(key,arity+1);
+  OZ_putArg(exc,0,OZ_atom(label));
+
+  va_list ap;
+  va_start(ap,arity);
+
+  for (int i = 0; i < arity; i++) {
+    OZ_putArg(exc,i+1,va_arg(ap,OZ_Term));
+  }
+
+  va_end(ap);
+
+
+  OZ_Term ret = OZ_record(cat,
+			  oz_cons(OZ_int(1),
+				  oz_cons(AtomDebug,oz_nil())));
+  OZ_putSubtree(ret,OZ_int(1),exc);
+  OZ_putSubtree(ret,AtomDebug,NameUnit);
+
+  am.setException(ret, literalEq(cat,E_ERROR) ? TRUE : ozconf.errorDebug);
+  return RAISE;
+}
+
+OZ_Term oz_getLocation(Board *bb)
+{
+  OZ_Term out = oz_nil();
+  while (!oz_isRootBoard(bb)) {
+    if (bb->isSolve()) {
+      out = oz_cons(OZ_atom("space"),out);
+    } else if (bb->isAsk()) {
+      out = oz_cons(OZ_atom("cond"),out);
+    } else if (bb->isWait()) {
+      out = oz_cons(OZ_atom("dis"),out);
+    } else {
+      out = oz_cons(OZ_atom("???"),out);
+    }
+    bb=bb->getParent();
+  }
+  return out;
+}
+
+/*===================================================================
+ * type errors
+ *=================================================================== */
+
+static
+char *getTypeOfPos(char * t, int p)
+{
+  static char buffer[100];
+  int i, bi, comma;
+
+  for (i = 0, comma = 0; t[i] != '\0' && comma < p; i += 1) {
+    if (t[i] == ',') comma += 1;
+    if (t[i] == '\\' && t[i+1] == ',') i += 1;
+  } 
+
+  for (bi = 0; t[i] != '\0' && t[i] != ','; i += 1, bi += 1) {
+    if (t[i] == '\\' && t[i+1] == ',') i += 1;
+    buffer[bi] = t[i];
+  }
+
+  buffer[bi] = '\0';
+  
+  return buffer;
+}
+
+OZ_Return typeError(int Pos, char *Comment, char *TypeString)
+{
+  (void) oz_raise(E_ERROR,E_KERNEL,
+		  "type",5,NameUnit,NameUnit,
+		  OZ_atom(getTypeOfPos(TypeString, Pos)),
+		  OZ_int(Pos+1),
+		  OZ_string(Comment));
+  return BI_TYPE_ERROR;
+}

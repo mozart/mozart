@@ -32,7 +32,7 @@
 #endif
 
 #include "fdomn.hh"
-
+#include "builtins.hh"
 
 enum Recalc_e {lower, upper};
 

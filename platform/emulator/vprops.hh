@@ -3,6 +3,7 @@
 #ifndef __VPROPS__HH__
 #define __VPROPS__HH__
 
+#include "base.hh"
 #include "oz.h"
 
 // Bogus OZ_Return values to indicate that the property is

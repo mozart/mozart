@@ -32,7 +32,7 @@
 #endif
 
 //
-#include "runtime.hh"
+#include "controlvar.hh"
 #include "codearea.hh"
 #include "indexing.hh"
 #include "perdio.hh"

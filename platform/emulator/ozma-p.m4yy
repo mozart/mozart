@@ -25,10 +25,11 @@ dnl
 
 #undef OZMA_DEBUG
 
-#include "runtime.hh"
 #include "indexing.hh"
 #include "dictionary.hh"
 #include "builtins.hh"
+#include "codearea.hh"
+#include "am.hh"
 
 #define YYERROR_VERBOSE
 
@@ -143,11 +144,11 @@ CodeSize	: INTEGER
 		    ninstrs = 0;
 #endif
 		    codeArea = new CodeArea(size);
-		    labelDict = new OzDictionary(am.currentBoard());
-		    abstrEntryDict = new OzDictionary(am.currentBoard());
-		    nameDict1 = new OzDictionary(am.currentBoard());
-		    nameDict2 = new OzDictionary(am.currentBoard());
-		    runTimeDict = new OzDictionary(am.currentBoard());
+		    labelDict = new OzDictionary(oz_currentBoard());
+		    abstrEntryDict = new OzDictionary(oz_currentBoard());
+		    nameDict1 = new OzDictionary(oz_currentBoard());
+		    nameDict2 = new OzDictionary(oz_currentBoard());
+		    runTimeDict = new OzDictionary(oz_currentBoard());
 		  }
 		;
 
@@ -638,7 +639,7 @@ OZ_BI_define(ozma_readProc,1,1)
 		oz_nil(),maxX);
   pte->PC = codeArea->getStart();
   pte->setGSize(1);
-  Abstraction *ab = Abstraction::newAbstraction(pte,am.currentBoard());
+  Abstraction *ab = Abstraction::newAbstraction(pte,oz_currentBoard());
   ab->initG(0,makeTaggedConst(runTimeDict));
   OZ_RETURN(makeTaggedConst(ab));
 } OZ_BI_end

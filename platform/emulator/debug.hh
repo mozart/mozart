@@ -33,6 +33,9 @@
 #ifndef __DEBUGH
 #define __DEBUGH
 
+#include "base.hh"
+#include "value.hh"
+
 /* The Oz source level debugger */
 
 class OzDebug {

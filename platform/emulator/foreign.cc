@@ -31,14 +31,14 @@
 
 #include "iso-ctype.hh"
 
-#include "runtime.hh"
-
+#include "value.hh"
 #include "genvar.hh"
-
 #include "ofgenvar.hh"
 
 #include "gmp.h"
 #include "os.hh"
+#include "threadInterface.hh"
+#include "builtins.hh"
 
 // forward decl
 static
@@ -1229,7 +1229,7 @@ OZ_Term OZ_string(const char *s)
   }
   OZ_Term ret = oz_nil();
   while (p!=s) {
-    ret = oz_cons(makeInt((unsigned char)*(--p)), ret);
+    ret = oz_cons(oz_int((unsigned char)*(--p)), ret);
   }
   return ret;
 }
