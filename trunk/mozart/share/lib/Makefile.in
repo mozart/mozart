@@ -26,8 +26,8 @@ INSTALLSRC	= @INSTALLSRC@
 MKINSTALLDIRS	= @MKINSTALLDIRS@
 INSTALLDIR	= $(MKINSTALLDIRS)
 
-PERL		= perl
-ENV2TYPE	= $(PERL) @ENV2TYPE@
+PERL		= @PERL@
+ENV2TYPE	= $(PERL) $(SRCDIR)/env2type
 
 OZFLAGS		=
 OZBATCH		= @OZBATCH@
@@ -286,10 +286,6 @@ realclean: clean
 veryclean: realclean
 	$(RM) TAGS
 
-distclean: veryclean
-	$(RM) confdefs.h config.cache config.status config.log
-	$(RM) Makefile
-
 $(OZLIB) $(OZLIBDIRS) $(BITMAPDIR) $(OZCARBITMAPDIR) $(OZBIN):
 	$(INSTALLDIR) $@
 
@@ -396,11 +392,11 @@ $(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env Gump.env Compiler.env Init.ozc \
 compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@
 
-compiler-Builtins.oz: $(TOPDIR)/platform/emulator/bidecl.perl
+compiler-Builtins.oz: $(SRCDIR)/../../platform/emulator/bidecl.perl
 	$(PERL) $< -oztable > $@
 
-compiler-Opcodes.oz: compiler/Opcodes.m4oz $(TOPDIR)/platform/emulator/instrDefs.m4
-	$(M4) -DEMUDIR=$(TOPDIR)/platform/emulator < $< > $@
+compiler-Opcodes.oz: compiler/Opcodes.m4oz $(SRCDIR)/../../platform/emulator/instrDefs.m4
+	$(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@
 
 CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) SP.env OP.env WP.env \
 	Compiler.env Browser.env CompilerPanel.env Init.ozc
@@ -432,12 +428,6 @@ Gump.ozc: $(DUMPINTRO) $(GUMPSRC) compiler/TupleSyntax.oz compiler/Misc.oz \
 GumpScanner.ozc: $(DUMPINTRO) $(GUMPSCANNERSRC) SP.env GumpScanner.env
 
 GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) SP.env GumpParser.env
-
-Makefile: Makefile.in config.status
-	./config.status
-
-config.status: configure
-	./config.status --recheck
 
 tags:
 	etags --language=none \

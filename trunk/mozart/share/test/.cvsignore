@@ -1,6 +1,3 @@
-config.log
-config.cache
-config.status
 oztest
 make-test
 Makefile
