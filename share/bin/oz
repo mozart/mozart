@@ -73,7 +73,14 @@ case "$cmd" in
                 exit 1
             fi
         fi
-        exec $OZEMACS --eval '(setq load-path (cons "'$OZHOME'/share/elisp" load-path))' -l oz.elc -f run-oz "$@"
+        if ( $OZEMACS --version | grep XEmacs > /dev/null 2>&1 )
+        then
+            exec $OZEMACS \
+                    --eval '(setq load-path (cons "'$OZHOME'/share/elisp" load-path))' \
+                    -l oz.elc -f run-oz "$@"
+        else
+            exec $OZEMACS -L "$OZHOME/share/elisp" -l oz.elc -f run-oz "$@"
+        fi
         ;;
 
    ozengine)  # that is the real thing
