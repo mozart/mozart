@@ -364,7 +364,7 @@ though, one-argument procedures
 and objects are interchangeable.</NOTE>
 
 
-<SUBSECTION><TITLE>A compute server</TITLE>
+<SUBSECTION id="compute server"><TITLE>A compute server</TITLE>
 
 <P>One of the promises of distributed computing is making
 computations go faster by exploiting the parallelism
@@ -548,5 +548,43 @@ We leave it to the reader to upgrade
 the server to add a new
 method that returns the number of
 active computations at each priority level.
+
+<SECTION><TITLE>Practical tips</TITLE>
+
+<P>This section gives some practical programming tips to
+improve the network performance of distributed applications.
+
+<SUBSECTION><TITLE>Partial evaluation</TITLE>
+
+<P>When sending procedures over the network, one should check
+that they don't contain calculations that could have been done
+on the original site.
+For example, the following code sends the procedure <<P>>
+to object <<D>>:
+<<<
+declare
+R=big(a:1 b:2 c:3)   % A very big record
+proc {P X} X=R.c end % Procedure that uses record field c
+{D addentry(P)}      % Send P to D, where it is executed
+>>>
+<P>If <<D>> executes <<P>>, then the big record <<R>>
+is transferred to <<D>>'s site where the field <<c>>
+is extracted.
+Much better is to extract the field before sending <<P>>:
+<<<
+declare
+R=big(a:1 b:2 c:3)
+F=R.c                % Extract field c before sending
+proc {P X} X=F end
+{D addentry(P)}
+>>>
+<P>This avoids sending the big record <<R>> across the network.
+This technique is a kind of partial evaluation.
+It is useful for almost any Oz entity,
+for example procedures, functions, classes, and functors.
+
+<SUBSECTION><TITLE>Recognizing the same entity</TITLE>
+
+<P>The binary of a collaborative tool will be downloaded to many sites.
 
 </CHAPTER>
