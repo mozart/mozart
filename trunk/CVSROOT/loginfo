@@ -30,6 +30,7 @@ Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,tmueller
 Oz/demo		mail -s "I have changed %s" wuertz
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz/plugin	mail -s "I have changed %s" paralic
+Oz/tools/compiler	mail -s "I have changed %s" scheidhr
 Misc/papers/TypeMemo	mail -s "I have changed %s" niehren mmueller
 Misc/papers/TypeType	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Rolls	mail -s "I have changed %s" niehren mmueller
