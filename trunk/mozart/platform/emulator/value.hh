@@ -2170,13 +2170,13 @@ public:
     state=Lock_Valid;
     pending=pt;
     locker=t;
-    DebugCode(next=NULL); }
+    next=NULL; } // maybe not needed except for debug
 
   LockSec(){ // on Proxy becoming Frame
     state=Lock_Invalid;
     locker=NULL;
-    DebugCode(pending=NULL);
-    DebugCode(next=NULL);}
+    pending=NULL;
+    next=NULL;} // maybe not needed except for debug
 };
 
 class LockFrame:public OzLock{
