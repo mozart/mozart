@@ -186,7 +186,7 @@ public:
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
   Bool fastUnify(TaggedRef ref1, TaggedRef ref2, Bool prop);
   Bool fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop);
-  Bool performUnify(TaggedRef *ref1, TaggedRef *ref2, Bool prop);
+  Bool performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop);
   void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term, Bool prop);
 
   void rebind(TaggedRef *ref, TaggedRef ptr);

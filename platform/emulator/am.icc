@@ -240,6 +240,8 @@ inline
 void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
                              PropCaller calledBy)
 {
+  Assert(isRef(term) || !isAnyVar(term));
+
   SVariable * var = tagged2SuspVar(taggedvar);
   var->setSuspList(checkSuspensionList(var, taggedvar, var->getSuspList(),
                                        term, calledBy));

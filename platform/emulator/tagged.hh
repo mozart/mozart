@@ -706,27 +706,28 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
 //   ....
 // }
 
-#define _DEREF(term, termPtr, tag)                                             \
+
+#define _DEREF(term, termPtr, tag)                                            \
   while(IsRef(term)) {                                                        \
     termPtr = tagged2Ref(term);                                               \
     term = *termPtr;                                                          \
   }                                                                           \
-  TypeOfTerm tag = tagTypeOf(term);                                           \
-
+  TypeOfTerm tag = tagTypeOf(term);
 
 #define DEREF(term, termPtr, tag)                                             \
-  TaggedRef *termPtr = NULL;                                                  \
+  register TaggedRef *termPtr = NULL;                                         \
+  _DEREF(term,termPtr,tag);
+
+#define DEREFPTR(term, termPtr, tag)                                          \
+  register TaggedRef term = *termPtr;                                         \
   _DEREF(term,termPtr,tag);
 
 
-#define DEREFPTR(termPtr, term, tag)                                          \
-  register TaggedRef term = *termPtr;                                         \
-  while(IsRef(term)) {                                                        \
-    termPtr = tagged2Ref(term);                                               \
-    term = *termPtr;                                                          \
-  }                                                                           \
-  TypeOfTerm tag = tagTypeOf(term);                                           \
-
+inline
+TaggedRef deref(TaggedRef t) {
+  DEREF(t,_1,_2);
+  return t;
+}
 
 // ---------------------------------------------------------------------------
 // ------- RefsArray ----------------------------------------------------------

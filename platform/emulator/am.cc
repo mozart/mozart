@@ -32,6 +32,7 @@
 #include "unify.hh"
 #include "fdbuilti.hh"
 
+
 AM am;
 
 int AM::ProcessCounter;
@@ -333,9 +334,8 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
                            localPropStore.isInLocalPropagation()));
                            */
 start:
-
-  DEREFPTR(termPtr1,term1,tag1);
-  DEREFPTR(termPtr2,term2,tag2);
+  DEREFPTR(term1,termPtr1,tag1);
+  DEREFPTR(term2,termPtr2,tag2);
 
   // identical terms ?
   if (term1 == term2 &&
@@ -477,8 +477,7 @@ start:
  /*************/
  unify_args:
 
-  rebind(termPtr2, term1);
-
+  rebind(termPtr2,term1);
   for (int i = 0; i < argSize-1; i++ ) {
     if (!performUnify(args1+i,args2+i, prop)) {
       return NO;
@@ -636,6 +635,8 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
                                    TaggedRef term,
                                    PropCaller calledBy)
 {
+  Assert(isRef(term) || !isAnyVar(term));
+
   SuspList * retSuspList = NULL;
 
   // see the reduction of solve actor by the enumeration;
@@ -817,87 +818,35 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
                      Bool prop)
      /* bind var to term;         */
 {
-  /* termPtr == NULL means term is not a variable */
+  Assert(!isCVar(var) && !isRef(term));
 
   /* first step: do suspensions */
-
-  Assert(isCVar(var) == NO);
-
   if (prop && isSVar(var)) {
 
-    DEREF(term,zzz,tag);
-    // special case if second arg is a variable !!!!
-    SVariable * tvar = (termPtr && isNotCVar(tag)) ?
-      (taggedBecomesSuspVar(termPtr)) : (SVariable*) NULL;
-    // variables are passed as references
-    checkSuspensionList(var, tvar ? makeTaggedRef(termPtr) : term,
+    checkSuspensionList(var, isAnyVar(term) ? makeTaggedRef(termPtr) : term,
                         pc_std_unif);
-
-#ifdef BUGFIX_FOR_TM_ONLY_WHEN_EXAMPLE_AVAILABLE
-    // suspension entries with conditions may remain unpropagated, so that
-    // they have to be saved to the suspension list of the remaining variable
-    if (tvar) {
-      SVariable * svar = tagged2SVar(var);
-      tvar->setSuspList(tvar->getSuspList()->appendTo(svar->getSuspList()));
-      svar->setSuspList(NULL);
-    }
-#endif
 
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
                              localPropStore.isInLocalPropagation()));
+    DebugCheckT(Board *hb=(tagged2SuspVar(var)->getHome())->getBoardDeref());
+    Assert(!hb->isReflected());
+    Assert(!hb->getSolveBoard() ||
+           !hb->getSolveBoard()->isReflected());
+  }
 
-#ifdef DEBUG_CHECK
-    Board *hb = (tagged2SuspVar(var)->getHome ())->getBoardDeref ();
-    if (hb->isReflected () == OK)
-      error ("the variable from reflected board is bound");
-    Board *sb = hb->getSolveBoard ();
-    if (sb != (Board *) NULL && sb->isReflected () == OK)
-      error ("the variable in reflected search problem is bound");
-#endif
-  }
-#ifdef DEBUG_CHECK
-  if (isUVar (var)) {
-    Board *hb = (tagged2VarHome (var))->getBoardDeref ();
-    if (hb->isReflected () == OK)
-      error ("UVar from reflected board is bound???");
-  }
-#endif
+  Assert(!isUVar(var)||!(tagged2VarHome(var))->getBoardDeref()->isReflected());
 
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
   if ( !isLocalVariable(var) || prop==NO ) {
-
-    (void) taggedBecomesSuspVar(varPtr);
-
-    /* trail old value */
-    trail.pushRef(varPtr,*varPtr);
-
-// check if term is also a variable
-    // bug fixed by mm 25.08.92
-    // we must add currentBoard to suspension list of second variable if
-    // both variables are global
-    // term must be deref\'ed because isAnyVar() should really check
-    // is unbound variable
-
-    if (termPtr) {  // term may be a variable ?
-      DEREFPTR(termPtr,term1,_2);
-
-      if (isAnyVar(term1) ) {
-        (void) taggedBecomesSuspVar(termPtr);
-        term = makeTaggedRef(termPtr);
-      }
-    }
+    trail.pushRef(varPtr,var);
   } else  { // isLocalVariable(var)
-    if ( termPtr && isAnyVar(term) ) {
-      term = makeTaggedRef(termPtr);
-    }
     if (isSVar(var)) {
       tagged2SVar(var)->dispose();
     }
   }
 
-  // term is set now correctly to a non variable TaggedRef
-  doBind(varPtr,term);
+  doBind(varPtr,isAnyVar(term) ? makeTaggedRef(termPtr) : term);
 }
 
 
@@ -961,16 +910,12 @@ void AM::reduceTrailOnUnitCommit()
     TaggedRef value;
     trail.popRef(refPtr,value);
 
+    Assert(isRef(*refPtr) || !isAnyVar(*refPtr));
+    Assert(isAnyVar(value));
+
     bb->setScript(index,refPtr,*refPtr);
-#ifdef DEBUG_CHECK
-    TaggedRef aux = value;
-    DEREF(aux, ptr, tag);
-    if (isAnyVar (tag) == NO)
-      error ("non-variable is found in AM::reduceTrailOnUnitCommit ()");
-    if (isUVar (tag) == OK)
-      error ("UVar is found as value in trail;");
-#endif
-    *refPtr = value;
+
+    doBind(refPtr,value);
   }
   trail.popMark();
 }
@@ -980,55 +925,50 @@ void AM::reduceTrailOnSuspend()
 {
   int numbOfCons = trail.chunkSize();
 
-  Suspension *susp;
-  Board *bb = currentBoard;
-  Bool used = NO;
+  if (numbOfCons > 0) {
+    Board *bb = currentBoard;
+    bb->newScript(numbOfCons);
 
-  // one single suspension for all
+    Bool used = NO;
+    // one single suspension for all
+    Suspension *susp = new Suspension(bb);
 
-  bb->newScript(numbOfCons);
+    for (int index = 0; index < numbOfCons; index++) {
+      TaggedRef *refPtr;
+      TaggedRef value;
+      trail.popRef(refPtr,value);
 
-  susp = (numbOfCons > 0) ? new Suspension(bb) : (Suspension*) NULL;
+      Assert(isRef(*refPtr) || !isAnyVar(*refPtr));
+      Assert(isAnyVar(value));
 
-  for (int index = 0; index < numbOfCons; index++) {
-    TaggedRef *refPtr;
-    TaggedRef value;
-    trail.popRef(refPtr,value);
+      bb->setScript(index,refPtr,*refPtr);
 
-    TaggedRef oldVal = makeTaggedRef(refPtr);
-    DEREF(oldVal,ptrOldVal,tagOldVal);
+      TaggedRef oldVal = makeTaggedRef(refPtr);
+      DEREF(oldVal,ptrOldVal,tagOldVal);
 
-    bb->setScript(index,refPtr,*refPtr);
+      doBind(refPtr,value);
 
-    if (isAnyVar(oldVal)) {
-      // local generic variables are allowed to occure here
-      DebugCheck (isLocalVariable (oldVal) && isNotCVar(oldVal),
-                  error ("the right var is local  and unconstrained");
-                  return;);
-      // add susps to global non-cvars
-      if(!isLocalVariable(oldVal) && isNotCVar(tagOldVal)) {
-        taggedBecomesSuspVar(ptrOldVal)->addSuspension (susp);
+      if (isNotCVar(value)) {
+        taggedBecomesSuspVar(refPtr)->addSuspension(susp);
         used = OK;
       }
+
+      if (isAnyVar(oldVal)) {
+        // local generic variables are allowed to occure here
+        Assert(!isLocalVariable (oldVal) || !isNotCVar(oldVal));
+
+        // add susps to global non-cvars
+        if(!isLocalVariable(oldVal) && isNotCVar(tagOldVal)) {
+          taggedBecomesSuspVar(ptrOldVal)->addSuspension (susp);
+          used = OK;
+        }
+      }
     }
-#ifdef DEBUG_CHECK
-    TaggedRef aux = value;
-    DEREF(aux, ptr, tag);
-    if (isAnyVar (tag) == NO)
-      error ("non-variable is found in AM::reduceTrailOnSuspend ()");
-    if (isUVar (tag) == OK)
-      error ("UVar is found as value in trail;");
-#endif
-    if (isNotCVar(value)) {
-      tagged2SuspVar(value)->addSuspension(susp);
-      used = OK;
+    if (!used) {
+      susp->killSusp();
     }
-    *refPtr = value;
   }
   trail.popMark();
-  if (susp && !used) {
-    susp->killSusp();
-  }
 }
 
 
@@ -1039,41 +979,37 @@ void AM::reduceTrailOnFail()
     TaggedRef *refPtr;
     TaggedRef value;
     trail.popRef(refPtr,value);
-/*
- *  Don't works??? Sometimes the machine gets UVars ???
-#ifdef DEBUG_CHECK
-    TaggedRef aux = value;
-    DEREF(aux, ptr, tag);
-    if (isAnyVar (tag) == NO)
-      error ("non-variable is found in AM::reduceTrailOnFail ()");
-    if (isUVar (tag) == OK)
-      error ("UVar is found as value in trail;");
-#endif
- */
-    *refPtr = value;
+    *refPtr=value;      /* don't use doBind */
   }
   trail.popMark();
 }
 
+/*
+ * shallow guards sometimes do not bind variables but only push them
+ */
 void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 {
-  // one single suspension for all
-
   for (int i = 0; i < numbOfCons; i++) {
     TaggedRef *refPtr;
     TaggedRef value;
     trail.popRef(refPtr,value);
 
+    Assert(isAnyVar(value));
+
     TaggedRef oldVal = makeTaggedRef(refPtr);
     DEREF(oldVal,ptrOldVal,_1);
-    *refPtr = value;
+
+    *refPtr=value; /* dont use doBind */
+
+    /* test if only trailed to create suspension and not bound ? */
+    if (refPtr!=ptrOldVal) {
+      if (isAnyVar(oldVal)) {
+        taggedBecomesSuspVar(ptrOldVal)->addSuspension(susp);
+      }
+    }
 
     taggedBecomesSuspVar(refPtr)->addSuspension(susp);
-    if (isAnyVar(oldVal)) {
-      taggedBecomesSuspVar(ptrOldVal)->addSuspension(susp);
-    }
   }
-
   trail.popMark();
 }
 
