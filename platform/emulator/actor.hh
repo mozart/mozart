@@ -24,9 +24,18 @@
 // ------------------------------------------------------------------------
 //  all 'proper' actors;
 
+enum ActorFlags {
+  Ac_None       = 0,
+  Ac_Ask        = 1<<0,
+  Ac_Wait       = 1<<1,
+  Ac_Solve      = 1<<2,
+  Ac_Committed  = 1<<3,
+  Ac_WaitTop    = 1<<4,
+  Ac_DisWait    = 1<<5,
+};
+
 class Actor : public ConstTerm {
 public:
-  static void InitSolve();
 protected:
   int flags;
   Board *board;
@@ -130,6 +139,8 @@ WaitActor *CastWaitActor(Actor *a);
 //  'solve' actors;
 
 class SolveActor : public Actor {
+public:
+  static void Init();
 private:
   Board *solveBoard;
   DLLStack orActors;
@@ -184,8 +195,6 @@ DLLStackEntry actorStackEntryGC (DLLStackEntry entry);
 OZ_Bool solveActorWaker (int n, TaggedRef *args);
 
 // ------------------------------------------------------------------------
-
-void initSolve();
 
 #ifndef OUTLINE
 #include "actor.icc"

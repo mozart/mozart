@@ -219,9 +219,9 @@ void AM::init(int argc,char **argv)
   }
 
   initAtoms();
-  Actor::InitSolve();
+  SolveActor::Init();
 
-  globalStore = allocateRefsArray(500);
+  globalStore = allocateRefsArray(GLOBAL_STORE_SIZE);
 
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   globalStore[0] = makeTaggedSRecord(bi);

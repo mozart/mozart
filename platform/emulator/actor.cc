@@ -60,24 +60,9 @@
  *
  */
 
-enum ActorFlags {
-  Ac_None       = 0,
-  Ac_Ask        = 1<<0,
-  Ac_Wait       = 1<<1,
-  Ac_Solve      = 1<<2,
-  Ac_Committed  = 1<<3,
-  Ac_WaitTop    = 1<<4,
-  Ac_DisWait    = 1<<5,
-};
-
-// ------------------------------------------------------------------------
-
-void AWActor::failChild(Board *n) {
-  childCount--;
-  if (isWait()) {
-    CastWaitActor(this)->failChildInternal(n);
-  }
-}
+/* ------------------------------------------------------------------------
+   class WaitActor
+   ------------------------------------------------------------------------ */
 
 void WaitActor::addChildInternal(Board *bb)
 {
@@ -131,12 +116,13 @@ Board *WaitActor::getChild()
   error("WaitActor::getChild");
 }
 
-// ------------------------------------------------------------------------
-//
+
+/* ------------------------------------------------------------------------
+   class SolveActor
+   ------------------------------------------------------------------------ */
 
 BuiltinTabEntry *solveContBITabEntry = NULL;
 BuiltinTabEntry *solvedBITabEntry    = NULL;
-TaggedRef SolveContFList             = makeTaggedNULL();
 Arity *SolveContArity                = NULL;
 
 TaggedRef solvedAtom;
@@ -147,23 +133,23 @@ TaggedRef entailedAtom;
 TaggedRef stableAtom;
 TaggedRef failedAtom;
 
-void Actor::InitSolve()
+void SolveActor::Init()
 {
-  solveContBITabEntry =
-    new BuiltinTabEntry("*solveCont*", 1, BIsolveCont); // local Entry;
-  solvedBITabEntry =
-    new BuiltinTabEntry("*solved*", 1, BIsolved);       // local Entry;
-  SolveContFList =
-    makeTaggedLTuple(new LTuple(makeTaggedAtom(StatusAtom),
-                                makeTaggedAtom(NameOfNil)));
-  SolveContArity = SRecord::aritytable.find(SolveContFList);
-  solvedAtom     = makeTaggedAtom (SolvedAtom);
-  enumedAtom     = makeTaggedAtom (EnumedAtom);
-  lastAtom       = makeTaggedAtom (LastAtom);
-  moreAtom       = makeTaggedAtom (MoreAtom);
-  entailedAtom   = makeTaggedAtom (EntailedAtom);
-  stableAtom     = makeTaggedAtom (StableAtom);
-  failedAtom     = makeTaggedAtom (FailedAtom);
+  solveContBITabEntry
+    = new BuiltinTabEntry("*solveCont*", 1, BIsolveCont); // local Entry;
+  solvedBITabEntry
+    = new BuiltinTabEntry("*solved*", 1, BIsolved);       // local Entry;
+
+  TaggedRef solveContFList = cons(makeTaggedAtom(SEARCH_STATUS),nil());
+  SolveContArity = SRecord::aritytable.find(solveContFList);
+
+  solvedAtom     = makeTaggedAtom (SEARCH_SOLVED);
+  enumedAtom     = makeTaggedAtom (SEARCH_ENUMED);
+  lastAtom       = makeTaggedAtom (SEARCH_LAST);
+  moreAtom       = makeTaggedAtom (SEARCH_MORE);
+  entailedAtom   = makeTaggedAtom (SEARCH_ENTAILED);
+  stableAtom     = makeTaggedAtom (SEARCH_STABLE);
+  failedAtom     = makeTaggedAtom (SEARCH_FAILED);
 
 }
 
@@ -346,6 +332,38 @@ OZ_Bool solveActorWaker (int n, TaggedRef *args)
     am.pushNervous (bb);  // inderectly - can't say 'goto LBLreduce';
   }
   return (PROCEED);    // always;
+}
+
+
+// Note that threre is one thread ALREADY AT THE CREATION TIME!
+
+SolveActor::SolveActor (Board *bb, int prio, TaggedRef resTR)
+     : Actor (Ac_Solve, bb, prio), result (resTR),
+     boardToInstall(NULL), suspList (NULL), threads (1)
+{
+  Board::NewCurrentSolve (this);
+  solveBoard = am.currentBoard;
+  solveVar = makeTaggedRef(newTaggedUVar (solveBoard));
+}
+
+SolveActor::~SolveActor()
+{
+  solveBoard = (Board *) NULL;
+  orActors.clear ();
+  solveVar = (TaggedRef) NULL;
+  result = (TaggedRef) NULL;
+  boardToInstall = (Board *) NULL;
+  suspList = (SuspList *) NULL;
+  threads = 0;
+}
+
+Bool SolveActor::isStable ()
+{
+  if (threads != 0)
+    return (NO);
+  if (am.trail.isEmptyChunk() == NO)
+    return (NO);
+  return (areNoExtSuspensions ());
 }
 
 // ------------------------------------------------------------------------
