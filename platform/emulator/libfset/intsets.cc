@@ -356,6 +356,174 @@ failure:
   return P.fail();
 }
 
+//-----------------------------------------------------------------------------
+// minN propagator
+
+OZ_C_proc_begin(fsp_minN, 2)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_VECT OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectFSetVarAny);
+  OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
+  
+  return pe.impose(new FSetMinNPropagator(OZ_args[0],
+					  OZ_args[1]));
+} 
+OZ_C_proc_end
+
+OZ_CFun FSetMinNPropagator::header = fsp_minN;
+
+#define MATCH_NOLOOP
+
+OZ_Return FSetMinNPropagator::propagate(void)
+{
+  _OZ_DEBUGPRINT(endl << "in " << *this);
+
+  OZ_FSetVar s(_s);
+  DECL_DYN_ARRAY(OZ_FDIntVar, vd, _vd_size);
+  PropagatorController_S_VD P(s, _vd_size, vd);
+  int max_fd = OZ_getFDInf();
+  int min_fd = OZ_getFDSup();
+  int i;
+
+  for (i = _vd_size; i--; ) {
+    vd[i].read(_vd[i]);
+    min_fd = min(min_fd, vd[i]->getMinElem());
+    max_fd = max(max_fd, vd[i]->getMaxElem());
+  }
+
+  if (_firsttime) {
+    _OZ_DEBUGPRINT("firsttime==1");
+  
+    _firsttime = 0; // do it only once
+
+    _k = 0; _l = _vd_size - 1;
+    _last_min = s->getLubSet().getMinElem() - 1;
+    _last_max = s->getLubSet().getMaxElem() + 1;
+
+    // (1) 
+    //
+    FailOnInvalid(s->putCard(_vd_size, 32 * fset_high));
+    _OZ_DEBUGPRINT("(1) " << *this);
+  }
+
+#ifndef  MATCH_NOLOOP 
+  int old_size, new_size;
+  FSetTouched st;
+
+  for (old_size = 0, i = _k; i <= _l; i += 1)
+    old_size += vd[i]->getSize();
+#endif
+
+loop:
+  _OZ_DEBUGPRINT("_k=" << _k << " _l=" << _l << 
+		 " _last_min=" << _last_min << " _last_max=" << _last_max <<
+		 " min_fd=" << min_fd << " max_fd=" << max_fd);
+
+#ifndef MATCH_NOLOOP
+  st = s;
+#endif
+
+  {
+    // (2)
+    FailOnEmpty(*vd[_k] >= _last_min + 1);
+    for (i = _k; i < _l; i += 1) {
+      FailOnEmpty(*vd[i + 1] >= vd[i]->getMinElem() + 1);
+    }
+    
+    FailOnEmpty(*vd[_l] <= _last_max - 1);
+    for (i = _l; i > _k; i -= 1) {
+      FailOnEmpty(*vd[i - 1] <= vd[i]->getMaxElem() - 1);
+    }
+    
+    _OZ_DEBUGPRINT("(2) " << *this);
+  }
+  {
+    // (3)
+    _OZ_DEBUGPRINT("_k=" << _k << " _l=" << _l);
+
+    if (_k == 0) { // TMUELLER
+      for (i = OZ_getFSetInf(); i < vd[0]->getMinElem(); i += 1)
+	FailOnInvalid(*s -= i);
+    } else {
+      for (i = vd[_k - 1]->getMaxElem() + 1; i < vd[_k]->getMinElem(); i += 1)
+	FailOnInvalid(*s -= i);
+    }
+    _OZ_DEBUGPRINT("(3) " << *this);
+  }
+  
+  {
+    // (4)
+    for (i = _k; i <= _l; i += 1)
+      if (*vd[i] == fd_singl)
+	FailOnInvalid(*s += vd[i]->getMinElem());
+
+    _OZ_DEBUGPRINT("(4) " << *this);
+  }
+
+  {
+    // (5)
+    OZ_FSetValue glb_s = s->getGlbSet(), lub_s = s->getLubSet();
+    FSetIterator glb_it(&glb_s, _last_min), lub_it(&lub_s, _last_min);
+
+    int min_lub = lub_it.getNextLarger(), min_glb = glb_it.getNextLarger();
+    for ( ; min_lub == min_glb && min_lub != -1;  
+	  min_lub = lub_it.getNextLarger(), 
+	    min_glb = glb_it.getNextLarger(), _k += 1 ) {
+      FailOnEmpty(*vd[_k] &= min_glb); 
+      _last_min = min_lub;
+    
+      _OZ_DEBUGPRINT("(5) " << *this);
+    }
+  }
+  
+#ifndef MATCH_NOLOOP
+  for (new_size = 0, i = _k; i <= _l; i += 1)
+    new_size += vd[i]->getSize();
+
+  if (((old_size != new_size && new_size > _vd_size) || st <= s) &&
+      _k < _vd_size && _l > -1) {
+    old_size = new_size;
+    goto loop;
+  }
+#endif
+
+  _OZ_DEBUGPRINT("out " << *this);
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+
+//-----------------------------------------------------------------------------
+// maxN propagator
+
+OZ_C_proc_begin(fsp_maxN, 2)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_VECT OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectFSetVarAny);
+  OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
+  
+  return pe.impose(new FSetMaxNPropagator(OZ_args[0],
+					  OZ_args[1]));
+} 
+OZ_C_proc_end
+
+OZ_CFun FSetMaxNPropagator::header = fsp_maxN;
+
+#define MATCH_NOLOOP
+
+OZ_Return FSetMaxNPropagator::propagate(void)
+{
+  return OZ_ENTAILED;
+}
+
 
 //-----------------------------------------------------------------------------
 // eof
