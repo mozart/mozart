@@ -45,31 +45,30 @@ ApplPrefixText         = 'Application:'
 ApplFilePrefixText     = 'File:'
 
 InvalidThreadID        = 'Invalid Thread ID in step message'
-NoFileInfo             = 'step message without line number information, ' #
-                         'continuing thread #'
+NoFileInfo             = ('step message without line number information, ' #
+                          'continuing thread #')
 NoFileBlockInfo        = ' blocks without line number information'
 EarlyThreadDeath       = 'won\'t add thread #'
 EarlyTermThread        = 'Early terminating thread'
 KnownThread            = 'Got known thread'
 NewThread              = 'Got new thread'
-NextOnLeave            = '\'next\' while leaving procedure - ' #
-                         'substituting by \'step\''
+NextOnLeave            = ('\'next\' while leaving procedure - ' #
+                          'substituting by \'step\'')
 
 UnknownSuspThread      = 'Unknown suspending thread'
 UnknownWokenThread     = 'Unknown woken thread'
 UnknownMessage         = 'Unknown message on stream'
 
-WaitForThread          = 'waiting for thread to be added ' #
-                         'to dictionary of debugged threads...'
+WaitForThread          = ('waiting for thread to be added ' #
+                          'to dictionary of debugged threads...')
 
 ErrorExcText           = 'Exception: '
 UserExcText            = 'Exception: '
 NoStackText            = ' / no stack available'
 
 FirstSelectThread      = 'You must select a thread first!'
-IgnoreNoFileStep       = 'Ignoring new thread as there\'s' #
-                         ' no line information available. ' #
-                         ' Hint: save your Emacs buffer!'
+IgnoreNoFileStep       = ('Ignoring new thread as there\'s' #
+                          ' no file information available.')
 
 DoneMessage            = ' done'
 
@@ -85,12 +84,6 @@ OzcarMessagePrefix     = fun {$}
                             'Ozcar[' # {Thread.id {Thread.this}} # ']: '
                          end
 OzcarErrorPrefix       = 'Ozcar ERROR: '
-
-BraceLeft              = '{'
-BraceRight             = '}'
-
-BracketLeft            = '['
-BracketRight           = ']'
 
 DotEnd                 = '.end'
 
@@ -121,7 +114,6 @@ RecordType             = '<record>'
 ChunkType              = '<chunk>'
 UnknownType            = '<???>'
 UnboundType            = '_'
-UnAllocatedType        = {NewName}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -364,12 +356,11 @@ ConfigVerbose              = false  %% debug messages in Emulator buffer?
 
 ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
 
-ConfigStepRecordBuiltin         = false  %% step on builtin 'record'  ?
-ConfigStepDotBuiltin            = false  %% step on builtin '.'       ?
-ConfigStepWidthBuiltin          = false  %% step on builtin 'width'   ?
-ConfigStepNewNameBuiltin        = false  %% step on builtin 'NewName' ?
-ConfigStepSetSelfBuiltin        = false  %% step on builtin 'setSelf' ?
-ConfigStepWaitForArbiterBuiltin = false  %% step on builtin 'waitForArbiter'?
+ConfigStepRecordBuiltin    = false  %% step on builtin 'record'  ?
+ConfigStepDotBuiltin       = false  %% step on builtin '.'       ?
+ConfigStepWidthBuiltin     = false  %% step on builtin 'width'   ?
+ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName' ?
+ConfigStepSetSelfBuiltin   = false  %% step on builtin 'setSelf' ?
 
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
@@ -390,7 +381,6 @@ Config =
        stepWidthBuiltin :          ConfigStepWidthBuiltin
        stepNewNameBuiltin :        ConfigStepNewNameBuiltin
        stepSetSelfBuiltin :        ConfigStepSetSelfBuiltin
-       stepWaitForArbiterBuiltin : ConfigStepWaitForArbiterBuiltin
 
        envSystemVariables :        ConfigEnvSystemVariables
        envProcedures :             ConfigEnvProcedures
