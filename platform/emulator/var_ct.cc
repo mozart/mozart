@@ -253,7 +253,6 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     if (oz_isLocalVariable(vptr)) {
       if (!oz_isUVar(v)) {
 	oz_checkSuspensionListProp(tagged2CVar(v));
-	ctv->setSuspList(tagged2CVar(v)->unlinkSuspList());
       }
       bindLocalVar(vptr, tctv);
     } else {
