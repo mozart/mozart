@@ -58,7 +58,7 @@ depend:: Makefile $(FSETLIBSRCS)
 -include Makefile.deps
 
 veryclean::
-	-rm -f *.a *.so
+	-rm -f *.a *.so Makefile.deps
 
 include ../Makefile.rules
 
