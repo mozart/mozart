@@ -1,47 +1,218 @@
-<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+<!doctype book system "ozdoc.dtd" [
 <!-- $Id$ -->
 
 <!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
 <!-- Abbreviations -->
 <!-- Processing Instructions -->
 
 ]>
 
-<Book>
-  <Front>
-    <Meta name=ozversion value="3.0">
-    <Meta name=status value=draft>
-    <Title/The Mozart Debugger/
-    <Author.Extern to="author.db" key="Benjamin.Lorenz">
-    <Abstract>
+<book proglang=oz>
+  <front>
+    <meta name=ozversion value="3.0">
+    <meta name=status value=draft>
+    <title/The Mozart Debugger/
+    <author.extern to="author.db" key="Benjamin.Lorenz">
+    <abstract>
+
       This manual describes Ozcar, a symbolic debugger which provides
       well known features like single stepping, breakpoints, and
       environment inspectation.  Moreover, it supports debugging of
       multiple threads; their concurrent behaviour can be observed and
       manipulated.
+
       <p>
+
       Ozcar has been smoothly integrated into the Oz Programming
       Interface. It can be started and stopped from within Emacs,
       which itself serves both as a source view manager, showing the
       current position in a debugged program by highlightening the
       corresponding source line, and as a breakpoint manager, allowing
       to set breakpoints at arbitrary source lines.
+
       <p>
+
       Finally, the application ozd is provided to debug standalone
       programs.
-    </Abstract>
-  <Body>
-    <Chapter>
-      <Title/Getting Started/
-       <P>
-	There are two ways in which Ozcar can be invoked. First, from
-	within the OPI, second, from the unix/windows shell.
-      <Section>
-	<Title/Invocation from the OPI/
 
-<Para class=apropos><Title/Starting/
-        so gehts: <Key/C-c C-d/ ok, alles klar?
-      <Section>
-	<Title/Invocation from the Shell/
+    </abstract>
+  <body>
+    <chapter>
+      <title/Getting Started/
+      <p>
 
-</Book>
+      There are two ways in which Ozcar can be invoked. First, from
+      within the OPI, second, from the Shell.
+
+      <section>
+	<title/Invocation from the OPI/
+	<p>
+	To start Ozcar from the OPI, you have to use the Emacs
+	function <span proglang=elisp><<oz-debugger>></span> (<Key/C-c
+	C-d/). Executed with prefix argument (<Key/C-u C-c C-d/), the
+	Ozcar window gets closed again. Note, however, that this just
+	suspends the debugger; after re-opening the window, you can
+	continue debugging exactly where you stopped before,
+	presupposing that all debugged threads are stopped (see
+	single-stepping).
+
+      <section>
+	<title/Invocation from the Shell/
+	<p>
+	Another way of using Ozcar is to debug Oz applications.
+	For this purpose, the program ozd is provided (which is an
+	oz application itself, btw.). If you want to debug the
+	application foo, you just type from the shell ozd foo. This
+	starts an Oz engine, which in turn starts Ozcar and Emacs.
+
+      <section>
+	<title/The Main Window/
+	<p>
+	<ptr to=ozcar.initial> shows the main window after Ozcar has
+	been invoked for the first time.
+
+	<figure class="maxi picture" id=ozcar.initial>
+	  <caption/The main window/
+	  <p><picture.extern gif to="ozcar-initial.gif">
+	</figure>
+
+	<Para class=apropos><Title/Thread Forest/
+	On the left, there is a window labeled <def>Thread
+	Forest</def>. Here you can see all the threads which are
+	currently attached (see attach). The thread's hierarchical
+	dependencies are illustrated by printing all threads as nodes
+	of a tree: Children are always inserted below their parent,
+	indented to the right. Different node colors correspond to
+	different thread states: A thread can be runnable (green),
+	blocked (red) or terminated (grey).
+
+	<p>
+
+	One thread (if there is any one attached) is the <def>selected
+	thread</def>; its node is printed in bold face. Some actions,
+	like single stepping or selecting stack frames, are always
+	relative to this thread. You can select a thread by clicking
+	on it with the left mouse button or by using the left and
+	right cursor keys.
+
+	<p>
+
+	<Para class=apropos><Title/Stack/
+
+	Right beside the thread window, there is another window
+	labeled <def>Stack</def>. It prints the stack of the currently
+	selected thread. Beware: the topmost frame is displayed at the
+	bottom. The procedures arguments are printed in bold face and
+	can be further investigated (using the Browser tool) by
+	clicking on them.
+
+	<p>
+
+	One frame is the <def>selected frame</def>. It is displayed
+	white on blue. Initially, the top frame is selected
+	implicitely, without being marked in any way.  You can
+	navigate through the stack by clicking on a frame (search for
+	a position within the line where no arguments are displayed!)
+	or by using the up and down cursor keys.
+
+	<p>
+
+	<Para class=apropos><Title/Variables/
+
+	Below the stack window, there are two windows, labeled
+	<def>Local Variables</def> and <def>Global Variables</def>, to
+	display information about local and global variables of the
+	currently selected stack frame. The local environment is
+	sorted by introduction order of the variables in the source
+	code, the global environment is sorted alphabetically. As with
+	the arguments in the stack window, you can click on the (bold
+	faced) values of the variables to browse them.
+
+	<p>
+
+	<Para class=apropos><Title/Menu Bar, Buttons/
+
+	On the top of the main window, there is a menu bar, as well as
+	a button bar. Their functions and dialogs will be
+	discussed in section ...
+
+	<p>
+
+	<Para class=apropos><Title/Status Line/
+
+	At the bottom of the main window, there is a <def>Status
+	Line</def> which is used to display miscellaneous useful
+	information.
+
+      <section>
+	<title/A first interaction
+	<p>
+
+	So, how can Ozcar actually be used? Consider the following
+	small program:
+
+<<<local
+   S = 'hello'
+in
+   {Show S # ' world!'}
+end>>>
+
+	<Para class=apropos><Title/Attaching a thread/
+	Let's check how this code is executed by the virtual machine
+	of mozart&emdash;step by step. The default behaviour of Ozcar
+	is to <q>catch</q> all threads which are created by Emacs
+	queries, so all you have to do in order to debug the code
+	is to feed it in the normal way, for example using the
+	Emacs function <span proglang=elisp><<oz-feed-paragraph>></span>
+	(<Key/C-c C-p/). You will see Ozcar printing the following:
+
+	<figure class="maxi picture" id=ozcar.hello>
+	  <caption/The main window after feeding the program/
+	  <p><picture.extern gif to="ozcar-hello.gif">
+	</figure>
+
+	First, you are informed through the status line, that there
+	has been attached a new thread with thread number 96, and this
+	thread was selected automatically. In the thread forest
+	window, you see a single, bold faced node, labeled with the
+	thread number. The executing thread has been stopped directly
+	after its creation, so the stack window displays a single
+	stack frame, containing the first application of the program,
+	<<S = 'hello'>>, which is, translated into core syntax,
+	<<{Value.'='_ hello}>>. The variable name seems to be lost,
+	and in fact, it is, at least in the stack window. But, there
+	is no need to despair, we have our variable windows, and
+	indeed, the variable <<S>> can be found in the local
+	environment, still unbound (visualized by the underscore
+	char). The right arrow at the beginning of the line in
+	the stack window means: You are about to apply the
+	function, but you haven't yet! The number beside the arrow
+	means: This is stack frame number one.
+
+	<p>
+
+	In Emacs, the source line which contains
+	<<{Value.'='_ hello}>> is highlighted, like this:
+
+	<figure class="picture">
+	  <p><picture.extern gif to="ozcar-hello3.gif">
+	</figure>
+
+	<p>
+
+	<Para class=apropos><Title/Single Stepping/ Now, how can we
+	apply the function <<Value.'='>>? One way is to use the mouse,
+	clicking on the <picture.extern inline gif to="step.gif">
+	button. This means: Do exactly one step. What happens, is,
+	that in the stack window you can read
+
+	<figure class="picture">
+	  <p><picture.extern gif to="ozcar-hello2.gif">
+	</figure>
+
+
+</book>
