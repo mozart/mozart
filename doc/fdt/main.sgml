@@ -172,6 +172,22 @@
 
     <Meta name=latex.input   value="fdt-utils.tex">
 
+    <Meta name="latex.table.spec" arg1="fig.conozsolver.table" arg2="@{}ll@{}">
+    <Meta name="latex.picture.width" arg1="pic.explorer-a" arg2="0.58\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.explorer-b" arg2="0.58\linewidth">
+
+    <Meta name="latex.picture.width" arg1="pic.q1" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.q2" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.q3" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.q4" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.q5" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.q6" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.q7" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.q8" arg2="1cm">
+
+    <Meta name="latex.picture.width" arg1="pic.bridgeProblem" arg2="\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.gantt" arg2="\linewidth">
+
     <Title/Finite Domain Constraint Programming in &Oz;. A Tutorial./
       <Author.Extern to="author.db" key="Christian.Schulte">
       <Author.Extern to="author.db" key="Gert.Smolka">

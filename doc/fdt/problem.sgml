@@ -316,9 +316,9 @@ collapsed into a single red triangle.
 <P>
 <figure id="figConOzSolver">
 <caption/The Explorer with the search tree of <<Money>>./
-<table class=dyptic>
-<tr><td><Picture.Extern to="explorer-a.gif" type=gif></td>
-    <td><Picture.Extern to="explorer-b.gif" type=gif></td>
+<table class=dyptic id="fig.conozsolver.table">
+<tr><td><Picture.Extern id="pic.explorer-a" to="explorer-a.gif" type=gif></td>
+    <td><Picture.Extern id="pic.explorer-b" to="explorer-b.gif" type=gif></td>
 </tr>
 </table>
 </figure>

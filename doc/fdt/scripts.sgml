@@ -56,14 +56,26 @@ the 8-queens problem looks as follows:
 <figure class="Figure">
 <table>
   <tr/<th/<p.silent/&nbsp;// <th/1/<th/2/<th/3/<th/4/<th/5/<th/6/<th/7/<th/8//
-  <tr><th/1/ <td><picture.extern to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
-  <tr><th/2/ <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td></tr>
-  <tr><th/3/ <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
-  <tr><th/4/ <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
-  <tr><th/5/ <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern to="queen.gif" type=gif></td></tr>
-  <tr><th/6/ <td><p.silent/&nbsp;/</td><td><picture.extern to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
-  <tr><th/7/ <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
-  <tr><th/8/ <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
+  <tr><th/1/ <td><picture.extern id="pic.q1" to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
+  <tr><th/2/
+  <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern
+  id="pic.q2" to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td></tr>
+  <tr><th/3/
+  <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern
+  id="pic.q3" to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
+  <tr><th/4/
+  <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern
+  id="pic.q4" to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
+  <tr><th/5/
+  <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern
+  id="pic.q5" to="queen.gif" type=gif></td></tr>
+  <tr><th/6/ <td><p.silent/&nbsp;/</td><td><picture.extern id="pic.q6" to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
+  <tr><th/7/
+  <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern
+  id="pic.q7" to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
+  <tr><th/8/
+  <td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><picture.extern
+  id="pic.q8" to="queen.gif" type=gif></td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td><td><p.silent/&nbsp;/</td></tr>
 </table>
 </figure>
 
