@@ -308,22 +308,17 @@ OZ_Term OZ_termType(OZ_Term term)
  * providing constants
  *------------------------------------------------------------------*/
 
-int OZ_getMinPrio(void) 
+int OZ_getLowPrio(void) 
 {
   return OZMIN_PRIORITY;
 }
 
-int OZ_getDefaultPrio(void) 
+int OZ_getMediumPrio(void) 
 {
   return DEFAULT_PRIORITY;
 }
 
-int OZ_getPropagatorPrio(void) 
-{
-  return PROPAGATOR_PRIORITY;
-}
-
-int OZ_getMaxPrio(void) 
+int OZ_getHighPrio(void) 
 {
   return OZMAX_PRIORITY;
 }
