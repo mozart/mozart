@@ -1436,8 +1436,7 @@ void gc_finalize()
 
 
 inline
-void gcTagged(TaggedRef & frm, TaggedRef & to, 
-	      Bool hasDirectVars, Bool allVarsAreLocal) {
+void gcTagged(TaggedRef & frm, TaggedRef & to) {
   Assert(!isInGc || !fromSpace->inChunkChain(&to));
   
   TaggedRef aux = frm;
@@ -1484,7 +1483,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	{
 	  Board * bb = tagged2VarHome(aux)->derefBoard();
 	  
-	  if (!allVarsAreLocal && !isInGc && bb->isMarkedGlobal()) {
+	  if (!isInGc && bb->isMarkedGlobal()) {
 	    to = makeTaggedRef(aux_ptr);
 	    return;
 	  }
@@ -1511,8 +1510,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	  if (cv->gcIsMarked()) {
 	    Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
 	    to = makeTaggedRef(cv->gcGetFwd());
-	  } else if (allVarsAreLocal || 
-		     isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
+	  } else if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
 	    Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
 	    OzVariable *new_cv=cv->gcVar();
 #ifdef DEEP_GARBAGE
@@ -1580,7 +1578,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
   case SRECORD: DO_SRECORD:
     to = makeTaggedSRecord(tagged2SRecord(aux)->gcSRecord()); 
     return;
-
+    
   case OZFLOAT: DO_OZFLOAT:
     if (isInGc) {
       to = makeTaggedFloat(tagged2Float(aux)->gc());   
@@ -1603,12 +1601,12 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
   case UNUSED_VAR:  // FUT
     
   case UVAR: 
-    if (hasDirectVars) {
+    {
       Board * bb = tagged2VarHome(aux)->derefBoard();
       
       Assert(bb);
 
-      if (allVarsAreLocal || isInGc || !bb->isMarkedGlobal()) {
+      if (isInGc || !bb->isMarkedGlobal()) {
 	Assert(isInGc || !bb->isMarkedGlobal());
 	bb = bb->gcBoard();
 	Assert(bb);
@@ -1623,15 +1621,13 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
     return;
 
   case CVAR:
-    if (hasDirectVars) {
+    {
       OzVariable * cv = tagged2CVar(aux);
 
       if (cv->gcIsMarked()) {
 	Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
 	to = makeTaggedRef(cv->gcGetFwd());
-      } else if (allVarsAreLocal || 
-		 isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
-	Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
+      } else if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
 	isGround = NO;
 	to = makeTaggedCVar(cv->gcVar());
 	cv->gcMark(isInGc, &to);
@@ -1659,12 +1655,12 @@ void OZ_collect(OZ_Term *to) {
 }
 
 void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
-  gcTagged(frm, to, OK, NO);
+  gcTagged(frm, to);
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
   for (int i=sz; i--; )
-    gcTagged(frm[i], to[i], OK, NO);
+    gcTagged(frm[i], to[i]);
 }
 
 //*****************************************************************************
