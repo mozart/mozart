@@ -1410,28 +1410,27 @@ public:
   int getHigh()     { return getWidth() + offset - 1; }
   int getWidth()    { return width; }
 
-  OZ_Return getArg(int n, TaggedRef &out)
+  OZ_Term getArg(int n)
   {
     n -= offset;
     if (n>=getWidth() || n<0)
-      return OZ_raiseC("array",2,makeTaggedConst(this),OZ_int(n));
+      return 0;
 
-    out = getArgs()[n];
+    OZ_Term out = getArgs()[n];
     Assert(isRef(out) || !isAnyVar(out));
 
-    return PROCEED;
+    return out;
   }
 
-  OZ_Return setArg(int n,TaggedRef val)
+  int setArg(int n,TaggedRef val)
   {
     Assert(isRef(val) || !isAnyVar(val));
 
     n -= offset;
-    if (n>=getWidth() || n<0)
-      return OZ_raiseC("array",2,makeTaggedConst(this),OZ_int(n));
+    if (n>=getWidth() || n<0) return FALSE;
 
     getArgs()[n] = val;
-    return PROCEED;
+    return TRUE;
   }
 
   OZPRINT;

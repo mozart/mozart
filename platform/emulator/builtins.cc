@@ -316,11 +316,12 @@ OZ_C_proc_begin(BIbuiltin,3)
   BuiltinTabEntry *found = builtinTab.find(name);
 
   if (found == htEmpty) {
-    return am.raise(E_ERROR,E_KERNEL,"builtinUndefined",1,OZ_getCArg(0));
+    return am.raise(E_ERROR,E_SYSTEM,"builtinUndefined",1,OZ_getCArg(0));
   }
 
   if (arity!=-1 && (arity != found->getArity())) {
-    return am.raise(E_ERROR,E_KERNEL,"builtinArity",1,OZ_getCArg(0));
+    return am.raise(E_ERROR,E_SYSTEM,"builtinArity",2,
+                    OZ_getCArg(0),OZ_int(found->getArity()));
   }
 
   return OZ_unify(ret,makeTaggedConst(found));
@@ -4734,7 +4735,9 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   }
 
   OzArray *ar = tagged2Array(array);
-  return ar->getArg(smallIntValue(index),out);
+  out = ar->getArg(smallIntValue(index));
+  if (out) return PROCEED;
+  return am.raise(E_ERROR,E_KERNEL,"array",2,array,index);
 }
 DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
 
@@ -4753,7 +4756,9 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
 
   OzArray *ar = tagged2Array(array);
   CheckLocalBoard(ar,"array");
-  return ar->setArg(smallIntValue(index),value);
+  if (ar->setArg(smallIntValue(index),value)) return PROCEED;
+
+  return am.raise(E_ERROR,E_KERNEL,"array",2,array,index);
 }
 
 DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)

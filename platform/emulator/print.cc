@@ -423,8 +423,7 @@ PRINT(OzArray)
   stream << "Array@" << this << "[ ";
   for (int i=getLow(); i<=getHigh(); i++) {
     stream << i << ": ";
-    TaggedRef t;
-    getArg(i,t);
+    TaggedRef t=getArg(i);
     tagged2Stream(t,stream, depth,offset);
     stream << " ";
   }
