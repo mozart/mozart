@@ -98,8 +98,8 @@ public:
   void free(){
     genFreeListManager->putOne_3((FreeListEntry*) this);}
 
-  Bool maybeTrigger(OwnerEntry*, int, EntityCond);
-  void maybeTriggerOK(OwnerEntry*, int, EntityCond);
+  Bool maybeTrigger(OwnerEntry*, EntityCond);
+  void maybeTriggerOK(OwnerEntry*, EntityCond);
 };
 
 enum ChainFlags{
