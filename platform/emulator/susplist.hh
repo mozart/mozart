@@ -47,8 +47,6 @@ public:
     return ((Thread *) (ToPointer (ToInt32 (thr))));
   }
 
-  SuspList * appendTo(SuspList *);
-  SuspList * appendToAndUnlink(SuspList * &);
   SuspList * appendToAndUnlink(SuspList * &, Bool reset_local);
 
   Bool checkCondition(TaggedRef taggedVar, TaggedRef term);
