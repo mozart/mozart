@@ -271,7 +271,7 @@ $(OZTEST):
 test: $(OZTEST)
 	(OZEMULATOR=./oz.emulator.bin; export OZEMULATOR; \
 	 OZ_LOAD='root=$(TESTDIR)'; export OZ_LOAD; \
-	 $(OZTEST) --verbose)
+	 $(OZTEST) --verbose $(TESTARGS))
 
 test-lib:
 	(OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
