@@ -627,7 +627,8 @@ enum CE_RET {
   CE_CONT,
   CE_SOLVE_CONT,
   CE_NOTHING,
-  CE_FAIL
+  CE_FAIL,
+  CE_SUSPEND
 };
 
 int AM::checkEntailment(Continuation *&contAfter, Actor *&aa)
@@ -1242,8 +1243,7 @@ void engine()
               tt = e->createThread(aa->getPriority(),
                                    aa->getCompMode());
             }
-            tt->pushCont(cont->getPC(),cont->getY(),cont->getG(),
-                         cont->getX(),cont->getXSize(),NO);
+            tt->pushCont(cont);
             goto LBLpopTask;
           }
         case CE_NOTHING:
@@ -1368,6 +1368,7 @@ LBLkillThread:
       Actor *aa;
       switch (e->checkEntailment(cont,aa)) {
       case CE_FAIL:
+        printf("scheisse\n");
         if (nb) e->decSolveThreads(nb);
         HF_NOMSG;
       case CE_SOLVE_CONT: /* no special case */
@@ -1383,8 +1384,7 @@ LBLkillThread:
             tt = e->createThread(aa->getPriority(),
                                  aa->getCompMode());
           }
-          tt->pushCont(cont->getPC(),cont->getY(),cont->getG(),
-                       cont->getX(),cont->getXSize(),NO);
+          tt->pushCont(cont);
           if (nb) e->decSolveThreads(nb->getBoardFast());
           goto LBLstart;
         }
@@ -2626,7 +2626,6 @@ LBLkillThread:
       DebugCheckT(currentDebugBoard=CBB);
       if (CAA->hasNext()) {
 
-      LBLexecuteNext:
         DebugTrace(trace("next clause",CBB,CAA));
 
         LOADCONT(CAA->getNext());
@@ -2826,125 +2825,160 @@ LBLkillThread:
 
  LBLfailure:
   {
-    DebugTrace(trace("fail",CBB));
-    Assert(CBB->isInstalled());
-    Actor *aa=CBB->getActor();
-    if (aa->isAskWait()) {
-      (AWActor::Cast(aa))->failChild(CBB);
-    }
-    CBB->setFailed();
-    e->reduceTrailOnFail();
-    CBB->unsetInstalled();
-    e->setCurrent(aa->getBoardFast());
-    DebugCheckT(currentDebugBoard=CBB);
-    if (!e->currentThread->taskStack.discardLocalTasks()) {
-      e->currentThread->board=CBB;
-      CBB->incSuspCount();
-    }
-
-// ------------------------------------------------------------------------
-// *** REDUCE Actor
-// ------------------------------------------------------------------------
-
-    DebugTrace(trace("reduce actor",CBB,aa));
-
-    if (aa->isAsk()) {
-      AskActor *aaa = AskActor::Cast(aa);
-      if (aaa->hasNext () == OK) {
-        CAA = aaa;
-        goto LBLexecuteNext;
-      }
-/* check if else clause must be activated */
-      if ( aaa->isLeaf() ) {
-
-/* rule: if else ... fi
-   push the else cont on parent && remove actor */
-        aaa->setCommitted();
-        PC = aaa->getElsePC();
-
-        /* rule: if fi --> false */
-        if (PC == NOCODE) {
-          HF_FAIL(,message("reducing 'if fi' to 'false'\n"));
+    AWActor *aa;
+    Continuation *cont;
+    switch (e->handleFailure(cont,aa)) {
+    case CE_CONT:
+      DebugCheckT(currentDebugBoard=e->currentBoard);
+      if (!e->currentThread) {
+        e->currentThread = e->newThread(aa->getPriority(),CBB,
+                                        aa->getCompMode());
+        CBB->incSuspCount();
+        if (e->currentSolveBoard) {
+          e->incSolveThreads(e->currentSolveBoard);
         }
-
-        Continuation *cont = aaa->getNext();
-        Thread *tt=aaa->getThread();
-        if (tt) {
-          e->wakeUpThread(tt);
-          tt->pushCont(PC,
-                       cont->getY(),cont->getG(),
-                       cont->getX(),cont->getXSize(),NO);
-          goto LBLpopTask;
-        }
-        LOADCONT(cont);
-        PC = aaa->getElsePC(); // repeated because LOADCONT overwrites
-        CBB->decSuspCount();
-        goto LBLemulateHook;
+        e->restartThread();
       }
-      e->suspendCond(aaa);
-      CHECKSEQ;
-    } else if (aa->isWait ()) {
-      WaitActor *waa = WaitActor::Cast(aa);
-      if (waa->hasNext()) {
-        CAA = waa;
-        goto LBLexecuteNext;
+      CAA=aa;
+      LOADCONT(cont);
+      goto LBLemulate; // no thread switch allowed here (CAA)
+    case CE_NOTHING:
+      if (e->currentThread) {
+        DebugCheckT(currentDebugBoard=e->currentBoard);
+        goto LBLpopTask;
+      } else {
+        goto LBLstart;
       }
-/* rule: or ro (bottom commit) */
-      if (waa->hasNoChilds()) {
-        waa->setCommitted();
-        HF_FAIL(,
-                message("bottom commit\n"));
-      }
-/* rule: or <sigma> ro (unit commit rule) */
-      if (waa->hasOneChild()) {
-        Board *waitBoard = waa->getChild();
-        DebugTrace(trace("reduce actor unit commit",waitBoard,aa));
-        if (waitBoard->isWaiting()) {
-          waitBoard->setCommitted(CBB); // do this first !!!
-          if (!e->installScript(waitBoard->getScriptRef())) {
-            HF_FAIL(,
-                    message("unit commit failed\n"));
-          }
-
-          /* add the suspension from the committed board
-             remove the suspension for the board itself */
-          CBB->incSuspCount(waitBoard->getSuspCount()-1);
-
-          /* unit commit & WAITTOP */
-          if (waitBoard->isWaitTop()) {
-            goto LBLpopTask;
-          }
-
-          /* unit commit & WAIT, e.g. or X = 1 ... then ... [] false ro */
-          LOADCONT(waitBoard->getBodyPtr());
-          Assert(PC != NOCODE);
-
-          goto LBLemulateHook;
-        }
-      }
-    } else {
-      //  Reduce (i.e. with failure in this case) the solve actor;
-      //  The solve actor goes simply away, and the 'failed' atom is bound to
-      // the result variable;
-      aa->setCommitted();
-      CBB->decSuspCount();
-      // for statistic purposes
-      ozstat.incSolveFailed();
-      if ( !e->fastUnifyOutline(SolveActor::Cast(aa)->getResult(),
-                                SolveActor::Cast(aa)->genFailed(),
-                                OK) ) {
-        HF_NOMSG;
+    case CE_FAIL:
+      HF_FAIL(,);
+    case CE_SUSPEND:
+      if (e->currentThread) {
+        DebugCheckT(currentDebugBoard=e->currentBoard);
+        e->suspendCond(AskActor::Cast(aa));
+        CHECKSEQ;
+      } else {
+        goto LBLstart;
       }
     }
+  }
+} // end engine
 
-/* no rule: suspend longer */
-    goto LBLpopTask;
+int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
+{
+  aaout=0;
+  DebugTrace(trace("fail",currentBoard));
+  Assert(currentBoard->isInstalled());
+  Actor *aa=currentBoard->getActor();
+  if (aa->isAskWait()) {
+    (AWActor::Cast(aa))->failChild(currentBoard);
+  }
+  currentBoard->setFailed();
+  reduceTrailOnFail();
+  currentBoard->unsetInstalled();
+  setCurrent(aa->getBoardFast());
+  if (currentThread && !currentThread->discardLocalTasks()) {
+    currentThread->setBoard(currentBoard);
+    currentBoard->incSuspCount();
   }
 
-// ----------------- end reduce actor --------------------------------------
+  DebugTrace(trace("reduce actor",currentBoard,aa));
 
+  if (aa->isAsk()) {
+    AskActor *aaa = AskActor::Cast(aa);
+    aaout=aaa;
+    if (aaa->hasNext()) {
+      cont = aaa->getNext();
+      return CE_CONT;
+    }
+    /* check if else clause must be activated */
+    if (aaa->isLeaf()) {
 
-// ----------------- end failure ------------------------------------------
+      /* rule: if else ... fi */
+      aaa->setCommitted();
+      currentBoard->decSuspCount();
+
+      cont = aaa->getNext();
+      cont->setPC(aaa->getElsePC());
+
+      /* rule: if fi --> false */
+      if (cont->getPC() == NOCODE) {
+        return CE_FAIL;
+      }
+
+      Thread *tt=aaa->getThread();
+      if (tt) {
+        wakeUpThread(tt);
+        tt->pushCont(cont);
+        return CE_NOTHING;
+      }
+
+      return CE_CONT;
+    }
+    return CE_SUSPEND;
+  }
+  if (aa->isWait()) {
+    WaitActor *waa = WaitActor::Cast(aa);
+    aaout=waa;
+    if (waa->hasNext()) {
+      cont=waa->getNext();
+      return CE_CONT;
+    }
+
+    /* rule: or ro (bottom commit) */
+    if (waa->hasNoChilds()) {
+      waa->setCommitted();
+      return CE_FAIL;
+    }
+
+    /* rule: or <sigma> ro (unit commit rule) */
+    if (waa->hasOneChild()) {
+      Board *waitBoard = waa->getChild();
+      DebugTrace(trace("reduce actor unit commit",waitBoard,waa));
+      if (waitBoard->isWaiting()) {
+        waitBoard->setCommitted(currentBoard); // do this first !!!
+        if (!installScript(waitBoard->getScriptRef())) {
+          return CE_FAIL;
+        }
+
+        /* add the suspension from the committed board
+           remove the suspension for the board itself */
+        currentBoard->incSuspCount(waitBoard->getSuspCount()-1);
+
+        /* unit commit & WAITTOP */
+        if (waitBoard->isWaitTop()) {
+          if (!currentThread) {
+            // mm2: entailment check ???
+            createThread(waa->getPriority(),
+                         waa->getCompMode());
+          }
+          return CE_NOTHING;
+        }
+        cont=waitBoard->getBodyPtr();
+        return CE_CONT;
+      }
+    }
+    return CE_NOTHING;
+  }
+
+  Assert(aa->isSolve());
+
+  //  Reduce (i.e. with failure in this case) the solve actor;
+  //  The solve actor goes simply away, and the 'failed' atom is bound to
+  // the result variable;
+  aa->setCommitted();
+  SolveActor *saa=SolveActor::Cast(aa);
+  currentBoard->decSuspCount();
+  // for statistic purposes
+  ozstat.incSolveFailed();
+  if (!fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
+    return CE_FAIL;
+  }
+  if (!currentThread) {
+    // mm2: entailment check ???
+    createThread(saa->getPriority(),
+                 saa->getCompMode());
+  }
+  return CE_NOTHING;
 }
 
 #ifdef OUTLINE
