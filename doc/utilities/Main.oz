@@ -44,6 +44,7 @@ prepare
                  'latexdb'(single type: string default: unit)
                  'split'(rightmost type: bool default: true)
                  'abstract'(rightmost type: bool default: false)
+                 'keeppictures'(rightmost type:bool default:false)
                  %% Path names
                  'ozdoc-home'(single type: string default: unit)
                  'author-path'(single type: string default: unit)

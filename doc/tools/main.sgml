@@ -19,6 +19,7 @@
 <!ENTITY explorer.summary   SYSTEM "e-summary.sgml">
 <!ENTITY explorer.tree      SYSTEM "e-tree.sgml">
 
+<!ENTITY linker             SYSTEM "linker.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -94,18 +95,7 @@
   <Part id="Part.Cmd">
     <Title/Commandline Tools/
 
-    <Chapter id="Chapter.Linker">
-      <Title/The Oz Linker: <Kbd/ozl//
-
-      <P>
-      The Oz Linker is a commandline tool to create functors
-      that are prelinked with respect to some of the imported
-      functors. This can ease the deployment of functors by
-      combining a large hierarchy of functors into a single functor.
-      A short introduction can be found in ???.
-      </P>
-
-    </Chapter>
+      &linker;
 
   </Part>
 

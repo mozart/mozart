@@ -2,8 +2,6 @@
 %%% Authors:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%   Tobias Mueller <tmueller@ps.uni-sb.de>
-%%%
-%%% Contributor:
 %%%   Christian Schulte <schulte@dfki.de>
 %%%
 %%% Copyright:
@@ -25,11 +23,20 @@
 
 functor
 import
-   OS(system tmpnam unlink)
+   OS(system tmpnam unlink stat)
    File(baseName changeExtension)
 export
    'class': PostScriptToGIFClass
 define
+
+   fun {Exists Name}
+      try
+         {OS.stat Name}=_ true
+      catch _ then false
+      end
+   end
+
+
    proc {PsToPpm PsName PpmName} Cmd in
       Cmd = ('(cat '#PsName#'; echo quit) | '#
              'gs -q -dNOPAUSE '#
@@ -56,18 +63,26 @@ define
    end
 
    class PostScriptToGIFClass
-      attr DirName: unit
-      meth init(Dir)
+      attr
+         DirName: unit
+         Keep:    false
+      meth init(Dir KeepPictures)
          DirName <- Dir
+         Keep    <- KeepPictures
       end
-      meth convertPostScript(InName Info ?OutName) PpmName in
-         OutName = {File.changeExtension {File.baseName InName} '.ps' '.gif'}
-         PpmName = {OS.tmpnam}
-         try
-            {PsToPpm InName PpmName}
-            {PpmToGif PpmName Info @DirName#'/'#OutName}
-         finally
-            {OS.unlink PpmName}
+      meth convertPostScript(InName Info ?OutName)
+         !OutName  = {File.changeExtension {File.baseName InName} '.ps' '.gif'}
+         FullName  = @DirName#'/'#OutName
+      in
+         if {Not @Keep andthen {Exists FullName}} then
+            PpmName = {OS.tmpnam}
+         in
+            try
+               {PsToPpm InName PpmName}
+               {PpmToGif PpmName Info @DirName#'/'#OutName}
+            finally
+               {OS.unlink PpmName}
+            end
          end
       end
    end

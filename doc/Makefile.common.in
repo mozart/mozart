@@ -20,7 +20,7 @@ HTMLSUPPORTFILES0 = \
 HTMLSUPPORTFILES = \
         $(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
 
-.PHONY: all validate install clean veryclean distclean
+.PHONY: all quick validate install clean veryclean distclean
 
 all: $(WHAT)-html/index.html
 
@@ -35,9 +35,9 @@ $(SRCTOP)/doc/Makefile.common: $(SRCTOP)/doc/Makefile.common.in \
         $(SRCTOP)/doc/config.status
         cd $(SRCTOP)/doc && ./config.status
 
-$(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+quick: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
-        --type=html-stylesheets --stylesheet=ozdoc.css && \
+        --type=html-stylesheets --stylesheet=ozdoc.css --keeppictures && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(HTMLEXTRAFILES); do cp -p $$i $(WHAT)-html; done
 
