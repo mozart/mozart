@@ -98,24 +98,20 @@ void sendRequest(MessageType mt,BorrowEntry *be)
 
 Bool ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
 {
-  Bool send=FALSE;
-  // mm2: this may be wrong, when gc deletes a dead thread!
-  if (getSuspListLengthS()==0) send=TRUE;
   addSuspSVar(susp, unstable);
-  if(send) {
+  if (!requested) {
+    requested = 1;
     MessageType mt = M_GET_OBJECT;
-    if (isObjectClassNotAvail()) {
-      if(oz_findGName(getGNameClass())==0) {
-        mt = M_GET_OBJECTANDCLASS;
-      }
-    } else {
-      Assert(isObjectClassAvail());
+    if (isObjectClassNotAvail() &&
+        oz_findGName(getGNameClass())==0) {
+      mt = M_GET_OBJECTANDCLASS;
     }
     BorrowEntry *be=BT->getBorrow(getObject()->getIndex());
     sendRequest(mt,be);
   }
   return NO;
 }
+
 
 void ObjectVar::gcRecurseV(void)
 {

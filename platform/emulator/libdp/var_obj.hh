@@ -42,6 +42,7 @@ enum PV_TYPES {
 class ObjectVar : public ExtVar {
 protected:
   short pvtype;
+  short requested;
   Object *obj;
   union {
     ObjectClass *aclass;
@@ -57,11 +58,13 @@ public:
     setpvType(PV_OBJECTCLASSAVAIL);
     obj   = o;
     u.aclass=cl;
+    requested = 0;
   }
   ObjectVar(Board *bb,Object *o,GName *gn) : ExtVar(bb) {
     setpvType(PV_OBJECTCLASSNOTAVAIL);
     obj   = o;
     u.gnameClass=gn;
+    requested = 0;
   }
 
   int getIdV() { return OZ_EVAR_OBJECT; }
