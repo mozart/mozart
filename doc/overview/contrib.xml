@@ -1,0 +1,105 @@
+<database>
+<!--                                                               -->
+<!-- DATABASE TOPIC STRUCTURE                                      -->
+<!--                                                               -->
+<topic id="scripts">
+  <title>Scripts</title>
+</topic>
+<topic id="cp">
+  <title>Constraint Programming (CP)</title>
+</topic>
+<topic id="op">
+  <title>Open Programming (OP)</title>
+</topic>
+<topic id="wp">
+  <title>Window Programming (WP)</title>
+</topic>
+<topic id="xml">
+  <title>XML</title>
+</topic>
+<!--                                                               -->
+<!-- AUTHORS                                                       -->
+<!--                                                               -->
+<author id		="Denys.Duchier"
+	firstname	="Denys"
+	lastname	="Duchier"
+	www		="http://www.ps.uni-sb.de/~duchier/"
+	email		="duchier@ps.uni-sb.de"
+/>
+<author id		= "Donatien.Grolaux"
+	firstname	= "Donatien"
+	lastname	= "Grolaux"
+	www		= "http://www.info.ucl.ac.be/people/ned/"
+	email		= "ned@info.ucl.ac.be"
+/>
+<!--                                                               -->
+<!-- PACKAGES                                                      -->
+<!--                                                               -->
+<!-- AUTHOR: DENYS DUCHIER                                         -->
+<!--                                                               -->
+<package id="duchier-ozskel">
+  <author id="Denys.Duchier"/>
+  <topic id="scripts"/>
+  <title>ozskel</title>
+  <import href="/usr/local/oz/bin/ozskel"/>
+  <src href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/duchier-ozskel.tgz"/>
+  <abstract>
+A shell script that creates the files you need for
+managing/distributing a mozart contribution (e.g.
+<tt>configure.in</tt>,  <tt>Makefile.in</tt>, etc...)
+  </abstract>
+</package>
+<package id="duchier-select">
+  <author id="Denys.Duchier"/>
+  <topic id="cp"/>
+  <title>Select</title>
+  <import href="x-ozlib://duchier/cp/Select.ozf"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/cp/Select.html"/>
+  <src href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/cp/duchier-select.tgz"/>
+  <abstract>
+an implementation of the selection constraint for finite domains and
+finite sets.
+  </abstract>
+</package>
+<package id="duchier-inputsource">
+  <author id="Denys.Duchier"/>
+  <topic id="op"/>
+  <title>InputSource</title>
+  <import href="x-ozlib://duchier/op/InputSource.ozf"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/op/InputSource.html"/>
+  <src href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/op/duchier-inputsource.tgz"/>
+  <abstract>
+a class for reading data from an arbitrary sequence of heterogenous
+sources such as files, urls, strings and virtual strings.
+  </abstract>
+</package>
+<package id="duchier-expat">
+  <author id="Denys.Duchier"/>
+  <topic id="xml"/>
+  <title>Expat</title>
+  <import href="x-ozlib://duchier/xml/expat/Processor.ozf"/>
+  <import href="x-ozlib://duchier/xml/expat/Parser.ozf"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/xml/expat/index.html"/>
+  <src href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/xml/expat/duchier-expat.tgz"/>
+  <abstract>
+A SAX-like XML processor using Jame Clark's expat library, and a
+parser derived from it.
+  </abstract>
+</package>
+<!--                                                               -->
+<!-- AUTHOR: DONATIEN GLOLAUX                                      -->
+<!--                                                               -->
+<package id="glolaux-qtk">
+  <author id="Donatien.Grolaux"/>
+  <topic id="wp"/>
+  <title>QTk</title>
+  <import href="http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf"/>
+  <import href="http://www.info.ucl.ac.be/people/ned/qtk/Prototyper.ozf"/>
+  <doc href="http://www.info.ucl.ac.be/people/ned/qtk/"/>
+  <src href="http://www.info.ucl.ac.be/people/ned/qtk/QTk.tgz"/>
+  <abstract>
+A module for GUI programming, intended as a replacement for the Tk
+module, with many improvements.
+  </abstract>
+</package>
+</database>
