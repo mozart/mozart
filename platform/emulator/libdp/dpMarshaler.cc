@@ -2319,7 +2319,7 @@ void DPMarshalers::dpAllocateMarshalers(int numof)
       if (mus[i].m) delete mus[i].m;
       if (mus[i].b) delete mus[i].b;
     }
-    delete mus;
+    delete [] mus;
 
     //
     musNum = numof;

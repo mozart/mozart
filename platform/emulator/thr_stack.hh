@@ -150,7 +150,7 @@ public:
 
   void pushCont(ProgramCounter pc, RefsArray *y, Abstraction *cap) {
 #ifdef DEBUG_MEM
-    Assert(!y || MemChunks::areRegsInHeap(y,y->getLen()));
+    Assert(!y || MemChunks::areRegsInHeap(y->getArgsRef(), y->getLen()));
 #endif
     Assert(cap);
     pushFrame(pc, y, cap);
@@ -158,6 +158,9 @@ public:
 
   void pushCall(TaggedRef pred, RefsArray * x) {
     pushFrame(C_CALL_CONT_Ptr, (void *) pred, x);
+#ifdef DEBUG_MEM
+    Assert(!x || MemChunks::areRegsInHeap(x->getArgsRef(), x->getLen()));
+#endif
   }
   void pushX(int i) {
     Assert(i >= 0);
@@ -165,6 +168,9 @@ public:
       RefsArray * x = RefsArray::make(XREGS, i);
 #ifdef DEBUG_LIVENESS
       checkLiveness(x);
+#endif
+#ifdef DEBUG_MEM
+    Assert(MemChunks::areRegsInHeap(x->getArgsRef(), x->getLen()));
 #endif
       pushFrame(C_XCONT_Ptr, x, 0);
     }

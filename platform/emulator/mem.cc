@@ -457,34 +457,62 @@ Bool MemChunks::inChunkChain(void *value)
   return NO;
 }
 
-/*
- * debugging aids for memory problems
- */
+//
+extern Bool isCollecting;
+
+//
 Bool MemChunks::isInHeap(TaggedRef term)
 {
-  if (oz_isRef(term) && term != makeTaggedNULL() &&
-      !list->inChunkChain(tagged2Ref(term))) {
-    return NO;
-  }
-  if (!oz_isRef(term)) {
-    switch (tagTypeOf(term)) {
-      // kost@ : let's debug variables as well..  I see though no
-      // system here: what is debugged and what is not.
-    case TAG_VAR:
-    case TAG_LTUPLE:
-    case TAG_CONST:
-      if (oz_isBuiltin(term)) return OK;
-      // no break
-    case TAG_SRECORD:
-      if (!list->inChunkChain(tagged2Addr(term))) {
-        return NO;
+  if (isCollecting)
+    return (OK);
+
+ iterate:
+  switch (tagged2stag(term)) {
+  case STAG_REF0:
+  case STAG_REF1:
+    if (term != makeTaggedNULL()) {
+      TaggedRef *ref = tagged2Ref(term);
+      if (!list->inChunkChain(ref)) {
+        return (NO);
+      } else {
+        term = *ref;
+        goto iterate;
       }
-      break;
-    default:
-      break;
+      Assert(0);
     }
+    break;
+
+  case STAG_MARK:
+    // generic traverser also uses it;
+    break;
+
+  case STAG_VAR:
+    if (!list->inChunkChain(tagged2Var(term)))
+      return (NO);
+    break;
+
+  case STAG_CONST:
+    if (oz_isBuiltin(term))
+      break;
+    if (!list->inChunkChain(tagged2Const(term)))
+      return (NO);
+    break;
+
+  case STAG_LTUPLE:
+    if (!list->inChunkChain(tagged2LTuple(term)))
+      return (NO);
+    break;
+
+  case STAG_SRECORD:
+    if (!list->inChunkChain(tagged2SRecord(term)))
+      return (NO);
+    break;
+
+  default:
+    break;
   }
-  return OK;
+
+  return (OK);
 }
 
 Bool MemChunks::areRegsInHeap(TaggedRef *regs, int sz)

@@ -427,6 +427,7 @@ TaggedRef makeTaggedSmallInt(int i) {
  */
 
 #define _DEREF(term, termPtr)                          \
+  MemAssert(MemChunks::isInHeap(term));                \
   while (oz_isRef(term)) {                             \
     termPtr = tagged2Ref(term);                        \
     term    = *termPtr;                                \
