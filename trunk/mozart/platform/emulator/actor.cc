@@ -96,37 +96,8 @@ void WaitActor::failChildInternal(Board *bb)
   error("WaitActor::failChildInternal");
 }
 
-Board *WaitActor::getChild()
-{
-  int32 maxx = ToInt32(childs[-1]);
-  for (int i = 0; i < maxx; i++) {
-    if (childs[i]) {
-      Board *wb = childs[i];
-      for (; i < maxx-1; i++) {    // the order must be preserved (for solve); 
-	childs[i] = childs[i+1];
-      }
-      childs[maxx-1] = NULL;
-      return (wb);
-    }
-  }
-  error("WaitActor::getChild");
-  return NULL;
-}
-
-Board *WaitActor::getChildRef ()
-{
-  int32 maxx = ToInt32(childs[-1]);
-  for (int i = 0; i < maxx; i++) {
-    if (childs[i]) {
-      return (childs[i]);
-    }
-  }
-  error("WaitActor::getChild");
-  return NULL;
-}
-
 int WaitActor::selectChildren(int l, int r) {
-  int32 maxx      = ToInt32(childs[-1]);
+  int32 maxx = ToInt32(childs[-1]);
 
   if (l<=r && l>=0 && r<childCount) {
     for (int i = l; i <= r; i++)
