@@ -107,18 +107,19 @@ void quicksort(T * x, int l, int r) {
   s.push(l,r);
   while (!s.isEmpty()) {
     s.pop(l,r);
-  nopush:
-    if (r-l <= QuickSortCutoff)
-      continue;
-    sort_swap(x[(l+r)/2],x[r-1]);
-    sort_exchange<T,lt>(x[l],x[r-1]);
-    sort_exchange<T,lt>(x[l],x[r]);
-    sort_exchange<T,lt>(x[r-1],x[r]);
-    int i = partition<T,lt>(x, l+1, r-1);
-    if (i-l > r-i) {
-      s.push(l,i-1); l=i+1; goto nopush;
-    } else {
-      s.push(i+1,r); r=i-1; goto nopush;
+    while (1) {
+      if (r-l <= QuickSortCutoff)
+        break;
+      sort_swap(x[(l+r)/2],x[r-1]);
+      sort_exchange<T,lt>(x[l],x[r-1]);
+      sort_exchange<T,lt>(x[l],x[r]);
+      sort_exchange<T,lt>(x[r-1],x[r]);
+      int i = partition<T,lt>(x, l+1, r-1);
+      if (i-l > r-i) {
+        s.push(l,i-1); l=i+1; //goto nopush;
+      } else {
+        s.push(i+1,r); r=i-1; //goto nopush;
+      }
     }
   }
 }
