@@ -180,6 +180,8 @@ public:
 
   TaggedRef defaultExceptionHandler;
 
+  TaggedRef opiCompiler;
+
   unsigned int lastThreadID;
   unsigned int lastFrameID;
 

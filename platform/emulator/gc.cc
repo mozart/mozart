@@ -1653,6 +1653,7 @@ void AM::gc(int msgLevel)
   gcTagged(newHdl,newHdl);
 
   gcTagged(defaultExceptionHandler,defaultExceptionHandler);
+  gcTagged(opiCompiler,opiCompiler);
   gcTagged(threadStreamTail,threadStreamTail);
 
   gc_tcl_sessions();

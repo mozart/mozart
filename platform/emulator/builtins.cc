@@ -7062,8 +7062,38 @@ OZ_C_proc_end
 
 
 /********************************************************************
- * builtins for the new compiler's environment handling
+ * builtins for the new compiler
+ * (OPI and environment handling)
  ******************************************************************** */
+
+OZ_C_proc_begin(BIsetOPICompiler,1)
+{
+  oz_declareNonvarArg(0,obj);
+  if (!isObject(obj)) {
+    oz_typeError(0,"Object");
+  } else if (am.opiCompiler!=makeTaggedNULL()) {
+    return am.raise(E_ERROR,E_SYSTEM,"opiCompilerAlreadySet",1,
+		    oz_atom("setOPICompiler"));
+  } else {
+    am.opiCompiler = obj;
+    return PROCEED;
+  }
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIgetOPICompiler,1)
+{
+  OZ_declareArg(0,ret);
+  OZ_Term obj = am.opiCompiler;
+
+  if (obj==makeTaggedNULL()) {
+    return am.raise(E_ERROR,E_SYSTEM,"opiCompilerNotInstalled",1,
+		    oz_atom("getOPICompiler"));
+  }
+
+  return OZ_unify(ret,obj);
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BIrunningUnderEmacs,1)
 {
@@ -7708,7 +7738,10 @@ BIspec allSpec[] = {
   {"raise",      1, BIraise,      0},
   {"raiseError", 1, BIraiseError, 0},
 
-  // builtins for the new compiler's environment handling:
+  // builtins for the new compiler
+  // (OPI and environment handling):
+  {"setOPICompiler",             1, BIsetOPICompiler,             0},
+  {"getOPICompiler",             1, BIgetOPICompiler,             0},
   {"runningUnderEmacs",          1, BIrunningUnderEmacs,          0},
   {"isBuiltin",                  2, BIisBuiltin,                  0},
   {"getBuiltinName",             2, BIgetBuiltinName,             0},
