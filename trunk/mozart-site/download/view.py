@@ -361,12 +361,10 @@ def presort_entries(entries):
     l.sort()
     return [ item for key,item in l ]
 
-def print_entries_by_module(items,which,noreset=False):
+def print_entries_by_module(items,which):
     odd = True
     for module,entries in items:
         first = True
-        if not noreset:
-            odd = True
         for e in entries:
             if odd:
                 tr = "<tr class='ODD'>"
@@ -701,9 +699,9 @@ def page_cvs(mozart_version):
     """
     page_table_begin()
     page_table_header("CVS Release Tags")
-    print_entries_by_module(tag,'cvs-tag',noreset=True)
+    print_entries_by_module(tag,'cvs-tag')
     page_table_header("CVS Branch Tags")
-    print_entries_by_module(branch,'cvs-branch',noreset=True)
+    print_entries_by_module(branch,'cvs-branch')
     page_table_end()
     page_div_end()
     page_section("Instructions")
