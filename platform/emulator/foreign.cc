@@ -1914,6 +1914,8 @@ void OZ_addBISpec(OZ_BIspec *spec)
   }
 }
 
+// don't raise errors, because debug info is never included!
+// use OZ_raiseError
 OZ_Return OZ_raise(OZ_Term exc) {
   am.setException(exc,NameUnit,FALSE);
   return RAISE;
