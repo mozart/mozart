@@ -22,6 +22,16 @@
 #   define IncfProfCounter(C,N)
 #endif
 
+#ifdef HEAP_PROFILE
+# define INITCOUNT() ozstat.initCount();
+# define COUNT(WHAT) ozstat.WHAT += 1
+# define COUNT1(WHAT,n) ozstat.WHAT += n
+#else
+# define INITCOUNT()
+# define COUNT(WHAT)
+# define COUNT1(WHAT,n)
+#endif
+
 
 class StatCounter {
 public:
@@ -78,6 +88,40 @@ public:
   void incSolveClone(void)  { solveClone.incf();}
   void incSolveSolved(void) { solveSolved.incf(); }
   void incSolveFailed(void) { solveFailed.incf(); }
+
+#ifdef HEAP_PROFILE
+  void initCount();
+  void printCount();
+  long literal;
+  long ozfloat;
+  long bigInt;
+  long scriptLen; // length of all scripts
+  long refsArray;
+  long refsArrayLen; // length of all refsArrays
+  long continuation;
+  long suspCFun;
+  long suspCont;
+  long sTuple;
+  long sTupleLen;
+  long lTuple;
+  long sRecord;
+  long sRecordLen;
+  long suspension;
+  long suspList;
+  long uvar;
+  long svar;
+  long cvar;
+  long dynamicTable, dynamicTableLen;
+  long taskStack,taskStackLen;
+  long cNervous,cSolve,cLocal,cJob,cCont,cXCont,cDebugCont,cExceptHandler;
+  long cCallCont, cCFuncCont;
+  long abstraction,deepObject,flatObject,cell;
+  long oneCallBuiltin,solvedBuiltin,builtin;
+  long heapChunk,thread;
+  long board,objectClass;
+  long askActor,waitActor,solveActor,waitChild;
+  long solveDLLStack;
+#endif
 };
 
 extern Statistics ozstat;

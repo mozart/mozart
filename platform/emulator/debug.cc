@@ -319,7 +319,7 @@ void showCall(DBGPort port, Board *b, Chunk *def, int arity, TaggedRef *args,
       break;
 
     case DBG_STACK:
-      am.currentThread->printTaskStack(NULL,NO,help);
+      am.currentThread->printTaskStack(NOCODE,NO,help);
       break;
 
     case DBG_EMUL:

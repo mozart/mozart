@@ -86,7 +86,8 @@ public:
   void dispose () { deallocate(array,getMaxSize()); }
   virtual void resize(int newSize);
 
-  void printTaskStack(ProgramCounter pc, Bool verbose = NO, int depth = 10000);
+  void printTaskStack(ProgramCounter pc = NOCODE,
+                      Bool verbose = NO, int depth = 10000);
 
   Bool isEmpty(TaskStackEntry t) { return (t == emptyTaskStackEntry); }
   Bool isEmpty()                 { return isEmpty(*(tos-1)); }

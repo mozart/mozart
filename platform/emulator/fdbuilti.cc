@@ -1523,11 +1523,13 @@ void BIfdBodyManager::printTerm(int i) {
 static
 BIspec fdSpec[] = {
 // fdprofil.cc
+#ifdef PROFILE_FD
   {"fdReset", 0, BIfdReset},
   {"fdDiscard", 0, BIfdDiscard},
   {"fdGetNext", 1, BIfdGetNext},
   {"fdPrint", 0, BIfdPrint},
   {"fdTotalAverage", 0, BIfdTotalAverage},
+#endif
 
 // fdcore.cc
   {"fdIs", 1, BIfdIs},
