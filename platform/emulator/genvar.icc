@@ -18,11 +18,6 @@
 
 
 inline
-void GenCVariable::relinkSuspListTo(GenCVariable * lv, Bool reset_local) {
-  suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
-}
-
-inline
 Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 			 TaggedRef * tptr2, TaggedRef term2,
 			 Bool prop)

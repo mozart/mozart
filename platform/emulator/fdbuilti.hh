@@ -765,7 +765,10 @@ private:
   
   void process(void);
   void processFromTo(int, int);
-  void processLocal(void);
+  void processLocal(void) {
+    processLocalFromTo(0, curr_num_of_vars);
+  }
+
   void processLocalFromTo(int, int);
   void processNonRes(void);
   
@@ -887,14 +890,7 @@ public:
     saveDomainOnTopLevel(i);
   }
 
-  void introduceSpeculative(int i, TaggedRef v) {
-    if (only_local_vars) {
-      introduceLocal(i, v);
-    } else {
-      _introduce(i, v);
-    }
-    setSpeculative(i);
-  }
+  void introduceSpeculative(int i, TaggedRef v);
   
   OZ_Bool checkAndIntroduce(int i, TaggedRef v);
   
@@ -925,24 +921,7 @@ public:
     return EntailFD;
   }
 
-  OZ_Bool entailmentAndSuspOnAny(void) {
-    Assert(FDcurrentTaskSusp);
-    killPropagatedCurrentTaskSusp();
-
-    Bool a = FALSE;
-    
-    if (only_local_vars) {
-      processLocal();
-    } else {
-      a = addAnySuspToTouchedGlobalVars();
-      process();
-    }
-
-    if (a) 
-      activateCurrentTaskSusp();
-
-    return EntailFD;
-  }
+  OZ_Bool entailmentAndSuspOnAny(void);
 
   OZ_Bool entailmentClause(int from_b, int to_b,
 			   int from, int to,
