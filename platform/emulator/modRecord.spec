@@ -98,5 +98,9 @@
                        out => ['+bool','value'],
                        bi  => BItestRecordFeature},
 
+     'aritySublist'=> { in => ['+record','+record'],
+                        out=> ['+bool'],
+                        bi => BIaritySublist},
+
      );
 1;;

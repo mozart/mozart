@@ -2194,6 +2194,39 @@ OZ_BI_define(BItestRecordFeature,2,2)
   }
 } OZ_BI_end
 
+OZ_BI_define(BIaritySublist,2,1)
+{
+  oz_declareNonvarIN(0,a);
+  oz_declareNonvarIN(1,b);
+
+  OZ_Term ar1, ar2;
+  if (oz_isRecord(a)) {
+    ar1 = OZ_arityList(a);
+  } else if (oz_isLiteral(a)) {
+    ar1 = OZ_nil();
+  } else {
+    oz_typeError(0,"Record");
+  }
+  if (oz_isRecord(b)) {
+    ar2 = OZ_arityList(b);
+  } else if (oz_isLiteral(b)) {
+    ar2 = OZ_nil();
+  } else {
+    oz_typeError(1,"Record");
+  }
+
+  while (!OZ_isNil(ar1)) {
+    while (!OZ_isNil(ar2) && !OZ_eq(OZ_head(ar1),OZ_head(ar2))) {
+      ar2 = OZ_tail(ar2);
+    }
+    if (OZ_isNil(ar2)) {
+      OZ_RETURN(oz_false());
+    }
+    ar1 = OZ_tail(ar1);
+  }
+  OZ_RETURN(oz_true());
+} OZ_BI_end
+
 /* -----------------------------------------------------------------------
    Numbers
    ----------------------------------------------------------------------- */
