@@ -2155,7 +2155,7 @@ ConstTerm *ConstTerm::gcConstTerm()
       Abstraction *a = (Abstraction *) this;
       CheckLocal(a);
       sz = a->isProxy() ? sizeof(ProcProxy) : sizeof(Abstraction);
-      dogcGName(a->getGName());
+      dogcGName(a->getGName1());
       a->getPred()->gcPrTabEntry();
       COUNT(abstraction);
       break;
@@ -2166,7 +2166,7 @@ ConstTerm *ConstTerm::gcConstTerm()
       Object *o = (Object *) this;
       CheckLocal(o);
       sz = sizeof(Object);
-      dogcGName(o->getGName());
+      dogcGName(o->getGName1());
       break;
     }
   case Co_Cell:
@@ -2226,7 +2226,7 @@ ConstTerm *ConstTerm::gcConstTerm()
     CheckLocal((SChunk *) this);
     sz = sizeof(SChunk);
     COUNT(chunk);
-    dogcGName(((SChunk *) this)->getGName());
+    dogcGName(getGName1());
     break;
 
   case Co_Array:
