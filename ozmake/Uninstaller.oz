@@ -3,13 +3,22 @@ export
    'class' : Uninstaller
 prepare
    VSToAtom = VirtualString.toAtom
+import
+   Utils at 'Utils.ozf'
 define
    class Uninstaller
 
       meth uninstall
 	 MOG =
 	 if {self get_package_given($)} then
-	    {VSToAtom {self get_package($)}}
+	    Pkg={self get_package($)}
+	 in
+	    if {Utils.isMogulID Pkg} then
+	       {VSToAtom {self get_package($)}}
+	    elsecase {self load_extract_mogulid(Pkg $)}
+	    of unit then
+	       raise ozmake(uninstall:bizzarepackage(Pkg)) end
+	    [] A then A end
 	 else
 	    {self makefile_read}
 	    if {self get_no_makefile($)} then

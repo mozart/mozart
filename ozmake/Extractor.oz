@@ -118,5 +118,13 @@ define
 	 catch _ then raise ozmake(extract:load(PKG)) end end
       end
 
+      meth load_extract_mogulid(PKG $)
+	 S={CondSelect
+	    {CondSelect (Extractor,Load(PKG $)) info unit}
+	    mogul unit}
+      in
+	 if S\=unit then {VirtualString.toAtom S} else unit end
+      end
+
    end
 end
