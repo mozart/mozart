@@ -2602,9 +2602,19 @@ LBLdispatcher:
        }
 
        if (e->debugmode()) {
-	 execBreakpoint(CTT,NO);
-	 debugStreamRaise(CTT,e->exception.value);
-	 goto LBLpreemption;
+	 OZ_Term exc = e->exception.value;
+	 if (OZ_isRecord(exc) &&
+	     OZ_eq(OZ_label(exc),OZ_atom("system")) &&
+	     tagged2SRecord(exc)->getFeature(OZ_int(1)) != makeTaggedNULL() &&
+	     OZ_eq(OZ_label(OZ_subtree(exc,OZ_int(1))),OZ_atom("kernel")) &&
+	     OZ_eq(OZ_subtree(OZ_subtree(exc,OZ_int(1)),OZ_int(1)),
+		   OZ_atom("terminate")))
+	   ;
+	 else {
+	   execBreakpoint(CTT,NO);
+	   debugStreamRaise(CTT,e->exception.value);
+	   goto LBLpreemption;
+	 }
        }
        // else
        RefsArray argsArray = allocateRefsArray(1,NO);
