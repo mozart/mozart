@@ -16,6 +16,10 @@ listed here will be removed in future releases.
 
 <P>The limitations are:
 <list>
+<item>Threads, dictionaries, arrays, and spaces are sited,
+even though they are in base modules.
+In future releases, they will be made unsited.
+
 <item>The code of functions, procedures, classes, and functors
 (but not objects) is always inserted in messages,
 even this code is already present at the destination.
@@ -24,21 +28,28 @@ across the network only
 if they are not present on the destination site.
 In both current and future releases, at most a single copy
 of these entities can exist per site.
+
 <item>The fault state <<tempFail>> is indicated only after
 a long delay.
+
 <item>If an exception is raised or a handler or watcher
 is invoked for an <EM>object</EM>,
 then the <<Entity>> argument is undefined.
 For handlers and watchers, this limitation can
 be circumvented by letting the handler or watcher
 reference the object.
+
 <item>If an exception is raised or a handler is invoked
 for an <EM>object</EM>,
 then the attempted object operation cannot be retried.
-<item>A handler cannot be installed at the <<global>> level,
-i.e., the call <<{Fault.install _ global _ _}>> is undefined.
-If an attempt is made to install a <<global>> handler,
-then a <<notImplemented>> exception is given.
+
+<item>Enabling or installation cannot be done at the <<global>> level.
+In other words, the calls
+<<{Fault.enable _ global _}>> and
+<<{Fault.install _ global _ _}>> are undefined.
+If an attempt is made to enable a <<global>> exception
+or install a <<global>> handler,
+then an exception <<error(dp('not implemented') ...)>> is given.
 </list>
 
 <SECTION><TITLE>Modifications</TITLE>
