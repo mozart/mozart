@@ -2066,7 +2066,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           } else if (oz_isVar(vd)) {
             OzVariable *var = tagged2Var(vd);
             Assert(var->getType() == OZ_VAR_EXT);
-            ExtVar *evar = (ExtVar *) var;
+            ExtVar *evar = var2ExtVar(var);
             Assert(evar->getIdV() == OZ_EVAR_LAZY);
             LazyVar *lvar = (LazyVar *) evar;
             Assert(lvar->getLazyType() == LT_CLASS);
@@ -2111,7 +2111,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           } else if (oz_isVar(vd)) {
             OzVariable *var = tagged2Var(vd);
             Assert(var->getType() == OZ_VAR_EXT);
-            ExtVar *evar = (ExtVar *) var;
+            ExtVar *evar = var2ExtVar(var);
             Assert(evar->getIdV() == OZ_EVAR_LAZY);
             LazyVar *lvar = (LazyVar *) evar;
             Assert(lvar->getLazyType() == LT_CLASS);
@@ -2252,7 +2252,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           } else if (oz_isVar(vd)) {
             OzVariable *var = tagged2Var(vd);
             Assert(var->getType() == OZ_VAR_EXT);
-            ExtVar *evar = (ExtVar *) var;
+            ExtVar *evar = var2ExtVar(var);
             Assert(evar->getIdV() == OZ_EVAR_LAZY);
             LazyVar *lvar = (LazyVar *) evar;
             Assert(lvar->getLazyType() == LT_OBJECT);
@@ -2298,7 +2298,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           } else if (oz_isVar(vd)) {
             OzVariable *var = tagged2Var(vd);
             Assert(var->getType() == OZ_VAR_EXT);
-            ExtVar *evar = (ExtVar *) var;
+            ExtVar *evar = var2ExtVar(var);
             Assert(evar->getIdV() == OZ_EVAR_LAZY);
             LazyVar *lvar = (LazyVar *) evar;
             Assert(lvar->getLazyType() == LT_OBJECT);

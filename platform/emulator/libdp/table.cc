@@ -105,7 +105,7 @@ void BorrowEntry::freeBorrowEntry()
   }
   if (!isPersistent())
     remoteRef.dropReference();
-  DebugCode(setFlags(-1););
+  DebugCode(setFlags((unsigned short) -1););
 }
 
 void BorrowEntry::gcBorrowRoot()

@@ -200,7 +200,7 @@ public:
 
   //
   void localize();
-  ~OwnerEntry() { DebugCode(setFlags(-1);); }
+  ~OwnerEntry() { DebugCode(setFlags((unsigned short) -1);); }
 
   // credits;
   inline RRinstance *getCreditBig() {

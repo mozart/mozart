@@ -88,14 +88,14 @@ void ClassVar::disposeV()
     delete dsl;
     dsl = ne;
   }
-  oz_freeListDispose(this, sizeof(ClassVar));
+  freeListDispose(sizeof(ClassVar));
 }
 
 //
 TaggedRef newClassProxy(OB_TIndex bi, GName *gnclass)
 {
   ClassVar *pvar = new ClassVar(oz_currentBoard(), bi, gnclass);
-  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
+  TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(pvar)));
   return (val);
 }
 
@@ -106,5 +106,5 @@ void ClassVar::transfer(OZ_Term cl, OZ_Term *cvtp)
   Assert(gnobj->getValue() == cl);
 
   //
-  oz_bindLocalVar(this, cvtp, cl);
+  oz_bindLocalVar(extVar2Var(this), cvtp, cl);
 }

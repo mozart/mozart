@@ -92,7 +92,7 @@ public:
   Bool sendRequest(DSite *ds);
 
   //
-  virtual OzVariable *gCollectV() { return (new ClassVar(*this)); }
+  virtual ExtVar *gCollectV() { return (new ClassVar(*this)); }
   virtual void gCollectRecurseV(void);
   virtual void disposeV(void);
 

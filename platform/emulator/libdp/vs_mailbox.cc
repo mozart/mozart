@@ -297,13 +297,12 @@ VSMailboxManagerImported* VSMailboxRegister::find(key_t key)
   GenHashNode *aux = htFindFirst(hvalue);
   while(aux) {
     key_t auxKey;
-    GenCast(aux->getBaseKey(), GenHashBaseKey*, auxKey, key_t);
+    auxKey = (key_t) aux->getBaseKey();
 
     //
     if (key == auxKey) {
       VSMailboxManagerImported *mailboxManager;
-      GenCast(aux->getEntry(), GenHashEntry*,
-              mailboxManager, VSMailboxManagerImported*);
+      mailboxManager = (VSMailboxManagerImported*) aux->getEntry();
       return (mailboxManager);
     }
 
@@ -323,8 +322,8 @@ void VSMailboxRegister::add(key_t key, VSMailboxManagerImported *pool)
   int hvalue = hash(key);
 
   //
-  GenCast(key, key_t, ghn_bk, GenHashBaseKey*);
-  GenCast(pool, VSMailboxManagerImported*, ghn_e, GenHashEntry*);
+  ghn_bk = (GenHashBaseKey*) key;
+  ghn_e = (GenHashEntry*) pool;
   //
   htAdd(hvalue, ghn_bk, ghn_e);
 }
@@ -335,8 +334,7 @@ VSMailboxManagerImported *VSMailboxRegister::getFirst()
   VSMailboxManagerImported *mbm;
   seqGHN = GenHashTable::getFirst(seqIndex);
   if (seqGHN) {
-    GenCast(seqGHN->getEntry(), GenHashEntry*,
-            mbm, VSMailboxManagerImported*);
+    mbm = (VSMailboxManagerImported*) seqGHN->getEntry();
   } else {
     mbm = (VSMailboxManagerImported *) 0;
   }
@@ -349,8 +347,7 @@ VSMailboxManagerImported* VSMailboxRegister::getNext()
   VSMailboxManagerImported *mbm;
   seqGHN = GenHashTable::getNext(seqGHN, seqIndex);
   if (seqGHN) {
-    GenCast(seqGHN->getEntry(), GenHashEntry*,
-            mbm, VSMailboxManagerImported*);
+    mbm = (VSMailboxManagerImported*) seqGHN->getEntry();
   } else {
     mbm = (VSMailboxManagerImported *) 0;
   }
