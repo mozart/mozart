@@ -32,7 +32,7 @@
 #include "genvar.hh"
 #include "runtime.hh"
 
-void Promise::request()
+void Future::request()
 {
   if (oz_isRef(requested)) {
     oz_bind_global(requested,oz_unit());
@@ -40,7 +40,7 @@ void Promise::request()
   requested=oz_true();
 }
 
-OZ_Return Promise::waitRequest(TaggedRef *v)
+OZ_Return Future::waitRequest(TaggedRef *v)
 {
   if (oz_eq(requested,oz_false())) {
     requested=oz_newVar(GETBOARD(this));
@@ -55,7 +55,7 @@ OZ_Return Promise::waitRequest(TaggedRef *v)
   }
 }   
     
-OZ_Return Promise::unifyPromise(TaggedRef* vPtr)
+OZ_Return Future::unifyFuture(TaggedRef* vPtr)
 {
   request();
 
@@ -63,7 +63,7 @@ OZ_Return Promise::unifyPromise(TaggedRef* vPtr)
   return SUSPEND;
 }
 
-void Promise::addSuspPromise(TaggedRef *vPtr, Thread*th,int unstable)
+void Future::addSuspFuture(TaggedRef *vPtr, Thread*th,int unstable)
 {
   request();
 
@@ -72,46 +72,63 @@ void Promise::addSuspPromise(TaggedRef *vPtr, Thread*th,int unstable)
 
 OZ_BI_define(BIPromiseNew,0,1)
 {
-  Promise *pr = new Promise();
-  OZ_Term var=makeTaggedRef(newTaggedCVar(pr));
-  OZ_RETURN(oz_newPromise());
+  TaggedRef *p = newTaggedCVar(new Future());
+  OZ_RETURN(makeTaggedPromise(p));
 } OZ_BI_end
 
-OZ_Return promiseAssign(OZ_Term var, OZ_Term val)
+OZ_Return promiseAssign(OZ_Term p, OZ_Term val)
 {
-  DEREF(var,varPtr,varTag);
+  TaggedRef *varPtr = tagged2Promise(p);
+  TaggedRef var=*varPtr;
   if (isCVar(var)) {
     GenCVariable *cvar=tagged2CVar(var);
-    if (cvar->getType()==PROMISE) {
-      Promise *l=(Promise *)cvar;
+    if (cvar->getType()==FUTURE) {
+      Future *l=(Future *)cvar;
       CheckLocalBoard(l,"promise");
-      if (oz_deref(val)==var) {
+      if (oz_deref(val)==var) { // mm2
 	return oz_raise(E_ERROR,E_KERNEL,"promiseAssignToItself",
 			1,makeTaggedRef(varPtr));
       }
       oz_bind_global(makeTaggedRef(varPtr),val);
-      l->dispose();
       return PROCEED;
     }
   }
-  oz_typeError(1,"Promise");
+  return oz_raise(E_ERROR,E_KERNEL,"promiseAssignTwice",
+		  1,makeTaggedRef(varPtr));
 }
 
 OZ_BI_define(BIPromiseAssign,2,0)
 {
-  OZ_Term var = OZ_in(0);
-  OZ_Term val = OZ_in(1);
-  return promiseAssign(var,val);
+  oz_declareNonvarIN(0,p);
+  oz_declareIN(1,val);
+  if (!oz_isPromise(p)) {
+    oz_typeError(0,"Promise");
+  }
+  return promiseAssign(p,val);
+} OZ_BI_end
+
+OZ_BI_define(BIPromiseAccess,1,1)
+{
+  oz_declareNonvarIN(0,p);
+  if (!oz_isPromise(p)) {
+    oz_typeError(0,"Promise");
+  }
+  TaggedRef *varPtr = tagged2Promise(p);
+  OZ_RETURN(makeTaggedRef(varPtr));
 } OZ_BI_end
 
 OZ_BI_define(BIPromiseWaitRequest,1,0)
 {
-  OZ_Term var = OZ_in(0);
-  DEREF(var,varPtr,varTag);
+  oz_declareNonvarIN(0,p);
+  if (!oz_isPromise(p)) {
+    oz_typeError(0,"Promise");
+  }
+  TaggedRef *varPtr = tagged2Promise(p);
+  TaggedRef var = *varPtr;
   if (!isCVar(var)) return PROCEED;
   GenCVariable *cvar=tagged2CVar(var);
-  if (cvar->getType() != PROMISE) return PROCEED;
-  Promise *l=(Promise *)cvar;
+  if (cvar->getType() != FUTURE) return PROCEED;
+  Future *l=(Future *)cvar;
 
   CheckLocalBoard(l,"promise");
 
@@ -120,6 +137,6 @@ OZ_BI_define(BIPromiseWaitRequest,1,0)
 
 OZ_BI_define(BIPromiseIs,1,1)
 {
-  OZ_declareIN(0,var);
-  OZ_RETURN(isPromise(oz_deref(var))?oz_true():oz_false());
+  oz_declareNonvarIN(0,p);
+  OZ_RETURN(oz_isPromise(p)?oz_true():oz_false());
 } OZ_BI_end
