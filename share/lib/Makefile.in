@@ -356,7 +356,7 @@ stage1:
 # stage2: recreate the functors and boot compiler using the stage1 functors
 stage2:
         $(MAKE) install-stage PREFIX=$(STAGE2) \
-                OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:= \
+                OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:prefix=./=./:.:= \
                 OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
                 OZINIT=$(STAGE1)/share/Init.ozf \
                 OZAR=$(STAGE1)/bin/ozar
@@ -370,7 +370,7 @@ stage3:
                 BOOTOZCTXTFROM=$(STAGE2)/share/$(BOOTOZCTXT)
         $(MAKE) install-stage \
                 PREFIX=$(STAGE3) \
-                OZ_LOAD=prefix=$(URL)/share/=./:.:prefix=/=/:= \
+                OZ_LOAD=prefix=$(URL)/share/=./:prefix=./=./:.:prefix=/=/:= \
                 OZC=$(SRCDIR)/boot-ozc.sh \
                 OZINIT=Init.ozf \
                 OZAR=ozar
@@ -439,7 +439,7 @@ boot-init: $(BOOTINITTXTFROM)
 # may have been side-effected and may contains stateful stuff
 
 boot-ozc.ar: ozc ozar Compiler.ozf Type.ozf
-        OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh $(OZAR) --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates --in=$< --out=$@
+        OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh $(OZAR) --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates --in=$< --out=$@
 
 boot-init.ar: Init.ozf
         cp $< $@
