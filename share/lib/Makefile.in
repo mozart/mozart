@@ -56,7 +56,7 @@ SPSRC   = Error ErrorFormatters Finalize
 OPSRC   = Open
 APSRC   = Application
 CPSRC1  = Search FD FS
-CPSRC2  = Schedule ParSearch ParWorker
+CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Remote RemoteServer Fault URL
 WPSRC   = Tk TkTools
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
@@ -162,10 +162,13 @@ ParSearchTmp.ozf: cp/par/ParSearch.oz \
 ParWorkerTmp.ozf: cp/par/ParWorker.oz \
         ParLogging.ozf ParTraceSpace.ozf ParServer.ozf
         $(COMPILE) $< -o $@
+ParLoggingTmp.ozf: cp/par/ParLogging.oz
+        $(COMPILE) $< -o $@
 ParWorker.ozf: ParWorkerTmp.ozf ozl
         $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
-ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf \
-        ParLogging.ozf ozl
+ParLogging.ozf: ParLoggingTmp.ozf ParStatistics.ozf ozl
+        $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl
         $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
 %.ozf: cp/par/%.oz Base.ozf
         $(COMPILE) $< -o $@
