@@ -7241,6 +7241,7 @@ BIspec allSpec[] = {
   {"suspensions",2,BIsuspensions},
 
   // Debugging
+  {"debugmode",1,BIdebugmode},
   {"globalThreadStream",1,BIglobalThreadStream},
   {"currentThread",1,BIcurrentThread},
   {"setContFlag",2,BIsetContFlag},
