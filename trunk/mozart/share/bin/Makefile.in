@@ -21,6 +21,7 @@
 #  of this file, and for a DISCLAIMER OF ALL 
 #  WARRANTIES.
 
+BUILDTOP=	@BUILDTOP@
 PREFIX=		@prefix@
 
 SRCDIR		= @srcdir@
@@ -34,9 +35,10 @@ INSTALL_BIN	= $(INSTALL) -m 555
 SCRIPTS = oz ozplatform ozdynld
 LINKS   = ozdo ozapplet ozengine
 
-.PHONY: all install clean distclean win-install
+.PHONY: bootstrap all install clean distclean win-install
 
 all: version.h
+bootstrap: all
 
 install: $(BINDIR)
 	$(INSTALL_BIN) $(SCRIPTS:%=$(SRCDIR)/%) $(BINDIR)
