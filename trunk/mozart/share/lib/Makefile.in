@@ -286,6 +286,9 @@ realclean: clean
 veryclean: realclean
 	$(RM) TAGS
 
+distclean: veryclean
+	$(RM) Makefile
+
 $(OZLIB) $(OZLIBDIRS) $(BITMAPDIR) $(OZCARBITMAPDIR) $(OZBIN):
 	$(INSTALLDIR) $@
 
