@@ -157,13 +157,13 @@ void Actor::InitSolve()
     makeTaggedLTuple(new LTuple(makeTaggedAtom(StatusAtom),
                                 makeTaggedAtom(NameOfNil)));
   SolveContArity = SRecord::aritytable.find(SolveContFList);
-  solvedAtom = makeTaggedAtom (SolvedAtom);
-  enumedAtom = makeTaggedAtom (EnumedAtom);
-  lastAtom = makeTaggedAtom (LastAtom);
-  moreAtom = makeTaggedAtom (MoreAtom);
-  entailedAtom = makeTaggedAtom (EntailedAtom);
-  stableAtom = makeTaggedAtom (StableAtom);
-  failedAtom = makeTaggedAtom (FailedAtom);
+  solvedAtom     = makeTaggedAtom (SolvedAtom);
+  enumedAtom     = makeTaggedAtom (EnumedAtom);
+  lastAtom       = makeTaggedAtom (LastAtom);
+  moreAtom       = makeTaggedAtom (MoreAtom);
+  entailedAtom   = makeTaggedAtom (EntailedAtom);
+  stableAtom     = makeTaggedAtom (StableAtom);
+  failedAtom     = makeTaggedAtom (FailedAtom);
 
 }
 

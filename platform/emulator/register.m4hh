@@ -94,14 +94,26 @@ define(M4INSTRTWOREGS,``''
     }
 
   M4INSTRONEREG(CREATENAMEDVARIABLE,
-                ``
-                SVariable *svar
-                = new SVariable(CBB,
-                                makeTaggedAtom(getAtomArg(PC+2)));
-                Reg1(getRegArg(PC+1)) = makeTaggedRef(newTaggedSVar(svar));
-               ''
-               DISPATCH(3);
-               );
+    ``
+    {
+      int regIndex = getRegArg(PC+1);
+      DebugCheck(&Reg1(0)!= &am.globalStore[0],
+                 error("createNamedVar: am.globalStore expected"););
+      int size = getRefsArraySize(am.globalStore);
+      if (size <= regIndex) {
+        int newSize = int(size*1.5);
+        message("resizing store for toplevel vars from %d to %d\n",
+                size,newSize);
+        am.globalStore = resize(am.globalStore,newSize);
+        Y = am.globalStore;
+        // do deletion of old array --> GC does it
+      }
+      SVariable *svar = new SVariable(CBB, makeTaggedAtom(getAtomArg(PC+2)));
+      Reg1(regIndex) = makeTaggedRef(newTaggedSVar(svar));
+    }
+    ''
+    DISPATCH(3);
+    );
 
   M4INSTRONEREG( CREATEVARIABLE,
                ``

@@ -21,6 +21,7 @@ exported:
 #endif
 
 #include <ctype.h>
+#include <strstream.h>
 
 #include "actor.hh"
 #include "am.hh"
@@ -28,14 +29,11 @@ exported:
 #include "bignum.hh"
 #include "board.hh"
 #include "cell.hh"
-#include "codeArea.hh"
 #include "fdgenvar.hh"
 #include "fdomn.hh"
-#include "genvar.hh"
 #include "misc.hh"
 #include "records.hh"
 #include "taskstack.hh"
-#include "term.hh"
 #include "thread.hh"
 #include "objects.hh"
 
@@ -969,7 +967,7 @@ PRINT(TaskStack)
   if (isEmpty() == OK) {
     stream << "*** empty ***";
   } else {
-    for (void **i = top - 1; i != stack; i--) {
+    for (void **i = tos - 1; i != array; i--) {
       stream << "@" << *i << ",";
     }
   }

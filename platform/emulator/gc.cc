@@ -74,8 +74,6 @@ void performCopying(void);
                           printChunkChain(from = heapGetStart());
 #   define INFROMSPACE(P)                                                     \
       if (opMode == IN_GC && P != NULL && !inChunkChain(from, (void*)P))      \
-         if ((void*)P < (void*)am.globalStore ||                             \
-         ((void*)(am.globalStore + NumberOfYRegisters)) < (void*)P)          \
            error("NOT taken from heap.");
 #   define INTOSPACE(P)                                                       \
       if (opMode == IN_GC && P != NULL && inChunkChain(heapGetStart(), (void*)P)) \
@@ -191,15 +189,15 @@ inline Bool needsNoCollection(TaggedRef t)
 
 inline void RebindTrail::gc()
 {
-  DebugCheck(!isEmpty(),
-             error("Inconsistency found:\n\tRebind trail should be empty."););
+  DebugCheck(!empty(),
+             error("RebindTrail::gc: trail is not empty"););
 }
 
 
 // cursor points to next free position
 inline void Trail::gc()
 {
-  DebugCheck(lowBound < cursor,
+  DebugCheck(!empty(),
              error("Trail::gc: trail is not empty"););
 }
 
@@ -518,18 +516,13 @@ inline SuspContinuation *SuspContinuation::gcCont()
   return ret;
 }
 
-// am.globalStore is the only RefsArray which is not allocated on heap but
-// has to be garbage collected. There may be references to am.globalStore
-// from within the tree and that's why there is an if-statement at the
-// beginning of gcRefsArray necessary.
-
 // Structure of type 'RefsArray' (see ./tagged.h)
 // r[0]..r[n-1] data
 // r[-1] gc bit set --> has already been copied
 
 RefsArray gcRefsArray(RefsArray r)
 {
-  if ( (r == NULL) || (r == am.globalStore))
+  if (r == NULL)
     return r;
 
   INTOSPACE(r);
@@ -1070,10 +1063,8 @@ void AM::gc(int msgLevel) {
     }
   performCopying();
 
-  // collect only the entry points into heap (don't copy 'globalStore')
   GCPROCMSG("globalStore");
-  for(i = 0; i < getRefsArraySize(am.globalStore); i++)
-    gcTagged(am.globalStore[i],am.globalStore[i]);
+  am.globalStore = gcRefsArray(am.globalStore);
 
   GCPROCMSG("updating external references to terms into heap");
   ExtRefNode::gc();
@@ -1280,164 +1271,67 @@ void CodeArea::gc()
 TaskStack *TaskStack::gc()
 {
   TaskStack *newStack = new TaskStack(size);
-  Board *newBB;
 
-  int usedSize = gcGetUsedSize();
-
-  if (usedSize == 0) {
-    return newStack;
-  }
-
-  newStack->gcInit(usedSize);
+  newStack->gcInit();
 
   while (!isEmpty()) {
 
     TaggedBoard tb = (TaggedBoard) pop();
     ContFlag cFlag = getContFlag(tb);
-    Board *bb = clrContFlag(tb, cFlag);
-    RefsArray ra;
+    Board *newBB = getBoard(tb, cFlag)->gcBoard();
+
+    if (newBB == NULL) {
+      switch (cFlag){
+      case C_NERVOUS:    continue;
+      case C_XCONT:      pop(4); continue;
+      case C_CONT:       pop(3); continue;
+      case C_DEBUG_CONT: pop(1); continue;
+      case C_CFUNC_CONT: pop(3); continue;
+      }
+    }
+
+    newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
 
     switch (cFlag){
-      case C_NERVOUS:
-      newBB = bb->gcBoard();
-      if (newBB) {
-        newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
-      }
+
+    case C_NERVOUS:
+      break;
+
+    case C_CONT:
+      newStack->gcQueue(pop());                           // PC
+      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // Y
+      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // G
       break;
 
     case C_XCONT:
-    case C_CONT:
-      // Continuation to continue at codearea PC
-      newBB = bb->gcBoard();
-      if (!newBB) {
-        pop(); // pc
-        pop(); // Y
-        pop(); // G
-
-        if (cFlag == C_XCONT) {
-          pop();
-        }
-        break;
-      }
-
-      newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
-
-      newStack->gcQueue(pop()); // pc
-      // y
-      ra = (RefsArray) pop();
-      newStack->gcQueue(gcRefsArray(ra));
-      // g
-      ra = (RefsArray) pop();
-      newStack->gcQueue(gcRefsArray(ra));
-
-      if (cFlag == C_XCONT) {
-        ra = (RefsArray) pop();
-        newStack->gcQueue(gcRefsArray(ra));
-      } // if
+      newStack->gcQueue(pop());                           // PC
+      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // Y
+      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // G
+      newStack->gcQueue(gcRefsArray((RefsArray) pop()));  // X
       break;
 
     case C_DEBUG_CONT:
-      newBB = bb->gcBoard();
-      if (!newBB) {
-        pop(); // OzDebug *
-        break;
-      }
-
-      newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
-
-      OzDebug *deb = (OzDebug*) pop();
-      newStack->gcQueue(deb->gcOzDebug());
+      newStack->gcQueue(((OzDebug*) pop())->gcOzDebug());
       break;
 
     case C_CFUNC_CONT:
-      {
-        // Continuation to continue at c codeaddress
-        newBB = bb->gcBoard();
-        if (!newBB) {
-          pop(); // BIFun
-          pop(); // Suspension
-          pop(); // x regs
-          break;
-        } // if
-
-        newStack->gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
-
-        newStack->gcQueue(pop()); // BIFun
-
-        Suspension* susp = (Suspension*) pop();
-        newStack->gcQueue(susp->gcSuspension());
-
-        ra = (RefsArray) pop();
-        newStack->gcQueue(gcRefsArray(ra));
-
-        break;
-      }
+      newStack->gcQueue(pop());                // BIFun
+      newStack->gcQueue(((Suspension*) pop())->gcSuspension());
+      newStack->gcQueue(gcRefsArray((RefsArray) pop()));
+      break;
 
     default:
       error("Unexpected case in TaskStack::gc().");
       break;
-    } // switch
+    }
   } // while not task stack is empty
 
-  newStack->gcEnd(usedSize);
+  newStack->gcEnd();
 
   return newStack;
 } // TaskStack::gc
 
 
-int TaskStack::gcGetUsedSize()
-{
-  int ret = 0;
-  void **oldTop = top;
-
-  while (!isEmpty()) {
-    TaggedBoard tb = (TaggedBoard) pop();
-    ContFlag cFlag = getContFlag(tb);
-    Board *n = clrContFlag(tb, cFlag);
-
-    switch (cFlag){
-    case C_NERVOUS:
-      if (n->gcGetBoardDeref()) {
-        ret++;
-      }
-      break;
-
-    case C_XCONT:
-      pop(4);
-      if (n->gcGetBoardDeref()) {
-        ret += 5;
-      }
-      break;
-
-    case C_CONT:
-      pop(3);
-      if (n->gcGetBoardDeref()) {
-        ret += 4;
-      }
-      break;
-
-    case C_DEBUG_CONT:
-      pop(1);
-      if (n->gcGetBoardDeref()) {
-        ret += 2;
-      }
-      break;
-
-    case C_CFUNC_CONT:
-      pop(3);
-      if (n->gcGetBoardDeref()) {
-        ret += 4;
-      }
-      break;
-
-    default:
-      error("Unexpected case in TaskStack::gcGetUsedSize().");
-      break;
-    } // switch
-  } // while
-  top = oldTop;
-  return ret;
-}
 
 //*****************************************************************************
 //                           NODEs

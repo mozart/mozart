@@ -48,6 +48,8 @@
 #include "ozdebug.hh"
 #include "fdAddOn.hh"
 
+
+
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE
 
@@ -159,6 +161,41 @@
 
 #define GET_CURRENT_PRIORITY() e->currentThread->getPriority()
 
+HookValue emulateHookOutline(Abstraction *def, int arity, TaggedRef *args)
+{
+  // without signal blocking;
+  if (am.isSetSFlag(ThreadSwitch)) {
+    if (Thread::QueueIsEmpty()
+        || Thread::GetHead()->getPriority() < am.currentThread->getPriority()) {
+      Alarm::RestartProcess();
+    } else {
+      return HOOK_SCHEDULE;
+    }
+  }
+  if (am.isSetSFlag(StartGC)) {
+    return HOOK_SCHEDULE;
+  }
+
+  blockSignals();
+  // & with blocking of signals;
+  if (am.isSetSFlag(UserAlarm)) {
+    Alarm::HandleUser();
+  }
+  if (am.isSetSFlag(IOReady)) {
+    IO::handleIO();
+  }
+
+  unblockSignals();
+
+  if (def && am.isSetSFlag(DebugMode)) {
+    enterCall(am.currentBoard,def,arity,args);
+  }
+
+  return HOOK_OK;
+}
+
+
+
 inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
 {
 #ifdef DEBUG_DET
@@ -166,41 +203,14 @@ inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
 #endif
 
   if (am.isSetSFlag()) {
-    // without signal blocking;
-    if (am.isSetSFlag(ThreadSwitch)) {
-      if (Thread::QueueIsEmpty()
-          || Thread::GetHead()->getPriority() < am.currentThread->getPriority()) {
-        Alarm::RestartProcess();
-      } else {
-        return HOOK_SCHEDULE;
-      }
-    }
-    if (am.isSetSFlag(StartGC)) {
-      return HOOK_SCHEDULE;
-    }
-
-    blockSignals();
-    // & with blocking of signals;
-    if (am.isSetSFlag(UserAlarm)) {
-      Alarm::HandleUser();
-    }
-    if (am.isSetSFlag(IOReady)) {
-      IO::handleIO();
-    }
-
-    unblockSignals();
-
-    if (def && am.isSetSFlag(DebugMode)) {
-      enterCall(am.currentBoard,def,arity,args);
-    }
-
-    return HOOK_OK;
-  } else {
-    return HOOK_OK;
+    return emulateHookOutline(def,arity,args);
   }
+  return HOOK_OK;
 }
 
-inline TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
+
+
+TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 {
   if (arity == 0) {
     return makeTaggedAtom(label);
@@ -327,20 +337,21 @@ inline TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
     }                                                                         \
   }
 
-void engine() {
 
-// ------------------------------------------------------------------------
-// *** Global Variables
-// ------------------------------------------------------------------------
 
 /* define REGOPT if you want the into register optimization for GCC */
-/*#define REGOPT    /* fuer Fortgeschrittene!  */
 #if __GNUC__ >= 2 && defined(sparc) && !defined(DEBUG_CHECK) && defined(REGOPT)
 #define Into(Reg) asm(#Reg)
 #else
 #define Into(Reg)
 #endif
 
+
+void engine() {
+
+// ------------------------------------------------------------------------
+// *** Global Variables
+// ------------------------------------------------------------------------
 
   register ProgramCounter PC Into(i0) = 0;
 
@@ -356,10 +367,6 @@ void engine() {
   int XSize = 0;
 
   Bool isExecute = NO;
-#ifdef DEBUG_CHECK
-  Bool isExecutePlus = NO;
-  RefsArray GPlus, YPlus;
-#endif
   extern Suspension* FDcurrentTaskSusp; // see fdAddOn
   Suspension* &currentTaskSusp = FDcurrentTaskSusp;
   AWActor *CAA = NULL;
@@ -376,6 +383,7 @@ void engine() {
   SRecord *predicate;
   int predArity;
   ProgramCounter contAdr;
+
 #if defined THREADED && THREADED > 0
 
 #  include "instrTable.hh"
@@ -511,7 +519,8 @@ void engine() {
         goto LBLTaskEmpty;
       }
       ContFlag cFlag = getContFlag(tb);
-      tmpBB = clrContFlag(tb,cFlag)->getBoardDeref();
+      tmpBB = getBoard(tb,cFlag)->getBoardDeref();
+
       switch (cFlag){
       case C_CONT:
         PC = (ProgramCounter) TaskStackPop(--topCache);
@@ -645,7 +654,6 @@ void engine() {
 
 
   LBLTaskCont:
-    DebugCheckT(GPlus = G; YPlus = Y);
     tmpBB->removeSuspension();
 
     INSTALLPATH(tmpBB);
@@ -691,7 +699,6 @@ void engine() {
                 goto LBLfailure;
               }
               );
-
 
   switch (op) {
 
@@ -1161,7 +1168,6 @@ void engine() {
 
   INSTRUCTION(SHALLOWTHEN)
     {
-      int argsToSave = getPosIntArg(shallowCP+2);
       int numbOfCons = e->trail.chunkSize();
 
       if (numbOfCons == 0) {
@@ -1170,6 +1176,7 @@ void engine() {
         DISPATCH(1);
       }
 
+      int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp =
         new Suspension(new SuspContinuation(CBB,
                                             GET_CURRENT_PRIORITY(),
@@ -1508,8 +1515,6 @@ void engine() {
      Builtin *bi;
      predArity = getPosIntArg(PC+2);
 
-     DebugCheckT(isExecutePlus = isExecute);
-
      // argument 3 is continuation adress
      // code after call is suspension handler
      contAdr = isExecute ? 0 : getLabelArg(PC+3);
@@ -1552,7 +1557,6 @@ void engine() {
     switch (type) {
     case R_ABSTRACTION:
     case R_OBJECT:
-    LBLabstractionEntry:
       {
         Abstraction *def = (Abstraction *) predicate;
 
@@ -1578,7 +1582,6 @@ void engine() {
 // --- Call: Builtin
 // -----------------------------------------------------------------------
     case R_BUILTIN:
-    LBLbuiltinEntry:
       {
         bi = (Builtin *) predicate;
 
@@ -1600,9 +1603,6 @@ void engine() {
         case BIApply:
           goto LBLBIapply;
 
-        case BILoadFile:
-          goto LBLBIloadFile;
-
         case BIsolve:
           goto LBLBIsolve;
 
@@ -1621,6 +1621,7 @@ void engine() {
             if (am.isSetSFlag(DebugMode)) {
               exitBuiltin(res,bi,predArity,X);
             }
+
             switch (res) {
 
             case SUSPEND:
@@ -1683,10 +1684,8 @@ void engine() {
 
   LBLBIapply:
     {
-      TaggedRef term0 = X[0];
-      DEREF(term0,_0,tag0);
-      TaggedRef term1 = X[1];
-      DEREF(term1,_1,tag1);
+      TaggedRef term0 = X[0]; DEREF(term0,_0,tag0);
+      TaggedRef term1 = X[1]; DEREF(term1,_1,tag1);
 
       if (isAnyVar(tag0) || isAnyVar(tag1)) {
         warning("call: apply: arguments not determined");
@@ -1704,29 +1703,22 @@ void engine() {
       predicate = tagged2SRecord(term0);
 
       switch (tag1) {
+
       case ATOM:
         predArity = 0;
-      LBLtrueApply:
-        switch (predicate->getType()) {
-        case R_BUILTIN:
-          goto LBLbuiltinEntry;
-        case R_ABSTRACTION:
-        case R_OBJECT:
-          goto LBLabstractionEntry;
-        default:
-          error("apply: impossible");
-          goto LBLerror;
-        }
+        break;
+
       case STUPLE:
         {
           STuple *s = tagged2STuple(term1);
           // XRegs initialization
           for (int i = 0; i < s->getSize(); i++) {
-          X[i] = s->getArg(i);
-        }
+            X[i] = s->getArg(i);
+          }
           predArity = s->getSize();
-          goto LBLtrueApply;
+          break;
         }
+
       case LTUPLE:
         {
           LTuple *l = tagged2LTuple(term1);
@@ -1734,8 +1726,7 @@ void engine() {
           X[0] = l->getHead();
           X[1] = l->getTail();
           predArity = 2;
-
-          goto LBLtrueApply;
+          break;
         }
 
       default:
@@ -1743,52 +1734,9 @@ void engine() {
         HANDLE_FAILURE1(contAdr,
                         message("call: apply: tuple argument expected"));
       }
-      error("call: builtin apply: impossible: never be here");
+
+      goto LBLcall;
     }
-
-// ------------------------------------------------------------------------
-// --- Call: Builtin: Load File
-// ------------------------------------------------------------------------
-
-   LBLBIloadFile:
-     {
-       TaggedRef term0 = X[0];
-       DEREF(term0,_0,tag0);
-
-       if (!isXAtom(term0)) {
-         warning("call: loadFile: 1. arg must be a file name");
-           HANDLE_FAILURE1(contAdr,
-                           message("call: loadFile: 1. arg must be a file name"));
-       }
-       char *file = tagged2Atom(term0)->getPrintName();
-
-       FILE *fd = fopen(file,"r");
-
-       if (fd == NULL) {
-         warning("call: loadFile: cannot open file '%s'",file);
-         HANDLE_FAILURE1(contAdr,
-                         message("call: loadFile: cannot open file '%s'",file));
-       }
-
-       if (conf.showFastLoad) {
-         message("Fast loading file '%s'\n",file);
-       }
-
-       // begin critical region
-       blockSignals();
-
-       IO::loadQuery(fd,OK);    /* "NO" means: do not acknowledge */
-
-       fclose(fd);
-
-       unblockSignals();
-       // end critical region
-
-       if (isExecute) {
-         goto LBLreduce;
-       }
-       JUMP(contAdr);
-     }
 
 // ------------------------------------------------------------------------
 // --- Call: Builtin: solve
@@ -2204,9 +2152,9 @@ void engine() {
 
   INSTRUCTION(DEBUGINFO)
     {
-
-// mm2: should be done in assembler !!
-      error("DEBUGINFO: not longer suuported");
+      Atom *filename = getAtomArg(PC+1);
+      int line       = smallIntValue(getNumberArg(PC+2));
+      int absPos     = smallIntValue(getNumberArg(PC+3));
       DISPATCH(4);
     }
 

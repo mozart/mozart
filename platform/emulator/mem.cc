@@ -11,6 +11,8 @@
 #pragma implementation "mem.hh"
 #endif
 
+#include <sys/types.h>
+
 #include "types.hh"
 
 #include "mem.hh"

@@ -14,7 +14,12 @@
 #pragma interface
 #endif
 
+
+#include <memory.h>
+#include <stdio.h>
+
 #include "types.hh"
+#include "error.h"
 
 
 /*     Redefine the operator "new" in every class, that shall use memory

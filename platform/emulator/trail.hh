@@ -32,109 +32,75 @@
 #pragma interface
 #endif
 
-#include "types.hh"
-#include "gc.hh"
-#include "term.hh"
-
-class TrailEntry {
-private:
-  TaggedRef *refPtr;
-  TaggedRef value;
-public:
-  void setRefPtr(TaggedRef *refPtr1) { refPtr = refPtr1; }
-  void setValue(TaggedRef value1) { value = value1; }
-  TaggedRef *getRefPtr() { return refPtr; }
-  TaggedRef getValue() { return value; }
-};
-
-class RebindTrail {
-public:
-  void gc();
-  RebindTrail (int sizeInit = 5000);
-  ~RebindTrail ();
-  void pushCouple(TaggedRef *reference, TaggedRef oldValue);
-  void popCouple(TaggedRef * &reference, TaggedRef &value);
-  Bool isEmpty () { return (cursor == lowBound) ? OK : NO; };
-private:
-  TrailEntry* lowBound;
-  TrailEntry* upperBound;
-  TrailEntry* cursor;
-  /* points always to the next free cell;   */
-  int size;
-};
+#include "stack.hh"
+#include "tagged.hh"
 
 /* ***common trail;                         */
 
-class  Trail {
-  friend class AM;
+class  Trail: public Stack {
 private:
-  TrailEntry* lowBound;
-  TrailEntry* upperBound;
-  TrailEntry* cursor;
-  TrailEntry* lastMark;
-  /* points always to the next free cell;   */
-  int size;
-  void push(TaggedRef *val, TaggedRef old)
-  {
-    if (cursor >= upperBound) {
-      error ("Trail::push: space in trail (%d words) exhausted",size);
-    } else {
-      cursor->setRefPtr(val);
-      cursor->setValue(old);
-      cursor++;
-    }
-  }
-
-
-// !!!!! mm2 : x = pop(); push(a) --> x ist geaendert !
-  TrailEntry *pop()
-  {
-    cursor--;
-    if (cursor < lowBound)
-      error ("Trail::popRef: bottom in trail is reached");
-    return ( cursor );
-  }
+  StackEntry* lastMark;
 
 public:
   void gc();
-  Trail (int sizeInit = 10000);
-  ~Trail () { delete [] (char *)lowBound; }
-  void pushRef(TaggedRef* reference,TaggedRef val)
+
+  Trail (int sizeInit = 10): Stack(sizeInit) { lastMark = tos; }
+
+  void pushRef(TaggedRef *val, TaggedRef old)
   {
-    push(reference,val);
+    ensureFree(2);
+    Stack::push((StackEntry) val,NO);
+    Stack::push((StackEntry) old,NO);
   }
+
+  void popRef(TaggedRef *&val, TaggedRef &old)
+  {
+    old = (TaggedRef)  Stack::pop();
+    val = (TaggedRef*) Stack::pop();
+  }
+
   void pushIfVar(TaggedRef A)
   {
     DEREF(A,Aptr,_1);
     if (isAnyVar(A)) { pushRef(Aptr,A); }
   }
-  TrailEntry *popRef () { return pop(); }
-  void pushMark();
-  void popMark();
-  int chunkSize() { return cursor - lastMark; }
-  Bool isEmptyChunk() { return lastMark == cursor ? OK : NO; }
+
+  void pushMark()
+  {
+    Stack::push((StackEntry)(tos-lastMark));
+    lastMark = tos-1;
+  }
+
+  void popMark() {
+    DebugCheck(lastMark != tos-1,
+               error("trail inconsistent"););
+    lastMark -= (unsigned long) Stack::pop();
+  }
+
+  int chunkSize()     { return (tos-1-lastMark)/2; }
+  Bool isEmptyChunk() { return lastMark == tos-1 ? OK : NO; }
+  virtual void resize(int newSize);
 };
 
-inline Trail::Trail (int sizeInit)
-{
-  lowBound = (TrailEntry *) new char [sizeInit * sizeof (TrailEntry)];
-  if ( lowBound == NULL ) {
-    error ("Trail::Trail: failed");
-    return;
+
+
+
+class RebindTrail: public Trail {
+public:
+  RebindTrail(int sizeInit = 5000): Trail(sizeInit) {};
+
+  void gc();
+
+  void pushCouple(TaggedRef *reference, TaggedRef oldValue)
+  {
+    Trail::pushRef(reference,oldValue);
   }
-  cursor = lowBound;
-  lastMark = cursor;
-  upperBound = lowBound + sizeInit;
-  size = sizeInit;
-}
 
-inline void Trail::pushMark() {
-  push((TaggedRef *)lastMark,makeTaggedNULL());
-  lastMark = cursor;
-}
+  void popCouple(TaggedRef * &reference, TaggedRef &value)
+  {
+    Trail::popRef(reference,value);
+  }
+};
 
-inline void Trail::popMark() {
-  lastMark = (TrailEntry *) (pop()->getRefPtr());
-}
 
 #endif
