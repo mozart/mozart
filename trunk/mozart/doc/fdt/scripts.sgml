@@ -132,7 +132,7 @@ large ?{N}.
 <p>
 <figure id="ProgQueens">
 <caption>A script for the ?{N}-queens Problem.</caption>
-<<<
+<chunk class=anonymous><title/Queens/
 fun {Queens N}
    proc {$ Row}
       L1N LM1N
@@ -147,7 +147,7 @@ fun {Queens N}
       {FD.distribute generic(value:mid) Row}
    end
 end
->>>
+</chunk>
 </figure>
 
 <subsection class=unnumbered>
@@ -235,7 +235,7 @@ and, with second priority, to larger values.
 
 <figure id="ProgChange">
 <caption/A script for changing money together with a data specification./
-<<<
+<chunk class=anonymous><title/ChangeMoney/
 fun {ChangeMoney BillsAndCoins Amount}
    Available    = {Record.map BillsAndCoins fun {$ A#D} A end}
    Denomination = {Record.map BillsAndCoins fun {$ A#D} D end}
@@ -250,7 +250,7 @@ in
 end
 
 BillsAndCoins = bac(6#100  8#25  10#10  1#5  5#1)
->>>
+</chunk>
 </figure>
 
 <subsection class=unnumbered>
@@ -267,9 +267,9 @@ assumed that the bills and coins are specified in
 denomination decreasing order.
 <p>
 The statement
-<<<
+<chunk class=anonymous><title/{SearchOne ChangeMoney}/
 {Browse {SearchOne {ChangeMoney BillsAndCoins 142}}}
->>>
+</chunk>
 computes the list
 <<<
 [change(1 1 1 1 2)]
@@ -280,10 +280,52 @@ This payment uses the minimal number of bills and
 coins.  The number of different possibilities to
 pay $1.42 with the specified stock of bills and
 coins is 6 and can be computed with the statement
-<<<
+<chunk class=anonymous><title/{SearchAll ChangeMoney}/
 {Browse {Length {SearchAll {ChangeMoney BillsAndCoins 142}}}}
->>>
+</chunk>
 </section>
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Parameterized Scripts
+%%%
+
+%%
+%% Example: Queens
+%%
+
+declare
+<chunk.ref/Queens/
+
+{ExploreOne {Queens 8}}
+
+{ExploreAll {Queens 6}}
+
+
+
+%%
+%% Example: Changing Money
+%%
+
+declare
+<chunk.ref/ChangeMoney/
+
+{ExploreOne {ChangeMoney BillsAndCoins 142}}
+
+
+<chunk.ref/{SearchOne ChangeMoney}/
+
+<chunk.ref/{SearchAll ChangeMoney}/
+
+
+
+</chunk>
+]]>
+
+
 </chapter>
 
 

@@ -141,7 +141,7 @@ value of the selected variable.
 
 <figure id="ProgMoney" class="Figure">
 <caption/A script for the Send More Money Puzzle./
-<<<
+<chunk class=anonymous><title/Money/
 proc {Money Root}
    S E N D M O R Y
 in
@@ -155,7 +155,7 @@ in
    =: 10000*M + 1000*O + 100*N + 10*E + Y
    {FD.distribute ff Root}
 end
->>>
+</chunk>
 </figure>
 
 <subsection class=unnumbered>
@@ -219,9 +219,9 @@ and <<y>>.
 
 <p>
 The statement
-<<<
+<chunk class=anonymous><title/{SearchAll Money}/
 {Browse {SearchAll Money}}
->>>
+</chunk>
 will compute and display the list of all solutions
 of the Send More Money Puzzle:
 <<<
@@ -299,9 +299,9 @@ associated with the nodes of the search tree.
 
 <p>
 The statement
-<<<
+<chunk class=anonymous><title/{ExploreAll Money}/
 {ExploreAll Money}
->>>
+</chunk>
 tells the Explorer to run the script <<Money>> and
 explore the entire search tree.  The Explorer
 will pop up a window and display the explored
@@ -360,9 +360,9 @@ shown in <Ptr to="figConMoneyTree">.
 
 <para><title/open and closed choice nodes/
 The statement
-<<<
+<chunk class=anonymous><title/{ExploreOne Money}/
 {ExploreOne Money}
->>>
+</chunk>
 tells the Explorer to run the script <<Money>>
 until the first solution is found.  This time the
 Explorer will show a partial search tree that
@@ -466,7 +466,7 @@ search tree obtained with naive distribution.
 </Exercise>
 
 <Answer to="problem.ex.b">
-<<<
+<chunk class=anonymous><title/Donald/
 proc {Donald Root}
    sol(a:A b:B d:D e:E g:G l:L n:N  o:O r:R t:T) = Root
 in
@@ -478,7 +478,7 @@ in
    =: 100000*R + 10000*O + 1000*B + 100*E + 10*R + T
    {FD.distribute split Root}
 end
->>>
+</chunk>
 </Answer>
 
 </section>
@@ -571,7 +571,8 @@ notational conveniences appears in
 <figure class="Figure" id="ProgMoneyNoGadgets">
 <caption/A script for Money that does not use the
 infix notations <<=:>> and <<\=:>>./
-<<<proc {Money Root}
+<chunk class=anonymous><title/MoneyRaw/
+proc {Money Root}
    S E N D M O R Y
 in
    Root = sol(s:S e:E n:N d:D m:M o:O r:R y:Y)
@@ -585,7 +586,8 @@ in
     '=:'
     0}
    {FD.distribute ff Root}
-end>>>
+end
+</chunk>
 </figure>
 </section>
 
@@ -597,7 +599,7 @@ one or several propagators with the Browser.
 Enter the following statements line by line and
 observe in the Browser the shrinking domains of
 the variables <<X>>, <<Y>>, and <<Z>>:
-<<<
+<chunk class=anonymous><title/WatchingPropagators/
 declare X Y Z 
 {Browse [X Y Z]}         % [X Y Z]
 X :: 1#13                % [X[1#13] Y Z]
@@ -607,7 +609,7 @@ Z :: 1#12                % [X[1#13] Y[0#27] Z[1#12]]
 X <: Y                   % [X[1#5]  Y[2#6]  Z[4#12]]
 Z <: 7                   % [X[1#2]  Y[2#3]  Z[4#6]]
 X \=: 1                  % [2 3 6]
->>>
+</chunk>
 The comments say what you will see in the Browser.
 Note that the statement <<2*Y=:Z>> creates a
 propagator that performs interval rather than
@@ -646,7 +648,7 @@ strategy.
 <p>
 <figure class="Figure" id="ProgSafe">
 <caption/A script for the Safe Puzzle./
-<<<
+<chunk class=anonymous><title/Safe/
 proc {Safe C}
    {FD.tuple code 9 1#9 C}
    {FD.distinct C}
@@ -656,7 +658,8 @@ proc {Safe C}
    C.9 <: C.8
    {For 1 9 1 proc {$ I} C.I \=: I end}
    {FD.distribute ff C}
-end>>>
+end
+</chunk>
 </figure>
 
 <para><title/Script./
@@ -679,6 +682,86 @@ The full search tree of <<Safe>> has 23 nodes and
 contains the unique solution
 <<code(4 3 1 8 9 2 6 7 5)>>.
 </section>
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Writing Problem Solvers in Oz
+%%%
+
+%%
+%% Example: Send More Money
+%%
+
+declare
+<chunk.ref/Money/
+
+<chunk.ref/{SearchAll Money}/
+
+
+
+%%
+%% The Explorer
+%%
+
+<chunk.ref/{ExploreAll Money}/
+
+<chunk.ref/{ExploreOne Money}/
+
+
+
+%%
+%% New Primitives
+%%
+
+declare
+<chunk.ref/MoneyRaw/
+
+{ExploreAll Money}
+
+
+
+%%
+%% Watching Propagators
+%%
+
+<chunk.ref/WatchingPropagators/
+
+
+
+%%
+%% Example: Safe
+%%
+
+declare
+<chunk.ref/Safe/
+
+{ExploreAll Safe}
+
+
+
+</chunk>
+<chunk><title/ANSWERS/
+%%%
+%%% Chapter: Writing Problem Solvers in Oz
+%%%
+
+%%
+%% DONALD + GERALD = ROBERT
+%%
+
+declare
+<chunk.ref/Donald/
+
+{ExploreAll Donald}
+
+
+
+</chunk>
+]]>
+
 </chapter>
 
 

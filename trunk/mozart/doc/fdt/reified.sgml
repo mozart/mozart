@@ -149,7 +149,7 @@ means of the following procedures:
 <<{FD.equi X Y Z}>> posts the constraint
 <Math/(X\leftrightarrow Y)=Z/.
 <item>
-<<{FD.nega X Y}>> posts the constraint <Math/\neg Y=Z/.
+<<{FD.nega X Y}>> posts the constraint <Math/\neg X=Y/.
 </list>
 
 <subsection class=unnumbered>
@@ -320,7 +320,7 @@ that splits the domain of the selected variable.
 <P>
 <figure id="ProgPhoto">
   <caption/A script for the Photo Puzzle./
-<<<
+<chunk class=anonymous><title/Photo/
 proc {Photo Root}
    Persons       = [betty chris donald fred gary mary paul]
    Preferences   = [betty#gary betty#mary  chris#betty chris#gary
@@ -341,7 +341,7 @@ in
    {FD.distribute generic(order:naive value:max) [Satisfaction]}
    {FD.distribute split Alignment}
 end
->>>
+</chunk>
 </figure>
 
 
@@ -648,7 +648,7 @@ strategy.
 <P>
 <figure id=ProgSRAT>
  <caption/A script for the self-referential aptitude test./
-<<<
+<chunk class=anonymous><title/SRAT/
 proc {SRAT Q}
    proc {Vector V}  % V is a 0/1-vector of length 10
       {FD.tuple v 10 0#1 V} 
@@ -701,7 +701,7 @@ in
    skip
    {FD.distribute ff Q}
 end
->>>
+</chunk>
 </figure>
 
 
@@ -929,7 +929,7 @@ with the standard first-fail strategy.
 <P>
 <figure id=ProgIsBin>
   <caption/The defined constraint <<IsBin>>./
-<<<
+<chunk><title/The defined constraint IsBin/
 proc {IsBin Bin}
    [Blue Red Green] = [0 1 2]
    BinTypes         = [Blue Red Green]
@@ -953,19 +953,17 @@ in
       end
    end
 end
->>>
+</chunk>
 </figure>
 
 <P>
 <figure id=ProgBinPacking>
   <caption/A script for the Bin Packing Problem./
-<<<
+<chunk class=anonymous><title/BinPacking/
 fun {BinPacking Order}
    ComponentTypes = [glass plastic steel wood copper]
    MaxBinCapacity = 4
-   proc {IsBin Bin}
-      %% ...
-   end
+   <chunk.ref/The defined constraint IsBin/
    proc {IsPackList Xs}
       thread
 	 {ForAll Xs IsBin}
@@ -1014,7 +1012,7 @@ in
       {Distribute PackList}
    end
 end
->>>
+</chunk>
 </figure>
 
 <P>
@@ -1022,12 +1020,12 @@ The script is shown in
 <Ptr to=ProgBinPacking>. It takes as parameter
 the order for which a packing list is to be
 compiled.  The statement
-<<<
+<chunk class=anonymous><title/{SearchOne BinPacking}/
 {Browse 
  {SearchOne 
   {BinPacking 
    order(glass:2 plastic:4 steel:3 wood:6 copper:4)}}}
->>>
+</chunk>
 will compute a packing list for the order that
 was given in the problem specification:
 <<<
@@ -1162,6 +1160,50 @@ thread
 end
 >>>
 </Answer>
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Reified Constraints
+%%%
+
+%%
+%% Example: Aligning for a Photo
+%%
+
+declare
+<chunk.ref/Photo/
+
+{ExploreOne Photo}
+
+
+
+%%
+%% Example:  Self-referential Aptitude Test
+%%
+
+declare
+<chunk.ref/SRAT/
+
+{ExploreOne SRAT}
+
+
+
+%%
+%% Example: Bin Packing
+%%
+
+declare
+<chunk.ref/BinPacking/
+
+<chunk.ref/{SearchOne BinPacking}/
+
+
+
+</chunk>
+]]>
 
 </chapter>
 

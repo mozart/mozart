@@ -5,8 +5,9 @@
   -   Jörg Würtz
   -
   - Contributors:
-  -   Daniel Simon <dansim@ps.uni-sb.de>
-  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   Daniel Simon <dansim@ps.uni-sb.de> (porting to sgml))
+  -   Andy Walter <anwalt@ps.uni-sb.de> (porting to sgml)
+  -   Andrea Panati <panati@di.unito.it> (typo fixes)
   -   
   - Copyright:
   -   Christian Schulte, 1998
@@ -38,6 +39,7 @@
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>
+<!ENTITY % EXTRA "IGNORE">
 
 <!-- Include Files -->
 <!ENTITY intro       SYSTEM "intro.sgml">
@@ -54,6 +56,7 @@
 <!ENTITY packing     SYSTEM "packing.sgml">
 <!ENTITY traps       SYSTEM "traps.sgml">
 <!ENTITY goldenrules SYSTEM "golden-rules.sgml">
+<!ENTITY data        SYSTEM "data.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -97,8 +100,9 @@
     <Meta name="html.split" value="chapter.branchandbound">
     <Meta name="html.split" value="chapter.scheduling">
     <Meta name="html.split" value="chapter.packing">
-    <Meta name="html.split" value="chapter.traps">
-    <Meta name="html.split" value="chapter.golden-rules">
+    <Meta name="html.split" value="appendix.traps">
+    <Meta name="html.split" value="appendix.golden-rules">
+    <Meta name="html.split" value="appendix.data">
     <Meta name="html.split.toc"     value="">
     <Meta name="html.split.bib"     value="">
     <Meta name="html.split.answers" value="">
@@ -144,9 +148,12 @@
    &userdefined; 
    &bab;
    &scheduling; 
-   &packing;
+<!--   &packing; -->
    &traps; 
    &goldenrules; 
+   &data;
+
+
   <Back>
     <Bib.Extern id="Caseau.95" to="fdt.bib" key="Caseau.95"> 
     <Bib.Extern id="Caseau.94a" to="fdt.bib" key="Caseau.94a"> 
