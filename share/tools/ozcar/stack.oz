@@ -92,9 +92,9 @@ local
 	    column:  {CondSelect Frame column unit}
 	    time:    Frame.time
 	    name:    case Kind == 'call' then
-			case {IsDet Data} then
-			   case Data == unit then 'unknown'
-			   elsecase {IsProcedure Data} then
+			case {Not {HasFeature Frame data}} then 'unknown'
+			elsecase {IsDet Data} then
+			   case {IsProcedure Data} then
 			      {System.printName Data}
 			   else
 			      {System.valueToVirtualString Data 0 0}
