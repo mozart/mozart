@@ -18,8 +18,6 @@
 #include "am.hh"
 #include "io.hh"
 
-extern "C" void *sbrk(int incr);
-
 // ----------------------------------------------------------------
 // heap memory
 
@@ -84,20 +82,19 @@ unsigned int getMemoryInFreeList()
 
 
 // ----------------------------------------------------------------
-// mem from os with 3 alternative
+// mem from os with 2 alternative
 //   USESBRK
-//   USEMMAP   does not work --> rs
 //   USEMALLOC
 
-#if defined(ULTRIX_MIPS) || defined(HPUX_700)
-#define USEMALLOC
-#else
+#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX_I486) || defined(IRIX5_MIPS) 
 #define USESBRK
+#else
+#define USEMALLOC
 #endif
 
 
 
-#if defined USEMALLOC
+#if defined(USEMALLOC)
 #include <memory.h>
 
 void ozFree(void *addr) {
@@ -108,42 +105,9 @@ void *ozMalloc(size_t size) {
   return malloc(size);
 }
 
-#elif defined USEMMAP
-#include <sys/mman.h>
+#elif defined(USESBRK)
 
-void *ozMalloc(size_t size)
-{
-  int fd, i;
-  int *array;
-  size += sizeof(int);
-
-  if ((fd = open("/dev/zero",O_RDWR)) == -1) {
-    ozperror("open /dev/zero failed");
-  }
-
-  caddr_t ret = mmap((((int)sbrk(0)/getpagesize())+1)*getpagesize(),
-		     size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_FIXED,fd,0);
-  if ((int)ret == -1) {
-    ozperror("ozMalloc: mmap failed");
-  }
-  close(fd);
-
-  *(int *) ret = size;
-
-  return (void *) ((int*)ret+1);
-}
-
-void ozFree(void *block)
-{
-  caddr_t retBlock = (caddr_t) ((int*)block-1);
-  int size = *(int*)retBlock;
-
-  if (munmap(retBlock,size) == -1) {
-    ozperror("ozFree: munmap failed");
-  }
-}
-
-#elif defined USESBRK
+extern "C" void *sbrk(int incr);
 
 /* have to define this, that gcc is quiet */
 
