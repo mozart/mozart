@@ -364,11 +364,12 @@ in
 	       SavedVars = F.vars
 	    in
 	       case SavedVars \= unit then
-		  {OzcarMessage 'using saved variables'}
+		  {OzcarMessage
+		   'getEnv: using saved variables of frame #' # FrameId}
 		  SavedVars
 	       elsecase FrameId \= unit then
 		  {OzcarMessage
-		   'requesting variables for frame id ' # FrameId}
+		   'getEnv: requesting variables for frame #' # FrameId}
 		  V = {Thread.frameVariables @currentThread FrameId}
 	       in
 		  case V == unit then %% `FrameId' was an invalid frame id...
@@ -470,7 +471,6 @@ in
 	    %% allow switching of stack frames only if thread is stopped
 	    Vars = Gui,getEnv(F $)
 	 in
-	    {OzcarMessage 'selecting frame #' # F.nr}
 	    case Highlight then
 	       L = case F.line == unit then unit else {Abs F.line} end
 	    in
@@ -517,7 +517,6 @@ in
       meth SelectStackFrame(T)
 	 LSF = @LastSelectedFrame
       in
-%       {OzcarMessage 'SelectStackFrame: LSF == ' # LSF # ', T == ' # T}
 	 case LSF \= T then
 	    case LSF > 0 then
 	       Gui,DeactivateLine(LSF)
@@ -532,7 +531,6 @@ in
       meth UnselectStackFrame
 	 LSF = @LastSelectedFrame
       in
-	 {OzcarMessage 'UnselectStackFrame: LSF == ' # LSF}
 	 case LSF > 0 then
 	    Gui,DeactivateLine(LSF)
 	    LastSelectedFrame <- 0
@@ -633,7 +631,6 @@ in
       meth printStack(id:I frames:Frames depth:Depth last:LastFrame<=nil)
 	 W = {self.StackText w($)}
       in
-	 {OzcarMessage 'printing complete stack (#' # I # '/' # Depth # ')'}
 	 Gui,Enqueue(stack {self.StackText resetTags($)})
 	 Gui,Clear(stack W)
 	 case I == 0 then   % clear stack and env windows; reset title
@@ -753,11 +750,9 @@ in
       meth DoMarkStack(How)
 	 case How
 	 of active then
-	    {OzcarMessage 'activating stack'}
 	    {self.StackText tk(tag 'raise' StackTag)}
 	    {self.StackText tk(tag conf StackTag foreground:DefaultForeground)}
 	 [] inactive then
-	    {OzcarMessage 'deactivating stack'}
 	    {self.StackText tk(tag 'raise' StackTag)}
 	    {self.StackText tk(tag conf StackTag foreground:DirtyColor)}
 	 end
@@ -777,11 +772,9 @@ in
       meth DoMarkEnv(How)
 	 case How
 	 of active then
-	    {OzcarMessage 'activating env'}
 	    {self.LocalEnvText  tk(conf foreground:DefaultForeground)}
 	    {self.GlobalEnvText tk(conf foreground:DefaultForeground)}
 	 [] inactive then
-	    {OzcarMessage 'deactivating env'}
 	    {self.LocalEnvText  tk(conf foreground:DirtyColor)}
 	    {self.GlobalEnvText tk(conf foreground:DirtyColor)}
 	 end
