@@ -32,13 +32,13 @@
     <p>
       The source rpm package from which the binary rpm packages can
       be build are available from <ref.extern
-      to="http://www.mozart-oz.org/download/"><file
-      >http://www.mozart-oz.org/download/</file></ref.extern>.
+      to="http://www.mozart-oz.org/download/view.cgi?action=rpm"><file
+      >http://www.mozart-oz.org/download/view.cgi?action=rpm</file></ref.extern>.
 
   <section>
     <title/Source Tarball/
     <p>
-      The source tarball is available from <ref.extern to="http://www.mozart-oz.org/download/ftp.cgi?action=src"><file>http://www.mozart-oz.org/download/ftp.cgi?action=src</file></ref.extern>. 
+      The source tarball is available from <ref.extern to="http://www.mozart-oz.org/download/view.cgi?action=tar"><file>http://www.mozart-oz.org/download/view.cgi?action=tar</file></ref.extern>.
   </section>
 
   <section>
