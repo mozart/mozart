@@ -1,3 +1,6 @@
+define(readArg,$1)
+define(writeArg,$1)
+
 define(instruction,
         `ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1)),
                 numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1)),

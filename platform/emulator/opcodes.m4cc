@@ -12,6 +12,8 @@ define(makeInstr,
              $1,2,case $2XX: case $2XY: case $2XG: case $2YX: case $2YY:
                   case $2YG: case $2GX: case $2GY: case $2GG:)') dnl
 
+define(readArg,$1)
+define(writeArg,$1)
 define(instruction,
        `makeInstr(eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),TOUPPER($1)) return dnl
         eval(1+Size($2)+Size($3)+Size($4)+Size($5)+Size($6)+Size($7)+Size($8))dnl

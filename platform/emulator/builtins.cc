@@ -7824,6 +7824,8 @@ BIspec allSpec[] = {
   {"Debug.breakpointAt",4, BIbreakpointAt},
   {"Debug.breakpoint",  0, BIbreakpoint},
   {"Debug.displayCode", 2, BIdisplayCode},
+  {"Debug.procedureCode", 2, BIprocedureCode},
+  {"Debug.livenessX", 2, BIlivenessX},
 
 #ifdef UNUSED
   {"index2Tagged",  2,BIindex2Tagged},

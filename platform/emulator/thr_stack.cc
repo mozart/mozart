@@ -333,3 +333,18 @@ void TaskStack::unleash(int frameId) {
       return;
   }
 }
+
+#ifdef DEBUG_LIVENESS
+// set unused values in X to zero
+void TaskStack::checkLiveness(RefsArray X) {
+  PopFrame(this,auxPC,auxY,auxG);
+  pushFrame(auxPC,auxY,auxG);
+  int n=getRefsArraySize(X);
+  int m=CodeArea::livenessX(auxPC,X,n);
+  if (n!=m) {
+    if (m>n) printf("#######################\n");
+    printf("TaskStack: checkLiveness(%p): unused X detected: %d of %d\n",
+           auxPC,m,n);
+  }
+}
+#endif
