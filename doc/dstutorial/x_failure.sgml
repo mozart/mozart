@@ -11,7 +11,7 @@ This is both good and bad for application design.
 The bad part is that it makes applications more complex.
 The good part is that applications can take
 advantage of the redundancy offered by
-distributed systems to be more robust.
+distributed systems to become more robust.
 
 <P>The Mozart failure model defines what failures
 are recognized by the system
@@ -24,12 +24,16 @@ to program with language entities that are subject
 to failures.
 
 <P>The Mozart failure model is accessed
-through the module <<Fault>>,
-which is documented in the System Modules manual,
-part III: Distributed Programming.
+through the module <<Fault>>.
 This chapter explains and justifies this
 functionality, and gives examples
 showing how to use it.
+We present the failure model in two steps:
+the basic model and the advanced model.
+To start writing fault-tolerant applications
+it is enough to understand the basic model.
+To build fault-tolerant abstractions it
+is often necessary to use the advanced model.
 
 <P>In its current state,
 the Mozart system provides only the
@@ -38,7 +42,7 @@ and reflect it in the language.
 The design and implementation of
 fault-tolerant abstractions
 within the language
-by means of these primitives
+by using these primitives
 is the subject of ongoing research.
 This chapter and the next one give the first results
 of this research.
@@ -86,11 +90,9 @@ a crash on the other side.
 identifies four different remote problems:
 <LIST>
 <ITEM> <<I=permSome>>: At least one of the other sites
-referencing the entity is either failed or
-in the fault state <<permFail>>.
+referencing the entity is failed.
 <ITEM> <<I=permAll>>: All of the other sites referencing
-the entity are either failed or
-in the fault state <<permFail>>.
+the entity are failed.
 <ITEM> <<I=tempSome>>: At least one of the other sites
 referencing the entity is currently unreachable.
 <ITEM> <<I=tempAll>>: All of the other sites
@@ -105,10 +107,8 @@ referencing the entity are currently unreachable.
 <<remoteProblem(tempSome)>>, and
 <<remoteProblem(tempAll)>>.
 All fault detection primitives
-set up fault detection for
-a given set of fault states.
-This set must only contain
-fault states among the six listed here.
+are triggered on
+some subset of these fault states.
 
 
 <SUBSECTION><TITLE>Temporary faults</TITLE>
@@ -135,26 +135,26 @@ to another server.
 The <<tempFail>> exceptions will therefore be relatively frequent,
 much more frequent than time-outs.
 
-<P>It is possible for
-a <<tempFail>> state to last forever.
-In general, the distinction between <<tempFail>>
-and <<permFail>> cannot be made from inside the application.
+<P>It is possible for a <<tempFail>> state to last forever.
 For example, if a user disconnects the network connection of a laptop
 machine, then only he or she knows whether the problem is permanent.
+The application cannot know this in general.
 The decision whether to continue waiting on a temporary failure
 or whether to interrupt the wait can cut through all levels of
 abstraction to appear at the top level.
-The application then pops up a window to ask the user whether
+The application might then pop up a window to ask the user whether
 to continue waiting or not.
 
 <SECTION><TITLE>Basic model</TITLE>
 
-<P>The simplest way to start writing fault-tolerant
-applications is to use the basic failure model.
-In this model, attempting to perform operations
+<P>We present the failure model in two steps:
+the basic model and the advanced model.
+In the basic model,
+attempting to perform operations
 on entities with problems will
-either block or raise an exception instead of performing
-the operation.
+either block or raise an exception without doing the operation.
+The simplest way to start writing fault-tolerant
+applications is to use the basic model.
 
 <SUBSECTION><TITLE>Enabling exceptions on faults</TITLE>
 
@@ -184,13 +184,13 @@ The <<Level>> is <<global>>, <<site>>, or <<thread(T)>>
 <ITEM> <<fun {Fault.disable Entity Level}>> disables
 fault detection on the given entity at the given level.
 </LIST>
-<P>The function <<Fault.enable>> returns <<true>> if the
+<P>The function <<Fault.enable>> returns <<true>> if and only if the
 enable was successful, i.e., the entity was not already
 enabled for that level.
-The function <<Fault.disable>> returns <<false>> if the
+The function <<Fault.disable>> returns <<false>> if and only if the
 disable was successful, i.e., the entity was already
 enabled for that level.
-Both functions raise an exception if their arguments
+Both functions raise a type error exception if their arguments
 do not have the correct type.
 
 <SUBSECTION><TITLE>Exception formats</TITLE>
@@ -286,12 +286,12 @@ Then thread <<T1>> will block, since it is set up
 to detect only <<permFail>>.
 All other threads will raise the exception <<tempFail>>.
 
-<SECTION><TITLE>Extended model</TITLE>
+<SECTION><TITLE>Advanced model</TITLE>
 
 <P>The basic model lets you set up the system to do
 one of two things when an operation is attempted:
 either raise an exception or block (do nothing).
-The extended model calls a user-defined
+The advanced model calls a user-defined
 procedure instead of raising an exception.
 This procedure is called a <EM>fault handler</EM>.
 When an operation is attempted
@@ -324,7 +324,7 @@ have an installation or an enable for that level.
 The function <<Fault.deInstall>> returns <<true>> if and only if the
 disable was successful, i.e., the entity was already
 enabled for that level.
-Both functions raise an exception if their arguments
+Both functions raise a type error exception if their arguments
 do not have the correct type.
 
 <P>A handler <<HandlerProc>> is a three-argument
@@ -395,8 +395,8 @@ and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permFail(type:port)>>).
-<ITEM> Owner site unreachable (<<tempFail(type:port)>>).
+<ITEM> Owner site down (<<permFail>>).
+<ITEM> Owner site unreachable (<<tempFail>>).
 </LIST>
 <P>A port has a single operation, <<Send>>,
 which can complete if the fault state is <<ok>>.
@@ -419,16 +419,14 @@ and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permFail(type:variable)>>).
-<ITEM> Owner site unreachable (<<tempFail(type:variable)>>).
-<ITEM> Some proxy sites down
-(<<remoteProblem(type:variable permFail:SiteList)>>).
-<ITEM> Some proxy sites unreachable
-(<<remoteProblem(type:variable tempFail:SiteList)>>).
+<ITEM> Owner site down (<<permFail>>).
+<ITEM> Owner site unreachable (<<tempFail>>).
+<ITEM> Some or all proxy sites down
+(<<remoteProblem(I)>> where <<I>> is <<permSome>> or <<permAll>>).
+<ITEM> Some or all proxy sites unreachable
+(<<remoteProblem(I))>> where <<I>> is <<tempSome>> or <<tempAll>>).
 </LIST>
-<P>(The <<SiteList>> lists the site identifiers
-of the problem sites.)
-A logic variable has two operations,
+<P A logic variable has two operations,
 binding and waiting until bound.
 Bind operations are explicit in the program text.
 Most wait operations are implicit:
@@ -436,7 +434,8 @@ threads block until their data is available.
 The bind operation will only complete if the
 fault state is <<ok>> or <<remoteProblem>>.
 
-<P>The wait operation will only complete if the
+<P>If the application binds a variable,
+then its wait operation is only sure to complete if the
 fault state is <<ok>>.
 When it completes, this means
 that another proxy has bound the variable.
@@ -465,50 +464,56 @@ The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
 <ITEM> Owner site down and state pointer not present
-(<<permFail(type:CL info:owner)>>).
+(<<permFail(info:owner)>>).
 <ITEM> Owner site unreachable and state pointer not present
-(<<tempFail(type:CL info:owner)>>).
+(<<tempFail(info:owner)>>).
 <ITEM> State pointer lost (owner site up)
-(<<permFail(type:CL info:state)>>).
+(<<permFail(info:state)>>).
 This failure mode is only for cells.
 If a lock token is lost then the owner recreates it.
 <ITEM> State pointer unreachable (owner site up)
-(<<tempFail(type:CL info:state)>>).
+(<<tempFail(info:state)>>).
+<ITEM> State pointer present and owner site down
+(<<remoteProblem(permAll)>>).
+<ITEM> State pointer present and owner site unreachable
+(<<remoteProblem(tempAll)>>).
 </LIST>
-<P>(The <<CL>> is <<cell>> or <<lock>>.)
-Objects and cells have one primitive operation,
+<P>Objects and cells have one primitive operation,
 namely a state update.
 For a cell this operation is called <<Exchange>>.
-The exchange operation can complete if the
-fault state is <<ok>>.
 
 <SUBSECTION><TITLE>Objects</TITLE>
 
 <P>An object consists of
 an object-record that is a lazy chunk
 and that references
-the object's features, a cell, a class.
-The object-record and the class are
-copied when requested.
+the object's features, a cell, and a class.
+The object-record is lazy: it is copied to the site
+when the object is used for the first time.
 This means that
 the following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
 <ITEM> Owner site down and
 object-record or state pointer not present
-(<<permFail(type:object info:owner)>>).
+(<<permFail(info:owner)>>).
 <ITEM> Owner site unreachable and
 object-record or state pointer not present
-(<<tempFail(type:object info:owner)>>).
+(<<tempFail(info:owner)>>).
 <ITEM> State pointer lost (owner site up)
-(<<permFail(type:object info:state)>>).
+(<<permFail(info:state)>>).
 <ITEM> State pointer unreachable (owner site up)
-(<<tempFail(type:object info:state)>>).
+(<<tempFail(info:state)>>).
+<ITEM> Object-record and state pointer present and owner site down
+(<<remoteProblem(permAll)>>).
+<ITEM> Object-record and state pointer present and owner site unreachable
+(<<remoteProblem(tempAll)>>).
 </LIST>
-There are two new failure modes that
-occur because the object-record can be absent.
-Since in both cases the object
-cannot be used, we simply consider the new failure modes
+Compared to cells,
+objects have two new failure modes:
+the object-record can be temporarily or permanently absent.
+In both cases the object
+cannot be used, so we simply consider the new failure modes
 to be instances of <<permFail>> and <<tempFail>>.
 
 <SECTION><TITLE>Limitations of current release</TITLE>
@@ -516,8 +521,9 @@ to be instances of <<permFail>> and <<tempFail>>.
 <P>The current release has the following limitations:
 <LIST>
 <ITEM>If an exception is raised or a handler invoked
-for an object, then the entity argument <<E>> is undefined.
-<ITEM>The global level for handlers is not implemented.
+due to a distribution fault of an object,
+then the entity argument <<E>> is undefined.
+<ITEM>The <<global>> level is not implemented for handlers.
 If an attempt is made to install a global handler,
 then a <<notImplemented>> exception is given.
 </LIST>
