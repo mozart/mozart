@@ -76,8 +76,8 @@ returns the status of ?_{Space} in verbose form. Reduces immediately, even if ?_
 <p>
 If ?_{Space} becomes merged, the atom <<merged>> is returned.
 <p>
-If ?_{Space} becomes blocked but not stable, ?_{T} is bound to the tuple
-<<blocked(?{T1})>>. ?{T1} is a future that is bound to the status of
+If ?_{Space} becomes suspended (that is, blocked but not stable), ?_{T} is bound to the tuple
+<<suspended(?{T1})>>. ?{T1} is a future that is bound to the status of
 ?_{Space} when ?_{Space} becomes unblocked again.
 <p>
 If ?_{Space} is stable and:
