@@ -153,21 +153,9 @@
 				     out => [],
 				     BI  => BIstorePredId},
 
-    'newHashTable'		=> { in  => ['+foreignPointer','+int','+int'],
-				     out => ['+foreignPointer'],
+    'newHashTable'		=> { in  => ['+foreignPointer','+int','+int','+value'],
+				     out => [],
 				     BI  => BInewHashTable},
-
-    'storeHTScalar'		=> { in  => ['+foreignPointer',
-					     '+foreignPointer',
-					     '+value','+int'],
-				     out => [],
-				     BI  => BIstoreHTScalar},
-
-    'storeHTRecord'		=> { in  => ['+foreignPointer',
-					     '+foreignPointer',
-					     '+literal','+value','+int'],
-				     out => [],
-				     BI  => BIstoreHTRecord},
 
     'storeRecordArity'		=> { in  => ['+foreignPointer','+value'],
 				     out => [],
