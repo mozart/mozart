@@ -222,8 +222,7 @@ void BIfdHeadManager::addForFDishSusp(int i, Suspension * susp)
 //   and no coefficient nor variables are zero. Returns 1 if all
 //   coefficients are either  1 or -1 otherwise 0.
 
-// functions used by BIfdHeadManager::simp
-lifyHead and
+// functions used by BIfdHeadManager::simplifyHead and
 // BIfdBodyManager::simplifyBody
 const int taggedIndex = 0x80000000;
 inline TaggedRef makeTaggedIndex(TaggedRef t) {return (t | taggedIndex);}
