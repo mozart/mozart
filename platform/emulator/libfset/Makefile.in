@@ -33,7 +33,7 @@ FSETLIBSRCS =   standard.cc telling.cc \
                 intsets.cc monitor.cc \
                 reified.cc fsstd.cc \
                 std_n.cc table.cc \
-                fsinit.cc filter.cc
+                fsinit.cc
 
 FSETLIBOBJS = $(FSETLIBSRCS:.cc=.lo)
 

@@ -494,7 +494,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-#include "filter.hh"
+//#include "filter.hh"
 
 OZ_BI_define(fsp_intersectionN, 2, 0)
 {
@@ -516,7 +516,7 @@ OZ_BI_define(fsp_intersectionN, 2, 0)
 OZ_BI_end
 
 
-OZ_Service &filter_intersectN(OZ_Service& s,
+OZ_Service &filter_intersectN(OZ_Service &s,
                               OZ_FSetVarVector &xs, OZ_FSetVar &z)
 {
   DSP(("filter_intersect\n"));
@@ -554,7 +554,7 @@ OZ_Service &filter_intersectN(OZ_Service& s,
       return s.replace_propagator(new FSetIntersectionNPropagator(xs.getOzTermVector(), z));
     }
   }
-
+  //
   int redo;
   //
   do {

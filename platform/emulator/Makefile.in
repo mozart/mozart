@@ -132,7 +132,7 @@ FDSRCS=\
         var_fd.cc var_bool.cc
 
 CPISRCS=\
-        cpi.cc cpi_fd.cc cpi_prop.cc \
+        cpi.cc cpi_fd.cc cpi_prop.cc cpi_filter.cc \
         cpi_fs.cc cpi_expect.cc cpi_misc.cc \
         cpi_stream.cc cpi_profile.cc cpi_ct.cc \
         var_ct.cc
