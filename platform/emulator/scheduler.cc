@@ -78,7 +78,7 @@ void checkStability(Thread * ct, Board * cb) {
 
 
 
-void scheduler() {
+void scheduler(void) {
   register AM * const e	= &am;
 
   register Thread * ct;

@@ -56,7 +56,7 @@ Bool isGcMarkedNamer(OZ_Term t)
   OZ_Term t_deref = oz_deref(t);
   return oz_isRef(t) && (GCISMARKED(t_deref) || 
 			 (isCVar(t_deref) && 
-			  tagged2CVar(t_deref)->gcIsMarkedOutlined()));
+			  tagged2CVar(t_deref)->gcIsMarked()));
 }
 
 void GcIndexNamer(OZ_Term &t)
@@ -68,7 +68,7 @@ OZ_Term getGcForward(OZ_Term t)
 {
   OZ_Term t_deref = oz_deref(t);
   return (isCVar(t_deref) 
-	  ? makeTaggedRef(tagged2CVar(t_deref)->gcGetFwdOutlined()) 
+	  ? makeTaggedRef(tagged2CVar(t_deref)->gcGetFwd()) 
 	  : (OZ_Term) GCUNMARK(t));
 }
 
@@ -98,7 +98,7 @@ PropNamer propNamer;
 
 Bool isGcMarkedNamer(Propagator * p)
 { 
-  return p->gcIsMarkedOutlined(); 
+  return p->isGcMarked(); 
 }
 void GcIndexNamer(Propagator * &p) 
 {
@@ -107,7 +107,7 @@ void GcIndexNamer(Propagator * &p)
 
 Propagator *  getGcForward(Propagator * p) 
 {
-  return p->gcGetFwdOutlined();
+  return (Propagator *) p->gcGetFwd();
 }
 
 void GcDataNamer(OZ_Term &t)
