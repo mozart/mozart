@@ -2,7 +2,6 @@
 
 SUBDIRS = bin lib tools test demo elisp examples
 
-
 .PHONY: bootstrap all install clean distclean veryclean check depend
 
 all::
@@ -21,3 +20,4 @@ clean veryclean distclean::
 
 distclean::
         -rm -f Makefile config.log config.status config.cache
+        -rm -f $(SUBDIRS:%=%/Makefile)
