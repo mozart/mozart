@@ -57,12 +57,40 @@ StackEntry *TaskStack::reallocate(StackEntry *p, int oldsize, int newsize)
   return ret;
 }
 
+
+static
+void printX(FILE *fd, RefsArray X)
+{
+  int xsize = getRefsArraySize(X);
+  while (--xsize >= 0) {
+    fprintf(fd,"\t\tX[%d]=0x%x\n", xsize, X[xsize]);
+  }
+}
+
+static
+void printDef(ProgramCounter PC)
+{
+  Reg reg;
+  ProgramCounter next;
+  TaggedRef file, line;
+  PrTabEntry *pred;
+  CodeArea::getDefinitionArgs(CodeArea::definitionStart(PC),reg,next,file,line,pred);
+
+  message("\tIn procedure %s (File %s, line %s)\n",
+	  pred ? pred->getPrintName() : "???",
+	  tagged2String(file,10),tagged2String(line,10));
+}
+
+
 void TaskStack::printDebug(Bool verbose, int depth)
 {
   if (this == NULL) {
-    printf("TaskStack empty.\n");
+    message("TaskStack empty.\n");
     return;
   }
+
+  message("Stack dump:\n");
+  message("-----------\n");
 
   TaskStackEntry *p = getTop();
   
@@ -76,10 +104,11 @@ void TaskStack::printDebug(Bool verbose, int depth)
 	ProgramCounter PC = (ProgramCounter) pop();
 	RefsArray Y = (RefsArray) pop();
 	RefsArray G = (RefsArray) pop();
-	if (!verbose) break;
-	printf("\tC_CONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n\t",
-	       n, PC, Y, G);
-	CodeArea::display(CodeArea::definitionStart(PC),1,stdout);
+	if (verbose) {
+	  message("\tC_CONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n\t",
+		 n, PC, Y, G);
+	}
+	printDef(PC);
       }
       break;
     case C_XCONT:
@@ -88,34 +117,29 @@ void TaskStack::printDebug(Bool verbose, int depth)
 	RefsArray Y = (RefsArray) pop();
 	RefsArray G = (RefsArray) pop();
 	RefsArray X = (RefsArray) pop();
-	if (!verbose) break;
-	printf("\tC_XCONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n",
-	       n, PC, Y, G);
-	int XSize = getRefsArraySize(X);
-	while (--XSize >= 0) {
-	  printf("\t\tX[%d]=0x%x\n", XSize, X[XSize]);
+	if (verbose) {
+	  message("\tC_XCONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n",
+		 n, PC, Y, G);
+	  printX(stdout,X);
 	}
+	printDef(PC);
 	break;
       }
     case C_NERVOUS: 
       if (!verbose) break;
-      printf("\tC_NERVOUS: board=0x%x\n", n);
+      message("\tC_NERVOUS: board=0x%x\n", n);
       break;
     case C_CFUNC_CONT:
       {
-	OZ_CFun biFun = (OZ_CFun) pop();
+	OZ_CFun biFun    = (OZ_CFun) pop();
 	Suspension* susp = (Suspension*) pop();
-	RefsArray X = (RefsArray) pop();
-	printf("\tC_CFUNC_CONT: board=0x%x, biFun=0x%x, susp=0x%x\n",
+	RefsArray X      = (RefsArray) pop();
+	message("\tC_CFUNC_CONT: board=0x%x, biFun=0x%x, susp=0x%x\n",
 	       n , biFun, susp);
-	if (!verbose) break;
 	if (X != NULL) {
-	  int XSize = getRefsArraySize(X);
-	  while (--XSize >= 0) {
-	    printf("\t\tX[%d]=0x%x\n", XSize, X[XSize]);
-	  }
+	  printX(stdout,X);
 	} else {
-	  printf("\t\tNo arguments.\n");
+	  message("\t\tNo arguments.\n");
 	}
 	break;
       }
@@ -132,7 +156,8 @@ void TaskStack::printDebug(Bool verbose, int depth)
 	SRecord *s = (SRecord *) pop();
 	RefsArray X = (RefsArray) pop();
 	if (!verbose) break;
-	printf("\tC_DEBUG_CONT: board=0x%x, Pred=0x%x, X=0x%x\n", n, s, X);
+	message("\tC_DEBUG_CONT: board=0x%x, Pred=0x%x\n", n, s);
+	printX(stdout,X);
 	break;
       }
 

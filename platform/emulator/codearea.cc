@@ -230,6 +230,17 @@ void displayCode(ProgramCounter from, int ssize) {
  fflush(stderr);
 }
 
+void CodeArea::getDefinitionArgs(ProgramCounter PC,
+				 Reg &reg, ProgramCounter &next, TaggedRef &file,
+				 TaggedRef &line, PrTabEntry *& pred)
+{
+  Assert(adressToOpcode(getOP(PC)) == DEFINITION);
+  reg  = regToInt(getRegArg(PC+1));
+  next = getLabelArg(PC+2);
+  file = getLiteralArg(PC+3);
+  line = getNumberArg(PC+4);
+  pred = getPredArg(PC+5);
+}
 
 
 void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
@@ -573,12 +584,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case DEFINITION:
 	  /* ***type 11:    OP predicate     */
       {
-	Reg reg = regToInt(getRegArg(PC+1));
-	ProgramCounter next = getLabelArg(PC+2);
-	TaggedRef file      = getLiteralArg(PC+3);
-	TaggedRef line      = getNumberArg(PC+4);
-	PrTabEntry *pred    = getPredArg(PC+5);
-	
+	Reg reg;
+	ProgramCounter next;
+	TaggedRef file, line;
+	PrTabEntry *pred;
+	getDefinitionArgs(PC,reg,next,file,line,pred);
+
 	fprintf(ofile, "(X%d,0x%x,%s,%s,%s,[",reg,next,
 		pred ? pred->getPrintName() : "(NULL)",
 		OZ_toC(file), OZ_toC(line));
