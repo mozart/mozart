@@ -32,6 +32,8 @@
 /****************************************************************************
  ****************************************************************************/
 
+#include "cac.hh"
+
 #include "tagged.hh"
 #include "board.hh"
 #include "var_base.hh"
@@ -93,6 +95,18 @@ static void gCollectCode(CodeArea *block);
 static void gCollectCode(ProgramCounter PC);
 
 #endif
+
+/*
+ * Depending on whether garbage collection or cloning use heap allocation
+ *
+ */
+
+#ifdef G_COLLECT
+#define CAC_MALLOC(sz) heapMalloc((sz))
+#else
+#define CAC_MALLOC(sz) freeListMalloc((sz))
+#endif
+
 
 /*
  * CHECKSPACE -- check if object is really copied from heap
@@ -162,18 +176,10 @@ void * _cacReallocStatic(void * p, size_t sz) {
              OZ_error("_cacReallocStatic: can only handle word sized blocks"););
 
   if (sz > 12) {
-#ifdef G_COLLECT
-    return memcpy(heapMalloc(sz), p, sz);
-#else
-    return memcpy(freeListMalloc(sz), p, sz);
-#endif
+    return memcpy(CAC_MALLOC(sz), p, sz);
   } else {
     register int32 * frm = (int32 *) p;
-#ifdef G_COLLECT
-    register int32 * to  = (int32 *) heapMalloc(sz);
-#else
-    register int32 * to  = (int32 *) freeListMalloc(sz);
-#endif
+    register int32 * to  = (int32 *) CAC_MALLOC(sz);
 
     switch(sz) {
     case 12:
@@ -190,58 +196,6 @@ void * _cacReallocStatic(void * p, size_t sz) {
     return to;
   }
 }
-
-
-/*
- * The garbage collector uses an explicit recursion stack. The stack
- * items are references where garbage collection must continue.
- *
- * The items are tagged pointers, the tag gives which routine must
- * continue, whereas the pointer itself says with which entity.
- *
- */
-
-enum TypeOfPtr {
-  PTR_LTUPLE         =  0,  // 0000
-  PTR_SRECORD        =  1,  // 0001
-  PTR_BOARD          =  2,  // 0010
-  PTR_CVAR           =  3,  // 0011
-  PTR_CONSTTERM      =  4,  // 0100
-  PTR_EXTENSION      =  5,  // 0101
-  PTR_SUSPLIST       =  6,  // 0110
-  PTR_UNUSED2        =  7,  // 0111
-  PTR_LOCAL_SUSPLIST =  8,  // 1000
-  // The remaining entries are reserved:
-  //  the lower three bits encode, how many suspenlists are to
-  //  be collected.
-};
-
-
-typedef TaggedRef TypedPtr;
-
-class _CacStack: public Stack {
-public:
-  _CacStack() : Stack(1024, Stack_WithMalloc) {}
-  ~_CacStack() {}
-
-  void push(void * ptr, TypeOfPtr type) {
-    Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) type, ptr));
-  }
-
-  void pushLocalSuspList(Board * bb, SuspList ** sl, int n) {
-    Assert(n<8);
-    Stack::ensureFree(2);
-    Stack::push((StackEntry) bb, NO);
-    Stack::push((StackEntry)
-                makeTaggedRef2p((TypeOfTerm) (PTR_LOCAL_SUSPLIST | n),
-                                (void *) sl), NO);
-  }
-
-  void recurse(void);
-
-};
-
-static _CacStack _cacStack;
 
 
 #ifdef S_CLONE
@@ -427,38 +381,12 @@ GCMeManager * GCMeManager::_head;
 
 #endif
 
-/*
- * The variable copying stack: VarFix
- *
- * When during garbage collection or during copying a variable V is
- * encountered that has not been collected so far and V is not direct,
- + that is, V has been reached by a reference chain, V cannot be copied
- * directly.
- *
- * So, push the location of the reference on VarFix and replace its content
- * by a reference to the old variable, as to shorten the ref-chain.
- *
- * Later V might be reached directly, that fixes V's location. After
- * collection has finished, VarFix tracks this new location to
- * and fixes the occurence on VarFix.
- *
- */
+#ifdef G_COLLECT
 
-class _CacVarFix: public Stack {
-public:
-  _CacVarFix() : Stack(1024, Stack_WithMalloc) {}
-  ~_CacVarFix() {}
+VarFix varFix;
+CacStack cacStack;
 
-  void defer(TaggedRef * var, TaggedRef * ref) {
-    Assert(var);
-    Stack::push((StackEntry) ref);
-    *ref = makeTaggedRef(var);
-  }
-
-  void fix(void);
-};
-
-static _CacVarFix _cacVarFix;
+#endif
 
 
 /****************************************************************************
@@ -570,7 +498,7 @@ Board * Board::_cacBoard() {
 
   Board *ret = (Board *) oz_hrealloc(bb, sizeof(Board));
 
-  _cacStack.push(ret,PTR_BOARD);
+  cacStack.push(ret,PTR_BOARD);
 
   bb->_cacMark(ret);
 
@@ -657,16 +585,6 @@ Object * Object::_cacObject(void) {
 
 
 inline
-void _cacSuspList(SuspList ** sl) {
-  _cacStack.push(sl, PTR_SUSPLIST);
-}
-
-inline
-void _cacLocalSuspList(Board * bb, SuspList ** sl, int n) {
-  _cacStack.pushLocalSuspList(bb, sl, n);
-}
-
-inline
 void OzVariable::_cacMark(TaggedRef * fwd) {
   Assert(!cacIsMarked());
 #ifdef S_CLONE
@@ -679,7 +597,7 @@ inline
 void OzFDVariable::_cac(void) {
   ((OZ_FiniteDomainImpl *) &finiteDomain)->copyExtension();
 
-  _cacLocalSuspList(getBoardInternal(), &(fdSuspList[0]), fd_prop_any);
+  cacLocalSuspList(getBoardInternal(), &(fdSuspList[0]), fd_prop_any);
 }
 
 inline
@@ -689,7 +607,7 @@ void OzFSVariable::_cac(void) {
   _fset.copyExtension();
 #endif
 
-  _cacLocalSuspList(getBoardInternal(), &(fsSuspList[0]), fs_prop_any);
+  cacLocalSuspList(getBoardInternal(), &(fsSuspList[0]), fs_prop_any);
 }
 
 inline
@@ -704,7 +622,7 @@ void OzCtVariable::_cac(void) {
     new_susp_lists[i] = _susp_lists[0];
   _susp_lists = new_susp_lists;
   // collect
-  _cacLocalSuspList(getBoardInternal(), _susp_lists, noOfSuspLists);
+  cacLocalSuspList(getBoardInternal(), _susp_lists, noOfSuspLists);
 
 }
 
@@ -746,7 +664,7 @@ OzVariable * OzVariable::_cacVarInline(void) {
 
     to->setHome(bb);
     // Only after board is collected!
-    _cacSuspList(&(to->suspList));
+    cacSuspList(&(to->suspList));
 
     switch (t){
     case OZ_VAR_FD:
@@ -768,10 +686,10 @@ OzVariable * OzVariable::_cacVarInline(void) {
   } else {
     to = ((ExtVar *) this)->_cacV();
     to->setHome(bb);
-    _cacSuspList(&(to->suspList));
+    cacSuspList(&(to->suspList));
   }
 
-  _cacStack.push(to, PTR_CVAR);
+  cacStack.push(to, PTR_CVAR);
 
   return to;
 
@@ -904,7 +822,7 @@ LTuple * LTuple::_cac(void) {
   if (GCISMARKED(args[0]))
     return (LTuple *) GCUNMARK(args[0]);
 
-  LTuple * to = (LTuple *) heapMalloc(sizeof(LTuple));
+  LTuple * to = (LTuple *) CAC_MALLOC(sizeof(LTuple));
 
   // Save the content
   to->args[0] = args[0];
@@ -912,7 +830,7 @@ LTuple * LTuple::_cac(void) {
   // Do not store foreward! Recurse takes care of this!
   args[0] = GCMARK(to->args);
 
-  _cacStack.push(this, PTR_LTUPLE);
+  cacStack.push(this, PTR_LTUPLE);
 
   return to;
 }
@@ -925,14 +843,14 @@ SRecord *SRecord::_cacSRecord() {
 
   int len = (getWidth()-1)*sizeof(TaggedRef)+sizeof(SRecord);
 
-  SRecord *ret = (SRecord*) heapMalloc(len);
+  SRecord *ret = (SRecord*) CAC_MALLOC(len);
 
   ret->label       = label;
   ret->recordArity = recordArity;
 
   _cacStoreFwd((int32*)&label, ret);
 
-  _cacStack.push(this, PTR_SRECORD);
+  cacStack.push(this, PTR_SRECORD);
 
   return ret;
 }
@@ -983,7 +901,7 @@ TaggedRef _cacExtension(TaggedRef term) {
   if (bb)
     ret->__setSpaceInternal(bb);
 
-  _cacStack.push(ret,PTR_EXTENSION);
+  cacStack.push(ret,PTR_EXTENSION);
 
   int32 *fromPtr = (int32*)ex;
 
@@ -1245,7 +1163,7 @@ void OZ_cacBlock(TaggedRef * frm, TaggedRef * to, int sz) {
               bb = bb->_cacBoard();
 
               Assert(bb);
-              _cacVarFix.defer(aux_ptr, &to[i]);
+              varFix.defer(aux_ptr, &to[i]);
             }
 
           }
@@ -1434,19 +1352,19 @@ void AM::gCollect(int msgLevel) {
   extRefs = extRefs->gCollect();
 
   oz_gCollectTerm(finalize_handler,finalize_handler);
-  _cacStack.recurse();
+  cacStack.gCollectRecurse();
   gCollect_finalize();
   gCollectWeakDictionaries();
   gCollectDeferWatchers();
   (*gCollectPerdioRoots)();
-  _cacStack.recurse();
+  cacStack.gCollectRecurse();
 
   (*gCollectBorrowTableUnusedFrames)();
-  _cacStack.recurse();
+  cacStack.gCollectRecurse();
 
 #ifdef NEW_NAMER
   GCMeManager::gCollect();
-  _cacStack.recurse();
+  cacStack.gCollectRecurse();
 #endif
 
   weakStack.recurse();          // must come after namer gc
@@ -1454,15 +1372,15 @@ void AM::gCollect(int msgLevel) {
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
 
-  _cacVarFix.fix();
+  varFix.gCollectFix();
 
-  Assert(_cacStack.isEmpty());
+  Assert(cacStack.isEmpty());
 
   GT.gCollectGNameTable();
   //   MERGECON gcPerdioFinal();
   gCollectSiteTable();
   (*gCollectPerdioFinal)();
-  Assert(_cacStack.isEmpty());
+  Assert(cacStack.isEmpty());
 
   GCDBG_EXITSPACE;
 
@@ -1490,7 +1408,7 @@ void AM::gCollect(int msgLevel) {
  * After collection has finished, update variable references
  *
  */
-void _CacVarFix::fix(void) {
+void VarFix::_cacFix(void) {
 
   if (isEmpty())
     return;
@@ -1599,9 +1517,9 @@ redo:
 
   Assert(copy);
 
-  sCloneStack.recurse();
+  cacStack.sCloneRecurse();
 
-  sCloneVarFix.fix();
+  varFix.sCloneFix();
 
 #ifdef NEW_NAMER
   if (am.isPropagatorLocation()) {
@@ -1970,7 +1888,7 @@ ConstTerm *ConstTerm::_cacConstTerm() {
 
       Abstraction *newA = Abstraction::newAbstraction(a->getPred(),
                                                       a->getBoardInternal());
-      _cacStack.push(newA,PTR_CONSTTERM);
+      cacStack.push(newA,PTR_CONSTTERM);
       storeFwdField(this, newA);
 #ifdef G_COLLECT
       gn = a->getGName1();
@@ -2103,7 +2021,7 @@ ConstTerm *ConstTerm::_cacConstTerm() {
     return 0;
   }
 
-  _cacStack.push(ret,PTR_CONSTTERM);
+  cacStack.push(ret,PTR_CONSTTERM);
   storeFwdField(this, ret);
 #ifdef G_COLLECT
   dogcGName(gn);
@@ -2242,12 +2160,12 @@ Suspendable * Suspendable::_cacSuspendableInline(void) {
 #endif
 
     if (isThread()) {
-      to = (Suspendable *) freeListMalloc(sizeof(Thread));
+      to = (Suspendable *) CAC_MALLOC(sizeof(Thread));
 
       ((Thread *) to)->_cacRecurse(SuspToThread(this));
 
     } else {
-      to = (Suspendable *) freeListMalloc(sizeof(Propagator));
+      to = (Suspendable *) CAC_MALLOC(sizeof(Propagator));
 
       ((Propagator *) to)->_cacRecurse(SuspToPropagator(this));
 
@@ -2300,7 +2218,7 @@ Propagator * Propagator::_cacLocalInline(Board * bb) {
   Assert(getBoardInternal()->derefBoard()->cacIsMarked() &&
          getBoardInternal()->derefBoard()->cacGetFwd() == bb);
 
-  to = (Propagator *) freeListMalloc(sizeof(Propagator));
+  to = (Propagator *) CAC_MALLOC(sizeof(Propagator));
 
   to->_cacRecurse(SuspToPropagator(this));
 
@@ -2440,9 +2358,9 @@ void Board::_cacRecurse() {
   oz_cacTerm(rootVar,rootVar);
   oz_cacTerm(status,status);
 
-  _cacSuspList(&suspList);
+  cacSuspList(&suspList);
   setDistBag(getDistBag()->_cac());
-  _cacSuspList((SuspList **) &nonMonoSuspList);
+  cacSuspList((SuspList **) &nonMonoSuspList);
 
 #ifdef CS_PROFILE
 #ifdef G_COLLECT
@@ -2507,7 +2425,7 @@ void LTuple::_cacRecurse() {
       return;
     }
 
-    LTuple * next = (LTuple *) freeListMalloc(sizeof(LTuple));
+    LTuple * next = (LTuple *) CAC_MALLOC(sizeof(LTuple));
 
     to->args[1] = makeTaggedLTuple(next);
     to = next;
@@ -2522,7 +2440,7 @@ void LTuple::_cacRecurse() {
 }
 
 
-void _CacStack::recurse(void) {
+void CacStack::_cacRecurse(void) {
 
   while (!isEmpty()) {
     TaggedRef tp  = (TaggedRef) pop();
