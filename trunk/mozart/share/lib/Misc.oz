@@ -20,6 +20,26 @@
 %%% WARRANTIES.
 %%%
 
+\ifdef LILO
+
+functor $
+
+export
+   'Misc': Misc
+   
+body
+   
+   \insert 'misc/Server.oz'
+   \insert 'misc/Agenda.oz'
+
+in
+   Misc = misc(agenda: NewAgenda
+	       server: NewServer)
+	       
+end
+
+\else
+
 fun instantiate {$ IMPORT}
    
    \insert 'misc/Server.oz'
@@ -32,3 +52,4 @@ in
    \insert 'Misc.env'
 end
 
+\endif
