@@ -290,23 +290,32 @@ int main(int argc, char **argv)
       usage("Missing object files.\n");
     }
     char *target = argv[3];
+    int num_of_obj_files = argc - 4;
     switch (sys) {
     case SYS_GNU:
       {
 	char *tmpfile_a = concat(ostmpnam(),".a");
-	char **dlltoolCmd = new char*[6];
-	dlltoolCmd[0] = "dlltool";
-	dlltoolCmd[1] = "--def";
-	dlltoolCmd[2] = concat(getOzHome(true),"/include/emulator.def");
-	dlltoolCmd[3] = "--output-lib";
-	dlltoolCmd[4] = tmpfile_a;
-	dlltoolCmd[5] = NULL;
+	char *tmpfile_def = concat(ostmpnam(),".def");
+	char **dlltoolCmd = new char*[7+num_of_obj_files+1];
+	int index = 0;
+	dlltoolCmd[index++] = "dlltool";
+	dlltoolCmd[index++] = "--def";
+	dlltoolCmd[index++] = concat(getOzHome(true),"/include/emulator.def");
+	dlltoolCmd[index++] = "--output-def";
+	dlltoolCmd[index++] = tmpfile_def;
+	dlltoolCmd[index++] = "--output-lib";
+	dlltoolCmd[index++] = tmpfile_a;
+	for (int i = 4; i < argc; i++)
+	  dlltoolCmd[index++] = argv[i];
+	dlltoolCmd[index] = NULL;
 	int r = execute(dlltoolCmd,false);
 	if (!r) {
-	  char **dllwrapCmd = new char*[argc+4];
+	  char **dllwrapCmd = new char*[argc+6];
 	  dllwrapCmd[r++] = "dllwrap";
 	  dllwrapCmd[r++] = "-s";
-	  dllwrapCmd[r++] = "-o";
+	  dllwrapCmd[r++] = "--def";
+	  dllwrapCmd[r++] = tmpfile_def;
+	  dllwrapCmd[r++] = "--dllname";
 	  dllwrapCmd[r++] = target;
 	  for (int i = 4; i < argc; i++)
 	    dllwrapCmd[r++] = argv[i];
@@ -316,13 +325,14 @@ int main(int argc, char **argv)
 	  r = execute(dllwrapCmd,false);
 	}
 	unlink(tmpfile_a);
+	unlink(tmpfile_def);
 	doexit(r);
       }
     case SYS_MSVC:
       {
 	char *tmpfile = toUnix(ostmpnam());
-	char *tmpfile_lib = concat(tmpfile,".lib");
-	char *tmpfile_exp = concat(tmpfile,".exp");
+	char *tmpfile_lib = concat(tmpfile,"lib");
+	char *tmpfile_exp = concat(tmpfile,"exp");
 	char **libCmd = new char *[6];
 	libCmd[0] = "lib";
 	libCmd[1] = "/nologo";
