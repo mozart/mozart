@@ -216,10 +216,11 @@ GenHashNode *GenHashTable::htFindFirst(int bigIndex){
 
 GenHashNode *GenHashTable::getByIndex(int &i){
   while(TRUE){
-    if(!table[i].isEmpty()) break;
+    if(i>=tableSize) return NULL;
+    if(!table[i].isEmpty()) return &table[i];
     i++;
-    if(i>=tableSize) return NULL;}
-  return &table[i];}
+  }
+}
 
 GenHashNode *GenHashTable::getFirst(int &i){
   i=0;

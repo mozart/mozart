@@ -479,9 +479,9 @@ int getSite(int sd,char *&h, int &p, int &t);
 class GName {
 public:
   int32 flags;
-
   GNameSite site;
   FatInt id;
+
   Bool same(GName *other) { return site.same(other->site) && id.same(other->id); }
   GName() { flags = 0; }
   GName(char *ip, int port, int timestamp)
@@ -1506,7 +1506,7 @@ void BorrowTable::gcBorrowTable()
   hshtbl->compactify();
 }
 
-/* OBSERVE - this must done at the end of other gc */
+/* OBSERVE - this must be done at the end of other gc */
 void GNameTable::gcGNameTable()
 {
   PERDIO_DEBUG(GC,"GC:gname gc");
@@ -1514,18 +1514,20 @@ void GNameTable::gcGNameTable()
   GenHashNode *aux = getFirst(index);
   while(aux) {
     GName *gn = (GName*) aux->getBaseKey();
+    GenHashNode *aux1 = aux;
+    int oldindex = index;
+    aux = getNext(aux,index);
+    /* code is never garbage collected */
+    if (gn->getPredMark()) {
+      continue;
+    }
     if (gn->getGCMark()) {
-      if (!gn->getPredMark()) {
-        TaggedRef t = (TaggedRef) ToInt32(aux->getEntry());
-        gcTagged(t,t);
-        aux->setEntry((GenHashEntry*)ToPointer(t));
-      }
+      TaggedRef t = (TaggedRef) ToInt32(aux1->getEntry());
+      gcTagged(t,t);
+      aux1->setEntry((GenHashEntry*)ToPointer(t));
       gn->resetGCMark();
-      aux = getNext(aux,index);
     } else {
-      GenHashNode *aux1 = aux;
-      int oldindex = index;
-      aux = getNext(aux,index);
+      delete gn;
       htSub(oldindex,aux1);
     }
   }

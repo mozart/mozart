@@ -1617,12 +1617,12 @@ void AM::gc(int msgLevel)
 
   EXITCHECKSPACE;
 
-  oldChain->deleteChunkChain();
-
 #ifdef PERDIO
   gcBorrowTable();
   gcGNameTable();
 #endif
+
+  oldChain->deleteChunkChain();
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
