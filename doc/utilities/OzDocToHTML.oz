@@ -826,8 +826,13 @@ define
 		  span(COMMON: @Common
 		       PCDATA('``') OzDocToHTML, Batch(M 1 $) PCDATA('\'\''))
 	       end
-	    [] span then
-	       span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	    [] span then HTML in
+	       HTML = span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	       if {SGML.isOfClass M index} then HTML1 in
+		  OzDocToHTML, Index(M [HTML] ?HTML1)
+		  SEQ([HTML1 HTML])
+	       else HTML
+	       end
 	    [] def then
 	       em(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    %-----------------------------------------------------------
