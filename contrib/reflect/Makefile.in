@@ -42,7 +42,7 @@ OZDEPEND        = $(OZC) -c -M
 # Sources and targets
 #----------------------------------------------------------------------
 
-CSRCS           = reflect.cc
+CSRCS           = reflect.cc builtins.cc reflect_prop.cc reflect_var.cc
 
 OZSRCS          = Reflect.oz
 
