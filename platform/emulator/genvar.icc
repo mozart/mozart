@@ -28,24 +28,28 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 			 Bool prop)
 {
   Assert(getType()==FDVariable || getType()==OFSVariable);
+  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
+			   localPropStore.isInLocalPropagation()));
+
   switch (getType()){
   case FDVariable:
     {
-      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
-			       localPropStore.isInLocalPropagation()));
-
       if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, prop))
 	return FALSE;
-      LOCAL_PROPAGATION(if (! localPropStore.isInLocalPropagation())
-			if (! localPropStore.do_propagation()) return FALSE;)
     }
-    return TRUE;
-  case OFSVariable:
-    return ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, prop);
-  default:
     break;
+  case OFSVariable:
+    if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, prop)) {
+      return FALSE;
+    }
+    break;
+  default:
+    return FALSE;
   }
-  return FALSE;
+      
+  LOCAL_PROPAGATION(if (! localPropStore.isInLocalPropagation())
+		    if (! localPropStore.do_propagation()) return FALSE;)
+  return TRUE;
 } 
 
 inline
