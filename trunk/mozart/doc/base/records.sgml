@@ -403,6 +403,23 @@
 	  are similar to <<Record.takeWhile>>, <<Record.dropWhile>> and
 	  <<Record.takeDropWhile>> but the binary boolean function&nbsp;?_{P}
 	  is applied with the current index as first actual argument.
+
+	<Entry><<waitOr>>
+	  <Index class=tails/<<Record>><And><<waitOr>>/
+	<Synopsis>
+	  <<{Record.waitOr ?+{R} ??{LI}}>>
+	<Item>
+          blocks until at least one field of ?+{R} is
+	  determined. Returns the feature ?_{LI} of a determined
+	  field. 
+        <P>
+          For example,
+          <<<{Record.waitOr a(_ b:1)}>>
+          returns <<b>> while
+          <<<{Record.waitOr a(2 b:_)}>>
+          returns <<1>>, and 
+          <<<{Record.waitOr a(_ b:_)}>>
+          blocks.
       </List>
 
   <Section>
