@@ -415,7 +415,7 @@ OZ_Return cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[],
   
   BIfdBodyManager x;
   
-  x.introduce(OZ_getCArg(last_index));
+  x.introduce(OZ_args[last_index]);
 
   Assert(x[0] != 1); // clause cannot already be entailed
   
