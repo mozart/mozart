@@ -5098,7 +5098,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   strCat(command, commandUsed, "ld -shared -o ");
 #endif
 #ifdef FREEBSD_I486
-  strCat(command, commandUsed, "ld -r -o ");
+  strCat(command, commandUsed, "ld -Bshareable -o ");
 #endif
   strCat(command, commandUsed, tempfile);
 
