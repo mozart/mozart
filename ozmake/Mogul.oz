@@ -548,12 +548,21 @@ define
 	 {self set_database_ignore(true)}
 	 {self makefile_read}
 	 %% install docs if necessary
-	 local L={self get_doc_targets($)} in
-	    if L\=nil then
-	       {self set_docdir({Path.resolve
-				 {self get_moguldocdir($)}
-				 {Utils.mogulToFilename {self get_mogul($)}}})}
-	       {self install(L)}
+	 local
+	    ILIBS = {self get_includelibs($)}
+	    IBINS = {self get_includebins($)}
+	    IDOCS = {self get_includedocs($)}
+	 in
+	    {self set_includelibs(false)}
+	    {self set_includebins(false)}
+	    {self set_includedocs(true)}
+	    {self set_docdir({Path.resolve
+			      {self get_moguldocdir($)}
+			      {Utils.mogulToFilename {self get_mogul($)}}})}
+	    {self install()}
+	    {self set_includelibs(ILIBS)}
+	    {self set_includebins(IBINS)}
+	    {self set_includedocs(IDOCS)}
 	    end
 	 end
 	 %% create and install package if necessary
