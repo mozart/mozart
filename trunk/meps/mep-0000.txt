@@ -1,0 +1,84 @@
+MEP: 0
+Title: Index of Mozart Enhancement Proposals (MEPs)
+Version: $Revision$
+Last-Modified: $Date$
+Author: Denys Duchier <denys.duchier@mozart-oz.org>
+Status: Active
+Type: Informational
+Created: 28-10-2004
+Post-History:
+
+
+Introduction
+
+    The MEP contains the index of all Mozart Enhancement Proposals,
+    known as MEPs.  MEP numbers are assigned by the MEP Editor, and
+    once assigned are never changed.  The CVS history of the MEP
+    texts represent their historical record.
+
+
+Index by Category
+
+     num  title                                        owner
+     ---  -----                                        -----
+
+ Meta-MEPs (MEPs about MEPs or Process)
+
+ I     0  Index of Python Enhancement Proposals        Duchier
+ I     1  MEP Guidelines                               Duchier
+ I     2  Sample ReStructuredText MEP Template         Duchier
+ I     3  Sample Plaintext MEP Template                Duchier
+
+ Other Informational MEPs
+
+
+ Accepted MEPs (accepted; may not be implemented yet)
+
+
+ Open MEPs (under consideration)
+
+
+ Finished MEPs (done, implemented in CVS)
+
+ Empty MEPs (or containing only an abstract)
+
+ Deferred, Abandoned, Withdrawn, and Rejected MEPs
+
+
+Numerical Index
+
+     num  title                                        owner
+     ---  -----                                        -----
+ I     0  Index of Mozart Enhancement Proposals        Duchier
+ I     1  MEP Guidelines                               Duchier
+ I     2  Sample ReStructuredText MEP Template         Duchier
+ I     3  Sample Plaintext MEP Template                Duchier
+
+
+Key
+
+    I - Informational MEP
+    S - Standards Track MEP
+    A - Accepted proposal
+    R - Rejected proposal
+    D - Deferred proposal
+    F - Final proposal
+
+
+Owners
+
+    name                     email address
+    ----------------         -------------
+    Duchier                  denys.duchier@mozart-oz.org
+
+
+References
+
+
+
+Local Variables:
+mode: indented-text
+indent-tabs-mode: nil
+sentence-end-double-space: t
+fill-column: 70
+End:
