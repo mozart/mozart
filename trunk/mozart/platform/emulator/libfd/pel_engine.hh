@@ -242,42 +242,39 @@ public:
   // store variable and propagation variable are identical,
   // initialization and propagation are conjoined in a single function
   PEL_FSetVar * init(PEL_FSetProfile &fsetp, OZ_FSetConstraint &fset,
-			 PEL_PersistentFSetVar &fsv,
-			 PEL_Engine &engine, int first = 1) 
-    {
-      _init(fsv.getEventLists(), engine);
-      //
-      _profile = fsetp;
-      _fset = & fset;
-      _engine = &engine;
-      leave(first);
-      return this;
-    }
+		     PEL_PersistentFSetVar &fsv,
+		     PEL_Engine &engine, int first = 1) {
+    _init(fsv.getEventLists(), engine);
+    //
+    _profile = fsetp;
+    _fset = & fset;
+    _engine = &engine;
+    leave(first);
+    return this;
+  }
   //
   PEL_FSetVar(PEL_FSetProfile &fsetp, OZ_FSetConstraint &fset,
-		  PEL_PersistentFSetVar &fsv,
-		  PEL_Engine &engine, int first = 1) {
+	      PEL_PersistentFSetVar &fsv,
+	      PEL_Engine &engine, int first = 1) {
     (void) init(fsetp, fset, fsv, engine, first);
   }
   //---------------------------------------------------------------------------
   // store variable and propagation variable are separate,
   // initialization and propagation are separate functions
   PEL_FSetVar * init(PEL_PersistentFSetVar &fsv,
-			 PEL_Engine &engine) 
-    {
-      _init(fsv.getEventLists(), engine);
-      //
-      _profile.init(*fsv);
-      _fset = & *fsv;
-      _engine = &engine;
-      return this;
-    }
+			 PEL_Engine &engine) {
+    _init(fsv.getEventLists(), engine);
+    //
+    _profile.init(*fsv);
+    _fset = & *fsv;
+    _engine = &engine;
+    return this;
+  }
   //
   PEL_FSetVar(PEL_PersistentFSetVar &fsv,
-		  PEL_Engine &engine) 
-    {
-      (void) init(fsv, engine);
-    }
+	      PEL_Engine &engine) {
+    (void) init(fsv, engine);
+  }
   //
   int propagate_to(OZ_FSetConstraint &fset, int first = 0) {
     int r = (*_fset <<= fset);
@@ -364,28 +361,26 @@ public:
   // store variable and propagation variable are identical,
   // initialization and propagation are conjoined in a single function
   PEL_FDIntVar * init(PEL_FDProfile &fdp, OZ_FiniteDomain &fd,
-			  PEL_PersistentFDIntVar &fdv,
-			  PEL_Engine &engine, int first)
-    {
-      _init(fdv.getEventLists(), engine);
-      //
-      _profile = fdp;
-      _fd = &fd;
+		      PEL_PersistentFDIntVar &fdv,
+		      PEL_Engine &engine, int first) {
+    _init(fdv.getEventLists(), engine);
+    //
+    _profile = fdp;
+    _fd = &fd;
       _engine = &engine;
       leave(first);
       return this;
-    }
+  }
   PEL_FDIntVar(PEL_FDProfile &fdp, OZ_FiniteDomain &fd,
-		   PEL_PersistentFDIntVar &fdv,
-		   PEL_Engine &engine,int first = 1) {
+	       PEL_PersistentFDIntVar &fdv,
+	       PEL_Engine &engine,int first = 1) {
     (void) init(fdp, fd, fdv, engine, first);
   }
   //---------------------------------------------------------------------------
   // store variable and propagation variable are separate,
   // initialization and propagation are separate functions
   PEL_FDIntVar * init(PEL_PersistentFDIntVar &fdv,
-			  PEL_Engine &engine)
-  {
+		      PEL_Engine &engine) {
     _init(fdv.getEventLists(), engine);
     //
     _profile.init(*fdv);
@@ -436,5 +431,8 @@ inline
 int _PEL_PersistentVar::newId(PEL_PersistentEngine &e) {
   return newId(e.getCurrentId());
 }
+
+//-----------------------------------------------------------------------------
+
 
 #endif /* #ifndef __PEL_ENGINE_HH__ */
