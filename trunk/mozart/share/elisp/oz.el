@@ -924,8 +924,8 @@ the GDB commands `cd DIR' and `directory'."
   (setq paragraph-ignore-fill-prefix t)
   (make-local-variable 'fill-paragraph-function)
   (setq fill-paragraph-function 'oz-fill-paragraph)
-  (make-local-variable 'auto-fill-function)
-  (setq auto-fill-function 'oz-auto-fill)
+;  (make-local-variable 'auto-fill-function)
+;  (setq auto-fill-function 'oz-auto-fill)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'oz-indent-line)
   (make-local-variable 'comment-start)
@@ -1073,9 +1073,9 @@ and initial semicolons."
 
 
 ;; oz auto fill not impl (mm)
-(defun oz-auto-fill ()
+;(defun oz-auto-fill ()
 ;  (let ((start (oz-comment-start)))
-  (message "Oz auto fill: not implemented"))
+;  (message "Oz auto fill: not implemented"))
 
 ;;------------------------------------------------------------
 ;; Fontification
