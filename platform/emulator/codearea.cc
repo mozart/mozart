@@ -268,6 +268,17 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
   return OZ_recordInit(OZ_atom("proc"), pairlist);
 }
 
+Bool CodeArea::existVarNames(ProgramCounter PC) {
+  ProgramCounter aux = definitionEnd(PC);
+  if (aux != NOCODE && aux != NOCODE_GLOBALVARNAME) {
+    aux += sizeOf(getOpcode(aux));
+    Opcode op = getOpcode(aux);
+    if (op == LOCALVARNAME || op == GLOBALVARNAME)
+      return OK;
+  }
+  return NO;
+}
+
 TaggedRef CodeArea::varNames(ProgramCounter PC, RefsArray G, RefsArray Y)
 {
   TaggedRef locals = nil();

@@ -129,6 +129,7 @@ public:
 
   static void printDef(ProgramCounter PC);
   static TaggedRef dbgGetDef(ProgramCounter PC);
+  static Bool existVarNames(ProgramCounter PC);
   static TaggedRef varNames(ProgramCounter PC, RefsArray G, RefsArray Y);
   static TaggedRef argumentList(RefsArray X, int arity);
   static void getDefinitionArgs(ProgramCounter PC,
