@@ -18,7 +18,6 @@ echo "Building Oz System distribution directory "\"$DIR\"
 echo ""
 
 OZDIR=/usr/share/gs/soft/oz
-LEMACS=/usr/gnu/lib/lemacs
 
 # program to copy files (we use GNU cp, since
 # it allows to preserve links; if not available
@@ -33,34 +32,7 @@ cd $1
 echo "Copying Oz ..."
 $GCP /usr/share/gs/soft/oz/* .
 
-echo -n "Copying Lucid Emacs ..."
-mkdir -p lemacs/etc lemacs/lisp lemacs/info lemacs/lock
-cd lemacs
-$GCP /usr/gnu/info/dir /usr/gnu/info/lemacs* info
-$GCP $LEMACS/etc/DOC* etc
-$GCP /usr/gnu/bin/lemacs lemacs
-
-# Copy the elisp files. To save space: if a byte compiled
-# version of a file exists (ending in ".elc" instead of ".el")
-# copy only this and not its ".el" counterpart
-
-whereami=`pwd`
-cd $LEMACS
-#cp lisp/*.el $whereami/lisp
-
-
-for i in lisp/*
-do
-   if [ -d $i ]; then
-      mkdir -p $whereami/$i
-      if [ "$i" != "lisp/sunview" ]; then 
-         cp $i/*.elc $whereami/$i
-      fi
-      echo -n .   # to see that we are still working echo a dot from time to time
-   fi
-done
-
 echo ""
-
+echo "don't forget to copy an emacs !!"
 exit 0
 
