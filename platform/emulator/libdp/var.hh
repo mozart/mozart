@@ -35,13 +35,15 @@
 #include "dpBase.hh"
 #include "table.hh"
 
+
+
 class ProxyManagerVar : public ExtVar {
 protected:
   int index;
+  EntityInfo *info;
 public:
   ProxyManagerVar(Board *bb,int i)
-    : ExtVar(bb), index(i) { }
-
+    : ExtVar(bb), info(NULL), index(i){}
   OZ_Term statusV() = 0;
   VarStatus checkStatusV() = 0;
   Bool validV(TaggedRef v) { return TRUE; }
@@ -56,13 +58,21 @@ public:
 
   int getIndex() { return index; }
   void gcSetIndex(int i);
+
+  // for failure
+  EntityInfo *getInfo(){return info;}
+  EntityCond *getEntityCond(); 
+  void setInfo(EntityInfo* ei){info=ei;}
 };
 
 class ProxyVar : public ProxyManagerVar {
 private:
   TaggedRef binding;
+  TaggedRef status;
+  Bool is_future;
 public:
-  ProxyVar(Board *bb, int i) : ProxyManagerVar(bb,i), binding(0) { }
+  ProxyVar(Board *bb, int i,Bool isF) : 
+    ProxyManagerVar(bb,i), binding(0),status(0), is_future(isF){ }
 
   int getIdV() { return OZ_EVAR_PROXY; }
   OZ_Term statusV();
@@ -76,11 +86,26 @@ public:
 
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:pxy>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
+  void receiveStatus(TaggedRef);
   OZ_Return addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE);
 
   void redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
   void acknowledge(TaggedRef *vPtr, BorrowEntry *be);
   void marshal(MsgBuffer*);
+
+  Bool isFuture(){ return is_future;}
+  void addEntityCond(EntityCond);
+  void subEntityCond(EntityCond);
+  void probeFault(int);
+  void newWatcher(Bool);
+
+  Bool errorIgnore(){
+    if(info==NULL) return TRUE;
+    if(info->getEntityCond()==ENTITY_NORMAL) return TRUE;
+    return FALSE;}
+
+  Bool failurePreemption();
+  void wakeAll();
 };
 
 inline
@@ -94,12 +119,18 @@ ProxyVar *oz_getProxyVar(TaggedRef v) {
   return (ProxyVar*) oz_getExtVar(v);
 }
 
+enum ProxyListKind {
+  EXP_REG=0,
+  AUT_REG=1};
+
 class ProxyList {
+friend class ManagerVar;
 public:
   DSite* sd;
+  ProxyListKind kind; 
   ProxyList *next;
-public:
-  ProxyList(DSite* s,ProxyList *nxt) :sd(s),next(nxt) {}
+public: // PER-LOOK
+  ProxyList(DSite* s,ProxyList *nxt) :sd(s),next(nxt),kind(EXP_REG){}
 
   USEFREELISTMEMORY;
 
@@ -116,11 +147,14 @@ class ManagerVar : public ProxyManagerVar {
 private:
   ProxyList *proxies;
   OzVariable *origVar;
+  InformElem *inform; // for failure
 protected:
   OZ_Return sendRedirectToProxies(OZ_Term val, DSite* ackSite);
 public:
   ManagerVar(OzVariable *ov, int index)
-    :  ProxyManagerVar(ov->getHome1(),index), proxies(0),origVar(ov) {}
+    :  ProxyManagerVar(ov->getHome1(),index), inform(NULL), 
+       proxies(0),origVar(ov) {}
+
   int getIdV() { return OZ_EVAR_MANAGER; }
   OZ_Term statusV();
   VarStatus checkStatusV();
@@ -157,12 +191,31 @@ public:
     proxies = new ProxyList(sd,proxies);
   }
 
+  Bool siteInProxyList(DSite*);
+
+  void deregisterSite(DSite* sd);
   void surrender(TaggedRef*, TaggedRef);
   void requested(TaggedRef*);
   void marshal(MsgBuffer*);
+  void getStatus(DSite*, int, TaggedRef);
 
   inline
   void localize(TaggedRef *vPtr);
+  Bool isFuture(){ // mm3
+    if(origVar->getType()==OZ_VAR_FUTURE) return TRUE;
+    return FALSE;}
+
+  // for failure
+  void newInform(DSite*, EntityCond);
+  void probeFault(DSite *,int);
+  void addEntityCond(EntityCond);
+
+  EntityCond getEntityCond(){
+    if(info==NULL) return ENTITY_NORMAL;
+    return info->getEntityCond();}
+
+  void subEntityCond(EntityCond);
+  void newWatcher(Bool);
 };
 
 inline
@@ -179,7 +232,55 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 /* ---------------------------------------------------------------------- */
 
 OZ_Return sendRedirect(DSite*, int, TaggedRef);
-OZ_Term unmarshalVarImpl(MsgBuffer*);
+OZ_Term unmarshalVarImpl(MsgBuffer*,Bool,Bool);
 Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs);
 
+/* ---------------------------------------------------------------------- */
+
+enum VarKind{
+  VAR_PROXY,
+  VAR_MANAGER,
+  VAR_OBJECT,
+  VAR_FREE,
+  VAR_FUTURE,    
+  VAR_KINDED,
+};
+
+VarKind classifyVar(TaggedRef *);
+VarKind classifyVarLim(TaggedRef);
+
+inline ManagerVar* getManagerVar(TaggedRef *tPtr){
+  Assert(classifyVar(tPtr)==VAR_MANAGER);
+  return oz_getManagerVar(*tPtr);}
+
+inline ProxyVar* getProxyVar(TaggedRef *tPtr){
+  Assert(classifyVar(tPtr)==VAR_PROXY);
+  return oz_getProxyVar(*tPtr);}
+
+Watcher *varGetWatchersIfExist(TaggedRef* tPtr);
+
+#define GET_VAR(po,T) oz_get##T##Var(*((po)->getPtr()))
+
+VarKind typeOfBorrowVar(BorrowEntry*);
+
+ManagerVar* globalizeFreeVariable(TaggedRef*);
+EntityInfo *varMakeOrGetEntityInfo(TaggedRef*);
+EntityInfo *varGetEntityInfo(TaggedRef*);
+EntityCond varGetEntityCond(TaggedRef*);
+
+void maybeUnaskVar(BorrowEntry*);
+Bool errorIgnoreVar(BorrowEntry*);
+Bool varFailurePreemption(EntityInfo*, Bool&);
+void varPOAdjustForFailure(int,EntityCond,EntityCond);
+
 #endif
+
+
+
+
+
+
+
+
+
+

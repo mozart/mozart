@@ -34,17 +34,17 @@
 #include "dpMarshaler.hh"
 #include "chain.hh"
 #include "state.hh"
+#include "var.hh"
+#include "var_obj.hh"
 
-void sendAskError(Tertiary *t,EntityCond ec){ 
-  BorrowEntry *be=BT->getBorrow(t->getIndex());
+void sendAskError(BorrowEntry* be,EntityCond ec){ 
   NetAddress* na=be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   be->getOneMsgCredit();
   marshal_M_ASK_ERROR(bs,na->index,myDSite,ec);
   SendTo(na->site,bs,M_ASK_ERROR,na->site,na->index);}
 
-void sendUnAskError(Tertiary *t,EntityCond ec){
-  BorrowEntry *be=BT->getBorrow(t->getIndex());
+void sendUnAskError(BorrowEntry *be,EntityCond ec){
   NetAddress* na=be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   be->getOneMsgCredit();
@@ -62,19 +62,26 @@ void Chain::receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
   if(aux != ENTITY_NORMAL){
     sendTellError(oe,toS,oe->getTertiary()->getIndex(),aux,TRUE);
     return;}
-  newInform(toS,ec);
+  newInform(toS,ec); // PER-LOOK can be reclaimed
   PD((NET_HANDLER,"Adding Inform Element"));}
 
 // caused by installing remote watcher/handler
 void receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){  
   PD((NET_HANDLER,"Ask Error Received"));
-  Tertiary *t=oe->getTertiary();
-  switch(t->getType()){
-  case Co_Cell: 
-  case Co_Lock: 
-    getChainFromTertiary(t)->receiveAskError(oe,toS,ec);
-    return;
-  default: NOT_IMPLEMENTED;}
+  if(oe->isTertiary()){
+    Tertiary *t=oe->getTertiary();
+    switch(t->getType()){
+    case Co_Cell: 
+    case Co_Lock: 
+      getChainFromTertiary(t)->receiveAskError(oe,toS,ec);
+      return;
+    default: Assert(0);}}
+  if(oe->isRef()) return;
+  Assert(oe->isVar());
+  ManagerVar* mv=GET_VAR(oe,Manager);
+  if(mv->getEntityCond() & ec){
+    sendTellError(oe,toS,mv->getIndex(),mv->getEntityCond() & ec,TRUE);}
+  mv->newInform(toS,ec); // PER-LOOK can be reclaimed
 }
  
 void receiveUnAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){ 
@@ -84,17 +91,46 @@ void receiveUnAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
   case Co_Lock: 
     getChainFromTertiary(t)->receiveUnAsk(toS,ec);
     return;
-  default: NOT_IMPLEMENTED;}
+  default: Assert(0);}
 }
 
 /**********************************************************************/
 
 /**********************************************************************/
+static
+void receiveTellErrorTert(Tertiary *t,EntityCond ec,Bool set){
+  if(set){
+    if(addEntityCond(t,ec))
+      entityProblem(t);
+    return;}
+  subEntityCond(t,ec);}
 
+static
+void  receiveTellErrorVar(BorrowEntry*b,EntityCond ec,Bool set){
+  if(typeOfBorrowVar(b)==VAR_PROXY){
+    if(set){
+      GET_VAR(b,Proxy)->addEntityCond(ec);}
+    else{
+      GET_VAR(b,Proxy)->subEntityCond(ec);}
+    return;}
+  Assert(typeOfBorrowVar(b)==VAR_OBJECT);
+  if(set){
+    GET_VAR(b,Object)->addEntityCond(ec);}
+  else{
+    GET_VAR(b,Object)->subEntityCond(ec);}
+}
+
+void receiveTellError(BorrowEntry* b,EntityCond ec,Bool set){
+  if(b->isTertiary()){
+    receiveTellErrorTert(b->getTertiary(),ec,set);
+    return;}
+  Assert(b->isVar);
+  receiveTellErrorVar(b,ec,set);}
 
 void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
   if(toS==myDSite){
-    receiveTellError(oe->getTertiary(),ec,set);
+    Assert(0); // PER-LOOK is this possible
+    receiveTellErrorTert(oe->getTertiary(),ec,set);
     return;}
   if(SEND_SHORT(toS)) {return;}
   oe->getOneCreditOwner();
@@ -102,12 +138,7 @@ void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
   marshal_M_TELL_ERROR(bs,myDSite,mI,ec,set);
   SendTo(toS,bs,M_TELL_ERROR,myDSite,mI);}
 
-void receiveTellError(Tertiary *t,EntityCond ec,Bool set){
-  if(set){
-    if(addEntityCondMsg(t,ec))
-      entityProblem(t);
-    return;}
-  subEntityCondMsg(t,ec);}
+    
 
 
 

@@ -127,6 +127,11 @@ void gcFrameToProxyImpl();
 void gcPerdioFinalImpl();
 void gcPerdioRootsImpl();
 void dpExitImpl();
+
+void SiteUnify(TaggedRef, TaggedRef);
+
+void localizeTertiary(Tertiary*);
+Bool isTertiaryPending(Tertiary*);
 void dpExitWithTimer(unsigned int);
 
 /* __PERDIOHH */

@@ -33,6 +33,7 @@
 
 #include "dpBase.hh"
 #include "var_ext.hh"
+#include "var.hh"
 
 enum PV_TYPES {
   PV_OBJECTCLASSAVAIL,     // class available
@@ -44,6 +45,7 @@ protected:
   short pvtype;
   short requested;
   Object *obj;
+  EntityInfo* info;
   union {
     ObjectClass *aclass;
     GName *gnameClass;
@@ -57,15 +59,20 @@ public:
   ObjectVar(Board *bb,Object *o,ObjectClass *cl) : ExtVar(bb) {
     setpvType(PV_OBJECTCLASSAVAIL);
     obj   = o;
+    info=NULL;
     u.aclass=cl;
     requested = 0;
   }
   ObjectVar(Board *bb,Object *o,GName *gn) : ExtVar(bb) {
     setpvType(PV_OBJECTCLASSNOTAVAIL);
     obj   = o;
+    info=NULL;
     u.gnameClass=gn;
     requested = 0;
   }
+
+  EntityInfo* getInfo(){return info;}
+  void setInfo(EntityInfo* ei){info=ei;}
 
   int getIdV() { return OZ_EVAR_OBJECT; }
   OZ_Term statusV();
@@ -99,6 +106,15 @@ public:
   void marshal(MsgBuffer*);
   void sendObject(DSite*, int, ObjectFields&, BorrowEntry*);
   void sendObjectAndClass(ObjectFields&, BorrowEntry*);
+
+  // failure
+  void probeFault(int);
+  void addEntityCond(EntityCond);
+  void subEntityCond(EntityCond);
+  Bool errorIgnore();
+  void wakeAll();
+  Bool failurePreemption();
+  void newWatcher(Bool);
 };
 
 inline
@@ -114,5 +130,9 @@ ObjectVar *oz_getObjectVar(TaggedRef v) {
 
 
 TaggedRef newObjectProxy(Object*, GName*, GName*, TaggedRef);
+
+inline ObjectVar* getObjectVar(TaggedRef *tPtr){
+  Assert(classifyVar(tPtr)==VAR_OBJECT);
+  return oz_getObjectVar(*tPtr);}
 
 #endif

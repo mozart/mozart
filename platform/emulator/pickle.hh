@@ -83,6 +83,9 @@ typedef enum {
   DIF_EXTENSION,
   DIF_RESOURCE_T,
   DIF_RESOURCE_N,
+  DIF_FUTURE,
+  DIF_VAR_AUTO,
+  DIF_FUTURE_AUTO,
   DIF_LAST
 } MarshalTag;
 

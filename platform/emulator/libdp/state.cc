@@ -101,7 +101,6 @@ void globalizeCell(CellLocal* cl, int myIndex){
   CellSec* sec=new CellSec(val1);
   Chain* ch=new Chain(myDSite);
   cm->init(myIndex,ch,sec);
-  initManagerForFailure(cm);
 }
 
 void globalizeLock(LockLocal* ll, int myIndex){
@@ -113,7 +112,6 @@ void globalizeLock(LockLocal* ll, int myIndex){
   LockSec* sec=new LockSec(th,pt);
   Chain* ch=new Chain(myDSite);
   lm->init(myIndex,ch,sec);
-  initManagerForFailure(lm);
 }
 
 void convertCellProxyToFrame(Tertiary *t){
@@ -280,7 +278,7 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
     BorrowEntry *be=BT->getBorrow(index);
     be->getOneMsgCredit();
     cellSendRead(be,myDSite);}
-  else{ // ERIK-LOOK PER-LOOK
+  else{ // ERIK-LOOK 
     Assert(((CellManager*)c)->getChain()->getCurrent() != myDSite);
     sendPrepOwner(index);
     cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
@@ -612,17 +610,15 @@ void LockManager::gcLockManager(){
 void cellLock_Perm(int state,Tertiary* t){
   switch(state){
   case Cell_Lock_Invalid:{
-    if(addEntityCond(t,PERM_SOME|PERM_ME)) break;
+    if(addEntityCond(t,PERM_ME)) break;
     return;}
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
-    if(addEntityCond(t,PERM_SOME|PERM_ME|PERM_BLOCKED)) break;
+    if(addEntityCond(t,PERM_ME|PERM_BLOCKED)) break;
     return;}
   case Cell_Lock_Valid|Cell_Lock_Next: 
-    if(addEntityCond(t,PERM_SOME)) break;
-    return;
   case Cell_Lock_Valid:
-    if(addEntityCond(t,PERM_SOME|PERM_ALL)) break;
+    if(addEntityCond(t,PERM_ALL)) break;
     return;
   default: 
     Assert(0);}
@@ -633,17 +629,15 @@ void cellLock_Perm(int state,Tertiary* t){
 void cellLock_Temp(int state,Tertiary* t){
   switch(state){
   case Cell_Lock_Invalid:{
-    if(addEntityCond(t,TEMP_SOME|TEMP_ME)) break;
+    if(addEntityCond(t,TEMP_ME)) break;
     return;} 
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
-    if(addEntityCond(t,TEMP_SOME|TEMP_ME|TEMP_BLOCKED)) break;    
+    if(addEntityCond(t,TEMP_ME|TEMP_BLOCKED)) break;    
     return;}
   case Cell_Lock_Valid|Cell_Lock_Next:
-    if(addEntityCond(t,TEMP_SOME)) break;    
-    return;
   case Cell_Lock_Valid:
-    if(addEntityCond(t,TEMP_SOME|TEMP_ALL)) break;    
+    if(addEntityCond(t,TEMP_ALL)) break;    
     return;
   default: 
     Assert(0);}
@@ -653,17 +647,15 @@ void cellLock_Temp(int state,Tertiary* t){
 void cellLock_OK(int state,Tertiary* t){
   switch(state){
   case Cell_Lock_Invalid:{ 
-    subEntityCond(t,TEMP_SOME|TEMP_ME);
+    subEntityCond(t,TEMP_ME);
     return;} 
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
-    subEntityCond(t,TEMP_SOME|TEMP_ME);
+    subEntityCond(t,TEMP_ME|TEMP_BLOCKED);
     return;} 
   case Cell_Lock_Valid|Cell_Lock_Next:
-    subEntityCond(t,TEMP_SOME);
-    return;
  case Cell_Lock_Valid:{
-    subEntityCond(t,TEMP_SOME|TEMP_ALL);
+    subEntityCond(t,TEMP_ALL);
     return;}
   default: {
     Assert(0);}}

@@ -25,7 +25,6 @@
  */
 
 message(M_PORT_SEND,Index,Term)
-message(M_REMOTE_SEND,Index,String,Term)
 
 message(M_ASK_FOR_CREDIT,Index,Site)
 message(M_OWNER_CREDIT,Index,Credit)
@@ -36,7 +35,8 @@ message(M_REGISTER,Index,Site)
 message(M_REDIRECT,Site,Index,Term)
 message(M_ACKNOWLEDGE,Site,Index)
 message(M_SURRENDER,Index,Site,Term)
-message(M_GETSTATUS,Index,Term)
+message(M_GETSTATUS,Site,Index)
+message(M_SENDSTATUS,Site,Index,Term)
 
 message(M_CELL_LOCK_GET,Index,Site)
 message(M_CELL_LOCK_FORWARD,Site,Index,Site2)

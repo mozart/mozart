@@ -147,6 +147,9 @@
 	  ( AtomWatcher,	"watcher"),
 	  ( AtomAny,		"any"),
 	  ( AtomAll,		"all"),
+	  ( AtomVar,	        "var"),
+	  ( AtomNonVar,	         "nonvar"),
+	  ( AtomNormal,	         "normal"),
 
 	# Types
 	  ( AtomBool,        "bool"),

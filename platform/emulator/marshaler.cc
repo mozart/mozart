@@ -880,11 +880,27 @@ loop:
       return;
     }
 
-
-
   case DIF_VAR: 
     {
-      *ret = (*unmarshalVar)(bs);
+      *ret = (*unmarshalVar)(bs,FALSE,FALSE);
+      return;
+    }
+
+  case DIF_FUTURE: 
+    {
+      *ret = (*unmarshalVar)(bs,TRUE,FALSE);
+      return;
+    }
+
+  case DIF_VAR_AUTO: 
+    {
+      *ret = (*unmarshalVar)(bs,FALSE,FALSE);
+      return;
+    }
+
+  case DIF_FUTURE_AUTO: 
+    {
+      *ret = (*unmarshalVar)(bs,TRUE,FALSE);
       return;
     }
 
@@ -994,7 +1010,7 @@ void initMarshaler()
    * following tests fails: increase PERDIOMINOR
    */
   Assert(OZERROR == 225);  /* new instruction(s) added? */
-  Assert(DIF_LAST == 39);  /* new dif(s) added? */
+  Assert(DIF_LAST == 42);  /* new dif(s) added? */
 }
 
 
