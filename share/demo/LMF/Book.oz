@@ -23,25 +23,22 @@
 functor
 
 import
-   HTML
    Abstractions
    Application
    OS
-
+   HTML
    System
+
 prepare
 
-   Url = "/usr/standalone/ozdemo/LMF/ticket.ozp"
+   Url = "/tmp/ticket.ozp"
 
-   ArgSpec = list(url(single type:string default:"/usr/standalone/ozdemo/LMF/ticket.ozp"))
+   ArgSpec = list(url(single type:string default:"/tmp/ticket.ozp"))
 
-   fun {ParseHelp Args}
-      {List.toRecord args {Map Args fun {$ A#V} {String.toAtom A}#V end}}
-   end
 
 define
 
-   Argv = {ParseHelp {Application.getCgiArgs ArgSpec}}
+   Argv = {Application.getCgiArgs ArgSpec}
 
    {System.show url(Argv)}
 

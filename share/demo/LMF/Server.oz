@@ -32,7 +32,7 @@ import
 
 prepare
 
-   BaseDir = './'
+   BaseDir = '/tmp/'
 
    IDB = [t(fr:'Saarbrücken' to:'London'        price:576)
           t(fr:'Saarbrücken' to:'Miami'         price:345)
@@ -59,7 +59,7 @@ prepare
    fun {RemoveJourney Js JID}
       case Js of nil then nil
       [] J|Jr then
-         case J.id==JID then Jr else J|{RemoveJourney Jr JID} end
+         if J.id==JID then Jr else J|{RemoveJourney Jr JID} end
       end
    end
 
@@ -122,7 +122,7 @@ define
 
 
       meth request(From $)
-         {self.Text show('Request: '#case From==false then anonymous
+         {self.Text show('Request: '#if From==false then anonymous
                                      else From
                                      end)}
          try
@@ -135,7 +135,7 @@ define
          try
             DB = {Pickle.load self.DbFile}
          in
-            case {FindJourney DB JID} then
+            if {FindJourney DB JID} then
                NDB = {RemoveJourney DB JID}
             in
                {OS.unlink self.DbFile}

@@ -34,7 +34,7 @@ define
 
    fun {NewServer C M}
       S P={Port.new S} PS
-      O = {New {Class.extendFeatures C o(server:PS) nil} M}
+      O = {New {Class.new [C] nil f(server:PS) nil} M}
    in
       thread
          {ForAll S proc {$ M}
