@@ -7,6 +7,5 @@ fi
 export OZHOME
 
 exec emacs --batch \
--L $OZHOME/share/elisp -l oz.elc \
--L `dirname $0` -l ozdoc.elc \
+-L $OZHOME/share/elisp -l oz.elc -l ozdoc.elc \
 -f ozdoc-fontify $*
