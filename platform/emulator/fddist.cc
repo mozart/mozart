@@ -15,20 +15,14 @@
 //                  Finite Domains Distribution Built-ins
 // ---------------------------------------------------------------------
 
-inline
-static int getSize(TaggedRef var) {
-  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getSize() : 2;
-}
+#define getSize(var) \
+  (isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getSize() : 2)
 
-inline
-static int getMin(TaggedRef var) {
-  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMinElem() : 0;
-}
+#define getMin(var) \
+  (isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMinElem() : 0)
 
-inline
-static int getMax(TaggedRef var) {
-  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMaxElem() : 1;
-}
+#define getMax(var) \
+  (isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMaxElem() : 1)
 
 inline
 static int getMid(TaggedRef var) {
@@ -40,12 +34,17 @@ static int getMid(TaggedRef var) {
   }
 }
 
-inline
-static int getConstraints(TaggedRef var) {
-  Assert(isCVar(var));
-  return tagged2CVar(var)->getSuspListLength();
-}
+#define getConstraints(var) \
+  (tagged2CVar(var)->getSuspListLength())
 
+#define CheckVectorArg(i) \
+  TaggedRef arg, d_arg;                             \
+  arg   = vector->getArg(i);                        \
+  d_arg = arg;                                      \
+  DEREF(d_arg, p_arg, t_arg);                       \
+  if (isSmallInt(t_arg)) continue;                  \
+  vector->setArg(new_cur++, arg);                   \
+  Assert(isGenFDVar(d_arg) || isGenBoolVar(d_arg));
 
 OZ_C_proc_begin(BIfdDistribute, 5) {
   TaggedRef tagged_vector = deref(OZ_getCArg(0));
@@ -74,29 +73,21 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
 
   Assert(isGenFDVar(d_variable) || isGenBoolVar(d_variable));
 
-  if (cur!=0)
-    vector->setArg(0,variable);
+  vector->setArg(0,variable);
 
-  if (literalEq(order_spec, AtomNaive) && (cur>0)) {
-    for (int i=cur+1; i<width; i++)
-      vector->setArg(i-cur,vector->getArg(i));
+  int new_cur = 1;
+
+  if (literalEq(order_spec, AtomNaive)) {
+
+    for (int i=cur+1; i<width; i++) {
+      CheckVectorArg(i);
+    }
 
   } else  if (literalEq(order_spec, AtomSize)) {
     int minsize = getSize(d_variable);
-    int new_cur = 1;
 
     for (int i=cur+1; i<width; i++) {
-      TaggedRef   arg = vector->getArg(i);
-      TaggedRef d_arg = deref(arg);
-
-      if (isSmallInt(d_arg))
-        continue;
-
-      if (i != new_cur)
-        vector->setArg(new_cur, arg);
-      new_cur++;
-
-      Assert(isGenFDVar(d_arg) || isGenBoolVar(d_arg));
+      CheckVectorArg(i);
 
       int cursize = getSize(d_arg);
 
@@ -109,20 +100,9 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
     }
   } else  if (literalEq(order_spec, AtomMax)) {
     int maxmax  = getMax(d_variable);
-    int new_cur = 1;
 
     for (int i=cur+1; i<width; i++) {
-      TaggedRef   arg = vector->getArg(i);
-      TaggedRef d_arg = deref(arg);
-
-      if (isSmallInt(d_arg))
-        continue;
-
-      if (i != new_cur)
-        vector->setArg(new_cur, arg);
-      new_cur++;
-
-      Assert(isGenFDVar(d_arg) || isGenBoolVar(d_arg));
+      CheckVectorArg(i);
 
       int curmax = getMax(d_arg);
 
@@ -135,20 +115,9 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
     }
   } else  if (literalEq(order_spec, AtomMin)) {
     int minmin  = getMin(d_variable);
-    int new_cur = 1;
 
     for (int i=cur+1; i<width; i++) {
-      TaggedRef   arg = vector->getArg(i);
-      TaggedRef d_arg = deref(arg);
-
-      if (isSmallInt(d_arg))
-        continue;
-
-      if (i != new_cur)
-        vector->setArg(new_cur, arg);
-      new_cur++;
-
-      Assert(isGenFDVar(d_arg) || isGenBoolVar(d_arg));
+      CheckVectorArg(i);
 
       int curmin = getMin(d_arg);
 
@@ -162,20 +131,9 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
   } else  if (literalEq(order_spec, AtomNbSusps)) {
     int minsize = getSize(d_variable);
     int mincon  = getConstraints(d_variable);
-    int new_cur = 1;
 
     for (int i=cur+1; i<width; i++) {
-      TaggedRef   arg = vector->getArg(i);
-      TaggedRef d_arg = deref(arg);
-
-      if (isSmallInt(d_arg))
-        continue;
-
-      if (i != new_cur)
-        vector->setArg(new_cur, arg);
-      new_cur++;
-
-      Assert(isGenFDVar(d_arg) || isGenBoolVar(d_arg));
+      CheckVectorArg(i);
 
       int curcon  = getConstraints(d_arg);
 
@@ -198,9 +156,9 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
 
     }
 
-    if (new_cur < width)
-      vector->downSize(new_cur);
   }
+
+  vector->downSize(new_cur);
 
   if (literalEq(value_spec, AtomMin)) {
     value = makeTaggedSmallInt(getMin(d_variable));
@@ -215,6 +173,8 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
           OZ_unify(out_value,    value)) ? PROCEED : FAILED;
 } OZ_C_proc_end
 
+
+#undef CheckVectorArg
 
 // ---------------------------------------------------------------------
 //                  Scheduling Distribution
