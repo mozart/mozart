@@ -656,6 +656,7 @@ void Chain::managerSeesSitePerm(Tertiary *t,DSite* s){
     if(before->site->siteStatus()==SITE_PERM){
       if(dead->flagIsSet(CHAIN_BEFORE)){
         before->setFlagAndCheck(CHAIN_BEFORE);}
+      if(dead == last) { last = before;}
       removeNextChainElem(&(before->next));
       managerSeesSitePerm(t,before->site);
       return;}}
@@ -665,6 +666,11 @@ void Chain::managerSeesSitePerm(Tertiary *t,DSite* s){
   else{
     PD((ERROR_DET,"managerSeesSitePerm - perm is not last site"));
     if(after->site->siteStatus()==SITE_PERM){
+      // ERIK, hack there migh be a problem if
+      // next is the last chain-element.
+      if(dead->next == last){
+        last = dead;
+      }
       removeNextChainElem(&(dead->next));
       managerSeesSitePerm(t,s);
       return;}}
