@@ -9,8 +9,10 @@ local
    
    \insert pre
    \insert config
-   \insert emacs
+   %\insert emacs
+   \insert source
    \insert thr
+   \insert stack
    \insert manager
    \insert dialog
    \insert tkext
