@@ -30,14 +30,29 @@
 #include "am.hh"
 
 class IONode {
+private:
+  Bool isprotected[2];  // whether
 public:
   int fd;
   OZ_IOHandler handler[2];
   void *readwritepair[2];
   IONode *next;
   IONode(int f, IONode *nxt): fd(f), next(nxt) {
+    isprotected[0] = isprotected[1] = NO;
     handler[0] = handler[1] = 0;
     readwritepair[0] = readwritepair[1] = 0;
+  }
+  void protect(int mode) {
+    if (!isprotected[mode]) {
+      isprotected[mode] = OK;
+      oz_protect((TaggedRef *)&readwritepair[mode]);
+    }
+  }
+  void unprotect(int mode) {
+    if (isprotected[mode]) {
+      isprotected[mode] = NO;
+      oz_unprotect((TaggedRef *)&readwritepair[mode]);
+    }
   }
 };
 
@@ -109,7 +124,7 @@ int oz_io_select(int fd, int mode,TaggedRef l,TaggedRef r)
   }
   IONode *ion = findIONode(fd);
   ion->readwritepair[mode]=(void *) oz_cons(l,r);
-  (void) oz_protect((TaggedRef *) &(ion->readwritepair[mode]));
+  ion->protect(mode);
 
   ion->handler[mode]=oz_io_awake;
   osWatchFD(fd,mode);
@@ -125,7 +140,7 @@ void oz_io_acceptSelect(int fd,TaggedRef l,TaggedRef r)
 
   IONode *ion = findIONode(fd);
   ion->readwritepair[SEL_READ]=(void *) oz_cons(l,r);
-  (void) oz_protect((TaggedRef *) &(ion->readwritepair[SEL_READ]));
+  ion->protect(SEL_READ);
 
   ion->handler[SEL_READ]=oz_io_awake;
   osWatchAccept(fd);
@@ -136,7 +151,7 @@ void oz_io_deSelect(int fd,int mode)
   osClrWatchedFD(fd,mode);
   IONode *ion = findIONode(fd);
   ion->readwritepair[mode]  = 0;
-  (void) oz_unprotect((TaggedRef *) &(ion->readwritepair[mode]));
+  ion->unprotect(mode);
   ion->handler[mode]  = 0;
 }
 
@@ -164,7 +179,7 @@ void oz_io_handle()
         if ((ion->handler[mode]) &&  /* Perdio: handlers may do a deselect for other fds*/
             (ion->handler[mode])(index, ion->readwritepair[mode])) {
           ion->readwritepair[mode] = 0;
-          (void) oz_unprotect((TaggedRef *)&(ion->readwritepair[mode]));
+          ion->unprotect(mode);
           ion->handler[mode] = 0;
           osClrWatchedFD(index,mode);
         }
