@@ -167,10 +167,13 @@ choice</EM> statements.
 
 <SUBSECTION><TITLE/or statement/
 <P>In all the disjunctive statements we are going to use the notion of
-a clause and a guard.  A clause consists of a guard ?{G} and a body ?{S},
+a clause and a guard.  A clause consists of a guard ?{G} and a body ?{S1},
 and has the following form:
 
-<<<?{X1} ... ?{XN} in ?{G} then ?{S}>>>
+<<<?{G} then ?{S1}>>>
+
+<P> The guard ?{G} has thw form:
+<<< ?{X1} ... ?{Xn} in ?{S0} >>>
 
 where the variables ?{Xi} are existentially quantified with scope extending
 over both the guard and the body.
