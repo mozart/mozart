@@ -60,7 +60,7 @@ CSSFILES = $(CSSDIR)/ozdoc.css $(CSSDIR)/page.gif
 
 all: $(FUNCTORS) $(SYSLETS) $(ELCS)
 
-include $(SRCDIR)/../../share/Makefile.boot
+include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

@@ -6,4 +6,4 @@ MAIN = contrib.sgml
 SGMLSRCS =
 HTMLEXTRAFILES =
 
-include $(SRCDIR)/../Makefile.common
+include ../Makefile.common

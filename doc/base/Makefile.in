@@ -11,4 +11,4 @@ SGMLSRCS = \
 HTMLEXTRAFILES = \
 	base.gif
 
-include $(SRCDIR)/../Makefile.common
+include ../Makefile.common
