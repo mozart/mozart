@@ -622,9 +622,9 @@ OZ_BI_define(ozma_readProc,1,1)
   const int maxX=-1; // should never suspend
   PrTabEntry *pte
     = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-	  	mkTupleWidth(0),
-		OZ_mkTupleC("pos",3,OZ_atom("nofile"),OZ_int(0),OZ_int(0)),
-                nil(),maxX);
+		mkTupleWidth(0),
+		OZ_mkTupleC("pos",3,OZ_atom(""),OZ_int(0),OZ_int(0)),
+		nil(),maxX);
   pte->PC = codeArea->getStart();
   pte->setGSize(0);
   Abstraction *ab=Abstraction::newAbstraction(pte,am.currentBoard());
