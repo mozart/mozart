@@ -195,13 +195,13 @@ U=1
 %% Test options
 %%
 
-{Explorer option(search search:4 information:8 order:True)}
+{Explorer option(search search:4 information:8 order:true)}
 
 {Explorer option(search search:0 information:1)}
 {Explorer option(search search:none information:full)}
 {Explorer option(search search:full information:none)}
 
-{Explorer option(drawing hide:False scale:True update:40)}
+{Explorer option(drawing hide:false scale:true update:40)}
 
 {Explorer option(postscript color:grayscale orientation:landscape
 		 size:6#i#x#7#i)}

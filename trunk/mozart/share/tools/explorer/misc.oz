@@ -14,17 +14,17 @@ local
 		  {Int.toFloat {String.toInt Num}}
 	       elsecase {String.isFloat Num} then
 		  {String.toFloat Num}
-	       else False
+	       else false
 	       end
 	 F   = case Unit    
 	       of &i then 2.54
 	       [] &c then 1.00
 	       [] &m then 10.0
 	       [] &p then 0.035277778
-	       else False
+	       else false
 	       end
       in
-	 case N==False orelse F==False then False
+	 case N==false orelse F==false then false
 	 else N*F
 	 end
       end
@@ -37,13 +37,13 @@ in
       {List.takeDropWhile {Filter Is Char.isGraph}
        fun {$ I} I\=&x end ?RW ?XRH}
       case XRH of &x|RH then
-	 case {ComputeCM RW} of !False then False
+	 case {ComputeCM RW} of false then false
 	 elseof W then
-	    case {ComputeCM RH} of !False then False
+	    case {ComputeCM RH} of false then false
 	    elseof H then o(width:W height:H)
 	    end
 	 end
-      else False
+      else false
       end
    end
 end

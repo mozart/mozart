@@ -27,12 +27,12 @@ local
    end
       
    fun {FindNextSolBelow Ns}
-      case Ns of nil then False
+      case Ns of nil then false
       [] N|Nr then
 	 case N.kind
 	 of succeeded then N
 	 [] choose then
-	    case {N NextSolBelow($)} of !False then {FindNextSolBelow Nr}
+	    case {N NextSolBelow($)} of false then {FindNextSolBelow Nr}
 	    elseof Sol then Sol
 	    end
 	 else {FindNextSolBelow Nr}
@@ -41,12 +41,12 @@ local
    end
       
    fun {FindPrevSolBelow Ns}
-      case Ns of nil then False
+      case Ns of nil then false
       [] N|Nr then
 	 case N.kind
 	 of succeeded then N
 	 [] choose then
-	    case {N PrevSolBelow($)} of !False then {FindPrevSolBelow Nr}
+	    case {N PrevSolBelow($)} of false then {FindPrevSolBelow Nr}
 	    elseof Sol then Sol
 	    end
 	 else {FindPrevSolBelow Nr}
@@ -55,10 +55,10 @@ local
    end
    
    fun {FindBackBelow Ns}
-      case Ns of nil then False
+      case Ns of nil then false
       [] N|Nr then
 	 case N.kind\=choose then {FindBackBelow Nr}
-	 elsecase {N BackBelow($)} of !False then {FindBackBelow Nr}
+	 elsecase {N BackBelow($)} of false then {FindBackBelow Nr}
 	 elseof B then B
 	 end
       end
@@ -78,9 +78,9 @@ local
 	       case @isHidden then self
 	       else {FindNextSolBelow {GetRight @kids N}}
 	       end
-	    else False
+	    else false
 	    end
-	 of !False then {self.mom NextSol(self $)}
+	 of false then {self.mom NextSol(self $)}
 	 elseof N then N
 	 end
       end
@@ -107,9 +107,9 @@ local
 	       case @isHidden then self
 	       else {FindPrevSolBelow {Reverse {GetLeft @kids N}}}
 	       end
-	    else False
+	    else false
 	    end
-	 of !False then {self.mom PrevSol(self $)}
+	 of false then {self.mom PrevSol(self $)}
 	 elseof N then N
 	 end
       end
@@ -135,22 +135,22 @@ local
       end
       
       meth !BackBelow($)
-	 case @isHidden then False
-	 elsecase @choices==0 then False
+	 case @isHidden then false
+	 elsecase @choices==0 then false
 	 elsecase {FindBackBelow {Reverse @kids}}
-	 of !False then
-	    case @toDo\=nil then self else False end
+	 of false then
+	    case @toDo\=nil then self else false end
 	 elseof N then N
 	 end
       end
       
       meth !Back(Son $)
 	 case
-	    case @isHidden then False
-	    elsecase @choices==0 then False
+	    case @isHidden then false
+	    elsecase @choices==0 then false
 	    else {FindBackBelow {Reverse {GetLeft @kids Son}}}
 	    end
-	 of !False then
+	 of false then
 	    case @toDo\=nil then self
 	    else self,back($)
 	    end
@@ -205,9 +205,9 @@ local
    end
 
    class Sentinel
-      meth !PrevSol(_ $) False end
-      meth !NextSol(_ $) False end
-      meth !Back(_ $)    False end
+      meth !PrevSol(_ $) false end
+      meth !NextSol(_ $) false end
+      meth !Back(_ $)    false end
    end
    
 in

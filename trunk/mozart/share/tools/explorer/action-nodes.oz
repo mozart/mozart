@@ -20,7 +20,7 @@ local
    local
       fun {GetRightBorder D Es X}
 	 case D>0 then
-	    case Es of nil then False
+	    case Es of nil then false
 	    [] E|Er then {GetRightBorder D-1 Er E.2+X}
 	    end
 	 else X
@@ -56,7 +56,7 @@ local
 
 	 meth isInSubtree(CurX Depth FindX $)
 	    case {GetRightBorder Depth @shape.2 @offset+CurX}
-	    of !False then False
+	    of false then false
 	    elseof BorderX then FindX<BorderX
 	    end
 	 end
