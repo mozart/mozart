@@ -109,7 +109,8 @@ void Thread::checkToplevel()
 {
   if (ToplevelQueue) {
     Verbose((VERB_THREAD,"Thread::checkToplevel: pushNext: 0x%x\n",this));
-    for (Toplevel **last = &ToplevelQueue;
+    Toplevel **last;
+    for (last = &ToplevelQueue;
 	 ((*last)->next) != NULL;
 	 last = &((*last)->next)) {
     }
