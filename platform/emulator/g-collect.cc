@@ -441,9 +441,15 @@ void AM::gCollect(int msgLevel) {
   oz_gCollectTerm(finalize_handler,finalize_handler);
   cacStack.gCollectRecurse();
   gCollect_finalize();
-  gCollectWeakDictionaries();
   gCollectDeferWatchers();
   (*gCollectPerdioRoots)();
+  cacStack.gCollectRecurse();
+
+  // now everything that is locally not garbage
+  // has been marked and copied - whatever remains in
+  // the weak dictionaries that is not marked is
+  // otherwise inaccessible and should be finalized
+  gCollectWeakDictionaries();
   cacStack.gCollectRecurse();
 
   (*gCollectBorrowTableUnusedFrames)();
