@@ -50,13 +50,13 @@ least possible value for <math/x/. The distributor is shown in
 proc {NaiveDistributor Is}
    choice skip end
    local
-      Filtered = {Filter Is fun {$ I} {FD.reflect.size I}>1 end}
+      Fs={Filter Is fun {$ I} {FD.reflect.size I}>1 end}
    in
-      case Filtered 
+      case Fs
       of nil then skip
-      [] I|Ir then M={FD.reflect.min I} in
-	 choice I=M   then {NaiveDistributor Fr}
-	 []     I\=:M then {NaiveDistributor Filtered}
+      [] F|Fr then M={FD.reflect.min F} in
+	 choice F=M   {NaiveDistributor Fr}
+	 []     F\=:M {NaiveDistributor Fs}
 	 end
       end
    end
@@ -72,7 +72,7 @@ computation space becomes stable. Then the computation in the blocked
 thread is resumed and the statement ?{S} is executed.
 
 <p>
-Thus, the variable <<Filtered>> in <ptr to=fig.naiveDist> denotes the
+Thus, the variable <<Fs>> in <ptr to=fig.naiveDist> denotes the
 list of  undetermined variables after the space 
 has become stable. To detect undetermined variables we use the procedure
 <<FD.reflect.size>> which reflects the current size of a variable's
@@ -80,7 +80,7 @@ domain. If the domain size is one, the variabe is determined.
 
 <p>
 Then the least possible value for the first 
-undetermined variable <<I>> is computed by 
+undetermined variable <<F>> is computed by 
 <<<
 M={FD.reflect.min I}
 >>>
@@ -89,26 +89,21 @@ M={FD.reflect.min I}
 We now have to distribute. To this aim Oz provides a binary
 choice-statement. If a thread reaches the statement 
 <<<
-choice ?{S11} then ?{S12}
-[]     ?{S21} then ?{S22} 
+choice ?{S1}
+[]     ?{S2}
 end
 >>>
 the thread is blocked until its hosting
 computation space becomes stable. 
 
 <p>
-Assume that the execution of the  statements ?{S11} and
-?{S21} will create propagators for the constraints <math>C_1</math> and <math>C_2</math>,
-respectively. If the space has become stable,  the computation in the
+If the space has become stable,  the computation in the
 blocked  thread is resumed and it is distributed. Distribution yields
-two spaces, one obtained by adding a propagator for <math/C_1/ and replacing
-the choice-statement by the statement ?{S12}, one obtained by adding a
-propagator for <math/C_2/ and replacing
-the choice-statement by the statement ?{S22}. 
-Note that according to <ptr to=sec.dast/ the constraint <math/C_2/ must
-be equivalent to <math/\neg C_1/ (see <ptr to=sec.serializers/ for a
-generalization). All search engines in this tutorial will explore the
-space first which hosts ?{S11}. 
+two spaces, one obtained by replacing
+the choice-statement by the statement ?{S1}, one obtained by  replacing
+the choice-statement by the statement ?{S2}. 
+All search engines in this tutorial will explore the
+space first which hosts ?{S1}. 
 
 <p>
 In <ptr to=fig.naiveDist>, we distribute with the constraint that
