@@ -593,7 +593,7 @@ functorDescriptorList
 importDecls	: /* empty */
 		  { $$ = nilAtom; }
 		| nakedVariable optFeatures optFrom importDecls
-		  { $$ = consList(newCTerm("fImportItem",$1,$2,$3),$2); }
+		  { $$ = consList(newCTerm("fImportItem",$1,$2,$3),$4); }
 		;
 
 optFeatures	: /* empty */
