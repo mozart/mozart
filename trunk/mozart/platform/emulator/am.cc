@@ -297,8 +297,12 @@ void AM::init(int argc,char **argv)
   
   initVirtualProperties();
 
+#ifdef DEBUG_CHECK
+
   extern void initTagged();
   initTagged();
+
+#endif
 
   emptySuspendVarList(); // must be after initLiterals
 

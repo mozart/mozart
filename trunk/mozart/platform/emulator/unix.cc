@@ -1882,8 +1882,8 @@ OZ_BI_define(unix_randLimits, 0,2)
   // OZ_out(0) == minn
   // OZ_out(1) == maxx
 
-  OZ_out(0) = OZ_int(0);
-  OZ_out(1) = OZ_int(RAND_MAX);
+  OZ_out(0) = oz_int(0);
+  OZ_out(1) = oz_int(RAND_MAX);
   return PROCEED;
 } OZ_BI_end
 

@@ -163,7 +163,7 @@ Bool IHashTable::disentailed(OzVariable *cvar, TaggedRef *ptr)
 
   // mm2: hack: an arbitrary number is check for validity
   case OZ_VAR_EXT:
-    return !oz_var_valid(cvar,ptr,OZ_int(4711));
+    return !oz_var_valid(cvar,ptr,oz_int(4711));
 
   default:    
     return NO;

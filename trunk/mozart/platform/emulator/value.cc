@@ -863,6 +863,8 @@ Arity *ArityTable::find( TaggedRef list)
 }
 
 
+#ifdef DEBUG_CHECK
+
 void ArityTable::printStat()
 {
   int ec=0,ne=0,na=0,ac=0;
@@ -882,6 +884,8 @@ void ArityTable::printStat()
   printf("Entries:          %d\n", ne);
   printf("Entry collisions: %d\n", ec);
 }
+
+#endif
 
 /************************************************************************/
 /*                      Class Record                          */
