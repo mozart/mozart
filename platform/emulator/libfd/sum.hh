@@ -24,8 +24,6 @@
  *
  */
 
-//#define FLAGS
-
 #ifndef __SUM_HH__
 #define __SUM_HH__
 
@@ -34,44 +32,13 @@
 //-----------------------------------------------------------------------------
 
 class LinEqPropagator : public Propagator_VI_VD_I {
-
-#ifdef FLAGS
-private:
-  int * _l, * _u;
-  void init_l_u(void)
-  {
-    _l = OZ_hallocCInts(reg_sz);
-    _u = OZ_hallocCInts(reg_sz);
-    int m = OZ_getFDSup() + 1;
-    for (int i = reg_sz; i--; ) {
-      _l[i] = -1; _u[i] = m
-    } 
-  }
-#endif
-
   friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
   LinEqPropagator(OZ_Term a, OZ_Term x, OZ_Term c,
 		  OZ_Boolean is_lin = OZ_TRUE) 
-#ifndef FLAGS
     : Propagator_VI_VD_I(a, x, c, is_lin) { };
-#else
-    : Propagator_VI_VD_I(a, x, c, is_lin) { init_l_u(); };
-
-  virtual size_t sizeOf(void) { return sizeof(LinEqPropagator); }
-  virtual void gCollect(void) {
-    Propagator_VI_VD_I::gCollect();
-    _l = OZ_copyCInts(reg_sz, _l);
-    _u = OZ_copyCInts(reg_sz, _u);
-  }
-  virtual void sClone(void) {
-    Propagator_VI_VD_I::sClone();
-    _l = OZ_copyCInts(reg_sz, _l);
-    _u = OZ_copyCInts(reg_sz, _u);
-  }
-#endif
 
   LinEqPropagator(const Propagator_VI_VD_I_D &o) 
     : Propagator_VI_VD_I(o) {}
