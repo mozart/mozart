@@ -1,5 +1,5 @@
 dnl -*-sh-*-
-AC_INIT(ConstraintGraph.oz)
+AC_INIT(ConstrGraph.oz)
 OZ_CONTRIB_INIT_CXX
 OZ_LIB_GMP
 
