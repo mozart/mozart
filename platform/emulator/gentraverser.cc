@@ -736,7 +736,7 @@ repeat:
     }
 
   default:
-    OZ_error("Builder: unknown task!");
+    OZD_error("Builder: unknown task!");
   }
 
   //

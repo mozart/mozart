@@ -88,11 +88,11 @@ public:
   }
 #ifdef DEBUG_CHECK
   void * operator new (size_t)  {
-    OZ_error("Unexpected call of FDIntervals::new.");
+    OZD_error("Unexpected call of FDIntervals::new.");
     return (void *) 1;
   }
   void operator delete(void *, size_t) {
-    OZ_error("Unexpected call of FDIntervals::delete.");
+    OZD_error("Unexpected call of FDIntervals::delete.");
   }
 #endif
   void dispose(void) {
@@ -162,14 +162,14 @@ private:
 public:
 #ifdef DEBUG_CHECK
   void * operator new (size_t) {
-    OZ_error("Unexpected call of FDBitVector::new.");
+    OZD_error("Unexpected call of FDBitVector::new.");
     return (void *) 1;
   }    
   void operator delete(void *, size_t) {
-    OZ_error("Unexpected call of FDBitVector::delete.");
+    OZD_error("Unexpected call of FDBitVector::delete.");
   }
   FDBitVector(void) { 
-    OZ_error("Unexpected call of FDBitVector::FDBitVector."); 
+    OZD_error("Unexpected call of FDBitVector::FDBitVector."); 
   }
 #endif
   FDBitVector(int hi) : high(hi) { Assert(high <= word32(fd_bv_max_elem)); }
