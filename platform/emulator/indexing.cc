@@ -14,6 +14,7 @@
 #endif
 
 
+#include "codearea.hh"
 #include "indexing.hh"
 #include "genvar.hh"
 
