@@ -181,7 +181,7 @@ enum EmulatorPropertyIndex {
 static OZ_Term getApplicationArgs(void) {
   TaggedRef out = oz_nil();
   for(int i=ozconf.argC-1; i>=0; i--)
-    out = oz_cons(oz_atom(ozconf.argV[i]),out);
+    out = oz_cons(oz_atomNoDup(ozconf.argV[i]),out);
   return out;
 }
 
@@ -190,7 +190,7 @@ static OZ_Term getApplicationArgs(void) {
 
 #define CASE_INT( P,L) case P: return oz_int( L)
 #define CASE_BOOL(P,L) case P: return oz_bool(L)
-#define CASE_ATOM(P,L) case P: return oz_atom(L)
+#define CASE_ATOM(P,L) case P: return oz_atomNoDup(L)
 
 // Construct an Arity given `n' atoms.  First argument is n
 // i.e. the number of features, the following arguments are
@@ -222,7 +222,7 @@ OZ_Arity mkArity(int n,...)
 static OZ_Term  LAB__ = 0;			\
 static OZ_Arity ARY__;				\
 if (LAB__==0) {					\
-  LAB__ = oz_atom(L);				\
+  LAB__ = oz_atomNoDup(L);			\
   ARY__ = mkArity A ;				\
 }						\
 REC__ = SRecord::newSRecord(LAB__,(Arity*)ARY__);
@@ -452,18 +452,18 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 
   CASE_BOOL(PROP_PERDIO_USEALTVARPROTOCOL,ozconf.perdioUseAltVarProtocol);
   CASE_REC(PROP_PERDIO,"perdio",
-	   (7,oz_atom("useAltVarProtocol"),oz_atom("minimal"),
-	    oz_atom("seifHandler"),oz_atom("debug"),
-	    oz_atom("flowbuffersize"),oz_atom("flowbuffertime"),
-	    oz_atom("version")),
-	   SET_BOOL(oz_atom("useAltVarProtocol"),
+	   (7,oz_atomNoDup("useAltVarProtocol"),oz_atomNoDup("minimal"),
+	    oz_atomNoDup("seifHandler"),oz_atomNoDup("debug"),
+	    oz_atomNoDup("flowbuffersize"),oz_atomNoDup("flowbuffertime"),
+	    oz_atomNoDup("version")),
+	   SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		    ozconf.perdioUseAltVarProtocol);
-	   SET_BOOL(oz_atom("minimal"), ozconf.perdioMinimal);
-	   SET_BOOL(oz_atom("seifHandler"), ozconf.perdioSeifHandler);
-	   SET_INT(oz_atom("debug"), ozconf.debugPerdio);
-	   SET_INT(oz_atom("flowbuffersize"), ozconf.perdioFlowBufferSize);
-	   SET_INT(oz_atom("flowbuffertime"), ozconf.perdioFlowBufferTime);
-	   SET_REC(oz_atom("version"), OZ_pair2(oz_int(PERDIOMAJOR),
+	   SET_BOOL(oz_atomNoDup("minimal"), ozconf.perdioMinimal);
+	   SET_BOOL(oz_atomNoDup("seifHandler"), ozconf.perdioSeifHandler);
+	   SET_INT(oz_atomNoDup("debug"), ozconf.debugPerdio);
+	   SET_INT(oz_atomNoDup("flowbuffersize"), ozconf.perdioFlowBufferSize);
+	   SET_INT(oz_atomNoDup("flowbuffertime"), ozconf.perdioFlowBufferTime);
+	   SET_REC(oz_atomNoDup("version"), OZ_pair2(oz_int(PERDIOMAJOR),
 						oz_int(PERDIOMINOR)));
 	   );
   CASE_INT(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
@@ -475,18 +475,18 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_DPTABLE_BUFFER, ozconf.dpTableBuffer);
   CASE_INT(PROP_DPTABLE_WORTHWHILEREALLOC, ozconf.dpTableWorthwhileRealloc);
   CASE_REC(PROP_DPTABLE,"dpTable",
-	   (6,oz_atom("defaultOwnerTableSize"),
-	    oz_atom("defaultBorrowTableSize"),
-	    oz_atom("lowLimit"),oz_atom("expandFactor"),oz_atom("buffer"),
-	    oz_atom("worthwhileRealloc")),
-	   SET_INT(oz_atom("defaultOwnerTableSize"),
+	   (6,oz_atomNoDup("defaultOwnerTableSize"),
+	    oz_atomNoDup("defaultBorrowTableSize"),
+	    oz_atomNoDup("lowLimit"),oz_atomNoDup("expandFactor"),oz_atomNoDup("buffer"),
+	    oz_atomNoDup("worthwhileRealloc")),
+	   SET_INT(oz_atomNoDup("defaultOwnerTableSize"),
 		   ozconf.dpTableDefaultOwnerTableSize);
-	   SET_INT(oz_atom("defaultBorrowTableSize"),
+	   SET_INT(oz_atomNoDup("defaultBorrowTableSize"),
 		   ozconf.dpTableDefaultBorrowTableSize);
-	   SET_INT(oz_atom("lowLimit"), ozconf.dpTableLowLimit);
-	   SET_INT(oz_atom("expandFactor"), ozconf.dpTableExpandFactor);
-	   SET_INT(oz_atom("buffer"), ozconf.dpTableBuffer);
-	   SET_INT(oz_atom("worthwhileRealloc"), 
+	   SET_INT(oz_atomNoDup("lowLimit"), ozconf.dpTableLowLimit);
+	   SET_INT(oz_atomNoDup("expandFactor"), ozconf.dpTableExpandFactor);
+	   SET_INT(oz_atomNoDup("buffer"), ozconf.dpTableBuffer);
+	   SET_INT(oz_atomNoDup("worthwhileRealloc"), 
 		   ozconf.dpTableWorthwhileRealloc);
 	   );
   CASE_INT(PROP_CLOSE_TIME,ozconf.closetime);
@@ -751,7 +751,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_PERDIO_USEALTVARPROTOCOL,ozconf.perdioUseAltVarProtocol);
     CASE_BOOL_DO(PROP_PERDIO_MINIMAL,
 		 if ((*isPerdioInitialized)())
-		   return OZ_raiseDebug(OZ_makeException(E_ERROR,OZ_atom("dp"),
+		   return OZ_raiseDebug(OZ_makeException(E_ERROR,oz_atomNoDup("dp"),
 							 "modelChoose",0));
 		 ozconf.perdioMinimal=INT__);
     CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
@@ -761,14 +761,14 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     // PERDIO    
     CASE_REC(PROP_PERDIO,
 	     SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
-	     SET_NAT(oz_atom("flowbuffersize"),ozconf.perdioFlowBufferSize);
- 	     SET_NAT(oz_atom("flowbuffertime"),ozconf.perdioFlowBufferTime);
-	     SET_BOOL(oz_atom("seifHandler"),ozconf.perdioSeifHandler);
-	     SET_BOOL(oz_atom("useAltVarProtocol"),
+	     SET_NAT(oz_atomNoDup("flowbuffersize"),ozconf.perdioFlowBufferSize);
+ 	     SET_NAT(oz_atomNoDup("flowbuffertime"),ozconf.perdioFlowBufferTime);
+	     SET_BOOL(oz_atomNoDup("seifHandler"),ozconf.perdioSeifHandler);
+	     SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		      ozconf.perdioUseAltVarProtocol);
-	     DO_BOOL(oz_atom("minimal"),
+	     DO_BOOL(oz_atomNoDup("minimal"),
 		 if ((*isPerdioInitialized)())
-		   return OZ_raiseDebug(OZ_makeException(E_ERROR,OZ_atom("dp"),
+		   return OZ_raiseDebug(OZ_makeException(E_ERROR,oz_atomNoDup("dp"),
 							 "modelChoose",0));
 		 ozconf.perdioMinimal=INT__));
     // DPTABLE
@@ -797,15 +797,15 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
       am.setSFlag(StartGC);
       return BI_PREEMPT;});      
     CASE_REC(PROP_DPTABLE,
-	     SET_NAT(oz_atom("defaultOwnerTableSize"), 
+	     SET_NAT(oz_atomNoDup("defaultOwnerTableSize"), 
 		   ozconf.dpTableDefaultOwnerTableSize);
-	     SET_NAT(oz_atom("defaultBorrowTableSize"),
+	     SET_NAT(oz_atomNoDup("defaultBorrowTableSize"),
 		     ozconf.dpTableDefaultBorrowTableSize);
-	     SET_NAT(oz_atom("lowLimit"), ozconf.dpTableLowLimit);
-	     SET_NAT(oz_atom("expandFactor"),
+	     SET_NAT(oz_atomNoDup("lowLimit"), ozconf.dpTableLowLimit);
+	     SET_NAT(oz_atomNoDup("expandFactor"),
 		     ozconf.dpTableExpandFactor);
-	     SET_NAT(oz_atom("buffer"), ozconf.dpTableBuffer);
-	     SET_NAT(oz_atom("worthwhileRealloc"), 
+	     SET_NAT(oz_atomNoDup("buffer"), ozconf.dpTableBuffer);
+	     SET_NAT(oz_atomNoDup("worthwhileRealloc"), 
 		     ozconf.dpTableWorthwhileRealloc);
 	     );
 
@@ -842,8 +842,8 @@ OZ_Return VirtualProperty::set(OZ_Term) { Assert(0); return FAILED  ; }
 static OZ_Term vprop_registry;
 OZ_Term system_registry;	// eventually make it static [TODO]
 
-void VirtualProperty::add(char*s,int p) {
-  tagged2Dictionary(vprop_registry)->setArg(oz_atom(s),OZ_int(p));
+void VirtualProperty::add(char * s, int p) {
+  tagged2Dictionary(vprop_registry)->setArg(oz_atomNoDup(s),OZ_int(p));
 }
 
 // in addition to the usual OZ_Return values, the following
@@ -933,7 +933,7 @@ OZ_BI_define(BIputProperty,2,0)
     return oz_raise(E_ERROR,E_SYSTEM,"putProperty",1,key);
   else if (status == PROP__NOT__GLOBAL)
     return oz_raise(E_ERROR,E_KERNEL,"globalState",
-		    1,oz_atom("putProperty"));
+		    1,oz_atomNoDup("putProperty"));
   else return status;
 } OZ_BI_end
 
@@ -946,7 +946,7 @@ void initVirtualProperties()
   // POPULATE THE SYSTEM REGISTRY
   {
     OzDictionary * dict = tagged2Dictionary(system_registry);
-    dict->setArg(oz_atom("oz.home"),oz_atom(ozconf.ozHome));
+    dict->setArg(oz_atomNoDup("oz.home"),oz_atom(ozconf.ozHome));
   }
   // THREADS
   VirtualProperty::add("threads.created",PROP_THREADS_CREATED);
