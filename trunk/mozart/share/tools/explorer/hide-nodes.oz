@@ -186,6 +186,9 @@ local
       meth isHidden($)
 	 False
       end
+      meth hide
+	 true
+      end
       meth hideFailed
 	 true
       end

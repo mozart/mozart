@@ -31,16 +31,16 @@ local
 	 ScaleFrame = {New Tk.frame tkInit(parent:Frame highlightthickness:0)}
 	 
 	 Scale = {New Tk.scale [tkInit(parent:    ScaleFrame
-				       'from':    MinScalePercent
-				       to:        MaxScalePercent
+				       'from':    MinScale
+				       to:        MaxScale
 				       showvalue: 0
 				       width:     ScrollerWidth
+				       resolution: 0.001 / FloatScaleBase
 				       action: proc {$ S}
 						  {Manager
-						   scale({Tk.string.toFloat S}
-							 / 100.0)}
+						   scale({Tk.string.toFloat S})}
 					       end)
-				tk(set DefScalePercent)
+				tk(set DefScale)
 				tkBind(event:  '<2>'
 				       action: proc {$}
 						  {Manager scaleToFit}
@@ -83,11 +83,11 @@ local
       from Tk.canvas
 
       attr
-	 scale:  1.0
+	 scale:  DefScale
          %% These values are scaled
-	 left:   0.0
-	 right:  0.0
-	 bottom: 0.0
+	 left:   0
+	 right:  0
+	 bottom: 0
          %% These values are unscaled
 	 width:  CanvasWidth
 	 height: CanvasHeight
@@ -149,8 +149,8 @@ local
 			    fill:both   expand:yes padx:BigPad pady:BigPad))]}
 	 <<Tk.canvas tkBind(event: '<Configure>'
 			    action: proc {$ H W}
-				       {self  Resized({Tk.string.toFloat H}
-						      {Tk.string.toFloat W})}
+				       {self Resized({Tk.string.toFloat H}
+						     {Tk.string.toFloat W})}
 				    end
 			    args:   [h w]
 			    append: True)>>
@@ -203,9 +203,9 @@ local
       end
 
       meth clear
-	 left   <- 0.0
-	 right  <- 0.0
-	 bottom <- 0.0
+	 left   <- 0
+	 right  <- 0
+	 bottom <- 0
 	 <<Tk.canvas tk(delete all)>>
 	 <<ScrollCanvas AdjustRegion>>
 	 {self.genTagId clear}
@@ -213,14 +213,14 @@ local
 
       meth scrollTo(X Y)
 	 Scale  = @scale
-	 Left   = Scale * @left
-	 Right  = Scale * @right
-	 Bottom = Scale * @bottom
+	 Left   = Scale * {IntToFloat @left}
+	 Right  = Scale * {IntToFloat @right}
+	 Bottom = Scale * {IntToFloat @bottom}
       in 
 	 <<Tk.canvas tk(xview moveto
-			(X*Scale - Left - @width/2.0)/(Right-Left))>>
+			({IntToFloat X}*Scale - Left - @width/2.0)/(Right-Left))>>
 	 <<Tk.canvas tk(yview moveto
-			(Y*Scale - @height/2.0)/Bottom)>>
+			({IntToFloat Y}*Scale - @height/2.0)/Bottom)>>
       end
 
       meth bounding(NewLeft NewRight NewBottom)
@@ -232,9 +232,9 @@ local
    
       meth AdjustRegion
 	 Scale  = @scale
-	 Left   = Scale * @left
-	 Right  = Scale * @right
-	 Bottom = Scale * @bottom
+	 Left   = Scale * {IntToFloat @left}
+	 Right  = Scale * {IntToFloat @right}
+	 Bottom = Scale * {IntToFloat @bottom}
 	 Width  = Right - Left
 	 Delta  = (Width - @width) / 2.0
 	 ReqLeft # ReqRight = case Delta<0.0 then
@@ -258,22 +258,25 @@ local
 	 <<Tk.canvas tk(scale all 0 0 ScaleBy ScaleBy)>>
       end
 
-      meth scaleToFit(?NewScale)
+      meth scaleToFit($)
 	 Left   = @left
 	 Right  = @right
 	 Bottom = @bottom
       in
-	 case Bottom==0.0 orelse Left==0.0 orelse Right==0.0 then true else
-	    Factor = {FloatToInt 100.0 * {Min
-					  @width / (Right - Left)
-					  @height / Bottom}}
-	    ScaleFactor = case Factor<MinScalePercent then MinScalePercent
-			  elsecase Factor>MaxScalePercent then MaxScalePercent
-			  else Factor
-			  end
+	 case Bottom==0 orelse Left==Right then
+	    DefScale
+	 else
+	    Factor   = {Min @width * FloatScaleBase /
+			{IntToFloat (Right - Left)}
+			@height * FloatScaleBase /
+			{IntToFloat Bottom}} / FloatScaleBase
+	    NewScale = case Factor<MinScale then MinScale
+		       elsecase Factor>MaxScale then MaxScale
+		       else Factor
+		       end
 	 in
-	    NewScale = {IntToFloat ScaleFactor} / 100.0
-	    {self.manager.toplevel.scale tk(set ScaleFactor)}
+	    {self.manager.toplevel.scale tk(set NewScale)}
+	    NewScale
 	 end
       end
       
@@ -285,15 +288,15 @@ local
 
       meth postscript(colormode:C rotate:R file:F height:H width:W)
 	 Scale  = @scale
-	 Height = @bottom * Scale
-	 Width  = (@right - @left) * Scale
+	 Height = {IntToFloat @bottom} * Scale
+	 Width  = {IntToFloat (@right - @left)} * Scale
       in
 	 <<Tk.canvas tk(postscript(file:       F
 				   colormode:  C
 				   rotate:     R
 				   height:     Height
 				   width:      Width
-				   x:          @left * Scale
+				   x:          {IntToFloat @left} * Scale
 				   y:          0)
 			case H/Height > W/Width then
 			   o(pagewidth: W#c)
@@ -333,11 +336,11 @@ in
       
       attr
 	 CurNumber:     1
-	 curFont:       {PickFont NumberFonts InitialScale}
+	 curFont:       {PickFont NumberFonts DefScale}
 	 NumberNodes:   nil
 	 curNode:       False
 	 cmpNode:       False
-	 scale:         1.0
+	 scale:         DefScale
 
       meth init(?PackMe)
 	 self.toplevel  = {New Toplevel init(self
@@ -359,7 +362,7 @@ in
       meth configurePointer(Status)
 	 case {Det {self.canvas
 		    tkReturn(conf(cursor:case Status
-					 of drawing   then   pencil
+					 of drawing   then pencil
 					 [] searching then watch
 					 [] idle      then top_left_arrow
 					 end) $)}} then
@@ -372,7 +375,7 @@ in
 	 FontName = case Font==False then False else Font.name end
 	 Canvas   = self.canvas
       in
-	 scale   <- Scale
+	 scale <- Scale
 	 {Canvas scale(Scale)}
 	 case @curFont of !Font then true elseof CF then
 	    case @NumberNodes==nil then true else
@@ -404,29 +407,26 @@ in
 	 CanvasX = job {self.canvas tkReturnFloat(canvasx(ScaledX) $)} end
 	 CanvasY = job {self.canvas tkReturnFloat(canvasy(ScaledY) $)} end
 	 Scale   = @scale
-	 FindX   =  CanvasX / Scale - MaxExtent 
-	 Depth   = {Float.toInt
-		    {Float.round (CanvasY / Scale - HalfVerSpace) / VerSpace}}
+	 FindX   = {FloatToInt CanvasX / Scale - MaxExtent}
+	 Depth   = {FloatToInt
+		    {Float.round (CanvasY / Scale - HalfVerSpaceF) / VerSpaceF}}
       in
 	 {@root findByX(Depth RootX FindX $)}
       end
       
       meth setCursor(CurNode IsVisible)
 	 X Y
-	 CursorX CursorY
-	 Scale = @scale
+	 Scale  = @scale
 	 Canvas = self.canvas
       in
 	 {Canvas tk(delete self.cursor self.connection)}
 	 {CurNode getCenter(?X ?Y)}
-	 CursorX = (X + ShadeWidth) * Scale
-	 CursorY = (Y + ShadeWidth) * Scale
 	 {Canvas tk(crea {Shapes.(case
 				     CurNode.kind==choice andthen
 				     {CurNode isHidden($)} then hidden
 				  else CurNode.kind end)
-			  (X + ShadeWidth) * Scale
-			  (Y + ShadeWidth) * Scale
+			  {IntToFloat (X + ShadeWidth)} * Scale
+			  {IntToFloat (Y + ShadeWidth)} * Scale
 			  Scale}
 		    o(fill:CursorColor outline: '' tags:self.cursor))}
 	 {Canvas tk(lower self.cursor NodePrefix#CurNode.suffix)}
@@ -443,7 +443,8 @@ in
 	       {CmpNode getCenter(?CmpX ?CmpY)}
 	       {self.canvas [tk(delete self.connection)
 			     tk(crea line
-				Scale*X Scale*Y Scale*CmpX Scale*CmpY
+				Scale*{IntToFloat X} Scale*{IntToFloat Y}
+				Scale*{IntToFloat CmpX} Scale*{IntToFloat CmpY}
 				o(arrow: last
 				  fill:  CursorColor
 				  width: LinkWidth
