@@ -832,7 +832,7 @@ void AM::reduceTrailOnSuspend()
     Thread *thr = mkWakeupThread(bb);
 
     for (int index = 0; index < numbOfCons; index++) {
-      TaggedRef * refPtr, value, old_value;
+      TaggedRef * refPtr, value;
 
       trail.popRef(refPtr, value);
 
@@ -840,9 +840,6 @@ void AM::reduceTrailOnSuspend()
       Assert(isAnyVar(value));
 
       bb->setScript(index,refPtr,*refPtr);
-
-      old_value = makeTaggedRef(refPtr);
-      DEREF(old_value, old_value_ptr, old_value_tag);
 
       unBind(refPtr, value);
 
