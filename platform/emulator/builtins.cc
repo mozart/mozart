@@ -6801,7 +6801,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIsetSelf,1)
 {
-  OZ_Term obj = OZ_getCArg(0);
+  oz_declareNonvarArg(0,obj);
   obj = deref(obj);
   if (!isObject(obj)) {
     oz_typeError(0,"Object");
