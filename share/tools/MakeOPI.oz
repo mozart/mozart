@@ -69,12 +69,20 @@ in
        end
     in
        proc {StartOPI _ _} Sock OPICompiler CompilerReadEvalLoop in
-	  local Port in
+	  local Port NodeName in
 	     thread
 		Sock = {New TextSocket server(port: ?Port)}
 	     end
-	     {Print {VirtualString.toAtom
-		     'oz-socket "'#{OS.uName}.nodename#'" '#Port}}
+\ifdef NODENAME_USE_UNAME
+	     NodeName = {OS.uName}.nodename
+\else
+\ifdef NODENAME_USE_HOSTENV
+	     NodeName = {OS.getEnv 'HOST'}
+\else
+	     NodeName = 'localhost'
+\endif
+\endif
+	     {Print {VirtualString.toAtom 'oz-socket "'#NodeName#'" '#Port}}
 	  end
 
 	  OPICompiler = {New Compiler.compilerClass init()}
