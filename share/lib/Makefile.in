@@ -230,7 +230,7 @@ TkTools.ozf: DefaultURL.ozf
 # gtk dependencies and rules
 GTKSPECS   = $(VPATH)/gtk/gtk/*.spec
 GDKSPECS   = $(VPATH)/gtk/gdk/*.spec
-BUILDERSCR = $(VPATH)/gtk/builder.perl
+BUILDERSRC = $(VPATH)/gtk/builder.perl
 BUILDER    = $(PERL) $(BUILDERSRC)
 
 GTK.ozf: gtkclasses.oz gtkexports.oz
