@@ -946,6 +946,79 @@ OZ_CHECK_DLOPEN_UNDERSCORE
 
 # check malloc base
 
+dnl ****************************************************************
+dnl check for the times/sysconf(_SC_CLK_TCK) bug
+dnl ****************************************************************
+
+case $platform in
+win32*);;
+*)
+AC_CACHE_CHECK([whether the times/sysconf(_SC_CLK_TCK) bug is present],
+  oz_cv_times_sysconf_bug,
+  [AC_LANG_SAVE
+   AC_LANG_C
+   cat > conftest.$ac_ext <<EOF
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/times.h>
+#include <sys/time.h>
+extern double trunc(double);
+
+int main()
+{
+  int clktck;
+  struct tms buf;
+  struct timeval tmv_begin;
+  struct timeval tmv_end;
+  clock_t tck_begin;
+  clock_t tck_end;
+  long int elapsed1;
+  long int elapsed2;
+  long int diff;
+  double ratio;
+  int fix;
+
+  clktck = sysconf(_SC_CLK_TCK);
+  (void) gettimeofday(&tmv_begin,NULL);
+  tck_begin = times(&buf);
+  usleep(1000000);
+  (void) gettimeofday(&tmv_end,NULL);
+  tck_end = times(&buf);
+
+  elapsed1 = (tmv_end.tv_sec-tmv_begin.tv_sec)*1000 + (tmv_end.tv_usec-tmv_end.tv_usec)/1000;
+  elapsed2 = ((tck_end-tck_begin)*1000)/clktck;
+
+  ratio = ((double)elapsed2) / ((double)elapsed1);
+  if (ratio < 1.0) fix=0;
+  else fix = (int) trunc(ratio);
+  printf("%d\n",fix);
+  return 0;
+}
+EOF
+   if `${CC-gcc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS -lm`; then
+     oz_cv_CLKFIX=`./conftest${ac_exeext}` || oz_cv_CLKFIX='0'
+   else
+     oz_cv_CLKFIX='0'
+   fi
+   AC_LANG_RESTORE
+   if test "$oz_cv_CLKFIX" -eq 0 ; then
+     oz_cv_times_sysconf_bug=error
+     AC_MSG_ERROR([unable to test for times/sysconf(_SC_CLK_TCK) bug])
+   elif test "$oz_cv_CLKFIX" -eq 1; then
+     oz_cv_times_sysconf_bug=no
+   else
+     oz_cv_times_sysconf_bug=yes
+   fi
+])
+
+if test "$oz_cv_times_sysconf_bug" = yes; then
+   AC_MSG_CHECKING([for times/sysconf(_SC_CLK_TCK) fix ratio])
+   AC_MSG_RESULT($oz_cv_CLKFIX)
+   AC_DEFINE_UNQUOTED(CLK_TCK_BUG_RATIO,$oz_cv_CLKFIX)
+fi
+;;
+esac
+
 dnl *****************************************************************
 dnl *** GMP
 dnl *****************************************************************
