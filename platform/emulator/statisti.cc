@@ -170,6 +170,10 @@ void Statistics::printIdle(FILE *fd)
   timeUtime.idle();
 }
 
+#ifdef TRACE_ALOVER
+float perc_alover;
+#endif
+
 void Statistics::initGcMsg(int level)
 {
   if (level > 0) {
@@ -180,6 +184,11 @@ void Statistics::initGcMsg(int level)
   gcStarttime = osUserTime();
   gcStartmem  = getUsedMemory();
   heapUsed.incf(gcStartmem);
+
+#ifdef TRACE_ALOVER
+  perc_alover = (100.0 * _oz_alover) / getUsedMemoryBytes();
+  _oz_alover = 0;
+#endif
 }
 
 void Statistics::printGcMsg(int level)
@@ -197,6 +206,9 @@ void Statistics::printGcMsg(int level)
   if (level > 0) {
     printMem(stdout, " disposed ", gc_mem*KB);
     printf(" in %d msec.\n", gc_utime);
+#ifdef TRACE_ALOVER
+    printf("Allocation overhead is %2.2f%%.\n",perc_alover);
+#endif
     fflush(stdout);
   }
 }

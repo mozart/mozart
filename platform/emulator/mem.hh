@@ -94,6 +94,10 @@ extern   char * _oz_heap_cur;
 
 extern   char * _oz_heap_end;
 
+#ifdef TRACE_ALOVER
+extern size_t _oz_alover;
+#endif
+
 
 void _oz_getNewHeapChunk(const size_t);
 
@@ -125,6 +129,12 @@ void * oz_heapMalloc(const size_t sz) {
 
   {
     size_t a_sz = oz_alignSize(sz);
+
+#ifdef TRACE_ALOVER
+    if (a_sz != sz) {
+      _oz_alover += 4;
+    }
+#endif
 
     _oz_heap_cur -= a_sz;
 
@@ -313,12 +323,18 @@ public:
  * that are not longer needed. Unsafe will enforce the right alignment!
  *
  */
-#define oz_freeListDisposeUnsafe(p,s)
+inline void oz_freeListDisposeUnsafe(void * p, size_t s) {
+  char * p_c = (char *) p;
+  size_t p_o = ((OZ_HEAPALIGNMENT - 
+		 (ToInt32(p_c) & (OZ_HEAPALIGNMENT - 1))) 
+		& (OZ_HEAPALIGNMENT - 1));
+  size_t s_o = s - p_o;
+  size_t s_a = s_o & (-OZ_HEAPALIGNMENT);
+  if (s_a > 0) {
+    oz_freeListDispose(p_c + p_o, s_a);
+  }
+} 
 
-/*
- * AS YOU CAN SEE: THIS ROUTINE IS MISSING FOR NOW
- *
- */
 
 
 /*     

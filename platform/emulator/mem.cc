@@ -49,6 +49,9 @@ unsigned int heapTotalSizeBytes;
 char * _oz_heap_cur;
 #endif
 char * _oz_heap_end;
+#ifdef TRACE_ALOVER
+size_t _oz_alover;
+#endif
 
 
 void initMemoryManagement(void) {
@@ -57,6 +60,9 @@ void initMemoryManagement(void) {
   heapTotalSizeBytes = heapTotalSize = 0;
   _oz_heap_cur       = NULL;
   _oz_heap_end       = NULL;
+#ifdef TRACE_ALOVER
+  _oz_alover = 0;
+#endif
 
   // allocate first chunk of memory;
   MemChunks::list = NULL;
