@@ -277,7 +277,12 @@ void PickleBuffer::unmarshalEnd()
 {
   Assert(pbState == PB_Unmarshal);
   DebugCode(pbState = PB_None;);
-  Assert(posMB == last->head() + lastChunkSize);
+  // If zero bytes where read in the last chunk (or, differently put,
+  // the last non-empty chunk was full) - then that last chunk will
+  // never be reached, so 'posMB' will never point to it - because
+  // 'getNext()' advances 'posMB' to a next buffer only when it is
+  // really necessary.
+  Assert(lastChunkSize == 0 || posMB == last->head() + lastChunkSize);
   DebugCode(posMB = (BYTE *) -1;);
   DebugCode(endMB = (BYTE *) -1;);
 }

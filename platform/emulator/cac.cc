@@ -552,9 +552,8 @@ Board * Board::_cacBoardDo(void) {
   ret->nextGCStep();
   // an alive board must be copied at every GC step exactly once:
   Assert(ret->isEqGCStep(oz_getGCStep()));
-#else
-  ret->setCopyStep(oz_getCopyStep());
 #endif
+  ret->setCopyStep(oz_getCopyStep());
 
   cacStack.push(ret, PTR_BOARD);
 
