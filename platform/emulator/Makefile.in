@@ -46,7 +46,8 @@ OZVERSION       = $(SRCTOP)/OZVERSION
 
 MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
         PID URL FDB FSB System Finalize CTB \
-        AssemblerSupport CompilerSupport Profile
+        AssemblerSupport CompilerSupport Profile \
+        Debug Fault Foreign Browser Misc Distribution
 
 CREATEDOTHERS= \
         instrtab.hh opcodes.hh optostr.hh marshaler.hh\

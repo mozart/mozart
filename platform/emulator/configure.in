@@ -671,6 +671,16 @@ OZ_ENABLE_NO(virtualsites,[
         )
 
 dnl *****************************************************************
+dnl Include misc builtins
+dnl *****************************************************************
+
+OZ_ENABLE_NO(miscbuiltins,[ include misc builtins],
+        AC_DEFINE(MISC_BUILTINS)
+        AC_MSG_RESULT(yes)
+        ,
+        )
+
+dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
