@@ -52,7 +52,8 @@ TransObj *TransController::getTransObj() {
   if (used<getMaxNumOfResources()) {
     used++;
     if(used>getWeakMaxNumOfResources() && timer==NULL) {
-      timers->setTimer(timer,ozconf.perdioTempRetryFloor,
+      PD((TCPCACHE,"CloseOne timer set"));
+      timers->setTimer(timer,ozconf.dpRetryTimeFloor,
 		       transController_closeOne,this);
     }
     return newTransObj();
@@ -142,12 +143,17 @@ void TransController::allocateMarshalersForResources(int numOfResources)
 void TransController::changeNumOfResources() {
   PD((TCPCACHE,"****************************** CHANGE *************"));
 
-  //
   int weakmax=getWeakMaxNumOfResources();
-  allocateMarshalersForResources(getMaxNumOfResources());
+  int hardmax=getMaxNumOfResources();
+
+  PD((TCPCACHE,"Now hard %d, weak %d",hardmax,weakmax));
+  Assert(hardmax>=weakmax);
+
+  allocateMarshalersForResources(hardmax);
 
   if(used>weakmax && timer==NULL) { // If timer is set things will work
-    timers->setTimer(timer,ozconf.perdioTempRetryFloor,
+    PD((TCPCACHE,"CloseOne timer set"));
+    timers->setTimer(timer,ozconf.dpRetryTimeFloor,
 		     transController_closeOne,this);
   }
   ComObj *next=(ComObj *) 0x1; // Assignement to enter while
@@ -242,8 +248,9 @@ void TransController::enqueue(ComObj *c) {
   if(timer==NULL) {
     //    closeOne(); // UNHEALTHY
     // Set timer to wake us up to close someones connection soon.
-    // ozconf.perdioTempRetryFloor used as timer interval for now
-    timers->setTimer(timer,ozconf.perdioTempRetryFloor,
+    // ozconf.dpRetryTimeFloor used as timer interval for now
+    PD((TCPCACHE,"CloseOne timer set"));
+    timers->setTimer(timer,ozconf.dpRetryTimeFloor,
 		     transController_closeOne,this);
   }
 }

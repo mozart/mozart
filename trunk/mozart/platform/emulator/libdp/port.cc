@@ -128,13 +128,13 @@ Bool  PortProxy::canSend(){
    DSite* site     = na->site;
    /*
      if(!(site->getQueueStatus() < 
-     ozconf.perdioFlowBufferSize))
+     ozconf.dpFlowBufferSize))
 	printf("ps c:%d max: %d\n",
 	site->getQueueStatus(dummy), 
-	ozconf.perdioFlowBufferSize);
+	ozconf.dpFlowBufferSize);
    */
    return(site->getQueueStatus() < 
-	  ozconf.perdioFlowBufferSize);}
+	  ozconf.dpFlowBufferSize);}
 
 
 void  PortProxy::wakeUp(){
