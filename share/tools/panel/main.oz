@@ -78,7 +78,7 @@ in
 	    {Wait @ThisPanelTop}
 	    case
 	       case
-		  What==update andthen {List.sub {Arity OM} [1 time mouse]}
+		  What==update andthen {List.sub {Arity OM} [1 mouse time]}
 	       then
 		  case {HasFeature OM time} then T=OM.time in
 		     case {IsNat T} then
