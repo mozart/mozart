@@ -1359,7 +1359,9 @@ void engine() {
          *  if (e->currentSolveBoard)
          */
         if (tmpThread->hasNotificationBoard()) {
-          nb = tmpThread->notificationBoard->getBoardFast();
+          //  kost@
+          // nb = tmpThread->notificationBoard->getBoardFast();
+          nb = bb;
           Assert(!nb->isReflected());
           Assert(nb==bb);
           if (bb->isSolve()) {
@@ -2950,7 +2952,8 @@ LBLcheckEntailment:
       e->setCurrent(aa->getBoardFast());
       e->currentThread->home=CBB;
       Assert(CBB);
-      if (e->currentSolveBoard) e->currentThread->notificationBoard=CBB;
+      //  kost@
+      // if (e->currentSolveBoard) e->currentThread->notificationBoard=CBB;
       CBB->incSuspCount();
     } else
 #endif

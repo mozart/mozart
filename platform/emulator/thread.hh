@@ -44,6 +44,7 @@ public:
   void init(int prio,Board *home);
   int getPriority();
   // isSolve() replace by hasNotificationBoard()
+  // kost@ : 'notificationBoard' is not used actually;
   Bool hasNotificationBoard () { return notificationBoard!=NULL; }
   void setNotificationBoard (Board *b) { notificationBoard = b; }
   void pushDebug(Board *b, OzDebug *d)
