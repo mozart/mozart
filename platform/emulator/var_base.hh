@@ -97,10 +97,11 @@ enum TypeOfVariable {
   OZ_VAR_CT             = 3,
   // group 0a: constraints, but without a need for additional tagging;
   OZ_VAR_OF             = 4,
-  // group 1: futures: anything but constrained variables should be
-  //          bound to them. Note that a constrained variable cannot
-  //          be bound to a future since that means that the future
-  //          has to be converted to an FD variable, which is not
+  // group 1: read-onlys and failed values: anything but constrained
+  //          variables should be bound to them.
+  //          Note that a constrained variable cannot be bound to a
+  //          read-only or a failed value, since that means that the
+  //          latter has to be converted to an FD variable, which is not
   //          possible.
   OZ_VAR_FAILED         = 5,
   OZ_VAR_READONLY       = 6,
@@ -409,7 +410,7 @@ SimpleVar *tagged2SimpleVar(TaggedRef t)
 enum VarStatus {
   EVAR_STATUS_KINDED,
   EVAR_STATUS_FREE,
-  EVAR_STATUS_FUTURE,
+  EVAR_STATUS_READONLY,
   EVAR_STATUS_FAILED,
   EVAR_STATUS_DET,
   EVAR_STATUS_UNKNOWN
@@ -445,7 +446,7 @@ VarStatus oz_check_var_status(OzVariable *cv)
     return EVAR_STATUS_FREE;
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY:
-    return EVAR_STATUS_FUTURE;
+    return EVAR_STATUS_READONLY;
   case OZ_VAR_FAILED:
     return EVAR_STATUS_FAILED;
   case OZ_VAR_OPT:
@@ -457,7 +458,7 @@ VarStatus oz_check_var_status(OzVariable *cv)
 
 #if defined(DEBUG_CHECK)
 
-// isKinded || isFree || isFuture
+// isKinded || isFree || isReadOnly
 inline
 int oz_isFree(TaggedRef r)
 {
@@ -480,10 +481,10 @@ int oz_isKindedVar(TaggedRef r)
 }
 
 inline
-int oz_isFuture(TaggedRef r)
+int oz_isReadOnly(TaggedRef r)
 {
   return (oz_isVar(r) &&
-          oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FUTURE);
+          oz_check_var_status(tagged2Var(r))==EVAR_STATUS_READONLY);
 }
 
 // returns TRUE iff the entity is a failed value
@@ -510,8 +511,8 @@ int oz_isNonKinded(TaggedRef r)
 #define oz_isKindedVar(r)                                               \
 ((oz_check_var_status(tagged2Var(r)) == EVAR_STATUS_KINDED))
 
-#define oz_isFuture(r)                                                  \
-((oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FUTURE))
+#define oz_isReadOnly(r)                                                \
+((oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_READONLY))
 
 #define oz_isFailed(r)                                                  \
 ((oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FAILED))

@@ -197,11 +197,11 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
   return OZ_raiseDebug(makeGenericExc(id,msg,arg));
 }
 
-OZ_Return onlyFutures(OZ_Term l) {
+OZ_Return onlyReadOnlys(OZ_Term l) {
   if (oz_isNil(l)) return PROCEED;
   while (oz_isCons(l)) {
     OZ_Term f=oz_head(l);
-    if (!oz_isFuture(oz_deref(f))) {
+    if (!oz_isReadOnly(oz_deref(f))) {
       am.emptySuspendVarList();
       return PROCEED;
     }
@@ -223,7 +223,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header,
 
   //
   extractResources(in, cloneCells, resources, nogoods);
-  OZ_Return ret = onlyFutures(resources);
+  OZ_Return ret = onlyReadOnlys(resources);
   if (ret != PROCEED)
     return ret;
 

@@ -479,7 +479,7 @@ private:
   Bool isMarshaled;             // for the case of transmission failure;
   OB_TIndex oti;
   RRinstance *remoteRef;
-  MarshalTag tag;               // future? auto?
+  MarshalTag tag;               // readonly? auto?
 
   //
 public:
@@ -550,7 +550,7 @@ private:
   Ext_OB_TIndex oti;
   RRinstance *remoteRef;
   DSite *ms;                    // manager site, always;
-  short isFuture;               //
+  short isReadOnly;             //
   short isToOwner;              //
   BYTE  ec;                     // Entity Condition
 

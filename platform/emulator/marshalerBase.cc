@@ -86,9 +86,9 @@ MarshalTag defmap[DIF_LAST] = {
   (MarshalTag) -1,              // EXTENSION_DEF
   (MarshalTag) -1,              // RESOURCE_DEF
   DIF_RESOURCE_DEF,
-  (MarshalTag) -1,              // FUTURE_DEF
+  (MarshalTag) -1,              // READONLY_DEF
   (MarshalTag) -1,              // VAR_AUTO_DEF
-  (MarshalTag) -1,              // FUTURE_AUTO_DEF
+  (MarshalTag) -1,              // READONLY_AUTO_DEF
   (MarshalTag) -1,              // EOF
   (MarshalTag) -1,              // CODEAREA
   (MarshalTag) -1,              // VAR_OBJECT_DEF
@@ -122,9 +122,9 @@ MarshalTag defmap[DIF_LAST] = {
   DIF_COPYABLENAME_DEF,
   DIF_OWNER_DEF,
   DIF_VAR_DEF,
-  DIF_FUTURE_DEF,
+  DIF_READONLY_DEF,
   DIF_VAR_AUTO_DEF,
-  DIF_FUTURE_AUTO_DEF,
+  DIF_READONLY_AUTO_DEF,
   DIF_VAR_OBJECT_DEF,
 };
 

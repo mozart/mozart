@@ -866,7 +866,7 @@ Bool installWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
 
   VarKind vk=classifyVar(tPtr);
   Assert(vk!=VAR_KINDED);
-  if((vk==VAR_FREE) || (vk==VAR_FUTURE)){
+  if((vk==VAR_FREE) || (vk==VAR_READONLY)){
     Assert(perdioInitialized);
     (void) globalizeFreeVariable(tPtr);
     Assert(classifyVar(tPtr)==VAR_MANAGER);
@@ -906,7 +906,7 @@ Bool deinstallWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
   VarKind vk=classifyVar(tPtr);
   if(vk==VAR_KINDED) return FALSE;
   if(vk==VAR_FREE) return FALSE;
-  if(vk==VAR_FUTURE) return FALSE;
+  if(vk==VAR_READONLY) return FALSE;
 
   EntityInfo* ei=varGetEntityInfo(tPtr);
   if(ei==NULL) return FALSE;

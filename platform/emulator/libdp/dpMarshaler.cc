@@ -229,10 +229,10 @@ MgrVarPatch::MgrVarPatch(OZ_Term locIn, OzValuePatch *nIn,
   oti = mv->getIndex();
   saveMarshalOwnHead(oti, remoteRef);
   if ((USE_ALT_VAR_PROTOCOL) && (globalRedirectFlag == AUT_REG)) {
-    tag = mv->isFuture() ? DIF_FUTURE_AUTO : DIF_VAR_AUTO;
+    tag = mv->isReadOnly() ? DIF_READONLY_AUTO : DIF_VAR_AUTO;
     mv->registerSite(dest);
   } else {
-    tag = mv->isFuture() ? DIF_FUTURE : DIF_VAR;
+    tag = mv->isReadOnly() ? DIF_READONLY : DIF_VAR;
   }
 }
 
@@ -274,7 +274,7 @@ PxyVarPatch::PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
 
   //
   PD((MARSHAL,"var proxy bi: %d", bi));
-  isFuture = pv->isFuture();
+  isReadOnly = pv->isReadOnly();
   ms = borrowTable->getOriginSite(bi);
   if (dest && ms == dest) {
     isToOwner = OK;
@@ -297,7 +297,7 @@ void PxyVarPatch::disposeV()
   DebugCode(oti = (Ext_OB_TIndex) -1;);
   DebugCode(remoteRef = (RRinstance *) -1;);
   DebugCode(ms = (DSite *) -1;);
-  DebugCode(isFuture = isToOwner = -1;);
+  DebugCode(isReadOnly = isToOwner = -1;);
   DebugCode(ec = (BYTE) -1;);
   oz_freeListDispose(extVar2Var(this), extVarSizeof(PxyVarPatch));
 }
@@ -313,8 +313,8 @@ void PxyVarPatch::marshal(ByteBuffer *bs, int hasIndex)
     marshalDIFcounted(bs, (hasIndex ? DIF_OWNER_DEF : DIF_OWNER));
     marshalToOwnerSaved(bs, remoteRef, oti);
   } else {
-    marshalDIFcounted(bs, (isFuture ?
-                           (hasIndex ? DIF_FUTURE_DEF : DIF_FUTURE) :
+    marshalDIFcounted(bs, (isReadOnly ?
+                           (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
                            (hasIndex ? DIF_VAR_DEF : DIF_VAR)));
     marshalBorrowHeadSaved(bs, ms, oti, remoteRef, ec);
   }
@@ -328,15 +328,15 @@ void ManagerVar::marshal(ByteBuffer *bs, Bool hasIndex)
   OB_TIndex oti = getIndex();
   PD((MARSHAL,"var manager o:%d", oti));
   if ((USE_ALT_VAR_PROTOCOL) && (globalRedirectFlag == AUT_REG)) {
-    MarshalTag tag = (isFuture() ?
-                      (hasIndex ? DIF_FUTURE_AUTO_DEF : DIF_FUTURE_AUTO) :
+    MarshalTag tag = (isReadOnly() ?
+                      (hasIndex ? DIF_READONLY_AUTO_DEF : DIF_READONLY_AUTO) :
                       (hasIndex ? DIF_VAR_AUTO_DEF : DIF_VAR_AUTO));
     marshalDIFcounted(bs, tag);
     marshalOwnHead(bs, oti);
     registerSite(bs->getSite());
   } else {
-    MarshalTag tag = (isFuture() ?
-                      (hasIndex ? DIF_FUTURE_DEF : DIF_FUTURE) :
+    MarshalTag tag = (isReadOnly() ?
+                      (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
                       (hasIndex ? DIF_VAR_DEF : DIF_VAR));
     marshalDIFcounted(bs, tag);
     marshalOwnHead(bs, oti);
@@ -356,8 +356,8 @@ void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex)
     marshalDIFcounted(bs, (hasIndex ? DIF_OWNER_DEF : DIF_OWNER));
     marshalToOwner(bs, bti);
   } else {
-    MarshalTag tag = (isFuture() ?
-                      (hasIndex ? DIF_FUTURE_DEF : DIF_FUTURE) :
+    MarshalTag tag = (isReadOnly() ?
+                      (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
                       (hasIndex ? DIF_VAR_DEF : DIF_VAR));
     BYTE ec = (getInfo() ?
                (getInfo()->getEntityCond() & PERM_FAIL) : ENTITY_NORMAL);
@@ -864,7 +864,7 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
       Assert(0);
       break;
     }
-  } else if (oz_isFree(v) || oz_isFuture(v)) {
+  } else if (oz_isFree(v) || oz_isReadOnly(v)) {
     Assert(perdioInitialized);
 
     //
@@ -2143,7 +2143,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         break;
       }
 
-    case DIF_FUTURE_DEF:
+    case DIF_READONLY_DEF:
       {
         OZ_Term f = unmarshalVar(bs, TRUE, FALSE);
         int refTag = unmarshalRefTag(bs);
@@ -2155,7 +2155,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         break;
       }
 
-    case DIF_FUTURE:
+    case DIF_READONLY:
       {
         OZ_Term f = unmarshalVar(bs, TRUE, FALSE);
 #if defined(DBG_TRACE)
@@ -2189,7 +2189,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         break;
       }
 
-    case DIF_FUTURE_AUTO_DEF:
+    case DIF_READONLY_AUTO_DEF:
       {
         OZ_Term fa = unmarshalVar(bs, TRUE, TRUE);
         int refTag = unmarshalRefTag(bs);
@@ -2201,7 +2201,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         break;
       }
 
-    case DIF_FUTURE_AUTO:
+    case DIF_READONLY_AUTO:
       {
         OZ_Term fa = unmarshalVar(bs, TRUE, TRUE);
 #if defined(DBG_TRACE)

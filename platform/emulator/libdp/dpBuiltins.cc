@@ -267,7 +267,7 @@ OZ_BI_define(BIhwDeInstall,3,0){
     if(!isVariableTag(vs_tag)) return PROCEED;  // mm3
     VarKind vk=classifyVar(vs_ptr);            //mm3 - follow
     if((vk==VAR_KINDED) || (vk==VAR_FREE) ||
-       (vk==VAR_FUTURE)) return IncorrectFaultSpecification;
+       (vk==VAR_READONLY)) return IncorrectFaultSpecification;
     return varWatcherDeinstall(vs_ptr,condStruct,proc);} //mm3 - follow
 
   NONVAR(e0, e);
@@ -291,7 +291,7 @@ OZ_Term v0 = OZ_in(1);
     if(!isVariableTag(vs_tag)) goto normal;     // mm3
     VarKind vk=classifyVar(vs_ptr);             //mm3 - follow
     if((vk==VAR_KINDED) || (vk==VAR_FREE) ||
-       (vk==VAR_FUTURE)) goto normal;
+       (vk==VAR_READONLY)) goto normal;
     getEntityCondVar(makeTaggedRef(v));}         // mm3 - follow
 
   if(v!=AtomNonVar) return IncorrectFaultSpecification;

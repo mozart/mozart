@@ -47,7 +47,7 @@ void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
 }
 
 inline
-void bindfut(Board * bb, const TaggedRef a, const TaggedRef b) {
+void bindreadonly(Board * bb, const TaggedRef a, const TaggedRef b) {
   oz_newThreadInject(bb)->pushCall(BI_bindReadOnly,RefsArray::make(a,b));
 }
 
@@ -266,7 +266,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
       sb->bindStatus(AtomMerged);
     } else {
       // Inject a thread to SBP to make the tell
-      bindfut(sp,sb->getStatus(),AtomMerged);
+      bindreadonly(sp,sb->getStatus(),AtomMerged);
     }
   }
 

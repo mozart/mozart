@@ -67,11 +67,9 @@ OZ_Return ReadOnly::unify(TaggedRef *vPtr, TaggedRef *tPtr)
 // suspension list and change the variable's type.
 OZ_Return ReadOnly::becomeNeeded()
 {
-  // release the current suspension list
+  // waken the suspension list, and become a needed read-only variable
   oz_checkSuspensionList(this, pc_all);
-  // mutate into a needed read-only variable
   setType(OZ_VAR_READONLY);
-  // disposeS();
   return PROCEED;
 }
 
@@ -97,8 +95,7 @@ OZ_BI_define(BIbindReadOnly,2,0)
          (tagged2Var(var)->getType() == OZ_VAR_READONLY ||
           tagged2Var(var)->getType() == OZ_VAR_READONLY_QUIET));
 
-  // oz_declareNonvarIN(1, val);
-  OZ_Term val = OZ_in(1);
+  oz_declareIN(1, val);
 
   oz_bindReadOnly(varPtr,val);
   return PROCEED;

@@ -103,7 +103,7 @@ static ScStack scStack;
  *
  */
 
-TaggedRef futs;
+TaggedRef readonlys;
 TaggedRef bads;
 
 /*
@@ -116,7 +116,7 @@ void checkSituatedBlock(OZ_Term *, int);
 inline
 void Board::checkSituatedness(TaggedRef * x, TaggedRef *f,TaggedRef *b) {
 
-  futs = AtomNil;
+  readonlys = AtomNil;
   bads = AtomNil;
 
   scTrail.init();
@@ -137,7 +137,7 @@ void Board::checkSituatedness(TaggedRef * x, TaggedRef *f,TaggedRef *b) {
   scTrail.exit();
   scStack.exit();
 
-  *f = futs;
+  *f = readonlys;
   *b = bads;
 }
 
@@ -153,7 +153,7 @@ OZ_Return OZ_checkSituatednessDynamic(Board * s,TaggedRef * x) {
   }
 
   if (!oz_eq(f,AtomNil)) {
-    // There is at least a future, suspend!
+    // There is at least a read-only, suspend!
     do {
       Assert(oz_isCons(f));
       TaggedRef h = oz_head(f);
@@ -161,7 +161,7 @@ OZ_Return OZ_checkSituatednessDynamic(Board * s,TaggedRef * x) {
       TaggedRef * f_ptr = tagged2Ref(h);
       Assert(oz_isVar(*f_ptr));
 
-      Assert(oz_isFuture(*f_ptr));
+      Assert(oz_isReadOnly(*f_ptr));
 
       (void) am.addSuspendVarListInline(f_ptr);
       f = oz_tail(f);
@@ -352,8 +352,8 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
         OzVariable * cv = tagged2Var(x);
 
         if (!ISGOOD(cv->getBoardInternal())) {
-          if (oz_isFuture(x))
-            futs = oz_cons(makeTaggedRef(x_ptr),futs);
+          if (oz_isReadOnly(x))
+            readonlys = oz_cons(makeTaggedRef(x_ptr),readonlys);
           else
             bads = oz_cons(makeTaggedRef(x_ptr),bads);
           MARKVAR(x_ptr);

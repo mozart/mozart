@@ -1252,11 +1252,11 @@ OZ_Term unpickleTermInternal(PickleMarshalerBuffer *bs)
     case DIF_VAR_DEF:
     case DIF_VAR_AUTO:
     case DIF_VAR_AUTO_DEF:
-    case DIF_FUTURE:
-    case DIF_FUTURE_DEF:
-    case DIF_FUTURE_AUTO:
-    case DIF_FUTURE_AUTO_DEF:
-      OZ_error("unmarshal: unexpected var/future tag: %d\n",tag);
+    case DIF_READONLY:
+    case DIF_READONLY_DEF:
+    case DIF_READONLY_AUTO:
+    case DIF_READONLY_AUTO_DEF:
+      OZ_error("unmarshal: unexpected var/readonly tag: %d\n",tag);
       b->buildValue(oz_nil());
       break;
 

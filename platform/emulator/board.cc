@@ -98,12 +98,12 @@ TaggedRef Board::genSuspended(TaggedRef arg) {
 void Board::bindStatus(TaggedRef t) {
   TaggedRef s = getStatus();
   DEREF(s, sPtr);
-  if (oz_isFuture(s))
+  if (oz_isReadOnly(s))
     oz_bindReadOnly(sPtr, t);
 }
 
 void Board::clearStatus() {
-  if (oz_isFuture(oz_deref(getStatus())))
+  if (oz_isReadOnly(oz_deref(getStatus())))
     return;
   status = oz_newReadOnly(getParent());
 }

@@ -64,7 +64,7 @@ typedef enum {
   VAR_MANAGER,
   VAR_LAZY,
   VAR_FREE,
-  VAR_FUTURE,
+  VAR_READONLY,
   VAR_KINDED
 } VarKind;
 

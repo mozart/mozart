@@ -199,12 +199,12 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
     if(!errorIgnore()){
-      if(isFuture()){
+      if(isReadOnly()){
         if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
       else{
         if(failurePreemption(mkOp1("bind",r))) return BI_REPLACEBICALL;}}
     if (!binding) {
-      if(isFuture()){
+      if(isReadOnly()){
         return oz_addSuspendVarList(lPtr);
       }
       BorrowEntry *be=borrowIndex2borrowEntry(getIndex());
@@ -351,7 +351,7 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
   PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(*lPtr)));
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
-    if(isFuture()){
+    if(isReadOnly()){
       return oz_addSuspendVarList(lPtr);
     }
     EntityInfo *ei=info;
@@ -470,7 +470,7 @@ void ProxyVar::nowGarbage(BorrowEntry* be){
 // Marshaling code is in dpMarshaler.cc;
 
 //
-OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
+OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isReadOnly, Bool isAuto)
 {
   OB_Entry *ob;
   OB_TIndex bi;
@@ -484,7 +484,7 @@ OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
     return val1;}
 
   PD((UNMARSHAL,"var miss: b:%d",bi));
-  ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isFuture);
+  ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isReadOnly);
 
   TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(pvar)));
   ob->changeToVar(val); // PLEASE DONT CHANGE THIS
@@ -558,11 +558,11 @@ void ManagerVar::localize(TaggedRef *vPtr)
 }
 
 OZ_Term ManagerVar::statusV() {
-  return oz_isFuture(origVar) ? AtomFuture : AtomFree;
+  return oz_isReadOnly(origVar) ? AtomFuture : AtomFree;
 }
 
 VarStatus ManagerVar::checkStatusV(){
-  return oz_isFuture(origVar) ? EVAR_STATUS_FUTURE : EVAR_STATUS_FREE;
+  return oz_isReadOnly(origVar) ? EVAR_STATUS_READONLY : EVAR_STATUS_FREE;
 }
 
 void oz_dpvar_localize(TaggedRef *vPtr) {
@@ -590,8 +590,8 @@ VarKind classifyVar(TaggedRef* tPtr)
     }
   } else if (oz_isFree(tr)) {
     return (VAR_FREE);
-  } else if (oz_isFuture(tr)) {
-    return (VAR_FUTURE);
+  } else if (oz_isReadOnly(tr)) {
+    return (VAR_READONLY);
   } else {
     return (VAR_KINDED);
   }

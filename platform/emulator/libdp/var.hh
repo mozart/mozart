@@ -75,12 +75,12 @@ class ProxyVar : public ProxyManagerVar {
 private:
   TaggedRef binding;
   TaggedRef status;
-  short is_future;
+  short is_readonly;
   short is_auto;
 public:
-  ProxyVar(Board *bb, OB_TIndex i, Bool isF) :
+  ProxyVar(Board *bb, OB_TIndex i, Bool isRO) :
     ProxyManagerVar(bb, i),
-    binding(0), status(0), is_future(isF), is_auto(FALSE){ }
+    binding(0), status(0), is_readonly(isRO), is_auto(FALSE){ }
 
   void makeAuto(){is_auto=TRUE;}
   Bool isAuto(){return is_auto==1;}
@@ -107,7 +107,7 @@ public:
   void acknowledge(TaggedRef *vPtr, BorrowEntry *be);
   void marshal(ByteBuffer *bs, Bool hasIndex);
 
-  Bool isFuture(){ return is_future;}
+  Bool isReadOnly(){ return is_readonly;}
   void addEntityCond(EntityCond);
   void subEntityCond(EntityCond);
   void probeFault(int);
@@ -229,8 +229,8 @@ public:
   void marshal(ByteBuffer *bs, Bool hasIndex);
 
   inline void localize(TaggedRef *vPtr);
-  Bool isFuture(){ // mm3
-    return oz_isFuture(origVar);
+  Bool isReadOnly(){ // mm3
+    return oz_isReadOnly(origVar);
   }
 
   // for failure
