@@ -139,7 +139,7 @@ public:
   OZ_Return replaceByInt(OZ_Term, int);
   OZ_Return postpone(void);
   OZ_Boolean postOn(OZ_Term);
-  void addSpawn(OZ_FDPropState s, OZ_Term v);
+  OZ_Boolean addSpawn(OZ_FDPropState s, OZ_Term v);
   void spawn(OZ_Propagator * p, int prio = OZ_getPropagatorPrio());
 
   virtual size_t sizeOf(void) = 0;
