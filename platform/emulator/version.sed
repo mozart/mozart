@@ -1,3 +1,4 @@
+/* -*- C++ -*- */
 #include <stdio.h>
 #include "../include/config.h"
 
@@ -11,7 +12,9 @@ char *ozplatform = "win32-i486";
 char *ozplatform = "OZPLATFORM";
 #endif
 
-void version() {
-  printf("DFKI Oz Emulator %s (%s) of %s\n",AMVersion,ozplatform,AMDate);
+void version()
+{
+  printf("Mozart playing Oz3. Engine %s %s of %s.\n",
+	 AMVersion,ozplatform,AMDate);
   fflush(stdout);
 }

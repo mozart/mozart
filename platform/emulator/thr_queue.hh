@@ -1,9 +1,10 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *    Kostja Popow (popow@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Michael Mehl (mehl@dfki.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -23,16 +24,6 @@
  *  WARRANTIES.
  *
  */
-/*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: popow
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
-
-  ------------------------------------------------------------------------
-*/
 
 #ifndef __THREADQUEUEH
 #define __THREADQUEUEH

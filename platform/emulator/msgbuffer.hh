@@ -1,6 +1,6 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Per Brand (perbrand@sics.se)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)

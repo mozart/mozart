@@ -1,6 +1,6 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Per Brand (perbrand@sics.se)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,18 +23,6 @@
  *  WARRANTIES.
  *
  */
-/*
-  Perdio Project, DFKI & SICS,
-  Universit"at des Saarlandes
-  Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
-  SICS
-  Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
-  Author: brand
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
-  ------------------------------------------------------------------------
-*/
 
 
 #if defined(INTERFACE)

@@ -1,12 +1,12 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl (1997)
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -23,16 +23,8 @@
  *  WARRANTIES.
  *
  */
-/* -----------------------------------------------------------------------
- *  (c) Perdio Project, DFKI & SICS
- *  Universit"at des Saarlandes
- *    Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
- *  SICS
- *    Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
- *  Author: mehl
- *
- *  internal interface to AMOZ
- * -----------------------------------------------------------------------*/
+
+// internal interface to AMOZ
 
 #ifndef FOREIGN_HH
 #define FOREIGN_HH

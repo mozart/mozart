@@ -1,6 +1,8 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Per Brand (perbrand@sics.se)
+ *    Michael Mehl (mehl@dfki.de)
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,17 +25,6 @@
  *  WARRANTIES.
  *
  */
-
-/* -----------------------------------------------------------------------
- *  (c) Perdio Project, DFKI & SICS
- *  Universit"at des Saarlandes
- *    Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
- *  SICS
- *    Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
- *  Author: brand, scheidhr, mehl
- *
- *  marshaler
- * -----------------------------------------------------------------------*/
 
 #ifdef INTERFACE
 #pragma implementation "marshaler.hh"

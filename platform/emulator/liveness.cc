@@ -1,12 +1,12 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl (1997)
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -23,19 +23,6 @@
  *  WARRANTIES.
  *
  */
-/*********************************************************************
- * Author: Michael Mehl@ps.uni-sb.de
- * Copyright: author 1997
- *
- * This file is part of the Mozart system:
- *     http://www.ps.uni-sb.de/mozart/
- *
- * See the file "LICENSE for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * Last modified: $Date$ from $Author$
- * Version: $Revision$
- *********************************************************************/
 
 #include "am.hh"
 #include "indexing.hh"
