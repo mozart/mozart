@@ -76,6 +76,15 @@ prepare
 
    InverseOrderMap = {List.toTuple inverseOrderMap OrderList}
 define
+   fun {AddAName A|Ar L}
+      case Ar of _|_ then A|{AddAName Ar L}
+      [] nil then
+         case A of SortKey#Item then [SortKey#a(name: L Item)]
+         elseof Item then [a(name: L Item)]
+         end
+      end
+   end
+
    local
       fun {MakeSortKeySub S}
          case S of C|Cr then
@@ -155,8 +164,8 @@ define
       meth init()
          Entries <- nil
       end
-      meth enter(Ands HTML)
-         Entries <- Ands#HTML|@Entries
+      meth enter(L Ands HTML)
+         Entries <- {AddAName Ands L}#HTML|@Entries
       end
       meth empty($)
          @Entries == nil
