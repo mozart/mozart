@@ -30,19 +30,47 @@ in
       meth init
 	 self.menuBar = 
 	 {TkTools.menubar self.toplevel self.toplevel
-	  [MB(text: 'File'
+	  [MB(text: 'Ozcar'
 	      menu:
-		 [C(label:   'Close'
+		 [C(label:   'About...'
+		    action:  self # about
+		    key:     ctrl(i))
+		  separator
+		  C(label:   'Reset'
+		    action:  self # action(' reset')
+		    key:     ctrl(r))
+		  C(label:   'Close'
 		    action:  self # off
-		    key:     ctrl(x)
-		    feature: quit)]
-	      feature: file)
-	   /*
+		    key:     ctrl(x))]
+	      feature: ozcar)
 	   MB(text: 'Thread'
 	      menu:
-		 [separator]
+		 [C(label:  'Step'
+		    action: self # action(' step')
+		    key:    s)
+		  C(label:  'Next'
+		    action: self # action(' next')
+		    key:    n)
+		  C(label:  'Continue'
+		    action: self # action(' cont')
+		    key:    c)
+		  C(label:  'Forget'
+		    action: self # action(' forget')
+		    key:    f)
+		  C(label:  'Terminate'
+		    action: self # action(' term')
+		    key:    t)]
 	      feature: 'thread')
-	   */
+	   MB(text: 'Stack'
+	      menu:
+		 [C(label:  'Previous Frame'
+		    action: self # neighbourStackFrame(~1)
+		    key:    'Up'
+		    event:  '<Up>')
+		  C(label:  'Next Frame'
+		    action: self # neighbourStackFrame(1)
+		    key:    'Down'
+		    event:  '<Down>')])
 	   MB(text: 'Options'
 	      menu:
 		 [CB(label:    'Use Oz Source Window'
@@ -92,12 +120,28 @@ in
 	      feature: options)]
 	  [MB(text: 'Help'
 	      menu:
-		 [C(label:   'About...'
-		    action:  self # about
-		    feature: about)]
+		 [C(label:   'Thread Tree'
+		    state:   disabled)
+		  C(label:   'Stack'
+		    state:   disabled)
+		  C(label:   'Environment'
+		    state:   disabled)
+		  CC(label:  'Breakpoints'
+		     menu:
+			[C(label:  'static'
+			   state:   disabled)
+			 C(label:  'dynamic'
+			   state:   disabled)]
+		     feature: breakpoints)]
 	      feature: help)
 	  ]}
-%	 {self.menuBar.help tk(conf tearoff:false)}
+
+	 {ForAll [self.menuBar.ozcar.menu
+		  self.menuBar.'thread'.menu
+		  self.menuBar.help.menu
+		  self.menuBar.help.breakpoints.menu]
+	  proc {$ M} {M tk(conf tearoff:false)} end}
+
 	 {self.menuBar tk(conf borderwidth:1)}
       end
    end

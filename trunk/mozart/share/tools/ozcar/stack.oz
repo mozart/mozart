@@ -93,8 +93,14 @@ in
 	 Rebuild <- false
       end
 
-      meth getVars(Nr $)
-	 {Dget self.D Nr}.vars
+      meth getFrame(Nr $)
+	 S = @Size
+	 N = case     Nr == ~1  then S
+	     elsecase Nr < 1    then 1
+	     elsecase Nr > S    then S
+	     else                    Nr end
+      in
+	 {Dget self.D N}
       end
       
       meth blockMsg(Ack)
