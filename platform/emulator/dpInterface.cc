@@ -168,6 +168,8 @@ void gCollectEntityInfoStub(Tertiary *t)
 // exit hook;
 void dpExitStub() {;}
 
+// hook to make changing of tcpcache-size dynamic
+void changeMaxTCPCacheStub() {;}
 
 Bool distHandlerInstallStub(unsigned short x,unsigned short y,
                                  Thread* th,TaggedRef a,TaggedRef b){
@@ -248,6 +250,10 @@ void (*gCollectEntityInfo)(Tertiary*)
 // exit hook;
 void (*dpExit)()
   = dpExitStub;
+
+// hook to make changing of tcpcache-size dynamic
+void (*changeMaxTCPCache)()
+  = changeMaxTCPCacheStub;
 
 // distribution handlers
 
