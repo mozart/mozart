@@ -87,8 +87,6 @@ public:
   OZPRINT;
   OZPRINTLONG;
   MPRINT;
-
-  static Bool unifyGenCVariables;
 };
 
 

@@ -18,9 +18,6 @@
 #include "fdgenvar.hh"
 #include "am.hh"
 
-Bool GenCVariable::unifyGenCVariables = OK;
-
-
 GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn,
                            Board * n)
 :type(t), SVariable(n==NULL ? am.currentBoard : n, pn){}
