@@ -18,7 +18,7 @@ define
    class Package from GS XT EntryClass HTMLClass
       attr id pid url blurb provides requires content_type
 	 url_pkg url_doc body author contact keywords
-	 categories
+	 categories url_doc_extra
       meth init(Msg Id Url Pid Prev)
 	 {Manager incTrace('--> init Package '#Id)}
 	 try
@@ -36,6 +36,7 @@ define
 	    keywords     <- {Append {Msg getSplit('keyword' $)}
 			     {Msg getSplit('keywords' $)}}
 	    categories   <- {self getCategories($)}
+	    url_doc_extra<- {Msg condGet('url-doc-extra' nil $)}
 	    %% !!! here we should copy the persistent info from Prev
 	 finally
 	    {Manager decTrace('<-- init Package '#Id)}
@@ -45,7 +46,7 @@ define
       meth extern_slots($)
 	 [id pid url blurb provides requires content_type
 	  url_pkg url_doc body author contact keywords
-	  categories]
+	  categories url_doc_extra]
       end
       meth printOut(Margin Out DB)
 	 {Out write(vs:Margin#' '#@id#' (package)\n')}
@@ -55,6 +56,7 @@ define
 	 try
 	    for U in @url_pkg do {self UpdatePkg(U DB)} end
 	    for U in @url_doc do {self UpdateDoc(U DB)} end
+	    for U in @url_doc_extra do {self UpdateDocExtra(U DB)} end
 	 finally
 	    {Manager decTrace('<-- updatePub package '#@id)}
 	 end
@@ -82,6 +84,24 @@ define
 		{self get_id_as_rel_path($)}}}}
 	 catch mogul(...)=E then
 	    {Manager addReport(update_pub_doc(@id) E)}
+	 end
+      end
+      meth UpdateDocExtra(U DB)
+	 {Manager trace('Downloading doc extra '#U)}
+	 DocDir = {URL.toString
+		   {URL.resolve
+		    {URL.toBase {Manager get_docdir($)}}
+		    {self get_id_as_rel_path($)}}}
+	 Dir Url
+      in
+	 case {Regex.search RE_DOC_EXTRA U}
+	 of false then Dir=DocDir Url=U
+	 [] M then Dir=DocDir#'/'#{Strip {Regex.group 1 M U}}
+	    Url = {Strip {Regex.group 2 M U}}
+	 end
+	 try {Wget.wgetDoc Url Dir}
+	 catch mogul(...)=E then
+	    {Manager addReport(update_pub_doc_extra(@id) E)}
 	 end
       end
       meth updateProvided(DB D)
@@ -132,4 +152,5 @@ define
    RE_PROVIDES = {Regex.compile '^(\\[[^]]*\\][[:space:]]*)*(.*)$' [extended]}
    RE_CATEGORY = {Regex.make '^\\[([^]]*)\\]'}
    RE_WORD_SEP = {Regex.make '[[:space:],;]+'}
+   RE_DOC_EXTRA= {Regex.make '^\\[([^]]+)\\][[:space:]]+(.+)$'}
 end
