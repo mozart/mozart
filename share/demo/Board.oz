@@ -252,7 +252,7 @@ local
                {Tk.batch [grid(@page1  row:0 column:0 pady:4 sticky:ew)
                           grid(@page2  row:1 column:0 pady:4 sticky:ew)
                           grid(@canvas row:0 column:1 sticky:sn padx:2 pady:2
-                               rowspan:3)
+                               rowspan:4)
 
                           grid({New Tk.button
                                 tkInit(parent: @top
