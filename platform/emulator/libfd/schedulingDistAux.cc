@@ -28,7 +28,11 @@ struct min_max_dur_setFL {
 static inline int intMin(int a, int b) { return a < b ? a : b; }
 static inline int intMax(int a, int b) { return a > b ? a : b; }
 static inline int ozabs(int a) {return a > 0 ? a : -a;}
-static int CompareFirsts(min_max_dur_setFL *Int1, min_max_dur_setFL *Int2) {
+
+static int CompareFirsts(const void *x, const void *y)
+{
+  min_max_dur_setFL *Int1 = (min_max_dur_setFL*) x;
+  min_max_dur_setFL *Int2 = (min_max_dur_setFL*) y;
   int min1 = Int1->min;
   int min2 = Int2->min;
   if (min1 < min2) return -1;
@@ -40,7 +44,10 @@ static int CompareFirsts(min_max_dur_setFL *Int1, min_max_dur_setFL *Int2) {
   }
 }
 
-static int CompareLasts(min_max_dur_setFL *Int1, min_max_dur_setFL *Int2) {
+static int CompareLasts(const void *x, const void *y)
+{
+  min_max_dur_setFL *Int1 = (min_max_dur_setFL *) x;
+  min_max_dur_setFL *Int2 = (min_max_dur_setFL *) y;
   int max1 = Int1->max;
   int max2 = Int2->max;
   int dur1 = Int1->dur;
@@ -161,13 +168,14 @@ void FirstsLasts::updateHeapRefs(OZ_Boolean duplicate)
   int * new_reg_ordered_resources = OZ_hallocCInts(reg_nb_tasks_size);
   int * new_reg_ordered      = OZ_hallocCInts(reg_fds_size);
 
-  for (int i = reg_fds_size; i--; ) {
+  int i;
+  for (i = reg_fds_size; i--; ) {
     new_reg_fds[i]     = reg_fds[i];
     new_reg_ordered[i] = reg_ordered[i];
     OZ_updateHeapTerm(new_reg_fds[i]);
   }
 
-  for (int i = reg_nb_tasks_size; i--; ) {
+  for (i = reg_nb_tasks_size; i--; ) {
     new_reg_nb_tasks[i] = reg_nb_tasks[i];
     new_reg_ordered_resources[i] = reg_ordered_resources[i];
   }

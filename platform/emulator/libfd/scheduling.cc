@@ -239,6 +239,7 @@ cploop:
   //////////
   qsort(forCompSet0Up, ts, sizeof(int), compareDescRel);
 
+  {
   for (int upTask=0; upTask < ts; upTask++) {
 
     kUp = MinMax[upTask].max + dur[upTask];
@@ -444,6 +445,7 @@ cploop:
     }
 
   }
+  }
 
   //////////
   // constrain the variables as memorized
@@ -472,6 +474,7 @@ cploop:
   qsort(forCompSet0Down, ts, sizeof(int), compareAscDue);
 
 
+  {
   for (int downTask=0; downTask < ts; downTask++) {
 
     kUp = MinMax[downTask].max + dur[downTask];
@@ -486,7 +489,8 @@ cploop:
     //////////
     // compute set S0
     //////////
-         for (int l=0; l<ts; l++) {
+    int l;
+         for (l=0; l<ts; l++) {
            int dl = dur[l];
            int xlMin = MinMax[l].min;
            int xlMaxDL = MinMax[l].max + dl;
@@ -502,7 +506,7 @@ cploop:
            }
          }
 
-    for (int l=0; l<ts; l++) {
+    for (l=0; l<ts; l++) {
       int realL = forCompSet0Down[l];
       if ( (MinMax[realL].min >= kDown) &&
            (MinMax[realL].max + dur[realL] > kUp) )
@@ -682,6 +686,7 @@ cploop:
     }
 
 
+  }
   }
 
   //////////
@@ -1200,7 +1205,8 @@ cploop:
     //////////
     // compute set S0
     //////////
-    for (int l=0; l<ts; l++) {
+    int l;
+    for (l=0; l<ts; l++) {
       int dl = dur[l];
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
@@ -1215,7 +1221,7 @@ cploop:
       }
     }
 
-    for (int l=0; l<ts; l++) {
+    for (l=0; l<ts; l++) {
       int realL = forCompSet0Down[l];
       if ( (MinMax[realL].min >= kDown) &&
            (MinMax[realL].max + dur[realL] > kUp) )
