@@ -124,7 +124,10 @@ typedef ByteCode *ProgramCounter;
 #define NOCODE ((ProgramCounter) -1l)
 
 typedef int32 PosInt;
-typedef PosInt Reg;
+
+typedef PosInt XReg;
+typedef PosInt YReg;
+typedef PosInt GReg;
 
 typedef unsigned int32 TaggedRef;
 

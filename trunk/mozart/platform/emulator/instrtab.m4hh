@@ -28,30 +28,8 @@ define(readArg,$1)
 define(writeArg,$1)
 
 define(instruction,
-	`ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1)),
-		numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1)),
-		INSTR(TOUPPER($1)LBL))
+	`INSTR(TOUPPER($1)LBL)
 ')
-
-
-define(oneReg,
-	`INSTR($1XLBL)
-	 INSTR($1YLBL)
-	 INSTR($1GLBL)
-')
-
-define(twoRegs,
-	`INSTR($1XXLBL)
-	 INSTR($1XYLBL)
-	 INSTR($1XGLBL)
-	 INSTR($1YXLBL)
-	 INSTR($1YYLBL)
-	 INSTR($1YGLBL)
-	 INSTR($1GXLBL)
-	 INSTR($1GYLBL)
-	 INSTR($1GGLBL)
-')
-
 
 
 #ifdef __GNUC__

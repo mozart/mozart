@@ -1973,9 +1973,9 @@ OzArray *tagged2Array(TaggedRef term)
  *=================================================================== */
 
 enum KindOfReg {
-  XReg,
-  YReg,
-  GReg
+  K_XReg,
+  K_YReg,
+  K_GReg
 };
 
 class AssReg {
