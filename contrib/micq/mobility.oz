@@ -22,6 +22,8 @@
 %%% WARRANTIES.
 %%%
 
+%%% Large part of this code will be replaced with the SafeSend(Point2Point)-abstraction, when available
+
 functor
 
 export

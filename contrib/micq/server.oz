@@ -65,7 +65,7 @@ export
    start:StartServer
 
 define
-   Logger
+   Logger  Gate
    proc{WriteLog M}
       {Logger log(M)}
       {System.showInfo M}
@@ -187,9 +187,7 @@ define
                              {self S_messageAck( id: I mid: GlobalMID )} E=nil
                           end
                           if E\=nil then
-                             try
-                                C={DB getClient(id:I client:$)}
-                             in
+                             try C={DB getClient(id:I client:$)} in
                                 {WriteLog "Forward message "#GlobalMID#" to "#E.name}
                                 {C receiveMessage(mid:GlobalMID message:M sender:SID date:D reply_to:R)
                                  "Message ("#GlobalMID#") forwarding to "#E.name#" failed"}
@@ -212,7 +210,7 @@ define
             {WriteLog "Logged out "#ID}
             try
                {DB logout(id:ID)}
-            catch _ then {WriteLog ID#" is not online."} end
+            catch _ then {WriteLog ID#" is not online"} end
 
             if C\=nil then
                {C serverLogout() "Can't logout "#ID }
@@ -255,8 +253,10 @@ define
                try
                   {self S_logout(id:ID)}
                   {WriteLog ID#" on "#H#" is autologged out"}
-               catch noSuchEntry(...) then
-                  {WriteLog "Autologout failed for "#ID}
+               catch X then
+                  case X of noSuchEntry(...) then
+                     {WriteLog "Autologout failed for "#ID}
+                  else {Browse autologout(X)} end
                end
             end
          end
@@ -383,7 +383,7 @@ define
                end
 
                %% Initialize the client
-               {C startgui(settings: E.settings) "Couldn't start client"}
+               {C startgui(settings:E.settings) "Couldn't start client"}
 
                %% So that we can uninstall watcher
                {Dictionary.put self.watchers ID entry(port: CP procedure: WatcherProc )}
@@ -405,11 +405,13 @@ define
                thread
                   {ForAll M proc {$ X}
                                {WriteLog "Forward stored message ("#X.id#") to "#E.name}
-                               {C receiveMessage(mid:X.id
-                                                 message:X.message
-                                                 sender:X.sender
-                                                 date:X.date
-                                                 reply_to:X.reply_to) "Message delivery failed for "#X.id}
+                               try
+                                  {C receiveMessage(mid:X.id
+                                                    message:X.message
+                                                    sender:X.sender
+                                                    date:X.date
+                                                    reply_to:X.reply_to) "Message delivery failed for "#X.id}
+                               catch _ then skip end
                             end}
                end
 
@@ -435,8 +437,10 @@ define
          {WriteLog A#" adds application "#N#" ("#ID#")"}
          thread
             {ForAll {DB getAllOnline(entries:$)} proc{$ X}
-                                                    {X.client addapplication([app(id:ID name:N author:A)])
-                                                     "Can not add application "#N#" to client("#X.id#")."}
+                                                    try
+                                                       {X.client addapplication([app(id:ID name:N author:A)])
+                                                        "Can not add application "#N#" to client("#X.id#")"}
+                                                    catch _ then skip end
                                                  end}
          end
       end
@@ -446,8 +450,10 @@ define
          {WriteLog A#" updates application "#N#" ("#ID#")"}
          thread
             {ForAll {DB getAllOnline(entries:$)} proc{$ X}
-                                                    {X.client updateapplication(app(id:ID name:N author:A))
-                                                     "Can not update application "#N#" to client "#X.id}
+                                                    try
+                                                       {X.client updateapplication(app(id:ID name:N author:A))
+                                                        "Can not update application "#N#" to client "#X.id}
+                                                    catch _ then skip end
                                                  end}
          end
       end
@@ -481,7 +487,7 @@ define
          if {DB isOnline( id:Id online:$ )}\=false then
             try C={DB getClient(id:Id client:$)} in
                {C serverLogout()
-                "Can't logout "#Id#"."}
+                "Can't logout "#Id}
             catch networkFailure(...) then skip end
 
             {self S_logout( id: Id )}
@@ -496,7 +502,7 @@ define
                                                             in
                                                                {C removeFriend(friend: Id)
                                                              "Can't remove friend ("#Id#") from client ("#
-                                                                X#")."}
+                                                                X#")"}
                                                             catch networkFailure(...) then skip end
                                                          end
                                                          {self S_removeFriend( id: X friend: Id )}
@@ -576,7 +582,7 @@ define
       meth !S_removeMessage(mid:Mid)
          try
             {DB removeMessage(mid:Mid)}
-            {WriteLog "Message ("#Mid#") has been removed from server."}
+            {WriteLog "Message ("#Mid#") has been removed from server"}
          catch _ then skip end
       end
 
@@ -599,10 +605,10 @@ define
       meth !S_removeApplication(aid:Aid id:Id)
          try
             {DB removeApplication( id: Aid author: Id)}
-            {WriteLog "["#Id#"] removes application ("#Aid#")."}
+            {WriteLog "["#Id#"] removes application ("#Aid#")"}
             {self RemoveAppFromClients( aid: Aid )}
          catch _ then
-            {WriteLog "["#Id#"] failed to remove application ("#Aid#")."} end
+            {WriteLog "["#Id#"] failed to remove application ("#Aid#")"} end
       end
 
 
@@ -610,6 +616,7 @@ define
 
 
       meth !HaltServer(1:Msg<=nil)
+         {Gate close}
          {WriteLog "*** System will halt within 10 seconds..."}
          {WriteLog "*** Saving database"}
 
@@ -635,13 +642,13 @@ define
          unit=WaitQuit
       end
 
-      meth RemoveAppFromClients( aid: Id )
+      meth RemoveAppFromClients(aid:Id)
          thread
             {ForAll {DB getAllOnline( entries: $)}
              proc{$ X}
-                {X.client appRemoved( aid: Id )
-                 "Failed to remove application ("#Id#
-                 ") from client ("#X.id#")."}
+                try
+                   {X.client appRemoved(aid:Id) "Failed to remove application ("#Id#") from client ("#X.id#")"}
+                catch _ then skip end
              end}
          end
       end
@@ -649,21 +656,24 @@ define
       meth Notify(id:ID online:O)=M ON in
          {DB getNotifyStatus(id:ID online:ON offline:_)}
          {ForAll ON proc{$ N}
-                       try C={DB getClient(id:N.id client:$)} in
-                          {C notify(id:ID online:O) "Could not notify "#
-                           N.id#" from "#ID}
-                       catch networkFailure(...) then skip end
+                       thread
+                          try C={DB getClient(id:N.id client:$)} in
+                             {C notify(id:ID online:O) "Could not notify ("#O#") "#
+                              N.id#" from "#ID}
+                          catch networkFailure(...) then skip end
+                       end
                     end}
       end
 
-      meth otherwise(X) N={Label X} in
-         {Browse N#X}
-         raise noSuchMethodsInServer(X) end
+      meth otherwise(X)
+         {WriteLog "* Illeagal access: "#{Value.toVirtualString X 30 30}}
+         {Browse illegalAccesByClient(X)}
+         raise noSuchMethodInServer(X) end
       end
    end
 
    proc{StartServer Args}
-      EnterTicket %Gate
+      EnterTicket
       S={NewStationary ServerClass InitServer(dbdir:Args.dbdir)}
    in
       Logger = {New Log.log init(file:Args.dbdir#"log.db")}
@@ -671,7 +681,7 @@ define
       {DB loadAll(dir:Args.dbdir)}
       {WriteLog "Database is loaded"}
 
-      _={New Connection.gate init(S EnterTicket)}
+      Gate={New Connection.gate init(S EnterTicket)}
       {Pickle.save EnterTicket Args.ticketSave}
 
       {WriteLog "Ticket is saved to "#Args.ticketSave}
@@ -732,7 +742,7 @@ define
                                           end)}
          B2c={New Tk.button tkInit(parent:T text:"Browse Applications" relief:groove
                                    action:proc{$} Rec = {DB toRecord(record:$)} in
-                                             {WriteLog "Browse accounts"}
+                                             {WriteLog "Browse applications"}
                                              {Browse applications#{Map {Record.toList Rec.applicationDB} fun{$ X} L=X.author in L(X.id X.name) end}}
                                           end)}
 
@@ -764,6 +774,21 @@ define
 
          %% Administrator frame
          ADR=9
+         OF1={New Tk.frame tkInit(parent:T)}
+         COV={New Tk.variable tkInit(0)}
+         COL={New Tk.label tkInit(parent:OF1 text:"Clients Online:")}
+         COE={New Tk.entry tkInit(parent:OF1 textvariable:COV state:disabled justify:right)}
+         AF1={New Tk.frame tkInit(parent:T)}
+         CAL={New Tk.label tkInit(parent:AF1 text:"Number of Accounts:")}
+         CAV={New Tk.variable tkInit(0)}
+         CAE={New Tk.entry tkInit(parent:AF1 textvariable:CAV state:disabled justify:right)}
+         {Tk.batch [grid(COL row:0 column:0 sticky:e)
+                    grid(COE row:0 column:1 sticky:we padx:1)
+                    grid(CAL row:0 column:0 sticky:e)
+                    grid(CAE row:0 column:1 sticky:we padx:1)
+                    grid(columnconfigure OF1 1 weight:1)
+                    grid(columnconfigure AF1 1 weight:1)]}
+
          HSV={New Tk.variable tkInit('')}
          HSE={New Tk.entry tkInit(parent:T textvariable:HSV bg:white fg:red)}
          B5={New Tk.button tkInit(parent:T relief:groove
@@ -779,24 +804,42 @@ define
                                                                {S HaltServer({HSV tkReturnString($)})}
                                                             end)}
          {Tk.batch [grid({Separator "Administration"} row:ADR column:0 columnspan:2 sticky:we pady:3)
-                    grid(B5 row:ADR+1 column:0 sticky:we)
-                    grid(B6 row:ADR+1 column:1 sticky:we)
-                    grid(HSE row:ADR+2 column:0 sticky:we columnspan:2 pady:1)]}
+                    grid(OF1 row:ADR+1 column:0 sticky:we padx:5)
+                    grid(AF1 row:ADR+1 column:1 sticky:we padx:5)
+                    grid(B5 row:ADR+2 column:0 sticky:we)
+                    grid(B6 row:ADR+2 column:1 sticky:we)
+                    grid(HSE row:ADR+3 column:0 sticky:we columnspan:2 pady:1)]}
       in
          {Tk.batch [grid(T row:0 column:0 sticky:news padx:4 pady:1)
                     grid(columnconfigure T1 0 weight:1)
                     grid(columnconfigure T 0 weight:1)
                     grid(columnconfigure T 1 weight:1)
                     wm(resizable T1 1 0)]}
+         thread
+            proc{Loop} O T in
+               {DB getNoOfUsers(online:O total:T)}
+               {COE tk(config state:normal)}
+               {COV tkSet(O)}
+               {COE tk(config state:disabled)}
+               {CAE tk(config state:normal)}
+               {CAV tkSet(T)}
+               {CAE tk(config state:disabled)}
+               {Delay 5000}
+               {Loop}
+            end
+         in
+            {Delay 6000}
+            {Loop}
+         end
       end
 
       {Wait WaitQuit}
-      {WriteLog "Server is going down immediately..."}
+      {WriteLog "Server is going down immediately...\n-----------------------------------------------------------\n"}
       {Logger close}
    end
    OSinfo = {OS.uName}
 in
    {Property.put 'errors.toplevel' proc {$} skip end}
    {System.showInfo  "Server is running on "#OSinfo.nodename#" ("#OSinfo.sysname#" "#
-    OSinfo.release#" "# OSinfo.machine#")."}
+    OSinfo.release#" "# OSinfo.machine#")"}
 end

@@ -56,7 +56,6 @@ define
       in
          {Wait A.file} {Wait A.login} {Wait A.ticketURL} {Wait A.passwd}
          {T tkClose}
-         {System.show A}
          {StartClient A}
          {Save A.file}
          raise quit end

@@ -25,53 +25,28 @@
 functor
 
 require
-   Meths(getApplicationInfo:S_getApplicationInfo
+   Meths(%getApplicationInfo:S_getApplicationInfo
          getapplication:S_getapplication
-         message:S_message
+%        message:S_message
          logout:S_logout
-         addFriends:S_addFriends
-         removeFriend:S_removeFriend
-         getFriends:S_getFriends
-         setStatus:S_setStatus
-         searchFriends:S_searchFriends
+%        addFriends:S_addFriends
+%        removeFriend:S_removeFriend
+%        getFriends:S_getFriends
+%        setStatus:S_setStatus
+%        searchFriends:S_searchFriends
          login:S_login
-         updateSettings:S_updateSettings
-         addApplication:S_addApplication
-         editApplication:S_editApplication
+%        updateSettings:S_updateSettings
+%        addApplication:S_addApplication
+%        editApplication:S_editApplication
          inviteUser:S_inviteUser
-         addUser:S_addUser
-         removeUser:S_removeUser
-         getInfo:S_getInfo
-         updateUser:S_updateUser
-         messageAck:S_messageAck
-         removeMessage:S_removeMessage
-         getUserName:S_getUserName
+%        addUser:S_addUser
+%        removeUser:S_removeUser
+%        getInfo:S_getInfo
+%        updateUser:S_updateUser
+%        messageAck:S_messageAck
+%        removeMessage:S_removeMessage
+%        getUserName:S_getUserName
          removeApplication:S_removeApplication) at 'methods.ozf'
-
-prepare
-   SMeth=meths(getApplicationInfo:S_getApplicationInfo
-               getapplication:S_getapplication
-               message:S_message
-               logout:S_logout
-               addFriends:S_addFriends
-               removeFriend:S_removeFriend
-               getFriends:S_getFriends
-               setStatus:S_setStatus
-               searchFriends:S_searchFriends
-               login:S_login
-               updateSettings:S_updateSettings
-               addApplication:S_addApplication
-               editApplication:S_editApplication
-               inviteUser:S_inviteUser
-               addUser:S_addUser
-               removeUser:S_removeUser
-               getInfo:S_getInfo
-               updateUser:S_updateUser
-               messageAck:S_messageAck
-               removeMessage:S_removeMessage
-               getUserName:S_getUserName
-               removeApplication:S_removeApplication)
-
 import
    Browser(browse:Browse)
    System
@@ -120,24 +95,24 @@ define
 
       meth init(server:S args:A)
          proc{MyServer M}
-            A={Label M}
-            Secure_A M1
-            ID=@id
-         in
-            if {IsName A} then Secure_A=A else Secure_A=SMeth.A {System.printInfo "* "} end
-            M1={Adjoin M Secure_A()}
-            {System.print invokeServer(ID A)}
-            try {@ServerRef M1} %{System.printInfo ", "} {System.show ok(A)}
+            try {@ServerRef M}
             catch X then
-               %{System.printInfo ", "} {System.show failed(A)}
                case X of networkFailure(...) then
-                  {Browse networkFailure(serverGone X.1)}
+                  {Browse networkFailure(serverGone X.1 M)}
                   {ErrorBox "The server has crashed..."}
                   {StopGUI}
                   {Delay 1}
                   unit=WaitQuit
+               elseof noSuchMethodInServer(...) then
+                  {ErrorBox "You are running a client that is not compliant with the server!\n"#
+                   "Please make sure that you are running a client compiled for this particular server, or make "#
+                   "sure that you have typed the right ticket URL!\n\n"#
+                   "If you have any questions, please send a mail to: nilsf@sics.se or simon@sics.se"}
+                  {StopGUI}
+                  {Delay 1}
+                  unit=WaitQuit
                else
-                  {Browse client#X}
+                  {Browse client(X M)}
                   raise X end
                end
             end
@@ -151,16 +126,7 @@ define
 
       meth registerclient(id:L passwd:PW)
          id<-L
-         try
-            {@server S_login(id:L passwd:PW client:self.this host:{OS.uName}.nodename)}
-
-% Ralf, Erik
-%           {System.show gcDo}
-%           {System.gcDo}
-%           {System.show gcDone}
-%           {@server S_login(id:L passwd:PW client:self.this host:{OS.uName}.nodename)}
-
-         catch X then {System.printError X} end
+         {@server S_login(id:L passwd:PW client:self.this host:{String.toAtom {OS.uName}.nodename})}
       end
 
       meth startgui(settings:S<=nil)
