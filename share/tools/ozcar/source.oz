@@ -209,7 +209,7 @@ in
       meth EmacsScrollbar(file:F line:L color:C what:What ack:Ack)
 	 case {IsDet Ack} then skip else Ack = unit end
          case {UnknownFile F} then skip else
-            {Show {VS2A 'oz-arrow ' # {LookupFile F} # ' ' # L}}
+            {Print {VS2A 'oz-arrow ' # {LookupFile F} # ' ' # L}}
          end
       end
       
