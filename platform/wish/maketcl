@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 TK=tk4.1b1
 TCL=tcl7.5b1
 
@@ -8,12 +10,12 @@ make -k distclean
 ./configure --prefix=/project/ps/soft/$TCL
 make
 
-cd ../$TK/unix
+cd ../../$TK/unix
 make -k distclean
 ./configure --prefix=/project/ps/soft/$TCL
 make
 
-cd ..
+cd ../..
 
 LIBDIR=/project/ps/soft/$TCL/platform/`ozplatform`
 mkdir -p $LIBDIR/lib
