@@ -16,14 +16,13 @@
 #pragma interface
 #endif
 
-#if defined(OUTLINE) || defined(FDOUTLINE)
-#define inline
-#endif
-
 #include "genvar.hh"
 #include "fdomn.hh"
 #include "fdhook.hh"
 
+#if defined(OUTLINE) || defined(FDOUTLINE)
+#define inline
+#endif
 
 //-----------------------------------------------------------------------------
 //                           class GenFDVariable
