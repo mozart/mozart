@@ -617,19 +617,19 @@ do_leave:
 }
 
 //-----------------------------------------------------------------------------
-OZ_CFun isumEqProp::spawner = fdp_dsum;
-OZ_CFun isumNEqProp::spawner = fdp_dsum;
-OZ_CFun isumLeqProp::spawner = fdp_dsum;
-OZ_CFun isumLtProp::spawner = fdp_dsum;
-OZ_CFun isumGeqProp::spawner = fdp_dsum;
-OZ_CFun isumGtProp::spawner = fdp_dsum;
+OZ_CFunHeader isumEqProp::spawner = fdp_dsum;
+OZ_CFunHeader isumNEqProp::spawner = fdp_dsum;
+OZ_CFunHeader isumLeqProp::spawner = fdp_dsum;
+OZ_CFunHeader isumLtProp::spawner = fdp_dsum;
+OZ_CFunHeader isumGeqProp::spawner = fdp_dsum;
+OZ_CFunHeader isumGtProp::spawner = fdp_dsum;
 
-OZ_CFun isumcEqProp::spawner = fdp_dsumC;
-OZ_CFun isumcNEqProp::spawner = fdp_dsumC;
-OZ_CFun isumcLeqProp::spawner = fdp_dsumC;
-OZ_CFun isumcLtProp::spawner = fdp_dsumC;
-OZ_CFun isumcGeqProp::spawner = fdp_dsumC;
-OZ_CFun isumcGtProp::spawner = fdp_dsumC;
+OZ_CFunHeader isumcEqProp::spawner = fdp_dsumC;
+OZ_CFunHeader isumcNEqProp::spawner = fdp_dsumC;
+OZ_CFunHeader isumcLeqProp::spawner = fdp_dsumC;
+OZ_CFunHeader isumcLtProp::spawner = fdp_dsumC;
+OZ_CFunHeader isumcGeqProp::spawner = fdp_dsumC;
+OZ_CFunHeader isumcGtProp::spawner = fdp_dsumC;
 
 //-----------------------------------------------------------------------------
 // eof

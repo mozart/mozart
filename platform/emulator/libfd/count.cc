@@ -288,7 +288,7 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_CFun ExactlyPropagator::spawner = fdp_exactly;
-OZ_CFun AtLeastPropagator::spawner = fdp_atLeast;
-OZ_CFun AtMostPropagator::spawner = fdp_atMost;
-OZ_CFun ElementPropagator::spawner = fdp_element;
+OZ_CFunHeader ExactlyPropagator::spawner = fdp_exactly;
+OZ_CFunHeader AtLeastPropagator::spawner = fdp_atLeast;
+OZ_CFunHeader AtMostPropagator::spawner = fdp_atMost;
+OZ_CFunHeader ElementPropagator::spawner = fdp_element;

@@ -109,68 +109,68 @@ public:
 
 class isumEqProp : public iLinEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumEqProp(OZ_Term x, OZ_Term d) : iLinEqProp(x, d) {}
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumNEqProp : public iLinNEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumNEqProp(OZ_Term x, OZ_Term d) : iLinNEqProp(x, d) {}
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumLeqProp : public iLinLessEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumLeqProp(OZ_Term x, OZ_Term d) : iLinLessEqProp(x, d) {}
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumLtProp : public iLinLessEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumLtProp(OZ_Term x, OZ_Term d) : iLinLessEqProp(x, d) LEQ_TO_LT
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumGeqProp : public iLinLessEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumGeqProp(OZ_Term x, OZ_Term d) : iLinLessEqProp(x, d) LEQ_TO_GEQ
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumGtProp : public iLinLessEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumGtProp(OZ_Term x, OZ_Term d) : iLinLessEqProp(x, d) LEQ_TO_GT
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 //-----------------------------------------------------------------------------
 
 class isumcEqProp : public iLinEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumcEqProp(OZ_Term a, OZ_Term x, OZ_Term d) : iLinEqProp(a, x, d) {}
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumcNEqProp : public iLinNEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumcNEqProp(OZ_Term a, OZ_Term x, OZ_Term d) : iLinNEqProp(a, x, d) {}
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 
@@ -178,35 +178,35 @@ class isumcLeqProp : public iLinLessEqProp {
 public:
   isumcLeqProp(OZ_Term a, OZ_Term x, OZ_Term d) : iLinLessEqProp(a, x, d) {}
 private:
-  static OZ_CFun spawner;
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  static OZ_CFunHeader spawner;
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumcLtProp : public iLinLessEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumcLtProp(OZ_Term a, OZ_Term x, OZ_Term d) : iLinLessEqProp(a, x, d)
        LEQ_TO_LT
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumcGeqProp : public iLinLessEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumcGeqProp(OZ_Term a, OZ_Term x, OZ_Term d)
     : iLinLessEqProp(a, x, d) LEQ_TO_GEQ
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 class isumcGtProp : public iLinLessEqProp {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   isumcGtProp(OZ_Term a, OZ_Term x, OZ_Term d)
     : iLinLessEqProp(a, x, d) LEQ_TO_GT
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 //-----------------------------------------------------------------------------

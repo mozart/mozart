@@ -18,7 +18,7 @@
 
 class LinEqBPropagator : public Propagator_VI_VD_I_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   LinEqBPropagator(OZ_Term a, OZ_Term x, OZ_Term c, OZ_Term b,
                   OZ_Boolean is_lin = OZ_TRUE)
@@ -27,13 +27,13 @@ public:
     : Propagator_VI_VD_I_D(x, c, b) { };
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
   virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParameters(SUM_OP_EQ); }
 };
 
 class LinNotEqBPropagator : public Propagator_VI_VD_I_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   LinNotEqBPropagator(OZ_Term a, OZ_Term x, OZ_Term c, OZ_Term b,
                      OZ_Boolean is_lin = OZ_TRUE)
@@ -42,13 +42,13 @@ public:
     : Propagator_VI_VD_I_D(x, c, b) { };
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
   virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParameters(SUM_OP_NEQ); }
 };
 
 class LinLessEqBPropagator : public Propagator_VI_VD_I_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   LinLessEqBPropagator(OZ_Term a, OZ_Term x, OZ_Term c, OZ_Term b,
                       OZ_Boolean is_lin = OZ_TRUE)
@@ -57,7 +57,7 @@ public:
     : Propagator_VI_VD_I_D(x, c, b) { };
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
   virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParameters(SUM_OP_LEQ); }
 };
 
@@ -209,26 +209,26 @@ public:
 
 class InBPropagator : public  Propagator_D_FD_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   InBPropagator(OZ_Term v, OZ_Term d, OZ_Term b)
     : Propagator_D_FD_D(v, d, b) {}
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 //-----------------------------------------------------------------------------
 
 class CardBPropagator : public Propagator_VD_D_D_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   CardBPropagator(OZ_Term v, OZ_Term l, OZ_Term u, OZ_Term b)
     : Propagator_VD_D_D_D(v, l, u,b) {}
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 //-----------------------------------------------------------------------------

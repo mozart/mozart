@@ -67,10 +67,10 @@ OZ_C_proc_begin(fdp_sumAC, 4)
 }
 OZ_C_proc_end
 
-OZ_CFun LinEqAbsPropagator::header = fdp_sumAC;
-OZ_CFun LinLessEqAbsPropagator::header = fdp_sumAC;
-OZ_CFun LinGreaterEqAbsPropagator::header = fdp_sumAC;
-OZ_CFun LinNotEqAbsPropagator::header = fdp_sumAC;
+OZ_CFunHeader LinEqAbsPropagator::header = fdp_sumAC;
+OZ_CFunHeader LinLessEqAbsPropagator::header = fdp_sumAC;
+OZ_CFunHeader LinGreaterEqAbsPropagator::header = fdp_sumAC;
+OZ_CFunHeader LinNotEqAbsPropagator::header = fdp_sumAC;
 
 //-----------------------------------------------------------------------------
 

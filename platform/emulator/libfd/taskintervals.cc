@@ -419,4 +419,4 @@ failure:
 }
 
 
-OZ_CFun TaskIntervalsPropagator::spawner = sched_taskIntervals;
+OZ_CFunHeader TaskIntervalsPropagator::spawner = sched_taskIntervals;

@@ -29,7 +29,7 @@ OZ_C_proc_begin(fsp_min, 2)
 }
 OZ_C_proc_end
 
-OZ_CFun FSetsMinPropagator::header = fsp_min;
+OZ_CFunHeader FSetsMinPropagator::header = fsp_min;
 
 OZ_Return FSetsMinPropagator::propagate(void)
 {
@@ -97,7 +97,7 @@ OZ_C_proc_begin(fsp_max, 2)
 }
 OZ_C_proc_end
 
-OZ_CFun FSetsMaxPropagator::header = fsp_max;
+OZ_CFunHeader FSetsMaxPropagator::header = fsp_max;
 
 OZ_Return FSetsMaxPropagator::propagate(void)
 {
@@ -154,7 +154,7 @@ OZ_C_proc_begin(fsp_convex, 1)
 }
 OZ_C_proc_end
 
-OZ_CFun FSetsConvexPropagator::header = fsp_convex;
+OZ_CFunHeader FSetsConvexPropagator::header = fsp_convex;
 
 OZ_Return FSetsConvexPropagator::propagate(void)
 {
@@ -209,7 +209,7 @@ OZ_C_proc_begin(fsp_match, 2)
 }
 OZ_C_proc_end
 
-OZ_CFun FSetMatchPropagator::header = fsp_match;
+OZ_CFunHeader FSetMatchPropagator::header = fsp_match;
 
 #define MATCH_NOLOOP
 
@@ -372,7 +372,7 @@ OZ_C_proc_begin(fsp_minN, 2)
 }
 OZ_C_proc_end
 
-OZ_CFun FSetMinNPropagator::header = fsp_minN;
+OZ_CFunHeader FSetMinNPropagator::header = fsp_minN;
 
 #define MATCH_NOLOOP
 
@@ -513,7 +513,7 @@ OZ_C_proc_begin(fsp_maxN, 2)
 }
 OZ_C_proc_end
 
-OZ_CFun FSetMaxNPropagator::header = fsp_maxN;
+OZ_CFunHeader FSetMaxNPropagator::header = fsp_maxN;
 
 #define MATCH_NOLOOP
 
@@ -538,7 +538,7 @@ OZ_C_proc_begin(fsp_seq, 1)
 }
 OZ_C_proc_end
 
-OZ_CFun FSetSeqPropagator::header = fsp_seq;
+OZ_CFunHeader FSetSeqPropagator::header = fsp_seq;
 
 OZ_Return FSetSeqPropagator::propagate(void)
 {

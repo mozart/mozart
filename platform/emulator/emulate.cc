@@ -1060,7 +1060,7 @@ void engine(Bool init)
         CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB);
         CTS = CTT->getTaskStackRef();
         e->restartThread();
-        HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeaderFunc()))),
+        HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeader()->getHeaderFunc()))),
                  prop->getParameters());
       }
 

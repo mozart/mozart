@@ -9,7 +9,7 @@ class Counter : public OZ_Propagator {
 private:
   int c;
   OZ_Term s;
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   Counter(OZ_Term i, OZ_Term st) : c(OZ_intToC(i)), s(st) {}
 
@@ -17,7 +17,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean) { OZ_updateHeapTerm(s); }
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { RETURN_LIST2(OZ_int(c), s); }
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 
@@ -26,7 +26,7 @@ private:
   int size;
   OZ_Term * reg_fds;
   OZ_Term stream;
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   //  FirstFail(OZ_Term l, OZ_Term stream) : FirstFail(l, stream) {};
   FirstFail(OZ_Term, OZ_Term);
@@ -34,7 +34,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { RETURN_LIST2(OZ_int(size), stream); }
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -44,7 +44,7 @@ private:
   OZ_Term a, b;
   int c;
 public:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   SpawnLess(OZ_Term i1, OZ_Term i2) : a(i1), b(i2), c(2) {}
 
@@ -52,7 +52,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean) { OZ_updateHeapTerm(a); OZ_updateHeapTerm(b); }
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { RETURN_LIST2(a, b); }
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -69,7 +69,7 @@ public:
 
   OZ_Term getParameters(void) const { RETURN_LIST2(_x, _y);}
 
-  virtual OZ_CFun getHeaderFunc(void) const { return SpawnLess::spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &SpawnLess::spawner; }
 
   virtual OZ_Return propagate(void);
 };

@@ -228,7 +228,7 @@ void TaskIntervalsProof::updateHeapRefs(OZ_Boolean duplicate)
 // SPAWNER
 //////////
 
-OZ_CFun TaskIntervalsProof::spawner = sched_taskIntervalsProof;
+OZ_CFunHeader TaskIntervalsProof::spawner = sched_taskIntervalsProof;
 
 
 //////////

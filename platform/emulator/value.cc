@@ -1308,7 +1308,7 @@ TaggedRef PrTabEntry::getProfileStats()
         rec->setFeature(heap,oz_int(0));
         rec->setFeature(closures,oz_int(0));
         rec->setFeature(line,oz_int(0));
-        rec->setFeature(name,oz_atom(builtinTab.getName((void *)(aux->getHeader()))));
+        rec->setFeature(name,oz_atom(builtinTab.getName((void *)(aux->getHeaderFunc()))));
         rec->setFeature(file,noname);
         ret = cons(makeTaggedSRecord(rec),ret);
       }

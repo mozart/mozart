@@ -453,7 +453,7 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_CFun DistancePropagatorLeq::spawner = fdp_distance;
-OZ_CFun DistancePropagatorGeq::spawner = fdp_distance;
-OZ_CFun DistancePropagatorEq::spawner = fdp_distance;
-OZ_CFun DistancePropagatorNeq::spawner = fdp_distance;
+OZ_CFunHeader DistancePropagatorLeq::spawner = fdp_distance;
+OZ_CFunHeader DistancePropagatorGeq::spawner = fdp_distance;
+OZ_CFunHeader DistancePropagatorEq::spawner = fdp_distance;
+OZ_CFunHeader DistancePropagatorNeq::spawner = fdp_distance;

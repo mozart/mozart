@@ -19,7 +19,7 @@
 
 class TaskIntervalsPropagator : public Propagator_VD_VI {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 public:
   TaskIntervalsPropagator (OZ_Term x, OZ_Term durations)
     : Propagator_VD_VI(x, durations) {}
@@ -27,7 +27,7 @@ public:
   TaskIntervalsPropagator(OZ_Term tasks, OZ_Term starts, OZ_Term durs);
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 private:
   OZ_NonMonotonic _nm;
 public:

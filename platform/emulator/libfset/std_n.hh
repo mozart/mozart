@@ -18,7 +18,7 @@
 
 class FSetDisjointNPropagator : public Propagator_VS {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 
   OZ_FSetValue _u;
 
@@ -29,8 +29,8 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(FSetDisjointNPropagator); }
 
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
 };
 
@@ -38,7 +38,7 @@ public:
 
 class FSetUnionNPropagator : public Propagator_VS_S {
 protected:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 
   OZ_FSetConstraint * _aux, _u;
   int _aux_size;
@@ -59,8 +59,8 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(FSetUnionNPropagator); }
 
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
 
   virtual void updateHeapRefs(OZ_Boolean dup) {
@@ -80,7 +80,7 @@ public:
 
 class FSetPartitionPropagator : public FSetUnionNPropagator {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 
 public:
   FSetPartitionPropagator(OZ_Term vs, OZ_Term s)
@@ -90,8 +90,8 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(FSetPartitionPropagator); }
 
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
 };
 

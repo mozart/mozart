@@ -2094,8 +2094,8 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_CFun SchedCardPropagator::spawner = sched_disjoint_card;
-OZ_CFun CPIteratePropagator::spawner = sched_cpIterate;
-OZ_CFun CPIteratePropagatorCap::spawner = sched_cpIterateCap;
-OZ_CFun CPIteratePropagatorCapUp::spawner = sched_cpIterateCapUp;
-OZ_CFun DisjunctivePropagator::spawner = sched_disjunctive;
+OZ_CFunHeader SchedCardPropagator::spawner = sched_disjoint_card;
+OZ_CFunHeader CPIteratePropagator::spawner = sched_cpIterate;
+OZ_CFunHeader CPIteratePropagatorCap::spawner = sched_cpIterateCap;
+OZ_CFunHeader CPIteratePropagatorCapUp::spawner = sched_cpIterateCapUp;
+OZ_CFunHeader DisjunctivePropagator::spawner = sched_disjunctive;

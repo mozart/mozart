@@ -435,14 +435,14 @@ failure:
 //-----------------------------------------------------------------------------
 // static members
 
-OZ_CFun NotEqOffPropagator::spawner = fdp_notEqOff;
-OZ_CFun LessEqOffPropagator::spawner = fdp_lessEqOff;
-OZ_CFun MinimumPropagator::spawner = fdp_minimum;
-OZ_CFun MaximumPropagator::spawner = fdp_maximum;
-OZ_CFun IntersectionPropagator::spawner = fdp_inter;
-OZ_CFun UnionPropagator::spawner = fdp_union;
-OZ_CFun DistinctPropagator::spawner = fdp_distinct;
-OZ_CFun DistinctOffsetPropagator::spawner = fdp_distinctOffset;
-OZ_CFun  SubSetPropagator::spawner  = fdp_subset;
+OZ_CFunHeader NotEqOffPropagator::spawner = fdp_notEqOff;
+OZ_CFunHeader LessEqOffPropagator::spawner = fdp_lessEqOff;
+OZ_CFunHeader MinimumPropagator::spawner = fdp_minimum;
+OZ_CFunHeader MaximumPropagator::spawner = fdp_maximum;
+OZ_CFunHeader IntersectionPropagator::spawner = fdp_inter;
+OZ_CFunHeader UnionPropagator::spawner = fdp_union;
+OZ_CFunHeader DistinctPropagator::spawner = fdp_distinct;
+OZ_CFunHeader DistinctOffsetPropagator::spawner = fdp_distinctOffset;
+OZ_CFunHeader SubSetPropagator::spawner  = fdp_subset;
 
 //-----------------------------------------------------------------------------

@@ -433,5 +433,5 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_CFun DisjunctivePropagatorStream::spawner = sched_disjunctiveStream;
-OZ_CFun DistinctPropagatorStream::spawner = fdp_distinctStream;
+OZ_CFunHeader DisjunctivePropagatorStream::spawner = sched_disjunctiveStream;
+OZ_CFunHeader DistinctPropagatorStream::spawner = fdp_distinctStream;

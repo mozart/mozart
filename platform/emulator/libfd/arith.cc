@@ -749,16 +749,16 @@ failure:
 //-----------------------------------------------------------------------------
 // static members
 
-OZ_CFun TwicePropagator::spawner = fdp_twice;
-OZ_CFun SquarePropagator::spawner = fdp_square;
-OZ_CFun PlusPropagator::spawner = fdp_plus;
-OZ_CFun MinusPropagator::spawner = fdp_minus;
-OZ_CFun TimesPropagator::spawner = fdp_times;
-OZ_CFun DivPropagator::spawner = fdp_divD;
-OZ_CFun DivIPropagator::spawner = fdp_divI;
-OZ_CFun ModPropagator::spawner = fdp_modD;
-OZ_CFun ModIPropagator::spawner = fdp_modI;
-OZ_CFun PowerPropagator::spawner = fdp_power;
+OZ_CFunHeader TwicePropagator::spawner = fdp_twice;
+OZ_CFunHeader SquarePropagator::spawner = fdp_square;
+OZ_CFunHeader PlusPropagator::spawner = fdp_plus;
+OZ_CFunHeader MinusPropagator::spawner = fdp_minus;
+OZ_CFunHeader TimesPropagator::spawner = fdp_times;
+OZ_CFunHeader DivPropagator::spawner = fdp_divD;
+OZ_CFunHeader DivIPropagator::spawner = fdp_divI;
+OZ_CFunHeader ModPropagator::spawner = fdp_modD;
+OZ_CFunHeader ModIPropagator::spawner = fdp_modI;
+OZ_CFunHeader PowerPropagator::spawner = fdp_power;
 
 //-----------------------------------------------------------------------------
 // eof
