@@ -798,6 +798,7 @@ void const2buffer(ostream &out, ConstTerm *c)
   case Co_Lock:       out << "<Lock>"; break;
   case Co_Array:      out << "<Array>"; break;
   case Co_Dictionary: out << "<Dictionary>"; break;
+  case Co_BitArray:   out << "<BitArray>"; break;
 
   case Co_Class:
   case Co_Object:

@@ -644,6 +644,81 @@ TaggedRef ObjectClass::getFallbackApply() {
 
 
 /*===================================================================
+ * Bit Arrays
+ *=================================================================== */
+
+void BitArray::set(int i) {
+  Assert(checkBounds(i));
+  int relative = i - lowerBound;
+  array[relative / BITS_PER_INT] |= 1 << (relative % BITS_PER_INT);
+}
+
+void BitArray::clear(int i) {
+  Assert(checkBounds(i));
+  int relative = i - lowerBound;
+  array[relative / BITS_PER_INT] &= ~(1 << (relative % BITS_PER_INT));
+}
+
+Bool BitArray::test(int i) {
+  Assert(checkBounds(i));
+  int relative = i - lowerBound;
+  return array[relative / BITS_PER_INT] & 1 << (relative % BITS_PER_INT);
+}
+
+void BitArray::or(const BitArray *b) {
+  Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
+  int size = getSize();
+  for (int i = 0; i < size; i++)
+    array[i] |= b->array[i];
+}
+
+void BitArray::and(const BitArray *b) {
+  Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
+  int size = getSize();
+  for (int i = 0; i < size; i++)
+    array[i] &= b->array[i];
+}
+
+void BitArray::nimpl(const BitArray *b) {
+  Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
+  int size = getSize();
+  for (int i = 0; i < size; i++)
+    array[i] &= ~b->array[i];
+}
+
+TaggedRef BitArray::toList(void) {
+  TaggedRef list = AtomNil;
+  int offset =
+    ((upperBound - lowerBound) / BITS_PER_INT) * BITS_PER_INT + lowerBound;
+  int i, j, word;
+  for (i = getSize() - 1; i >= 0; i--) {
+    word = array[i];
+    for (j = BITS_PER_INT - 1; j >= 0; j--)
+      if (word & (1 << j))
+        list = OZ_cons(OZ_int(offset + j),list);
+    offset -= BITS_PER_INT;
+  }
+  return list;
+}
+
+TaggedRef BitArray::complementToList(void) {
+  TaggedRef list = AtomNil;
+  int offset =
+    ((upperBound - lowerBound) / BITS_PER_INT) * BITS_PER_INT + lowerBound;
+  int i, j, word;
+  for (i = getSize() - 1; i >= 0; i--) {
+    word = array[i];
+    for (j = BITS_PER_INT - 1; j >= 0; j--)
+      if (!(word & (1 << j)))
+        list = OZ_cons(OZ_int(offset + j),list);
+    offset -= BITS_PER_INT;
+  }
+  return list;
+}
+
+
+
+/*===================================================================
  * Bigint memory management
  *=================================================================== */
 

@@ -5277,6 +5277,132 @@ OZ_BI_define(BIdictionaryRemoveAll,1,0)
   return PROCEED;
 } OZ_BI_end
 
+/* -----------------------------------------------------------------
+   Bit Arrays
+   ----------------------------------------------------------------- */
+
+#define oz_declareBitArrayIN(ARG,VAR)           \
+BitArray *VAR;                                  \
+{                                               \
+  oz_declareNonvarIN(ARG,_VAR);                 \
+  if (!oz_isBitArray(oz_deref(_VAR))) {         \
+    oz_typeError(ARG,"BitArray");               \
+  } else {                                      \
+    VAR = tagged2BitArray(oz_deref(_VAR));      \
+  }                                             \
+}
+
+OZ_BI_define(BIbitArray_new,2,1)
+{
+  oz_declareIntIN(0,l);
+  oz_declareIntIN(1,h);
+  if (l <= h)
+    OZ_RETURN(makeTaggedConst(new BitArray(l, h)));
+  else
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.new",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_is,1,1)
+{
+  oz_declareNonvarIN(0,x);
+  OZ_RETURN(oz_isBitArray(oz_deref(x))? OZ_true(): OZ_false());
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_set,2,0)
+{
+  oz_declareBitArrayIN(0,b);
+  oz_declareIntIN(1,i);
+  if (b->checkBounds(i)) {
+    b->set(i);
+    return PROCEED;
+  } else
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.set",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_clear,2,0)
+{
+  oz_declareBitArrayIN(0,b);
+  oz_declareIntIN(1,i);
+  if (b->checkBounds(i)) {
+    b->clear(i);
+    return PROCEED;
+  } else
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.clear",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_test,2,1)
+{
+  oz_declareBitArrayIN(0,b);
+  oz_declareIntIN(1,i);
+  if (b->checkBounds(i))
+    OZ_RETURN(b->test(i)? OZ_true(): OZ_false());
+  else
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.test",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_low,1,1)
+{
+  oz_declareBitArrayIN(0,b);
+  OZ_RETURN_INT(b->getLower());
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_high,1,1)
+{
+  oz_declareBitArrayIN(0,b);
+  OZ_RETURN_INT(b->getUpper());
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_clone,1,1)
+{
+  oz_declareBitArrayIN(0,b);
+  OZ_RETURN(makeTaggedConst(new BitArray(*b)));
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_or,2,0)
+{
+  oz_declareBitArrayIN(0,b1);
+  oz_declareBitArrayIN(1,b2);
+  if (b1->checkBounds(b2)) {
+    b1->or(b2);
+    return PROCEED;
+  } else
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.or",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_and,2,0)
+{
+  oz_declareBitArrayIN(0,b1);
+  oz_declareBitArrayIN(1,b2);
+  if (b1->checkBounds(b2)) {
+    b1->and(b2);
+    return PROCEED;
+  } else
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.and",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_nimpl,2,0)
+{
+  oz_declareBitArrayIN(0,b1);
+  oz_declareBitArrayIN(1,b2);
+  if (b1->checkBounds(b2)) {
+    b1->nimpl(b2);
+    return PROCEED;
+  } else
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.nimpl",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_toList,1,1)
+{
+  oz_declareBitArrayIN(0,b);
+  OZ_RETURN(b->toList());
+} OZ_BI_end
+
+OZ_BI_define(BIbitArray_complementToList,1,1)
+{
+  oz_declareBitArrayIN(0,b);
+  OZ_RETURN(b->complementToList());
+} OZ_BI_end
+
 
 /* -----------------------------------------------------------------
    Statistics
@@ -6787,6 +6913,8 @@ static int finalizable(OZ_Term& x)
       case Co_Chunk:
         b = ((SChunk*)xp)->getBoardInternal(); break;
       case Co_HeapChunk:
+        return 1;
+      case Co_BitArray:
         return 1;
       case Co_Array:
         b = ((OzArray*)xp)->getBoardInternal(); break;
