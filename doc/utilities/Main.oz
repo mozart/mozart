@@ -83,20 +83,16 @@ define
             Url  = {URL.make X}
             Path = {CondSelect Url path unit}
          in
-            if Path==unit orelse Path.1==nil then
-               '.'
-            else
-               Lab = {Label Path}
-               L1  = Path.1
-               N   = {Length L1}
-               L2  = {List.take L1 N-1}
-            in
-               case L2 of nil then
-                  {URL.toString {AdjoinAt Url path Lab(["."#false])}}
-               elsecase {Reverse L2} of (C#_)|L then
-                  {URL.toString {AdjoinAt Url path
-                                 Lab({Reverse (C#false)|L})}}
-               end
+            case Path
+            of unit then '.'
+            [] nil  then '.'
+            [] [_]  then
+               {URL.toString
+                {AdjoinAt Url path
+                 if {CondSelect Url absolute false}
+                 then [nil] else ["."] end}}
+            elsecase {Reverse Path} of _|L then
+               {URL.toString {AdjoinAt Url path {Reverse L}}}
             end
          end
          {Property.put 'ozdoc.src.dir' SRC_DIR}
