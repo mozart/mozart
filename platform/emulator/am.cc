@@ -1496,6 +1496,8 @@ void handlerALRM()
 
 void AM::handleAlarm()
 {
+  ProfileCode(if (ozstat.currAbstr) ozstat.currAbstr->getPred()->samples++; );
+
   if (isCritical()) {  /* wait for next ALRM signal */
     return;
   }
