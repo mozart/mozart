@@ -1023,7 +1023,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
 
 	  backup();
 
-	  if (OZ_unify(l_var, r_var) == FAILED) {
+	  if (oz_unify(l_var, r_var) == FAILED) { //mm_u
 	    restore();
 	    *bifdbm_dom[idx_b(c)] &= 0;
 	    continue;

@@ -184,7 +184,7 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
     value = makeTaggedSmallInt(getMid(d_variable));
   } 
  
-  return (OZ_unify(out_variable, variable) &&
+  return (OZ_unify(out_variable, variable) && // mm_u
 	  OZ_unify(out_value,    value)) ? PROCEED : FAILED;
 } OZ_C_proc_end
 

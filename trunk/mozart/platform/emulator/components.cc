@@ -218,7 +218,7 @@ ByteSink::putTerm(OZ_Term in, OZ_Term resources)
   bs->writeCheck();
   bufferManager->freeByteStream(bs);
 
-  return OZ_unify(resources,bs->resources) ? PROCEED : FAILED;
+  return oz_unify(resources,bs->resources);
 }
 
 // ===================================================================
@@ -372,7 +372,7 @@ ByteSource::getTerm(OZ_Term out)
     stream->afterInterpret();    
     bufferManager->freeByteStream(stream);
     delete versiongot;    
-    return oz_unify(val,out);}    
+    return oz_unify(val,out);} // mm_u
       
   bufferManager->dumpByteStream(stream);
   if (versiongot) {
@@ -754,7 +754,7 @@ url_local:
     return FAILED;
   }
 url_remote:
-  out = OZ_newVariable();
+  out = oz_newVariable();
   return getURL(url,out,act);
 kaboom:
   return oz_raise(E_SYSTEM,oz_atom("url"),ACTION_STRING(act),2,

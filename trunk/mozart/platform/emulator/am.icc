@@ -32,60 +32,9 @@
 #pragma interface
 #endif
 
+#include "runtime.hh"
+
 // optimize: inline ....
-
-INLINE
-void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
-		      TaggedRef a, ByteCode *scp) 
-{
-  // most probable case first: local UVar
-  // if (isUVar(var) && isCurrentBoard(tagged2VarHome(var))) {
-  // more efficient:
-  if (currentUVarPrototypeEq(var) && scp==0) {
-    doBind(varPtr,a);
-  } else {
-    genericBind(varPtr,var,NULL,a);
-  }
-}
-
-
-/* specially optimized unify: test two most probable cases first:
- *
- *     1. bind a variable
- *     2. test two non-variables
- *     3. but don't forget to check identical variables
- */
-
-INLINE
-Bool AM::fastUnify(TaggedRef A, TaggedRef B, ByteCode *scp)
-{
-  TaggedRef term1 = A;
-  DEREF0(term1,term1Ptr,_1);
-  
-  TaggedRef term2 = B;
-  DEREF0(term2,term2Ptr,_2);
-  
-  if (!isAnyVar(term2)) {
-    if (currentUVarPrototypeEq(term1) && scp==0) {
-      COUNT(varNonvarUnify);
-      doBind(term1Ptr,term2);
-      goto exit;
-    }
-    if (term1==term2) {
-      goto exit;
-    }
-  } else if (!isAnyVar(term1) && currentUVarPrototypeEq(term2) && scp==0) {
-    COUNT(varNonvarUnify);
-    doBind(term2Ptr,term1);
-    goto exit;
-  }
-
-  return unify(A,B,scp);
-
- exit:
-  COUNT(totalUnify);
-  return OK;
-}
 
 INLINE
 void AM::deinstallCurrent()
@@ -239,22 +188,6 @@ Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 }
 
 //
-//  Constructors for 'suspended' cases:
-//    deep 'unify' suspension;
-//    suspension with continuation;
-//    suspension with a 'C' function;
-//    suspended sequential thread (with a task stack);
-//
-INLINE
-Thread *AM::mkWakeupThread(Board *bb) 
-{
-  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,newId());
-  bb->incSuspCount();
-  checkDebug(th,bb);
-  return th;
-}
-
-//
 INLINE
 Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
 {
@@ -334,22 +267,7 @@ void AM::suspThreadToRunnable(Thread *tt)
     tt->clearExtThread();
   }
 }
-
-INLINE
-void AM::wakeupToRunnable(Thread *tt)
-{
-  Assert(tt->isSuspended());
-  tt->markRunnable();
-
-  if (isBelowSolveBoard() || tt->isExtThread()) {
-    Assert (isInSolveDebug (GETBOARD(tt)));
-    incSolveThreads(GETBOARD(tt));
-    tt->setInSolve();
-  } else {
-    Assert(!isInSolveDebug(GETBOARD(tt)));
-  }
-}
-  
+ 
 INLINE 
 void AM::updateSolveBoardPropagatorToRunnable(Thread *tt)
 {
@@ -382,7 +300,7 @@ void AM::checkExtThread(Thread *tt)
 #define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)	\
 {						\
   Board *bb = GETBOARD(tt);			\
-  switch (isBetween(bb, home)) {		\
+  switch (oz_isBetween(bb, home)) {		\
   case B_BETWEEN:				\
 						\
     if (calledBy)				\
@@ -406,7 +324,7 @@ void AM::checkExtThread(Thread *tt)
   }						\
 }
 
-INLINE 
+INLINE
 Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
 {
   Assert(tt->isSuspended());

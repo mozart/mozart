@@ -257,7 +257,7 @@ OZ_Return OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
     return PROCEED;
   }
 
-  return OZ_unify(v, metaterm);
+  return OZ_unify(v, metaterm); // mm_u
 }  
 
 OZ_Return OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
