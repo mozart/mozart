@@ -294,18 +294,18 @@ TaggedRef makeTaggedUVar(Board *s)
   CHECK_POINTER_N(s);
   return makeTaggedRef2p(UVAR,s);
 }
-inline
-TaggedRef makeTaggedCVar(OzVariable *s) {
-  CHECK_POINTER_N(s);
-  return makeTaggedRef2p(CVAR, s);
-}
 #else
 #define isVariableTag(term)    _oz_isVariable(term)
 #define oz_isVariable(term)    _oz_isVariable(term)
 #define isUVar(term)           _isUVar(term)
 #define makeTaggedUVar(s)      makeTaggedRef2p(UVAR,s)
-#define makeTaggedCVar(s)      makeTaggedRef2p(CVAR,s)
 #endif
+
+inline
+TaggedRef makeTaggedCVar(OzVariable *s) {
+  CHECK_POINTER_N(s);
+  return makeTaggedRef2p(CVAR, s);
+}
 
 // mm2: obsolete
 inline

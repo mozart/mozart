@@ -87,12 +87,6 @@ enum TypeOfVariable {
 #define SVAR_FLAGSMASK 0x3
 
 class OzVariable {
-#ifdef _MSC_VER
-  // RS: this is just a hack workaround: MSVC++ puts virtual table pointer
-  // into first word. This way casting from ExtVar* to OzVariable* an back
-  // will shift a pointer by one!!
-  virtual void dummy() {}
-#endif
 friend class OzFDVariable;
 friend class OzFSVariable;
 friend class OzCtVariable;
