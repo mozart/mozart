@@ -165,7 +165,7 @@ end
 programmer to structure his/her application in a modular
 way. In this respect the Mozart system is excellent. Threads
 are so cheap that can afford to create say 100000 of them.
-As a comparison thread creation in Mozart is about 60 time faster
+As a comparison thread creation in Mozart 1.0 is about 60 time faster
 than in Java JDK 1.2.
 If concurrency makes an easier structure of you program then
 use it without hesitation. However sequential programs are
