@@ -472,6 +472,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	    int numb=0;
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("G[%d] = ", numb);
+	    fflush(stdout);
 	    oz_print(G[numb]);
 	    printf ("\n");
 	  }
@@ -490,6 +491,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	    int numb=0;
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("X[%d] = ", numb);
+	    fflush(stdout);
 	    oz_print(am.getX(numb));
 	    printf ("\n");
 	  }
@@ -507,6 +509,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	    int numb=0;
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("Y[%d] = ", numb);
+	    fflush(stdout);
 	    oz_print(Y[numb]);
 	    printf ("\n");
 	  }
