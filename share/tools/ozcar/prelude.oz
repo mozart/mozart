@@ -106,15 +106,16 @@ local
 	 OrigF
       elseof Path|SearchListRest then Try = Path # F in
 	 try
-	    case {OS.stat Try} == reg then
+	    case {OS.stat Try}.type == reg then
 	       {OzcarMessage LS # F # ' is ' # Try}
 	       {VS2A Try}
 	    else
-	       {OzcarMessage LS # F # ' is not ' # Try # ' (not a plain file)'}
+	       {OzcarMessage LS # F # ' is not ' #
+		Try # ': ' # {V2VS {OS.stat Try}}}
 	       {DoLookupFile SearchListRest F OrigF}
 	    end
 	 catch system(...) then
-	    {OzcarMessage LS # F # ' is not ' # Try}
+	    {OzcarMessage LS # F # ' is not ' # Try # ': file not found'}
 	    {DoLookupFile SearchListRest F OrigF}
 	 end
       end
@@ -161,4 +162,3 @@ fun {StripPath File}
       end
    end
 end
-
