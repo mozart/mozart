@@ -30,7 +30,7 @@ dnl INITIALIZE
 dnl *****************************************************************
 
 dnl This will check that we are in the Oz directory and initiate
-AC_INIT(gozsupport.h)
+AC_INIT(goz_support.h)
 
 
 AC_SUBST(EXTRALDFLAGS)
