@@ -79,7 +79,11 @@ define
 	    {File write(vs: '\\documentclass{report}\n')}
 	    {ForAll Packages
 	     proc {$ P}
-		{File write(vs: '\\usepackage{'#P#'}\n')}
+		case P of X#Y then
+		   {File write(vs: '\\usepackage['#Y#']{'#X#'}\n')}
+		else
+		   {File write(vs: '\\usepackage{'#P#'}\n')}
+		end
 	     end}
 	    {File write(vs: ('\\pagestyle{empty}\n'#
 			     '\\begin{document}\n'))}
