@@ -1,24 +1,22 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-class ThreadDebugger from Emacs
-   feat
-      Thr
+class ThreadManager from UrObject
 
-   meth init(thr:T)
-      self.Thr = T
-   end
-   
-   meth step
-      {Thread.resume self.Thr}
+   meth init
+      skip
    end
 
-   meth cont
-      {Dbg.stepmode self.Thr off}
-      {Thread.resume self.Thr}
+   meth step(T)
+      {Thread.resume T}
+   end
+
+   meth cont(T)
+      {Dbg.stepmode T off}
+      {Thread.resume T}
    end
    
-   meth stack
-      {Ozcar stack(self.Thr)}
+   meth stack(T)
+      {Ozcar stackThread(T)}
    end
 end

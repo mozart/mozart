@@ -95,14 +95,23 @@ class Frontend from Dialog
    end
 
    meth send(Action)
-      {{Thread.getName @CurrentThread} Action}
+      {self Action(@CurrentThread)}
    end
 
    meth switch(T I)
+      %TS = {Dbg.taskstack T}
+      %% todo: adapt highlighted lines in SourceWindows
+   %in
       CurrentThread <- T
       Frontend,printStatus("Current Thread:  #" # I #
 			   " (state: " # {Thread.state T} # ")")
       {self.ThreadTree select(T)}
+   end
+
+   meth stepThread(file:F line:L thr:T)
+      {self highlight(file:F line:L)}  % ignore T for now -- sometime later we
+                                       % might have different colors for
+                                       % different threads
    end
    
    meth newThread(T I)
@@ -123,7 +132,7 @@ class Frontend from Dialog
       {self.StatusLabel tk(conf text:S)}
    end
    
-   meth stack(T)
+   meth stackThread(T)
       S = {Dbg.taskstack T}
       S1 S2 S3
    in
