@@ -57,24 +57,21 @@
 #define inline
 #endif
 
-/****************************************************************************
- *               Forward Declarations
- ****************************************************************************/
 
-void processUpdateStack(void);
-void performCopying(void);
-
-/****************************************************************************
- *   Modes of working:
- *     IN_GC: garbage collecting
- *     IN_TC: term copying
- ****************************************************************************/
+/*
+ * Needed for smart memory allocation
+ *
+ */
 
 Bool gc_is_running = NO;
 
-typedef enum {IN_GC = 0, IN_TC} GcMode;
 
-static GcMode opMode;
+/*
+ * isInGc: garbage collector does garbage collection, otherwise it clones
+ *
+ */
+
+static Bool isInGc;
 
 #ifdef CS_PROFILE
 int32 * cs_copy_start = NULL;
@@ -137,23 +134,19 @@ void verbReopen ()
 
 static MemChunks *fromSpace;
 
-Bool inToSpace(void *p)
-{
-  return (opMode==IN_TC || p==NULL || MemChunks::list->inChunkChain(p));
+Bool inToSpace(void *p) {
+  return (!isInGc || p==NULL || MemChunks::list->inChunkChain(p));
 }
 
-Bool notInToSpace(void *p)
-{
-  return (opMode==IN_TC || p==NULL || !MemChunks::list->inChunkChain(p));
+Bool notInToSpace(void *p) {
+  return (!isInGc || p==NULL || !MemChunks::list->inChunkChain(p));
 }
 
-Bool inFromSpace(void *p)
-{
-  return (opMode==IN_TC || p==NULL || fromSpace->inChunkChain(p));
+Bool inFromSpace(void *p) {
+  return (!isInGc || p==NULL || fromSpace->inChunkChain(p));
 }
 
-void initCheckSpace()
-{
+void initCheckSpace() {
   fromSpace = MemChunks::list;
   DebugGCT(printf("FROM-SPACE:\n");
 	   fromSpace->print();)
@@ -187,7 +180,7 @@ void exitCheckSpace()
 
 #ifdef VERBOSE
 #  define GCMETHMSG(S)                                                        \
-    fprintf(verbOut,"(gc) [%d] %s this: 0x%p ",(ptrStack.getUsed ()),S,this); \
+    fprintf(verbOut,"(gc) [%d] %s this: 0x%p ",(gcStack.getUsed ()),S,this); \
     WHERE(verbOut);							      \
     fprintf(verbOut,"\n");						      \
     fflush(verbOut);
@@ -337,32 +330,19 @@ OZ_C_proc_end
 
 
 /*
- * TC: groundness check needs to count the number of
- *    variables, names, cells & abstractions
+ * Allocate and copy memory blocks.
+ * 
  */
 
-static Bool varCopied;
-
-#define setVarCopied \
- varCopied = OK;
-
-
-/*
- * TC: the copy board in from-space and to-space
- */
-static Board* fromCopyBoard;
-static Board* toCopyBoard;
-
-
-/****************************************************************************
- * Copy from from-space to to-space
- ****************************************************************************/
 inline
-void fastmemcpy_static(int32 *to, int32 *frm, size_t sz)
-{
-#ifdef VERBOSE
-  fprintf(verbOut,"(gc) \tcopy %d bytes from 0x%p to 0x%p\n",sz,frm,to);
-#endif
+void * gcReallocStatic(void * p, size_t sz) {
+  // Use for blocks where size is known statically at compile time
+  DebugCheck(sz%sizeof(int) != 0,
+	     error("gcReallocStatic: can only handle word sized blocks"););
+
+  int32 * frm = (int32 *) p;
+  int32 * to  = (int32 *) heapMalloc(sz);
+
   switch(sz) {
   case 64: to[15] = frm[15];
   case 60: to[14] = frm[14];
@@ -387,79 +367,53 @@ void fastmemcpy_static(int32 *to, int32 *frm, size_t sz)
       { Assert(0); };
 #endif
   }
-}
-
-inline
-void fastmemcpy_dynamic(int32 *to, int32 *frm, size_t sz)
-{
-#ifdef VERBOSE
-  fprintf(verbOut,"(gc) \tcopy %d bytes from 0x%p to 0x%p\n",sz,frm,to);
-#endif 
-  sz = sz >> 2;
-  while (sz > 8) {
-    to[7] = frm[7]; to[6] = frm[6]; to[5] = frm[5]; to[4] = frm[4];
-    to[3] = frm[3]; to[2] = frm[2]; to[1] = frm[1]; to[0] = frm[0];
-    to += 8; frm += 8; sz -= 8;
-  }
-  switch(sz) {
-  case 8: to[7] = frm[7];
-  case 7: to[6] = frm[6];
-  case 6: to[5] = frm[5];
-  case 5: to[4] = frm[4];
-  case 4: to[3] = frm[3];
-  case 3: to[2] = frm[2];
-  case 2: to[1] = frm[1];
-  case 1: to[0] = frm[0];
-  }
-}
-
-inline
-void *gcReallocStatic(void *ptr, size_t sz)
-{
-  void *ret = heapMalloc(sz);
-  DebugCheck(sz%sizeof(int) != 0,
-	     error("gcReallocStatic: can only handle word sized blocks"););
-  fastmemcpy_static((int32*)ret,(int32*)ptr,sz);
-  return ret;
+  return to;
 }
 
 
-inline
-void *gcReallocDynamic(void *ptr, size_t sz)
-{
-  void *ret = heapMalloc(sz);
+void * gcReallocDynamic(void * const p, size_t sz) {
+  // Use for blocks where size is not known at compile time
   DebugCheck(sz%sizeof(int) != 0,
 	     error("gcReallocDynamic: can only handle word sized blocks"););
-  fastmemcpy_dynamic((int32*)ret,(int32*)ptr,sz);
+
+  int32 * frm = (int32 *) p;
+  int32 * to  = (int32 *) heapMalloc(sz);
+  int32 * ret = to;
+
+  register int32 f0, f1;
+  
+  while (sz > 16) {
+    f0 = frm[3-0]; f1 = frm[2-0];
+    sz -= 16;
+    to[3-0] = f0;  to[2-0] = f1; 
+    frm += 4; 
+    f0 = frm[1-4]; f1 = frm[0-4]; 
+    to += 4; 
+    to[1-4] = f0;  to[0-4] = f1;
+  }
+
+  switch(sz) {
+  case 16: to[3] = frm[3];
+  case 12: to[2] = frm[2];
+  case  8: to[1] = frm[1];
+  case  4: to[0] = frm[0];
+  }
+
   return ret;
 }
 
 
-/*****************************************************************************
- * makeTaggedRef without consitency check
- *****************************************************************************/
-
-inline
-TaggedRef makeTaggedRefToFromSpace(TaggedRef *s)
-{
-  CHECK_POINTER_N(s);
-  return (TaggedRef) ToInt32(s);
-}
-
-
-/****************************************************************************
- * The pointer stack is the recursion stack for garbage collection
- * to avoid the usage of the runtime call stack
+/*
+ * The garbage collector uses an explicit recursion stack. The stack
+ * items are references where garbage collection must continue.
  *
- * Elements of the stack are of the type "TypePtr" which has a tag
- * and a value field.
+ * The items are tagged pointers, the tag gives which routine must 
+ * continue, whereas the pointer itself says with which entity.
  *
- * The stack is stored in the global variable "ptrStack".
- ****************************************************************************/
+ */
 
 enum TypeOfPtr {
   PTR_LTUPLE,
-  PTR_LTUPLE_TAIL,
   PTR_SRECORD,
   PTR_NAME,
   PTR_BOARD,
@@ -474,80 +428,52 @@ enum TypeOfPtr {
 
 typedef TaggedRef TypedPtr;
 
-inline
-TypedPtr makeTypedPtr(void *ptr, TypeOfPtr tag)
-{
-  return makeTaggedRef2p((TypeOfTerm) tag, ptr);
-}
-
-inline
-TypeOfPtr getType(TypedPtr tp)
-{
-  return (TypeOfPtr) tagTypeOf(tp);
-}
-
-inline
-void *getPtr(TypedPtr tp)
-{
-  return tagValueOf(tp);
-}
-
-class TypedPtrStack: public Stack {
+class GcStack: public Stack {
 public:
-  Bool locked;
-  TypedPtrStack() : Stack(1000,Stack_WithMalloc), locked(NO) {}
-  ~TypedPtrStack() {}
+  GcStack() : Stack(1024, Stack_WithMalloc) {}
+  ~GcStack() {}
   
-  void lock()   { locked = OK; }
-  void unlock() { locked = NO; }
-
-  void push(void *ptr, TypeOfPtr type) {
-    Assert(!locked);
-    Stack::push((StackEntry)makeTypedPtr(ptr,type));
-  }
-  void pushInt(int n) {
-    Assert(!locked);
-    Stack::push((StackEntry) n);
+  void push(void * ptr, TypeOfPtr type) {
+    Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) type, ptr));
   }
 
-  TypedPtr pop()  { 
-    return (TypedPtr) ToInt32(Stack::pop()); 
-  }
-  TypedPtr popInt()  { 
-    return (int) ToInt32(Stack::pop()); 
-  }
+  void recurse(void);
+
 };
 
-static TypedPtrStack ptrStack;
+static GcStack gcStack;
 
 
-/****************************************************************************
- *  SavedPtrStack consists of SavedPtr's and is used by coping
- * of terms (in common sense) to save overwrited value.
+/*
+ * The copy trail: CpTrail
  *
- *  We must make here some note:
- *  such technic is used since it is was already used (in gc):)),
- * and since it seems to be efficient.
- *  It relies heavyly on fact that first cell of every term contains
- * no data that can have GCTAG bit, and, moreover, this cell
- * contains no compiler-related information (for instance,
- * pointer to procedure table if we are using run-time resolution
- * of class' methods across class hierarchy
- ****************************************************************************/
+ * During copying fields that are overwritten must be saved in order 
+ * to reestablish the space that has been copied.
+ *
+ */
 
-class SavedPtrStack: public Stack {
+class CpTrail: public Stack {
 public:
-  SavedPtrStack() : Stack(1000,Stack_WithMalloc) {}
-  ~SavedPtrStack() {}
-  void pushPtr(int32* ptr)
-  {
+  CpTrail() : Stack(1024, Stack_WithMalloc) {}
+  ~CpTrail() {}
+  
+  void save(int * p) {
+    // Save content and address
     ensureFree(2);
-    push(ptr,NO);
-    push((StackEntry) *ptr,NO);
+    push((StackEntry) *p, NO);
+    push((StackEntry) p,  NO);
+  }
+
+  void unwind(void) {
+    while (!isEmpty()) {
+      int * p = (int *) pop();
+      int   v = (int)   pop();
+      *p = v;
+    } 
   }
 };
 
-static SavedPtrStack savedPtrStack;
+static CpTrail cpTrail;
 
 
 /****************************************************************************
@@ -580,19 +506,17 @@ if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
  *
  */
 inline
-void storeFwd (int32* fromPtr, void *newValue, Bool domark=OK)
-{
-  if (opMode == IN_TC) {
-    savedPtrStack.pushPtr(fromPtr);
-  }
+void storeFwd (int32* fromPtr, void *newValue, Bool domark=OK) {
+  if (!isInGc)
+    cpTrail.save(fromPtr);
+
   Assert(inFromSpace(fromPtr));
-  //  Assert(inToSpace(newValue));
+
   *fromPtr = domark ? GCMARK(newValue) : ToInt32(newValue);
 }
 
 inline
-void storeFwd(void* fromPtr, void *newValue)
-{
+void storeFwd(void* fromPtr, void *newValue) {
   storeFwd((int32*) fromPtr, newValue);
 }
 
@@ -719,94 +643,127 @@ Bool gcUnprotect(TaggedRef *ref)
 } 
 
 
-/****************************************************************************
- * The update stack contains REF's to not yet copied variables
- ****************************************************************************/
+/*
+ * The variable copying stack: VarFix
+ *
+ * When during garbage collection or during copying a variable V is
+ * encountered that has not been collected so far and V is not direct, 
+ + that is, V has been reached by a reference chain, V cannot be copied
+ * directly.
+ *
+ * So, push the location of the reference on VarFix and replace its content
+ * by a reference to the old variable, as to shorten the ref-chain.
+ *
+ * Later V might be reached directly, that fixes V's location. After 
+ * collection has finished, VarFix tracks this new location to
+ * and fixes the occurence on VarFix.
+ *
+ */
 
-
-
-class UpdateStack: public Stack {
-  Bool locked;
+class VarFix: public Stack {
 public:
-  UpdateStack() : Stack(1000,Stack_WithMalloc), locked(NO) {}
-  ~UpdateStack() {}
-  void push(TaggedRef *t) {
-    Assert(!locked);
-    Stack::push((StackEntry)t);
-  }
-  TaggedRef *pop() { return (TaggedRef*) Stack::pop(); }
+  VarFix() : Stack(1024, Stack_WithMalloc) {}
+  ~VarFix() {}
 
-  void lock()   { locked = OK; } 
-  void unlock() { locked = NO; } 
+  void defer(TaggedRef * var, TaggedRef * ref) {
+    Assert(var);
+    Stack::push((StackEntry) ref);
+    // Do not use makeTaggedRef, because this expects references
+    // to to-space!
+    *ref = ToInt32(var); 
+  }
+
+  void fix(void);
+
 };
 
-static UpdateStack updateStack;
+static VarFix varFix;
 
 
-/****************************************************************************
- * TC: Path marks
- *  all nodes above search are marked
- *  to test if a variable,cell,name,... is local:
- *   check if the path mark is set in home board
- ****************************************************************************/
 
 /*
- * Check if a variable, cell, procedure or name is local to the copy board.
- *  The argument is the home pointer.
+ * Routines to check whether entities are local to space to be cloned
  *
- * NOTE: this doesn't work for suspension list entries.
+ * - Boards are marked
+ * - For suspension list entries use isInTree 
+ *   (This routine is only needed for debugging, since in a stable space
+ *    there are no external suspensions)
+ *
  */
 
-inline
-Bool isLocalBoard(Board* b)
-{
-  return !b->isPathMark();
-}
 
 /*
- * TC: before copying:  all nodes are marked, but node self
+ * Copying: the board to be copied (and its copy)
  */
-inline
-void setPathMarks(Board *bb)
-{
-  Assert(!bb->_isRoot());
+static Board * fromCopyBoard;
+static Board * toCopyBoard;
+
+/*
+ * Copying: groundness check needs to find whether situated entity
+ * (i.e., variables, cells, procedures, ...) have been copied
+ * 
+ */
+static Bool isGround;
+
+/*
+ * Copying: before copying all spaces but the space to be copied get marked.
+ */
+void Board::setGlobalMarks(void) {
+  Assert(!isInGc);
+  Assert(!_isRoot());
+
+  Board * b = this;
+
   do {
-    bb = bb->getParent();
-    bb->setPathMark();
-  } while (!bb->_isRoot());
+    b = b->getParent(); b->setGlobalMark();
+  } while (!b->_isRoot());
+  
 }
 
 /*
- * TC: after copying
+ * Copying: purge marks after copying
  */
+void Board::unsetGlobalMarks(void) {
+  Assert(!isInGc);
+  Assert(!_isRoot());
 
-inline
-void unsetPathMarks(Board *bb)
-{
-  Assert(!bb->_isRoot());
+  Board * b = this;
+
   do {
-    bb = bb->getParent();
-    bb->unsetPathMark();
-  } while (!bb->_isRoot());
+    b = b->getParent(); b->unsetGlobalMark();
+  } while (!b->_isRoot());
+
 }
 
 
 /*
- * Check if an entry of a suspension list is local to the copyBoard.
+ * Copying: Check if suspension entry is local to copyBoard.
  */
-inline
-Bool isInTree (Board *b)
-{
-  Assert (opMode == IN_TC);
-  Assert (b);
- loop:
-  Assert (!b->isCommitted());
-  if (b == fromCopyBoard) return (OK);
-  if (!isLocalBoard(b)) return (NO);
-  b = b->getParentAndTest ();
-  if (!b) return (NO);
-  goto loop;
+
+Bool Board::isInTree(void) {
+  Assert(!isInGc);
+  Assert(this);
+
+  Board * b = this;
+
+  while (1) {
+    Assert (!b->isCommitted());
+
+    if (b == fromCopyBoard) 
+      return OK;
+  
+    if (b->isMarkedGlobal()) 
+      return NO;
+
+    b = b->getParentAndTest();
+  
+    if (!b) 
+      return NO;
+  }
+
 }
+
+
 
 /****************************************************************************
  * Collect all types of terms
@@ -836,7 +793,7 @@ Board * Board::gcGetFwd(void) {
   return (Board *) body.gcGetFwd();
 }
 
-inline
+
 Board * Board::gcDerefedBoard() {
   GCMETHMSG("Board::gcDerefedBoard");
   INFROMSPACE(this);
@@ -853,25 +810,18 @@ Board * Board::gcDerefedBoard() {
   if (!bb->gcIsAlive()) 
     return 0;
 
-  // kost@, TMUELLER
-  // process.oz causes the assertion to fire!!! 
-  // Presumably a register allocation problem
-  // See the cure below:
-  //  if (opMode == IN_TC && !isInTree(bb)) return 0; 
-
-  // In an optimized machine the assertion is absent
-  Assert(opMode != IN_TC || isInTree(bb)); 
+  Assert(isInGc || bb->isInTree()); 
 
   COUNT(board);
 
-  Assert(opMode==IN_TC || !inToSpace(bb));
+  Assert(!isInGc || !inToSpace(bb));
 
   Board *ret = (Board *) gcReallocStatic(bb, sizeof(Board));
       
   FDPROFILE_GC(cp_size_board, sizeof(Board));
 	
   GCNEWADDRMSG(ret);
-  ptrStack.push(ret,PTR_BOARD);
+  gcStack.push(ret,PTR_BOARD);
 
   storeFwdField(ret);
 
@@ -901,29 +851,28 @@ Board * Board::gcBoard() {
  *   only dynamic names need to be copied
  */
 
-void dogcGName(GName *gn)
-{
-  if (gn && opMode == IN_GC) {
+void dogcGName(GName *gn) {
+  if (gn && isInGc) 
     gcGName(gn);
-  }
 }
 
-inline
-Name *Name::gcName()
-{
+
+Name *Name::gcName() {
   CHECKCOLLECTED(homeOrGName, Name *);
   GName *gn = NULL;
+
   if (hasGName()) {
     gn = getGName();
   }
-  if (opMode == IN_GC && isOnHeap() ||
-      opMode == IN_TC && isLocalBoard(GETBOARD(this))) {
+
+  if (isInGc && isOnHeap() ||
+      !isInGc && !(GETBOARD(this))->isMarkedGlobal()) {
     GCMETHMSG("Name::gc");
     COUNT(literal);
-    setVarCopied;
+    isGround = NO;
     Name *aux = (Name*) gcReallocStatic(this,sizeof(Name));
     GCNEWADDRMSG(aux);
-    ptrStack.push(aux, PTR_NAME);
+    gcStack.push(aux, PTR_NAME);
     storeFwd(&homeOrGName, aux);
     
     FDPROFILE_GC(cp_size_literal,sizeof(*this));
@@ -1024,13 +973,13 @@ void GenFSetVariable::gc()
     fsSuspList[i] = fsSuspList[i]->gc();
 }
 
-inline
+
 FSetValue * FSetValue::gc(void) 
 {
   return (FSetValue *) gcReallocDynamic(this, sizeof(FSetValue));
 }
 
-inline
+
 void GenLazyVariable::gc(void)
 {
   GCMETHMSG("GenLazyVariable::gc");
@@ -1054,51 +1003,44 @@ void AVar::gc(void)
   OZ_updateHeapTerm(value);
 }
 
-inline
-DynamicTable* DynamicTable::gc(void)
-{
+
+DynamicTable* DynamicTable::gc(void) {
   GCMETHMSG("DynamicTable::gc");
 
   Assert(isPwrTwo(size));
+
   // Copy the table:
-  COUNT(dynamicTable);
-  COUNT1(dynamicTableLen,size);
-  size_t len = (size-1)*sizeof(HashElement)+sizeof(DynamicTable);
-  DynamicTable* ret = (DynamicTable*) gcReallocDynamic(this,len);
+
+  size_t len = (size-1)*sizeof(HashElement) + sizeof(DynamicTable);
+
+  DynamicTable* ret = (DynamicTable*) heapMalloc(len);
   
-  FDPROFILE_GC(cp_size_ofsvar, len);
-  
+  ret->numelem = numelem;
+  ret->size    = size;
+
+  // Leave a mark where gcRecurse finds the already allocated heap mem
+  numelem = (dt_index) ToInt32(ret);
+
   GCNEWADDRMSG(ret);
+
   // Take care of all TaggedRefs in the table:
-  ptrStack.push(ret,PTR_DYNTAB);
+  gcStack.push(this, PTR_DYNTAB);
   // (no storeFwd needed since only one place points to the dynamictable)
 
-#ifdef DEBUG_CHECK
-  for (dt_index i=size; i--; ) {
-    if (table[i].ident != makeTaggedNULL()) {
-      Assert(!isDirectVar(table[i].ident));
-      Assert(!isDirectVar(table[i].value));
-    }
-  }
-#endif
-  
   return ret;
 }
 
 inline
 void DynamicTable::gcRecurse() {
-  for (dt_index i=size; i--; ) {
-    if (table[i].ident != makeTaggedNULL()) {
-      OZ_updateHeapTerm(table[i].ident);
-      OZ_updateHeapTerm(table[i].value);
-    }
-  }
+  DynamicTable * to = (DynamicTable *) ToPointer(numelem);
+
+  OZ_collectHeapBlock((TaggedRef *) table, (TaggedRef *) to->table, size * 2);
+
 }
 
 
 inline
-void GenOFSVariable::gc(void)
-{
+void GenOFSVariable::gc(void) {
     GCMETHMSG("GenOFSVariable::gc");
     OZ_updateHeapTerm(label);
     // Update the pointer in the copied block:
@@ -1127,7 +1069,7 @@ GenCVariable * GenCVariable::gcGetFwd(void) {
 }
 
 inline
-Bool GenCVariable::gcNeeded(void) {
+Bool GenCVariable::gcNeeded() {
 
   if (this->gcIsMarked()) {
     Assert(!home->isCommitted());
@@ -1138,10 +1080,10 @@ Bool GenCVariable::gcNeeded(void) {
 
   home = bb;
 
-  return ((opMode == IN_GC) || isLocalBoard(bb));
+  return (isInGc || !bb->isMarkedGlobal());
 }
   
-inline
+
 GenCVariable * GenCVariable::gc(void) {
   INFROMSPACE(this);
 
@@ -1158,7 +1100,7 @@ GenCVariable * GenCVariable::gc(void) {
   
   SuspList * sl = suspList;
   
-  setVarCopied;
+  isGround = NO;
 
   GenCVariable * to;
     
@@ -1214,7 +1156,7 @@ GenCVariable * GenCVariable::gc(void) {
     Assert(0);
   }
 
-  Assert(opMode != IN_GC || this->home != bb);
+  Assert(!isInGc || this->home != bb);
     
   to->suspList = sl->gc();
   to->home     = bb;
@@ -1244,7 +1186,7 @@ SVariable * SVariable::gcGetFwd(void) {
 }
 
 inline
-Bool SVariable::gcNeeded(void) {
+Bool SVariable::gcNeeded() {
 
   if (this->gcIsMarked()) {
     Assert(!home->isCommitted());
@@ -1255,10 +1197,10 @@ Bool SVariable::gcNeeded(void) {
 
   home = bb;
 
-  return ((opMode == IN_GC) || isLocalBoard(bb));
+  return (isInGc || !bb->isMarkedGlobal());
 }
   
-inline
+
 SVariable * SVariable::gc() {
   Assert(!home->isCommitted());
 
@@ -1271,11 +1213,11 @@ SVariable * SVariable::gc() {
     
   Assert(bb);
   
-  setVarCopied;
+  isGround = NO;
 
   SVariable * to = (SVariable *) heapMalloc(sizeof(SVariable));
   
-  Assert(opMode != IN_GC || to->home != bb);
+  Assert(!isInGc || to->home != bb);
 
   to->suspList = suspList->gc();
   to->home     = bb;
@@ -1293,11 +1235,11 @@ Bool gcUVarNeeded(TaggedRef var) {
 
   Board * bb = tagged2VarHome(var)->derefBoard();
 
-  return ((opMode == IN_GC) || isLocalBoard(bb));
+  return (isInGc || !bb->isMarkedGlobal());
 }
 
 
-inline
+
 TaggedRef gcUVar(TaggedRef var) {
   GCPROCMSG("gcUVar");
   
@@ -1305,76 +1247,19 @@ TaggedRef gcUVar(TaggedRef var) {
 
   Board * bb = tagged2VarHome(var)->derefBoard();
 
-  Assert(((opMode == IN_GC) || isLocalBoard(bb)));
+  Assert(isInGc || !bb->isMarkedGlobal());
 
   bb = bb->gcDerefedBoard();
 
   Assert(bb);
     
-  setVarCopied;
+  isGround = NO;
 
   INTOSPACE(bb);
   
   return makeTaggedUVar(bb);
 }
 
-
-void gcDirectVar(TaggedRef * frm, TaggedRef * to) {
-  GCPROCMSG("gcDirectVar");
-  TaggedRef var = * frm;
-
-  Assert(isDirectVar(var));
-  
-  switch (tagTypeOf(var)) {
-  case CVAR:
-    {
-      GenCVariable * cv = tagged2CVar(var);
-
-      if (cv->gcNeeded()) { 
-	*to = makeTaggedCVar(cv->gc());
-      } else {
-	// We cannot copy the variable, but we have already copied
-	// their taggedref, so we change the original variable to a ref 
-	// of the copy.
-	// After pushing on the update stack the
-	// the original variable is replaced by a reference!
-	*to  = *frm;
-	*frm = makeTaggedRef(to);
-      }
-
-      break;
-    }
-  case SVAR:
-    {
-      SVariable * sv = tagged2SVar(var);
-
-      if (sv->gcNeeded()) { 
-	*to = makeTaggedSVar(sv->gc());
-      } else {
-	// See above
-	*to  = *frm;
-	*frm = makeTaggedRef(to);
-      }
-
-      break;
-    }
-
-  case UVAR:
-    
-    if (gcUVarNeeded(var)) {
-      *to = gcUVar(var);
-    } else {
-      // See above
-      *to  = *frm;
-      *frm = makeTaggedRef(to);
-    }
-    break;
-    
-  default:
-    Assert(0);
-    break;
-  }
-}
 
 /*
  * Float
@@ -1383,17 +1268,14 @@ void gcDirectVar(TaggedRef * frm, TaggedRef * to) {
  */
 inline
 Float *Float::gc() {
-  Assert(opMode == IN_GC);
+  Assert(isInGc);
 
-  COUNT(ozfloat);
-
-  Float *ret =  newFloat(value);
-  return ret;
+  return newFloat(value);
 }
 
-inline
+
 BigInt * BigInt::gc() {
-  Assert(opMode == IN_GC);
+  Assert(isInGc);
 
   CHECKCOLLECTED(*(int *)&value, BigInt *);
   COUNT(bigInt);
@@ -1404,14 +1286,16 @@ BigInt * BigInt::gc() {
   return ret;
 }
 
-inline
+
 void Script::gc()
 {
   GCMETHMSG("Script::gc");
+
   if (first){
     int sz = numbOfCons*sizeof(Equation);
-    COUNT1(scriptLen,sz);
+    
     Equation *aux = (Equation*) heapMalloc(sz);
+
     GCNEWADDRMSG(aux);
     
     FDPROFILE_GC(cp_size_script, sz);
@@ -1422,7 +1306,7 @@ void Script::gc()
       //  'Equations' with non-variable at the left side are figured out;
       TaggedRef auxTerm = first[i].left;
       TaggedRef *auxTermPtr;
-      if (opMode == IN_TC && IsRef(auxTerm)) {
+      if (!isInGc && IsRef(auxTerm)) {
 	do {
 	  if (auxTerm == makeTaggedNULL ())
 	    error ("NULL in script");
@@ -1544,7 +1428,7 @@ OZ_Propagator * OZ_Propagator::gc(void)
 
   GCNEWADDRMSG (p);
 
-  ptrStack.push(p, PTR_PROPAGATOR);
+  gcStack.push(p, PTR_PROPAGATOR);
   
   return p;
 }
@@ -1593,7 +1477,7 @@ Continuation *Continuation::gc()
   Continuation *ret =
     (Continuation *) gcReallocStatic(this, sizeof(Continuation));
   GCNEWADDRMSG (ret);
-  ptrStack.push (ret, PTR_CONT);
+  gcStack.push (ret, PTR_CONT);
 
   storeFwdField(ret);
 
@@ -1604,95 +1488,29 @@ Continuation *Continuation::gc()
 
 /* collect LTuple, SRecord */
 
-inline
+
 LTuple * LTuple::gc() {
   GCMETHMSG("LTuple::gc");
 
-  LTuple * l = this;
+  // Does basically nothing, the real stuff is in gcRecurse
 
-  TaggedRef start;
-  TaggedRef * p = &start;
-
-  int n = 0;
-
-  while (1) {
-    TaggedRef h = l->args[0];
-
-    // Check wether already collected
-    if (GCISMARKED(h)) {
-      if (n > 0) {
-	*p = makeTaggedLTuple((LTuple *) GCUNMARK(h));
-
-	LTuple * ret = tagged2LTuple(start);
-
-	ptrStack.pushInt(n);
-	ptrStack.push(ret, PTR_LTUPLE);
-
-	return ret;
-      } else {
-	return ((LTuple *) GCUNMARK(h));
-      }
-    }
-
-    n++;
-
-    LTuple * c = (LTuple *) heapMalloc(sizeof(LTuple));
-
-    *p = makeTaggedLTuple(c);
-    p  = &(c->args[1]);
-    
-    // Process list element
-    if (isDirectVar(h)) {
-      gcDirectVar(&(l->args[0]), &(c->args[0]));
-    } else {
-      c->args[0] = h;
-    }
-
-    // Store forward
-    storeFwd(&(l->args[0]), &(c->args[0]));
-    
-    TaggedRef t = l->args[1];
-
-    // Process list tail
-    if (isDirectVar(t)) {
-      gcDirectVar(&(l->args[1]),&(c->args[1]));
-      storeFwd(&(l->args[1]), &(c->args[1]));
-      
-      LTuple * ret = tagged2LTuple(start);
-
-      ptrStack.pushInt(n);
-      ptrStack.push(ret, PTR_LTUPLE);
-      
-      return ret;
-    }
-
-    TaggedRef not_deref = t;
-    
-    DEREF(t, t_ptr, t_tag);
-
-    if (!isLTuple(t_tag)) {
-      LTuple * ret = tagged2LTuple(start);
-
-      ptrStack.pushInt(n);
-
-      if (isNil(t)) {
-	c->args[1] = t;
-	ptrStack.push(ret, PTR_LTUPLE);
-      } else {
-	c->args[1] = not_deref;
-	ptrStack.push(ret, PTR_LTUPLE_TAIL);
-      }
-      return ret;
-    }
-    
-    l = tagged2LTuple(t);
-
-  } 
+  if (GCISMARKED(args[0]))
+    return (LTuple *) GCUNMARK(args[0]);
   
-  Assert(0);
+  LTuple * to = (LTuple *) heapMalloc(sizeof(LTuple));
+
+  // Save the content
+  to->args[0] = args[0];
+
+  // Do not store foreward! gcRecurse takes care of this!
+  args[0] = GCMARK(to->args);
+
+  gcStack.push(this, PTR_LTUPLE);
+
+  return to;
 }
 
-inline
+
 SRecord *SRecord::gcSRecord()
 {
   GCMETHMSG("SRecord::gcSRecord");
@@ -1708,26 +1526,9 @@ SRecord *SRecord::gcSRecord()
   ret->label       = label;
   ret->recordArity = recordArity;
 
-  Bool isInGc = (opMode != IN_TC);
-  
-  register TaggedRef * a = getRef();
-  register TaggedRef * c = ret->getRef();
-
-  for (int i = getWidth(); i--; ) {
-    TaggedRef from = a[i];
-
-    if (isDirectVar(from)) {
-      gcDirectVar(a + i, c + i);
-      storeFwd((int *) a + i, c + i);
-    } else {
-      c[i] = from;
-    }
-    
-  }
-
-  ptrStack.push(ret,PTR_SRECORD);
-
   storeFwd((int32*)&label, ret);
+
+  gcStack.push(this, PTR_SRECORD);
 
   FDPROFILE_GC(cp_size_record, len);
 
@@ -1764,11 +1565,10 @@ Thread *Thread::gcThread ()
   // nothing can be copied (IN_TC) until stability;
 
   // first class threads: must only copy thread when local to solve!!!
-  if (opMode == IN_TC && !isLocalBoard(GETBOARD(this))) {
+  if (!isInGc && (GETBOARD(this))->isMarkedGlobal())
     return this;
-  }
 
-  Assert(opMode == IN_GC || !isRunnable());
+  Assert(isInGc || !isRunnable());
 
   // 
   //  Note that runnable threads can be also counted 
@@ -1786,7 +1586,7 @@ Thread *Thread::gcThread ()
     ThreadList::add(newThread);
   }
 
-  ptrStack.push(newThread, PTR_THREAD);
+  gcStack.push(newThread, PTR_THREAD);
 
   FDPROFILE_GC(cp_size_susp, sizeof(*this));
 
@@ -1946,6 +1746,233 @@ void gc_finalize()
 }
 #endif
 
+
+
+inline
+Bool gcTagged(TaggedRef & frm, TaggedRef & to, Bool isAliased) {
+  // Returns OK if a direct variable has been collected
+  Assert(!isInGc || !fromSpace->inChunkChain(&to));
+
+  TaggedRef aux       = frm;
+  TaggedRef * aux_ptr = NULL;
+
+update:
+  
+  switch (tagTypeOf(aux)) {
+    
+  case REFTAG1:
+    /* initalized but unused cell in register array */
+    if (aux == makeTaggedNULL()) {
+      if (!isAliased)
+	to = aux;
+      return NO;
+    }
+
+  case REFTAG2:
+  case REFTAG3:
+  case REFTAG4:
+    
+    do {
+      aux_ptr = tagged2Ref(aux);
+      aux     = *aux_ptr;
+    } while (IsRef(aux));
+  
+    if (isAliased)
+      to = aux;
+
+    goto update;
+
+  case GCTAG:
+    to = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
+    // mm2: this can lead to not shortened ref chains together with
+    // the CONS forwarding: if a CONS cell is collected then every
+    // reference to the first element becomes a ref. May try this:
+    // if (!isVar(*to)) to=deref(to);
+    break;
+    
+  case SMALLINT:
+    if (!isAliased)
+      to = aux;
+    break;
+
+  case FSETVALUE:
+    if (isInGc) {
+      to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc()); 
+    } else {
+      if (!isAliased)
+	to = aux;
+    }
+    break;
+    
+  case LITERAL:  
+    { 
+      Literal * l = tagged2Literal(aux);
+
+      if (needsCollection(l)) {
+	to = makeTaggedLiteral(l->gc()); 
+      } else {
+	if (!isAliased)
+	  to = aux;
+      }
+      break;
+    }
+    
+  case LTUPLE:   
+    to = makeTaggedLTuple(tagged2LTuple(aux)->gc()); 
+    break;
+
+  case SRECORD:  
+    to = makeTaggedSRecord(tagged2SRecord(aux)->gcSRecord()); 
+    break;
+
+  case BIGINT: 
+    if (isInGc) {
+      to = makeTaggedBigInt(tagged2BigInt(aux)->gc()); 
+    } else {
+      if (!isAliased)
+	to = aux;
+    }
+    break;
+
+  case OZFLOAT:  
+    if (isInGc) {
+      to = makeTaggedFloat(tagged2Float(aux)->gc());   
+    } else {
+      if (!isAliased)
+	to = aux;
+    }
+    break;
+
+  case OZCONST:
+    to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
+    break;
+
+  case SVAR:
+    {
+      SVariable * sv = tagged2SVar(aux);
+
+      if (sv->gcNeeded()) {
+	SVariable * sv_gc = sv->gc();
+
+	// Only if not isAlised, direct variables can occur!
+	if (isAliased || aux_ptr) {
+	  // This means the variable is not direct!
+	  varFix.defer(aux_ptr, &to);
+	} else {
+	  Assert(isDirectVar(frm));
+	  to = makeTaggedSVar(sv_gc);
+	  storeFwd(&frm, &to);
+	  return OK;
+	}
+	
+      } else {
+
+	if (isAliased || aux_ptr) {
+	  Assert(aux_ptr);
+	  to = makeTaggedRef(aux_ptr);
+	} else {
+	  Assert(isDirectVar(frm));
+	  // We cannot copy the variable, but we have already copied
+	  // their taggedref, so we change the original variable to a ref 
+	  // of the copy.
+	  // After pushing on the update stack the
+	  // the original variable is replaced by a reference!
+	  to  = aux;
+	  frm = makeTaggedRef(&to);
+	  storeFwd(&frm, &to);
+	  return OK;
+	}
+	
+      }
+
+      break;
+    }
+
+  case CVAR:
+    {
+      GenCVariable * cv = tagged2CVar(aux);
+
+      if (cv->gcNeeded()) {
+	GenCVariable * cv_gc = cv->gc();
+
+	if (isAliased || aux_ptr) {
+	  // This means the variable is not direct!
+	  varFix.defer(aux_ptr, &to);
+	} else {
+	  Assert(isDirectVar(frm));
+	  to = makeTaggedCVar(cv_gc);
+	  storeFwd(&frm, &to);
+	  return OK;
+	}
+	
+      } else {
+
+	if (isAliased || aux_ptr) {
+	  Assert(aux_ptr);
+	  to = makeTaggedRef(aux_ptr);
+	} else {
+	  Assert(isDirectVar(frm));
+	  // We cannot copy the variable, but we have already copied
+	  // their taggedref, so we change the original variable to a ref 
+	  // of the copy.
+	  // After pushing on the update stack the
+	  // the original variable is replaced by a reference!
+	  to  = aux;
+	  frm = makeTaggedRef(&to);
+	  storeFwd(&frm, &to);
+	  return OK;
+	}
+	
+      }
+
+      break;
+    }
+    
+  case UVAR: 
+    {
+      Board * bb = tagged2VarHome(aux)->derefBoard();
+      
+      Assert(bb);
+
+      if (isInGc || !bb->isMarkedGlobal()) {
+
+	if (isAliased || aux_ptr) {
+	  (void) bb->gcDerefedBoard();
+      
+	  Assert(bb->gcIsAlive());
+	  varFix.defer(aux_ptr, &to);
+	} else {
+	  Assert(isDirectVar(frm));
+	  to = gcUVar(aux);
+	  storeFwd(&frm, &to);
+	  return OK;
+	}
+
+      } else {
+
+	if (isAliased || aux_ptr) {
+	  Assert(aux_ptr);
+	  to = makeTaggedRef(aux_ptr);
+	} else {
+	  Assert(isDirectVar(frm));
+	  // See above
+	  to  = aux;
+	  frm = makeTaggedRef(&to);
+	  storeFwd(&frm, &to);
+	  return OK;
+	}
+
+      }
+      
+      break;    
+    }
+  }
+ 
+  return NO;
+
+}
+
+
 /*
  * If an object has been copied, all slots of type 
  * 'TaggedRef' have to be 
@@ -1961,144 +1988,16 @@ void gc_finalize()
  */
 void OZ_updateHeapTerm(TaggedRef &to) {
   GCPROCMSG("OZ_updateHeapTerm");
-  register TaggedRef aux = to;
 
-  Assert(opMode==IN_TC || !fromSpace->inChunkChain(&to));
+  (void) gcTagged(to, to, OK);
 
-  register TaggedRef * aux_ptr = NULL;
-
-update:
-  
-  switch (tagTypeOf(aux)) {
-    
-  case REFTAG1:
-    /* initalized but unused cell in register array */
-    if (aux == makeTaggedNULL())
-      return;
-
-  case REFTAG2:
-  case REFTAG3:
-  case REFTAG4:
-    
-    do {
-      aux_ptr = tagged2Ref(aux);
-      aux     = *aux_ptr;
-    } while (IsRef(aux));
-  
-    to = aux;
-    
-    goto update;
-
-  case GCTAG:
-    to = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
-    // mm2: this can lead to not shortened ref chains together with
-    // the CONS forwarding: if a CONS cell is collected then every
-    // reference to the first element becomes a ref. May try this:
-    // if (!isVar(*to)) to=deref(to);
-    break;
-    
-  case SMALLINT: 
-    break;
-
-  case FSETVALUE:
-    if (opMode == IN_GC)
-      to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc()); 
-    break;
-    
-  case LITERAL:  
-    { 
-      Literal * l = tagged2Literal(aux);
-
-      if (needsCollection(l)) 
-	to = makeTaggedLiteral(l->gc()); 
-      break;
-    }
-    
-  case LTUPLE:   
-    to = makeTaggedLTuple(tagged2LTuple(aux)->gc()); 
-    break;
-
-  case SRECORD:  
-    to = makeTaggedSRecord(tagged2SRecord(aux)->gcSRecord()); 
-    break;
-
-  case BIGINT: 
-    if (opMode == IN_GC) 
-      to = makeTaggedBigInt(tagged2BigInt(aux)->gc()); 
-    break;
-
-  case OZFLOAT:  
-    if (opMode == IN_GC) 
-      to = makeTaggedFloat(tagged2Float(aux)->gc());   
-    break;
-
-  case OZCONST:
-    to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
-    break;
-
-  case SVAR:
-    {
-      SVariable * sv = tagged2SVar(aux);
-
-      if (sv->gcNeeded()) {
-	(void) sv->gc();
-	updateStack.push(&to);
-	to = makeTaggedRefToFromSpace(aux_ptr);
-      } else {
-	to = makeTaggedRef(aux_ptr);
-      }
-      
-      break;
-    }
-
-  case CVAR:
-    {
-      GenCVariable * cv = tagged2CVar(aux);
-
-      if (cv->gcNeeded()) {
-	(void) cv->gc();
-	updateStack.push(&to);
-	to = makeTaggedRefToFromSpace(aux_ptr);
-      } else {
-	to = makeTaggedRef(aux_ptr);
-      }
-
-      break;
-    }
-    
-  case UVAR: 
-    {
-      // put address of ref cell to be updated onto update stack    
-      Assert(aux_ptr);
-      
-      Board * bb = tagged2VarHome(aux)->derefBoard();
-      
-      Assert(bb);
-
-      if (opMode == IN_TC && !isLocalBoard(bb)) {
-	to = makeTaggedRef(aux_ptr);
-      } else {
-	(void) bb->gcDerefedBoard();
-      
-	Assert(bb->gcIsAlive());
-
-	updateStack.push(&to);
-      
-	to = makeTaggedRefToFromSpace(aux_ptr);
-      }
-      
-      break;    
-    }
-  }
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
-
-  for (int i=sz; i--; ) {
-    to[i] = frm[i];
-    OZ_updateHeapTerm(to[i]);
+  while (sz--) {
+    (void) gcTagged(*frm, *to, NO);
+    frm++; to++;
   }
-  
 }
 
 
@@ -2120,14 +2019,12 @@ void AM::gc(int msgLevel)
   gcFrameToProxy();
 
   GCMETHMSG(" ********** AM::gc **********");
-  opMode = IN_GC;
+  isInGc = OK;
   gcing = 0;
   gc_is_running = OK;
 
   ozstat.initGcMsg(msgLevel);
   
-  ptrStack.unlock();
-
   MemChunks *oldChain = MemChunks::list;
 
   VariableNamer::cleanup();  /* drop bound variables */
@@ -2149,7 +2046,6 @@ void AM::gc(int msgLevel)
 // colouring root pointers grey
 //-----------------------------------------------------------------------------
 
-  Assert(updateStack.isEmpty());
   Assert(trail.isEmpty());
   Assert(cachedSelf==0);
   Assert(ozstat.currAbstr==NULL);
@@ -2188,30 +2084,28 @@ void AM::gc(int msgLevel)
 
 #ifdef FINALIZATION
   OZ_updateHeapTerm(finalize_handler);
-  performCopying();
+  gcStack.recurse();
   gc_finalize();
 #endif
 
   gcOwnerTable();  
   gcBorrowTable1();
-  performCopying();
+  gcStack.recurse();
   gcBorrowTable2();
 
 
-  performCopying();
-
-  ptrStack.lock();
+  gcStack.recurse();
 
   gcGNameTable();
-  performCopying();
+  gcStack.recurse();
 
 
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
   GCPROCMSG("updating references");
-  processUpdateStack();
+  varFix.fix();
   
-  Assert(ptrStack.isEmpty());
+  Assert(gcStack.isEmpty());
 
   gcBorrowTable3();
   gcSiteTable();
@@ -2233,28 +2127,23 @@ void AM::gc(int msgLevel)
 
 
 /*
- *   Process updateStack -
+ * After collection has finished, update variable references
  *
  */
-void processUpdateStack(void) {
-  updateStack.lock();
+void VarFix::fix(void) {
 
-  while (!updateStack.isEmpty()) {
-    TaggedRef * to = updateStack.pop();
+  while (!isEmpty()) {
+    TaggedRef * to = (TaggedRef *) pop();
 
     Assert(isRef(*to));
 
     TaggedRef * aux_ptr = tagged2Ref(*to);
     TaggedRef   aux     = *aux_ptr;
     
-    Assert(!isRef(aux));
-    
     switch (tagTypeOf(aux)) {
 
     case UVAR:
       {
-	Assert(gcUVarNeeded(aux));
-
 	TaggedRef uv = gcUVar(aux);
 	
 	Assert(uv);
@@ -2266,36 +2155,12 @@ void processUpdateStack(void) {
       }
     
     case SVAR:
-      { 
-	SVariable *sv = tagged2SVar(aux);
-	
-	Assert(sv->gcNeeded());
-
-	INFROMSPACE(sv);
-  
-	Assert(sv->gcIsMarked());
-	  
-	*to = makeTaggedRef(newTaggedSVar(sv->gcGetFwd()));
-      
-	COUNT(svar);
-	break;
-      }
+      *to = makeTaggedRef(newTaggedSVar(tagged2SVar(aux)->gcGetFwd()));
+      break;
 
     case CVAR:
-      {
-	GenCVariable *cv = tagged2CVar(aux);
-	
-	Assert(cv->gcNeeded());
-
-	INFROMSPACE(cv);
-
-	Assert(cv->gcIsMarked());
-	
-	*to = makeTaggedRef(newTaggedCVar(cv->gcGetFwd()));
-    
-	COUNT(cvar);
-	break;
-      }
+      *to = makeTaggedRef(newTaggedCVar(tagged2CVar(aux)->gcGetFwd()));
+      break;
 
     case GCTAG:
       *to = makeTaggedRef((TaggedRef *) GCUNMARK(aux));
@@ -2307,12 +2172,10 @@ void processUpdateStack(void) {
     
     INFROMSPACE(aux_ptr);
     
-    storeFwd((int *) aux_ptr, ToPointer(*to));
+    storeFwd((int32 *) aux_ptr, ToPointer(*to));
     
-  } // while
+  }
 
-  Assert(updateStack.isEmpty());
-  updateStack.unlock();
 }
 
 
@@ -2325,7 +2188,7 @@ void processUpdateStack(void) {
 static Bool across_redid = NO;
 #endif
 
-Board* AM::copyTree(Board* bb, Bool *isGround)
+Board* AM::copyTree(Board* bb, Bool *getIsGround)
 {
 #ifdef VERBOSE
   if (verbOut == (FILE *) NULL) 
@@ -2339,15 +2202,10 @@ Board* AM::copyTree(Board* bb, Bool *isGround)
 
   PROFILE_CODE1(FDProfiles.add(bb); FDVarsTouched.discard();)
   
-  if (isGround == (Bool *) NULL) {
-    GCMETHMSG(" ********** AM::copyTree **********");
-  } else {
-    GCMETHMSG(" ********** AM::copyTree (groundness) **********");
-  }
-  opMode = IN_TC;
+  isInGc = NO;
   gcing = 0;
 
-  varCopied = NO;
+  isGround = OK;
 
   unsigned int starttime = 0;
 
@@ -2367,27 +2225,20 @@ redo:
   cs_orig_start = (int32 *) heapTop;
 #endif
 
-  ptrStack.unlock();
-
   Assert(!bb->isCommitted());
   fromCopyBoard = bb;
-  setPathMarks(fromCopyBoard);
+  fromCopyBoard->setGlobalMarks();
   toCopyBoard = fromCopyBoard->gcBoard();
   Assert(toCopyBoard);
 
-  performCopying();
+  gcStack.recurse();
 
-  processUpdateStack();
+  varFix.fix();
 
-  Assert(ptrStack.isEmpty());
-  
-  while (!savedPtrStack.isEmpty()) {
-    int value = ToInt32(savedPtrStack.pop());
-    int* ptr  = (int*) savedPtrStack.pop();
-    *ptr = value;
-  } 
+  cpTrail.unwind();
 
-  unsetPathMarks(fromCopyBoard);
+  fromCopyBoard->unsetGlobalMarks();
+
   fromCopyBoard = NULL;
   gcing = 1;
 
@@ -2416,11 +2267,9 @@ redo:
 
   if (ozconf.timeDetailed)
     ozstat.timeForCopy.incf(osUserTime()-starttime);
-  // Note that parent, right&leftSibling must be set in this subtree -
-  // for instance, with "setParent"
 
-  if (isGround != (Bool *) NULL)
-    *isGround = (varCopied == NO) ? OK : NO;
+  if (getIsGround != (Bool *) NULL)
+    *getIsGround = isGround;
 
   PROFILE_CODE1(FDProfiles.setBoard(toCopyBoard);)
 
@@ -2522,11 +2371,11 @@ void ThreadQueue::gc() {
    tail    = size - 1;
 }
 
-LocalThreadQueue * LocalThreadQueue::gc()
-{
-  if (!this) return NULL;
+LocalThreadQueue * LocalThreadQueue::gc() {
+  if (!this) 
+    return NULL;
   
-  Assert(opMode == IN_GC);
+  Assert(isInGc);
   Assert(!isEmpty());
 
   LocalThreadQueue * new_ltq = new LocalThreadQueue (suggestNewSize());
@@ -2597,8 +2446,8 @@ void TaskStack::gc(TaskStack *newstack)
     } else if (PC == C_CATCH_Ptr) {
     } else if (PC == C_XCONT_Ptr) {
       ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
-      if (opMode == IN_TC)
-	(void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
+      //      if (isInGc)
+      //	(void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
@@ -2671,7 +2520,7 @@ void ConstTermWithHome::gcConstTermWithHome()
 
 void ConstTerm::gcConstRecurse()
 {
-  setVarCopied;
+  isGround = NO;
   switch(getType()) {
   case Co_Object:
     {
@@ -2801,16 +2650,14 @@ void ConstTerm::gcConstRecurse()
       int aw = a->getWidth();
 
       if (aw > 0) {
-	TaggedRef *oldargs = a->getArgs();
+
 	TaggedRef *newargs = 
 	  (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
-	for (int i=aw; i--; ) {
-	  newargs[i] = oldargs[i];
-	  Assert(!isDirectVar(oldargs[i]));
-	  OZ_updateHeapTerm(newargs[i]);
-	}
-	
+
 	a->setPtr(newargs);
+
+	OZ_collectHeapBlock(a->getArgs(), newargs, aw);
+	
       }
       
       break;
@@ -2869,11 +2716,11 @@ void ConstTerm::gcConstRecurse()
   }
 }
 
-#define CheckLocal(CONST)					\
-{								\
-   Board *bb=GETBOARD(CONST);					\
-   if (!bb->gcIsAlive()) return NULL;				\
-   if (opMode == IN_TC && !isLocalBoard(bb)) return this;	\
+#define CheckLocal(CONST)			     \
+{						     \
+   Board *bb=GETBOARD(CONST);			     \
+   if (!bb->gcIsAlive()) return NULL;		     \
+   if (!isInGc && bb->isMarkedGlobal()) return this; \
 }
 
 inline void EntityInfo::gcWatchers(){
@@ -3047,7 +2894,7 @@ ConstTerm *ConstTerm::gcConstTerm()
   }
 
   GCNEWADDRMSG(ret);
-  ptrStack.push(ret,PTR_CONSTTERM);
+  gcStack.push(ret,PTR_CONSTTERM);
   storeFwdField(ret);
   dogcGName(gn);
   return ret;
@@ -3087,7 +2934,7 @@ ConstTerm* ConstTerm::gcConstTermSpec()
     ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockFrame));
     lf->myStoreForward(ret);}
   GCNEWADDRMSG(ret);
-  ptrStack.push(ret,PTR_CONSTTERM);
+  gcStack.push(ret,PTR_CONSTTERM);
   return ret;
 }
 
@@ -3247,7 +3094,7 @@ Actor *Actor::gcActor()
 	
   GCNEWADDRMSG(ret);
 
-  ptrStack.push(ret,PTR_ACTOR);
+  gcStack.push(ret,PTR_ACTOR);
 
   storeFwdField(ret);
 
@@ -3299,14 +3146,14 @@ void AskActor::gcRecurse () {
 inline
 void SolveActor::gcRecurse () {
   GCMETHMSG("SolveActor::gcRecurse");
-  if (opMode == IN_GC || solveBoard != fromCopyBoard) {
+  if (isInGc || solveBoard != fromCopyBoard) {
     board = board->gcBoard();
     Assert(board);
   }
   solveBoard = solveBoard->gcBoard();
   Assert(solveBoard);
 
-  if (opMode == IN_GC || !isGround())
+  if (isInGc || !isGround())
     OZ_updateHeapTerm(solveVar);
   
   OZ_updateHeapTerm(result);
@@ -3315,7 +3162,7 @@ void SolveActor::gcRecurse () {
   localThreadQueue = localThreadQueue->gc();
   nonMonoSuspList  = nonMonoSuspList->gc();
 #ifdef CS_PROFILE
-  if((copy_size>0) && copy_start && (opMode == IN_GC)) {
+  if((copy_size>0) && copy_start && isInGc) {
     free(copy_start);
   }
   orig_start = (int32 *) NULL;
@@ -3350,7 +3197,7 @@ CpBag * CpBag::gc(void) {
     WaitActor * wa = old->choice;
     
     if (wa && wa->isAliveUpToSolve() && GETBOARD(wa)->gcIsAlive()) {
-      Assert(!(opMode == IN_TC && !isInTree(GETBOARD(wa))));
+      Assert(isInGc || (GETBOARD(wa))->isInTree());
       
       CpBag * one = new CpBag((WaitActor *) wa->gcActor());
       *cur = one;
@@ -3374,66 +3221,112 @@ CpBag * CpBag::gc(void) {
 inline
 void SRecord::gcRecurse() {
   GCMETHMSG("SRecord::gcRecurse");
-  OZ_updateHeapTerm(label);
-
-  TaggedRef * a = getRef();
   
-  for (int i = getWidth(); i--; ) {
-    if (!isDirectVar(a[i]))
-      OZ_updateHeapTerm(a[i]);
-  }
+  SRecord * to = (SRecord *) GCUNMARK(label);
+
+  OZ_updateHeapTerm(to->label);
+
+  OZ_collectHeapBlock(getRef(), to->getRef(), getWidth());
+
 }
 
 
 inline
-void LTuple::gcRecurse(int n, Bool tail) {
+void LTuple::gcRecurse() {
   GCMETHMSG("LTuple::gcRecurse");
   
-  LTuple * l = this;
+  LTuple * frm = this;
+  LTuple * to  = (LTuple *) GCUNMARK(frm->args[0]);
 
-  while (n > 1) {
-    if (!isDirectVar(l->args[0]))
-      OZ_updateHeapTerm(l->args[0]);
-    l = tagged2LTuple(l->args[1]);
-    n--;
-  }
+  // Restore original!
+  frm->args[0] = to->args[0];
 
-  if (!isDirectVar(l->args[0]))
-    OZ_updateHeapTerm(l->args[0]);
 
-  if (tail) {
-    Assert(!isDirectVar(l->args[1]));
-    OZ_updateHeapTerm(l->args[1]);
-  }
+  TaggedRef start;
+  TaggedRef * p = &start;
 
+  int n = 0;
+
+  while (1) {
+    // Collect element and if store fwd has not been done in gcTagged
+    // do it here!
+    if (!gcTagged(frm->args[0], to->args[0], NO)) 
+      storeFwd(frm->args, to->args);
+    
+    TaggedRef t = deref(frm->args[1]);
+
+    if (!isLTuple(t)) {
+      OZ_collectHeapBlock(&(frm->args[1]), &(to->args[1]), 1);
+      return;
+    }
+
+    frm = tagged2LTuple(t);
+
+    if (GCISMARKED(frm->args[0])) {
+      to->args[1] = makeTaggedLTuple((LTuple *) GCUNMARK(frm->args[0]));
+      return;
+    }
+
+    LTuple * next = (LTuple *) heapMalloc(sizeof(LTuple));
+
+    to->args[1] = makeTaggedLTuple(next);
+    to = next;
+    
+  } 
+  
+  Assert(0);
 }
 
 
+void GcStack::recurse(void) {
 
-void performCopying(void)
-{
-  while (!ptrStack.isEmpty()) {
-    TypedPtr tptr     = ptrStack.pop();  
-    void *ptr         = getPtr(tptr);
-    TypeOfPtr ptrType = getType(tptr);
+  while (!isEmpty()) {
+    TaggedRef tp  = (TaggedRef) pop();  
+    void * ptr    = tagValueOf(tp);
+    TypeOfPtr how = (TypeOfPtr) tagTypeOf(tp);
     
-    switch(ptrType) {
+    switch(how) {
       
     case PTR_LTUPLE:    
-      ((LTuple *) ptr)->gcRecurse(ptrStack.popInt(), NO);
+      ((LTuple *) ptr)->gcRecurse();
       break;
-    case PTR_LTUPLE_TAIL:    
-      ((LTuple *) ptr)->gcRecurse(ptrStack.popInt(), OK);
+
+    case PTR_SRECORD:   
+      ((SRecord *) ptr)->gcRecurse();          
       break;
-    case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse();          break;
-    case PTR_NAME:      ((Name *) ptr)->gcRecurse ();            break;
-    case PTR_BOARD:     ((Board *) ptr)->gcRecurse();            break;
-    case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
-    case PTR_THREAD:    ((Thread *) ptr)->gcRecurse();           break;
-    case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
-    case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->updateHeapRefs(opMode == IN_GC); break;
-    case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
-    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;
+
+    case PTR_NAME:      
+      ((Name *) ptr)->gcRecurse ();            
+      break;
+
+    case PTR_BOARD:     
+      ((Board *) ptr)->gcRecurse();            
+      break;
+      
+    case PTR_ACTOR:     
+      ((Actor *) ptr)->gcRecurse();            
+      break;
+      
+    case PTR_THREAD:    
+      ((Thread *) ptr)->gcRecurse();           
+      break;
+      
+    case PTR_CONT:      
+      ((Continuation*) ptr)->gcRecurse();      
+      break;
+
+    case PTR_PROPAGATOR:
+      ((OZ_Propagator *) ptr)->updateHeapRefs(isInGc); 
+      break;
+
+    case PTR_DYNTAB:    
+      ((DynamicTable *) ptr)->gcRecurse();     
+      break;
+
+    case PTR_CONSTTERM: 
+      ((ConstTerm *) ptr)->gcConstRecurse();   
+      break;
+
     default:
       Assert(NO);
     }

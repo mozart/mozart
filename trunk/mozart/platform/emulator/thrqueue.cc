@@ -66,8 +66,6 @@ void ThreadQueueImpl::resize () {
   int currentSize = size;
   int currentHead = head;
   
-  DebugCode(message("Resizing thread queue 0x%x --> 0x%x.\n",
-		    maxsize, new_maxsize));
   while (currentSize) {
     new_queue[index++] = queue[currentHead];
     INC(currentHead);
@@ -135,9 +133,6 @@ void ThreadStackImpl::resize(void)
   Thread ** new_stack = 
     (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * new_maxsize));
   
-  DebugCode(message("Resizing thread stack 0x%x --> 0x%x.\n",
-		    maxsize, new_maxsize));
-
   for (int i = tos; i--; )
     new_stack[i] = stack[i];
 

@@ -85,7 +85,7 @@ enum BoardFlags {
   Bo_Installed	= 0x0010,
   Bo_Nervous	= 0x0020,
   Bo_WaitTop	= 0x0040,
-  Bo_PathMark	= 0x0080,
+  Bo_GlobalMark	= 0x0080,
   Bo_Failed	= 0x0100,
   Bo_Committed	= 0x0200,
   Bo_Waiting    = 0x0800
@@ -177,17 +177,17 @@ public:
     Assert(suspCount >= 0);
     return suspCount != 0;
   }
-  Bool isAsk() { return flags & Bo_Ask ? OK : NO; }
-  Bool isCommitted() { return flags & Bo_Committed ? OK : NO; }
-  Bool isFailed() { return flags & Bo_Failed ? OK : NO; }
-  Bool isInstalled() { return flags & Bo_Installed ? OK : NO; }
-  Bool isNervous() { return flags & Bo_Nervous ? OK : NO; }
-  Bool isPathMark() { return flags & Bo_PathMark ? OK : NO; }
-  Bool isWaitTop() { return flags & Bo_WaitTop ? OK : NO; }
-  Bool isWait() { return flags & Bo_Wait ? OK : NO; }
-  Bool isWaiting() { return flags & Bo_Waiting ? OK : NO; }
-  Bool _isRoot() { return flags & Bo_Root ? OK : NO; }
-  Bool isSolve () { return ((flags & Bo_Solve) ? OK : NO); }
+  Bool isAsk()          { return flags & Bo_Ask;        }
+  Bool isCommitted()    { return flags & Bo_Committed;  }
+  Bool isFailed()       { return flags & Bo_Failed;     }
+  Bool isInstalled()    { return flags & Bo_Installed;  }
+  Bool isNervous()      { return flags & Bo_Nervous;    }
+  Bool isMarkedGlobal() { return flags & Bo_GlobalMark; }
+  Bool isWaitTop()      { return flags & Bo_WaitTop;    }
+  Bool isWait()         { return flags & Bo_Wait;       }
+  Bool isWaiting()      { return flags & Bo_Waiting;    }
+  Bool _isRoot()        { return flags & Bo_Root;       }
+  Bool isSolve ()       { return flags & Bo_Solve;      }
 
   void newScript(int size) {
     script.allocate(size);
@@ -201,15 +201,12 @@ public:
     body.setX(x,i);
   }
 
-  void setInstalled() { flags |= Bo_Installed; }
-  void setNervous() { flags |= Bo_Nervous; }
-  void setFailed() { flags |= Bo_Failed; }
-  void setPathMark() { flags |= Bo_PathMark; }
-
-  void setScript(int i,TaggedRef *v,TaggedRef r) {
-    script[i].setLeft(v);
-    script[i].setRight(r);
-  }
+  void setInstalled()  { flags |= Bo_Installed; }
+  void setNervous()    { flags |= Bo_Nervous; }
+  void setFailed()     { flags |= Bo_Failed; }
+  void setGlobalMark() { flags |= Bo_GlobalMark; }
+  void setWaitTop()    { flags |= Bo_WaitTop; }
+  void setWaiting()    { flags |= Bo_Waiting; }
 
   void setCommitted(Board *s) {
     Assert(!isInstalled() && !isCommitted());
@@ -217,13 +214,21 @@ public:
     u.actor->setCommitted();
     u.ref = s;
   }
+  void setActor (Actor *aa) { 
+    u.actor = aa; 
+  }
+  void setScript(int i,TaggedRef *v,TaggedRef r) {
+    script[i].setLeft(v);
+    script[i].setRight(r);
+  }
 
-  void setWaitTop() { flags |= Bo_WaitTop; }
-  void setWaiting() { flags |= Bo_Waiting; }
-  void setActor (Actor *aa) { u.actor = aa; }   // needed for the solve combinator; 
-  void unsetInstalled() { flags &= ~Bo_Installed; }
-  void unsetNervous() { flags &= ~Bo_Nervous; }
-  void unsetPathMark() { flags &= ~Bo_PathMark; }
+  void unsetInstalled()  { flags &= ~Bo_Installed;  }
+  void unsetNervous()    { flags &= ~Bo_Nervous;    }
+  void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
+
+  Bool isInTree(void);
+  void unsetGlobalMarks(void);
+  void setGlobalMarks(void);
 };
 
 #endif
