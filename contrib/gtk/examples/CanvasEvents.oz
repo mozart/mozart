@@ -36,11 +36,7 @@ define
 	 {self signalConnect('delete-event' deleteEvent _)}
       end
       meth deleteEvent(Args)
-	 %% CAUTION: At this time, the underlying objects has been destroyed.
-	 %% CAUTION: This event is solely intended for oz side cleanup code.
-	 %% CAUTION: If you want eager finalisation of object wrappers then
-	 %% CAUTION: connect the delete event handler using a procedure
-	 %% CAUTION: rather than a object method.
+	 {self gtkClose}
 	 {Application.exit 0}
       end
    end
@@ -48,16 +44,8 @@ define
    Toplevel = {New CanvasToplevel new}
  
    %% Setup the Colors
-   %% 1. Obtain the system colormap
-   %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors,
-   %%    non-writeable and with best-match
-   %% 4. Use colors black and white
-   Colormap = {New GDK.colormap getSystem}
-   Black    = {New GDK.color new(0 0 0)}
-   White    = {New GDK.color new(65535 65535 65535)}
-   {Colormap allocColor(Black 0 1 _)}
-   {Colormap allocColor(White 0 1 _)}
+   Black = {GDK.makeColor '#000000'}
+   White = {GDK.makeColor '#FFFFFF'}
 
    %% Setup canvas without image support
    MyCanvas = {New Canvas.canvas new(false)}
