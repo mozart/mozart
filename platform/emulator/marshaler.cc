@@ -1299,7 +1299,7 @@ OZ_BI_define(BIperdioStatistics,0,1)
   ar=oz_cons(oz_pairA("send",send),ar);
   ar=oz_cons(oz_pairA("recv",recv),ar);
   OZ_RETURN(OZ_recordInit(oz_atom("perdioStatistics"),ar));
-}
+} OZ_BI_end
 
 BIspec marshalerSpec[]= {
   {"perdioStatistics",  1, BIperdioStatistics, 0},

@@ -719,7 +719,7 @@ OZ_BI_define(BIgetProperty,1,1)
   else if (status == PROP__NOT__FOUND)
     return oz_raise(E_SYSTEM,E_KERNEL,"getProperty",1,key);
   else return status;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIcondGetProperty,2,1)
 {
@@ -731,7 +731,7 @@ OZ_BI_define(BIcondGetProperty,2,1)
   else if (status == PROP__NOT__FOUND)
     OZ_RETURN(def);
   else return status;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIputProperty,2,0)
 {
@@ -744,7 +744,7 @@ OZ_BI_define(BIputProperty,2,0)
     return oz_raise(E_ERROR,E_KERNEL,"globalState",
 		    1,oz_atom("putProperty"));
   else return status;
-}
+} OZ_BI_end
 
 static BIspec vpropSpecs[] = {
   {"GetProperty"    , 2, BIgetProperty    , 0},

@@ -1540,7 +1540,7 @@ OZ_BI_define(BIdebugPrint,2,0)
   cerr << endl;
   flush(cerr);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIdebugPrintLong,2,0)
 {
@@ -1548,6 +1548,6 @@ OZ_BI_define(BIdebugPrintLong,2,0)
   oz_declareIntIN(1,depth);
   ozd_printLongStream(t,cerr,depth);
   return PROCEED;
-}
+} OZ_BI_end
 
 #endif

@@ -356,7 +356,7 @@ OZ_BI_define(BIbuiltin,2,1)
   }
 
   OZ_RETURN(makeTaggedConst(found));
-}
+} OZ_BI_end
 
 
 /********************************************************************
@@ -387,7 +387,7 @@ OZ_BI_define(BIwaitOr,2,0)
   am.addSuspendVarList(bPtr);
   
   return SUSPEND;
-}
+} OZ_BI_end
 
 
 OZ_Return isLiteralInline(TaggedRef t)
@@ -642,7 +642,7 @@ OZ_BI_define(BIprocedureEnvironment,1,1)
     }
   }
   OZ_RETURN(t);
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIgetProcInfo,1,1)
@@ -654,7 +654,7 @@ OZ_BI_define(BIgetProcInfo,1,1)
   }
 
   OZ_RETURN(tagged2Abstraction(p)->getPred()->getInfo());
-}
+} OZ_BI_end
 
 OZ_BI_define(BIsetProcInfo,2,0)
 {
@@ -667,7 +667,7 @@ OZ_BI_define(BIsetProcInfo,2,0)
 
   tagged2Abstraction(p)->getPred()->setInfo(t);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIgetProcNames,1,1)
@@ -679,7 +679,7 @@ OZ_BI_define(BIgetProcNames,1,1)
   }
 
   OZ_RETURN(tagged2Abstraction(p)->getPred()->getNames());
-}
+} OZ_BI_end
 
 OZ_BI_define(BIsetProcNames,2,0)
 {
@@ -692,7 +692,7 @@ OZ_BI_define(BIsetProcNames,2,0)
 
   tagged2Abstraction(p)->getPred()->setNames(t);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIgetProcPos,1,2)
@@ -708,7 +708,7 @@ OZ_BI_define(BIgetProcPos,1,2)
   OZ_out(0) = pte->getFileName();
   OZ_out(1) = OZ_int(pte->getLine());
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_Return isCellInline(TaggedRef cell)
@@ -825,7 +825,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
   default:
     return FAILED;
   }
-}
+} OZ_BI_end
 
 
 // Constrain term to a record, with given label (wait until determined).
@@ -905,7 +905,7 @@ OZ_BI_define(BIrecordTell,2,0)
   default:
     return FAILED;
   }
-}
+} OZ_BI_end
 
 
 // Suspend until can determine whether term is a record or not.
@@ -964,7 +964,7 @@ OZ_BI_define(BIisRecordCVarB,1,1)
     OZ_RETURN(NameFalse);
   }
   OZ_RETURN(NameTrue);
-}
+} OZ_BI_end
 
 
 /*
@@ -1536,7 +1536,7 @@ OZ_BI_define(BInewSpace, 1,1) {
   OZ_result(makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
   return BI_PREEMPT;
 
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIisSpace, 1,1) {
@@ -1548,7 +1548,7 @@ OZ_BI_define(BIisSpace, 1,1) {
     oz_suspendOn(makeTaggedRef(space_ptr));
 
   OZ_RETURN(isSpace(tagged_space) ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIaskSpace, 1,1) {
@@ -1575,7 +1575,7 @@ OZ_BI_define(BIaskSpace, 1,1) {
 		       AtomSucceeded))
 	    ? AtomSucceeded : answer);
 		  
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIaskVerboseSpace, 2,0) {
@@ -1610,7 +1610,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
     oz_suspendOn(makeTaggedRef(answer_ptr));
 
   return oz_unify(OZ_in(1), answer);
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BImergeSpace, 1,1) {
@@ -1690,7 +1690,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
     return FAILED;
 
   OZ_RETURN(root);
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIcloneSpace, 1,1) {
@@ -1717,7 +1717,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
   OZ_RETURN(makeTaggedConst(new Space(CBB,space->getSolveActor()->clone(CBB))));
 
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIcommitSpace, 2,0) {
@@ -1803,7 +1803,7 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   am.scheduleThread(tt);
 
   return BI_PREEMPT;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIinjectSpace, 2,0)
@@ -1844,7 +1844,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
   sa->inject(DEFAULT_PRIORITY, proc);
     
   return BI_PREEMPT;
-}
+} OZ_BI_end
 
 
 #ifdef CS_PROFILE
@@ -1855,7 +1855,7 @@ OZ_BI_define(BIgetCloneDiff, 1,1) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
   OZ_RETURN(space->getSolveActor()->getCloneDiff());
-}
+} OZ_BI_end
 
 #endif
 
@@ -2409,7 +2409,7 @@ OZ_BI_define(BIstringToAtom,1,1)
   oz_declareProperStringIN(0,str);
 
   OZ_RETURN(oz_atom(str));
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Virtual Strings
@@ -2590,7 +2590,7 @@ OZ_BI_define(BIvsLength,2,1) {
   } else {
     OZ_RETURN(makeTaggedSmallInt(len));
   }
-}
+} OZ_BI_end
 
 OZ_BI_define(BIvsIs,1,1) {
   TaggedRef rest = makeTaggedNULL();
@@ -2600,7 +2600,7 @@ OZ_BI_define(BIvsIs,1,1) {
     return SUSPEND;
   }
   OZ_RETURN((status == PROCEED) ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 
 // ---------------------------------------------------------------------
@@ -2614,7 +2614,7 @@ OZ_BI_define(BInewChunk,1,1)
   if (!isRecord(val)) oz_typeError(0,"Record");
 
   OZ_RETURN(oz_newChunk(val));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIchunkArity,1,1)
 {
@@ -2643,7 +2643,7 @@ OZ_BI_define(BIchunkArity,1,1)
   default:
     oz_typeError(0,"Chunk");
   }
-}
+} OZ_BI_end
 
 OZ_BI_define(BIchunkWidth, 1,1)
 {
@@ -2672,7 +2672,7 @@ OZ_BI_define(BIchunkWidth, 1,1)
   default:
     oz_typeError(0,"Chunk");
   }
-}
+} OZ_BI_end
 
 OZ_BI_define(BIrecordWidth, 1,1)
 {
@@ -2699,7 +2699,7 @@ OZ_BI_define(BIrecordWidth, 1,1)
   default:
     oz_typeError(0, "Record");
   }
-}
+} OZ_BI_end
 
 /* ---------------------------------------------------------------------
  * Threads
@@ -2708,7 +2708,7 @@ OZ_BI_define(BIrecordWidth, 1,1)
 OZ_BI_define(BIthreadThis,0,1)
 {
   OZ_RETURN(makeTaggedConst(am.currentThread()));
-}
+} OZ_BI_end
 
 /*
  * change priority of a thread
@@ -2760,7 +2760,7 @@ OZ_BI_define(BIthreadSetPriority,2,0)
   }
 
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_Term threadGetPriority(Thread *th) {
   switch (th->getPriority()) {
@@ -2781,7 +2781,7 @@ OZ_BI_define(BIthreadGetPriority,1,1)
   }
 
   OZ_RETURN(threadGetPriority(th));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadID,1,1)
 {
@@ -2791,7 +2791,7 @@ OZ_BI_define(BIthreadID,1,1)
     return oz_raise(E_ERROR,E_SYSTEM,"threadID Proxy not impl",0);
 
   OZ_RETURN_INT(th->getID() & THREAD_ID_MASK);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIsetThreadID,2,0)
 {
@@ -2803,7 +2803,7 @@ OZ_BI_define(BIsetThreadID,2,0)
 
   th->setID(id | (1 << THREAD_ID_SIZE));
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIparentThreadID,1,1)
 {
@@ -2813,14 +2813,14 @@ OZ_BI_define(BIparentThreadID,1,1)
     return oz_raise(E_ERROR,E_SYSTEM,"parentThreadID Proxy not impl",0);
 
   OZ_RETURN_INT((th->getID() >> THREAD_ID_SIZE) & THREAD_ID_MASK);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadIs,1,1)
 {
   oz_declareNonvarIN(0,th);
 
   OZ_RETURN(oz_isThread(th)?NameTrue:NameFalse);
-}
+} OZ_BI_end
 
 /*
  * raise exception on thread
@@ -2863,7 +2863,7 @@ OZ_BI_define(BIthreadRaise,2,0)
 
   threadRaise(th,E);
   return PROCEED;
-}
+} OZ_BI_end
 
 /*
  * suspend a thread
@@ -2882,7 +2882,7 @@ OZ_BI_define(BIthreadSuspend,1,0)
     return BI_PREEMPT;
   }
   return PROCEED;
-}
+} OZ_BI_end
 
 void threadResume(Thread *th) {
   th->setStop(NO);
@@ -2906,7 +2906,7 @@ OZ_BI_define(BIthreadResume,1,0)
   threadResume(th);
 
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadIsSuspended,1,1)
 {
@@ -2918,7 +2918,7 @@ OZ_BI_define(BIthreadIsSuspended,1,1)
   }
 
   OZ_RETURN(th->getStop() ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 OZ_Term threadState(Thread *th) {
   if (th->isDeadThread()) {
@@ -2940,7 +2940,7 @@ OZ_BI_define(BIthreadState,1,1)
   }
 
   OZ_RETURN(threadState(th));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadPreempt,1,0)
 {
@@ -2953,7 +2953,7 @@ OZ_BI_define(BIthreadPreempt,1,0)
     return BI_PREEMPT;
   }
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadSetRaiseOnBlock,2,0)
 {
@@ -2967,14 +2967,14 @@ OZ_BI_define(BIthreadSetRaiseOnBlock,2,0)
   else
     oz_typeError(1,"Bool");
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadGetRaiseOnBlock,1,1)
 {
   oz_declareThreadIN(0,thread);
 
   OZ_RETURN(thread->getNoBlock()? NameTrue: NameFalse);
-}
+} OZ_BI_end
 
 // ------------------ explore a thread's taskstack ---------------------------
 
@@ -2997,7 +2997,7 @@ OZ_BI_define(BIthreadTaskStack,3,1)
 
   TaskStack *taskstack = thread->getTaskStackRef();
   OZ_RETURN(taskstack->getTaskStack(thread,doverbose,depth));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadFrameVariables,2,1)
 {
@@ -3009,7 +3009,7 @@ OZ_BI_define(BIthreadFrameVariables,2,1)
   
   TaskStack *taskstack = thread->getTaskStackRef();
   OZ_RETURN(taskstack->getFrameVariables(frameId));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadLocation,1,1)
 {
@@ -3020,7 +3020,7 @@ OZ_BI_define(BIthreadLocation,1,1)
   } else {
     OZ_RETURN(oz_getLocation(GETBOARD(thread)));
   }
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // NAMES
@@ -3029,13 +3029,13 @@ OZ_BI_define(BIthreadLocation,1,1)
 OZ_BI_define(BInewName,0,1)
 {
   OZ_RETURN(oz_newName());
-}
+} OZ_BI_end
 
 OZ_BI_define(BInewUniqueName,1,1)
 {
   oz_declareAtomIN(0,name);
   OZ_RETURN(getUniqueName(name));
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // term type
@@ -3144,7 +3144,7 @@ OZ_BI_define(BIeq,2,0)
   TaggedRef A = OZ_in(0);
   TaggedRef B = OZ_in(1);
   return eqeqWrapper(A,B);
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIneq,2,0)
@@ -3152,7 +3152,7 @@ OZ_BI_define(BIneq,2,0)
   TaggedRef A = OZ_in(0);
   TaggedRef B = OZ_in(1);
   return eqeqWrapper(A,B);
-}
+} OZ_BI_end
 
 
 
@@ -3166,7 +3166,7 @@ OZ_BI_define(BIneqB,2,1)
     //  OZ_Term help;
     //  OZ_Return ret=neqInline(OZ_getCArg(0),OZ_getCArg(1),help);
     //  return ret==PROCEED ? oz_unify(help,OZ_getCArg(2)) : ret;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIeqB,2,1)
 {
@@ -3174,7 +3174,7 @@ OZ_BI_define(BIeqB,2,1)
   //  OZ_Term help;
   //  OZ_Return ret=eqeqInline(OZ_getCArg(0),OZ_getCArg(1),help);
   //  return ret==PROCEED ? oz_unify(help,OZ_getCArg(2)): ret;
-}
+} OZ_BI_end
 
 
 OZ_Return eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
@@ -3216,7 +3216,7 @@ OZ_BI_define(BIlength,1,1)
   if (isRef(ret)) oz_suspendOnVar(ret);
   if (ret==NameFalse) oz_typeError(0,"finite list");
   OZ_RETURN(ret);
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // String
@@ -3232,7 +3232,7 @@ OZ_BI_define(BIisString,1,1)
     oz_suspendOn(var);
   }
   OZ_RETURN(NameTrue);
-}
+} OZ_BI_end
 
 
 // ---------------------------------------------------------------------
@@ -3291,10 +3291,10 @@ OZ_BI_define(BIcharIs,1,1) {
  if (!isSmallInt(c)) OZ_RETURN(NameFalse);
  int i = smallIntValue(c);
  OZ_RETURN((i >=0 && i <= 255) ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 #define BI_TESTCHAR(Name,Arg) \
-OZ_BI_define(Name,1,1) { NEW_TestChar(Arg); }
+OZ_BI_define(Name,1,1) { NEW_TestChar(Arg); } OZ_BI_end
 
 BI_TESTCHAR(BIcharIsAlNum,iso_isalnum)
 BI_TESTCHAR(BIcharIsAlpha,iso_isalpha)
@@ -3312,14 +3312,14 @@ BI_TESTCHAR(BIcharIsXDigit,iso_isxdigit)
 OZ_BI_define(BIcharToLower,1,1) {
   NEW_FirstCharArg;
   OZ_RETURN_INT(iso_tolower((unsigned char) i));
-}
+} OZ_BI_end
 
 NEW_INLINE_FUN1(INLINE__BIcharToLower,BI__BIcharToLower);
 
 OZ_BI_define(BIcharToUpper,1,1) {
   NEW_FirstCharArg;
   OZ_RETURN_INT(iso_toupper((unsigned char) i));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIcharToAtom,1,1) {
   NEW_FirstCharArg;
@@ -3328,7 +3328,7 @@ OZ_BI_define(BIcharToAtom,1,1) {
      OZ_RETURN(makeTaggedAtom(s));
   }
   OZ_RETURN(AtomEmpty);
-}
+} OZ_BI_end
 
 #define FirstCharIN		    \
  TaggedRef tc = OZ_in(0);	    \
@@ -3357,7 +3357,7 @@ OZ_BI_define(BIcharType,1,1) {
   else if (iso_ispunct(i)) type = AtomPunct;
   else                     type = AtomOther;
   OZ_RETURN(type);
-}
+} OZ_BI_end
 
 
 /********************************************************************
@@ -3521,7 +3521,7 @@ OZ_BI_define(BIadjoinAt,3,1)
   default:
     oz_typeError(0,"Record");
   }
-}
+} OZ_BI_end
 
 TaggedRef getArityFromPairList(TaggedRef list)
 {
@@ -3691,7 +3691,7 @@ OZ_BI_define(BIadjoinList,2,1)
   default:
     return state;
   }
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BImakeRecord,2,1)
@@ -3708,7 +3708,7 @@ OZ_BI_define(BImakeRecord,2,1)
   default:
     return state;
   }
-}
+} OZ_BI_end
 
 
 OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
@@ -4378,7 +4378,7 @@ OZ_BI_define(BIfloatToString, 1,1)
     OZ_RETURN(OZ_string(s));
   }
   oz_typeError(0,"Float");
-}
+} OZ_BI_end
 
 OZ_BI_define(BIstringToFloat, 1,1)
 {
@@ -4389,7 +4389,7 @@ OZ_BI_define(BIstringToFloat, 1,1)
     return oz_raise(E_ERROR,E_KERNEL,"stringNoFloat",1,OZ_in(0));
   }
   OZ_RETURN(OZ_CStringToFloat(str));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIstringIsFloat, 1,1)
 {
@@ -4404,7 +4404,7 @@ OZ_BI_define(BIstringIsFloat, 1,1)
   }
 
   OZ_RETURN(NameTrue);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIstringIsAtom, 1,1) {
   OZ_Term in = OZ_in(0);
@@ -4415,7 +4415,7 @@ OZ_BI_define(BIstringIsAtom, 1,1) {
     oz_suspendOn(var);
   }
   OZ_RETURN(NameTrue);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIstringToInt, 1,1)
 {
@@ -4429,7 +4429,7 @@ OZ_BI_define(BIstringToInt, 1,1)
     return oz_raise(E_ERROR,E_KERNEL,"stringNoInt",1,OZ_in(0));
   else
     OZ_RETURN(res);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIstringIsInt, 1,1)
 {
@@ -4444,7 +4444,7 @@ OZ_BI_define(BIstringIsInt, 1,1)
   }
 
   OZ_RETURN(NameTrue);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIintToString, 1,1)
 {
@@ -4454,7 +4454,7 @@ OZ_BI_define(BIintToString, 1,1)
     OZ_RETURN(OZ_string(OZ_toC(in,100,100))); //mm2
   }
   oz_typeError(0,"Int");
-}
+} OZ_BI_end
 
 /* -----------------------------------
    type X
@@ -4612,7 +4612,7 @@ OZ_BI_define(BInewPort,1,1)
   oz_declareIN(0,val);
 
   OZ_RETURN(oz_newPort(val));
-}
+} OZ_BI_end
 
 OZ_Return sendPort(OZ_Term prt, OZ_Term val)
 {
@@ -4665,7 +4665,7 @@ OZ_BI_define(BIsendPort,2,0)
   }
 
   return sendPort(prt,val);
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Locks
@@ -4675,7 +4675,7 @@ OZ_BI_define(BInewLock,0,1)
 {
 
   OZ_RETURN(makeTaggedConst(new LockLocal(am.currentBoard())));
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIlockLock,1,0)
@@ -4713,7 +4713,7 @@ OZ_BI_define(BIlockLock,1,0)
 
   Assert(0);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIunlockLock,1,0)
@@ -4739,7 +4739,7 @@ OZ_BI_define(BIunlockLock,1,0)
   }
   Assert(0);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 // ---------------------------------------------------------------------
@@ -4751,7 +4751,7 @@ OZ_BI_define(BInewCell,1,1)
   OZ_Term val = OZ_in(0);
 
   OZ_RETURN(oz_newCell(val));
-}
+} OZ_BI_end
 
 
 inline
@@ -4792,7 +4792,7 @@ OZ_BI_define(BIexchangeCell,3,0)
   } else {
     return state;
   }
-}
+} OZ_BI_end
 
 
 OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
@@ -4849,7 +4849,7 @@ OZ_BI_define(BIarrayNew,3,1)
 
   OZ_RETURN(makeTaggedConst(new OzArray(am.currentBoard(),
 					ilow,ihigh,initValue)));
-}
+} OZ_BI_end
 
 
 OZ_Return isArrayInline(TaggedRef t, TaggedRef &out)
@@ -4935,7 +4935,7 @@ OZ_BI_define(BIcrash,0,0)   /* only for debugging */
   exit(1);  
 
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIprobe,1,0)
 { 
@@ -4944,7 +4944,7 @@ OZ_BI_define(BIprobe,1,0)
   Tertiary *tert = tagged2Tert(entity);
   tert->entityProblem();
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIrestop,1,0)
 {
@@ -4964,7 +4964,7 @@ OZ_BI_define(BIrestop,1,0)
     Assert(0);}}
   oz_suspendOnNet(am.currentThread());
   return BI_PREEMPT;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIhandlerInstall,3,0)
 {
@@ -4989,7 +4989,7 @@ OZ_BI_define(BIhandlerInstall,3,0)
   if(tert->installHandler(ec,proc,am.currentThread())){
     return PROCEED;}
   return oz_raise(E_ERROR,E_SYSTEM,"handler already installed",0);
-}
+} OZ_BI_end
 
 Bool translateWatcherCond(TaggedRef tr,EntityCond &ec){
   TaggedRef car;
@@ -5047,7 +5047,7 @@ OZ_BI_define(BIwatcherInstall,3,0)
     return oz_raise(E_ERROR,E_SYSTEM,"watchers on ? not implemented",0);}
   tert->installWatcher(ec,proc);
   return PROCEED;
-}
+} OZ_BI_end
 
 
 /********************************************************************
@@ -5057,7 +5057,7 @@ OZ_BI_define(BIwatcherInstall,3,0)
 OZ_BI_define(BIdictionaryNew,0,1)
 {
   OZ_RETURN(makeTaggedConst(new OzDictionary(am.currentBoard())));
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIdictionaryKeys,1,1)
@@ -5065,7 +5065,7 @@ OZ_BI_define(BIdictionaryKeys,1,1)
   oz_declareDictionaryIN(0,dict);
 
   OZ_RETURN(dict->keys());
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIdictionaryMarkSafe,1,0)
@@ -5073,7 +5073,7 @@ OZ_BI_define(BIdictionaryMarkSafe,1,0)
   oz_declareDictionaryIN(0,dict);
   dict->markSafe();
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIdictionaryEntries,1,1)
@@ -5081,7 +5081,7 @@ OZ_BI_define(BIdictionaryEntries,1,1)
   oz_declareDictionaryIN(0,dict);
 
   OZ_RETURN(dict->pairs());
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIdictionaryItems,1,1)
@@ -5089,7 +5089,7 @@ OZ_BI_define(BIdictionaryItems,1,1)
   oz_declareDictionaryIN(0,dict);
 
   OZ_RETURN(dict->items());
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIdictionaryClone,1,1)
@@ -5097,7 +5097,7 @@ OZ_BI_define(BIdictionaryClone,1,1)
   oz_declareDictionaryIN(0,dict);
 
   OZ_RETURN(dict->clone(am.currentBoard()));
-}
+} OZ_BI_end
 
 
 OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
@@ -5191,7 +5191,7 @@ OZ_BI_define(BIdictionaryExchange,4,0) {
     return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
   }
   return oz_unify(ov,OZ_in(2));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIdictionaryCondExchange,5,0) {
   TaggedRef d = OZ_in(0);
@@ -5205,7 +5205,7 @@ OZ_BI_define(BIdictionaryCondExchange,5,0) {
 
   return oz_unify(OZ_in(2), 
 		  ((ov==makeTaggedNULL()) ? (OZ_in(4)) : ov));
-}
+} OZ_BI_end
 
 
 OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
@@ -5226,7 +5226,7 @@ OZ_BI_define(BIdictionaryRemoveAll,1,0)
 
   tagged2Dictionary(dict)->removeAll();
   return PROCEED;
-}
+} OZ_BI_end
 
 
 /* -----------------------------------------------------------------
@@ -5238,7 +5238,7 @@ OZ_BI_define(BIstatisticsReset, 0,0)
 {
   ozstat.initCount();
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIstatisticsPrint, 1,0)
@@ -5246,14 +5246,14 @@ OZ_BI_define(BIstatisticsPrint, 1,0)
   oz_declareVirtualStringIN(0,file);
   ProfileCode(ozstat.printCount(file));
   return PROCEED;
-}
+} OZ_BI_end
 
 #ifdef PROFILE_INSTR
 OZ_BI_define(BIinstructionsPrint, 0,0)
 {
   ozstat.printInstr();
   return PROCEED;
-}
+} OZ_BI_end
 #endif
 
 #ifdef PROFILE_BI
@@ -5269,7 +5269,7 @@ OZ_BI_define(BIbiPrint, 0,0)
   }
   printf("----------\n%010lu\n",sum);
   return PROCEED;
-}
+} OZ_BI_end
 #endif
 
 
@@ -5277,19 +5277,19 @@ OZ_BI_define(BIstatisticsPrintProcs, 0,0)
 {
   PrTabEntry::printPrTabEntries();
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIstatisticsGetProcs, 0,1)
 {
   OZ_RETURN(PrTabEntry::getProfileStats());
-}
+} OZ_BI_end
 
 OZ_BI_define(BIsetProfileMode, 1,0)
 {
   oz_declareIN(0,onoff);
   am.setProfileMode(literalEq(deref(onoff),NameTrue));
   return PROCEED;
-}
+} OZ_BI_end
 
 /* -----------------------------------------------------------------
    dynamic link objects files
@@ -5300,20 +5300,20 @@ OZ_BI_define(BIdlOpen,1,1)
   oz_declareVirtualStringIN(0,filename);
 
   return osDlopen(filename,OZ_out(0));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIisForeignPointer,1,1)
 {
   oz_declareNonvarIN(0,p);
   OZ_RETURN(OZ_isForeignPointer(p)? NameTrue: NameFalse);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIdlClose,1,0)
 {
   OZ_declareForeignPointerIN(0,handle);
 
   return osDlclose(handle);
-}
+} OZ_BI_end
 
 /* findFunction(+fname,+farity,+handle) */
 OZ_BI_define(BIfindFunction,3,0)
@@ -5336,7 +5336,7 @@ OZ_BI_define(BIfindFunction,3,0)
   
   OZ_addBuiltin(ozstrdup(functionName),functionArity,*func);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIdlLoad,1,2)
 {
@@ -5364,7 +5364,7 @@ OZ_BI_define(BIdlLoad,1,2)
   }
   OZ_out(1)=OZ_recordInit(AtomForeign,l);
   return PROCEED;
-}
+} OZ_BI_end
 
 /* ------------------------------------------------------------
  * Shutdown
@@ -5375,7 +5375,7 @@ OZ_BI_define(BIshutdown,1,0)
   OZ_declareIntIN(0,status);
   am.exitOz(status);
   return(PROCEED); /* not reached but anyway */
-}
+} OZ_BI_end
 
 /* ------------------------------------------------------------
  * Alarm und Delay
@@ -5394,7 +5394,7 @@ OZ_BI_define(BIalarm,2,0) {
 
   am.insertUser(t,cons(NameUnit,out));
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIdelay,1,0) {
@@ -5418,7 +5418,7 @@ OZ_BI_define(BIdelay,1,0) {
     return SUSPEND;
   }
   return PROCEED;
-}
+} OZ_BI_end
 
 
 /* ------------------------------------------------------------
@@ -5430,7 +5430,7 @@ OZ_BI_define(BIgarbageCollection,0,0)
   am.setSFlag(StartGC);
 
   return BI_PREEMPT;
-}
+} OZ_BI_end
 
 /* ------------------------------------------------------------
  * System specials
@@ -5440,7 +5440,7 @@ OZ_BI_define(BIsystemEq,2,1) {
   oz_declareIN(0,a);
   oz_declareIN(1,b);
   OZ_RETURN(oz_eq(a,b) ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 /*
  * unify: used by compiler if '\sw -optimize'
@@ -5451,17 +5451,17 @@ OZ_BI_define(BIunify,2,0)
   oz_declareIN(1,b);
 
   return oz_unify(a,b);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIfail,0,0)
 {
   return FAILED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BInop,0,0)
 {
   return PROCEED;
-}
+} OZ_BI_end
 
 // ------------------------------------------------------------------------
 // --- Apply
@@ -5493,7 +5493,7 @@ OZ_BI_define(BIapply,2,0)
   am.currentThread()->pushCall(proc,argsArray,len);
   disposeRefsArray(argsArray);
   return BI_REPLACEBICALL;
-}
+} OZ_BI_end
 
 // ------------------------------------------------------------------------
 // --- special Cell access
@@ -5534,7 +5534,7 @@ OZ_BI_define(BIdeepFeed,2,0)
   }
 
   return ret;
-}
+} OZ_BI_end
 
 
 /* ---------------------------------------------------------------------
@@ -5544,7 +5544,7 @@ OZ_BI_define(BIdeepFeed,2,0)
 OZ_BI_define(_getsBound_dummy, 0,0)
 {
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIgetsBound, 1,0)
@@ -5558,13 +5558,13 @@ OZ_BI_define(BIgetsBound, 1,0)
   }
 
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(_getsBound_dummyB, 1,1)
 {
   OZ_RETURN(NameTrue);
-}
+} OZ_BI_end
 
 
 OZ_C_proc_begin(BIgetsBoundB, 2)
@@ -5596,7 +5596,7 @@ OZ_BI_define(BIconstraints,1,1)
     len = tagged2SVar(in)->getSuspList()->length();
   }
   OZ_RETURN_INT(len);
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------------
 // abstraction table
@@ -5611,7 +5611,7 @@ OZ_BI_define(BIsetAbstractionTabDefaultEntry,1,0)
 
   warning("setAbstractionTabDefaultEntry no longer needed");
   return PROCEED;
-}
+} OZ_BI_end
 
 /* ---------------------------------------------------------------------
  * System
@@ -5634,7 +5634,7 @@ OZ_BI_define(BIprintInfo,1,0)
   OZ_printVirtualString(t);
   fflush(stdout);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIprintError,1,0)
 {
@@ -5644,7 +5644,7 @@ OZ_BI_define(BIprintError,1,0)
   fprintf(stderr, "%s", s);
   fflush(stderr);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BItermToVS,3,1)
 {
@@ -5652,14 +5652,14 @@ OZ_BI_define(BItermToVS,3,1)
   oz_declareIntIN(1,depth);
   oz_declareIntIN(2,width);
   OZ_RETURN(OZ_string(OZ_toC(t,depth,width)));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgetTermSize,3,1) {
   oz_declareIN(0,t);
   oz_declareIntIN(1,depth);
   oz_declareIntIN(2,width);
   OZ_RETURN_INT(OZ_termGetSize(t, depth, width));
-}
+} OZ_BI_end
 
 OZ_Return showInline(TaggedRef term)
 {
@@ -5724,7 +5724,7 @@ OZ_BI_define(BIgetPrintName,1,1)
   }
 
   OZ_RETURN_ATOM("");
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------------
 
@@ -5732,7 +5732,7 @@ OZ_BI_define(BIonToplevel,0,1)
 {
 
   OZ_RETURN(OZ_onToplevel() ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 // for browser
 OZ_BI_define(BIaddr,1,1)
@@ -5744,7 +5744,7 @@ OZ_BI_define(BIaddr,1,1)
   OZ_RETURN_INT((isAnyVar(valTag) && valPtr) ? 
 		ToInt32(valPtr) :
 		ToInt32(tagValueOf2(valTag,val)));
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------------
 
@@ -5753,7 +5753,7 @@ OZ_BI_define(BIshowBuiltins,0,0)
 {
   builtinTab.print();
   return(PROCEED);
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------------
 
@@ -5764,7 +5764,7 @@ OZ_BI_define(BIforeignFDProps, 0,1)
 #else
   OZ_RETURN(NameFalse);
 #endif
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------------
 
@@ -5798,7 +5798,7 @@ OZ_BI_define(BIcopyRecord,1,1)
   default:
     oz_typeError(0,"Determined Record");
   }
-}
+} OZ_BI_end
 
 
 inline
@@ -5888,7 +5888,7 @@ OZ_BI_define(BIatWithState,2,1)
   OZ_Term fea = OZ_in(1);
 
   return doAt(tagged2SRecord(deref(state)),fea,OZ_out(0));
-}
+} OZ_BI_end
 
 
 inline
@@ -5933,7 +5933,7 @@ OZ_BI_define(BIassignWithState,3,0)
   OZ_Term val = OZ_in(2);
 
   return doAssign(tagged2SRecord(deref(state)),fea,val);
-}
+} OZ_BI_end
 
 OZ_Return ooExchInline(TaggedRef fea, TaggedRef newAttr, TaggedRef &oldAttr)
 {
@@ -6011,7 +6011,7 @@ OZ_BI_define(BImakeClass,5,1)
 				    am.currentBoard());
 
   OZ_RETURN(makeTaggedConst(cl));
-}
+} OZ_BI_end
 
 
 // COMPILE(,) [+class +record]
@@ -6193,7 +6193,7 @@ OZ_BI_define(BIsetSelf,1,0) {
   }
   am.changeSelf(tagged2Object(obj));
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_Return ooGetLockInline(TaggedRef val)
@@ -6221,7 +6221,7 @@ OZ_BI_define(BIsetDefaultExceptionHandler,1,0)
 
   am.setDefaultExceptionHdl(hdl);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgetDefaultExceptionHandler,0,1)
 {
@@ -6233,7 +6233,7 @@ OZ_BI_define(BIgetDefaultExceptionHandler,0,1)
   }
 
   OZ_RETURN(hdl);
-}
+} OZ_BI_end
 
 /*
  * the builtin exception handler
@@ -6247,28 +6247,28 @@ OZ_BI_define(BIbiExceptionHandler,1,0)
   errorTrailer();
 
   return am.onToplevel() ? PROCEED : FAILED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIraise,1,0)
 {
   oz_declareIN(0,exc);
 
   return OZ_raise(exc);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIraiseError,1,0)
 {
   oz_declareIN(0,exc);
 
   return OZ_raiseError(exc);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIraiseDebug,1,0)
 {
   oz_declareIN(0,exc);
 
   return OZ_raiseDebug(exc);
-}
+} OZ_BI_end
 
 
 /********************************************************************
@@ -6288,7 +6288,7 @@ OZ_BI_define(BIsetOPICompiler,1,0)
     am.setOpiCompiler(obj);
     return PROCEED;
   }
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgetOPICompiler,0,1)
 {
@@ -6298,7 +6298,7 @@ OZ_BI_define(BIgetOPICompiler,0,1)
     OZ_RETURN(NameFalse);
   else
     OZ_RETURN(obj);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIisBuiltin,1,1)
 {
@@ -6306,7 +6306,7 @@ OZ_BI_define(BIisBuiltin,1,1)
 
   OZ_RETURN((isConst(val) && tagged2Const(val)->getType() == Co_Builtin)
 	    ?NameTrue:NameFalse);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgetBuiltinName,1,1)
 {
@@ -6318,7 +6318,7 @@ OZ_BI_define(BIgetBuiltinName,1,1)
   if (cnst->getType() != Co_Builtin)
     oz_typeError(0,"builtin");
   OZ_RETURN(((BuiltinTabEntry *) cnst)->getName());
-}
+} OZ_BI_end
 
 OZ_BI_define(BInameVariable,2,0)
 {
@@ -6326,7 +6326,7 @@ OZ_BI_define(BInameVariable,2,0)
   oz_declareAtomIN(1,name);
   VariableNamer::addName(var,name);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BInewNamedName,1,1)
 {
@@ -6338,7 +6338,7 @@ OZ_BI_define(BInewNamedName,1,1)
   OZ_out(0) = makeTaggedLiteral(addToNameTab(s));
   delete s;
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIisUniqueName,1,1)
 {
@@ -6346,14 +6346,14 @@ OZ_BI_define(BIisUniqueName,1,1)
 
   OZ_RETURN((isLiteral(val) && tagged2Literal(val)->isUniqueName())
 	    ?NameTrue:NameFalse);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgenerateAbstractionTableID,1,1)
 {
   oz_declareNonvarIN(0,forComponent);
   AbstractionEntry *entry = new AbstractionEntry(OZ_isTrue(forComponent));
   OZ_RETURN(OZ_makeForeignPointer(entry));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIconcatenateAtomAndInt,2,1)
 {
@@ -6366,7 +6366,7 @@ OZ_BI_define(BIconcatenateAtomAndInt,2,1)
   OZ_Term newa = oz_atom(news);
   delete[] news;
   OZ_RETURN(newa);
-}
+} OZ_BI_end
 
 #define BITS_PER_INT (sizeof(int) * 8)
 
@@ -6409,7 +6409,7 @@ OZ_BI_define(BIregSet_new,2,1)
   data[1] = upper;
   for (int i = 2; i < count; i++) data[i] = 0;
   OZ_RETURN(heapChunk);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_copy,1,1)
 {
@@ -6419,7 +6419,7 @@ OZ_BI_define(BIregSet_copy,1,1)
   int count = size / sizeof(int);
   for (int i = 0; i < count; i++) newData[i] = data[i];
   OZ_RETURN(heapChunk);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_adjoin,2,0)
 {
@@ -6432,7 +6432,7 @@ OZ_BI_define(BIregSet_adjoin,2,0)
   } else
     return OZ_raiseErrorC("regSet",4,oz_atom("elementOutOfBounds"),
 			  oz_int(element),oz_int(data[0]),oz_int(data[1]));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_remove,2,0)
 {
@@ -6445,7 +6445,7 @@ OZ_BI_define(BIregSet_remove,2,0)
   } else
     return OZ_raiseErrorC("regSet",4,oz_atom("elementOutOfBounds"),
 			  oz_int(element),oz_int(data[0]),oz_int(data[1]));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_member,2,1)
 {
@@ -6459,7 +6459,7 @@ OZ_BI_define(BIregSet_member,2,1)
       OZ_RETURN(NameFalse);
   } else
     OZ_RETURN(NameFalse);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_union,2,0)
 {
@@ -6473,7 +6473,7 @@ OZ_BI_define(BIregSet_union,2,0)
     return OZ_raiseErrorC("regSet",5,oz_atom("boundsDoNotMatch"),
 			  oz_int(data1[0]),oz_int(data1[1]),
 			  oz_int(data2[0]),oz_int(data2[1]));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_intersect,2,0)
 {
@@ -6487,7 +6487,7 @@ OZ_BI_define(BIregSet_intersect,2,0)
     return OZ_raiseErrorC("regSet",5,oz_atom("boundsDoNotMatch"),
 			  oz_int(data1[0]),oz_int(data1[1]),
 			  oz_int(data2[0]),oz_int(data2[1]));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_subtract,2,0)
 {
@@ -6501,7 +6501,7 @@ OZ_BI_define(BIregSet_subtract,2,0)
     return OZ_raiseErrorC("regSet",5,oz_atom("boundsDoNotMatch"),
 			  oz_int(data1[0]),oz_int(data1[1]),
 			  oz_int(data2[0]),oz_int(data2[1]));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_toList,1,1)
 {
@@ -6518,7 +6518,7 @@ OZ_BI_define(BIregSet_toList,1,1)
     offset -= BITS_PER_INT;
   }
   OZ_RETURN(list);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIregSet_complementToList,1,1)
 {
@@ -6535,7 +6535,7 @@ OZ_BI_define(BIregSet_complementToList,1,1)
     offset -= BITS_PER_INT;
   }
   OZ_RETURN(list);
-}
+} OZ_BI_end
 
 /********************************************************************
  * Finalization
@@ -6675,7 +6675,7 @@ OZ_BI_define(BIfinalize_register,2,0)
   if (guardian_list==0) guardian_list=oz_nil();
   guardian_list = oz_cons(oz_cons(obj,hdl),guardian_list);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIfinalize_setHandler,1,0)
 {
@@ -6691,7 +6691,7 @@ OZ_BI_define(BIfinalize_setHandler,1,0)
     oz_typeError(0,"Procedure|Object");
   finalize_handler = hdl;
   return PROCEED;
-}
+} OZ_BI_end
 
 #endif
 
@@ -6720,7 +6720,7 @@ extern OZ_Term system_registry;	// moved to vprops.cc
 OZ_BI_define(BIsystem_registry,0,1)
 {
   OZ_RETURN(system_registry);
-}
+} OZ_BI_end
 
 
 /********************************************************************
@@ -6740,7 +6740,7 @@ OZ_BI_define(BIcopyCode,2,0)
   (void) copyCode(tagged2Abstraction(proc)->getPC(),alist,OK);
 
   return PROCEED;
-}
+} OZ_BI_end
 
 
 /********************************************************************
@@ -6750,6 +6750,7 @@ OZ_BI_define(BIcopyCode,2,0)
 OZ_C_proc_proto(BIdebugPrint);
 OZ_C_proc_proto(BIdebugPrintLong);
 
+#include "builtins.dcl"
 BIspec allSpec[] = {
 #include "builtins.tbl"
   {0,0,0,0}
@@ -6780,7 +6781,7 @@ BuiltinTabEntry *BIinit()
   BI_Show=makeTaggedConst(builtinTab.find("Show"));
   BI_send=makeTaggedConst(builtinTab.find("Send"));
 
-  BIinitAssembler();
+  // BIinitAssembler();
 
   BIinitFD();
   BIinitFSet();

@@ -138,12 +138,12 @@ void debugStreamUpdate(Thread *thread) {
 OZ_BI_define(BIdebugmode,0,1)
 {
   OZ_RETURN(am.debugmode()? NameTrue: NameFalse);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgetDebugStream,0,1)
 {
   OZ_RETURN(am.getDebugStreamTail());
-}
+} OZ_BI_end
 
 OZ_BI_define(BIthreadUnleash,2,0)
 {
@@ -154,7 +154,7 @@ OZ_BI_define(BIthreadUnleash,2,0)
     thread->getTaskStackRef()->unleash(frameId);
 
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIsetStepFlag,2,0)
 {
@@ -168,7 +168,7 @@ OZ_BI_define(BIsetStepFlag,2,0)
   else
     oz_typeError(1,"Bool");
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIsetTraceFlag,2,0)
 {
@@ -182,13 +182,13 @@ OZ_BI_define(BIsetTraceFlag,2,0)
   else
     oz_typeError(1,"Bool");
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIcheckStopped,1,1)
 {
   oz_declareThreadIN(0,thread);
   OZ_RETURN(thread->getStop() ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 // ------------------
 
@@ -218,7 +218,7 @@ OZ_BI_define(BIbreakpointAt, 3,1)
   }
 
   OZ_RETURN(ok?OZ_true():OZ_false());
-}
+} OZ_BI_end
 
 void execBreakpoint(Thread *t) {
   if (!t->getTrace() || !t->getStep()) {
@@ -233,7 +233,7 @@ OZ_BI_define(BIbreakpoint, 0,0)
   if (am.debugmode() && am.onToplevel())
     execBreakpoint(am.currentThread());
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIdisplayCode, 2,0)
 {
@@ -241,7 +241,7 @@ OZ_BI_define(BIdisplayCode, 2,0)
   OZ_declareIntIN(1,size);
   displayCode((ProgramCounter)ToPointer(pc),size);
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIprocedureCode, 1,1)
 {
@@ -255,7 +255,7 @@ OZ_BI_define(BIprocedureCode, 1,1)
 
   Abstraction *a=tagged2Abstraction(proc);
   OZ_RETURN_INT(ToInt32(a->getPred()->getPC()));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIprocedureCoord, 1,1)
 {
@@ -284,14 +284,14 @@ OZ_BI_define(BIprocedureCoord, 1,1)
     OZ_RETURN(OZ_recordInit(OZ_atom("def"), pairlist));
   } else   // should never happen
     OZ_RETURN(NameUnit);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIlivenessX, 1,1)
 {
   OZ_declareIntIN(0,pc);
 
   OZ_RETURN_INT(CodeArea::livenessX((ProgramCounter)ToPointer(pc),0,0));
-}
+} OZ_BI_end
 
 
 /*----------------------------------------------------------------------
@@ -533,6 +533,6 @@ OZ_BI_define(BIhalt, 0,0)
 {
   mode=OK;
   return PROCEED;
-}
+} OZ_BI_end
 
 #endif
