@@ -178,3 +178,11 @@ OZ_BI_define(BIReflectVariable, 1, 1)
   OZ_RETURN(reflect_variable(OZ_in(0)));
 }
 OZ_BI_end     
+
+//-----------------------------------------------------------------------------
+
+OZ_BI_define(BIReflectSpace, 1, 1)
+{
+  OZ_RETURN(reflect_space(OZ_in(0)));
+}
+OZ_BI_end     
