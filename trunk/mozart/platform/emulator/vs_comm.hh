@@ -56,12 +56,12 @@ enum VSMsgType {
 // defined in virtual.cc (require static memory managers, etc.);
 VSMsgBufferOwned* composeVSInitMsg();
 VSMsgBufferOwned* composeVSSiteIsAliveMsg(Site *s);
-VSMsgBufferOwned* composeVSSiteAliveMsg(Site *s);
+VSMsgBufferOwned* composeVSSiteAliveMsg(Site *s, VirtualSite *vs);
 VSMsgBufferOwned* composeVSUnusedShmIdMsg(Site *s, key_t shmid);
 //
 void decomposeVSInitMsg(VSMsgBuffer *mb, Site* &s);
 void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, Site* &s);
-void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, Site* &s);
+void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, Site* &s, VirtualSite* &vs);
 void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, Site* &s, key_t &shmid);
 
 //
@@ -208,23 +208,39 @@ class VSMsgQueueNode {
   friend class VSFreeMessagePool;
   friend class VSMsgQueue;
 private:
-  VSMessage *next;
+  VSMsgQueueNode *nextVSMsgQueueNode, *prevVSMsgQueueNode;
 
   //
 protected:
-  VSMessage* getNext() { return (next); }
-  void setNext(VSMessage *n) { next = n; }
+  VSMsgQueueNode* getNextVSMsgQueueNode() { return (nextVSMsgQueueNode); }
+  void setNextVSMsgQueueNode(VSMsgQueueNode *n) { nextVSMsgQueueNode = n; }
+  VSMsgQueueNode* getPrevVSMsgQueueNode() { return (prevVSMsgQueueNode); }
+  void setPrevVSMsgQueueNode(VSMsgQueueNode *p) { prevVSMsgQueueNode = p; }
 
 public:
-  VSMsgQueueNode() : next((VSMessage *) 0) {}
-  ~VSMsgQueueNode() { error("VSMsgQueueNode destroyed??"); }
+  VSMsgQueueNode() {
+    DebugCode(nextVSMsgQueueNode = (VSMsgQueueNode *) -1;);
+    DebugCode(prevVSMsgQueueNode = (VSMsgQueueNode *) -1;);
+  }
+  ~VSMsgQueueNode() {}
+
+  //
+  // A message as a queue node can delete itself out of the queue
+  // which is a double-linked ring of nodes, one of whose is a
+  // "marker" node;
+  void retractVSMsgQueueNode() {
+    getNextVSMsgQueueNode()->setPrevVSMsgQueueNode(getPrevVSMsgQueueNode());
+    getPrevVSMsgQueueNode()->setNextVSMsgQueueNode(getNextVSMsgQueueNode());
+    DebugCode(nextVSMsgQueueNode = (VSMsgQueueNode *) -1;);
+    DebugCode(prevVSMsgQueueNode = (VSMsgQueueNode *) -1;);
+  }
 };
 
 //
 // "Messages" are necessary for the case when a message cannot be
 // delivered (i.e. put in a mailbox) immediately (when e.g. that
 // mailbox is locked or full);
-class VSMessage : private VSMsgQueueNode {
+class VSMessage : public VSMsgQueueNode {
   friend class VSFreeMessagePool;
   friend class VSMsgQueue;
 private:
@@ -272,16 +288,16 @@ public:
   VSMessage *allocate() {
     if (freeList) {
       VSMessage *b = freeList;
-      freeList = freeList->getNext();
-      DebugCode(b->setNext((VSMessage *) 0));
+      freeList = (VSMessage *) freeList->getNextVSMsgQueueNode();
+      DebugCode(b->setNextVSMsgQueueNode((VSMessage *) 0));
       return (b);
     } else {
       return ((VSMessage *) malloc(sizeof(VSMessage)));
     }
   }
   void dispose(VSMessage *b) {
-    Assert(b->getNext() == (VSMessage *) 0);
-    b->setNext(freeList);
+    Assert(b->getNextVSMsgQueueNode() == (VSMessage *) 0);
+    b->setNextVSMsgQueueNode(freeList);
     freeList = b;
   }
 };
@@ -289,43 +305,78 @@ public:
 //
 // A queue of messages waiting for delivery (an element of a "virtual
 // site" object);
-class VSMsgQueue {
+class VSMsgQueue : private VSMsgQueueNode {
 private:
-  VSMessage *first, *last;
+  VSMsgQueueNode *next;		// for 'getFirst()'/'getNext()';
+  // a next element is pointed out in order to make the "current" one
+  // removable;
 
   //
 public:
-  VSMsgQueue() : first((VSMessage *) 0), last((VSMessage *) 0) {}
-  ~VSMsgQueue() { 
-    Assert(first == (VSMessage *) 0);
-    Assert(last == (VSMessage *) 0);
+  VSMsgQueue() : next((VSMsgQueueNode *) 0) {
+    setNextVSMsgQueueNode(this); setPrevVSMsgQueueNode(this);
   }
+  ~VSMsgQueue() { Assert(isEmpty()); }
 
   //
-  Bool isNotEmpty() { return ((Bool) first); }
+  Bool isEmpty() { return (getNextVSMsgQueueNode() == this); }
+  Bool isNotEmpty() { return (getNextVSMsgQueueNode() != this); }
 
   //
   void enqueue(VSMessage *n) {
-    if (last) {
-      Assert(last->getNext() == (VSMessage *) 0);
-      last->setNext(n);
-    }
-    last = n;
-    if (first == (VSMessage *) 0) 
-      first = last;
+    VSMsgQueueNode *p = getPrevVSMsgQueueNode(); // could be 'this';
+
+    //
+    setPrevVSMsgQueueNode(n);
+    n->setPrevVSMsgQueueNode(p);
+    p->setNextVSMsgQueueNode(n);
+    n->setNextVSMsgQueueNode(this);
   }
 
   //
   VSMessage* dequeue() {
-    VSMessage *r = first;
-    Assert(first != (VSMessage *) 0);
-    if (first == last) { 
-      first = last = (VSMessage *) 0;
+    VSMsgQueueNode *n = getNextVSMsgQueueNode();
+    if (n == this) {
+      return ((VSMessage *) 0);
     } else {
-      first = first->getNext();
+      VSMsgQueueNode *nn = n->getNextVSMsgQueueNode();
+
+      //
+      setNextVSMsgQueueNode(nn);
+      nn->setPrevVSMsgQueueNode(this);
+      DebugCode(n->setNextVSMsgQueueNode((VSMsgQueueNode *) -1););
+      DebugCode(n->setPrevVSMsgQueueNode((VSMsgQueueNode *) -1););
+      //
+      return ((VSMessage *) n);	// safe by 'enqueue()';
     }
-    DebugCode(r->setNext((VSMessage *) 0));
-    return (r);
+  }
+
+  //
+  VSMessage* getFirst() {
+    VSMsgQueueNode *vm;
+
+    //
+    vm = getNextVSMsgQueueNode();
+    if (vm == this) {
+      DebugCode(next = (VSMsgQueueNode *) 0;);
+      return ((VSMessage *) 0);
+    } else {
+      next = vm->getNextVSMsgQueueNode();
+      return ((VSMessage *) vm);
+    }
+  }
+  VSMessage* getNext() {
+    VSMsgQueueNode *vm;
+
+    //
+    vm = next;
+    if (vm == this) {
+      DebugCode(next = (VSMsgQueueNode *) 0;);
+      return ((VSMessage *) 0);
+    } else {
+      next = vm->getNextVSMsgQueueNode();
+      return ((VSMessage *) vm);
+    }
   }
 };
 
@@ -337,29 +388,84 @@ public:
 // messages, since (a) each VS has to know what's going on with its
 // messages anyway (e.g. for the needs of statistic/control), and (b)
 // the implementations of both queues can be changed separately.
+//
+// 'VirtualSite's are inherited from 'VSSiteQueueNode'. Nodes provide
+// for retracting themselves out of a queue they stay in.
 class VSSiteQueue;
 class VSSiteQueueNode {
   friend class VSSiteQueue;
 private:
-  Bool isInFlag;		// Every site is stored at most once;
-  VirtualSite *nextSiteInQueue;
+  VSSiteQueueNode *nextVSSiteQueueNode;
+  VSSiteQueueNode *prevVSSiteQueueNode;
 
   //
 private:
   //
-  Bool isIn() { return (isInFlag); }
-  void setIn() { isInFlag = OK; }
-  void setOut() { isInFlag = NO; }
-
-  //
-  VirtualSite* getNext() { return (nextSiteInQueue); }
-  void setNext(VirtualSite *n) { nextSiteInQueue = n; }
+  VSSiteQueueNode* getNextVSSiteQueueNode() {
+    return (nextVSSiteQueueNode);
+  }
+  void setNextVSSiteQueueNode(VSSiteQueueNode *n) {
+    nextVSSiteQueueNode = n;
+  }
+  VSSiteQueueNode* getPrevVSSiteQueueNode() {
+    return (prevVSSiteQueueNode);
+  }
+  void setPrevVSSiteQueueNode(VSSiteQueueNode *n) {
+    prevVSSiteQueueNode = n;
+  }
 
   //
 public:
-  VSSiteQueueNode()
-    : isInFlag(NO), nextSiteInQueue((VirtualSite *) 0) {}
-  ~VSSiteQueueNode() { Assert(!isInFlag); }
+  VSSiteQueueNode() {
+    DebugCode(nextVSSiteQueueNode = (VSSiteQueueNode *) -1;);
+    DebugCode(prevVSSiteQueueNode = (VSSiteQueueNode *) -1;);
+  }
+  ~VSSiteQueueNode() {}
+
+  //
+  void retractVSSiteQueueNode() {
+    getNextVSSiteQueueNode()
+      ->setPrevVSSiteQueueNode(getPrevVSSiteQueueNode());
+    getPrevVSSiteQueueNode()
+      ->setNextVSSiteQueueNode(getNextVSSiteQueueNode());
+    DebugCode(nextVSSiteQueueNode = (VSSiteQueueNode *) -1;);
+    DebugCode(prevVSSiteQueueNode = (VSSiteQueueNode *) -1;);
+  }
+};
+
+//
+// 'VSRegister' keeps 'VirtualSite' objects ever created. It is used 
+// for probing virtual sites, and for trying to reclaim resources of 
+// those of them that went down. Note that VSs are probed regardless
+// whether there are language-level probes installed;
+class VSRegisterNode {
+  friend class VSRegister;
+  friend class VirtualSite;
+private:
+  VSRegisterNode *nextVSRegisterNode, *prevVSRegisterNode;
+
+  //
+protected:
+  VSRegisterNode* getNextVSRegisterNode() { return (nextVSRegisterNode); }
+  void setNextVSRegisterNode(VSRegisterNode *n) { nextVSRegisterNode = n; }
+  VSRegisterNode* getPrevVSRegisterNode() { return (prevVSRegisterNode); }
+  void setPrevVSRegisterNode(VSRegisterNode *p) { prevVSRegisterNode = p; }
+
+  //
+  void retractVSRegisterNode() {
+    getNextVSRegisterNode()->setPrevVSRegisterNode(getPrevVSRegisterNode());
+    getPrevVSRegisterNode()->setNextVSRegisterNode(getNextVSRegisterNode());
+    DebugCode(nextVSRegisterNode = (VSRegisterNode *) -1;);
+    DebugCode(prevVSRegisterNode = (VSRegisterNode *) -1;);
+  }
+
+  //
+public:
+  VSRegisterNode() {
+    DebugCode(nextVSRegisterNode = (VSRegisterNode *) -1;);
+    DebugCode(prevVSRegisterNode = (VSRegisterNode *) -1;);
+  }
+  ~VSRegisterNode() {}
 };
 
 //
@@ -410,7 +516,9 @@ public:
 //
 // That's the thing which is referenced by a site object denoting a
 // virtual site, and created whenever something is to be sent there;
-class VirtualSite : private VSSiteQueueNode, public VSMsgQueue  {
+class VirtualSite : public VSSiteQueueNode, 
+		    public VSMsgQueue, 
+		    public VSRegisterNode {
   friend class VSSiteQueue;
   friend class VSProbingObject;
 private:
@@ -437,6 +545,13 @@ private:
   VSSiteQueue *sq;
 
   //
+  // GC of lost resources: whenever the site ("this" site) is discovered
+  // to be dead, this list of segment keys is used for destroying 
+  // corresponding shm pages;
+  int segKeysNum, segKeysArraySize;
+  key_t *segKeys;
+
+  //
 private:
   //
   void setStatus(SiteStatus statusIn) { status = statusIn; }
@@ -453,13 +568,11 @@ private:
   void clearVSFlag(int flag) { vsStatus &= ~flag; }
 
   //
-  // 'VSProbingObject' needs pids of virtual sites;
-  int getVSPid() { return (mboxMgr->getMailbox()->getPid()); }
-
+  // special stuff - probing, etc.
   //
   unsigned long getTimeIsAliveSent() { return (isAliveSent); }
-  unsigned long getTimeAliveAck() { return (aliveAck); }
   void setTimeIsAliveSent(unsigned long ms) { isAliveSent = ms; }
+  unsigned long getTimeAliveAck() { return (aliveAck); }
 
   //
   Bool hasProbesAll() { return (probeAllCnt); }
@@ -468,6 +581,12 @@ private:
   void incProbesPerm() { probePermCnt++; }
   void decProbesAll() { probeAllCnt--; }
   void decProbesPerm() { probePermCnt--; }
+
+  //
+  // 'gcResources()' is used when a site is discovered to be dead:
+  // Note that for chunk pool segments it's *not* sufficient just to
+  // kill the page; we need also to unmap them;
+  void gcResources(VSMsgChunkPoolManagerImported *cpm);
 
   //
 public:
@@ -492,7 +611,7 @@ public:
 	     FreeListDataManager<VSMsgBufferOwned> *freeMBs);
   // ... resend it ('TRUE' if we succeeded);
   Bool tryToSendToAgain(VSMessage *vsm,
-		       FreeListDataManager<VSMsgBufferOwned> *freeMBs);
+			FreeListDataManager<VSMsgBufferOwned> *freeMBs);
 
   //
   // The mailbox is mapped/unmapped on these events:
@@ -513,7 +632,27 @@ public:
   Site *getSite() { return (site); }
 
   //
+  // special stuff - probing, etc.
+  //
+  // Both 'VSProbingObject' and exit hook need pids of virtual sites;
+  int getVSPid() { return (mboxMgr->getMailbox()->getPid()); }
+
+  //
   void setTimeAliveAck(unsigned long ms) { aliveAck = ms; }
+
+  //
+  // When cleaning up upon exiting, slaves virtual sites known to us
+  // are explicitely killed;
+  Bool isSlave() { return (isLocalKey(mboxMgr->getSHMKey())); }
+
+  //
+  // 'alive ack' message contains also a list of ipc keys - of shared
+  // memory pages (mailboxes, chunk pool segments, may be even
+  // something else?). These are maintained using these methods:
+  void marshalLocalResources(MsgBuffer *mb,
+			     VSMailboxManagerOwned *mbm,
+			     VSMsgChunkPoolManagerOwned *cpm);
+  void unmarshalResources(MsgBuffer *mb); 
 };
 
 //
@@ -522,58 +661,134 @@ public:
 // An object of this class is tried to empty (i.e. to send out pending
 // messages to those sites) at regular intervals (tasks; see
 // virtual.cc and am.*);
-//
-// (We cannot use templates for 'VSMsgQueue' and 'VSSiteQueue'
-// implementations since their corresponding "queue node" classes 
-// should define those queue classes as "friends";)
-class VSSiteQueue {
+class VSSiteQueue : private VSSiteQueueNode {
 private:
-  VirtualSite *first, *last;
+  VSSiteQueueNode *next;	// used by 'getFirst()'/'getNext()';
+  // a next element is pointed out in order to make the "current" one
+  // removable;
 
   //
 public:
-  VSSiteQueue() : 
-    first((VirtualSite *) 0), last((VirtualSite *) 0) 
-  {}
+  VSSiteQueue() : next((VSSiteQueueNode *) 0) {
+    setNextVSSiteQueueNode(this); setPrevVSSiteQueueNode(this);
+  }
   ~VSSiteQueue() {}
 
   //
-  Bool isEmpty() { return (first == (VirtualSite *) 0); }
-  Bool isNotEmpty() { return ((Bool) first); }
+  Bool isEmpty() { return (getNextVSSiteQueueNode() == this); }
+  Bool isNotEmpty() { return (getNextVSSiteQueueNode() != this); }
 
   //
   void enqueue(VirtualSite *n) {
-    if (!n->isIn()) {
-      n->setIn();
+    VSSiteQueueNode *p = getPrevVSSiteQueueNode();
+
+    //
+    setPrevVSSiteQueueNode(n);
+    n->setPrevVSSiteQueueNode(p);
+    p->setNextVSSiteQueueNode(n);
+    n->setNextVSSiteQueueNode(this);
+  }
+  VirtualSite* dequeue() {
+    VSSiteQueueNode *n = getNextVSSiteQueueNode();
+    if (n == this) {
+      return ((VirtualSite *) 0);
+    } else {
+      VSSiteQueueNode *nn = n->getNextVSSiteQueueNode();
 
       //
-      if (last) {
-	Assert(last->getNext() == (VirtualSite *) 0);
-	last->setNext(n);
-      }
-      last = n;
-      if (first == (VirtualSite *) 0) 
-	first = last;
+      setNextVSSiteQueueNode(nn);
+      nn->setPrevVSSiteQueueNode(this);
+      DebugCode(n->setNextVSSiteQueueNode((VSSiteQueueNode *) -1););
+      DebugCode(n->setPrevVSSiteQueueNode((VSSiteQueueNode *) -1););
+
+      //
+      return ((VirtualSite *) n); // safe by 'enqueue()';
     }
   }
 
   //
-  VirtualSite* dequeue() {
-    VirtualSite *r = first;
-    Assert(r->isIn());
-    r->setOut();
+  VirtualSite* getFirst() {
+    VSSiteQueueNode *vs;
 
     //
-    Assert(first != (VirtualSite *) 0);
-    if (first == last) { 
-      first = last = (VirtualSite *) 0;
+    vs = getNextVSSiteQueueNode();
+    if (vs == this) {
+      DebugCode(next = (VSSiteQueueNode *) 0);
+      return ((VirtualSite *) 0);
     } else {
-      first = first->getNext();
+      next = vs->getNextVSSiteQueueNode();
+      return ((VirtualSite *) vs);
     }
-    DebugCode(r->setNext((VirtualSite *) 0));
+  }
+  VirtualSite* getNext() {
+    VSSiteQueueNode *vs;
 
     //
-    return (r);
+    vs = next;
+    if (vs == this) {
+      DebugCode(next = (VSSiteQueueNode *) 0);
+      return ((VirtualSite *) 0);
+    } else {
+      next = vs->getNextVSSiteQueueNode();
+      return ((VirtualSite *) vs);
+    }
+  }
+};
+
+//
+class VSRegister : private VSRegisterNode {
+private:
+  VSRegisterNode *next;		// used by 'getFirst()'/'getNext()';
+
+  //
+public:
+  VSRegister() : next((VSRegisterNode *) 0) {
+    setNextVSRegisterNode(this), setPrevVSRegisterNode(this);
+  }
+  ~VSRegister() {}
+
+  //
+  Bool isEmpty() { return (getNextVSRegisterNode() == this); }
+  Bool isNotEmpty() { return (getNextVSRegisterNode() != this); }
+  
+  //
+  void registerVS(VSRegisterNode *n) {
+    VSRegisterNode *p = getPrevVSRegisterNode();
+
+    //
+    setPrevVSRegisterNode(n);
+    n->setPrevVSRegisterNode(p);
+    p->setNextVSRegisterNode(n);
+    n->setNextVSRegisterNode(this);
+  }
+  void retractVS(VSRegisterNode *n) { n->retractVSRegisterNode(); }
+
+  //
+  VirtualSite* getFirst() {
+    VSRegisterNode *vs;
+
+    //
+    vs = getNextVSRegisterNode();
+    if (vs == this) {
+      DebugCode(next = (VSRegisterNode *) 0);
+      return ((VirtualSite *) 0);
+    } else {
+      next = vs->getNextVSRegisterNode();
+      return ((VirtualSite *) vs);
+    }
+  }
+  VirtualSite* getNext() {
+    VSRegisterNode *vs;
+
+    //
+    vs = next;
+    if (vs == this) {
+      DebugCode(next = (VSRegisterNode *) 0);
+      return ((VirtualSite *) 0);
+    } else {
+      next = vs->getNextVSRegisterNode();
+      return ((VirtualSite *) vs);
+    }
   }
 };
 
@@ -618,13 +833,15 @@ protected:
 
   //
   Site *getFirst();
-  Site *getNext(Site *prev);
+  Site *getNext();
 };
 
 //
 //
 class VSProbingObject : VSSiteHashTable {
 private:
+  //
+  VSRegister *vsRegister;	// all known (virtual) sites;
   //
   int probesNum;
   // Perform checks at this interval. Right now checks are performed
@@ -638,15 +855,7 @@ private:
 
   //
 public:
-  VSProbingObject(int size)
-    : VSSiteHashTable(size),
-      probesNum(0), lastCheck(0), lastPing(0), 
-      minInterval(PROBE_INTERVAL) {
-    // kost@ : task manager does not keep track who and which minimal
-    // service interval has requested, virtual sites just say from
-    // scratch "we want to have PROBE_INTERVAL";
-    am.setMinimalTaskInterval(PROBE_INTERVAL);
-  }
+  VSProbingObject(int size, VSRegister *vsRegisterIn);
   ~VSProbingObject() {}
 
   //
@@ -658,10 +867,6 @@ public:
 
   //
   Bool checkProbes(unsigned long clock) {
-    if (!probesNum) 
-      return (FALSE);
-
-    //
     if (clock - lastCheck > minInterval) {
       lastCheck = clock;
       return (TRUE);
@@ -671,7 +876,8 @@ public:
   }
 
   //
-  Bool processProbes(unsigned long clock);
+  Bool processProbes(unsigned long clock,
+		     VSMsgChunkPoolManagerImported *cpm);
 };
 
 #endif // VIRTUALSITES

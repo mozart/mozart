@@ -694,7 +694,9 @@ void osInitSignals()
   // only virtual site messages;
   osSignal(SIGUSR2,handlerUSR2);
 #endif
-#ifndef DEBUG_DET
+  // kost@ : virtual sites need to be cleaned up - otherwise some
+  // shared memory pages will get stuck in the system;
+#if !defined(DEBUG_DET) || defined(VIRTUALSITES)
   osSignal(SIGINT,handlerINT);
   osSignal(SIGTERM,handlerTERM);
   osSignal(SIGSEGV,handlerSEGV);

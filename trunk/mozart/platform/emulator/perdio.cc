@@ -341,7 +341,7 @@ int getStateFromLockOrCell(Tertiary*t){
   return ((LockFrame*)t)->getSec()->getState();}      
 
 /* ******************************************************************* */
-/*   SECTION 16b :: div small routines                                  */
+/*   SECTION 16b :: div small routines          chain is STATE                        */
 /* ******************************************************************* */
 
 inline Bool someTempCondition(EntityCond ec){
@@ -506,7 +506,7 @@ void sendHelpX(MessageType mt,BorrowEntry *be)
 }
 
 /* ******************************************************************* */
-/*   SECTION 18::  garbage-collection                                  */
+/*   SECTION 18::  garbage-collection  DMM + some BASIC                           */
 /* ******************************************************************* */
 
 /* OBS: ---------- interface to gc.cc ----------*/
@@ -838,7 +838,7 @@ void GNameTable::gcGNameTable()
 }
 
 /**********************************************************************/
-/*   SECTION 19 :: Globalizing                                        */
+/*   SECTION 19 :: Globalizing       stateless BASIC otherwise entity                         */
 /**********************************************************************/
 
 GName *Name::globalize()
@@ -999,7 +999,7 @@ inline void maybeConvertCellProxyToFrame(Tertiary *t){
 
 
 /**********************************************************************/
-/*   SECTION 20 :: Localizing                                         */
+/*   SECTION 20 :: Localizing                 should be more localize */
 /**********************************************************************/
 
 void Object::localize()
@@ -1009,7 +1009,7 @@ void Object::localize()
 }
 
 /**********************************************************************/
-/*   SECTION 21 :: marshaling/unmarshaling by protocol-layer          */
+/*   SECTION 21 :: marshaling/unmarshaling by protocol-layer   DMM       */
 /**********************************************************************/
 
 /* for now credit is a 32-bit word */
@@ -1294,7 +1294,7 @@ OZ_Term unmarshalOwner(MsgBuffer *bs,MarshalTag mt){
 }
 
 /**********************************************************************/
-/*   SECTION 22:: Main Receive                                       */
+/*   SECTION 22:: Main Receive                      PERDIO                 */
 /**********************************************************************/
 
 inline OwnerEntry* maybeReceiveAtOwner(Site *mS,int OTI){
@@ -1993,7 +1993,7 @@ void sendCreditBack(Site* sd,int OTI,Credit c){
   return;}
 
 /**********************************************************************/
-/*   SECTION 28:: Cell lock protocol common                           */
+/*   SECTION 28:: Cell lock protocol common  STATE                         */
 /**********************************************************************/
 
 void Chain::informHandleTempOnAdd(OwnerEntry* oe,Tertiary *t,Site *s){
@@ -2483,7 +2483,7 @@ void ChainElem::init(Site *s){
   site=s;}
 
 /**********************************************************************/
-/*   SECTION 31b:: InformElem routines                                  */
+/*   SECTION 31b:: InformElem routines              FAILURE              */
 /**********************************************************************/
     
 void InformElem::init(Site*s,EntityCond c){
@@ -3108,7 +3108,7 @@ void receiveUnAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
   getChainFromTertiary(t)->receiveUnAsk(toS,ec);}
 
 /**********************************************************************/
-/*   SECTION 37:: handlers/watchers                                   */
+/*   SECTION 37:: handlers/watchers                       FAILURE            */
 /**********************************************************************/
 
 Watcher** Tertiary::findWatcherBase(Thread* th,EntityCond ec){
@@ -3308,7 +3308,7 @@ Bool Tertiary::threadIsPending(Thread* th){
 
   
 /**********************************************************************/
-/*   SECTION 38:: error                                               */
+/*   SECTION 38:: error  FAILURE                                              */
 /**********************************************************************/
 
 void sendTellError(OwnerEntry *oe,Site* toS,int mI,EntityCond ec,Bool set){
@@ -3651,7 +3651,7 @@ void Chain::managerSeesSiteOK(Tertiary *t,Site *s){
   resetFlagAndCheck(INTERESTED_IN_OK);}
 
 /**********************************************************************/
-/*   SECTION 39:: probes                                            */
+/*   SECTION 39:: probes       STATE & FAILURE                                    */
 /**********************************************************************/
 
 void cellLock_Perm(int state,Tertiary* t){
@@ -3791,7 +3791,7 @@ void insertDangelingEvent(Tertiary *t){
 }
 
 /**********************************************************************/
-/*   SECTION 40:: communication problem                               */
+/*   SECTION 40:: communication problem         PERDIO                      */
 /**********************************************************************/
 
 inline void returnSendCredit(Site* s,int OTI){
