@@ -184,18 +184,19 @@ static long emulatorStartTime = 0;
 // inner is for the buffer stuff and outer is for the ticks returned
 // by times.
 //
-// configure checks for the bug and, if present, defines CLK_TCK_BUG
-// to the integer ratio of outer over inner as observed in its test.
+// configure checks for the bug and, if present, defines
+// CLK_TCK_BUG_RATIO to the integer ratio of outer over inner as
+// observed in its test.
 // ===================================================================
 
-static int   SYS_CLK_TCK_INNER;
-static double OZ_CLK_TCK_INNER;
-#ifdef CLK_TCK_BUG
-static int   SYS_CLK_TCK_OUTER;
-static double OZ_CLK_TCK_OUTER;
+static int    INNER_TICKS_PER_SEC_AS_INT;
+static double INNER_TICKS_PER_SEC_AS_DOUBLE;
+#ifdef CLK_TCK_BUG_RATIO
+static int    OUTER_TICKS_PER_SEC_AS_INT;
+static double OUTER_TICKS_PER_SEC_AS_DOUBLE;
 #else
-#define SYS_CLK_TCK_OUTER SYS_CLK_TCK_INNER
-#define  OZ_CLK_TCK_OUTER  OZ_CLK_TCK_INNER
+#define OUTER_TICKS_PER_SEC_AS_INT    INNER_TICKS_PER_SEC_AS_INT
+#define OUTER_TICKS_PER_SEC_AS_DOUBLE INNER_TICKS_PER_SEC_AS_DOUBLE
 #endif
 #endif
 
@@ -214,7 +215,7 @@ unsigned int osUserTime()
   struct tms buffer;
 
   times(&buffer);
-  return (unsigned int)(buffer.tms_utime*1000.0/OZ_CLK_TCK_INNER);
+  return (unsigned int)(buffer.tms_utime*1000.0/INNER_TICKS_PER_SEC_AS_DOUBLE);
 #endif
 }
 
@@ -233,7 +234,7 @@ unsigned int osSystemTime()
   struct tms buffer;
 
   times(&buffer);
-  return (unsigned int)(buffer.tms_stime*1000.0/OZ_CLK_TCK_INNER);
+  return (unsigned int)(buffer.tms_stime*1000.0/INNER_TICKS_PER_SEC_AS_DOUBLE);
 #endif
 }
 
@@ -256,7 +257,7 @@ unsigned int osTotalTime()
 
   struct tms buffer;
   int t = times(&buffer) - emulatorStartTime;
-  return (unsigned int) (t*1000.0/OZ_CLK_TCK_OUTER);
+  return (unsigned int) (t*1000.0/OUTER_TICKS_PER_SEC_AS_DOUBLE);
 
 #endif
 }
@@ -1155,7 +1156,9 @@ char *osinet_ntoa(char *ip)
 #endif
 }
 
-
+#if !defined(WINDOWS) && !defined(SUNOS_SPARC)
+int OUTER_TICKS_PER_10MS_AS_INT;
+#endif
 
 void osInit()
 {
@@ -1216,12 +1219,16 @@ void osInit()
 #endif
 
 #ifndef WINDOWS
-  SYS_CLK_TCK_INNER = sysconf(_SC_CLK_TCK);
-  OZ_CLK_TCK_INNER = (double) SYS_CLK_TCK_INNER;
-#ifdef CLK_TCK_BUG
-  SYS_CLK_TCK_OUTER = CLK_TCK_BUG*SYS_CLK_TCK_INNER;
-  OZ_CLK_TCK_OUTER = (double) SYS_CLK_TCK_OUTER;
+  INNER_TICKS_PER_SEC_AS_INT = sysconf(_SC_CLK_TCK);
+  INNER_TICKS_PER_SEC_AS_DOUBLE = (double) INNER_TICKS_PER_SEC_AS_INT;
+#ifdef CLK_TCK_BUG_RATIO
+  OUTER_TICKS_PER_SEC_AS_INT = CLK_TCK_BUG_RATIO * INNER_TICKS_PER_SEC_AS_INT;
+  OUTER_TICKS_PER_SEC_AS_DOUBLE = (double) OUTER_TICKS_PER_SEC_AS_INT;
 #endif
+#endif
+
+#if !defined(WINDOWS) && !defined(SUNOS_SPARC)
+  OUTER_TICKS_PER_10MS_AS_INT = OUTER_TICKS_PER_SEC_AS_INT / 100;
 #endif
 }
 
@@ -1643,8 +1650,8 @@ int osgetEpid()
   struct tms buffer;
   do {
     ticks = times(&buffer);
-  } while (ticks==emulatorStartTime);
-  ticks = ticks % SYS_CLK_TCK_OUTER;
+  } while ((ticks-emulatorStartTime)<OUTER_TICKS_PER_10MS_AS_INT);
+  ticks = ticks % 100;
 #endif
   Assert(ticks<100);
   unsigned int pid = (unsigned int) osgetpid();

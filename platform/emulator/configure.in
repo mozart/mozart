@@ -1003,6 +1003,7 @@ EOF
    AC_LANG_RESTORE
    if test "$oz_cv_CLKFIX" -eq 0 ; then
      oz_cv_times_sysconf_bug=error
+     AC_MSG_ERROR([unable to test for times/sysconf(_SC_CLK_TCK) bug])
    elif test "$oz_cv_CLKFIX" -eq 1; then
      oz_cv_times_sysconf_bug=no
    else
@@ -1013,7 +1014,7 @@ EOF
 if test "$oz_cv_times_sysconf_bug" = yes; then
    AC_MSG_CHECKING([for times/sysconf(_SC_CLK_TCK) fix ratio])
    AC_MSG_RESULT($oz_cv_CLKFIX)
-   AC_DEFINE_UNQUOTED(CLK_TCK_BUG,$oz_cv_CLKFIX)
+   AC_DEFINE_UNQUOTED(CLK_TCK_BUG_RATIO,$oz_cv_CLKFIX)
 fi
 ;;
 esac

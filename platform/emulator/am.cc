@@ -881,9 +881,7 @@ public:
 void AM::insertUser(int ms, TaggedRef node)
 {
   osBlockSignals();
-  cerr << "now=" << osTotalTime() << endl;
   unsigned int wakeupAt = osTotalTime() + ms;
-  cerr << "inserting user: time=" << wakeupAt << " node=" << node << endl;
   OzSleep **prev = &sleepQueue;
   for (OzSleep *aux = *prev; aux; prev = &aux->next, aux=aux->next) {
     if (wakeupAt <= aux->time) {
@@ -950,7 +948,6 @@ void AM::wakeUser()
 #else
   unsigned int now = osTotalTime();
   while (sleepQueue && sleepQueue->time<=now) {
-    cerr << "waking up user: time=" << sleepQueue->time << " node=" << sleepQueue->node << " now=" << now << endl;
     oz_io_awakeVar(sleepQueue->node);
     OzSleep *aux = sleepQueue->next;
     delete sleepQueue;
