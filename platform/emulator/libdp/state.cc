@@ -545,7 +545,13 @@ void CellManager::gcCellManager(){
   int i=getIndex();
   PD((GC,"relocate cellManager:%d",i));
   OwnerEntry* oe=OT->getOwner(i);
+  Assert(oe->getTertiary()->gcIsMarked()?
+         oe->getTertiary()->gcGetFwd()->getType() == Co_Cell:
+         oe->getTertiary()->getType() == Co_Cell );
   oe->gcPO(this);
+  Assert(oe->getTertiary()->gcIsMarked()?
+         oe->getTertiary()->gcGetFwd()->getType() == Co_Cell:
+         oe->getTertiary()->getType() == Co_Cell );
   CellFrame *cf=(CellFrame*)this;
   getCellSec()->gcCellSec();}
 

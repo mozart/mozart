@@ -230,6 +230,9 @@ void gcBorrowTableUnusedFramesImpl() {
 void gcFrameToProxyImpl() {
   if (isPerdioInitializedImpl())
     borrowTable->gcFrameToProxy();
+
+  Assert(OT->notGCMarked());
+  Assert(BT->notGCMarked());
 }
 
 void gcProxyRecurseImpl(Tertiary *t) {
@@ -297,6 +300,8 @@ void gcPerdioFinalImpl()
     gcDSiteTable();
   }
   gcTwins();
+  Assert(OT->notGCMarked());
+  Assert(BT->notGCMarked());
 }
 
 Bool isTertiaryPending(Tertiary* t){
@@ -674,7 +679,7 @@ void msgReceived(MsgBuffer* bs)
       TaggedRef status;
       unmarshal_M_SENDSTATUS(bs,site,OTI,status);
       PD((MSG_RECEIVED,"M_SENDSTATUS site:%s index:%d status:%d",
-          s->stringrep(),OTI,status));
+          site->stringrep(),OTI,status));
       NetAddress na=NetAddress(site,OTI);
       BorrowEntry *be=BT->find(&na);
       if(be==NULL){
@@ -1304,14 +1309,15 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   if (!isPerdioInitialized())
     return;
 
-  int proxiesLeft = 1;
-  int connectionsLeft = 1;
+  int proxiesLeft = 1, connectionsLeft;
 
   unsigned int timeToSleep;
 
   oz_deinstallPath(oz_rootBoard());
   osSetAlarmTimer(0);
 
+  if((int) timeUntilClose > 0)
+    BT->closeFrameToProxy(timeUntilClose);
   while ((int) timeUntilClose > 0 && proxiesLeft) {
     //    printf("times left %d\n", timeUntilClose);
     //    printf("proxies left %d\n", proxiesLeft);

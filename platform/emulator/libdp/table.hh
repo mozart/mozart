@@ -469,6 +469,8 @@ public:
   void gcOwnerTableRoots();
   void gcOwnerTableFinal();
 
+  Bool notGCMarked();
+
   void resize();
 
   int newOwner(OwnerEntry *&);
@@ -801,6 +803,8 @@ public:
   void gcBorrowTableUnusedFrames();
   void gcBorrowTableFinal();
   void gcFrameToProxy();
+
+  Bool notGCMarked();
 
   BorrowEntry* find(NetAddress *na)  {
     int i = hshtbl->findNA(na);
