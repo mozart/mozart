@@ -73,25 +73,23 @@ in
 	 end
       end
       
-      meth script(Script Order <=false)
+      meth Exec(Script Order Action)
 	 lock
 	    ExplorerClass,Init
-	    {@MyManager script(proc {$ X} {Script X} end Order)}
+	    {@MyManager script(proc {$ X} {Script X} end Order Action)}
 	 end
+      end
+
+      meth script(Script Order <=false)
+	 ExplorerClass,Exec(Script Order 'skip')
       end
 
       meth one(Script Order <=false)
-	 lock
-	    ExplorerClass,script(Script Order)
-	    {@MyManager.menu.search.next tk(invoke)}
-	 end
+	 ExplorerClass,Exec(Script Order 'next')
       end
 
       meth all(Script Order <=false)
-	 lock
-	    ExplorerClass,script(Script Order)
-	    {@MyManager.menu.search.all tk(invoke)}
-	 end
+	 ExplorerClass,Exec(Script Order 'all')
       end
 
 \define CS_SPECIAL
