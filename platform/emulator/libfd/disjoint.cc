@@ -31,8 +31,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#define COMPOUND
-
 //-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(fdp_disjoint, 4)
@@ -185,11 +183,23 @@ failure:
   return P.fail();
 }
 
-#ifdef COMPOUND
-
 //-----------------------------------------------------------------------------
 // Compound propagator interface
 //-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// debug macros
+
+//#define DEBUG_COMPOUND
+
+#ifdef DEBUG_COMPOUND
+#define CDM(A) printf A; fflush(stdout)
+#else
+#define CDM(A)
+#endif
+
+//-----------------------------------------------------------------------------
+
 class HeapAlloc {
 protected:
   void * alloc(int n) { return OZ_hallocChars(n); }
@@ -209,6 +219,7 @@ public:
 template <class T, class M>
 class EnlargeableArray : public M {
 private:
+  static const int _margin = 10;
   virtual void _gc(void) {
     T * new_array = (T *) alloc(_size * sizeof(T));
     for (int i = _size; i--; )
@@ -257,7 +268,6 @@ public:
 template <class T, class M>
 class PushArray : public EnlargeableArray<T,M> {
 protected:
-  static const int _margin = 10;
   int _high;
 public:
   PushArray(int s = _margin)
@@ -265,8 +275,9 @@ public:
   //
   int push(T &d) {
     _array[_high] = d;
-    request(_high+1);
-    return _high++;
+    _high += 1;
+    request(_high);
+    return _high-1;
   }
   //
   int getHigh(void) { return _high; }
@@ -327,14 +338,14 @@ public:
   int isScheduled(void) {
     return int(_prop_fn) & _scheduled;
   }
-  int isDead(void) {
-    return int(_prop_fn) & _dead;
-  }
   void setScheduled(void) {
     _prop_fn = pf_fnct_t(int(_prop_fn) | _scheduled);
   }
   void unsetScheduled(void) {
     _prop_fn = pf_fnct_t(int(_prop_fn) & ~_scheduled);
+  }
+  int isDead(void) {
+    return int(_prop_fn) & _dead;
   }
   void setDead(void) {
     _prop_fn = pf_fnct_t(int(_prop_fn) | _dead);
@@ -390,7 +401,6 @@ private:
     _maxsize = new_maxsize;
   }
 
-  void setFailed(void) { _failed = 1; }
 public:
   PropQueue(void)
     : _alive_prop_fncts(0), _read(0), _write(_init_maxsize - 1),
@@ -415,11 +425,10 @@ public:
   //
   pf_return_t apply(PropFnctTable &, ParamTable &, SuspVar * []);
   //
-  int isEmpty(void) { return _size == 0; }
+  int isEmpty(void) { return (_size == 0) || _failed; }
   // if one of the next is true then queue is empty
-  int isFailed(void) {
-    return _failed;
-  }
+  void setFailed(void) { _failed = 1; }
+  int isFailed(void) { return _failed; }
   //
   int isBasic(void) { return _alive_prop_fncts == 0; }
   //APF = alive propagation function
@@ -441,8 +450,12 @@ public:
 void EventList::wakeup(PropQueue * pq, PropFnctTable * pft) {
   for (int i = _high; i--; ) {
     int idx = operator[](i);
-    pq->enqueue(idx);
-    (*pft)[idx].setScheduled();
+    PropFnctTableEntry &pft_idx = (*pft)[idx];
+    if (! pft_idx.isScheduled()) {
+      CDM((" <waking up>"));
+      pq->enqueue(idx);
+      pft_idx.setScheduled();
+    }
   }
 }
 
@@ -450,19 +463,27 @@ void EventList::wakeup(PropQueue * pq, PropFnctTable * pft) {
 
 int PropFnctTable::add(ParamTable &pt, PropQueue &pq, pf_fnct_t fnct, ...)
 {
-  PropFnctTableEntry fnct_entry(fnct, pt.getHigh());
+  int pt_high = pt.getHigh();
+  PropFnctTableEntry fnct_entry(fnct, pt_high);
   int r = push(fnct_entry);
   pq.incAPF();
+
+  CDM(("fnct=%p pt_high=%d\n", fnct, pt_high));
 
   va_list ap;
 
   va_start(ap, fnct);
 
-  int param;
-  do {
-    param = va_arg(ap, int);
+  for (int param = va_arg(ap, int); param != -1; param = va_arg(ap, int)) {
+#ifdef DEBUG_COMPOUND
+    int i =
+#endif
     pt.add(param);
-  } while (param != -1);
+
+    CDM(("arg=%d idx=%d\n", param, i));
+  }
+
+  CDM(("=============================\n"));
 
   return r;
 }
@@ -472,7 +493,7 @@ pf_return_t PropQueue::apply(PropFnctTable &pft,
                              SuspVar * x[])
 {
   int idx = dequeue();
-  PropFnctTableEntry fnct_entry = pft[idx];
+  PropFnctTableEntry &fnct_entry = pft[idx]; // this must be a reference
 
   pf_fnct_t fnct = fnct_entry.getFnct();
   int paramIdx = fnct_entry.getParamIdx();
@@ -482,10 +503,14 @@ pf_return_t PropQueue::apply(PropFnctTable &pft,
   if (r == pf_entailed) {
     decAPF();
     fnct_entry.setDead();
+    return r;
   }
   if (r == pf_failed) {
     setFailed();
+    return r;
   }
+
+  CDM(("apply sleep\n"));
   fnct_entry.unsetScheduled();
   return r;
 }
@@ -598,8 +623,13 @@ private:
     _event_list = &fdel;
   }
 public:
+  SuspFDIntVar(void) {}
+  //---------------------------------------------------------------------------
+  //store variable and propagation variable are identical,
+  //initialization and propagation are conjoined in a single function
   SuspFDIntVar * init(OZ_FDProfile &fdp, OZ_FiniteDomain &fd,
-                      FDEventLists &fdel, PropQueue &pq, PropFnctTable &pft)
+                      FDEventLists &fdel, PropQueue &pq, PropFnctTable &pft,
+                      int first = 1)
   {
     _init(fdel, pq);
     //
@@ -609,7 +639,15 @@ public:
     wakeUp();
     return this;
   }
-  SuspFDIntVar * init(OZ_FiniteDomain &fdl, OZ_FiniteDomain &fd,
+  SuspFDIntVar(OZ_FDProfile &fdp, OZ_FiniteDomain &fdv,
+               FDEventLists &fdel, PropQueue &pd, PropFnctTable &pft,
+               int first = 1) {
+    init(fdp, fdv, fdel, pd, pft, first);
+  }
+  //---------------------------------------------------------------------------
+  //store variable and propagation variable are separate,
+  //initialization and propagation are separate functions
+  SuspFDIntVar * init(OZ_FiniteDomain &fdl,
                       FDEventLists &fdel, PropQueue &pq, PropFnctTable &pft)
   {
     _init(fdel, pq);
@@ -617,28 +655,30 @@ public:
     _profile.init(fdl);
     _fd = &fdl;
     _prop_fnct_table = &pft;
-    wakeUp();
     return this;
   }
-  //
-  SuspFDIntVar(void) {}
-  SuspFDIntVar(OZ_FDProfile &fdp, OZ_FiniteDomain &fdv,
-               FDEventLists &fdel, PropQueue &pd, PropFnctTable &pft) {
-    init(fdp, fdv, fdel, pd, pft);
+  // propagate store constraints to encapsulated constraints
+  int propagate_to(OZ_FiniteDomain &fd, int first = 0) {
+    int r = (*_fd &= fd);
+    if (r == 0)
+      return 0;
+    wakeUp(first);
+    return 1;
   }
-  SuspFDIntVar(OZ_FiniteDomain &fdl, OZ_FiniteDomain &fdv,
-               FDEventLists &fdel, PropQueue &pd, PropFnctTable &pft) {
-    init(fdl, fdv, fdel, pd, pft);
+  //
+  SuspFDIntVar(OZ_FiniteDomain &fdl, FDEventLists &fdel,
+               PropQueue &pd, PropFnctTable &pft) {
+    init(fdl, fdel, pd, pft);
   }
 
   OZ_FiniteDomain &operator * (void) { return *_fd; }
   OZ_FiniteDomain * operator -> (void) { return _fd; }
 
-  virtual OZ_Boolean wakeUp(void) {
-    if (_profile.isTouchedSingleValue(*_fd))
+  virtual OZ_Boolean wakeUp(int first  = 0) {
+    if (first || _profile.isTouchedSingleValue(*_fd))
       _event_list->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
     //
-    if (_profile.isTouchedBounds(*_fd))
+    if (first || _profile.isTouchedBounds(*_fd))
       _event_list->getBounds().wakeup(_prop_queue, _prop_fnct_table);
     //
     _profile.init(*_fd);
@@ -656,12 +696,13 @@ class TasksOverlapPropagator : public Propagator_D_I_D_I_D {
 private:
   static OZ_PropagatorProfile profile;
 
+  int _first;
   OZ_FDProfile _x_profile, _y_profile;
   PropFnctTable _prop_fnct_table;
   ParamTable _param_table;
 
   // clause 1: t1 + d1 >: t2 /\ t2 + d2 >: t1 /\ o =: 1
-  enum {_cl1_t1 = 0, _cl1_t2, _cl1_o,
+  enum _var_ix1 {_cl1_t1 = 0, _cl1_t2, _cl1_o,
 
   // clause 2: t1 + d1 =<: t2 /\ o =: 0
         _cl2_t1, _cl2_t2, _cl2_o,
@@ -669,7 +710,7 @@ private:
   // clause 3: t2 + d2 =<: t1 /\ o =: 0
         _cl3_t1, _cl3_t2, _cl3_o, nb_lvars };
 
-  enum {_d1 = nb_lvars, _d2, nb_consts};
+  enum _var_ix2 {_d1 = nb_lvars, _d2, nb_consts};
 
   OZ_FiniteDomain _ld[nb_lvars];
   FDEventLists    _el[nb_lvars];
@@ -701,6 +742,8 @@ public:
 // X + C <= Y
 pf_return_t lessEqOff(int * map, SuspVar * regs[])
 {
+  CDM(("lessEqOff function %p ", map));
+
   SuspFDIntVar &x = *(SuspFDIntVar *) regs[map[0]];
   int c = (int) regs[map[1]];
   SuspFDIntVar &y = *(SuspFDIntVar *) regs[map[2]];
@@ -711,21 +754,29 @@ pf_return_t lessEqOff(int * map, SuspVar * regs[])
   if (x->getMaxElem() + c <= y->getMinElem()) {
     x.wakeUp();
     y.wakeUp();
+    CDM(("\t-> entailed\n"));
     return pf_entailed;
   }
 
-  if (x->getMinElem() + c > y->getMaxElem())
+  if (x->getMinElem() + c > y->getMaxElem()) {
+    CDM(("\t-> failed\n"));
     goto failure;
-
-  return (x.wakeUp() | y.wakeUp()) ? pf_sleep : pf_entailed;
-
+  }
+  {
+    pf_return_t r = (x.wakeUp() | y.wakeUp()) ? pf_sleep : pf_entailed;
+    CDM(("\t-> %s\n", r == pf_sleep ? "sleep" : "entailed"));
+    return r;
+  }
  failure:
+  CDM(("\t-> failed\n"));
   return pf_failed;
 }
 
 // X + C > Y
 pf_return_t greaterOff(int * map, SuspVar * regs[])
 {
+  CDM(("greaterOff function %p ", map));
+
   SuspFDIntVar &x = *(SuspFDIntVar *) regs[map[0]];
   int c = (int) regs[map[1]];
   SuspFDIntVar &y = *(SuspFDIntVar *) regs[map[2]];
@@ -736,15 +787,21 @@ pf_return_t greaterOff(int * map, SuspVar * regs[])
   if (x->getMinElem() + c > y->getMaxElem()) {
     x.wakeUp();
     y.wakeUp();
+    CDM(("\t-> entailed\n"));
     return pf_entailed;
   }
 
-  if (x->getMaxElem() + c <= y->getMinElem())
+  if (x->getMaxElem() + c <= y->getMinElem()) {
+    CDM(("\t-> failed\n"));
     goto failure;
-
-  return (x.wakeUp() | y.wakeUp()) ? pf_sleep : pf_entailed;
-
+  }
+  {
+    pf_return_t r = (x.wakeUp() | y.wakeUp()) ? pf_sleep : pf_entailed;
+    CDM(("\t-> %s\n", r == pf_sleep ? "sleep" : "entailed"));
+    return r;
+  }
  failure:
+  CDM(("\t-> failed\n"));
   return pf_failed;
 }
 
@@ -758,6 +815,7 @@ TasksOverlapPropagator::TasksOverlapPropagator(OZ_Term x,
                                                OZ_Term o)
   : Propagator_D_I_D_I_D(x, xd, y, yd, o)
 {
+  _first = 0;
   // clause 1
   {
     int fnct_idx;
@@ -827,194 +885,193 @@ OZ_Return TasksOverlapPropagator::propagate(void)
   x[_d1] = (SuspVar *) d1;
   x[_d2] = (SuspVar *) d2;
 
-  int not_init_cl1 = 1, not_init_cl2 = 1,  not_init_cl3 = 1;
+  for (int var_idx = _cl1_t1; var_idx <= _cl1_o; var_idx += 1)
+    x[var_idx]=_x[var_idx].init(_ld[var_idx], _el[var_idx],
+                                _prop_queue_cl1, _prop_fnct_table);
+  for (int var_idx = _cl2_t1; var_idx <= _cl2_o; var_idx += 1)
+    x[var_idx]=_x[var_idx].init(_ld[var_idx], _el[var_idx],
+                                _prop_queue_cl2, _prop_fnct_table);
+  for (int var_idx = _cl3_t1; var_idx <= _cl3_o; var_idx += 1)
+    x[var_idx]=_x[var_idx].init(_ld[var_idx], _el[var_idx],
+                                _prop_queue_cl3, _prop_fnct_table);
 
-  do {
-    int nb_failed_clauses = 0;
+  int nb_failed_clauses = 0, not_first_iteration = 0;
 
+  /*
+     1. lift common information of unfailed clauses
+     2. propagate basic constraints into unfailed spaces
+     3. if all propagation queues are empty then:
+     3.a check for failure
+     3.b check for unit commit
+     3.c check entailment of disjunction
+     3.d otherwise leave propagator
+     4. otherwise run propagation queues
+     5. loop
+  */
+  while (1) {
     //--------------------------------------------------
-    // clause 1
+    // 1. step
+    if (not_first_iteration) {
+      OZ_FiniteDomain u_t1(fd_empty), u_t2(fd_empty), u_o(fd_empty);
+      if (!_prop_queue_cl1.isFailed()) {
+        u_t1 = u_t1 | *_x[_cl1_t1];
+        u_t2 = u_t2 | *_x[_cl1_t2];
+        u_o  = u_o  | *_x[_cl1_o];
+      }
+      if (!_prop_queue_cl2.isFailed()) {
+        u_t1 = u_t1 | *_x[_cl2_t1];
+        u_t2 = u_t2 | *_x[_cl2_t2];
+        u_o  = u_o  | *_x[_cl2_o];
+      }
+      if (!_prop_queue_cl3.isFailed()) {
+        u_t1 = u_t1 | *_x[_cl3_t1];
+        u_t2 = u_t2 | *_x[_cl3_t2];
+        u_o  = u_o  | *_x[_cl3_o];
+      }
+      FailOnEmpty(*_t1 &= u_t1);
+      FailOnEmpty(*_t2 &= u_t2);
+      FailOnEmpty(*_o  &= u_o);
+    }
+    not_first_iteration = 1;
+    //--------------------------------------------------
+    // 2. step
     if (!_prop_queue_cl1.isFailed()) {
-      // init registers (only once)
-      if (not_init_cl1) {
-        x[_cl1_t1]=_x[_cl1_t1].init(_ld[_cl1_t1], *_t1, _el[_cl1_t1],
-                                    _prop_queue_cl1, _prop_fnct_table);
-        x[_cl1_t2]=_x[_cl1_t2].init(_ld[_cl2_t1], *_t2, _el[_cl2_t1],
-                                    _prop_queue_cl1, _prop_fnct_table);
-        x[_cl1_o] =_x[_cl1_o].init(_ld[_cl1_o], *_o, _el[_cl1_o],
-                                   _prop_queue_cl1, _prop_fnct_table);
-        not_init_cl1 = 0;
+      CDM(("cl1 propagating to\n"));
+      if (!(_x[_cl1_t1].propagate_to(*_t1, _first) &
+            _x[_cl1_t2].propagate_to(*_t2, _first) &
+            _x[_cl1_o].propagate_to(*_o, _first))) {
+        CDM(("cl1 failed while lifting\n"));
+        _prop_queue_cl1.setFailed();
       }
-      if (nb_failed_clauses == 2) { // this clause has to be committed
-        // t1 + d1 > t2
-        {
-          addImpose(fd_prop_bounds, reg_x);
-          addImpose(fd_prop_bounds, reg_y);
-          impose(new LessEqOffPropagator(reg_y, reg_x, d1-1));
+    }
+    if (!_prop_queue_cl2.isFailed()) {
+      CDM(("cl2 propagating to\n"));
+      if (!(_x[_cl2_t1].propagate_to(*_t1, _first) &
+            _x[_cl2_t2].propagate_to(*_t2, _first) &
+            _x[_cl2_o].propagate_to(*_o, _first))) {
+        CDM(("cl2 failed while lifting\n"));
+        _prop_queue_cl2.setFailed();
+      }
+    }
+    if (!_prop_queue_cl3.isFailed()) {
+      CDM(("cl3 propagating to\n"));
+      if (!(_x[_cl3_t1].propagate_to(*_t1, _first) &
+            _x[_cl3_t2].propagate_to(*_t2, _first) &
+            _x[_cl3_o].propagate_to(*_o, _first))) {
+        CDM(("cl3 failed\n"));
+        _prop_queue_cl3.setFailed();
+      }
+    }
+    _first = 0;
+    // 3. step
+    if (_prop_queue_cl1.isEmpty() &&
+        _prop_queue_cl2.isEmpty() &&
+        _prop_queue_cl3.isEmpty()) {
+      CDM(("all propagation queues are empty\n"));
+      int nb_failed_clauses = (_prop_queue_cl1.isFailed() +
+                               _prop_queue_cl2.isFailed() +
+                               _prop_queue_cl3.isFailed());
+      // 3.a step
+      if (nb_failed_clauses == 3) {
+        goto failure;
+      }
+      // 3.b step
+      if (nb_failed_clauses == 2) {
+        if (!_prop_queue_cl1.isFailed()) {
+          CDM(("cl1 unit committed\n"));
+          // t1 + d1 > t2
+          {
+            addImpose(fd_prop_bounds, reg_x);
+            addImpose(fd_prop_bounds, reg_y);
+            impose(new LessEqOffPropagator(reg_y, reg_x, d1-1));
+          }
+          // t2 + d2 > t1
+          {
+            addImpose(fd_prop_bounds, reg_x);
+            addImpose(fd_prop_bounds, reg_y);
+            impose(new LessEqOffPropagator(reg_x, reg_y, d2-1));
+          }
+          // o = 1
+          FailOnEmpty(*_o &= 1);
+          goto vanish;
         }
-        // t2 + d2 > t1
-        {
-          addImpose(fd_prop_bounds, reg_x);
-          addImpose(fd_prop_bounds, reg_y);
-          impose(new LessEqOffPropagator(reg_x, reg_y, d2-1));
-        }
+        if (!_prop_queue_cl2.isFailed()) {
+          CDM(("cl2 unit committed\n"));
+          // t1 + d1 <= t2
+          {
+            addImpose(fd_prop_bounds, reg_x);
+            addImpose(fd_prop_bounds, reg_y);
+            impose(new LessEqOffPropagator(reg_x, reg_y, -d1));
+          }
         // o = 1
-        FailOnEmpty(*_o &= 1);
-        goto vanish;
-      }
-      // run propagation functions
-      while (!_prop_queue_cl1.isEmpty()) {
-        pf_return_t r = _prop_queue_cl1.apply(_prop_fnct_table,
-                                              _param_table, x);
-        if (r == pf_failed) {
-          nb_failed_clauses += 1;
-          if (nb_failed_clauses == 3)
-            goto failure;
-          goto clause2;
+          FailOnEmpty(*_o &= 0);
+          goto vanish;
         }
-      }
-      // if no prop fncts are left and basic constraints subsumed then
-      // the clause is entailed
+        if (!_prop_queue_cl3.isFailed()) {
+          CDM(("cl3 unit committed\n"));
+          // t2 + d2 <= t1
+          {
+            addImpose(fd_prop_bounds, reg_x);
+            addImpose(fd_prop_bounds, reg_y);
+            impose(new LessEqOffPropagator(reg_y, reg_x, -d2));
+          }
+          // o = 1
+          FailOnEmpty(*_o &= 0);
+          goto vanish;
+        }
+        CDM(("oops 1\n"));
+      } // step 3.b
+      // step 3.c
+      //   a clause is entailed if no prop fncts are left and
+      //   the basic constraints subsumed
       if (_prop_queue_cl1.isBasic() &&
           _t1->getSize() <= _x[_cl1_t1]->getSize() &&
           _t2->getSize() <= _x[_cl1_t2]->getSize() &&
           _o->getSize()  <= _x[_cl1_o]->getSize()) {
         goto vanish;
       }
-    }
-    //
-    //--------------------------------------------------
-    // clause 2
-  clause2:
-    if (!_prop_queue_cl2.isFailed()) {
-      // init registers (only once)
-      if (not_init_cl2) {
-        x[_cl2_t1]=_x[_cl2_t1].init(_ld[_cl2_t1], *_t1, _el[_cl2_t1],
-                                    _prop_queue_cl2, _prop_fnct_table);
-        x[_cl2_t2]=_x[_cl2_t2].init(_ld[_cl2_t1], *_t2, _el[_cl2_t1],
-                                    _prop_queue_cl2, _prop_fnct_table);
-        x[_cl2_o] =_x[_cl2_o].init(_ld[_cl2_o], *_o, _el[_cl2_o],
-                                   _prop_queue_cl2, _prop_fnct_table);
-        not_init_cl2 = 0;
-      }
-      if (nb_failed_clauses == 2) { // this clause has to be committed
-        // t1 + d1 <= t2
-        {
-          addImpose(fd_prop_bounds, reg_x);
-          addImpose(fd_prop_bounds, reg_y);
-          impose(new LessEqOffPropagator(reg_x, reg_y, -d1));
-        }
-        // o = 1
-        FailOnEmpty(*_o &= 0);
-        goto vanish;
-      }
-      // run propagation functions
-      while (!_prop_queue_cl2.isEmpty()) {
-        int prop_fnct_idx = _prop_queue_cl2.dequeue();
-        pf_return_t r = _prop_queue_cl2.apply(_prop_fnct_table,
-                                              _param_table, x);
-        if (r == pf_failed) {
-          nb_failed_clauses += 1;
-          if (nb_failed_clauses == 3)
-            goto failure;
-          goto clause3;
-        }
-      }
-      // if no prop fncts are left and basic constraints subsumed then
-      // the clause is entailed
       if (_prop_queue_cl2.isBasic() &&
           _t1->getSize() <= _x[_cl2_t1]->getSize() &&
           _t2->getSize() <= _x[_cl2_t2]->getSize() &&
           _o->getSize()  <= _x[_cl2_o]->getSize()) {
         goto vanish;
       }
-    }
-    //
-    //--------------------------------------------------
-    // clause 3
-  clause3:
-    if (!_prop_queue_cl3.isFailed()) {
-      // init registers (only once)
-      if (not_init_cl3) {
-        x[_cl3_t1]=_x[_cl3_t1].init(_ld[_cl3_t1], *_t1, _el[_cl3_t1],
-                                    _prop_queue_cl3, _prop_fnct_table);
-        x[_cl3_t2]=_x[_cl3_t2].init(_ld[_cl3_t1], *_t2, _el[_cl3_t1],
-                                    _prop_queue_cl3, _prop_fnct_table);
-        x[_cl3_o] =_x[_cl3_o].init(_ld[_cl3_o], *_o, _el[_cl3_o],
-                                   _prop_queue_cl3, _prop_fnct_table);
-        not_init_cl3 = 0;
-      }
-      if (nb_failed_clauses == 2) { // this clause has to be committed
-        // t2 + d2 <= t1
-        {
-          addImpose(fd_prop_bounds, reg_x);
-          addImpose(fd_prop_bounds, reg_y);
-          impose(new LessEqOffPropagator(reg_y, reg_x, -d2));
-        }
-        // o = 1
-        FailOnEmpty(*_o &= 0);
-        goto vanish;
-      }
-      // run propagation functions
-      while (!_prop_queue_cl3.isEmpty()) {
-        int prop_fnct_idx = _prop_queue_cl3.dequeue();
-        pf_return_t r = _prop_queue_cl3.apply(_prop_fnct_table,
-                                              _param_table, x);
-        if (r == pf_failed) {
-          nb_failed_clauses += 1;
-          if (nb_failed_clauses == 3)
-            goto failure;
-          goto end;
-        }
-      }
-      // if no prop fncts are left and basic constraints subsumed then
-      // the clause is entailed
       if (_prop_queue_cl3.isBasic() &&
           _t1->getSize() <= _x[_cl3_t1]->getSize() &&
           _t2->getSize() <= _x[_cl3_t2]->getSize() &&
           _o->getSize()  <= _x[_cl3_o]->getSize()) {
         goto vanish;
       }
+      break;
+    } // step 3.
+    // 4.step
+    CDM(("cl1 running propagation queue\n"));
+    while (!_prop_queue_cl1.isEmpty()) {
+      pf_return_t r = _prop_queue_cl1.apply(_prop_fnct_table, _param_table, x);
     }
-    //
-  end:
-    ;
-  } while (!_prop_queue_cl1.isEmpty() ||
-           !_prop_queue_cl2.isEmpty() ||
-           !_prop_queue_cl3.isEmpty());
-  // lift common information
-  {
-    OZ_FiniteDomain u_t1(fd_empty), u_t2(fd_empty), u_o(fd_empty);
-    if (!_prop_queue_cl1.isFailed()) {
-      u_t1 = u_t1 | *_x[_cl1_t1];
-      u_t2 = u_t2 | *_x[_cl1_t2];
-      u_o  = u_o  | *_x[_cl1_o];
+    CDM(("cl2 running propagation queue\n"));
+    while (!_prop_queue_cl2.isEmpty()) {
+      pf_return_t r = _prop_queue_cl2.apply(_prop_fnct_table, _param_table, x);
     }
-    if (!_prop_queue_cl2.isFailed()) {
-      u_t1 = u_t1 | *_x[_cl2_t1];
-      u_t2 = u_t2 | *_x[_cl2_t2];
-      u_o  = u_o  | *_x[_cl2_o];
+    CDM(("cl3 running propagation queue\n"));
+    while (!_prop_queue_cl3.isEmpty()) {
+      pf_return_t r = _prop_queue_cl3.apply(_prop_fnct_table, _param_table, x);
     }
-    if (!_prop_queue_cl3.isFailed()) {
-      u_t1 = u_t1 | *_x[_cl3_t1];
-      u_t2 = u_t2 | *_x[_cl3_t2];
-      u_o  = u_o  | *_x[_cl3_o];
-    }
-    FailOnEmpty(*_t1 &= u_t1);
-    FailOnEmpty(*_t2 &= u_t2);
-    FailOnEmpty(*_o  &= u_o);
-  }
+  } // while(1)
   //
- leave:
+
+  CDM(("leaving\n"));
   OZ_DEBUGPRINTTHIS("out: ");
   return P.leave();
   //
  vanish:
   OZ_DEBUGPRINTTHIS("out: ");
+  CDM(("vanishing\n"));
   return P.vanish();
   //
  failure:
   OZ_DEBUGPRINT(("fail"));
+  CDM(("failing\n"));
   return P.fail();
 }
 
@@ -1041,19 +1098,10 @@ OZ_C_proc_begin(fdp_tasksOverlap, 5)
                                               OZ_args[4]));
 }
 OZ_C_proc_end
-#else
-OZ_C_proc_begin(fdp_tasksOverlap, 5)
-{
-  return OZ_ENTAILED;
-}
-OZ_C_proc_end
-#endif
 
 //-----------------------------------------------------------------------------
 // static member
 
 OZ_PropagatorProfile SchedCDPropagator::profile;
 OZ_PropagatorProfile SchedCDBPropagator::profile;
-#ifdef COMPOUND
 OZ_PropagatorProfile TasksOverlapPropagator::profile;
-#endif
