@@ -28,34 +28,35 @@
 #define __AUX_HH__
 
 #include "mozart_cpi.hh"
-
-double * getDoubleVector(OZ_Term, double *);
-
-#define LINUX_IEEE
-
 #include <math.h>
+#include <values.h>
+
+//#define LINUX_IEEE
+
 
 
 #ifdef LINUX_IEEE
 
 #include "ieeefp.h"
 #include "sigfpe.h"
-#include "aux.hh"
 
 void exception_handler(int i, siginfo_t * info, ucontext_t * fpu_state);
 
 #define TOWARDS_MINUS_INF fpsetround(FP_RM)
-#define TOWARDS_PLUS_INF fpsetround(FP_RP)
+#define TOWARDS_PLUS_INF  fpsetround(FP_RP)
 
 #else
 
-#define TOWARDS_MINUS_INF
-#define TOWARDS_PLUS_INF
-#define DBL_MAX 1
-
 #include <ieeefp.h>
-#include "aux.hh"
+
+#define TOWARDS_MINUS_INF fpsetround(FP_RM)
+#define TOWARDS_PLUS_INF  fpsetround(FP_RP)
+
 #endif
+
+//-----------------------------------------------------------------------------
+
+double * getDoubleVector(OZ_Term, double *);
 
 #define DECLARE_FLOAT(ARG, VAR)                 \
  double VAR;                                    \
@@ -81,11 +82,11 @@ return OZ_FAILED
 #define RI_DEBUG_PRINT(ARGS) printf ARGS; fflush(stdout);
 #define RI_DEBUG_PRINT_THIS(STR)                        \
    RI_DEBUG_PRINT(("%s%s\n", STR, this->toString()))
-#define ASSERT(Cond)                                                    \
-  if (! (Cond)) {                                                       \
-    fprintf(stderr,"%s:%d ",__FILE__,__LINE__);                         \
-    fprintf(stderr, " assertion '%s' failed", #Cond);                   \
-    abort();                                                            \
+#define ASSERT(Cond)                                    \
+  if (! (Cond)) {                                       \
+    fprintf(stderr,"%s:%d ",__FILE__,__LINE__);         \
+    fprintf(stderr, " assertion '%s' failed", #Cond);   \
+    abort();                                            \
   }
 #else
 #define ASSERT(Cond)
@@ -98,17 +99,17 @@ return OZ_FAILED
 #ifdef USE_RI_DOUBLE
 
 typedef double ri_float;
-#define RI_FLOAT_MIN -DBL_MAX
-#define RI_FLOAT_MAX DBL_MAX
-#define RI_EPSILON 0.0001
+#define RI_FLOAT_MIN    -MAXDOUBLE
+#define RI_FLOAT_MAX    MAXDOUBLE
+#define RI_EPSILON      0.0001
 #define RI_FLOAT_FORMAT "%g"
 
 #else
 
 typedef float ri_float;
-#define RI_FLOAT_MIN FLT_MIN
-#define RI_FLOAT_MAX FLT_MAX
-#define RI_EPSILON 0.0001
+#define RI_FLOAT_MIN    -MAXFLOAT
+#define RI_FLOAT_MAX    MAXFLOAT
+#define RI_EPSILON      0.0001
 #define RI_FLOAT_FORMAT "%g"
 
 #endif

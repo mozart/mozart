@@ -1,6 +1,8 @@
 USECPLEX =
 #USECPLEX = 1
 
+PLATFORM = $(shell ozplatform)
+
 OPTIMIZE = -O3
 #OPTIMIZE = -g3 -DDEBUG_CHECK
 
@@ -8,7 +10,6 @@ LIBS     = -lc -lm -llpk
 TARGETLIBPATH  = $(HOME)/.oz/cache/http/www.ps.uni-sb.de/~tmueller/mozart
 
 CFLAGS  = -I/usr/local/oz/include
-CFLAGS   = -I../ReflectConstraints
 
 CFLAGS   += -ILpsolve
 
@@ -27,11 +28,11 @@ endif
 CFLAGS   += -I$(HOME)/mozart/platform/emulator
 CFLAGS   += -I$(HOME)/mozart.build/platform/emulator
 
-CXX     = c++ -fno-exceptions -fno-rtti
+CXX     = oztool c++
 
 DEPEND   = $(CXX) $(CFLAGS) -MM
 
-OZDYNLD = ozdynld
+LD = oztool ld
 
 OZC     = ozc
 OZL     = ozl
@@ -43,7 +44,11 @@ CPPSRCS  =      aux.cc \
                 propagators.cc \
                 lp.cc
 
+ifeq ($(PLATFORM), linux-i486)
 CSRCS    = fpgetset.c sigfpe.c
+CFLAGS   += -DLINUX_IEEE
+
+endif
 
 TARGZ    = ri.tar.gz
 
@@ -56,7 +61,6 @@ OZGSRCS  =
 
 OZFCTS  = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
 
-PLATFORM = $(shell ozplatform)
 
 all: ri.so-$(PLATFORM) $(OZFCTS)
 
@@ -75,7 +79,7 @@ all: ri.so-$(PLATFORM) $(OZFCTS)
 #
 
 ri.so-$(PLATFORM): $(OBJS) Lpsolve/liblpk.a
-        $(OZDYNLD) -o $(TARGETLIBPATH)/$@ $^ $(LDFLAGS) $(LIBS)
+        $(LD) -o $(TARGETLIBPATH)/$@ $^ $(LDFLAGS) $(LIBS)
 
 Lpsolve/liblpk.a:
         (cd Lpsolve; make)

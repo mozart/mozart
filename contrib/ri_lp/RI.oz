@@ -32,9 +32,6 @@ import
    Export_RI at
    'http://www.ps.uni-sb.de/~tmueller/mozart/ri.so{native}'
 
-   Export_ReflectConstraints at
-   'http://www.ps.uni-sb.de/~tmueller/mozart/refl_constr.so{native}'
-
 export
 
    sup:           Sup
@@ -45,7 +42,6 @@ export
    getWidth:      GetWidth
    var:           Var
    lessEq:        LessEq
-   lessEqMeta:    LessEqMeta
    greater:       Greater
    intBounds:     IntBounds
    intBoundsSPP:  IntBoundsSPP
@@ -53,13 +49,8 @@ export
    plus:          Plus
    distribute:    Distribute
 
-   /*
-   LP = lp(solve:   Export_RI.lpsolve
-           config:  Export_RI.lpsolve_conf)
-   */
 
 define
-   {Wait Export_ReflectConstraints}
 
    Sup           = {Export_RI.getSup}
    Inf           = {Export_RI.getInf}
@@ -70,7 +61,6 @@ define
    Var           = var(decl:   Export_RI.declVar
                        bounds: Export_RI.newVar)
    LessEq        = Export_RI.lessEq
-   LessEqMeta    = Export_RI.lessEqMeta
    Greater       = Export_RI.greater
    IntBounds     = Export_RI.intBounds
    IntBoundsSPP  = Export_RI.intBoundsSPP

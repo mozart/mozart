@@ -2,14 +2,13 @@
 %{Property.put 'internal.debug' true}
 declare
 [RI LP] = {Module.link
-              [{OS.getEnv 'HOME'}#'/Programming/Oz/RealIntervals/RI.ozf'
-               {OS.getEnv 'HOME'}#'/Programming/Oz/RealIntervals/LP.ozf'
-              ]}
+              ['RI.ozf' 'LP.ozf']}
 
 /*
 
 {Wait RI}
 {Wait LP}
+
 {Show RI}
 {Show LP}
 
