@@ -376,6 +376,7 @@ in
       meth updateEnv
 	 V = Gui,getEnv(unit $)
       in
+	 Gui,markEnv(active)
 	 Gui,PrintEnv(vars:V)
       end
 
@@ -411,6 +412,7 @@ in
 	 case {Cget updateEnv} then
 	    New in
 	    EnvSync <- New = unit
+	    Gui,markEnv(active)
 	    thread
 	       {WaitOr New {Alarm {Cget timeoutToUpdateEnv}}}
 	       case {IsDet New} then skip else
@@ -669,10 +671,6 @@ in
 	 {self.ThreadTree add(I Q)}
       end
 
-      meth removeNode(I)
-	 {self.ThreadTree remove(I)}
-      end
-
       meth killNode(I $)
 	 {self.ThreadTree kill(I $)}
       end
@@ -845,7 +843,6 @@ in
 	    I = {Thread.id T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I StepInto)
-%           [] blocked    then Gui,BlockedStatus(T StepInto)
 	    [] terminated then Gui,TerminatedStatus(T StepInto)
 	    else
 	       TopFrame = {@currentStack getTop($)}
@@ -853,9 +850,10 @@ in
 	       case TopFrame == unit then skip else
 		  case TopFrame.dir == exit then skip else
 		     N = {@currentStack incStep($)} in
-		     Gui,status(N # ' step' #
-				case N == 1 then '' else 's' end #
-				' into')
+%		     Gui,status(N # ' step' #
+%				case N == 1 then '' else 's' end #
+%				' into')
+		     Gui,status('')
 		  end
 		  Gui,ContinueTo(T TopFrame)
 	       end
@@ -866,7 +864,6 @@ in
 	    I = {Thread.id T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I StepOver)
-%           [] blocked    then Gui,BlockedStatus(T StepOver)
 	    [] terminated then Gui,TerminatedStatus(T StepOver)
 	    else
 	       TopFrame = {@currentStack getTop($)}
@@ -874,9 +871,10 @@ in
 	       case TopFrame == unit then skip else
 		  case TopFrame.dir == exit then skip else
 		     N = {@currentStack incNext($)} in
-		     Gui,status(N # ' step' #
-				case N == 1 then '' else 's' end #
-				' over')
+%		     Gui,status(N # ' step' #
+%				case N == 1 then '' else 's' end #
+%				' over')
+		     Gui,status('')
 		     {Dbg.step T false}
 		  end
 		  Gui,ContinueTo(T TopFrame)
@@ -888,7 +886,6 @@ in
 	    I = {Thread.id T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I A)
-%           [] blocked    then Gui,BlockedStatus(T A)
 	    [] terminated then Gui,TerminatedStatus(T A)
 	    else
 	       Frame
@@ -1037,7 +1034,6 @@ in
       meth Clear(W Widget)
 	 Gui,Enqueue(W o(Widget conf state:normal))
 	 Gui,Enqueue(W o(Widget delete p(0 0) 'end'))
-	 Gui,Enqueue(W o(Widget conf foreground:DefaultForeground))
       end
 
       meth Append(W Widget Text Color<=unit)
