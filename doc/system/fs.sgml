@@ -630,11 +630,12 @@ Converts <<M>> to a string and returns it in <<M>>.
 <index class=module/FS<and>reified<and>areIn/
 <<reified.areIn>>
 <synopsis>
-<<<{FS.reified.areIn +Is *M $Ds}
+<<<{FS.reified.areIn +Spec *M $Ds}
 >>>
 <item>
-?{Is} and ?{Ds} are lists of the same length such that every element
-<math/{\tt D}_i/ of ?{Ds} reifies the presence of the corresponding element
+?{Spec} describes a list of individual elements ?{Is}. ?{Is} and
+?{Ds} are lists of the same length such that every element <math/{\tt
+D}_i/ of ?{Ds} reifies the presence of the corresponding element
 <math/{\tt I}_i/ of ?{Is} in the set ?{M}.
 
 <entry>
