@@ -148,11 +148,58 @@ local
 	 end
       end
 
+      meth UnhideButFailedKids(Ks $)
+	case Ks of nil then False
+	[] K|Kr then
+	   case K.kind==choose andthen {K UnhideButFailed($)} then
+	      isDirty <- True
+	      <<Inner UnhideButFailedKids(Kr _)>>
+	      True
+	   else <<Inner UnhideButFailedKids(Kr $)>>
+	   end
+	end
+      end
+      
+      meth UnhideButFailed(?IsDirty)
+	 case @choices>0 orelse @isSolBelow then
+	    case @isHidden then
+	       isHidden <- False
+	       isDrawn  <- False
+	       isDirty  <- True
+	       <<deleteTree>>
+	       IsDirty = True
+	       <<Inner UnhideButFailedKids(@kids _)>>
+	    else
+	       <<Inner UnhideButFailedKids(@kids IsDirty)>>
+	    end
+	 elsecase @isHidden then
+	    IsDirty=False
+	 else
+	    isHidden <- True
+	    <<deleteTree>>
+	    {HideTreeKids @kids}
+	    isDrawn <- False
+	    isDirty <- True
+	    IsDirty=True
+	 end
+      end
+
+      meth unhideButFailed
+	 case <<Inner UnhideButFailed($)>> then
+	    case self.mom of !False then true
+	    elseof Mom then {Mom dirtyUp}
+	    end
+	 else true
+	 end
+      end
+      
       meth isFailedHidable($)
 	 NonFailedKids={SkipFailed @kids}
       in
-	 @choices==0 andthen NonFailedKids==nil
-	 orelse {IsFailedHidable NonFailedKids}
+	 case @isHidden then False
+	 else @choices==0 andthen NonFailedKids==nil
+	    orelse {IsFailedHidable NonFailedKids}
+	 end
       end
 
       meth isUnhidable($)
