@@ -35,6 +35,9 @@ LIBS    	= $(TK_LIB_SPEC) $(TCL_LIB_SPEC) $(TK_LIBS) @LIBS@
 CPPFLAGS	= -I. $(TK_XINCLUDES) -I $(TCL_INCLUDES) -I $(TK_INCLUDES) @CPPFLAGS@
 TCLLIBTCLDIR    = $(TCL_PREFIX)/lib/tcl$(TCL_VERSION)
 TKLIBTCLDIR     = $(TK_PREFIX)/lib/tk$(TK_VERSION)
+# redhat oddball;
+TCLLIBTCLDIR2   = $(TCL_PREFIX)/share/tcl$(TCL_VERSION)
+TKLIBTCLDIR2    = $(TK_PREFIX)/share/tk$(TK_VERSION)
 
 EXTRALDFLAGS   	= @EXTRALDFLAGS@
 
@@ -124,11 +127,17 @@ provide-link: $(PLATFORMDIR)
 provide-copy: $(PLATFORMDIR)
 	rm -rf $(PLATFORMDIR)/wish
 	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tcl
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tk
 	for i in $(TCLLIBTCLDIR)/*; do\
 	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tcl; fi;\
 	done
-	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tk
 	for i in $(TKLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tk; fi;\
+	done
+	for i in $(TCLLIBTCLDIR2)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tcl; fi;\
+	done
+	for i in $(TKLIBTCLDIR2)/*; do\
 	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tk; fi;\
 	done
 
