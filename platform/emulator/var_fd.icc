@@ -84,9 +84,9 @@ void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
     error("Singleton expected.");
 #endif
 
-  TaggedRef si = newSmallInt(finiteDomain.singl());
-  propagate(*trPtr, det, si);
-  *trPtr = si;
+  TaggedRef si_val = newSmallInt(finiteDomain.singl());
+  propagate(*trPtr, det, si_val);
+  *trPtr = si_val;
 }
 
 

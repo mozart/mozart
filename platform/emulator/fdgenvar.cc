@@ -189,10 +189,10 @@ ProgramCounter GenFDVariable::index(ProgramCounter elseLabel,
   // if there are no integer guards goto else-branch
   if (table->numberTable) {
     HTEntry** aux_table = table->numberTable;
-    int size = table->size;
+    int tsize = table->size;
 
     // if there is at least one integer member of the domain then goto varLabel
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < tsize; i++) {
       HTEntry* aux_entry = aux_table[i];
       while (aux_entry) {
 	if (isSmallInt(aux_entry->getNumber()))
