@@ -131,26 +131,27 @@ char *misc_names[MISC_LAST] = {
 class RefTable {
   OZ_Term *array;
   int size;
-  int pos;
+  int nextFree; // only for backwards compatibility
 public:
+  void reset() { nextFree=0; }
   RefTable()
   {
-    pos = 0;
-    size = 100;
-    array = new OZ_Term[size];
+    reset();
+    size     = 100;
+    array    = new OZ_Term[size];
   }
-  void reset() { pos=0; }
   OZ_Term get(int i)
   {
-    Assert(i<size);
-    return array[i];
+    return (i>=size) ? makeTaggedNULL() : array[i];
   }
-  int set(OZ_Term val)
+  void set(OZ_Term val, int pos)
   {
+    if (pos == -1) {
+      pos = nextFree++;
+    }
     if (pos>=size) 
       resize(pos);
     array[pos] = val;
-    return pos++;
   }
   void resize(int newsize)
   {
@@ -165,26 +166,18 @@ public:
     }
     delete oldarray;
   }
-  DebugCode(int getPos() { return pos; })
 };
 
 RefTable *refTable;
 
-#ifdef DEBUG_REFCOUNTERS
-#define MagicConst 23
-#endif
-
-
-inline void gotRef(MsgBuffer *bs, TaggedRef val)
+int unmarshalRefTag(MsgBuffer *bs)
 {
-  int counter = refTable->set(val);
-  PD((REF_COUNTER,"got: %d",counter));
-#ifdef DEBUG_REFCOUNTERS
-  int n1 = unmarshalNumber(bs);
-  Assert(n1==MagicConst);
-  int n2 = unmarshalNumber(bs);
-  Assert(n2==counter);
-#endif
+  return bs->oldFormat() ? -1 : unmarshalNumber(bs);
+}
+
+inline void gotRef(MsgBuffer *bs, TaggedRef val, int index)
+{
+  refTable->set(val,index);
 }
 
 
@@ -401,12 +394,13 @@ void marshalRef(int n, MsgBuffer *bs, TypeOfTerm tag)
   PD((MARSHAL,"circular: %d",n));
   
   if (debugRefs && tag!=REFTAG1) {
+    Assert(0); // not yet implemented
     marshalDIF(bs,DIF_REF_DEBUG);
     marshalNumber(n,bs);
     marshalNumber(tag,bs);
   } else {
     marshalDIF(bs,DIF_REF);
-    marshalNumber(n,bs);
+    marshalTermRef(n,bs);
   }
 }
 
@@ -438,13 +432,9 @@ void comment(MsgBuffer *bs, const char *format, ...)
 inline void trailCycle(OZ_Term *t, MsgBuffer *bs)
 {
   int counter = refTrail->trail(t);
-  Comment((bs,"DEFREF %d",counter));
+  marshalTermDef(counter,bs);
   PD((REF_COUNTER,"trail: %d",counter));
   *t = ((counter)<<tagSize)|GCTAG;
-#ifdef DEBUG_REFCOUNTERS
-  marshalNumber(MagicConst,bs);
-  marshalNumber(counter,bs);
-#endif
 }
 
 inline Bool checkCycle(LTuple *l, MsgBuffer *bs)
@@ -460,11 +450,7 @@ inline Bool checkCycle(LTuple *l, MsgBuffer *bs)
 inline void trailCycle(LTuple *l, MsgBuffer *bs)
 {
   int counter = refTrail->trail(l);
-  Comment((bs,"DEFREF %d",counter));
-#ifdef DEBUG_REFCOUNTERS
-  marshalNumber(MagicConst,bs);
-  marshalNumber(counter,bs);
-#endif
+  marshalTermDef(counter,bs);
 }
 
 void marshalSRecord(SRecord *sr, MsgBuffer *bs)
@@ -479,8 +465,9 @@ void marshalSRecord(SRecord *sr, MsgBuffer *bs)
 void marshalClass(ObjectClass *cl, MsgBuffer *bs)
 {
   marshalDIF(bs,DIF_CLASS);
-  marshalGName(cl->getGName(),bs);
+  GName *gn = cl->getGName();
   trailCycle(cl->getCycleRef(),bs);
+  marshalGName(gn,bs);
   marshalSRecord(cl->getFeatures(),bs);
 }
 
@@ -527,8 +514,8 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 
       marshalDIF(bs,DIF_DICT);
       int size = d->getSize();
-      marshalNumber(size,bs);
       trailCycle(d->getCycleRef(),bs);
+      marshalNumber(size,bs);
       
       int i = d->getFirst();
       i = d->getNext(i);
@@ -544,15 +531,15 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Builtin:
     {
       PD((MARSHAL,"builtin"));
-      marshalDIF(bs,DIF_BUILTIN);
-      PD((MARSHAL_CT,"tag DIF_BUILTIN BYTES:1"));
       Builtin *bi= (Builtin *)t;
-      
       if (bi->isNative())
 	goto bomb;
 
+      marshalDIF(bs,DIF_BUILTIN);
+      trailCycle(t->getCycleRef(),bs);
+
       marshalString(bi->getPrintName(),bs);
-      break;
+      return;
     }
   case Co_Chunk:
     {
@@ -560,8 +547,8 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       SChunk *ch=(SChunk *) t;
       GName *gname=ch->getGName();
       marshalDIF(bs,DIF_CHUNK);
-      marshalGName(gname,bs);
       trailCycle(t->getCycleRef(),bs);
+      marshalGName(gname,bs);
       marshalTerm(ch->getValue(),bs);
       return;
     }
@@ -583,18 +570,18 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       if (pp->getPred()->isNative())
 	goto bomb;
 
-      GName *gname=pp->getGName();
+      GName *gname = pp->getGName();
 
       marshalDIF(bs,DIF_PROC);
-      marshalGName(gname,bs);
+      trailCycle(t->getCycleRef(),bs);
 
+      marshalGName(gname,bs);
       marshalTerm(pp->getName(),bs);
       marshalNumber(pp->getArity(),bs);
       ProgramCounter pc = pp->getPC();
-      int gs = pp->getPred()->getGSize();
+      int gs            = pp->getPred()->getGSize();
       marshalNumber(gs,bs);
       marshalNumber(pp->getPred()->getMaxX(),bs);
-      trailCycle(t->getCycleRef(),bs);
       for (int i=0; i<gs; i++) {
 	marshalTerm(pp->getG(i),bs);
       }
@@ -618,34 +605,26 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       marshalObject(o,bs,oc->getGName());
       return;
     }
-  case Co_Lock:
-    CheckD0Compatibility;
 
-    PD((MARSHAL,"lock"));
-    bs->addRes(makeTaggedConst(t));
-    if (marshalTertiary((Tertiary *) t,DIF_LOCK,bs)) return;
-    break;
+#define HandleTert(string,tag)				\
+    CheckD0Compatibility;				\
+    PD((MARSHAL,string));				\
+    bs->addRes(makeTaggedConst(t));			\
+    if (marshalTertiary((Tertiary *) t,tag,bs)) return;	\
+    trailCycle(t->getCycleRef(),bs);			\
+    return;
 
-  case Co_Cell:
-    CheckD0Compatibility;
+  case Co_Lock: HandleTert("lock",DIF_LOCK); 
+  case Co_Cell: HandleTert("cell",DIF_CELL); 
+  case Co_Port: HandleTert("port",DIF_PORT); 
 
-    PD((MARSHAL,"cell"));
-    bs->addRes(makeTaggedConst(t));
-    if (marshalTertiary((Tertiary *) t,DIF_CELL,bs)) return;
-    break;
-
-  case Co_Port:
-    PD((MARSHAL,"port"));
-    bs->addRes(makeTaggedConst(t));
-    if (marshalTertiary((Tertiary *) t,DIF_PORT,bs)) return;
-    break;
+#undef HandleTert
 
   default:
     goto bomb;
   }
 
-  trailCycle(t->getCycleRef(),bs);
-  return;
+  Assert(0);
 
 bomb:
   marshalNoGood(makeTaggedConst(t),bs);
@@ -675,35 +654,28 @@ loop:
     {
       PD((MARSHAL,"literal"));
       Literal *lit = tagged2Literal(t);
-      /* make things more readbale (less refs) in textmode */
-      if (0 && bs->textmode() && lit->isAtom()) { 
-	marshalDIF(bs,DIF_ATOMNOREF);
-	marshalString(lit->getPrintName(),bs);
-	break;
-      }
       if (checkCycle(*lit->getCycleRef(),bs,tTag)) goto exit;
 
+      MarshalTag litTag;
+
       if (lit->isAtom()) {
-	marshalDIF(bs,DIF_ATOM);
-	PD((MARSHAL_CT,"tag DIF_ATOM  BYTES:1"));
-	marshalString(lit->getPrintName(),bs);
-	PD((MARSHAL,"atom: %s",lit->getPrintName()));
+	litTag = DIF_ATOM;
       } else if (lit->isUniqueName()) {
-	marshalDIF(bs,DIF_UNIQUENAME);
-	marshalString(lit->getPrintName(),bs);	
-	PD((MARSHAL,"unique name: %s",lit->getPrintName()));
+	litTag = DIF_UNIQUENAME;
       } else if (lit->isCopyableName()) {
-	marshalDIF(bs,DIF_COPYABLENAME);
-	marshalString(lit->getPrintName(),bs);
-	PD((MARSHAL,"copyable name: %s",lit->getPrintName()));
+	litTag = DIF_COPYABLENAME;
       } else {
-	marshalDIF(bs,DIF_NAME);
+	litTag = DIF_NAME;
+      }
+
+      marshalDIF(bs,litTag);
+      const char *name = lit->getPrintName();
+      trailCycle(lit->getCycleRef(),bs);
+      marshalString(name,bs);
+      if (litTag == DIF_NAME) {
 	GName *gname = ((Name*)lit)->globalize();
 	marshalGName(gname,bs);
-	marshalString(lit->getPrintName(),bs);
-	PD((MARSHAL,"name: %s",lit->getPrintName()));
       }
-      trailCycle(lit->getCycleRef(),bs);
       break;
     }
 
@@ -714,10 +686,10 @@ loop:
       LTuple *l = tagged2LTuple(t);
       if (checkCycle(l,bs)) goto exit;
       marshalDIF(bs,DIF_LIST);
+      trailCycle(l,bs);
       PD((MARSHAL_CT,"tag DIF_LIST BYTES:1"));
       PD((MARSHAL,"list"));
 
-      trailCycle(l,bs);
       marshalTerm(l->getHead(),bs);
 
       // tail recursion optimization
@@ -735,15 +707,16 @@ loop:
 
       if (rec->isTuple()) {
 	marshalDIF(bs,DIF_TUPLE);
+	trailCycle(rec->getCycleAddr(),bs);
 	PD((MARSHAL_CT,"tag DIF_TUPLE BYTES:1"));
 	marshalNumber(rec->getTupleWidth(),bs);
       } else {
 	marshalDIF(bs,DIF_RECORD);
+	trailCycle(rec->getCycleAddr(),bs);
 	PD((MARSHAL_CT,"tag DIF_RECORD BYTES:1"));
 	marshalTerm(rec->getArityList(),bs);
       }
       marshalTerm(label,bs);
-      trailCycle(rec->getCycleAddr(),bs);
       int argno = rec->getWidth();
       PD((MARSHAL,"record-tuple no:%d",argno));
 
@@ -812,13 +785,14 @@ loop:
 
 void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
 {
-  int size = unmarshalNumber(bs);
+  int refTag = unmarshalRefTag(bs);
+  int size   = unmarshalNumber(bs);
   PD((UNMARSHAL,"dict size:%d",size));
   Assert(oz_onToplevel());
   OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
   aux->markSafe();
   *ret = makeTaggedConst(aux);
-  gotRef(bs,*ret);
+  gotRef(bs,*ret,refTag);
 
   while(size-- > 0) {
     TaggedRef key = unmarshalTerm(bs);
@@ -919,8 +893,17 @@ loop:
 
   case DIF_NAME:
     {
-      GName *gname    = unmarshalGName(ret,bs);
-      char *printname = unmarshalString(bs);
+      int refTag = unmarshalRefTag(bs);
+      GName *gname;
+      char *printname;
+
+      if (bs->oldFormat()) {
+	gname     = unmarshalGName(ret,bs);
+	printname = unmarshalString(bs);
+      } else {
+	printname = unmarshalString(bs);
+	gname     = unmarshalGName(ret,bs);
+      }
 
       PD((UNMARSHAL,"name %s",printname));
 
@@ -935,44 +918,45 @@ loop:
 	*ret = makeTaggedLiteral(aux);
 	addGName(gname,*ret);
       }
+      gotRef(bs,*ret,refTag);
       delete printname;
-      gotRef(bs,*ret);
       return;
     }
 
   case DIF_COPYABLENAME:
     {
+      int refTag      = unmarshalRefTag(bs);
       char *printname = unmarshalString(bs);
 
       NamedName *aux = NamedName::newNamedName(ozstrdup(printname));
       aux->setFlag(Lit_isCopyableName);
       *ret = makeTaggedLiteral(aux);
+      gotRef(bs,*ret,refTag);
       delete printname;
-      gotRef(bs,*ret);
       return;
     }
 
   case DIF_UNIQUENAME:
     {
+      int refTag      = unmarshalRefTag(bs);
       char *printname = unmarshalString(bs);
 
       PD((UNMARSHAL,"unique name %s",printname));
 
       *ret = getUniqueName(printname);
+      gotRef(bs,*ret,refTag);
       delete printname;
-      gotRef(bs,*ret);
       return;
     }
 
   case DIF_ATOM:
-  case DIF_ATOMNOREF:
     {
-      char *aux = unmarshalString(bs);
+      int refTag = unmarshalRefTag(bs);
+      char *aux  = unmarshalString(bs);
       PD((UNMARSHAL,"atom %s",aux));
       *ret = OZ_atom(aux);
+      gotRef(bs,*ret,refTag);
       delete aux;
-      if (tag==DIF_ATOM)
-	gotRef(bs,*ret);
       return;
     }
 
@@ -990,7 +974,8 @@ loop:
       PD((UNMARSHAL,"list"));
       LTuple *l = new LTuple();
       *ret = makeTaggedLTuple(l);
-      gotRef(bs,*ret);
+      int refTag = unmarshalRefTag(bs);
+      gotRef(bs,*ret,refTag);
       unmarshalTerm(bs,l->getRefHead());
       // tail recursion optimization
       ret = l->getRefTail();
@@ -998,12 +983,13 @@ loop:
     }
   case DIF_TUPLE:
     {
-      int argno = unmarshalNumber(bs);
+      int refTag = unmarshalRefTag(bs);
+      int argno  = unmarshalNumber(bs);
       PD((UNMARSHAL,"tuple no_args:%d",argno));
       TaggedRef label = unmarshalTerm(bs);
       SRecord *rec = SRecord::newSRecord(label,argno);
       *ret = makeTaggedSRecord(rec);
-      gotRef(bs,*ret);
+      gotRef(bs,*ret,refTag);
 
       for(int i=0; i<argno-1; i++) {
 	unmarshalTerm(bs,rec->getRef(i));
@@ -1015,6 +1001,7 @@ loop:
 
   case DIF_RECORD:
     {
+      int refTag = unmarshalRefTag(bs);
       TaggedRef arity = unmarshalTerm(bs);
       TaggedRef sortedarity = arity;
       if (!isSorted(arity)) {
@@ -1026,7 +1013,7 @@ loop:
       TaggedRef label = unmarshalTerm(bs);
       SRecord *rec    = SRecord::newSRecord(label,aritytable.find(sortedarity));
       *ret = makeTaggedSRecord(rec);
-      gotRef(bs,*ret);
+      gotRef(bs,*ret,refTag);
 
       while(oz_isCons(arity)) {
 	TaggedRef val = unmarshalTerm(bs);
@@ -1047,6 +1034,7 @@ loop:
 
   case DIF_REF_DEBUG:
     {
+      Assert(0); // not yet implemented
       int i          = unmarshalNumber(bs);
       TypeOfTerm tag = (TypeOfTerm) unmarshalNumber(bs);
       PD((UNMARSHAL,"ref: %d",i));
@@ -1070,13 +1058,17 @@ loop:
   case DIF_OBJECT:
     {
       *ret=unmarshalTertiary(bs,tag);
-      gotRef(bs,*ret);
-      return;}
+      int refTag = unmarshalRefTag(bs);
+      gotRef(bs,*ret,refTag);
+      return;
+    }
+
   case DIF_CHUNK:
     {
       PD((UNMARSHAL,"chunk"));
 
-      GName *gname=unmarshalGName(ret,bs);
+      int refTag   = unmarshalRefTag(bs);
+      GName *gname = unmarshalGName(ret,bs);
       
       SChunk *sc;
       if (gname) {
@@ -1090,7 +1082,7 @@ loop:
 	Assert(oz_isSChunk(oz_deref(*ret)));
 	sc = 0;
       }
-      gotRef(bs,*ret);
+      gotRef(bs,*ret,refTag);
       TaggedRef value = unmarshalTerm(bs);
       if (sc) sc->import(value);
       return;
@@ -1099,6 +1091,7 @@ loop:
   case DIF_CLASS:
     {
       PD((UNMARSHAL,"class"));
+      int refTag = unmarshalRefTag(bs);
 
       GName *gname=unmarshalGName(ret,bs);
 
@@ -1111,7 +1104,7 @@ loop:
 	Assert(oz_isClass(oz_deref(*ret)));
 	cl = 0;
       }
-      gotRef(bs,*ret);
+      gotRef(bs,*ret,refTag);
       unmarshalClass(cl,bs);
       return;
     }
@@ -1128,6 +1121,7 @@ loop:
     {
       PD((UNMARSHAL,"proc"));
 
+      int refTag    = unmarshalRefTag(bs);
       GName *gname  = unmarshalGName(ret,bs);
       OZ_Term name  = unmarshalTerm(bs);
       int arity     = unmarshalNumber(bs);
@@ -1143,7 +1137,7 @@ loop:
 	*ret = makeTaggedConst(pp);
 	pp->setGName(gname);
 	addGName(gname,*ret);
-	gotRef(bs,*ret);
+	gotRef(bs,*ret,refTag);
 	for (int i=0; i<gsize; i++) {
 	  pp->initG(i, unmarshalTerm(bs));
 	}
@@ -1151,7 +1145,7 @@ loop:
 	pr->patchFileAndLine();
       } else {
 	Assert(oz_isAbstraction(oz_deref(*ret)));
-	gotRef(bs,*ret);
+	gotRef(bs,*ret,refTag);
 	for (int i=0; i<gsize; i++) {
 	  (void) unmarshalTerm(bs);
 	}
@@ -1174,6 +1168,7 @@ loop:
     }
   case DIF_BUILTIN:
     {
+      int refTag = unmarshalRefTag(bs);
       char *name = unmarshalString(bs); // ATTENTION deletion
       PD((UNMARSHAL,"builtin: %s",name));
       Builtin * found = string2Builtin(name);
@@ -1189,7 +1184,7 @@ loop:
       }
 
       *ret = makeTaggedConst(found);
-      gotRef(bs,*ret);
+      gotRef(bs,*ret,refTag);
       return;
     }
 
@@ -1330,42 +1325,33 @@ void initMarshaler(){
 }
 
 
-static
-void splitversion(char *vers, char *&major, char*&minor)
+
+Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t)
 {
-  major = vers;
-  minor = strrchr(vers,'#');
-  if (minor) {
-    minor++;
-  } else {
-    minor = "0";
-  }
-}
-
-
-Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t){
   PD((MARSHAL_BE,"unmarshal begin: %s s:%s","$1",buf->siteStringrep()));
   refTable->reset();
   Assert(creditSite==NULL);	
   Assert(refTrail->isEmpty());
   if(buf->get()==DIF_SECONDARY) {Assert(0);return NO;}
   vers=unmarshalString(buf);
-  char *major, *minor;
-  splitversion(vers,major,minor);
+  char *major;
+  int minordiff;
+  splitversion(vers,major,minordiff);
   if (strncmp(PERDIOMAJOR,major,strlen(PERDIOMAJOR))!=0) {
     return NO;}
-  int minordiff = atoi(PERDIOMINOR) - atoi(minor);
-  //  if (minordiff > 1 || /* we only support the last minor */
-  //      minordiff < 0) { /* emulator older than component */
-  //    return NO;
-  //  }
-  if (minordiff)
+  if (minordiff > 1 || /* we only support the last minor */
+      minordiff < 0) { /* emulator older than component */
     return NO;
+  }
+  if (minordiff) {
+    buf->setOldFormat();
+  }
   t=unmarshalTerm(buf);
   buf->unmarshalEnd();
   refTrail->unwind();
   PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->siteStringrep()));
-  return OK;}
+  return OK;
+}
 
 
 /* *********************************************************************/
