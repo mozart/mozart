@@ -1,8 +1,9 @@
-OZHOME=/usr/share/gs/soft/oz
+OZHOME  = /usr/share/gs/soft/oz
+BINDIR  = $(OZHOME)/bin
+SHELL   = /bin/sh
 
-SHELL=/bin/sh
 SCRIPTS = oz oz2lpr oz+ oz2declare
-LINKS = oz- oz.compiler oz.machine
+LINKS   = oz- ozc oz.compiler oz.machine
 
 help:
         @echo ""
@@ -12,7 +13,7 @@ help:
 
 install:
         install -m 555 $(SCRIPTS) $(OZHOME)/bin
-        @cd  $(BINDIR); set -x; \
+        @set -x; cd $(BINDIR);\
         for file in $(LINKS); \
         do\
            rm -f $$file; \
