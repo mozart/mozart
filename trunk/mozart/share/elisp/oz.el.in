@@ -677,6 +677,9 @@ Handle input and output via the Oz Emulator buffer."
   (interactive)
   (save-excursion
     (oz-check-running t))
+  (oz-create-oz-buffer))
+
+(defun oz-create-oz-buffer ()
   (or (equal mode-name "Oz")
       (equal mode-name "Oz-Gump")
       (equal mode-name "Oz-Machine")
@@ -751,7 +754,8 @@ If FORCE is non-nil, kill it immediately."
     (setq oz-emulator-filter-hook 'oz-filter)
     (set-process-filter (get-buffer-process oz-emulator-buffer)
 			'oz-emulator-filter)
-    (bury-buffer oz-emulator-buffer)))
+    (bury-buffer oz-emulator-buffer)
+    (oz-create-oz-buffer)))
 
 (defun oz-socket (host port)
   (let ((bs oz-compiler-buffers) (newbs nil))
