@@ -283,6 +283,12 @@ _FUNDECL(void ,OZ_send,(OZ_Term,OZ_Term));
 /* name */
 _FUNDECL(OZ_Term ,OZ_newName,());
 
+/* bit strings */
+#define OZBitString void*
+_FUNDECL(OZ_Boolean,OZ_BitStringGet,(OZBitString,int));
+_FUNDECL(OZBitString,OZ_getBitString,(OZ_Term));
+
+
 /* foreign pointer */
 _FUNDECL(OZ_Term	,OZ_makeForeignPointer,(void*));
 _FUNDECL(void*	,OZ_getForeignPointer,(OZ_Term));
@@ -545,12 +551,12 @@ OZ_declareType(ARG,VAR,OZ_CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
 OZ_setType(ARG,VAR,OZ_CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
 
 #define OZ_declareBitString(ARG,VAR)		\
-OZ_declareType(ARG,VAR,BitString*,"BitString",	\
-	       OZ_isBitString,tagged2BitString)
+OZ_declareType(ARG,VAR,OZBitString,"BitString",	\
+	       OZ_isBitString,OZ_getBitString)
 
 #define OZ_setBitString(ARG,VAR)		\
-OZ_setType(ARG,VAR,BitString*,"BitString",	\
-	       OZ_isBitString,tagged2BitString)
+OZ_setType(ARG,VAR,OzBitString,"BitString",	\
+	       OZ_isBitString,OZ_getBitString)
 
 #define OZ_declareByteString(ARG,VAR)		\
 OZ_declareType(ARG,VAR,ByteString*,"ByteString",\
