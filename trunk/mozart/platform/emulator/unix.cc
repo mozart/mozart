@@ -1411,8 +1411,9 @@ OZ_BI_define(unix_pipe,2,2) {
   char buf[10000];
   buf[0] = '\0';
   for (k=0 ; k<argno; k++) {
+    strcat(buf,"\"");
     strcat(buf,argv[k]);
-    strcat(buf," ");
+    strcat(buf,"\" ");
   }
 
   int sv[2];
