@@ -27,8 +27,8 @@
 TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
 
-Platform               = {Property.get 'platform.name'}
-WindowsPlatform        = 'win32-i486'
+Platform               = {Property.get 'platform.os'}
+WindowsPlatform        = 'win32'
 
 NameOfBenni            = 'Benjamin Lorenz'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
