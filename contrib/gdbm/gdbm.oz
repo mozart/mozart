@@ -3,8 +3,8 @@
 %%%
 %%%
 
-proc {$ Foreign GDBM}
-   FLoad = Foreign.load
+proc {$ IMPORTS GDBM}
+   FLoad = IMPORTS.'SP'.'Foreign'.load
 in
    %% open a new `local' to protect redefinitions of
    %% variables already in Base
