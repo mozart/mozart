@@ -38,7 +38,7 @@ public:
   RRinstance_TL(int t, RRinstance *n);
   
   void marshal_RR(MarshalerBuffer *buf);
-  void unmarshal_RR(MarshalerBuffer *buf, int *error);
+  void unmarshal_RR(MarshalerBuffer *buf);
   virtual ~RRinstance_TL(){}
 };
 

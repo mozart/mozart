@@ -198,16 +198,6 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
   return OZ_raiseDebug(makeGenericExc(id,msg,arg));
 }
 
-static void saveTerm(PickleBuffer* buf, TaggedRef t, Bool cloneCells)
-{
-  buf->marshalBegin();
-  char *version  =  MARSHALERVERSION;
-  marshalString(buf, version);
-  pickleTerm(buf, t, cloneCells);
-  buf->marshalEnd();
-  return;
-} 
-
 OZ_Return onlyFutures(OZ_Term l) {
   if (oz_isNil(l)) return PROCEED;
   while (oz_isCons(l)) {
@@ -235,7 +225,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header,
   //
   extractResources(in, cloneCells, resources, nogoods);
   OZ_Return ret = onlyFutures(resources);
-  if (ret != PROCEED) 
+  if (ret != PROCEED)
     return ret;
 
   //
@@ -258,7 +248,12 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header,
   PickleBuffer* pb = new PickleBuffer();
   if (textmode)
     pb->setTextmode();
-  saveTerm(pb, in, cloneCells);
+
+  //
+  pb->marshalBegin();
+  marshalString(pb, MARSHALERVERSION);
+  pickleTerm(in, pb, cloneCells);
+  pb->marshalEnd();
 
   //
   pb->saveBegin();
@@ -285,6 +280,9 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header,
     total -= len;
     OZ_Return result = putBytes(pos,len);
     if (result != PROCEED) {
+      do {
+	pb->chunkWritten();
+      } while (pb->unlinkNext(len));
       delete pb;
       return (result);
     }
@@ -516,15 +514,7 @@ LoadTermRet loadTerm(PickleBuffer *buf, char* &vers, OZ_Term &t)
 {
   buf->unmarshalBegin();	
 
-#ifndef USE_FAST_UNMARSHALER   
-  int error;
-  vers = unmarshalVersionStringRobust(buf, &error);
-  if (error)
-    return (CLT_NOPICKLE);
-#else
   vers = unmarshalVersionString(buf);
-#endif
-
   if (vers == 0)
     return (CLT_NOPICKLE);
 
@@ -534,13 +524,7 @@ LoadTermRet loadTerm(PickleBuffer *buf, char* &vers, OZ_Term &t)
   if (major != MARSHALERMAJOR || minor != MARSHALERMINOR)
     return (CLT_WRONGVERS);
 
-#ifndef USE_FAST_UNMARSHALER   
-  t = unpickleTermRobust(buf);
-  if (t == (OZ_Term) 0)
-    return (CLT_FORMATERR);
-#else
   t = unpickleTerm(buf);
-#endif
 
   buf->unmarshalEnd();
 
@@ -610,11 +594,8 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   LoadTermRet ret;
 
   OZ_Return result = loadPickleBuffer(buffer, compname);
-  if (result != PROCEED) {
-    buffer->dropBuffers();
-    delete buffer;
+  if (result != PROCEED)
     return (result);
-  }
 
   ret = loadTerm(buffer, versiongot, val);
   buffer->dropBuffers();
@@ -689,6 +670,7 @@ ByteSource::loadPickleBuffer(PickleBuffer*& buffer, const char *filename)
     int got;
     OZ_Return result = getBytes(pos, max, got);   
     if (result != PROCEED) {
+      buffer->dropBuffers();
       delete buffer;
       DebugCode(buffer = (PickleBuffer *) 0;);
       return result;
@@ -706,6 +688,7 @@ ByteSource::loadPickleBuffer(PickleBuffer*& buffer, const char *filename)
 
   //
   if (total == 0) {
+    buffer->dropBuffers();
     delete buffer;
     DebugCode(buffer = (PickleBuffer *) 0;);
     return (raiseGeneric("bytesource:empty",
@@ -714,6 +697,7 @@ ByteSource::loadPickleBuffer(PickleBuffer*& buffer, const char *filename)
 					  oz_atom(filename)), oz_nil())));
   }
   if (checkChecksum(crc) == NO) {
+    buffer->dropBuffers();
     delete buffer;
     DebugCode(buffer = (PickleBuffer *) 0;);
     return (raiseGeneric("bytesource:crc","Checksum mismatch",
@@ -1237,4 +1221,136 @@ OZ_Term toXML(OZ_Term t,marshalFun f)
   delete pb;
   return val;
 }
+#endif
+
+#if defined(PROFILE_MARSHALER)
+//
+#include "byteBuffer.hh"
+#include "libdp/dpMarshaler.hh"
+
+#define TestMError(PROC, MSG) \
+  OZ_raiseErrorC("testM",3,OZ_atom(PROC),OZ_inAsList(),OZ_atom(MSG))
+
+OZ_BI_define(BIemptyBuiltin, 0, 0)
+{
+  return PROCEED;
+} OZ_BI_end
+
+// Oz value + number of iterations;
+OZ_BI_define(BItestMarshaler, 2, 0)
+{
+  OZ_declareDetTerm(0, val);
+  OZ_declareInt(1, iterations);
+  PickleBuffer* buf = new PickleBuffer();
+
+  for (int i = iterations; i--; ) {
+    OZ_Term resources, nogoods;
+
+    extractResources(val, 0, resources, nogoods);
+
+    if (!oz_isNil(resources))
+      return (TestMError("testMarshaler", "resources found!"));
+    if (!oz_isNil(nogoods))
+      return (TestMError("testMarshaler", "nogoods found!"));
+
+    buf->marshalBegin();
+    pickleTerm(val, buf, 0);
+    buf->marshalEnd();
+
+    buf->saveBegin();
+    int len; 
+    (void) buf->unlinkFirst(len);
+    do {
+      buf->chunkWritten();
+    } while (buf->unlinkNext(len));
+    buf->saveEnd();
+  }
+
+  delete buf;
+  return PROCEED;
+} OZ_BI_end
+
+// Oz value + number of iterations.
+// Note: first, the value is marshaled, which takes some time;
+OZ_BI_define(BItestUnmarshaler, 2, 0)
+{
+  OZ_declareDetTerm(0, val);
+  OZ_declareInt(1, iterations);
+
+  OZ_Term resources, nogoods;
+
+  extractResources(val, 0, resources, nogoods);
+
+  if (!oz_isNil(resources))
+    return (TestMError("testMarshaler", "resources found!"));
+  if (!oz_isNil(nogoods))
+    return (TestMError("testMarshaler", "nogoods found!"));
+
+  PickleBuffer* buf = new PickleBuffer();
+  buf->marshalBegin();
+  pickleTerm(val, buf, 0);
+  buf->marshalEnd();
+
+  for (int i = iterations; i--; ) {
+    buf->unmarshalBegin();	
+    (void) unpickleTerm(buf);
+    buf->unmarshalEnd();
+  }
+
+  // bug in 1.2.0 : just 'delete buf' doesn't delete the whole buffer;
+  buf->saveBegin();
+  int len; 
+  (void) buf->unlinkFirst(len);
+  do {
+    buf->chunkWritten();
+  } while (buf->unlinkNext(len));
+  buf->saveEnd();
+  delete buf;
+
+  return PROCEED;
+} OZ_BI_end
+
+// Oz value + number of iterations;
+OZ_BI_define(BItestDPMarshaler, 2, 0)
+{
+  OZ_declareDetTerm(0, val);
+  OZ_declareInt(1, iterations);
+  const int bbSize = 1024*64;
+  BYTE *bb = new BYTE[bbSize];
+
+  DPMarshaler *dpm = (DPMarshaler *) new DPMarshaler;
+  ByteBuffer* buf = new ByteBuffer();
+  buf->init(bbSize, bb);
+
+  for (int i = iterations; i--; ) {
+    buf->reinit();
+    buf->marshalBegin();
+    if (dpMarshalTerm(val, buf, dpm, (DSite *) 0))
+      return (TestMError("testDPMarshaler", "value too large for test!"));
+    buf->marshalEnd();
+    dpm->reset();
+  }
+
+  delete buf;
+  delete dpm;
+  delete bb;
+  return (PROCEED);
+} OZ_BI_end
+
+/*
+ * also add this to e.g. modPickle.spec:
+    'emptyBuiltin'      => { in     => [],
+			      out    => [],
+			      BI     => BIemptyBuiltin},
+    'testMarshaler'     => { in     => ['+value', '+int'],
+			      out    => [],
+			      BI     => BItestMarshaler},
+    'testUnmarshaler'   => { in     => ['+value', '+int'],
+			      out    => [],
+			      BI     => BItestUnmarshaler},
+    'testDPMarshaler'   => { in     => ['+value', '+int'],
+			      out    => [],
+			      BI     => BItestDPMarshaler},
+ */
+
 #endif

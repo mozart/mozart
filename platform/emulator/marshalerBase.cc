@@ -44,6 +44,90 @@
 
 //
 
+//
+// The map from non-DEF to DEF tags;
+MarshalTag defmap[DIF_LAST] = {
+  (MarshalTag) -1,		// UNUSED0
+  (MarshalTag) -1,		// SMALLINT
+  DIF_BIGINT_DEF,
+  (MarshalTag) -1,		// FLOAT
+  (MarshalTag) -1,		// ATOM_DEF
+  (MarshalTag) -1,		// NAME_DEF
+  (MarshalTag) -1,		// UNIQUENAME_DEF
+  (MarshalTag) -1,		// RECORD_DEF
+  (MarshalTag) -1,		// TUPLE_DEF
+  (MarshalTag) -1,		// LIST_DEF
+  (MarshalTag) -1,		// REF
+  (MarshalTag) -1,		// UNUSED1
+  (MarshalTag) -1,		// OWNER_DEF
+  (MarshalTag) -1,		// UNUSED2
+  (MarshalTag) -1,		// PORT_DEF
+  (MarshalTag) -1,		// CELL_DEF
+  (MarshalTag) -1,		// LOCK_DEF
+  (MarshalTag) -1,		// VAR_DEF
+  (MarshalTag) -1,		// BUILTIN_DEF
+  (MarshalTag) -1,		// DICT_DEF
+  (MarshalTag) -1,		// OBJECT_DEF
+  (MarshalTag) -1,		// UNUSED3
+  (MarshalTag) -1,		// UNUSED4
+  (MarshalTag) -1,		// CHUNK_DEF
+  (MarshalTag) -1,		// PROC_DEF
+  (MarshalTag) -1,		// CLASS_DEF
+  (MarshalTag) -1,		// ARRAY_DEF
+  (MarshalTag) -1,		// FSETVALUE
+  (MarshalTag) -1,		// ABSTRENTRY
+  (MarshalTag) -1,		// UNUSED5
+  (MarshalTag) -1,		// UNUSED6
+  (MarshalTag) -1,		// SITE
+  (MarshalTag) -1,		// UNUSED7
+  (MarshalTag) -1,		// SITE_PERM
+  (MarshalTag) -1,		// UNUSED8
+  (MarshalTag) -1,		// COPYABLENAME_DEF
+  (MarshalTag) -1,		// EXTENSION_DEF
+  (MarshalTag) -1,		// RESOURCE_DEF
+  DIF_RESOURCE_DEF,
+  (MarshalTag) -1,		// FUTURE_DEF
+  (MarshalTag) -1,		// VAR_AUTO_DEF
+  (MarshalTag) -1,		// FUTURE_AUTO_DEF
+  (MarshalTag) -1,		// EOF
+  (MarshalTag) -1,		// CODEAREA
+  (MarshalTag) -1,		// VAR_OBJECT_DEF
+  (MarshalTag) -1,		// SYNC
+  (MarshalTag) -1,		// CLONEDCELL_DEF
+  (MarshalTag) -1,		// STUB_OBJECT_DEF
+  (MarshalTag) -1,		// SUSPEND
+  (MarshalTag) -1,		// LIT_CONT
+  (MarshalTag) -1,		// EXT_CONT
+  (MarshalTag) -1,		// SITE_SENDER
+  DIF_RECORD_DEF,
+  DIF_TUPLE_DEF,
+  DIF_LIST_DEF,
+  DIF_PORT_DEF,
+  DIF_CELL_DEF,
+  DIF_LOCK_DEF,
+  DIF_BUILTIN_DEF,
+  DIF_DICT_DEF,
+  DIF_OBJECT_DEF,
+  DIF_CHUNK_DEF,
+  DIF_PROC_DEF,
+  DIF_CLASS_DEF,
+  DIF_EXTENSION_DEF,
+  DIF_STUB_OBJECT_DEF,
+  (MarshalTag) -1,		// BIGINT_DEF
+  DIF_CLONEDCELL_DEF,
+  DIF_ARRAY_DEF,
+  DIF_ATOM_DEF,
+  DIF_NAME_DEF,
+  DIF_UNIQUENAME_DEF,
+  DIF_COPYABLENAME_DEF,
+  DIF_OWNER_DEF,
+  DIF_VAR_DEF,
+  DIF_FUTURE_DEF,
+  DIF_VAR_AUTO_DEF,
+  DIF_FUTURE_AUTO_DEF,
+  DIF_VAR_OBJECT_DEF,
+};
+
 #if !defined(TEXT2PICKLE)
 //
 unsigned int RobustMarshaler_Max_Shift;
@@ -66,7 +150,7 @@ SendRecvCounter dif_counter[DIF_LAST];
 SendRecvCounter misc_counter[MISC_LAST];
 
 //
-GName *globalizeConst(ConstTerm *t, MarshalerBuffer *bs)  
+GName *globalizeConst(ConstTerm *t)
 { 
   switch(t->getType()) {
   case Co_Object:      return ((Object*)t)->globalize();
@@ -152,8 +236,6 @@ void traverseHashTableRef(GenTraverser *gt, int start, IHashTable *table)
   }
 }
 
-#ifdef USE_FAST_UNMARSHALER   
-
 //
 unsigned int unmarshalNumber(MarshalerBuffer *bs)
 {
@@ -234,118 +316,6 @@ GName *unmarshalGName(TaggedRef *ret, MarshalerBuffer *bs)
   nn->setValue((TaggedRef) 0);
   return (nn);
 }
-
-#else // USE_FAST_UNMARSHALER
-
-//
-unsigned int unmarshalNumberRobust(MarshalerBuffer *bs, int *overflow)
-{
-  unsigned int ret = 0, shft = 0;
-  unsigned int c = bs->get();
-  while (c >= SBit) {
-    ret += ((c-SBit) << shft);
-    c = bs->get();
-    shft += 7;
-  }
-  if(shft > RobustMarshaler_Max_Shift) {
-    *overflow = OK;
-    return 0;
-  }
-  else if(shft == RobustMarshaler_Max_Shift) {
-    if(c >= RobustMarshaler_Max_Hi_Byte) {
-      *overflow = OK;
-      return 0;
-    }
-  }
-  ret |= (c<<shft);
-  *overflow = NO;
-  return ret;
-}
-
-//
-static
-char *getStringRobust(MarshalerBuffer *bs, unsigned int i, int *error)
-{
-  char *ret = new char[i+1];
-  if (ret==NULL) {
-    *error = OK;
-    return NULL;
-  }
-  for (unsigned int k=0; k<i; k++)
-    ret[k] = bs->get();
-  ret[i] = '\0';
-  *error = NO;
-  return ret;
-}
-
-//
-double unmarshalFloatRobust(MarshalerBuffer *bs, int *overflow)
-{
-  static DoubleConv dc;
-  if (lowendian) {
-    dc.u.i[0] = unmarshalNumberRobust(bs, overflow);
-    if(*overflow) return 0.0;
-    dc.u.i[1] = unmarshalNumberRobust(bs, overflow);
-    if(*overflow) return 0.0;
-  } else {
-    dc.u.i[1] = unmarshalNumberRobust(bs, overflow);
-    if(*overflow) return 0.0;
-    dc.u.i[0] = unmarshalNumberRobust(bs, overflow);
-    if(*overflow) return 0.0;
-  }
-  return dc.u.d;
-}
-
-//
-char *unmarshalStringRobust(MarshalerBuffer *bs, int *error)
-{
-  char *string;
-  misc_counter[MISC_STRING].recv();
-  unsigned int i = unmarshalNumberRobust(bs,error);
-  if(*error) return NULL;
-  string = getStringRobust(bs,i,error);
-  if(*error) return NULL;
-  return string;
-}
-
-//
-static
-void unmarshalGName1Robust(GName *gname, MarshalerBuffer *bs, int *error)
-{
-  gname->site = unmarshalSiteRobust(bs, error);
-  if(*error) return;
-  for (int i=0; i<fatIntDigits; i++) {
-    int e;
-    unsigned int num;
-    num = unmarshalNumberRobust(bs, &e);
-    if(*error || (num > maxDigit)) return;
-    gname->id.number[i] = num;
-  }
-  gname->gnameType = (GNameType) unmarshalNumberRobust(bs, error);
-  *error = *error || (gname->gnameType > MAX_GNT);
-}
-
-//
-GName *unmarshalGNameRobust(TaggedRef *ret, MarshalerBuffer *bs, int *error)
-{
-  misc_counter[MISC_GNAME].recv();
-  GName gname;
-  unmarshalGName1Robust(&gname, bs, error);
-  if (*error) return ((GName *) -1);
-  
-  TaggedRef aux = oz_findGName(&gname);
-  if (aux) {
-    if (ret) *ret = aux; // ATTENTION
-    return 0;
-  }
-
-  //
-  GName *nn = new GName(gname);
-  nn->setValue((TaggedRef) 0);
-  return (nn);
-}
-
-#endif
 
 //
 // Occasionally Oz terms must be placed in the current binary area
@@ -769,8 +739,6 @@ ProgramCounter unmarshalBuiltin(Builder *b, ProgramCounter pc)
 }
 
 
-#ifdef USE_FAST_UNMARSHALER   
-
 //
 ProgramCounter unmarshalGRegRef(ProgramCounter PC, MarshalerBuffer *bs)
 { 
@@ -1038,334 +1006,20 @@ ProgramCounter unmarshalProcedureRef(Builder *b, ProgramCounter pc,
     MarshalTag tag = (MarshalTag) bs->get();
     if (tag == DIF_REF) {
       int i = unmarshalNumber(bs);
-      entry = (AbstractionEntry*) ToPointer(b->get(i));
+      entry = (AbstractionEntry*) b->getLocation(i);
     } else {
       Assert(tag == DIF_ABSTRENTRY);
       int refTag = unmarshalRefTag(bs);
       entry = new AbstractionEntry(OK);
-      b->setNoGC(ToInt32(entry), refTag);
+      b->setLocation(entry, refTag);
+#if defined(MFORMAT_3h2)
+      // when a 3#2 pickle is read, setting a location also causes a
+      // gap in the valueRT - see also comments in
+      // BuilderRefTable::set();
+#endif
     }
   }
   return (pc ? code->writeAbstractionEntry(entry,pc) : (ProgramCounter) pc);
 }
-
-#else 
-
-//
-ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,
-				      MarshalerBuffer *bs, int *error)
-{ 
-  int nGRegs = unmarshalNumberRobust(bs, error);
-  if(*error) return ((ProgramCounter) 0);
-  AssRegArray *gregs = PC ? AssRegArray::allocate(nGRegs) : 0;
-
-  for (int i = 0; i < nGRegs; i++) {
-    unsigned int reg = unmarshalNumberRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
-    if (PC) {
-      (*gregs)[i].set(reg>>2,(reg&3));
-    }
-  }
-
-  return (writeAddress(gregs, PC));
-}
-
-//
-ProgramCounter unmarshalLocationRobust(ProgramCounter PC, MarshalerBuffer *bs,
-				     int *error) 
-{
-  int inAr = unmarshalNumberRobust(bs, error);
-  if(*error) return ((ProgramCounter) 0);
-  int outAr = unmarshalNumberRobust(bs, error);
-  if(*error) return ((ProgramCounter) 0);
-
-  OZ_Location::initLocation();
-
-  for (int i = 0; i < inAr+outAr; i++) {
-    int n = unmarshalNumberRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
-    OZ_Location::set(i,n);
-  }
-  return (writeAddress(OZ_Location::getLocation(inAr+outAr), PC));
-}
-
-//
-// 'unmarshalRecordArity' exists in two flavors: one fills a cell in a
-// code area with an 'SRecordArity' value (resp. discards it in "skip"
-// mode), while another one just fills up a given cell;
-ProgramCounter unmarshalRecordArityRobust(Builder *b, ProgramCounter pc, 
-					  MarshalerBuffer *bs, int *error) 
-{
-  RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
-  if(*error) return ((ProgramCounter) 0);
-  if (pc) {
-    if (at == RECORDARITY) {
-      CodeAreaLocation *loc = new CodeAreaLocation(pc);
-      b->getOzValue(putRealRecordArityCA, loc);
-      return (CodeArea::allocateWord(pc));
-    } else {
-      int width = unmarshalNumberRobust(bs, error);
-      if(*error || (at != TUPLEWIDTH)) return ((ProgramCounter) 0);
-      return (CodeArea::writeInt(mkTupleWidth(width), pc));
-    }
-  } else {
-    if (at == RECORDARITY)
-      b->discardOzValue();
-    else
-      skipNumber(bs);
-    return ((ProgramCounter) 0);
-  }
-}
-
-//
-// (of course, this code must resemble 'marshalPredId()')
-ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
-				     ProgramCounter instPC, MarshalerBuffer *bs, 
-				     int *error) 
-{
-  if (pc) {
-    Assert(sizeOf(DEFINITION) == 6);
-    PredIdLocation *loc = new PredIdLocation(pc, instPC + 6);
-
-    //
-    b->getOzValue(getPredIdNameCA, loc);
-    //
-    RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
-    if (at == RECORDARITY) {
-      b->getOzValue(saveRecordArityPredIdCA, loc);
-    } else {
-      Assert(at == TUPLEWIDTH);
-      int width = unmarshalNumberRobust(bs, error);
-      if(*error) return ((ProgramCounter) 0);
-      // set 'SRecordArity' directly (and there will be no arity
-      // list);
-      loc->setSRA(mkTupleWidth(width));
-    }
-    //
-    b->getOzValue(saveFileCA, loc);
-    //
-    loc->setLine(unmarshalNumberRobust(bs, error));
-    if(*error) return ((ProgramCounter) 0);
-    loc->setColumn(unmarshalNumberRobust(bs, error));
-    if(*error) return ((ProgramCounter) 0);
-    //
-    b->getOzValue(saveFlagsListCA, loc);
-    //
-    loc->setMaxX(unmarshalNumberRobust(bs, error));
-    if(*error) return ((ProgramCounter) 0);
-    //
-    loc->setGSize(unmarshalNumberRobust(bs, error));
-    if(*error) return ((ProgramCounter) 0);
-
-    //
-    return (CodeArea::allocateWord(pc));
-
-  } else {
-    //
-    b->discardOzValue();	// name;
-    //
-    RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
-    if (at == RECORDARITY) {
-      b->discardOzValue();	// arity list;
-    } else {
-      Assert(at == TUPLEWIDTH);
-      skipNumber(bs);
-    }
-    //
-    b->discardOzValue();	// file;
-    //
-    skipNumber(bs);		// line & column;
-    skipNumber(bs);
-    //
-    b->discardOzValue();	// flags list;
-    //
-    skipNumber(bs);		// maxX;
-    skipNumber(bs);		// GSize;
-
-    //
-    return ((ProgramCounter) 0);
-  }
-}
-
-//
-ProgramCounter unmarshalCallMethodInfoRobust(Builder *b, ProgramCounter pc, 
-					     MarshalerBuffer *bs, int *error) 
-{
-  int compact = unmarshalNumberRobust(bs, error);
-  if(*error) return ((ProgramCounter) 0);
-
-  //
-  if (pc) {
-    CallMethodInfoLocation *loc = new CallMethodInfoLocation(pc, compact);
-
-    //
-    b->getOzValue(getCallMethodInfoNameCA, loc);
-    //
-    RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
-    if (at == RECORDARITY) {
-      b->getOzValue(saveCallMethodInfoRecordArityCA, loc);
-    } else {
-      Assert(at == TUPLEWIDTH);
-      int width = unmarshalNumberRobust(bs, error);
-      if(*error) return ((ProgramCounter) 0);
-      loc->setSRA(mkTupleWidth(width));
-    }
-
-    //
-    return (CodeArea::allocateWord(pc));
-  } else {
-    b->discardOzValue();	// name;
-    //
-    RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
-    if (at == RECORDARITY)
-      b->discardOzValue();
-    else
-      skipNumber(bs);
-
-    //
-    return ((ProgramCounter) 0);
-  }
-}
-
-//
-ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
-					   MarshalerBuffer *bs, int *error)
-{
-  //
-  if (pc) {
-    (void) unmarshalNumberRobust(bs, error); // Backward compatibility;
-    if (*error) return ((ProgramCounter) 0);
-    int elseLabel = unmarshalNumberRobust(bs, error); /* the else label */
-    if (*error) return ((ProgramCounter) 0);
-    int listLabel = unmarshalNumberRobust(bs, error);
-    if (*error) return ((ProgramCounter) 0);
-    int nEntries = unmarshalNumberRobust(bs, error);
-    if (*error) return ((ProgramCounter) 0);
-    IHashTable *table;
-
-    //
-    table = IHashTable::allocate(nEntries, elseLabel);
-    if (listLabel)
-      table->addLTuple(listLabel);
-
-    //
-    for (int i = 0; i < nEntries; i++) {    
-      int termTag = unmarshalNumberRobust(bs, error);
-      if(*error) return ((ProgramCounter) 0);
-      int label = unmarshalNumberRobust(bs, error);
-      if(*error) return ((ProgramCounter) 0);
-      HashTableEntryDesc *desc = new HashTableEntryDesc(table, label);
-
-      //
-      switch (termTag) {
-      case RECORDTAG:
-	{
-	  b->getOzValue(getHashTableRecordEntryLabelCA, desc);
-	  //
-	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
-	  if(*error) return ((ProgramCounter) 0);
-	  if (at == RECORDARITY) {
-	    b->getOzValue(saveRecordArityHashTableEntryCA, desc);
-	  } else {
-	    Assert(at == TUPLEWIDTH);
-	    int width = unmarshalNumberRobust(bs, error);
-	    if(*error) return ((ProgramCounter) 0);
-	    desc->setSRA(mkTupleWidth(width));
-	  }
-	  break;
-	}
-
-      case ATOMTAG:
-	b->getOzValue(getHashTableAtomEntryLabelCA, desc);
-	break;
-
-      case NUMBERTAG:
-	b->getOzValue(getHashTableNumEntryLabelCA, desc);
-	break;
-
-      default: *error = OK; break;
-      }
-    }
-
-    // 
-    // The hash table is stored already, albeit it is not yet filled
-    // up;
-    return (CodeArea::writeIHashTable(table, pc));
-  } else {
-    skipNumber(bs);		// size
-    skipNumber(bs);		// elseLabel
-    skipNumber(bs);		// listLabel
-    int nEntries = unmarshalNumberRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
-
-    //
-    for (int i = 0; i < nEntries; i++) {
-      int termTag = unmarshalNumberRobust(bs, error);
-      if(*error) return ((ProgramCounter) 0);
-      skipNumber(bs);		// label
-
-      //
-      switch (termTag) {
-      case RECORDTAG:
-	{
-	  b->discardOzValue();
-	  //
-	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
-	  if(*error) return ((ProgramCounter) 0);
-	  if (at == RECORDARITY)
-	    b->discardOzValue();
-	  else
-	    skipNumber(bs);
-	  break;
-	}
-
-      case ATOMTAG:
-	b->discardOzValue();
-	break;
-
-      case NUMBERTAG:
-	b->discardOzValue();
-	break;
-
-      default: *error = OK; break;
-      }
-    }
-
-    //
-    return ((ProgramCounter) 0);
-  }
-}
-
-//
-ProgramCounter unmarshalProcedureRefRobust(Builder *b, ProgramCounter pc,
-					   MarshalerBuffer *bs, CodeArea *code, 
-					   int *error)
-{
-  AbstractionEntry *entry = 0;
-  Bool copyable = unmarshalNumberRobust(bs, error);
-  if(*error) return ((ProgramCounter) 0);
-  if (copyable) {
-    MarshalTag tag = (MarshalTag) bs->get();
-    if (tag == DIF_REF) {
-      int i = unmarshalNumberRobust(bs, error);
-      if(*error) return ((ProgramCounter) 0);
-      entry = (AbstractionEntry*) ToPointer(b->get(i));
-    } else {
-      Assert(tag == DIF_ABSTRENTRY);
-      int refTag = unmarshalRefTagRobust(bs, b, error);
-      if(*error || (tag != DIF_ABSTRENTRY)) return ((ProgramCounter) 0);
-      entry = new AbstractionEntry(OK);
-      b->setNoGC(ToInt32(entry),refTag);
-    }
-  }
-  return ((pc && !(*error)) ? code->writeAbstractionEntry(entry,pc)
-	  : (ProgramCounter) pc);
-}
-
-#endif // defined(USE_FAST_UNMARSHALER)
 
 #endif // !defined(TEXT2PICKLE)

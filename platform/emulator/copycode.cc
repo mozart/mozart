@@ -29,15 +29,19 @@
 #include "value.hh"
 #include "codearea.hh"
 
-#define CheckHT(Type,Val)			\
-  Type aux = (Type)ht->htFind(ToInt32(Val));	\
-  if ((uint32)ToInt32(aux) != ToInt32(htEmpty))	\
+#define CheckHTPtr(Type,Ptr)				\
+  Type aux = (Type) ht->htFind(Ptr);			\
+  if ((uint32)ToInt32(aux) != ToInt32(htEmpty))		\
+    return aux;
+#define CheckHTVal(Type,Val)				\
+  Type aux = (Type) ht->htFind(ToPointer(Val));		\
+  if ((uint32)ToInt32(aux) != ToInt32(htEmpty))		\
     return aux;
 
 static
 inline
 TaggedRef checkTagged(TaggedRef t, AddressHashTable *ht) {
-  CheckHT(TaggedRef,t);
+  CheckHTVal(TaggedRef, t);
   return t;
 }
 
@@ -58,10 +62,10 @@ CallMethodInfo *checkGCI(CallMethodInfo *cmi, AddressHashTable *ht)
   // if (newname == gci->mn)
   //   return gci;
 
-  CheckHT(CallMethodInfo *,cmi);
+  CheckHTPtr(CallMethodInfo *,cmi);
   
   aux = new CallMethodInfo(cmi->regIndex,newname,cmi->isTailCall,cmi->arity);
-  ht->htAdd(ToInt32(cmi),aux);
+  ht->htAdd(cmi, aux);
   return aux;
 }
 
@@ -79,7 +83,7 @@ void handleCallMethodInfo(ProgramCounter PC, AddressHashTable *ht)
 static 
 SRecordArity doCheckSRA(SRecordArity sra, AddressHashTable *ht) {
   Assert(!sraIsTuple(sra))
-  CheckHT(SRecordArity,sra);
+  CheckHTVal(SRecordArity,sra);
 
   TaggedRef list = getRecordArity(sra)->getList();
   TaggedRef newlist = oz_nil();
@@ -93,7 +97,7 @@ SRecordArity doCheckSRA(SRecordArity sra, AddressHashTable *ht) {
   newlist = reverseC(newlist);
   Assert(isSorted(newlist));
   aux = mkRecordArity(aritytable.find(newlist));
-  ht->htAdd(sra,ToPointer(aux));
+  ht->htAdd(ToPointer(sra), ToPointer(aux));
   return aux;
 }
 
@@ -110,14 +114,14 @@ static
 inline
 PrTabEntry *checkPTE(PrTabEntry *pte, AddressHashTable *ht)
 {
-  CheckHT(PrTabEntry *,pte);
+  CheckHTPtr(PrTabEntry *,pte);
   
   aux = new PrTabEntry(pte->getName(), checkSRA(pte->getMethodArity(), ht),
 		       pte->getFile(), pte->getLine(), pte->getColumn(), 
 		       pte->getFlagsList(),
 		       pte->getMaxX());
   aux->setGSize(pte->getGSize()); // does not change;
-  ht->htAdd(ToInt32(pte), aux);
+  ht->htAdd(pte, aux);
   return aux;
 }
 
@@ -147,7 +151,7 @@ static
 inline
 AbstractionEntry *checkAE(AbstractionEntry *ae, AddressHashTable *ht)
 {
-  CheckHT(AbstractionEntry *,ae);
+  CheckHTPtr(AbstractionEntry *,ae);
   return ae;
 }
 
@@ -203,7 +207,7 @@ ProgramCounter copyCode(PrTabEntry *ope, PrTabEntry *pe,
 {
   AddressHashTable *ht = new AddressHashTable(100);
   // kost@ : The entry for the whole thing is already known, so:
-  ht->htAdd(ToInt32(ope), pe);
+  ht->htAdd(ope, pe);
   
   list = oz_deref(list);
 
@@ -217,11 +221,11 @@ ProgramCounter copyCode(PrTabEntry *ope, PrTabEntry *pe,
 	(AbstractionEntry *) oz_getForeignPointer(key);
       Assert(oldentry->isCopyable());
       AbstractionEntry *newentry = new AbstractionEntry(NO);
-      ht->htAdd(ToInt32(oldentry),newentry);
+      ht->htAdd(oldentry, newentry);
     } else {
       NamedName *theCopy =
 	((NamedName *) tagged2Literal(key))->generateCopy();
-      ht->htAdd(ToInt32(key),ToPointer(makeTaggedLiteral(theCopy)));
+      ht->htAdd(ToPointer(key), ToPointer(makeTaggedLiteral(theCopy)));
     }
     list = oz_deref(oz_tail(list));
     Assert(!oz_isRef(list));

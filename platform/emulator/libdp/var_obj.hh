@@ -113,7 +113,7 @@ public:
   }
 
 public:
-  virtual void marshal(ByteBuffer *);
+  virtual void marshal(ByteBuffer *, Bool hasCoRefsIndex);
   //
   void transfer(Object *o, BorrowEntry *be);
 };

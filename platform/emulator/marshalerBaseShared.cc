@@ -39,20 +39,6 @@
 // with distinct signatures.
 
 //
-void marshalFloat(MARSHALERBUFFER *bs, double d)
-{
-  static DoubleConv dc;
-  dc.u.d = d;
-  if (lowendian) {
-    marshalNumber(bs, dc.u.i[0]);
-    marshalNumber(bs, dc.u.i[1]);
-  } else {		       
-    marshalNumber(bs, dc.u.i[1]);
-    marshalNumber(bs, dc.u.i[0]);
-  }
-}
-
-//
 void marshalSmallInt(MARSHALERBUFFER *bs, OZ_Term siTerm)
 {
   marshalDIF(bs, DIF_SMALLINT);
@@ -62,8 +48,16 @@ void marshalSmallInt(MARSHALERBUFFER *bs, OZ_Term siTerm)
 //
 void marshalFloat(MARSHALERBUFFER *bs, OZ_Term floatTerm)
 {
+  static DoubleConv dc;
   marshalDIF(bs, DIF_FLOAT);
-  marshalFloat(bs, tagged2Float(floatTerm)->getValue());
+  dc.u.d = tagged2Float(floatTerm)->getValue();
+  if (lowendian) {
+    marshalNumber(bs, dc.u.i[0]);
+    marshalNumber(bs, dc.u.i[1]);
+  } else {		       
+    marshalNumber(bs, dc.u.i[1]);
+    marshalNumber(bs, dc.u.i[0]);
+  }
 }
 
 //
@@ -78,53 +72,19 @@ void marshalGName(MARSHALERBUFFER *bs, GName *gname)
 }
 
 //
-void marshalLiteral(MARSHALERBUFFER *bs, OZ_Term litTerm, int litTermInd)
-{
-  Literal *lit = tagged2Literal(litTerm);
-
-  MarshalTag litTag;
-  GName *gname = NULL;
-
-  if (lit->isAtom()) {
-    litTag = DIF_ATOM;
-  } else if (lit->isUniqueName()) {
-    litTag = DIF_UNIQUENAME;
-  } else if (lit->isCopyableName()) {
-    litTag = DIF_COPYABLENAME;
-  } else {
-    litTag = DIF_NAME;
-    gname = ((Name *) lit)->globalize();
-  }
-
-  marshalDIF(bs, litTag);
-  const char *name = lit->getPrintName();
-  marshalTermDef(bs, litTermInd);
-  marshalString(bs, name);
-  if (gname) marshalGName(bs, gname);
-}
-
-//
-void marshalBigInt(MARSHALERBUFFER *bs, OZ_Term biTerm, ConstTerm *biConst)
-{ 
-  marshalDIF(bs, DIF_BIGINT);
-  marshalString(bs, toC(biTerm));
-}
-
-
-//
-void marshalProcedureRef(GenTraverser *gt,
+void marshalProcedureRef(AddressHashTableO1Reset *lIT,
 			 AbstractionEntry *entry, MARSHALERBUFFER *bs)
 {
   Bool copyable = entry && entry->isCopyable();
   marshalNumber(bs, copyable);
   if (copyable) {
-    int ind = gt->findLocation(entry);
+    int ind = ToInt32(lIT->htFind(entry));
     if (ind >= 0) {
       marshalDIF(bs, DIF_REF);
       marshalTermRef(bs, ind);
     } else {
       marshalDIF(bs, DIF_ABSTRENTRY);
-      rememberLocation(gt, bs, entry);
+      rememberLocation(lIT, bs, entry);
     }
   } else {
     Assert(entry==NULL || entry->getAbstr() != NULL);

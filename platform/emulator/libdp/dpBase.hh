@@ -55,7 +55,6 @@ class ObjectVar;
 class ExportedProxyVar;
 class GCStubVar;
 class DPMarshaler;
-class MsgTermSnapshot;
 
 //
 typedef unsigned int FaultInfo;

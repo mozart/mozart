@@ -53,25 +53,12 @@ VSMarshalerBufferOwned* composeVSUnusedShmIdMsg(DSite *s, key_t shmid);
 //
 VSMsgType getVSMsgType(VSMarshalerBufferImported *mb);
 //
-#ifdef USE_FAST_UNMARSHALER   
 void decomposeVSInitMsg(VSMarshalerBuffer *mb, DSite* &s);
 void decomposeVSSiteIsAliveMsg(VSMarshalerBuffer *mb, DSite* &s);
 void decomposeVSSiteAliveMsg(VSMarshalerBuffer *mb, DSite* &s, VirtualSite* &vs);
 void decomposeVSSiteDeadMsg(VSMarshalerBuffer *mb, DSite* &ds, VirtualSite* &dvs);
 void decomposeVSYourIndexHereMsg(VSMarshalerBuffer *mb, int &index);
 void decomposeVSUnusedShmIdMsg(VSMarshalerBuffer *mb, DSite* &s, key_t &shmid);
-#else
-void decomposeVSInitMsgRobust(VSMarshalerBuffer *mb, DSite* &s, int* error);
-void decomposeVSSiteIsAliveMsgRobust(VSMarshalerBuffer *mb, DSite* &s, int* error);
-void decomposeVSSiteAliveMsgRobust(VSMarshalerBuffer *mb, DSite* &s, 
-				   VirtualSite* &vs, int* error);
-void decomposeVSSiteDeadMsgRobust(VSMarshalerBuffer *mb, DSite* &ds, 
-				  VirtualSite* &dvs, int* error);
-void decomposeVSYourIndexHereMsgRobust(VSMarshalerBuffer *mb, 
-				       int &index, int* error);
-void decomposeVSUnusedShmIdMsgRobust(VSMarshalerBuffer *mb, DSite* &s, 
-				     key_t &shmid, int* error);
-#endif
 
 //
 // Messages are queued up using the field of the message itself, 

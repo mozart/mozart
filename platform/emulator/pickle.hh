@@ -43,29 +43,47 @@
 void initPickleMarshaler();
 
 //
+#define ValuesITInitSize	2048
+#define LocationsITInitSize	256
+
+//
 class Pickler : public GenTraverser {
 private:
+  MarshalerDict *vIT;		// shared with the resource excavator;
+  // index table for (C heap) locations;
+  AddressHashTableO1Reset *lIT;
+  //
   Bool cc;			// cloneCells;
 
+  // 
 public:
-  ~Pickler() {}
-  void init(Bool ccIn) {
-    cc = ccIn;
+  void resetPickler() {
+    DebugCode(cc = TRUE;);
+    lIT->mkEmpty();
   }
+  //
+  Pickler(MarshalerDict *vITin)
+    : vIT(vITin) {
+    lIT = new AddressHashTableO1Reset(LocationsITInitSize);
+    resetPickler();
+  }
+  ~Pickler() {}
+
+  //
+  void setCloneCells(Bool ccIn) { cc = ccIn; }
 
   //
   void processSmallInt(OZ_Term siTerm);
   void processFloat(OZ_Term floatTerm);
   void processLiteral(OZ_Term litTerm);
   void processExtension(OZ_Term extensionTerm);
-  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   void processPort(OZ_Term portTerm, Tertiary *portTert);
   void processResource(OZ_Term resTerm, Tertiary *tert);
-  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
-  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -83,6 +101,7 @@ public:
   //
   void traverse(OZ_Term t);
   void resume(Opaque *o);
+  void resume();
 
   //
   Bool cloneCells() { return (cc); }
@@ -97,6 +116,10 @@ public:
 // Extract resources & nogoods from a term into lists;
 class ResourceExcavator : public GenTraverser {
 private:
+  // index table for (Oz) values (but not for locations: we don't
+  // marshal anything now). It is shared with the pickler;
+  MarshalerDict *vIT;
+  //
   Bool cc;			// cloneCells;
   OZ_Term resources;
   OZ_Term nogoods;
@@ -108,25 +131,33 @@ private:
 
   //
 public:
-  ~ResourceExcavator() {}
-  void init(Bool ccIn) {
-    cc = ccIn;
+  void resetResourceExcavator() {
+    DebugCode(cc = TRUE;);
     resources = nogoods = oz_nil();
+    vIT->mkEmpty();
   }
+  //
+  ResourceExcavator(MarshalerDict *vITin)
+    : vIT(vITin) {
+    resetResourceExcavator();
+  }
+  ~ResourceExcavator() {}
+
+  //
+  void setCloneCells(Bool ccIn) { cc = ccIn; }
 
   //
   void processSmallInt(OZ_Term siTerm);
   void processFloat(OZ_Term floatTerm);
   void processLiteral(OZ_Term litTerm);
   void processExtension(OZ_Term extensionTerm);
-  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   void processPort(OZ_Term portTerm, Tertiary *portTert);
   void processResource(OZ_Term resTerm, Tertiary *tert);
-  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
-  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -144,9 +175,12 @@ public:
   //
   void traverse(OZ_Term t);
   void resume(Opaque *o);
+  void resume();
 
   // (from former MarshalerBuffer's 'visit()' business;)
   Bool cloneCells() { return (cc); }
+
+  //
   OZ_Term getResources()      { return (resources); }
   OZ_Term getNoGoods()        { return (nogoods); }
 };
@@ -178,10 +212,15 @@ inline
 void extractResources(OZ_Term in, Bool cloneCells,
 		      OZ_Term &resources, OZ_Term &nogoods)
 {
-  re.init(cloneCells);
+  // reset both the resource excavator and the pickler;
+  re.resetResourceExcavator();
+  pickler.resetPickler();
+  //
+  re.setCloneCells(cloneCells);
   re.prepareTraversing((Opaque *) 0);
   re.traverse(in);
   re.finishTraversing();
+  //
   resources = re.getResources();
   nogoods = re.getNoGoods();
 }
@@ -189,9 +228,9 @@ void extractResources(OZ_Term in, Bool cloneCells,
 //
 // Interface procedures;
 inline
-void pickleTerm(PickleMarshalerBuffer *bs, OZ_Term term, Bool cloneCells)
+void pickleTerm(OZ_Term term, PickleMarshalerBuffer *bs, Bool cloneCells)
 {
-  pickler.init(cloneCells);
+  pickler.setCloneCells(cloneCells);
   pickler.prepareTraversing((Opaque *) bs);
   pickler.traverse(term);
   pickler.finishTraversing();
@@ -204,11 +243,7 @@ OZ_Term unpickleTermInternal(PickleMarshalerBuffer *);
 //
 // Interface procedures. 
 inline
-#ifdef USE_FAST_UNMARSHALER   
 OZ_Term unpickleTerm(PickleMarshalerBuffer *bs)
-#else
-OZ_Term unpickleTermRobust(PickleMarshalerBuffer *bs)
-#endif
 {
   unpickler.prepareBuild();
   return unpickleTermInternal(bs);

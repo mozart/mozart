@@ -34,11 +34,7 @@
 class MarshalerBuffer;
 void marshalNumber(MarshalerBuffer *bs, unsigned int i);
 
-#ifdef USE_FAST_UNMARSHALER   
 unsigned int unmarshalNumber(MarshalerBuffer *);
-#else
-unsigned int unmarshalNumberRobust(MarshalerBuffer *, int *);
-#endif
 
 class Word: public OZ_Extension {
 private:
@@ -101,17 +97,16 @@ public:
   void sCloneRecurseV(void) {}
 
   OZ_Boolean toBePickledV() { return (OZ_TRUE); }
-  OZ_Boolean pickleV(MarshalerBuffer *bs) {
+  void pickleV(MarshalerBuffer *bs, GenTraverser *gt) {
     marshalNumber(bs, size);
     marshalNumber(bs, value);
-    return (OZ_TRUE);
   }
 
   //
   virtual OZ_Boolean toBeMarshaledV() { return (NO); }
-  virtual
-  OZ_Boolean marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt)
-  { return (NO); }
+  virtual void marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt) {
+    Assert(0);
+  }
 };
 
 inline static bool OZ_isWord(OZ_Term t) {
@@ -131,31 +126,27 @@ inline static Word *OZ_WordToC(OZ_Term t) {
 #define OZ_RETURN_WORD(size, value) OZ_RETURN(OZ_word(size, value))
 
 static
-OZ_Term unmarshalWord(MarshalerBuffer *bs)
+OZ_Term unmarshalWord(MarshalerBuffer *bs, Builder*)
 {
-#ifdef USE_FAST_UNMARSHALER   
   int size = unmarshalNumber(bs);
   int value = unmarshalNumber(bs);
-#else
-  int error;
-  int size = unmarshalNumberRobust(bs, &error);
-  int value = unmarshalNumberRobust(bs, &error);
-#endif
-  return OZ_word(size, value);
+  return (OZ_word(size, value));
 }
 
 static
-OZ_Term suspUnmarshalWord(ByteBuffer *mb, GTAbstractEntity* &bae)
+OZ_Term suspUnmarshalWord(ByteBuffer *mb, Builder*,
+			  GTAbstractEntity* &bae)
 {
   Assert(0);
-  return ((OZ_Term) 0);
+  return (UnmarshalEXT_Error);
 }
 
 static
-OZ_Term unmarshalWordCont(ByteBuffer *mb, GTAbstractEntity* bae)
+OZ_Term unmarshalWordCont(ByteBuffer *mb, Builder*,
+			  GTAbstractEntity* bae)
 {
   Assert(0);
-  return ((OZ_Term) 0);
+  return (UnmarshalEXT_Error);
 }
 
 
