@@ -1426,21 +1426,11 @@ OZ_BI_define(unix_pipe,2,2) {
 
   PROCESS_INFORMATION pinf;
   
-  /* win32 does not support process groups,
-   * so we set OZPPID such that subprocess can check whether
-   * its father still lives
-   */
-  char auxbuf[100];
-  int ppid = GetCurrentProcessId();
-  sprintf(auxbuf,"%d",ppid);
-  SetEnvironmentVariableA("OZPPID",strdup(auxbuf));
-
-
   HANDLE saveout = GetStdHandle(STD_OUTPUT_HANDLE);
   HANDLE saveerr = GetStdHandle(STD_ERROR_HANDLE);
   HANDLE savein  = GetStdHandle(STD_INPUT_HANDLE);
   HANDLE rh1,wh1,rh2,wh2;
-message(buf);
+
   if (!CreatePipe(&rh1,&wh1,&sa,0)  ||
       !CreatePipe(&rh2,&wh2,&sa,0)  ||
       !SetStdHandle((DWORD)STD_OUTPUT_HANDLE,wh1) ||
