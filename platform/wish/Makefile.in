@@ -8,6 +8,7 @@ INSTALL         = @INSTALL@
 INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_DIR     = @INSTALL_DIR@
 CC              = @CC@
+CXX             = @CXX@
 
 LIBS            = @LIBS@
 EXTRALDFLAGS    = @EXTRALDFLAGS@
@@ -24,16 +25,19 @@ WINDLLDIR       = @WINDLLDIR@
 
 OZWISH          = tk.exe
 SRCS            = @SRCS@
-OBJS            = ${SRCS:.c=.o}
+OBJS            = ${SRCS:.cc=.o}
 
 .PHONY: $(PROVIDETCLLIBS)
+
+.SUFFIXES: .cc .o .c $(SUFFIXES)
+
 
 all: $(OZWISH)
 
 bootstrap: all
 
 $(OZWISH): $(OBJS)
-        $(CC) $(LDFLAGS) $(EXTRALDFLAGS) -o $@ $(OBJS) $(LIBS)
+        $(CXX) $(LDFLAGS) $(EXTRALDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean:
         -rm -f $(OBJS) *~

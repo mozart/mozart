@@ -31,7 +31,7 @@ dnl INITIALIZE
 dnl *****************************************************************
 
 dnl This will check that we are in the Oz directory and initiate
-AC_INIT(ozMain.c)
+AC_INIT(unixMain.cc)
 
 
 dnl *****************************************************************
@@ -40,7 +40,6 @@ dnl *****************************************************************
 
 case "$target" in
    NONE)
-        SRCS="ozMain.c ozAppInit.c"
    ;;
    i386-mingw32)
         platform=win32-i486
@@ -51,13 +50,13 @@ case "$target" in
     ;;
 esac
 
-AC_SUBST(SRCS)
 AC_SUBST(EXTRALDFLAGS)
 
 dnl ******************************************************************
 OZ_INIT
 
 OZ_CC_CHOOSE
+OZ_CXX_CHOOSE
 
 AC_PROG_LN_S
 
@@ -76,7 +75,7 @@ case "$platform" in
         LDFLAGS="$oz_a $LDFLAGS"
         CPPFLAGS="$oz_a $CPPFLAGS"
         EXTRALDFLAGS="-mwindows -s"
-        SRCS="winMain.c"
+        SRCS="winMain.cc"
         INSTALLWINDLLS=installwindlls
         : ${WINDLLDIR=$windlldir}
         for i in tcl80.dll tk80.dll msvcrt.dll; do
@@ -92,10 +91,11 @@ case "$platform" in
    *)
         WINDLLDIR=""
         INSTALLWINDLLS=""
-        SRCS="ozMain.c ozAppInit.c"
+        SRCS="unixMain.cc"
     ;;
 esac
 
+AC_SUBST(SRCS)
 AC_SUBST(WINDLLDIR)
 AC_SUBST(INSTALLWINDLLS)
 
@@ -125,6 +125,7 @@ dnl *****************************************************************
 
 # intl is required when linking statically
 AC_CHECK_LIB(intl, dgettext)
+AC_CHECK_LIB(wsock32,main)
 
 case "$platform" in
    irix6*)
