@@ -1314,7 +1314,6 @@ static WeakStack weakStack;
 
 void WeakStack::recurse(void)
 {
-  fprintf(stderr,"WeakStack::recurse\n");
   OZ_Term fut,val;
   while (!isEmpty()) {
     pop(fut,val);
@@ -1334,13 +1333,11 @@ inline int isNowMarked(OZ_Term t)
 }
 
 void WeakDictionary::gcRecurseV(void) {
-  fprintf(stderr,"WeakDictionary::gcRecurseV\n");
   if (stream) OZ_collect(&stream);
 }
 
 void WeakDictionary::weakGC()
 {
-  fprintf(stderr,"WeakDictionary::weakGC begin\n");
   int numelem = table->numelem;
   // go through the table and finalize each entry whose value is not
   // marked.  also clear these entries.
@@ -1351,7 +1348,6 @@ void WeakDictionary::weakGC()
     TaggedRef t = table->getValue(i);
     if (t!=0 && !isNowMarked(t)) {
       numelem--;
-      fprintf(stderr,"  found garbage entry\n");
       if (stream) {
 	if (!list) newstream=list=oz_newFuture(oz_rootBoard());
 	OZ_Term k = table->getKey(i);
@@ -1366,7 +1362,6 @@ void WeakDictionary::weakGC()
   }
   // then update the stream
   if (stream && list) {
-    fprintf(stderr,"  pushing stream update on weakStack\n");
     weakStack.push(stream,list);
     stream=newstream;
   }
@@ -1376,14 +1371,12 @@ void WeakDictionary::weakGC()
   for (dt_index i=table->size;i--;) {
     OZ_Term v = frm->getValue(i);
     if (v!=0) {
-      fprintf(stderr,"  collecting remaining entry\n");
       OZ_Term k = frm->getKey(i);
       OZ_collect(&k);
       OZ_collect(&v);
       put(k,v);
     }
   }
-  fprintf(stderr,"WeakDictionary::weakGC end\n");
 }
 
 // ===================================================================
