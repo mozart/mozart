@@ -244,6 +244,7 @@ void Statistics::printRunning(FILE *fd)
 {
   if (ozconf.showIdleMessage) {
     fprintf(fd,"running...\n");
+    fflush(fd);
   }
 
 #ifdef WINDOWS
