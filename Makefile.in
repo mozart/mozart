@@ -135,7 +135,8 @@ src: $(PACKDIR)
 	(cd $(PACKDIR); \
 	 (cd $(SRCTOP)/..; \
 	  $(TAR) -cf - mozart) | $(TAR) -xf - ; \
-	 find mozart -name CVS -type d -exec rm -rf '{}' ';' 2>/dev/null ; \
+	 tbr=`find mozart -name CVS -type d 2>/dev/null` ; \
+	 rm -rf $$tbr ; \
 	 find mozart -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
 	 mv mozart mozart-`$(OZVERSION)`.$(OZBUILD); \
 	 $(TAR) -cf - mozart-`$(OZVERSION)`.$(OZBUILD) ) | \
