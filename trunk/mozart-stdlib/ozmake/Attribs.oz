@@ -111,7 +111,7 @@ define
 	 MogulUrl    : unit
 	 ConfigAction: unit
 	 TarTargets  : nil
-	 Fast        : false
+	 Fast        : true
 	 WantVersion : unit
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
