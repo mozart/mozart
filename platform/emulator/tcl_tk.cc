@@ -162,7 +162,9 @@ OZ_Return isTcl(TaggedRef tcl) {
   } else if (isLiteral(tcl_tag)) {
     if (tagged2Literal(tcl)->isAtom()) {
       return PROCEED;
-    } else if (literalEq(tcl,NameTrue) || literalEq(tcl,NameFalse)) {
+    } else if (literalEq(tcl,NameTrue) ||
+               literalEq(tcl,NameFalse) ||
+               literalEq(tcl,NameUnit)) {
       return PROCEED;
     }
     return FAILED;
@@ -623,6 +625,8 @@ void tcl2buffer(TaggedRef tcl) {
       tcl_put('1');
     } else if (literalEq(tcl,NameFalse)) {
       tcl_put('0');
+    } else if (literalEq(tcl,NameUnit)) {
+      ;
     }
   } else if (isCons(tcl_tag)) {
     start_protect();
