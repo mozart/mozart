@@ -486,10 +486,11 @@ protected:
   //
 public:
   //
-  // 'reset()' returns the traverser to the original state;
+  // 'reset()' returns the traverser to the original state.
+  // This method may be used if marshaling failed;
   void reset() {
     CrazyDebug(debugNODES = 0;); 
-    DebugCode(proc = (ProcessNodeProc) -1;); // not used;
+    Assert(proc == (ProcessNodeProc) -1); // not used;
     DebugCode(opaque = (Opaque *) -1);
     keepRunning = NO;
     clear();
@@ -497,7 +498,10 @@ public:
   }
 
   //
-  GenTraverser() { reset(); }
+  GenTraverser() {
+    DebugCode(proc = (ProcessNodeProc) -1;); // not used;
+    reset();
+  }
   virtual ~GenTraverser() {}
 
   //
@@ -565,9 +569,9 @@ public:
   // specify values to be marshaled with 'traverseOne()', and finish
   // with 'finishTraversing()':
   void prepareTraversing(Opaque *o) {
-    Assert(proc == (ProcessNodeProc) -1);
-    Assert(keepRunning == NO);	// not used;
+    Assert(proc == (ProcessNodeProc) -1); // not used;
     Assert(opaque == (Opaque *) -1); // otherwise that's recursive;
+    Assert(keepRunning == NO);	// not used;
     Assert(o != (Opaque *) -1);	     // not allowed (limitation);
     opaque = o;
     keepRunning = OK;
@@ -585,8 +589,9 @@ public:
   void finishTraversing() {
     Assert(isEmpty());
     DebugCode(opaque = (Opaque *) -1);
-    DebugCode(proc = (ProcessNodeProc) -1;); // not used;
+    Assert(proc == (ProcessNodeProc) -1); // not used;
     keepRunning = NO;
+    unwindGTIT();
   }
 
   //
