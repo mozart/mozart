@@ -865,7 +865,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     Propagator::setRunningPropagator(prop);
 
     switch (oz_runPropagator(prop)) {
-    case FAILED:						
+    case OZ_FAILED:						
 
 #ifdef NAME_PROPAGATORS
       // this is experimental: a top-level failure with set
@@ -883,13 +883,13 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
       oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return FAILED;					        
-    case SLEEP:		
+    case OZ_SLEEP:		
       oz_sleepPropagator(prop);
       break;						
     case SCHEDULED:					
       oz_preemptedPropagator(prop);
       break;						
-    case PROCEED:						
+    case OZ_ENTAILED:						
       oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return PROCEED;                                     
