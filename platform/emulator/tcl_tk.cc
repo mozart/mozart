@@ -242,7 +242,7 @@ OZ_Return isTcl(TaggedRef tcl) {
     }
 
   } else if (isCons(tcl_tag)) {
-    OZ_assertString(tcl);
+    OZ_assertProperString(tcl);
     return PROCEED;
   }
 
@@ -325,6 +325,7 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
     }
   }
   error("isTclFilter");
+  return FAILED;
 } OZ_C_proc_end
 
 

@@ -523,7 +523,6 @@ enum TypeOfConst {
   Co_Chunk,
   Co_Array,
   Co_Dictionary,
-  Co_Group,
   Dummy      // GCTAG
 };
 
@@ -571,49 +570,6 @@ public:
   Board *getBoardFast();
 };
 
-/*===================================================================
- * Group
- *=================================================================== */
-
-inline Bool isGroup(TaggedRef term)
-{
-  return isConst(term) && tagged2Const(term)->getType() == Co_Group;
-}
-
-inline
-Group *tagged2Group(TaggedRef term)
-{
-  Assert(isGroup(term));
-  return (Group *) tagged2Const(term);
-}
-
-class Group : public ConstTerm {
-  friend void ConstTerm::gcConstRecurse(void);
-private:
-  TaggedRef exceptionHandler;
-  Group *parent;
-public:
-  Group *gcGroup();
-  OZPRINT;
-  OZPRINTLONG;
-
-  Group(Group *p) : ConstTerm(Co_Group), parent(p)
-  {
-    if (parent) {
-      exceptionHandler = parent->getExceptionHandler();
-    } else {
-      exceptionHandler = 0;
-    }
-  }
-
-  void setExceptionHandler(TaggedRef hdl);
-
-  TaggedRef getExceptionHandler() {
-    return exceptionHandler;
-  }
-
-  Group *getParent()  { return parent; }
-};
 
 /*===================================================================
  * HeapChunk
@@ -1328,40 +1284,6 @@ Bool isChunk(TaggedRef t)
 }
 
 /*===================================================================
- * Threads
- *=================================================================== */
-
-class OzThread: public ConstTermWithHome {
-  friend void ConstTerm::gcConstRecurse(void);
-private:
-  Thread* t;
-
-public:
-  OzThread(Board *b, Thread *th) : ConstTermWithHome(b,Co_Thread)
-  {
-    t = th;
-  }
-
-  Thread  *th() { return t; }
-
-  OZPRINT;
-  OZPRINTLONG;
-};
-
-inline
-Bool isThread(TaggedRef term)
-{
-  return isConst(term) && tagged2Const(term)->getType() == Co_Thread;
-}
-
-inline
-OzThread *tagged2Thread(TaggedRef term)
-{
-  Assert(isThread(term));
-  return (OzThread *) tagged2Const(term);
-}
-
-/*===================================================================
  * Arrays
  *=================================================================== */
 
@@ -1399,7 +1321,7 @@ public:
   {
     n -= offset;
     if (n>=getWidth() || n<0)
-      TypeErrorM("index out of range");
+      return OZ_raiseC("array",2,makeTaggedConst(this),OZ_int(n));
 
     out = getArgs()[n];
     Assert(isRef(out) || !isAnyVar(out));
@@ -1413,7 +1335,7 @@ public:
 
     n -= offset;
     if (n>=getWidth() || n<0)
-      TypeErrorM("index out of range");
+      return OZ_raiseC("array",2,makeTaggedConst(this),OZ_int(n));
 
     getArgs()[n] = val;
     return PROCEED;

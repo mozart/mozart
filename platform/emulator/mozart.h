@@ -102,6 +102,7 @@ extern int _FUNDECL(OZ_isVariable,(OZ_Term));
 
 extern int _FUNDECL(OZ_isList,(OZ_Term, OZ_Term *));
 extern int _FUNDECL(OZ_isString,(OZ_Term, OZ_Term *));
+extern int _FUNDECL(OZ_isProperString,(OZ_Term, OZ_Term *));
 extern int _FUNDECL(OZ_isVirtualString,(OZ_Term, OZ_Term *));
 
 #define OZ_assertList(t)                        \
@@ -113,10 +114,10 @@ extern int _FUNDECL(OZ_isVirtualString,(OZ_Term, OZ_Term *));
     }                                           \
   }
 
-#define OZ_assertString(t)                      \
+#define OZ_assertProperString(t)                \
   {                                             \
     OZ_Term var;                                \
-    if (!OZ_isString(t,&var)) {                 \
+    if (!OZ_isProperString(t,&var)) {           \
       if (var == 0) return FAILED;              \
       OZ_suspendOn(var);                        \
     }                                           \
@@ -398,13 +399,13 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
    VAR = OZ_atomToC(OZ_getCArg(ARG));           \
  }
 
-#define OZ_declareStringArg(ARG,VAR)                    \
+#define OZ_declareProperStringArg(ARG,VAR)              \
  char *VAR;                                             \
  {                                                      \
    OZ_Term OZ_avar;                                     \
-   if (!OZ_isString(OZ_getCArg(ARG),&OZ_avar)) {        \
+   if (!OZ_isProperString(OZ_getCArg(ARG),&OZ_avar)) {  \
      if (OZ_avar == 0) {                                \
-       return OZ_typeError(ARG,"String");               \
+       return OZ_typeError(ARG,"ProperString");         \
      } else {                                           \
        OZ_suspendOn(OZ_avar);                           \
      }                                                  \

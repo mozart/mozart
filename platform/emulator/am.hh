@@ -18,6 +18,9 @@
 
 #include <setjmp.h>
 
+#include "oz.h"
+#include "oz_cpi.hh"
+
 #include "types.hh"
 
 #include "tagged.hh"
@@ -208,6 +211,17 @@ public:
                           int arity=0, TaggedRef *arguments=NULL);
   Bool hookCheckNeeded();
   Bool isNotPreemtiveScheduling(void);
+
+  RunnableThreadBody* allocateBody();
+  Thread *mkRunnableThread(int prio, Board *bb,
+                           TaggedRef val,
+                           Bool inSolve=NO);
+  Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
+  Thread *mkWakeupThread(Board *bb);
+  Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
+  Thread *mkSuspendedThread(Board *bb, int prio, TaggedRef val);
+
+
   Thread *mkSuspThread ();
   void suspendCond(AskActor *aa);
 

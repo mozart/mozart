@@ -117,10 +117,14 @@ int OZ_isObject(OZ_Term term)
 
 /*
  * list checking
+ *   checkChar:
+ *     0 = any list
+ *     1 = list of char
+ *     2 = list of char != 0
  */
 
 inline
-int isList(OZ_Term l, OZ_Term *var, Bool checkChar)
+int isList(OZ_Term l, OZ_Term *var, int checkChar)
 {
   while (1) {
     DEREF(l,lPtr,lTag);
@@ -140,6 +144,7 @@ int isList(OZ_Term l, OZ_Term *var, Bool checkChar)
         if (!isSmallInt(hTag)) return 0;
         int i=smallIntValue(h);
         if (i<0 || i>255) return 0;
+        if (checkChar>1 && i==0) return 0;
       }
       l = tail(l);
     } else if (isNil(l)) {
@@ -153,13 +158,19 @@ int isList(OZ_Term l, OZ_Term *var, Bool checkChar)
 int OZ_isString(OZ_Term term,OZ_Term *var)
 {
   if (var) *var = 0;
-  return isList(term,var,OK);
+  return isList(term,var,1);
+}
+
+int OZ_isProperString(OZ_Term term,OZ_Term *var)
+{
+  if (var) *var = 0;
+  return isList(term,var,2);
 }
 
 int OZ_isList(OZ_Term term,OZ_Term *var)
 {
   if (var) *var = 0;
-  return isList(term,var,NO);
+  return isList(term,var,0);
 }
 
 int OZ_isTrue(OZ_Term term)
@@ -1591,7 +1602,7 @@ int isVirtualString(OZ_Term vs, OZ_Term *var)
     return 1;
   }
 
-  if (isCons(vs)) return isList(vs,var,OK);
+  if (isCons(vs)) return isList(vs,var,2);
 
   return 0;
 }
@@ -1670,7 +1681,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
   printf("\n");
 #endif
 
-  thr = new Thread (am.currentBoard, ozconf.defaultPriority);
+  thr = am.mkSuspendedThread(am.currentBoard, ozconf.defaultPriority,0);
   thr->pushCFunCont (fun, args, arity, OK);
 
   return ((OZ_Thread) thr);
@@ -1678,7 +1689,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
 
 void OZ_makeRunableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
-  Thread *tt = new Thread (ozconf.defaultPriority, am.currentBoard);
+  Thread *tt = am.mkRunnableThread(ozconf.defaultPriority, am.currentBoard,0);
   tt->pushCFunCont (fun, args, arity, OK);
   am.scheduleThread (tt);
 }

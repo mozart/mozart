@@ -398,26 +398,6 @@ PRINT(Space)
   stream << "Space@" << this;
 }
 
-PRINT(OzThread)
-{
-  stream << "Thread";
-}
-
-PRINTLONG(OzThread)
-{
-  stream << "Thread";
-}
-
-PRINT(Group)
-{
-  stream << "Group";
-}
-
-PRINTLONG(Group)
-{
-  stream << "Group" << endl;
-}
-
 PRINT(OzArray)
 {
   CHECKDEPTH;
@@ -659,8 +639,7 @@ PRINTLONG(ConstTerm)
   case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
   case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
   case Co_Dictionary: ((OzDictionary *) this)->printLong(stream,depth,offset);break;
-  case Co_Thread:     ((OzThread *) this)->printLong(stream,depth,offset);    break;
-  case Co_Group:      ((Group *) this)->printLong(stream,depth,offset); break;
+  case Co_Thread:     ((Thread *) this)->printLong(stream,depth,offset);    break;
   case Co_Builtin:    ((Builtin *) this)->printLong(stream,depth,offset);     break;
   default:            Assert(NO);
   }
@@ -680,8 +659,7 @@ PRINT(ConstTerm)
   case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);      break;
   case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);     break;
   case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);break;
-  case Co_Thread:      ((OzThread *) this)->print(stream,depth,offset);    break;
-  case Co_Group:       ((Group *) this)->print(stream,depth,offset);    break;
+  case Co_Thread:      ((Thread *) this)->print(stream,depth,offset);    break;
   case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);     break;
   default:             Assert(NO);
   }
@@ -999,7 +977,7 @@ PRINT(Thread)
   if ((getFlags ()) & T_ltq)       stream << 'Q';
   stream << ">]" << endl;
 
-  if (board) {
+  if (getBoard()) {
     stream << indent(offset+2) << "in board: ";
     getBoardFast()->print(stream, DEC(depth));
   }

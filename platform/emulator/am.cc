@@ -819,7 +819,7 @@ void AM::reduceTrailOnSuspend()
 
     //
     // one single suspended thread for all;
-    Thread *thr = new Thread (bb);
+    Thread *thr = mkWakeupThread(bb);
 
     for (int index = 0; index < numbOfCons; index++) {
       TaggedRef * refPtr, value, old_value;
@@ -1190,7 +1190,7 @@ void AM::decSolveThreads(Board *bb)
         //
         // ... first - notification board below the failed solve board;
         if (!(sa->isCommitted ()) && isStableSolve (sa)) {
-          scheduleThread (new Thread (sa->getPriority (), bb, OK));
+          scheduleThread (mkRunnableThread(sa->getPriority(),bb,0,OK));
         }
       } else {
         Assert (sa->getThreads () > 0);
@@ -1506,6 +1506,24 @@ OZ_Term AM::dbgGetSpaces() {
   return out;
 }
 
+
+//
+//  Make a runnable thread with a single task stack entry <local trhread queue>
+Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
+{
+  Thread *th = new Thread(S_RTHREAD | T_prop | T_ltq,prio,bb,0);
+  th->setBody(allocateBody());
+
+  Assert(bb == currentBoard);
+  Assert (isInSolveDebug(bb));
+
+  incSolveThreads(bb);
+  th->setInSolve();
+
+  th->pushTask(sa);
+
+  return th;
+}
 
 #ifdef OUTLINE
 #define inline

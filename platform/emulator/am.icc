@@ -285,4 +285,87 @@ Board *ConstTermWithHome::getBoardFast() {
   return home->getBoardFast();
 }
 
+
+/*
+ * Threads
+ */
+
+//
+//  An allocator for thread's bodies;
+inline
+RunnableThreadBody* AM::allocateBody()
+{
+  RunnableThreadBody *body = threadBodyFreeList;
+  if (body) {
+    threadBodyFreeList = threadBodyFreeList->u.next;
+  } else {
+    body = new RunnableThreadBody(ozconf.taskStackSize);
+  }
+
+  body->taskStack.makeEmpty();
+  body->u.self = NULL;
+  body->setStreamTail(OZ_atom("noStream"));
+
+  return body;
+}
+
+//
+//  Make a runnable thread with a task stack;
+inline
+Thread *AM::mkRunnableThread(int prio, Board *bb, TaggedRef val, Bool inSolve)
+{
+  Thread *th = new Thread(S_RTHREAD | T_prop,prio,bb,val);
+  th->setBody(allocateBody());
+
+  Assert(bb==currentBoard || inSolve);
+  if (currentSolveBoard != (Board *) NULL || inSolve) {
+    Assert (isInSolveDebug (bb));
+    incSolveThreads (bb);
+    th->setInSolve ();
+  } else {
+    Assert (!(isInSolveDebug (bb)));
+  }
+
+  //DebugCheckT(printf("thread created\n"));
+
+  return th;
+}
+
+//
+//  Constructors for 'suspended' cases:
+//    deep 'unify' suspension;
+//    suspension with continuation;
+//    suspension with a 'C' function;
+//    suspended sequential thread (with a task stack);
+//
+inline
+Thread *AM::mkWakeupThread(Board *bb)
+{
+  Thread *th = new Thread(S_WAKEUP,bb->getActor()->getPriority(),bb,0);
+
+  markDirtyRefsArray ((bb->getBodyPtr())->getY());
+
+  return th;
+}
+
+//
+inline
+Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
+{
+  Thread * th = new Thread(S_PR_THR, prio, bb, 0);
+  th->setInitialPropagator(pro);
+
+  return th;
+}
+
+//
+inline
+Thread *AM::mkSuspendedThread(Board *bb, int prio, TaggedRef val)
+{
+  Thread *th = new Thread(S_RTHREAD,prio,bb,val);
+  th->setBody(allocateBody());
+
+  return th;
+}
+
 #endif  // __AM_ICC

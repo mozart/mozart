@@ -88,7 +88,7 @@ void Thread::checkExtThreadOutlined ()
 
     SolveActor *sa = SolveActor::Cast (sb->getActor ());
     if (e->isStableSolve (sa)) {
-      e->scheduleThread (new Thread (sa->getPriority (), sb));
+      e->scheduleThread (e->mkRunnableThread (sa->getPriority (),sb,0));
     }
     sb = (sa->getBoardFast ())->getSolveBoard ();
   }
@@ -172,3 +172,37 @@ Bool Thread::hasJobDebug ()
   return (item.threadBody->taskStack.hasJobDebug ());
 }
 #endif
+
+/*
+ * terminate a thread
+ *  if not in deep guard: discard all tasks, return NO
+ *  if in deep guard: don't discard any task, return OK
+ */
+Bool Thread::terminate()
+{
+  TaskStack *ts;
+  TaskStackEntry *tos;
+  Assert(hasStack());
+
+  ts = &(item.threadBody->taskStack);
+  tos = ts->getTop ();
+  while (TRUE) {
+    TaskStackEntry entry=*(--tos);
+    if (ts->isEmpty (entry)) {
+      ts->setTop(tos+1);
+      unsetHasJobs();
+      return NO;
+    }
+
+    ContFlag cFlag = getContFlag(ToInt32(entry));
+
+    switch (cFlag) {
+    case C_LOCAL:
+      return OK;
+
+    default:
+      tos = tos - ts->frameSize(cFlag) + 1;
+      break;
+    }
+  }
+}

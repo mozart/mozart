@@ -20,10 +20,6 @@
 
 #include "oz_cpi.hh"
 
-#ifdef OUTLINE
-#define inline
-#endif
-
 //
 //  On Sparc (v8), most efficient flags are (strictly) between 0x0 and
 // 0x1000. Flags up to 0x1000 and above 0x1000 should not be mixed,
@@ -76,6 +72,57 @@ enum ThreadFlag {
 #define  S_RTHREAD    T_stack
 #define  S_PR_THR     T_p_thr
 
+
+//
+//  Body of the runnable thread;
+class RunnableThreadBody {
+friend class AM;
+friend class Thread;
+private:
+  TaskStack taskStack;
+  union {
+    Object *self;              /* the self object pointer     */
+    RunnableThreadBody *next;  /* for linking in the freelist */
+  } u;
+  TaggedRef streamTail;    // the debug stream's tail
+
+public:
+  USEHEAPMEMORY;
+  //
+  //  Note that 'RunnableThreadBody'"s
+  // are allocated in pre-defined regions, and, therefore,
+  // their allocators may not be used.
+
+  void reInit ();               // for the root thread only;
+
+  //  gc methods;
+  RunnableThreadBody(int sz) : taskStack(sz) { }
+  RunnableThreadBody *gcRTBody();
+
+  void setSelf(Object *o) { Assert(u.self==NULL); u.self = o; }
+  void makeRunning();
+
+  TaggedRef getStreamTail()        { return streamTail; }
+  void setStreamTail(TaggedRef v)  { streamTail = v; }
+
+  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
+  {
+    taskStack.pushCont(pc,y,g,x,i);
+  }
+  void pushTask(SolveActor * sa)
+  {
+    taskStack.pushLTQ(sa);
+  }
+};
+
+//
+//
+union ThreadBodyItem {
+  OZ_Propagator *propagator;
+  RunnableThreadBody *threadBody;
+};
+
+
 //
 //  Flags & priority of a thread;
 //
@@ -92,7 +139,8 @@ enum ThreadFlag {
 //                    |                               |
 //                    `-------------------------------'
 //
-class ThreadState {
+class Thread : public ConstTerm {
+  friend void ConstTerm::gcConstRecurse(void);
 private:
   //  Sparc, for instance, has a ldsb/stb instructions -
   // so, this is exactly as efficient as just two integers;
@@ -101,8 +149,26 @@ private:
     int flags:  (sizeof(int) - sizeof(char)) * sizeof(char) * 8;
   } state;
 
+  TaggedRef cell;
+  ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
+
+  //  special allocator for thread's bodies;
+  void freeThreadBody ();
+
+  //
+  void disposeThread ();
+
+  Bool wakeUpPropagator (Board *home,
+                         PropCaller calledBy = pc_propagator);
+  Bool wakeUpBoard (Board *home);
+  Bool wakeUpThread (Board *home);
+
+  //
+  void setExtThreadOutlined (Board *varHome);
+  //  it asserts that the suspended thread is 'external' (see beneath);
+  void checkExtThreadOutlined ();
+
 protected:
-  Group *group;
 
   //  Note that other flags are removed;
   void markDeadThread () {
@@ -113,31 +179,22 @@ protected:
   int getFlags () { return (state.flags); }
 
 public:
+  Thread (int flags, int prio, Board *bb, TaggedRef val);
+
+  USEHEAPMEMORY;
+  OZPRINT;
+  OZPRINTLONG;
+
   //
-  //  Initialisation;
-  //  Note that a thread is made alive and suspended, and with
-  // some undefined priority (needs further initialisation!);
-  ThreadState () {
-    group = 0;
-    state.flags = T_null;
-  }
-  ThreadState (int inFlags) {
-    group = 0;
-    state.flags = inFlags;
-  }
-  ThreadState (int inFlags, int inPri) {
-    group = 0;
-    state.pri = inPri;
-    state.flags = inFlags;
-  }
+  Thread *gcThread();
+  Thread *gcDeadThread();
+  void gcRecurse();
 
-  TaggedRef getExceptionHandler()
-  {
-    return group ? group->getExceptionHandler() : 0;
-  }
+  void setBody(RunnableThreadBody *rb) { item.threadBody=rb; }
+  void setInitialPropagator(OZ_Propagator *pro) { item.propagator=pro; }
 
-  void setGroup(Group *gr) { group = gr; }
-  Group *getGroup() { return group; }
+  TaggedRef getValue() { return cell; }
+  void setValue(TaggedRef v) { cell = v; }
 
   //  priority;
   int getPriority() {
@@ -340,140 +397,15 @@ public:
     Assert (!(isPropagator ()));
     state.flags = state.flags | T_stack;
   }
-};
-
-//
-//  Body of the runnable thread;
-class RunnableThreadBody {
-friend class Thread;
-private:
-  TaskStack taskStack;
-  union {
-    Object *self;              /* the self object pointer     */
-    RunnableThreadBody *next;  /* for linking in the freelist */
-  } u;
-  TaggedRef streamTail;    // the debug stream's tail
-
-public:
-  USEHEAPMEMORY;
-  //
-  //  Note that 'RunnableThreadBody'"s
-  // are allocated in pre-defined regions, and, therefore,
-  // their allocators may not be used.
-
-  void reInit ();               // for the root thread only;
-
-  //  gc methods;
-  RunnableThreadBody(int sz) : taskStack(sz) { }
-  RunnableThreadBody *gcRTBody();
-
-  void setSelf(Object *o) { Assert(u.self==NULL); u.self = o; }
-  void makeRunning();
-
-  TaggedRef getStreamTail()        { return streamTail; }
-  void setStreamTail(TaggedRef v)  { streamTail = v; }
-
-  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
-  {
-    taskStack.pushCont(pc,y,g,x,i);
-  }
-  void pushTask(SolveActor * sa)
-  {
-    taskStack.pushLTQ(sa);
-  }
-};
-
-//
-//
-union ThreadBodyItem {
-  OZ_Propagator *propagator;
-  RunnableThreadBody *threadBody;
-};
-
-//
-const size_t threadBodySize = sizeof (RunnableThreadBody);
-
-//
-//  'Lightweight' thread - for local computation only
-// (aka local propagation, etc.);
-class LWThread : public ThreadState {
-friend class ThreadsPool;
-protected:
-  ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
-public:
-  //
-  //  Tobias' stub.
-  //  NOT in the sense "a stub FOR Tobias", but "a stub which
-  // CAN BE USED by Tobias" :-)))
-  //  So, define here all what your soul ever wants! :-))
-
-  LWThread ()
-    : ThreadState () {}
-  LWThread (int inFlags)
-    : ThreadState (inFlags) {}
-  LWThread (int inFlags, int inPri)
-    : ThreadState (inFlags, inPri) {}
-};
-
-extern char * ctHeap, * ctHeapTop;
-
-//
-//  Generic 'Thread' class;
-//  It contains a reference to either a kind of continuation, or
-// the body of the 'RunnableThread';
-class Thread : public LWThread {                // it's a kind of hanger;
-private:
-  Board *board;
-
-  //  special allocator for thread's bodies;
-  RunnableThreadBody *allocateBody ();
-  void freeThreadBody ();
-
-  //
-  void disposeThread ();
-
-  Bool wakeUpPropagator (Board *home,
-                         PropCaller calledBy = pc_propagator);
-  Bool wakeUpBoard (Board *home);
-  Bool wakeUpThread (Board *home);
-
-  //
-  void setExtThreadOutlined (Board *varHome);
-  //  it asserts that the suspended thread is 'external' (see beneath);
-  void checkExtThreadOutlined ();
-
-  //
-  //  ... with furhter assertions;
-  DebugCode (void markDeadThread ();)
-  DebugCode (void createHook ();)
-public:
-  USEHEAPMEMORY;
-  OZPRINT;
-  OZPRINTLONG;
-  //
-  Thread *gcThread ();
-  void gcRecurse ();
 
   //  General;
   //  Zeroth: constructors for various cases;
   void reInit (int prio, Board *home);  // for the root thread only;
 
-  //  It makes a runnable thread with a task stack;
-  Thread (int prio, Board *b, Bool inSolve = NO);
-  //  They make a suspended thread;
-  Thread (Board *b);
-  //  an empty suspended sequential thread (with a task stack!);
-  Thread (Board *b, int prio);
-  //
-  Thread (Board * b, int prio, SolveActor * sa);
-  //
-  Thread (Board * b, int prio, OZ_Propagator *p);
-
-  //  First - it inherits all the methods of 'ThreadState';
   //  Second - get/set the home board;
   Board *getBoardFast ();
-  DebugCode (Board *getBoard () { return (board); })
-  void setBoard (Board *bp) { board = bp; }
+  Board *getBoard () { return (Board *) getPtr(); }
+  void setBoard (Board *bp) { setPtr(bp); }
   void setSelf(Object *o);
 
   TaggedRef getStreamTail();
@@ -494,6 +426,7 @@ public:
   OZ_Return runPropagator(void) {
     Assert(isPropagator());
     ozstat.propagatorsInvoked.incf();
+    extern char * ctHeap, * ctHeapTop;
     ctHeap = ctHeapTop;
     return item.propagator->run();
   }
@@ -508,7 +441,7 @@ public:
   void suspThreadToRunnable ();
   void wakeupToRunnable ();
   void propagatorToRunnable ();
-
+  Bool terminate();
   //
   //  Note that the stack is allocated now in "lazy fashion", i.e.
   // that it is created only when a thread is getting "running";
@@ -561,6 +494,7 @@ public:
   Bool isBelowFailed (Board *top);
 
   //
+  void pushTask(SolveActor * sa) { item.threadBody->pushTask(sa); }
   void pushDebug (OzDebug *d);
   void pushCall (TaggedRef pred, RefsArray  x, int n);
   void pushJob();
@@ -592,14 +526,6 @@ public:
   Thread *getJob ();
   //
   DebugCode (Bool hasJobDebug ();)
-
-#ifdef DEBUG_CHECK
-  //  redefined from the ThreadState - because of assertion;
-  void unsetHasJobs() {
-    Assert (!(hasJobDebug ()));
-    ThreadState::unsetHasJobs ();
-  }
-#endif
 
   //
   TaskStack *getTaskStackRef ();
@@ -643,10 +569,30 @@ public:
 
   // wake up cconts and board conts
   Bool wakeUp (Board *home, PropCaller calledBy);
+
 };
+
+
+//
+const size_t threadBodySize = sizeof (RunnableThreadBody);
+
+inline
+Bool isThread(TaggedRef term)
+{
+  return isConst(term) && tagged2Const(term)->getType() == Co_Thread;
+}
+
+inline
+Thread *tagged2Thread(TaggedRef term)
+{
+  Assert(isThread(term));
+  return (Thread *) tagged2Const(term);
+}
 
 #ifndef OUTLINE
 #include "thread.icc"
+#else
+#define inline
 #endif
 
 #endif
