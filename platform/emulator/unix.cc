@@ -1056,7 +1056,7 @@ OZ_BI_define(unix_getSockName,1,1)
 #if __GLIBC__ == 2
   unsigned int length = sizeof(addr);
 #else
-  int length = sizeof(addr);
+  socklen_t length = sizeof(addr);
 #endif
 
   WRAPCALL("getsockname",getsockname(s, (struct sockaddr *) &addr, &length), ret);
@@ -1431,7 +1431,7 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
 #if __GLIBC__ == 2
   unsigned int fromlen = sizeof from;
 #else
-  int fromlen = sizeof from;
+  socklen_t fromlen = sizeof from;
 #endif
 
   WRAPCALL("recvfrom",recvfrom(sock, buf, maxx, flags,
