@@ -86,10 +86,10 @@ OZ_BI_define(ri_lpsolve_conf, 2, 0)
     }
 
     OZ_Term arity_def[] = {
-      {OZ_pair2(atom_solver, RILPSolve::getSolverAtom())},
-      {OZ_pair2(atom_mode,   RILPSolve::getModeAtom())},
-      {OZ_pair2(atom_avail,  solver_list)},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_solver, RILPSolve::getSolverAtom()),
+      OZ_pair2(atom_mode,   RILPSolve::getModeAtom()),
+      OZ_pair2(atom_avail,  solver_list),
+      (OZ_Term) 0
     };
     
     MKARITY(arity, arity_def);
