@@ -70,6 +70,8 @@ public:
 
 /*****************************************************************************/
 
+#define getWord(PC) (*(PC))
+
 
 class CodeAreaList {
   CodeArea *elem;
@@ -129,14 +131,11 @@ public:
   /* load statements from "codeFile" until "ENDOFFILE", acknowledge if ok*/
   static Bool load(CompStream *fd, ProgramCounter &newPC);
 
-  static ByteCode getWord(ProgramCounter PC)  { return (*PC);}
-
 #ifdef THREADED
   static void **globalInstrTable;
 #endif
 
-  static AdressOpcode getOP(ProgramCounter PC)
-  { return (AdressOpcode) getWord(PC); }
+  static AdressOpcode getOP(ProgramCounter PC) { return (AdressOpcode) getWord(PC); }
   static Opcode adressToOpcode(AdressOpcode);
   static AdressOpcode opcodeToAdress(Opcode);
 
@@ -293,45 +292,14 @@ inline void printNameTab()
  * with "CodeArea::"
  */
 
-inline Reg getRegArg(ProgramCounter PC)
-{
-  return (Reg) CodeArea::getWord(PC);
-}
-
-inline int getPosIntArg(ProgramCounter PC)
-{
-  return (int) CodeArea::getWord(PC);
-}
-
-inline TaggedRef getTaggedArg(ProgramCounter PC)
-{
-  return (TaggedRef) CodeArea::getWord(PC);
-}
-
-inline TaggedRef getNumberArg(ProgramCounter PC)
-{
-  return getTaggedArg(PC);
-}
-
-inline  TaggedRef getLiteralArg(ProgramCounter PC)
-{
-  return getTaggedArg(PC);
-}
-
-inline void *getAdressArg(ProgramCounter PC)
-{
-  return ToPointer(CodeArea::getWord(PC));
-}
-
-inline PrTabEntry *getPredArg(ProgramCounter PC)
-{
-  return (PrTabEntry *) getAdressArg(PC);
-}
-
-inline ProgramCounter getLabelArg(ProgramCounter PC)
-{
-  return (ProgramCounter) getAdressArg(PC);
-}
+#define getRegArg(PC)    ((Reg) getWord(PC))
+#define getPosIntArg(PC) ((int) getWord(PC))
+#define getTaggedArg(PC) ((TaggedRef) getWord(PC))
+#define getNumberArg(PC)  getTaggedArg(PC)
+#define getLiteralArg(PC) getTaggedArg(PC)
+#define getAdressArg(PC)  (ToPointer(getWord(PC)))
+#define getPredArg(PC)   ((PrTabEntry *) getAdressArg(PC))
+#define getLabelArg(PC)  ((ProgramCounter) getAdressArg(PC))
 
 
 void displayCode(ProgramCounter from, int ssize);
