@@ -107,7 +107,8 @@ case "$cmd" in
 
    oz.compiler)
 
-
+       # make enough room on Prolog heap
+       GLOBALSTKSIZE=1000000; export GLOBALSTKSIZE
        if [ $TERM = "emacs" ]; then
           exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
        else
