@@ -95,42 +95,41 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
   PropagatorController_S_S_S P(x, y, z);
   FSetTouched xt, yt, zt;
 
-loop:
-  xt = x;  yt = y;  zt = z;
-
-  if (z->isEmpty()) {
-    OZ_DEBUGPRINT("replace: (z empty)" << *this);
-    P.vanish();
-    return replaceBy(new FSetDisjointPropagator(_x, _y));
-  }
-  if (x->isSubsumedBy(*y)) {
-    OZ_DEBUGPRINT("replace: (x subsumbed by y)" << *this);
-    P.vanish();
-    return OZ_DEBUGRETURNPRINT(replaceBy(_x, _z));
-  }
-  if (y->isSubsumedBy(*x)) {
-    OZ_DEBUGPRINT("replace: (y subsumbed by xy)" << *this);
-    P.vanish();
-    return OZ_DEBUGRETURNPRINT(replaceBy(_y, _z));
-  }
+  do {
+    xt = x;  yt = y;  zt = z;
+    
+    if (z->isEmpty()) {
+      OZ_DEBUGPRINT("replace: (z empty)" << *this);
+      P.vanish();
+      return replaceBy(new FSetDisjointPropagator(_x, _y));
+    }
+    if (x->isSubsumedBy(*y)) {
+      OZ_DEBUGPRINT("replace: (x subsumbed by y)" << *this);
+      P.vanish();
+      return OZ_DEBUGRETURNPRINT(replaceBy(_x, _z));
+    }
+    if (y->isSubsumedBy(*x)) {
+      OZ_DEBUGPRINT("replace: (y subsumbed by xy)" << *this);
+      P.vanish();
+      return OZ_DEBUGRETURNPRINT(replaceBy(_y, _z));
+    }
+    
+    FailOnInvalid(*x <= -(- *z & *y)); // lub
+    OZ_DEBUGPRINT("x=" << *x);
+    FailOnInvalid(*y <= -(- *z & *x)); // lub
+    OZ_DEBUGPRINT("y=" << *y);
+    
+    FailOnInvalid(*z <<= (*x & *y)); // glb
+    OZ_DEBUGPRINT("z=" << *z);
+    FailOnInvalid(*x >= *z); // glb
+    OZ_DEBUGPRINT("x=" << *x);
+    FailOnInvalid(*y >= *z); // glb
+    OZ_DEBUGPRINT("y=" << *y);
+    
+  } while (xt <= x || yt <= y || zt <= z);
+    
+    return OZ_DEBUGRETURNPRINT(P.leave1()); 
   
-  FailOnInvalid(*x <= -(- *z & *y)); // lub
-  OZ_DEBUGPRINT("x=" << *x);
-  FailOnInvalid(*y <= -(- *z & *x)); // lub
-  OZ_DEBUGPRINT("y=" << *y);
-
-  FailOnInvalid(*z <<= (*x & *y)); // glb
-  OZ_DEBUGPRINT("z=" << *z);
-  FailOnInvalid(*x >= *z); // glb
-  OZ_DEBUGPRINT("x=" << *x);
-  FailOnInvalid(*y >= *z); // glb
-  OZ_DEBUGPRINT("y=" << *y);
-
-  if (xt <= x || yt <= y || zt <= z) 
-    goto loop;
-
-  return OZ_DEBUGRETURNPRINT(P.leave1()); 
-
 failure:
   OZ_DEBUGPRINT("failed " << *this);
   return P.fail();
@@ -144,43 +143,42 @@ OZ_Return FSetUnionPropagator::propagate(void)
   PropagatorController_S_S_S P(x, y, z);
   FSetTouched xt, yt, zt;
 
-loop:
-  xt = x;  yt = y;  zt = z;
-
-  if (z->isEmpty()) {
-    OZ_FSetConstraint aux(fs_empty);
-    FailOnInvalid(*x <<= aux);
-    FailOnInvalid(*y <<= aux);
-    P.vanish();
-    return ENTAILED;
-  }
-  if (x->isSubsumedBy(*y)) {
-    P.vanish();
-    return replaceBy(_y, _z);
-  }
-  if (y->isSubsumedBy(*x)) {
-    P.vanish();
-    return replaceBy(_x, _z);
-  }
-
-  FailOnInvalid(*x >= (*z & - *y)); // glb
-  OZ_DEBUGPRINT("x=" << *x);
-  FailOnInvalid(*y >= (*z & - *x)); // glb
-  OZ_DEBUGPRINT("y=" << *y);
-
-  FailOnInvalid(*z <<= (*x | *y)); // lub
-  OZ_DEBUGPRINT("z=" << *z);
-  FailOnInvalid(*x <= *z); // lub
-  OZ_DEBUGPRINT("x=" << *x);
-  FailOnInvalid(*y <= *z); // lub
-  OZ_DEBUGPRINT("y=" << *y);
-
-  if (xt <= x || yt <= y || zt <= z) 
-    goto loop;
-
+  do {
+    xt = x;  yt = y;  zt = z;
+    
+    if (z->isEmpty()) {
+      OZ_FSetConstraint aux(fs_empty);
+      FailOnInvalid(*x <<= aux);
+      FailOnInvalid(*y <<= aux);
+      P.vanish();
+      return ENTAILED;
+    }
+    if (x->isSubsumedBy(*y)) {
+      P.vanish();
+      return replaceBy(_y, _z);
+    }
+    if (y->isSubsumedBy(*x)) {
+      P.vanish();
+      return replaceBy(_x, _z);
+    }
+    
+    FailOnInvalid(*x >= (*z & - *y)); // glb
+    OZ_DEBUGPRINT("x=" << *x);
+    FailOnInvalid(*y >= (*z & - *x)); // glb
+    OZ_DEBUGPRINT("y=" << *y);
+    
+    FailOnInvalid(*z <<= (*x | *y)); // lub
+    OZ_DEBUGPRINT("z=" << *z);
+    FailOnInvalid(*x <= *z); // lub
+    OZ_DEBUGPRINT("x=" << *x);
+    FailOnInvalid(*y <= *z); // lub
+    OZ_DEBUGPRINT("y=" << *y);
+    
+  } while (xt <= x || yt <= y || zt <= z);
+  
   OZ_DEBUGPRINT("out " << *this);
   return P.leave1();
-
+  
 failure:
   OZ_DEBUGPRINT("failed " << *this);
   return P.fail();
