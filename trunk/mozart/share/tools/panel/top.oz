@@ -393,7 +393,7 @@ in
 					     {System.set
 					      gc(max:       4 * MegaByteI
 						 min:       1 * MegaByteI
-						 free:      60
+						 free:      75
 						 tolerance: 20)}
 					     {Memory update(nosample)}
 					  end)
@@ -402,7 +402,7 @@ in
 					     {System.set
 					      gc(max:       16 * MegaByteI
 						 min:       2  * MegaByteI
-						 free:      70
+						 free:      80
 						 tolerance: 15)}
 					     {Memory update(nosample)}
 					  end)
@@ -411,7 +411,7 @@ in
 					     {System.set
 					      gc(max:       64 * MegaByteI
 						 min:       8 * MegaByteI
-						 free:      80
+						 free:      90
 						 tolerance: 10)}
 					     {Memory update(nosample)}
 					  end)])
