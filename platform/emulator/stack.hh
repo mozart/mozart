@@ -23,8 +23,12 @@
 //                Definition of class Stack 
 //*****************************************************************************
 
-
 typedef void* StackEntry;
+
+typedef enum {
+  Stack_WithMalloc,
+  Stack_WithFreelist,
+} StackAllocation;
 
 class Stack {
 protected:
@@ -32,26 +36,36 @@ protected:
   StackEntry *array; 
   StackEntry *stackEnd;
 
-  virtual void resize(int newSize);
-  void resizeOutline(int newSize);
+  StackAllocation stkalloc;
+  void resize(int newSize);
 
-  // memory management: default via malloc/free
-  void allocate(int sz, void *(*allocfun)(size_t t))
+  void reallocate(int newsize);
+
+  void deallocate(StackEntry *p, int n) 
+  { 
+    if (stkalloc==Stack_WithMalloc)
+      free(p);
+    else
+      freeListDispose(p, n*sizeof(StackEntry));
+  }
+  
+  void allocate(int sz, int alloc)
   {
-    array = (StackEntry*) allocfun(sz*sizeof(StackEntry));
-    if(!array)
+    int auxsz = sz*sizeof(StackEntry);
+    array = alloc==Stack_WithMalloc 
+         ? (StackEntry*)malloc(auxsz):(StackEntry*)freeListMalloc(auxsz);
+    if(array==NULL)
       error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
     tos = array;
     stackEnd = array+sz;
   }
-  virtual void deallocate(StackEntry *p, int n) { free(p); }
-  virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
+
+  void allocate(int sz) { allocate(sz,stkalloc); }
+  
 
 public:
-  Stack(int sz = 1000, void *(*allocfun)(size_t t) = malloc) {
-    allocate(sz,allocfun);
-  }
-  virtual ~Stack() { deallocate(array,stackEnd-array); }
+  Stack(int sz, StackAllocation alloc) : stkalloc(alloc) { allocate(sz,alloc); }
+  ~Stack() { deallocate(array,stackEnd-array); }
 
   void mkEmpty(void) { tos = array; }
   Bool isEmpty(void) { return (tos <= array); }
@@ -59,7 +73,7 @@ public:
   {
     StackEntry *ret = tos;
     if (stackEnd <= tos+n) {
-      resizeOutline(n);
+      resize(n);
       ret = tos;
     }
     return ret;

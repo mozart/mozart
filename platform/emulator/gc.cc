@@ -411,7 +411,7 @@ void *getPtr(TypedPtr tp)
 
 class TypedPtrStack: public Stack {
 public:
-  TypedPtrStack() : Stack() {}
+  TypedPtrStack() : Stack(1000,Stack_WithMalloc) {}
   ~TypedPtrStack() {}
 
   void push(void *ptr, TypeOfPtr type) {
@@ -440,7 +440,7 @@ static TypedPtrStack ptrStack;
 
 class SavedPtrStack: public Stack {
 public:
-  SavedPtrStack() : Stack() {}
+  SavedPtrStack() : Stack(1000,Stack_WithMalloc) {}
   ~SavedPtrStack() {}
   void pushPtr(int32* ptr, int32 value)
   {
@@ -575,7 +575,7 @@ DebugCheckT(static int updateStackCount = 0;)
 
 class UpdateStack: public Stack {
 public:
-  UpdateStack() : Stack() {}
+  UpdateStack() : Stack(1000,Stack_WithMalloc) {}
   ~UpdateStack() {}
   void push(TaggedRef *t) {
     DebugGCT(updateStackCount++);
@@ -1805,7 +1805,7 @@ void TaskStack::gc(TaskStack *newstack)
    */
   COUNT(taskStack);
   COUNT1(taskStackLen,getMaxSize());
-  newstack->allocate(getMaxSize(),heapMalloc);
+  newstack->allocate(getMaxSize());
   newstack->push(this);
 }
 

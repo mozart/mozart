@@ -18,8 +18,3 @@
 #include "stack.hh"
 #include "trail.hh"
 
-void Trail::resize(int newSize) 
-{
-  DebugCheckT(message("resizing trail from %d to %d\n", getMaxSize (), newSize));
-  Stack::resize(newSize);
-}

@@ -14,30 +14,43 @@
 #include <malloc.h>
 
 #include "types.hh"
-#include "error.hh"
+#include "mem.hh"
 #include "stack.hh"
 
-void Stack::resizeOutline(int n)
+inline
+void Stack::reallocate(int newsize) 
 {
-  resize(((getMaxSize())*3)/2);  // faster than size*1.5
-  ensureFree(n);
+  StackEntry *savearray = array;
+  int oldsize = getMaxSize();
+
+  allocate(newsize);
+
+  for (int i=0; i < oldsize; i++) {
+    array[i] = savearray[i];
+  }
+  
+  if (stkalloc==Stack_WithMalloc)
+    free(savearray);
+  else
+    freeListDispose(savearray,sizeof(StackEntry)*oldsize);
 }
 
-void Stack::resize(int newSize)
+
+
+/* resize by at least "incSize" */
+void Stack::resize(int incSize)
 {
+  Assert(incSize > 0);
+  int allocsize = max((getMaxSize()*3)/2,100);  // faster than size*1.5
+
 #ifdef DEBUG_STACK
-  warning("Resizing stack from %d to %d\n",getMaxSize(),newSize);
+  message("Resizing stack from %d to %d\n",getMaxSize(),allocsize);
 #endif
-  DebugCheck(newSize <= 0,error("Resizing stack <= 0\n"));
   int used = tos-array;
-  array = reallocate(array, getMaxSize(), newSize);
-  if(!array)
-    error("Cannot realloc stack memory at %s:%d.", __FILE__, __LINE__);
+  reallocate(allocsize);
   tos      = array+used;
-  stackEnd = array+newSize;
+
+  ensureFree(incSize);
 }
 
-StackEntry *Stack::reallocate(StackEntry *p, int oldsize, int newsize) 
-{
-  return (StackEntry*) realloc(p,sizeof(StackEntry) * newsize);
-}
+
