@@ -381,7 +381,7 @@ Bool oz_var_hasSuspAt(TaggedRef v, Board * b) {
 
 inline
 Future *tagged2Future(TaggedRef t) {
-  Assert(oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FUTURE));
+  Assert(oz_isVar(t) && (tagged2Var(t)->getType() == OZ_VAR_FUTURE));
   return (Future *) tagged2Var(t);
 }
 
