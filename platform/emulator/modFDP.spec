@@ -66,29 +66,29 @@ $module_init_fun_name = "fdp_init";
 			     out => [],
 			     bi  => fdp_sumCN},
  
- 'sumR'		=> { in  => ['+value','+atom','*int','*int'],
+ 'reified.sum'		=> { in  => ['+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumR},
  
- 'sumCR'		=> { in  => ['+value','+value','+atom','*int','*int'],
+ 'reified.sumC'		=> { in  => ['+value','+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumCR},
  
- 'sumCNR'	        => { in  => ['+value','+value','+atom','*int','*int'],
+ 'reified.sumCN'	        => { in  => ['+value','+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumCNR},
  
- 'sumCD'		=> { in  => ['+value','+atom','*int','*int'],
+ 'sum_CD'		=> { in  => ['+value','+atom','*int','*int'],
 			     out => [],
 			     ifdef => FDCD,
 			     bi  => fdp_sumCD},
  
- 'sumCCD'	=> { in  => ['+value','+value','+atom','*int','*int'],
+ 'sumC_CD'	=> { in  => ['+value','+value','+atom','*int','*int'],
 		     out => [],
 		     ifdef => FDCD,
 		     bi  => fdp_sumCCD},
  
- 'sumCNCD'	=> { in  => ['+value','+value','+atom','*int','*int'],
+ 'sumCN_CD'	=> { in  => ['+value','+value','+atom','*int','*int'],
 		     out => [],
 		     ifdef => FDCD,
 		     bi  => fdp_sumCNCD},
@@ -161,11 +161,11 @@ $module_init_fun_name = "fdp_init";
 			     out => [],
 			     bi  => fdp_nega},
  
- 'intR'		=> { in  => ['int','+value','int'],
+ 'reified.int'		=> { in  => ['int','+value','int'],
 			     out => [],
 			     bi  => fdp_intR},
  
- 'card'		=> { in  => ['+value','int','int','int'],
+ 'reified.card'		=> { in  => ['+value','int','int','int'],
 			     out => [],
 			     bi  => fdp_card},
  
@@ -189,11 +189,11 @@ $module_init_fun_name = "fdp_init";
 			     out => [],
 			     bi  => fdp_lessEqOff},
  
- 'minimum'	=> { in  => ['int','int','int'],
+ 'min'	=> { in  => ['int','int','int'],
 		     out => [],
 		     bi  => fdp_minimum},
  
- 'maximum'	=> { in  => ['int','int','int'],
+ 'max'	=> { in  => ['int','int','int'],
 		     out => [],
 		     bi  => fdp_maximum},
  
@@ -241,11 +241,11 @@ $module_init_fun_name = "fdp_init";
 		     out => [],
 		     bi  => fdp_subset},
  
- 'dsum'		=> { in  => ['+value','+atom','int'],
+ 'sumD'		=> { in  => ['+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_dsum},
  
- 'dsumC'		=> { in  => ['+value','+value','+atom','int'],
+ 'sumCD'		=> { in  => ['+value','+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_dsumC},
  
