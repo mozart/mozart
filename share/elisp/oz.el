@@ -695,7 +695,7 @@ If FORCE is non-nil, kill the processes immediately."
 		   (setq oz-read-emulator-output t)
 		   (let ((compilercomp
 			  (or (getenv "OZCOMPILERCOMP")
-			      (concat (oz-home) "/lib/Compiler.ozc"))))
+			      (concat "file:" (oz-home) "/lib/Compiler.ozc"))))
 		     (make-comint "Oz Emulator" "ozemulator" nil "-E"
 				  "-u" compilercomp)))
 		  (oz-using-new-compiler
@@ -882,6 +882,7 @@ feed that many preceding paragraphs as well as the current paragraph."
   (interactive "p")
   (let ((region (oz-paragraph-region arg)))
     (oz-feed-region (car region) (cdr region))))
+
 
 (defun oz-send-string (string)
   "Feed STRING to the Oz Compiler, restarting it if it died."
