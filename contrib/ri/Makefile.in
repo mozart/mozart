@@ -40,6 +40,7 @@ CXX             = $(OZTOOL) c++
 CC              = $(OZTOOL) cc
 LD              = $(OZTOOL) ld
 DEPEND          = $(CXX) $(CFLAGS) -MM
+PERL            = @PERL@
 
 OZDEPEND        = $(OZC) -c -M
 
@@ -113,7 +114,7 @@ first: $(GENERATED_FILES)
         $(CC) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 %-table.cc: %.spec
-        $(PERL) $(FCPDECL) -file $< -interface > $@
+        $(PERL) $(FCPDECL) -file $< -interface > $@ || { rm -f $@; exit 1; }
 
 #----------------------------------------------------------------------
 # Maintenance
