@@ -80,6 +80,78 @@ public:
   }
 };
 
+//-----------------------------------------------------------------------------
+
+class BoundsNPropagator : public OZ_Propagator {
+private:
+  static OZ_CFunHeader header;
+
+  int _size, * _d_ub;
+  OZ_Term * _s, * _d, * _r;
+  union _s_ub_t {int * s_ub_card; OZ_Term * s_ub;} _s_ub;
+  int first;
+public:
+  BoundsNPropagator(OZ_Term s_ub, OZ_Term s, OZ_Term d_ub, 
+		    OZ_Term d, OZ_Term r) : first(1)
+  {
+    _size = OZ_vectorSize(d);
+
+    _d = OZ_hallocOzTerms(_size);
+    OZ_getOzTermVector(d, _d);
+
+    _s = OZ_hallocOzTerms(_size);
+    OZ_getOzTermVector(s, _s);
+
+    _r = OZ_hallocOzTerms(_size);
+    OZ_getOzTermVector(r, _r);
+
+    _d_ub = OZ_hallocCInts(_size);
+    OZ_getCIntVector(d_ub, _d_ub);
+
+    _s_ub.s_ub = OZ_hallocOzTerms(_size);
+    OZ_getOzTermVector(s_ub, _s_ub.s_ub);
+  }
+  
+
+  virtual OZ_Return propagate(void);
+  
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
+  }
+  virtual size_t sizeOf(void) {
+    return sizeof(BoundsNPropagator);
+  }
+  virtual void updateHeapRefs(OZ_Boolean) {
+    OZ_Term * new_d  = OZ_hallocOzTerms(_size);
+    OZ_Term * new_s  = OZ_hallocOzTerms(_size);
+    OZ_Term * new_r  = OZ_hallocOzTerms(_size);
+    int * new_d_ub   = OZ_hallocCInts(_size);
+    _s_ub_t new_s_ub = { OZ_hallocCInts(_size) };
+    
+    for (int i = _size; i--; ) {
+      new_d[i] = _d[i];
+      OZ_updateHeapTerm(new_d[i]);
+
+      new_s[i] = _s[i];
+      OZ_updateHeapTerm(new_s[i]);
+
+      new_r[i] = _r[i];
+      OZ_updateHeapTerm(new_r[i]);
+
+      new_d_ub[i] = _d_ub[i];
+      new_s_ub.s_ub_card[i] = _s_ub.s_ub_card[i];
+    }
+    _d    = new_d;
+    _s    = new_s;
+    _r    = new_r;
+    _d_ub = new_d_ub;
+    _s_ub = new_s_ub;
+  }
+  virtual OZ_Term getParameters(void) const {
+    return OZ_nil();
+  }
+};
+
 
 #endif /* __REIFIED_HH__ */
 
