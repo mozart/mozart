@@ -204,7 +204,7 @@ in
 	 case {UnknownFile F} then
 	    SourceManager,EraseScrollbar(What)
 	 else
-	    RealF = {LookupPath F}
+	    RealF = {LookupFile F}
 	    E     = {self lookup(file:RealF entry:$)}
 	 in
 	    lock

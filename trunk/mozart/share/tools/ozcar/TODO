@@ -4,6 +4,3 @@ Sat Jan 11 01:23:12 MET 1997
 Button einbauen zum temporaeren "Blindschalten" des Debuggers.
 Interessant, um Codebereiche mit DebugInfo, aber ohne Debuggerinteraktion
 zu feeden.
-
-Wed Jan 15 16:40:41 MET 1997
-Suchen von Quelltextfiles ohne Prefix '/' gemaess OZPATH realisieren
