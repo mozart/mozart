@@ -35,7 +35,7 @@ $(ELISPDIR)/%.elc: %.elc
 	$(INSTALLFILE) $< $@
 
 clean:
-	$(RM) $(ELCS) TAGS
+	$(RM) *.elc TAGS
 
 veryclean: clean
 
