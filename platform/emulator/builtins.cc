@@ -2652,6 +2652,27 @@ OZ_Return InlineName(TaggedRef AA, TaggedRef &out)      \
 }                                                       \
 OZ_DECLAREBI_USEINLINEFUN1(BIName,InlineName)
 
+#ifdef WINDOWS
+// These we had to hack ourselves because they are not provided
+// by Windows libraries:
+
+double asinh(double x) {
+  return log(x + sqrt(x * x + 1.0));
+}
+
+double acosh(double x) {
+  return log(x + sqrt(x * x - 1.0));
+}
+
+double atanh(double x) {
+  if (fabs(x) > 1.0) {
+    errno = EDOM;
+    return asin(2.0);
+  } else {
+    return log((1.0 + x) / (1.0 - x)) / 2.0;
+  }
+}
+#endif
 
 FLOATFUN(exp, BIexp, BIinlineExp)
 FLOATFUN(log, BIlog, BIinlineLog)
