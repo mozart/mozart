@@ -115,6 +115,16 @@ This means that calculations are significantly
 faster and memory-efficient
 when done with small integers rather than
 with floating-point numbers or big integers.
+
+<section class=unnumbered><title/Graphics Interface/
+
+The graphics interface
+(see <ptr.extern to="ozdoc:system" key="chapter.tk">).
+is much slower under Windows than under Unix.
+To be precise, interprocess communication between
+the Oz and tk processes is particularly slow.
+This limitation will be fixed soon.
+The Oz and tk processes themselves have no speed problems.
  
 <section class=unnumbered><title/Compiler/
 
