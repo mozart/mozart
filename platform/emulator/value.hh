@@ -53,6 +53,7 @@ extern TaggedRef
   BI_controlVarHandler,
   BI_PROP_LPQ,
   BI_bindFuture,
+  BI_bindReadOnly,
   BI_waitStatus,
   BI_unknown,
   BI_varToFuture,

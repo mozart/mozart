@@ -33,7 +33,6 @@
 #endif
 
 #include "var_readonly.hh"
-#include "var_failed.hh"
 #include "dpInterface.hh"
 #include "builtins.hh"
 #include "unify.hh"
@@ -90,7 +89,6 @@ OZ_BI_define(BInewReadOnly,0,1)
 } OZ_BI_end
 
 // this built-in binds a ReadOnly
-// it is used by the definition of '!!' only
 OZ_BI_define(BIbindReadOnly,2,0)
 {
   // BEWARE: the type of var is not checked.
@@ -125,7 +123,7 @@ OZ_BI_define(BIvarToReadOnly,2,0)
       return PROCEED;
     }
     if (oz_isNeeded(r)) { // propagate need
-      oz_var_need(vPtr);
+      oz_var_makeNeeded(vPtr);
     } else { // r not needed yet: suspend again on r
       OZ_Return ret = oz_var_addQuietSusp(rPtr, oz_currentThread());
       Assert(ret == SUSPEND);

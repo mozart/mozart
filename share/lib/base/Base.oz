@@ -61,9 +61,9 @@ require
 \ifdef SITE_PROPERTY
    Boot_SiteProperty	at 'x-oz://boot/SiteProperty'
 \endif
-   
+
 prepare
-   
+
    %%
    %% Value
    %%
@@ -80,26 +80,39 @@ prepare
    Min		= Boot_Value.min
    CondSelect	= Boot_Value.condSelect
    HasFeature	= Boot_Value.hasFeature
+   FailedValue  = Boot_Value.failedValue
    ByNeed	= proc {$ P X} thread {WaitNeeded X} {P X} end end
-   ByNeedFuture	= Boot_Value.byNeedFuture
-   
+   ByNeedFuture	= proc {$ P X}
+		     R={Boot_Value.newReadOnly}
+		  in
+		     thread
+			{WaitNeeded R}
+			try Y in
+			   {P Y} {Boot_Value.bindReadOnly R Y}
+			catch E then
+			   {Boot_Value.bindReadOnly R {FailedValue E}}
+			end
+		     end
+		     X=R
+		  end
+
    %%
    %% Literal
    %%
    IsLiteral	= Boot_Literal.is
-   
+
    %%
    %% Unit
    %%
    IsUnit	= Boot_Unit.is
    `unit`	= {Boot_Name.newUnique 'unit'}
-   
+
    %%
    %% Lock
    %%
    IsLock	= Boot_Lock.is
    NewLock	= Boot_Lock.new
-   
+
    %%
    %% Cell
    %%
@@ -108,7 +121,7 @@ prepare
    Exchange	= proc {$ C Old New} Old = {Boot_Cell.exchangeFun C New} end
    Assign	= Boot_Cell.assign
    Access	= Boot_Cell.access
-   
+
    %%
    %% Port
    %%
@@ -116,20 +129,20 @@ prepare
    NewPort	= Boot_Port.new
    Send		= Boot_Port.send
    SendRecv     = Boot_Port.sendRecv
-   
+
    %%
    %% Atom
    %%
    IsAtom	= Boot_Atom.is
    AtomToString	= Boot_Atom.toString
-   
+
    %%
    %% Name
    %%
    IsName	= Boot_Name.is
    NewName	= Boot_Name.new
    NewUniqueName= Boot_Name.newUnique % not exported
-   
+
    %%
    %% Bool
    %%
@@ -139,7 +152,7 @@ prepare
    Or		= Boot_Bool.'or'
    `true`	= {NewUniqueName 'true'}
    `false`	= {NewUniqueName 'false'}
-   
+
    %%
    %% String
    %%
@@ -147,19 +160,19 @@ prepare
    StringToAtom	= Boot_String.toAtom
    StringToInt	= Boot_String.toInt
    StringToFloat= Boot_String.toFloat
-   
+
    %%
    %% Char
    %%
    IsChar	= Boot_Char.is
-   
+
    %%
    %% Int
    %%
    IsInt	= Boot_Int.is
    IntToFloat	= Boot_Int.toFloat
    IntToString	= Boot_Int.toString
-   
+
    %%
    %% Float
    %%
@@ -179,19 +192,19 @@ prepare
    Round	= Boot_Float.round
    FloatToInt	= Boot_Float.toInt
    FloatToString= Boot_Float.toString
-   
+
    %%
    %% Number
    %%
    IsNumber	= Boot_Number.is
    Abs		= Boot_Number.abs
-   
+
    %%
    %% Tuple
    %%
    IsTuple	= Boot_Tuple.is
    MakeTuple	= Boot_Tuple.make
-   
+
    %%
    %% Procedure
    %%
@@ -203,13 +216,13 @@ prepare
    %%
    IsWeakDictionary	= Boot_WeakDictionary.is
    NewWeakDictionary	= Boot_WeakDictionary.new
-   
+
    %%
    %% Dictionary
    %%
    IsDictionary	= Boot_Dictionary.is
    NewDictionary= Boot_Dictionary.new
-   
+
    %%
    %% Record
    %%
@@ -220,18 +233,18 @@ prepare
    Adjoin	= Boot_Record.adjoin
    AdjoinList	= Boot_Record.adjoinList
    AdjoinAt	= Boot_Record.adjoinAt
-   
+
    %%
    %% Chunk
    %%
    IsChunk	= Boot_Chunk.is
    NewChunk	= Boot_Chunk.new
-   
+
    %%
    %% VirtualString
    %%
    IsVirtualString	= Boot_VirtualString.is
-   
+
    %%
    %% Array
    %%
@@ -239,7 +252,7 @@ prepare
    IsArray	= Boot_Array.is
    Put		= Boot_Array.put
    Get		= Boot_Array.get
-   
+
    %%
    %% Object, Class, and OoExtensions
    %%
@@ -263,22 +276,22 @@ prepare
    %% Other
    `ooPrintName` = {NewUniqueName 'ooPrintName'}
    `ooFallback`	 = {NewUniqueName 'ooFallback'}
-   
+
    %%
    %% BitArray
    %%
    IsBitArray	= Boot_BitArray.is
-   
+
    %%
    %% ForeignPointer
    %%
    IsForeignPointer	= Boot_ForeignPointer.is
-   
+
    %%
    %% Thread
    %%
    IsThread	= Boot_Thread.is
-   
+
    %%
    %% Exception
    %%
@@ -288,13 +301,13 @@ prepare
    %% Time
    %%
    Alarm	= Boot_Time.alarm
-   
+
    %%
    %% BitString ByteString
    %%
    IsBitString	= Boot_BitString.is
    IsByteString	= Boot_ByteString.is
-   
+
    \insert 'Exception.oz'
    \insert 'Value.oz'
    \insert 'Literal.oz'
@@ -531,7 +544,5 @@ export
    %% SiteProperty
    'SiteProperty'	: SiteProperty
 \endif
-   
+
 end
-
-

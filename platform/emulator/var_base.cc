@@ -207,6 +207,9 @@ OZ_Return oz_var_addQuietSusp(TaggedRef *v, Suspendable * susp) {
   Assert(oz_isVar(*v));
   OzVariable *ov = tagged2Var(*v);
   switch (ov->getType()) {
+  case OZ_VAR_FAILED:
+    // Don't suspend on a failed value!  addSusp() raises the exception.
+    return ((Failed *) ov)->addSusp(v, susp);
   case OZ_VAR_FUTURE:
     ov->addSuspSVar(susp);
     return (SUSPEND);
@@ -216,7 +219,6 @@ OZ_Return oz_var_addQuietSusp(TaggedRef *v, Suspendable * susp) {
     ov = new SimpleVar(ov->getBoardInternal());
     *v = makeTaggedVar(ov);
     // fall through;
-  case OZ_VAR_FAILED:
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY:
   case OZ_VAR_SIMPLE_QUIET:
@@ -232,7 +234,7 @@ OZ_Return oz_var_addQuietSusp(TaggedRef *v, Suspendable * susp) {
 }
 
 // raph: makes a variable needed
-OZ_Return oz_var_need(TaggedRef *v) {
+OZ_Return oz_var_makeNeeded(TaggedRef *v) {
   Assert(oz_isVar(*v));
   OzVariable *ov = tagged2Var(*v);
 

@@ -52,7 +52,6 @@ private:
   OZ_Term exception;
 
 public:
-  // Failed(Board *bb) : OzVariable(OZ_VAR_FAILED,bb), exception(0) {}
   Failed(Board *bb, OZ_Term exc)
     : OzVariable(OZ_VAR_FAILED,bb), exception(exc) {}
 
@@ -84,12 +83,6 @@ public:
 inline
 OZ_Term oz_newFailed(Board *bb, OZ_Term exc) {
   return makeTaggedRef(newTaggedVar(new Failed(bb, exc)));
-}
-
-inline
-int oz_isFailed(TaggedRef r) {
-  // Assert(!oz_isRef(r));
-  return (oz_isVar(r) && tagged2Var(r)->getType() == OZ_VAR_FAILED);
 }
 
 #endif /* __FAILED__HH__ */

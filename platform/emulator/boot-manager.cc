@@ -519,6 +519,7 @@ void initBuiltins() {
   BI_unknown           = string2Builtin("INTERNAL", "UNKNOWN");
   BI_PROP_LPQ          = string2Builtin("INTERNAL", "propagate");  
   BI_bindFuture        = string2Builtin("INTERNAL", "bindFuture");
+  BI_bindReadOnly      = string2Builtin("INTERNAL", "bindReadOnly");
   BI_waitStatus        = string2Builtin("INTERNAL", "waitStatus");
   BI_varToFuture       = string2Builtin("INTERNAL", "varToFuture");
   BI_varToReadOnly     = string2Builtin("INTERNAL", "varToReadOnly");

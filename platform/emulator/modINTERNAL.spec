@@ -64,6 +64,10 @@
 			      out => [],
 			      BI  => BIbindFuture},
 
+     'bindReadOnly'	 => { in  => ['value', 'value'],
+			      out => [],
+			      BI  => BIbindReadOnly},
+
      'waitStatus'	 => { in  => ['value', 'value'],
 			      out => ['value'],
 			      BI  => BIwaitStatus},

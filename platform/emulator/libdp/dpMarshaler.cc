@@ -42,7 +42,7 @@
 #include "dpInterface.hh"
 #include "var.hh"
 #include "var_obj.hh"
-#include "var_future.hh"
+#include "var_readonly.hh"
 #include "var_class.hh"
 #include "gname.hh"
 #include "state.hh"
@@ -838,15 +838,11 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
     switch (evt) {
     case OZ_EVAR_MANAGER:
       {
+	// make the variable needed first
+	oz_var_makeNeeded(vRef);
 	// make&save an "exported" manager;
 	ManagerVar *mvp = oz_getManagerVar(v);
 	expVars = new MgrVarPatch(vrt, expVars, mvp, dest);
-	// There are no distributed futures: once exported, it is
-	// kicked (just now). Note also that futures are first
-	// exported, then kicked (since kicking can immediately
-	// yield a new subtree we cannot handle).
-	Assert(oz_isVar(*vRef));
-	(void) triggerVariable(vRef);
       }
       break;
 
@@ -872,12 +868,12 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
     }
   } else if (oz_isFree(v) || oz_isFuture(v)) {
     Assert(perdioInitialized);
+
+    // make the variable needed first
+    oz_var_makeNeeded(vRef);
     //
     ManagerVar *mvp = globalizeFreeVariable(vRef);
     expVars = new MgrVarPatch(vrt, expVars, mvp, dest);
-    //
-    Assert(oz_isVar(*vRef));
-    (void) triggerVariable(vRef);
   } else { 
     //
 

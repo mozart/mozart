@@ -976,7 +976,7 @@ void WeakStack::recurse(void)
   while (!isEmpty()) {
     pop(fut,val);
     DEREF(fut,ptr);
-    oz_bindFuture(ptr,val);
+    oz_bindReadOnly(ptr,val);
   }
 }
 
@@ -1053,7 +1053,7 @@ void WeakDictionary::weakGC()
     if (t!=0 && !isGCMarkedTerm(t)) {
       numelem--;
       if (stream) {
-	if (!list) newstream=list=oz_newFuture(oz_rootBoard());
+	if (!list) newstream=list=oz_newReadOnly(oz_rootBoard());
 	// schedule key and value for later collection
 	OZ_Term p = oz_pair2(table->getKey(i),t);
 	weakReviveStack.push(p);

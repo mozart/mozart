@@ -53,6 +53,7 @@ TaggedRef
   BI_exchangeCell,BI_assign,BI_atRedo,
   BI_controlVarHandler,
   BI_bindFuture,
+  BI_bindReadOnly,
   BI_waitStatus,
   BI_unknown,
   BI_PROP_LPQ,
