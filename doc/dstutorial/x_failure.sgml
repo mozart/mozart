@@ -184,8 +184,8 @@ together with at most two elements from the set
 <<remoteProblem(tempSome)>>,
 <<remoteProblem(tempAll)>>}.
 Permanent remote problems mask temporary ones,
-i.e., if <<remoteProblem<<permSome>> is detected
-then <<remoteProblem<<tempSome>> cannot be detected.
+i.e., if <<remoteProblem(permSome)>> is detected
+then <<remoteProblem(tempSome)>> cannot be detected.
 If a (temporary or permanent)
 problem exists on <EM>all</EM> remote sites
 (e.g., <<remoteProblem(permAll)>>)
