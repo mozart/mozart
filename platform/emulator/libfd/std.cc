@@ -4,6 +4,7 @@
  * 
  *  Contributors:
  *    Christian Schulte (schulte@dfki.de)
+ *    Joerg Wuertz (wuertz@dfki.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
