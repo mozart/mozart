@@ -372,6 +372,7 @@ void markDestroy(key_t shmkey);
 class VSMailboxRegister : public GenHashTable {
 private:
   int seqIndex;			// does not need to be initialized;
+  GenHashNode *seqGHN;		// both needed for 'getFirst'/'getNext';
 
   //
 private:

@@ -140,7 +140,7 @@
 // Tasks manager;
 // Minimal frequency in ms. Rounded up to the 'CLOCK_TICK' value;
 // A minimal frequency of '0' means there is no minimal frequency;
-#define DEFAULT_MIN_FREQ  0
+#define DEFAULT_MIN_INTERVAL   0
 
 //
 // Distributed Oz - general;
@@ -154,6 +154,13 @@
 #define VS_CHUNKS_NUM   4096
 // 12,5% fill-up for 32 sites?
 #define VS_REGISTER_HT_SIZE   256
+//
+// Wait time for "ping" probing. Note that this time should be
+// considerably larger than 'PROBE_INTERVAL', since ping messages
+// ('M_SITE_IS_ALIVE'/'M_SITE_ALIVE') are delivered with the same
+// priority as all other messages. This time is effectively made
+// at least as large as 'PROBE_INTERVAL';
+#define PROBE_WAIT_TIME 30000 /* ms */
 
 /*
  * Switches

@@ -3672,6 +3672,9 @@ GiveUpReturn giveUp_RemoteSite(RemoteSite* site){
 void discoveryPerm_RemoteSite(RemoteSite* site){
   site->sitePrmDwn();} 
 
+void siteAlive_RemoteSite(RemoteSite*) {}
+
+
 void initNetwork()
 {
   ip_address ip;

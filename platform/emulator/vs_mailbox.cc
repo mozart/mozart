@@ -216,10 +216,13 @@ void VSMailboxRegister::add(key_t key, VSMailboxManagerImported *pool)
 VSMailboxManagerImported *VSMailboxRegister::getFirst()
 {
   VSMailboxManagerImported *mbm;
-  GenHashNode *ghn;
-
-  ghn = GenHashTable::getFirst(seqIndex);
-  GenCast(ghn, GenHashNode*, mbm, VSMailboxManagerImported*);
+  seqGHN = GenHashTable::getFirst(seqIndex);
+  if (seqGHN) {
+    GenCast(seqGHN->getEntry(), GenHashEntry*,
+	    mbm, VSMailboxManagerImported*);
+  } else {
+    mbm = (VSMailboxManagerImported *) 0;
+  }
   return (mbm);
 }
 
@@ -228,11 +231,13 @@ VSMailboxManagerImported*
 VSMailboxRegister::getNext(VSMailboxManagerImported *prev)
 {
   VSMailboxManagerImported *mbm;
-  GenHashNode *ghn;
-
-  GenCast(prev, VSMailboxManagerImported*, ghn, GenHashNode*);
-  ghn = GenHashTable::getNext(ghn, seqIndex);
-  GenCast(ghn, GenHashNode*, mbm, VSMailboxManagerImported*);
+  seqGHN = GenHashTable::getNext(seqGHN, seqIndex);
+  if (seqGHN) {
+    GenCast(seqGHN->getEntry(), GenHashEntry*,
+	    mbm, VSMailboxManagerImported*);
+  } else {
+    mbm = (VSMailboxManagerImported *) 0;
+  }
   return (mbm);
 }
 

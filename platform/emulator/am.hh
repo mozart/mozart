@@ -96,11 +96,11 @@ oz_BFlag oz_isBetween(Board *to, Board *varHome);
 
 //
 // "check" says 'TRUE' if there is some pending processing;
-typedef Bool (*TaskCheckProc)(double clock, void *arg);
+typedef Bool (*TaskCheckProc)(unsigned long clock, void *arg);
 // 'process' says 'TRUE' if all the tasks are done;
-typedef Bool (*TaskProcessProc)(double clock, void *arg);
+typedef Bool (*TaskProcessProc)(unsigned long clock, void *arg);
 
-Bool NeverDo_CheckProc(double, void*);
+Bool NeverDo_CheckProc(unsigned long, void*);
 
 //
 class TaskNode {
@@ -112,10 +112,12 @@ private:
 
   //
 public:
-  // There is no task if check==NULL;
+  //
+  // There is no task if check == NeverDo_CheckProc;
   TaskNode() {
-    check = NeverDo_CheckProc;	// 
-    DebugCode(arg = (void *) 0; ready = NO; process = (TaskProcessProc) 0);
+    check = NeverDo_CheckProc;
+    ready = FALSE;		// ready is used by 'AM::handleTasks()';
+    DebugCode(arg = (void *) 0; process = (TaskProcessProc) 0);
   }
   ~TaskNode() {
     DebugCode(check = NeverDo_CheckProc);
@@ -131,7 +133,10 @@ public:
     ready = FALSE;
     process = pIn;
   }
-  void dropTask() { check = NeverDo_CheckProc; }
+  void dropTask() {
+    check = NeverDo_CheckProc;
+    ready = FALSE;
+  }
 
   //
   void *getArg() {
@@ -151,7 +156,6 @@ public:
     ready = TRUE;
   }
   Bool isReady() { 
-    Assert(check != NeverDo_CheckProc);
     return (ready);
   }
   void dropReady() {
@@ -161,10 +165,11 @@ public:
 };
 
 //
-// By now we need only two - one for input between virtual sites, and
-// another - for pending (because of locks at the receiver site)
-// sends;
-#define	MAXTASKS	2
+// By now we need three:
+// (a) input between virtual sites,
+// (b) pending (because of locks at the receiver site) sends,
+// (c) probing of virtual sites.
+#define	MAXTASKS	3
 
 
 /* -----------------------------------------------------------------------
@@ -245,7 +250,7 @@ private:
   Bool installingScript;  // ask TM
 
   // internal clock in 'ms';
-  double emulatorClock;
+  unsigned long emulatorClock;
 
   // minimal interval at which tasks are checked/handled.
   // '0' means no minimal interval is required.
@@ -581,7 +586,7 @@ public:
   void checkTasks();
 
   //
-  double getEmulatorClock() { return (emulatorClock); }
+  unsigned long getEmulatorClock() { return (emulatorClock); }
 
   // yields time for blocking in 'select()';
   unsigned int waitTime();

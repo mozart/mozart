@@ -84,6 +84,10 @@ static VSFreeMessagePool freeMessagePool;
 static VSMailboxRegister mailboxRegister(vsRegisterHTSize);
 
 //
+// The guy busy with probing...
+static VSProbingObject vsProbingObject(vsRegisterHTSize);
+
+//
 // Created mailboxes (their keys);
 static VSMailboxKeysRegister slavesRegister;
 
@@ -112,17 +116,24 @@ static VSMsgChunkPoolManagerOwned *myVSChunksPoolManager;
 // The 'check'&'process' procedures for processing incoming messages
 // (see am.hh, class 'TaskNode'):
 // static TaskCheckProc checkVSMessages;
-static Bool checkVSMessages(double clock, void *mbox);
+static Bool checkVSMessages(unsigned long clock, void *mbox);
 // ... and the read handler itself:
 // static TaskProcessProc readVSMessages;
-static Bool readVSMessages(double clock, void *mbox);
+static Bool readVSMessages(unsigned long clock, void *mbox);
 
 //
 // ... and the pair for processing unsent messages:
 // static TaskCheckProc checkMessageQueue;
-static Bool checkMessageQueue(double clock, VSSiteQueue *sq);
+static Bool checkMessageQueue(unsigned long clock, VSSiteQueue *sq);
 // static TaskProcessProc processMessageQueue;
-static Bool processMessageQueue(double clock, VSSiteQueue *sq);
+static Bool processMessageQueue(unsigned long clock, VSSiteQueue *sq);
+
+//
+// ... and for dealing with probes;
+// static TaskCheckProc checkProbes;
+static Bool checkProbes(unsigned long clock, VSProbingObject *po);
+// static TaskProcessProc processProbes;
+static Bool processProbes(unsigned long clock, VSProbingObject *po);
 
 ///
 /// (static) interface methods for virtual sites;
@@ -205,21 +216,17 @@ MonitorReturn demonitorQueue_VirtualSite(VirtualSite* vs)
 }
 
 //
-// There are no probes by now.
-// Probes can be implemented with dummy messages which must read
-// (e.g. freed) by the receiver;
 ProbeReturn
-installProbe_VirtualSite(VirtualSite *vs,
-			 ProbeType pt, int frequency, void *storePtr)
+installProbe_VirtualSite(VirtualSite *vs, ProbeType pt, int frequency)
 {
   Assert(frequency > 0);
-  return (PROBE_INSTALLED);
+  return (vsProbingObject.installProbe(vs, pt, frequency));
 }
 
 //
-ProbeReturn deinstallProbe_VirtualSite(VirtualSite*, ProbeType pt)
+ProbeReturn deinstallProbe_VirtualSite(VirtualSite *vs, ProbeType pt)
 {
-  return (PROBE_DEINSTALLED);
+  return (vsProbingObject.deinstallProbe(vs, pt));
 }
 
 //
@@ -292,7 +299,7 @@ MsgBuffer* getVirtualMsgBuffer(Site* site)
 
 //
 //
-static Bool checkVSMessages(double clock, void *vMBox)
+static Bool checkVSMessages(unsigned long clock, void *vMBox)
 {
   // unsafe by now - some magic number should be added;
   VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
@@ -300,7 +307,7 @@ static Bool checkVSMessages(double clock, void *vMBox)
 }
 
 //
-static Bool readVSMessages(double clock, void *vMBox)
+static Bool readVSMessages(unsigned long clock, void *vMBox)
 {
   // unsafe by now - some magic number(s) should be added;
   VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
@@ -346,7 +353,7 @@ static Bool readVSMessages(double clock, void *vMBox)
 
 //
 //
-static Bool checkMessageQueue(double clock, void *sqi)
+static Bool checkMessageQueue(unsigned long clock, void *sqi)
 {
   // unsafe by now - some magic number should be added;
   VSSiteQueue *sq = (VSSiteQueue *) sqi;
@@ -354,7 +361,7 @@ static Bool checkMessageQueue(double clock, void *sqi)
 }
 
 //
-static Bool processMessageQueue(double clock, void *sqi)
+static Bool processMessageQueue(unsigned long clock, void *sqi)
 {
   // unsafe by now - some magic number should be added;
   VSSiteQueue *sq = (VSSiteQueue *) sqi;
@@ -396,6 +403,20 @@ static Bool processMessageQueue(double clock, void *sqi)
 #undef	VSMsgQueueMark
 
 //
+static Bool checkProbes(unsigned long clock, void *poi)
+{
+  VSProbingObject *po = (VSProbingObject *) poi;
+  return (po->checkProbes(clock));
+}
+
+//
+static Bool processProbes(unsigned long clock, void *poi)
+{
+  VSProbingObject *po = (VSProbingObject *) poi;
+  return (po->processProbes(clock));
+}
+
+//
 void dumpVirtualMsgBuffer(MsgBuffer* m)
 {
   VSMsgBufferOwned *buf = (VSMsgBufferOwned *) m;
@@ -403,6 +424,12 @@ void dumpVirtualMsgBuffer(MsgBuffer* m)
   buf->releaseChunks();
   buf->cleanup();
   freeMsgBufferPool.dispose(buf);
+}
+
+//
+void siteAlive_VirtualSite(VirtualSite *vs)
+{
+  vs->setTimeAliveAck(am.getEmulatorClock());
 }
 
 //
@@ -444,6 +471,8 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 		    checkVSMessages, readVSMessages);
     am.registerTask((void *) &vsSiteQueue,
 		    checkMessageQueue, processMessageQueue);
+    am.registerTask((void *) &vsProbingObject,
+		    checkProbes, processProbes);
   }
 
   //
@@ -460,6 +489,10 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   if (!mbm->getMailbox()->enqueue(buf->getSHMKey(),
 				  buf->getFirstChunk()))
     error("Virtual sites: unable to put the M_INIT_VS message");
+  buf->passChunks();
+  buf->cleanup();
+  freeMsgBufferPool.dispose(buf);
+  DebugCode(voidBUF = buf = (VSMsgBufferOwned *) 0);
 
   //
   mbm->unmap();			// we don't need that object now anymore;
@@ -543,6 +576,8 @@ OZ_BI_define(BIVSinitServer,1,0)
 		  checkVSMessages, readVSMessages);
   am.registerTask((void *) &vsSiteQueue,
 		  checkMessageQueue, processMessageQueue);
+  am.registerTask((void *) &vsProbingObject,
+		  checkProbes, processProbes);
 
   //
   return (PROCEED);
@@ -690,7 +725,7 @@ MonitorReturn demonitorQueue_VirtualSite(VirtualSite *)
 }
 
 //
-ProbeReturn installProbe_VirtualSite(VirtualSite*, ProbeType, int, void*)
+ProbeReturn installProbe_VirtualSite(VirtualSite*, ProbeType, int)
 {
   error("'installProbe_VirtualSite' called without 'VIRTUALSITES'?");
   return ((ProbeReturn) -1);
