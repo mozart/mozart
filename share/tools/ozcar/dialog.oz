@@ -84,40 +84,38 @@ local
 	    {C enqueue(mergeEnv(@CurEnv))}
 	    {Wait {C enqueue(ping($))}}
 	    {CUI reset}
-
-	    {self.Result tk(conf
-			    fg:DefaultForeground
-			    text:'')}
 	 end
 
-	 proc {Spinner W X SpinnerDone}
+	 SpinnerLock = {NewLock}
+
+	 proc {Spinner W X}
 	    case {IsFree X} then
 	       S|Sr = @SlashList
 	    in
-	       {Delay 80}
+	       {Delay 70}
 	       {W tk(conf text:S)}
 	       SlashList <- Sr
-	       {Spinner W X SpinnerDone}
-	    else
-	       {self.Result tk(conf fg:DefaultForeground)}
-	       {self.Result tk(conf text:'')}
-	       SpinnerDone = unit
-	    end
+	       {Spinner W X}
+	    else skip end
 	 end
 
 	 proc {Doit V}
-	    case @EvalThread == unit then
-	       Sync SpinnerDone
-	    in
-	       try
-		  Self
-		  R
-	       in
+	    case @EvalThread == unit then Sync in
+	       try Self R in
 		  EvalThread <- {Thread.this}
 		  {OzcarMessage 'Doit: ' # V}
 		  thread
-		     {Thread.setThisPriority high}
-		     {Spinner self.Result Sync SpinnerDone}
+		     lock SpinnerLock then
+			{Delay 150} %% short calculations don't need a spinner
+			case {IsFree Sync} then
+			   S|Sr = @SlashList
+			in
+			   {self.Result tk(conf fg:DefaultForeground text:S)}
+			   SlashList <- Sr
+			   {Thread.setThisPriority high}
+			   {Spinner self.Result Sync}
+			else skip end
+		     end
 		  end
 		  {EvalInit}
 		  Self = {CondSelect @CurEnv 'self' unit}
@@ -133,7 +131,7 @@ local
 		     %% local
 		     %%    class Class1
 		     %%       meth eval($)
-		     %% 	 <V>
+		     %%          <V>
 		     %%       end
 		     %%    end
 		     %% in
@@ -148,7 +146,7 @@ local
 		  end
 		  {Wait {@CurComp enqueue(ping($))}}
 		  Sync = unit
-		  {Wait SpinnerDone}
+		  lock SpinnerLock then skip end %% wait for spinner to finish
 		  case {@CurCompUI hasErrors($)} then ResultText in
 		     case RunningWithOPI then
 			ResultText = 'Compile Error (see *Oz Compiler* buffer)'
@@ -160,7 +158,8 @@ local
 		     {self.Result tk(conf fg:BlockedThreadColor
 				     text:ResultText)}
 		  else
-		     {self.Result tk(conf text:{V2VS R})}
+		     {self.Result tk(conf fg:DefaultForeground
+				     text:{V2VS R})}
 		  end
 		  EvalThread <- unit
 	       catch E=kernel(terminate) then
@@ -196,10 +195,16 @@ local
 	    end
 	 end
 
+	 proc {Reset}
+	    {Kill}
+	    {self.Result tk(conf text:'')}
+	 end
+
 	 proc {Kill}
 	    lock
 	       case @EvalThread == unit then skip else
 		  {Thread.terminate @EvalThread}
+		  lock SpinnerLock then skip end %% wait for spinner to finish
 		  EvalThread <- unit
 	       end
 	    end
@@ -215,7 +220,7 @@ local
 			       title:   'Query'
 			       buttons: ['Eval'  # Eval
 					 'Exec'  # Exec
-					 'Reset' # Kill
+					 'Reset' # Reset
 					 'Done'  # Close]
 			       pack:    false)
 	 Frame = {New TkTools.textframe tkInit(parent: self
@@ -247,8 +252,8 @@ local
 	 {self.toplevel tkBind(event: '<Escape>'
 			       action: Close)}
 	 %% resetting (kill eval/exec thread)
-	 {ExprEntry tkBind(event: '<Control-r>'
-			   action: Kill)}
+	 {ExprEntry tkBind(event: '<Meta-t>'
+			   action: Reset)}
 	 %% eval expression
 	 {ExprEntry tkBind(event: '<Return>'
 			   action: Eval)}
@@ -279,6 +284,8 @@ local
 				  tkInit({Cget envSystemVariables})}
 
 	 proc {Apply}
+	    {FocusToTop}
+
 	    local
 	       Verbose = {TkVerbose tkReturnInt($)} > 0
 	    in
@@ -292,8 +299,10 @@ local
 	    {Config set(envSystemVariables
 			{TkEnvSystemVariables tkReturnInt($)} > 0)}
 
-	    {Config set(printWidth {WidthEntry tkGet($)})}
-	    {Config set(printDepth {DepthEntry tkGet($)})}
+	    {Config set(printWidth         {WidthEntry tkGet($)})}
+	    {Config set(printDepth         {DepthEntry tkGet($)})}
+	    {Config set(timeoutToSwitch    {TSwiEntry  tkGet($)})}
+	    {Config set(timeoutToUpdateEnv {TEnvEntry  tkGet($)})}
 
 	    {Ozcar PrivateSend(rebuildCurrentStack)}
 	 end
@@ -303,9 +312,23 @@ local
 	    {self tkClose}
 	 end
 
+	 proc {CheckFocusApplyAndExit}
+	    Top = {Tk.getTclName self.toplevel}
+	    Cur = {Tk.return focus(displayof:self.toplevel)}
+	 in
+	    case Cur == Top then
+	       {ApplyAndExit}
+	    else skip end
+	 end
+
+	 proc {FocusToTop}
+	    {Thread.preempt {Thread.this}}
+	    {Tk.send focus(self.toplevel)}
+	 end
+
 	 TkTools.dialog,tkInit(master:  Master
 			       root:    pointer
-			       title:   'Settings'
+			       title:   'Preferences'
 			       buttons: ['Ok'    # ApplyAndExit
 					 'Apply' # Apply
 					 'Abort' # tkClose]
@@ -313,38 +336,71 @@ local
 	 Title = {New Tk.label tkInit(parent: self
 				      fg:     SelectedBackground
 				      font:   HelpTitleFont
-				      text:   'Ozcar Settings')}
+				      text:   'Miscellaneous Settings')}
+%---------------
+	 TimeoutFrame = {New TkTools.textframe
+			    tkInit(parent:  self
+				   'class': 'NumberEntry'
+				   text:    'Idle Time To Perform Action')}
+	 DummyFrame2 = {New Tk.frame tkInit(parent: TimeoutFrame.inner)}
+	 TSwiLabel   = {New Tk.label tkInit(parent: DummyFrame2
+					    text:   'Thread Switch:')}
+	 TSwiEntry   = {New TkTools.numberentry
+			tkInit(parent:      DummyFrame2
+			       focusparent: self.toplevel
+			       min:         0
+			       max:         2000
+			       val:         {Cget timeoutToSwitch}
+			       width:       5)}
+	 TSwiLabel2  = {New Tk.label tkInit(parent: DummyFrame2
+					    text:   'ms')}
+	 TEnvLabel   = {New Tk.label tkInit(parent: DummyFrame2
+					    text:   'Env Update:')}
+	 TEnvEntry   = {New TkTools.numberentry
+			tkInit(parent:      DummyFrame2
+			       focusparent: self.toplevel
+			       min:         0
+			       max:         5000
+			       val:         {Cget timeoutToUpdateEnv}
+			       width:       5)}
+	 TEnvLabel2  = {New Tk.label tkInit(parent: DummyFrame2
+					    text:   'ms')}
+%---------------
 	 WidthDepthFrame = {New TkTools.textframe
 			    tkInit(parent:  self
 				   'class': 'NumberEntry'
 				   text:    'Value Printing')}
-	 DummyFrame = {New Tk.frame tkInit(parent:WidthDepthFrame.inner)}
+	 DummyFrame = {New Tk.frame tkInit(parent: WidthDepthFrame.inner)}
 	 WidthLabel = {New Tk.label tkInit(parent: DummyFrame
 					   text:   'Width:')}
 	 WidthEntry = {New TkTools.numberentry
-		       tkInit(parent: DummyFrame
-			      min:    1
-			      max:    20
-			      val:    {Cget printWidth}
-			      width:  3)}
+		       tkInit(parent:      DummyFrame
+			      focusparent: self.toplevel
+			      min:         1
+			      max:         20
+			      val:         {Cget printWidth}
+			      width:       3)}
 	 DepthLabel = {New Tk.label tkInit(parent: DummyFrame
 					   text:   'Depth:')}
 	 DepthEntry = {New TkTools.numberentry
-		       tkInit(parent: DummyFrame
-			      min:    0
-			      max:    5
-			      val:    {Cget printDepth}
-			      width:  3)}
+		       tkInit(parent:      DummyFrame
+			      focusparent: self.toplevel
+			      min:         0
+			      max:         5
+			      val:         {Cget printDepth}
+			      width:       3)}
+%---------------
 	 StepFrame = {New TkTools.textframe
 			tkInit(parent:  self
-			       text:    'Stepping')}
+			       text:    'Step on Builtin')}
 	 StepDot   = {New Tk.checkbutton
 		      tkInit(parent:   StepFrame.inner
-			     text:     'Step on Builtin `.\''
+			     text:     '`.\' ' %% make it somewhat larger
+					       %% for easier clicking... ;)
 			     variable: TkStepDotBuiltin)}
 	 StepNewName = {New Tk.checkbutton
 			tkInit(parent:   StepFrame.inner
-			       text:     'Step on Builtin `NewName\''
+			       text:     '`NewName\''
 			       variable: TkStepNewNameBuiltin)}
 	 FilterFrame = {New TkTools.textframe
 			tkInit(parent:  self
@@ -360,20 +416,21 @@ local
 		     tkInit(parent:   OtherFrame.inner
 			    text:     'Debug Debugger'
 			    variable: TkVerbose)}
-	 proc {FocusToTop}
-	    {Tk.send focus(self)}
-	 end
 
       in
 
 	 %% how to close the dialog
-	 {self.toplevel tkBind(event:'<Escape>' action:ApplyAndExit)}
-	 {StepDot tkBind(event:'<Return>' action:FocusToTop)}
-	 {StepNewName tkBind(event:'<Return>' action:FocusToTop)}
-	 {SystemVButton tkBind(event:'<Return>' action:FocusToTop)}
-	 {DDButton tkBind(event:'<Return>' action:FocusToTop)}
+	 {self.toplevel tkBind(event:'<Return>' action:CheckFocusApplyAndExit)}
+	 {self.toplevel tkBind(event:'<Escape>' action:self#tkClose)}
 
-	 {Tk.batch [grid(Title row:1 column:1 columnspan:2 sticky:we pady:2)
+	 {StepDot       tkBind(event:'<Return>' action:FocusToTop)}
+	 {StepNewName   tkBind(event:'<Return>' action:FocusToTop)}
+	 {SystemVButton tkBind(event:'<Return>' action:FocusToTop)}
+	 {DDButton      tkBind(event:'<Return>' action:FocusToTop)}
+
+	 {Tk.batch [grid(Title row:0 column:1 columnspan:2 sticky:we pady:2)
+		    grid(TimeoutFrame    row:1 column:1 columnspan:2
+			 sticky:nswe padx:2 pady:2)
 		    grid(WidthDepthFrame row:2 column:1
 			 sticky:nswe padx:2 pady:2)
 		    grid(StepFrame       row:2 column:2
@@ -382,14 +439,24 @@ local
 			 sticky:nswe padx:2 pady:2)
 		    grid(OtherFrame      row:3 column:2
 			 sticky:nswe padx:2 pady:2)
-		    pack(DummyFrame side:left anchor:w padx:1 pady:2)
+		    pack(DummyFrame2 side:left anchor:w padx:1 pady:2)
+		    pack(DummyFrame  side:left anchor:w padx:1 pady:2)
+		    grid(TSwiLabel       row:1 column:1 sticky:w)
+		    grid(TSwiEntry       row:1 column:2 sticky:w)
+		    grid(TSwiLabel2      row:1 column:3 sticky:w)
+		    grid(TEnvLabel       row:2 column:1 sticky:w)
+		    grid(TEnvEntry       row:2 column:2 sticky:w)
+		    grid(TEnvLabel2      row:2 column:3 sticky:w)
 		    grid(WidthLabel      row:1 column:1 sticky:w)
 		    grid(WidthEntry      row:1 column:2 sticky:w)
 		    grid(DepthLabel      row:2 column:1 sticky:w)
 		    grid(DepthEntry      row:2 column:2 sticky:w)
 		    pack(StepDot StepNewName side:top anchor:w pady:1)
 		    pack(SystemVButton anchor:w)
-		    pack(DDButton anchor:w)
+		    pack(DDButton
+			 {New Tk.label tkInit(parent:OtherFrame.inner
+					      text:'      ')}
+			 anchor:w side:left)
 		   ]}
 	 SettingsDialog,tkPack
       end

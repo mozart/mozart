@@ -396,7 +396,7 @@ in
 	    New in
 	    EnvSync <- New = unit
 	    thread
-	       {WaitOr New {Alarm TimeoutToUpdateEnv}}
+	       {WaitOr New {Alarm {Cget timeoutToUpdateEnv}}}
 	       case {IsDet New} then skip else
 		  Gui,PrintEnv(vars:V)
 	       end
@@ -715,24 +715,35 @@ in
 	       {OzcarMessage 'action:' # A}
 	    end
 
-	    case A == RemoveAllAction then
-	       N in
-	       Gui,doStatus('Killing and removing all threads...')
-	       ThreadManager,killAll(N)
+	    case A == TermAllAction then
+	       Gui,doStatus('Terminating all threads...')
+	       ThreadManager,termAll
 	       {Delay 200} %% just to look nice... ;)
-	       Gui,doStatus(case N == 1 then
-			       ' done  (1 thread collected)'
-			    else
-			       ' done  (' # N # ' threads collected)'
-			    end append)
+	       Gui,doStatus(' done' append)
 
-	    elsecase A == RemoveAllDeadAction then
-	       Gui,doStatus('Removing all dead threads...')
-	       thread
-		  {Delay 200}
-		  Gui,doStatus(' done' append)
-	       end
-	       ThreadManager,removeAllDead
+	    elsecase A == TermAllButCurAction then
+	       Gui,doStatus('Terminating all threads but current...')
+	       ThreadManager,termAllButCur
+	       {Delay 200} %% just to look nice... ;)
+	       Gui,doStatus(' done' append)
+
+	    elsecase A == DetachAllAction then
+	       Gui,doStatus('Detaching all threads...')
+	       ThreadManager,detachAll
+	       {Delay 200}
+	       Gui,doStatus(' done' append)
+
+	    elsecase A == DetachAllButCurAction then
+	       Gui,doStatus('Detaching all threads but current...')
+	       ThreadManager,detachAllButCur
+	       {Delay 200}
+	       Gui,doStatus(' done' append)
+
+	    elsecase A == DetachAllDeadAction then
+	       Gui,doStatus('Detaching all dead threads...')
+	       ThreadManager,detachAllDead
+	       {Delay 200}
+	       Gui,doStatus(' done' append)
 
 	    elsecase A == StepButtonBitmap then
 	       T = @currentThread
@@ -880,7 +891,7 @@ in
 		  ThreadManager,kill(T I)
 	       end
 
-	    elsecase A == StackAction then
+	    elsecase A == BrowseStackAction then
 	       T = @currentThread
 	    in
 	       case T == unit then
