@@ -382,6 +382,7 @@ private:
 // business;)
 class VariableExcavator : public GenTraverser {
 private:
+  Bool doToplevel;
   OZ_Term vars;
 
   //
@@ -391,7 +392,7 @@ private:
   //
 public:
   virtual ~VariableExcavator() {}
-  void init() { vars = oz_nil(); }
+  void init(Bool full) { vars = oz_nil(); doToplevel = full; }
 
   //
   virtual void processSmallInt(OZ_Term siTerm);
@@ -445,9 +446,9 @@ extern VariableExcavator ve;
 
 //
 inline
-OZ_Term extractVars(OZ_Term in)
+OZ_Term extractVars(OZ_Term in, Bool full)
 {
-  ve.init();
+  ve.init(full);
   ve.prepareTraversing((Opaque *) 0);
   ve.traverse(in);
   ve.finishTraversing();
@@ -541,7 +542,7 @@ public:
   void install()   {
     Assert(!(flags&MTS_SET));
     SntVarLocation* l = locs;
-    while(l) {
+    while (l) {
       OZ_Term vr = l->getLoc();
       OZ_Term *vp = tagged2Ref(vr);
       OZ_Term v = l->getVar();
@@ -556,7 +557,7 @@ public:
   void deinstall() {
     Assert(flags&MTS_SET);
     SntVarLocation* l = locs;
-    while(l) {
+    while (l) {
       OZ_Term vr = l->getLoc();
       OZ_Term *vp = tagged2Ref(vr);
       OZ_Term val = l->getSavedValue();
@@ -580,6 +581,15 @@ public:
   //
 #if defined(DEBUG_CHECK)
   void checkVar(OZ_Term t);
+  int getSize() {
+    SntVarLocation* l = locs;
+    int cnt = 0;
+    while (l) {
+      cnt++;
+      l = l->getNextLoc();
+    }
+    return (cnt);
+  }
 #endif
 };
 
@@ -619,8 +629,8 @@ void deleteSntVarLocsOutline(SntVarLocation *locs);
 
 //
 inline
-MsgTermSnapshot* takeTermSnapshot(OZ_Term t, DSite *dest) {
-  OZ_Term vars = extractVars(t);
+MsgTermSnapshot* takeTermSnapshot(OZ_Term t, DSite *dest, Bool full) {
+  OZ_Term vars = extractVars(t, full);
   SntVarLocation *svl;
   //
   svl = oz_isNil(vars) ?
