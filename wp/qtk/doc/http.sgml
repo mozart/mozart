@@ -93,6 +93,7 @@
     <Meta name="html.split" value="chapter.widgets.tdlr">
     <Meta name="html.split" value="chapter.widgets.grid">
     <Meta name="html.split" value="chapter.widgets.toplevel">
+    <Meta name="html.split" value="misc.iso8859">
     <Meta name="html.split" value="misc.color">
     <Meta name="html.split" value="misc.bitmap">
     <Meta name="html.split" value="misc.image">

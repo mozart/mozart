@@ -55,6 +55,7 @@ text, using the commands described below.
 <ref to="chapter.widgets.label.param_ipady">ipady</ref>
 <ref to="chapter.widgets.label.param_justify">justify</ref>
 <ref to="chapter.widgets.label.param_look">look</ref>
+<ref to="chapter.widgets.label.param_onCreation">onCreation</ref>
 <ref to="chapter.widgets.label.param_padx">padx</ref>
 <ref to="chapter.widgets.label.param_pady">pady</ref>
 <ref to="chapter.widgets.label.param_relief">relief</ref>
@@ -66,7 +67,11 @@ text, using the commands described below.
 
 <subsection><title>Method List</title><p>
 
-<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order just above <<W>>; this could end up either raising
+<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in
+the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If
+<<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the
+descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order
+just above <<W>>; this could end up either raising
 or lowering the widget.
 
 <para><title>bind</title><p><<bind(event:E action:A args:LA append:AP)>>: Specifies an action <<LA>> to execute when the event <<E>> is triggered.
@@ -83,14 +88,22 @@ or lowering the widget.
 
 <para><title>getGrabStatus</title><p><<getGrabStatus(1:V)>>: Binds <<V>> to the atom <<none>> if there is no grab on the widget, to the atom <<local>> if there is a local grab and to <<global>> if there is a global grab. <<V>> must be a free variable.
 
-<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order just below <<W>>; this could end up either raising
+<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in
+the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If
+<<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the
+descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order
+just below <<W>>; this could end up either raising
 or lowering the widget. 
 
 <para><title>releaseGrab</title><p><<releaseGrab>>: Releases the grab on the widget if there is one, otherwise does nothing.
 
 <para><title>set</title><p><<set(parameter1:value1 ... parameterX:valueX)>>: Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.
 
-<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will be reported to other applications as if the grab had never occurred. A global grab locks out all applications on the screen, so that only the given subtree of the grabbing application will be sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
+<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will
+be reported to other applications as if the grab had never occurred. A global grab
+locks out all applications on the screen, so that only the given subtree of the grabbing application will be
+sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and
+window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
 
 <para><title>winfo</title><p><<winfo(parameter1:value1 ... parameterX:valueX)>>: This commands works like the <<get>> method, but for window-related information. For more details, see <ptr to="misc.winfo">.
 
@@ -159,6 +172,8 @@ or lowering the widget.
 
 <para id="chapter.widgets.label.param_look"><title>look</title><p><<look:L>>: Specifies a look to use for the widget. A look specifies default values for the parameters of widgets. This parameter can be specified at creation time only. Moreover changing a look will not change the appearance of widgets that are already displayed with that look. See <ptr to="misc.look"> for more details.
 
+<para id="chapter.widgets.label.param_onCreation"><title>onCreation</title><p><<onCreation:P>>: When a widget is created, for example by <<QTk.build>>, this parameter specifies an action to execute right after the widget has been created, but before returning from the build instruction. It is usefull if one needs the handle of the widget to initialize it in ways not permitted by its description record (for example binding the <<Enter>> or <<Leave>> mouse events).
+
 <para id="chapter.widgets.label.param_padx"><title>padx</title><p><<padx:P>>: Specifies how much horizontal external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
 
 <para id="chapter.widgets.label.param_pady"><title>pady</title><p><<pady:P>>: Specifies how much vertical external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
@@ -167,7 +182,7 @@ or lowering the widget.
     indicates how the interior of the widget should appear relative to its exterior; for example, <<raised>> means the interior of the widget
     should appear to protrude from the screen, relative to the exterior of the widget. 
 
-<para id="chapter.widgets.label.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
+<para id="chapter.widgets.label.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanims consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
 
 <para id="chapter.widgets.label.param_text"><title>text</title><p><<text:VS>>: Specifies a string to be displayed inside the widget. The way in which the string is displayed depends on the particular widget and may be determined by other options, such as <<anchor>> or <<justify>>. <<VS>> must be a virtual string.
 

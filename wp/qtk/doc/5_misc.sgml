@@ -3,17 +3,18 @@
 
 <P> This section describes several miscellaneous point of QTk.
 
-<section ID="misc.accents"><TITLE>Accentuated characters support for Windows</TITLE>
-<P>
-Undex Linux, Unix and Macintosh OSX, the Tcl/Tk process that serves as the effective front-end of QTk uses the same iso8859-1 character encoding as Mozart. However under Windows, Tcl/Tk can unfortunately not be configured to use iso8859-1, it can use utf-8 only. Many characters are common between these two sets, but there are also many differences eg accentuated characters. On the Windows platform, QTk implements a translation on the fly between these two sets, so that one should only deal with the iso8859-1 character set on all possible platforms Mozart can run on. The translation works as follow:
-<list>
-<item> If a character has an equivalent in both sets then it is directly translated.
-<item> The euro currency symbool doesn't exist in iso8859-1 while it does in utf-8. The character number 158 has been trivially chosen to represent it at the Oz side.
-<item> Several other characters exist in utf-8 but not in iso8859-1. These characters are translated by an escape sequence at the Oz side: <<27|N|X1|..|Xn>> where <<N>> is the number of <<X.>> present, and the <<X.>> are the utf-8 encoding of the character.
-</list>
-In practice, developpers using QTk don't have to worry about character encoding issues, their application will run fine with accentuated characters on all platforms, including Windows.
-
+<section ID="misc.iso8859"><TITLE>ISO8859-1 Character Encoding support under Windows</TITLE>
+<p>
+The Mozart programming system uses the ISO8859-1 character encoding system, no matter the platform it is running on. However under Windows the Tcl/Tk process that serves as the front-end graphical user interface can only use the UTF-8 character encoding. This is a Windows specific problem as Tcl/Tk uses also ISO8859-1 undex Linux, Unix, and Mac OS X. 
 </p>
+<p>Many characters are common between the two encodings, however more specialized ones like accentuated characters are not. QTk embeds an automatic translation mechanism between the two sets under Windows. Mozart application developpers should care only about the ISO8859-1 encoding system on all platforms including Windows. The translation mechanism works like this:
+<list>
+<item> If a character exists in both encodings, then it is directly translated.
+<item> ISO8859-1 doesn't support the euro currency symbol. This symbol is represented by the (arbitrarily choosen) character number 158 at the Oz side.
+<item> The characters that exist in UTF-8 but not in ISO8859-1 are translated into an escape sequence: <<27|N|X1|...|Xn>> where <<N>> is the number of <<Xi>> present, and <<X1|..|Xn>> is the UTF-8 encoding of the character.
+<item> There are no characters existing in ISO8859-1 but not in UTF-8.
+</list>
+
 <section ID="misc.color"><TITLE>Colors</TITLE>
 
 <P>
@@ -183,7 +184,7 @@ The function <<QTk.newImageLibrary>> returns an empty image library. An image li
 
 <ITEM> <<get(name:A image:V)>>: Binds <<V>> to the image in the image library that has the name <<A>>. The returned image is similar the images built using then <<QTk.newImage>> function. However, if you modify these images after they were created inside the image library, the image library won't be updated. You need to explicitly save and reload the modified image into the library.
 
-<ITEM> <<getNames(V)>>: Binds <<V>> to a list of atoms that are all the names of all available images in the library.
+<ITEM> <<getNames(V)>>: Binds <<V>> to a list of atoms that are all the names of all avalaible images in the library.
 
 <ITEM> <<remove(name:A)>>: Removes the image named <<A>> from the library if present, does nothing otherwise.
 </LIST>
@@ -192,7 +193,7 @@ Image libraries can be also be saved and loaded to files:
 <LIST>
 <ITEM> <<{QTk.saveImageLibrary L VS}>>: This procedure saves the image library <<L>> to a file named <<VS>>.
 
-<ITEM> <<{QTk.loadImageLibrary VS}>>: This function returns an image library loaded from the file <<VS>>.
+<ITEM> <<{QTk.loadImageLibray VS}>>: This function returns an image library loaded from the file <<VS>>.
 </LIST>
 Saved image libraries are functors that you can directly import and link into your application's functor. To achieve this, you must do the following:
 
@@ -493,7 +494,7 @@ Menu description records are records of the form <<menu(E1 E2 .. Ex param1:value
 <p>
 Menu descriptions usage:
 <list>
-<item> As the <<menu>> parameter of the <<td>> or <<lr>> <em>toplevel</em> widget. This menu's items will be displayed in a menubar across the top of the window. These menus will behave according to the interface guidelines of their platforms. For every menu set as a menubar, a clone menu is made (see below).
+<item> As the <<menu>> parameter of the <<td>> or <<lr>> <em>toplevel</em> widget. This menu's items will be displayed in a menubar accross the top of the window. These menus will behave according to the interface guidelines of their platforms. For every menu set as a menubar, a clone menu is made (see below).
 <item> As the <<menu>> parameter of a <<menubutton>> widget. This is the most usual way of using menu declarations.
 <item> As the parameter of the function <<QTk.buildMenu>>. This function returns an Oz object representing the described menu. This object can be used as the <<menu>> parameter of a <<menubutton>> widget, or alternatively be displayed anywhere on the screen using its <<post>> method (see below). <em>Warning:</em> <<QTk.buildMenu>> requires that the menu description specifies a <<parent>> parameter set to a QTk window existing inside the display where the menu is to be posted. Example:
 <<<T={QTk.build td(title:"Test")}
@@ -535,7 +536,7 @@ The menu description support the following parameters:
 <item><<relief:A>>: Specifies the 3-D effect desired for the widget.  Must be one of these atoms: <<raised>>, <<sunken>>, <<flat>>, <<ridge>>, <<solid>> or <<groove>>. The value
     indicates how the interior of the widget should appear relative to its exterior; for example, <<raised>> means the interior of the widget
     should appear to protrude from the screen, relative to the exterior of the widget. 
-<item><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
+<item><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanims consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
 
 <ITEM> <<tearoff:B>>: Specifies whether or not the menu should include a tear-off entry at the top. The default menu bindings arrange for the menu to be torn off when the tear-off entry is invoked. <<B>> must be a boolean.
 
