@@ -58,7 +58,7 @@ ostream * cpi_cout = &cout;
 
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val)
 {
-  return isPosSmallInt(val);
+  return isPosSmallFDInt(val);
 }
 
 #define OZMALLOC(T, S) (T *) freeListMalloc(S * sizeof(T))

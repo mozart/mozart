@@ -202,6 +202,7 @@ _OZ_EXPECT_SUSPEND(O, P, OZ_args[P], F, SC)
 #define _OZ_EM_INTMAX   "134 217 727"
 
 #define OZ_EM_LIT       "literal"
+#define OZ_EM_FLOAT     "float"
 #define OZ_EM_INT       "integer in [~"_OZ_EM_INTMAX"\\,...\\,"_OZ_EM_INTMAX"]"
 #define OZ_EM_FD        "finite domain integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"}"
 #define OZ_EM_FDBOOL    "boolean finite domain integer in {0,1}"
@@ -326,13 +327,8 @@ public:
   OZ_FSetValue(int, int);
   OZ_FSetValue(const OZ_FiniteDomain &);
 
-  void gc(void) { 
-#ifdef BIGFSET
-    copyExtension(); 
-#endif
-  }
-
   void copyExtension(void);
+  void disposeExtension(void);
 
   int getCard(void) const { return _card; }
   int getKnownNotIn(void) const { return fsethigh32 - _card; }
@@ -359,9 +355,6 @@ public:
   OZ_FSetValue operator += (const int);
   OZ_FSetValue operator -= (const int);
   OZ_FSetValue operator - (void) const;
-
-  static void * operator new(size_t);
-  static void operator delete(void *, size_t);
 };
 
 
@@ -395,8 +388,8 @@ public:
   OZ_FSetConstraint(const OZ_FSetConstraint &);
   OZ_FSetConstraint &operator = (const OZ_FSetConstraint &);
 
-  // loeckelt: for gc
-  void copyExtensions(void);
+  void copyExtension(void);
+  void disposeExtension(void);
 
   int getKnownIn(void) const { return _known_in; }
   int getKnownNotIn(void) const { return _known_not_in; }
@@ -541,7 +534,7 @@ public:
   OZ_Boolean imposeOn(OZ_Term);
   OZ_Boolean addImpose(OZ_FDPropState s, OZ_Term v);
   OZ_Boolean addImpose(OZ_FSetPropState s, OZ_Term v);
-  void impose(OZ_Propagator * p, int prio = OZ_getMediumPrio());
+  void impose(OZ_Propagator *);
   virtual size_t sizeOf(void) = 0;
   virtual void updateHeapRefs(OZ_Boolean duplicate) = 0;
   virtual OZ_Return propagate(void) = 0;
@@ -604,7 +597,6 @@ public:
 
 //-----------------------------------------------------------------------------
 // class OZ_FSetVar
-// the whole class is not documented
 
 class OZ_FSetVar {
 private:
@@ -674,7 +666,8 @@ public:
 //-----------------------------------------------------------------------------
 // Miscellaneous
 
-inline void OZ_updateHeapTerm(OZ_Term &t) {
+inline 
+void OZ_updateHeapTerm(OZ_Term &t) {
   OZ_collect(&t);
 }
 
@@ -872,8 +865,6 @@ struct OZ_expect_t {
   OZ_expect_t(int s, int a) : size(s), accepted(a) {}
 };
 
-enum OZ_PropagatorFlags {NULL_flag, OFS_flag};
-
 class OZ_Expect;
 
 typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
@@ -923,9 +914,7 @@ public:
   OZ_expect_t expectStream(OZ_Term st); 
   OZ_expect_t expectGenCtVar(OZ_Term, OZ_CtDefinition *, OZ_CtWakeUp);
 
-  OZ_Return impose(OZ_Propagator * p, 
-		   int prio = OZ_getMediumPrio(),
-		   OZ_PropagatorFlags flags = NULL_flag);
+  OZ_Return impose(OZ_Propagator * p);
   OZ_Return suspend(OZ_Thread); // blocks if argument is `NULL'
   OZ_Return fail(void);
   OZ_Boolean isSuspending(OZ_expect_t r) {
