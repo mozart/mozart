@@ -146,6 +146,8 @@ GiveUpReturn giveUp_RemoteSite(RemoteSite*);
 void discoveryPerm_RemoteSite(RemoteSite*);
 void siteAlive_RemoteSite(RemoteSite*);
 void dumpRemoteMsgBuffer(MsgBuffer*);
+int getNOSM_RemoteSite(RemoteSite*);
+int getNORM_RemoteSite(RemoteSite*);
 
 //
 //
@@ -405,11 +407,10 @@ private:
     flags |= PERM_SITE;}
 
 
-protected:
 
-  unsigned short getType(){ return flags;}
 
 public:
+  unsigned short getType(){ return flags;}
   void* operator new(size_t size) { return (malloc(size)); }
   // for re-creation of the object;
   void* operator new(size_t, void *place) { return (place); }
