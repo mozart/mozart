@@ -125,6 +125,8 @@ define
       end
    
       meth addSite(Ks)
+	 DC = self.listbox
+	 
 	 R = {Map Ks fun{$ K}
 			Line = {self getEntry($)}
 			S=site(text:K.text
@@ -132,7 +134,7 @@ define
 			       fg:{CondSelect K fg black}
 			       bg:{CondSelect K bg white}
 			       line: Line 
-			       fgtag:Line)
+			       fgtag:{New Tk.canvasTag tkInit(parent:DC)})
 		     in
 			self.entryDict.(K.key):=S
 			S
@@ -149,7 +151,7 @@ define
 		       if {Dictionary.member self.entryDict K} then
 			  E = self.entryDict.K in
 			  {System.show member(K)#E}
-			  {self.listbox tk(delete E.fgtag )}
+			  {E.fgtag tk(delete)}
 			  {self putEntry(E.line)}
 			  {Dictionary.remove self.entryDict K} 
 		       else
@@ -170,10 +172,8 @@ define
 	 Y1
       in
 	 {ForAll Ss proc{$ X}
-		       T = {New Tk.canvasTag tkInit(parent:DC)}
-		    in
 		       {DC tk(crea text 5 X.line * @lineSize + 5 
-			      text:X.text anchor:nw fill:X.fg tags:T)}
+			      text:X.text anchor:nw fill:X.fg tags:X.fgtag)}
 		    end}
 	 Y1 = (({List.sort  @nextFree Value.'>'}.1)  +1) *  @lineSize 
 	 {self.listbox tk(configure scrollregion:q(0 0 1000  Y1 + 5 ))}
