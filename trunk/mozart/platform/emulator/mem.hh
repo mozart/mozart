@@ -270,7 +270,7 @@ public:
 class FL_Manager {
 
 private:
-  static FL_Small * small[FL_SizeToIndex(FL_MaxSize) + 1];
+  static FL_Small * smmal[FL_SizeToIndex(FL_MaxSize) + 1];
   static FL_Large * large;
 
 private:
@@ -284,10 +284,10 @@ public:
     if (s > FL_MaxSize) {
       return heapMalloc(s);
     } else {
-      FL_Small * f = small[FL_SizeToIndex(s)];
+      FL_Small * f = smmal[FL_SizeToIndex(s)];
       Assert(f);
       FL_Small * n = f->getNext();
-      small[FL_SizeToIndex(s)] = n;
+      smmal[FL_SizeToIndex(s)] = n;
       if (!n) 
 	refill(s);
       return f;
@@ -302,8 +302,8 @@ public:
       large = f;
     } else {
       FL_Small * f  = (FL_Small *) p;
-      f->setNext(small[FL_SizeToIndex(s)]);
-      small[FL_SizeToIndex(s)] = f;
+      f->setNext(smmal[FL_SizeToIndex(s)]);
+      smmal[FL_SizeToIndex(s)] = f;
     }
   }
 
