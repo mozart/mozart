@@ -1567,7 +1567,7 @@ local
 	    Meth = nil
 	    Tables = '#'()
 	 else ADict CaseClauses X Dollar Grammar Tables0 StartSymbols in
-	    {Rep logSubPhase('generating parse tables ...')}
+	    {Rep startSubPhase('generating parse tables')}
 	    @rulesTail = nil
 	    ADict = @actions
 	    CaseClauses =
@@ -1819,7 +1819,7 @@ in
 	ProdTempl Rep}
       Globals
    in
-      {Rep logPhase('processing parser "'#{SymbolToVirtualString T}#'" ...')}
+      {Rep startPhase('processing parser "'#{SymbolToVirtualString T}#'"')}
       Globals = {New ParserSpecification init(ProdTempl)}
       {Globals setFlags(Flags)}
       {Globals enterFrom(From)}
@@ -1844,11 +1844,11 @@ in
 	     {Globals addGrammarSymbol({TransformSyn Rule Rep} Rep)}
 	  end
        end}
-      {Rep logSubPhase('analysing and expanding grammar ...')}
+      {Rep startSubPhase('analysing and expanding grammar')}
       {Globals analyse(Rep)}
       if {Rep hasSeenError($)} then fSkip(unit)
       else PTG F SynMeth Tables in
-	 {Rep logSubPhase('extracting BNF ...')}
+	 {Rep startSubPhase('extracting BNF')}
 	 {Globals generate(?PTG)}
 	 if {PTG hasStartSymbols($)} then skip
 	 else
@@ -1867,7 +1867,7 @@ in
 	 {PTG generateTables(Globals F P Rep ?SynMeth ?Tables)}
 	 if {Rep hasSeenError($)} then fSkip(unit)
 	 else Descrs Meths in
-	    {Rep logSubPhase('building class definition ...')}
+	    {Rep startSubPhase('building class definition')}
 	    {Globals
 	     enterFeat({Record.foldRInd Tables
 			fun {$ F V In}
