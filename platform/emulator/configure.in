@@ -233,10 +233,10 @@ fi
 AC_SUBST(LD)
 
 
-oz_enable_modules_static=yes
 case $platform in
     sunos*)
-        TOOLLDCMD=""
+        TOOLLDCMD="ld"
+        oz_enable_modules_static=yes
         ;;
     linux*)
         TOOLLDCMD="gcc -shared"
@@ -249,6 +249,7 @@ case $platform in
         ;;
     irix*)
         TOOLLDCMD="ld -shared"
+        oz_enable_modules_static=yes
         ;;
     osf1*)
         TOOLLDCMD="gcc -shared -Wl,-expect_unresolved -Wl,*"
@@ -258,12 +259,21 @@ case $platform in
         ;;
     hpux*)
         TOOLLDCMD="ld -b"
+        oz_enable_modules_static=yes
         ;;
     freebsd*)
         TOOLLDCMD="ld -Bshareable"
+        oz_enable_modules_static=yes
         ;;
     netbsd*)
         TOOLLDCMD="ld -Bshareable"
+        oz_enable_modules_static=yes
+        ;;
+   *)
+        AC_MSG_WARN(Unknown platform "$platform")
+        sleep 3
+        TOOLLDCMD="ld"
+        oz_enable_modules_static=yes
         ;;
 esac
 
