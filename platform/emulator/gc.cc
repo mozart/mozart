@@ -1905,7 +1905,7 @@ void TaskStack::gc(TaskStack *newstack)
     RefsArray G=oldtop->getG();
 #else
   while (1) {
-    PopFrame(oldtop,PC,Y,G);
+    GetFrame(oldtop,PC,Y,G);
 #endif
 
     if (PC == C_EMPTY_STACK) {
