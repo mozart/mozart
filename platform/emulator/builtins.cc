@@ -5904,29 +5904,6 @@ OZ_C_proc_begin(BIconstraints,2)
 OZ_C_proc_end
 
 // ---------------------------------------------------------------------------
-// linguistic reflection
-// ---------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIgetLingRefFd,1)
-{
-  oz_declareArg(0,out);
-  if (am.getCompStream())
-    return oz_unifyInt(out,am.getCompStream()->getLingRefFd());
-  else
-    return oz_unifyInt(out,-1);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIgetLingEof,1)
-{
-  oz_declareArg(0,out);
-  return oz_unifyInt(out,am.getCompStream()->getLingEOF());
-}
-OZ_C_proc_end
-
-
-// ---------------------------------------------------------------------------
 // abstraction table
 // ---------------------------------------------------------------------------
 
@@ -7637,10 +7614,6 @@ BIspec allSpec[] = {
   {"getsBound",      1, BIgetsBound,            0},
   {"getsBoundB",     2, BIgetsBoundB,           0},
 
-  {"getLingRefFd",   1, BIgetLingRefFd,         0},
-  {"getLingEof",     1, BIgetLingEof,           0},
-  {"getOzEof",       1, BIgetLingEof,           0},
-  {"System.nbSusps", 2, BIconstraints,          0},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
@@ -7648,6 +7621,7 @@ BIspec allSpec[] = {
   {"Print", 1, BIprint,  (IFOR) printInline},
   {"Show",  1, BIshow,   (IFOR) showInline},
 
+  {"System.nbSusps", 2, BIconstraints,          0},
   {"SystemGetThreads",    1, BISystemGetThreads},
   {"SystemGetPriorities", 1, BISystemGetPriorities},
   {"SystemGetTime",       1, BISystemGetTime},
