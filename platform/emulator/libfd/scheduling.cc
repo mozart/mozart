@@ -158,7 +158,7 @@ CPIteratePropagator::CPIteratePropagator(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  myqsort(sd,0,reg_sz-1, compareDurs);
+  myqsort(GET_ARRAY(sd),0,reg_sz-1, compareDurs);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sd[i].start;
@@ -338,7 +338,7 @@ cploop:
   //////////
   // sort by descending release date; ie. min(s1) > min(s2) > min(s3) etc.
   //////////
-  myqsort(forCompSet0Up, 0, ts-1,compareDescRel );
+  myqsort(GET_ARRAY(forCompSet0Up), 0, ts-1,compareDescRel );
 
   {
   for (int upTask=0; upTask < ts; upTask++) {
@@ -546,7 +546,7 @@ cploop:
   //////////
   // sort by ascending due date; ie. max(s1)+dur(s1) < max(s2)+dur(s2)
   //////////
-  myqsort(forCompSet0Down, 0, ts-1, compareAscDue);
+  myqsort(GET_ARRAY(forCompSet0Down), 0, ts-1, compareAscDue);
 
 
   {
@@ -1005,7 +1005,7 @@ CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  myqsort(sdu, 0, reg_sz-1, compareDursUse);
+  myqsort(GET_ARRAY(sdu), 0, reg_sz-1, compareDursUse);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sdu[i].start;
@@ -1248,7 +1248,7 @@ cploop:
   //////////
   // sort by descending release date; ie. min(s1) > min(s2) > min(s3) etc.
   //////////
-  myqsort(forCompSet0Up, 0, ts-1,compareDescRel );
+  myqsort(GET_ARRAY(forCompSet0Up), 0, ts-1,compareDescRel );
 
   {
   for (int upTask=0; upTask < ts; upTask++) {
@@ -1393,7 +1393,7 @@ cploop:
   //////////
   // sort by ascending due date; ie. max(s1)+dur(s1) < max(s2)+dur(s2)
   //////////
-  myqsort(forCompSet0Down, 0, ts-1, compareAscDue);
+  myqsort(GET_ARRAY(forCompSet0Down), 0, ts-1, compareAscDue);
 
 
   {
@@ -1888,7 +1888,7 @@ CPIteratePropagatorCapUp::CPIteratePropagatorCapUp(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  myqsort(sdu, 0, reg_sz-1, compareDursUse);
+  myqsort(GET_ARRAY(sdu), 0, reg_sz-1, compareDursUse);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sdu[i].start;

@@ -523,7 +523,7 @@ CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  myqsort(sdu, 0, reg_sz-1, compareDursUse);
+  myqsort(GET_ARRAY(sdu), 0, reg_sz-1, compareDursUse);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sdu[i].start;

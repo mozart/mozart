@@ -445,10 +445,17 @@ public:
 
   inline
   operator T*() { return _array; } // conversion operator
+
+  inline
+  T * getArray(void) { return _array; }
 };
+
+#define GET_ARRAY(A) (A).getArray()
 
 #define _DECL_DYN_ARRAY(Type,Var,Size) IndexCheckArray<Type> Var(Size)
 #else
+
+#define GET_ARRAY(A) (A)
 
 /* gcc supports dynamic sized arrays */
 #ifdef USE_GCCALLOCA
