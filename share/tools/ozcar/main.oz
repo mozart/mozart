@@ -4,7 +4,7 @@
 
 %% turn the compiler/emulator into debug mode
 
-\sw -optimize
+\sw -optimize +debuginfo
 
 {Debug.on}
 
@@ -14,11 +14,14 @@ declare
 
 local
    
-   \insert pre   
+   \insert pre
    \insert config
    \insert emacs
    \insert thr
    \insert manager
+   \insert dialog
+   \insert tkext
+   \insert frontend
 
 in
 

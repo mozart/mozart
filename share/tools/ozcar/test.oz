@@ -14,6 +14,7 @@ local
 	  {B Z}
        end
    B = proc{$ X}
+	  {Debug.breakpoint}
 	  Y = X + 1
        in
 	  {Show 'Y'#Y}
