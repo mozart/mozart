@@ -267,8 +267,8 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	     SET_INT(AtomSize,      getUsedMemory()*KB);
 	     SET_INT(AtomActive,    ozstat.gcLastActive*KB););
     // PRINT
-    CASE_INT(PROP_PRINT_WIDTH,ozconf.printDepth);
-    CASE_INT(PROP_PRINT_DEPTH,ozconf.printWidth);
+    CASE_INT(PROP_PRINT_DEPTH,ozconf.printDepth);
+    CASE_INT(PROP_PRINT_WIDTH,ozconf.printWidth);
     CASE_REC(PROP_PRINT,"print",(2,AtomDepth,AtomWidth),
 	     SET_INT(AtomDepth, ozconf.printDepth);
 	     SET_INT(AtomWidth, ozconf.printWidth););
