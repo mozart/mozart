@@ -1,0 +1,14 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=Mozart.chm
+Contents file=Mozart.hhc
+Display compile progress=Yes
+Full-text search=Yes
+Language=0x409 English (United States)
+Title=Mozart Documentation
+
+[FILES]
+P:\Mozart\doc\index.html
+
+[INFOTYPES]
+
