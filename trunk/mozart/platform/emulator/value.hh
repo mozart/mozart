@@ -53,6 +53,8 @@ extern TaggedRef
   BI_exchangeCell,BI_assign,BI_atRedo,
   BI_controlVarHandler,
   BI_PROP_LPQ,
+  BI_ByNeedAssign,
+  BI_waitStatus,
   BI_unknown,
 
   __UNUSED_DUMMY_END_MARKER;
@@ -2064,15 +2066,18 @@ Abstraction *tagged2Abstraction(TaggedRef term)
 class Builtin: public ConstTerm {
 friend void ConstTerm::gcConstRecurse(void);
 private:
-  TaggedRef printname; //must be atom
+  const char * mod_name;
+  const char * bi_name;
+  OZ_CFun fun;
   short inArity;
   short outArity;
-  OZ_CFun fun;
   Bool sited;
 #ifdef PROFILE_BI
   unsigned long counter;
 #endif
 
+  void initname(void);
+  
 public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(Builtin)
@@ -2081,24 +2086,40 @@ public:
   static void *operator new(size_t chunk_size)
   { return ::new char[chunk_size]; }
   
-  Builtin(const char *s,int inArity,int outArity, OZ_CFun fn, Bool nat)
-  : inArity(inArity),outArity(outArity),fun(fn), sited(nat),
-    ConstTerm(Co_Builtin)
-  {
-    printname = oz_atom(s);
+  Builtin(const char * mn, const char * bn, 
+	  int inArity, int outArity, 
+	  OZ_CFun fn, Bool nat)
+    : mod_name(mn), bi_name(bn),
+      inArity(inArity), outArity(outArity), 
+      fun(fn), sited(nat),
+      ConstTerm(Co_Builtin) {
 #ifdef PROFILE_BI
     counter = 0;
 #endif
   }
 
-  OZ_CFun getFun() { return fun; }
-  int getArity() { return inArity+outArity; }
-  int getInArity() { return inArity; }
-  int getOutArity() { return outArity; }
-  const char *getPrintName() {
-    return tagged2Literal(printname)->getPrintName();
+  OZ_CFun getFun(void) { 
+    return fun; 
   }
-  TaggedRef getName() { return printname; }
+  int getArity(void) { 
+    return inArity+outArity; 
+  }
+  int getInArity(void) { 
+    return inArity; 
+  }
+  int getOutArity(void) { 
+    return outArity; 
+  }
+  TaggedRef getName() {
+    if (mod_name) {
+      initname();
+      Assert(!mod_name);
+    }
+    return (TaggedRef) ToInt32(bi_name); 
+  }
+  const char * getPrintName(void) {
+    return tagged2Literal(getName())->getPrintName();
+  }
   Bool isSited()      { return sited; }
 
 #ifdef PROFILE_BI
@@ -2125,22 +2146,6 @@ Builtin *tagged2Builtin(TaggedRef term)
   Assert(oz_isBuiltin(term));
   return (Builtin *)tagged2Const(term);
 }
-
-/* -----------------------------------------------------------------------
- * BuiltinTab
- * -----------------------------------------------------------------------*/
-
-extern TaggedRef dictionary_of_builtins;
-
-extern
-Builtin * atom2Builtin(TaggedRef);
-
-inline
-Builtin * string2Builtin(const char * s) {
-  return atom2Builtin(oz_atom(s));
-}
-
-Builtin * cfunc2Builtin(void * f);
 
 /*===================================================================
  * Procedure = Abstraction or Builtin

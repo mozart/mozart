@@ -1081,18 +1081,18 @@ void initDPCore()
     OZ_error("Unable to register FlowControl task");
 #endif
    
-  BI_defer = makeTaggedConst(new Builtin("defer", 0, 0, BIdefer, OK));
+  BI_defer = makeTaggedConst(new Builtin("", "defer", 0, 0, BIdefer, OK));
   globalWatcher = NULL; 
   DeferdEvents = NULL;
   usedTwins = NULL;
 
-  BI_startTmp  = makeTaggedConst(new Builtin("startTmp",
+  BI_startTmp  = makeTaggedConst(new Builtin("", "startTmp",
 					     2, 0, BIstartTmp, OK));
 
 
   if(ozconf.perdioSeifHandler)
     installGlobalWatcher(PERM_FAIL|TEMP_FAIL,
-	          makeTaggedConst(new Builtin("failureDefault",
+	          makeTaggedConst(new Builtin("", "failureDefault",
 					       3, 0, BIfailureDefault, OK)),
 	 WATCHER_PERSISTENT|WATCHER_SITE_BASED|WATCHER_INJECTOR);
   
