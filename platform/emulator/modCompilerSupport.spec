@@ -28,6 +28,10 @@
 (
     ##* CompilerSupport
 
+    'featureLess'               => { in  => ['+feature','+feature'],
+                                     out => ['+bool'],
+                                     BI  => BIfeatureLess},
+
     'concatenateAtomAndInt'     => { in  => ['+atom','+int'],
                                      out => ['+atom'],
                                      BI  => BIconcatenateAtomAndInt},
