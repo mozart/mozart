@@ -22,7 +22,7 @@
   -->
 
 <chapter id=chapter.src.make>
-  <title/Configuration And Compilation/
+  <title/Compiling on Unix/
 
   <p>Now, you need to decide where you are going to build the
 system.  Let us assume that the Mozart sources are in
@@ -46,9 +46,8 @@ explaining what went wrong and possibly how to fix it.  Most
 frequently the problem is either that (1) a library, tool, or include
 file cannot be found, (2) or the installed version is too old.  There
 are many shell variables and command line options that can be used to
-parametrize the configuration process.  They are described below.</p>
-
-        &section.configure;
+parametrize the configuration process.  See <Ptr to="chapter.src.configure">
+for their description.</p>
 
 </chapter>
 <!--

@@ -1,5 +1,5 @@
-<section>
-  <title/Configuration/
+<Chapter id="chapter.src.configure">
+  <title/Configuration Options/
   <p>The <code/configure/ script can be parametrized by (1) a
 site configuration file that provides values for certain shell
 variables, (2) by command line options which may override these
@@ -20,7 +20,7 @@ reciprocally).  If the default value for a configuration variable
 <code/oz_enable_foo/ is <code/yes/, then you can set it to <code/no/
 to turn it off.
 </p>
-  <subsection>
+  <section>
     <title/General Parameters/
     <p><list>
         <entry class=option><code>--prefix=/usr/local/oz</code></entry>
@@ -57,9 +57,9 @@ documented later, but our experience is that putting everything in one
         <item>Similar to the above, but for libraries.</item>
       </list>
 </p>
-  </subsection>
+  </section>
 
-  <subsection id=contrib>
+  <section id=contrib>
     <title/Contributions/
     <p>The <q/contributions/ are not an intrinsic part of the Mozart
 distribution.  Often they require that you install additional
@@ -73,9 +73,9 @@ built.  You can completely omit them using <code/--disable-contrib/ or
 <code/oz_enable_contrib=//
       </list>
 </p>
-  </subsection>
+  </section>
 
-  <subsection>
+  <section>
     <title/Documentation/
     <p>Processing the documentation requires the contributions (<ptr
 to=contrib>).  Also you need additional packages such as LaTeX,
@@ -102,9 +102,9 @@ indicates that all documents should be processed./
         <item/Construct CHM table of contents files (for windows)/
       </list>
 </p>
-  </subsection>
+  </section>
 
-  <subsection>
+  <section>
     <title/Emulator/
     <p>The emulator has quite a few configuration parameters.
 <list>
@@ -204,8 +204,8 @@ broken.  This option is overriden by <code/--with-ccmalloc/.</item>
 default depends on whether virtual sites can be supported on your
 platform, &ie; it depends on support for shared memory.</item>
       </list>
-  </subsection>
-</section>
+  </section>
+</Chapter>
 <!--
 Local Variables:
 mode: sgml

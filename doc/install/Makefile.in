@@ -6,8 +6,10 @@ WHAT    = install
 MAIN    = main.sgml
 #WHATCLASS=reference
 #PRINTNAME=Installation
-SGMLSRCS =  configure.sgml src-get.sgml src-make.sgml \
-        rpm.sgml bin.sgml applets.sgml
+SGMLSRCS = \
+        windows.sgml rpm.sgml tarball.sgml \
+        src-get.sgml src-make.sgml cygwin.sgml configure.sgml \
+        emacs.sgml applets.sgml
 
 HTMLEXTRAFILES = netscape.gif
 
