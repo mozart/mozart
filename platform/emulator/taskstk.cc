@@ -187,11 +187,17 @@ Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
   if (out) {
     *out = nil();
     if (PC != NOCODE) {
-      ProgramCounter definitionPC = CodeArea::definitionStart(PC);
-      if (definitionPC != NOCODE) {
-        TaggedRef frameRec = CodeArea::dbgGetDef(PC,definitionPC);
-        if (frameRec != makeTaggedNULL())
-          *out = cons(frameRec,*out);
+      Frame *auxframe = getTop();
+      GetFrame(auxframe,auxPC,auxY,auxG);
+      while (isUninterestingTask(auxPC))
+        GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
+      if (auxPC != C_DEBUG_CONT_Ptr) {
+        ProgramCounter definitionPC = CodeArea::definitionStart(PC);
+        if (definitionPC != NOCODE) {
+          TaggedRef frameRec = CodeArea::dbgGetDef(PC,definitionPC);
+          if (frameRec != makeTaggedNULL())
+            *out = cons(frameRec,*out);
+        }
       }
     }
   }
