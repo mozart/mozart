@@ -336,17 +336,18 @@ void AbstractionEntry::setPred(Abstraction * ab) {
   pc    = ab->getPC();
 
   // indexing on X[0] optimized !!!
-  if (pc != NOCODE &&
-      CodeArea::getOpcode(pc) == MATCHX &&
-      getXRegArg(pc+1) == 0) {
-    listpc = pc + ((IHashTable *) getAdressArg(pc+2))->lookupLTuple();
-  } else if (pc != NOCODE &&
-	     CodeArea::getOpcode(pc) == TESTLISTX &&
-	     getXRegArg(pc+1) == 0) {
-    listpc = pc+3;
-  } else {
-    listpc = pc;
-  }
+// kost@ : this a contra-optimization, at least - now;
+//    if (pc != NOCODE &&
+//        CodeArea::getOpcode(pc) == MATCHX &&
+//        getXRegArg(pc+1) == 0) {
+//      listpc = pc + ((IHashTable *) getAdressArg(pc+2))->lookupLTuple();
+//    } else if (pc != NOCODE &&
+//  	     CodeArea::getOpcode(pc) == TESTLISTX &&
+//  	     getXRegArg(pc+1) == 0) {
+//      listpc = pc+3;
+//    } else {
+//      listpc = pc;
+//    }
 }
 
 

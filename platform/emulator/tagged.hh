@@ -58,7 +58,6 @@
 #define STAG_MASK __MASKIFY(STAG_BITS)
 #define LTAG_MASK __MASKIFY(LTAG_BITS)
 
-
 /*
  * Short tags
  *
@@ -68,9 +67,9 @@
 
 enum stag_t {
   STAG_REF0     = 0 /* 000 */,  // This is fixed: least two bits are zero!
-  STAG_VAR      = 1 /* 001 */,
-  STAG_CONST    = 2 /* 010 */,
-  STAG_LTUPLE   = 3 /* 011 */,
+  STAG_VAR      = 1 /* 001 */,  // Don't move this tag: isVarOrRef
+  STAG_LTUPLE   = 2 /* 010 */,  // Don't move this tag: isLTupleOrRef
+  STAG_CONST    = 3 /* 011 */,
   STAG_REF1     = 4 /* 100 */,  // This is fixed: least two bits are zero!
   STAG_SRECORD  = 5 /* 101 */,
   STAG_TOKEN    = 6 /* 110 */,
@@ -85,22 +84,26 @@ enum stag_t {
 
 enum ltag_t {
   LTAG_REF00     =  0 /* 0000 */,  // This is fixed: least two bits are zero!
-  LTAG_VAR0      =  1 /* 0001 */,
-  LTAG_CONST0    =  2 /* 0010 */,
-  LTAG_LTUPLE0   =  3 /* 0011 */,
+  LTAG_VAR0      =  1 /* 0001 */,  // Don't move this tag: isVarOrRef
+  LTAG_LTUPLE0   =  2 /* 0010 */,  // Don't move this tag: isLTupleOrRef
+  LTAG_CONST0    =  3 /* 0011 */,
   LTAG_REF10     =  4 /* 0100 */,  // This is fixed: least two bits are zero!
   LTAG_SRECORD0  =  5 /* 0101 */,
   LTAG_LITERAL   =  6 /* 0110 */,  // IMPORTANT!!
   LTAG_MARK0     =  7 /* 0111 */,
   LTAG_REF01     =  8 /* 1000 */,  // This is fixed: least two bits are zero!
-  LTAG_VAR1      =  9 /* 1001 */,
-  LTAG_CONST1    = 10 /* 1010 */,
-  LTAG_LTUPLE1   = 11 /* 1011 */,
+  LTAG_VAR1      =  9 /* 1001 */,  // Don't move this tag: isVarOrRef
+  LTAG_LTUPLE1   = 10 /* 1010 */,  // Don't move this tag: isLTupleOrRef
+  LTAG_CONST1    = 11 /* 1011 */,
   LTAG_REF11     = 12 /* 1100 */,  // This is fixed: least two bits are zero!
   LTAG_SRECORD1  = 13 /* 1101 */,
   LTAG_SMALLINT  = 14 /* 1110 */,  // IMPORTANT!!
   LTAG_MARK1     = 15 /* 1111 */,
 };
+
+// Zero-bits masks for is{Var,LTuple}OrRef
+#define VAR_ZEROBITS	0x6
+#define LTUPLE_ZEROBITS	0x5
 
 #define LTAG_PAIR(a,b) (((a)<<LTAG_BITS)|(b))
 
@@ -227,7 +230,9 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 
 #define oz_isRef(t)      (!((t) & RTAG_MASK))
 #define oz_isVar(t)      hasStag(t,STAG_VAR)
+#define oz_isVarOrRef(t)	(((t) & VAR_ZEROBITS) == 0)
 #define oz_isLTuple(t)   hasStag(t,STAG_LTUPLE)
+#define oz_isLTupleOrRef(t)	(((t) & LTUPLE_ZEROBITS) == 0)
 #define oz_isLiteral(t)  hasLtag(t,LTAG_LITERAL)
 #define oz_isSRecord(t)  hasStag(t,STAG_SRECORD)
 #define oz_isSmallInt(t) hasLtag(t,LTAG_SMALLINT)
@@ -464,8 +469,10 @@ inline
 TaggedRef oz_safeDeref(TaggedRef t) {
   if (oz_isRef(t)) {
     TaggedRef * sp = tagged2Ref(t);
-    _DEREF(t,sp);			               
-    if (oz_isVar(t)) t=makeTaggedRef(sp);          
+    _DEREF(t,sp);
+    Assert(!oz_isRef(t));
+    if (oz_isVarOrRef(t))
+      t = makeTaggedRef(sp);          
   }
   return t;
 }
@@ -483,10 +490,24 @@ TaggedRef oz_derefPtr(TaggedRef t) {
  *
  */
 
+#if defined(DEBUG_CHECK) || defined(SHIT_HAPPEN)
+
 inline 
 TaggedRef tagged2NonVariable(TaggedRef * t) {
   return oz_isVar(*t) ? makeTaggedRef(t) : *t;
 }
+
+inline 
+TaggedRef tagged2NonVariableFast(TaggedRef * t) {
+  return oz_isVarOrRef(*t) ? makeTaggedRef(t) : *t;
+}
+
+#else
+
+#define tagged2NonVariable(t) ((oz_isVar(*(t))?makeTaggedRef(t):(*(t))))
+#define tagged2NonVariableFast(t) ((oz_isVarOrRef(*(t))?makeTaggedRef(t):(*(t))))
+
+#endif
 
 inline 
 TaggedRef * newTaggedRef(TaggedRef *t) {

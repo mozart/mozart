@@ -96,7 +96,8 @@ int OZ_isDictionary(OZ_Term term)
 int OZ_isCons(OZ_Term term)
 {
   term = oz_deref(term);
-  return oz_isCons(term);
+  Assert(!oz_isRef(term));
+  return oz_isLTupleOrRef(term);
 }
 
 int OZ_isFloat(OZ_Term term)
@@ -281,13 +282,15 @@ int OZ_isTuple(OZ_Term term)
 int OZ_isValue(OZ_Term term)
 {
   term = oz_deref(term);
-  return !oz_isVar(term);
+  Assert(!oz_isRef(term));
+  return !oz_isVarOrRef(term);
 }
 
 int OZ_isVariable(OZ_Term term)
 {
   term = oz_deref(term);
-  return oz_isVar(term);
+  Assert(!oz_isRef(term));
+  return oz_isVarOrRef(term);
 }
 
 inline
@@ -930,7 +933,8 @@ inline
 Bool isNiceList(OZ_Term l, int width) {
   if (width <= 0) return NO;
 
-  while (oz_isCons(l) && width--> 0) {
+  Assert(!oz_isRef(l));
+  while (oz_isLTuple(l) && width-- > 0) {
     l = oz_deref(oz_tail(l));
   }
   
@@ -951,8 +955,9 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
       OZ_Term arg = oz_deref(sr->getArg(i));
+      Assert(!oz_isRef(arg));
       if (isNiceHash(arg,ozconf.printWidth) ||
-	  (oz_isCons(arg) && !isNiceList(arg,ozconf.printWidth))) {
+	  (oz_isLTupleOrRef(arg) && !isNiceList(arg,ozconf.printWidth))) {
 	out << '(';
 	term2Buffer(out, sr->getArg(i), depth-1);
 	out << ')';
@@ -1021,7 +1026,7 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
     if (isNiceList(makeTaggedLTuple(list),width)) {
       out << '[';
       OZ_Term l = makeTaggedLTuple(list);
-      while (oz_isCons(l)) {
+      while (oz_isLTuple(l)) {
 	term2Buffer(out, oz_head(l), depth-1);
 	l = oz_deref(oz_tail(l));
 	if (oz_isCons(l)) {
@@ -1101,7 +1106,8 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
 	break;
       }
       const char *s = oz_varGetName(makeTaggedRef(termPtr));
-      if (oz_isVar(term)) {
+      Assert(!oz_isRef(term));
+      if (oz_isVarOrRef(term)) {
 	oz_var_printStream(out, s,tagged2Var(term),depth);
       } else {
 	out << s;
@@ -1460,8 +1466,9 @@ OZ_Term OZ_mkTuple(OZ_Term label,int arity,...)
 
 void OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
 {
-  term=oz_deref(term);
-  if (oz_isLTuple(term)) {
+  term = oz_deref(term);
+  Assert(!oz_isRef(term));
+  if (oz_isLTupleOrRef(term)) {
     switch (pos) {
     case 0:
       tagged2LTuple(term)->setHead(newTerm);
@@ -1480,8 +1487,9 @@ void OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
 
 OZ_Term OZ_getArg(OZ_Term term, int pos)
 {
-  term=oz_deref(term);
-  if (oz_isLTuple(term)) {
+  term = oz_deref(term);
+  Assert(!oz_isRef(term));
+  if (oz_isLTupleOrRef(term)) {
     switch (pos) {
     case 0:
       return tagged2LTuple(term)->getHead();
@@ -1512,21 +1520,27 @@ OZ_Term OZ_cons(OZ_Term hd,OZ_Term tl)
 
 OZ_Term OZ_head(OZ_Term term)
 {
-  term=oz_deref(term);
-  if (!oz_isLTuple(term)) {
+  term = oz_deref(term);
+#ifdef DEBUG_CHECK
+  Assert(!oz_isRef(term));
+  if (!oz_isLTupleOrRef(term)) {
     OZ_error("OZ_head: no cons");
     return 0;
   }
+#endif
   return oz_head(term);
 }
 
 OZ_Term OZ_tail(OZ_Term term)
 {
-  term=oz_deref(term);
-  if (!oz_isLTuple(term)) {
+  term = oz_deref(term);
+#ifdef DEBUG_CHECK
+  Assert(!oz_isRef(term));
+  if (!oz_isLTupleOrRef(term)) {
     OZ_error("OZ_tail: no cons");
     return 0;
   }
+#endif
   return oz_tail(term);
 }
 
@@ -1601,8 +1615,9 @@ OZ_Term OZ_recordInit(OZ_Term label, OZ_Term propList)
 
 void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
 {
-  term=oz_deref(term);
-  if (oz_isCons(term)) {
+  term = oz_deref(term);
+  Assert(!oz_isRef(term));
+  if (oz_isLTupleOrRef(term)) {
     int i2 = tagged2SmallInt(feature);
 
     switch (i2) {
@@ -1799,7 +1814,8 @@ static
 int oz_isVirtualStringNoZero(OZ_Term vs, OZ_Term * var) {
   if (oz_isRef(vs)) {
     DEREF(vs,vsPtr);
-    if (oz_isVar(vs))  {
+    Assert(!oz_isRef(vs));
+    if (oz_isVarOrRef(vs))  {
       if (var) 
 	*var = makeTaggedRef(vsPtr);
       return 0;
@@ -1819,7 +1835,8 @@ int oz_isVirtualStringNoZero(OZ_Term vs, OZ_Term * var) {
     return 1;
   }
 
-  if (oz_isCons(vs)) {
+  Assert(!oz_isRef(vs));
+  if (oz_isLTupleOrRef(vs)) {
     OZ_Term ret = oz_checkList(vs,OZ_CHECK_CHAR_NONZERO);
     if (oz_isRef(ret)) {
       if (var) 
@@ -1848,7 +1865,8 @@ static
 int oz_isVirtualString(OZ_Term vs, OZ_Term * var) {
   if (oz_isRef(vs)) {
     DEREF(vs,vsPtr);
-    if (oz_isVar(vs))  {
+    Assert(!oz_isRef(vs));
+    if (oz_isVarOrRef(vs))  {
       if (var) 
 	*var = makeTaggedRef(vsPtr);
       return 0;
@@ -1868,7 +1886,8 @@ int oz_isVirtualString(OZ_Term vs, OZ_Term * var) {
     return 1;
   }
 
-  if (oz_isCons(vs)) {
+  Assert(!oz_isRef(vs));
+  if (oz_isLTupleOrRef(vs)) {
     OZ_Term ret = oz_checkList(vs,OZ_CHECK_CHAR);
     if (oz_isRef(ret)) {
       if (var) 
@@ -2069,7 +2088,8 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
 void OZ_addThread(OZ_Term var, OZ_Thread thr)
 {
   DEREF(var, varPtr);
-  if (!oz_isVar(var)) {
+  Assert(!oz_isRef(var));
+  if (!oz_isVarOrRef(var)) {
     OZ_error("OZ_addThread(%s): var arg expected", toC(var));
     return;
   }

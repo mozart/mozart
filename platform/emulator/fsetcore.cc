@@ -61,7 +61,8 @@ OZ_BI_define(BIfsIsValueB, 1, 1)
 {
   OZ_Term term = OZ_in(0);
   DEREF(term, term_ptr);
-  if (oz_isVar(term))
+  Assert(!oz_isRef(term));
+  if (oz_isVarOrRef(term))
     oz_suspendOnPtr(term_ptr);
 
   OZ_RETURN(oz_bool(oz_isFSetValue(term)));
@@ -297,9 +298,10 @@ OZ_BI_define(BIfsCardRange, 3, 0)
     OZ_Term lt = OZ_in(0);
     DEREF(lt, ltptr);
 
+    Assert(!oz_isRef(lt));
     if (oz_isSmallInt(lt)) {
       l = tagged2SmallInt(lt);
-    } else if (oz_isVar(lt)) {
+    } else if (oz_isVarOrRef(lt)) {
       oz_suspendOnPtr(ltptr);
     } else {
       TypeError(0, "");
@@ -311,9 +313,10 @@ OZ_BI_define(BIfsCardRange, 3, 0)
     OZ_Term ut = OZ_in(1);
     DEREF(ut, utptr);
 
+    Assert(!oz_isRef(ut));
     if (oz_isSmallInt(ut)) {
       u = tagged2SmallInt(ut);
-    } else if (oz_isVar(ut)) {
+    } else if (oz_isVarOrRef(ut)) {
       oz_suspendOnPtr(utptr);
     } else {
       TypeError(1, "");

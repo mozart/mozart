@@ -243,6 +243,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
   if (fs && !((FSetConstraint *) fs)->isValid()) {
     goto failed;
   }
+  Assert(!oz_isRef(v));
   if (oz_isFree(v)) {
     //
     // tell a finite set constraint to an unconstrained variable
@@ -342,7 +343,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       goto proceed;
     }
     goto failed;
-  } else if (oz_isVar(v)) {
+  } else if (oz_isVarOrRef(v)) {
     //
     // future stuff, no idea what is going on here
     TaggedRef newVar = oz_newVariable();

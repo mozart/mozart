@@ -53,7 +53,8 @@ OZ_BI_define(BIchunkWidth, 1,1)
 
   DEREF(ch, chPtr);
 
-  if (oz_isVar(ch)) {
+  Assert(!oz_isRef(ch));
+  if (oz_isVarOrRef(ch)) {
     oz_suspendOn(makeTaggedRef(chPtr));
   }
   if (oz_isChunk(ch)) {
@@ -82,7 +83,8 @@ OZ_BI_define(BIisRecordVarB,1,1)
 {
   TaggedRef t = OZ_in(0); 
   DEREF(t, tPtr);
-  if (oz_isLTuple(t) || oz_isLiteral(t) || oz_isSRecord(t) ||
+  Assert(!oz_isRef(t));
+  if (oz_isLTupleOrRef(t) || oz_isLiteral(t) || oz_isSRecord(t) ||
       isGenOFSVar(t)) {
     OZ_RETURN(oz_true());
   } else {
@@ -109,7 +111,8 @@ OZ_BI_define(BIgetsBoundB, 2, 0)
 {
   oz_declareDerefIN(0,v);
   
-  if (oz_isVar(v)){
+  Assert(!oz_isRef(v));
+  if (oz_isVarOrRef(v)){
     RefsArray * args = RefsArray::allocate(1, NO);
     args->setArg(0,OZ_in(1));
 
@@ -130,7 +133,8 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
 
   DEREF(ch, chPtr);
 
-  if (oz_isVar(ch)) {
+  Assert(!oz_isRef(ch));
+  if (oz_isVarOrRef(ch)) {
     oz_suspendOn(makeTaggedRef(chPtr));
   }
 
@@ -172,6 +176,7 @@ OZ_BI_define(BIvarSpace,1,1)
 
   DEREF(v,vPtr);
 
+  Assert(!oz_isRef(v));
   if (oz_isVar(v)) {
     OzVariable *ov = tagged2Var(v);
     addr = ov->getBoardInternal();

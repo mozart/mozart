@@ -42,7 +42,7 @@ class AbstractionEntry {
 private:  
   TaggedRef      abstr;
   ProgramCounter pc;
-  ProgramCounter listpc;
+  // ProgramCounter listpc;
   Tagged2        next_flags;
 
   static AbstractionEntry * allEntries;
@@ -70,7 +70,7 @@ public:
   AbstractionEntry(Bool fc) { 
     abstr      = makeTaggedNULL();
     pc         = NOCODE;
-    listpc     = NOCODE;
+    // listpc     = NOCODE;
     next_flags.set(allEntries,fc);
     allEntries = this;
   }
@@ -82,9 +82,9 @@ public:
   ProgramCounter getPC(void)  { 
     return pc; 
   };
-  ProgramCounter getListPC(void)  { 
-    return listpc; 
-  };
+  //    ProgramCounter getListPC(void)  { 
+  //      return listpc; 
+  //    };
   
   void setPred(Abstraction * ab);
 

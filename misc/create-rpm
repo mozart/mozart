@@ -2,10 +2,14 @@
 #
 #  Authors:
 #    Christian Schulte <schulte@ps.uni-sb.de>
-# 
+#
+#  Contributors:
+#    Konstantin Popov <kost@sics.se>
+#
 #  Copyright:
 #    Christian Schulte, 1998
-# 
+#    Konstantin Popov, 2001
+#
 #  Last change:
 #    $Date$ by $Author$
 #    $Revision$
@@ -31,7 +35,8 @@ TMPDIR=/tmp
 #
 if test $# -lt 2
 then
-   echo "usage: create-rpm <src-dir> <dst-dir>" 1>&2;
+   echo "usage: create-rpm <build-dir> <dst-dir>" 1>&2;
+   echo <build-dir> is the place where Mozart has been built;
    exit 1;
 fi
 BUILDDIR=$1
@@ -149,7 +154,9 @@ cd $TMPDIR
 cat > $RPMSPEC/$SPEC <<EOF
 # Spec file for Mozart, an efficient and distributed implementation of Oz
 # Author: Christian Schulte, 1998
+# Contributor: Konstantin Popov, 2001
 # Copyright: Christian Schulte, 1998, 1999
+# Copyright: Konstantin Popov, 2001
 Name: mozart
 Version: $VERSION
 Release: $BUILD
@@ -158,7 +165,7 @@ Copyright: Free
 Vendor: Mozart Consortium
 Url: http://www.mozart-oz.org/
 Group: Development/Languages
-Packager: Christian Schulte <schulte@ps.uni-sb.de>
+Packager: Konstantin Popov <kost@sics.se>
 Icon: mozart.xpm
 
 Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${SRCTAR}
@@ -192,9 +199,9 @@ Summary: Mozart documentation
 Group: Development/Languages
 requires: mozart
 %description doc
-This package contains the extensive Mozart online documentation as a set of
-HTML pages. It also contains demo applications that can directly be
-started from the pages.
+This package contains the extensive Mozart online documentation as a
+set of HTML pages, postscript and pdf documents. It also contains demo
+applications that can directly be started from the pages.
 %package contrib
 Summary: Mozart contributions
 Group: Development/Languages
@@ -210,7 +217,7 @@ expression package, data base interfaces, and so on.
 : \${CFLAGS="\$RPM_OPT_FLAGS"}
 : \${CXXFLAGS="\$RPM_OPT_FLAGS"}
 export CFLAGS CXXFLAGS
-./configure --prefix=\$RPM_BUILD_ROOT$OZHOME
+./configure --enable-opt=yes --prefix=\$RPM_BUILD_ROOT$OZHOME
 make
 
 %install
@@ -225,6 +232,7 @@ mkdir -p \$PREFIX
 (cd \$PREFIX; \
  gzip -dc \$RPM_SOURCE_DIR/$DOCTAR | tar xf -; \
  mv mozart/doc .; \
+ mv mozart/print .; \
  rm -rf mozart; \
  rm -rf doc/demo/applets; \
  chown -R root .; \
@@ -261,7 +269,7 @@ EOF
 # No we have all what we need, go and build rpms
 #
 
-rpm -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+rpm --clean -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
 rm -f ${RPMSPEC}/${SPEC}
 rm -f ${RPMSRC}/${SRCTAR}
 rm -f ${RPMSRC}/${DOCTAR}

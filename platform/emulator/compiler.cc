@@ -646,7 +646,8 @@ static IHashTable * ci_store_hsh(TaggedRef t_ht,
 
   IHashTable * ht = IHashTable::allocate(size, code->computeLabel(elbl));
   
-  while (oz_isCons(t_tes)) {
+  Assert(!oz_isRef(t_tes));
+  while (oz_isLTuple(t_tes)) {
     LTuple * es = tagged2LTuple(t_tes);
     SRecord * e = tagged2SRecord(oz_deref(es->getHead()));
     
@@ -676,6 +677,7 @@ static IHashTable * ci_store_hsh(TaggedRef t_ht,
       ht->addScalar(e1,r_lbl);
     }
     t_tes = oz_deref(es->getTail());
+    Assert(!oz_isRef(t_tes));
   }
 
   Assert(oz_isNil(t_tes));
@@ -744,7 +746,8 @@ OZ_BI_define(BIstoreInstructions,4,1) {
 
   TaggedRef t_instr;
 
-  while (oz_isCons(t_instrs)) {
+  Assert(!oz_isRef(t_instrs));
+  while (oz_isLTuple(t_instrs)) {
     t_instr = oz_deref(oz_head(t_instrs));
     TaggedRef t_instr_label;
     TaggedRef t_instr_num;
@@ -1474,7 +1477,7 @@ OZ_BI_define(BIstoreInstructions,4,1) {
     }
 
     t_instrs = oz_deref(oz_tail(t_instrs));
-
+    Assert(!oz_isRef(t_instrs));
   }
   
   OZ_RETURN(makeTaggedConst(topl));
@@ -1602,13 +1605,17 @@ OZ_BI_define(BIisCopyableProcedureRef,1,1)
 OZ_BI_define(BIisLocalDet,1,1)
 {
   oz_declareDerefIN(0,var);
-  if (oz_isOptVar(var))
-    OZ_RETURN(oz_false());
 
-  if (!oz_isVar(var))
+  Assert(!oz_isRef(var));
+  if (oz_isVarOrRef(var)) {
+    if (oz_isOptVar(var)) {
+      OZ_RETURN(oz_false());
+    } else {
+      OZ_RETURN(oz_bool(oz_check_var_status(tagged2Var(var))==EVAR_STATUS_DET));
+    }
+  } else {
     OZ_RETURN(oz_true());
-
-  OZ_RETURN(oz_bool(oz_check_var_status(tagged2Var(var))==EVAR_STATUS_DET));
+  }
 } OZ_BI_end
 
 

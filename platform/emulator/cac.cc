@@ -1759,7 +1759,8 @@ void LTuple::_cacRecurse() {
   TaggedRef aux = oz_deref(to->args[0]);
 
   //
-  if (!oz_isLTuple(aux) || tagged2LTuple(aux) != this) {
+  Assert(!oz_isRef(aux));
+  if (!oz_isLTupleOrRef(aux) || tagged2LTuple(aux) != this) {
     frm->args[0] = to->args[0];
     oz_cacTerm(frm->args[0], to->args[0]);
     STOREFWDFIELD(frm, to);
@@ -1772,7 +1773,8 @@ void LTuple::_cacRecurse() {
     // have done a storeFwd, which means that this one will be overwritten
     TaggedRef t = oz_deref(frm->args[1]);
 
-    if (!oz_isCons(t)) {
+    Assert(!oz_isRef(t));
+    if (!oz_isLTupleOrRef(t)) {
       oz_cacTerm(frm->args[1], to->args[1]);
       return;
     }

@@ -233,27 +233,29 @@ files.base:
          find . \( -type f -or -type l \) -and \( \
 		! -path './platform/*' -and \
 		! -path './winbin/*' -and \
-		! -path './contrib/*' -and  \
+		! -path './cache/x-oz/contrib/*' -and  \
 		! -path './doc/*' -and  \
 		! -path './examples/*' -and  \
-		! -path './share/gump/examples/*' -and  \
+		! -path './cache/x-oz/system/gump/examples/*' -and  \
 		! -path './share/doc/*' -and  \
 		! -path './bin/ozdoc' -and \
 		! -path './bin/convertTextPickle' -and \
 		! -name '*.so-*' \
 	\) ) > $@
 
+
 files.base-%:
 	(cd $(PREFIX); \
          find . \( -type f -or -type l \) -and \
 		\( -path './platform/$*/*' -or \
-		   -path './share/*.so-$*' \) \
+		   -path './cache/x-oz/boot/*.so-$*' -or \
+		   -path './cache/x-oz/system/*.so-$*' \) \
 	) > $@
 
 files.contrib:
 	(cd $(PREFIX); \
 	 find . \( -type f -or -type l \) -and \( \
-		\( -path './contrib/*' -and ! -name '*.so-*' \) -or \
+		\( -path './cache/x-oz/contrib/*' -and ! -name '*.so-*' \) -or \
 		-path './bin/ozdoc' -or \
 		-path './bin/convertTextPickle' -or \
 		-path './share/doc/*' \
@@ -262,7 +264,7 @@ files.contrib:
 files.contrib-%:
 	(cd $(PREFIX); \
 	 find . \( -type f -or -type l \) -and \
-		-path './contrib/*' -and \
+		-path './cache/x-oz/contrib/*' -and \
 		-name '*.so-$*' \
 	) > $@
 
@@ -270,7 +272,8 @@ files.doc:
 	(cd $(PREFIX); \
 	 find . \( -type f -or -type l \) -and \( \
 		-path './doc/*' -or \
-		-path './share/gump/examples/*' -or \
+		-path './print/*' -or \
+		-path './cache/x-oz/system/gump/examples/*' -or \
 		-path './examples/*' \
 	\) -and -not -path './doc/Mozart.hh?' ) > $@
 

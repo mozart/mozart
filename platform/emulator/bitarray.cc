@@ -433,7 +433,8 @@ OZ_BI_define(BIbitArray_fromList,1,1)
   while (oz_isLTuple(is_td)) {
     LTuple * is = tagged2LTuple(is_td);
     TaggedRef i_t = oz_deref(is->getHead());
-    if (oz_isVar(i_t)) {
+    Assert(!oz_isRef(i_t));
+    if (oz_isVarOrRef(i_t)) {
       oz_suspendOn(is->getHead());
     }
     if (!oz_isSmallInt(i_t))
@@ -448,7 +449,8 @@ OZ_BI_define(BIbitArray_fromList,1,1)
     is_td = oz_deref(is_t);
   }
 
-  if (oz_isVar(is_td)) {
+  Assert(!oz_isRef(is_td));
+  if (oz_isVarOrRef(is_td)) {
     oz_suspendOn(is_t);
   }
 
