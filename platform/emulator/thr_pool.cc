@@ -53,7 +53,6 @@ void ThreadsPool::initThreads ()
   hi  = ozconf.hiMidRatio;
   mid = ozconf.midLowRatio;
 
-  threadBodyFreeList = NULL;
 }
 
 //

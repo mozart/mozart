@@ -66,7 +66,7 @@ Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
     // stated just before 'disposeThread ()' in thread.hh;
     tt->markDeadThread();
     CheckExtSuspension(tt);
-    am.threadsPool.freeThreadBody(tt);
+    tt->disposeStack();
     return TRUE;
 
   default:

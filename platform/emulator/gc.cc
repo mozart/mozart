@@ -1098,18 +1098,6 @@ void Script::gc() {
  *  Thread items methods;
  *
  */
-//
-//  RunnableThreadBody;
-
-
-RunnableThreadBody *RunnableThreadBody::gcRTBody () {
-  RunnableThreadBody *ret =
-    (RunnableThreadBody *) gcReallocStatic(this, sizeof(RunnableThreadBody));
-
-  taskStack.gc(&ret->taskStack);
-
-  return (ret);
-}
 
 /* collect LTuple, SRecord */
 
@@ -1175,37 +1163,6 @@ OZ_Propagator * OZ_Propagator::gc(void) {
   OZ_Propagator * to = (OZ_Propagator *) oz_hrealloc(this, sizeOf());
 
   return to;
-}
-
-inline
-void Thread::gcRecurse() {
-
-  if (getBoardInternal()->gcIsAlive()) {
-
-    setBoardInternal(getBoardInternal()->gcBoard());
-
-    threadBody = threadBody->gcRTBody();
-
-  } else {
-    //  The following assertion holds because suspended threads
-    // which home board is dead are filtered out during
-    // 'Thread::gcThread ()';
-    Assert(isRunnable());
-
-    //  Actually, there are two cases: for runnable threads with
-    // a taskstack, and without it (note that the last case covers
-    // also the GC'ing of propagators);
-    Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
-
-    setBoardInternal(notificationBoard->gcBoard());
-
-    setBody(am.threadsPool.allocateBody());
-    getBoardInternal()->incSuspCount();
-
-    pushCall(BI_skip,0,0);
-
-  }
-
 }
 
 ForeignPointer * ForeignPointer::gc(void) {
@@ -2010,8 +1967,6 @@ void ThreadQueue::gc() {
 #endif /* !LINKED_QUEUES */
 
 void ThreadsPool::doGC() {
-  threadBodyFreeList = (RunnableThreadBody *) NULL;
-
   hiQueue.gc();
   midQueue.gc();
   lowQueue.gc();
@@ -2451,11 +2406,12 @@ OzDebug *OzDebug::gcOzDebug() {
   return ret;
 }
 
-void TaskStack::gc(TaskStack *newstack) {
+inline
+TaskStack * TaskStack::gc(void) {
 
+  TaskStack *newstack = new TaskStack(suggestNewSize());
   TaskStack *oldstack = this;
 
-  newstack->allocate(suggestNewSize());
   Frame *oldtop = oldstack->getTop();
   int offset    = oldstack->getUsed();
   Frame *newtop = newstack->array + offset;
@@ -2472,7 +2428,7 @@ void TaskStack::gc(TaskStack *newstack) {
       *(--newtop) = CAP;
       Assert(newstack->array == newtop);
       newstack->setTop(newstack->array+offset);
-      return;
+      return newstack;
     } else if (PC == C_CATCH_Ptr) {
     } else if (PC == C_XCONT_Ptr) {
       // mm2: opt: only the top task can/should be xcont!!
@@ -2510,15 +2466,12 @@ void TaskStack::gc(TaskStack *newstack) {
 }
 
 
-/****************************************************************************
- * Board collection
- ****************************************************************************/
-
 /*
  * notification board == home board of thread
  * Although this may be discarded/failed, the solve actor must be announced.
  * Therefore this procedures searches for another living board.
  */
+inline
 Board* Board::gcGetNotificationBoard() {
   Assert(this);
 
@@ -2546,6 +2499,40 @@ Board* Board::gcGetNotificationBoard() {
 
   }
 }
+
+
+inline
+void Thread::gcRecurse() {
+
+  if (getBoardInternal()->gcIsAlive()) {
+
+    setBoardInternal(getBoardInternal()->gcBoard());
+
+    taskStack = taskStack->gc();
+
+  } else {
+    // The following assertion holds because suspended threads
+    // which home board is dead are filtered out during
+    // 'Thread::gcThread ()';
+    Assert(isRunnable());
+
+    Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
+
+    setBoardInternal(notificationBoard->gcBoard());
+
+    taskStack = new TaskStack(ozconf.stackMinSize);
+    getBoardInternal()->incSuspCount();
+
+    pushCall(BI_skip,0,0);
+
+  }
+
+}
+
+
+/****************************************************************************
+ * Board collection
+ ****************************************************************************/
 
 inline
 DistBag * DistBag::gc(void) {
