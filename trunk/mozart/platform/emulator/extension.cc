@@ -30,6 +30,11 @@ int oz_newUniqueId() {
   return counter++;
 }
 
+int OZ_getUniqueId(void)
+{
+  return oz_newUniqueId();
+}
+
 SituatedExtension::SituatedExtension(void)
   : ConstTermWithHome(oz_currentBoard(), Co_SituatedExtension) {}
 
