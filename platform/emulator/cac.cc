@@ -1509,7 +1509,7 @@ TaskStack * TaskStack::_cac(void) {
       oz_cacTerm(*((TaggedRef *) Y), *((TaggedRef *) Y));
       *CAP = makeTaggedVerbatim((void *)
                              _cacRefsArray((RefsArray)
-                                           tagValueOf(*CAP)));
+                                           tagged2Verbatim(*CAP)));
     } else { // usual continuation
       *Y   = _cacRefsArray(*Y);
       oz_cacTerm(*CAP, *CAP);

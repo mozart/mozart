@@ -217,12 +217,12 @@ public:
 
 };
 
-#define GetFrameNoDecl(top,pc,y,cap)            \
-{                                               \
-  pc   = (ProgramCounter) *(top-1);             \
-  y    = (RefsArray)      *(top-2);             \
-  cap  = (Abstraction *)  tagValueOf((TaggedRef) *(top-3));     \
-  top -= frameSz;                               \
+#define GetFrameNoDecl(top,pc,y,cap)                             \
+{                                                                \
+  pc   = (ProgramCounter) *(top-1);                              \
+  y    = (RefsArray)      *(top-2);                              \
+  cap  = (Abstraction *)  tagged2Verbatim((TaggedRef) *(top-3)); \
+  top -= frameSz;                                                \
 }
 
 #define ReplaceFrame(frame,pc,y,cap)            \
