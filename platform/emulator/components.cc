@@ -923,8 +923,35 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 #include <ctype.h>
 #include <unistd.h>
 
+inline int toHex(char c) {
+  return
+    ('0' <= c && c <= '9')?(c-'0'):
+    (('a' <= c && c <= 'f')?(c-'a'):
+     (('A' <= c && c <= 'F')?(c-'A'):-1));
+}
+static void urlDecode(const char*s1,char*s2)
+{
+  while (*s1 != '\0') {
+    int i1,i2;
+    if (*s1 == '%' &&
+        (i1=toHex(s1[1]))>=0 &&
+        (i2=toHex(s1[2]))>=0) {
+      *s2++ = i1*16+i2;
+      s1 += 3;
+    }
+    else
+      *s2++ = *s1++;
+  }
+  *s2='\0';
+}
+
+#define Return(val) ret=val; goto exit;
+
 OZ_Return URL_get(const char*url,OZ_Term& out,URLAction act)
 {
+  char *urlDecoded = new char [strlen(url)+1];
+  urlDecode(url,urlDecoded);
+  OZ_Return ret;
 #ifdef WINDOWS
   // check for WINDOWS style absolute pathname
   if (isalpha(url[0]) && url[1]==':' && (url[2]=='/' || url[2]=='\\')) {
@@ -938,40 +965,44 @@ OZ_Return URL_get(const char*url,OZ_Term& out,URLAction act)
     if (*s==':') goto url_remote;
   }
 url_local:
+
   switch (act) {
   case URL_LOCALIZE:
     {
-      if (access(url,F_OK)<0) goto kaboom;
+      if (access(urlDecoded,F_OK)<0) goto kaboom;
       out = OZ_mkTupleC("old",1,oz_atom(url));
-      return PROCEED;
+      Return(PROCEED);
     }
   case URL_OPEN:
     {
-      int fd = osopen(url,O_RDONLY,0);
+      int fd = osopen(urlDecoded,O_RDONLY,0);
       if (fd<0) goto kaboom;
       out = OZ_int(fd);
-      return PROCEED;
+      Return(PROCEED);
     }
   case URL_LOAD:
     {
-      int fd = osopen(url,O_RDONLY,0);
+      int fd = osopen(urlDecoded,O_RDONLY,0);
       if (fd<0) goto kaboom;
       OZ_Term   val    = oz_newVariable();
-      OZ_Return status = loadFD(fd,val,url);
+      OZ_Return status = loadFD(fd,val,urlDecoded);
       if (status==PROCEED) out=val;
-      return status;
+      Return(status);
     }
   default:
     Assert(0);
-    return FAILED;
+    Return(FAILED);
   }
 url_remote:
   out = oz_newVariable();
-  return getURL(url,out,act);
+  Return(getURL(url,out,act));
 kaboom:
-  return oz_raise(E_SYSTEM,oz_atom("url"),ACTION_STRING(act),2,
+  Return(oz_raise(E_SYSTEM,oz_atom("url"),ACTION_STRING(act),2,
                   oz_atom(OZ_unixError(errno)),
-                  oz_atom(url));
+                  oz_atom(url)));
+
+ exit:
+  return ret;
 }
 
 OZ_BI_define(BIurl_localize,1,1)
