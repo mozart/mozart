@@ -6448,17 +6448,16 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
 }
 
 
-OZ_C_proc_begin(BImakeClass,9)
+OZ_C_proc_begin(BImakeClass,8)
 {
-  OZ_Term fastmeth  = OZ_getCArg(0); { DEREF(fastmeth,_1,_2); }
-  OZ_Term printname = OZ_getCArg(1); { DEREF(printname,_1,_2); }
-  OZ_Term slowmeth  = OZ_getCArg(2); { DEREF(slowmeth,_1,_2); }
-  OZ_Term hfb       = OZ_getCArg(3); { DEREF(hfb,_1,_2); }
-  OZ_Term send      = OZ_getCArg(4); { DEREF(send,_1,_2); }
-  OZ_Term features  = OZ_getCArg(5); { DEREF(features,_1,_2); }
-  OZ_Term ufeatures = OZ_getCArg(6); { DEREF(ufeatures,_1,_2); }
-  OZ_Term defmethods = OZ_getCArg(7);{ DEREF(defmethods,_1,_2); }
-  OZ_Term out       = OZ_getCArg(8);
+  OZ_Term fastmeth   = OZ_getCArg(0); { DEREF(fastmeth,_1,_2); }
+  OZ_Term printname  = OZ_getCArg(1); { DEREF(printname,_1,_2); }
+  OZ_Term slowmeth   = OZ_getCArg(2); { DEREF(slowmeth,_1,_2); }
+  OZ_Term send       = OZ_getCArg(3); { DEREF(send,_1,_2); }
+  OZ_Term features   = OZ_getCArg(4); { DEREF(features,_1,_2); }
+  OZ_Term ufeatures  = OZ_getCArg(5); { DEREF(ufeatures,_1,_2); }
+  OZ_Term defmethods = OZ_getCArg(6);{ DEREF(defmethods,_1,_2); }
+  OZ_Term out        = OZ_getCArg(7);
 
   SRecord *methods = NULL;
 
@@ -6476,7 +6475,6 @@ OZ_C_proc_begin(BImakeClass,9)
                                     tagged2Literal(printname),
                                     tagged2Dictionary(slowmeth),
                                     tagged2Abstraction(send),
-                                    literalEq(hfb,NameTrue),
                                     uf,
                                     tagged2Dictionary(defmethods));
 
@@ -6513,25 +6511,6 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
   return PROCEED;
 }
 OZ_C_proc_end
-
-
-OZ_Return hasFastBatchInline(TaggedRef t)
-{
-  DEREF(t,_,tag);
-  if (isNotCVar(tag)) return SUSPEND;
-  if (!isObject(t)) {
-    return FAILED;
-  }
-  Object *obj = (Object *) tagged2Const(t);
-  if (obj->getFastBatch() &&
-      am.currentBoard == obj->getBoardFast()) {
-    return PROCEED;
-  }
-
-  return FAILED;
-}
-
-DECLAREBI_USEINLINEREL1(BIhasFastBatch,hasFastBatchInline)
 
 
 OZ_Return BIisObjectInline(TaggedRef t)
@@ -7307,13 +7286,12 @@ BIspec allSpec2[] = {
   {"platform",       1, BIplatform},
   {"ozhome",         1, BIozhome},
 
-  {"makeClass",        9,BImakeClass,          0},
+  {"makeClass",        8,BImakeClass,          0},
   {"setModeToDeep",    0,BIsetModeToDeep,      0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
   {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
   {"new",              3,BInew,                0},
   {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
-  {"hasFastBatch",     1,BIhasFastBatch,       (IFOR) hasFastBatchInline},
   {"objectIsFree",     2,BIobjectIsFree,       (IFOR) objectIsFreeInline},
   {"getOONames",       5,BIgetOONames,         0},
   {"releaseObject",    0,BIreleaseObject,      0},
