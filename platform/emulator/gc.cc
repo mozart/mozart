@@ -1391,9 +1391,7 @@ void AM::gc(int msgLevel)
   CodeArea::gc();
 
   aritytable.gc ();
-
-  currentThread=currentThread->gcThread();
-  rootThread=rootThread->gcThread();
+  ThreadsPool::doGC ();
   Assert(rootThread);
 
   if (FDcurrentTaskSusp != (Suspension *) NULL) {
@@ -1403,10 +1401,6 @@ void AM::gc(int msgLevel)
 #ifdef DEBUG_STABLE
   board_constraints = board_constraints->gc(NO);
 #endif
-
-  threadsFreeList = NULL;
-  threadsHead=threadsHead->gcThread();
-  threadsTail=threadsTail->gcThread();
 
   suspendVarList=makeTaggedNULL(); /* no valid data */
   gcTagged(suspCallHandler,suspCallHandler);
@@ -1628,6 +1622,41 @@ void CodeArea::gc()
   abstractionTab.gcAbstractionTable();
 }
 
+void ThreadsPool::doGC ()
+{
+  int pri, prioInd = nextPrioInd;
+  ThreadQueue *thq;
+
+  currentThread = currentThread->gcThread ();
+  rootThread = rootThread->gcThread ();
+  threadsFreeList = NULL;
+
+  thq = currentQueue;
+  pri = currentPriority;
+  while (thq) {
+    thq->doGC ();
+
+    if (prioInd >= 0) {
+      pri = nextPrio[prioInd--];
+      thq = &queues[pri];
+    } else {
+      thq = (ThreadQueue *) NULL;
+    }
+  }
+}
+
+void ThreadQueue::doGC ()
+{
+  int asize = size;
+  int ahead = head;
+  int mod = maxsize - 1;
+
+  while (asize) {
+    queue[ahead] = queue[ahead]->gcThread ();
+    ahead = (ahead + 1) & mod;
+    asize--;
+  }
+}
 
 void TaskStack::gc(TaskStack *newstack)
 {
@@ -1905,8 +1934,6 @@ void Thread::gcThreadRecurse()
 
   GCMETHMSG("Thread::gcRecurse");
 
-  next=next->gcThread();
-  prev=prev->gcThread();
   home=home->gcBoard();
   // Assert(home);
 
