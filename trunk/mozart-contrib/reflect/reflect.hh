@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef __REFL_CONSTR__HH__
-#define __REFL_CONSTR__HH__
+#ifndef __REFLECT__HH__
+#define __REFLECT__HH__
 
 #include "var_all.hh"
 
@@ -74,16 +74,47 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+// prototypes of reflection functions
 
 OZ_Term reflect_propagator(Suspension);
 OZ_Term reflect_thread(Suspension);
+OZ_Term reflect_susplist(SuspList *);
+OZ_Term reflect_variable(OZ_Term);
+
+//-----------------------------------------------------------------------------
+// prototypes of built-ins
+
+OZ_BI_proto(BIReflectPropagator);
+OZ_BI_proto(BIReflectPropagatorName);
+OZ_BI_proto(BIIsPropagatorFailed);
+OZ_BI_proto(BIReflectPropagatorCoordinates);
+OZ_BI_proto(BIReflectVariable);
+OZ_BI_proto(BIPropagatorEq);
 
 //-----------------------------------------------------------------------------
 
+inline
 OZ_Term propagator2Term(Propagator * p) {
   return oz_makeTaggedExtension(new PropagatorReference(p));
 }
 
+OZ_Term prop_name(char * name);
+
+//-----------------------------------------------------------------------------
+
+#define MKARITY(Arity, ArityDef)			\
+OZ_Term Arity = OZ_nil();				\
+for (int i = 0; ArityDef[i] != (OZ_Term) 0; i += 1)	\
+  Arity = OZ_cons(ArityDef[i], Arity);
+
+//-----------------------------------------------------------------------------
+
+extern 
+OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,  
+  atom_bounds, atom_val, atom_glb, atom_lub, atom_flat, atom_local, atom_ask, 
+  atom_wait, atom_waittop, atom_oops, atom_prop, atom_params, atom_name,
+  atom_space, atom_susp, atom_thread, atom_ct, atom_susplists, atom_ref;
+  
 //-----------------------------------------------------------------------------
 
 #ifdef DEBUG
@@ -92,4 +123,4 @@ OZ_Term propagator2Term(Propagator * p) {
 #define DEBUGPRINT(A)
 #endif
 
-#endif
+#endif /* __REFLECT__HH__ */
