@@ -296,8 +296,8 @@ OZ_Return DPlusPropagator::run(void)
                   z_aux(fd_empty);
 
   int i, j;
-  for (i = x->getMinElem(); i != -1; i = x->getNextLargerEl(i)) {
-    for (j = y->getMinElem(); j != -1; j = y->getNextLargerEl(j)) {
+  for (i = x->getMinElem(); i != -1; i = x->getNextLargerElem(i)) {
+    for (j = y->getMinElem(); j != -1; j = y->getNextLargerElem(j)) {
       if (z->isIn(i + j)) {
 	x_aux += i;
 	y_aux += j; 
