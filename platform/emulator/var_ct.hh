@@ -129,7 +129,7 @@ public:
     return _constraint->unify(val);
   }
 
-  OzVariable * gc(void);
+  void gc(void);
 
   void gcRecurse(void);
 

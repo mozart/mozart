@@ -47,7 +47,6 @@ public:
   OZ_Return valid(TaggedRef /* val */) {
     return TRUE;
   }
-  OzVariable* gc() { return new Future(*this); }
   void gcRecurse()   {
     if (function) {
       OZ_collectHeapTerm(function,function);

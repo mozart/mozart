@@ -59,3 +59,12 @@ int Thread::getRunnableNumber() {
 
   return 0;
 }
+
+void Thread::printTaskStack(int depth) {
+  if (!isDeadThread()) {
+    threadBody->taskStack.printTaskStack(depth);
+  } else {
+    message("\tEMPTY\n");
+    message("\n");
+  }
+}

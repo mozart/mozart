@@ -43,7 +43,6 @@ public:
   OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr);
 
   OZ_Return valid(TaggedRef /* val */) { return OK; }
-  OzVariable* gc() { return new SimpleVar(*this); }
   void gcRecurse() {}
 
   void dispose(void) {
