@@ -317,7 +317,7 @@ public:
   Thread *thread;
   PendThread(Thread *th,PendThread *pt):thread(th),next(pt){}
   PendThread(Thread *th):thread(th),next(NULL){}
-  PendThread(){DebugCode(thread=NULL);}
+  PendThread(){thread=NULL;}
   USEFREELISTMEMORY;
   void dispose(){freeListDispose(this,sizeof(PendThread));}
 };
