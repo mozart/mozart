@@ -242,9 +242,12 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       stream << ' ' << me->toString(DEC(depth)) << '>';
       break;
     }
-  case DVAR:
   case AVAR:
-    stream << indent(offset) << (getType()==AVAR ? "<AVAR " : "<DVAR ")
+    stream << indent(offset) << "<AVAR "
+	     << getVarName(v) << " @" << this << ">";
+      break;
+  case PerdioVariable:
+    stream << indent(offset) << "<PerdioVariable "
 	     << getVarName(v) << " @" << this << ">";
       break;
 
@@ -1123,7 +1126,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
       AVar* me = (AVar *) this;
       stream << indent(offset); this->print(stream,depth, 0,v);
       stream << endl << indent(offset) << "Value: ";
-      tagged2Stream(me->value, stream, DEC(depth), offset + 2);
+      tagged2Stream(me->getValue(), stream, DEC(depth), offset + 2);
       stream << endl;
       break;
     }
