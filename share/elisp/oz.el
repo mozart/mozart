@@ -286,6 +286,17 @@ Positions are returned as a pair ( START . END )."
       (cons start end))))
 
 (defun oz-get-region (start end)
+  (save-excursion
+    (goto-char start)
+    (skip-chars-forward " \t\n")
+    (if (/= (count-lines start (point)) 0)
+	(progn
+	  (beginning-of-line)
+	  (setq start (point))))
+    (goto-char end)
+    (skip-chars-backward " \t\n")
+    (setq end (point)))
+  (setq oz-last-fed-region-start (copy-marker start))
   (concat "\\line " (1+ (count-lines 1 start))
 	  " '" (or (buffer-file-name) "nofile") "' % fromemacs\n"
 	  (buffer-substring start end)))
@@ -841,7 +852,6 @@ the gdb commands `cd DIR' and `directory'."
   "Feed the current region to the Oz Compiler."
   (interactive "r")
   (oz-send-string (oz-get-region start end))
-  (setq oz-last-fed-region-start (copy-marker start))
   (oz-zmacs-stuff))
 
 (defun oz-feed-line (arg)
@@ -2355,8 +2365,7 @@ Assuming it to contain an expression, it is enclosed by an application
 of the procedure Browse."
   (interactive "r")
   (let ((contents (oz-get-region start end)))
-    (oz-send-string (concat "{Browse\n" contents "}"))
-    (setq oz-last-fed-region-start (copy-marker start))))
+    (oz-send-string (concat "{Browse\n" contents "}"))))
 
 (defun oz-feed-line-browse (arg)
   "Feed the current line to the Oz Compiler.
