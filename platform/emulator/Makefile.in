@@ -147,10 +147,11 @@ version:
              -e "s/OZPLATFORM/$(PLATFORM)/" \
              $(SRCDIR)/version.sed > version.cc
 
+depend:: Makefile $(CREATEDFILES) $(SRCS)
+        $(DEPEND) $(SRCS1:%=$(SRCDIR)/%) $(CREATEDSRCS) >> Makefile
 
-depend:: $(CREATEDFILES) $(SRCS)
-        $(DEPEND) `for f in $(SRCS1); do echo $(SRCDIR)/$$f; done` \
-                $(CREATEDSRCS) >> Makefile
+# prefered gmake depend!
+# include $(SRCS:.cc=.d)
 
 tags::  $(CREATEDFILES) version.cc
 
@@ -190,13 +191,13 @@ ozma-p.o: ozma-p.cc
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
 
 ozma-s.ll: ozma-s.m4ll
-        $(M4) $< > $@
+        $(M4) $(M4_D) $< > $@
 
 ozma-p.yy: ozma-p.m4yy
-        $(M4) $< > $@
+        $(M4) $(M4_D) $< > $@
 
 config.h: config.m4h $(OZVERSION)
-        $(M4) -DOZVERSION=\"`$(OZVERSION)`\" $< > $@
+        $(M4_S) -DOZVERSION=\"`$(OZVERSION)`\" $< > $@
 
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
@@ -225,13 +226,6 @@ scancode.cc ozma-s.ll ozma-p.yy optostr.hh marshalcode.cc opcodes.hh opcodes.cc 
 # automatic configure
 ${srcdir}/configure: configure.in
         cd ${srcdir} && autoconf
-
-# autoheader might not change config.h.in, so touch a stamp file.
-#${srcdir}/config.h.in: stamp-h.in
-#${srcdir}/stamp-h.in: configure.in aclocal.m4 acconfig.h \
-#    config.h.top config.h.bot
-#        cd ${srcdir} && autoheader
-#        echo timestamp > ${srcdir}/stamp-h.in
 
 conf.h: conf.h.in config.status
         ./config.status
