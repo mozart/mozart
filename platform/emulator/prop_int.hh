@@ -136,11 +136,11 @@ OZ_Return oz_runPropagator(Propagator * p) {
     Assert(profile);
     //
     char * pn = profile->getPropagatorName();
-    printf("<%s[%p] %s", pn, ozprop, OZ_toC(params, 10, 10));
+    printf("<%s[%p] %s", pn, ozprop, OZ_toC(params, ozconf.errorPrintDepth, ozconf.errorPrintWidth));
     fflush(stdout);
     //
     OZ_Return ret = ozprop->propagate();
-    printf(" -> %s (%s)>\n\n", RETVAL_TEXT(ret), OZ_toC(params, 10, 10));
+    printf(" -> %s (%s)>\n\n", RETVAL_TEXT(ret), OZ_toC(params, ozconf.errorPrintDepth, ozconf.errorPrintWidth));
     fflush(stdout);
     return ret;
 #else
