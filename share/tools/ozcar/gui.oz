@@ -294,29 +294,30 @@ in
 	 {Delay 70} % > TIME_SLICE
 	 L = {Lck is($)}
 	 case L then skip else
-	    Ack
 	    FrameId       = F.id
 	    FrameNr       = F.nr
-	    CurrentThread = ThreadManager,getCurrentThread($)
-	    Vars          = {Dbg.frameVars CurrentThread FrameId}
+	    CurThr        = @currentThread
+	    CurThrId      = {Thread.id CurThr}
+	    StackObj      = {Dget ThreadManager,getThreadDic($) CurThrId}
+	    SavedVars     = {StackObj getVars(FrameNr $)}
+	    Vars          = case SavedVars \= nil then
+			       {OzcarMessage 'using saved variables'}
+			       SavedVars
+			    else
+			       {OzcarMessage
+				'requesting variables from Emulator'}
+			       {Dbg.frameVars CurThr FrameId}
+			    end
 	 in
-	    {OzcarMessage 'Selecting frame #' # FrameId}
+	    {OzcarMessage 'Selecting frame #' # FrameNr}
 	    case Highlight then
-	       thread
-		  SourceManager,scrollbar(file:F.file line:{Abs F.line} ack:Ack
-					  color:ScrollbarStackColor what:stack)
-	       end
-	       thread Gui,loadStatus(F.file Ack) end
+	       SourceManager,scrollbar(file:F.file line:{Abs F.line}
+				       color:ScrollbarStackColor what:stack)
 	       Gui,SelectStackFrame(FrameNr)
 	    else
 	       Gui,SelectStackFrame(0)
 	    end
 	    Gui,printEnv(frame:FrameNr vars:Vars)
-	    /*
-	    case {Cget verbose} then
-	       {Debug.displayCode F.'PC' 5}
-	    else skip end
-	    */
 	 end
       end
    
@@ -495,28 +496,6 @@ in
 	 Gui,Disable(W)
       end
 
-      meth loadStatus(File Ack)
-	 case {UnknownFile File} then skip else
-	    {Delay TimeoutToMessage}
-	    case {IsDet Ack} then skip else
-	       RealFile = {LookupFile File}
-	    in
-	       Gui,rawStatus('Loading file ' # RealFile # '...')
-	       {Wait Ack}
-	       Gui,rawStatus(' done' append)
-	    end
-	 end
-      end
-      
-      meth stackStatus(Size Ack)
-	 {Delay TimeoutToMessage}
-	 case {IsDet Ack} then skip else
-	    Gui,rawStatus('Printing stack of size ' # Size # '...')
-	    {Wait Ack}
-	    Gui,rawStatus(' done' append)
-	 end
-      end
-	    
       meth action(A)
 	 T = @currentThread
 	 L = {Label A}

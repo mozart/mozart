@@ -233,16 +233,15 @@ in
 	 end
       end
 
-      meth scrollbar(file:F line:L color:C what:What<=appl ack:Ack<=unit)
+      meth scrollbar(file:F line:L color:C what:What<=appl)
 	 M = {Cget scrollbar}
       in
 	 lock
-	    SourceManager,M(file:F line:L color:C what:What ack:Ack)
+	    SourceManager,M(file:F line:L color:C what:What)
 	 end
       end
       
-      meth emacsScrollbar(file:F line:L color:C what:What ack:Ack)
-	 case {IsDet Ack} then skip else Ack = unit end
+      meth emacsScrollbar(file:F line:L color:C what:What)
          case {UnknownFile F} then
 	    case What == stack then skip else
 	       {MagicEmacsScrollbar undef 0 hide}
@@ -252,7 +251,7 @@ in
          end
       end
       
-      meth ozScrollbar(file:F line:L color:C what:What ack:Ack)
+      meth ozScrollbar(file:F line:L color:C what:What)
 	 case {UnknownFile F} then
 	    SourceManager,EraseScrollbar(What)
 	 else
@@ -274,7 +273,6 @@ in
 	       WithDrawn <- false
 	    else skip end
 	 end
-	 case {IsDet Ack} then skip else Ack = unit end
       end
       
       meth NewFile(file:F line:L color:C what:What)
