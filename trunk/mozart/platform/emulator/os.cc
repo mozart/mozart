@@ -238,7 +238,7 @@ public:
   HANDLE char_avail;
   HANDLE char_consumed;
   char chr;
-  BOOL status;  /* true iff input is available */
+  Bool status;  /* true iff input is available */
   int thrd;     /* reader thread */
 };
 
@@ -258,10 +258,8 @@ void readerThread(void *arg)
       perror("readerThread: read");
       break;
     }
-    printf("readerThread read(%d): %d\n",sr->fd,sr->chr); fflush(stdout);
-    ResetEvent(sr->char_consumed);
     SetEvent(sr->char_avail);
-        
+
     /* Wait until our input is acknowledged before reading again */
     if (WaitForSingleObject(sr->char_consumed, INFINITE) != WAIT_OBJECT_0)
       break;
@@ -271,22 +269,20 @@ void readerThread(void *arg)
   _endthread();
 }
 
-static BOOL 
-createReader(int fd)
+static 
+Bool createReader(int fd)
 {
   StreamReader *sr = &readers[fd];
-  DWORD id;
-  STARTUPINFO start;
-  SECURITY_ATTRIBUTES sec_attrs;
-  SECURITY_DESCRIPTOR sec_desc;
-  
+
+  if (sr->thrd != NULL)
+    return OK;
+
   sr->char_avail = CreateEvent(NULL, FALSE, FALSE, NULL);
-  if (sr->char_avail == NULL)
-    goto err;
-  
   sr->char_consumed = CreateEvent(NULL, FALSE, FALSE, NULL);
-  if (sr->char_consumed == NULL)
+
+  if ((sr->char_consumed==NULL) || (sr->char_avail == NULL)) {
     goto err;
+  }
   
   sr->thrd = _beginthread(readerThread, NULL, 4096, sr);
   if (sr->thrd == -1) {
@@ -294,20 +290,19 @@ createReader(int fd)
     goto err;
   }
   
-  return TRUE;
+  return OK;
   
 err:
-  id = GetLastError();
+  int id = GetLastError();
   CloseHandle(sr->char_consumed);
   CloseHandle(sr->char_avail);
   
-  return FALSE;
+  return NO;
 }
 
 
 int win32_wait(fd_set *fds)
 {
-  DWORD active;
   HANDLE wait_hnd[OPEN_MAX];
   
   int nh = 0;
@@ -324,9 +319,8 @@ int win32_wait(fd_set *fds)
     return -1;
   }
   
-  printf("enter wait\n"); fflush(stdout);
-  active = WaitForMultipleObjects(nh, wait_hnd, FALSE, INFINITE);
-  printf("exit wait\n"); fflush(stdout);
+  DWORD active = WaitForMultipleObjects(nh, wait_hnd, FALSE, INFINITE);
+
   if (active == WAIT_FAILED) {
     errno = EBADF;
     return -1;
@@ -347,12 +341,10 @@ int win32_wait(fd_set *fds)
   /* search fd */
   for (i=0; i<OPEN_MAX; i++) {
     if (wait_hnd[active] == readers[i].char_avail) {
-      printf("win32wait: found descriptor: %d\n",i);
       return i;
     }
   }
 
-  printf("win32wait: NO DESCRIPTOR FOUND\n");
   return -1;
 }
 
@@ -714,17 +706,14 @@ int osread(int fd, void *buf, unsigned int len)
 #ifdef WINDOWS
   if (readers[fd].thrd) {
     if (readers[fd].status==NO) {
-      printf("osread(%d) enter wait\n",fd); fflush(stdout);
       WaitForSingleObject(readers[fd].char_avail, INFINITE);
     }
     *(char*)buf = readers[fd].chr;
-    printf("enter osread(%d)\n",fd); fflush(stdout);
     int ret = read(fd,((char*)buf)+1,len-1);
-    printf("osread(%d) read %d chars\n",fd,ret); fflush(stdout);
     if (ret<0)
       return ret;
     readers[fd].status=NO;
-    SetEvent(readers[fd].char_consumed);
+    PulseEvent(readers[fd].char_consumed);
     return ret+1;
   }
 #endif
