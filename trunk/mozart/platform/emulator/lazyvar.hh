@@ -54,6 +54,7 @@ public:
   void kickLazy();
   void kickLazy(TaggedRef*);
   void addSuspLazy(Thread*,int);
+  bool isKinded() { return false; }
 };
 
 
