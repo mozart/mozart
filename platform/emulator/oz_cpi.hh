@@ -181,6 +181,9 @@ public:
   OZ_FSetConstraint(const OZ_FSetValue &);
   OZ_FSetConstraint(OZ_FSetState);
 
+  OZ_FSetConstraint(const OZ_FSetConstraint &);
+  OZ_FSetConstraint &operator = (const OZ_FSetConstraint &);
+
   int getKnownIn(void) const { return _known_in; }
   int getKnownNotIn(void) const { return _known_not_in; }
   int getUnknown(void) const { 
@@ -316,7 +319,7 @@ public:
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState = fd_prop_any);
-  OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState);
+  OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState = fs_prop_any);
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectFSetValue(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);

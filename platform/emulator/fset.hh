@@ -74,12 +74,15 @@ public:
   OZ_FSetImpl(OZ_Term, OZ_Term);
   OZ_FSetImpl(const FSetValue& s) { init(s); }
 
+  OZ_FSetImpl(const OZ_FSetImpl &);
+  OZ_FSetImpl &operator = (const OZ_FSetImpl &);
+
   void init(void);
-  void init(const FSetValue&);
+  void init(const FSetValue &);
+  void init(const OZ_FSetImpl &);
   void init(OZ_FSetState);
 
   OZ_FSetImpl unify(const OZ_FSetImpl &) const;
-  //  OZ_Boolean unify(const FSetValue &);
   OZ_Boolean valid(const FSetValue &) const;
 
   int getCardMin(void) const { return _card_min; }

@@ -68,6 +68,18 @@ OZ_C_proc_begin(BIfsSup, 1)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIfsClone, 2) 
+{
+  ExpectedTypes(OZ_EM_FSET "," OZ_EM_FSET);
+  
+  ExpectOnly pe;
+  
+  EXPECT_BLOCK(pe, 0, expectFSetVar);
+  
+  return tellBasicConstraint(OZ_getCArg(1), 
+			     (OZ_FSetImpl *) &tagged2GenFSetVar(deref(OZ_getCArg(0)))->getSet());
+}
+OZ_C_proc_end
 //-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(BIfsGetKnownIn, 2) 
@@ -323,6 +335,7 @@ BIspec fdSpec[] = {
   {"fsGetNumOfUnknown", 2, BIfsGetNumOfUnknown},
   
   {"mkFSetVar", 5, BImkFSetVar},
+  {"fsClone", 2, BIfsClone},
 
 #ifndef FOREIGNFDPROPS
   {"fsp_init",         1, fsp_init},
