@@ -113,12 +113,17 @@ prepare
       end
    end
 
-   fun {MakeDummyObject PN}
-      {New BaseObject noop()}
-   end
-
-   fun {MakeDummyClass PN}
-      {OoExtensions.'class' nil '#' 'attr' 'feat' nil PN}
+   local
+      Meth = 'meth'(noop # proc {$ noop} skip end)
+   in
+      fun {MakeDummyClass PN}
+	 {OoExtensions.'class' nil Meth 'attr' 'feat' nil
+	  if PN==unit then '' else PN end}
+      end
+      
+      fun {MakeDummyObject PN}
+	 {New {MakeDummyClass PN} noop()}
+      end
    end
 
 
