@@ -1686,6 +1686,7 @@ Negative arg -N means kill N Oz expressions after the cursor."
 
   (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
   (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
+  (define-key map "\C-x "        'oz-breakpoint-key-set)
   (define-key map "\C-c\C-d\C-b" 'oz-breakpoint-key-set)
   (define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
   (cond (oz-gnu-emacs
