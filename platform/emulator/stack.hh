@@ -14,6 +14,9 @@
 #pragma interface
 #endif
 
+#include <stdio.h>
+
+#include "error.h"
 #include "types.hh"
 
 //*****************************************************************************
@@ -29,47 +32,54 @@ protected:
   StackEntry *tos;   // top of stack: pointer to first UNUSED cell
   StackEntry *array; 
   StackEntry *stackEnd;
+
+  virtual void resize(int newSize);
+
+  // memory management: default via malloc/free
+  virtual StackEntry *allocate(int n);
+  virtual void deallocate(StackEntry *p, int n);
+  virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
+
 public:
 
-  Stack(int sz = 10000) {
-    size = sz;
-    array = (StackEntry*) malloc(sizeof(StackEntry) * size);
-    if(!array)
-      error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
-    tos = array;
-    stackEnd = array+size;
-  }
+  Stack(int sz = 10000);
+  ~Stack() { deallocate(array,size*sizeof(StackEntry)); }
 
-  Bool empty(void){
-    return (tos <= array) ? OK : NO;
-  }
+  Bool empty(void) { return (tos <= array) ? OK : NO; }
 
-  void realloc(int n);
-  
   void ensureFree(int n)
   {
     if (stackEnd <= tos+n) {
-      realloc(n);
+      resize((int)(size*1.5));
+      ensureFree(n);
     }
   }
   
+  void checkConsistency()
+  {
+    DebugCheck(((tos < array) || (tos > array+size)),
+	       error("Stack inconsistent"));
+  }
+
   void push(StackEntry value, Bool check=OK)
   {
-    if ( check ) {
-      ensureFree(1);
-    }
+    checkConsistency();
+    if (check) { ensureFree(1); }
     *tos = value;
     tos++;
   };
 
-  StackEntry pop(void)
+  StackEntry pop(int n=1)
   {
-    DebugCheck(empty() == OK,
-	       error("Cannot pop from empty stack."););
-    tos--;
+    checkConsistency();
+    DebugCheck(empty() == OK, error("Cannot pop from empty stack."););
+    tos -= n;
     return *tos;
-  };
-}; // Stack
+  }
+
+  int getMaxSize()  { return size; }
+  int getUsed()     { return tos-array; }
+};
 
 
 #endif //__STACK_H__

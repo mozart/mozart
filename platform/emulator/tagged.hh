@@ -23,7 +23,12 @@
 #pragma interface
 #endif
 
+#include <stdio.h>
+
+
+#include "error.h"
 #include "types.hh"
+#include "mem.hh"
 #include "gc.hh"
 
 // ---------------------------------------------------------------------------
@@ -712,9 +717,18 @@ inline void markFreedRefsArray(RefsArray a)
 
 #endif
 
+inline void setRefsArraySize(RefsArray a, int n)
+{
+  a[-1] = (TaggedRef)n<<2;
+}
+
+inline int getRefsArraySize(RefsArray a) {
+  return (int) a[-1] >> 2;
+}
+
 inline Bool initRefsArray(RefsArray a, int size, Bool init)
 {
-  a[-1] = (TaggedRef)size<<2;
+  setRefsArraySize(a,size);
   TaggedRef help = makeTaggedNULL();    /* due to stupid gcc */
   if (init) {
     for(int i = size-1; i >= 0; i--) 
@@ -732,10 +746,6 @@ inline RefsArray allocateRefsArray(int n, Bool init=OK)
   a += 1;
   initRefsArray(a,n,init);
   return a;  
-}
-
-inline int getRefsArraySize(RefsArray a) {
-  return (int) a[-1] >> 2;
 }
 
 inline RefsArray allocateY(int n, Bool init=OK)
@@ -783,17 +793,18 @@ inline RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) {
 
 
 inline RefsArray resize(RefsArray r, int s){
-  int size = (int) r[-1];
+  int size = getRefsArraySize(r);
   if (s < size){
-    r[-1] = (TaggedRef)s;
+    setRefsArraySize(r,s);
     return r;
-  } else
-    if (s > size){
-      RefsArray aux = allocateRefsArray(s);
-      for(int j = size-1; j >= 0; j--)
-	aux[j] = r[j];
-      return aux;
-    }
+  }
+  
+  if (s > size){
+    RefsArray aux = allocateRefsArray(s);
+    for(int j = size-1; j >= 0; j--)
+      aux[j] = r[j];
+    return aux;
+  }
   return r;
 } // resize
 

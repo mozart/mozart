@@ -221,7 +221,7 @@ void AM::init(int argc,char **argv)
   initAtoms();
   Actor::InitSolve();
 
-  globalStore = allocateStaticRefsArray(NumberOfYRegisters);
+  globalStore = allocateRefsArray(500);
 
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   globalStore[0] = makeTaggedSRecord(bi);
@@ -241,7 +241,7 @@ Bool AM::unify(TaggedRef *ref1, TaggedRef *ref2)
   TaggedRef *refPtr;
   TaggedRef value;
   
-  while (!rebindTrail.isEmpty ()) {
+  while (!rebindTrail.empty ()) {
     rebindTrail.popCouple(refPtr, value);
     doBind(refPtr,value);
   }
@@ -708,11 +708,7 @@ void AM::reduceTrailOnUnitCommit()
   for (int index = 0; index < numbOfCons; index++) {
     TaggedRef *refPtr;
     TaggedRef value;
-    {
-      TrailEntry *eq = trail.popRef();
-      refPtr = eq->getRefPtr();
-      value = eq->getValue ();
-    }
+    trail.popRef(refPtr,value);
 
     bb->setScript(index,refPtr,*refPtr);
     *refPtr = value;
@@ -738,11 +734,7 @@ void AM::reduceTrailOnSuspend()
   for (int index = 0; index < numbOfCons; index++) {
     TaggedRef *refPtr;
     TaggedRef value;
-    {
-      TrailEntry *eq = trail.popRef();
-      refPtr = eq->getRefPtr();
-      value = eq->getValue ();
-    }
+    trail.popRef(refPtr,value);
     
     TaggedRef oldVal = makeTaggedRef(refPtr);
     DEREF(oldVal,ptrOldVal,tagOldVal);
@@ -779,11 +771,7 @@ void AM::reduceTrailOnFail()
   for (int index = 0; index < numbOfCons; index++) {
     TaggedRef *refPtr;
     TaggedRef value;
-    {
-      TrailEntry *eq = trail.popRef();
-      refPtr = eq->getRefPtr();
-      value = eq->getValue ();
-    }
+    trail.popRef(refPtr,value);
     *refPtr = value;
   }
   trail.popMark();
@@ -794,10 +782,10 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
   // one single suspension for all
   
   for (int i = 0; i < numbOfCons; i++) {
-    TrailEntry *eq = trail.popRef();
-    TaggedRef *refPtr = eq->getRefPtr();
-    // unbind
-    *refPtr = eq->getValue();
+    TaggedRef *refPtr;
+    TaggedRef value;
+    trail.popRef(refPtr,value);
+    *refPtr = value;
 
     DebugCheck(!isAnyVar(*refPtr),
 	       error("Non-variable on trail"));

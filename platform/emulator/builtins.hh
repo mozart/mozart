@@ -28,10 +28,7 @@
 // special builtins known in emulate
 enum BIType {
   BIDefault,
-  BIDefaultSusp,
-  BIwakeup,
   BIApply,
-  BILoadFile,
   BIsolve,
   BIsolveCont,
   BIsolved
