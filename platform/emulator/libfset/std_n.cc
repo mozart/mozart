@@ -71,10 +71,14 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
   PropagatorController_VS P(_vs_size, vs);
   int i;
 
+
   for (i = _vs_size; i--; ) {
     vs[i].read(_vs[i]);
     vst[i] = vs[i];
   }
+
+  if (hasEqualVars())
+    goto failure;
 
   OZ_FSetValue u = _u;
 
@@ -142,8 +146,12 @@ OZ_C_proc_begin(fsp_unionN, 2)
 
   PropagatorExpect pe;
 
-  OZ_EXPECT(pe, 0, expectVectorFSetVarBounds);
-  OZ_EXPECT(pe, 1, expectFSetVarBounds);
+  int susp_count = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectVectorFSetVarBounds, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
+
+  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
   return pe.impose(new FSetUnionNPropagator(OZ_args[0],
                                             OZ_args[1]));
@@ -313,8 +321,12 @@ OZ_C_proc_begin(fsp_partition, 2)
 
   PropagatorExpect pe;
 
-  OZ_EXPECT(pe, 0, expectVectorFSetVarBounds);
-  OZ_EXPECT(pe, 1, expectFSetVarBounds);
+  int susp_count = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectVectorFSetVarBounds, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
+
+  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
   return pe.impose(new FSetPartitionPropagator(OZ_args[0],
                                                OZ_args[1]));
