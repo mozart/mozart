@@ -1322,7 +1322,11 @@ prepare
                             set: setSensitive)
                   colormap(type: colormap
                            get: getColormap
-                           set: setColormap)]
+                           set: setColormap)
+                  usizeX(type: int
+                         set: proc {$ O I} {O setUsize(I ~1)} end)
+                  usizeY(type: int
+                         set: proc {$ O I} {O setUsize(~1 I)} end)]
            signals: [show hide map unmap realize unrealize draw drawFocus
                      drawDefault sizeRequest sizeAllocate stateChanged
                      parentSet addAccelerator removeAccelerator grabFocus event
@@ -1335,7 +1339,8 @@ prepare
                      proximityInEvent proximityOutEvent dragBegin dragEnd
                      dragDataDelete dragLeave dragMotion dragDrop dragDataGet
                      dragDataReceived clientEvent noExposeEvent
-                     visibilityNotifyEvent debugMsg])
+                     visibilityNotifyEvent debugMsg]
+           set: [[usizeX usizeY]#setUsize])
 
       window:
          o(api: gtk
