@@ -1101,7 +1101,7 @@ fi
     if test ! -n "$OZENGINE"
     then
 	OZENGINE=undefined
-	OZENGINE=`pwd`/lib/oze.sh
+	OZENGINE=$srcdir/lib/oze.sh
     fi
     
 
