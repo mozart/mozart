@@ -1,54 +1,9 @@
-PREFIX          = @prefix@
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
-BUILDTOP        = @BUILDTOP@
-SRCTOP          = @SRCTOP@
-OZENGINE        = @OZENGINE@
-OZDOC           = @OZDOC@
-OZDOCFLAGS      =
-DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
-DOCDIR          = /www/mozart/documentation/ozdoc
+WHAT = ozdoc
+MAIN = ozdoc.sgml
+SGMLSRCS =
+HTMLEXTRAFILES =
 
-INSTALL         = @INSTALL@
-INSTALL_FILE    = $(INSTALL) -m 444
-INSTALL_BIN     = $(INSTALL) -m 555
-INSTALL_DIR     = @INSTALL_DIR@
-
-SGMLSRCS        = ozdoc.sgml
-
-.PHONY: all validate install clean veryclean distclean
-
-all: ozdoc-html
-
-include $(SRCTOP)/share/Makefile.boot
-
-bootstrap: boot-all
-
-Makefile: Makefile.in ../config.status
-        cd .. && ./config.status
-
-ozdoc-html: $(SGMLSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/ozdoc.sgml --out=$@ --type=html-stylesheets
-
-ozdoc-tex:  $(SGMLSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/ozdoc.sgml --out=$@ --type=latex
-
-validate: ozdoc-html
-        nsgmls -cHTML4.soc -sB ozdoc-html/*.html
-
-install: ozdoc-html $(DOCDIR)
-        for i in ozdoc-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
-
-$(DOCDIR):
-        $(INSTALL_DIR) $@
-
-clean:
-        -rm -rf ozdoc-html
-        -rm -rf ozdoc-tex
-        -rm -f *~
-
-veryclean: clean
-
-distclean: veryclean
-        -rm -f Makefile config.status config.cache config.log
+include $(SRCDIR)/../Makefile.common

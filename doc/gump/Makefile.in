@@ -1,63 +1,13 @@
-PREFIX          = @prefix@
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
-BUILDTOP        = @BUILDTOP@
-SRCTOP          = @SRCTOP@
-OZENGINE        = @OZENGINE@
-OZDOC           = @OZDOC@
-OZDOCFLAGS      =
-DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
-DOCDIR          = /www/mozart/documentation/gump
-
-INSTALL         = @INSTALL@
-INSTALL_FILE    = $(INSTALL) -m 444
-INSTALL_BIN     = $(INSTALL) -m 555
-INSTALL_DIR     = @INSTALL_DIR@
-
+WHAT = gump
+MAIN = gump.sgml
 SGMLSRCS = \
-        gump.sgml intro.sgml parser.sgml scanner.sgml syntax.sgml
-OZGSRCS = \
-        LambdaParser.ozg LambdaScanner.ozg TestParser.ozg TestScanner.ozg
-MISCSRCS = \
+        intro.sgml parser.sgml scanner.sgml syntax.sgml \
+        LambdaParser.ozg LambdaScanner.ozg TestParser.ozg TestScanner.ozg \
         Lambda.in gump.bib
-GIFSRCS = \
+HTMLEXTRAFILES = \
         gump.gif
 
-.PHONY: all validate install clean veryclean distclean
-
-all: gump-html
-
-include $(SRCDIR)/../../share/Makefile.boot
-
-bootstrap: boot-all
-
-Makefile: Makefile.in ../config.status
-        cd .. && ./config.status
-
-gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=$@ \
-        --type=html-stylesheets && \
-        cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
-
-gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=$@ --type=latex
-
-validate: gump-html
-        nsgmls -cHTML4.soc -sB gump-html/*.html
-
-install: gump-html $(DOCDIR)
-        for i in gump-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
-
-$(DOCDIR):
-        $(INSTALL_DIR) $@
-
-clean:
-        -rm -rf gump-html
-        -rm -rf gump-tex
-        -rm -f *~
-
-veryclean: clean
-
-distclean: veryclean
-        -rm -f Makefile
+include $(SRCDIR)/../Makefile.common
