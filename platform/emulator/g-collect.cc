@@ -450,6 +450,7 @@ void AM::gCollect(int msgLevel) {
   // the weak dictionaries that is not marked is
   // otherwise inaccessible and should be finalized
   gCollectWeakDictionaries();
+  weakReviveStack.recurse();    // copy stuff scheduled for finalization
   cacStack.gCollectRecurse();
 
   (*gCollectBorrowTableUnusedFrames)();
