@@ -37,6 +37,9 @@
 #pragma implementation "comm.hh"
 #endif
 
+#if defined(INTERFACE)
+#pragma implementation "chain.hh"
+#endif
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -62,9 +65,9 @@
 #include "marshaler.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
+#include "chain.hh"
 
 #define SITE_CUTOFF           100
-#define SITEEXTENSION_CUTOFF   50
 
 /**********************************************************************/
 /*   SECTION :: class SiteManager                                     */
@@ -91,7 +94,6 @@ public:
 
   void freeSite(Site *s){ 
     Assert(!(s->getType() & MY_SITE));
-    Assert(s->refCtr==0);
     deleteSite(s);}
 
   Site* allocSite(Site* s){
@@ -106,39 +108,6 @@ public:
     PD((SITE,"allocated site:%s ",newS->stringrep()));
     return newS;}
 }siteManager;
-
-/**********************************************************************/
-/*   SECTION :: class SiteExtensionManager                            */
-/**********************************************************************/
-
-class SiteExtensionManager: public FreeListManager{
-
-  SiteExtension* newSiteExtension(){
-    SiteExtension* s;
-    FreeListEntry *f=getOne();
-    if(f==NULL) {s=new SiteExtension();}
-    else{GenCast(f,FreeListEntry*,s,SiteExtension*);}
-    return s;}
-
-  void deleteSiteExtension(SiteExtension *s){
-    FreeListEntry *f;
-    GenCast(s,SiteExtension*,f,FreeListEntry*);
-    if(putOne(f)) {return;}
-    delete s;
-    return;}
-
-public:
-  SiteExtensionManager():FreeListManager(SITEEXTENSION_CUTOFF){}
-
-  void freeSiteExtension(SiteExtension *s){ 
-    deleteSiteExtension(s);}
-
-  SiteExtension* allocSiteExtension(){
-    SiteExtension *newS = newSiteExtension();
-    return newS;}
-
-}siteExtensionManager;
-
   
 /**********************************************************************/
 /*   SECTION ::  Site Hash Table                                     */
@@ -203,10 +172,46 @@ public:
 
   void removeSecondary(Site *s,int hvalue){
     removePrimary(s,hvalue);}
+
+  void cleanup();
 };
 
 SiteHashTable* primarySiteTable=new SiteHashTable(PRIMARY_SITE_TABLE_SIZE);
 SiteHashTable* secondarySiteTable=new SiteHashTable(SECONDARY_SITE_TABLE_SIZE);
+
+void SiteHashTable::cleanup(){
+  GenHashNode *ghn,*ghn1;
+  Site* s;
+  int i=0;
+  ghn=getFirst(i);
+  while(ghn!=NULL){
+    GenCast(ghn->getBaseKey(),GenHashBaseKey*,s,Site*);
+    if(!(s->isGCMarkedSite())){
+      if(s->canBeFreed()){
+	siteManager.freeSite(s);
+	deleteFirst(ghn);
+	ghn=getByIndex(i);
+	continue;}}
+    else{
+      s->removeGCMarkSite();}
+    ghn1=ghn->getNext();
+    while(ghn!=NULL){
+      GenCast(ghn1->getBaseKey(),GenHashBaseKey*,s,Site*);
+      if(s->isGCMarkedSite){
+	s->removeGCMarkSite();}
+      else{
+	if(s->canBeFreed()){
+	  siteManager.freeSite(s);
+	  deleteNonFirst(ghn,ghn1);}}
+      ghn1=ghn->getNext();}
+    i++;
+    ghn=getByIndex(i);}
+  return;
+}
+
+void gcSiteTable(){
+  primarySiteTable->cleanup();
+  secondarySiteTable->cleanup();}
 
 /**********************************************************************/
 /*   SECTION ::  General unmarshaling routines                        */
@@ -286,13 +291,11 @@ Site* unmarshalSite(MsgBuffer *buf){
     if(mt==DIF_VIRTUAL){
       unmarshalUselessVirtualInfo(buf);
       if(!s->ActiveSite()) {
-	SiteExtension *se=siteExtensionManager.allocSiteExtension();
-	s->makeActiveVirtual(se);}
+	s->makeActiveVirtual();}
       return s;}
     Assert(mt==DIF_REMOTE);
     if(!s->ActiveSite()) {
-      SiteExtension *se=siteExtensionManager.allocSiteExtension();
-      s->makeActiveRemote(se);}
+      s->makeActiveRemote();}
     return s;}
 
   case NONE: {
@@ -323,18 +326,17 @@ Site* unmarshalSite(MsgBuffer *buf){
     PD((SITE,"initsite DIF_PERM"));
     s->initPerm();
     return s;}
-  SiteExtension *se=siteExtensionManager.allocSiteExtension();
   if(mt==DIF_VIRTUAL){
     PD((SITE,"initsite DIF_VIRTUAL"));
     VirtualInfo * vi=unmarshalVirtualInfo(buf);
     if(inMyGroup(&tryS,vi)){
-      s->initVirtual(se,vi);
+      s->initVirtual(vi);
       return s;}
-    s->initVirtualRemote(se,vi);      
+    s->initVirtualRemote(vi);      
     return s;}
   Assert(mt==DIF_REMOTE);
   PD((SITE,"initsite DIF_REMOTE"));
-  s->initRemote(se);
+  s->initRemote();
   return s;
 }
 
@@ -428,91 +430,22 @@ void Site::marshalSite(MsgBuffer *buf){
   marshalBaseSite(buf);
   return;}
 
-void Site::disconnectInPerm(){
-  setType(getType() & PERM_SITE);
-  Assert((getType() & CONNECTED)==0); 
-  if(getType() & VIRTUAL_SITE){
-    dumpVirtualInfo(getVirtualInfo());}
-  setType(getType() & (~(VIRTUAL_SITE|REMOTE_SITE)));
-  int i=getRefCtrS();
-  siteExtensionManager.freeSiteExtension(getSiteExtension());
-  extension = (unsigned int) i;}
-
 /**********************************************************************/
 /*   SECTION :: memory management  methods                            */
 /**********************************************************************/
-
-void siteZeroPassiveRef(Site *s){
-  if(s->isInSecondary()){
-    secondarySiteTable->removeSecondary(s,s->hashSecondary());}
-  else{
-    primarySiteTable->removePrimary(s,s->hashPrimary());}
-  siteManager.freeSite(s);
-  return;}
-
-void siteZeroActiveRef(Site *s){
-  siteExtensionManager.freeSiteExtension(s->getSiteExtension());
-  primarySiteTable->removePrimary(s,s->hashPrimary());
-  siteManager.freeSite(s);
-  return;}
 
 Site* initMySite(ip_address a,port_t p,time_t t){
   Site *s =new Site(a,p,t);
   int hvalue = s->hashPrimary();
   primarySiteTable->insertPrimary(s,hvalue);
-  SiteExtension *se=siteExtensionManager.allocSiteExtension();
-  s->initMySiteR(se);
+  s->initMySiteR();
   return s;}
 
 Site* initMySiteVirtual(ip_address a,port_t p,time_t t,VirtualInfo *vi){
   Site *s =new Site(a,p,t);
   int hvalue = s->hashPrimary();
   primarySiteTable->insertPrimary(s,hvalue);
-  SiteExtension *se=siteExtensionManager.allocSiteExtension();
-  s->initMySiteV(se,vi);
+  s->initMySiteV(vi);
   return s;}
-
-/* **********************************************************************
-     for components
-********************************************************************** */
-
-/* ATTENTION to be removed */
-
-class SS: public MsgBuffer{
-private:
-  char xx[100];
-  char* pos;
-public:
-  SS(){}
-  void marshalBegin(){Assert(0);}
-
-  void marshalEnd(){Assert(0);}
-  char* marshalEnd2(){*posMB='\0';return &xx[0]; }
-
-  void unmarshalBegin() {Assert(0);}
-  void unmarshalBegin2(char* in) {pos=in;}
-
-  char* unmarshalEnd2() {return pos;}
-  void unmarshalEnd() {Assert(0);}
-
-  void putNext(BYTE c){Assert(0);*pos++=c;}
-  BYTE getNext(){Assert(0);return *pos++;}
-
-  char* siteStringrep(){return "gate";}
-  Site* getSite(){Assert(0);return NULL;}
-};
-
-SS* stringMsgBuffer = new SS();
-
-char* Site::toString(){
-  stringMsgBuffer->marshalBegin();
-  if(getType() & VIRTUAL_SITE){
-    stringMsgBuffer->put(VIRTUAL_SITE);
-    marshalBaseSite(stringMsgBuffer);
-    marshalVirtualInfo(getVirtualInfo(),stringMsgBuffer);}
-  stringMsgBuffer->put(REMOTE_SITE);
-  marshalBaseSite(stringMsgBuffer);
-  return stringMsgBuffer->marshalEnd2();}
-
   
 

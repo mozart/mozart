@@ -188,12 +188,55 @@ public:
   GenHashBaseKey *htGetBaseKey(int i) {return table[i].getBaseKey();}
   GenHashEntry *htGetEntry(int i) {return table[i].getEntry();}
   int htGetKey(int i) {return table[i].getKey();}
+  void deleteFirst(GenHashNode*);
+  void deleteNonFirst(GenHashNode*,GenHashNode*);
 #ifdef DEBUG_PERDIO
   void printStatistics();
   GenHashNode *getElem(int);
 #endif
 };
 
+
+
+class Construct_3{
+  void* one;
+  void* two;
+  void* three;
+public:
+  Construct_3(){one=NULL;two=NULL;three=NULL;};
+};
+
+#define CUTOFF_3  500
+
+class GenFreeListManager{
+  FreeListManager* flm_3; // used for OwnerCreditExtennsion,BorrowCreditExtension,
+  
+public:
+  
+  GenFreeListManager(){
+    flm_3=new FreeListManager(CUTOFF_3);}
+
+  void putOne_3(FreeListEntry *f){
+    if(flm_3->putOne(f)) return;
+    Construct_3 *tmp=(Construct_3*) f;
+    delete tmp;
+    return;}
+
+  FreeListEntry *getOne_3(){
+    FreeListEntry* tmp=flm_3->getOne();
+    if(tmp!=NULL) return tmp;
+    return (FreeListEntry*) new Construct_3();}
+};
+
+extern GenFreeListManager *genFreeListManager;
+
+
+
 #endif
+
+
+
+
+
 
 
