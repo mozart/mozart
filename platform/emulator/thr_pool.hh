@@ -31,8 +31,9 @@
 #pragma interface
 #endif
 
-#include "thrqueue.hh"
-#include "thread.hh"
+#include "base.hh"
+#include "thr_queue.hh"
+#include "thr_class.hh"
 
 class ThreadsPool {
 private:

@@ -30,7 +30,7 @@
 
 #include "base.hh"
 #include "trail.hh"
-#include "thrspool.hh"
+#include "thr_pool.hh"
 #include "value.hh"
 
 // more includes at end!

@@ -34,7 +34,6 @@
 #include "base.hh"
 #include "value.hh"
 
-#include "threadInterface.hh"
 #include "codearea.hh"
 #include "indexing.hh"
 #include "genvar.hh"
@@ -46,9 +45,8 @@
 #include "comm.hh"
 #include "msgbuffer.hh"
 #include "builtins.hh"
-#include "taskstk.hh"
+#include "thr_int.hh"
 
-#include "thread.hh"
 #include "table.hh"
 #include "msgType.hh"
 #include "dpDebug.hh"

@@ -26,7 +26,8 @@
  */
 
 #include "space.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
+#include "variable.hh"
 
 inline
 void unBind(TaggedRef *p, TaggedRef t)

@@ -25,10 +25,10 @@
  */
 
 #if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "thrspool.hh"
+#pragma implementation "thr_pool.hh"
 #endif
 
-#include "am.hh"
+#include "thr_pool.hh"
 
 int ThreadsPool::getRunnableNumber()
 {

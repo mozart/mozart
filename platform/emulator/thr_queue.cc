@@ -26,21 +26,11 @@
  */
 
 #if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "thrqueue.hh"
+#pragma implementation "thr_queue.hh"
 #endif
 
-#include "tagged.hh"
-#include "value.hh"
-#include "cont.hh"
-#include "actor.hh"
-#include "board.hh"
-#include "stack.hh"
-#include "taskstk.hh"
-#include "am.hh"
-#include "thread.hh"
-
-#include "thrqueue.hh"
-
+#include "thr_queue.hh"
+#include "thr_class.hh"
 
 Bool ThreadQueue::isScheduledSlow(Thread *thr)
 {

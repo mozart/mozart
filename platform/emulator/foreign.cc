@@ -36,7 +36,7 @@
 #include "genvar.hh"
 
 #include "os.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 #include "builtins.hh"
 #include "dictionary.hh"
 

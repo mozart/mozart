@@ -35,7 +35,7 @@
 
 #include "base.hh"
 #include "mem.hh"
-#include "thread.hh"
+#include "suspension.hh"
 
 // #include "oz_cpi.hh"
 

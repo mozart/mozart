@@ -27,10 +27,10 @@
  */
 
 #if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "taskstk.hh"
+#pragma implementation "thr_stack.hh"
 #endif
 
-#include "taskstk.hh"
+#include "thr_stack.hh"
 #include "os.hh"
 #include "value.hh"
 #include "am.hh"

@@ -26,7 +26,7 @@
 
 #include "cpi.hh"
 #include "allgenvar.hh"
-#include "threadInterface.hh"
+#include "prop_int.hh"
 
 inline
 OZ_expect_t expectFail(void) {

@@ -26,7 +26,7 @@
 
 #include "fdbuilti.hh"
 #include "lps.hh"
-#include "threadInterface.hh"
+#include "prop_int.hh"
 #include "genvar.hh"
 #include "fdgenvar.hh"
 #include "fdbvar.hh"

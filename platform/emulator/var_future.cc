@@ -31,7 +31,7 @@
 
 #include "future.hh"
 #include "builtins.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 
 inline
 Bool isFuture(TaggedRef term)

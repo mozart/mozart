@@ -25,7 +25,6 @@
 #include "debug.hh"
 #include "codearea.hh"
 #include "builtins.hh"
-#include "thread.hh"
 #include "am.hh"
 #include "board.hh"
 

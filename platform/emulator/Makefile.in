@@ -93,7 +93,7 @@ CREATEDFILES=                                           \
 OTHERSRCS= \
         main.cc \
         version.cc initffuns.cc \
-        fdhook.cc statisti.cc trace.cc \
+        statisti.cc trace.cc \
         print.cc base.cc ozconfig.cc \
         foreign.cc boot-manager.cc \
         builtins.cc vprops.cc debug.cc
@@ -115,10 +115,12 @@ STORESRCS=\
         bytedata.cc
 
 RUNSRCS=\
-        am.cc indexing.cc taskstk.cc codearea.cc lps.cc thread.cc\
-        thrqueue.cc thrspool.cc trail.cc emulate.cc scheduler.cc \
-        threadInterface.cc copycode.cc opcodes.cc controlvar.cc \
-        cont.cc
+        am.cc indexing.cc codearea.cc lps.cc \
+        trail.cc emulate.cc scheduler.cc \
+        copycode.cc opcodes.cc controlvar.cc \
+        cont.cc prop_int.cc suspension.cc prop_class.cc \
+        thr_stack.cc thr_class.cc thr_pool.cc \
+        thr_queue.cc thr_int.cc
 
 SPACESRCS=\
         actor.cc board.cc solve.cc cpbag.cc space.cc

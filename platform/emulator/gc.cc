@@ -49,7 +49,7 @@
 #include "future.hh"
 #include "simplevar.hh"
 #include "extvar.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 #include "solve.hh"
 #include "debug.hh"
 #include "pointer-marks.hh"

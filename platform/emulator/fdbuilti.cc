@@ -33,11 +33,10 @@
 
 #include "fdbuilti.hh"
 
-#include "fdhook.hh"
 #include "genvar.hh"
 #include "fdgenvar.hh"
 #include "fdbvar.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -656,12 +655,12 @@ void BIfdBodyManager::processFromTo(int from, int to)
 
       if (*bifdbm_dom[i] == fd_singl) {
         OZ_Term smallInt = OZ_int(bifdbm_dom[i]->getSingleElem());
-        oz_checkSuspensionList(tagged2SVarPlus(bifdbm_var[i]));
+        oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
         am.doBindAndTrail(bifdbm_varptr[i], smallInt);
       } else if (*bifdbm_dom[i] == fd_bool) {
         GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
-        oz_checkSuspensionList(tagged2SVarPlus(bifdbm_var[i]));
+        oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
         am.doBindAndTrail(bifdbm_varptr[i],
                           makeTaggedRef(newtaggedboolvar));
         vars_left = OZ_TRUE;
@@ -669,7 +668,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
         GenFDVariable * newfdvar
           = new GenFDVariable(*bifdbm_dom[i],oz_currentBoard());
         OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
-        oz_checkSuspensionList(tagged2SVarPlus(bifdbm_var[i]));
+        oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
         am.doBindAndTrail(bifdbm_varptr[i],
                           makeTaggedRef(newtaggedfdvar));
         vars_left = OZ_TRUE;
@@ -744,12 +743,12 @@ void BIfdBodyManager::processNonRes(void)
 
     if (*bifdbm_dom[0] == fd_singl) {
       OZ_Term smallInt = OZ_int(bifdbm_dom[0]->getSingleElem());
-      oz_checkSuspensionList(tagged2SVarPlus(bifdbm_var[0]));
+      oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
       am.doBindAndTrail(bifdbm_varptr[0], smallInt);
     } else if (*bifdbm_dom[0] == fd_bool) {
       GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
       OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
-      oz_checkSuspensionList(tagged2SVarPlus(bifdbm_var[0]));
+      oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
       am.doBindAndTrail(bifdbm_varptr[0],
                         makeTaggedRef(newtaggedboolvar));
       vars_left = OZ_TRUE;
@@ -757,7 +756,7 @@ void BIfdBodyManager::processNonRes(void)
       GenFDVariable * newfdvar
         = new GenFDVariable(*bifdbm_dom[0],oz_currentBoard());
       OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
-      oz_checkSuspensionList(tagged2SVarPlus(bifdbm_var[0]));
+      oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
       am.doBindAndTrail(bifdbm_varptr[0],
                         makeTaggedRef(newtaggedfdvar));
       vars_left = OZ_TRUE;
@@ -818,7 +817,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
-      oz_checkSuspensionList(tagged2SVarPlus(v));
+      oz_checkSuspensionListProp(tagged2SVarPlus(v));
       fdvar->setSuspList(tagged2SVarPlus(v)->getSuspList()); // mm2
       doBind(vptr, makeTaggedRef(taggedfdvar));
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);

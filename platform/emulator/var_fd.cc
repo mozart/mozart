@@ -32,7 +32,7 @@
 #include "fdbvar.hh"
 #include "fdomn.hh"
 #include "am.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 
 // unify expects either two GenFDVariables or at least one
 // GenFDVariable and one non-variable
@@ -330,7 +330,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     if (fd->getSize() == 1) {
       if (am.isLocalVariable(v, vptr)) {
         if (!isUVar(vtag))
-          oz_checkSuspensionList(tagged2SVarPlus(v));
+          oz_checkSuspensionListProp(tagged2SVarPlus(v));
         doBind(vptr, OZ_int(fd->getSingleElem()));
       } else {
         am.doBindAndTrail(vptr, OZ_int(fd->getSingleElem()));
@@ -352,7 +352,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
     if (am.isLocalVariable(v, vptr)) {
       if (!isUVar(vtag)) {
-        oz_checkSuspensionList(tagged2SVarPlus(v));
+        oz_checkSuspensionListProp(tagged2SVarPlus(v));
         cv->setSuspList(tagged2SVarPlus(v)->getSuspList());
       }
       doBind(vptr, makeTaggedRef(tcv));
