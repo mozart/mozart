@@ -264,23 +264,7 @@ Bool _isLocalUVar(TaggedRef *varPtr)
   return oz_isCurrentBoard(bb);
 }
 
-// get home node without deref, for faster isLocal
-inline static
-Board *getHomeUpdate(OzVariable *var) {
-  if (var->getHome1()->isCommitted()) {
-    var->setHome(var->getHome1()->derefBoard());
-  }
-  return var->getHome1();
-}
-
-Bool _isLocalVar(OzVariable *var)
-{
-  Board *home = getHomeUpdate(var);
-  return oz_isCurrentBoard(home);
-}
-
 inline
-static 
 Board *getVarBoard(TaggedRef var)
 {
   CHECK_ISVAR(var);
@@ -291,7 +275,6 @@ Board *getVarBoard(TaggedRef var)
 }  
 
 inline
-static
 Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 {
   Board *board1 = getVarBoard(var1);
@@ -299,8 +282,7 @@ Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
   return oz_isBelow(board1,board2);
 }
 
-
-static
+inline
 int cmpCVar(OzVariable *v1, OzVariable *v2)
 {
   TypeOfVariable t1 = v1->getType();
@@ -321,7 +303,6 @@ static UnifyStack unifyStack;
 static Stack rebindTrail(100,Stack_WithMalloc);
 
 inline
-static
 void rebind(TaggedRef *refPtr, TaggedRef term2)
 {
   rebindTrail.ensureFree(2);
