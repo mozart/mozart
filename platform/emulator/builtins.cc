@@ -52,7 +52,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-#if defined(LINUX) || defined(SOLARIS) || defined(SUNOS_SPARC) || defined(IRIX) || defined(OSF1_ALPHA) || defined(FREEBSD) || defined(NETBSD)
+#if defined(LINUX) || defined(SOLARIS) || defined(SUNOS_SPARC) || defined(IRIX) || defined(OSF1_ALPHA) || defined(FREEBSD) || defined(NETBSD) || defined(IRIX6)
 #   define DLOPEN 1
 #if defined(FREEBSD)
 #define RTLD_NOW 1
@@ -2788,7 +2788,7 @@ OZ_C_proc_end
 OZ_C_proc_proto(BIraise);
 OZ_C_proc_proto(BIraiseDebug);
 
-void threadRaise(Thread *th,OZ_Term E,int debug=0) {
+void threadRaise(Thread *th,OZ_Term E,int debug) {
   Assert(am.currentThread() != th);
 
   if (th->isDeadThread()) return;

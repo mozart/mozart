@@ -50,7 +50,7 @@ extern int h_errno;
 #if !defined(OS2_I486) && !defined(WINDOWS)
 #include <sys/param.h>
 #include <sys/socket.h>
-#ifndef LINUX
+#if !defined(LINUX) && !defined(IRIX6)
 #include <sys/uio.h>
 #endif
 #include <sys/un.h>
