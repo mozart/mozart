@@ -33,3 +33,9 @@ reset optional auch ohne kill anbieten
 
 Mon Oct 27 17:51:41 MET 1997
 unmarshalling of code does not preserve breakpoint information
+
+Mon Nov  3 20:06:35 CET 1997
+bei Exceptions: wenn Emacs Bar einmal geloescht wurde, kommt er
+beim Selektieren anderer (gesicherter) Stack Frames nie mehr zurueck;
+im File wird jedoch an die richtige Stelle gesprungen.
+
