@@ -178,7 +178,7 @@ Bool initAccept() {
 OZ_BI_define(BIconnFailed,2,0) {
   oz_declareNonvarIN(0,requestor);
   oz_declareNonvarIN(1,reason);
-//    printf("connFailed\n");
+
   ComObj *comObj=(ComObj *) oz_intToC(requestor);
   DSite *site=comObj->getSite();
 
@@ -187,8 +187,10 @@ OZ_BI_define(BIconnFailed,2,0) {
     site->probeFault(PROBE_PERM);
   } 
   else if(oz_eq(reason,oz_atom("temp"))) {
-//      site->probeFault(PROBE_TEMP);
-;  }
+    // This could be reported to the comObj, but the comObj also
+    // has its own timer to discover this.
+    ;
+  }
   else
     Assert(0);
 
