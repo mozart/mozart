@@ -110,6 +110,14 @@ protected:
   }
 
 public:
+  TypeOfVariable getType(void) { 
+    return u.var_type; 
+  }
+
+  void setType(TypeOfVariable t){
+    u.var_type = t;
+  }  
+
   OzVariable() { Assert(0); }
   OzVariable(TypeOfVariable t, DummyClass *) { setType(t); };
   OzVariable(TypeOfVariable t, Board *bb) : suspList(NULL) {
@@ -118,11 +126,6 @@ public:
   }
 
   USEFREELISTMEMORY;
-
-  TypeOfVariable getType(void) { return u.var_type; }
-  void setType(TypeOfVariable t){
-    u.var_type = t;
-  }  
 
   Board *getHome1()        { return (Board *)(homeAndFlags&~SVAR_FLAGSMASK); }
   void setHome(Board *h) { 
