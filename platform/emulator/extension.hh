@@ -61,6 +61,7 @@ public:
   virtual OZ_Boolean    marshalV(void *)           { return OZ_FALSE; }
   virtual void *        __getSpaceInternal()       { return 0; }
   virtual void          __setSpaceInternal(void *) {}
+  virtual OZ_Boolean	isLocalV();
 };
 
 
@@ -75,6 +76,7 @@ public:
 
   virtual void * __getSpaceInternal()         { return space; }
   virtual void   __setSpaceInternal(void *sp) { space = sp; }
+  virtual OZ_Boolean isLocalV();
 };
 
 
