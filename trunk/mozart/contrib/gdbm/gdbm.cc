@@ -12,7 +12,7 @@ class GDBM: public OZ_SituatedExtension {
 public:
   GDBM_FILE db;
   char *filename;
-  GDBM(char*f,GDBM_FILE d):OZ_SituatedExtension(),filename(f),db(d){}
+  GDBM(char*f,void * d):OZ_SituatedExtension(),filename(f),db((GDBM_FILE) d){}
   //
   // Situated Extension 
   //
