@@ -1693,35 +1693,19 @@ void TaskStack::gcRecurse()
 
   while (!oldstack->isEmpty()) {
     TaskStackEntry oldEntry=oldstack->pop();
-    TaggedBoard tb = (TaggedBoard) ToInt32(oldEntry);
-    ContFlag cFlag = getContFlag(tb);
-    if (cFlag == C_COMP_MODE) {
-      gcQueue(oldEntry);
-      continue;
-    }
-
-    Board *newBB = getBoard(tb, cFlag)->gcBoard();
-    if (!newBB) {
-      switch (cFlag){
-      case C_NERVOUS:    continue;
-      case C_COMP_MODE:  Assert(0);
-      case C_XCONT:      oldstack->pop(4); continue;
-      case C_CONT:       oldstack->pop(3); continue;
-      case C_DEBUG_CONT: oldstack->pop(1); continue;
-      case C_CFUNC_CONT: oldstack->pop(3); continue;
-      case C_CALL_CONT:  oldstack->pop(2); continue;
-      }
-    }
-
-    gcQueue((TaskStackEntry) setContFlag(newBB,cFlag));
+    ContFlag cFlag = (ContFlag) oldEntry;
+    gcQueue((TaskStackEntry) cFlag);
 
     switch (cFlag){
 
     case C_NERVOUS:
       break;
+    case C_SOLVE:
+      break;
+    case C_LOCAL:
+      break;
 
     case C_COMP_MODE:
-      Assert(0);
       break;
 
     case C_CONT:
@@ -1928,14 +1912,6 @@ Thread *Thread::gcThread()
   if (this==0) return 0;
   CHECKCOLLECTED(*getGCField(), Thread *);
 
-#ifdef DEBUG_GC
-  //mm2
-  Board *bb=home?getBoardFast():0;
-  if (!bb || !bb->gcIsAlive()) {
-    warning("discarded thread detected ...");
-  }
-#endif
-
   size_t sz = sizeof(Thread);
   Thread *ret = (Thread *) gcRealloc(this,sz);
   ThreadList::add(ret);
@@ -1950,22 +1926,26 @@ void Thread::gcThreadRecurse()
 {
   GCMETHMSG("Thread::gcRecurse");
 
-  Board *newHome = home->gcBoard();
-#ifdef NEWCOUNTER
-  if (!newHome) {
-    newHome=home->gcGetNotificationBoard()->gcBoard();
-    //  virtually the new thread, because in LBLkillThread a suspension
-    // counter will be decremented for 'newHome';
-    newHome->incSuspCount ();
-  }
-#endif
-  home=newHome;
-  // Assert(home);
-
   taskStack.gcRecurse();
-  DebugCheckT(Board *sob = notificationBoard);
-  notificationBoard = (notificationBoard->gcGetNotificationBoard ())->gcBoard();
-  Assert(sob == (Board *) NULL || notificationBoard != (Board *) NULL);
+  Board *newBoard = board->gcBoard();
+  if (!newBoard) {
+    newBoard=board->gcGetNotificationBoard();
+    Bool newHome=NO;
+    while (board != newBoard) {
+      if (!taskStack.discardLocalTasks()) {
+        newHome=OK;
+        board = newBoard;
+        break;
+      }
+      board=board->getParentFast();
+    }
+    board=board->gcBoard();
+    if (newHome) {
+      board->incSuspCount();
+    }
+  } else {
+    board=newBoard;
+  }
 }
 
 /*

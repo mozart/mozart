@@ -359,7 +359,7 @@ Case(SETVOID)
 
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(atm)) {
-          Suspension *susp = e->mkSuspension(CBB,CPP,
+          Suspension *susp = e->mkSuspension(CPP,
                                              PC,Y,G,X,getPosIntArg(PC+5));
           addSusp(termPtr,susp);
 
@@ -403,7 +403,7 @@ Case(SETVOID)
 
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(i)) {
-          Suspension *susp=e->mkSuspension(CBB,CPP,
+          Suspension *susp=e->mkSuspension(CPP,
                                            PC,Y,G,X,getPosIntArg(PC+5));
           addSusp(termPtr,susp);
           CHECKSEQ;

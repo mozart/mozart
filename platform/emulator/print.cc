@@ -1336,10 +1336,11 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
   TaskStackEntry *p = getTop();
 
   while (isEmpty() == NO && depth-- > 0) {
-    TaggedBoard tb = (TaggedBoard) ToInt32(pop());
-    ContFlag flag = getContFlag(tb);
-    if (flag == C_COMP_MODE) {
-      switch (((int) tb)>>4) {
+    TaskStackEntry topElem=pop();
+    ContFlag flag = (ContFlag) ToInt32(topElem);
+    switch (flag){
+    case C_COMP_MODE:
+      switch (((int) topElem)>>4) {
       case PARMODE:
         message("\tPARMODE\n");
         break;
@@ -1350,18 +1351,15 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
         message("\tSEQMODE (all)\n");
         break;
       }
-      continue;
-    }
-    Board* n = getBoard(tb,flag)->getBoardFast();
-    switch (flag){
+      break;
     case C_CONT:
       {
         ProgramCounter PC = (ProgramCounter) pop();
         RefsArray Y = (RefsArray) pop();
         RefsArray G = (RefsArray) pop();
         if (verbose) {
-          message("\tC_CONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n\t",
-                 n, PC, Y, G);
+          message("\tC_CONT: PC=0x%x, Y=0x%x, G=0x%x\n\t",
+                  PC, Y, G);
         }
         CodeArea::printDef(PC);
       }
@@ -1373,31 +1371,27 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
         RefsArray G = (RefsArray) pop();
         RefsArray X = (RefsArray) pop();
         if (verbose) {
-          message("\tC_XCONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n",
-                 n, PC, Y, G);
+          message("\tC_XCONT: PC=0x%x, Y=0x%x, G=0x%x\n",
+                  PC, Y, G);
           printX(stdout,X);
         }
         CodeArea::printDef(PC);
         break;
       }
     case C_NERVOUS:
-      if (!verbose) break;
-      message("\tC_NERVOUS: board=0x%x\n", n);
+      message("\tNERVOUS\n");
       break;
-    case C_COMP_MODE:
-      Assert(0);
+    case C_LOCAL:
+      message("\tLOCAL\n");
+      break;
+    case C_SOLVE:
+      message("\tSOLVE\n");
       break;
     case C_CFUNC_CONT:
       {
         OZ_CFun biFun    = (OZ_CFun) pop();
         Suspension* susp = (Suspension*) pop();
         RefsArray X      = (RefsArray) pop();
-#ifdef NEWCOUNTER
-        if (biFun == AM::SolveActorWaker) {
-          message("\tSolve Actor\n");
-          break;
-        }
-#endif
         message("\tBuiltin: {%s", builtinTab.getName((void *) biFun));
         for(int i=0; i<getRefsArraySize(X); i++) {
           printf(" ");
@@ -1418,7 +1412,7 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
       {
         SRecord *s = (SRecord *) pop();
         RefsArray X = (RefsArray) pop();
-        message("\tC_DEBUG_CONT: board=0x%x, Pred=0x%x\n", n, s);
+        message("\tC_DEBUG_CONT: Pred=0x%x\n", s);
         printX(stdout,X);
         if (!verbose) break;
         break;

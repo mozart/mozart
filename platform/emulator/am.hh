@@ -132,7 +132,7 @@ public:
   void addSuspendVarList(TaggedRef * t);
   void suspendOnVarList(Suspension *susp);
 
-  void suspendInline(Board *bb,int prio,OZ_CFun fun,int n,
+  void suspendInline(int prio,OZ_CFun fun,int n,
                      OZ_Term A,OZ_Term B=makeTaggedNULL(),
                      OZ_Term C=makeTaggedNULL(),OZ_Term D=makeTaggedNULL());
 
@@ -207,10 +207,10 @@ public:
   Bool emulateHookOutline(Abstraction *def=NULL,
                           int arity=0, TaggedRef *arguments=NULL);
   Bool hookCheckNeeded();
-  Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
+  Suspension *mkSuspension(int prio, ProgramCounter PC,
                            RefsArray Y, RefsArray G,
                            RefsArray X, int argsToSave);
-  Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
+  Suspension *mkSuspension(int prio, OZ_CFun bi,
                            RefsArray X, int argsToSave);
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();
@@ -251,14 +251,16 @@ public:
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var);
 
-  void pushCall(Board *b, Chunk *def, int arity, RefsArray args);
-  void pushDebug(Board *n, Chunk *def, int arity, RefsArray args);
-  void pushTask(Board *n,ProgramCounter pc,
+  void pushCall(Chunk *def, int arity, RefsArray args);
+  void pushDebug(Chunk *def, int arity, RefsArray args);
+  void pushTask(ProgramCounter pc,
                 RefsArray y,RefsArray g,RefsArray x=0,int i=0);
-  void pushTaskOutline(Board *n,ProgramCounter pc,
+  void pushTaskOutline(ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=0,int i=0);
-  void pushCFun(Board *n, OZ_CFun f, RefsArray x=0, int i=0);
-  void pushNervous(Board *n);
+  void pushCFun(OZ_CFun f, RefsArray x=0, int i=0);
+  void pushNervous();
+  void pushSolve();
+  void pushLocal();
 
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term, Bool prop);
@@ -304,7 +306,6 @@ public:
   void insertUser(int t,TaggedRef node);
   int wakeUser();
 
-  static OZ_Bool SolveActorWaker(int n, TaggedRef *args);
   Bool isStableSolve(SolveActor *sa);
 
   void createTask();

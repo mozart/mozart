@@ -294,6 +294,8 @@ void AM::exitOz(int status)
 
 void AM::suspendEngine()
 {
+  deinstallPath(rootBoard);
+
   idleGC();
   ozstat.printIdle(stdout);
 
@@ -1189,25 +1191,6 @@ Bool AM::_checkExtSuspension (Suspension *susp)
   return wasFound;
 }
 
-//  'OZ_CFun' solveActorWaker;
-// No arguments actually, but the type 'OZ_CFun' is fixed;
-OZ_Bool AM::SolveActorWaker(int n, TaggedRef *args)
-{
-  Assert(n == 0);
-  Board *bb = am.currentBoard;
-  Assert(bb && bb->isSolve());
-  Assert(!bb->isCommitted() && !bb->isFailed());
-  SolveActor *sa = SolveActor::Cast(bb->getActor());
-  // DebugCheckT (message ("SolveActor::Waker (@0x%x)\n", (void *) sa));
-
-  Assert(!bb->isReflected());
-
-  sa->decThreads ();      // get rid of threads - '1' in creator;
-  // after return we are going to the "reduce" state,
-  // so reduce the actor if possible;
-  return PROCEED;    // always;
-}
-
 Bool AM::isStableSolve(SolveActor *sa)
 {
   if (sa->getThreads() != 0)
@@ -1227,9 +1210,9 @@ Bool AM::isStableSolve(SolveActor *sa)
  * toplevel: rootThread and toplevelQueue
  * ------------------------------------------------------------------------ */
 
-void AM::pushDebug(Board *n, Chunk *def, int arity, RefsArray args)
+void AM::pushDebug(Chunk *def, int arity, RefsArray args)
 {
-  currentThread->pushDebug(n,new OzDebug(def,arity,args));
+  currentThread->pushDebug(new OzDebug(def,arity,args));
 }
 
 void AM::scheduleSuspCont(Board *bb, int prio, Continuation *c,
@@ -1238,9 +1221,8 @@ void AM::scheduleSuspCont(Board *bb, int prio, Continuation *c,
   Thread *th = newThread(prio,bb,PARMODE);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
-    th->setNotificationBoard(bb);
   }
-  th->pushCont(bb,c->getPC(),c->getY(),c->getG(),
+  th->pushCont(c->getPC(),c->getY(),c->getG(),
                c->getX(),c->getXSize(), NO);
   scheduleThread(th);
 }
@@ -1252,30 +1234,11 @@ void AM::scheduleSuspCCont(Board *bb, int prio,
   Thread *th = newThread(prio,bb,PARMODE);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
-    th->setNotificationBoard(bb);
   }
-  th->pushCFunCont(bb,c->getCFunc(),s,c->getX(),c->getXSize(),NO);
+  th->pushCFunCont(c->getCFunc(),s,c->getX(),c->getXSize(),NO);
   scheduleThread(th);
 }
 
-#ifndef NEWCOUNTER
-// create a new thread to reduce a solve actor;
-void AM::scheduleSolve(Board *bb)
-{
-  Assert(!bb->isCommitted() && !bb->isFailed() && bb->isSolve());
-
-  // message("ScheduleSolve (@0x%x)\n", (void *) bb->getActor ());
-
-  Actor *aa=bb->getActor();
-  Thread *th = newThread(aa->getPriority(),bb);
-  Board *nb = aa->getBoardFast()->getSolveBoard();
-  if (nb) incSolveThreads(nb);
-  th->setNotificationBoard(nb);
-  th->pushNervous(bb);
-  bb->setNervous();
-  scheduleThread(th);
-}
-#endif
 
 // create a new thread after wakeup (nervous)
 void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
@@ -1284,9 +1247,8 @@ void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
   Thread *th = newThread(bb->getActor()->getPriority(),bb,PARMODE);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
-    th->setNotificationBoard(bb);
   }
-  th->pushNervous(bb);
+  th->pushNervous();
   bb->setNervous();
   scheduleThread(th);
 }
@@ -1300,11 +1262,6 @@ Thread *AM::createThread(int prio,int compMode)
 #endif
   if (currentSolveBoard != (Board *) NULL) {
     incSolveThreads (currentSolveBoard);
-#ifdef NEWCOUNTER
-    tt->setNotificationBoard (currentBoard);
-#else
-    tt->setNotificationBoard (currentSolveBoard);
-#endif
   }
   IncfProfCounter(procCounter,sizeof(Thread));
   scheduleThread(tt);
@@ -1333,7 +1290,7 @@ void AM::pushToplevel(ProgramCounter pc)
 {
   Assert(rootThread->isEmpty());
   rootBoard->incSuspCount();
-  rootThread->pushCont(rootBoard,pc,toplevelVars,NULL,NULL,0,OK);
+  rootThread->pushCont(pc,toplevelVars,NULL,NULL,0,OK);
   if (rootThread!=currentThread && !isScheduled(rootThread)) {
     scheduleThread(rootThread);
   }
@@ -1549,10 +1506,10 @@ int AM::wakeUser()
 }
 
 
-void AM::pushTaskOutline(Board *n,ProgramCounter pc,
+void AM::pushTaskOutline(ProgramCounter pc,
                          RefsArray y,RefsArray g,RefsArray x,int i)
 {
-  pushTask(n,pc,y,g,x,i);
+  pushTask(pc,y,g,x,i);
 }
 
 void AM::createTask()

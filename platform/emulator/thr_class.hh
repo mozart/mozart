@@ -32,8 +32,7 @@ friend void engine();
 friend class ThreadsPool;
 private:
   int priority;
-  Board *home;
-  Board *notificationBoard; // for search capabilities;
+  Board *board;
   short compMode;
   short flags;
   TaskStack taskStack;
@@ -48,52 +47,44 @@ public:
   Thread(int size);
   void init(int prio,Board *home,int compMode);
   int getPriority();
-  // isSolve() replace by hasNotificationBoard()
-  // kost@ : 'notificationBoard' is not used actually;
-  Bool hasNotificationBoard () { return notificationBoard!=NULL; }
-  void setNotificationBoard (Board *b) { notificationBoard = b; }
-  void pushDebug(Board *b, OzDebug *d)
+  void pushDebug(OzDebug *d)
   {
-#ifndef NEWCOUNTER
-    b->incSuspCount();
-#endif
-    taskStack.pushDebug(b, d);
+    taskStack.pushDebug(d);
   }
 
   void setSuspended() { flags |= T_Suspended; }
   void unsetSuspended() { flags &= ~T_Suspended; }
   int  isSuspended() { return (flags & T_Suspended); }
-  void pushCall(Board *b, Chunk *pred, RefsArray  x, int n)
+  void pushCall(Chunk *pred, RefsArray  x, int n)
   {
-#ifndef NEWCOUNTER
-    b->incSuspCount();
-#endif
-    taskStack.pushCall(b,pred,x,n);
+    taskStack.pushCall(pred,x,n);
   }
 
-  void pushNervous(Board *b)
+  void pushNervous()
   {
-    taskStack.pushNervous(b);
+    taskStack.pushNervous();
+  }
+  void pushSolve()
+  {
+    taskStack.pushSolve();
+  }
+  void pushLocal()
+  {
+    taskStack.pushLocal();
   }
 
-  void pushCFunCont(Board *b, OZ_CFun f, Suspension* s,
+  void pushCFunCont(OZ_CFun f, Suspension* s,
                     RefsArray  x, int n, Bool copyF)
   {
-#ifndef NEWCOUNTER
-    if (copyF) b->incSuspCount();
-#endif
-    taskStack.pushCFunCont(b,f,s,x,n,copyF);
+    taskStack.pushCFunCont(f,s,x,n,copyF);
   }
 
-  void pushCont(Board *b,ProgramCounter pc,
+  void pushCont(ProgramCounter pc,
                 RefsArray y,RefsArray g,RefsArray x,int n,
                 Bool copyF)
   {
     Assert(pc!=0)
-#ifndef NEWCOUNTER
-    if (copyF) b->incSuspCount();
-#endif
-    taskStack.pushCont(b,pc,y,g,x,n,copyF);
+    taskStack.pushCont(pc,y,g,x,n,copyF);
   }
   Bool isEmpty()
   {
@@ -103,12 +94,12 @@ public:
     taskStack.printDebug(pc,verbose,depth);
   }
   void setPriority(int prio);
-  Board *getBoardFast() { return home->getBoardFast(); }
+  Board *getBoardFast() { return board->getBoardFast(); }
   int getCompMode() { return compMode; }
   void checkCompMode(int newMode);
   void setCompMode(int newMode);
   void switchCompMode();
-  void Thread::getSeqFrom(Thread *th);
+  void getSeqFrom(Thread *th);
 };
 
 
