@@ -140,7 +140,8 @@ local
 	    case {CurrEntry getEntryType($)} \= lexicalMode then
 	       {Rep error(coord: {CoordinatesOf Symbol}
 			  kind: 'scanner generator error'
-			  msg: ('grammar symbol '#{OutputOz Symbol}#
+			  msg: ('grammar symbol '#
+				{SymbolToVirtualString Symbol}#
 				' multiply defined'))}
 	    else
 	       {CurrEntry addParents({Entry getParents($)})}
@@ -149,7 +150,8 @@ local
 	 else
 	    {Rep error(coord: {CoordinatesOf Symbol}
 		       kind: 'scanner generator error'
-		       msg: ('grammar symbol '#{OutputOz Symbol}#
+		       msg: ('grammar symbol '#
+			     {SymbolToVirtualString Symbol}#
 			     ' multiply defined'))}
 	 end
       end
@@ -254,11 +256,12 @@ local
       end
       meth generate(Globals I ?Flex ?Expr) Flex0 in
 	 case @regularExpression of '<<EOF>>' then
-	    Flex0 = {OutputOz self.modeSymbol}
+	    Flex0 = {SymbolToVirtualString self.modeSymbol}   %--** legal?
 	 else Entry in
 	    Entry = {Globals getGrammarSymbol(self.modeSymbol $)}
 	    Flex0 = {FoldL {Entry getDescendants($)}
-		     fun {$ In X} In#','#X end {OutputOz self.modeSymbol}}
+		     fun {$ In X} In#','#X end
+		     {SymbolToVirtualString self.modeSymbol}}   %--** legal?
 	 end
 	 Flex = '<'#Flex0#'>'#@regularExpression#' return '#I#';\n'
 	 Expr = @ozExpression
@@ -293,7 +296,8 @@ local
 	 skip
       end
       meth generate($)
-	 {OutputOz @symbol}#' '#@regularExpression#'\n'
+	 {SymbolToVirtualString @symbol}#   %--** legal?
+	 ' '#@regularExpression#'\n'
       end
    end
 
@@ -326,11 +330,11 @@ local
 	     case GrammarSymbol of notFound then
 		{Rep error(coord: {CoordinatesOf S}
 			   kind: 'scanner generator error'
-			   msg: 'undefined mode '#{OutputOz S})}
+			   msg: 'undefined mode '#{SymbolToVirtualString S})}
 	     elsecase {GrammarSymbol getEntryType($)} \= lexicalMode then
 		{Rep error(coord: {CoordinatesOf S}
 			   kind: 'scanner generator error'
-			   msg: ({OutputOz S}#
+			   msg: ({SymbolToVirtualString S}#
 				 ' does not denote a lexical mode'))}
 	     else skip
 	     end
@@ -344,7 +348,7 @@ local
 	    ""
 	 else
 	    AST = fEq(@symbol fInt(I unit) unit)
-	    '%x '#{OutputOz @symbol}#'\n'
+	    '%x '#{SymbolToVirtualString @symbol}#'\n'   %--** legal?
 	 end
       end
 
@@ -354,7 +358,7 @@ local
 	       {Rep error(coord: {CoordinatesOf @symbol}
 			  kind: 'scanner generator error'
 			  msg: ('cyclic inheritance for lexical mode '#
-				{OutputOz @symbol}))}
+				{SymbolToVirtualString @symbol}))}
 	       LexicalMode, MergeParents(Rest Globals Rep)
 	    elsecase {Some @parents fun {$ S} {SymbolEq S Symbol} end} then
 	       LexicalMode, MergeParents(Rest Globals Rep)
@@ -378,7 +382,7 @@ in
    fun {TransformScanner T From Prop Attr Feat Ms Rules P Flags Rep}
       Globals
    in
-      {Rep logPhase('processing scanner "'#{OutputOz T}#'" ...')}
+      {Rep logPhase('processing scanner "'#{SymbolToVirtualString T}#'" ...')}
       Globals = {New ScannerSpecification init()}
       {Globals setFlags(Flags)}
       {Globals enterFrom(From)}

@@ -159,7 +159,7 @@ local
    % Auxiliary Functions for Code Generation
 
    fun {SymbolToAtom Symbol}
-      {String.toAtom {VirtualString.toString {OutputOz Symbol}}}
+      {VirtualString.toAtom {SymbolToVirtualString Symbol}}
    end
 
    fun {MakeSemanticValue Ts}
@@ -216,7 +216,8 @@ local
 	    elsecase {CurrEntry getEntryType($)} \= terminal then
 	       {Rep error(coord: {CoordinatesOf Symbol}
 			  kind: ParserGeneratorError
-			  msg: ('grammar symbol '#{OutputOz Symbol}#
+			  msg: ('grammar symbol '#
+				{SymbolToVirtualString Symbol}#
 				' multiply defined'))}
 	    else
 	       {CurrEntry setAssoc({Entry getAssoc($)} Rep)}
@@ -231,7 +232,8 @@ local
 	 else
 	    {Rep error(coord: {CoordinatesOf Symbol}
 		       kind: ParserGeneratorError
-		       msg: ('grammar symbol '#{OutputOz Symbol}#
+		       msg: ('grammar symbol '#
+			     {SymbolToVirtualString Symbol}#
 			     ' multiply defined'))}
 	 end
       end
@@ -353,7 +355,7 @@ local
 	     {R getSymbol(?Symbol)}
 	     case Symbol of fAtom(_ C) then
 		{Rep error(coord: C kind: ParserGeneratorError
-			   msg: ('Atom '#{OutputOz Symbol}#
+			   msg: ('Atom '#{SymbolToVirtualString Symbol}#
 				 ' not allowed as local rule name'))}
 		Vs
 	     [] fVar(_ _) then
@@ -365,7 +367,7 @@ local
 	     case {Some Vr fun {$ V0} {SymbolEq V V0} end} then
 		{Rep error(coord: {CoordinatesOf V}
 			   kind: ParserGeneratorError
-			   msg: ('Symbol '#{OutputOz V}#
+			   msg: ('Symbol '#{SymbolToVirtualString V}#
 				 ' multiply defined in production template'))}
 	     else skip
 	     end
@@ -428,7 +430,7 @@ local
 	    {Rep error(coord: {CoordinatesOf @symbol}
 		       kind: ParserGeneratorError
 		       msg: ('multiple associativity declarations for '#
-			     'terminal '#{OutputOz @symbol}))}
+			     'terminal '#{SymbolToVirtualString @symbol}))}
 	 end
       end
       meth getEntryType($)
@@ -477,7 +479,7 @@ local
 		     case P of fVar(Y _) then X == Y else false end
 		  end} then
 	       {Rep error(coord: P kind: ParserGeneratorError
-			  msg: ({OutputOz Parameter}#
+			  msg: ({SymbolToVirtualString Parameter}#
 				' multiply contained in formal parameters'))}
 	    else
 	       {Dictionary.put @formalParameters @length Parameter#_#_}
@@ -506,8 +508,10 @@ local
 	    Parameter#AttrType#_ = {Dictionary.get Formals 0}
 	    {ForThread 1 @length - 1 1
 	     fun {$ X I} Parameter#AttrType#_ = {Dictionary.get Formals I} in
-		X#GL#{OutputOz Parameter}#{OutputAttr AttrType}
-	     end '('#PU#{OutputOz Parameter}#{OutputAttr AttrType}}#PO#')'
+		X#GL#{SymbolToVirtualString Parameter}#{OutputAttr AttrType}
+	     end
+	     '('#PU#{SymbolToVirtualString Parameter}#
+	     {OutputAttr AttrType}}#PO#')'
 	 end
       end
       meth setAttributeType(N X P Rep) Parameter AttrType P0 in
@@ -526,7 +530,7 @@ local
 	    {Rep error(coord: {CoordinatesOf Parameter}
 		       kind: ParserGeneratorError
 		       msg: ('conflicting attribute types of formal '#
-			     'parameter '#{OutputOz Parameter})
+			     'parameter '#{SymbolToVirtualString Parameter})
 		       items: Items)}
 	 else skip
 	 end
@@ -592,7 +596,8 @@ local
 	 SyntaxRule, MakeAlternative(Globals Rep Expected NewEx)
       end
       meth output($)
-	 'syn '#{OutputOz @symbol}#{@formalParameterList output($)}#IN#NL#
+	 'syn '#{SymbolToVirtualString @symbol}#
+	 {@formalParameterList output($)}#IN#NL#
 	 {@synExpression output($)}#EX#NL#'end'
       end
       meth classifyAttributes(Globals Rep) As in
@@ -697,8 +702,8 @@ local
 	 else
 	    {Rep error(coord: {CoordinatesOf @symbol}
 		       kind: ParserGeneratorError
-		       msg: ('no nesting marker in application of '#
-			     {OutputOz @symbol}))}
+		       msg: ('missing nesting marker in application of '#
+			     {SymbolToVirtualString @symbol}))}
 	 end
       end
       meth simplify(Globals TemplI Rep Expected $)
@@ -712,11 +717,12 @@ local
 		     {Rep error(coord: {CoordinatesOf Parameter}
 				kind: ParserGeneratorError
 				msg: ('unknown grammar symbol '#
-				      {OutputOz Parameter}))}
+				      {SymbolToVirtualString Parameter}))}
 		  elsecase {Entry getEntryType($)} \= terminal then
 		     {Rep error(coord: {CoordinatesOf Parameter}
 				kind: ParserGeneratorError
-				msg: ('precedence token '#{OutputOz Parameter}#
+				msg: ('precedence token '#
+				      {SymbolToVirtualString Parameter}#
 				      ' must be a terminal'))}
 		  else skip
 		  end
@@ -760,7 +766,8 @@ local
 	       {Rep error(coord: {CoordinatesOf @symbol}
 			  kind: ParserGeneratorError
 			  msg: ('wrong number of parameters '#
-				'in application of '#{OutputOz @symbol}))}
+				'in application of '#
+				{SymbolToVirtualString @symbol}))}
 	       self
 	    end
 	 [] notFound then
@@ -777,7 +784,7 @@ local
 	   end nil}}
       end
       meth output($)
-	 {OutputOz @symbol}#{@actualParameterList output($)}
+	 {SymbolToVirtualString @symbol}#{@actualParameterList output($)}
       end
       meth classifyAttributes(Globals Rep As $) Entry in
 	 Entry = {Globals getGrammarSymbol(@symbol $)}
@@ -791,7 +798,8 @@ local
 		  elsecase Attr of inherited then
 		     {Rep error(coord: P kind: ParserGeneratorError
 				msg: ('inherited attribute illegal for '#
-				      'terminal'#{OutputOz @symbol}))}
+				      'terminal'#
+				      {SymbolToVirtualString @symbol}))}
 		  [] synthesized then skip
 		  end
 	       end
@@ -916,7 +924,8 @@ local
 	 case Entry of notFound then
 	    {Rep error(coord: {CoordinatesOf @symbol}
 		       kind: ParserGeneratorError
-		       msg: 'undefined grammar symbol '#{OutputOz @symbol})}
+		       msg: ('undefined grammar symbol '#
+			     {SymbolToVirtualString @symbol}))}
 	    self
 	 elsecase {Entry getEntryType($)} of terminal then
 	    SynApplication, SimplifyTerminalAppl(Globals Rep Expected $)
@@ -926,7 +935,8 @@ local
 	 else
 	    {Rep error(coord: {CoordinatesOf @symbol}
 		       kind: ParserGeneratorError
-		       msg: {OutputOz @symbol}#' is not a grammar symbol')}
+		       msg: ({SymbolToVirtualString @symbol}#
+			     ' is not a grammar symbol'))}
 	    self
 	 end
       end
@@ -949,7 +959,7 @@ local
 	    {Rep error(coord: {CoordinatesOf @symbol}
 		       kind: ParserGeneratorError
 		       msg: ('too many arguments in application of terminal '#
-			     {OutputOz @symbol}))}
+			     {SymbolToVirtualString @symbol}))}
 	 end
 	 self
       end
@@ -960,7 +970,7 @@ local
 	    {Rep error(coord: {CoordinatesOf @symbol}
 		       kind: ParserGeneratorError
 		       msg: ('wrong number of parameters in application of '#
-			     {OutputOz @symbol}))}
+			     {SymbolToVirtualString @symbol}))}
 	 else skip
 	 end
 	 DollarIndex = {@actualParameterList getDollarIndex($)}
@@ -1088,7 +1098,7 @@ local
       end
       meth output($)
 	 case @localVariables of Vs=_|_ then
-	    {LI {Map Vs OutputOz} GL}#GL#'in'#NL
+	    {LI {Map Vs SymbolToVirtualString} GL}#GL#'in'#NL
 	 else ""
 	 end#
 	 case @synExpressions of Exs=Ex|_ then
@@ -1797,7 +1807,7 @@ in
 	ProdTempl Rep}
       Globals
    in
-      {Rep logPhase('processing parser "'#{OutputOz T}#'" ...')}
+      {Rep logPhase('processing parser "'#{SymbolToVirtualString T}#'" ...')}
       Globals = {New ParserSpecification init(ProdTempl)}
       {Globals setFlags(Flags)}
       {Globals enterFrom(From)}
