@@ -10,6 +10,7 @@
 #include "term.hh"
 #include "records.hh"
 #include "mem.hh"
+#include "misc.hh"
 
 // TODO
 // 1. Check that all TaggedRef's are dereferenced when they should be.
@@ -136,6 +137,9 @@ public:
 
     USEHEAPMEMORY;
 
+    void print(ostream & = cout, int = 0) const;
+    void printLong(ostream & = cout, int = 0) const;
+
     // Copy the dynamictable from 'from' to 'to' space:
     void gc(void); // Definition in gc.cc
 
@@ -207,6 +211,20 @@ public:
             // Val is not found
             return makeTaggedNULL();
         }
+    }
+
+    // Return TRUE iff there are features in an external dynamictable that
+    // are not in the current dynamictable
+    Bool extraFeaturesIn(DynamicTable dt) {
+        Assert(isPwrTwo(size));
+        for (dt_index i=0; i<dt.size; i++) {
+	    if (dt.table[i].ident!=makeTaggedNULL()) {
+		Assert(isLiteral(dt.table[i].ident));
+		Bool exists=lookup(dt.table[i].ident);
+		if (!exists) return TRUE;
+	    }
+	}
+	return FALSE;
     }
 
     // Merge an external dynamictable into the current dynamictable
@@ -335,6 +353,14 @@ public:
     // Methods relevant for term copying (gc and solve)
     void gc(void);
     size_t getSize(void) { return sizeof(GenOFSVariable); }
+
+    Atom* getLabel(void) {
+	return tagged2Atom(AtomOpen);
+    }
+
+    DynamicTable* getTable(void) {
+	return &dynamictable;
+    }
 
     Bool unifyOFS(TaggedRef *, TaggedRef, TypeOfTerm,
                   TaggedRef *, TaggedRef, TypeOfTerm);
