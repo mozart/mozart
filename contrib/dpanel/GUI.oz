@@ -3,9 +3,10 @@ import
    Tk
    Widgets(cardFrame toplevel)
    Graph(graph:GraphClass)
+   System
 export
    Open
-   
+   ReOpen
    ssites:SSites
    sactivity:SActive
    snumber:SNumber
@@ -50,23 +51,44 @@ define
       feat
 	 listbox
 	 InternalHelpFun1
+	 entryDict 
       attr
 	 cy:1
 	 width:18*8
 	 height:17*8
-	 sites:nil
 	 action:proc{$ _} skip end
+	 lineSize:12
+	 nextFree:[0]
 
       meth tkInit(...)=M
 	 LB SY
       in
 	 Tk.frame, M
+	 self.entryDict = {NewDictionary}
 	 self.listbox=LB={New Tk.canvas tkInit(parent:self
 					       bd:2
 					       relief:sunken
 					       bg:white
 					       width:@width
 					       height:@height)}
+	 {self.listbox tkBind(event:'<1>' args: [ int(y)]
+			      action: proc{$  CY}
+					 Y={self.listbox tkReturnInt(canvasy CY $)}
+					 Line
+					 Found
+				      in
+					 {System.show Y}
+					 Line = (Y -5)  div @lineSize
+					 Found = {Filter {Dictionary.entries self.entryDict}
+							  fun{$ E}
+							     E.line == Line
+							  end}
+					 case Found of [E] then
+					    {self Action(E)}
+					 else skip end 
+				      end)}
+	 
+	 
 	 SY={New Tk.scrollbar tkInit(parent:self
 				     width:8)}
 	 {Tk.addYScrollbar LB SY}
@@ -74,23 +96,23 @@ define
 		    grid(SY row:0 column:1 sticky:ns)
 		    grid(columnconfigure self 0 weight:1)
 		    grid(rowconfigure self 0 weight:1)]}
-	 
-	 self.InternalHelpFun1 = proc{$ X} Y0 Y1
-				    DC=self.listbox
-				 in
-				    
-				    {X.bgtag tk(delete)}
-				    {X.fgtag tk(delete)}
-				    {DC tk(crea text 5 @cy text:X.text anchor:nw fill:X.fg tags:X.fgtag)}
-				    [_ Y0 _ Y1]={DC tkReturnListInt(bbox X.fgtag $)}
-				    cy<-Y1+1
-				    {DC tk(crea rect 0 Y0 1000 Y1+1 fill:X.bg tags:X.bgtag outline:X.bg)}
-				    {DC tk('raise' X.fgtag)}
-				 end
-	 
-	 
       end
    
+      meth getEntry($)
+	 case @nextFree of
+	    [A] then
+	    nextFree <- [A+1]
+	    A
+	 elseof A|R then
+	    nextFree <- R
+	    A
+	 end
+      end
+      
+      meth putEntry(E)
+	 nextFree <- E|@nextFree
+      end
+      
       meth setAction(P)
 	 action<-P
       end
@@ -99,86 +121,64 @@ define
 	 {@action A}
       end
    
-      meth addSite(Ks)=M
-	 DC=self.listbox
+      meth addSite(Ks)
+	 R = {Map Ks fun{$ K}
+			Line = {self getEntry($)}
+			S=site(text:K.text
+			       key:K.key
+			       fg:{CondSelect K fg black}
+			       bg:{CondSelect K bg white}
+			       line: Line 
+			       fgtag:Line)
+		     in
+			self.entryDict.(K.key):=S
+			S
+		     end}
       in
-	 if {IsList Ks}==false then
-	    {Exception.'raise' giveMeAFuckingListPleaze(M)}
-	 else
-	    skip
-	 end
-	 sites <- {Append @sites {Map Ks proc{$ K O}
-					    T1={New Tk.canvasTag tkInit(parent:DC)}
-					    T2={New Tk.canvasTag tkInit(parent:DC)}
-					    S=site(text:K.text
-						   key:K.key
-						   fg:{CondSelect K fg black}
-						   bg:{CondSelect K bg white}
-						   bgtag:T1
-						   fgtag:T2)
-					 in
-					    O = S
-					    {DC tk(crea line 0 0 0 1 tags:q(T1 T2))}
-					    {T1 tkBind(event:'<1>'
-						       action:self#Action(K.key))}
-					    {T2 tkBind(event:'<1>'
-						       action:self#Action(K.key))}
-					 end}}
-	 {self Redraw(@sites)}
+	 {self Draw(R)}
       end
       
       meth deleteSite(Ks)=M
-	 if {IsList Ks}==false then
-	    {Exception.'raise' giveMeAFuckingListPleaze(M)}
-	 else
-	    skip
-	 end
-	 sites<-{List.filterInd @sites fun{$ I X}
-					  if {Member X.key Ks} then
-					     {X.bgtag tk(delete)}
-					     {X.fgtag tk(delete)}
-					     false
-					  else
-					     true
-					  end
-				       end}
-	 {self Redraw(@sites)}
+	 {ForAll Ks proc{$ K}
+		    if {Dictionary.member self.entryDict K} then
+		       E = self.entryDict.K in
+		       {self.listbox tk(delete E.fgtag )}
+		       {self putEntry(E.line)}
+		       {Dictionary.remove self.entryDict K} 
+		    end
+		 end}
+      end
+      
+      meth Draw(Ss)
+	 DC=self.listbox
+      in
+	 {ForAll Ss proc{$ X}
+		       {DC tk(crea text 5 X.line * @lineSize + 5 
+			      text:X.text anchor:nw fill:X.fg tags:X.fgtag)}
+		    end}
+	% {self.listbox tk(configure scrollregion:q(0 1 1000 ))}
       end
 
       
-      meth Redraw(Ss)
-	 cy<-1
-	 {ForAll Ss self.InternalHelpFun1}
-	 {self.listbox tk(configure scrollregion:q(0 1 1000 @cy))}
-      end
-   
-		    
-      meth setColour(key:K bg:BG fg:FG)
-	 sites<-{Map @sites fun{$ X}
-			       if K==X.key then
-				  {X.fgtag tk(itemconfig fill:FG)}
-				  {X.bgtag tk(itemconfig fill:BG outline:BG)}
-				  site(key:X.key
-				       text:X.text
-				       bg:BG
-				       fg:FG
-				       bgtag:X.bgtag
-				       fgtag:X.fgtag)
-			       else X end
-			    end}
+      meth setColour(key:K bg:_ fg:FG) = M 
+	 if {Dictionary.member self.entryDict  K} then 
+	    S = self.entryDict.K in
+	    {self.listbox tk(itemconfig S.fgtag fill:FG)}
+	    self.entryDict.K:={Record.adjoinAt S fg FG}
+	 end
       end
    end
 
    Toplevel
-   proc{Open Resume TThread}
-      if Resume==true then
-	 {Thread.resume TThread}
-	 {Toplevel tkShow}
-      else
-	 T=Toplevel={New Widgets.toplevel tkInit(title:"Distribution Panel"
+   proc{ReOpen}
+      {Toplevel tkShow}
+   end
+	       
+   proc{Open  RunSync}
+      T=Toplevel={New Widgets.toplevel tkInit(title:"Distribution Panel"
 						 delete:proc{$}
 							   {T tkHide}
-							   {Thread.suspend TThread}
+							   {Exchange RunSync unit _}
 							end)}
 	 CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:900 height:190)}
 	 SiteF OwnerF BorrowF NetInfoF
@@ -284,7 +284,6 @@ define
 	 {Tk.batch [grid(columnconfigure T 0 weight:1)
 		    grid(rowconfigure T 0 weight:1)
 		    grid(CardF row:0 column:0 sticky:news)]}
-      end
    end
 end
 
