@@ -167,7 +167,7 @@ public:
 
     void print(ostream & = cout, int=0, int=0);
     void printLong(ostream & = cout, int=0, int=0);
-    void ofs2buffer(int depth);
+    ostream &newprint(ostream &, int depth);
 
     // Copy the dynamictable from 'from' to 'to' space:
     DynamicTable* gc(void); // See definition in gc.cc

@@ -70,6 +70,7 @@ extern int OZ_isCell       _PROTOTYPE((OZ_Term));
 extern int OZ_isChunk      _PROTOTYPE((OZ_Term));
 extern int OZ_isCons       _PROTOTYPE((OZ_Term));
 extern int OZ_isFalse      _PROTOTYPE((OZ_Term));
+extern int OZ_isFeature    _PROTOTYPE((OZ_Term));
 extern int OZ_isFloat      _PROTOTYPE((OZ_Term));
 extern int OZ_isInt        _PROTOTYPE((OZ_Term));
 extern int OZ_isLiteral    _PROTOTYPE((OZ_Term));
@@ -339,20 +340,20 @@ OZ_C_proc_begin(Name,Arity)                                                   \
 #define OZ_declareArg(ARG,VAR) \
      OZ_Term VAR = OZ_getCArg(ARG);
 
-#define OZ_nonvarArg(ARG)                                                     \
-{                                                                             \
-  if (OZ_isVariable(OZ_getCArg(ARG))) {                                       \
-    OZ_suspendOn(OZ_getCArg(ARG));                                    \
-  }                                                                           \
+#define OZ_nonvarArg(ARG)                       \
+{                                               \
+  if (OZ_isVariable(OZ_getCArg(ARG))) {         \
+    OZ_suspendOn(OZ_getCArg(ARG));              \
+  }                                             \
 }
 
-#define OZ_declareIntArg(ARG,VAR)                                             \
- int VAR;                                                                     \
- OZ_nonvarArg(ARG);                                                           \
- if (! OZ_isInt(OZ_getCArg(ARG))) {                                           \
-   return OZ_typeError(ARG,"Int");                                            \
- } else {                                                                     \
-   VAR = OZ_intToC(OZ_getCArg(ARG));                                          \
+#define OZ_declareIntArg(ARG,VAR)               \
+ int VAR;                                       \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isInt(OZ_getCArg(ARG))) {             \
+   return OZ_typeError(ARG,"Int");              \
+ } else {                                       \
+   VAR = OZ_intToC(OZ_getCArg(ARG));            \
  }
 
 #define OZ_declareFloatArg(ARG,VAR)                                           \

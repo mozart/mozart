@@ -281,8 +281,8 @@ OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
 {
   if (!OZ_isProcedure(handler)) {
     if (!OZ_isAtom(handler) || !OZ_eq(handler,OZ_atom("noHandler"))) {
-      TypeError2("builtin",1,"Procedure or Atom \"noHandler\"",
-                 OZ_getCArg(0),handler);
+      warning("builtin: '%s' illegal handler", name,toC(handler));
+      return 0;
     }
     handler = 0;
   }
@@ -290,18 +290,15 @@ OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
   BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.htFind(name);
 
   if (found == htEmpty) {
-    // type error
     warning("builtin: '%s' not in table", name);
-    return FAILED;
+    return 0;
   }
 
   if (!handler && !found->getFun()) {
-    // type error
     warning("builtin '%s' is special: needs suspension handler",name);
-    return FAILED;
+    return 0;
   }
   if (handler && found->getInlineFun()) {
-    // type error
     warning("builtin '%s' is compiled inline: suspension handler ignored",name);
     handler = 0;
   }
@@ -318,6 +315,10 @@ OZ_C_proc_begin(BIbuiltin,3)
   OZ_Term ret = OZ_getCArg(2);
 
   OZ_Term bi = OZ_findBuiltin(str, hdl);
+  if (!bi) {
+    return OZ_raise(OZ_mkTupleC("typeError",1,
+                                OZ_atom("builtin not found")));
+  }
   return OZ_unify(ret,bi);
 }
 OZ_C_proc_end
@@ -1585,11 +1586,22 @@ LBLagain:
     if (isChunk(term)) {
       if (! isFeature(feaTag)) { goto typeError1r; }
       TaggedRef t;
-      if (isSChunk(term)) {
+      switch (tagged2Const(term)->getType()) {
+      case Co_Chunk:
         t = tagged2SChunk(term)->getFeature(fea);
-      } else {
-        Assert(isObject(term));
+        break;
+      case Co_Object:
         t = tagged2Object(term)->getFeature(fea);
+        break;
+      case Co_Array:
+      case Co_Dictionary:
+        // no public known features
+        t = 0;
+        break;
+      default:
+        warning("subtree: chunk type %d not impl.",
+                tagged2Const(term)->getType());
+        t = 0;
       }
       if (t == makeTaggedNULL()) {
         if (dot) { goto typeError1r; }
@@ -2171,11 +2183,18 @@ OZ_C_proc_begin(BIchunkArity,2)
   ch=deref(ch);
   if (!isChunk(ch)) TypeError1("Chunk.arity",0,"Chunk",ch);
 
-  if (isObject(ch)) {
+  switch (tagged2Const(ch)->getType()) {
+  case Co_Object:
     return OZ_unify(out,tagged2Object(ch)->getArityList());
+  case Co_Chunk:
+    return OZ_unify(out,tagged2SChunk(ch)->getArityList());
+  case Co_Dictionary:
+  case Co_Array:
+    return OZ_unify(out,nil());
+  default:
+    warning("`ChunkArity` not impl");
+    return FAILED;
   }
-  Assert(isSChunk(ch));
-  return OZ_unify(out,tagged2SChunk(ch)->getArityList());
 }
 OZ_C_proc_end
 
@@ -5271,6 +5290,8 @@ OZ_C_proc_begin(BIgetPrintName,2)
       case Co_Abstraction:  return OZ_unify(out, ((Abstraction *) rec)->getName());
       case Co_Object:      return OZ_unifyAtom(out, ((Object*) rec)->getPrintName());
       case Co_Cell:        return OZ_unifyAtom(out,"_");
+      case Co_Dictionary:  return OZ_unifyAtom(out,"_");
+      case Co_Array:       return OZ_unifyAtom(out,"_");
       default:             break;
       }
     }
@@ -5469,6 +5490,35 @@ OZ_C_proc_begin(BIsetValue,3)
 OZ_C_proc_end
 
 #undef DOIF
+
+/*
+ * System parameters
+ */
+
+#define BICONF(gname,sname,aname)               \
+OZ_C_proc_begin(gname,2)                        \
+{                                               \
+  OZ_declareArg(1,val);                         \
+                                                \
+  return OZ_unifyInt(val,ozconf.aname);         \
+}                                               \
+OZ_C_proc_end                                   \
+OZ_C_proc_begin(sname,2)                        \
+{                                               \
+  OZ_declareIntArg(0,val);                      \
+  ozconf.aname=val;                             \
+  return PROCEED;                               \
+}                                               \
+OZ_C_proc_end
+
+
+BICONF(BIgetPrintDepth,BIsetPrintDepth,printDepth)
+BICONF(BIgetPrintWidth,BIsetPrintWidth,printWidth)
+BICONF(BIgetErrorDepth,BIsetErrorDepth,errorPrintDepth)
+BICONF(BIgetErrorWidth,BIsetErrorWidth,errorPrintWidth)
+
+#undef BICONF
+
 
 // ---------------------------------------------------------------------------
 // Debugging: set a break
@@ -6305,6 +6355,14 @@ BIspec allSpec[] = {
   {"Space.choose (Task)", 2, BIchooseInternal, 0},
   {"Space.inject",        2, BIinjectSpace,    0},
 
+  {"System.getPrintDepth", 2, BIgetPrintDepth, 0},
+  {"System.getPrintWidth", 2, BIgetPrintWidth, 0},
+  {"System.getErrorDepth", 2, BIgetErrorDepth, 0},
+  {"System.getErrorWidth", 2, BIgetErrorWidth, 0},
+  {"System.setPrintDepth", 2, BIsetPrintDepth, 0},
+  {"System.setPrintWidth", 2, BIsetPrintWidth, 0},
+  {"System.setErrorDepth", 2, BIsetErrorDepth, 0},
+  {"System.setErrorWidth", 2, BIsetErrorWidth, 0},
   {0,0,0,0}
 };
 
