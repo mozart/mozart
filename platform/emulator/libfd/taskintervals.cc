@@ -287,6 +287,16 @@ tiloop:
                   constraints[constraintsSize+1] = 0;
                   constraints[constraintsSize+2] = right;
                   constraintsSize += 3;
+                  /*
+                    // is not useful
+                  OZ_Term left_side_task = reg_l[element];
+                  OZ_Term right_side_task = reg_l[i];
+                  addImpose(fd_prop_bounds, left_side_task);
+                  addImpose(fd_prop_bounds, right_side_task);
+
+                  impose(new LessEqOffPropagator(left_side_task, right_side_task,
+                  -dur[element]));
+                  */
                 }
               }
             }
@@ -309,6 +319,16 @@ tiloop:
                   constraints[constraintsSize+1] = 1;
                   constraints[constraintsSize+2] = right;
                   constraintsSize += 3;
+                  /*
+                    // is not useful
+                  OZ_Term left_side_task = reg_l[i];
+                  OZ_Term right_side_task = reg_l[element];
+                  addImpose(fd_prop_bounds, left_side_task);
+                  addImpose(fd_prop_bounds, right_side_task);
+
+                  impose(new LessEqOffPropagator(left_side_task, right_side_task,
+                  -dur[i]));
+                  */
                 }
               }
             }
