@@ -587,7 +587,7 @@ INT          {DIGIT}+
 
 OZINT        ~?(0{OCT}*|0(x|X){HEX}+|0(b|B){BIN}+|{NONZERODIGIT}{DIGIT}*)
 
-FILENAME     ([-0-9a-zA-Z/_~]|\..)+|'["-~]+'
+FILENAME     ([-0-9a-zA-Z/_~]|\..)+|'["-\377]+'
 
 REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
