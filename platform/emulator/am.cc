@@ -568,6 +568,11 @@ start:
   goto start;
 }
 
+/*
+  This function checks if the current board is between "varHome" and "to"
+  resp. equal to "to".
+  */
+
 BFlag AM::isBetween(Board *to, Board *varHome)
 {
   while (1) {
