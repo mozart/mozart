@@ -361,7 +361,6 @@ enum TypeOfPtr {
   PTR_BOARD,
   PTR_ACTOR,
   PTR_THREAD,
-  PTR_RTBODY,			// RunnableThreadBody;
   PTR_CONT,
   PTR_CFUNCONT,
   PTR_PROPAGATOR,
@@ -829,22 +828,6 @@ RefsArray gcRefsArray(RefsArray r)
  */
 //
 //  RunnableThreadBody;
-inline
-void RunnableThreadBody::gcRecurse ()
-{
-  GCMETHMSG ("RunnableThreadBody::gcRecurse");
-
-  // 
-  //  kost@: TODO?
-  //  There is a problem: 'TaskStack.gc ()' doesn't really copy 
-  // the stack, but saves only the reference to the newly allocated
-  // region. Therefore, the original stack is needed during gcRecurse 
-  // (sic! - already the hack!), and, in turn, it's cells cannot be 
-  // used for GCmarking. So, .gcRecurse is performed immediately 
-  // after .gc;
-  // taskStack.gcRecurse ();
-  error ("We don't need 'RunnableThreadBody::gcRecurse ()'"); 
-}
 
 RunnableThreadBody *RunnableThreadBody::gcRTBody ()
 {
@@ -853,9 +836,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   RunnableThreadBody *ret = 
     (RunnableThreadBody *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (ret);
-  taskStack.gc (&ret->taskStack);
-  //  see above ('RunnableThreadBody::gcRecurse ()');
-  ret->taskStack.gcRecurse ();
+  taskStack.gc(&ret->taskStack);
 
   ret->u.self = ret->u.self->gcObject();
   gcTagged(ret->debugVar,ret->debugVar);
@@ -1776,28 +1757,23 @@ void ThreadQueue::doGC ()
 
 void TaskStack::gc(TaskStack *newstack)
 {
-  /* 
-   *  Allocate new stack and save reference for 
-   * TaskStack::gcRecurse on the new stack
-   */
   COUNT(taskStack);
   COUNT1(taskStackLen,getMaxSize());
+
   newstack->allocate(getMaxSize());
-  newstack->push(this);
-}
+  TaskStack *oldstack = this;
 
-void TaskStack::gcRecurse()
-{
-  GCMETHMSG("TaskStack::gcRecurse");
-  TaskStack *oldstack = (TaskStack *) pop();
+  TaskStackEntry *oldtop = oldstack->getTop();
+  int offset             = oldstack->getUsed();
+  TaskStackEntry *newtop = newstack->array + offset;
 
-  gcInit();
-  TaskStackEntry *savedTop=oldstack->getTop();
-
-  while (!oldstack->isEmpty()) {
-    TaskStackEntry oldEntry = oldstack->pop();
+  while (1) {
+    TaskStackEntry oldEntry = *(--oldtop);
+    *(--newtop) = oldEntry;
+    if (isEmpty(oldEntry)) {
+      break;
+    }
     ContFlag cFlag = getContFlag(ToInt32(oldEntry));
-    gcQueue(oldEntry);
 
     switch (cFlag){
 
@@ -1807,57 +1783,57 @@ void TaskStack::gcRecurse()
     case C_CONT: 
       COUNT(cCont);
       // PC is already queued
-      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y
-      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // G
+      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // Y
+      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // G
       break;
       
     case C_XCONT:
       COUNT(cXCont);
       // PC is already queued
-      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y 
-      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // G
-      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // X
+      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // Y 
+      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // G
+      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // X
       break;
 
     case C_DEBUG_CONT: 
       COUNT(cDebugCont);
-      gcQueue(((OzDebug *) oldstack->pop())->gcOzDebug());
+      *(--newtop) = ((OzDebug *) *(--oldtop))->gcOzDebug();
       break;
 
     case C_EXCEPT_HANDLER:
       {
 	COUNT(cExceptHandler);
-	TaggedRef tt=deref((TaggedRef) oldstack->pop());
+	TaggedRef tt=deref((TaggedRef) ToInt32(*(--oldtop)));
 	Assert(!isAnyVar(tt));
 	gcTagged(tt,tt);
-	gcQueue(ToPointer(tt));
+	*(--newtop) = ToPointer(tt);
       }
       break;
 
     case C_CALL_CONT: 
       {
 	COUNT(cCallCont);
-	TaggedRef tt=deref((TaggedRef) oldstack->pop());
+	TaggedRef tt=deref((TaggedRef) ToInt32(*(--oldtop)));
 	Assert(!isAnyVar(tt));
 	gcTagged(tt,tt);
-	gcQueue(ToPointer(tt));
-	gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
+	*(--newtop) = ToPointer(tt);
+	*(--newtop) = gcRefsArray((RefsArray) *(--oldtop));
       }
       break;
 
     case C_CFUNC_CONT:
       COUNT(cCFuncCont);
-      gcQueue(oldstack->pop());                // OZ_CFun
-      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
+      *(--newtop) = *(--oldtop);                // OZ_CFun
+      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));
       break;
 
     case C_SET_CAA:
       COUNT (cSetCaa);
-      gcQueue (((Actor *) oldstack->pop ())->gcActor ());  // CAA
+      *(--newtop) = ((Actor *) *(--oldtop))->gcActor();  // CAA
       break;
 
     case C_SET_SELF:
-      gcQueue(((Object *)oldstack->pop())->gcObject());
+      *(--newtop) = ((Object *) *(--oldtop))->gcObject();
       break;
 
     default:
@@ -1866,8 +1842,8 @@ void TaskStack::gcRecurse()
     }
   } // while not task stack is empty
 
-  gcEnd();
-  oldstack->setTop(savedTop);
+  Assert(newstack->array == newtop);
+  newstack->setTop(newstack->array+offset);
 } // TaskStack::gc
 
 
@@ -2364,8 +2340,6 @@ void performCopying(void)
     case PTR_BOARD:     ((Board *) ptr)->gcRecurse();            break;
     case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
     case PTR_THREAD:    ((Thread *) ptr)->gcRecurse();           break;
-    case PTR_RTBODY:
-      ((RunnableThreadBody *) ptr)->gcRecurse();                 break;
     case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
     case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;
     case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->gcRecurse();   break;
