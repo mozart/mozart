@@ -113,8 +113,16 @@ public:
 
 typedef unsigned long dt_index;
 
+// Maximum size of completely full table
+#define FILLLIMIT 4
+// Maximum fill factor of bigger tables
+// (if changing this, must also change ofgenvar.cc)
+#define FILLFACTOR 0.75
+
 // Return true iff argument is a power of two
 extern Bool isPwrTwo(dt_index s);
+// Round up to nearest power of two
+extern dt_index ceilPwrTwo(dt_index s);
 
 class HashElement {
 friend class DynamicTable;
@@ -235,6 +243,10 @@ private:
 
 
 class GenOFSVariable: public GenCVariable {
+
+    friend class GenCVariable;
+    friend inline void addSuspOFSVar(TaggedRef, SuspList *);
+    friend inline void addSuspOFSVar(TaggedRef, Thread *);
 
 private:
     TaggedRef label;
@@ -378,5 +390,22 @@ Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag);
 GenOFSVariable *tagged2GenOFSVar(TaggedRef term);
 /* a simple sorting routine using atomcmp */
 void inplace_quicksort(TaggedRef* first, TaggedRef* last);
+
+inline
+void addSuspOFSVar(TaggedRef v, SuspList * el)
+{
+  GenOFSVariable * ofs = tagged2GenOFSVar(v);
+
+  ofs->suspList = addSuspToList(ofs->suspList, el, ofs->home);
+}
+
+inline
+void addSuspOFSVar(TaggedRef v, Thread * el)
+{
+  GenOFSVariable * ofs = tagged2GenOFSVar(v);
+
+  ofs->suspList = addSuspToList(ofs->suspList, el, ofs->home);
+}
+
 
 #endif

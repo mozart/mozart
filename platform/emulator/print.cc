@@ -273,7 +273,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 } // PRINT(GenCVariable)
 
 
-// Non-Name Features are output in alphabetic order:
+// Non-Name Features are output in alphanumeric order (ints before atoms):
 PRINT(DynamicTable)
 {
     CHECKDEPTH;
@@ -283,7 +283,7 @@ PRINT(DynamicTable)
     TaggedRef tmplit,tmpval;
     dt_index di;
     long ai;
-    long nAtom=0;
+    long nAtomOrInt=0;
     long nName=0;
     for (di=0; di<size; di++) {
 	tmplit=table[di].ident;
@@ -291,22 +291,23 @@ PRINT(DynamicTable)
 	if (tmpval) { 
 	    nonempty=TRUE;
             CHECK_DEREF(tmplit);
-	    if (isAtom(tmplit)) nAtom++; else nName++;
+	    if (isAtom(tmplit)||isInt(tmplit)) nAtomOrInt++; else nName++;
 	}
     }
     // Allocate array on heap, put Atoms in array:
-    //STuple *stuple=STuple::newSTuple(AtomNil,nAtom);
+    //STuple *stuple=STuple::newSTuple(AtomNil,nAtomOrInt);
     //TaggedRef *arr=stuple->getRef();
-    TaggedRef *arr = new TaggedRef[nAtom+1]; // +1 since nAtom may be zero
+    TaggedRef *arr = new TaggedRef[nAtomOrInt+1]; // +1 since nAtomOrInt may be zero
     for (ai=0,di=0; di<size; di++) {
 	tmplit=table[di].ident;
         tmpval=table[di].value;
-	if (tmpval!=makeTaggedNULL() && isAtom(tmplit)) arr[ai++]=tmplit;
+	if (tmpval!=makeTaggedNULL() && (isAtom(tmplit)||isInt(tmplit)))
+            arr[ai++]=tmplit;
     }
     // Sort the Atoms according to printName:
-    inplace_quicksort(arr, arr+(nAtom-1));
+    inplace_quicksort(arr, arr+(nAtomOrInt-1));
     // Output the Atoms first, in order:
-    for (ai=0; ai<nAtom; ai++) {
+    for (ai=0; ai<nAtomOrInt; ai++) {
         stream << ' ';
         tagged2Stream(arr[ai],stream,depth);
         stream << ':';
@@ -317,7 +318,7 @@ PRINT(DynamicTable)
     for (di=0; di<size; di++) {
 	tmplit=table[di].ident;
         tmpval=table[di].value;
-	if (tmpval!=makeTaggedNULL() && !isAtom(tmplit)) {
+	if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
             stream << ' ';
             tagged2Stream(tmplit,stream,depth);
             stream << ':';

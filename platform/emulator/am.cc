@@ -891,7 +891,36 @@ void AM::reduceTrailOnShallow()
  * OFS
  * -------------------------------------------------------------------------*/
 
+// Check if there is a propagator prop on a given variable rec
+// If so, return the width argument of the propagator
+// If not, return NULL
+TaggedRef AM::getWidthSuspension(void *prop, TaggedRef rec)
+{
+    Assert(tagged2CVar(rec)->getType()==OFSVariable);
+    GenOFSVariable *ofsvar=tagged2GenOFSVar(rec);
+    SuspList *suspList=ofsvar->getSuspList();
+
+    while (suspList) {
+        Thread *thr = suspList->getElem();
+	// Tobias personally guarantees that isPropagator implies CCont!
+        if (thr->isPropagator()) {
+	    CFuncContinuation *cont = thr->getCCont();
+	    OZ_CFun fun=cont->getCFunc();
+	    if ((void*)fun==prop) {
+	        RefsArray xregs=cont->getX();
+	        TaggedRef arg0=xregs[0];
+	        DEREF(arg0,arg0Ptr,arg0Tag);
+	        if (arg0==rec) return xregs[1];
+	    }
+        }
+        suspList = suspList->getNext();
+    }
+    return makeTaggedNULL();
+}
+
+
 // Check if there exists an S_ofs (Open Feature Structure) suspension in the suspList
+// (Used only for monitorArity)
 Bool AM::hasOFSSuspension(SuspList *suspList)
 {
     while (suspList) {
@@ -904,11 +933,12 @@ Bool AM::hasOFSSuspension(SuspList *suspList)
 
 
 // Add list of features to each OFS-marked suspension list
-// 'flist' has three possible values: a single feature (literal), a nonempty list of
-// features, or NULL (no extra features).  'determined'==TRUE iff the unify makes the
-// OFS determined.  'var' (which must be deref'ed) is used to make sure that
-// features are added only to variables that are indeed waiting for features.
-// This routine is inspired by am.checkSuspensionList, and must track all changes to it.
+// 'flist' has three possible values: a single feature (literal or integer), a
+// nonempty list of features, or NULL (no extra features).  'determined'==TRUE iff
+// the unify makes the OFS determined.  'var' (which must be deref'ed) is used to
+// make sure that features are added only to variables that are indeed waiting for
+// features. This routine is inspired by am.checkSuspensionList, and must track all
+// changes to it.
 void AM::addFeatOFSSuspensionList(TaggedRef var,
                                   SuspList* suspList,
 				  TaggedRef flist,
