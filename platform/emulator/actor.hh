@@ -39,10 +39,9 @@ public:
 protected:
   int flags;
   Board *board;
-  short priority;
-  short compMode;
+  int priority;
 public:
-  Actor(int typ,Board *bb,int prio,int compMode);
+  Actor(int typ,Board *bb,int prio);
 
   ~Actor() {}
 
@@ -53,7 +52,6 @@ public:
   OZPRINTLONG;
 
   int getPriority() { return (priority); }
-  int getCompMode() { return (compMode); }
   inline Board *getBoardFast();
   inline Board *getBoardAndTest();
   Bool isCommitted() { return flags & Ac_Committed; }
@@ -82,7 +80,7 @@ protected:
   Continuation next;
   int childCount;
 public:
-  AWActor(int type,Board *s,int prio,int compMode,
+  AWActor(int type,Board *s,int prio,
 	  ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
 	  RefsArray x=0,int i=0);
   USEHEAPMEMORY;
@@ -108,7 +106,7 @@ public:
 private:
   ProgramCounter elsePC;
 public:
-  AskActor(Board *s,int prio,int compMode,
+  AskActor(Board *s,int prio,
 	   ProgramCounter elsepc,
 	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i,
 	   Thread *tt);
@@ -131,7 +129,7 @@ public:
 private:
   Board **childs;
 public:
-  WaitActor(Board *s,int prio,int compMode,
+  WaitActor(Board *s,int prio,
 	    ProgramCounter p,RefsArray y,RefsArray g,RefsArray x,int i);
   WaitActor(WaitActor *wa);  // without children; 
 

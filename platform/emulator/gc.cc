@@ -1708,7 +1708,7 @@ void TaskStack::gcRecurse()
     case C_NERVOUS:   break;
     case C_SOLVE:     break;
     case C_LOCAL:     break;
-    case C_COMP_MODE: break;
+    case C_JOB:       break;
 
     case C_CONT: 
       // PC is already queued

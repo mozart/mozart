@@ -359,8 +359,8 @@ Case(SETVOID)
 
         if (isNotCVar(term) ||
 	    isCVar(term) && tagged2CVar(term)->valid(atm)) {
-	  Suspension *susp = e->mkSuspension(CPP,
-					     PC,Y,G,X,getPosIntArg(PC+5));
+	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
+	  Suspension *susp = e->mkSuspension();
 	  addSusp(termPtr,susp);
 
 	  /* Bug fix:
@@ -378,7 +378,7 @@ Case(SETVOID)
 	      addSusp(labPtr,susp);
 	    }
 	  }
-	  CHECKSEQ;
+	  CHECK_CURRENT_THREAD;
 	}
 
 	JUMP( getLabelArg(PC+4) );
@@ -403,10 +403,10 @@ Case(SETVOID)
 
         if (isNotCVar(term) ||
 	    isCVar(term) && tagged2CVar(term)->valid(i)) {
-	  Suspension *susp=e->mkSuspension(CPP,
-					   PC,Y,G,X,getPosIntArg(PC+5));
+	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
+	  Suspension *susp=e->mkSuspension();
 	  addSusp(termPtr,susp);
-	  CHECKSEQ;
+	  CHECK_CURRENT_THREAD;
 	}
 
 	JUMP( getLabelArg(PC+4) );
