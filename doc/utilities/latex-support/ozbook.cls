@@ -31,6 +31,8 @@
 \DeclareOption{noinfo}{\@infoPagefalse}
 \DeclareOption{abstract}{\@abstractPagetrue}
 \DeclareOption{noabstract}{\@abstractPagefalse}
+\DeclareOption{title}{\@titlePagetrue}
+\DeclareOption{notitle}{\@titlePagefalse}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
 
 % Execution of Options
