@@ -46,7 +46,7 @@ void OzBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr, int e)
 {
   if (oz_isSmallInt(*trPtr)) return;
   propagate();
-  DoBind(trPtr, OZ_int(e));
+  DoBind(trPtr, newSmallInt(e));
   dispose();
 }
 

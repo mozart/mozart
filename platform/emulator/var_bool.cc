@@ -38,7 +38,7 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
   Assert(!oz_isRef(term));
   if (!oz_isSmallInt(term)) return FAILED;
 
-  int term_val = OZ_intToC(term);
+  int term_val = smallIntValue(term);
   if (term_val < 0 || 1 < term_val) {
     return FAILED;
   }
@@ -193,7 +193,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 #endif
 
           if (intsct != -1) {
-            TaggedRef int_var = OZ_int(intsct);
+            TaggedRef int_var = newSmallInt(intsct);
             termvar->propagate(fd_prop_singl, pc_cv_unif);
             propagate(pc_cv_unif);
             DoBind(vPtr, int_var);
@@ -222,7 +222,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
           printf("bool-fd local global\n"); fflush(stdout);
 #endif
           if (intsct != -1) {
-            TaggedRef int_var = OZ_int(intsct);
+            TaggedRef int_var = newSmallInt(intsct);
             if (isNotInstallingScript)
               termvar->propagate(fd_prop_singl, pc_cv_unif);
             if (isConstrainedVar) propagate(pc_cv_unif);
@@ -246,7 +246,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 #endif
 
           if(intsct != -1) {
-            TaggedRef int_term = OZ_int(intsct);
+            TaggedRef int_term = newSmallInt(intsct);
             if (isNotInstallingScript) propagate(pc_cv_unif);
             if (isConstrainedTerm)
               termvar->propagate(fd_prop_singl, pc_cv_unif);
@@ -271,7 +271,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 #endif
 
           if (intsct != -1){
-            TaggedRef int_val = OZ_int(intsct);
+            TaggedRef int_val = newSmallInt(intsct);
             if (scp==0) {
               propagate(pc_cv_unif);
               termvar->propagate(fd_prop_singl, pc_cv_unif);
@@ -312,7 +312,7 @@ Bool OzBoolVariable::valid(TaggedRef val)
 {
   Assert(!oz_isRef(val));
   if (oz_isSmallInt(val)) {
-    int intval = OZ_intToC(val);
+    int intval = smallIntValue(val);
     return (intval == 0 || intval == 1);
   }
   return FALSE;

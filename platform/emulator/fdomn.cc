@@ -346,7 +346,7 @@ OZ_Term FDIntervals::getAsList(void) const
 
   for (int i = 0; i < high; i += 1)
       l_ptr = (i_arr[i].left == i_arr[i].right)
-        ? mkListEl(hd, l_ptr, OZ_int(i_arr[i].left))
+        ? mkListEl(hd, l_ptr, oz_int(i_arr[i].left))
         : mkListEl(hd, l_ptr, oz_pairII(i_arr[i].left, i_arr[i].right));
 
   return makeTaggedLTuple(hd);
@@ -955,7 +955,7 @@ OZ_Term FDBitVector::getAsList(void) const
 
   for (int i = 0; i < len; i += 1)
     if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
-      l_ptr = mkListEl(hd, l_ptr, OZ_int(fd_bv_left_conv[i]));
+      l_ptr = mkListEl(hd, l_ptr, oz_int(fd_bv_left_conv[i]));
     else
       l_ptr = mkListEl(hd, l_ptr, oz_pairII(fd_bv_left_conv[i],
                                             fd_bv_right_conv[i]));
@@ -1516,14 +1516,14 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
     *this = ~ *this;
     return size;
   } else if (isSmallIntTag(d_tag)) {
-    return initSingleton(OZ_intToC(d));
+    return initSingleton(smallIntValue(d));
   } else if (AtomSup == d) {
     return initSingleton(fd_sup);
   } else if (oz_isSTuple(d)) {
     SRecord &t = *tagged2SRecord(d);
     OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
-    return initRange(AtomSup == t0 ? fd_sup : OZ_intToC(t0),
-                     AtomSup == t1 ? fd_sup : OZ_intToC(t1));
+    return initRange(AtomSup == t0 ? fd_sup : smallIntValue(t0),
+                     AtomSup == t1 ? fd_sup : smallIntValue(t1));
   } else if (AtomBool == d) {
     return initRange(0, 1);
   } else if (oz_isNil(d)) {
@@ -1541,7 +1541,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
       DEREF(val, valptr, valtag);
 
       if (isSmallIntTag(valtag)) {
-        int v = OZ_intToC(val);
+        int v = smallIntValue(val);
         if (v < fd_inf || fd_sup < v) goto for_loop;
 
         left_arr[len_arr] = right_arr[len_arr] = v;
@@ -1565,8 +1565,8 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
         SRecord &t = *tagged2SRecord(val);
         OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
 
-        int l = max(0, AtomSup == t0 ? fd_sup : OZ_intToC(t0));
-        int r = min(fd_sup, AtomSup == t1 ? fd_sup : OZ_intToC(t1));
+        int l = max(0, AtomSup == t0 ? fd_sup : smallIntValue(t0));
+        int r = min(fd_sup, AtomSup == t1 ? fd_sup : smallIntValue(t1));
 
         if (l > r) goto for_loop;
 
