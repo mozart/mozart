@@ -63,14 +63,11 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
   int line, abspos;
   time_t feedtime;
 
-  //tt->deleteContFlag();
-  
-  //if (!am.runChildren) {
-  //  tt->startStepMode();
-  //  tt->stop();
-  //}
-
   if (debugPC == NOCODE) {
+
+    if (!builtin) return;
+
+    // else
     file    = OZ_atom("noDebugInfo");
     comment = OZ_atom("");
     line    = 1;
@@ -106,7 +103,6 @@ void debugStreamCont(Thread *tt) {
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
 
-  //if (!am.runChildren)
   tt->stop();
 
   TaggedRef pairlist = 
