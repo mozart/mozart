@@ -201,13 +201,26 @@ void unCast(TaggedRef * tvp, // The variable to which...
   /*
    * Copy back suspensions
    *
-   * All other suspensions that tv has acquired in
-   * some special suspension lists are local to the
-   * current space
+   * Important invariant: All  suspensions that tv has acquired
+   * in the single generic suspension list.
+   *
+   * The other special purpose suspensionlists are empty! This
+   * is due to the fact that theses lists can hold only local
+   * entries (local with respect to the variable's home).
+   *
+   * This also the reason, why the home pointer of the variable
+   * can be changed! If the suspension list were not empty
+   * this would violate the above mentioned invariant,
+   * which would lead to problems during garbage
+   * collection.
    *
    */
 
   fv->setSuspList(tv->unlinkSuspList());
+
+  // Check that there are indeed no suspension
+
+  Assert(oz_var_getSuspListLength(tv) == 0);
 
   /*
    * Make cast variable local

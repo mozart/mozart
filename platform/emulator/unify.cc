@@ -327,6 +327,8 @@ loop:
 
     int res = oz_var_cast(termPtr2, tb2, tagged2CVar(term1)->getType());
 
+    // termPtr2 is changed!
+
     if (res != PROCEED) {
       result = res;
       goto fail;

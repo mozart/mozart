@@ -245,10 +245,28 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
 #define VARTP(T1,T2) ((T1<<3)|T2)
 #define VTP(T1,T2)   VARTP(OZ_VAR_ ## T1, OZ_VAR_ ## T2)
 
-OZ_Return oz_var_cast(TaggedRef * fp, Board * fb, TypeOfVariable tt) {
+// #define VAR_CAST_DEBUG
+
+#ifdef VAR_CAST_DEBUG
+
+static char * VCTN[] = {
+  "EXT", "SIMPLE", "FUTURE", "BOOL", "FD", "OF", "FS", "CT"
+};
+
+#endif
+
+
+OZ_Return oz_var_cast(TaggedRef * &fp, Board * fb, TypeOfVariable tt) {
   OzVariable * fv = tagged2CVar(*fp);
 
   TypeOfVariable ft = fv->getType();
+
+#ifdef VAR_CAST_DEBUG
+
+  if (ft != tt)
+    printf("Variable casting: %s ---> %s\n", VCTN[(int) ft], VCTN[(int) tt]);
+
+#endif
 
   OzVariable * tv;
 
@@ -266,8 +284,13 @@ OZ_Return oz_var_cast(TaggedRef * fp, Board * fb, TypeOfVariable tt) {
     tv = new OzFDVariable(fb);
     break;
 
+  case VTP(BOOL,FD):
+    // Care for the susp lists
+    ((OzFDVariable *) fv)->relinkSuspListToItself();
+    // fall...
+
   case VTP(BOOL,SIMPLE): case VTP(BOOL,FUTURE):
-  case VTP(BOOL,EXT):    case VTP(BOOL,FD):
+  case VTP(BOOL,EXT):
     tv = new OzBoolVariable(fb);
     break;
 
@@ -293,6 +316,12 @@ OZ_Return oz_var_cast(TaggedRef * fp, Board * fb, TypeOfVariable tt) {
     // The variable is not local, so trail the cast operation
     am.trail.pushCast(fp);
 
+#ifdef VAR_CAST_DEBUG
+
+  if (ft != tt && oz_currentBoard() != fb)
+    printf("Variable casting: TRAILING\n");
+
+#endif
   /*
    *  The new variable inherits all suspensions:
    *   see above to understand that no variable with multiple
@@ -303,7 +332,11 @@ OZ_Return oz_var_cast(TaggedRef * fp, Board * fb, TypeOfVariable tt) {
   tv->setSuspList(fv->unlinkSuspList());
 
   // Bind original variable to casted variable
-  *fp = makeTaggedRef(newTaggedCVar(tv));
+  TaggedRef * tvt = newTaggedCVar(tv);
+
+  *fp = makeTaggedRef(tvt);
+
+  fp = tvt;
 
   return PROCEED;
 }
