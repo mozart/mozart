@@ -35,13 +35,92 @@
 #include "pickle.hh"
 
 
-void putString(const char *s, MsgBuffer *bs)
+void putVerbatim(const char *s, MsgBuffer *bs)
 {
   while (*s) {
-    if (isspace(*s) || *s=='\\')
-      bs->put('\\');
     bs->put(*s);
     s++;
+  }
+}
+
+#define oz_isalnum(c) ((c) >= 'a' && (c) <= 'z' || \
+		       (c) >= 0337 && (c) <= 0366 || \
+		       (c) >= 0370 && (c) <= 0377 || \
+		       (c) >= 'A' && (c) <= 'Z' || \
+		       (c) >= 0300 && (c) <= 0326 || \
+		       (c) >= 0330 && (c) <= 0336 || \
+		       (c) >= '0' && (c) <= '9' || \
+		       (c) == '_')
+
+inline
+void putQuotedString(const char *s, MsgBuffer *bs)
+{
+  unsigned char c;
+  bs->put('\'');
+  while ((c = *s)) {
+    if (c == '\'' || c == '\\') {
+      bs->put('\\');
+      bs->put(c);
+    } else if (c >= 32 && c <= 126 || c >= 160) {
+      bs->put(c);
+    } else {
+      bs->put('\\');
+      switch (c) {
+      case '\'':
+	bs->put('\'');
+	break;
+      case '\a':
+	bs->put('a');
+	break;
+      case '\b':
+	bs->put('b');
+	break;
+      case '\f':
+	bs->put('f');
+	break;
+      case '\n':
+	bs->put('n');
+	break;
+      case '\r':
+	bs->put('r');
+	break;
+      case '\t':
+	bs->put('t');
+	break;
+      case '\v':
+	bs->put('v');
+	break;
+      default:
+	bs->put((char) (((c >> 6) & '\007') + '0'));
+	bs->put((char) (((c >> 3) & '\007') + '0'));
+	bs->put((char) (( c       & '\007') + '0'));
+	break;
+      }
+    }
+    s++;
+  }
+  bs->put('\'');
+}
+
+void putString(const char *s, MsgBuffer *bs)
+{
+  const char *t = s;
+  unsigned char c = *t++;
+  if (c == '\0' || !oz_isalnum(c)) {
+    putQuotedString(s,bs);
+  } else {
+    c = *t++;
+    while (c) {
+      if (!oz_isalnum(c)) {
+	putQuotedString(s,bs);
+	return;
+      }
+      c = *t++;
+    }
+    while (*s) {
+      bs->put(*s);
+      s++;
+    }
   }
 }
 
@@ -70,7 +149,7 @@ void putNumber(unsigned int i,MsgBuffer *bs)
 {
   char buf[100];
   sprintf(buf,"%u",i);
-  putString(buf,bs);
+  putVerbatim(buf,bs);
 }
 
 
@@ -95,7 +174,7 @@ void marshalDIF(MsgBuffer *bs, MarshalTag tag)
   EmulatorOnly(dif_counter[tag].send());
   if (bs->textmode()) {
     putTag(TAG_DIF,bs);
-    putString(dif_names[tag].name,bs);
+    putVerbatim(dif_names[tag].name,bs);
     return;
   } 
   bs->put(tag);
@@ -214,7 +293,7 @@ void marshalOpCode(int lbl, Opcode op, MsgBuffer *bs, Bool showLabel)
       putNumber(lbl,bs);
     }
     putTag(TAG_OPCODE,bs);
-    putString(opcodeToString(op),bs);
+    putVerbatim(opcodeToString(op),bs);
     return;
   } 
   bs->put(op);
