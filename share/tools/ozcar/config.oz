@@ -137,7 +137,7 @@ TextCursor             = left_ptr
 MaxStackSize           = 10000
 MaxStackBrowseSize     = 10
 
-TimeoutToMessage       = 1000  % ms
+TimeoutToMessage       = 500  % ms
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff
