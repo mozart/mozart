@@ -1679,8 +1679,8 @@ inline void Arity::gc()
   while(aux) {
     GCMETHMSG("Arity::gc");
     for (int i = 0; i < aux->size; i++) {
-      if (aux->keytable[i] != NULL) {
-        aux->keytable[i] = aux->keytable[i]->gc ();
+      if (aux->keytable[i] != makeTaggedNULL()) {
+        gcTagged(aux->keytable[i],aux->keytable[i]);
       }
     }
     gcTagged(aux->list, aux->list);

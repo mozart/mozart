@@ -16,6 +16,7 @@
 #pragma interface
 #endif
 
+#define OUTLINE
 #include <setjmp.h>
 
 #include "types.hh"
@@ -207,11 +208,14 @@ public:
                                GenCVariable * lv, GenCVariable * gv,
                                Bool prop);
 
+  Bool isLocalUVarOutline(TaggedRef var,TaggedRef *varPtr);
+  Bool isLocalSVarOutline(SVariable *var);
   Bool isLocalUVar(TaggedRef var);
+  Bool isLocalUVar(TaggedRef var,TaggedRef *varPtr);
   Bool isLocalSVar(TaggedRef var);
   Bool isLocalSVar(SVariable *var);
   Bool isLocalCVar(TaggedRef var);
-  Bool isLocalVariable(TaggedRef var);
+  Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
 
   void pushCall(TaggedRef def, int arity, RefsArray args);
   void pushDebug(TaggedRef def, int arity, RefsArray args);

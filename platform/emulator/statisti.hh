@@ -75,7 +75,7 @@ public:
   void initGcMsg(int level);
   void printGcMsg(int level);
 
-  void getStatistics(TaggedRef rec, TaggedRef enu);
+  OZ_Term getStatistics();
 
 #ifdef PROFILE
   /* these should alos use class StatCounter */

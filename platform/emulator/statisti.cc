@@ -166,22 +166,30 @@ static void recSetArg(OZ_Term record, char *feat, unsigned int val)
  *        enum(a:_  c:_  s:_  f:_)
  */
 
-void Statistics::getStatistics(TaggedRef rec, TaggedRef enu)
+OZ_Term Statistics::getStatistics()
 {
   unsigned int timeNow = osUserTime();
 
-  recSetArg(rec,"r",timeNow-(timeForGC.total+timeForLoading.total+timeForCopy.total));
-  recSetArg(rec,"g",timeForGC.total);
-  recSetArg(rec,"l",timeForLoading.total);
-  recSetArg(rec,"c",timeForCopy.total);
-  recSetArg(rec,"h",heapUsed.total+getUsedMemory());
-  recSetArg(rec,"s",osSystemTime());
-  recSetArg(rec,"u",timeNow);
+  OZ_Term r=OZ_pairAI("r",timeNow-(timeForGC.total+timeForLoading.total+
+                                   timeForCopy.total));
+  OZ_Term g=OZ_pairAI("g",timeForGC.total);
+  OZ_Term l=OZ_pairAI("l",timeForLoading.total);
+  OZ_Term c=OZ_pairAI("c",timeForCopy.total);
+  OZ_Term h=OZ_pairAI("h",heapUsed.total+getUsedMemory());
+  OZ_Term s=OZ_pairAI("s",osSystemTime());
+  OZ_Term u=OZ_pairAI("u",timeNow);
 
-  recSetArg(enu,"a",solveAlt.total);
-  recSetArg(enu,"c",solveClone.total);
-  recSetArg(enu,"s",solveSolved.total);
-  recSetArg(enu,"f",solveFailed.total);
+  OZ_Term a2=OZ_pairAI("a",solveAlt.total);
+  OZ_Term c2=OZ_pairAI("c",solveClone.total);
+  OZ_Term s2=OZ_pairAI("s",solveSolved.total);
+  OZ_Term f2=OZ_pairAI("f",solveFailed.total);
+  OZ_Term e=OZ_pair(OZ_CToAtom("e"),
+                    OZ_recordInit(OZ_CToAtom("enum"),
+                                  OZ_cons(a2,OZ_cons(c2,OZ_cons(s2,OZ_cons(f2,OZ_nil()))))));
+
+  return OZ_recordInit(OZ_CToAtom("stat"),
+                       OZ_cons(r,OZ_cons(g,OZ_cons(l,OZ_cons(c,OZ_cons(h,OZ_cons(s,OZ_cons(u,OZ_cons(e,nil())))))))));
+
 }
 
 

@@ -36,7 +36,7 @@ extern TaggedRef methApplHdl;
 
 Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, TaggedRef *X)
 {
-  Assert(isLiteral(label));
+  Assert(isFeature(label));
 
   SRecord *methods  = obj->getMethods();
 
@@ -54,7 +54,7 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, TaggedRef *X
     return StateLocked;
   Assert(isLiteral(state) || isSRecord(state));
 
-  TaggedRef method = methods ? methods->getFeature(tagged2Literal(label))
+  TaggedRef method = methods ? methods->getFeature(label)
                              : makeTaggedNULL();
   if (method == makeTaggedNULL())
     return NULL;
@@ -78,14 +78,14 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, TaggedRef *X
 
 Abstraction *getApplyMethod(Object *obj, TaggedRef label, int arity, TaggedRef state)
 {
-  Assert(isLiteral(label));
+  Assert(isFeature(label));
 
   DEREF(state,_1,_2);
   if (isAnyVar(state))
     return NULL;
 
   SRecord *methods  = obj->getMethods();
-  TaggedRef method = methods ? methods->getFeature(tagged2Literal(label))
+  TaggedRef method = methods ? methods->getFeature(label)
                              : makeTaggedNULL();
   if (method == makeTaggedNULL())
     return NULL;
@@ -885,6 +885,7 @@ loop:
             ozstat.incSolveAlt();
 
             waitBoard->setCommitted(solveBB);
+            Assert(!solveBB->isCommitted());
             solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
             if (!installScript(waitBoard->getScriptRef())) {
@@ -948,6 +949,7 @@ loop:
               Board *waitBoard = wa->getChildRefAt(clauseNo);
 
               waitBoard->setCommitted(solveBB);
+              Assert(!solveBB->isCommitted());
               solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
               if (!installScript(waitBoard->getScriptRef())) {
@@ -2163,7 +2165,7 @@ LBLsuspendThread:
         if (ar==getAdressArg(PC+5)) {
           XPC(3)=srec->getArg(getPosIntArg(PC+6));
         } else {
-          int i = srec->getTheArity()->find(tagged2Literal(feature));
+          int i = srec->getTheArity()->find(feature);
           if (i<0) {
             goto dotFailed;
           }

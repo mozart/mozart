@@ -14,6 +14,10 @@
 #include "tagged.hh"
 #include "value.hh"
 
+/*===================================================================
+ * global names and atoms
+ *=================================================================== */
+
 TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomLess, AtomGreater, AtomSame, AtomUncomparable,
   AtomInt, AtomFloat, AtomTuple, AtomProcedure, AtomCell,
@@ -80,9 +84,10 @@ void initLiterals()
 
 
 
-/*
+/*===================================================================
  * Literal
- */
+ *=================================================================== */
+
 
 int Literal::LiteralCurrentNumber = 0x200000;
 
@@ -108,9 +113,10 @@ Literal::Literal (Board *hb)
   seqNumber = LiteralCurrentNumber++;
 }
 
-/*
+
+/*===================================================================
  * ConstTerm
- */
+ *=================================================================== */
 
 char *ConstTerm::getPrintName()
 {
@@ -126,10 +132,9 @@ char *ConstTerm::getPrintName()
   }
 }
 
-/*
- * STuple
- */
-
+/*===================================================================
+ * Object
+ *=================================================================== */
 
 /*
  * append two *det* lists
@@ -162,9 +167,9 @@ TaggedRef Object::getArityList()
   return ret;
 }
 
-/* -----------------------------------------------------------------------
+/*===================================================================
  * Bigint memory management
- * ----------------------------------------------------------------------- */
+ *=================================================================== */
 
 static void *bigint_alloc(size_t size)
 {
@@ -189,18 +194,20 @@ void bigIntInit()
   mp_set_memory_functions(bigint_alloc,bigint_realloc,bigint_dealloc);
 }
 
-/*
+/*===================================================================
  * SRecord
- */
+ *=================================================================== */
+
 /************************************************************************/
 /*                      Useful Stuff: Lists                             */
 /************************************************************************/
 
 /*
- *      Precondition: lista and listb are increasing lists of literals.
+ *      Precondition: lista and listb are increasing lists of features.
  *      Test, whether the two lists are equal.
  * completely deref'd
  */
+
 
 
 static
@@ -208,7 +215,7 @@ Bool listequal(TaggedRef lista, TaggedRef listb)
 {
   while (isCons(lista)) {
     if (!isCons(listb)) return NO;
-    if ( !sameLiteral(head(lista),head(listb)) ) return NO;
+    if ( !featureEq(head(lista),head(listb)) ) return NO;
 
     lista = tail(lista);
     listb = tail(listb);
@@ -229,7 +236,7 @@ Bool listequal(TaggedRef lista, TaggedRef listb)
 static
 TaggedRef insert(TaggedRef a, TaggedRef list) {
 
-  Assert(isLiteral(a));
+  Assert(isFeature(a));
 
   if (isNil(list)) {
     return cons(a,list);
@@ -240,9 +247,7 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
   TaggedRef oldhead = head(list);
   CHECK_DEREF(oldhead);
 
-  Assert(isLiteral(oldhead));
-
-  switch (atomcmp(tagged2Literal(a),tagged2Literal(oldhead))) {
+  switch (featureCmp(a,oldhead)) {
 
   case 0:
     return makeTaggedNULL();
@@ -251,15 +256,20 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
     return cons(a,list);
 
   case 1:
+    {
+      TaggedRef rest = insert(a,tail(list));
+      return (rest == makeTaggedNULL()) ? rest : cons(oldhead,rest);
+    }
+
   default:
-    TaggedRef rest = insert(a,tail(list));
-    return (rest == makeTaggedNULL()) ? rest : cons(oldhead,rest);
+    error("insert");
+    return 0;
   }
 }
 
 /*
- *      Precondition: old is an increasing list of atoms, ins is a list of
- *      Atoms. Return the list obtained by succesively inserting all the
+ *      Precondition: old is an increasing list of features, ins is a list of
+ *      features. Return the list obtained by succesively inserting all the
  *      elements of ins into old.
  * old is deref'd
  */
@@ -285,8 +295,8 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old)
 }
 
 /*
- *      Precondition: lista and listb are strictly increasing lists of atoms.
- *      Return the merge of the two, without duplicates.
+ * Precondition: lista and listb are strictly increasing lists of features.
+ * Return the merge of the two, without duplicates.
  * everything is deref'd
  */
 
@@ -315,7 +325,7 @@ TaggedRef merge(TaggedRef lista, TaggedRef listb)
   TaggedRef b = head(listb);
   TaggedRef newHead;
 
-  switch (atomcmp(tagged2Literal(a),tagged2Literal(b))) {
+  switch (featureCmp(a,b)) {
 
   case 0:
     newHead = a;
@@ -364,14 +374,14 @@ void quicksort(TaggedRef** first, TaggedRef** last)
   if (first >= last)
     return;
   for (i = first, j = last; ; j--) {
-    while (i != j && atomcmp(**i, **j) <= 0)
+    while (i != j && featureCmp(**i, **j) <= 0)
       j--;
     if (i == j)
       break;
     swap(i, j);
     do
       i++;
-    while (i != j && atomcmp(**i, **j) <= 0);
+    while (i != j && featureCmp(**i, **j) <= 0);
     if (i == j)
       break;
     swap(i, j);
@@ -403,7 +413,7 @@ TaggedRef sortlist(TaggedRef list,int len)
   int p = 0, c = 1;
   while (isCons(cElem)) {
     LTuple* cElemPtr = tagged2LTuple(cElem);
-    if (atomcmp(*r[p], *r[c]) == 0) {
+    if (featureEq(*r[p], *r[c])) {
       tagged2LTuple(pElem)->setTail(cElemPtr->getTail());
     } else {
       pElem = cElem;
@@ -509,10 +519,10 @@ Arity::Arity ( TaggedRef entrylist )
   numberofcollisions = 0;
   hashmask = size-1;
   indextable = ::new int[size];
-  keytable = ::new Literal*[size];
-  for (int i=0 ; i<size ; keytable[i++] = NULL);
+  keytable = ::new TaggedRef[size];
+  for (int i=0 ; i<size ; keytable[i++] = makeTaggedNULL());
   while (isCons(entrylist)) {
-    add(tagged2Literal(head(entrylist)));
+    add(head(entrylist));
     entrylist = tail(entrylist);
   }
 }
@@ -523,11 +533,11 @@ Arity::Arity ( TaggedRef entrylist )
  *      Insert entry, assigning a new index.
  */
 
-void Arity::add( Literal *entry )
+void Arity::add( TaggedRef entry )
 {
-  int i=hashfold(entry->hash());
+  int i=hashfold(featureHash(entry));
   int step=scndhash(entry);
-  while ( keytable[i] != NULL ) {
+  while ( keytable[i] != makeTaggedNULL() ) {
     numberofcollisions++;
     i = hashfold(i+step);
   }
@@ -573,7 +583,7 @@ unsigned int ArityTable::hashvalue( TaggedRef list )
 {
   int i = 0;
   while(isCons(list)){
-    i += tagged2Literal(head(list))->hash();
+    i += featureHash(head(list));
     list = tail(list);
   }
   Assert(isNil(list));
@@ -745,10 +755,10 @@ void SRecord::setFeatures(TaggedRef proplist)
 
 Bool SRecord::setFeature(TaggedRef feature,TaggedRef value)
 {
-  CHECK_LIT(feature);
+  CHECK_FEATURE(feature);
   Assert(theArity!=NULL);
 
-  int i = theArity->find(tagged2Literal(feature));
+  int i = theArity->find(feature);
   if ( i == -1 ) {
     return NO;
   }
@@ -758,9 +768,9 @@ Bool SRecord::setFeature(TaggedRef feature,TaggedRef value)
 
 SRecord *SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
 {
-  CHECK_LIT(feature);
+  CHECK_FEATURE(feature);
 
-  int i = theArity->find(tagged2Literal(feature));
+  int i = theArity->find(feature);
   if ( i == -1 ) {
     return NULL;
   }
@@ -772,3 +782,7 @@ SRecord *SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
   setArg(i,value);
   return this;
 }
+
+/*===================================================================
+ *
+ *=================================================================== */

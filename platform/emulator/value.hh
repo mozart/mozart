@@ -15,9 +15,9 @@
 #pragma interface
 #endif
 
-/********************************************************************
+/*===================================================================
  * global names and atoms
- ********************************************************************/
+ *=================================================================== */
 extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomLess, AtomGreater, AtomSame, AtomUncomparable,
        AtomInt, AtomFloat, AtomTuple, AtomProcedure, AtomCell,
@@ -33,9 +33,9 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomError,
        AtomDot, AtomTagPrefix, AtomVarPrefix, AtomImagePrefix;
 
-/********************************************************************
+/*===================================================================
  * Literal
- ********************************************************************/
+ *=================================================================== */
 
 class Literal {
 private:
@@ -143,12 +143,9 @@ int atomcmp(TaggedRef a, TaggedRef b)
 
 
 
-#define CHECK_LIT(lab) \
-Assert(!(isRef(lab) || isAnyVar(lab) || !isLiteral(lab)));
-
-/********************************************************************
+/*===================================================================
  * Numbers
- ********************************************************************/
+ *=================================================================== */
 
 #include <math.h>
 #include <limits.h>
@@ -158,9 +155,9 @@ extern "C" {
 }
 
 
-/********************************************************************
+/*===================================================================
  * SmallInt
- ********************************************************************/
+ *=================================================================== */
 
 /* ----------------------------------------------------------------------
    SmallInts represented as follows
@@ -235,9 +232,15 @@ Bool sameSmallInt(TaggedRef a, TaggedRef b)
   return (a == b);
 }
 
-/********************************************************************
+inline
+Bool smallIntCmp(TaggedRef a, TaggedRef b)
+{
+  return smallIntLess(a,b) ? -1 : (sameSmallInt(a,b) ? 0 : 1);
+}
+
+/*===================================================================
  * Float
- ********************************************************************/
+ *=================================================================== */
 
 class Float {
 protected:
@@ -280,8 +283,11 @@ TaggedRef makeTaggedFloat(double i)
   return makeTaggedFloat(Float::newFloat(i));
 }
 
-/********************************************************************
+/*===================================================================
  * BigInt
+ *=================================================================== */
+/********************************************************************
+ *
  ********************************************************************/
 
 class BigInt {
@@ -397,9 +403,12 @@ Bool numberEq(TaggedRef a, TaggedRef b)
   }
 }
 
-/********************************************************************
+#define CHECK_LITERAL(lab) \
+Assert(!isRef(lab) && !isAnyVar(lab) && isLiteral(lab));
+
+/*===================================================================
  * STuple
- ********************************************************************/
+ *=================================================================== */
 
 class STuple {
 protected:
@@ -417,7 +426,7 @@ public:
   // no initialisation of args !!
   static STuple * newSTuple(TaggedRef lab, int sz) {
     Assert(sz > 0);
-    CHECK_LIT(lab);
+    CHECK_LITERAL(lab);
     int memSize = sizeof(STuple) + sizeof(TaggedRef) * (sz - 1);
     STuple * ret = (STuple *) int32Malloc(memSize);
     ret->label = lab;
@@ -524,9 +533,9 @@ TaggedRef argDeref(TaggedRef tuple, int i)
   return ret;
 }
 
-/********************************************************************
+/*===================================================================
  * LTuple
- ********************************************************************/
+ *=================================================================== */
 
 class LTuple {
 protected:
@@ -635,9 +644,9 @@ TaggedRef tailDeref(TaggedRef list)
   return ret;
 }
 
-/********************************************************************
+/*===================================================================
  * ConstTerm
- ********************************************************************/
+ *=================================================================== */
 
 /* must not match GCTAG (ie <> 13 (1101) !!!! */
 enum TypeOfConst {
@@ -685,9 +694,9 @@ public:
 };
 
 
-/********************************************************************
+/*===================================================================
  * HeapChunk
- ********************************************************************/
+ *=================================================================== */
 
 class HeapChunk: public ConstTerm {
 private:
@@ -717,9 +726,96 @@ public:
   HeapChunk * gc(void);
 };
 
-/********************************************************************
+/*===================================================================
  * SRecord: incl. Arity, ArityTable
- ********************************************************************/
+ *=================================================================== */
+
+
+inline
+Bool isFeature(TaggedRef lab) { return isLiteral(lab) || isInt(lab); }
+
+#define CHECK_FEATURE(lab) \
+Assert(!isRef(lab) && !isAnyVar(lab) && isFeature(lab));
+
+inline
+Bool featureEq(TaggedRef a,TaggedRef b)
+{
+  CHECK_FEATURE(a);
+  CHECK_FEATURE(b);
+  if (isLiteral(a)) {
+    // Note: if b is no literal this also returns NO
+    return a==b ? OK : NO;
+  }
+  TypeOfTerm tagA = tagTypeOf(a);
+  TypeOfTerm tagB = tagTypeOf(b);
+  if (tagA != tagB) return NO;
+  switch(tagA) {
+  case SMALLINT: return sameSmallInt(a,b);
+  case BIGINT:   return sameBigInt(a,b);
+  default:       return NO;
+  }
+}
+
+/*
+ * for sorting the arity one needs to have a total order
+ *
+ * SMALLINT < BIGINT < LITERAL
+ * return 0: if equal
+ *       -1: a<b
+ *        1: a>b
+ */
+inline
+int featureCmp(TaggedRef a,TaggedRef b)
+{
+  CHECK_FEATURE(a);
+  CHECK_FEATURE(b);
+  TypeOfTerm tagA = tagTypeOf(a);
+  TypeOfTerm tagB = tagTypeOf(b);
+  if (tagA != tagB) {
+    if (tagA==SMALLINT) return -1;
+    if (tagA==BIGINT) {
+      if (tagB==SMALLINT) return 1;
+      Assert(tagB==LITERAL);
+      return -1;
+    }
+    Assert(tagA==LITERAL);
+    return 1;
+  }
+  switch (tagA) {
+  case LITERAL:
+    return atomcmp(tagged2Literal(a),tagged2Literal(b));
+  case SMALLINT:
+    return smallIntCmp(a,b);
+  case BIGINT:
+    return tagged2BigInt(a)->cmp(tagged2BigInt(b));
+  default:
+    error("featureCmp");
+    return 0;
+  }
+}
+
+
+/*
+ * Hash function for Features:
+ * NOTE: all bigints are hashed to the same value
+ */
+inline
+int featureHash(TaggedRef a)
+{
+  CHECK_FEATURE(a);
+  TypeOfTerm tag = tagTypeOf(a);
+  switch (tag) {
+  case LITERAL:
+    return tagged2Literal(a)->hash();
+  case SMALLINT:
+    return (int) a;
+  case BIGINT:
+    return 75;
+  default:
+    error("featureHash");
+    return 0;
+  }
+}
 
 class Arity {
 friend class ArityTable;
@@ -737,19 +833,19 @@ private:
   int numberofentries;
   int numberofcollisions;
 
-  Literal* *keytable;
+  TaggedRef *keytable;
   int *indextable;
-  int scndhash(Literal* a) { return( ((a->getSeqNumber ())&7)<<1|1); }
+  int scndhash(TaggedRef a) { return ((featureHash(a)&7)<<1)|1; }
   int hashfold(int i) { return(i&hashmask); }
-  void add ( Literal* );
+  void add (TaggedRef);
 
 public:
-  int find(Literal *entry)   // return -1, if argument not found.
+  int find(TaggedRef entry)   // return -1, if argument not found.
   {
-    int i=hashfold(entry->hash());
+    int i=hashfold(featureHash(entry));
     int step=scndhash(entry);
     while ( keytable[i] != entry ) {
-      if ( keytable[i] == NULL) return(-1);
+      if ( keytable[i] == makeTaggedNULL()) return(-1);
       i = hashfold(i+step);
     }
     return(indextable[i]);
@@ -808,7 +904,7 @@ public:
 
   static SRecord *newSRecord(TaggedRef lab, Arity *f)
   {
-    CHECK_LIT(lab);
+    CHECK_LITERAL(lab);
     Assert(f != NULL);
     int sz = f->getSize();
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (sz - 1);
@@ -853,27 +949,19 @@ public:
 
   Arity* getTheArity () { return theArity; }
 
-  Bool hasFeature(Literal *feature)
+  Bool hasFeature(TaggedRef feature)
   {
+    CHECK_FEATURE(feature);
     return theArity->find(feature) >= 0;
   }
 
-  Bool hasFeature(TaggedRef feature) {
-    CHECK_LIT(feature);
-    return hasFeature(tagged2Literal(feature));
-  }
-
-  TaggedRef getFeature(Literal *feature)
+  TaggedRef getFeature(TaggedRef feature)
   {
+    CHECK_FEATURE(feature);
     Assert(theArity != NULL);
 
     int i = theArity->find(feature);
     return (i==-1) ? makeTaggedNULL() : getArg(i);
-  }
-
-  TaggedRef getFeature(TaggedRef feature) {
-    CHECK_LIT(feature);
-    return getFeature(tagged2Literal(feature));
   }
 
   Bool setFeature(TaggedRef feature,TaggedRef value);
@@ -919,9 +1007,9 @@ State adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
                      Bool recordFlag);
 
 
-/********************************************************************
+/*===================================================================
  * ObjectOrClass incl. ObjectClass, DeepObjectOrClass
- ********************************************************************/
+ *=================================================================== */
 
 /* Internal representation of Oz classes */
 
@@ -957,7 +1045,7 @@ public:
   TaggedRef getOzClass()        { return ozclass; }
   void setOzClass(TaggedRef cl) { ozclass = cl; }
 
-  TaggedRef getFeature(Literal *lit)
+  TaggedRef getFeature(TaggedRef lit)
   {
     return unfreeFeatures
       ? unfreeFeatures->getFeature(lit)
@@ -1025,17 +1113,13 @@ public:
   SRecord *getFreeRecord()          { return (SRecord *) getPtr(); }
   void setFreeRecord(SRecord *aRec) { setPtr(aRec); }
 
-  TaggedRef getFeature(Literal *lit)
+  TaggedRef getFeature(TaggedRef lit)
   {
     TaggedRef ret = getFreeRecord()->getFeature(lit);
     return (!ret && !isClass()) ? getClass()->getFeature(lit) : ret;
   }
 
   TaggedRef getArityList();
-  TaggedRef getFeature(TaggedRef lit)
-  {
-    return getFeature(tagged2Literal(lit));
-  }
   OZPRINT;
   OZPRINTLONG;
 };
@@ -1073,9 +1157,9 @@ Object *tagged2Object(TaggedRef term)
   return (Object *)tagged2Const(term);
 }
 
-/********************************************************************
+/*===================================================================
  * SChunk
- ********************************************************************/
+ *=================================================================== */
 
 class SChunk: public ConstTerm {
 friend void ConstTerm::gcConstRecurse(void);
@@ -1115,9 +1199,9 @@ Bool isChunk(TaggedRef t)
   return (isSChunk(t) || isObject(t)) ? OK : NO;
 }
 
-/********************************************************************
+/*===================================================================
  * Abstraction (incl. PrTabEntry, AssRegArray, AssReg)
- ********************************************************************/
+ *=================================================================== */
 
 enum KindOfReg {
   XReg = XREG,
@@ -1255,9 +1339,9 @@ Abstraction *tagged2Abstraction(TaggedRef term)
 }
 
 
-/********************************************************************
+/*===================================================================
  * Builtin (incl. BuiltinTabEntry)
- ********************************************************************/
+ *=================================================================== */
 
 // special builtins known in emulate
 enum BIType {
@@ -1392,9 +1476,9 @@ Builtin *tagged2Builtin(TaggedRef term)
   return (Builtin *)tagged2Const(term);
 }
 
-/********************************************************************
+/*===================================================================
  * Cell
- ********************************************************************/
+ *=================================================================== */
 
 class Cell: public ConstTerm {
 friend void ConstTerm::gcConstRecurse(void);
@@ -1429,8 +1513,8 @@ Cell *tagged2Cell(TaggedRef term)
   return (Cell *) tagged2Const(term);
 }
 
-/********************************************************************
+/*===================================================================
  *
- ********************************************************************/
+ *=================================================================== */
 
 #endif
