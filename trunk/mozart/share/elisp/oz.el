@@ -1398,6 +1398,15 @@ variable) and is used for fontification.")
 The second subexpression matches the definition's identifier
 \(if it is a variable) and is used for fontification.")
 
+(defconst oz-from-matcher
+  (concat "\\<from\\(\\([ \t]+"
+	  "\\([A-Z\300-\326\330-\336]"
+	  "[" oz-atom-or-variable-char ".]*\\|\\$"
+	  "\\|`[^`\n]*`\\)\\)+\\)")
+  "Regular expression matching class parents.
+The first subexpression matches the parents' identifiers
+\(if they are variables) and is used for fontification.")
+
 (defconst oz-meth-matcher
   (concat "\\<meth\\([ \t]+\\|[ \t]*!\\)"
 	  "\\([A-Z\300-\326\330-\336a-z\337-\366\370-\377]"
@@ -1451,6 +1460,8 @@ and is used for fontification.")
 		      '(2 font-lock-function-name-face))
 		(list oz-class-matcher
 		      '(2 font-lock-type-face))
+		(list oz-from-matcher
+		      '(1 font-lock-type-face))
 		(list oz-meth-matcher
 		      '(2 font-lock-function-name-face))
 		(cons oz-space-matcher-1
