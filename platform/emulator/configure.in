@@ -339,7 +339,8 @@ dnl *****************************************************************
 
 
 if test "$platform" != "win32-i486" ; then 
-    AC_CHECK_LIB(nsl, gethostbyaddr)
+    AC_CHECK_LIB(nsl, gethostbyaddr,,[
+      AC_CHECK_LIB(c, gethostbyaddr)])
     OZ_NEEDS_FUNC(gethostbyaddr)
     AC_CHECK_LIB(socket, socket)
     OZ_NEEDS_FUNC(socket)
