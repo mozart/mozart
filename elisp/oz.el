@@ -1801,6 +1801,9 @@ and is used for fontification.")
 ;;------------------------------------------------------------
 ;; Fontification for Oz-Machine Mode
 
+(defconst ozm-keywords-matcher
+  "\\<\\(true\\|false\\|unit\\)\\>")
+
 (defconst ozm-instr-matcher-1
   (concat
    "\t\\("
@@ -1851,7 +1854,8 @@ and is used for fontification.")
 	  "shallowTest[12]\\)(\\([A-Za-z0-9_]+\\|'[^'\n]'\\)"))
 
 (defconst ozm-font-lock-keywords-1
-  (list (list ozm-instr-matcher-1
+  (list (cons ozm-keywords-matcher 1)
+	(list ozm-instr-matcher-1
 	      '(1 font-lock-keyword-face))
 	(list ozm-instr-matcher-2
 	      '(1 font-lock-keyword-face))
@@ -2311,7 +2315,9 @@ of the procedure Browse."
 (defun oz-precompile-file (file)
   "Precompile an Oz file."
   (interactive "FPrecompile file: ")
-  (oz-send-string (concat "\\precompile '" file "'")))
+  (if oz-using-new-compiler
+      (error "Precompiling not supported with the new compiler")
+    (oz-send-string (concat "\\precompile '" file "'"))))
 
 (defun oz-find-dvi-file ()
   "View a file from the Oz documentation directory."
