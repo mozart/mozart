@@ -4,8 +4,12 @@
 declare
 
 fun {NewEmacs IMPORT}
-   \insert Standard.env
+   \insert 'Standard.env'
        = IMPORT.'Standard'
+   \insert 'SP.env'
+       = IMPORT.'SP'
+   \insert 'OP.env'
+       = IMPORT.'OP'
 
    TimeoutToUpdateBar = 430
    TimeoutToConfigBar = 70
