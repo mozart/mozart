@@ -363,8 +363,10 @@ class RunnableThreadBody {
 friend class Thread;
 private:
   TaskStack taskStack;
-  Object *self;              /* the self object pointer */
-  RunnableThreadBody *next;  /* for linking in the freelist */
+  union {
+    Object *self;              /* the self object pointer */
+    RunnableThreadBody *next;  /* for linking in the freelist */
+  } u;
   TaggedRef debugVar;        /* variable will be instantiated,
                                 if thread is being debugged */
 public:
@@ -385,10 +387,15 @@ public:
   RunnableThreadBody *gcRTBody();
   void gcRecurse();
 
-  void setSelf(Object *o) { Assert(self==NULL); self = o; }
+  void setSelf(Object *o) { Assert(u.self==NULL); u.self = o; }
   void makeRunning();
   TaggedRef getDebugVar()       { return debugVar; }
   void setDebugVar(TaggedRef v) { debugVar = v; }
+
+  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
+  {
+    taskStack.pushCont(pc,y,g,x,i);
+  }
 };
 
 //
@@ -623,8 +630,7 @@ public:
   void pushLocal();
   void pushCFunCont (OZ_CFun f, RefsArray  x, int n, Bool copyF);
   void pushCont (ProgramCounter pc,
-                 RefsArray y, RefsArray g, RefsArray x, int n,
-                 Bool copyF);
+                 RefsArray y, RefsArray g, RefsArray x, int n);
   void pushCont (Continuation *cont);
   //
   Bool isEmpty();
