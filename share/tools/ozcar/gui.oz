@@ -202,6 +202,9 @@ class Gui from Menu Dialog
       Gui,printEnv(frame:I vars:F.vars)
       SourceManager,scrollbar(file:F.file line:F.line
 			      color:ScrollbarStackColor what:stack)
+      case {Cget verbose} then
+	 {Debug.displayCode F.'PC' 7}
+      else skip end
    end
    
    meth SelectStackFrame(T)
