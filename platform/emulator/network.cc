@@ -1136,7 +1136,6 @@ public:
 class RemoteSiteManager: public FreeListManager{
 
   RemoteSite* newRemoteSite(){
-    OZ_warning("newRemoteSite");
     RemoteSite* s;
     FreeListEntry *f=getOne();
     if(f==NULL) {s=new RemoteSite();}
@@ -1157,7 +1156,6 @@ public:
     deleteRemoteSite(s);}
 
   RemoteSite* allocRemoteSite(Site *s, int r){ 
-    OZ_warning("newRemoteSite2");
     RemoteSite *rs=newRemoteSite();
     PD((SITE,"allocated a:%x ctr:%d rs:%x",s,r,rs));
     rs->init(s, r);
