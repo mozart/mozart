@@ -273,6 +273,37 @@ OZ_C_proc_begin(BIprocedureCode, 2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIprocedureCoord, 2)
+{
+  oz_declareNonvarArg(0,proc);
+  oz_declareArg(1,out);
+  if (!isProcedure(proc)) {
+    oz_typeError(0,"Procedure");
+  }
+  if (isBuiltin(proc)) {
+    oz_typeError(0,"Procedure (no builtin)");
+  }
+  Abstraction *a=tagged2Abstraction(proc);
+  ProgramCounter PC = a->getPred()->getPC();
+  ProgramCounter definitionPC = CodeArea::definitionStart(PC);
+  if (definitionPC != NOCODE) {
+    Reg reg;
+    int next;
+    TaggedRef file, line, column, predName;
+    CodeArea::getDefinitionArgs(definitionPC,reg,next,file,line,column,
+                                predName);
+    TaggedRef pairlist =
+      cons(OZ_pairA("file",file),
+           cons(OZ_pairA("line",line),
+                cons(OZ_pairAI("PC",ToInt32(definitionPC)),nil())));
+    if (column != makeTaggedNULL())
+      pairlist = cons(OZ_pairA("column",column),pairlist);
+    return oz_unify(out,OZ_recordInit(OZ_atom("def"), pairlist));
+  } else   // should never happen
+    return oz_unify(out,NameUnit);
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIlivenessX, 2)
 {
   OZ_declareIntArg(0,pc);
