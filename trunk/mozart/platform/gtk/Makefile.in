@@ -17,30 +17,31 @@ CFLAGS		= -I. -I$(VPATH) @CFLAGS@
 LDFLAGS		= @LDFLAGS@ $(LIBS)
 LN_S		= @LN_S@
 PERL            = @PERL@
+
 GOZWRIGHT       = $(PERL) $(VPATH)/gozwright.pl
 GOZCONST        = $(PERL) $(VPATH)/genconstants.pl
 
 GTK_HEADER_PREFIX = @GTK_HDRS@
 GDK_HEADER_PREFIX = @GDK_HDRS@
 
-GDK_HEADERS = $(GDK_HEADER_PREFIX)/gdk.h          \
-	      $(GDK_HEADER_PREFIX)/gdkcursors.h   \
-	      $(GDK_HEADER_PREFIX)/gdki18n.h      \
-	      $(GDK_HEADER_PREFIX)/gdkkeysyms.h   \
-	      $(GDK_HEADER_PREFIX)/gdkrgb.h       \
-	      $(GDK_HEADER_PREFIX)/gdktypes.h
+GDK_HEADERS     = $(GDK_HEADER_PREFIX)/gdk.h             \
+	          $(GDK_HEADER_PREFIX)/gdkcursors.h      \
+	          $(GDK_HEADER_PREFIX)/gdki18n.h         \
+	          $(GDK_HEADER_PREFIX)/gdkkeysyms.h      \
+                  $(GDK_HEADER_PREFIX)/gdkrgb.h          \
+                  $(GDK_HEADER_PREFIX)/gdktypes.h
 
-GTK_HEADERS = $(GTK_HEADER_PREFIX)/gtk.h             \
-              $(GTK_HEADER_PREFIX)/gtk[a-h]*.h       \
-              $(GTK_HEADER_PREFIX)/gtkimage.h        \
-              $(GTK_HEADER_PREFIX)/gtkinputdialog.h  \
-              $(GTK_HEADER_PREFIX)/gtkitem.h         \
-              $(GTK_HEADER_PREFIX)/gtkitemfactory.h  \
-	      $(GTK_HEADER_PREFIX)/gtk[j-z]*.h
+GTK_HEADERS     = $(GTK_HEADER_PREFIX)/gtk.h             \
+                  $(GTK_HEADER_PREFIX)/gtk[a-h]*.h       \
+                  $(GTK_HEADER_PREFIX)/gtkimage.h        \
+                  $(GTK_HEADER_PREFIX)/gtkinputdialog.h  \
+                  $(GTK_HEADER_PREFIX)/gtkitem.h         \
+                  $(GTK_HEADER_PREFIX)/gtkitemfactory.h  \
+	          $(GTK_HEADER_PREFIX)/gtk[j-z]*.h
 
-ALL_HEADERS = $(GDK_HEADERS) $(GTK_HEADERS)
+ALL_HEADERS     = $(GDK_HEADERS) $(GTK_HEADERS)
 
-OBJECTS = goz.o	gozinterface.o gozsupport.o
+OBJECTS         = goz.o gozinterface.o gozsupport.o
 
 .SUFFIXES: .cc .o .c .h $(SUFFIXES)
 
@@ -54,7 +55,7 @@ $(OBJECTS): %.o: %.c
 	oztool $(CXX) $(CFLAGS) -c $(ALL_INCLUDES) $< -o $@
 
 goz.c: $(ALL_HEADERS)
-	$(GOZWRIGHT) --c-wrappers $(ALL_HEADERS) > goz.c
+	$(GOZWRIGHT) --c-wrappers $^ > $@
 
 constantsdeclarations.oz:
 	$(GOZCONST)
@@ -63,10 +64,10 @@ constantsdefinitions.oz:
 	$(GOZCONST)
 
 gozinterface.c: goz.c gozsupport.c
-	$(GOZWRIGHT) --interface goz.c gozsupport.c > gozinterface.c
+	$(GOZWRIGHT) --interface $^ > $@
 
 GTK.so-$(PLATFORM): $(OBJECTS)
-	oztool ld $(LDFLAGS)  $(OBJECTS) -o $@
+	oztool ld $(LDFLAGS) $(OBJECTS) -o $@
 
 clean:
 	-rm -f gozinterface.c goz.c *.o *~ core
