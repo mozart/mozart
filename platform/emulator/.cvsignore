@@ -1,4 +1,4 @@
-solaris-sparc linux-i486 netbsd-i486
+solaris-sparc linux-i486 netbsd-i486 netbsd-m68k
 config.h version.cc oz.emulator.bin
 Makefile Makefile.rules Makefile.vars
 conf.h
