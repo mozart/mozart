@@ -75,11 +75,9 @@ veryclean: clean
 distclean: veryclean
 	-rm -f conf.h config.* Makefile OzWish.pbxproj/project.pbxproj
 
-install: $(PLATFORMDIR) $(OZWISHDIR) $(OZWISH) $(PROVIDETCLLIBS)
-	$(INSTALL_BIN) $(OZWISH) $(OZWISHDIR)
+install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS)
+	cd OzWish.pbxproj && pbxbuild SYMROOT=$(BUILDTOP)/platform/wish DSTROOT=/ install
 
-$(OZWISHDIR):
-	$(INSTALL_DIR) $@
 else
 ######################################################################
 # ANYTHING NON-DARWIN
