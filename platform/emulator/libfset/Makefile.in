@@ -38,15 +38,15 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 all: $(FSETTARGETS)
 
-.PHONY: libfset.a libfset.so
+.PHONY: libFSP.a libFSP.so
 
-libfset.a: ../libfset.a
-libfset.so: ../libfset.so
+libFSP.a: ../libFSP.a
+libFSP.so: ../libFSP.so
 
-../libfset.so: $(FSETLIBOBJS)
+../libFSP.so: $(FSETLIBOBJS)
         $(DYNLD) -o $@ $(FSETLIBOBJS)
 
-../libfset.a: $(FSETLIBOBJS)
+../libFSP.a: $(FSETLIBOBJS)
         $(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
 depend:: Makefile $(FSETLIBSRCS)

@@ -31,12 +31,12 @@
  * The builtin table
  */
 
-#ifndef STATIC_LIBFSET
+#ifndef MODULES_LINK_STATIC
 
-#include "../libfset.dcl"
+#include "../modFSP.dcl"
 
 OZ_C_proc_interface oz_interface[] = {
-#include "../libfset.tbl"
+#include "../modFSP.tbl"
  {0,0,0,0}
 };
 

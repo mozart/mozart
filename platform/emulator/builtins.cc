@@ -4323,38 +4323,38 @@ TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I)
 }
 
 #ifdef MODULES_LINK_STATIC
-#include "libwif.dcl"
+#include "modWif.dcl"
 
 static OZ_C_proc_interface libwif_interface[] = {
-#include "libwif.tbl"
+#include "modWif.tbl"
  {0,0,0,0}
 };
 
-#include "libfd.dcl"
+#include "modFDP.dcl"
 
 static OZ_C_proc_interface libfd_interface[] = {
-#include "libfd.tbl"
+#include "modFDP.tbl"
  {0,0,0,0}
 };
 
-#include "libschedule.dcl"
+#include "modSchedule.dcl"
 
 static OZ_C_proc_interface libschedule_interface[] = {
-#include "libschedule.tbl"
+#include "modSchedule.tbl"
  {0,0,0,0}
 };
 
-#include "libfset.dcl"
+#include "modFSP.dcl"
 
 static OZ_C_proc_interface libset_interface[] = {
-#include "libfset.tbl"
+#include "modFSP.tbl"
  {0,0,0,0}
 };
 
-#include "libparser.dcl"
+#include "modParser.dcl"
 
 static OZ_C_proc_interface libparser_interface[] = {
-#include "libparser.tbl"
+#include "modParser.tbl"
  {0,0,0,0}
 };
 
@@ -4368,23 +4368,23 @@ OZ_BI_define(BIdlStaticLoad,1,1)
   OZ_C_proc_interface * I = 0;
 
 #ifdef MODULES_LINK_STATIC
-  if (!strcmp(basename, "libwif.so")) {
+  if (!strcmp(basename, "libWif.so")) {
      I = libwif_interface;
      goto success;
   }
-  if (!strcmp(basename, "libfd.so")) {
+  if (!strcmp(basename, "libFDP.so")) {
      I = libfd_interface;
      goto success;
   }
-  if (!strcmp(basename, "libschedule.so")) {
+  if (!strcmp(basename, "libSchedule.so")) {
      I = libschedule_interface;
      goto success;
   }
-  if (!strcmp(basename, "libfset.so")) {
+  if (!strcmp(basename, "libFSP.so")) {
      I = libset_interface;
      goto success;
   }
-  if (!strcmp(basename, "libparser.so")) {
+  if (!strcmp(basename, "libParser.so")) {
      I = libparser_interface;
      goto success;
   }
