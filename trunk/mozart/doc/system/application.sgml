@@ -108,6 +108,13 @@
 
       <P>
         <List>
+          <Entry><Span class=index/<<init>>/
+	    <Index/<<Module>><And><<manager>><And><<init>>/
+          <Synopsis>
+	    <<<init()>>>
+          <Item>
+            Initializes the module manager.
+
           <Entry><Span class=index/<<link>>/
 	    <Index/<<Module>><And><<manager>><And><<link>>/
           <Synopsis>
@@ -125,8 +132,8 @@
           <Entry><Span class=index/<<apply>>/
 	    <Index/<<Module>><And><<manager>><And><<apply>>/
           <Synopsis>
-	    <<<link(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)>>>
-	    <<<link(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)>>>
+	    <<<apply(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)>>>
+	    <<<apply(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)>>>
           <Item>
             Applies the functor ?_{Functor}, where the url ?_{UrlV} (a
             virtual string) or the module name ?_{NameV} (a virtual
@@ -142,8 +149,8 @@
           <Entry><Span class=index/<<enter>>/
 	    <Index/<<Module>><And><<manager>><And><<enter>>/
           <Synopsis>
-	    <<<link(url:?+{UrlV} ?_{ModuleR})>>>
-	    <<<link(name:?+{NameV} ?_{ModuleR})>>>
+	    <<<enter(url:?+{UrlV} ?_{ModuleR})>>>
+	    <<<enter(name:?+{NameV} ?_{ModuleR})>>>
           <Item>
             Installs the module ?_{ModuleR} under the url ?_{UrlV} (a
             virtual string) or the module name ?_{NameV} (a virtual
@@ -161,6 +168,10 @@
 
     <Section id="Section.Modules.Inherit">
       <Title/Customizing Module Managers/
+
+      <P>
+        This still stinks completely.
+      </P>
 
     </Section>
 
