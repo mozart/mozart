@@ -328,15 +328,24 @@ Case(CREATEVARIABLEMOVEY)
       DISPATCH(4);
     } else if (oz_isVariable(term)) {
       Assert(isCVar(term));
-      SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
-      // mm2: optimize simple variables: use write mode
-      // fill w/unb. var.
-      srecord->initArgs();
-      TaggedRef srecordRef=makeTaggedSRecord(srecord);
-      tmpRet = oz_var_bindINLINE(tagged2CVar(term),termPtr,srecordRef,
-                                 NOFLATGUARD);
+      TaggedRef record;
+      if (DIST_UNIFY_FIX && oz_onToplevel()) {
+        RegAccess(HelpReg,getRegArg(PC+3)) = record = OZ_newVariable();
+        buildRecord(PC,X,Y,CAP);
+        record = oz_deref(record);
+        //message("buildRecord: %s\n",toC(record));
+        RegAccess(HelpReg,getRegArg(PC+3)) = makeTaggedRef(termPtr);
+      } else {
+        SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
+        // mm2: optimize simple variables: use write mode
+        // fill w/unb. var.
+        srecord->initArgs();
+        record=makeTaggedSRecord(srecord);
+      }
+      tmpRet = oz_var_bindINLINE(tagged2CVar(term),termPtr,record,NOFLATGUARD);
+
       if (tmpRet==PROCEED) {
-        sPointer = srecord->getRef();
+        sPointer = tagged2SRecord(oz_deref(record))->getRef();
         SetReadMode;
         DISPATCH(4);
       }
@@ -624,13 +633,24 @@ Case(CREATEVARIABLEMOVEY)
                    DISPATCH(2);
                  } else if (oz_isVariable(term)) {
                    Assert(isCVar(term));
-                   LTuple *ltuple = new LTuple();
-                   sPointer = ltuple->getRef();
-                   ltuple->setHead(e->currentUVarPrototype());
-                   ltuple->setTail(e->currentUVarPrototype());
+                   TaggedRef record;
+                   if (DIST_UNIFY_FIX && oz_onToplevel()) {
+                     TaggedRef savedTerm = Reg1(reg);
+                     Reg1(reg) = record = OZ_newVariable();
+                     buildRecord(PC,X,Y,CAP);
+                     record = oz_deref(record);
+                     sPointer = tagged2LTuple(record)->getRef();
+                     //message("buildRecord: %s\n",toC(record));
+                     Reg1(reg) = savedTerm;
+                   } else {
+                     LTuple *ltuple = new LTuple();
+                     sPointer = ltuple->getRef();
+                     ltuple->setHead(e->currentUVarPrototype());
+                     ltuple->setTail(e->currentUVarPrototype());
+                     record = makeTaggedLTuple(ltuple);
+                   }
                    tmpRet=oz_var_bindINLINE(tagged2CVar(term),termPtr,
-                                            makeTaggedLTuple(ltuple),
-                                            NOFLATGUARD);
+                                            record,NOFLATGUARD);
                    if (tmpRet==PROCEED) {
                      SetReadMode;
                      DISPATCH(2);
