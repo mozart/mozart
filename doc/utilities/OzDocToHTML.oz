@@ -231,7 +231,7 @@ define
                        end
                        case Ups of nil then EMPTY
                        elseof Node#_|_ then
-                          td(a(href: Node VERBATIM('- Up -')))
+                          td(a(href: Node PCDATA('- Up -')))
                        end
                        case {GetNext Rest 0} of unit then EMPTY
                        elseof To then td(a(href: To PCDATA('Next >>')))
@@ -631,9 +631,26 @@ define
                       {@Reporter warn(kind: OzDocWarning
                                       msg: 'Reference to undefined chunk'
                                       items: [hint(l: 'Chunk title' m: VS)])}
-                      VERBATIM(Name)
-                   elseof Tos then a(href: {List.last Tos} VERBATIM(Name))
+                      PCDATA(Name)
+                   elseof Tos then a(href: {List.last Tos}.1 PCDATA(Name))
                    end
+                end}
+               {ForAll {Dictionary.items @ChunkDefinitions}
+                proc {$ Tos}
+                   {FoldLTail Tos
+                    fun {$ Next To#ChunkNav|Rest}
+                       ChunkNav = SEQ([case Rest of Prev#_|_ then
+                                          SEQ([PCDATA(' ')
+                                               a(href: Prev PCDATA('<<'))])
+                                       [] nil then EMPTY
+                                       end
+                                       case Next of unit then EMPTY
+                                       else
+                                          SEQ([PCDATA(' ')
+                                               a(href: Next PCDATA('>>'))])
+                                       end])
+                       To
+                    end unit _}
                 end}
                unit
             %-----------------------------------------------------------
@@ -1110,28 +1127,29 @@ define
             %-----------------------------------------------------------
             % Literate Programming
             %-----------------------------------------------------------
-            [] chunk then Title Label Name Left Right Body in
+            [] chunk then Title Label Name ChunkNav Left Right Body in
                OzDocToHTML, Batch(M.1=title(...) 1 ?Title)
                ToGenerate <- Label|@ToGenerate
                Name = {VirtualString.toAtom
                        {HTML.toVirtualString {HTML.clean Title}}}
                {Dictionary.put @ChunkDefinitions Name
-                @CurrentNode#"#"#Label|
+                (@CurrentNode#"#"#Label)#ChunkNav|
                 {Dictionary.condGet @ChunkDefinitions Name nil}}
-               Left = span('class': [chunkborder] VERBATIM('&lt;'))
-               Right = span('class': [chunkborder] VERBATIM('&gt;='))
+               Left = span('class': [chunkborder] PCDATA('<'))
+               Right = span('class': [chunkborder] PCDATA('>='))
                Body = OzDocToHTML, BatchCode(M.2 1 $)
                BLOCK(dl(COMMON: @Common
                         dt(span('class': [chunktitle]
-                                SEQ([Left a(name: Label Title) Right])))
+                                SEQ([Left a(name: Label Title) Right]))
+                           ChunkNav)
                         dd('class': [code] Body)))
             [] 'chunk.ref' then Title LinkedTitle Left Right in
                OzDocToHTML, Batch(M 1 ?Title)
                ChunkLinks <- ({VirtualString.toAtom
                                {HTML.toVirtualString {HTML.clean Title}}}#
                               LinkedTitle)|@ChunkLinks
-               Left = span('class': [chunkborder] VERBATIM('&lt;'))
-               Right = span('class': [chunkborder] VERBATIM('&gt;'))
+               Left = span('class': [chunkborder] PCDATA('<'))
+               Right = span('class': [chunkborder] PCDATA('>'))
                span(COMMON: @Common
                     'class': [chunktitle]
                     SEQ([Left LinkedTitle Right]))
