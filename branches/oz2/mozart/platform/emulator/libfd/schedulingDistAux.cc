@@ -300,6 +300,20 @@ OZ_Return FirstsLasts::propagate(void)
 
       findResource:
 
+	// if only one resource available, take this without search!
+
+	if ((reg_nb_tasks_size == 1) && (reg_ordered_resources[0] == 0)){
+	  reg_resource = 0;
+	  int ct = reg_nb_tasks[0];
+	  int rStart = resource_starts[0];
+	  for (j = 0; j < ct; j++)
+	    all_fds[0][j].read(reg_fds[rStart+j]);
+	  considered_resources[nb_considered_resources++] = 0;
+	  goto afterFind;
+	}
+
+
+
 	for (i=0; i<reg_nb_tasks_size; i++) {
 	  if (reg_ordered_resources[i] == 0) {
 	    int current_slack = fd_sup;
@@ -389,7 +403,6 @@ OZ_Return FirstsLasts::propagate(void)
 	
       afterFind:
 
-
 	if (reg_resource == -1) {
 	  if (OZ_unify(new_out, OZ_atom("finished")) == FAILED) 
 	    goto failure;
@@ -432,7 +445,6 @@ OZ_Return FirstsLasts::propagate(void)
 	      }
 	    }
 	  }
-	  
 	  
 	  // compute firsts and lasts
 	  int number_of_firsts = 0;
