@@ -79,7 +79,7 @@ Bool SolveActor::isBlocked() {
   return ((getThreads()==0) && !am.isStableSolve(this));
 }
 
-Bool SolveActor::checkExtSuspList() {
+void SolveActor::clearSuspList(Thread *killThr = NULL) {
   SuspList *tmpSuspList = suspList;
 
   suspList = NULL;
@@ -99,6 +99,7 @@ Bool SolveActor::checkExtSuspList() {
      */
 
     if (thr->isDeadThread () ||
+	killThr == thr ||
 	(thr->isPropagated () && !(thr->isPropagator()))) {
       tmpSuspList = tmpSuspList->dispose ();
       continue;
@@ -123,9 +124,7 @@ Bool SolveActor::checkExtSuspList() {
       addSuspension (helpList);
     }
   }
-
-  return (suspList == NULL);
-}
+}  
 
 SolveActor::SolveActor(Board *bb, int prio)
  : Actor (Ac_Solve, bb, prio), suspList (NULL), threads (0), cps(NULL), 
