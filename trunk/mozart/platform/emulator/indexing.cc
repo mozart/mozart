@@ -43,40 +43,45 @@ EntryTable newEntryTable(int sz)
 }
 
 
-int *IHashTable::add(Literal *constant, int label) 
+int *IHashTable::addToTable(EntryTable &table, HTEntry *entry, int pos)
 {
   numentries++;
-  unsigned int hsh = hash(constant->hash());
-  
-  if (literalTable == NULL)
-    literalTable = newEntryTable(size); 
-  
-  /* we do not check, whether it is already in there */
-  literalTable[hsh] = new HTEntry(constant,label,literalTable[hsh]);
 
-  return literalTable[hsh]->getLabelRef();
+  if (table == NULL)
+    table = newEntryTable(size);
+  
+  /* append new entries to the end, so (un)marshalling will preserve order */
+  HTEntry *aux = table[pos];
+  if (aux==NULL) {
+    table[pos] = entry;
+  } else {
+    while(aux->getNext()) {
+      aux = aux->getNext();
+    }
+    aux->setNext(entry);
+  }
+
+  return entry->getLabelRef();
 }
+
+
+int *IHashTable::add(Literal *constant, int label) 
+{
+  unsigned int hsh = hash(constant->hash());
+  return addToTable(literalTable,new HTEntry(constant,label),hsh);
+}
+
 
 int *IHashTable::add(Literal *name, SRecordArity arity,
 				int label)
 {
-  numentries++;
-  unsigned int hsh = hash(name->hash());
-  
-  if (functorTable == NULL)
-    functorTable = newEntryTable(size); 
-  
-  /* we do not check, whether it is already in there */
-  functorTable[hsh] = new HTEntry(name, arity, label, functorTable[hsh]);
-
-  return functorTable[hsh]->getLabelRef();
+  unsigned int hsh = hash(name->hash());  
+  return addToTable(functorTable,new HTEntry(name, arity, label),hsh);
 }
 
 
 int *IHashTable::add(TaggedRef number, int label)
 {
-  numentries++;
-
   unsigned int hsh;
   switch (tagTypeOf(number)) {
 
@@ -88,13 +93,7 @@ int *IHashTable::add(TaggedRef number, int label)
 
   hsh = hash(hsh);
 
-  if (numberTable == NULL)
-    numberTable = newEntryTable(size); 
-  
-  /* we do not check, whether it is already in there */
-  numberTable[hsh] = new HTEntry(number, label, numberTable[hsh]);
-
-  return numberTable[hsh]->getLabelRef();
+  return addToTable(numberTable,new HTEntry(number,label),hsh);
 }
 
 
