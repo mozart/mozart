@@ -40,19 +40,6 @@
 #include <sys/select.h>
 #endif
 
-#ifdef IRIX5_MIPS
-// #include <bstring.h>
-#endif
-
-#ifdef LINUX
-// #include <sys/utsname.h>
-#endif
-
-#ifdef WINDOWS
-/* can be removed if osSelect is adapted */
-#include "am.hh"
-#endif
-
 #include "tagged.hh"
 #include "os.hh"
 
@@ -230,9 +217,18 @@ extern "C" void __builtin_delete (void *ptr)
 #include <time.h>
 #endif
 
+
+
+
+/* abstract timeout values */
+#define WAIT_INFINITE (int*) -1
+#define WAIT_NULL     (int*) -2
+
+
+
 #ifdef WINDOWS
 
-class StreamReader {
+class StreamReaders {
 public:
   int fd;
   HANDLE char_avail;
@@ -301,13 +297,34 @@ err:
 }
 
 
-int win32_wait(fd_set *fds)
+static
+int getAvailFDs(int nfds, fd_set *readfds)
 {
+  FD_ZERO(readfds);
+  int ret=0, i;
+  for (i=0; i<nfds; i++) {
+    if (readers[i].status==OK) {
+      FD_SET(i,readfds);
+      ret++;
+    }
+  }
+  return ret;
+}
+
+
+static
+Bool win32Select(int maxfd, fd_set *fds, int *timeout)
+{
+  if (timeout == WAIT_NULL)
+    return getAvailFDs(readfds);
+
+  int wait = (timeout==WAIT_INFINITE) ? INFINITE : *timeout;
+
   HANDLE wait_hnd[OPEN_MAX];
 
   int nh = 0;
   int i;
-  for (i=0; i< OPEN_MAX; i++) {
+  for (i=0; i< maxfd; i++) {
     if (FD_ISSET(i,fds) && readers[i].thrd!=NULL) {
       wait_hnd[nh++] = readers[i].char_avail;
     }
@@ -316,84 +333,27 @@ int win32_wait(fd_set *fds)
   if (nh == 0) {
     /* Nothing to wait on, so fail */
     errno = ECHILD;
-    return -1;
+    return NO;
   }
 
-  DWORD active = WaitForMultipleObjects(nh, wait_hnd, FALSE, INFINITE);
+  DWORD active = WaitForMultipleObjects(nh, wait_hnd, FALSE, wait);
 
   if (active == WAIT_FAILED) {
     errno = EBADF;
-    return -1;
+    return NO;
   }
   if (active == WAIT_TIMEOUT) {
-    /* Should never happen */
-    errno = EINVAL;
-    return -1;
-  }
-  if (active >= WAIT_OBJECT_0 &&
-      active < WAIT_OBJECT_0+MAXIMUM_WAIT_OBJECTS) {
-    active -= WAIT_OBJECT_0;
-  } else if (active >= WAIT_ABANDONED_0 &&
-           active < WAIT_ABANDONED_0+MAXIMUM_WAIT_OBJECTS) {
-    active -= WAIT_ABANDONED_0;
-  }
-
-  /* search fd */
-  for (i=0; i<OPEN_MAX; i++) {
-    if (wait_hnd[active] == readers[i].char_avail) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
-int readyfd = -1;
-
-#endif
-
-
-/* The prototypes for select are wrong on HP-UX 9.x */
-static int osSelect(int nfds, fd_set *readfds, fd_set *writefds,
-                    fd_set *exceptfds, struct timeval *timeout)
-{
-#ifdef WINDOWS
-  if (timeout != NULL)
     return 0;
+  }
 
-  readyfd = -1;
-  int fd = win32_wait(readfds);
-  if (fd<0)
-    return fd;
-  FD_ZERO(readfds);
-  FD_SET(fd,readfds);
-  readyfd = fd;
-  return 1;
-#else
+  if (timeout!=WAIT_INFINITE) {
+    *timeout = 0;  /* must be corrected !!!!! */
+  }
 
-#ifdef HPUX_700
-  return select(nfds, (int*)readfds,(int*)writefds,(int*)exceptfds,timeout);
-#else
-  return select(nfds, readfds,writefds,exceptfds,timeout);
-#endif
-
-#endif  /* WINDOWS */
+  return getAvailFDs(maxfd, fds);
 }
 
-void osInitSignals()
-{
-#ifndef DEBUG_DET
-  osSignal(SIGINT,handlerINT);
-  osSignal(SIGTERM,handlerTERM);
-  osSignal(SIGSEGV,handlerSEGV);
-  osSignal(SIGBUS,handlerBUS);
-  osSignal(SIGPIPE,handlerPIPE);
-  osSignal(SIGUSR1,handlerUSR1);
-  osSignal(SIGCHLD,handlerCHLD);
-  osSignal(SIGFPE,handlerFPE);
-  osSignal(SIGALRM,handlerALRM);
 #endif
-}
 
 void osSetAlarmTimer(int t, Bool interval)
 {
@@ -427,6 +387,63 @@ int osGetAlarmTimer()
   }
 
   return (timer.it_value.tv_sec * 1000) + (timer.it_value.tv_usec/1000);
+#endif
+}
+
+
+
+/* wait *timeout msecs on given fds
+ * return number of fds ready and return in *timeout msecs left
+ */
+static
+int osSelect(int nfds, fd_set *readfds, fd_set *writefds, int *timeout)
+{
+#ifdef WINDOWS
+
+  return win32Select(nfds,readfds,timeout);
+
+#else
+
+  struct timeval timeoutstruct, *timeoutptr;
+  if (timeout == WAIT_INFINITE) {
+    timeoutptr=NULL;
+  } else if (timeout == WAIT_NULL) {
+    timeoutstruct.tv_sec = 0;
+    timeoutstruct.tv_usec = 0;
+    timeoutptr = &timeoutstruct;
+  } else {
+    timeoutptr=NULL;
+    osSetAlarmTimer(*timeout,NO);
+    osUnblockSignals();
+  }
+
+/* The prototypes for select are wrong on HP-UX 9.x */
+#ifdef HPUX_700
+  int ret = select(nfds,(int*)readfds,(int*)writefds,NULL,timeoutptr);
+#else
+  int ret = select(nfds,readfds,writefds,NULL,timeoutptr);
+#endif
+
+  if (timeout!=WAIT_INFINITE && timeout!=WAIT_NULL) {
+    *timeout = osGetAlarmTimer();
+    osBlockSignals();
+  }
+  return ret;
+#endif  /* WINDOWS */
+}
+
+void osInitSignals()
+{
+#ifndef DEBUG_DET
+  osSignal(SIGINT,handlerINT);
+  osSignal(SIGTERM,handlerTERM);
+  osSignal(SIGSEGV,handlerSEGV);
+  osSignal(SIGBUS,handlerBUS);
+  osSignal(SIGPIPE,handlerPIPE);
+  osSignal(SIGUSR1,handlerUSR1);
+  osSignal(SIGCHLD,handlerCHLD);
+  osSignal(SIGFPE,handlerFPE);
+  osSignal(SIGALRM,handlerALRM);
 #endif
 }
 
@@ -519,6 +536,10 @@ void osClrWatchedFD(int fd, int mode)
 {
   CheckMode(mode);
   FD_CLR(fd,&globalFDs[mode]);
+#ifdef WINDOWS
+  Assert(mode==SEL_READ);
+  deleteReader(fd);
+#endif
 }
 
 Bool osIsWatchedFD(int fd, int mode)
@@ -538,17 +559,14 @@ int osBlockSelect(int ticks)
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
   int wait = osClockTickToMs(ticks);
-  osSetAlarmTimer(wait,NO);
-  osUnblockSignals();
-  int ret = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],NULL,NULL);
-  osBlockSignals();
-  int ticksleft = osMsToClockTick(osGetAlarmTimer());
+  int ret = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&wait);
+  int ticksleft = osMsToClockTick(wait);
   return ticksleft;
 }
 
 /* osClearSocketErrors
-     remove the closed/failed descriptors from the fd_sets
-   */
+ * remove the closed/failed descriptors from the fd_sets
+ */
 void osClearSocketErrors()
 {
   for (int i = 0; i < openMax; i++) {
@@ -577,17 +595,11 @@ int osTestSelect(int fd, int mode)
   if (GetFileType(h) != FILE_TYPE_PIPE)
     return 1;
 
-  //  if (readers[fd].thrd==NULL)
-  //  return -1;
-
-  return readers[fd].status;
-
+  if (readers[fd].thrd==NULL)
+    return -1;
+  return (readers[fd].status==OK) ? 1 : 0;
 #else
   while(1) {
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 0;
-
     fd_set fdset, *readFDs=NULL, *writeFDs=NULL;
     FD_ZERO(&fdset);
     FD_SET(fd,&fdset);
@@ -597,7 +609,7 @@ int osTestSelect(int fd, int mode)
     } else {
       writeFDs = &fdset;
     }
-    int ret = osSelect(fd+1, readFDs, writeFDs, NULL, &timeout);
+    int ret = osSelect(fd+1, readFDs, writeFDs, WAIT_NULL);
     if (ret >= 0 || errno != EINTR) {
       return ret;
     }
@@ -614,22 +626,11 @@ static fd_set tmpFDs[2];
 /* signals are blocked */
 int osFirstSelect()
 {
-#ifdef WINDOWS
-  FD_ZERO(&tmpFDs[SEL_READ]);
-  FD_ZERO(&tmpFDs[SEL_WRITE]);
-  if (readyfd == -1)
-    return 0;
-  FD_SET(readyfd,&tmpFDs[SEL_READ]);
-  return 1;
-#else
  loop:
-  struct timeval timeout;
-  timeout.tv_sec = 0;
-  timeout.tv_usec = 0;
   tmpFDs[SEL_READ]  = globalFDs[SEL_READ];
   tmpFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 
-  int numbOfFDs = osSelect(openMax,&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE], NULL,&timeout);
+  int numbOfFDs = osSelect(openMax,&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE], WAIT_NULL);
 
   if (numbOfFDs < 0) {
     if (errno == EINTR) {
@@ -643,7 +644,6 @@ int osFirstSelect()
   }
 
   return numbOfFDs;
-#endif
 }
 
 Bool osNextSelect(int fd, int mode)
@@ -666,15 +666,11 @@ Bool osNextSelect(int fd, int mode)
 int osCheckIO()
 {
  loop:
-  struct timeval timeout;
-  timeout.tv_sec = 0;
-  timeout.tv_usec = 0;
-
   fd_set copyFDs[2];
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 
-  int numbOfFDs = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],NULL,&timeout);
+  int numbOfFDs = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],WAIT_NULL);
   if (numbOfFDs < 0) {
     if (errno == EINTR) goto loop;
     if (errno != EBADF) { /* the compiler may have terminated (rs) */
@@ -692,7 +688,7 @@ void osKillChildren()
   if (osHasJobControl()) {
     // terminate all our children
     OsSigFun *save=osSignal(SIGTERM,(OsSigFun*)SIG_IGN);
-    if (kill(-getpid(),SIGTERM) < 0) {
+    if (oskill(-getpid(),SIGTERM) < 0) {
       ozpwarning("kill");
     }
     osSignal(SIGTERM,save);
