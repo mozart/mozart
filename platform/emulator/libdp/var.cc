@@ -242,6 +242,9 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
 void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
 {
   int BTI=getIndex();
+  if(status!=0){
+    SiteUnify(status,val);}
+  TaggedRef stat=status;
   PD((TABLE,"REDIRECT - borrow entry hit b:%d",BTI));
   if (binding) {
     DebugCode(binding=0);
@@ -257,6 +260,8 @@ void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
 void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be) 
 {
   int BTI=getIndex();
+  if(status!=0){
+    SiteUnify(status,binding);}
   PD((PD_VAR,"acknowledge"));
 
   EntityInfo* ei=info;
@@ -387,7 +392,7 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r){
     if(failurePreemption(mkOp1("bind",r))) return BI_REPLACEBICALL;}
   return bindVInternal(lPtr,r,myDSite);}
 
-void ManagerVar::getStatus(DSite* site,int OTI, TaggedRef tr){
+void varGetStatus(DSite* site,int OTI, TaggedRef tr){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_SENDSTATUS(bs,myDSite,OTI,tr);
