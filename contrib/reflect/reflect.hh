@@ -27,8 +27,13 @@
 #ifndef __REFLECT__HH__
 #define __REFLECT__HH__
 
-#include "var_all.hh"
+#include "var_bool.hh"
+#include "var_fd.hh"
+#include "var_fs.hh"
+#include "var_ct.hh"
+#include "var_simple.hh"
 #include "prop_int.hh"
+#include "cpi.hh"
 
 //#define DEBUG
 
@@ -78,7 +83,7 @@ public:
   // (entailment), so check the corresponding suspendable
   OZ_Boolean isDiscarded(void) {
     Suspendable * susp = (Suspendable *) _p;
-    return susp->isDead() ? OZ_TRUE : (_p == (Propagator *) NULL);
+    return (_p == (Propagator *) NULL) || susp->isDead();
   }
 
   void discard(void) {
@@ -113,7 +118,7 @@ OZ_BI_proto(BIReflectSpace);
 OZ_BI_proto(BIIsPropagator);
 OZ_BI_proto(BIIsDiscardedPropagator);
 OZ_BI_proto(BIDiscardPropagator);
-
+OZ_BI_proto(BIIdentifyParameter);
 
 //-----------------------------------------------------------------------------
 
@@ -139,6 +144,25 @@ OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
   atom_params, atom_name, atom_susp, atom_thread, atom_ct,
   atom_susplists, atom_ref, atom_id, atom_loc, atom_vars, atom_props,
   atom_reflect, atom_reflect_vartable, atom_reflect_proptable;
+
+//-----------------------------------------------------------------------------
+
+class VarListExpect;
+
+typedef OZ_expect_t (VarListExpect::*PropagatorExpectMeth) (OZ_Term);
+
+class VarListExpect : public ExpectOnly {
+public:
+  OZ_expect_t expectList(OZ_Term t, PropagatorExpectMeth expectf) {
+    return OZ_Expect::expectList(t, (OZ_ExpectMeth) expectf);
+  }
+  OZ_expect_t expectAny(OZ_Term) {
+    return OZ_expect_t(1, 1);
+  }
+  OZ_expect_t expectListVar(OZ_Term t) {
+    return expectList(t, (PropagatorExpectMeth) &expectAny);
+  }
+};
 
 //-----------------------------------------------------------------------------
 
