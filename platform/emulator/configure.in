@@ -214,6 +214,12 @@ if test "${GXX}" = yes; then
     AC_ARG_ENABLE(warnings,
         [--enable-warnings  print c warnings (default=no)],,
         [enable_warnings=$oz_enable_warnings])
+    : ${oz_enable_errors=no}
+    AC_MSG_CHECKING(for --enable-errors)
+    AC_ARG_ENABLE(errors,
+        [--enable-errors  c warnings abort make (default=no)],,
+        [enable_errors=$oz_enable_errors])
+
 
     if test "${enable_warnings}" != no
     then
@@ -222,6 +228,7 @@ if test "${GXX}" = yes; then
             -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
             -Wnested-externs -Wsynth \
             -Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"
+        test "$enable_errors" != no && \
         oz_warn_error="-Werror"
     else
         AC_MSG_RESULT(no)
