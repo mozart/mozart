@@ -29,6 +29,13 @@
 #include "auxcomp.hh"
 #include <stdlib.h>
 
+#define BITS_PER_INT (sizeof(int) * 8)
+
+inline 
+int getLimit(const int reg_size) {
+  return (reg_size * reg_size) / BITS_PER_INT + 1;
+}
+
 class Min_max {
 public:
   int min, max;
@@ -68,7 +75,7 @@ DiffnPropagator::DiffnPropagator(OZ_Term xtasks, OZ_Term xdurs,
   reg_y       = vectorToOzTerms(ytasks, reg_size);
   reg_xdurs   = vectorToInts(xdurs, reg_size);
   reg_ydurs   = vectorToInts(ydurs, reg_size);
-  int limit   = reg_size*reg_size;  
+  int limit   = getLimit(reg_size);
   reg_ordered = OZ_hallocCInts(limit);
 
   VectorIterator vix(xtasks);
@@ -109,7 +116,9 @@ void DiffnPropagator::updateHeapRefs(OZ_Boolean duplicate) {
     OZ_updateHeapTerm(new_reg_y[i]);
   }
 
-  reg_ordered = OZ_copyCInts(reg_size*reg_size,reg_ordered);
+  int limit = getLimit(reg_size);
+
+  reg_ordered = OZ_copyCInts(limit,reg_ordered);
 
   reg_x               = new_reg_x;
   reg_y               = new_reg_y;
@@ -163,33 +172,35 @@ OZ_Return DiffnPropagator::propagate(void)
   }
 
   int disjFlag = 0;
-  int ground = 1;
 
 reifiedloop:
   
-  for (i=0; i<ts; i++) {
-    int count = i * reg_size;
-    for (j=i+1; j<ts; j++) {
-      if (reg_ordered[count+j] == 0) {
+  for (i=ts; i--; ) {
+    for (j=i; j--; ) {
+      int ro_n = i * reg_size + j;
+      int ro_hi = ro_n / BITS_PER_INT;
+      unsigned int ro_lo = 2 << ((unsigned int) ro_n % BITS_PER_INT);
+
+      if (!(reg_ordered[ro_hi] & ro_lo)) {
 	// if one is entailed, no action takes place
         int xui = xMinMax[i].max, xdi = xdur[i], xlj = xMinMax[j].min;
 	if (xui + xdi <= xlj) {
-	  reg_ordered[count+j] = 1;
+	  reg_ordered[ro_hi] |= ro_lo;
 	  continue;
 	}
 	int xuj = xMinMax[j].max, xdj = xdur[j], xli = xMinMax[i].min;
 	if (xuj + xdj <= xli) {
-	  reg_ordered[count+j] = 1;
+	  reg_ordered[ro_hi] |= ro_lo;
 	  continue;
 	}
 	int yui = yMinMax[i].max, ydi = ydur[i], ylj = yMinMax[j].min;
 	if (yui + ydi <= ylj) {
-	  reg_ordered[count+j] = 1;
+	  reg_ordered[ro_hi] |= ro_lo;
 	  continue;
 	}
 	int yuj = yMinMax[j].max, ydj = ydur[j], yli = yMinMax[i].min;
 	if (yuj + ydj <= yli) {
-	  reg_ordered[count+j] = 1;
+	  reg_ordered[ro_hi] |= ro_lo;
 	  continue;
 	}
 	if ( (yli + ydi > yuj) && (ylj + ydj > yui) ) {
@@ -254,22 +265,28 @@ reifiedloop:
     disjFlag = 0;
     goto reifiedloop;
   }
+
+  {
+    int ret = 0;
+
+    for (i=ts; i--; ) {
+      ret |= x[i].leave();
+      ret |= y[i].leave();
+    }
   
-  for (i=0; i<ts; i++) {
-    if (x[i].leave()) ground = 0;
-    if (y[i].leave()) ground = 0;
+    if (ret)
+      return OZ_SLEEP;
   }
 
-  if (ground == 1) return PROCEED;
-  else return SLEEP;
+  return OZ_ENTAILED;
 
 failure:
 
-  for (i=0; i<ts; i++) {
+  for (i=ts; i--;) {
     x[i].fail();
     y[i].fail();
   }
-  return FAILED;
+  return OZ_FAILED;
 
 }
 
