@@ -956,7 +956,12 @@ OZ_Return genericExchange(TaggedRef term, TaggedRef fea, TaggedRef val, TaggedRe
     if (oz_isChunk(term)) {
       switch (tagged2Const(term)->getType()) {
       case Co_Extension:
-	return tagged2Extension(term)->putFeatureV(fea,val);
+	{
+	  OZ_Extension *ext = tagged2Extension(term);
+	  OZ_Return r = ext->getFeatureV(fea,old);
+	  if (r != PROCEED) return r;
+	  return ext->putFeatureV(fea,val);
+	}
       case Co_Chunk:
       case Co_Object:
       case Co_Class:
