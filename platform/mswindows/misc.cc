@@ -49,7 +49,7 @@ OzPanic(int quit, char *format,...)
   vsprintf(buf, format, argList);
 
 #ifdef OZENGINE
-  fprintf(stderr,"Fatal Error in Oz: ");
+  fprintf(stderr,"Fatal Error: ");
   fprintf(stderr,buf);
 #else
   MessageBeep(MB_ICONEXCLAMATION);
@@ -164,7 +164,8 @@ char *getOzHome(char *path, int depth)
   if (ret==NULL) {
     ret = getParent(path,depth);
     if (ret == NULL) {
-      OzPanic(1,"Cannot determine Oz installation directory.\nTry setting OZHOME environment variable.");
+      OzPanic(1,"Cannot determine Oz installation directory.\n"
+                "Try setting OZHOME environment variable.");
     }
   }
   normalizePath(ret);
