@@ -99,7 +99,7 @@ define
 	 [] nil then ""
 	 end
       [] !EMPTY then ""
-      [] BLOCK(X) then End#{HTMLToVirtualString X}#Start
+      [] BLOCK(X) then End#{ToVSSub X Start End}#Start
       else Tag Attrs1 Attrs ThisStart ThisEnd NewStart NewEnd in
 	 Tag = {Map {Atom.toString {Label HTML1}} Char.toUpper}
 	 Attrs1 = {Record.foldLInd HTML1
