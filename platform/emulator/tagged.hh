@@ -96,7 +96,7 @@ extern int gcing;
 inline void* TaggedToPointer(TaggedRef t)
 {
   return (void*) (mallocBase|t);
-};
+}
 
 inline
 void *tagValueOf(TaggedRef ref)

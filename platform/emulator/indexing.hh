@@ -35,11 +35,12 @@ class HTEntry {
  public:
 
   HTEntry(Literal *name, ProgramCounter lbl, HTEntry *nxt)
-    : literal(name), label(lbl), next(nxt) {};
+    : label(lbl), next(nxt) { literal = name; };
 
   HTEntry(TaggedRef num, ProgramCounter lbl, HTEntry *nxt)
-    : number(num), label(lbl), next(nxt)
+    : label(lbl), next(nxt)
   {
+    number = num;
     OZ_protect(&number);
   };
 

@@ -1020,7 +1020,7 @@ static OZ_Bool get_send_recv_flags(OZ_Term OzFlags, int * flags)
   if (OZ_isVariable(OzFlags))
     return SUSPEND;
 
-  if (!(OZ_nil(OzFlags)))
+  if (!(OZ_nil()))
     return FAILED;
 
   return PROCEED;
