@@ -70,6 +70,12 @@ static OZ_C_proc_interface mod_int_Parser[] = {
  {0,0,0,0}
 };
 
+
+#include "modCompilerSupport.dcl"
+static OZ_C_proc_interface mod_int_CompilerSupport[] = {
+#include "modCompilerSupport.tbl"
+ {0,0,0,0}
+};
 #endif
 
 
@@ -89,8 +95,6 @@ struct ModuleEntry {
 #include "modSystem.dcl"
 #include "modCTB.dcl"
 #include "modFinalize.dcl"
-#include "modAssemblerSupport.dcl"
-#include "modCompilerSupport.dcl"
 #include "modProfile.dcl"
 #include "modBrowser.dcl"
 #include "modDebug.dcl"
@@ -136,14 +140,6 @@ static OZ_C_proc_interface mod_int_CTB[] = {
 };
 static OZ_C_proc_interface mod_int_Finalize[] = {
 #include "modFinalize.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_AssemblerSupport[] = {
-#include "modAssemblerSupport.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_CompilerSupport[] = {
-#include "modCompilerSupport.tbl"
  {0,0,0,0}
 };
 static OZ_C_proc_interface mod_int_Profile[] = {
@@ -197,9 +193,6 @@ static ModuleEntry module_table[] = {
   {"Finalize", mod_int_Finalize},
   {"Profile",  mod_int_Profile},
 
-  {"AssemblerSupport", mod_int_AssemblerSupport},
-  {"CompilerSupport",  mod_int_CompilerSupport},
-
   {"Browser",      mod_int_Browser},
   {"Foreign",      mod_int_Foreign},
   {"Fault",        mod_int_Fault},
@@ -211,11 +204,12 @@ static ModuleEntry module_table[] = {
   {"CTB",      mod_int_CTB},
   {"PID",      mod_int_PID},
 
-  {"Wif",      DYNAMIC_MODULE(mod_int_Wif) },
-  {"Parser",   DYNAMIC_MODULE(mod_int_Parser) },
-  {"FDP",      DYNAMIC_MODULE(mod_int_FDP) },
-  {"Schedule", DYNAMIC_MODULE(mod_int_Schedule) },
-  {"FSP",      DYNAMIC_MODULE(mod_int_FSP) },
+  {"CompilerSupport",  DYNAMIC_MODULE(mod_int_CompilerSupport)},
+  {"Wif",              DYNAMIC_MODULE(mod_int_Wif) },
+  {"Parser",           DYNAMIC_MODULE(mod_int_Parser) },
+  {"FDP",              DYNAMIC_MODULE(mod_int_FDP) },
+  {"Schedule",         DYNAMIC_MODULE(mod_int_Schedule) },
+  {"FSP",              DYNAMIC_MODULE(mod_int_FSP) },
 
 #ifdef MISC_BUILTINS
   {"Misc",         mod_int_Misc},

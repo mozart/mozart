@@ -32,7 +32,8 @@ SRCDIR=	@srcdir@
 
 include Makefile.vars
 
-MODULE_NAMES = libWif libFDP libSchedule libFSP libParser libozma
+MODULE_NAMES = libWif libFDP libSchedule libFSP libParser \
+	libozma libCompilerSupport
 STATIC_MODULETARGETS  = $(MODULE_NAMES:%=%.a)
 DYNAMIC_MODULETARGETS = $(MODULE_NAMES:%=%.so)
 
@@ -46,7 +47,7 @@ OZVERSION	= $(SRCTOP)/OZVERSION
 
 MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
 	PID URL FDB FSB System Finalize CTB \
-	AssemblerSupport CompilerSupport Profile \
+	CompilerSupport Profile \
 	Debug Fault Foreign Browser Misc Distribution
 
 CREATEDOTHERS= \
@@ -66,7 +67,7 @@ CREATEDFILES= $(CREATEDOTHERS) $(CREATEDSRCS)
 PEANUTSFILE= peanuts.cc
 PEANUTS= \
 	am.cc genvar.cc	indexing.cc fdhook.cc \
-	taskstk.cc mem.cc assemble.cc \
+	taskstk.cc mem.cc \
 	statisti.cc fdgenvar.cc \
 	codearea.cc debug.cc lps.cc solve.cc \
 	variable.cc thrqueue.cc thrspool.cc \
@@ -136,6 +137,13 @@ libWif.so: wif.o
 
 libWif.a: wif.o
 	$(AR) -rc $@ wif.o && $(RANLIB) $@
+
+libCompilerSupport.so: compiler.o
+	$(DYNLD) -o $@ compiler.o
+
+libCompilerSupport.a: compiler.o
+	$(AR) -rc $@ compiler.o && $(RANLIB) $@
+
 
 win: ozlib.lnk $(CREATEDFILES)
 
@@ -224,6 +232,8 @@ builtins.o: builtins.tbl builtins.dcl
 wif.o: modWif.tbl modWif.dcl
 
 parsertable.o: modParser.dcl modParser.tbl
+
+compiler.o: modCompilerSupport.dcl modCompilerSupport.tbl
 
 boot-manager.o: $(MODSPECS:%=mod%.dcl) $(MODSPECS:%=mod%.tbl)
 
