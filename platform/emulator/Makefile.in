@@ -158,7 +158,7 @@ BROWSERSRCS= \
 DEBUGSRCS= \
         debugBI.cc
 SPACEOPSRCS = \
-        s-clone.cc board-bi.cc
+        s-clone.cc board-bi.cc sit-check.cc
 FDBSRCS = \
         fdcore.cc
 FSBSRCS = \
