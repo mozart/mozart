@@ -46,6 +46,11 @@
 // #include <sys/utsname.h>
 #endif
 
+#ifdef WINDOWS
+/* can be removed if osSelect is adapted */
+#include "am.hh"
+#endif
+
 #include "tagged.hh"
 #include "os.hh"
 
@@ -223,11 +228,24 @@ extern "C" void __builtin_delete (void *ptr)
 static int osSelect(int nfds, fd_set *readfds, fd_set *writefds,
 		    fd_set *exceptfds, struct timeval *timeout)
 {
+#ifdef WINDOWS
+  /* force a blocking read on compiler input */
+  if (timeout == NULL) {
+    FD_SET(am.compStream->csfileno(),readfds);
+    return 1;
+  } else {
+    return 0;
+  }
+
+#else
+
 #ifdef HPUX_700
   return select(nfds, (int*)readfds,(int*)writefds,(int*)exceptfds,timeout);
 #else
   return select(nfds, readfds,writefds,exceptfds,timeout);
 #endif
+
+#endif  /* WINDOWS */
 }
 
 void osInitSignals()
@@ -298,7 +316,7 @@ Bool osHasJobControl()
  *********************************************************/
 
 static long openMax;
-static fd_set globalFDs[2];	// mask of active read/write FDs
+static fd_set globalFDs[2];     // mask of active read/write FDs
 
 int osOpenMax()
 {
