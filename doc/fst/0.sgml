@@ -51,7 +51,6 @@
 
 <Book proglang="oz">
   <Front>
-    <Meta name="latex.package" value="wasysym">
 
     <!-- Splitting the document into different HTML nodes -->
 
