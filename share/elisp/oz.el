@@ -45,16 +45,13 @@
 
 
 ;;------------------------------------------------------------
-;; lucid and gnu19 Support
+;; GNU and Lucid Emacsen Support
 ;;------------------------------------------------------------
 
-(defvar oz-lucid nil)
-(defvar oz-gnu19 nil)
-
-(cond ((string-match "Lucid" emacs-version)
-       (setq oz-lucid t))
-      ((string-match "19" emacs-version)
-       (setq oz-gnu19 t)))
+(defvar oz-gnu-emacs
+  (string-match "\\`[0-9]+\\(\\.[0-9]+\\)*\\'" emacs-version))
+(defvar oz-lucid-emacs
+  (string-match "\\<Lucid\\>" emacs-version))
 
 
 ;;------------------------------------------------------------
@@ -208,17 +205,17 @@ All strings matching this regular expression are removed.")
 ;;------------------------------------------------------------
 ;; Setting the Frame Title
 ;;------------------------------------------------------------
-;; lucid supports frame-title as format string (is better ...);
+;; GNU Emacs supports frame-title as constant string
+;; Lucid Emacs supports frame-title as format string (is better ...);
 ;;    see function mode-line-format
-;; gnu19 supports frame-title as constant string
 
 (defvar oz-change-title t
   "*If non-nil, change the title of the Emacs window while Oz is running.")
 
 (defvar oz-old-frame-title
-  (cond (oz-gnu19
+  (cond (oz-gnu-emacs
 	 (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
-	(oz-lucid
+	(oz-lucid-emacs
 	 frame-title-format))
   "Saved Emacs window title.")
 
@@ -229,13 +226,13 @@ All strings matching this regular expression are removed.")
 (defun oz-set-title (frame-title)
   "Set the title of the Emacs window."
   (cond ((not oz-change-title) t)
-	(oz-gnu19
+	(oz-gnu-emacs
 	 (mapcar '(lambda (scr)
 		    (modify-frame-parameters
 		     scr
 		     (list (cons 'name frame-title))))
 		 (visible-frame-list)))
-	(oz-lucid
+	(oz-lucid-emacs
 	 (setq frame-title-format frame-title))))
 
 
@@ -310,18 +307,40 @@ Positions are returned as a pair ( START . END )."
 ;;------------------------------------------------------------
 ;; Menus
 ;;------------------------------------------------------------
-;; lucid: a menubar is a new datastructure (see function set-buffer-menubar)
-;; gnu19: a menubar is a usual key sequence with prefix "menu-bar"
+;; GNU Emacs: a menubar is a usual key sequence with prefix "menu-bar"
+;; Lucid Emacs: a menubar is a new datastructure
+;;    (see function set-buffer-menubar)
 
 (defvar oz-menubar nil
   "Oz Menubar for Lucid Emacs.")
 
 (defun oz-make-menu (list)
-  (cond (oz-lucid
-	 (setq oz-menubar (oz-make-menu-lucid list)))
-	(oz-gnu19
-	 (oz-make-menu-gnu19 oz-mode-map
-			     (list (cons "menu-bar" (cons nil list)))))))
+  (cond (oz-gnu-emacs
+	 (oz-make-menu-gnu oz-mode-map
+			   (list (cons "menu-bar" (cons nil list)))))
+	(oz-lucid-emacs
+	 (setq oz-menubar (oz-make-menu-lucid list)))))
+
+(defun oz-make-menu-gnu (map list)
+  (if list
+      (progn
+	(let* ((entry (car list))
+	       (name (car entry))
+	       (aname (intern name))
+	       (command (car (cdr entry)))
+	       (rest (cdr (cdr entry))))
+	  (cond ((null rest)
+		 (define-key map (vector (intern (oz-make-temp-name name)))
+		   (cons name nil)))
+		((null command)
+		 (let ((newmap (make-sparse-keymap name)))
+		   (define-key map (vector aname)
+		     (cons name newmap))
+		   (oz-make-menu-gnu newmap (reverse rest))))
+		(t
+		 (define-key map (vector aname) (cons name command))
+		 (put command 'menu-enable (car rest)))))
+	(oz-make-menu-gnu map (cdr list)))))
 
 (defun oz-make-menu-lucid (list)
   (if (null list)
@@ -338,27 +357,6 @@ Positions are returned as a pair ( START . END )."
 	     (t
 	      (vector name command (car rest)))))
      (oz-make-menu-lucid (cdr list)))))
-
-(defun oz-make-menu-gnu19 (map list)
-  (if list
-      (progn
-	(let* ((entry (car list))
-	       (name (car entry))
-	       (aname (intern name))
-	       (command (car (cdr entry)))
-	       (rest (cdr (cdr entry))))
-	  (cond ((null rest)
-		 (define-key map (vector (intern (oz-make-temp-name name)))
-		   (cons name nil)))
-		((null command)
-		 (let ((newmap (make-sparse-keymap name)))
-		   (define-key map (vector aname)
-		     (cons name newmap))
-		   (oz-make-menu-gnu19 newmap (reverse rest))))
-		(t
-		 (define-key map (vector aname) (cons name command))
-		 (put command 'menu-enable (car rest)))))
-	(oz-make-menu-gnu19 map (cdr list)))))
 
 (defvar oz-menu
  '(("Oz" nil
@@ -494,9 +492,9 @@ Positions are returned as a pair ( START . END )."
 (make-face 'bar-blocked)
 
 (defun oz-set-face (face foreground background)
-  (cond (oz-gnu19
+  (cond (oz-gnu-emacs
 	 (modify-face face foreground background nil nil nil nil))
-	(oz-lucid
+	(oz-lucid-emacs
 	 (set-face-foreground face foreground)
 	 (set-face-background face background))))
 
@@ -528,14 +526,14 @@ Positions are returned as a pair ( START . END )."
 
 	  (or oz-bar-overlay
 	      (setq oz-bar-overlay
-		    (cond (oz-gnu19
+		    (cond (oz-gnu-emacs
 			   (make-overlay start end))
-			  (oz-lucid
+			  (oz-lucid-emacs
 			   (make-extent start end)))))
-	  (cond (oz-gnu19
+	  (cond (oz-gnu-emacs
 		 (move-overlay
 		  oz-bar-overlay start end (current-buffer)))
-		(oz-lucid
+		(oz-lucid-emacs
 		 (set-extent-endpoints
 		  oz-bar-overlay start end (current-buffer))))
 
@@ -558,9 +556,9 @@ Positions are returned as a pair ( START . END )."
 		     'bar-runnable)
 		    ((string-equal state "blocked")
 		     'bar-blocked))))
-    (cond (oz-gnu19
+    (cond (oz-gnu-emacs
 	   (overlay-put oz-bar-overlay 'face face))
-	  (oz-lucid
+	  (oz-lucid-emacs
 	   (set-extent-face oz-bar-overlay face)))))
 
 
@@ -611,9 +609,9 @@ If FORCE is non-nil, kill the processes immediately."
 	 (delete-windows-on oz-temp-buffer)
 	 (kill-buffer oz-temp-buffer)))
   (cond (oz-bar-overlay
-	 (cond (oz-gnu19
+	 (cond (oz-gnu-emacs
 		(delete-overlay oz-bar-overlay))
-	       (oz-lucid
+	       (oz-lucid-emacs
 		(delete-extent oz-bar-overlay)))
 	 (setq oz-bar-overlay nil)))
   (if (and (not force)
@@ -816,8 +814,8 @@ the gdb commands `cd DIR' and `directory'."
 	(init-str (if oz-using-new-compiler
 		      (concat "set args -u " oz-new-compiler-url "\n")
 		    (concat "set args -S " file "\n"))))
-    (cond (oz-gnu19 (gdb (concat "gdb " oz-emulator)))
-	  (oz-lucid (gdb oz-emulator)))
+    (cond (oz-gnu-emacs (gdb (concat "gdb " oz-emulator)))
+	  (oz-lucid-emacs (gdb oz-emulator)))
     (setq oz-emulator-buffer (buffer-name (current-buffer)))
     (comint-send-string
      (get-buffer-process oz-emulator-buffer)
@@ -839,7 +837,7 @@ the gdb commands `cd DIR' and `directory'."
 ;;------------------------------------------------------------
 
 (defun oz-zmacs-stuff ()
-  (if oz-lucid (setq zmacs-region-stays t)))
+  (if oz-lucid-emacs (setq zmacs-region-stays t)))
 
 (defun oz-feed-buffer ()
   "Feed the current buffer to the Oz Compiler."
@@ -1564,10 +1562,10 @@ Negative arg -N means kill N Oz expressions after the cursor."
     (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
     (define-key map "\C-c\C-d\C-b" 'oz-breakpoint-key-set)
     (define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
-    (cond (oz-gnu19
+    (cond (oz-gnu-emacs
 	   (define-key map [(meta shift mouse-1)] 'oz-breakpoint-mouse-set)
 	   (define-key map [(meta shift mouse-3)] 'oz-breakpoint-mouse-delete))
-	  (oz-lucid
+	  (oz-lucid-emacs
 	   (define-key map [(meta shift button1)] 'oz-breakpoint-mouse-set)
 	   (define-key map [(meta shift button3)] 'oz-breakpoint-mouse-delete))
 	  )
@@ -1620,7 +1618,7 @@ if that value is non-nil."
   (setq major-mode 'oz-mode)
   (setq mode-name "Oz")
   (oz-mode-variables)
-  (if (and oz-lucid (not (assoc "Oz" current-menubar)))
+  (if (and oz-lucid-emacs (not (assoc "Oz" current-menubar)))
       (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
 
   (set (make-local-variable 'oz-gump-indentation) nil)
@@ -1661,7 +1659,7 @@ if that value is non-nil."
   (setq major-mode 'oz-gump-mode)
   (setq mode-name "Oz-Gump")
   (oz-mode-variables)
-  (if (and oz-lucid (not (assoc "Oz" current-menubar)))
+  (if (and oz-lucid-emacs (not (assoc "Oz" current-menubar)))
       (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
 
   (set (make-local-variable 'oz-gump-indentation) t)
@@ -2154,9 +2152,9 @@ The rest of the output is then passed through the oz-filter."
 		(replace-match "" nil t)
 		(if (string-equal file "undef")
 		    (cond (oz-bar-overlay
-			   (cond (oz-gnu19
+			   (cond (oz-gnu-emacs
 				  (delete-overlay oz-bar-overlay))
-				 (oz-lucid
+				 (oz-lucid-emacs
 				  (delete-extent oz-bar-overlay)))
 			   (setq oz-bar-overlay nil)))
 		  (oz-bar file line state)))))
@@ -2207,7 +2205,7 @@ The rest of the output is then passed through the oz-filter."
 	       (setq oz-emulator-buffer-map (copy-keymap comint-mode-map)))
 	   (use-local-map oz-emulator-buffer-map)))
     (oz-set-mouse-error-key)
-    (if oz-lucid
+    (if oz-lucid-emacs
      (set-buffer-menubar (append current-menubar oz-menubar)))
     (delete-region (point-min) (point-max))))
 
@@ -2241,7 +2239,7 @@ If it is, then remove it."
 	      (save-excursion
 		(set-buffer buffer)
 		(if (= (window-point win) (point-max))
-		  (if oz-gnu19
+		  (if oz-gnu-emacs
 		      (delete-windows-on buffername t)
 		    (delete-windows-on buffername))
 		  (set-window-point win (point-max))))
@@ -2459,16 +2457,16 @@ of the procedure Browse."
 (defun oz-set-mouse-error-key ()
   (let ((map (current-local-map)))
     (if map
-	(if oz-lucid
+	(if oz-lucid-emacs
 	    (define-key map [(shift button2)] 'oz-mouse-goto-error)
 	  (define-key map [(shift mouse-2)] 'oz-mouse-goto-error)))))
 
 (defun oz-mouse-goto-error (event)
   (interactive "e")
-  (set-buffer (if oz-lucid
+  (set-buffer (if oz-lucid-emacs
 		  (event-buffer event)
 		(window-buffer (posn-window (event-end event)))))
-  (goto-char (if oz-lucid
+  (goto-char (if oz-lucid-emacs
 		 (event-closest-point event)
 	       (posn-point (event-end event))))
   (or (eq (current-buffer) (get-buffer oz-compiler-buffer))
