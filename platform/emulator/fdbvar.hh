@@ -58,6 +58,14 @@ public:
 
   void installPropagators(GenFDVariable *, Board *);
 
+  void relinkSuspListTo(GenBoolVariable * lv, Bool reset_local = FALSE) {
+    GenCVariable::relinkSuspListTo(lv, reset_local);
+  }
+
+  void relinkSuspListTo(GenFDVariable * lv, Bool reset_local = FALSE) {
+    GenCVariable::relinkSuspListTo(lv, reset_local);
+  }
+
   void propagate(TaggedRef var, PropCaller prop_eq = pc_propagator) {
     if (suspList) GenCVariable::propagate(var, suspList, prop_eq);
   }
