@@ -131,7 +131,14 @@ dnl *****************************************************************
 : ${platform=$PLATFORM}
 AC_SUBST(platform)
 
-PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
+# GNU tr and System V tr use incompatible syntax
+# System V expects character sets to be enclosed in square brackets
+# It is OK to always use square brackets because it will work as expected
+# on System V and will harmlessly convert square brackets into themselves
+# on GNU systems.
+changequote(<,>)
+PLATFORM="`echo $platform|sed -e s/-/_/|tr '[a-z]' '[A-Z]'`"
+changequote([,])
 AC_DEFINE_UNQUOTED($PLATFORM)
 AC_SUBST(PLATFORM)
 
