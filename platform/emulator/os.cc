@@ -510,10 +510,17 @@ int osTestSelect(int fd, int mode)
 
   /* for a disk file hopefully input will not block */
   HANDLE h = (HANDLE)_os_handle(fd);
-  if (!FD_ISSET(fd,&isSocket) && GetFileType(h) != FILE_TYPE_PIPE)
+  IOChannel *ch = findChannel(fd);
+  //  fprintf(stderr,"before GFT(%d,%d)\n",h,fd); fflush(stderr);
+  if (!FD_ISSET(fd,&isSocket) && 
+      ch == NULL && 
+      GetFileType(h) != FILE_TYPE_PIPE) {
+    //    fprintf(stderr,"after GFT(%d), success\n",h); fflush(stderr);
     return 1;
+  }
 
-  return findChannel(fd)->status==OK;
+  //  fprintf(stderr,"after GFT(%d), fail\n",h); fflush(stderr);
+  return ch->status==OK;
 #else
   while(1) {
     fd_set fdset, *readFDs=NULL, *writeFDs=NULL;
