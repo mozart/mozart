@@ -1,6 +1,6 @@
 functor
 export
-   'class' : URL
+   'class' : URLClass
    Is
 prepare
    IS_URL = {NewName}
