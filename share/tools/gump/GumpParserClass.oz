@@ -86,7 +86,7 @@ in
 	 {self.MyScanner putToken(Token Is)}
 	 lookaheadSymbol <- YYEMPTY
 	 Yyss <- nil
-	 Yyvs <- nil
+	 Yyvs <- ['#']
 	 Yyerrstatus <- 0
 	 Yystate <- 0
 	 try
