@@ -273,7 +273,8 @@ static char *scExpndFileName(char *fileName, char *curfile) {
   // full pathname given?
   if (fileName[0] == '/' ||
 #ifdef WINDOWS
-      fileName[1] == ':' ||   // good old DOS filename like E:...
+      (fileName[0] != '\0' && fileName[1] == ':') ||
+      // good old DOS filename like E:...
 #endif
       !strncmp(fileName, "./", 2))
     return checkAccess(fileName);
