@@ -1316,13 +1316,24 @@ ProgramCounter CodeArea::writeAbstractionEntry(AbstractionEntry *p, ProgramCount
  *
  */
 
+#define MAX_LOC_HOPELESS   8
+#define MAX_LOC_HASH       61
+
+#define LOC_FP_SHIFT       4
+#define LOC_FP_MASK        15
+
+OZ_LocList * OZ_Location::cache[MAX_LOC_HASH];
+TaggedRef  * OZ_Location::new_map[NumberOfXRegisters];
+
+
 OZ_Location * OZ_ID_LOC;
 
 void initOzIdLoc(void) {
   OZ_Location::initCache();
-  OZ_ID_LOC = OZ_Location::newLocation(NumberOfXRegisters);
+  OZ_Location::initLocation();
   for (int i=NumberOfXRegisters; i--;  )
-    OZ_ID_LOC->set(i,i);
+    OZ_Location::set(i,i);
+  OZ_ID_LOC = OZ_Location::getLocation(NumberOfXRegisters);
 }
 
 TaggedRef OZ_Location::getArgs(Builtin * bi) {
@@ -1344,62 +1355,66 @@ TaggedRef OZ_Location::getInArgs(Builtin * bi) {
   return out;
 }
 
-#define MAX_LOC_HOPELESS   8
-#define MAX_LOC_HASH       61
-
-#define LOC_FP_SHIFT       4
-#define LOC_FP_MASK        15
-
-OZ_LocList * OZ_Location::cache[MAX_LOC_HASH];
-
 void OZ_Location::initCache(void) {
   for (int i=MAX_LOC_HASH; i--; )
     cache[i] = (OZ_LocList *) NULL;
 }
 
-OZ_Location * OZ_Location::compress(int n) {
-  if (n > MAX_LOC_HOPELESS)
-    return this;
+OZ_Location * OZ_Location::getLocation(int n) {
+  int fp = -1;
+  int sfp;
 
-  /*
-   * Compute finger print:
-   *   The finger print must contain the size literally!
-   *
-   */
+  if (n <= MAX_LOC_HOPELESS) {
 
-  int fp = 0;
-  for (int i = n; i--; )
-    fp = (fp << 1) + getIndex(i);
+    /*
+     * Compute finger print:
+     *   The finger print must contain the size literally!
+     *
+     */
 
-  int sfp = fp % MAX_LOC_HASH;
-
-  fp = (fp << LOC_FP_SHIFT) + n;
-
-  OZ_LocList * ll = cache[sfp];
-
-  while (ll) {
-
-    if ((ll->loc->fingerprint >> LOC_FP_SHIFT) != (fp >> LOC_FP_SHIFT))
-      goto next;
-
-    if ((ll->loc->fingerprint & LOC_FP_MASK) < n)
-      goto next;
+    fp = 0;
 
     for (int i = n; i--; )
-      if (ll->loc->map[i] != map[i])
+      fp = (fp << 1) + getNewIndex(i);
+
+    sfp = fp % MAX_LOC_HASH;
+
+    fp = (fp << LOC_FP_SHIFT) + n;
+
+    OZ_LocList * ll = cache[sfp];
+
+    while (ll) {
+
+      if ((ll->loc->fingerprint >> LOC_FP_SHIFT) != (fp >> LOC_FP_SHIFT))
         goto next;
 
-    // Cache hit!
-    free(this);
-    return ll->loc;
+      if ((ll->loc->fingerprint & LOC_FP_MASK) < n)
+        goto next;
 
-  next:
-    ll = ll->next;
+      for (int i = n; i--; )
+        if (ll->loc->map[i] != new_map[i])
+          goto next;
+
+      // Cache hit!
+      return ll->loc;
+
+    next:
+      ll = ll->next;
+
+    }
 
   }
 
-  this->fingerprint = fp;
-  cache[sfp] = new OZ_LocList(this,cache[sfp]);
-  return this;
+  OZ_Location * l = alloc(n);
+
+  if (fp != -1) {
+    l->fingerprint = fp;
+    cache[sfp]     = new OZ_LocList(l,cache[sfp]);
+  }
+
+  for (int i = n; i--; )
+    l->map[i] = new_map[i];
+
+  return l;
 
 }

@@ -557,16 +557,29 @@ class OZ_Location {
 private:
   int         fingerprint;
   TaggedRef * map[1];
+  static TaggedRef  * new_map[];
   static OZ_LocList * cache[];
 
 public:
   NO_DEFAULT_CONSTRUCTORS(OZ_Location)
   static void initCache(void);
-  static OZ_Location *newLocation(int n) {
-    int sz = sizeof(OZ_Location)+sizeof(TaggedRef*)*(n-1);
-    OZ_Location *loc = (OZ_Location *) malloc(sz);
-    return loc;
+  /*
+   * Construction of locations
+   */
+  static void initLocation(void) {
   }
+  static OZ_Location * alloc(int n) {
+    int sz = sizeof(OZ_Location)+sizeof(TaggedRef*)*(n-1);
+    return (OZ_Location *) malloc(sz);
+  }
+  static void set(int n, int i) {
+    new_map[n]=&(XREGS[i]);
+  }
+  static int getNewIndex(int n) {
+    return (new_map[n]-XREGS);
+  }
+  static OZ_Location * getLocation(int n);
+
   TaggedRef ** getMapping(void) {
     return map;
   }
@@ -588,10 +601,6 @@ public:
   TaggedRef getOutValue(Builtin * bi, int n) {
     return getValue(bi->getInArity()+n);
   }
-  void set(int n, int i) {
-    map[n]=&(XREGS[i]);
-  }
-  OZ_Location * compress(int n);
   TaggedRef getInArgs(Builtin *);
   TaggedRef getArgs(Builtin *);
 };

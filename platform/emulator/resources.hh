@@ -125,7 +125,7 @@ error include resources.hh before mozart.h
 
 #define TIMEDETAILED            0
 
-#define NumberOfXRegisters      10000
+#define NumberOfXRegisters      4096
 
 /* threads */
 #define THREAD_ID_SIZE          16
