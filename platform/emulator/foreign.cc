@@ -3,7 +3,7 @@
  *    Michael Mehl (mehl@dfki.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Denys Duchier (duchier@ps.uni-sb.de)
  *
  *  Copyright:
  *    Michael Mehl (1997)

@@ -5,7 +5,7 @@
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Denys Duchier (duchier@ps.uni-sb.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -576,8 +576,8 @@ typedef struct {
 #define OZ_DATUM_UNKNOWNERROR -1
 #define OZ_DATUM_OUTOFMEMORY  -2
 
-extern OZ_Return _FUNDECL(OZ_valueToDatum,(OZ_Term t, OZ_Datum *d));
-extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum *d,OZ_Term *t));
+extern OZ_Return _FUNDECL(OZ_valueToDatum,(OZ_Term  t, OZ_Datum* d));
+extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 
 
 #ifdef __cplusplus
