@@ -1004,7 +1004,7 @@ void DynamicTable::gc(void)
     HashElement* tableCopy=(HashElement*) gcRealloc(table,size*sizeof(HashElement));
     // Take care of all TaggedRefs in the table:
     for (dt_index i=0; i<size; i++) {
-        if (table[i].ident!=NULL) {
+        if (table[i].ident!=makeTaggedNULL()) {
             gcTagged(table[i].ident, tableCopy[i].ident);
             gcTagged(table[i].value, tableCopy[i].value);
         }
