@@ -30,6 +30,14 @@
 		       out => ['+bool'],
 		       bi  => BIisRecord},
 
+     'make'	  => { in  => ['+literal','+[feature]'],
+		       out => ['+record'],
+		       bi  => BIrealMakeRecord},
+
+     'clone'	  => { in  => ['+record'],
+		       out => ['+record'],
+		       bi  => BIcloneRecord},
+
      'isC'	  => { in  => ['+value'],
 		       out => ['+bool'],
 		       bi  => BIisRecordCB},
