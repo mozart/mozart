@@ -66,12 +66,7 @@ OZ_Term Celloid::printV(int depth = 10)
 }
 
 OZ_Extension* Celloid::gcV() { return new Celloid(content); }
-
-extern void OZ_collectHeapTerm(OZ_Term&,OZ_Term&);
-
-void Celloid::gcRecurseV() {
-  OZ_collectHeapTerm(content,content);
-}
+void Celloid::gcRecurseV() { OZ_collect(content); }
 
 extern "C"
 {
