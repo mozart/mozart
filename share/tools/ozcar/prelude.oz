@@ -86,7 +86,7 @@ end
 %% file lookup
 
 local
-   LS = 'lookup: '
+   LS = 'file lookup: '
    fun {DoLookupFile F SearchList}
       case SearchList == nil then
 	 {OzcarError LS # F # ' NOT FOUND!'} % should not happen!
@@ -94,7 +94,7 @@ local
       else Try = SearchList.1 # F in
 	 try
 	    {OS.stat Try _}
-	    {OzcarMessage LS # F # ' actually is ' # Try}
+	    {OzcarMessage LS # F # ' is ' # Try}
 	    {VS2A Try}
 	 catch system(...) then
 	    {OzcarMessage LS # F # ' is not ' # Try}
