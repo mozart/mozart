@@ -332,9 +332,6 @@ static SigHandler handlers[] = {
 #ifdef SIGUSR2
   {SIGUSR2,"SIGUSR2",NO,handlerDefault,0},
 #endif
-#ifdef SIGALRM
-  {SIGALRM,"SIGALRM",NO,handlerDefault,0},
-#endif
 #ifdef SIGBUS
   {SIGBUS,"SIGBUS",NO,handlerDefault,0},
 #endif
@@ -847,8 +844,8 @@ void osInitSignals()
   OZ_Term def = OZ_atom("default");
   SigHandler *aux = handlers;
   while(aux->signo != SIGLAST) {
-    osSignal(aux->signo,aux->chandler);
     aux->ozhandler = def;
+    osSignal(aux->signo,aux->chandler);
     OZ_protect(&aux->ozhandler);
     osSignalInternal(aux->signo,genericHandler);
     aux++;
@@ -858,9 +855,6 @@ void osInitSignals()
   // only virtual site messages;
 #ifdef SIGUSR2
   osSignal(SIGUSR2,handlerUSR2);
-#endif
-#ifdef SIGALRM
-  osSignal(SIGALRM,handlerALRM);
 #endif
 #ifdef SIGUSR1
   osSignal(SIGUSR1,handlerUSR1);
@@ -876,6 +870,11 @@ void osInitSignals()
 #endif
 
   osSignal(SIGSEGV,handlerSEGV);
+
+  // do not allow to overload SIGALRM
+#ifdef SIGALRM
+  osSignalInternal(SIGALRM,handlerALRM);
+#endif
 }
 
 
