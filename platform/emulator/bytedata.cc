@@ -27,7 +27,7 @@
 //         marshaling only. The byteBuffer.hh does not contain/should
 //         not contain nothing distribution-specific. Just the byte
 //         buffer abstraction..
-#include "libdp/byteBuffer.hh"
+#include "byteBuffer.hh"
 
 #include "string.h"
 

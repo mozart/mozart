@@ -396,6 +396,11 @@ SigHandler *findHandler(const char *sig)
   return NULL;
 }
 
+static
+void dropHandlers()
+{
+  handlers->signo = SIGLAST;
+}
 
 void pushSignalHandlers()
 {
@@ -1313,6 +1318,7 @@ void osExit(int status)
     aux = aux->next;
   }
 
+  dropHandlers();
 #ifdef WINDOWS
   ExitProcess(status);
 #else
