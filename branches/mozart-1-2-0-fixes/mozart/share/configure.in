@@ -52,21 +52,23 @@ dnl *****************************************************************
 # PLATFORM is defined by OZ_INIT
 : ${platform=$PLATFORM}
 
+changequote(<,>)
 case $platform in
     win32*)
 	OZLOADSEP=';'
-	oztmp=`cygpath -a -w $builddir`
+	oztmp=`pwd`
+	oztmp=`cygpath -a -w "$tmp"`
 	oztmp=`expr "$oztmp" : "\(.\):"`
 	if test -n "$oztmp"; then
-	  oztmplo=`echo $oztmp | tr [:upper:] [:lower:]`
-	  oztmphi=`echo $oztmp | tr [:lower:] [:upper:]`
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
 	  OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
 	fi
-	oztmp=`cygpath -a -w $srcdir`
+	oztmp=`cygpath -a -w "$srcdir"`
 	oztmp=`expr "$oztmp" : "\(.\):"`
 	if test -n "$oztmp"; then
-	  oztmplo=`echo $oztmp | tr [:upper:] [:lower:]`
-	  oztmphi=`echo $oztmp | tr [:lower:] [:upper:]`
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
 	  OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
 	fi
 	;;
@@ -74,6 +76,7 @@ case $platform in
 	OZLOADSEP=':'
 	;;
 esac
+changequote([,])
 
 AC_SUBST(OZLOADSEP)
 AC_SUBST(OZLOADWIN)
