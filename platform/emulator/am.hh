@@ -243,6 +243,8 @@ public:
 
   Bool debugmode() { return isSetSFlag(DebugMode); }
 
+  void checkStatus(); // in emulate.cc
+
   void print();
 
 private:
@@ -298,7 +300,7 @@ public:
     return trail.isEmptyChunk();
   }
 
-  void checkEntailment();
+  void checkStability();
   int handleFailure(Continuation *&cont, AWActor *&aa);
   INLINE int commit(Board *bb, Thread *tt=0);
 
