@@ -29,24 +29,27 @@ const int fd_iv_max_high = FD_NOI;
 const int fd_iv_max_elem = OzMaxInt;
 const int fd_full_size = fd_iv_max_elem + 1;
 
-// Invariants: high == 1 other reduce to FiniteDomain
+// Invariants: high == 1 reduce to FiniteDomain
 class FDIntervals {
 friend class FiniteDomain;
 private:
   int high;
-  struct i_arr_type {int left; int right;} i_arr[fd_iv_max_high];
-  int findPossibleIndexOf(int) const;
-#ifdef DEBUG_CHECK
-  Bool isConsistent(void) {
-    for (int i = 0; i < high; i++) {
-      if (i_arr[i].left > i_arr[i].right)
-        return FALSE;
-      if ((i + 1 < high) && (i_arr[i].right >= i_arr[i + 1].left))
-        return FALSE;
+  struct i_arr_type {int left; int right;};
+
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  Bool isConsistent(void);
+  struct _i_arr_type {
+    i_arr_type _i_arr[fd_iv_max_high];
+    i_arr_type &operator [] (int i) const {
+      Assert(0 <= i && i < *(((int *)this) - 1));
+      return _i_arr[i];
     }
-    return TRUE;
-  }
+  } i_arr;
+#else
+  i_arr_type i_arr[fd_iv_max_high];
 #endif
+
+  int findPossibleIndexOf(int) const;
 public:
   FDIntervals(int hi) {high = hi;}
   FDIntervals(const FDIntervals &);

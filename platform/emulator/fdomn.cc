@@ -16,9 +16,32 @@
 #include "fdomn.hh"
 #include "misc.hh"
 
+// Debugging Stuff ------------------------------------------------------------
 
-static int div32(int n) {return n >> 5;}
-static int mod32(int n) {return n & 0x1f;}
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+
+#define DEBUG_FD_IR(COND, CODE) //if (COND) CODE;
+
+Bool FDIntervals::isConsistent(void) {
+  for (int i = 0; i < high; i++) {
+    if (i_arr[i].left > i_arr[i].right)
+      return FALSE;
+    if ((i + 1 < high) && (i_arr[i].right >= i_arr[i + 1].left))
+      return FALSE;
+  }
+  return TRUE;
+}
+
+#else
+
+#define DEBUG_FD_IR(COND, CODE)
+
+#endif
+
+// Miscellaneous --------------------------------------------------------------
+
+inline int div32(int n) {return n >> 5;}
+inline int mod32(int n) {return n & 0x1f;}
 
 extern unsigned char numOfBitsInByte[];
 extern int toTheLowerEnd[];
@@ -262,9 +285,9 @@ FDIntervals * FDIntervals::operator -= (const int take_out)
 
   // take_out is in i_arr[index]
   if (i_arr[index].left == i_arr[index].right) {
-    high -= 1;
-    for (int i = index; i < high; i++)
+    for (int i = index; i < (high - 1); i++)
       i_arr[i] = i_arr[i + 1];
+    high -= 1;
   } else if (i_arr[index].left == take_out) {
     i_arr[index].left += 1;
   } else if (i_arr[index].right == take_out) {
@@ -272,12 +295,12 @@ FDIntervals * FDIntervals::operator -= (const int take_out)
   } else {
     int new_max_high = high + 1;
     if (new_max_high <= fd_iv_max_high) {
-      for (int i = new_max_high - 1; i > index; i -= 1)
+      high = new_max_high;
+
+      for (int i = high - 1; i > index; i -= 1)
         i_arr[i] = i_arr[i - 1];
       i_arr[index].right = take_out - 1;
       i_arr[index + 1].left = take_out + 1;
-
-      high = new_max_high;
     } else {
       FDIntervals * new_iv = new(new_max_high) FDIntervals(new_max_high);
       for (int i = 0; i <= index; i += 1)
@@ -303,7 +326,6 @@ FDIntervals * FDIntervals::operator += (const int put_in)
   int index = findPossibleIndexOf(put_in);
 
   if (i_arr[index].left <= put_in && put_in <= i_arr[index].right)
-
     return this;
 
   if (index > 0 && (put_in == i_arr[index - 1].right + 1)) {
@@ -318,21 +340,19 @@ FDIntervals * FDIntervals::operator += (const int put_in)
   } else if (put_in == i_arr[index].left - 1) {
     i_arr[index].left -= 1;
   } else {
-    int new_max_high = high + 1;
-    index += 1;
-    if (new_max_high <= fd_bv_max_high) {
-      for (int i = high; index < i; i -= 1)
+    high += 1;
+    if (i_arr[index].right < put_in) index += 1;
+    if (high <= fd_bv_max_high) {
+      for (int i = high - 1; index < i; i -= 1)
         i_arr[i] = i_arr[i - 1];
-      i_arr[index].right = i_arr[index].left = put_in;
-      high = new_max_high;
+      i_arr[index].left = i_arr[index].right = put_in;
     } else {
-      FDIntervals * new_iv = new(new_max_high) FDIntervals(new_max_high);
-      for (int i = 0; i <= index; i += 1)
+      FDIntervals * new_iv = new(high) FDIntervals(high);
+      for (int i = 0; i < index; i += 1)
         new_iv->i_arr[i] = i_arr[i];
-      index += 1;
-      new_iv->i_arr[index].right = new_iv->i_arr[index].right = put_in;
-      for (i = high; index <= i; i -= 1)
-        new_iv->i_arr[i + 1] = i_arr[i];
+      for (i = high - 1; index < i; i -= 1)
+        new_iv->i_arr[i] = i_arr[i - 1];
+      new_iv->i_arr[index].left = new_iv->i_arr[index].right = put_in;
       Assert(new_iv->isConsistent());
       return new_iv;
     }
@@ -789,14 +809,6 @@ int FDBitVector::intersect_bv(FDBitVector &z, const FDBitVector &y)
 
 // FD -------------------------------------------------------------------------
 
-#ifdef DEBUG_CHECK
-#define DEBUG_FD_IR(COND, CODE) //if (COND) CODE; // {if (DEBUG_FD_IR_count >= 100) {cout << endl <<"press a to cont" << endl; while (getchar() != 'c'); DEBUG_FD_IR_count = 1;} CODE;DEBUG_FD_IR_count += 1;}
-
-static int DEBUG_FD_IR_count = 1;
-
-#else
-#define DEBUG_FD_IR(COND, CODE)
-#endif
 
 void FiniteDomain::print(ostream &ofile, int idnt) const
 {
@@ -972,11 +984,14 @@ FDBitVector * FiniteDomain::provideBitVector(void)
 
 static
 // int intcompare(int ** i, int ** j) {return(**i - **j);}
-int intcompare(void * ii, void  * jj) {int **i = (int **) ii;
-        int **j = (int **) jj; return(**i - **j);}
+int intcompare(void * ii, void  * jj) {
+  int **i = (int **) ii;
+  int **j = (int **) jj;
+  return(**i - **j);
+}
 
 int FiniteDomain::simplify(int list_len,
-                                int * list_left, int * list_right)
+                           int * list_left, int * list_right)
 {
   for (int i = list_len; i--; ) {
     fd_iv_left_sort[i] = list_left + i;
@@ -1181,7 +1196,7 @@ int FiniteDomain::operator <= (const int leq)
 {
   DEBUG_FD_IR(FALSE, cout << *this  << " <= " << leq << " = ");
 
-  if (leq < 0) {
+  if (leq < min_elem) {
     DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
     return initEmpty();
   }
