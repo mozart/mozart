@@ -359,13 +359,26 @@ Case(SETVOID):
 
         if (isNotCVar(term) ||
 	    isCVar(term) && tagged2CVar(term)->valid(atm)) {
-	  e->suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
-			  CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-	  if (e->currentThread->getCompMode() == ALLSEQMODE) {
-	    e->currentThread=0;
-	    goto LBLstart;
+	  Suspension *susp = e->mkSuspension(CBB,CPP,
+					     PC,Y,G,X,getPosIntArg(PC+5));
+	  addSusp(termPtr,susp);
+
+	  /* Bug fix:
+	     declare Y Z
+	     {RecLabel Y Z}
+	     if Y=b then {Show yes36b} else {Show no36b} fi
+	     Z=c
+	     we must suspend on the label of OFS too!!
+	     */
+
+	  if (isCVar(term) && tagged2CVar(term)->getType() == OFSVariable) {
+	    TaggedRef lab = ((GenOFSVariable*)tagged2CVar(term))->getLabel();
+	    DEREF(lab,labPtr,labTag);
+	    if (isAnyVar(labTag)) {
+	      addSusp(labPtr,susp);
+	    }
 	  }
-	  goto LBLpopTask;
+	  CHECKSEQ;
 	}
 
 	JUMP( getLabelArg(PC+4) );
@@ -388,15 +401,11 @@ Case(SETVOID):
 	  JUMP( getLabelArg(PC+3) );
 	}
 
-        if (isNotCVar(term) ||
-	    isCVar(term) && tagged2CVar(term)->valid(i)) {
-	  e->suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
-			  CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-	  if (e->currentThread->getCompMode() == ALLSEQMODE) {
-	    e->currentThread=0;
-	    goto LBLstart;
-	  }
-	  goto LBLpopTask;
+        if (isNotCVar(term)) {
+	  Suspension *susp=e->mkSuspension(CBB,CPP,
+					   PC,Y,G,X,getPosIntArg(PC+5));
+	  addSusp(termPtr,susp);
+	  CHECKSEQ;
 	}
 
 	JUMP( getLabelArg(PC+4) );

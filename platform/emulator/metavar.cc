@@ -258,12 +258,12 @@ OZ_Bool OZ_constrainMetaVar(OZ_Term v, OZ_MetaType t, OZ_Term d)
 
 OZ_Bool OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
 {
-  OZ_Suspension susp = OZ_makeSuspension(OZ_self, OZ_args, OZ_arity);
+  OZ_Thread susp = OZ_makeThread(OZ_self, OZ_args, OZ_arity);
   Bool suspNotAdded = TRUE;
   
   for (int i = OZ_arity; i--; )
     if (!OZ_isUnique(OZ_getCArg(i))) {
-      OZ_addSuspension(OZ_args[i], susp);
+      OZ_addThread(OZ_args[i], susp);
       suspNotAdded = FALSE;
     }
 
@@ -418,8 +418,8 @@ OZ_C_proc_begin(BImetaGetDataAsAtom, 2)
     return OZ_unify(makeTaggedAtom(((GenMetaVariable *) tagged2CVar(var))->toString()),
 		    OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
-    OZ_addSuspension(makeTaggedRef(varptr),
-		     OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
+    OZ_addThread(makeTaggedRef(varptr),
+		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
     TypeError(0, "");
@@ -440,8 +440,8 @@ OZ_C_proc_begin(BImetaGetStrength, 2)
     return OZ_unify(((GenMetaVariable *) tagged2CVar(var))->getData(),
 		    OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
-    OZ_addSuspension(makeTaggedRef(varptr),
-		     OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
+    OZ_addThread(makeTaggedRef(varptr),
+		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
     TypeError(0, "");
@@ -463,8 +463,8 @@ OZ_C_proc_begin(BImetaGetNameAsAtom, 2)
       OZ_unify(makeTaggedAtom(((GenMetaVariable*)tagged2CVar(var))->getName()),
 	       OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
-    OZ_addSuspension(makeTaggedRef(varptr),
-		     OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
+    OZ_addThread(makeTaggedRef(varptr),
+		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
     TypeError(0, "");
@@ -485,8 +485,8 @@ OZ_C_proc_begin(BImetaWatchVar, 2)
     if (((GenMetaVariable*)tagged2CVar(v))->isStrongerThan(deref(OZ_args[1])))
       return PROCEED;
     
-    OZ_addSuspension(makeTaggedRef(vptr),
-		     OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
+    OZ_addThread(makeTaggedRef(vptr),
+		 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
   } else {
     TypeError(0, "");

@@ -83,6 +83,7 @@ public:
 		RefsArray y,RefsArray g=NULL,RefsArray x=NULL,int n=0,
 		Bool copyF=OK)
   {
+    Assert(pc!=0)
 #ifndef NEWCOUNTER
     if (copyF) b->incSuspCount();
 #endif
