@@ -15,7 +15,6 @@
 #pragma implementation "emulate.hh"
 #endif
 
-#include "../include/config.h"
 #include "types.hh"
 
 #include "actor.hh"
@@ -33,11 +32,6 @@
 #include "verbose.hh"
 
 
-extern State BIexchangeCellInline(TaggedRef c, TaggedRef out,TaggedRef &in);
-extern TaggedRef getSuspHandlerBool(InlineFun2);
-extern void printSuspension(ProgramCounter pc);
-
-
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE (HF = Handle Failure)
 
@@ -51,7 +45,7 @@ extern void printSuspension(ProgramCounter pc);
       if (e->conf.errorVerbosity > 1) {                                       \
         message("\n");                                                        \
         {MSG_LONG;}                                                           \
-	e->currentThread->taskStack.printDebug(PC,NO,10000);		      \
+	e->currentThread->printDebug(PC,NO,10000);		      \
       }                                                                       \
       errorTrailer();                                                         \
     } else {                                                                  \
@@ -143,8 +137,9 @@ if (arity != arityExp && VarArity != arityExp) {		      	      \
 
 
 
-static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
-					  TaggedRef *&sP)
+static
+ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
+				   TaggedRef *&sP)
 {
   ProgramCounter offset = table->getElse();
   if (isSTuple(term)) {
@@ -216,46 +211,43 @@ static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
      FALSE: can continue
    */
 
-static
-Bool emulateHookOutline(AM *e, Abstraction *def=NULL,
-			int arity=0,
-			TaggedRef *arguments=NULL)
+Bool AM::emulateHookOutline(Abstraction *def,
+			    int arity,
+			    TaggedRef *arguments)
 {
   // without signal blocking;
-  if (e->isSetSFlag(ThreadSwitch)) {
-    if (Thread::QueueIsEmpty()
-	|| Thread::GetHead()->getPriority() < e->currentThread->getPriority()){
-      e->RestartProcess();
+  if (isSetSFlag(ThreadSwitch)) {
+    if (threadQueueIsEmpty()
+	|| threadsHead->getPriority() < currentThread->getPriority()){
+      restartThread();
     } else {
       return TRUE;
     }
   }
-  if (e->isSetSFlag(StartGC)) {
+  if (isSetSFlag(StartGC)) {
     return TRUE;
   }
 
   blockSignals();
   // & with blocking of signals;
-  if (e->isSetSFlag(UserAlarm)) {
+  if (isSetSFlag(UserAlarm)) {
     Alarm::HandleUser();
   }
-  if (e->isSetSFlag(IOReady)) {
+  if (isSetSFlag(IOReady)) {
     IO::handleIO();
   }
   
   unblockSignals();
   
-  if (def && e->isSetSFlag(DebugMode)) {
-    enterCall(e->currentBoard,def,arity,arguments);
+  if (def && isSetSFlag(DebugMode)) {
+    enterCall(currentBoard,def,arity,arguments);
   }
 
   return FALSE;
 }
 
-
-
 inline
-Bool hookCheckNeeded(AM *e)
+Bool AM::hookCheckNeeded()
 {
 #ifdef DEBUG_DET
   static int counter = 100;
@@ -265,12 +257,12 @@ Bool hookCheckNeeded(AM *e)
   }
 #endif
   
-  return (e->isSetSFlag());
+  return (isSetSFlag());
 }
 
 /* macros are faster ! */
 #define emulateHook(e,def,arity,arguments) \
- (hookCheckNeeded(e) && emulateHookOutline(e, def, arity, arguments))
+ (e->hookCheckNeeded() && e->emulateHookOutline(def, arity, arguments))
 
 #define emulateHook0(e) emulateHook(e,NULL,0,NULL)
 
@@ -279,14 +271,14 @@ Bool hookCheckNeeded(AM *e)
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs,IsEx,ContAdr,Arity,CheckMode)			      \
+#define CallDoChecks(Pred,gRegs,IsEx,ContAdr,Arity,CheckMode)		      \
      if (! IsEx) {				\
        e->pushTask(CBB,ContAdr,Y,G);		\
      }						\
      G = gRegs;								      \
      if (CheckMode) e->currentThread->checkCompMode(Pred->getCompMode()); \
      if (emulateHook(e,Pred,Arity,X)) {					      \
-	e->pushTaskOutline(CBB,Pred->getPC(),NULL,G,X,Arity);		      \
+	e->pushTask(CBB,Pred->getPC(),NULL,G,X,Arity);		      \
 	goto LBLschedule;						      \
      }
 
@@ -448,20 +440,24 @@ Bool hookCheckNeeded(AM *e)
 // ------------------------------------------------------------------------
 
 inline
-Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
-			 RefsArray Y, RefsArray G,
-			 RefsArray X, int argsToSave)
+Suspension *AM::mkSuspension(Board *b, int prio, ProgramCounter PC,
+			     RefsArray Y, RefsArray G,
+			     RefsArray X, int argsToSave)
 {
 #ifndef NEWCOUNTER
   b->incSuspCount();
 #endif
-  switch (am.currentThread->getCompMode()) {
+  switch (currentThread->getCompMode()) {
   case ALLSEQMODE:
-    am.pushTask(b,PC,Y,G,X,argsToSave);
-    return new Suspension(am.currentThread);
+    pushTask(b,PC,Y,G,X,argsToSave);
+    return new Suspension(currentThread);
   case SEQMODE:
-    am.pushTask(b,PC,Y,G,X,argsToSave);
-    return new Suspension(am.currentThread->newSeqThread());
+    {
+      pushTask(b,PC,Y,G,X,argsToSave);
+      Thread *th=newThread(currentThread->getPriority(),currentBoard);
+      th->getSeqFrom(currentThread);
+      return new Suspension(th);
+    }
   case PARMODE:
     return new Suspension(b,prio,PC,Y,G,X,argsToSave);
   default:
@@ -471,19 +467,23 @@ Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
 }
 
 inline
-Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
-			 RefsArray X, int argsToSave)
+Suspension *AM::mkSuspension(Board *b, int prio, OZ_CFun bi,
+			     RefsArray X, int argsToSave)
 {
 #ifndef NEWCOUNTER
   b->incSuspCount();
 #endif
-  switch (am.currentThread->getCompMode()) {
+  switch (currentThread->getCompMode()) {
   case ALLSEQMODE:
-    am.pushCFun(b,bi,X,argsToSave);
-    return new Suspension(am.currentThread);
+    pushCFun(b,bi,X,argsToSave);
+    return new Suspension(currentThread);
   case SEQMODE:
-    am.pushCFun(b,bi,X,argsToSave);
-    return new Suspension(am.currentThread->newSeqThread());
+    {
+      pushCFun(b,bi,X,argsToSave);
+      Thread *th=newThread(currentThread->getPriority(),currentBoard);
+      th->getSeqFrom(currentThread);
+      return new Suspension(th);
+    }
   case PARMODE:
     return new Suspension(b,prio,bi,X,argsToSave);
   default:
@@ -492,9 +492,8 @@ Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
   }
 }
 
-static
-void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
-		  RefsArray X, RefsArray Y, RefsArray G, int prio)
+void AM::suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
+		      RefsArray X, RefsArray Y, RefsArray G, int prio)
 {
   DEREF(A,APtr,ATag);
   Assert(isAnyVar(ATag));
@@ -518,43 +517,52 @@ void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
   }
 }
 
-static
-void suspendInlineRel(TaggedRef A, TaggedRef B, int noArgs,
-		      OZ_CFun fun, AM *e, ByteCode *shallowCP)
+void AM::suspendInlineRel(TaggedRef A, TaggedRef B, int noArgs,
+		      OZ_CFun fun, ByteCode *shallowCP)
 {
   Assert(noArgs==1 || noArgs==2);
   
   static RefsArray X = allocateStaticRefsArray(2);
   
   if (shallowCP) {
-    e->trail.pushIfVar(A);
-    if (noArgs>1) e->trail.pushIfVar(B);
+    trail.pushIfVar(A);
+    if (noArgs>1) trail.pushIfVar(B);
     return;
   }
 
   X[0] = A;
   X[1] = B;
-  
-  OZ_Suspension susp = OZ_makeSuspension(fun,X,noArgs);
-  if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
-  if (noArgs>1 && OZ_isVariable(B)) OZ_addSuspension(B,susp);
+
+  // mm2
+#ifndef NEWCOUNTER
+  currentBoard->incSuspCount();
+#endif
+  Suspension *susp=new Suspension(currentBoard,currentThread->getPriority(),
+				  fun,X,noArgs);
+
+  DEREF(A,APtr,ATag);
+  if (isAnyVar(ATag)) taggedBecomesSuspVar(APtr)->addSuspension(susp);
+  if (noArgs>1) {
+    DEREF(B,BPtr,BTag);
+    if (isAnyVar(BTag)) taggedBecomesSuspVar(BPtr)->addSuspension(susp);
+  }
 }
 
 
-static
-void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C, TaggedRef &Out,
-		      int noArgs, OZ_CFun fun, InlineFun2 inFun, AM *e,
-		      ByteCode *shallowCP)
+void AM::suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C,
+			  TaggedRef &Out,
+			  int noArgs, OZ_CFun fun, InlineFun2 inFun,
+			  ByteCode *shallowCP)
 {
   static RefsArray X = allocateStaticRefsArray(4);
 
-  TaggedRef newVar = makeTaggedRef(newTaggedUVar(e->currentBoard));
+  TaggedRef newVar = makeTaggedRef(newTaggedUVar(currentBoard));
   Out = newVar;
   
   if (shallowCP) {
-    e->trail.pushIfVar(A);
-    if (noArgs>=3) e->trail.pushIfVar(B);
-    if (noArgs>=4) e->trail.pushIfVar(C);
+    trail.pushIfVar(A);
+    if (noArgs>=3) trail.pushIfVar(B);
+    if (noArgs>=4) trail.pushIfVar(C);
     return;
   }
 
@@ -563,18 +571,30 @@ void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C, TaggedRef &Out,
   if (noArgs>=3) X[i++] = B;
   if (noArgs>=4) X[i++] = C;
   X[i] = newVar;
-  
-  OZ_Suspension susp = OZ_makeSuspension(fun, X, noArgs);
 
-  if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
+  // mm2
+#ifndef NEWCOUNTER
+  currentBoard->incSuspCount();
+#endif
+  Suspension *susp=new Suspension(currentBoard,currentThread->getPriority(),
+				  fun,X,noArgs);
 
-  if (noArgs>=3 && OZ_isVariable(B)) OZ_addSuspension(B,susp);
-  if (noArgs>=4 && OZ_isVariable(C)) OZ_addSuspension(C,susp);
+  DEREF(A,APtr,ATag);
+  if (isAnyVar(ATag)) taggedBecomesSuspVar(APtr)->addSuspension(susp);
+  if (noArgs>=3) {
+    DEREF(B,BPtr,BTag);
+    if (isAnyVar(BTag)) taggedBecomesSuspVar(BPtr)->addSuspension(susp);
+    if (noArgs>=4) {
+      DEREF(C,CPtr,CTag);
+      if (isAnyVar(CTag)) taggedBecomesSuspVar(CPtr)->addSuspension(susp);
+    }
+  }
 }
 
-static
-void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave, Board *b,
-			 ProgramCounter PC, RefsArray X, RefsArray Y, RefsArray G, int prio)
+void AM::suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave,
+			     Board *b,
+			     ProgramCounter PC, RefsArray X, RefsArray Y,
+			     RefsArray G, int prio)
 {
   DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
   Suspension *susp=mkSuspension(b,prio,PC,Y,G,X,argsToSave);
@@ -608,17 +628,16 @@ TaggedRef makeMethod(int arity, TaggedRef label, TaggedRef *X)
   }
 }
 
-static
-TaggedRef createNamedVariable(int regIndex, TaggedRef name, AM *e)
+TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
 {
-  int size = getRefsArraySize(e->toplevelVars);
+  int size = getRefsArraySize(toplevelVars);
   if (LessIndex(size,regIndex)) {
     int newSize = int(size*1.5);
     message("resizing store for toplevel vars from %d to %d\n",size,newSize);
-    e->toplevelVars = resize(e->toplevelVars,newSize);
+    toplevelVars = resize(toplevelVars,newSize);
     // no deletion of old array --> GC does it
   }
-  SVariable *svar = new SVariable(e->currentBoard);
+  SVariable *svar = new SVariable(currentBoard);
   TaggedRef ret = makeTaggedRef(newTaggedSVar(svar));
   VariableNamer::addName(ret,name);
   return ret;
@@ -713,7 +732,7 @@ void engine() {
 // ------------------------------------------------------------------------
  LBLschedule:
 
-  e->currentThread->schedule();
+  e->scheduleThread(e->currentThread);
   e->currentThread=(Thread *) NULL;
 
  LBLerror:
@@ -729,15 +748,15 @@ void engine() {
 // ------------------------------------------------------------------------
 // *** process switch
 // ------------------------------------------------------------------------
-  if (Thread::QueueIsEmpty()) {
+  if (e->threadQueueIsEmpty()) {
     IO::suspendEngine();
   }
 
-  e->currentThread = Thread::GetFirst();
+  e->currentThread = e->getFirstThread();
 
   DebugTrace(trace("thread switched"));
 
-  e->RestartProcess();
+  e->restartThread();
 
 
 // ------------------------------------------------------------------------
@@ -954,12 +973,12 @@ void engine() {
 	  extern TaggedRef *globalSeqSuspendHack;
 	  Assert(globalSeqSuspendHack);
 	  Suspension *susp =
-	    mkSuspension(CBB,GET_CURRENT_PRIORITY(),
-			 biFun,X,XSize);
+	    e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
+			    biFun,X,XSize);
 	  taggedBecomesSuspVar(globalSeqSuspendHack)
 	    ->addSuspension(susp);
 	  globalSeqSuspendHack=0;
-	  if (e->currentThread->getCompMode() == ALLSEQMODE) {
+	  if (e->currentThread->compMode == ALLSEQMODE) {
 	    e->currentThread=0;
 	    goto LBLstart;
 	  }
@@ -981,7 +1000,7 @@ void engine() {
       Thread *tmpThread = e->currentThread;
       e->currentThread=(Thread *) NULL;
       if (tmpThread) {  /* may happen if catching SIGSEGV and SIGBUS */
-	tmpThread->dispose();
+	e->disposeThread(tmpThread);
       }
     }
     goto LBLstart;
@@ -998,7 +1017,7 @@ void engine() {
 
  LBLemulateHook:
   if (emulateHook0(e)) {
-    e->pushTaskOutline(CBB,PC,Y,G,X,XSize);
+    e->pushTask(CBB,PC,Y,G,X,XSize);
     goto LBLschedule;
   }
   goto LBLemulate;
@@ -1069,7 +1088,7 @@ void engine() {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
       INCFPC(2);
 
-      Assert((e->currentThread->getCompMode()&1) == entry->getAbstr()->getCompMode());
+      Assert((e->currentThread->compMode&1) == entry->getAbstr()->getCompMode());
       CallDoChecks(entry->getAbstr(),entry->getGRegs(),NO,PC,
 		   entry->getAbstr()->getArity(),NO);
 
@@ -1088,7 +1107,7 @@ void engine() {
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
-      Assert((e->currentThread->getCompMode()&1) == entry->getAbstr()->getCompMode());
+      Assert((e->currentThread->compMode&1) == entry->getAbstr()->getCompMode());
       CallDoChecks(entry->getAbstr(),entry->getGRegs(),OK,PC,
 		   entry->getAbstr()->getArity(),NO);
 
@@ -1144,8 +1163,8 @@ void engine() {
 	DISPATCH(3);
 
       case SUSPEND:
-	suspendInlineRel(XPC(2),makeTaggedNULL(),1,
-			 entry->getFun(),e,shallowCP);
+	e->suspendInlineRel(XPC(2),makeTaggedNULL(),1,
+			    entry->getFun(),shallowCP);
 	DISPATCH(3);
 
       case FAILED:
@@ -1164,7 +1183,7 @@ void engine() {
 	DISPATCH(4);
 
       case SUSPEND:
-	suspendInlineRel(XPC(2),XPC(3),2,entry->getFun(),e,shallowCP);
+	e->suspendInlineRel(XPC(2),XPC(3),2,entry->getFun(),shallowCP);
 	DISPATCH(4);
       case FAILED:
 	SHALLOWFAIL;
@@ -1186,8 +1205,8 @@ void engine() {
 	DISPATCH(4);
 
       case SUSPEND:
-	suspendInlineFun(XPC(2),makeTaggedNULL(),makeTaggedNULL(),XPC(3),2,
-			 entry->getFun(),(InlineFun2)fun,e,shallowCP);
+	e->suspendInlineFun(XPC(2),makeTaggedNULL(),makeTaggedNULL(),XPC(3),2,
+			    entry->getFun(),(InlineFun2)fun,shallowCP);
 	DISPATCH(4);
 
       case FAILED:
@@ -1206,8 +1225,8 @@ void engine() {
 	DISPATCH(5);
 
       case SUSPEND:
-	suspendInlineFun(XPC(2),XPC(3),makeTaggedNULL(),XPC(4),3,
-			 entry->getFun(),fun,e,shallowCP);
+	e->suspendInlineFun(XPC(2),XPC(3),makeTaggedNULL(),XPC(4),3,
+			    entry->getFun(),fun,shallowCP);
 	DISPATCH(5);
 
       case FAILED:
@@ -1227,8 +1246,8 @@ void engine() {
 	DISPATCH(6);
 
       case SUSPEND:
-	suspendInlineFun(XPC(2),XPC(3),XPC(4),XPC(5),4,
-			 entry->getFun(),(InlineFun2)fun,e,shallowCP);
+	e->suspendInlineFun(XPC(2),XPC(3),XPC(4),XPC(5),4,
+			 entry->getFun(),(InlineFun2)fun,shallowCP);
 	DISPATCH(6);
 
       case FAILED:
@@ -1274,9 +1293,9 @@ void engine() {
       case FAILED:  JUMP( getLabelArg(PC+3) );
 
       case SUSPEND:
-	suspendOnVar(XPC(2),getPosIntArg(PC+4),
-		     CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-	if (e->currentThread->getCompMode() == ALLSEQMODE) {
+	e->suspendOnVar(XPC(2),getPosIntArg(PC+4),
+			CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	if (e->currentThread->compMode == ALLSEQMODE) {
 	  e->currentThread=0;
 	  goto LBLstart;
 	}
@@ -1297,9 +1316,9 @@ void engine() {
 
       case SUSPEND:
       default:
-	suspendShallowTest2(XPC(2),XPC(3),getPosIntArg(PC+5),
-			    CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-	if (e->currentThread->getCompMode() == ALLSEQMODE) {
+	e->suspendShallowTest2(XPC(2),XPC(3),getPosIntArg(PC+5),
+			       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	if (e->currentThread->compMode == ALLSEQMODE) {
 	  e->currentThread=0;
 	  goto LBLstart;
 	}
@@ -1324,12 +1343,12 @@ void engine() {
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
-      Suspension *susp=mkSuspension(CBB,GET_CURRENT_PRIORITY(),
-				    shallowCP,Y,G,X,argsToSave);
+      Suspension *susp=e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
+				       shallowCP,Y,G,X,argsToSave);
       e->reduceTrailOnShallow(susp,numbOfCons);
       inShallowGuard = NO;
       shallowCP = NULL;
-      if (e->currentThread->getCompMode() == ALLSEQMODE) {
+      if (e->currentThread->compMode == ALLSEQMODE) {
 	e->currentThread=0;
 	goto LBLstart;
       }
@@ -1454,7 +1473,7 @@ void engine() {
                     now woken up always, even if variable is bound to another var */
 
       int argsToSave = getPosIntArg(PC+2);
-      suspendOnVar(origTerm,argsToSave,CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+      e->suspendOnVar(origTerm,argsToSave,CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
       if (e->currentThread->getCompMode() == ALLSEQMODE) {
 	e->currentThread=0;
 	goto LBLstart;
@@ -1673,8 +1692,8 @@ void engine() {
 		extern TaggedRef *globalSeqSuspendHack;
 		if (globalSeqSuspendHack) {
 		  Suspension *susp =
-		    mkSuspension(CBB,GET_CURRENT_PRIORITY(),
-				 bi->getFun(),X,predArity);
+		    e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
+				    bi->getFun(),X,predArity);
 		  taggedBecomesSuspVar(globalSeqSuspendHack)
 		    ->addSuspension(susp);
 		  globalSeqSuspendHack=0;
@@ -1696,7 +1715,7 @@ void engine() {
 				   goto localHack0;);
 	      if (emulateHook0(e)) {
 		if (!isTailCall) {
-		  e->pushTaskOutline(CBB,PC,Y,G);
+		  e->pushTask(CBB,PC,Y,G);
 		}
 		goto LBLschedule;
 	      }
@@ -1749,7 +1768,7 @@ void engine() {
 
        // put continuation if any;
        if (isTailCall == NO)
-	 e->pushTaskOutline(CBB, PC, Y, G);
+	 e->pushTask(CBB, PC, Y, G);
 
        // create solve actor(x1);
        // Note: don't perform any derefencing on X[1];
@@ -2136,14 +2155,14 @@ void engine() {
 	prio = defPrio;
       }
 
-      Thread *tt = Thread::newThread(prio,CBB);
+      Thread *tt = e->newThread(prio,CBB);
       if (e->currentSolveBoard != (Board *) NULL) {
 	e->incSolveThreads (e->currentSolveBoard);
 	tt->setNotificationBoard (e->currentSolveBoard);
       }
       IncfProfCounter(procCounter,sizeof(Thread));
-      tt->pushTask(CBB,newPC,Y,G);
-      tt->schedule();
+      tt->pushCont(CBB,newPC,Y,G);
+      e->scheduleThread(tt);
       JUMP(contPC);
     }
 

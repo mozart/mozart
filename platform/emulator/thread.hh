@@ -22,6 +22,9 @@
 
 #include "types.hh"
 
+#include "taskstk.hh"
+#include "board.hh"
+
 class Toplevel;
 
 const int ALLSEQMODE=3;
@@ -29,76 +32,89 @@ const int ALLSEQMODE=3;
 class Thread : public ConstTerm
 {
 friend void engine();
-private:
-  static Thread *Head;
-  static Thread *Tail;
-  static Toplevel *ToplevelQueue;
-  static Thread *FreeList;
-
 public:
-  static void Init();
-  static void GC();
-  static void Print();
-  static Bool CheckSwitch();
-  static Thread *GetHead();
-  static Thread *GetTail();
-  static Bool QueueIsEmpty();
-  static Thread *GetFirst();
-  static void ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
-  static void ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
-				Suspension *s = NULL);
-  static void ScheduleWakeup(Board *n, Bool wasExtSusp);
-  static void ScheduleSolve (Board *b); 
-
-private:
   Thread *next;
   Thread *prev;
+private:
   int priority;
   Board *home;
   Board *notificationBoard; // for search capabilities;
   int compMode;
-  Thread(int size=-1);
-public:
   TaskStack taskStack;
 
 public:
-  static Thread *newThread(int prio,Board *home);
-  Thread *newSeqThread();
-
   USEFREELISTMEMORY;
   OZPRINT;
   OZPRINTLONG;
   Thread *gc();
   void gcRecurse();
 
+  Thread(int size);
+  void init(int prio,Board *home);
   int getPriority();
   // isSolve() replace by hasNotificationBoard()
   Bool hasNotificationBoard () { return notificationBoard ? OK : NO; }
   void setNotificationBoard (Board *b) { notificationBoard = b; }
   Board* getNotificationBoard () { return (notificationBoard); }
-  void pushTask(Board *n,ProgramCounter pc,
-		RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
-  void pushTask(Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
-  void schedule();
+
+  void pushDebug(Board *b, OzDebug *d)
+  {
+#ifndef NEWCOUNTER
+    b->incSuspCount();
+#endif
+    taskStack.pushDebug(b, d);
+  }
+
+  void pushCall(Board *b, SRecord *pred, RefsArray  x, int n)
+  {
+#ifndef NEWCOUNTER
+    b->incSuspCount();
+#endif
+    taskStack.pushCall(b,pred,x,n);
+  }
+
+  void pushNervous(Board *b)
+  {
+    taskStack.pushNervous(b);
+  }
+
+  void pushCFunCont(Board *b, OZ_CFun f, Suspension* s,
+		    RefsArray  x=NULL, int n=0, Bool copyF=OK)
+  {
+#ifndef NEWCOUNTER
+    if (copyF) b->incSuspCount();
+#endif
+    taskStack.pushCFunCont(b,f,s,x,n,copyF);
+  }
+
+  void pushCont(Board *b,ProgramCounter pc,
+		RefsArray y,RefsArray g=NULL,RefsArray x=NULL,int n=0,
+		Bool copyF=OK)
+  {
+#ifndef NEWCOUNTER
+    if (copyF) b->incSuspCount();
+#endif
+    taskStack.pushCont(b,pc,y,g,x,n,copyF);
+  }
+  Bool isEmpty()
+  {
+    return taskStack.isEmpty();
+  }
+  void printDebug(ProgramCounter pc, Bool verbose, int depth = 10000) {
+    taskStack.printDebug(pc,verbose,depth);
+  }
+  void printSuspension(ostream &out) {
+    taskStack.print(out);
+  }
+
   void setPriority(int prio);
-  void checkToplevel();
-  void addToplevel(ProgramCounter pc);
-  void pushToplevel(ProgramCounter pc);
   Board *getHome() { return home->getBoardDeref(); }
   void setHome(Board *b) { home=b; }
   int getCompMode() { return compMode; }
   void checkCompMode(int newMode);
   void setCompMode(int newMode);
   void switchCompMode();
-private:
-  void init(int prio,Board *home);
-  Bool isScheduled();
-  void insertFromTail();
-  void insertFromHead();
-  void insertAfter(Thread *here);
-  void insertBefore(Thread *here);
-  Thread *unlink();
-  void dispose();
+  void Thread::getSeqFrom(Thread *th);
 };
 
 

@@ -116,7 +116,7 @@ case INSTRUCTION(MOVEMOVEXYYX):
       TaggedRef name   = getLiteralArg(PC+2);
       DebugCheck(&Reg1(0)!= &(e->toplevelVars[0]),
 		 error("createNamedVar: e->toplevelVars expected"););
-      TaggedRef newVar = createNamedVariable(regIndex,name,e);
+      TaggedRef newVar = e->createNamedVariable(regIndex,name);
       Y = e->toplevelVars;
       Reg1(regIndex) = newVar;
     }
@@ -373,8 +373,8 @@ case INSTRUCTION(SETVOID):
 
         if (isNotCVar(term) ||
 	    isCVar(term) && tagged2CVar(term)->valid(atm)) {
-	  suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
-		       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	  e->suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
+			  CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
 	  if (e->currentThread->getCompMode() == ALLSEQMODE) {
 	    e->currentThread=0;
 	    goto LBLstart;
@@ -404,8 +404,8 @@ case INSTRUCTION(SETVOID):
 
         if (isNotCVar(term) ||
 	    isCVar(term) && tagged2CVar(term)->valid(i)) {
-	  suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
-		       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	  e->suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
+			  CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
 	  if (e->currentThread->getCompMode() == ALLSEQMODE) {
 	    e->currentThread=0;
 	    goto LBLstart;

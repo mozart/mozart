@@ -924,29 +924,29 @@ PRINTLONG(SolveActor)
   suspList->print(stream,DEC(depth),offset+2);
 }
 
-void Thread::Print()
+void AM::printThreads()
 {
-  cout << "class Thread" << endl
-       << "  currentThread: ";
-  am.currentThread->print(cout,0,0);
+  cout << "Threads" << endl
+       << "  running: ";
+  currentThread->print(cout,0,0);
   cout << endl
-       << "  rootThread:    ";
-  am.rootThread->print(cout,0,0);
+       << "  toplevel:    ";
+  rootThread->print(cout,0,0);
   cout << endl
-       << "  Queue:" << endl;
-  for (Thread *th=Head; th; th = th->next) {
+       << "  runnable:" << endl;
+  for (Thread *th=threadsHead; th; th = th->next) {
     th->print(cout,0,4);
-    if (th == Head) {
+    if (th == threadsHead) {
       cout << " HEAD";
     }
-    if (th == Tail) {
+    if (th == threadsTail) {
       cout << " TAIL";
     }
-    if (th == am.rootThread) {
+    if (th == rootThread) {
       cout << " ROOT";
     }
-    if (th == am.currentThread) {
-      cout << " CURRENT";
+    if (th == currentThread) {
+      cout << " RUNNING";
     }
     cout << endl;
   }
@@ -1471,7 +1471,7 @@ void printSuspension(ProgramCounter pc)
   printWhere(cout,pc);
   cout << endl;
   if (am.conf.showSuspension > 1) {
-    am.currentThread->taskStack.print(cout);
+    am.currentThread->printSuspension(cout);
   }
 }
 
