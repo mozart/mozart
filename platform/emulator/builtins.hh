@@ -109,7 +109,7 @@ OZ_C_proc_begin(Name,2)                                                       \
   switch (state) {                                                            \
   case SUSPEND: {                                                             \
     OZ_Suspension susp = OZ_makeSelfSuspension();                             \
-    OZ_addSuspension(arg1,susp);                                                      \
+    OZ_addSuspension(arg1,susp);                                              \
     return PROCEED;                                                           \
    }                                                                          \
   case FAILED:                                                                \
