@@ -296,6 +296,8 @@ outerLoop:
       xUsage[w->i]=0;
       w = t;
     }
+    // Delete current
+    delete current;
   }
 
 outerLoop2:
@@ -337,15 +339,15 @@ outerLoop2:
 	  // of the 'current' writer set.
 	  delete current;
 	  goto outerLoop2;
-	} else if (PC > next->pc) {
+	} else if (PC >= next->pc) {
 	  prev = &next->next;
 	  next = *prev;
 	} else {
 	  break;
 	}
       }
-      current->next = next;
-      *prev = current;
+      // Insert copy of current into seen list
+      *prev = new Segment(current->pc, next, current->writer);
     }
 
     // install writer flags
@@ -864,6 +866,8 @@ outerLoop:
       }
       w = t;
     }
+    // Delete current
+    delete current;
   }
 
 outerLoop2:
@@ -915,15 +919,15 @@ outerLoop2:
 	  // of the 'current' writer set.
 	  delete current;
 	  goto outerLoop2;
-	} else if (PC > next->pc) {
+	} else if (PC >= next->pc) {
 	  prev = &next->next;
 	  next = *prev;
 	} else {
 	  break;
 	}
       }
-      current->next = next;
-      *prev = current;
+      // Insert copy of current into seen list
+      *prev = new Segment(current->pc, next, current->writer);
     }
     // install writer flags
     for (Writer *w = current->writer; w;) {
