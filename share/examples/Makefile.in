@@ -72,12 +72,12 @@ $(OZEX) $(OZEXDIRS):
         $(INSTALL_DIR) $@
 
 FD = \
-        bin-packing bridge-naive bridge cars change \
+        bin-packing bridge cars change \
         conference configuration donald family fraction \
         grocery kalotan knights magic-sequence \
         magic-square map-coloring money multiply photo \
         pythagoras queens safe srat \
-        tiling warehouses zebra
+        warehouses zebra
 
 GR = \
         hpsg shieber shieber/formalism shieber/grammar
@@ -88,7 +88,7 @@ EXAMPLES = \
 
 SAMPLER0 = \
         constraints/animate-bridge constraints/bridge \
-        constraints/draw-photo constraints/gantt constraints/machines \
+        constraints/draw-photo constraints/abz6 \
         constraints/scheduling-compiler oz
 SAMPLER = $(SAMPLER0:%=$(OZEX)/sampler/%.oz)
 
