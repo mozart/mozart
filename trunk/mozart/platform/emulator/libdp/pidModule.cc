@@ -89,14 +89,14 @@ OZ_BI_define(BIGetPID,0,1)
   OZ_RETURN(OZ_recordInit(OZ_atom("PID"),l));
 } OZ_BI_end
 
-OZ_BI_define(BIReceivedPID,1,0)
+OZ_BI_define(BIReceivedPID,0,1)
 {
-  oz_declareIN(0,stream);
-
   //
   initDP();
 
-  return oz_unify(GateStream,stream);
+  OZ_Term gate = GateStream;
+  GateStream = OZ_unit(); // clear it - avoid space leak
+  OZ_RETURN(gate);
 } OZ_BI_end
 
 
