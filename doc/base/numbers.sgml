@@ -285,6 +285,48 @@ end>>>
           exception may (but needs not) be raised if both arguments
           are zero.
 
+        <Entry><Span class=index/<<Float.sinh>>/
+          <Index/<<Float>><And><<sinh>>/
+        <Synopsis>
+          <<{Float.sinh ?+{F1} ??{F2}}>>
+        <Item>
+          returns the hyperbolic sine of&nbsp;?_{F1}.
+
+        <Entry><Span class=index/<<Float.cosh>>/
+          <Index/<<Float>><And><<cosh>>/
+        <Synopsis>
+          <<{Float.cosh ?+{F1} ??{F2}}>>
+        <Item>
+          returns the hyperbolic cosine of&nbsp;?_{F1}.
+
+        <Entry><Span class=index/<<Float.tanh>>/
+          <Index/<<Float>><And><<tanh>>/
+        <Synopsis>
+          <<{Float.tanh ?+{F1} ??{F2}}>>
+        <Item>
+          returns the hyperbolic tangent of&nbsp;?_{F1}.
+
+        <Entry><Span class=index/<<Float.asinh>>/
+          <Index/<<Float>><And><<asinh>>/
+        <Synopsis>
+          <<{Float.asinh ?+{F1} ??{F2}}>>
+        <Item>
+          returns the inverse hyperbolic sine of&nbsp;?_{F1}.
+
+        <Entry><Span class=index/<<Float.acosh>>/
+          <Index/<<Float>><And><<acosh>>/
+        <Synopsis>
+          <<{Float.acosh ?+{F1} ??{F2}}>>
+        <Item>
+          returns the inverse hyperbolic cosine of&nbsp;?_{F1}.
+
+        <Entry><Span class=index/<<Float.atanh>>/
+          <Index/<<Float>><And><<atanh>>/
+        <Synopsis>
+          <<{Float.atanh ?+{F1} ??{F2}}>>
+        <Item>
+          returns the inverse hyperbolic tangent of&nbsp;?_{F1}.
+
         <Entry><Span class=index/<<FloatToInt>>/
           <Index class=tails/<<Float>><And><<toInt>>/
         <Synopsis>
