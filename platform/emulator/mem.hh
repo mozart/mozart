@@ -240,6 +240,15 @@ extern size_t nextChopSize;
 
 unsigned int getMemoryInFreeList();
 
+inline
+void * oz_hrealloc(const void * p, size_t sz) {
+  // Use for blocks where size is not known at compile time
+  DebugCheck(sz%sizeof(int) != 0,
+             OZ_error("OZ_hrealloc: can only handle word sized blocks"););
+
+  return memcpy(heapMalloc(sz), p, sz);
+}
+
 void initMemoryManagement(void);
 void deleteChunkChain(char *);
 int inChunkChain(void *, void *);

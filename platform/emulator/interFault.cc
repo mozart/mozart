@@ -2,9 +2,6 @@
  *  Authors:
  *    Per Brand (perbrand@sics.se)
  *
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
- *
  *  Copyright:
  *    Per Brand, 1998
  *
@@ -266,7 +263,7 @@ void gcDeferWatchers(){
   if(deferWatchers==NULL) return;
   base=&(deferWatchers);
   while((*base)!=NULL){
-    newW= (DeferWatcher*) OZ_hrealloc((*base),sizeof(DeferWatcher));
+    newW= (DeferWatcher*) oz_hrealloc((*base),sizeof(DeferWatcher));
     newW->gc();
     *base=newW;
     base= &(newW->next);}

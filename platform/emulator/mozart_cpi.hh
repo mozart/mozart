@@ -29,6 +29,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include "mozart.h"
 
 //-----------------------------------------------------------------------------
@@ -671,8 +672,6 @@ void OZ_updateHeapTerm(OZ_Term &t) {
   OZ_collect(&t);
 }
 
-extern void * OZ_hrealloc(void *, size_t);
-
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
 
 OZ_Term * OZ_hallocOzTerms(int);
@@ -680,7 +679,11 @@ int *     OZ_hallocCInts(int);
 char *    OZ_hallocChars(int);
 OZ_Term * OZ_copyOzTerms(int, OZ_Term *);
 inline int * OZ_copyCInts(int n, int * frm) {
-  return (n>0) ? ((int *) OZ_hrealloc(frm, n*sizeof(int))) : ((int *) 0);
+  if (n>0) {
+    return (int *) memcpy(OZ_hallocCInts(n), frm, n*sizeof(int));
+  } else {
+    return ((int *) 0);
+  }
 }
 char *    OZ_copyChars(int, char *);
 void      OZ_hfreeOzTerms(OZ_Term *, int);

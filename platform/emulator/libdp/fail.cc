@@ -1127,7 +1127,7 @@ OZ_Return DistHandlerDeInstall(SRecord *condStruct, TaggedRef proc, Bool &suc){
 
 EntityInfo* gcEntityInfoInternal(EntityInfo *info){
   if(info==NULL) return NULL;
-  EntityInfo *newInfo = (EntityInfo *) OZ_hrealloc(info,sizeof(EntityInfo));
+  EntityInfo *newInfo = (EntityInfo *) oz_hrealloc(info,sizeof(EntityInfo));
   newInfo->gcWatchers();
   return newInfo;}
 
@@ -1166,7 +1166,7 @@ void EntityInfo::gcWatchers(){
     if(w->twin!=NULL){
       w->twin->setGCMark();}
 
-    Watcher* newW=(Watcher*) OZ_hrealloc(w,sizeof(Watcher));
+    Watcher* newW=(Watcher*) oz_hrealloc(w,sizeof(Watcher));
     *base=newW;
     newW->thread=nth;
     OZ_collectHeapTerm(newW->proc,newW->proc);
@@ -1176,7 +1176,7 @@ void EntityInfo::gcWatchers(){
 
 void gcGlobalWatcher(){
   if(globalWatcher==NULL) return;
-  globalWatcher = (Watcher*) OZ_hrealloc(globalWatcher,sizeof(Watcher));
+  globalWatcher = (Watcher*) oz_hrealloc(globalWatcher,sizeof(Watcher));
   OZ_collectHeapTerm(globalWatcher->proc,globalWatcher->proc);}
 
 // called from gc

@@ -87,7 +87,7 @@ void ResourceHashTable::gcResourceTableRecurse(GenHashNode *in, int index){
 }
 
 ConstTerm* gcDistResourceImpl(ConstTerm* term){
-  term = (ConstTerm *) OZ_hrealloc((void*)term,sizeof(DistResource));
+  term = (ConstTerm *) oz_hrealloc((void*)term,sizeof(DistResource));
   gcProxyRecurseImpl((Tertiary *)term);
   return term;
 }
