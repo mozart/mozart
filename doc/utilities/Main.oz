@@ -192,12 +192,13 @@ define
             try DB in
                DB = {Gdbm.new read(Args.'in')}
                Xs = {Gdbm.entries DB}
+               {IsList Xs _}
                {Gdbm.close DB}
                true
             catch _ then
                false
             end
-         then Table Pages DocType Address HTML2 in
+         then Table Pages Address HTML2 in
             Table#Pages = {Indexer.makeSplitIndex
                            {FoldR Xs
                             fun {$ Prefix#(DocumentTitle#Entries) Rest}
