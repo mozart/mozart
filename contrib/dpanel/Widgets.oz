@@ -3,7 +3,10 @@ import
    Tk
 export
    CardFrame
+   Toplevel
 define
+   %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %% Cardlayout
    class CardFrame from Tk.frame
       feat AddCard RemoveCard showCard
       prop final
@@ -170,6 +173,36 @@ define
       meth showCard(id:ID) {self.showCard ID} end
       meth addCard(id:_ title:_ frame:_)=M {self.AddCard M} end
       meth removeCard(id:_)=M {self.RemoveCard M} end
+   end
+
+   %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %% Extended toplevel
+   class Toplevel from Tk.toplevel
+      attr Pos:0#0
+      meth SaveLocation
+         [X Y]={Map [x y] fun{$ Q} {Tk.returnInt winfo(Q self)} end}
+      in
+         Pos<-X#Y
+      end
+      meth GetLocation($) XY=@Pos in "+"#XY.1#"+"#XY.2 end
+      meth tkIconify
+         {self SaveLocation}
+         {Tk.send wm(iconify self)}
+      end
+      meth tkHide
+         if {Tk.returnAtom wm(state self)}\=withdrawn then
+            {self SaveLocation}
+            {Tk.send wm(withdraw self)}
+         end
+      end
+      meth tkShow XY={self GetLocation($)} in
+         if {Tk.returnAtom wm(state self)}==withdrawn then
+            {Tk.send wm(deiconify self)}
+         end
+         {Tk.batch [wm(deiconify self) wm(geometry self XY)]}
+      end
+      meth tkStatus($) {Tk.returnAtom wm(state self)} end
+      meth tkSetTitle(Str) {Tk.send wm(title self Str)} end
    end
 end
 
