@@ -117,7 +117,7 @@ public:
   OZ_Return leave1(void) {
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
-    return (r1 + r2 <= 0) ? OZ_ENTAILED : OZ_SLEEP; // TMUELLER
+    return (r1 + r2 <= 1) ? OZ_ENTAILED : OZ_SLEEP;
   }
   OZ_Return vanish(void) {
     v1.leave();
