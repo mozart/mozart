@@ -180,11 +180,7 @@ Bool AM::isLocalSVar(TaggedRef var)
 
 inline
 Bool AM::isLocalCVar(TaggedRef var) {
-  SVariable *svar=taggedCVar2SVar(var);
-  Board *home = svar->getHome1();
-
-  if (home == currentBoard) return OK;
-  return isLocalSVarOutline(svar);
+  return isLocalSVar(taggedCVar2SVar(var));
 }
 
 inline

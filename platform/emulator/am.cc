@@ -403,6 +403,35 @@ Bool AM::isLocalSVarOutline(SVariable *var)
   return home == currentBoard;
 }
 
+Bool AM::installScriptOutline(Script &script)
+{
+  return installScript(script);
+}
+
+
+inline
+Board *getVarBoard(TaggedRef var)
+{
+  CHECK_ISVAR(var);
+
+  if (isUVar(var))
+    return tagged2VarHome(var);
+  if (isSVar(var))
+    return tagged2SVar(var)->getHome1();
+
+  return taggedCVar2SVar(var)->getHome1();
+}
+
+
+inline
+Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
+{
+  Board *board1 = getVarBoard(var1)->getBoardFast();
+  Board *board2 = getVarBoard(var2)->getBoardFast();
+  return isBelow(board1,board2);
+}
+
+
 #define Swap(A,B,Type) { Type help=A; A=B; B=help; }
 
 Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
@@ -463,19 +492,16 @@ start:
    * The implemented partial order for binding variables to variables is:
    *   local -> global
    *   UVAR/SVAR -> CVAR (prefer binding nonCVars to CVars)
+   *   UVAR      -> SVAR
    *   local newer -> local older
    */
   if (isNotCVar(tag1)) {
-    if ( isNotCVar(tag2) && isLocalVariable(term2,termPtr2) &&
-         /*
-          * prefer also binding of UVars: otherwise if we bind SVar to UVar
-          * suspensions attached to SVar will be woken, which is redundant!
-          */
+    if ( isNotCVar(tag2) &&
+         isMoreLocal(term2,term1) &&
          (!isLocalVariable(term1,termPtr1) ||
           (isUVar(term2) && !isUVar(term1)) ||
            heapNewer(termPtr2,termPtr1))) {
       genericBind(termPtr2, term2, termPtr1, *termPtr1, prop);
-      /* prefer binding of newer to older variables */
     } else {
       genericBind(termPtr1, term1, termPtr2, *termPtr2, prop);
     }
@@ -671,13 +697,17 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   Assert(!isCVar(var) && !isRef(term));
 
   /* first step: do suspensions */
-  if (prop && isSVar(var)) {
+  if (prop) {
+    if (isSVar(var)) {
+      checkSuspensionList(var, pc_std_unif);
+    }
 
-    checkSuspensionList(var, pc_std_unif);
+    if (isSVar(term)) {
+      checkSuspensionList(term, pc_std_unif);
+    }
 
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
                              localPropStore.isInLocalPropagation()););
-    DebugCheckT(Board *hb=tagged2SuspVar(var)->getBoardFast());
   }
 
   /* second step: mark binding for non-local variable in trail;     */
@@ -832,13 +862,6 @@ void AM::reduceTrailOnSuspend()
 
       // value is always global variable, so add always a thread;
       taggedBecomesSuspVar(refPtr)->addSuspension (thr);
-
-      // this might be a global unconstrained variable; in this case
-      // add thread;
-      if(isNotCVar(old_value_tag) && !isLocalVariable(old_value,old_value_ptr)) {
-        Assert(isNotCVar(value));
-        taggedBecomesSuspVar(old_value_ptr)->addSuspension (thr);
-      }
 
       /* spawn askHandler threads for dvars */
       if (isDVar(value)) {
