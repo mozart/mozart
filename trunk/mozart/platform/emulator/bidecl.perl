@@ -1092,6 +1092,74 @@ $builtins = {
 			      native => false},
 
 
+    ###* Bit Arrays
+
+    'BitArray.new'	=> { in  => ['+int','+int'],
+			     out => ['+chunk'],
+			     BI  => BIbitArray_new,
+			     native => false},
+
+    'BitArray.is'	=> { in  => ['+value'],
+			     out => ['+bool'],
+			     BI  => BIbitArray_is,
+			     native => false},
+
+    'BitArray.set'	=> { in  => ['+chunk','+int'],
+			     out => [],
+			     BI  => BIbitArray_set,
+			     native => false},
+
+    'BitArray.clear'	=> { in  => ['+chunk','+int'],
+			     out => [],
+			     BI  => BIbitArray_clear,
+			     native => false},
+
+    'BitArray.test'	=> { in  => ['+chunk','+int'],
+			     out => ['+bool'],
+			     BI  => BIbitArray_test,
+			     native => false},
+
+    'BitArray.low'	=> { in  => ['+chunk'],
+			     out => ['+int'],
+			     BI  => BIbitArray_low,
+			     native => false},
+
+    'BitArray.high'	=> { in  => ['+chunk'],
+			     out => ['+int'],
+			     BI  => BIbitArray_high,
+			     native => false},
+
+    'BitArray.clone'	=> { in  => ['+chunk'],
+			     out => ['+chunk'],
+			     BI  => BIbitArray_clone,
+			     native => false},
+
+    'BitArray.or'	=> { in  => ['+chunk','+chunk'],
+			     out => [],
+			     BI  => BIbitArray_or,
+			     native => false},
+
+    'BitArray.and'	=> { in  => ['+chunk','+chunk'],
+			     out => [],
+			     BI  => BIbitArray_and,
+			     native => false},
+
+    'BitArray.nimpl'	=> { in  => ['+chunk','+chunk'],
+			     out => [],
+			     BI  => BIbitArray_nimpl,
+			     native => false},
+
+    'BitArray.toList'	=> { in  => ['+chunk'],
+			     out => ['+[int]'],
+			     BI  => BIbitArray_toList,
+			     native => false},
+
+    'BitArray.complementToList'	=> { in  => ['+chunk'],
+				     out => ['+[int]'],
+				     BI  => BIbitArray_complementToList,
+				     native => false},
+
+
     ##* Misc Operations
     ###* Equalities
 

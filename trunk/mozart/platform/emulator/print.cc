@@ -752,6 +752,9 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_HeapChunk:
     ((HeapChunk *) this)->printLongStream(stream, depth, offset);
     break;
+  case Co_BitArray:
+    ((BitArray *) this)->printLongStream(stream, depth, offset);
+    break;
   case Co_Abstraction:
     ((Abstraction *) this)->printLongStream(stream,depth,offset);
     break;
@@ -844,6 +847,8 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_HeapChunk:   ((HeapChunk *) this)->printStream(stream, depth);
     break;
+  case Co_BitArray:    ((BitArray *) this)->printStream(stream, depth);
+    break;
   case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
     break;
   case Co_Object:      ((Object *) this)->printStream(stream,depth);
@@ -920,6 +925,11 @@ void HeapChunk::printStream(ostream &stream, int depth)
 	   */
 }
 
+void BitArray::printStream(ostream &stream, int depth)
+{
+  stream << "bit array: " << upperBound - lowerBound - 1
+	 << " bits at " << this << '.';
+}
 
 void ForeignPointer::printStream(ostream &stream, int depth)
 {

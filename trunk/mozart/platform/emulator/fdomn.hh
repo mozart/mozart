@@ -215,8 +215,6 @@ public:
   int intersect_bv(const FDBitVector &); 
 };
 
-typedef FDBitVector BitArray;
-
 typedef int * intptr;
 
 #define FDOMNINITSIZE 1000
