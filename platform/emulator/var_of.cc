@@ -45,7 +45,10 @@ void DynamicTable::init(dt_index s) {
 // This test sets maximum fullness of table to 75%.
 Bool DynamicTable::fullTest() {
     Assert(isPwrTwo(size));
-    return (numelem>=((size>>1)+(size>>2)));
+    /* return (numelem>=((size>>1)+(size>>2))); */
+    /* Full(Max): 1(1), 2(2), 3(4), 6(8), 13(16), 24(32) */
+    return (numelem>=((size+(size>>1)+1)>>1));
+    /* !!! DOING +2 instead of +1 goes into INFINITE LOOP.  CHECK IT OUT! */
 }
 
 // Return a table that is double the size of the current table and
