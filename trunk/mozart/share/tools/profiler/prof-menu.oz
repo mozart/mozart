@@ -25,11 +25,23 @@ in
 		  C(label:   'Close'
 		    action:  self # off
 		    key:     ctrl(x))])
+	   MB(text: 'Action'
+	      menu:
+		 [C(label:   'Update'
+		    action:  self # action(UpdateButtonText)
+		    key:     u)
+		  C(label:   'Reset'
+		    action:  self # action(ResetButtonText)
+		    key:     r)])
 	   MB(text: 'Options'
 	      menu:
 		 [CB(label:   'Use Emacs'
 		     variable: TkEmacs
-		     action:   self # toggleEmacs)])]
+		     action:   self # toggleEmacs
+		     key:      e)
+		  C(label:    'Automatic Update...'
+		    action:   self # configureUpdate
+		    key:      a)])]
 	  [MB(text: 'Help'
 	      menu:
 		 [C(label:   'Help on Help'

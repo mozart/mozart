@@ -33,7 +33,7 @@ WindowsPlatform        = 'win32-i486'
 NameOfRalf             = 'Ralf Scheidhauer'
 NameOfBenni            = 'Benjamin Lorenz'
 
-EmailOfAuthors         = '{scheidhr,lorenz}@ps.uni-sb.de'
+EmailOfBoth            = '{scheidhr,lorenz}@ps.uni-sb.de'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 
 BarCanvasTitle         = 'Procedures'
@@ -141,6 +141,12 @@ PrintWidth             = 3
 
 TimeoutToStatus        = 210
 
+UpdateTimes            = [0     # 'never'
+			  2000  # '2s'
+			  5000  # '5s'
+			  10000 # '10s'
+			  30000 # '30s']
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff
@@ -168,31 +174,51 @@ end
 %% the config object to read/write changeable options
 %% first, some initial values... (read from a config file someday?)
 
-ConfigEmacs = true
+ConfigEmacs  = true             % should we use Emacs?
+ConfigUpdate = UpdateTimes.1.1  % Automatic update interval
 
-Config =
-{New
- class
-    
-    attr
-       emacs : ConfigEmacs
-    
-    meth init
-       skip
-    end
-    
-    meth toggle(What)
-       What <- {Not @What}
-    end
+local
 
-    meth get(What $)
-       @What
-    end
-    
- end init}
-
-fun {Cget What}
-   {Config get(What $)}
+   Config =
+   {New
+    class
+       
+       attr
+	  emacs  : ConfigEmacs
+	  update : ConfigUpdate
+	  
+       meth init
+	  skip
+       end
+       
+       meth toggle(What)
+	  What <- {Not @What}
+       end
+       
+       meth set(What Value)
+	  What <- Value
+       end
+       
+       meth get(What $)
+	  @What
+       end
+       
+    end init}
+   
+in
+   
+   proc {Ctoggle What}
+      {Config toggle(What)}
+   end
+   
+   proc {Cset What Value}
+      {Config set(What Value)}
+   end
+   
+   fun {Cget What}
+      {Config get(What $)}
+   end
+   
 end
 
 %%

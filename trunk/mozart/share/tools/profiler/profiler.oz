@@ -13,17 +13,21 @@ Profiler =
 	end
 	
 	meth off
+	   Time.repeat,stop
 	   {Tk.send wm(withdraw self.toplevel)}
-	   {Compile "\\switch -profile\n"}
-	   {{`Builtin` setProfileMode 1} false}
+	   {Compile "\\switch -profile"}
+	   {Profile.mode false}
 	end
 	
 	meth on
 	   {Tk.batch [update(idletasks)
 		      wm(deiconify self.toplevel)]}
-	   {Compile "\\switch +profile\n"}
-	   {{`Builtin` setProfileMode 1} true}
+	   {Compile "\\switch +profile"}
+	   {Profile.mode true}
 	   {Profile.reset}
+	   case {Cget update} > 0 then
+	      Time.repeat,go
+	   else skip end
 	end
 	
      end init}
