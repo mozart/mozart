@@ -39,6 +39,7 @@
   <call-template name="build.table.id"/>
   <call-template name="build.table.tabspec"/>
   <call-template name="build.table.picwid"/>
+  <call-template name="build.table.category"/>
 </template>
 
 <!-- build table mapping id to node -->
@@ -63,6 +64,24 @@
 <template name="build.table.picwid">
   <for-each select="/BOOK/FRONT/META[@NAME='LATEX.PICTURE.WIDTH']">
     <if test="meta:pictureWidthPut(string(@ARG1),string(@ARG2))"/>
+  </for-each>
+</template>
+
+<!-- build table mapping entry categories to names -->
+
+<template name="build.table.category">
+  <for-each select="/BOOK/FRONT/META[@NAME='ENTRY.CATEGORY']">
+    <choose>
+      <when test="@VALUE">
+        <if test="meta:entryCategoryPut(string(@VALUE),string(@VALUE))"/>
+      </when>
+      <when test="@ARG1 and @ARG2">
+        <if test="meta:entryCategoryPut(string(@ARG1),string(@ARG2))"/>
+      </when>
+      <otherwise>
+        <if test="msg:saynl('ILL-FORMED META ENTRY.CATEGORY')"/>
+      </otherwise>
+    </choose>
   </for-each>
 </template>
 
@@ -354,7 +373,16 @@
 </template>
 
 <template mode="list.desc" match="ENTRY">
-  <txt:usemap>\ENTRY{</txt:usemap>
+  <choose>
+    <when test="@CLASS and meta:entryCategoryExists(string(@CLASS))">
+      <txt:usemap>\ENTRYWITHCATEGORY{</txt:usemap>
+      <value-of select="meta:entryCategoryGet(string(@CLASS))"/>
+      <txt:usemap>}{</txt:usemap>
+    </when>
+    <otherwise>
+      <txt:usemap>\ENTRY{</txt:usemap>
+    </otherwise>
+  </choose>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
   <if test="@ID">
@@ -390,7 +418,9 @@
   <txt:usemap>}{</txt:usemap>
   <if test="@KEY">
     <txt:usemap>\KEY{</txt:usemap>
-    <value-of select="@KEY"/>
+    <txt:usemap name="code">
+      <value-of select="@KEY"/>
+    </txt:usemap>
     <txt:usemap>}</txt:usemap>
   </if>
   <txt:usemap>}{</txt:usemap>
@@ -441,6 +471,13 @@
 
 <template match="CODE/SPAN[@CLASS='IGNORE']"/>
 
+<template match="SPAN[@CLASS='INDEX']">
+  <!-- first process normally -->
+  <apply-templates/>
+  <!-- then create indexing command -->
+  <call-template name="process.as.index"/>
+</template>
+
 <!-- format variables -->
 
 <template match="VAR">
@@ -470,7 +507,18 @@
 
 <!-- miscellaneous commands -->
 
-<template match="FILE | SAMP | EM | KBD | KEY">
+<template match="FILE | SAMP | KBD | KEY">
+  <call-template name="maybe.display.begin"/>
+  <txt:usemap>\<value-of select="local-part(.)"/>{</txt:usemap>
+  <txt:usemap name="code">
+    <apply-templates/>
+  </txt:usemap>
+  <txt:usemap>}</txt:usemap>
+  <call-template name="maybe.label"/>
+  <call-template name="maybe.display.end"/>
+</template>
+
+<template match="EM">
   <call-template name="maybe.display.begin"/>
   <txt:usemap>\<value-of select="local-part(.)"/>{</txt:usemap>
   <apply-templates/>
@@ -593,6 +641,15 @@
 <template mode="ptr.ref" match="ITEM">
   <txt:usemap name="text">item</txt:usemap>
   <call-template name="ref.to.id"/>
+  <call-template name="pageref.to.id"/>
+</template>
+
+<template mode="ptr.ref" match="KEY">
+  <txt:usemap>\KEY{</txt:usemap>
+  <txt:usemap name="code">
+    <value-of select="."/>
+  </txt:usemap>
+  <txt:usemap>}</txt:usemap>
   <call-template name="pageref.to.id"/>
 </template>
 
@@ -1121,7 +1178,10 @@
 
 <!-- DTD doc support -->
 
-<template match="TAG|NAME[@CLASS and @CLASS='TAG']|NAME[@TYPE and @TYPE='TAG']">
+<template match="TAG|
+                 NAME[@CLASS and meta:equal(string(@CLASS),'TAG')]|
+                 NAME[@TYPE and meta:equal(string(@TYPE),'TAG')]"
+	  priority="2.0">
   <txt:usemap>\DTDTAG{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
@@ -1133,15 +1193,31 @@
   <txt:usemap>}</txt:usemap>
 </template>
 
-<template match="NAME[@TYPE and @TYPE='PI']">
+<template match="NAME[@TYPE and meta:equal(string(@TYPE),'PI')]"
+	  priority="2.0">
   <txt:usemap>\DTDPI{</txt:usemap>
   <apply-templates/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<!-- OPI support -->
+
+<template match="NAME[@TYPE and meta:equal(string(@TYPE),'BUFFER')]"
+	  priority="2.0">
+  <txt:usemap>\OPINAMEBUFFER{</txt:usemap>
+  <txt:usemap name="code">
+    <apply-templates/>
+  </txt:usemap>
   <txt:usemap>}</txt:usemap>
 </template>
 
 <!-- indexing -->
 
 <template match="INDEX">
+  <call-template name="process.as.index"/>
+</template>
+
+<template name="process.as.index">
   <txt:usemap>\INDEX{</txt:usemap>
   <txt:alias from="text" to="index.text">
     <txt:alias from="code" to="index.code">
