@@ -1,0 +1,23 @@
+
+1)  CommHandlers/Watchers/			Per/Erik
+2)  Arrays/Dictionaries - distribution		Ralf
+3)  Builtins - distribution			??
+4)  Threads - distribution			??
+5)  Simplification component code		Per/Erik
+6)  WaitOnRequest
+ a) centralized					Ralf
+ b) distributed					Per/Erik
+7)  GlobalNames of Code				Michael
+8)  Unification-stopping immediately/
+    simplify perdio as a result			Michael
+9)  SecondaryCredit test/debug			Per/Erik
+10) Spaces - distribution 			??
+11) GC of sites rather than ref counting	Per/Erik
+12) Test Bench
+ a) protocol suite				Per/Erik
+ b) starting remote sites			Michael
+ c) programs					??
+13) Cell-Access protocol			Per/Erik
+14) IsFree (distributed)			Ralf
+15) support for multiple marshalers		Ralf
+16) GC- code					??
