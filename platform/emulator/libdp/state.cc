@@ -544,7 +544,8 @@ ConstTerm* auxGcDistLock(Tertiary *t)
 {
   LockFrame *lf=(LockFrame *)t;
   if(lf->isAccessBit()){
-    DebugCode(lf->resetAccessBit());
+    // may be optimized by not resetting at all - PER
+    lf->resetAccessBit();
     void* forward=lf->getForward();
     ((LockFrame*)forward)->resetAccessBit();
     lf->gcMark((ConstTerm *) forward);

@@ -91,8 +91,6 @@ enum DEBUGType {
 
 };
 
-#ifdef DEBUG_PERDIO
-
 extern TaggedRef BI_startTmp;
 
 #include <stdarg.h>
@@ -113,9 +111,6 @@ public:
 extern DebugVector *DV;
 extern void resize_hash();
 
-#define PERDIO_DEBUG_DO(X) X
-#define PERDIO_DEBUG_DO1(INDEX,Y) {if(DV->on(INDEX)) {Y;}}
-
 Bool isPerdioInitialized();
 
 inline
@@ -133,12 +128,11 @@ void _PD(int i,char *format,...)
 
 void networkTimer(int);
 
+#ifdef DEBUG_PERDIO
+
 #define PD(Args) _PD Args
 
 #else
-
-#define PERDIO_DEBUG_DO(X)
-#define PERDIO_DEBUG_DO1(INDEX,Y)
 
 #define PD(Args)
 

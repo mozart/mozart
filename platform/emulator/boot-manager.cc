@@ -63,9 +63,7 @@ TaggedRef dictionary_of_modules;
 #include "modPID-if.cc"
 #include "modFault-if.cc"
 // kost@ : linked so far statically;
-#ifdef MISC_BUILTINS
 #include "modDPMisc-if.cc"
-#endif
 // kost@ : linked so far statically;
 #ifdef VIRTUALSITES
 #include "modVirtualSite-if.cc"
@@ -89,9 +87,7 @@ TaggedRef dictionary_of_modules;
 // #include "modPID-if.cc"
 // #include "modFault-if.cc"
 // kost@ : linked so far statically;
-// #ifdef MISC_BUILTINS
 // #include "modDPMisc-if.cc"
-// #endif
 // kost@ : linked so far statically;
 // #ifdef VIRTUALSITES
 // #include "modVirtualSite-if.cc"
@@ -149,9 +145,7 @@ static ModuleEntry module_table[] = {
   {"PID",             mod_int_PID},
   {"Fault",           mod_int_Fault},
 // kost@ : linked so far statically;
-#ifdef MISC_BUILTINS
   {"DPMisc",          mod_int_DPMisc},
-#endif
 // kost@ : linked so far statically;
 #ifdef VIRTUALSITES
   {"VirtualSite",  mod_int_VirtualSite},

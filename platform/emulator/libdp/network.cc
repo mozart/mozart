@@ -2727,7 +2727,7 @@ static int acceptHandler(int fd,void *unused)
     written += ret;
     if(written==accHbufSize) break;
     if(ret<=0 && errno!=EINTR && errno!=EWOULDBLOCK && errno!=EAGAIN ) {
-      DebugCode(OZ_warning("Error in OPening, we're closing");)
+      OZ_warning("Error in OPening, we're closing");
       osclose(newFD);
       return 0;}}
 
@@ -3982,7 +3982,6 @@ Bool checkIncTimeSlice(unsigned long time, void* v){
 
 #endif
 
-#ifdef MISC_BUILTINS
 
 OZ_BI_define(BIslowNet,2,0)
 {
@@ -3998,5 +3997,3 @@ OZ_BI_define(BIslowNet,2,0)
   return PROCEED;
 
 } OZ_BI_end
-
-#endif

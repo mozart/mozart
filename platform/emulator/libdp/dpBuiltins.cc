@@ -204,7 +204,6 @@ OZ_BI_define(BIgetNetBufferSize,0,1)
   OZ_RETURN(oz_int(PortSendTreash / 20000));
 } OZ_BI_end
 
-#ifdef MISC_BUILTINS
 
 OZ_BI_define(BIcrash,0,0)   /* only for debugging */
 {
@@ -213,7 +212,6 @@ OZ_BI_define(BIcrash,0,0)   /* only for debugging */
   return PROCEED;
 } OZ_BI_end
 
-#endif
 
 //
 OZ_BI_define(BIhwInstall,3,0){
@@ -285,10 +283,11 @@ OZ_BI_define(BIgetEntityCond,1,1)
 /*   Misc Builtins                                            */
 /**********************************************************************/
 
-#ifdef MISC_BUILTINS
-
 OZ_BI_define(BItablesExtract,0,1)
 {
+  if(!isPerdioInitialized())
+    perdioInitLocal();
+
   OZ_Term borrowlist = oz_nil();
   int bt_size=BT->getSize();
   for(int ctr=0; ctr<bt_size; ctr++){
@@ -304,6 +303,9 @@ OZ_BI_define(BItablesExtract,0,1)
 
 OZ_BI_define(BIsiteStatistics,0,1)
 {
+  if(!isPerdioInitialized())
+    perdioInitLocal();
+
   int indx;
   DSite* found;
   GenHashNode *node = getPrimaryNode(NULL, indx);
@@ -343,7 +345,6 @@ OZ_BI_define(BIsiteStatistics,0,1)
 
 } OZ_BI_end
 
-#endif
 
 //
 #ifndef VIRTUALSITES

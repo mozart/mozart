@@ -72,9 +72,6 @@ public:
   int findNA(NetAddress *);
   void add(NetAddress *,int);
   void sub(NetAddress *);
-#ifdef DEBUG_PERDIO
-  void print();
-#endif
 };
 
 inline NetAddress * GenHashNode2NetAddr(GenHashNode *ghn){
@@ -429,7 +426,6 @@ class OwnerTable {
 public:
   OwnerEntry* array;  /* TODO move to private */
 
-  void print();
   OZ_Term extract_info();
 
   OwnerEntry *getOwner(int i)  { Assert(i>=0 && i<size); return &array[i];}
@@ -613,7 +609,6 @@ public:
   int getExtendFlags(){
     return getFlags() & (~PO_GC_MARK|PO_EXTENDED);}
 
-  void print();
   void print_entry(int);
   OZ_Term extract_info(int);
 
@@ -815,7 +810,6 @@ public:
 
   void copyBorrowTable(BorrowEntry *,int);
 
-  void print();
 };
 
 extern BorrowTable *borrowTable;

@@ -144,11 +144,9 @@ GenHashTable::GenHashTable(int s){
   manager = new GenHashNodeManager();
   init(0,tableSize);}
 
-#ifdef DEBUG_PERDIO
 GenHashNode *GenHashTable::getElem(int i){
   if(table[i].isEmpty()) return NULL;
   return &table[i];}
-#endif
 
 void GenHashTable::htAdd(int bigIndex,GenHashBaseKey* key,GenHashEntry *entry){
   if (counter > top_percent) resize();

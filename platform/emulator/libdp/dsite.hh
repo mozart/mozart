@@ -712,10 +712,7 @@ public:
   void setMailboxKey(key_t mbkIn) { mailboxKey = mbkIn; }
 };
 
-//
-#ifdef DEBUG_PERDIO
 char *oz_site2String(DSite *s);
-#endif
 
 //
 // Marshaller uses that;
