@@ -2851,7 +2851,7 @@ OZ_BI_define(BIexchangeCellFun,2,1)
   oz_declareIN(1,newVal);
   OZ_Term old;
   int ret = exchangeCell(cell,newVal,old);
-  OZ_out(0) = old;
+  OZ_result(old);
   return ret;
 } OZ_BI_end
 
@@ -3508,27 +3508,88 @@ SRecord *getRecordFromState(RecOrCell state)
 }
 
 
-
 // perdio
-inline
-SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
-                        OZ_Term fea, OZ_Term &val, int &EmCode)
-{
-  SRecord *aux = getRecordFromState(state);
-  if (aux)
-    return aux;
+// returns SUSPEND (suspend on variable feature)
+// returns BI_REPLACEBICALL (suspend on perdio)
+// returns PROCEED
 
+inline
+OZ_Return stateAt(RecOrCell state, OZ_Term fea, OZ_Term &old){
+  Assert(!oz_isVariable(fea));
+  SRecord *aux = getRecordFromState(state);
+  if (aux){
+    TaggedRef t;
+    t=aux->getFeature(fea);
+    if(t){
+      old=t;
+      return PROCEED;}
+    oz_typeError(0,"(valid) Feature");
+  }
+
+  old=oz_newVariable();
   Tertiary *t=getCell(state);          // shortcut
-  DEREF(fea, _1, feaTag);
-  if (oz_isVariable(fea)) {
-    EmCode = SUSPEND;
-    return NULL;}
+  if (oz_onToplevel()) {
+    return (*cellAtExchange)(t,fea,old);}
+  return (*cellAtAccess)(t,fea,old);
+}
+
+OZ_Return stateLevelError(TaggedRef fea,TaggedRef newVal){
+  return oz_raise(E_ERROR,E_OBJECT,
+                  "deep assignment attempted",3,
+                  makeTaggedConst(am.getSelf()),fea,newVal);}
+
+inline
+OZ_Return stateAssign(RecOrCell state, OZ_Term fea, OZ_Term neW){
+  Assert(!oz_isVariable(fea));
+  SRecord *aux = getRecordFromState(state);
+  if (aux){
+    TaggedRef t;
+    t=aux->replaceFeature(fea,neW);
+    if(t){
+      return PROCEED;}
+    oz_typeError(0,"(valid) Feature");
+  }
+
+  if (!oz_onToplevel()) {return stateLevelError(fea,neW);}
+  Tertiary *t=getCell(state);          // shortcut
+  return (*cellAssignExchange)(t,fea,neW);
+}
+
+inline
+OZ_Return stateExch(RecOrCell state, OZ_Term fea, OZ_Term &old, OZ_Term neW){
+  Assert(!oz_isVariable(fea));
+  SRecord *aux = getRecordFromState(state);
+  if (aux){
+    TaggedRef t=aux->getFeature(fea);
+    if(t){
+      old=t;
+      t=aux->replaceFeature(fea,neW);
+      Assert(t);
+      return PROCEED;}
+    oz_typeError(0,"(valid) Feature");}
+
+  old=oz_newVariable();
+  Tertiary *t=getCell(state);          // shortcut
+  if (!oz_onToplevel()) {return stateLevelError(fea,neW);}
+  return (*objectExchange)(t,fea,old,neW);
+}
+
+//perdio interface to engine inline object functions
+SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val)
+{
+  Assert(!oz_isVariable(fea));
+  SRecord *aux=getRecordFromState(state);
+  if(aux){
+    return aux;}
+
+  int EmCode;
+  Tertiary *t=getCell(state);          // shortcut
 
   if (oz_onToplevel()) {
     if(isAssign) {
       EmCode = (*cellAssignExchange)(t,fea,val);
     } else {
-      if(newVar) val = oz_newVariable();
+      val= oz_newVariable();
       EmCode = (*cellAtExchange)(t,fea,val);
     }
   } else {
@@ -3536,50 +3597,26 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
     EmCode = (*cellAtAccess)(t,fea,val);
   }
 
+  Assert(EmCode==BI_REPLACEBICALL);
   return NULL;
 }
 
-//perdio
-SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val)
-{
-  int EmCode;
-  return getStateInline(state,isAssign,TRUE,fea,val,EmCode);
-}
-
-
-//perdio
-inline
-OZ_Return doAt(SRecord *rec, TaggedRef fea, TaggedRef &out)
-{
-  Assert(rec!=NULL);
-
-  DEREF(fea, _1, feaTag);
-  if (!oz_isFeature(fea)) {
-    if (oz_isVariable(fea)) {
-      return SUSPEND;
-    }
-  } else {
-    TaggedRef t = rec->getFeature(fea);
-    if (t) {
-      out = t;
-      return PROCEED;
-    }
-  }
-
-  oz_typeError(0,"(valid) Feature");
-}
 
 //perdio
 OZ_Return atInlineRedo(TaggedRef fea, TaggedRef out)
 {
-  RecOrCell state = am.getSelf()->getState();
-  int emC;
-  SRecord *rec = getStateInline(state,NO,FALSE,fea,out,emC);
-  if (rec==NULL) {
-    return emC;
+  DEREF(fea, feaPtr, feaTag);
+  if (!oz_isFeature(fea)) {
+    if (oz_isVariable(fea)) {
+      oz_suspendOnPtr(feaPtr);
+    }
+    oz_typeError(0,"Feature");
   }
-  return doAt(rec,fea,out);
+
+  RecOrCell state = am.getSelf()->getState();
+  return stateAt(state,fea,out);
 }
+
 OZ_DECLAREBI_USEINLINEREL2(BIatRedo,atInlineRedo)
 
 OZ_BI_define(BIat,1,1)
@@ -3595,30 +3632,15 @@ OZ_BI_define(BIat,1,1)
   }
 
   RecOrCell state = am.getSelf()->getState();
-  if (!stateIsCell(state)) {
-    SRecord *rec = getRecord(state);
-    Assert(rec!=NULL);
-
-    TaggedRef t = rec->getFeature(fea);
-    if (t) {
-      OZ_RETURN(t);
-    }
-    return oz_raise(E_ERROR,E_OBJECT,"@",2,makeTaggedConst(am.getSelf()),fea);
-  } else { // perdio
-    int ret;
-    OZ_Term out;
-    SRecord *rec = getStateInline(state,NO,TRUE,fea,out,ret);
-    if (!rec) {
-      if (ret==SUSPEND) {
-        oz_suspendOn(fea);
-      }
-    } else {
-      ret = doAt(rec,fea,out);
-      OZ_result(out);
-    }
-    return ret;
-  }
+  OZ_Term old;
+  OZ_Return ret=stateAt(state,fea,old);
+  if(ret==PROCEED) {
+    OZ_RETURN(old);}
+  else{
+    OZ_result(old);
+    return ret;}
 } OZ_BI_end
+
 
 OZ_BI_define(BIassign,2,0)
 {
@@ -3637,35 +3659,7 @@ OZ_BI_define(BIassign,2,0)
   CheckLocalBoard(self,"object");
 
   RecOrCell state = self->getState();
-  if (!stateIsCell(state)) {
-    SRecord *rec = getRecord(state);
-    Assert(rec!=NULL);
-    TaggedRef t = rec->replaceFeature(fea,value);
-    if (t) {
-      return PROCEED;
-    } else {
-      return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedConst(self),fea,value);
-    }
-  }
-
-  // perdio
-  int emC;
-  OZ_Term val=value;
-  SRecord *rec = getStateInline(state,OK,TRUE,fea,val,emC);
-  if (rec==NULL) {
-    if (state == SUSPEND) {
-      oz_suspendOn(fea);
-    } else {
-      return state;
-    }
-    return emC;
-  }
-  Assert(rec!=NULL);
-
-  if (rec->replaceFeature(fea,value) == makeTaggedNULL()) {
-    return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedConst(self),fea,value);
-  }
-  return PROCEED;
+  return stateAssign(state,fea,value);
 } OZ_BI_end
 
 
@@ -3684,37 +3678,20 @@ OZ_BI_define(BIexchange,2,1)
     oz_typeError(1,"Feature");
   }
 
-  RecOrCell state = am.getSelf()->getState();
-  SRecord *rec;
-  if (stateIsCell(state)) {
-    rec = getRecordFromState(state);
-    if (!rec) {
-      Tertiary* t=getCell(state);
-      if(!oz_onToplevel())
-        return oz_raise(E_ERROR,E_OBJECT,
-                      "exchange",3,
-                      makeTaggedConst(am.getSelf()),fea,newVal);
-      OZ_Term old;
-      old=oz_newVariable();
-      int ret=(*objectExchange)(t,fea,old,newVal);
-      OZ_out(0) = old;
-      return ret;
-    }
-  } else {
-    rec = getRecord(state);
-  }
-  Assert(rec!=NULL);
+  Object *self=am.getSelf();
+  CheckLocalBoard(self,"object");
+  RecOrCell state = self->getState();
+  TaggedRef old;
 
-  // mm2: why twice? getFea and replaceFea
-  TaggedRef aux = rec->getFeature(fea);
-  if (aux) {
-    OZ_Term tmp = rec->replaceFeature(fea,newVal);
-    Assert(tmp);
-    OZ_RETURN(aux);
-  }
+  OZ_Return ret=stateExch(state,fea,old,newVal);
+  if(ret==PROCEED) {
+    OZ_RETURN(old);}
+  else{
+    OZ_result(old);
+    return ret;}
 
-  return oz_raise(E_ERROR,E_OBJECT,"ooExch",3,makeTaggedConst(am.getSelf()),fea,newVal); // mm2: Error
 } OZ_BI_end
+
 
 
 
