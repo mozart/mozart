@@ -15,7 +15,7 @@ PLATFORM	= @PLATFORM@
 
 TARGETS		= xsl-attribute.ozf \
 		  XSL_Attribute_Scanner.so-$(PLATFORM) \
-		  xsl-stylesheet.ozf \
+		  xsl-stylesheet.ozf xsl-compiler.ozf \
 		  xml.ozf XML_Scanner.so-$(PLATFORM)
 LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
 
@@ -31,7 +31,7 @@ $(LIB_TARGETS): $(LIB_DIR)/% : %
 %.ozf: %.oz
 	$(OZC) -c $< -o $@
 
-XSL_Scanner.so-$(PLATFORM): xsl-parser.ozf
+XSL_Attribute_Scanner.so-$(PLATFORM): xsl-attribute.ozf
 XML_Scanner.so-$(PLATFORM): xml.ozf
 
 clean veryclean:
@@ -48,8 +48,8 @@ bootstrap: boot-all
 # Automatic Makefile update
 #---------------------------------------------------------------------
 
-Makefile: Makefile.in ../config.status
-	cd .. && ./config.status
+Makefile: Makefile.in config.status
+	./config.status
 
-config.status: ../configure
-	cd .. && ./config.status --recheck
+config.status: configure
+	./config.status --recheck

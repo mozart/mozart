@@ -31,7 +31,7 @@ define
       lex <<EOF>> GS,putToken1('EOF') end
    end
    class XSL_Attribute_Parser
-      feat locking
+      prop locking
       attr Scanner
       meth init Scanner <- {New XSL_Attribute_Scanner init} end
       meth parsePattern(VS $)
