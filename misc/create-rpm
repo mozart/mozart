@@ -157,8 +157,8 @@ Group: Development/Languages
 Packager: Christian Schulte <schulte@ps.uni-sb.de>
 Icon: mozart.xpm
 
-Source0: mozart-${VERSION}-src.tar.gz
-Source1: mozart-${VERSION}-doc.tar.gz
+Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/mozart-${VERSION}-src.tar.gz
+Source1: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/mozart-${VERSION}-doc.tar.gz
 Source2: mozart-profiles.tar.gz
 
 BuildRoot: /var/tmp/mozart-${VERSION}
