@@ -281,12 +281,23 @@ ByteBuffer *ByteStream::getAnother(){
 
 void ByteStream::marshalBegin(){
   PERDIO_DEBUG(MARSHALL_BE,"MARSHAL_BE marshal begin");
+  Assert(type==BS_None);
   Assert(first==NULL);
   Assert(last==NULL);
   first=getAnother();
   last=first;
   totlen= 0;
+  type=BS_Marshal;
   pos=first->head()+tcpHeaderSize;}
+
+void ByteStream::dumpByteBuffers(){
+  ByteBuffer *bb=first;
+  ByteBuffer *bb1;
+  while(bb!=NULL){
+    bb1=bb;
+    bb=bb->next;
+    bufferManager->freeByteBuffer(bb);
+    bb=bb1;}}
 
 /* BufferManager */
 
@@ -305,6 +316,10 @@ ByteBuffer* BufferManager::getByteBuffer(){
   ByteBuffer *bb=byteBufM->newByteBuffer();
   bb->init();
   return bb;}
+
+void BufferManager::dumpByteStream(ByteStream *bs){
+  bs->dumpByteBuffers();
+  freeByteStream(bs);}
 
 void BufferManager::freeByteBuffer(ByteBuffer* bb){
   byteBufM->deleteByteBuffer(bb);}
