@@ -66,10 +66,6 @@ remote problems are temporary.
 whether a fault is temporary or permanent.
 In particular, a <<tempFail>> may hide
 a crash on the other side.
-Later on we explain how each fault state is
-a consequence of the entity's
-distributed behavior and the
-system's possible failure modes.
 
 <P>The fault state <<remoteProblem(I)>>
 identifies four different remote problems:
@@ -101,9 +97,8 @@ network connection.
 After the time-out,
 one can be sure that the connection is no longer working.
 
-<P>The purpose of <<tempFail>> is quite different from
-a time-out:
-it is to <EM>inform</EM> the application
+<P>The purpose of <<tempFail>> is quite different from a time-out.
+It is to <EM>inform</EM> the application
 of network problems, not to mark the <EM>end</EM> of a connection.
 For example, an application might be connected to a given server.
 If there are problems with this server, the application
@@ -126,13 +121,76 @@ to continue waiting or not.
 
 <SUBSECTION><TITLE>Detecting fault states</TITLE>
 
-<P>The distributed protocol of each language
-entity will determine the fault state on each site.
-There are two ways to make this state
+<P>Applications find out about fault states
+by installing <EM>distribution handlers</EM>
+on language entities.
+When the application tries to do an operation
+on an entity, then the handler is called
+instead if the entity has a problem.
+The handler is called in the context
+of the thread
+If the entity works again later
+(which is possible with <<tempFail>>
+and <<remoteProblem>>) then the
+handler can just try the operation again.
+
+
+<SUBSUBSECTION><TITLE>Handler conditions</TITLE>
+
+<P>A handler will be called
+only on some of all possible fault states.
+At installation, a list is given of these states.
+These states are called the handler's
+<EM>fault conditions</EM>.
+
+<P>The set of fault conditions
+is a subset of all possible
+fault states given above, i.e., a subset of
+<<[tempFail>>, <<permFail>>, <<remoteProblem(tempSome)>>,
+<<remoteProblem(permSome)>>,
+<<remoteProblem(tempAll)>>,
+<<remoteProblem(permAll)]>>.
+
+<SUBSUBSECTION><TITLE>Handler levels</TITLE>
+
+<P>There are three levels of handlers:
+globally, on a site, and in a thread.
+The level determines <EM>which</EM> handler is called.
+A thread-based handler overrides
+a site-based handler, which overrides a global handler.
+It does not matter what the fault condition is.
+If a thread-based handler exists for
+the current thread, then none of the
+others will ever be called there.
+
+<P>For example, let's say that the cell <<C>>
+has two handlers:
+The first has level <<thread(T1)>> and
+set of conditions <<[permFail]>>.
+The second has level <<global>> and
+set of conditions <<[tempFail,permFail]>>.
+Let's say that the fault state is <<tempFail>>
+and that there are a bunch of threads trying
+to do exchange on <<C>>.
+Then thread <<T1>> will block--its handler is only
+waiting for <<permFail>>, and no action is
+defined for any other fault state.
+All other threads will call the
+global handler with condition <<permFail>>.
+
+
+<P>There are two ways to make this state
 known to an application:
-eagerly, i.e., the application
-is informed as soon as possible, or lazily,
-i.e., the application is informed when it needs the language entity.
+eagerly, i.e., as soon as possible, or lazily,
+i.e., only when it needs the language entity.
+
+<P>To be informed of a fault state,
+the application has to install a <EM>distribution handler</EM>
+on the entity.
+A handler can be installed to trigger on a particular
+set of fault states.
+A handler can be installed at each of three levels, namely
+<<global>>, <<site>>, and <<thread(T)>>.
 
 
 <P>A fault state <<F>> different from <<ok>> will
@@ -157,8 +215,20 @@ and
 <SUBSECTION><TITLE>Fault states for language entities</TITLE>
 
 <P>This section explains the possible fault states
-of each language entity
-in terms of their distributed behavior.
+of each language entity.
+The fault state is
+a consequence of two things:
+the entity's distributed implementation and
+the system's failure mode.
+For example, let's consider a variable.
+There is an owner site and a set of proxy sites.
+If a variable proxy is
+on a crashed site and the owner site
+is still working,
+then to another variable proxy this
+will be a <<remoteProblem>>.
+If the owner site crashes, then
+all proxies will see a <<permFail>>.
 
 <SUBSUBSECTION><TITLE>Eager stateless data</TITLE>
 
