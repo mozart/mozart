@@ -307,13 +307,16 @@ class Gui from Menu Dialog
 	 {W tk(insert 'end' '}')}
 	 Gui,Disable(W)
 
-	 case F \= undef then
+	 local
 	    W = self.ApplFileText
 	 in
 	    Gui,Clear(W)
-	    {W tk(insert 'end' ' ' # {StripPath F} # ' ' # L)}
+	    case F \= undef then
+	       {W tk(insert 'end' ' ' # {StripPath F} # ' ' # L)}
+	    else skip end
 	    Gui,Disable(W)
-	 else skip end
+	 end
+	 
       end
    end
    
