@@ -342,6 +342,7 @@
 	    <GRAMMAR.ALT OR/<TAG/GRAMMAR//
 	    <GRAMMAR.ALT OR/<TAG/GRAMMAR.RULE//
 	    <GRAMMAR.ALT OR/<TAG/TABLE//
+	    <GRAMMAR.ALT OR/<TAG/CHUNK//
 	  </GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/MATH//
@@ -465,6 +466,14 @@
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/AUTHOR.EXTERN//
 	    <GRAMMAR.ALT/?={EMPTY}/</GRAMMAR.RULE>
+	  <GRAMMAR.RULE>
+	    <GRAMMAR.HEAD/<TAG/CHUNK//
+	    <GRAMMAR.ALT/<TAG/TITLE/ (?={TEXT} | <TAG/CHUNK.REF/)*/
+	  </GRAMMAR.RULE>
+	  <GRAMMAR.RULE>
+	    <GRAMMAR.HEAD/<TAG/CHUNK.REF//
+	    <GRAMMAR.ALT/?={TEXT or PHRASE}*/
+	  </GRAMMAR.RULE>
 	</GRAMMAR></P>
 
     <CHAPTER ID=chapter.principles>
@@ -1090,6 +1099,16 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
 		<ITEM>denotes the desired entry in the external
 		    bibliographic database.
 	      </LIST>
+	  <ENTRY><TAG/CHUNK/
+	  <ITEM>provides literate programming support.  A chunk of
+code is named by its <TAG/title/.  There may be several chunks with
+the same title: their code is concatenated.  A chunk may be used as
+a macro to insert code into another chunk: this is effected by
+<TAG/CHUNK.REF/.
+	  <ENTRY><TAG/CHUNK.REF/
+	  <ITEM>Its content is (the text of) the title of a chunk.  It
+is intended to denote the concatenated code of all chunks with this
+title.
 	</LIST></P>
 
     <CHAPTER ID=chapter.extending>
