@@ -244,13 +244,14 @@ EOF
 
 # removes tag before type string
 # Tags are:
-#   !        Object with corrospondencing Oz object
+#   !        Object with corresponding Oz object
+#   ^        Same as ! but also allows unit to stand for NULL
 #   %        Enumeration type
 #   +        Out value (eg. gchar** in gtk_label_get)
 #   =        In/Out value
 sub clean_type {
   my ($type_str) = @_;
-  $type_str =~ s/^[\%\!\+\=]+//s ;
+  $type_str =~ s/^[\%\!\+\=\^]+//s ;
   $type_str =~ s/const //sg;
   return $type_str;
 }
