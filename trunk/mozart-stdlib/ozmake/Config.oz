@@ -75,7 +75,7 @@ define
 
       meth config_install(Args OPTLIST)
 	 {self config_read}
-	 for Key#Set#Flag in OPTLIST do
+	 for Key#Set#Flag#_ in OPTLIST do
 	    if Flag
 	       andthen {HasFeature @DB Key}
 	       andthen {Not {HasFeature Args Key}}
@@ -92,7 +92,7 @@ define
 	 of put then
 	    {self incr}
 	    try
-	       for Key#_#Flag in OPTLIST do
+	       for Key#_#Flag#_ in OPTLIST do
 		  if {HasFeature Args Key} then
 		     if Flag then
 			{self xtrace('setting '#Key#': '#{ToVS Args.Key})}

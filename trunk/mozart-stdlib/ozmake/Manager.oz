@@ -19,6 +19,7 @@ import
    Mogul       at 'Mogul.ozf'
    ExecutorFast at 'ExecutorFast.ozf'
    Depends     at 'Depends.ozf'
+   Requires    at 'Requires.ozf'
 define
    class Manager
       from
@@ -39,6 +40,7 @@ define
 	 Mogul      .'class'
 	 ExecutorFast.'class'
 	 Depends    .'class'
+	 Requires   .'class'
 
       meth init
 	 {self exec_init}
