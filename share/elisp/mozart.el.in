@@ -1285,7 +1285,7 @@ The first subexpression matches the file name without the extension.")
    "\t\\("
    (mapconcat
     'identity
-    '("move" "moveMoveXYXY" "moveMoveYXYX" "moveMoveXYYX" "moveMoveYXXY"
+    '("move" "moveMove"
       "allocateL" "createVariable" "createVariableMove" "putConstant"
       "putList" "putRecord" "setConstant" "setProcedureRef" "setValue"
       "setVariable" "setVoid" "getNumber" "getLiteral" "getList"
@@ -1297,7 +1297,7 @@ The first subexpression matches the file name without the extension.")
       "exHandler" "testLiteral" "testNumber" "testRecord" "testList"
       "testBool" "testBI" "testLT" "testLE" "match" "getVariable" "getVarVar"
       "getVoid" "lockThread" "getSelf" "setSelf" "debugEntry" "debugExit"
-      "globalVarname" "localVarname" "clearY") "\\|")
+      "globalVarname" "localVarname" "clear") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2
