@@ -201,7 +201,7 @@ define
       else SEQ({Map L ToHtmlCSS1}) end
    end
 
-   fun {ToHtmlColor1 Face#Text L}
+   fun {ToHtmlColor1 Face#Text}
       font(color:{Face2Color Face} 1:{HtmlEscape Text})
    end
 
@@ -212,7 +212,7 @@ define
       else SEQ({Map L ToHtmlColor1}) end
    end
 
-   fun {ToHtmlMono1 Face#Text L}
+   fun {ToHtmlMono1 Face#Text}
       F = {Face2Font Face}
    in if F==unit then {HtmlEscape Text}
       else F({HtmlEscape Text}) end
