@@ -109,10 +109,6 @@ StackTextWidth         = 0
 EnvTextWidth           = 24
 EnvVarWidth            = 14
 
-NoBorderSize           = 0
-SmallBorderSize        = 1
-BorderSize             = 2
-
 PadXButton             = 5
 PadYButton             = 3
 
