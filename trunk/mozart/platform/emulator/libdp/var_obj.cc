@@ -98,6 +98,8 @@ void ObjectVar::transfer(Object *o, BorrowEntry *be)
   Assert(isObjectClassAvail());
   DebugCode(GName *gnobj = getGName());
   Assert(gnobj->getValue() == makeTaggedConst(o));
+  // may not access "this" after 'oz_bindLocalVar';
+  OB_TIndex ovIndex = index;
 
   //
   EntityInfo *savedInfo = info; // bind disposes this!
@@ -107,7 +109,7 @@ void ObjectVar::transfer(Object *o, BorrowEntry *be)
   //
   be->changeToRef();
   maybeHandOver(savedInfo, makeTaggedConst(o));
-  (void) BT->maybeFreeBorrowEntry(index);
+  (void) BT->maybeFreeBorrowEntry(ovIndex);
 }
 
 

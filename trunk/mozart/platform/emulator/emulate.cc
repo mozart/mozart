@@ -2857,6 +2857,7 @@ Case(GETVOID)
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
 
+// #define EMULATE_NO_CONSCALL
 // for kostja, until we can figure out a better way
 #ifndef EMULATE_NO_CONSCALL
   Case(DECONSCALLX)
