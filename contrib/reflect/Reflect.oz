@@ -47,6 +47,7 @@ import
    System
    FS
    CTB at 'x-oz://boot/CTB'
+   Error
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
@@ -64,15 +65,39 @@ define
    GetCtVarNameAsAtom       = CTB.getNameAsAtom
    GetCtVarConstraintAsAtom = CTB.getConstraintAsAtom
 
+   local
+      T = 'reflect constraints error'
+   in
+      {Error.registerFormatter reflect
+       fun {$ Exc}
+          case Exc
+          of reflect(What Where) then
+             error(kind:  T
+                   msg:   What#" in "#Where
+                   items: nil)
+          [] reflect(What Where Expl) then
+             error(kind:  T
+                   msg:   What#" in "#Where
+                   items: [line(oz(Expl))])
+          else
+             error(kind: T items: [line(oz(Exc))])
+          end
+       end}
+   end
+
    fun {VariableToVirtualString V}
       case {Value.status V}
-      of kinded(free)  then {Value.toVirtualString V 1 1}
+      of free  then {Value.toVirtualString V 1 1}
       [] kinded(int)   then {Value.toVirtualString V 1 1}
       [] kinded(fset)  then {Value.toVirtualString V 1 1}
       [] kinded(other) then {Value.toVirtualString V 1 1}
          #'<'#{GetCtVarNameAsAtom V}#':'#{GetCtVarConstraintAsAtom V}#'>'
+      [] det(_) then {Value.toVirtualString V 1 1}
       else
-         {Exception.raiseError vc("Unexpected case" "VariableToVirtualString")}
+         {Exception.raiseError reflect("Unexpected case"
+                                       "VariableToVirtualString"
+                                       var(stat:{Value.status V} var:V)
+                                      )}
          error
       end
    end
