@@ -808,8 +808,6 @@ void FL_Manager::refill(const size_t sz) {
     block = (char *) heapMalloc(n);
   }
 
-  ((FL_Small *) block)->setNext(NULL);
-
   small[FL_SizeToIndex(sz)] = (FL_Small *) block;
 
   n -= sz;
@@ -817,9 +815,11 @@ void FL_Manager::refill(const size_t sz) {
   while (n >= sz) {
     block += sz;
     n     -= sz;
-    ((FL_Small *) block)->setNext((FL_Small *) (block-sz));
+    ((FL_Small *) (block-sz))->setNext((FL_Small *) block);
   }
   
+  ((FL_Small *) block)->setNext(NULL);
+
   if (n > 0)
     free(block+sz,n);
   
