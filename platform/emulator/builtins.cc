@@ -1440,7 +1440,14 @@ OZ_C_proc_begin(BInewSpace, 2) {
   sa->inject(DEFAULT_PRIORITY, proc);
 
   // create space
-  return oz_unify(OZ_getCArg(1), makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
+  OZ_Return s = oz_unify(OZ_getCArg(1),
+                         makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
+
+  if (s == PROCEED)
+    return BI_PREEMPT;
+
+  return s;
+
 } OZ_C_proc_end
 
 
@@ -1700,7 +1707,7 @@ OZ_C_proc_begin(BIcommitSpace, 2) {
   am.suspThreadToRunnable(tt);
   am.scheduleThread(tt);
 
-  return PROCEED;
+  return BI_PREEMPT;
 } OZ_C_proc_end
 
 
@@ -1741,7 +1748,7 @@ OZ_C_proc_begin(BIinjectSpace, 2)
   // inject
   sa->inject(DEFAULT_PRIORITY, proc);
 
-  return PROCEED;
+  return BI_PREEMPT;
 } OZ_C_proc_end
 
 
