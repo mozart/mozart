@@ -1108,6 +1108,10 @@ void xy_init_from_string(char *str) {
   xyFileNameAtom = OZ_atom(xyFileName);
 }
 
+char *xy_expand_file_name(char *file) {
+  return scExpndFileName(file, NULL);
+}
+
 void xy_exit() {
   xy_delete_buffer(YY_CURRENT_BUFFER);
 }

@@ -6546,6 +6546,7 @@ OZ_C_proc_proto(ozparser_parseFile)
 OZ_C_proc_proto(ozparser_parseVirtualString)
 OZ_C_proc_proto(ozparser_parseFileAtomic)
 OZ_C_proc_proto(ozparser_parseVirtualStringAtomic)
+OZ_C_proc_proto(ozparser_fileExists)
 
 
 // ---------------------------------------------------------------------
@@ -7695,6 +7696,7 @@ BIspec allSpec[] = {
   {"ozparser_parseVirtualString",2,ozparser_parseVirtualString},
   {"ozparser_parseFileAtomic",6,ozparser_parseFileAtomic},
   {"ozparser_parseVirtualStringAtomic",6,ozparser_parseVirtualStringAtomic},
+  {"ozparser_fileExists",2,ozparser_fileExists},
 
   {"System.printInfo",1,BIprintInfo},
   {"System.printError",1,BIprintError},

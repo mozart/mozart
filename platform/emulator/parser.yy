@@ -127,6 +127,17 @@ OZ_C_proc_begin(ozparser_parseVirtualStringAtomic, 6)
 }
 OZ_C_proc_end
 
+char *xy_expand_file_name(char *file);
+
+OZ_C_proc_begin(ozparser_fileExists, 2)
+{
+  OZ_declareVirtualStringArg(0, str);
+  OZ_declareArg(1, res);
+  int b = xy_expand_file_name(str) != NULL;
+  return OZ_unify(res, b? OZ_true(): OZ_false());
+}
+OZ_C_proc_end
+
 
 static CTerm newCTerm(char *l) {
   return OZ_atom(l);
