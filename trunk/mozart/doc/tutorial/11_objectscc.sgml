@@ -32,7 +32,7 @@ section guarded by the lock will block. We say <EM>reentrancy</EM> is
 not supported. Simple locks can be modeled in Oz as follows, where
 <<Code>> is a nullary procedure encapsulating the computation to be
 performed in the critical section.  The lock is represented as a
-procedure, which when applied to so some code it tries to get the lock
+procedure: when applied to so some code, it tries to get the lock
 by waiting until <<Old>> gets bound to <<unit>>. Notice that the lock is
 released upon normal as well as abnormal exit.
 
@@ -487,10 +487,10 @@ applying the corresponding class methods.
 </LIST>
 
 <<<
-fun {NewServer Class init}
+fun {NewServer Class Init}
    S    % The stream of the port
    Port = {NewPort S}
-   Object = {New Class init}
+   Object = {New Class Init}
 in
    thread {ForAll S 
            proc{$ M} {Object M} end}
@@ -511,10 +511,10 @@ local
      attr close:Close
      meth Close raise closeException end end
    end
-fun {NewServer Class init}
+fun {NewServer Class Init}
    S    % The stream of the port
    Port = {NewPort S}
-   Object = {New class $ from Server Class end init}
+   Object = {New class $ from Server Class end Init}
 in
    thread 
      try  {ForAll S 

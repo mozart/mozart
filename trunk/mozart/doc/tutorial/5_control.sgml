@@ -118,7 +118,7 @@ equality. Others include threads, cells, and chunks.
 <SECTION id=control.lexical><TITLE>On Lexical Scoping</TITLE>
 <P>In general, the statement ?{S} in a procedure definition will
 have many variable occurrences. A 
-variable that occures textually in a statement is called an identifier 
+variable that occurs textually in a statement is called an identifier 
 to distinguish it from the logic
 variable that is a data structure created at runtime. Some identifier occurrences in
 ?{S} are <EM>syntactically bound</EM> while others are
@@ -304,21 +304,21 @@ declared, and have a scope stretching over the corresponding
 ?{Si}. 
 
 <SUBSECTION><TITLE>Semantics</TITLE>
-<P>Let us assume that expression <<E>> is evaluated to <<E'>>.
-Executing the case statement will sequentially try to match <<E'>> against
+<P>Let us assume that expression <<E>> is evaluated to <<V>>.
+Executing the case statement will sequentially try to match <<V>> against
 the patterns ?{Pattern_1}, ?{Pattern_2}, ...,?{Pattern_n} in this order.
-Matching <<E'>> against <<Pattern_i>> is done in left-to-right depth-first
+Matching <<V>> against <<Pattern_i>> is done in left-to-right depth-first
 manner.
 
 <P><LIST>
 
- <ITEM>If <<E'>> matches <<Pattern_i>> without binding any variable
-        occuring in <<E'>>, the corresponding ?{Si} statement is executed.
+ <ITEM>If <<V>> matches <<Pattern_i>> without binding any variable
+        occuring in <<V>>, the corresponding ?{Si} statement is executed.
 
- <ITEM>If <<E'>> matches <<Pattern_i>> but binds some variables
-        occuring in <<E'>>, the thread suspends
+ <ITEM>If <<V>> matches <<Pattern_i>> but binds some variables
+        occuring in <<V>>, the thread suspends
 
- <ITEM>If the matching of <<E'>> and <<Pattern_i>> fails, <<E'>> is
+ <ITEM>If the matching of <<V>> and <<Pattern_i>> fails, <<V>> is
 tried against the next pattern <<Pattern_i+1>>, otherwise the <<else>>
 statement ?{S} is executed.
 </LIST>
@@ -327,7 +327,7 @@ statement ?{S} is executed.
 may be omitted, in which case an exception is raised if all matches
 fail.
 
-<P>Again, in each pattern one may suppress the introduction of new
+<P>Again, in each pattern one may suppress the introduction of a new
 local variable by using <<!>>. For example, in the following example:
 
 <<<case f(X1 X2) of f(!Y Z) then ... else ... end>>>
@@ -659,7 +659,7 @@ try ?{S1} catch X then ?{S2} end
 >>>
 <P>Execution of this statement is equivalent to executing ?{S1} if
 ?{S1} does not raise an exception. If ?{S1} raises an exception
-?{E}, {X} gets bound to ?{E} and the statement ?{S2} is executed.
+?{E}, ?{X} gets bound to ?{E} and the statement ?{S2} is executed.
 The variable ?{X} is visible in the scope of ?{S2}.
 
 <P> A more convenient try statement has the following form:
@@ -762,7 +762,7 @@ end
 message is printed in the emulator window (standard error), and
 the current thread terminates. In stand-alone applications the default
 behavior is that a message is printed on standard error and the whole
-application terminates. It is possible to change this bahavior to something
+application terminates. It is possible to change this behavior to something
 else that is more desirable for particular applications.
 
 </CHAPTER>

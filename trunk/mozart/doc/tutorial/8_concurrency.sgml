@@ -130,7 +130,7 @@ end
 </FIGURE>
 
 <P><FIGURE ID="Threads" CLASS="Figure">
-<CAPTION>The Mozart Panel showing thread creation <<{Fib 26 X>></CAPTION>
+<CAPTION>The Mozart Panel showing thread creation <<{Fib 26 X}>></CAPTION>
 <PICTURE.EXTERN TO="Thread.ps" TYPE="ps" info="-width 400">
 </FIGURE>
 
@@ -527,7 +527,7 @@ end
 uses the notion of <EM> future </EM> and the <<ByNeed>> primitive
 operation. 
 A future is a read-only capability of a logic variable. For example
-to create a future of the variable <<X>> we perfrom the operation
+to create a future of the variable <<X>> we perform the operation
 <<!!>> to create a future <<Y>>.
 
 <<< Y = !!X >>>

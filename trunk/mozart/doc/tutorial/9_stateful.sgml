@@ -109,7 +109,8 @@ futures that can only be read and cannot be bound. So the thread
 corresponding to the queue server will suspend in
 the statement <<Given = Taken>>. This problem is remedied by running
 this statement in its own thread as shown in <ptr to="concurrentQueue1">
-<note foot>This solution is proposed by Denys Duchier</note>.
+<note foot>This design of a FIFO queue server was proposed
+by Denys Duchier</note>.
 
 <P> The program works as follows. 
 <<{Q.put I0} {Q.put I1} ... {Q.put In}>>
