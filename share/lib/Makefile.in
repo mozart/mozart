@@ -39,7 +39,8 @@ OZLIBDIRS = \
         $(OZLIB)/Standard $(OZLIB)/SP $(OZLIB)/OP $(OZLIB)/CP $(OZLIB)/WP \
         $(OZLIB)/DP \
         $(OZLIB)/compiler $(OZLIB)/panel $(OZLIB)/browser \
-        $(OZLIB)/explorer $(OZLIB)/ozcar $(OZLIB)/profiler
+        $(OZLIB)/explorer $(OZLIB)/ozcar $(OZLIB)/profiler \
+        $(OZLIB)/Init
 OZCARBITMAPDIR = $(BITMAPDIR)/ozcar
 
 STANDARDSRC1 = \
@@ -51,6 +52,9 @@ STANDARDSRC1 = \
         Time.oz Thread.oz Match.oz Type.oz Space.oz \
         Array.oz Dictionary.oz Exception.oz Lazy.oz
 STANDARDSRC = $(STANDARDSRC1:%=$(SRCDIR)/Standard/%) $(SRCDIR)/Standard.oz
+
+INITSRC1 = URL.oz
+INITSRC = $(INITSRC1:%=$(SRCDIR)/Init/%) $(SRCDIR)/Init.oz
 
 SPSRC1 = System.oz Debug.oz Foreign.oz Error.oz Finalize.oz
 SPSRC = $(SPSRC1:%=$(SRCDIR)/SP/%) $(SRCDIR)/SP.oz
@@ -121,7 +125,7 @@ PROFILERSRC = $(PROFILERSRC1:%=$(SRCDIR)/profiler/%) $(SRCDIR)/Profiler.oz
 ALLSRCS = \
         $(STANDARDSRC) $(SPSRC) $(OPSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
         $(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
-        $(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC)
+        $(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) $(INITSRC)
 
 DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
 DUMPINTRO = $(DUMPINTRO1:%=$(SRCDIR)/%) Base.ozc Standard.ozc
@@ -137,14 +141,15 @@ TYCS = $(ENVS1:%.env=%.tyc)
 LIBFILES = \
         $(ALLSRCS:$(SRCDIR)/%=$(OZLIB)/%) \
         $(ENVS:$(SRCDIR)/%=$(OZLIB)/%) \
-        $(TYPS:%=$(OZLIB)/%)
+        $(TYPS:%=$(OZLIB)/%) \
+        $(TYCS:%=$(OZLIB)/%)
 
 HELPCOMPONENTS = Base.ozc Standard.ozc
 
 COMPONENTS = \
         OPI.ozc SP.ozc OP.ozc CP.ozc WP.ozc DP.ozc \
         Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc Explorer.ozc \
-        Emacs.ozc Ozcar.ozc Profiler.ozc
+        Emacs.ozc Ozcar.ozc Profiler.ozc Init.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 
@@ -200,7 +205,7 @@ install: all \
 clean:
         $(RM) *~ *.bak
         $(RM) compiler/Version.oz compiler/Opcodes.oz ozcar/version.oz
-        $(RM) $(TYPS) $(HELPCOMPONENTS) $(COMPONENTS) ozbatch
+        $(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS) ozbatch
         $(RM) TAGS
 
 realclean: clean
@@ -246,6 +251,8 @@ $(OZBIN)/ozbatch: ozbatch
 
 %.ozc:
         $(COMPILE) $*
+
+Init.ozc: $(DUMPINTRO) $(INITSRC)
 
 OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz SP.ozc OP.ozc \
         $(SRCDIR)/Compiler.env
