@@ -223,7 +223,6 @@ OZ_BI_define(BIslowNet,2,0)
 OZ_BI_define(BIclose,1,0)   
 {
   oz_declareIntIN(0,time);
-  printf("%d:%d\n", time, (unsigned int) time);
   dpExitWithTimer((unsigned int) time);
   osExit(0);
   return PROCEED;
