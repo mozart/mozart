@@ -68,6 +68,12 @@ Bool oz_isLocalVar(OzVariable *var) {
   return NO;
 }
 
+#include "var_ext.hh"
+inline
+Bool oz_isLocalVar(ExtVar*v) {
+  return oz_isLocalVar(extVar2Var(v));
+}
+
 inline
 Bool oz_isLocalVariable(TaggedRef var)
 {

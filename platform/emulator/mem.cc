@@ -30,7 +30,8 @@
 #pragma implementation "mem.hh"
 #endif
 
-#include <malloc.h>
+// keving:  Is this necessary?  Will cause problems on MACOSX methinks
+//#include <malloc.h>
 
 #include "mem.hh"
 #include "os.hh"
@@ -263,7 +264,7 @@ SbrkMemory* SbrkMemory::shrink()
 #ifdef DEBUG_TRACEMEM
     printf("*** Returning %d bytes to the operating system\n",size);
 #endif
-#if defined(NETBSD) || defined(__FreeBSD__) || defined(OSF1_ALPHA)
+#if defined(NETBSD) || defined(__FreeBSD__) || defined(OSF1_ALPHA) || defined(OPENBSD)
     int ret = (int)brk((char*)oldBrk);
 #else
     int ret = brk(oldBrk);

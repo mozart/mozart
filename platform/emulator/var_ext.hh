@@ -44,13 +44,28 @@ typedef enum {
 } ExtVarType;
 
 //
-class ExtVar : public OzVariable {
+class ExtVar;
+
+inline
+OzVariable* extVar2Var(ExtVar*p) {
+  return reinterpret_cast<OzVariable*>(reinterpret_cast<OzVariable*>(p)-1);
+}
+
+class ExtVar {
 public:
-  ExtVar(Board *bb) : OzVariable(OZ_VAR_EXT,bb) {}
+  static void* operator new(size_t n)
+  {
+    return reinterpret_cast<void*>
+      (reinterpret_cast<char*>(oz_freeListMalloc(n+sizeof(OzVariable)))
+       + sizeof(OzVariable));
+  }
+  static void  operator delete(void*,size_t) { Assert(NO); }
+public:
+  ExtVar(Board *bb) { extVar2Var(this)->initAsExtension(bb); }
   virtual ExtVarType    getIdV() = 0;
-  virtual OzVariable*   gCollectV() = 0;
+  virtual ExtVar*       gCollectV() = 0;
   virtual void          gCollectRecurseV() = 0;
-  virtual OzVariable*   sCloneV() = 0;
+  virtual ExtVar*       sCloneV() = 0;
   virtual void          sCloneRecurseV() = 0;
   virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*) = 0;
   virtual OZ_Return     bindV(TaggedRef*, TaggedRef) = 0;
@@ -60,10 +75,12 @@ public:
   virtual void          disposeV() = 0;
 
   virtual OZ_Return addSuspV(TaggedRef *, Suspendable * susp) {
-    addSuspSVar(susp);
+    extVar2Var(this)->addSuspSVar(susp);
     return PROCEED;
   }
-  virtual int getSuspListLengthV() { return getSuspListLengthS(); }
+  virtual int getSuspListLengthV() {
+    return extVar2Var(this)->getSuspListLengthS();
+  }
 
   virtual void printStreamV(ostream &out,int depth = 10) {
     out << "<extvar: #" << (int) getIdV() << ">";
@@ -76,6 +93,12 @@ public:
   virtual OZ_Return     forceBindV(TaggedRef*p, TaggedRef v) {
     return bindV(p,v);
   }
+
+  // helpers for disposeV()
+  void disposeS() { extVar2Var(this)->disposeS(); }
+  void freeListDispose(size_t n) {
+    oz_freeListDispose(extVar2Var(this),n+sizeof(void*));
+  }
 };
 
 inline
@@ -85,14 +108,19 @@ int oz_isExtVar(TaggedRef r)
 }
 
 inline
+ExtVar* var2ExtVar(OzVariable*p) {
+  return reinterpret_cast<ExtVar*>(p+1);
+}
+
+inline
 ExtVar *oz_getExtVar(TaggedRef r) {
   Assert(oz_isExtVar(r));
-  return (ExtVar *) tagged2Var(r);
+  return var2ExtVar(tagged2Var(r));
 }
 
 inline
 OZ_Term oz_makeExtVar(ExtVar *ev) {
-  return makeTaggedVar(ev);
+  return makeTaggedVar(extVar2Var(ev));
 }
 
 #endif

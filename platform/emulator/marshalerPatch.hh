@@ -122,10 +122,10 @@ public:
   // each patch type has its own type:
   virtual ExtVarType    getIdV() = 0;
   // also type-specific;
-  virtual OzVariable*   gCollectV() = 0;
+  virtual ExtVar*       gCollectV() = 0;
   // (usually just 'gcRecurseOVP()');
   virtual void          gCollectRecurseV() = 0;
-  virtual OzVariable*   sCloneV() { Assert(0); return ((OzVariable *) 0); }
+  virtual ExtVar*       sCloneV() { Assert(0); return ((ExtVar *) 0); }
   virtual void          sCloneRecurseV() { Assert(0); }
 
   //

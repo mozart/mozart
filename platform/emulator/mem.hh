@@ -85,8 +85,16 @@ public:
 
 #define OZ_HEAPALIGNMENT 8
 
-extern char * _oz_heap_cur;
-extern char * _oz_heap_end;
+#ifndef HEAPCURVOLATILE
+#define HEAPCURVOLATILE
+#endif
+
+#ifndef HEAPENDVOLATILE
+#define HEAPENDVOLATILE
+#endif
+
+extern HEAPCURVOLATILE char * _oz_heap_cur;
+extern HEAPENDVOLATILE char * _oz_heap_end;
 
 #ifdef TRACE_ALOVER
 extern size_t _oz_alover;
@@ -137,7 +145,7 @@ void * oz_heapMalloc(const size_t sz)
       goto retry;
     }
 
-    return _oz_heap_cur;
+    return (void*) _oz_heap_cur;
   }
 }
 

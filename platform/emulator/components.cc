@@ -269,8 +269,12 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header,
     pos = pb->accessNext(len);
   } while (pos);
 
-  // header;
-  allocateBytes(total, header, hlen, crc, textmode);
+  // header - also open file if nec
+  OZ_Term result = allocateBytes(total, header, hlen, crc, textmode);
+  if (result!=PROCEED) {
+    delete pb;
+    return result;
+  }
 
   //
   pos = pb->unlinkFirst(len);
@@ -595,8 +599,9 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   LoadTermRet ret;
 
   OZ_Return result = loadPickleBuffer(buffer, compname);
-  if (result != PROCEED)
+  if (result != PROCEED) {
     return (result);
+  }
 
   ret = loadTerm(buffer, versiongot, val);
   buffer->dropBuffers();

@@ -859,7 +859,7 @@ void const2buffer(ostream &out, ConstTerm *c,const char sign,int depth)
   case Co_Extension:
     {
       int n;
-      char * s = OZ_virtualStringToC(((OZ_Extension *) (OZ_Container *) c)->printV(depth),
+      char * s = OZ_virtualStringToC(const2Extension(c)->printV(depth),
                                      &n);
       while (n--) out << *s++;
     }

@@ -1175,3 +1175,25 @@ OZ_Return oz_addSuspendInArgs4(OZ_Term * _OZ_LOC[]) {
     (void) am.addSuspendVarListInline(t4ptr);
   return SUSPEND;
 }
+
+#if OUTLINE_SETEXCEPTIONINFO
+void AM::setExceptionInfo(TaggedRef inf) {
+    if (exception.info == NameUnit) {
+      exception.info=oz_nil();
+    }
+    exception.info = oz_cons(inf,exception.info);
+  }
+#endif
+
+#if OUTLINE_HF_RAISE_FAILURE
+Bool AM::hf_raise_failure()
+{
+  if (!oz_onToplevel() && !oz_currentThread()->isCatch())
+    return OK;
+
+  exception.info  = NameUnit;
+  exception.value = RecordFailure;
+  exception.debug = ozconf.errorDebug;
+  return NO;
+}
+#endif

@@ -1167,7 +1167,7 @@ void osInit()
 
   FD_ZERO(&socketFDs);
 
-#ifdef SUNOS_SPARC
+#if defined(SUNOS_SPARC)
 
   struct timeval tp;
 
@@ -1888,7 +1888,7 @@ void *osDlsym(void *h, const char *name)
     sprintf(buf,"_%s",name);
     ret = GetProcAddress(handle,buf);
   }
-  return ret;
+  return (void *) ret;
 }
 #else
 void *osDlsym(void *h, const char *name) {}
@@ -2244,7 +2244,8 @@ static DWORD __stdcall writerThread(void *p)
       goto loop;
   }
   CloseHandle(out);
-  osclose(in);
+  // keving: why is this commented out?
+  //osclose(in);
   return 0;
 }
 
