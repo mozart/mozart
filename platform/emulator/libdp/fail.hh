@@ -213,7 +213,7 @@ public:
   Watcher* getNext(){return next;}
 
   void varInvokeInjector(TaggedRef t,EntityCond);
-  void invokeInjector(TaggedRef t,EntityCond,TaggedRef);
+  void invokeInjector(TaggedRef t,EntityCond,TaggedRef,Thread*);
   void invokeWatcher(TaggedRef t,EntityCond);
 
   Thread* getThread(){Assert(thread!=NULL);return thread;}
