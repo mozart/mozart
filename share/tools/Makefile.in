@@ -212,7 +212,7 @@ $(CACHELINK): $(CACHEDIR)
 .PHONY: clean veryclean distclean tags
 
 clean:
-	rm -f *~ *.bak
+	rm -f *~ *.bak ./*/*~ ./*/*.bak
 	rm -f ozcar-version.oz
 	rm -f $(FUNCTORS)
 	rm -f opi
