@@ -2845,21 +2845,6 @@ void engine() {
       DISPATCH(6);
     }
 
-  Case(TESTLABEL1):
-  Case(TESTLABEL2):
-  Case(TESTLABEL3):
-  Case(TESTLABEL4):
-
-  Case(TEST1):
-  Case(TEST2):
-  Case(TEST3):
-  Case(TEST4):
-
-  Case(INLINEDOT):
-
-  Case(ENDOFFILE):
-  Case(ENDDEFINITION):
-
   Case(SWITCHCOMPMODE):
     /* brute force: don't know exactly, when to mark Y as dirty (RS) */
     markDirtyRefsArray(Y);
@@ -2875,6 +2860,21 @@ void engine() {
       e->currentThread->taskStack.pushCompMode(ALLSEQMODE);
     }
     DISPATCH(1);
+
+  Case(TESTLABEL1):
+  Case(TESTLABEL2):
+  Case(TESTLABEL3):
+  Case(TESTLABEL4):
+
+  Case(TEST1):
+  Case(TEST2):
+  Case(TEST3):
+  Case(TEST4):
+
+  Case(INLINEDOT):
+
+  Case(ENDOFFILE):
+  Case(ENDDEFINITION):
 
 #ifndef THREADED
   default:
