@@ -1876,6 +1876,8 @@ public:
 
   ProgramCounter PC;
 
+  CodeArea *codeBlock; // cache surrounding code block for code GC
+
 public:
   OZPRINT;
   NO_DEFAULT_CONSTRUCTORS(PrTabEntry);
@@ -1888,6 +1890,7 @@ public:
     line  = lin;
     colum = colu;
 
+    codeBlock = NULL;
     flags = 0;
     fl = oz_deref(fl);
     while (oz_isCons(fl)) {
@@ -1957,6 +1960,8 @@ public:
   int getLine()   { return line; }
   int getColumn() { return colum; }
   TaggedRef getFile() { return file; }
+
+  CodeArea *getCodeBlock();
 
   void patchFileAndLine();
 
