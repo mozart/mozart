@@ -300,8 +300,11 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
     return TRUE;
   }
 
-  if (def && debugmode() && !currentSolveBoard && currentThread != rootThread 
-                         && CodeArea::existVarNames(PC)) {
+  if (def && debugmode() && !currentSolveBoard && currentThread != rootThread
+                         &&
+      (CodeArea::getOpcode(PC+sizeOf(CodeArea::getOpcode(PC)))==DEBUGINFO ||
+       CodeArea::getOpcode(PC)==DEBUGINFO)) {
+
     OzDebug *dbg;
     int frameId   = ++lastFrameID % MAX_ID;
     
@@ -554,7 +557,8 @@ void pushDummyDebug(TaskStack *stk, ProgramCounter PC)
 
 #ifdef FASTREGACCESS
 #define RegAccess(Reg,Index) (*(RefsArray)((intlong) Reg + Index))
-#define LessIndex(Index,CodedIndex) (Index <= CodedIndex/sizeof(TaggedRef))
+#define LessIndex(Index,CodedIndex) \
+                       (Index <= (int)(CodedIndex/sizeof(TaggedRef)))
 #else
 #define RegAccess(Reg,Index) (Reg[Index])
 #define LessIndex(I1,I2) (I1<=I2)
