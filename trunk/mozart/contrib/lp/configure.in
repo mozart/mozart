@@ -1,5 +1,5 @@
 dnl -*-sh-*-
-AC_INIT(ri.cc)
+AC_INIT(lp.cc)
 OZ_CONTRIB_INIT_CXX
 OZ_LIB_GMP
 
