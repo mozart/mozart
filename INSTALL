@@ -7,7 +7,6 @@ INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
 
   GNU GCC 2.7
   GNU make
-  GNU m4
   GNU bison 1.25
   GNU flex 2.5.3
   GNU mp library 2.0
