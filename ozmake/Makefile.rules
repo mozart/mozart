@@ -43,19 +43,22 @@ have.lynx:
 	    echo >&2 "(see http://lynx.browser.org/)"; \
 	fi
 
-html: have.xsltproc HELP.xml HELP.xsl Makefile.vars
+html: HELP.xml HELP.xsl Makefile.vars
+	@$(MAKE) have.xsltproc
 	xsltproc -o index.html \
 		--stringparam OZMAKEOUTPUT html \
 		--stringparam OZMAKEVERSION $(VERSION) \
 		HELP.xsl HELP.xml
 
-HELP.html: have.xsltproc HELP.xml HELP.xsl Makefile.vars
+HELP.html: HELP.xml HELP.xsl Makefile.vars
+	@$(MAKE) have.xsltproc
 	xsltproc -o HELP.html \
 		--stringparam OZMAKEOUTPUT text \
 		--stringparam OZMAKEVERSION $(VERSION) \
 		HELP.xsl HELP.xml
 
-HELP.txt: have.lynx HELP.html Makefile.vars
+HELP.txt: HELP.html Makefile.vars
+	@$(MAKE) have.lynx
 	lynx -dump HELP.html > HELP.txt
 
 txt: HELP.txt
