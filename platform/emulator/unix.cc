@@ -529,6 +529,14 @@ OZ_Term readEntries(DIR *dp) {
   OZ_Term dirs = oz_nil();
   do {
   retry:
+    // clear errno.  It looks like readdir doesn't
+    // clear it when it successfully reaches the end.
+    // this means that if an interrupt occurs while
+    // attempting to read one entry, errno remains
+    // set to EINTR and when reaching the end, readdir
+    // just returns NULL and we loop for ever because
+    // errno is still set to EINTR.
+    errno=0;
     struct dirent * dirp = readdir(dp);
     if (dirp == NULL) {
       if (errno==EINTR) goto retry;
