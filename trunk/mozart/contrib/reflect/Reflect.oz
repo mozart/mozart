@@ -1,25 +1,25 @@
 /*
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     $MOZARTURL$
- * 
+ *
  *  See the file "LICENSE" or
  *     $LICENSEURL$
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -30,11 +30,11 @@ functor
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 export
-   
+
    VarReflect
-   VarEq     
+   VarEq
    PropReflect
-   PropEq     
+   PropEq
    PropName
    PropLocation
    PropIsFailed
@@ -42,6 +42,7 @@ export
    IsPropagator
    IsDiscardedPropagator
    DiscardPropagator
+   IdentifyParameter
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
@@ -51,10 +52,10 @@ import
    FS
    CTB at 'x-oz://boot/CTB'
    Error
-   
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
-   
+
    VarReflect            = ReflectExport.variableReflect
    VarEq                 = System.eq
    PropReflect           = ReflectExport.propagatorReflect
@@ -66,8 +67,9 @@ define
    IsDiscardedPropagator = ReflectExport.isDiscardedPropagator
    DiscardPropagator     = ReflectExport.discardPropagator
    BIspaceReflect        = ReflectExport.spaceReflect
+   IdentifyParameter     = ReflectExport.identifyParameter
 
-   GetCtVarNameAsAtom       = CTB.getNameAsAtom   
+   GetCtVarNameAsAtom       = CTB.getNameAsAtom
    GetCtVarConstraintAsAtom = CTB.getConstraintAsAtom
 
    local
@@ -75,18 +77,18 @@ define
    in
       {Error.registerFormatter reflect
        fun {$ Exc}
-          case Exc
-          of reflect(What Where) then          
-             error(kind:  T
-                   msg:   What#" in "#Where
-                   items: nil) 
-          [] reflect(What Where Expl) then
-             error(kind:  T
-                   msg:   What#" in "#Where
-                   items: [line(oz(Expl))]) 
-          else
-             error(kind: T items: [line(oz(Exc))])
-          end
+	  case Exc
+	  of reflect(What Where) then
+	     error(kind:  T
+		   msg:   What#" in "#Where
+		   items: nil)
+	  [] reflect(What Where Expl) then
+	     error(kind:  T
+		   msg:   What#" in "#Where
+		   items: [line(oz(Expl))])
+	  else
+	     error(kind: T items: [line(oz(Exc))])
+	  end
        end}
    end
 
@@ -109,7 +111,7 @@ define
 
    fun {SpaceReflect Vs}
 \ifdef VERBOSE
-      {System.showInfo '\t collecting ...'}      
+      {System.showInfo '\t collecting ...'}
 \endif
       ReflectTables = {BIspaceReflect Vs}
 \ifdef VERBOSE
@@ -145,7 +147,7 @@ define
 		  end}
 \ifdef VERBOSE
       {System.showInfo '\t preparing '#{Width ReflectTables.props}
-       #' propagators ...'}      
+       #' propagators ...'}
 \endif
       PropTable = {Record.map
 		   ReflectTables.props
@@ -158,7 +160,7 @@ define
 		      CP = {FS.diff
 			    {FS.unionN
 			     {Map
-			      Params 
+			      Params
 			      fun {$ PI}
 				 VarTable.PI.propagators
 			      end}}
@@ -174,20 +176,24 @@ define
 		   end}
 
 \ifdef VERBOSE
-      {System.showInfo '\t preparing procedures ...'}      
+      {System.printInfo '\t preparing '}
 \endif
-      local 
+      local
+	 % list of all propagator ids
 	 PropList = {Record.toList PropTable}
+	 % list all procedure ids
+	 ProcList = {FS.reflect.lowerBoundList
+		     {FS.value.make
+		      {Map PropList
+		       fun {$ P}
+			  P.location.propInvoc.invoc
+		       end}}
+		    }
       in
-	 ProcTable = {MakeRecord procTable
-		      {FS.reflect.lowerBoundList
-		       {FS.value.make
-			{Map PropList
-			 fun {$ P}
-			    P.location.propInvoc.invoc
-			 end}}
-		      }
-		     }
+	 ProcTable = {MakeRecord procTable ProcList}
+\ifdef VERBOSE
+      {System.showInfo {Width ProcTable}#' procedures ...'}
+\endif
 	 {ForAll PropList
 	  proc {$ P}
 	     Proc = P.location.propInvoc
@@ -207,10 +213,15 @@ define
 			    {FS.var.lowerBound
 			     {FS.reflect.lowerBound
 			      P.parameters}}
-			 connected_props: 
+			 connected_props:
 			    {FS.var.lowerBound
 			     {FS.reflect.lowerBound
 			      P.connected_props}}
+			 connected_procs: _
+			 subsumed_props: {FS.var.lowerBound P.id}
+
+			 called_by:
+			    Proc.callerInvoc
 			)
 	  end}
 	 {Record.forAll ProcTable
@@ -219,13 +230,27 @@ define
 	     = {FS.value.make {FS.reflect.lowerBound Proc.parameters}}
 	     Proc.connected_props
 	     = {FS.value.make {FS.reflect.lowerBound Proc.connected_props}}
+	     Proc.subsumed_props
+	     = {FS.value.make {FS.reflect.lowerBound Proc.subsumed_props}}
+	  end}
+	 {ForAll ProcList
+	  proc {$ ProcId}
+	     ProcTable.ProcId.connected_procs =
+	     {FS.diff
+	      {FS.value.make
+	       {Map
+		{Map PropList fun {$ P} P.id end}
+		fun {$ PropId}
+		   PropTable.PropId.location.propInvoc.invoc
+		end}}
+	      {FS.value.make ProcId}}
 	  end}
       end
    in
 \ifdef VERBOSE
-      {System.showInfo '\t done.'}      
+      {System.showInfo '\t done.'}
 \endif
-      
+
       reflect_space(varsTable:  VarTable
 		    propTable:  PropTable
 		    procTable:  ProcTable

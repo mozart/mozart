@@ -77,6 +77,7 @@ extern "C"
       {"isPropagator",          1, 1, BIIsPropagator},
       {"isDiscardedPropagator", 1, 1, BIIsDiscardedPropagator},
       {"discardPropagator",     1, 0, BIDiscardPropagator},
+      {"identifyParameter",     1, 1, BIIdentifyParameter},
       {0,0,0,0}
     };
 
