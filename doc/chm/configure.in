@@ -26,7 +26,18 @@ AC_INIT(Mozart.hhc.in)
 OZ_INIT
 OZ_PATH_PROG(AWK,gawk awk)
 AC_SUBST(AWK)
-AC_OUTPUT(Makefile)
+
+AC_MSG_CHECKING(for --with-stdlib)
+AC_ARG_WITH(stdlib,
+    [--with-stdlib=DIR
+         directory where mozart standard library is checked out (default=NONE)],
+    oz_stdlib=${with_stdlib})
+: ${oz_stdlib=}
+AC_MSG_RESULT($oz_stdlib)
+OZSTDLIB="$oz_stdlib"
+AC_SUBST(OZSTDLIB)
+
+AC_OUTPUT(Makefile preprocess.awk)
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
 ],
