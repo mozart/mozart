@@ -26,7 +26,8 @@ export
    proxyNode        : ProxyNode
    bitmapTreeNode   : BitmapTreeNode
    internalAtomNode : InternalAtomNode
-
+   genericNode      : GenericNode
+   
 define
    class OptionManager
       from
@@ -58,7 +59,7 @@ define
    end
    
    OpMan = {New OptionManager create}
-   
+
    \insert 'Create/BaseCreateObject.oz'
    \insert 'Create/SupportCreateObjects.oz'
    \insert 'Layout/BaseLayoutObject.oz'
@@ -124,5 +125,17 @@ define
 
       prop
 	 final
-   end   
+   end
+
+   %% GenericNode
+
+   class GenericNode
+      from
+	 GenericCreateObject
+	 GenericLayoutObject
+	 GenericDrawObject
+
+      prop
+	 final
+   end
 end
