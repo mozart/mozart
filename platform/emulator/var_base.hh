@@ -56,15 +56,16 @@
 // see int cmpCVar(OzVariable *, OzVariable *)
 
 enum TypeOfVariable {
-  OZ_VAR_EXT,
-  OZ_VAR_SIMPLE,
-  OZ_VAR_FUTURE,
-  OZ_VAR_BOOL,
-  OZ_VAR_FD,
-  OZ_VAR_OF,
-  OZ_VAR_FS,
-  OZ_VAR_CT
+  OZ_VAR_EXT     = 0,
+  OZ_VAR_SIMPLE  = 1,
+  OZ_VAR_FUTURE  = 2,
+  OZ_VAR_BOOL    = 3,
+  OZ_VAR_FD      = 4,
+  OZ_VAR_OF      = 5,
+  OZ_VAR_FS      = 6,
+  OZ_VAR_CT      = 7
 };
+
 
 extern const int varSizes[];
 
@@ -274,6 +275,8 @@ int oz_var_getSuspListLength(OzVariable*);
 
 OzVariable * oz_var_copyForTrail(OzVariable *);
 void oz_var_restoreFromCopy(OzVariable *, OzVariable *);
+
+OZ_Return oz_var_cast(TaggedRef *, Board *, TypeOfVariable);
 
 
 inline

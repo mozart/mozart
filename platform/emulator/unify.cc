@@ -251,6 +251,100 @@ loop:
  /*************/
  var_var:
 
+
+  // #define CORRECT_UNIFY
+
+#ifdef CORRECT_UNIFY
+
+  /*
+   * Specially optimized: local uvars
+   */
+
+  if (isUVar(tag1) && oz_isLocalUVar(termPtr1)) {
+    // Both have the same home, order them according to age
+    if (term1 == term2 && heapNewer(termPtr2,termPtr1)) {
+      oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
+      goto next;
+    }
+    oz_bindUVar(termPtr1, makeTaggedRef(termPtr2));
+    goto next;
+  }
+  
+  if (isUVar(tag2) && oz_isLocalUVar(termPtr2)) {
+    // Both have the same home, order them according to age
+    if (term1 == term2 && heapNewer(termPtr1,termPtr2)) {
+      oz_bindUVar(termPtr1, makeTaggedRef(termPtr2));
+      goto next;
+    }
+    oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
+    goto next;
+  }
+  
+
+  /*
+   * Prescribe in which order to bind:
+   *  - home(term1) below home(term2) ``term1 is more local''
+   *  - never bind the strange guys (see var_base.hh)
+   */
+
+  {
+    Board * tb1 = getVarBoard(term1)->derefBoard();
+    Board * tb2 = getVarBoard(term2)->derefBoard();
+
+    if (oz_isBelow(tb2,tb1)) {
+      // t2 should be bound to t1
+      Swap(term1,term2,TaggedRef);
+      Swap(termPtr1,termPtr2,TaggedRef *);
+      Swap(tb1,tb2,Board *);
+    }
+  
+    if (isUVar(term1)) {
+      // Both have the same home, order them according to age
+      if (term1 == term2 && heapNewer(termPtr2,termPtr1)) {
+	oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
+	goto next;
+      }
+      oz_bindUVar(termPtr1, makeTaggedRef(termPtr2));
+      goto next;
+    }
+    
+    Assert(isCVar(term1));
+
+    if (isUVar(term2)) {
+      *termPtr2 = term2 = makeTaggedCVar(oz_newSimpleVar(tb2));
+    }
+
+    Assert(isCVar(term1) && isCVar(term2));
+
+    /* preferred binding of perdio vars */
+    if (tb1 == tb2 && cmpCVar(tagged2CVar(term1),tagged2CVar(term2))>0) {
+      Swap(term1,term2,TaggedRef);
+      Swap(termPtr1,termPtr2,TaggedRef*);
+      Swap(tb1,tb2,Board *);
+    }
+
+    // Make the variable to which the binding is done fit!
+
+    int res = oz_var_cast(termPtr2, tb2, tagged2CVar(term1)->getType());
+
+    if (res != PROCEED) {
+      result = res;
+      goto fail;
+    }
+    
+    res = oz_var_unify(tagged2CVar(*termPtr1),termPtr1, termPtr2);
+    
+    if (res == PROCEED)
+      goto next;
+    result = res;
+    goto fail;
+  }
+
+
+
+#else
+
+
   /*
    * The implemented partial order for binding variables to variables is:
    *   local -> global
@@ -288,6 +382,9 @@ loop:
     result = res;
     goto fail;
   }
+
+
+#endif
 
 
  /*************/
