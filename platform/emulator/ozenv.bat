@@ -9,11 +9,3 @@ rem set OZRC=ozrc
 
 set TCL_LIBRARY=%OZHOME%\lib\wish\tcl
 set TK_LIBRARY=%OZHOME%\lib\wish\tk
-
-rem set TCL_LIBRARY=%OZHOME%\ozwish-win\lib\tcl
-rem set TK_LIBRARY=%OZHOME%\ozwish-win\lib\tk
-
-rem set TCL_LIBRARY=d:\tcl\lib\tcl7.5
-rem set TK_LIBRARY=d:\tcl\lib\tk4.1
-
-rem set OZBOOT=./ozboot.ql
