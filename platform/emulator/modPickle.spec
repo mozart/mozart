@@ -48,6 +48,7 @@
 
     'newMarshaler'	=> { in     => ['+int'],
 			     out    => [],
-			     BI     => BInewMarshaler},
+			     BI     => BInewMarshaler,
+	                     ifdef  => NEWMARSHALER},
 
  );

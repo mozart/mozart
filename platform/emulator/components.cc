@@ -61,7 +61,9 @@
 #include <stdio.h>
 #include <errno.h>
 
+#ifdef NEWMARSHALER
 #include "newmarshaler.hh"
+#endif
 
 #include "zlib.h"
 
@@ -212,20 +214,28 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
 }
 
 
+#ifdef NEWMARSHALER
 Bool newMarshaler = NO;
+#endif
 
 void marshalTermRT0(OZ_Term t, MsgBuffer *bs)
 {
+#ifdef NEWMARSHALER
   if (newMarshaler)
     newMarshalTerm(t,bs);
   else 
+#endif
     marshalTermRT(t,bs);
 }
 
 
 void saveTerm(ByteStream* buf,TaggedRef t) {
   buf->marshalBegin();
+#ifdef NEWMARSHALER
   char *version  =  newMarshaler ? "2#0" : PERDIOVERSION;
+#else
+  char *version  =  PERDIOVERSION;
+#endif
   marshalString(version, buf);
   marshalTermRT0(t, buf);
   buf->marshalEnd();
@@ -417,14 +427,14 @@ OZ_BI_define(BIsave,2,0)
   return saveIt(in,filename,"",0,NO);
 } OZ_BI_end
 
-
+#ifdef NEWMARSHALER
 OZ_BI_define(BInewMarshaler,1,0)
 {
   OZ_declareInt(0,nm);
   newMarshaler = nm;
   return PROCEED;
 } OZ_BI_end
-
+#endif
 
 
 OZ_BI_define(BIsaveCompressed,3,0)
@@ -535,6 +545,7 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
     return NO;
   }
   
+#ifdef NEWMARSHALER
   Bool newFormat = NO;
 
   if (major!=PERDIOMAJOR || minor > PERDIOMINOR) {
@@ -547,6 +558,16 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
   buf->setVersion(major,minor);
 
   t = newFormat ? newUnmarshalTerm(buf) : unmarshalTerm(buf);
+#else
+  if (major!=PERDIOMAJOR || minor > PERDIOMINOR) {
+    return NO;
+  }
+
+  buf->setVersion(major,minor);
+
+  t = unmarshalTerm(buf);
+#endif
+
   buf->unmarshalEnd();
   refTrail->unwind();
   return OK;
