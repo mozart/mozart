@@ -1,281 +1,337 @@
-usage: ozmake OPTIONS TARGETS
 
-ozmake is a tool for building Mozart-based projects and for creating
-and installing Mozart packages.  It was inspired by the Unix tools
-`make' and `rpm', but is much, much simpler and specialized for
-Mozart-based software development and deployment.
+USAGE
 
-ozmake must currently be invoked from a shell, but it will eventually
-acquire additionally an optional, user-friendly graphical interface.
+   ozmake OPTIONS TARGETS
+
+   ozmake  is  a tool for building Mozart-based projects and for creating
+   and installing Mozart packages. It was inspired by the Unix tools make
+   and  rpm,  but  is much, much simpler and specialized for Mozart-based
+   software development and deployment.
+
+   ozmake  must currently be invoked from a shell, but it will eventually
+   acquire additionally an optional, user-friendly graphical interface.
 
 SYNOPSIS
 
-        ozmake --help
-        ozmake [--build]
-        ozmake [--build] FILES...
-        ozmake --install FILES...
-        ozmake --install --package=PKG
-        ozmake --uninstall [--package=PKG]
-        ozmake --clean
-        ozmake --veryclean
-        ozmake --create --package=FILE
-        ozmake --publish
-        ozmake --extract --package=PKG
-        ozmake --list
-        ozmake --list --package=MOGUL
+   ozmake --help
+   ozmake [--build]
+   ozmake [--build] FILES...
+   ozmake --install FILES...
+   ozmake --install --package=PKG
+   ozmake --uninstall [--package=PKG]
+   ozmake --clean
+   ozmake --veryclean
+   ozmake --create --package=FILE
+   ozmake --publish
+   ozmake --extract --package=PKG
+   ozmake --list
+   ozmake --list --package=MOGUL
 
-In the following, we write meta variables between angle brackets,
-e.g. <PREFIX> or <URI as cache path>
+OPTIONS
 
-GENERAL OPTIONS
+   In the following, we write meta variables between angle brackets, e.g.
+   <PREFIX> or <URI as cache path>
 
--v, --verbose
-        print out more tracing information that the default
--q, --quiet
-        suppress all tracing and feedback information
--n, --just-print
-        perform a dry run, i.e. just print what would happen without
-        actually performing the actions
---local
-	do not recurse into subdirectories
+  General Options
 
-DIRECTORIES
+   -v, --verbose
+          print out more tracing information that the default
 
---prefix=<PREFIX>
-        root of private installation area (default: ~/.oz)
---dir=<DIR>
-        default directory for other options below
-        default: current directory
---builddir=<BUILDDIR>
-        directory in which to build
-        default: <DIR>
---srcdir=<SRCDIR>
-        directory where source files are located
-        default: <DIR>
---bindir=<BINDIR>
-        directory where `bin' targets are placed
-        default: <PREFIX>/bin
---libroot=<LIBROOT>
-        root directory of cache into which `lib' targets are installed
-        default: <PREFIX>/cache
---libdir=<LIBDIR>
-        directory into which `lib' targets are installed
-        default: <LIBROOT>/<URI as cache path>
-        example:
-          <URI>               = x-ozlib://foo/bar/baz
-          <URI as cache path> = x-ozlib/foo/bar/baz
-          <LIBDIR>            = <LIBROOT>/x-ozlib/foo/bar/baz
---docroot=<DOCROOT>
-        root directory into which `doc' targets are installed
-        default: <PREFIX>/doc
---docdir=<DOCDIR>
-        directory into which `doc' targets are installed
-        default: <DOCROOT>/<MOGUL as filename>
-        example:
-          <MOGUL>             = mogul:/aaa/bbb/ccc
-          <MOGUL as filename> = aaa-bbb-ccc
-          <DOCDIR>            = <DOCROOT>/aaa-bbb-ccc
---extractdir=<EXTRACTDIR>
-        directory into which to extract a package
-        default: <DIR>
---publishdir=<PUBLISHDIR>
-        directory where to place packages for publication in the mogul archive
-        default: <PREFIX>/pkg
-        example:
-          <MOGUL> = mogul:/aaa/bbb/ccc
-          is published as <PUBLISHDIR>/aaa-bbb-ccc.pkg
---archive=<ARCHIVE>
-        URL of mogul archive from which packages can be downloaded
-        default: http://ww.mozart-oz.org/mogul/pkg
-        example:
-          <MOGUL> = mogul:/aaa/bbb/ccc
-          is downloaded from ARCHIVE/aaa-bbb-ccc.pkg
+   -q, --quiet
+          suppress all tracing and feedback information
 
-FILES
+   -n, --just-print
+          perform  a  dry  run, i.e. just print what would happen without
+          actually performing the actions
 
--m <FILE>, --makefile=<FILE>
-        location of makefile
-        default: <SRCDIR>/makefile.oz
--p <PKG>, --package=<PKG>
-        file or URL of package.  when creating a package, it should be
-        a local filename.  when extracting or installing, it can also
-        be a URL or a mogul id; it the latter case, the package is
-        automatically downloaded from the mogul archive
---database=<DB>
-        base path of installed packages database
-        default: <PREFIX>/DATABASE
-        the database is saved in both pickled and textual format
-        respectively in files <DB>.ozf and <DB>.txt
+   --local
+          do not recurse into subdirectories
 
-HELP
+  Directories
 
-ozmake --help
+   --prefix=<PREFIX>
+          default: ~/.oz
+          root of private installation area
 
--h, --help
-        print this information message
+   --dir=<DIR>
+          default: current directory
+          default directory for other options below
 
-BUILD
+   --builddir=<BUILDDIR>
+          default: <DIR>
+          directory in which to build
 
-ozmake [--build]
-        build all targets
-ozmake [--build] FILES...
-        build these target
+   --srcdir=<SRCDIR>
+          default: <DIR>
+          directory where source files are located
 
--b, --build
-        this is the default.  builds targets of the package
---optlevel=( none | debug | optimize )
-        select optimization level for compilation
-        default: optimize
--g, --debug, --optlevel=debug
-        compile with debugging
--O, --optimize, --optlevel=optimize
-        compile with full optimization.  this is the default
---(no)gnu
-        is the C++ compiler the GNU compiler.  this is determined
-        automatically and allows a greater optimization level, namely
-        passing -O3 rather than just -O to the compiler
---(no)fullbuild
-        default: false
-        also build the `src' targets
+   --bindir=<BINDIR>
+          default: <PREFIX>/bin
+          directory where bin targets are placed
 
-INSTALL
+   --libroot=<LIBROOT>
+          default: <PREFIX>/cache
+          root directory of cache into which lib targets are installed
 
-ozmake --install
-        install using the makefile
-ozmake --install FILES...
-        install these targets using the makefile
-ozmake --install --package=PKG
-        install package PKG
+   --libdir=<LIBDIR>
+          default: <LIBROOT>/<URI as cache path>
+          directory into which lib targets are installed
 
--i, --install
-        install targets of the package and updates the package
-        database
---grade=( none | same | up | down | any )
-        default: none
-        what to do if this package is already installed?
-        --grade=none signals an error
-        --grade=same requires versions to be the same
-        --grade=up   requires a package with newer version than the
-                     one installed
-        --grade=down requires a package with older version than the
-                     one installed
-        --grade=any  no conditions
--U, --upgrade
-        equivalent to --install --grade=up
---downgrade
-        equivalent to --install --grade=down
--A, --anygrade
-        equivalent to --install --grade=any
---(no)replacefiles
-        allow installation to overwrite files from other packages
-        default:false
--R, --replace
-        equivalent to --install --grade=any --replacefiles
---(no)extendpackage
-        whether to replace or extend the current installation of this
-        package if any
-        default: false
--X, --extend
-        equivalent to --install --grade=any --extendpackage
---(no)savedb
-        save the updated database after installation
-        default: true
---includedocs
---excludedocs
-        default: --includedocs
-        whether to install the `doc' targets
---includelibs
---excludelibs
-        default: --includelibs
-        whether to install the `lib' targets
---includebins
---excludebins
-        default: --includebins
-        whether to install the `bin' targets
---(no)keepzombies
-        default: false
-        whether to remove files left over from a previous installation
-        of this package
+   --docroot=<DOCROOT>
+          default: <PREFIX>/doc
+          root directory into which doc targets are installed
 
-UNINSTALL
+   --docdir=<DOCDIR>
+          default: <DOCROOT>/<MOGUL as filename>
+          directory into which doc targets are installed
 
-ozmake --uninstall
-        uninstall package described by makefile
-ozmake --uninstall --package=PKG
-        uninstall package named by mogul id PKG
+   --extractdir=<EXTRACTDIR>
+          default: <DIR>
+          directory into which to extract a package
 
--e, --uninstall
-        uninstall a package
+   --publishdir=<PUBLISHDIR>
+          default: <PREFIX>/pkg
+          directory  where to place packages for publication in the mogul
+          archive
 
-CLEAN
+   --archive=<ARCHIVE>
+          default: http://ww.mozart-oz.org/mogul/pkg
+          URL of mogul archive from which packages can be downloaded
 
-ozmake --clean
-ozmake --veryclean
-        remove files as specified by the makefile's clean and
-	veryclean features. --veryclean implies --clean.
-        default clean glob patterns: *~ *.ozf *.o *.so-* *.exe
+  Files
 
-CREATE
+   -m <FILE>, --makefile=<FILE>
+          default: <SRCDIR>/makefile.oz
+          location of makefile
 
-ozmake --create --package=<FILE>
-        create a package and save it in <FILE>.  the files needed for
-        the package are automatically computed from the makefile.
---include(bins|libs|docs)
---exclude(bins|libs|docs)
-        control which target types are included in the package
+   -p <PKG>, --package=<PKG>
+          file or URL of package. when creating a package, it should be a
+          local filename. when extracting or installing, it can also be a
+          URL  or  a  mogul  id;  it  the  latter  case,  the  package is
+          automatically downloaded from the mogul archive
 
-PUBLISH
+   --database=<DB>
+          default: <PREFIX>/DATABASE
+          base path of installed packages database. The database is saved
+          in  both  pickled  and  textual  format  respectively  in files
+          <DB>.ozf and <DB>.txt
 
-ozmake --publish
-        create a package and place it in the user's area for
-        publication in the mogul archive
+  Help
 
-EXTRACT
+   ozmake --help
 
-ozmake --extract --package=<PKG>
-        extract the files from file or URL <PKG>.  if <PKG> is a mogul
-        id, then the package is automatically downloaded from the
-        mogul archive
+   -h, --help
+          print this information message
 
-LIST
+  Build
 
-ozmake --list
-        list info for all packages in the installed package database
-ozmake --list --package=<MOGUL>
-        list info for the installed package indentified by mogul id
-        <MOGUL>
---linewidth=N
-        assume a line with of N characters
-        default: 70
+   ozmake [--build]
+          build all targets
+
+   ozmake [--build] FILES...
+          build these target
+
+   -b, --build
+          this is the default. builds targets of the package
+
+   --optlevel=( none | debug | optimize )
+          default: optimize
+          select optimization level for compilation
+
+   -g, --debug, --optlevel=debug
+          compile with debugging
+
+   -O, --optimize, --optlevel=optimize
+          compile with full optimization. this is the default
+
+   --(no)gnu
+          is  the  C++  compiler  the  GNU  compiler.  this is determined
+          automatically  and  allows a greater optimization level, namely
+          passing -O3 rather than just -O to the compiler
+
+   --(no)fullbuild
+          default: false
+          also build the src targets
+
+   --includedir DIR, -I DIR
+          tell  the  C++  compiler to additionally search DIR for include
+          files
+
+   --(no)sysincludedirs
+          default: true
+          tell  the C++ compiler to additionally search (or not, if using
+          --nosysincludedirs)  the  Mozart-specific  include  directories
+          located  in the global installation directory and in the user's
+          private ~/.oz area.
+
+   --librarydir DIR, -L DIR
+          tell the C++ linker to additionally search DIR for libraries
+
+   --(no)syslibrarydirs
+          default: true
+          tell  the  C++  linker to additionally search (or not, if using
+          --nosyslibrarydirs)  the  Mozart-specific  library  directories
+          located  in the global installation directory and in the user's
+          private ~/.oz area.
+
+  Install
+
+   ozmake --install
+          install using the makefile
+
+   ozmake --install FILES...
+          install these targets using the makefile
+
+   ozmake --install --package=PKG
+          install package PKG
+
+   -i, --install
+          install targets of the package and updates the package database
+
+   --grade=( none | same | up | down | any )
+          default: none
+          what to do if this package is already installed?
+
+        --grade=none
+                signals an error
+
+        --grade=same
+                requires versions to be the same
+
+        --grade=up
+                requires  a  package  with  newer  version  than  the one
+                installed
+
+        --grade=down
+                requires  a  package  with  older  version  than  the one
+                installed
+
+        --grade=any
+                no conditions
+
+   -U, --upgrade
+          equivalent to --install --grade=up
+
+   --downgrade
+          equivalent to --install --grade=down
+
+   -A, --anygrade
+          equivalent to --install --grade=any
+
+   --(no)replacefiles
+          default: false
+          allow installation to overwrite files from other packages
+
+   -R, --replace
+          equivalent to --install --grade=any --replacefiles
+
+   --(no)extendpackage
+          default: false
+          whether  to  replace or extend the current installation of this
+          package if any
+
+   -X, --extend
+          equivalent to --install --grade=any --extendpackage
+
+   --(no)savedb
+          default: true
+          save the updated database after installation
+
+   --includedocs, --excludedocs
+          default: --includedocs
+          whether to install the doc targets
+
+   --includelibs, --excludelibs
+          default: --includelibs
+          whether to install the lib targets
+
+   --includebins, --excludebins
+          default: --includebins
+          whether to install the bin targets
+
+   --(no)keepzombies
+          default: false
+          whether  to remove files left over from a previous installation
+          of this package
+
+  Uninstall
+
+   ozmake --uninstall
+          uninstall package described by makefile
+
+   ozmake --uninstall --package=PKG
+          uninstall package named by mogul id PKG
+
+   -e, --uninstall
+          uninstall a package
+
+  Clean
+
+   ozmake --clean
+   ozmake --veryclean *~ *.ozf *.o *.so-* *.exe
+          remove files as specified by the makefile's clean and veryclean
+          features. --veryclean implies --clean.
+
+  Create
+
+   ozmake --create --package=<FILE>
+          create  a  package  and save it in <FILE>. the files needed for
+          the package are automatically computed from the makefile.
+
+   --include(bins|libs|docs), --exclude(bins|libs|docs)
+          control which target types are included in the package
+
+  Publish
+
+   ozmake --publish
+          create   a  package  and  place  it  in  the  user's  area  for
+          publication in the mogul archive
+
+  Extract
+
+   ozmake --extract --package=<PKG>
+          extract the files from file or URL PKG. if <PKG> is a mogul id,
+          then  the  package  is  automatically downloaded from the mogul
+          archive
+
+  List
+
+   ozmake --list
+          list info for all packages in the installed package database
+
+   ozmake --list --package=<MOGUL>
+          list  info  for  the  installed package indentified by mogul id
+          <MOGUL>
+
+   --linewidth=N
+          default: 70
+          assume a line with of N characters
 
 MAKEFILE
 
-The makefile contains a single Oz record which describes the project
-and should normally be placed in a file called `makefile.oz'.  A
-makefile typically looks like this:
-
+   The  makefile  contains a single Oz record which describes the project
+   and should normally be placed in a file called makefile.oz. A makefile
+   typically looks like this:
         makefile(
-          lib   : ['Foo.ozf']
-          uri   : 'x-ozlib://mylib'
+          lib : ['Foo.ozf']
+          uri : 'x-ozlib://mylib'
           mogul : 'mogul:/denys/lib-foo')
 
-stating explicitly that there is one library target, namely the
-functor Foo.ozf, and that it should installed at URI:
-
+   stating  explicitly  that  there  is  one  library  target, namely the
+   functor Foo.ozf, and that it should installed at URI:
         x-ozlib://mylib/Foo.ozf
 
-and implicitly that it should be compiled from the Oz source file
-Foo.oz.  When you invoke `ozmake --install', the `mogul' feature
-serves to uniquely identify this package and the files it contributes
-in the ozmake database of installed packages.
+   and  implicitly  that  it  should  be compiled from the Oz source file
+   Foo.oz.  When you invoke ozmake --install, the mogul feature serves to
+   uniquely  identify  this  package  and the files it contributes in the
+   ozmake database of installed packages.
 
-There are many more features which can occur in the makefile and they
-are all optional.  If you omit all the features, you only get the
-defaults and you don't even need a makefile.  All values, suchs as
-files, should be given as virtual string; atoms are recommended except
-for features blurb, info_text and info_html, where strings are
-recommended.
-
+   There  are many more features which can occur in the makefile and they
+   are  all  optional.  If  you  omit  all the features, you only get the
+   defaults  and  you  don't  even  need a makefile. All values, suchs as
+   files, should be given as virtual string; atoms are recommended except
+   for  features  blurb,  info_text  and  info_html,  where  strings  are
+   recommended.
         makefile(
           bin      : [ FILES... ]
           lib      : [ FILES... ]
@@ -301,188 +357,199 @@ recommended.
           subdirs  : [ DIRS... ]
         )
 
-Features bin, lib and doc list targets to be installed in <BINDIR>,
-<LIBDIR> and <DOCDIR> respectively.  bin targets should be executable
-functors, i.e. they should end with extension `.exe'.  lib targets are
-typically compiled functors i.e. ending with extension `.ozf', but
-could also be native functors, i.e. ending with extension `.so', or
-simply data files.  doc targets are documentation files.
+   Features  bin,  lib  and doc list targets to be installed in <BINDIR>,
+   <LIBDIR>  and  <DOCDIR> respectively. bin targets should be executable
+   functors,  i.e.  they  should end with extension .exe. lib targets are
+   typically compiled functors i.e. ending with extension .ozf, but could
+   also  be  native  functors,  i.e. ending with extension .so, or simply
+   data files. doc targets are documentation files.
 
-EXTENSIONS
+  Extensions
 
-ozmake knows how to build targets by looking at the target's
-extension:
+   ozmake  knows  how  to  build  targets  by  looking  at  the  target's
+   extension:
+   Foo.exe
+          is an executable functor and is created from Foo.ozf
+   Foo.ozf
+          is a compiled functor and is created from Foo.oz
+   Foo.o
+          is a compiled C++ file and is created from Foo.cc
+   Foo.so
+          is a native functor and is created from Foo.o
+   Foo.cc
+          is a C++ source file
+   Foo.hh
+          is a C++ header file
 
-Foo.exe   is an executable functor and is created from Foo.ozf
-Foo.ozf   is a compiled functor and is created from Foo.oz
-Foo.o     is a compiled C++ file and is created from Foo.cc
-Foo.so    is a native functor and is created from Foo.o
-Foo.cc    is a C++ source file
-Foo.hh    is a C++ header file
+   Note  that  these  are  abstract targets. In particular, Foo.so really
+   denotes  the  file  Foo.so-<PLATFORM>  where <PLATFORM> identifies the
+   architecture  and  operating  system  where  the package is built; for
+   example:  linux-i486. Also, when a bin target Foo.exe is installed, it
+   is  installed both as <BINDIR>/Foo.exe and <BINDIR>/Foo so that it can
+   be invoked as Foo on both Windows and Unix platforms.
 
-Note that these are `abstract' targets.  In particular, Foo.so really
-denotes the files Foo.so-<PLATFORM> where <PLATFORM> identifies the
-architecture and operating system where the package is built; for
-example: linux-i486.  Also, when a bin target Foo.exe is installed, it
-is installed both as <BINDIR>/Foo.exe and <BINDIR>Foo so that it can
-be invoked as Foo on both Windows and Unix platforms.
+   It  is  imperative that you respect the conventional use of extensions
+   described  here:  ozmake  permits  no  variation and supports no other
+   extensions.
 
-It is imperative that you respect the conventional use of extensions
-described here: ozmake permits no variation and supports no other
-extensions.
+  Rules
 
-RULES
-
-ozmake has built-in rules for building files.  Occasionally, you may
-want to override the default rule for one or more targets.  This is
-done with feature `rule' which contains a record mapping target to
-rule:
+   ozmake  has  built-in  rules for building files. Occasionally, you may
+   want  to  override  the  default rule for one or more targets. This is
+   done with feature rule which contains a record mapping target to rule:
         TARGET_FILE : TOOL(SOURCE_FILE)
 
-the rule may also have a list of options:
-
+   the rule may also have a list of options:
         TARGET_FILE : TOOL(SOURCE_FILE OPTIONS)
 
-The tools supported by ozmake are ozc (Oz compiler), ozl (Oz linker),
-cc (C++ compiler), ld (C++ linker).  The default rules are:
-
+   The  tools supported by ozmake are ozc (Oz compiler), ozl (Oz linker),
+   cc (C++ compiler), ld (C++ linker). The default rules are:
         'Foo.exe' : ozl('Foo.ozf' [executable])
         'Foo.ozf' : ozc('Foo.oz')
         'Foo.o'   : cc('Foo.cc')
         'Foo.so'  : ld('Foo.o')
 
-currently ozc and ozl support option `executable'.
+   The tools support the following options:
+   ozc
+        executable
+               make the result executable
+   ozl
+        executable
+               make the result executable
+   cc
+        include(DIR)
+               Similar  to  the usual C++ compiler option -IDIR. DIR is a
+               virtual string
+        'define'(MAC)
+               Similar  to  the usual C++ compiler option -DMAC. MAC is a
+               virtual string
+   ld
+        library(DIR)
+               Similar  to  the  usual  C++ linker option -lDIR. DIR is a
+               virtual string
 
-You might want to specify a rule to create a pre-linked library:
-
+   You might want to specify a rule to create a pre-linked library:
         'Utils.ozf' : ozl('Foo.ozf')
 
-or to create a non-prelinked executable:
-
+   or to create a non-prelinked executable:
         'Foo.exe' : ozc('Foo.oz' [executable])
 
-DEPENDENCIES
+  Dependencies
 
-ozmake automatically determines whether targets needed to be rebuilt,
-e.g. because they are missing or if some source file needed to create
-them has been modified.  The rules are used to determine dependencies
-between files.  Sometimes this is insufficient e.g. because you use
-tool ozl (dependencies on imports), or \insert in an Oz file, or
-#include in a C++ file.  In this case you can specify additional
-dependencies using feature `depends' which is a record mapping targets
-to list of dependencies:
-
+   ozmake  automatically determines whether targets needed to be rebuilt,
+   e.g.  because they are missing or if some source file needed to create
+   them  has  been modified. The rules are used to determine dependencies
+   between  files.  Sometimes  this  is insufficient e.g. because you use
+   tool  ozl  (dependencies  on  imports),  or  \insert in an Oz file, or
+   #include  in  a  C++  file.  In  this  case you can specify additional
+   dependencies  using  feature depends which is a record mapping targets
+   to list of dependencies:
         TARGET : [ FILES... ]
 
-For example:
-
+   For example:
         'Foo.o' : [ 'Foo.hh' 'Baz.hh' ]
-or      'Foo.exe' : [ 'Lib1.ozf' 'Lib2.ozf' ]
 
-CLEANING
+   or
+        'Foo.exe' : [ 'Lib1.ozf' 'Lib2.ozf' ]
 
-During development, it is often convenient to be able to easily remove
-all junk and compiled files to obtain again a clean project directory.
-This is supported by ozmake --clean and ozmake --veryclean; the latter
-also implies the former.  Files to be removed are specified by `glob'
-patterns where `?' matches any 1 character and `*' matches a sequence
-of 0 or more characters.  All files in <BUILDDIR> matching one such
-pattern is removed.  There are built-in patterns, but ou can override
-them with features `clean' and `veryclean' which should be lists of
-glob patterns.  For example the default clean glob patterns are:
+  Cleaning
 
+   During development, it is often convenient to be able to easily remove
+   all junk and compiled files to obtain again a clean project directory.
+   This is supported by ozmake --clean and ozmake --veryclean; the latter
+   also  implies  the  former.  Files to be removed are specified by glob
+   patterns where ? matches any 1 character and * matches a sequence of 0
+   or more characters. All files in BUILDDIR matching one such pattern is
+   removed.  There  are  built-in patterns, but ou can override them with
+   features  clean  and veryclean which should be lists of glob patterns.
+   For example the default clean glob patterns are:
         clean : [ "*~" "*.ozf" "*.o" "*.so-*" "*.exe" ]
 
-PACKAGE RELATED FEATURES
+  Package Related Features
 
-URI
+    uri
 
-feature `uri' indicates the URI where to install lib targets.  For
-example:
-
+   feature  uri  indicates  the  URI  where  to  install lib targets. For
+   example:
         uri : 'x-ozlib://mylib/XML'
 
-states that all lib targets (e.g. Foo.ozf) will be installed under
-this URI so that they can also be imported from it, i.e.:
-
+   states  that  all  lib  targets (e.g. Foo.ozf) will be installed under
+   this URI so that they can also be imported from it, i.e.:
        import MyFoo at 'x-ozlib://mylib/XML/Foo.ozf'
 
-MOGUL
+    mogul
 
-feature `mogul' is the mogul id uniquely identifying this package.  It
-is used to identify the package in the database of installed packages,
-to create/publish the package, and to install its documention files.
+   feature mogul is the mogul id uniquely identifying this package. It is
+   used to identify the package in the database of installed packages, to
+   create/publish the package, and to install its documention files.
 
-AUTHOR
+    author
 
-feature `author' is a virtual string or list of virtual string
-resp. identifying the author or authors of the package.  It is
-recommended to identify authors by their mogul id, however is is also
-possible to simply give their names.  For example:
+   feature  author  is  a  virtual string or list of virtual string resp.
+   identifying the author or authors of the package. It is recommended to
+   identify  authors  by  their  mogul id, however is is also possible to
+   simply give their names. For example, the recommended way is:
+        author : 'mogul:/duchier'
 
-recommended:        author : 'mogul:/duchier'
-also possible:      author : 'Denys Duchier'
+   but the following is also possible:
+        author : 'Denys Duchier'
 
-RELEASED
+    released
 
-feature `released' is a virtual string specifying the date and time of
-release in the following format:
-
+   feature  released  is a virtual string specifying the date and time of
+   release in the following format:
         released : "YYYY-MM-DD-HH:MM:SS"
 
-time is optional.  An appropriate release date using the currentdate
-and time is automatically inserted when invoking ozmake --create or
-ozmake --publish.
+   time  is  optional.  An appropriate release date using the currentdate
+   and  time  is  automatically inserted when invoking ozmake --create or
+   ozmake --publish.
 
-BLURB
+    blurb
 
-feature `blurb' contains a very short piece of text describing the
-package.  This text should be just one line and is intended to be used
-as a title when the package is published in the mogul archive.
+   feature  blurb  contains  a  very  short  piece of text describing the
+   package.  This text should be just one line and is intended to be used
+   as a title when the package is published in the mogul archive.
 
-INFO_TEXT
+    info_text
 
-feature `info_text' contains a plain text description of the package.
-This is intended to be used as an abstract on the presentation page
-for the package in the mogul archive.  It should be brief and
-informative, but should not attempt to document the package.
+   feature  info_text  contains  a plain text description of the package.
+   This  is  intended  to be used as an abstract on the presentation page
+   for  the  package  in  the  mogul  archive.  It  should  be  brief and
+   informative, but should not attempt to document the package.
 
-INFO_HTML
+    info_html
 
-feature `info_html' is similar to `info_text' but contains HTML rather
-than plain text.
+   feature  info_html  is  similar  to info_text but contains HTML rather
+   than plain text.
 
-SRC
+    src
 
-feature `src' indicates which targets should be considered source,
-i.e. in particular non-buildable.  All targets mentioned in src should
-be mentioned in bin, lib, or doc too.  The point of src is to support
-distributing packages with pre-built targets and without giving out
-the corresponding sources.  You should not do this with native
-functors since they are platform dependent and not portable, but it
-can be a convenient means of distributing prebuilt Oz libraries. For
-example:
-
+   feature  src indicates which targets should be considered source, i.e.
+   in  particular  non-buildable.  All targets mentioned in src should be
+   mentioned  in  bin,  lib,  or  doc too. The point of src is to support
+   distributing  packages  with  pre-built targets and without giving out
+   the corresponding sources. You should not do this with native functors
+   since  they  are  platform dependent and not portable, but it can be a
+   convenient means of distributing prebuilt Oz libraries. For example:
         makefile(
           lib : [ 'Foo.ozf' ]
           src : [ 'Foo.ozf' ]
           uri : 'x-ozlib://mylib'
           mogul : 'mogul:/myname/foolib')
 
-is a makefile for a package that distribute the precompiled Foo.ozf,
-but does not also distribute its source Foo.oz.  Normally, when you
-build a package it simply checks that the src files are present but
-will not attempt to build them.  If you have the sources, you can
-force building the src targets if necessary using --fullbuild.
+   is  a  makefile for a package that distribute the precompiled Foo.ozf,
+   but  does  not  also  distribute its source Foo.oz. Normally, when you
+   build  a  package  it simply checks that the src files are present but
+   will not attempt to build them. If you have the sources, you can force
+   building the src targets if necessary using --fullbuild.
 
-SUBDIRS
+    subdirs
 
-feature `subdirs' is a list of bare filenames representing
-subdirectories of the project.  By default, when necessary, ozmake
-will recurse into these subdirectories.  It is expected that each
-subdirectory should provide its own makefile.  The mogul id is
-automatically inherited to subdirectories and the uri is automatically
-extended by appending the name of the subdirectory: thus submakefiles
-can be simpler since they don't need to be concerned with
-package-level features.
-
+   feature   subdirs   is   a   list   of   bare  filenames  representing
+   subdirectories of the project. By default, when necessary, ozmake will
+   recurse   into   these   subdirectories.  It  is  expected  that  each
+   subdirectory  should  provide  its  own  makefile.  The  mogul  id  is
+   automatically inherited to subdirectories and the uri is automatically
+   extended  by appending the name of the subdirectory: thus submakefiles
+   can   be   simpler   since  they  don't  need  to  be  concerned  with
+   package-level features.

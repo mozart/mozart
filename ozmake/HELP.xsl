@@ -10,6 +10,9 @@
 
 <xsl:output method="html"/>
 
+<xsl:param name="OZMAKEVERSION" select="''"/>
+<xsl:param name="OZMAKEOUTPUT" select="'html'"/>
+
 <xsl:template name="PREBUILT">
   <xsl:param name="VERSION" select="''"/>
   <xsl:variable name="EXTENSION">
@@ -105,6 +108,7 @@ SPAN.BUILTIN      { color: #DA70D6; }
 </STYLE>
 </HEAD>
 <BODY>
+<xsl:if test="$OZMAKEOUTPUT='html'">
 <H1>ozmake</H1>
 <P CLASS="AUTHOR">
   <A HREF="http://www.ps.uni-sb.de/~duchier/">Denys Duchier</A>
@@ -119,18 +123,21 @@ SPAN.BUILTIN      { color: #DA70D6; }
     <xsl:with-param name="VERSION" select="''"/>
   </xsl:call-template>
   <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.7h'"/>
+    <xsl:with-param name="VERSION" select="$OZMAKEVERSION"/>
   </xsl:call-template>
 </DL>
 <HR/>
   <P CLASS="WARNING">this is an alpha-release -  feedback is welcome<BR/>
 ozmake support for automated publication in MOGUL is still under development
 </P>
+</xsl:if>
   <xsl:apply-templates/>
+<xsl:if test="$OZMAKEOUTPUT='html'">
 <HR/>
 <ADDRESS>
 <A HREF="http://www.ps.uni-sb.de/~duchier/">Denys Duchier</A>
 </ADDRESS>
+</xsl:if>
 </BODY>
 </HTML>
 </xsl:template>
