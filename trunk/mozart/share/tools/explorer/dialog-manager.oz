@@ -685,7 +685,7 @@ local
 	 meth init(master:Master previous:Prev options:?Options)
 	    <<DialogClass
 	    init(master:Master
-		 title: TitelName#': Search Options'
+		 title: TitleName#': Search Options'
 		 focus:  1
 		 return: 1
 		 buttons: ['Okay'#
