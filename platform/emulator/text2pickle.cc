@@ -30,6 +30,11 @@
 #include <ctype.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 /* do not include extension.hh: otherwise HPUX does not find OZ_atom :-( */
 #define __EXTENSIONHH
@@ -708,13 +713,29 @@ TaggedPair *unpickle(FILE *in)
 int main(int argc, char **argv)
 {
   int textmode = 0;
-  if (argc == 2 && strcmp(argv[1],"--textmode")==0) {
+  int fd = STDOUT_FILENO;
+  if (argc >= 2 && !strcmp(argv[1],"--textmode")) {
     /* out in textmode too: eliminates unused labels */
     textmode = 1;
+    argv++;
+    argc--;
+  }
+  if (argc >= 3 && !strcmp(argv[1],"-o")) {
+    fd = open(argv[2],O_WRONLY|O_CREAT|O_TRUNC|O_BINARY);
+    if (fd == -1) {
+      fprintf(stderr,"text2pickle: could not open output file %s\n",argv[2]);
+      exit(1);
+    }
+    argv += 2;
+    argc -= 2;
+  }
+  if (argc != 1) {
+    fprintf(stderr,"Usage: text2pickle [--textmode] [-o <file>]\n");
+    exit(2);
   }
 
   TaggedPair *aux = unpickle(stdin);
 
-  PickleMarshalerBuffer fbuf(STDOUT_FILENO,textmode);
+  PickleMarshalerBuffer fbuf(fd,textmode);
   pickle(aux,&fbuf);
 }
