@@ -42,18 +42,6 @@
 #include "vs_mailbox.hh"
 
 //
-// Perdio messages contain a "virtual sites" header;
-//
-enum VSMsgType {
-  VS_M_INVALID = 0,
-  VS_M_PERDIO,                  // perdio messages - passed up;
-  VS_M_INIT_VS,                 // initializing a slave;
-  VS_M_SITE_IS_ALIVE,           // "ping" probing;
-  VS_M_SITE_ALIVE,              //
-  VS_M_UNUSED_SHMID             // GCing of messages' shm segments;
-};
-
-//
 // defined in virtual.cc (require static memory managers, etc.);
 VSMsgBufferOwned* composeVSInitMsg();
 VSMsgBufferOwned* composeVSSiteIsAliveMsg(DSite *s);
