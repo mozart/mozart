@@ -259,7 +259,7 @@ private:
 
 
 class Builtin: public Chunk {
-friend Chunk::gcRecurse();
+friend void Chunk::gcRecurse(void);
 private:
   BuiltinTabEntry *fun;
   TaggedRef suspHandler; // this one is called, when it must suspend

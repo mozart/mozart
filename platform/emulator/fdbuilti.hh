@@ -856,13 +856,13 @@ public:
   void printTerm(int i) {
     if (*bifdbm_varptr[i] == bifdbm_var[i]) {
       cout << "index=" << i << endl;
-      taggedPrintLong(TaggedRef(bifdbm_varptr[i]));
+      taggedPrintLong(makeTaggedRef(bifdbm_varptr[i]));
       cout << endl << flush;
     } else {
       cout << "ATTENTION *bifdbm_varptr[i]!=bifdbm_var[i]. index="
 	   << i << endl;
       cout << "bifdbm_varptr";
-      taggedPrintLong(TaggedRef(bifdbm_varptr[i]));
+      taggedPrintLong(makeTaggedRef(bifdbm_varptr[i]));
       cout << endl << flush;
       cout << "bifdbm_var";
       taggedPrintLong(bifdbm_var[i]);

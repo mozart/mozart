@@ -34,7 +34,7 @@ enum ContFlag {
   C_CFUNC_CONT = 3,  // a continuation  to call a c-function
   C_DEBUG_CONT = 4,  // a continuation for debugging
   C_CALL_CONT  = 5,  // 
-  C_COMP_MODE  = 6,  // 
+  C_COMP_MODE  = 6   // 
 };
 
 
@@ -94,7 +94,7 @@ public:
 
   Bool isEmpty(TaskStackEntry t)
   {
-    return (t == emptyTaskStackEntry ? OK : NO);
+    return (t == emptyTaskStackEntry);
   }
 
   Bool isEmpty() { return isEmpty(*(tos-1)); }
@@ -193,10 +193,10 @@ public:
   }
 
   static TaskStackEntry makeCompMode(int mode) {
-    return (TaskStackEntry) ((mode<<4) | C_COMP_MODE);
+    return (TaskStackEntry) ToPointer((mode<<4) | C_COMP_MODE);
   }
   static int getCompMode(TaskStackEntry e) {
-    return ((int) e)>>4;
+    return (ToInt32(e)>>4);
   }
   void pushCompMode(int mode)
   {
