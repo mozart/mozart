@@ -299,6 +299,12 @@ void displayCode(ProgramCounter from, int ssize)
  fflush(stderr);
 }
 
+void displayDef(ProgramCounter from, int ssize) 
+{
+  displayCode(CodeArea::definitionStart(from),ssize);
+}
+
+
 void CodeArea::getDefinitionArgs(ProgramCounter PC,
 				 Reg &reg, ProgramCounter &next, TaggedRef &file,
 				 int &line, PrTabEntry *& pred)

@@ -491,7 +491,8 @@ PRINT(Object)
          << ", ";
   getFreeRecord()->print(stream,depth,offset);
   stream << ", State: ";
-  tagged2Stream(getCell(),stream,depth,offset);
+  if (getState())
+    getState()->print(stream,depth,offset);
   stream << ">";
 }
 
@@ -1206,7 +1207,8 @@ PRINTLONG(Object)
   getFreeRecord()->printLong(stream,depth,offset);
   stream << endl;
   stream << "State: ";
-  tagged2StreamLong(getCell(),stream,depth,offset);
+  if (getState())
+    getState()->printLong(stream,depth,offset);
 }
 
 PRINTLONG(Abstraction)
@@ -1473,6 +1475,17 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 	message("\tC_SET_CAA: AA=0x%x\n", aa);
 	break;
       }
+
+    case C_SET_CUROBJECT:
+      { 
+	Object *obj = (Object *) pop();
+	message("\tSET_CUROBJECT: 0x%x\n", obj);
+	break;
+      }
+
+    case C_SET_MODETOP:
+      message("\tSET_MODETOP\n");
+      break;
 
     default:
       Assert(0);

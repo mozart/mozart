@@ -579,9 +579,11 @@ public:
   //
   void pushDebug (OzDebug *d);
   void pushCall (TaggedRef pred, RefsArray  x, int n); 
-  void pushJob ();
-  void pushSetCaa (AskActor *aa);
-  void pushLocal ();
+  void pushJob();
+  void pushSetCaa(AskActor *aa);
+  void pushSetCurObject(Object *obj);
+  void pushSetModeTop();
+  void pushLocal();
   void pushCFunCont (OZ_CFun f, RefsArray  x, int n, Bool copyF);
   void pushCont (ProgramCounter pc, 
 		 RefsArray y, RefsArray g, RefsArray x, int n,
