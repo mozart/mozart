@@ -1666,7 +1666,7 @@ void AM::gc(int msgLevel)
 
   { /* initialize X regs; this IS necessary ! */
     for (int j=0; j < NumberOfXRegisters; j++) {
-      xRegs[j] = makeTaggedNULL();
+      xRegs[j] = 0;
     }
   }
   

@@ -82,7 +82,7 @@ private:
 
   int statusReg;
   Trail trail;
-  TaggedRef *xRegs;
+  TaggedRef xRegs[NumberOfXRegisters];
   TaskStack *cachedStack;
   Object *cachedSelf;
   char *shallowHeapTop;
