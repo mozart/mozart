@@ -55,49 +55,27 @@ local
       end
    end
 
-   fun {CutTrail N}
-      Head = N div 100
-      Tail = N mod 100
-   in
-      Head#'.'#case Tail<10 then '0'#Tail else Tail end
-   end
-   
    class PrintTime
       from Tk.label
       prop final
-      feat Dim
       attr Saved:0 Clear:0
-      meth init(parent:P dim:D)
-	 PrintTime,tkInit(parent:P text:0 anchor:e width:LabelWidth)
-	 self.Dim = D
+      meth init(parent:P)
+	 PrintTime,tkInit(parent:P text:'0.00' anchor:e width:LabelWidth)
       end
       meth set(N)
 	 case @Saved==N then skip else
-	    C = N - @Clear
-	    DimText
-	    PrintText
+	    C    = (N - @Clear) * 100 div 1000
+	    Head = C div 100
+	    Tail = C mod 100
 	 in
+	    PrintTime,tk(conf text:Head#'.'#case Tail<10 then '0'#Tail
+					    else Tail
+					    end)
 	    Saved <- N
-	    case C>HourI then
-	       DimText   = 'h'
-	       PrintText = {CutTrail C * 100 div HourI}
-	    elsecase C>MinuteI then
-	       DimText   = 'm'
-	       PrintText = {CutTrail C * 100 div MinuteI}
-	    elsecase C>SecondI then
-	       DimText   = 's'
-	       PrintText = {CutTrail C * 100 div SecondI}
-	    else
-	       DimText   = 'ms'
-	       PrintText = C
-	    end
-	    {self.Dim tk(conf text:DimText)}	       
-	    PrintTime,tk(conf text:PrintText)
 	 end
       end
       meth clear
-	 {self.Dim tk(conf text:ms)}	       
-	 PrintTime,tk(conf text:0)
+	 PrintTime,tk(conf text:'0.00')
 	 Clear <- @Saved
 	 Saved <- 0
       end
@@ -270,9 +248,8 @@ local
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
 				      anchor: w)}
-	    L3 = {New Tk.label  tkInit(parent:P anchor:e)}
-	    L2 = {New PrintTime init(parent: P
-				     dim:    L3)}
+	    L3 = {New Tk.label  tkInit(parent:P text:s anchor:e)}
+	    L2 = {New PrintTime init(parent:P)}
 	    L4 = case {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
 		    S = {CondSelect L stipple ''}
