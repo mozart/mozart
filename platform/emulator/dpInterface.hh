@@ -63,15 +63,15 @@ extern void (*gCollectDistCellRecurse)(Tertiary *t);
 extern void (*gCollectDistLockRecurse)(Tertiary *t);
 extern void (*gCollectDistPortRecurse)(Tertiary *t);
 //
+extern void (*gCollectEntityInfo)(Tertiary*);
 //
 //
-extern void (*gCollectBorrowTableUnusedFrames)();
-extern void (*gCollectFrameToProxy)();
 
 //
-extern void (*gCollectPerdioFinal)();
+extern void (*gCollectPerdioStart)();
 extern void (*gCollectPerdioRoots)();
-extern void (*gCollectEntityInfo)(Tertiary*);
+extern void (*gCollectBorrowTableUnusedFrames)();
+extern void (*gCollectPerdioFinal)();
 
 // exit hook;
 extern void (*dpExit)();

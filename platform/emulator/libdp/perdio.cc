@@ -52,6 +52,7 @@
 #include "dpResource.hh"
 #include "protocolState.hh"
 #include "protocolFail.hh"
+#include "msgContainer.hh"
 #include "dpMarshaler.hh"
 #include "dpMarshalExt.hh"
 #include "flowControl.hh"
@@ -66,9 +67,6 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board*);
 /* *********************************************************************/
 /*   global variables                                                  */
 /* *********************************************************************/
-
-
-MsgContainerManager* msgContainerManager;
 
 int  globalSendCounter = 0;
 int  globalRecCounter  = 0;
@@ -149,40 +147,29 @@ void initDP()
 /*   Utility routines                                      */
 /* *********************************************************************/
 
-void SendTo(DSite* toS,MsgContainer *msgC,int priority) {
+//
+void sendTo(DSite* toS, MsgContainer *msgC, int priority)
+{
+  // kost@ : 'toS' is unnecessary here?
+  Assert(msgC->getDestination() == toS);
+
+  //
   globalSendCounter++;
 
-  int ret=toS->sendTo(msgC,priority);
-  
-  if(ret==ACCEPTED) return;
+  //
+  int ret = toS->sendTo(msgC, priority);
 
-  if(ret==PERM_NOT_SENT){
-    toS->communicationProblem(msgC,COMM_FAULT_PERM_NOT_SENT);
+  //
+  switch (ret) {
+  case ACCEPTED:
+    break;
+  case PERM_NOT_SENT:
+    toS->communicationProblem(msgC, COMM_FAULT_PERM_NOT_SENT);
     msgContainerManager->deleteMsgContainer(msgC);
+    break;
+  default:
+    break;
   }
-}
-
-//
-// mm2: should be OZ_unifyInThread???
-void SiteUnify(TaggedRef val1,TaggedRef val2)
-{
-  TaggedRef aux1 = val1; DEREF(aux1,_1,_2);
-  TaggedRef aux2 = val2; DEREF(aux2,_3,_4);
-  
-    if (oz_isUVar(aux1) || oz_isUVar(aux2)) {
-      // cannot fail --> do it in current thread
-    OZ_unify(val1,val2); // mm2: should be bind?
-    return;
-    }
-  
-  Assert(oz_onToplevel());
-  Thread *th=oz_newThread(DEFAULT_PRIORITY);
-#ifdef PERDIO_DEBUG
-  PD((SITE_OP,"SITE_OP: site unify called %d %d",val1, val2));
-
-  Assert(MemChunks::isInHeap(val1) && MemChunks::isInHeap(val1));
-#endif
-  th->pushCall(BI_Unify,val1,val2);
 }
 
 DSite* getSiteFromTertiaryProxy(Tertiary* t){
@@ -242,13 +229,6 @@ void gcBorrowTableUnusedFramesImpl() {
   if (isPerdioInitializedImpl())
     borrowTable->gcBorrowTableUnusedFrames();
 }
-void gcFrameToProxyImpl() {
-  if (isPerdioInitializedImpl())
-    borrowTable->gcFrameToProxy();
-
-  Assert(OT->notGCMarked());
-  Assert(BT->notGCMarked());
-}
 
 void gcProxyRecurseImpl(Tertiary *t) {
   int i = t->getIndex();
@@ -295,6 +275,19 @@ void gCollectPendThread(PendThread **pt){
 
 /*--------------------*/
 
+//
+void gcPerdioStartImpl()
+{
+  if (isPerdioInitializedImpl()) {
+    comController_startGCComObjs();
+    // Erik+kost: TODO: why can't we do 'frameToProxy' during GCing of
+    // matching proxies and 'gCollectBorrowTableUnusedFrames'??!
+    borrowTable->gcFrameToProxy();
+  }
+  Assert(OT->notGCMarked());
+  Assert(BT->notGCMarked());
+}
+
 void gcPerdioRootsImpl()
 {
   if (isPerdioInitializedImpl()) {
@@ -309,6 +302,7 @@ void gcPerdioRootsImpl()
   }
 }
 
+//
 void gcPerdioFinalImpl()
 {
   if (isPerdioInitializedImpl()) {
@@ -316,6 +310,7 @@ void gcPerdioFinalImpl()
     OT->gcOwnerTableFinal(); 
     RHT->gcResourceTable();
     gcDSiteTable();
+    comController_finishGCComObjs();
   }
   gcTwins();
   Assert(OT->notGCMarked());
@@ -571,7 +566,7 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
       MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
       newmsgC->put_M_BORROW_CREDIT(myDSite,na_index,c);
 
-      SendTo(rsite,newmsgC,3);
+      sendTo(rsite,newmsgC,3);
       break;
     }
 
@@ -683,7 +678,7 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
 	  msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT_AND_CLASS,
 				o->getClassTerm());
 	  // printf("Class: %s\n",toC(o->getClassTerm()));
-	  SendTo(rsite, msgC, 3);
+	  sendTo(rsite, msgC, 3);
 	}
 	// no break here! - proceed with the 'OBJECT' case;
 
@@ -696,7 +691,7 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
 
 	  //
 	  msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT, t);
-	  SendTo(rsite, msgC, 3);
+	  sendTo(rsite, msgC, 3);
 	}	
 	break;
 
@@ -1152,11 +1147,11 @@ void initDPCore()
   gCollectDistCellRecurse = gcDistCellRecurseImpl;
   gCollectDistLockRecurse = gcDistLockRecurseImpl;
   gCollectDistPortRecurse = gcDistPortRecurseImpl;
-  gCollectBorrowTableUnusedFrames = gcBorrowTableUnusedFramesImpl;
-  gCollectFrameToProxy = gcFrameToProxyImpl;
-  gCollectPerdioFinal = gcPerdioFinalImpl;
-  gCollectPerdioRoots = gcPerdioRootsImpl;
   gCollectEntityInfo = gcEntityInfoImpl;
+  gCollectPerdioStart = gcPerdioStartImpl;
+  gCollectPerdioRoots = gcPerdioRootsImpl;
+  gCollectBorrowTableUnusedFrames = gcBorrowTableUnusedFramesImpl;
+  gCollectPerdioFinal = gcPerdioFinalImpl;
   dpExit = dpExitImpl;
   changeMaxTCPCache = changeMaxTCPCacheImpl;
   distHandlerInstall = distHandlerInstallImpl;
@@ -1226,7 +1221,7 @@ void sendPing(DSite* s){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(s);
   msgC->put_M_SEND_PING(myDSite,42);
 
-  SendTo(s,msgC,3);
+  sendTo(s,msgC,3);
 }
 
 void marshalDSite(MarshalerBuffer *buf, DSite* s)

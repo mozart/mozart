@@ -84,7 +84,9 @@ private:
 protected:
   ComObj *next; // For ComController usage
   void close(CState statetobe);
-  void gcComObj();
+  void gcComObj() { queues.gcMsgCs(); }
+  void startGCComObj() { queues.startGCMsgCs(); }
+  void finishGCComObj() { queues.finishGCMsgCs(); }
   void clearTimers();
   void shutDown();
   ComObj *next_cache; // For TransController usage
@@ -165,7 +167,9 @@ public:
   void deleteComObj(ComObj* comObj);
   int getCTR(){ return wc;}
 
+  void startGCComObjs();
   void gcComObjs();
+  void finishGCComObjs();
   int closeDownCount();
 private:
   Bool inList(ComObj *list,ComObj *testObj);

@@ -28,7 +28,7 @@
 #include "dpBase.hh"
 #include "msgType.hh"
 #include "dpDebug.hh"
-#include "mbuffer.hh"
+#include "msgContainer.hh"
 #include "protocolCredit.hh"
 
 /**********************************************************************/
@@ -42,7 +42,7 @@ void sendPrimaryCredit(DSite *sd,int OTI,Credit c){
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_OWNER_CREDIT(OTI,c);
-  SendTo(sd,msgC,3);
+  sendTo(sd,msgC,3);
 }
 
 void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c){
@@ -51,7 +51,7 @@ void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(cs);
   msgC->put_M_OWNER_SEC_CREDIT(sd,OTI,c); // no msg credit
 
-  SendTo(cs,msgC,3);
+  sendTo(cs,msgC,3);
 }
 
 void sendCreditBack(DSite* sd,int OTI,Credit c){ 

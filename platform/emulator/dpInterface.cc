@@ -154,16 +154,16 @@ ConstTerm *gCollectStatefulSpecStub(Tertiary *t)
 }
 
 //
-void gCollectBorrowTableUnusedFramesStub() {}
-void gCollectFrameToProxyStub() {}
-
-//
-void gCollectPerdioFinalStub() {}
-void gCollectPerdioRootsStub() {}
 void gCollectEntityInfoStub(Tertiary *t)
 {
   Assert(t->getInfo() == (EntityInfo *) 0);
 }
+
+//
+void gCollectPerdioStartStub() {}
+void gCollectPerdioFinalStub() {}
+void gCollectBorrowTableUnusedFramesStub() {}
+void gCollectPerdioRootsStub() {}
 
 // exit hook;
 void dpExitStub() {;}
@@ -230,22 +230,19 @@ void (*gCollectDistLockRecurse)(Tertiary *t)
   = gCollectDistLockRecurseStub;
 void (*gCollectDistPortRecurse)(Tertiary *t)
   = gCollectDistPortRecurseStub;
-
 //
-//
-//
-void (*gCollectBorrowTableUnusedFrames)()
-  = gCollectBorrowTableUnusedFramesStub;
-void (*gCollectFrameToProxy)()
-  = gCollectFrameToProxyStub;
-
-//
-void (*gCollectPerdioFinal)()
-  = gCollectPerdioFinalStub;
-void (*gCollectPerdioRoots)()
-  = gCollectPerdioRootsStub;
 void (*gCollectEntityInfo)(Tertiary*)
   = gCollectEntityInfoStub;
+
+//
+void (*gCollectPerdioStart)()
+  = gCollectPerdioStartStub;
+void (*gCollectPerdioRoots)()
+  = gCollectPerdioRootsStub;
+void (*gCollectBorrowTableUnusedFrames)()
+  = gCollectBorrowTableUnusedFramesStub;
+void (*gCollectPerdioFinal)()
+  = gCollectPerdioFinalStub;
 
 // exit hook;
 void (*dpExit)()

@@ -875,7 +875,7 @@ inline int isNowMarked(OZ_Term t) {
 }
 
 void WeakDictionary::gCollectRecurseV(void) {
-  oz_gCollectTerm(stream, stream);
+  oz_cacTerm(stream, stream);
 }
 
 void WeakDictionary::sCloneRecurseV(void) {

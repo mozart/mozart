@@ -459,9 +459,15 @@ void *ozMalloc(size_t size)
 		   -1, (off_t) 0);
 #endif
 #else
+#if defined(USE_AUTO_PLACEMENT)
+  void *ret = mmap((char *) 0x1, size, (PROT_READ|PROT_WRITE),
+		   (MAP_PRIVATE), 
+		   devZeroFD, (off_t) 0);
+#else
   void *ret = mmap(nextAddr, size, (PROT_READ|PROT_WRITE),
 		   (MAP_PRIVATE|MAP_FIXED),
 		   devZeroFD, (off_t) 0);
+#endif
 #endif
   if (ret == MAP_FAILED) { ozperror("mmap"); }
 #ifdef DEBUG_CHECK
