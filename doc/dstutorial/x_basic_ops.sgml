@@ -604,6 +604,14 @@ local F in
    {Browse F}
 end
 >>>
+<P> This first does the computation
+remotely and then repeats it locally.
+In the remote case, the variable <<F>>
+is shared between the client and server.
+When the server binds it, its value
+is immediately sent to the server.
+This is how the client gets a result from the server
+
 <P> Any Oz expression <EM>E</EM> can be executed
 remotely by prefixing it by
 <<{C run(proc {$}>> and suffixing it by <<end)}>>.
