@@ -31,14 +31,14 @@
  */
 
 class RecordCache {
-  Arity *ar;
-  int index;
+  int32 ar;    // was Arity *
+  int32 index;
 
 public:
   int lookup(SRecord *rec, TaggedRef feature)
   {
-    if (ar!=rec->getArity()) {
-      ar = rec->getArity();
+    if (ar!=ToInt32(rec->getArity())) {
+      ar = ToInt32(rec->getArity());
       index = rec->getIndex(feature); // is ok even if index==-1 !
     }
     return index;
@@ -49,18 +49,18 @@ int xCalled = 0;
 int xMiss = 0;
 
 class MethodCache {
-  ObjectClass *cl;
-  Abstraction *abstr;
+  int32 cl;      // was ObjectClass *
+  int32 abstr;   // was Abstraction *
 
 public:
   Abstraction *lookup(Object *obj, TaggedRef meth, SRecordArity arity)
   {
     ObjectClass *cla = obj->getClass();
-    if (cla!=cl) {
-      cl    = cla;
-      abstr = obj->getMethod(meth,arity);  /* is ok even if we find no method */
+    if (ToInt32(cla)!=cl) {
+      cl    = ToInt32(cla);
+      abstr = ToInt32(obj->getMethod(meth,arity));  /* is ok even if we find no method */
     }
-    return abstr;
+    return (Abstraction*) ToPointer(abstr);
   }
 };
 
