@@ -684,7 +684,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	PrTabEntry *pred;
 	getDefinitionArgs(PC,reg,next,file,line,pred);
 
-	fprintf(ofile, "(X%d,0x%x,%s,%s,%s,[",reg,next,
+	fprintf(ofile, "(X%d,0x%x,%s,%s,%d,[",reg,next,
 		pred ? pred->getPrintName() : "(NULL)",
 		OZ_toC(file), line);
 
