@@ -1,5 +1,5 @@
 makefile(
-   mogul  : 'mogul:/stdlib'
+   mogul  : 'mogul:/mozart/stdlib'
    uri    : 'x-oz://system'
-   subdirs: ['ds' 'os']
+   subdirs: ['ds' 'os' 'op' 'wp']
    )
