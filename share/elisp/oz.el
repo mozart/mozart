@@ -1,5 +1,6 @@
 ;; Major mode for editing Oz, and for running Oz under Emacs
 ;; Copyright (C) 1993 DFKI GmbH
+;; $Id$
 ;; Author: Ralf Scheidhauer and Michael Mehl ([scheidhr|mehl]@dfki.uni-sb.de)
 
 ;; TODO
@@ -69,7 +70,7 @@ nil:     Don't start emulator (use command 'run').
          This is useful when you want to use breakpoints.
 ")
 
-(defvar oz-debug-mode nil
+(defvar oz-step-mode nil
   "*Determines the way how feeding of code is done.")
 
 (defvar oz-auto-indent t
@@ -345,21 +346,29 @@ starts the emulator under gdb")
 (oz-make-menu oz-menu)
 
 ;;------------------------------------------------------------
-;; Start/Stop debugger
+;; Debugger stuff
 ;;------------------------------------------------------------
 
 (defun oz-debug-start()
   "Start the debugger."
   (interactive)
   (oz-emacs-connect)
-  (oz-insert-file "tools/ozcar/main.oz")
-  (setq oz-debug-mode t))
+  (oz-insert-file "tools/ozcar/main.oz"))
 
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
-  (setq oz-debug-mode nil)
   (oz-insert-file "tools/ozcar/exit.oz"))
+
+(defun oz-debug-step()
+  "Activate step mode."
+  (interactive)
+  (setq oz-step-mode t))
+
+(defun oz-debug-cont()
+  "Deactivate step mode."
+  (interactive)
+  (setq oz-step-mode nil))
 
 
 ;;------------------------------------------------------------
@@ -371,6 +380,7 @@ starts the emulator under gdb")
 Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (interactive)
   (oz-check-running t)
+  (oz-debug-cont) ;; be sure the debugger is _off_ on startup
   (if (not (equal mode-name "Oz"))
       (oz-new-buffer))
   (oz-show-buffer (get-buffer oz-compiler-buffer)))
@@ -597,9 +607,7 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-feed-region (start end)
   "Feeds the region."
   (interactive "r")
-  (if oz-debug-mode
-      (oz-send-string (buffer-substring start end))
-    (oz-send-string (buffer-substring start end)))
+  (oz-send-string (buffer-substring start end))
   (oz-zmacs-stuff))
 
 
@@ -1077,15 +1085,19 @@ the GDB commands `cd DIR' and `directory'."
 	(define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
 	(define-key map "\C-c\C-b\C-r"  'oz-feed-region-browse)
 	)
-    (define-key map "\C-c\C-f" 'oz-feed-file)
-    (define-key map "\M-\C-m"  'oz-feed-buffer)
-    (define-key map "\M-r"     'oz-feed-region)
-    (define-key map "\M-l"     'oz-feed-line)
-    (define-key map "\C-c\C-p" 'oz-feed-paragraph)
-    (define-key map "\C-cb"    'oz-feed-line-browse)
-    (define-key map "\C-c\C-b" 'oz-feed-region-browse)
-    (define-key map "\M-n"     'oz-next-buffer)
-    (define-key map "\M-p"     'oz-previous-buffer)
+    (define-key map "\C-c\C-f"     'oz-feed-file)
+    (define-key map "\M-\C-m"      'oz-feed-buffer)
+    (define-key map "\M-r"         'oz-feed-region)
+    (define-key map "\M-l"         'oz-feed-line)
+    (define-key map "\C-c\C-p"     'oz-feed-paragraph)
+    (define-key map "\C-cb"        'oz-feed-line-browse)
+    (define-key map "\C-c\C-b"     'oz-feed-region-browse)
+    (define-key map "\M-n"         'oz-next-buffer)
+    (define-key map "\M-p"         'oz-previous-buffer)
+    (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
+    (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
+    (define-key map "\C-c\C-d\C-s" 'oz-debug-step)
+    (define-key map "\C-c\C-d\C-c" 'oz-debug-cont)
     )
 
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
@@ -1492,7 +1504,7 @@ OZ compiler, emulator and error window")
 
 ;;(defun oz-insert-file (file)
 ;;  "Insert an file into the Oz Compiler"
-;;  (if oz-debug-mode
+;;  (if oz-step-mode
 ;;      (oz-send-string (concat 
 ;;            "local T = {Thread.this} thread {Ozcar add(T)} end "
 ;;            "{Thread.suspend T} in \n\\insert '" file "'\nend"))
@@ -1500,7 +1512,7 @@ OZ compiler, emulator and error window")
 
 (defun oz-insert-file (file)
   "Insert an file into the Oz Compiler"
-  (if oz-debug-mode
+  (if oz-step-mode
       (progn (write-region 1 1 "/tmp/ozdebugmagic")
 	     (oz-send-string (concat "\\threadedfeed '" file "'")))
     (oz-send-string (concat "\\threadedfeed '" file "'"))))
