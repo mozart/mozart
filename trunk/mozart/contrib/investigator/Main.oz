@@ -35,13 +35,11 @@ define
    fun {CorrespondingItems CurrItems CurrTable NewItems}
       {List.foldLTail {FS.reflect.lowerBoundList CurrItems}
        fun {$ L R}
-	  {System.show foldLTail#[l#L r#R]}
 	  case R
 	  of A|B|T then
 	     {FS.union L
 	      {FoldL B|T
 	       fun {$ L R}
-		  {System.show foldL#[l#L r#R]}
 		  {FS.union {FS.intersect
 			     CurrTable.R.NewItems
 			     CurrTable.A.NewItems}
@@ -160,7 +158,6 @@ define
 	 Skip         = display
 	 NextArgs     = {CorrespondingItems CurrVars VarTable propagators}
 
-	 {System.show corrcg#NextArgs}
 	 {Hist add_action(NextAction NextArgs)}
 	 NextAction
       elseof corrvg then
