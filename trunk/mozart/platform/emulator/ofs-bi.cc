@@ -256,14 +256,14 @@ OZ_BI_define(BIisRecordCB,1,1)
   case LTUPLE:
   case LITERAL:
   case SRECORD:
-    OZ_RETURN(oz_true());
+    OZ_RETURN(NameTrue);
   case CVAR:
     switch (tagged2CVar(t)->getType()) {
     case OZ_VAR_OF:
-      OZ_RETURN(oz_true());
+      OZ_RETURN(NameTrue);
     case OZ_VAR_FD:
     case OZ_VAR_BOOL:
-      OZ_RETURN(oz_false());
+      OZ_RETURN(NameFalse);
     default:
       oz_suspendOnPtr(tPtr);
     }
@@ -272,7 +272,7 @@ OZ_BI_define(BIisRecordCB,1,1)
     // FUT
     oz_suspendOnPtr(tPtr);
   default:
-    OZ_RETURN(oz_false());
+    OZ_RETURN(NameFalse);
   }
 } OZ_BI_end
 
@@ -761,6 +761,23 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
 } OZ_BI_end
 
 
+
+OZ_BI_define(BIhasLabel, 1, 1)
+{
+  oz_declareDerefIN(0,rec);
+  // Wait for term to be a record with determined label:
+  // Get the term's label, if it exists
+  if (oz_isVariable(rec)) {
+    if (isGenOFSVar(rec)) {
+      TaggedRef thelabel=tagged2GenOFSVar(rec)->getLabel(); 
+      DEREF(thelabel,lPtr,_2);
+      OZ_RETURN(oz_bool(!oz_isVariable(thelabel)));
+    }
+    OZ_RETURN(NameFalse);
+  }
+  if (oz_isRecord(rec)) OZ_RETURN(NameTrue);
+  oz_typeError(0,"Record");
+} OZ_BI_end
 
 
 /*

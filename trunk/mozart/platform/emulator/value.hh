@@ -45,8 +45,6 @@
 extern TaggedRef 
   RecordFailure,
 
-  _NameTrue, _NameFalse,
-
   BI_Unify,BI_send,BI_wait,
   BI_load,BI_fail,BI_skip,BI_url_load, BI_obtain_native,
   BI_dot,
@@ -205,8 +203,8 @@ Bool oz_isName(TaggedRef term) {
   return oz_isLiteral(term) && tagged2Literal(term)->isName();
 }
 
-inline OZ_Term oz_true()  { return _NameTrue; }
-inline OZ_Term oz_false() { return _NameFalse; }
+inline OZ_Term oz_true()  { return NameTrue; }
+inline OZ_Term oz_false() { return NameFalse; }
 inline OZ_Term oz_unit()  { return NameUnit; }
 
 inline
@@ -438,6 +436,9 @@ public:
   TaggedRef getTail()          { return tagged2NonVariable(args+1); }
   void setHead(TaggedRef term) { args[0] = term;}
   void setTail(TaggedRef term) { args[1] = term;}
+  void setBoth(TaggedRef h, TaggedRef t) {
+    args[0] = h; args[1] = t;
+  }
   TaggedRef *getRef()          { return args; }
   TaggedRef *getRefTail()      { return args+1; }
   TaggedRef *getRefHead()      { return args; }
@@ -476,18 +477,46 @@ TaggedRef oz_cons(char *head, TaggedRef tail)
 }
 
 inline
+TaggedRef oz_mklist(TaggedRef l1) {
+  return oz_cons(l1,AtomNil);
+}
+
+inline
 TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2) {
-  return oz_cons(l1,oz_cons(l2,oz_nil()));
+  LTuple * l = (LTuple *) heapMalloc(2 * sizeof(LTuple));
+  l[0].setBoth(l1,makeTaggedLTuple(l+1));
+  l[1].setBoth(l2,AtomNil);
+  return makeTaggedLTuple(l);
 }
 
 inline
 TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3) {
-  return oz_cons(l1,oz_mklist(l2,l3));
+  LTuple * l = (LTuple *) heapMalloc(3 * sizeof(LTuple));
+  l[0].setBoth(l1,makeTaggedLTuple(l+1));
+  l[1].setBoth(l2,makeTaggedLTuple(l+2));
+  l[2].setBoth(l3,AtomNil);
+  return makeTaggedLTuple(l);
 }
 
 inline
 TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4) {
-  return oz_cons(l1,oz_mklist(l2,l3,l4));
+  LTuple * l = (LTuple *) heapMalloc(4 * sizeof(LTuple));
+  l[0].setBoth(l1,makeTaggedLTuple(l+1));
+  l[1].setBoth(l2,makeTaggedLTuple(l+2));
+  l[2].setBoth(l3,makeTaggedLTuple(l+3));
+  l[3].setBoth(l4,AtomNil);
+  return makeTaggedLTuple(l);
+}
+
+inline
+TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4,TaggedRef l5) {
+  LTuple * l = (LTuple *) heapMalloc(5 * sizeof(LTuple));
+  l[0].setBoth(l1,makeTaggedLTuple(l+1));
+  l[1].setBoth(l2,makeTaggedLTuple(l+2));
+  l[2].setBoth(l3,makeTaggedLTuple(l+3));
+  l[3].setBoth(l4,makeTaggedLTuple(l+4));
+  l[4].setBoth(l5,AtomNil);
+  return makeTaggedLTuple(l);
 }
 
 OZ_Term oz_list(OZ_Term t, ...);
@@ -1402,7 +1431,7 @@ OZ_Term oz_pair2(OZ_Term t1,OZ_Term t2) {
 #define oz_pairA(s1,t)      oz_pair2(oz_atom(s1),t)
 #define oz_pairAI(s1,i)     oz_pair2(oz_atom(s1),oz_int(i))
 #define oz_pairAA(s1,s2)    oz_pair2(oz_atom(s1),oz_atom(s2))
-#define oz_pairAS(s1,s2)    oz_pair2(oz_atom(s1),oz_string(s2))
+#define oz_pairAS(s1,s2)    oz_pair2(oz_atom(s1),OZ_string(s2))
 #define oz_pairII(i1,i2)    oz_pair2(oz_int(i1),oz_int(i2))
 
 /* -----------------------------------------------------------------------
@@ -2673,20 +2702,8 @@ Bool oz_isExtensionPlus(TaggedRef t) {
   return FALSE;
 }
 
-inline
-OZ_Term oz_string(const char *s)
-{
-  if (!s) { return oz_nil(); }
-  const char *p=s;
-  while (*p!='\0') {
-    p++;
-  }
-  OZ_Term ret = oz_nil();
-  while (p!=s) {
-    ret = oz_cons(oz_int((unsigned char)*(--p)), ret);
-  }
-  return ret;
-}
+OZ_Term oz_string(const char *s, const int len, const OZ_Term tail);
+ 
 
 /*===================================================================
  * Service Registry

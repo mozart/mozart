@@ -354,11 +354,11 @@ void AM::init(int argc,char **argv)
     // Construct import for functor:
     TaggedRef boot_module = 
       OZ_recordInit(AtomExport,
-		    oz_cons(oz_pair2(AtomObtain,BI_obtain_native),
-			    oz_nil()));
+		    oz_mklist(oz_pair2(AtomObtain,BI_obtain_native)));
+
     TaggedRef boot_import = 
       OZ_recordInit(AtomExport,
-		    oz_cons(oz_pair2(AtomBoot,   boot_module),oz_nil()));
+		    oz_mklist(oz_pair2(AtomBoot,   boot_module)));
     
     // Task3: execute functor's code
     tt->pushCall(procedure,boot_import,export);
