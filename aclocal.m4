@@ -1147,6 +1147,19 @@ AC_DEFUN(OZ_ENABLE, [
     ])
 
 dnl ------------------------------------------------------------------
+dnl OZ_DENYS_EVENTS
+dnl     check for --enable-denys-events
+dnl sets DENYS_EVENTS accordingly
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_DENYS_EVENTS,
+  [OZ_ENABLE(denys-events,[enable new events mechanism],no,
+        DENYS_EVENTS=yes,
+        DENYS_EVENTS=no)
+   AC_MSG_RESULT($DENYS_EVENTS)
+   AC_SUBST(DENYS_EVENTS)])
+
+dnl ------------------------------------------------------------------
 dnl OZ_ARG_WITH_LIB_DIR
 dnl
 dnl maybe adds some directories to LDFLAGS and oz_lib_path
