@@ -328,23 +328,23 @@ copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h
 marshaler.o: marshalcode.cc
 
 # automatic configure
-${srcdir}/configure: configure.in
-	@echo configure.in was changes: cd ${srcdir} && autoconf -l ..
+#${srcdir}/configure: configure.in
+#	cd ${srcdir} && autoconf -l ..
 
 conf.h: conf.h.in
-	@echo conf.h.in was changed: ./config.status
+	./config.status
 
 Makefile: Makefile.in
-	@echo Makefile.in was changed: ./config.status
+	./config.status
 
 Makefile.vars: Makefile.vars.in
-	@echo Makefile.vars.in was changed: ./config.status
+	./config.status
 
 Makefile.rules: Makefile.rules.in
-	@echo Makefule.rules.in was changed: ./config.status
+	./config.status
 
 config.status: configure
-	@echo configure was changed: ./config.status --recheck
+	./config.status --recheck
 
 
 # ozma
