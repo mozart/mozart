@@ -636,6 +636,7 @@ void atomq2buffer(ostream &out, char *s)
 inline
 Bool checkAtom(char *s)
 {
+  char *t = s;
   unsigned char c = *s++;
   if (!c || !islower(c)) {
     return NO;
@@ -647,7 +648,50 @@ Bool checkAtom(char *s)
     }
     c=*s++;
   }
-  return OK;
+  switch (t[0]) {
+  case 'a':
+    return strcmp(t, "andthen") && strcmp(t, "attr")? OK: NO;
+  case 'c':
+    return strcmp(t, "case") && strcmp(t, "catch")
+	&& strcmp(t, "choice") && strcmp(t, "class")
+	&& strcmp(t, "condis") && strcmp(t, "create")? OK: NO;
+  case 'd':
+    return strcmp(t, "declare") && strcmp(t, "dis")
+	&& strcmp(t, "div")? OK: NO;
+  case 'e':
+    return strcmp(t, "else") && strcmp(t, "elsecase")
+	&& strcmp(t, "elseif") && strcmp(t, "elseof")
+	&& strcmp(t, "end")? OK: NO;
+  case 'f':
+    return strcmp(t, "false") && strcmp(t, "feat")
+	&& strcmp(t, "finally") && strcmp(t, "from")
+	&& strcmp(t, "fun")? OK: NO;
+  case 'i':
+    return strcmp(t, "if") && strcmp(t, "in")? OK: NO;
+  case 'j':
+    return strcmp(t, "job")? OK: NO;
+  case 'l':
+    return strcmp(t, "local")? OK: NO;
+  case 'm':
+    return strcmp(t, "meth") && strcmp(t, "mod")? OK: NO;
+  case 'n':
+    return strcmp(t, "not")? OK: NO;
+  case 'o':
+    return strcmp(t, "of") && strcmp(t, "or")
+	&& strcmp(t, "orelse")? OK: NO;
+  case 'p':
+    return strcmp(t, "proc")? OK: NO;
+  case 's':
+    return strcmp(t, "self")? OK: NO;
+  case 't':
+    return strcmp(t, "then") && strcmp(t, "thread")
+	&& strcmp(t, "touch") && strcmp(t, "true")
+	&& strcmp(t, "try")? OK: NO;
+  case 'w':
+    return strcmp(t, "with")? OK: NO;
+  default:
+    return OK;
+  }
 }
 
 inline
