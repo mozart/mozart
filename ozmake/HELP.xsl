@@ -10,6 +10,33 @@
 
 <xsl:output method="html"/>
 
+<xsl:template name="PREBUILT">
+  <xsl:param name="VERSION" select="''"/>
+  <xsl:variable name="EXTENSION">
+    <xsl:choose>
+      <xsl:when test="$VERSION=''"></xsl:when>
+      <xsl:otherwise>-<xsl:value-of select="$VERSION"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+  <DL>
+  <DT><xsl:choose>
+        <xsl:when test="$VERSION=''">Current version</xsl:when>
+        <xsl:otherwise>Version <xsl:value-of select="$VERSION"/></xsl:otherwise>
+      </xsl:choose></DT>
+  <DD><A
+  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}"><SPAN
+  CLASS="MODULE">ozmake<xsl:value-of select="$EXTENSION"/></SPAN> for Unix</A></DD>
+  <DD><A
+  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}.exe"><SPAN
+  CLASS="MODULE">ozmake<xsl:value-of select="$EXTENSION"/>.exe</SPAN> for Windows</A></DD>
+  <DD><A
+  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}.ozf">non
+  executable functor <SPAN
+  CLASS="MODULE">ozmake<xsl:value-of select="$EXTENSION"/>.ozf</SPAN>
+  for either</A></DD>
+  </DL>
+</xsl:template>
+
 <xsl:template match="/doc">
 <HTML>
 <HEAD>
@@ -88,16 +115,15 @@ SPAN.BUILTIN      { color: #DA70D6; }
 </DL>
 <DL>
   <DT><B>download prebuilt tool</B></DT>
-  <DD><A
-  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake"><SPAN
-  CLASS="MODULE">ozmake</SPAN> for Unix</A></DD>
-  <DD><A
-  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake.exe"><SPAN
-  CLASS="MODULE">ozmake.exe</SPAN> for Windows</A></DD>
-  <DD><A
-  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake.exe">non
-  executable functor <SPAN
-  CLASS="MODULE">ozmake.ozf</SPAN> for either</A></DD>
+  <xsl:call-template name="PREBUILT">
+    <xsl:with-param name="VERSION" select="''"/>
+  </xsl:call-template>
+  <xsl:call-template name="PREBUILT">
+    <xsl:with-param name="VERSION" select="'0.2'"/>
+  </xsl:call-template>
+  <xsl:call-template name="PREBUILT">
+    <xsl:with-param name="VERSION" select="'0.1'"/>
+  </xsl:call-template>
 </DL>
 <HR/>
   <P CLASS="WARNING">this is an alpha-release -  feedback is welcome<BR/>
