@@ -124,6 +124,7 @@ static TaggedRef dictionary_of_modules;
 #include "modVirtualSite-if.cc"
 #include "modSystem-if.cc"
 #include "modProfile-if.cc"
+#include "modAssembler-if.cc"
 
 // Here comes the faked DPB interface
 extern "C"
@@ -215,6 +216,7 @@ static ModuleEntry ext_module_table[] = {
   {"Win32",           mod_int_Win32},
   {"System",          mod_int_System},
   {"Profile",         mod_int_Profile},
+  {"Assembler",       mod_int_Assembler},
 #endif
 
 #ifdef MISC_BUILTINS

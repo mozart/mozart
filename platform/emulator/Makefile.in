@@ -35,7 +35,7 @@ include Makefile.vars
 MODULE_NAMES =                                                  \
         PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser \
         CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
-        Win32 System Profile OsTime
+        Win32 System Profile OsTime Assembler
 
 STATIC_MODULES=         @STATIC_MODULES@
 DYNAMIC_MODULES=        @DYNAMIC_MODULES@
@@ -68,6 +68,7 @@ MODSPECS= \
         CompilerSupport Compat Win32 Profile \
         Debug Fault Browser Misc DPMisc Distribution \
         VirtualSite Application DPPane OsTime \
+        Assembler \
         $(BIMODSPECS) \
         $(DENYS_SPECS)
 
@@ -178,6 +179,8 @@ SYSTEMSRCS = \
         system.cc
 PROFILESRCS = \
         profile.cc
+ASSEMSRCS = \
+        disassemble.cc
 
 TKOBJS= $(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=    $(COMPILERSUPPORTSRCS:%.cc=%.lo)
@@ -193,6 +196,7 @@ COMPATOBJS=     $(COMPATSRCS:%.cc=%.lo)
 WIN32OBJS=      $(WIN32SRCS:%.cc=%.lo)
 SYSTEMOBJS=     $(SYSTEMSRCS:%.cc=%.lo)
 PROFILEOBJS=    $(PROFILESRCS:%.cc=%.lo)
+ASSEMOBJS=      $(ASSEMSRCS:%.cc=%.lo)
 
 
 ALLSRCS= $(SRCS) \
@@ -344,6 +348,12 @@ System.so: $(SYSTEMOBJS)
 
 libSystem.a: $(SYSTEMOBJS)
         $(AR) -rc $@ $(SYSTEMOBJS) && $(RANLIB) $@
+
+Assembler.so: $(ASSEMOBJS)
+        $(DYNLD) -o $@ $(ASSEMOBJS)
+
+libAssembler.a: $(ASSEMOBJS)
+        $(AR) -rc $@ $(ASSEMOBJS) && $(RANLIB) $@
 
 
 PRGDEP=$(CREATEDFILES) $(OBJS) $(STATIC_MODULETARGETS)
