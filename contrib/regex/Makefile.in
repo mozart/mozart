@@ -67,9 +67,9 @@ $(ALL_DLOAD): %.so : %.o
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
-        -$(RM) *~ *.ozc *.o *.so *.oz
+        -$(RM) *~ *.ozc *.o *.so
 
 distclean: clean
-        -$(RM) config.* Makefile
+        -$(RM) config.* Makefile posix.oz
 
 include ../../share/Makefile.boot

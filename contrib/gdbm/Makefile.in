@@ -56,9 +56,9 @@ gdbm.ozc: gdbm.oz
         $(OZBATCH) -c gdbm.oz
 
 clean veryclean:
-        -$(RM) *~ *.bak *.o *.so *.ozc *.oz
+        -$(RM) *~ *.bak *.o *.so *.ozc
 
 distclean: clean
-        -$(RM) config.* Makefile
+        -$(RM) config.* Makefile gdbm.oz
 
 include ../../share/Makefile.boot
