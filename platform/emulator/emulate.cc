@@ -1052,7 +1052,7 @@ LBLdispatcher:
       case SLEEP:
       case FAILED:
       default:
-	Assert(0);
+	OZ_error("unexcpeted return value in TESTBI: %d",ret);
       }
     }
 

@@ -44,19 +44,23 @@
 
      'isFree'		=> { in  => ['value'],
 			     out => ['+bool'],
-			     bi  => BIisFree},
+			     bi  => BIisFree,
+			     test => 0},
 
      'isKinded'		=> { in  => ['value'],
 			     out => ['+bool'],
-			     bi  => BIisKinded},
+			     bi  => BIisKinded,
+			     test => 0},
 
      'isFuture'		=> { in  => ['value'],
 			     out => ['+bool'],
-			     bi  => BIisFuture},
+			     bi  => BIisFuture,
+			     test => 0},
 
      'isDet'		=> { in  => ['value'],
 			     out => ['+bool'],
-			     bi  => BIisDet},
+			     bi  => BIisDet,
+			     test => 0},
 
      'max'	        => { in  => ['+comparable','+comparable'],
 			     out => ['+comparable'],
