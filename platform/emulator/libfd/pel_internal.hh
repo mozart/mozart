@@ -88,14 +88,14 @@ template <class T, class M>
 class EnlargeableArrayWithBase : public M {
 private:
   virtual void _gCollect(void) {
-    T * new_array = (T *) alloc(_size * sizeof(T));
+    T * new_array = (T *) this->alloc(_size * sizeof(T));
     for (int i = _size; i--; ) {
       new_array[i] = _array[i];
     }
     _array = new_array;
   }
   virtual void _sClone(void) {
-    T * new_array = (T *) alloc(_size * sizeof(T));
+    T * new_array = (T *) this->alloc(_size * sizeof(T));
     for (int i = _size; i--; ) {
       new_array[i] = _array[i];
     }
@@ -107,7 +107,7 @@ protected:
   //
   T * realloc(T * old, int old_n, int new_n) {
     if (old_n < new_n) {
-      T * _new = (T *) alloc(new_n * sizeof(T));
+      T * _new = (T *) this->alloc(new_n * sizeof(T));
       T * _old = old;
       for (int i = old_n; i--; ) {
 	_new[i] = _old[i];
@@ -131,7 +131,7 @@ public:
   }
   //
   EnlargeableArrayWithBase(int s) : _size(s) {
-    _array = s > 0 ? (T *) alloc(s * sizeof(T)) : (T *) NULL;
+    _array = s > 0 ? (T *) this->alloc(s * sizeof(T)) : (T *) NULL;
   }
   //
   T &operator [](int i) {
@@ -148,9 +148,9 @@ protected:
   //
 public:
   int push(T &d) {
-    _array[_high] = d;
+    this->_array[_high] = d;
     _high += 1;
-    request(_high);
+    this->request(_high);
     return _high-1;
   }
   //
@@ -168,13 +168,13 @@ public:
   ResizeableArray(void) : EnlargeableArrayWithBase<T,M>() { }
   //
   void resize(int new_size) {
-    if (new_size > _size) {
-      _array = realloc(_array, _size, new_size);
-      _size = new_size;
+    if (new_size > this->_size) {
+      this->_array = realloc(this->_array, this->_size, new_size);
+      this->_size = new_size;
     }
   }
   void reset(void) {
-    _size = 0;
+    this->_size = 0;
   }
 };
 
