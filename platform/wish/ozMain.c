@@ -315,7 +315,7 @@ StdinProc(clientData, mask)
     ClientData clientData;              /* Not used. */
     int mask;                           /* Not used. */
 {
-#define BUFFER_SIZE 4000
+#define BUFFER_SIZE 16384
     char input[BUFFER_SIZE+1];
     static int gotPartial = 0;
     char *cmd;
