@@ -197,6 +197,7 @@ char *OZ_normFloat(char *s)
 {
   replChar(s,'-','~');
   delChar(s,'+');
+  return s;
 }
 
 /*
