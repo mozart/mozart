@@ -180,58 +180,35 @@ static
 void marshalHashTableRef(Marshaler *m, int start, IHashTable *table,
 			 MsgBuffer *bs)
 {
-  int sz = table->size;
-  marshalNumber(sz, bs);
-  marshalLabel(start, table->elseLabel, bs);
-  marshalLabel(start, table->listLabel, bs);
-  int entries = table->numentries;
-  // total number of entries (and, thus, of 'ht_???_entry' tasks);
+  marshalNumber(0, bs); // Backward compatibility
+  marshalLabel(start, table->lookupElse(), bs);
+  marshalLabel(start, table->lookupLTuple(), bs);
+  int entries = table->getEntries();
   marshalNumber(entries, bs);
 
-  //
-  if (table->literalTable) {
-    for(int i = 0; i < sz; i++) {
-      HTEntry *aux = table->literalTable[i];
-      while(aux) {
-	entries--;
-	marshalNumber(ATOMTAG, bs);
-	marshalLabel(start, aux->getLabel(), bs);
-	m->marshalOzValue(makeTaggedLiteral(aux->getLiteral()));
-	aux = aux->getNext();
-      }
-    }
-  }
-
-  //
-  if (table->numberTable) {
-    for(int i = 0; i < sz; i++) {
-      HTEntry *aux = table->numberTable[i];
-      while(aux) {
-	entries--;
+  for (int i = table->getSize(); i--; )
+    if (table->entries[i].val) {
+      if (oz_isLiteral(table->entries[i].val)) {
+	if (table->entries[i].sra == mkTupleWidth(0)) {
+	  // That's a literal entry
+	  marshalNumber(ATOMTAG, bs);
+	  marshalLabel(start, table->entries[i].lbl, bs);
+	  m->marshalOzValue(table->entries[i].val);
+	} else {
+	  // That's a record entry
+	  marshalNumber(RECORDTAG,bs);
+	  marshalLabel(start, table->entries[i].lbl, bs);
+	  m->marshalOzValue(table->entries[i].val);
+	  marshalRecordArity(m, table->entries[i].sra, bs);
+	}
+      } else {
+	Assert(oz_isNumber(table->entries[i].val));
+	// That's a number entry
 	marshalNumber(NUMBERTAG, bs);
-	marshalLabel(start, aux->getLabel(), bs);
-	m->marshalOzValue(aux->getNumber());
-	aux = aux->getNext();
+	marshalLabel(start, table->entries[i].lbl, bs);
+	m->marshalOzValue(table->entries[i].val);
       }
     }
-  }
-
-  //
-  if (table->functorTable) {
-    for(int i=0; i<sz; i++) {
-      HTEntry *aux = table->functorTable[i];
-      while(aux) {
-	entries--;
-	marshalNumber(RECORDTAG,bs);
-	marshalLabel(start,aux->getLabel(),bs);
-        SRecordArity sra;
-        Literal *label = aux->getFunctor(sra);
-	m->marshalOzValue(makeTaggedLiteral(label));
-        marshalRecordArity(m, sra, bs);
-	aux = aux->getNext();
-      }
-    }
-  }
 }
 
 //
@@ -829,7 +806,7 @@ static void getHashTableRecordEntryLabelCA(void *arg, OZ_Term value) {
     sra = makeRealRecordArity(recordArity);
   }
   //
-  (desc->getTable())->add(tagged2Literal(value), sra, desc->getLabel());
+  (desc->getTable())->addRecord(value, sra, desc->getLabel());
 
   //
   delete desc;
@@ -845,7 +822,7 @@ static void getHashTableAtomEntryLabelCA(void *arg, OZ_Term value) {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
 
   //
-  (desc->getTable())->add(tagged2Literal(value), desc->getLabel());
+  (desc->getTable())->addScalar(value, desc->getLabel());
   delete desc;
 }
 
@@ -854,7 +831,7 @@ static void getHashTableNumEntryLabelCA(void *arg, OZ_Term value) {
   HashTableEntryDesc *desc = (HashTableEntryDesc *) arg;
 
   //
-  (desc->getTable())->add(value, desc->getLabel());
+  (desc->getTable())->addScalar(value, desc->getLabel());
   delete desc;
 }
 
@@ -877,21 +854,21 @@ ProgramCounter unmarshalHashTableRef(Builder *b, ProgramCounter pc,
 {
   //
   if (pc) {
-    int sz = unmarshalNumber(bs);
+    (void) unmarshalNumber(bs); // Backward compat
     int elseLabel = unmarshalNumber(bs); /* the else label */
     int listLabel = unmarshalNumber(bs);
-    int nEntries = unmarshalNumber(bs);
+    int nEntries  = unmarshalNumber(bs);
     IHashTable *table;
 
     //
-    table = new IHashTable(sz, elseLabel);
+    table = IHashTable::allocate(nEntries, elseLabel);
     if (listLabel)
-      table->addList(listLabel);
+      table->addLTuple(listLabel);
 
     //
-    for (int i = 0; i < nEntries; i++) {    
+    for (int i = nEntries; i--; ) {    
       int termTag = unmarshalNumber(bs);
-      int label = unmarshalNumber(bs);
+      int label   = unmarshalNumber(bs);
       HashTableEntryDesc *desc = new HashTableEntryDesc(table, label);
 
       //
@@ -934,7 +911,7 @@ ProgramCounter unmarshalHashTableRef(Builder *b, ProgramCounter pc,
     int nEntries = unmarshalNumber(bs);
 
     //
-    for (int i = 0; i < nEntries; i++) {
+    for (int i = nEntries; i--; ) {
       int termTag = unmarshalNumber(bs);
       skipNumber(bs);		// label
 
@@ -1297,7 +1274,7 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
   //
   if (pc) {
     int e1,e2,e3,e4;
-    int sz = unmarshalNumberRobust(bs, &e1);
+    (void) unmarshalNumberRobust(bs, &e1); // Backward compat
     int elseLabel = unmarshalNumberRobust(bs, &e2); /* the else label */
     int listLabel = unmarshalNumberRobust(bs, &e3);
     int nEntries = unmarshalNumberRobust(bs, &e4);
@@ -1305,12 +1282,12 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
     IHashTable *table;
 
     //
-    table = new IHashTable(sz, elseLabel);
+    table = IHashTable::allocate(nEntries, elseLabel);
     if (listLabel)
-      table->addList(listLabel);
+      table->addLTuple(listLabel);
 
     //
-    for (int i = 0; i < nEntries; i++) {    
+    for (int i = nEntries; i--; ) {    
       int termTag = unmarshalNumberRobust(bs, &e2);
       int label = unmarshalNumberRobust(bs, &e3);
       HashTableEntryDesc *desc = new HashTableEntryDesc(table, label);
@@ -1360,7 +1337,7 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
     int nEntries = unmarshalNumberRobust(bs, &e1);
 
     //
-    for (int i = 0; i < nEntries; i++) {
+    for (int i = nEntries; i--; ) {
       int termTag = unmarshalNumberRobust(bs, &e2);
       e1 = e1 || e2;
       skipNumber(bs);		// label

@@ -1,12 +1,15 @@
 /*
  *  Authors:
- *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Michael Mehl <mehl@ps.uni-sb.de>
+ *    Ralf Scheidhauer <scheidhr@ps.uni-sb.de>
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl, 1999
+ *    Ralf Scheidhauer, 1999
+ *    Christian Schulte, 2000
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -33,188 +36,116 @@
 
 #include "value.hh"
 
-class HTEntry {
- protected:
-  int label;
-  HTEntry *next;
-  union {
-    Literal *literal;
-    TaggedRef number;
-    struct {
-      Literal *fname;
-      SRecordArity arity;
-    } functor;
-  } u;
-
- public:
-
-  HTEntry(Literal *name, int lbl) : label(lbl), next(0) { u.literal = name; };
-
-  HTEntry(TaggedRef num, int lbl) : label(lbl), next(0) 
-  {
-    u.number = num;
-    oz_staticProtect(&u.number);
-  };
-
-  HTEntry(Literal *name, SRecordArity arity, int lbl) : label(lbl), next(0) {
-    u.functor.fname = name;
-    u.functor.arity = arity;
-  };
-
-  void setNext(HTEntry *nxt) { next = nxt; }
-  HTEntry* getNext(void) {return next;}
-
-  int getLabel()              { return label; }
-  int *getLabelRef()          { return &label; }
-  TaggedRef getNumber()       { return u.number; }
-  Literal *getLiteral()       { return u.literal; }
-  void setLiteral(Literal *l) { u.literal = l; }
-  Literal *getFunctor(SRecordArity &a)  
-  {
-    a = u.functor.arity;
-    return u.functor.fname;
-  }
-
-  void setFunctor(Literal *l, SRecordArity a) {u.functor.fname=l; u.functor.arity=a; }
-
-
-  int lookupLiteral(Literal * l, int elseLabel) {
-    for (HTEntry * help = this; help != NULL; help = help->next)
-      if (help->u.literal == l)
-	return help->label;
-    return elseLabel;
-  }
-
-  int lookupSRecord(Literal * l, SRecordArity sra, int elseLabel) {
-    for (HTEntry *help = this; help != NULL; help = help->next)
-      if ((help->u.functor.fname == l) &&
-	  sameSRecordArity(help->u.functor.arity,sra))
-	return help->label;
-    return elseLabel;
-  }
-
-  int lookupSmallInt(TaggedRef term, int elseLabel) {
-    Assert(oz_isSmallInt(term));
-    for (HTEntry * help = this; help != NULL; help = help->next)
-      if (oz_eq(help->u.number,term)) {
-	Assert(oz_isSmallInt(help->u.number));
-	return help->label;
-      }
-    return elseLabel;
-  }
-
-  int lookupBigInt(BigInt * i, int elseLabel) {
-    for (HTEntry * help = this; help != NULL; help = help->next)
-      if (oz_isConst(help->u.number) &&
-	  (tagged2BigInt(help->u.number)->equal(i))) {
-	Assert(oz_isBigInt(help->u.number));
-	return help->label;
-      }
-    return elseLabel;
-  }
-
-  int lookupFloat(double f, int elseLabel) {
-    for (HTEntry * help = this; help != NULL; help = help->next)
-      if (oz_isFloat(help->u.number) && 
-	  (tagged2Float(help->u.number)->getValue() == f))
-	return help->label;
-    return elseLabel;
-  }
-  
+class IHashTableEntry {
+public:
+  TaggedRef    val;
+  SRecordArity sra;
+  int          lbl;
 };
 
-
-typedef HTEntry** EntryTable;
-
 class IHashTable {
- public:
-  int size;      // is always a power of 2
-  int hashMask;  // always size-1
-  int numentries;
-  
-  EntryTable literalTable;
-  EntryTable functorTable;
-  EntryTable numberTable;
-  
-  int elseLabel;
-  int listLabel;
+public:
+  int elseLbl;
+  int listLbl;
+  int hashMsk;
+  IHashTableEntry entries[1];
 
-  IHashTable(int sz, int elseLbl) {
-    numentries = 0;
-    size = nextPowerOf2(sz);
-    hashMask = size-1;
-    literalTable = functorTable = numberTable = NULL;
-    elseLabel = elseLbl;
-    listLabel = elseLbl;
-  };
+  static IHashTable * allocate(int, int);
+  IHashTable * clone(void);
 
-  int *addToTable(EntryTable &table, HTEntry *entry, int pos);
-  int *add(TaggedRef number, int label);
-  int *add(Literal *constant, int label);
-  int *add(Literal *functor, SRecordArity arity,
-		      int label);
-  void addList(int label) { listLabel = label; }
+  void deallocate(void) {
+    free(this);
+  }
 
-  int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
-  int getElse() { 
-    return elseLabel; 
+  int getSize(void) {
+    return hashMsk+1;
+  }
+
+  int getEntries(void);
+
+  void addRecord(TaggedRef, SRecordArity, int);
+  void addScalar(TaggedRef, int);
+  void addLTuple(int lbl) {
+    listLbl = lbl;
+  }
+
+  int lookupElse(void) {
+    return elseLbl;
   }
 
   int lookupLTuple(void) {
     /* If there is no alternative list, listLabel equals elseLabel */
-    return listLabel;
+    return listLbl;
   }
   
-  int lookupLiteral(TaggedRef term) {
-    if (literalTable) {
-      Literal * l = tagged2Literal(term);
-      return literalTable[hash(l->hash())]->lookupLiteral(l,elseLabel);
-    } else {
-      return elseLabel;
+  int lookupLiteral(TaggedRef t) {
+    register int hm = hashMsk;
+    register int i  = tagged2Literal(t)->hash();
+    while (OK) {
+      i &= hm;
+      if ((oz_eq(entries[i].val,t) && 
+	   sameSRecordArity(entries[i].sra,mkTupleWidth(0))) || 
+	  !entries[i].val)
+	return entries[i].lbl;
+      i++;
     }
   }
   
-  int lookupSRecord(TaggedRef term) {
-    if (functorTable) {
-      SRecord * r = tagged2SRecord(term);
-      Literal * l = r->getLabelLiteral();
-      Assert(l!=NULL);
-      return functorTable[hash(l->hash())]->
-	lookupSRecord(l,r->getSRecordArity(),elseLabel);
-    } else {
-      return elseLabel;
+  int lookupSmallInt(TaggedRef t) {
+    register int hm = hashMsk;
+    register int i  = smallIntHash(t);
+    while (OK) {
+      i &= hm;
+      if (oz_eq(entries[i].val,t) || !entries[i].val)
+	return entries[i].lbl;
+      i++;
     }
   }
   
-  int lookupSmallInt(TaggedRef term) {
-    if (numberTable) {
-      return numberTable[hash(smallIntHash(term))]->lookupSmallInt(term,elseLabel);
-    } else {
-      return elseLabel;
+  int lookupBigInt(TaggedRef t) {
+    BigInt * b = tagged2BigInt(t);
+    int i      = b->hash();
+    while (OK) {
+      i &= hashMsk;
+      if (!entries[i].val || 
+	  (oz_isConst(entries[i].val) && 
+	   tagged2BigInt(entries[i].val)->equal(b)))
+	return entries[i].lbl;
+      i++;
     }
   }
   
-  int lookupConst(TaggedRef term) {
-    if (numberTable && tagged2Const(term)->getType() == Co_BigInt) {
-      BigInt * b = tagged2BigInt(term);
-      return numberTable[hash(b->hash())]->lookupBigInt(b,elseLabel);
-    } else {
-      return elseLabel;
+  int lookupFloat(TaggedRef t) {
+    Float * f = tagged2Float(t);
+    double d  = f->getValue();
+    int i     = f->hash();
+    while (OK) {
+      i &= hashMsk;
+      if (!entries[i].val || 
+	  (oz_isFloat(entries[i].val) && 
+	   tagged2Float(entries[i].val)->getValue()==d))
+	return entries[i].lbl;
+      i++;
     }
   }
   
-  int lookupFloat(TaggedRef term) {
-    if (numberTable) {
-      Float * f = tagged2Float(term);
-      return numberTable[hash(f->hash())]->lookupFloat(f->getValue(),elseLabel);
-    } else {
-      return elseLabel;
+  int lookupSRecord(TaggedRef t) {
+    int hm           = hashMsk;
+    SRecord * r      = tagged2SRecord(t);
+    TaggedRef l      = r->getLabel();
+    SRecordArity sra = r->getSRecordArity();
+    int i            = tagged2Literal(l)->hash();
+    while (OK) {
+      i &= hm;
+      if ((oz_eq(entries[i].val,l) && sameSRecordArity(entries[i].sra,sra)) ||
+	  !entries[i].val)
+	return entries[i].lbl;
+      i++;
     }
   }
 
   Bool disentailed(OzVariable * var);
   
 };
-
 
 #endif
