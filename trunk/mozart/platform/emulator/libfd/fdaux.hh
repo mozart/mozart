@@ -28,7 +28,6 @@
 #define __FDAUX_HH__
 
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
 
 #include "oz_cpi.hh"

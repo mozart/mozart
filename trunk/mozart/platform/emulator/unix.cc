@@ -64,7 +64,7 @@ extern int h_errno;
 
 #include <signal.h>
 
-#if !defined(WINDOWS) || defined(GNUWIN32)
+#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(MINGW32))
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #endif
@@ -190,6 +190,7 @@ int raiseUnixError(char *f,int n, char * e, char * g) {
 
 static char* h_strerror(const int err) {
   switch (err) {
+#ifndef MINGW32
   case HOST_NOT_FOUND:
     return "No such host is known.";
   case TRY_AGAIN:
@@ -203,6 +204,7 @@ static char* h_strerror(const int err) {
   case NO_DATA:
 #endif
     return "No internet address.";
+#endif
   default:
     return "Hostname lookup failure.";
   }
@@ -600,7 +602,7 @@ OZ_BI_iodefine(unix_stat,1,1)
   OZ_RETURN(OZ_recordInit(OZ_atom("stat"),pairlist));
 } OZ_BI_ioend
 
-#if !defined(WINDOWS) || defined(GNUWIN32)
+#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(MINGW32))
 OZ_BI_iodefine(unix_uName,0,1)
 {
   struct utsname buf;
@@ -624,20 +626,7 @@ OZ_BI_iodefine(unix_uName,0,1)
 #endif
 
   OZ_RETURN(OZ_recordInit(OZ_atom("utsname"),pairlist));
-
 } OZ_BI_ioend
-#endif
-
-#if !defined(WINDOWS) || defined(GNUWIN32)
-inline
-static
-OZ_Term timeval2Oz(struct timeval tv)
-{
-  OZ_Term pl=oz_nil();
-  pl=oz_cons(OZ_pairA("sec",oz_long(tv.tv_sec)),pl);
-  pl=oz_cons(OZ_pairA("usec",oz_long(tv.tv_usec)),pl);
-  return OZ_recordInit(OZ_atom("timeval"),pl);
-}
 #endif
 
 
@@ -743,7 +732,7 @@ OZ_BI_iodefine(unix_open,3,1)
 #ifdef OS2_I486
     return OZ_typeError(2,"enum openMode");
 #else
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(MINGW32)
     if (OZ_eqAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
     else if (OZ_eqAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
     else if (OZ_eqAtom(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
@@ -1566,7 +1555,7 @@ OZ_BI_iodefine(unix_system,1,1)
   OZ_RETURN_INT(ret);
 } OZ_BI_ioend
 
-#if !defined(WINDOWS) || defined(GNUWIN32)
+#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(MINGW32))
 OZ_BI_iodefine(unix_wait,0,2)
 {
   // OZ_out(0) == rpid
@@ -1755,19 +1744,13 @@ OZ_BI_define(unix_srandom, 1,0)
 
 #ifdef WINDOWS
 
-#define NotAvail(Name,Arity,Fun)			\
-OZ_BI_iodefine(Fun,Arity)				\
+#define NotAvail(Name,InArity,OutArity,Fun)		\
+OZ_BI_define(Fun,InArity,OutArity)			\
 {							\
   return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,	\
 		   OZ_atom(Name));			\
-} OZ_BI_ioend
+} OZ_BI_end
 
-
-#ifndef GNUWIN32
-NotAvail("OS.getServByName",   3, unix_getServByName);
-NotAvail("OS.wait",            2, unix_wait);
-NotAvail("OS.uName",           1, unix_uName);
-#endif
 
 #ifdef _MSC_VER
 NotAvail("OS.getDir",          2, unix_getDir);
@@ -1776,8 +1759,11 @@ NotAvail("OS.fileDesc",        2, unix_fileDesc);
 
 #endif
 
+#ifndef MINGW32
 #include <pwd.h>
+
 #include <sys/types.h>
+
 OZ_BI_define(unix_getpwnam,1,1)
 {
   OZ_declareVirtualStringIN(0,user);
@@ -1800,6 +1786,15 @@ retry:
     OZ_RETURN(R);
   }
 } OZ_BI_end
+#endif
+
+#if defined(MINGW32)
+NotAvail("OS.getServByName",   2,1, unix_getServByName);
+NotAvail("OS.wait",            0,2, unix_wait);
+NotAvail("OS.uName",           0,1, unix_uName);
+NotAvail("OS.getpwnam",        1,1, unix_getpwnam);
+#endif
+
 
 #ifdef WINDOWS
 

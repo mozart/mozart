@@ -151,6 +151,8 @@ int osdup(int fd);
 
 char *ostmpnam(char *s);
 
+char *oslocalhostname();
+
 void registerSocket(int fd);
 
 char *osfgets(char *s, int n, FILE *stream);
@@ -163,6 +165,20 @@ char *osfgets(char *s, int n, FILE *stream);
 
 #ifdef GNUWIN32
 extern int _hdopen(int, int flags);
+#endif
+
+#ifdef MINGW32
+#define SIGUSR1 SIGQUIT
+#define h_errno errno
+#define O_NONBLOCK 0
+#define O_NOCTTY   0
+
+struct timeval {
+    long tv_sec;
+    long tv_usec;
+};
+
+
 #endif
 
 
