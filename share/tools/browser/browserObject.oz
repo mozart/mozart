@@ -24,7 +24,7 @@
 %%% 
 %%% 
 class FBrowserClass
-   from MyClosableObject
+   from Object.base
    prop locking
    feat
    %%
@@ -205,10 +205,9 @@ class FBrowserClass
 	 {self.BrowserBuffer close}
 	 {self.Store close}
 
-	 %%
 	 %% simply throw away everything else;
 	 %% That's not my problem if somebody will send messages here ;-)
-	 MyClosableObject , close
+	 % Object.closable , close
 \ifdef DEBUG_BO
 	 {Show 'FBrowserClass::close is finished'}
 \endif

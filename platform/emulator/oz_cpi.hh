@@ -80,8 +80,8 @@ public:
   int initBool(void);
 
   int getMidElem(void) const; 
-  int getNextSmallerElem(int v) const;
-  int getNextLargerElem(int v) const;
+  int getNextSmallerEl(int v) const;
+  int getNextLargerEl(int v) const;
   int getLowerIntervalBd(int v) const;
   int getUpperIntervalBd(int v) const;
   int getSize(void) const { return size; }

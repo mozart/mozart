@@ -2239,12 +2239,12 @@ int OZ_FiniteDomain::getMidElem(void) const
   return CASTTHIS->midElem();
 }
 
-int OZ_FiniteDomain::getNextSmallerElem(int v) const
+int OZ_FiniteDomain::getNextSmallerEl(int v) const
 {
   return CASTTHIS->nextSmallerElem(v);
 }
 
-int OZ_FiniteDomain::getNextLargerElem(int v) const
+int OZ_FiniteDomain::getNextLargerEl(int v) const
 {
   return CASTTHIS->nextLargerElem(v);
 }

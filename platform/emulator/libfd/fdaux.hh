@@ -315,7 +315,7 @@ public:
   int nextLarger(void) {
     if (size > 0) {
       size -= 1;
-      return current = finiteDomain->getNextLargerElem(current);
+      return current = finiteDomain->getNextLargerEl(current);
     } else {
       return -1;
     }

@@ -11,10 +11,12 @@ local
    class AboutDialog 
       from TkTools.dialog
 
-      meth init(master:Master)
+      meth init(master:Master done:Done)
 	 TkTools.dialog,tkInit(master:  Master
 			       title:   TitleName#': About'
-			       buttons: ['Okay'#tkClose]
+			       buttons: ['Okay'#tkClose(proc {$}
+							   Done = unit
+							end)]
 			       focus:   1
 			       default: 1)
 	 Title = {New Tk.label tkInit(parent:     self
@@ -35,14 +37,14 @@ local
    class ShutdownDialog 
       from TkTools.dialog
 
-      meth init(master:Master shut:Shut)
+      meth init(master:Master done:Done)
 	 TkTools.dialog,tkInit(master:  Master
 			       title:   TitleName#': Shutdown'
 			       buttons: ['Okay'#tkClose(proc {$}
-							   Shut = true
+							   Done = true
 							end)
 					 'Cancel'#tkClose(proc {$}
-							     Shut = false
+							     Done = false
 							  end)]
 			       focus:   1
 			       default: 1)
@@ -74,18 +76,25 @@ local
       
       class UpdateDialog
 	 from TkTools.dialog
-	 meth init(master:Master  options:O)
+	 attr NextMouse: true
+	 meth init(master: Master
+		   prev:   Prev
+		   next:   Next)
 	    TkTools.dialog,tkInit(master:  Master
 				  title:   TitleName#': Update'
-				  buttons:
-		['Okay'   #
-		 tkClose(proc {$}
-			    {Dictionary.put O mouse
-			     {MouseVar tkReturnInt($)}==1}
-			    {Dictionary.put O time
-			     {TimeScale get($)}}
-			 end)
-		 'Cancel' # tkClose]
+				  buttons: ['Okay'   #
+					    tkClose(proc {$}
+						       Next =
+						       {AdjoinAt
+							{AdjoinAt Prev
+							 time
+							 {TimeScale get($)}}
+							mouse
+							{self GetMouse($)}}
+						    end)
+					    'Cancel' # tkClose(proc {$}
+								  Next = Prev
+							       end)]
 				  focus:   1
 				  default: 1)
 	    TimeOuter = {New TkTools.textframe tkInit(parent: self
@@ -96,19 +105,28 @@ local
 						width:  ScaleWidth
 						values: UpdateTimes
 						initpos: {FindPos UpdateTimes
-							  {Dictionary.get O
-							   time} 1})}
+							  Prev.time 1})}
 	    MouseOuter = {New TkTools.textframe tkInit(parent: self
 						       text:   'Update Requirement')}
-	    MouseVar   = {New Tk.variable tkInit({Dictionary.get O mouse})}
+	    MouseVar   = {New Tk.variable tkInit(Prev.mouse)}
 	    MouseButton = {New Tk.checkbutton
 			   tkInit(parent:   MouseOuter.inner
 				  variable: MouseVar
-				  text:     'Require mouse over panel')}
+				  text:     'Require mouse over panel'
+				  action:   self # ToggleMouse)}
 	 in
+	    NextMouse <- Prev.mouse
 	    {Tk.batch [pack(TimeLabel TimeScale side:left fill:x)
 		       pack(MouseButton side:left fill:x)
 		       pack(TimeOuter MouseOuter fill:x)]}
+	 end
+
+	 meth ToggleMouse
+	    NextMouse <- {Not @NextMouse}
+	 end
+
+	 meth GetMouse($)
+	    @NextMouse
 	 end
 	 
       end
@@ -117,15 +135,19 @@ local
       class HistoryDialog
 	 from TkTools.dialog
 
-	 meth init(master:Master options:O)
+	 meth init(master: Master
+		   prev:   Prev
+		   next:   Next)
 	    TkTools.dialog,tkInit(master:  Master
 				  title:   TitleName#': History'
 				  buttons: ['Okay'   #
 					    tkClose(proc {$}
-						     {Dictionary.put O history
-						      {RangeScale get($)}}
+						       Next = 
+						       {RangeScale get($)}
 						    end)
-					    'Cancel' # tkClose]
+					    'Cancel' # tkClose(proc {$}
+								  Next = Prev
+							       end)]
 				  focus:   1
 				  default: 1)
 	    RangeOuter = {New TkTools.textframe tkInit(parent: self
@@ -137,9 +159,7 @@ local
 						 values:  HistoryRanges
 						 initpos: {FindPos
 							   HistoryRanges
-							   {Dictionary.get O
-							    history}
-							   1})}
+							   Prev 1})}
 	 in
 	    {Tk.batch [pack(RangeLabel RangeScale side:left fill:x)
 		       pack(RangeOuter)]}
@@ -151,26 +171,32 @@ local
 
 in
 
-   class DialogClass
+   fun {DoAbout Master}
+      Done
+   in
+      _ = {New AboutDialog init(master:Master done:?Done)}
+      Done
+   end
+      
+   fun {DoShutdown Master}
+      Done
+   in
+      _ = {New ShutdownDialog init(master:Master done:?Done)}
+      Done
+   end
+      
+   fun {DoOptionUpdate Master Prev}
+      Next
+   in
+      _ = {New UpdateDialog init(master:Master prev:Prev next:?Next)}
+      Next
+   end
 
-      meth about
-         {Wait {New AboutDialog init(master:self)}.tkClosed}
-      end
-
-      meth shutdown(?Shut)
-	 {Wait {New ShutdownDialog init(master:self shut:?Shut)}.tkClosed}
-      end
-
-      meth update
-	 {Wait {New UpdateDialog
-		init(master:self options:self.options)}.tkClosed}
-      end
-
-      meth history
-	 {Wait {New HistoryDialog
-		init(master:self options:self.options)}.tkClosed}
-      end
-
+   fun {DoOptionHistory Master Prev}
+      Next
+   in
+      _ = {New HistoryDialog init(master:Master prev:Prev next:?Next)}
+      Next
    end
 
 end
