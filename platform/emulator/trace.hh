@@ -39,7 +39,6 @@ Bool ozd_trace(char *s,
 void ozd_tracerOn();
 void ozd_tracerOff();
 
-OZ_C_proc_proto(BIhalt);
 #endif
 
 #endif /* __TRACEH */
