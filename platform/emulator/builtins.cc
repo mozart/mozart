@@ -3562,14 +3562,6 @@ OZ_BI_define(BIdictionaryMarkSafe,1,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIdictionaryMarkCache,1,0)
-{
-  oz_declareDictionaryIN(0,dict);
-  dict->markCache();
-  return PROCEED;
-} OZ_BI_end
-
-
 OZ_BI_define(BIdictionaryEntries,1,1)
 {
   oz_declareDictionaryIN(0,dict);
@@ -3591,6 +3583,18 @@ OZ_BI_define(BIdictionaryClone,1,1)
   oz_declareDictionaryIN(0,dict);
 
   OZ_RETURN(dict->clone(oz_currentBoard()));
+} OZ_BI_end
+
+
+OZ_BI_define(BIdictionaryToRecord,2,1) {
+  oz_declareNonvarIN(0, label);
+
+  if (!oz_isLiteral(label)) 
+    oz_typeError(0, "Literal");
+
+  oz_declareDictionaryIN(1,dict);
+
+  OZ_RETURN(dict->toRecord(label));
 } OZ_BI_end
 
 
