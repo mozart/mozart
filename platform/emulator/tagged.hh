@@ -917,4 +917,13 @@ RefsArray resize(RefsArray r, int s){
 } // resize
 
 
+
+inline
+TaggedRef mkTuple(int from, int to){
+  OZ_Term s = OZ_tuple(OZ_CToAtom("#"), 2);
+  OZ_putArg(s, 1, OZ_CToInt(from));
+  OZ_putArg(s, 2, OZ_CToInt(to));
+  return s;
+}
+
 #endif
