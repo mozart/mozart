@@ -18,7 +18,7 @@ LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc
 
 all: Makefile oz.elc
 
-oz.elc: $(SRCDIR)/oz.el
+oz.elc: oz.el
 	@$(ECHO) "(setq byte-compile-compatibility t) \
 	(byte-compile-file \"$<\")" > compile.el
 	$(EMACS) -q -batch -l compile.el
@@ -47,3 +47,12 @@ distclean: clean
 
 tags:
 	etags oz.el
+
+Makefile: Makefile.in config.status
+	./config.status
+
+oz.el: oz.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
