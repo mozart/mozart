@@ -55,6 +55,35 @@ void oz_checkStability()
     Assert(am.trail.isEmptyChunk());
     // all possible reduction steps require this; 
 
+    // check for nonmonotonic propagators
+    oz_solve_scheduleNonMonoSuspList(solveAA);
+    if (!oz_isStableSolve(solveAA))
+      return;
+    
+    // Check whether there are registered distributors
+    Distributor * d = solveAA->getDistributor();
+    
+    if (d) {
+      
+      if (d->getAlternatives() == 1) {
+	// Is the distributor unary?
+	d->commit(solveBB,1,1);
+	return;
+      }
+
+      // give back number of clauses
+      am.trail.popMark();
+      oz_currentBoard()->unsetInstalled();
+      am.setCurrent(oz_currentBoard()->getParent());
+      
+      // don't decrement counter of parent board!
+      int ret = oz_unify(solveAA->getResult(), 
+			 solveAA->genChoice(d->getAlternatives()));
+      Assert(ret==PROCEED);
+      return;
+      
+    }
+    
     if (!solveBB->hasSuspension()) {
       // 'solved';
       // don't unlink the subtree from the computation tree;
@@ -68,13 +97,8 @@ void oz_checkStability()
       return;
     }
 
-    // check for nonmonotonic propagators
-    oz_solve_scheduleNonMonoSuspList(solveAA);
-    if (! oz_isStableSolve(solveAA))
-      return;
-
-    WaitActor *wa = solveAA->getChoice();
-
+    WaitActor *wa   = solveAA->getChoice();
+    
     if (wa == NULL) {
       // "stuck" (stable without distributing waitActors);
       // don't unlink the subtree from the computation tree; 
@@ -101,7 +125,7 @@ void oz_checkStability()
       DebugCode(am.threadsPool.unsetCurrentThread());
       return;
     }
-
+    
     // give back number of clauses
     am.trail.popMark();
     oz_currentBoard()->unsetInstalled();

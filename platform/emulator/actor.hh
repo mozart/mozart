@@ -236,7 +236,6 @@ public:
     return cpb;
   }
 
-
 };
 
 #endif
