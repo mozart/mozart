@@ -326,7 +326,7 @@ static Board* toCopyBoard;
  * copy from from-space to to-space
  ****************************************************************************/
 inline
-void fastmemcpy(int32 *to, int32 *frm, int sz)
+void fastmemcpy(int32 *to, int32 *frm, size_t sz)
 {
 #ifdef VERBOSE
   fprintf(verbOut,"(gc) \tcopy %d bytes from 0x%p to 0x%p\n",sz,frm,to);
@@ -345,7 +345,7 @@ void fastmemcpy(int32 *to, int32 *frm, int sz)
   default:
     while(sz>0) {
       *to++ = *frm++;
-      sz -= sizeof(int);
+      sz -= sizeof(sz);
     }
   }
 #ifdef WIPEOUTFROM
