@@ -802,7 +802,7 @@ structures and vice versa.
 <code >char *OZ_virtualStringToC(OZ_Term t, int *n)</code>
 <item>Converts &Oz; virtual string <code /t/ to a C string.
 </list></section>
-<section><title/Term access and construction/
+<section id=section.term_access><title/Term access and construction/
 <p>
 Several functions are available to access and construct terms.
 <list>
@@ -1085,7 +1085,7 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
 
 
 
-<section><title/Threads/
+<section id=section.threads><title/Threads/
 <p>
 <list>
 

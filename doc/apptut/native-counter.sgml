@@ -59,7 +59,7 @@ builtin.  The table must be terminated by an entry whose fields are
 all zero.</p>
   </section>
 
-  <section>
+  <section id=section.counter.global.compilation>
     <title/Compilation/
     <p>We must now make this native module available as a
 <em/shared object library/.  First we must compile it and create
@@ -89,7 +89,7 @@ so arcane and highly magical, it could well endanger your sanity.
 Fortunately <code proglang=sh/oztool ld/ automatically takes
 care of the details.</p>
   </section>
-  <section>
+  <section id=section.counter.global.compilation.deployment>
     <title/Deployment/
     <p>Normally, you will then place the resulting shared object file, e.g.
 <file/counter.so-linux-i486/ on a Linux system, in an installation
