@@ -299,8 +299,6 @@ TaggedRef oz_valueType(OZ_Term term) {
     return AtomVariable;
   case TAG_SMALLINT:
     return AtomInt;
-  case TAG_FLOAT:    
-    return AtomFloat;
   case TAG_LITERAL:
     return tagged2Literal(term)->isAtom() ? AtomAtom : AtomName;
   case TAG_LTUPLE:
@@ -311,6 +309,8 @@ TaggedRef oz_valueType(OZ_Term term) {
     return tagged2Extension(term)->typeV();
   case TAG_CONST:
     switch (tagged2Const(term)->getType()) {
+    case Co_Float:    
+      return AtomFloat;
     case Co_BigInt:
       return AtomInt;
     case Co_FSetValue:
@@ -852,6 +852,9 @@ void const2buffer(ostream &out, ConstTerm *c,const char sign)
   case Co_BigInt:
     bigInt2buffer(out,(BigInt *)c,sign);
     break;
+  case Co_Float:
+    float2buffer(out,makeTaggedConst(c),'~');
+    break;
   case Co_FSetValue:
     fset2buffer(out, ((ConstFSetValue *) c)->getValue());
     break;
@@ -1119,9 +1122,6 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       }
       break;
     }
-  case TAG_FLOAT:
-    float2buffer(out,term,'~');
-    break;
   case TAG_SMALLINT:
     smallInt2buffer(out,term,'~');
     break;

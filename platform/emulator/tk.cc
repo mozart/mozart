@@ -667,9 +667,6 @@ OZ_Return TK::put_vs(TaggedRef vs) {
   } else if (isSmallIntTag(vs_tag) || oz_isBigInt(vs)) {
     put_int(vs);
     return PROCEED;
-  } else if (isFloatTag(vs_tag)) {
-    put_float(vs);
-    return PROCEED;
   } else if (isLiteralTag(vs_tag)) {
 
     if (!tagged2Literal(vs)->isAtom())
@@ -689,6 +686,9 @@ OZ_Return TK::put_vs(TaggedRef vs) {
     return PROCEED;
   } else if (isLTupleTag(vs_tag)) {
     return put_string(vs);
+  } else if (oz_isFloat(vs)) {
+    put_float(vs);
+    return PROCEED;
   } else if (oz_isByteString(vs)) {
     put_byteString(vs);
     return PROCEED;
@@ -706,9 +706,6 @@ OZ_Return TK::put_vs_quote(TaggedRef vs) {
     return SUSPEND;
   } else if (isSmallIntTag(vs_tag) || oz_isBigInt(vs)) {
     put_int(vs);
-    return PROCEED;
-  } else if (isFloatTag(vs_tag)) {
-    put_float(vs);
     return PROCEED;
   } else if (isLiteralTag(vs_tag)) {
 
@@ -729,6 +726,9 @@ OZ_Return TK::put_vs_quote(TaggedRef vs) {
     return PROCEED;
   } else if (isLTupleTag(vs_tag)) {
     return put_string_quote(vs);
+  } else if (oz_isFloat(vs)) {
+    put_float(vs);
+    return PROCEED;
   } else if (oz_isByteString(vs)) {
     put_byteString_quote(vs);
     return PROCEED;
@@ -747,9 +747,6 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
   } else if (isSmallIntTag(tcl_tag) || oz_isBigInt(tcl)) {
     put_int(tcl);
     return PROCEED;
-  } else if (isFloatTag(tcl_tag)) {
-    put_float(tcl);
-    return PROCEED;
   } else if (isLiteralTag(tcl_tag)) {
     if (tagged2Literal(tcl)->isAtom()) {
       start_protect();
@@ -767,6 +764,9 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
     } else {
       return raise_type_error(tcl);
     }
+  } else if (oz_isFloat(tcl)) {
+    put_float(tcl);
+    return PROCEED;
   } else if (oz_isObject(tcl)) {
     TaggedRef v = tagged2Object(tcl)->getFeature(TkNameTclName);
  

@@ -322,12 +322,6 @@ loop:
       goto push;
     }
 
-  case TAG_FLOAT:
-    if (floatEq(term1,term2))
-      goto next;
-    else
-      goto fail;
-
   case TAG_SMALLINT:
     if (smallIntEq(term1,term2))
       goto next;
@@ -343,6 +337,10 @@ loop:
     }
   case TAG_CONST:
     switch (tagged2Const(term1)->getType()) {
+    case Co_Float:
+      if (floatEq(term1,term2))
+	goto next;
+      break;
     case Co_FSetValue:
       if (((FSetValue *) tagged2FSetValue(term1))->unify(term2))
 	goto next;
