@@ -676,8 +676,8 @@ if that value is non-nil."
 (defconst oz-begin-pattern
       (oz-make-keywords-for-match 
 	         '("local" "class" "meth" "create" "or" "if" "pred" "proc"
-		   "handle" "exists" "case" "begin" "process" "not"
-		   "seq")))
+		   "handle" "seq" "exists" "case" "begin" "process" "not"
+		   )))
 
 (defconst oz-end-pattern
       (oz-make-keywords-for-match '("end" "fi" "ro")))
@@ -979,8 +979,8 @@ if that value is non-nil."
        "pred" "proc" "true" "false" "local" "begin" "end"
        "in" "not" "process" "det" "if" "then" "else" "elseif" 
        "fi" "or" "ro" "meth" "create" "class" "from" "with" 
-       "handle" "by" "exists" "on" "case" "of"
-       "seq" "wait" "as" "div" "mod" "self"
+       "exists" "on" "case" "of"
+       "wait" "as" "div" "mod" "self"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
     ))
