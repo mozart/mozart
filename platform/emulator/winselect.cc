@@ -165,6 +165,7 @@ static
 void deleteReader(IOChannel *ch)
 {
   TerminateThread((HANDLE)ch->thrd,0);
+  CloseHandle((HANDLE)ch->thrd);
   ch->thrd = 0;
 }
 
@@ -336,6 +337,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
     unsigned tid;
     HANDLE ret = CreateThread(NULL,10000,&selectThread,si,0,&tid);
     Assert(ret!=0);
+    CloseHandle(ret);
   }
 
   IOChannel *aux = channels;
@@ -356,6 +358,12 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
 #endif
 
   if (nh == 0) {
+    if (wait==INFINITE) {
+      /* wait forever */
+      while(1) {
+        Sleep(100000);
+      }
+    }
     /* Nothing to wait on, so fail */
     errno = ECHILD;
     return 0;
