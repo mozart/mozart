@@ -1748,11 +1748,8 @@ void Chunk::gcRecurse()
 	      
   case C_OBJECT:
     {
-      Object *o      = (Object *) this;
-      o->cell        = (Cell*)o->cell->gcConstTerm();
-      if (!o->cell) {
-	DebugCheckT(warning("cell in object is dead"));
-      }
+      Object *o = (Object *) this;
+      gcTagged(o->cell,o->cell);
       o->fastMethods = o->fastMethods->gcSRecord();
     }   // no break here!
     
