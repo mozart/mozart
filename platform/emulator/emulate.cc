@@ -3297,32 +3297,40 @@ Case(GETVOID)
   Case(CALLMETHOD)
     {
       CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC+1);
-      TaggedRef pred = CAP->getG(cmi->regIndex);
-      DEREF(pred,predPtr,_1);
-      if (oz_isVariable(pred)) {
-	SUSP_PC(predPtr,PC);
+      TaggedRef cls = CAP->getG(cmi->regIndex);
+      DEREF(cls,clsPtr,_1);
+      if (oz_isVariable(cls)) {
+	SUSP_PC(clsPtr,PC);
       }
 
-      Bool defaultsUsed;
-      Abstraction *abstr = tagged2ObjectClass(pred)->getMethod(cmi->mn,cmi->arity,
-							       NO,defaultsUsed);
-      /* fill cache and try again later */
-      if (abstr==NULL || defaultsUsed) {
-	isTailCall = cmi->isTailCall;
-	if (!isTailCall) PC = PC+3;
+      if (oz_isClass(cls)) {
+	Bool defaultsUsed;
+	Abstraction *abstr = tagged2ObjectClass(cls)->getMethod(cmi->mn,cmi->arity,
+								NO,defaultsUsed);
+	/* fill cache and try again later */
+	if (abstr==NULL || defaultsUsed) {
+	  isTailCall = cmi->isTailCall;
+	  if (!isTailCall) PC = PC+3;
+	  
+	  Assert(tagged2ObjectClass(cls)->getFallbackApply());
 	
-	Assert(tagged2ObjectClass(pred)->getFallbackApply());
+	  XREGS[1] = makeMessage(cmi->arity,cmi->mn);
+	  XREGS[0] = cls;
 	
-	XREGS[1] = makeMessage(cmi->arity,cmi->mn);
-	XREGS[0] = pred;
-	
-	predArity = 2;
-	predicate = tagged2Const(tagged2ObjectClass(pred)->getFallbackApply());
-	goto LBLcall;
+	  predArity = 2;
+	  predicate = tagged2Const(tagged2ObjectClass(cls)->getFallbackApply());
+	  goto LBLcall;
+	}
+	patchToFastCall(abstr,PC,cmi->isTailCall);
+	cmi->dispose();
+	DISPATCH(0);
       }
-      patchToFastCall(abstr,PC,cmi->isTailCall);
-      cmi->dispose();
-      DISPATCH(0);
+
+      (void) oz_raise(E_ERROR,E_KERNEL,"type",5,AtomComma,
+		      oz_mklist(cls,makeMessage(cmi->arity,cmi->mn)),
+		      AtomClass,oz_int(1),oz_nil());
+      RAISE_THREAD;
+      
     }
 
 
