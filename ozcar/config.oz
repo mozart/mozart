@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.4.0 (Apr 97)'
+Version                = '1.4.1 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -40,14 +40,11 @@ InvalidThreadID        = 'Invalid Thread ID in step message' /* end */
 NoFileInfo             = 'step message without line number information, ' #
                          'continuing thread #' /* end */
 NoFileBlockInfo        = ' blocks without line number information'
-EarlyThreadDeath       = 'won\'t add thread as it died already.'
+EarlyThreadDeath       = 'won\'t add thread as it died already.' /* end */
 KnownThread            = 'Got known thread' /* end */
 NewThread              = 'Got new thread' /* end */
 NextOnLeave            = '\'next\' while leaving procedure - ' #
                          'substituting by \'step\''
-ByeBye                 = 'hm... seems as if this thread only ' # /* end end */
-                         'exists to turn me off?! *sigh*'
-
 
 UnknownSuspThread      = 'Unknown suspending thread' /* end */
 UnknownWokenThread     = 'Unknown woken thread' /* end */
@@ -55,7 +52,11 @@ UnknownMessage         = 'Unknown message on stream'
 UnknownTermThread      = 'Unknown terminating thread' /* end */
 
 WaitForThread          = 'waiting for thread to be added ' # /* end */
-                         'to dictionary of debugged threads...'
+                         'to dictionary of debugged threads...' /* end */
+
+ErrorExcText           = 'Exception: '
+UserExcText            = 'Unhandled User Exception: '
+NoStackText            = ' / no stack available'
 
 ID                     = fun {$ I} ' (id ' # I # ')' end
 OzcarMessagePrefix     = 'Ozcar: '
