@@ -165,6 +165,7 @@ define
                end
             else {CopyBraceLevel Cr 1}
             end
+         [] &~ then &\240|{CleanLine Cr}
          else C|{CleanLine Cr}
          end
       [] nil then ""
