@@ -21,16 +21,14 @@
     <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
     <title/The Mozart Profiler/
     <author.extern to="author.db" key="Denys.Duchier">
-    <author.extern to="author.db" key="Ralf.Scheidhauer">
     <author.extern to="author.db" key="Benjamin.Lorenz">
+    <author.extern to="author.db" key="Ralf.Scheidhauer">
     <abstract>
-
       This manual describes the profiler for the Mozart programming
       system. With its help you can optimize your Oz applications.  It
       mainly counts procedure applications and measures their memory
       consumption, presenting its calculations using nice,
       clickable bar charts.
-
     </abstract>
   <body>
     <chapter>
@@ -48,7 +46,7 @@ This information consists of the following quantities:
 	  <entry class=bold/head/
 	  <item/heap memory allocated by the procedure/
 	  <entry/calls/
-	  <item/how many time the procedure was called/
+	  <item/how many times the procedure was called/
 	  <entry/closures/
 	  <item/how many times the corresponding closure was created/
 	  <entry/samples/
