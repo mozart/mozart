@@ -742,7 +742,9 @@ define
          end
       end
       meth HandleException(E)
-         case E of system(os(os _ 111 ...) ...) then
+         case E of system(os(os _ 110 ...) ...) then
+            TkDictionary, Status('Connection timed out')
+         elseof system(os(os _ 111 ...) ...) then
             TkDictionary, Status('Connection refused')
          elseof error(netdict(unexpectedResponse _ N Response) ...) then
             if N == unit orelse N < 500 then
@@ -757,6 +759,8 @@ define
                                  end)
          elseof error(netdict(notConnected) ...) then
             TkDictionary, Status('Not connected')
+         else
+            {Raise E}
          end
       end
       meth Status(VS)
