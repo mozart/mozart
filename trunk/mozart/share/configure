@@ -1167,7 +1167,7 @@ fi
 
 
 
-: ${oz_picklecompression=0}
+: ${oz_picklecompression=9}
 
 echo $ac_n "checking for --enable-picklecompression""... $ac_c" 1>&6
 echo "configure:1174: checking for --enable-picklecompression" >&5
@@ -1182,9 +1182,9 @@ case $enable_picklecompression in
 	0|1|2|3|4|5|6|7|8|9)
 	    oz_picklecompression=${enable_picklecompression}
 	    ;;
-	*)
+	no)
 	    oz_picklecompression=0
-		;;
+	    ;;
 esac
 
 echo "$ac_t""$oz_picklecompression" 1>&6
