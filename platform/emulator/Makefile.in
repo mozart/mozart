@@ -42,7 +42,7 @@ DYNAMIC_MODULETARGETS=	$(MODULE_NAMES:%=%.so)
 
 CORE_MODULES=	DP Run OF FS FD CPI OS Space Store Mem Support
 # mm2: spliting emulator into different libraries does not work,
-#      because some files are not linked into oz.emulator.bin, which
+#      because some files are not linked into emulator.exe, which
 #      are only required from dynamic modules
 # CORE_LIBS=	-L. ${CORE_MODULES:%=-l%}
 CORE_TARGETS=	${CORE_MODULES:%=lib%.a}
@@ -399,7 +399,7 @@ config.status: configure
 .PHONY: test-all test lib-all check
 
 test:
-	OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
+	OZEMULATOR=`pwd`/emulator.exe; export OZEMULATOR; \
 	cd $(TESTDIR) && \
 	$(MAKE) check
 
@@ -407,16 +407,16 @@ lib-all:
 	$(MAKE) lib-check
 
 lib-%:
-	OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
+	OZEMULATOR=`pwd`/emulator.exe && export OZEMULATOR; \
 	cd $(LIBDIR) && \
 	$(MAKE) $*
 
 test-%:
-	OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
+	OZEMULATOR=`pwd`/emulator.exe && export OZEMULATOR; \
 	cd $(TESTDIR) && \
 	$(MAKE) $*
 
-check-all: oz.emulator.bin
+check-all: emulator.exe
 	$(MAKE) test
 	$(MAKE) lib-check
 

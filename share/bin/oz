@@ -33,7 +33,7 @@ export OZPLATFORM
 
 if test -z "${OZEMULATOR}"
 then
-    OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
+    OZEMULATOR=$OZHOME/platform/$OZPLATFORM/emulator.exe
 fi
 
 
