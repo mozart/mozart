@@ -64,6 +64,8 @@
  *
  */
 
+// If you change this, also change OZ_isEqualVars in mozart_cpi.hh!
+
 enum stag_t {
   STAG_REF0     = 0 /* 000 */,  // This is fixed: least two bits are zero!
   STAG_VAR      = 1 /* 001 */,
@@ -240,14 +242,15 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
  *
  */
 
+// If you change this, also change mozart_cpi.hh
+#define OzMaxInt (134217727)
+
 #if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__)
 
-#define OzMaxInt (134217727)
 #define OzMinInt (~134217727)
 
 #else
 
-#define OzMaxInt (INT_MAX>>LTAG_BITS)
 #define OzMinInt (-(OzMaxInt+1))
 
 #endif

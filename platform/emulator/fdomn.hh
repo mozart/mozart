@@ -46,8 +46,8 @@
 
 //-----------------------------------------------------------------------------
 
-const int fd_inf = 0;
-const int fd_sup = OzMaxInt - 1;
+const int fd_inf = OZ_getFDInf();
+const int fd_sup = OZ_getFDSup();
 
 const int fd_full_size = fd_sup + 1;
 
