@@ -24,6 +24,11 @@
  *
  */
 
+// fred+raph: An OptVar object models a variable with no suspension.
+// In particular, the value of that variable is not demanded.
+// When a suspension is added, the OptVar object should be "converted"
+// into either a QuietVar or a SimpleVar, depending on the kind of suspension.
+
 #ifndef __OPTVAR__H__
 #define __OPTVAR__H__
 

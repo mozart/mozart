@@ -7,6 +7,8 @@
  *
  *  Contributors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
+ *    Raphael Collet <raph@info.ucl.ac.be>
+ *    Alfred Spiessens <fsp@info.ucl.ac.be>
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -89,25 +91,28 @@ enum TypeOfVariable {
   // group 0:  constraint stuff, both built-in and extensible. 
   //           Cannot be moved from this position since Tobias (ab)uses
   //           it also for additional tagging.
-  OZ_VAR_FD      = 0,
-  OZ_VAR_BOOL    = 1,
-  OZ_VAR_FS      = 2,
-  OZ_VAR_CT      = 3,
+  OZ_VAR_FD             = 0,
+  OZ_VAR_BOOL           = 1,
+  OZ_VAR_FS             = 2,
+  OZ_VAR_CT             = 3,
   // group 0a: constraints, but without a need for additional tagging;
-  OZ_VAR_OF      = 4,
+  OZ_VAR_OF             = 4,
   // group 1: futures: anything but constrained variables should be
   //          bound to them. Note that a constrained variable cannot
   //          be bound to a future since that means that the future
   //          has to be converted to an FD variable, which is not
   //          possible.
-  OZ_VAR_FUTURE  = 5,
+  OZ_VAR_FUTURE         = 5,
+  OZ_VAR_READONLY       = 6,
+  OZ_VAR_READONLY_QUIET = 7,
   // group 2:  extensions, notably the distributed variables;
-  OZ_VAR_EXT     = 6,
+  OZ_VAR_EXT            = 8,
   // group 3:  simple variables;
-  OZ_VAR_SIMPLE  = 7,
+  OZ_VAR_SIMPLE         = 9,
+  OZ_VAR_QUIET          = 10,
   // group 4:  optimized variables are bound to anything else anyway
   //           whenever possible (since they are optimized);
-  OZ_VAR_OPT     = 8
+  OZ_VAR_OPT            = 11
 };
 
 
@@ -371,6 +376,7 @@ OZ_Return oz_var_unify(OzVariable *v, TaggedRef *lvp, TaggedRef *rvp);
 OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *);
+OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);
@@ -437,8 +443,11 @@ VarStatus oz_check_var_status(OzVariable *cv)
     return EVAR_STATUS_KINDED;
   case OZ_VAR_EXT:
     return _var_check_status(cv);
+  case OZ_VAR_QUIET:
   case OZ_VAR_SIMPLE:
     return EVAR_STATUS_FREE;
+//    case OZ_VAR_READONLY_QUIET:
+//    case OZ_VAR_READONLY:
   case OZ_VAR_FUTURE:
     return EVAR_STATUS_FUTURE;
   case OZ_VAR_OPT:

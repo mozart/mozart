@@ -90,6 +90,19 @@ OZ_BI_define(BIwaitOr,2,0)
     (void) am.addSuspendVarListInline(aPtr);
   if (!tagged2Var(b)->isInSuspList(oz_currentThread()))
     (void) am.addSuspendVarListInline(bPtr);
+
+  // fred+raph: This is an alternative for the pair of ifs above.
+  // With this definition, WaitOr does not need the variables, except if
+  // they're are equal.
+/*
+  if (aPtr == bPtr)
+    return oz_var_addSusp(bPtr, oz_currentThread());
+  if (!tagged2Var(a)->isInSuspList(oz_currentThread()))
+    (void) oz_var_addQuietSusp(aPtr, oz_currentThread());
+  if (!tagged2Var(b)->isInSuspList(oz_currentThread()))
+    (void) oz_var_addQuietSusp(bPtr, oz_currentThread());
+*/
+
   return SUSPEND;
 } OZ_BI_end
 

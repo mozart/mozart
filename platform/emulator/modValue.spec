@@ -70,6 +70,14 @@
 			     out => [],
 			     bi  => BIwaitQuiet},
 
+     'waitNeeded'       => { in  => ['value'],
+			     out => [],
+			     bi  => BIwaitNeeded},
+
+     'need'             => { in  => ['value'],
+			     out => [],
+			     bi  => BIneed},
+
      'waitOr'		=> { in  => ['value','value'],
 			     out => [],
 			     BI  => BIwaitOr},
@@ -97,6 +105,11 @@
      'isDet'		=> { in  => ['value'],
 			     out => ['+bool'],
 			     bi  => BIisDet,
+			     test => 0},
+
+     'isNeeded'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     bi  => BIisNeeded,
 			     test => 0},
 
      'max'	        => { in  => ['+comparable','+comparable'],
@@ -134,6 +147,14 @@
      '!!'		=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIfuture},
+
+     'newReadOnly'	=> { in  => [],
+			     out => ['value'],
+			     BI  => BInewReadOnly},
+
+     'bindReadOnly'	=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIbindReadOnly},
 
      '=='		=> { in  => ['*value','*value'],
 			     out => ['+bool'],

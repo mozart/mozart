@@ -24,6 +24,9 @@
  *
  */
 
+// fred+raph: A SimpleVar is a free variable whose value is demanded.
+// The operation WaitNeeded does not block on that kind of variable.
+
 #ifndef __SIMPLEVAR__H__
 #define __SIMPLEVAR__H__
 

@@ -69,11 +69,13 @@ prepare
    %%
    Wait		= Boot_Value.wait
    WaitOr	= Boot_Value.waitOr
+   WaitNeeded	= Boot_Value.waitNeeded
    IsFree	= Boot_Value.isFree
    IsKinded	= Boot_Value.isKinded
    IsFuture	= Boot_Value.isFuture
    IsFailed     = Boot_Value.isFailed
    IsDet	= Boot_Value.isDet
+   IsNeeded	= Boot_Value.isNeeded
    Max		= Boot_Value.max
    Min		= Boot_Value.min
    CondSelect	= Boot_Value.condSelect
@@ -334,11 +336,13 @@ export
    'Value'		: Value
    'Wait'		: Wait
    'WaitOr'		: WaitOr
+   'WaitNeeded'		: WaitNeeded
    'IsFree'		: IsFree
    'IsKinded'	        : IsKinded
    'IsFuture'		: IsFuture
    'IsFailed'           : IsFailed
    'IsDet'		: IsDet
+   'IsNeeded'		: IsNeeded
    'Min'		: Min
    'Max'		: Max
    'CondSelect'	        : CondSelect
