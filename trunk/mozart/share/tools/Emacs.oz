@@ -26,7 +26,7 @@
 functor
 import
    Property(get condGet)
-   System(showInfo print)
+   System(showInfo printInfo)
    Error(formatLine msg)
    OS(getEnv stat tmpnam)
    Open(socket text file)
@@ -163,16 +163,16 @@ define
 	 attr
 	    Socket BarSync: _ BarLock: {NewLock} Trace: false Topped: false
 	    lastFile: unit lastLine: unit lastColumn: unit
-	 meth init(CompilerObject Host <= unit Print <= System.print)
+	 meth init(CompilerObject Host <= unit Print <= System.printInfo)
 	    lock Port in
 	       Listener.'class', init(CompilerObject Serve)
 	       thread
 		  @Socket = {New TextSocket server(port: ?Port)}
 	       end
-	       {Print {VirtualString.toAtom
-		       'oz-socket '#case Host of unit then ""
-				    else '"'#Host#'" '
-				    end#Port}}
+	       {Wait Port}
+	       {Print '\'oz-socket '#case Host of unit then ""
+				     else '"'#Host#'" '
+				     end#Port#'\''}
 	    end
 	 end
 	 meth readQueries() VS0 VS in
