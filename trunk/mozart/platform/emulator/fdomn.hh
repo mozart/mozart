@@ -13,7 +13,7 @@
 #define __FDOMN__H__
 
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 
@@ -44,14 +44,17 @@ private:
   enum descr_type {bv_descr = 0, iv_descr = 1, fd_descr = 2};
   void * descr;
 
+  descr_type getTypeI(void) const;
   descr_type getType(void) const;
   void setType(descr_type t);
   void setType(descr_type t, void * p);
   void setType(FDBitVector * p);
   void setType(FDIntervals * p);
   void set_iv(void * p);
+  FDIntervals * get_ivI(void) const;
   FDIntervals * get_iv(void) const;
   void set_bv(void * p);
+  FDBitVector * get_bvI(void) const;
   FDBitVector * get_bv(void) const;
 
   FDBitVector * provideBitVector(void) const;
@@ -72,7 +75,9 @@ public:
 
   unsigned getDescrSize(void);
 
+  int setEmptyI(void);
   int setEmpty(void);
+  int setFullI(void);
   int setFull(void);
 
   OZ_FiniteDomain(FDState state);
@@ -80,11 +85,14 @@ public:
   OZ_FiniteDomain(const OZ_FiniteDomain &);
   const OZ_FiniteDomain &operator = (const OZ_FiniteDomain &fd);
 
+  int initFullI(void);
   int initFull(void);
+  int initEmptyI(void);
   int initEmpty(void);
   int initSingleton(int);
   int initList(int list_len, int * list_left, int * list_right,
 	       int list_min, int list_max);
+  int initI(int, int);
   int init(int, int);
   int init(OZ_Term);
   

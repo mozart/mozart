@@ -9,9 +9,8 @@
   For faster compilation: includes must be parsed only once
   ------------------------------------------------------------------------
 */
-#define NOPRAGMA
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 
 #pragma implementation "actor.hh"
@@ -55,6 +54,7 @@
 #pragma implementation "thrqueue.hh"
 #pragma implementation "thrspool.hh"
 #pragma implementation "verbose.hh"
+#undef INTERFACE
 #endif
 
 #include "actor.cc"
