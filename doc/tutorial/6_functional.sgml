@@ -22,7 +22,7 @@ following procedure definition:
 <<<proc {F X1 ... Xn R} ?{S} R=?{E} end>>>
 
 <P CLASS=WARNING>The exact syntax for functions as well as their
-unfolding into procedure definitions is defined in the
+transformation into procedure definitions is defined in the
 <ref.extern to="ozdoc:notation"/<EM>The Oz Notation Reference Manual</EM>/.
 
 <P>Here we rely on the reader's intuition. Roughly speaking, the
@@ -40,8 +40,7 @@ are legal Oz programs.
 
 <<<
 fun {AndThen BP1 BP2}
-   if {BP1} then
-      if {BP2} then true else false end
+   if {BP1} then {BP2}
    else false end
 end
 >>>
@@ -50,33 +49,21 @@ end
 
 <<<
 proc {AndThen BP1 BP2 B}
-   B = if {BP1} then
-          if {BP2} then true else false end
+   B = if {BP1} then {BP2}
        else false end
 end
 >>>
 
-<P>Move the result variable into the outer <EM>case-expression</EM>
-to make it a <EM>case-statement</EM>:
+<P>Move the result variable into the outer <EM>if-expression</EM>
+to make it an <EM>if-statement</EM>:
 
 <<<
 proc {AndThen BP1 BP2 B}
-   if {BP1} then
-      B = if {BP2} then true else false end
+   if {BP1} then B = {BP2}
    else B = false end
 end
 >>>
 
-<P>Move the result variable into the inner <EM>case-expression</EM>
-to make it a <EM>case-statement</EM>, and we are done:
-
-<<<
-proc {AndThen BP1 BP2 B}
-   if {BP1} then
-      if {BP2} then B = true else B = false end
-   else B = false end
-end
->>>
 
 <P><FIGURE ID="CheckBinTreeLazy3" CLASS="Figure">
 <CAPTION>Checking a binary tree lazily</CAPTION>
@@ -84,17 +71,16 @@ end
 % Syntax Convenience: functional notation
 local
    fun {AndThen BP1 BP2}
-      if {BP1} then
-         if {BP2} then true else false end
+      if {BP1} then {BP2}
       else false end
    end
    fun {BinaryTree T}
       case T
       of nil then true
-      elseof tree(K V T1 T2) then
+      [] tree(K V T1 T2) then
          {AndThen
           fun {$} {BinaryTree T1} end
-          fun {$}{BinaryTree T2} end}
+          fun {$} {BinaryTree T2} end}
       else false end
    end
 end
@@ -104,14 +90,17 @@ end
 <P>If you are a functional programmer, you can cheer up! You have your
 functions, including higher-order ones, and similar to lazy functional
 languages Oz allows certain forms of tail-recursion optimizations that
-are not found in certain strict functional languages<NOTE FOOT>Strict
+are not found in certain strict functional languages
+<NOTE FOOT>Strict
 functional languages evaluate all its argument first before executing
-the function</NOTE> including Standard ML, Scheme, and the concurrent
-functional language Erlang. However, functions in Oz are not
-lazy. This property is easily programmed using the concurrency
-constructs of Oz and the single assignment variables.  Here is an
-example of the well-known higher order function <<Map/2>>. It is tail
-recursive in Oz but not in Standard ML or in Scheme.
+the function</NOTE>
+including Standard ML, Scheme, and the concurrent
+functional language Erlang. However, standard function definitions in
+Oz are not lazy. This property is easily programmed using the
+concurrency constructs of Oz and the single assignment variables.
+Here is an example of the well-known higher order function
+<<Map/2>>. It is tail recursive in Oz but not in Standard ML or in
+Scheme.
 
 <<<
 fun {Map Xs F}
