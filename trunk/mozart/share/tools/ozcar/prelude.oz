@@ -34,7 +34,7 @@ Dbg = dbg(on:           proc {$}
 	  trace:        Debug.setTraceFlag
 	  checkStopped: fun {$ T}
 			   try
-			      {Debug.checkStopped T}
+			      {Thread.isSuspended T}
 			   catch error(kernel(deadThread ...) ...) then
 			      false
 			   end
