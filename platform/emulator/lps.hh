@@ -28,7 +28,7 @@
  *
  */ 
 
-#ifndef DONT_LP 
+#ifndef LTQ
 #define TM_LP
 #endif
 
@@ -91,17 +91,17 @@ class LocalPropagationStore : protected LocalPropagationQueue {
 private:
   Bool in_local_propagation, backup_in_local_propagation;
   Bool propagate_locally ();
-#ifndef TM_LP
+  //#ifndef TM_LP
   Bool useit;
-#endif
+  //#endif
 
   DebugCode (Bool checkIsPropagator (Thread *thr);)
 public:
   LocalPropagationStore ()
   : in_local_propagation(FALSE)
-#ifndef TM_LP
+       //#ifndef TM_LP
        , useit(FALSE)
-#endif
+       //#endif
   {};
 
   Bool reset () {
@@ -139,11 +139,11 @@ public:
     restoreQueue ();
   }
 
-#ifndef TM_LP
+  //#ifndef TM_LP
   void setUseIt () { useit = TRUE; }
   void unsetUseIt () { useit = FALSE; }
   Bool isUseIt () { return (useit); }
-#endif    
+  //#endif    
 };
 
 extern LocalPropagationStore localPropStore;

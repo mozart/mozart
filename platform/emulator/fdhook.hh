@@ -34,7 +34,9 @@ SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
 
 Thread * createPropagator (OZ_CFun func, int arity, RefsArray xregs);
-Thread * createNewPropagator (OZ_Propagator * p);
+Thread * createNewPropagator (OZ_Propagator * p, 
+			      
+int prio = OZPROPAGATOR_PRIORITY);
 
 inline 
 Bool isUnifyCurrentPropagator () {
@@ -53,9 +55,9 @@ Thread *makeHeadThread (OZ_CFun fun,
 }
 
 inline
-Thread *makeHeadThread (OZ_Propagator * p)
+Thread *makeHeadThread (OZ_Propagator * p, int prio)
 {
-  return new Thread (am.currentBoard, ozconf.defaultPriority, p);
+  return new Thread (am.currentBoard, prio, p);
 }
 
 #endif

@@ -991,7 +991,7 @@ SRecord *SRecord::gcSRecord()
  * non-runnable ones);
  *  If threads is dead, returns (Thread *) NULL;
  */
-inline 
+//inline 
 Thread *Thread::gcThread ()
 {
   GCMETHMSG ("Thread::gcThread");
@@ -1757,6 +1757,27 @@ void ThreadQueue::doGC ()
   }
 }
 
+LocalThreadQueue * LocalThreadQueue::gc()
+{
+  if (!this) return NULL;
+  
+  Assert(opMode == IN_GC);
+  Assert(!isEmpty());
+
+  // find smallest power of 2 greater than size
+  int new_size = 1;
+  for (int aux_size = size; aux_size; aux_size >>= 1, new_size <<= 1); 
+  Assert(new_size >= size);
+
+  // create neq queue queue
+  LocalThreadQueue * new_ltq = new LocalThreadQueue (new_size);
+
+  // gc and copy entries
+  for ( ; !isEmpty(); new_ltq->enqueue(dequeue()->gcThread()));
+
+  return new_ltq;
+}
+
 void TaskStack::gc(TaskStack *newstack)
 {
   COUNT(taskStack);
@@ -1838,6 +1859,10 @@ void TaskStack::gc(TaskStack *newstack)
       *(--newtop) = ((Object *) *(--oldtop))->gcObject();
       break;
 
+    case C_LTQ:
+      *(--newtop) = ((Actor *) *(--oldtop))->gcActor();
+      break;
+    
     default:
       error("Unexpected case in TaskStack::gc().");
       break;
@@ -2288,6 +2313,7 @@ void SolveActor::gcRecurse ()
       cps = new_cps;
     }
   }
+  localThreadQueue = localThreadQueue->gc();
 }
 
 void CpStack::gc(CpStack *cps) {

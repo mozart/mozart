@@ -37,6 +37,7 @@ private:
   TaggedRef solveVar;
   TaggedRef result;
   SuspList  *suspList;
+  LocalThreadQueue * localThreadQueue;
   int threads;
 public:
   SolveActor(Board *bb, int prio, Bool debug);
@@ -88,6 +89,20 @@ public:
   TaggedRef genFailed();
   TaggedRef genUnstable(TaggedRef arg);
 
+  void pushToLocalThreadQueue(Thread * thr, Board * b);
+
+  void resetLocalThreadQueue(void) {
+    Assert(localThreadQueue);
+    delete localThreadQueue;
+    localThreadQueue = NULL;
+  }
+  LocalThreadQueue * getLocalThreadQueue(void) {
+    Assert(localThreadQueue);
+    return localThreadQueue;
+  }
+  void setLocalThreadQueue(LocalThreadQueue * ltq) {
+    localThreadQueue = ltq;
+  }
 private:
   Bool checkExtSuspList ();
 };

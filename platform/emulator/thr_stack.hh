@@ -34,7 +34,8 @@ enum ContFlag {
   C_LOCAL          = 6, // a local computation space
   C_EXCEPT_HANDLER = 7, // 
   C_SET_CAA        = 8, // supply the emulator with the CAA pointer;
-  C_SET_SELF       = 9  // set am.cachedSelf
+  C_SET_SELF       = 9, // set am.cachedSelf
+  C_LTQ            = 10 // local thread queue
 };
 
 
@@ -169,6 +170,14 @@ public:
     *newTop = p;
     *(newTop+1) = ToPointer(cf);
     tos = newTop+2;
+  }
+
+  void pushLTQ(SolveActor * sa) 
+  {
+    TaskStackEntry *newTop = ensureFree(2);
+    *newTop++ = ToPointer((int) sa);
+    *newTop++ = ToPointer(C_LTQ);
+    tos = newTop;
   }
 
   void pushDebug(OzDebug *deb)   { pushPair(deb,C_DEBUG_CONT); }
