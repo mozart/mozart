@@ -1129,7 +1129,7 @@ int OZ_FiniteDomainImpl::initBool(void)
 }
 
 inline
-int OZ_FiniteDomainImpl::init(int l, int r)
+int OZ_FiniteDomainImpl::initRange(int l, int r)
 {
   l = max(l, fd_inf);
   r = min(r, fd_sup);
@@ -1304,12 +1304,12 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
   return y;
 }
 
-int OZ_FiniteDomainImpl::init(OZ_Term d)
+int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
 {
   DEREF(d, d_ptr, d_tag);
   
   if (isSTuple(d) && tagged2SRecord(d)->getWidth() == 1) {
-    init((*tagged2SRecord(d))[0]);
+    initDescr((*tagged2SRecord(d))[0]);
     *this = ~ *this;
     return size;
   } else if (isSmallInt(d_tag)) {
@@ -1319,10 +1319,10 @@ int OZ_FiniteDomainImpl::init(OZ_Term d)
   } else if (isSTuple(d)) {
     SRecord &t = *tagged2SRecord(d);
     OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
-    return init(AtomSup == t0 ? fd_sup : OZ_intToC(t0),
-		AtomSup == t1 ? fd_sup : OZ_intToC(t1));
+    return initRange(AtomSup == t0 ? fd_sup : OZ_intToC(t0),
+		     AtomSup == t1 ? fd_sup : OZ_intToC(t1));
   } else if (AtomBool == d) {
-    return init(0, 1);
+    return initRange(0, 1);
   } else if (isNil(d)) {
     return initEmpty();
   } else if (isLTuple(d_tag)) {
@@ -1899,20 +1899,10 @@ void OZ_FiniteDomainImpl::copyExtension(void)
 #define CASTREF * (OZ_FiniteDomainImpl *) &
 #define CASTTHIS (CASTPTR this)
 
-void OZ_FiniteDomain::FiniteDomainInit(void * d)
-{
-  CASTTHIS->FiniteDomainInit(d);
-}
-
-OZ_FiniteDomain::OZ_FiniteDomain(void * d) 
-{
-  CASTTHIS->FiniteDomainInit(d);
-}
-
 OZ_FiniteDomain::OZ_FiniteDomain(OZ_Term t)
 {
   CASTTHIS->FiniteDomainInit(NULL);
-  CASTTHIS->init(t);
+  CASTTHIS->initDescr(t);
 }
 
 OZ_FiniteDomain::OZ_FiniteDomain(OZ_FDState state)
@@ -1955,9 +1945,9 @@ int OZ_FiniteDomain::initEmpty(void)
   return CASTTHIS->initEmpty();
 }
 
-int OZ_FiniteDomain::init(OZ_Term t)
+int OZ_FiniteDomain::initDescr(OZ_Term t)
 {
-  return CASTTHIS->init(t);
+  return CASTTHIS->initDescr(t);
 }
 
 int OZ_FiniteDomain::initSingleton(int s)
@@ -1965,9 +1955,9 @@ int OZ_FiniteDomain::initSingleton(int s)
   return CASTTHIS->initSingleton(s);
 }
 
-int OZ_FiniteDomain::init(int l, int u)
+int OZ_FiniteDomain::initRange(int l, int u)
 {
-  return CASTTHIS->init(l, u);
+  return CASTTHIS->initRange(l, u);
 }
 
 int OZ_FiniteDomain::initBool(void)
@@ -1975,7 +1965,7 @@ int OZ_FiniteDomain::initBool(void)
   return CASTTHIS->initBool();
 }
 
-int OZ_FiniteDomain::singl(void) const
+int OZ_FiniteDomain::getSingleElem(void) const
 {
   return CASTTHIS->singl();
 }
@@ -1985,22 +1975,22 @@ OZ_Boolean OZ_FiniteDomain::isIn(int i) const
   return CASTTHIS->contains(i);
 }
 
-OZ_Term OZ_FiniteDomain::getAsList(void) const
+OZ_Term OZ_FiniteDomain::getDescr(void) const
 {
   return CASTTHIS->getAsList();
 }
 
-int OZ_FiniteDomain::midElem(void) const
+int OZ_FiniteDomain::getMidElem(void) const
 {
   return CASTTHIS->midElem();
 }
 
-int OZ_FiniteDomain::nextSmallerElem(int v) const
+int OZ_FiniteDomain::getNextSmallerElem(int v) const
 {
   return CASTTHIS->nextSmallerElem(v);
 }
 
-int OZ_FiniteDomain::nextLargerElem(int v) const
+int OZ_FiniteDomain::getNextLargerElem(int v) const
 {
   return CASTTHIS->nextLargerElem(v);
 }
