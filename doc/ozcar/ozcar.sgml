@@ -139,7 +139,7 @@
         stack of the currently selected thread (if there is
         any). Beware: the topmost frame is displayed at the
         bottom. The procedure arguments are printed in bold face and
-        can be further investigated (using the Browser tool) by
+        can be further investigated (using the Inspector) by
         clicking on them.
         <subsection>
         <title/Stackframe Selection/
@@ -164,7 +164,7 @@
         sorted by introduction order of the variables in the source
         code, the global environment is sorted alphabetically. As with
         the arguments in the stack window, you can click on the (bold
-        faced) values of the variables to browse them.
+        faced) values of the variables to inspect them.
       <section>
         <title/Status Line/
         <p>
@@ -286,7 +286,7 @@ end>>>
           and closing brace, respectively. The stack view displays
           a stack frame which contains the procedure, function or
           method name (if there exists any, $ otherwise), together
-          which the argument list. All arguments can be browsed by
+          which the argument list. All arguments can be inspected by
           clicking on them with the left mouse button.
           <entry>Conditional
           <item>
@@ -451,7 +451,7 @@ end
         Environment inspection is easy with Ozcar. In fact,
         it is done automatically for you. Whenever you select a stack
         frame, the variables which are visible inside this frame are
-        printed in the variable windows. You can browse the values by
+        printed in the variable windows. You can inspect the values by
         clicking on their type information.
         <section>
         <title/The Query Dialog/
@@ -480,8 +480,8 @@ end
         <title/Execution of Statements/
         <p>
         Something other you can do with the Query dialog is to execute
-        Oz statements. For example, when you type <<{Browse hugo}>>
-        and press the Exec button, the Browser pops up and prints
+        Oz statements. For example, when you type <<{Inspect hugo}>>
+        and press the Exec button, the Inspector pops up and prints
         the obvious data. Note that the result of executing a statement
         is <<unit>>. Another example comes with
         the next picture. An unbound variable, <<G2>>, is
