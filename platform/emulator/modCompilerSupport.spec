@@ -171,11 +171,6 @@
 				     out => [],
 				     BI  => BIstoreGenCallInfo},
 
-    'storeApplMethInfo'		=> { in  => ['+foreignPointer',
-					     '+literal','+value'],
-				     out => [],
-				     BI  => BIstoreApplMethInfo},
-
     'storeGRegRef'		=> { in  => ['+foreignPointer','+[tuple]'],
 				     out => [],
 				     BI  => BIstoreGRegRef},

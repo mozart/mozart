@@ -392,21 +392,6 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIstoreApplMethInfo,3,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,name);
-  if (!oz_isLiteral(name)) {
-    oz_typeError(1,"Literal");
-  }
-  OZ_declareRecordArityIN(2,arity);
-
-  ApplMethInfoClass *ami = new ApplMethInfoClass(name,arity,code);
-  code->writeAddress(ami);
-  return PROCEED;
-} OZ_BI_end
-
-
 OZ_BI_define(BIstoreGRegRef,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
