@@ -260,3 +260,11 @@ ozma.so: ozma-p.o ozma-s.o
 
 realclean::
 	$(RM) ozma-p.cc ozma-p.yy ozma-s.cc ozma-s.ll ozma.hh
+
+test:
+	(OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
+	 cd $(SRCDIR)/../test; make clean all; ./oztest --verbose)
+
+test-lib:
+	(OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
+	 cd $(SRCDIR)/../lib; make clean all)
