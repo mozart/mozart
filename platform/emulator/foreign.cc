@@ -1787,12 +1787,12 @@ void OZ_sClone(OZ_Term * to) {
 
 
 static
-int oz_isVirtualString(OZ_Term vs, OZ_Term *var)
-{
+int oz_isVirtualStringNoZero(OZ_Term vs, OZ_Term * var) {
   if (oz_isRef(vs)) {
     DEREF(vs,vsPtr,vsTag);
     if (isVariableTag(vsTag))  {
-      if (var) *var = makeTaggedRef(vsPtr);
+      if (var)
+        *var = makeTaggedRef(vsPtr);
       return 0;
     }
   }
@@ -1802,10 +1802,10 @@ int oz_isVirtualString(OZ_Term vs, OZ_Term *var)
     return 1;
 
   if (oz_isPair(vs)) {
-    SRecord *sr = tagged2SRecord(vs);
-    int len = sr->getWidth();
-    for (int i=0; i < len; i++) {
-      if (!oz_isVirtualString(sr->getArg(i),var)) return 0;
+    SRecord * sr = tagged2SRecord(vs);
+    for (int i = sr->getWidth(); i--;) {
+      if (!oz_isVirtualStringNoZero(sr->getArg(i),var))
+        return 0;
     }
     return 1;
   }
@@ -1813,19 +1813,71 @@ int oz_isVirtualString(OZ_Term vs, OZ_Term *var)
   if (oz_isCons(vs)) {
     OZ_Term ret = oz_checkList(vs,OZ_CHECK_CHAR_NONZERO);
     if (oz_isRef(ret)) {
-      if (var) *var = ret;
+      if (var)
+        *var = ret;
       return 0;
     }
-    if (var) *var = 0;
+    if (var)
+      *var = 0;
     return oz_isFalse(ret) ? 0 : 1;
   }
 
   return 0;
 }
 
-int OZ_isVirtualString(OZ_Term vs, OZ_Term *var)
+int OZ_isVirtualStringNoZero(OZ_Term vs, OZ_Term * var)
 {
-  if (var) *var = 0;
+  if (var)
+    *var = 0;
+
+  return oz_isVirtualStringNoZero(vs,var);
+}
+
+
+
+static
+int oz_isVirtualString(OZ_Term vs, OZ_Term * var) {
+  if (oz_isRef(vs)) {
+    DEREF(vs,vsPtr,vsTag);
+    if (isVariableTag(vsTag))  {
+      if (var)
+        *var = makeTaggedRef(vsPtr);
+      return 0;
+    }
+  }
+
+  if (oz_isInt(vs) || oz_isFloat(vs) || oz_isAtom(vs) ||
+      oz_isByteString(vs))
+    return 1;
+
+  if (oz_isPair(vs)) {
+    SRecord * sr = tagged2SRecord(vs);
+    for (int i = sr->getWidth(); i--;) {
+      if (!oz_isVirtualString(sr->getArg(i),var))
+        return 0;
+    }
+    return 1;
+  }
+
+  if (oz_isCons(vs)) {
+    OZ_Term ret = oz_checkList(vs,OZ_CHECK_CHAR);
+    if (oz_isRef(ret)) {
+      if (var)
+        *var = ret;
+      return 0;
+    }
+    if (var)
+      *var = 0;
+    return oz_isFalse(ret) ? 0 : 1;
+  }
+
+  return 0;
+}
+
+int OZ_isVirtualString(OZ_Term vs, OZ_Term * var)
+{
+  if (var)
+    *var = 0;
 
   return oz_isVirtualString(vs,var);
 }
