@@ -356,7 +356,8 @@ void AM::init(int argc,char **argv)
     // Construct import for functor:
     TaggedRef boot_module = 
       OZ_recordInit(AtomExport,
-		    oz_mklist(oz_pair2(AtomObtain,BI_obtain_native)));
+		    oz_mklist(oz_pair2(AtomGetInternal,BI_get_internal),
+			      oz_pair2(AtomGetNative,BI_get_native)));
 
     TaggedRef boot_import = 
       OZ_recordInit(AtomExport,
