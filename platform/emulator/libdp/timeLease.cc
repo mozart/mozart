@@ -189,7 +189,7 @@ Bool TL::isRoot()
 
 OZ_Term TL::extract_info(OZ_Term in)
 {
-  return oz_cons(oz_pairAA("tl",expireDate.toString()),in);
+  return oz_cons(oz_pairAI("tl",expireDate - *(am.getEmulatorClock())),in);
 }
 
 OZ_Term TL::extract_OzId()
