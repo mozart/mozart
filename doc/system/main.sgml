@@ -35,7 +35,7 @@
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>
-<!ENTITY % proglang.values.local "|sh|none">
+<!ENTITY % proglang.values.local "|sh|none|fundamental">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -206,6 +206,7 @@
     <Meta name="html.split"       value="chapter.objectsupport">
 
     <Meta name="proglang.mode" arg1="none" arg2="fundamental-mode">
+    <meta name=proglang        arg1="fundamental" arg2="fundamental-mode">
 
     <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
