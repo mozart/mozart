@@ -529,7 +529,7 @@ public:
 //-----------------------------------------------------------------------------
 // Miscellaneous
 
-void OZ_updateHeapTerm(OZ_Term &);
+extern void OZ_updateHeapTerm(OZ_Term &);
 
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
 

@@ -44,7 +44,7 @@ extern Bool gc_is_running;
 Bool gcStaticProtect(TaggedRef *);
 Bool gcProtect(TaggedRef *);
 Bool gcUnprotect(TaggedRef *);
-void gcTagged(TaggedRef&,TaggedRef&);
+void OZ_updateHeapTerm(TaggedRef&);
 
 void protectInlineCache(InlineCache *);
 
