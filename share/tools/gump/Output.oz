@@ -121,9 +121,9 @@ local
 	 PU#'fun '#IN#{LI ProcFlags OutputOz}#
 	 '{'#PU#{LI {Map T|Fs OutputOz} GL}#PO#'}'#IN#NL#
 	 {OzBlock E}#EX#NL#PO#'end'
-      [] fFunctor(T Ds S _) then
+      [] fFunctor(T Ds S1 S2 _) then
 	 'functor '#{OutputOz T}#NL#{LI {Map Ds OutputOz} NL}#NL#
-	 'body'#IN#NL#{OutputOz S}#EX#NL#'end'
+	 'body'#IN#NL#{OutputOz S1}#EX#NL#'in'#IN#NL#{OutputOz S2}#EX#NL#'end'
       [] fImport(Is _) then 'import'#IN#NL#{LI {Map Is OutputOz} NL}#EX
       [] fImportItem(V Fs OptFrom) then
 	 {OutputOz V}#
