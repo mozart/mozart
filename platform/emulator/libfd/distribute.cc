@@ -105,8 +105,6 @@ public:
     return sync;
   }
 
-  void normalize(void);
-
   void selectVarNaive(void);
   void selectVarSize(void);
   void selectVarMin(void);
@@ -157,94 +155,86 @@ public:
 };
 
 
-void FdDistributor::normalize(void) {
-  // Discard all elements which are already bound
-  int j = size;
-
-  for (int i = size; i--;) {
-    if (!oz_isSmallInt(oz_deref(vars[i])))
-      vars[--j]=vars[i];
-  }
-
-  if (j > 0) {
-    freeListDispose(vars, j * sizeof(TaggedRef));
-    vars += j;
-    size -= j;
-  }
-
-}
-
 /*
  * Variable selection strategies
  *
  */
 
+#define ITERATOR(INIT,UPDATE) \
+  int i = size, j = size;                         \
+  TaggedRef vd;                                   \
+  while (i--) {                                   \
+    vd = oz_deref(vars[i]);                       \
+    if (!oz_isSmallInt(vd)) break;                \
+  }                                               \
+  if (i < 0) {                                    \
+    size = 0; return;                             \
+  }                                               \
+  vars[--j] = vars[i];                            \
+  INIT;                                           \
+  sel_var = j;                                    \
+  while (i--) {                                   \
+    vd = oz_deref(vars[i]);                       \
+    if (oz_isSmallInt(vd)) continue;              \
+    vars[--j] = vars[i];                          \
+    UPDATE;                                       \
+  }                                               \
+  if (j > 0) {                                    \
+    freeListDispose(vars, j * sizeof(TaggedRef)); \
+    vars    += j;                                 \
+    size    -= j;                                 \
+    sel_var -= j;                                 \
+  }
+
+
 inline
 void FdDistributor::selectVarNaive(void) {
-  Assert(size > 0);
-  sel_var = size-1;
+  ITERATOR({},{});
 }
 
+inline
 void FdDistributor::selectVarSize(void) {
-  Assert(size > 0);
-  int minsize = getSize(oz_deref(vars[size-1]));
-  sel_var = size-1;
-  for (int i = size-1; i--; ) {
-    int cursize = getSize(oz_deref(vars[i]));
-    if (cursize < minsize) {
-      minsize = cursize; sel_var = i;
-    }
-  }
+  ITERATOR(int minsize = getSize(vd),
+           int cursize = getSize(vd);
+           if (cursize < minsize) {
+             minsize = cursize; sel_var = j;
+           });
 }
 
+inline
 void FdDistributor::selectVarMin(void) {
-  Assert(size > 0);
-  int minmin = getMin(oz_deref(vars[size-1]));
-  sel_var = size-1;
-  for (int i = size-1; i--; ) {
-    int curmin = getMin(oz_deref(vars[i]));
-    if (curmin < minmin) {
-      minmin = curmin; sel_var = i;
-    }
-  }
+  ITERATOR(int minmin = getMin(vd),
+           int curmin = getMin(oz_deref(vars[i]));
+           if (curmin < minmin) {
+             minmin = curmin; sel_var = j;
+           });
 }
 
+inline
 void FdDistributor::selectVarMax(void) {
-  Assert(size > 0);
-  int maxmax = getMax(oz_deref(vars[size-1]));
-  sel_var = size-1;
-  for (int i = size-1; i--; ) {
-    int curmax = getMax(oz_deref(vars[i]));
-    if (curmax > maxmax) {
-      maxmax = curmax; sel_var = i;
-    }
-  }
+  ITERATOR(int maxmax = getMax(vd),
+           int curmax = getMax(oz_deref(vars[i]));
+           if (curmax > maxmax) {
+             maxmax = curmax; sel_var = j;
+           });
 }
 
+inline
 void FdDistributor::selectVarNbSusps(void) {
-  Assert(size > 0);
-  TaggedRef d_var = oz_deref(vars[size-1]);
-  int minsize = getSize(d_var);
-  int maxnb   = getConstraints(d_var);
-  sel_var = size-1;
-  for (int i = size-1; i--; ) {
-    d_var = oz_deref(vars[i]);
-    int curnb = getConstraints(d_var);
-
-    if (curnb < maxnb)
-      continue;
-
-    int cursize = getSize(d_var);
-
-    if (curnb > maxnb || cursize < minsize) {
-      maxnb   = curnb;
-      minsize = cursize;
-      sel_var = i;
-    }
-  }
+  ITERATOR(int minsize = getSize(vd);
+           int maxnb   = getConstraints(vd),
+           int curnb = getConstraints(vd);
+           if (curnb < maxnb)
+           continue;
+           int cursize = getSize(vd);
+           if (curnb > maxnb || cursize < minsize) {
+             maxnb   = curnb;
+             minsize = cursize;
+             sel_var = j;
+           });
 }
 
-
+#undef ITERATOR
 
 /*
  * Value selection strategies
@@ -294,9 +284,9 @@ class CLASS : public FdDistributor {              \
   CLASS(Board * b, TaggedRef * v, int s) :        \
     FdDistributor(b,v,s) {}                       \
   virtual int getAlternatives(void) {             \
-    normalize();                                  \
-    if (size > 0) { VARSEL(); VALSEL(); return 2; \
-    } else {                            return 1; \
+    VARSEL();                                     \
+    if (size > 0) { VALSEL(); return 2;           \
+    } else {                  return 1;           \
     }                                             \
   };                                              \
 }
