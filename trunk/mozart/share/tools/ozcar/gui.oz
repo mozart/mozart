@@ -651,7 +651,7 @@ in
 	    {self.StackText title(AltStackTitle # I)}
 	    case Depth == 0 then
 	       case {CheckState @currentThread} == running then
-		  Gui,Append(W (' There has no stack been computed (yet)\n' #
+		  Gui,Append(W (' There was no stack computed (yet)\n' #
 				' for this thread;' #
 				' stop it to compute one!'))
 	       else
