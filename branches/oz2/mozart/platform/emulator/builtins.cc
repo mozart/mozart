@@ -6603,6 +6603,19 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIgetDefaultExceptionHandler,1)
+{
+  OZ_declareArg(0,ret);
+  OZ_Term hdl = am.defaultExceptionHandler;
+
+  if (hdl==makeTaggedNULL()) {
+    return am.raise(E_ERROR,E_KERNEL,"exceptionHandlerNotSet",0);
+  }
+
+  return OZ_unify(ret,hdl);
+}
+OZ_C_proc_end
+
 /*
  * the builtin exception handler
  */
@@ -7018,6 +7031,7 @@ BIspec allSpec2[] = {
 
   {"biExceptionHandler",         1, BIbiExceptionHandler,         0},
   {"setDefaultExceptionHandler", 1, BIsetDefaultExceptionHandler, 0},
+  {"getDefaultExceptionHandler", 1, BIgetDefaultExceptionHandler, 0},
 
   {"raise",      1, BIraise,      0},
   {"raiseError", 1, BIraiseError, 0},
