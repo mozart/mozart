@@ -7371,7 +7371,7 @@ OZ_C_proc_end
 //	registry_put(OZ_Term,OZ_Term)
 //	registry_put(char*s,OZ_Term)
 
-OZ_Term system_registry;
+extern OZ_Term system_registry;	// moved to vprops.cc
 
 OZ_C_proc_begin(BIsystem_registry,1)
 {
@@ -7379,139 +7379,6 @@ OZ_C_proc_begin(BIsystem_registry,1)
 }
 OZ_C_proc_end
 
-/********************************************************************
- * Virtual Properties
- ******************************************************************** */
-
-// Copyright © by Denys Duchier, Feb 1998, Universität des Saarlandes
-//
-// The idea is to make system information available through a
-// dictionary-like interface, in a manner that is trivially extensible,
-// and such that we avoid the proliferation of specialized builtins.
-//
-// A virtual property is an object with virtual functions get and set.
-// get() returns an OZ_Term as the (current) value of the property.
-// set(V) sets the value of the property to the value described by the
-// OZ_Term V.  It returns an OZ_Return status that indicate how the
-// operation fared: it could succeed, fail, suspend, or raise an error.
-//
-// Virtual properties can be entered into dictionaries as Foreign
-// Pointers.  We will use this technique to record all system virtual
-// properties in a distinguished dictionary.
-
-class VirtualProperty {
-public:
-  virtual OZ_Term   get();
-  virtual OZ_Return set(OZ_Term);
-};
-
-class BoolVirtualProperty : public VirtualProperty {
-  int& b;
-public:
-  BoolVirtualProperty(int&bb):b(bb){}
-  virtual OZ_Term   get();
-  virtual OZ_Return set(OZ_Term);
-};
-
-class IntVirtualProperty : public VirtualProperty {
-  int& n;
-public:
-  IntVirtualProperty(int&nn):n(nn){}
-  virtual OZ_Term get();
-  virtual OZ_Return set(OZ_Term);
-};
-
-OZ_Term   VirtualProperty::get()        { Assert(0); return NameUnit; }
-OZ_Return VirtualProperty::set(OZ_Term) { Assert(0); return FAILED; }
-
-OZ_Term BoolVirtualProperty::get() { return b?NameTrue:NameFalse; }
-OZ_Return BoolVirtualProperty::set(OZ_Term t) {
-  if (OZ_isVariable(t)) OZ_suspendOn(t);
-  if (!OZ_isName(t)) goto kaboom;
-  if      (OZ_eq(t,NameTrue )) b=1;
-  else if (OZ_eq(t,NameFalse)) b=0;
-  else goto kaboom;
-  return PROCEED;
-kaboom:
-  oz_typeError(1,"Bool");
-}
-
-OZ_Term IntVirtualProperty::get() { return OZ_int(n); }
-OZ_Return IntVirtualProperty::set(OZ_Term t) {
-  if (OZ_isVariable(t)) OZ_suspendOn(t);
-  if (!OZ_isInt(t)) goto kaboom;
-  n = OZ_intToC(t);
-  return PROCEED;
-kaboom:
-  oz_typeError(1,"Int");
-}
-
-OZ_Term virtual_property_registry;
-
-OZ_Return GetProperty(TaggedRef k,TaggedRef val)
-{
-  TaggedRef key = k; SAFE_DEREF(key);
-  if (OZ_isVariable(key)) OZ_suspendOn(key);
-  if (!OZ_isAtom(key)) oz_typeError(0,"Atom");
-  // TaggedRef val = v; DEREF(val,_vPtr,_vTag);
-  OzDictionary* dict;
-  TaggedRef entry;
-  dict = tagged2Dictionary(virtual_property_registry);
-  cerr << "trying virtual" << endl;
-  if (dict->getArg(key,entry)==PROCEED)
-    return oz_unify(val,((VirtualProperty*)
-			 OZ_getForeignPointer(entry))->get());
-  cerr << "trying system" << endl;
-  dict = tagged2Dictionary(system_registry);
-  if (dict->getArg(key,entry)==PROCEED)
-    return oz_unify(val,entry);
-  // we return SCHEDULED to indicate that the property was not found
-  // we do this because SCHEDULED is never returned by oz_unify
-  return SCHEDULED;
-}
-
-OZ_Return PutProperty(TaggedRef k,TaggedRef v)
-{
-  if (!am.onToplevel())
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("putProperty"));
-  TaggedRef key = k; SAFE_DEREF(key);
-  if (OZ_isVariable(key)) OZ_suspendOn(key);
-  if (!OZ_isAtom(key)) oz_typeError(0,"Atom");
-  TaggedRef val = v; SAFE_DEREF(val);
-  OzDictionary* dict;
-  TaggedRef entry;
-  dict = tagged2Dictionary(virtual_property_registry);
-  if (dict->getArg(key,entry)==PROCEED)
-    return ((VirtualProperty*)
-	    OZ_getForeignPointer(entry))->set(val);
-  dict = tagged2Dictionary(system_registry);
-  dict->setArg(key,val);
-  return PROCEED;
-}
-
-OZ_C_proc_begin(BIgetProperty,2)
-{
-  OZ_Return r = GetProperty(OZ_getCArg(0),OZ_getCArg(1));
-  return (r==SCHEDULED)
-    ? oz_raise(E_ERROR,E_KERNEL,"getProperty",1,OZ_getCArg(0))
-    : r;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIcondGetProperty,3)
-{
-  OZ_Return r = GetProperty(OZ_getCArg(0),OZ_getCArg(2));
-  return (r==SCHEDULED)
-    ? oz_unify(OZ_getCArg(1),OZ_getCArg(2))
-    : r;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIputProperty,2)
-{
-  return PutProperty(OZ_getCArg(0),OZ_getCArg(1));
-}
-OZ_C_proc_end
 
 /********************************************************************
  * Copy Code
@@ -7978,11 +7845,6 @@ BIspec allSpec[] = {
   {"SystemRegistry",             1, BIsystem_registry,            0},
   {"ServiceRegistry",            1, BIsystem_registry,            0},
 
-  // Virtual Properties
-  {"getProperty",                2, BIgetProperty,                0},
-  {"putProperty",                2, BIputProperty,                0},
-  {"condGetProperty",            3, BIcondGetProperty,            0},
-
   {0,0,0,0}
 };
 
@@ -7997,8 +7859,7 @@ extern void BIinitAssembler();
 extern void BIinitTclTk();
 extern void BIinitPerdio();
 extern void BIinitLazy();
-
-TaggedRef dummyState;
+extern void initVirtualProperties();
 
 BuiltinTabEntry *BIinit()
 {
@@ -8027,10 +7888,7 @@ BuiltinTabEntry *BIinit()
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);
 
-  system_registry = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
-  virtual_property_registry = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
-  OZ_protect(&system_registry);
-  OZ_protect(&virtual_property_registry);
+  initVirtualProperties();
 
   return bi;
 }
