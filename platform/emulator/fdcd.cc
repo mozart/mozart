@@ -89,9 +89,22 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
       TaggedRef vp_i_j = makeTaggedRef(&vp_i[j]);
       DEREF(vp_i_j, vp_i_j_ptr, vp_i_j_tag);
       if (isNotCVar(vp_i_j_tag)) {
-	GenFDVariable * fdvar = new GenFDVariable();
-	fdvar->getDom().initFull();
-	doBind(vp_i_j_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
+	OZ_Term vj = v[j], vp_i_j_val;
+	DEREF(vj, vjptr, vjtag);
+	
+	if (isSmallInt(vjtag)) {
+	  vp_i_j_val = vj;
+	} else if (isGenBoolVar(vj,vjtag)) {
+	  vp_i_j_val = makeTaggedRef(newTaggedCVar(new GenBoolVariable));
+	} else if (isGenFDVar(vj,vjtag)) {
+	  
+	  GenFDVariable * fdvar = new GenFDVariable(tagged2GenFDVar(vj)->getDom());
+	  vp_i_j_val = makeTaggedRef(newTaggedCVar(fdvar));
+	} else {
+	  GenFDVariable * fdvar = new GenFDVariable;
+	  vp_i_j_val = makeTaggedRef(newTaggedCVar(fdvar));
+	}
+	doBind(vp_i_j_ptr, vp_i_j_val);
       }
     }
   }
@@ -99,8 +112,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
 }
 OZ_C_proc_end 
 
-//  by kost@ 9.04.96: usage of fdaux.hh in fdcd.cc is eliminated;
-//#include "../FDLib/fdaux.hh"
+//-----------------------------------------------------------------------------
 
 class CDPropagator : public OZ_Propagator {
 protected:
@@ -120,44 +132,6 @@ public:
     return o << "cd manager";
   }
 };
-
-OZ_C_proc_begin(BIfdConstrDisj, 3)
-{ 
-  EXPECTED_TYPE("tuple of finite domain,tuple of finite domain,"
-		"tuple of of tuple of finite domain");
-  
-  OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
-  OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
-  OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
-
-  if (isLiteral(v_tupletag)) {
-    SRecord &b = *tagged2SRecord(b_tuple);
-    int b_size = b.getWidth();
-    int ones = 0;
-
-    for (int i = 0; i < b_size; i++) {
-      OZ_Term b_val = deref(b[i]);
-      Assert(isSmallInt(b_val)); 
-      if (smallIntValue(b_val) == 1) ones += 1;
-    }
-    return ones > 0 ? PROCEED : FAILED;
-  }
-
-
-  if (! isSTuple(b_tuple) || ! isSTuple(v_tuple) || 
-      ! isSTuple(vp_tuple)) {
-    warning("Unexpected type in cd manager");
-    return FAILED;
-  }
-
-  OZ_PropagatorExpect pe;
-  EXPECT(pe, 1, expectVectorIntVarAny);
-
-  return pe.spawn(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
-		  OZMAX_PRIORITY - 1);
-}
-OZ_C_proc_end
-
 
 //-----------------------------------------------------------------------------
 // BIfdConstrDisj
@@ -420,15 +394,9 @@ OZ_C_proc_begin(BIfdPutGeCD, 3)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIfdPutListCD, 4)
+OZ_C_proc_begin(BIfdPutListCD, 3)
 {
   return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdPutList);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdPutIntervalCD, 4)
-{
-  return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdPutInterval);
 }
 OZ_C_proc_end
 
@@ -446,6 +414,56 @@ OZ_C_proc_end
 #undef SimplifyOnUnify
 
 #include "../FDLib/cd.hh"
+
+OZ_C_proc_begin(BIfdConstrDisj, 3)
+{ 
+  EXPECTED_TYPE("tuple of finite domain,tuple of finite domain,"
+		"tuple of of tuple of finite domain");
+  
+  OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
+  OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
+  OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
+
+  if (isLiteral(v_tupletag)) {
+    SRecord &b = *tagged2SRecord(b_tuple);
+    int b_size = b.getWidth();
+    int ones = 0;
+    
+    for (int i = 0; i < b_size; i++) {
+      OZ_Term b_i = b[i];
+      DEREF(b_i, b_i_ptr, b_i_tag);
+      int max_elem = isSmallInt(b_i_tag) ? smallIntValue(b_i) : tagged2GenFDVar(b_i)->getDom().maxElem();
+      
+      switch (max_elem) {
+      case 2: 
+	ones += 1;
+	break;
+      case 0: 
+	break;
+      default:
+	DebugCode(OZ_warning("Unexpected value for controller variable, "
+			     "in case no variable occured in clause."));
+	break;
+      }
+    }
+    return ones > 0 ? PROCEED : FAILED;
+  }
+
+  
+  if (! isSTuple(b_tuple) || ! isSTuple(v_tuple) || 
+      ! isSTuple(vp_tuple)) {
+    warning("Unexpected type in cd manager");
+    return FAILED;
+  }
+
+  PropagatorExpect pe;
+  EXPECT(pe, 1, expectVectorIntVarAny);
+
+  return pe.spawn(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
+		  OZMAX_PRIORITY - 1);
+}
+OZ_C_proc_end
+
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b) 
 {
@@ -481,6 +499,11 @@ OZ_Return CDSuppl::run(void)
 
   Thread * backup_currentThread = am.currentThread;
   am.currentThread = (Thread *) thr;
+  // propagate unify flag to actual propagator
+  if (backup_currentThread->isUnifyThread()) {
+    backup_currentThread->unmarkUnifyThread();
+    ((Thread *) thr)->markUnifyThread();
+  }
   OZ_Return ret_val = ((Thread *) thr)->runPropagator();
   am.currentThread = backup_currentThread;
 

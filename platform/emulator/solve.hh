@@ -89,7 +89,7 @@ public:
   TaggedRef genFailed();
   TaggedRef genUnstable(TaggedRef arg);
 
-  void pushToLocalThreadQueue(Thread * thr, Board * b);
+  void pushToLTQ(Thread * thr, Board * b);
 
   void resetLocalThreadQueue(void) {
     Assert(localThreadQueue);

@@ -1,3 +1,14 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
 #ifndef __FDOMN_HH__
 #define __FDOMN_HH__
 
@@ -78,7 +89,8 @@ public:
   int findMaxElem(void);
   void initList(int list_len, int * list_left, int * list_right);
   void init(int l, int r) {i_arr[0].left = l; i_arr[0].right = r;}
-  int nextBiggerElem(int v, int upper) const;
+  int nextSmallerElem(int v, int upper) const;
+  int nextLargerElem(int v, int upper) const;
   int next(int i) const;
   OZ_Term getAsList(void) const;
   FDIntervals * copy(void);
@@ -147,7 +159,8 @@ public:
   int findMinElem(void);
   int findMaxElem(void);
   void initList(int list_len, int * list_left, int * list_right);
-  int nextBiggerElem(int v, int upper) const;
+  int nextSmallerElem(int v, int upper) const;
+  int nextLargerElem(int v, int upper) const;
   int next(int i) const;
   OZ_Term getAsList(void) const;
   FDBitVector * copy(void);
@@ -226,7 +239,8 @@ public:
    
   OZ_Term getAsList(void) const;
   int next(int i) const; 
-  int nextBiggerElem(int v) const;
+  int nextSmallerElem(int v) const;
+  int nextLargerElem(int v) const;
   int intersectWithBool(void);
   int constrainBool(void);
   
