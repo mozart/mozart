@@ -118,7 +118,7 @@ boot-%:
 	OZC="$(BOOTCOM)" \
 	OZINIT=$(BUILDLIB)/Init.ozf \
 	OZPATH="$(subst %,$(OZLOADSEP),.%$(CYG_BUILDLIB)%$(CYG_BUILDTOOLS)%$(CYG_SOURCELIB)%$(CYG_SOURCETOOLS))" \
-	OZ_LOAD=root="$(subst %,$(OZLOADSEP),.%prefix=/=/%prefix=./=./$(OZLOADWIN)%prefix=x-oz://system/=$(CYG_BUILDLIB)/%prefix=x-oz://system/=$(CYG_BUILDTOOLS)/%prefix=x-oz://contrib/=$(CYG_BUILDCONTRIB)/%prefix=x-oz://contrib/=$(CYG_BUILDGDBM)/%prefix=x-oz://contrib/os/=$(CYG_BUILDOS)/%prefix=x-oz://boot/=$(CYG_BUILDEMU)/%prefix=x-oz://system/=$(CYG_BUILDGUMP)/%prefix=x-oz://system/=$(CYG_BUILDBISON)/:%=)" \
+	OZ_LOAD=root="$(subst %,$(OZLOADSEP),.%prefix=/=/%prefix=./=./$(OZLOADWIN)%prefix=x-oz://system/=$(CYG_BUILDLIB)/%prefix=x-oz://system/=$(CYG_BUILDTOOLS)/%prefix=x-oz://contrib/=$(CYG_BUILDCONTRIB)/%prefix=x-oz://contrib/=$(CYG_BUILDGDBM)/%prefix=x-oz://contrib/os/=$(CYG_BUILDOS)/%prefix=x-oz://boot/=$(CYG_BUILDEMU)/%prefix=x-oz://system/=$(CYG_BUILDGUMP)/%prefix=x-oz://system/=$(CYG_BUILDBISON)/%=)" \
 	OZL="$(BOOTOZL)" \
 	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
 	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
