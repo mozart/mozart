@@ -152,7 +152,7 @@ public:
 	numelem=0;
         size=s;
         table=(HashElement *)freeListMalloc(s*sizeof(HashElement));
-        for (dt_index i=0; i<s; i++) table[i].ident=NULL;
+        for (dt_index i=0; i<s; i++) table[i].ident=makeTaggedNULL();
     }
 
     // Create a copy of an existing dynamictable
@@ -177,7 +177,7 @@ public:
         overflowTest();
         dt_index i=fullhash(id);
 	Assert(i<size);
-        if (table[i].ident!=NULL) {
+        if (table[i].ident!=makeTaggedNULL()) {
 	    Assert(isLiteral(table[i].ident));
             // Ident exists already; return value & don't insert
             return table[i].value;
@@ -187,7 +187,7 @@ public:
 	    Assert(numelem<size);
             table[i].ident=id;
             table[i].value=val;
-            return NULL;
+            return makeTaggedNULL();
         }
     }
 
@@ -205,7 +205,7 @@ public:
             return table[i].value;
         } else {
             // Val is not found
-            return NULL;
+            return makeTaggedNULL();
         }
     }
 
@@ -216,10 +216,10 @@ public:
         pairs=new PairList();
 	Assert(pairs->isempty());
         for (dt_index i=0; i<dt.size; i++) {
-            if (dt.table[i].ident!=NULL) {
+            if (dt.table[i].ident!=makeTaggedNULL()) {
 		Assert(isLiteral(dt.table[i].ident));
         	TaggedRef val=insert(dt.table[i].ident, dt.table[i].value);
-        	if  (val!=NULL) {
+        	if  (val!=makeTaggedNULL()) {
                     // Two terms have this feature; don't insert
                     // Add the terms to the list of pairs:
                     pairs->addpair(val, dt.table[i].value);
@@ -242,10 +242,10 @@ public:
 	pairs=new PairList();
 	Assert(pairs->isempty());
 	for (dt_index i=0; i<size; i++) {
-	    if (table[i].ident!=NULL) {
+	    if (table[i].ident!=makeTaggedNULL()) {
 		Assert(isLiteral(table[i].ident));
 		TaggedRef val=sr.getFeature(table[i].ident);
-		if (val!=NULL) {
+		if (val!=makeTaggedNULL()) {
 		    // Feature found in srecord; add corresponding terms to list of pairs:
 		    pairs->addpair(val, table[i].value);
 		    Assert (!pairs->isempty());
@@ -268,7 +268,7 @@ private:
 	    Assert(isPwrTwo(size<<1));
             DynamicTable* dt=new DynamicTable(size<<1);
             for(dt_index i=0; i<size; i++) {
-                if (table[i].ident!=NULL) {
+                if (table[i].ident!=makeTaggedNULL()) {
 		    Assert(isLiteral(table[i].ident));
                     dt->insert(table[i].ident, table[i].value);
                 }
@@ -292,7 +292,7 @@ private:
         dt_index i=(size-1) & ((dt_index) (tagged2Atom(id)->hash()));
         dt_index s=1;
         // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
-        while(table[i].ident!=NULL && table[i].ident!=id) {
+        while(table[i].ident!=makeTaggedNULL() && table[i].ident!=id) {
             i+=s;
             i&=(size-1);
             s++;
@@ -353,7 +353,7 @@ public:
         TaggedRef prev=dynamictable.insert(feature,term);
         // (a future optimization: a second suspList only waiting on features)
         propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
-	return (prev==NULL);
+	return (prev==makeTaggedNULL());
     }
 
     int getSuspListLength(void) {
