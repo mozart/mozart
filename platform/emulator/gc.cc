@@ -1033,7 +1033,7 @@ Thread* isCollected(Thread *t,void *p)
  * non-runnable ones);
  *  If threads is dead, returns (Thread *) NULL;
  */
-//inline 
+
 Thread *Thread::gcThread ()
 {
   GCMETHMSG ("Thread::gcThread");
@@ -1066,8 +1066,6 @@ Thread *Thread::gcThread ()
   Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (newThread);
 
-  Assert(opMode==IN_TC || opMode==IN_GC);
-
   if (isRunnable () || hasStack ()) {
     ThreadList::add (newThread);
   }
@@ -1086,13 +1084,13 @@ Thread *Thread::gcDeadThread()
   Assert(isDeadThread());
 
   COUNT(thread);
-  Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
-  GCNEWADDRMSG (newThread);
+  Thread *newThread = (Thread *) gcRealloc(this,sizeof(*this));
+  GCNEWADDRMSG(newThread);
 
   Assert(inToSpace(am.rootBoard));
   newThread->setBoard(am.rootBoard);
-  newThread->state.flags=0;
-  newThread->item.threadBody=0;
+  //  newThread->state.flags=0;
+  Assert(newThread->item.threadBody==NULL);
 
   storeForward (&item.threadBody, newThread);
   setSelf(getSelf()->gcObject());
@@ -1140,16 +1138,16 @@ void Thread::gcRecurse ()
 
   case S_WAKEUP: 
     //  should not contain any reference;
-    Assert (item.threadBody == (RunnableThreadBody *) NULL);
+    Assert(item.threadBody == (RunnableThreadBody *) NULL);
     break;
 
   case S_PR_THR:
     item.propagator = item.propagator->gc();
-    Assert (item.propagator);
+    Assert(item.propagator);
     break;
 
   default:
-    error ("Unknown type of a runnable thread?\n");
+    Assert(0);
   }
 
   setSelf(getSelf()->gcObject());
@@ -1579,8 +1577,6 @@ void AM::gc(int msgLevel)
   gcTagged(loadHook,loadHook);
 
   gcTagged(defaultExceptionHandler,defaultExceptionHandler);
-
-  gcTagged(threadStream,threadStream);
   gcTagged(threadStreamTail,threadStreamTail);
 
   gc_tcl_sessions();
@@ -2289,9 +2285,10 @@ ConstTerm *ConstTerm::gcConstTerm()
     }
   case Co_Thread:
     {
-      Thread *th = ((Thread *)this)->gcThread();
-      if (!th) th = ((Thread *)this)->gcDeadThread();
-      return (ConstTerm *) th;
+      Thread *old = (Thread *)this;
+      Thread *th  = old->gcThread();
+      if (!th) th = old->gcDeadThread();
+      return th;
     }
 
   /* builtins are allocate dusing malloc */
