@@ -385,7 +385,7 @@ public:
 
   TaggedRef member(TaggedRef key) { 
     TaggedRef found = table->lookup(key);
-    return (found == makeTaggedNULL()) ? NameFalse : NameTrue;
+    return oz_bool(found != makeTaggedNULL());
   }
 
   void setArg(TaggedRef key, TaggedRef value) { 

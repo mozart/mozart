@@ -183,53 +183,53 @@ int OZ_isByteString(OZ_Term t)
 
 int OZ_isString(OZ_Term term,OZ_Term *var)
 {
-  OZ_Term ret = oz_isList(term,1);
+  OZ_Term ret = oz_checkList(term,OZ_CHECK_CHAR);
   if (oz_isRef(ret)) {
     if (var) *var = ret;
     return 0;
   }
   if (var) *var = 0;
-  return ret!=NameFalse;
+  return !oz_isFalse(ret);
 }
 
 int OZ_isProperString(OZ_Term term,OZ_Term *var)
 {
-  OZ_Term ret = oz_isList(term,2);
+  OZ_Term ret = oz_checkList(term,OZ_CHECK_CHAR_NONZERO);
   if (oz_isRef(ret)) {
     if (var) *var = ret;
     return 0;
   }
   if (var) *var = 0;
-  return ret!=NameFalse;
+  return !oz_isFalse(ret);
 }
 
 int OZ_isList(OZ_Term term,OZ_Term *var)
 {
-  OZ_Term ret = oz_isList(term);
+  OZ_Term ret = oz_checkList(term);
   if (oz_isRef(ret)) {
     if (var) *var = ret;
     return 0;
   }
   if (var) *var = 0;
-  return ret!=NameFalse;
+  return !oz_isFalse(ret);
 }
 
 int OZ_isTrue(OZ_Term term)
 {
   term = oz_deref(term);
-  return literalEq(term,NameTrue);
+  return oz_isTrue(term);
 }
 
 int OZ_isFalse(OZ_Term term)
 {
   term = oz_deref(term);
-  return literalEq(term,NameFalse);
+  return oz_isFalse(term);
 }
 
 int OZ_isUnit(OZ_Term term)
 {
   term = oz_deref(term);
-  return literalEq(term,NameUnit);
+  return oz_eq(term,NameUnit);
 }
 
 
@@ -366,12 +366,12 @@ int OZ_smallIntMax(void)
 
 OZ_Term OZ_false(void)
 {
-  return NameFalse;
+  return oz_false();
 }
 
 OZ_Term OZ_true(void)
 {
-  return NameTrue;
+  return oz_true();
 }
 
 OZ_Term OZ_unit(void)
@@ -780,11 +780,11 @@ inline
 void name2buffer(ostream &out, Literal *a) {
   const char *s = a->getPrintName();
 
-  if (literalEq(makeTaggedLiteral(a),NameTrue))  {
+  if (oz_isTrue(makeTaggedLiteral(a)))  {
     out << "true";
-  } else if (literalEq(makeTaggedLiteral(a),NameFalse)) {
+  } else if (oz_isFalse(makeTaggedLiteral(a))) {
     out << "false";
-  } else if (literalEq(makeTaggedLiteral(a),NameUnit)) {
+  } else if (oz_eq(makeTaggedLiteral(a),NameUnit)) {
     out << "unit";
   } else if (!*s) {
     out << "<N>";
@@ -850,7 +850,7 @@ inline
 Bool isNiceHash(OZ_Term t, int width) {
   if (width <= 0) return NO;
 
-  if (!oz_isSTuple(t) || !literalEq(tagged2SRecord(t)->getLabel(),AtomPair)) 
+  if (!oz_isSTuple(t) || !oz_eq(tagged2SRecord(t)->getLabel(),AtomPair)) 
     return NO;
 
   int w = tagged2SRecord(t)->getWidth();
@@ -1137,7 +1137,7 @@ OZ_Term OZ_atom(const char *s)
 int OZ_boolToC(OZ_Term term)
 {
   term = oz_deref(term);
-  return (literalEq(term,NameTrue))?1:0;
+  return oz_isTrue(term);
 }
 
 /* -----------------------------------------------------------------
@@ -1374,7 +1374,7 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
     return 0;
   }
 
-  if (width == 2 && literalEq(label,AtomCons)) {
+  if (width == 2 && oz_eq(label,AtomCons)) {
     // have to make a list
     return makeTaggedLTuple(new LTuple());
   }
@@ -1494,7 +1494,7 @@ OZ_Term OZ_tail(OZ_Term term)
  */
 int OZ_length(OZ_Term l)
 {
-  OZ_Term ret=oz_isList(l);
+  OZ_Term ret=oz_checkList(l);
   if (!oz_isSmallInt(ret)) return -1;
   return smallIntValue(ret);
 }
@@ -1657,7 +1657,7 @@ OZ_Return OZ_unify(OZ_Term t1, OZ_Term t2)
 
 int OZ_eq(OZ_Term t1, OZ_Term t2)
 {
-  return oz_eq(t1,t2);
+  return oz_eq(oz_safeDeref(t1),oz_safeDeref(t2));
 }
 
 
@@ -1762,13 +1762,13 @@ int oz_isVirtualString(OZ_Term vs, OZ_Term *var)
   }
 
   if (oz_isCons(vs)) {
-    OZ_Term ret = oz_isList(vs,2);
+    OZ_Term ret = oz_checkList(vs,OZ_CHECK_CHAR_NONZERO);
     if (oz_isRef(ret)) {
       if (var) *var = ret;
       return 0;
     }
     if (var) *var = 0;
-    return ret==NameFalse ? 0 : 1;
+    return oz_isFalse(ret) ? 0 : 1;
   }
 
   return 0;
@@ -1805,7 +1805,7 @@ OZ_Return OZ_raise(OZ_Term exc) {
 OZ_Return OZ_raiseDebug(OZ_Term exc) {
   int debug =
     OZ_isRecord(exc) && OZ_subtree(exc,AtomDebug) &&
-    (literalEq(OZ_label(exc),E_ERROR) || ozconf.errorDebug);
+    (oz_eq(OZ_label(exc),E_ERROR) || ozconf.errorDebug);
   am.setException(exc,debug);
   return RAISE;
 }

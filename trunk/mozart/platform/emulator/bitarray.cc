@@ -342,7 +342,7 @@ OZ_BI_define(BIbitArray_disjoint,2,1)
   oz_declareBitArrayIN(0,b1);
   oz_declareBitArrayIN(1,b2);
   if (b1->checkBounds(b2)) {
-    OZ_RETURN(b1->disjoint(b2) ? NameTrue : NameFalse);
+    OZ_RETURN(oz_bool(b1->disjoint(b2)));
   } else
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end

@@ -336,7 +336,7 @@ public:
   }
 
   void put_atom(TaggedRef atom) {
-    if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
+    if (oz_eq(atom, AtomPair) || oz_eq(atom, AtomNil))
       return;
     Assert(oz_isAtom(atom));
     Atom *l = (Atom*) tagged2Literal(atom);
@@ -350,7 +350,7 @@ public:
   }
 
   void put_atom_quote(TaggedRef atom) {
-    if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
+    if (oz_eq(atom, AtomPair) || oz_eq(atom, AtomNil))
       return;
 
     Assert(oz_isAtom(atom));
@@ -589,7 +589,7 @@ OZ_Return WIF::put_batch(TaggedRef batch, char delim) {
       return batch_state;
     
     batch = oz_tail(batch);
-  } else if (isLiteralTag(batch_tag) && literalEq(batch,AtomNil)) {
+  } else if (isLiteralTag(batch_tag) && oz_eq(batch,AtomNil)) {
     return PROCEED;
   } else {
     return raise_type_error(batch);
@@ -609,7 +609,7 @@ OZ_Return WIF::put_batch(TaggedRef batch, char delim) {
 	return batch_state;
       
       batch = oz_tail(batch);
-    } else if (isLiteralTag(batch_tag) && literalEq(batch,AtomNil)) {
+    } else if (isLiteralTag(batch_tag) && oz_eq(batch,AtomNil)) {
       return PROCEED;
     } else {
       return raise_type_error(batch);
@@ -676,7 +676,7 @@ OZ_Return WIF::put_vs(TaggedRef vs) {
   } else if (oz_isSTuple(vs)) {
     SRecord * sr = tagged2SRecord(vs);
 
-    if (!literalEq(sr->getLabel(),AtomPair))
+    if (!oz_eq(sr->getLabel(),AtomPair))
        return raise_type_error(vs);
 
     for (int i=0; i < sr->getWidth(); i++) {
@@ -715,7 +715,7 @@ OZ_Return WIF::put_vs_quote(TaggedRef vs) {
   } else if (oz_isSTuple(vs)) {
     SRecord * sr = tagged2SRecord(vs);
 
-    if (!literalEq(sr->getLabel(),AtomPair))
+    if (!oz_eq(sr->getLabel(),AtomPair))
       return raise_type_error(vs);
 
     for (int i=0; i < sr->getWidth(); i++) {
@@ -750,13 +750,13 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
       put_atom_quote(tcl);
       stop_protect();
       return PROCEED;
-    } else if (literalEq(tcl,NameTrue)) {
+    } else if (oz_isTrue(tcl)) {
       put('1');
       return PROCEED;
-    } else if (literalEq(tcl,NameFalse)) {
+    } else if (oz_isFalse(tcl)) {
       put('0');
       return PROCEED;
-    } else if (literalEq(tcl,NameUnit)) {
+    } else if (oz_eq(tcl,NameUnit)) {
       return PROCEED;
     } else {
       return raise_type_error(tcl);
@@ -770,7 +770,7 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
       if (isVariableTag(v_tag)) {
 	am.addSuspendVarList(v_ptr);
 	return SUSPEND;
-      } else if (isLiteralTag(v_tag) && literalEq(v,WifNameTclClosed)) {
+      } else if (isLiteralTag(v_tag) && oz_eq(v,WifNameTclClosed)) {
 	return raise_closed(tcl);
       } else {
 	return put_vs(v);
@@ -784,14 +784,14 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
     TaggedRef l   = st->getLabel();
     
     if (oz_isAtom(l)) {
-      if (literalEq(l,AtomCons)) { 
+      if (oz_eq(l,AtomCons)) { 
 	return raise_type_error(tcl);	
-      } else if (literalEq(l,AtomPair)) { 
+      } else if (oz_eq(l,AtomPair)) { 
 	start_protect();
 	StateReturn(put_vs_quote(tcl));
 	stop_protect();
 	return PROCEED;
-      } else if (literalEq(l,WifAtomTclVS)) {
+      } else if (oz_eq(l,WifAtomTclVS)) {
 	TaggedRef arg = st->getArg(0);
 
 	if (st->getWidth() != 1)
@@ -806,12 +806,12 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 
 	return put_vs(arg);
 
-      } else if (literalEq(l,WifAtomTclBatch)) {
+      } else if (oz_eq(l,WifAtomTclBatch)) {
 	if (st->getWidth() != 1)
 	  return raise_type_error(tcl);
 	  
 	return put_batch(st->getArg(0), ' ');
-      } else if (literalEq(l,WifAtomTclColor)) {
+      } else if (oz_eq(l,WifAtomTclColor)) {
 	if (st->getWidth() != 3)
 	  return raise_type_error(tcl);
 	  
@@ -839,9 +839,9 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 	  put2(c1,c2);
 	}
 	return PROCEED;
-      } else if (literalEq(l,WifAtomTclOption)) {
+      } else if (oz_eq(l,WifAtomTclOption)) {
 	return put_tuple(st);
-      } else if (literalEq(l,WifAtomTclDelete)) {
+      } else if (oz_eq(l,WifAtomTclDelete)) {
 	if (st->getWidth() != 1)
 	  return raise_type_error(tcl);
 	TaggedRef rt = st->getArg(0);
@@ -851,22 +851,22 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 	  return SUSPEND;
 	}
 	return put_record_or_tuple(rt);
-      } else if (literalEq(l,WifAtomTclList)) {
+      } else if (oz_eq(l,WifAtomTclList)) {
 	put('['); 
 	StateReturn(put_tuple(st)); 
 	put(']');
 	return PROCEED;
-      } else if (literalEq(l,WifAtomTclQuote)) {
+      } else if (oz_eq(l,WifAtomTclQuote)) {
 	put('{'); 
 	StateReturn(put_tuple(st)); 
 	put('}');
 	return PROCEED;
-      } else if (literalEq(l,WifAtomTclString)) {
+      } else if (oz_eq(l,WifAtomTclString)) {
 	put('"'); 
 	StateReturn(put_tuple(st)); 
 	put('"');
 	return PROCEED;
-      } else if (literalEq(l,WifAtomTclPosition)) {
+      } else if (oz_eq(l,WifAtomTclPosition)) {
 	put('{'); 
 	StateReturn(put_tcl(st->getArg(0)));
 	put('.'); 
@@ -888,28 +888,28 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
     
     if (tagged2Literal(l)->isAtom()) {
 
-      if (literalEq(l,AtomPair) || literalEq(l,AtomCons) ||
-	  literalEq(l,WifAtomTclVS) || literalEq(l,WifAtomTclBatch) ||
-	  literalEq(l,WifAtomTclColor)) {
+      if (oz_eq(l,AtomPair) || oz_eq(l,AtomCons) ||
+	  oz_eq(l,WifAtomTclVS) || oz_eq(l,WifAtomTclBatch) ||
+	  oz_eq(l,WifAtomTclColor)) {
 	return raise_type_error(tcl);
-      } else if (literalEq(l,WifAtomTclOption)) {
+      } else if (oz_eq(l,WifAtomTclOption)) {
 	return put_record(sr, as);
-      } else if (literalEq(l,WifAtomTclList)) {
+      } else if (oz_eq(l,WifAtomTclList)) {
 	put('['); 
 	StateReturn(put_record(sr, as)); 
 	put(']');
 	return PROCEED;
-      } else if (literalEq(l,WifAtomTclQuote)) {
+      } else if (oz_eq(l,WifAtomTclQuote)) {
 	put('{'); 
 	StateReturn(put_record(sr, as)); 
 	put('}');
 	return PROCEED;
-      } else if (literalEq(l,WifAtomTclString)) {
+      } else if (oz_eq(l,WifAtomTclString)) {
 	put('"'); 
 	StateReturn(put_record(sr, as)); 
 	put('"');
 	return PROCEED;
-      } else if (literalEq(l,WifAtomTclPosition)) {
+      } else if (oz_eq(l,WifAtomTclPosition)) {
 	put('{'); 
 	StateReturn(put_feature(sr, oz_head(as)));
 	put('.');
@@ -1364,7 +1364,7 @@ OZ_Return WIF::close_hierarchy(Object * o) {
   Assert(!isVariableTag(v_tag)); 
   // since the message has been assembled for closing already!
 
-  if (isLiteralTag(v_tag) && literalEq(v,WifNameTclClosed)) {
+  if (isLiteralTag(v_tag) && oz_eq(v,WifNameTclClosed)) {
     // okay, has been closed already
     return PROCEED;
   } else {
@@ -1406,7 +1406,7 @@ TaggedRef findAliveEntry(TaggedRef group) {
   while (oz_isCons(group)) {
       TaggedRef ahead = oz_deref(oz_head(group));
 
-      if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
+      if (!(oz_isLiteral(ahead) && oz_eq(ahead,NameGroupVoid)))
 	return group;
       
       group = oz_deref(oz_tail(group));
@@ -1447,7 +1447,7 @@ OZ_BI_define(BIwif_close,2,0) {
 	am.addSuspendVarList(v_ptr);
 	s = SUSPEND;
 	goto exit;
-      } else if (isLiteralTag(v_tag) && literalEq(v,WifNameTclClosed)) {
+      } else if (isLiteralTag(v_tag) && oz_eq(v,WifNameTclClosed)) {
 	LEAVE_WIF_LOCK;
 	return PROCEED;
       }

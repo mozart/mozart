@@ -53,7 +53,7 @@ OZ_BI_define(BIfsValueToString, 1,1)
 
 OZ_BI_define(BIfsIsVarB, 1,1)
 {
-  OZ_RETURN(isGenFSetVar(oz_deref(OZ_in(0))) ? NameTrue : NameFalse);
+  OZ_RETURN(oz_bool(isGenFSetVar(oz_deref(OZ_in(0)))));
 } OZ_BI_end
 
 OZ_C_proc_begin(BIfsIsValueB, 2)
@@ -64,7 +64,7 @@ OZ_C_proc_begin(BIfsIsValueB, 2)
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, term_ptr);
 
   return OZ_unify(OZ_getCArg (1),
-		  (oz_isFSetValue(oz_deref(OZ_getCArg(0))) ? NameTrue : NameFalse));
+		  oz_bool(oz_isFSetValue(oz_deref(OZ_getCArg(0)))));
 }
 OZ_C_proc_end
 
