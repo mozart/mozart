@@ -85,6 +85,11 @@ public:
   int taskStackSize;
 
   int errorVerbosity;
+
+  /* command line arguments visible from Oz */
+  char **argV;
+  int argC;
+  
 public:
   ConfigData();
 };
