@@ -439,7 +439,7 @@ void AM::init(int argc,char **argv)
         osExit(1);
       }
       ozmaFunc = (OZ_Term (*)(const char *))
-        osDlsym((void *) OZ_intToC(out),"ozma_readProc");
+        osDlsym(OZ_getForeignPointer(out),"ozma_readProc");
       if (!ozmaFunc) {
         fprintf(stderr, "can't find ozma_readProc\n");
         osExit(1);
