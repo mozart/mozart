@@ -1,0 +1,666 @@
+/* This may look like C code, but it is really -*- C++ -*-
+
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: popow,mehl,scheidhr
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+
+  ****** Register Instructions: use m4 to minimize duplication
+
+  */
+
+
+/* 
+ * m4 macros to simplfy defining instructions,
+ * that use registers
+ */
+
+changequote(XXX,XXX)
+
+changequote(``,'')
+
+
+define(M4INSTRONEREG,``''
+       INSTRUCTION($1X)
+       ``define(``Reg1'',Xreg(``$''1))''{$2}
+
+       INSTRUCTION($1Y)
+       ``define(``Reg1'',Yreg(``$''1))''{$2}
+
+       INSTRUCTION($1G)
+       ``define(``Reg1'',Greg(``$''1))''{$2}
+
+       ``undefine(``Reg1'')''
+      )
+
+
+define(M4INSTRTWOREGS,``''
+       INSTRUCTION($1XX)
+       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
+       INSTRUCTION($1XY)
+       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
+       INSTRUCTION($1XG)
+       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
+
+       INSTRUCTION($1YX)
+       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
+       INSTRUCTION($1YY)
+       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
+       INSTRUCTION($1YG)
+       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
+
+       INSTRUCTION($1GX)
+       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
+       INSTRUCTION($1GY)
+       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
+       INSTRUCTION($1GG)
+       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
+
+       ``undefine(``Reg1'')''
+       ``undefine(``Reg2'')''
+      )
+
+
+// -------------------------------------------------------------------------
+// CLASS: TERM: MOVE/UNIFY/CREATEVAR/...
+// -------------------------------------------------------------------------
+
+  M4INSTRTWOREGS( MOVE,
+		``
+		  Reg2(getRegArg(PC+2)) = Reg1(getRegArg(PC+1));
+		  DISPATCH(3);
+		''
+		);
+
+
+  // move X[i] --> Y[j], X[k] --> Y[l]
+  INSTRUCTION(MOVEMOVEXY)
+    {
+      Yreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
+      Yreg(getRegArg(PC+4)) = Xreg(getRegArg(PC+3));
+      DISPATCH(5);
+    }
+
+  // move Y[i] --> X[j], Y[k] --> X[l]
+  INSTRUCTION(MOVEMOVEYX)
+    {
+      Xreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
+      Xreg(getRegArg(PC+4)) = Yreg(getRegArg(PC+3));      
+      DISPATCH(5);
+    }
+
+  M4INSTRONEREG(CREATENAMEDVARIABLE, 
+		``
+		SVariable *svar
+		= new SVariable(CBB,
+				makeTaggedAtom(getAtomArg(PC+2)));
+		Reg1(getRegArg(PC+1)) =	makeTaggedRef(newTaggedSVar(svar));
+	       ''
+	       DISPATCH(3);
+	       );
+
+  M4INSTRONEREG( CREATEVARIABLE,
+	       ``
+		 // create a local unbound variable (i.e. not reference)
+		 // and bind the reference in X reg to it.
+		 
+		 Reg1(getRegArg(PC+1)) =
+		   makeTaggedRef(newTaggedUVar(CBB));
+
+	       ''
+	       DISPATCH(2);
+	       );
+  
+  M4INSTRONEREG( CREATEVARIABLEMOVE,
+	       ``{
+		 Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = 
+		     makeTaggedRef(newTaggedUVar(CBB));
+		 } ''
+		     DISPATCH(3);
+	       );
+  
+  
+  M4INSTRTWOREGS(UNIFY,
+	       ``{
+		 if ( !e->fastUnify(Reg1(getRegArg(PC+1)),
+				    Reg2(getRegArg(PC+2)))) {
+		   HANDLE_FAILURE(PC+3,
+				  message("unify: %s = %s",
+					  tagged2String(Reg1(getRegArg(PC+1))),
+					  tagged2String(Reg2(getRegArg(PC+2))))
+					  );
+		 }
+	       }''
+	       DISPATCH(3);
+	       );
+  
+  
+  M4INSTRONEREG( PUTSTRUCTURE,
+	       ``
+		 STuple *stuple =
+		   STuple::newSTuple(getAtomArg(PC+1),getPosIntArg(PC+2));
+		 TaggedRef term = makeTaggedSTuple(stuple);
+
+		 Reg1(getRegArg(PC+3)) = term;
+		 sPointer = stuple->getRef();
+
+		 DISPATCH(4);''
+	       );
+
+
+  M4INSTRONEREG( PUTRECORD,
+	       ``
+		 TaggedRef label = makeTaggedAtom(getAtomArg(PC+1));
+		 Arity *ff = (Arity *) getAdressArg(PC+2);
+		 SRecord *srecord = new SRecord(ff,label);
+		 
+		 TaggedRef term = makeTaggedSRecord(srecord);
+
+		 Reg1(getRegArg(PC+3)) = term;
+		 sPointer = srecord->getRef();
+
+		 DISPATCH(4);''
+	       );
+
+
+  M4INSTRONEREG( PUTCONSTANT,
+	       ``
+	       Reg1(getRegArg(PC+2)) = makeTaggedAtom(getAtomArg(PC+1));
+	       DISPATCH(3);
+	       ''
+	       );
+  
+
+  M4INSTRONEREG( PUTINT,
+	       ``
+	       Reg1(getRegArg(PC+2)) = getNumberArg(PC+1);
+	       DISPATCH(3);
+	       ''
+	       );
+
+
+  M4INSTRONEREG( PUTLIST,
+	       ``{
+		 LTuple *term = new LTuple();
+		 Reg1(getRegArg(PC+1)) = makeTaggedLTuple(term);
+		 sPointer = term->getRef();
+
+	       }''
+	       DISPATCH(2);
+	       );
+
+
+  M4INSTRONEREG( SETVARIABLE,
+	       ``{
+		 Reg reg = getRegArg(PC+1);
+		 *sPointer = e->currentUVarPrototype;
+		 Reg1(reg) = makeTaggedRef(sPointer++);
+		 DISPATCH(2);
+	       }''
+	       );
+
+  M4INSTRONEREG( SETVALUE,
+	       ``{
+		 *sPointer++ = Reg1(getRegArg(PC+1));
+		 DISPATCH(2);
+	       }''
+	       );
+
+
+  INSTRUCTION(SETCONSTANT)
+    {
+      *sPointer++ = makeTaggedAtom(getAtomArg(PC+1));
+      DISPATCH(2);
+    }
+
+
+  INSTRUCTION(SETINT)
+    {
+      *sPointer++ = getNumberArg(PC+1);
+      DISPATCH(2);
+    }
+
+
+  INSTRUCTION(SETVOID)
+    {
+      int n = getPosIntArg(PC+1);
+      TaggedRef newVar = e->currentUVarPrototype;
+      for (int i = 0; i < n; i++ ) {
+	*sPointer++ = newVar;
+      }
+      DISPATCH(2);
+    }
+
+
+  M4INSTRONEREG( GETSTRUCTURE,
+	       ``{
+		 Atom *atom = getAtomArg(PC+1);
+		 int arity = getPosIntArg(PC+2);
+		 
+		 TaggedRef term = Reg1( getRegArg(PC+3) );
+		 DEREF(term,termPtr,tag);
+
+		 if (isNotCVar(term)) {
+		   // then produce new .
+		   STuple *stuple = STuple::newSTuple(atom,arity);
+		   e->bindToNonvar(termPtr, term,makeTaggedSTuple(stuple));
+
+		   sPointer = stuple->getRef();
+		   mode = WRITE;
+		   DISPATCH(4);
+		 }
+		   
+		 if (isSTuple(tag) &&
+		     tagged2STuple(term)->compareSortAndSize(atom,arity)) {
+		   sPointer = tagged2STuple(term)->getRef();
+		   mode = READ;
+		   DISPATCH(4);
+		 }
+		 if (isCVar(term)) {
+		   STuple *stuple = STuple::newSTuple(atom,arity);
+		   if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
+						makeTaggedSTuple(stuple), STUPLE)) {
+		     DISPATCH(4);
+		   }
+		 }
+		 HANDLE_FAILURE(PC+4,
+				STuple *stuple = STuple::newSTuple(atom,arity);
+				mode = WRITE;
+				sPointer = stuple->getRef();
+				message("getstructure %s/%d = %s",
+					atom->getPrintName(),arity,
+					tagged2String(term))
+				);
+	       }''
+	       );
+
+
+  M4INSTRONEREG( GETRECORD,
+	       ``{
+		 Atom *atom = getAtomArg(PC+1);
+		 TaggedRef label = makeTaggedAtom(atom);
+		 Arity *ff = (Arity *) getAdressArg(PC+2);
+		 
+		 TaggedRef term = Reg1( getRegArg(PC+3) );
+		 DEREF(term,termPtr,tag);
+
+		 if (isNotCVar(term)) {
+		   // then produce new record
+		   SRecord *srecord = new SRecord(ff,label);
+		   e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord));
+
+		   sPointer = srecord->getRef();
+		   mode = WRITE;
+		   DISPATCH(4);
+		 }
+		 
+		 if (isSRecord(tag) &&
+		     tagged2SRecord(term)->compareSortAndArity(label,ff)) {
+		   sPointer = tagged2SRecord(term)->getRef();
+		   mode = READ;
+		   DISPATCH(4);
+		 }
+
+		 if(isCVar(term) == OK){
+		   SRecord *srecord = new SRecord(ff,label);
+		   if(tagged2CVar(term)->unify(termPtr, term, tag, NULL,
+					       makeTaggedSRecord(srecord), SRECORD)) {
+		     DISPATCH(4);
+		   }
+		 }
+
+		 HANDLE_FAILURE(PC+4,
+				SRecord *srecord = new SRecord(ff,label);
+				mode = WRITE;
+				sPointer = srecord->getRef();
+				message("getrecord %s/%d = %s",
+					atom->getPrintName(),ff,
+					tagged2String(term))
+				);
+	       }''
+	       );
+
+
+  M4INSTRONEREG( GETCONSTANT,
+	       ``{
+		 Atom *atom = getAtomArg(PC+1);
+		 
+		 TaggedRef term = Reg1( getRegArg(PC+2) );
+		 DEREF(term,termPtr,tag);
+
+		 if (isNotCVar(tag)) {
+		   e->bindToNonvar(termPtr, term, makeTaggedAtom(atom));
+		   DISPATCH(3);
+		 }
+		 
+		 if ( isLiteral(tag) &&
+		      tagged2Atom(term) == atom ) {
+		   DISPATCH(3);
+		 }
+
+		 if (isCVar(term) &&
+		     tagged2CVar(term)->unify(termPtr, term, tag,
+					      NULL, makeTaggedAtom(atom), ATOM)) {
+		   DISPATCH(3);
+		 }
+
+		 SHALLOWFAIL;
+		 HANDLE_FAILURE(PC+3,
+				message("getconstant %s = %s",
+					atom->getPrintName(),
+					tagged2String(term)));
+	       }''
+	       );
+
+
+  M4INSTRONEREG( GETINT,
+	       ``{
+		 TaggedRef i = getNumberArg(PC+1);
+		 Reg reg = getRegArg(PC+2);
+		 
+		 TaggedRef term = Reg1(reg);
+		 DEREF(term,termPtr,tag);
+
+		 if (isNotCVar(tag)) {
+		   e->bind(termPtr, term, &i);
+		   DISPATCH(3);
+		 }
+		 
+		 if ( (tag == tagTypeOf(i)) && numberEq(term,i)) {
+		   DISPATCH(3);
+		 }
+
+		 if (isCVar(term) &&
+		     tagged2CVar(term)->unify(termPtr, term, tag,
+					      NULL, i, tagTypeOf(i))) {
+		   DISPATCH(3);
+		 }
+
+		 SHALLOWFAIL;
+		 HANDLE_FAILURE(PC+3,
+				message("getint %s = %s",
+					tagged2String(i),
+					tagged2String(term))
+				);
+	       }''
+	       );
+
+/* getListValVar(N,R,M) == getList(X[N]) unifyVal(R), unifyVar(X[M]) */
+  M4INSTRONEREG(GETLISTVALVAR,
+		``{
+		 Reg reg1 = getRegArg(PC+1);
+		 Reg reg2 = getRegArg(PC+2);
+		 Reg reg3 = getRegArg(PC+3);
+
+	
+		 TaggedRef term = Xreg(reg1);
+		 DEREF(term,termPtr,tag);
+
+		 if(isNotCVar(term)) {
+		   LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
+		   e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
+		   Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
+
+		   DISPATCH(4);
+		 }
+		   
+		 if (isLTuple(term)) {
+		   TaggedRef *arg = tagged2LTuple(term)->getRef();
+		   if (e->fastUnify(Reg1(reg2),makeTaggedRef(arg))) {
+		     Xreg(reg3) = tagged2NonVariable(arg+1);
+		     
+		     DISPATCH(4);
+		   }
+		 } else {
+
+		   if (isCVar(term) == OK) {
+		     LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
+		     if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
+						  makeTaggedLTuple(ltuple), LTUPLE)) {
+		       DISPATCH(4);
+		     }
+		   }
+
+		 }
+		 HANDLE_FAILURE(PC+4,
+				LTuple *ltuple = new LTuple(Reg1(reg2),
+							    e->currentUVarPrototype);
+				Xreg(reg1) = makeTaggedLTuple(ltuple);
+				Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
+				message("getLisValVar %s", tagged2String(term)););
+	       }''
+	       );
+  
+
+  M4INSTRONEREG( GETLIST,
+	       ``{
+		 Reg reg = getRegArg(PC+1);
+		 
+		 register TaggedRef term = Reg1(reg);
+		 DEREF(term,termPtr,tag);
+
+		 if(isNotCVar(term)) {
+		   LTuple *ltuple = new LTuple();
+		   e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
+
+		   sPointer = ltuple->getRef();
+		   mode = WRITE;
+		   DISPATCH(2);
+		 }
+
+		 if (isLTuple(term)) {
+		   sPointer = tagged2LTuple(term)->getRef();
+		   mode = READ;
+		   DISPATCH(2);
+		 }
+		 
+		 if (isCVar(term) == OK) {
+		   LTuple *ltuple = new LTuple();
+		   if(tagged2CVar(term)->unify(termPtr, term, tag, NULL,
+					       makeTaggedLTuple(ltuple), LTUPLE)) {
+		     DISPATCH(2);
+		   }
+		 }
+
+		 HANDLE_FAILURE(PC+2,
+				LTuple *ltuple = new LTuple();
+				mode = WRITE;
+				sPointer = ltuple->getRef();
+				message("getlist = %s",
+					tagged2String(term)
+					));
+	       }''
+	       );
+
+
+  /* a unifyVariable in read mode */
+  M4INSTRONEREG( GETVARIABLE,
+	       ``{
+		 Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+		 sPointer++;
+		 DISPATCH(2);
+	       }''
+	       );
+
+
+  M4INSTRTWOREGS( GETVARVAR,
+	       ``{
+		 Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+		 Reg2(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+		 sPointer += 2;
+		 DISPATCH(3);
+	       }''
+	       );
+
+
+  /* a unify void in read mode */
+  INSTRUCTION(GETVOID)
+    {
+      sPointer += getPosIntArg(PC+1);
+      DISPATCH(2);
+    }
+
+
+  M4INSTRONEREG( UNIFYVARIABLE,
+	       ``{
+		 switch(mode) {
+		 case WRITE:
+		   {
+		     Reg reg = getRegArg(PC+1);
+		     *sPointer = e->currentUVarPrototype;
+		     Reg1(reg) = makeTaggedRef(sPointer++);
+		     DISPATCH(2);
+		   }
+//		 case READ:
+		 default:
+		   Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+		   sPointer++;
+		   DISPATCH(2);
+		 }
+	       }''
+	       );
+
+
+  M4INSTRONEREG( UNIFYVALUE,
+	       ``{
+		 Reg reg = getRegArg(PC+1);
+	
+		 switch(mode) {
+		 case WRITE:
+		   *sPointer++ = Reg1(reg);
+		   DISPATCH(2);
+
+//		 case READ:
+		 default:
+		   if ( !e->fastUnify(Reg1(reg), makeTaggedRef(sPointer++)) ) {
+		     HANDLE_FAILURE(PC+2,
+				    message("unifyvalue %s = %s",
+					    tagged2String(*(sPointer-1)),
+					    tagged2String(Reg1(reg)))
+					    );
+		   }
+		   DISPATCH(2);
+		 }
+	       }''
+	       );
+  
+
+
+  M4INSTRTWOREGS( UNIFYVALVAR,
+	       ``{
+		 Reg reg = getRegArg(PC+1);
+	
+		 if (mode == WRITE) {
+		   *sPointer = Reg1(reg);
+
+		   *(sPointer+1) = e->currentUVarPrototype;
+		   Reg2(getRegArg(PC+2)) = makeTaggedRef(sPointer+1);
+
+		   sPointer += 2;
+		   DISPATCH(3);
+		 } else {
+		   if ( !e->fastUnify(Reg1(reg), makeTaggedRef(sPointer) ) ) {
+		     HANDLE_FAILURE(PC+3,
+				    message("unifyvalvar %s = %s",
+					    tagged2String(*sPointer),
+					    tagged2String(Reg1(reg)))
+					    );
+		   }
+
+		   Reg2(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+
+		   sPointer += 2;
+		   DISPATCH(3);
+		 }
+	       }''
+	       );
+  
+
+  INSTRUCTION(UNIFYCONSTANT) 
+    {
+      switch(mode) {
+      case WRITE:
+	*sPointer++ = makeTaggedAtom(getAtomArg(PC+1));
+	DISPATCH(2);
+//      case READ:
+      default:
+	if ( !e->fastUnify(makeTaggedRef(sPointer++),
+			   makeTaggedAtom(getAtomArg(PC+1))) ) {
+	  HANDLE_FAILURE(PC+2,
+			 message("unifyconst %s = %s",
+				 getAtomArg(PC+1)->getPrintName(),
+				 tagged2String(*(sPointer-1)))
+				 );
+	}
+	DISPATCH(2);
+      }
+    }
+
+
+  INSTRUCTION(UNIFYINT)
+    {
+      switch(mode) {
+      case WRITE:
+	*sPointer++ = getNumberArg(PC+1);
+	DISPATCH(2);
+//      case READ:
+      default:
+	if ( !e->fastUnify(makeTaggedRef(sPointer++),getNumberArg(PC+1)) ) {
+	  HANDLE_FAILURE(PC+2,
+			 message("unifyint %s = %s",
+				 tagged2String(getNumberArg(PC+1)),
+				 tagged2String(*(sPointer-1)))
+				 );
+	}
+	DISPATCH(2);
+      }
+    }
+
+
+  INSTRUCTION(UNIFYVOID)
+    {
+      switch(mode) {
+      case WRITE:
+	{
+	  int n = getPosIntArg(PC+1);
+	  TaggedRef newVar = e->currentUVarPrototype;
+	  for (int i = 0; i < n; i++ ) {
+	    *sPointer++ = newVar;
+	  }
+	  DISPATCH(2);
+	}
+//      case READ:
+      default:
+	sPointer += getPosIntArg(PC+1);
+	DISPATCH(2);
+      }
+    }
+
+
+  M4INSTRONEREG( BRANCHONVAR,
+	       ``
+	       TaggedRef term = Reg1(getRegArg(PC+1));
+	       DEREF(term,_,tag);
+	       if (isAnyVar(tag)) {
+		 JUMP( getLabelArg(PC+2) );
+	       }
+	       DISPATCH(3);
+	       ''
+	       );
+
+  M4INSTRONEREG( BRANCHONNONVAR,
+	       ``
+	       TaggedRef term = Reg1(getRegArg(PC+1));
+	       DEREF(term,_,tag);
+	       if (!isAnyVar(tag)) {
+		 JUMP( getLabelArg(PC+2) );
+	       }
+	       DISPATCH(3);
+	       ''
+	       );
+
+

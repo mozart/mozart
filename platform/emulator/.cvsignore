@@ -1,0 +1,3 @@
+version.cc oz.emulator.bin
+Makefile
+scanCode.cc instrTable.hh  opcodes.hh optostring.hh register.hh
