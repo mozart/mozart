@@ -51,7 +51,7 @@
 inline Bool isEffectiveSusp(SuspList* sl)
 {
   Suspension* s = sl->getSusp();
-  if (s->isDead() == OK)
+  if (s->isDead())
     return NO;
   if (!s->getNode()->getBoardDeref())
     return NO;
@@ -430,7 +430,7 @@ PRINT(SuspList)
   for (SuspList* sl = this; sl != NULL; sl = sl->getNext()) {
     if (isEffectiveSusp(sl) == NO)
       continue;
-    if (sl->isCondSusp() == OK)
+    if (sl->isCondSusp())
       stream << indent(offset)
 	     << ((CondSuspList*)sl)->getCondNum() << " conds";
     else 
