@@ -13,19 +13,23 @@ local
    end
 
    class Thr
-      attr
-	 Th   : undef
+      feat
+	 Th
+	 Stack
       
+      attr
 	 Loc  : loc( file:undef line:undef)
 	 Call : call(builtin:false name:undef args:undef)
 	 Time : 0
-	 Stack: nil
-
-      meth init(T)
-	 Th <- T
+      
+      meth init(T I)
+	 self.Th    = T
+	 self.Stack = {New StackManager init(thr:T id:I
+					     output:{Ozcar getStackText($)})}
       end
       
-      meth setPos(file:F line:L name:N args:A builtin:B time:T)
+      meth setPos(name:N args:A<=nil file:F<=undef line:L<=0
+		  builtin:B<=false time:T<=0)
 	 Loc  <- loc( file:F line:L)
 	 Call <- call(builtin:B name:N args:A)
 	 Time <- T
@@ -44,11 +48,10 @@ local
       end
       
       meth getThr($)
-	 @Th
+	 self.Th
       end
       
-      meth setStack(S) Stack <- S end
-      meth getStack($) @Stack end
+      meth getStack($) self.Stack end
    end
 
 in
@@ -187,31 +190,15 @@ in
 	 end
       end
 
-      meth block(T I F L N A B Time)
-	 ThreadManager,setThrPos(id:I file:F line:L time:Time
-				 name:N args:A builtin:B)
-	 Gui,markNode(I blocked)
-	 case T == @currentThread then
-	    case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
-	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
-	       SourceManager,scrollbar(file:'' line:undef
-				       color:undef what:both)
-	    else
-	       SourceManager,scrollbar(file:F line:L
-				       color:ScrollbarBlockedColor what:appl)
-	       SourceManager,scrollbar(file:'' line:undef
-				       color:undef what:stack)
-	    end
-	    Gui,printAppl(id:I name:N args:A builtin:B
-			  file:F line:L time:Time)
-	    Gui,printStack(id:I stack:{Dbg.taskstack T 25} top:B)
-	    Gui,status(I blocked)
-	 else skip end
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      meth exists(T $)
+	 {List.member T @Threads}
       end
-      
+
       meth add(T I Q)
 	 Threads <- T | @Threads
-	 {Dictionary.put self.ThreadDic I {New Thr init(T)}}
+	 {Dictionary.put self.ThreadDic I {New Thr init(T I)}}
 	 Gui,addNode(I Q)
 	 case Q == 0 orelse Q == 1 then 
 	    ThreadManager,switch(I)       %% does Gui,displayTree
@@ -220,23 +207,14 @@ in
 	 end
       end
 
-      meth forget(T I)
-	 {Dbg.trace T false}      %% thread is not traced anymore
-	 {Dbg.stepmode T false}   %% no step mode, run as you like!
-	 {Thread.resume T}        %% run, run to freedom!! :-)
-	 ThreadManager,remove(T I kill)
-      end
-
-      meth gc   %% remove terminated threads
-	 skip
-      end
-	 
       meth remove(T I Mode)
+	 O = {Dget self.ThreadDic I}
+      in
 	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
-	 ThreadManager,setThrPos(id:I name:undef)
+	 {O setPos(name:undef)}
 	 SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	 Gui,printAppl(id:I name:undef args:undef)
-	 Gui,printStack(id:I stack:nil)
+	 {{O getStack($)} clear}
 	 case Mode == kill then
 	    currentThread <- undef
 	    Gui,killNode(I)
@@ -253,48 +231,30 @@ in
 	 else skip end
       end
       
-      meth exists(T $)
-	 {List.member T @Threads}
+      meth forget(T I)
+	 {Dbg.trace T false}      %% thread is not traced anymore
+	 {Dbg.stepmode T false}   %% no step mode, run as you like!
+	 {Thread.resume T}        %% run, run to freedom!! :-)
+	 ThreadManager,remove(T I kill)
       end
 
-      meth setThrPos(id:I name:N args:A<=nil builtin:B<=false
-		     file:F<=undef line:L<=0 time:Time<=0)
-	 T = {Dictionary.get self.ThreadDic I}
-      in
-	 {T setPos(file:F line:L name:N args:A builtin:B time:Time)}
-      end
-      
-      meth getThrPos(id:I file:?F line:?L name:?N args:?A
-		     builtin:?B time:?Time)
-	 T = {Dictionary.get self.ThreadDic I}
-      in
-	 {T getPos(file:F line:L name:N args:A builtin:B time:Time)}
-      end
-
-      meth thrIsBuiltin(id:I builtin:?B)
-	 T = {Dictionary.get self.ThreadDic I}
-      in
-	 {T isBuiltin(B)}
-      end
-
-      meth getThrThr(id:I thr:?T state:?S)
-	 O = {Dictionary.get self.ThreadDic I}
-      in
-	 T = {O getThr($)}
-	 S = {Thread.state T}
-      end
-      
       meth step(file:F line:L thr:T id:I name:N args:A
 		builtin:IsBuiltin time:Time)
-	 case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
-	    {OzcarMessage NoFileInfo # I}
-	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
-	    {Thread.resume @currentThread}
-	 else
-	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
-	    local
-	       Ack
-	    in
+	 O = {Dget self.ThreadDic I}
+      in
+	 {O setPos(file:F line:L time:Time name:N args:A builtin:IsBuiltin)}
+	 case T == @currentThread then
+	    Ack
+	 in
+	    {{O getStack($)} print}
+	    case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
+	       {OzcarMessage NoFileInfo # I}
+	       SourceManager,scrollbar(file:'' line:undef color:undef
+				       what:both)
+	       {Thread.resume @currentThread}
+	    else
+	       SourceManager,scrollbar(file:'' line:undef color:undef
+				       what:stack)
 	       thread
 		  SourceManager,scrollbar(file:F line:L ack:Ack
 					  color:ScrollbarApplColor what:appl)
@@ -303,26 +263,48 @@ in
 	    end
 	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin time:Time
 			  file:F line:L)
-	    ThreadManager,setThrPos(id:I file:F line:L time:Time
-				    name:N args:A builtin:IsBuiltin)
-	    Gui,printStack(id:I stack:{Dbg.taskstack T 25} top:IsBuiltin)
 	 end
+      end
+
+      meth block(T I F L N A B Time)
+	 O = {Dget self.ThreadDic I}
+      in
+	 {O setPos(file:F line:L time:Time name:N args:A builtin:B)}
+	 Gui,markNode(I blocked)
+	 case T == @currentThread then
+	    {{O getStack($)} print}
+	    case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
+	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
+	       SourceManager,scrollbar(file:'' line:undef
+				       color:undef what:both)
+	    else
+	       SourceManager,scrollbar(file:F line:L
+				       color:ScrollbarBlockedColor what:appl)
+	       SourceManager,scrollbar(file:'' line:undef
+				       color:undef what:stack)
+	    end
+	    Gui,printAppl(id:I name:N args:A builtin:B
+			  file:F line:L time:Time)
+	    Gui,status(I blocked)
+	 else skip end
       end
       
       meth switch(I)
-	 F L N A T S B Time
+	 F L N A B Time
       in
 	 case I == 1 then
 	    Gui,status(0)
 	 else
-	    ThreadManager,getThrPos(id:I file:F line:L name:N
-				    args:A builtin:B time:Time)
-	    ThreadManager,getThrThr(id:I thr:T state:S)
+	    O = {Dget self.ThreadDic I}
+	    T = {O getThr($)}
+	    S = {Thread.state T}
+	 in
 	    currentThread <- T
+	    {O getPos(file:F line:L name:N args:A builtin:B time:Time)}
+
+	    {{O getStack($)} print}
 	    
 	    Gui,status(I S)
-	    Gui,printStack(id:I stack:{Dbg.taskstack T 25} top:B)
-	    
 	    Gui,selectNode(I)
 	    Gui,displayTree
 
@@ -341,7 +323,7 @@ in
 	    Gui,printAppl(id:I name:N args:A builtin:B file:F line:L time:Time)
 	 end
       end
-      
+
       meth close
 	 %% actually, we should kill this damned thread, but then we get this:
 	 %% board.icc:21

@@ -38,6 +38,7 @@ NoFileBlockInfo        = ' blocks without line number information'
 EarlyThreadDeath       = '...hm, but it has died already?!'
 KnownThread            = 'Got known thread' /* end */
 NewThread              = 'Got new thread' /* end */
+NextOnBuiltin          = '\'next\' on builtin - substituting by \'step\''
 
 UnknownSuspThread      = 'Unknown suspending thread' /* end */
 UnknownWokenThread     = 'Unknown woken thread' /* end */
@@ -95,7 +96,7 @@ ThreadTreeOffset       = 4
 StackTextWidth         = 0
 EnvTextWidth           = 24
 					
-SmallBorderSize        = 0
+SmallBorderSize        = 1
 BorderSize             = 2
 
 /* end */
