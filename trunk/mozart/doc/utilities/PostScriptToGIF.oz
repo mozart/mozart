@@ -35,14 +35,24 @@ define
       catch _ then false
       end
    end
-	 
+
+   fun {FilenameExplode Name}
+      Prefix Suffix
+   in
+      {String.token {Reverse {VirtualString.toString Name}} &. Prefix Suffix}
+      %%  Basename    #   Extension
+      {Reverse Suffix}#{Reverse Prefix}
+   end
 	 
    proc {PsToPpm PsName PpmName}
-      PsCat = if {Exists PsName} then
-		 'cat '#PsName
-	      else
-		 'gzip -dc '#PsName#'.gz'
-	      end
+      Basename#Extension = {FilenameExplode PsName}
+      PsCat = if Extension=="gz" then 'gzip -dc '#PsName
+	      elseif {Exists PsName#'.gz'} then 'gzip -dc '#PsName#'.gz'
+	      elseif {Exists PsName#'.eps.gz'} then 'gzip -dc '#PsName#'.eps.gz'
+	      elseif {Exists PsName#'.ps.gz'} then 'gzip -dc '#PsName#'.ps.gz'
+	      elseif {Exists PsName#'.eps'} then 'cat '#PsName#'.eps'
+	      elseif {Exists PsName#'.ps'} then 'cat '#PsName#'.ps'
+	      else 'cat '#PsName end
       Cmd   = ('('#PsCat#'; echo quit) | '#
 	       'gs -q -dNOPAUSE '#
 	       '-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 '#
@@ -77,7 +87,8 @@ define
 	 Keep    <- KeepPictures
       end
       meth convertPostScript(InName Info ?OutName)
-	 !OutName  = {File.changeExtension {File.baseName InName} '.ps' '.gif'}
+	 Basename#_ = {FilenameExplode InName}
+	 !Outname = Basename#'.gif'
 	 FullName  = @DirName#'/'#OutName
       in
 	 if {Not @Keep andthen {Exists FullName}} then
