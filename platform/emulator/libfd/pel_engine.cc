@@ -89,7 +89,8 @@ PEL_Engine::PEL_Engine(PEL_PersistentEngine &pe, const char * f, ...)
   // determine number of variables according to type string
   //
   int nb_vars = 0;
-  for (const char * p = f; *p; ) {
+  const char * p;
+  for (p = f; *p; ) {
     switch (*p) {
     case 'D': case 'd': case 'S': case 's': case 'C': case 'c':
       nb_vars += getNumber(p);
@@ -112,7 +113,7 @@ PEL_Engine::PEL_Engine(PEL_PersistentEngine &pe, const char * f, ...)
   va_list ap;
   va_start(ap, f);
   //
-  for (const char * p = f; *p; ) {
+  for (p = f; *p; ) {
     switch (*p) {
     case 'D': // finite domain
     case 'd': // integer

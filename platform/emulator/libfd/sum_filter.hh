@@ -42,9 +42,11 @@ RETURN make_lessEqOffsetN(RETURN r, EXPECT &pe, VAR a, VAR x, VAR c)
 template <class SERVICE, class FDVARVECTOR>
 SERVICE &filter_lessEqOffsetN(SERVICE &s, int * a, FDVARVECTOR &x, int &c)
 {
-  int n = x.getHigh(), pa[n];
+  int n = x.getHigh();
+  DECL_DYN_ARRAY(int, pa, n);
   x.find_equals(pa);
-  for (int i = n; i --; ) {
+  int i;
+  for (i = n; i --; ) {
     if (a[i] == 0) {
       x[i].dropParameter();
     } else if (pa[i] == -1) {
@@ -72,23 +74,24 @@ SERVICE &filter_lessEqOffsetN(SERVICE &s, int * a, FDVARVECTOR &x, int &c)
     }
   }
   //
-  double v[n], w[n];
+  DECL_DYN_ARRAY(double, v, n);
+  DECL_DYN_ARRAY(double, w, n);
   //
   v[0] = 0;
-  for (int i = 1; i < n; i += 1) {
+  for (i = 1; i < n; i += 1) {
     double x_i = a[i-1] > 0 ? x[i-1]->getMinElem() : x[i-1]->getMaxElem();
     v[i] = v[i-1] + a[i-1] * x_i;
   }
   //
   w[n-1] = 0;
-  for (int i = n; i > 1; i -= 1) {
+  for (i = n; i > 1; i -= 1) {
     double x_i = a[i-1] > 0 ? x[i-1]->getMinElem() : x[i-1]->getMaxElem();
     w[i-2] = w[i-1] + a[i-1] * x_i;
   }
   //
   double sum = c;
   //
-  for (int i = 0; i < n; i += 1) {
+  for (i = 0; i < n; i += 1) {
     if (a[i] > 0) {
       int ub = doubleToInt(floor(double(v[i]+w[i]+c)/-a[i]));
       FailOnEmpty(*x[i] <= ub);
