@@ -25,6 +25,7 @@
 \RequirePackage{float}
 \RequirePackage{verbatim}
 \RequirePackage{multicol}
+\RequirePackage{graphicx}% for \includegraphics
 \RequirePackage{pstricks}
 \RequirePackage{pst-node}
 \RequirePackage{latexsym}
@@ -564,15 +565,22 @@ referenced is defined on this page.}
   \@setminipage
 }
 
+\newcommand{\@maxioption}[1]{%
+  \@ifnextchar[{\@@maxioption{#1}}{\@@@maxioption{#1}}}
+\def\@@maxioption#1[#2]{\begin{#1}[#2]\begin{minipage}{\fullwidth}}
+\def\@@@maxioption#1{\begin{#1}\begin{minipage}{\fullwidth}}
+
 \newfloat{@maxiprogram}{tbp}{lop}[chapter]
 \floatname{@maxiprogram}{Program}
 \newfloat{@maxifigure}{tbp}{lof}[chapter]
 \floatname{@maxifigure}{Figure}
 \newenvironment{maxifigure}
-  {\begin{@maxifigure}\begin{minipage}{\fullwidth}}
+  {\@maxioption{@maxifigure}}
+%  {\begin{@maxifigure}\begin{minipage}{\fullwidth}}
   {\end{minipage}\end{@maxifigure}}
 \newenvironment{maxiprogram}
-  {\begin{@maxiprogram}\begin{minipage}{\fullwidth}}
+  {\@maxioption{@maxiprogram}}
+%  {\begin{@maxiprogram}\begin{minipage}{\fullwidth}}
   {\end{minipage}\end{@maxiprogram}}
 % we want the corresponding lists to be entered into the table of contents
 \newcommand{\@chapter@acl}[1]{%
@@ -585,6 +593,12 @@ referenced is defined on this page.}
   \@chapter@acl{List of Oz Programs}%
   \listof{@maxiprogram}{List of Oz Programs}}
 \let\dolistofozprogs\dolistofprograms
+
+\newfloat{@maxitable}{tbp}{lot}[chapter]
+\floatname{@maxitable}{Table}
+\newenvironment{maxitable}
+  {\@maxioption{@maxitable}}
+  {\end{minipage}\end{@maxitable}}
 
 % redefine the following to cause captions to be flushed left
 

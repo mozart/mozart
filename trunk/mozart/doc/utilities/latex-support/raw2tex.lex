@@ -149,6 +149,9 @@ loop:
     putchar(*s++); }
   putchar('}');
 }
+<DISPLAY>"&"[\"\']	{
+  FLUSH;
+  printf("\\OzChar\\&\\OzChar\\%c ",yytext[1]); }
 <DISPLAY,CDISPLAY>[\\{}$&#^_%~]	OZCHAR;
 <DISPLAY>{KEYWORD}		OZKEYWORD;
 <CDISPLAY>{CKEYWORD}		OZKEYWORD;
