@@ -215,7 +215,7 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
   oz_suspendPropagator(prop);
 
   prop->markRunnable();
-  cb->pushToLPQ(prop);
+  oz_pushToLPQ(cb,prop);
 
   OZ_Boolean all_local = OZ_TRUE;
 

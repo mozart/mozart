@@ -25,11 +25,10 @@
  */
 
 
-#include "am.hh"
-#include "runtime.hh"
 #include "indexing.hh"
 #include "builtins.hh"
-
+#include "codearea.hh"
+#include "variable.hh"
 
 static
 SRecordArity getArity(TaggedRef arity)
@@ -148,7 +147,7 @@ OZ_BI_define(BImakeProc,2,1)
   pte->PC = code->getStart();
 
   Assert(oz_onToplevel());
-  Abstraction *p = Abstraction::newAbstraction(pte,am.currentBoard());
+  Abstraction *p = Abstraction::newAbstraction(pte,oz_currentBoard());
 
   globals = oz_deref(globals);
   for (int i = 0; i < numGlobals; i++) {

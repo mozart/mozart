@@ -29,7 +29,6 @@
 #endif
 
 #include "simplevar.hh"
-#include "runtime.hh"
 
 OZ_Return SimpleVar::unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp) {
   TaggedRef v=*vPtr;

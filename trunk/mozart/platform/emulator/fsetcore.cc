@@ -24,7 +24,8 @@
  *
  */
 
-#include "am.hh"
+#include "builtins.hh"
+#include "space.hh"
 #include "cpi.hh"
 
 //*****************************************************************************

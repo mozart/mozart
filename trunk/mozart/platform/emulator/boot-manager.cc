@@ -29,9 +29,9 @@
 
 #include <string.h>
 
-#include "runtime.hh"
 #include "builtins.hh"
 #include "os.hh"
+#include "am.hh"
 
 #ifdef MODULES_LINK_STATIC
 #define DYNAMIC_MODULE(m) m
@@ -192,10 +192,11 @@ OZ_BI_define(BIBootManager, 1, 1) {
     strcpy(libfile + n + 4,     mod_name);
     strcpy(libfile + n + m + 4, ".so");
     
-    OZ_Return res = osDlopen(libfile,hdl);
+    TaggedRef res = osDlopen(libfile,hdl);
     
-    if (res!=PROCEED) {
-      fprintf(stderr, "Could not open boot library: %s.\n",libfile);
+    if (res) {
+      fprintf(stderr, "Could not open boot library: %s: %s.\n",
+	      libfile, toC(res));
       osExit(1);
     }
 
@@ -231,8 +232,10 @@ OZ_BI_define(BIdlLoad,1,1)
   oz_declareVirtualStringIN(0,filename);
 
   TaggedRef hdl;
-  OZ_Return res = osDlopen(filename,hdl);
-  if (res!=PROCEED) return res;
+  TaggedRef res = osDlopen(filename,hdl);
+  if (res) return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,
+			   oz_atom(filename),res);
+
   void* handle = OZ_getForeignPointer(hdl);
   OZ_C_proc_interface * I;
   I = (OZ_C_proc_interface *) osDlsym(handle,"oz_interface");

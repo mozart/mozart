@@ -26,8 +26,7 @@
  *
  */
 
-
-#include "am.hh"
+#include "codearea.hh"
 #include "indexing.hh"
 #include "optostr.hh"
 

@@ -35,7 +35,6 @@
 #include "actor.hh"
 
 #include "thread.hh"
-#include "thrqueue.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 #define GETBOARDOBJ(v) ((v).getBoardInternal()->derefBoard())
@@ -222,7 +221,11 @@ public:
     body.setX(x,i);
   }
 
-  void setCommitted(Board *s);
+  void setCommittedBoard(Board *s) {
+    Assert(!isInstalled() && !isCommitted());
+    flags |= Bo_Committed;
+    u.ref = s;
+  }
 
   void setActor (Actor *aa) { 
     u.actor = aa; 
@@ -241,8 +244,10 @@ public:
 private:
   LocalPropagatorQueue * localPropagatorQueue;
 public:
-  void pushToLPQ(Propagator *);
-
+  void initLPQ(LocalPropagatorQueue *lpq) {
+    Assert(!localPropagatorQueue);
+    localPropagatorQueue=lpq;
+  }
   void resetLocalPropagatorQueue(void);
 
   LocalPropagatorQueue * getLocalPropagatorQueue(void) {
@@ -253,9 +258,5 @@ public:
   }
 
 };
-
-#ifndef OUTLINE
-#include "board.icc"
-#endif
 
 #endif

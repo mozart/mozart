@@ -34,7 +34,8 @@
 #include "ozconfig.hh"
 
 #include "am.hh"
-
+#include "codearea.hh"
+#include "os.hh"
 #include "fdomn.hh"
 
 

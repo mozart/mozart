@@ -84,7 +84,7 @@ CXXSRCS= \
 	cont.cc ozconfig.cc trail.cc \
 	foreign.cc boot-manager.cc \
 	ofgenvar.cc genhashtbl.cc \
-	ozostream.cc runtime.cc unix.cc \
+	ozostream.cc controlvar.cc unix.cc \
 	perdio.cc debug.cc \
 	urlc.cc iso-ctype.cc hashtbl.cc \
 	os.cc emulate.cc scheduler.cc builtins.cc \
@@ -93,7 +93,8 @@ CXXSRCS= \
 	vprops.cc \
         vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
 	ctgenvar.cc simplevar.cc \
-	ofbi.cc ioHandler.cc future.cc
+	ofbi.cc ioHandler.cc future.cc \
+	threadInterface.cc space.cc
 
 FDSRCS=\
 	fdbuilti.cc fdomn.cc fdcore.cc \

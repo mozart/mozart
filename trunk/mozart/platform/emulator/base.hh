@@ -269,6 +269,7 @@ class SuspList;
 class CondSuspList;
 class Suspension;
 class Propagator;
+class OZ_Propagator;
 
 class CpStack;
 class Thread;
@@ -288,6 +289,10 @@ class Script;
 
 class Trail;
 
+class TaskStack;
+class CallList;
+
+class LocalPropagatorQueue;
 
 // source level debugger
 enum OzDebugDoit {DBG_STEP, DBG_NOSTEP, DBG_EXIT};
@@ -417,6 +422,10 @@ OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
 			     Bool recordFlag);
 OZ_Return BIminusOrPlus(Bool callPlus,TaggedRef A, TaggedRef B, TaggedRef &out);
 OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B);
+
+OZ_Term oz_getLocation(Board *bb);
+
+OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X);
 
 // see am.cc
 SuspList *oz_installPropagators(SuspList *local_list, SuspList *glob_list,

@@ -28,8 +28,5 @@
 #pragma implementation "trail.hh"
 #endif
 
-#include "tagged.hh"
-
-#include "stack.hh"
 #include "trail.hh"
 
