@@ -34,6 +34,7 @@ import
 	    condFeat:           CondFeat
 	    assert:             Assert
 	    qTkClass:           QTkClass
+	    propagateLook:      PropagateLook
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
@@ -117,7 +118,8 @@ define
 	       elseif {Label B}==empty then
 		  NC=empty
 	       else
-		  NC={MapLabelToObject {Record.adjoinAt B parent self}}
+		  NC={MapLabelToObject
+		      {Record.adjoinAt {PropagateLook B} parent self}}
 %		  if {HasFeature B feature} then
 %		     try
 %			self.(B.feature)=NC

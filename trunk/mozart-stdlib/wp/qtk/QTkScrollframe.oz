@@ -102,12 +102,18 @@ define
 	    Tk.canvas,{TkInit {Subtracts A [tdscrollbar lrscrollbar]}}
 	    %% B contains the structure of
 	    %% creates the children
-	    self.Child={MapLabelToObject {Record.adjoinAt B.1 parent self}}
+	    self.Child={MapLabelToObject
+			{Record.subtract
+			 {Record.subtract
+			  {Record.adjoinAt B.1 parent self}
+			  handle}
+			 feature}
+		       }
 	    if {HasFeature B.1 feature} then
-	       self.((B.1).feature)=self.Child
+	       self.((B.1).feature)=self
 	    end
 	    if {HasFeature B.1 handle} then
-	       (B.1).handle=self.Child
+	       (B.1).handle=self
 	    end
 	    {self tk(create window 0 0 anchor:nw window:self.Child)} % Displays the window
 	    %% update of the size of the child

@@ -67,6 +67,8 @@ export
    NewLook
    DefLook
    PropagateLook
+   NewRedirector
+   Redirector
 
    
 require
@@ -249,11 +251,12 @@ prepare
 		    parent:no
 		    handle:free
 		    tooltips:vs
+		    blackbox:free
 		    look:no)
 
    GlobalUnsetType={Record.adjoinAt {Record.subtract GlobalInitType tooltips} return unit}
 
-   GlobalUngetType={Record.adjoinAt {Record.subtract GlobalInitType tooltips} return unit}
+   GlobalUngetType={Record.adjoinAt {Record.subtract {Record.subtract GlobalInitType tooltips} blackbox} return unit}
 
    %% Taken from Tk.oz from Christian Schulte
    
@@ -384,6 +387,8 @@ prepare
 	    else
 	       {String.toAtom Str}
 	    end
+	 [] colortrans then
+	    if Str==nil then nil else {ConvertToType Str color} end
 	 [] cursor then {String.toAtom Str}
 	 [] bitmap then {String.toAtom Str}
 	 [] atom then {String.toAtom Str}
@@ -452,11 +457,17 @@ prepare
    end
 
 define
-   
+
+   NotifyMeth={NewName}
+   NotifyEvent={NewName}
    Lock={NewLock}
    NoArgs={NewName}
+   Toplevel={NewName}
    NQTk={ByNeed fun{$} QTk end}
    QTkRegisterWidget={ByNeed fun{$} QTk.registerWidget end}
+   Redirector={NewName}
+   Blackbox={NewName}
+   Win32=({Property.get 'platform'}.os==win32)
 
    fun{NewLook}
       L={NewDictionary}
@@ -475,8 +486,12 @@ define
 		get:fun{$ P} P end)
    
    proc{ExecTk Obj Msg}
-      if {Tk.returnInt 'catch'(v("{") b([Obj Msg]) v("}"))}==1 then
-	 {Exception.raiseError qtk(execFailed Obj Msg)}
+      if {Access AssertLevel}.all==none then
+	 {Tk.send 'catch'(v("{") b([Obj Msg]) v("}"))}
+      else
+	 if {Tk.returnInt 'catch'(v("{") b([Obj Msg]) v("}"))}==1 then
+	    {Exception.raiseError qtk(execFailed Obj Msg)}
+	 end
       end
    end
 
@@ -659,7 +674,7 @@ define
 	    if {Int.is V} andthen V>=0 then unit else
 	       "An integer value >= 0"
 	    end
-	 [] integer then
+	 [] int then
 	    if {Int.is V} then unit else
 	       "An integer value"
 	    end
@@ -836,15 +851,19 @@ define
    %% Assertion stuff for checking parameter types
    %%
    
-   AssertLevel={NewCell assert(init:full set:full get:full)}
+   AssertLevel={NewCell assert(init:full set:full get:full all:full)}
 
    proc{SetAssertLevel What Level}
-      if {List.member What [init set get]} andthen
-	 {List.member Level [full partial none]} then
-	 {Assign AssertLevel {Record.adjoinAt {Access AssertLevel}
-			      What Level}}
+      if (What==all) andthen {List.member Level [full partial none]} then
+	 {Assign AssertLevel assert(init:Level set:Level get:Level all:Level)}
       else
-	 {Exception.raiseError qtk(custom "Illegal AssertLevel" "Can only assert init, set and get to level full, partial or none" What#Level)}
+	 if {List.member What [init set get]} andthen
+	    {List.member Level [full partial none]} then
+	    {Assign AssertLevel {Record.adjoinAt {Access AssertLevel}
+				 What Level}}
+	 else
+	    {Exception.raiseError qtk(custom "Illegal AssertLevel" "Can only assert init, set and get to level full, partial or none" What#Level)}
+	 end
       end
    end
 
@@ -1075,9 +1094,11 @@ define
 	 
 	 meth remove
 	    lock self.Lock then
-	       try
-		  {Tk.send wm(withdraw {Access self.Toolwin})}
-	       catch _ then skip end
+	       if {Access self.Toolwin}\=nil then
+		  try
+		     {Tk.send wm(withdraw {Access self.Toolwin})}
+		  catch _ then skip end
+	       end
 	       shown<-false
 	    end
 	 end
@@ -1188,7 +1209,7 @@ define
 
       attr Action
 
-      feat Toplevel Parent
+      feat !Toplevel Parent
       
       meth init(parent:P action:A<=proc{$} skip end)
 	 lock
@@ -1220,7 +1241,7 @@ define
 	    fun{Adjoin Xs}
 	       if M==execute then Xs else
 		  Max={List.foldR
-		       {Arity Xs} fun{$ Old N}
+		       {Arity Xs} fun{$ N Old}
 				     if {IsInt N} andthen N>Old then N else Old end
 				  end 0}
 	       in
@@ -1258,6 +1279,303 @@ define
    
    end
 
+   BindBlackBox={NewName}
+   Events={NewName}
+
+   fun{FindEntry DB DBL K} % find entry under key K
+      
+      if {Dictionary.member DB K} then
+	 DB.K
+      else
+	 V
+      in
+	 {Dictionary.put DB K V}
+	 {Assign DBL K#V|{Access DBL}}
+	 V
+      end
+   end
+   
+   fun{FindKey DB DBL V} % find key with entry V
+      S
+      fun{Loop L R}
+	 case R
+	 of K#N|Xs then
+	    if {IsDet N} andthen N==V then
+	       %% bring this pair in front of the DBL list so that next search is fast
+	       L=Xs
+	       {Assign DBL K#V|S}
+	       K
+	    else
+	       %% puts X on the left list and loops with next item
+	       E
+	    in
+	       L=K#N|E
+	       {Loop E Xs}
+	    end
+	 else
+	    %% key not already existing : create one
+	    K={NewName}
+	 in
+	    {Dictionary.put DB K V}
+	    {Assign DBL K#V|{Access DBL}}
+	    K
+	 end
+      end
+   in
+      {Loop S {Access DBL}}
+   end
+
+   Obj={NewName}
+   Apply={NewName}
+   
+   class BlackboxClass
+
+      attr
+	 OutS
+	 LocIn
+	 LocOut
+	 Multiplex
+	 
+      feat
+	 FMeth
+	 FParam
+	 FMParam
+	 FEParam
+	 FEvent
+	 !Obj
+	 InP
+	 DB DBL
+	 OutP
+
+      meth init(O)
+	 InS
+      in
+	 LocIn<-fun{$ V _} V end
+	 LocOut<-fun{$ V _} V end
+	 Multiplex<-unit
+	 self.FMeth={NewDictionary}
+	 self.FParam={NewDictionary}
+	 self.FMParam={NewDictionary}
+	 self.FEParam={NewDictionary}
+	 self.FEvent={NewDictionary}
+	 self.Obj=O
+	 self.DB={NewDictionary}
+	 self.DBL={NewCell nil}
+	 self.InP={NewPort InS}
+	 self.OutP={NewPort @OutS}
+	 thread
+	    {ForAll InS
+	     proc{$ M}
+		{self Apply(M)}
+	     end}
+	 end
+	 thread
+	    proc{Loop O}
+	       case O of X|Xs then
+		  OutS<-Xs
+		  {Loop Xs}
+	       end
+	    end
+	 in
+	    {Loop @OutS}
+	 end
+      end
+
+      meth Apply(M1)
+	 M={self localize(M1 $)}
+      in
+	 case M
+	 of 'meth'(X) then {self.Obj X}
+	 [] param(_ P V) then {self.Obj set(P:V)}
+	 [] event(E A) then
+	    if {Dictionary.member self.Obj.Events E} then
+	       Act={New QTkAction init(parent:self.Obj
+				       action:self.Obj.Events.E)}
+	    in
+	       {Send self.Obj.Toplevel.port
+		{List.toTuple r Act|execute|A}}
+	    end
+	 [] multiplex(O M) then
+	    Ob={self getLocalResource(O $)}
+	 in
+	    if {IsFree Ob} then
+	       raise unknownMultiplexObject(O M) end
+	    else
+	       {Ob.Blackbox Apply(M)}
+	    end
+	 end
+      end
+      
+      meth setFilter(Filter)
+	 % methcall ou methcall(name)
+	 % event(onkeypress)
+	 % parameter(value events:[onkeypress] meths:[])
+	 proc{WatchEvent Event Args}
+	    fun{Add L1 L2}
+	       {List.append {List.filter L2 fun{$ A} {Not {List.member A L1}} end} L1}
+	    end
+	    OldArgs=if {Dictionary.member self.FEvent Event} then self.FEvent.Event
+		    elseif {Dictionary.member self.FEParam Event} then nil
+		    else unit end
+	    NewArgs=if OldArgs==unit then Args else {Add NewArgs OldArgs} end
+	 in
+	    if OldArgs\=NewArgs then
+	       {self.Obj BindBlackBox(Event NewArgs)}
+	    end
+	 end
+      in
+	 case Filter
+	 of 'meth' then
+	    {self setFilter('meth'(unit))}
+	 [] 'meth'(N) then
+	    {Dictionary.put self.FMeth N unit}
+	 [] event(N) then
+	    {self setFilter(event(N args:nil))}
+	 [] event(N args:A) then
+	    {WatchEvent N A}
+	    {Dictionary.put self.FEvent N A}
+	 [] param(V) then
+	    {self setFilter(param(V events:nil meths:nil))}
+	 [] param(V events:L) then
+	    {self setFilter(param(V events:L meths:nil))}
+	 [] param(V meths:M) then
+	    {self setFilter(param(V events:nil meths:M))}
+	 [] param(V events:L meths:M) then
+	    proc{Add D K}
+	       E={Dictionary.condGet D K nil}
+	    in
+	       if {List.member V E} then skip
+	       else {Dictionary.put D K V|E} end
+	    end
+	 in
+	    {Dictionary.put self.FParam V unit}
+	    {ForAll M proc{$ Me} {Add self.FMParam Me} end}
+	    {ForAll L proc{$ Ee}
+			 {WatchEvent Ee nil}
+			 {Add self.FEParam Ee}
+		      end}
+	 else
+	    raise invalidFilter(Filter) end
+	 end
+      end
+
+      meth removeFilter(Filter)
+	 skip
+      end
+
+      meth setLocalizer(L)
+	 LocIn<-L
+      end
+
+      meth setGlobalizer(L)
+	 LocOut<-L
+      end
+
+      meth localize(M $)
+	 {@LocIn M fun{$ V} {FindEntry self.DB self.DBL V} end}
+      end
+
+      meth globalize(M $)
+	 {@LocOut M fun{$ V} {FindKey self.DB self.DBL V} end}
+      end
+      
+      meth getGlobalName(V $)
+	 R={FindKey self.DB self.DBL V}
+      in
+%	 {Show globalize#R}
+	 R
+      end
+
+      meth getLocalResource(E $)
+	 {FindEntry self.DB self.DBL E}
+      end
+      
+      meth getOutputStream($)
+	 @OutS
+      end
+
+      meth getInputPort($)
+	 self.InP
+      end
+
+      meth getFullState($)
+	 % sync
+	 % pack data
+	 {List.map {Dictionary.keys self.FParam}
+	  fun{$ P}
+	     P#{self.Obj get(P:$)}
+	  end}
+      end
+
+      meth setFullState(LS)
+	 % set data
+	 {ForAll LS
+	  proc{$ P#V}
+	     {self.Obj set(P:V)}
+	  end}
+      end
+
+      meth !NotifyMeth(M)
+	 Meth={Label M}
+      in
+	 if Meth==set then
+	    % check if a watched parameter is modified by a call to set
+	    {Record.forAllInd M
+	     proc{$ P V}
+		if {Dictionary.member self.FParam P} then
+		   {self SendOut(param(set P V))}
+		end
+	     end}
+	 end
+	 {ForAll {Dictionary.condGet self.FMParam Meth nil}
+	  proc{$ P}
+	    % check if a watched parameter is modified by a method
+	     {self SendOut(param(Meth P {self.Obj get(P:$)}))}
+	  end}
+	 if {Dictionary.member self.FMeth unit}
+	    % check if this method call is watched
+	    orelse {Dictionary.member self.FMeth Meth} then
+	    {self SendOut('meth'(M))}
+	 end
+      end
+
+      meth !NotifyEvent(...)=M
+	 Event=M.event
+	 Args={Record.toList {Record.subtract M event}}
+      in
+	 {ForAll {Dictionary.condGet self.FEParam Event nil}
+	  proc{$ P}
+	    % check if a watched parameter is modified by an event
+	     {self SendOut(param(Event P {self.Obj get(P:$)}))}
+	  end}
+	 if {Dictionary.member self.FEvent Event} then
+	     % check if this event has to be checked anyway
+	    {self SendOut(event(Event Args))}
+	 end
+      end
+
+      meth sendMsg(M)
+	 {self SendOut(M)}
+      end
+      
+      meth multiplex(O)
+	 % multiplex a message of the blackbox from the local object O to this port
+	 Multiplex<-O#{O getGlobalName(self.Obj.Redirector $)}
+%	 {self SendOut(multiplex({self getGlobalName(O $)} M))}
+      end
+
+      meth SendOut(M)
+	 if @Multiplex==unit then
+	    {Port.send self.OutP
+	     {self globalize(M $)}}
+	 else
+	    {@Multiplex.1 sendMsg(multiplex(@Multiplex.2
+					    {self globalize(M $)}))}
+	 end
+      end
+      
+   end
+
    class QTkClass % QTk mixin class 
 
       prop locking
@@ -1270,12 +1588,20 @@ define
 	 tooltipsAvailable:true
 	 toplevel
 	 parent
+	 !Blackbox
+	 BBEvents
+	 !Redirector
+	 !Events
 	 typeInfo:unit % different from unit means type checking is on : r(init:r unset:r unget:r)
       
       meth init(...)=M
 	 lock
+	    self.Redirector={NewRedirector self}
 	    self.parent=M.parent
 	    self.toplevel=M.parent.toplevel
+	    self.Blackbox={New BlackboxClass init(self)}
+	    self.BBEvents={NewDictionary}
+	    self.Events={NewDictionary}
 	    {Assert self.widgetType self.typeInfo M}
 	    if {HasFeature self action} then % action widget
 	       self.action={New QTkAction init(parent:self action:{CondFeat M action proc{$} skip end})}
@@ -1283,6 +1609,7 @@ define
 	    if self.tooltipsAvailable==true then % this widget has got a tooltips
 	       {self SetToolTip(M)}
 	    end
+	    if {HasFeature M blackbox} then M.blackbox=self.Blackbox end
 	 end
       end
 
@@ -1312,10 +1639,11 @@ define
 			     {self.ToolTip get($)}
 			  end
 	    end
+	    if {HasFeature M blackbox} then M.blackbox=self.Blackbox end
 	    if self.typeInfo==unit then
-	       SetGet,{Subtracts M [action tooltips]}
+	       SetGet,{Subtracts M [action tooltips blackbox]}
 	    else
-	       {Record.forAllInd {Subtracts M [action tooltips]}
+	       {Record.forAllInd {Subtracts M [action tooltips blackbox]}
 		proc{$ I R}
 		   SetGet,get(I:R type:self.typeInfo.all.I)
 		end}
@@ -1335,11 +1663,29 @@ define
 	 end
       end
 
+      meth !BindBlackBox(E P)
+	 lock
+	    Event={VirtualString.toAtom E}
+	 in
+	    self.BBEvents.Event:=P
+	    {self tkBind(event:Event
+			 append:true
+			 action:self.Blackbox#NotifyEvent(event:Event)
+			 args:P)}
+	 end
+      end
+      
       meth bind(action:A<=proc{$} skip end event:E args:G<=nil)
 	 lock
-	    {self tkBind(event:E
-			 action:{{New QTkAction init(parent:self action:A)} action($)}
+	    Event={VirtualString.toAtom E}
+	 in
+	    self.Events.Event:={{New QTkAction init(parent:self action:A)} action($)}
+	    {self tkBind(event:Event
+			 action:self.Events.Event
 			 args:G)}
+	    if {Dictionary.member self.BBEvents {VirtualString.toAtom E}} then
+	       {self BindBlackBox(E self.BBEvents)}
+	    end
 	 end
       end
 
@@ -1634,6 +1980,44 @@ define
    fun{NewFeat Class Desc}
       {New {MakeClass Class Desc} {PropagateLook Desc}}
    end
+
+
+   NewRedirector
+   local
+      Init={NewName}
+      NewUniqueName=BootName.newUnique
+      GetClass=BootObject.getClass
+      
+      `ooFeat`={NewUniqueName 'ooFeat'}
+      
+      fun{GetFeats Obj}
+	 C={GetClass Obj}
+      in
+	 {Record.map C.`ooFeat` fun{$ _} _ end}
+      end
+      class RedirectorClass
+	 feat Obj BB
+	 meth !Init(O)
+	    self.Obj=O
+	    self.BB=O.Blackbox
+	 end
+	 meth otherwise(M)
+	    {self.Obj M}
+	    {self.BB NotifyMeth(M)}
+	 end
+      end
+   in
+      fun{NewRedirector O}
+	 Feats={GetFeats O}
+	 R={New {Class.new [RedirectorClass] q Feats nil}
+	    Init(O)}
+	 {ForAll {Arity Feats} % copy all features
+	  proc{$ F} R.F=O.F end}
+      in
+%	 {Show nd#R}
+	 R
+      end
+   end
    
    fun{MapLabelToObject R}
       Name={Label R}
@@ -1727,12 +2111,13 @@ define
 \endif
 	end
       Object
+%      RD={ByNeed fun{$} {NewRedirector Object} end}
       proc{SetHandle}
 	 if {HasFeature R handle} then
-	    R.handle=Object
+	    R.handle=Object.Redirector
 	 end
 	 if {HasFeature R feature} then
-	    (R.parent).(R.feature)=Object
+	    (R.parent).(R.feature)=Object.Redirector
 	 end
       end
       case D.feature
@@ -1742,7 +2127,7 @@ define
       [] menu then
 	 Object={NewFeat D.object R}
 	 if {HasFeature R handle} then
-	    R.handle=Object
+	    R.handle=Object.Redirector
 	 end
       [] false then
 	 Object={New D.object R}
@@ -1772,18 +2157,26 @@ define
 				   grid(columnconfigure self 0 weight:1)]}
 			if {CondFeat B tdscrollbar false} then
 			   self.tdscrollbar={New {Dictionary.get Widgets tdscrollbar}.object
-					     tdscrollbar(parent:self width:{CondFeat B scrollwidth 10})}
+					     {Record.adjoin
+					      if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
+					      else r(width:{CondFeat B scrollwidth 10}) end
+					      tdscrollbar(parent:self)}}
+%					     tdscrollbar(parent:self width:{CondFeat B scrollwidth 10})}
 			   {Tk.send grid(self.tdscrollbar row:0 column:1 sticky:ns)}
 			   {Tk.addYScrollbar self.Type self.tdscrollbar}
 			end
 			if {CondFeat B lrscrollbar false} then
 			   self.lrscrollbar={New {Dictionary.get Widgets lrscrollbar}.object
-					     lrscrollbar(parent:self width:{CondFeat B scrollwidth 10})}
+					     {Record.adjoin
+					      if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
+					      else r(width:{CondFeat B scrollwidth 10}) end
+					      lrscrollbar(parent:self)}}
+%					     lrscrollbar(parent:self width:{CondFeat B scrollwidth 10})}
 			   {Tk.send grid(self.lrscrollbar row:1 column:0 sticky:we)}
 			   {Tk.addXScrollbar self.Type self.lrscrollbar}
 			end
 			if {HasFeature R handle} then
-			   R.handle=self.Type
+			   R.handle={NewRedirector self.Type}
 			end
 			if {HasFeature R feature} then
 			   (R.parent).(R.feature)=self.Type

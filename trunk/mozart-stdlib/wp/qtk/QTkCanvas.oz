@@ -33,11 +33,13 @@ import
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    mapLabelToObject:   MapLabelToObject
+	    newRedirector:      NewRedirector
 	    qTkClass:           QTkClass
 	    qTkAction:          QTkAction
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
+	    redirector:Redirector
 	    registerWidget:     RegisterWidget)
    
 export
@@ -142,7 +144,7 @@ define
 	       from Tk.canvasTag QTkClass
 	       feat
 		  cvtType:r(extent:natural
-			    fill:color
+			    fill:colortrans
 			    outline:color
 			    outlinestipple:bitmap
 			    start:natural
@@ -189,6 +191,8 @@ define
 		      proc{$ I R}
 			 if {HasFeature self.cvtType I} then
 			    R={ReturnTk Self itemcget(self "-"#I $) self.cvtType.I}
+			 elseif I==blackbox then
+			    QTkCanvas,get(I:R)
 			 else
 			    {Exception.raiseError qtk(ungettableParameter I canvasTag M)}
 			 end
@@ -218,7 +222,7 @@ define
 	       %% coords split in two to reflect whether we want to get or to set the coords
 	       meth getCoords(...)=M
 		  lock
-		     {TReturnTk {Record.adjoin M coords} listInt}
+		     {TReturnTk {Record.adjoin M coords} listFloat}
 		  end
 	       end
 	       meth setCoords(...)=M
@@ -234,6 +238,11 @@ define
 	       meth focus=M
 		  lock
 		     {TExecTk M}
+		  end
+	       end
+	       meth blur
+		  lock
+		     {TExecTk focus('""')}
 		  end
 	       end
 	       meth icursor(...)=M
@@ -278,7 +287,7 @@ define
 	       end
 	    end
 	 in	    
-	    Tag={New CanvasTag init(parent:self)}
+	    Tag={New CanvasTag init(parent:self)}.Redirector
 	 end
       end
       
@@ -298,6 +307,7 @@ define
 
       meth create(...)=M
 	 lock
+%	    {Show create#M}
 	    if {HasFeature M 1} andthen M.1==window andthen
 	       {HasFeature M 2} andthen {HasFeature M 3} andthen
 	       {HasFeature M window} then
@@ -311,7 +321,7 @@ define
 
       % find not supplied : it returns Tk tags and they can't be transformed into the corresponding Oz objects
 
-      meth focus(...)=M
+      meth focus=M
 	 lock
 	    {ExecTk self M}
 	 end

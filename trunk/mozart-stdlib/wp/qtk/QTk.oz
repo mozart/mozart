@@ -79,6 +79,7 @@ export
    LoadTk
    LoadTkPI
    WInfo
+   SetAssertLevel
 
 define
 
@@ -86,6 +87,7 @@ define
 
    LoadTk=QTkDevel.loadTk
    LoadTkPI=QTkDevel.loadTkPI
+   SetAssertLevel=QTkDevel.setAssertLevel
 
    QTkAction
    NewLook

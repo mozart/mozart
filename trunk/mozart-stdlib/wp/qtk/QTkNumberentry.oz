@@ -50,7 +50,7 @@ require QTkNumberentry_bitmap
 prepare BL=QTkNumberentry_bitmap.buildLibrary
 
 define
-
+   
    WidgetType=numberentry
    Feature=false
    Lib={QTkImage.buildImageLibrary BL}
@@ -125,7 +125,7 @@ define
 	    self.Entry={New QEntry {Record.adjoin
 				    {Subtracts M [feature handle min max]}
 				    entry(parent:self
-					  action:self#Assert
+%					  action:self#Assert
 					  return:self.EReturn)}}
 	    self.Inc={New QButton button(parent:self
 					 image:{Lib get(name:'mini-inc.xbm' image:$)})}
@@ -149,6 +149,8 @@ define
 			     action: self # IncStop)}
 	    {self.Entry bind(event:  '<KeyRelease-Down>'
 			     action: self # IncStop)}
+	    {self.Entry bind(event:  '<FocusOut>'
+			     action: self # Assert)}
 	    {self.Inc bind(event:  '<ButtonPress-1>'
 			   action: self # Inc(1))}
 	    {self.Inc bind(event:  '<ButtonRelease-1>'
@@ -212,21 +214,20 @@ define
    
       meth Inc(I)
 	 lock
-	    THID
-	    proc{Loop}
+	    proc{Loop IncWait}
 	       {Delay IncWait}
 	       {self Add(I)}
-	       {Loop}
+	       {Loop 100}
 	    end
 	 in
 	    {self IncStop}
 	    {self Add(I)}
+	    ID<-_
 	    thread
-	       THID={Thread.this}
-	       {Loop}
+	       @ID={Thread.this}
+	       {Loop 500}
 	    end
-	    {Wait THID}
-	    ID<-THID
+	    {Wait @ID}
 	 end
       end
 
@@ -252,6 +253,7 @@ define
 	    {SplitParams M [1] A B}
 	    {self.Entry A}
 	    if {HasFeature B 1} then
+	       {self Assert(exec:false)}
 	       R={ConvertToType {self.Entry get($)} natural}
 	    in
 	       B.1=if R==false then @Min else R end

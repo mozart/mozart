@@ -158,9 +158,8 @@ define
 	    self.Window={QTk.build td(overrideredirect:true
 				      {Record.adjoin {Subtracts A [handle]}
 				       listbox(glue:nswe
-					       feature:list
-					       action:self#Execute)})}
-	    {self.Window bind(event:"<ButtonRelease-1>" action:self#Close)}
+					       feature:list)})}
+	    {self.Window.list bind(event:"<ButtonRelease-1>" action:self#Close)}
 	 end
       end
 
@@ -195,6 +194,7 @@ define
 	 try
 	    {self.Window releaseGrab}
 	    {self.Window hide}
+	    {self.action execute}
 	 catch _ then skip end
       end
       
