@@ -2,11 +2,12 @@ functor
 export
    NewFromString
    NewFromURL
-   NewFromURLOld
+   Fast
+   new : NewParserInit
 import
-   OldTokenizer at 'Tokenizer.ozf'
-   Tokenizer at 'FastTokenizer.ozf'
-   NameSpaces at 'NameSpaces.ozf'
+   Tokenizer     at 'Tokenizer.ozf'
+   FastTokenizer at 'FastTokenizer.ozf'
+   NameSpaces    at 'NameSpaces.ozf'
 prepare
    MakeBS = ByteString.make
    BIVS2S = VirtualString.toString
@@ -26,6 +27,8 @@ prepare
    fun {NewParser GET Params NS}
       IgnoreComments = {CondSelect Params ignoreComments true}
       StripSpaces = {CondSelect Params stripSpaces unit}
+      ProcessElem = NS.processElement
+      ProcessName = NS.processName
       fun {ParseSeq MAP TAG}
 	 {ParseSeqTok {GET} MAP TAG}
       end
@@ -43,9 +46,7 @@ prepare
 	 [] stag(Name Alist Empty Coord) then
 	    Tag2 Alist2 Map2
 	 in
-	    {NS.processElement
-	     Name Alist MAP
-	     Tag2 Alist2 Map2}
+	    {ProcessElem Name Alist MAP Tag2 Alist2 Map2}
 	    element(
 	       tag      : Tag2
 	       alist    : Alist2
@@ -58,7 +59,7 @@ prepare
 	 [] text(S C) then
 	    {ParseSeqText S C MAP TAG}
 	 [] etag(Name Coord) then
-	    Tag={NS.processName Name MAP}
+	    Tag={ProcessName Name MAP}
 	 in
 	    if Tag==TAG then nil else
 	       raise xml(parser(want:TAG got:Tag coord:Coord)) end
@@ -72,7 +73,7 @@ prepare
 	 of text(S2 _) then
 	    {ParseSeqText S#S2 Coord MAP TAG}
 	 [] T then
-	    if {CondSelect StripSpaces TAG.key false} then
+	    if {CondSelect StripSpaces {CondSelect TAG key TAG} false} then
 	       SS={VS2S S}
 	    in
 	       if {AllSpaces SS} then {ParseSeqTok T MAP TAG}
@@ -97,7 +98,22 @@ define
    fun {NewFromURL S Params}
       {NewParser {Tokenizer.newFromURL S}.get Params NameSpaces}
    end
-   fun {NewFromURLOld S Params}
-      {NewParser {OldTokenizer.newLazyFromURL S}.get Params NameSpaces}
+   fun {FastNewFromString S Params}
+      {NewParser {FastTokenizer.newFromString S}.get Params NameSpaces.fast}
+   end
+   fun {FastNewFromURL S Params}
+      {NewParser {FastTokenizer.newFromURL S}.get Params NameSpaces.fast}
+   end
+   Fast = fast(newFromString : FastNewFromString
+	       newFromURL    : FastNewFromURL)
+   fun {NewParserInit Init}
+      TOK = if {CondSelect Init fast false} then FastTokenizer else Tokenizer end
+      NS  = if {CondSelect Init namespaces true} then NameSpaces else NameSpaces.fast end
+      FEA = if {HasFeature Init string} then newFromString else newFromURL end
+      ARG = if {HasFeature Init string} then Init.string
+	    elseif {HasFeature Init url} then Init.url
+	    else Init.file end
+   in
+      {NewParser {TOK.FEA ARG}.get Init NS}
    end
 end
