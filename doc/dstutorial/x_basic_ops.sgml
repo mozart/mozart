@@ -548,8 +548,11 @@ end
    {Connection.offer Srv}
    "http://www.sics.se/~pvr/hw"}
 >>>
+<P>All the above must be executed on the server site.
+Later on we will show how a client can create a
+server remotely.
 
-<P> Now any client that knows the URL can access the server:
+<P> Any client that knows the URL can access the server:
 <<<
 declare Srv in
 Srv={Connection.take {Pickle.load "http://www.sics.se/~pvr/hw"}}
@@ -563,8 +566,8 @@ end
 
 <P> What happens is that by taking the connection, the client
 gets in its computation space a reference to the server.
-This makes the client and server computation spaces
-conceptually merge into a single computation space.
+This merges conceptually the client and server computation spaces
+into a single computation space.
 The client and server can then communicate as if
 they were in the same process.
 Later, when the client forgets the server reference,
@@ -655,11 +658,10 @@ those using client resources.
 <P> The solution of the previous section
 is reasonable when the client and server
 are independent computations that connect.
-Let's now think of the case when the
-client itself wants to start up a compute
+Let's now see how the
+client itself can start up a compute
 server on a remote site.
-The client first creates a new Mozart process
-that is ready to accept new computations:
+The client first creates a new Mozart process:
 <<<
 declare
 R={New Remote.manager init(host:"sinuhe.sics.se")}
@@ -695,35 +697,59 @@ end
 <SUBSECTION><TITLE>A dynamically-extensible server</TITLE>
 
 <P> Sometimes a server has to be upgraded,
+for example
 to add extra functionality or to fix a bug.
-We show how to upgrade the server
+We show how to upgrade a server
 without stopping it.
 This cannot be done in Java.
-In practice, one can even do it interactively.
+In practice, the upgrade can even
+be done interactively.
 A person sits down at a terminal anywhere
 in the world, starts up an interactive Mozart
 session, and can
 upgrade the server while it is running.
 
-<P> Let's first define a generic upgradable server
-on top of stationary objects:
+<P> Let's first define a generic upgradable server:
 <<<
 declare
-proc {NewUpgradableStat Class Init ?Cell ?USObj}
-  Obj={NewStat Class Init} % Create stationary object
-  Cell={NewCell Obj}       % Create a cell containing the object
-  proc {USObj M}           % Object call indirectly through the cell
-     {{Access Cell} M}
-  end
+proc {NewUpgradableStat Class Init ?Upgrade ?Srv}
+   Obj={New Class Init}
+   C={NewCell Obj}
+in
+   Srv={MakeStat proc {$ M} X in {{Exchange C X X} M} end}
+   proc {Upgrade Class2 Init2}
+      Obj2={New Class2 Init2}
+      {Assign C Obj2}
+   end
 end
-
-declare Srv Cell in
-Srv={NewUpgradableState ComputeServer init Cell Srv}
 >>>
+<P> This definition must be executed
+on the server site.
+It returns a server <<Srv>> and a procedure
+<<Upgrade>> used for upgrading the server.
+Because of <<MakeStat>>, all object calls will
+be done on the server site.
+The server is upgradable because it does
+all object calls indirectly through <<C>>.
+Since <<Obj2>> is a mobile object,
+<<Upgrade>> can be executed from anywhere.
+The object will move to the
+server site the first time it is called.
+From then on,
+the object stays on the server site permanently.
 
-<P> Clients can use this compute server as before.
-Let's now upgrade the compute server while
-it is running:
+<P> A client creates an upgradable compute server almost
+exactly as it creates a fixed compute server,
+by executing the following on the server site:
+<<<
+declare Srv Upgrade in
+Srv={NewUpgradableStat ComputeServer init Upgrade}
+>>>
+<P> Let's now upgrade the compute server while
+it is running.
+We first define a new class <<CComputeServer>>
+and then we upgrade the server with
+an object of the new class:
 <<<
 declare
 class CComputeServer from ComputeServer
@@ -736,16 +762,16 @@ class CComputeServer from ComputeServer
 end
 
 declare
-Srv2={New CComputeServer init}
-{Assign Cell Srv2}
+Srv2={Upgrade CComputeServer init}
 >>>
+
 
 <P> That's all there is to it.
 Furthermore, this can be
 repeated indefinitely
-since garbage collection removes
+since garbage collection will remove
 the old compute server code.
-The extended compute server runs
+The upgraded compute server runs
 each compute job in its own thread and
 has two method calls, <<run(P)>>
 and <<run(P Prio)>>, where <<Prio>>
@@ -753,10 +779,12 @@ sets the priority of the thread doing computation <<P>>.
 
 <P> It would be nice if the client could
 find out how many active computations there
-are on the compute server.
-We leave it to the reader to add a new
-method to the class that returns
-the number of
+are on the compute server
+before deciding whether or not to do
+a computation there.
+We leave it to the reader to upgrade
+the class to add a new
+method that returns the number of
 active computations at each priority level.
 
 </CHAPTER>
