@@ -114,9 +114,9 @@ GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef*tPtr,ByteCode*scp)
   // ^^^DONE AUTOMATICALLY
   // else x.kick() x=y
   kickLazy(vPtr);
-  Bool ret = am.performUnify(vPtr,tPtr,scp);
-  // Assert(am.rebindTrail.isEmpty());
-  return ret;
+
+  am.genericBind(vPtr,*vPtr,tPtr,*tPtr);
+  return OK;
 }
 
 void
