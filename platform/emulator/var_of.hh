@@ -52,6 +52,7 @@ class OzOFVariable: public OzVariable {
 
   friend class OzVariable;
   friend inline void addSuspOFSVar(TaggedRef, Suspendable *);
+  friend void constrainGlobalVar(OZ_Term *, DynamicTable *);
 
 private:
   TaggedRef label;

@@ -375,6 +375,14 @@ void constrainGlobalVar(OZ_Term * varptr, OZ_Ct * ct)
   ctvar->copyConstraint(ct);
 }
 
+void constrainGlobalVar(OZ_Term * varptr, DynamicTable * dt)
+{
+  DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar(of)\n"));
+  am.trail.pushVariable(varptr);
+  OzOFVariable * ofvar = (OzOFVariable *) tagged2CVar(*varptr);
+  ofvar->dynamictable = dt->copyDynamicTable();
+}
+
 // dealing with local variables
 void bindLocalVarToValue(OZ_Term * varptr, OZ_Term value)
 {

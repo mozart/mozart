@@ -38,9 +38,9 @@
 
 #define CORRECT_UNIFY
 
-#if defined(DEBUG_CHECK) && defined(CORRECT_UNIFY)
+#if defined(DEBUG_CONSTRAINT_UNIFY) && defined(CORRECT_UNIFY)
 
-#define DEBUG_CONSTRAIN_CVAR(ARGS)// printf ARGS; fflush(stdout);
+#define DEBUG_CONSTRAIN_CVAR(ARGS) printf ARGS; fflush(stdout);
 
 #else
 
@@ -473,6 +473,7 @@ void castGlobalVar(OZ_Term *, OZ_Term *);
 void constrainGlobalVar(OZ_Term *, OZ_FiniteDomain &);
 void constrainGlobalVar(OZ_Term *, OZ_FSetConstraint &);
 void constrainGlobalVar(OZ_Term *, OZ_Ct *);
+void constrainGlobalVar(OZ_Term *, DynamicTable *);
 
 // dealing with local variables
 void bindLocalVar(OZ_Term *, OZ_Term *);
