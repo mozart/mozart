@@ -2081,14 +2081,9 @@ $builtins = {
 			     doesNotReturn=>1,
 			     native => dontknow},
 
-    'InstallHandler'	=> { in  => ['+value','+value','value'],
+    'hwInstall'	=>         { in  => ['+value','+value','value'],
 			     out => [],
-			     BI  => BIhandlerInstall,
-			     native => dontknow},
-
-    'InstallWatcher'	=> { in  => ['+value','+value','value'],
-			     out => [],
-			     BI  => BIwatcherInstall,
+			     BI  => BIhwInstall,
 			     native => dontknow},
 
     'controlVarHandler'	=> { in  => ['+value'],
