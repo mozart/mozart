@@ -16,20 +16,17 @@
 	<List>
 	  <Entry><<newQuery(Id M)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      A new query <<M>> with identification number <<Id>> has been
-	      enqueued.
+	    A new query <<M>> with identification number <<Id>> has been
+	    enqueued.
 	  <Entry><<runQuery(Id M)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The query <<M>> with identification number <<Id>> is now
-	      being executed.
+	    The query <<M>> with identification number <<Id>> is now
+	    being executed.
 	  <Entry><<removeQuery(Id)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The query with identification number <<Id>> has been removed
-	      from the query queue, either because it finished executing
-	      or because it was dequeued by a user program.
+	    The query with identification number <<Id>> has been removed
+	    from the query queue, either because it finished executing
+	    or because it was dequeued by a user program.
 	</List>
   <SubSection>
     <Title/Compiler Activity Notifications/
@@ -37,13 +34,11 @@
 	<List>
 	  <Entry><<busy()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The compiler is currently busy (&ie;, executing a query).
+	    The compiler is currently busy (&ie;, executing a query).
 	  <Entry><<idle()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The compiler is currently idle (&ie;, waiting for a query to
-	      be enqueued).
+	    The compiler is currently idle (&ie;, waiting for a query to
+	    be enqueued).
 	</List>
   <SubSection>
     <Title/Compiler State Change Notifications/
@@ -51,21 +46,17 @@
 	<List>
 	  <Entry><<switch(SwitchName B)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The switch named <<SwitchName>> has been set to <<B>>.
+	    The switch named <<SwitchName>> has been set to <<B>>.
 	  <Entry><<switches(Rec)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The settings of all switches is transmitted.
+	    The settings of all switches is transmitted.
 	  <Entry><<maxNumberOfErrors(N)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The maximum number of errors after which to abort compilation
-	      has been set to <<N>>.
+	    The maximum number of errors after which to abort compilation
+	    has been set to <<N>>.
 	  <Entry><<env(Env)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The environment has been set to <<Env>>.
+	    The environment has been set to <<Env>>.
 	</List>
   <SubSection>
     <Title/Compiler Output Notificiations/
@@ -73,41 +64,34 @@
 	<List>
 	  <Entry><<info(VS)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      An information message <<VS>> is to be output.
+	    An information message <<VS>> is to be output.
 	  <Entry><<info(VS Coord)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      An information message <<VS>> related to the source coordinates
-	      <<Coord>> is to be output.
+	    An information message <<VS>> related to the source coordinates
+	    <<Coord>> is to be output.
 	  <Entry><<message(Record Coord)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      An error or warning message <<Record>> related to the source
-	      coordinates <<Coord>> is to be output.  <<Record>> has the
-	      standard error message format, described in
-	      <File>mozart/share/lib/sp/Error.oz</File>.
+	    An error or warning message <<Record>> related to the source
+	    coordinates <<Coord>> is to be output.  <<Record>> has the
+	    standard error message format, described in
+	    <File>mozart/share/lib/sp/Error.oz</File>.
 	  <Entry><<insert(FilenameVS Coord)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      During parsing, the file named <<FilenameVS>> has been read.
-	      The corresponding <<\insert>> directive (if any) was at source
-	      coordinates <<Coord>>.
+	    During parsing, the file named <<FilenameVS>> has been read.
+	    The corresponding <<\insert>> directive (if any) was at source
+	    coordinates <<Coord>>.
 	  <Entry><<displaySource(TitleVS ExtVS VS)>>
 	  <Item>
-	    <P.silent><!--**-->
-	      A source text <<VS>> with title <<TitleVS>> is to be displayed;
-	      it's format is the one for which the file extension <<ExtVS>> is
-	      typically used (such as <<oz>> or <<ozm>>).
+	    A source text <<VS>> with title <<TitleVS>> is to be displayed;
+	    it's format is the one for which the file extension <<ExtVS>> is
+	    typically used (such as <<oz>> or <<ozm>>).
 	  <Entry><<errorFound()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      An error has been reported.
+	    An error has been reported.
 	  <Entry><<toTop()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      The error output buffer should be raised with the cursor at
-	      the current output coordinates (an error message should follow).
+	    The error output buffer should be raised with the cursor at
+	    the current output coordinates (an error message should follow).
 	</List>
   <SubSection>
     <Title/Synchronization Notifications/
@@ -115,8 +99,7 @@
 	<List>
 	  <Entry><<pong()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This is sent in response to a <<ping(_)>> query
-	      (see <Ptr to="section.reference.queries">).
+	    This is sent in response to a <<ping(_)>> query
+	    (see <Ptr to="section.reference.queries">).
 	</List>
 </Section>

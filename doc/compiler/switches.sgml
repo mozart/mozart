@@ -7,7 +7,7 @@
       they are set.
       <Figure float id="table.switches" class=table>
 	<Caption>Summary of All Compiler Switches.</Caption>
-	<P><!--**-->
+	<P>
 	  <Table>
 	    <TR>
 	      <TH colspan=3>Global Configuration
