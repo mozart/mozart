@@ -83,6 +83,8 @@ extern OZ_Term  OZ_CToFloat        _PROTOTYPE((OZ_Float));
 extern OZ_Float OZ_floatToC        _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CStringToFloat  _PROTOTYPE((char *s));
 extern char *   OZ_floatToCString  _PROTOTYPE((OZ_Term term));
+extern char *   OZ_floatToCStringInt     _PROTOTYPE((OZ_Term term));
+extern char *   OZ_floatToCStringPretty  _PROTOTYPE((OZ_Term term));
 extern char *   OZ_normFloat       _PROTOTYPE((char *s));
 extern char *   OZ_parseFloat      _PROTOTYPE((char *s));
 

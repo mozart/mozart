@@ -23,9 +23,10 @@
 #include "suspension.hh"
 
 
-/* TmpBuffer with at LEAST 100 characters,
-   must be sufficiently large to convert smallInts and floats to strings */
-char TmpBuffer[100];
+/* TmpBuffer with at LEAST 512 characters,
+   must be sufficiently large to convert
+     smallInts and floats to strings/BigInts */
+char TmpBuffer[512];
 
 /* ------------------------------------------------------------------------ *
  * tests
@@ -298,6 +299,20 @@ char *OZ_floatToCString(OZ_Term term)
 {
   OZ_Float f = OZ_floatToC(term);
   sprintf(TmpBuffer,"%e",f);
+  return ozstrdup(TmpBuffer);
+}
+
+char *OZ_floatToCStringInt(OZ_Term term)
+{
+  OZ_Float f = OZ_floatToC(term);
+  sprintf(TmpBuffer,"%.0f",f);
+  return ozstrdup(TmpBuffer);
+}
+
+char *OZ_floatToCStringPretty(OZ_Term term)
+{
+  OZ_Float f = OZ_floatToC(term);
+  sprintf(TmpBuffer,"%g",f);
   return ozstrdup(TmpBuffer);
 }
 
