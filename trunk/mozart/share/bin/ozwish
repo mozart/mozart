@@ -1,17 +1,19 @@
 #!/bin/sh
 OZWISHHOME=$OZHOME/ozwish
-BLTWISH=$OZWISHHOME/platform/$OZPLATFORM/blt_wish
-if [ -x  $BLTWISH ]
+OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish
+if [ -x  $OZWISH ]
 then
   TCL_LIBRARY=$OZWISHHOME/tcl/lib/tcl
   TK_LIBRARY=$OZWISHHOME/tcl/lib/tk
   export TCL_LIBRARY
   export TK_LIBRARY
-  exec $BLTWISH "$@"
+  exec $OZWISH "$@"
 fi
 
+echo "can't find ozwish trying blt_wish"
 # if ozwish failed
 exec blt_wish "$@"
 
+echo "can't find blt_wish trying wish"
 # if blt_wish failed
 exec wish "$@"
