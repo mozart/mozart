@@ -13,45 +13,6 @@
 #define cdecl __cdecl
 #endif
 
-#if defined(__WATCOMC__) || defined(__MINGW32__)
-#pragma aux (cdecl) Tk_MainWindow;
-#pragma aux (cdecl) Tcl_AppendResult;
-#pragma aux (cdecl) Tcl_CreateCommand;
-#pragma aux (cdecl) Tcl_Merge;
-#pragma aux (cdecl) Tcl_SetVar;
-#pragma aux (cdecl) Tcl_CreateInterp;
-#pragma aux (cdecl) Tcl_GetVar;
-#pragma aux (cdecl) Tcl_GetVar2;
-#pragma aux (cdecl) Tcl_DStringFree;
-#pragma aux (cdecl) Tcl_DStringValue;
-#pragma aux (cdecl) Tcl_DStringSetLength;
-#pragma aux (cdecl) Tcl_Eval;
-#pragma aux (cdecl) Tcl_Init;
-#pragma aux (cdecl) Tcl_SetPanicProc;
-#pragma aux (cdecl) Tcl_SetVar2;
-#pragma aux (cdecl) Tk_ParseArgv;
-#pragma aux (cdecl) Tcl_DStringInit;
-#pragma aux (cdecl) Tcl_ResetResult;
-#pragma aux (cdecl) Tcl_VarEval;
-#pragma aux (cdecl) Tk_Init;
-#pragma aux (cdecl) TkWinXInit;
-#pragma aux (cdecl) Tk_MainLoop;
-#pragma aux (cdecl) Tcl_DStringAppend;
-#pragma aux (cdecl) Tcl_CommandComplete;
-#pragma aux (cdecl) Tcl_AsyncCreate;
-#pragma aux (cdecl) Tcl_AsyncMark;
-#pragma aux (cdecl) Tcl_DoWhenIdle;
-#pragma aux (cdecl) Tcl_Alloc;
-#pragma aux (cdecl) Tcl_Free;
-#pragma aux (cdecl) PutsCmd;
-#pragma aux (cdecl) idleProc;
-#pragma aux (cdecl) asyncHandler;
-#endif
-
-#ifdef __MINGW32__
-#define _hdopen(file,flags) _open_osfhandle(file,flags)
-#endif
-
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -59,21 +20,13 @@
 #include <io.h>
 #include <process.h>
 
-#define Tk_MainLoop xx1
-#define Tk_MainWindow xx2
 #include "tk.h"
-#undef Tk_MainLoop
-#undef Tk_MainWindow
 
 static void cdecl WishPanic(char *x,...);
 static unsigned __stdcall readerThread(void *arg);
 static int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code);
 
-extern void cdecl Tk_MainLoop();
-extern Tk_Window cdecl Tk_MainWindow(Tcl_Interp *interp);
-
-
-#define XXDEBUG
+#define xxDEBUG
 
 #ifdef DEBUG
 FILE *dbgout = NULL, *dbgin = NULL;
@@ -159,24 +112,6 @@ typedef struct {
   DWORD toplevelThread;
   Tcl_AsyncHandler ash;
 } ReaderInfo;
-
-/*
- *----------------------------------------------------------------------
- *
- * WinMain --
- *
- *	Main entry point from Windows.
- *
- * Results:
- *	Returns false if initialization fails, otherwise it never
- *	returns. 
- *
- * Side effects:
- *	Just about anything, since from here we call arbitrary Tcl code.
- *
- *----------------------------------------------------------------------
- */
-
 
 
 /* THE TWO FOLLOWING FUNCTIONS HAVE BEEN COPIED FROM EMULATOR */
@@ -515,40 +450,49 @@ int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code)
 }
 
 
-static Tcl_DString command;	/* Used to assemble lines of terminal input
-				 * into Tcl commands. */
-
 static unsigned __stdcall readerThread(void *arg)
 {
-#define BUFFER_SIZE 4000
   ReaderInfo *ri = (ReaderInfo *)arg;
-  char input[BUFFER_SIZE+1];
-  int count;
-  int fdin = _hdopen((int)GetStdHandle(STD_INPUT_HANDLE),O_RDONLY|O_BINARY);
+  int count,i;
 
-  Tcl_DStringInit(&command);
-    
-#define TclRead read
+  int bufSize  = 100000; // is selected smaller get strange errors, don't know why (RS)
+  char *buffer = (char*) malloc(bufSize+1);
+  int used = 0;
 
   while(1) {
 
 #ifdef DEBUG
-    fprintf(dbgout,"before read\n"); fflush(dbgout);
+    fprintf(dbgout,"\n***before read:\n"); fflush(dbgout);
 #endif
 
-    count = read(fdin, input, BUFFER_SIZE);
-
-    if (count <= 0) {
+    if (used>=bufSize) {
+      bufSize *= 2;
+      buffer = realloc(buffer,bufSize+1);
+      if (buffer==0)
+	WishPanic("realloc of buffer failed");	
+    }
+    if (ReadFile(GetStdHandle(STD_INPUT_HANDLE),buffer+used,
+		 bufSize-used,&count,0)==FALSE) {
       WishPanic("Connection to engine lost");
     }
 
-    ri->cmd = Tcl_DStringAppend(&command, input, count);
-
-    if ((input[count-1] != '\n') && (input[count-1] != ';') ||
-	!Tcl_CommandComplete(ri->cmd)) {
-      continue;
+#ifdef DEBUG
+    fprintf(dbgout,"count=%d\n",count); fflush(dbgout);
+    for (i=0; i<count; i++) {
+      fputc(buffer[used+i],dbgout); fflush(dbgout);
     }
+#endif
+
+    used += count;
+    buffer[used] = 0;
+    if ((buffer[used-1] != '\n') && (buffer[used-1] != ';') ||
+	!Tcl_CommandComplete(buffer) ||
+	used >=2 && buffer[used-2] == '\\')
+      continue;
   
+    ri->cmd = buffer;
+    used = 0;
+
     ResetEvent(ri->event);
     Tcl_AsyncMark(ri->ash);
 
@@ -557,8 +501,6 @@ static unsigned __stdcall readerThread(void *arg)
 
     if (WaitForSingleObject(ri->event, INFINITE) != WAIT_OBJECT_0)
       WishPanic("readerThread: wait failed");
-
-    Tcl_DStringFree(&command);
   }
   
   return 0;
