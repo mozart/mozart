@@ -81,6 +81,7 @@ extern "C" int dlclose(void *);
 
 #ifdef WINDOWS
 #include <time.h>
+#include <sys/time.h>
 #include <process.h>
 
 extern "C" int _fmode;

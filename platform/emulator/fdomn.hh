@@ -27,6 +27,9 @@
 #ifndef __FDOMN_HH__
 #define __FDOMN_HH__
 
+#ifdef INTERFACE
+#pragma interface
+#endif
 
 #include "tagged.hh"
 #include "value.hh"

@@ -612,8 +612,6 @@ struct  linger {
  * compatibility purposes.
  */
 
-#define h_errno         WSAGetLastError()
-
 /* Authoritative Answer: Host not found */
 #define WSAHOST_NOT_FOUND       (WSABASEERR+1001)
 #ifndef GNUWIN32
@@ -687,10 +685,6 @@ struct  linger {
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
 #endif
-
-/* activated by RS */
-#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
-#define EINPROGRESS             WSAEINPROGRESS
 
 
 /* Socket function prototypes */
