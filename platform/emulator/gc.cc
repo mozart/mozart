@@ -1671,6 +1671,12 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
   }
 }
 
+// extern
+void OZ_collect(OZ_Term *to)
+{
+  OZ_collectHeapTerm(*to,*to);
+}
+
 
 void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
   gcTagged(frm, to, isInGc, OK, NO);

@@ -46,6 +46,9 @@
 #include "dpResource.hh"
 /* for now credit is a 32-bit word */
 
+// from var_obj
+TaggedRef newObjectProxy(Object*, GName*, GName*, TaggedRef);
+
 void marshalCreditOutline(Credit credit,MsgBuffer *bs){  
   marshalCredit(credit,bs);}
 

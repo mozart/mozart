@@ -55,10 +55,10 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
       propagateUnify();
     }
     if (isLocalVar) {
-      doBind(vptr, term);
+      DoBind(vptr, term);
       dispose();
     } else {
-      doBindAndTrail(vptr, term);
+      DoBindAndTrail(vptr, term);
     }
   }
   return PROCEED;
@@ -109,8 +109,8 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 	OZ_Term new_value = new_constr->toValue();
 	term_var->propagateUnify();
 	propagateUnify();
-	doBind(vptr, new_value);
-	doBind(tptr, new_value);
+	DoBind(vptr, new_value);
+	DoBind(tptr, new_value);
 	dispose(); 
 	term_var->dispose(); 
       } else if (heapNewer(vptr, tptr)) { // bind var to term
@@ -118,14 +118,14 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 	propagateUnify();
 	term_var->propagateUnify();
 	relinkSuspListTo(term_var);
-	doBind(vptr, makeTaggedRef(tptr));
+	DoBind(vptr, makeTaggedRef(tptr));
 	dispose();
       } else { // bind term to var
 	copyConstraint(new_constr);
 	term_var->propagateUnify();
 	propagateUnify();
 	term_var->relinkSuspListTo(this);
-	doBind(tptr, makeTaggedRef(vptr));
+	DoBind(tptr, makeTaggedRef(vptr));
 	term_var->dispose();
       }
     } // TRUE + 2 * TRUE:
@@ -141,8 +141,8 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 	    term_var->propagateUnify();
 	  if (var_is_constrained) 
 	    propagateUnify();
-	  doBind(vptr, new_value);
-	  doBindAndTrail(tptr, new_value);
+	  DoBind(vptr, new_value);
+	  DoBindAndTrail(tptr, new_value);
 	  dispose();
 	} else {
 	  copyConstraint(new_constr);
@@ -159,7 +159,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 	if (var_is_constrained) 
 	  propagateUnify();
 	relinkSuspListTo(term_var, TRUE);
-	doBind(vptr, makeTaggedRef(tptr));
+	DoBind(vptr, makeTaggedRef(tptr));
 	dispose();
       }
     } // TRUE + 2 * FALSE:
@@ -175,8 +175,8 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 	    propagateUnify();
 	  if (term_is_constrained) 
 	    term_var->propagateUnify();
-	  doBind(tptr, new_value);
-	  doBindAndTrail(vptr, new_value);
+	  DoBind(tptr, new_value);
+	  DoBindAndTrail(vptr, new_value);
 	  term_var->dispose();
 	} else {
 	  term_var->copyConstraint(new_constr);
@@ -193,7 +193,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 	if (is_not_installing_script) 
 	  propagateUnify();
 	term_var->relinkSuspListTo(this, TRUE);
-	doBind(tptr, makeTaggedRef(vptr));
+	DoBind(tptr, makeTaggedRef(vptr));
 	term_var->dispose();
       }
     } // FALSE + 2 * TRUE:
@@ -210,8 +210,8 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 	  if (term_is_constrained)
 	    term_var->propagateUnify();
 	}
-	doBindAndTrail(vptr, new_value);
-	doBindAndTrail(tptr, new_value);
+	DoBindAndTrail(vptr, new_value);
+	DoBindAndTrail(tptr, new_value);
       } else { 
 	OzCtVariable * cv = new OzCtVariable(new_constr, getDefinition(),
 					     oz_currentBoard());
@@ -255,9 +255,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       if (oz_isLocalVariable(vptr)) {
 	if (!isUVar(vtag))
 	  oz_checkSuspensionListProp(tagged2SVarPlus(v));
-	doBind(vptr, constr->toValue());
+	DoBind(vptr, constr->toValue());
       } else {
-	doBindAndTrail(vptr, constr->toValue());
+	DoBindAndTrail(vptr, constr->toValue());
       }
       goto proceed;
     } else {
@@ -272,11 +272,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       if (oz_isLocalVariable(vptr)) {
 	if (!isUVar(vtag)) {
 	  oz_checkSuspensionListProp(tagged2SVarPlus(v));
-	  ctv->setSuspList(tagged2SVarPlus(v)->getSuspList());
+	  ctv->setSuspList(tagged2SVarPlus(v)->unlinkSuspList());
 	}
-	doBind(vptr, makeTaggedRef(tctv));
+	DoBind(vptr, makeTaggedRef(tctv));
       } else { 
-	doBindAndTrail(vptr, makeTaggedRef(tctv));
+	DoBindAndTrail(vptr, makeTaggedRef(tctv));
       }
       goto proceed;
     }
@@ -301,9 +301,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
 
       if (oz_isLocalVar(ctvar)) {
-	doBind(vptr, new_constr->toValue());
+	DoBind(vptr, new_constr->toValue());
       } else {
-	doBindAndTrail(vptr, new_constr->toValue());
+	DoBindAndTrail(vptr, new_constr->toValue());
       }
     } else {
       // `new_constr' does not designate a value

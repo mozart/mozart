@@ -32,10 +32,11 @@
 #endif
 
 #include "var_fd.hh"
+#include "unify.hh"
 
 inline
 void OzBoolVariable::dispose(void) {
-  suspList->disposeList();
+  disposeS();
   freeListDispose(this, sizeof(OzBoolVariable));
 }
 
@@ -45,7 +46,7 @@ void OzBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr, int e)
 {
   if (oz_isSmallInt(*trPtr)) return;
   propagate();
-  doBind(trPtr, OZ_int(e));
+  DoBind(trPtr, OZ_int(e));
   dispose();
 }
 

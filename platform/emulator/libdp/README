@@ -101,11 +101,11 @@ port.cc
 
 var.hh
 var.cc
-	perdio variables 
+	distributed simple variables and futures
 
-protocolVar.hh
-protocolVar.cc
-	the perdio protocols of distributed variables
+var_obj.hh
+var_obj.cc
+	lazy objects
 
 ----- Distributed failure
 

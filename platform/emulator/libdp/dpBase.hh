@@ -45,6 +45,6 @@ class OwnerEntry;
 class DSite;
 class ChainElem;
 class ObjectFields;
+class GName;
 
-/* __BASEHH */
 #endif 

@@ -94,8 +94,13 @@ public:
 
   void addSuspension(Suspension); 
   void addSuspension(SuspList *);
-  SuspList *getSuspList() { return suspList; }
+  Bool isEmptySuspList() { return suspList==0; }
   void setSuspList(SuspList *sl) { suspList=sl; }
+  SuspList *unlinkSuspList() {
+    SuspList *sl = suspList;
+    suspList=0;
+    return sl;
+  }
   WaitActor * select(int left, int right);
 
   void mergeCPB(Board *bb, int siblings);
