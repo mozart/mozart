@@ -30,7 +30,6 @@
  */
 
 #include "value.hh"
-#include "trace.hh"
 #include "thr_int.hh"
 #include "prop_int.hh"
 #include "builtins.hh"
