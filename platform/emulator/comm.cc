@@ -283,55 +283,13 @@ Site *unmarshalPSite(MsgBuffer *buf){
   return s;}
 
 
-Site *findSite(ip_address a,int port,time_t stamp)
+static
+Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
 {
-  Site tryS(a,port,stamp);
-  int hvalue=tryS.hashPrimary();
   Site *s;
-  FindType rc=primarySiteTable->findPrimary(&tryS,hvalue,s);
+  int hvalue = tryS->hashPrimary();
 
-  switch(rc) {
-  case SAME:
-    if(!s->ActiveSite()) {
-      s->makeActiveRemote();
-    }
-    return s;
-  case NONE:
-    s=siteManager.allocSite(&tryS);
-    primarySiteTable->insertPrimary(s,hvalue);
-    s->initRemote();
-    return s;
-  case I_AM_YOUNGER:
-    {
-      int hvalue=tryS.hashSecondary();
-      s = secondarySiteTable->findSecondary(&tryS,hvalue);
-      if(s) return s;
-      s = siteManager.allocSite(&tryS,PERM_SITE);
-      secondarySiteTable->insertSecondary(s,hvalue);
-      return s;
-    }
-  case I_AM_OLDER:
-    primaryToSecondary(s,hvalue);
-    return s;
-  default:
-    error("impossible");
-    return 0;
-  }
-}
-
-Site* unmarshalSite(MsgBuffer *buf){
-  PD((UNMARSHAL,"site"));
-  MarshalTag mt= (MarshalTag) buf->get();
-  Assert((mt==DIF_REMOTE) || (mt==DIF_VIRTUAL) || (mt==DIF_PERM));
-  FindType rc;
-  int hvalue;
-  Site *s;
-  Site tryS;
-
-  tryS.unmarshalBaseSite(buf);
-  hvalue=tryS.hashPrimary();
-  rc=primarySiteTable->findPrimary(&tryS,hvalue,s);
-
+  FindType rc = primarySiteTable->findPrimary(tryS,hvalue,s);
   switch(rc){
   case SAME: {
     PD((SITE,"unmarshalsite SAME"));
@@ -349,16 +307,17 @@ Site* unmarshalSite(MsgBuffer *buf){
       s->makeActiveRemote();}
     return s;}
 
-  case NONE: {
-    PD((SITE,"unmarshalsite NONE"));break;}
+  case NONE:
+    PD((SITE,"unmarshalsite NONE"));
+    break;
 
   case I_AM_YOUNGER:{
     PD((SITE,"unmarshalsite I_AM_YOUNGER"));
     if(mt==DIF_VIRTUAL){unmarshalUselessVirtualInfo(buf);}
-    int hvalue=tryS.hashSecondary();
-    s=secondarySiteTable->findSecondary(&tryS,hvalue);
+    int hvalue=tryS->hashSecondary();
+    s=secondarySiteTable->findSecondary(tryS,hvalue);
     if(s){return s;}
-    s=siteManager.allocSite(&tryS,PERM_SITE);
+    s=siteManager.allocSite(tryS,PERM_SITE);
     secondarySiteTable->insertSecondary(s,hvalue);
     return s;}
 
@@ -371,7 +330,7 @@ Site* unmarshalSite(MsgBuffer *buf){
 
   // none
 
-  s=siteManager.allocSite(&tryS);
+  s=siteManager.allocSite(tryS);
   primarySiteTable->insertPrimary(s,hvalue);
   if(mt==DIF_PERM){
     PD((SITE,"initsite DIF_PERM"));
@@ -380,7 +339,7 @@ Site* unmarshalSite(MsgBuffer *buf){
   if(mt==DIF_VIRTUAL){
     PD((SITE,"initsite DIF_VIRTUAL"));
     VirtualInfo * vi=unmarshalVirtualInfo(buf);
-    if(inMyGroup(&tryS,vi)){
+    if(inMyGroup(tryS,vi)){
       s->initVirtual(vi);
       return s;}
     s->initVirtualRemote(vi);
@@ -389,6 +348,23 @@ Site* unmarshalSite(MsgBuffer *buf){
   PD((SITE,"initsite DIF_REMOTE"));
   s->initRemote();
   return s;
+}
+
+Site *findSite(ip_address a,int port,time_t stamp)
+{
+  Site tryS(a,port,stamp);
+  return unmarshalSiteInternal(NULL, &tryS, DIF_REMOTE);
+}
+
+Site* unmarshalSite(MsgBuffer *buf)
+{
+  PD((UNMARSHAL,"site"));
+  MarshalTag mt = (MarshalTag) buf->get();
+  Assert((mt==DIF_REMOTE) || (mt==DIF_VIRTUAL) || (mt==DIF_PERM));
+  Site tryS;
+
+  tryS.unmarshalBaseSite(buf);
+  return unmarshalSiteInternal(buf, &tryS, mt);
 }
 
 /**********************************************************************/
