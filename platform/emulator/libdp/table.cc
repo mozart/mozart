@@ -873,6 +873,7 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     Assert(from->isRef());
     mkRef(from->getRef(),from->getFlags());
   }
+  uOB.credit = from->getCredit();
   netaddr.set(from->netaddr.site,from->netaddr.index);
 }
 
@@ -946,7 +947,7 @@ void BorrowTable::compactify(){
     array=oldarray;
     return;}
   int oldsize=size;
-  size=newsize;
+  size=newsize; 
   copyBorrowTable(oldarray,oldsize);
   PD((TABLE,"compactify borrow complete"));
   return;}
