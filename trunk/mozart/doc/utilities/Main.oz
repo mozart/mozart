@@ -180,6 +180,8 @@ define
 	  '                    Where to look for author databases,\n'#
 	  '                    bib files, bst files, and ozdoc scripts.\n'}
 	 {Syslet.exit 2}
+      [] error then
+	 {Syslet.exit 1}
       else
 	 {Error.printExc E}
 	 {Syslet.exit 1}
