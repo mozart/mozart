@@ -2,6 +2,8 @@
 <!ENTITY part.native SYSTEM "native.sgml">
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
 ]>
 <BOOK>
 <Title/Application Programming/
