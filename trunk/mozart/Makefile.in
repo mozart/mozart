@@ -82,7 +82,7 @@ COMPRESS=	gzip -9
 WINCACHEDIR=	oz/cache/http/www.ps.uni-sb.de/ozhome
 
 # sub directories for recursive makes
-SUBDIRS=	platform share contrib
+SUBDIRS=	@oz_subdirs@
 
 # list of directories to create during install
 DIRS=		
@@ -93,15 +93,8 @@ INSTALLDIRS=	$(PREFIX) $(DIRS:%=$(PREFIX)/%)
 ######################################################################
 
 .PHONY: all bootstrap install clean veryclean distclean check
-.PHONY: platform platform-install
 
 all:: bootstrap
-
-platform:
-	(cd platform; make bootstrap)
-
-platform-install:
-	(cd platform; make install)
 
 bootstrap clean veryclean depend distclean check install::
 	dirs="$(SUBDIRS)"; \

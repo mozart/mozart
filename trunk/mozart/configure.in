@@ -38,7 +38,31 @@ OZ_INIT
 BUILDTOP=`pwd`
 AC_SUBST(BUILDTOP)
 
-AC_CONFIG_SUBDIRS(platform share contrib doc)
+: ${oz_subdirs="platform share contrib doc"}
+AC_MSG_CHECKING(for --enable-subdirs)
+AC_ARG_ENABLE(subdirs,
+    [--enable-subdirs=<dirs>
+	which subdirs should be configured (default: $oz_subdirs)])
+
+if test -n "${enable_subdirs}"
+then
+    case $enable_subdirs in
+	no)
+	    oz_subdirs=
+	    ;;
+	yes)
+	    ;;
+	*)
+	    oz_subdirs=${enable_subdirs}
+	    ;;
+    esac
+fi
+
+AC_MSG_RESULT($oz_subdirs)
+
+AC_SUBST(oz_subdirs)
+
+AC_CONFIG_SUBDIRS($oz_subdirs)
 
 AC_OUTPUT(Makefile)
 
