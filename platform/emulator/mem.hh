@@ -83,6 +83,9 @@ inline void *heapMalloc(size_t size)
     heapTop += size;
   }
 
+#ifdef DEBUG_MEM
+  memset((char *)oldTop,0x5A,size);
+#endif
   return oldTop;
 } // heapMalloc
 
@@ -110,6 +113,9 @@ inline void *freeListMalloc(size_t size)
   else {
     FreeList[size] = *(void **)aux;
   }
+#ifdef DEBUG_MEM
+  memset((char *)aux,0x5A,size);
+#endif
   return aux;
 }
 
