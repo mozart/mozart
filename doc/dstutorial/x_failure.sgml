@@ -488,9 +488,9 @@ FOOT>Note that each site has its own <<Fault>> module.</NOTE>
 The calls <<{Fault.enable E 'thread'(T) ...}>>
 and <<{Fault.install E 'thread'(T) ...}>> will work anywhere.
 A procedure containing these calls may be passed around
-the network at will, and will work correctly anywhere
-if <<T>> identifies a thread on the site
-where the procedure is executed.
+the network at will, and will work correctly anywhere.
+Of course, since threads are sited, <<T>> has to identify
+a thread on the site where the procedure is executed.
 
 <SECTION id="advanced.model"><TITLE>Advanced model</TITLE>
 
