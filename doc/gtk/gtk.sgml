@@ -24,6 +24,9 @@
 
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|fundamental">
+
 <!-- Processing Instructions -->
 <!ENTITY emdash PI "emdash">
 <!ENTITY endash PI "endash">
@@ -45,6 +48,8 @@
 
 <Book proglang=oz>
   <Front>
+    <Meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+
     <!-- Splitting the document into different HTML files -->
     <Meta name="html.split" value="chapter.intro">
     <Meta name="html.split" value="chapter.basics">
