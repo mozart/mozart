@@ -29,8 +29,8 @@
 #define BA_COVERS_R
 
 // limits of a bit array
-//const int baSize = 8;
-const int baSize = 4;
+const int baSize = 8;
+//const int baSize = 4;
 
 //const int baSize = 32;
 
