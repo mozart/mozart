@@ -2,6 +2,7 @@ dnl -*-sh-*-
 AC_INIT(ri.cc)
 OZ_CONTRIB_INIT_CXX
 OZ_LIB_GMP
+OZ_PROG_PERL
 
 AC_OUTPUT(Makefile)
 
