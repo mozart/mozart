@@ -58,7 +58,7 @@ void performCopying(void);
 //// switches for debug macros
 #define CHECKSPACE  // check if object is really copied from heap (1 chunk) 
 // #define INITFROM    // initialise copied object
-#define VERBOSE     // inform user about current state of gc
+// #define VERBOSE     // inform user about current state of gc
 
 // the debug macros themselves
 #ifndef DEBUG_GC
@@ -988,7 +988,8 @@ int gcing = 1;
 // This method is responsible for the heap garbage collection of the
 // abstract machine, ie that all entry points into heap are properly 
 // treated and references to variables are properly updated
-void AM::gc(int msgLevel) {
+void AM::gc(int msgLevel) 
+{
   GCMETHMSG(" ********** AM::gc **********");
   opMode = IN_GC;
   gcing = 0;
