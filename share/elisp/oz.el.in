@@ -2617,9 +2617,9 @@ of the procedure Browse."
   (oz-send-string "{Panel.open}" t))
 
 (defun oz-compiler-panel ()
-  "Feed `{New CompilerPanel init(`Compiler`) _}' to the Oz Compiler."
+  "Feed `{New CompilerPanel.'class' init(`Compiler`) _}' to the Oz Compiler."
   (interactive)
-  (oz-send-string "{New CompilerPanel init(`Compiler`) _}" t))
+  (oz-send-string "{New CompilerPanel.'class' init(`Compiler`) _}" t))
 
 (defun oz-feed-file (file)
   "Feed a file to the Oz Compiler."
