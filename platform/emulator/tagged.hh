@@ -940,6 +940,18 @@ public:
     checkPointer(ptr);
     tagged = ((uint32)ptr) | getTag();
   }
+  void setTag(int tag) {
+    checkTag(tag);
+    tagged = (tagged & ~tagged2Mask) | tag;
+  }
+  void borTag(int tag) {
+    checkTag(tag);
+    tagged = tagged | tag;
+  }
+  void bandTag(int tag) {
+    checkTag(tag & tagged2Mask);
+    tagged = tagged & (tag | ~tagged2Mask);
+  }
   void setVal(uint32 val) {
     checkVal(val);
     tagged = (val<<tagged2Bits) | getTag();
