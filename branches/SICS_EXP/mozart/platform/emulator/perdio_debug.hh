@@ -56,7 +56,8 @@ enum DEBUGType {
   HASH2,        // 35
 
   USER,					// misc
-  SPECIAL,       // 37
+  SPECIAL,      // 37
+  ERROR_DET,    // 38
   LAST
 };
 
@@ -95,6 +96,8 @@ void _PD(int i,char *format,...)
     printf("\n");
   }
 }
+
+void networkTimer(int);
 
 #define PD(Args) _PD Args
 

@@ -67,8 +67,8 @@ enum ProbeType{
 
 enum SiteStatus{
   SITE_OK,
-    SITE_PERM,
-    SITE_TEMP
+  SITE_PERM,
+  SITE_TEMP
 };
 
 // sendTo return
@@ -98,8 +98,8 @@ int getQueueStatus_RemoteSite(RemoteSite*,int &noMsgs);  // return size in bytes
 SiteStatus siteStatus_RemoteSite(RemoteSite*); 
 MonitorReturn monitorQueue_RemoteSite(RemoteSite*,int size,int no_msgs,void*);
 MonitorReturn demonitorQueue_RemoteSite(RemoteSite*);
-ProbeReturn installProbe_RemoteSite(RemoteSite*,ProbeType,int frequency,void*);
-ProbeReturn deinstallProbe_RemoteSite(RemoteSite*,ProbeType);
+ProbeReturn installProbe_RemoteSite(RemoteSite*,int frequency);
+ProbeReturn deinstallProbe_RemoteSite(RemoteSite*);
 ProbeReturn probeStatus_RemoteSite(RemoteSite*,ProbeType &pt,int &frequncey,void* &storePtr);
 GiveUpReturn giveUp_RemoteSite(RemoteSite*);
 void discoveryPerm_RemoteSite(RemoteSite*);
@@ -223,7 +223,7 @@ public:
 
 /* Sites -14  possibilities 
 
-		    
+   
                     (REMOTE_SITE)              1  (REMOTE_SITE|CONNECTED)               5
                     (VIRTUAL_SITE)             2  (VIRTUAL_SITE|CONNECTED)              6
                     (VIRTUAL_SITE|REMOTE_SITE) 3  (VIRTUAL_SITE|REMOTE_SITE|CONNECTED)  7
@@ -568,19 +568,19 @@ public:
       return monitorQueue_VirtualSite(getVirtualSite(),size,noMsgs,storePtr);}
     return MONITOR_PERM;}
 
-  ProbeReturn installProbe(ProbeType pt,int frequency,void* storePtr){
+  ProbeReturn installProbe(int frequency){
     if(connect()){
       if(getType() & REMOTE_SITE){
-	return installProbe_RemoteSite(getRemoteSite(),pt,frequency,storePtr);}
-      return installProbe_VirtualSite(getVirtualSite(),pt,frequency,storePtr);}
+	return installProbe_RemoteSite(getRemoteSite(),frequency);}
+      return installProbe_VirtualSite(getVirtualSite(),PROBE_TYPE_ALL,frequency,NULL);}
     return PROBE_PERM;}
     
-  ProbeReturn deinstallProbe(ProbeType pt){
+  ProbeReturn deinstallProbe(){
     unsigned short t=getType();
     if(t & CONNECTED){
       if(t & REMOTE_SITE){
-	return deinstallProbe_RemoteSite(getRemoteSite(),pt);}	
-      return deinstallProbe_VirtualSite(getVirtualSite(),pt);}
+	return deinstallProbe_RemoteSite(getRemoteSite());}	
+      return deinstallProbe_VirtualSite(getVirtualSite(),PROBE_TYPE_ALL);}
     return PROBE_NONEXISTENT;}
 
   ProbeReturn probeStatus(ProbeType &pt,int &frequency,void* &storePtr){
@@ -626,17 +626,12 @@ public:
 
 // provided for network and virtual site comm-layers
 
-  void communicationProblem(MessageType mt,Site* storeSite,int storeIndex,FaultCode fc,FaultInfo fi){
-    //ATTENTION not implemented
-    //EK
-    // Assert(0) removed due to dbging of the system
-    OZ_warning("not implemented");
-    return;}
+  void communicationProblem(MessageType mt,Site* 
+			    storeSite,int storeIndex
+			    ,FaultCode fc,FaultInfo fi);
+  
+  void probeFault(ProbeReturn pr);
 
-  void probeFault(void* Ptr,ProbeReturn pr){
-    Assert(0);
-    error("not implemented");
-    return;}
     
   void sitePermProblem(){
     if(getType() & PERM_SITE) {return;}
@@ -648,7 +643,7 @@ public:
     error("not implemented");
     return;}
 
-
+  
   void msgReceived(MsgBuffer *);
 
   char* toString();
@@ -658,6 +653,7 @@ public:
 
 Site* initMySite(ip_address,port_t,time_t);
 Site* initMySiteVirtual(ip_address,port_t,time_t,VirtualInfo*);
+
 
 
 

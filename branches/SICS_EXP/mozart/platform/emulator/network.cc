@@ -55,7 +55,7 @@
 #define NO_MSG_NUM -1
 
 #define TCP_MSG_SIGN_BITS 3
-#define INT_IN_BYTES_LEN 6
+#define INT_IN_BYTES_LEN 7
 #define CONNECTION REMOTE
 #define REMOTESITE SITE
 
@@ -64,7 +64,7 @@
 #define NetMsgBuffer_CUTOFF 50
 
 static Bool net_timer_set;
-
+int tempTimeCtr=0;
 
 #include <netdb.h>
 
@@ -83,6 +83,7 @@ static const int tcpSimpleHeaderSize = 1+netIntSize;
 static const int tcpHeaderSize=1+netIntSize+msgNrSize + ansNrSize;
 static const int tcpConfirmSize=tcpHeaderSize+netIntSize;
 
+/*
 enum InterfaceCode{
   INVALID_VIRTUAL_PORT,
   SITE_NAME_UNKNOWN,
@@ -92,29 +93,36 @@ enum InterfaceCode{
   SITE_UNKNOWN,
   NET_CRASH
 };
+*/
+
 enum tcpMessageType {
   TCP_CLOSE_REQUEST_FROM_WRITER = 0,
   TCP_CLOSE_REQUEST_FROM_READER,
-  TCP_CLOSE_ACK_FROM_WRITER,
   TCP_CLOSE_ACK_FROM_READER,
-  TCP_CONNECTION, // from READER
-  TCP_PACKET,     // from WRITER
-  TCP_MYSITE,     // from WRITER
   TCP_MSG_ACK_FROM_READER,
-  TCP_MSG_ACK_REQUEST_FROM_WRITER,
+  TCP_RESEND_MESSAGES,
+  TCP_NO_CONNECTION, // from READER
+  TCP_CONNECTION,    // from READER
+  TCP_PACKET,        // from WRITER
+  TCP_MYSITE,        // from WRITER
+  TCP_MSG_ACK_REQUEST_FROM_WRITER, // not used
   TCP_NONE 
 };
 
 enum ConnectionFlags{
-  CLOSING=1,
-  OPENING=2,
-  WANTS_TO_OPEN=4,
-  WANTS_TO_ACK_CLOSE=8,
-  WANTS_TO_CLOSE=16,
-  CURRENT=32,
-  WRITE_QUEUE=64,
-  CAN_CLOSE = 128,
-  ACK_MSG_INCOMMING=256
+  CLOSING=1,  // has sent CLOSE request
+  OPENING=2,  // has made connection 
+  WANTS_TO_OPEN=4,      // ??
+  WANTS_TO_PROBE=8, // ??
+  WANTS_TO_CLOSE=16,    // is blocked on trying to send CLOSE
+  CURRENT=32,           // incompleteRead or Write
+  WRITE_QUEUE=64,       // has something in write queue
+  CAN_CLOSE = 128,      // ??
+  ACK_MSG_INCOMMING=256,// incomplete on back-channel
+  WRITE_CON = 512,      // connection type is WRITE
+  MY_INITIATVE = 1024,  //?? 
+  TMP_PROBE = 2048,     
+  PRM_PROBE = 4096,
 };
 
 enum ByteStreamType{
@@ -125,9 +133,7 @@ enum ByteStreamType{
   BS_Unmarshal};
 
 
-#define REFERENCES     4 // ATTENTION
-
-#define MAXTCPCACHE 20
+#define MAXTCPCACHE 30
 
 enum ipReturn{
   IP_OK= 0,
@@ -138,10 +144,16 @@ enum ipReturn{
   IP_TIMER_EXCEPTION= -5,
   IP_NET_CRASH= -6,
   IP_TEMP_BLOCK= -7,
-  IP_PERM_BLOCK= -8
+  IP_PERM_BLOCK= -8,
+  IP_GARBAGE= -9
 };
 
 #define LOST -1
+
+
+#define INITIATOR_ME 1
+#define INITIATOR_HIM 2
+
 
 #ifdef XXGNUWIN32
 #define ntohl __ntohl
@@ -166,14 +178,16 @@ class ByteBufferManager;
 class MessageManager;
 class TcpCache;
 class TcpOpenMsgBuffer;
+class NetMsgBuffer;
 
-/*
-extern void dvset(int);
-*/
 
-ipReturn tcpCloseWriter(WriteConnection *);
+ipReturn tcpSend(int,Message *,Bool);
+inline void tcpWantsToOpen(Connection *);
 int intifyUnique(BYTE *);
 TcpOpenMsgBuffer *tcpOpenMsgBuffer;
+Bool tcpAckReader(ReadConnection*, int);
+static ipReturn tcpOpen(RemoteSite *,WriteConnection *) ;
+int tcpConnectionHandler(int,void *);
 /* ************************************************************************ */
 /*  SECTION ::  Global Variables                                            */
 /* ************************************************************************ */
@@ -186,37 +200,104 @@ ByteBufferManager *byteBufferManager;
 MessageManager *messageManager;
 TcpCache *tcpCache;
 
-/* ************************************************************************ */
-/*  SECTION ::  Debugging                                                   */
-/* ************************************************************************ */
-
-void printBytes(BYTE *s, int len)
-{
-  for (int i = 0; i < len; i++) {
-    if ((i % 16) == 0) printf("-> %d: ",i);
-    printf(" %02x",*s++);
-    if (((i+1) % 16) == 0) printf("\n");
-  }
-  printf("\n\n");
-}
 
 
-/* *****************************************************************
- * *****************************************************************
- * Site                     basic info on sites - common to gnames
-   RemoteSiteManager              SINGLE
-   MySiteInfo               SINGLE
- * *****************************************************************
- * *************************************************************** */
+
+class Message{
+  friend class IOQueue;
+  friend class MessageManager;
+  friend class RemoteSite;
+  friend class WriteConnection;
+protected:
+  Message *next;
+  tcpMessageType type; // ?? 
+  NetMsgBuffer *bs;
+  int remainder;
+  int msgNum;
+  Site *site;// not needed ??
+  MessageType msgType;
+  int storeIndx;
+  
+public:
+  Message(){}
+  void init(NetMsgBuffer *b, int n, 
+	    Site *s, MessageType msg, int stI){
+    next=NULL;
+    bs=b;
+    remainder=0;
+    type=TCP_NONE;
+    msgNum = n;
+    site = s;
+    msgType = msg;
+    storeIndx = stI;}
+  NetMsgBuffer* getMsgBuffer(){
+    return bs;};
+  void setType(tcpMessageType t){
+    PD((MESSAGE,"set type %d",t));
+    type=t;}
+  tcpMessageType getType(){
+    return type;}
+  int getRemainder(){
+    return remainder;} 
+  void setRemainder(int i){
+    PD((MESSAGE,"set remainder %d",i));
+    remainder=i;}
+  Message* getNext(){
+    return next;}
+  int getMsgNum(){
+    return msgNum;}
+  void setMsgNum(int n){
+    msgNum = n;}
+  void resend();
+  
+};
 
 
-/* ------------------------------------------------------------------------
-   Site - common to network layer and global name mechanism
-   ----------------------------------------------------------------------- */
-
-#define NO_TIMESTAMP ~1
-#define NO_PORT 0xffff
-
+class IOQueue {
+private:
+  Message *first;
+  Message *last;
+  void checkQueue();
+public:
+  IOQueue():first(NULL),last(NULL){}
+  Message* getFirst();
+  Message* removeFirst();
+  Bool     queueEmpty(){
+    Assert(((first==NULL) && (last==NULL))|| 
+	   ((first!=NULL) && (last!=NULL)));
+    return first == NULL;}
+  Message* find(int msg){
+    // EK
+    // Rewrite, looks like shit...
+    //
+    Assert(((first==NULL) && (last==NULL))|| 
+	   ((first!=NULL) && (last!=NULL)));
+    Message *b=first;
+    if (first == last)
+      if (first != NULL && first -> msgNum == msg){
+	first = last = NULL;
+	return b;}
+      else
+	return NULL;
+    if (first->msgNum == msg){
+      first = first->next;
+      return b;}
+    while(b->next != NULL)
+      if(b->next->msgNum == msg){
+	Message *d = b->next;
+	if(d == last){
+	  last = b;
+	  b->next = NULL; }
+	else
+	  b->next = d->next;
+	return d;}
+      else
+	b = b->next;
+    return NULL;}
+  void enqueue(Message *m);
+  void dequeue(Message *m);
+  void addfirst(Message *m);
+};      
 
 /* ************************************************************************ */
 /*  SECTION ::  Network MsgBuffer and friends                                       */
@@ -241,23 +322,21 @@ public:
 
 class ByteBufferManager: public FreeListManager {
 public:
-  ByteBufferManager():FreeListManager(BYTEBUFFER_CUTOFF){}
+  ByteBufferManager():FreeListManager(BYTEBUFFER_CUTOFF){wc = 0;}
+  int wc;
 
   ByteBuffer*newByteBuffer(){
     FreeListEntry *f=getOne();
     ByteBuffer *bb;
-    if(f==NULL) {
-      bb=new ByteBuffer();
-      PD((WEIRD,"New ByteBuffer"));}
-    else{
-      GenCast(f,FreeListEntry*,bb,ByteBuffer*);
-      PD((WEIRD,"Old ByteBuffer"));}
+    if(f==NULL) {bb=new ByteBuffer();}
+    else{GenCast(f,FreeListEntry*,bb,ByteBuffer*);}
     bb->init();
-    PD((WEIRD,"The New ByteBuffer %d %d",bb, bb->next));
+    PD((BUFFER,"New ByteBuffer %d %d nr:%d",bb, bb->next, ++wc));
     return bb;}
   
   void deleteByteBuffer(ByteBuffer* bb){
     FreeListEntry *f;
+     PD((BUFFER,"DeAllocating ByteBuffer nr:%d",--wc));
     GenCast(bb,ByteBuffer*,f,FreeListEntry*);
     if(putOne(f)) return;
     delete bb;
@@ -295,24 +374,38 @@ protected:
   
 public:
   NetMsgBuffer(){}
+
+
+  void resend();
+    
+
   void init(){type=BS_None;first=NULL;start=NULL;last=NULL;
   site=NULL;remotesite=NULL;stop=NULL;}
+
   void init(Site *s){type=BS_None;first=NULL;start=NULL;last=NULL;
   site=s;remotesite=NULL;stop=NULL;}
+
   void setSite(Site *s){
   site = s;}
+
   Site* getSite(){
     return site;}
+
   RemoteSite* getRemoteSite(){
     return remotesite;}
+
   char *siteStringrep();
   int getTotLen();
+  
   void removeFirst(){
     Assert(first!=last);
     ByteBuffer *bb=first;
     first=bb->next;
     byteBufferManager->deleteByteBuffer(bb);
   }
+
+  void   constructMsg(RemoteSite*,tcpMessageType);
+
   void removeSingle(){
     Assert(first==last);    
     Assert(first!=NULL);
@@ -362,7 +455,7 @@ public:
     type=BS_None;}
   
   void beginWrite(RemoteSite*); /* putting end packet header */
-  void PiggyBack();
+  void PiggyBack(Message*);
   
   
   // EK
@@ -455,6 +548,11 @@ public:
       first=last=NULL;}}
   
 };
+
+
+void Message::resend(){
+  next = NULL;
+  bs->resend();}
 char* NetMsgBuffer::siteStringrep(){
   return site->stringrep();}
 int NetMsgBuffer::getTotLen() {return totlen;}
@@ -545,6 +643,8 @@ class NetMsgBufferManager:public FreeListManager{
 public:
   NetMsgBufferManager():FreeListManager(NetMsgBuffer_CUTOFF){}
   
+  int wc; // for debug purposes
+  
   NetMsgBuffer*newNetMsgBuffer(Site *s){
     FreeListEntry *f=getOne();
     NetMsgBuffer *bb;
@@ -552,11 +652,13 @@ public:
     else{GenCast(f,FreeListEntry*,bb,NetMsgBuffer*);}
     bb->NetMsgBuffer();
     bb->init(s);
+    PD((BUFFER,"New netMsgBuffer b:%r nr:%d",bb,++wc));
     return bb;}
   
   void deleteNetMsgBuffer(NetMsgBuffer* b){
     Assert(b->start == b->stop);
     Assert(b->start == NULL);
+    PD((BUFFER,"Deallocating netMsgBuffer b:%d nr:%d",b,--wc));
     FreeListEntry *f;
     GenCast(b,NetMsgBuffer*,f,FreeListEntry*);
     if(putOne(f)) return;
@@ -582,23 +684,23 @@ ByteBuffer *NetMsgBuffer::getAnother(){
 
 class RemoteSite{
   friend class RemoteSiteManager;
-
-  int sentMsgCtr;
-  int recMsgCtr;
-  int tmpMsgNum;
-  SiteStatus status;
-  int totalNrMsg;
-  int totalMsgSize;
-  int MsgMonitorSize;
-  int MsgMonitorNr;
-  void* MsgMonitorPtr;
-  WriteConnection *writeConnection;
+  
+  int recMsgCtr; 
+  int tmpMsgNum;             // optimize away
+  SiteStatus status;         // TEMP,PERM,OK
+  
+  // This is all monitor stuff. 
+  // should be encapsulated in an  object with manager
+  int totalNrMsg;        // nr of queued msgs
+  int totalMsgSize;      // size of queued msgs
+  int MsgMonitorSize;    // limits given by protocol-layer
+  int MsgMonitorNr;      // limits given by protocol-layer
+  void* MsgMonitorPtr;   // given by protocol-layer
+  
+  WriteConnection *writeConnection; 
   ReadConnection *readConnection;
-  Message *sentMsg;
-  int  maxNrAck;
-  int  maxSizeAck;
-  int  recNrAck;
-  int  recSizeAck;
+  Message *sentMsg;      // non-acknowledge msgs
+  IOQueue writeQueue; //Unsent Messages,
 public:
   Site* site;
 
@@ -607,28 +709,40 @@ protected:
 public:
   RemoteSite(): writeConnection(NULL),readConnection(NULL){} 
   
+  void setAckStartNr(int nr);
+  int resendAckQueue(Message *m);
+  
   int sendTo(NetMsgBuffer*,MessageType,Site*, int);
   void zeroReferences();
-  void nonZeroReferences(){OZ_warning("We have pointers to us, soo?");}
+  void nonZeroReferences();
   
   void writeConnectionRemoved();
   void readConnectionRemoved();
+
+  void addWriteQueue(Message* m,int msg){
+    // EK fix this
+    Assert(0);}
   
+  void addWriteQueue(Message*);
+  void addFirstWriteQueue(Message* m){
+    writeQueue.addfirst(m);}
+    
+  Message* getWriteQueue();
+
   SiteStatus siteStatus(){return status;}
+
   void siteTmpDwn();
   void siteLost();
-  int incMsgCtr(){
-    return ++sentMsgCtr; }
-  int getMsgCtr(){
-    return sentMsgCtr;}
+
   int getTmpMsgNum(){
     return tmpMsgNum++;}
-  void receivedNewMsg(int Nr);
+
+  Bool receivedNewMsg(int, int);
   int getRecMsgCtr();
+  void clearRecMsgCtr(){
+    recMsgCtr = 0;}
   void storeSentMessage(Message* bs);
-  void ackReceived(int nr);
   time_t getTimeStamp();
-  //Bool checkTimeStamp(time_t t);
   port_t getPort();
   ip_address getAddress();
   WriteConnection *getWriteConnection();
@@ -636,14 +750,17 @@ public:
   void setWriteConnection(WriteConnection *r);
   void setReadConnection(ReadConnection *r);
   int discardUnsentMessage(int msgNum);
+
   int getQueueSize(int &noMsg) {Assert(0);return 0;} // ATTENTION
   MonitorReturn deMonitorQueue();
+
   void queueMessage(int size){
     Assert(totalNrMsg >=0 && totalMsgSize >=0);
     totalNrMsg++;
     totalMsgSize += size;
     PD((SITE,"New queue entry nr: %d size: %d",
 	totalNrMsg,totalMsgSize));}
+
   void deQueueMessage(int size){
     totalNrMsg--;
     totalMsgSize -= size;
@@ -657,6 +774,7 @@ public:
       */
       PD((SITE,"Remove queue entry nr: %d size: %d",
 	totalNrMsg,totalMsgSize));}
+
   void partlyDeQueueMessage(int size){
     Assert(totalNrMsg >0 && totalMsgSize >0 && size > 0);
     totalMsgSize -= size;
@@ -667,10 +785,11 @@ public:
   MonitorReturn monitorQueueMsgs(int NoMess, int SizeMess, void *p);
   Bool deMonitorQueueMsg();
   int  getQueuesize(int &);
-  void setMaxNrSizeAck(int mN, int mS);
-  void receivedNewSize(int size);
-  Site* getSite(){
-    return site;}
+  Site* getSite(){return site;}
+  
+  ProbeReturn installProbe();
+  ProbeReturn deInstallProbe();
+
 };
 
 
@@ -679,94 +798,6 @@ public:
    ********************************************************************** */
 
 
-class Message{
-friend class IOQueue;
-friend class MessageManager;
-friend class RemoteSite;
-friend class WriteConnection;
-protected:
-  Message *next;
-  tcpMessageType type;
-  NetMsgBuffer *bs;
-  int remainder;
-  int msgNum;
-  Site *site;
-  MessageType msgType;
-  int storeIndx;
-  
-public:
-  Message(){}
-  void init(NetMsgBuffer *b, int n, 
-	    Site *s, MessageType msg, int stI){
-    next=NULL;
-    bs=b;
-    remainder=0;
-    type=TCP_NONE;
-    msgNum = n;
-    site = s;
-    msgType = msg;
-    storeIndx = stI;}
-  NetMsgBuffer* getMsgBuffer(){
-    return bs;};
-  void setType(tcpMessageType t){
-    PD((MESSAGE,"set type %d",t));
-    type=t;}
-  tcpMessageType getType(){
-    return type;}
-  int getRemainder(){
-    return remainder;} 
-  void setRemainder(int i){
-    PD((MESSAGE,"set remainder %d",i));
-    remainder=i;}
-  Message* getNext(){
-    return next;}
-  int getMsgNum(){
-    return msgNum;}
-  
-};
-
-
-class IOQueue {
-private:
-  Message *first;
-  Message *last;
-  void checkQueue();
-public:
-  IOQueue():first(NULL),last(NULL){}
-  Message* getFirst();
-  Message* removeFirst();
-  Bool     queueEmpty();
-  Message* find(int msg){
-    // EK
-    // Rewrite, looks like shit...
-    //
-    Assert(((first==NULL) && (last==NULL))|| 
-	   ((first!=NULL) && (last!=NULL)));
-    Message *b=first;
-    if (first == last)
-      if (first != NULL && first -> msgNum == msg){
-	first = last = NULL;
-	return b;}
-      else
-	return NULL;
-    if (first->msgNum == msg){
-      first = first->next;
-      return b;}
-    while(b->next != NULL)
-      if(b->next->msgNum == msg){
-	Message *d = b->next;
-	if(d == last){
-	  last = b;
-	  b->next = NULL; }
-	else
-	  b->next = d->next;
-	return d;}
-      else
-	b = b->next;
-    return NULL;}
-  void enqueue(Message *m);
-  void dequeue(Message *m);
-};      
 
 
 /* ********************************************************************** 
@@ -778,27 +809,15 @@ public:
   int fd;               // LOST means no connection
   int flags;
   RemoteSite *remoteSite;
-  
-  void connectionLost(){
-    remoteSite->site->discoveryPerm();}
-  
   Message* current;
-
-
+  Connection *next, *prev;
+  
   void setFlag(int f){flags |= f;}
   void clearFlag(int f){flags &= ~f;}
   Bool testFlag(int f){return f & flags;}
+  void connectionLost(){
+    remoteSite->site->discoveryPerm();}
 
-
-  Bool isWantsToAckClose(){
-    return testFlag(WANTS_TO_ACK_CLOSE);}
-  void clearWantsToAckClose(){ 
-    Assert(testFlag(WANTS_TO_ACK_CLOSE));
-    PD((REMOTE,"clearWantsToAckClose site:%s",remoteSite->site->stringrep()));
-    clearFlag(WANTS_TO_ACK_CLOSE);}
-
-
-  
   Bool isOpening(){
     return testFlag(OPENING);}
   void setIncomplete(){
@@ -813,10 +832,8 @@ public:
     Assert(testFlag(CURRENT));
     PD((REMOTE,"clearIncomplete site:%s",remoteSite->site->stringrep()));    
     clearFlag(CURRENT);}
-  void setClosing(){
-    PD((REMOTE,"setClosing site:%s",remoteSite->site->stringrep()));
-    Assert(!testFlag(CLOSING));
-    setFlag(CLOSING);}
+  void setClosing();
+
   Bool isClosing(){
     return testFlag(CLOSING);}
   void clearClosing(){
@@ -843,90 +860,105 @@ public:
     Message *m = current;
     current = NULL;
     clearIncomplete();
-    return m;
-  }
-};
-
-class ReadConnection:public Connection{
-  friend class ReadConnectionManager;
-  friend class TcpCache;
-protected:
-  ReadConnection *next, *prev;
-public:
-  void informSiteRemove(){
-    remoteSite->readConnectionRemoved();}
-  
-  void prmDwn();
-  void informSiteAck(int m, int a, int s){
-    PD((REMOTE,"Ack received: %d waiting for: %d",
-	a,remoteSite->getMsgCtr()));
-    // EKT
-    // This could be done in one method invokation,
-    // They coulSreceivedNewMd allso be inlined...
-    remoteSite->receivedNewMsg(m);
-    remoteSite->receivedNewSize(s);
-    remoteSite->ackReceived(a);}
-    
-  
-
-
-  void init(RemoteSite *s){
-    next = prev = NULL;
-    flags=0;
-    current = NULL;
-    remoteSite=s;
-    current=NULL;}
+    return m;}
   
   void disconnect(){
     Assert(next!=NULL);
     Assert(prev!=NULL);
     next->prev=prev;
     prev->next=next;}
+};
 
+class ReadConnection:public Connection{
+  friend class ReadConnectionManager;
+  friend class TcpCache;
+
+protected:
+  int  maxSizeAck;
+  int  recSizeAck; 
+public:
+
+  void receivedNewSize(int size){
+    recSizeAck +=  size;
+    PD((SITE,"SizeReceived s: %d l: %d",recSizeAck
+	,maxSizeAck));
+    if(recSizeAck >= maxSizeAck &&
+       tcpAckReader(this,remoteSite->getRecMsgCtr())){
+      PD((SITE,"Ack, limit reached...."));
+      recSizeAck = 0;}}
+  
+  void messageSent(){
+    recSizeAck=0;}
+  
+  void informSiteRemove(){
+    remoteSite->readConnectionRemoved();}
+  
+  void resend();
+  
+  void setMaxSizeAck(int max){
+    PD((SITE,"Max size: %d",max));
+    maxSizeAck = max;
+    recSizeAck = 0;}
+  
+  Bool informSiteAck(int, int, int);
+
+  void init(RemoteSite *s){
+    next = prev = NULL;
+    flags=0;
+    current = NULL;
+    maxSizeAck = 0;
+    recSizeAck = 0;
+    remoteSite=s;
+    current=NULL;}
+  
   Bool canbeClosed(){
-    if(isClosing()) return FALSE;
+    if(isClosing()) Assert(0);
     if(isOpening()) return FALSE;
-
     return TRUE;}
-
+  
+  Bool goodCloseCand(){
+    return canbeClosed() && !isIncomplete();}
+  
+  void close();
+  void prmDwn();
+  void closeTcpConnection();
 };
 
 class WriteConnection:public Connection{
   friend class WriteConnectionManager;
   friend class TcpCache;
 protected:
-  WriteConnection *next, *prev;
   BYTE intBuffer[INT_IN_BYTES_LEN];
   BYTE *bytePtr;
-  int writeCtr;
-  
-  IOQueue writeQueue;
+  int sentMsgCtr;
+  Message *sentMsg;      // non-acknowledge msgs
+  int probeCtr;
 public:
-  void tryToTakeDown(Bool askForAck){
-    setCanClose();
-    if(askForAck){
-      return;}
-    
-    
-  }
   void informSiteRemove(){
     remoteSite->writeConnectionRemoved();}
-    
-  void tmpDwn();
-  Bool shouldSendFromUser(){
-    if(isClosing()){PD((REMOTE,"isClosing")); return FALSE;}
-    if(isOpening()) {PD((REMOTE,"isOpening")); return FALSE;}
-    if(isWantsToAckClose()) {PD((REMOTE,"isWantsToAckClose")); return FALSE;}
-    if(isWantsToOpen()) {PD((REMOTE,"isWantsToOpen")); return FALSE;}
-    if(isIncomplete()) {PD((REMOTE,"isIncompleteWrite")); return FALSE;}
-    Assert(fd!=LOST);
-    return TRUE;}
+  
+  void reOpen();
+  void close(int);
 
-  void nowOpening();
+  void closeTcpConnection();
+  void tmpDwn();
+  Bool shouldSendFromUser();
+
+  int incMsgCtr(){
+    return ++sentMsgCtr; }
+  void informSiteResendAckQueue();
+
+  void storeSentMessage(Message* m);
+
+  int getMsgCtr(){
+    return sentMsgCtr;}
+  Bool checkAckQueue();
+
+  void ackReceived(int);
+
   void setWantsToClose();
   void nowClosing();
   void setWantsToOpen();
-  
 
   Bool goodCloseCand(){
     return (canbeClosed() && (!isWritePending()));}
@@ -942,39 +974,47 @@ public:
     *bytePtr++ = msg;   
     PD((TCP,"Reading byte: %d diff: %d tot: %d",
 	msg, bytePtr - intBuffer, INT_IN_BYTES_LEN));
-    if((bytePtr - intBuffer) == INT_IN_BYTES_LEN)
-      {
-	remoteSite->ackReceived(intifyUnique(intBuffer));
-	clearFlag(ACK_MSG_INCOMMING);
-	return false;
-      }
-    return true;
-  }
+    if((bytePtr - intBuffer) == INT_IN_BYTES_LEN){
+      clearFlag(ACK_MSG_INCOMMING);
+      ackReceived(intifyUnique(intBuffer));
+      return false;}
+    return true; }
+  
   void prmDwn();
-  void addWriteQueue(Message* m,int msg){
-    // EK fix this
-    Assert(0);
-  }
-  void addWriteQueue(Message* m){
-    setInWriteQueue();
-    remoteSite->queueMessage(m->bs->getTotLen());
-    writeQueue.enqueue(m);}
+  
   Bool isInWriteQueue(){
     Assert(!testFlag(CURRENT));
     return testFlag(WRITE_QUEUE);}
   void setInWriteQueue(){
-    writeCtr++;
-    PD((REMOTE,"setInWriteQueue s:%s ct:%d",remoteSite->site->stringrep(),writeCtr));
+    PD((REMOTE,"setInWriteQueue s:%s",remoteSite->site->stringrep()));
     setFlag(WRITE_QUEUE);}
   void clearInWriteQueue(){
-    writeCtr--;
-    PD((REMOTE,"Removed from writequeue  s:%s ct:%d",remoteSite->site->stringrep(),writeCtr));
+    PD((REMOTE,"Removed from writequeue  s:%s",	remoteSite->site->stringrep()));
     clearFlag(WRITE_QUEUE);}
-  Message* getWriteQueue(){
-    Message* m = writeQueue.removeFirst();
-    if(writeQueue.queueEmpty())
-      clearInWriteQueue();
-    return m;}
+
+  
+  void setWantsToProbe(){
+    Assert(!testFlag(WANTS_TO_PROBE));    
+    PD((REMOTE,"setWantsToPROBE site:%s",remoteSite->site->stringrep()));
+    setFlag(WANTS_TO_PROBE);}
+  Bool isWantsToProbe(){
+    return testFlag(WANTS_TO_PROBE);}
+  void clearWantsToProbe(){ 
+    Assert(testFlag(WANTS_TO_PROBE));
+    PD((REMOTE,"clearWantsToProbe site:%s",remoteSite->site->stringrep()));
+    clearFlag(WANTS_TO_PROBE);}
+  
+  Bool isProbing(){
+    return testFlag(TMP_PROBE | PRM_PROBE);}
+  void setProbingPrm(){
+    setFlag(TMP_PROBE|PRM_PROBE);}
+  void setProbingTmp(){
+    setFlag(TMP_PROBE);}
+  void clearProbingPrm(){
+    clearFlag(TMP_PROBE|PRM_PROBE);}
+  void clearProbingTmp(){
+    clearFlag(TMP_PROBE);}
+  
   Bool isWantsToClose(){
     return testFlag(WANTS_TO_CLOSE);}
   Bool isOpening(){
@@ -984,43 +1024,53 @@ public:
     setFlag(ACK_MSG_INCOMMING);}
   Bool isWritePending(){
     return testFlag(WRITE_QUEUE|CURRENT);}
-  void setWantsToAckClose(){
-    Assert(!testFlag(WANTS_TO_ACK_CLOSE));    
-    PD((REMOTE,"setWantsToAckClose site:%s",remoteSite->site->stringrep()));
-    setFlag(WANTS_TO_ACK_CLOSE);}
-  
+
+  // Zero references to Site. When no msgs are waiting
+  // close the writeConnedtion.
   void setCanClose(){
     // EK assertion?
     PD((REMOTE,"You can now close site:%s",remoteSite->site->stringrep()));
     setFlag(CAN_CLOSE);}
   Bool isCanClose(){
     return testFlag(CAN_CLOSE);}
+  void clearCanClose(){
+    Assert(isCanClose());
+    clearFlag(CAN_CLOSE);}
+
   void setOpening(){
     Assert(!testFlag(OPENING));
     PD((REMOTE,"setOpening site:%s",remoteSite->site->stringrep()));
+    if(testFlag(WANTS_TO_OPEN))
+      clearFlag(WANTS_TO_OPEN);
     setFlag(OPENING);}
   int discardUnsentMessage(int msgNum);
   Bool canbeClosed(){
     if(isClosing()) return FALSE;
     if(isOpening()) return FALSE;
-    if(isWantsToAckClose()) return FALSE;
+    if(isWantsToProbe()) return FALSE;
     // Ek is it writing? insert that here 
     return TRUE;}
   
   void init(RemoteSite *s){
     next = prev = NULL;
     current = NULL;
-    flags=0;
-    writeCtr=0;
+    sentMsg = NULL;
+    sentMsgCtr =0;
+    flags=WRITE_CON;
     remoteSite=s;
     bytePtr = intBuffer + INT_IN_BYTES_LEN;
+    probeCtr = 0;
   }
-
-  void disconnect(){
-    Assert(next!=NULL);
-    Assert(prev!=NULL);
-    next->prev=prev;
-    prev->next=next;}
+  void installProbe(){
+    Assert(probeCtr >=0);
+    if(probeCtr==0)
+      setProbingPrm();
+    probeCtr++;}
+  void deInstallProbe(){
+    Assert(probeCtr>0);
+    probeCtr--;
+    if(probeCtr==0)
+      clearProbingPrm();}
 };
 
 
@@ -1032,9 +1082,14 @@ void RemoteSite::zeroReferences(){
     return;
   
   if(writeConnection -> goodCloseCand())
-    tcpCloseWriter(writeConnection);
+    writeConnection->closeTcpConnection();
   else
     writeConnection -> setCanClose();}
+  
+void RemoteSite::nonZeroReferences(){
+  PD((SITE,"Non zero references to site %s",site->stringrep()));
+  if(writeConnection == NULL && writeConnection->isCanClose())
+    writeConnection->clearCanClose();}
   
 /* -------------------------------------------------------------------
             MySiteInfo
@@ -1085,35 +1140,26 @@ public:
 void RemoteSite::writeConnectionRemoved(){
     writeConnection = NULL;
     if(readConnection == NULL){
-      Assert(sentMsg == NULL);
-      // EK insert this one when the real files
-      // are inserted.
-      // site->dumpRemoteSite(recMsgCtr);
+      site->dumpRemoteSite(recMsgCtr);
       remoteSiteManager->freeRemoteSite(this);}}
 
 void RemoteSite::readConnectionRemoved(){
     readConnection = NULL;
     if(writeConnection == NULL){
-      Assert(sentMsg == NULL);
-      // EK insert this one when the real files
-      // are inserted.
-      // site->dumpRemoteSite(recMsgCtr);
+      site->dumpRemoteSite(recMsgCtr);
       remoteSiteManager->freeRemoteSite(this);}}
-/* *******************************************************************
-   *******************************************************************
-            Connection    for all tcp connected-sites
-	    ConnectionManager                                 SINGLE
-	    TcpCache                                      SINGLE
-   *******************************************************************
-   ******************************************************************* */
-
-
 
 /* *******************************************************************
-            ConnectionManagers
+   Managers:
+   Used for our own memory management.
+
+   ReadConnectionManager
+   WriteConnectionManager
+   
    ******************************************************************* */
 
 class ReadConnectionManager: public FreeListManager{
+  int wc; 
   void deleteConnection(ReadConnection *r){
     FreeListEntry *f;
     GenCast(r,ReadConnection*,f,FreeListEntry*);
@@ -1132,20 +1178,22 @@ public:
   ReadConnectionManager():FreeListManager(READ_CONNECTION_CUTOFF){} 
   
   void freeConnection(ReadConnection *r){ 
-    PD((REMOTE,"freed r:%x",r));
+    PD((REMOTE,"freed r:%x nr:%d",r,--wc));
     Assert(r->isRemovable());
     deleteConnection(r);
     return;}
 
   ReadConnection *allocConnection(RemoteSite *s,int f){
     ReadConnection *r=newConnection(s,f);
-    PD((REMOTE,"allocated r:%x s:%x fd:%d",r,s,f));
+    PD((REMOTE,"allocated r:%x s:%x fd:%d nr:%d",r,s,f,++wc));
     return r;}
 
 };
 
 
 class WriteConnectionManager: public FreeListManager{
+  int wc; 
+  
   void deleteConnection(WriteConnection *r){
     FreeListEntry *f;
     GenCast(r,WriteConnection*,f,FreeListEntry*);
@@ -1161,25 +1209,23 @@ class WriteConnectionManager: public FreeListManager{
     r->fd=fd0;
     return r;}
 public:
-  WriteConnectionManager():FreeListManager(WRITE_CONNECTION_CUTOFF){} 
+  WriteConnectionManager():
+    FreeListManager(WRITE_CONNECTION_CUTOFF){wc = 0;} 
 
   void freeConnection(WriteConnection *r){ 
-    PD((REMOTE,"freed r:%x",r));
+    PD((REMOTE,"freed r:%x nr%d",r,--wc));
+    r->clearFlag(WRITE_CON);
     Assert(r->isRemovable());
     deleteConnection(r);
     return;}
 
   WriteConnection *allocConnection(RemoteSite *s,int f){
     WriteConnection *r=newConnection(s,f);
-    PD((REMOTE,"allocated r:%x s:%x fd:%d",r,s,f));
+    PD((REMOTE,"allocated r:%x s:%x fd:%d nr:%d",r,s,f,++wc));
     return r;}
 
 };
 
-/* TODO */
-
-Bool noaccept() {NETWORK_ERROR(("not implemented"));return FALSE;}
-Bool yesaccept() {NETWORK_ERROR(("not implemented"));return FALSE;}
 
 /* *******************************************************************
             TcpCache
@@ -1206,175 +1252,240 @@ ipReturn tcpWriteError()
   return IP_TEMP_BLOCK;
 }
 
-void tcpCloseReader(Connection *);
 
 
 class TcpCache {
-  ReadConnection* readHead; 
-  ReadConnection* readTail;
-  WriteConnection* writeHead;
-  WriteConnection* writeTail;
-  int size;
+  Connection* currentHead; // CurrentConnections
+  Connection* currentTail; //
+  Connection* closeHead;   // Connections that are closing
+  Connection* closeTail;   //
+  Connection* myHead;      // Writes that this site has taken down
+  Connection* myTail;      //
+  Connection* extHead;     // Writes that the other site has taken down
+  Connection* extTail;     // 
+  Connection* tmpHead;     // Connections that are tmp down
+  Connection* tmpTail;     //
+  Connection* probeHead;     // closed Connections that are to be probed
+  Connection* probeTail;     //
+  int current_size;
+  int close_size;
+  int open_size;
   int max_size;
-    
-  void destroyRead(ReadConnection *r){
-    PD((TCPCACHE,"destroy r:%x",r));
-    Assert(r->canbeClosed());
-    tcpCloseReader(r);
-    return;}
-
-  void destroyWrite(WriteConnection *r){
-    PD((TCPCACHE,"destroy r:%x",r));
-    Assert(r->canbeClosed());
-    tcpCloseWriter(r);
-    return;}
-    
-  void addToReadFront(ReadConnection *r){
-    if(readHead==NULL){
-      Assert(readTail==NULL);
+  
+  void addToFront(Connection *r, Connection* &head, Connection* &tail){
+    if(head==NULL){
+      Assert(tail==NULL);
       r->next=NULL;
       r->prev=NULL;
-      readHead=r;
-      readTail=r;
+      head=r;
+      tail=r;
       return;}
-    r->next=readHead;
+    r->next=head;
     r->prev=NULL;
-    readHead->prev=r;
-    readHead=r;}
+    head->prev=r;
+    head=r;}
 
-  void addToWriteFront(WriteConnection *r){
-    if(writeHead==NULL){
-      Assert(writeTail==NULL);
+  void addToTail(Connection *r, Connection* &head, Connection* &tail){
+    if(tail==NULL){
+      Assert(head==NULL);
       r->next=NULL;
       r->prev=NULL;
-      writeHead=r;
-      writeTail=r;
+      head=r;
+      tail=r;
       return;}
-    r->next=writeHead;
-    r->prev=NULL;
-    writeHead->prev=r;
-    writeHead=r;}
+    r->next=NULL;
+    r->prev=tail;
+    tail->next=r;
+    tail=r;}
+
+
+  Connection* openClosedConnection(Connection* &head,Connection* &tail){
+    Connection *w = tail;
+    if (head == tail) 
+      head = tail = NULL;
+    else{
+      tail = w->prev;
+      w->prev = NULL;
+      tail->next = NULL;}
+    return w;}
+
+  void unlink(Connection *r,Connection* &head, Connection* &tail){
+    PD((TCPCACHE,"cache unlink r:%x",r));
+    if(tail==r) {
+      if(head==r){
+	tail=NULL;
+	head=NULL;
+	return;}
+      tail=r->prev;
+      tail->next=NULL;
+      return;}
+    if(head==r) {
+      head=r->next;
+      head->prev=NULL;
+      return;}
+    r->disconnect();}
+  
+  void close() {
+    PD((TCPCACHE,"close"));
+    WriteConnection* w;
+    ReadConnection* r;
+    Connection *c=currentTail;
+    WriteConnection *cncls = NULL;
+    while(c!=NULL){
+      if(c->testFlag(WRITE_CON)){
+	GenCast(c, Connection*, w,WriteConnection*);
+	if(w->goodCloseCand()){
+	  w->closeTcpConnection();
+	  return;}
+	if(cncls==NULL && w->canbeClosed())
+	  cncls = w;}
+      else{
+	GenCast(c, Connection*,  r, ReadConnection*);
+	if(r->goodCloseCand()){
+	  r->closeTcpConnection();
+	  return;}}
+    c = c->next;}
+    if(open_size>max_size * 2 && cncls != NULL)
+      {cncls->closeTcpConnection();
+      return;}}
 
 public:
   Bool accept;
-
-  TcpCache():size(0),accept(FALSE){ 
-    readHead=NULL;
-    writeHead=NULL;
-    readTail=NULL;
-    writeTail=NULL;
+  
+  TcpCache():accept(FALSE){ 
+    currentHead = NULL; 
+    currentTail= NULL;
+    closeHead= NULL;
+    closeTail= NULL;
+    myHead= NULL;
+    myTail= NULL;
+    extHead= NULL;
+    extTail= NULL;
+    tmpHead= NULL;
+    tmpTail= NULL;
+    probeHead = NULL;
+    probeTail = NULL;
+    current_size = 0;
+    close_size = 0;
+    open_size = 0;
     max_size=MAXTCPCACHE;
     PD((TCPCACHE,"max_size:%d",max_size));}
-
-  void nowAccept();
-
-  void adjust(){
-    if(size>max_size) close();
-    if(size>max_size + 5){
-      if(noaccept()) accept=FALSE;}
-    if(size<max_size && !accept){
-      if(yesaccept()) accept=TRUE;}}
-
-  void close() {
-    Assert(0);
-    /*
-    
-    PD((TCPCACHE,"close"));
-    Assert(0);
-    Connection *r=writeTail;
-    Assert(r!=NULL);
-    Assert(r!=head);
-    while(!r->goodCloseCand()){
-      r=r->prev;
-      if(r==NULL) break;}
-    if(r!=NULL) {destroy(r);return;}
-    if((r==NULL) && (size<max_size * 2)) return;
-    r=tail;
-    while(!r->canbeClosed()){
-      r=r->prev;
-      if(r==NULL) break;}
-    if(r==NULL) return;
-    destroy(r);
-    */
-  }
-
-  void addWrite(WriteConnection *w) {
-    PD((TCPCACHE,"cache add write r:%x",w));
-    addToWriteFront(w);
-    size++;
-    adjust();}
-  void addRead(ReadConnection *r) {
-    PD((TCPCACHE,"cache add r:%x",r));
-    addToReadFront(r);
-    size++;
-    adjust();}
-
-  void touchRead(ReadConnection *r) {
-    PD((TCPCACHE,"cache touch r:%x",r));
-    if(readHead!=r){
-      unlinkRead(r);
-      addToReadFront(r);}
-    adjust();}
-
-  void touchWrite(WriteConnection *w) { 
-    PD((TCPCACHE,"cache touch r:%x",w));
-    if(writeHead!=w){
-      unlinkWrite(w);
-      addToWriteFront(w);}
-    adjust();}
-
-  void removeWrite(WriteConnection *w) {
-    PD((TCPCACHE,"cache remove r:%x",w));
-    unlinkWrite(w);
-    writeConnectionManager->freeConnection(w);
-    size--;}
   
-  void removeRead(ReadConnection *r) {
-    PD((TCPCACHE,"cache remove r:%x",r));
-    unlinkRead(r);
-    readConnectionManager->freeConnection(r);
-    size--;}
+  void nowAccept(){
+    Assert(accept==FALSE);
+    accept=TRUE;}
+  
+  Bool Accept(){
+    return accept;}
+    
+  void adjust(){
+    PD((TCPCACHE,"adjusting size:%d maxsize:%d",open_size,max_size));
+    if(open_size>(max_size)) close();
+    if ((open_size + close_size) > (2 * max_size))
+      accept = FALSE;
+    else
+      accept = TRUE;} 
+  
+  void add(Connection *w) {
+    PD((TCPCACHE,"cache add connection r:%x",w));
+    addToFront(w, currentHead, currentTail);
+    open_size++;
+    adjust();}
+  
+  void touch(Connection *r) {
+    PD((TCPCACHE,"cache touch r:%x",r));
+    if(currentHead!=r){
+      unlink(r, currentHead, currentTail);
+      addToFront(r,currentHead, currentTail);}
+    adjust();}
+  
+  void tryOpenClosedConnection(){
+    if(open_size<max_size)
+      openMyClosedConnection();}
 
-  void unlinkRead(ReadConnection *r){
-    Assert((readHead!=NULL && (readTail!=NULL)));
-    PD((TCPCACHE,"cache unlink r:%x",r));
-    if(readTail==r) {
-      if(readHead==r){
-	readTail=NULL;
-	readHead=NULL;
-	return;}
-      readTail=r->prev;
-      readTail->next=NULL;
-      return;}
-    if(readHead==r) {
-      readHead=r->next;
-      readHead->prev=NULL;
-      return;}
-    r->disconnect();}
+  void closeConnection(Connection *c){
+    PD((TCPCACHE,"cache moved to closing r:%x",c));
+    unlink(c, currentHead, currentTail);
+    addToFront(c, closeHead, closeTail);
+    open_size--;
+    close_size++;
+    tryOpenClosedConnection();}
+  
+  void connectionClosed(Connection *c){
+    PD((TCPCACHE,"cache removed from closing r:%x",c));
+    unlink(c, closeHead, closeTail);
+    close_size--;}
+  
+  void connectionClosedByHim(Connection *c){
+    connectionClosed(c);
+    PD((TCPCACHE,"Connection moved to closedByHim r:%x",c));
+    ((WriteConnection *)c )->setWantsToOpen();
+    addToTail(c, extHead, extTail);}
 
-  void unlinkWrite(WriteConnection *r){
-    Assert((writeHead!=NULL && (writeTail!=NULL)));
-    PD((TCPCACHE,"cache unlink r:%x",r));
-    if(writeTail==r) {
-      if(writeHead==r){
-	writeTail=NULL;
-	writeHead=NULL;
-	return;}
-      writeTail=r->prev;
-      writeTail->next=NULL;
-      return;}
-    if(writeHead==r) {
-      writeHead=r->next;
-      writeHead->prev=NULL;
-      return;}
-    r->disconnect();}
+  void connectionClosedByMe(Connection *c){
+    connectionClosed(c);
+    PD((TCPCACHE,"Connection moved to closedByMe r:%x",c));
+    ((WriteConnection *)c )->setWantsToOpen();
+    addToTail(c, myHead, myTail);}
 
-  Bool has_place(){
-    if(size<max_size) return TRUE;
-    return FALSE;}
+  void connectionLost(Connection *c){
+    PD((TCPCACHE,"cache removed from current r:%x",c));
+    unlink(c, currentHead, currentTail);
+    open_size--;
+    tryOpenClosedConnection();}
+  
+  void openMyClosedConnection(){
+    if(myHead!=NULL)
+      ((WriteConnection *)
+       openClosedConnection(myHead, myTail))->reOpen();}
+
+  void openHisClosedConnection(){
+    if(extHead != NULL)
+      ((WriteConnection *) 
+       openClosedConnection(extHead, extTail))->reOpen();}
+  
+  void probeTrigger(){
+    PD((TCPCACHE,"Probes Invoked"));
+    if(probeHead != NULL)
+      ((WriteConnection *)
+       openClosedConnection(probeHead,probeTail))->reOpen();}
+  
+  void messageOnProbe(Connection *c){
+    PD((TCPCACHE,"Connection moved from Probe to Wants to Open r:%x",c));
+    unlink(c, probeHead, probeTail);
+    ((WriteConnection *)c )->clearWantsToProbe();
+    ((WriteConnection *)c )->setWantsToOpen();
+    addToTail(c, myHead, myTail);}
+
+  void connectionProbeClosed(Connection *c){
+    connectionClosed(c);
+    PD((TCPCACHE,"Connection moved to Probe r:%x",c));
+    ((WriteConnection *)c )->setWantsToProbe();
+    addToFront(c, probeHead, probeTail);}
+  
+  
 };
 
+void WriteConnection::reOpen(){
+  int fd = tcpOpen(remoteSite, this);
+  if(fd == IP_NET_CRASH)
+    remoteSite->site->discoveryPerm();
+  else tcpCache->add(this);}
 
+void Connection::setClosing(){
+  PD((REMOTE,"setClosing site:%s",remoteSite->site->stringrep()));
+  Assert(!testFlag(CLOSING));
+  tcpCache->closeConnection(this);
+  setFlag(CLOSING);}
+
+Bool WriteConnection::shouldSendFromUser(){
+    if(isClosing()){PD((REMOTE,"isClosing")); return FALSE;}
+    if(isOpening()) {PD((REMOTE,"isOpening")); return FALSE;}
+    if(isWantsToProbe()) {tcpCache->messageOnProbe(this);PD((REMOTE,"isWantsProbe")); return FALSE;}
+    if(isWantsToOpen()) {PD((REMOTE,"isWantsToOpen")); return FALSE;}
+    if(isIncomplete()) {PD((REMOTE,"isIncompleteWrite")); return FALSE;}
+    Assert(fd!=LOST);
+    return TRUE;}
 
 /* *****************************************************************
  * *****************************************************************
@@ -1385,6 +1496,51 @@ public:
  * *****************************************************************
  * *************************************************************** */
 
+void ReadConnection::close(){
+  PD((TCP,"close ReadConnection r:%x fd:%d",this,fd));
+  OZ_unregisterRead(fd);
+  osclose(fd);
+  lostConnection();
+  tcpCache->connectionClosed(this);
+  clearClosing();
+  remoteSite->clearRecMsgCtr();
+  informSiteRemove();
+  readConnectionManager->freeConnection(this);}
+
+void WriteConnection::close(int initiater){
+  PD((TCP,"close connection r:%x fd:%d",this,fd));
+  Assert(fd >0);
+  OZ_unregisterRead(fd);
+  if(isWritePending() || sentMsg != NULL){ 
+    if(initiater == INITIATOR_ME){
+      Assert(!isIncomplete());
+      tcpCache->connectionClosedByMe(this);}
+    if(initiater == INITIATOR_HIM){
+      OZ_unregisterWrite(fd); 
+      if(isIncomplete())
+	getCurQueue();
+      tcpCache->connectionClosedByHim(this);}
+    if(isWritePending())
+      OZ_unregisterWrite(fd);
+    if(sentMsg != NULL){
+      remoteSite->resendAckQueue(sentMsg);
+      sentMsg = NULL;}
+    sentMsgCtr = 0;
+    osclose(fd);
+    lostConnection();
+    clearClosing();}
+  else{ 
+    sentMsgCtr = 0;
+    osclose(fd);
+    lostConnection();
+    clearClosing();
+    if(isProbing()){
+      tcpCache->connectionProbeClosed(this);
+      return;}
+    tcpCache->connectionClosed(this);
+    informSiteRemove();
+    clearFlag(WRITE_CON);
+    writeConnectionManager->freeConnection(this);}}
 
 class MessageManager: public FreeListManager {
 private:
@@ -1408,38 +1564,40 @@ public:
   Message * allocMessage(NetMsgBuffer *bs, int msgNum = 0,
 			 Site *s, MessageType b, int i){
     Message*m = newMessage();
-    PD((MESSAGE,"allocate  nr:%d", --Msgs));
+    PD((MESSAGE,"allocate  nr:%d", ++Msgs));
     m->init(bs,msgNum,s,b,i);
     return m;}
 
   Message * allocMessage(NetMsgBuffer *bs,tcpMessageType t,int rem){
     Message*m = newMessage();
-    PD((MESSAGE,"allocate DANGER r:%x nr:%d", --Msgs));
+    PD((MESSAGE,"allocate DANGER r:%x nr:%d", ++Msgs));
     m->init(bs,0,NULL,M_LAST,0);
     m->setRemainder(rem);
     m->setType(t);
     return m;}
   
   void freeMessage(Message *m){
-    PD((MESSAGE,"freed nr: %d", ++Msgs));
+    PD((MESSAGE,"freed nr: %d", --Msgs));
     deleteMessage(m);}
 
   void freeMessageAndMsgBuffer(Message *m){
     netMsgBufferManager->dumpNetMsgBuffer(m->bs);
-    PD((MESSAGE,"BM freed nr:%d", ++Msgs));
+    PD((MESSAGE,"BM freed nr:%d", --Msgs));
     deleteMessage(m);}
 };
 
 
 
-int WriteConnection::discardUnsentMessage(int msgNum){
-  if(isInWriteQueue()){
-    Message *m  = writeQueue.find(msgNum);
-    if (m != NULL){
-      NetMsgBuffer *bs = m->bs;
-	messageManager->freeMessage(m);
-	return (int) bs;}}
-  return MSG_SENT;}
+int RemoteSite::discardUnsentMessage(int msgNum){
+  Message *m  = writeQueue.find(msgNum);
+  if (m != NULL){
+    NetMsgBuffer *bs = m->bs;
+    messageManager->freeMessage(m);
+    return (int) bs;}
+  // EK
+  // Should the message be looked for
+  // among the maybe sent msgs?
+  return writeConnection->discardUnsentMessage(msgNum);}
 
 
 void ReadConnection::prmDwn(){
@@ -1447,66 +1605,86 @@ void ReadConnection::prmDwn(){
   PD((TCP,"ReadConnection is taken down fd: %d",fd));
   osclose(fd);
   OZ_unregisterRead(fd);
+  if(isClosing())
+    tcpCache->connectionClosed(this);
+  else
+    tcpCache->connectionLost(this);
+  
   if(current!=NULL) {
     messageManager->freeMessage(current);
     current = NULL;}}
+
 void WriteConnection::prmDwn(){
-    Message *m;
     osclose(fd);
     PD((TCP,"WriteConnection is taken down fd: %d",fd));
     OZ_unregisterRead(fd);
+    if(isClosing())
+      tcpCache->connectionClosed(this);
+    else
+      if(isProbing()){
+	remoteSite->site->probeFault(PROBE_PERM);
+	clearProbingPrm();
+      }
+      tcpCache->connectionLost(this);
+    
+    // EK 
+    // Emptyong the ackqueue
+    
+    Message *m = sentMsg;
+    sentMsg = NULL;
+    while(m != NULL){
+      PD((REMOTESITE,"Emptying ackqueu m:%x bs: %x",m, m->bs)); 
+      remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
+				 COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
+      Message *tmp = m;
+      m = m->next;
+      messageManager->freeMessageAndMsgBuffer(tmp);}
+        
     if(!isWritePending())
       return;
-    
+    if(isInWriteQueue())
+      clearInWriteQueue();
     OZ_unregisterWrite(fd);
     
     if(isIncomplete()) {
+      clearIncomplete();
       Assert(current != NULL);
       remoteSite->site->communicationProblem(current->msgType, current->site,
 					     current->storeIndx,COMM_FAULT_PERM_NOT_SENT,
 					     (FaultInfo) current->bs);
       messageManager->freeMessage(current);
-      current = NULL;}
-
-    while((m = writeQueue.removeFirst()) && m != NULL) {
-      remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
-			   COMM_FAULT_PERM_NOT_SENT,(FaultInfo) m->bs);
-      messageManager->freeMessageAndMsgBuffer(m);}}
+      current = NULL;}}
 
 void WriteConnection::tmpDwn(){
     Message *m;
     if(current!=NULL) {
       remoteSite->site->communicationProblem(current->msgType, current->site,
 			   current->storeIndx,COMM_FAULT_TEMP_NOT_SENT,(int) current->bs);}
-    while((m = writeQueue.removeFirst()) && m != NULL) {
+    m = sentMsg;
+    while(m != NULL){
+      m->msgNum = remoteSite->getTmpMsgNum();
       remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
-			   COMM_FAULT_TEMP_NOT_SENT,(int) m->bs);;}}
+				 COMM_FAULT_TEMP_MAYBE_SENT,(FaultInfo)m->msgNum);
+      m = m->next;
+    }}
+    
 
+/********************************************************
 
-inline void TcpCache::nowAccept(){
-  Assert(accept==FALSE);
-  accept=TRUE;}
+      RemoteSite DBG
 
-/*
-void Connection::clearInFastQueue(){
-  writeCtr--;
-  PD((REMOTE,"clearInFastQueue s:%x ct:%d",site,writeCtr));
-  if(findWriteFastQueue()!=NULL){
-    Assert(writeCtr>0);
-    return;}
-  clearFlag(WRITE_FAST);}
+********************************************************/
 
-  void Connection::clearInSlowQueue(){
-writeCtr--;
-  PD((REMOTE,"clearInSlowQueue s:%x ct:%d",site,writeCtr));
-  if(findWriteSlowQueue()!=NULL){ 
-  Assert(writeCtr>0);
-    return;}
-    clearFlag(WRITE_SLOW);}
+Bool WriteConnection::checkAckQueue(){
+  Message *m = sentMsg;
+  if (m == NULL ) return false;
+  while (m != NULL){
+    PD((REMOTESITE,"Ack queue ptr: %d nr: %d ctr: %d",
+	m,m->msgNum,sentMsgCtr));
+    m=m->next;}
+  return true;
+}
   
-  */
-
-
 
 /* *****************************************************************
  * *****************************************************************
@@ -1514,75 +1692,40 @@ writeCtr--;
  * *****************************************************************
  * *************************************************************** */
 
+
+
 void RemoteSite::storeSentMessage(Message* m) {
+  PD((REMOTESITE,"Adding to ack queue  %d",m));
+  Assert(writeConnection != NULL);
+  writeConnection->storeSentMessage(m);}
+  
+void WriteConnection::storeSentMessage(Message* m) {
   m->next = sentMsg;
-  sentMsg = m;}
-    
-void RemoteSite::ackReceived(int nr)
-  {
-    int ctr = sentMsgCtr;
-    PD((SITE,"Ack nr:%d received, total sent: %d",nr,ctr));
-    Message *ptr = sentMsg;
-    Message *old;
-
-    Assert(ctr >= nr);
-    if(ptr!=NULL){
-      if(ctr == nr)
-	sentMsg = NULL;
-      else{
-	while(ctr > nr){
-	  old = ptr;
-	  ptr = ptr->next;
-	  if(ptr == NULL) break;
-	  ctr = ptr -> msgNum;
-	}
-	    old->next = NULL;
-	  }
-	while(ptr!=NULL)
-	  {
-	    PD((REMOTESITE,"Removing from queue"));
-	    old = ptr;
-	    ptr=ptr->next;
-	    deQueueMessage(old->getMsgBuffer()->getTotLen());
-	    messageManager->freeMessageAndMsgBuffer(old);
-	  }
-      }
-  }
-
-
-int RemoteSite::discardUnsentMessage(int msgNum)
+  sentMsg = m;
+  checkAckQueue();}
+int WriteConnection::discardUnsentMessage(int msgNum)
 {
   //EKT
   //
   // This code may be compressed a lot.
   // With double pointers and so on....
   Message *m = sentMsg;
-    if(m != NULL)
-      {
-	if(m->getMsgNum() == msgNum) 
-	  {
+    if(m != NULL){
+	if(m->getMsgNum() == msgNum){
 	    NetMsgBuffer *bs = m->getMsgBuffer();
-	    this->sentMsg = m->next;
+	    sentMsg = m->next;
 	    messageManager->freeMessage(m);
-	    return (int) bs;
-	  }
+	    return (int) bs;}
 	Message *ptr = m->next;
-	while(ptr != NULL)
-	  {
-	    if(ptr->getMsgNum() == msgNum) 
-	      {
-		NetMsgBuffer *bs = ptr->getMsgBuffer();
-		m->next = ptr->next;
-		messageManager->freeMessage(ptr);
-		return (int) bs;
-	      }
-	    m->next = ptr;
-	    ptr = ptr->next;
-	  }
-      }
-    return writeConnection->discardUnsentMessage(msgNum);
-}
-
+	while(ptr != NULL){
+	  if(ptr->getMsgNum() == msgNum){
+	    NetMsgBuffer *bs = ptr->getMsgBuffer();
+	    m->next = ptr->next;
+	    messageManager->freeMessage(ptr);
+	    return (int) bs;}
+	  m->next = ptr;
+	  ptr = ptr->next;}}
+    return MSG_SENT;}
 
 MonitorReturn RemoteSite::monitorQueueMsgs(int NoMess, int SizeMess, void* ptr)  {
   if(NoMess >= totalNrMsg)
@@ -1717,11 +1860,6 @@ int NetMsgBuffer::interLen(){
  * *****************************************************************
  * *************************************************************** */
 
-int tcpConnectionHandler(int,void *);
-
-
-  
-
 inline BYTE *int2net(BYTE *buf,int i){ 
   for (int k=0; k<4; k++) { 
     *buf++ = i & 0xFF; 
@@ -1758,15 +1896,47 @@ void NetMsgBuffer::beginWrite(RemoteSite *s)
   int2net(thispos,totlen);
 }
 
-void NetMsgBuffer::PiggyBack()
+void NetMsgBuffer::resend(){
+  Assert(start!=NULL && stop != NULL);
+  Assert(type == BS_Write);
+  first= start;
+  last = stop;}
+
+
+void NetMsgBuffer::PiggyBack(Message* m)
 {
+  int msgCtr = remotesite->getWriteConnection()->incMsgCtr();
   BYTE* thispos= first->head() + 5;
-  int2net(thispos, remotesite->incMsgCtr());
+  int2net(thispos, msgCtr);
   thispos += 4;
   int2net(thispos, remotesite->getRecMsgCtr());
+  m->setMsgNum(msgCtr);
+  remotesite->storeSentMessage(m);
   PD((SITE,"¤¤¤¤¤ Message nr: %d Ack nr: %d inserted ¤¤¤¤¤¤¤¤"
-      ,remotesite->getMsgCtr(), remotesite->getRecMsgCtr()));
+      ,msgCtr, remotesite->getRecMsgCtr()));
 }
+
+void NetMsgBuffer::constructMsg(RemoteSite* rs, tcpMessageType msg){
+  type = BS_Write;
+  first=getAnother();
+  start=first;
+  last=first;
+  stop=first;
+  remotesite = rs;
+  pos=first->head();
+  *pos=msg;
+  pos++;
+  int2net(pos,tcpHeaderSize);
+  pos+=4;
+  int2net(pos,remotesite->getWriteConnection()->getMsgCtr());
+
+  pos+=4;
+  int2net(pos,remotesite->getRecMsgCtr());
+  pos+=4;
+  endpos=pos;
+  pos=first->head();
+}
+  
 
 #define OZReadPortNumber  9000
 #define OZStartUpTries    490
@@ -1933,14 +2103,15 @@ retry:
   
   fd=ossocket(PF_INET,SOCK_STREAM,0);
   if (fd < 0) {
-    error("ip - should not happen");
     
+    return IP_NET_CRASH;}
+    /*  
     if(errno==ENOBUFS){
       PD((WEIRD,"tcpOpen set on timer",errno));
       return IP_TIMER;}
     NETWORK_ERROR(("system:socket %d",errno));}
 
-  /*  URGENT
+  
       if(setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,1,sizeof(int))<0)
     {NETWORK_ERROR(("setsockopt"));}*/
     
@@ -1954,7 +2125,7 @@ retry:
     PD((TCP,"Sending My Site Message..%s",mySite->stringrep()));
     
     tcpOpenMsgBuffer->marshalBegin();
-    marshalNumber(mySiteInfo.maxNrAck, tcpOpenMsgBuffer);
+    marshalNumber(r->getMsgCtr(), tcpOpenMsgBuffer);
     marshalNumber(mySiteInfo.maxSizeAck, tcpOpenMsgBuffer);
     mySite->marshalSite(tcpOpenMsgBuffer);
     tcpOpenMsgBuffer->marshalEnd();
@@ -2018,50 +2189,6 @@ inline void tcpWantsToOpen(Connection *r){
   //tcpSetTimer();
   Assert(0);
 }
-    
-inline void close_write_connection(int fd,WriteConnection *r){
-  PD((TCP,"close connection r:%x",r));
-  osclose(fd);
-  r->lostConnection();
-  r->clearClosing();
-  r->informSiteRemove();
-  tcpCache->unlinkWrite(r);
-  if(r->isWritePending()){
-    tcpWantsToOpen(r);
-    return;}
-  writeConnectionManager->freeConnection(r);}
-
-inline void close_read_connection(int fd,ReadConnection *r){
-  PD((TCP,"close connection r:%x",r));
-  osclose(fd);
-  r->lostConnection();
-  r->clearClosing();
-  r->informSiteRemove();
-  tcpCache->unlinkRead(r);
-  readConnectionManager->freeConnection(r);}
-
-
-inline ipReturn write_ack_close(int fd,Connection *r){
-  PD((TCP,"write_ack_close r:%x",r));
-  BYTE msg;
-  msg=TCP_CLOSE_ACK_FROM_WRITER;
-  ipReturn ret=writeI(fd,&msg);
-  if(ret==IP_OK) return IP_OK;
-  return IP_BLOCK;}
-
-ipReturn tcpCloseWriter(WriteConnection *r){
-  PD((TCP,"tcpCloseWriter r:%x site: %s",r,r->remoteSite->site->stringrep()));
-  OZ_warning("Closing connection, no check for acks!!!!");
-  Assert(r->canbeClosed());
-  int fd=r->getFD();
-  Assert(fd!=LOST);
-  BYTE msg;
-  msg=TCP_CLOSE_REQUEST_FROM_WRITER;
-  ipReturn ret=writeI(fd,&msg);
-  if(ret==IP_OK) {
-    r->setClosing();
-    return IP_OK;}
-  return IP_BLOCK;}
 
 /*********************************************************************** 
   tcpCloseHandler - associated with WRITER
@@ -2089,31 +2216,18 @@ close_handler_read:
       goto close_handler_read;
     return 0;}
   if(msg==TCP_CLOSE_REQUEST_FROM_READER){
-    if(r->isClosing()){ /* writer has precedence */
-      PD((WEIRD,"tcpCloseHandler writer precedence"));
-      return 0;}
-    if(r->isOpening()){
-      PD((WEIRD,"tcpCloseHandler is opening "));
-      r->setWantsToAckClose();
-      return 0;}
-    if(r->isIncomplete()){
-      PD((WEIRD,"tcpCloseHandler isIncompletWrite "));
-      r->setWantsToAckClose();
-      return 0;}
-    if(write_ack_close(fd,r)==IP_BLOCK){
-      PD((WEIRD,"tcpCloseHandler blocked 1"));
-      r->setWantsToAckClose();
-      return 0;}}
-  if(msg==TCP_CLOSE_ACK_FROM_READER){
-    // EK I'm very suspisious against this one...
-    int ret=write_ack_close(fd,r);
-    if(ret==IP_BLOCK){
-      PD((WEIRD,"tcpCloseHandler blocked 2 "));
-      r->setWantsToAckClose();
-      return 0;}
-    PD((TCP,"tcpCloseHandler closes connection"));
-    close_write_connection(fd,r);
+    PD((TCP,"ClsoeReq from reader"));
+    if(!r->isClosing())
+      r->setClosing();
+    r->close(INITIATOR_HIM);
     return 0;}
+  if(msg==TCP_CLOSE_ACK_FROM_READER){
+    PD((TCP,"CloseAck form reader"));
+    r->close(INITIATOR_ME);
+    return 0;}
+  if(msg==TCP_RESEND_MESSAGES){
+    PD((TCP,"Resend from reader"));
+    r->informSiteResendAckQueue();}
   if(r->addByteToInt(msg)){
     ret=readI(fd,&msg);
     if(ret!=IP_BLOCK)
@@ -2125,41 +2239,27 @@ close_handler_read:
     maybeWrite
    ********************************************************************** */
 
-ipReturn tcpSend(int,Message *,Bool);
 
 ipReturn maybeWrite(int fd,WriteConnection *r){
   int ret;
-  RemoteSite* site = r->remoteSite;
-  
-  PD((TCP,"maybeWrite r%x",r));
-  if(r->isWantsToAckClose()){
-    ret=write_ack_close(fd,r);
-    if(ret==IP_BLOCK){
-      PD((WEIRD,"maybeWrite blocked 1"));
-      return IP_OK;}
-    OZ_unregisterWrite(fd);
-    PD((OS,"unregister WRITE fd:%d",fd));
-    close_write_connection(fd,r);
-    return IP_OK;}
-  if(r->isWantsToClose()){
-    ret=tcpCloseWriter(r);
-    if(ret==IP_BLOCK){
-      PD((WEIRD,"maybeWrite blocked 2"));
-      return IP_OK;}
-    return IP_OK;}
   Message *m;
+  RemoteSite* site = r->remoteSite;
+  PD((TCP,"maybeWrite r%x",r));
+  if(r->isWantsToClose()){
+    r->closeTcpConnection();
+    return IP_OK;}
+  
   while(r->isInWriteQueue()){
     PD((TCP,"taking from write queue %x",r));
-    m=r->getWriteQueue();
+    m=site->getWriteQueue();
     Assert(m!=NULL);
     ret=tcpSend(r->getFD(),m,FALSE);
     if(ret<0)
       goto error_block;}
   
-  tcpCache->touchWrite(r); /* QUES */
+  tcpCache->touch(r);
   return IP_OK;
-
-
+  
 error_block:
   switch(ret){
   case IP_BLOCK:{
@@ -2170,21 +2270,17 @@ error_block:
   case IP_PERM_BLOCK:{
     PD((WEIRD,"Site lost in maybeWrite %x",r));
     r->connectionLost();
-    // EK should be sent up....
     messageManager->freeMessageAndMsgBuffer(m);
     return IP_PERM_BLOCK;}
   default:
     //EK
     // Not implemented yetgg
     OZ_warning("Tmp block during send, not handled...");
-    return IP_BLOCK;
-    
-  }
-}
+    return IP_BLOCK;}}
 
 /*  *****************************************************************
-          tcpWriteHandler
-   ***************************************************************** */
+    tcpWriteHandler
+    ***************************************************************** */
 
 int tcpWriteHandler(int fd,void *r0){
   WriteConnection *r=(WriteConnection *)r0;
@@ -2193,16 +2289,8 @@ int tcpWriteHandler(int fd,void *r0){
 
   PD((TCP,"tcpWriteHandler invoked r:%x",r));
   if(!r->isIncomplete()){
-    if(r->isWantsToAckClose()){
-      ret=write_ack_close(fd,r);
-      if(ret==IP_BLOCK){return IP_OK;}
-      OZ_unregisterWrite(fd);
-      PD((OS,"unregister WRITE fd:%d",fd));
-      close_write_connection(fd,r);
-      return 0;}
     if(r->isWantsToClose()){
-      if(tcpCloseWriter(r)==IP_BLOCK)
-	{NETWORK_ERROR(("tcpWriteHandler"));}
+      r->closeTcpConnection();
       return 0;}
     NETWORK_ERROR(("unregisterWrite does not work"));}
   m=r->getCurQueue();
@@ -2215,10 +2303,16 @@ int tcpWriteHandler(int fd,void *r0){
     return 0;}
 
   PD((TCP,"tcpWriteHandler finished r:%x",r));  
+  if(r->isClosing()){
+    messageManager->freeMessageAndMsgBuffer(m);
+    return 0;}
   ret=maybeWrite(fd,r);
   if(ret==IP_OK) {
     OZ_unregisterWrite(fd);
-    PD((OS,"unregister WRITE fd:%d",fd));}
+    PD((OS,"unregister WRITE fd:%d",fd));
+    if(r->isCanClose()){
+      r->clearCanClose();
+      r->closeTcpConnection();}}
   return 0;
 }
 
@@ -2237,9 +2331,8 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
     total=bs->getTotLen();
     PD((CONTENTS,"tot:%d",total));
     PD((TCP,"tcpSend invoked tot:%d",total));
-    bs->PiggyBack();
-    bs->getRemoteSite()->storeSentMessage(m);}
-  
+    bs->PiggyBack(m);}
+      
   while(total){
     Assert(total>0);
     len=bs->getWriteLen();
@@ -2303,80 +2396,79 @@ int tcpConnectionHandler(int fd,void *r0){
   BYTE *buf = new BYTE[bufSize];
   BYTE *pos=buf;
   int todo=bufSize;
+  Bool Accepted;
 
   PD((TCP,"tcpConnectionHandler invoked r:%x",r));  
   ret=smallMustRead(fd,pos,bufSize,CONNECTION_HANDLER_TRIES);
   if(ret!=0){
     if(ret>0){
-      // EK
-      // Handle these errors. They can occur.
-      // Inform Connection and Site.
-     IMPLEMENT(("tcpConnectionHandler 2 %d\n",ret));
+      r->connectionLost();
      delete buf;
      return 0;}
     NETWORK_ERROR(("tcpConnectionHandler 1 %d\n",ret));}
 
   pos = buf;
-  if(*pos!=TCP_CONNECTION){
+  switch(*pos){
+  case TCP_CONNECTION:{
+    Accepted = true;
+    break;}
+  case TCP_NO_CONNECTION:{
+    Accepted = false;
+    break;}
+  default:
     NETWORK_ERROR(("connectionHandler received %c",buf[0]));}
   pos++;
   time_t timestamp=net2int(pos);
   int tcheck=r->remoteSite->site->checkTimeStamp(timestamp);
-    if(tcheck!=0){
+  if(tcheck!=0){
     if(tcheck<0) {
       NETWORK_ERROR(("impossible timestamp"));}
     delete buf;
-    r->remoteSite->site->sitePermProblem();
-    IMPLEMENT(("tcpConnectionHandler 2 %d\n",ret));}
-    
+    r->connectionLost();}
+  
   pos += netIntSize;
   unsigned int strngLen = net2int(pos);
 
   delete buf;
   buf = new BYTE[strngLen + 1];
   pos = buf;
-
-  // EK 
-  // Reads the fd for the string
-  //
   
   ret=smallMustRead(fd,pos,strngLen,CONNECTION_HANDLER_TRIES);
   if(ret!=0){
     if(ret>0){
-      // EK
-      // Handle these errors. They can occur.
-      // Inform Connection and Site.
-     IMPLEMENT(("tcpConnectionHandler 4 %d\n",ret));
-     delete buf;
-     return 0;}
+      r->connectionLost();
+      delete buf;
+      return 0;}
     NETWORK_ERROR(("tcpConnectionHandler 3 %d\n",ret));}
-
+  
   if (strlen(PERDIOVERSION)!=strngLen ||
       strncmp(PERDIOVERSION,(char*)pos,strngLen)!=0) {
     buf[bufSize-1] = 0;
     OZ_warning("Perioversion conflict with site");
-    // Ek here we have to abort the opening.
-    // Otherwise will we have an unknown connection
-    // to the new site running the wrong perdio version.
-    r->remoteSite->site->sitePermProblem();
+    r->connectionLost();
     delete buf;
     return 0;
   }
   delete buf;
-  r->opened();
+  if(Accepted){
+    r->opened();
+    OZ_unregisterRead(fd);
+    PD((OS,"unregister READ fd:%d",fd));
+    // fcntl(fd,F_SETFL,O_NONBLOCK);
+    fcntl(fd,F_SETFL,O_NDELAY);
+    OZ_registerReadHandler(fd,tcpCloseHandler,(void *)r);
+    PD((OS,"register READ - close fd:%d",fd));
+    if(r->isWritePending()){
+      int ret = maybeWrite(fd,r);
+      if(ret==IP_BLOCK) {
+	PD((WEIRD,"tcpConnectionHandler pending write blocked"));  
+	PD((OS,"register WRITE - tcpWriteHandler fd:%d",fd));
+	OZ_registerWriteHandler(fd,tcpWriteHandler,(void *)r);}}
+    PD((TCP,"tcpConnectionHandler ord fin"));    
+    return 0;}
   OZ_unregisterRead(fd);
-  PD((OS,"unregister READ fd:%d",fd));
-  // fcntl(fd,F_SETFL,O_NONBLOCK);
-  fcntl(fd,F_SETFL,O_NDELAY);
-  OZ_registerReadHandler(fd,tcpCloseHandler,(void *)r);
-  PD((OS,"register READ - close fd:%d",fd));
-  if(r->isWritePending()){
-    int ret = maybeWrite(fd,r);
-    if(ret==IP_BLOCK) {
-      PD((WEIRD,"tcpConnectionHandler pending write blocked"));  
-      PD((OS,"register WRITE - tcpWriteHandler fd:%d",fd));
-      OZ_registerWriteHandler(fd,tcpWriteHandler,(void *)r);}}
-  PD((TCP,"tcpConnectionHandler ord fin"));    
+  osclose(fd);
+  tcpCache->connectionClosedByHim(r);
   return 0;
 }
 
@@ -2423,32 +2515,29 @@ inline ipReturn readI(int fd,BYTE *buf)
 
 #define EAGAIN_TRIES 100000
 
-// EK
-// This one seems to be litle dangerous
-// If the send fails is nothing done....
-void tcpCloseReader(ReadConnection *r){
+
+void ReadConnection::closeTcpConnection(){
   BYTE msg;
-  int fd=r->getFD();
+  Assert(!isClosing());
+  int fd=getFD();
   Assert(fd!=LOST);
   ipReturn ret;
-  PD((TCP,"tcpCloserReader r:%x",r));    
+  PD((TCP,"tcpCloserReader r:%x",this));    
   msg=TCP_CLOSE_REQUEST_FROM_READER;
+  if(!tcpAckReader(this,remoteSite->getRecMsgCtr())){
+    NETWORK_ERROR(("tcpCloseReader: ack failed write %d\n",errno));}
   ret=writeI(fd,&msg);
   if(ret==IP_BLOCK){
     NETWORK_ERROR(("tcpCloseReader:write %d\n",errno));}
   Assert(ret==IP_OK);
-  r->setClosing();
+  setClosing();
   return;}
-
-
 
 // EK
 // WARNING
 // The buffer must be of the right size. No check
 // is done for overflow
-
-void uniquefyInt(BYTE *buf, int Num)
-{
+void uniquefyInt(BYTE *buf, int Num){
   PD((TCP,"Intfy %d",Num));
   int ctr = 0;
   BYTE b;
@@ -2456,11 +2545,9 @@ void uniquefyInt(BYTE *buf, int Num)
     b = Num & 255;
     b <<=  TCP_MSG_SIGN_BITS;
     *buf++ = b;
-    PD((TCP,"Writing to buffer %d", b));
+    PD((TCP,"Writing to buffer %d lim:33 act:%d", b, ctr));
     Num >>= (8 - TCP_MSG_SIGN_BITS);
-    ctr += 8 - TCP_MSG_SIGN_BITS;
-  }
-}
+    ctr += 8 - TCP_MSG_SIGN_BITS;}}
 
 int intifyUnique(BYTE *buf){
   int ctr = 0;
@@ -2469,14 +2556,16 @@ int intifyUnique(BYTE *buf){
   while(ctr < 33){
     i = *buf++;
     i >>= TCP_MSG_SIGN_BITS;
-    PD((TCP,"Reading from buffer %d", i));
     ans += i << ctr;
-
+    PD((TCP,"Reading from buffer %d ans:%d lim:33 act:%d", i,ans,ctr));
     ctr += (8 - TCP_MSG_SIGN_BITS);}
+  PD((TCP,"Ack read: %d", ans));
   return ans;}
 
 
-
+// EK
+// should be changed to a method in  readconnections
+//
 Bool tcpAckReader(ReadConnection *r, int ack){
   BYTE buffer[INT_IN_BYTES_LEN + 1];
   BYTE *buf = buffer;
@@ -2497,8 +2586,7 @@ Bool tcpAckReader(ReadConnection *r, int ack){
       // the Connection could be invoked to handle this. 
       PD((TCP,"Write fail in Acking"));
       return false;}}
-  return true;
-}
+  return true;}
 
 inline
 int tcpRead(int fd,BYTE *buf,int size,Bool &readAll)
@@ -2527,22 +2615,25 @@ int tcpRead(int fd,BYTE *buf,int size,Bool &readAll)
   return ret;
 }
 
-// EK something funny is happening here
-// try to remove the inine. Might work...
-//inline 
-ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type){
-  if(type==TCP_PACKET){
-    PD((TCP,"interpret-packet"));      
-    PD((TCP,"received TCP_PACKET"));
-    bs->getSite()->msgReceived(bs);
+inline 
+ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type, Bool
+ ValidMsg){
+  switch(type){
+  case TCP_PACKET:{
+    if(ValidMsg){
+      PD((TCP,"interpret-packet"));      
+      PD((TCP,"received TCP_PACKET"));
+      bs->getSite()->msgReceived(bs);}
     return IP_OK;}
-  else{
+  case TCP_CLOSE_REQUEST_FROM_WRITER:{
     PD((TCP,"interpret - close"));      
-    Assert(type==TCP_CLOSE_REQUEST_FROM_WRITER);
-    PD((TCP,"received TCP_CLOSE_REQUEST_FROM_WRITER"));
     return IP_CLOSE;}
+  default:{
+    OZ_warning("Something is very wrong");
+    Assert(0);
+    return IP_GARBAGE;}
+  }
 }
-
 
 inline tcpMessageType getHeader(NetMsgBuffer *bs,int &len, int &msg, int &ans){
   BYTE buf[4];
@@ -2575,13 +2666,15 @@ inline Message* newReadCur(Message *m,NetMsgBuffer *bs,
 			   tcpMessageType type,int rem){
   if(m==NULL){
     PD((WEIRD,"newReadCur r:%x",r));
-    m=messageManager->allocMessage(bs,type,rem);}
+    Message *m=messageManager->allocMessage(bs,type,rem);
+    r->addCurQueue(m);  return m;}
   else{
     PD((WEIRD,"oldReadCur r:%x",r));
     m->setType(type);
-    m->setRemainder(rem);}
-  r->addCurQueue(m);
-  return m;
+    m->setRemainder(rem);
+    r->addCurQueue(m);  return m;}
+
+
 }
  
 /*   ***************************************************************** */
@@ -2590,7 +2683,7 @@ static int tcpReadHandler(int fd,void *r0)
 {  
   PD((TCP,"tcpReadHandler Invoked"));
   ReadConnection *r = (ReadConnection*) r0;
-  tcpCache->touchRead(r);
+
 
   int ret,rem,len,msgNr,ansNr;
   int totLen;
@@ -2601,7 +2694,6 @@ static int tcpReadHandler(int fd,void *r0)
   BYTE *pos;
   Assert(fd==r->getFD());
   Bool readAll;
-  Bool length_knownnown;
   
   if(r->isIncomplete()){
     m=r->getCurQueue();
@@ -2625,8 +2717,13 @@ start:
   Assert(osTestSelect(fd,SEL_READ));
   ret=tcpRead(fd,pos,len,readAll);
   if (ret<0) {
-    //EK
-    // This one is noy handled right now....
+    
+    if(r->isClosing()){
+      PD((TCP,"tcpReadHandler ses Close"));
+      netMsgBufferManager->dumpNetMsgBuffer(bs);
+      r->close();
+      return 0;}
+    
     warning("Connection Site Has Crashed\n%s",
 	    r->remoteSite->site->stringrep());
     if(m!=NULL){
@@ -2659,31 +2756,31 @@ start:
 	goto maybe_redo;}}
     else{
       rem -=ret;}
-       
+  
     if(rem>0){goto maybe_redo;}
     
-    // EK 
-    // Does Not check if messages is resending...
     PD((CONTENTS,"¤¤¤¤¤¤¤¤¤¤¤¤ Informin: %d %d %d ¤¤¤¤¤¤¤¤¤¤¤",
 	msgNr,ansNr,totLen));
-    r->informSiteAck(msgNr,ansNr,totLen);
 
+
+    /***************************************************/
+    /* ATTENTION                                       */
+    /* EK                                              */
+    /* For concistency, When to inform the remoteSite  */
+    /* About the received Message.                     */
+    /***************************************************/
+    
     bs->beforeInterpret(rem);
     PD((CONTENTS,"interpret rem:%d len:%d",
 		 rem,bs->interLen()));
     // EK this might be done in a nicer way...
-    ip=interpret(bs,type);
+    ip=interpret(bs,type,r->informSiteAck(msgNr,ansNr,totLen));
     if(ip==IP_CLOSE){
       Assert(rem==0);
       if(m!=NULL){
 	Assert(r->isIncomplete());
 	messageManager->freeMessage(m);}
-      // EK check this out...
-      // ATTENTION
-      // Here we must dump all the ByteBuffers, they should
-      // have been removed dynamicly during marshaling.
-      // ATTENTION
-      else{netMsgBufferManager->dumpNetMsgBuffer(bs);}
+      netMsgBufferManager->dumpNetMsgBuffer(bs);
       goto close;}
     bs->afterInterpret();    
     if(rem==0){goto fin;}
@@ -2696,8 +2793,10 @@ maybe_redo:
     if(rem==0) {pos=bs->initForRead(len);}
     else {pos=bs->beginRead(len);}
     goto start;}
-
+  
 fin:
+  if(!r->isClosing())
+    tcpCache->touch(r);
   if(rem==0){
     if(m==NULL){
       // EK check this out...
@@ -2717,19 +2816,30 @@ close:
 
   PD((TCP,"readHandler received close"));
   if(rem!=0) {NETWORK_ERROR(("readHandler gets bytes after Close"));}
-  if(r->isClosing()){ /* writer has precedence */
-    r->clearClosing();}
-  BYTE msg=TCP_CLOSE_ACK_FROM_READER;
-  while(TRUE){
-    int ret=oswrite(fd,&msg,1);
-    if(ret==1) break;
-    if(ret<0){
-      if((ret!=EINTR) && (ret!=EWOULDBLOCK) && (ret!=EAGAIN)){
-	NETWORK_ERROR(("readHandler: write %d\n",errno));}}}
-  close_read_connection(fd,r);
-  return 0;
+  switch(type){
+  case TCP_CLOSE_REQUEST_FROM_WRITER:{
+    if(r->isClosing())
+      return 0;
+    r->setClosing();
+    if(!tcpAckReader(r, r->remoteSite->getRecMsgCtr())){
+      OZ_warning("During close, acks faild to be sent");
+      OZ_warning("Inform erik");
+      Assert(0);}
+    
+    BYTE msg=TCP_CLOSE_ACK_FROM_READER;
+    while(TRUE){
+      int ret=oswrite(fd,&msg,1);
+      if(ret==1) break;
+      if(ret<0){
+	if((ret!=EINTR) && (ret!=EWOULDBLOCK) && (ret!=EAGAIN)){
+	  r->connectionLost();
+	  return 0;}}}
+    return 0;}
+  default:{
+    Assert(0);
+    return 0;}
+  }
 }
-
 
   
 /* ********************************************************************** 
@@ -2770,15 +2880,16 @@ int tcpPreReadHandler(int fd,void *r0){
      return 0;}
     NETWORK_ERROR(("tcpPreReadHandler 3 %d\n",ret));}
   
-  int maxNrAck = unmarshalNumber(tcpOpenMsgBuffer);
+  int ackStartNr = unmarshalNumber(tcpOpenMsgBuffer);
   int maxNrSize= unmarshalNumber(tcpOpenMsgBuffer);
   Site *site = unmarshalSite(tcpOpenMsgBuffer);
   tcpOpenMsgBuffer->unmarshalEnd();
 
   RemoteSite *remotesite = site->getRemoteSite();
   
-  remotesite -> setMaxNrSizeAck(maxNrAck, maxNrSize);
+  r->setMaxSizeAck(maxNrSize);
   remotesite->setReadConnection(r);
+  remotesite->setAckStartNr(ackStartNr);
   OZ_unregisterRead(fd);
   PD((OS,"unregister READ fd:%d",fd));
   PD((OS,"register READ - close fd:%d",fd));
@@ -2800,26 +2911,27 @@ static int acceptHandler(int fd,void *unused)
   
   ip_address ip=from.sin_addr.s_addr;
   port_t port=from.sin_port;
-
-  ReadConnection *r=readConnectionManager->
-    allocConnection(NULL,newFD);
-
-  int  bufSize = 9 + strlen(PERDIOVERSION) + 1;
+  Bool accept = tcpCache->Accept();
+  
+  int  bufSize = 9 + strlen(PERDIOVERSION);
   BYTE *buf = new BYTE[bufSize];
   BYTE *auxbuf = buf;
-
-  *auxbuf = TCP_CONNECTION;
+  ReadConnection *r;
+  if(accept){
+    *auxbuf = TCP_CONNECTION;
+    r=readConnectionManager->
+      allocConnection(NULL,newFD);}
+  else
+    *auxbuf = TCP_NO_CONNECTION;
   auxbuf++;
   int2net(auxbuf,mySite->getTimeStamp());
   auxbuf += netIntSize;
-  int2net(auxbuf, bufSize - 10);
+  int2net(auxbuf, bufSize - 9);
   auxbuf += netIntSize;
   for (char *pv = PERDIOVERSION; *pv;) {
     PD((TCP,"Writing %c %d",*pv,auxbuf));
     *auxbuf++ = *pv++;
   }
-  PD((TCP,"Writing 0 %d",auxbuf));
-  *auxbuf++ = 0;
   Assert(auxbuf-buf == bufSize);
 
   // fcntl(newFD,F_SETFL,O_NONBLOCK);
@@ -2835,14 +2947,13 @@ static int acceptHandler(int fd,void *unused)
       NETWORK_ERROR(("acceptHandler:write %d\n",errno));
     }
   }
-
+  
   delete buf;
-  tcpCache->addRead(r);
-  PD((TCP,"acceptHandler success r:%x",r)); 
-  // EK should be optimized 
-  // Check for MYSITE info in fd
-  OZ_registerReadHandler(newFD,tcpPreReadHandler,(void *)r);
-  PD((OS,"register READ- tcpPreReadHandler fd:%d",fd));
+  if(accept){
+    tcpCache->add(r);
+    PD((TCP,"acceptHandler success r:%x",r)); 
+    OZ_registerReadHandler(newFD,tcpPreReadHandler,(void *)r);
+    PD((OS,"register READ- tcpPreReadHandler fd:%d",fd));}
   return 0;
 }
 
@@ -2854,17 +2965,84 @@ static int acceptHandler(int fd,void *unused)
 *******************************************************/
 
 
-
 /**********************************
  *  class Site
  **********************************/
+Bool ReadConnection::informSiteAck(int m, int a, int s){
+  
+  if(!isClosing() && remoteSite->receivedNewMsg(m,a)){
+    receivedNewSize(s);
+    return true;}
+  return false;}
 
+void WriteConnection::informSiteResendAckQueue(){
+  sentMsgCtr -= remoteSite->resendAckQueue(sentMsg);
+  if(!isInWriteQueue()){
+    setInWriteQueue();
+    if(!isIncomplete())
+      OZ_registerWriteHandler(getFD(),
+			      tcpWriteHandler,
+			      (void *)this);}
+  sentMsg = NULL;}
+
+
+int RemoteSite::resendAckQueue(Message *ptr){
+  Message *m = ptr;
+  int nr = 0;
+  while(ptr!=NULL){
+    nr++;
+    m = ptr;
+    ptr = ptr->next;
+    m->resend();
+    writeQueue.addfirst(m);}
+  if(!writeConnection->isInWriteQueue())
+    writeConnection->setInWriteQueue();
+  return nr;}
+
+void ReadConnection::resend(){ 
+  PD((REMOTE,"Resend messages"));
+  int fd=getFD();
+  Assert(fd!=LOST);
+  ipReturn ret;
+  BYTE msg = TCP_RESEND_MESSAGES;
+  if(!tcpAckReader(this,remoteSite->getRecMsgCtr())){
+    NETWORK_ERROR(("tcpCloseReader: ack failed write %d\n",errno));}
+  ret=writeI(fd,&msg);
+  if(ret==IP_BLOCK){
+    NETWORK_ERROR(("tcpCloseReader:write %d\n",errno));}
+  Assert(ret==IP_OK);}
+
+void WriteConnection::ackReceived(int nr){  
+    int ctr = sentMsgCtr;
+    PD((REMOTESITE,"Ack nr:%d received, total sent: %d",nr,ctr));
+    checkAckQueue();
+    Message *ptr = sentMsg;
+    Message *old;
+    if(ctr >= nr && ptr!=NULL){
+      if(ctr == nr)
+	sentMsg = NULL;
+      else{
+	while(ctr > nr){
+	  PD((REMOTESITE,"Stepping through ackQueue cur:%d stop%d",ctr, nr));
+	  old = ptr;
+	  ptr = ptr->next;
+	  if(ptr == NULL) break;
+	  ctr = ptr -> msgNum;}
+	old->next = NULL;}
+      while(ptr!=NULL) {
+	PD((REMOTESITE,"Removing from queue nr %d %d",
+	    ptr->msgNum,ptr));
+	    old = ptr;
+	    ptr=ptr->next;
+	    remoteSite->deQueueMessage(old->getMsgBuffer()->getTotLen());
+	    messageManager->freeMessageAndMsgBuffer(old);}}}
 
   
 
 void RemoteSite::siteLost(){
   if(writeConnection!=NULL){
-    writeConnection->prmDwn();
+    if(writeConnection->getFD() != LOST)
+      writeConnection->prmDwn();
     writeConnectionManager->freeConnection(writeConnection);
     writeConnection = NULL;}
   
@@ -2872,14 +3050,12 @@ void RemoteSite::siteLost(){
     readConnection->prmDwn();
     readConnectionManager->freeConnection(readConnection);
     readConnection=NULL;}
-  Message *m = sentMsg;
-  sentMsg = NULL;
-  while(m != NULL){
+  Message* m;
+  status = SITE_PERM;
+  while((m = writeQueue.removeFirst()) && m != NULL) {
     site->communicationProblem(m->msgType, m->site, m->storeIndx,
-			 COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
-    Message *tmp = m;
-    messageManager->freeMessageAndMsgBuffer(m);
-    m = m->next;}
+			       COMM_FAULT_PERM_NOT_SENT,(FaultInfo) m->bs);
+    messageManager->freeMessageAndMsgBuffer(m);}
   remoteSiteManager->freeRemoteSite(this);}
   
 
@@ -2888,34 +3064,19 @@ void RemoteSite::siteLost(){
     writeConnection->tmpDwn();
     //Ek
     //release Connection
-    Message *m = sentMsg;
-    while(m != NULL){
-      m->msgNum = getTmpMsgNum();
+      Message* m;
+    while((m = writeQueue.removeFirst()) && m != NULL) {
       site->communicationProblem(m->msgType, m->site, m->storeIndx,
-			   COMM_FAULT_TEMP_MAYBE_SENT,(FaultInfo)m->msgNum);
-      m = m->next;
-    }
-    
-  }
+				 COMM_FAULT_TEMP_NOT_SENT,(int) m->bs);}}
 
 void RemoteSite::init(Site* s, int msgCtr){
     writeConnection=NULL;
     readConnection=NULL;
-    sentMsgCtr = 0;
     recMsgCtr = msgCtr;
-    sentMsg = NULL;
     tmpMsgNum = 1;
     totalNrMsg = 0;
     totalMsgSize = 0;
     site = s;
-}
-
-void RemoteSite::setMaxNrSizeAck(int mA, int mS){
-  PD((SITE,"Max acks: %d size: %d",mA, mS));
-  maxNrAck = mA;
-  maxSizeAck = mS;
-  recNrAck = 0;
-  recSizeAck = 0;
 }
 
 void RemoteSite::setWriteConnection(WriteConnection *r){
@@ -2923,42 +3084,43 @@ void RemoteSite::setWriteConnection(WriteConnection *r){
   writeConnection=r; 
   r->setSite(this);}
 
-void RemoteSite::receivedNewMsg(int Nr){
-  if (Nr > recMsgCtr || (Nr == 1 && recMsgCtr > Nr)){
-    recMsgCtr = Nr;
-    recNrAck ++;
-    PD((SITE,"SiteObject msgrec: %d nr: %d lim: %d",
-	recMsgCtr,recNrAck, maxNrAck));
-    if (recNrAck >= maxNrAck && 
-	tcpAckReader(getReadConnection(),Nr)){
-      PD((SITE,"Ack, limit reached...."));
-      recSizeAck = 0;
-      recNrAck = 0;
-    }}}
-
+Bool RemoteSite::receivedNewMsg(int Nr, int a){
+  PD((REMOTESITE,"Ack received: %d",a));
+  PD((REMOTESITE,"MsgnumReceived new:%d old:%d",Nr,recMsgCtr));
   
-void RemoteSite::receivedNewSize(int size){
-  recSizeAck +=  size;
-  PD((SITE,"SizeReceived s: %d l: %d",recSizeAck
-      ,maxSizeAck));
-  if(recSizeAck >= maxSizeAck &&
-     tcpAckReader(getReadConnection(),recMsgCtr)){
-    PD((SITE,"Ack, limit reached...."));
-    recSizeAck = 0;
-    recNrAck = 0;
-  }}
+  if (Nr  == recMsgCtr + 1 || (Nr == 1 && recMsgCtr > Nr)){
+    PD((REMOTESITE,"Message nr %d accepted",Nr));
+    recMsgCtr = Nr;}
+  else if(Nr > recMsgCtr){
+    PD((REMOTESITE,"Message nr %d too large, old %d", Nr, recMsgCtr));
+    readConnection->resend();
+    return false;}
+  if(writeConnection!= NULL) {
+    PD((REMOTESITE,"Ack received: %d waiting for: %d",
+	a,writeConnection->getMsgCtr()));
+    writeConnection->ackReceived(a);}
+  return true;}
 
-int RemoteSite::getRecMsgCtr(){ recNrAck = 0; 
-recSizeAck = 0;
-return recMsgCtr;}
+int RemoteSite::getRecMsgCtr(){
+  PD((REMOTE,"MsgnumGet %d",recMsgCtr));
+  if(readConnection != NULL)
+    readConnection->messageSent();
+  return recMsgCtr;}
 
+void RemoteSite::setAckStartNr(int nr){
+  if(nr < recMsgCtr){
+    Assert(nr == 0);
+    PD((REMOTE,"My ack is bigger %d > %d",recMsgCtr, nr));
+    recMsgCtr = nr;}
+  else
+    PD((REMOTE,"My ack is smaler eq %d =< %d",recMsgCtr, nr));}
 
 void RemoteSite::setReadConnection(ReadConnection *r)
 {
   Assert(readConnection==NULL);
   readConnection=r; 
-  r->setSite(this); 
-}
+  r->setSite(this);}
+
 ReadConnection* RemoteSite::getReadConnection(){
   return readConnection;}
 
@@ -2995,22 +3157,24 @@ Message* IOQueue::removeFirst(){
     last = NULL;
   return t;
 }
-Bool IOQueue::queueEmpty(){
-  Assert((first==NULL && last == NULL) || first != NULL);
-  return first == NULL;}
-    
 void IOQueue::enqueue(Message *m){ 
-  // EKT
-  // Expensive, shouyld be an Assertion
-  checkQueue();
   Assert(((first==NULL) && (last==NULL))|| 
 	 ((first!=NULL) && (last!=NULL)));
   if(last!=NULL){last->next=m;Assert(m->next==NULL);}
   else {Assert(first==NULL);first=m;}
-    last=m;
-    return;}
-
-
+  last=m;
+  return;}
+void IOQueue::addfirst(Message *m){
+  Assert(((first==NULL) && (last==NULL))|| 
+	 ((first!=NULL) && (last!=NULL)));
+  if(first!=NULL){
+    Assert(m->next==NULL);
+    m->next=first;}
+  else {
+    Assert(last==NULL);
+    last=m;}
+  first=m;
+  return;}
 
 void IOQueue::dequeue(Message *m){
   Assert(((first==NULL) && (last==NULL))|| 
@@ -3027,34 +3191,13 @@ void IOQueue::dequeue(Message *m){
   m->next=NULL;
     return;}
 
-/**********************************
- *  class Connection
- **********************************/
-/*
-
-  void Connection::init(RemoteSite *s, Bool isR){
-    next = prev = NULL;
-    flags=0;
-    writeCtr=0;
-    remoteSite=s;
-    isRdr = isR;
-    bytePtr = intBuffer + INT_IN_BYTES_LEN;
-
-  }
-  */
-
-
-
-
-  
-
-
   /* closing */
 
   void WriteConnection::setWantsToClose(){
     PD((REMOTE,"setWantsToClose site:%s",remoteSite->site->stringrep()));
     Assert(!testFlag(WANTS_TO_CLOSE));
     Assert(!testFlag(CLOSING));
+    tcpCache->closeConnection(this);
     setFlag(WANTS_TO_CLOSE);}
   void WriteConnection::nowClosing(){
     PD((REMOTE,"nowClosing site:%s",remoteSite->site->stringrep()));
@@ -3067,97 +3210,86 @@ void IOQueue::dequeue(Message *m){
     Assert(!testFlag(WANTS_TO_OPEN));
     Assert(!testFlag(OPENING));
     setFlag(WANTS_TO_OPEN);}
-  void WriteConnection::nowOpening(){
-    Assert(testFlag(WANTS_TO_OPEN));
-    PD((REMOTE,"nowOpening site:%s",remoteSite->site->stringrep()));
-    clearFlag(WANTS_TO_OPEN);
-    setFlag(OPENING);}
-
-/*  void WriteConnection::setOpening(){
-    Assert(!testFlag(OPENING));
-    PD((REMOTE,"setOpening site:%x",site));
-    setFlag(OPENING);}*/
-
-
-  /* pending messages stuff */
-
-/*
-void Connection::setInFastQueue(){
-    writeCtr++;
-    Assert(!isReader());
-    PD((REMOTE,"setInFastQueue s:%x ct:%d",site,writeCtr));
-    setFlag(WRITE_FAST);}
   
-  Bool Connection::isInSlowQueue(){
-    Assert(!testFlag(WRITE_CURRENT));
-    Assert(!testFlag(WRITE_FAST));
-    return testFlag(WRITE_SLOW);}
-  void Connection::setInSlowQueue(){
-    Assert(!isReader());
-    writeCtr++;
-    PD((REMOTE,"setInSlowQueue s:%x ct:%d",site,writeCtr));
-    setFlag(WRITE_SLOW);}
+void WriteConnection::closeTcpConnection(){
+  PD((TCP,"tcpCloseWriter r:%x site: %s",this,remoteSite->site->stringrep()));
+  Assert(canbeClosed());
+  int fd=getFD();
+  Assert(fd!=LOST);
   
-  Bool Connection::isWritePending(){
-    if(testFlag(WRITE_SLOW|WRITE_FAST|WRITE_CURRENT)) return TRUE;
-    return FALSE;}
-    
-void Connection::addOpenQueue(Message *m){
-    PD((TCPQUEUE,"add open m:%x r:%x",m,this));
-    setWantsToOpen();
-    openQueue.enqueue(m);}
-
-  void Connection::subOpenQueue(Message *m){
-    PD((TCPQUEUE,"sub Open m:%x r:%x",m,this));
-    nowOpening();
-    openQueue.dequeue(m);}
-
-*/
-
-
+  if(isWantsToClose())
+    nowClosing();
+  if(!isClosing()){
+    if(isIncomplete()){
+      setWantsToClose();
+      return;}
+    setClosing();}
   
-/* ********************************************************************** 
-    ipInit               INVALID_VIRTUAL_PORT    NET_OK
-                         NET_RAN_OUT_OF_TRIES
-   ********************************************************************** */
-  
+  NetMsgBuffer* nb = netMsgBufferManager->
+    getNetMsgBuffer(NULL);
+  nb->constructMsg(remoteSite,TCP_CLOSE_REQUEST_FROM_WRITER);
+  Message* m= messageManager->
+    allocMessage(nb, NO_MSG_NUM, NULL,(MessageType) 0, 0);
+  switch(isInWriteQueue()?IP_BLOCK:tcpSend(fd,m,TRUE)){
+  case IP_OK:{
+    messageManager->freeMessageAndMsgBuffer(m);
+    return;}
+  case IP_BLOCK:{
+    addCurQueue(m);
+    OZ_registerWriteHandler(fd,tcpWriteHandler,(void *)this);
+    return;}
+  case IP_PERM_BLOCK:{
+    messageManager->freeMessageAndMsgBuffer(m);
+    connectionLost();
+    return;}
+  default:
+    Assert(0);
+    return;}}
 
-InterfaceCode ipInit(){
-  ip_address ip;
-  port_t p;
-  int tcpFD;
-  
+ProbeReturn RemoteSite::installProbe(){
+  if(siteStatus() == SITE_PERM)
+    return PROBE_PERM;
+  if(writeConnection==NULL){
+    int fd;
+    PD((TCP_INTERFACE,"try open %s",site->stringrep()));
+    writeConnection=writeConnectionManager->allocConnection(this,LOST);
+    fd=tcpOpen(this,writeConnection);
+    if(fd==IP_TIMER ||fd==IP_NO_MORE_TRIES){
+      Assert(0);
+      //EK 
+      // Site tmpdown?
+    }
+    if(fd==IP_NET_CRASH){ return PROBE_PERM;}
+    PD((TCP,"is reopened %s",site->stringrep()));
+    tcpCache->add(writeConnection);}
+  writeConnection->installProbe();
+  return PROBE_INSTALLED;}
 
-  PD((TCP_INTERFACE,"ipInit invoked"));
-  ipReturn ret=createTcpPort(OZReadPortNumber,ip,p,tcpFD);
-  if (ret<0){
-    PD((WEIRD,"timer"));
-    Assert(ret==IP_TIMER);
-    return NET_RAN_OUT_OF_TRIES;}
-  time_t timestamp=time(0);
-  mySiteInfo.tcpFD=tcpFD;
-  mySiteInfo.maxNrAck = 100;
-  mySiteInfo.maxSizeAck = 40000;
-  Assert(mySite==NULL);
-  mySite=initMySite(ip,p,timestamp);
-  Assert(mySite!=NULL);  
-  OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
-  PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
-  tcpCache->nowAccept();
-  return NET_OK;
-}
+ProbeReturn RemoteSite::deInstallProbe(){
+  if(siteStatus() == SITE_PERM)
+    return PROBE_DEINSTALLED;
+  Assert(writeConnection!= NULL);
+  writeConnection->deInstallProbe();
+  return PROBE_DEINSTALLED;}
 
-/* ********************************************************************** 
-    connectSite    (SITE_NAME_UNKNOWN      INVALID_VIRTUAL_PORT,
-                    NET_RAN_OUT_OF_TRIES   NET_OK
-   ********************************************************************** */
+void RemoteSite::addWriteQueue(Message* m){
+  writeConnection->setInWriteQueue();
+  queueMessage(m->bs->getTotLen());
+  writeQueue.enqueue(m);}
+
+Message* RemoteSite::getWriteQueue(){
+  Message* m = writeQueue.removeFirst();
+  if(writeQueue.queueEmpty())
+    writeConnection->clearInWriteQueue();
+  return m;}
 
 int RemoteSite::
 sendTo(NetMsgBuffer *bs, MessageType msg,
        Site *storeS, int storeInd)
 {
   int msgNum,ret;
-  Message *m=messageManager->allocMessage(bs,NO_MSG_NUM,storeS,msg,storeInd);
+  Message *m=messageManager->allocMessage(bs,NO_MSG_NUM,
+storeS,msg,storeInd);
   queueMessage(m->getMsgBuffer()->getTotLen());
   switch (siteStatus()){
   case SITE_TEMP:{
@@ -3176,18 +3308,18 @@ sendTo(NetMsgBuffer *bs, MessageType msg,
       goto tmpdwnsend;}
     if(fd==IP_NET_CRASH){ return SITE_PERM;}
     PD((TCP,"is reopened %s",site->stringrep()));
-    tcpCache->addWrite(writeConnection);
+    tcpCache->add(writeConnection);
     goto ipBlockSend;}
   else{
     if(!writeConnection->shouldSendFromUser())
       goto ipBlockSend;
-    tcpCache->touchWrite(writeConnection);}  
+    tcpCache->touch(writeConnection);}  
   
   fd=writeConnection->getFD();
   Assert(fd>0);
   switch(tcpSend(fd,m,FALSE)){
 	case IP_OK:{
-	  PD((TCP_INTERFACE,"reliableSend- all sent"));
+	  PD((TCP_INTERFACE,"reliableSend- all sent %d"));
 	  return ACCEPTED;}
 	case IP_BLOCK:{
 	  PD((TCP_INTERFACE,"reliableSend- part sent"));
@@ -3215,11 +3347,11 @@ tmpdwnsend:
 	tcpWantsToOpen(writeConnection);
 tmpdwnsend2:
 	msgNum = getTmpMsgNum();
-	writeConnection->addWriteQueue(m, msgNum);
+	addWriteQueue(m, msgNum);
 	return msgNum;
 ipBlockSend:
 	PD((TCP_INTERFACE,"sendTo IpBlock add to writeQueue %d",m));
-	writeConnection->addWriteQueue(m);
+	addWriteQueue(m);
 	return ACCEPTED;
 
 
@@ -3229,6 +3361,7 @@ ipBlockSend:
 /**********************************************************************/
 /*   SECTION :: exported to the protocol layer              */
 /**********************************************************************/
+
 RemoteSite* createRemoteSite(Site* site, int readCtr){
   return remoteSiteManager->allocRemoteSite(site, readCtr);}
 void zeroRefsToRemote(RemoteSite *s){return;}
@@ -3247,10 +3380,10 @@ MonitorReturn monitorQueue_RemoteSite(RemoteSite* site,int size,int no_msgs,void
   return site->monitorQueueMsgs(no_msgs, size, storePtr);}
 MonitorReturn demonitorQueue_RemoteSite(RemoteSite* site){
   return site->deMonitorQueue();}
-ProbeReturn installProbe_RemoteSite(RemoteSite* site,ProbeType type,int frequency,void* storePtr){
-  Assert(0);return PROBE_PERM;}
-ProbeReturn deinstallProbe_RemoteSite(RemoteSite* site,ProbeType type){
-  Assert(0);return PROBE_PERM;}
+ProbeReturn installProbe_RemoteSite(RemoteSite* site,int frequency){
+  return site->installProbe();}
+ProbeReturn deinstallProbe_RemoteSite(RemoteSite* site){
+  return site->deInstallProbe();}
 ProbeReturn probeStatus_RemoteSite(RemoteSite* site,ProbeType &pt,int &frequncey,void* &storePtr){
   Assert(0);return PROBE_PERM;}
 GiveUpReturn giveUp_RemoteSite(RemoteSite* site){
@@ -3259,6 +3392,11 @@ void discoveryPerm_RemoteSite(RemoteSite* site){
   site->siteLost();} 
 
 void initNetwork(){
+  ip_address ip;
+  port_t p;
+  int tcpFD;
+  PD((TCP_INTERFACE,"Init Network"));
+  
   writeConnectionManager = new WriteConnectionManager();
   readConnectionManager = new ReadConnectionManager();
   netMsgBufferManager = new NetMsgBufferManager();
@@ -3267,12 +3405,49 @@ void initNetwork(){
   messageManager = new MessageManager();
   tcpCache = new TcpCache();
   tcpOpenMsgBuffer= new TcpOpenMsgBuffer();
-(void)ipInit();}
+  
+  ipReturn ret=createTcpPort(OZReadPortNumber,ip,p,tcpFD);
+  if (ret<0){
+    PD((WEIRD,"timer"));
+    Assert(ret==IP_TIMER);
+    return;}
+  time_t timestamp=time(0);
+  mySiteInfo.tcpFD=tcpFD;
+  mySiteInfo.maxNrAck = 100;
+  mySiteInfo.maxSizeAck = 100;
+  Assert(mySite==NULL);
+  mySite=initMySite(ip,p,timestamp);
+  Assert(mySite!=NULL);  
+  OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
+  PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
+  tcpCache->nowAccept();}  // can be removed ?? 
   
 MsgBuffer* getRemoteMsgBuffer(Site* s){ 
   return netMsgBufferManager->getNetMsgBuffer(s);}
 
+
+
+
   
 
 
+/**********************************************************************/
+/*   SECTION :: exported for debugging                                */
+/**********************************************************************/
+int timeCtr = 0;
+#define MY_INITIATED_CLOSE 5
+#define HIS_INITIATED_CLOSE 10
+#define PROBE 20
 
+void networkTimer(){
+  timeCtr ++;
+  if(tcpCache == NULL) return;
+  if(timeCtr%MY_INITIATED_CLOSE == 0) 
+    tcpCache->openMyClosedConnection();
+  if(timeCtr%HIS_INITIATED_CLOSE == 0) 
+    tcpCache->openHisClosedConnection();
+  if(timeCtr%PROBE == 0) 
+    tcpCache->probeTrigger();}
+  
+
+  

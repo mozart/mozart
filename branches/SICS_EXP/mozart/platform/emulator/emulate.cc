@@ -423,6 +423,10 @@ void AM::checkStatus()
       deinstallPath(rootBoard);
       doGC();
   }
+  tempTimeCtr++;
+  if(tempTimeCtr==TIME_CTR_THRESHOLD)
+    {networkTimer();
+    tempTimeCtr=0;}
   if (isSetSFlag(StopThread)) {
     unsetSFlag(StopThread);
   }
