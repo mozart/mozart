@@ -31,8 +31,6 @@ fun instantiate {$ IMPORT}
       = IMPORT.'Browser'
    \insert 'Emacs.env'
       = IMPORT.'Emacs'
-   \insert 'Compiler.env'
-      = IMPORT.'Compiler'
 
    \insert 'profiler/prof-config'
    \insert 'profiler/prof-prelude'
