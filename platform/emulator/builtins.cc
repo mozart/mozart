@@ -1171,7 +1171,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
         }
 
         if (am.currentBoard == ofsvar->getBoard()) {
-          TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
+          TaggedRef uvar=oz_newVariable();
           Bool ok=ofsvar->addFeatureValue(fea,uvar);
           Assert(ok);
           ofsvar->propagateOFS();
@@ -1208,7 +1208,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
         }
         // Create thread containing relational blocking version of uparrow:
         RefsArray x=allocateRefsArray(3, NO);
-        out=makeTaggedRef(newTaggedUVar(am.currentBoard));
+        out=oz_newVariable();
         x[0]=termOrig;
         x[1]=feaOrig;
         x[2]=out;
@@ -1237,7 +1237,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
             if (am.currentBoard == ofsvar->getBoard()) {
                 // Optimization:
                 // If current board is same as ofsvar board then can add feature directly
-                TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
+                TaggedRef uvar=oz_newVariable();
                 Bool ok=ofsvar->addFeatureValue(fea,uvar);
                 Assert(ok);
                 ofsvar->propagateOFS();
@@ -1246,7 +1246,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
                 // Create newofsvar:
                 GenOFSVariable *newofsvar=new GenOFSVariable();
                 // Add feature to newofsvar:
-                TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
+                TaggedRef uvar=oz_newVariable();
                 Bool ok1=newofsvar->addFeatureValue(fea,uvar);
                 Assert(ok1);
                 out=uvar;
@@ -1265,7 +1265,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
         // Create newofsvar:
         GenOFSVariable *newofsvar=new GenOFSVariable();
         // Add feature to newofsvar:
-        TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
+        TaggedRef uvar=oz_newVariable();
         Bool ok1=newofsvar->addFeatureValue(fea,uvar);
         Assert(ok1);
         out=uvar;
@@ -4564,7 +4564,7 @@ OZ_C_proc_end
 OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
 {
   NONVAR(c,rec);
-  newVal = makeTaggedRef(newTaggedUVar(am.currentBoard));
+  newVal = oz_newVariable();
 
   if (!isCell(rec)) {oz_typeError(0,"Cell");}
 
@@ -4610,7 +4610,7 @@ OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
   }
   Tertiary *tert=tagged2Tert(rec);
   if(tert->getTertType()!=Te_Local){
-    TaggedRef newVal = makeTaggedRef(newTaggedUVar(am.currentBoard)); /* ATTENTION - clumsy */
+    TaggedRef newVal = oz_newVariable(); /* ATTENTION - clumsy */
     cellDoAccess(tert,newVal);
     out = newVal;
     return PROCEED;}
@@ -4631,8 +4631,8 @@ OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
 
   Tertiary *tert = tagged2Tert(rec);
   if(tert->getTertType()!=Te_Local){
-    TaggedRef tr=makeTaggedRef(newTaggedUVar(am.currentBoard));
-    BIexchangeCellInline(c,tr,in);
+    TaggedRef oldIgnored = oz_newVariable();
+    cellDoExchange(tert,oldIgnored,in,oz_currentThread);
     return PROCEED;}
 
   CellLocal *cell=(CellLocal*)tert;
@@ -5360,7 +5360,7 @@ OZ_C_proc_begin(BIdelay,1) {
   if (t <= 0)
     return PROCEED;
 
-  TaggedRef var = makeTaggedRef(newTaggedUVar(am.currentBoard));
+  TaggedRef var = oz_newVariable();
 
   am.insertUser(t,cons(NameUnit,var));
   DEREF(var, var_ptr, var_tag);
@@ -6374,7 +6374,7 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &va
       return tagged2SRecord(old);
   }
 
-  old = makeTaggedRef(newTaggedUVar(am.currentBoard));
+  old = oz_newVariable();
   if (am.isToplevel())
     cellDoExchange(getCell(state),old,old,oz_currentThread);
   else
@@ -6388,7 +6388,7 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &va
   x[0] = old;
   x[1] = fea;
   if (!isAssign)
-    val = makeTaggedRef(newTaggedUVar(am.currentBoard));
+    val = oz_newVariable();
   x[2] = val;
   oz_currentThread->pushCFun(isAssign?BIassignWithState:BIatWithState,x,3,NO);
 
