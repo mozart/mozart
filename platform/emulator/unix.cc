@@ -76,6 +76,15 @@ extern "C" char *inet_ntoa(struct in_addr in);
 // Argument handling
 //
 
+
+#define OZ_C_ioproc_begin(Name,Arity)                                   \
+OZ_C_proc_begin(Name,Arity)                                             \
+  if (!OZ_onToplevel()) {                                               \
+    return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));    \
+  }
+
+#define OZ_C_ioproc_end }
+
 #define OZ_declareVsArg(ARG,VAR)                                        \
  vs_buff(VAR); OZ_nonvarArg(ARG);                                       \
  { int len; OZ_Return status; OZ_Term rest, susp;                       \
@@ -1863,6 +1872,37 @@ OZ_C_proc_begin(unix_randLimits, 2)
 }
 OZ_C_proc_end
 
+#ifdef WALSER
+OZ_C_proc_begin(unix_random, 1)
+{
+  OZ_Term out = OZ_getCArg(0);
+#if defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(LINUX)
+  return OZ_unifyInt(out,random());
+#else
+  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("Unix.random"));
+  // return OZ_unifyInt(out,rand());
+#endif
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(unix_srandom, 1)
+{
+  OZ_declareIntArg(0, seed);
+
+  if (!seed) { seed = time(NULL); }
+
+#if defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(LINUX)
+  srandom((unsigned int) seed);
+#else
+  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("Unix.srandom"));
+  // srand((unsigned int) seed);
+#endif
+
+  return PROCEED;
+}
+OZ_C_proc_end
+#endif
 
 
 #ifdef WINDOWS
