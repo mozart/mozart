@@ -308,7 +308,7 @@ public:
     Assert(!table[extOTI2ownerTableIndex(extOTI)].isFree());
     return (table[extOTI2ownerTableIndex(extOTI)].getOE());
   }
-  
+
   void gcOwnerTableRoots();
   void gcOwnerTableFinal();
   DebugCode(Bool notGCMarked(););
