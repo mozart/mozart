@@ -3507,6 +3507,13 @@ OZ_BI_define(BIdictionaryClone,1,1)
 } OZ_BI_end
 
 
+OZ_BI_define(BIdictionaryIsEmpty,1,1) {
+  oz_declareDictionaryIN(0,dict);
+
+  OZ_RETURN(dict->isEmpty() ? oz_true() : oz_false());
+} OZ_BI_end
+
+
 OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
 {
   NONVAR( t, term);
