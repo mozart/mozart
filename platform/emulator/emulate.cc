@@ -462,26 +462,30 @@ void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
 		  RefsArray X, RefsArray Y, RefsArray G, int prio)
 {
   DEREF(A,APtr,ATag);
-  if (isAnyVar(ATag)) {
-    Suspension *susp =
-      new Suspension(b,prio,PC,Y,G,X,argsToSave);
-    b->incSuspCount();
-    taggedBecomesSuspVar(APtr)->addSuspension(susp);
+  Assert(isAnyVar(ATag));
+  Suspension *susp;
+  if (am.currentThread->getMode()==ALLSEQMODE) {
+    am.pushTask(b,PC,Y,G,X,argsToSave);
+    susp = new Suspension(am.currentThread);
+  } else {
+    susp = new Suspension(b,prio,PC,Y,G,X,argsToSave);
+  }
+  b->incSuspCount();
+  taggedBecomesSuspVar(APtr)->addSuspension(susp);
 
-    /* Bug fix:
-          declare Y Z
-          {RecLabel Y Z}
-          if Y=b then {Show yes36b} else {Show no36b} fi
-          Z=c
-      we must suspend on the label of OFS too!!
+  /* Bug fix:
+     declare Y Z
+     {RecLabel Y Z}
+     if Y=b then {Show yes36b} else {Show no36b} fi
+     Z=c
+     we must suspend on the label of OFS too!!
      */
 
-    if (isCVar(A) && tagged2CVar(A)->getType() == OFSVariable) {
-      TaggedRef lab = ((GenOFSVariable*)tagged2CVar(A))->getLabel();
-      DEREF(lab,labPtr,labTag);
-      if (isAnyVar(labTag)) {
-	taggedBecomesSuspVar(labPtr)->addSuspension(susp);
-      }
+  if (isCVar(A) && tagged2CVar(A)->getType() == OFSVariable) {
+    TaggedRef lab = ((GenOFSVariable*)tagged2CVar(A))->getLabel();
+    DEREF(lab,labPtr,labTag);
+    if (isAnyVar(labTag)) {
+      taggedBecomesSuspVar(labPtr)->addSuspension(susp);
     }
   }
 }
@@ -550,7 +554,13 @@ void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave, Board *b,
 			 ProgramCounter PC, RefsArray X, RefsArray Y, RefsArray G, int prio)
 {
   DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
-  Suspension *susp  = new Suspension(b,prio,PC,Y,G,X,argsToSave);
+  Suspension *susp;
+  if (am.currentThread->getMode()==ALLSEQMODE) {
+    am.pushTask(b,PC,Y,G,X,argsToSave);
+    susp = new Suspension(am.currentThread);
+  } else {
+    susp = new Suspension(b,prio,PC,Y,G,X,argsToSave);
+  }
   b->incSuspCount();
 
   Assert(isAnyVar(ATag) || isAnyVar(BTag));
@@ -779,7 +789,9 @@ void engine() {
     }
 
     topCache--;
-      
+    if (cFlag == C_MODE) {
+      goto LBLpopTask;;
+    }
     tmpBB = getBoard(tb,cFlag)->getBoardDeref();
     switch (cFlag){
     case C_XCONT:
@@ -1068,8 +1080,9 @@ void engine() {
 
       switch (fun(arity, X)){
       case SUSPEND:
-	warning("call builtin: SUSPEND unexpected\n");
-	// no break here
+	e->pushTask(CBB,PC,Y,G,X,arity);
+	e->currentThread=0;
+	goto LBLstart;
       case FAILED:
 	killPropagatedCurrentTaskSusp();
 	LOCAL_PROPAGATION(localPropStore.reset());
@@ -1081,8 +1094,7 @@ void engine() {
 			  goto localhack1;);
 	DISPATCH(3);
       default:
-	error("Unexpected return value at CALLBUILTIN.");
-	goto LBLerror;
+	Assert(0);
       }
     }
 
@@ -1229,6 +1241,10 @@ void engine() {
       case SUSPEND:
 	suspendOnVar(XPC(2),getPosIntArg(PC+4),
 		     CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	if (e->currentThread->getMode() == ALLSEQMODE) {
+	  e->currentThread=0;
+	  goto LBLstart;
+	}
 	goto LBLcheckEntailment;
       }
     }
@@ -1248,6 +1264,10 @@ void engine() {
       default:
 	suspendShallowTest2(XPC(2),XPC(3),getPosIntArg(PC+5),
 			    CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	if (e->currentThread->getMode() == ALLSEQMODE) {
+	  e->currentThread=0;
+	  goto LBLstart;
+	}
 	goto LBLcheckEntailment;
       }
     }
@@ -1269,15 +1289,22 @@ void engine() {
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
-      Suspension *susp = 
-        new Suspension(CBB,
-		       GET_CURRENT_PRIORITY(),
-		       shallowCP, Y, G, X, argsToSave);
-
+      Suspension *susp;
+      if (am.currentThread->getMode()==ALLSEQMODE) {
+	am.pushTask(CBB,shallowCP,Y,G,X,argsToSave);
+	susp = new Suspension(am.currentThread);
+      } else {
+	susp=new Suspension(CBB, GET_CURRENT_PRIORITY(),
+			    shallowCP, Y, G, X, argsToSave);
+      }
       CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
       inShallowGuard = NO;
       shallowCP = NULL;
+      if (e->currentThread->getMode() == ALLSEQMODE) {
+	e->currentThread=0;
+	goto LBLstart;
+      }
       goto LBLcheckEntailment;
     }
 
@@ -1354,7 +1381,8 @@ void engine() {
       int size = list.getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
-      Abstraction *p = new Abstraction (predd, gRegs, new Name(e->currentBoard));
+      Abstraction *p = new Abstraction (predd, gRegs,
+					new Name(e->currentBoard));
       if (predEntry) {
 	predEntry->setPred(p);
       }
@@ -1399,7 +1427,12 @@ void engine() {
 
       int argsToSave = getPosIntArg(PC+2);
       suspendOnVar(origTerm,argsToSave,CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-      goto LBLcheckEntailment; // mm2 ???
+      if (e->currentThread->getMode() == ALLSEQMODE) {
+	e->currentThread=0;
+	goto LBLstart;
+      } else {
+	goto LBLcheckEntailment; // mm2 ???
+      }
     } else {
       DISPATCH(3);
     }
@@ -1446,7 +1479,7 @@ void engine() {
 
     CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity+3);
     Y = NULL; // allocateL(0);
-
+    e->currentThread->checkMode(def->getMode());
     JUMP(def->getPC());
 
 
@@ -1484,7 +1517,7 @@ void engine() {
     
     CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity);
     Y = NULL; // allocateL(0);
-
+    e->currentThread->checkMode(def->getMode());
     JUMP(def->getPC());
 
 
@@ -1561,6 +1594,7 @@ void engine() {
 	CallDoChecks(def,def->getGRegs(),isTailCall,PC,def->getArity());
 	Y = NULL; // allocateL(0);
 
+	e->currentThread->checkMode(def->getMode());
 	JUMP(def->getPC());
       }
 
@@ -1611,9 +1645,9 @@ void engine() {
 
 	      predicate = bi->getSuspHandler();
 	      if (!predicate) {
-		HF_WARN(applFailure(bi),
-			message("No suspension handler\n");
-			printArgs(X,predArity));
+		e->pushTask(CBB,PC,Y,G,X,predArity);
+		e->currentThread=0;
+		goto LBLstart;
 	      }
 	      goto LBLcall;
 	    case FAILED:
@@ -2135,8 +2169,8 @@ void engine() {
   INSTRUCTION(ENDDEFINITION)
   
   INSTRUCTION(SWITCHCOMPMODE)
-    warning("emulate: Unimplemented command");
-    goto LBLcheckEntailment;
+    e->currentThread->switchMode();
+    DISPATCH(1);
 
 #ifndef THREADED
   default:
