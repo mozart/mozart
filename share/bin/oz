@@ -124,7 +124,7 @@ case "$cmd" in
    ozdo)    exec "$@" ;;
 
    oznc)    if [ ${OZCOMPILERCOMP-xx} = xx ]
-            then OZCOMPILERCOMP="$OZHOME/lib/Compiler.ozc"
+            then OZCOMPILERCOMP="$OZHOME/lib/OPI.ozc"
             else $doecho "Using compiler component: $OZCOMPILERCOMP"
             fi
 
