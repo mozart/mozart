@@ -2743,7 +2743,7 @@ void threadRaise(Thread *th,OZ_Term E) {
 
   th->pushCFun(BIraise, args, 1, OK);
 
-  th->cont();
+  th->setStop(NO);
 
   if (th->isSuspended())
     am.suspThreadToRunnable(th);
@@ -2783,7 +2783,7 @@ OZ_C_proc_begin(BIthreadSuspend,1)
   }
 
 
-  th->stop();
+  th->setStop(OK);
   if (th == am.currentThread) {
     return BI_PREEMPT;
   }
@@ -2792,7 +2792,7 @@ OZ_C_proc_begin(BIthreadSuspend,1)
 OZ_C_proc_end
 
 void threadResume(Thread *th) {
-  th->cont();
+  th->setStop(NO);
 
   if (th->isDeadThread()) return;
 
@@ -2826,7 +2826,7 @@ OZ_C_proc_begin(BIthreadIsSuspended,2)
   }
 
 
-  return oz_unify(out,th->stopped()?NameTrue:NameFalse);
+  return oz_unify(out, th->getStop() ? NameTrue : NameFalse);
 }
 OZ_C_proc_end
 
@@ -4598,7 +4598,7 @@ OZ_C_proc_end
 inline
 OZ_Return checkSuspend()
 {
-  return oz_currentThread->stopped() ? BI_PREEMPT : PROCEED;
+  return oz_currentThread->getStop() ? BI_PREEMPT : PROCEED;
 }
 
 
@@ -6460,7 +6460,7 @@ OZ_C_proc_begin(BIstopThread,1)
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = (Thread*) rec;
 
-  thread->stop();
+  thread->setStop(OK);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6471,7 +6471,7 @@ OZ_C_proc_begin(BIcontThread,1)
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = (Thread*) rec;
 
-  thread->cont();
+  thread->setStop(NO);
   am.scheduleThread(thread);
   return PROCEED;
 }
@@ -7718,11 +7718,11 @@ BIspec allSpec[] = {
 
   {"traceBack",0,BItraceBack},
 
-  {"taskstack",      3, BItaskStack},
-  {"suspendDebug",   1, BIsuspendDebug},
-  {"runChildren",    1, BIrunChildren},
-  {"frameVariables", 3, BIframeVariables},
-  {"location",       2, BIlocation},
+  {"taskstack",         3, BItaskStack},
+  {"debugEmacsThreads", 1, BIdebugEmacsThreads},
+  {"debugSubThreads",   1, BIdebugSubThreads},
+  {"frameVariables",    3, BIframeVariables},
+  {"location",          2, BIlocation},
 
 #ifdef DEBUG_TRACE
   {"halt",0,BIhalt},
