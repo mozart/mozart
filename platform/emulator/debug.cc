@@ -235,7 +235,7 @@ void execBreakpoint(Thread *t) {
 
 OZ_C_proc_begin(BIbreakpoint, 0)
 {
-  if (am.debugmode())
+  if (am.debugmode() && am.onToplevel())
     execBreakpoint(am.currentThread());
   return PROCEED;
 }
