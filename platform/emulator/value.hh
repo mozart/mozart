@@ -29,7 +29,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
 
        NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
        NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
-       NameOoPrintName,NameOoLocking,
+       NameOoPrintName,NameOoLocking,NameOoFallback,
+       AtomNew, AtomSend, AtomApply,
 
        NameUnit,
        AtomKinded, AtomDet, AtomRecord, AtomFSet, 
