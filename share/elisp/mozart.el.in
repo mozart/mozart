@@ -1718,7 +1718,8 @@ With ARG, stop it instead."
 
 (defun oz-start-gdb-emulator ()
   ;; Run the Oz Emulator under gdb.
-  ;; This is hooked into the variable `oz-emulator-hook' via \\[oz-gdb].
+  ;; This is invoked when `*oz-gdb*' is non-nil as specified by the
+  ;; current profile.
   ;; The directory containing FILE becomes the initial working directory
   ;; and source-file directory for gdb.  If you wish to change this, use
   ;; the gdb commands `cd DIR' and `directory'.
