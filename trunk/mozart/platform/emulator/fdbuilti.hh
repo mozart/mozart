@@ -799,7 +799,8 @@ public:
   void printDebug(int i) {
     cerr << '[' << i << "]: var=" << (void *) bifdbm_var[i]
 	 << ", varptr=" << (void *) bifdbm_varptr[i]
-	 << ", dom=" << *bifdbm_dom[i] 
+	 << ", dom=" << *bifdbm_dom[i]
+	 << ", @dom=" << bifdbm_dom[i]
 	 << ", init_dom_size=" << bifdbm_init_dom_size[i]
 	 << ", is_local=" << bifdbm_is_local[i] << endl;
     cerr.flush();
@@ -814,6 +815,12 @@ public:
     // if current board is the top-level then save domains for
     // restoration on failure
     saveDomainOnTopLevel(i);
+  }
+
+  void reintroduce(int i, TaggedRef v) {
+    int aux = bifdbm_init_dom_size[i];
+    introduce(i, v);
+    bifdbm_init_dom_size[i] = aux;
   }
   
   void introduce(int i, int j, TaggedRef v) {
