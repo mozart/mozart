@@ -44,35 +44,22 @@ local
    SATypeError   = 'type error'
 
    AnalysisDepth = 3
-   
-   DPut = Dictionary.put
-   DGet = Dictionary.get
-   DNew = Dictionary.new
-   DCGet= Dictionary.condGet
-   DMem = Dictionary.member
+
    VS2S = VirtualString.toString
    IsVS = IsVirtualString
    Partition = List.partition
    FSClone = {`Builtin` fsClone 2}
 
    IsConstType = IsDet
-   
+
    fun {TypeClone T}
       case {IsFree T} then _ else {FSClone T} end
    end
-   
+
    fun {FirstOrId X}
       case X of F#_ then F else X end
    end
 
-   fun {First F#_}
-      F
-   end
-
-   fun {Second _#S}
-      S
-   end
-   
 % assumes privacy of the following feature names
 % introduced in CoreLanguage:
 %
@@ -80,7 +67,7 @@ local
 % ImAValueNode
 % ImAConstruction
 % ImAToken
-   
+
 %-----------------------------------------------------------------------
 % kinded records
 
@@ -96,17 +83,12 @@ local
       {Member F {CurrentArity R}}
    end
 
-   fun {KindedRecordToList R}
-      {FoldR {CurrentArity R}
-       fun {$ A In} R.A|In end nil}
-   end
-
 %-----------------------------------------------------------------------
 
 % GetClassData: T -> <value>
 % given a T node, assumes a class value and
 % returns an associated class token or unit
-   
+
    fun {GetClassData X}
       XV = {X getValue($)}
    in
@@ -118,16 +100,16 @@ local
 	    unit % variable
 	 elsecase {HasFeature XV ImAToken}
 	    andthen XV.kind == 'class'
-	 then 
-	    XV 
+	 then
+	    XV
 	 elsecase {HasFeature XV ImAVariableOccurrence}
 	 then
-	    {GetClassData XV} 
+	    {GetClassData XV}
 	 else
 	    unit % type checking elsewhere
 	 end
       else
-	 unit    % variable 
+	 unit    % variable
       end
    end
 
@@ -150,17 +132,17 @@ local
 	    {XV getClassNode($)}
 	 elsecase {HasFeature XV ImAVariableOccurrence}
 	 then
-	    {GetClassOfObjectData XV} 
+	    {GetClassOfObjectData XV}
 	 else
 	    unit % type checking elsewhere
 	 end
       else
-	 unit % variable 
+	 unit % variable
       end
    end
 
 % GetValue: T -> <value>
-% given a T node, returns the associated value 
+% given a T node, returns the associated value
 % ie, an integer/float/atom/construction, or a token;
 % constructions may contain embedded T nodes
 
@@ -176,11 +158,11 @@ local
 	 elsecase {HasFeature XV ImAValueNode}
 	    orelse {HasFeature XV ImAToken}
 	 then
-	    XV 
+	    XV
 	 elsecase {HasFeature XV ImAConstruction}
 	    orelse {HasFeature XV ImAVariableOccurrence}
 	 then
-	    {GetData XV} 
+	    {GetData XV}
 	 else
 	    XV
 	 end
@@ -211,7 +193,7 @@ local
 	 elsecase {HasFeature XV ImAConstruction}
 	    orelse {HasFeature XV ImAVariableOccurrence}
 	 then
-	    {GetData XV} 	    
+	    {GetData XV}
 	 else
 	    XV
 	 end
@@ -246,8 +228,8 @@ local
 	    in
 	       {NameVariable X {XD getPrintName($)}}
 	       X
-%		  {PrintNameToVirtualString
-%		   {XD getPrintName($)}}
+%                 {PrintNameToVirtualString
+%                  {XD getPrintName($)}}
 	    elsecase
 	       {HasFeature XD ImAToken}
 	    then
@@ -365,7 +347,7 @@ local
 	'procedure/>6':    fun {$ X}
 			      {TypeTests.procedure X}
 			      andthen {Procedure.arity X} > 6
-			   end	
+			   end
 	cell:              IsCell
 	chunk:             IsChunk
 	array:             IsArray
@@ -381,10 +363,10 @@ local
 	port:              IsPort
 	space:             IsSpace
 	'thread':          IsThread
-	virtualString:     IsVirtualString 
-	string:            IsString        
-        list:              IsList          
-        pair:              fun {$ X}
+	virtualString:     IsVirtualString
+	string:            IsString
+	list:              IsList
+	pair:              fun {$ X}
 			      case X of _#_ then true else false end
 			   end
        )
@@ -400,7 +382,7 @@ local
 		   else true end
 		end
 	detOrKinded:
-	        fun {$ X} XD = {GetData X} in
+		fun {$ X} XD = {GetData X} in
 		   case {IsDet XD} then
 		      case {IsObject XD} then
 			 {Not {HasFeature XD ImAVariableOccurrence}}
@@ -415,37 +397,37 @@ local
 		       orelse {HasFeature XD ImAConstruction}}
 		   else false end
 		end)
-   
+
    %
    % three valued tests for recursive data structures
-   % 
-   
+   %
+
    fun {IsListNow S}
-      case {IsDet S} then 
+      case {IsDet S} then
 	 case S
 	 of nil then true
 	 elseof _|Sr then
-	    {IsListNow Sr} 
+	    {IsListNow Sr}
 	 else false end
       else unit end
    end
-   
+
    fun {IsStringNow S}
-      case {IsDet S} then 
+      case {IsDet S} then
 	 case S
 	 of nil then true
 	 elseof I|Sr then
 	    {IsDet I}
 	    andthen {IsChar I}
-	    andthen {IsStringNow Sr} 
+	    andthen {IsStringNow Sr}
 	 else false end
       else unit end
    end
-   
+
    % approximation of isVirtualString
-   
+
    fun {IsVirtualStringNow S}
-      case {IsDet S} then 
+      case {IsDet S} then
 	 case {IsAtom S}
 	    orelse {IsInt S}
 	    orelse {IsFloat S}
@@ -457,7 +439,7 @@ local
 	 else false end
       else unit end
    end
-   
+
 %-----------------------------------------------------------------------
 % Determination & type predicates
 
@@ -533,20 +515,20 @@ local
 	    pairOf: MaybePairOf
 	    string: MaybeString
 	    virtualString:MaybeVirtualString)
-      
+
    in
       % flat type tests generalize to "isdet then type"
-      % complex ones must be recursively checked 
-      
+      % complex ones must be recursively checked
+
       DetTypeTests
       = {Adjoin {Record.map TypeTests Maybe} DetTypeTests2}
 
       fun {DetTypeTest T X}
 	 case
 	    {Width T} == 0
-	 then	    
+	 then
 	    {DetTypeTests.{Label T} X}
-	    
+
 	 elsecase T
 	 of list(T1) then
 	    {DetTypeTests.listOf T1 X}
@@ -561,7 +543,7 @@ local
 %-----------------------------------------------------------------------
 % perform determination & type checks
 
-   local 
+   local
       fun {TypeCheckN N VOs Ts}
 	 case VOs of nil then
 	    Ts = nil
@@ -569,12 +551,12 @@ local
 	 [] VO|VOr then
 	    T|Tr = Ts
 	 in
-	    case 
+	    case
 	       {DetTypeTest T VO}
 	    then
 	       {TypeCheckN N+1 VOr Tr}
 	    else
-	       N 
+	       N
 	    end
 	 end
       end
@@ -593,7 +575,7 @@ local
       in
 	 {DetTests.{Label D} VO}
 	 andthen
-	 {DetCheck VOr Dr} 
+	 {DetCheck VOr Dr}
       end
    end
 
@@ -603,15 +585,15 @@ local
    fun {GetReachable V}
       L = {V getLastValue($)}
       T = {V getType($)}
-   in	  	  
+   in
       % L == unit if V is uninitialized
-      % eg, first use within conditional; 
+      % eg, first use within conditional;
       % atomic data need not be saved
 
       case
 	 L==unit
       then
-	 
+
 	 case {IsConstType T}
 	 then env(var:V last:L)
 	 else
@@ -619,7 +601,7 @@ local
 	    {V setType({TypeClone T})}
 	    env(var:V last:L type:T)
 	 end
-	 
+
       elsecase
 	 {L isVariableOccurrence($)}
       then
@@ -633,7 +615,7 @@ local
 	    {V setType({TypeClone T})}
 	    env(var:V last:L data:{GetValue L} type:T)
 	 end
-	 
+
       elsecase
 	 {L isConstruction($)}
       then
@@ -647,10 +629,10 @@ local
 	    {V setType({TypeClone T})}
 	    env(var:V last:L data:{GetValue L} type:T)
 	 end
-	 
+
       else
-         % L is atomic: int, float, atom, token
-	 % has constant type 
+	 % L is atomic: int, float, atom, token
+	 % has constant type
 	 case {IsConstType T}
 	 then env(var:V last:L)
 	 else {Show weird(L T)}
@@ -676,14 +658,14 @@ local
       {V setLastValue(L)}
 
       case {HasFeature E data}
-      then {L setValue(E.data)} 
-      else skip end 
+      then {L setValue(E.data)}
+      else skip end
 
       case {HasFeature E type}
       then {V setType(E.type)}
       else skip end
    end
-   
+
    fun {GetGlobalEnv Vs}
       ReachableVs = {FoldL Vs AppendReachable nil}
    in
@@ -702,18 +684,18 @@ local
 %-----------------------------------------------------------------------
 % type equality assertions
 
-% TryUnifyTypes: FSET x FSET 
+% TryUnifyTypes: FSET x FSET
 % propagate type information both ways
 % (cloning values to avoid incorrect backflow of data)
-   
+
    fun {TryUnifyTypes TX TY}
       try
-	 case {IsConstType TX} 
+	 case {IsConstType TX}
 	    orelse {IsConstType TY}
 	 then
 	    TX = TY
-	 else 
-	    TX = {TypeClone TY} 
+	 else
+	    TX = {TypeClone TY}
 	    TY = {TypeClone TX}
 	 end
 	 true
@@ -725,7 +707,7 @@ local
    end
 
 %
-% IssueTypeError: FSET x FSET x VALUE x VALUE 
+% IssueTypeError: FSET x FSET x VALUE x VALUE
 %
 
    fun {ValueToErrorLine Text X}
@@ -741,18 +723,18 @@ local
 	 else [hint(l:Text m:oz(XD))] end
       end
    end
-   
+
    proc {IssueTypeError TX TY X Y Ctrl Top Coord}
 \ifdef DEBUGSA
       {Show issuetypeerror(TX TY X Y)}
-\endif      
+\endif
 
       ErrMsg UnifLeft UnifRight Msgs Body
    in
-      
+
       ErrMsg = {Ctrl getErrorMsg($)}
       {Ctrl getUnifier(UnifLeft UnifRight)}
-      
+
       Msgs   = [ [hint(l:'First type' m:{TypeToVS TX})
 		  hint(l:'Second type' m:{TypeToVS TY})]
 		 {ValueToErrorLine 'First value' X}
@@ -767,7 +749,7 @@ local
 	       ]
       Body   = {FoldR Msgs Append nil}
 
-      case Top then 
+      case Top then
 	 {Ctrl.rep
 	  error(coord:Coord kind:SATypeError msg:ErrMsg body:Body)}
       else
@@ -779,7 +761,7 @@ local
    fun {UnifyTypes X Y Ctrl Top Coord}
       TX = {X getType($)}
       TY = {Y getType($)}
-   in      
+   in
       case
 	 {TryUnifyTypes TX TY}
       then
@@ -803,15 +785,15 @@ local
       Text1 = case UnifLeft \= unit
 		 andthen UnifRight \= unit
 	      then
-		 {Append Msgs 
+		 {Append Msgs
 		  [hint(l:'Original assertion'
 			m:oz({GetPrintData UnifLeft}) # ' = '
 			# oz({GetPrintData UnifRight}))]}
 	      else
 		 Msgs
 	      end
-	 
-      Text2 = case Origin==Coord then Text1 
+
+      Text2 = case Origin==Coord then Text1
 	      else {Append Text1 [Offend]} end
 
       case Top then
@@ -826,10 +808,10 @@ local
 			body:  Text2)}
       end
    end
-	  
+
 %-----------------------------------------------------------------------
-% 
-   
+%
+
    fun {MakeDummyProcedure N}
       case N
       of 0 then  proc {$} skip end
@@ -854,10 +836,10 @@ local
       [] 19 then proc {$ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _} skip end
       [] 20 then proc {$ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _} skip end
       else
-	 _ % weaker analysis for procedures with arity > 20 
+	 _ % weaker analysis for procedures with arity > 20
       end
    end
-      
+
 %-----------------------------------------------------------------------
 % some formatting
 
@@ -866,9 +848,9 @@ local
       of nil then
 	 L # R
       elseof [X] then
-	 L # X # R 
-      elseof X1|(Xr=(_|_)) then 
-	 L # X1 # 
+	 L # X # R
+      elseof X1|(Xr=(_|_)) then
+	 L # X1 #
 	 {FoldR Xr
 	  fun {$ X In} Sep # X # In end
 	  R}
@@ -879,14 +861,10 @@ local
       {ListToVS Xs '{' ', ' '}'}
    end
 
-   fun {SeqToVS Xs}
-      {ListToVS Xs '' ' ' ''}
-   end
-   
    fun {ProdToVS Xs}
       {ListToVS Xs '' ' x ' ''}
    end
-   
+
    fun {ApplToVS Xs}
       {ListToVS Xs '{' ' ' '}'}
    end
@@ -900,7 +878,7 @@ local
       {Map Xs
        fun {$ X} case {IsVS X} then X else oz(X) end end}
    end
-   
+
    fun {TypeToVS T}
       X = {ListToVS {OzTypes.decode T} '' ' ++ ' ''}
    in
@@ -915,7 +893,7 @@ local
 	 case Xs
 	 of nil then
 	    Ill = N   % avoid free variables
-	    true 
+	    true
 	 [] X|Xr then
 	    case {P X}
 	    then {AllUpToAux Xr P N+1 Ill}
@@ -935,7 +913,7 @@ local
 	    Ill = N   % avoid free variables
 	    false
 	 [] X|Xr then
-	    case {P X} then Ill = N true 
+	    case {P X} then Ill = N true
 	    else {SomeUpToAux Xr P N+1 Ill}
 	    end
 	 end
@@ -952,7 +930,7 @@ local
 	 {Not {Member X Xr}} andthen {AllDistinct Xr}
       end
    end
- 
+
    fun {Add X Ys}
       case {Member X Ys}
       then Ys else X|Ys end
@@ -996,7 +974,7 @@ local
 %-----------------------------------------------------------------------
 % ApproxInheritance: list(record) x list(record) -> record(pair(<req> <opt>))
 %
-% the features of the returned record are the available method labels   
+% the features of the returned record are the available method labels
 % per label, the fields of the returned record are the
 %     list of labels required for calls/messages of this method (or nil)
 %     list of labels optional for calls/messages of this method
@@ -1004,7 +982,7 @@ local
 % overriding in parenst is approximated by throwing away all information
 % about the message format (required/optional features); this avoids the
 % need to carry around the inheritance hierarchy completely
-   
+
    fun {ApproxInheritance PMet PNew}
       {Adjoin
        {FoldL PMet
@@ -1022,20 +1000,20 @@ local
 
 %-----------------------------------------------------------------------
 %  global control information
-   
+
    class Control
       prop final
       feat
-	 rep                 % the reporter object 
+	 rep                 % the reporter object
 	 switches            % interface switch control
       attr
 	 'self': nil         % currently active class context
 	 coord: unit         % current coordinates
 	 toplevelNames: unit % list of names in a virtual toplevel
-	 errorMsg: unit      % currently active error message    
+	 errorMsg: unit      % currently active error message
 	 unifierLeft: unit   % last unification requested
-	 unifierRight: unit  % 
-	 
+	 unifierRight: unit  %
+
       meth init(Rep Switches)
 	 self.rep = Rep
 	 self.switches = Switches
@@ -1046,13 +1024,13 @@ local
 	 unifierLeft   <- unit
 	 unifierRight  <- unit
       end
-      
+
       meth pushSelf(S)
 	 'self' <- S|@'self'
       end
       meth popSelf
 	 case @'self'
-	 of _|S then 'self' <- S 
+	 of _|S then 'self' <- S
 	 else
 	    raise popEmptyStack end
 	 end
@@ -1098,7 +1076,7 @@ local
       end
       meth resetErrorMsg
 	 errorMsg <- unit
-      end      
+      end
       meth getErrorMsg($)
 	 @errorMsg
       end
@@ -1110,32 +1088,32 @@ local
       meth resetUnifier
 	 unifierLeft  <- unit
 	 unifierRight <- unit
-      end      
+      end
       meth getUnifier(L R)
 	 L = @unifierLeft
 	 R = @unifierRight
       end
-   end 
+   end
 
 %-----------------------------------------------------------------------
 %  static analysis mix-ins
 
    class SADefault
       meth applyEnvSubst(Ctrl Top)
-	 skip 
+	 skip
       end
       meth saDescend(Ctrl Top)
 	 skip
       end
       meth sa(Ctrl Top)
-	 skip           
+	 skip
       end
    end
-   
+
    class SAStatement
       from SADefault
 
-      % a complex statement is one which may do more than suspend immediately 
+      % a complex statement is one which may do more than suspend immediately
       % or bind a variable; _not_ complex in this sense are constraints,
       % declarations, definitions, class nodes, etc.
       % (a class with isComplex = false should provide an saLookahead method)
@@ -1143,12 +1121,12 @@ local
       % we only deal with definitions and class nodes at this point
 
       feat
-	 isComplex:true     
+	 isComplex:true
 
       meth staticAnalysis(Rep Switches Ss)
 	 Ctrl = {New Control init(Rep Switches)}
       in
-	 {self SaDo(Ctrl true true)}	   % initiate first lookahead
+	 {self SaDo(Ctrl true true)}       % initiate first lookahead
       end
 
       %%
@@ -1156,9 +1134,9 @@ local
       %%
 
       meth saveCoord(Ctrl)
-	 {Ctrl setCoord({self getCoord($)})} 
+	 {Ctrl setCoord({self getCoord($)})}
       end
-      
+
       %%
       %% static analysis iteration
       %%
@@ -1178,16 +1156,16 @@ local
       end
       meth saLookahead(Ctrl Top)
 	 {self applyEnvSubst(Ctrl Top)}      % apply old substitutions
-	 {self saSimple(Ctrl Top)}	 
+	 {self saSimple(Ctrl Top)}
 	 case
 	    self.isComplex                   % if this statement is complex
 	    orelse
 	    @next==self                      % or there is no other one
 	 then
-	    skip                             % then terminate 
+	    skip                             % then terminate
 	 else
-	    {@next saLookahead(Ctrl Top)}    % otherwise proceed 
-	 end	    
+	    {@next saLookahead(Ctrl Top)}    % otherwise proceed
+	 end
       end
       meth SaDo(Ctrl Top Cpx)
 	 case
@@ -1195,14 +1173,14 @@ local
 	 then
 	    SAStatement, saveCoord(Ctrl)
 	    {self saLookahead(Ctrl Top)}     % then do lookahead
-         else
+	 else
 	    {self applyEnvSubst(Ctrl Top)}   % apply old substitutions
 	 end
 
 	 SAStatement, saveCoord(Ctrl)
 	 {self sa(Ctrl Top)}
-	 {self saDescend(Ctrl Top)}        
-	 
+	 {self saDescend(Ctrl Top)}
+
 	 case
 	    @next==self
 	 then
@@ -1251,15 +1229,15 @@ local
       end
       meth applyEnvSubst(Ctrl Top)
 	 {@left applyEnvSubst(Ctrl Top)}
-	 {@right applyEnvSubst(Ctrl Top)}                    
+	 {@right applyEnvSubst(Ctrl Top)}
       end
    end
 
    class SAConstructionOrPattern
       attr
 	 type: unit
-	 lastValue : unit 
-	 
+	 lastValue : unit
+
       meth init()
 	 type <- {OzTypes.new record nil}
       end
@@ -1287,10 +1265,10 @@ local
       meth getType($)
 	 @type
       end
-      meth setType(T) 
-	 type <- T 
+      meth setType(T)
+	 type <- T
       end
-      meth deref(VO) 
+      meth deref(VO)
 	 case
 	    @lastValue == unit                          % is "free"
 	 then
@@ -1307,19 +1285,19 @@ local
 	    elsecase
 	       NewVal == unit
 	    then
-	       {@lastValue setLastValue(@lastValue)}    % non initialised 
+	       {@lastValue setLastValue(@lastValue)}    % non initialised
 	    else
 	       SAConstructionOrPattern, setLastValue(NewVal) % constr path compr
-	       SAConstructionOrPattern, deref(VO)                 
+	       SAConstructionOrPattern, deref(VO)
 	    end
 	 else
-	    skip % atom 
+	    skip % atom
 	 end
       end
       meth reachable(Vs $)
 \ifdef LOOP
 	 {Show reachable({Map Vs fun {$ V} {V getPrintName($)} end})}
-\endif 
+\endif
 	 {FoldL @args
 	  fun {$ VsIn Arg}
 	     case Arg of F#T then
@@ -1334,7 +1312,7 @@ local
       meth makeType
 	 type <- {OzValueToType @value}
       end
-      
+
       meth makeConstruction(Ctrl)
 	 Coord= {@label getCoord($)}
 	 Args = {FoldL @args
@@ -1343,8 +1321,8 @@ local
 		 end nil}
       in
 	 case
-	    {DetTypeTests.literal @label} 
-	    andthen 
+	    {DetTypeTests.literal @label}
+	    andthen
 	    {All Args DetTypeTests.feature}
 	 then
 	    LData = {GetData @label}
@@ -1356,14 +1334,14 @@ local
 	 in
 \ifdef DEBUGSA
 	 {Show makeConstruction(LData FData Fields)}
-\endif 
+\endif
 	    case
 	       {AllDistinct Fields}
 	    then
 	       case
 		  {All @label|Args DetTests.det}
 	       then
-		  case		     
+		  case
 		     @isOpen
 		  then
 		     value <- {TellRecord LData}
@@ -1373,7 +1351,7 @@ local
 		  end
 	       else
 \ifdef DEBUGSA
-		  {Show noRecordConstructed} 
+		  {Show noRecordConstructed}
 \endif
 		  value <- _ % no record constructed
 	       end
@@ -1385,7 +1363,7 @@ local
 		      body:  [hint(l:'Features found' m:{SetToVS Fields})])}
 	    end
 	 else
-	    {Ctrl.rep error(coord: Coord 
+	    {Ctrl.rep error(coord: Coord
 			    kind:  SAGenError
 			    msg:   'ill-typed construction')}
 	 end
@@ -1394,7 +1372,7 @@ local
 \endif
       end
 
-      %% Bind: _ x Construction 
+      %% Bind: _ x Construction
 
       meth bind(Ctrl Top RHS)
 \ifdef DEBUGSA
@@ -1403,7 +1381,7 @@ local
 	 case
 	    {Not {UnifyTypes self RHS Ctrl Top {@label getCoord($)}}}
 	 then
-	    skip % not continue on type error 
+	    skip % not continue on type error
 	 else
 	    % set new value for following occurrences
 	    SAConstructionOrPattern, setLastValue(RHS)
@@ -1411,7 +1389,7 @@ local
       end
 
       % unify: _ x Token U Construction U ValueNode
-	 
+
       meth unify(Ctrl Top RHS)
 \ifdef LOOP
 	 {Show unifyC(RHS)}
@@ -1434,36 +1412,36 @@ local
 	       {@label isVariableOccurrence($)}
 	    then
 	       {@label unify(Ctrl Top RLab)}               % unify labels
-	    elsecase 
+	    elsecase
 	       {RLab isVariableOccurrence($)}
 	    then
 	       {RLab unify(Ctrl Top @label)}
-	    else 	                        % both labels must be known
+	    else                                % both labels must be known
 \ifdef DEBUGSA
 	       {Show label({GetData @label} {GetData RLab})}
 \endif
 	       case
 		  {GetData @label}=={GetData RLab}
 	       then
-		  skip 
+		  skip
 	       else
 		  {IssueUnificationFailure Ctrl Top Coord
-		   [hint(l:'incompatible labels' 
+		   [hint(l:'incompatible labels'
 			 m:oz({GetData @label}) # ' and ' # oz({GetData RLab}))
 		    hint(l:'First value' m:oz(@value))
 		    hint(l:'Second value' m:oz(RVal))]}
 	       end
 	    end
-	       
+
 	    case
 	       {Not @isOpen}
 	       andthen
-	       {Not ROpen} 
-	       andthen 
+	       {Not ROpen}
+	       andthen
 	       {Length @args} \= {Length RArgs}
-	    then	
+	    then
 	       {IssueUnificationFailure Ctrl Top Coord
-		[hint(l:'incompatible widths' 
+		[hint(l:'incompatible widths'
 		      m:{Length @args} # ' and ' # {Length RArgs})
 		 hint(l:'First value' m:oz(@value))
 		 hint(l:'Second value' m:oz(RVal))]}
@@ -1505,7 +1483,7 @@ local
 			 {VF unify(Ctrl Top RF)}
 		      end
 		   else
-	              %--** incomplete ft unification
+		      %--** incomplete ft unification
 		      skip
 		   end
 		end}
@@ -1516,7 +1494,7 @@ local
 	    orelse
 	    {IsAtom {RHS getValue($)}}
 	 then
-		  
+
 	    case
 	       @isOpen
 	    then
@@ -1539,13 +1517,13 @@ local
 	      hint(l:'First value' oz(@value))
 	      hint(l:'Second value' oz({RHS getValue($)}))]}
 	 end
-      end     	 
+      end
       meth sa(Ctrl Top)
 
 \ifdef DEBUGSA
 	 {Show saConstruction}
 \endif
-	 
+
 	 {ForAll @args
 	  proc {$ Arg}
 	     case Arg of F#T then
@@ -1555,13 +1533,13 @@ local
 		{Arg sa(Ctrl Top)}
 	     end
 	  end}
-	 SAConstructionOrPattern, makeConstruction(Ctrl)      
+	 SAConstructionOrPattern, makeConstruction(Ctrl)
 	 SAConstructionOrPattern, makeType
       end
       meth applyEnvSubst(Ctrl Top)
 	 {Record.forAll self.expansionOccs
 	  proc {$ VO}
-	     case VO of undeclared then skip 
+	     case VO of undeclared then skip
 	     else {VO applyEnvSubst(Ctrl Top)} end
 	  end}
 	 {@label applyEnvSubst(Ctrl Top)}
@@ -1576,7 +1554,7 @@ local
 	  end}
       end
    end
-   
+
    class SAConstruction
       from SAConstructionOrPattern
    end
@@ -1588,11 +1566,11 @@ local
 	 @value
       end
    end
-   
+
    class SADefinition
       from SAAbstraction
       feat
-	 isComplex:false             
+	 isComplex:false
       meth saSimple(Ctrl Top)
 	 DummyProc ID
       in
@@ -1612,9 +1590,9 @@ local
 	 end
 	 self.abstractionTableID = ID
 	 @value.abstractionTableID = ID
- 
+
 	 {@designator unifyVal(Ctrl Top @value)}
-	 
+
 \ifdef DEBUGSA
 	 {Show lookedAhead({@designator getPrintName($)} @value)}
 \endif
@@ -1626,7 +1604,7 @@ local
 \endif
       end
       meth saDescend(Ctrl Top)
-	 Env = {GetGlobalEnv @globalVars} 
+	 Env = {GetGlobalEnv @globalVars}
       in
 	 case {Member 'instantiate' @procFlags} then
 	    {Ctrl beginVirtualToplevel(@coord)}
@@ -1640,7 +1618,7 @@ local
       meth applyEnvSubst(Ctrl Top)
 	 {Record.forAll self.expansionOccs
 	  proc {$ VO}
-	     case VO of undeclared then skip 
+	     case VO of undeclared then skip
 	     else {VO applyEnvSubst(Ctrl Top)} end
 	  end}
 	 {@designator applyEnvSubst(Ctrl Top)}
@@ -1649,12 +1627,12 @@ local
 
    class SAFunctionDefinition
    end
-   
+
    class SAClauseBody
    end
 
    class SABuiltinApplication
-      
+
       meth AssertTypes(Ctrl N Args Types Det)
 	 case Args
 	 of nil then skip
@@ -1695,7 +1673,7 @@ local
 	    end
 	 end
       end
-      
+
       meth assertTypes(Ctrl BIName)
 
 	 case {GetBuiltinInfo BIName}
@@ -1709,7 +1687,7 @@ local
 \endif
 	    SABuiltinApplication, AssertTypes(Ctrl 1 @actualArgs Types Det)
 	 end
-      end	       
+      end
 
       meth checkMessage(Ctrl Top MsgArg Meth Type PN)
 	 Msg     = {GetData MsgArg}
@@ -1724,7 +1702,7 @@ local
 	 of object then
 	    What  = 'Object'
 	    Where = 'object application'
-	 elseof new then 
+	 elseof new then
 	    What  = 'Object'
 	    Where = 'object creation'
 	 elseof 'class' then
@@ -1736,8 +1714,8 @@ local
 	 end
 
 	 case Meth==unit
-	 then 
-	    skip 
+	 then
+	    skip
 	 elsecase
 	    {IsDet Msg} andthen {IsRecord Msg}
 	 then
@@ -1746,7 +1724,7 @@ local
 	    then
 	       Req # Opt = Meth.{Label Msg}
 	    in
-	       
+
 	       {ForAll Req
 		proc {$ R}
 		   case {HasFeature Msg R}
@@ -1754,14 +1732,14 @@ local
 		      {Ctrl.rep
 		       error(coord: @coord
 			     kind:  SAGenError
-			     msg:   'missing message feature in ' # Where 
+			     msg:   'missing message feature in ' # Where
 			     body:  [hint(l:What m:pn(PN))
 				     hint(l:'Required feature' m:R)
 				     hint(l:'Message found'
 					  m:oz(MsgData))])}
 		   end
 		end}
-	       
+
 	       case
 		  Opt \= unit
 	       then
@@ -1797,12 +1775,12 @@ local
 			      hint(l:'Message found' m:oz(MsgData))])}
 	    end
 	 else
-	    skip 
+	    skip
 	 end
       end
 
-      % Det: flag whether to check determination 
-      
+      % Det: flag whether to check determination
+
       meth checkArguments(Ctrl N Det $)
 	 BIInfo = {GetBuiltinInfo N}
       in
@@ -1814,7 +1792,7 @@ local
 	    case
 	       {TypeCheck @actualArgs BIInfo.types}
 	    of
-	       0 % no type error 
+	       0 % no type error
 	    then
 \ifdef DEBUGSA
 	       {Show det({Map @actualArgs GetData}
@@ -1823,7 +1801,7 @@ local
 	       {Not Det} orelse {DetCheck @actualArgs BIInfo.det}
 	    elseof
 	       Pos
-	    then 
+	    then
 	       PNs = {Map @actualArgs fun {$ A} pn({A getPrintName($)}) end}
 	       Vals= {Map @actualArgs fun {$ A} oz({GetPrintData A}) end}
 	       Ts  = {Map BIInfo.types fun {$ T} oz(T) end}
@@ -1854,7 +1832,7 @@ local
 					 m:{ApplToVS pn(N)|PNs})
 				    hint(l:'Argument values'
 					 m:{ApplToVS pn(N)|Vals})])}
-	    false 
+	    false
 	 end
       end
 
@@ -1902,13 +1880,13 @@ local
 	 else skip end
       end
       meth doNewName(Ctrl Top B)
-	 
+
 	 SABuiltinApplication, checkArguments(Ctrl 'NewName' true B)
 
-	 case B then 
+	 case B then
 	    BndVO BndV PrintName TheName Top0 Token
 	 in
-	    BndVO = {Nth @actualArgs 1} 
+	    BndVO = {Nth @actualArgs 1}
 	    {BndVO getVariable(?BndV)}
 	    {BndV getPrintName(?PrintName)}
 	    case Top andthen {BndV getOrigin($)} \= generated then
@@ -1920,7 +1898,7 @@ local
 	    Top0 = (Top andthen
 		    {Not {Ctrl.switches getSwitch(debuginfovarnames $)}})
 	    Token = {New Core.nameToken init(PrintName TheName Top0)}
-	    {BndVO unifyVal(Ctrl Top Token)} 
+	    {BndVO unifyVal(Ctrl Top Token)}
 	    case Top then self.codeGenMakeEquateLiteral = TheName
 	    else skip end
 	 else skip end
@@ -1928,12 +1906,12 @@ local
       meth doNewUniqueName(Ctrl Top B)
 
 	 SABuiltinApplication, checkArguments(Ctrl 'NewUniqueName' true B)
-	 
+
 	 case B then
 	    NName = {GetData {Nth @actualArgs 1}}
 	    Value = {{`Builtin` 'NewUniqueName' 2} NName}   % always succeeds
 	    Token = {New Core.nameToken init(NName Value true)}
-	    BndVO = {Nth @actualArgs 2} 
+	    BndVO = {Nth @actualArgs 2}
 	 in
 \ifdef DEBUGSA
 	    {Show newUniqueName(NName Token)}
@@ -1947,7 +1925,7 @@ local
       meth doTclNames(Ctrl Top B)
 
 	 SABuiltinApplication, checkArguments(Ctrl 'getTclNames' true B)
-	 
+
 	 case B then
 	    BVO1 = {Nth @actualArgs 1}
 	    BVO2 = {Nth @actualArgs 2}
@@ -1967,12 +1945,12 @@ local
 	 else skip end
       end
       meth doNewLock(Ctrl Top B)
-	 
+
 	 SABuiltinApplication, checkArguments(Ctrl 'NewLock' true B)
 
 	 case B then
 	    Token = {New Core.lockToken init({NewLock})}
-	    BndVO = {Nth @actualArgs 1} 
+	    BndVO = {Nth @actualArgs 1}
 	 in
 	    {BndVO unifyVal(Ctrl Top Token)}
 	 else skip end
@@ -1983,7 +1961,7 @@ local
 
 	 case B then
 	    Token = {New Core.portToken init({NewPort _})}
-	    BndVO = {Nth @actualArgs 2} 
+	    BndVO = {Nth @actualArgs 2}
 	 in
 	    {BndVO unifyVal(Ctrl Top Token)}
 	 else skip end
@@ -1992,9 +1970,9 @@ local
 
 	 SABuiltinApplication, checkArguments(Ctrl 'NewCell' true B)
 
-	 case B then 
+	 case B then
 	    Token = {New Core.cellToken init({NewCell _})}
-	    BndVO = {Nth @actualArgs 2} 
+	    BndVO = {Nth @actualArgs 2}
 	 in
 	    {BndVO unifyVal(Ctrl Top Token)}
 	 else skip end
@@ -2006,8 +1984,8 @@ local
 	 case B then
 	    Low  = {GetData {Nth @actualArgs 1}}
 	    High = {GetData {Nth @actualArgs 2}}
-	    Token= {New Core.arrayToken init({Array.new Low High _})} 
-	    BndVO= {Nth @actualArgs 4} 
+	    Token= {New Core.arrayToken init({Array.new Low High _})}
+	    BndVO= {Nth @actualArgs 4}
 	 in
 	    {BndVO unifyVal(Ctrl Top Token)}
 	 else skip end
@@ -2017,7 +1995,7 @@ local
 	 SABuiltinApplication, checkArguments(Ctrl 'NewDictionary' true B)
 
 	 case B then
-	    Token= {New Core.dictionaryToken init({Dictionary.new})} 
+	    Token= {New Core.dictionaryToken init({Dictionary.new})}
 	    BndVO= {Nth @actualArgs 1}
 	 in
 	    {BndVO unifyVal(Ctrl Top Token)}
@@ -2039,19 +2017,19 @@ local
 
 	 SABuiltinApplication, checkArguments(Ctrl 'Space.new' true B)
 
-	 case B then 
-	    Pred = {GetData {Nth @actualArgs 1}}
+	 case B then
 	    Token= {New Core.spaceToken init({Space.new proc {$ _} skip end})}
 	    BndVO= {Nth @actualArgs 2}
-	 in
 \ifdef DEBUGSA
+	    Pred = {GetData {Nth @actualArgs 1}}
 	    {Show space({{Nth @actualArgs 2} getPrintName($)} Pred)}
 \endif
+	 in
 	    {BndVO unifyVal(Ctrl Top Token)}
 	 else skip end
       end
       meth doNew(Ctrl Top B)
-	 
+
 	 SABuiltinApplication, checkArguments(Ctrl 'New' true B)
 
 	 case B then
@@ -2063,7 +2041,7 @@ local
 	    PN   = {BndVO getPrintName($)}
 	 in
 	    {BndVO unifyVal(Ctrl Top Token)}
-	    
+
 	    case Cls == unit
 	    then skip else
 	       Meth = {Cls getMethods($)}
@@ -2072,7 +2050,7 @@ local
 	    end
 	 else
 	    skip
-\ifdef DEBUGSA	    
+\ifdef DEBUGSA
 	    {Show noObjectCreation({{Nth @actualArgs 3} getPrintName($)})}
 \endif
 	 end
@@ -2082,7 +2060,7 @@ local
 	 {Show dot(@actualArgs {Map @actualArgs GetData})}
 \endif
 
-	 
+
 	 SABuiltinApplication, checkArguments(Ctrl '.' true B)
 
 	 case B then
@@ -2093,9 +2071,9 @@ local
 \ifdef DEBUGSA
 	    {Show dot(FirstArg RecOrCh F)}
 \endif
-	    case	
+	    case
 	       {IsDet RecOrCh}
-	       andthen {TypeTests.object RecOrCh} 
+	       andthen {TypeTests.object RecOrCh}
 	    then
 \ifdef DEBUGSA
 	       {Show dotobj}
@@ -2103,7 +2081,7 @@ local
 	       case {GetClassOfObjectData FirstArg}
 	       of unit then
 		  skip
-	       elseof Cls then 
+	       elseof Cls then
 		  Fs  = {Cls getFeatures($)}
 	       in
 		  case
@@ -2123,7 +2101,7 @@ local
 	    elsecase
 	       {IsDet RecOrCh}
 	       andthen {TypeTests.'class' RecOrCh}
-	    then	
+	    then
 	       case {GetClassData FirstArg}
 	       of unit then
 		  skip
@@ -2145,11 +2123,11 @@ local
 	    elsecase
 	       {IsDet RecOrCh}
 	       andthen {TypeTests.record RecOrCh}
-	    then 
+	    then
 	       case {HasFeature RecOrCh F}
 	       then
-		  BndVO = {Nth @actualArgs 3} 
-	       in		  
+		  BndVO = {Nth @actualArgs 3}
+	       in
 		  {Ctrl setErrorMsg('feature selection (.) failed')}
 		  {Ctrl setUnifier(BndVO RecOrCh.F)}
 
@@ -2167,20 +2145,20 @@ local
 	       end
 	    elsecase
 	       {TypeTests.recordC RecOrCh}
-	       andthen {HasFeatureNow RecOrCh F} 
+	       andthen {HasFeatureNow RecOrCh F}
 	    then
-	       BndVO = {Nth @actualArgs 3} 
+	       BndVO = {Nth @actualArgs 3}
 	    in
 	       {Ctrl setErrorMsg('dot selection failed')}
 	       {Ctrl setUnifier(BndVO RecOrCh.F)}
 
-	       {BndVO unify(Ctrl Top RecOrCh^F)} 
+	       {BndVO unify(Ctrl Top RecOrCh^F)}
 
 	       {Ctrl resetUnifier}
 	       {Ctrl resetErrorMsg}
 	    else
 	       skip
-	    end	    
+	    end
 	 else
 	    skip
 	 end
@@ -2191,7 +2169,7 @@ local
 \endif
 
 	 SABuiltinApplication, checkArguments(Ctrl '^' true B)
-	 
+
 	 case B then
 	    Rec = {GetData {Nth @actualArgs 1}}
 	    Fea = {GetData {Nth @actualArgs 2}}
@@ -2206,14 +2184,14 @@ local
 	    in
 	       {Ctrl setErrorMsg('feature selection (^) failed')}
 	       {Ctrl setUnifier(BndVO Rec^Fea)}
-	       
+
 	       {BndVO unify(Ctrl Top Rec^Fea)}
 
 	       {Ctrl resetUnifier}
 	       {Ctrl resetErrorMsg}
 	    elsecase
 	       {IsDet Rec}
-	    then 
+	    then
 	       {Ctrl.rep
 		error(coord: @coord
 		      kind:  SAGenError
@@ -2233,9 +2211,9 @@ local
 	 PN   = {{Nth @actualArgs 1} getPrintName($)}
       in
 	 B = true % this is a hack; should be passed to checkMessage
-	 
+
 	 case Cls == unit
-	 then skip else 
+	 then skip else
 	    Meth = {Cls getMethods($)}
 	 in
 	    SABuiltinApplication, checkMessage(Ctrl Top Msg Meth 'class' PN)
@@ -2300,7 +2278,7 @@ local
 	    Token = {New Core.nameToken
 		     init({BndVO getPrintName($)} `true` true)}
 	 in
-	    {BndVO unifyVal(Ctrl Top Token)} 
+	    {BndVO unifyVal(Ctrl Top Token)}
 	    self.codeGenMakeEquateLiteral = {Token getValue($)}
 	 else skip end
       end
@@ -2308,22 +2286,22 @@ local
 
 	 SABuiltinApplication, checkArguments(Ctrl 'getFalse' true B)
 
-	 case B then 
-	    BndVO = {Nth @actualArgs 1} 
+	 case B then
+	    BndVO = {Nth @actualArgs 1}
 	    Token = {New Core.nameToken
 		     init({BndVO getPrintName($)} `false` true)}
 	 in
-	    {BndVO unifyVal(Ctrl Top Token)} 
+	    {BndVO unifyVal(Ctrl Top Token)}
 	    self.codeGenMakeEquateLiteral = {Token getValue($)}
 	 else skip end
       end
       meth doAndOr(PName Junctor Ctrl Top B)
-	 
+
 	 SABuiltinApplication, checkArguments(Ctrl PName true B)
 
 	 case B then
-	    BVO1 = {Nth @actualArgs 1} 
-	    BVO2 = {Nth @actualArgs 2} 
+	    BVO1 = {Nth @actualArgs 1}
+	    BVO2 = {Nth @actualArgs 2}
 	    BVO3 = {Nth @actualArgs 3}
 	    Val1 = {GetData BVO1}
 	    Val2 = {GetData BVO2}
@@ -2340,14 +2318,14 @@ local
 	       skip
 	    end
 	 else skip end
-      end     
+      end
       meth doNot(Ctrl Top B)
 
 	 SABuiltinApplication, checkArguments(Ctrl 'Not' true B)
 
 	 case B then
-	    BVO1 = {Nth @actualArgs 1} 
-	    BVO2 = {Nth @actualArgs 2} 
+	    BVO1 = {Nth @actualArgs 1}
+	    BVO2 = {Nth @actualArgs 2}
 	    Val1 = {GetData BVO1}
 	 in
 	    case
@@ -2360,7 +2338,7 @@ local
 	       {BVO2 unifyVal(Ctrl Top Token)}
 	    else skip end
 	 else skip end
-      end     
+      end
       meth doLabel(Ctrl Top B)
 
 	 SABuiltinApplication, checkArguments(Ctrl 'Label' true B)
@@ -2458,7 +2436,7 @@ local
 			      {New Core.nameToken
 			       init('`false`' `false` true)})}
 	    elseof unit then
-	       skip 
+	       skip
 	    end
 	 else skip end
       end
@@ -2485,7 +2463,7 @@ local
 	 else skip end
       end
    end
-   
+
    class SAApplication
       from SABuiltinApplication
 
@@ -2493,7 +2471,7 @@ local
 	 DesigType = {@designator getType($)}
 	 ProcType  = case {Length @actualArgs}
 		     of 0 then TypeConstants.'procedure/0'
-		     [] 1 then {OzTypes.new unaryProcOrObject nil} 
+		     [] 1 then {OzTypes.new unaryProcOrObject nil}
 		     [] 2 then TypeConstants.'procedure/2'
 		     [] 3 then TypeConstants.'procedure/3'
 		     [] 4 then TypeConstants.'procedure/4'
@@ -2508,7 +2486,6 @@ local
 	 else
 	    PN  = {@designator getPrintName($)}
 	    PNs = {Map @actualArgs fun {$ A} pn({A getPrintName($)}) end}
-	    Val = {GetPrintData @designator}
 	    Vals= {Map @actualArgs fun {$ A} oz({GetPrintData A}) end}
 	 in
 	    {Ctrl.rep
@@ -2523,25 +2500,25 @@ local
 				m:{ApplToVS pn(PN)|Vals})])}
 	 end
       end
-      
+
       meth sa(Ctrl Top)
 
 \ifdef DEBUGSA
 	 {Show application({@designator getPrintName($)} )}
-\endif	 
+\endif
 	 {@designator sa(Ctrl Top)}
 
 	 {ForAll @actualArgs proc {$ A} {A sa(Ctrl Top)} end}
-	 
-	 case 
+
+	 case
 	    SAApplication, checkDesignatorBuiltin($)
 	 then
 	    BIName = {GetBuiltinName {GetData @designator}}
-	    ArgsOk 
+	    ArgsOk
 	 in
 \ifdef DEBUGSA
 	    {Show applying(BIName)}
-\endif	    
+\endif
 	    case BIName
 	    of 'NewName'        then
 	       SABuiltinApplication, doNewName(Ctrl Top ArgsOk)
@@ -2584,7 +2561,7 @@ local
 	    [] 'IsInt'          then
 	       SABuiltinApplication, doDetType('IsInt' IsInt Ctrl Top ArgsOk)
 	    [] 'IsList'         then
-	       SABuiltinApplication, doRecDetType('IsList' IsListNow Ctrl Top ArgsOk) 
+	       SABuiltinApplication, doRecDetType('IsList' IsListNow Ctrl Top ArgsOk)
 	    [] 'IsLiteral'      then
 	       SABuiltinApplication, doDetType('IsLiteral' IsLiteral Ctrl Top ArgsOk)
 	    [] 'IsLock'         then
@@ -2651,9 +2628,9 @@ local
 
 	    %%
 	    %% type-assertions go here if no type error raised yet
-	    %% 
+	    %%
 
-	    case ArgsOk then 
+	    case ArgsOk then
 	       SABuiltinApplication, assertTypes(Ctrl BIName)
 	    else skip end
 
@@ -2683,7 +2660,7 @@ local
 			      hint(l:'Application (values)'
 				   m:{ApplToVS pn(PN)|Vals})])}
 	    else skip end
-	       
+
 	 elsecase
 	    SAApplication, checkDesignatorObject($)
 	 then
@@ -2710,7 +2687,7 @@ local
 	       Meth = {Cls getMethods($)}
 	    in
 	       SAApplication, checkMessage(Ctrl Top Msg Meth object PN)
-	    end 
+	    end
 
 	 elsecase
 	    {DetTests.det @designator}
@@ -2729,7 +2706,7 @@ local
       meth checkDesignatorBuiltin($)
 	 {DetTests.det @designator}
 	 andthen {TypeTests.builtin {GetData @designator}}
-      end 
+      end
       meth checkDesignatorProcedure($)
 	 {DetTests.det @designator}
 	 andthen {TypeTests.procedure {GetData @designator}}
@@ -2737,7 +2714,7 @@ local
       meth checkDesignatorObject($)
 	 {DetTests.det @designator}
 	 andthen {TypeTests.object {GetData @designator}}
-      end 
+      end
       meth applyEnvSubst(Ctrl Top)
 	 {@designator applyEnvSubst(Ctrl Top)}
 	 {ForAll @actualArgs
@@ -2753,7 +2730,7 @@ local
 \ifdef DEBUGSA
 	 {Show boolCase}
 \endif
-	 skip 
+	 skip
       end
       meth saDescend(Ctrl Top)
 	 % descend with global environment
@@ -2770,21 +2747,21 @@ local
 		warn(coord: {@arbiter getCoord($)}
 		     kind:  SAGenWarn
 		     msg:   'boolean guard ' # pn(PN) # ' is always true')}
-	       
+
 	       {@alternative saDescend(Ctrl false)}
 	       {@consequent saDescendAndCommit(Ctrl Top)}
-	       
+
 	    else
 	       % {TypeTests.'false' {GetData @arbiter}}
 	       {Ctrl.rep
 		warn(coord: {@arbiter getCoord($)}
 		     kind:  SAGenWarn
 		     msg:   'boolean guard ' # pn(PN) # ' is always false')}
-	       
+
 	       {@consequent saDescend(Ctrl false)}
 	       {@alternative saDescendAndCommit(Ctrl Top)}
 	    end
-	    
+
 	 elsecase
 	    {Not {DetTypeTests.bool @arbiter}}
 	 then
@@ -2800,13 +2777,13 @@ local
 
 	    {@alternative
 	     saDescendWithValue(Ctrl false @arbiter
-				self.expansionOccs.'`false`')}	    
+				self.expansionOccs.'`false`')}
 	 end
       end
       meth applyEnvSubst(Ctrl Top)
 	 {Record.forAll self.expansionOccs
 	  proc {$ VO}
-	     case VO of undeclared then skip 
+	     case VO of undeclared then skip
 	     else {VO applyEnvSubst(Ctrl Top)} end
 	  end}
 	 {@arbiter applyEnvSubst(Ctrl Top)}
@@ -2821,9 +2798,9 @@ local
 	 skip
       end
       meth saDescendWithValue(Ctrl Top Arbiter Val)
- 	 ArbV = {Arbiter getVariable($)}
-         % arbiter value unknown, hence also save arbiter value
-	 Env  = {GetGlobalEnv {Add ArbV @globalVars}} 
+	 ArbV = {Arbiter getVariable($)}
+	 % arbiter value unknown, hence also save arbiter value
+	 Env  = {GetGlobalEnv {Add ArbV @globalVars}}
       in
 	 case
 	    {TryUnifyTypes
@@ -2835,20 +2812,20 @@ local
 	    PN  = {Arbiter getPrintName($)}
 	    Val = {GetPrintData Arbiter}
 	 in
-	    {Ctrl.rep	    
+	    {Ctrl.rep
 	     error(coord: {@body.1 getCoord($)}
 		   msg:   'Non-boolean arbiter in boolean case statement'
 		   kind:  SATypeError
 		   body:  [hint(l:'Name' m:pn(PN))
 			   hint(l:'Value' m:oz(Val))])}
 	 end
-	 
+
 	 SAStatement, saBody(Ctrl false @body)
 	 {InstallGlobalEnv Env}
       end
       meth saDescend(Ctrl Top)
-         % arbiter value known, hence no need to save arbiter value
-	 Env  = {GetGlobalEnv @globalVars} 
+	 % arbiter value known, hence no need to save arbiter value
+	 Env  = {GetGlobalEnv @globalVars}
       in
 	 SAStatement, saBody(Ctrl false @body)
 	 {InstallGlobalEnv Env}
@@ -2861,7 +2838,7 @@ local
    class SAPatternCase
       meth sa(Ctrl Top)
 	 skip
-\ifdef DEBUGSA	 
+\ifdef DEBUGSA
 	 {Show patternCase(@clauses {Map @globalVars fun {$ V} {V getPrintName($)} end})}
 \endif
 	 skip
@@ -2869,7 +2846,7 @@ local
       meth saDescend(Ctrl Top)
 	 % descend with global environment
 	 % will be saved and restored in clauses
-	 {ForAll @clauses	 
+	 {ForAll @clauses
 	  proc {$ C} {C saDescendWith(Ctrl false @arbiter)} end}
 	 {@alternative saDescendWith(Ctrl false @arbiter)}
       end
@@ -2883,7 +2860,7 @@ local
 
    class SAPatternClause
       meth sa(Ctrl Top)
-\ifdef DEBUGSA	 
+\ifdef DEBUGSA
 	 {Show patternClause(@body)}
 \endif
 	 {@pattern sa(Ctrl false)}
@@ -2891,18 +2868,18 @@ local
       meth saDescendWith(Ctrl Top Arbiter)
 	 ArbV  = {Arbiter getVariable($)}
 	 % also save arbiter !!
-	 Env   = {GetGlobalEnv {Add ArbV @globalVars}} 
+	 Env   = {GetGlobalEnv {Add ArbV @globalVars}}
       in
 	 {@pattern sa(Ctrl Top)}
 
 	 {Ctrl setErrorMsg('pattern never matches')}
 	 {Ctrl setUnifier(Arbiter @pattern)}
-	 
+
 	 {Arbiter unify(Ctrl false @pattern)}
 
 	 {Ctrl resetUnifier}
 	 {Ctrl resetErrorMsg}
-	 
+
 	 SAStatement, saBody(Ctrl false @body)
 	 {InstallGlobalEnv Env}
       end
@@ -2933,13 +2910,13 @@ local
 	 {@right getValue($)}
       end
       meth setValue(Val)
-	 {@right setValue(Val)} 
+	 {@right setValue(Val)}
       end
       meth getLastValue($)
-	 {@right getLastValue($)} 
+	 {@right getLastValue($)}
       end
       meth setLastValue(Val)
-	 {@right setLastValue(Val)} 
+	 {@right setLastValue(Val)}
       end
       meth getLabel($)
 	 {@right getLabel($)}
@@ -2957,13 +2934,13 @@ local
       meth deref(VO)
 	 {@right deref(VO)}
       end
-      
+
       meth sa(Ctrl Top)
-\ifdef DEBUGSA	 
+\ifdef DEBUGSA
 	 {Show equationPattern}
-\endif	 
+\endif
 	 {@right sa(Ctrl Top)}                            % analyse right hand side
-	 {@left unify(Ctrl Top @right)}                   % l -> r 
+	 {@left unify(Ctrl Top @right)}                   % l -> r
       end
 
       meth reachable(Vs $)
@@ -2972,9 +2949,9 @@ local
 \endif
 	 {@right reachable({@left reachable(Vs $)} $)}
       end
-      
+
       % unify: _ x Token U Construction U ValueNode
-	 
+
       meth unify(Ctrl Top RHS)
 \ifdef LOOP
 	 {Show unifyEP(RHS)}
@@ -2991,7 +2968,7 @@ local
    class SAAbstractElse
       from SADefault
    end
-   
+
    class SAElseNode
       from SAAbstractElse
       meth sa(Ctrl Top)
@@ -3003,9 +2980,9 @@ local
       meth saDescend(Ctrl Top)
 	 Env = {GetGlobalEnv @globalVars}
       in
-	 SAStatement, saBody(Ctrl false @body) 
+	 SAStatement, saBody(Ctrl false @body)
 	 {InstallGlobalEnv Env}
-      end      
+      end
       meth saDescendWithValue(Ctrl Top Arbiter Val)
 	 ArbV  = {Arbiter getVariable($)}
 	 Env   = {GetGlobalEnv {Add ArbV @globalVars}}
@@ -3017,18 +2994,18 @@ local
       meth saDescendWith(Ctrl Top Arbiter)
 	 ArbV  = {Arbiter getVariable($)}
 	 % also save arbiter !!
-	 Env   = {GetGlobalEnv {Add ArbV @globalVars}} 
+	 Env   = {GetGlobalEnv {Add ArbV @globalVars}}
       in
 	 SAStatement, saBody(Ctrl false @body)
 	 {InstallGlobalEnv Env}
-      end      
+      end
       meth saDescendAndCommit(Ctrl Top)
 	 SAStatement, saBody(Ctrl Top @body)
       end
    end
    class SANoElse
       from SAAbstractElse
-      meth sa(Ctrl Top)	
+      meth sa(Ctrl Top)
 	 skip
 \ifdef DEBUGSA
 	 {Show noElse}
@@ -3038,15 +3015,15 @@ local
 	 skip
       end
       meth applyEnvSubst(Ctrl Top)
-      	 {Record.forAll self.expansionOccs
+	 {Record.forAll self.expansionOccs
 	  proc {$ VO}
-	     case VO of undeclared then skip 
+	     case VO of undeclared then skip
 	     else {VO applyEnvSubst(Ctrl Top)} end
 	  end}
       end
       meth saDescendWith(Ctrl Top Arbiter)
 	 skip
-      end      
+      end
       meth saDescendAndCommit(Ctrl Top)
 	 skip
       end
@@ -3078,17 +3055,17 @@ local
 	 Env1 Env2
       in
 	 % check try clause
-	 Env1 = {GetGlobalEnv @globalVars} 
+	 Env1 = {GetGlobalEnv @globalVars}
 	 SAStatement, saBody(Ctrl false @tryBody)
 	 {InstallGlobalEnv Env1}
 
 	 % check catch clause
-	
+
 	 % the main reason to copy the global environment
 	 % here a second time (and not reuse the first one) is
 	 % that during GetGlobalEnv the types of all reachable
 	 % variables are cloned (possible optimization: compute
-	 % reachable variables only once and _only_ clone types here) 
+	 % reachable variables only once and _only_ clone types here)
 	 Env2 = {GetGlobalEnv @globalVars}
 	 SAStatement, saBody(Ctrl false @catchBody)
 	 {InstallGlobalEnv Env2}
@@ -3099,7 +3076,7 @@ local
       meth sa(Ctrl Top)
 	 skip
 \ifdef DEBUGSA
-	 {Show lockNode}                           
+	 {Show lockNode}
 \endif
       end
       meth saDescend(Ctrl Top)
@@ -3122,7 +3099,7 @@ local
 	 TestClass NrClass
 	 DummyClass = class $ end
       in
-	 value <- {New Core.classToken init(DummyClass)}         
+	 value <- {New Core.classToken init(DummyClass)}
 
 	 isVirtualToplevel <- {Ctrl isVirtualToplevel($)}
 
@@ -3139,15 +3116,15 @@ local
 	    TestClass
 	 then
 	    PTs = {Map @parents fun {$ X} {X getValue($)} end}
-	    NoDet PsDet 
+	    NoDet PsDet
 	 in
 	    {AllUpTo @parents DetTests.det ?NoDet ?PsDet}
-	    
+
 	    SAClassNode, inheritProperties(Ctrl PTs)
 	    SAClassNode, inheritAttributes(Ctrl PTs PsDet)
 	    SAClassNode, inheritFeatures(Ctrl PTs PsDet)
 	    SAClassNode, inheritMethods(Ctrl PTs PsDet)
-	       
+
 \ifdef INHERITANCE
 	    case PsDet
 	    then skip else
@@ -3159,44 +3136,44 @@ local
 				  m:pn({{Nth @parents NoDet}
 					getPrintName($)}))])}
 	    end
-\endif 
-	    
+\endif
+
 	 else
 	    NoCls = {GetPrintData {Nth @parents NrClass}}
 	 in
 	    {Ctrl.rep
-	     error(coord: @coord 
+	     error(coord: @coord
 		   kind:  SATypeError
 		   msg:   'inheriting from non-class ' # oz(NoCls))}
 	 end
 
 \endif
-	 
+
 	 {@designator unify(Ctrl Top @value)}
 
 \ifdef DEBUGSA
 	 {Show lookedAhead({@designator getPrintName($)} @value)}
 \endif
       end
-      
+
       meth inheritProperties(Ctrl PTs)
 	 NrAtom TestAtom
       in
-	 
+
 \ifdef DEBUGSA
 	 {Show properties(@properties)}
 \endif
 
 	 {AllUpTo @properties DetTypeTests.atom ?NrAtom ?TestAtom}
 
-	 % type test 
+	 % type test
 	 case TestAtom then
 	    % new determined properties
 	    Pro  = {Filter {Map @properties GetData}
 		    TypeTests.atom}
-	    % properties of det parents 
+	    % properties of det parents
 	    PPro = {Filter {Map PTs fun {$ P}
-				       case {DetTests.det P} 
+				       case {DetTests.det P}
 				       then {P getProperties($)}
 				       else unit end
 				    end}
@@ -3215,7 +3192,7 @@ local
 		      msg:   'inheritance from final class '
 		      # pn({Cls getPrintName($)}))}
 	    else
-	       % type & det test 
+	       % type & det test
 	       {@value setProperties({UnionAll Pro|PPro})}
 	    end
 	 else
@@ -3226,7 +3203,7 @@ local
 		   kind:  SATypeError
 		   msg:   'non-atomic class property '
 		   # pn({Prop getPrintName($)}))}
-					 
+
 	 end
       end
       meth inheritAttributes(Ctrl PTs PsDet)
@@ -3236,24 +3213,24 @@ local
 	 {Show attributes(Att)}
 \endif
 
-	 % type test 
+	 % type test
 	 case
 	    {All Att DetTypeTests.feature}
-	 then	   
+	 then
 	    AData = {Map Att GetData}
 	 in
-	    % distinct attributes required 
+	    % distinct attributes required
 	    case
 	       {AllDistinct AData}
 	    then
-	       % parents determined? 
-	       case PsDet then 
+	       % parents determined?
+	       case PsDet then
 		  PAtt = {Map PTs fun {$ P} {P getAttributes($)} end}
 	       in
-		  % type & det test 
+		  % type & det test
 		  case
 		     {Not {Member unit PAtt}}
-		     andthen 
+		     andthen
 		     {All AData TypeTests.feature}
 		  then
 		     {@value setAttributes({UnionAll AData|PAtt})}
@@ -3292,21 +3269,21 @@ local
 	 {Show features(Fea)}
 \endif
 
-	 % type test 
+	 % type test
 	 case
 	    {All Fea DetTypeTests.feature}
 	 then
 	    FData = {Map Fea GetData}
 	 in
-	    % distinct features required 
+	    % distinct features required
 	    case
 	       {AllDistinct FData}
 	    then
-	       % parents determined? 
-	       case PsDet then 
+	       % parents determined?
+	       case PsDet then
 		  PFea = {Map PTs fun {$ P} {P getFeatures($)} end}
 	       in
-		  % type & det test 
+		  % type & det test
 		  case
 		     {Not {Member unit PFea}}
 		     andthen
@@ -3321,7 +3298,7 @@ local
 			   msg:   'insufficient information about class features')}
 \else
 		     skip
-\end	    
+\end
 		  end
 	       % complain about parents elsewhere
 	       else skip end
@@ -3346,7 +3323,7 @@ local
 \ifdef DEBUGSA
 	 {Show methods(PTs PMet Met)}
 \endif
-	 % type test 
+	 % type test
 	 case
 	    {All Met
 	     fun {$ L#(R#O)}
@@ -3368,11 +3345,11 @@ local
 	    case
 	       {AllDistinct MethNames}
 	    then
-	       % parents determined? 
+	       % parents determined?
 	       case PsDet then
 		  PMet = {Map PTs fun {$ P} {P getMethods($)} end}
 	       in
-		  % type & det test 
+		  % type & det test
 		  case
 		     {All MethNames TypeTests.literal}
 		     andthen
@@ -3383,7 +3360,7 @@ local
 		  in
 		     {@value setMethods(TotalMet)}
 		  else
-\ifdef INHERITANCE  
+\ifdef INHERITANCE
 		     {Ctrl.rep
 		      warn(coord: @coord
 			   kind:  SAGenWarn
@@ -3413,16 +3390,16 @@ local
 	 skip
 \ifdef DEBUGSA
 	 {Show classDef({@designator getPrintName($)} Top)}
-\endif	 
+\endif
       end
       meth saDescend(Ctrl Top)
 	 {Ctrl pushSelf(self)}
 
-         % descend with global environment
+	 % descend with global environment
 	 % will be saved in methods
 	 SAClassNode, SaBody(@methods Ctrl Top)
 
-	 {Ctrl popSelf}	 	 
+	 {Ctrl popSelf}
       end
       meth SaBody(Methods Ctrl Top)
 	 case Methods of M|Mr then
@@ -3433,10 +3410,10 @@ local
 	 end
       end
       meth applyEnvSubst(Ctrl Top)
-	 
-      	 {Record.forAll self.expansionOccs
+
+	 {Record.forAll self.expansionOccs
 	  proc {$ VO}
-	     case VO of undeclared then skip 
+	     case VO of undeclared then skip
 	     else {VO applyEnvSubst(Ctrl Top)} end
 	  end}
 	 {@designator applyEnvSubst(Ctrl Top)}
@@ -3474,7 +3451,7 @@ local
 
 	 R2 = {Map R1 fun {$ R} R.1 end}
 	 O2 = {Map O1 fun {$ O} O.1 end}
-	 
+
 	 @label # (R2 # O2)
       end
       meth sa(Ctrl Top)
@@ -3482,7 +3459,7 @@ local
 \ifdef DEBUGSA
 	 {Show method}
 \endif
-      end 
+      end
       meth saDescend(Ctrl Top)
 	 Env = {GetGlobalEnv @globalVars}
       in
@@ -3490,9 +3467,9 @@ local
 	 {InstallGlobalEnv Env}
       end
       meth preApplyEnvSubst(Ctrl Top)
-      	 {Record.forAll self.expansionOccs
+	 {Record.forAll self.expansionOccs
 	  proc {$ VO}
-	     case VO of undeclared then skip 
+	     case VO of undeclared then skip
 	     else {VO applyEnvSubst(Ctrl Top)} end
 	  end}
 	 {@label applyEnvSubst(Ctrl Top)}
@@ -3510,7 +3487,7 @@ local
 
 	 R2 = {Map R1 fun {$ R} R.1 end}
 	 O2 = case @isOpen then unit else {Map O1 fun {$ O} O.1 end} end
-	 
+
 	 @label # (R2 # O2)
       end
       meth sa(Ctrl Top)
@@ -3572,20 +3549,20 @@ local
 \endif
       end
       meth saDescend(Ctrl Top)
-	 % descend with same environment 
+	 % descend with same environment
 	 SAStatement, saBody(Ctrl false @body)
       end
       meth applyEnvSubst(Ctrl Top)
 	 {Record.forAll self.expansionOccs
 	  proc {$ VO}
-	     case VO of undeclared then skip 
+	     case VO of undeclared then skip
 	     else {VO applyEnvSubst(Ctrl Top)} end
 	  end}
       end
    end
 
-   class SAGetSelf 
-      meth sa(Ctrl Top)	 
+   class SAGetSelf
+      meth sa(Ctrl Top)
 \ifdef DEBUGSA
 	 {Show getSelf}
 \endif
@@ -3615,7 +3592,7 @@ local
       meth saDescend(Ctrl Top)
 	 % descend with global environment
 	 % will be saved and restored in clauses
-	 {ForAll @clauses	 
+	 {ForAll @clauses
 	  proc {$ C} {C saDescend(Ctrl false)} end}
 	 {@alternative saDescend(Ctrl false)}
       end
@@ -3636,7 +3613,7 @@ local
       meth saDescend(Ctrl Top)
 	 % descend with global environment
 	 % will be saved and restored in clauses
-	 {ForAll @clauses	 
+	 {ForAll @clauses
 	  proc {$ C} {C saDescend(Ctrl false)} end}
       end
       meth applyEnvSubst(Ctrl Top)
@@ -3682,13 +3659,13 @@ local
       end
       meth saDescend(Ctrl Top)
 	 % shared local environment
-	 % for guard and body 
+	 % for guard and body
 	 Env = {GetGlobalEnv @globalVars}
       in
 	 SAStatement, saBody(Ctrl false @guard)
 	 SAStatement, saBody(Ctrl false @body)
 	 {InstallGlobalEnv Env}
-      end      
+      end
    end
 
    class SAValueNode
@@ -3709,7 +3686,7 @@ local
       meth deref(VO)
 	 skip
       end
-      meth sa(Ctrl Top)  
+      meth sa(Ctrl Top)
 	 skip
 \ifdef DEBUGSA
 	 {Show atomNode(@value)}
@@ -3719,9 +3696,9 @@ local
       meth reachable(Vs $)
 	 Vs
       end
-      
+
       % unify: _ x Token U ValueNode
-      
+
       meth unify(Ctrl Top RHS)
 \ifdef LOOP
 	 {Show unifyA(RHS)}
@@ -3741,7 +3718,7 @@ local
 	    @value == {RHS getValue($)}
 	 then
 	    skip
-	 else	    
+	 else
 	    {IssueUnificationFailure Ctrl Top @coord
 	     [hint(l:'First value' oz(@value))
 	      hint(l:'Second value' oz({RHS getValue($)}))]}
@@ -3771,9 +3748,9 @@ local
       meth reachable(Vs $)
 	 Vs
       end
-      
+
       % unify: _ x Token U ValueNode
-      
+
       meth unify(Ctrl Top RHS)
 \ifdef LOOP
 	 {Show unifyI(RHS)}
@@ -3826,18 +3803,18 @@ local
       meth reachable(Vs $)
 	 Vs
       end
-      
+
       % unify: _ x Token U ValueNode
-      
+
       meth unify(Ctrl Top RHS)
 \ifdef LOOP
 	 {Show unifyF(RHS)}
 \endif
 
-	 case 
+	 case
 	    {Not {UnifyTypes self RHS Ctrl Top @coord}}
 	 then
-	    skip % do not continue on type error 
+	    skip % do not continue on type error
 	 elsecase
 	    {TypeTests.token RHS}
 	 then
@@ -3861,11 +3838,11 @@ local
 	 VL = @value
 	 NL = @value
       end
-   end  
+   end
 
    class SAVariable
       attr
-	 lastValue : unit      
+	 lastValue : unit
 	 type: unit
       meth init()
 	 type <- {OzTypes.new value nil}
@@ -3895,12 +3872,12 @@ local
 
 	 elsecase
 	    {@lastValue isVariableOccurrence($)}
-	 then	    
+	 then
 	    NewVal = {@lastValue getValue($)}         % getLastValue($) ?
 	 in
-	    SAVariable, setLastValue(NewVal)          % var path compression 
+	    SAVariable, setLastValue(NewVal)          % var path compression
 	    case @lastValue == NewVal
-	    then skip else 
+	    then skip else
 	       SAVariable, deref(VO)                  % recur
 	    end
 	 elsecase
@@ -3915,7 +3892,7 @@ local
 	    elsecase
 	       NewVal == unit
 	    then
-	       {@lastValue setLastValue(@lastValue)}  % non initialised 
+	       {@lastValue setLastValue(@lastValue)}  % non initialised
 	    else
 	       SAVariable, setLastValue(NewVal)       % constr path compression
 	       case
@@ -3939,7 +3916,7 @@ local
 \ifdef DEBUGSA
 	    {Show valToSubstBreakDepth(Value)}
 \endif
-	    SAVariable, setLastValue(unit) % stop analysis here	    
+	    SAVariable, setLastValue(unit) % stop analysis here
 
 	 elsecase
 	    {IsDet Value}
@@ -3951,14 +3928,14 @@ local
 
 	    case
 	       {IsInt Value}
-	    then	       
+	    then
 	       SAVariable, setLastValue({New Core.intNode init(Value unit)})
-       
+
 	    elsecase
 	       {IsFloat Value}
 	    then
 	       SAVariable, setLastValue({New Core.floatNode init(Value unit)})
-	       
+
 	    elsecase
 	       {IsAtom Value}
 	    then
@@ -3980,15 +3957,15 @@ local
 	    in
 	       {self recordValToArgs(RecArgs
 				     (Value#self)|Seen
-				     Depth 
+				     Depth
 				     PrintNameBase
 				     ?ConstrArgs
 				     ?ConstrValArgs)}
-	       
+
 	       Constr = {New Core.construction init(ConstrLab ConstrArgs true)}
 	       {Constr setValue({List.toRecord Lab ConstrValArgs})}
 	       {Constr makeType}
-	       
+
 	       SAVariable, setLastValue(Constr)
 
 	    elsecase
@@ -3997,7 +3974,7 @@ local
 	       BI      = {New Core.builtinToken init(Value)}
 	    in
 	       SAVariable, setLastValue(BI)
-	       
+
 	    elsecase
 	       {IsProcedure Value}
 	    then
@@ -4013,9 +3990,9 @@ local
 	       Meths = {Record.make m {Class.methodNames Value}}
 	    in
 	       {Record.forAll Meths fun {$} nil#unit end}
-	       {Cls setMethods(Meths)}   
+	       {Cls setMethods(Meths)}
 	       SAVariable, setLastValue(Cls)
-	       
+
 	    elsecase
 	       {IsObject Value}
 	    then
@@ -4024,9 +4001,9 @@ local
 	       Cls   = {New Core.classToken init(TheClass)}
 	    in
 	       {Record.forAll Meths fun {$} nil#unit end}
-	       {Cls setMethods(Meths)}   
+	       {Cls setMethods(Meths)}
 	       SAVariable, setLastValue({New Core.objectToken init(Value Cls)})
-	       
+
 	    elsecase
 	       {IsCell Value}
 	    then
@@ -4058,7 +4035,7 @@ local
 	       {IsSpace Value}
 	    then
 	       SAVariable, setLastValue({New Core.spaceToken init(Value)})
-	       
+
 	    elsecase
 	       {IsThread Value}
 	    then
@@ -4068,7 +4045,7 @@ local
 	       {IsChunk Value}
 	    then
 	       SAVariable, setLastValue({New Core.chunkToken init(Value)})
-	       
+
 	    else
 	       SAVariable, setLastValue(unit)
 	    end
@@ -4076,7 +4053,7 @@ local
 	 else
 	    SAVariable, setLastValue(unit)
 	 end
-      end   
+      end
       meth recordValToArgs(RecArgs Seen Depth PrintNameBase ?ConstrArgs ?ConstrValArgs)
 
 	 case RecArgs
@@ -4092,7 +4069,7 @@ local
 	    then
 	       PrintName = {String.toAtom {VS2S PrintNameBase#'.'#F}}
 	       V = {New Core.variable init(PrintName generated unit)}
-	       
+
 	    in
 	       {V ValToSubst(PrintName Seen Depth-1 X)}
 	       {V occ(unit ?VO)}
@@ -4101,16 +4078,16 @@ local
 	       {Assoc occ(unit ?VO)}
 	       {VO updateValue({Assoc getLastValue($)})}
 	    end
-	    
-	    ConstrArgs = A#VO | CAr 
+
+	    ConstrArgs = A#VO | CAr
 	    ConstrValArgs = F#VO | CVAr
 
 	    {self recordValToArgs(RAs Seen Depth PrintNameBase CAr CVAr)}
 	 elseof
-	    nil	
+	    nil
 	 then
 	    ConstrArgs = nil
-	    ConstrValArgs = nil	
+	    ConstrValArgs = nil
 	 end
       end
       meth reachable(Vs $)
@@ -4118,9 +4095,9 @@ local
 	 {Show reachable({Map Vs fun {$ V} {V getPrintName($)} end})}
 \endif
 	 SAVariable, deref(@lastValue)
-	 
+
 	 case
-	    @lastValue 
+	    @lastValue
 	 of
 	    unit         % uninitialized variable
 	 then
@@ -4132,13 +4109,13 @@ local
 	       {@lastValue isVariableOccurrence($)} % free variable
 	    then
 	       % save self + representant (might differ!)
-	       {Add self {Add {@lastValue getVariable($)} Vs}} 
+	       {Add self {Add {@lastValue getVariable($)} Vs}}
 	    elsecase
 	       {@lastValue isConstruction($)}
 	    then
 	       %
 	       % if we do not implement ft unification fully
-	       % but only on determined records, then 
+	       % but only on determined records, then
 	       % we actually need not save self here.
 	       %
 	       {@lastValue reachable({Add self Vs} $)}
@@ -4161,8 +4138,8 @@ local
 	 {Show varOccurrence({self getPrintName($)} @value)}
 \endif
       end
-      
-      meth getLastValue($)	 
+
+      meth getLastValue($)
 	 {@variable deref(self)}
 	 {@variable getLastValue($)}
       end
@@ -4173,14 +4150,14 @@ local
       % copies the value Val after replacing variable occurrences
       % with the currently last variable occurrences ones of the
       % same variable
-      % 
-      % if Val is unit, then VO is returned as current value 
-   
+      %
+      % if Val is unit, then VO is returned as current value
+
       meth updateValue(O)
 \ifdef DEBUGSA
 	 {Show updating(O)}
 \endif
-	 case	 
+	 case
 	    O==unit                       % no value known
 	 then
 	    {self setValue(self)}         % initialize value
@@ -4203,7 +4180,7 @@ local
 	 in
 	    Lab   = {O getLabel($)}
 	    NLab  = {Lab getLastValue($)}
-	    
+
 	    Args  = {O getArgs($)}
 	    NArgs = {Map Args
 		     fun {$ Arg}
@@ -4214,7 +4191,7 @@ local
 			end
 		     end}
 
-   	    % no change in construction 
+	    % no change in construction
 	    case Args == NArgs
 	       andthen Lab == NLab
 	    then
@@ -4228,33 +4205,33 @@ local
 \endif
 	       Constr = {New Core.construction init(NLab NArgs {O isOpen($)})}
 	    in
-  	       % construction value could be recomputed here
+	       % construction value could be recomputed here
 	       % we save the effort for efficiency reasons
 	       % this implies that the variable _occurrences_
 	       % in construction values do not have any significance
 	       {Constr setValue({O getValue($)})}
-	       {Constr setLastValue(Constr)}  
+	       {Constr setLastValue(Constr)}
 	       {self setValue(Constr)}
 	    end
 	 else
-            % atom, integer, float, token (ground values)
+	    % atom, integer, float, token (ground values)
 	    {self setValue(O)}
 	 end
       end
-         
+
       % there is only one type field per variable
       % this could be improved but would - in the
       % current state - invalidate an invariant
       % wrt saving/installing variable environments
       % for conditional clauses
-      
+
       meth setType(T)
 	 {@variable setType(T)}
       end
       meth getType(T)
 	 {@variable getType(T)}
-      end 
-      
+      end
+
       meth getPrintName($)
 	 {@variable getPrintName($)}
       end
@@ -4276,9 +4253,9 @@ local
 	    {@variable reachable(Vs $)}
 	 end
       end
-      
-      %% unifyVal: _ x Token U Construction U ValueNode 
-      
+
+      %% unifyVal: _ x Token U Construction U ValueNode
+
       meth unifyVal(Ctrl Top RHS)
 \ifdef LOOP
 	 {Show unifyVO({self getPrintName($)} RHS)}
@@ -4287,10 +4264,10 @@ local
       in
 	 SAVariableOccurrence, getLastValue(LHS)
 
-	 case 
+	 case
 	    {Not {UnifyTypes self RHS Ctrl Top @coord}}
 	 then
-	    skip % do not continue on type error 
+	    skip % do not continue on type error
 	 elsecase
 	    {LHS isVariableOccurrence($)}
 	 then
@@ -4305,8 +4282,8 @@ local
 	    case
 	       {TypeTests.token RHS}
 	    then
-   	       % token = token
-	    
+	       % token = token
+
 	       case
 		  {LHS getValue($)} == {RHS getValue($)}
 	       then
@@ -4332,17 +4309,17 @@ local
       meth bind(Ctrl Top RHS)
 \ifdef DEBUGSA
 	 {Show bind({self getPrintName($)} {self getType($)} {RHS getValue($)})}
-\endif	
+\endif
 	 case
 	    {Not {UnifyTypes self RHS Ctrl Top @coord}}
 	 then
-	    skip % not continue on type error 
+	    skip % not continue on type error
 	 else
-            % set new value for following occurrences
+	    % set new value for following occurrences
 	    {@variable setLastValue(RHS)}
 	 end
       end
-      
+
       %% unify: _ x VariableOccurrence U Token U Construction U ValueNode
 
       meth unify(Ctrl Top TorC)
@@ -4355,22 +4332,22 @@ local
 	    {Show unifyV({self getPrintName($)} TorC)}
 	 end
 \endif
-	 
-	 LHS RHS 
+
+	 LHS RHS
       in
 	 SAVariableOccurrence, getLastValue(LHS)
 
 	 case
 	    {Not {UnifyTypes LHS TorC Ctrl Top @coord}}
 	 then
-	    skip % do not continue on type error 
+	    skip % do not continue on type error
 	 else
 	    case
 	       {TorC isVariableOccurrence($)}
 	    then
 	       % implicit deref
 	       RHS = {TorC getLastValue($)}
-	    elsecase	       
+	    elsecase
 	       {TorC isConstruction($)}
 	    then
 	       {TorC deref(TorC)}
@@ -4391,7 +4368,7 @@ local
 \endif
 	 case
 	    LHS == RHS
-	 then  
+	 then
 	    skip                                % nothing to do
 	 else
 	    case
@@ -4409,12 +4386,12 @@ local
 	       case
 		  {RHS isConstruction($)}
 	       then
- 		  {RHS bind(Ctrl Top LHS)}
+		  {RHS bind(Ctrl Top LHS)}
 	       else
 		  skip % and fail on unification
 	       end
 	       {LHS unify(Ctrl Top RHS)}
-	    elsecase 
+	    elsecase
 	       {RHS isConstruction($)}
 	    then
 	       {RHS unify(Ctrl Top LHS)}

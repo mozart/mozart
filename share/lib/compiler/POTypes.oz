@@ -19,12 +19,8 @@
 %%% WARRANTIES.
 %%%
 
-local    
-
-   S2A  = String.toAtom 
-   VS2S = VirtualString.toString 
-   
-   % add to list if no duplicate   
+local
+   % add to list if no duplicate
    fun {Add X Ys}
       case {Member X Ys} then Ys else X|Ys end
    end
@@ -43,14 +39,12 @@ local
       N     = {Length Names}
       Defd  = {Map Def fun {$ def(DN _)} DN end}
       Types = {Append Names Defd}
-      
+
       % define mapping names -> indexes
       proc {IdxMapping N2I}
-	 Ds 
-      in
 	 N2I = {Record.make n2i Names}
 
-         % each name receives an integer between 1 and N
+	 % each name receives an integer between 1 and N
 	 {Record.forAll N2I
 	  proc {$ A}
 	     A = {FD.int 1#N}
@@ -65,14 +59,12 @@ local
 	 % numbering must be one-one
 	 {FD.distinct N2I}
 
-	 % go  
+	 % go
 	 {FD.distribute naive N2I}
       end
 
       % define mapping names -> sets
       proc {SetMapping N2S}
-	 Ss
-      in
 	 N2S = {Record.make n2s Types}
 
 	 % each sort is encoded as a subset of {1..N}
@@ -85,10 +77,10 @@ local
 	     {FS.include Name2Index.X SX}
 	  end}
 
-         % set encoding must respect partial ordering 
-	 {ForAll Spec 
+	 % set encoding must respect partial ordering
+	 {ForAll Spec
 	  proc {$ A#B}
-	     {FS.subset N2S.A N2S.B} 
+	     {FS.subset N2S.A N2S.B}
 	  end}
 
 	 % minimize set values after proPagation
@@ -100,7 +92,7 @@ local
 		S = {FS.value.new {FS.reflect.lowerBound S}}
 	     end
 	  end}
-      end  
+      end
 
       % compute mapping names <-> indexes
       Name2Index = {SearchOne IdxMapping}.1
@@ -108,15 +100,15 @@ local
 
       {ForAll Names
        proc {$ X}
-	  Index2Name.(Name2Index.X) = X 
+	  Index2Name.(Name2Index.X) = X
        end}
 
-      % compute mapping names -> sets 
+      % compute mapping names -> sets
       Name2Set = {SearchOne SetMapping}.1
 
       % compute mapping names -> domains
       Name2Dom = {Record.make n2d Types}
-      
+
       {ForAll Names
        proc {$ X}
 	  Name2Dom.X  = {FS.reflect.lowerBound Name2Set.X}
@@ -125,9 +117,9 @@ local
       fun {AppendDom X Y}
 	 {Append Name2Dom.X Y}
       end
-      
+
       fun {UnionSet X Y}
-	 {FS.union Name2Set.X Y} 
+	 {FS.union Name2Set.X Y}
       end
 
    in
@@ -135,7 +127,7 @@ local
       fun {Name2Domain A}
 	 case A of nil
 	 then
-	    nil 
+	    nil
 	 elseof _|_
 	 then
 	    {FoldR A AppendDom nil}
@@ -143,10 +135,10 @@ local
 	    Name2Dom.A
 	 end
       end
-      
+
       NN = N
 
-      % encodes type constants 
+      % encodes type constants
       fun {Encode Pos Neg}
 	 case Pos==nil
 	 then
@@ -176,7 +168,7 @@ local
 	    NS= Name2Set.N
 	 in
 	    N | {Decode {FS.diff S NS}}
-	 elseof X|_ then 
+	 elseof X|_ then
 	    N = Index2Name.X
 	    NS= Name2Set.N
 	 in
@@ -194,11 +186,11 @@ local
 	  else
 	     NSet = {Encode Ns nil}
 	  in
-	     Name2Set.N = NSet 
+	     Name2Set.N = NSet
 	     Name2Dom.N = {FS.reflect.upperBound NSet}
 	  end
        end}
-      
+
    end
 
    fun {PartialOrder Spec Def}
@@ -218,7 +210,7 @@ local
 	    {FS.disjoint S {FS.value.new {N2D Neg}}}
 	 end
       end
-      
+
       po(encode:   Enc
 	 decode:   fun {$ X}
 		      case {IsFree X} then [value] else {Dec X} end
@@ -236,20 +228,20 @@ local
 		   end
 	)
    end
-   
+
 in
 
    OzTypes = {PartialOrder
 	      ['thread' # value  space  # value
 	       chunk  # value    cell   # value
 	       recordC# value
-	       record # recordC 
+	       record # recordC
 	       number # value
-	       intC   # number 
+	       intC   # number
 	       int    # intC
 	       float  # number   char   # fdint
-	       fdint  # int 
-	       tuple  # record   literal# tuple 
+	       fdint  # int
+	       tuple  # record   literal# tuple
 	       atom   # literal  name   # literal
 	       nilAtom # atom     cons   # tuple
 	       bool   # name     'unit' # name
@@ -264,7 +256,7 @@ in
 	       'procedure/5' # value
 	       'procedure/6' # value
 	       'procedure/>6'   # value
-	       pair # tuple 
+	       pair # tuple
 	      ]
 
 	      [def(feature           [int literal])
@@ -328,7 +320,7 @@ in
 	  raise nonBasicType(N T) end
        end
     end}
-    
+
    fun {OzValueToType V}
       case
 	 {IsDet V}
@@ -338,8 +330,8 @@ in
 	    case {IsChar V}
 	    then TypeConstants.char
 	    elsecase {FD.is V}
-	    then TypeConstants.fdint 
-	    else TypeConstants.int 
+	    then TypeConstants.fdint
+	    else TypeConstants.int
 	    end
 	 elsecase {IsFloat V}
 	 then TypeConstants.float
@@ -347,26 +339,26 @@ in
 	 then
 	    case V == nil
 	    then TypeConstants.nil
-	    else TypeConstants.atom 
+	    else TypeConstants.atom
 	    end
 	 elsecase {IsName V}
 	 then
 	    case V == true orelse V == false
-	    then TypeConstants.bool 
+	    then TypeConstants.bool
 	    elsecase V == unit
 	    then TypeConstants.'unit'
-	    else TypeConstants.name 
+	    else TypeConstants.name
 	    end
 	 elsecase {IsTuple V}
 	 then
 	    case V of _|_
 	    then TypeConstants.cons
 	    [] _#_
-	    then TypeConstants.pair 
-	    else TypeConstants.tuple 
+	    then TypeConstants.pair
+	    else TypeConstants.tuple
 	    end
 	 elsecase {IsRecord V}
-	 then TypeConstants.record 
+	 then TypeConstants.record
 	 elsecase {IsProcedure V}
 	 then
 	    case {ProcedureArity V}
@@ -380,13 +372,13 @@ in
 	    else TypeConstants.'procedure/>6'
 	    end
 	 elsecase {IsCell V}
-	 then TypeConstants.cell 
+	 then TypeConstants.cell
 	 elsecase {IsChunk V}
 	 then
 	    case {IsArray V}
-	    then TypeConstants.array	      
+	    then TypeConstants.array
 	    elsecase {IsDictionary V}
-	    then TypeConstants.dict	       
+	    then TypeConstants.dict
 	    elsecase {IsClass V}
 	    then TypeConstants.'class'
 	    elsecase {IsObject V}
