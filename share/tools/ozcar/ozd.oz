@@ -61,7 +61,7 @@ define
    try Args in
       Args = {Application.getCmdArgs ArgSpec}
       case Args.1 of AppName|AppArgs then AppFunc MM in
-	 {Property.put 'ozd.argv' AppArgs}
+	 {Property.put 'ozd.args' AppArgs}
 	 {Ozcar.object on()}
 	 if Args.useemacs then Socket Port E EMACS I in
 	    thread

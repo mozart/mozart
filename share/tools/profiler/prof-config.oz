@@ -19,14 +19,7 @@
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
 
-%%
-%% some helpers
-
-S2A = String.toAtom  %% string to atom
-fun {VS2A X}         %% virtual string to atom
-   {S2A {VirtualString.toString X}}
-end
-
+S2A = String.toAtom
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
@@ -36,11 +29,7 @@ Version                = 'Mar 28 1998'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
-Platform               = local
-			    X#Y = {Property.get platform}
-			 in
-			    {VS2A X#'-'#Y}
-			 end
+Platform               = {Property.get 'platform.name'}
 WindowsPlatform        = 'win32-i486'
 
 NameOfRalf             = 'Ralf Scheidhauer'

@@ -21,10 +21,9 @@
 
 local
    local
-      OZHOME = {Property.get 'oz.home'}
-      X#Y    = {Property.get platform}
+      OZHOME      = {Property.get 'oz.home'}
    in
-      PLATFORM = X#'-'#Y
+      PLATFORM    = {Property.get 'platform.name'}
       PLATFORMDIR = OZHOME#'/platform/'#PLATFORM
       %% include dirs for testing in bootstrap mode:
       %%	mozart/platform/emulator mozart/platform/tools/gump
