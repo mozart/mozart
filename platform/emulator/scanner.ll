@@ -996,9 +996,11 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 "[]"                           { return CHOICE; }
 "..."                          { return LDOTS; }
-"<-"                           { return ASSIGN; }
+"<-"                           { return OOASSIGN; }
 "<="                           { return DEFAULT; }
 "=>"                           { return REDUCE; }
+":="                           { return ASSIGN; }
+"!!"                           { return DEREF; }
 "//"                           { return SEP; }
 {ADD}                          { return ADD; }
 {FDMUL}                        { return FDMUL; }
