@@ -8,6 +8,8 @@
 #pragma implementation "builtins.hh"
 #endif
 
+#include "types.h"
+
 #include "wsock.hh"
 
 #include "iso-ctype.hh"
