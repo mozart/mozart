@@ -31,10 +31,10 @@
     know about Oz applets (or Oz applications as we also call them).
 
   <Section id="section.windows.notes">
-    <Title/Enabling Oz Applets under MS Windows/
+    <Title/Enabling Oz Applets under Windows/
     <p>
-    The modifications described below only have to be done by UNIX
-    users. On MS Windows the installation process will automatically
+    The modifications described below only have to be done by Unix
+    users. Under Windows the installation process will automatically
     do the necessary modifications for you. If that fails for some
     reason, please follow the instructions below, but use
 <code display>
