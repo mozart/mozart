@@ -1474,7 +1474,6 @@ LBLdispatcher:
       case FAILED:	  HF_BI;
       case RAISE:	  goto LBLraise;
       case BI_TYPE_ERROR: RAISE_TYPE;
-      case BI_TERMINATE:  goto LBLpopTask;
 	 
       case SUSPEND:
 	e->pushTask(PC,Y,G,X,predArity);
@@ -1484,6 +1483,10 @@ LBLdispatcher:
       case BI_PREEMPT:
 	e->pushTask(PC+3,Y,G);
 	goto LBLpreemption;
+
+      case BI_REPLACEBICALL: 
+	PC += 3;
+	goto LBLreplaceBICall;
 
       case SLEEP:
       default:
@@ -1556,6 +1559,11 @@ LBLdispatcher:
 
       case RAISE:
 	goto LBLraise;
+
+      case BI_REPLACEBICALL: 
+	predArity = getPosIntArg(PC+4);
+	PC += 5;
+	goto LBLreplaceBICall;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(entry->getPrintName(),
@@ -1634,8 +1642,11 @@ LBLdispatcher:
 	SHALLOWFAIL;
 	Assert(0);
 
-      case RAISE:
-	goto LBLraise;
+      case RAISE:            goto LBLraise;
+      case BI_REPLACEBICALL: 
+	predArity = getPosIntArg(PC+4);
+	PC += 5;
+	goto LBLreplaceBICall;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1_FUN(entry->getPrintName(),
@@ -1680,6 +1691,11 @@ LBLdispatcher:
 
       case RAISE:
 	goto LBLraise;
+
+      case BI_REPLACEBICALL: 
+	predArity = getPosIntArg(PC+5);
+	PC += 6;
+	goto LBLreplaceBICall;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1_FUN(entry->getPrintName(),
@@ -1740,18 +1756,28 @@ LBLdispatcher:
   Case(INLINEAT)
     {
       TaggedRef fea = getLiteralArg(PC+1);
+      Object *self = e->getSelf();
 
       Assert(e->getSelf()!=NULL);
-      SRecord *rec = e->getSelf()->getState();
-      if (rec) {
-	int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
-	if (index>=0) {
-	  XPC(2) = rec->getArg(index);
-	  DISPATCH(6);
+      RecOrCell state = self->getState();
+      SRecord *rec;
+      if (stateIsCell(state)) {
+	rec = getState(state,NO,fea,XPC(2));
+	if (rec==NULL) {
+	  predArity = getPosIntArg(PC+3);
+	  PC += 6;
+	  goto LBLreplaceBICall;
 	}
+      } else {
+	rec = getRecord(state);
       }
-      (void) e->raise(E_ERROR,E_OBJECT,"@",2,
-		      rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),fea);
+      Assert(rec!=NULL);
+      int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
+      if (index>=0) {
+	XPC(2) = rec->getArg(index);
+	DISPATCH(6);
+      }
+      (void) e->raise(E_ERROR,E_OBJECT,"@",2,makeTaggedSRecord(rec),fea);
       goto LBLraise;
     }
 
@@ -1760,25 +1786,33 @@ LBLdispatcher:
       TaggedRef fea = getLiteralArg(PC+1);
 
       Object *self = e->getSelf();
-      SRecord *rec = self->getState();
-      
+
       if (!e->isToplevel() && e->currentBoard != self->getBoard()) {
 	(void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
 	goto LBLraise;
       }
 
-      if (rec) {
-	int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
-	if (index>=0) {
-	  Assert(isRef(*rec->getRef(index)) || !isAnyVar(*rec->getRef(index)));
-	  rec->setArg(index,XPC(2));
-	  DISPATCH(6);
+      RecOrCell state = self->getState();
+      SRecord *rec;
+      if (stateIsCell(state)) {
+	rec = getState(state,OK,fea,XPC(2));
+	if (rec==NULL) {
+	  predArity = getPosIntArg(PC+3);
+	  PC += 6;
+	  goto LBLreplaceBICall;
 	}
+      } else {
+	rec = getRecord(state);
+      }
+      Assert(rec!=NULL);
+      int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
+      if (index>=0) {
+	Assert(isRef(*rec->getRef(index)) || !isAnyVar(*rec->getRef(index)));
+	rec->setArg(index,XPC(2));
+	DISPATCH(6);
       }
       
-      (void) e->raise(E_ERROR,E_OBJECT,"<-",3,
-		      rec?makeTaggedSRecord(rec) :OZ_atom("noattributes"),
-		      fea, XPC(2));
+      (void) e->raise(E_ERROR,E_OBJECT,"<-",3, makeTaggedSRecord(rec), fea, XPC(2));
       goto LBLraise;
     }
 
@@ -2418,7 +2452,6 @@ LBLdispatcher:
        case SLEEP:         Assert(0);
        case RAISE:         goto LBLraise;
        case BI_TYPE_ERROR: RAISE_TYPE;
-       case BI_TERMINATE:  goto LBLpopTask;
        case FAILED:        HF_BI;
 
        case BI_PREEMPT:
@@ -2427,8 +2460,28 @@ LBLdispatcher:
 	 }
 	 goto LBLpreemption;
 	 
+      case BI_REPLACEBICALL: 
+	goto LBLreplaceBICall;
+
        default: Assert(0);
        }
+     }
+// ------------------------------------------------------------------------
+// --- Call: Builtin: replaceBICall
+// ------------------------------------------------------------------------
+
+   LBLreplaceBICall:
+     {
+       if (PC != NOCODE) {
+	 TaskStackEntry *topCache = CTS->getTop();
+	 PopFrame(topCache,auxPC,auxY,auxG);
+	 CTS->setTop(topCache);
+
+	 e->pushTask(PC,Y,G,X,predArity);
+	 CTS->pushFrame(auxPC,auxY,auxG);
+       }
+       e->suspendOnVarList(CTT);
+       goto LBLsuspendThread;
      }
 // ------------------------------------------------------------------------
 // --- Call: Builtin: raise

@@ -34,6 +34,7 @@ void portSend(Tertiary *p, TaggedRef msg);
 
 void cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
 void cellDoAccess(Tertiary*,TaggedRef);
+TaggedRef cellGetContentsFast(Tertiary *c);
 
 void networkSiteDec(int sd);
 
