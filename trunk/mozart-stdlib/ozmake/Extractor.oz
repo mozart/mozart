@@ -36,11 +36,11 @@ define
 	 for X in REC.data do
 	    case X of F#D then
 	       if {Not {IsVirtualString F}} then
-		  raise ozmake(extractfilenotvs(F)) end
+		  raise ozmake(extract:filenotvs(F)) end
 	       elseif {Not {Path.isRelative F}} then
 		  raise ozmake(extract:filenotrelative(F)) end
 	       elseif {Not {IsVirtualString D}} then
-		  raise ozmake(extract:fildatanotvs(F D)) end
+		  raise ozmake(extract:filedatanotvs(F D)) end
 	       end
 	    else raise ozmake(extract:baddatapair(X)) end end
 	 end

@@ -58,6 +58,11 @@ SPAN.DEFAULT {
   font-family:"lucida console",courier,monospace;
   color:steelblue;
 }
+P.WARNING {
+  color:red;
+  font-weight:bold;
+  text-align:center;
+}
 SPAN.COMMENT      { color: #B22222; }
 SPAN.KEYWORD      { color: #A020F0; }
 SPAN.STRING       { color: #BC8F8F; }
@@ -77,7 +82,21 @@ SPAN.BUILTIN      { color: #DA70D6; }
   <DT><B>provides</B></DT>
   <DD><SPAN CLASS="MODULE">ozmake</SPAN></DD>
 </DL>
+<DL>
+  <DT><B>download prebuilt tool</B></DT>
+  <DD><A
+  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake"><SPAN
+  CLASS="MODULE">ozmake</SPAN> for Unix</A></DD>
+  <DD><A
+  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake.exe"><SPAN
+  CLASS="MODULE">ozmake.exe</SPAN> for Windows</A></DD>
+  <DD><A
+  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake.exe">non
+  executable functor <SPAN
+  CLASS="MODULE">ozmake.ozf</SPAN> for either</A></DD>
+</DL>
 <HR/>
+  <P CLASS="WARNING">this is an alpha-release -  feedback is welcome</P>
   <xsl:apply-templates/>
 <HR/>
 <ADDRESS>

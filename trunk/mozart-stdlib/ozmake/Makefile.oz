@@ -111,7 +111,7 @@ define
 
 	 if {HasFeature R veryclean} then
 	    if {Not {IsList R.veryclean}} orelse {Not {All R.veryclean IsVirtualString}} then
-	       raise ozmake(makefile:badclean(R.veryclean)) end
+	       raise ozmake(makefile:badveryclean(R.veryclean)) end
 	    else
 	       {self set_veryclean(R.veryclean)}
 	    end
@@ -278,7 +278,9 @@ define
 	    end
 	    for F#L in {Record.toListInd DEP} do
 	       Stack={Utils.newStack}
-	       LL = if {IsVirtualString L} then [L] else L end
+	       LL = if {IsVirtualString L} then [L]
+		    elseif {IsList L} andthen {All L IsVirtualString} then L
+		    else raise ozmake(makefile:baddependslist(F L)) end end
 	       A
 	    in
 	       if {Path.isAbsolute F} then
@@ -288,10 +290,10 @@ define
 	       %% check that all files are relative
 	       for D in LL do
 		  if {Not {IsVirtualString D}} then
-		     raise ozmake(makefile:baddependsvalue(D)) end
+		     raise ozmake(makefile:baddependsvalue(A D)) end
 		  end
 		  if {Path.isAbsolute D} then
-		     raise ozmake(makefile:baddependsentry(D)) end
+		     raise ozmake(makefile:baddependsentry(A D)) end
 		  end
 		  {Stack.push {Path.toAtom D}}
 	       end

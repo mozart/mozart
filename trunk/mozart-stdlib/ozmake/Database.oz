@@ -78,22 +78,26 @@ define
 	       local D={self get_released($)} in
 		  if D\=unit then D else CurDate end
 	       end
+	       NewOldCmp =
+	       if NewReleased==OldReleased then eq
+	       elseif {Utils.dateLess NewReleased OldReleased} then lt
+	       else gt end
 	       OldString = {Utils.dateToUserVS OldReleased}
 	       NewString = {Utils.dateToUserVS NewReleased}
 	    in
 	       case Grade
 	       of none then
-		  raise ozmake(database:nograde(OldString NewString)) end
+		  raise ozmake(database:nograde(OldString NewString NewOldCmp)) end
 	       [] same then
-		  if OldReleased\=NewReleased then
-		     raise ozmake(database:samegrade(OldString NewString)) end
+		  if NewOldCmp\=eq then
+		     raise ozmake(database:samegrade(OldString NewString NewOldCmp)) end
 		  end
 	       [] up then
-		  if {Utils.dateLess NewReleased OldReleased} then
+		  if NewOldCmp==lt then
 		     raise ozmake(database:upgrade(OldString NewString)) end
 		  end
 	       [] down then
-		  if {Utils.dateLess OldReleased NewReleased} then
+		  if NewOldCmp==gt then
 		     raise ozmake(datebase:downgrade(OldString NewString)) end
 		  end
 	       end
