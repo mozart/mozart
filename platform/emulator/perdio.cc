@@ -2089,7 +2089,6 @@ void PerdioVar::gcPerdioVar(void)
 void PerdioVar::addSuspPerdioVar(Thread *el)
 {
   if (isObject()) {
-    Assert(suspList==NULL);
     TaggedRef cl=deref(getClass());
     if (isPerdioVar(cl)) {
       PerdioVar *pv=tagged2PerdioVar(cl);
@@ -2103,7 +2102,9 @@ void PerdioVar::addSuspPerdioVar(Thread *el)
       TaggedRef pv=findGName(o->getGName());
       DEREF(pv,pvPtr,_1);
       Assert(tagged2PerdioVar(pv)==this);
-      *pvPtr=makeTaggedConst(o);
+      //*pvPtr=makeTaggedConst(o);
+      addSuspSVar(el);
+      SiteUnify(makeTaggedRef(pvPtr),makeTaggedConst(o));
     }
     return;
   }
@@ -2153,8 +2154,8 @@ void CellManager::localize(){
   CellFrame *cf=(CellFrame *)this;
   Assert(cf->getState()==Cell_Valid);
   TaggedRef tr=cf->getContents();
-  setBoard(am.rootBoard);
   setTertType(Te_Local);
+  setBoard(am.rootBoard);
   CellLocal *cl=(CellLocal*) this;
   cl->setValue(tr);}
 
@@ -2162,8 +2163,8 @@ void LockManager::localize(){
   LockFrame *lf=(LockFrame *)this;
   Assert(lf->getState()==Lock_Valid);
   Thread *t=lf->getLocker();
-  setBoard(am.rootBoard);
   setTertType(Te_Local);
+  setBoard(am.rootBoard);
   LockLocal *ll=(LockLocal*) this;
   ll->convertToLocal(t,lf->getPending());}
 
@@ -2303,6 +2304,7 @@ public:
     }
     delete oldarray;
   }
+  DebugCode(int getPos() { return pos; })
 };
 
 RefTable *refTable;
@@ -2692,7 +2694,7 @@ OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
 inline
 Bool checkCycle(OZ_Term t, ByteStream *bs)
 {
-  if (!isRef(t) && tagTypeOf(t)==GCTAG) {
+  if (!IsRef(t) && _tagTypeOf(t)==GCTAG) {
     PD((MARSHALL,"circular: %d",t>>tagSize));
     bs->put(DIF_REF);
     marshallNumber(t>>tagSize,bs);
@@ -2786,13 +2788,15 @@ void marshallSRecord(Site *sd, SRecord *sr, ByteStream *bs)
   marshallTerm(sd,t,bs);
 }
 
-void marshallObject(Site *sd, Object *o, ByteStream *bs)
+void marshallObject(Site *sd, Object *o, TaggedRef oc, ByteStream *bs)
 {
-  Object *oc = o->getOzClass();
+  if (oc==makeTaggedNULL())
+    oc = makeTaggedConst(o->getOzClass());
   bs->put(DIF_OBJECT);
   marshallGName(o->getGName(),bs);
-  marshallTerm(sd,makeTaggedConst(oc),bs);
   trailCycle(o->getRef(),bs,1);
+
+  marshallTerm(sd,oc,bs);
   marshallSRecord(sd,o->getFreeRecord(),bs);
   marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs);
   if (o->getLock()) {
@@ -2867,7 +2871,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
         if (checkURL(o->getGName(),bs)) return;
         marshallClass(sd,o,bs);
       } else {
-        marshallObject(sd,o,bs);
+        marshallObject(sd,o,0,bs);
       }
       return;
     }
@@ -2928,7 +2932,9 @@ void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs)
 
   if (pvar->isObject()) {
     PD((MARSHALL,"var tertproxy"));
-    marshallObject(sd,pvar->getObject(),bs);
+    if (checkCycle(*(pvar->getObject()->getRef()),bs))
+      return;
+    marshallObject(sd,pvar->getObject(),pvar->getClass(),bs);
     return;
   }
 
@@ -3467,29 +3473,31 @@ loop:
     {
       PD((UNMARSHALL,"object"));
 
-      GName *gname    = unmarshallGName(ret,bs);
-      TaggedRef clas  = unmarshallTerm(bs);
+      GName *gname   = unmarshallGName(ret,bs);
 
       if (!gname) {
         PD((UNMARSHALL,"object found"));
         gotRef(bs,*ret);
+        unmarshallTerm(bs);     // skip class
         unmarshallObject(0,bs); // throw away data
-      } else {
-        Object *obj = new Object(am.rootBoard,gname);
-
-        TaggedRef val;
-        if (isClass(deref(clas))) {
-          obj->setClass(tagged2Object(deref(clas))->getClass());
-          val = makeTaggedConst(obj);
-        } else {
-          PerdioVar *pvar = new PerdioVar(obj,clas);
-          val = makeTaggedRef(newTaggedCVar(pvar));
-        }
-        addGName(gname,val);
-        *ret = val;
-        gotRef(bs,val);
-        unmarshallObject(obj,bs);
+        return;
       }
+
+      Object *obj = new Object(am.rootBoard,gname);
+
+      PerdioVar *pvar = new PerdioVar(obj);
+      TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+      gotRef(bs,val);
+      TaggedRef clas = unmarshallTerm(bs);
+      pvar->setClass(clas);
+
+      addGName(gname,val);
+      if (isClass(deref(clas))) {
+        obj->setClass(tagged2Object(deref(clas))->getClass());
+        val = makeTaggedConst(obj);
+      }
+      *ret = val;
+      unmarshallObject(obj,bs);
       return;
     }
 
@@ -4248,6 +4256,9 @@ void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
     PD((PD_VAR,"bind url u:%s",toC(pv->getURL())));
     PD((PD_VAR,"bind url v:%s",toC(v)));
     pv->primBind(lPtr,v);
+  } else if (pv->isObject()) {
+    PD((PD_VAR,"bind object u:%s",toC(makeTaggedConst(pv->getObject()))));
+    pv->primBind(lPtr,v);
   } else {
     PD((PD_VAR,"bind proxy b:%d v:%s",pv->getIndex(),toC(v)));
     Assert(pv->isProxy());
@@ -4543,7 +4554,7 @@ TaggedRef cellGetContentsFast(Tertiary *c)
       break;
     }
   default:
-    Assert(0);
+    break;
   }
   return makeTaggedNULL();
 }
