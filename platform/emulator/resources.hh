@@ -105,6 +105,7 @@
 
 #define GC_FLAG		1
 #define GC_VERBOSITY	0
+#define CODE_GC_CYLES	5
 
 #define RESIZESTACKMINSIZE 64 /* used for resizing a stack */
 

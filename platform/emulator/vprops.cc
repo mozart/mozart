@@ -54,6 +54,7 @@ enum EmulatorPropertyIndex {
   PROP_GC_THRESHOLD,
   PROP_GC_SIZE,
   PROP_GC_ACTIVE,
+  PROP_GC_CODE_CYLES,
   PROP_GC,
   // PRINT
   PROP_PRINT_DEPTH,
@@ -260,6 +261,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_GC_MAX,ozconf.heapMaxSize*KB);
     CASE_INT(PROP_GC_FREE,ozconf.heapFree);
     CASE_INT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
+    CASE_INT(PROP_GC_CODE_CYLES,ozconf.codeGCcycles);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
     CASE_INT(PROP_GC_THRESHOLD,ozconf.heapThreshold*KB);
     CASE_INT(PROP_GC_SIZE,getUsedMemory()*KB);
@@ -577,6 +579,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 	return BI_PREEMPT;}});
     CASE_PERCENT(PROP_GC_FREE,ozconf.heapFree);
     CASE_PERCENT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
+    CASE_NAT(PROP_GC_CODE_CYLES,ozconf.codeGCcycles);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
     CASE_REC(PROP_GC,
 	     DO_NAT(AtomMin,ozconf.heapMinSize=INT__/KB);
@@ -823,6 +826,7 @@ void initVirtualProperties()
   VirtualProperty::add("gc.free",PROP_GC_FREE);
   VirtualProperty::add("gc.tolerance",PROP_GC_TOLERANCE);
   VirtualProperty::add("gc.on",PROP_GC_ON);
+  VirtualProperty::add("gc.codeCyles",PROP_GC_CODE_CYLES);
   VirtualProperty::add("gc.threshold",PROP_GC_THRESHOLD);
   VirtualProperty::add("gc.size",PROP_GC_SIZE);
   VirtualProperty::add("gc.active",PROP_GC_ACTIVE);

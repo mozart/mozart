@@ -79,6 +79,7 @@ int     cs_copy_size  = 0;
  */
 
 static void OZ_collectHeapBlock(TaggedRef *, TaggedRef *, int);
+static void gcCode(ProgramCounter PC);
 
 /*
  *               Debug
@@ -1690,6 +1691,7 @@ void AM::gc(int msgLevel)
   OZ_collectHeapTerm(defaultExceptionHdl,defaultExceptionHdl);
   OZ_collectHeapTerm(debugStreamTail,debugStreamTail);
 
+  CodeArea::gcCodeAreaStart();
   PrTabEntry::gcPrTabEntries();
   extRefs = extRefs->gc();
   
@@ -2073,7 +2075,7 @@ void ConstTerm::gcConstRecurse()
     {
       Abstraction *a = (Abstraction *) this;
       a->gcConstTermWithHome();
-      CodeArea::gcReferenced(a->getPC());
+      gcCode(a->getPC());
       break;
     }
     
@@ -2540,7 +2542,7 @@ void TaskStack::gc(TaskStack *newstack) {
   while (1) {
     GetFrame(oldtop,PC,Y,CAP);
 
-    CodeArea::gcReferenced(PC);
+    gcCode(PC);
 
     if (PC == C_EMPTY_STACK) {
       *(--newtop) = PC;
@@ -2553,7 +2555,7 @@ void TaskStack::gc(TaskStack *newstack) {
     } else if (PC == C_XCONT_Ptr) {
       // mm2: opt: only the top task can/should be xcont!!
       ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
-      CodeArea::gcReferenced(pc);
+      gcCode(pc);
       (void) CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
@@ -2937,16 +2939,27 @@ TaggedRef gcTagged1(TaggedRef in) {
 }
 
 
-void CodeArea::gcReferenced(ProgramCounter PC)
+
+//*****************************************************************************
+//       GC Code Area
+//*****************************************************************************
+
+static int codeGCgeneration = 0;
+
+void CodeArea::gcCodeBlock()
 {
-  if (!isInGc)
+  if (referenced == NO) {
+    referenced = OK;
+    gclist->collectGClist();
+  }
+}
+
+void gcCode(ProgramCounter PC)
+{
+  if (!isInGc || codeGCgeneration!=0)
     return;
 
-  CodeArea *code = findBlock(PC);
-  if (code->referenced == NO) {
-    code->referenced = OK;
-    code->gclist->collectGClist();
-  }
+  CodeArea::findBlock(PC)->gcCodeBlock();
 }
 
 void CodeGCList::collectGClist()
@@ -2971,6 +2984,21 @@ void CodeGCList::collectGClist()
       }
     }
     aux = aux->next;
+  }
+}
+
+void CodeArea::gcCodeAreaStart()
+{
+  if (++codeGCgeneration >= ozconf.codeGCcycles) {
+    // switch code GC on
+    codeGCgeneration = 0;
+    return;
+  }
+
+  CodeArea *code = allBlocks;
+  while (code) {
+    code->gcCodeBlock();
+    code = code->nextBlock;
   }
 }
 
