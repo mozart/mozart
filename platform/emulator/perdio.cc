@@ -1292,6 +1292,15 @@ private:
     return uOB.bExt;}
 
 
+  void setSlave(BorrowCreditExtension* bce){
+    Assert(getFlags() & PO_SLAVE);
+    uOB.bExt = bce;}
+
+  void setMaster(BorrowCreditExtension* bce){
+    Assert(getFlags() & PO_MASTER);
+    Assert(!(getFlags() & PO_SLAVE));
+    uOB.bExt = bce;}
+
   Bool getOnePrimaryCredit_E();
   Credit getSmallPrimaryCredit_E();
 
@@ -1307,12 +1316,15 @@ private:
   void createSecSlave(Credit,Site *);
 
   Credit extendGetPrimCredit(){
-    Assert(getSlave()==getMaster());
+    if(getFlags() & PO_MASTER)
+      return getMaster()->msGetPrimCredit();
     return getSlave()->msGetPrimCredit();}
-
+  
   void extendSetPrimCredit(Credit c){
-    Assert(getSlave()==getMaster());
-    getSlave()->msSetPrimCredit(c);}
+    if(getFlags() & PO_MASTER)
+      getMaster()->msSetPrimCredit(c);
+    else
+      getSlave()->msSetPrimCredit(c);}
 
   void generalTryToReduce();
   void giveBackSecCredit(Site *,Credit);
@@ -1386,7 +1398,7 @@ public:
     Credit tmp=getCreditOB();
     Assert(tmp>0);
     if(tmp-1<BORROW_MIN) {
-      PD((SPECIAL,"low credit %d",tmp));
+      PD((CREDIT,"low credit %d",tmp));
       return NO;}
     setCreditOB(tmp-1);
     thresholdCheck(1);
@@ -1455,13 +1467,13 @@ void BorrowEntry::initSecBorrow(Site *cs,Credit c,Site *s,int i){
 
 void BorrowEntry::makePersistent_E(){
   switch(getExtendFlags()){
-  case PO_MASTER:
-  case PO_MASTER|PO_BIGCREDIT:
-  case PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
-  case PO_SLAVE|PO_MASTER:{
+  case PO_EXTENDED|PO_MASTER:
+  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
+  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
+  case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
     addFlags(PO_PERSISTENT);
     return;}
-  case PO_SLAVE:{
+  case PO_EXTENDED|PO_SLAVE:{
     addFlags(PO_PERSISTENT);    
     removeSlave();
     return;}
@@ -1478,12 +1490,14 @@ void BorrowEntry::removeSoleExtension(Credit c){
 void BorrowEntry::createSecMaster(){
   BorrowCreditExtension *bce=newBorrowCreditExtension();
   bce->initMaster(getCreditOB());
-  setFlags(PO_MASTER|PO_EXTENDED);}
+  setFlags(PO_MASTER|PO_EXTENDED);
+  setMaster(bce);}
 
 void BorrowEntry::createSecSlave(Credit cred,Site *s){
   BorrowCreditExtension *bce=newBorrowCreditExtension();
   bce->initSlave(getCreditOB(),cred,s);
-  setFlags(PO_SLAVE|PO_EXTENDED);}
+  setFlags(PO_SLAVE|PO_EXTENDED);
+  setSlave(bce);}
 
 Bool BorrowEntry::getOnePrimaryCredit_E(){
   Credit c=extendGetPrimCredit();
@@ -1508,21 +1522,21 @@ Credit BorrowEntry::getSmallPrimaryCredit_E(){
 Site* BorrowEntry::getSmallSecondaryCredit(Credit &cred){
   while(TRUE){
     switch(getExtendFlags()){
-    case PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
+    case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
       cred=OWNER_GIVE_CREDIT_SIZE;
       getSlave()->getMaster()->getBig()->requestCreditE(OWNER_GIVE_CREDIT_SIZE);
       return mySite;}
-    case PO_SLAVE|PO_MASTER:{
+    case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
       cred=OWNER_GIVE_CREDIT_SIZE;      
       if(getSlave()->getMaster()->getSecCredit_Master(OWNER_GIVE_CREDIT_SIZE)){
 	addFlags(PO_BIGCREDIT);}
       return mySite;}      
-    case PO_MASTER:{
+    case PO_EXTENDED|PO_MASTER:{
       cred=OWNER_GIVE_CREDIT_SIZE;      
       if(getMaster()->getSecCredit_Master(OWNER_GIVE_CREDIT_SIZE)){
 	addFlags(PO_BIGCREDIT);}
       return mySite;}
-    case PO_MASTER|PO_BIGCREDIT:{
+    case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
       cred=OWNER_GIVE_CREDIT_SIZE;
       getMaster()->getBig()->requestCreditE(OWNER_GIVE_CREDIT_SIZE);
       return mySite;}
@@ -1534,8 +1548,9 @@ Site* BorrowEntry::getSmallSecondaryCredit(Credit &cred){
       createSecMaster();
       break;}
     default:{
-      Assert(0);
-      return NULL;}
+      if(getExtendFlags() & PO_PERSISTENT) 
+	return NULL;
+      Assert(0);}
     }
   }
 }
@@ -1543,23 +1558,23 @@ Site* BorrowEntry::getSmallSecondaryCredit(Credit &cred){
 Site* BorrowEntry::getOneSecondaryCredit(){
   while(TRUE){
     switch(getExtendFlags()){
-    case PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
+    case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
       getSlave()->getMaster()->getBig()->requestCreditE(1);
       return mySite;}
-    case PO_SLAVE|PO_MASTER:{
+    case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
       if(getSlave()->getMaster()->getSecCredit_Master(1)){
 	addFlags(PO_BIGCREDIT);
 	break;}
       return mySite;}      
-    case PO_MASTER:{
+    case PO_EXTENDED|PO_MASTER:{
       if(getMaster()->getSecCredit_Master(1)){
 	addFlags(PO_BIGCREDIT);
 	break;}
       return mySite;}
-    case PO_MASTER|PO_BIGCREDIT:{
+    case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
       getMaster()->getBig()->requestCreditE(1);
       return mySite;}
-    case PO_SLAVE:{
+    case PO_EXTENDED|PO_SLAVE:{
       if(getSlave()->getOne_Slave()){
 	addFlags(PO_MASTER);
 	break;}
@@ -1568,8 +1583,10 @@ Site* BorrowEntry::getOneSecondaryCredit(){
       createSecMaster();
       break;}
     default:{
-      Assert(0);
-      return NULL;}
+      if(getExtendFlags() & PO_PERSISTENT) 
+	return NULL;
+      Assert(0);}
+
     }
   }
   return NULL; // stupid compiler
@@ -1581,19 +1598,19 @@ void BorrowEntry::addPrimaryCreditExtended(Credit c){
     return;}
   Credit overflow;
   switch(getExtendFlags()){
-  case PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
-  case PO_SLAVE|PO_MASTER:{
+  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
+  case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
     overflow=getSlave()->getMaster()->addPrimaryCredit_Master(c);
     break;}
-  case PO_SLAVE:{
+  case PO_EXTENDED|PO_SLAVE:{
     Site *s;
     Credit sec;
     overflow=getSlave()->reduceSlave(c,s,sec);
     removeSoleExtension(overflow);
     giveBackSecCredit(s,sec);
     break;}
-  case PO_MASTER|PO_BIGCREDIT:
-  case PO_MASTER:{
+  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
+  case PO_EXTENDED|PO_MASTER:{
     overflow=getMaster()->addPrimaryCredit_Master(c);
     break;
   default:
@@ -1617,7 +1634,7 @@ void BorrowEntry::removeMaster_SM(BorrowCreditExtension* master){
   BorrowCreditExtension *slave=getSlave();
   Credit c=master->msGetPrimCredit();
   slave->slaveSetSecCredit(c);
-  removeFlags(PO_MASTER);
+  removeFlags(PO_EXTENDED|PO_MASTER);
   freeBorrowCreditExtension(master);
   generalTryToReduce();}
 
@@ -1626,7 +1643,7 @@ void BorrowEntry::removeMaster_M(BorrowCreditExtension* master){
   Assert(!(getExtendFlags() & PO_SLAVE));
   Assert(master->masterGetSecCredit()==START_CREDIT_SIZE);
   Credit c=master->msGetPrimCredit();
-  removeFlags(PO_MASTER);
+  removeFlags(PO_EXTENDED|PO_MASTER);
   freeBorrowCreditExtension(master);
   setCreditOB(c);}
 
@@ -1642,33 +1659,35 @@ void BorrowEntry::removeSlave(){
 void BorrowEntry::generalTryToReduce(){
   while(TRUE){
     switch(getExtendFlags()){
-    case PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
+    case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
       if(getSlave()->getMaster()->isReducibleBig()){
 	removeBig(getSlave()->getMaster());
 	break;}
       return;}
   
-    case PO_SLAVE|PO_MASTER:{
+    case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
       if(getSlave()->getMaster()->isReducibleMaster()){
 	removeMaster_SM(getSlave()->getMaster());
 	break;}
       return;}
   
-    case PO_SLAVE:{
+    case PO_EXTENDED|PO_SLAVE:{
       if(getSlave()->isReducibleSlave()){
 	removeSlave();}
       return;}
   
-    case PO_MASTER|PO_BIGCREDIT:{
+    case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
       if(getMaster()->isReducibleBig()){
 	removeBig(getMaster()); 
 	break;}
       return;}
 
-    case PO_MASTER:{
+    case PO_EXTENDED|PO_MASTER:{
       if(getMaster()->isReducibleMaster()){
 	removeMaster_M(getMaster());      
 	break;}
+      return;}
+    case PO_NONE:{
       return;}
     default:{
       Assert(0);}
@@ -1706,7 +1725,7 @@ Bool BorrowEntry::addSecCredit_Slave(Credit c,BorrowCreditExtension *slave){
 
 void BorrowEntry::addSecondaryCredit(Credit c,Site *s){
   switch(getExtendFlags()){
-  case PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
+  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
     if(s==mySite){
       addSecCredit_MasterBig(c,getSlave()->getMaster());      
       return;}
@@ -1714,7 +1733,7 @@ void BorrowEntry::addSecondaryCredit(Credit c,Site *s){
       if(addSecCredit_Slave(c,getSlave())) {return;}}
     break;}
   
-  case PO_SLAVE|PO_MASTER:{
+  case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
     if(s==mySite){
       addSecCredit_Master(c,getSlave()->getMaster());
       return;}
@@ -1722,18 +1741,18 @@ void BorrowEntry::addSecondaryCredit(Credit c,Site *s){
       if(addSecCredit_Slave(c,getSlave())) {return;}}
     break;}
   
-  case PO_SLAVE:{
+  case PO_EXTENDED|PO_SLAVE:{
     if(s==getSlave()->getSite()){
       if(addSecCredit_Slave(c,getSlave())){return;}}
     break;}
   
-  case PO_MASTER|PO_BIGCREDIT:{
+  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
     if(s==mySite){
       addSecCredit_MasterBig(c,getMaster());
       return;}
     break;}
 
-  case PO_MASTER:{
+  case PO_EXTENDED|PO_MASTER:{
     if(s==mySite){
       addSecCredit_Master(c,getMaster());
       return;}
@@ -1763,6 +1782,7 @@ void BorrowEntry::moreCredit(){
   Assert(!isPersistent());
   NetAddress *na = getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
+  PD((CREDIT,"Asking for more credit %s",na->site->stringrep()));
   marshal_M_ASK_FOR_CREDIT(bs,na->index,mySite);
   SendTo(na->site,bs,M_ASK_FOR_CREDIT,netaddr.site,netaddr.index); 
 }
@@ -2994,7 +3014,7 @@ inline void marshalOwnHead(int tag,int i,MsgBuffer *bs){
   bs->put(DIF_PRIMARY);
   Credit c=ownerTable->getOwner(i)->getSendCredit();
   marshalNumber(c,bs);
-  PD((MARSHAL,"ownHead o:%d rest-c:%d ",i,ownerTable->getOwner(i)->getCreditOB()));
+  PD((MARSHAL,"ownHead o:%d rest-c: ",i));
   return;}
 
 void marshalToOwner(int bi,MsgBuffer *bs){
@@ -3021,7 +3041,7 @@ void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs){
   marshalNumber(na->index,bs);
   Credit cred=b->getSmallPrimaryCredit();
   if(cred) {
-    PD((MARSHAL,"borrowed b:%d remCredit c:%d give c:%d",bi,b->getCreditOB(),cred));
+    PD((MARSHAL,"borrowed b:%d remCredit c: give c:%d",bi,cred));
     bs->put(DIF_PRIMARY);
     marshalCredit(cred,bs);
     return;}
@@ -3408,6 +3428,7 @@ void Site::msgReceived(MsgBuffer* bs)
       unmarshal_M_OWNER_SEC_CREDIT(bs,s,index,c);
       PD((MSG_RECEIVED,"OWNER_SEC_CREDIT site:%s index:%d credit:%d",s->stringrep(),index,c));    
       receiveAtBorrowNoCredit(s,index)->addSecondaryCredit(c,mySite);
+      creditSite = NULL;
       break;
     }
 
@@ -4042,7 +4063,7 @@ void sendPrimaryCredit(Site *sd,int OTI,Credit c){
 void sendSecondaryCredit(Site *cs,Site *sd,int OTI,Credit c){
   MsgBuffer *bs= msgBufferManager->getMsgBuffer(cs);
   marshal_M_OWNER_SEC_CREDIT(bs,sd,OTI,c);
-  SendTo(sd,bs,M_OWNER_SEC_CREDIT,sd,OTI);}
+  SendTo(cs,bs,M_OWNER_SEC_CREDIT,sd,OTI);}
 
 /**********************************************************************/
 /*   SECTION 28:: Cell lock protocol common                           */

@@ -84,7 +84,7 @@ define(message,`
 	refTable->reset();
         Assert(creditSite==NULL);	
 	if(buf->get()==DIF_SECONDARY){
-	  creditSite==unmarshalSite(buf); }
+	  creditSite=unmarshalSite(buf); }
 	Assert(refTrail->isEmpty());
 	argEnc($2)
 	argEnc($3)
