@@ -28,8 +28,6 @@ define
    class MyToplevel from GTK.window
       meth new
 	 GTK.window, new(GTK.wINDOW_TOPLEVEL)
-      end
-      meth connectEvents
 	 GTK.window, signalConnect('destroy' destroyEvent _)
 	 GTK.window, setBorderWidth(10)
       end
@@ -45,8 +43,6 @@ define
    class MyButton from GTK.button
       meth new
 	 GTK.button, newWithLabel("Hello, GTK!")
-      end
-      meth connectEvents
 	 GTK.button, signalConnect('clicked' clickedEvent _)
       end
       meth clickedEvent(Event)
