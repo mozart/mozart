@@ -160,10 +160,7 @@ public:
   }
 
   //
-  void setMinimalTaskInterval(unsigned int ms) {
-    Assert(!ms || ms >= (CLOCK_TICK/1000));
-    minInterval = ms;
-  }
+  void setMinimalTaskInterval(unsigned int ms) { minInterval = ms; }
   unsigned int getMinimalTaskInterval() { return (minInterval); }
 
   //

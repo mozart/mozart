@@ -1010,6 +1010,14 @@ OZ_BI_proto(BIfailureDefault);
 
 void initDPCore()
 {
+  //
+  // kost@ : a new process group - otherwise failed sites will kill
+  // the whole process group ;-(
+  (void) setpgid(0, 0);
+  // We try to do the best possible here. For instance, 'setpgid' will
+  // fail it the process is already in a new process group (aka
+  // started by 'rshd', i can imagine).
+
   // link interface...
   isPerdioInitialized = isPerdioInitializedImpl;
   portSend = portSendImpl;
