@@ -99,7 +99,7 @@ public:
     int noOfSuspLists = getNoOfSuspLists();
 
     _susp_lists = (SuspList **)
-      freeListMalloc(sizeof(SuspList *) * noOfSuspLists);
+      oz_freeListMalloc(sizeof(SuspList *) * noOfSuspLists);
 
     for (int i = noOfSuspLists; i--; )
       _susp_lists[i] = (SuspList *) NULL;
@@ -133,7 +133,7 @@ public:
 
   void dispose(void) {
     // dispose suspension lists
-    freeListDispose(_susp_lists, getNoOfSuspLists() * sizeof(SuspList *));
+    oz_freeListDisposeUnsafe(_susp_lists, getNoOfSuspLists() * sizeof(SuspList *));
 
     // dispose constraint
     delete _constraint;

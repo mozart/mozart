@@ -895,7 +895,7 @@ void FL_Manager::init(void) {
   smmal[0] = NULL;
 
   for (int i = FL_SizeToIndex(FL_MaxSize); i>0; i--) {
-    FL_Small * f = (FL_Small *) heapMalloc(FL_IndexToSize(i));
+    FL_Small * f = (FL_Small *) oz_heapMalloc(FL_IndexToSize(i));
     f->setNext(NULL);
     smmal[i] = f;
   }
@@ -921,7 +921,7 @@ void FL_Manager::refill(const size_t sz) {
     n     = l->getSize();
   } else {
     n     = ((sz > FL_RFL_Small) ? FL_RFL_N1 : FL_RFL_N2) * sz;
-    block = (char *) heapMalloc(n);
+    block = (char *) oz_heapMalloc(n);
   }
 
   smmal[FL_SizeToIndex(sz)] = (FL_Small *) block;

@@ -53,7 +53,7 @@ public:
   void dispose(void) {
     disposeS();
     DebugCode(function=0);
-    freeListDispose(this, sizeof(Future));
+    oz_freeListDispose(this, sizeof(Future));
   }
   void printStream(ostream &out,int depth = 10);
   void printLongStream(ostream &out,int depth = 10,

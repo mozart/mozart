@@ -76,7 +76,7 @@ public:
   }
   
   void dispose(void) {
-    freeListDispose(this, sizeof(BaseDistributor));
+    oz_freeListDispose(this, sizeof(BaseDistributor));
   }
   
   TaggedRef getVar(void) {
