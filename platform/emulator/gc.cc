@@ -1503,7 +1503,6 @@ void AM::gc(int msgLevel)
 //-----------------------------------------------------------------------------
 
   Assert(trail.isEmpty());
-  Assert(rebindTrail.isEmpty());
 
   rootBoard = rootBoard->gcBoard();   // must go first!
   Assert(cachedSelf==0);
