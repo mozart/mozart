@@ -22,7 +22,7 @@
 functor
 import
    Gdbm at 'x-oz://contrib/gdbm'
-   HTML(seq: SEQ verbatim: VERBATIM pcdata: PCDATA)
+   HTML(seq: SEQ pcdata: PCDATA)
 export
    'class': CrossReferencerClass
 define
@@ -95,7 +95,7 @@ define
                HTML = B
             [] X#Y then
                To = X
-               HTML = SEQ([B VERBATIM(' of ``') Y VERBATIM('\'\'')])
+               HTML = SEQ([Y PCDATA(' of ') B])
             end
          end
       end
