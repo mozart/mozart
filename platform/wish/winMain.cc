@@ -1,7 +1,8 @@
+
 /* 
  * winMain.c --
  *
- *	Main entry point for wish and other Tk-based applications.
+ *      Main entry point for wish and other Tk-based applications.
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  *
@@ -43,7 +44,7 @@ DebugCode(FILE *dbgout = NULL; FILE *dbgin = NULL;)
  * Global variables used by the main program:
  */
 
-static Tcl_Interp *interp;	/* Interpreter for this application. */
+static Tcl_Interp *interp;      /* Interpreter for this application. */
 
 
 void sendToEngine(char *s)
@@ -68,7 +69,7 @@ PutsCmd(ClientData clientData, Tcl_Interp *inter, int argc, char **argv)
   
   if ((i < (argc-3)) || (i >= argc)) {
     Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		     " ?-nonewline? ?fileId? string\"", (char *) NULL);
+                     " ?-nonewline? ?fileId? string\"", (char *) NULL);
     return TCL_ERROR;
   }
   
@@ -83,7 +84,7 @@ PutsCmd(ClientData clientData, Tcl_Interp *inter, int argc, char **argv)
   return TCL_OK;
 }
 
-
+
 
 /* THE TWO FOLLOWING FUNCTIONS HAVE BEEN COPIED FROM EMULATOR */
 
@@ -94,7 +95,7 @@ DWORD __stdcall watchEmulatorThread(void *arg)
   DWORD ret = WaitForSingleObject(handle,INFINITE);
   if (ret != WAIT_OBJECT_0) {
     WishPanic("WaitForSingleObject(0x%x) failed: %d (error=%d)",
-	      handle,ret,GetLastError());
+              handle,ret,GetLastError());
     ExitThread(0);
   }
   ExitProcess(0);
@@ -136,9 +137,10 @@ void readHandler(ClientData clientData, int mask)
   // that the I/O manager calls a readHandler exactly once for each
   // channel. That is, it cannot happen that two 'readHandlers' are
   // started simultaneously.
-  if (tkLock == 1) return;
-  else tkLock = 1;
-
+  if (tkLock == 1) 
+    return;
+  else 
+    tkLock = 1;
   static int bufSize  = 1000;
   static char *buffer = NULL;
   if (buffer == NULL) {
@@ -151,16 +153,18 @@ void readHandler(ClientData clientData, int mask)
     bufSize *= 2;
     buffer = (char *) realloc(buffer,bufSize+1);
     if (buffer==0)
-      WishPanic("realloc of buffer failed");	
+      WishPanic("realloc of buffer failed");    
   }
+
 
   Tcl_Channel in = (Tcl_Channel) clientData;
   int count = Tcl_Read(in,buffer+used,bufSize-used);
 
   if (count<0) {
     WishPanic("Connection to engine lost: %d, %d, %d", 
-	      count, in, Tcl_GetErrno());
+              count, in, Tcl_GetErrno());
   }
+
   
   if (count==0) {
     if (Tcl_Eof(in)) {
@@ -170,7 +174,7 @@ void readHandler(ClientData clientData, int mask)
       return;
     }
   }
-  
+
   used += count;
   buffer[used] = 0;
   
@@ -182,12 +186,13 @@ void readHandler(ClientData clientData, int mask)
     tkLock = 0;
     return;
   }
-  
+
+
   int code = Tcl_GlobalEval(interp, buffer);
   if (code != TCL_OK) {
     char buf[1000];
     DebugCode(fprintf(dbgin,"### Error(%d):  %s\n", code,interp->result);
-	      fflush(dbgin));
+              fflush(dbgin));
     sprintf(buf,"w --- %s---  %s\n---\n.\n", buffer,interp->result);
     sendToEngine(buf);
   }
@@ -203,6 +208,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
 {
     watchParent();
 
+    Tcl_FindExecutable("");
     interp = Tcl_CreateInterp();
 
     int argc;
@@ -221,30 +227,30 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
      * Invoke application-specific initialization.
      */
     if (Tcl_Init(interp) == TCL_ERROR ||
-	Tk_Init(interp) == TCL_ERROR) {
+        Tk_Init(interp) == TCL_ERROR) {
       WishPanic("Tcl_Init failed: %s\n", interp->result);
     }
 
     Tcl_ResetResult(interp);
 
     Tcl_CreateCommand(interp, "puts", (Tcl_CmdProc*) PutsCmd,  (ClientData) NULL,
-		      (Tcl_CmdDeleteProc *) NULL);
+                      (Tcl_CmdDeleteProc *) NULL);
 
     if (argc!=1)
       WishPanic("Usage: tk.exe port\n", argc);
+
+    close(0);
+    close(1);
+    close(2);
 
     int port = atoi(argv[0]);
     Tcl_Channel inout = Tcl_OpenTcpClient(interp,port,"localhost",0,0,0);
     if (inout==0)
       WishPanic("Tcl_OpenTcpClient(%d,%s) failed",port,"localhost");
-
+    Tcl_CreateChannelHandler(inout,TCL_READABLE ,readHandler,(ClientData)inout);
+    Tcl_RegisterChannel(interp, inout);
     Tcl_SetChannelOption(interp, inout, "-blocking", "off");
     Tcl_SetChannelOption(interp, inout, "-translation", "binary");
-    Tcl_CreateChannelHandler(inout,TCL_READABLE,readHandler,(ClientData)inout);
-
-    close(0);
-    close(1);
-    close(2);
     Tcl_SetStdChannel(inout,TCL_STDIN);
     Tcl_SetStdChannel(inout,TCL_STDOUT);
     Tcl_SetStdChannel(inout,TCL_STDERR);
@@ -272,19 +278,19 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
 
 
 
-
+
 /*
  *----------------------------------------------------------------------
  *
  * WishPanic --
  *
- *	Display a message and exit.
+ *      Display a message and exit.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Exits the program.
+ *      Exits the program.
  *
  *----------------------------------------------------------------------
  */
@@ -300,7 +306,7 @@ WishPanic TCL_VARARGS_DEF(char *,arg1)
   
   MessageBeep(MB_ICONEXCLAMATION);
   MessageBox(NULL, buf, "Fatal Error in Wish",
-	     MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+             MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
   ExitProcess(1);
 }
 
@@ -313,6 +319,5 @@ WishInfo TCL_VARARGS_DEF(char *,arg1)
   vsprintf(buf, format, argList);
   
   MessageBox(NULL, buf, "Fatal Error in Wish",
-	     MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+             MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 }
-
