@@ -115,23 +115,23 @@ $(FUNCTORS): Standard.ozf Init.ozp
 
 Standard.ozf: Init.ozp
 
-%.ozf: sp/%.oz
+%.ozf: sp/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
-%.ozf: op/%.oz
+%.ozf: op/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
-%.ozf: ap/%.oz
+%.ozf: ap/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
-%.ozf: cp/%.oz
+%.ozf: cp/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
-%.ozf: dp/%.oz
+%.ozf: dp/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
-%.ozf: wp/%.oz
+%.ozf: wp/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
-%.ozf: misc/%.oz
+%.ozf: misc/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
-%.ozf: %.oz
+%.ozf: %.oz Standard.ozf
 	$(COMPILE) $< -o $@
-%.ozf: compiler/%.oz
+%.ozf: compiler/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
 
 # ap dependencies
@@ -437,5 +437,5 @@ $(COMPILER_BIG): $(COMPILERSRC)
 
 $(COMPILER_FUN): FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
 	FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
-	compiler/FunMake.oz
+	compiler/FunMake.oz Standard.ozf Pickle.ozf
 	$(COMPILE) -l Pickle=./Pickle.ozf compiler/FunMake.oz -o Compiler.ozf
