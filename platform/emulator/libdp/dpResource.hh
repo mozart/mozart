@@ -68,16 +68,14 @@ public:
 /************************************************************/
 
 
-class ResourceHashTable: public GenHashTable{
+class ResourceHashTable: public GenHashTable {
   int hash(TaggedRef entity){
     int val = abs((int) entity) ;
     return val;}
-  void gcResourceTableRecurse(GenHashNode*, int);
-  
 
 public:
   ResourceHashTable(int i):GenHashTable(i){}
-  
+
   void add(TaggedRef entity, int index){
     // kost@ : this is what we can deal with:
     Assert((!oz_isRef(entity) && !oz_isVariable(entity)) ||
@@ -139,8 +137,8 @@ public:
       }
     }
   }
-    
-  
+
+  //
   void gcResourceTable();
 };
 
