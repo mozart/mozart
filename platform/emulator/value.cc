@@ -167,9 +167,11 @@ void initLiterals()
 int oz_fastlength(OZ_Term l) {
   int len = 0;
   l = oz_deref(l);
-  while (oz_isCons(l)) {
-    len++;
+  Assert(!oz_isRef(l));
+  while (oz_isLTuple(l)) {
     l = oz_deref(oz_tail(l));
+    len++;
+    Assert(!oz_isRef(l));
   }
   return len;
 }
@@ -225,12 +227,14 @@ TaggedRef appendI(TaggedRef x,TaggedRef y)
   TaggedRef ret;
   TaggedRef *out=&ret;
 
-  x=oz_deref(x);
-  while (oz_isCons(x)) {
-    LTuple *lt=new LTuple(oz_head(x),makeTaggedNULL());
+  x = oz_deref(x);
+  Assert(!oz_isRef(x));
+  while (oz_isLTuple(x)) {
+    LTuple *lt = new LTuple(oz_head(x), makeTaggedNULL());
     *out=makeTaggedLTuple(lt);
     out=lt->getRefTail();
-    x=oz_deref(oz_tail(x));
+    x = oz_deref(oz_tail(x));
+    Assert(!oz_isRef(x));
   }
   *out=y;
   return ret;
@@ -240,10 +244,12 @@ Bool member(TaggedRef elem,TaggedRef list)
 {
   elem = oz_deref(elem);
   list = oz_deref(list);
-  while (oz_isCons(list)) {
-    if (elem==oz_deref(oz_head(list)))
+  Assert(!oz_isRef(list));
+  while (oz_isLTuple(list)) {
+    if (oz_deref(oz_head(list)) == elem)
       return OK;
     list = oz_deref(oz_tail(list));
+    Assert(!oz_isRef(list));
   }
   return NO;
 }
@@ -254,13 +260,15 @@ Bool member(TaggedRef elem,TaggedRef list)
 TaggedRef reverseC(TaggedRef l)
 {
   TaggedRef out=oz_nil();
-  l=oz_deref(l);
-  while (oz_isCons(l)) {
+  l = oz_deref(l);
+  Assert(!oz_isRef(l));
+  while (oz_isLTuple(l)) {
     LTuple *lt=tagged2LTuple(l);
     TaggedRef next=oz_deref(lt->getTail());
     lt->setTail(out);
     out = l;
     l = next;
+    Assert(!oz_isRef(l));
   }
   Assert(oz_isNil(l));
   return out;
@@ -273,11 +281,13 @@ TaggedRef duplist(TaggedRef list, int &len)
   TaggedRef ret = oz_nil();
   TaggedRef *aux = &ret;
 
-  while(oz_isCons(list)) {
+  Assert(!oz_isRef(list));
+  while (oz_isLTupleOrRef(list)) {
     len++;
-    *aux = oz_cons(oz_head(list),*aux);
+    *aux = oz_cons(oz_head(list), *aux);
     aux = tagged2LTuple(*aux)->getRefTail();
     list = oz_tail(list);
+    Assert(!oz_isRef(list));
   }
   return ret;
 }
@@ -353,9 +363,12 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorde
   int argnoProvided = 0;
   for (argno = 0; oz_isCons(def); def = oz_tail(def), argno++) {
     TaggedRef feat  = oz_head(def);
+    Assert(!oz_isRef(feat) && !oz_isVar(feat));
+    Assert(oz_isNil(arityList) || 
+	   (!oz_isRef(oz_head(arityList)) && !oz_isVar(oz_head(arityList))));
     TaggedRef value = oz_deref(rec->getArg(argno));
 
-    if (!oz_isNil(arityList) && featureEq(oz_head(arityList),feat)) {
+    if (!oz_isNil(arityList) && featureEq(oz_head(arityList), feat)) {
       arityList = oz_tail(arityList);
       if (reorder)
 	auxX[argno] = XREGS[argnoProvided];
@@ -395,7 +408,8 @@ Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity,
     return NULL;
   
   DEREF(method,_1);
-  if (oz_isVar(method)) return NULL;
+  Assert(!oz_isRef(method));
+  if (oz_isVarOrRef(method)) return NULL;
   Assert(oz_isAbstraction(method));
   
   Abstraction *abstr = (Abstraction*) tagged2Const(method);
@@ -522,12 +536,18 @@ TaggedRef SRecord::getFeature(TaggedRef f) {
 static
 Bool listequal(TaggedRef lista, TaggedRef listb)
 {	
-  while (oz_isCons(lista)) {
-    if (!oz_isCons(listb)) return NO; 
+  Assert(!oz_isRef(lista));
+  Assert(!oz_isRef(listb));
+  while (oz_isLTupleOrRef(lista)) {
+    if (!oz_isLTupleOrRef(listb)) return NO; 
+    Assert(!oz_isRef(oz_head(lista)) && !oz_isVar(oz_head(lista)));
+    Assert(!oz_isRef(oz_head(listb)) && !oz_isVar(oz_head(listb)));
     if ( !featureEq(oz_head(lista),oz_head(listb)) ) return NO;
     
     lista = oz_tail(lista);
     listb = oz_tail(listb);
+    Assert(!oz_isRef(lista));
+    Assert(!oz_isRef(listb));
   }
   Assert(oz_isNil(lista));
   return oz_isNil(listb);
@@ -549,7 +569,8 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
   TaggedRef out;
   TaggedRef *ptr=&out;
 
-  while (oz_isCons(list)) {
+  Assert(!oz_isRef(list));
+  while (oz_isLTuple(list)) {
     TaggedRef oldhead = oz_head(list);
     Assert(!oz_isRef(oldhead) && !oz_isVar(oldhead));
 
@@ -565,13 +586,14 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
 	LTuple *lt = new LTuple(oldhead,makeTaggedNULL());
 	*ptr = makeTaggedLTuple(lt);
 	ptr = lt->getRefTail();
-	list=oz_tail(list);
+	list = oz_tail(list);
       }
       break;
     default:
       OZD_error("insert");
       return 0;
     }
+    Assert(!oz_isRef(list));
   }
   Assert(oz_isNil(list));
   *ptr=oz_mklist(a);
@@ -591,10 +613,12 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old) {
   ins = oz_deref(ins);
   Assert(!oz_isVar(ins) && !oz_isRef(old));
 
-  while (oz_isCons(ins)) {
+  Assert(!oz_isRef(ins));
+  while (oz_isLTuple(ins)) {
     old = insert(oz_deref(oz_head(ins)),old);
     Assert(!oz_isRef(old));
     ins = oz_deref(oz_tail(ins));
+    Assert(!oz_isRef(ins));
     Assert(!oz_isVar(ins));
   }
 
@@ -649,6 +673,8 @@ Bool isSorted(TaggedRef list)
   while(1) {
     TaggedRef cdr = oz_deref(oz_tail(list));
     if (oz_isNil(cdr)) return OK;
+    Assert(!oz_isRef(oz_head(list)) && !oz_isVar(oz_head(list)));
+    Assert(!oz_isRef(oz_head(cdr)) && !oz_isVar(oz_head(cdr)));
     if (featureCmp(oz_head(list),oz_head(cdr))!=-1) return NO;
     list = cdr;
   }
@@ -666,9 +692,11 @@ TaggedRef sortlist(TaggedRef list,int len)
   // put pointers to elems of list in array r
   TaggedRef tmp = list;
   int i = 0;
-  while (oz_isCons(tmp)) {
+  Assert(!oz_isRef(tmp));
+  while (oz_isLTuple(tmp)) {
     r[i++] = tagged2LTuple(tmp)->getRef();
     tmp = oz_tail(tmp);
+    Assert(!oz_isRef(tmp));
   }
     
   // sort array r using quicksort
@@ -678,7 +706,8 @@ TaggedRef sortlist(TaggedRef list,int len)
   TaggedRef pElem = list;
   TaggedRef cElem = tagged2LTuple(list)->getTail();
   int p = 0, c = 1;
-  while (oz_isCons(cElem)) {
+  Assert(!oz_isRef(cElem));
+  while (oz_isLTuple(cElem)) {
     LTuple* cElemPtr = tagged2LTuple(cElem); 
     if (featureEq(*r[p], *r[c])) {
       tagged2LTuple(pElem)->setTail(cElemPtr->getTail());
@@ -688,8 +717,9 @@ TaggedRef sortlist(TaggedRef list,int len)
     }
     c += 1;
     cElem = cElemPtr->getTail();
+    Assert(!oz_isRef(cElem));
   } // while
-    
+
   DELETE_TEMP_ARRAY(r);
   return list;
 }
@@ -697,7 +727,7 @@ TaggedRef sortlist(TaggedRef list,int len)
 // mm2: cycle test
 TaggedRef packsort(TaggedRef list)
 {
-  list=oz_deref(list);
+  list = oz_deref(list);
   if (oz_isNil(list)) {
     return oz_nil();
   }
@@ -705,12 +735,14 @@ TaggedRef packsort(TaggedRef list)
 
   TaggedRef tmp = list;
   
-  while (oz_isCons(tmp)) {
+  Assert(!oz_isRef(tmp));
+  while (oz_isLTupleOrRef(tmp)) {
     len++;
     LTuple *lt=tagged2LTuple(tmp);
     lt->setHead(oz_deref(lt->getHead()));
-    tmp=oz_deref(lt->getTail());
+    tmp = oz_deref(lt->getTail());
     lt->setTail(tmp);
+    Assert(!oz_isRef(tmp));
   }
 
  if (!oz_isNil(tmp)) return 0;
@@ -753,7 +785,9 @@ Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
   ar->hashmask = size-1;
   int j=0;
   for (int i=0 ; i<size ; ar->table[i++].key = 0);
-  while (oz_isCons(entrylist)) {
+
+  Assert(!oz_isRef(entrylist));
+  while (oz_isLTuple(entrylist)) {
     const TaggedRef entry = oz_head(entrylist);
     const int hsh         = featureHash(entry);
     int i                 = ar->hashfold(hsh);
@@ -765,6 +799,7 @@ Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
     ar->table[i].key   = entry;
     ar->table[i].index = j++;
     entrylist = oz_tail(entrylist);
+    Assert(!oz_isRef(entrylist));
   }
   return ar;
 }
@@ -834,8 +869,9 @@ Bool ArityTable::hashvalue( TaggedRef list, int &ret )
 {
   int i = 0;
   int len = 0;
-  while(oz_isCons(list)){
-    TaggedRef it=oz_head(list);
+  Assert(!oz_isRef(list));
+  while (oz_isLTuple(list)){
+    TaggedRef it = oz_head(list);
     if (len>=0 && oz_isSmallInt(it) && tagged2SmallInt(it)==len+1) {
       len++;
     } else {
@@ -843,8 +879,9 @@ Bool ArityTable::hashvalue( TaggedRef list, int &ret )
     }
     i += featureHash(it);
     list = oz_tail(list);
+    Assert(!oz_isRef(list));
   }
-  Assert(oz_isNil(list));
+  Assert(oz_isNil(oz_deref(list)));
   ret = hashfold(i);
   return len < 0 ? NO : OK;
 }
@@ -931,6 +968,8 @@ TaggedRef merge(TaggedRef lista, TaggedRef listb)
 
   Assert(oz_isCons(lista) && oz_isCons(listb));
 
+  Assert(!oz_isRef(oz_head(lista)) && !oz_isVar(oz_head(lista)));
+  Assert(!oz_isRef(oz_head(listb)) && !oz_isVar(oz_head(listb)));
   TaggedRef a = oz_head(lista);
   TaggedRef b = oz_head(listb);
   TaggedRef newHead;
@@ -982,7 +1021,7 @@ TaggedRef oz_adjoin(SRecord *lrec, SRecord* hrecord)
   // copy left record to new record
   TaggedRef ar = list1;
   Assert(!oz_isRef(ar) && !oz_isVar(ar));
-  while (oz_isCons(ar)) {
+  while (oz_isLTuple(ar)) {
     TaggedRef a = oz_head(ar);
     Assert(!oz_isRef(a) && !oz_isVar(a));
     newrec->setFeature(a,lrec->getFeature(a));
@@ -992,7 +1031,7 @@ TaggedRef oz_adjoin(SRecord *lrec, SRecord* hrecord)
 
   TaggedRef har = list2;
   Assert(!oz_isRef(har) && !oz_isVar(har));
-  while (oz_isCons(har)) {
+  while (oz_isLTuple(har)) {
     TaggedRef a = oz_head(har);
     Assert(!oz_isRef(a) && !oz_isVar(a));
     newrec->setFeature(a,hrecord->getFeature(a));
@@ -1022,7 +1061,7 @@ TaggedRef oz_adjoinAt(SRecord *rec, TaggedRef feature, TaggedRef value)
     SRecord *newrec = SRecord::newSRecord(rec->getLabel(),arity);
 
     Assert(!oz_isRef(oldArityList) && !oz_isVar(oldArityList));
-    while (oz_isCons(oldArityList)) {
+    while (oz_isLTuple(oldArityList)) {
       TaggedRef a = oz_head(oldArityList);
       Assert(!oz_isRef(a) && !oz_isVar(a));
       newrec->setFeature(a,rec->getFeature(a));
@@ -1050,11 +1089,13 @@ TaggedRef oz_adjoinList(SRecord *lrec,TaggedRef arityList,TaggedRef proplist)
 
   TaggedRef ar = lrec->getArityList();
   Assert(!oz_isRef(ar) && !oz_isVar(ar));
-  while (oz_isCons(ar)) {
+  while (oz_isLTuple(ar)) {
     TaggedRef a = oz_head(ar);
     Assert(!oz_isRef(a) && !oz_isVar(a));
     newrec->setFeature(a,lrec->getFeature(a));
-    ar = oz_tail(ar);
+    // 
+    ar = oz_deref(oz_tail(ar));
+    // ar = oz_tail(ar);
     Assert(!oz_isRef(ar) && !oz_isVar(ar));
   }
 
@@ -1068,7 +1109,8 @@ void SRecord::setFeatures(TaggedRef proplist)
   proplist = oz_deref(proplist);
   Assert(!oz_isVar(proplist));
 
-  while (oz_isCons(proplist)) {
+  Assert(!oz_isRef(proplist));
+  while (oz_isLTuple(proplist)) {
     TaggedRef pair = oz_deref(oz_head(proplist));
     Assert(!oz_isVar(pair));
     proplist = oz_deref(oz_tail(proplist));
@@ -1117,7 +1159,7 @@ TaggedRef SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
   }
 
   TaggedRef oldVal = args[i];
-  if (!oz_isRef(oldVal) && oz_isVar(oldVal)) {
+  if (!oz_isRef(oldVal) && oz_isVarOrRef(oldVal)) {
     return oz_adjoinAt(this,feature,value);
   }
   setArg(i,value);

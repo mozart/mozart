@@ -60,6 +60,7 @@ OZ_BI_define(BIconstraints,1,1)
   oz_declareDerefIN(0,in);
 
   int len = 0;
+  Assert(!oz_isRef(in));
   if (oz_isVar(in)) {
     len=oz_var_getSuspListLength(tagged2Var(in));
   }

@@ -46,7 +46,8 @@ void oz_varAddName(OZ_Term v, const char *nm)
 {
   DEREF(v, vptr);
     
-  if (!oz_isVar(v))
+  Assert(!oz_isRef(v));
+  if (!oz_isVarOrRef(v))
     return;
   varNamer.addName(makeTaggedRef(vptr), nm);
 }
@@ -54,6 +55,7 @@ void oz_varAddName(OZ_Term v, const char *nm)
 Bool isCacMarkedNamer(OZ_Term t) 
 { 
   OZ_Term t_deref = oz_deref(t);
+  Assert(!oz_isRef(t_deref));
   return oz_isRef(t) && (oz_isMark(t_deref) || 
 			 (oz_isVar(t_deref) && 
 			  tagged2Var(t_deref)->cacIsMarked()));
@@ -67,6 +69,7 @@ void GCollectIndexNamer(OZ_Term &t)
 OZ_Term getCacForward(OZ_Term t) 
 {
   OZ_Term t_deref = oz_deref(t);
+  Assert(!oz_isRef(t_deref));
   return (oz_isVar(t_deref) 
 	  ? makeTaggedRef(tagged2Var(t_deref)->cacGetFwd()) 
 	  : (OZ_Term) tagged2UnmarkedPtr(t));

@@ -301,6 +301,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
   if (fd && (*fd == fd_empty)) {
     goto failed;
   }
+  Assert(!oz_isRef(v));
   if (oz_isFree(v)) {
     //
     // tell finite domain constraint to an unconstrained variable
@@ -421,7 +422,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
     if (fd->isIn(tagged2SmallInt(v)))
       goto proceed;
-  } else if (oz_isVar(v)) {
+  } else if (oz_isVarOrRef(v)) {
     // 
     // future stuff, no idea what is going on here 
     TaggedRef newVar = oz_newVariable();

@@ -65,6 +65,7 @@ public:
       Assert(ct->getType() == Co_Class);
       return (OK);
     }
+    Assert(!oz_isRef(cl));
     if (oz_isVar(cl)) {
       OzVariable *var = tagged2Var(cl);
       Assert(var->getType() == OZ_VAR_EXT);
@@ -85,6 +86,7 @@ public:
       Assert(ct->getType() == Co_Class);
       return (((ObjectClass *) ct)->getGName());
     }
+    Assert(!oz_isRef(cl));
     if (oz_isVar(cl)) {
       OzVariable *var = tagged2Var(cl);
       Assert(var->getType() == OZ_VAR_EXT);

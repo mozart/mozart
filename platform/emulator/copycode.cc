@@ -207,7 +207,8 @@ ProgramCounter copyCode(PrTabEntry *ope, PrTabEntry *pe,
   
   list = oz_deref(list);
 
-  while (oz_isCons(list)) {
+  Assert(!oz_isRef(list));
+  while (oz_isLTuple(list)) {
 
     TaggedRef key = oz_deref(oz_head(list));
     
@@ -223,6 +224,7 @@ ProgramCounter copyCode(PrTabEntry *ope, PrTabEntry *pe,
       ht->htAdd(ToInt32(key),ToPointer(makeTaggedLiteral(theCopy)));
     }
     list = oz_deref(oz_tail(list));
+    Assert(!oz_isRef(list));
   }
 
   Assert(OZ_isNil(list));

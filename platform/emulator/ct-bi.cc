@@ -42,7 +42,8 @@ OZ_BI_define(BIGetCtVarConstraintAsAtom, 1, 1)
   
   OZ_getINDeref(0, var, varptr);
 
-  if (!oz_isVar(var)) {
+  Assert(!oz_isRef(var));
+  if (!oz_isVarOrRef(var)) {
     OZ_RETURN(var);
   } else if (isGenCtVar(var)) {
     OZ_RETURN(oz_atom(((OzCtVariable *) tagged2Var(var))->getConstraint()->toString(ozconf.printDepth)));
@@ -60,7 +61,8 @@ OZ_BI_define(BIGetCtVarNameAsAtom, 1, 1)
   
   OZ_getINDeref(0, var, varptr);
 
-  if (!oz_isVar(var)) {
+  Assert(!oz_isRef(var));
+  if (!oz_isVarOrRef(var)) {
     OZ_RETURN(var);
   } else if (isGenCtVar(var)) {
     OZ_RETURN(oz_atom(((OzCtVariable*)tagged2Var(var))->getDefinition()->getName()));

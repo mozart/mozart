@@ -78,7 +78,8 @@ void addFeatOFSSuspensionList(TaggedRef var,
       // Only add features if the 'kill' variable is undetermined:
       TaggedRef killl=prop->K;
       DEREF(killl,_);
-      if (!oz_isVar(killl)) {
+      Assert(!oz_isRef(killl));
+      if (!oz_isVarOrRef(killl)) {
 	suspList=suspList->getNext();
 	continue;
       }
@@ -102,6 +103,7 @@ void addFeatOFSSuspensionList(TaggedRef var,
 	// Do *not* use unification to do this binding!
 	TaggedRef tl=prop->FT;
 	DEREF(tl,tailPtr);
+	Assert(!oz_isRef(tl));
 	if (oz_isVar(tl)) {
 	  OzVariable *ov = tagged2Var(tl);
 	  oz_bindVar(ov, tailPtr, AtomNil);
@@ -522,7 +524,8 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   // Must be literal or variable:
   TaggedRef tmp = label;
   DEREF(tmp,_1);
-  if (!oz_isLiteral(tmp) && !oz_isVar(tmp)) {
+  Assert(!oz_isRef(tmp));
+  if (!oz_isLiteral(tmp) && !oz_isVarOrRef(tmp)) {
     pairs->free();
     return FALSE;
   }

@@ -54,8 +54,26 @@
 #include "boot-manager.hh"
 
 #define RETURN_ON_ERROR(ERROR)             \
-        if(ERROR) { (void) b->finish(); return ((OZ_Term) 0); }
+        if(ERROR) { Assert(0); (void) b->finish(); return ((OZ_Term) 0); }
 
+//
+// #define DBG_TRACE
+
+//
+#if defined(DBG_TRACE)
+static char dbgname[128];
+static FILE *dbgout = (FILE *) 0;
+
+#define DBGINIT()						\
+  if (dbgout == (FILE *) 0) {					\
+    sprintf(dbgname, "/tmp/dpm-dbg-%d.txt", osgetpid());       	\
+    dbgout = fopen(dbgname, "a+");				\
+  }
+
+#define DBG_TRACE_CODE(C) C
+#else
+#define DBG_TRACE_CODE(C)
+#endif
 
 // The count of marshaled diffs should be done for the distributed
 // messages and not for other marshaled structures. 
@@ -73,8 +91,20 @@ void DPMarshaler::processSmallInt(OZ_Term siTerm)
   // The current term is not allowed to occupy the remaining space in
   // the buffer completely, but leave a space for 'DIF_SUSPEND';
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize) {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_SMALLINT].name, DIF_SMALLINT, toC(siTerm));
+    fflush(dbgout);
+#endif
     marshalSmallInt(bs, siTerm);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(siTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(siTerm);
   }
@@ -87,9 +117,21 @@ void DPMarshaler::processFloat(OZ_Term floatTerm)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize + MFloatMaxSize) {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_FLOAT].name, DIF_FLOAT, toC(floatTerm));
+    fflush(dbgout);
+#endif
     marshalFloat(bs, floatTerm);
   } else {
     dif_counter[DIF_SUSPEND].send();
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(floatTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(floatTerm);
   }
@@ -135,6 +177,19 @@ static void dpMarshalLitCont(GenTraverser *gt, GTAbstractEntity *arg)
   //
   dif_counter[DIF_LIT_CONT].send();
   marshalDIFcounted(bs, DIF_LIT_CONT);
+#if defined(DBG_TRACE)
+  {
+    DBGINIT();
+    DPMarshalerLitSusp *desc = (DPMarshalerLitSusp *) arg;
+    char buf[10];
+    buf[0] = (char) 0;
+    strncat(buf, desc->getRemainingString(),
+	    min(10, desc->getCurrentSize()));
+    fprintf(dbgout, "> tag: %s(%d) = %.10s\n",
+	    dif_names[DIF_LIT_CONT].name, DIF_LIT_CONT, buf);
+    fflush(dbgout);
+  }
+#endif
   dpMarshalString(bs, gt, (DPMarshalerLitSusp *) arg);
 }
 
@@ -177,8 +232,27 @@ void DPMarshaler::processLiteral(OZ_Term litTerm)
     //
     // Observe: the format is different from pickles!
     DPMarshalerLitSusp *desc = new DPMarshalerLitSusp(litTerm, nameSize);
+#if defined(DBG_TRACE)
+    {
+      DBGINIT();
+      char buf[10];
+      buf[0] = (char) 0;
+      strncat(buf, desc->getRemainingString(),
+	      min(10, desc->getCurrentSize()));
+      fprintf(dbgout, "> tag: %s(%d) = %.10s %s at %d\n",
+	      dif_names[litTag].name, litTag, buf,
+	      (desc->getCurrentSize() > 10 ? ".." : ""), litTermInd);
+      fflush(dbgout);
+    }
+#endif
     dpMarshalString(bs, this, desc);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(litTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(litTerm);
   }
@@ -192,24 +266,53 @@ void DPMarshaler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize + strlen(crep)) {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_BIGINT].name, DIF_BIGINT, toC(biTerm));
+    fflush(dbgout);
+#endif
     marshalBigInt(bs, biTerm, biConst);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(biTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(biTerm);
   }
 }
 
 //
-void DPMarshaler::processNoGood(OZ_Term resTerm, Bool trail)
+Bool DPMarshaler::processNoGood(OZ_Term resTerm, Bool trail)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
   //
   if (bs->availableSpace() >= DIFMaxSize + MDistSPPMaxSize) {
+#if defined(DBG_TRACE)
+    {
+      DBGINIT();
+      MarshalTag mt = trail ? DIF_RESOURCE_T : DIF_RESOURCE_N;
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[mt].name, mt, toC(resTerm));
+      fflush(dbgout);
+    }
+#endif
     marshalSPP(bs, resTerm, trail); 
+    return (OK);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(resTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(resTerm);
+    return (NO);
   }
 }
 
@@ -224,19 +327,33 @@ void DPMarshaler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
   if (bi->isSited()) {
     if (bs->availableSpace() >= 
 	MDistSPPMaxSize + MNumberMaxSize + DIFMaxSize) {
-      processNoGood(biTerm, OK);
-      rememberNode(this, bs, biTerm);
+      if (processNoGood(biTerm, OK))
+	rememberNode(this, bs, biTerm);
       return;
     }
   } else {
     if (bs->availableSpace() >= 
 	2*DIFMaxSize + MNumberMaxSize + strlen(pn)) {
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_BUILTIN].name, DIF_BUILTIN, toC(biTerm));
+      fflush(dbgout);
+#endif
       marshalDIFcounted(bs, DIF_BUILTIN);
       rememberNode(this, bs, biTerm);
       marshalString(bs, pn);
       return;
     }
   }
+
+  //
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(biTerm));
+  fflush(dbgout);
+#endif
   marshalDIFcounted(bs, DIF_SUSPEND);
   suspend(biTerm);
 }
@@ -248,19 +365,37 @@ void DPMarshaler::processExtension(OZ_Term t)
   OZ_Extension *oe = tagged2Extension(t);
 
   //
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + oe->minNeededSpace()) {
-    marshalDIFcounted(bs, DIF_EXTENSION);
-    rememberNode(this, bs, t);
-    marshalNumber(bs, oe->getIdV());
-    //
-    if (!oe->marshalSuspV(t, bs, this)) {
-      processNoGood(t, NO);	// not remembered!
+  if (oe->toBeMarshaledV()) {
+    if (bs->availableSpace() >= 
+	2*DIFMaxSize + 2*MNumberMaxSize + oe->minNeededSpace()) {
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_EXTENSION].name, DIF_EXTENSION, toC(t));
+      fflush(dbgout);
+#endif
+      marshalDIFcounted(bs, DIF_EXTENSION);
+      rememberNode(this, bs, t);
+      marshalNumber(bs, oe->getIdV());
+      //
+      OZ_Boolean ret = oe->marshalSuspV(t, bs, this);
+      Assert(ret == OK);
+      return;
     }
   } else {
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(t);
+    (void) processNoGood(t, NO); // not remembered!
+    return;
   }
+
+  //
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(t));
+  fflush(dbgout);
+#endif
+  marshalDIFcounted(bs, DIF_SUSPEND);
+  suspend(t);
 }
 
 //
@@ -283,8 +418,8 @@ Bool DPMarshaler::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
   if (o->getClass()->isSited()) {
     if (bs->availableSpace() >= 
 	DIFMaxSize + MNumberMaxSize + MDistSPPMaxSize) {
-      processNoGood(term, OK);
-      rememberNode(this, bs, term);
+      if (processNoGood(term, OK))
+	rememberNode(this, bs, term);
       return (TRUE);
     }
   } else {
@@ -314,9 +449,23 @@ Bool DPMarshaler::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
 
       //
       rememberNode(this, bs, term);
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_STUB_OBJECT].name, DIF_STUB_OBJECT, toC(term));
+      fflush(dbgout);
+#endif
       return (TRUE);
     }
   }
+
+  //
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
+  fflush(dbgout);
+#endif
   marshalDIFcounted(bs, DIF_SUSPEND);
   suspend(term);
   return (TRUE);
@@ -333,12 +482,23 @@ Bool DPMarshaler::marshalFullObject(OZ_Term term, ConstTerm *objConst)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize) {
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_OBJECT].name, DIF_OBJECT, toC(term));
+      fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_OBJECT);
     rememberNode(this, bs, term);
     marshalGName(bs, o->getGName1());
     doToplevel = FALSE;
   } else {
-//      printf("suspend %d\n",osgetpid());
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(term);
     // 'doToplevel' is NOT reset here, since 'processObject' will be
@@ -356,7 +516,10 @@ Bool DPMarshaler::marshalFullObject(OZ_Term term, ConstTerm *objConst)
       marshalTertiary(bs, tert, tag);			\
       rememberNode(this, bs, term);			\
     } else {						\
-      marshalDIFcounted(bs, DIF_SUSPEND);			\
+      DBG_TRACE_CODE(DBGINIT(););			\
+      DBG_TRACE_CODE(fprintf(dbgout, "> tag: %s(%d) on %s\n", dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term)););	\
+      DBG_TRACE_CODE(fflush(dbgout););			\
+      marshalDIFcounted(bs, DIF_SUSPEND);		\
       suspend(term);					\
     }
 
@@ -393,15 +556,28 @@ void DPMarshaler::processVar(OZ_Term cv, OZ_Term *varTerm)
   if (bs->availableSpace() >= DIFMaxSize + MNumberMaxSize +
 	     max(MDistVarMaxSize, MDistSPPMaxSize)) {
     if (marshalVariable(varTerm, bs)) {
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> var = %s\n", toC(cv));
+      fflush(dbgout);
+#endif
       rememberVarNode(this, bs, varTerm);
     } else {
       // kost@ : this does not work currently: when a variable is
       // bound, its 'ref' owner entry will never be found.
       OZ_warning("marshaling a variable as a resource!");
-      processNoGood(makeTaggedRef(varTerm), OK);
-      rememberVarNode(this, bs, varTerm);
+      if (processNoGood(makeTaggedRef(varTerm), OK))
+	rememberVarNode(this, bs, varTerm);
+      return;
     }
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND,
+	    toC(makeTaggedRef(varTerm)));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(makeTaggedRef(varTerm));
   }
@@ -415,12 +591,26 @@ void DPMarshaler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize) {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) for %d, value =  %s\n",
+	    dif_names[DIF_REF].name, DIF_REF, repNumber, toC(t));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_REF);
     marshalTermRef(bs, repNumber);
   } else {
     Assert(t);			// we should not get here without 't'!
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND,
+	    toC(oz_isVar(t) ? makeTaggedRef(tPtr) : t));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
-    if (oz_isVar(t))
+    Assert(!oz_isRef(t));
+    if (oz_isVarOrRef(t))
       suspend(makeTaggedRef(tPtr));
     else
       suspend(t);
@@ -434,10 +624,22 @@ Bool DPMarshaler::processLTuple(OZ_Term ltupleTerm)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize) {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_LIST].name, DIF_LIST, toC(ltupleTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_LIST);
     rememberNode(this, bs, ltupleTerm);
     return (NO);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(ltupleTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(ltupleTerm);
     // Observe: suspended nodes are obviously leaves! 
@@ -459,16 +661,34 @@ Bool DPMarshaler::processSRecord(OZ_Term srecordTerm)
 
     //
     if (rec->isTuple()) {
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_TUPLE].name, DIF_TUPLE, toC(srecordTerm));
+      fflush(dbgout);
+#endif
       marshalDIFcounted(bs, DIF_TUPLE);
       rememberNode(this, bs, srecordTerm);
       marshalNumber(bs, rec->getTupleWidth());
     } else {
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_RECORD].name, DIF_RECORD, toC(srecordTerm));
+      fflush(dbgout);
+#endif
       marshalDIFcounted(bs, DIF_RECORD);
       rememberNode(this, bs, srecordTerm);
     }
 
     return (NO);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(srecordTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(srecordTerm);
     return (OK);
@@ -487,12 +707,24 @@ Bool DPMarshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
     Assert(gname);
 
     //
-    marshalDIFcounted(bs,DIF_CHUNK);
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_CHUNK].name, DIF_CHUNK, toC(chunkTerm));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_CHUNK);
     rememberNode(this, bs, chunkTerm);
     marshalGName(bs, gname);
 
     return (NO);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(chunkTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(chunkTerm);
     return (OK);
@@ -506,9 +738,21 @@ Bool DPMarshaler::processFSETValue(OZ_Term fsetvalueTerm)
 
   //
   if (bs->availableSpace() >= 2*DIFMaxSize) {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_FSETVALUE].name, DIF_FSETVALUE, toC(fsetvalueTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_FSETVALUE);
     return (NO);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(fsetvalueTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(fsetvalueTerm);
     return (OK);
@@ -525,16 +769,28 @@ Bool DPMarshaler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
   if (bs->availableSpace() >= 
       2*DIFMaxSize + MDistSPPMaxSize + 2*MNumberMaxSize) {
     if (!d->isSafeDict()) {
-      processNoGood(dictTerm, OK);
-      rememberNode(this, bs, dictTerm);
+      if (processNoGood(dictTerm, OK))
+	rememberNode(this, bs, dictTerm);
       return (OK);
     } else {
-      marshalDIFcounted(bs,DIF_DICT);
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_DICT].name, DIF_DICT, toC(dictTerm));
+      fflush(dbgout);
+#endif
+      marshalDIFcounted(bs, DIF_DICT);
       rememberNode(this, bs, dictTerm);
       marshalNumber(bs, d->getSize());
       return (NO);
     }
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(dictTerm));
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(dictTerm);
     return (OK);
@@ -546,8 +802,20 @@ Bool DPMarshaler::processArray(OZ_Term arrayTerm,
 			       ConstTerm *arrayConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
-  processNoGood(arrayTerm, OK);
-  rememberNode(this, bs, arrayTerm);
+  if (bs->availableSpace() >= 
+      DIFMaxSize + MDistSPPMaxSize + MNumberMaxSize) {
+    if (processNoGood(arrayTerm, OK))
+      rememberNode(this, bs, arrayTerm);
+  } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(arrayTerm));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(arrayTerm);
+  }
   return (OK);
 }
 
@@ -565,16 +833,25 @@ Bool DPMarshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
   if (cl->isSited()) {
     if (bs->availableSpace() >= 
 	DIFMaxSize + MDistSPPMaxSize + MNumberMaxSize) {
-      processNoGood(classTerm, OK);
-      rememberNode(this, bs, classTerm);
+      if (processNoGood(classTerm, OK))
+	rememberNode(this, bs, classTerm);
       return (OK);		// done - a leaf;
     }
   } else {
-    if (bs->availableSpace() >= 2*DIFMaxSize + 2*MNumberMaxSize +
-	MGNameMaxSize) {
+    if (bs->availableSpace() >= 
+	2*DIFMaxSize + 2*MNumberMaxSize + MGNameMaxSize) {
+
       //
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_CLASS].name, DIF_CLASS, toC(classTerm));
+      fflush(dbgout);
+#endif
       marshalDIFcounted(bs, DIF_CLASS);
       GName *gn = globalizeConst(cl, bs);
+
+      //
       Assert(gn);
       rememberNode(this, bs, classTerm);
       marshalGName(bs, gn);
@@ -582,6 +859,14 @@ Bool DPMarshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
       return (NO);
     }
   }
+
+  //
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(classTerm));
+  fflush(dbgout);
+#endif
   marshalDIFcounted(bs, DIF_SUSPEND);
   suspend(classTerm);
   return (OK);
@@ -598,8 +883,8 @@ Bool DPMarshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   if (pred->isSited()) {
     if (bs->availableSpace() >= 
 	DIFMaxSize + MNumberMaxSize + MDistSPPMaxSize) {
-      processNoGood(absTerm, OK);
-      rememberNode(this, bs, absTerm);
+      if (processNoGood(absTerm, OK))
+	rememberNode(this, bs, absTerm);
       return (OK);		// done - a leaf;
     }
   } else {
@@ -610,6 +895,12 @@ Bool DPMarshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
       Assert(gname);
 
       //
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	      dif_names[DIF_PROC].name, DIF_PROC, toC(absTerm));
+      fflush(dbgout);
+#endif
       marshalDIFcounted(bs, DIF_PROC);
       rememberNode(this, bs, absTerm);
 
@@ -636,8 +927,8 @@ Bool DPMarshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
       marshalNumber(bs, nxt);	// codesize in ByteCode"s;
 
       //
-      MarshalerCodeAreaDescriptor *desc = 
-	new MarshalerCodeAreaDescriptor(start, start + nxt);
+      DPMarshalerCodeAreaDescriptor *desc = 
+	new DPMarshalerCodeAreaDescriptor(start, start + nxt);
       traverseBinary(dpMarshalCode, desc);
 
       //
@@ -646,10 +937,379 @@ Bool DPMarshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   }
 
   //
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(absTerm));
+  fflush(dbgout);
+#endif
   marshalDIFcounted(bs, DIF_SUSPEND);
   suspend(absTerm);
   return (OK);
 }
+
+//
+// Marshaling of "hash table references" (for "match" instructions)
+// into a limited space buffer is special: it can be partial, in which
+// case marshaling of the code area suspends *at the instruction* that
+// referenced that hash table (and not at the next one, as usual);
+//
+// It returns 'OK' when marshaling [of a hash table] was partial.
+// In other words, 'OK' means that (a) marshaling of the code area has
+// to suspend, and (b) it has to do so on the current instruction.
+Bool dpMarshalHashTableRef(GenTraverser *gt,
+			   DPMarshalerCodeAreaDescriptor *desc,
+			   int start, IHashTable *table,
+			   ByteBuffer *bs)
+{
+  // Make a worst-case estimation for the number of entries we can fit
+  // into the remaining space in the in the buffer.
+  const int nDone = desc->getHTNDone();
+  // 'nDone' is non-zero when marshaling of a hash table is continued;
+  const int tEntries = table->getEntries();  // Total Entries;
+  Assert(tEntries > 0);
+  const int rEntries = tEntries - nDone;     // Remaining Entries;
+  const int wcFit =		// how many entries would fit;
+    min((bs->availableSpace() - 4*MNumberMaxSize) / (4*MNumberMaxSize),
+	rEntries);
+  Assert(wcFit > 0);
+  // Note: that field is present but not used by the pickler;
+  marshalNumber(bs, wcFit);
+
+  //
+  int hti;
+  if (nDone == 0) {
+    marshalLabel(bs, start, table->lookupElse());
+    marshalLabel(bs, start, table->lookupLTuple());
+    marshalNumber(bs, tEntries);
+    hti = table->getSize();
+  } else {
+    marshalLabel(bs, start, 0);
+    marshalLabel(bs, start, 0);
+    marshalNumber(bs, tEntries);
+    hti = desc->getHTIndex();
+  }    
+
+  //
+  int num = wcFit;
+  // Tests in this order! 
+  // If we suspend, we want to continue with the first unprocessed index;
+  while (num > 0 && hti-- > 0) {
+    if (table->entries[hti].val) {
+      if (oz_isLiteral(table->entries[hti].val)) {
+	if (table->entries[hti].sra == mkTupleWidth(0)) {
+	  // That's a literal entry
+	  marshalNumber(bs, ATOMTAG);
+	  marshalLabel(bs, start, table->entries[hti].lbl);
+	  gt->traverseOzValue(table->entries[hti].val);
+	} else {
+	  // That's a record entry
+	  marshalNumber(bs, RECORDTAG);
+	  marshalLabel(bs,start, table->entries[hti].lbl);
+	  gt->traverseOzValue(table->entries[hti].val);
+	  marshalRecordArity(gt, table->entries[hti].sra, bs);
+	}
+      } else {
+	Assert(oz_isNumber(table->entries[hti].val));
+	// That's a number entry
+	marshalNumber(bs,NUMBERTAG);
+	marshalLabel(bs, start, table->entries[hti].lbl);
+	gt->traverseOzValue(table->entries[hti].val);
+      }
+      num--;
+    }
+  }
+
+  //
+  Assert(num == 0);
+  // if we suspend, then there are some unprocessed indexes left:
+  DebugCode(const Bool ret = (wcFit < rEntries) ? OK : NO;);
+  Assert(ret == NO || hti > 0);
+  // When we finish, the last index we checked is not necessarily 0;
+
+  //
+  if (wcFit < rEntries) {
+    desc->setHTIndex(hti);
+    desc->setHTNDone(wcFit);
+    return (OK);
+  } else {
+    DebugCode(desc->setHTIndex(-1));
+    desc->setHTNDone(0);
+    return (NO);
+  }
+}
+
+#ifdef USE_FAST_UNMARSHALER   
+
+//
+// 'suspend' turns 'OK' if unmarshaling is not complete;
+ProgramCounter
+dpUnmarshalHashTableRef(Builder *b,
+			ProgramCounter pc, MarshalerBuffer *bs,
+			DPBuilderCodeAreaDescriptor *desc, Bool &suspend)
+{
+  //
+  if (pc) {
+    const int num = unmarshalNumber(bs);
+    const int elseLabel = unmarshalNumber(bs);
+    const int listLabel = unmarshalNumber(bs);
+    const int nEntries = unmarshalNumber(bs);
+    const int nDone = desc->getHTNDone();
+    IHashTable *table;
+
+    //
+    if (nDone == 0) {
+      // new entry;
+      table = IHashTable::allocate(nEntries, elseLabel);
+      if (listLabel)
+	table->addLTuple(listLabel);
+    } else {
+      // continuation;
+      Assert(elseLabel == 0 && listLabel == 0);
+      table = (IHashTable *) getAdressArg(pc);
+    }
+
+    //
+    for (int i = num; i--; ) {    
+      const int termTag = unmarshalNumber(bs);
+      const int label   = unmarshalNumber(bs);
+      HashTableEntryDesc *desc = new HashTableEntryDesc(table, label);
+
+      //
+      switch (termTag) {
+      case RECORDTAG:
+	{
+	  b->getOzValue(getHashTableRecordEntryLabelCA, desc);
+	  //
+	  RecordArityType at = unmarshalRecordArityType(bs);
+	  if (at == RECORDARITY) {
+	    b->getOzValue(saveRecordArityHashTableEntryCA, desc);
+	  } else {
+	    Assert(at == TUPLEWIDTH);
+	    int width = unmarshalNumber(bs);
+	    desc->setSRA(mkTupleWidth(width));
+	  }
+	  break;
+	}
+
+      case ATOMTAG:
+	b->getOzValue(getHashTableAtomEntryLabelCA, desc);
+	break;
+
+      case NUMBERTAG:
+	b->getOzValue(getHashTableNumEntryLabelCA, desc);
+	break;
+
+      default: Assert(0); break;
+      }
+    }
+
+    //
+    if (num + nDone < nEntries) {
+      suspend = OK;		// even if it already was;
+      desc->setHTNDone(num + nDone);
+    } else {
+      Assert(num + nDone == nEntries);
+      desc->setHTNDone(0);
+    }
+
+    // 
+    // Either a new one, or a continuation: just write it off;
+    return (CodeArea::writeIHashTable(table, pc));
+  } else {
+    const int num = unmarshalNumber(bs);
+    skipNumber(bs);		// elseLabel
+    skipNumber(bs);		// listLabel
+    const int nEntries = unmarshalNumber(bs);
+    const int nDone = desc->getHTNDone();
+
+    //
+    for (int i = num; i--; ) {
+      const int termTag = unmarshalNumber(bs);
+      skipNumber(bs);		// label
+
+      //
+      switch (termTag) {
+      case RECORDTAG:
+	{
+	  b->discardOzValue();
+	  //
+	  RecordArityType at = unmarshalRecordArityType(bs);
+	  if (at == RECORDARITY)
+	    b->discardOzValue();
+	  else
+	    skipNumber(bs);
+	  break;
+	}
+
+      case ATOMTAG:
+	b->discardOzValue();
+	break;
+
+      case NUMBERTAG:
+	b->discardOzValue();
+	break;
+
+      default: Assert(0); break;
+      }
+    }
+
+    //
+    if (num + nDone < nEntries) {
+      suspend = OK;		// even if it already was;
+      desc->setHTNDone(num + nDone);
+    } else {
+      Assert(num + nDone == nEntries);
+      desc->setHTNDone(0);
+    }
+
+    //
+    return ((ProgramCounter) 0);
+  }
+}
+
+#else
+
+//
+ProgramCounter
+dpUnmarshalHashTableRefRobust(Builder *b,
+			      ProgramCounter pc, MarshalerBuffer *bs,
+			      DPBuilderCodeAreaDescriptor *desc,
+			      Bool &suspend,
+			      int *error)
+{
+  //
+  if (pc) {
+    const int num = unmarshalNumberRobust(bs, error);
+    if (*error) return ((ProgramCounter) 0);
+    const int elseLabel = unmarshalNumberRobust(bs, error);
+    if (*error) return ((ProgramCounter) 0);
+    const int listLabel = unmarshalNumberRobust(bs, error);
+    if (*error) return ((ProgramCounter) 0);
+    const int nEntries = unmarshalNumberRobust(bs, error);
+    if (*error) return ((ProgramCounter) 0);
+    const int nDone = desc->getHTNDone();
+    IHashTable *table;
+
+    //
+    if (nDone == 0) {
+      // new entry;
+      table = IHashTable::allocate(nEntries, elseLabel);
+      if (listLabel)
+	table->addLTuple(listLabel);
+    } else {
+      // continuation;
+      Assert(elseLabel == 0 && listLabel == 0);
+      table = (IHashTable *) getAdressArg(pc);
+    }
+
+    //
+    for (int i = num; i--; ) {    
+      const int termTag = unmarshalNumberRobust(bs, error);
+      if (*error) return ((ProgramCounter) 0);
+      const int label = unmarshalNumberRobust(bs, error);
+      if (*error) return ((ProgramCounter) 0);
+      HashTableEntryDesc *desc = new HashTableEntryDesc(table, label);
+
+      //
+      switch (termTag) {
+      case RECORDTAG:
+	{
+	  b->getOzValue(getHashTableRecordEntryLabelCA, desc);
+	  //
+	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+	  if(*error) return ((ProgramCounter) 0);
+	  if (at == RECORDARITY) {
+	    b->getOzValue(saveRecordArityHashTableEntryCA, desc);
+	  } else {
+	    Assert(at == TUPLEWIDTH);
+	    int width = unmarshalNumberRobust(bs, error);
+	    if(*error) return ((ProgramCounter) 0);
+	    desc->setSRA(mkTupleWidth(width));
+	  }
+	  break;
+	}
+
+      case ATOMTAG:
+	b->getOzValue(getHashTableAtomEntryLabelCA, desc);
+	break;
+
+      case NUMBERTAG:
+	b->getOzValue(getHashTableNumEntryLabelCA, desc);
+	break;
+
+      default: *error = OK; break;
+      }
+    }
+
+    //
+    if (num + nDone < nEntries) {
+      suspend = OK;
+      desc->setHTNDone(num + nDone);
+    } else {
+      Assert(num + nDone == nEntries);
+      desc->setHTNDone(0);
+    }
+
+    // 
+    return (CodeArea::writeIHashTable(table, pc));
+  } else {
+    const int num = unmarshalNumberRobust(bs, error);
+    if (*error) return ((ProgramCounter) 0);
+    skipNumber(bs);		// elseLabel
+    skipNumber(bs);		// listLabel
+    const int nEntries = unmarshalNumberRobust(bs, error);
+    if (*error) return ((ProgramCounter) 0);
+    const int nDone = desc->getHTNDone();
+
+    //
+    for (int i = num; i--; ) {
+      const int termTag = unmarshalNumberRobust(bs, error);
+      if (*error) return ((ProgramCounter) 0);
+      skipNumber(bs);		// label
+
+      //
+      switch (termTag) {
+      case RECORDTAG:
+	{
+	  b->discardOzValue();
+	  //
+	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+	  if(*error) return ((ProgramCounter) 0);
+	  if (at == RECORDARITY)
+	    b->discardOzValue();
+	  else
+	    skipNumber(bs);
+	  break;
+	}
+
+      case ATOMTAG:
+	b->discardOzValue();
+	break;
+
+      case NUMBERTAG:
+	b->discardOzValue();
+	break;
+
+      default: *error = OK; break;
+      }
+    }
+
+    //
+    if (num + nDone < nEntries) {
+      suspend = OK;		// even if it already was;
+      desc->setHTNDone(num + nDone);
+    } else {
+      Assert(num + nDone == nEntries);
+      desc->setHTNDone(0);
+    }
+
+    //
+    return ((ProgramCounter) 0);
+  }
+}
+
+#endif
 
 #include "dpMarshalcode.cc"
 
@@ -658,8 +1318,19 @@ void DPMarshaler::processSync()
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
   if (bs->availableSpace() >= 2*DIFMaxSize) {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d)\n", dif_names[DIF_SYNC].name, DIF_SYNC);
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SYNC);
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d)\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND);
+    fflush(dbgout);
+#endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspendSync();
   }
@@ -680,9 +1351,10 @@ Bool VariableExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
   rememberTerm(objTerm);
   return (TRUE);
 }
-void VariableExcavator::processNoGood(OZ_Term resTerm, Bool trail)
+Bool VariableExcavator::processNoGood(OZ_Term resTerm, Bool trail)
 {
   Assert(!oz_isVar(resTerm));
+  return (OK);
 }
 void VariableExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
 {
@@ -744,7 +1416,7 @@ Bool VariableExcavator::processDictionary(OZ_Term dictTerm,
   OzDictionary *d = (OzDictionary *) dictConst;
   rememberTerm(dictTerm);
   if (!d->isSafeDict()) {
-    processNoGood(dictTerm, OK);
+    (void) processNoGood(dictTerm, OK);
     return (OK);
   } else {
     return (NO);
@@ -756,7 +1428,7 @@ Bool VariableExcavator::processArray(OZ_Term arrayTerm,
 				     ConstTerm *arrayConst)
 {
   rememberTerm(arrayTerm);
-  processNoGood(arrayTerm, OK);
+  (void) processNoGood(arrayTerm, OK);
   return (OK);
 }
 
@@ -767,7 +1439,7 @@ Bool VariableExcavator::processClass(OZ_Term classTerm,
   ObjectClass *cl = (ObjectClass *) classConst;
   rememberTerm(classTerm);
   if (cl->isSited()) {
-    processNoGood(classTerm, OK);
+    (void) processNoGood(classTerm, OK);
     return (OK);		// done - a leaf;
   } else {
     return (NO);
@@ -784,7 +1456,7 @@ Bool VariableExcavator::processAbstraction(OZ_Term absTerm,
   //
   rememberTerm(absTerm);
   if (pred->isSited()) {
-    processNoGood(absTerm, OK);
+    (void) processNoGood(absTerm, OK);
     return (OK);		// done - a leaf;
   } else {
     ProgramCounter start = pp->getPC() - sizeOf(DEFINITION);
@@ -795,8 +1467,8 @@ Bool VariableExcavator::processAbstraction(OZ_Term absTerm,
 				line, colum, predName);
 
     //
-    MarshalerCodeAreaDescriptor *desc = 
-      new MarshalerCodeAreaDescriptor(start, start + nxt);
+    DPMarshalerCodeAreaDescriptor *desc = 
+      new DPMarshalerCodeAreaDescriptor(start, start + nxt);
     traverseBinary(traverseCode, desc);
     return (NO);
   }
@@ -1093,6 +1765,12 @@ void marshalVarObject(ByteBuffer *bs, int BTI, GName *gnobj, GName *gnclass)
 
 void marshalTertiary(ByteBuffer *bs, Tertiary *t, MarshalTag tag)
 {
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	  dif_names[tag].name, tag, toC(makeTaggedConst(t)));
+  fflush(dbgout);
+#endif
   PD((MARSHAL,"Tert"));
   switch(t->getTertType()){
   case Te_Local:
@@ -1339,6 +2017,12 @@ unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt)
 OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 {
   Assert(oz_onToplevel());
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "<bs: %p (getptr=%p,posMB=%p,endMB=%p)\n",
+	  bs, bs->getGetptr(), bs->getPosMB(), bs->getEndMB());
+  fflush(dbgout);
+#endif
 
 #ifndef USE_FAST_UNMARSHALER
   TRY_UNMARSHAL_ERROR {
@@ -1346,7 +2030,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     while(1) {
       MarshalTag tag = (MarshalTag) bs->get();
       dif_counter[tag].recv();	// kost@ : TODO: needed?
-      //      printf("tag: %d\n", tag);
+#if defined(DBG_TRACE)
+      fprintf(dbgout, "< tag: %s(%d)", dif_names[tag].name, tag);
+      fflush(dbgout);
+#endif
 
       switch (tag) {
 	
@@ -1358,6 +2045,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  RETURN_ON_ERROR(error || !OZ_isSmallInt(ozInt));
 #else
 	  OZ_Term ozInt = OZ_int(unmarshalNumber(bs));
+#endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %d\n", ozInt);
+	  fflush(dbgout);
 #endif
 	  b->buildValue(ozInt);
 	  break;
@@ -1371,6 +2062,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  RETURN_ON_ERROR(error);
 #else
 	  double f = unmarshalFloat(bs);
+#endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %f\n", f);
+	  fflush(dbgout);
 #endif
 	  b->buildValue(OZ_float(f));
 	  break;
@@ -1407,6 +2102,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    //
 	    b->getAbstractEntity(ns);
 	    b->suspend();
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " >>> (at %d)\n", refTag);
+	    fflush(dbgout);
+#endif
 	    // returns '-1' for an additional consistency check - the
 	    // caller should know whether that's a complete message;
 	    return ((OZ_Term) -1);
@@ -1433,6 +2132,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    //
 	    b->set(value, refTag);
 	    delete printname;
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	    fflush(dbgout);
+#endif
 	    break;
 	  }
 	}
@@ -1463,6 +2166,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    //
 	    b->getAbstractEntity(cns);
 	    b->suspend();
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " >>> (at %d)\n", refTag);
+	    fflush(dbgout);
+#endif
 	    // returns '-1' for an additional consistency check - the
 	    // caller should know whether that's a complete message;
 	    return ((OZ_Term) -1);
@@ -1476,6 +2183,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    b->buildValue(value);
 	    b->set(value, refTag);
 	    delete printname;
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	    fflush(dbgout);
+#endif
 	  }
 	  break;
 	}
@@ -1505,6 +2216,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    //
 	    b->getAbstractEntity(uns);
 	    b->suspend();
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " >>> (at %d)\n", refTag);
+	    fflush(dbgout);
+#endif
 	    // returns '-1' for an additional consistency check - the
 	    // caller should know whether that's a complete message;
 	    return ((OZ_Term) -1);
@@ -1517,6 +2232,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    b->buildValue(value);
 	    b->set(value, refTag);
 	    delete printname;
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	    fflush(dbgout);
+#endif
 	  }
 	  break;
 	}
@@ -1545,6 +2264,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    //
 	    b->getAbstractEntity(as);
 	    b->suspend();
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " >>> (at %d)\n", refTag);
+	    fflush(dbgout);
+#endif
 	    // returns '-1' for an additional consistency check - the
 	    // caller should know whether that's a complete message;
 	    return ((OZ_Term) -1);
@@ -1556,6 +2279,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    b->buildValue(value);
 	    b->set(value, refTag);
 	    delete [] aux;
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	    fflush(dbgout);
+#endif
 	  }
 	  break;
 	}
@@ -1583,6 +2310,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 		// still not there;
 		b->getAbstractEntity(ns);
 		b->suspend();
+#if defined(DBG_TRACE)
+		fprintf(dbgout, " >>> (at %d)\n", ns->getRefTag());
+		fflush(dbgout);
+#endif
 		// returns '-1' for an additional consistency check - the
 		// caller should know whether that's a complete message;
 		return ((OZ_Term) -1);
@@ -1611,6 +2342,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 		//
 		b->set(value, ns->getRefTag());
 		delete ns;
+#if defined(DBG_TRACE)
+		fprintf(dbgout, " = %s (at %d)\n",
+			toC(value), ns->getRefTag());
+		fflush(dbgout);
+#endif
 	      }
 	      break;
 	    }
@@ -1623,6 +2359,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 		// still not there;
 		b->getAbstractEntity(as);
 		b->suspend();
+#if defined(DBG_TRACE)
+		fprintf(dbgout, " >>> (at %d)\n", as->getRefTag());
+		fflush(dbgout);
+#endif
 		// returns '-1' for an additional consistency check - the
 		// caller should know whether that's a complete message;
 		return ((OZ_Term) -1);
@@ -1633,6 +2373,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 		b->buildValue(value);
 		b->set(value, as->getRefTag());
 		delete as;
+#if defined(DBG_TRACE)
+		fprintf(dbgout, " = %s (at %d)\n",
+			toC(value), as->getRefTag());
+		fflush(dbgout);
+#endif
 	      }
 	      break;
 	    }
@@ -1646,6 +2391,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 		// still not there;
 		b->getAbstractEntity(uns);
 		b->suspend();
+#if defined(DBG_TRACE)
+		fprintf(dbgout, " >>> (at %d)\n", uns->getRefTag());
+		fflush(dbgout);
+#endif
 		// returns '-1' for an additional consistency check - the
 		// caller should know whether that's a complete message;
 		return ((OZ_Term) -1);
@@ -1656,6 +2405,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 		b->buildValue(value);
 		b->set(value, uns->getRefTag());
 		delete uns;
+#if defined(DBG_TRACE)
+		fprintf(dbgout, " = %s (at %d)\n",
+			toC(value), uns->getRefTag());
+		fflush(dbgout);
+#endif
 	      }
 	      break;
 	    }
@@ -1669,6 +2423,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 		// still not there;
 		b->getAbstractEntity(cns);
 		b->suspend();
+#if defined(DBG_TRACE)
+		fprintf(dbgout, " >>> (at %d)\n", cns->getRefTag());
+		fflush(dbgout);
+#endif
 		// returns '-1' for an additional consistency check - the
 		// caller should know whether that's a complete message;
 		return ((OZ_Term) -1);
@@ -1682,12 +2440,18 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 		b->buildValue(value);
 		b->set(value, cns->getRefTag());
 		delete cns;
+#if defined(DBG_TRACE)
+		fprintf(dbgout, " = %s (at %d)\n",
+			toC(value), cns->getRefTag());
+		fflush(dbgout);
+#endif
 	      }
 	      break;
 	    }
 
 	  default:
 #ifndef USE_FAST_UNMARSHALER
+	    Assert(0);
 	    (void) b->finish();
 	    return ((OZ_Term) 0);
 #else
@@ -1707,6 +2471,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #else
 	  char *aux  = unmarshalString(bs);
 #endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " %s\n", aux);
+	  fflush(dbgout);
+#endif
 	  b->buildValue(OZ_CStringToNumber(aux));
 	  delete aux;
 	  break;
@@ -1720,6 +2488,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
+#endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " (at %d)\n", refTag);
+	  fflush(dbgout);
 #endif
 	  b->buildListRemember(refTag);
 	  break;
@@ -1737,6 +2509,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  int refTag = unmarshalRefTag(bs);
 	  int argno  = unmarshalNumber(bs);
 #endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " (at %d)\n", refTag);
+	  fflush(dbgout);
+#endif
 	  b->buildTupleRemember(argno, refTag);
 	  break;
 	}
@@ -1750,6 +2526,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #else
 	  int refTag = unmarshalRefTag(bs);
 #endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " (at %d)\n", refTag);
+	  fflush(dbgout);
+#endif
 	  b->buildRecordRemember(refTag);
 	  break;
 	}
@@ -1762,6 +2542,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  RETURN_ON_ERROR(error || !b->checkIndexFound(i));
 #else
 	  int i = unmarshalNumber(bs);
+#endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " (from %d)\n", i);
+	  fflush(dbgout);
 #endif
 	  b->buildValue(b->get(i));
 	  break;
@@ -1786,6 +2570,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  OZ_Term tert = unmarshalOwner(bs, tag);
 	  int refTag = unmarshalRefTag(bs);
 #endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s (at %d)\n", toC(tert), refTag);
+	  fflush(dbgout);
+#endif
 	  b->buildValueRemember(tert, refTag);
 	  break;
 	}
@@ -1809,6 +2597,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  OZ_Term tert = unmarshalTertiary(bs, tag);
 	  int refTag = unmarshalRefTag(bs);
 #endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s (at %d)\n", toC(tert), refTag);
+	  fflush(dbgout);
+#endif
 	  b->buildValueRemember(tert, refTag);
 	  break;
 	}
@@ -1821,6 +2613,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  RETURN_ON_ERROR(error);
 #else
 	  OZ_Term tert = unmarshalTertiary(bs, tag);
+#endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s\n", toC(tert));
+	  fflush(dbgout);
 #endif
 	  b->buildValue(tert);
 	  break;
@@ -1841,10 +2637,18 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  GName *gname = unmarshalGName(&value, bs);
 #endif
 	  if (gname) {
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " (at %d)\n", refTag);
+	    fflush(dbgout);
+#endif
 	    b->buildChunkRemember(gname, refTag);
 	  } else {
 	    b->knownChunk(value);
 	    b->set(value, refTag);
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	    fflush(dbgout);
+#endif
 	  }
 	  break;
 	}
@@ -1867,16 +2671,25 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #endif
 	  //
 	  if (gname) {
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " (at %d)\n", refTag);
+	    fflush(dbgout);
+#endif
 	    b->buildClassRemember(gname, flags, refTag);
 	  } else {
 	    // Either we have the class itself, or that's the lazy
 	    // object protocol, in which case it must be a variable
 	    // that denotes an object (of this class);
 	    OZ_Term vd = oz_deref(value);
+	    Assert(!oz_isRef(vd));
 	    if (oz_isConst(vd)) {
 	      Assert(tagged2Const(vd)->getType() == Co_Class);
 	      b->knownClass(value);
 	      b->set(value, refTag);
+#if defined(DBG_TRACE)
+	      fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	      fflush(dbgout);
+#endif
 	    } else if (oz_isVar(vd)) {
 	      OzVariable *var = tagged2Var(vd);
 	      Assert(var->getType() == OZ_VAR_EXT);
@@ -1889,8 +2702,13 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	      // construction of a class is finished.
 	      gname = cv->getGName();
 	      b->buildClassRemember(gname, flags, refTag);
+#if defined(DBG_TRACE)
+	      fprintf(dbgout, " (at %d)\n", refTag);
+	      fflush(dbgout);
+#endif
 	    } else {
 #ifndef USE_FAST_UNMARSHALER
+	      Assert(0);
 	      (void) b->finish();
 	      return ((OZ_Term) 0);
 #else
@@ -1914,6 +2732,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  OZ_Term v = unmarshalVar(bs, FALSE, FALSE);
 	  int refTag = unmarshalRefTag(bs);
 #endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s (at %d)\n", toC(v), refTag);
+	  fflush(dbgout);
+#endif
 	  b->buildValueRemember(v, refTag);
 	  break;
 	}
@@ -1929,6 +2751,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #else
 	  OZ_Term f = unmarshalVar(bs, TRUE, FALSE);
 	  int refTag = unmarshalRefTag(bs);
+#endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s (at %d)\n", toC(f), refTag);
+	  fflush(dbgout);
 #endif
 	  b->buildValueRemember(f, refTag);
 	  break;
@@ -1946,6 +2772,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  OZ_Term va = unmarshalVar(bs, FALSE, TRUE);
 	  int refTag = unmarshalRefTag(bs);
 #endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s (at %d)\n", toC(va), refTag);
+	  fflush(dbgout);
+#endif
 	  b->buildValueRemember(va, refTag);
 	  break;
 	}
@@ -1961,6 +2791,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #else
 	  OZ_Term fa = unmarshalVar(bs, TRUE, TRUE);
 	  int refTag = unmarshalRefTag(bs);
+#endif
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s (at %d)\n", toC(fa), refTag);
+	  fflush(dbgout);
 #endif
 	  b->buildValueRemember(fa, refTag);
 	  break;
@@ -1983,17 +2817,26 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    // If objects are distributed only using the lazy
 	    // protocol, this shouldn't happen: There must be a proxy
 	    // already;
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " (at %d)\n", refTag);
+	    fflush(dbgout);
+#endif
 	    b->buildObjectRemember(gname, refTag);
 	  } else {
 	    // The same as for classes: either we have already the
 	    // object (how comes? requested twice??), or that's the
 	    // lazy object protocol;
 	    OZ_Term vd = oz_deref(value);
+	    Assert(!oz_isRef(vd));
 	    if (oz_isConst(vd)) {
 	      Assert(tagged2Const(vd)->getType() == Co_Object);
 	      OZ_warning("Full object is received again.");
 	      b->knownObject(value);
 	      b->set(value, refTag);
+#if defined(DBG_TRACE)
+	      fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	      fflush(dbgout);
+#endif
 	    } else if (oz_isVar(vd)) {
 	      OzVariable *var = tagged2Var(vd);
 	      Assert(var->getType() == OZ_VAR_EXT);
@@ -2005,8 +2848,13 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	      gname = ov->getGName();
 	      // Observe: the gname points to the proxy;
 	      b->buildObjectRemember(gname, refTag);
+#if defined(DBG_TRACE)
+	      fprintf(dbgout, " (at %d)\n", refTag);
+	      fflush(dbgout);
+#endif
 	    } else {
 #ifndef USE_FAST_UNMARSHALER
+	      Assert(0);
 	      (void) b->finish();
 	      return ((OZ_Term) 0);
 #else
@@ -2057,22 +2905,35 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    ProgramCounter start = code->getStart();
 	    ProgramCounter pc = start + sizeOf(DEFINITION);
 	    //
-	    BuilderCodeAreaDescriptor *desc =
-	      new BuilderCodeAreaDescriptor(start, start+codesize, code);
+	    Assert(codesize > 0);
+	    DPBuilderCodeAreaDescriptor *desc =
+	      new DPBuilderCodeAreaDescriptor(start, start+codesize, code);
 	    b->buildBinary(desc);
 
 	    //
 	    b->buildProcRemember(gname, arity, gsize, maxX, line, column, 
 				 pc, refTag);
+#if defined(DBG_TRACE)
+	    fprintf(dbgout,
+		    " do arity=%d,line=%d,column=%d,codesize=%d (at %d)\n",
+		    arity, line, column, codesize, refTag);
+	    fflush(dbgout);
+#endif
 	  } else {
 	    Assert(oz_isAbstraction(oz_deref(value)));
 	    // ('zero' descriptions are not allowed;)
-	    BuilderCodeAreaDescriptor *desc =
-	      new BuilderCodeAreaDescriptor(0, 0, 0);
+	    DPBuilderCodeAreaDescriptor *desc =
+	      new DPBuilderCodeAreaDescriptor(0, 0, 0);
 	    b->buildBinary(desc);
 
 	    //
 	    b->knownProcRemember(value, refTag);
+#if defined(DBG_TRACE)
+	    fprintf(dbgout,
+		    " skip %s (arity=%d,line=%d,column=%d,codesize=%d) (at %d)\n",
+		    toC(value), arity, line, column, codesize, refTag);
+	    fflush(dbgout);
+#endif
 	  }
 	  break;
 	}
@@ -2086,26 +2947,50 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_CODEAREA:
 	{
 	  BuilderOpaqueBA opaque;
-	  BuilderCodeAreaDescriptor *desc = 
-	    (BuilderCodeAreaDescriptor *) b->fillBinary(opaque);
+	  DPBuilderCodeAreaDescriptor *desc = 
+	    (DPBuilderCodeAreaDescriptor *) b->fillBinary(opaque);
 	  //
+#if defined(DBG_TRACE)
+	  fprintf(dbgout,
+		  " [begin=%p, end=%p, current=%p]",
+		  desc->getStart(), desc->getEnd(), desc->getCurrent());
+	  fflush(dbgout);
+#endif
 #ifndef USE_FAST_UNMARSHALER
 	  switch (dpUnmarshalCodeRobust(bs, b, desc)) {
 	  case UCR_ERROR:
+	    Assert(0);
 	    (void) b->finish();
 	    return 0;
 	  case UCR_DONE:
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " ..finished\n");
+	    fflush(dbgout);
+#endif
 	    b->finishFillBinary(opaque);
 	    break;
 	  case UCR_SUSPEND:
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " ..suspended\n");
+	    fflush(dbgout);
+#endif
 	    b->suspendFillBinary(opaque);
 	    break;
 	  }
 #else
-	  if (dpUnmarshalCode(bs, b, desc))
+	  if (dpUnmarshalCode(bs, b, desc)) {
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " ..finished\n");
+	    fflush(dbgout);
+#endif
 	    b->finishFillBinary(opaque);
-	  else
+	  } else {
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " ..suspended\n");
+	    fflush(dbgout);
+#endif
 	    b->suspendFillBinary(opaque);
+	  }
 #endif
 	  break;
 	}
@@ -2124,6 +3009,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #endif
 	  Assert(oz_onToplevel());
 	  b->buildDictionaryRemember(size,refTag);
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " size=%d (at %d)\n", size, refTag);
+	  fflush(dbgout);
+#endif
 	  break;
 	}
 
@@ -2156,6 +3045,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  }
 	  b->buildValue(value);
 	  b->set(value, refTag);
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	  fflush(dbgout);
+#endif
 	  break;
 	}
 
@@ -2180,10 +3073,15 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    Assert(bae);
 	    b->getAbstractEntity(bae);
 	    b->suspend();
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " suspended (for %d)\n", refTag);
+	    fflush(dbgout);
+#endif
 	    return ((OZ_Term) -1);
 
 	  case (OZ_Term) 0:	// error;
 #ifndef USE_FAST_UNMARSHALER
+	    Assert(0);
 	    (void) b->finish();
 	    return ((OZ_Term) 0);
 #else
@@ -2195,6 +3093,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  default:		// got it!
 	    b->buildValue(value);
 	    b->set(value, refTag);
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	    fflush(dbgout);
+#endif
 	    break;
 	  }
 	  break;
@@ -2219,10 +3121,15 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  case (OZ_Term) -1:
 	    b->getAbstractEntity(bae);
 	    b->suspend();
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " suspended\n");
+	    fflush(dbgout);
+#endif
 	    return ((OZ_Term) -1);
 
 	  case (OZ_Term) 0:
 #ifndef USE_FAST_UNMARSHALER
+	    Assert(0);
 	    (void) b->finish();
 	    return ((OZ_Term) 0);
 #else
@@ -2232,6 +3139,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #endif
 
 	  default:
+#if defined(DBG_TRACE)
+	    fprintf(dbgout, " = %s\n", toC(value));
+	    fflush(dbgout);
+#endif
 	    b->buildValue(value);
 	    break;
 	  }
@@ -2239,11 +3150,16 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	}
 
       case DIF_FSETVALUE:
+#if defined(DBG_TRACE)
+	fprintf(dbgout, "\n");
+	fflush(dbgout);
+#endif
 	b->buildFSETValue();
 	break;
 
       case DIF_REF_DEBUG:
 #ifndef USE_FAST_UNMARSHALER   
+	Assert(0);
 	(void) b->finish();
 	return ((OZ_Term) 0);
 #else
@@ -2254,6 +3170,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
       case DIF_ARRAY:
 #ifndef USE_FAST_UNMARSHALER   
+	Assert(0);
 	(void) b->finish();
 	return ((OZ_Term) 0);
 #else
@@ -2266,13 +3183,25 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	// 'DIF_SYNC' and its handling is a part of the interface
 	// between the builder object and the unmarshaler itself:
       case DIF_SYNC:
+#if defined(DBG_TRACE)
+	fprintf(dbgout, "\n");
+	fflush(dbgout);
+#endif
 	b->processSync();
 	break;
 
       case DIF_EOF: 
+#if defined(DBG_TRACE)
+	fprintf(dbgout, "\n");
+	fflush(dbgout);
+#endif
 	return (b->finish());
 
       case DIF_SUSPEND:
+#if defined(DBG_TRACE)
+	fprintf(dbgout, "\n");
+	fflush(dbgout);
+#endif
 	// 
 	b->suspend();
 	// returns '-1' for an additional consistency check - the
@@ -2281,6 +3210,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
       default:
 #ifndef USE_FAST_UNMARSHALER   
+	Assert(0);
 	(void) b->finish();
 	return ((OZ_Term) 0);
 #else
@@ -2293,6 +3223,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #ifndef USE_FAST_UNMARSHALER
   }
   CATCH_UNMARSHAL_ERROR { 
+    Assert(0);
     (void) b->finish();
     return ((OZ_Term) 0);
   }
@@ -2408,7 +3339,8 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
 	  if (triggerVariable(vp)) {
 	    v = makeTaggedRef(vp);
 	    DEREF(v, vp);
-	    if (oz_isVar(v)) {
+	    Assert(!oz_isRef(v));
+	    if (oz_isVarOrRef(v)) {
 	      goto repeat;	// 'v' can be a var again;
 	    } else {
 	      break;		// var is gone;
@@ -2460,7 +3392,8 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
       if (triggerVariable(vp)) {
 	v = makeTaggedRef(vp);
 	DEREF(v, vp);
-	if (oz_isVar(v)) {
+	Assert(!oz_isRef(v));
+	if (oz_isVarOrRef(v)) {
 	  goto repeat;		// 'v' can be a var again;
 	} else {
 	  break;		// var is gone;
@@ -2551,7 +3484,7 @@ void MsgTermSnapshotImpl::gcStart()
     // Keep locations of former variables. Note that a single
     // 'GCStubVar' can be shared between different snapshots during
     // GC.
-    if (oz_isRef(hv) || !oz_isVar(hv)) {
+    if (oz_isRef(hv) || !oz_isVarOrRef(hv)) {
       GCStubVar *svp = new GCStubVar(hv);
       *hvp = makeTaggedVar(svp);
     }

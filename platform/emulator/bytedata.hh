@@ -108,6 +108,7 @@ public:
   virtual OZ_Return eqV(OZ_Term);
   virtual OZ_Boolean toBePickledV();
   virtual OZ_Boolean pickleV(MarshalerBuffer *);
+  virtual OZ_Boolean toBeMarshaledV();
   virtual OZ_Boolean marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt);
   virtual int minNeededSpace();
   virtual OZ_Term printV(int depth = 10);
@@ -197,6 +198,7 @@ public:
   virtual OZ_Return eqV(OZ_Term);
   virtual OZ_Boolean toBePickledV();
   virtual OZ_Boolean pickleV(MarshalerBuffer *);
+  virtual OZ_Boolean toBeMarshaledV();
   virtual OZ_Boolean marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt);
   virtual int minNeededSpace();
   virtual OZ_Term printV(int depth = 10);

@@ -1091,7 +1091,7 @@ Bool distHandlerInstallImpl(unsigned short kind,unsigned short ec,
 				 TaggedRef proc){
   if(entity==0){
     return installGlobalWatcher(ec,proc,kind);}
-  if(!oz_isVar(oz_deref(entity))){
+  if(!oz_isVarOrRef(oz_deref(entity))){
     entity=oz_deref(entity);
     if(!isWatcherEligible(entity)) return TRUE;
     Tertiary * tert = (Tertiary *) tagged2Const(entity);
@@ -1106,7 +1106,7 @@ Bool distHandlerDeInstallImpl(unsigned short kind,unsigned short ec,
 				 TaggedRef proc){
   if(entity==0){
     return deInstallGlobalWatcher(ec,proc,kind);}
-  if(!oz_isVar(oz_deref(entity))){
+  if(!oz_isVarOrRef(oz_deref(entity))){
     entity=oz_deref(entity);
     if(!isWatcherEligible(entity)) return TRUE;
     Tertiary* tert = (Tertiary *) tagged2Const(entity);
@@ -1314,7 +1314,8 @@ void maybeHandOver(EntityInfo* oldE, TaggedRef t){
   if(oldE->watchers==NULL) return;
   EntityInfo *newE;
   DEREF(t,vs_ptr);
-  if(oz_isVar(t)){
+  Assert(!oz_isRef(t));
+  if(oz_isVarOrRef(t)){
     newE=varMakeOrGetEntityInfo(vs_ptr);
     newE->watchers=mergeWatchers(oldE->watchers,newE->watchers);
     return;}

@@ -143,7 +143,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
     }
-    if (oz_isKinded(t)) {
+    if (oz_isKindedVar(t)) {
       oz_typeError(3,"Record");
     } else {
       // Calculate initial size of hash table:
@@ -233,7 +233,7 @@ OZ_BI_define(BIrecordTell,2,0)
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
     }
-    if (oz_isKinded(t)) {
+    if (oz_isKindedVar(t)) {
       oz_typeError(0,"Record");
     } else {
       // Create newofsvar with unbound variable as label & given
@@ -414,8 +414,9 @@ OZ_Return WidthPropagator::propagate(void)
     case LTAG_LTUPLE1:
     {
         // Impose width constraint
+      Assert(!oz_isRef(rec));
         recwidth = (oz_isSRecord(rec) ? tagged2SRecord(rec)->getWidth() :
-		    (oz_isLTuple(rec) ? 2 : 0));
+		    (oz_isLTupleOrRef(rec) ? 2 : 0));
         if (isGenFDVar(wid)) {
             // OzFDVariable *fdwid=tagged2GenFDVar(wid);
             // res=fdwid->setSingleton(recwidth);
@@ -528,7 +529,8 @@ OZ_BI_define(BImonitorArity, 3, 0)
 
     OZ_Term tmpkill=OZ_in(1);
     DEREF(tmpkill,_1);
-    Bool isKilled = !oz_isVar(tmpkill);
+    Assert(!oz_isRef(tmpkill));
+    Bool isKilled = !oz_isVarOrRef(tmpkill);
 
     OZ_Term tmprec=OZ_in(0);
     DEREF(tmprec,_2);
@@ -605,7 +607,8 @@ OZ_Return MonitorArityPropagator::propagate(void)
     TaggedRef kill=K;
     TaggedRef tmpkill=kill;
     DEREF(tmpkill,_2);
-    Bool isKilled = !oz_isVar(tmpkill);
+    Assert(!oz_isRef(tmpkill));
+    Bool isKilled = !oz_isVarOrRef(tmpkill);
 
     TaggedRef tmptail=FT;
     DEREF(tmptail,_3);
@@ -659,6 +662,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   DEREF(fea,  feaPtr);
 
   // optimize the most common case: adding or reading a feature
+  Assert(!oz_isRef(term));
   if (oz_isVar(term) &&
       tagged2Var(term)->getType()==OZ_VAR_OF &&
       oz_isFeature(fea)) {
@@ -680,15 +684,16 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   }
   
   // Wait until Y is a feature:
-  if (oz_isVar(fea)) {
-
-    if (oz_isVar(fea) && tagged2Var(fea)->getType()==OZ_VAR_OF) {
+  Assert(!oz_isRef(fea));
+  if (oz_isVarOrRef(fea)) {
+    if (tagged2Var(fea)->getType()==OZ_VAR_OF) {
       OzOFVariable *ofsvar=tagged2GenOFSVar(fea);
       if (ofsvar->getWidth()>0) 
 	goto typeError2;
     }
 
-    if (!oz_isVar(term) && !oz_isRecord(term)) 
+    Assert(!oz_isRef(term));
+    if (!oz_isVarOrRef(term) && !oz_isRecord(term)) 
       goto typeError2;
     
     oz_suspendOnPtr(feaPtr);
@@ -798,7 +803,8 @@ OZ_BI_define(BIhasLabel, 1, 1)
   oz_declareDerefIN(0,rec);
   // Wait for term to be a record with determined label:
   // Get the term's label, if it exists
-  if (oz_isVar(rec)) {
+  Assert(!oz_isRef(rec));
+  if (oz_isVarOrRef(rec)) {
     if (isGenOFSVar(rec)) {
       TaggedRef thelabel=tagged2GenOFSVar(rec)->getLabel(); 
       DEREF(thelabel,lPtr);

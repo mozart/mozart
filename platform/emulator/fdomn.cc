@@ -1426,7 +1426,8 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
 int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
 {
   DEREF(d, d_ptr);
-  
+
+  Assert(!oz_isRef(d));
   if (oz_isSTuple(d) && tagged2SRecord(d)->getWidth() == 1) {
     initDescr((*tagged2SRecord(d))[0]);
     *this = ~ *this;
@@ -1444,7 +1445,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
     return initRange(0, 1);
   } else if (oz_isNil(d)) {
     return initEmpty();
-  } else if (oz_isLTuple(d)) {
+  } else if (oz_isLTupleOrRef(d)) {
     EnlargeableArray<int> left_arr(FDOMNINITSIZE), right_arr(FDOMNINITSIZE);
 
     int min_arr = fd_sup, max_arr = 0;
@@ -1500,6 +1501,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
       right_arr.request(len_arr);
     for_loop:
       d = oz_deref(list.getTail());
+      Assert(!oz_isRef(d));
     } // for
     return initList(len_arr, left_arr, right_arr, min_arr, max_arr);
   }
