@@ -62,6 +62,19 @@ void performCopying(void);
 
 
 /****************************************************************************
+ *   Modes of working:
+ *     IN_GC: garbage collecting
+ *     IN_TC: term copying
+ ****************************************************************************/
+
+Bool gc_is_running = NO;
+
+
+typedef enum {IN_GC = 0, IN_TC} GcMode;
+
+static GcMode opMode;
+
+/****************************************************************************
  *               Debug
  ****************************************************************************/
 
@@ -85,48 +98,56 @@ void performCopying(void);
  * CHECKSPACE -- check if object is really copied from heap
  *   has as set of macros:
  *    INITCHECKSPACE - save pointer to from-space & print from-space
- *    EXITCHECKSPACE - print to-space
- *    INFROMSPACE    - assert in from-space
  *    NOTINTOSPACE   - assert not in to-space
  *    INTOSPACE      - assert in to-space
  * NOTE: this works only for chunk
  */
 
-DebugCheckT(MemChunks *from);
+
+static MemChunks *fromSpace;
+
+Bool inToSpace(void *p)
+{
+  return (opMode==IN_TC || p==NULL || MemChunks::list->inChunkChain(p));
+}
+
+Bool notInToSpace(void *p)
+{
+  return (opMode==IN_TC || p==NULL || !MemChunks::list->inChunkChain(p));
+}
+
+Bool inFromSpace(void *p)
+{
+  return (opMode==IN_TC || p==NULL || fromSpace->inChunkChain(p));
+}
+
+void initCheckSpace()
+{
+  fromSpace = MemChunks::list;
+  DebugGCT(printf("FROM-SPACE:\n");
+           fromSpace->print();)
+}
+
+void exitCheckSpace()
+{
+  DebugGCT(printf("TO-SPACE:\n");
+           MemChunks::list->print();)
+}
+
 
 #ifdef CHECKSPACE
 
-#   define INITCHECKSPACE                                                     \
-{                                                                             \
-  printf("FROM-SPACE:\n");                                                    \
-  from = MemChunks::list;                                                     \
-  from->print();                                                              \
-}
+#define INFROMSPACE(P)  Assert(inFromSpace(P))
+#define NOTINTOSPACE(P) Assert(notInToSpace(P))
+#define INTOSPACE(P)    Assert(inToSpace(P))
 
-#   define EXITCHECKSPACE                                                     \
-{                                                                             \
-  printf("TO-SPACE:\n");                                                      \
-  MemChunks::list->print();                                                   \
-}
+#else
 
-#   define INFROMSPACE(P)                                                     \
-  Assert(opMode==IN_TC || P==NULL || from->inChunkChain((void*)P))
+#define INFROMSPACE(P)
+#define NOTINTOSPACE(P)
+#define INTOSPACE(P)
 
-
-#   define NOTINTOSPACE(P)                                                    \
-  Assert(opMode==IN_TC || P==NULL || !MemChunks::list->inChunkChain((void*)P))
-
-
-#   define INTOSPACE(P)                                                       \
-  Assert(opMode==IN_TC || P==NULL || MemChunks::list->inChunkChain((void*)P));
-
-#else // CHECKSPACE
-#   define INITCHECKSPACE
-#   define EXITCHECKSPACE
-#   define INFROMSPACE(P)
-#   define NOTINTOSPACE(P)
-#   define INTOSPACE(P)
-#endif // CHECKSPACE
+#endif
 
 
 
@@ -273,19 +294,6 @@ OZ_C_proc_begin(BIdumpThreads, 0)
 }
 OZ_C_proc_end
 
-/****************************************************************************
- *   Modes of working:
- *     IN_GC: garbage collecting
- *     IN_TC: term copying
- ****************************************************************************/
-
-Bool gc_is_running = NO;
-
-
-typedef enum {IN_GC = 0, IN_TC} GcMode;
-
-GcMode opMode;
-
 /*
  * TC: groundness check needs to count the number of
  *    variables, names, cells & abstractions
@@ -365,10 +373,6 @@ inline
 TaggedRef makeTaggedRefToFromSpace(TaggedRef *s)
 {
   CHECK_POINTER_N(s);
-/*  DebugGCT(extern MemChunks * from);
-  DebugGC(gcing == 0 && !from->inChunkChain ((void *)s),
-          error ("making TaggedRef pointing to 'to' space"));
-          */
   return (TaggedRef) ToInt32(s);
 }
 
@@ -1085,7 +1089,8 @@ Thread *Thread::gcDeadThread()
   Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (newThread);
 
-  newThread->setBoard(am.rootBoard->gcBoard());
+  Assert(inToSpace(am.rootBoard));
+  newThread->setBoard(am.rootBoard);
   newThread->state.flags=0;
   newThread->item.threadBody=0;
 
@@ -1227,7 +1232,6 @@ TaggedRef gcVariable(TaggedRef var)
   if (var==nil()) { return nil(); }
   if (isUVar(var)) {
     Board *bb = tagged2VarHome(var);
-    INFROMSPACE(bb);
     bb = bb->gcBoard();
     if (!bb) return nil();
     INTOSPACE (bb);
@@ -1422,7 +1426,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   GCPROCMSG("gcTagged");
   TaggedRef auxTerm = fromTerm;
 
-  Assert(opMode != IN_GC || !from->inChunkChain(&toTerm));
+  Assert(opMode==IN_TC || !fromSpace->inChunkChain(&toTerm));
 
   /* initalized but unused cell in register array */
   if (auxTerm == makeTaggedNULL()) {
@@ -1521,7 +1525,7 @@ void AM::gc(int msgLevel)
   VariableNamer::cleanup();  /* drop bound variables */
   cacheList->cacheListGC();  /* invalidate inline caches */
 
-  INITCHECKSPACE;
+  initCheckSpace();
   initMemoryManagement();
   //  ProfileCode(ozstat.initCount());
 
@@ -1605,7 +1609,7 @@ void AM::gc(int msgLevel)
   if(!ptrStack.isEmpty())
     error("ptrStack should be empty");
 
-  EXITCHECKSPACE;
+  exitCheckSpace();
 
 #ifdef PERDIO
   gcBorrowTable();
