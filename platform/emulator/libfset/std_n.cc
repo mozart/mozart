@@ -42,7 +42,7 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     vst[i] = vs[i];
   }
 
-  OZ_FSetValue u(fs_empty);
+  OZ_FSetValue u = _u;
 
   for (i = _vs_size; i--; ) {
     OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
@@ -74,8 +74,26 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     } while (doagain);
   }
 
-  OZ_DEBUGPRINTTHIS("out ");
-  return P.leave();
+  {
+    OZ_Return r = P.leave();
+
+    if (r == OZ_SLEEP) {
+
+      int j = 0;
+      for (i = 0; i < _vs_size; i += 1) {
+        if (vs[i]->isValue()) {
+          _u |= vs[i]->getGlbSet();
+          continue;
+        }
+        _vs[j] = _vs[i];
+        j += 1;
+      }
+      _vs_size = j;
+    }
+
+    OZ_DEBUGPRINTTHIS("out ");
+    return r;
+  }
 
 failure:
   OZ_DEBUGPRINTTHIS("failed");
@@ -100,6 +118,7 @@ OZ_C_proc_end
 
 OZ_CFun FSetUnionNPropagator::header = fsp_unionN;
 
+inline
 OZ_FSetConstraint unionN(OZ_FSetVar x[], int high, int except)
 {
   OZ_FSetConstraint z(fs_empty);
@@ -112,6 +131,7 @@ OZ_FSetConstraint unionN(OZ_FSetVar x[], int high, int except)
   return z;
 }
 
+inline
 OZ_Boolean union3(OZ_FSetConstraint &x,
                   OZ_FSetConstraint &y,
                   OZ_FSetConstraint &z,
@@ -149,17 +169,7 @@ failure:
 OZ_Return FSetUnionNPropagator::propagate(void)
 {
 #ifdef LINEAR
-  _OZ_DEBUGPRINTTHIS("in ");
-
-  if (_vs_size == 0) {
-    _OZ_DEBUGPRINTTHIS("_vs_size == 0");
-    return OZ_FAILED;
-  } else if (_vs_size == 1) {
-    _OZ_DEBUGPRINTTHIS("_vs_size == 1");
-    return OZ_DEBUGRETURNPRINT(("%d",replaceBy(_s, _vs[0])));
-  } else if (_vs_size == 2) {
-    return replaceBy(new FSetUnionPropagator(_vs[0], _vs[1], _s));
-  }
+  OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   OZ_FSetVar s(_s);
@@ -171,48 +181,76 @@ OZ_Return FSetUnionNPropagator::propagate(void)
   for (i = _vs_size; i--; )
     vs[i].read(_vs[i]);
 
-   printf("."); fflush(stdout);
-
   OZ_Boolean doagain;
+
+  if (_vs_size == 0) {
+    OZ_DEBUGPRINTTHIS("_vs_size == 0");
+    FailOnInvalid(*s <<= _u);
+    return P.vanish();
+  } else if (_vs_size == 1) {
+    OZ_DEBUGPRINTTHIS("_vs_size == 1");
+    do {
+      doagain = OZ_FALSE;
+
+      if (!union3(_u, *vs[0], *s, doagain))
+        goto failure;
+
+    } while (doagain);
+
+    return P.leave();
+  }
+
 
   do {
     doagain = OZ_FALSE;
 
-    union3(*vs[0], *vs[1], aux[0], doagain);
+    if (!union3(_u, *vs[0], aux[0], doagain))
+      goto failure;
 
-    for (i = 0; i < _vs_size-3; i += 1)
-      if (!union3(aux[i], *vs[i+2], aux[i+1], doagain))
+    for (i = 0; i < _aux_size-1; i += 1)
+      if (!union3(aux[i], *vs[i+1], aux[i+1], doagain))
         goto failure;
 
-    union3(aux[_vs_size-3], *vs[_vs_size-1], *s, doagain);
+    if (!union3(*vs[_vs_size-1], aux[_aux_size-1], *s, doagain))
+      goto failure;
 
   } while (doagain);
 
   {
-    _OZ_DEBUGPRINTTHIS("out ");
     OZ_Return r = P.leave();
-    /*
+
     if (r == OZ_SLEEP) {
+
       int j = 0;
       for (i = 0; i < _vs_size; i += 1) {
-        if (vs[i]->isValue())
+        if (vs[i]->isEmpty() && i != _vs_size) {
+          _u = _u | *vs[i];
           continue;
+        }
         _vs[j] = _vs[i];
+        _aux[j] = _aux[i];
+
         j += 1;
       }
-      _vs_size = j;
+      if (_vs_size != j) {
+        _vs_size = j;
+        _aux_size = max(0,_vs_size - 1);
+      }
     }
-    */
+
+    OZ_DEBUGPRINTTHIS("out ");
     return r;
   }
 
 failure:
-  _OZ_DEBUGPRINTTHIS("failed");
+  OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 
 #else /* LINEAR ----------------------------------------------------------- */
 
   OZ_DEBUGPRINTTHIS("in ");
+
+  //printf("."); fflush(stdout);
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   DECL_DYN_ARRAY(FSetTouched, vst, _vs_size);
@@ -230,7 +268,10 @@ failure:
   do {
     doagain = OZ_FALSE;
 
-    FailOnInvalid(*s <<= unionN(vs, _vs_size, -1));
+    OZ_FSetConstraint u = _u | unionN(vs, _vs_size, -1);
+
+    FailOnInvalid(*s <<= u);
+    //FailOnInvalid(*s <<= unionN(vs, _vs_size, -1));
 
     if (st <= s) {
       doagain = OZ_TRUE;
@@ -243,7 +284,29 @@ failure:
 
       FailOnInvalid(*vs[i] <= *s);
 
-      FailOnInvalid(*vs[i] >= (*s - unionN(vs, _vs_size, i)));
+      OZ_FSetConstraint a = (unionN(vs, _vs_size, i) | _u);
+      OZ_FSetConstraint b = (u - *vs[i]);
+
+
+      if (((*s-a).getGlbSet()-(*s-b).getGlbSet()).getCard() > 0) {
+        printf("%s\n\n", this->toString());
+        printf("unionN=%s ",  unionN(vs, _vs_size, i).toString());
+        printf("_u=%s ", _u.toString());
+        printf("a=%s\n", a.toString());
+        printf("sa=%s\n\n", (*s-a).toString());
+
+        printf("u=%s ", u.toString());
+        printf("vs[i]=%s", vs[i]->toString());
+        printf("b=%s\n", b.toString());
+        printf("sb=%s\n\n", (*s-b).toString());
+        printf("a-b=%s\n", (a.getGlbSet()-b.getGlbSet()).toString());
+        printf("sa-sb=%s\n\n", ((*s-a).getGlbSet()-(*s-b).getGlbSet()).toString());
+        printf("-------------------------------------------------------------\n");
+        fflush(stdout);
+      }
+
+      //FailOnInvalid(*vs[i] >= (*s - a));
+      FailOnInvalid(*vs[i] >= (*s - b));
 
       if (vst[i] <= vs[i]) {
         doagain = OZ_TRUE;
@@ -253,11 +316,152 @@ failure:
 
   } while (doagain);
 
-  OZ_DEBUGPRINTTHIS("out ");
-  return P.leave();
+  {
+    OZ_Return r = P.leave();
 
+    if (r == OZ_SLEEP) {
+
+      int j = 0;
+      for (i = 0; i < _vs_size; i += 1) {
+        if (vs[i]->isValue()) {
+          _u = _u | *vs[i];
+          continue;
+        }
+        _vs[j] = _vs[i];
+        j += 1;
+      }
+      _vs_size = j;
+    }
+
+    OZ_DEBUGPRINTTHIS("out ");
+    return r;
+  }
 failure:
   OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 #endif /* LINEAR */
+}
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fsp_partition, 2)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectVectorFSetVarBounds);
+  OZ_EXPECT(pe, 1, expectFSetVarBounds);
+
+  return pe.impose(new FSetPartitionPropagator(OZ_args[0],
+                                               OZ_args[1]));
+}
+OZ_C_proc_end
+
+OZ_CFun FSetPartitionPropagator::header = fsp_partition;
+
+OZ_Return FSetPartitionPropagator::propagate(void)
+{
+  _OZ_DEBUGPRINTTHIS("in ");
+
+  DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
+  OZ_FSetVar s(_s);
+  OZ_FSetConstraint * aux = _aux;
+  DECL_DYN_ARRAY(FSetTouched, vst, _vs_size);
+  PropagatorController_VS_S P(_vs_size, vs, s);
+  int i;
+
+  for (i = _vs_size; i--; )
+    vs[i].read(_vs[i]);
+
+  OZ_Boolean doagain;
+
+  if (_vs_size == 0) {
+    OZ_DEBUGPRINTTHIS("_vs_size == 0");
+    FailOnInvalid(*s <<= _u);
+    return P.vanish();
+  } else if (_vs_size == 1) {
+    OZ_DEBUGPRINTTHIS("_vs_size == 1");
+    do {
+      doagain = OZ_FALSE;
+
+      if (!union3(_u, *vs[0], *s, doagain))
+        goto failure;
+
+    } while (doagain);
+
+    return P.leave();
+  }
+
+  {
+    OZ_FSetValue u(fs_empty);
+
+    for (i = _vs_size; i--; ) {
+      OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
+
+      if ((u & vsi_glb).getCard() > 0)
+        goto failure;
+
+      u |= vsi_glb;
+    }
+
+    OZ_Boolean dodisjoint = u.getCard() > 0;
+
+    do {
+      doagain = OZ_FALSE;
+
+      if (dodisjoint)
+        for (i = _vs_size; i--; ) {
+          OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
+
+          FailOnInvalid(*vs[i] != (u - vsi_glb));
+
+          if (vst[i] <= vs[i]) {
+            doagain = OZ_TRUE;
+            vst[i] = vs[i];
+            u |= vsi_glb;
+          }
+        }
+
+      if (!union3(_u, *vs[0], aux[0], doagain))
+        goto failure;
+
+      for (i = 0; i < _aux_size-1; i += 1)
+        if (!union3(aux[i], *vs[i+1], aux[i+1], doagain))
+          goto failure;
+
+      if (!union3(*vs[_vs_size-1], aux[_aux_size-1], *s, doagain))
+        goto failure;
+
+    } while (doagain);
+  }
+  {
+    OZ_Return r = P.leave();
+
+    if (r == OZ_SLEEP) {
+
+      int j = 0;
+      for (i = 0; i < _vs_size; i += 1) {
+        if (vs[i]->isEmpty() && i != _vs_size) {
+          continue;
+        }
+        _vs[j] = _vs[i];
+        _aux[j] = _aux[i];
+
+        j += 1;
+      }
+      if (_vs_size != j) {
+        _vs_size = j;
+        _aux_size = max(0,_vs_size - 1);
+      }
+    }
+
+    _OZ_DEBUGPRINTTHIS("out ");
+    return r;
+  }
+
+failure:
+  _OZ_DEBUGPRINTTHIS("failed");
+  return P.fail();
+
 }

@@ -118,6 +118,7 @@ OZ_C_proc_proto(fdtest_firstFail)
 OZ_C_proc_proto(fdtest_spawnLess)
 OZ_C_proc_proto(fdtest_plus)
 OZ_C_proc_proto(fdtest_sumac)
+OZ_C_proc_proto(fdtest_alldiff)
 
 //*****************************************************************************
 //  Finite Sets
@@ -146,5 +147,6 @@ OZ_C_proc_proto(fsp_includeR)
 OZ_C_proc_proto(fsp_bounds)
 OZ_C_proc_proto(fsp_disjointN)
 OZ_C_proc_proto(fsp_unionN)
+OZ_C_proc_proto(fsp_partition)
 OZ_C_proc_proto(fsp_boundsN)
 #endif

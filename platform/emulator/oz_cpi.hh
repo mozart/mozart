@@ -164,6 +164,7 @@ public:
   OZ_Term getKnownNotInList(void) const;
   char * toString(void) const;
 
+  OZ_Boolean operator == (const OZ_FSetValue &) const;
   OZ_FSetValue operator & (const OZ_FSetValue &) const;
   OZ_FSetValue operator | (const OZ_FSetValue &) const;
   OZ_FSetValue operator - (const OZ_FSetValue &) const;
@@ -235,7 +236,7 @@ public:
   OZ_Boolean operator <= (const OZ_FSetConstraint &);
   OZ_Boolean operator >= (const OZ_FSetConstraint &);
   OZ_Boolean operator != (const OZ_FSetConstraint &);
-  OZ_Boolean operator == (const OZ_FSetConstraint &);
+  OZ_Boolean operator == (const OZ_FSetConstraint &) const;
   OZ_Boolean operator <= (const int);
   OZ_Boolean operator >= (const int);
   char * toString(void) const;
