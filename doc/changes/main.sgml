@@ -202,6 +202,16 @@
           key="section.oztool-env">.
         </p>
 
+      <subsection><title/QTk/
+        <p>
+          QTk now transparently supports accentuated characters on all
+          platforms. The <<hidden>> parameter has been added to the <<set>>
+          method of the <<placeholder>> widget. The <<onCreation>> parameter
+          has been added to all widgets. The <<QTk.flush>> function has been
+          introduced. Several bugs were fixed, in particular display problems
+          on Mac OS X.
+        </p>
+
     <section id="section.m130.fixes">
       <title/Changes in the implementation that affect usability and performance/
 
