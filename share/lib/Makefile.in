@@ -32,7 +32,7 @@ RALFBATCH       = . ./env && @OZBATCH@
 COMPILE         = $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
 EXEC            = $(OZBATCH) $(OZFLAGS)
 EXECWITHSTD     = $(OZBATCH) $(OZFLAGS) -l AP --include=DumpIntro.oz
-OZMA            = $(OZBATCH) $(OZFLAGS) --ozma
+OZMA            = $(OZBATCH) $(OZFLAGS) -DOZM --ozma
 
 # exports
 export SRCDIR
