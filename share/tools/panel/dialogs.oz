@@ -60,16 +60,18 @@ local
 
    end
 
+
+   
    local
 
-      ScaleWidth  = 120
-      FrameWidth  = ScaleWidth + 120
-   
       fun {FindPos TLs FT N}
 	 !TLs = T#L|TLr
       in
 	 case T==FT then N else {FindPos TLr FT N+1} end
       end
+      
+      ScaleWidth  = 100
+      FrameWidth  = ScaleWidth + 120
 
    in
       
@@ -106,8 +108,8 @@ local
 					     text:   'Update every: ')}
 	    TimeScale = {New DiscreteScale init(parent: TimeInner
 						width:  ScaleWidth
-						values: SampleTimes
-						initpos: {FindPos SampleTimes
+						values: UpdateTimes
+						initpos: {FindPos UpdateTimes
 							  Prev.time 1})}
 	    MouseOuter = {New Labelframe tkInit(parent: self
 						text:   'Update Requirement'
@@ -140,6 +142,47 @@ local
 	 
       end
 
+      
+      class HistoryDialog
+	 from TkTools.dialog
+
+	 meth init(master: Master
+		   prev:   Prev
+		   next:   Next)
+	    <<TkTools.dialog tkInit(master:  Master
+				    title:   TitleName#': History'
+				    buttons: ['Okay'   #
+					      close(proc {$}
+						       Next = 
+						       {RangeScale get($)}
+						    end)
+					      'Cancel' # close(proc {$}
+								  Next = Prev
+							       end)]
+				    focus:   1
+				    default: 1)>>
+	    RangeOuter = {New Labelframe tkInit(parent: self
+					       text:   'History Range'
+					       width:  FrameWidth
+					       height: 40)}
+	    RangeInner = {New Tk.frame tkInit(parent:             RangeOuter
+					      highlightthickness: 0)}
+	    RangeLabel = {New Tk.label tkInit(parent: RangeInner
+					     text:   'Range covers: ')}
+	    RangeScale = {New DiscreteScale init(parent:  RangeInner
+						 width:   ScaleWidth
+						 values:  HistoryRanges
+						 initpos: {FindPos
+							   HistoryRanges
+							   Prev 1})}
+	 in
+	    {RangeOuter add(RangeInner)}
+	    {Tk.batch [pack(RangeLabel RangeScale side:left)
+		       pack(RangeOuter pady:Pad)]}
+	 end
+
+      end
+
    end
 
 in
@@ -162,6 +205,13 @@ in
       Next
    in
       _ = {New UpdateDialog init(master:Master prev:Prev next:?Next)}
+      Next
+   end
+
+   fun {DoOptionHistory Master Prev}
+      Next
+   in
+      _ = {New HistoryDialog init(master:Master prev:Prev next:?Next)}
       Next
    end
 
