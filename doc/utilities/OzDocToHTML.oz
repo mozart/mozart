@@ -1585,7 +1585,9 @@ define
 	 Res
       end
       meth MakeTitle(PtrText FormatNumber Sep LayoutTitle M Level HTML
-		     ?NodeTitle) HTML1 Ns Title Authors TheLabel Res in
+		     ?NodeTitle)
+	 HTML1 Ns Title Authors Abstract TheLabel Res
+      in
 	 OzDocToHTML, FlushFloats(?HTML1)
 	 Ns = {Record.toList M.1=front(...)}
 	 Title = case {Filter Ns fun {$ N} {Label N} == title end} of [T] then
@@ -1601,6 +1603,12 @@ define
 		       else In
 		       end
 		    end nil}
+	 Abstract = case {Filter Ns fun {$ N} {Label N} == abstract end}
+		    of [A] then
+		       blockquote(span(COMMON: @Common
+				       OzDocToHTML, Batch(A 1 $)))
+		    [] nil then EMPTY
+		    end
 	 if {HasFeature M id} then
 	    TheLabel = M.id
 	 else
@@ -1642,7 +1650,8 @@ define
 		     else
 			h3('class': [authors]
 			   OzDocToHTML, FormatAuthors(Authors $))
-		     end])
+		     end
+		     Abstract])
       end
       meth ID(L Node HTML)
 	 if {Dictionary.member @Labels L} then
