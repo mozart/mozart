@@ -170,24 +170,6 @@ void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
  * Threads
  * ------------------------------------------------------------------------ */
 
-inline
-void AM::pushCall(TaggedRef def, int arity, RefsArray args)
-{
-  currentThread->pushCall(def,args,arity);
-}
-
-inline
-void AM::pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g)
-{
-  cachedStack->pushCont(pc,y,g,0);
-}
-
-inline
-void AM::pushCFun(OZ_CFun f, RefsArray x, int i)
-{
-  currentThread->pushCFunCont(f, x, i, OK);
-}
-
 // unset the ThreadSwitch flag and reset the counter
 inline
 void AM::restartThread()
@@ -343,7 +325,10 @@ int AM::commit(Board *bb, Thread *tt)
     tt->getTaskStackRef()->discardFrame(C_ACTOR_Ptr);
   }
 
-  tt->pushCont(bb->getBodyPtr());
+  {
+    Continuation *cont=bb->getBodyPtr();
+    tt->pushCont(cont->getPC(),cont->getY(),cont->getG(),cont->getX());
+  }
 
   bb->setCommitted(currentBoard);
   currentBoard->incSuspCount(bb->getSuspCount()-1);

@@ -1948,14 +1948,14 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
 #endif
 
   thr = am.mkSuspendedThread(am.currentBoard, DEFAULT_PRIORITY);
-  thr->pushCFunCont (fun, args, arity, OK);
+  thr->pushCFun(fun, args, arity, OK);
 
   return ((OZ_Thread) thr);
 }
 
 void OZ_pushCFun(OZ_Thread thr,OZ_CFun fun,OZ_Term *args,int arity)
 {
-  ((Thread *)thr)->pushCFunCont (fun, args, arity, OK);
+  ((Thread *)thr)->pushCFun(fun, args, arity, OK);
 }
 
 void OZ_pushCall(OZ_Thread thr,OZ_Term fun,OZ_Term *args,int arity)
@@ -1967,7 +1967,7 @@ void OZ_pushCall(OZ_Thread thr,OZ_Term fun,OZ_Term *args,int arity)
 void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
   Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.currentBoard);
-  tt->pushCFunCont (fun, args, arity, OK);
+  tt->pushCFun(fun, args, arity, OK);
   am.scheduleThread (tt);
 }
 
