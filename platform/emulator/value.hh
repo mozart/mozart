@@ -721,11 +721,11 @@ public:
 
     int i=hashfold(featureHash(entry));
     int step=scndhash(entry);
-    while ( keytable[i] != entry ) {
+    while (OK) {
       if ( keytable[i] == makeTaggedNULL()) return -1;
+      if ( featureEq(keytable[i],entry) ) return indextable[i];
       i = hashfold(i+step);
     }
-    return(indextable[i]);
   }
 public:
   TaggedRef getList() { return list; }

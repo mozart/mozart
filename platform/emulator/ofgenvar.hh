@@ -303,7 +303,7 @@ public:
 
     // Return the feature value if feature exists, return NULL if it doesn't exist
     TaggedRef getFeatureValue(TaggedRef feature) {
-	Assert(isLiteral(feature));
+	Assert(isFeature(feature));
         return dynamictable->lookup(feature);
     }
 
@@ -312,7 +312,7 @@ public:
     // Return TRUE if feature successfully inserted, FALSE if it already exists
     // ATTENTION: only use this for terms that do not have to be trailed
     Bool addFeatureValue(TaggedRef feature, TaggedRef term) {
-	Assert(isLiteral(feature));
+	Assert(isFeature(feature));
         Bool valid;
         if (dynamictable->fullTest()) dynamictable=dynamictable->doubleDynamicTable();
         TaggedRef prev=dynamictable->insert(feature,term,&valid);
@@ -334,7 +334,7 @@ public:
     // Destructively update feature's value, if feature exists
     // Return TRUE if feature exists, FALSE if it does not
     Bool setFeatureValue(TaggedRef feature, TaggedRef term) {
-	Assert(isLiteral(feature));
+	Assert(isFeature(feature));
         return dynamictable->update(feature,term);
     }
 
@@ -359,7 +359,7 @@ public:
         return (int) dynamictable->numelem;
     }
 
-    // Is X=val still valid, i.e., is val a literal and is width(ofs)==0 (see GenFDVariable::valid)
+    // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see GenFDVariable::valid)
     Bool valid(TaggedRef val);
 
     // These procedures exist as well in the class GenFDVariable,
