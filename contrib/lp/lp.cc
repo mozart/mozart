@@ -87,7 +87,7 @@ void module_init_lp(void)
     RILPSolve::mode   = RILPSolve::quiet;
 
 #ifndef ALLWAYS_CLOSE_CPLEX
-#ifdef CPLEX
+#ifdef INCLUDE_CPLEX
     int status;
     CPLEX_env = CPXopenCPLEXdevelop(&status);
     
