@@ -33,13 +33,6 @@
 #include "thr_pool.hh"
 #include "value.hh"
 
-// more includes at end!
-
-#ifdef DEBUG_THREADCOUNT
-#define DECSOLVETHREADS(BB, S) oz_decSolveThreads(BB, S)
-#else
-#define DECSOLVETHREADS(BB, S) oz_decSolveThreads(BB)
-#endif
 
 /* -----------------------------------------------------------------------
  * StatusReg

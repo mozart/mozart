@@ -27,4 +27,3 @@
 
 #include "thr_int.hh"
 #include "var_base.hh"
-#include "solve.hh"

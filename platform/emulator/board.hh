@@ -32,8 +32,7 @@
 #pragma interface
 #endif
 
-#include "actor.hh"
-
+#include "distributor.hh"
 #include "thr_class.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
@@ -83,6 +82,7 @@ enum BoardFlags {
   Bo_GlobalMark = 0x0004,
   Bo_Failed     = 0x0008,
   Bo_Committed  = 0x0010,
+  Bo_Clone      = 0x0020,
 };
 
 
@@ -95,16 +95,17 @@ friend int engine(Bool init);
 private:
   int flags;
   int suspCount;
-  union {
-    Actor *actor;
-    Board *ref;
-  } u;
+  Board * parent;
   Script script;
   Board * gcField; // Will go away, when new propagator model is active
+  TaggedRef solveVar;
+  TaggedRef result;
+  SuspList  *suspList;
+  int threads;
 
 public:
-  NO_DEFAULT_CONSTRUCTORS(Board)
-  Board(Actor *a,int type);
+  NO_DEFAULT_CONSTRUCTORS(Board);
+  Board(Board *b);
 
   USEHEAPMEMORY;
 
@@ -113,13 +114,17 @@ public:
   Bool isInstalled()    { return flags & Bo_Installed;  }
   Bool isMarkedGlobal() { return flags & Bo_GlobalMark; }
   Bool isRoot()         { return flags & Bo_Root;       }
+  Bool isCloneBoard()   { return flags & Bo_Clone;      }
 
-  void setInstalled()  { flags |= Bo_Installed; }
-  void setFailed()     { flags |= Bo_Failed; }
+  void setRoot()       { flags |= Bo_Root;       }
+  void setInstalled()  { flags |= Bo_Installed;  }
+  void setFailed()     { flags |= Bo_Failed;     }
   void setGlobalMark() { flags |= Bo_GlobalMark; }
+  void setCloneBoard() { flags |= Bo_Clone;      }
 
   void unsetInstalled()  { flags &= ~Bo_Installed;  }
   void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
+  void unsetCloneBoard() { flags &= ~Bo_Clone;      }
 
   Bool gcIsMarked(void);
   void gcMark(Board *);
@@ -134,6 +139,10 @@ public:
 
   void printTree();
 
+  //
+  // Suspension counter
+  //
+
   void incSuspCount(int n=1) {
     Assert(!isCommitted() && !isFailed());
     suspCount += n;
@@ -145,30 +154,6 @@ public:
     suspCount--;
   }
 
-  Board *derefBoard() {
-    Board *bb;
-    for (bb=this; bb->isCommitted(); bb=bb->u.ref) {}
-    return bb;
-  }
-
-  Board *getParent() {
-    Assert(!isCommitted());
-    return GETBOARD(u.actor);
-  }
-
-  Board *getParentAndTest() {
-    Assert(!isCommitted());
-    if (isFailed() || isRoot() || u.actor->isCommitted()) return 0;
-    return getParent();
-  }
-
-  Actor *getActor() {
-    Assert(!isCommitted());
-    return u.actor;
-  }
-
-  Board* getSolveBoard ();
-  Script &getScriptRef() { return script; }
   int getSuspCount(void) {
     Assert(!isFailed());
     Assert(suspCount >= 0);
@@ -181,14 +166,58 @@ public:
     return suspCount != 0;
   }
 
-  void newScript(int size) {
-    script.allocate(size);
+
+  //
+  // Thread counter
+  //
+
+  void incThreads(int n = 1) {
+    threads += n;
   }
+  int decThreads()  {
+    Assert (threads > 0);
+    return (--threads);
+  }
+
+  int getThreads(void) {
+    return threads;
+  }
+
+  //
+  // Home and parent access
+  //
 
   void setCommittedBoard(Board *s) {
     Assert(!isInstalled() && !isCommitted());
     flags |= Bo_Committed;
-    u.ref = s;
+    parent = s;
+  }
+
+  Board *derefBoard() {
+    Board *bb;
+    for (bb=this; bb->isCommitted(); bb=bb->parent) {}
+    return bb;
+  }
+
+  Board *getParent() {
+    Assert(!isCommitted());
+    return parent->derefBoard();
+  }
+
+  Board *getParentAndTest() {
+    Assert(!isCommitted());
+    if (isFailed() || isRoot())
+      return 0;
+    return getParent();
+  }
+
+  //
+  // Script
+  //
+
+  Script &getScriptRef() { return script; }
+  void newScript(int size) {
+    script.allocate(size);
   }
 
   void setScript(int i,TaggedRef *v,TaggedRef r) {
@@ -196,21 +225,34 @@ public:
     script[i].setRight(r);
   }
 
+  //
+  // Suspension list
+  //
+  void addSuspension(Suspension);
+  Bool isEmptySuspList() { return suspList==0; }
+  void setSuspList(SuspList *sl) { suspList=sl; }
+  SuspList *unlinkSuspList() {
+    SuspList *sl = suspList;
+    suspList=0;
+    return sl;
+  }
+
+  //
+  // Copying marks
+  //
+
   Bool isInTree(void);
   void unsetGlobalMarks(void);
   void setGlobalMarks(void);
 
-//-----------------------------------------------------------------------------
-// local thread queue
+  //
+  // local thread queue
+  //
+
 private:
   LocalPropagatorQueue * localPropagatorQueue;
-public:
-  void initLPQ(LocalPropagatorQueue *lpq) {
-    Assert(!localPropagatorQueue);
-    localPropagatorQueue=lpq;
-  }
-  void resetLocalPropagatorQueue(void);
 
+public:
   LocalPropagatorQueue * getLocalPropagatorQueue(void) {
     return localPropagatorQueue;
   }
@@ -218,6 +260,96 @@ public:
     localPropagatorQueue = lpq;
   }
 
+  void resetLocalPropagatorQueue(void);
+
+  //
+  // nonmonotonic propagators
+  //
+
+private:
+  OrderedSuspList * nonMonoSuspList;
+
+public:
+  void setNonMonoSuspList(OrderedSuspList * l) {
+    nonMonoSuspList = l;
+  }
+  OrderedSuspList *getNonMonoSuspList() {
+    return nonMonoSuspList;
+  }
+
+  void addToNonMonoSuspList(Propagator *);
+  void mergeNonMonoSuspListWith(OrderedSuspList *);
+
+  void mergeNonMono(Board *bb);
+
+  //
+  // distributors
+  //
+private:
+  DistBag   *bag;
+
+public:
+  void addDistributor(Distributor * d) {
+    bag = bag->add(d);
+  }
+  void mergeDistributors(DistBag * db) {
+    bag = bag->merge(db);
+  }
+  DistBag * getBag() {
+    return bag;
+  }
+
+  void cleanDistributors(void);
+  Distributor * getDistributor(void);
+
+  int commit(int left, int right);
+
+
+  //
+  // Status variable
+  //
+
+  void clearResult();
+  void patchChoiceResult(int i);
+  TaggedRef getResult() { return result; }
+  void setResult(TaggedRef v) { result = v; }
+
+  TaggedRef genSolved();
+  TaggedRef genStuck();
+  TaggedRef genChoice(int noOfClauses);
+  TaggedRef genFailed();
+  TaggedRef genUnstable(TaggedRef arg);
+
+
+  //
+  // Root variable
+  //
+
+  TaggedRef getSolveVar() {
+    return makeTaggedRef(&solveVar);
+  }
+
+
+  //
+  // Trailing comparison
+  //
+
+#ifdef CS_PROFILE
+public:
+  int32 * orig_start;
+  int32 * copy_start;
+  int     copy_size;
+
+  TaggedRef getCloneDiff(void);
+#endif
+
+
 };
+
+void oz_solve_scheduleNonMonoSuspList(Board *);
+
+#ifndef OUTLINE
+#include "board.icc"
+#endif
 
 #endif
