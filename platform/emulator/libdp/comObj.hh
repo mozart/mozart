@@ -120,9 +120,9 @@ protected:
   void clearTimers();
   void shutDown();
   ComObj *next_cache; // For TransController usage
-  Bool hasQueued();
   Bool canBeClosed();
 public:
+  Bool hasQueued();
   ComObj(DSite *site);
   void init(DSite *site);
 
