@@ -164,6 +164,10 @@ void AM::init(int argc,char **argv)
   
   if (!home)
     home ="unknown";
+#ifdef WINDOWS
+  else
+    home =strdup(home);
+#endif
 
     
   ozconf.ozHome = home;
