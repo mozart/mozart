@@ -14,6 +14,8 @@
 
 #if !defined(OUTLINE)
 #define INLINE inline
+#else
+#define INLINE
 #endif
 
 #ifdef INTERFACE
