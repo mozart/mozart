@@ -55,13 +55,6 @@ typedef enum {
  * spaces
  * -----------------------------------------------------------------------*/
 
-enum InstType {
-  INST_OK,
-  INST_FAILED,
-  INST_REJECTED
-};
-
-
 Bool oz_isBelow(Board *below, Board *above);
 
 // oz_isBetween returns

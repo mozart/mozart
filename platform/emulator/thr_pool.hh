@@ -112,6 +112,13 @@ public:
   }
   int getRunnableNumber();
 
+  Thread * getNext() {
+    if (threadQueuesAreEmpty())
+      return (Thread *) NULL;
+
+    return getFirstThread();
+  }
+
   //
   //  An allocator for thread's bodies;
   RunnableThreadBody* allocateBody()

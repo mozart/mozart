@@ -421,8 +421,6 @@ OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
 OZ_Return BIminusOrPlus(Bool callPlus,TaggedRef A, TaggedRef B, TaggedRef &out);
 OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B);
 
-OZ_Term oz_getLocation(Board *bb);
-
 OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X);
 
 // see ??

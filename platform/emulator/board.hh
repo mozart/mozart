@@ -170,6 +170,12 @@ public:
     Assert(!isCommitted());
     return getParentInternal()->derefBoard();
   }
+  int isAlive() {
+    for (Board * s = this; !s->isRoot() ; s=s->getParent())
+      if (s->isFailed())
+        return NO;
+    return OK;
+  }
 
   //
   // Garbage collection and copying

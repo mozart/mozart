@@ -201,25 +201,20 @@ Board * installOnly(Board * frm, Board * to) {
 }
 
 
-InstType oz_installPath(Board * to) {
-  // Tries to install "to". If "to" is on a path
-  // containing a failed space INST_REJECTED is returned.
-  // If installation of a script fails, INST_FAILED is returned and
+Bool oz_installPath(Board * to) {
+  // Tries to install "to".
+  // If installation of a script fails, NO is returned and
   // the highest space for which installation is possible gets installed.
-  // Otherwise, INST_OK is returned.
+  // Otherwise, OK is returned.
 
   Board * frm = oz_currentBoard();
 
   Assert(!frm->isCommitted() && !to->isCommitted());
 
   if (frm == to)
-    return INST_OK;
+    return OK;
 
-  // Step 0: Check whether "to" is still alive
-  for (Board * s = to; !s->isRoot() ; s=s->getParent())
-    if (s->isFailed())
-      return INST_REJECTED;
-
+  Assert(to->isAlive());
 
   // Step 1: Mark all spaces including root as installed
   {
@@ -265,6 +260,6 @@ InstType oz_installPath(Board * to) {
 
   // Step 4: Install from "ancestor" to "to"
 
-  return (installOnly(ancestor, to) == ancestor) ? INST_OK : INST_FAILED;
+  return installOnly(ancestor, to) == ancestor;
 
 }

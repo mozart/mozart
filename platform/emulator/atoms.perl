@@ -131,6 +131,11 @@
           ( AtomDebugPerdio, "debugPerdio"),
 
 
+          # Error formatting
+          ( AtomStack,          "stack"),
+          ( AtomD,              "d"),
+          ( AtomFailure,        "failure"),
+
           # Failure
           ( AtomBlocked,        "blocked"),
           ( AtomPermBlocked,    "permBlocked"),
