@@ -548,7 +548,7 @@ define
 	 {self set_database_ignore(true)}
 	 {self makefile_read}
 	 %% install docs if necessary
-	 local
+	 if {self get_doc_targets($)}\=nil then
 	    ILIBS = {self get_includelibs($)}
 	    IBINS = {self get_includebins($)}
 	    IDOCS = {self get_includedocs($)}
