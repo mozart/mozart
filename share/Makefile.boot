@@ -4,7 +4,6 @@
 #	use the local emulator and local libraries
 #---------------------------------------------------------------------
 
-URL=http\\://mozart.ps.uni-sb.de/home
 BUILDSHARE=$(BUILDTOP)/share
 BUILDLIB=$(BUILDSHARE)/lib
 BUILDTOOLS=$(BUILDSHARE)/tools
@@ -74,7 +73,7 @@ boot-%:
 	OZC="$(BOOTCOM)" \
 	OZINIT=$(BUILDLIB)/Init.ozf \
 	OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:prefix=$(URL)/contrib/=$(BUILDCONTRIB)/:prefix=$(URL)/contrib/=$(BUILDGDBM)/:= \
+	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=$(BUILDLIB)/:prefix=$(HOMEURL)/share/=$(BUILDTOOLS)/:prefix=$(HOMEURL)/contrib/=$(BUILDCONTRIB)/:prefix=$(HOMEURL)/contrib/=$(BUILDGDBM)/:= \
 	OZL="$(BOOTOZL)" \
 	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
 	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
@@ -89,6 +88,6 @@ STAGE1_LIB=$(BUILDLIB)/stage1
 STAGE1_TOOLS=$(BUILDTOOLS)/stage1
 stage1-%:
 	$(MAKE) $* \
-	OZ_LOAD=root=.:prefix=$(URL)=$(STAGE1_LIB):prefix=$(URL)/share=.:prefix=/=/:= \
+	OZ_LOAD=root=.:prefix=$(HOMEURL)=$(STAGE1_LIB):prefix=$(HOMEURL)/share=.:prefix=/=/:= \
 	OZINIT=$(STAGE1_LIB)/lib/Init.ozf \
 	OZC=$(STAGE1_LIB)/bin/ozc

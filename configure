@@ -849,13 +849,17 @@ fi
 	
     fi
     
+  HOMEURL="http://mozart.ps.uni-sb.de/home"
+  HOMECACHE="http/mozart.ps.uni-sb.de/home"
+  
+  
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 
 
 : ${oz_subdirs="platform share contrib doc"}
 echo $ac_n "checking for --enable-subdirs""... $ac_c" 1>&6
-echo "configure:859: checking for --enable-subdirs" >&5
+echo "configure:863: checking for --enable-subdirs" >&5
 # Check whether --enable-subdirs or --disable-subdirs was given.
 if test "${enable_subdirs+set}" = set; then
   enableval="$enable_subdirs"
@@ -1035,6 +1039,8 @@ s%@SET_MAKE@%$SET_MAKE%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
+s%@HOMEURL@%$HOMEURL%g
+s%@HOMECACHE@%$HOMECACHE%g
 s%@oz_subdirs@%$oz_subdirs%g
 s%@subdirs@%$subdirs%g
 

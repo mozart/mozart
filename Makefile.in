@@ -33,16 +33,18 @@ SRCDIR=		@srcdir@
 VPATH=		@srcdir@
 PREFIX=		@prefix@
 
+HOMEURL=	@HOMEURL@
+HOMECACHE=      @HOMECACHE@
+
 BINDIR=		$(PREFIX)/bin
 SHAREDIR=	$(PREFIX)/share
 TOOLSDIR=	$(SHAREDIR)/tools
 ELISPDIR=	$(SHAREDIR)/elisp
 IMAGESDIR=	$(SHAREDIR)/images
-CACHEDIR= 	$(PREFIX)/cache/http/mozart.ps.uni-sb.de/home
+CACHEDIR= 	$(PREFIX)/$(HOMECACHE)
 CACHETOOLS= 	$(CACHEDIR)/tools
 CACHEBIN=	$(CACHEDIR)/bin
 SHARECACHE=	$(CACHEDIR)/share
-URL=		http\\://mozart.ps.uni-sb.de/home
 
 ######################################################################
 # programs
@@ -79,7 +81,7 @@ DEMOFILES=	demo examples
 
 COMPRESS=	gzip -9
 
-WINCACHEDIR=	oz/cache/http/mozart.ps.uni-sb.de/home
+WINCACHEDIR=	oz/cache/$(HOMECACHE)
 
 # sub directories for recursive makes
 SUBDIRS=	@oz_subdirs@

@@ -3,7 +3,7 @@ BUILDDIR	= $(BUILDTOP)/share/tools
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
-
+HOMEURL         = @HOMEURL@
 PREFIX		= @prefix@
 
 OZBIN		= $(PREFIX)/bin

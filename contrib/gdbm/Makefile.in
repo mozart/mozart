@@ -6,6 +6,7 @@ VPATH		= @srcdir@
 PREFIX		= @prefix@
 PLATFORM	= @PLATFORM@
 LIB_DIR		= $(PREFIX)/contrib
+HOMEURL         = @HOMEURL@
 
 OZC		= @OZC@
 COMPILE		= $(OZC) -c

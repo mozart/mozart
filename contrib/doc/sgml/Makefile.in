@@ -9,6 +9,7 @@ OZC		= @OZC@
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
+HOMEURL         = @HOMEURL@
 
 TARGETS		= Parser.ozf
 LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
