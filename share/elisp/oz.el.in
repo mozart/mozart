@@ -1014,7 +1014,7 @@ compiled using a default set of switches."
 
 (defconst oz-begin-pattern
   (oz-make-keywords-for-match
-   '("local" "proc" "fun" "case" "if" "or" "dis" "choice" "condis" "not"
+   '("local" "proc" "fun" "case" "if" "cond" "or" "dis" "choice" "condis" "not"
      "thread" "try" "raise" "lock")))
 
 (defconst oz-gump-between-pattern
@@ -1999,10 +1999,11 @@ and initial percent signs."
   '("declare" "local" "in" "end"
     "proc" "fun" "functor" "import" "export" "body"
     "case" "then" "else" "of" "elseof" "elsecase"
+    "if" "elseif"
     "class" "from" "prop" "attr" "feat" "meth" "self"
     "true" "false" "unit"
     "div" "mod" "andthen" "orelse"
-    "if" "elseif" "or" "dis" "choice" "condis" "not"
+    "cond" "or" "dis" "choice" "condis" "not"
     "thread" "try" "catch" "finally" "raise" "with" "lock"
     "skip" "fail")
   "List of all Oz keywords with identifier syntax.")
