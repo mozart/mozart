@@ -26,7 +26,7 @@
 
 #include <time.h>
 
-OZ_Term make_time(const struct tm* tim) {
+static OZ_Term make_time(const struct tm* tim) {
   OZ_MAKE_RECORD_S("time",9,
 		   {"hour" OZ_COMMA 
 		      "isDst" OZ_COMMA 
