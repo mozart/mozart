@@ -180,7 +180,8 @@ enum ConnectionFlags{
   RC_READING        = 8192,     // ReadCon in midle of read
   RC_CRASHED        = 16384,    // ReadCon crashed during read
   HIS_DWN           = 32768,    // WriteCon closed by reader
-  PROBE             = 65536     // WriteCon in probe list
+  PROBE             = 65536,    // WriteCon in probe list
+  HIS_MY_TMP        = 131072    // WriteCon in closed by initiative and Tmp
 };
 
 enum ByteStreamType {
@@ -223,7 +224,8 @@ enum closeInitiator{
 #define WKUPTMP_TIME 60000
 #define WKUPPRB_TIME 3000
 #define CLOSE_EXPIRETIME 540000
-
+#define ADAPTION_RATE   1.5
+#define ADAPTION_TIMOUT_LIMIT  10
 /* ************************************************************************ */
 /*  SECTION 2:  Forward declarations                                        */
 /* ************************************************************************ */
@@ -938,7 +940,7 @@ class RemoteSite{
 
 public:
   DSite* site;
-
+  Bool   hasBeenConnected;
 protected:
   void init(DSite*, int);
 public:
@@ -1207,6 +1209,8 @@ protected:
   Message *sentMsg;      // non-acknowledge msgs
 public:
   unsigned long expireTime;
+  int           tmpCounter;     // Used for adaptation of connect atempt
+  float         tmpCounterLimit; // timeouts.
 
   void fastfixerik3(){
     Connection();}
@@ -1348,7 +1352,10 @@ public:
     flags=WRITE_CON;
     setReference();
     remoteSite=s;
-    bytePtr = intBuffer + INT_IN_BYTES_LEN;}
+    bytePtr = intBuffer + INT_IN_BYTES_LEN;
+    tmpCounter     = 1;
+    tmpCounterLimit  = 1;
+  }
 
   Bool goodCloseCand(){
     return (canbeClosed() && (!isWritePending()));}
@@ -1357,9 +1364,12 @@ public:
     Assert(isOpening());
     PD((TCP_INTERFACE,"opened site:%s",remoteSite->site->stringrep()));
     expireTime = 0;
+    tmpCounter = 1;
+    tmpCounterLimit = 1;
     clearOpening();
     remoteSite->setSiteStatus(SITE_OK);
     remoteSite->incTmpSessionNr();
+    remoteSite->hasBeenConnected = TRUE;
     if(isProbingOK()){
       remoteSite->site->probeFault(PROBE_OK);
       clearProbingOK();}}
@@ -1992,31 +2002,37 @@ OZ_BI_end
 #endif
 
 Bool TcpCache::openMyClosedConnection(unsigned long time){
-  /*  if(time)
-      printf("OpeningMys %d %d time:%d\n",(int)myHead, (int)myTail, (int) time);
-  */
+  // if time is set to zero openmyClsoedConnection is used
+  // top open a writeconnection when place just has been freed.
+
   WriteConnection *w = (WriteConnection *)myHead;
   while(time && w!= NULL){
     if(w->expireTime == 0)
       w->expireTime = time + CLOSE_EXPIRETIME;
-    if(w->expireTime < time ){
-      remove(w);
-      if(w->isHisInitiative())
-        w->clearHisInitiative();
-      else
-        w->clearMyInitiative();
-      w->setTmpDwn();
-      add(w);
-      w->remoteSite->site->probeFault(PROBE_TEMP);}
+    if(w->expireTime < time && ! w->testFlag(HIS_MY_TMP) ){
+      w->setFlag(HIS_MY_TMP);
+      w->remoteSite->site->probeFault(PROBE_TEMP);
+      w->setProbingOK();}
     w = (WriteConnection*) w->next;}
   w = (WriteConnection *)myTail;
   while(w!=NULL && time==0 && w->isHisInitiative())
     w = (WriteConnection*) w->prev;
+
+  // Increasing the counters for eventual hisclosed
+  // connections. This should not be done in the case
+  // of an atempt to open a myClosed connection.
+  while(time!=0 && w!= NULL && w->isHisInitiative() && w->tmpCounter > 1){
+    w->tmpCounter = w->tmpCounter -1;
+    w = (WriteConnection*) w->prev;}
+
   if(w!=NULL){
-    //fprintf(stderr,"Opening %d %d\n", (int)w, (int)w->isWriteCon());
     remove(w);
-    if(w->isHisInitiative())
+    if(w->isHisInitiative()){
       w->clearHisInitiative();
+      w->tmpCounterLimit = w->tmpCounterLimit * ADAPTION_RATE;
+      w->tmpCounter = (int) w->tmpCounterLimit;
+      if (w->remoteSite->hasBeenConnected)
+        w->tmpCounter = min(w->tmpCounter,ADAPTION_TIMOUT_LIMIT);}
     else
       w->clearMyInitiative();
     w->open();}
@@ -3852,6 +3868,7 @@ void RemoteSite::init(DSite* s, int msgCtr){
     status = SITE_OK;
     nrOfSentMsgs = 0;
     nrOfRecMsgs = 0;
+    hasBeenConnected = FALSE;
 }
 
 void RemoteSite::setWriteConnection(WriteConnection *r){
