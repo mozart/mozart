@@ -993,9 +993,9 @@ void oz_cv_printStream(ostream &out, const char *s, OzVariable *cv,
 
 void oz_printStream(OZ_Term term, ostream &out, int depth, int width)
 {
-  int old;
+  int old = ozconf.printWidth;
+
   if (width>=0) {
-    old = ozconf.printWidth;
     ozconf.printWidth=width;
   }
   if (depth<0) {
@@ -1005,9 +1005,7 @@ void oz_printStream(OZ_Term term, ostream &out, int depth, int width)
   term2Buffer(out,term,depth);
   flush(out);
 
-  if (width>=0) {
-    ozconf.printWidth=old;
-  }
+  ozconf.printWidth=old;
 }
 
 // for printing from gdb: no default args needed

@@ -23,6 +23,8 @@
  *  WARRANTIES.
  *
  */
+#include <errno.h>
+
 #include "ozostream.hh"
 #include "base.hh"
 
@@ -36,41 +38,44 @@ ozostream ozcout(stdout), ozcerr(stderr);
 
 ozostream &ozostream::operator << (const char *s)  
 {
-  Assert(fd); 
-  fprintf(fd,s);
+  Assert(fd);
+ loop:
+  if (fprintf(fd,s) < 0) {
+    if (errno == EINTR) goto loop;
+    perror("fprintf");
+  }
   return *this;
 }
 
 ozostream &ozostream::operator << (const void *p)
 {
-  Assert(fd);
-  fprintf(fd,"%p",p);
-  return *this;
+  char buf[100];
+  sprintf(buf,"%p",p);
+  return *this << buf;
 }
 
 
 ozostream &ozostream::operator << (char c)  
 {
-  Assert(fd);
-  fprintf(fd,"%c",c);
-  return *this;
+  char buf[100];
+  sprintf(buf,"%c",c);
+  return *this << buf;
 }
 
 ozostream &ozostream::operator << (long i)    
 {
-  Assert(fd); 
-  fprintf(fd,"%ld",i);
-  return *this;
+  char buf[100];
+  sprintf(buf,"%ld",i);
+  return *this << buf;
 }
 
-ozostream &ozostream::operator << (double f) 
+
+ozostream &ozostream::operator << (double d)    
 {
-  Assert(fd); 
-  fprintf(fd,"%f",f); 
-  return *this;
+  char buf[100];
+  sprintf(buf,"%f",d);
+  return *this << buf;
 }
-
-
 
 
 void ozstrstream::resize()
@@ -88,27 +93,4 @@ ozostream &ozstrstream::operator << (const char *s)
   return *this;
 }
 
-ozostream &ozstrstream::operator << (const void *p)  
-{ 
-  char buf[100];
-  sprintf(buf,"%p",p);
-  (*this) << buf;
-  return *this;
-}
-
-ozostream &ozstrstream::operator << (long i)
-{
-  char buf[100];
-  sprintf(buf,"%ld",i);
-  (*this) << buf;
-  return *this;
-}
-
-ozostream &ozstrstream::operator << (double f)
-{
-  char buf[100];
-  sprintf(buf,"%g",f);
-  (*this) << buf;
-  return *this;
-}
 

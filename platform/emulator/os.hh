@@ -149,6 +149,10 @@ int osaccept(int s, struct sockaddr *addr, int *addrlen);
 int osconnect(int s, struct sockaddr *addr, int namelen);
 int osdup(int fd);
 
+/* check for EINTR and make sure everything is written */
+int ossafewrite(int fd, char *buf, unsigned int len);
+int ossaferead(int fd, char *buf, unsigned int len);
+
 char *ostmpnam(char *s);
 
 char *oslocalhostname();
