@@ -69,7 +69,6 @@ local
       [] dirCore(Filename) then '\\core \''#Filename#'\''
       [] dirMachine(Filename) then '\\machine \''#Filename#'\''
       [] dirExpect(_) then ""
-      [] fStepPoint(S _) then {Oz S P}
       [] fAnd(S T) then
 	 case S of fSkip(_) then {Oz T P}
 	 elsecase T of fSkip(_) then {Oz S P}
