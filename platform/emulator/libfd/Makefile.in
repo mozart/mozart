@@ -62,9 +62,10 @@ all:
 ../libSchedule.a: $(SCHEDLIBOBJS)
         $(AR) -rc $@ $(SCHEDLIBOBJS) && $(RANLIB) $@
 
-depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
-        $(DEPEND) $(FDLIBSRCS:%=$(SRCDIR)/%) $(SCHEDLIBSRCS:%=$(SRCDIR)/%) \
-                > Makefile.deps
+depend:: Makefile.deps
+
+Makefile.deps: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
+        $(DEPEND) $(FDLIBSRCS:%=$(SRCDIR)/%) $(SCHEDLIBSRCS:%=$(SRCDIR)/%) > $@
 
 Makefile: Makefile.in
         (cd ..;./config.status)
