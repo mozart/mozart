@@ -205,7 +205,8 @@ PRINT(STuple)
 
 PRINT(SRecord)
 {
-  switch (getType()) {
+  TypeOfRecord type = getType();
+  switch (type) {
   case R_ABSTRACTION:
   case R_OBJECT:
     ((Abstraction *) this)->print(stream,depth,offset);
@@ -224,7 +225,7 @@ PRINT(SRecord)
 
   if (depth <= 0) {
     stream << "(...)";
-  } else {
+  } else if (type != R_ABSTRACTION && type != R_OBJECT) {
     stream << "(";
     NEWLINE(offset+2);
     TaggedRef ar = getArityList();

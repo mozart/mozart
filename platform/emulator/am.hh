@@ -43,7 +43,8 @@ typedef enum {
   ThreadSwitch  = 1 << 2, // choose a new process
   IOReady       = 1 << 3, // IO handler has signaled IO ready
   UserAlarm     = 1 << 4, // Alarm handler has signaled User Alarm
-  StartGC       = 1 << 5  // need a GC
+  StartGC       = 1 << 5, // need a GC
+  DebugMode     = 1 << 6
 } StatusBit;
 
 enum JumpReturns {

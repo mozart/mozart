@@ -158,7 +158,10 @@
 #define inline
 #endif
 
-inline HookValue emulateHook()
+// where to define this !!!!!!!!!!!
+void traceCall(Abstraction *def,int arity, TaggedRef *args);
+
+inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
 {
 #ifdef DEBUG_DET
   Alarm::Handle();   // simulate an alarm
@@ -183,6 +186,10 @@ inline HookValue emulateHook()
     }
 
     unblockSignals();
+
+    if (def && am.isSetSFlag(DebugMode)) {
+      traceCall(def,arity,args);
+    }
 
     return (HOOK_OK);
   } else {
@@ -217,7 +224,7 @@ inline TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
      if (! IsEx) {e->pushTask(CBB,ContAdr,Y,G);}                      \
      G = Pred->getGRegs();                                            \
                                                                       \
-     switch (emulateHook()) {                                         \
+     switch (emulateHook(Pred,Arity,X)) {                             \
      case HOOK_SCHEDULE:                                              \
        e->pushTask(CBB,Pred->getPC(),NULL,G,X,Arity);                 \
        goto LBLschedule;                                              \
@@ -426,7 +433,7 @@ void engine() {
  LBLfindWork:
 // third: do work
   {
-    switch (emulateHook()) {
+    switch (emulateHook(NULL,0,NULL)) {
     case HOOK_SCHEDULE:
       goto LBLschedule;
     case HOOK_FIND:
@@ -1547,7 +1554,7 @@ void engine() {
             if (isExecute) {
               goto LBLreduce;
             }
-            switch (emulateHook ()) {
+            switch (emulateHook (NULL,0,NULL)) {
             case HOOK_SCHEDULE:
               e->pushTask(CBB, contAdr,Y,G);
               goto LBLschedule;
