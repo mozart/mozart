@@ -609,6 +609,7 @@ If FORCE is non-nil, kill the processes immediately."
 	  (cond (oz-using-new-compiler
 		 t)
 		(oz-win32
+		 (setq oz-read-emulator-output nil)
 		 (make-comint "Oz Compiler"
 			      "ozcompiler" nil "+E"))
 		(t
@@ -637,6 +638,7 @@ If FORCE is non-nil, kill the processes immediately."
 	    (setq oz-emulator-buffer "*Oz Emulator*")
 
 	    (cond (oz-using-new-compiler
+		   (setq oz-read-emulator-output t)
 		   (make-comint "Oz Emulator" "oznc" nil "-E"))
 		  (oz-win32 t)
 		  (t
@@ -1978,9 +1980,6 @@ and is used for fontification.")
 (defun oz-fontify-buffer ()
   (interactive)
   (if (oz-window-system) (font-lock-fontify-buffer)))
-
-(defun oz-fontify-region (beg end)
-  (if (oz-window-system) (font-lock-fontify-region beg end)))
 
 (defun oz-fontify (&optional arg)
   (interactive "P")
