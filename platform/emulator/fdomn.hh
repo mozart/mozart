@@ -206,8 +206,8 @@ private:
 public:
   void dispose(void) {
     switch (getType()) {
-    case iv_descr: return get_iv()->dispose(); 
-    case bv_descr: return get_bv()->dispose(); 
+    case iv_descr: get_iv()->dispose(); return;
+    case bv_descr: get_bv()->dispose(); return;
     default: return;
     }
   }
