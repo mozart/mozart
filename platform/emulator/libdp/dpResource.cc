@@ -68,6 +68,7 @@ void ResourceHashTable::gcResourceTable(){
     TaggedRef entity = (TaggedRef) aux->getBaseKey();
     if(!oz_isBuiltin(entity)){
       entity = oz_deref(entity);
+      Assert(!oz_isVariable(entity));
       OTI =  (int) aux->getEntry();
       if(htSub(index,aux)) ;
       oe = OT->getEntry(OTI);
