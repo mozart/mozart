@@ -27,6 +27,19 @@
 // generated parse trees.
 //
 
+// 
+// To support '. :=' as a multifix operator (see share/lib/compiler/Doc/UniformStateAccess) 
+// this parser distinguishes e1.e2 := e3 from (e1.e2) := e3.  The only way
+// I could find to make this work (without rewriting the parser) was to 
+// keep parens in the parse tree (see rule  '(' inSequence ')' in phrase2).
+// It is then the responsibility of the parent parse to remove the extra
+// Paren nodes.  In most cases this is taken care of automatically by the 
+// newCTerm functions,  but sometimes this has to be done by special versions
+// of oz_cons, oz_mklist etc.  
+// When adding/modifying parse rules,  be sure that sub-parses have any 
+// outer paren node removed (with function unwrap).
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,7 +111,9 @@ static void xyerror(char *);
 // Atom definitions
 //-----------------
 
-OZ_Term _PA_AtomTab[110];
+#define PA_MAX_ATOM 111
+
+OZ_Term _PA_AtomTab[PA_MAX_ATOM+1];
 
 #define PA_allowdeprecated			_PA_AtomTab[0]
 #define PA_coord				_PA_AtomTab[1]
@@ -210,6 +225,8 @@ OZ_Term _PA_AtomTab[110];
 #define PA_fMacro				_PA_AtomTab[107]
 #define PA_fDotAssign				_PA_AtomTab[108]
 #define PA_fFOR					_PA_AtomTab[109]
+#define PA_fColonEquals				_PA_AtomTab[110]
+#define PA_parens				_PA_AtomTab[111]
 
 const char * _PA_CharTab[] = {
 	"allowdeprecated",			//0
@@ -322,10 +339,12 @@ const char * _PA_CharTab[] = {
 	"fMacro",				//107
 	"fDotAssign",				//108
 	"fFOR",					//109
+	"fColonEquals",				//110
+	"parentheses",				//111
 };
 
 void parser_init(void) {
-   for (int i = 110; i--; )
+   for (int i = PA_MAX_ATOM+1; i--; )
      _PA_AtomTab[i] = oz_atomNoDup(_PA_CharTab[i]);
 }
 
@@ -352,73 +371,87 @@ static OZ_Term decls[DEPTH];
 // Operations on Terms
 //---------------------
 
+
+inline 
+OZ_Term unwrap(OZ_Term t) {
+  // sub-terms aren't always SRecords, e.g. when creating
+  // a long position from two sub positions.
+  OZ_Term ret;
+  if (oz_isSRecord(t) && oz_eq(OZ_label(t), PA_parens)) {
+     ret = OZ_getArg(t, 0);
+     return ret;
+  } 
+  else
+    return t;
+}
+
 inline
 OZ_Term newCTerm(OZ_Term l, OZ_Term t1) {
   SRecord * t = SRecord::newSRecord(l, 1);
-  t->setArg(0, t1);
+  t->setArg(0, unwrap(t1));
   return makeTaggedSRecord(t);
 }
 
 inline
 OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2) {
   SRecord * t = SRecord::newSRecord(l, 2);
-  t->setArg(0, t1);
-  t->setArg(1, t2);
+  t->setArg(0, unwrap(t1));
+  t->setArg(1, unwrap(t2));
   return makeTaggedSRecord(t);
 }
 
 inline
 OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3) {
   SRecord * t = SRecord::newSRecord(l, 3);
-  t->setArg(0, t1);
-  t->setArg(1, t2);
-  t->setArg(2, t3);
+  t->setArg(0, unwrap(t1));
+  t->setArg(1, unwrap(t2));
+  t->setArg(2, unwrap(t3));
   return makeTaggedSRecord(t);
 }
 
 inline
 OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4) {
   SRecord * t = SRecord::newSRecord(l, 4);
-  t->setArg(0, t1);
-  t->setArg(1, t2);
-  t->setArg(2, t3);
-  t->setArg(3, t4);
+  t->setArg(0, unwrap(t1));
+  t->setArg(1, unwrap(t2));
+  t->setArg(2, unwrap(t3));
+  t->setArg(3, unwrap(t4));
   return makeTaggedSRecord(t);
 }
 
 inline
 OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5) {
   SRecord * t = SRecord::newSRecord(l, 5);
-  t->setArg(0, t1);
-  t->setArg(1, t2);
-  t->setArg(2, t3);
-  t->setArg(3, t4);
-  t->setArg(4, t5);
+  t->setArg(0, unwrap(t1));
+  t->setArg(1, unwrap(t2));
+  t->setArg(2, unwrap(t3));
+  t->setArg(3, unwrap(t4));
+  t->setArg(4, unwrap(t5));
   return makeTaggedSRecord(t);
 }
 
 inline
 OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5, OZ_Term t6) {
   SRecord * t = SRecord::newSRecord(l, 6);
-  t->setArg(0, t1);
-  t->setArg(1, t2);
-  t->setArg(2, t3);
-  t->setArg(3, t4);
-  t->setArg(4, t5);
-  t->setArg(5, t6);
+  t->setArg(0, unwrap(t1));
+  t->setArg(1, unwrap(t2));
+  t->setArg(2, unwrap(t3));
+  t->setArg(3, unwrap(t4));
+  t->setArg(4, unwrap(t5));
+  t->setArg(5, unwrap(t6));
   return makeTaggedSRecord(t);
 }
 
 inline
 OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5, OZ_Term t6, OZ_Term t7) {
   SRecord * t = SRecord::newSRecord(l, 7);
-  t->setArg(0, t1);
-  t->setArg(1, t2);
-  t->setArg(2, t3);
-  t->setArg(3, t4);
-  t->setArg(4, t5);
-  t->setArg(5, t6);
-  t->setArg(6, t7);
+  t->setArg(0, unwrap(t1));
+  t->setArg(1, unwrap(t2));
+  t->setArg(2, unwrap(t3));
+  t->setArg(3, unwrap(t4));
+  t->setArg(4, unwrap(t5));
+  t->setArg(5, unwrap(t6));
+  t->setArg(6, unwrap(t7));
   return makeTaggedSRecord(t);
 }
 
@@ -453,6 +486,22 @@ OZ_Term makeVar(char *printName) {
   return makeVar(OZ_atom(printName),pos());
 }
 
+inline
+TaggedRef oz_consUnwrap(TaggedRef head, TaggedRef tail)
+{
+  return oz_cons(unwrap(head),unwrap(tail));
+}
+
+inline
+TaggedRef oz_mklistUnwrap(TaggedRef l1) {
+  return oz_mklist(unwrap(l1));
+}
+
+inline
+TaggedRef oz_mklistUnwrap(TaggedRef l1,TaggedRef l2) {
+  return oz_mklist(unwrap(l1), unwrap(l2));
+}
+
 inline 
 OZ_Term makeCons(OZ_Term first, OZ_Term second, OZ_Term pos) {
   SRecord * t1 = SRecord::newSRecord(PA_fRecord, 2);
@@ -462,7 +511,7 @@ OZ_Term makeCons(OZ_Term first, OZ_Term second, OZ_Term pos) {
   t2->setArg(1, pos);
   
   t1->setArg(0, makeTaggedSRecord(t2));
-  t1->setArg(1, oz_mklist(first,second));
+  t1->setArg(1, oz_mklist(unwrap(first),unwrap(second)));
 
   return makeTaggedSRecord(t1);
 }
@@ -499,7 +548,20 @@ OZ_Term makeString(const char * chars, OZ_Term pos) {
   return s;
 }
 
+inline
+TaggedRef oz_headUnwrap(TaggedRef l) {
+  return oz_head(unwrap(l));
+}
 
+inline
+TaggedRef oz_tailUnwrap(TaggedRef l) {
+  return oz_tail(unwrap(l));
+}
+
+inline
+TaggedRef oz_pair2Unwrap(TaggedRef l1,TaggedRef l2) {
+  return oz_pair2(unwrap(l1), unwrap(l2));
+}
 //------
 // Gump
 //------
@@ -541,7 +603,8 @@ void xy_setParserExpect() {
 %nonassoc T_ITER
 %right    '='
 %right    T_OOASSIGN
-%nonassoc T_DOTASSIGN
+%right    T_DOTASSIGN
+%right    T_COLONEQUALS
 %right    T_orelse
 %right    T_andthen
 %nonassoc T_COMPARE T_FDCOMPARE T_LMACRO T_RMACRO
@@ -691,26 +754,26 @@ file		: queries T_ENDOFFILE
 		;
 
 queries		: sequence queries1
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| prodClauseList queries1
-		  { $$ = oz_cons(newCTerm(PA_fSynTopLevelProductionTemplates,
+		  { $$ = oz_consUnwrap(newCTerm(PA_fSynTopLevelProductionTemplates,
 					   $1),$2); }
 		| queries1
 		  { $$ = $1; }
 		| thisCoord functorDescriptorList queries1
-		  { $$ = oz_cons(newCTerm(PA_fFunctor,newCTerm(PA_fDollar,$1),
+		  { $$ = oz_consUnwrap(newCTerm(PA_fFunctor,newCTerm(PA_fDollar,$1),
 					   $2,$1),$3); }
 		;
 
 queries1	: directive queries
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| T_declare coord sequence T_in thisCoord queries1
-		  { $$ = oz_cons(newCTerm(PA_fDeclare,$3,newCTerm(PA_fSkip,$5),
+		  { $$ = oz_consUnwrap(newCTerm(PA_fDeclare,$3,newCTerm(PA_fSkip,$5),
 					   $2),$6); }
 		| T_declare coord sequence T_in sequence queries1
-		  { $$ = oz_cons(newCTerm(PA_fDeclare,$3,$5,$2),$6); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fDeclare,$3,$5,$2),$6); }
 		| T_declare coord sequence thisCoord queries1
-		  { $$ = oz_cons(newCTerm(PA_fDeclare,$3,
+		  { $$ = oz_consUnwrap(newCTerm(PA_fDeclare,$3,
 					   newCTerm(PA_fSkip,$4),$2),$5); }
 		| /* empty */
 		  { $$ = AtomNil; }
@@ -729,7 +792,7 @@ directive	: T_SWITCH switchList
 switchList	: /* empty */
 		  { $$ = AtomNil; }
 		| switch switchList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 switch		: '+' T_SWITCHNAME
@@ -756,8 +819,14 @@ sequence	: phrase
 
 phrase		: phrase '=' coord phrase
 		  { $$ = newCTerm(PA_fEq,$1,$4,$3); }
-		| phrase T_DOTASSIGN coord phrase
-		  { $$ = newCTerm(PA_fDotAssign,$1,$4,$3); }
+		| phrase T_COLONEQUALS coord phrase
+		  { if (oz_isSRecord($1) && 
+                        oz_eq(OZ_label($1), PA_fOpApply) && 
+                        oz_eq(OZ_getArg($1,0), AtomDot)) {
+                       $$ = newCTerm(PA_fDotAssign,$1,$4,$3);
+			}
+                    else
+                       $$ = newCTerm(PA_fColonEquals,$1,$4,$3); }
 		| phrase T_OOASSIGN coord phrase
 		  { $$ = newCTerm(PA_fAssign,$1,$4,$3); }
 		| phrase T_orelse coord phrase
@@ -766,7 +835,7 @@ phrase		: phrase '=' coord phrase
 		  { $$ = newCTerm(PA_fAndThen,$1,$4,$3); }
 		| phrase compare coord phrase %prec T_COMPARE
 		  { $$ = newCTerm(PA_fOpApply,$2,
-				  oz_mklist($1,$4),$3); }
+				  oz_mklistUnwrap($1,$4),$3); }
 		| phrase fdCompare coord phrase %prec T_FDIN
 		  { $$ = newCTerm(PA_fFdCompare,$2,$1,$4,$3); }
 		| phrase fdIn coord phrase %prec T_FDIN
@@ -778,45 +847,45 @@ phrase		: phrase '=' coord phrase
 		| phrase2 '#' coord hashes
 		  { $$ = newCTerm(PA_fRecord,
 				  newCTerm(PA_fAtom,AtomPair,$3),
-				  oz_cons($1,$4)); }
+				  oz_consUnwrap($1,$4)); }
 		;
 
 hashes		: phrase2
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| phrase2 '#' hashes
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 phrase2		: phrase2 add coord phrase2 %prec T_ADD
 		  { $$ = newCTerm(PA_fOpApply,$2,
-				  oz_mklist($1,$4),$3); }
+				  oz_mklistUnwrap($1,$4),$3); }
 		| phrase2 fdMul coord phrase2 %prec T_FDMUL
 		  { $$ = newCTerm(PA_fOpApply,$2,
-				  oz_mklist($1,$4),$3); }
+				  oz_mklistUnwrap($1,$4),$3); }
 		| phrase2 otherMul coord phrase2 %prec T_OTHERMUL
 		  { $$ = newCTerm(PA_fOpApply,$2,
-				  oz_mklist($1,$4),$3); }
+				  oz_mklistUnwrap($1,$4),$3); }
 		| phrase2 ',' coord phrase2
 		  { $$ = newCTerm(PA_fObjApply,$1,$4,$3); }
 		| '~' coord phrase2 %prec '~'
 		  { $$ = newCTerm(PA_fOpApply,AtomTilde,
-				  oz_mklist($3),$2); }
+				  oz_mklistUnwrap($3),$2); }
 		| phrase2 '.' coord phrase2
 		  { $$ = newCTerm(PA_fOpApply,AtomDot,
-				  oz_mklist($1,$4),$3); }
+				  oz_mklistUnwrap($1,$4),$3); }
 		| phrase2 T_DOTINT
 		  { $$ = newCTerm(PA_fOpApply,AtomDot,
-				  oz_mklist($1,makeInt(xytext,pos())),pos()); }
+				  oz_mklistUnwrap($1,makeInt(xytext,pos())),pos()); }
 		| phrase2 '^' coord phrase2
 		  { $$ = newCTerm(PA_fOpApply,AtomHat,
-				  oz_mklist($1,$4),$3); }
+				  oz_mklistUnwrap($1,$4),$3); }
 		| '@' coord phrase2
 		  { $$ = newCTerm(PA_fAt,$3,$2); }
 		| T_DEREFF coord phrase2
 		  { $$ = newCTerm(PA_fOpApply,AtomDExcl,
-				  oz_mklist($3),$2); }
+				  oz_mklistUnwrap($3),$2); }
 		| '(' inSequence ')'
-		  { $$ = $2; }
+		  { $$ = newCTerm(PA_parens,$2); }
 		| atom
 		  { $$ = $1; }
 		| variable
@@ -844,7 +913,7 @@ phrase2		: phrase2 add coord phrase2 %prec T_ADD
 		| '[' coord phrase fixedListArgs ']' coord
 		  { $$ = newCTerm(PA_fRecord,newCTerm(PA_fAtom,AtomCons,
 						     makeLongPos($2,$6)),
-				  oz_mklist($3,$4)); }
+				  oz_mklistUnwrap($3,$4)); }
 		| '{' coord phrase phraseList '}' coord
 		  { $$ = newCTerm(PA_fApply,$3,$4,makeLongPos($2,$6)); }
 		| T_proc coord procFlags '{' phrase phraseList '}'
@@ -904,7 +973,7 @@ phrase2		: phrase2 add coord phrase2 %prec T_ADD
 FOR_decls	: /* empty */
 		  { $$ = AtomNil; }
 		| FOR_decl FOR_decls
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 FOR_decl	: atom ':' phrase
@@ -920,9 +989,11 @@ FOR_gen		: phrase
 		| phrase T_2DOTS phrase FOR_genOptInt
 		  { $$ = newCTerm(oz_atom("forGeneratorInt"),$1,$3,$4); }
 		| phrase ';' FOR_genOptC
-		  { $$ = newCTerm(oz_atom("forGeneratorC"),$1,oz_head($3),oz_tail($3)); }
+		  { $$ = newCTerm(oz_atom("forGeneratorC"),$1,oz_headUnwrap($3),
+                                                              oz_tailUnwrap($3)); }
 		| '(' phrase ';' FOR_genOptC ')'
-		  { $$ = newCTerm(oz_atom("forGeneratorC"),$2,oz_head($4),oz_tail($4)); }
+		  { $$ = newCTerm(oz_atom("forGeneratorC"),$2,oz_headUnwrap($4),
+                                                              oz_tailUnwrap($4)); }
 		;
 
 FOR_genOptInt	: /* empty */
@@ -932,7 +1003,7 @@ FOR_genOptInt	: /* empty */
 		;
 
 FOR_genOptC	: phrase FOR_genOptC2
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 FOR_genOptC2	: /* empty */
@@ -952,13 +1023,13 @@ iterator	: nakedVariable T_in coord phrase T_2DOTS phrase optIteratorStep coord
 		  {
 		    $$ = newCTerm(PA_fMacro,
 				  oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
-					  $1,
+					  unwrap($1),
 					  newCTerm(PA_fAtom,oz_atom("from"),NameUnit),
-					  $4,
+					  unwrap($4),
 					  newCTerm(PA_fAtom,oz_atom("to"),NameUnit),
-					  $6,
+					  unwrap($6),
 					  newCTerm(PA_fAtom,oz_atom("by"),NameUnit),
-					  ($7 == 0)?makeInt("1",NameUnit):$7,
+					  (unwrap($7) == 0)?makeInt("1",NameUnit):unwrap($7),
 					  0),
 				  makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$8));
 		  }
@@ -969,9 +1040,9 @@ iterator	: nakedVariable T_in coord phrase T_2DOTS phrase optIteratorStep coord
 		    if ($5 == 0) {
 		      $$ = newCTerm(PA_fMacro,
 				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
-					    $1,
+					    unwrap($1),
 					    newCTerm(PA_fAtom,oz_atom("in"),NameUnit),
-					    $4,
+					    unwrap($4),
 					    0),
 				    makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$6));
 		    } else {
@@ -979,7 +1050,7 @@ iterator	: nakedVariable T_in coord phrase T_2DOTS phrase optIteratorStep coord
 				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
 					    newCTerm(PA_fEq,$1,$4,NameUnit),
 					    newCTerm(PA_fAtom,oz_atom("next"),NameUnit),
-					    $5,
+					    unwrap($5),
 					    0),
 				    makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$6));
 		    }
@@ -994,7 +1065,7 @@ optIteratorStep	: { $$ = 0; }
 procFlags	: /* empty */
 		  { $$ = AtomNil; }
 		| atom procFlags
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 optFunctorDescriptorList
@@ -1006,29 +1077,29 @@ optFunctorDescriptorList
 
 functorDescriptorList
 		: T_require coord importDecls optFunctorDescriptorList
-		  { $$ = oz_cons(newCTerm(PA_fRequire,$3,$2),$4); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fRequire,$3,$2),$4); }
 		| T_prepare coord sequence T_in sequence optFunctorDescriptorList
-		  { $$ = oz_cons(newCTerm(PA_fPrepare,$3,$5,$2),$6); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fPrepare,$3,$5,$2),$6); }
 		| T_prepare coord sequence optFunctorDescriptorList
-		  { $$ = oz_cons(newCTerm(PA_fPrepare,$3,
+		  { $$ = oz_consUnwrap(newCTerm(PA_fPrepare,$3,
 					   newCTerm(PA_fSkip,$2),$2),$4); }
 		| T_import coord importDecls optFunctorDescriptorList
-		  { $$ = oz_cons(newCTerm(PA_fImport,$3,$2),$4); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fImport,$3,$2),$4); }
 		| T_export coord exportDecls optFunctorDescriptorList
-		  { $$ = oz_cons(newCTerm(PA_fExport,$3,$2),$4); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fExport,$3,$2),$4); }
 		| T_define coord sequence T_in sequence optFunctorDescriptorList
-		  { $$ = oz_cons(newCTerm(PA_fDefine,$3,$5,$2),$6); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fDefine,$3,$5,$2),$6); }
 		| T_define coord sequence optFunctorDescriptorList
-		  { $$ = oz_cons(newCTerm(PA_fDefine,$3,
+		  { $$ = oz_consUnwrap(newCTerm(PA_fDefine,$3,
 					   newCTerm(PA_fSkip,$2),$2),$4); }
 		;
 
 importDecls	: /* empty */
 		  { $$ = AtomNil; }
 		| nakedVariable optImportAt importDecls
-		  { $$ = oz_cons(newCTerm(PA_fImportItem,$1,AtomNil,$2),$3); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fImportItem,$1,AtomNil,$2),$3); }
 		| variableLabel '(' featureList ')' optImportAt importDecls
-		  { $$ = oz_cons(newCTerm(PA_fImportItem,$1,$3,$5),$6); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fImportItem,$1,$3,$5),$6); }
 		;
 
 variableLabel	: T_VARIABLE_LABEL coord
@@ -1036,13 +1107,13 @@ variableLabel	: T_VARIABLE_LABEL coord
 		;
 
 featureList	: featureNoVar
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| featureNoVar ':' nakedVariable
-		  { $$ = oz_mklist(oz_pair2($3,$1)); }
+		  { $$ = oz_mklistUnwrap(oz_pair2Unwrap($3,$1)); }
 		| featureNoVar featureList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| featureNoVar ':' nakedVariable featureList
-		  { $$ = oz_cons(oz_pair2($3,$1),$4); }
+		  { $$ = oz_consUnwrap(oz_pair2Unwrap($3,$1),$4); }
 		;
 
 optImportAt	: /* empty */
@@ -1054,9 +1125,9 @@ optImportAt	: /* empty */
 exportDecls	: /* empty */
 		  { $$ = AtomNil; }
 		| nakedVariable exportDecls
-		  { $$ = oz_cons(newCTerm(PA_fExportItem,$1),$2); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fExportItem,$1),$2); }
 		| featureNoVar ':' nakedVariable exportDecls
-		  { $$ = oz_cons(newCTerm(PA_fExportItem,
+		  { $$ = oz_consUnwrap(newCTerm(PA_fExportItem,
 					   newCTerm(PA_fColon,$1,$3)),$4); }
 		;
 
@@ -1093,7 +1164,7 @@ inSequence	: sequence T_in coord sequence
 phraseList	: /* empty */
 		  { $$ = AtomNil; }
 		| phrase phraseList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 fixedListArgs	: thisCoord
@@ -1101,7 +1172,7 @@ fixedListArgs	: thisCoord
 		| thisCoord phrase fixedListArgs
 		  { $$ = newCTerm(PA_fRecord,
 				  newCTerm(PA_fAtom,AtomCons,$1),
-				  oz_mklist($2,$3)); }
+				  oz_mklistUnwrap($2,$3)); }
 		;
 
 optCatch	: /* empty */
@@ -1145,9 +1216,9 @@ recordVarLabel	: T_VARIABLE_LABEL
 recordArguments	: /* empty */
 		  { $$ = AtomNil; }
 		| phrase recordArguments
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| feature ':' phrase recordArguments
-		  { $$ = oz_cons(newCTerm(PA_fColon,$1,$3),$4); }
+		  { $$ = oz_consUnwrap(newCTerm(PA_fColon,$1,$3),$4); }
 		;
 
 optDots		: /* empty */
@@ -1209,17 +1280,17 @@ caseRest	: T_elseif ifMain
 		;
 
 elseOfList	: caseClause
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| caseClause T_CHOICE elseOfList
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		| caseClause T_elseof elseOfList
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 caseClauseList	: caseClause
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| caseClause T_CHOICE caseClauseList
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 caseClause	: sideCondition T_then inSequence
@@ -1244,7 +1315,7 @@ pattern		: pattern '=' coord pattern
 		| phrase2 '#' coord hashes
 		  { $$ = newCTerm(PA_fRecord,
 				  newCTerm(PA_fAtom,AtomPair,$3),
-				  oz_cons($1,$4)); }
+				  oz_consUnwrap($1,$4)); }
 		;
 
 class		: T_class coord phraseOpt classDescriptorList methList
@@ -1262,27 +1333,27 @@ classDescriptorList
 		: /* empty */
 		  { $$ = AtomNil; }
 		|  classDescriptor classDescriptorList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 classDescriptor	: T_from coord phrase phraseList
-		  { $$ = newCTerm(PA_fFrom,oz_cons($3,$4),$2); }
+		  { $$ = newCTerm(PA_fFrom,oz_consUnwrap($3,$4),$2); }
 		| T_attr coord attrFeat attrFeatList
-		  { $$ = newCTerm(PA_fAttr,oz_cons($3,$4),$2); }
+		  { $$ = newCTerm(PA_fAttr,oz_consUnwrap($3,$4),$2); }
 		| T_feat coord attrFeat attrFeatList
-		  { $$ = newCTerm(PA_fFeat,oz_cons($3,$4),$2); }
+		  { $$ = newCTerm(PA_fFeat,oz_consUnwrap($3,$4),$2); }
 		| T_prop coord phrase phraseList
-		  { $$ = newCTerm(PA_fProp,oz_cons($3,$4),$2); }
+		  { $$ = newCTerm(PA_fProp,oz_consUnwrap($3,$4),$2); }
 		;
 
 attrFeatList	: /* empty */
 		  { $$ = AtomNil; }
 	        | attrFeat attrFeatList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 attrFeat	: attrFeatFeature ':' phrase
-		  { $$ = oz_pair2($1,$3); }
+		  { $$ = oz_pair2Unwrap($1,$3); }
 		| attrFeatFeature
 		  { $$ = $1; }
 		;
@@ -1304,7 +1375,7 @@ attrFeatFeature	: atom
 methList	: /* empty */
 		  { $$ = AtomNil; }
 		| meth methList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 meth		: T_meth coord methHead inSequence T_end
@@ -1348,7 +1419,7 @@ methHeadLabel	: T_ATOM_LABEL
 		;
 
 methFormals	: methFormal methFormals
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| /* empty */
 		  { $$ = AtomNil; }
 		;
@@ -1385,9 +1456,9 @@ condElse	: T_else inSequence
 		;
 
 condClauseList	: condClause
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| condClause T_CHOICE condClauseList
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 condClause	: sequence T_then coord inSequence
@@ -1397,9 +1468,9 @@ condClause	: sequence T_then coord inSequence
 		;
 
 orClauseList	: orClause T_CHOICE orClause
-		  { $$ = oz_mklist($1,$3); }
+		  { $$ = oz_mklistUnwrap($1,$3); }
 		| orClause T_CHOICE orClauseList
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 orClause	: sequence thisCoord
@@ -1416,9 +1487,9 @@ orClause	: sequence thisCoord
 		;
 
 choiceClauseList: inSequence
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| inSequence T_CHOICE choiceClauseList
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 atom		: T_OZATOM
@@ -1472,17 +1543,17 @@ scannerSpecification
 		;
 
 scannerRules	: lexAbbrev
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| lexRule
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| modeClause
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| lexAbbrev scannerRules
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| lexRule scannerRules
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| modeClause scannerRules
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 lexAbbrev	: T_lex atom '=' regex T_end
@@ -1508,7 +1579,7 @@ modeClause	: T_mode nakedVariable modeDescrs T_end
 modeDescrs	: /* empty */
 		  { $$ = AtomNil; }
 		| modeDescr modeDescrs
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 modeDescr	: T_from modeFromList
@@ -1530,13 +1601,13 @@ parserSpecification
 		;
 
 parserRules	: synClause
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| prodClause
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| synClause parserRules
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| prodClause parserRules
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 tokenClause	: /* empty */
@@ -1546,27 +1617,27 @@ tokenClause	: /* empty */
 		;
 
 tokenList	: tokenDecl
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| tokenDecl tokenList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 tokenDecl	: atom
 		  { $$ = $1; }
 		| atom ':' phrase
-		  { $$ = oz_pair2($1,$3); }
+		  { $$ = oz_pair2Unwrap($1,$3); }
 		;
 
 modeFromList	: nakedVariable
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| nakedVariable modeFromList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 prodClauseList	: prodClause
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| prodClause prodClauseList
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 prodClause	: T_prod nakedVariable '='
@@ -1582,9 +1653,9 @@ prodClause	: T_prod nakedVariable '='
 		;
 
 prodHeadRest	: prodNameAtom nakedVariable optTerminatorOp
-		  { $$ = oz_mklist($2); }
+		  { $$ = oz_mklistUnwrap($2); }
 		| nakedVariable terminatorOp
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| prodName prodKey
 		  { $$ = $2; }
 		;
@@ -1606,9 +1677,9 @@ prodKey		: '(' { *prodKey[depth]++ = '('; depth++; }
 		;
 
 prodParams	: prodParam
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| prodParam separatorOp prodParams
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 prodParam	: nakedVariable { $$ = $1; }
@@ -1629,7 +1700,7 @@ terminatorOp	: T_ADD { *prodKey[depth]++ = xytext[0]; }
 
 prodMakeKey	: /* empty */
 		  { *prodKey[depth] = '\0';
-		    $$ = oz_pair2(prodName[depth],OZ_string(prodKeyBuffer[depth]));
+		    $$ = oz_pair2Unwrap(prodName[depth],OZ_string(prodKeyBuffer[depth]));
 		    prodName[depth] = PA_none;
 		    prodKey[depth] = prodKeyBuffer[depth];
 		  }
@@ -1642,9 +1713,9 @@ localRules	: /* empty */
 		;
 
 localRulesSub	: synClause
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| synClause localRulesSub
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 synClause	: T_syn atom synAlt T_end
@@ -1658,7 +1729,7 @@ synClause	: T_syn atom synAlt T_end
 synParams	: /* empty */
 		  { $$ = AtomNil; }
 		| synParam synParams
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 synParam	: nakedVariable
@@ -1674,15 +1745,15 @@ synAlt		: synSeqs
 		;
 
 synSeqs		: synSeq
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| synSeq T_CHOICE synSeqs
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 synSeq		: thisCoord nonEmptySeq
 		  { OZ_Term t = $2;
 		    while (terms[depth]) {
-		      t = oz_cons(newCTerm(PA_fSynApplication, terms[depth]->term, AtomNil), t);
+		      t = oz_consUnwrap(newCTerm(PA_fSynApplication, terms[depth]->term, AtomNil), t);
 		      TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		    }
 		    $$ = newCTerm(PA_fSynSequence, decls[depth], t, $1);
@@ -1695,14 +1766,14 @@ synSeq		: thisCoord nonEmptySeq
 optSynAction	: /* empty */
 		  { $$ = AtomNil; }
 		| T_REDUCE inSequence
-		  { $$ = oz_mklist(newCTerm(PA_fSynAction,$2)); }
+		  { $$ = oz_mklistUnwrap(newCTerm(PA_fSynAction,$2)); }
 		;
 
 nonEmptySeq	: synVariable nonEmptySeq
 		  { $$ = $2; }
 		| synVariable terminatorOp coord synPrims prodMakeKey
-		  { $$ = oz_cons(newCTerm(PA_fSynTemplateInstantiation, $5,
-					   oz_cons(newCTerm(PA_fSynApplication,
+		  { $$ = oz_consUnwrap(newCTerm(PA_fSynTemplateInstantiation, $5,
+					   oz_consUnwrap(newCTerm(PA_fSynApplication,
 							     terms[depth]->term,
 							     AtomNil),
 						    AtomNil),
@@ -1711,19 +1782,19 @@ nonEmptySeq	: synVariable nonEmptySeq
 		    TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		  }
 		| synVariable '=' synPrimNoAssign synPrims
-		  { $$ = oz_cons(newCTerm(PA_fSynAssignment, terms[depth]->term, $3),
+		  { $$ = oz_consUnwrap(newCTerm(PA_fSynAssignment, terms[depth]->term, $3),
 				  $4);
 		    TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		  }
 		| T_in synPrims
 		  { while (terms[depth]) {
-		      decls[depth] = oz_cons(terms[depth]->term, decls[depth]);
+		      decls[depth] = oz_consUnwrap(terms[depth]->term, decls[depth]);
 		      TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		    }
 		    $$ = $2;
 		  }
 		| synPrimNoVar synPrims
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		| optSynAction
 		  { $$ = $1; }
 		;
@@ -1735,7 +1806,7 @@ synVariable	: nakedVariable
 synPrims	: optSynAction
 		  { $$ = $1; }
 		| synPrim synPrims
-		  { $$ = oz_cons($1,$2); }
+		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
 synPrim		: variable '=' synPrimNoAssign
@@ -1748,7 +1819,7 @@ synPrimNoAssign	: nakedVariable
 		  { $$ = newCTerm(PA_fSynApplication,$1,AtomNil); }
 		| nakedVariable terminatorOp coord prodMakeKey
 		  { $$ = newCTerm(PA_fSynTemplateInstantiation,$4,
-				  oz_cons(newCTerm(PA_fSynApplication,$1,
+				  oz_consUnwrap(newCTerm(PA_fSynApplication,$1,
 						    AtomNil),
 					   AtomNil),$3);
 		  }
@@ -1768,11 +1839,11 @@ synPrimNoVarNoAssign
 		  { $$ = $1; }
 		| prodNameAtom coord synInstTerm optTerminatorOp prodMakeKey
 		  { $$ = newCTerm(PA_fSynTemplateInstantiation,$5,
-				  oz_mklist($3),$2);
+				  oz_mklistUnwrap($3),$2);
 		  }
 		| synInstTerm terminatorOp coord prodMakeKey
 		  { $$ = newCTerm(PA_fSynTemplateInstantiation,$4,
-				  oz_mklist($1),$3);
+				  oz_mklistUnwrap($1),$3);
 		  }
 		| prodName coord '(' { *prodKey[depth]++ = '('; depth++; }
 		  synProdCallParams ')' { depth--; }
@@ -1802,9 +1873,9 @@ synLabel	: T_ATOM_LABEL
 
 synProdCallParams
 		: synAlt
-		  { $$ = oz_mklist($1); }
+		  { $$ = oz_mklistUnwrap($1); }
 		| synAlt separatorOp synProdCallParams
-		  { $$ = oz_cons($1,$3); }
+		  { $$ = oz_consUnwrap($1,$3); }
 		;
 
 %%
@@ -1892,7 +1963,7 @@ static OZ_Term parse() {
       TermNode *tmp = terms[i]; terms[i] = terms[i]->next; delete tmp;
     }
 
-  return OZ_pair2(yyoutput, xy_errorMessages);
+  return OZ_pair2(unwrap(yyoutput), xy_errorMessages);
 }
 
 OZ_BI_define(parser_parseFile, 2, 1)

@@ -84,17 +84,18 @@ typedef union {
 #define	T_ITER	336
 #define	T_OOASSIGN	337
 #define	T_DOTASSIGN	338
-#define	T_orelse	339
-#define	T_andthen	340
-#define	T_COMPARE	341
-#define	T_FDCOMPARE	342
-#define	T_LMACRO	343
-#define	T_RMACRO	344
-#define	T_FDIN	345
-#define	T_ADD	346
-#define	T_FDMUL	347
-#define	T_OTHERMUL	348
-#define	T_DEREFF	349
+#define	T_COLONEQUALS	339
+#define	T_orelse	340
+#define	T_andthen	341
+#define	T_COMPARE	342
+#define	T_FDCOMPARE	343
+#define	T_LMACRO	344
+#define	T_RMACRO	345
+#define	T_FDIN	346
+#define	T_ADD	347
+#define	T_FDMUL	348
+#define	T_OTHERMUL	349
+#define	T_DEREFF	350
 
 
 extern YYSTYPE xylval;
