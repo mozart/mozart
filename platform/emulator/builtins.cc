@@ -3185,6 +3185,18 @@ OZ_BI_define(BIexchangeCell,3,0)
   return ret2;
 } OZ_BI_end
 
+
+OZ_BI_define(BIexchangeCellFun,2,1)
+{			
+  oz_declareNonvarIN(0,cell);
+  if (!oz_isCell(cell)) { oz_typeError(0,"Cell"); }
+  oz_declareIN(1,newVal);
+  OZ_Term old;
+  int ret = exchangeCell(cell,newVal,old);
+  if (ret != PROCEED) return ret;
+  OZ_RETURN(old);
+} OZ_BI_end
+
 /********************************************************************
  * Arrays
  ******************************************************************** */
