@@ -196,7 +196,6 @@ BITMAPS1 = \
 	panel.xbm zig-zag.xbm lines-lr.xbm lines-rl.xbm \
 	grid-25.xbm grid-50.xbm \
 	browserMIcon.xbm browserIcon.xbm stop.xbm \
-	explorer.xbm \
 	debugger.xbm
 BITMAPS = $(BITMAPS1:%=$(BITMAPDIR)/%) \
 
