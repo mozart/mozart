@@ -70,4 +70,4 @@ depend: $(FDLIBSRCS) $(SCHEDLIBSRCS)
 realclean::
 	$(RM) *.a *.so
 
-include $(FDDIR)/../Makefile.rules
+include ../Makefile.rules
