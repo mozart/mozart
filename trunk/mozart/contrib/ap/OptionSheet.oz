@@ -2,6 +2,7 @@ functor
 import
    Application(postProcess exit)
    CB(checkBox:CheckBox) at 'x-oz://contrib/tk/CheckBox.ozf'
+   SF(scrollFrame:ScrollFrame) at 'x-oz://contrib/tk/ScrollFrame.ozf'
    Tk TkTools
 export
    GetGuiCmdArgs
@@ -49,6 +50,19 @@ fun {ProcessOptionSpec Spec}
 	     help        : Help)
    end
 end
+
+ArgumentSpec =
+argument(option		 : NONE
+	 text		 : 'Argument'
+	 type		 : string
+	 default	 : nil
+	 optional	 : true
+	 aliases	 : nil
+	 clonable	 : true
+	 collecting	 : false
+	 editorClass	 : StringOptionEditor
+	 help		 : unit
+	)
 
 %% -------------------------------------------------------------------
 %% There is one OptionManager for each option understood by the
@@ -277,14 +291,23 @@ class OptionRow
       Clonable = self.manager.spec.clonable
    in
       {New OptionHelp
-       init('option: --'#self.manager.spec.option#'\n'#
-	    'type  : '#{self.editor userHelpNotify($)}#
-	    if Clonable then
-	       '\n\nMultiple occurrences of this option are allowed\n'#
-	       'select the option by clicking Mouse-1 on its name\n'#
-	       'then choose \`Clone\' from the menu or press Control-o'
-	    else nil end #
-	    if Help==unit then nil else '\n\n'#Help end)
+       if self.manager.spec.option==NONE then
+	  init(
+	     'This stands for an ordinary argument rather than an option\n'#
+	     'type: '#{self.editor userHelpNotify($)}#
+	     '\n\nMultiple occurrences are allowed\n'#
+	     'select this row by clicking Mouse-1 on the Argument label\n'#
+	     'then choose \`Clone\' from the menu or press Control-o')
+       else
+	  init('option: --'#self.manager.spec.option#'\n'#
+	       'type  : '#{self.editor userHelpNotify($)}#
+	       if Clonable then
+		  '\n\nMultiple occurrences of this option are allowed\n'#
+		  'select the option by clicking Mouse-1 on its name\n'#
+		  'then choose \`Clone\' from the menu or press Control-o'
+	       else nil end #
+	       if Help==unit then nil else '\n\n'#Help end)
+       end
        _}
    end
 end
@@ -682,41 +705,6 @@ class OptionHelp from Tk.toplevel
    end
 end
 
-class ScrollFrame from Tk.frame
-   feat inner vscroll canvas
-   meth init(parent:P)
-      Tk.frame,tkInit(parent:P)
-      self.vscroll = {New Tk.scrollbar tkInit(parent:self orient:v)}
-      self.canvas  = {New Tk.canvas    tkInit(parent:self)}
-      self.inner   = {New Tk.frame     tkInit(parent:self.canvas)}
-      {Tk.addYScrollbar self.canvas self.vscroll}
-      {self.canvas tk(create window 0 0 window:self.inner)}
-      {self.inner tkBind(event:'<Map>' append:true action:self#FixBoth)}
-      {self.canvas tkBind(event:'<Map>' append:true action:self#FixBoth)}
-      {self tkBind(event:'<Map>' append:true action:self#FixBoth)}
-      {self.inner tkBind(event:'<Configure>' append:true
-			 action:self#FixScrollRegion)}
-      {Tk.batch
-       [ grid(columnconfigure self 0 weight:1)
-	 grid(rowconfigure    self 0 weight:1)
-	 grid(self.canvas  row:0 column:0 sticky:nswe)
-	 grid(self.vscroll row:0 column:1 sticky:nsw) ]}
-   end
-   meth FixScrollRegion
-      [A B C D] = {self.canvas tkReturnListInt(bbox all $)}
-   in
-      {self.canvas tk(configure scrollregion:q(A B C D))}
-   end
-   meth FixView
-      {self.canvas tk(xview moveto 0)}
-      {self.canvas tk(yview moveto 0)}
-   end
-   meth FixBoth
-      ScrollFrame,FixScrollRegion
-      ScrollFrame,FixView
-   end
-end
-
 class OptionGlobalHelp from OptionHelp
    meth init
       HELP =
@@ -760,8 +748,8 @@ class OptionSheet from Tk.toplevel
 			 action:self#userCloneNotify)
       Tk.toplevel,tkBind(event:'<Control-g>' append:true
 			 action:self#userDeleteNotify)
-      self.sframe= {New ScrollFrame init(parent:self)}%
-      self.frame = self.sframe.inner
+      self.sframe= {New ScrollFrame tkInit(parent:self)}%
+      self.frame = self.sframe.frame
       self.msg   = {New Tk.label tkInit(parent:self relief:groove)}
       self.bar   = {TkTools.menubar self self
 		    [menubutton(text:'Menu' feature:ed
@@ -783,10 +771,12 @@ class OptionSheet from Tk.toplevel
       {self.bar.ed.menu tk(configure tearoff:false)}
       {Tk.send grid(columnconfigure self.frame 2 weight:1 minsize:150)}
       self.list =
-      {Map {Filter {Map {Filter {Record.toListInd Specs}
-			 fun {$ I#_} {IsInt I} end}
-		    fun {$ _#Spec} {ProcessOptionSpec Spec} end}
-	    fun {$ S} S\=unit end}
+      {Map
+       ArgumentSpec|
+       {Filter {Map {Filter {Record.toListInd Specs}
+		     fun {$ I#_} {IsInt I} end}
+		fun {$ _#Spec} {ProcessOptionSpec Spec} end}
+	fun {$ S} S\=unit end}
        fun {$ Spec}
 	  {New OptionManager init(frame:self.frame
 				  sheet:self
@@ -804,10 +794,7 @@ class OptionSheet from Tk.toplevel
       {Tk.batch
        [ grid(rowconfigure self 2 weight:1)
 	 grid(columnconfigure self 0 weight:1)
-	 %grid(self.butframe row:0 column:0 sticky:nwe)
 	 grid(self.bar row:0 column:0 sticky:nwe)
-	 %pack(self.accept side:left)
-	 %pack(self.help self.abort side:right)
 	 grid(self.msg row:1 column:0 sticky:nwe)
 	 grid(self.sframe row:2 column:0 sticky:nswe)
        ]}
@@ -815,15 +802,16 @@ class OptionSheet from Tk.toplevel
    meth get($)
       {Application.postProcess
        {FoldR {Map @rows fun {$ R} {R get($)} end}
-	fun {$ V L}
-	   case V
-	   of _#_       then V|L
-	   [] alias(L2) then {Append L2 L}
-	   [] omit      then L
-	   [] bad(K)    then
-	      raise system(ap(illegalOptionValue K)) end
-	   end
-	end nil} self.specs}
+	   fun {$ V L}
+	      case V
+	      of K#X       then if K==NONE then X else V end|L
+	      [] alias(L2) then {Append L2 L}
+	      [] omit      then L
+	      [] bad(K)    then
+		 raise system(ap(illegalOptionValue K)) end
+	      end
+	   end nil}
+       self.specs}
    end
    meth userSelectNotify(R)
       if @selected\=unit andthen @selected\=R then
