@@ -192,6 +192,6 @@ failure:
   return P.fail();
 }
 
-OZ_PropagatorProfile IncludePropagator::profile = "fsp_include";
-OZ_PropagatorProfile ExcludePropagator::profile = "fsp_exclude";
-OZ_PropagatorProfile FSetCardPropagator::profile = "fsp_card";
+OZ_PropagatorProfile IncludePropagator::profile;
+OZ_PropagatorProfile ExcludePropagator::profile;
+OZ_PropagatorProfile FSetCardPropagator::profile;

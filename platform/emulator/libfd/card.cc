@@ -523,8 +523,8 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_PropagatorProfile LinEqBPropagator::profile = "fdp_sumCR";
-OZ_PropagatorProfile LinNotEqBPropagator::profile = "fdp_sumCR";
-OZ_PropagatorProfile LinLessEqBPropagator::profile = "fdp_sumCR";
-OZ_PropagatorProfile InBPropagator::profile = "fdp_intR";
-OZ_PropagatorProfile CardBPropagator::profile = "fdp_card";
+OZ_PropagatorProfile LinEqBPropagator::profile;
+OZ_PropagatorProfile LinNotEqBPropagator::profile;
+OZ_PropagatorProfile LinLessEqBPropagator::profile;
+OZ_PropagatorProfile InBPropagator::profile;
+OZ_PropagatorProfile CardBPropagator::profile;

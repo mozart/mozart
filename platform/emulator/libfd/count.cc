@@ -465,7 +465,7 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_PropagatorProfile ExactlyPropagator::profile = "fdp_exactly";
-OZ_PropagatorProfile AtLeastPropagator::profile = "fdp_atLeast";
-OZ_PropagatorProfile AtMostPropagator::profile = "fdp_atMost";
-OZ_PropagatorProfile ElementPropagator::profile = "fdp_element"; 
+OZ_PropagatorProfile ExactlyPropagator::profile;
+OZ_PropagatorProfile AtLeastPropagator::profile;
+OZ_PropagatorProfile AtMostPropagator::profile;
+OZ_PropagatorProfile ElementPropagator::profile;

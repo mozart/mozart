@@ -123,6 +123,7 @@ public:
 //=============================================================================
 
 class isumEqProp : public iLinEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -131,6 +132,7 @@ public:
 };
 
 class isumNEqProp : public iLinNEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -139,6 +141,7 @@ public:
 };
 
 class isumLeqProp : public iLinLessEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -147,6 +150,7 @@ public:
 };
 
 class isumLtProp : public iLinLessEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -155,6 +159,7 @@ public:
 };
 
 class isumGeqProp : public iLinLessEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -163,6 +168,7 @@ public:
 };
 
 class isumGtProp : public iLinLessEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -173,6 +179,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class isumcEqProp : public iLinEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -181,6 +188,7 @@ public:
 };
 
 class isumcNEqProp : public iLinNEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -190,6 +198,7 @@ public:
 
 
 class isumcLeqProp : public iLinLessEqProp {
+  friend INIT_FUNC(fdp_init);
 public:
   isumcLeqProp(OZ_Term a, OZ_Term x, OZ_Term d) : iLinLessEqProp(a, x, d) {}
 private:
@@ -198,6 +207,7 @@ private:
 };
 
 class isumcLtProp : public iLinLessEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -207,6 +217,7 @@ public:
 };
 
 class isumcGeqProp : public iLinLessEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -216,6 +227,7 @@ public:
 };
 
 class isumcGtProp : public iLinLessEqProp {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

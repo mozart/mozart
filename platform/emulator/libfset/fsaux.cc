@@ -28,18 +28,6 @@
 
 #include "fsaux.hh"
 
-OZ_BI_define(fsp_init, 0,1)
-{
-#ifdef OZ_DEBUG
-  oz_fsetdebugprint("*** DEBUG-FSETLIB ***");
-#elif OZ_PROFILE
-  oz_fsetdebugprint("*** PROFILE-FSETLIB ***");
-#endif
-  //  cout << "fsetlib " << __DATE__ << ' ' << __TIME__ << endl << flush;
-  OZ_RETURN_ATOM(__DATE__ " (" __TIME__ ")");
-} OZ_BI_end
-
-
 extern FILE *cpi_fileout;
 
 void oz_fsetdebugprint(char *format, ...)

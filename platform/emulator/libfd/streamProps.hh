@@ -28,6 +28,7 @@
 
 //-----------------------------------------------------------------------------
 class DisjunctivePropagatorStream : public OZ_Propagator {
+  friend INIT_FUNC(sched_init);
 private:
   // The finite domains
   OZ_Term * reg_fds;
@@ -52,6 +53,7 @@ public:
 
 //-----------------------------------------------------------------------------
 class DistinctPropagatorStream : public OZ_Propagator {
+  friend INIT_FUNC(fdp_init);
 private:
   // The finite domains
   OZ_Term * reg_fds;

@@ -40,6 +40,17 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#ifdef OZ_DEBUG
+  int edgecount;
+  int nodecount;
+  int dlinkcount;
+  int dlinktotal;
+  int listcount;
+  int listtotal;
+#endif
+
+CpiHeapClass memory;
+
 //-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(fdp_distinctD, 1) {
@@ -53,8 +64,8 @@ OZ_C_proc_begin(fdp_distinctD, 1) {
 }
 OZ_C_proc_end
 
-OZ_PropagatorProfile CompleteAllDistProp::profile = "fdp_distinctD";
-int CompleteAllDistProp::init_memory_management = 1;
+OZ_PropagatorProfile CompleteAllDistProp::profile;
+int CompleteAllDistProp::init_memory_management;
 
 //=============================================================================
 

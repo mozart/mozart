@@ -31,6 +31,7 @@
 #include "auxcomp.hh"
 
 class LinEqAbsPropagator : public Propagator_VI_VD_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -44,6 +45,7 @@ public:
 };
 
 class LinLessEqAbsPropagator : public Propagator_VI_VD_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -57,6 +59,7 @@ public:
 };
 
 class LinGreaterEqAbsPropagator : public Propagator_VI_VD_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -70,6 +73,7 @@ public:
 };
 
 class LinNotEqAbsPropagator : public Propagator_VI_VD_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

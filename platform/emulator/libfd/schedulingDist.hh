@@ -24,15 +24,17 @@
  *
  */
 
-#ifndef __SCHED_HH__
-#define __SCHED_HH__
+#ifndef __SCHEDULING_DIST_HH__
+#define __SCHEDULING_DIST_HH__
 
 #include "std.hh"
 
 //////////
 // Task Intervals
 //////////
+
 class TaskIntervalsProof : public OZ_Propagator {
+  friend INIT_FUNC(sched_init);
 private:
 
   // The finite domains
@@ -75,47 +77,6 @@ public:
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
-//////////
-// FIrsts and Lasts
-//////////
-class FirstsLasts : public OZ_Propagator {
-private:
-
-  // The finite domains
-  OZ_Term * reg_fds;
-  // overall number of tasks
-  int reg_fds_size;
-
-  // The durations
-  int ** reg_durs;  // reg_durs_size equals reg_fds_size
-
-  // Number of tasks in each resource
-  int * reg_nb_tasks;
-  // Number of resources
-  //  int reg_nb_resources;
-  int reg_nb_tasks_size;
-
-  // Maximal number of tasks on a resource
-  int reg_max_nb_tasks;
-
-  // To store the already ordered pairs
-  int * reg_ordered;
-
-
-  OZ_Term stream;
-
-  static OZ_PropagatorProfile profile;
-public:
-  FirstsLasts(OZ_Term, OZ_Term, OZ_Term, OZ_Term, int);
-  virtual size_t sizeOf(void) { return sizeof(FirstsLasts); }
-  virtual void updateHeapRefs(OZ_Boolean);
-  virtual OZ_Return propagate(void); 
-  virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
-  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
-};
-
-
-
-#endif // __SCHED_HH__
+#endif // __SCHEDULING_DIST_HH__
 
 

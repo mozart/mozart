@@ -30,6 +30,7 @@
 #include "fsstd.hh" 
 
 class IsInPropagator : public Propagator_S_I_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
