@@ -76,6 +76,8 @@ define
    ServerList = {NewCell nil}
    PickledPort = {Connection.offerUnlimited ServerPort}
 
+   SelectSite
+   
    class ClientClass
       feat
 	 site
@@ -160,8 +162,16 @@ define
 	       MGUI = {GUI.remoteSiteWin Site proc{$} {self close(Site)} end}
 	       SD = {New SiteInfo.sitesDict init(Colour.list MGUI)}
 	       ST = {New SiteInfo.sites init(SD)}
+	       Action1 = proc{$ M}
+			    S = {SD getSite(M $)}
+			 in 
+			    {SelectSite M}
+			    {Browser.browse trafic(sent:{S getTotSent($)}
+						   received:{S getTotReceived($)})}
+			 end
 	    in
 	       {ST setGui(MGUI)}
+	       {MGUI.ssites setAction(Action1)}
 	       {Client setup(gui:MGUI sd:SD st:ST)}
 	       {Client setState(start(1000))}
 	       try
@@ -201,6 +211,8 @@ define
       end
       
    end
+
+   
    proc {Start} O N 
       proc{GCLineDraw}
 	 {Finalize.everyGC proc{$}
@@ -229,6 +241,27 @@ define
 	 ClientControler
 	 SelectedSite = {NewCell none}
       in
+	 SelectSite = proc{$ Key}
+			 O in
+			 %% Deselect the selected and select S
+			 %% If S was selected deselct S
+			 {Exchange SelectedSite O Key}
+			 if O \= Key then 
+			    {{SD getSite(Key $)} select}
+			    {GUI.ssites select( key:Key)}
+			    %% Select the site at all remote wins
+			    {ClientControler selectSite(key:Key)}
+			 else
+			    {Assign SelectedSite none}
+			 end
+			 if O \= none then 
+			    {{SD getSite(O $)}deselect}
+			    {GUI.ssites deselect(key:O )}
+			    %% Deselect the site at all remote wins
+			    {ClientControler deselectSite(key:O)}
+			 end
+		      end
+	 
 	 {GUI.open RunSync}
 	 
 	 N = true
@@ -242,26 +275,15 @@ define
 	 {ST setGui(GUI)}
 	 {OT setGui(GUI.osites GUI.oactive GUI.onumber)}
 	 {BT setGui(GUI.bsites GUI.bactive GUI.bnumber)}
+
+
+
 	 {GUI.ssites setAction(proc{$ M} O S =  {SD getSite(M $)}in
 				  {ClientControler open(site(ip:S.info.ip port:S.info.port pid:S.info.pid))}
 				  {Browser.browse S.info#trafic(sent:{S getTotSent($)}
 								received:{S getTotReceived($)})}
-
-				  %% Deselect the selected and select S
-				  %% If S was selected deselct S
-				  {Exchange SelectedSite O S}
-				  if O \= S then 
-				     {S select}
-				     {GUI.ssites select( key:S.key)}
-				     {ClientControler selectSite(key:S.key)}
-				  else
-				     {Assign SelectedSite none}
-				  end
-				  if O \= none then 
-				     {O deselect}
-				     {GUI.ssites deselect(key:O.key )}
-				     {ClientControler deselectSite(key:O.key)}
-				  end
+				  {SelectSite M}
+				  
 			       end)}
 	 {GCLineDraw}
 	 ClientControler = {New ClientCntrler init(SD)}
