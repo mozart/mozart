@@ -471,17 +471,17 @@ void marshalTerm(OZ_Term t, MsgBuffer *bs)
 
 loop:
 
-  bs->visit(t);
-
   DEREF(t,tPtr,tTag);
   switch(tTag) {
 
   case SMALLINT:
+    bs->visit(t);
     marshalDIF(bs,DIF_SMALLINT);
     marshalNumber(smallIntValue(t),bs);
     break;
 
   case OZFLOAT:
+    bs->visit(t);
     marshalDIF(bs,DIF_FLOAT);
     marshalFloat(tagged2Float(t)->getValue(),bs);
     break;
@@ -490,6 +490,8 @@ loop:
     {
       Literal *lit = tagged2Literal(t);
       if (checkCycle(*lit->getCycleRef(),bs,tTag)) goto exit;
+
+      bs->visit(t);
 
       MarshalTag litTag;
       GName *gname = NULL;
@@ -519,6 +521,7 @@ loop:
       depth++; Comment((bs,"("));
       LTuple *l = tagged2LTuple(t);
       if (checkCycle(l,bs)) goto exit;
+      bs->visit(t);
       marshalDIF(bs,DIF_LIST);
       trailCycle(l,bs);
 
@@ -534,6 +537,7 @@ loop:
       depth++; Comment((bs,"("));
       SRecord *rec = tagged2SRecord(t);
       if (checkCycle(*rec->getCycleAddr(),bs,tTag)) goto exit;
+      bs->visit(t);
       TaggedRef label = rec->getLabel();
 
       if (rec->isTuple()) {
@@ -560,6 +564,7 @@ loop:
     {
       // hack alert using vtable to trail cycle
       if (!checkCycle(*((TaggedRef*)oz_tagged2Extension(t)),bs,tTag)) {
+	bs->visit(t);
 	marshalDIF(bs,DIF_EXTENSION);
 	marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
 	if (!oz_tagged2Extension(t)->marshalV(bs)) {
@@ -571,6 +576,7 @@ loop:
   case OZCONST:
     {
       if (!checkCycle(*(tagged2Const(t)->getCycleRef()),bs,tTag)) {
+	bs->visit(t);
 	Comment((bs,"("));
 	marshalConst(tagged2Const(t),bs);
 	Comment((bs,")"));
@@ -582,6 +588,8 @@ loop:
     {
       CheckD0Compatibility;
 
+      bs->visit(t);
+
       OZ_FSetValue * fsetval = tagged2FSetValue(t);
       marshalDIF(bs,DIF_FSETVALUE);
       // tail recursion optimization
@@ -592,6 +600,7 @@ loop:
   case UVAR:
     // FUT
   case CVAR:
+    bs->visit(makeTaggedRef(tPtr));
     if (marshalVariable(tPtr, bs))
       break;
     t=makeTaggedRef(tPtr);
