@@ -241,10 +241,10 @@ OZ_Boolean OZ_FSetVar::tell(void)
       // ... upper bounds
       if (known_not_in < setPtr->getKnownNotIn())
 	tagged2GenFSetVar(var)->propagate(fs_prop_lub);
-      /*
+      // ... cardinality
       if (card_size > setPtr->getCardSize())
 	tagged2GenFSetVar(var)->propagate(fs_prop_val);
-      */
+      //
       if (isState(glob_e)) {
 	constrainGlobalVar(varPtr, set);
       }
