@@ -84,7 +84,7 @@ OZ_Boolean isPosSmallSetInt(OZ_Term v);
 
 #define EXPECT_BLOCK(O, P, F, C)					\
 {									\
-  OZ_expect_t r = O.F(OZ_getCArg(P));					\
+  OZ_expect_t r = O.F(OZ_in(P));					\
   if (O.isFailing(r)) {							\
     TypeError(P, C);							\
   } else if (O.isSuspending(r) || pe.isExceptional(r)) {		\
