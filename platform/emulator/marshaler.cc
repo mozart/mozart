@@ -475,15 +475,17 @@ loop:
   switch(tTag) {
 
   case SMALLINT:
-    bs->visit(t);
-    marshalDIF(bs,DIF_SMALLINT);
-    marshalNumber(smallIntValue(t),bs);
+    if (bs->visit(t)) {
+      marshalDIF(bs,DIF_SMALLINT);
+      marshalNumber(smallIntValue(t),bs);
+    }
     break;
 
   case OZFLOAT:
-    bs->visit(t);
-    marshalDIF(bs,DIF_FLOAT);
-    marshalFloat(tagged2Float(t)->getValue(),bs);
+    if (bs->visit(t)) {
+      marshalDIF(bs,DIF_FLOAT);
+      marshalFloat(tagged2Float(t)->getValue(),bs);
+    }
     break;
 
   case LITERAL:
@@ -491,7 +493,8 @@ loop:
       Literal *lit = tagged2Literal(t);
       if (checkCycle(*lit->getCycleRef(),bs,tTag)) goto exit;
 
-      bs->visit(t);
+      if (!bs->visit(t))
+	break;
 
       MarshalTag litTag;
       GName *gname = NULL;
@@ -521,7 +524,8 @@ loop:
       depth++; Comment((bs,"("));
       LTuple *l = tagged2LTuple(t);
       if (checkCycle(l,bs)) goto exit;
-      bs->visit(t);
+      if (!bs->visit(t))
+	break;
       marshalDIF(bs,DIF_LIST);
       trailCycle(l,bs);
 
@@ -537,7 +541,8 @@ loop:
       depth++; Comment((bs,"("));
       SRecord *rec = tagged2SRecord(t);
       if (checkCycle(*rec->getCycleAddr(),bs,tTag)) goto exit;
-      bs->visit(t);
+      if (!bs->visit(t))
+	break;
       TaggedRef label = rec->getLabel();
 
       if (rec->isTuple()) {
@@ -563,8 +568,8 @@ loop:
   case EXT:
     {
       // hack alert using vtable to trail cycle
-      if (!checkCycle(*((TaggedRef*)oz_tagged2Extension(t)),bs,tTag)) {
-	bs->visit(t);
+      if (!checkCycle(*((TaggedRef*)oz_tagged2Extension(t)),bs,tTag) &&
+	  bs->visit(t)) {
 	marshalDIF(bs,DIF_EXTENSION);
 	marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
 	if (!oz_tagged2Extension(t)->marshalV(bs)) {
@@ -575,8 +580,8 @@ loop:
     }
   case OZCONST:
     {
-      if (!checkCycle(*(tagged2Const(t)->getCycleRef()),bs,tTag)) {
-	bs->visit(t);
+      if (!checkCycle(*(tagged2Const(t)->getCycleRef()),bs,tTag) &&
+	  bs->visit(t)) {
 	Comment((bs,"("));
 	marshalConst(tagged2Const(t),bs);
 	Comment((bs,")"));
@@ -588,7 +593,8 @@ loop:
     {
       CheckD0Compatibility;
 
-      bs->visit(t);
+      if (!bs->visit(t))
+	break;
 
       OZ_FSetValue * fsetval = tagged2FSetValue(t);
       marshalDIF(bs,DIF_FSETVALUE);
@@ -600,8 +606,7 @@ loop:
   case UVAR:
     // FUT
   case CVAR:
-    bs->visit(makeTaggedRef(tPtr));
-    if (marshalVariable(tPtr, bs))
+    if (!bs->visit(makeTaggedRef(tPtr)) || marshalVariable(tPtr, bs))
       break;
     t=makeTaggedRef(tPtr);
     goto bomb;
