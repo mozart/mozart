@@ -381,9 +381,35 @@ proc {Merge Xs Ys Zs}
 end
 >>>
 
-Note, however, that this can be more simply and much more efficiently
-expressed using concurrent stream processing instead of deep guard
-conditionals; see <ptr.extern to="ozdoc:apptut"
-key="subsection.stream.merging"> for details.
+In general binary-stream merge is inefficient, specially when multiple
+of these are used to connect multiple threads to a simple server thread.
+An efficient way to implement a constant-time multi-merge operator is
+defined below by using cells and streams instread. The procedure
+<<{MMerge STs L}>> has to arguments STs may be either nil, a list of streams
+to merged, or of the form <<merge(ST1 ST2)>> where each <<STi>> is again
+of the same form as <<STs>>.
+<<<
+proc {MMerge STs L}
+   C = {NewCell L}
+   proc {MM STs S E}
+      case STs
+      of ST|STr then M in
+	 thread
+	    {ForAll ST proc{$ X} ST1 in {Exchange C X|ST1 ST1} end}
+	    M=S
+	 end
+	 {MM STr M E}
+      [] nil then skip
+      [] merge(STs1 STs2) then M in
+	 thread {MM STs1 S M} end
+	 {MM STs2 M E} 
+      end
+   end
+in
+   thread {MM  STs unit E} end
+   thread if E==unit then L = nil end end
+end
+>>>
+A binary-merge <<{Merge X Y Z}>> is simply <<{MMerge [X Y] Z>>.
 
 </CHAPTER>
