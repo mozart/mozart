@@ -124,10 +124,6 @@ LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
 CACHETYCS       = $(ENVS:%.env=$(CACHEDIR)/%.tyc)
 
-STAGEEXTRAFILES = \
-        $(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc \
-        $(OZLIB)/ozbatch.ozm $(OZLIB)/ozbatch.ozc
-
 SYSLETS = ozbatch ozserver
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
 
@@ -139,7 +135,7 @@ DUMPINTRO = DumpIntro.oz $(STANDARD)
 
 .PHONY: all
 
-all: Makefile $(COMPONENTS) $(SYSLETS)
+all: $(COMPONENTS) $(SYSLETS)
 
 Makefile: Makefile.in ../config.status
         cd .. && ./config.status
@@ -213,7 +209,7 @@ ozbatch.ozm:
         mv -f /tmp/$$$$.ozm $@
 
 ozbatch.ozc: ozbatch.ozm
-        OZMAINIT="" OZMAFILE="-b $(SRCDIR)/ozbatch.ozm" $(SRCDIR)/ozbatch.sh
+        OZMAINIT="" OZMAFILE="-b $<" $(SRCDIR)/ozbatch.sh
 
 ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
         Init.ozc SP.ozc SP.env OP.ozc OP.env AP.ozc AP.env $(TYCS)
@@ -286,6 +282,11 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
 
 install: install-main install-images install-cache
 
+
+STAGEEXTRAFILES = \
+        $(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc \
+        $(OZLIB)/ozbatch.ozm $(OZLIB)/ozbatch.ozc
+
 install-stage: install-main $(STAGEEXTRAFILES)
 
 install-main: all \
@@ -302,13 +303,6 @@ $(CACHECOMPONENTS): $(CACHEDIR)/%.ozc : %.ozc
         $(INSTALL_FILE) $< $@
 $(CACHETYCS): $(CACHEDIR)/%.tyc : tyc/lib/%.tyc
         $(INSTALL_FILE) $< $@
-
-#$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
-#       $(PREFIX)/cache/http/www.ps.uni-sb.de
-#       cd $(PREFIX)/cache/http/www.ps.uni-sb.de && $(LN_S) ../../.. ozhome
-
-#$(PREFIX)/cache/http/www.ps.uni-sb.de:
-#       $(INSTALL_DIR) $(PREFIX)/cache/http/www.ps.uni-sb.de
 
 $(OZLIB) $(IMAGESDIR) $(OZBIN):
         $(INSTALL_DIR) $@
@@ -390,13 +384,18 @@ stage1:
 
 # stage2: recreate the components and Ozma file using the stage1 components
 stage2:
+        mv $(SRCDIR)/ozbatch.ozm ozbatch.ozm.save
+        trap "s=$$?;mv ozbatch.ozm.save $(SRCDIR)/ozbatch.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
         $(MAKE) install-stage PREFIX=$(STAGE2) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
         OZBATCH=$(STAGE1)/bin/ozbatch \
         OZINIT=$(STAGE1)/lib/Init.ozc
 
+
 # stage2b: recreate the components and Ozma file using the stage2 components
 stage2b:
+        mv $(SRCDIR)/ozbatch.ozm ozbatch.ozm.save
+        trap "s=$$?;mv ozbatch.ozm.save $(SRCDIR)/ozbatch.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
         $(MAKE) install-stage PREFIX=$(STAGE2B) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE2)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
         OZBATCH=$(STAGE2)/bin/ozbatch \
