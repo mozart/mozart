@@ -164,7 +164,7 @@ actually read. ?_{LenI} may be less than ?_{SizeAI}. The atom <<all>>
 is also a legal value for ?_{SizeAI}. In this case the entire file is
 read.
 <p>
-The data read binds ?_{ListS} to a list of characters characters. The
+The data read binds ?_{ListS} to a list of characters. The
 tail of the list can be given by ?_{TailX}. The value for ?_{TailX}
 defaults to <<nil>>, which means that in this case the list ?_{ListS} is
 a string.
