@@ -80,12 +80,10 @@ define
                                          Found
                                       in
                                          Line = (Y -5)  div @lineSize
-                                         {System.show Line}
                                          Found = {Filter {Dictionary.items self.entryDict}
                                                           fun{$ E}
                                                              E.line == Line
                                                           end}
-                                         {System.show Found}
                                          case Found of [E] then
                                             {self Action(E.key)}
                                          else skip end
@@ -146,16 +144,12 @@ define
       end
 
       meth deleteSite(Ks)=M
-         {System.show M}
          {ForAll Ks proc{$ K}
                        if {Dictionary.member self.entryDict K} then
                           E = self.entryDict.K in
-                          {System.show member(K)#E}
                           {E.fgtag tk(delete)}
                           {self putEntry(E.line)}
                           {Dictionary.remove self.entryDict K}
-                       else
-                          {System.show notMember(K)}
                        end
                     end}
       end
