@@ -748,6 +748,10 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
   register TaggedRef *termPtr = NULL;		\
   _DEREF(term,termPtr,tag);
 
+#define DEREF0(term, termPtr, tag)		\
+  register TaggedRef *termPtr;			\
+  _DEREF(term,termPtr,tag);
+
 #define DEREFPTR(term, termPtr, tag)		\
   register TaggedRef term = *termPtr;		\
   _DEREF(term,termPtr,tag);
@@ -943,13 +947,21 @@ RefsArray allocateY(int n)
 }
 
 inline
-void deallocateY(RefsArray a)
+void deallocateY(RefsArray a, int sz)
 {
+  Assert(getRefsArraySize(a)==sz);
+  Assert(!isFreedRefsArray(a));
 #ifdef DEBUG_CHECK
   markFreedRefsArray(a);
 #else
-  freeListDispose(a-1,(getRefsArraySize(a)+1) * sizeof(TaggedRef));
+  freeListDispose(a-1,(sz+1) * sizeof(TaggedRef));
 #endif
+}
+
+inline
+void deallocateY(RefsArray a)
+{
+  deallocateY(a,getRefsArraySize(a));
 }
 
 inline
