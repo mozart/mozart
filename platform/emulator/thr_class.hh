@@ -495,7 +495,8 @@ public:
   //  Third - transactions between states;
   //  These methods are specialised because the type of suspended thread
   // is known statically;
-  void suspThreadToRunnable ();
+  void suspThreadToRunnable();
+  void suspThreadToRunnableOPT();
   void wakeupToRunnable ();
   void propagatorToRunnable ();
   void updateSolveBoardPropagatorToRunnable ();

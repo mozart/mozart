@@ -3081,7 +3081,7 @@ LBLdispatcher:
       // only in the board where the actor itself is located;
       Assert(tt->getBoard() == CBB);
 
-      tt->suspThreadToRunnable();
+      tt->suspThreadToRunnableOPT();
 
       e->scheduleThread(tt);
     } else {

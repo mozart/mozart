@@ -66,6 +66,7 @@ public:
   void setCommitted() { flags |= Ac_Committed; }
   void setGround() { flags |= Ac_Ground; }
   void unsetGround() { flags &= ~Ac_Ground; }
+  void unsetChoice() { flags &= ~Ac_Choice; }
 };
 
 // ------------------------------------------------------------------------
@@ -156,6 +157,7 @@ public:
   Bool hasOneChildNoChoice() { return ((childCount == 1 && 
 					!isChoice() && 
 					!hasNext()) ? OK : NO); }
+    
   Bool hasNoChildren() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   int selectOrFailChildren(int l, int r);
 

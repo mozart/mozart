@@ -343,7 +343,7 @@ public:
 				 SuspList * suspList, PropCaller calledBy);
   BFlag isBetween(Board * to, Board * varHome);
   Bool  isBelow(Board *below, Board *above);
-  void incSolveThreads (Board *bb);
+  int incSolveThreads (Board *bb);
   void decSolveThreads (Board *bb);
   DebugCode (Bool isInSolveDebug (Board *bb);)
 

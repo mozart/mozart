@@ -1285,11 +1285,14 @@ void AM::checkIO()
  * and less possibilities to make an assertion.
  *
  */
-void AM::incSolveThreads(Board *bb)
+int AM::incSolveThreads(Board *bb)
 {
+  int found = NO;
   while (!bb->isRoot()) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
+      found = OK;
+
       SolveActor *sa = SolveActor::Cast(bb->getActor());
       //
       Assert (!sa->isCommitted());
@@ -1302,6 +1305,7 @@ void AM::incSolveThreads(Board *bb)
     }
     bb = bb->getParent();
   }
+  return found;
 }
 
 void AM::decSolveThreads(Board *bb)
