@@ -25,26 +25,18 @@
   -
   -->
 
-
-<!--
-  Translated to SGML by:
-     Daniel Simon, dansim@ps.uni-sb.de
-     Andy Walter, anwalt@ps.uni-sb.de
--->
-
 <Chapter id="chapter.files">
   <Title/Files/
   <P>
     This section explains by means of examples how to read data from and
-    write data to a file.  Detailed reference information on files is
-    available in 
+    write data to a file.
 
   <Section id="section.files.basic">
     <Title/Basic Patterns of Use/
     <P>
       The basic idea of how to use files in Mozart is as follows.  We provide
-      a class <<Open.file>>.  Creating an object by inheriting from this class
-      we get a <Def/file object/<Index/file<And>object/.  Conceptually, its
+      a class <<Open.file>>.  To an object created from this class
+      we refer to as <Def/file object/<Index/file<And>object/.  Conceptually, its 
       state consists of a string together with the current position in this
       string called <Def/seek pointer/.
     <P>
@@ -190,7 +182,6 @@ end>>>
 	where <<A>> is an atom describing the category of the error
 	(&eg;, <<os>> or <<net>>), <<I>>&nbsp;is the operating system
 	dependent error number, and <<S>> is a string describing the error.
-	For more information on exceptions see also <Ptr to="Mozart-Base">.
       <P>
 	Besides of operating system exceptions, the methods of the class
 	<<Open.file>> can raise two different exceptions themselves:
@@ -228,7 +219,7 @@ end>>>
 	<Caption/The <<Expand>> procedure./
 <<<local
    fun {Insert N Is}
-      case N>0 then {Insert N-1 & |Is} else Is end
+      if N>0 then {Insert N-1 & |Is} else Is end
    end
    fun {Scan Is Tab N}
       case Is of nil then nil

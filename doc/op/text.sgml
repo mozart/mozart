@@ -26,12 +26,6 @@
   -->
 
 
-<!--
-  Translated to SGML by:
-     Daniel Simon, dansim@ps.uni-sb.de
-     Andy Walter, anwalt@ps.uni-sb.de
--->
-
 <chapter id=chapter.text>
 <title/Input and Output of Text/
 <p>
@@ -58,7 +52,7 @@ provides methods for buffered input and output.
 <<<
 local 
    fun {Insert N Is}
-      case N>0 then {Insert N-1 & |Is} else Is end
+      if N>0 then {Insert N-1 & |Is} else Is end
    end
    fun {ScanLine Is Tab N}
       case Is of nil then nil
@@ -71,8 +65,11 @@ local
       end
    end
    proc {Scan Tab IF OF}
-      case {IF getS($)} of false then {IF close} {OF close}
-      elseof Is then
+      Is={IF getS($)} 
+   in
+      if Is==false then 
+         {IF close} {OF close}
+      else
          {OF putS({ScanLine Is Tab 0})}
          {Scan Tab IF OF}
       end
