@@ -30,6 +30,9 @@
 #include "gentraverser.hh"
 #include "indexing.hh"
 
+#ifndef GY_CACHE_RESET_OFF 
+extern void resetLivenessCaches(void);
+#endif
 
 /*
  * Entry points for code garbage collection
@@ -1073,6 +1076,9 @@ void AM::gCollect(int msgLevel)
   Assert(_inEqEq==FALSE);
   Assert(_rootBoard);
 
+#ifndef GY_CACHE_RESET_OFF
+  resetLivenessCaches();
+#endif
   //
   uFillNode = am.getCurrentOptVar();
   _rootBoard = _rootBoard->gCollectBoard();   // must go first!
