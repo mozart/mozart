@@ -3,7 +3,7 @@
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
 %%% Copyright:
-%%%   Leif Kornstaedt, 1997
+%%%   Leif Kornstaedt, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -26,21 +26,11 @@ fun
    {$ IMPORT}
    \insert 'SP.env'
    = IMPORT.'SP'
-   \insert 'CP.env'
-   = IMPORT.'CP'
-   \insert 'Gump.env'
-   = IMPORT.'Gump'
 in
    local
-      \insert 'compiler/InsertAll.oz'
-
-      GetOPICompiler = {`Builtin` 'getOPICompiler' 1}
-
-      Compiler = compiler(compilerClass: CompilerClass
-			  genericInterface: CompilerInterfaceGeneric
-			  quietInterface: CompilerInterfaceQuiet
-			  getOPICompiler: GetOPICompiler)
+      GumpParser
    in
-      \insert 'Compiler.env'
+      \insert gump/GumpParserClass
+      \insert GumpParser.env
    end
 end

@@ -31,7 +31,7 @@ OZPATH		= .:compiler:ozcar:$(SRCDIR)
 export OZPATH
 OZ_PI		= 1
 export OZ_PI
-OZ_LOAD		= root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZLIB)/:root=$(OZLIB)
+OZ_LOAD		= root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZLIB)/
 export OZ_LOAD
 COMPILE		= $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz -c
 EXEC		= $(OZBATCH) $(OZFLAGS)
@@ -44,7 +44,8 @@ OZLIBDIRS = \
 	$(OZLIB)/Standard $(OZLIB)/Init $(OZLIB)/SP $(OZLIB)/OP \
 	$(OZLIB)/AP $(OZLIB)/CP $(OZLIB)/WP $(OZLIB)/DP \
 	$(OZLIB)/compiler $(OZLIB)/panel $(OZLIB)/browser \
-	$(OZLIB)/explorer $(OZLIB)/ozcar $(OZLIB)/profiler
+	$(OZLIB)/explorer $(OZLIB)/ozcar $(OZLIB)/profiler \
+	$(OZLIB)/gump
 OZCARBITMAPDIR = $(BITMAPDIR)/ozcar
 
 STANDARDSRC1 = \
@@ -129,11 +130,22 @@ PROFILERSRC1 = \
 	prof-dialog.oz prof-menu.oz prof-string.oz
 PROFILERSRC = $(PROFILERSRC1:%=$(SRCDIR)/profiler/%) $(SRCDIR)/Profiler.oz
 
+GUMPSRC1 = Bison.oz Main.oz Output.oz ParserGenerator.oz ScannerGenerator.oz
+GUMPSRC = $(GUMPSRC1:%=$(SRCDIR)/gump/%) $(SRCDIR)/Gump.oz
+
+GUMPSCANNERSRC1 = GumpScannerClass.oz
+GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=$(SRCDIR)/gump/%) $(SRCDIR)/GumpScanner.oz
+
+GUMPPARSERSRC1 = GumpParserClass.oz
+GUMPPARSERSRC = $(GUMPPARSERSRC1:%=$(SRCDIR)/gump/%) $(SRCDIR)/GumpParser.oz
+
 ALLSRCS = \
 	$(STANDARDSRC) $(INITSRC) \
 	$(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
 	$(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
-	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC)
+	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
+	$(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC) \
+	$(SRCDIR)/gump/ProductionTemplates.oz
 
 DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
 DUMPINTRO = $(DUMPINTRO1:%=$(SRCDIR)/%) Base.ozc Standard.ozc
@@ -141,7 +153,8 @@ DUMPINTRO = $(DUMPINTRO1:%=$(SRCDIR)/%) Base.ozc Standard.ozc
 ENVS1 = \
 	SP.env OP.env AP.env CP.env WP.env DP.env \
 	Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
-	Emacs.env Ozcar.env Profiler.env
+	Emacs.env Ozcar.env Profiler.env Gump.env GumpScanner.env \
+	GumpParser.env
 ENVS = $(ENVS1:%=$(SRCDIR)/%) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env
 TYPS = $(ENVS1:%.env=%.typ)
 TYCS = $(TYPS:%.typ=tyc/%.tyc)
@@ -156,7 +169,8 @@ HELPCOMPONENTS = Base.ozc Standard.ozc
 COMPONENTS = \
 	Init.ozc OPI.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
 	Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
-	Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc
+	Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc Gump.ozc \
+	GumpScanner.ozc GumpParser.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 
@@ -179,13 +193,13 @@ OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
 .PHONY: all install clean realclean veryclean tags
 
-all: Makefile $(COMPONENTS) $(TYCS) ozbatch
+all: Makefile $(TYPS) $(TYCS) $(COMPONENTS) ozbatch
 
 ozbatch.ozm: $(SRCDIR)/MakeAssembly.oz \
 	$(STANDARDSRC) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env \
 	$(SPSRC) $(SRCDIR)/SP.env $(CPSRC) $(SRCDIR)/CP.env \
-	$(OPSRC) $(SRCDIR)/OP.env $(COMPILERSRC) $(SRCDIR)/Compiler.env \
-	$(SRCDIR)/BatchCompile.oz
+	$(OPSRC) $(SRCDIR)/OP.env $(GUMPSRC) $(SRCDIR)/Gump.env \
+	$(COMPILERSRC) $(SRCDIR)/Compiler.env $(SRCDIR)/BatchCompile.oz
 	$(OZMA) -o /tmp/$$$$.ozm $(SRCDIR)/MakeAssembly.oz && \
 	/bin/mv -f /tmp/$$$$.ozm $@
 
@@ -278,7 +292,7 @@ DP.ozc: $(DUMPINTRO) $(DPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
 	$(SRCDIR)/AP.env $(SRCDIR)/WP.env $(SRCDIR)/DP.env Init.ozc
 
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
-	$(SRCDIR)/CP.env $(SRCDIR)/Compiler.env Init.ozc
+	$(SRCDIR)/CP.env $(SRCDIR)/Gump.env $(SRCDIR)/Compiler.env Init.ozc
 
 compiler/Version.oz: compiler $(COMPILERSRCNOVER) $(OZVERSION) \
 	$(SRCDIR)/compiler/Opcodes.m4oz
@@ -316,6 +330,15 @@ ozcar/version.oz: ozcar $(OZCARSRCNOVER)
 Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
 	$(SRCDIR)/WP.env $(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env \
 	$(SRCDIR)/Compiler.env $(SRCDIR)/Profiler.env Init.ozc
+
+Gump.ozc: $(DUMPINTRO) $(GUMPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
+	$(SRCDIR)/Gump.env
+
+GumpScanner.ozc: $(DUMPINTRO) $(GUMPSCANNERSRC) $(SRCDIR)/SP.env \
+	$(SRCDIR)/GumpScanner.env
+
+GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) $(SRCDIR)/SP.env \
+	$(SRCDIR)/GumpParser.env
 
 Makefile: $(SRCDIR)/Makefile.in config.status
 	./config.status
