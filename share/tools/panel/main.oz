@@ -11,8 +11,6 @@ local
 
    \insert configure.oz
 
-   \insert number-entry.oz
-   
    \insert discrete-scale.oz
    
    \insert runtime-bar.oz
