@@ -1,5 +1,5 @@
 DESCRIPTION="A GTK canvas for Mozart and Alice"
-SRC_URI="ftp://ftp.mozart-oz.org/pub/mozart/store/1.2.5-2003-02-12/gtk-canvas-0.1-20030212.tar.gz"
+SRC_URI="http://www.mozart-oz.org/download/archive/1.2.5-2003-02-12/gtk-canvas-0.1-20030212.tar.gz"
 HOMEPAGE="http://www.mozart-oz.org/"
 KEYWORDS="x86 ppc sparc hppa"
 DEPEND="
