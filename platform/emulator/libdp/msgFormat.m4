@@ -27,8 +27,8 @@
 // Strings are limited to MAX_DP_STRING
 message(M_PORT_SEND,3,Index,Term)
 
-message(M_ASK_FOR_CREDIT,1,Index,Site)
-message(M_OWNER_CREDIT,1,Index,Credit)
+message(M_ASK_FOR_CREDIT,3,Index,Site)
+message(M_OWNER_CREDIT,3,Index,Credit)
 message(M_OWNER_SEC_CREDIT,3,Site,Index,Credit)
 message(M_BORROW_CREDIT,3,Site,Index,Credit)
 
