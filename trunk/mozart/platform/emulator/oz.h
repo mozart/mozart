@@ -346,8 +346,8 @@ typedef enum {
 
 typedef void * OZ_MetaType;
 
-typedef mur_t (* OZ_UnifyMetaDet) (OZ_Term, OZ_Term, OZ_TermType, OZ_Term *);
-typedef mur_t (* OZ_UnifyMetaMeta) (OZ_Term, OZ_Term, OZ_MetaType, OZ_Term *);
+typedef mur_t (* OZ_UnifyMetaDet) (OZ_Term, OZ_Term, OZ_Term, OZ_TermType, OZ_Term *);
+typedef mur_t (* OZ_UnifyMetaMeta) (OZ_Term, OZ_Term, OZ_Term, OZ_Term, OZ_MetaType, OZ_Term *);
 
 typedef char * (* OZ_PrintMeta) (OZ_Term);
 typedef int (* OZ_IsSingleValue) (OZ_Term);

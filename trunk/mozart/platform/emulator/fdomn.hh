@@ -22,6 +22,17 @@
 #include "bignum.hh"
 
 
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+#define DEBUG_FD_IR(COND, CODE) if (COND) CODE;
+#define AssertFD(C) \
+   if (!(C)) error("FD assertion '%s' failed at %s:%d.", \
+       #C, __FILE__, __LINE__); 
+#else
+#define DEBUG_FD_IR(COND, CODE)
+#define AssertFD(C)
+#endif
+
+
 enum FDPropState {fd_det = 0, fd_bounds, fd_any};
 enum FDState {fd_empty, fd_full, fd_discrete, fd_singleton};
 
@@ -225,6 +236,18 @@ public:
 
   FiniteDomain(void * d = NULL) {FiniteDomainInit(d);}
 
+  int setEmpty(void) {
+    setType(fd_descr, NULL);
+    return size = 0;
+  }
+
+  int setFull(void) {
+    setType(fd_descr, NULL);
+    min_elem = 0;
+    max_elem = fd_iv_max_elem;
+    return size = fd_full_size;
+  }
+
   FiniteDomain(FDState state) {
     switch (state) {
     case fd_empty:
@@ -243,8 +266,6 @@ public:
   const FiniteDomain &operator = (const FiniteDomain &fd);
   void gc(void);
 
-  int setEmpty(void);
-
   int initFull(void);
   int initEmpty(void);
   int initSingleton(int);
@@ -253,7 +274,6 @@ public:
   int init(int, int);
   int init(TaggedRef);
   
-  int setFull(void);
   int setSingleton(int);
   
   int getSize(void) const {return size;}
@@ -323,6 +343,11 @@ public:
 };
 
 
+#if !defined(OUTLINE) && !defined(FDOUTLINE)
+#include "fdomn.icc"
+#endif
+
+
 class LocalFD : public FiniteDomain {
 private:
   char iv_bv_descr[sizeof(FDIntervals)];
@@ -351,19 +376,5 @@ TaggedRef mkTuple(int from, int to){
   OZ_putArg(s, 2, OZ_CToInt(to));
   return s;
 }
-
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-#define DEBUG_FD_IR(COND, CODE) if (COND) CODE;
-#define AssertFD(C) \
-   if (!(C)) error("FD assertion '%s' failed at %s:%d.", \
-       #C, __FILE__, __LINE__); 
-#else
-#define DEBUG_FD_IR(COND, CODE)
-#define AssertFD(C)
-#endif
-
-#if !defined(OUTLINE) && !defined(FDOUTLINE)
-#include "fdomn.icc"
-#endif
 
 #endif
