@@ -19,7 +19,7 @@ functor $
 import
    BrowserSupport(getsBoundB) at 'x-oz://boot/Browser'
    System(eq)
-				  
+  
 export
    storeListener : StoreListener
 
