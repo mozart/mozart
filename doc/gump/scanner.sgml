@@ -385,15 +385,15 @@
     <SubSection id="section.scanner.params">
       <Title/Parameters to Scanner Generation/
       <P>
-        The &Gump; Scanner Generator supports several configuration parameters,
-        which may be set on a per-scanner basis via the use of compiler
-        directives.
+        The &Gump; Scanner Generator supports several configuration
+        parameters, which may be set on a per-scanner basis via the use
+        of macro directives.
       <P>
         Due to the implementation of scanners in&nbsp;C, a unique prefix is
         required for each scanner to avoid symbol conflicts when several
         scanners reside at the same time in the Mozart system.  The following
-        directive allows this prefix to be changed (the default <<zy>> is all
-        right if only a single scanner is used at any time):
+        macro directive allows this prefix to be changed (the default <<zy>>
+        is all right if only a single scanner is used at any time):
         <<<\gumpscannerprefix ?={atom}>>>
       <P>
         <Ptr to="table.scanner.switches"> summarizes some compiler switches
