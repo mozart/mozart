@@ -233,7 +233,7 @@ void CodeArea::printDef(ProgramCounter PC)
 	  toC(file),line,PC);
 }
 
-TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
+TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
 {
   TaggedRef file, comment;
   int line, abspos;

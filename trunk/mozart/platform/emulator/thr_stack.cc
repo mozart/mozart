@@ -55,7 +55,7 @@ loop:
 }
 #endif
 
-Bool TaskStack::findCatch(TaggedRef *out) 
+Bool TaskStack::findCatch(TaggedRef *out, Bool verbose) 
 {
   Assert(this);
 
@@ -82,8 +82,36 @@ Bool TaskStack::findCatch(TaggedRef *out)
       am.setSelf(newSelf);
     }
     if (out) {
+      if (verbose) {
+	if (PC==C_DEBUG_CONT_Ptr) {
+	  OzDebug *ozdeb = (OzDebug *) Y;
+	  *out = cons(OZ_mkTupleC("debug",1,ozdeb->info), *out);
+	  continue;
+	}
+	if (PC==C_CFUNC_CONT_Ptr) {
+	  OZ_CFun biFun    = (OZ_CFun) (void*) Y;
+	  RefsArray X      = (RefsArray) G;
+	  TaggedRef args   = nil();
+	  
+	  if (X)
+	    for (int i=getRefsArraySize(X)-1; i>=0; i--)
+	      args = cons(X[i],args);
+	  else
+	    args = nil();
+	  
+	  TaggedRef pairlist = 
+	    cons(OZ_pairA("name", OZ_atom(builtinTab.getName((void *) biFun))),
+		 cons(OZ_pairA("args", args),
+		      nil()));
+	  TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
+	  *out = cons(entry, *out);
+	  continue;
+	}
+      }
       TaggedRef tt=CodeArea::dbgGetDef(PC);
       if (tt!=nil()) { // NOCODE_GLOBALVARNAME
+	if (verbose)
+	  tt = OZ_adjoinAt(tt,OZ_atom("vars"),CodeArea::varNames(PC,G,Y));
 	*out = cons(tt,*out);
       }
     }
