@@ -56,6 +56,10 @@
 #include "tagged.hh"
 #include "os.hh"
 
+
+
+
+
 // return current usertime in milliseconds
 unsigned int osUserTime()
 {
@@ -226,19 +230,153 @@ extern "C" void __builtin_delete (void *ptr)
 #include <time.h>
 #endif
 
+#ifdef WINDOWS
+
+class StreamReader {
+public:
+  int fd;
+  HANDLE char_avail;
+  HANDLE char_consumed;
+  char chr;
+  BOOL status;  /* true iff input is available */
+  int thrd;     /* reader thread */
+};
+
+static StreamReader *readers;
+
+
+void readerThread(void *arg)
+{
+  StreamReader *sr = (StreamReader *)arg;
+  
+  while(1) {
+    sr->status=NO;
+    ResetEvent(sr->char_avail);
+    int ret = read(sr->fd, &sr->chr, sizeof(char));
+    sr->status = (ret == sizeof(char));
+    if (ret<0) {
+      perror("readerThread: read");
+      break;
+    }
+    printf("readerThread read(%d): %d\n",sr->fd,sr->chr); fflush(stdout);
+    ResetEvent(sr->char_consumed);
+    SetEvent(sr->char_avail);
+        
+    /* Wait until our input is acknowledged before reading again */
+    if (WaitForSingleObject(sr->char_consumed, INFINITE) != WAIT_OBJECT_0)
+      break;
+  }
+  sr->status = NO;
+  sr->thrd = NULL;
+  _endthread();
+}
+
+static BOOL 
+createReader(int fd)
+{
+  StreamReader *sr = &readers[fd];
+  DWORD id;
+  STARTUPINFO start;
+  SECURITY_ATTRIBUTES sec_attrs;
+  SECURITY_DESCRIPTOR sec_desc;
+  
+  sr->char_avail = CreateEvent(NULL, FALSE, FALSE, NULL);
+  if (sr->char_avail == NULL)
+    goto err;
+  
+  sr->char_consumed = CreateEvent(NULL, FALSE, FALSE, NULL);
+  if (sr->char_consumed == NULL)
+    goto err;
+  
+  sr->thrd = _beginthread(readerThread, NULL, 4096, sr);
+  if (sr->thrd == -1) {
+    sr->thrd = NULL;
+    goto err;
+  }
+  
+  return TRUE;
+  
+err:
+  id = GetLastError();
+  CloseHandle(sr->char_consumed);
+  CloseHandle(sr->char_avail);
+  
+  return FALSE;
+}
+
+
+int win32_wait(fd_set *fds)
+{
+  DWORD active;
+  HANDLE wait_hnd[OPEN_MAX];
+  
+  int nh = 0;
+  int i;
+  for (i=0; i< OPEN_MAX; i++) {
+    if (FD_ISSET(i,fds) && readers[i].thrd!=NULL) {
+      wait_hnd[nh++] = readers[i].char_avail;
+    }
+  }
+
+  if (nh == 0) {
+    /* Nothing to wait on, so fail */
+    errno = ECHILD;
+    return -1;
+  }
+  
+  printf("enter wait\n"); fflush(stdout);
+  active = WaitForMultipleObjects(nh, wait_hnd, FALSE, INFINITE);
+  printf("exit wait\n"); fflush(stdout);
+  if (active == WAIT_FAILED) {
+    errno = EBADF;
+    return -1;
+  } 
+  if (active == WAIT_TIMEOUT) {
+    /* Should never happen */
+    errno = EINVAL;
+    return -1;
+  } 
+  if (active >= WAIT_OBJECT_0 &&
+      active < WAIT_OBJECT_0+MAXIMUM_WAIT_OBJECTS) {
+    active -= WAIT_OBJECT_0;
+  } else if (active >= WAIT_ABANDONED_0 &&
+	   active < WAIT_ABANDONED_0+MAXIMUM_WAIT_OBJECTS) {
+    active -= WAIT_ABANDONED_0;
+  }
+  
+  /* search fd */
+  for (i=0; i<OPEN_MAX; i++) {
+    if (wait_hnd[active] == readers[i].char_avail) {
+      printf("win32wait: found descriptor: %d\n",i);
+      return i;
+    }
+  }
+
+  printf("win32wait: NO DESCRIPTOR FOUND\n");
+  return -1;
+}
+
+int readyfd = -1;
+
+#endif
+
+
 /* The prototypes for select are wrong on HP-UX 9.x */
 static int osSelect(int nfds, fd_set *readfds, fd_set *writefds,
 		    fd_set *exceptfds, struct timeval *timeout)
 {
 #ifdef WINDOWS
-  /* force a blocking read on compiler input */
-  if (timeout == NULL) {
-    FD_SET(am.compStream->csfileno(),readfds);
-    return 1;
-  } else {
+  if (timeout != NULL)
     return 0;
-  }
 
+  readyfd = -1;
+  int fd = win32_wait(readfds);
+  if (fd<0)
+    return fd;
+  FD_ZERO(readfds);
+  FD_SET(fd,readfds);
+  readyfd = fd;
+  return 1;    
 #else
 
 #ifdef HPUX_700
@@ -317,8 +455,8 @@ Bool osHasJobControl()
  *       Sockets                                         *
  *********************************************************/
 
-static long openMax;
 static fd_set globalFDs[2];     // mask of active read/write FDs
+static long openMax;
 
 int osOpenMax()
 {
@@ -361,6 +499,15 @@ void osInit()
 
   FD_ZERO(&globalFDs[SEL_READ]);
   FD_ZERO(&globalFDs[SEL_WRITE]);
+
+#ifdef WINDOWS
+  readers = new StreamReader[openMax];
+  for(int i=0; i<=openMax; i++) {
+    readers[i].fd     = i;
+    readers[i].thrd   = NULL;
+    readers[i].status = NO;
+  }
+#endif
 }
 
 #define CheckMode(mode) Assert(mode==SEL_READ || mode==SEL_WRITE)
@@ -370,6 +517,10 @@ void osWatchFD(int fd, int mode)
 {
   CheckMode(mode);
   FD_SET(fd,&globalFDs[mode]); 
+#ifdef WINDOWS
+  Assert(mode==SEL_READ);
+  createReader(fd);
+#endif
 }
 
 void osClrWatchedFD(int fd, int mode)
@@ -417,8 +568,6 @@ void osClearSocketErrors()
   }
 }
 
-
-
 /* returns: 1 if select succeeded on fd
  *          0 did not succeed
  *         -1 on error
@@ -426,6 +575,22 @@ void osClearSocketErrors()
 int osTestSelect(int fd, int mode)
 {
   CheckMode(mode);
+#ifdef WINDOWS
+  /* no select on write */
+  if (mode==SEL_WRITE)
+    return 1;
+
+  /* hopefully a disk file, so input will not block */
+  HANDLE h = (HANDLE)_os_handle(fd);
+  if (GetFileType(h) != FILE_TYPE_PIPE)
+    return 1;
+
+  //  if (readers[fd].thrd==NULL)
+  //  return -1;
+
+  return readers[fd].status;
+
+#else
   while(1) {
     struct timeval timeout;
     timeout.tv_sec = 0;
@@ -445,6 +610,7 @@ int osTestSelect(int fd, int mode)
       return ret;
     }
   }
+#endif
 }
 
 /* -------------------------------------------------------------------------
@@ -456,6 +622,14 @@ static fd_set tmpFDs[2];
 /* signals are blocked */
 int osFirstSelect()
 {
+#ifdef WINDOWS
+  FD_ZERO(&tmpFDs[SEL_READ]);
+  FD_ZERO(&tmpFDs[SEL_WRITE]);
+  if (readyfd == -1)
+    return 0;
+  FD_SET(readyfd,&tmpFDs[SEL_READ]);
+  return 1;
+#else
  loop:
   struct timeval timeout;
   timeout.tv_sec = 0;
@@ -477,6 +651,7 @@ int osFirstSelect()
   }
 
   return numbOfFDs;
+#endif
 }
 
 Bool osNextSelect(int fd, int mode)
@@ -537,9 +712,20 @@ void osKillChildren()
 int osread(int fd, void *buf, unsigned int len)
 {
 #ifdef WINDOWS
-  HANDLE h = (HANDLE)_os_handle(fd);
-  if (GetFileType(h) == FILE_TYPE_PIPE) {
-    ;
+  if (readers[fd].thrd) {
+    if (readers[fd].status==NO) {
+      printf("osread(%d) enter wait\n",fd); fflush(stdout);
+      WaitForSingleObject(readers[fd].char_avail, INFINITE);
+    }
+    *(char*)buf = readers[fd].chr;
+    printf("enter osread(%d)\n",fd); fflush(stdout);
+    int ret = read(fd,((char*)buf)+1,len-1);
+    printf("osread(%d) read %d chars\n",fd,ret); fflush(stdout);
+    if (ret<0)
+      return ret;
+    readers[fd].status=NO;
+    SetEvent(readers[fd].char_consumed);
+    return ret+1;
   }
 #endif
   return read(fd, buf, len);
