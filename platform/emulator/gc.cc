@@ -1076,12 +1076,13 @@ Thread *Thread::gcDeadThread()
   Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (newThread);
 
-  gcTagged(cell,newThread->cell);
-  newThread->setBoardInternal(am.rootBoard);
+  newThread->setBoardInternal(am.rootBoard->gcBoard());
   newThread->state.flags=0;
   newThread->item.threadBody=0;
 
   storeForward (&item.threadBody, newThread);
+
+  gcTagged(cell,newThread->cell);
 
   return (newThread);
 }
