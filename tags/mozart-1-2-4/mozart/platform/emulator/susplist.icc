@@ -1,0 +1,79 @@
+/*
+ *  Authors:
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __SUSPLIST_ICC__
+#define __SUSPLIST_ICC__
+
+
+#ifdef INTERFACE
+#ifndef OUTLINE
+#pragma interface
+#endif
+#endif
+
+//-----------------------------------------------------------------------------
+//                           class SuspList
+
+//-----------------------------------------------------------------------------
+// class OrderedSuspList
+
+inline   
+OrderedSuspList * OrderedSuspList::insert(Propagator * prop)
+{
+#ifdef DEBUG_NONMONOTONIC
+  cout << "OrderedSuspList::insert" << endl << flush;
+#endif
+
+  Assert(prop->isNMO());
+
+  OrderedSuspList * r = this, ** p = &r;
+  OZ_NonMonotonic::order_t n_order = prop->getPropagator()->getOrder();
+  while (*p && (n_order > (*p)->_p->getPropagator()->getOrder()))
+    p = &((*p)->_n);
+
+  *p = new OrderedSuspList(prop, *p);
+
+  return r;
+}
+
+inline
+OrderedSuspList * OrderedSuspList::merge(OrderedSuspList * osl) {
+  
+  if (this) {
+    OrderedSuspList * to = this;
+
+    for (; osl != NULL; osl = osl->getNext())
+      to = to->insert(osl->getPropagator()); 
+
+    return to;
+  } else {
+    return osl;
+  }
+  
+}
+
+#endif
+

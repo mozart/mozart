@@ -1,0 +1,12 @@
+This example shows the radiobutton widget.
+
+Radiobuttons come grouped by set. One and only one radiobutton of all the set can be selected at a time. When the user selects another radiobutton, the previous selected one is deselected.
+
+The example below shows an example of two sets of radiobuttons (1 to 3 and 4 to 5).
+
+- the group parameters define the set in which the radiobutton is. Note that this group parameter is also extended to the radiobutton menu entry and to the tbradiobutton widget so that you can mix them while preserving the property that only one button can be selected at a time.
+- the init parameter specifies whether the radiobutton is selected or not. If several radiobutton with the same group have their init set to true, only the last one will be selected.
+- the return parameter specifies a variable that will be binded when the window is closed. It is binded to true if the radiobutton is selected, else to false.
+- the handle parameter specifies a variable that can be used to control the widget.
+- the action parameter specifies a command that is to be executed just after the user has selected the radiobutton.
+

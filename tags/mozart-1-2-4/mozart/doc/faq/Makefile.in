@@ -1,0 +1,10 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT = faq
+MAIN = faq.sgml
+SGMLSRCS =
+HTMLEXTRAFILES =
+
+include ../Makefile.common

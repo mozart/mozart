@@ -1,0 +1,513 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|fundamental">
+
+<!ENTITY % input.local.2 SYSTEM "panel.extra">
+<!ENTITY % p.mix.local "|menu">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
+    <meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+    <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
+
+    <Meta name="html.split"       value="chapter.usage">
+    <Meta name="html.split"       value="chapter.usage.threads">
+    <Meta name="html.split"       value="chapter.usage.memory">
+    <Meta name="html.split"       value="chapter.usage.problem">
+    <Meta name="html.split"       value="chapter.usage.opi">
+    <Meta name="html.split"       value="chapter.menu">
+    <Meta name="html.split"       value="chapter.object">
+
+    <Meta name="html.split.bib"   value="">
+    <Meta name="html.split.index" value="">
+    <Meta name="html.split.toc"   value="">
+
+    <Meta name="latex.fullwidth" value="table.info.threads">
+    <Meta name="latex.fullwidth" value="table.heap.usage">
+
+    <Meta name="latex.table.spec" arg1="table.info.threads"    arg2="LP{0.44\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.heap.usage"      arg2="LP{0.44\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.problem.solving" arg2="P{0.25\linewidth}P{0.7\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.usage.opi"       arg2="P{0.25\linewidth}P{0.7\linewidth}">
+
+    <Meta name="latex.picture.width" arg1="runtime-load.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="runtime-dist.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="threads-runnable.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="memory-heap.gif" arg2="0.5\linewidth">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Title/Oz Panel/
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Abstract>
+      The Oz Panel is a graphical tool to visualize and control the
+      most important parameters of a running Mozart system.
+    </Abstract>
+  <Body>
+
+<chapter id="chapter.usage">
+  <title/Usage/
+<p>
+This chapter briefly outlines the features of the Oz Panel.
+
+<p>
+<para><title/invoking/
+The Panel is invoked by either feeding the 
+expression
+<<<{Panel.object open}>>>
+or by selecting from the Oz Menu in the Oz Programming Interface the
+<<Panel>> entry. Furthermore, it is possible to invoke the Panel from
+the Oz Programming Interface with the key <KBD/C-C p/.
+
+<p>
+<para><title/monitor/The Panel <def/monitors/ the
+most important system parameters. The Panel can be configured (see
+<Ptr to="chapter.menu.options">) to also allow to
+<para><title/configure/<def/configure/ system parameters. The Panel
+works as a graphical frontend for the procedures 
+<<Property.get>>
+<index/<<Property>><and><<get>>/
+and
+<<Property.put>>
+<index/<<Property>><and><<put>>/ that are described in
+<Ptr.Extern to="ozdoc:system" key="chapter.property">.
+
+<p>
+<para><title/update/The panel periodically updates its display. By
+default, only when the mouse pointer is over the Panel's window updating
+takes place. However, this can be changed (see
+<Ptr to="chapter.menu.options">).
+
+<p>
+The information the panel displays is described in 
+<Ptr to="chapter.usage.threads">,
+<Ptr to="chapter.usage.memory">,
+<Ptr to="chapter.usage.problem">, and
+<Ptr to="chapter.usage.opi">.
+
+<p>
+
+<section id="chapter.usage.threads">
+  <title/Information on Threads/
+
+  <P><table id="table.info.threads">
+    <tr>
+      <th colspan=2>Runtime</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Run</td>
+          <td>Run time.</td>
+        </tr>
+        <tr>
+          <td>Garbage collection</td>
+          <td>Time spent on garbage collection.</td>
+        </tr>
+        <tr>
+          <td>Copy</td>
+          <td>Time spent on copying (that is, on cloning of spaces).</td>
+        </tr>
+        <tr>
+          <td>Propagation</td>
+          <td>Time spent on executing propagators.</td>
+        </tr>
+        <tr>
+          <td>
+            <Picture.Extern id="runtime-load.gif" to="runtime-load.gif" type=gif>
+          </td>
+          <td>Operating system load of the Mozart engine.</td>
+        </tr>
+        <tr>
+          <td>
+            <Picture.Extern id="runtime-dist.gif" to="runtime-dist.gif" type=gif>
+          </td>
+          <td>Relative distribution of entire computation time.</td>
+        </tr>
+    <tr>
+      <th colspan=2>Threads</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Created</td>
+          <td>Total number of threads created.</td>
+        </tr>
+        <tr>
+          <td>Runnable</td>
+          <td>Number of currently runnable threads.</td>
+        </tr>
+        <tr>
+          <td>
+            <Picture.Extern id="threads-runnable.gif" to="threads-runnable.gif" type=gif>
+          </td>
+          <td>Number of currently runnable threads..</td>
+        </tr>
+    <tr>
+      <th colspan=2>Priorities</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>High / Medium</td>
+          <td>        Relation between time slices available for threads of
+        priorities <<high>> and <<medium>>. </td>
+        </tr>
+        <tr>
+          <td>Medium / Low</td>
+          <td>        Relation between time slices available for threads of
+        priorities <<medium>> and <<low>>. </td>
+        </tr>
+  </table>
+
+</section>
+
+  
+<section id="chapter.usage.memory">
+  <title/Information on Memory/
+
+  <P><table id="table.heap.usage">
+    <tr>
+      <th colspan=2>Heap Usage</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Threshold</td>
+          <td>Heap size when next automatic garbage collection takes
+        place. Gets recomputed after every garbage collection.</td>
+        </tr>
+        <tr>
+          <td>Size</td>
+          <td>Current heap size.</td>
+        </tr>
+        <tr>
+          <td>Active Size</td>
+          <td>Heap size after last garbage collection.</td>
+        </tr>
+        <tr>
+          <td>
+            <Picture.Extern id="memory-heap.gif" to="memory-heap.gif" type=gif>
+          </td>
+          <td>Displays the three values from above.</td>
+        </tr>
+    <tr>
+      <th colspan=2>Heap Parameters</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Minimal Size</td>
+          <td>Minimal heap size.</td>
+        </tr>
+        <tr>
+          <td>Free</td>
+          <td>Gives the percentage of free heap memory after garbage
+        collection. For example, a value of $75$ means that 
+        the heap threshold is set to approximately: 
+        <Math class=display>\mbox{Active Size} * 100/(100-75)</Math>
+	that is:
+        <Math class=display>\mbox{Active Size} * 4.</Math></td>
+        </tr>
+        <tr>
+          <td>Tolerance</td>
+          <td>Gives the percentage by which the system is allowed for
+        purposes of better memory allocation to
+          increase the heap 
+          threshold.</td>
+        </tr>
+    <tr>
+      <th colspan=2>Garbage Collector</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Active</td>
+          <td>Whether garbage collection is invoked automatically.</td>
+        </tr>
+  </table>
+
+</section>
+
+  
+<section id="chapter.usage.problem">
+  <title/Information on Problem Solving/
+
+  <P><table id="table.problem.solving">
+    <tr>
+      <th colspan=2>Finite Domain Constraints</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Variables Created</td>
+          <td>Number of finite domain variables created.</td>
+        </tr>
+        <tr>
+          <td>Propagators Created</td>
+          <td>Number of finite domain propagators created.</td>
+        </tr>
+        <tr>
+          <td>Propagators Invoked</td>
+          <td>Number of finite domain propagators invoked.</td>
+        </tr>
+    <tr>
+      <th colspan=2>Spaces</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Created</td>
+          <td>Number of computation spaces created by <<Space.new>>.</td>
+        </tr>
+        <tr>
+          <td>Cloned</td>
+          <td>Number of computation spaces cloned by <<Space.clone>>.</td>
+        </tr>
+        <tr>
+          <td>Committed</td>
+          <td>Number of computation spaces committed by <<Space.commit>>.</td>
+        </tr>
+        <tr>
+          <td>Failed</td>
+          <td>Number of failed computation spaces.</td>
+        </tr>
+        <tr>
+          <td>Succeeded</td>
+          <td>Number of succeeded computation spaces.</td>
+        </tr>
+  </table>
+
+</section>
+
+  
+<section id="chapter.usage.opi">
+  <title/Information on Programming Interface/
+
+  <P><table id="table.usage.opi">
+    <tr>
+      <th colspan=2>Status Messages</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Idle</td>
+          <td>Whether messages are printed when the Mozart engine gets 
+               idle.</td>
+        </tr>
+        <tr>
+          <td>Garbage Collection</td>
+          <td>Whether messages on garbage collection are printed.</td>
+        </tr>
+    <tr>
+      <th colspan=2>Output</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Maximal Depth</td>
+          <td>Maximal depth used for <<System.show>> and <<System.print>> (See also <Ptr.Extern to="ozdoc:system" key="chapter.system">).</td>
+        </tr>
+        <tr>
+          <td>Maximal Width</td>
+          <td>Maximal width used for <<System.show>> and <<System.print>> (See also <Ptr.Extern to="ozdoc:system" key="chapter.system">).</td>
+        </tr>
+    <tr>
+      <th colspan=2>Errors</th>
+    </tr>
+        <tr>
+          <th>Field</th>
+          <th>Explanation</th>
+        </tr>
+        <tr>
+          <td>Show Location</td>
+          <td>Whether error messages contain location information.</td>
+        </tr>
+        <tr>
+          <td>Show Hints</td>
+          <td>Whether error messages contain hints.</td>
+        </tr>
+        <tr>
+          <td>Maximal Depth</td>
+          <td>Maximal depth used for printing values in error messages.</td>
+        </tr>
+        <tr>
+          <td>Maximal Width</td>
+          <td>Maximal width used for printing values in error messages.</td>
+        </tr>
+        <tr>
+          <td>Maximal Tasks</td>
+          <td>Maximal number of tasksk on the thread to be printed.</td>
+        </tr>
+  </table>
+
+</section>
+
+  
+
+</chapter>
+
+
+<chapter id="chapter.menu">
+  <title/The Menu Bar/
+
+<p>
+<section id="chapter.menu.panel">
+<title/The <<Panel>> Menu/
+<p>
+This menu contains operations to clear and close the panel and to stop
+the Oz system.
+<p>
+<list>
+<entry><menu/About.../
+<item>
+Displays a window containing short information on the
+Panel.
+
+<Entry><menu key="C-r"/Reset/
+<Item>Clears all monitoring information of the Panel.
+
+<Entry><menu/Save Parameters&ellipsis;/
+<Item>
+Save the current system parameters settings to a file. Feeding that file
+resets the system parameters to their saved values. 
+
+<Entry><menu/Shutdown System&ellipsis;/
+<Item>
+After confirmation with a dialog the entire Oz system is halted.
+
+<Entry><menu key="C-x"/Close/
+<Item>
+Closes the Panel window.
+</list>
+</section>
+
+
+<section id="chapter.menu.options">
+<title/The <<Options>> Menu/
+<p>
+<list>
+<Entry><menu/Configure/
+<Item>
+Toggles whether the Panel provides for monitoring only, or for both
+monitoring and configuring.
+
+<Entry><menu/Update&ellipsis;/
+<Item>
+Creates a dialog to set options when the Panel updates its display.
+<<Update Time>> gives the time period after which the display is
+updated.
+<<Update Requirement>> allows to toggle whether the display is
+updated, only if the mouse pointer is over the Panel's window.
+
+
+<Entry><menu/History&ellipsis;/
+<Item>
+Creates a dialog to set the history range for the thread and memory 
+graphs.
+</list>
+</chapter>
+
+<chapter id="chapter.object">
+<title/The <<Panel>> Object/
+<p>
+This chapter lists all methods of the <<Panel>> object. New
+Panels can be created by 
+creating new objects from the class <<Panel.'class'>>. Execution of
+<index class=module/Panel/
+<<<MyPanel = {New Panel.'class' init}>>>
+creates a new Panel which can be accessed by the variable
+<<MyPanel>>.
+
+<section>
+<title/Invoking/
+<p>
+<list>
+<entry>open
+<Synopsis>
+<<<{Panel.'object' open}>>>
+<index class=module/<<Panel>><and><<open>>/
+<Item>
+Invokes the Panel.
+</list>
+</section>
+
+<section>
+<title/Options/
+<p>
+<list>
+<entry>option
+<Synopsis>
+<<<{Panel.'object' option(configure ?+{B})>>>
+<index class=module/Panel<and>option/
+<item>
+Toggles whether the panel allows to configure system parameters.
+
+<entry>option
+<Synopsis>
+<<<{Panel.'object' option(update time:  ?+{I}<=_
+                              mouse: ?+{B}<=_)}>>>
+<index class=module/Panel<and>option/
+<item>
+Sets the parameters for updating as described in
+<Ptr to="chapter.menu.options">.
+
+<entry>option
+<Synopsis>
+<<<{Panel.'object' option(history range: ?+{I}<=_)>>>
+<index class=module/Panel<and>option/
+<Item>
+Sets the parameters for the history range as described in
+<Ptr to="chapter.menu.options">.
+</list>
+</section>
+</chapter>
+
+
+
+
+  
+</Book>

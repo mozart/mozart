@@ -1,0 +1,88 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh">
+
+<!-- Include Files -->
+<!ENTITY intro SYSTEM "intro.sgml">
+<!ENTITY directives SYSTEM "directives.sgml">
+<!ENTITY applications SYSTEM "applications.sgml">
+<!ENTITY api SYSTEM "api.sgml">
+<!ENTITY engines SYSTEM "engines.sgml">
+<!ENTITY interfaces SYSTEM "interfaces.sgml">
+<!ENTITY switches SYSTEM "switches.sgml">
+<!ENTITY narrator SYSTEM "narrator.sgml">
+<!ENTITY syntax SYSTEM "syntax.sgml">
+<!ENTITY bytecode SYSTEM "bytecode.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY dot "." -- to distinguish it from periods -->
+
+<!-- Processing Instructions -->
+<!ENTITY slash PI "slash">
+<!ENTITY eg PI "eg">
+<!ENTITY ie PI "ie">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY resp PI "resp">
+<!ENTITY emdash PI "emdash">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.intro">
+    <Meta name="html.split" value="chapter.directives">
+    <Meta name="html.split" value="chapter.applications">
+    <Meta name="html.split" value="chapter.api">
+    <Meta name="html.split" value="appendix.switches">
+    <Meta name="html.split" value="appendix.narrator">
+    <Meta name="html.split" value="appendix.syntax">
+    <Meta name="html.split" value="appendix.bytecode">
+    <Meta name="html.split.bib" value="">
+
+    <meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+    <Title/The Mozart Compiler/
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Abstract>
+      This document describes how to use the Oz Compiler in Mozart.
+      This includes the descriptions of the batch compiler and compiler
+      panel as well as of the application programmer's interface to the
+      compiler.
+    </Abstract>
+  <Body>
+    &intro;
+    &directives;
+    &applications;
+    &api;
+    <!-- Appendices -->
+    &switches;
+    &narrator;
+    &syntax;
+    &bytecode;
+</Book>

@@ -1,0 +1,11 @@
+*~
+Makefile
+compiler-Version.oz
+compiler-Opcodes.oz
+compiler-Builtins.oz
+*.ozf
+ozc ozl
+boot-init boot-ozc
+boot-init.ozt boot-ozc.ozt
+gdkclasses.oz gdkexports.oz
+gnome-canvas-classes.oz gnome-canvas-exports.oz

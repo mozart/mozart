@@ -1,0 +1,97 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+include ../Makefile.vars
+
+BUILDTOP	= @BUILDTOP@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I..
+
+FDLIBSRCS = fdaux.cc pel_fncts.cc pel_engine.cc \
+	    fdinit.cc fdtable.cc \
+	    arith.cc bool.cc \
+	    card.cc count.cc \
+	    rel.cc disjoint.cc std.cc \
+	    sum.cc sumequal.cc \
+	    distance.cc streamProps.cc \
+	    sumd.cc sumabs.cc complalldist.cc diffn.cc \
+	    distribute.cc taskoverlap.cc \
+	    boundsalldist.cc
+
+FDLIBOBJS = $(FDLIBSRCS:.cc=.lo)
+
+SCHEDLIBSRCS = \
+	    scheduling.cc schedulingDist.cc \
+	    schedulingDistAux.cc taskintervals.cc  \
+            schedtable.cc schedinit.cc
+
+SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.lo)
+
+
+all:
+
+# NOTE: $(SRCDIR) added to the dependencies, because in ../Makefile.in the libs
+#       depend also on this dir
+../FDP.so-$(PLATFORM): $(FDLIBOBJS)
+	$(DYNLD) -o $@ $(FDLIBOBJS)
+
+../libFDP.a: $(FDLIBOBJS)
+	$(AR) -rc $@ $(FDLIBOBJS) && $(RANLIB) $@
+
+../Schedule.so-$(PLATFORM): $(SCHEDLIBOBJS)
+	$(DYNLD) -o $@ $(SCHEDLIBOBJS)
+
+../libSchedule.a: $(SCHEDLIBOBJS)
+	$(AR) -rc $@ $(SCHEDLIBOBJS) && $(RANLIB) $@
+
+depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
+	$(DEPEND) $(FDLIBSRCS:%=$(SRCDIR)/%) $(SCHEDLIBSRCS:%=$(SRCDIR)/%) \
+		| sed -e 's/\.o:/\.lo:/g' > Makefile.deps
+
+Makefile: Makefile.in
+	(cd ..;./config.status)
+
+-include Makefile.deps
+include ../Makefile.rules
+
+first:
+
+distclean::
+	-rm -f Makefile makefile
+
+veryclean::
+	-rm -f *.a *.so-$(PLATFORM) TAGS Makefile.deps
+
+cleaner::
+	-rm -f *.a *.so-$(PLATFORM)
+
+BUILDDIR=$(shell pwd)
+tags:	$(CREATEDFILES)
+	etags \
+	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
+	-o $(SRCDIR)/TAGS \
+	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h  
