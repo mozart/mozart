@@ -24,7 +24,7 @@ prepare
    proc {Split Name NameSpacePrefix LocalPart}
       Prefix Suffix
    in
-      {StringToken {AtomToString Name} &: Prefix Suffix}
+      {StringToken Name &: Prefix Suffix}
       if Suffix==nil then
 	 NameSpacePrefix = unit
 	 LocalPart       = {StringToAtom Prefix}

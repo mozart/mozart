@@ -1,4 +1,5 @@
 makefile(
+   bin : ['app.exe']
    lib : ['Tokenizer.ozf'
 	  'Parser.ozf'
 	  'NameSpaces.ozf'
