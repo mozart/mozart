@@ -24,7 +24,7 @@
 
 functor
 require
-   DefaultSettings(pictureUrl:PicturesURL) at 'defaultsettings.ozf'
+%   DefaultSettings(pictureUrl:PicturesURL) at 'defaultsettings.ozf'
    Meths(message:S_message
          addFriends:S_addFriends
          removeFriend:S_removeFriend
@@ -55,6 +55,14 @@ import
 \ifdef SCROLLFRAME
    ScrollFrame
 \endif
+
+   %% Images
+   Logo_gif(image:LogoI)
+   Letter_gif(image:LetterImage) % letter.gif
+   Away_gif(image:AwayImage) % away_t.gif
+   Online_gif(image:OnlineImage) % online_t.gif
+   Offline_gif(image:OfflineImage) % offline_t.gif
+   Eyes_gif(image:UnreadSentMailImage) % eyes_t.gif
 export
    dlgBox:DlgBox
    start:Start
@@ -141,11 +149,13 @@ define
       {Animate}
    end
 
+   /*
    LetterImage
    AwayImage
    OnlineImage
    OfflineImage
    UnreadSentMailImage
+   */
 
    class DDLabel from Tk.label DragAndDrop
       prop locking
@@ -859,7 +869,7 @@ define
    end
 
    proc{Start C S CID M Settings}
-      StatusL LogoL F StatusF LogoI
+      StatusL LogoL F StatusF %LogoI
    in
       GUIisStarted=true
       Client=C
@@ -874,12 +884,13 @@ define
          {Assign UsingBrowser {CondSelect Settings browser false}}
       end
 
+      /*
       LetterImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'letter.gif')}
       AwayImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'away_t.gif')}
       OnlineImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'online_t.gif')}
       OfflineImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'offline_t.gif')}
       UnreadSentMailImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'eyes_t.gif')}
-
+      */
       %% Start Graphics
       T={New Tk.toplevel tkInit(title:"Client" delete:Kill)}
 
@@ -902,7 +913,7 @@ define
       StatusF={New Tk.frame tkInit(parent:T bd:0)}
       StatusL={New Tk.label tkInit(parent:StatusF relief:sunken bd:2
                                    textvariable:StatusV font:FontSystem)}
-      LogoI={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'logo.gif')}
+%      LogoI={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'logo.gif')}
       LogoL={New Tk.label tkInit(parent:StatusF image:LogoI)}
 
       {Tk.batch [grid(LogoL column:0 row:1 sticky:we padx:2)
