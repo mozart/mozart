@@ -95,7 +95,7 @@ public:
     if (posMB>=getptr)
       return (used-(posMB-getptr))>=size;
     else
-      return (used-(endMB-getptr)+(posMB-buf) +1)>=size;
+      return (used-((endMB-getptr)+(posMB-buf))+1)>=size;
   }
   void setFrameSize(int size);
   inline Bool frameCanGet(int size) {
@@ -103,7 +103,7 @@ public:
     if (posMB>=getptr)
       return (framesize-(posMB-getptr))>=size;
     else
-      return (framesize-(endMB-getptr)+(posMB-buf) +1)>=size;
+      return (framesize-((endMB-getptr)+(posMB-buf)) +1)>=size;
   }
   int getInt();
   BYTE getNext();
