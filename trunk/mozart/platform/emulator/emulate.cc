@@ -2304,8 +2304,9 @@ LBLdispatcher:
 
   Case(TASKDEBUGCONT)
     {
-      // this should not happen -BL
-      // OZ_warning("Emulate: TASKDEBUGCONT instruction executed");
+      OZ_warning("\n      TASKDEBUGCONT instruction executed -- "
+		 "this should not happen.\n      "
+                 "Please send a bug report to <lorenz@dfki.de>.");
       if (e->debugmode() && CTT->getTrace())
 	debugStreamUpdate(CTT);
       ((OzDebug *) Y)->dispose();
