@@ -1065,12 +1065,31 @@ int osdup(int fd)
 
 char *osgetenv(char *var)
 {
-  static char buffer[2048];
-  int n = GetEnvironmentVariable(var,buffer,sizeof(buffer));
-  if (n == 0 || n > sizeof(buffer))
-    return NULL;
-  else
-    return buffer;
+  char *env = static_cast<char *>(GetEnvironmentStrings());
+  char *p = env;
+  while (p[0] != '\0')
+    for (int i = 0; ; i++)
+      if (var[i] == '\0') {
+        if (p[i] == '=') {
+          char *value = &p[i + 1];
+          int length = strlen(value);
+          static char *buffer = NULL;
+          static int size = -1;
+          if (length > size) {
+            if (buffer) free(buffer);
+            buffer = static_cast<char *>(malloc(length + 1));
+          }
+          strcpy(buffer, value);
+          FreeEnvironmentStrings(env);
+          return buffer;
+        }
+      } else if (p[i] == '=' || var[i] != p[i]) {
+        p += i;
+        while (*p++ != '\0');
+        break;
+      }
+  FreeEnvironmentStrings(env);
+  return NULL;
 }
 
 #else
