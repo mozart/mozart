@@ -53,7 +53,7 @@ public:
 protected:
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
-  void relinkSuspList(GenCVariable * leftVar);
+  void relinkSuspListTo(GenCVariable * leftVar);
   
   void propagate(TaggedRef, SuspList * &, TaggedRef, Bool);
 
