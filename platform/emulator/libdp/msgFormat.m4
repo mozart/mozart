@@ -64,3 +64,5 @@ message(M_SEND_OBJECTANDCLASS,Site,Index,ObjectAndClass)
 
 message(M_UNASK_ERROR,Index,Site,Index2)
 message(M_SEND_GATE,Term)
+
+message(M_REQUESTED,Index)
