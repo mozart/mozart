@@ -57,6 +57,7 @@
 #include "protocolFail.hh"
 #include "dpMarshaler.hh"
 #include "perdio.hh"
+#include "controlvar.hh"
 #ifdef DEBUG_CHECK
 #include "os.hh"
 #endif
