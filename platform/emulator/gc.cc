@@ -54,6 +54,7 @@
 #include "dpInterface.hh"
 #include "gname.hh"
 #include "interFault.hh"
+#include "weakdict.hh"
 
 // loeckelt (for big fsets)
 #include "mozart_cpi.hh"
@@ -1292,6 +1293,100 @@ void gcExtensionRecurse(OZ_Extension *ex)
 }
 
 // ===================================================================
+// Weak Dictionaries
+
+class WeakStack : public Stack {
+public:
+  WeakStack() : Stack(64,Stack_WithMalloc) {}
+  ~WeakStack() {}
+  void push(OZ_Term fut,OZ_Term val) {
+    Stack::push((StackEntry)fut);
+    Stack::push((StackEntry)val);
+  }
+  void pop(OZ_Term& fut,OZ_Term& val) {
+    val = (OZ_Term) Stack::pop();
+    fut = (OZ_Term) Stack::pop();
+  }
+  void recurse(void);
+};
+
+static WeakStack weakStack;
+
+void WeakStack::recurse(void)
+{
+  fprintf(stderr,"WeakStack::recurse\n");
+  OZ_Term fut,val;
+  while (!isEmpty()) {
+    pop(fut,val);
+    DEREF(fut,ptr,_);
+    oz_bindFuture(ptr,val);
+  }
+}
+
+inline int isNowMarked(OZ_Term t)
+{
+  switch (tagTypeOf(t)) {
+  case EXT    : return ((*(int32*)oz_tagged2Extension(t))&1);
+  case OZCONST: return (tagged2Const(t)->gcIsMarked());
+  default     : Assert(0);
+  }
+  return 0;
+}
+
+void WeakDictionary::gcRecurseV(void) {
+  fprintf(stderr,"WeakDictionary::gcRecurseV\n");
+  if (stream) OZ_collect(&stream);
+}
+
+void WeakDictionary::weakGC()
+{
+  fprintf(stderr,"WeakDictionary::weakGC begin\n");
+  int numelem = table->numelem;
+  // go through the table and finalize each entry whose value is not
+  // marked.  also clear these entries.
+  OZ_Term newstream = 0;
+  OZ_Term list = 0;
+  int count = 0;
+  for (dt_index i=table->size; i--; ) {
+    TaggedRef t = table->getValue(i);
+    if (t!=0 && !isNowMarked(t)) {
+      numelem--;
+      fprintf(stderr,"  found garbage entry\n");
+      if (stream) {
+        if (!list) newstream=list=oz_newFuture(oz_rootBoard());
+        OZ_Term k = table->getKey(i);
+        // collect key and value
+        OZ_collect(&t);
+        OZ_collect(&k);
+        list = oz_cons(oz_pair2(k,t),list);
+        count++;
+      }
+      table->clearValue(i);
+    }
+  }
+  // then update the stream
+  if (stream && list) {
+    fprintf(stderr,"  pushing stream update on weakStack\n");
+    weakStack.push(stream,list);
+    stream=newstream;
+  }
+  // finally collect the table
+  DynamicTable * frm = table;
+  table = DynamicTable::newDynamicTable(numelem);
+  for (dt_index i=table->size;i--;) {
+    OZ_Term v = frm->getValue(i);
+    if (v!=0) {
+      fprintf(stderr,"  collecting remaining entry\n");
+      OZ_Term k = frm->getKey(i);
+      OZ_collect(&k);
+      OZ_collect(&v);
+      put(k,v);
+    }
+  }
+  fprintf(stderr,"WeakDictionary::weakGC end\n");
+}
+
+// ===================================================================
 // Finalization
 
 extern OZ_Term guardian_list;
@@ -1603,6 +1698,7 @@ void AM::gc(int msgLevel) {
   OZ_collectHeapTerm(finalize_handler,finalize_handler);
   gcStack.recurse();
   gc_finalize();
+  gcWeakDictionaries();
   gcDeferWatchers();
   (*gcPerdioRoots)();
   gcStack.recurse();
@@ -1614,6 +1710,7 @@ void AM::gc(int msgLevel) {
   GCMeManager::gc();
   gcStack.recurse();
 #endif
+  weakStack.recurse();          // must come after namer gc
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
   varFix.fix();

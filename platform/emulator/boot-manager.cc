@@ -57,6 +57,7 @@ TaggedRef dictionary_of_modules;
 #include "modFinalize-if.cc"
 #include "modProfile-if.cc"
 #include "modDistribution-if.cc"
+#include "modWeakDictionary-if.cc"
 
 /*
  * Modules that are always in the emulator: Base
@@ -182,6 +183,7 @@ static ModuleEntry ext_module_table[] = {
   {"CTB",             mod_int_CTB},
   {"FDB",             mod_int_FDB},
   {"FSB",             mod_int_FSB},
+  {"WeakDictionary",  mod_int_WeakDictionary},
 
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},

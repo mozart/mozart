@@ -216,6 +216,7 @@ public:
 
   TaggedRef getKey(int i)   { return table[i].ident; }
   TaggedRef getValue(int i) { return table[i].value; }
+  void clearValue(int i) { table[i].value=0; }
 
   ostream &newprint(ostream &, int depth);
 
