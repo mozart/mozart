@@ -27,20 +27,19 @@
 
 local
    local
-      UrlDefaults = \insert '../url-defaults.oz'
+      UrlDefaults = \insert ../url-defaults
    in
-      FunExt      = UrlDefaults.'functor'
-      MozartUrl   = UrlDefaults.'home'
+      FunExt    = UrlDefaults.'functor'
+      MozartUrl = UrlDefaults.'home'
    end
 
-   FuncDefaults = \insert '../functor-defaults'
+   FuncDefaults = \insert ../functor-defaults
 
    local
-      fun {IsPrintName A}
-	 S={Atom.toString A}
-      in
+      fun {IsPrintName A} S in
+	 S = {Atom.toString A}
 	 case S of nil then false
-	 [] C|_ then {Char.isUpper C} orelse C==&`
+	 [] C|_ then {Char.isUpper C} orelse C == &`
 	 end
       end
    in
@@ -48,15 +47,17 @@ local
 	 {Filter {Arity E} IsPrintName}
       end
    end
-   
+
    PrintNames =
    {FoldL FuncDefaults.dirs
     fun {$ PNs Dir}
        {FoldL FuncDefaults.Dir
-	fun {$ PNs A}
-	   Ns={GetPrintNames {Pickle.load MozartUrl#Dir#'/'#A#FunExt}.'export'}
-	in
-	   case Ns==nil then PNs else A#Ns|PNs end
+	fun {$ PNs A} Ns in
+	   Ns = {GetPrintNames
+		 {Pickle.load MozartUrl#Dir#'/'#A#FunExt}.'export'}
+	   case Ns == nil then PNs
+	   else A#Ns|PNs
+	   end
 	end PNs}
     end nil}
 
@@ -66,35 +67,26 @@ local
 	 Request = unit
       end
    in
-      M2={MakeRecord 'export' Fs}
+      M2 = {MakeRecord 'export' Fs}
       {Record.forAll M2
        fun {$}
 	  {Lazy.new FwdRequest}
        end}
       thread
 	 {Wait Request}
-	 {ForAll Fs proc {$ F} M1.F=M2.F end}
+	 {ForAll Fs proc {$ F} M1.F = M2.F end}
       end
    end
 in
-   functor $
-
+   functor prop once
    import
-      Module.{load}
-      
-      System.{printError
-	      property}
-      
-      OS.{getEnv}
-      
-      Open.{file}
-
-      Compiler.{engine}
-
-      Emacs.{interface}
-
+      Module.load
+      System.{printError property}
+      OS.getEnv
+      Open.file
+      Compiler.engine
+      Emacs.interface
    body
-
       local
 	 OZVERSION = {System.property.get 'oz.version'}
 	 DATE      = {System.property.get 'oz.date'}
@@ -125,29 +117,26 @@ in
 	  {OPICompiler enqueue(mergeEnv(Env))}
        end}
 
-      {OPICompiler enqueue(mergeEnv(env('Module':
-					   {Module.load 'Module' unit})))}
-      {OPICompiler enqueue(mergeEnv(env('URL':
-					   {Module.load 'URL' unit})))}
-      
+      {OPICompiler enqueue(mergeEnv(env('Module': {Module.load 'Module' unit}
+					'URL': {Module.load 'URL' unit})))}
+
       CompilerUI = {New Emacs.interface init(OPICompiler)}
       Sock = {CompilerUI getSocket($)}
       {{`Builtin` setOPICompiler 1} CompilerUI}
 
-       % Try to load some ozrc file:
+      % Try to load some ozrc file:
       local
-	 HOME = {OS.getEnv 'HOME'}
-      in
-	 case HOME == false then skip
-	 else
-	    fun {FileExists FN}
-	       try
-		  F = {New Open.file init(name:FN)}
-	       in
-		  {F close} true
-	       catch _ then false
-	       end
+	 fun {FileExists FileName}
+	    try F in
+	       F = {New Open.file init(name: FileName flags: [read])}
+	       {F close()}
+	       true
+	    catch _ then false
 	    end
+	 end
+      in
+	 case {OS.getEnv 'HOME'} of false then skip
+	 elseof HOME then
 	    OZRC = {OS.getEnv 'OZRC'}
 	 in
 	    case OZRC \= false andthen {FileExists OZRC} then
@@ -161,14 +150,14 @@ in
 	    end
 	 end
       end
-      
+
       proc {CompilerReadEvalLoop} VS0 VS in
 	 {Sock readQuery(?VS0)}
 	 VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
 	 {OPICompiler enqueue(feedVirtualString(VS))}
 	 {CompilerReadEvalLoop}
       end
-      
+
       {CompilerReadEvalLoop}
    end
 end
