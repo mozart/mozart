@@ -688,11 +688,9 @@ void osInitSignals()
 {
 #ifndef WINDOWS
   osSignal(SIGALRM,handlerALRM);
-#ifdef VIRTUALSITES
   // 'SIGUSR2' notifies about presence of tasks. Right now these are 
   // only virtual site messages;
   osSignal(SIGUSR2,handlerUSR2);
-#endif
 #endif
 #ifndef DEBUG_DET
   osSignal(SIGINT,handlerINT);
