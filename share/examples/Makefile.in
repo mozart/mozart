@@ -57,12 +57,12 @@ all: $(FUNCTORS)
 
 
 EXFUNCTORS = \
-	$(FUNCTORS:%=$(OZEX)/%)
+	$(FUNCTORS:%=$(OZEX)/fd/graphics/%)
 
 EXDIRS = \
 	sampler sampler/constraints \
-	fd fd/knights fd/queens \
-	grammar grammar/shieber 
+	fd grammar grammar/shieber \
+	fd/graphics
 
 
 OZEXDIRS = $(EXDIRS:%=$(OZEX)/%)
@@ -77,7 +77,7 @@ FD = \
 	grocery kalotan knights magic-sequence \
 	magic-square map-coloring money multiply photo \
 	pythagoras queens safe srat \
-	warehouses zebra
+	warehouses zebra graphics/Knights graphics/Queens
 
 GR = \
 	hpsg shieber shieber/formalism shieber/grammar
@@ -92,9 +92,11 @@ SAMPLER0 = \
 	constraints/scheduling-compiler oz
 SAMPLER = $(SAMPLER0:%=$(OZEX)/sampler/%.oz)
 
-$(OZEX)/%.ozf: %.ozf
-	$(INSTALL_FILE) $< $@
 $(OZEX)/fd/%.oz: fd/%.oz
+	$(INSTALL_FILE) $< $@
+$(OZEX)/fd/graphics/%.ozf: %.ozf
+	$(INSTALL_FILE) $< $@
+$(OZEX)/fd/graphics/%.oz: fd/graphics/%.oz
 	$(INSTALL_FILE) $< $@
 $(OZEX)/grammar/%.oz: grammar/%.oz
 	$(INSTALL_FILE) $< $@
