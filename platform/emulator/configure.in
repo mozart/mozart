@@ -610,12 +610,12 @@ AC_SUBST(oz_tmphack_host)
 AC_SUBST(oz_tmphack_programname)
 
 dnl *****************************************************************
-dnl special hack for static linking under linux
+dnl special hack for static linking under linux (libc5 only)
 dnl *****************************************************************
 
 case $platform in
     linux*)
-        if ! test -f /lib/libc.so.6
+        if ! test -f /usr/include/xopen_lim.h
         then
             OZ_ENABLE_YES(lstatic,[  statically link on linux],
                     AC_MSG_RESULT(yes)
