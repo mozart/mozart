@@ -9,19 +9,13 @@ TCLHOME=/project/ps/soft/$TCL
 
 ############################################################
 
-cd $TCL/unix
-rm -rf dltest
-make -k distclean
-./configure --prefix=/project/ps/soft/$TCL --enable-gcc
-make
-
-cd ../../$TK/unix
-rm -rf dltest
-make -k distclean
-./configure --prefix=/project/ps/soft/$TCL --enable-gcc
-make
-
-cd ../..
+for i in $TCL $TK; do
+   (cd $TCL/unix;
+    rm -rf dltest;
+    make -k distclean;
+    ./configure --prefix=/project/ps/soft/$TCL --enable-gcc --disable-load;
+    make)
+ done
 
 LIBDIR=$TCLHOME/platform/`ozplatform`
 mkdir -p $LIBDIR/lib
