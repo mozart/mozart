@@ -209,7 +209,8 @@ in
 	    case E then
 	       case T == @currentThread andthen
 		  {self.tkRunChildren tkReturnInt($)} == 0 then
-		  Gui,status(I runnable)
+		  skip
+		  %Gui,status(I runnable)
 	       else skip end
 	       Gui,markNode(I runnable)
 	    else
@@ -240,6 +241,7 @@ in
 	 Gui,addNode(I Q)
 	 case Q == 0 orelse Q == 1 then 
 	    ThreadManager,switch(I)       %% does Gui,displayTree
+	    Gui,rawStatus('Got new query, selecting thread #' # I)
 	 else
 	    Gui,displayTree
 	 end
@@ -258,16 +260,17 @@ in
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	    case Mode == kill then
 	       currentThread <- undef
-	       Gui,status(0)
+	       %Gui,status(0)
 	    else
-	       Gui,status(I terminated)
+	       skip
+	       %Gui,status(I terminated)
 	    end
 	    Gui,printStack(id:I frames:nil depth:0)
 	 else skip end
 	 case {Dkeys self.ThreadDic} == nil then
 	    {OzcarMessage 'no more threads to debug.'}
 	    currentThread <- undef
-	    Gui,status(0)
+	    %Gui,status(0)
 	    Gui,selectNode(0)
 	    Gui,displayTree
 	 else skip end
@@ -279,8 +282,9 @@ in
 	 ThreadManager,remove(T I kill)
       end
 
-      meth killAll
+      meth killAll($)
 	 E = {Ditems self.ThreadDic}
+	 DeleteCount = {Length E}
       in
 	 {ForAll E
 	  proc {$ S}
@@ -289,6 +293,7 @@ in
 	  in
 	     ThreadManager,kill(T I)
 	  end}
+	 DeleteCount
       end
       
       meth forget(T I)
@@ -328,7 +333,7 @@ in
 	 Gui,markNode(I blocked)
 	 case T == @currentThread andthen
 	    {self.tkRunChildren tkReturnInt($)} == 0 then
-	    Gui,status(I blocked)
+	    %Gui,status(I blocked)
 	    case {UnknownFile F} then
 	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
@@ -349,7 +354,8 @@ in
 	 F L N A B Time
       in
 	 case I == 1 then
-	    Gui,status(0)
+	    skip
+	    %Gui,status(0)
 	 else
 	    Stack = {Dget self.ThreadDic I}
 	    T     = {Stack getThread($)}
@@ -357,7 +363,7 @@ in
 	 in
 	    currentThread <- T
 	    
-	    Gui,status(I S)
+	    %Gui,status(I S)
 	    Gui,selectNode(I)
 	    Gui,displayTree
 	    
