@@ -21,11 +21,12 @@
 
 functor prop once
 import
+   Property(get)
    Open(file text)
 export
    'class': AuthorDBClass
 define
-   DBPath = ['.' '/home/ps-home/kornstae/mozart/doc/']
+   DBPath = ['.' {Property.get 'oz.home'}#'/share/doc/']
 
    local
       class TextFile from Open.file Open.text

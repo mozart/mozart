@@ -1,0 +1,32 @@
+dnl -*- sh -*-
+dnl
+dnl  Author:
+dnl    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+dnl
+dnl  Copyright:
+dnl    Leif Kornstaedt, 1998
+dnl
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl
+dnl  This file is part of Mozart, an implementation of Oz 3:
+dnl     http://mozart.ps.uni-sb.de
+dnl
+dnl  See the file "LICENSE" or
+dnl     http://mozart.ps.uni-sb.de/LICENSE.html
+dnl  for information on usage and redistribution
+dnl  of this file, and for a DISCLAIMER OF ALL
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(ozdoc.el)
+OZ_INIT
+AC_PROG_INSTALL
+AC_OUTPUT(Makefile)
+errprint(ifdef([OZ_INIT],
+ [],
+ [autoconf failed: use 'autoconf -l ../..' to include ../../aclocal.m4.
+]))
