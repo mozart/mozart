@@ -44,13 +44,11 @@ case Tk.isColor then
    color(run:  yellow4
 	 'prop': mediumvioletred
 	 copy: mediumaquamarine
-	 gc:   mediumseagreen
-	 load: wheat) #
+	 gc:   mediumseagreen) #
    stipple(run:    ''
 	   'prop': ''
 	   copy:   ''
-	   gc:     ''
-	   load:   '') #
+	   gc:     '') #
    blue #
    lightslateblue
 else
@@ -62,13 +60,11 @@ else
    color(run:    black
 	 'prop': black
 	 copy:   black
-	 gc:     black
-	 load:   black) #
+	 gc:     black) #
    stipple(run:    BitMapDir # 'grid-25.xbm'
 	   'prop': BitMapDir # 'grid-50.xbm'
 	   copy:   BitMapDir # 'lines-lr.xbm'
-	   gc:     BitMapDir # 'lines-rl.xbm'
-	   load:   BitMapDir # 'zig-zag.xbm') #
+	   gc:     BitMapDir # 'lines-rl.xbm') #
    black #
    black
 end
@@ -99,7 +95,6 @@ MediumFont       = MediumFontFamily # 120 # FontMatch
 
 ZeroTime     = time(copy:      0
 		    gc:        0
-		    load:      0
 		    propagate: 0
 		    run:       0
 		    system:    0

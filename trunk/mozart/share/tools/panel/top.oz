@@ -80,7 +80,6 @@ local
 	    {OR.gc          set(R.gc)}
 	    {OR.copy        set(R.copy)}
 	    {OR.propagation set(R.propagate)}
-	    {OR.load        set(R.load)}
 	 end
       end
       meth clear
@@ -95,7 +94,6 @@ local
 	 {OR.gc          clear}
 	 {OR.copy        clear}
 	 {OR.propagation clear}
-	 {OR.load        clear}
 	 {OR.curLoad     clear}
 	 PrevRuntime <- {System.get time}
       end
@@ -340,11 +338,7 @@ in
 			time(text:    'Propagation:'
 			     feature: propagation
 			     color:   TimeColors.'prop'
-			     stipple: TimeStipple.'prop')
-			time(text:    'Load:'
-			     feature: load
-			     color:   TimeColors.load
-			     stipple: TimeStipple.load)]
+			     stipple: TimeStipple.'prop')]
 		    right:
 		       [load(feature: curLoad
 			     colors:  [CurLoadColor]

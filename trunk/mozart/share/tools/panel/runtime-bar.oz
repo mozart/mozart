@@ -41,7 +41,6 @@ in
 	 GcTag
 	 CopyTag
 	 PropTag
-	 LoadTag
       attr
 	 Saved: ZeroTime
 	 Clear: ZeroTime
@@ -58,13 +57,11 @@ in
 	 ThisGcTag   = {New Tk.canvasTag tkInit(parent:self)}
 	 ThisCopyTag = {New Tk.canvasTag tkInit(parent:self)}
 	 ThisPropTag = {New Tk.canvasTag tkInit(parent:self)}
-	 ThisLoadTag = {New Tk.canvasTag tkInit(parent:self)}
       in
 	 self.RunTag  = ThisRunTag
 	 self.GcTag   = ThisGcTag
 	 self.CopyTag = ThisCopyTag
 	 self.PropTag = ThisPropTag
-	 self.LoadTag = ThisLoadTag
 	 RuntimeBar,tk(crea rectangle Home Y0 Home Y1
 		       fill:    TimeColors.run
 		       stipple: TimeStipple.run
@@ -81,10 +78,6 @@ in
 		       fill:    TimeColors.'prop'
 		       stipple: TimeStipple.'prop'
 		       tags:    ThisPropTag)
-	 RuntimeBar,tk(crea rectangle Home Y0 Home Y1
-		       fill:    TimeColors.load
-		       stipple: TimeStipple.load
-		       tags:    ThisLoadTag)
       end
 
       meth clear
@@ -98,7 +91,6 @@ in
 	 RuntimeBar,tk(coords self.GcTag   Home Y0 Home Y1)
 	 RuntimeBar,tk(coords self.CopyTag Home Y0 Home Y1)
 	 RuntimeBar,tk(coords self.PropTag Home Y0 Home Y1)
-	 RuntimeBar,tk(coords self.LoadTag Home Y0 Home Y1)
       end
 
       meth display(T)
@@ -108,7 +100,6 @@ in
 	    CopyTime    = T.copy - C.copy
 	    PropTime    = T.propagate - C.propagate
 	    RunTime     = T.user - C.user
-	    LoadTime    = T.load - C.load
 	 in
 	    case RunTime==0 then
 	       RuntimeBar,displayZero
@@ -116,17 +107,13 @@ in
 	       GcZero    = case GcTime==0   then 0 else 1 end
 	       CopyZero  = case CopyTime==0 then 0 else 1 end
 	       PropZero  = case PropTime==0 then 0 else 1 end
-	       LoadZero  = case LoadTime==0 then 0 else 1 end
 	       HalfTime  = RunTime div 2
 	       ThisWidth = Width -
-			   (GcZero + CopyZero + PropZero + LoadZero + 1) * Gap
+			   (GcZero + CopyZero + PropZero + 1) * Gap
 	       GcWidth   = (GcTime   * ThisWidth + HalfTime) div RunTime
 	       CopyWidth = (CopyTime * ThisWidth + HalfTime) div RunTime
 	       PropWidth = (PropTime * ThisWidth + HalfTime) div RunTime
-	       LoadWidth = (LoadTime * ThisWidth + HalfTime) div RunTime
-	       LoadEnd   = Width
-	       LoadStart = LoadEnd - LoadWidth
-	       PropEnd   = LoadStart - LoadZero * Gap
+	       PropEnd   = Width
 	       PropStart = PropEnd - PropWidth
 	       CopyEnd   = PropStart - PropZero * Gap
 	       CopyStart = CopyEnd - CopyWidth
@@ -151,11 +138,6 @@ in
 			     tk(coords self.PropTag Home Y0 Home Y1)
 			  else
 			     tk(coords self.PropTag PropStart Y0 PropEnd Y1)
-			  end
-	       RuntimeBar,case LoadTime==0 then
-			     tk(coords self.LoadTag Home Y0 Home Y1)
-			  else
-			     tk(coords self.LoadTag LoadStart Y0 LoadEnd Y1)
 			  end
 	    end
 	 end
