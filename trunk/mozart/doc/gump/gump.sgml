@@ -23,14 +23,14 @@
 <!ENTITY bison "<Name type=tool>bison</Name>">
 
 <!-- Processing Instructions -->
-<!ENTITY emdash PI "PI:EMDASH">
-<!ENTITY endash PI "PI:ENDASH">
-<!ENTITY nbsp PI "PI:NBSP">
-<!ENTITY ellipsis PI "PI:ELLIPSIS">
-<!ENTITY slash PI "PI:SLASH">
-<!ENTITY ie PI "PI:I.E.">
-<!ENTITY wrt PI "PI:W.R.T.">
-<!ENTITY eg PI "PI:E.G.">
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
 
 ]>
 
@@ -49,7 +49,7 @@
     <Meta name=ozversion value="3.0">
     <Meta name=status value="revised">
     <Title/Gump&emdash;A Front-End Generator for Oz/
-    <Author.Extern to="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Abstract>
       <P.silent><!--**-->
 	This manual describes &Gump;, the front-end generator for &Oz;.
