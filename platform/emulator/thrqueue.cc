@@ -26,29 +26,6 @@
 
 #include "thrqueue.hh"
 
-void ThreadQueueImpl::resize () 
-{
-  int new_maxsize = maxsize * 2;
-  Thread ** new_queue = ::new Thread*[new_maxsize];
-  int index = 0; 
-  int currentSize = size;
-  int currentHead = head;
-  int mod = maxsize - 1;
-  
-  DebugCode(message("Resizing thread queue 0x%x --> 0x%x.\n",
-		    maxsize, new_maxsize));
-  while (currentSize) {
-    new_queue[index++] = queue[currentHead];
-    currentHead = (currentHead + 1) & mod;
-    currentSize--;
-  }
-  
-  delete queue;
-  queue = new_queue;
-  head = 0;
-  tail = size - 1;
-  maxsize = new_maxsize;
-}
 
 Bool ThreadQueue::isScheduled (Thread *thr)
 {
@@ -58,28 +35,27 @@ Bool ThreadQueue::isScheduled (Thread *thr)
 
   while (currentSize) {
     if (queue[currentHead] == thr) return (OK);
-    currentHead = (currentHead + 1) & mod;
+    INC(currentHead);
     currentSize--;
   }
 
   return (NO);
 }
 
-void LocalThreadQueue::resize () 
-{
-  int new_maxsize = maxsize * 2;
+void ThreadQueueImpl::resize () {
+  int new_maxsize = (maxsize * 3) >> 1;
   Thread ** new_queue = 
     (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * new_maxsize));
+
   int index = 0; 
   int currentSize = size;
   int currentHead = head;
-  int mod = maxsize - 1;
   
   DebugCode(message("Resizing thread queue 0x%x --> 0x%x.\n",
 		    maxsize, new_maxsize));
   while (currentSize) {
     new_queue[index++] = queue[currentHead];
-    currentHead = (currentHead + 1) & mod;
+    INC(currentHead);
     currentSize--;
   }
   
@@ -100,7 +76,7 @@ Board * ThreadQueueImpl::getHighestSolveDebug(void)
     Board * c = queue[ahead]->getBoard()->getHighestSolveDebug();
     if (c) 
       return c;
-    ahead = (ahead + 1) & mod;
+    INC(ahead);
     asize--;
   }
 
