@@ -712,8 +712,12 @@ define
    
    proc{StartApp X} {Apps add(id:X.id name:X.name )} end
    
-   proc{InviteClient SID N Desc IsOk}
-      E={Dictionary.get DB SID}
+   proc{InviteClient SID N Desc IsOk} E D L in
+      if {Dictionary.member DB SID} then
+	 E={Dictionary.get DB SID}
+      else
+	 E=entry(id:SID name:"Unknown dude!")
+      end
       
       D={New TkTools.dialog
 	 tkInit(title:"Start Application"
@@ -726,7 +730,7 @@ define
 			  'Cancel' # proc{$} IsOk=false end]
 		default: 1)}
       L={New Tk.label tkInit(parent:D text:"Start Application: "#N#" from "#E.name#"?" )}
-   in
+   
       {Tk.send pack(L)}
       thread
 	 {Wait IsOk}
