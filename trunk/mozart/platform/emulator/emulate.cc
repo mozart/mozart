@@ -402,7 +402,7 @@ void pushContX(TaskStack *stk,
 
 #define INCFPC(N) PC += N
 
-#if !defined(DISABLE_INSTRPROFILE) && defined(__GNUC__)
+#if !defined(DEBUG_EMULATOR) && !defined(DISABLE_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
 #define asmLbl(INSTR)
