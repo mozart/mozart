@@ -117,7 +117,7 @@ in
 		 text: N*{FloatToInt Y}#' '#self.Dimension
 		 anchor: e
 		 tags:   self.TextTag)
-	 Load,tk(raise self.TextTag)
+	 Load,tk('raise' self.TextTag)
 	 case N>0 then Load,DrawLabel(N-1 D Y) else skip end
       end
       
