@@ -54,11 +54,13 @@ int SuspList::lengthProp(void)
 
 //-----------------------------------------------------------------------------
 
-SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
+SuspList * installPropagators(SuspList * local_list, 
+			      SuspList * glob_list,
 			      Board * glob_home)
 {
-  SuspList * aux = local_list, * ret_list = local_list;
-
+  SuspList * aux = local_list;
+  SuspList * ret_list = local_list;
+  
   
   // mark up local suspensions
   while (aux) {
