@@ -31,10 +31,12 @@
 #endif
 
 #include "am.hh"
+
+#ifdef VIRTUALSITES
+
 #include "vs_comm.hh"
 #include "virtual.hh"
 
-#ifdef VIRTUALSITES
 
 #include <sys/types.h>
 #include <sys/wait.h>
