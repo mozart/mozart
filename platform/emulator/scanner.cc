@@ -26,6 +26,7 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
+#include <unistd.h>
 
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
@@ -39,7 +40,6 @@
 #ifdef __cplusplus
 
 #include <stdlib.h>
-#include <unistd.h>
 
 /* Use prototypes in function declarations. */
 #define YY_USE_PROTOS
@@ -1406,7 +1406,7 @@ char *yytext;
  *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
  * 
  *  Copyright:
- *    Martin Henz and Leif Kornstaedt, 1996-1999
+ *    Martin Henz and Leif Kornstaedt, 1996-2002
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -1442,8 +1442,9 @@ void xyreportError(char *kind, char *message,
 void xy_setScannerPrefix();
 void xy_setParserExpect();
 
-char xyFileName[100];
-char xyhelpFileName[100];
+static const int maxFileNameSize = 256;
+char xyFileName[maxFileNameSize];
+char xyhelpFileName[maxFileNameSize];
 OZ_Term xyFileNameAtom;
 
 int xy_gumpSyntax, xy_allowDeprecated;
@@ -1581,8 +1582,8 @@ static XyFileEntry *bufferStack;
 static void push_insert(FILE *filep, char *fileName) {
   bufferStack = new XyFileEntry(YY_CURRENT_BUFFER, xyFileNameAtom, xylino,
 				conditional_basep, bufferStack);
-  strncpy(xyFileName, fileName, 99);
-  xyFileName[99] = '\0';
+  strncpy(xyFileName, fileName, maxFileNameSize - 1);
+  xyFileName[maxFileNameSize - 1] = '\0';
   xyFileNameAtom = OZ_atom(fileName);
   xyin = filep;
   BEGIN(INITIAL);
@@ -1602,8 +1603,8 @@ static int pop_insert() {
     xy_switch_to_buffer(bufferStack->buffer);
     xyFileNameAtom = bufferStack->fileNameAtom;
     const char *fileName = OZ_atomToC(xyFileNameAtom);
-    strncpy(xyFileName, fileName, 99);
-    xyFileName[99] = '\0';
+    strncpy(xyFileName, fileName, maxFileNameSize - 1);
+    xyFileName[maxFileNameSize - 1] = '\0';
     xylino = bufferStack->lino;
     conditional_basep = bufferStack->conditional_basep;
     XyFileEntry *old = bufferStack;
@@ -2300,11 +2301,11 @@ YY_RULE_SETUP
 { strip('\'');
 				 char *fullname = scExpndFileName(xytext,xyFileName);
 				 if (fullname != NULL) {
-				   strncpy(xyFileName, fullname, 99);
+				   strncpy(xyFileName, fullname, maxFileNameSize - 1);
 				   delete[] fullname;
 				 } else
-				   strncpy(xyFileName, xytext, 99);
-				 xyFileName[99] = '\0';
+				   strncpy(xyFileName, xytext, maxFileNameSize - 1);
+				 xyFileName[maxFileNameSize - 1] = '\0';
 				 xyFileNameAtom = OZ_atom(xyFileName);
 				 BEGIN(DIRECTIVE);
 			       }
@@ -4086,11 +4087,6 @@ YY_BUFFER_STATE b;
 	}
 
 
-#ifndef YY_ALWAYS_INTERACTIVE
-#ifndef YY_NEVER_INTERACTIVE
-extern int isatty YY_PROTO(( int ));
-#endif
-#endif
 
 #ifdef YY_USE_PROTOS
 void yy_init_buffer( YY_BUFFER_STATE b, FILE *file )
@@ -4434,8 +4430,8 @@ int xy_init_from_file(char *file, OZ_Term defines) {
   if (xyin == NULL)
     return 0;
   xy_switch_to_buffer(xy_create_buffer(xyin, YY_BUF_SIZE));
-  strncpy(xyFileName,fullname,99);
-  xyFileName[99] = '\0';
+  strncpy(xyFileName,fullname,maxFileNameSize - 1);
+  xyFileName[maxFileNameSize - 1] = '\0';
   xyFileNameAtom = OZ_atom(xyFileName);
   delete[] fullname;
   xy_init(defines);
