@@ -1714,7 +1714,6 @@ define
 	 [] A|Ar then
 	    fun {FormatAuthor A} N1 N2 H in
 	       N1 = {FoldLTail [{CondSelect A firstname unit}
-				{CondSelect A middlename unit}
 				{CondSelect A lastname unit}]
 		     fun {$ In X|Xr}
 			case X of unit then In
