@@ -55,11 +55,11 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   DSite* site     = na->site;
   int index      = na->index;
   
-  MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(site,am.currentThread()->getPriority());
   msgC->put_M_PORT_SEND(index,msg);
-
+  
   PD((PORT,"sendingTo %s %d",site->stringrep(),index));
-  send(msgC,-1);
+  send(msgC);
 
   return PROCEED;
 }
