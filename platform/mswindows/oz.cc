@@ -39,6 +39,18 @@ char *splitFirstArg(char *s)
 }
 
 
+char *getEmulator(char *ozhome)
+{
+  char buffer[5000];
+  char *ozemulator = getenv("OZEMULATOR");
+  if (ozemulator == NULL) {
+    sprintf(buffer,"%s/platform/%s/emulator.exe",ozhome,ozplatform);
+    ozemulator = buffer;
+  }
+  return strdup(ozemulator);
+}
+
+
 #ifdef OZENGINE
 int main(int argc, char **argv)
 #else
@@ -52,11 +64,7 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   GetModuleFileName(NULL, buffer, sizeof(buffer));
   char *progname = getProgname(buffer);
 
-#ifdef OZENGINE
   const int depth = 2;
-#else
-  const int depth = 2;
-#endif
   char *ozhome   = getOzHome(buffer,depth);
 
   ozSetenv("OZPLATFORM",ozplatform);
@@ -82,31 +90,28 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
     }
     sprintf(buffer,"%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
 	    emacshome,ozhome);
-  } else if (stricmp(progname,"ozengine.exe")==0) {
-    /*
+#ifndef OZENGINE
+  } else if (stricmp(progname,"ozenginew.exe")==0) {
       char *rest = splitFirstArg(lpszCmdLine);
       char *url = lpszCmdLine;
-      sprintf(buffer,"%s -u \"%s\" -- %s", ozemulator,url,rest);
-      */
-#ifdef OZENGINE
+      char *ozemulator = getEmulator(ozhome);
+      sprintf(buffer,"%s -u \"%s\" -- %s",ozemulator,url,rest);
+      console = DETACHED_PROCESS;
+#else
+  } else if (stricmp(progname,"ozengine.exe")==0) {
     if (argc < 2) {
       fprintf(stderr,"usage: ozengine url <args>\n");
       exit(1);
     }
-    char *ozemulator = getenv("OZEMULATOR");
-    if (ozemulator == NULL) {
-      sprintf(buffer,"%s/platform/%s/emulator.exe",ozhome,ozplatform);
-      ozemulator = strdup(buffer);
-    }
-
+    char *ozemulator = getEmulator(ozhome);
     char *url = argv[1];
     sprintf(buffer,"%s -u \"%s\" -- ", ozemulator,url);
     for (int i=2; i<argc; i++) {
       strcat(buffer," ");
       strcat(buffer,argv[i]);
     }
-#endif
     //    console = DETACHED_PROCESS;
+#endif
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
   } 
