@@ -96,10 +96,21 @@ AC_ARG_ENABLE(linkprop,
 if test "x$enable_linkprop" != xno; then
         AC_MSG_RESULT(yes)
 	AC_DEFINE(FOREIGNFDPROPS)
-	POBJ="\$(PROPOBJ)"
+	PROPOBJ="\$(PROPOBJ)"
 else
-	POBJ=""
+	PROPOBJ=""
         AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(for --enable-peanuts)
+AC_ARG_ENABLE(peanuts,
+  [--enable-peanuts	use peanuts file (default=yes)])
+if test "x$enable_peanuts" != xno; then
+        AC_MSG_RESULT(yes)
+	PEANUTS="peanuts.cc"
+else
+        AC_MSG_RESULT(no)
+	PEANUTS="\$(PEANUTS)"
 fi
 
 dnl Checks for libraries.
@@ -176,8 +187,9 @@ AC_ARG_ENABLE(sun-pro,
 
 
 AC_SUBST(COPT)
-AC_SUBST(POBJ)
+AC_SUBST(PROPOBJ)
 AC_SUBST(OzPlatform)
+AC_SUBST(PEANUTS)
 
 AC_CONFIG_HEADER(conf.h)
 
