@@ -189,3 +189,4 @@ oz-win::
         done
         i386-mingw32-strip oz3/platform/win32-i486/*.exe
         mv oz3/platform/winbin oz3/bin
+        cp /project/ps/soft/win32-i486/dlls/*.dll oz3/platform/win32-i486
