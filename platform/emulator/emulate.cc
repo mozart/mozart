@@ -17,9 +17,9 @@
 
 #define PROP_TIME
 
-/*
- * Object stuff
- */
+// -----------------------------------------------------------------------
+// Object stuff
+// -----------------------------------------------------------------------
 
 inline
 Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity, 
@@ -38,7 +38,8 @@ Abstraction *getApplyMethod(ObjectClass *cl, ApplMethInfoClass *ami,
 }
 
 // -----------------------------------------------------------------------
-// EXCEPTION
+// *** EXCEPTION stuff
+// -----------------------------------------------------------------------
 
 void AM::formatError(OZ_Term traceBack,OZ_Term loc)
 {
@@ -142,22 +143,14 @@ if (predArity != arityExp && VarArity != arityExp) {			 \
 }
 
 // -----------------------------------------------------------------------
-//
+// *** ???
+// -----------------------------------------------------------------------
 
 #define NOFLATGUARD   (shallowCP)
 
 #define SHALLOWFAIL   if (shallowCP) { goto LBLshallowFail; }
 
 #define IMPOSSIBLE(INSTR) error("%s: impossible instruction",INSTR)
-
-
-
-
-
-
-// TOPLEVEL END
-// -----------------------------------------------------------------------
-
 
 #define DoSwitchOnTerm(indexTerm,table)					    \
       TaggedRef term = indexTerm;					    \
@@ -190,7 +183,8 @@ TaggedRef fastnewTaggedUVar(AM *e)
 
 
 // -----------------------------------------------------------------------
-// genCallInfo: self modifying code!
+// *** genCallInfo: self modifying code!
+// -----------------------------------------------------------------------
 
 static
 Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
@@ -241,7 +235,8 @@ bombGenCall:
 }
 
 // -----------------------------------------------------------------------
-// CALL HOOK
+// *** CALL HOOK
+// -----------------------------------------------------------------------
 
 
 /* the hook functions return:
@@ -370,6 +365,33 @@ void AM::suspendEngine()
   osUnblockSignals();
 }
 
+void AM::checkStatus()
+{
+  if (isSetSFlag(StartGC)) {
+      deinstallPath(rootBoard);
+      doGC();
+  }
+  if (isSetSFlag(StopThread)) {
+    unsetSFlag(StopThread);
+  }
+  if (isSetSFlag(UserAlarm)) {
+    deinstallPath(rootBoard);
+    osBlockSignals();
+    handleUser();
+    osUnblockSignals();
+  }
+  if (isSetSFlag(IOReady)) {
+    deinstallPath(rootBoard);
+    osBlockSignals();
+    handleIO();
+    osUnblockSignals();
+  }
+}
+
+
+// -----------------------------------------------------------------------
+// ???
+// -----------------------------------------------------------------------
 
 //
 //  As said (in thread.hh), lazy allocation of stack can be toggled
@@ -414,7 +436,10 @@ void Thread::makeRunning ()
   }
 }
 
-/* ********************************************************************** */
+
+// -----------------------------------------------------------------------
+// ???
+// -----------------------------------------------------------------------
 
 /* macros are faster ! */
 #define emulateHookCall(e,def,arguments,Code)		\
@@ -461,7 +486,8 @@ void Thread::makeRunning ()
   }
 
 // -----------------------------------------------------------------------
-// THREADED CODE
+// *** THREADED CODE
+// -----------------------------------------------------------------------
 
 #if defined(RECINSTRFETCH) && defined(THREADED)
  Error: RECINSTRFETCH requires THREADED == 0;
@@ -578,9 +604,7 @@ void Thread::makeRunning ()
 #define Reg6
 #define Reg7
 
-#endif
-
-/*
+#endif/*
  * Handling of the READ/WRITE mode bit: 
  * last significant bit of sPointer set iff in WRITE mode
  */
@@ -593,9 +617,8 @@ void Thread::makeRunning ()
 #define GetSPointerWrite(ptr) (TaggedRef*)(((long)ptr)-1)
 
 // ------------------------------------------------------------------------
-// outlined auxiliary functions
+// ???
 // ------------------------------------------------------------------------
-
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)		\
    e->pushContX(PC,Y,G,X,RegsToSave);		\
@@ -641,8 +664,7 @@ void AM::suspendOnVarList(Thread *thr)
 
 void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
 {
-  switch(n) { /* no break's used!! */
-  case 3: { DEREF (C, ptr, _1); if (isAnyVar(C)) addSusp(ptr, currentThread); }
+  switch(n) { /* no break's used!! */  case 3: { DEREF (C, ptr, _1); if (isAnyVar(C)) addSusp(ptr, currentThread); }
   case 2: { DEREF (B, ptr, _1); if (isAnyVar(B)) addSusp(ptr, currentThread); }
   case 1: { DEREF (A, ptr, _1); if (isAnyVar(A)) addSusp(ptr, currentThread); }
     break;
@@ -651,6 +673,9 @@ void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
   }
 }
 
+// -----------------------------------------------------------------------
+// outlined auxiliary functions
+// -----------------------------------------------------------------------
 
 static
 TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
@@ -694,33 +719,10 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
 }
 
 /*
- * Entailment handling for emulator
- *
- * check entailment and stability
- *  after thread is finished or top commit
+ * check stability after thread is finished
  */
-void AM::checkEntailment()
+void AM::checkStability()
 {
-  DebugTrace(trace("check entailment",currentBoard));
-
-#ifdef DEBUG_NONMONOTONIC
-  cout << "AM::checkEntailment" << endl << flush;
-#endif
-
-  currentBoard->unsetNervous();
-
-  // check for entailment of ASK and WAITTOP
-  if ((currentBoard->isAsk() || currentBoard->isWaitTop()) && entailment()) {
-    Board *bb = currentBoard;
-    deinstallCurrent();
-    int ret=commit(bb);
-    Assert(ret);
-    return;
-  }
-
-  // do solve
-  if (!currentBoard->isSolve()) return;
-
   // try to reduce a solve board;
   SolveActor *solveAA = SolveActor::Cast(currentBoard->getActor());
   Board      *solveBB = currentBoard; 
@@ -821,6 +823,17 @@ void AM::checkEntailment()
 } 
 
 
+// ------------------------------------------------------------------------
+// ------------------------------------------------------------------------
+// ************************************************************************
+// ************************************************************************
+// THE BIG EMULATE LOOP STARTS
+// ************************************************************************
+// ************************************************************************
+// ------------------------------------------------------------------------
+// ------------------------------------------------------------------------
+
+
 /* &Var prevent Var to be allocated to a register,
  * increases chances that variables declared as "register"
  * will be really allocated to registers
@@ -899,320 +912,212 @@ void engine(Bool init)
   goto LBLstart;
 
 // ------------------------------------------------------------------------
-// *** RUN: Main Loop
+// *** Error
 // ------------------------------------------------------------------------
- LBLpreemption:
 
+LBLerror:
+  error("impossible state in emulator: LBLerror");
+  goto LBLstart;
+
+
+// ------------------------------------------------------------------------
+// *** preempt current thread
+// ------------------------------------------------------------------------
+
+LBLpreemption:
   SaveSelf;
   Assert(CTT->getBoard()==CBB);
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
 
- LBLerror:
- LBLstart:
 
+
+// ------------------------------------------------------------------------
+// *** execute runnable thread
+// ------------------------------------------------------------------------
+LBLstart:
   Assert(CTT==0);
 
-  if (e->isSetSFlag()) {  
-
-    if (e->isSetSFlag(StartGC)) {
-      e->deinstallPath(e->rootBoard);
-      e->doGC();
-    }
-
-    if (e->isSetSFlag(StopThread)) {
-      e->unsetSFlag(StopThread);
-    }
-
-    if (e->isSetSFlag(UserAlarm)) {
-      e->deinstallPath(e->rootBoard);
-      osBlockSignals();
-      e->handleUser();
-      osUnblockSignals();
-    }
-    if (e->isSetSFlag(IOReady)) {
-      e->deinstallPath(e->rootBoard);
-      osBlockSignals();
-      e->handleIO();
-      osUnblockSignals();
-    }
+  // check status register
+  if (e->isSetSFlag()) {
+    e->checkStatus();
   }
 
-  /* process switch */
   if (e->threadQueuesAreEmpty()) {
     e->suspendEngine();
   }
-
   CTT = e->getFirstThread();
   Assert(CTT);
 
   PC = NOCODE; // this is necessary for printing stacks (mm)
 
-  DebugTrace (trace("new thread"));
+  DebugTrace (trace("runnable thread->running"));
 
-  // Debugger
+  // Debugger & oz_stop
   if (CTT->stopped()) {
     CTT = 0;  // byebye...
     goto LBLstart;
   }
 
-  //  now, we have *globally* am.currentThread;
-
-  //
-  //  No dead threads here;
-  // (while, of course, their *tasks* may be dead already;)
-  //  So, every runnable thread must be terminated through 
+  //  Every runnable thread must be terminated through 
   // 'LBL{discard,kill}Thread', and it should not appear 
   // more than once in the threads pool;
-  Assert (!(CTT->isDeadThread ()));
-  //
-  //  So, every thread in the threads pool *must* be runnable;
-  Assert (CTT->isRunnable ());
+  Assert(!CTT->isDeadThread() && CTT->isRunnable());
 
-  /*
-   *  Lazy stack allocation;
-   *
-   *  Note that we cover the case for 'propagator' threads specially, 
-   *  since they don't differ in 'suspended' and 'runnable' states;
-   */
-  if (CTT->isPropagator ()) {
-    //
-    //  First, get the home board of that propagator, 
-    // and try to install it;
-    Board *tmpBB = CTT->getBoard();
-    DebugTrace (trace ("propagator thread", tmpBB));
-
-    // 
-    //  HERE: a special version of INSTALLPATH for propagators;
-    //  This is because we have to go for the 'LBLdiscardThread'
-    // if the installation is rejected;
-    if (CBB != tmpBB) {
-      switch (e->installPath (tmpBB)) {
-      case INST_OK:
-	break;
-
-      case INST_REJECTED:
-	//
-	//  Note that once a propagator is failed, its thread is 
-	// scheduled for execution again (!), and at this place it 
-	// should be catched and forwarded to the 
-	// 'LBLdiscardThread';
-	DebugCode (CTT->removePropagator ());
-	goto LBLdiscardThread;
-
-      case INST_FAILED:
-	//
-	//  The thread must be killed;
-	//  So, first go to the 'LBLfailure', and there it must be 
-	// scheduled once again - and then the 'INST_REJECTED' case
-	// hits ...
-	DebugCode (CTT->removePropagator ());
-	goto LBLfailure;
-      }
-    }
-
-    CBB->unsetNervous();
-
-    //    unsigned int starttime = osUserTime();
-    switch (CTT->runPropagator()) {
-    case SLEEP: 
-      CTT->suspendPropagator ();
-      if (e->currentSolveBoard != (Board *) NULL) {
-	e->decSolveThreads (e->currentSolveBoard);
-	//  but it's still "in solve";
-      }
-      CTT = 0;
-
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-      goto LBLstart;
-
-    case SCHEDULED:
-      CTT->scheduledPropagator ();
-      if (e->currentSolveBoard != (Board *) NULL) {
-	e->decSolveThreads (e->currentSolveBoard);
-	//  but it's still "in solve";
-      }
-      CTT = 0;
-
-      //      ozstat.timeForPropagation.incf(osUserTime()-starttime); 
-      goto LBLstart;
-
-    case PROCEED:
-      // Note: CTT must be reset in 'LBLkillXXX';
-
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-      if (e->isToplevel ()) {
-	goto LBLkillToplevelThread;
-      } else {
-	Assert (CTT->isPropagator () || CTT->isEmpty ());
-	goto LBLkillThread;
-      }
-
-      //  Note that *propagators* never yield 'SUSPEND';
-    case FAILED:
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-
-      // propagator failure never catched
-      if (!e->isToplevel()) goto LBLfailure;
-
-      {
-	OZ_Propagator *prop = CTT->getPropagator();
-	CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB);
-	CTS = CTT->getTaskStackRef();
-	e->restartThread();
-	HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeader()->getHeaderFunc()))),
-		 prop->getParameters());
-      }
-
-    default:
-      Assert(0);
-      goto LBLerror;
-    }
-  } else { 
-    /*
-     * install board
-     */
+  // Install board
+  {
     Board *bb=CTT->getBoard();
-
     if (CBB != bb) {
       switch (e->installPath(bb)) {
       case INST_OK:
 	break;
-
       case INST_REJECTED:
+	DebugCode (if (CTT->isPropagator()) CTT->removePropagator());
 	goto LBLdiscardThread;
-
       case INST_FAILED:
+	DebugCode (if (CTT->isPropagator()) CTT->removePropagator());
 	goto LBLfailure;
       }
     }
+  }
 
-    CBB->unsetNervous();
+  // Constraints are implicitly propagated
+  CBB->unsetNervous();
+
+  if (!CTT->isPropagator()) {
     DebugCheckT(currentDebugBoard=CBB);
 
-    //  I.e. it's not a propagator - then just convert it 
-    // to a full-fledged thread (with a task stack);
-    CTT->makeRunning ();
-
-    //
-    e->restartThread();
+    CTT->makeRunning(); // convert to a full-fledged thread with a task stack
+    e->restartThread(); // start a new time slice
+    goto LBLpopTask;
   }
 
-
-  //  INVARIANT:
-  //  current thread always has a stack, and it might not 
-  // be marked as dead;
-  Assert(CTT->hasStack ());
-  
-  goto LBLpopTask;
-
-  /*
-   *  Kill a thread at the toplevel - i.e. just dispose it;
-   *
-   */
-LBLkillToplevelThread:
-  {
-    Assert (CTT);
-    Assert (e->isToplevel ());
-    asmLbl(killToplevelThread);
-
-    CBB->decSuspCount ();
-
-    if (CTT == e->rootThread) {
-      // 
-      //  A special case: the "root" thread;
-      e->rootThread->reInit (e->rootThread->getPriority (), e->rootBoard);
-      CBB->incSuspCount();
-
-      //  Anything else?
-      e->checkToplevel ();
-
-      if (e->rootThread->isEmpty ()) {
-	//  still empty:
-	CTT = 0;
-	goto LBLstart;
-      } else {
-	//  ... no, we have fetched something - go ahead;
-	goto LBLpreemption;
-      }
-    } else if (CTT->isPropagator()) {
-      CTT->disposeRunnableThread ();
-      CTT = 0;
-
-      goto LBLstart;
-    } else {
-
-      CTT->disposeRunnableThread ();
-      CTT = (Thread *) NULL;
-      
-      goto LBLstart;
+  // Propagator
+  //    unsigned int starttime = osUserTime();
+  switch (CTT->runPropagator()) {
+  case SLEEP: 
+    CTT->suspendPropagator ();
+    if (e->currentSolveBoard != (Board *) NULL) {
+      e->decSolveThreads (e->currentSolveBoard);
+      //  but it's still "in solve";
     }
+    CTT = 0;
+
+    //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+    goto LBLstart;
+
+  case SCHEDULED:
+    CTT->scheduledPropagator ();
+    if (e->currentSolveBoard != (Board *) NULL) {
+      e->decSolveThreads (e->currentSolveBoard);
+      //  but it's still "in solve";
+    }
+    CTT = 0;
+
+    //      ozstat.timeForPropagation.incf(osUserTime()-starttime); 
+    goto LBLstart;
+
+  case PROCEED:
+    // Note: CTT must be reset in 'LBLkillXXX';
+
+    //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+    goto LBLterminateThread;
+
+    //  Note that *propagators* never yield 'SUSPEND';
+  case FAILED:
+    //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+    // propagator failure never catched
+    if (!e->isToplevel()) goto LBLfailure;
+
+    {
+      OZ_Propagator *prop = CTT->getPropagator();
+      CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB);
+      CTS = CTT->getTaskStackRef();
+      e->restartThread();
+      HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeader()->getHeaderFunc()))),
+	       prop->getParameters());
+    }
+
   }
 
-  Assert(0);
   goto LBLerror;
 
+// ------------------------------------------------------------------------
+// *** Thread on toplevel is terminated
+// ------------------------------------------------------------------------
+
+LBLkillToplevelThread:
+  {
+    Assert(CTT);
+    Assert(e->isToplevel());
+    asmLbl(killToplevelThread);
+
+    CBB->decSuspCount();
+
+    CTT->disposeRunnableThread();
+    CTT = 0;
+    goto LBLstart;
+  }
+
+// ------------------------------------------------------------------------
+// *** Thread is terminated
+// ------------------------------------------------------------------------
 
   /*
    *  Kill the thread - decrement 'suspCounter'"s and counters of 
-   * runnable threads in solve actors if any;
-   *
-   *  This label should be entered from the only place: when 
-   * the task stack is detected to be empty in 'LBLpopTask';
-   *
-   *  Note: this code should ensure the presence of a (non-dead) 
-   * runnable non-propagator thread with a stack when the control 
-   * is passed to the 'LBLfailure';
-   *
-   *  Invariants: 
-   *  - The thread must be yet alive;
-   *  - It might be entered only if the task stack is empty
-   *    OR it's a propagator;
-   *  - It might not be entered in the toplevel;
-   *  - 'CBB' must be alive (and not committed, of course);
-   * 
+   * runnable threads in solve actors if any
    */
-LBLkillThread:
+LBLterminateThread:
   {
-    Thread *tmpThread = CTT;
-#ifdef DEBUG_CHECK
-    if (CTT== e->rootThread) {
-      printf("killThread: root\n");
-    }
-#endif
-    Board *nb = 0;
+    DebugTrace(trace("kill thread", CBB));
+    Assert(CTT);
+    Assert(!CTT->isDeadThread());
+    Assert(CTT->isRunnable());
+    Assert(CTT->isPropagator() || CTT->isEmpty());
 
-    DebugTrace (trace ("kill thread", CBB));
-    Assert (tmpThread);
-    Assert (!(tmpThread->isDeadThread ()));
-    Assert (tmpThread->isRunnable ());
-
-    Assert (!(e->isToplevel ()));
-    Assert (tmpThread->isPropagator () || tmpThread->isEmpty ());
     //  Note that during debugging the thread does not carry 
     // the board pointer (== NULL) wenn it's running;
-    // Assert (CBB == tmpThread->getBoard());
-    Assert (CBB != (Board *) NULL);
-    Assert (!(CBB->isFailed ()));
-    // 
-    //  Note that if we are in a solve problem, then 
-    // the thread should be marked correspondingly, and vice versa.
-    //  In other words, we will test for the presence/absence 
-    // of a 'currentSolveBoard' instead of 'isInSolve'!
-    Assert (tmpThread->isInSolve () || !e->currentSolveBoard); 
-    Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
-    asmLbl(killThread);
+    // Assert (CBB == CTT->getBoard());
 
+    Assert(CBB != (Board *) NULL);
+    Assert(!CBB->isFailed());
+
+    Assert(e->isToplevel() ||
+	   ((CTT->isInSolve() || !e->currentSolveBoard) &&
+	    (e->currentSolveBoard || !CTT->isInSolve())));
+
+    asmLbl(terminateThread);
+
+    if (CTT == e->rootThread) {
+      e->rootThread->reInit(e->rootThread->getPriority(), e->rootBoard);
+      e->checkToplevel();
+      if (e->rootThread->isEmpty()) {
+	CTT = 0;
+	goto LBLstart;
+      } else {
+	goto LBLpreemption;
+      }
+    }
+
+    CBB->decSuspCount();
+
+    CTT->disposeRunnableThread();
     CTT = (Thread *) NULL;
-    tmpThread->disposeRunnableThread ();
 
-    CBB->decSuspCount ();
+    // fall through to checkEntailmentAndStability
+  }
 
-    /*
-     *  General comment - about checking for stability:
+// ------------------------------------------------------------------------
+// *** Check entailment and stability
+// ------------------------------------------------------------------------
+
+LBLcheckEntailmentAndStability:
+  {
+    /*     *  General comment - about checking for stability:
      *  In the case when the thread was originated in a solve board, 
      * we have to update the (runnable) threads counter there manually, 
-     * check stability there ('AM::checkEntailment ()'), and proceed 
+     * check stability there ('AM::checkStability ()'), and proceed 
      * with further solve actors upstairs by means of 
      * 'AM::decSolveThreads ()' as usually.
      *  This is because the 'AM::decSolveThreads ()' just generates 
@@ -1225,11 +1130,12 @@ LBLkillThread:
      * can be reduced, solve actors above it are getting *instable*
      * because of a new thread!
      *
-     *  This code has been originally written by mm2 with some 
-     * assistance from me (i.e. kost@). After that, it was fixed 
-     * and simplified (in many iterations :-)) as follows.
-     *
      */ 
+
+    // maybe optimize?
+    if (e->isToplevel()) goto LBLstart;
+
+    Board *nb = 0; // notification board
 
     // 
     //  First, look at the current board, and if it's a solve one, 
@@ -1262,18 +1168,39 @@ LBLkillThread:
     // the 'nb' board which is probably modified above!
     // 
     DebugCode (CTT = (Thread *) NULL);
-    e->checkEntailment();
+
+    DebugTrace(trace("check entailment",CBB));
+
+#ifdef DEBUG_NONMONOTONIC
+    cout << "checkEntailment" << endl << flush;
+#endif
+
+    CBB->unsetNervous();
+
+  // check for entailment of ASK and WAITTOP
+    if ((CBB->isAsk() || CBB->isWaitTop()) && e->entailment()) {
+      Board *bb = CBB;
+      e->deinstallCurrent();
+      int ret=e->commit(bb);
+      Assert(ret);
+    } else if (CBB->isSolve()) {
+      e->checkStability();
+    }
+
     // 
     //  deref nb, because it maybe just committed!
     if (nb) e->decSolveThreads (nb->derefBoard());
     goto LBLstart;
   }
 
+// ------------------------------------------------------------------------
+// *** Discard Thread
+// ------------------------------------------------------------------------
 
   /*
    *  Discard the thread, i.e. just decrement solve thread counters 
    * everywhere it is needed, and dispose the body; 
-   *  The main difference to the 'LBLkillThread' is that no 
+   *  The main difference to the 'LBLterminateThread' is that no 
    * entailment can be reached here, because it's tested already 
    * when the failure was processed;
    * 
@@ -1287,23 +1214,21 @@ LBLkillThread:
    */
 LBLdiscardThread:
   {
-    Thread *tmpThread = CTT;
-
-    Assert (tmpThread);
-    Assert (!(tmpThread->isDeadThread ()));
-    Assert (tmpThread->isRunnable ());
+    Assert(CTT);
+    Assert(!CTT->isDeadThread());
+    Assert(CTT->isRunnable ());
 
     asmLbl(discardThread);
 
     //
     //  Note that we may not use the 'currentSolveBoard' test here,
     // because it may point to an irrelevant board!
-    if (tmpThread->isInSolve ()) {
-      Board *tmpBB = tmpThread->getBoard();
+    if (CTT->isInSolve()) {
+      Board *tmpBB = CTT->getBoard();
 
-      if (tmpBB->isSolve ()) {
+      if (tmpBB->isSolve()) {
 	//
-	//  The same technique as by 'LBLkillThread';
+	//  The same technique as by 'LBLterminateThread';
 	SolveActor *sa = SolveActor::Cast (tmpBB->getActor ());
 	Assert (sa);
 	Assert (sa->getSolveBoard () == tmpBB);
@@ -1313,12 +1238,15 @@ LBLdiscardThread:
 	e->decSolveThreads (tmpBB);
       }
     }
+    CTT->disposeRunnableThread();
     CTT = (Thread *) NULL;
-    tmpThread->disposeRunnableThread ();
 
     goto LBLstart;
   }
 
+// ------------------------------------------------------------------------
+// *** Suspend Thread
+// ------------------------------------------------------------------------
 
   /*
    *  Suspend the thread in a generic way. It's used when something 
@@ -1328,8 +1256,7 @@ LBLdiscardThread:
    *
    *  Note that this code might be entered not only from within 
    * the toplevel, so, it has to handle everything correctly ...
-   *
-   *  Invariants:
+   *   *  Invariants:
    *  - CBB must be alive;
    *
    */
@@ -1339,14 +1266,14 @@ LBLsuspendThread:
 
     DebugTrace (trace("suspend runnable thread", CBB));
 
-    Assert (CTT);
+    Assert(CTT);
     CTT->unmarkRunnable();
 
-    Assert (CBB);
-    Assert (!(CBB->isFailed ()));
-    //  see the note for the 'LBLkillThread';
-    Assert (CTT->isInSolve () || !e->currentSolveBoard); 
-    Assert (e->currentSolveBoard || !(CTT->isInSolve ()));
+    Assert(CBB);
+    Assert(!CBB->isFailed());
+    //  see the note for the 'LBLterminateThread';
+    Assert(CTT->isInSolve() || !e->currentSolveBoard); 
+    Assert(e->currentSolveBoard || !CTT->isInSolve());
 
     asmLbl(suspendThread);
 
@@ -1356,12 +1283,15 @@ LBLsuspendThread:
     Assert(CTT->getBoard()==CBB);
     SaveSelf;
 
+    // this can happen if \sw -threadedqueries,
+    // and in \feed prelude if suspend for I/O
 #ifdef DEBUG_CHECK
     if (CTT==e->rootThread) {
       // printf("root blocked\n");
     }
 #endif
-    
+
+    // Debugger
     if (e->debugmode() && CTT->isTraced()) {
       Frame *auxtos = CTT->getTaskStackRef()->getTop();
       GetFrame(auxtos,debugPC,Y,G);
@@ -1413,41 +1343,13 @@ LBLsuspendThread:
     //  So, from now it's somewhere in a deep guard;
     Assert (!(e->isToplevel ()));
 
-    if (e->currentSolveBoard) {
-      if (CBB->isSolve ()) {
-	SolveActor *sa;
-
-	//
-	sa = SolveActor::Cast (CBB->getActor ());
-	//  'nb' points to some board above the current one,
-	// so, 'decSolveThreads' will start there!
-	nb = sa->getBoard();
-
-	//
-	//  kost@ : optimize the most probable case!
-	if (sa->decThreads () != 0) {
-	  e->decSolveThreads (nb);
-	  goto LBLstart;
-	}
-      } else {
-	nb = CBB;
-      }
-    }
-
-    // 
-    DebugCode (CTT = (Thread *) NULL);
-    e->checkEntailment();
-    // 
-    if (nb) e->decSolveThreads (nb->derefBoard());
-    goto LBLstart;
+    goto LBLcheckEntailmentAndStability;
   }
 
-//
-// ----------------- end killThread----------------------------------------
-  
 // ------------------------------------------------------------------------
-// *** Emulate: execute continuation
+// *** Emulator: execute instructions
 // ------------------------------------------------------------------------
+
  LBLemulate:
   Assert(CBB==currentDebugBoard);
 
@@ -1469,16 +1371,14 @@ LBLdispatcher:
   switch (op) {
 #endif
     
-// the instructions are classified into groups
-// to find a certain class of instructions search for the String "CLASS:"
 // -------------------------------------------------------------------------
-// CLASS: TERM: MOVE/UNIFY/CREATEVAR/...
+// INSTRUCTIONS: TERM: MOVE/UNIFY/CREATEVAR/...
 // -------------------------------------------------------------------------
 
 #include "register.hh"
 
 // ------------------------------------------------------------------------
-// CLASS: (Fast-) Call/Execute Inline Funs/Rels
+// INSTRUCTIONS: (Fast-) Call/Execute Inline Funs/Rels
 // ------------------------------------------------------------------------
 
   Case(FASTCALL)
@@ -1948,7 +1848,7 @@ LBLdispatcher:
 #undef SHALLOWFAIL
 
 // ------------------------------------------------------------------------
-// CLASS: Shallow guards stuff
+// INSTRUCTIONS: Shallow guards stuff
 // ------------------------------------------------------------------------
 
   Case(SHALLOWGUARD)
@@ -2043,7 +1943,7 @@ LBLdispatcher:
     }
 
 // -------------------------------------------------------------------------
-// CLASS: Environment
+// INSTRUCTIONS: Environment
 // -------------------------------------------------------------------------
 
   Case(ALLOCATEL)
@@ -2085,7 +1985,7 @@ LBLdispatcher:
       DISPATCH(1);
     }
 // -------------------------------------------------------------------------
-// CLASS: CONTROL: FAIL/SUCCESS/RETURN/SAVECONT
+// INSTRUCTIONS: CONTROL: FAIL/SUCCESS/RETURN/SAVECONT
 // -------------------------------------------------------------------------
 
   Case(FAILURE)
@@ -2200,7 +2100,7 @@ LBLdispatcher:
 
 
 // ------------------------------------------------------------------------
-// CLASS: Definition
+// INSTRUCTIONS: Definition
 // ------------------------------------------------------------------------
 
   Case(DEFINITION)
@@ -2242,7 +2142,7 @@ LBLdispatcher:
     }
 
 // -------------------------------------------------------------------------
-// CLASS: CONTROL: FENCE/CALL/EXECUTE/SWITCH/BRANCH
+// INSTRUCTIONS: CONTROL: FENCE/CALL/EXECUTE/SWITCH/BRANCH
 // -------------------------------------------------------------------------
   
   Case(BRANCH)
@@ -2639,7 +2539,7 @@ LBLdispatcher:
 
   
 // -------------------------------------------------------------------------
-// CLASS: Actors/Deep Guards
+// INSTRUCTIONS: Actors/Deep Guards
 // -------------------------------------------------------------------------
 
   Case(WAIT)
@@ -2837,18 +2737,14 @@ LBLdispatcher:
     }
 
 // -------------------------------------------------------------------------
-// CLASS: MISC: ERROR/NOOP/default
+// INSTRUCTIONS: MISC: ERROR/NOOP/default
 // -------------------------------------------------------------------------
 
   Case(TASKEMPTYSTACK)  
     {
       Assert(Y==0 && G==0);
       CTS->pushEmpty();
-      if (e->isToplevel ()) {
-	goto LBLkillToplevelThread;
-      } else {
-	goto LBLkillThread;
-      }
+      goto LBLterminateThread;
     }
 
 
@@ -3302,11 +3198,13 @@ LBLdispatcher:
 #endif
 
 
-  // ----------------- end emulate ------------------------------------------
+// ----------------- end instructions -------------------------------------
+
 
 // ------------------------------------------------------------------------
 // *** FAILURE
 // ------------------------------------------------------------------------
+
  LBLshallowFail:
   {
     if (e->trail.isEmptyChunk()) {
