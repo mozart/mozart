@@ -1988,8 +1988,9 @@ void performCopying(void){
 // signal handler
 void checkGC()
 {
+  Assert(!am.isCritical());
   if (getUsedMemory() > am.conf.heapMaxSize && am.conf.gcFlag) {
-    am.setSFlagInt(StartGC);
+    am.setSFlag(StartGC);
   }
 }
 
