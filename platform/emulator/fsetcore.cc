@@ -395,6 +395,7 @@ BIspec fdSpec[] = {
   {"fsp_disjointN",    1, fsp_disjointN},
   {"fsp_unionN",       2, fsp_unionN},
   {"fsp_partition",    2, fsp_partition},
+  {"fsp_partitionReified",    3, fsp_partitionReified},
 #endif /* FOREIGNFDPROPS */
 
   {0,0,0,0}

@@ -11,6 +11,11 @@
 
 #include "reified.hh"
 
+#ifdef PROFILE
+#define inline
+#endif
+
+//-----------------------------------------------------------------------------
 OZ_C_proc_begin(fsp_includeR, 3)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET "," OZ_EM_FD);
@@ -337,6 +342,177 @@ failure:
   P.fail();
   OZ_DEBUGPRINTTHIS("fail: ");
   return FAILED;
+}
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fsp_partitionReified, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET "," 
+		   OZ_EM_VECT OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectVectorFSetValue);
+  OZ_EXPECT(pe, 1, expectFSetValue);
+  OZ_EXPECT(pe, 2, expectVectorIntVarMinMax);
+  
+  return pe.impose(new PartitionReifiedPropagator(OZ_args[0],
+						  OZ_args[1],
+						  OZ_args[2]));
+} 
+OZ_C_proc_end
+
+OZ_CFunHeader PartitionReifiedPropagator::header = fsp_partitionReified;
+
+OZ_Return PartitionReifiedPropagator::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in ");
+
+  //_i_sets->print();
+ 
+  DECL_DYN_ARRAY(OZ_FDIntVar, vd, _size);
+  DECL_DYN_ARRAY(int, stack, _u_max_elem+1);
+  ItStack ist(_u_max_elem+1, stack);
+  
+  PropagatorController_VD P(_size, vd);
+  int i;
+
+  int i_high = _i_sets->getHigh();
+  DECL_DYN_ARRAY(int, elems, i_high);
+  IndexSet u(i_high, elems);
+    
+  for (i = _size; i--; ) 
+    vd[i].read(_vd[i]);
+  
+  if (_first) {
+    for (i = _u_max_elem+1; i--; ) {
+      IndexSet &tmp_i = (*_i_sets)[i];
+      if (! tmp_i.isIgnore() && tmp_i.getCard() == 1)
+	ist.push(i);
+    }
+    _first = 0;
+  }
+ 
+  IndexSet &det_vars = (*_i_sets)[_u_max_elem+1];
+
+  for (i = _size; i--; ) 
+    if (!det_vars.isIn(i) && *vd[i] == fd_singl) {
+      int s = vd[i]->getSingleElem();
+      if (s > 0) {
+	if (! _i_sets->resetAllBut(ist, u, i))
+	  goto failure;
+      } else {
+	OZ_ASSERT(s == 0);
+
+	for (int j = _u_max_elem+1; j--; ) {
+	  IndexSet &tmp_j = (*_i_sets)[j];
+	  if (! tmp_j.isIgnore()) {
+	    int card = tmp_j.reset(i);
+	    if (card == 0) {
+	      goto failure;
+	    } else if (card == 1) {
+	      int k = tmp_j.nextLargerElem(-1);
+	      if (! _i_sets->resetAllBut(ist, u, k)) 
+		goto failure;
+	      FailOnEmpty(*vd[k] -= 0);
+	    }
+	  }
+	}
+      }
+    }
+
+  //_i_sets->print();
+
+  while (!ist.isEmpty()) {
+    int k = (*_i_sets)[ist.pop()].nextLargerElem(-1);
+    //printf("<%d>", k);
+    if (! _i_sets->resetAllBut(ist, u, k)) 
+      goto failure;
+
+    //_i_sets->print();
+  }  
+  
+
+  //printf("b\n");
+
+  for (i = _u_max_elem+1; i--; ) {
+    IndexSet &tmp_i = (*_i_sets)[i];
+    if (! tmp_i.isIgnore() && tmp_i.getCard() == 1)
+      FailOnEmpty(*vd[tmp_i.nextLargerElem(-1)] -= 0);
+  }
+  //printf("c\n");
+
+  //printf("a\n");
+
+  _i_sets->unionAll(u);
+  for (i = _size; i--; ) {
+    if (!u.isIn(i)) 
+      FailOnEmpty(*vd[i] &= 0);
+    if (*vd[i] == fd_singl)
+      det_vars.set(i);
+  }
+
+#ifdef OZ_DEBUG
+  for (i = _u_max_elem+1; i--; )
+    if (!(*_i_sets)[i].getCard())
+      abort();
+#endif
+  
+  OZ_DEBUGPRINTTHIS("out ");
+  {
+    OZ_Return r = P.leave();
+    //    if (r == OZ_ENTAILED)
+    //  _i_sets->print();
+    return r;
+  }
+failure:
+  OZ_DEBUGPRINTTHIS("failed");
+  return P.fail();  
+}
+
+PartitionReifiedPropagator::PartitionReifiedPropagator(OZ_Term vs, OZ_Term s, OZ_Term vd) 
+{
+  _first = 1;
+  // init ground set
+  OZ_FSetVar aux(s);
+  OZ_FSetValue u = aux->getGlbSet();
+  _u_max_elem = u.getMaxElem();
+  
+  int i;
+  _size = OZ_vectorSize(vs);
+  
+  // creating subsets
+  _vs = (OZ_FSetValue *) (void *) OZ_hallocChars(_size * sizeof(OZ_FSetValue));
+  DECL_DYN_ARRAY(OZ_Term, vs_terms, _size);
+  OZ_getOzTermVector(vs, vs_terms);
+  
+  for (i = _size; i--; ) {
+    OZ_FSetVar aux(vs_terms[i]);
+    _vs[i] = aux->getGlbSet();
+  }
+  
+  // creating bools
+  _vd = OZ_hallocOzTerms(_size);
+  OZ_getOzTermVector(vd, _vd);
+  
+  // create index sets
+  _i_sets = IndexSets::create(_u_max_elem+2, _size);
+  //_i_sets->print();
+  
+  for (i = _u_max_elem+1; i--; ) {
+    if (u.isIn(i)) {
+      for (int j = _size; j--; ) {
+	if (_vs[j].isIn(i)) {
+	  (*_i_sets)[i].set(j);
+	}
+      }
+    } else {
+	(*_i_sets)[i].setIgnore();
+    }
+  }
+  //  _i_sets->print();
+  
 }
 
 //-----------------------------------------------------------------------------

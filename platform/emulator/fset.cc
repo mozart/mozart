@@ -67,7 +67,7 @@ unsigned char * initNumOfBitsInHalfWord(void)
 }
 
 inline 
-int findBitsSet(int high, int * bv)
+int findBitsSet(int high, const int * bv)
 {
   static unsigned char * numOfBitsInHalfWord = initNumOfBitsInHalfWord();
   int s, i;
@@ -210,6 +210,12 @@ void printBits(ostream &o, int high, const int * bv, int neg = 0)
 }
 
 //-----------------------------------------------------------------------------
+
+inline 
+OZ_Boolean FSetValue::isIn(int i) const
+{
+  return testBit(_in, i);
+}
 
 inline 
 void FSetValue::init(const FSetConstraint &fs)
@@ -951,6 +957,52 @@ OZ_Boolean FSetConstraint::operator <<= (const FSetConstraint& y)
 }
 
 inline 
+OZ_Boolean FSetConstraint::operator %= (const FSetConstraint& y)
+{
+  DEBUG_FSETIR('(' << *this << " %= " << y << ") = ");
+
+  {
+    // greatest lower bound
+    OZ_Boolean becomesUpperBound = (_card_min < y._card_min);
+    
+    if (! becomesUpperBound)
+      for (int i = fset_high; i--; ) {
+	int i_in = _in[i];
+	becomesUpperBound = (i_in != (i_in | y._in[i]));
+	if (becomesUpperBound)
+	  break;
+      }
+    if (becomesUpperBound) {
+      for (int i = fset_high; i--; ) {
+	_in[i] |= ~y._not_in[i];
+      }
+      _card_min = _card_max = y._card_max;
+    }
+  }
+  {
+    // least upper bound
+    OZ_Boolean becomesLowerBound = (_card_max > y._card_max);
+    
+    if (! becomesLowerBound)
+      for (int i = fset_high; i--; ) {
+	int i_not_in = _not_in[i];
+	becomesLowerBound = (i_not_in != (i_not_in | y._not_in[i]));
+	if (becomesLowerBound)
+	  break;
+      }
+
+    if (becomesLowerBound) {
+      for (int i = fset_high; i--; ) {
+	_not_in[i] |= ~y._in[i];
+      }
+      _card_min = _card_max = y._card_min;
+    } 
+  }
+
+  return normalize();
+}
+
+inline 
 OZ_Boolean FSetConstraint::operator <= (const FSetConstraint &y)
 {
   // since _*this_ is subsumed by _y_, _*this_ must contain at least 
@@ -1128,6 +1180,34 @@ FSetValue FSetConstraint::getNotInSet(void) const
   return FSetValue(_not_in);  
 }
 
+
+inline 
+int FSetConstraint::getGlbCard(void) const
+{
+  return findBitsSet(fset_high, _in);
+}
+
+inline 
+int FSetConstraint::getLubCard(void) const
+{
+  return (32 * fset_high) - findBitsSet(fset_high, _not_in);
+}
+
+inline 
+int FSetConstraint::getNotInCard(void) const
+{
+  return findBitsSet(fset_high, _not_in);
+}
+
+inline 
+int FSetConstraint::getUnknownCard(void) const
+{
+  return (32 * fset_high) 
+    - findBitsSet(fset_high, _not_in) 
+    - findBitsSet(fset_high, _in);
+
+}
+
 inline 
 OZ_Boolean FSetConstraint::operator >= (const int ii)
 {
@@ -1274,6 +1354,16 @@ char * OZ_FSetValue::toString()
   return str.str();
 }
 
+void * OZ_FSetValue::operator new(size_t s)
+{
+  return heapMalloc(s);
+}
+
+void OZ_FSetValue::operator delete(void *, size_t)
+{
+  error("deleting heap mem");
+}
+
 //-----------------------------------------------------------------------------
 
 #undef CASTPTR
@@ -1308,6 +1398,12 @@ OZ_FSetConstraint &OZ_FSetConstraint::operator = (const OZ_FSetConstraint &s)
 {
   return CASTTHIS->operator = (* (const FSetConstraint *) &s);
 }
+
+void OZ_FSetConstraint::init(const OZ_FSetValue & s) 
+{
+  CASTTHIS->init(* (const FSetValue *) &s);
+}
+
 
 void OZ_FSetConstraint::init(OZ_FSetState s) 
 {
@@ -1384,6 +1480,11 @@ OZ_Boolean OZ_FSetConstraint::operator <<= (const OZ_FSetConstraint& y)
   return CASTTHIS->operator <<= (CASTREF y);
 }
 
+OZ_Boolean OZ_FSetConstraint::operator %= (const OZ_FSetConstraint& y)
+{
+  return CASTTHIS->operator %= (CASTREF y);
+}
+
 OZ_FSetConstraint OZ_FSetConstraint::operator & (const OZ_FSetConstraint& y) const
 {
   return CASTCONSTTHIS->operator & (CASTREF y);
@@ -1452,6 +1553,26 @@ OZ_FSetValue OZ_FSetConstraint::getUnknownSet(void) const
 OZ_FSetValue OZ_FSetConstraint::getNotInSet(void) const
 {
   return CASTCONSTTHIS->getNotInSet();
+}
+
+int OZ_FSetConstraint::getGlbCard(void) const
+{
+  return CASTCONSTTHIS->getGlbCard();
+}
+
+int OZ_FSetConstraint::getLubCard(void) const
+{
+  return CASTCONSTTHIS->getLubCard();
+}
+
+int OZ_FSetConstraint::getNotInCard(void) const
+{
+  return CASTCONSTTHIS->getNotInCard();
+}
+
+int OZ_FSetConstraint::getUnknownCard(void) const
+{
+  return CASTCONSTTHIS->getUnknownCard();
 }
 
 char * OZ_FSetConstraint::toString()
