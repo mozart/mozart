@@ -85,13 +85,8 @@ public:
 
 #define OZ_HEAPALIGNMENT 8
 
-#ifdef HEAPCURINTOREGISTER
-register char * _oz_heap_cur asm("g6");
-#else
-extern   char * _oz_heap_cur;
-#endif
-
-extern   char * _oz_heap_end;
+extern char * _oz_heap_cur;
+extern char * _oz_heap_end;
 
 #ifdef TRACE_ALOVER
 extern size_t _oz_alover;
