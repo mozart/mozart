@@ -299,8 +299,7 @@ define
 	 if {HasFeature M I} then
 	    case M.I of S=_|_ then VS in
 	       {@MyFontifier enqueueVirtualString(@ProgLang S '<BR>' ?VS)}
-	       code(COMMON: @Common 'class': [M.display]
-		    VERBATIM(VS))|   %--** VERBATIM?
+	       code(COMMON: @Common VERBATIM(VS))|   %--** VERBATIM?
 	       OzDocToHTML, BatchCodeSub(M I + 1 $)
 	    [] nil then
 	       OzDocToHTML, BatchCodeSub(M I + 1 $)
@@ -706,7 +705,8 @@ define
 	    %-----------------------------------------------------------
 	    [] code then HTML in
 	       OzDocToHTML, BatchCode(M 1 ?HTML)
-	       case M.display of display then BLOCK(blockquote(p(HTML)))
+	       case M.display of display then
+		  BLOCK(blockquote('class': [codedisplay] p(HTML)))
 	       [] inline then HTML
 	       end
 	    [] 'code.extern' then HTML in
