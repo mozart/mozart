@@ -43,16 +43,7 @@ if test -n "${enable_wish}"; then
 fi
 AC_MSG_RESULT($oz_enable_wish)
 
-if test "${oz_enable_wish}" = yes; then
-    PLATFORMDIRS="emulator wish tools"
-else
-    PLATFORMDIRS="emulator tools"
-fi
-
-OZ_GTK_ENABLED
-if test "${GTK_ENABLED}" = yes; then
-    PLATFORMDIRS="$PLATFORMDIRS gtk"
-fi
+PLATFORMDIRS="emulator"
 
 case $platform in
     win32*)
@@ -61,6 +52,17 @@ case $platform in
     *)
 	;;
 esac
+
+if test "${oz_enable_wish}" = yes; then
+    PLATFORMDIRS="$PLATFORMDIRS wish"
+fi
+
+OZ_GTK_ENABLED
+if test "${GTK_ENABLED}" = yes; then
+    PLATFORMDIRS="$PLATFORMDIRS gtk"
+fi
+
+PLATFORMDIRS="$PLATFORMDIRS tools"
 
 AC_SUBST(PLATFORMDIRS)
 
