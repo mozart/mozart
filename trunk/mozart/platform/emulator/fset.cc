@@ -184,7 +184,7 @@ void printBits(ostream &o, int high, const int * bv, int neg = 0)
   
   Bool flag = FALSE;
 
-  o << '[';
+  o << '{';
   for (int i = 0; i < len; i += 1) {
     if (flag) o << ' '; else flag = TRUE; 
     o << fd_bv_left_conv[i];
@@ -194,7 +194,7 @@ void printBits(ostream &o, int high, const int * bv, int neg = 0)
       else
 	o << '#' << fd_bv_right_conv[i];
   }
-  o << ']';
+  o << '}';
 }
 
 //-----------------------------------------------------------------------------
@@ -236,9 +236,8 @@ OZ_Boolean FSetValue::unify(OZ_Term t)
 
 ostream &FSetValue::print2stream(ostream &o) const
 {
-  o << "{";
   printBits(o, fset_high, _in);
-  o << "}#" << _card;
+  o << '#' << _card;
   return o;
 }
 
@@ -397,21 +396,11 @@ OZ_FSetImpl::OZ_FSetImpl(OZ_Term ins, OZ_Term outs)
 void OZ_FSetImpl::printGlb(ostream &o) const 
 {
   printBits(o, fset_high, _in);
-  /*
-#ifdef DEBUG_FSET
-  o << '#' << _known_in;
-#endif
-*/
 }
 
 void OZ_FSetImpl::printLub(ostream &o) const
 {
   printBits(o, fset_high, _not_in, 1);
-  /*
-#ifdef DEBUG_FSET
-  o << '#' << _known_not_in;
-#endif
-*/
 }
 
 ostream &OZ_FSetImpl::print(ostream &o) const
@@ -424,7 +413,7 @@ ostream &OZ_FSetImpl::print(ostream &o) const
   if (_card_min == _card_max) 
     o << _card_min;
   else 
-    o << '[' << _card_min << '#' << _card_max << ']';
+    o << '{' << _card_min << '#' << _card_max << '}';
 
   return o;
 }
