@@ -446,31 +446,23 @@ define
 	       Chapter <- 0
 	       Appendix <- false
 	       OzDocToHTML, Batch(M 1 $)
-	    [] part then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
-	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Batch(M.1 1 $)
-		       else unit
-		       end
+	    [] part then X HTML1 HTML2 HTML3 HTML4 Title in
 	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       OzDocToHTML, MakeTitle(""
 				      fun {$}
 					 Part <- @Part + 1
 					 'Part&nbsp;'#{RomanU @Part}
 				      end
-				      ': ' Title
+				      ': '
 				      fun {$ N}
 					 h1(align: center 'class': [part] N)
 				      end
-				      M 1 ?HTML2 ?NodeTitle)
+				      M 1 ?HTML2 ?Title)
 	       OzDocToHTML, Batch(M 2 ?HTML3)
-	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
-							 HTML2 HTML3) ?HTML4)
+	       OzDocToHTML, FinishNode(Title X 'div'(COMMON: @Common
+						     HTML2 HTML3) ?HTML4)
 	       SEQ([HTML1 HTML4])
-	    [] chapter then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
-	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Batch(M.1 1 $)
-		       else unit
-		       end
+	    [] chapter then X HTML1 HTML2 HTML3 HTML4 Title in
 	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       OzDocToHTML, MakeTitle('Chapter&nbsp;'
 				      fun {$}
@@ -479,18 +471,14 @@ define
 					 FigureCounters <- {NewDictionary}
 					 @Chapter
 				      end
-				      ' ' Title
+				      ' '
 				      fun {$ N} h1(N) end
-				      M 2 ?HTML2 ?NodeTitle)
+				      M 2 ?HTML2 ?Title)
 	       OzDocToHTML, Batch(M 2 ?HTML3)
-	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
-							 HTML2 HTML3) ?HTML4)
+	       OzDocToHTML, FinishNode(Title X 'div'(COMMON: @Common
+						     HTML2 HTML3) ?HTML4)
 	       SEQ([HTML1 HTML4])
-	    [] appendix then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
-	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Batch(M.1 1 $)
-		       else unit
-		       end
+	    [] appendix then X HTML1 HTML2 HTML3 HTML4 Title in
 	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       if @Appendix then skip
 	       else
@@ -504,18 +492,14 @@ define
 					 FigureCounters <- {NewDictionary}
 					 {Alpha @Chapter}
 				      end
-				      ' ' Title
+				      ' '
 				      fun {$ N} h1(N) end
-				      M 2 ?HTML2 ?NodeTitle)
+				      M 2 ?HTML2 ?Title)
 	       OzDocToHTML, Batch(M 2 ?HTML3)
-	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
-							 HTML2 HTML3) ?HTML4)
+	       OzDocToHTML, FinishNode(Title X 'div'(COMMON: @Common
+						     HTML2 HTML3) ?HTML4)
 	       SEQ([HTML1 HTML4])
-	    [] section then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
-	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Batch(M.1 1 $)
-		       else unit
-		       end
+	    [] section then X HTML1 HTML2 HTML3 HTML4 Title in
 	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       OzDocToHTML, MakeTitle('Section&nbsp;'
 				      fun {$}
@@ -525,18 +509,14 @@ define
 					 else @Chapter
 					 end#'.'#@Section
 				      end
-				      ' ' Title
+				      ' '
 				      fun {$ N} h2(N) end
-				      M 3 ?HTML2 ?NodeTitle)
+				      M 3 ?HTML2 ?Title)
 	       OzDocToHTML, Batch(M 2 ?HTML3)
-	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
-							 HTML2 HTML3) ?HTML4)
+	       OzDocToHTML, FinishNode(Title X 'div'(COMMON: @Common
+						     HTML2 HTML3) ?HTML4)
 	       SEQ([HTML1 HTML4])
-	    [] subsection then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
-	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Batch(M.1 1 $)
-		       else unit
-		       end
+	    [] subsection then X HTML1 HTML2 HTML3 HTML4 Title in
 	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       OzDocToHTML, MakeTitle('Section&nbsp;'
 				      fun {$}
@@ -545,30 +525,24 @@ define
 					 else @Chapter
 					 end#'.'#@Section#'.'#@SubSection
 				      end
-				      ' ' Title
+				      ' '
 				      fun {$ N} h3(N) end
-				      M 4 ?HTML2 ?NodeTitle)
+				      M 4 ?HTML2 ?Title)
 	       OzDocToHTML, Batch(M 2 ?HTML3)
-	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
-							 HTML2 HTML3) ?HTML4)
+	       OzDocToHTML, FinishNode(Title X 'div'(COMMON: @Common
+						     HTML2 HTML3) ?HTML4)
 	       SEQ([HTML1 HTML4])
-	    [] subsubsection then Title TheLabel in
-	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Batch(M.1 1 $)
-		       else unit
-		       end
-	       if {HasFeature M id} then
-		  OzDocToHTML, ID(M.id @CurrentNode
-				  SEQ([PCDATA('Section ``') Title
-				       PCDATA('\'\'')]))
-		  TheLabel = M.id
-	       else
-		  ToGenerate <- TheLabel|@ToGenerate
-	       end
-	       TOC <- {Append @TOC [5#TheLabel#@CurrentNode#Title]}
-	       'div'(COMMON: @Common
-		     h4(a(name: TheLabel Title))
-		     OzDocToHTML, Batch(M 2 $))
+	    [] subsubsection then X HTML1 HTML2 HTML3 HTML4 Title in
+	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
+	       OzDocToHTML, MakeTitle('Section&nbsp;'
+				      fun {$} "" end
+				      ""
+				      fun {$ N} h4(N) end
+				      M 5 ?HTML2 ?Title)
+	       OzDocToHTML, Batch(M 2 ?HTML3)
+	       OzDocToHTML, FinishNode(Title X 'div'(COMMON: @Common
+						     HTML2 HTML3) ?HTML4)
+	       SEQ([HTML1 HTML4])
 	    %-----------------------------------------------------------
 	    % Paragraphs
 	    %-----------------------------------------------------------
@@ -925,26 +899,22 @@ define
 		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    end
 	 end = Res
-	 case {CondSelect M id unit} of unit then skip
-	 elseof L then N T in
-	    OzDocToHTML, ID(L N T)
-	    if {IsFree N} then
-	       N = @CurrentNode
-	       T = PCDATA('???')
-	    end
-	 end
 	 OzDocToHTML, PopCommon(OldCommon)
 	 Res
       end
-      meth MakeTitle(PtrText FormatNumber Sep Title LayoutTitle M Level
-		     HTML ?NodeTitle) HTML1 Label Res in
+      meth MakeTitle(PtrText FormatNumber Sep LayoutTitle M Level HTML
+		     ?NodeTitle) HTML1 Title TheLabel Res in
 	 OzDocToHTML, FlushFloats(?HTML1)
+	 Title = case {Label M.1} of title then
+		    OzDocToHTML, Batch(M.1 1 $)
+		 else unit
+		 end
 	 if {HasFeature M id} then
-	    Label = M.id
+	    TheLabel = M.id
 	 else
-	    ToGenerate <- Label|@ToGenerate
+	    ToGenerate <- TheLabel|@ToGenerate
 	 end
-	 Res = a(name: Label NodeTitle)
+	 Res = a(name: TheLabel NodeTitle)
 	 if {SGML.isOfClass M unnumbered} then
 	    if Title == unit then
 	       {Exception.raiseError ozDoc(sgmlToHTML emptySectionTitle M)}
@@ -964,7 +934,7 @@ define
 	       OzDocToHTML, ID(M.id @CurrentNode VERBATIM(PtrText#NumberVS))
 	    end
 	 end
-	 TOC <- {Append @TOC [Level#Label#@CurrentNode#NodeTitle]}
+	 TOC <- {Append @TOC [Level#TheLabel#@CurrentNode#NodeTitle]}
 	 HTML = SEQ([HTML1 {LayoutTitle Res}])
       end
       meth ID(L Node HTML)
@@ -1118,7 +1088,7 @@ define
 	    {FoldLTail Ar
 	     fun {$ In A|Ar}
 		SEQ([In
-		     PCDATA(case Ar of nil then ' and' else ',' end)
+		     PCDATA(case Ar of nil then ' and ' else ', ' end)
 		     {FormatAuthor A}])
 	     end {FormatAuthor A}}
 	 end

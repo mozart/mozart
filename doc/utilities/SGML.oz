@@ -155,13 +155,13 @@ define
 	    {Exception.raiseError sgml(nonconforming @File VSs)}
 	 [] C|Cr then
 	    case C of &s then
-		  %--** ignore for now
+	       %--** ignore for now
 	       SGMLParser, parse()
 	    [] &p then
-		  %--** ignore for now
+	       %--** ignore for now
 	       SGMLParser, parse()
 	    [] &N then
-		  %--** ignore for now
+	       %--** ignore for now
 	       SGMLParser, parse()
 	    [] &A then Name Rest1 Type Rest2 in
 	       {List.takeDropWhile Cr IsNoSpace ?Name & |?Rest1}
