@@ -37,9 +37,10 @@
 ;; files ending in ".oz"
 (or (assoc "\\.oz$" auto-mode-alist)
     (setq auto-mode-alist
-	  (append '(("/\\.ozrc$" . oz-mode)
-		    ("\\.oz$" . oz-mode)
-		    ("\\.ozg$" . oz-gump-mode))
+	  (append '(("/\\.ozrc\\'" . oz-mode)
+		    ("\\.oz\\'" . oz-mode)
+		    ("\\.ozm\\'" . ozm-mode)
+		    ("\\.ozg\\'" . oz-gump-mode))
 		  auto-mode-alist)))
 
 
@@ -1576,6 +1577,23 @@ if that value is non-nil."
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
 
+(defun ozm-mode ()
+  "Major mode for editing Oz machine code.
+
+Commands:
+\\{oz-mode-map}"
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map oz-mode-map)
+  (setq major-mode 'oz-mode)
+  (setq mode-name "Oz-Machine")
+  (oz-mode-variables)
+
+  ;; font lock stuff
+  (ozm-set-font-lock-defaults)
+  (if (and oz-want-font-lock (oz-window-system))
+      (font-lock-mode 1)))
+
 (defun oz-gump-mode ()
   "Major mode for editing Oz code with embedded Gump specifications.
 
@@ -1781,7 +1799,84 @@ and is used for fontification.")
 	 nil nil ((?& . "/")) beginning-of-line)))
 
 ;;------------------------------------------------------------
-;; Gump Fontification
+;; Fontification for Oz-Machine Mode
+
+(defconst ozm-instr-matcher-1
+  (concat
+   "\t\\("
+   (mapconcat
+    'identity
+    '("move" "moveMoveXYXY" "moveMoveYXYX"
+      "moveMoveXYYX" "moveMoveYXXY" "createNamedVariable" "createVariable"
+      "createVariableMove" "putInt" "putConstant" "putList" "putRecord"
+      "setInt" "setConstant" "setValue" "setVariable" "setVoid" "getInt"
+      "getConstant" "getList" "getListValVar" "getRecord" "unifyInt"
+      "unifyConstant" "unifyValue" "unifyVariable" "unifyValVar" "unifyVoid"
+      "unify" "branch" "callBuiltin" "inlineFun[1-3]" "inlineRel[1-3]"
+      "inlineEqEq" "inlineDot" "inlineUparrow" "inlineAt" "inlineAssign"
+      "genCall" "call" "tailCall" "fastCall" "fastTailCall" "genFastCall"
+      "marshalledFastCall" "sendMsg" "tailSendMsg" "applMeth" "tailApplMeth"
+      "thread" "exHandler" "createCond" "nextClause" "shallowGuard"
+      "shallowTest[12]" "testConst" "testNumber" "testBool" "switchOnTerm"
+      "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf" "det"
+      "weakDet" "debugInfo" "globalVarname" "localVarname") "\\|")
+   "\\)("))
+
+(defconst ozm-instr-matcher-2
+  (concat
+   "\t\\("
+   (mapconcat
+    'identity
+    '("allocateL" "allocateL[1-9]" "allocateL10" "deAllocateL"
+      "deAllocateL[1-9]" "deAllocateL10" "return" "popEx" "createOr"
+      "createEnumOr" "createChoice" "clause" "emptyClause" "lastClause"
+      "shallowThen" "failure" "succeed" "wait" "waitTop" "ask")
+    "\\|")
+   "\\)$"))
+
+(defconst ozm-definition-matcher
+  "\t\\(definition\\|endDefinition\\)(")
+
+(defconst ozm-register-matcher
+  "\\<\\(x\\|y\\|g\\)([0-9]+)")
+
+(defconst ozm-label-matcher
+  "^lbl([0-9]+)")
+
+(defconst ozm-name-matcher
+  "<N: [^>]+>")
+
+(defconst ozm-builtin-name-matcher
+  (concat "\t\\(callBuiltin\\|inlineRel[1-3]\\|inlineFun[1-3]\\|inlineEqEq\\|"
+	  "shallowTest[12]\\)(\\([A-Za-z0-9_]+\\|'[^'\n]'\\)"))
+
+(defconst ozm-font-lock-keywords-1
+  (list (list ozm-instr-matcher-1
+	      '(1 font-lock-keyword-face))
+	(list ozm-instr-matcher-2
+	      '(1 font-lock-keyword-face))
+	(list ozm-definition-matcher
+	      '(1 font-lock-function-name-face))
+	(cons ozm-name-matcher 'font-lock-string-face)))
+
+(defconst ozm-font-lock-keywords ozm-font-lock-keywords-1)
+
+(defconst ozm-font-lock-keywords-2
+  (append (list (list ozm-register-matcher
+		      '(1 font-lock-type-face))
+		(cons ozm-label-matcher 'font-lock-reference-face)
+		(list ozm-builtin-name-matcher
+		      '(2 font-lock-variable-name-face)))
+	  ozm-font-lock-keywords-1))
+
+(defun ozm-set-font-lock-defaults ()
+  (set (make-local-variable 'font-lock-defaults)
+       '((ozm-font-lock-keywords ozm-font-lock-keywords-1
+	  ozm-font-lock-keywords-2)
+	 nil nil nil beginning-of-line)))
+
+;;------------------------------------------------------------
+;; Fontification for Oz-Gump Mode
 
 (defconst oz-gump-keywords
   '("lex" "mode" "parser" "prod" "scanner" "syn" "token"))
@@ -1991,7 +2086,14 @@ The rest of the output is then passed through the oz-filter."
 		  (set-buffer buf)
 		  (goto-char (point-max))
 		  (insert-file-contents file)
-		  (delete-file file))))
+		  (delete-file file)
+		  (cond ((not oz-want-font-lock) t)
+			((string-match "\\.ozc\\'" file)
+			 (oz-mode)
+			 (oz-fontify-buffer))
+			((string-match "\\.ozm\\'" file)
+			 (ozm-mode)
+			 (oz-fontify-buffer))))))
 
 	    ;; oz-bar information?
 	    (while (search-forward-regexp oz-bar-pattern nil t)
