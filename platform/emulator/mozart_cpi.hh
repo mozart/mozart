@@ -525,6 +525,14 @@ public:
   OZ_CPIVar(void)
     : _nb_refs(0) {}
   void dropParameter(void);
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  // mm2: portability ?
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
 };
 #endif
 //-----------------------------------------------------------------------------
@@ -571,6 +579,7 @@ public:
   OZ_FDIntVar(void);
   OZ_FDIntVar(OZ_Term v);
 
+#ifndef TMUELLER
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
@@ -578,6 +587,7 @@ public:
   // mm2: portability ?
   static void * operator new[](size_t);
   static void operator delete[](void *, size_t);
+#endif
 #endif
 
   OZ_FiniteDomain &operator * (void);
@@ -713,6 +723,7 @@ public:
   OZ_FSetVar(void);
   OZ_FSetVar(OZ_Term v);
 
+#ifndef TMUELLER
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
@@ -720,6 +731,7 @@ public:
   // mm2: portability ?
   static void * operator new[](size_t);
   static void operator delete[](void *, size_t);
+#endif
 #endif
 
   OZ_FSetConstraint &operator * (void);
@@ -1046,13 +1058,14 @@ public:
   OZ_CtVar(void);
 #else
   OZ_CtVar(void) {}
-#endif
+
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
 #ifdef __GNUC__
   static void * operator new[](size_t);
   static void operator delete[](void *, size_t);
+#endif
 #endif
 
   virtual OZ_Boolean isTouched(void) const = 0;

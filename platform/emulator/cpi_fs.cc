@@ -29,6 +29,7 @@
 
 //-----------------------------------------------------------------------------
 
+#ifndef TMUELLER
 void * OZ_FSetVar::operator new(size_t s)
 {
   return CpiHeap.alloc(s);
@@ -49,6 +50,7 @@ void OZ_FSetVar::operator delete[](void * p, size_t s)
 {
   // deliberately left empty
 }
+#endif
 #endif
 
 #ifdef TMUELLER
