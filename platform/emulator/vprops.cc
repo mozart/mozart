@@ -593,7 +593,15 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
              DO_NAT(AtomThreshold,reInitFDs(INT__)););
     // ERRORS
   case PROP_ERRORS_HANDLER: {
+    if (oz_isVariable(val))
+      return SUSPEND;
+
+    if (!oz_isProcedure(val) || tagged2Const(val)->getArity()!=1) {
+      oz_typeError(0,"Procedure/1");
+    }
+
     am.setDefaultExceptionHdl(val);
+    return PROCEED;
   }
     CASE_BOOL(PROP_ERRORS_LOCATION,ozconf.errorLocation);
     CASE_BOOL(PROP_ERRORS_HINTS,ozconf.errorHints);
