@@ -5688,7 +5688,7 @@ OZ_BI_define(BIdlStaticLoad,1,1)
 #ifdef STATIC_LIBPARSER
   if (!strcmp(basename, "libparser.so")) {
      I = libparser_interface;
-     goto sucess;
+     goto success;
   }
 #endif
 
