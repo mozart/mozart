@@ -117,14 +117,17 @@ $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 #
 
 clean:
-        -rm *.ozf
-        -rm *.o
-        -rm ri.so-$(PLATFORM)
-        -rm *.s
-        -rm *~
+        -rm -f *.ozf
+        -rm -f *.o
+        -rm -f ri.so-$(PLATFORM)
+        -rm -f *.s
+        -rm -f *~
 
 veryclean: clean
-        -rm Makefile.deps
+        -rm -f Makefile.deps
+
+distclean: veryclean
+        -rm -f Makefile config.status config.log config.cache
 
 %.o: %.cc
         $(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
