@@ -226,7 +226,7 @@ ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
 	$(EXECWITHSTD) MakeBatch.oz
 
 ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) AP.ozc \
-	SP.ozc OP.ozc \
+	SP.ozc OP.ozc
 	$(EXECWITHSTD) MakeOzServer.oz
 
 Base.ozc: Standard.ozc
