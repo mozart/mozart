@@ -63,9 +63,7 @@ define
 		  Sock = {New TextSocket server(port: ?Port)}
 	       end
 	       {Wait Port}
-	       {System.showError "BEFORE"}
 	       {Wait OPIServer.port}
-	       {System.showError "AFTER"}
 	       Socket <- Sock
 	       {Print '\'oz-socket '#case Host of unit then ""
 				     else '"'#Host#'" '
