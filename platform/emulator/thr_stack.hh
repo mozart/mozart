@@ -118,21 +118,21 @@ public:
   void gc(TaskStack *newstack);
   void gcRecurse();
 
-  void pushCall(Chunk *pred, RefsArray  x, int i)
+  void pushCall(TaggedRef pred, RefsArray  x, int i)
   {
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
     ensureFree(3);
 
     push(i>0 ? copyRefsArray(x, i) : NULL, NO);
-    push(pred, NO);
+    push(ToPointer(pred), NO);
     push(ToPointer(C_CALL_CONT), NO);
   }
 
-  void pushExceptionHandler(Chunk *pred)
+  void pushExceptionHandler(TaggedRef pred)
   {
     ensureFree(2);
-    push(pred, NO);
+    push(ToPointer(pred), NO);
     push(ToPointer(C_EXCEPT_HANDLER), NO);
   }
 
