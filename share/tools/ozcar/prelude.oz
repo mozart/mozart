@@ -94,18 +94,22 @@ end
 
 local
    LS = 'file lookup: '
-   fun {DoLookupFile F SearchList}
-      case SearchList == nil then
+   fun {DoLookupFile SearchList F OrigF}
+      case SearchList of nil then
 	 %% must have been the name of an unsaved file or buffer in Emacs:
-	 F
-      else Try = SearchList.1 # F in
+	 OrigF
+      elseof Path|SearchListRest then Try = Path # F in
 	 try
-	    {OS.stat Try _}
-	    {OzcarMessage LS # F # ' is ' # Try}
-	    {VS2A Try}
+	    case {OS.stat Try} == reg then
+	       {OzcarMessage LS # F # ' is ' # Try}
+	       {VS2A Try}
+	    else
+	       {OzcarMessage LS # F # ' is not ' # Try # ' (not a plain file)'}
+	       {DoLookupFile SearchListRest F OrigF}
+	    end
 	 catch system(...) then
 	    {OzcarMessage LS # F # ' is not ' # Try}
-	    {DoLookupFile F SearchList.2}
+	    {DoLookupFile SearchListRest F OrigF}
 	 end
       end
    end
@@ -118,8 +122,8 @@ in
 	    else false end
    in
       case Abs then
-	 %% the file needs not exist, since it may be the name of an unsaved
-	 %% buffer or file in Emacs:
+	 %% the file doesn't need to exist, since it may be the name of
+	 %% an unsaved buffer or file in Emacs:
 	 F
       else                           % ...no!
 	 %% strip "./" or "././"
@@ -128,7 +132,7 @@ in
 		     else T end
 		  else S end
       in
-	 {DoLookupFile Suffix OzPath} 
+	 {DoLookupFile OzPath Suffix F}
       end
    end
 end
