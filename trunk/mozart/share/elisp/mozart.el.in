@@ -996,19 +996,6 @@ With ARG, stop it instead."
   (interactive "fFeed file: ")
   (oz-send-string (concat "\\insert '" file "'")))
 
-(defun oz-find-demo-file ()
-  "Find an Oz file in the demo directory."
-  (interactive)
-  (oz-find-file "Find demo file: " "demo/"))
-
-(defun oz-find-modules-file ()
-  "Find an Oz file in the lib directory."
-  (interactive)
-  (oz-find-file "Find modules file: " "share/"))
-
-(defun oz-find-file (prompt file)
-  (find-file (read-file-name prompt (concat (oz-home) "/" file) nil t nil)))
-
 ;;}}}
 ;;{{{ The oz-bar (used by Compiler Panel, Debugger and Profiler)
 
