@@ -57,17 +57,19 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
     not_first = 1;
     //
     DEREF(h, hptr);
-    switch (tagTypeOf(h)) {
+    switch (tagged2ltag(h)) {
 
-    case TAG_LITERAL:
+    case LTAG_LITERAL:
       o << tagged2Literal(h)->getPrintName();
       break;
 
-    case TAG_LTUPLE:
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
       outputArgsList(o, h, TRUE);
       break;
 
-    case TAG_SRECORD:
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
       {
 	SRecord * st = tagged2SRecord(h);
 	if (st->isTuple()) {
@@ -77,18 +79,20 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
       }
       break;
 
-    case TAG_CONST:
+    case LTAG_CONST0:
+    case LTAG_CONST1:
       if (oz_isFSetValue(h))
 	o << tagged2FSetValue(h)->toString();
       if (oz_isFloat(h))
 	o << floatValue(h);
       break;
 
-    case TAG_SMALLINT:
+    case LTAG_SMALLINT:
       o << tagged2SmallInt(h);
       break;
 
-    case TAG_VAR:
+    case LTAG_VAR0:
+    case LTAG_VAR1:
       {
 	o << oz_varGetName(makeTaggedRef(hptr));
 	
@@ -128,7 +132,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
   
  problem:
   OZ_warning("Unexpected term found in argument list "
-	     "of propagator while printing %x, %x.", args, tagTypeOf(args));
+	     "of propagator while printing %x, %x.", args, tagged2stag(args));
 }
 
 ostream& operator << (ostream& o, const OZ_Propagator &p) 

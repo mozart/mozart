@@ -97,13 +97,16 @@ OZ_BI_define(BIsystemTellSize,3,0)
     return PROCEED;
   }
 
-  switch (tagTypeOf(label)) {
-  case TAG_LTUPLE:
-  case TAG_SRECORD:
+  switch (tagged2ltag(label)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     oz_typeError(0,"Literal");
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     break;
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     switch (tagged2Var(label)->getType()) {
     case OZ_VAR_OF:
       {
@@ -124,14 +127,17 @@ OZ_BI_define(BIsystemTellSize,3,0)
   Assert(oz_isLiteral(label));
 
   // Create record:
-  switch (tagTypeOf(t)) {
-  case TAG_LTUPLE:
+  switch (tagged2ltag(t)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     return oz_eq(label, AtomCons) ? PROCEED : FAILED;
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     return oz_eq(label, t) ? PROCEED : FAILED;
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     return oz_eq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     if (tagged2Var(t)->getType()==OZ_VAR_OF) {
        OZ_Return ret=oz_unify(tagged2GenOFSVar(t)->getLabel(),label);
        tagged2GenOFSVar(t)->propagateOFS();
@@ -182,13 +188,16 @@ OZ_BI_define(BIrecordTell,2,0)
     return PROCEED;
   }
 
-  switch (tagTypeOf(label)) {
-  case TAG_LTUPLE:
-  case TAG_SRECORD:
+  switch (tagged2ltag(label)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     oz_typeError(0,"Literal");
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     break;
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     switch (tagged2Var(label)->getType()) {
     case OZ_VAR_OF:
       {
@@ -208,14 +217,17 @@ OZ_BI_define(BIrecordTell,2,0)
 
   Assert(oz_isLiteral(label));
   // Create record:
-  switch (tagTypeOf(t)) {
-  case TAG_LTUPLE:
+  switch (tagged2ltag(t)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     return oz_eq(label, AtomCons) ? PROCEED : FAILED;
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     return oz_eq(label, t) ? PROCEED : FAILED;
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     return oz_eq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     if (tagged2Var(t)->getType()==OZ_VAR_OF) {
        OZ_Return ret=oz_unify(tagged2GenOFSVar(t)->getLabel(),label);
        tagged2GenOFSVar(t)->propagateOFS();
@@ -245,12 +257,15 @@ OZ_BI_define(BIisRecordCB,1,1)
 {
   OZ_Term t=OZ_in(0);
   DEREF(t, tPtr);
-  switch (tagTypeOf(t)) {
-  case TAG_LTUPLE:
-  case TAG_LITERAL:
-  case TAG_SRECORD:
+  switch (tagged2ltag(t)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
+  case LTAG_LITERAL:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     OZ_RETURN(NameTrue);
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     switch (tagged2Var(t)->getType()) {
     case OZ_VAR_OF:
       OZ_RETURN(NameTrue);
@@ -286,8 +301,9 @@ OZ_BI_define(BIwidthC, 2, 0)
     DEREF(wid, widPtr);
 
     // Wait until first argument is a constrained record (OFS, SRECORD, LTUPLE, LITERAL):
-    switch (tagTypeOf(rec)) {
-    case TAG_VAR:
+    switch (tagged2ltag(rec)) {
+    case LTAG_VAR0:
+    case LTAG_VAR1:
       switch (tagged2Var(rec)->getType()) {
       case OZ_VAR_OF:
           break;
@@ -298,17 +314,20 @@ OZ_BI_define(BIwidthC, 2, 0)
           oz_suspendOn(rawrec);
       }
       break;
-    case TAG_SRECORD:
-    case TAG_LITERAL:
-    case TAG_LTUPLE:
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
+    case LTAG_LITERAL:
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
       break;
     default:
       oz_typeError(0,"Record");
     }
 
     // Ensure that second argument wid is a FD or integer:
-    switch (tagTypeOf(wid)) {
-    case TAG_VAR:
+    switch (tagged2ltag(wid)) {
+    case LTAG_VAR0:
+    case LTAG_VAR1:
       {
 	OzVariable *widv = tagged2Var(wid);
 	switch (oz_check_var_status(widv)) {
@@ -341,10 +360,11 @@ OZ_BI_define(BIwidthC, 2, 0)
 	break;
       }
 
-    case TAG_CONST:
+    case LTAG_CONST0:
+    case LTAG_CONST1:
       if (!oz_isBigInt(wid)) return FAILED;
       break;
-    case TAG_SMALLINT:
+    case LTAG_SMALLINT:
         break;
     default:
         return FAILED;
@@ -386,10 +406,12 @@ OZ_Return WidthPropagator::propagate(void)
     DEREF(rec, recptr);
     DEREF(wid, widptr);
 
-    switch (tagTypeOf(rec)) {
-    case TAG_SRECORD:
-    case TAG_LITERAL:
-    case TAG_LTUPLE:
+    switch (tagged2ltag(rec)) {
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
+    case LTAG_LITERAL:
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
     {
         // Impose width constraint
         recwidth = (oz_isSRecord(rec) ? tagged2SRecord(rec)->getWidth() :
@@ -411,7 +433,8 @@ OZ_Return WidthPropagator::propagate(void)
         result = PROCEED;
         break;
     }
-    case TAG_VAR:
+    case LTAG_VAR0:
+    case LTAG_VAR1:
     {
         Assert(tagged2Var(rec)->getType() == OZ_VAR_OF);
         // 1. Impose width constraint
@@ -509,16 +532,19 @@ OZ_BI_define(BImonitorArity, 3, 0)
 
     OZ_Term tmprec=OZ_in(0);
     DEREF(tmprec,_2);
-    switch (tagTypeOf(tmprec)) {
-    case TAG_LTUPLE:
+    switch (tagged2ltag(tmprec)) {
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
         return oz_unify(arity,makeTupleArityList(2));
-    case TAG_LITERAL:
+    case LTAG_LITERAL:
         // *** arity is nil
         return oz_unify(arity,AtomNil);
-    case TAG_SRECORD:
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
         // *** arity is known set of features of the SRecord
         return oz_unify(arity,tagged2SRecord(tmprec)->getArityList());
-    case TAG_VAR:
+    case LTAG_VAR0:
+    case LTAG_VAR1:
         switch (tagged2Var(tmprec)->getType()) {
         case OZ_VAR_OF:
             break;
@@ -674,8 +700,9 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   // Add feature and return:
   Assert(term!=makeTaggedNULL());
 
-  switch (tagTypeOf(term)) {
-  case TAG_VAR:
+  switch (tagged2ltag(term)) {
+  case LTAG_VAR0:
+  case LTAG_VAR1:
 
     if (tagged2Var(term)->getType() == OZ_VAR_OF) {
       OzOFVariable *ofsvar=tagged2GenOFSVar(term);
@@ -725,7 +752,8 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
       OZ_RETURN(v);
     }
     
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     {
       // Get the SRecord corresponding to term:
       SRecord* termSRec=makeRecord(term);
@@ -737,7 +765,8 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
       return FAILED;
     }
 
-  case TAG_LTUPLE:
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     {
       if (!oz_isSmallInt(fea)) return FAILED;
       int i2 = tagged2SmallInt(fea);
@@ -750,7 +779,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
       return FAILED;
     }
     
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     return FAILED;
     
   default:

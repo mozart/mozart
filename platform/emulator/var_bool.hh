@@ -107,7 +107,6 @@ public:
 };
 
 inline Bool isGenBoolVar(TaggedRef term);
-inline Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag);
 inline OzBoolVariable * tagged2GenBoolVar(TaggedRef term);
 inline void addSuspBoolVar(TaggedRef, Suspendable *);
 OZ_Return tellBasicBoolConstraint(OZ_Term);

@@ -54,7 +54,7 @@ void oz_varAddName(OZ_Term v, const char *nm)
 Bool isCacMarkedNamer(OZ_Term t) 
 { 
   OZ_Term t_deref = oz_deref(t);
-  return oz_isRef(t) && (oz_isGcMark(t_deref) || 
+  return oz_isRef(t) && (oz_isMark(t_deref) || 
 			 (oz_isVar(t_deref) && 
 			  tagged2Var(t_deref)->cacIsMarked()));
 }

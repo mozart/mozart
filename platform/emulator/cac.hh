@@ -103,14 +103,14 @@ public:
   ~CacStack() {}
   
   void push(void * ptr, TypeOfPtr type) {
-    FastStack::push1((StackEntry) makeTaggedRef2p((TypeOfTerm) type, ptr));
+    FastStack::push1((StackEntry) makeTaggedRef2p((ltag_t) type, ptr));
   }
 
   void pushLocalSuspList(Board * bb, SuspList ** sl, int n) {
     Assert(n<8);
     FastStack::push2((StackEntry) bb, 
 		     (StackEntry) 
-		     makeTaggedRef2p((TypeOfTerm) (PTR_LOCAL_SUSPLIST | n), 
+		     makeTaggedRef2p((ltag_t) (PTR_LOCAL_SUSPLIST | n), 
 				     (void *) sl));
   }
 

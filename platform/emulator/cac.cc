@@ -799,11 +799,11 @@ void WeakStack::recurse(void)
 Bool isGCMarkedTerm(OZ_Term t)
 {
  redo:
-  switch (tagTypeOf(t)) {
-  case TAG_REF:
-  case TAG_REF2:
-  case TAG_REF3:
-  case TAG_REF4:
+  switch (tagged2ltag(t)) {
+  case LTAG_REF00:
+  case LTAG_REF01:
+  case LTAG_REF10:
+  case LTAG_REF11:
     {
       TaggedRef * ptr;
       do {
@@ -812,7 +812,7 @@ Bool isGCMarkedTerm(OZ_Term t)
       } while (oz_isRef(t));
       goto redo;
     }
-  case TAG_LITERAL: 
+  case LTAG_LITERAL: 
     {
       Literal * lit = tagged2Literal(t);
       if (lit->isAtom()) 
@@ -820,9 +820,11 @@ Bool isGCMarkedTerm(OZ_Term t)
       else 
 	return ((Name*)lit)->cacIsMarked();
     }
-  case TAG_CONST: 
+  case LTAG_CONST0: 
+  case LTAG_CONST1: 
     return (tagged2Const(t)->cacIsMarked());
-  case TAG_VAR: 
+  case LTAG_VAR0: 
+  case LTAG_VAR1: 
     {
       OzVariable *cv = tagged2Var(t);
       if (cv->getType() == OZ_VAR_OPT)
@@ -831,18 +833,17 @@ Bool isGCMarkedTerm(OZ_Term t)
 	return (cv->cacIsMarked());
     }
 
-  case TAG_GCMARK: 
+  case LTAG_MARK0: 
+  case LTAG_MARK1: 
     return OK;
-
-  case TAG_SRECORD: 
-  case TAG_LTUPLE: 
-  case TAG_SMALLINT : 
-    return NO;
-
-  default:        
-    Assert(0);
-    return 0;
+  case LTAG_SRECORD0: 
+  case LTAG_SRECORD1: 
+  case LTAG_LTUPLE0: 
+  case LTAG_LTUPLE1: 
+  case LTAG_SMALLINT: 
+    break;
   }
+  return NO;
 }
 
 void WeakDictionary::gCollectRecurseV(void) {
@@ -922,7 +923,7 @@ void VarFix::_cacFix(void)
     TaggedRef  aux     = *aux_ptr;
     TaggedRef *to_ptr;
 
-    if (tagTypeOf(aux) == TAG_VAR) {
+    if (oz_isVar(aux)) {
       // not yet collected.
       OzVariable *ov = tagged2Var(aux);
       Assert(ov->getType() == OZ_VAR_OPT);
@@ -941,7 +942,7 @@ void VarFix::_cacFix(void)
     } else {
       // already there (either due to another "var fix" entry, or was
       // reached directly);
-      if (tagTypeOf(aux) == TAG_GCMARK) {
+      if (oz_isMark(aux)) {
 	to_ptr = (TaggedRef *) tagged2UnmarkedPtr(aux);
       } else {
 	Assert(oz_isRef(aux) && isSWAligned(tagged2Ref(aux)));
@@ -1785,7 +1786,7 @@ void CacStack::_cacRecurse(void) {
     StackEntry tp;
     pop1(tp);  
     void * ptr    = tagValueOf((TaggedRef) tp);
-    TypeOfPtr how = (TypeOfPtr) tagTypeOf((TaggedRef) tp);
+    TypeOfPtr how = (TypeOfPtr) tagged2ltag((TaggedRef) tp);
     
     switch(how) {
     case PTR_LTUPLE:    
@@ -1846,53 +1847,53 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
     sz--; f++; t++;
     aux = *f;
 
-    switch (tagTypeOf(aux)) {
-    case TAG_REF:        
+    switch (tagged2ltag(aux)) {
+    case LTAG_REF00:        
       if (aux)
 	goto DO_DEREF;
       *t = makeTaggedNULL();
       continue;
-    case TAG_REF2:       goto DO_DEREF;
-    case TAG_REF3:       goto DO_DEREF;
-    case TAG_REF4:       goto DO_DEREF;
-    case TAG_GCMARK:     goto DO_GCMARK;
-    case TAG_SMALLINT:   goto DO_SMALLINT;
-    case TAG_LITERAL:    goto DO_LITERAL;
-    case TAG_LTUPLE:     goto DO_LTUPLE;
-    case TAG_SRECORD:    goto DO_SRECORD;
-    case TAG_CONST:      goto DO_CONST;
-    case TAG_VAR:        goto DO_D_VAR;
-    case TAG_UNUSED_EXT:       goto DO_UNUSED;
-    case TAG_UNUSED_FLOAT:     goto DO_UNUSED;
-    case TAG_UNUSED_FSETVALUE: goto DO_UNUSED;
-    case TAG_UNUSED_UVAR:      goto DO_UNUSED;
-    case TAG_UNUSED_SVAR:      goto DO_UNUSED;
+    case LTAG_REF01:    goto DO_DEREF;
+    case LTAG_REF10:    goto DO_DEREF;
+    case LTAG_REF11:    goto DO_DEREF;
+    case LTAG_MARK0:    goto DO_MARK;
+    case LTAG_MARK1:    goto DO_MARK;
+    case LTAG_SMALLINT: goto DO_SMALLINT;
+    case LTAG_LITERAL:  goto DO_LITERAL;
+    case LTAG_LTUPLE0:  goto DO_LTUPLE;
+    case LTAG_LTUPLE1:  goto DO_LTUPLE;
+    case LTAG_SRECORD0: goto DO_SRECORD;
+    case LTAG_SRECORD1: goto DO_SRECORD;
+    case LTAG_CONST0:   goto DO_CONST;
+    case LTAG_CONST1:   goto DO_CONST;
+    case LTAG_VAR0:     goto DO_D_VAR;
+    case LTAG_VAR1:     goto DO_D_VAR;
     }
 
   DO_DEREF: 
     aux_ptr = tagged2Ref(aux);
     aux     = *aux_ptr;
 
-    switch (tagTypeOf(aux)) {
-    case TAG_REF:        goto DO_DEREF;
-    case TAG_REF2:       goto DO_DEREF;
-    case TAG_REF3:       goto DO_DEREF;
-    case TAG_REF4:       goto DO_DEREF;
-    case TAG_GCMARK:     goto DO_GCMARK;
-    case TAG_SMALLINT:   goto DO_SMALLINT;
-    case TAG_LITERAL:    goto DO_LITERAL;
-    case TAG_LTUPLE:     goto DO_LTUPLE;
-    case TAG_SRECORD:    goto DO_SRECORD;
-    case TAG_CONST:      goto DO_CONST;
-    case TAG_VAR:        goto DO_I_VAR;
-    case TAG_UNUSED_EXT:       goto DO_UNUSED;
-    case TAG_UNUSED_FLOAT:     goto DO_UNUSED;
-    case TAG_UNUSED_FSETVALUE: goto DO_UNUSED;
-    case TAG_UNUSED_UVAR:      goto DO_UNUSED;
-    case TAG_UNUSED_SVAR:      goto DO_UNUSED;
+    switch (tagged2ltag(aux)) {
+    case LTAG_REF00:    goto DO_DEREF;
+    case LTAG_REF01:    goto DO_DEREF;
+    case LTAG_REF10:    goto DO_DEREF;
+    case LTAG_REF11:    goto DO_DEREF;
+    case LTAG_MARK0:    goto DO_MARK;
+    case LTAG_MARK1:    goto DO_MARK;
+    case LTAG_SMALLINT: goto DO_SMALLINT;
+    case LTAG_LITERAL:  goto DO_LITERAL;
+    case LTAG_LTUPLE0:  goto DO_LTUPLE;
+    case LTAG_LTUPLE1:  goto DO_LTUPLE;
+    case LTAG_SRECORD0: goto DO_SRECORD;
+    case LTAG_SRECORD1: goto DO_SRECORD;
+    case LTAG_CONST0:   goto DO_CONST;
+    case LTAG_CONST1:   goto DO_CONST;
+    case LTAG_VAR0:     goto DO_I_VAR;
+    case LTAG_VAR1:     goto DO_I_VAR;
     }
 
-  DO_GCMARK:
+  DO_MARK:
     *t = makeTaggedRef((TaggedRef*) tagged2UnmarkedPtr(aux));
     continue;
 

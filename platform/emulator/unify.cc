@@ -165,7 +165,7 @@ OZ_Return oz_unify(TaggedRef t1, TaggedRef t2)
   TaggedRef term2 = t2;
   TaggedRef *termPtr1 = &term1;
   TaggedRef *termPtr2 = &term2;
-  TypeOfTerm tag1, tag2;
+  ltag_t tag1, tag2;
 
 loop:
   int argSize;
@@ -283,15 +283,16 @@ loop:
  /*************/
  nonvar_nonvar:
 
-  tag1 = tagTypeOf(term1);
-  tag2 = tagTypeOf(term2);
+  tag1 = tagged2ltag(term1);
+  tag2 = tagged2ltag(term2);
 
   if (tag1 != tag2)
     goto fail;
 
   switch ( tag1 ) {
 
-  case TAG_LTUPLE:
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     {
       LTuple *lt1 = tagged2LTuple(term1);
       LTuple *lt2 = tagged2LTuple(term2);
@@ -303,7 +304,8 @@ loop:
       goto push;
     }
 
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     {
       SRecord *sr1 = tagged2SRecord(term1);
       SRecord *sr2 = tagged2SRecord(term2);
@@ -318,12 +320,13 @@ loop:
       goto push;
     }
 
-  case TAG_SMALLINT:
+  case LTAG_SMALLINT:
     if (smallIntEq(term1,term2))
       goto next;
     goto fail;
 
-  case TAG_CONST:
+  case LTAG_CONST0:
+  case LTAG_CONST1:
     switch (tagged2Const(term1)->getType()) {
     case Co_Extension:
       {
@@ -351,7 +354,7 @@ loop:
     }
     goto fail;
 
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     /* literals and constants unify if their pointers are equal */
   default:
     goto fail;
