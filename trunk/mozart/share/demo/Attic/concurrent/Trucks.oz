@@ -31,7 +31,7 @@ local
    Height      = 165
    TruckHeight = 60
    Free        = 25
-   ImageUrl    = 'http://www.ps.uni-sb.de/ozhome/demo/images/trucks/'
+   ImageUrl    = 'http://mozart.ps.uni-sb.de/home/doc/demo/images/trucks/'
 
 in
 

@@ -22,7 +22,7 @@
 
 local
    
-   URL = 'http://www.ps.uni-sb.de/ozhome/demo/images/animated-queens/'
+   URL = 'http://mozart.ps.uni-sb.de/home/demo/images/animated-queens/'
    
    MaxWidth      = 600 % How large can the drawing area be
    
