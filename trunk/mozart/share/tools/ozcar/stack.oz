@@ -116,7 +116,7 @@ in
       end
 
       meth printException(X)
-	 case {HasFeature X debug} then
+	 case {HasFeature X debug} andthen {HasFeature X.debug stack} then
 	    Stack = X.debug.stack
 	    H|T   = case Stack.1 == nil then Stack.2.2 else Stack end
 	    C     = case %% you never know...
