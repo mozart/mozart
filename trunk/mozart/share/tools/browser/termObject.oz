@@ -30,6 +30,7 @@
 
 
 local
+   BaseMetaTermObject
    MetaTermObject
    MetaCompoundTermObject
    MetaTupleTermObject
@@ -596,10 +597,7 @@ in
 %%%
 
    %%
-   class MetaTermObject
-      from
-	 ControlObject
-	 RepManagerObject
+   class BaseMetaTermObject
 
 	 %%
 	 %% generic "dummy" closeTerm (which is normally sufficient,
@@ -643,6 +641,13 @@ in
 
    end
 
+   class MetaTermObject
+      from
+	 ControlObject
+	 RepManagerObject
+	 BaseMetaTermObject
+   end
+   
 %%%
 %%%
 %%%   There is a really "sparse" part - term classes for primitive
@@ -1261,7 +1266,7 @@ in
    %%
    class MetaCompoundTermObject
       from
-	 MetaTermObject
+	 BaseMetaTermObject
 	 CompoundControlObject
 	 CompoundRepManagerObject 
 
