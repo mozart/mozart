@@ -39,21 +39,55 @@
 static
 SRecordArity getArity(TaggedRef arity)
 {
-  arity = oz_deref(arity);
   if (oz_isSmallInt(arity)) {
     return mkTupleWidth(smallIntValue(arity));
+  } else if (oz_isList(arity)) {
+    TaggedRef sortedarity = arity;
+    if (!isSorted(arity)) {
+      int len;
+      TaggedRef aux = duplist(arity,len);
+      sortedarity = sortlist(aux,len);
+    }
+    Arity *ari = aritytable.find(sortedarity);
+    return (ari->isTuple())? mkTupleWidth(ari->getWidth()): mkRecordArity(ari);
+  } else {
+    return (SRecordArity) -1;
   }
-
-  Arity *ari = oz_makeArity(arity);
-  return (ari->isTuple())? mkTupleWidth(ari->getWidth()): mkRecordArity(ari);
 }
+
+
+#define OZ_declareRecordArityIN(num,name)		\
+  SRecordArity name;					\
+  {							\
+    oz_declareNonvarIN(num,__aux);			\
+    name = getArity(__aux);				\
+    if (name == (SRecordArity) -1) {			\
+      return OZ_typeError(num,"RecordArity");		\
+    }							\
+  }
 
 
 inline
 Bool getBool(TaggedRef t)
 {
-  return literalEq(oz_deref(t),NameTrue);
+  if (literalEq(t,NameTrue))
+    return OK;
+  else if (literalEq(t,NameFalse))
+    return NO;
+  else
+    return -1;
 }
+
+
+#define OZ_declareBoolIN(num,name)			\
+  Bool name;						\
+  {							\
+    oz_declareNonvarIN(num,__aux);			\
+    name = getBool(__aux);				\
+    if (name == -1) {					\
+      return OZ_typeError(num,"Bool");			\
+    }							\
+  }
 
 
 OZ_BI_define(BIgetOpcode,1,1)
@@ -85,7 +119,10 @@ OZ_BI_define(BIgetInstructionSize,1,1)
 OZ_BI_define(BInewCodeBlock,1,1)
 {
   oz_declareIntIN(0,size);
-
+  if (size < 0) {
+    return oz_raise(E_ERROR,OZ_atom("assembler"),
+		    "illegalCodeBlockSize",1,OZ_in(0));
+  }
   CodeArea *code = new CodeArea(size);
   OZ_RETURN(OZ_makeForeignPointer(code));
 } OZ_BI_end
@@ -103,23 +140,26 @@ OZ_BI_define(BImakeProc,2,1)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,globals);
-  globals = oz_deref(globals);
 
   int numGlobals = OZ_length(globals);
+  if (numGlobals == -1) {
+    return OZ_typeError(1,"List");
+  }
   const int maxX=-1; // should never suspend
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-				   mkTupleWidth(0), nil(),0,0, nil() ,maxX);
+				   mkTupleWidth(0), AtomEmpty, 0, -1, nil(),
+				   maxX);
   pte->setGSize(numGlobals);
   pte->PC = code->getStart();
 
   Assert(am.onToplevel());
   Abstraction *p = Abstraction::newAbstraction(pte,am.currentBoard());
 
+  globals = oz_deref(globals);
   for (int i = 0; i < numGlobals; i++) {
     p->initG(i,head(globals));
     globals = oz_deref(tail(globals));
   }
-  Assert(oz_isNil(globals));
 
   OZ_RETURN(makeTaggedConst(p));
 } OZ_BI_end
@@ -128,7 +168,10 @@ OZ_BI_define(BImakeProc,2,1)
 OZ_BI_define(BIaddDebugInfo,3,0)
 {
   OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,file); file = oz_deref(file);
+  oz_declareNonvarIN(1,file);
+  if (!oz_isAtom(file)) {
+    return OZ_typeError(1,"Atom");
+  }
   oz_declareIntIN(2,line);
   code->writeDebugInfo(file,line);
   return PROCEED;
@@ -138,13 +181,17 @@ OZ_BI_define(BIaddDebugInfo,3,0)
 #ifdef DEBUG_CHECK
 static Opcode lastOpcode=OZERROR;
 #endif
+
 OZ_BI_define(BIstoreOpcode,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
-  Assert(i>=0 && i<(int)OZERROR);
-  code->writeOpcode((Opcode)i);
-  DebugCheckT(lastOpcode=(Opcode)i);
+  if (i < 0 || i >= (int) OZERROR) {
+    return oz_raise(E_ERROR,OZ_atom("assembler"),
+		    "unknownInstruction",1,OZ_in(1));
+  }
+  code->writeOpcode((Opcode) i);
+  DebugCheckT(lastOpcode = (Opcode) i);
   return PROCEED;
 } OZ_BI_end
 
@@ -153,8 +200,9 @@ OZ_BI_define(BIstoreNumber,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
-  arg = oz_deref(arg);
-  Assert(OZ_isNumber(arg));
+  if (!oz_isNumber(arg)) {
+    return OZ_typeError(1,"Int");
+  }
   code->writeTagged(arg);
   return PROCEED;
 } OZ_BI_end
@@ -164,8 +212,9 @@ OZ_BI_define(BIstoreLiteral,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
-  arg = oz_deref(arg);
-  Assert(OZ_isLiteral(arg));
+  if (!oz_isLiteral(arg)) {
+    return OZ_typeError(1,"Literal");
+  }
   code->writeTagged(arg);
   return PROCEED;
 } OZ_BI_end
@@ -175,8 +224,9 @@ OZ_BI_define(BIstoreFeature,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
-  arg = oz_deref(arg);
-  Assert(OZ_isFeature(arg));
+  if (!oz_isFeature(arg)) {
+    return OZ_typeError(1,"Feature");
+  }
   code->writeTagged(arg);
   return PROCEED;
 } OZ_BI_end
@@ -198,8 +248,9 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,builtin);
-  builtin = oz_deref(builtin);
-  Assert(oz_isBuiltin(builtin));
+  if (!oz_isBuiltin(builtin)) {
+    return OZ_typeError(1,"Builtin");
+  }
   code->writeBuiltin(tagged2Builtin(builtin));
   return PROCEED;
 } OZ_BI_end
@@ -209,7 +260,23 @@ OZ_BI_define(BIstoreRegisterIndex,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
-  Assert(i >= 0);
+  if (i < 0) {
+    return oz_raise(E_ERROR,OZ_atom("assembler"),
+		    "registerIndexOutOfRange",1,OZ_in(1));
+  }
+  code->writeReg(i);
+  return PROCEED;
+} OZ_BI_end
+
+
+OZ_BI_define(BIstoreRegisterIndexX,2,0)
+{
+  OZ_declareCodeBlockIN(0,code);
+  oz_declareIntIN(1,i);
+  if (i < 0 || i >= NumberOfXRegisters) {
+    return oz_raise(E_ERROR,OZ_atom("assembler"),
+		    "registerIndexOutOfRange",1,OZ_in(1));
+  }
   code->writeReg(i);
   return PROCEED;
 } OZ_BI_end
@@ -253,12 +320,26 @@ OZ_BI_define(BIstorePredId,6,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,name);
-  oz_declareNonvarIN(2,arity);
+  if (!oz_isAtom(name)) {
+    return OZ_typeError(1,"Atom");
+  }
+  OZ_declareRecordArityIN(2,arity);
   oz_declareNonvarIN(3,pos);
+  if (!(OZ_isUnit(pos) || oz_isTuple(pos) && OZ_width(pos) == 3)) {
+    return OZ_typeError(3,"Coordinates");
+  }
   oz_declareNonvarIN(4,flags);
+  if (!oz_isList(flags)) {
+    return OZ_typeError(4,"List");
+  }
   oz_declareIntIN(5,maxX);
 
-  PrTabEntry *pte = new PrTabEntry(name,getArity(arity),pos,flags,maxX);
+  PrTabEntry *pte;
+  if (OZ_isUnit(pos)) {
+    pte = new PrTabEntry(name,arity,AtomEmpty,0,-1,flags,maxX);
+  } else {
+    pte = new PrTabEntry(name,arity,pos,flags,maxX);
+  }
   code->writeAddress(pte);
   return PROCEED;
 } OZ_BI_end
@@ -292,12 +373,12 @@ OZ_BI_define(BIstoreHTScalar,4,0)
   oz_declareNonvarIN(2,value);
   oz_declareIntIN(3,label);
 
-  value = oz_deref(value);
   if (oz_isLiteral(value)) {
     ht->add(tagged2Literal(value),code->computeLabel(label));
-  } else {
-    Assert(oz_isNumber(value));
+  } else if (oz_isNumber(value)) {
     ht->add(value,code->computeLabel(label));
+  } else {
+    return OZ_typeError(2,"NumberOrLiteral");
   }
 
   return PROCEED;
@@ -309,16 +390,20 @@ OZ_BI_define(BIstoreHTRecord,5,0)
   OZ_declareCodeBlockIN(0,code);
   OZ_declareHashTableIN(1,ht);
   oz_declareNonvarIN(2,reclabel);
-  oz_declareNonvarIN(3,arity);
+  if (!oz_isLiteral(reclabel)) {
+    return OZ_typeError(2,"Literal");
+  }
+  OZ_declareRecordArityIN(3,arity);
+  if (sraIsTuple(arity) && getTupleWidth(arity) == 0) {
+    return OZ_typeError(3,"NonemptyRecordArity");
+  }
   oz_declareIntIN(4,label);
 
-  SRecordArity ar   = getArity(arity);
-  reclabel          = oz_deref(reclabel);
-
-  if (literalEq(reclabel,AtomCons) && sraIsTuple(ar) && getTupleWidth(ar)==2) {
+  if (literalEq(reclabel,AtomCons) && sraIsTuple(arity) &&
+      getTupleWidth(arity) == 2) {
     ht->addList(code->computeLabel(label));
   } else {
-    ht->add(tagged2Literal(reclabel),ar,code->computeLabel(label));
+    ht->add(tagged2Literal(reclabel),arity,code->computeLabel(label));
   }
 
   return PROCEED;
@@ -328,8 +413,8 @@ OZ_BI_define(BIstoreHTRecord,5,0)
 OZ_BI_define(BIstoreRecordArity,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,arity);
-  code->writeSRecordArity(getArity(arity));
+  OZ_declareRecordArityIN(1,arity);
+  code->writeSRecordArity(arity);
   return PROCEED;
 } OZ_BI_end
 
@@ -338,14 +423,16 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,regindex);
-  oz_declareNonvarIN(2,isMethod);
-  oz_declareNonvarIN(3,name); name = oz_deref(name);
-  oz_declareNonvarIN(4,isTail);
-  oz_declareNonvarIN(5,arity);
+  OZ_declareBoolIN(2,isMethod);
+  oz_declareNonvarIN(3,name);
+  if (!oz_isLiteral(name)) {
+    return OZ_typeError(3,"Literal");
+  }
+  OZ_declareBoolIN(4,isTail);
+  OZ_declareRecordArityIN(5,arity);
 
   GenCallInfoClass *gci =
-    new GenCallInfoClass(regindex,getBool(isMethod),name,
-			 getBool(isTail),getArity(arity));
+    new GenCallInfoClass(regindex,isMethod,name,isTail,arity);
   code->writeAddress(gci);
   return PROCEED;
 } OZ_BI_end
@@ -354,10 +441,13 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
 OZ_BI_define(BIstoreApplMethInfo,3,0)
 {
   OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,name); name = oz_deref(name);
-  oz_declareNonvarIN(2,arity);
+  oz_declareNonvarIN(1,name);
+  if (!oz_isLiteral(name)) {
+    return OZ_typeError(1,"Literal");
+  }
+  OZ_declareRecordArityIN(2,arity);
 
-  ApplMethInfoClass *ami = new ApplMethInfoClass(name,getArity(arity));
+  ApplMethInfoClass *ami = new ApplMethInfoClass(name,arity);
   code->writeAddress(ami);
   return PROCEED;
 } OZ_BI_end
@@ -367,30 +457,39 @@ OZ_BI_define(BIstoreGRegRef,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,globals);
-  globals = oz_deref(globals);
   int numGlobals = OZ_length(globals);
-
-  AssRegArray *gregs = new AssRegArray(numGlobals);
-
-  for (int i = 0; i < numGlobals; i++) {
-    SRecord *rec = tagged2SRecord(oz_deref(head(globals)));
-    globals = oz_deref(tail(globals));
-
-    const char *label = rec->getLabelLiteral()->getPrintName();
-    KindOfReg regType;
-    if (strcmp(label,"x")==0) {
-      regType = XReg;
-    } else if (strcmp(label,"y")==0) {
-      regType = YReg;
-    } else {
-      Assert(strcmp(label,"g")==0);
-      regType = GReg;
-    }
-    (*gregs)[i].kind = regType;
-    (*gregs)[i].number = smallIntValue(oz_deref(rec->getArg(0)));
+  if (numGlobals == -1) {
+    return OZ_typeError(1,"RegisterList");
   }
 
-  Assert(oz_isNil(globals));
+  AssRegArray *gregs = new AssRegArray(numGlobals);
+  globals = oz_deref(globals);
+  for (int i = 0; i < numGlobals; i++) {
+    OZ_Term reg = oz_deref(head(globals));
+    globals = oz_deref(tail(globals));
+    if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
+      return OZ_typeError(1,"RegisterList");
+    }
+
+    SRecord *rec = tagged2SRecord(reg);
+    const char *label = rec->getLabelLiteral()->getPrintName();
+    KindOfReg regType;
+    if (!strcmp(label,"x")) {
+      regType = XReg;
+    } else if (!strcmp(label,"y")) {
+      regType = YReg;
+    } else if (!strcmp(label,"g")) {
+      regType = GReg;
+    } else {
+      return OZ_typeError(1,"RegisterList");
+    }
+    (*gregs)[i].kind = regType;
+    OZ_Term index = oz_deref(rec->getArg(0));
+    if (!oz_isSmallInt(index)) {
+      return OZ_typeError(1,"RegisterList");
+    }
+    (*gregs)[i].number = smallIntValue(index);
+  }
 
   code->writeAddress(gregs);
   return PROCEED;
@@ -401,29 +500,52 @@ OZ_BI_define(BIstoreLocation,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,locs);
-  locs=oz_deref(locs);
+  if (!oz_isPair2(locs)) {
+    return OZ_typeError(1,"Location");
+  }
   OZ_Term inLocs = oz_deref(oz_left(locs));
   OZ_Term outLocs = oz_deref(oz_right(locs));
   const int inArity = OZ_length(inLocs);
   const int outArity = OZ_length(outLocs);
+  if (inArity == -1 || outArity == -1) {
+    return OZ_typeError(1,"Location");
+  }
 
   OZ_Location *loc = OZ_Location::newLocation(inArity,outArity);
-
   for (int i = 0; i < inArity; i++) {
     OZ_Term reg = oz_deref(head(inLocs));
-    loc->in(i) = smallIntValue(oz_deref(oz_arg(reg,0)));
+    if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
+      return OZ_typeError(1,"Location");
+    }
+    TaggedRef index = oz_deref(oz_arg(reg,0));
+    if (!oz_isSmallInt(index)) {
+      return OZ_typeError(1,"Location");
+    }
+    int j = smallIntValue(index);
+    if (j < 0 || j >= NumberOfXRegisters) {
+      return oz_raise(E_ERROR,OZ_atom("assembler"),
+		      "registerIndexOutOfRange",1,OZ_in(1));
+    }
+    loc->in(i) = j;
     inLocs = oz_deref(tail(inLocs));
   }
-
-  Assert(oz_isNil(inLocs));
-
   for (int i = 0; i < outArity; i++) {
     OZ_Term reg = oz_deref(head(outLocs));
-    loc->out(i) = smallIntValue(oz_deref(oz_arg(reg,0)));
+    if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
+      return OZ_typeError(1,"Location");
+    }
+    TaggedRef index = oz_deref(oz_arg(reg,0));
+    if (!oz_isSmallInt(index)) {
+      return OZ_typeError(1,"Location");
+    }
+    int j = smallIntValue(index);
+    if (j < 0 || j >= NumberOfXRegisters) {
+      return oz_raise(E_ERROR,OZ_atom("assembler"),
+		      "registerIndexOutOfRange",1,OZ_in(1));
+    }
+    loc->out(i) = j;
     outLocs = oz_deref(tail(outLocs));
   }
-
-  Assert(oz_isNil(outLocs));
 
   code->writeAddress(loc);
   return PROCEED;
