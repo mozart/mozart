@@ -44,7 +44,7 @@
 
 int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
 
-Bool oz_var_valid(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
+Bool oz_var_valid(OzVariable *ov,TaggedRef val) {
   switch (ov->getType()){
   case OZ_VAR_SIMPLE:  return ((SimpleVar *) ov)->valid(val);
   case OZ_VAR_FUTURE:  return ((Future *) ov)->valid(val);

@@ -107,8 +107,7 @@ int *IHashTable::add(TaggedRef number, int label)
 // unifying two fd variables may result in a singleton (ie. determined term),
 // det-nodes are reentered and we achieve completeness.
 
-Bool IHashTable::disentailed(OzVariable *cvar, TaggedRef *ptr)
-{
+Bool IHashTable::disentailed(OzVariable *cvar) {
   switch (cvar->getType()) {
   case OZ_VAR_FD: 
   case OZ_VAR_BOOL: 
@@ -121,7 +120,7 @@ Bool IHashTable::disentailed(OzVariable *cvar, TaggedRef *ptr)
       // if there is at least one integer member of the domain then goto varLabel
       for (int i = 0; i < size; i++) {
 	for (HTEntry* aux = numberTable[i]; aux!=NULL; aux=aux->getNext()) {
-	  if (oz_var_valid(cvar,ptr,aux->getNumber()))
+	  if (oz_var_valid(cvar,aux->getNumber()))
 	    return NO;
 	}
       }
@@ -163,33 +162,31 @@ Bool IHashTable::disentailed(OzVariable *cvar, TaggedRef *ptr)
 
   // mm2: hack: an arbitrary number is check for validity
   case OZ_VAR_EXT:
-    return !oz_var_valid(cvar,ptr,oz_int(4711));
+    return !oz_var_valid(cvar,oz_int(4711));
 
   default:    
     return NO;
   }
 }
 
-int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
-			IHashTable *table, TaggedRef *&sP)
-{
-  int offset = table->getElse();
+int IHashTable::switchOnTerm(TaggedRef term, TaggedRef *&sP) {
+  int offset = getElse();
   if (oz_isSRecord(term)) {
-    if (table->functorTable) {
+    if (functorTable) {
       SRecord *rec = tagged2SRecord(term);
       Literal *lname = rec->getLabelLiteral();
       Assert(lname!=NULL);
-      unsigned int hsh = table->hash(lname->hash());
-      offset = table->functorTable[hsh]->lookup(lname,rec->getSRecordArity(),offset);
+      unsigned int hsh = hash(lname->hash());
+      offset = functorTable[hsh]->lookup(lname,rec->getSRecordArity(),offset);
       sP = rec->getRef();
     }
     return offset;
   }
 
   if (oz_isLiteral(term)) {
-    if (table->literalTable) {
-      unsigned int hsh = table->hash(tagged2Literal(term)->hash());
-      offset = table->literalTable[hsh]->lookup(tagged2Literal(term),offset);
+    if (literalTable) {
+      unsigned int hsh = hash(tagged2Literal(term)->hash());
+      offset = literalTable[hsh]->lookup(tagged2Literal(term),offset);
     }
     return offset;
   }
@@ -199,25 +196,25 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
   }
 
   if (oz_isSmallInt(term)) {
-    if (table->numberTable) {
-      int hsh = table->hash(smallIntHash(term));
-      offset = table->numberTable[hsh]->lookup(term,offset);
+    if (numberTable) {
+      int hsh = hash(smallIntHash(term));
+      offset = numberTable[hsh]->lookup(term,offset);
     }
     return offset;
   }
 
   if (oz_isFloat(term)) {
-    if (table->numberTable) {
-      unsigned int hsh = table->hash(tagged2Float(term)->hash());
-      offset = table->numberTable[hsh]->lookup(term,offset);
+    if (numberTable) {
+      unsigned int hsh = hash(tagged2Float(term)->hash());
+      offset = numberTable[hsh]->lookup(term,offset);
     }
     return offset;
   }
 
   if (oz_isBigInt(term)) {
-    if (table->numberTable) {
-      unsigned int hsh = table->hash(tagged2BigInt(term)->hash());
-      offset =table->numberTable[hsh]->lookup(term,offset);
+    if (numberTable) {
+      unsigned int hsh = hash(tagged2BigInt(term)->hash());
+      offset = numberTable[hsh]->lookup(term,offset);
     }
     return offset;
   }
@@ -227,7 +224,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
       return 0;
     }
 
-    if (oz_isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
+    if (oz_isCVar(term) && !disentailed(tagged2CVar(term))) {
       return 0;
     }
   }

@@ -143,7 +143,7 @@ class IHashTable {
     hashMask = size-1;
     literalTable = functorTable = numberTable = NULL;
     elseLabel = elseLbl;
-    listLabel = 0;
+    listLabel = elseLbl;
   };
 
   int *addToTable(EntryTable &table, HTEntry *entry, int pos);
@@ -156,11 +156,11 @@ class IHashTable {
   int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
   int getElse() { return elseLabel; }
 
-  Bool disentailed(OzVariable *var, TaggedRef *varPtr);
+  int switchOnTerm(TaggedRef term, TaggedRef *&sP);
+
+  Bool disentailed(OzVariable * var);
 };
 
-int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
-			IHashTable *table, TaggedRef *&sP);
 
 #endif
 
