@@ -31,7 +31,9 @@
 #include "var_base.hh"
 
 enum {
-  OZ_EVAR_DIST,
+  OZ_EVAR_PROXY,
+  OZ_EVAR_MANAGER,
+  OZ_EVAR_OBJECT,
   OZ_EVAR_LAST
 };
 
