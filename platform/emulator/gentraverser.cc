@@ -199,9 +199,14 @@ void GenTraverser::doit()
       case Co_Lock:
 	processLock(t, (Tertiary *) ct);
 	break;
+
       case Co_Cell:
-	processCell(t, (Tertiary *) ct);
+	if (!processCell(t, (Tertiary *) ct) && ((Tertiary *) ct)->isLocal()) {
+	  t = ((CellLocal *) ct)->getValue();
+	  goto bypass;
+	}
 	break;
+
       case Co_Port:
 	processPort(t, (Tertiary *) ct);
 	break;
