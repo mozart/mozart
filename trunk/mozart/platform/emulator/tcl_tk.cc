@@ -140,7 +140,7 @@ StringBuffer tcl_buffer;
 OZ_Term NameTclName,
   AtomTclOption, AtomTclList, AtomTclPosition,
   AtomTclQuote, AtomTclString, AtomTclVS,
-  AtomTclBatch,
+  AtomTclBatch, AtomTclColor,
   AtomError,
   AtomDot, AtomTagPrefix, AtomVarPrefix, AtomImagePrefix,
   NameGroupVoid;
@@ -226,7 +226,17 @@ OZ_Return isTcl(TaggedRef tcl) {
 	    return FAILED;
 	  }
 	}
-
+      } else if (literalEq(l,AtomTclColor)) {
+	if (st->getWidth() != 3)
+	  return FAILED;
+	for (int i=0; i < 3; i++) {
+	  TaggedRef arg = deref(st->getArg(i));
+	  if (!isSmallInt(arg) || 
+	      (smallIntValue(arg) < 0) ||
+	      (smallIntValue(arg) > 256))
+	    return FAILED;
+	}
+	return PROCEED; 
       } else {
 	for (int i=0; i < st->getWidth(); i++) {
 	  OZ_Return argstate = isTcl(st->getArg(i));
@@ -244,7 +254,8 @@ OZ_Return isTcl(TaggedRef tcl) {
     if (tagged2Literal(l)->isAtom()) {
 
       if (literalEq(l,AtomPair) || literalEq(l,AtomCons) ||
-	  literalEq(l,AtomTclVS) || literalEq(l,AtomTclBatch))
+	  literalEq(l,AtomTclVS) || literalEq(l,AtomTclBatch) ||
+	  literalEq(l,AtomTclColor))
 	return FAILED;
 
       while (isCons(as)) {
@@ -393,7 +404,18 @@ void tcl_put_quote(char c) {
     }
   }
 }
-  
+
+inline 
+char hex_digit(unsigned int i) {
+  return (i>9) ? (i - 10 + 'a') : (i + '0');
+}
+
+inline
+void tcl_put_hex(int i) {
+  unsigned char c1 = hex_digit(((unsigned char) i & '\xF0') >> 4);
+  unsigned char c2 = hex_digit((unsigned char) i & '\x0F');
+  tcl_put2(c1,c2);
+}
 
 inline
 void cstring2buffer(char* s) {
@@ -628,6 +650,13 @@ void tcl2buffer(TaggedRef tcl) {
       tcl_put('}');
     } else if (literalEq(l,AtomTclVS)) {
       vs2buffer(st->getArg(0));
+    } else if (literalEq(l,AtomTclColor)) {
+      Assert(st->getWidth() == 3);
+
+      tcl_put('#');
+      for (int i=0; i < 3; i++) 
+	tcl_put_hex(smallIntValue(deref(st->getArg(i))));
+	
     } else if (literalEq(l,AtomTclBatch)) {
       TaggedRef b = deref(st->getArg(0));
 
@@ -1094,12 +1123,13 @@ void BIinitTclTk() {
   AtomTclString    = OZ_atom("s");
   AtomTclVS        = OZ_atom("v");
   AtomTclBatch     = OZ_atom("b");
+  AtomTclColor     = OZ_atom("c");
   AtomError        = OZ_atom("error");
   AtomDot          = OZ_atom(".");
   AtomTagPrefix    = OZ_atom("t");
   AtomVarPrefix    = OZ_atom("v");
   AtomImagePrefix  = OZ_atom("i");
-
+  
   NameGroupVoid    = OZ_newName();
 }
 
