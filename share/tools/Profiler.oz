@@ -20,15 +20,11 @@
 %%% WARRANTIES.
 %%%
 
-declare
-   NewProfiler
-in
-
 fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewProfiler IMPORT}
+   {$ IMPORT}
    \insert 'SP.env'
       = IMPORT.'SP'
    \insert 'OP.env'

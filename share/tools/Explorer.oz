@@ -20,16 +20,11 @@
 %%% WARRANTIES.
 %%%
 
-
-declare
-   NewExplorer
-in
-
 fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewExplorer IMPORT}
+   {$ IMPORT}
    \insert 'SP.env'
        = IMPORT.'SP'
    \insert 'WP.env'

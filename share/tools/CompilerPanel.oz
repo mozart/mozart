@@ -1,6 +1,6 @@
 %%%
 %%% Authors:
-%%%   Leif Kornstaedt (kornstae@ps.uni-sb.de)
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Leif Kornstaedt, 1997
@@ -9,8 +9,7 @@
 %%%   $Date$ by $Author$
 %%%   $Revision$
 %%%
-%%% This file is part of Mozart, an implementation
-%%% of Oz 3
+%%% This file is part of Mozart, an implementation of Oz 3:
 %%%    $MOZARTURL$
 %%%
 %%% See the file "LICENSE" or
@@ -20,12 +19,11 @@
 %%% WARRANTIES.
 %%%
 
-declare
 fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewCompilerPanel IMPORT}
+   {$ IMPORT}
    \insert 'SP.env'
    = IMPORT.'SP'
    \insert 'OP.env'
