@@ -1154,7 +1154,7 @@ BIspec fdSpec[] = {
   {"fdTellConstraintCD", 3, BIfdTellConstraintCD},
 
 #ifndef FOREIGNFDPROPS
-  {"fdp_init", 0, fdp_init},
+  {"fdp_init", 1, fdp_init},
   {"fdp_sum", 3, fdp_sum},
   {"fdp_sumC", 4, fdp_sumC},
   {"fdp_sumCN", 4, fdp_sumCN},
@@ -1199,7 +1199,7 @@ BIspec fdSpec[] = {
   {"sched_disjoint_card", 4, sched_disjoint_card},
   {"fdp_disjointC", 5, fdp_disjointC},
   {"fdp_distance", 4, fdp_distance},
-  {"sched_cpIterate", 2, sched_cpIterate},
+  {"sched_cpIterate", 3, sched_cpIterate},
   {"sched_cpIterateCap", 4, sched_cpIterateCap},
   {"sched_cpIterateCapUp", 4, sched_cpIterateCapUp},
   {"sched_taskIntervals", 2, sched_taskIntervals},

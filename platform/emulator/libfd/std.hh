@@ -293,6 +293,7 @@ protected:
   int reg_sz;
 public:
   Propagator_VD_VI(OZ_Term, OZ_Term);
+  Propagator_VD_VI(int);
   virtual ~Propagator_VD_VI(void);
 
   virtual void updateHeapRefs(OZ_Boolean);

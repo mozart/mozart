@@ -416,6 +416,12 @@ Propagator_VD_VI::Propagator_VD_VI(OZ_Term l, OZ_Term offset)
   reg_l = vectorToOzTerms(l, reg_sz);
 }
 
+Propagator_VD_VI::Propagator_VD_VI(int size) : reg_sz(size)
+{
+  reg_offset = OZ_hallocCInts(size);
+  reg_l = OZ_hallocOzTerms(size);
+}
+
 Propagator_VD_VI::~Propagator_VD_VI(void)
 {
   OZ_hfreeCInts(reg_offset, reg_sz);

@@ -86,21 +86,86 @@ static int compareAscDue(const void *a, const void *b) {
   return(xx[*(int*)a]->getMaxElem() + dd[*(int*)a] - xx[*(int*)b]->getMaxElem() - dd[*(int*)b]);
 }
 
+struct StartDurTerms {
+  OZ_Term start;
+  int dur;
+};
 
-OZ_C_proc_begin(sched_cpIterate, 2)
+int compareDurs(const void * a, const void * b) {
+  return ((StartDurTerms *) b)->dur - ((StartDurTerms *) a)->dur;
+}
+
+CPIteratePropagator::CPIteratePropagator(OZ_Term tasks,
+                                         OZ_Term starts,
+                                         OZ_Term durs)
+  : Propagator_VD_VI(OZ_vectorSize(tasks))
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+  VectorIterator vi(tasks);
+  int i = 0;
 
-  PropagatorExpect pe;
+  DECL_DYN_ARRAY(StartDurTerms, sd, reg_sz);
 
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  SAMELENGTH_VECTORS(0, 1);
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
 
-  return pe.impose(new CPIteratePropagator(OZ_args[0], OZ_args[1]),
-                   OZ_getLowPrio());
+    sd[i].start = OZ_subtree(starts, task);
+    sd[i].dur = OZ_intToC(OZ_subtree(durs, task));
+    i += 1;
+  } // while
+
+  OZ_ASSERT(i == reg_sz);
+
+  qsort(sd, reg_sz, sizeof(StartDurTerms), compareDurs);
+
+  for (i = reg_sz; i--; ) {
+    reg_l[i]      = sd[i].start;
+    reg_offset[i] = sd[i].dur;
+  }
+}
+
+OZ_C_proc_begin(sched_cpIterate, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT ","
+                   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+
+  {
+    PropagatorExpect pe;
+
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    SAMELENGTH_VECTORS(1, 2);
+  }
+
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2];
+
+  VectorIterator vi(OZ_args[0]);
+
+  for (int i = OZ_vectorSize(OZ_args[0]); i--; ) {
+    OZ_Term tasks = vi.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      if (!start_task || !dur_task)
+        return OZ_FAILED;
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new CPIteratePropagator(tasks, starts, durs),
+                            OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
 }
 OZ_C_proc_end
+
+//-----------------------------------------------------------------------------
 
 class Min_max {
 public:
