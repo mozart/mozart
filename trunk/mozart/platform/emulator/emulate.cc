@@ -125,7 +125,7 @@ Bool AM::hf_raise_failure()
 #define HF_RAISE_FAILURE(T)				\
    if (e->hf_raise_failure())				\
      goto LBLfailure;					\
-   if (ozconf.errorDebug) e->exception.info  = (T);	\
+   if (ozconf.errorDebug) e->setExceptionInfo(T);	\
    RAISE_THREAD;
 
 
@@ -1314,7 +1314,7 @@ LBLdispatcher:
 	  SUSPENDONVARLIST;
 
       case FAILED:
-	HF_APPLY(OZ_atom("^"),
+	HF_APPLY(OZ_atom("Record.'^'"),
 		 oz_cons(XPC(1),oz_cons(XPC(2),oz_nil())));
 
       case RAISE:
