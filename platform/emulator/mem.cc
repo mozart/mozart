@@ -15,8 +15,6 @@
 
 #include "mem.hh"
 #include "tagged.hh"
-#include "am.hh"
-#include "io.hh"
 
 // ----------------------------------------------------------------
 // heap memory
@@ -232,8 +230,7 @@ void *ozMalloc(int chunk_size)
     void *old = sbrk(0);
     void *ret_val = sbrk(chunk_size);
     if (ret_val == (caddr_t) - 1) {
-      message("Virtual memory exhausted\n");
-      IO::exitOz(1);
+      error("Virtual memory exhausted");
     }
 
     SbrkMemory *newMem = (SbrkMemory *) ret_val;
@@ -359,9 +356,7 @@ void *heapMallocOutline(size_t chunk_size)
 void getMemFromOS(size_t sz)
 {
   if (sz > heapBlockSize) {
-    message("required chunk bigger than max size\n");
-    message(" hint: look for an endless recursion\n");
-    IO::exitOz(1);
+    error("too big memory chunk: look for an infinite recursion");
   }
 
   heapTotalSize += heapBlockSize/KB;
@@ -385,7 +380,6 @@ void getMemFromOS(size_t sz)
 //  message("heapEnd: 0x%lx\n maxPointer: 0x%lx\n",heapEnd,maxPointer+1);
   if (tagValueOf(makeTaggedMisc(heapTop)) != heapTop) {
     error("Oz adress space exhausted");
-    IO::exitOz(1);
   }
 
   MemChunks::list = new MemChunks(heapEnd,MemChunks::list,heapBlockSize);

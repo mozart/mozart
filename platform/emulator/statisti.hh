@@ -12,8 +12,6 @@
 #ifndef __STATISTICS_H__
 #define __STATISTICS_H__
 
-#include "tagged.hh"
-
 #ifdef __GNUC__
 #pragma interface
 #endif

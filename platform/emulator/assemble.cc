@@ -10,10 +10,7 @@
 
 
 #include "am.hh"
-#include "thread.hh"
 #include "assemble.hh"
-#include "builtins.hh"
-
 
 
 OZ_C_proc_begin(BIstringToOp,2)

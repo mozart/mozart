@@ -11,7 +11,6 @@
 #include "term.hh"
 #include "records.hh"
 #include "mem.hh"
-#include "misc.hh"
 
 // TODO
 // 1. Check that all TaggedRef's are dereferenced when they should be.
@@ -344,5 +343,7 @@ public:
 Bool isGenOFSVar(TaggedRef term);
 Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag);
 GenOFSVariable *tagged2GenOFSVar(TaggedRef term);
+/* a simple sorting routine using atomcmp */
+void inplace_quicksort(TaggedRef* first, TaggedRef* last);
 
 #endif

@@ -7,17 +7,10 @@
   State: $State$
 
   ------------------------------------------------------------------------
-
-  ------------------------------------------------------------------------
 */
 
-#include "types.hh"
-
-#include "builtins.hh"
-#include "codearea.hh"
-#include "misc.hh"
-#include "records.hh"
-#include "opcodes.hh"
+#include "am.hh"
+#include "indexing.hh"
 #include "optostr.hh"
 
 //
@@ -190,6 +183,26 @@ char *getBIName(ProgramCounter PC)
 
 }
 
+
+void CodeArea::printDef(ProgramCounter PC)
+{
+  Reg reg;
+  ProgramCounter next;
+  TaggedRef file, line;
+  PrTabEntry *pred;
+
+  ProgramCounter pc = definitionStart(PC);
+  if (pc == NOCODE) {
+    message("\tOn toplevel\n");
+    return;
+  }
+
+  getDefinitionArgs(pc,reg,next,file,line,pred);
+
+  message("\tIn procedure %s (File %s, line %s)\n",
+          pred ? pred->getPrintName() : "???",
+          tagged2String(file,10),tagged2String(line,10));
+}
 
 /* find the start of the definition where from points into */
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)

@@ -16,19 +16,44 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include <setjmp.h>
 
-#include "alarm.hh"
-#include "codearea.hh"
-#include "gc.hh"
-// #include "genvar.hh"
-#include "misc.hh"
-#include "records.hh"
-#include "statisti.hh"
-#include "taskstk.hh"
+#include "tagged.hh"
 #include "term.hh"
+#include "constter.hh"
+
+#include "actor.hh"
+#include "board.hh"
+
+#include "hashtbl.hh"
+
+#include "suspensi.hh"
+#include "variable.hh"
+
+#include "opcodes.hh"
+# include "codearea.hh"
+
+#include "statisti.hh"
+
+#include "stack.hh"
+#  include "taskstk.hh"
+
 #include "trail.hh"
-#include "unify.hh"
+#include "bignum.hh"
+
+#include "records.hh"
+
+#include "builtins.hh"
+#include "compiler.hh"
+#include "debug.hh"
+#include "os.hh"
+#include "thread.hh"
+#include "verbose.hh"
+#include "cell.hh"
+#include "objects.hh"
+
+#include "dllstack.hh"
+# include "solve.hh"
 
 // -----------------------------------------------------------------------
 
@@ -71,9 +96,6 @@ public:
   unsigned int heapIncrement;
   unsigned int heapIdleMargin;
 
-  char *ozPath;
-  char *linkPath;
-
   int systemPriority;
   int defaultPriority;
   int timeSlice;
@@ -84,7 +106,12 @@ public:
 
   int dumpCore;
 
-  int cellHack;
+  int cellHack;         /* enable/disable dot access on cells */
+
+  int runningUnderEmacs;
+
+  char *ozPath;
+  char *linkPath;
 
   /* command line arguments visible from Oz */
   char **argV;
@@ -99,7 +126,8 @@ public:
 class AM {
 friend void engine();
 public:
-  static int ProcessCounter;
+  int threadSwitchCounter;
+  int userCounter;
 
   int statusReg;
   Trail trail;
@@ -114,6 +142,14 @@ public:
   Board *currentSolveBoard;       // current 'solve' board or NULL if none;
   Bool wasSolveSet;
 
+  CompStream *compStream;
+  Bool isStandaloneF;
+  Bool isStandalone() { return isStandaloneF; }
+
+  jmp_buf engineEnvironment;
+
+  Board **ioNodes;              // node that must be waked up on io
+
   Statistics stat;
   ConfigData conf;
 
@@ -121,6 +157,9 @@ public:
   Bool dontPropagate;
   // is used by consistency checking of a copy of a search tree;
 #endif
+
+  TaggedRef suspCallHandler;
+  TaggedRef *suspendVar;
 
   /* Threads */
   Thread *currentThread;
@@ -135,31 +174,35 @@ public:
   void initThreads();
   void printThreads();
 
-  void AM::scheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
-  void AM::scheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
+  void scheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
+  void scheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
                              Suspension *s=0);
-  void AM::scheduleSolve(Board *b);
-  void AM::scheduleWakeup(Board *b, Bool wasExtSusp);
+  void scheduleSolve(Board *b);
+  void scheduleWakeup(Board *b, Bool wasExtSusp);
 
-  void AM::pushToplevel(ProgramCounter pc);
-  void AM::checkToplevel();
-  void AM::addToplevel(ProgramCounter pc);
+  void pushToplevel(ProgramCounter pc);
+  void checkToplevel();
+  void addToplevel(ProgramCounter pc);
 
-  Thread *AM::newThread(int p,Board *h);
-  void AM::disposeThread(Thread *th);
-  Bool AM::isScheduled(Thread *th);
-  void AM::scheduleThread(Thread *th);
-  Bool AM::threadQueueIsEmpty();
-  Thread *AM::getFirstThread();
-  Thread *AM::unlinkThread(Thread *th);
-  void AM::insertFromHead(Thread *th);
-  void AM::insertAfter(Thread *th,Thread *here);
-  void AM::insertFromTail(Thread *th);
-  void AM::insertBefore(Thread *th, Thread *here);
+  Thread *newThread(int p,Board *h);
+  void disposeThread(Thread *th);
+  Bool isScheduled(Thread *th);
+  void scheduleThread(Thread *th);
+  Bool threadQueueIsEmpty();
+  Thread *getFirstThread();
+  Thread *unlinkThread(Thread *th);
+  void insertFromHead(Thread *th);
+  void insertAfter(Thread *th,Thread *here);
+  void insertFromTail(Thread *th);
+  void insertBefore(Thread *th, Thread *here);
 
+  int catchError() { return setjmp(engineEnvironment); }
 public:
   AM() {};
   void init(int argc,char **argv);
+  void checkVersion();
+  void exitOz(int status);
+  void suspendEngine();
 
   Bool criticalFlag;  // if this is true we will NOT set Sflags
                       // from within signal handlers
@@ -241,8 +284,14 @@ public:
   void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term, Bool prop);
 
   void rebind(TaggedRef *ref, TaggedRef ptr);
+  void doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t);
+  void doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
+                               GenCVariable * lv, GenCVariable * gv,
+                               Bool prop);
+
   Bool isLocalUVar(TaggedRef var);
   Bool isLocalSVar(TaggedRef var);
+  Bool isLocalSVar(SVariable *var);
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var);
   Bool isInScope (Board *above, Board* node);
@@ -284,6 +333,23 @@ public:
   State setValue(TaggedRef feature, TaggedRef value);
 
   void restartThread();
+
+  void handleIO();
+  Bool loadQuery(CompStream *fd);
+  void select(int fd);
+  void checkIO();
+
+  void handleAlarm();
+  void handleUser();
+  int setUserAlarmTimer(int ms);
+
+  Sleep *sleepQueue;
+  void insertUser(int t,TaggedRef node);
+  int wakeUser();
+
+  static OZ_Bool SolveActorWaker(int n, TaggedRef *args);
+  Bool isStableSolve(SolveActor *sa);
+
 };
 
 extern AM am;

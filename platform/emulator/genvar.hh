@@ -23,9 +23,6 @@
 #pragma interface
 #endif
 
-#include "term.hh"
-#include "unify.hh"
-
 //-----------------------------------------------------------------------------
 //                       Generic Constrained Variable
 //-----------------------------------------------------------------------------
@@ -69,8 +66,6 @@ public:
   Bool isTagged(void) {
     return (var_type & BeingTagged);
   }
-
-  Bool isLocalVariable(void);
 
   // methods relevant for term copying (gc and solve)
   void gc(void);

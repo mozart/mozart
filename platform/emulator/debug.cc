@@ -20,19 +20,8 @@
 #include <signal.h>
 #include <setjmp.h>
 
-#include "debug.hh"
-
-#include "actor.hh"
 #include "am.hh"
-#include "builtins.hh"
-#include "codearea.hh"
-#include "io.hh"
-#include "taskstk.hh"
-#include "thread.hh"
-
-
-// mm2 extern AM am;
-
+#include "debug.hh"
 
 unsigned long OzDebug::goalCounter = 1;
 
@@ -506,7 +495,7 @@ Bool trace(char *s,Board *board,Actor *actor,
       break;
     case 'e':
       printf("*** Leaving Oz\n");
-      IO::exitOz(0);
+      am.exitOz(0);
     case 'f':
       return NO;
     case 'p':

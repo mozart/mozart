@@ -14,22 +14,31 @@
 #endif
 
 #include <ctype.h>
+#include <strstream.h>
 
-#include "actor.hh"
 #include "am.hh"
-#include "builtins.hh"
-#include "bignum.hh"
-#include "board.hh"
-#include "cell.hh"
-#include "debug.hh"
+
 #include "genvar.hh"
 #include "fdomn.hh"
-#include "misc.hh"
-#include "records.hh"
-#include "taskstk.hh"
-#include "term.hh"
-#include "thread.hh"
-#include "objects.hh"
+
+class Indent {
+public:
+  int len;
+  Indent(int n) : len(n) {};
+};
+
+inline ostream& operator<<(ostream& o, Indent m)
+{
+  int i = m.len;
+  while(i--) {
+    o << ' ';
+  }
+  return o;
+}
+
+inline Indent indent(int i) {
+  return Indent(i);
+}
 
 
 void printWhere(ostream &cout,ProgramCounter PC);
@@ -1408,6 +1417,262 @@ PRINTLONG(TaskStack)
   stream << "End of TaskStack\n";
 }
 
+static
+void printX(FILE *fd, RefsArray X)
+{
+  int xsize = getRefsArraySize(X);
+  while (--xsize >= 0) {
+    fprintf(fd,"\t\tX[%d]=0x%x\n", xsize, X[xsize]);
+  }
+}
+
+void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
+{
+  if (this == NULL) {
+    message("TaskStack empty.\n");
+    return;
+  }
+
+  message("\n");
+  message("Stack dump:\n");
+  message("-----------\n");
+
+  if (pc != NOCODE && pc !=NULL) {
+    CodeArea::printDef(pc);
+  }
+  TaskStackEntry *p = getTop();
+
+  while (isEmpty() == NO && depth-- > 0) {
+    TaggedBoard tb = (TaggedBoard) ToInt32(pop());
+    ContFlag flag = getContFlag(tb);
+    Board* n = getBoard(tb,flag);
+    switch (flag){
+    case C_CONT:
+      {
+        ProgramCounter PC = (ProgramCounter) pop();
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        if (verbose) {
+          message("\tC_CONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n\t",
+                 n, PC, Y, G);
+        }
+        CodeArea::printDef(PC);
+      }
+      break;
+    case C_XCONT:
+      {
+        ProgramCounter PC = (ProgramCounter) pop();
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        RefsArray X = (RefsArray) pop();
+        if (verbose) {
+          message("\tC_XCONT: board=0x%x, PC=0x%x, Y=0x%x, G=0x%x\n",
+                 n, PC, Y, G);
+          printX(stdout,X);
+        }
+        CodeArea::printDef(PC);
+        break;
+      }
+    case C_NERVOUS:
+      if (!verbose) break;
+      message("\tC_NERVOUS: board=0x%x\n", n);
+      break;
+    case C_COMP_MODE:
+      message("\t%sMODE\n",((int) tb)>>4==SEQMODE?"SEQ":"PAR");
+      break;
+    case C_CFUNC_CONT:
+      {
+        OZ_CFun biFun    = (OZ_CFun) pop();
+        Suspension* susp = (Suspension*) pop();
+        RefsArray X      = (RefsArray) pop();
+        message("\tC_CFUNC_CONT: board=0x%x, biFun=0x%x, susp=0x%x\n",
+               n , biFun, susp);
+        if (X != NULL) {
+          printX(stdout,X);
+        } else {
+          message("\t\tNo arguments.\n");
+        }
+        break;
+      }
+
+    case C_DEBUG_CONT:
+      {
+        OzDebug *deb = (OzDebug*) pop();
+        deb->printCall();
+        break;
+      }
+
+    case C_CALL_CONT:
+      {
+        SRecord *s = (SRecord *) pop();
+        RefsArray X = (RefsArray) pop();
+        if (!verbose) break;
+        message("\tC_DEBUG_CONT: board=0x%x, Pred=0x%x\n", n, s);
+        printX(stdout,X);
+        break;
+      }
+
+    default:
+      error("printDebug: unexpected task found.");
+    } // switch
+  } // while
+
+  setTop(p);
+}
+
+
+
+#define RANGESTR "#"
+
+void printFromTo(ostream &ofile, int f, int t)
+{
+  if (f == t)
+    ofile << ' ' << f;
+  else if ((t - f) == 1)
+    ofile << ' ' << f << ' ' << t;
+  else
+    ofile << ' ' << f << RANGESTR << t;
+}
+
+void FDIntervals::print(ostream &ofile, int idnt) const
+{
+  ofile << indent(idnt) << '{';
+  for (int i = 0; i < high; i += 1)
+    printFromTo(ofile, i_arr[i].left, i_arr[i].right);
+  ofile << " }";
+}
+
+void FDIntervals::printLong(ostream &ofile, int idnt) const
+{
+  ofile << endl << indent(idnt) << "high=" << high
+        << " fd_iv_max_high=" << fd_iv_max_high << endl;
+  print(ofile, idnt);
+  for (int i = 0; i < high; i += 1)
+    ofile << endl << indent(idnt)
+          << "i_arr[" << i << "]@" << (void*) &i_arr[i]
+          << " left=" << i_arr[i].left << " right=" << i_arr[i].right;
+  ofile << endl;
+}
+
+void FDIntervals::printDebug(void) const
+{
+  print(cerr, 0);
+  cerr << endl;
+  cerr.flush();
+}
+
+void FDIntervals::printDebugLong(void) const
+{
+  printLong(cerr, 0);
+  cerr << endl;
+  cerr.flush();
+}
+
+void FDBitVector::print(ostream &ofile, int idnt) const
+{
+  ofile << indent(idnt) << '{';
+
+  int len = mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+  for (int i = 0; i < len; i += 1) {
+    ofile << ' ' << fd_bv_left_conv[i];
+    if (fd_bv_left_conv[i] != fd_bv_right_conv[i])
+      if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i])
+        ofile << ' ' << fd_bv_right_conv[i];
+      else
+        ofile << RANGESTR << fd_bv_right_conv[i];
+  }
+  ofile << " }";
+}
+
+void FDBitVector::printLong(ostream &ofile, int idnt) const
+{
+  ofile << "  fd_bv_max_high=" << fd_bv_max_high << endl;
+  print(ofile, idnt);
+  for (int i = 0; i < fd_bv_max_high; i++) {
+    ofile << endl << indent(idnt + 2) << '[' << i << "]:  ";
+    for (int j = 31; j >= 0; j--) {
+      ofile << ((b_arr[i] & (1 << j)) ? '1' : 'o');
+      if (j % 8 == 0) ofile << ' ';
+    }
+  }
+  ofile << endl;
+}
+
+void FDBitVector::printDebug(void) const
+{
+  print(cerr, 0);
+  cerr << endl;
+  cerr.flush();
+}
+
+void FDBitVector::printDebugLong(void) const
+{
+  printLong(cerr, 0);
+  cerr << endl;
+  cerr.flush();
+}
+
+void FiniteDomain::print(ostream &ofile, int idnt) const
+{
+  if (getSize() == 0)
+    ofile << indent(idnt) << "{ - empty - }";
+  else switch (getType()) {
+  case fd_descr:
+      ofile << indent(idnt) << '{';
+      printFromTo(ofile, min_elem, max_elem);
+      ofile << " }";
+    break;
+  case bv_descr:
+    get_bv()->print(ofile, idnt);
+    break;
+  case iv_descr:
+    get_iv()->print(ofile, idnt);
+    break;
+  default:
+    error("unexpected case");
+  }
+  DEBUG_FD_IR(FALSE, ofile << ((getType() == fd_descr) ? 'f' :
+              (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
+}
+
+char * FiniteDomain::descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
+
+void FiniteDomain::printLong(ostream &ofile, int idnt) const
+{
+  ofile << indent(idnt) << "min_elem=" << min_elem
+        << " max_elem=" << max_elem << " size=" << getSize()
+        << " descr=" << get_iv() << " type=" << descr_type_text[getType()];
+
+  switch (getType()) {
+  case fd_descr:
+    ofile << endl;
+    print(ofile, idnt);
+    ofile << endl;
+    break;
+  case bv_descr:
+    get_bv()->printLong(ofile, idnt);
+    break;
+  case iv_descr:
+    get_iv()->printLong(ofile, idnt);
+    break;
+  default:
+    error("unexpected case");
+  }
+}
+
+void FiniteDomain::printDebug(void) const
+{
+  print(cerr, 0);
+  cerr << endl;
+  cerr.flush();
+}
+
+void FiniteDomain::printDebugLong(void) const
+{
+  printLong(cerr, 0);
+  cerr << endl;
+  cerr.flush();
+}
 
 #ifdef RECINSTRFETCH
 

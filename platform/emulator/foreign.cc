@@ -9,18 +9,11 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <string.h>
 
 #include "oz.h"
 
-
 #include "am.hh"
-#include "bignum.hh"
-#include "builtins.hh"
-#include "cell.hh"
-#include "io.hh"
-#include "records.hh"
-#include "thread.hh"
-#include "suspensi.hh"
 
 
 /* TmpBuffer with at LEAST 512 characters,
@@ -878,18 +871,19 @@ OZ_Term OZ_newVariable()
 
 int OZ_select(int fd)
 {
-  return IO::setIORequest(fd) ? 1 : 0;
+  am.select(fd);
+  return 1;
 }
 
 int OZ_openIO(int fd)
 {
-  IO::openIO(fd);
+  DebugCheckT(warning("openIO is obsolete"));
   return 1;
 }
 
 int OZ_closeIO(int fd)
 {
-  IO::closeIO(fd);
+  DebugCheckT(warning("close IO is obsolete"));
   return 1;
 }
 

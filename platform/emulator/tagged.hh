@@ -24,10 +24,9 @@
 
 #include <stdio.h>
 
-
 #include "machine.hh"
-#include "error.hh"
 #include "types.hh"
+#include "error.hh"
 #include "mem.hh"
 #include "gc.hh"
 
@@ -682,6 +681,14 @@ SVariable *tagged2SVar(TaggedRef ref)
   return (SVariable *) tagValueOf(SVAR,ref);
 }
 
+
+inline
+SVariable *taggedCVar2SVar(TaggedRef ref) {
+  GCDEBUG(ref);
+  CHECKTAG(CVAR);
+  return (SVariable *) tagValueOf(CVAR,ref);
+}
+
 inline
 GenCVariable *tagged2CVar(TaggedRef ref) {
   GCDEBUG(ref);
@@ -737,6 +744,36 @@ TaggedRef deref(TaggedRef t) {
   DEREF(t,_1,_2);
   return t;
 }
+
+inline
+TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, TypeOfTerm &tag)
+{
+  TaggedRef tr1=tr;
+  DEREF(tr1,ptr1,tag1);
+  tr=tr1;
+  ptr=ptr1;
+  tag=tag1;
+  return tr1;
+}
+
+// ---------------------------------------------------------------------------
+// Binding
+// ---------------------------------------------------------------------------
+
+inline
+void doBind(TaggedRef *p, TaggedRef t)
+{
+  CHECK_NONVAR(t);
+  *p = t;
+}
+
+inline
+void unBind(TaggedRef *p, TaggedRef t)
+{
+  Assert(isAnyVar(t));
+  *p = t;
+}
+
 
 // ---------------------------------------------------------------------------
 // ------- RefsArray ----------------------------------------------------------
@@ -942,5 +979,54 @@ inline Bool sameTerm(TaggedRef t1, TaggedRef t2)
 
 
 extern void initTagged();
+
+class Continuation {
+protected:
+  ProgramCounter pc;
+  RefsArray yRegs, gRegs, xRegs;
+public:
+  USEFREELISTMEMORY
+
+  Continuation(void)
+  : pc(NOCODE), yRegs(NULL), gRegs(NULL) , xRegs(NULL) {}
+
+  Continuation(ProgramCounter p, RefsArray y, RefsArray g=0,
+               RefsArray x=0, int i=0);
+
+  void defeat () {
+    pc = NOCODE;
+    yRegs = NULL;
+    gRegs = NULL;
+    xRegs = NULL;
+  }
+
+  ProgramCounter getPC(void) { return pc;}
+
+  void setPC(ProgramCounter p) { pc = p;}
+
+  RefsArray getY(void) { return yRegs;}
+  void setY(RefsArray Y) {
+    yRegs = Y;
+#ifdef DEBUG_CHECK
+    if (Y != (RefsArray) 0) {
+      for (int i = 0; i < getRefsArraySize(Y); i++) {
+        TaggedRef aux = Y[i];
+        if (aux != (TaggedRef) 0) { DEREF(aux,_ptr,_tag); }
+      }
+    }
+#endif
+  }
+
+  RefsArray getG(void) {return gRegs;}
+  void setG(RefsArray G) { gRegs = G;}
+
+  int getXSize(void) {return xRegs ? getRefsArraySize(xRegs) : 0;}
+  RefsArray getX(void) { return xRegs;}
+  void getX(RefsArray x);
+  void setX(RefsArray x, int i);
+
+  void gcRecurse(void);
+  Continuation * gc();
+}; // Continuation
 
 #endif

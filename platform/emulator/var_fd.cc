@@ -14,8 +14,8 @@
 #pragma implementation "fdgenvar.hh"
 #endif
 
+#include "am.hh"
 #include "genvar.hh"
-#include "bignum.hh"
 #include "fdprofil.hh"
 
 // unify expects either two GenFDVariables or at least one
@@ -39,12 +39,12 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
       }
       if (prop) propagate(var, fd_det, term, pc_propagator);
 
-      if (prop && isLocalVariable()) {
+      if (prop && am.isLocalSVar(this)) {
         doBind(vPtr, term);
         if (disp) dispose();
       } else {
         if (prop) addSuspension(new Suspension(am.currentBoard));
-        doBindAndTrail(var, vPtr, term);
+        am.doBindAndTrail(var, vPtr, term);
       }
 
       PROFILE_CODE1(if (FDVarsTouched.add(term))
@@ -78,8 +78,8 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
                     FDProfiles.inc_item(no_succ_fdunify_vars);
                     )
 // bind - trail - propagate
-      Bool varIsLocal =  (prop && isLocalVariable());
-      Bool termIsLocal = (prop && termVar->isLocalVariable());
+      Bool varIsLocal =  (prop && am.isLocalSVar(this));
+      Bool termIsLocal = (prop && am.isLocalSVar(termVar));
       switch (varIsLocal + 2 * termIsLocal) {
       case TRUE + 2 * TRUE: // var and term are local
         {
@@ -133,14 +133,14 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               propagate(var, l_dom, int_var, pc_cv_unif);
               termVar->addSuspension(new Suspension(am.currentBoard));
               doBind(vPtr, int_var);
-              doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
+              am.doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
               if (disp) dispose();
             } else {
               setDom(intsct);
               termVar->propagate(term, r_dom, makeTaggedRef(vPtr), pc_cv_unif);
               propagate(var, l_dom, makeTaggedRef(vPtr), pc_cv_unif);
               termVar->addSuspension(new Suspension(am.currentBoard));
-              doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
+              am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
                                   this, termVar, prop);
             }
           } else {
@@ -161,15 +161,15 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               termVar->propagate(term, r_dom, int_term, pc_cv_unif);
               addSuspension(new Suspension(am.currentBoard));
               doBind(tPtr, int_term);
-              doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
+              am.doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
               if (disp) termVar->dispose();
             } else {
               termVar->setDom(intsct);
               propagate(var, l_dom, makeTaggedRef(tPtr), pc_cv_unif);
               termVar->propagate(term, r_dom, makeTaggedRef(tPtr), pc_cv_unif);
               addSuspension(new Suspension(am.currentBoard));
-              doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
-                                  termVar, this, prop);
+              am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
+                                     termVar, this, prop);
             }
           } else {
             termVar->propagate(term, r_dom, makeTaggedRef(vPtr), pc_cv_unif);
@@ -188,8 +188,8 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               propagate(var, l_dom, int_val, pc_cv_unif);
               termVar->propagate(term, r_dom, int_val, pc_cv_unif);
             }
-            doBindAndTrail(var, vPtr, int_val);
-            doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
+            am.doBindAndTrail(var, vPtr, int_val);
+            am.doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
           } else {
             GenFDVariable * fd_var = new GenFDVariable(intsct);
             TaggedRef * var_val = newTaggedCVar(fd_var);
@@ -197,9 +197,9 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               propagate(var, l_dom, makeTaggedRef(var_val), pc_cv_unif);
               termVar->propagate(term, r_dom, makeTaggedRef(var_val), pc_cv_unif);
             }
-            doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
+            am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
                                 fd_var, this, prop);
-            doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
+            am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
                                 fd_var, termVar, prop);
           }
           if (prop) {

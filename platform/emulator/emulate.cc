@@ -15,21 +15,12 @@
 #pragma implementation "emulate.hh"
 #endif
 
-#include "types.hh"
-
-#include "actor.hh"
-#include "alarm.hh"
 #include "am.hh"
-#include "builtins.hh"
-#include "debug.hh"
-#include "genvar.hh"
+
 #include "indexing.hh"
-#include "io.hh"
-#include "objects.hh"
-#include "board.hh"
-#include "thread.hh"
+
+#include "genvar.hh"
 #include "fdhook.hh"
-#include "verbose.hh"
 
 
 // -----------------------------------------------------------------------
@@ -144,10 +135,10 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
   ProgramCounter offset = table->getElse();
   if (isSTuple(term)) {
     if (table->functorTable) {
-      Literal *name = tagged2STuple(term)->getLabelLiteral();
-      int hsh = name ? table->hash(name->hash()) : 0;
+      Literal *lname = tagged2STuple(term)->getLabelLiteral();
+      int hsh = lname ? table->hash(lname->hash()) : 0;
       offset = table->functorTable[hsh]
-            ->lookup(name,tagged2STuple(term)->getSize(),offset);
+            ->lookup(lname,tagged2STuple(term)->getSize(),offset);
       sP = tagged2STuple(term)->getRef();
     }
     return offset;
@@ -196,6 +187,21 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
   return offset;
 }
 
+Bool Board::isFailureInBody ()
+{
+  Assert(isWaiting () == OK);
+  if (isWaitTop () == OK) {
+    return (NO);
+  } else {
+#ifdef THREADED
+    Opcode op = CodeArea::adressToOpcode (CodeArea::getOP (body.getPC ()));
+#else
+    Opcode op = CodeArea::getOP (body.getPC ());
+#endif
+    return (op == FAILURE);
+  }
+}
+
 // -----------------------------------------------------------------------
 // CALL HOOK
 
@@ -228,16 +234,16 @@ Bool AM::emulateHookOutline(Abstraction *def,
     return TRUE;
   }
 
-  blockSignals();
+  osBlockSignals();
   // & with blocking of signals;
   if (isSetSFlag(UserAlarm)) {
-    Alarm::HandleUser();
+    handleUser();
   }
   if (isSetSFlag(IOReady)) {
-    IO::handleIO();
+    handleIO();
   }
 
-  unblockSignals();
+  osUnblockSignals();
 
   if (def && isSetSFlag(DebugMode)) {
     enterCall(currentBoard,def,arity,arguments);
@@ -252,7 +258,7 @@ Bool AM::hookCheckNeeded()
 #ifdef DEBUG_DET
   static int counter = 100;
   if (--counter == 0) {
-    Alarm::Handle();   // simulate an alarm
+    handleAlarm();   // simulate an alarm
     counter = 100;
   }
 #endif
@@ -706,7 +712,7 @@ void engine() {
   int predArity;    NoReg(predArity);
 
 #ifdef CATCH_SEGV
-  switch (setjmp(IO::engineEnvironment)) {
+  switch (e->catchError()) {
 
   case NOEXCEPTION:
     break;
@@ -753,7 +759,7 @@ void engine() {
 // *** process switch
 // ------------------------------------------------------------------------
   if (e->threadQueueIsEmpty()) {
-    IO::suspendEngine();
+    e->suspendEngine();
   }
 
   e->currentThread = e->getFirstThread();
@@ -975,14 +981,13 @@ void engine() {
             killPropagatedCurrentTaskSusp();
             LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                               goto localhack0;);
-            extern TaggedRef *globalSeqSuspendHack;
-            Assert(globalSeqSuspendHack);
+            Assert(e->suspendVar);
             Suspension *susp =
               e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
                               biFun,X,XSize);
-            taggedBecomesSuspVar(globalSeqSuspendHack)
+            taggedBecomesSuspVar(e->suspendVar)
               ->addSuspension(susp);
-            globalSeqSuspendHack=0;
+            e->suspendVar=0;
             if (e->currentThread->compMode == ALLSEQMODE) {
               e->currentThread=0;
               goto LBLstart;
@@ -1051,9 +1056,9 @@ void engine() {
 
 #ifdef SLOW_DEBUG_CHECK
   /* These tests make the emulator really sloooooww */
-  DebugCheck(blockSignals() == NO,
+  DebugCheck(osBlockSignals() == NO,
              error("signalmask not zero"));
-  DebugCheckT(unblockSignals());
+  DebugCheckT(osUnblockSignals());
   DebugCheck ((e->currentSolveBoard != CBB->getSolveBoard ()),
               error ("am.currentSolveBoard and real solve board mismatch"));
 
@@ -1516,8 +1521,7 @@ void engine() {
         X[0] = makeMethod(arity,label,X);
         X[1] = origObj;
         predArity = 2;
-        extern TaggedRef suspCallHandler; // mm2
-        predicate = chunkCast(suspCallHandler);
+        predicate = chunkCast(e->suspCallHandler);
         goto LBLcall;
       }
 
@@ -1612,8 +1616,7 @@ void engine() {
        if (!isConstChunk(taggedPredicate)) {
          if (isAnyVar(predTag)) {
            X[predArity++] = makeTaggedRef(predPtr);
-           extern TaggedRef suspCallHandler; // mm2
-           predicate = chunkCast(suspCallHandler);
+           predicate = chunkCast(e->suspCallHandler);
            goto LBLcall;
          }
          HF_WARN(applFailure(taggedPredicate),
@@ -1697,14 +1700,13 @@ void engine() {
               predicate = bi->getSuspHandler();
               if (!predicate) {
                 if (!isTailCall) e->pushTask(CBB,PC,Y,G);
-                extern TaggedRef *globalSeqSuspendHack;
-                if (globalSeqSuspendHack) {
+                if (e->suspendVar) {
                   Suspension *susp =
                     e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
                                     bi->getFun(),X,predArity);
-                  taggedBecomesSuspVar(globalSeqSuspendHack)
+                  taggedBecomesSuspVar(e->suspendVar)
                     ->addSuspension(susp);
-                  globalSeqSuspendHack=0;
+                  e->suspendVar=0;
                 }
                 if (e->currentThread->getCompMode() == ALLSEQMODE) {
                   e->currentThread=0;
@@ -1792,7 +1794,7 @@ void engine() {
 
        // put ~'solve actor';
        // Note that CBB is already the 'solve' board;
-       e->pushCFun(CBB, SolveActor::Waker);    // no args;
+       e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
 
        // apply the predicate;
        predArity = 1;
@@ -2300,7 +2302,7 @@ void engine() {
     // try to reduce a solve board;
     DebugCheck ((CBB->isReflected () == OK),
                 error ("trying to reduce an already reflected solve actor"));
-    if (SolveActor::Cast(CBB->getActor())->isStable() == OK) {
+    if (e->isStableSolve(SolveActor::Cast(CBB->getActor()))) {
       DebugCheck ((e->trail.isEmptyChunk () == NO),
                   error ("non-empty trail chunk for solve board"));
       // all possible reduction steps require this;
@@ -2317,6 +2319,8 @@ void engine() {
         CBB->decSuspCount ();
 
         DebugCheckT (solveBB->setReflected ());
+        // statistic
+        e->stat.incSolveSolved();
         if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genSolved(), OK) ) {
           HF_NOMSG;
         }
@@ -2367,7 +2371,7 @@ void engine() {
               solveAA->incThreads();
 
               // put ~'solve actor';
-              e->pushCFun(solveBB, SolveActor::Waker);    // no args;
+              e->pushCFun(solveBB, &AM::SolveActorWaker);    // no args;
 
               if (waitBoard->isWaitTop()) {
                 goto LBLcheckEntailment;
@@ -2388,6 +2392,8 @@ void engine() {
               ((AWActor *) wa)->addChild (waitBoard);
               solveAA->setBoardToInstall (waitBoard);
               DebugCheckT (solveBB->setReflected ());
+              // statistics
+              am.stat.incSolveDistributed();
               if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
                 HF_NOMSG;
               }
@@ -2454,6 +2460,8 @@ void engine() {
             DebugCheckT (newSolveBB->setReflected ());
             // ... and now there are two proper branches of search problem;
 
+            // statistics
+            e->stat.incSolveDistributed();
             if ( !e->fastUnifyOutline(solveAA->getResult(),
                                       solveAA->genEnumed(newSolveBB),
                                       OK)) {
@@ -2571,6 +2579,8 @@ void engine() {
       // the result variable;
       aa->setCommitted();
       CBB->decSuspCount();
+      // for statistic purposes
+      am.stat.incSolveFailed();
       if ( !e->fastUnifyOutline(SolveActor::Cast(aa)->getResult(),
                                 SolveActor::Cast(aa)->genFailed(),
                                 OK) ) {

@@ -14,9 +14,6 @@
 #pragma interface
 #endif
 
-#include "records.hh"
-#include "hashtbl.hh"
-
 // special builtins known in emulate
 enum BIType {
   BIDefault,

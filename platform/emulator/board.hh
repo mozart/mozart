@@ -16,12 +16,6 @@
 #pragma interface
 #endif
 
-
-#include "constter.hh"
-
-#include "suspensi.hh"
-
-
 struct Equation {
 friend class Script;
 private:
@@ -106,8 +100,6 @@ public:
 
   void incSuspCount(int n=1);
   void decSuspCount();
-  void addSuspension (Suspension *susp);
-  // should be applied only for 'solve' boards;
   Board *gcGetBoardDeref();
   Board *gcGetNotificationBoard ();
   Actor *getActor();
@@ -157,6 +149,7 @@ public:
 };
 
 #ifndef OUTLINE
+#include "actor.hh"
 #include "board.icc"
 #endif
 

@@ -14,14 +14,10 @@
 #endif
 
 
-#include "types.hh"
-
-#include "am.hh"
+#include "tagged.hh"
+#include "constter.hh"
 #include "board.hh"
 #include "actor.hh"
-#include "codearea.hh"
-
-
 
 Equation *ScriptAllocate(int size)
 {
@@ -121,11 +117,12 @@ void Script::dealloc()
 Board* Board::getSolveBoard ()
 {
   Board *b = this;
-  Board *rb = am.rootBoard;
   b = b->getBoardDeref ();
-  while (b != (Board *) NULL && b != rb) {
+  while (b != (Board *) NULL) {
     if (b->isSolve () == OK)
       return (b);
+    if (!b->getActor()) /* root board reached */
+      return 0;
     b = (b->getParentBoard ())->getBoardDeref ();
   }
   return ((Board *) NULL);
@@ -158,20 +155,6 @@ Board::~Board() {
   error("mm2: not yet impl");
 }
 
-Bool Board::isFailureInBody ()
-{
-  Assert(isWaiting () == OK);
-  if (isWaitTop () == OK) {
-    return (NO);
-  } else {
-#ifdef THREADED
-    Opcode op = CodeArea::adressToOpcode (CodeArea::getOP (body.getPC ()));
-#else
-    Opcode op = CodeArea::getOP (body.getPC ());
-#endif
-    return (op == FAILURE);
-  }
-}
 
 // -------------------------------------------------------------------------
 

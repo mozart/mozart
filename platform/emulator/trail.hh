@@ -7,18 +7,6 @@
   State: $State$
 
   ------------------------------------------------------------------------
-
-  exported variables/classes: class Trail;
-
-  exported procedures: no
-
-  ------------------------------------------------------------------------
-
-  internal static variables: no
-
-  internal procedures: no
-
-  ------------------------------------------------------------------------
 */
 
 /*
@@ -31,9 +19,6 @@
 #ifdef __GNUC__
 #pragma interface
 #endif
-
-#include "stack.hh"
-#include "tagged.hh"
 
 /* ***common trail;                         */
 

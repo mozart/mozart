@@ -14,7 +14,6 @@
 #endif
 
 #include "fdomn.hh"
-#include "misc.hh"
 
 #if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline
@@ -63,53 +62,7 @@ int fd_bv_right_conv[fd_bv_conv_max_high];
 intptr fd_iv_left_sort[MAXFDBIARGS];
 intptr fd_iv_right_sort[MAXFDBIARGS];
 
-#define RANGESTR "#"
-
 // FDInterval -----------------------------------------------------------------
-
-void printFromTo(ostream &ofile, int f, int t)
-{
-  if (f == t)
-    ofile << ' ' << f;
-  else if ((t - f) == 1)
-    ofile << ' ' << f << ' ' << t;
-  else
-    ofile << ' ' << f << RANGESTR << t;
-}
-
-void FDIntervals::print(ostream &ofile, int idnt) const
-{
-  ofile << indent(idnt) << '{';
-  for (int i = 0; i < high; i += 1)
-    printFromTo(ofile, i_arr[i].left, i_arr[i].right);
-  ofile << " }";
-}
-
-void FDIntervals::printLong(ostream &ofile, int idnt) const
-{
-  ofile << endl << indent(idnt) << "high=" << high
-        << " fd_iv_max_high=" << fd_iv_max_high << endl;
-  print(ofile, idnt);
-  for (int i = 0; i < high; i += 1)
-    ofile << endl << indent(idnt)
-          << "i_arr[" << i << "]@" << (void*) &i_arr[i]
-          << " left=" << i_arr[i].left << " right=" << i_arr[i].right;
-  ofile << endl;
-}
-
-void FDIntervals::printDebug(void) const
-{
-  print(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-void FDIntervals::printDebugLong(void) const
-{
-  printLong(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
 
 void FDIntervals::initList(int list_len,
                            int * list_left, int * list_right)
@@ -504,50 +457,6 @@ int FDIntervals::subtract_iv(FDIntervals &z, const FDIntervals &y)
 
 // FDBitVector ----------------------------------------------------------------
 
-void FDBitVector::print(ostream &ofile, int idnt) const
-{
-  ofile << indent(idnt) << '{';
-
-  int len = mkRaw(fd_bv_left_conv, fd_bv_right_conv);
-  for (int i = 0; i < len; i += 1) {
-    ofile << ' ' << fd_bv_left_conv[i];
-    if (fd_bv_left_conv[i] != fd_bv_right_conv[i])
-      if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i])
-        ofile << ' ' << fd_bv_right_conv[i];
-      else
-        ofile << RANGESTR << fd_bv_right_conv[i];
-  }
-  ofile << " }";
-}
-
-void FDBitVector::printLong(ostream &ofile, int idnt) const
-{
-  ofile << "  fd_bv_max_high=" << fd_bv_max_high << endl;
-  print(ofile, idnt);
-  for (int i = 0; i < fd_bv_max_high; i++) {
-    ofile << endl << indent(idnt + 2) << '[' << i << "]:  ";
-    for (int j = 31; j >= 0; j--) {
-      ofile << ((b_arr[i] & (1 << j)) ? '1' : 'o');
-      if (j % 8 == 0) ofile << ' ';
-    }
-  }
-  ofile << endl;
-}
-
-void FDBitVector::printDebug(void) const
-{
-  print(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-void FDBitVector::printDebugLong(void) const
-{
-  printLong(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
 void FDBitVector::initList(int list_len,
                            int * list_left, int * list_right)
 {
@@ -797,67 +706,6 @@ int FDBitVector::operator -= (const FDBitVector &y)
 
 // FD -------------------------------------------------------------------------
 
-void FiniteDomain::print(ostream &ofile, int idnt) const
-{
-  if (getSize() == 0)
-    ofile << indent(idnt) << "{ - empty - }";
-  else switch (getType()) {
-  case fd_descr:
-      ofile << indent(idnt) << '{';
-      printFromTo(ofile, min_elem, max_elem);
-      ofile << " }";
-    break;
-  case bv_descr:
-    get_bv()->print(ofile, idnt);
-    break;
-  case iv_descr:
-    get_iv()->print(ofile, idnt);
-    break;
-  default:
-    error("unexpected case");
-  }
-  DEBUG_FD_IR(FALSE, ofile << ((getType() == fd_descr) ? 'f' :
-              (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
-}
-
-char * FiniteDomain::descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
-
-void FiniteDomain::printLong(ostream &ofile, int idnt) const
-{
-  ofile << indent(idnt) << "min_elem=" << min_elem
-        << " max_elem=" << max_elem << " size=" << getSize()
-        << " descr=" << get_iv() << " type=" << descr_type_text[getType()];
-
-  switch (getType()) {
-  case fd_descr:
-    ofile << endl;
-    print(ofile, idnt);
-    ofile << endl;
-    break;
-  case bv_descr:
-    get_bv()->printLong(ofile, idnt);
-    break;
-  case iv_descr:
-    get_iv()->printLong(ofile, idnt);
-    break;
-  default:
-    error("unexpected case");
-  }
-}
-
-void FiniteDomain::printDebug(void) const
-{
-  print(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-void FiniteDomain::printDebugLong(void) const
-{
-  printLong(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
 
 // expects valid intervals, ie 0 <= left <= right <= fd_iv_max_elem
 int FiniteDomain::initList(int list_len,

@@ -33,6 +33,12 @@
 
    */
 
+#include "tagged.hh"
+#include "constter.hh"
+#include "actor.hh"
+#include "board.hh"
+#include "stack.hh"
+#include "taskstk.hh"
 #include "thread.hh"
 
 #include "suspensi.hh"

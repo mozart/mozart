@@ -20,13 +20,6 @@
 #pragma interface
 #endif
 
-#include "types.hh"
-
-#include "taskstk.hh"
-#include "board.hh"
-
-class Toplevel;
-
 const int ALLSEQMODE=3;
 
 class Thread : public ConstTerm
