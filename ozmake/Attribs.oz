@@ -625,10 +625,17 @@ define
 	       BLD={self get_builddir($)}
 	       SEP=[{Property.get 'path.separator'}]
 	       OZHOME={Property.get 'oz.home'}
+	       OZLOAD=case {OS.getEnv 'OZ_SEARCH_LOAD'} of false then
+			 case {OS.getEnv 'OZ_LOAD'} of false then
+			    case {OS.getEnv 'OZLOAD'} of false then
+			       'cache=~/.oz/cache'     #SEP#
+			       'cache='#OZHOME#'/cache'
+			    [] S then S end
+			 [] S then S end
+		      [] S then S end
 	    in
 	       {OS.putEnv 'OZ_SEARCH_LOAD'
-		'cache=~/.oz/cache'     #SEP#
-		'cache='#OZHOME#'/cache'#SEP#
+		OZLOAD                  #SEP#
 		'root='#SRC             #SEP#
 		'root='#BLD}
 	       {Resolve.addHandler
