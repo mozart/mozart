@@ -153,6 +153,11 @@ public:
   void gcRecurse();
 
   ProgramCounter getElsePC() { return elsePC; }
+
+  // not possible because spaces are lazy marked as failed
+  void disposeAsk(void) {
+    // freeListDispose(this,sizeof(AskActor));
+  }
 };
 
 // ------------------------------------------------------------------------
@@ -164,12 +169,13 @@ public:
     Assert(a->isWait()); return (WaitActor *) a;
   }
 private:
-  Board   **children;
+  Board **children;
   CpBag *cpb;
 public:
-  WaitActor();
-  ~WaitActor();
-  WaitActor(WaitActor&);
+  WaitActor();  // fake compiler
+  ~WaitActor();  // fake compiler
+  WaitActor(WaitActor&);  // fake compiler
+
   WaitActor(Board *s,Thread *tt,
             ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i,
             Bool d)
@@ -186,10 +192,13 @@ public:
 
   void addWaitChild(Board *n);
   void failWaitChild(Board *n);
-  Board *getLastChild() { Board* b=children[0]; children[0] = NULL; return b; }
+
   // returns the first created child; this child is unlinked from the actor;
-  Board *getChildRef() { return children[0]; }
+  Board *getLastChild() { Board* b=children[0]; children[0] = NULL; return b; }
+
   // the same, but a child is not unlinked from the actor;
+  Board *getChildRef() { return children[0]; }
+
   int getChildCount() { return childCount; };
   Bool hasOneChildNoChoice() { return
                                  childCount == 1 &&
@@ -198,7 +207,8 @@ public:
   Bool hasNoChildren() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   int selectOrFailChildren(int l, int r);
 
-  void dispose(void) {
+  // maybe in some cpbag...
+  void disposeWait(void) {
     //  freeListDispose(children-1,(ToInt32(children[-1])+1)*sizeof(Board *));
     //  freeListDispose(this,sizeof(WaitActor));
   }
@@ -216,7 +226,5 @@ public:
   }
 
 };
-
-// ------------------------------------------------------------------------
 
 #endif

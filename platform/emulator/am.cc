@@ -1972,6 +1972,12 @@ int AM::commit(Board *bb, Thread *tt)
 
   TaskStack *ts = tt->getTaskStackRef();
   ts->discardActor();
+  if (aw->isAsk()) {
+    AskActor::Cast(aw)->disposeAsk();
+  } else {
+    WaitActor::Cast(aw)->disposeWait();
+  }
+
   ts->pushCont(cont->getPC(),cont->getY(),cont->getG());
   if (cont->getX()) ts->pushX(cont->getX());
 

@@ -86,7 +86,6 @@ public:
     // Return a sorted difference list of all the features currently in the OFS
     // The head is the return value and the tail is returned through an argument.
     TaggedRef getOpenArityList(TaggedRef*,Board*);
-    TaggedRef getOpenArityList(TaggedRef*);
 
     // Return a sorted list of all features currently in the OFS
     TaggedRef getArityList();

@@ -31,7 +31,6 @@
 
 #include "thread.hh"
 
-
 int Thread::getRunnableNumber()
 {
   switch (getThrType()) {

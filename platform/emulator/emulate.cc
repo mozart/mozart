@@ -830,8 +830,6 @@ void AM::checkStability()
       Assert(ret);
 
       DebugCode (currentThread = (Thread *) NULL);
-
-      wa->dispose();
       return;
     }
 
@@ -2603,6 +2601,7 @@ LBLdispatcher:
         tmpBB->setCommitted(CBB);
         CBB->decSuspCount();
         CTS->discardActor();
+        WaitActor::Cast(CAA)->disposeWait();
         DISPATCH(1);
       }
       CBB->setWaiting();
@@ -2625,6 +2624,7 @@ LBLdispatcher:
         tmpBB->setCommitted(CBB);
         CBB->decSuspCount();
         CTS->discardActor();
+        AskActor::Cast(CAA)->disposeAsk();
         DISPATCH(1);
       }
 
@@ -2657,7 +2657,6 @@ LBLdispatcher:
           if (!e->commit(waitBoard,CTT)) {
             HF_DIS;
           }
-          wa->dispose();
           goto LBLpopTask;
         }
 
@@ -2675,13 +2674,17 @@ LBLdispatcher:
           aa->setCommitted();
           CBB->decSuspCount();
 
-          /* rule: if fi --> false */
-          if (aa->getElsePC() == NOCODE) {
+          LOADCONT(aa->getNext());
+          PC = aa->getElsePC();
+
+          aa->disposeAsk();
+
+          // rule: if else fail fi --> fail
+          // mm2: this should be removed (compiler should generate code!)
+          if (PC == NOCODE) {
             HF_COND;
           }
 
-          LOADCONT(aa->getNext());
-          PC=aa->getElsePC();
           goto LBLemulate;
         }
 
@@ -3306,7 +3309,6 @@ LBLfailure:
         if (wa->hasOneChildNoChoice()) {
           Board *waitBoard = wa->getLastChild();
           int succeeded = e->commit(waitBoard);
-          wa->dispose(); // mm2
           if (!succeeded) {
             if (canOptimizeFailure(e,tt)) goto LBLfailure;
           }
@@ -3327,12 +3329,14 @@ LBLfailure:
 
         /* rule: if fi --> false */
         if (aa->getElsePC() == NOCODE) {
+          aa->disposeAsk();
           if (canOptimizeFailure(e,tt)) goto LBLfailure;
         } else {
           Continuation *tmpCont = aa->getNext();
           ts->pushCont(aa->getElsePC(),
                        tmpCont->getY(), tmpCont->getG());
           if (tmpCont->getX()) ts->pushX(tmpCont->getX());
+          aa->disposeAsk();
           e->suspThreadToRunnable(tt);
           e->scheduleThread(tt);
         }

@@ -404,12 +404,6 @@ Bool GenOFSVariable::valid(TaggedRef val)
     return TRUE;
 }
 
-
-TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail)
-{
-    return dynamictable->getOpenArityList(ftail);
-}
-
 TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail, Board* hoome)
 {
     return dynamictable->getOpenArityList(ftail,hoome);
