@@ -3,7 +3,8 @@ SRCDIR		= @srcdir@
 
 WHAT = changes
 MAIN = main.sgml
-
+WHATCLASS=misc
+PRINTNAME=Changes
 HTMLEXTRAFILES =
 
 HTMLEXTRASUPPORTFILES = 

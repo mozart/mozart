@@ -80,6 +80,7 @@ ozdoc: $(FUNCTORS)
 
 install: $(BINDIR) $(BINFILES)
 install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)
+installps:
 
 $(BINDIR) $(DOCDIR):
 	$(INSTALL_DIR) $@
