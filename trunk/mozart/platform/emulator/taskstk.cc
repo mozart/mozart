@@ -205,7 +205,10 @@ TaggedRef TaskStack::findCatch(TaggedRef &out) {
 
     case C_SET_SELF:
       { 
-        Object *obj = (Object *) pop();
+        Object *oldSelf = am.getSelf();
+        Object *newSelf = (Object *) pop();
+	oldSelf->setDeepness(0); /* free the object */
+	am.setSelf(newSelf);
         out = cons(OZ_atom("setSelf"),out);
         break;
       }

@@ -7010,6 +7010,26 @@ OZ_C_proc_begin(BIsetSelf,1)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIoogetCounterSelf,1)
+{
+  int counter = am.getSelf()->getDeepness();
+  return OZ_unifyInt(OZ_getCArg(0),counter);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIoosetCounterSelf,1)
+{
+  OZ_declareIntArg(0,counter);
+
+  /* set counter+1 and the nrelease which decreases counter again */
+  am.getSelf()->setDeepness(counter+1);
+  am.getSelf()->release();
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BIsetModeToDeep,0)
 {
   Assert(0);
@@ -7415,6 +7435,8 @@ BIspec allSpec2[] = {
   {"makeClass",        8,BImakeClass,	       0},
   {"setModeToDeep",    0,BIsetModeToDeep,      0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
+  {"oogetCounterSelf", 1,BIoogetCounterSelf,   0},
+  {"oosetCounterSelf", 1,BIoosetCounterSelf,   0},
   {"getClass",         2,BIgetClass, 	       (IFOR) getClassInline},
   {"new",              3,BInew, 	       0},
   {"newObject",        2,BInewObject, 	       (IFOR) newObjectInline},
