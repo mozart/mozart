@@ -78,7 +78,7 @@
 	((string-match "\\<running\\>" s) "running")
 	((string-match "\\<halted\\>" s) "halted")
 	((string-match "\\<booting\\>" s) "booting")
-	( t "???")))
+	( t s)))
 
 
 (defun oz-set-state(state string)
