@@ -1,10 +1,11 @@
 /*
  *  Authors:
- *    Per Brand (perbrand@sics.se)
- *    Michael Mehl (mehl@dfki.de)
+ *    Konstantin Popov (kost@sics.se)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
+ *    Per Brand (perbrand@sics.se)
+ *    Michael Mehl (mehl@dfki.de)
  *    Denys Duchier (duchier@ps.uni-sb.de)
  * 
  *  Copyright:
@@ -33,6 +34,20 @@
 #include "newmarshaler.hh"
 #include "boot-manager.hh"
 
+#ifdef NEWMARSHALER
+
+//
+int32* NMMemoryManager::freelist[NMMM_SIZE];
+
+//
+// init stuff - must be called;
+static Bool isInitialized;
+void initNewMarshaler()
+{
+  NMMemoryManager::init();
+  isInitialized = OK;
+  Assert(DIF_LAST == 45);  /* new dif(s) added? */
+}
 
 //
 void Marshaler::processSmallInt(OZ_Term siTerm)
@@ -87,16 +102,19 @@ void Marshaler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
 void Marshaler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
-  Builtin *bi= (Builtin *)biConst;
-  if (bi->isSited()) {
-    processNoGood(biTerm,OK);
+  if (bs->visit(biTerm)) {
+    Builtin *bi= (Builtin *)biConst;
+    if (bi->isSited()) {
+      processNoGood(biTerm,OK);
+      rememberNode(biTerm,bs);
+      return;
+    }
+
+    //
+    marshalDIF(bs,DIF_BUILTIN);
     rememberNode(biTerm,bs);
-    return;
+    marshalString(bi->getPrintName(),bs);
   }
-  
-  marshalDIF(bs,DIF_BUILTIN);
-  rememberNode(biTerm,bs);
-  marshalString(bi->getPrintName(),bs);
 }
 
 
@@ -122,29 +140,30 @@ void Marshaler::processExtension(OZ_Term t)
   }
 }
 
-
-
-
 void Marshaler::processObject(OZ_Term term, ConstTerm *objConst)
 {
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
-  Object *o = (Object*) objConst;
-  if(ozconf.perdioMinimal || o->getClass()->isSited()) {
-    processNoGood(term,OK);
-    return;
+  if (bs->visit(term)) {
+    Object *o = (Object*) objConst;
+    if(ozconf.perdioMinimal || o->getClass()->isSited()) {
+      processNoGood(term,OK);
+      return;
+    }
+    if (!bs->globalize()) return;
+    (*marshalObject)(o, bs);
+    rememberNode(term, bs);
   }
-  if (!bs->globalize()) return;
-  (*marshalObject)(o,bs,this);
 }
 
 #define HandleTert(string,tert,term,tag,check)		\
     MsgBuffer *bs = (MsgBuffer *) getOpaque();		\
+    if (!bs->visit(term)) return;			\
     if (check && ozconf.perdioMinimal) {		\
       processNoGood(term,OK);				\
       return;						\
     }							\
     if (!bs->globalize()) return;			\
-    if ((*marshalTertiary)(tert,tag,bs)) return;	\
+    (*marshalTertiary)(tert,tag,bs);			\
     rememberNode(term, bs);
 
 
@@ -156,42 +175,48 @@ void Marshaler::processLock(OZ_Term term, Tertiary *tert)
 
 void Marshaler::processCell(OZ_Term term, Tertiary *tert)
 {
-  HandleTert("cell",tert,term,DIF_LOCK,OK);
+  HandleTert("cell",tert,term,DIF_CELL,OK);
 }
 
 void Marshaler::processPort(OZ_Term term, Tertiary *tert)
 {
-  HandleTert("port",tert,term,DIF_LOCK,NO);
+  HandleTert("port",tert,term,DIF_PORT,NO);
 }
 
 void Marshaler::processResource(OZ_Term term, Tertiary *tert)
 {
-  HandleTert("resource",tert,term,DIF_LOCK,OK);
+  HandleTert("resource",tert,term,DIF_RESOURCE_T,OK);
 }
 
 #undef HandleTert
 
 
 void Marshaler::processUVar(OZ_Term *uvarTerm)
-{ 
-  processCVar(uvarTerm);
+{
+#ifdef DEBUG_CHECK
+  OZ_Term term = processCVar(uvarTerm);
+  Assert(term == (OZ_Term) 0);
+#else
+  (void) processCVar(uvarTerm);
+#endif
 }
 
-void Marshaler::processCVar(OZ_Term *cvarTerm)
+//
+OZ_Term Marshaler::processCVar(OZ_Term *cvarTerm)
 {
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
-  if (!bs->visit(makeTaggedRef(cvarTerm))) return;
-  if((*triggerVariable)(cvarTerm)){
-    // KOST-look
-    //  processTerm(makeTaggedRef(cvarTerm));
-    Assert(0);
-    return;}
-  if((*marshalVariable)(cvarTerm, bs, this))
-     return;
+  if (!bs->visit(makeTaggedRef(cvarTerm))) return (0);
+  if((*triggerVariable)(cvarTerm))
+    return (makeTaggedRef(cvarTerm));
+  if((*marshalVariable)(cvarTerm, bs)) {
+    rememberNode(cvarTerm, bs);
+    return (0);
+  }
   processNoGood(makeTaggedRef(cvarTerm),NO);
+  return (0);
 }
 
-Bool Marshaler::processRepetition(OZ_Term term, int repNumber)
+Bool Marshaler::processRepetition(int repNumber)
 {
   Assert(repNumber >= 0);
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
@@ -261,37 +286,88 @@ Bool Marshaler::processFSETValue(OZ_Term fsetvalueTerm)
 Bool Marshaler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 {
   OzDictionary *d = (OzDictionary *) dictConst;
-
   if (!d->isSafeDict()) {
     processNoGood(dictTerm,OK);
     return OK;
+  } else {
+    MsgBuffer *bs = (MsgBuffer *) getOpaque();
+    marshalDIF(bs,DIF_DICT);
+    rememberNode(dictTerm, bs);
+    marshalNumber(d->getSize(),bs);
+    return (NO);
   }
-
-  MsgBuffer *bs = (MsgBuffer *) getOpaque();
-  marshalDIF(bs,DIF_DICT);
-  rememberNode(dictTerm, bs);
-  marshalNumber(d->getSize(),bs);
-  return NO;
 }
 
 Bool Marshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
-  MsgBuffer *bs = (MsgBuffer *) getOpaque();
-
   ObjectClass *cl = (ObjectClass *) classConst;
-  marshalDIF(bs,DIF_CLASS);
-  GName *gn = globalizeConst(cl,bs);
+  if (cl->isSited()) {
+    processNoGood(classTerm, OK);
+    return (OK);		// done - a leaf;
+  }
+
+  //
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  marshalDIF(bs, DIF_CLASS);
+  GName *gn = globalizeConst(cl, bs);
   rememberNode(classTerm, bs);
-  marshalGName(gn,bs);
-  marshalNumber(cl->getFlags(),bs);
-  return NO;
+  marshalGName(gn, bs);
+  marshalNumber(cl->getFlags(), bs);
+  return (NO);
 }
+
 
 Bool Marshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
-{ OZ_warning("processAbstraction not implemented!");
- processSmallInt(newSmallInt(4711)); 
- return(OK); 
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  ProgramCounter start;
+
+  //
+  Abstraction *pp = (Abstraction *) absConst;
+  PrTabEntry *pred = pp->getPred();
+  if (pred->isSited()) {
+    processNoGood(absTerm, OK);
+    return (OK);		// done - a leaf;
+  }
+
+  //
+  GName* gname = globalizeConst(pp, bs);
+
+  //
+  marshalDIF(bs, DIF_PROC);
+  rememberNode(absTerm, bs);
+
+  //
+  marshalGName(gname, bs);
+  marshalNumber(pp->getArity(), bs);
+  ProgramCounter pc = pp->getPC();
+  int gs = pred->getGSize();
+  marshalNumber(gs, bs);
+  marshalNumber(pred->getMaxX(), bs);
+  marshalNumber(pred->getLine(), bs);
+  marshalNumber(pred->getColumn(), bs);
+
+  //
+  start = pp->getPC() - sizeOf(DEFINITION);
+
+  //
+  Reg reg;
+  int nxt, line, colum;
+  TaggedRef file, predName;
+  CodeArea::getDefinitionArgs(start, reg, nxt, file, line, colum, predName);
+  //
+  marshalNumber(nxt, bs);	// codesize in ByteCode"s;
+
+  //
+  MarshalerCodeAreaDescriptor *desc = 
+    new MarshalerCodeAreaDescriptor(start, start + nxt);
+  marshalBinary(newMarshalCode, desc);
+
+  //
+  return (NO);
 }
+
+#include "newmarshalcode.cc"
 
 //
 Marshaler marshaler;
@@ -301,6 +377,8 @@ Builder builder;
 //
 OZ_Term newUnmarshalTerm(MsgBuffer *bs)
 {
+  Assert(isInitialized);
+  Assert(oz_onToplevel());
   builder.build();
 
   while(1) {
@@ -421,11 +499,17 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
 	break;
       }
 
+    //
+    // kost@ : remember that either all DIF_OBJECT, DIF_VAR_OBJECT and
+    // DIF_OWNER are remembered, or none of them is remembered. That's
+    // because both 'marshalVariable' and 'marshalObject' could yield
+    // 'DIF_OWNER' (see also dpInterface.hh);
     case DIF_OWNER:
     case DIF_OWNER_SEC:
       {
 	OZ_Term tert = (*unmarshalOwner)(bs, tag);
-	b->buildValue(tert);
+	int refTag = unmarshalRefTag(bs);
+	b->buildValueRemember(tert, refTag);
 	break;
       }
 
@@ -439,7 +523,7 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       {
 	OZ_Term tert = (*unmarshalTertiary)(bs, tag);
 	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemeber(tert,refTag);
+	b->buildValueRemember(tert, refTag);
 	break;
       }
 
@@ -483,25 +567,99 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
 
     case DIF_VAR: 
       {
-	b->buildValue((*unmarshalVar)(bs,FALSE,FALSE));
+	OZ_Term v = (*unmarshalVar)(bs, FALSE, FALSE);
+	int refTag = unmarshalRefTag(bs);
+	b->buildValueRemember(v, refTag);
 	break;
       }
-      
+
     case DIF_FUTURE: 
       {
-	b->buildValue((*unmarshalVar)(bs,TRUE,FALSE));
+	OZ_Term f = (*unmarshalVar)(bs, TRUE, FALSE);
+	int refTag = unmarshalRefTag(bs);
+	b->buildValueRemember(f, refTag);
 	break;
       }
-      
+
     case DIF_VAR_AUTO: 
       {
-	b->buildValue((*unmarshalVar)(bs,FALSE,TRUE));
+	OZ_Term va = (*unmarshalVar)(bs, FALSE, TRUE);
+	int refTag = unmarshalRefTag(bs);
+	b->buildValueRemember(va, refTag);
 	break;
       }
-      
+
     case DIF_FUTURE_AUTO: 
       {
-	b->buildValue((*unmarshalVar)(bs,TRUE,TRUE));
+	OZ_Term fa = (*unmarshalVar)(bs, TRUE, TRUE);
+	int refTag = unmarshalRefTag(bs);
+	b->buildValueRemember(fa, refTag);
+	break;
+      }
+
+    case DIF_VAR_OBJECT:
+      {
+	OZ_Term obj = (*unmarshalTertiary)(bs, tag);
+	int refTag = unmarshalRefTag(bs);
+	b->buildValueRemember(obj, refTag);
+	break;
+      }
+
+    case DIF_PROC:
+      { 
+	OZ_Term value;
+	int refTag    = unmarshalRefTag(bs);
+	GName *gname  = unmarshalGName(&value, bs);
+	int arity     = unmarshalNumber(bs);
+	int gsize     = unmarshalNumber(bs);
+	int maxX      = unmarshalNumber(bs);
+	int line      = unmarshalNumber(bs);
+	int column    = unmarshalNumber(bs);
+	int codesize  = unmarshalNumber(bs); // in ByteCode"s;
+
+	//
+	if (gname) {
+	  //
+	  CodeArea *code = new CodeArea(codesize);
+	  ProgramCounter start = code->getStart();
+	  ProgramCounter pc = start + sizeOf(DEFINITION);
+	  //
+	  BuilderCodeAreaDescriptor *desc =
+	    new BuilderCodeAreaDescriptor(start, start+codesize, code);
+	  b->buildBinary(desc);
+
+	  //
+	  b->buildProcRemember(gname, arity, gsize, maxX, line, column, 
+			       pc, refTag);
+	} else {
+	  Assert(oz_isAbstraction(oz_deref(value)));
+	  // ('zero' descriptions are not allowed;)
+	  BuilderCodeAreaDescriptor *desc =
+	    new BuilderCodeAreaDescriptor(0, 0, 0);
+	  b->buildBinary(desc);
+
+	  //
+	  b->knownProcRemember(value, refTag);
+	}
+	break;
+      }
+
+    //
+    // 'DIF_CODEAREA' is an artifact due to the non-recursive
+    // unmarshaling of code areas: in order to unmarshal an Oz term
+    // that occurs in an instruction, unmarshaling of instructions
+    // must be interrupted and later resumed; 'DIF_CODEAREA' tells the
+    // unmarshaler that a new code area chunk begins;
+    case DIF_CODEAREA:
+      {
+	BuilderOpaqueBA opaque;
+	BuilderCodeAreaDescriptor *desc = 
+	  (BuilderCodeAreaDescriptor *) b->fillBinary(opaque);
+	//
+	if (unmarshalCode(bs, b, desc))
+	  b->finishFillBinary(opaque);
+	else
+	  b->suspendFillBinary(opaque);
 	break;
       }
 
@@ -558,9 +716,6 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
     case DIF_REF_DEBUG:
       { OZ_error("not implemented!"); }
 
-    case DIF_PROC:
-      { OZ_error("not implemented!"); }
-
     case DIF_ARRAY:
       { OZ_error("not implemented!"); }
 
@@ -575,3 +730,5 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
   }
   Assert(0);
 }
+
+#endif

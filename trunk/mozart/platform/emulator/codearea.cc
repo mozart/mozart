@@ -137,6 +137,8 @@ Opcode CodeArea::adressToOpcode(AdressOpcode adr) { return adr; }
 
 AbstractionEntry *AbstractionEntry::allEntries = NULL;
 
+//
+// kost@ : 'Abstraction' can be set only once!
 void AbstractionEntry::setPred(Abstraction *ab)
 {
   Assert(!copyable && !abstr);
@@ -1057,6 +1059,8 @@ void CodeArea::allocateBlock(int sz)
 }
 
 
+// kost@ : TODO : with disappearance of the old marshaler, this must
+// become a procedure returning nothing;
 ProgramCounter CodeArea::writeTagged(TaggedRef t, ProgramCounter ptr)
 {
   Assert(getStart()<=ptr && ptr < getStart()+size);

@@ -107,6 +107,7 @@ public:
   }
   void marshalBaseSiteForGName(MsgBuffer* buf){
     marshalNumber(address,buf);
+    Assert(port == 0); // kost@ : otherwise hashing will be broken;
     marshalNumber(timestamp.start,buf);
     marshalNumber(timestamp.pid,buf);
   }
@@ -119,7 +120,7 @@ public:
 
   void unmarshalBaseSiteGName(MsgBuffer* buf, int minor){
     address=unmarshalNumber(buf);
-    port = (minor==0) ? unmarshalShort(buf) : 0;
+    port = 0;
     timestamp.start=unmarshalNumber(buf);
     timestamp.pid=unmarshalNumber(buf);
   }

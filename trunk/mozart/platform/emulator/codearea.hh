@@ -259,7 +259,6 @@ private:
   static void recordInstr(ProgramCounter PC);
 #endif
 
-
   static ProgramCounter writeWord(ByteCode c, ProgramCounter ptr)  
   { 
     *ptr = c;
@@ -283,6 +282,8 @@ public:
     return writeWord(literal,ptr);    
   }
 
+  // kost@ : TODO : with disappearance of the old marshaler, this must
+  // become a procedure returning nothing;
   ProgramCounter writeTagged(TaggedRef t, ProgramCounter ptr);
 
   static CodeArea *findBlock(ProgramCounter PC);
@@ -349,6 +350,9 @@ public:
   {
     return writeWord(p, ptr);
   }
+  static void writeAddressAllocated(void *p, ProgramCounter ptr) {
+    writeWordAllocated(p, ptr);
+  }
 
   void writeCache() { wPtr = writeCache(wPtr); }  
   ProgramCounter writeCache(ProgramCounter PC);
@@ -369,6 +373,21 @@ public:
     allDbgInfos = new DbgInfo(PC,file,line,allDbgInfos);
   }
   ProgramCounter getWritePtr(void)       { return wPtr; }
+
+  //
+  // kost@ : support for non-recursive (new) unmarshaler...
+  // The builder expects the word to be word-aligned, so that it can
+  // treat it as an s-pointer.
+  static ProgramCounter allocateWord(ProgramCounter ptr) {
+    Assert(((unsigned int) ptr) / sizeof(int) * sizeof(int) == (unsigned int) ptr);
+    return (ptr+1); 
+  }
+  static void writeWordAllocated(ByteCode c, ProgramCounter ptr) {
+    *ptr = c;
+  }
+  static void writeWordAllocated(void *p, ProgramCounter ptr) {
+    writeWordAllocated((ByteCode)ToInt32(p),ptr);
+  }
 };
 
 

@@ -104,10 +104,9 @@ void unlockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
 }
 
 //
-Bool marshalTertiaryStub(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
+void marshalTertiaryStub(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
 {
   OZ_error("'marshalTertiary' called without DP library?");
-  return (NO);
 }
 OZ_Term unmarshalTertiaryStub(MsgBuffer *bs, MarshalTag tag)
 {
@@ -125,7 +124,7 @@ OZ_Term unmarshalVarStub(MsgBuffer*,Bool, Bool)
   OZ_error("'unmarshalVar' called without DP library?");
   return ((OZ_Term) 0);
 }
-Bool marshalVariableStub(TaggedRef*, MsgBuffer*, GenTraverser *)
+Bool marshalVariableStub(TaggedRef*, MsgBuffer*)
 {
   OZ_error("'marshalVariable' called without DP library?");
   return (NO);
@@ -135,7 +134,7 @@ Bool triggerVariableStub(TaggedRef*){
   return (NO);
 }
   
-void marshalObjectStub(ConstTerm *t, MsgBuffer *bs, GenTraverser *)
+void marshalObjectStub(ConstTerm *t, MsgBuffer *bs)
 {
   OZ_error("'marshalObject' called without DP library?");
 }
@@ -263,7 +262,7 @@ LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
 void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
   = unlockLockFrameOutlineStub;
 //
-Bool (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
+void (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
   = marshalTertiaryStub;
 OZ_Term (*unmarshalTertiary)(MsgBuffer *bs, MarshalTag tag)
   = unmarshalTertiaryStub;
@@ -272,11 +271,11 @@ OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt)
 //
 OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool)
   = unmarshalVarStub;
-Bool (*marshalVariable)(TaggedRef*, MsgBuffer*, GenTraverser *)
+Bool (*marshalVariable)(TaggedRef*, MsgBuffer*)
   = marshalVariableStub;
 Bool (*triggerVariable)(TaggedRef*)
   = triggerVariableStub;
-void (*marshalObject)(ConstTerm *t, MsgBuffer *bs, GenTraverser *)
+void (*marshalObject)(ConstTerm *t, MsgBuffer *bs)
   = marshalObjectStub;
 void (*marshalSPP)(TaggedRef term, MsgBuffer *bs,Bool trail)
   = marshalSPPStub;
