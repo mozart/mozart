@@ -98,10 +98,10 @@
         (as opposed to a statement) with the value of the corresponding actual
         parameter as its value.  This application is written inside the
         repetition symbols <<{ &ellipsis; }*>>, which means that the
-        application is to be repeated 0 to&nbsp;<Math>n</Math> times.  The
-        repetition construct builds a list of its argument's values at each
-        iteration, since it is used in expression position.  This list is
-        assigned to the formal parameter <<Definitions>>.
+        application is to be repeated 0 to&nbsp;<Var type=meta>n</Var> times.
+        The repetition construct builds a list of its argument's values at
+        each iteration, since it is used in expression position.  This list
+        is assigned to the formal parameter <<Definitions>>.
       <P>
         The next line, line&nbsp;21, is similar:  Here, a nonempty list
         (note the <<+>>) of <<Term>>s is expected, seperated by semicolons.
