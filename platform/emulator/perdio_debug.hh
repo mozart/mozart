@@ -103,6 +103,9 @@ void PD(int i,char *format,...)
 inline
 void PD(int i,char *format,...) {}
 
+#define BUFFER 0
+#define MARSHALL_BE 0
+
 #endif
 
 
