@@ -27,6 +27,10 @@
 
 <Chapter id="Chapter.Finalize">
   <Title/Memory Management: <<Finalize>>/
+  <p>The finalization facility gives the programmer the ability to
+process an Oz value when it is discovered (during garbage collection)
+that it has otherwise become unreachable.  This is often used to
+release native resources held or encapsulated by said value.</p>
   <p>Native functors and extension classes make it very easy to extend
 Oz with new interfaces to arbitrary resources.  Typically, the access
 to a resource will be encapsulated into a data-structure that is an
@@ -43,36 +47,43 @@ no longer referenced, we would like the memory to be automatically
 freed.
     </list>
 This is the purpose of <em/finalization/: to execute a cleanup action
-when a computational object is no longer referenced.  In Oz,
-finalization is based on the notion of <em/guardian/ [NEED REF].
+when a computational object is no longer referenced. The Oz
+finalization facility was inspired by the article <ref.extern to=
+"ftp://ftp.cs.indiana.edu/pub/scheme-repository/doc/pubs/guardians.ps.gz"
+>Guardians in a Generation-Based Garbage Collector</ref.extern>
+(R. Kent Dybvig, Carl Bruggeman, David Eby, June 1993).
 <list>
-      <entry/Finalize.register/
+      <entry/<code/Finalize.register/
+<index/<code/Finalize/<and><code/register///
       <synopsis/<code/{Finalize.register ?+{Value} ?+{Handler}}//
       <item>A ?_{Value} that must be finalized is registered with
 the finalization guardian together with its finalization ?_{Handler}.
 When this ?_{Value} is no longer referenced except by the guardian,
 <code/{?_{Handler} ?_{Value}}/ is eventually executed in a new
 thread.  We say <em/eventually/ because the finalization thread is
-subject to the same fair scheduling as any other thread. Note, that
+subject to the same fair scheduling as any other thread. Note that
 the ?_{Value} has still not be garbage collected; only at the next
-garbage collection after the call to ?_{Handler} has returned will it
-really be garbage collected.  It is possible for a ?_{Value} to be
+garbage collection after the call to ?_{Handler} has returned, and
+?_{Value} is no longer referenced at all, not even by the guardian,
+will it really be garbage collected.  It is possible for a ?_{Value} to be
 registered multiple times.  It is also possible for the ?_{Handler} to
 decide to re-register the value.
         <p>To be more precise: the guardian maintains a list of
-pairs, each consisting of a ?_{Value} and a ?_{Handler}: this is thze
+pairs, each consisting of a ?_{Value} and a ?_{Handler}: this is the
 guardian list.  When a garbage collection occurs, the guardian
 determines which values are no longer referenced except through this
 list.  The corresponding pairs are removed from the guardian list and
 put into a finalization list.  This finalization list is then
-processed in a new thread by the finalization handler.
-      <entry/Finalize.setHandler/
-      <synopsis><code>{Finalize.setHandler ?+{P/1}</code></synopsis>
+processed in a new thread by the finalization handler (see below).
+      <entry/<code/Finalize.setHandler/
+<index/<code/Finalize/<and><code/setHandler///
+      <synopsis><code>{Finalize.setHandler ?+{P/1}}</code></synopsis>
       <item>This sets the finalization handler.  The default
 finalization handler simply loops through the finalization list and
 invokes <code/{?_{Handler} ?_{Value}}/ for each pair of ?_{Value} and
 ?_{Handler} in it.
-      <entry/Finalize.everyGC/
+      <entry/<code/Finalize.everyGC/
+<index/<code/Finalize/<and><code/everyGC///
       <synopsis><code>{Finalize.everyGC ?+{P/0}}</code></synopsis>
       <item>This simply registers a nullary procedure to be invoked
 after each garbage collection.  Note that you cannot rely on how soon
@@ -88,7 +99,7 @@ in {Finalize.register DO DO} end
 </code>
 in other words, we create a procedure <code/DO/ and register it using
 itself as its own handler.  When invoked, it calls <code/P/ and
-registers itself.
+registers itself again.
       </list>
 </Chapter>
 <!--

@@ -57,6 +57,15 @@ locating the desired resource.
     <p>We now describe the syntax of <code/KIND=ARG/ for the
 supported methods.  For each one, we use a concrete example.
 <code/ARG/ can normally be indifferently a directory or a url.
+    <p>Any character of <code/ARG/ can be escaped by preceding it with
+a backslash <samp/\/: this is useful &eg; to prevent an occurrence of
+a colon in a url to be interpreted as a method separator.  However, it
+means that, if you insist on using <samp/\/ as a path component
+separator (à la Windows) instead of <samp>/</samp> (à la Unix), then
+you will have to escape them in <code/ARG/.  Furthermore, <samp/\/ is
+also an escape character for the shell, which means that you will
+normally have to double each escape character.</p>
+<p>
 <list>
         <entry><code>all=/usr/local/oz/share</code></entry>
         <item>The last component in the input url is extracted and
@@ -114,7 +123,7 @@ these two methods succeeds, the resolution would simply raise an
 exception, but it would not attempt to retrieve the input url from the
 net.
       </list>
-  <section>
+  <section proglang=oz>
     <title/Resolvers/
     <p>A resolver is a module that encapsulates and exports the
 resolving services of a sequence of search methods.  For different
@@ -122,7 +131,7 @@ purposes, you may need to apply different resolution strategies.  For
 this reason, you may create arbitrarily many resolvers, each
 implementing an arbitrary resolution strategy.
 <list>
-        <entry/Resolve.make/
+        <entry/<code/Resolve.make/<index/<code/Resolve/<and><code/make///
         <synopsis/<code/{Resolve.make ?+{VS} ?+{Spec} ??{R}}//
         <item>Creates a new resolver ?_{R}, identified by virtual
 string ?_{VS} in trace messages, and whose strategy is initialized
@@ -142,47 +151,57 @@ is not set, then use <code/S/ as its value.
               <item>simply get the search methods from virtual
 string <code/S/.
             </list>
-        <entry/Resolve.trace.get/
-        <entry/Resolve.trace.set/
+        <entry/<code/Resolve.trace.get/
+<index/<code/Resolve/<and><code/trace/<and><code/get///
+        <entry/<code/Resolve.trace.set/
+<index/<code/Resolve/<and><code/trace/<and><code/set///
         <synopsis/<code/{Resolve.trace.get ??{Bool}}//
         <synopsis/<code/{Resolve.trace.set ?+{Bool}}//
         <item>Obtain or set the trace flag.  When tracing is
 enabled, every resolve method that is attempted prints an informative
 message.  Furthermore, all messages are prefixed by the virtual string
 identifying the resolver in which these methods are being invoked.
-        <entry/Resolve.expand/
+        <entry/<code/Resolve.expand/
+<index/<code/Resolve/<and><code/expand///
         <item>THIS SUCKS AND SHOULD BE IN THE URL MODULE.
 SEPARATE THE URL-BASICS FROM THE URL MODULE, THE LATTER NEEDS TO
 BE INSTANTIATED WITH MODULE OS.
-        <entry/Resolve.handler/
+        <entry/<code/Resolve.handler/
+<index/<code/Resolve/<and><code/handler///
         <item>You don't have to specify your methods as virtual
 strings, instead you can directly construct them using the following
 procedures:
 <list>
-              <entry>Resolve.handler.default
-              <item>This is the default handler that simly looks up
+              <entry/<code/Resolve.handler.default/
+<index/<code/Resolve/<and><code/handler/<and><code/default///
+              <item>This is the default handler that simply looks up
 the given url as is.
-              <entry>Resolve.handler.all
+              <entry/<code/Resolve.handler.all/
+<index/<code/Resolve/<and><code/handler/<and><code/all///
               <synopsis/<code/{Resolve.handler.all ?+{LOC} ??{Handler}}//
               <item>This creates a handler that implements the
 <code/all/ method for location ?_{LOC}.  The final component in the
 input url is looked up in ?_{LOC}.
-              <entry>Resolve.handler.root
+              <entry/<code/Resolve.handler.root/
+<index/<code/Resolve/<and><code/handler/<and><code/root///
               <synopsis/<code/{Resolve.handler.root ?+{LOC} ??{Handler}}//
               <item>This creates a handler that implements the
 <code/root/ method for location ?_{LOC}.  A relative pathname is
 resolved relative to ?_{LOC}.
-              <entry>Resolve.handler.cache
+              <entry/<code/Resolve.handler.cache/
+<index/<code/Resolve/<and><code/handler/<and><code/cache///
               <synopsis/<code/{Resolve.handler.cache ?+{LOC} ??{Handler}}//
               <item>This creates a handler that implements the
 <code/cache/ method for location ?_{LOC}.  A full url is transformed
 into a relative pathname and resolved relative to ?_{LOC}.
-              <entry>Resolve.handler.prefix
+              <entry/<code/Resolve.handler.prefix/
+<index/<code/Resolve/<and><code/handler/<and><code/prefix///
               <synopsis/<code/{Resolve.handler.prefix ?+{Prefix} ?+{Subst} ??{Handler}}//
               <item>This creates a handler that implements the
 <code/prefix/ method.  If the input url begins with string ?_{Prefix},
 then this is replaced by ?_{Subst} and looked up instead.
-              <entry>Resolve.handler.pattern
+              <entry/<code/Resolve.handler.pattern/
+<index/<code/Resolve/<and><code/handler/<and><code/pattern///
               <synopsis/<code/{Resolve.handler.prefix ?+{Pattern} ?+{Subst} ??{Handler}}//
               <item>This creates a handler that implements the
 <code/pattern/ method.  If the input url matches the string pattern
