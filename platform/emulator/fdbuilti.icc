@@ -66,6 +66,16 @@ Bool BIfdHeadManager::addSuspXorYdet(void)
 
 
 inline
+void BIfdHeadManager::addResSusps(Suspension * susp, FDPropState target) {
+  for (int i = curr_num_of_items; i--; )
+    addResSusp(i, susp, target);
+  
+  if (global_vars == 0)
+    FDcurrentTaskSusp->markLocalSusp();
+}
+
+
+inline
 Bool BIfdHeadManager::expectFDish(int i, TaggedRef v, int &s)
 {
   DebugCheck(i < 0 || i >= curr_num_of_items, error("index violation"));
