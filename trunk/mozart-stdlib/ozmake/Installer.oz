@@ -24,7 +24,14 @@ define
 	 end
       end
 
-      %meth check_wanted_version
+      meth check_wanted_version()
+	 V1={self get_want_version($)}
+	 V2={self get_version($)}
+      in
+	 if V1\=unit andthen V1\=V2 then
+	    raise ozmake(install:wantversion(V1 V2)) end
+	 end
+      end
 
       %% return all install targets according to both makefile
       %% and command line options

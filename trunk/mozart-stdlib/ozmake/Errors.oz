@@ -559,6 +559,11 @@ prepare
 	       msg  : 'bad value for --packageversion'
 	       items: [hint(l:'Value' m:S)
 		       line('a version number should consist of integers separated by single dots')])
+      [] ozmake(install:wantversion(Want Have)) then
+	 error(kind : TITLE
+	       msg  : 'version found does not match --packageversion argument'
+	       items: [hint(l:'Found' m:if Have==unit then 'None' else Have end)
+		       hint(l:'Wanted' m:if Want==unit then 'None' else Want end)])
       end
    end
 define

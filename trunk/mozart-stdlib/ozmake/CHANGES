@@ -7,6 +7,10 @@
 ** ozmake --install will compare both version and date to determine if the
    package to be installed is newer than the installed
    version. version is more significant than date.
+** --packageversion=VERSION is now respected by --extract and --install.
+   when --extract downloads from the MOGUL archive, it will look for
+   the given version of the package.  --install will signal an error
+   if the package to be installed doesn't have the given version.
 
 * version 0.75
 ** ozmake --create will now automatically pick a package filename if none

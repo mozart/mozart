@@ -135,10 +135,14 @@ define
 	       %% download the appropriate file from the mogul
 	       %% archive
 	       Archive = {self get_archive($)}
-	       Filename = {Utils.mogulToPackagename PKG}
+	       Filename = {Utils.mogulToFilename PKG}
+	       WantVersion = {self get_want_version($)}
+	       FilenameVer =
+	       if WantVersion==unit then Filename else Filename#'-'#WantVersion end
+	       #'.pkg'
 	       Url = {URL.resolve {URL.toBase Archive}
 		      {Path.resolve
-		       {Utils.mogulToRelative PKG} Filename}}
+		       {Utils.mogulToRelative PKG} FilenameVer}}
 	       UrlStr = {URL.toString Url}
 	    in
 	       {self xtrace('downloading '#UrlStr)}
