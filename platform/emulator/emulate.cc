@@ -3363,9 +3363,12 @@ Case(GETVOID)
       goto LBLpopTaskNoPreempt;
     }
 
-    if (!CBB->isRoot() &&
-        OZ_eq(OZ_label(e->exception.value),AtomFailure)) {
-      return T_FAILURE;
+    if (!CBB->isRoot()) {
+      TaggedRef ev = oz_deref(e->exception.value);
+      if ((oz_isLiteral(ev) && oz_eq(ev,AtomFailure)) ||
+          (oz_isSRecord(ev) &&
+           oz_eq(tagged2SRecord(ev)->getLabel(),AtomFailure)))
+        return T_FAILURE;
     }
 
     if (e->debugmode()) {
