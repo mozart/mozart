@@ -207,3 +207,12 @@ Bool Thread::terminate()
   }
 }
 
+void Thread::propagatorToNormal()
+{
+  Assert(isPropagator());
+  delete item.propagator;
+  state.flags &= ~S_PR_THR;
+
+  setBody(am.allocateBody());
+  state.flags |= S_RTHREAD;
+}
