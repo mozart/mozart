@@ -28,72 +28,76 @@
 
     'init'              => { in     => ['value','value','value'],
                              out    => [],
-                             BI     => BIwif_init},
+                             BI     => BItk_init},
 
     'send'              => { in     => ['!value'],
                              out    => [],
-                             BI     => BIwif_write},
+                             BI     => BItk_write},
 
     'return'            => { in     => ['!value','value','value'],
                              out    => [],
-                             BI     => BIwif_writeReturn},
+                             BI     => BItk_writeReturn},
 
     'returnMess'        => { in     => ['!value','value','value','value'],
                              out    => [],
-                             BI     => BIwif_writeReturnMess},
+                             BI     => BItk_writeReturnMess},
 
     'batch'             => { in     => ['!value'],
                              out    => [],
-                             BI     => BIwif_writeBatch},
+                             BI     => BItk_writeBatch},
 
     'sendTuple' => { in     => ['!value','value'],
                              out    => [],
-                             BI     => BIwif_writeTuple},
+                             BI     => BItk_writeTuple},
 
     'sendTagTuple'      => { in     => ['!value','value','value'],
                              out    => [],
-                             BI     => BIwif_writeTagTuple},
+                             BI     => BItk_writeTagTuple},
 
     'sendFilter'        => { in     => ['!value','value','value',
                                         'value','value'],
                              out    => [],
-                             BI     => BIwif_writeFilter},
+                             BI     => BItk_writeFilter},
 
     'close'             => { in     => ['!value','value'],
                              out    => [],
-                             BI     => BIwif_close},
+                             BI     => BItk_close},
 
     'genTopName'        => { in     => [],
                              out    => ['value'],
-                             BI     => BIwif_genTopName},
+                             BI     => BItk_genTopName},
 
     'genWidgetName'     => { in     => ['value'],
                              out    => ['value'],
-                             BI     => BIwif_genWidgetName},
+                             BI     => BItk_genWidgetName},
 
     'genTagName'        => { in     => [],
                              out    => ['value'],
-                             BI     => BIwif_genTagName},
+                             BI     => BItk_genTagName},
 
     'genVarName'        => { in     => [],
                              out    => ['value'],
-                             BI     => BIwif_genVarName},
+                             BI     => BItk_genVarName},
 
     'genImageName'      => { in     => [],
                              out    => ['value'],
-                             BI     => BIwif_genImageName},
+                             BI     => BItk_genImageName},
+
+    'genFontName'       => { in     => [],
+                             out    => ['value'],
+                             BI     => BItk_genFontName},
 
     'getNames'          => { in     => [],
                              out    => ['value','value','value'],
-                             BI     => BIwif_getNames},
+                             BI     => BItk_getNames},
 
 
-    'addGroup'          => { in  => ['+value','value'],
-                             out => ['value'],
-                             BI  => BIaddFastGroup},
+    'addGroup'          => { in     => ['+value','value'],
+                             out    => ['value'],
+                             BI     => BItk_addGroup},
 
-    'delGroup'          => { in  => ['value'],
-                             out => [],
-                             BI  => BIdelFastGroup},
+    'delGroup'          => { in     => ['value'],
+                             out    => [],
+                             BI     => BItk_delGroup},
 
  );
