@@ -919,4 +919,7 @@ RefsArray resize(RefsArray r, int s){
   return r;
 } // resize
 
+
+extern void initTagged();
+
 #endif

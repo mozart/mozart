@@ -283,6 +283,7 @@ void AM::init(int argc,char **argv)
   }
 
   initLiterals();
+  initTagged();
   SolveActor::Init();
 
   int numToplevelVars = getenvDefault("OZTOPLEVELVARS",NUM_TOPLEVEL_VARS);
