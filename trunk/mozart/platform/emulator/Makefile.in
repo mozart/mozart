@@ -33,7 +33,7 @@ SRCDIR=	@srcdir@
 include Makefile.vars
 
 MODULE_NAMES =\
-	Wif Schedule FDP FSP Parser \
+	DP Wif Schedule FDP FSP Parser \
 	CompilerSupport Browser Debug
 
 STATIC_MODULELIBS=	-L. ${MODULE_NAMES:%=-l%}
@@ -47,14 +47,18 @@ CORE_MODULES=	DP Run OF FS FD CPI OS Space Store Mem Support
 # CORE_LIBS=	-L. ${CORE_MODULES:%=-l%}
 CORE_TARGETS=	${CORE_MODULES:%=lib%.a}
 
+# kost@, Per: let's link against libdp statically (so far);
+CORE_LIBS=	-L. libDP.a
 LIBS=		$(CORE_LIBS) @LIBS@
 
 INCS=		-I. -I$(SRCDIR)
 M4_D=		-DEMUDIR=$(SRCDIR)
 TARGETS=	@TARGETS@ text2pickle
 MODULETARGETS=	@MODULETARGETS@
+# kost@, Per: temporary: include libDP.a:
+MODULETARGETS += libDP.a
 MODULEINSTALL=	@MODULEINSTALL@  
-SUBDIRS=	libfd libfset
+SUBDIRS=	libdp libfd libfset
 OZVERSION=	$(SRCTOP)/OZVERSION
 
 # these are the builtin modules: non-sited primitives
@@ -67,10 +71,10 @@ BIMODSPECS = \
 	BitString ByteString
 
 MODSPECS= \
-	FDP FSP Schedule Wif Parser OS Property Pickle \
+	DP FDP FSP Schedule Wif Parser OS Property Pickle \
 	PID URL FDB FSB System Finalize CTB \
 	CompilerSupport Profile \
-	Debug Fault Browser Misc Distribution \
+	Debug Fault Browser Misc DPMisc Distribution \
 	VirtualSite Native \
 	$(BIMODSPECS)
 
@@ -78,12 +82,12 @@ MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
 CREATEDSRCS=scanner.cc parser.cc
 
-CREATEDFILES= \
-	instrtab.hh opcodes.hh marshaler.hh\
-	marshalcode.cc marshalMsg.cc register.hh oz.c \
-	atoms.hh atoms.cc\
-	config.h scanner.cc parser.cc \
-	version.cc initffuns.cc copycode.cc opcodes.cc\
+CREATEDFILES=						\
+	instrtab.hh opcodes.hh				\
+	marshalcode.cc register.hh oz.c			\
+	atoms.hh atoms.cc				\
+	config.h scanner.cc parser.cc			\
+	version.cc initffuns.cc copycode.cc opcodes.cc	\
 	$(MODINTERS)
 
 OTHERSRCS= \
@@ -122,12 +126,8 @@ SPACESRCS=\
 MEMSRCS=\
 	gc.cc mem.cc liveness.cc
 
-DPSRCS=\
-	dp_gname.cc dp_msgType.cc dp_table.cc \
-	dp_pendThread.cc \
-	perdio.cc components.cc network.cc comm.cc perdio_debug.cc \
-	virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
-	marshaler.cc perdiovar.cc
+COMPONENTSSRCS=\
+	gname.cc components.cc marshaler.cc site.cc
 
 OFSRCS=	ofgenvar.cc ofbi.cc
 
@@ -151,7 +151,7 @@ SRCS= \
 	$(SUPPORTSRCS) $(MEMSRCS) $(STORESRCS) \
 	$(SPACESRCS) $(RUNSRCS) $(OSSRCS) \
 	$(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
-	$(DPSRCS)
+	$(COMPONENTSSRCS)
 
 # mm2: if enabled CORE_LIBS uncomment the following
 COREOBJS=   $(SRCS:%.cc=%.o)
@@ -187,6 +187,10 @@ bootstrap:: all
 
 $(MODINTERS): bidecl.perl
 
+.PHONY: libDP.a DP.so
+libDP.a DP.so:
+	cd libdp; $(MAKE) ../$@
+
 .PHONY: libFDP.a FDP.so libSchedule.a Schedule.so
 libFDP.a FDP.so libSchedule.a Schedule.so:
 	cd libfd; $(MAKE) ../$@
@@ -220,9 +224,6 @@ Debug.so: $(DEBUGOBJS)
 
 libDebug.a: $(DEBUGOBJS)
 	$(AR) -rc $@ $(DEBUGOBJS) && $(RANLIB) $@
-
-libDP.a: $(DPSRCS:%.cc=%.o)
-	$(AR) -rc $@ $(DPSRCS:%.cc=%.o) && $(RANLIB) $@
 
 libOF.a: $(OFSRCS:%.cc=%.o)
 	$(AR) -rc $@ $(OFSRCS:%.cc=%.o) && $(RANLIB) $@

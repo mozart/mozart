@@ -234,29 +234,26 @@ class Extension;
 class Cell;
 class SChunk;
 
-class Watcher;
+class EntityInfo;
 class Tertiary;
 
 class Port;
 class PortWithStream;
-class PortProxy;
 class PortLocal;
-class PortManager;
-class ProcProxy;
 
 class PendThread;
 class PendBinding;
-class CellManager;
-class CellFrame;
-class CellSec;
+class CellLocal;
+class CellFrameEmul;
+class CellSecEmul;
+class CellManagerEmul;
 class Chain;
-class ChainElem;
 
-class OwnerEntry;
-class BorrowEntry;
-class OwnerTable;
-class BorrowTable;
+class RefTable;
+class RefTrail;
+
 class Site;
+class DSite;
 
 class Builtin;
 
@@ -295,9 +292,8 @@ class CallList;
 
 class LocalPropagatorQueue;
 
-class PerdioVar;
+class ProxyList;
 class MsgBuffer;
-typedef long Credit;  /* TODO: full credit,long credit? */
 
 // source level debugger
 enum OzDebugDoit {DBG_STEP, DBG_NOSTEP, DBG_EXIT};
@@ -328,6 +324,10 @@ class Object;
 class OzDictionary;
 
 class OzLock;
+class LockLocal;
+class LockFrameEmul;
+class LockManagerEmul;
+class LockSecEmul;
 
 class InlineCache;
 class OZ_Location;
@@ -363,6 +363,13 @@ enum ThreadReturn {
   T_ERROR		// a fatal error occured
 };
 
+//
+enum VariableStatus {
+  OZ_FREE,
+  OZ_FUTURE,
+  OZ_KINDED,
+  OZ_OTHER
+};
 
 // see ozthread.cc
 Bool oz_isThread(TaggedRef term);

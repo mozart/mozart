@@ -26,6 +26,7 @@
  */
 
 #include "am.hh"
+#include "gname.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -295,9 +296,12 @@ void AM::init(int argc,char **argv)
   osSetAlarmTimer(CLOCK_TICK/1000);
 
   //
-  if (!perdioInit()) {
-    warning("Perdio initialization failed");
-  }
+  genFreeListManager=new GenFreeListManager();
+  idCounter = new FatInt();
+
+  //
+  initSite();
+  initMarshaler();
 
   //
   initExtensions();
@@ -343,17 +347,9 @@ void AM::init(int argc,char **argv)
   unsetProfileMode();
 }
 
-#ifdef VIRTUALSITES
-//
-// We have to reclaim the shared memory somehow;
-extern void virtualSitesExit();
-#endif
-
 void AM::exitOz(int status)
 {
-#ifdef VIRTUALSITES
-  virtualSitesExit();
-#endif
+  dpExit();
   osExit(status);
 }
 
