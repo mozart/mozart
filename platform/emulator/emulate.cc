@@ -2522,18 +2522,24 @@ LBLdispatcher:
           switch (CodeArea::getOpcode(PC+6)) {
           case TESTLITERALX:
           case TESTNUMBERX:
+          case TESTRECORDX:
+          case TESTLISTX:
           case TESTBOOLX:
           case MATCHX:
             dbg->data = Xreg(getRegArg(PC+7));
             break;
           case TESTLITERALY:
           case TESTNUMBERY:
+          case TESTRECORDY:
+          case TESTLISTY:
           case TESTBOOLY:
           case MATCHY:
             dbg->data = Yreg(getRegArg(PC+7));
             break;
           case TESTLITERALG:
           case TESTNUMBERG:
+          case TESTRECORDG:
+          case TESTLISTG:
           case TESTBOOLG:
           case MATCHG:
             dbg->data = Greg(getRegArg(PC+7));
