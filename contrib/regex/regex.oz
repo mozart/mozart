@@ -78,7 +78,7 @@ in
       EFlags = eflags(get:GetEFlags set:SetEFlags)
 
       proc {Compile SRC FLAGS RE}
-         {COMPILE SRC FLAGS RE}
+         {COMPILE SRC {CFlagToInt FLAGS} RE}
          {Register RE FREE}
       end
       proc {Make SRC RE}
@@ -88,7 +88,7 @@ in
          if {Is RE} then RE else {Make RE} end
       end
       fun {Execute RE TXT IDX FLAGS}
-         {EXECUTE {Coerce RE} TXT IDX FLAGS}
+         {EXECUTE {Coerce RE} TXT IDX {EFlagToInt FLAGS}}
       end
       fun {Search RE TXT}
          {EXECUTE {Coerce RE} TXT 0 {Access EFlagsInt}}
