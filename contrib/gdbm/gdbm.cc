@@ -44,7 +44,7 @@ inline Bool oz_isGdbm(OZ_Term t)
 
 inline GDBM* tagged2Gdbm(OZ_Term t)
 {
-  Assert(oz_isGDBM(t));
+  Assert(oz_isGdbm(t));
   return (GDBM*) OZ_getExtension(OZ_deref(t));
 }
 
