@@ -29,6 +29,7 @@ RPMROOT=/usr/src/redhat
 RPMSRC=$RPMROOT/SOURCES
 RPMSPEC=$RPMROOT/SPECS
 TMPDIR=/tmp
+: ${PACKAGER:="Christian Schulte <schulte@ps.uni-sb.de>"}
 
 #
 # Read dir
@@ -42,6 +43,7 @@ fi
 BUILDDIR=$1
 BUSRCTAR=`ls ${BUILDDIR}/mozart-*.*-src.tar.gz`
 BUDOCTAR=`ls ${BUILDDIR}/mozart-*.*-doc.tar.gz`
+BUSTDTAR=`ls ${BUILDDIR}/mozart-*.*-std.tar.gz`
 DSTDIR=$2
 OZHOME=/usr/lib/mozart
 
@@ -143,10 +145,11 @@ static char * mozart_xpm[] = {
 "                        *&*                                          "};
 EOF
 
-cp ${BUSRCTAR} ${BUDOCTAR} ${RPMSRC}
+cp ${BUSRCTAR} ${BUDOCTAR} ${BUSTDTAR} ${RPMSRC}
 
 SRCTAR=mozart-${VERSION}-src.tar.gz
 DOCTAR=mozart-${VERSION}-doc.tar.gz
+STDTAR=mozart-${VERSION}-std.tar.gz
 SPEC=mozart-$VERSION-$BUILD.spec
 
 # Generate redhat spec file
@@ -155,8 +158,10 @@ cat > $RPMSPEC/$SPEC <<EOF
 # Spec file for Mozart, an efficient and distributed implementation of Oz
 # Author: Christian Schulte, 1998
 # Contributor: Konstantin Popov, 2001
+# Contributor: Denys Duchier, 2001
 # Copyright: Christian Schulte, 1998, 1999
 # Copyright: Konstantin Popov, 2001
+# Copyright: Denys Duchier, 2001
 Name: mozart
 Version: $VERSION
 Release: $BUILD
@@ -165,12 +170,13 @@ Copyright: Free
 Vendor: Mozart Consortium
 Url: http://www.mozart-oz.org/
 Group: Development/Languages
-Packager: Christian Schulte <schulte@ps.uni-sb.de>
+Packager: $PACKAGER
 Icon: mozart.xpm
 
 Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${SRCTAR}
 Source1: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${DOCTAR}
 Source2: mozart-profiles.tar.gz
+Source3: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${STDTAR}
 
 BuildRoot: /var/tmp/mozart-${VERSION}
 
@@ -210,8 +216,16 @@ requires: mozart
 This package contains a collection of contributed software packages
 for Mozart that might come in handy for applications like a regular
 expression package, data base interfaces, and so on.
+%package stdlib
+Summary: Mozart standard library
+Group: Development/Languages
+requires: mozart
+%description stdlib
+This package contains a continually growing collection of libraries
+that complement the core Mozart distribution.
 %prep
 %setup -q
+%setup -q -D -T -b 3
 
 %build
 : \${CFLAGS="\$RPM_OPT_FLAGS"}
@@ -243,6 +257,9 @@ make install
 # Strip binaries and shared objects
 find \$PREFIX -type f -name '*.so*' -exec strip '{}' ';'
 find \$PREFIX -type f -name '*.exe' -exec strip '{}' ';'
+# standard library
+(cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \$PREFIX/bin/ozengine ./ozmake --prefix=\$PREFIX --install --package=mozart-stdlib.pkg --nosavedb)
+
 # Create file lists
 PLTFRM=\`\$PREFIX/bin/ozplatform\`
 make files.base files.base-\${PLTFRM}
@@ -257,6 +274,7 @@ cat files.doc | \
 
 %clean
 rm -rf \$RPM_BUILD_ROOT
+rm -rf \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std
 %files -f mfiles.base
 %doc README LICENSE LICENSE.html LICENSE.rtf
 %config /etc/profile.d/oz.sh
@@ -273,7 +291,9 @@ rpm --clean -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
 rm -f ${RPMSPEC}/${SPEC}
 rm -f ${RPMSRC}/${SRCTAR}
 rm -f ${RPMSRC}/${DOCTAR}
+rm -f ${RPMSRC}/${STDTAR}
 rm -f ${RPMSRC}/mozart-profiles.tar.*
+rm -f ${RPMSRC}/mozart.xpm
 
 #
 # Move the created rpms to destination
@@ -281,6 +301,3 @@ rm -f ${RPMSRC}/mozart-profiles.tar.*
 
 mv ${RPMROOT}/RPMS/i386/mozart-{,doc-,contrib-}$VERSION-$BUILD.i386.rpm ${DSTDIR}
 mv ${RPMROOT}/SRPMS/mozart-$VERSION-$BUILD.src.rpm ${DSTDIR}
-
-
-
