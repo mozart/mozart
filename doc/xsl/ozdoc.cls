@@ -1020,9 +1020,11 @@
 
 \newcommand{\MENU}[3]{%
   \colorbox{menucolor}{%
-    \begin{tabular}[b]{@{}p{\mozart@leftmarginwidth}p{1cm}p{1cm}@{}}%
-      #1&#2&#3%
-    \end{tabular}}}
+    \setlength{\mozart@len}{\mozart@leftmarginwidth}%
+    \addtolength{\mozart@len}{1cm}%
+    \begin{tabular}[b]{@{}p{\mozart@len}p{1cm}@{}}%
+      \normalfont\sffamily\small#1&#2%
+    \end{tabular}}~#3}
 
 \newcommand{\MOUSE}[1]{\hbox{\lower3mm\hbox{\epsfig{file=mouse-#1.ps,width=1cm}}}}
 
