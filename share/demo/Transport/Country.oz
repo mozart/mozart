@@ -20,9 +20,28 @@
 %%% WARRANTIES.
 %%%
 
-local
-   Germany = \insert 'germany.oz'
+functor
 
+export
+   GetDist
+   GetDetourDist
+   GetRoute
+
+   Cities
+   IsCity
+   GetGraph
+
+   width:    GermanyWidth
+   height:   GermanyHeight
+   GetCoord
+   
+prepare
+
+   Germany = \insert 'Germany.oz'
+
+   GermanyWidth  = Germany.width
+   GermanyHeight = Germany.height
+   
    fun {GetDist Src Dst}
       if Src==Dst then 0
       else V=Germany.map.Src.Dst in
@@ -60,11 +79,15 @@ local
 	    end
 	 end
       end
-   in
+
       fun {MkGraph Cs}
 	 case Cs of nil then nil
 	 [] C|Cr then C#Germany.coord.C#{MkSrc Cr C}|{MkGraph Cr}
 	 end
+      end
+   in
+      fun {GetGraph}
+	 {MkGraph Cities}
       end
    end
 
@@ -72,17 +95,10 @@ local
       {HasFeature Germany.map A}
    end
 
-in
 
-   Country = country(getDist:       GetDist
-		     getDetourDist: GetDetourDist
-		     getRoute:      GetRoute
-		     width:         Germany.width
-		     height:        Germany.height
-		     coord:         Germany.coord
-		     cities:        Cities
-		     graph:         fun {$} {MkGraph Cities} end
-		     isCity:        IsCity)
-
+   proc {GetCoord C ?X ?Y}
+      X#Y=Germany.coord.C
+   end
+   
 end
 
