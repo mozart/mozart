@@ -1,0 +1,9 @@
+$Id$
+
+Sat Jan 11 01:23:12 MET 1997
+Button einbauen zum temporaeren "Blindschalten" des Debuggers.
+Interessant, um Codebereiche mit DebugInfo, aber ohne Debuggerinteraktion
+zu feeden.
+
+Sat Jan 11 01:23:12 MET 1997
+finish & cont button mit Leben fuellen
