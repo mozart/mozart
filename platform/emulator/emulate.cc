@@ -469,6 +469,8 @@ void AM::handleToplevelBlocking()
   message("The toplevel thread is blocked.\n");
   message("\n");
   message("(Hint: don't forget to use task ... end)\n");
+  message("\n");
+  currentThread->printDebug(NOCODE,NO,10000);
   message("******************************************\n");
   rootThread=newThread(currentThread->getPriority(),rootBoard);
   checkToplevel();
