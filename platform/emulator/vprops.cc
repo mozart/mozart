@@ -58,7 +58,6 @@ enum EmulatorPropertyIndex {
   PROP_THREADS_CREATED,
   PROP_THREADS_RUNNABLE,
   PROP_THREADS_MIN,
-  PROP_THREADS_MAX,
   PROP_THREADS,
   // PRIORITIES
   PROP_PRIORITIES_HIGH,
@@ -77,7 +76,6 @@ enum EmulatorPropertyIndex {
   PROP_TIME,
   // GC
   PROP_GC_MIN,
-  PROP_GC_MAX,
   PROP_GC_FREE,
   PROP_GC_TOLERANCE,
   PROP_GC_ON,
@@ -262,13 +260,11 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_THREADS_CREATED,ozstat.createdThreads.total);
     CASE_INT(PROP_THREADS_RUNNABLE,am.threadsPool.getRunnableNumber());
     CASE_INT(PROP_THREADS_MIN,ozconf.stackMinSize / TASKFRAMESIZE);
-    CASE_INT(PROP_THREADS_MAX,ozconf.stackMaxSize / TASKFRAMESIZE);
     CASE_REC(PROP_THREADS,"threads",
-	     (4,AtomCreated,AtomRunnable,AtomMin,AtomMax),
+	     (3,AtomCreated,AtomRunnable,AtomMin),
 	     SET_INT(AtomCreated ,ozstat.createdThreads.total);
 	     SET_INT(AtomRunnable,am.threadsPool.getRunnableNumber());
-	     SET_INT(AtomMin     ,ozconf.stackMinSize/TASKFRAMESIZE);
-	     SET_INT(AtomMax     ,ozconf.stackMaxSize/TASKFRAMESIZE););
+	     SET_INT(AtomMin     ,ozconf.stackMinSize/TASKFRAMESIZE););
     // PRIORITIES
     CASE_INT(PROP_PRIORITIES_HIGH,ozconf.hiMidRatio);
     CASE_INT(PROP_PRIORITIES_MEDIUM,ozconf.midLowRatio);
@@ -313,7 +309,6 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	     SET_BOOL(AtomDetailed,ozconf.timeDetailed););
     // GC
     CASE_INT(PROP_GC_MIN,ozconf.heapMinSize*KB);
-    CASE_INT(PROP_GC_MAX,ozconf.heapMaxSize*KB);
     CASE_INT(PROP_GC_FREE,ozconf.heapFree);
     CASE_INT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
     CASE_INT(PROP_GC_CODE_CYCLES,ozconf.codeGCcycles);
@@ -322,10 +317,9 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_GC_SIZE,getUsedMemory()*KB);
     CASE_INT(PROP_GC_ACTIVE,ozstat.gcLastActive*KB);
     CASE_REC(PROP_GC,"gc",
-	     (9,AtomCodeCycles,AtomMin,AtomMax,AtomFree,AtomTolerance,
+	     (8,AtomCodeCycles,AtomMin,AtomFree,AtomTolerance,
 	      AtomOn,AtomThreshold,AtomSize,AtomActive),
 	     SET_INT(AtomMin,       ozconf.heapMinSize*KB);
-	     SET_INT(AtomMax,       ozconf.heapMaxSize*KB);
 	     SET_INT(AtomFree,      ozconf.heapFree);
 	     SET_INT(AtomTolerance, ozconf.heapTolerance);
 	     SET_BOOL(AtomOn,       ozconf.gcFlag);
@@ -656,22 +650,10 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_REC(PROP_TIME,SET_BOOL(AtomDetailed,ozconf.timeDetailed););
     // THREADS
     CASE_NAT_DO(PROP_THREADS_MIN,{
-      ozconf.stackMinSize=INT__/TASKFRAMESIZE;
-      if (ozconf.stackMinSize > ozconf.stackMaxSize) 
-	ozconf.stackMaxSize = ozconf.stackMinSize;});
-    CASE_NAT_DO(PROP_THREADS_MAX,{
-      ozconf.stackMaxSize=INT__/TASKFRAMESIZE;
-      if (ozconf.stackMinSize > ozconf.stackMaxSize) 
-	ozconf.stackMinSize = ozconf.stackMaxSize;});
+      ozconf.stackMinSize=INT__/TASKFRAMESIZE;});
     CASE_REC(PROP_THREADS,
 	     DO_NAT(AtomMin,
-		    ozconf.stackMinSize=INT__/TASKFRAMESIZE;
-		    if (ozconf.stackMinSize > ozconf.stackMaxSize) 
-		    ozconf.stackMinSize = ozconf.stackMaxSize;);
-	     DO_NAT(AtomMax,
-		    ozconf.stackMaxSize=INT__/TASKFRAMESIZE;
-		    if (ozconf.stackMinSize > ozconf.stackMaxSize) 
-		    ozconf.stackMaxSize = ozconf.stackMinSize;););
+		    ozconf.stackMinSize=INT__/TASKFRAMESIZE;););
     // PRIORITIES
     CASE_PERCENT(PROP_PRIORITIES_HIGH,ozconf.hiMidRatio);
     CASE_PERCENT(PROP_PRIORITIES_MEDIUM,ozconf.midLowRatio);
@@ -679,39 +661,20 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 	     SET_PERCENT(AtomHigh,ozconf.hiMidRatio);
 	     SET_PERCENT(AtomMedium,ozconf.midLowRatio););
     // GC
-    CASE_NAT_DO(PROP_GC_MAX,{
-      ozconf.heapMaxSize=INT__/KB;
-      if (ozconf.heapMinSize > ozconf.heapMaxSize) 
-	ozconf.heapMinSize = ozconf.heapMaxSize;
-      if (ozconf.heapThreshold > ozconf.heapMaxSize) {
-	am.setSFlag(StartGC);
-	return BI_PREEMPT;}});
     CASE_NAT_DO(PROP_GC_MIN,{
       ozconf.heapMinSize=INT__/KB;
-      if (ozconf.heapMinSize > ozconf.heapMaxSize) 
-	ozconf.heapMaxSize = ozconf.heapMinSize;
-      if (ozconf.heapMinSize > ozconf.heapThreshold) 
-	ozconf.heapThreshold = ozconf.heapMinSize;
-      if (ozconf.heapThreshold > ozconf.heapMaxSize) {
-	am.setSFlag(StartGC);
-	return BI_PREEMPT;}});
+    });
     CASE_PERCENT(PROP_GC_FREE,ozconf.heapFree);
     CASE_PERCENT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
     CASE_NAT(PROP_GC_CODE_CYCLES,ozconf.codeGCcycles);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
     CASE_REC(PROP_GC,
 	     DO_NAT(AtomMin,ozconf.heapMinSize=INT__/KB);
-	     DO_NAT(AtomMax,ozconf.heapMaxSize=INT__/KB);
 	     SET_NAT(AtomCodeCycles,ozconf.codeGCcycles);
-	     if (ozconf.heapMinSize > ozconf.heapMaxSize) 
-	       ozconf.heapMaxSize = ozconf.heapMinSize;
 	     SET_PERCENT(AtomFree,ozconf.heapFree);
 	     SET_PERCENT(AtomTolerance,ozconf.heapTolerance);
 	     SET_BOOL(AtomOn,ozconf.gcFlag);
-	     if (ozconf.heapThreshold > ozconf.heapMaxSize) {
-	       am.setSFlag(StartGC);
-	       return BI_PREEMPT;
-	     });
+	     );
     // PRINT
     CASE_NAT(PROP_PRINT_WIDTH,ozconf.printWidth);
     CASE_NAT(PROP_PRINT_DEPTH,ozconf.printDepth);
@@ -983,7 +946,6 @@ static const struct prop_entry prop_entries[] = {
   {"threads.created",PROP_THREADS_CREATED},
   {"threads.runnable",PROP_THREADS_RUNNABLE},
   {"threads.min",PROP_THREADS_MIN},
-  {"threads.max",PROP_THREADS_MAX},
   {"threads",PROP_THREADS},
   // PRIORITIES
   {"priorities.high",PROP_PRIORITIES_HIGH},
@@ -1002,7 +964,6 @@ static const struct prop_entry prop_entries[] = {
   {"time",PROP_TIME},
   // GC
   {"gc.min",PROP_GC_MIN},
-  {"gc.max",PROP_GC_MAX},
   {"gc.free",PROP_GC_FREE},
   {"gc.tolerance",PROP_GC_TOLERANCE},
   {"gc.on",PROP_GC_ON},
