@@ -46,16 +46,6 @@ Abstraction *getApplyMethod(Object *obj, ApplMethInfoClass *ami,
   return ami->methCache.lookup(obj,ami->methName,arity,X);
 }
 
-inline
-Abstraction *getApplyMethodForGenCall(Object *obj, TaggedRef label,
-                                      SRecordArity arity)
-{
-  Assert(isFeature(label));
-  Bool defaultsUsed;
-  Abstraction *ret = obj->getMethod(label,arity,am.xRegs,defaultsUsed);
-  return defaultsUsed ? (Abstraction*) 0 : ret;
-}
-
 // -----------------------------------------------------------------------
 // EXCEPTION
 
@@ -197,33 +187,25 @@ if (predArity != arityExp && VarArity != arityExp) {                     \
 // genCallInfo: self modifying code!
 
 static
-void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
+Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
 {
-  static int gencall = 0;
-  static int gencallmethfailed = 0;
-  static int gencallfailed = 0;
-  gencall++;
-
   Assert(!isRef(pred));
 
   Abstraction *abstr = NULL;
   if (gci->isMethAppl) {
-    if (!isObject(pred) ||
-        NULL == (abstr = getApplyMethodForGenCall(tagged2Object(pred),
-                                                  gci->mn,gci->arity))) {
-      ApplMethInfoClass *ami = new ApplMethInfoClass(gci->mn,gci->arity);
-      CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
-      CodeArea::writeAddress(ami, PC+1);
-      CodeArea::writeRegIndex(gci->regIndex, PC+2);
-      gencallmethfailed++;
-      return;
-    }
+    if (!isObject(pred)) goto insertMethApply;
+
+    Bool defaultsUsed;
+    abstr = tagged2Object(pred)->getMethod(gci->mn,gci->arity,
+                                           am.xRegs,defaultsUsed);
+    /* fill cache and try again later */
+    if (abstr==NULL) return NO;
+    if (defaultsUsed) goto insertMethApply;
   } else {
-    if(!isAbstraction(pred) || tagged2Abstraction(pred)->isProxy())
-      goto bombGenCall;
+    if(!isAbstraction(pred)) goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
-    if (abstr->getArity() != getWidth(gci->arity))
+    if (abstr->isProxy() || abstr->getArity() != getWidth(gci->arity))
       goto bombGenCall;
   }
 
@@ -232,15 +214,24 @@ void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
     AbstractionEntry *entry = AbstractionTable::add(abstr);
     CodeArea::writeAddress(entry, PC+1);
     CodeArea::writeOpcode(gci->isTailCall ? FASTTAILCALL : FASTCALL, PC);
-    return;
+    return OK;
+  }
+
+
+insertMethApply:
+  {
+    ApplMethInfoClass *ami = new ApplMethInfoClass(gci->mn,gci->arity);
+    CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
+    CodeArea::writeAddress(ami, PC+1);
+    CodeArea::writeRegIndex(gci->regIndex, PC+2);
+    return OK;
   }
 
 bombGenCall:
-  gencallfailed++;
   CodeArea::writeRegIndex(gci->regIndex,PC+1);
   CodeArea::writeArity(getWidth(gci->arity), PC+2);
   CodeArea::writeOpcode(gci->isTailCall ? TAILCALLG : CALLG,PC);
-  return;
+  return OK;
 }
 
 // -----------------------------------------------------------------------
@@ -2978,9 +2969,24 @@ LBLdispatcher:
       if (isAnyVar(pred)) {
         SUSP_PC(predPtr,getWidth(gci->arity),PC);
       }
-      genCallInfo(gci,pred,PC);
-      gci->dispose();
-      DISPATCH(0);
+
+      if (genCallInfo(gci,pred,PC)) {
+        gci->dispose();
+        DISPATCH(0);
+      }
+
+      isTailCall = gci->isTailCall;
+      if (!isTailCall) PC = PC+3;
+
+      /* the following adapted from bombApply */
+      Assert(e->methApplHdl != makeTaggedNULL());
+
+      X[1] = makeMessage(gci->arity,gci->mn,X);
+      X[0] = pred;
+
+      predArity = 2;
+      predicate = tagged2Const(e->methApplHdl);
+      goto LBLcall;
     }
 
 
