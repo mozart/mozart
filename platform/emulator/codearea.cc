@@ -209,6 +209,10 @@ ProgramCounter CodeArea::definitionStart(ProgramCounter from)
   while (1) {
     Opcode op = adressToOpcode(getOP(PC));
     switch (op) {
+    case CREATENAMEDVARIABLEX: 
+    case CREATENAMEDVARIABLEY: 
+    case CREATENAMEDVARIABLEG: 
+      return NOCODE;
 
     case DEFINITIONX:
     case DEFINITIONY:
@@ -228,7 +232,7 @@ ProgramCounter CodeArea::definitionStart(ProgramCounter from)
       DISPATCH();
     }
   }
-  return 0;
+  return NOCODE;
 }
 
 void displayCode(ProgramCounter from, int ssize) {

@@ -7,8 +7,7 @@
   Version: $Revision$
   State: $State$
 
-  ------------------------------------------------------------------------
-
+  The main engine
   ------------------------------------------------------------------------
 */
 
@@ -36,6 +35,7 @@
 
 extern State BIexchangeCellInline(TaggedRef c, TaggedRef out,TaggedRef &in);
 extern TaggedRef getSuspHandlerBool(InlineFun2);
+extern void printSuspension(ProgramCounter pc);
 
 
 // -----------------------------------------------------------------------
@@ -1229,6 +1229,10 @@ void engine() {
 	DISPATCH(1);
       }
 
+      if (e->conf.showSuspension) {
+	printSuspension(PC);
+      }
+
       int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp = 
         new Suspension(new SuspContinuation(CBB,
@@ -1976,6 +1980,10 @@ void engine() {
 	DISPATCH(1);
       }
 
+      if (e->conf.showSuspension) {
+	printSuspension(PC);
+      }
+      
     LBLsuspendBoard:
 
       CBB->setBody(PC+1, Y, G,NULL,0);
