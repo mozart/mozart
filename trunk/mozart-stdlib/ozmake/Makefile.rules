@@ -27,16 +27,16 @@ clean::
 	-rm -f ozmake ozmake.exe
 
 have.xsltproc:
-	if xsltproc -V 1>/dev/null 2>&1; then \
+	@if xsltproc -V 1>/dev/null 2>&1; then \
 	    : ; \
 	else \
-	    echo >&2 "xsltproc not found, but necessary to build the (html) documentation";
+	    echo >&2 "xsltproc not found, but necessary to build the (html) documentation"; \
 	    echo >&2 "(see http://xmlsoft.org/XSLT/xsltproc2.html)"; \
 	    exit -1; \
 	fi
 
 have.lynx:
-	if lynx -version 1>/dev/null 2>&1; then \
+	@if lynx -version 1>/dev/null 2>&1; then \
 	    : ; \
 	else \
 	    echo >&2 "lynx not found, but necessary to build the (text) documentation"; \
@@ -50,13 +50,13 @@ html: have.xsltproc HELP.xml HELP.xsl Makefile.vars
 		HELP.xsl HELP.xml
 
 HELP.html: have.xsltproc HELP.xml HELP.xsl Makefile.vars
-	xsltproc -o index.html \
+	xsltproc -o HELP.html \
 		--stringparam OZMAKEOUTPUT text \
 		--stringparam OZMAKEVERSION $(VERSION) \
 		HELP.xsl HELP.xml
 
 HELP.txt: have.lynx HELP.html Makefile.vars
-	lynx -dump $< > $@
+	lynx -dump HELP.html > HELP.txt
 
 txt: HELP.txt
 
