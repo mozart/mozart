@@ -36,6 +36,9 @@ proc {OzcarError M}
    {System.showInfo OzcarErrorPrefix # M}
 end
 
+%% a null object which ignores all messages
+NullObject = {New class meth otherwise(M) skip end end ''}
+
 %% Dictionary.xxx is too long, really...
 Dput     = Dictionary.put
 Dentries = Dictionary.entries
