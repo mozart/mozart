@@ -1400,6 +1400,7 @@ OZ_Term OZ_toVirtualString(OZ_Term t,int depth, int width)
   case CVAR:
   case LTUPLE:
   case SRECORD:
+  case EXT:
   case OZCONST:
     if (oz_isBigInt(t) || oz_isByteString(t)) return t;
     return OZ_string(OZ_toC(t,depth,width));
@@ -1698,6 +1699,12 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
     }
   case SRECORD:
     return tagged2SRecord(term)->getFeature(fea);
+
+  case EXT:
+    {
+      Extension *ex = oz_tagged2Extension(term);
+      return ex->getFeatureV(fea);
+    }
 
   case OZCONST:
     {
