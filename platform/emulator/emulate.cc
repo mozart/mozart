@@ -1586,7 +1586,6 @@ LBLdispatcher:
 
   if(!e->onToplevel()){
     (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
-    // mm2: missing
     RAISE_THREAD;
   }
 
@@ -1837,9 +1836,6 @@ LBLdispatcher:
 
        if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
          if (oz_isVariable(taggedPredicate)) {
-           /* compiler ensures: if pred is in X[n], then n == arity+1,
-            * so we save one additional argument */
-           Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
            SUSP_PC(predPtr,PC);
          }
          RAISE_APPLY(taggedPredicate,OZ_toList(predArity,X));
