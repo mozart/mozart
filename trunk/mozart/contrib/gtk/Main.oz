@@ -39,7 +39,7 @@ define
    {Prepare.'prepare' TreeSource PrepTree}
    %%
    %% Parse Tree and create Binding
-   %%
+   %%   
    case {Parser.parse PrepTree}
    of 'parse error'(...) then
       {System.show 'parse error'}

@@ -226,7 +226,7 @@ static OZ_Term createNoExposeEvent(char *type, GdkEventNoExpose *event) {
 		    OZ_int(event->send_event));
 }
 
-static OZ_Term createGdkEvent(GdkEvent *event) {
+OZ_Term createGdkEvent(GdkEvent *event) {
   switch (event->type) {
   case GDK_NOTHING:
     return OZ_atom("GDK_NOTHING");
@@ -301,28 +301,25 @@ static OZ_Term createGdkEvent(GdkEvent *event) {
 }
 
 /*
+ * GtkArg Handling (generated function)
+ */
+
+extern OZ_Term makeArgTerm(GtkArg *arg);
+
+/*
  * User Data is transmitted using the GtkArg Array.
- * Usually it consists of zero or one Argument, the GdkEvent Pointer.
  * The event pointer will be transformed to a tuple.
- * Additional Data will be ignored and should not be used.
  */
 
 static void signal_marshal(GtkObject *object, gpointer oz_id,
 			   guint n_args, GtkArg *args) {
-  switch (n_args) {
-  case 0: /* GtkWidget Event */
-    OZ_send(signal_port, OZ_mkTuple(OZ_atom("event"), 2, OZ_int((guint) oz_id),
-				    OZ_atom("UNSUPPORTED")));
-    break;
-  case 1: /* GdkEvent Type is stored as object */
-    OZ_send(signal_port,
-	    OZ_mkTuple(OZ_atom("event"), 2, OZ_int((guint) oz_id),
-		       createGdkEvent((GdkEvent*) GTK_VALUE_OBJECT(args[0]))));
-    break;
-  default:
-    fprintf(stderr, "signal_marshal: unable to handle event. IGNORED.\n");
-    break;
+  OZ_Term event = OZ_tuple(OZ_atom("event"), (n_args + 1));
+    
+  OZ_putArg(event, 0, OZ_int((guint) oz_id));
+  for (int i = 0; i < n_args; i++) {
+    OZ_putArg(event, (i + 1), makeArgTerm(&(args[i])));
   }
+  OZ_send(signal_port, event);
 
   /* Assign Result Type; this is fake because it ALWAYS indicates non-handling.
    * This should be changed later on but will work fine (but slowly) for now.
@@ -537,27 +534,7 @@ OZ_BI_define(native_make_arg, 2, 1) {
 
 OZ_BI_define (native_get_arg, 1, 1) {
   GOZ_declareForeignType(GtkArg *, 0, val);
-
-  switch (val->type) {
-  case GTK_TYPE_INT:
-    OZ_out(0) = OZ_int(val->d.int_data);
-    break;
-  case GTK_TYPE_DOUBLE:
-    OZ_out(0) = OZ_float(val->d.double_data);
-    break;
-  case GTK_TYPE_BOOL:
-    OZ_out(0) = OZ_int(val->d.bool_data);
-    break;
-  case GTK_TYPE_STRING:
-    OZ_out(0) = OZ_string(val->d.string_data);
-    break;
-  case GTK_TYPE_OBJECT:
-    OZ_out(0) = OZ_makeForeignPointer(val->d.object_data);
-    break;
-  default:
-    OZ_out(0) = OZ_atom("unit");
-    break;
-  }
+  OZ_out(0) = makeArgTerm(val);
   return OZ_ENTAILED;
 } OZ_BI_end
 
