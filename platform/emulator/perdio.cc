@@ -5283,11 +5283,9 @@ void LockFrame::lockComplex(Thread *t){
 void LockLocal::unlockComplex(){
   setLocker(pendThreadResumeFirst(getPendBase()));
   Assert(getLocker());
-  getLocker()->suspThreadToRunnable();
   return;}
 
 void LockLocal::lockComplex(Thread *t){
-  t->updateExtThread(getBoard());
   pendThreadAddToEnd(getPendBase(),t);}
   
 void LockFrame::unlockComplex(){
