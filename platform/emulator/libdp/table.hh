@@ -219,8 +219,9 @@ public:
 #define BORROW_LOW_THRESHOLD     ((1<<4))
 #define BORROW_HIGH_THRESHOLD    ((1<<19))
 #endif
-
+/*
 #define BTRESIZE_CRITICAL
+*/
 
 #ifdef BTRESIZE_CRITICAL
 #define DEFAULT_OWNER_TABLE_SIZE   5000
