@@ -29,6 +29,7 @@ OZ_INIT
 AC_CHECK_PROGS(RM,rm,rm)
 AC_CONFIG_SUBDIRS(gump)
 AC_OUTPUT(Makefile)
+
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded.
 ],
