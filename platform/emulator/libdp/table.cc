@@ -79,31 +79,6 @@ void NetHashTable::sub(NetAddress *na){
 	       hvalue,na->site,na->index));
   htSub(hvalue,ghn);}
 
-#ifdef DEBUG_PERDIO
-void NetHashTable::print(){
-  int limit=getSize();
-  int used=getUsed();
-  int i;
-  printf("******************************************************\n");
-  printf("************* NetAddress Hash Table *****************\n");
-  printf("******************************************************\n");
-  printf("Size:%d Used:%d\n",limit,used);
-  GenHashNode *ghn;
-  NetAddress *na;
-  for(i=0;i<limit;i++){
-    ghn=getElem(i);
-    if(ghn!=NULL){
-      na=GenHashNode2NetAddr(ghn);
-      printf("<%d> - s%s o:%d\n",i,oz_site2String(na->site),na->index);
-      ghn=ghn->getNext();
-      while(ghn!=NULL){
-	na=GenHashNode2NetAddr(ghn);
-	printf("<coll> - s:%s o:%d\n",oz_site2String(na->site),na->index);
-	ghn=ghn->getNext();}}}
-  printf("-----------------------------------\n");
-}
-#endif
-
 /* -------------------------------------------------------------------- */
 
 OwnerTable *ownerTable;
@@ -113,17 +88,6 @@ DSite* creditSiteOut;
 
 void sendPrimaryCredit(DSite *sd,int OTI,Credit c);
 
-#ifdef DEBUG_PERDIO
-
-void printTables(){
-  ownerTable->print();
-  borrowTable->print();
-  borrowTable->hshtbl->print();}
-
-void resize_hash(){
-  borrowTable->hshtbl->print();}
-
-#endif
 
 void OwnerEntry::addCreditExtended(Credit back){
   ReduceCode rc=getOwnerCreditExtension()->addCreditE(back);
@@ -154,7 +118,6 @@ void OwnerTable::compactify()  /* TODO - not tested */
   if(no_used/size< TABLE_LOW_LIMIT) return;
   PD((TABLE,"TABLE:owner compactify enter: size:%d no_used:%d",
 	       size,no_used));
-  PERDIO_DEBUG_DO1(TABLE2,printTables());
   int i=0;
   int used_slot= -1;
   int* base = &nextfree;
@@ -181,7 +144,6 @@ void OwnerTable::compactify()  /* TODO - not tested */
     array=oldarray;}
   init(first_free,size);      
   PD((TABLE,"TABLE:owner compactify no realloc"));
-  PERDIO_DEBUG_DO1(TABLE2,printTables());
   return;}
 
 void OwnerTable::resize(){
@@ -191,14 +153,12 @@ void OwnerTable::resize(){
   int newsize = ((int) (TABLE_EXPAND_FACTOR *size));
   PD((TABLE,"TABLE:resize owner old:%d no_used:%d new:%d",
 		size,no_used,newsize));
-  PERDIO_DEBUG_DO1(TABLE2,printTables());
   array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
   if(array==NULL){
     error("Memory allocation: Owner Table growth not possible");}
   init(size, newsize);  
   size=newsize;
   PD((TABLE2,"TABLE:resize owner complete"));
-  PERDIO_DEBUG_DO1(TABLE2,printTables());
   return;}
 
 int OwnerTable::newOwner(OwnerEntry *&oe){
@@ -260,44 +220,6 @@ OZ_Term OwnerTable::extract_info(){
            oz_cons(oz_pairA("list", list), oz_nil())));
 }
 
-void OwnerTable::print(){
-  printf("***********************************************\n");
-  printf("********* OWNER TABLE *************************\n");
-  printf("***********************************************\n");
-  printf("Size:%d No_used:%d \n\n",size,no_used);
-  printf("BI\t BORROW\t Credit\n");
-  int i;
-  for(i=0;i<size;i++){
-    if(!(array[i].isFree())){
-      OwnerEntry *oe=getOwner(i);
-      if(oe->isExtended()) {
-	int ctr = 1;
-	OwnerCreditExtension *next;
-	next = oe->uOB.oExt;
-	printf("<%d>\t %s\t", i, toC(PO_getValue(oe)));
-	while(next != NULL){
-	  printf("ex:%d %ld#%ld ", ctr, next->getCredit(0), 
-		 next->getCredit(1));
-	  ctr ++;
-	  next = next->getNext();}
-	printf("\n");}
-      else {
-	if(oe->uOB.credit == -1)
-	  printf("<%d>\t %s\t PERSISTENT\n", i, toC(PO_getValue(oe)));
-	else
-	  printf("<%d>\t %s\t %ld\n", i, toC(PO_getValue(oe)), 
-		 oe->uOB.credit);}
-#ifdef XXDEBUG_PERDIO
-      getOwner(i)->print();
-    } else{
-      printf("<%d> FREE: next:%d\n",i,array[i].uOB.nextfree);
-#endif
-    }
-  }
-  printf("-----------------------------------------------\n");  
-}
-
-
 void OwnerCreditExtension::init(Credit c){
   Assert(c > 0);
   credit[0]=c;
@@ -347,15 +269,6 @@ ReduceCode OwnerCreditExtension::addCreditE(Credit ret){
   credit[0]+=ret;
   return CANNOT_REDUCE;}
 
-#ifdef MISC_BUILTINS
-
-OZ_BI_define(BIprintOwnerTable,0,0)
-{
-  OT->print();
-  return PROCEED;
-} OZ_BI_end
-
-#endif
 
 /* expand */
 
@@ -898,7 +811,6 @@ void BorrowTable::compactify(){
   if(newsize<DEFAULT_BORROW_TABLE_SIZE) newsize=DEFAULT_BORROW_TABLE_SIZE;
   PD((TABLE,"compactify borrow old:%d no_used:%d new:%d",
 		size,no_used,newsize));
-  PERDIO_DEBUG_DO1(TABLE2,printTables());
   BorrowEntry *oldarray=array;
   array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));
   if(array==NULL){
@@ -909,7 +821,6 @@ void BorrowTable::compactify(){
   size=newsize;
   copyBorrowTable(oldarray,oldsize);
   PD((TABLE,"compactify borrow complete"));
-  PERDIO_DEBUG_DO1(TABLE2,printTables());
   return;}
 
 void BorrowTable::resize()
@@ -920,7 +831,6 @@ void BorrowTable::resize()
   Assert(no_used==size);
   int newsize = int (TABLE_EXPAND_FACTOR*size);
   PD((TABLE,"resize borrow old:%d no_used:%d new:%d", size,no_used,newsize));
-  PERDIO_DEBUG_DO1(TABLE2,printTables());
   BorrowEntry *oldarray=array;
   array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));
   if(array==NULL){
@@ -929,7 +839,6 @@ void BorrowTable::resize()
   size=newsize;
   copyBorrowTable(oldarray,oldsize);
   PD((TABLE,"resize borrow complete"));
-  PERDIO_DEBUG_DO1(TABLE2,printTables());
   return;}
 
 int BorrowTable::newSecBorrow(DSite *creditSite,Credit c,DSite * sd,int off){
@@ -1003,9 +912,6 @@ fin:
 }
 
 
-void OB_Entry::print() {
-  printf("Credit:%ld\n",getCreditOB());
-}
 
 void OB_Entry::gcPO() {
   if (isGCMarked())
@@ -1022,106 +928,9 @@ void OB_Entry::gcPO() {
     OZ_collectHeapTerm(u.ref,u.ref);}
 }
 
-void BorrowEntry::print() {
-  OB_Entry::print();
-  NetAddress *na=getNetAddress();
-  printf("NA: s:%s o:%d\n",na->site->stringrep(),na->index);
-}
-
-void BorrowEntry::print_entry(int nr) {
-  int ctr = 1;
-  char pC[1000], sC[1000];
-  char *temp;
-  char *primCred = (char *) pC,  *secCred = (char *) sC;
-  OwnerCreditExtension *next;
-  switch(getExtendFlags()){
-  case PO_PERSISTENT:
-    printf("<%d>\t %s\t %d\t PERSISTENT\n", nr, 
-	   toC(PO_getValue(this)), netaddr.index);
-    return;
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
-    sprintf(primCred, "%ld(slave)", getSlave()->getMaster()->primCredit);
-    next = getSlave()->getMaster()->uSOB.oce;
-    *secCred = '\0';
-    temp = secCred;
-    while(next != NULL){
-      temp += strlen(temp);
-      sprintf(temp, "ex:%d %ld#%ld ", ctr, next->getCredit(0), 
-	      next->getCredit(1));
-      ctr ++;
-      next = next->getNext();}
-    break;
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER:
-    sprintf(primCred, "%ld(slave)", getSlave()->getMaster()->primCredit);
-    sprintf(secCred, "%ld", getSlave()->getMaster()->uSOB.secCredit);
-    break;
-  case PO_EXTENDED|PO_SLAVE:
-    sprintf(primCred, "%ld", getSlave()->primCredit);
-    sprintf(secCred, "%ld", getSlave()->uSOB.secCredit);
-    break;
-  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
-    sprintf(primCred, "%ld", getMaster()->primCredit);
-    next = getMaster()->uSOB.oce;
-    *secCred = '\0';
-    temp = secCred;
-    while(next != NULL){
-      temp += strlen(temp);
-      sprintf(temp, "ex:%d %ld#%ld ", ctr, next->getCredit(0), 
-	      next->getCredit(1));
-      ctr ++;
-      next = next->getNext();}
-    break;
-  case PO_EXTENDED|PO_MASTER:
-    sprintf(primCred, "%ld", getMaster()->primCredit);
-    sprintf(secCred, "%ld", getMaster()->uSOB.secCredit);
-    break;
-  case PO_NONE:
-    secCred = "0";
-    sprintf(primCred, "%ld", uOB.credit);
-    break;
-  default:
-    Assert(0);}
-  
-  printf("<%d>\t %s\t %d\t %s\t\t %s\n", nr, toC(PO_getValue(this)), 
-	 netaddr.index, primCred, secCred);
-}
-
-void BorrowTable::print(){
-  printf("***********************************************\n");
-  printf("********* BORROW TABLE *************************\n");
-  printf("***********************************************\n");
-  printf("Size:%d No_used:%d \n\n",size,no_used);
-  printf("BI\t BORROW\t OI\t PrimCredit\t SecCredit\n");
-  int i;
-  BorrowEntry *b;
-  for(i=0;i<size;i++){
-    if(!(array[i].isFree())){
-      b=getBorrow(i);
-      b->print_entry(i);
-#ifdef XXDEBUG_PERDIO
-      b->print();
-    } else {
-      printf("<%d> FREE: next:%d\n",i,array[i].uOB.nextfree);
-#endif
-    }
-  }
-  printf("-----------------------------------------------\n");  
-}
-
-#ifdef MISC_BUILTINS
-
-OZ_BI_define(BIprintBorrowTable,0,0)
-{
-  BT->print();
-  return PROCEED;
-} OZ_BI_end
-
-#endif
-
 Bool withinBorrowTable(int i){
   if(i<borrowTable->getSize()) return OK;
   return NO;}
-
 
 void OwnerTable::gcOwnerTableRoots()
 {
