@@ -69,5 +69,6 @@
     &switches;
     &queries;
     &notifications;
-  </Body>
+  <Back>
+    <Bib.Extern id="mozart-gump" to="mozart.bib" key="Mozart-Gump">
 </Book>
