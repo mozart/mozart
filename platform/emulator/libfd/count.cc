@@ -54,8 +54,8 @@ ExactlyPropagator::~ExactlyPropagator(void)
 
 OZ_Return ExactlyPropagator::propagate(void)
 {
-
-  if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
+  if (reg_l_sz == 0)
+    return replaceByInt(reg_n, 0);
 
   int &v = reg_v, &l_sz = reg_l_sz;
   OZ_FDIntVar n_var(reg_n);
@@ -67,8 +67,11 @@ OZ_Return ExactlyPropagator::propagate(void)
   */
   int tn = 0, tnn = 0, i;
 
+  int n_in_l = 0;
   for (i = l_sz; i--; ) {
     l[i].read(reg_l[i]);
+    // find out if n_var occurs in l_reg
+    n_in_l |= (&(*n_var) == &(*l[i]));
     if (l[i]->getSize() < reg_oldDomSizes[i]) {
       if (*l[i] == fd_singl && l[i]->getSingleElem() == v)
         tn += 1;
@@ -88,7 +91,7 @@ OZ_Return ExactlyPropagator::propagate(void)
 loop:
   if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
-    if ( (oldSize - tnn < n) || (tn > n) ) {
+    if ((oldSize - tnn < n) || (tn > n)) {
       goto failure;
     }
     if (tn == n) {
@@ -103,10 +106,8 @@ loop:
       return P.vanish();
     }
   } else {
-    int oldIn=0, newIn=0;
-    if (n_var->isIn(v)) oldIn = 1;
-    if ( (oldSize - tnn < n_var->getMinElem()) ||
-         (tn > n_var->getMaxElem()) ) {
+    if ((oldSize - tnn < n_var->getMinElem()) ||
+         (tn > n_var->getMaxElem())) {
       goto failure;
     }
     if (tn == n_var->getMaxElem()) {
@@ -122,17 +123,23 @@ loop:
       FailOnEmpty(*n_var &= oldSize - tnn);
       return P.vanish();
     }
+
+    int oldIn = n_var->isIn(v);
+
     FailOnEmpty(*n_var <= oldSize - tnn);
     FailOnEmpty(*n_var >= tn);
-    if (n_var->isIn(v)) newIn = 1;
-    if (newIn != oldIn) {
-      reg_tnn++; tnn=reg_tnn;
-      goto loop;
-    }
-    else {
-      if ((oldIn==1) && (*n_var == fd_singl)) {
-      reg_tn++; tn=reg_tn;
-      goto loop;
+
+    if (n_in_l) {
+      // in case 'n_var' occurs in `reg_l' constraining n_var might
+      // have removed v from `reg_l'
+      if (n_var->isIn(v) != oldIn) {
+        reg_tnn++;
+        tnn = reg_tnn;
+        goto loop;
+      } else if ((oldIn == 1) && (*n_var == fd_singl)) {
+        reg_tn++;
+        tn = reg_tn;
+        goto loop;
       }
     }
   }
@@ -158,11 +165,9 @@ loop:
     FailOnEmpty(*n_var &= n_var->getMinElem());
   }
 
-
   return P.leave();
 
 failure:
-
   return P.fail();
 }
 
