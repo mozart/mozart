@@ -45,7 +45,7 @@ define
    {HTML.out
     'Last Minute Flights'
     try
-       form(action: 'lmf-process.cgi'
+       form(action: 'lmf-book.cgi'
 	    method: 'GET'
 	    h2('Personal Data')
 	    table(tr(td(label(for:firstname 'First name: '))
