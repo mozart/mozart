@@ -2253,7 +2253,7 @@ case "$platform" in
 	WITH_TCLTK=$with_tcl/lib
 	INSTALLWINDLLS=installwindlls
 	: ${WINDLLDIR=$windlldir}
-	for i in tcl83.dll tk83.dll msvcrt.dll; do
+	for i in tcl84.dll tk84.dll msvcrt.dll; do
 	  dll=$WINDLLDIR/$i
 	  echo $ac_n "checking for DLL $dll""... $ac_c" 1>&6
 echo "configure:2260: checking for DLL $dll" >&5
