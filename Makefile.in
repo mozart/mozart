@@ -274,5 +274,6 @@ files.doc:
                 -path './doc/*' -or \
                 -path './print/*' -or \
                 -path './cache/x-oz/system/gump/examples/*' -or \
+                -path './cache/http/www.mozart-oz.org/home-'`$(OZVERSION)`'/doc/*' -or \
                 -path './examples/*' \
         \) -and -not -path './doc/Mozart.hh?' ) > $@
