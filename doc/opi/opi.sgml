@@ -163,8 +163,8 @@
               Jochen Dörre, for initially providing Oz expression
               editing commands and jumping to compiler error messages.
           </List>
-          Leif Kornstaedt is the person now responsible for the entirety
-          of Mozart's &OPI;.  Please address any remarks to him.
+          Leif Kornstaedt is responsible for most of the current Mozart &OPI;.
+          Denys Duchier contributed the concept of <Em/profiles/.
     <Chapter id="chapter.start">
       <Title/Invoking the &OPI;/
       <P>
