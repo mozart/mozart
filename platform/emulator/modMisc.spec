@@ -1,5 +1,3 @@
-$cmode='dyn';
-
 %builtins_all =
 (
 
@@ -10,53 +8,37 @@ $cmode='dyn';
 
     'PerdioVar.is'	=> { in  => ['value'],
 			     out => ['+bool'],
-			     BI  =>   PerdioVar_is,
-			     module=> 'perdiovar',
-			     native => true},
+			     BI  =>   PerdioVar_is},
 
     'crash'		=> { in  => [],
 			     out => [],
 			     BI  => BIcrash,
-			     doesNotReturn=>1,
-			     native => true},
+			     doesNotReturn=>1},
 
     'dvset'		=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIdvset,
-			     ifdef=>DEBUG_PERDIO,
-			     module=>'perdio',
-			     native => true},
+			     ifdef=>DEBUG_PERDIO},
 
     'siteStatistics'	=> { in  => [],
 			     out => ['+[value]'],
-			     BI  => BIsiteStatistics,
-			     module=>'perdio',
-			     native => true},
+			     BI  => BIsiteStatistics},
 
     'printBorrowTable'	=> { in  => [],
 			     out => [],
-			     BI  => BIprintBorrowTable,
-			     module=>'perdio',
-			     native => true},
+			     BI  => BIprintBorrowTable},
 
     'printOwnerTable'	=> { in  => [],
 			     out => [],
-			     BI  => BIprintOwnerTable,
-			     module=>'perdio',
-			     native => true},
-
+			     BI  => BIprintOwnerTable},
 
     'perdioStatistics'	=> { in  => [],
 			     out => ['+record'],
-			     BI  => BIperdioStatistics,
-			     module=>'perdio' ,
-			     native => true},
-
+			     BI  => BIperdioStatistics},
 
     'slowNet'           => { in  => ['+int', '+int'],
 			     out => [],
-			     bi  => BIslowNet,
-			     native => true},
+			     bi  => BIslowNet},
 
     ###
     ### Debug
@@ -64,19 +46,15 @@ $cmode='dyn';
         
     'Debug.inspect'     => { in  => ['value'],
                              out => ['+value'],
-			     BI  => BIinspect,
-		             native => true},
-
+			     BI  => BIinspect},
 
     'Debug.livenessX'	=> { in  => ['+int'],
 			     out => ['+int'],
-			     BI  => BIlivenessX,
-			     native => true},
+			     BI  => BIlivenessX},
 
     'procedureEnvironment'=> { in  => ['+procedure'],
 			       out => ['+tuple'],
-			       BI  => BIprocedureEnvironment,
-			       native => true},
+			       BI  => BIprocedureEnvironment},
 
     ###
     ### Statistics
@@ -84,43 +62,36 @@ $cmode='dyn';
         
     'statisticsPrint'	=> { in  => ['+virtualString'],
 			     out => [],
-			     BI  => BIstatisticsPrint,
-			     native => true},
+			     BI  => BIstatisticsPrint},
 
     'statisticsPrintProcs'=> { in  => [],
 			       out => [],
-			       BI  => BIstatisticsPrintProcs,
-			       native => true},
+			       BI  => BIstatisticsPrintProcs},
 
     'instructionsPrint'	=> { in  => [],
 			     out => [],
 			     BI  => BIinstructionsPrint,
-			     ifdef=>'PROFILE_INSTR',
-			     native => true},
+			     ifdef=>'PROFILE_INSTR'},
 
     'instructionsPrintCollapsable' => { in  => [],
 			     out => [],
 			     BI  => BIinstructionsPrintCollapsable,
-			     ifdef=>'PROFILE_INSTR',
-			     native => true},
+			     ifdef=>'PROFILE_INSTR'},
 
     'instructionsPrintReset' => { in  => [],
 			     out => [],
 			     BI  => BIinstructionsPrintReset,
-			     ifdef=>'PROFILE_INSTR',
-			     native => true},
+			     ifdef=>'PROFILE_INSTR'},
 
     'biPrint'		=> { in  => [],
 			     out => [],
 			     BI  => BIbiPrint,
-			     ifdef=>'PROFILE_BI',
-			     native => true},
+			     ifdef=>'PROFILE_BI'},
 
     'halt'		=> { in  => [],
 			     out => [],
 			     BI  => BIhalt,
-			     ifdef=>'DEBUG_TRACE',
-			     native => true},
+			     ifdef=>'DEBUG_TRACE'},
 
     ###
     ### Christian's private stuff
@@ -129,8 +100,7 @@ $cmode='dyn';
     'GetCloneDiff'	=> { in  => ['+space'],
 			     out => ['+value'],
 			     BI  => BIgetCloneDiff,
-			     ifdef=>'CS_PROFILE',
-			     native => true},
+			     ifdef=>'CS_PROFILE'},
 
 
     ###
@@ -140,13 +110,11 @@ $cmode='dyn';
     'funReturn'		=> { in  => ['value'],
 			     out => [],
 			     doesNotReturn => 1,
-			     BI  => BIfunReturn,
-			     native => true},
+			     BI  => BIfunReturn},
 
     'getReturn'		=> { in  => [],
 			     out => ['value'],
-			     BI  => BIgetReturn,
-			     native => true},
+			     BI  => BIgetReturn},
 
 
     ###
@@ -155,8 +123,7 @@ $cmode='dyn';
 
     'getConstraints'    => { in  => ['+value','+[value]'],
 			     out => [],
-			     bi  => BIgetConstraints,
-			     native => true},
+			     bi  => BIgetConstraints},
 
     ###
     ### Michael's private stuff

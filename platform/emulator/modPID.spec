@@ -1,22 +1,17 @@
-$cmode='dyn';
-
 %builtins_all =
 (
     #* Connection
 
     'get'		=> { in  => [],
 			     out => ['+record'],
-			     BI  => BIGetPID,
-			     native => true},
+			     BI  => BIGetPID},
 
     'received'	=> { in  => ['value'],
 			     out => [],
-			     BI  => BIReceivedPID,
-			     native => true},
+			     BI  => BIReceivedPID},
 
     'toPort'	=> { in  => ['+virtualString','+int','+int','+int'],
 			     out => ['+port'],
-			     BI  => BITicket2Port,
-			     native => true},
+			     BI  => BITicket2Port},
 
  );

@@ -1,87 +1,68 @@
-$cmode='dyn';
-
 %builtins_all =
 (
 
     'threadUnleash'	=> { in  => ['+thread','+int'],
 			     out => [],
-			     BI  => BIthreadUnleash,
-			     native => true},
+			     BI  => BIthreadUnleash},
 
     'getStream'	=> { in  => [],
 			     out => ['value'],
-			     BI  => BIgetDebugStream,
-			     native => true},
+			     BI  => BIgetDebugStream},
 
     'setStepFlag'	=> { in  => ['+thread','+bool'],
 			     out => [],
-			     BI  => BIsetStepFlag,
-			     native => true},
+			     BI  => BIsetStepFlag},
 
     'setTraceFlag'=> { in  => ['+thread','+bool'],
 			     out => [],
-			     BI  => BIsetTraceFlag,
-			     native => true},
+			     BI  => BIsetTraceFlag},
 
     'checkStopped'=> { in  => ['+thread'],
 			     out => ['+bool'],
-			     BI  => BIcheckStopped,
-			     native => true},
+			     BI  => BIcheckStopped},
 
     'print'	=> { in  => ['value','+int'],
 			     out => [],
-			     BI  => BIdebugPrint,
-			     ifdef=>'DEBUG_PRINT',
-			     native => true},
+			     BI  => BIdebugPrint},
 
     'printLong'	=> { in  => ['value','+int'],
 			     out => [],
-			     BI  => BIdebugPrintLong,
-			     ifdef=>'DEBUG_PRINT',
-			     native => true},
+			     BI  => BIdebugPrintLong},
 
     'prepareDumpThreads'	=> { in  => [],
 				     out => [],
-				     BI  => BIprepareDumpThreads,
-				     native => true},
+				     BI  => BIprepareDumpThreads},
     
     'dumpThreads'	=> { in  => [],
 			     out => [],
-			     BI  => BIdumpThreads,
-			     native => true},
+			     BI  => BIdumpThreads},
 
     'listThreads'	=> { in  => [],
 			     out => ['+[thread]'],
-			     BI  => BIlistThreads,
-			     native => true},
+			     BI  => BIlistThreads},
 
     'breakpointAt'=> { in  => ['+atom','+int','+bool'],
 			     out => ['+bool'],
-			     BI  => BIbreakpointAt,
-			     native => true},
+			     BI  => BIbreakpointAt},
 
     'breakpoint'	=> { in  => [],
 			     out => [],
-			     BI  => BIbreakpoint,
-			     native => true},
+			     BI  => BIbreakpoint},
 
     'displayDef'	=> { in  => ['+int','+int'],
 			     out => [],
-			     BI  => BIdisplayDef,
-			     native => true},
+			     BI  => BIdisplayDef},
 
     'displayCode'	=> { in  => ['+int','+int'],
 			     out => [],
-			     BI  => BIdisplayCode,
-			     native => true},
+			     BI  => BIdisplayCode},
 
     'procedureCode'=> { in  => ['+procedure'],
 			      out => ['+int'],
-			      BI  => BIprocedureCode,
-			      native => true},
+			      BI  => BIprocedureCode},
     
     'procedureCoord'=> { in  => ['+procedure'],
 			       out => ['+record'],
-			       BI  => BIprocedureCoord,
-			       native => true},
+			       BI  => BIprocedureCoord},
+
  );
