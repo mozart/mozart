@@ -156,8 +156,12 @@ inline OZ_Term pos() {
   return newCTerm("pos",xyFileNameAtom,OZ_int(xylino),OZ_int(xycharno()));
 }
 
+inline OZ_Term makeVar(OZ_Term printName, OZ_Term pos) {
+  return newCTerm("fVar",printName,pos);
+}
+
 inline OZ_Term makeVar(char *printName) {
-  return newCTerm("fVar",OZ_atom(printName),pos());
+  return makeVar(OZ_atom(printName),pos());
 }
 
 inline OZ_Term makeCons(OZ_Term first, OZ_Term second, OZ_Term pos) {
@@ -264,8 +268,11 @@ void xy_setParserExpect() {
 %type <t>  fixedListArgs
 %type <t>  optCatch
 %type <t>  optFinally
-%type <t>  label
+%type <t>  record
+%type <t>  recordAtomLabel
+%type <t>  recordVarLabel
 %type <t>  recordArguments
+%type <t>  optDots
 %type <t>  feature
 %type <t>  featureNoVar
 %type <t>  caseMain
@@ -516,10 +523,8 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = $1; }
                 | float
                   { $$ = $1; }
-                | label '(' recordArguments ')'
-                  { $$ = newCTerm("fRecord",$1,$3); }
-                | label '(' recordArguments LDOTS ')'
-                  { $$ = newCTerm("fOpenRecord",$1,$3); }
+                | record
+                  { $$ = $1; }
                 | '[' coord phrase fixedListArgs ']' coord
                   { $$ = newCTerm("fRecord",newCTerm("fAtom",newCTerm("|"),
                                                      makeLongPos($2,$6)),
@@ -690,16 +695,30 @@ optFinally      : /* empty */
                   { $$ = $2; }
                 ;
 
-label           : ATOM_LABEL
-                  { $$ = newCTerm("fAtom",newCTerm(xytext),pos()); }
-                | VARIABLE_LABEL
-                  { $$ = makeVar(xytext); }
+record          : recordAtomLabel coord '(' recordArguments optDots ')' coord
+                  {
+                    $$ = newCTerm(OZ_isTrue($5)? "fOpenRecord": "fRecord",
+                                  newCTerm("fAtom",$1,makeLongPos($2,$7)),$4);
+                  }
+                | recordVarLabel coord '(' recordArguments optDots ')' coord
+                  {
+                    $$ = newCTerm(OZ_isTrue($5)? "fOpenRecord": "fRecord",
+                                  makeVar($1,makeLongPos($2,$7)),$4);
+                  }
+                ;
+
+recordAtomLabel : ATOM_LABEL
+                  { $$ = OZ_atom(xytext); }
+                ;
+
+recordVarLabel  : VARIABLE_LABEL
+                  { $$ = OZ_atom(xytext); }
                 | UNIT_LABEL
-                  { $$ = makeVar("`unit`"); }
+                  { $$ = OZ_atom("`unit`"); }
                 | TRUE_LABEL
-                  { $$ = makeVar("`true`"); }
+                  { $$ = OZ_atom("`true`"); }
                 | FALSE_LABEL
-                  { $$ = makeVar("`false`"); }
+                  { $$ = OZ_atom("`false`"); }
                 ;
 
 recordArguments : /* empty */
@@ -708,6 +727,12 @@ recordArguments : /* empty */
                   { $$ = consList($1,$2); }
                 | feature ':' phrase recordArguments
                   { $$ = consList(newCTerm("fColon",$1,$3),$4); }
+                ;
+
+optDots         : /* empty */
+                  { $$ = OZ_false(); }
+                | LDOTS
+                  { $$ = OZ_true(); }
                 ;
 
 feature         : atom
