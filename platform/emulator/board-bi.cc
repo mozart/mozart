@@ -34,6 +34,7 @@
 #include "builtins.hh"
 #include "value.hh"
 #include "var_base.hh"
+#include "var_future.hh"
 #include "os.hh"
 
 /*
@@ -49,6 +50,16 @@ void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
 
   Thread * t = oz_newThreadInject(bb);
   t->pushCall(BI_Unify,args,2);
+}
+
+inline
+void bindfut(Board * bb, const TaggedRef a, const TaggedRef b) {
+  RefsArray args = allocateRefsArray(2, NO);
+  args[0] = a;
+  args[1] = b;
+
+  Thread * t = oz_newThreadInject(bb);
+  t->pushCall(BI_ByNeedAssign,args,2);
 }
 
 
@@ -205,60 +216,23 @@ OZ_BI_define(BIaskSpace, 1,1) {
 } OZ_BI_end
 
 
-OZ_BI_define(BIaskVerboseSpace, 2,0) {
+OZ_BI_define(BIaskVerboseSpace, 1, 1) {
   declareSpace;
-  oz_declareIN(1,out);
-  
+
   if (isFailedSpace)
-    return oz_unify(out, AtomFailed);
+    OZ_RETURN(AtomFailed);
   
   if (space->isMarkedMerged())
-    return oz_unify(out, AtomMerged);
+    OZ_RETURN(AtomMerged);
 
   if (space->getSpace()->isBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
-    stuple->setArg(0, am.currentUVarPrototype());
+    stuple->setArg(0, space->getSpace()->getStatus());
 
-    if (oz_unify(out, makeTaggedSRecord(stuple)) == FAILED)
-      return FAILED;
-
-    OZ_in(1) = stuple->getArg(0);
+    OZ_RETURN(makeTaggedSRecord(stuple));
   } 
   
-  TaggedRef answer = space->getSpace()->getStatus();
-  
-  DEREF(answer, answer_ptr, answer_tag);
-
-  if (isVariableTag(answer_tag))
-    oz_suspendOn(makeTaggedRef(answer_ptr));
-
-  return oz_unify(OZ_in(1), answer);
-} OZ_BI_end
-
-
-OZ_BI_define(BIaskUnsafeSpace, 2,0) {
-  declareSpace;
-  oz_declareIN(1,out);
-
-  if (isFailedSpace)
-    return oz_unify(out, AtomFailed);
-  
-  if (space->isMarkedMerged())
-    return oz_unify(out, AtomMerged);
-
-  if (space->getSpace()->isBlocked()) {
-    SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
-    stuple->setArg(0, am.currentUVarPrototype());
-
-    if (oz_unify(out, makeTaggedSRecord(stuple)) == FAILED) // mm2
-      return FAILED;
-
-    OZ_in(1) = stuple->getArg(0);
-  } 
-  
-  TaggedRef answer = space->getSpace()->getStatus();
-  
-  return oz_unify(OZ_in(1), answer);
+  OZ_RETURN(space->getSpace()->getStatus());
 } OZ_BI_end
 
 
@@ -299,28 +273,23 @@ OZ_BI_define(BImergeSpace, 1,1) {
       
   Assert(!oz_isBelow(CBB,SBB));
   
-  TaggedRef status = space->getSpace()->getStatus();
-  
-  Assert(status);
-  
-  if (OZ_isVariable(status)) {
+  if (OZ_isVariable(SBB->getStatus())) {
     
     if (isSibling) {
 
       // Inject a thread to SBP to make the tell
-      telleq(SBP,status,AtomMerged);
+      bindfut(SBP,SBB->getStatus(),AtomMerged);
       
     } else {
-      if (oz_unify(status, AtomMerged) == FAILED)
-	return FAILED;
+      SBB->bindStatus(AtomMerged);
     }
 
   }
 
   
-  OZ_result(space->getSpace()->getRootVar());
+  OZ_result(SBB->getRootVar());
 
-  OZ_Return ret = space->getSpace()->merge(CBB, isSibling);
+  OZ_Return ret = SBB->merge(CBB, isSibling);
   space->markMerged();
 
   return ret;

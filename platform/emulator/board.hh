@@ -320,6 +320,7 @@ public:
   void setStatus(TaggedRef v) { 
     status = v; 
   }
+  void bindStatus(TaggedRef t);
 
   void clearStatus();
   void patchAltStatus(int i);
