@@ -250,6 +250,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
       }
       aux += sizeOf(getOpcode(aux));
     }
+    locals = reverseC(locals);
 
     if (G) {
       for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
@@ -259,6 +260,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
 	}
 	aux += sizeOf(getOpcode(aux));
       }
+      globals = reverseC(globals);
     }
   }
 
