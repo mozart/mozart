@@ -6,12 +6,6 @@
 : ${OZPREFIX=/usr/local/oz}
 : ${OZINIT="$BUILDTOP/share/lib/Init.ozf"}
 
-if test "x$OZMAKE_COPYALWAYS" = xyes
-then
-    OZCOPYALWAYS=yes
-    export OZCOPYALWAYS
-fi
-
 case $OZPLATFORM in
     win32*)
 	exe=emulator.dll
@@ -25,7 +19,6 @@ if test -z "$OZEMULATOR"
 then
     for d in \
 	$BUILDTOP/platform/emulator \
-	$BUILDTOP/platform/emulator/$OZPLATFORM \
 	$OZPREFIX/platform/$OZPLATFORM
     do
 	if test -x $d/$exe
