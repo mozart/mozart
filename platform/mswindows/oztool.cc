@@ -67,6 +67,13 @@
 
 bool console = true;
 
+void doexit(int n)
+{
+  if (n != 0)
+    fprintf(stderr,"*** error: oztool aborted with code %d\n",n);
+  exit(n);
+}
+
 void usage()
 {
   fprintf
@@ -112,26 +119,36 @@ char *commaList(char **argv, int from, int to)
 
 char *ostmpnam()
 {
-  //--** take oztmpnam from emulator/os.cc?
-  return tmpnam(NULL);
+  static char path[2048];
+  int n = GetTempPath(sizeof(path),path);
+  if (n == 0 || n >= sizeof(path))
+    doexit(18);
+  static char file[MAX_PATH];
+  n = GetTempFileName(path,"oztool",0,file);
+  if (n == 0)
+    doexit(19);
+  return strdup(file);
 }
 
 char *toUnix(char *s)
 {
+  s = strdup(s);
+  for (char *t = s; *t; t++)
+    if (*t == '\\')
+      *t = '/';
+  return s;
+}
+
+char *toWindows(char *s)
+{
+  s = strdup(s);
   for (char *t = s; *t; t++)
     if (*t == '/')
       *t = '\\';
   return s;
 }
 
-void doexit(int n)
-{
-  if (n != 0)
-    fprintf(stderr,"*** error: oztool aborted with code %d\n",n);
-  exit(n);
-}
-
-char *shorten(char *path)
+char *toDos(char *path)
 {
   static char buffer[2048];
   int n = GetShortPathName(path,buffer,sizeof(buffer));
@@ -231,6 +248,13 @@ int main(int argc, char **argv)
     argv++; argc--;
   }
 
+  char *incdir = concat(getOzHome(true),"/include");
+  if (argc >= 3 && !strcmp(argv[1],"-inc")) {
+    incdir = argv[2];
+    argv += 2;
+    argc -= 2;
+  }
+
   if ((!strcmp(argv[1],"cc") || !strcmp(argv[1],"c++"))
       && (argc == 4 || argc == 6) && !strcmp(argv[2],"-c")
       && (argc == 4 || !strcmp(argv[4],"-o"))) {
@@ -245,7 +269,7 @@ int main(int argc, char **argv)
         ccCmd[r++] = "g++";
       else
         ccCmd[r++] = "gcc";
-      ccCmd[r++] = concat("-I",concat(getOzHome(true),"/include"));
+      ccCmd[r++] = concat("-I",toUnix(incdir));
       ccCmd[r++] = "-c";
       ccCmd[r++] = argv[3];
       if (argc == 6) {
@@ -261,7 +285,7 @@ int main(int argc, char **argv)
         ccCmd[r++] = "-TP";
       else
         ccCmd[r++] = "-TC";
-      ccCmd[r++] = concat("-I",concat(getOzHome(false),"\\include"));
+      ccCmd[r++] = concat("-I",toWindows(incdir));
       ccCmd[r++] = "-c";
       ccCmd[r++] = argv[3];
       if (argc == 6)
@@ -276,7 +300,7 @@ int main(int argc, char **argv)
       ccCmd[r++] = "-zq";
       ccCmd[r++] = "-bd";
       ccCmd[r++] = "-5s";
-      ccCmd[r++] = concat("-i=",concat(shorten(getOzHome(false)),"\\include"));
+      ccCmd[r++] = concat("-i=",toDos(incdir));
       ccCmd[r++] = argv[3];
       if (argc == 6)
         ccCmd[r++] = concat("-fo=",argv[5]);
@@ -295,13 +319,13 @@ int main(int argc, char **argv)
     switch (sys) {
     case SYS_GNU:
       {
-        char *tmpfile_a = concat(ostmpnam(),".a");
-        char *tmpfile_def = concat(ostmpnam(),".def");
+        char *tmpfile_a = toUnix(concat(ostmpnam(),".a"));
+        char *tmpfile_def = toUnix(concat(ostmpnam(),".def"));
         char **dlltoolCmd = new char*[7+num_of_obj_files+1];
         int index = 0;
         dlltoolCmd[index++] = "dlltool";
         dlltoolCmd[index++] = "--def";
-        dlltoolCmd[index++] = concat(getOzHome(true),"/include/emulator.def");
+        dlltoolCmd[index++] = toUnix(concat(incdir,"/emulator.def"));
         dlltoolCmd[index++] = "--output-def";
         dlltoolCmd[index++] = tmpfile_def;
         dlltoolCmd[index++] = "--output-lib";
@@ -311,10 +335,11 @@ int main(int argc, char **argv)
         dlltoolCmd[index] = NULL;
         int r = execute(dlltoolCmd,false);
         if (!r) {
-          char **dllwrapCmd = new char*[argc+8];
+          char **dllwrapCmd = new char*[argc+9];
           dllwrapCmd[r++] = "dllwrap";
           dllwrapCmd[r++] = "--target";
           dllwrapCmd[r++] = "i386-mingw32";
+          dllwrapCmd[r++] = "-mno-cygwin"; //--**
           dllwrapCmd[r++] = "-s";
           dllwrapCmd[r++] = "--def";
           dllwrapCmd[r++] = tmpfile_def;
@@ -333,14 +358,14 @@ int main(int argc, char **argv)
       }
     case SYS_MSVC:
       {
-        char *tmpfile = toUnix(ostmpnam());
+        char *tmpfile = toWindows(ostmpnam());
         char *tmpfile_lib = concat(tmpfile,"lib");
         char *tmpfile_exp = concat(tmpfile,"exp");
         char **libCmd = new char *[6];
         libCmd[0] = "lib";
         libCmd[1] = "/nologo";
         libCmd[2] =
-          concat("/def:",concat(getOzHome(false),"\\include\\emulator.def"));
+          concat("/def:",toWindows(concat(incdir,"\\emulator.def")));
         libCmd[3] = "/machine:ix86";
         libCmd[4] = concat("/out:",tmpfile_lib);
         libCmd[5] = NULL;
@@ -366,14 +391,13 @@ int main(int argc, char **argv)
       }
     case SYS_WATCOM:
       {
-        char *tmpfile_lib = concat(ostmpnam(),".lib");
+        char *tmpfile_lib = toDos(concat(ostmpnam(),".lib"));
         char **wlibCmd = new char*[6];
         wlibCmd[0] = "wlib";
         wlibCmd[1] = "/q";
         wlibCmd[2] = "/n";
         wlibCmd[3] = tmpfile_lib;
-        wlibCmd[4] = concat("@",concat(shorten(getOzHome(false)),
-                                       "\\include\\emulator.cmd"));
+        wlibCmd[4] = concat("@",toDos(concat(incdir,"\\emulator.cmd")));
         wlibCmd[5] = NULL;
         int r = execute(wlibCmd,true);
         if (!r) {
