@@ -26,7 +26,7 @@
  */
 
 #include "thr_int.hh"
-#include "variable.hh"
+#include "var_base.hh"
 #include "solve.hh"
 
 // imports
@@ -220,7 +220,7 @@ void wakeup_Suspension_Any(Suspension susp, Board * bb)
   }
 }
 
-void oz_wakeupAll(SVariable *sv)
+void oz_wakeupAll(OzVariable *sv)
 {
   SuspList *sl=sv->getSuspList();
   sv->setSuspList(0);
@@ -468,7 +468,7 @@ void oz_removeExtThreadOutlined(Thread *tt)
   }
 }
 
-// see variable.hh
+// see var_base.hh
 void oz_checkExtSuspension(Suspension susp, Board * home)
 {
   if (am.isBelowSolveBoard()) {

@@ -422,10 +422,10 @@ public:
   }
 
   Bool isLocalUVarOutline(TaggedRef var,TaggedRef *varPtr);
-  Bool isLocalSVarOutline(SVariable *var);
+  Bool isLocalSVarOutline(OzVariable *var);
   Bool isLocalUVar(TaggedRef var,TaggedRef *varPtr);
   Bool isLocalSVar(TaggedRef var);
-  Bool isLocalSVar(SVariable *var);
+  Bool isLocalSVar(OzVariable *var);
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
 

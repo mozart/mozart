@@ -24,21 +24,21 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "ctgenvar.hh"
+#if defined(INTERFACE)
+#pragma implementation "var_ct.hh"
 #endif
 
-#include "ctgenvar.hh"
+#include "var_ct.hh"
 #include "am.hh"
 #include "builtins.hh"
 #include "thr_int.hh"
 
-// `var' and `vptr' belongs to `this', i.e., is a `GenCtVariable
+// `var' and `vptr' belongs to `this', i.e., is a `OzCtVariable
 // `term' and `tptr' are either values or other constrained variable
-// (preferably `GenCtVariable' of the right kind. Unification is
-// implemented such, that `GenCtVariable's of the sam ekind are
+// (preferably `OzCtVariable' of the right kind. Unification is
+// implemented such, that `OzCtVariable's of the sam ekind are
 // compatible with each other.
-OZ_Return GenCtVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
+OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 {
   TypeOfTerm ttag = tagTypeOf(term);
 
@@ -77,11 +77,11 @@ OZ_Return GenCtVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
   } else {
     OZ_Term  * tptr = tagged2Ref(term);
     term = *tptr;
-    GenCVariable *cv = tagged2CVar(term);
-    if (cv->getType() == CtVariable) {
-      // `t' and `tptr' refer to another `GenCtVariable'
+    OzVariable *cv = tagged2CVar(term);
+    if (cv->getType() == OZ_VAR_CT) {
+      // `t' and `tptr' refer to another `OzCtVariable'
 
-      GenCtVariable * term_var = (GenCtVariable *)cv;
+      OzCtVariable * term_var = (OzCtVariable *)cv;
       OZ_Ct * t_constr = term_var->getConstraint();
       OZ_Ct * constr = getConstraint();
 
@@ -216,7 +216,7 @@ OZ_Return GenCtVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
             am.doBindAndTrail(vptr, new_value);
             am.doBindAndTrail(tptr, new_value);
           } else {
-            GenCtVariable * cv = new GenCtVariable(new_constr, getDefinition(),
+            OzCtVariable * cv = new OzCtVariable(new_constr, getDefinition(),
                                                    oz_currentBoard());
             OZ_Term * cvar = newTaggedCVar(cv);
             if (scp == 0) {
@@ -275,10 +275,10 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       goto proceed;
     } else {
     ctvariable:
-      GenCtVariable * ctv =
+      OzCtVariable * ctv =
         constr
-        ? new GenCtVariable(constr, def, oz_currentBoard())
-        :  new GenCtVariable(def->leastConstraint(), def, oz_currentBoard());
+        ? new OzCtVariable(constr, def, oz_currentBoard())
+        :  new OzCtVariable(def->leastConstraint(), def, oz_currentBoard());
 
       OZ_Term *  tctv = newTaggedCVar(ctv);
 
@@ -297,7 +297,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     // tell constraint to constrained variable
     if (! constr) goto proceed;
 
-    GenCtVariable * ctvar = tagged2GenCtVar(v);
+    OzCtVariable * ctvar = tagged2GenCtVar(v);
     OZ_Ct * old_constr = ctvar->getConstraint();
     OZ_CtProfile * old_constr_prof = old_constr->getProfile();
     OZ_Ct * new_constr = old_constr->unify(constr);
@@ -326,7 +326,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       if (am.isLocalSVar(v)) {
         ctvar->copyConstraint(new_constr);
       } else {
-        GenCtVariable * locctvar = new GenCtVariable(new_constr, def,
+        OzCtVariable * locctvar = new OzCtVariable(new_constr, def,
                                                      oz_currentBoard());
         OZ_Term * loctaggedctvar = newTaggedCVar(locctvar);
         DoBindAndTrailAndIP(vptr, makeTaggedRef(loctaggedctvar),
@@ -358,7 +358,7 @@ proceed:
 }
 
 
-void GenCtVariable::propagate(OZ_CtWakeUp descr, PropCaller caller)
+void OzCtVariable::propagate(OZ_CtWakeUp descr, PropCaller caller)
 {
   int no_of_wakup_lists = _definition->getNoOfWakeUpLists();
 
@@ -366,27 +366,27 @@ void GenCtVariable::propagate(OZ_CtWakeUp descr, PropCaller caller)
     // called by propagator
     for (int i = no_of_wakup_lists; i--; )
       if (descr.isWakeUp(i) && _susp_lists[i])
-        GenCVariable::propagate(_susp_lists[i], caller);
+        OzVariable::propagate(_susp_lists[i], caller);
   } else {
     // called by unification
     for (int i = no_of_wakup_lists; i--; )
       if (_susp_lists[i])
-        GenCVariable::propagate(_susp_lists[i], caller);
+        OzVariable::propagate(_susp_lists[i], caller);
   }
   if (suspList)
-    GenCVariable::propagate(suspList, caller);
+    OzVariable::propagate(suspList, caller);
 }
 
-void GenCtVariable::relinkSuspListTo(GenCtVariable * lv, Bool reset_local)
+void OzCtVariable::relinkSuspListTo(OzCtVariable * lv, Bool reset_local)
 {
-  GenCVariable::relinkSuspListTo(lv, reset_local); // any
+  OzVariable::relinkSuspListTo(lv, reset_local); // any
 
   for (int i = _definition->getNoOfWakeUpLists(); i--; )
     _susp_lists[i] =
       _susp_lists[i]->appendToAndUnlink(lv->_susp_lists[i], reset_local);
 }
 
-void GenCtVariable::installPropagators(GenCtVariable * glob_var)
+void OzCtVariable::installPropagators(OzCtVariable * glob_var)
 {
   installPropagatorsG(glob_var);
   for (int i = _definition->getNoOfWakeUpLists(); i--; )
@@ -407,14 +407,14 @@ OZ_BI_define(BIIsGenCtVarB, 1,1)
 
 OZ_C_proc_begin(BIGetCtVarConstraintAsAtom, 2)
 {
-  ExpectedTypes("GenCtVariable<ConstraintData>,Atom");
+  ExpectedTypes("OzCtVariable<ConstraintData>,Atom");
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if(! oz_isVariable(vartag)) {
     return OZ_unify(var, OZ_getCArg(1));
   } else if (isGenCtVar(var, vartag)) {
-    return OZ_unify(oz_atom(((GenCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)),
+    return OZ_unify(oz_atom(((OzCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)),
                     OZ_getCArg(1));
   } else if (oz_isNonKinded(var)) {
     OZ_addThread(makeTaggedRef(varptr),
@@ -428,7 +428,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIGetCtVarNameAsAtom, 2)
 {
-  ExpectedTypes("GenCtVariable<ConstraintData>,Atom");
+  ExpectedTypes("OzCtVariable<ConstraintData>,Atom");
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
@@ -436,7 +436,7 @@ OZ_C_proc_begin(BIGetCtVarNameAsAtom, 2)
     return OZ_unify(var, OZ_getCArg(1));
   } else if (isGenCtVar(var, vartag)) {
     return
-      OZ_unify(oz_atom(((GenCtVariable*)tagged2CVar(var))->getDefinition()->getName()),
+      OZ_unify(oz_atom(((OzCtVariable*)tagged2CVar(var))->getDefinition()->getName()),
                OZ_getCArg(1));
   } else if (oz_isNonKinded(var)) {
     OZ_addThread(makeTaggedRef(varptr),
@@ -452,6 +452,6 @@ OZ_C_proc_end
 
 #ifdef OUTLINE
 #define inline
-#include "ctgenvar.icc"
+#include "var_ct.icc"
 #undef inline
 #endif

@@ -31,46 +31,46 @@
 #pragma interface
 #endif
 
-#include "genvar.hh"
+#include "var_base.hh"
 
 #ifdef OUTLINE
 #define inline
 #endif
 
 //-----------------------------------------------------------------------------
-//                           class GenBoolVariable
+//                           class OzBoolVariable
 //-----------------------------------------------------------------------------
 
-class GenBoolVariable : public GenCVariable {
+class OzBoolVariable : public OzVariable {
 
-  friend class GenCVariable;
+  friend class OzVariable;
   friend inline void addSuspBoolVar(TaggedRef, Suspension);
 
 private:
   OZ_FiniteDomain * store_patch;
 
 public:
-  GenBoolVariable(DummyClass *)
-    : GenCVariable(BoolVariable,(DummyClass*)0)
+  OzBoolVariable(DummyClass *)
+    : OzVariable(OZ_VAR_BOOL,(DummyClass*)0)
   {
   }
-  GenBoolVariable(Board *bb) : GenCVariable(BoolVariable,bb)
+  OzBoolVariable(Board *bb) : OzVariable(OZ_VAR_BOOL,bb)
   {
     ozstat.fdvarsCreated.incf();
   }
 
   // mm2: ???
-  GenBoolVariable(SuspList *sl) : GenCVariable(BoolVariable,(DummyClass*)0)
+  OzBoolVariable(SuspList *sl) : OzVariable(OZ_VAR_BOOL,(DummyClass*)0)
   {
     suspList=sl;
   }
 
   USEFREELISTMEMORY;
-  static void *operator new(size_t chunk_size, GenFDVariable *fdv) {
+  static void *operator new(size_t chunk_size, OzFDVariable *fdv) {
     return fdv;
   }
   // methods relevant for term copying (gc and solve)
-  void gc(GenBoolVariable *);
+  void gc(OzBoolVariable *);
   inline void dispose(void);
 
   // is X=val still valid, i.e. is val an smallint and either 0 or 1.
@@ -81,11 +81,11 @@ public:
 
   inline int getSuspListLength(void) { return suspList->length(); }
 
-  void installPropagators(GenBoolVariable *);
-  void installPropagators(GenFDVariable *);
+  void installPropagators(OzBoolVariable *);
+  void installPropagators(OzFDVariable *);
 
   void propagate(PropCaller prop_eq = pc_propagator) {
-    if (suspList) GenCVariable::propagate(suspList, prop_eq);
+    if (suspList) OzVariable::propagate(suspList, prop_eq);
   }
   void propagateUnify() { propagate(pc_cv_unif); }
 
@@ -106,12 +106,12 @@ public:
 
 inline Bool isGenBoolVar(TaggedRef term);
 inline Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag);
-inline GenBoolVariable * tagged2GenBoolVar(TaggedRef term);
+inline OzBoolVariable * tagged2GenBoolVar(TaggedRef term);
 inline void addSuspBoolVar(TaggedRef, Suspension);
 OZ_Return tellBasicBoolConstraint(OZ_Term);
 
 #ifndef OUTLINE
-#include "fdbvar.icc"
+#include "var_bool.icc"
 #else
 #undef inline
 #endif

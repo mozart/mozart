@@ -26,11 +26,12 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "variable.hh"
+#if defined(INTERFACE)
+#pragma implementation "var_base.hh"
 #endif
 
-#include "variable.hh"
+#include "var_base.hh"
+#include "var_all.hh"
 
 /*
  * Class VariableNamer: assign names to variables
@@ -137,3 +138,71 @@ void printBC(ostream &ofile, Board * b)
 }
 
 #endif
+
+Bool oz_cv_valid(OzVariable *cv,TaggedRef *ptr,TaggedRef val) {
+  return oz_cv_validINLINE(cv,ptr,val);
+}
+
+OZ_Return oz_cv_unify(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
+                      ByteCode *scp) {
+  return oz_cv_unifyINLINE(cv,ptr,val,scp);
+}
+
+OZ_Return oz_cv_bind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
+                      ByteCode *scp) {
+  return oz_cv_bindINLINE(cv,ptr,val,scp);
+}
+
+void oz_cv_addSusp(OzVariable *cv, TaggedRef *v, Suspension susp,
+                   int unstable = TRUE) {
+  oz_cv_addSuspINLINE(cv, v, susp, unstable);
+}
+
+void oz_cv_printStream(ostream &out, const char *s, OzVariable *cv,
+                       int depth)
+{
+  switch (cv->getType()) {
+  case OZ_VAR_SIMPLE:
+    out << s;
+    ((SimpleVar *)cv)->printStream(out,depth); return;
+  case OZ_VAR_FUTURE:
+    out << s;
+    ((Future *)cv)->printStream(out,depth); return;
+  case OZ_VAR_DIST:
+    out << s;
+    perdioVarPrint(cv, out, depth); return;
+  case OZ_VAR_BOOL:
+    out << s;
+    ((OzBoolVariable*)cv)->printStream(out,depth); return;
+  case OZ_VAR_FD:
+    out << s;
+    ((OzFDVariable*)cv)->printStream(out,depth); return;
+  case OZ_VAR_OF:
+    ((OzOFVariable*)cv)->printStream(out,depth); return;
+  case OZ_VAR_FS:
+    out << s;
+    ((OzFSVariable*)cv)->printStream(out,depth); return;
+  case OZ_VAR_CT:
+    out << s;
+    ((OzCtVariable*)cv)->printStream(out,depth); return;
+  case OZ_VAR_EXTENTED:
+    out << s;
+    ((ExtentedVar *)cv)->printStreamV(out,depth); return;
+  default:
+    error("not impl"); return;
+  }
+}
+
+int oz_cv_getSuspListLength(OzVariable *cv)
+{
+  Assert(cv->getType()!=OZ_VAR_INVALID);
+
+  switch (cv->getType()){
+  case OZ_VAR_BOOL:    return ((OzBoolVariable*)cv)->getSuspListLength();
+  case OZ_VAR_FD:      return ((OzFDVariable*)cv)->getSuspListLength();
+  case OZ_VAR_OF:     return ((OzOFVariable*)cv)->getSuspListLength();
+  case OZ_VAR_FS:    return ((OzFSVariable*)cv)->getSuspListLength();
+  case OZ_VAR_EXTENTED: return ((ExtentedVar *)cv)->getSuspListLengthV();
+  default:              return cv->getSuspListLengthS();
+  }
+}

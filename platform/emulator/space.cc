@@ -27,7 +27,7 @@
 
 #include "space.hh"
 #include "thr_int.hh"
-#include "variable.hh"
+#include "var_base.hh"
 
 inline
 void unBind(TaggedRef *p, TaggedRef t)

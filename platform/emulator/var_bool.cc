@@ -25,22 +25,21 @@
  */
 
 #if defined(INTERFACE)
-#pragma implementation "fdbvar.hh"
+#pragma implementation "var_bool.hh"
 #endif
 
 
-#include "genvar.hh"
-#include "fdbvar.hh"
-#include "fdgenvar.hh"
+#include "var_bool.hh"
+#include "var_fd.hh"
 #include "am.hh"
 
-// unify expects either two GenFDVariables or at least one
-// GenFDVariable and one non-variable
+// unify expects either two OzFDVariables or at least one
+// OzFDVariable and one non-variable
 // invariant: left term (ie var)  == *this
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-OZ_Return GenBoolVariable::unify(TaggedRef * vPtr, TaggedRef term,
+OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef term,
                                  ByteCode *scp)
 {
 #ifdef SCRIPTDEBUG
@@ -78,12 +77,12 @@ OZ_Return GenBoolVariable::unify(TaggedRef * vPtr, TaggedRef term,
   if (oz_isRef(term)) {
     TaggedRef *tPtr=tagged2Ref(term);
     term = *tPtr;
-    GenCVariable *cv=tagged2CVar(term);
+    OzVariable *cv=tagged2CVar(term);
     switch (cv->getType()) {
-    case BoolVariable:
+    case OZ_VAR_BOOL:
       {
         Bool isConstrained = ! am.isInstallingScript();
-        GenBoolVariable * termvar = (GenBoolVariable *)cv;
+        OzBoolVariable * termvar = (OzBoolVariable *)cv;
 
         Bool varIsLocal =  am.isLocalSVar(this);
         Bool termIsLocal = am.isLocalSVar(termvar);
@@ -148,8 +147,8 @@ OZ_Return GenBoolVariable::unify(TaggedRef * vPtr, TaggedRef term,
             printf("bool-bool global global\n"); fflush(stdout);
 #endif
 
-            GenBoolVariable * bool_var
-              = new GenBoolVariable(oz_currentBoard());
+            OzBoolVariable * bool_var
+              = new OzBoolVariable(oz_currentBoard());
             TaggedRef * var_val = newTaggedCVar(bool_var);
 
             if (scp==0) {
@@ -169,9 +168,9 @@ OZ_Return GenBoolVariable::unify(TaggedRef * vPtr, TaggedRef term,
         } // switch
         return TRUE;
       }
-    case FDVariable:
+    case OZ_VAR_FD:
       {
-        GenFDVariable * termvar = (GenFDVariable *)cv;
+        OzFDVariable * termvar = (OzFDVariable *)cv;
 
         int intsct = termvar->intersectWithBool();
 
@@ -278,8 +277,8 @@ OZ_Return GenBoolVariable::unify(TaggedRef * vPtr, TaggedRef term,
               am.doBindAndTrail(vPtr, int_val);
               am.doBindAndTrail(tPtr, int_val);
             } else {
-              GenBoolVariable * bool_var
-                = new GenBoolVariable(oz_currentBoard());
+              OzBoolVariable * bool_var
+                = new OzBoolVariable(oz_currentBoard());
               TaggedRef * var_val = newTaggedCVar(bool_var);
               if (scp==0) {
                 propagate(pc_cv_unif);
@@ -304,11 +303,11 @@ OZ_Return GenBoolVariable::unify(TaggedRef * vPtr, TaggedRef term,
   }
 
   return FALSE;
-} // GenBoolVariable::unify
+} // OzBoolVariable::unify
 
 
 
-Bool GenBoolVariable::valid(TaggedRef val)
+Bool OzBoolVariable::valid(TaggedRef val)
 {
   Assert(!oz_isRef(val));
   if (oz_isSmallInt(val)) {
@@ -326,6 +325,6 @@ OZ_Return tellBasicBoolConstraint(OZ_Term t)
 
 #ifdef OUTLINE
 #define inline
-#include "fdbvar.icc"
+#include "var_bool.icc"
 #undef inline
 #endif

@@ -28,7 +28,7 @@
 #include "indexing.hh"
 #include "builtins.hh"
 #include "codearea.hh"
-#include "variable.hh"
+#include "var_base.hh"
 
 static
 SRecordArity getArity(TaggedRef arity)

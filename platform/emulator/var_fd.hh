@@ -31,20 +31,20 @@
 #pragma interface
 #endif
 
-#include "genvar.hh"
+#include "var_base.hh"
 
 #ifdef OUTLINE
 #define inline
 #endif
 
 //-----------------------------------------------------------------------------
-//                           class GenFDVariable
+//                           class OzFDVariable
 //-----------------------------------------------------------------------------
 
-class GenFDVariable: public GenCVariable {
+class OzFDVariable: public OzVariable {
 
-friend class GenCVariable;
-friend class GenBoolVariable;
+friend class OzVariable;
+friend class OzBoolVariable;
 friend inline void addSuspFDVar(TaggedRef, Suspension, OZ_FDPropState);
 
 private:
@@ -53,24 +53,24 @@ private:
 
   void relinkSuspListToItself(Bool reset_local = FALSE);
 
-  GenBoolVariable * becomesBool(void);
+  OzBoolVariable * becomesBool(void);
 public:
-  GenFDVariable(OZ_FiniteDomain &fd,Board *bb) : GenCVariable(FDVariable,bb) {
+  OzFDVariable(OZ_FiniteDomain &fd,Board *bb) : OzVariable(OZ_VAR_FD,bb) {
     ozstat.fdvarsCreated.incf();
     finiteDomain = fd;
     fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
   }
 
-  GenFDVariable(DummyClass *) : GenCVariable(FDVariable,(DummyClass*)0) {}
+  OzFDVariable(DummyClass *) : OzVariable(OZ_VAR_FD,(DummyClass*)0) {}
 
-  GenFDVariable(Board *bb) : GenCVariable(FDVariable,bb) {
+  OzFDVariable(Board *bb) : OzVariable(OZ_VAR_FD,bb) {
     ozstat.fdvarsCreated.incf();
     finiteDomain.initFull();
     fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
   }
 
   // methods relevant for term copying (gc and solve)
-  void gc(GenFDVariable *);
+  void gc(OzFDVariable *);
   inline void dispose(void);
 
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
@@ -87,8 +87,8 @@ public:
   }
   OZ_FiniteDomain &getDom(void) {return finiteDomain;}
 
-  void relinkSuspListTo(GenFDVariable * lv, Bool reset_local = FALSE);
-  void relinkSuspListTo(GenBoolVariable * lv, Bool reset_local = FALSE);
+  void relinkSuspListTo(OzFDVariable * lv, Bool reset_local = FALSE);
+  void relinkSuspListTo(OzBoolVariable * lv, Bool reset_local = FALSE);
 
   void propagate(OZ_FDPropState state,
                  PropCaller prop_eq = pc_propagator);
@@ -106,7 +106,7 @@ public:
 
   SuspList * getSuspList(int i) { return fdSuspList[i]; }
 
-  void installPropagators(GenFDVariable *);
+  void installPropagators(OzFDVariable *);
 
   OZ_Return unify(TaggedRef *, TaggedRef, ByteCode *);
 
@@ -122,11 +122,11 @@ void addSuspFDVar(TaggedRef, Suspension, OZ_FDPropState = fd_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain *);
 
 #ifndef OUTLINE
-#include "fdgenvar.icc"
+#include "var_fd.icc"
 #else
 Bool isGenFDVar(TaggedRef term);
 Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
-GenFDVariable * tagged2GenFDVar(TaggedRef term);
+OzFDVariable * tagged2GenFDVar(TaggedRef term);
 #undef inline
 #endif
 

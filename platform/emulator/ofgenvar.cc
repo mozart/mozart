@@ -26,13 +26,13 @@
  */
 
 #if defined(INTERFACE)
-#pragma implementation "ofgenvar.hh"
+#pragma implementation "var_of.hh"
 #endif
 
-#include "ofgenvar.hh"
+#include "var_of.hh"
 
 //-------------------------------------------------------------------------
-//                               for class GenOFSVariable
+//                               for class OzOFVariable
 //-------------------------------------------------------------------------
 
 
@@ -53,7 +53,7 @@ Bool hasOFSSuspension(SuspList * suspList)
 }
 
 // (Arguments are dereferenced)
-OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
+OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef term,
                                 ByteCode *scp)
 {
   TaggedRef bindInRecordCaseHack = term;
@@ -81,12 +81,12 @@ OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
         if (vLoc) addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
 
         // Propagate changes to the suspensions:
-        // (this routine is actually GenCVariable::propagate)
+        // (this routine is actually OzVariable::propagate)
         if (scp==0) propagate(suspList, pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
-            // Add a suspension to the OFSVariable if it is global:
+            // Add a suspension to the OZ_VAR_OF if it is global:
             // Suspension* susp=new Suspension(am.currentBoard);
             // Assert(susp!=NULL);
             // addSuspension(susp);
@@ -135,7 +135,7 @@ OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
         if (arg2 && !oz_unify(termLTup->getTail(),arg2,scp)) return FALSE; // mm_u
 
         // Propagate changes to the suspensions:
-        // (this routine is actually GenCVariable::propagate)
+        // (this routine is actually OzVariable::propagate)
         if (scp==0) propagate(suspList, pc_cv_unif);
         return TRUE;
       }
@@ -201,12 +201,12 @@ OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
         // At this point, unification is successful
 
         // Propagate changes to the suspensions:
-        // (this routine is actually GenCVariable::propagate)
+        // (this routine is actually OzVariable::propagate)
         if (scp==0) propagate(suspList, pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
-            // Add a suspension to the OFSVariable if it is global:
+            // Add a suspension to the OZ_VAR_OF if it is global:
             // Suspension* susp=new Suspension(am.currentBoard);
             // Assert(susp!=NULL);
             // addSuspension(susp);
@@ -222,22 +222,22 @@ OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
 
     TaggedRef *tPtr = tagged2Ref(term);
     term = *tPtr;
-    GenCVariable *cv = tagged2CVar(term);
-    if (cv->getType()!=OFSVariable) {
+    OzVariable *cv = tagged2CVar(term);
+    if (cv->getType()!=OZ_VAR_OF) {
       return FALSE;
     }
     Assert(*tPtr!=*vPtr);
 
-    // Get the GenOFSVariable corresponding to term:
-    GenOFSVariable* termVar=(GenOFSVariable *)cv;
+    // Get the OzOFVariable corresponding to term:
+    OzOFVariable* termVar=(OzOFVariable *)cv;
     Assert(termVar!=NULL);
 
     // Get local/global flags:
     Bool vLoc=am.isLocalSVar(this);
     Bool tLoc=am.isLocalSVar(termVar);
 
-    GenOFSVariable* newVar=NULL;
-    GenOFSVariable* otherVar=NULL;
+    OzOFVariable* newVar=NULL;
+    OzOFVariable* otherVar=NULL;
     TaggedRef* nvRefPtr=NULL;
     TaggedRef* otherPtr=NULL;
     long varWidth=getWidth();
@@ -270,14 +270,14 @@ OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
       if (varWidth>termWidth) {
         // Make a local copy of the var's DynamicTable:
         DynamicTable* dt=dynamictable->copyDynamicTable();
-        // Make a new GenOFSVariable with the new DynamicTable:
-        newVar=new GenOFSVariable(*dt,oz_currentBoard());
+        // Make a new OzOFVariable with the new DynamicTable:
+        newVar=new OzOFVariable(*dt,oz_currentBoard());
         nvRefPtr=newTaggedCVar(newVar);
         otherVar=termVar; // otherVar must be smallest
       } else {
         // Same as above, but in opposite order:
         DynamicTable* dt=termVar->getTable()->copyDynamicTable();
-        newVar=new GenOFSVariable(*dt,oz_currentBoard());
+        newVar=new OzOFVariable(*dt,oz_currentBoard());
         nvRefPtr=newTaggedCVar(newVar);
         otherVar=this; // otherVar must be smallest
       }
@@ -379,7 +379,7 @@ OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
     // At this point, unification is successful
 
     // Propagate changes to the suspensions:
-    // (this routine is actually GenCVariable::propagate)
+    // (this routine is actually OzVariable::propagate)
     if (scp==0) {
       propagate(suspList, pc_cv_unif);
       termVar->propagate(termVar->suspList, pc_cv_unif);
@@ -419,7 +419,7 @@ OZ_Return GenOFSVariable::unify(TaggedRef *vPtr, TaggedRef term,
 
 
 // Return TRUE if OFS can't be constrained to l+tupleArity
-Bool GenOFSVariable::disentailed(Literal *l, int tupleArity) {
+Bool OzOFVariable::disentailed(Literal *l, int tupleArity) {
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
     if (oz_isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
@@ -428,7 +428,7 @@ Bool GenOFSVariable::disentailed(Literal *l, int tupleArity) {
 
 
 // Return TRUE if OFS can't be constrained to l+recordArity
-Bool GenOFSVariable::disentailed(Literal *l, Arity *recordArity) {
+Bool OzOFVariable::disentailed(Literal *l, Arity *recordArity) {
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
     if (oz_isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
@@ -436,7 +436,7 @@ Bool GenOFSVariable::disentailed(Literal *l, Arity *recordArity) {
 }
 
 
-Bool GenOFSVariable::valid(TaggedRef val)
+Bool OzOFVariable::valid(TaggedRef val)
 {
     if (!oz_isLiteral(val)) return FALSE;
     if (getWidth()>0) return FALSE;
@@ -446,12 +446,12 @@ Bool GenOFSVariable::valid(TaggedRef val)
     return TRUE;
 }
 
-TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail, Board* hoome)
+TaggedRef OzOFVariable::getOpenArityList(TaggedRef* ftail, Board* hoome)
 {
     return dynamictable->getOpenArityList(ftail,hoome);
 }
 
-TaggedRef GenOFSVariable::getArityList()
+TaggedRef OzOFVariable::getArityList()
 {
     return dynamictable->getArityList();
 }

@@ -25,7 +25,7 @@
  */
 
 #include "cpi.hh"
-#include "fsgenvar.hh"
+#include "var_fs.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -66,7 +66,7 @@ void OZ_FSetVar::ask(OZ_Term v)
   } else {
     Assert(isGenFSetVar(v, vtag));
 
-    GenFSetVariable * fsvar = tagged2GenFSetVar(v);
+    OzFSVariable * fsvar = tagged2GenFSetVar(v);
 
     setPtr = &fsvar->getSet();
     setSort(var_e);
@@ -94,7 +94,7 @@ void OZ_FSetVar::read(OZ_Term v)
     // local variable per definition
 
       setState(loc_e);
-      GenFSetVariable * fsvar = tagged2GenFSetVar(v);
+      OzFSVariable * fsvar = tagged2GenFSetVar(v);
 
       setSort(var_e);
 
@@ -109,7 +109,7 @@ void OZ_FSetVar::read(OZ_Term v)
     } else {
       // don't know before hand if local or global
 
-      GenFSetVariable * fsvar = tagged2GenFSetVar(v);
+      OzFSVariable * fsvar = tagged2GenFSetVar(v);
       setState(am.isLocalSVar(v) ? loc_e : glob_e);
 
       if (isState(glob_e) || oz_onToplevel())
@@ -151,7 +151,7 @@ void OZ_FSetVar::readEncap(OZ_Term v)
     setState(encap_e);
     setSort(var_e);
 
-    GenFSetVariable * fsvar = tagged2GenFSetVar(v);
+    OzFSVariable * fsvar = tagged2GenFSetVar(v);
 
     if (fsvar->testReifiedFlag()) {
       // fs var already entered somewhere else
@@ -178,6 +178,9 @@ OZ_Boolean OZ_FSetVar::tell(void)
 #ifdef DEBUG_TELLCONSTRAINTS
   cout << "tell_fs: " << *setPtr << endl << flush;
 #endif
+
+  if (!oz_isVariable(*varPtr))
+    return OZ_FALSE;
 
   if (testReifiedFlag(var))
     unpatchReifiedFSet(var);
@@ -211,8 +214,8 @@ OZ_Boolean OZ_FSetVar::tell(void)
         tagged2GenFSetVar(var)->propagate(fs_prop_val);
 
       if (isState(glob_e)) {
-        GenFSetVariable * locfsvar
-          = new GenFSetVariable(*setPtr,oz_currentBoard());
+        OzFSVariable * locfsvar
+          = new OzFSVariable(*setPtr,oz_currentBoard());
         OZ_Term * loctaggedfsvar = newTaggedCVar(locfsvar);
         *setPtr = set;
         DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedfsvar),

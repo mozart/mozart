@@ -65,8 +65,8 @@ OZ_Term deref(OZ_Term &tr, OZ_Term * &ptr, pm_term_type &tag)
   case SMALLINT: tag = pm_singl; break;
   case CVAR:
     switch (tagged2CVar(tr1)->getType()) {
-    case FDVariable: tag = pm_fd; break;
-    case BoolVariable: tag = pm_bool; break;
+    case OZ_VAR_FD: tag = pm_fd; break;
+    case OZ_VAR_BOOL: tag = pm_bool; break;
     default:
       tag = oz_isNonKinded(tr1) ? pm_svar : pm_none; break;
     }
@@ -545,7 +545,7 @@ void BIfdBodyManager::_introduce(int i, OZ_Term v)
     bifdbm_dom[i] = &bifdbm_domain[i];
     bifdbm_var_state[i] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
   } else if (vtag == pm_fd) {
-    GenFDVariable * fdvar = tagged2GenFDVar(v);
+    OzFDVariable * fdvar = tagged2GenFDVar(v);
     OZ_Boolean var_state = bifdbm_var_state[i] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
     bifdbm_domain[i].initEmpty();
     if (var_state == fdbm_local) {
@@ -606,8 +606,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
             becomesBoolVarAndPropagate(bifdbm_varptr[i]);
         } else {
           tagged2GenFDVar(bifdbm_var[i])->propagate(fd_prop_bounds);
-          GenBoolVariable * newboolvar
-            = new GenBoolVariable(oz_currentBoard());
+          OzBoolVariable * newboolvar
+            = new OzBoolVariable(oz_currentBoard());
           OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
           DoBindAndTrailAndIP(bifdbm_varptr[i],
                               makeTaggedRef(newtaggedboolvar),
@@ -618,8 +618,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
 
         tagged2GenFDVar(bifdbm_var[i])->propagate(fd_prop_bounds);
         if (bifdbm_var_state[i] == fdbm_global) {
-          GenFDVariable * newfdvar
-            = new GenFDVariable(*bifdbm_dom[i],oz_currentBoard());
+          OzFDVariable * newfdvar
+            = new OzFDVariable(*bifdbm_dom[i],oz_currentBoard());
           OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
           DoBindAndTrailAndIP(bifdbm_varptr[i],
                               makeTaggedRef(newtaggedfdvar),
@@ -650,15 +650,15 @@ void BIfdBodyManager::processFromTo(int from, int to)
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
         am.doBindAndTrail(bifdbm_varptr[i], smallInt);
       } else if (*bifdbm_dom[i] == fd_bool) {
-        GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
+        OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
         am.doBindAndTrail(bifdbm_varptr[i],
                           makeTaggedRef(newtaggedboolvar));
         vars_left = OZ_TRUE;
       } else {
-        GenFDVariable * newfdvar
-          = new GenFDVariable(*bifdbm_dom[i],oz_currentBoard());
+        OzFDVariable * newfdvar
+          = new OzFDVariable(*bifdbm_dom[i],oz_currentBoard());
         OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
         am.doBindAndTrail(bifdbm_varptr[i],
@@ -696,7 +696,7 @@ void BIfdBodyManager::processNonRes(void)
     } else if (*bifdbm_dom[0] == fd_bool) {
       tagged2GenFDVar(bifdbm_var[0])->propagate(fd_prop_bounds);
       if (bifdbm_var_state[0] == fdbm_global) {
-        GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
+        OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
         DoBindAndTrailAndIP(bifdbm_varptr[0],
                             makeTaggedRef(newtaggedboolvar),
@@ -708,8 +708,8 @@ void BIfdBodyManager::processNonRes(void)
     } else {
       tagged2GenFDVar(bifdbm_var[0])->propagate(fd_prop_bounds);
       if (bifdbm_var_state[0] == fdbm_global) {
-        GenFDVariable * newfdvar
-          = new GenFDVariable(*bifdbm_dom[0],oz_currentBoard());
+        OzFDVariable * newfdvar
+          = new OzFDVariable(*bifdbm_dom[0],oz_currentBoard());
         OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
         DoBindAndTrailAndIP(bifdbm_varptr[0],
                             makeTaggedRef(newtaggedfdvar),
@@ -738,15 +738,15 @@ void BIfdBodyManager::processNonRes(void)
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
       am.doBindAndTrail(bifdbm_varptr[0], smallInt);
     } else if (*bifdbm_dom[0] == fd_bool) {
-      GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
+      OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
       OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
       am.doBindAndTrail(bifdbm_varptr[0],
                         makeTaggedRef(newtaggedboolvar));
       vars_left = OZ_TRUE;
     } else {
-      GenFDVariable * newfdvar
-        = new GenFDVariable(*bifdbm_dom[0],oz_currentBoard());
+      OzFDVariable * newfdvar
+        = new OzFDVariable(*bifdbm_dom[0],oz_currentBoard());
       OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
       am.doBindAndTrail(bifdbm_varptr[0],
@@ -784,7 +784,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
     bifdbm_varptr[0] = vptr;
     bifdbm_vartag[0] = vtag;
   } else if (vtag == pm_fd) {
-    GenFDVariable * fdvar = tagged2GenFDVar(v);
+    OzFDVariable * fdvar = tagged2GenFDVar(v);
     fdbm_var_state var_state = bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
     if (var_state == fdbm_local) {
       bifdbm_dom[0] = &fdvar->getDom();
@@ -805,7 +805,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
 
     bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
     if (bifdbm_var_state[0] == fdbm_local) {
-      GenFDVariable * fdvar = new GenFDVariable(oz_currentBoard());
+      OzFDVariable * fdvar = new OzFDVariable(oz_currentBoard());
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
@@ -827,7 +827,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
 
     bifdbm_var_state[0] = (am.isLocalUVar(v,vptr)? fdbm_local : fdbm_global);
     if (bifdbm_var_state[0] == fdbm_local) {
-      GenFDVariable * fdvar = new GenFDVariable(oz_currentBoard());
+      OzFDVariable * fdvar = new OzFDVariable(oz_currentBoard());
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
@@ -875,7 +875,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
 
           if (bifdbm_vartag[idx_vp(c, fs)] == pm_literal) {
             // convert void variable to heap variable
-            GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, fs)],
+            OzFDVariable * fv = new OzFDVariable(*bifdbm_dom[idx_vp(c, fs)],
                                                    oz_currentBoard());
             bifdbm_varptr[idx_vp(c, fs)] = newTaggedCVar(fv);
             l_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, fs)]);
@@ -895,7 +895,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
 
           if (bifdbm_vartag[idx_vp(c, v)] == pm_literal) {
             // convert void variable to heap variable
-            GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, v)],
+            OzFDVariable * fv = new OzFDVariable(*bifdbm_dom[idx_vp(c, v)],
                                                    oz_currentBoard());
             bifdbm_varptr[idx_vp(c, v)] = newTaggedCVar(fv);
             r_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]);
@@ -1115,7 +1115,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     TaggedRef bi = makeTaggedRef(&b[i]);
     DEREF(bi, bi_ptr, bi_tag);
     Assert(isUVar(bi));
-    GenFDVariable * fdvar = new GenFDVariable(oz_currentBoard());
+    OzFDVariable * fdvar = new OzFDVariable(oz_currentBoard());
     fdvar->getDom().initRange(0, OZ_intToC(p[i]) + 2);
     doBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
   }
@@ -1152,15 +1152,15 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
         if (isSmallIntTag(vjtag)) {
           vp_i_j_val = vj;
         } else if (isGenBoolVar(vj,vjtag)) {
-          vp_i_j_val = makeTaggedRef(newTaggedCVar(new GenBoolVariable(oz_currentBoard())));
+          vp_i_j_val = makeTaggedRef(newTaggedCVar(new OzBoolVariable(oz_currentBoard())));
         } else if (isGenFDVar(vj,vjtag)) {
 
-          GenFDVariable * fdvar
-            = new GenFDVariable(tagged2GenFDVar(vj)->getDom(),
+          OzFDVariable * fdvar
+            = new OzFDVariable(tagged2GenFDVar(vj)->getDom(),
                                 oz_currentBoard());
           vp_i_j_val = makeTaggedRef(newTaggedCVar(fdvar));
         } else {
-          GenFDVariable * fdvar = new GenFDVariable(oz_currentBoard());
+          OzFDVariable * fdvar = new OzFDVariable(oz_currentBoard());
           vp_i_j_val = makeTaggedRef(newTaggedCVar(fdvar));
         }
         doBind(vp_i_j_ptr, vp_i_j_val);

@@ -41,20 +41,20 @@
 #endif
 
 #include "gc.hh"
-#include "genvar.hh"
+#include "var_base.hh"
 #include "fdomn.hh"
 #include "dictionary.hh"
 #include "os.hh"
 #include "value.hh"
 #include "codearea.hh"
-#include "fdgenvar.hh"
-#include "fsgenvar.hh"
-#include "fdbvar.hh"
-#include "ofgenvar.hh"
-#include "ctgenvar.hh"
-#include "future.hh"
-#include "simplevar.hh"
-#include "extvar.hh"
+#include "var_fd.hh"
+#include "var_fs.hh"
+#include "var_bool.hh"
+#include "var_of.hh"
+#include "var_ct.hh"
+#include "var_future.hh"
+#include "var_simple.hh"
+#include "var_ext.hh"
 #include "thr_int.hh"
 #include "solve.hh"
 #include "debug.hh"
@@ -918,12 +918,12 @@ SuspList * SuspList::gc(void) {
 
 
 inline
-Bool SVariable::gcIsMarked(void) {
+Bool OzVariable::gcIsMarked(void) {
   return IsMarkedPointer(suspList);
 }
 
 inline
-void SVariable::gcMark(Bool isInGc, TaggedRef * fwd) {
+void OzVariable::gcMark(Bool isInGc, TaggedRef * fwd) {
   Assert(!gcIsMarked());
   if (!isInGc)
     cpTrail.save((int32 *) &suspList);
@@ -931,23 +931,9 @@ void SVariable::gcMark(Bool isInGc, TaggedRef * fwd) {
 }
 
 inline
-TaggedRef * SVariable::gcGetFwd(void) {
+TaggedRef * OzVariable::gcGetFwd(void) {
   Assert(gcIsMarked());
   return (TaggedRef *) UnMarkPointer(suspList);
-}
-
-
-SVariable * SVariable::gc() {
-  Assert(!gcIsMarked())
-
-  SVariable * to = (SVariable *) freeListMalloc(sizeof(SVariable));
-
-  to->suspList = suspList->gc();
-  to->setHome(getHome1()->gcBoard());
-
-  Assert(to->getHome1());
-
-  return to;
 }
 
 
@@ -957,7 +943,7 @@ void OZ_FiniteDomainImpl::gc(void) {
 }
 
 inline
-void GenFDVariable::gc(GenFDVariable * frm) {
+void OzFDVariable::gc(OzFDVariable * frm) {
   finiteDomain = frm->finiteDomain;
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
 
@@ -966,12 +952,12 @@ void GenFDVariable::gc(GenFDVariable * frm) {
 }
 
 inline
-void GenBoolVariable::gc(GenBoolVariable * frm) {
+void OzBoolVariable::gc(OzBoolVariable * frm) {
   store_patch = frm->store_patch;
 }
 
 inline
-void GenFSetVariable::gc(GenFSetVariable * frm) {
+void OzFSVariable::gc(OzFSVariable * frm) {
   _fset = frm->_fset;
 
 #ifdef BIGFSET
@@ -983,16 +969,16 @@ void GenFSetVariable::gc(GenFSetVariable * frm) {
 }
 
 
-GenCVariable * GenCtVariable::gc(void)
+OzVariable * OzCtVariable::gc(void)
 {
-  GenCtVariable * to = new GenCtVariable(* (GenCtVariable*) this);
+  OzCtVariable * to = new OzCtVariable(* (OzCtVariable*) this);
 
   // common stuff
   to->u        = u;
   to->suspList = suspList;
   to->setHome(getHome1());
 
-  // stuff specific to `GenCtVariable's
+  // stuff specific to `OzCtVariable's
   to->_constraint = _constraint;
   to->_definition = _definition;
 
@@ -1009,14 +995,14 @@ GenCVariable * GenCtVariable::gc(void)
 }
 
 
-void GenCtVariable::gcRecurse(void)
+void OzCtVariable::gcRecurse(void)
 {
   // constraint (must go in `gcRecurse' since it may contain recursion
   _constraint = _constraint->copy();
 }
 
 
-GenCVariable * GenCVariable::gcG(void) {
+OzVariable * OzVariable::gcVar(void) {
   INFROMSPACE(this);
 
   Assert(!gcIsMarked())
@@ -1033,28 +1019,28 @@ GenCVariable * GenCVariable::gcG(void) {
 
   SuspList * sl = suspList->gc();
 
-  GenCVariable * to;
+  OzVariable * to;
 
   switch (getType()){
-  case FDVariable:
-    to = new GenFDVariable((DummyClass *)0);
-    ((GenFDVariable *) to)->gc((GenFDVariable *) this);
+  case OZ_VAR_FD:
+    to = new OzFDVariable((DummyClass *)0);
+    ((OzFDVariable *) to)->gc((OzFDVariable *) this);
     to->u        = u;
     to->suspList = sl;
     to->setHome(bb);
     return to;
 
-  case BoolVariable:
-    to = new GenBoolVariable((DummyClass*)0);
-    ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
+  case OZ_VAR_BOOL:
+    to = new OzBoolVariable((DummyClass*)0);
+    ((OzBoolVariable *) to)->gc((OzBoolVariable *) this);
     to->u        = u;
     to->suspList = sl;
     to->setHome(bb);
     return to;
 
-  case FSetVariable:
-    to = new GenFSetVariable((DummyClass*)0);
-    ((GenFSetVariable *) to)->gc((GenFSetVariable *) this);
+  case OZ_VAR_FS:
+    to = new OzFSVariable((DummyClass*)0);
+    ((OzFSVariable *) to)->gc((OzFSVariable *) this);
     to->u        = u;
     to->suspList = sl;
     to->setHome(bb);
@@ -1063,9 +1049,9 @@ GenCVariable * GenCVariable::gcG(void) {
 
   case OZ_VAR_SIMPLE:   to = ((SimpleVar *)this)->gc(); break;
   case OZ_VAR_FUTURE:   to = ((Future *)this)->gc(); break;
-  case OFSVariable:     to = new GenOFSVariable(*(GenOFSVariable*) this);break;
-  case PerdioVariable:  to = gcCopyPerdioVar(this); break;
-  case CtVariable:      to = ((GenCtVariable*)this)->gc(); break;
+  case OZ_VAR_OF:     to = new OzOFVariable(*(OzOFVariable*) this);break;
+  case OZ_VAR_DIST:  to = gcCopyPerdioVar(this); break;
+  case OZ_VAR_CT:      to = ((OzCtVariable*)this)->gc(); break;
   case OZ_VAR_EXTENTED: to = ((ExtentedVar *)this)->gcV(); break;
   default:
     Assert(0);
@@ -1108,24 +1094,24 @@ DynamicTable * DynamicTable::gc(void) {
 }
 
 
-void GenOFSVariable::gcRecurse(void) {
+void OzOFVariable::gcRecurse(void) {
   OZ_collectHeapTerm(label,label);
   // Update the pointer in the copied block:
   dynamictable=dynamictable->gc();
 }
 
 
-void GenCVariable::gcRecurseG(void) {
+void OzVariable::gcVarRecurse(void) {
 
   switch (getType()) {
   case OZ_VAR_SIMPLE:   ((SimpleVar *)this)->gcRecurse(); break;
   case OZ_VAR_FUTURE:   ((Future *)this)->gcRecurse(); break;
-  case PerdioVariable:  gcPerdioVarRecurse(this); break;
-  case BoolVariable:    Assert(0); break;
-  case FDVariable:      Assert(0); break;
-  case OFSVariable:     ((GenOFSVariable*)this)->gcRecurse(); break;
-  case FSetVariable:    Assert(0); break;
-  case CtVariable:      ((GenCtVariable*)this)->gcRecurse(); break;
+  case OZ_VAR_DIST:  gcPerdioVarRecurse(this); break;
+  case OZ_VAR_BOOL:    Assert(0); break;
+  case OZ_VAR_FD:      Assert(0); break;
+  case OZ_VAR_OF:     ((OzOFVariable*)this)->gcRecurse(); break;
+  case OZ_VAR_FS:    Assert(0); break;
+  case OZ_VAR_CT:      ((OzCtVariable*)this)->gcRecurse(); break;
   case OZ_VAR_EXTENTED: ((ExtentedVar *)this)->gcRecurseV(); break;
   default:
     Assert(0);
@@ -1540,7 +1526,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 
       case CVAR:
         {
-          GenCVariable * cv = tagged2CVar(aux);
+          OzVariable * cv = tagged2CVar(aux);
 
           if (cv->gcIsMarked()) {
             Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
@@ -1548,7 +1534,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
           } else if (allVarsAreLocal ||
                      isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
             Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
-            GenCVariable *new_cv=cv->gcG();
+            OzVariable *new_cv=cv->gcVar();
 #ifdef DEEP_GARBAGE
             // mm2: dead value may appear in the wrong space
             if (!new_cv) {
@@ -1658,7 +1644,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 
   case CVAR:
     if (hasDirectVars) {
-      GenCVariable * cv = tagged2CVar(aux);
+      OzVariable * cv = tagged2CVar(aux);
 
       if (cv->gcIsMarked()) {
         Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
@@ -1667,7 +1653,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
                  isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
         Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
         isGround = NO;
-        to = makeTaggedCVar(cv->gcG());
+        to = makeTaggedCVar(cv->gcVar());
         cv->gcMark(isInGc, &to);
       } else {
         // We cannot copy the variable, but we have already copied
@@ -2842,7 +2828,7 @@ void GcStack::recurse(void) {
       break;
 
     case PTR_CVAR:
-      ((GenCVariable *) ptr)->gcRecurseG();
+      ((OzVariable *) ptr)->gcVarRecurse();
       break;
 
     case PTR_CONSTTERM:

@@ -25,22 +25,22 @@
  */
 
 #if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "fdgenvar.hh"
+#pragma implementation "var_fd.hh"
 #endif
 
-#include "fdgenvar.hh"
-#include "fdbvar.hh"
+#include "var_fd.hh"
+#include "var_bool.hh"
 #include "fdomn.hh"
 #include "am.hh"
 #include "thr_int.hh"
 
-// unify expects either two GenFDVariables or at least one
-// GenFDVariable and one non-variable
+// unify expects either two OzFDVariables or at least one
+// OzFDVariable and one non-variable
 // invariant: left term (ie var)  == *this
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
+OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 {
 #ifdef SCRIPTDEBUG
   printf(am.isInstallingScript()
@@ -77,11 +77,11 @@ OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
   if (oz_isRef(term)) {
     TaggedRef *tPtr = tagged2Ref(term);
     term = *tPtr;
-    GenCVariable *cv=tagged2CVar(term);
-    if (cv->getType()!=FDVariable) return FAILED;
+    OzVariable *cv=tagged2CVar(term);
+    if (cv->getType()!=OZ_VAR_FD) return FAILED;
 
     // compute intersection of domains ...
-    GenFDVariable * termVar = (GenFDVariable *)cv;
+    OzFDVariable * termVar = (OzFDVariable *)cv;
     OZ_FiniteDomain &termDom = termVar->finiteDomain;
     OZ_FiniteDomain intsct;
 
@@ -115,7 +115,7 @@ OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
           termVar->dispose();
         } else if (heapNewer(vPtr, tPtr)) { // bind var to term
           if (intsct == fd_bool) {
-            GenBoolVariable * tbvar = termVar->becomesBool();
+            OzBoolVariable * tbvar = termVar->becomesBool();
             propagateUnify();
             tbvar->propagateUnify();
             relinkSuspListTo(tbvar);
@@ -130,7 +130,7 @@ OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
           dispose();
         } else { // bind term to var
           if (intsct == fd_bool) {
-            GenBoolVariable * bvar = becomesBool();
+            OzBoolVariable * bvar = becomesBool();
             termVar->propagateUnify();
             bvar->propagateUnify();
             termVar->relinkSuspListTo(bvar);
@@ -161,7 +161,7 @@ OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
             dispose();
           } else {
             if (intsct == fd_bool) {
-              GenBoolVariable * bvar = becomesBool();
+              OzBoolVariable * bvar = becomesBool();
               if (isNotInstallingScript) termVar->propagateUnify();
               if (varIsConstrained) bvar->propagateUnify();
               DoBindAndTrailAndIP(tPtr, makeTaggedRef(vPtr),
@@ -198,7 +198,7 @@ OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
             termVar->dispose();
           } else {
             if (intsct == fd_bool) {
-              GenBoolVariable * tbvar = termVar->becomesBool();
+              OzBoolVariable * tbvar = termVar->becomesBool();
               if (isNotInstallingScript) propagateUnify();
               if (termIsConstrained) tbvar->propagateUnify();
               DoBindAndTrailAndIP(vPtr, makeTaggedRef(tPtr),
@@ -235,8 +235,8 @@ OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
           am.doBindAndTrail(tPtr, int_val);
         } else {
           if (intsct == fd_bool) {
-            GenBoolVariable * c_var
-              = new GenBoolVariable(oz_currentBoard());
+            OzBoolVariable * c_var
+              = new OzBoolVariable(oz_currentBoard());
             TaggedRef * var_val = newTaggedCVar(c_var);
             if (scp==0) {
               if (varIsConstrained) propagateUnify();
@@ -247,8 +247,8 @@ OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
             DoBindAndTrailAndIP(tPtr, makeTaggedRef(var_val),
                                 c_var, termVar);
           } else {
-            GenFDVariable * c_var
-              = new GenFDVariable(intsct,oz_currentBoard());
+            OzFDVariable * c_var
+              = new OzFDVariable(intsct,oz_currentBoard());
             TaggedRef * var_val = newTaggedCVar(c_var);
             if (scp==0) {
               if (varIsConstrained) propagateUnify();
@@ -270,31 +270,31 @@ OZ_Return GenFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
   }
 
   return FALSE;
-} // GenFDVariable::unify
+} // OzFDVariable::unify
 
-Bool GenFDVariable::valid(TaggedRef val)
+Bool OzFDVariable::valid(TaggedRef val)
 {
   Assert(!oz_isRef(val));
   return (oz_isSmallInt(val) && finiteDomain.isIn(OZ_intToC(val)));
 }
 
-void GenFDVariable::relinkSuspListTo(GenBoolVariable * lv, Bool reset_local)
+void OzFDVariable::relinkSuspListTo(OzBoolVariable * lv, Bool reset_local)
 {
-  GenCVariable::relinkSuspListTo(lv, reset_local); // any
+  OzVariable::relinkSuspListTo(lv, reset_local); // any
   for (int i = 0; i < fd_prop_any; i += 1)
     fdSuspList[i] =
       fdSuspList[i]->appendToAndUnlink(lv->suspList, reset_local);
 }
 
 
-void GenFDVariable::relinkSuspListToItself(Bool reset_local)
+void OzFDVariable::relinkSuspListToItself(Bool reset_local)
 {
   for (int i = 0; i < fd_prop_any; i += 1)
     fdSuspList[i]->appendToAndUnlink(suspList, reset_local);
 }
 
 
-void GenFDVariable::becomesBoolVarAndPropagate(TaggedRef * trPtr)
+void OzFDVariable::becomesBoolVarAndPropagate(TaggedRef * trPtr)
 {
   if (isGenBoolVar(*trPtr)) return;
 
@@ -302,7 +302,7 @@ void GenFDVariable::becomesBoolVarAndPropagate(TaggedRef * trPtr)
   becomesBool();
 }
 
-int GenFDVariable::intersectWithBool(void)
+int OzFDVariable::intersectWithBool(void)
 {
   return ((OZ_FiniteDomainImpl *) &finiteDomain)->intersectWithBool();
 }
@@ -338,15 +338,15 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       goto proceed;
     }
 
-    GenCVariable * cv;
+    OzVariable * cv;
 
     // create appropriate constrained variable
     if (*fd == fd_bool) {
-      cv = (GenCVariable *) new GenBoolVariable(oz_currentBoard());
+      cv = (OzVariable *) new OzBoolVariable(oz_currentBoard());
     } else {
     fdvariable:
-      cv = (GenCVariable *) fd ? new GenFDVariable(*fd,oz_currentBoard())
-        : new GenFDVariable(oz_currentBoard());
+      cv = (OzVariable *) fd ? new OzFDVariable(*fd,oz_currentBoard())
+        : new OzFDVariable(oz_currentBoard());
     }
     OZ_Term *  tcv = newTaggedCVar(cv);
 
@@ -365,7 +365,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
   } else if (isGenFDVar(v, vtag)) {
     if (! fd) goto proceed;
 
-    GenFDVariable * fdvar = tagged2GenFDVar(v);
+    OzFDVariable * fdvar = tagged2GenFDVar(v);
     OZ_FiniteDomain dom = (fdvar->getDom() & *fd);
 
     if (dom == fd_empty)
@@ -388,7 +388,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
         fdvar->becomesBoolVarAndPropagate(vptr);
       } else {
         fdvar->propagate(fd_prop_bounds);
-        GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
+        OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
         DoBindAndTrailAndIP(vptr, makeTaggedRef(newtaggedboolvar),
                             newboolvar, tagged2GenBoolVar(v));
@@ -398,7 +398,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       if (am.isLocalSVar(v)) {
         fdvar->getDom() = dom;
       } else {
-        GenFDVariable * locfdvar = new GenFDVariable(dom,oz_currentBoard());
+        OzFDVariable * locfdvar = new OzFDVariable(dom,oz_currentBoard());
         OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
         DoBindAndTrailAndIP(vptr, makeTaggedRef(loctaggedfdvar),
                             locfdvar, tagged2GenFDVar(v));
@@ -414,7 +414,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     if (dom == -2) goto failed;
     if (dom == -1) goto proceed;
 
-    GenBoolVariable * boolvar = tagged2GenBoolVar(v);
+    OzBoolVariable * boolvar = tagged2GenBoolVar(v);
     if (am.isLocalSVar(v)) {
       boolvar->becomesSmallIntAndPropagate(vptr, dom);
     } else {
@@ -452,31 +452,31 @@ proceed:
 }
 
 // inline DISABLED CS
-void GenFDVariable::propagate(OZ_FDPropState state,
+void OzFDVariable::propagate(OZ_FDPropState state,
                               PropCaller prop_eq)
 {
   if (prop_eq == pc_propagator) {
     switch (state) {
     case fd_prop_singl: // no break
       if (fdSuspList[fd_prop_singl])
-        GenCVariable::propagate(fdSuspList[fd_prop_singl], prop_eq);
+        OzVariable::propagate(fdSuspList[fd_prop_singl], prop_eq);
     case fd_prop_bounds: // no break
       if (fdSuspList[fd_prop_bounds])
-        GenCVariable::propagate(fdSuspList[fd_prop_bounds], prop_eq);
+        OzVariable::propagate(fdSuspList[fd_prop_bounds], prop_eq);
     default:
       break;
     }
   } else {
-    GenCVariable::propagate(fdSuspList[fd_prop_singl], prop_eq);
-    GenCVariable::propagate(fdSuspList[fd_prop_bounds], prop_eq);
+    OzVariable::propagate(fdSuspList[fd_prop_singl], prop_eq);
+    OzVariable::propagate(fdSuspList[fd_prop_bounds], prop_eq);
   }
   if (suspList)
-    GenCVariable::propagate(suspList, prop_eq);
+    OzVariable::propagate(suspList, prop_eq);
 }
 
 
 #ifdef OUTLINE
 #define inline
-#include "fdgenvar.icc"
+#include "var_fd.icc"
 #undef inline
 #endif

@@ -32,13 +32,13 @@
 #endif
 
 
-#include "genvar.hh"
+#include "var_base.hh"
 #include "fset.hh"
 #include "oz_cpi.hh"
 
-class GenFSetVariable: public GenCVariable {
+class OzFSVariable: public OzVariable {
 
-friend class GenCVariable;
+friend class OzVariable;
 friend void addSuspFSetVar(OZ_Term, Suspension, OZ_FSetPropState);
 
 private:
@@ -46,20 +46,20 @@ private:
   SuspList * fsSuspList[fs_prop_any];
 
 public:
-  GenFSetVariable(DummyClass *) : GenCVariable(FSetVariable,(DummyClass*)0) {}
-  GenFSetVariable(Board *bb) : GenCVariable(FSetVariable,bb) {
+  OzFSVariable(DummyClass *) : OzVariable(OZ_VAR_FS,(DummyClass*)0) {}
+  OzFSVariable(Board *bb) : OzVariable(OZ_VAR_FS,bb) {
     _fset.init();
     for (int i = fs_prop_any; i--; )
       fsSuspList[i] = NULL;
   }
-  GenFSetVariable(OZ_FSetConstraint &fs,Board *bb)
-    : GenCVariable(FSetVariable,bb) {
+  OzFSVariable(OZ_FSetConstraint &fs,Board *bb)
+    : OzVariable(OZ_VAR_FS,bb) {
     _fset = fs;
     for (int i = fs_prop_any; i--; )
       fsSuspList[i] = NULL;
   }
 
-  void gc(GenFSetVariable *);
+  void gc(OzFSVariable *);
   void dispose(void);
 
   OZ_Return unify(OZ_Term *, OZ_Term, ByteCode *);
@@ -77,7 +77,7 @@ public:
 
   SuspList * getSuspList(int i) { return fsSuspList[i]; }
 
-  void relinkSuspListTo(GenFSetVariable * lv, Bool reset_local = FALSE);
+  void relinkSuspListTo(OzFSVariable * lv, Bool reset_local = FALSE);
 
   void propagate(OZ_FSetPropState state,
                  PropCaller prop_eq = pc_propagator);
@@ -88,7 +88,7 @@ public:
 
   void becomesFSetValueAndPropagate(OZ_Term *);
 
-  void installPropagators(GenFSetVariable *);
+  void installPropagators(OzFSVariable *);
 
   OZ_FSetConstraint * getReifiedPatch(void) {
     return (OZ_FSetConstraint *) (u.var_type & ~u_mask);
@@ -98,7 +98,7 @@ public:
     setReifiedFlag();
   }
   void unpatchReified(void) {
-    setType(FSetVariable);
+    setType(OZ_VAR_FS);
     resetReifiedFlag();
   }
 
@@ -116,11 +116,11 @@ void addSuspFSetVar(OZ_Term, Suspension, OZ_FSetPropState = fs_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FSetConstraint *);
 
 #if !defined(OUTLINE)
-#include "fsgenvar.icc"
+#include "var_fs.icc"
 #else
 Bool isGenFSetVar(OZ_Term term);
 Bool isGenFSetVar(OZ_Term term, TypeOfTerm tag);
-GenFSetVariable * tagged2GenFSetVar(OZ_Term term);
+OzFSVariable * tagged2GenFSetVar(OZ_Term term);
 OZ_FSetConstraint * unpatchReifiedFSet(OZ_Term t);
 
 #undef inline

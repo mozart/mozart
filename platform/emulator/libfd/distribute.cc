@@ -22,9 +22,9 @@
  */
 
 #include "../builtins.hh"
-#include "../genvar.hh"
-#include "../fdgenvar.hh"
-#include "../fdbvar.hh"
+#include "../var_base.hh"
+#include "../var_fd.hh"
+#include "../var_bool.hh"
 
 // ---------------------------------------------------------------------
 //                  Finite Domains Distribution Built-ins
@@ -55,7 +55,7 @@ static int getMid(TaggedRef var) {
   }
 }
 
-int oz_cv_getSuspListLength(GenCVariable *);
+int oz_cv_getSuspListLength(OzVariable *);
 
 inline
 static int getConstraints(TaggedRef var) {

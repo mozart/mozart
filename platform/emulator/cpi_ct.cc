@@ -25,7 +25,7 @@
  */
 
 #include "cpi.hh"
-#include "ctgenvar.hh"
+#include "var_ct.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -98,7 +98,7 @@ void OZ_CtVar::read(OZ_Term v)
       setState(loc_e);
       setSort(var_e);
 
-      GenCtVariable * ctvar = tagged2GenCtVar(v);
+      OzCtVariable * ctvar = tagged2GenCtVar(v);
       OZ_Ct * constr = ctvar->getConstraint();
 
       if (oz_onToplevel())
@@ -115,7 +115,7 @@ void OZ_CtVar::read(OZ_Term v)
       setState(am.isLocalSVar(v) ? loc_e : glob_e);
       setSort(var_e);
 
-      GenCtVariable * ctvar = tagged2GenCtVar(v);
+      OzCtVariable * ctvar = tagged2GenCtVar(v);
       OZ_Ct * constr = ctvar->getConstraint();
 
       if (isState(glob_e) || oz_onToplevel()) {
@@ -156,7 +156,7 @@ void OZ_CtVar::readEncap(OZ_Term v)
     setState(encap_e);
     setSort(var_e);
 
-    GenCtVariable * ctvar = tagged2GenCtVar(v);
+    OzCtVariable * ctvar = tagged2GenCtVar(v);
 
     if (ctvar->testReifiedFlag()) {
     // var is already entered somewhere else
@@ -194,6 +194,9 @@ void OZ_CtVar::readEncap(OZ_Term v)
 
 OZ_Boolean OZ_CtVar::tell(void)
 {
+  if (!oz_isVariable(*varPtr))
+    return OZ_FALSE;
+
   if (testReifiedFlag(var))
     unpatchReifiedCt(var);
 
@@ -204,7 +207,7 @@ OZ_Boolean OZ_CtVar::tell(void)
   } else {
     Assert(isSort(var_e)); // must be constraint variable
 
-    GenCtVariable * ctvar = tagged2GenCtVar(var);
+    OzCtVariable * ctvar = tagged2GenCtVar(var);
     OZ_Ct * constr = ctGetConstraint();
 
     if (constr->isValue()) {
@@ -233,7 +236,7 @@ OZ_Boolean OZ_CtVar::tell(void)
       ctvar->propagate(wakeup_descr, pc_propagator);
 
       if (isState(glob_e)) {
-        GenCtVariable * locctvar = new GenCtVariable(constr,
+        OzCtVariable * locctvar = new OzCtVariable(constr,
                                                      ctvar->getDefinition(),
                                                      oz_currentBoard());
         OZ_Term * loctaggedctvar = newTaggedCVar(locctvar);
@@ -274,7 +277,7 @@ void OZ_CtVar::fail(void)
 }
 
 
-OZ_Return OZ_mkCtVariable(OZ_Term v, OZ_Ct * c, OZ_CtDefinition * d)
+OZ_Return OZ_mkOZ_VAR_CT(OZ_Term v, OZ_Ct * c, OZ_CtDefinition * d)
 {
   return tellBasicConstraint(v, c, d);
 }

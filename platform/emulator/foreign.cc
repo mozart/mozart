@@ -32,7 +32,7 @@
 #include "iso-ctype.hh"
 
 #include "value.hh"
-#include "genvar.hh"
+#include "var_base.hh"
 
 #include "os.hh"
 #include "thr_int.hh"
@@ -988,7 +988,7 @@ void fset2buffer(ostream &out, OZ_FSetValue * fs)
 }
 
 // genvar.cc
-void oz_cv_printStream(ostream &out, const char *s, GenCVariable *cv,
+void oz_cv_printStream(ostream &out, const char *s, OzVariable *cv,
                        int depth);
 
 void oz_printStream(OZ_Term term, ostream &out, int depth, int width)

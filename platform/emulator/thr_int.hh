@@ -55,7 +55,7 @@ void oz_removeExtThreadOutlined(Thread *tt);
  * Suspension lists
  * ------------------------------------------------------------------------- */
 
-void oz_wakeupAll(SVariable *sv);
+void oz_wakeupAll(OzVariable *sv);
 
 SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
                           PropCaller calledBy);

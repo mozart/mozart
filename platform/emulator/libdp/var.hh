@@ -33,7 +33,7 @@
 
 #include "base.hh"
 #include "debug.hh"
-#include "genvar.hh"
+#include "var_base.hh"
 #include "table.hh"
 #include "controlvar.hh"
 
@@ -78,9 +78,9 @@ public:
   PendBinding *gcPendBinding();
 };
 
-class PerdioVar: public GenCVariable {
+class PerdioVar: public OzVariable {
 public:
-  PerdioVar(Board *bb) : GenCVariable(PerdioVariable,bb) {}
+  PerdioVar(Board *bb) : OzVariable(OZ_VAR_DIST,bb) {}
 
   virtual VariableStatus statusV() = 0;
   virtual OZ_Term isDetV() = 0;
@@ -260,7 +260,7 @@ inline
 Bool isPerdioVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == PerdioVariable);
+  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_DIST);
 }
 
 Bool checkExportable(TaggedRef var);

@@ -25,25 +25,24 @@
  */
 
 #if defined(INTERFACE)
-#pragma implementation "fsgenvar.hh"
+#pragma implementation "var_fs.hh"
 #endif
 
-#include "genvar.hh"
-#include "fsgenvar.hh"
+#include "var_fs.hh"
 #include "ozostream.hh"
 #include "fddebug.hh"
 #include "am.hh"
 #include "thr_int.hh"
 
-Bool GenFSetVariable::valid(TaggedRef val)
+Bool OzFSVariable::valid(TaggedRef val)
 {
   Assert(!oz_isRef(val));
   return (oz_isFSetValue(val) && ((FSetConstraint *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(val)));
 }
 
-void GenFSetVariable::dispose(void) {
+void OzFSVariable::dispose(void) {
   suspList->disposeList();
-  freeListDispose(this, sizeof(GenFSetVariable));
+  freeListDispose(this, sizeof(OzFSVariable));
 }
 
 #ifdef DEBUG_FSET
@@ -52,7 +51,7 @@ void GenFSetVariable::dispose(void) {
 #endif
 
 
-OZ_Return GenFSetVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
+OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 {
   if (oz_isFSetValue(term)) {
 #ifdef DEBUG_FSUNIFY
@@ -86,9 +85,9 @@ OZ_Return GenFSetVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
   if (oz_isRef(term)) {
     TaggedRef *tptr=tagged2Ref(term);
     term = *tptr;
-    GenCVariable *cv=tagged2CVar(term);
-    if (cv->getType() == FSetVariable) {
-      GenFSetVariable * term_var = (GenFSetVariable *)cv;
+    OzVariable *cv=tagged2CVar(term);
+    if (cv->getType() == OZ_VAR_FS) {
+      OzFSVariable * term_var = (OzFSVariable *)cv;
       OZ_FSetConstraint * t_fset = (OZ_FSetConstraint *) &term_var->getSet();
       OZ_FSetConstraint * fset = (OZ_FSetConstraint *) &getSet();
       OZ_FSetConstraint new_fset;
@@ -213,8 +212,8 @@ OZ_Return GenFSetVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
             am.doBindAndTrail(vptr, new_fset_var);
             am.doBindAndTrail(tptr, new_fset_var);
           } else {
-            GenFSetVariable *c_var
-              = new GenFSetVariable(new_fset,oz_currentBoard());
+            OzFSVariable *c_var
+              = new OzFSVariable(new_fset,oz_currentBoard());
             TaggedRef * var_val = newTaggedCVar(c_var);
             if (scp==0) {
               if (var_is_constrained) propagateUnify();
@@ -232,9 +231,9 @@ OZ_Return GenFSetVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
         break;
       } // switch (varIsLocal + 2 * termIsLocal)
       goto t;
-    } // case FSetVariable:
+    } // case OZ_VAR_FS:
     goto f;
-  } // if (tagged2CVar(term)->getType() == FSetVariable)
+  } // if (tagged2CVar(term)->getType() == OZ_VAR_FS)
 
   goto f;
 
@@ -286,9 +285,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 
     // create finite set variable
   fsvariable:
-    GenFSetVariable * fsv =
-      fs ? new GenFSetVariable(*fs,oz_currentBoard())
-      : new GenFSetVariable(oz_currentBoard());
+    OzFSVariable * fsv =
+      fs ? new OzFSVariable(*fs,oz_currentBoard())
+      : new OzFSVariable(oz_currentBoard());
 
     OZ_Term *  tfsv = newTaggedCVar(fsv);
 
@@ -307,7 +306,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
   } else if (isGenFSetVar(v, vtag)) {
     if (! fs) goto proceed;
 
-    GenFSetVariable * fsvar = tagged2GenFSetVar(v);
+    OzFSVariable * fsvar = tagged2GenFSetVar(v);
     OZ_FSetConstraint set = ((FSetConstraint *) ((OZ_FSetConstraint *) &fsvar->getSet()))->unify(* (FSetConstraint *) fs);
 
     if (!((FSetConstraint *) &set)->isValid())
@@ -329,8 +328,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       if (am.isLocalSVar(v)) {
         fsvar->getSet() = set;
       } else {
-        GenFSetVariable * locfsvar
-          = new GenFSetVariable(set,oz_currentBoard());
+        OzFSVariable * locfsvar
+          = new OzFSVariable(set,oz_currentBoard());
         OZ_Term * loctaggedfsvar = newTaggedCVar(locfsvar);
         DoBindAndTrailAndIP(vptr, makeTaggedRef(loctaggedfsvar),
                             locfsvar, tagged2GenFSetVar(v));
@@ -367,7 +366,7 @@ proceed:
 }
 
 // inline DISABLED CS
-void GenFSetVariable::propagate(OZ_FSetPropState state,
+void OzFSVariable::propagate(OZ_FSetPropState state,
                                 PropCaller prop_eq)
 {
   if (prop_eq == pc_propagator) {
@@ -375,17 +374,17 @@ void GenFSetVariable::propagate(OZ_FSetPropState state,
     case fs_prop_val: { // no break
       for (int i = fs_prop_any; i--; )
         if (fsSuspList[i])
-          GenCVariable::propagate(fsSuspList[i], prop_eq);
+          OzVariable::propagate(fsSuspList[i], prop_eq);
     }
            case fs_prop_lub: case fs_prop_glb:
       if (fsSuspList[state])
-        GenCVariable::propagate(fsSuspList[state], prop_eq);
+        OzVariable::propagate(fsSuspList[state], prop_eq);
       break;
     case fs_prop_bounds:
       if (fsSuspList[fs_prop_lub])
-        GenCVariable::propagate(fsSuspList[fs_prop_lub], prop_eq);
+        OzVariable::propagate(fsSuspList[fs_prop_lub], prop_eq);
       if (fsSuspList[fs_prop_glb])
-        GenCVariable::propagate(fsSuspList[fs_prop_glb], prop_eq);
+        OzVariable::propagate(fsSuspList[fs_prop_glb], prop_eq);
       break;
     default:
       break;
@@ -393,15 +392,15 @@ void GenFSetVariable::propagate(OZ_FSetPropState state,
   } else {
     for (int i = fs_prop_any; i--; )
       if (fsSuspList[i])
-        GenCVariable::propagate(fsSuspList[i], prop_eq);
+        OzVariable::propagate(fsSuspList[i], prop_eq);
   }
   if (suspList)
-    GenCVariable::propagate(suspList, prop_eq);
+    OzVariable::propagate(suspList, prop_eq);
 }
 
 
 #if defined(OUTLINE)
 #define inline
-#include "fsgenvar.icc"
+#include "var_fs.icc"
 #undef inline
 #endif

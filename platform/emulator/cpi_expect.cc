@@ -25,7 +25,7 @@
  */
 
 #include "cpi.hh"
-#include "allgenvar.hh"
+#include "var_all.hh"
 #include "prop_int.hh"
 
 inline
@@ -127,7 +127,7 @@ void OZ_Expect::addSuspendBool(OZ_Term * v)
 {
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
-    staticSuspendVars[staticSuspendVarsNumber].expected_type = BoolVariable;
+    staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_BOOL;
     staticSuspendVarsNumber++;
 
     staticSuspendVars.request(staticSuspendVarsNumber);
@@ -140,7 +140,7 @@ void OZ_Expect::addSuspend(OZ_FDPropState ps, OZ_Term * v)
 {
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
-    staticSuspendVars[staticSuspendVarsNumber].expected_type = FDVariable;
+    staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_FD;
     staticSuspendVars[staticSuspendVarsNumber++].state.fd = ps;
 
     staticSuspendVars.request(staticSuspendVarsNumber);
@@ -153,7 +153,7 @@ void OZ_Expect::addSuspend(OZ_FSetPropState ps, OZ_Term * v)
 {
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
-    staticSuspendVars[staticSuspendVarsNumber].expected_type = FSetVariable;
+    staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_FS;
     staticSuspendVars[staticSuspendVarsNumber++].state.fs = ps;
 
     staticSuspendVars.request(staticSuspendVarsNumber);
@@ -166,7 +166,7 @@ void OZ_Expect::addSuspend(OZ_CtDefinition * def, OZ_CtWakeUp w, OZ_Term * v)
 {;
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
-    staticSuspendVars[staticSuspendVarsNumber].expected_type = CtVariable;
+    staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_CT;
     staticSuspendVars[staticSuspendVarsNumber].state.ct.def = def;
     staticSuspendVars[staticSuspendVarsNumber++].state.ct.w = w;
 
@@ -186,7 +186,7 @@ OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
   if (def->isValidValue(t)) {
     return expectProceed(1, 1);
   } else if (isGenCtVar(t, ttag)) {
-    GenCtVariable * ctvar = tagged2GenCtVar(t);
+    OzCtVariable * ctvar = tagged2GenCtVar(t);
 
     // check the kind
     if (ctvar->getDefinition()->getKind() != def->getKind())
@@ -812,19 +812,19 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
   for (i = staticSuspendVarsNumber; i--; ) {
     OZ_Term v = makeTaggedRef(staticSuspendVars[i].var);
     DEREF(v, vptr, vtag);
-    TypeOfGenCVariable type = staticSuspendVars[i].expected_type;
+    TypeOfVariable type = staticSuspendVars[i].expected_type;
 
-    Assert(type == FDVariable || type == FSetVariable || type == CtVariable);
+    Assert(type == OZ_VAR_FD || type == OZ_VAR_FS || type == OZ_VAR_CT);
 
     if (oz_isFree(v)) {
-      if (type == FDVariable) {
+      if (type == OZ_VAR_FD) {
         tellBasicConstraint(makeTaggedRef(vptr), (OZ_FiniteDomain *) NULL);
-      } else if (type == BoolVariable) {
+      } else if (type == OZ_VAR_BOOL) {
         tellBasicBoolConstraint(makeTaggedRef(vptr));
-      } else if (type == FSetVariable) {
+      } else if (type == OZ_VAR_FS) {
         tellBasicConstraint(makeTaggedRef(vptr), (OZ_FSetConstraint *) NULL);
       } else {
-        Assert(type == CtVariable);
+        Assert(type == OZ_VAR_CT);
 
         tellBasicConstraint(makeTaggedRef(vptr),
                             (OZ_Ct *) NULL,

@@ -31,7 +31,7 @@
 
 #include "am.hh"
 #include "indexing.hh"
-#include "allgenvar.hh"
+#include "var_all.hh"
 
 EntryTable newEntryTable(int sz)
 {
@@ -106,11 +106,11 @@ int *IHashTable::add(TaggedRef number, int label)
 // unifying two fd variables may result in a singleton (ie. determined term),
 // det-nodes are reentered and we achieve completeness.
 
-Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
+Bool IHashTable::disentailed(OzVariable *cvar, TaggedRef *ptr)
 {
   switch (cvar->getType()) {
-  case FDVariable:
-  case BoolVariable:
+  case OZ_VAR_FD:
+  case OZ_VAR_BOOL:
     {
       /* if there are no integer guards goto else-branch */
       if (!numberTable) {
@@ -127,9 +127,9 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
 
       return OK;
     }
-  case OFSVariable:
+  case OZ_VAR_OF:
     {
-      GenOFSVariable *ofsvar = (GenOFSVariable*) cvar;
+      OzOFVariable *ofsvar = (OzOFVariable*) cvar;
       if (listLabel && !ofsvar->disentailed(tagged2Literal(AtomCons),2))
         return NO;
 
@@ -161,7 +161,7 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
     }
 
   // mm2: hack: an arbitrary number is check for validity
-  case PerdioVariable:
+  case OZ_VAR_DIST:
     return (!perdioVarValid(cvar, OZ_int(4711)));
 
   default:

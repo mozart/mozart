@@ -34,7 +34,7 @@
 
 #include "base.hh"
 #include "builtins.hh"
-#include "genvar.hh"
+#include "var_base.hh"
 #include "space.hh"
 
 
@@ -90,7 +90,7 @@ OZ_BI_define(BIisRecordCVarB,1,1)
   case SRECORD:
     break;
   case CVAR:
-    if (tagged2CVar(t)->getType()!=OFSVariable)
+    if (tagged2CVar(t)->getType()!=OZ_VAR_OF)
       OZ_RETURN(NameFalse);
     break;
   case UVAR:

@@ -34,7 +34,7 @@
 #include "codearea.hh"
 #include "indexing.hh"
 #include "gname.hh"
-#include "genvar.hh"
+#include "var_base.hh"
 #include "gc.hh"
 #include "dictionary.hh"
 #include "urlc.hh"

@@ -570,7 +570,6 @@ private:
   void setSort(Sort_e s) {sort = s;}
   OZ_Boolean isState(State_e s) const {return s == state;}
   void setState(State_e s) {state = s;}
-
   OZ_Boolean tell(void);
 public:
   OZ_FDIntVar(void) {}
@@ -593,7 +592,9 @@ public:
   void ask(OZ_Term);
   int read(OZ_Term);
   int readEncap(OZ_Term);
-  OZ_Boolean leave(void) { return isSort(sgl_e) ? OZ_FALSE : tell(); }
+  OZ_Boolean leave(void) {
+    return isSort(sgl_e) ? OZ_FALSE : tell();
+  }
   void fail(void);
 };
 
@@ -860,7 +861,7 @@ public:
 //-----------------------------------------------------------------------------
 // Misc
 
-OZ_Return OZ_mkCtVariable(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
+OZ_Return OZ_mkOZ_VAR_CT(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
 
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.

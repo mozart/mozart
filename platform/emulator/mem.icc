@@ -31,7 +31,6 @@
 #pragma interface
 #endif
 
-
 inline
 void * freeListMalloc(size_t size) {
   Assert(((size & 3) == 0) && (size > 0));
@@ -43,10 +42,18 @@ void * freeListMalloc(size_t size) {
 
     if (aux) {
       *fl = *((void **) aux);
+#ifdef DEBUG_MEM
+      {
+        char *s=(char *)aux;
+        s+=sizeof(void*);
+        for (int i=size-sizeof(void*); i--;) {
+          Assert(*s++==0x5a)
+        }
+      }
+#endif
       DebugMem(memset((char *)aux,0x5A,size));
       return aux;
     }
-
   }
 
   register void * aux = heapMalloc(size);
@@ -70,10 +77,12 @@ void freeListDisposeNoClean(void * addr, size_t size) {
     COUNT1(freeListDisposed,size);
     fl = &(FreeList[size]);
 #ifdef DEBUG_MEM
-    void * aux = *fl;
-    while (aux) {
-      Assert(aux != addr);
-      aux = * (void **) aux;
+    {
+      void * aux = *fl;
+      while (aux) {
+        Assert(aux != addr);
+        aux = * (void **) aux;
+      }
     }
 #endif
     *((void **) addr) = *fl;
@@ -90,7 +99,6 @@ void freeListDispose(void * addr, size_t chunk_size) {
   DebugCode(memset((char *)addr,0x5A,chunk_size));
 
   freeListDisposeNoClean(addr, chunk_size);
-
 }
 
 

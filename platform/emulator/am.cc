@@ -37,7 +37,7 @@
 #include "os.hh"
 #include "board.hh"
 #include "thr_int.hh"
-#include "allgenvar.hh"
+#include "var_all.hh"
 #include "codearea.hh"
 #include "fdomn.hh"
 #include "trace.hh"
@@ -368,7 +368,7 @@ Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
   return oz_isCurrentBoard(bb);
 }
 
-Bool AM::isLocalSVarOutline(SVariable *var)
+Bool AM::isLocalSVarOutline(OzVariable *var)
 {
   Board *home = var->getHomeUpdate();
   return oz_isCurrentBoard(home);
@@ -396,10 +396,10 @@ Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 
 
 static
-int cmpCVar(GenCVariable *v1, GenCVariable *v2)
+int cmpCVar(OzVariable *v1, OzVariable *v2)
 {
-  TypeOfGenCVariable t1 = v1->getType();
-  TypeOfGenCVariable t2 = v2->getType();
+  TypeOfVariable t1 = v1->getType();
+  TypeOfVariable t2 = v2->getType();
   return t1-t2;
 }
 
@@ -490,8 +490,7 @@ loop:
   /*
    * The implemented partial order for binding variables to variables is:
    *   local -> global
-   *   UVAR/SVAR -> CVAR (prefer binding nonCVars to CVars)
-   *   UVAR      -> SVAR
+   *   UVAR -> CVAR (prefer binding nonCVars to CVars)
    *   local newer -> local older
    */
   COUNT(varVarUnify);

@@ -34,7 +34,7 @@
 #include <stdarg.h>
 #include "oz_cpi.hh"
 #include "builtins.hh"
-#include "genvar.hh"
+#include "var_base.hh"
 #include "cpi_heap.hh"
 #include "fdomn.hh"
 
@@ -46,7 +46,7 @@
 
 struct _spawnVars_t {
   OZ_Term * var;
-  TypeOfGenCVariable expected_type;
+  TypeOfVariable expected_type;
   union {
     OZ_FDPropState fd;
     OZ_FSetPropState fs;

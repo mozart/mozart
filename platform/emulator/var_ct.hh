@@ -31,11 +31,11 @@
 #pragma interface
 #endif
 
-#include "genvar.hh"
+#include "var_base.hh"
 
-class GenCtVariable : public GenCVariable {
+class OzCtVariable : public OzVariable {
 
-  friend class GenCVariable;
+  friend class OzVariable;
   friend OZ_Return tellBasicConstraint(OZ_Term,
                                        OZ_Ct *,
                                        OZ_CtDefinition *);
@@ -66,12 +66,12 @@ private:
     _constraint = c->copy();
   }
 
-  void relinkSuspListTo(GenCtVariable * lv, Bool reset_local = FALSE);
+  void relinkSuspListTo(OzCtVariable * lv, Bool reset_local = FALSE);
 
 public:
   USEFREELISTMEMORY;
 
-  void installPropagators(GenCtVariable *);
+  void installPropagators(OzCtVariable *);
 
   int getNoOfSuspLists(void) {
     return _definition->getNoOfWakeUpLists();
@@ -83,8 +83,8 @@ public:
             : (SuspList *) NULL);
   }
 
-  GenCtVariable(OZ_Ct * c, OZ_CtDefinition * d,Board *bb)
-    : _definition(d), GenCVariable(CtVariable,bb)
+  OzCtVariable(OZ_Ct * c, OZ_CtDefinition * d,Board *bb)
+    : _definition(d), OzVariable(OZ_VAR_CT,bb)
   {
     Assert(c);
     Assert(d);
@@ -118,7 +118,7 @@ public:
   }
 
   void unpatchReified(void) {
-    setType(CtVariable);
+    setType(OZ_VAR_CT);
     resetReifiedFlag();
   }
 
@@ -128,7 +128,7 @@ public:
     return _constraint->unify(val);
   }
 
-  GenCVariable * gc(void);
+  OzVariable * gc(void);
 
   void gcRecurse(void);
 
@@ -156,11 +156,11 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
 
 
 #ifndef OUTLINE
-#include "ctgenvar.icc"
+#include "var_ct.icc"
 #else
 #undef inline
 
-GenCtVariable * tagged2GenCtVar(OZ_Term);
+OzCtVariable * tagged2GenCtVar(OZ_Term);
 Bool isGenCtVar(OZ_Term term, TypeOfTerm tag);
 OZ_Ct * unpatchReifiedCt(OZ_Term t);
 void addSuspCtVar(OZ_Term, Suspension, OZ_CtWakeUp);

@@ -25,11 +25,11 @@
  */
 
 #include "cpi.hh"
-#include "fdgenvar.hh"
-#include "fdbvar.hh"
-#include "fsgenvar.hh"
-#include "ctgenvar.hh"
-#include "ofgenvar.hh"
+#include "var_fd.hh"
+#include "var_bool.hh"
+#include "var_fs.hh"
+#include "var_ct.hh"
+#include "var_of.hh"
 #include "prop_int.hh"
 
 // gc.cc: OZ_Propagator * OZ_Propagator::gc(void)
@@ -94,7 +94,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
       {
         o << oz_varGetName(makeTaggedRef(hptr));
 
-        GenCVariable * cv = tagged2CVar(h);
+        OzVariable * cv = tagged2CVar(h);
 
         if (cv->testReifiedFlag()) {
 
@@ -107,18 +107,18 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
           if (cv->isCtPatched())
             goto ct_lbl;
 
-        } else if (cv->getType() == FDVariable) {
+        } else if (cv->getType() == OZ_VAR_FD) {
         fd_lbl:
-          o << ((GenFDVariable *) cv)->getDom().toString();
-        } else if (cv->getType() == BoolVariable) {
+          o << ((OzFDVariable *) cv)->getDom().toString();
+        } else if (cv->getType() == OZ_VAR_BOOL) {
         bool_lbl:
           o << "{0#1}";
-        } else if (cv->getType() == FSetVariable) {
+        } else if (cv->getType() == OZ_VAR_FS) {
         fs_lbl:
-          o << ((GenFSetVariable *) cv)->getSet().toString();
-        } else if (cv->getType() == CtVariable) {
+          o << ((OzFSVariable *) cv)->getSet().toString();
+        } else if (cv->getType() == OZ_VAR_CT) {
         ct_lbl:
-          o << ((GenCtVariable *) cv)->getConstraint()->toString(0);
+          o << ((OzCtVariable *) cv)->getConstraint()->toString(0);
         } else {
           goto problem;
         }
