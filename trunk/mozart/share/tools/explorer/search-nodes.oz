@@ -464,10 +464,10 @@ local
    
 in
    
-   SearchNodes = classes(choose:    Choose
-			 succeeded: Succeeded
-			 failed:    Leaf
-			 blocked:   Blocked
-			 sentinel:  Sentinel)
+   SearchNodes = classes(choose:    !Choose
+			 succeeded: !Succeeded
+			 failed:    !Leaf
+			 blocked:   !Blocked
+			 sentinel:  !Sentinel)
 
 end
