@@ -222,6 +222,18 @@ under the Getting Started/Documentation
           <item> Is available now.
           </list>
 
+        <SubSection>
+          <Title/Compiler Macro Names/
+          <P>
+            The Mozart compiler defines macro names to identify the version
+            of the system that is running (see <Ptr.Extern to="ozdoc:compiler"
+            key="section.macronames">).  These used to be
+            <Code display proglang=oz>Oz_1   Oz_1_0   Oz_1_0_1</Code>
+            for Mozart&nbsp;1.0.1, but to avoid clashes with the macro
+            names provided by DFKI Oz, they are now
+            <Code display proglang=oz
+            >Mozart_1   Mozart_1_1   Mozart_1_1_0</Code>
+
       </section>
 
       <section id="section.m110.fixes">
