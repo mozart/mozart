@@ -1668,6 +1668,7 @@ OZ_C_proc_end
 ... fill in RAND_MAX ...
 #endif
 #endif
+#endif
 
 OZ_C_proc_begin(unix_randLimits, 2)
 {
