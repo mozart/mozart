@@ -192,7 +192,8 @@ TextCursor             = left_ptr
 
 %% the timeout variables have critical values --
 %% you should know what you are doing when changing them...
-TimeoutToStatus        = 200 % ms
+TimeoutToMark          = 100 % ms
+TimeoutToStatus        = 200
 TimeoutToSwitch        = 300
 TimeoutToUpdateEnv     = 400
 TimeoutToCalcTree      = 500
