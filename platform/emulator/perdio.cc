@@ -2805,8 +2805,6 @@ void marshallObject(Site *sd, Object *o, ByteStream *bs)
   marshallSRecord(sd,o->getFreeRecord(),bs);
   marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs);
   if (o->getLock()) {
-    warning("marshallObject(%s): cannot handle locks (yet)",
-            toC(makeTaggedConst(o)));
     marshallTerm(sd,makeTaggedConst(o->getLock()),bs);
   } else {
     marshallTerm(sd,nil(),bs);
@@ -3187,9 +3185,7 @@ void unmarshallObject(Object *o, ByteStream *bs)
   o->setFreeRecord(feat);
   o->setState(tagged2Tert(t));
 
-  // TODO: make locks work
-  Assert(0);          /* cannot work */
-  o->setLock(isNil(lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(lock));  /* ATTENTION */
+  o->setLock(isNil(lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(lock));
 }
 
 void unmarshallClass(Object *o, ByteStream *bs)
@@ -3408,7 +3404,7 @@ loop:
       if (val) {
         PD((UNMARSHALL,"lock hit b:%d",bi));
         gotRef(bs,val);
-        Tertiary *t=BT->getBorrow(bi)->getTertiary();
+        Tertiary *t=ob->getTertiary();
         if((t->getType()==Co_Lock) && (t->getTertType()==Te_Frame)){
           LockFrame *lf=(LockFrame *)t;
           if(lf->getState() & Lock_Dump_Asked){
