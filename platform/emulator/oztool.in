@@ -6,48 +6,14 @@
 
 : ${oztool_cxx="@OZTOOL_CXX@"}
 : ${oztool_cc="cc"}
-: ${oztool_ld=$oztool_cxx}
+: ${oztool_ld="$oztool_cxx @TOOLLDFLAGS@"}
 cmd=$1
 shift
 
 case "$cmd" in
   c++) cmd=$oztool_cxx;;
   cc ) cmd=$oztool_cc;;
-  ld ) 
-    if [ -x /bin/uname ]; then uname=/bin/uname
-    elif [ -x /usr/bin/uname ]; then uname=/usr/bin/uname
-    else echo "Cannot find uname" 1>&2 ; exit 1
-    fi
-
-    system="`$uname -s`_`$uname -r`"
-
-    case $system in
-	SunOS_4.1*)
-	    cmd="$oztool_ld"
-	    ;;
-	SunOS_5*)
-	    cmd="$oztool_ld -Wl,-G"
-	    ;;
-	Linux_*)
-	    cmd="$oztool_ld -Wl,-shared"
-	    ;;
-	HP-UX_*)
-	    cmd="$oztool_ld -Wl,-b"
-	    ;;
-	IRIX_5*)
-	    cmd="$oztool_ld -Wl,-shared -Wl,-check_registry -Wl,/dev/null"
-	    ;;
-	OSF1_*)
-	    cmd="$oztool_ld -Wl,-shared -Wl,-expect_unresolved -Wl,'*'"
-	    ;;
-	FreeBSD_*|NetBSD_*)
-	    cmd="$oztool_ld -Wl,-Bshareable"
-	    ;;
-	*)
-	    echo "$0: platform $system not supported"
-	    exit 1
-	esac
-	;;
+  ld ) cmd=$oztool_ld;;
   *  )
   echo "oztool: unknown command $cmd" 1>&2
   exit 1
@@ -55,3 +21,6 @@ case "$cmd" in
 esac
 
 exec $cmd "$@"
+
+
+
