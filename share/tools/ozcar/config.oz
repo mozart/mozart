@@ -164,10 +164,8 @@ HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 %% Files
 %%
 
-UrlDefaults = \insert '../../url-defaults.oz'
 OzcarBitmap = fun {$ Bitmap}
-		 '@' # {Tk.localize UrlDefaults.home #
-			'images/ozcar/' # Bitmap # '.xbm'}
+		 '@' # {Tk.localize BitmapUrl # Bitmap # '.xbm'}
 	      end
 
 StepButtonBitmap       = step
