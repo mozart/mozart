@@ -38,6 +38,7 @@
 #include "dpMarshaler.hh"
 #include "dpInterface.hh"
 #include "dpResource.hh"
+#include "cac.hh"
 
 
 char *dpresource_names[UD_last] = {
@@ -52,32 +53,21 @@ char *dpresource_names[UD_last] = {
 ResourceHashTable *resourceTable;
 
 /* 
-   This must be done after the ownerTable has
-   been gced. The resource will stay in the resource table
-   if there is an entry for it in the ownertable.
-   */
+ *  This must be done after the ownerTable has been gced. The resource
+ *  will stay in the resource table if there is an entry for it in the
+ *  ownertable.
+ */
 
-// kost@ : WHAT IS ALL THAT?!! Not used anymore:
-/*
-inline
-Bool isReallyBuiltin(TaggedRef b) {
-  if (!oz_isConst(b))
-    return NO;
-
-  ConstTerm * c = tagged2Const(b);
-  
-  if (c->cacIsMarked())
-    return NO;
-
-  return isBuiltin(c);
-}
-*/
+struct GCRTEntry {
+  OZ_Term term;
+  int oti;
+};
 
 //
 void ResourceHashTable::gcResourceTable()
 {
   const int num = getUsed();
-  int *entries;
+  struct GCRTEntry *entries;
   int index;
   GenHashNode *aux;
   int ai = 0;
@@ -87,24 +77,69 @@ void ResourceHashTable::gcResourceTable()
     return;
 
   //
-  entries = new int[num];
+  entries = new struct GCRTEntry[num];
   aux = getFirst(index);
   Assert(aux);
   //
   do {
-    // kost@ : WHAT IS ALL THAT?!! Not used anymore:
-    /*
-      TaggedRef entity = (TaggedRef) aux->getBaseKey();
-      if(!isReallyBuiltin(entity)) {
-      entity = oz_deref(entity);
-      Assert(!oz_isVariable(entity));
-      }
-    */
-    int OTI;
-    GenCast(aux->getEntry(), GenHashEntry*, OTI, int);
-    entries[ai++] = OTI;
+    OZ_Term te;
+    Bool teWasVar;
 
     //
+    GenCast(aux->getBaseKey(), GenHashBaseKey*, te, OZ_Term);
+    teWasVar = oz_isRef(te);
+
+    //
+    if (isGCMarkedTerm(te)) {
+      // ... can be alive - somebody copied it;
+      int oti;
+      OwnerEntry *oe;
+
+      //
+      GenCast(aux->getEntry(), GenHashEntry*, oti, int);
+      oe = OT->getEntry(oti);
+
+      //
+      if (oe && oe->isRef()) {
+	OZ_Term oer = oe->getRef();
+	DEREF(oer, oerp, _tagoe);
+	Assert(!isGCMarkedTerm(oer));
+	// just extract the collected term:
+	oz_gCollectTerm(te, te);
+	DEREF(te, tep, _tagte);
+
+	//
+	if (oz_isVariable(oer)) {
+	  Assert(oerp);
+	  // 'tep' can be anything, however;
+	  if (oerp == tep) {
+	    entries[ai].term = makeTaggedRef(tep);
+	    entries[ai].oti = oti;
+	  } else {
+	    // nothing: dead entry;
+	    entries[ai].term = (OZ_Term) 0;
+	  }
+	} else {		// non-variable:
+	  // if the original entry was for a variable, then
+	  // discard it now: the variable has got bound;
+	  if (oer == te && !teWasVar) {
+	    entries[ai].term = te;
+	    entries[ai].oti = oti;
+	  } else {
+	    entries[ai].term = (OZ_Term) 0;
+	  }
+	}
+      } else {
+	// oe entry is gone, so the RHT entry is gone too:
+	entries[ai].term = (OZ_Term) 0;
+      }
+    } else {
+      // even the term itself is gone: 
+      entries[ai].term = (OZ_Term) 0;
+    }
+
+    //
+    ai++;
     aux = getNext(aux, index);
   } while (aux);
   Assert(ai == num);
@@ -114,26 +149,9 @@ void ResourceHashTable::gcResourceTable()
 
   //
   for (ai = 0; ai < num; ai++) {
-    int OTI = entries[ai];
-    OwnerEntry *oe = OT->getEntry(OTI);
-    // kost@ : i've replaced next two lines:
-    //    if(oe && (!oe->isFree()) && oe->getRef()==entity)
-    //      add(entity, OTI);
-    // kost@ : Now, like this:
-    // Must be alive, and, therefore, a reference, since RHT entries are
-    // discarded explicitly:
-    Assert(oe);
-    Assert(!oe->isFree());
-    Assert(oe->isRef());
-
-    //
-    OZ_Term t = oe->getRef();
-    DEREF(t, tPtr, _tag);
-    if (oz_isVariable(t)) {
-      add(makeTaggedRef(tPtr), OTI);
-    } else {
-      add(t, OTI);
-    }
+    OZ_Term te = entries[ai].term;
+    if (te)
+      add(te, entries[ai].oti);
   }
 
   //
