@@ -184,7 +184,8 @@ COMPONENTS = \
 	Init.ozc OPI.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
 	Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
 	Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc Gump.ozc \
-	GumpScanner.ozc GumpParser.ozc Misc.ozc
+	GumpScanner.ozc GumpParser.ozc Misc.ozc \
+	StandardModules.ozc StandardSubModules.ozc 
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 LIBOZM = $(OZLIB)/ozbatch.ozm
@@ -232,6 +233,12 @@ Standard.ozc: $(STANDARDSRC) Base.env Standard.env
 
 OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc AP.ozc Compiler.env $(TYCS)
 	$(COMPILE) -l AP OPI.oz -o OPI.ozc
+
+StandardModules.ozc: AP/StandardModules.oz
+	$(COMPILE)  $< -o $@
+
+StandardSubModules.ozc: AP/StandardSubModules.oz
+	$(COMPILE)  $< -o $@
 
 tycs: $(TYCS)
 
