@@ -56,7 +56,8 @@ dnl ------------------------------------------------------------------
 AC_DEFUN(OZ_PATH_UPWARD,[
   oz_tmp_dir=[$2]
   oz_tmp_ok=
-  for oz_tmp1 in [$3]; do
+  oz_for="[$3]"
+  for oz_tmp1 in $oz_for; do
     for oz_tmp2 in $oz_tmp_dir \
                    $oz_tmp_dir/.. \
                    $oz_tmp_dir/../.. \
@@ -897,7 +898,8 @@ AC_DEFUN(OZ_PATH_PROG, [
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    AC_PATH_PROG($1,$2,,$dummy_PATH:$SRCTOP/share/bin:$SRCTOP)
+    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
+    AC_PATH_PROG($1,$2,,$oz_for)
     case "$host_os" in
       cygwin32) ;;
       *) $1=`echo $$1 | sed -e "s|//|/|g"`;;
@@ -945,7 +947,8 @@ AC_DEFUN(OZ_CXX_OPTIONS, [
         if test -n "$1"
         then
             echo 'void f(){}' > oz_conftest.c
-            for ozm_opt in $1
+            oz_for="$1"
+            for ozm_opt in $oz_for
             do
                 AC_MSG_CHECKING(c++ compiler option $ozm_opt)
                 ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
@@ -972,7 +975,8 @@ AC_DEFUN(OZ_CC_OPTIONS, [
         if test -n "$1"
         then
             echo 'void f(){}' > oz_conftest.c
-            for ozm_opt in $1
+            oz_for="$1"
+            for ozm_opt in $oz_for
             do
                 AC_MSG_CHECKING(cc compiler option $ozm_opt)
                 ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
