@@ -125,6 +125,23 @@ Board *WaitActor::getChildRef ()
   return NULL;
 }
 
+int WaitActor::selectChildren(int l, int r) {
+  int32 maxx      = ToInt32(childs[-1]);
+
+  if (l<=r && l>=0 && r<childCount) {
+    for (int i = l; i <= r; i++)
+      childs[i-l] = childs[i];
+    for (int i = r+1; i < maxx; i++)
+      childs[i] = NULL;
+    childCount = r-l+1;
+    return childCount;
+  } else {
+    return 0;
+  }
+
+}
+
+
 
 #ifdef OUTLINE
 #define inline

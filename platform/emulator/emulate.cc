@@ -794,12 +794,39 @@ loop:
             TaggedRef guide = deref(solveAA->getGuidance());
 
             if (isCons(guide)) {
-              // it is asserted that each element is an int (see above)
-              int clauseNo = smallIntValue(headDeref(guide)) - 1;
+              // it is asserted that each element is an int or an pair of
+              // ints (see above)
+              TaggedRef guideHead = headDeref(guide);
 
               solveAA->setGuidance(tail(guide));
 
-              if ((clauseNo >= 0) && (clauseNo < wa->getChildCount())) {
+              int clauseNo, noOfClauses;
+
+              if (isInt(guideHead)) {
+                clauseNo = smallIntValue(guideHead) - 1;
+                noOfClauses = ((clauseNo >= 0) &&
+                               (clauseNo < wa->getChildCount())) ? 1 : 0;
+              } else {
+                // now we have a pair of integers
+                clauseNo = 0;
+                noOfClauses =
+                  wa->selectChildren(smallIntValue(leftDeref(guideHead))-1,
+                                     smallIntValue(rightDeref(guideHead))-1);
+              }
+
+              if (noOfClauses == 0) {
+                trail.popMark ();
+                currentBoard->unsetInstalled ();
+                setCurrent (currentBoard->getParentFast());
+                currentBoard->decSuspCount ();
+
+                if (!fastUnifyOutline(solveAA->getResult(),
+                                      solveAA->genFailed(),
+                                      OK)) {
+                  return CE_FAIL;
+                }
+
+              } else if (noOfClauses == 1) {
 
                 Board *waitBoard = wa->getChildRefAt(clauseNo);
 
@@ -830,16 +857,8 @@ loop:
                 return CE_CONT;
 
               } else {
-                trail.popMark ();
-                currentBoard->unsetInstalled ();
-                setCurrent (currentBoard->getParentFast());
-                currentBoard->decSuspCount ();
-
-                if (!fastUnifyOutline(solveAA->getResult(),
-                                      solveAA->genFailed(),
-                                      OK)) {
-                  return CE_FAIL;
-                }
+                solveAA->pushWaitActor(wa);
+                goto loop;
               }
 
             } else {
@@ -2095,11 +2114,6 @@ void engine() {
             isSolveGuided = OK;  isEatWaits = OK;  isSolveDebug = NO;
             goto LBLBIsolve;
           }
-        case BIsolveDebug:
-          {
-            isSolveGuided = NO;  isSolveDebug = OK;
-            goto LBLBIsolve;
-          }
         case BIsolveDebugGuided:
           {
             isSolveGuided = OK;  isSolveDebug = OK;
@@ -2237,11 +2251,19 @@ void engine() {
          // This is a guided solver, check whether the input list is ground
          TaggedRef guide = deref(X[1]);
 
-         while (isCons(guide) && isInt(headDeref(guide))) {
+         while (isCons(guide)) {
+           TaggedRef head = headDeref(guide);
+
+           if (!(isInt(head) ||
+                 (isPair(head) &&
+                  isInt(leftDeref(head)) &&
+                  isInt(rightDeref(head)))))
+             break;
+
            guide = tailDeref(guide);
          }
 
-         if (!isLiteral(guide)) {
+         if (!isNil(guide)) {
            predicate = bi->getSuspHandler();
            if (!predicate) {
              HF_WARN(applFailure(bi),
