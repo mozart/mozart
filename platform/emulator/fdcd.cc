@@ -40,6 +40,8 @@ void initFDCD(void)
 //-----------------------------------------------------------------------------
 // pm_
 
+char * fdbm_var_state_names[] = {"local", "global", "speculative"};
+
 inline
 char * pm_term_type2string(int t) {
   switch (t) {
