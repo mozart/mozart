@@ -29,13 +29,18 @@
 #include "thr_int.hh"
 #include "var_base.hh"
 
-OZ_Return oz_installScript(Script &script)
-{
+OZ_Return oz_installScript(Script & s) {
   OZ_Return ret = PROCEED;
-  am.setInstallingScript(); // mm2: special hack ???
-  for (int index = 0; index < script.getSize(); index++) {
-    int res = oz_unify(script[index].getLeft(),script[index].getRight());
-    if (res == PROCEED) continue;
+
+  am.setInstallingScript();
+
+  for (int i = 0; i < s.getSize(); i++) {
+
+    int res = oz_unify(s[i].left, s[i].right);
+
+    if (res == PROCEED)
+      continue;
+
     if (res == FAILED) {
       ret = FAILED;
       if (!oz_onToplevel()) {
@@ -50,9 +55,10 @@ OZ_Return oz_installScript(Script &script)
       }
     }
   }
+
   am.unsetInstallingScript();
 
-  script.dealloc();
+  s.dispose();
 
   return ret;
 }
@@ -98,7 +104,8 @@ Board * installOnly(Board * frm, Board * to) {
   am.setCurrent(to);
   am.trail.pushMark();
 
-  OZ_Return ret = oz_installScript(to->getScriptRef());
+  OZ_Return ret = oz_installScript(to->getScript());
+
   if (ret != PROCEED) {
     Assert(ret==FAILED);
     return to;

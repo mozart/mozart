@@ -39,43 +39,10 @@
 #include "suspendable.hh"
 #include "susp_queue.hh"
 #include "pointer-marks.hh"
+#include "trail.hh"
+
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
-
-struct Equation {
-friend class Script;
-private:
-  TaggedRef left;
-  TaggedRef right;
-public:
-  void setLeft(TaggedRef *l) { left = makeTaggedRef(l); }
-  void setRight(TaggedRef r) { right = r; }
-  TaggedRef getLeft() { return left; }
-  TaggedRef getRight() { return right; }
-  OZPRINT;
-};
-
-class Script {
-public:
-  void gc();
-
-  Script() { numbOfCons = 0; first = (Equation *)NULL; }
-  Script(int sizeInit);
-  ~Script();
-  OZPRINT;
-  void allocate(int sizeInit);
-  void dealloc();
-
-  int getSize() { return numbOfCons; }
-  Equation* getRef()  { return (first); }
-
-  Equation &operator[] (int elem)  { return ( *(first + elem) ); }
-  /* no bounds checking;    */
-
-private:
-  int numbOfCons;
-  Equation* first;
-};
 
 
 enum BoardTags {
@@ -247,15 +214,10 @@ private:
   Script script;
 
 public:
-  Script &getScriptRef() { return script; }
-  void newScript(int size) {
-    script.allocate(size);
+  Script & getScript(void) {
+    return script;
   }
 
-  void setScript(int i,TaggedRef *v,TaggedRef r) {
-    script[i].setLeft(v);
-    script[i].setRight(r);
-  }
 
   //
   // Suspension list

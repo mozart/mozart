@@ -906,18 +906,17 @@ BigInt * BigInt::gc() {
 inline
 void Script::gc() {
 
-  if (first){
-    int sz = numbOfCons*sizeof(Equation);
+  Assert(sizeof(Equation) == 2 * sizeof(TaggedRef));
 
-    Equation *aux = (Equation*) heapMalloc(sz);
+  if (size > 0) {
 
-    Assert(sizeof(Equation) == 2*sizeof(TaggedRef));
+    Equation * to = (Equation *) heapMalloc(size * sizeof(Equation));
 
 #ifdef DEBUG_CHECK
-    for (int i = numbOfCons; i--; ){
+    for (int i = size; i--; ){
       //  This is the very useful consistency check.
       //  'Equations' with non-variable at the left side are figured out;
-      TaggedRef auxTerm = first[i].left;
+      TaggedRef auxTerm = eqs[i].left;
       TaggedRef *auxTermPtr;
       if (!isInGc && oz_isRef(auxTerm)) {
         do {
@@ -938,9 +937,10 @@ void Script::gc() {
     }
 #endif
 
-  OZ_collectHeapBlock((TaggedRef *) first, (TaggedRef *) aux,
-                      numbOfCons * 2);
-  first = aux;
+    OZ_collectHeapBlock((TaggedRef *) eqs, (TaggedRef *) to,
+                        size * 2);
+    eqs = to;
+
   }
 
 }

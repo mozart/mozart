@@ -179,18 +179,22 @@ void unBind(TaggedRef *p, TaggedRef t) {
 
 void Trail::unwind(void) {
 
+  Board * cb = oz_currentBoard();
+
+  Script & s = cb->getScript();
+
   if (!isEmptyChunk()) {
 
-    int numbOfCons = chunkSize();
+    int n = chunkSize();
 
-    Board * bb = oz_currentBoard();
+    Assert(n > 0);
 
-    bb->newScript(numbOfCons);
+    s.allocate(n);
 
     // one single suspended thread for all;
-    Thread *thr = oz_newThreadPropagate(bb);
+    Thread *thr = oz_newThreadPropagate(cb);
 
-    for (int index = 0; index < numbOfCons; index++) {
+    for (int i = 0; i < n; i++) {
 
       switch (getTeType()) {
       case Te_Bind: {
@@ -201,7 +205,8 @@ void Trail::unwind(void) {
         Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
         Assert(oz_isVariable(value));
 
-        bb->setScript(index,refPtr,*refPtr);
+        s[i].left  = makeTaggedRef(refPtr);
+        s[i].right = *refPtr;
 
         TaggedRef vv= *refPtr;
         DEREF(vv,vvPtr,_vvTag);
@@ -227,10 +232,14 @@ void Trail::unwind(void) {
 
         oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
 
+        Assert(tagged2CVar(*varPtr)->isTrailed());
+
+        tagged2CVar(*varPtr)->unsetTrailed();
+
         oz_var_addSusp(varPtr, thr);
 
-        bb->setScript(index, varPtr,
-                      makeTaggedRef(newTaggedCVar(copy)));
+        s[i].left  = makeTaggedRef(varPtr);
+        s[i].right = makeTaggedRef(newTaggedCVar(copy));
 
         break;
       }
@@ -242,6 +251,8 @@ void Trail::unwind(void) {
       }
     }
 
+  } else {
+    s.setEmpty();
   }
 
   popMark();
@@ -270,6 +281,10 @@ void Trail::unwindFailed(void) {
       Assert(isCVar(*varPtr));
 
       oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+
+      Assert(tagged2CVar(*varPtr)->isTrailed());
+
+      tagged2CVar(*varPtr)->unsetTrailed();
 
       break;
     }
@@ -327,6 +342,10 @@ void Trail::unwindEqEq(void) {
       Assert(isCVar(*varPtr));
 
       oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+
+      Assert(tagged2CVar(*varPtr)->isTrailed());
+
+      tagged2CVar(*varPtr)->unsetTrailed();
 
       am.addSuspendVarList(varPtr);
 
