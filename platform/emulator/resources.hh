@@ -212,6 +212,7 @@
 #ifdef RS_PROFILE
 #define HEAP_PROFILE
 #define OUTLINE
+#define PROFILE_INSTR
 #endif
 
 
