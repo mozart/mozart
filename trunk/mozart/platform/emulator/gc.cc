@@ -258,7 +258,7 @@ public:
     AM *e = &am;
 
     for (ThreadList *aux = allthreads; aux; aux=aux->next) {
-      out = OZ_cons(makeTaggedConst(new OzThread(e->currentBoard,aux->elem)),
+      out = OZ_cons(makeTaggedConst(aux->elem),
 		    out);
     }
     return out;
@@ -1003,6 +1003,12 @@ Thread *Thread::gcThread ()
 
   //  Some invariants:
   // nothing can be copied (IN_TC) until stability;
+
+  // first class threads: must only copy thread when local to solve!!!
+  if (opMode == IN_TC && !isLocalBoard(getBoardFast())) {
+    return this;
+  }
+
   Assert (opMode == IN_GC || !(isRunnable ()));
 
   // 
@@ -1019,7 +1025,7 @@ Thread *Thread::gcThread ()
   if (isRunnable () || hasStack ()) {
     ThreadList::add (newThread);
   }
-  newThread->group = group->gcGroup();
+  gcTagged(cell,newThread->cell);
 
   ptrStack.push (newThread, PTR_THREAD);
 
@@ -1030,11 +1036,29 @@ Thread *Thread::gcThread ()
   return (newThread);
 }
 
+Thread *Thread::gcDeadThread()
+{
+  Assert(isDeadThread());
+
+  COUNT(thread);
+  Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
+  GCNEWADDRMSG (newThread);
+  gcTagged(cell,newThread->cell);
+
+  newThread->setBoard(0);
+  newThread->state.flags=0;
+  newThread->item.threadBody=0;
+
+  storeForward (&item.threadBody, newThread);
+
+  return (newThread);
+}
+
 void Thread::gcRecurse ()
 {
   GCMETHMSG("Thread::gcRecurse");
 
-  Board *newBoard = board->gcBoard ();
+  Board *newBoard = getBoard()->gcBoard ();
   if (!newBoard) {
     // 
     //  The following assertion holds because suspended threads
@@ -1051,21 +1075,21 @@ void Thread::gcRecurse ()
       //  ... it means that the thread is actually dead:
       //  it should happen only if this thread was local 
       //  to some (deep) guard, and that guard was killed or cancelled;
-      newBoard=board->gcGetNotificationBoard();
+      newBoard=getBoard()->gcGetNotificationBoard();
       Bool newHome=NO;
 
-      while (board != newBoard) {
+      while (getBoard() != newBoard) {
 	if (!(discardLocalTasks ())) {
 	  newHome=OK;
-	  board = newBoard;
+	  setBoard(newBoard);
 	  break;
 	}
-	board=board->getParentFast();
+	setBoard(getBoard()->getParentFast());
       }
 
-      board=board->gcBoard();
+      setBoard(getBoard()->gcBoard());
       if (newHome) {
-	board->incSuspCount();
+	getBoard()->incSuspCount();
       }
 
       //
@@ -1076,8 +1100,8 @@ void Thread::gcRecurse ()
       // Assert (isEmpty ());
     } else {
       //
-      board = (board->gcGetNotificationBoard ())->gcBoard ();
-      board->incSuspCount ();
+      setBoard(getBoard()->gcGetNotificationBoard()->gcBoard());
+      getBoard()->incSuspCount ();
 
       //
       //  Convert the thread to a 'wakeup' type, and just throw away
@@ -1086,7 +1110,7 @@ void Thread::gcRecurse ()
       item.threadBody = (RunnableThreadBody *) NULL;
     }
   } else {
-    board=newBoard;
+    setBoard(newBoard);
   }
 
   //
@@ -1890,25 +1914,6 @@ void TaskStack::gc(TaskStack *newstack)
 //                           NODEs
 //*********************************************************************
 
-Group *Group::gcGroup ()
-{
-  GCMETHMSG ("Group::gcGroup");
-
-  if (!this) return 0;
-  CHECKCOLLECTED (ToInt32 (parent), Group*);
-
-  // COUNT(group);
-  Group *newGroup = (Group *) gcRealloc (this, sizeof (*this));
-  GCNEWADDRMSG (newGroup);
-
-  gcTagged(exceptionHandler,newGroup->exceptionHandler);
-  newGroup->parent=parent->gcGroup();
-
-  storeForward (&parent, newGroup);
-
-  return (newGroup);
-}
-
 void ConstTerm::gcConstRecurse()
 {
   incVarCount;
@@ -2000,19 +2005,9 @@ void ConstTerm::gcConstRecurse()
 
   case Co_Thread:
     {
-      OzThread *thread = (OzThread *) this;
-      thread->t = thread->t->gcThread();
       break;
     }
     
-  case Co_Group:
-    {
-      Group *gr = (Group *) this;
-      gr->parent = gr->parent->gcGroup();
-      gcTagged(gr->exceptionHandler, gr->exceptionHandler);
-      break;
-    }
-	
   case Co_Builtin:
     {
       Builtin *bi = (Builtin *) this;
@@ -2089,13 +2084,11 @@ ConstTerm *ConstTerm::gcConstTerm()
     break;
 
   case Co_Thread:
-    //CheckLocal((OzThread *) this);
-    sz = sizeof(OzThread);
-    break;
-
-  case Co_Group:
-    sz = sizeof(Group);
-    break;
+    {
+      Thread *th = ((Thread *)this)->gcThread();
+      if (!th) th = ((Thread *)this)->gcDeadThread();
+      return (ConstTerm *) th;
+    }
 
   case Co_Builtin:
     sz = sizeof(Builtin);

@@ -220,9 +220,11 @@ public:
   OZ_FDIntVar(void) {}
   OZ_FDIntVar(OZ_Term v) { enter(v); }
 		      
-  static void * operator new(size_t);         
-  static void * operator new[](size_t);         
+  static void * operator new(size_t);
   static void operator delete(void *, size_t);
+
+  // mm2: portability ?
+  static void * operator new[](size_t);
   static void operator delete[](void *, size_t);
 
   OZ_FiniteDomain &operator * (void) {return *domPtr;}
