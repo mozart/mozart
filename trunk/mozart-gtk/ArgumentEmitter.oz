@@ -148,7 +148,7 @@ define
 	    GtkConstants, writeConstants(Cr)
 	 [] nil  then
 	    TextFile, putS({ToS "  }"})
-	    TextFile, putS({ToS "  fprintf(stderr, \"makeArgTerm: selecting default fallback on type '%d'\n\", arg->type);"})
+	    TextFile, putS({ToS "  fprintf(stderr, \"makeArgTerm: selecting default fallback on type '%d'\\n\", arg->type);"})
 	    TextFile, putS("  return GOZ_ARG_object(arg->d.object_data);")
 	 end
       end
