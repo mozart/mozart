@@ -529,7 +529,7 @@ CEs={Map Cs fun {$ C}
         <Figure id="figure.widgets-2.event-args2">
           <Caption/Some event modifiers and types./
           <P proglang=none>
-            <Table>
+            <Table id="table.widgets-2.event">
               <TR/<TH colspan=5/Event Modifier//
               <TR>
                 <TD/<<Control>>/
@@ -615,7 +615,7 @@ CEs={Map Cs fun {$ C}
         <Figure id="figure.widgets-2.event-args">
           <Caption/Event arguments./
           <P>
-            <Table>
+            <Table id="table.widgets-2.event-args">
               <TR/<TH colspan=4/Argument Type//
               <TR>
                 <TD/<<string(?_{A})>>, <<?_{A}>>/
