@@ -153,12 +153,12 @@ while ((RET = CALL) < 0) {                   \
 // -------------------------------------------------
 
 int raiseUnixError(int n, char * e, char * g) {
-  return am.raise(E_SYSTEM,E_UNIX, g, 2, OZ_int(n), OZ_string(e));
+  return am.raise(E_SYSTEM,E_OS, g, 2, OZ_int(n), OZ_string(e));
 }
 
 // return upon unix-error
 #define RETURN_UNIX_ERROR \
-{ return raiseUnixError(errno, OZ_unixError(errno), "unix"); }
+{ return raiseUnixError(errno, OZ_unixError(errno), "os"); }
 
 
 #if defined(ULTRIX_MIPS) || defined(OS2_I486)
@@ -1916,69 +1916,69 @@ OZ_C_ioproc_begin(Fun,Arity)                            \
 OZ_C_proc_end
 
 
-NotAvail("Unix.bindUnix",        2, unix_bindUnix);
-NotAvail("Unix.sendToUnix",      5, unix_sendToUnix);
-NotAvail("Unix.connectUnix",     2, unix_connectUnix);
-NotAvail("Unix.acceptUnix",      3, unix_acceptUnix);
-NotAvail("Unix.receiveFromUnix", 7, unix_receiveFromUnix);
+NotAvail("Unix.bind",        2, unix_bindUnix);
+NotAvail("Unix.sendTo",      5, unix_sendToUnix);
+NotAvail("Unix.connect",     2, unix_connectUnix);
+NotAvail("Unix.accept",      3, unix_acceptUnix);
+NotAvail("Unix.receiveFrom", 7, unix_receiveFromUnix);
 #ifndef GNUWIN32
-NotAvail("Unix.getServByName",   3, unix_getServByName);
-NotAvail("Unix.wait",            2, unix_wait);
-NotAvail("Unix.uName",           1, unix_uName);
+NotAvail("OS.getServByName",   3, unix_getServByName);
+NotAvail("OS.wait",            2, unix_wait);
+NotAvail("OS.uName",           1, unix_uName);
 #endif
 
 #ifdef _MSC_VER
-NotAvail("Unix.getDir",          2, unix_getDir);
-NotAvail("Unix.fileDesc",        2, unix_fileDesc);
+NotAvail("OS.getDir",          2, unix_getDir);
+NotAvail("OS.fileDesc",        2, unix_fileDesc);
 #endif
 
 #endif
 
 OZ_BIspec spec[] = {
-  {"Unix.getDir",          2, unix_getDir},
-  {"Unix.stat",            2, unix_stat},
-  {"Unix.getCWD",          1, unix_getCWD},
-  {"Unix.open",            4, unix_open},
-  {"Unix.fileDesc",        2, unix_fileDesc},
-  {"Unix.close",           1, unix_close},
-  {"Unix.write",           3, unix_write},
-  {"Unix.read",            5, unix_read},
-  {"Unix.lSeek",           4, unix_lSeek},
-  {"Unix.unlink",          1, unix_unlink},
-  {"Unix.readSelect",      1, unix_readSelect},
-  {"Unix.writeSelect",     1, unix_writeSelect},
-  {"Unix.acceptSelect",    1, unix_acceptSelect},
-  {"Unix.deSelect",        1, unix_deSelect},
-  {"Unix.system",          2, unix_system},
-  {"Unix.getEnv",          2, unix_getEnv},
-  {"Unix.putEnv",          2, unix_putEnv},
-  {"Unix.time",            1, unix_time},
-  {"Unix.gmTime",          1, unix_gmTime},
-  {"Unix.localTime",       1, unix_localTime},
-  {"Unix.srand",           1, unix_srand},
-  {"Unix.rand",            1, unix_rand},
-  {"Unix.randLimits",      2, unix_randLimits},
-  {"Unix.socket",          4, unix_socket},
-  {"Unix.bindInet",        2, unix_bindInet},
-  {"Unix.listen",          2, unix_listen},
-  {"Unix.connectInet",     3, unix_connectInet},
-  {"Unix.acceptInet",      4, unix_acceptInet},
-  {"Unix.shutDown",        2, unix_shutDown},
-  {"Unix.send",            4, unix_send},
-  {"Unix.sendToInet",      6, unix_sendToInet},
-  {"Unix.receiveFromInet", 8, unix_receiveFromInet},
-  {"Unix.getSockName",     2, unix_getSockName},
-  {"Unix.getHostByName",   2, unix_getHostByName},
-  {"Unix.bindUnix",        2, unix_bindUnix},
-  {"Unix.sendToUnix",      5, unix_sendToUnix},
-  {"Unix.connectUnix",     2, unix_connectUnix},
-  {"Unix.acceptUnix",      3, unix_acceptUnix},
-  {"Unix.receiveFromUnix", 7, unix_receiveFromUnix},
-  {"Unix.pipe",            4, unix_pipe},
-  {"Unix.tempName",        3, unix_tempName},
-  {"Unix.wait",            2, unix_wait},
-  {"Unix.getServByName",   3, unix_getServByName},
-  {"Unix.uName",           1, unix_uName},
+  {"OS.getDir",          2, unix_getDir},
+  {"OS.stat",            2, unix_stat},
+  {"OS.getCWD",          1, unix_getCWD},
+  {"OS.open",            4, unix_open},
+  {"OS.fileDesc",        2, unix_fileDesc},
+  {"OS.close",           1, unix_close},
+  {"OS.write",           3, unix_write},
+  {"OS.read",            5, unix_read},
+  {"OS.lSeek",           4, unix_lSeek},
+  {"OS.unlink",          1, unix_unlink},
+  {"OS.readSelect",      1, unix_readSelect},
+  {"OS.writeSelect",     1, unix_writeSelect},
+  {"OS.acceptSelect",    1, unix_acceptSelect},
+  {"OS.deSelect",        1, unix_deSelect},
+  {"OS.system",          2, unix_system},
+  {"OS.getEnv",          2, unix_getEnv},
+  {"OS.putEnv",          2, unix_putEnv},
+  {"OS.time",            1, unix_time},
+  {"OS.gmTime",          1, unix_gmTime},
+  {"OS.localTime",       1, unix_localTime},
+  {"OS.srand",           1, unix_srand},
+  {"OS.rand",            1, unix_rand},
+  {"OS.randLimits",      2, unix_randLimits},
+  {"OS.socket",          4, unix_socket},
+  {"OS.bind",            2, unix_bindInet},
+  {"OS.listen",          2, unix_listen},
+  {"OS.connect",         3, unix_connectInet},
+  {"OS.accept",          4, unix_acceptInet},
+  {"OS.shutDown",        2, unix_shutDown},
+  {"OS.send",            4, unix_send},
+  {"OS.sendTo",          6, unix_sendToInet},
+  {"OS.receiveFrom",     8, unix_receiveFromInet},
+  {"OS.getSockName",     2, unix_getSockName},
+  {"OS.getHostByName",   2, unix_getHostByName},
+  {"OS.pipe",            4, unix_pipe},
+  {"OS.tempName",        3, unix_tempName},
+  {"OS.wait",            2, unix_wait},
+  {"OS.getServByName",   3, unix_getServByName},
+  {"OS.uName",           1, unix_uName},
+  {"Unix.bind",          2, unix_bindUnix},
+  {"Unix.sendTo",        5, unix_sendToUnix},
+  {"Unix.connect",       2, unix_connectUnix},
+  {"Unix.accept",        3, unix_acceptUnix},
+  {"Unix.receiveFrom",   7, unix_receiveFromUnix},
   {0,0,0}
 };
 

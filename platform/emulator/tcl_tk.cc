@@ -38,7 +38,7 @@ TaggedRef tcl_dict;
 
 OZ_Return raise_os_error()
 {
-  return am.raise(E_SYSTEM,E_UNIX,"unix",2,OZ_int(errno),OZ_atom(OZ_unixError(errno)));
+  return am.raise(E_SYSTEM,E_OS,"os",2,OZ_int(errno),OZ_atom(OZ_unixError(errno)));
 }
 
 OZ_Return raise_type_error(TaggedRef tcl)

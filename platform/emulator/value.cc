@@ -44,7 +44,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
   AtomDebugIP, AtomDebugPerdio,
   RecordFailure,
-  E_ERROR, E_KERNEL, E_OBJECT, E_OPEN, E_TK, E_UNIX, E_SYSTEM;
+  E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM;
 
 
 // Some often used constants
@@ -163,9 +163,8 @@ void initLiterals()
   E_ERROR = makeTaggedAtom("error");
   E_KERNEL= makeTaggedAtom("kernel");
   E_OBJECT= makeTaggedAtom("object");
-  E_OPEN  = makeTaggedAtom("open");
   E_TK    = makeTaggedAtom("tk");
-  E_UNIX  = makeTaggedAtom("unix");
+  E_OS    = makeTaggedAtom("os");
   E_SYSTEM= makeTaggedAtom("system");
 
 }
