@@ -52,6 +52,9 @@
 <!ENTITY % proglang.values.local "|sh|makefile|java">
 <!ENTITY % p.mix.local "|em">
 <!ELEMENT em - - (#PCDATA)>
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY ellipsis PI "ellipsis">
 <!ENTITY ie PI "ie">
@@ -103,6 +106,14 @@
     <author.Extern to="author.db" key="Denys.Duchier">
     <author.Extern to="author.db" key="Leif.Kornstaedt">
     <author.Extern to="author.db" key="Christian.Schulte">
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="apptut.gif" type=gif>
+      </Picture.Choice>
+    <Abstract>
+    This document is an introduction in application programming 
+    with Oz and Mozart. 
+    </Abstract>
 
     <part id=part.getting.started>
       <title/Getting Started/
