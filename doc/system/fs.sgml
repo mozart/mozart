@@ -704,7 +704,7 @@ determined the stream <<Is>> will be closed.
 >>>
 <item>
 This procedure writes all elements of <<M>> to <<Is>> as soon as
-<math/{\tt I} \in {\tt M}/ becomes <Em/unknown/.  When <<M>> becomes
+<math/{\tt I} \notin {\tt M}/ becomes <Em/known/.  When <<M>> becomes
 determined the stream <<Is>> will be closed.
 
 <entry>
