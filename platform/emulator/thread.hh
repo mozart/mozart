@@ -90,7 +90,8 @@ public:
 
   Thread(int prio);
 private:
-  Thread();
+  Thread() : ConstTerm(Co_Thread) { init(); }
+  void init();
   Bool isScheduled();
   void insertFromTail();
   void insertFromHead();
