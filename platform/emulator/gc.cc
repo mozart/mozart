@@ -2105,7 +2105,8 @@ Bool AM::idleGC()
 {
   if (getUsedMemory() > (conf.heapIdleMargin*conf.heapMaxSize)/100 && conf.gcFlag) {
     if (conf.showIdleMessage) {
-      message("gc ... ");
+      printf("gc ... ");
+      fflush(stdout);
     }
     int save = conf.gcVerbosity;
     conf.gcVerbosity = 0;

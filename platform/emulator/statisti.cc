@@ -201,7 +201,7 @@ int Statistics::Statistics_gcSoFar = 0;
 void Statistics::initGcMsg(int level)
 {
   if (level > 0)
-    message("Heap garbage collection\n");
+    printf("Heap garbage collection\n");
 
   gc_level = level;
   gc_utime = usertime();
