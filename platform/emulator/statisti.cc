@@ -505,7 +505,7 @@ void Statistics::printInstrCollapsable()
   for (int i=0; i<PROFILE_INSTR_MAX; i++) {
     for (int j=0; j<PROFILE_INSTR_MAX; j++) {
       if (instrCollapsable[i][j]!=0)
-        fprintf(out,"%010lu x %s %s\n",
+        fprintf(out,"%10lu x %s %s\n",
                 instrCollapsable[i][j],
                 opcodeToString((Opcode)i),opcodeToString((Opcode)j));
     }
