@@ -4198,9 +4198,7 @@ OZ_Term oz_getLocation(Board *bb)
 {
   OZ_Term out = oz_nil();
   while (!oz_isRootBoard(bb)) {
-    if (bb->isSolve()) {
-      out = oz_cons(OZ_atom("space"),out);
-    }
+    out = oz_cons(OZ_atom("space"),out);
     bb=bb->getParent();
   }
   return out;

@@ -255,22 +255,19 @@ int oz_incSolveThreads(Board *bb) {
 
   int ret = NO;
 
-  while (!oz_isRootBoard(bb)) {
+  while (!bb->isRoot()) {
 
-    if (bb->isSolve()) {
-      ret = OK;
-      SolveActor *sa = SolveActor::Cast(bb->getActor());
-      // WRONG ASSERTION CS-SPECIAL
-      // Assert (!sa->isCommitted());
+    ret = OK;
 
-      //
-      sa->incThreads();
+    SolveActor *sa = SolveActor::Cast(bb->getActor());
 
-      //
-      Assert (!(oz_isStableSolve (sa)));
-    }
+    sa->incThreads();
+
+    Assert(!(oz_isStableSolve (sa)));
+
     bb = bb->getParent()->derefBoard();
   }
+
   return ret;
 }
 
@@ -282,51 +279,29 @@ void oz_decSolveThreads(Board *bb, char * s)
 void oz_decSolveThreads(Board *bb)
 {
 #endif
-  while (!oz_isRootBoard(bb)) {
-    Assert(!bb->isCommitted());
-    if (bb->isSolve()) {
-      SolveActor *sa = SolveActor::Cast(bb->getActor());
+  while (!bb->isRoot()) {
 
-      //
-      // local optimization - check for threads first;
-      if (sa->decThreads () == 0) {
-        //
-        // ... first - notification board below the failed solve board;
-        if (!(sa->isCommitted ()) && oz_isStableSolve (sa)) {
-          oz_newThreadInject(bb);
-        }
-      } else {
-        Assert (sa->getThreads () > 0);
+    Assert(!bb->isCommitted());
+
+    SolveActor *sa = SolveActor::Cast(bb->getActor());
+
+    // local optimization - check for threads first;
+    if (sa->decThreads () == 0) {
+
+      // ... first - notification board below the failed solve board;
+      if (!(sa->isCommitted ()) && oz_isStableSolve (sa)) {
+        oz_newThreadInject(bb);
       }
+    } else {
+      Assert (sa->getThreads () > 0);
     }
+
     bb = bb->getParent();
   }
 #ifdef DEBUG_THREADCOUNT
   //printf("(AM::decSolveThreads LTQs=%d) ", existingLTQs); fflush(stdout);
 #endif
 }
-
-#ifdef DEBUG_CHECK
-/*
- *  Just check whether the 'bb' is located beneath some (possibly dead)
- * solve board;
- */
-Bool oz_isInSolveDebug (Board *bb)
-{
-  while (!oz_isRootBoard(bb)) {
-    Assert(!bb->isCommitted());
-    if (bb->isSolve()) {
-      SolveActor *sa = SolveActor::Cast(bb->getActor());
-      if (!sa->isCommitted()) {
-        return (OK);
-      }
-    }
-    bb = bb->getParent();
-  }
-
-  return (NO);
-}
-#endif
 
 static
 Bool extParameters(OZ_Term list, Board * solve_board)
@@ -363,7 +338,7 @@ Bool extParameters(OZ_Term list, Board * solve_board)
           found = TRUE;
           break;
         }
-      } while (!tmp->_isRoot());
+      } while (!tmp->isRoot());
 
     } else if (OZ_isCons(h)) {
       found = extParameters(h, solve_board);
@@ -444,7 +419,6 @@ void oz_removeExtThread(Thread *tt)
   Board *sb = GETBOARD(tt)->getSolveBoard ();
 
   while (sb) {
-    Assert (sb->isSolve());
 
     SolveActor *sa = SolveActor::Cast(sb->getActor());
     solve_clearSuspList(sa,tt);
@@ -454,7 +428,7 @@ void oz_removeExtThread(Thread *tt)
 
 void oz_checkExtSuspension(Suspension susp, Board * varHome)
 {
-  if (am.isBelowSolveBoard()) {
+  if (!oz_onToplevel()) {
     varHome=varHome->derefBoard();
     Board * bb = oz_currentBoard();
     Bool wasFound = NO;
@@ -463,15 +437,16 @@ void oz_checkExtSuspension(Suspension susp, Board * varHome)
     while (bb != varHome) {
       Assert (!oz_isRootBoard(bb));
       Assert (!bb->isCommitted() && !bb->isFailed());
-      if (bb->isSolve()) {
-        SolveActor *sa = SolveActor::Cast(bb->getActor());
-        sa->addSuspension(susp);
-        wasFound = OK;
-      }
+
+      SolveActor *sa = SolveActor::Cast(bb->getActor());
+      sa->addSuspension(susp);
+      wasFound = OK;
+
       bb = bb->getParent();
     }
 
-    if (wasFound) susp.setExtSuspension();
+    if (wasFound)
+      susp.setExtSuspension();
   }
 }
 
@@ -482,7 +457,6 @@ void _checkExtSuspension(Suspension susp)
   Board *sb = GETBOARDOBJ(susp)->getSolveBoard();
 
   while (sb) {
-    Assert(sb->isSolve());
 
     SolveActor * sa = SolveActor::Cast(sb->getActor());
     if (oz_isStableSolve(sa)) {

@@ -47,8 +47,6 @@ enum ThreadFlag {
   T_runnable = 0x000002,  // the thread is runnable;
   T_stack    = 0x000004,  // it has an (allocated) stack;
   T_catch    = 0x000008,  // has or has had an exception handler
-  T_solve    = 0x000010,  // it was created in a search CS
-                          // (former notificationBoard);
   T_ext      = 0x000020,  // an external suspension wrt current search problem
   T_tag      = 0x000040,  // used to avoid duplication of threads
   T_lpq      = 0x000080,  // designates local thread queue
@@ -237,15 +235,6 @@ public:
   //  For reinitialisation;
   void setRunnable() {
     state.flags = (state.flags & ~T_dead) | T_runnable;
-  }
-
-  Bool isInSolve() {
-    Assert (!isDeadThread());
-    return state.flags & T_solve;
-  }
-  void setInSolve() {
-    Assert(isRunnable());
-    state.flags =  state.flags | T_solve;
   }
 
   //  non-runnable threads;

@@ -2457,7 +2457,7 @@ Board* Board::gcGetNotificationBoard() {
 
   while (1) {
 
-    if (bb->gcIsMarked() || bb->_isRoot())
+    if (bb->gcIsMarked() || bb->isRoot())
       return nb;
 
     Assert(!bb->isCommitted());
@@ -2499,7 +2499,7 @@ Bool Board::gcIsAlive() {
     if (bb->isFailed())
       return NO;
 
-    if (bb->_isRoot() || bb->gcIsMarked())
+    if (bb->isRoot() || bb->gcIsMarked())
       return OK;
 
     Actor *aa = bb->getActor();

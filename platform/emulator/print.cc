@@ -886,10 +886,10 @@ void Board::printStream(ostream &stream, int depth)
     return;
   }
 
-  if (_isRoot()) {
-    stream << "Root";
-  } else if (isSolve ()) {
-    stream << "Solve";
+  if (isRoot()) {
+    stream << "Root Space";
+  } else {
+    stream << "Space";
   }
 
   stream << "Board @" << this << " [";
@@ -918,7 +918,7 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
   stream << indent(offset) << "Flags: " << (void *) flags << endl;
   stream << indent(offset) << "Script: " << endl;
   script.printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-  if (_isRoot()) return;
+  if (isRoot()) return;
   if (isCommitted()) {
     stream << indent(offset) << "Board:" << endl;
     u.ref->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
@@ -959,11 +959,6 @@ void Actor::printStream(ostream &stream, int depth)
     return;
   }
 
-  if (isSolve()) {
-    stream << "Solve";
-  } else {
-    stream << "Unknown";
-  }
   stream << "Actor @"
          << this;
   if (isCommitted()) {
@@ -979,9 +974,9 @@ void Actor::printLongStream(ostream &stream, int depth, int offset)
   }
   printStream(stream,depth);
   stream << endl;
-  if (isSolve()) {
-    ((SolveActor *)this)->printLongStreamSolve(stream,depth,offset);
-  }
+
+  ((SolveActor *)this)->printLongStreamSolve(stream,depth,offset);
+
   stream << indent(offset) << "Board: " << endl;
   board->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
 }
@@ -1121,7 +1116,6 @@ void Thread::printStream(ostream &stream, int depth)
     stream << "(unknown type " << getThrType() << ")";
   }
 
-  if ((getFlags ()) & T_solve)     stream << " solve";
   if ((getFlags ()) & T_ext)       stream << " ext";
   if ((getFlags ()) & T_tag)       stream << " tag";
   if ((getFlags ()) & T_lpq)       stream << " lpq";

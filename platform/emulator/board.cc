@@ -126,7 +126,7 @@ Board* Board::getSolveBoard ()
   Assert(!isCommitted());
   Board *bb;
   for (bb=this;
-       bb!=0 && !bb->isSolve();
+       bb!=0 && bb->isRoot();
        bb=bb->getParentAndTest()) {}
   return bb;
 }
@@ -136,7 +136,6 @@ Board::Board(Actor *a,int typ)
 {
   Assert(a!=NULL || typ==Bo_Root);
   Assert(a==NULL || !a->isCommitted());
-  Assert(typ==Bo_Root || typ==Bo_Solve);
   flags     = typ;
   suspCount = 0;
   u.actor   = a;
@@ -148,13 +147,13 @@ Board::Board(Actor *a,int typ)
  * Before copying all spaces but the space to be copied get marked.
  */
 void Board::setGlobalMarks(void) {
-  Assert(!_isRoot());
+  Assert(!isRoot());
 
   Board * b = this;
 
   do {
     b = b->getParent(); b->setGlobalMark();
-  } while (!b->_isRoot());
+  } while (!b->isRoot());
 
 }
 
@@ -162,13 +161,13 @@ void Board::setGlobalMarks(void) {
  * Purge marks after copying
  */
 void Board::unsetGlobalMarks(void) {
-  Assert(!_isRoot());
+  Assert(!isRoot());
 
   Board * b = this;
 
   do {
     b = b->getParent(); b->unsetGlobalMark();
-  } while (!b->_isRoot());
+  } while (!b->isRoot());
 
 }
 
@@ -185,7 +184,7 @@ Bool Board::checkAlive()
 loop:
   Assert(!bb->isCommitted());
   if (bb->isFailed()) return NO;
-  if (bb->_isRoot()) return OK;
+  if (bb->isRoot()) return OK;
   Actor *aa=bb->getActor();
   if (aa->isCommitted()) return NO;
   bb=GETBOARD(aa);

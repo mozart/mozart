@@ -78,12 +78,11 @@ private:
 
 
 enum BoardFlags {
-  Bo_Solve      = 0x0004,
-  Bo_Root       = 0x0008,
-  Bo_Installed  = 0x0010,
-  Bo_GlobalMark = 0x0080,
-  Bo_Failed     = 0x0100,
-  Bo_Committed  = 0x0200,
+  Bo_Root       = 0x0001,
+  Bo_Installed  = 0x0002,
+  Bo_GlobalMark = 0x0004,
+  Bo_Failed     = 0x0008,
+  Bo_Committed  = 0x0010,
 };
 
 
@@ -113,8 +112,7 @@ public:
   Bool isFailed()       { return flags & Bo_Failed;     }
   Bool isInstalled()    { return flags & Bo_Installed;  }
   Bool isMarkedGlobal() { return flags & Bo_GlobalMark; }
-  Bool _isRoot()        { return flags & Bo_Root;       }
-  Bool isSolve ()       { return flags & Bo_Solve;      }
+  Bool isRoot()         { return flags & Bo_Root;       }
 
   void setInstalled()  { flags |= Bo_Installed; }
   void setFailed()     { flags |= Bo_Failed; }
@@ -160,7 +158,7 @@ public:
 
   Board *getParentAndTest() {
     Assert(!isCommitted());
-    if (isFailed() || _isRoot() || u.actor->isCommitted()) return 0;
+    if (isFailed() || isRoot() || u.actor->isCommitted()) return 0;
     return getParent();
   }
 

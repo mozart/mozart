@@ -271,8 +271,6 @@ void AM::init(int argc,char **argv)
   cachedSelf   = NULL;
   setShallowHeapTop(NULL);
   setCurrent(_rootBoard,OK);
-  _currentSolveBoard = (Board *) NULL;
-  wasSolveSet = NO;
 
   lastThreadID    = 0;
   debugMode       = NO;
@@ -371,7 +369,6 @@ void AM::exitOz(int status)
 
 #ifdef DEBUG_CHECK
 static Board *oldBoard = (Board *) NULL;
-static Board *oldSolveBoard = (Board *) NULL;
 #endif
 
 void AM::setCurrent(Board *c, Bool checkNotGC)
@@ -383,19 +380,6 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
   _currentUVarPrototype = makeTaggedUVar(c);
   DebugCheckT(oldBoard=c);
 
-  if (c->isSolve ()) {
-    Assert(!checkNotGC || oldSolveBoard == _currentSolveBoard);
-
-    _currentSolveBoard = c;
-    wasSolveSet = OK;
-    DebugCode (oldSolveBoard = c);
-  } else if (wasSolveSet == OK) {
-    Assert(!checkNotGC || oldSolveBoard == _currentSolveBoard);
-
-    _currentSolveBoard = c->getSolveBoard();
-    wasSolveSet = NO;
-    DebugCode (oldSolveBoard = _currentSolveBoard);
-  }
 }
 
 // mm2: missing ifdef VIRTUAL_SITE?

@@ -56,7 +56,7 @@ void SolveActor::mergeNonMono(Board *bb) {
   // merge nonmonotonic susp lists
   if (nonMonoSuspList) {
     // Merge in current solve board but not elsewhere
-    if (bb && bb->isSolve()) {
+    if (!bb->isRoot()) {
       // merge nonmonotonic susp list to another solve space
       SolveActor * sa = SolveActor::Cast(bb->getActor());
       if (sa->nonMonoSuspList) {
