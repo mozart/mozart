@@ -392,12 +392,27 @@ OZ_Term OZ_int(int i)
   return oz_int(i);
 }
 
+OZ_Term OZ_unsignedInt(unsigned int i)
+{
+  return oz_unsignedInt(i);
+}
+
+OZ_Term OZ_unsignedLong(unsigned long i)
+{
+  return oz_unsignedLong(i);
+}
+
 /*
  * BigInt: return INT_MAX/INT_MIN if too big
  */
 int OZ_intToC(OZ_Term term)
 {
   return oz_intToC(oz_deref(term));
+}
+
+unsigned long OZ_intToCulong(OZ_Term term)
+{
+  return tagged2BigInt(oz_deref(term))->getUnsignedLong();
 }
 
 OZ_Term OZ_CStringToInt(char *str)
