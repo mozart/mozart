@@ -211,16 +211,9 @@ case "$cmd" in
 	   echo "Usage: $0 infile outfile"
 	   exit 1
         fi
-	tempfile=/tmp/ozsac$$
-	trap "rm -f $tempfile" 0
         infile=$1; outfile=$2
-        $OZCOMPILER +p /dev/null +c $infile +dn $tempfile
-        if [ $? -ne 0 ]; then exit 1; fi
-        (echo "#!/bin/sh"; 
-         echo ": \${OZHOME=$OZHOME}";
-         echo "exec \$OZHOME/bin/ozsa -quiet -f \$0 -a \$@";
-         echo "###";
-         cat $tempfile) > $outfile
+        $OZCOMPILER +p /dev/null +c $infile +dn $outfile
+        if [ $? -ne 0 ]; then rm -f $outfile; exit 1; fi
         chmod +x $outfile
 	echo ""
    ;;
