@@ -1,0 +1,5 @@
+*mozart-base-1.2.5-r2 (08 Apr 2003)
+
+  08 Apr 2003; Denys Duchier (denys.duchier@loria.fr):
+  updated ebuild because some dependencies have been moved from one
+  category to another.
