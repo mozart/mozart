@@ -1684,8 +1684,8 @@ fi
 
 
 
-: ${oz_inc_path="/usr/local/include /usr/pkg/include /usr/X11R6/include /usr/X11/include /opt/X11R6/include /opt/X11/include"}
-: ${oz_lib_path="/usr/local/lib /usr/pkg/lib /usr/X11R6/lib /usr/X11/lib /opt/X11/lib /opt/X11R6/lib"}
+: ${oz_x11_inc_path_extra="/usr/local/include /usr/pkg/include /usr/X11R6/include /usr/X11/include /opt/X11R6/include /opt/X11/include"}
+: ${oz_x11_lib_path_extra="/usr/local/lib /usr/pkg/lib /usr/X11R6/lib /usr/X11/lib /opt/X11/lib /opt/X11R6/lib"}
 
 # Check whether --with-x11 or --without-x11 was given.
 if test "${with_x11+set}" = set; then
@@ -1724,8 +1724,8 @@ then
     oz_x11_inc_dir=$with_x11_include
 fi
 
-oz_inc_path="$oz_x11_inc_dir $oz_inc_path"
-oz_lib_path="$oz_x11_lib_dir $oz_lib_path"
+oz_inc_path="$oz_x11_inc_dir $oz_inc_path $oz_x11_inc_path_extra"
+oz_lib_path="$oz_x11_lib_dir $oz_lib_path $oz_x11_lib_path_extra"
 
 if test "$target" != i386-mingw32
 then
