@@ -34,12 +34,12 @@ class Broker from Contract History
       A R
    in
       Contract, {Adjoin M announce(answer:?A reply:R)}
-      case A==reject then skip else R=grant end
+      if A\=reject then R=grant end
       History, M
    end
 
    meth add(company:C driver:D<=unit ...) = M
-      case D==unit then
+      if D==unit then
 	 Contract,add(C {NewAgent Company init(name:C toplevel:self.toplevel)})
       else 
 	 {Contract,get(C $) add(driver:D city:M.city)}
@@ -47,7 +47,7 @@ class Broker from Contract History
    end
    
    meth remove(company:C driver:D<=unit)
-      case D==unit then Contract,remove(C) else
+      if D==unit then Contract,remove(C) else
 	 {Contract,get(C $) remove(D)}
       end
    end

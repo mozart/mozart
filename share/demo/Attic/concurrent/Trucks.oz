@@ -31,23 +31,20 @@ local
    Height      = 165
    TruckHeight = 60
    Free        = 25
-      
-   functor MakeTruckRace prop once
+   ImageUrl    = 'http://www.ps.uni-sb.de/ozhome/demo/images/trucks/'
+
+in
+   
+   functor
 
    import
       Tk
-
       TkTools
-
-      Applet
+      Application
 
    body
-      Applet.spec = single(title(type:string default:"Truck Race"))
-
-      Url = 'http://www.ps.uni-sb.de/ozhome/demo/images/trucks/'
-
-      Images = {TkTools.images [Url#'truck-right.gif'
-				Url#'truck-left.gif']}
+      Images = {TkTools.images [ImageUrl#'truck-right.gif'
+				ImageUrl#'truck-left.gif']}
 
       class Truck
 	 
@@ -82,7 +79,7 @@ local
 	 
 	 meth switch 
 	    step <- ~1 * @step
-	    case @step>0
+	    if @step>0
 	    then {self tk(itemconf image:Images.'truck-right')}
 	    else {self tk(itemconf image:Images.'truck-left')} 
 	    end
@@ -110,11 +107,15 @@ local
 	    Tk.canvasTag, tkClose
 	 end
       end
+
+      T = {New Tk.toplevel tkInit(title:  'Truckrace'
+				  delete: Application.exit # 0)}
       
-      C = {New Tk.canvas tkInit(parent: Applet.toplevel
+      C = {New Tk.canvas tkInit(parent: T
 				bg:     white
 				width:  Width
 				height: Height)}
+      
       {Tk.send pack(C fill:both)}
 
       thread {New Truck init(c:C y:Free)  _} end
@@ -122,10 +123,6 @@ local
       thread {New Truck init(c:C y:Free+TruckHeight*2) _} end
 
    end
-
-in
-    
-    MakeTruckRace
 
 end 
 

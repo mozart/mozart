@@ -24,14 +24,15 @@ local
    Germany = \insert 'germany.oz'
 
    fun {GetDist Src Dst}
-      case Src==Dst then 0
-      else V=Germany.map.Src.Dst in case {IsInt V} then V else V.1 end
+      if Src==Dst then 0
+      else V=Germany.map.Src.Dst in
+	 if {IsInt V} then V else V.1 end
       end
    end
 
    fun {GetDetourDist Src Via Dst}
-      case Via==Dst orelse Via==Src then 0
-      elsecase Src==Dst then 2*{GetDist Src Via}
+      if Via==Dst orelse Via==Src then 0
+      elseif Src==Dst then 2*{GetDist Src Via}
       else
 	 %% Due to sampling errors in the map data the detour might be
 	 %% negative!
@@ -40,9 +41,9 @@ local
    end
 
    fun {GetRoute Src Dst}
-      case Src==Dst then [Dst#0]
+      if Src==Dst then [Dst#0]
       else SrcDst=Germany.map.Src.Dst in
-	 case {IsInt SrcDst} then [Src#SrcDst Dst#0]
+	 if {IsInt SrcDst} then [Src#SrcDst Dst#0]
 	 else Via=SrcDst.2 in Src#Germany.map.Src.Via|{GetRoute Via Dst}
 	 end
       end
@@ -54,7 +55,7 @@ local
       fun {MkSrc Cs F}
 	 case Cs of nil then nil
 	 [] C|Cr then
-	    case {IsInt Germany.map.F.C} then Germany.coord.C|{MkSrc Cr F}
+	    if {IsInt Germany.map.F.C} then Germany.coord.C|{MkSrc Cr F}
 	    else {MkSrc Cr F}
 	    end
 	 end

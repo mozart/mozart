@@ -64,7 +64,7 @@ in
 	     Y = (MaxJobs - J) * JobDistance 
 	  in
 	     {self tk(create text ~5 Y font:Courier
-		      text: case J==1 then 10 else 0#(MaxJobs - J + 1) end
+		      text:  if J==1 then 10 else 0#(MaxJobs - J + 1) end
 		      anchor:e)}
 	  end}
 	 {For 1 MaxJobs 1
@@ -97,7 +97,7 @@ in
       end
 	 
       meth action(T SY)
-	 case @EditMode then
+	 if @EditMode then
 	    Y = SY - OffY
 	    J = {Get self.Jobs
 		 {Min {Max 1 (Y + JobDistance div 2 ) div JobDistance + 1}
@@ -107,13 +107,12 @@ in
 	    of create(R D) then
 	       {J newTask(resource:R duration:D)}
 	    [] delete      then
-	       case T==unit then skip else {J deleteTask(T)} end
+	       if T\=unit then {J deleteTask(T)} end
 	    [] resource(GR) then
-	       case T==unit then skip else {T setResource({GR})} end
+	       if T\=unit then {T setResource({GR})} end
 	    [] duration(GD) then
-	       case T==unit then skip else {J setDuration(T {GD})} end
+	       if T\=unit then {J setDuration(T {GD})} end
 	    end
-	 else skip
 	 end
       end
       
