@@ -129,6 +129,9 @@ LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
 CACHETYCS	= $(ENVS:%.env=$(CACHEDIR)/%.tyc)
 
+LIBFUNCTORS   = $(FUNCTORS:%=$(OZLIB)/%)
+CACHEFUNCTORS = $(FUNCTORS:%=$(CACHEDIR)/%)
+
 SYSLETS = ozbatch ozserver ozvsserver
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
 
@@ -208,19 +211,21 @@ Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
 %.ozf: %.oz
 	$(OZFC) $< -o $@
 
-SP.ozf: $(DUMPINTRO) $(SPSRC) SP.env Init.ozc
+SP.ozf: $(DUMPINTRO) $(SPSRC) Init.ozc
 
-OP.ozf: $(DUMPINTRO) $(OPSRC) SP.env OP.env Init.ozc
+OP.ozf: $(DUMPINTRO) $(OPSRC) Init.ozc
 
-AP.ozf: $(DUMPINTRO) $(APSRC) SP.env OP.env AP.env Init.ozc
+AP.ozf: $(DUMPINTRO) $(APSRC) Init.ozc
 
-DP.ozf: $(DUMPINTRO) $(DPSRC) OP.env Init.ozc
+DP.ozf: $(DUMPINTRO) $(DPSRC) Init.ozc
 
-CP.ozf: $(DUMPINTRO) $(CPSRC) SP.env CP.env Init.ozc
+CP.ozf: $(DUMPINTRO) $(CPSRC) Init.ozc
 
-WP.ozf: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
+WP.ozf: $(DUMPINTRO) $(WPSRC) Init.ozc
 
-Misc.ozf: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
+Misc.ozf: $(DUMPINTRO) $(MISCSRC) Init.ozc
+
+Compiler.ozf: $(DUMPINTRO) $(COMPILERSRC) Init.ozc
 
 # dependencies removed to avoid automatic recreation
 #ozbatch.ozm: MakeAssembly.oz \
@@ -309,7 +314,8 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
 
 install: install-main install-images install-cache
 
-
+install-lilo: $(LIBFUNCTORS)
+	
 STAGEEXTRAFILES = \
 	$(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc \
 	$(OZLIB)/ozbatch.ozm $(OZLIB)/ozbatch.ozc
@@ -335,6 +341,9 @@ $(OZLIB) $(IMAGESDIR) $(OZBIN):
 	$(INSTALL_DIR) $@
 
 $(OZLIB)/%.ozc: %.ozc
+	$(INSTALL_FILE) $< $@
+
+$(OZLIB)/%.ozf: %.ozf
 	$(INSTALL_FILE) $< $@
 
 $(OZLIB)/%.ozm: %.ozm
