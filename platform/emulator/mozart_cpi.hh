@@ -11,8 +11,8 @@
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
  *
@@ -442,16 +442,22 @@ public:
   static void profileReset(void);
 };
 
-inline OZ_PropagatorProfile::OZ_PropagatorProfile(void) {}
-inline char * OZ_PropagatorProfile::getPropagatorName() {
+inline
+char * OZ_PropagatorProfile::getPropagatorName() {
   return _propagator_name;
 }
-inline void OZ_PropagatorProfile::incSamples(void)         { _samples++; }
-inline void OZ_PropagatorProfile::incCalls(void)           { _calls++; }
-inline unsigned OZ_PropagatorProfile::getSamples(void)     { return _samples; }
-inline unsigned OZ_PropagatorProfile::getCalls(void)       { return _calls; }
-inline void OZ_PropagatorProfile::incHeap(unsigned inc)    { _heap += inc; }
-inline unsigned OZ_PropagatorProfile::getHeap(void)        { return _heap; }
+inline
+void OZ_PropagatorProfile::incSamples(void)         { _samples++; }
+inline
+void OZ_PropagatorProfile::incCalls(void)           { _calls++; }
+inline
+unsigned OZ_PropagatorProfile::getSamples(void)     { return _samples; }
+inline
+unsigned OZ_PropagatorProfile::getCalls(void)       { return _calls; }
+inline
+void OZ_PropagatorProfile::incHeap(unsigned inc)    { _heap += inc; }
+inline
+unsigned OZ_PropagatorProfile::getHeap(void)        { return _heap; }
 
 inline OZ_PropagatorProfile * OZ_PropagatorProfile::getFirst(void) {
   return OZ_PropagatorProfile::_all_headers;
@@ -514,7 +520,7 @@ protected:
   int _nb_refs;
   OZ_Term var, * varPtr;
 public:
-  OZ_CPIVar(void) 
+  OZ_CPIVar(void)
     : _nb_refs(0) {}
   void dropParameter(void);
   static void * operator new(size_t);
@@ -534,12 +540,12 @@ class ozdeclspec OZ_FDIntVar : public OZ_CPIVar {
   OZ_FiniteDomain _copy, _encap;
   OZ_FiniteDomain * _domain;
   int initial_size, initial_width;
-  enum State_e {empty_e = 0x00, 
-		loc_e   = 0x01, 
-		glob_e  = 0x02, 
+  enum State_e {empty_e = 0x00,
+		loc_e   = 0x01,
+		glob_e  = 0x02,
 		encap_e = 0x04,
-		sgl_e   = 0x08, 
-		bool_e  = 0x10, 
+		sgl_e   = 0x08,
+		bool_e  = 0x10,
 		int_e   = 0x20} _state;
   OZ_Boolean isSort(State_e s) const;
   void setSort(State_e s);
@@ -556,7 +562,7 @@ public:
   OZ_Boolean isTouched(void) const;
 
   OZ_Boolean operator == (OZ_FDIntVar &v) {
-    return (_domain == v._domain); 
+    return (_domain == v._domain);
   }
 
   void ask(OZ_Term);
@@ -568,12 +574,12 @@ public:
 
 
 inline
-OZ_FDIntVar::OZ_FDIntVar(void) 
+OZ_FDIntVar::OZ_FDIntVar(void)
   : _state(empty_e), OZ_CPIVar() {}
 inline
-OZ_FDIntVar::OZ_FDIntVar(OZ_Term v) 
-  : _state(empty_e), OZ_CPIVar() { 
-  read(v); 
+OZ_FDIntVar::OZ_FDIntVar(OZ_Term v)
+  : _state(empty_e), OZ_CPIVar() {
+  read(v);
 }
 inline
 OZ_FiniteDomain &OZ_FDIntVar::operator * (void) { return *_domain; }
@@ -619,10 +625,10 @@ private:
   OZ_FSetConstraint * _set;
   int known_in, known_not_in, card_size;
   enum State_e {empty_e = 0x00,
-		loc_e   = 0x01, 
-		glob_e  = 0x02, 
+		loc_e   = 0x01,
+		glob_e  = 0x02,
 		encap_e = 0x04,
-		val_e   = 0x08, 
+		val_e   = 0x08,
 		var_e   = 0x10} _state;
   OZ_Boolean isSort(State_e s) const;
   void setSort(State_e s);
@@ -677,8 +683,8 @@ void OZ_FSetVar::setSort(State_e s) {
   _state = State_e(_state | s);
 }
 inline
-OZ_Boolean OZ_FSetVar::leave(void) { 
-  return isSort(val_e) ? OZ_FALSE : tell(); 
+OZ_Boolean OZ_FSetVar::leave(void) {
+  return isSort(val_e) ? OZ_FALSE : tell();
 }
 
 //-----------------------------------------------------------------------------
@@ -724,7 +730,7 @@ _FUNDECL(int *,OZ_hallocCInts,(int));
 _FUNDECL(char *,OZ_hallocChars,(int));
 
 // Copying
-inline 
+inline
 int * OZ_copyCInts(int n, int * frm) {
   if (n>0) {
     return (int *) memcpy(OZ_hallocCInts(n), frm, n*sizeof(int));
@@ -874,10 +880,10 @@ private:
   OZ_CtProfile * _profile; // necessary ?
   OZ_CtDefinition * _definition;
   enum State_e {empty_e = 0x00,
-		loc_e   = 0x01, 
-		glob_e  = 0x02, 
+		loc_e   = 0x01,
+		glob_e  = 0x02,
 		encap_e = 0x04,
-		val_e   = 0x08, 
+		val_e   = 0x08,
 		var_e   = 0x10} _state;
   OZ_Boolean isSort(State_e s) const;
   void setSort(State_e s);
@@ -940,8 +946,8 @@ OZ_CtWakeUp OZ_CtVar::ctGetWakeUpDescriptor(void) {
   return ctGetConstraint()->getWakeUpDescriptor(ctGetConstraintProfile());
 }
 inline
-OZ_Boolean OZ_CtVar::leave(void) { 
-  return isSort(val_e) ? OZ_FALSE : tell(); 
+OZ_Boolean OZ_CtVar::leave(void) {
+  return isSort(val_e) ? OZ_FALSE : tell();
 }
 
 //-----------------------------------------------------------------------------
