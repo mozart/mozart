@@ -82,6 +82,12 @@ public:
     : LinLessEqAbsPropagator(a, x, d) {}
 };
 
+class SumACLessPropagator : public LinLessEqAbsPropagator {
+public:
+  SumACLessPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
+    : LinLessEqAbsPropagator(a, x, d) { reg_c += 1; }
+};
+
 class SumACNotEqPropagator : public LinNotEqAbsPropagator {
 public:
   SumACNotEqPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
@@ -92,6 +98,12 @@ class SumACGreaterEqPropagator : public LinGreaterEqAbsPropagator {
 public:
   SumACGreaterEqPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : LinGreaterEqAbsPropagator(a, x, d) {}
+};
+
+class SumACGreaterPropagator : public LinGreaterEqAbsPropagator {
+public:
+  SumACGreaterPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
+    : LinGreaterEqAbsPropagator(a, x, d) { reg_c -= 1; }
 };
 
 #endif

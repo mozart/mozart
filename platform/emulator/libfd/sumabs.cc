@@ -18,10 +18,6 @@ OZ_C_proc_begin(fdp_sumAC, 4)
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","
                    OZ_EM_LIT","OZ_EM_FD);
 
-#ifdef DEBUG_SUMAC
-  cout << "fd_sumAC=" << (void *) fd_sumAC << endl << flush;
-#endif
-
   PropagatorExpect pe;
   OZ_EXPECT(pe, 0, expectVectorInt);
   OZ_EXPECT(pe, 2, expectLiteral);
@@ -41,15 +37,27 @@ OZ_C_proc_begin(fdp_sumAC, 4)
     return pe.impose(new SumACLessEqPropagator(OZ_args[0],
                                                OZ_args[1],
                                                OZ_args[3]));
+  } else if (!strcmp(SUM_OP_LT, op)) {
+    OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
+    OZ_EXPECT(pe, 3, expectIntVarMinMax);
+    return pe.impose(new SumACLessPropagator(OZ_args[0],
+                                             OZ_args[1],
+                                             OZ_args[3]));
   } else if (!strcmp(SUM_OP_GEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax);
     return pe.impose(new SumACGreaterEqPropagator(OZ_args[0],
                                                   OZ_args[1],
                                                   OZ_args[3]));
-  } else if (!strcmp(SUM_OP_NEQ, op)) {
+  } else if (!strcmp(SUM_OP_GT, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax);
+    return pe.impose(new SumACGreaterPropagator(OZ_args[0],
+                                                OZ_args[1],
+                                                OZ_args[3]));
+  } else if (!strcmp(SUM_OP_NEQ, op)) {
+    OZ_EXPECT(pe, 1, expectVectorIntVarSingl);
+    OZ_EXPECT(pe, 3, expectIntVarSingl);
     return pe.impose(new SumACNotEqPropagator(OZ_args[0],
                                               OZ_args[1],
                                               OZ_args[3]));
@@ -66,37 +74,31 @@ OZ_CFun LinNotEqAbsPropagator::header = fdp_sumAC;
 
 //-----------------------------------------------------------------------------
 
-//#define DEBUG_LINEQABS 1
+#define CLAUSE1 1
+#define CLAUSE2 2
+#define CLAUSE(A, B) (clause & 2 ? (A) : (B))
 
 OZ_Return LinEqAbsPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
 
-  int summax, summin, axmax, axmin, dmax, dmin, i, j, k, dummy, fail, klausel;
+  int summax, summin, axmax, axmin, dmax, dmin, j, k, d_size, fail, clause;
   double bound1, bound2;
   OZ_FiniteDomain d_aux_neg, d_aux_pos, aux;
-  OZ_Boolean unified, changed, vars_left;
+  OZ_Boolean unified, changed;
 
-#ifdef DEBUG_LINEQABS
-  cout<<endl;
-  cout<<"vector size: "<<reg_sz<<endl;
-#endif
-
-  simplify();
-  unified = (dpos>-1 && dpos<reg_sz);
-
-#ifdef DEBUG_LINEQABS
-  cout<<"vector size: "<<reg_sz<<" (nach simplify)"<<endl;
-#endif
+  unified = simplify();
 
   OZ_FDIntVar d(reg_d);
   DECL_DYN_ARRAY(OZ_FDIntVar, x, reg_sz);
+  PropagatorController_VV_V P(reg_sz, x, d);
+
   DECL_DYN_ARRAY(OZ_FiniteDomain, x_aux_neg, reg_sz);
   DECL_DYN_ARRAY(OZ_FiniteDomain, x_aux_pos, reg_sz);
 
   for(j=reg_sz; j--;) {
     x[j].read(reg_x[j]);
-    x_aux_neg[j] = x_aux_pos[j] =* x[j];
+    x_aux_neg[j] = x_aux_pos[j] = *x[j];
   }
 
   if (unified) {
@@ -104,135 +106,86 @@ OZ_Return LinEqAbsPropagator::propagate(void)
     d_aux_neg.initSingleton(0);
     d_aux_pos.initSingleton(0);
   } else {
-    d_aux_neg = d_aux_pos =* d;
+    d_aux_neg = d_aux_pos = *d;
   }
 
-  klausel = 1;
+  clause = CLAUSE1;
   fail = 0; // 0 no fail, 1 positive clause failed, 2 negative clause failed
   do {
     changed = false;
-    summin = summax = (klausel & 2 ? -reg_c : reg_c);
+    summin = summax = CLAUSE(-reg_c, reg_c);
 
     for(j=reg_sz; j--;) {
       axmax = int(double(reg_a[j]) *
-                  (klausel & 2
-                   ? x_aux_neg[j].getMaxElem()
-                   : x_aux_pos[j].getMaxElem())
+                  CLAUSE(x_aux_neg[j].getMaxElem(), x_aux_pos[j].getMaxElem())
                   );
-      axmin = int(double(reg_a[j])*
-                  (klausel & 2
-                   ? x_aux_neg[j].getMinElem()
-                   : x_aux_pos[j].getMinElem())
+      axmin = int(double(reg_a[j]) *
+                  CLAUSE(x_aux_neg[j].getMinElem(), x_aux_pos[j].getMinElem())
                   );
-      if (reg_a[j]<0) {
-        summin += axmax;
-        summax += axmin;
+
+      if (reg_a[j] < 0) {
+        summin += axmax; summax += axmin;
       }
-      if (reg_a[j]>0) {
-        summin += axmin;
-        summax += axmax;
+      if (reg_a[j] > 0) {
+        summin += axmin; summax += axmax;
       }
     }
-    dummy = (klausel & 2 ? d_aux_neg.getSize() : d_aux_pos.getSize());
-    (klausel&2 ? d_aux_neg : d_aux_pos) >= summin;
-    (klausel&2 ? d_aux_neg : d_aux_pos) <= summax;
 
-#ifdef DEBUG_LINEQABS
-    cout<<endl;
-    cout<<(klausel&2 ? "negativ:" : "positiv:")<<endl;
-    cout<<"summin="<<summin<<" summax="<<summax<<endl;
-    cout<<summin<<"<=d<="<<summax<<endl;
-    cout<<"d_"<<(klausel&2 ? "neg=" : "pos=")
-        <<(klausel&2 ? d_aux_neg : d_aux_pos)<<endl;
-#endif
+    d_size = CLAUSE(d_aux_neg.getSize(), d_aux_pos.getSize());
+    CLAUSE(d_aux_neg, d_aux_pos) >= summin;
+    CLAUSE(d_aux_neg, d_aux_pos) <= summax;
 
-    if (!(klausel & 2 ? d_aux_neg.getSize() : d_aux_pos.getSize())) {
-      fail|=klausel;
+    if (! CLAUSE(d_aux_neg.getSize(), d_aux_pos.getSize())) {
+      fail |= clause;
     } else {
-      changed |= !(dummy == (klausel & 2
-                             ? d_aux_neg.getSize()
-                             : d_aux_pos.getSize())
-                   );
-      dmax = (klausel & 2 ? d_aux_neg.getMaxElem() : d_aux_pos.getMaxElem());
-      dmin = (klausel & 2 ? d_aux_neg.getMinElem() : d_aux_pos.getMinElem());
+      changed |= !(d_size == CLAUSE(d_aux_neg.getSize(), d_aux_pos.getSize()));
+      dmax = CLAUSE(d_aux_neg.getMaxElem(), d_aux_pos.getMaxElem());
+      dmin = CLAUSE(d_aux_neg.getMinElem(), d_aux_pos.getMinElem());
 
-      j = reg_sz;
-      while(j-- && !(fail & klausel)) {
-        summin=summax = (klausel & 2 ? -reg_c : reg_c);
-        for(k = reg_sz; k--;)
-          if (j!=k) {
-            axmax = int(double(reg_a[k])*
-                        (klausel & 2
-                         ? x_aux_neg[k].getMaxElem()
-                         : x_aux_pos[k].getMaxElem())
-                        );
-            axmin = int(double(reg_a[k])*
-                        (klausel & 2
-                         ? x_aux_neg[k].getMinElem()
-                         : x_aux_pos[k].getMinElem())
-                        );
-            if (reg_a[k]<0) {
-              summin += axmax;
-              summax += axmin;
+      for (j = reg_sz; j-- && !(fail & clause); ) {
+        summin = summax = CLAUSE(-reg_c, reg_c);
+
+        for(k = reg_sz; k--;) {
+          if (j != k) {
+            axmax = int(double(reg_a[k]) * CLAUSE(x_aux_neg[k].getMaxElem(),
+                                                  x_aux_pos[k].getMaxElem()));
+            axmin = int(double(reg_a[k]) * CLAUSE(x_aux_neg[k].getMinElem(),
+                                                  x_aux_pos[k].getMinElem()));
+
+            if (reg_a[k] < 0) {
+              summin += axmax; summax += axmin;
             }
-            if (reg_a[k]>0) {
-                summin += axmin;
-                summax += axmax;
-              }
+            if (reg_a[k] > 0) {
+              summin += axmin; summax += axmax;
+            }
           }
+        } // for
+
         bound1 = (dmin - summax) / double(reg_a[j]);
-        bound2 = (dmax-summin) / double(reg_a[j]);
-        dummy = (klausel & 2
-                 ? x_aux_neg[j].getSize()
-                 : x_aux_pos[j].getSize()
-                 );
+        bound2 = (dmax - summin) / double(reg_a[j]);
+        d_size = CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize());
+
         if (reg_a[j] < 0) {
-          (klausel & 2
-           ? x_aux_neg[j]
-           : x_aux_pos[j]) >= doubleToInt(ceil(bound2));
-          (klausel & 2
-           ? x_aux_neg[j]
-           : x_aux_pos[j]) <= doubleToInt(floor(bound1));
+          CLAUSE(x_aux_neg[j], x_aux_pos[j]) >= doubleToInt(ceil(bound2));
+          CLAUSE(x_aux_neg[j], x_aux_pos[j]) <= doubleToInt(floor(bound1));
         }
-        if (reg_a[j]>0) {
-          (klausel & 2 ? x_aux_neg[j] : x_aux_pos[j])
-            >= doubleToInt(ceil (bound1));
-          (klausel & 2 ? x_aux_neg[j] : x_aux_pos[j])
-            <= doubleToInt(floor(bound2));
+        if (reg_a[j] > 0) {
+          CLAUSE(x_aux_neg[j], x_aux_pos[j]) >= doubleToInt(ceil(bound1));
+          CLAUSE(x_aux_neg[j], x_aux_pos[j]) <= doubleToInt(floor(bound2));
         }
 
-#ifdef DEBUG_LINEQABS
-        cout<<"summin="<<summin<<" summax="<<summax<<endl;
-        if (reg_a[j]<0)
-          cout<<doubleToInt(ceil (bound2))<<"<=x"<<j<<"<="
-              <<doubleToInt(floor(bound1))<<endl;
-        if (reg_a[j]>0)
-          cout<<doubleToInt(ceil (bound1))<<"<=x"<<j<<"<="
-              <<doubleToInt(floor(bound2))<<endl;
-        cout<<'a'<<j<<'='<<reg_a[j]
-            <<" x"<<j<<(klausel&2 ? "_neg=" : "_pos=")
-            <<(klausel&2 ? x_aux_neg[j] : x_aux_pos[j])<<endl;
-#endif
-
-        if (!(klausel & 2 ? x_aux_neg[j].getSize() : x_aux_pos[j].getSize())) {
-          fail |= klausel;
+        if (!(CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize()))) {
+          fail |= clause;
           changed = false;
         } else {
-          changed |= !(dummy == (klausel & 2
-                                 ? x_aux_neg[j].getSize()
-                                 : x_aux_pos[j].getSize()));
+          changed |= !
+            (d_size == CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize()));
         }
       }
     }
 
-#ifdef DEBUG_LINEQABS
-    if (fail&klausel)
-      cout<<(klausel&2 ? "negative" : "positive")
-          <<" clause failed"<<endl;
-#endif
-
-    if (!changed && klausel & 1) {
-     klausel = 2;
+    if (!changed && (clause & CLAUSE1)) {
+     clause = CLAUSE2;
      changed = true;
      if (unified)
        reg_a[dpos] += 2;   // reg_a[dpos]++, Vorz. umk., reg_a[dpos]--
@@ -242,135 +195,109 @@ OZ_Return LinEqAbsPropagator::propagate(void)
   } while(changed);
 
   if (unified)
-    reg_a[dpos]-=2;    // Vorz. wieder korrigieren
+    reg_a[dpos] -= 2;    // Vorz. wieder korrigieren
+
   for(j = reg_sz; j--;)
-    reg_a[j]=-reg_a[j];
-  for(j=reg_sz; j--;) {
+    reg_a[j] = -reg_a[j];
+
+  for(j = reg_sz; j--;) {
     aux.initEmpty();
-    if (!(fail & 1))
+
+    if (!(fail & CLAUSE1))
       aux = x_aux_pos[j];
-    if (!(fail&2))
+
+    if (!(fail & CLAUSE2))
       aux = aux | x_aux_neg[j];
-    FailOnEmpty(*x[j]&=aux);
+
+    FailOnEmpty(*x[j] &= aux);
   }
+
   if (!unified) {
     aux.initEmpty();
-    if (!(fail&1))
+    if (!(fail & CLAUSE1))
       aux = d_aux_pos;
-    if (!(fail&2))
-      aux = aux|d_aux_neg;
-    *d &= aux;
+    if (!(fail & CLAUSE2))
+      aux = aux | d_aux_neg;
+    FailOnEmpty(*d &= aux);
   }
+
   FailOnEmpty(d->getSize());
-  vars_left=d.leave();
-  for(j=reg_sz; j--;)
-    vars_left |= x[j].leave();
 
-  OZ_DEBUGPRINT("out " << *this);
-
-  return (vars_left ? SLEEP : ENTAILED);
+  return P.leave();
 
 failure:
   OZ_DEBUGPRINT("failed: " << *this);
 
-  for(j = reg_sz; j--;)
-    x[j].fail();
-  d.fail();
-  return FAILED;
+  return P.fail();
 }
 
 //-----------------------------------------------------------------------------
-
-//#define DEBUG_LINLEQABS 1
 
 OZ_Return LinLessEqAbsPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
 
-  int summin, dmax, i, j, k, dummy, klausel;
+  int summin, dmax, j, k, d_size, clause;
   double bound1, bound2;
   OZ_FiniteDomain d_aux;
-  OZ_Boolean unified, changed, vars_left;
+  OZ_Boolean unified, changed;
 
-#ifdef DEBUG_LINLEQABS
-  cout<<endl;
-  cout<<"vector size: "<<reg_sz<<endl;
-#endif
-
-  simplify();
-  unified = (dpos > -1 && dpos < reg_sz);
-
-#ifdef DEBUG_LINLEQABS
-  cout<<"vector size: "<<reg_sz<<" (nach simplify)"<<endl;
-#endif
+  unified  = simplify();
 
   OZ_FDIntVar d(reg_d);
-  DECL_DYN_ARRAY(OZ_FDIntVar,x,reg_sz);
+  DECL_DYN_ARRAY(OZ_FDIntVar, x, reg_sz);
+  PropagatorController_VV_V P(reg_sz, x, d);
+
   for(j = reg_sz; j--;)
     x[j].read(reg_x[j]);
+
   if (unified) {
     reg_a[dpos] -= 1;
     d_aux.initSingleton(0);
   } else {
-    d_aux=*d;
+    d_aux = *d;
   }
 
-  klausel = 1;
+  clause = CLAUSE1;
   do {
     changed = false;
-    summin = (klausel & 2 ? -reg_c : reg_c);
+    summin = CLAUSE(-reg_c,reg_c);
 
     for(j = reg_sz; j--;) {
-      if (reg_a[j] < 0)
-        summin += int(double(reg_a[j]) * x[j]->getMaxElem());
-      if (reg_a[j] > 0)
-        summin += int(double(reg_a[j]) * x[j]->getMinElem());
+      summin += int(double(reg_a[j]) *
+                    (reg_a[j] < 0 ? x[j]->getMaxElem() : x[j]->getMinElem()));
     }
-    dummy = d_aux.getSize();
-    d_aux >= summin;
+    d_size = d_aux.getSize();
+    FailOnEmpty(d_aux >= summin);
 
-#ifdef DEBUG_LINLEQABS
-    cout<<endl;
-    cout<<(klausel&2 ? "negativ:" : "positiv:")<<endl;
-    cout<<"summin="<<summin<<endl;
-    cout<<"d>="<<summin<<endl;
-    cout<<"d="<<d_aux<<endl;
-#endif
+    changed |= !(d_size == d_aux.getSize());
 
-    FailOnEmpty(d_aux.getSize());
-    changed |= !(dummy == d_aux.getSize());
+    dmax = d_aux.getMaxElem();
 
-   dmax = d_aux.getMaxElem();
-   for(j = reg_sz; j--;) {
-     summin = (klausel&2 ? -reg_c : reg_c);
-     for(k = reg_sz; k--;)
-       if (j!=k) {
-         if (reg_a[k] < 0)
-           summin += int(double(reg_a[k]) * x[k]->getMaxElem());
-         if (reg_a[k]>0)
-           summin += int(double(reg_a[k]) * x[k]->getMinElem());
+    for(j = reg_sz; j--;) {
+
+      summin = CLAUSE(-reg_c, reg_c);
+
+      for(k = reg_sz; k--; )
+        if (j != k) {
+          summin += int(double(reg_a[k]) *
+                        (reg_a[k] < 0 ? x[k]->getMaxElem() : x[k]->getMinElem()));
        }
 
-     bound1 = (dmax-summin) / double(reg_a[j]);
-     dummy = x[j]->getSize();
+     bound1 = (dmax - summin) / double(reg_a[j]);
+     d_size = x[j]->getSize();
+
      if (reg_a[j] < 0)
-       *x[j] >= doubleToInt(ceil (bound1));
-     if (reg_a[j]>0)
+       *x[j] >= doubleToInt(ceil(bound1));
+     if (reg_a[j] > 0)
        *x[j] <= doubleToInt(floor(bound1));
 
-#ifdef DEBUG_LINLEQABS
-     cout<<"summin="<<summin<<endl;
-     if (reg_a[j]<0) cout<<doubleToInt(ceil (bound1))<<"<=x"<<j<<endl;
-     if (reg_a[j]>0) cout<<"x"<<j<<"<="<<doubleToInt(ceil (bound1))<<endl;
-     cout<<'a'<<j<<'='<<reg_a[j]<<" x"<<j<<"="<<*x[j]<<endl;
-#endif
-
      FailOnEmpty(x[j]->getSize());
-     changed|=!(dummy==x[j]->getSize());
+     changed |= !(d_size == x[j]->getSize());
    }
 
-   if (!changed && klausel & 1) {
-     klausel = 2;
+   if (!changed && (clause & CLAUSE1)) {
+     clause = CLAUSE2;
      changed = true;
      if (unified)
        reg_a[dpos] += 2;   // reg_a[dpos]++, Vorz. umk., reg_a[dpos]--
@@ -379,58 +306,271 @@ OZ_Return LinLessEqAbsPropagator::propagate(void)
    }
   } while(changed);
 
- if (unified)
-   reg_a[dpos] -= 2;    // Vorz. wieder korrigieren
- for(j = reg_sz; j--;)
-   reg_a[j] = -reg_a[j];
- if (!unified) *
-                 d &= d_aux;
- FailOnEmpty(d->getSize());
- vars_left = d.leave();
- for(j = reg_sz; j--;)
-   vars_left |= x[j].leave();
+  if (unified)
+    reg_a[dpos] -= 2;    // Vorz. wieder korrigieren
 
- OZ_DEBUGPRINT("out " << *this);
- return (vars_left ? SLEEP : ENTAILED);
+  for(j = reg_sz; j--;)
+    reg_a[j] = -reg_a[j];
+
+  if (!unified)
+    FailOnEmpty(*d &= d_aux);
+
+  return P.leave();
 
 failure:
  OZ_DEBUGPRINT("failed: " << *this);
 
- for(j = reg_sz;j--;)
-   x[j].fail();
- d.fail();
- return FAILED;
+ return P.fail();
 }
 
 //-----------------------------------------------------------------------------
-
-//#define DEBUG_LINNEQABS 1
 
 OZ_Return LinNotEqAbsPropagator::propagate(void)
 {
- OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINT("in " << *this);
 
+  int dmax, j, k, d_size, clause;
+  double bound1, bound2;
+  OZ_FiniteDomain d_aux;
+  OZ_Boolean unified, changed;
 
- OZ_DEBUGPRINT("out " << *this);
- return ENTAILED;
+  unified  = simplify();
+
+  OZ_FDIntVar d(reg_d);
+  DECL_DYN_ARRAY(OZ_FDIntVar, x, reg_sz);
+  PropagatorController_VV_V P(reg_sz, x, d);
+
+  int  num_of_singl = 0, last_nonsingl = 0;
+  for(j = reg_sz; j--;) {
+    x[j].read(reg_x[j]);
+    if (*x[j] == fd_singl)
+      num_of_singl += 1;
+    else
+      last_nonsingl = j;
+  }
+
+  if (unified) {
+    reg_a[dpos] -= 1;
+    d_aux.initSingleton(0);
+  } else {
+    d_aux = *d;
+  }
+
+  if (*d == fd_singl)
+    num_of_singl += 1;
+  else
+    last_nonsingl = -1;
+
+  if (num_of_singl < reg_sz) // anything to do, not enough singletons found?
+    return P.leave();
+
+  int all_singl = (num_of_singl == reg_sz + 1);
+
+  clause = CLAUSE1;
+  for (k = 2; k--; ) {
+    double sum = CLAUSE(-reg_c,reg_c);
+
+    if (all_singl) { // just check consistency
+
+      for(j = reg_sz; j--;) {
+        sum += int(double(reg_a[j]) * x[j]->getSingleElem());
+      }
+
+      if (sum == d->getSingleElem())
+        goto failure;
+
+    } else if (last_nonsingl == -1) { // _d_ is last non-singleton
+
+      for (j = reg_sz; j--; )
+        sum += double(reg_a[j]) * x[j]->getSingleElem();
+
+      FailOnEmpty(*d -= int(sum));
+    } else { // some _x_ is last singleton
+
+      for (j = reg_sz; j--; )
+        if (last_nonsingl != j)
+          sum += double(reg_a[j]) * x[j]->getSingleElem();
+      sum -= d->getSingleElem();
+
+      if ((int(sum) % reg_a[last_nonsingl]) == 0) {
+        sum /= -double(reg_a[last_nonsingl]);
+        FailOnEmpty(*x[last_nonsingl] -= int(sum));
+      }
+
+    }
+
+   if ((clause & CLAUSE1)) {
+     clause = CLAUSE2;
+     if (unified)
+       reg_a[dpos] += 2;   // reg_a[dpos]++, Vorz. umk., reg_a[dpos]--
+     for(j = reg_sz; j--;)
+       reg_a[j] = -reg_a[j];
+   }
+  } // for
+
+  if (unified)
+    reg_a[dpos] -= 2;    // Vorz. wieder korrigieren
+
+  for(j = reg_sz; j--;)
+    reg_a[j] = -reg_a[j];
+
+  if (!unified)
+    FailOnEmpty(*d &= d_aux);
+
+  return P.leave();
 
 failure:
  OZ_DEBUGPRINT("failed: " << *this);
- return FAILED;
+
+ return P.fail();
 }
 
 //-----------------------------------------------------------------------------
 
-//#define DEBUG_GEQABS 1
-
 OZ_Return LinGreaterEqAbsPropagator::propagate(void)
 {
- OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINT("in " << *this);
 
- OZ_DEBUGPRINT("out " << *this);
- return ENTAILED;
+  int summax, axmax, axmin, dmax, dmin, j, k, d_size, fail, clause;
+  double bound1, bound2;
+  OZ_FiniteDomain d_aux_neg, d_aux_pos, aux;
+  OZ_Boolean unified, changed;
 
- failure:
- OZ_DEBUGPRINT("failed: " << *this);
- return FAILED;
+  unified = simplify();
+
+  OZ_FDIntVar d(reg_d);
+  DECL_DYN_ARRAY(OZ_FDIntVar, x, reg_sz);
+  PropagatorController_VV_V P(reg_sz, x, d);
+
+  DECL_DYN_ARRAY(OZ_FiniteDomain, x_aux_neg, reg_sz);
+  DECL_DYN_ARRAY(OZ_FiniteDomain, x_aux_pos, reg_sz);
+
+  for(j=reg_sz; j--;) {
+    x[j].read(reg_x[j]);
+    x_aux_neg[j] = x_aux_pos[j] = *x[j];
+  }
+
+  if (unified) {
+    reg_a[dpos] -= 1;
+    d_aux_neg.initSingleton(0);
+    d_aux_pos.initSingleton(0);
+  } else {
+    d_aux_neg = d_aux_pos = *d;
+  }
+
+  clause = CLAUSE1;
+  fail = 0; // 0 no fail, 1 positive clause failed, 2 negative clause failed
+  do {
+    changed = false;
+    summax = CLAUSE(-reg_c, reg_c);
+
+    for(j=reg_sz; j--;) {
+      axmax = int(double(reg_a[j]) *
+                  CLAUSE(x_aux_neg[j].getMaxElem(), x_aux_pos[j].getMaxElem())
+                  );
+      axmin = int(double(reg_a[j]) *
+                  CLAUSE(x_aux_neg[j].getMinElem(), x_aux_pos[j].getMinElem())
+                  );
+
+      if (reg_a[j] < 0) {
+        summax += axmin;
+      }
+      if (reg_a[j] < 0) {
+        summax += axmax;
+      }
+    }
+
+    d_size = CLAUSE(d_aux_neg.getSize(), d_aux_pos.getSize());
+    CLAUSE(d_aux_neg, d_aux_pos) <= summax;
+
+    if (! CLAUSE(d_aux_neg.getSize(), d_aux_pos.getSize())) {
+      fail |= clause;
+    } else {
+      changed |= !(d_size == CLAUSE(d_aux_neg.getSize(), d_aux_pos.getSize()));
+      dmin = CLAUSE(d_aux_neg.getMinElem(), d_aux_pos.getMinElem());
+
+      for (j = reg_sz; j-- && !(fail & clause); ) {
+        summax = CLAUSE(-reg_c, reg_c);
+
+        for(k = reg_sz; k--;) {
+          if (j != k) {
+            axmax = int(double(reg_a[k]) * CLAUSE(x_aux_neg[k].getMaxElem(),
+                                                  x_aux_pos[k].getMaxElem()));
+            axmin = int(double(reg_a[k]) * CLAUSE(x_aux_neg[k].getMinElem(),
+                                                  x_aux_pos[k].getMinElem()));
+
+            if (reg_a[k] < 0) {
+              summax += axmin;
+            }
+            if (reg_a[k] > 0) {
+              summax += axmax;
+            }
+          }
+        } // for
+
+        bound1 = (dmin - summax) / double(reg_a[j]);
+        d_size = CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize());
+
+        if (reg_a[j] < 0) {
+          CLAUSE(x_aux_neg[j], x_aux_pos[j]) <= doubleToInt(floor(bound1));
+        }
+        if (reg_a[j] > 0) {
+          CLAUSE(x_aux_neg[j], x_aux_pos[j]) >= doubleToInt(ceil(bound1));
+        }
+
+        if (!(CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize()))) {
+          fail |= clause;
+          changed = false;
+        } else {
+          changed |= !
+            (d_size == CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize()));
+        }
+      }
+    }
+
+    if (!changed && (clause & CLAUSE1)) {
+     clause = CLAUSE2;
+     changed = true;
+     if (unified)
+       reg_a[dpos] += 2;   // reg_a[dpos]++, Vorz. umk., reg_a[dpos]--
+     for(j = reg_sz; j--;)
+       reg_a[j] = -reg_a[j];
+    }
+  } while(changed);
+
+  if (unified)
+    reg_a[dpos] -= 2;    // Vorz. wieder korrigieren
+
+  for(j = reg_sz; j--;)
+    reg_a[j] = -reg_a[j];
+
+  for(j = reg_sz; j--;) {
+    aux.initEmpty();
+
+    if (!(fail & CLAUSE1))
+      aux = x_aux_pos[j];
+
+    if (!(fail & CLAUSE2))
+      aux = aux | x_aux_neg[j];
+
+    FailOnEmpty(*x[j] &= aux);
+  }
+
+  if (!unified) {
+    aux.initEmpty();
+    if (!(fail & CLAUSE1))
+      aux = d_aux_pos;
+    if (!(fail & CLAUSE2))
+      aux = aux | d_aux_neg;
+    FailOnEmpty(*d &= aux);
+  }
+
+  FailOnEmpty(d->getSize());
+
+  return P.leave();
+
+failure:
+  OZ_DEBUGPRINT("failed: " << *this);
+
+  return P.fail();
 }

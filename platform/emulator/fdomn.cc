@@ -1610,54 +1610,32 @@ int OZ_FiniteDomainImpl::nextLargerElem(int v) const
 inline
 int OZ_FiniteDomainImpl::lowerBound(int v) const
 {
-  cout << "lowerBound(" << *this << ',' << v << ")=" << flush;
-
   if (isIn(v)) {
     descr_type type = getType();
     if (type == fd_descr) {
       return min_elem;
     } else {
-//#ifdef DEBUG_CHECK
-      int r = type == bv_descr
-        ? get_bv()->lowerBound(v, min_elem)
-        : get_iv()->lowerBound(v);
-      cout << r << endl << flush;
-      return r;
-/* #else
       return type == bv_descr
         ? get_bv()->lowerBound(v, min_elem)
-        : get_iv()->lowerBound(v_elem);
-#endif */
+        : get_iv()->lowerBound(v);
     }
   }
-  cout << -1 << endl << flush;
   return -1;
 }
 
 inline
 int OZ_FiniteDomainImpl::upperBound(int v) const
 {
-  cout << "upperBound(" << *this << ',' << v << ")=" << flush;
-
   if (isIn(v)) {
     descr_type type = getType();
     if (type == fd_descr) {
       return max_elem;
     } else {
-//#ifdef DEBUG_CHECK
-      int r = type == bv_descr
-        ? get_bv()->upperBound(v, max_elem)
-        : get_iv()->upperBound(v);
-      cout << r << endl << flush;
-      return r;
-/*#else
       return type == bv_descr
         ? get_bv()->upperBound(v, max_elem)
         : get_iv()->upperBound(v);
-#endif*/
     }
   }
-  cout << -1 << endl << flush;
   return -1;
 }
 
