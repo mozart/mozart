@@ -62,11 +62,14 @@ void addSuspCtVar(OZ_Term v, Suspendable * susp, OZ_CtWakeUp w)
 {
   OzCtVariable * ctv = tagged2GenCtVar(v);
 
-  int noOfSuspLists = ctv->getNoOfSuspLists();
+  Assert(ctv->getBoardInternal()->derefBoard() ==
+	 susp->getBoardInternal()->derefBoard());
 
+  int noOfSuspLists = ctv->getNoOfSuspLists();
+  
   for (int i = noOfSuspLists; i--; )
     if (w.isWakeUp(i))
-	AddSuspToList(ctv->_susp_lists[i], susp, ctv->getHome1());
+      AddSuspToListLocal(ctv->_susp_lists[i], susp);
 }
 
 #endif /* __CTGENVAR_ICC__ */

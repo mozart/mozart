@@ -83,6 +83,15 @@ extern const int varSizes[];
 }
 
 
+#define AddSuspToListLocal(List, Susp) \
+{							\
+  if ((List) && ((List)->getSuspendable() == Susp)) {	\
+  } else {						\
+    List = new SuspList(Susp, List);			\
+  }							\
+}
+
+
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
 
@@ -156,6 +165,9 @@ protected:
   
   void propagate(SuspList *& sl, PropCaller unifyVars) {
     oz_checkAnySuspensionList(&sl, this->getBoardInternal(), unifyVars);
+  }
+  void propagateLocal(SuspList *& sl, PropCaller unifyVars) {
+    oz_checkLocalSuspensionList(&sl, unifyVars);
   }
 
 public:

@@ -426,6 +426,9 @@ SuspList *oz_installPropagators(SuspList *local_list, SuspList *glob_list,
 void oz_checkAnySuspensionList(SuspList ** suspList, Board *home,
 			       PropCaller calledBy);
 
+void oz_checkLocalSuspensionList(SuspList ** suspList,
+				 PropCaller calledBy);
+
 // see ioHandler.cc
 void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val);
 void oz_io_acceptSelect(int fd, OZ_IOHandler fun, void *val);
