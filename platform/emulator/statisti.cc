@@ -93,7 +93,9 @@ void Statistics::print(FILE *fd)
   fprintf(fd, ".\n\n  Process resources consumed:");
   printTime(fd,"\n    User time is ", osUserTime());
   printTime(fd,".\n    System time is ", osSystemTime());
+#ifndef WINDOWS
   printMem(fd,".\n    Size is ", ToInt32(sbrk(0))-mallocBase);
+#endif
   fprintf(fd, ".\n");
 
 #ifdef PROFILE

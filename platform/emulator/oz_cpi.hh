@@ -166,8 +166,9 @@ class OZ_Expect;
 typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
 
 class OZ_Expect {
-private:
+public:
   struct spawnVars_t {OZ_Term * var; OZ_FDPropState state;} * spawnVars;
+private:
   OZ_Term ** suspendVars;
   int spawnVarsNumber,  suspendVarsNumber;
 protected:
@@ -223,9 +224,11 @@ public:
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
+#ifndef _MSC_VER
   // mm2: portability ?
   static void * operator new[](size_t);
   static void operator delete[](void *, size_t);
+#endif
 
   OZ_FiniteDomain &operator * (void) {return *domPtr;}
   OZ_FiniteDomain * operator -> (void) {return domPtr;}

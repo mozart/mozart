@@ -47,7 +47,10 @@ class GenCVariable: public SVariable {
 friend class GenFDVariable;
 
 private:
-  TypeOfGenCVariable var_type;
+  union {
+    TypeOfGenCVariable var_type;
+    OZ_FiniteDomain *patchDomain;
+  } u;
 
 protected:
   
@@ -59,10 +62,10 @@ public:
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable, Board * = NULL);
 
-  TypeOfGenCVariable getType(void){ return var_type; }
+  TypeOfGenCVariable getType(void){ return u.var_type; }
   void setType(TypeOfGenCVariable t){
     GenVarCheckType(t);
-    var_type = t;
+    u.var_type = t;
   }  
     
   // methods relevant for term copying (gc and solve)  
@@ -96,17 +99,18 @@ public:
 
   // needed to catch multiply occuring reified vars in propagators
   void patchReified(OZ_FiniteDomain * d, Bool isBool) { 
-    var_type = (TypeOfGenCVariable) d; 
-    if (isBool) var_type = (TypeOfGenCVariable) (var_type | 1);
+    u.patchDomain =  d; 
+    if (isBool)
+      u.patchDomain =  (OZ_FiniteDomain*) ToPointer(ToInt32(u.patchDomain) | 1);
     setReifiedFlag();
   }
   void unpatchReified(Bool isBool) { 
     setType(isBool ? BoolVariable : FDVariable); 
     resetReifiedFlag();
   }
-  OZ_Boolean isBoolPatched(void) { return (var_type & 1); }
+  OZ_Boolean isBoolPatched(void) { return (u.var_type & 1); }
   OZ_FiniteDomain * getReifiedPatch(void) { 
-    return (OZ_FiniteDomain *)  (var_type & ~1); 
+    return (OZ_FiniteDomain *)  (u.var_type & ~1); 
   }
 };
 
