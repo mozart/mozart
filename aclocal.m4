@@ -265,6 +265,9 @@ AC_DEFUN(OZ_PROG_VERSION_CHECK,[
   if oz_tmp_version=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null | tr '\012' ' '`; then
 changequote(<,>)
     oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
+    if test -z "$oz_tmp_version"; then
+      oz_tmp_version=`expr "$oz_tmp_version" : '.* \([0-9._]*\)$'`
+    fi
 changequote([,])
     if test -n "$oz_tmp_version"; then
       OZ_CHECK_VERSION([$1],$oz_tmp_version,[$3])
@@ -827,6 +830,8 @@ TheVersion __GNU_MP_VERSION __GNU_MP_VERSION_MINOR
 EOF
     oz_tmp=`$CXXCPP $CPPFLAGS conftest.$ac_ext | egrep TheVersion`;
     rm -f conftest.$ac_ext 2>/dev/null
+    OZ_GMP_MAJOR=`expr "$oz_tmp" : 'TheVersion \(.*\) '`
+    OZ_GMP_MINOR=`expr "$oz_tmp" : 'TheVersion .* \(.*\)$'`
     if oz_tmp=`expr "$oz_tmp" : 'TheVersion \(.*\)$'`; then
       OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GMP)
       test "$oz_tmp_ok" = yes && oz_cv_gmp_version_ok=$oz_tmp_ok
