@@ -287,7 +287,7 @@ fi
 AC_SUBST(LD)
 
 
-dnl mm2: don't know what libintl is needed for
+dnl mm2: don\'t know what libintl is needed for
 dnl AC_CHECK_LIB(intl, main)
 
 AC_CHECK_LIB(nsl, gethostbyaddr)
