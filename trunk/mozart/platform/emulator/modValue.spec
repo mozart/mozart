@@ -46,6 +46,10 @@
 			     out => ['+bool'],
 			     bi  => BIisKinded},
 
+     'isFuture'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     bi  => BIisFuture},
+
      'isDet'		=> { in  => ['value'],
 			     out => ['+bool'],
 			     bi  => BIisDet},

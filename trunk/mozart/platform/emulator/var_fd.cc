@@ -329,7 +329,6 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     // fd is singleton domain --> v becomes integer
     if (fd->getSize() == 1) {
       if (am.isLocalVariable(v, vptr)) {
-	// mm2: was isSVar
 	if (!isUVar(vtag))
 	  oz_checkSuspensionList(tagged2SVarPlus(v));
 	doBind(vptr, OZ_int(fd->getSingleElem()));
@@ -352,7 +351,6 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     OZ_Term *  tcv = newTaggedCVar(cv);
 
     if (am.isLocalVariable(v, vptr)) {
-      // mm2: was isSVar
       if (!isUVar(vtag)) {
 	oz_checkSuspensionList(tagged2SVarPlus(v));
 	cv->setSuspList(tagged2SVarPlus(v)->getSuspList());

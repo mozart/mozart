@@ -6,7 +6,7 @@
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Michael Mehl (1997)
+ *    Michael Mehl (1997,1998)
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -140,6 +140,9 @@ public:
   Bool isObjectClassAvail()    { return getpvType()==PV_OBJECTCLASSAVAIL; }
   Bool isObjectClassNotAvail() { return getpvType()==PV_OBJECTCLASSNOTAVAIL; }
   Bool isObject() { return isObjectClassAvail() || isObjectClassNotAvail();}
+
+  // mm2: OZ_DISTRIBUTED! and OZ_LAZY!
+  VariableStatus status() { return isObject()?OZ_OTHER:OZ_FREE; }
 
   int getIndex() { return ToInt32(ptr); }
 

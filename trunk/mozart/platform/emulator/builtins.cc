@@ -99,18 +99,11 @@ OZ_BI_define(BIwaitOr,2,0)
 
 OZ_Return isLiteralInline(TaggedRef t)
 { 
-  SUSPEND_ON_FREE_VAR( t, term, tag );
-  if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case OFSVariable:
-	{
-          GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-          if (ofsvar->getWidth()>0) return FAILED;
-          return SUSPEND;
-	}
-      default:
-          return FAILED;
-      }
+  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
+  if (isGenOFSVar(term)) {
+    GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+    if (ofsvar->getWidth()>0) return FAILED;
+    return SUSPEND;
   }
   return isLiteralTag(tag) ? PROCEED : FAILED;
 }
@@ -120,25 +113,14 @@ OZ_DECLAREBOOLFUN1(BIisLiteralB,isLiteralInline)
 
 OZ_Return isAtomInline(TaggedRef t)
 {
-  SUSPEND_ON_FREE_VAR( t, term, tag );
-  if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case OFSVariable:
-	{
-          GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-          TaggedRef lbl=ofsvar->getLabel();
-          DEREF(lbl,_1,lblTag);
-	  if (isLiteralTag(lblTag) && !oz_isAtom(lbl)) return FAILED;
-          if (ofsvar->getWidth()>0) return FAILED;
-          return SUSPEND;
-	}
-      case FDVariable:
-      case BoolVariable:
-          return FAILED;
-      default:
-	// return tagged2CVar(term)->isAtomV();
-          return SUSPEND;
-      }
+  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
+  if (isGenOFSVar(term)) {
+    GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+    TaggedRef lbl=ofsvar->getLabel();
+    DEREF(lbl,_1,lblTag);
+    if (isLiteralTag(lblTag) && !oz_isAtom(lbl)) return FAILED;
+    if (ofsvar->getWidth()>0) return FAILED;
+    return SUSPEND;
   }
   return oz_isAtom(term) ? PROCEED : FAILED;
 }
@@ -147,29 +129,29 @@ OZ_DECLAREBOOLFUN1(BIisAtomB,isAtomInline)
 
 OZ_Return isLockInline(TaggedRef t)
 {
-  SUSPEND_ON_FREE_VAR( t, term, tag );
+  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
   return oz_isLock(term) ? PROCEED : FAILED;
 }
 
 OZ_DECLAREBOOLFUN1(BIisLockB,isLockInline)
 
-inline
-OZ_Return isFreeRelInline(TaggedRef term) {
-  DEREF(term, _1, tag);
-  if (oz_isFree(term)) return PROCEED;
-  return FAILED;
-}
+OZ_BI_define(BIisFree, 1,1)
+{
+  oz_declareDerefIN(0,var);
+  OZ_RETURN(oz_isFree(var) ? oz_true() : oz_false());
+} OZ_BI_end
 
-OZ_DECLAREBOOLFUN1(BIisFree,isFreeRelInline)
+OZ_BI_define(BIisKinded, 1,1)
+{
+  oz_declareDerefIN(0,var);
+  OZ_RETURN(oz_isKinded(var) ? oz_true() : oz_false());
+} OZ_BI_end
 
-inline
-OZ_Return isKindedRelInline(TaggedRef term) {
-  DEREF(term, _1, tag);
-  if (oz_isFree(term)) return FAILED;
-  return PROCEED;
-}
-
-OZ_DECLAREBOOLFUN1(BIisKinded,isKindedRelInline)
+OZ_BI_define(BIisFuture, 1,1)
+{
+  oz_declareDerefIN(0,var);
+  OZ_RETURN(oz_isFuture(var) ? oz_true() : oz_false());
+} OZ_BI_end
 
 OZ_Return isDetRelInline(TaggedRef term) {
   DEREF(term, _1, _2);
@@ -182,22 +164,15 @@ OZ_DECLAREBOOLFUN1(BIisDet,isDetRelInline)
 
 OZ_Return isNameInline(TaggedRef t)
 {
-  SUSPEND_ON_FREE_VAR( t, term, tag );
-  if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case OFSVariable:
-	{
-          GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-          TaggedRef lbl=ofsvar->getLabel();
-          Assert(lbl!=makeTaggedNULL());
-          DEREF(lbl,_1,lblTag);
-          if (oz_isAtom(lbl)) return FAILED;
-          if (ofsvar->getWidth()>0) return FAILED;
-          return SUSPEND;
-	}
-      default:
-          return FAILED;
-      }
+  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
+  if (isGenOFSVar(term)) {
+    GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+    TaggedRef lbl=ofsvar->getLabel();
+    Assert(lbl!=makeTaggedNULL());
+    DEREF(lbl,_1,lblTag);
+    if (oz_isAtom(lbl)) return FAILED;
+    if (ofsvar->getWidth()>0) return FAILED;
+    return SUSPEND;
   }
   if (!isLiteralTag(tag)) return FAILED;
   return oz_isAtom(term) ? FAILED: PROCEED;
@@ -208,15 +183,9 @@ OZ_DECLAREBOOLFUN1(BIisNameB,isNameInline)
 
 OZ_Return isTupleInline(TaggedRef t)
 {
-  SUSPEND_ON_FREE_VAR( t, term, tag );
-  if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case FDVariable:
-      case BoolVariable:
-          return FAILED;
-      default:
-          return SUSPEND;
-      }
+  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
+  if (isGenOFSVar(term)) {
+    return SUSPEND;
   }
   return oz_isTuple(term) ? PROCEED : FAILED;
 }
@@ -226,15 +195,9 @@ OZ_DECLAREBOOLFUN1(BIisTupleB,isTupleInline)
 
 OZ_Return isRecordInline(TaggedRef t)
 {
-  SUSPEND_ON_FREE_VAR( t, term, tag );
-  if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case FDVariable:
-      case BoolVariable:
-          return FAILED;
-      default:
-          return SUSPEND;
-      }
+  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
+  if (isGenOFSVar(term)) {
+    return SUSPEND;
   }
   return oz_isRecord(term) ? PROCEED : FAILED;
 }
@@ -252,16 +215,9 @@ OZ_DECLAREBOOLFUN1(BIisProcedureB,isProcedureInline)
 
 OZ_Return isChunkInline(TaggedRef t)
 {
-  SUSPEND_ON_FREE_VAR( t, term, tag );
-  if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case OFSVariable:
-      case FDVariable:
-      case BoolVariable:
-          return FAILED;
-      default:
-          return SUSPEND;
-      }
+  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
+  if (isGenOFSVar(term)) {
+    return SUSPEND;
   }
   return oz_isChunk(term) ? PROCEED : FAILED;
 }
@@ -1109,35 +1065,26 @@ OZ_DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 
 OZ_Return isUnitInline(TaggedRef t)
 {
-  SUSPEND_ON_FREE_VAR( t, term, tag);
-  if (isCVar(tag)) {
-    switch (tagged2CVar(term)->getType()) {
-    case OFSVariable:
-      {
-	GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-	if (ofsvar->getWidth()>0) return FAILED;
-	TaggedRef lbl=ofsvar->getLabel();
-	DEREF(lbl,_1,lblTag);
-	if (isLiteralTag(lblTag)) {
-	  if (oz_isAtom(lbl)) {
-	    if (literalEq(term,NameUnit))
-	      return SUSPEND;
-	    else
-	      return FAILED;
-	  } else { // isName
-	    return FAILED;
-	  }
-	}
-	return SUSPEND;
+  SUSPEND_ON_NONKINDED_VAR( t, term, tag);
+  if (isGenOFSVar(term)) {
+    GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+    if (ofsvar->getWidth()>0) return FAILED;
+    TaggedRef lbl=ofsvar->getLabel();
+    DEREF(lbl,_1,lblTag);
+    if (isLiteralTag(lblTag)) {
+      if (oz_isAtom(lbl)) {
+	if (literalEq(term,NameUnit))
+	  return SUSPEND;
+	else
+	  return FAILED;
+      } else { // isName
+	return FAILED;
       }
-    case FDVariable:
-    case BoolVariable:
-      return FAILED;
-    default:
-      return SUSPEND;
     }
+    return SUSPEND;
   }
-  if (literalEq(term,NameUnit))
+
+  if (oz_isLiteral(term) && literalEq(term,NameUnit))
     return PROCEED;
   else
     return FAILED;
@@ -1151,39 +1098,28 @@ OZ_DECLAREBOOLFUN1(BIisUnitB,isUnitInline)
 
 OZ_Return isBoolInline(TaggedRef t)
 {
-  SUSPEND_ON_FREE_VAR(t, term, tag);
-  if (isCVar(tag)) {
-    switch (tagged2CVar(term)->getType()) {
-    case OFSVariable:
-      {
-	GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-	if (ofsvar->getWidth()>0) return FAILED;
-	TaggedRef lbl=ofsvar->getLabel();
-	DEREF(lbl,_1,lblTag);
-	if (isLiteralTag(lblTag)) {
-	  if (oz_isAtom(lbl)) {
-	    if (literalEq(term,NameTrue) ||
-		literalEq(term,NameFalse))
-	      return SUSPEND;
-	    else
-	      return FAILED;
-	  } else { // isName
-	    return FAILED;
-	  }
-	}
-	return SUSPEND;
+  SUSPEND_ON_NONKINDED_VAR(t, term, tag);
+  if (isGenOFSVar(term)) {
+    GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+    if (ofsvar->getWidth()>0) return FAILED;
+    TaggedRef lbl=ofsvar->getLabel();
+    DEREF(lbl,_1,lblTag);
+    if (isLiteralTag(lblTag)) {
+      if (oz_isAtom(lbl)) {
+	if (literalEq(term,NameTrue) ||
+	    literalEq(term,NameFalse))
+	  return SUSPEND;
+	else
+	  return FAILED;
+      } else { // isName
+	return FAILED;
       }
-    case FDVariable:
-    case BoolVariable:
-      return FAILED;
-    default:
-      return SUSPEND;
     }
+    return SUSPEND;
   }
-  if (literalEq(term,NameTrue) || literalEq(term,NameFalse))
-    return PROCEED;
-  else
-    return FAILED;
+  return (oz_isLiteral(term) &&
+	  (literalEq(term,NameTrue) || literalEq(term,NameFalse)))
+    ? PROCEED : FAILED;
 }
 
 OZ_DECLAREBOOLFUN1(BIisBoolB,isBoolInline)
@@ -1803,9 +1739,14 @@ OZ_BI_define(BIstatus,1,1)
     // FUT
     OZ_RETURN(AtomFree);
   case CVAR:
-    if (oz_isFree(term)) {
+    switch (oz_cv_status(tagged2CVar(term))) {
+    case OZ_FREE:
       OZ_RETURN(AtomFree);
-    } else {
+    case OZ_FUTURE:
+      OZ_RETURN(AtomFuture);
+    case OZ_OTHER:
+      OZ_RETURN(AtomOther);
+    case OZ_KINDED:
       SRecord *t = SRecord::newSRecord(AtomKinded, 1);
       switch (tagged2CVar(term)->getType()) {
       case FDVariable:
@@ -2189,14 +2130,11 @@ OZ_BI_define(BIadjoinAt,3,1)
       newrec->setArg(0,value);
       OZ_RETURN(makeTaggedSRecord(newrec));
     }
-    if (oz_isFree(fea)) {
-      oz_suspendOnPtr(feaPtr);
-    }
-    if (isCVar(fea)) {
-      if (tagged2CVar(fea)->getType()!=OFSVariable ||
-          tagged2GenOFSVar(fea)->getWidth()>0)
+    if (oz_isVariable(fea)) {
+      if (isGenOFSVar(fea) && tagged2GenOFSVar(fea)->getWidth()>0) {
 	oz_typeError(1,"Feature");
-      oz_suspendOnPtr(feaPtr);;
+      }
+      oz_suspendOnPtr(feaPtr);
     }
     oz_typeError(1,"Feature");
 
@@ -2215,20 +2153,13 @@ OZ_BI_define(BIadjoinAt,3,1)
   case UVAR:
     // FUT
   case CVAR:
-    if (!oz_isFree(rec) && tagged2CVar(rec)->getType()!=OFSVariable) {
+    if (oz_isKinded(rec) && !isGenOFSVar(rec)) {
       oz_typeError(0,"Record");
-    } else if (oz_isFeature(fea) || oz_isFree(fea)) {
-      oz_suspendOnPtr(recPtr);
-    } else if (isCVar(fea)) {
-      if (tagged2CVar(fea)->getType()!=OFSVariable ||
-          tagged2GenOFSVar(fea)->getWidth()>0) {
-	oz_typeError(1,"Feature");
-      } else {
-	oz_suspendOnPtr(recPtr);
-      }
-    } else {
+    }
+    if (isGenOFSVar(fea) && tagged2GenOFSVar(fea)->getWidth()>0) {
       oz_typeError(1,"Feature");
     }
+    oz_suspendOnPtr(recPtr);
 
   default:
     oz_typeError(0,"Record");
@@ -2302,7 +2233,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       }
       goto typeError0;
     case CVAR:
-      if (!oz_isFree(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
+      if (oz_isKinded(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
 	goto typeError0;
       if (recordFlag) {
 	return SUSPEND;
@@ -2330,7 +2261,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       out=makeTaggedRef(t0Ptr);
       return SUSPEND;
     case CVAR:
-      if (!oz_isFree(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
+      if (oz_isKinded(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
 	goto typeError0;
       out=makeTaggedRef(t0Ptr);
       return SUSPEND;
@@ -2367,7 +2298,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     out=makeTaggedRef(t0Ptr);
     return SUSPEND;
   case CVAR:
-    if (!oz_isFree(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
+    if (oz_isKinded(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
         goto typeError0;
     out=makeTaggedRef(t0Ptr);
     return SUSPEND;
@@ -2427,14 +2358,14 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
 {
   DEREF(term,termPtr,tag);
 
-  out = getArityList(term);
-  if (out) return PROCEED;
-  if (oz_isFree(term)) return SUSPEND;
-  if (isCVar(tag)) {
-    if (tagged2CVar(term)->getType()!=OFSVariable)
+  if (oz_isVariable(term)) {
+    if (oz_isKinded(term) && !isGenOFSVar(term)) {
       oz_typeError(0,"Record");
+    }
     return SUSPEND;
   }
+  out = getArityList(term);
+  if (out) return PROCEED;
   oz_typeError(0,"Record");
 }
 
