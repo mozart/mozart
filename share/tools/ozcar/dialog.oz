@@ -53,7 +53,7 @@ local
       end
    end
 
-   class EvalDialog from TkTools.evalDialog
+   class EvalDialog from BaseEvalDialog.dialog
       prop final
       meth init(master: Master)
 	 AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
@@ -70,13 +70,13 @@ local
 		    end
 		 end}}
       in
-	 TkTools.evalDialog, tkInit(master:   Master
-				    root:     pointer
-				    env:      Env
-				    'self':   if {IsFree Self} then unit
-					      else Self
-					      end)
-	 {TkTools.evalDialog, getCompiler($)
+	 BaseEvalDialog.dialog, tkInit(master:   Master
+				       root:     pointer
+				       env:      Env
+				       'self':   if {IsFree Self} then unit
+						 else Self
+						 end)
+	 {BaseEvalDialog.dialog, getCompiler($)
 	  enqueue([setSwitch(debuginfovarnames true)
 		   setSwitch(debuginfocontrol true)])}
 

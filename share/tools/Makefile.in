@@ -126,7 +126,8 @@ TOOLSFILES = \
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
-	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf Inspector.ozf
+	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf Inspector.ozf \
+	EvalDialog.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
@@ -154,6 +155,8 @@ bootstrap: boot-all
 
 %.ozf: %.oz
 	$(COMPILE) $< -o $@
+
+EvalDialog.ozf: EvalDialog.oz
 
 OPI.ozf: OPI.oz
 
