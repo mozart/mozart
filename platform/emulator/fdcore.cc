@@ -24,21 +24,13 @@ OZ_C_proc_begin(BIisFdVar,1)
 OZ_C_proc_end
 
 
-#ifdef BETA
 OZ_C_proc_begin(BIgetFDLimits,2)
 {
   return (OZ_unify(newSmallInt(0), OZ_getCArg(0)) &&
     OZ_unify(newSmallInt(fd_iv_max_elem), OZ_getCArg(1))) ? PROCEED : FAILED;
 }
 OZ_C_proc_end
-#else
-OZ_C_proc_begin(BIgetFDLimits,2)
-{
-  return (OZ_unify(newSmallInt(fdMinBA), OZ_getCArg(0)) &&
-    OZ_unify(newSmallInt(fdMaxBA), OZ_getCArg(1))) ? PROCEED : FAILED;
-}
-OZ_C_proc_end
-#endif
+
 
 OZ_C_proc_begin(BIfdMin, 2)
 {
@@ -253,7 +245,7 @@ OZ_C_proc_begin(BIfdPutGe, 2)
 }
 OZ_C_proc_end
 
-#ifdef BETA
+
 OZ_C_proc_begin(BIfdPutList, 3)
 {
   OZ_getCArgDeref(2, s, sptr, stag); // sign
@@ -359,69 +351,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
   return x.releaseNonRes();
 }
 OZ_C_proc_end
-#else
-OZ_C_proc_begin(BIfdPutList, 3)
-{
-  OZ_getCArgDeref(2, s, sptr, stag); // sign
 
-  if (isAnyVar(stag)) {
-    return addNonResSuspForDet(s, sptr, stag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
-  } else if (! isSmallInt(stag)) {
-    warning("BIfdPutList: Expected small integer, got 0x%x.", stag);
-    return FAILED;
-  }
-
-  OZ_getCArgDeref(1, list, listptr, listtag);
-
-  if (isNotCVar(listtag)) {
-    return addNonResSuspForCon(list, listptr, listtag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
-  } else if (! isLTuple(listtag)) {
-    warning("BIfdPutList: Expected list tuple, got 0x%x.", listtag);
-    return FAILED;
-  }
-
-  int list_array[fdMaxBA - fdMinBA + 1];
-  BitArray bitArray;
-  bitArray.empty();
-
-  for (int list_len = 0, list_array_index = 0; isLTuple(list); list_len += 1) {
-    TaggedRef ival = tagged2LTuple(list)->getHead();
-
-    while(isRef(ival)) ival = * TaggedRefPtr(ival);
-
-    if(! isSmallInt(ival)) {
-      warning("BIfdPutList: Expected list of small ints, got 0x%x.",
-              tagTypeOf(ival));
-      return FAILED;
-    } else {
-      int v = smallIntValue(ival);
-      if (!bitArray.contains(v) && fdMinBA <= v && v <= fdMaxBA) {
-        Assert(list_array_index < fdMaxBA - fdMinBA + 1);
-        list_array[list_array_index++] = v;
-        bitArray.setBit(v);
-      }
-    }
-
-    list = tagged2LTuple(list)->getTail();
-    while(isRef(list)) list = *TaggedRefPtr(list);
-  }
-
-  BIfdBodyManager x;
-
-  if (! x.introduce(OZ_getCArg(0))) return FAILED;
-
-  LocalFD aux; aux.init(list_len, list_array);
-
-  if (smallIntValue(s) != 0) aux = ~aux;
-
-  if ((*x &= aux) == 0) return FAILED;
-
-  return x.releaseNonRes();
-}
-OZ_C_proc_end
-#endif
 
 OZ_C_proc_begin(BIfdPutNot, 2)
 {
