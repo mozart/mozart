@@ -49,7 +49,7 @@
 
 
 ;;------------------------------------------------------------
-;; lemacs and gnu19 Support
+;; lucid and gnu19 Support
 ;;------------------------------------------------------------
 
 (defvar oz-lucid nil)
@@ -58,13 +58,10 @@
 (cond ((string-match "Lucid" emacs-version)
        (setq oz-lucid t))
       ((string-match "19" emacs-version)
-       (setq oz-gnu19 t)))
-
-(if oz-gnu19
-    (progn
-      (require 'lucid)
-      (defalias 'delete-extent 'delete-overlay)
-      (defalias 'make-extent 'make-overlay)))
+       (setq oz-gnu19 t)
+       (require 'lucid)
+       (defalias 'delete-extent 'delete-overlay)
+       (defalias 'make-extent 'make-overlay)))
 
 
 ;;------------------------------------------------------------
@@ -81,7 +78,7 @@
 ;; Variables/Initialization
 ;;------------------------------------------------------------
 
-(defvar oz-use-new-compiler (not (eq (getenv "OZUSENEWCOMPILER") nil))
+(defvar oz-use-new-compiler (getenv "OZUSENEWCOMPILER")
   "*If non-nil, use the new Oz Compiler.
 This has the effect of not opening the *Oz Compiler* buffer and feeding
 everything into the *Oz Emulator* buffer.")
@@ -212,53 +209,31 @@ All strings matching this regular expression are removed.")
 ;;    see function mode-line-format
 ;; gnu19 supports frame-title as constant string
 
-(defvar oz-old-frame-title
-  (if oz-lucid
-      (setq oz-old-frame-title
-	    frame-title-format)
-    (if oz-gnu19
-	(setq oz-old-frame-title
-	      (cdr (assoc 'name (frame-parameters))))))
-  "Saved Emacs window title.")
-
-(defun oz-get-title ()
-  (if oz-gnu19
-      (cdr (assoc 'name (frame-parameters (car (visible-frame-list)))))
-      (if oz-lucid
-	frame-title-format
-	"")))
-
-(defvar oz-title-format
-  (concat "Oz Programming Interface ("
-	  (oz-get-title) ")")
-  "Format string for Emacs window title while Oz is running.")
-
 (defvar oz-change-title t
   "*If non-nil, change the title of the Emacs window while Oz is running.")
 
-(defun oz-set-title ()
-  "Set the title of the Emacs window."
-  (if oz-change-title
-      (if oz-gnu19
-	  (mapcar '(lambda (scr)
-		     (modify-frame-parameters
-		      scr
-		      (list (cons 'name oz-title-format))))
-		  (visible-frame-list)))
-    (if oz-lucid
-	(setq frame-title-format oz-title-format))))
+(defvar oz-old-frame-title
+  (cond (oz-gnu19
+	 (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
+	(oz-lucid
+	 frame-title-format))
+  "Saved Emacs window title.")
 
-(defun oz-reset-title ()
-  "Restore the initial Emacs window title."
-  (if oz-change-title
-      (if oz-lucid
-	  (setq frame-title-format oz-old-frame-title))
-    (if oz-gnu19
-	(mapcar '(lambda (scr)
-		   (modify-frame-parameters
-		    scr
-		    (list (cons 'name oz-old-frame-title))))
-		(visible-frame-list)))))
+(defvar oz-frame-title
+  (concat "Oz Programming Interface (" oz-old-frame-title ")")
+  "Format string for Emacs window title while Oz is running.")
+
+(defun oz-set-title (frame-title)
+  "Set the title of the Emacs window."
+  (cond ((not oz-change-title) t)
+	(oz-gnu19
+	 (mapcar '(lambda (scr)
+		    (modify-frame-parameters
+		     scr
+		     (list (cons 'name frame-title))))
+		 (visible-frame-list)))
+	(oz-lucid
+	 (setq frame-title-format frame-title))))
 
 
 ;;------------------------------------------------------------
@@ -292,11 +267,10 @@ The point is moved to the end of the line."
   "Oz Menubar for Lucid Emacs.")
 
 (defun oz-make-menu (list)
-  (if oz-lucid
-      (setq oz-menubar (oz-make-menu-lucid list)))
-  (if oz-gnu19
-      (oz-make-menu-gnu19 oz-mode-map
-			  (list (cons "menu-bar" list)))))
+  (cond (oz-lucid
+	 (setq oz-menubar (oz-make-menu-lucid list)))
+	(oz-gnu19
+	 (oz-make-menu-gnu19 oz-mode-map (list (cons "menu-bar" list))))))
 
 (defun oz-make-menu-lucid (list)
   (if (null list)
@@ -571,7 +545,9 @@ after this delay, the processes are simply killed if still living.
 If FORCE is non-nil, kill the processes immediately."
   (interactive "P")
   (message "Halting Oz ...")
-  (if (get-buffer oz-temp-buffer) (kill-buffer oz-temp-buffer))
+  (cond ((get-buffer oz-temp-buffer)
+	 (delete-windows-on oz-temp-buffer)
+	 (kill-buffer oz-temp-buffer)))
   (if oz-bar-overlay
       (delete-overlay oz-bar-overlay))
   (if (and (not force)
@@ -594,7 +570,7 @@ If FORCE is non-nil, kill the processes immediately."
   (if (get-buffer-process oz-emulator-buffer)
       (delete-process oz-emulator-buffer))
   (message "Oz halted.")
-  (oz-reset-title))
+  (oz-set-title oz-old-frame-title))
 
 (defun oz-check-running (start-flag use-new-compiler)
   (let ((running t))
@@ -665,7 +641,7 @@ If FORCE is non-nil, kill the processes immediately."
 
 	  (bury-buffer oz-emulator-buffer)
 
-	  (oz-set-title)
+	  (oz-set-title oz-frame-title)
 	  (message "Oz started.")))))
 
 
@@ -774,8 +750,8 @@ the gdb commands `cd DIR' and `directory'."
 	(init-str (if oz-using-new-compiler
 		      (concat "set args -u " oz-new-compiler-url "\n")
 		    (concat "set args -S " file "\n"))))
-    (if oz-gnu19 (gdb (concat "gdb " oz-emulator)))
-    (if oz-lucid (gdb oz-emulator))
+    (cond (oz-gnu19 (gdb (concat "gdb " oz-emulator)))
+	  (oz-lucid (gdb oz-emulator)))
     (setq oz-emulator-buffer (buffer-name (current-buffer)))
     (comint-send-string
      (get-buffer-process oz-emulator-buffer)
