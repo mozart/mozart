@@ -44,7 +44,7 @@
   <Body>
 
 <chapter id=chapter.allplatforms>
-<title/Platform Independant Bugs/
+<title/Platform Independent Bugs/
 <p>
 To be done.
 </chapter>
@@ -52,47 +52,6 @@ To be done.
 <chapter id=chapter.platformspecific>
 <title/Bugs Occuring Only on Particular Platforms/
 <p>
-<section>
-<title/MS Windows/
-<p>
-
-<list>
-<item>
-On some machines graphical applications get stuck immediately after
-startup.
-<p>
-This problem is related to a bad interaction between Tcl/Tk and some
-other background programs. We found that we get the problem if one of
-the following programs is running (most liely there are more):
-<list>
-<item> babylon
-<item> fortify agent
-<item> sendback
-</list>
-
-The problem only appears on Windows NT and not on Windows 95. We
-tracked it down that it looks to be a bug in NT itself. We don't know
-any workaround yet except to kill the other program, sorry. So we
-propose the following: try to kill background programs one after the
-other before starting Mozart until Mozart works.
-
-<item> Mozart tries to create temporary files directly under
-<kbd>C:\</kbd>. This might lead to two different problems: a user
-might not have permission to create files under <kbd>C:\</kbd> and
-secondly Windows might get stuck if too many temporary files are
-created under <kbd>C:\</kbd>.
-<p>
-Workaround: set the environment variable <kbd>TMPDIR</kbd> to point to
-<kbd>C:\TEMP</kbd> before starting up Mozart for example
-by adding <p>
-<code>
-set TMPDIR=C:\TEMP
-</code>
-<p>
-to your <kbd/autoexec.bat/.
-</list>
-
-</section>
 <section>
 <title/Linux/
 <p>
