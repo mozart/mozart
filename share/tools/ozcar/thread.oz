@@ -48,7 +48,7 @@ in
    class ThreadManager
       feat
 	 ThreadDic             %% dictionary that holds various information
-	                       %% about debugged threads
+			       %% about debugged threads
       attr
 	 ReadLoopThread : unit
 
@@ -109,7 +109,7 @@ in
       in
 	 SkippedProcs <- Key | @SkippedProcs
 	 {OzcarMessage 'skipping procedure \'' # Name # '\''}
-%	 {OzcarShow @SkippedProcs}
+%        {OzcarShow @SkippedProcs}
 	 {Thread.resume T}
       end
 
@@ -177,7 +177,7 @@ in
 	    Key   = FrameId # I
 	    Found = {Member Key @SkippedProcs}
 	 in
-%	    {OzcarShow @SkippedProcs # Key # Found}
+%           {OzcarShow @SkippedProcs # Key # Found}
 	    case Found then
 	       {OzcarMessage 'ignoring `exit\' message of ignored application'}
 	       SkippedProcs  <- {Filter @SkippedProcs fun {$ F} F \= Key end}
@@ -341,9 +341,11 @@ in
       end
 
       meth kill(T I Select<=true)
-	 {Dbg.trace T false}
-	 {Dbg.step T false}
-	 {Thread.terminate T}
+	 try
+	    {Dbg.trace T false}
+	    {Dbg.step T false}
+	    {Thread.terminate T}
+	 catch error(kernel(deadThread ...) ...) then skip end
 	 case Select then
 	    Gui,status('Thread #' # I # ' has been terminated')
 	 else skip end
@@ -445,9 +447,9 @@ in
 
       meth blocked(thr:T id:I)
 	 Gui,markNode(I blocked)
-%	 case {CondSelect {@currentStack getTop($)} dir entry} of exit then
-%	    ThreadManager,rebuildCurrentStack
-%	 else skip end
+%        case {CondSelect {@currentStack getTop($)} dir entry} of exit then
+%           ThreadManager,rebuildCurrentStack
+%        else skip end
       end
 
       meth rebuildCurrentStack
