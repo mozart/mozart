@@ -33,7 +33,7 @@ AC_CHECK_PROGS(ECHO, echo)
 OZ_PATH_PROG(INSTALLSRC, ozinstallsrc)
 OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile oz.el:oz.in)
 
 errprint(ifdef([OZ_INIT],
  [],
