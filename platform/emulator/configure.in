@@ -51,26 +51,11 @@ dnl *****************************************************************
 dnl windows cross compilation
 dnl *****************************************************************
 
-echo "target=$target"
-
 case "$target" in
    NONE)
    ;;
    i386-mingw32)
         AC_MSG_RESULT(cross compiling for windows)
-        cross_compiling=yes
-
-        CXX=${target}-gcc
-        CC=${CXX}
-        RANLIB=${target}-ranlib
-        AR=${target}-ar
-
-        platform="win32-i486"
-        with_sunpro=no
-        oz_gmp_lib_dir=$oz_wincross_gmp_lib_dir
-        oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
-        oz_zlib_lib_dir=$oz_wincross_zlib_lib_dir
-        oz_zlib_inc_dir=$oz_wincross_zlib_inc_dir
         oz_malloc_obj=
 
         # va-start makes problems under mingw32
@@ -80,8 +65,8 @@ case "$target" in
         oz_copt_debug="-g"
 
         AC_DEFINE(WINDOWS)
-        CPPFLAGS="-DWINDOWS_EMULATOR $CPPFLAGS"
         AC_DEFINE(ARCH_I486)
+        CPPFLAGS="-DWINDOWS_EMULATOR $CPPFLAGS"
    ;;
 
    *)
@@ -89,27 +74,6 @@ case "$target" in
     ;;
 esac
 
-
-dnl *****************************************************************
-dnl OS2
-dnl *****************************************************************
-
-AC_MSG_CHECKING(for --enable-os2)
-AC_ARG_ENABLE(os2,
-  [--enable-os2       OS2 compilation (default=no)])
-if test "${enable_os2}" = yes; then
-    AC_MSG_RESULT(yes (-DOS2))
-    CXX=gcc
-    LD=$CXX
-    platform="os2-i486"
-    with_sunpro=no
-    with_gmp=no
-    oz_malloc_obj=
-    oz_warn_error=
-    AC_DEFINE(OS2)
-else
-    AC_MSG_RESULT(no)
-fi
 
 dnl *****************************************************************
 dnl Checks for programs.
