@@ -610,6 +610,10 @@ int osSystem(char *cmd)
   memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  SetHandleInformation(GetStdHandle(STD_OUTPUT_HANDLE),
+		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE),
+		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
   si.hStdInput = INVALID_HANDLE_VALUE;
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
