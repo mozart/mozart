@@ -14,11 +14,20 @@ import RI at 'x-oz://contrib/RI'
        LP at 'x-oz://contrib/LP'>>>
 as part of a functor definition.
 
-<p class=danger>
-Currently they are only supported on the following platforms:
-<table display>
-<tr/<td/<<linux-i486>>/<td/<<solaris-sparc>>//
-</table>
+
+<P> The module <<LP>> uses per default <EM/LP_SOLVE 2.x/ as linear
+programming solver. A version compatible with Mozart Oz can be
+downloaded via:
+
+<list>
+<item><ref.extern
+to="ftp://ftp.mozart-oz.org/pub/extras/lp_solve_2.3_mozart.tar.gz">ftp://ftp.mozart-oz.org/pub/extras/lp_solve_2.3_mozart.tar.gz</ref.extern>.
+</list>
+
+Unpack the archive and make it. You will be told what else has to be
+done. Please note that we are not able to sort out any problems
+concerning the actual <EM/LP_SOLVE 2.x/ solver and that we are not
+responsible for that kind of problems &resp; bugs.
 
 <P>
 Linear programming solver (LP solver) handle problems of the following
