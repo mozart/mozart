@@ -15,7 +15,7 @@ end
 %% Text
 %%
 
-Version                = 'Jul 8 1997'
+Version                = 'Jul 10 1997'
 TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
 
@@ -229,6 +229,8 @@ TextCursor             = left_ptr
 MaxStackSize           = 40
 MaxStackBrowseSize     = 15
 
+%% the timeout variables have critical values --
+%% you should know what you are doing when changing them...
 TimeoutToCalcTree      = 380 % ms
 TimeoutToBlock         = 620
 TimeoutToUpdateEnv     = 430
