@@ -279,7 +279,8 @@ files.base:
 		! -path './share/doc/*' -a  \
 		! -path './bin/ozdoc' -a \
 		! -path './bin/convertTextPickle' -a \
-		! -name '*.so-*' \
+		! -name '*.so-*' -a \
+		! -path './share/elisp/Fontifier.el' \
 	\) ) > $@
 
 
@@ -297,7 +298,8 @@ files.contrib:
 		\( -path './cache/x-oz/contrib/*' -a ! -name '*.so-*' \) -o \
 		-path './bin/ozdoc' -o \
 		-path './bin/convertTextPickle' -o \
-		-path './share/doc/*' \
+		-path './share/doc/*' -o \
+		-path './share/elisp/Fontifier.el' \
 	\) ) > $@
 
 files.contrib-%:
