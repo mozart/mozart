@@ -1037,7 +1037,9 @@ void GenCVariable::gc(void)
   Assert(getType() == FDVariable ||
 	 getType() == OFSVariable ||
 	 getType() == MetaVariable || 
-	 getType() == BoolVariable);
+	 getType() == BoolVariable ||
+	 getType() == AVAR
+	 );
   switch (getType()){
   case FDVariable:
     ((GenFDVariable*)this)->gc();
@@ -1061,6 +1063,9 @@ void GenCVariable::gc(void)
     PROFILE_CODE1(if (opMode == IN_TC) {
       FDProfiles.inc_item(cp_size_boolvar, sizeof(GenBoolVariable));
     });
+    break;
+  case AVAR:
+    ((AVar *) this)->gc();
     break;
   default:
     break;
@@ -1194,6 +1199,12 @@ void GenMetaVariable::gc(void)
 {
   GCMETHMSG("GenMetaVariable::gc");
   gcTagged(data, data);
+}
+
+void AVar::gc(void)
+{
+  GCMETHMSG("AVar::gc");
+  gcTagged(value, value);
 }
 
 DynamicTable* DynamicTable::gc(void)
@@ -1407,6 +1418,10 @@ void AM::gc(int msgLevel)
   
   suspendVarList=makeTaggedNULL(); /* no valid data */
   gcTagged(suspCallHandler,suspCallHandler);
+
+  gcTagged(aVarUnifyHandler,aVarUnifyHandler);
+  gcTagged(aVarBindHandler,aVarBindHandler);
+
   GCPROCMSG("ioNodes");
   for(int i = 0; i < osOpenMax(); i++) {
     if (osIsWatchedReadFD(i)) {

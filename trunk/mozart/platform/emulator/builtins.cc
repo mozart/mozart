@@ -85,6 +85,7 @@ extern void BIinitSpecial(void);
 extern void BIinitSystem(void);
 extern void BIinitFD(void);
 extern void BIinitMeta(void);
+extern void BIinitAVar(void);
 extern void BIinitObjects();
 extern void BIinitUnix();
 
@@ -106,7 +107,8 @@ BuiltinTabEntry *BIinit()
 
   BIinitFD();
   BIinitMeta();
-  
+
+  BIinitAVar();
   BIinitUnix();
 
   return bi;
