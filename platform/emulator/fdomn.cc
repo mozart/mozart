@@ -1706,8 +1706,10 @@ int OZ_FiniteDomainImpl::operator += (const int put_in)
           FDIntervals * iv = provideIntervals(2);
           if (put_in < min_elem) {
             iv->init(put_in, put_in, min_elem, max_elem);
+            min_elem = put_in;
           } else {
             iv->init(min_elem, max_elem, put_in, put_in);
+            max_elem = put_in;
           }
           setType(iv);
         }
