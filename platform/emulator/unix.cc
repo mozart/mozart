@@ -1724,7 +1724,7 @@ OZ_BI_define(unix_pipe,2,2) {
       !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
                      NULL,NULL,&si,&pinf)) {
-    fprintf(stderr,"dup error %d\n",GetLastError());
+    fprintf(stderr,"dup error %ld\n",GetLastError());
     return raiseUnixError("CreatePipe",0, "Cannot create pipe process.",
                           "os");
   }
