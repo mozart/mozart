@@ -3,24 +3,24 @@
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Michael Mehl (mehl@dfki.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Contributors:
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -29,7 +29,10 @@
 #include "thr_int.hh"
 #include "var_base.hh"
 
-OZ_Return oz_installScript(Script & s) {
+OZ_Return oz_installScript(Script & s)
+{
+  DEBUG_CONSTRAIN_CVAR(("\n ===== oz_installScript start\n"));
+
   OZ_Return ret = PROCEED;
 
   am.setInstallingScript();
@@ -37,10 +40,10 @@ OZ_Return oz_installScript(Script & s) {
   for (int i = 0; i < s.getSize(); i++) {
 
     int res = oz_unify(s[i].left, s[i].right);
- 
-    if (res == PROCEED) 
+
+    if (res == PROCEED)
       continue;
-    
+
     if (res == FAILED) {
       ret = FAILED;
       if (!oz_onToplevel()) {
@@ -59,6 +62,8 @@ OZ_Return oz_installScript(Script & s) {
   am.unsetInstallingScript();
 
   s.dispose();
+
+  DEBUG_CONSTRAIN_CVAR(("========== oz_installScript stop ======\n"));
 
   return ret;
 }
@@ -97,56 +102,56 @@ Board * installOnly(Board * frm, Board * to) {
     return frm;
 
   Board * r = installOnly(frm, to->getParent());
-  
+
   if (r != frm)
     return r;
 
   am.setCurrent(to);
   am.trail.pushMark();
-  
+
   OZ_Return ret = oz_installScript(to->getScript());
 
   if (ret != PROCEED) {
     Assert(ret==FAILED);
     return to;
   }
-    
+
   return r;
-  
+
 }
-  
+
 
 Bool oz_installPath(Board * to) {
-  // Tries to install "to". 
+  // Tries to install "to".
   // If installation of a script fails, NO is returned and
   // the highest space for which installation is possible gets installed.
   // Otherwise, OK is returned.
 
   Board * frm = oz_currentBoard();
-  
+
   Assert(!frm->isCommitted() && !to->isCommitted());
-  
+
   if (frm == to)
     return OK;
 
   Assert(to->isAlive());
-  
+
   // Step 1: Mark all spaces including root as installed
   {
     Board * s;
- 
+
     for (s = frm; !s->isRoot(); s=s->getParent()) {
       Assert(!s->hasMarkOne());
-      s->setMarkOne(); 
+      s->setMarkOne();
     }
     Assert(!s->hasMarkOne());
-    s->setMarkOne(); 
+    s->setMarkOne();
   }
 
   // Step 2: Find ancestor
   Board * ancestor = to;
 
-  while (!ancestor->hasMarkOne()) 
+  while (!ancestor->hasMarkOne())
     ancestor = ancestor->getParent();
 
   // Step 3: Deinstall from "frm" to "ancestor", also purge marks
@@ -160,7 +165,7 @@ Bool oz_installPath(Board * to) {
       s=s->getParent();
       am.setCurrent(s);
     }
-    
+
     am.setCurrent(ancestor);
 
     // Purge remaining marks
@@ -170,7 +175,7 @@ Bool oz_installPath(Board * to) {
     }
     Assert(s->hasMarkOne());
     s->unsetMarkOne();
-    
+
   }
 
   // Step 4: Install from "ancestor" to "to"
@@ -178,7 +183,3 @@ Bool oz_installPath(Board * to) {
   return installOnly(ancestor, to) == ancestor;
 
 }
-  
-
-
-

@@ -45,7 +45,7 @@
 
 #define DEFAULT_PRIORITY	MID_PRIORITY
 
-#define PRIORITY_SHIFT 15
+#define PRIORITY_SHIFT 16
 
 enum SuspendableFlags {
   // THIS MUST BE IN THE LOWEST TWO BITS!
@@ -63,13 +63,14 @@ enum SuspendableFlags {
   SF_OFS      = 1 << 7,
   SF_Unify    = 1 << 8,
   SF_Failed   = 1 << 9,
+  SF_Active   = 1 << 10,
 
   // Flags for threads
-  SF_Catch    = 1 << 10,
-  SF_Trace    = 1 << 11,
-  SF_Step     = 1 << 12,
-  SF_Stop     = 1 << 13,
-  SF_NoBlock  = 1 << 14,
+  SF_Catch    = 1 << 11,
+  SF_Trace    = 1 << 12,
+  SF_Step     = 1 << 13,
+  SF_Stop     = 1 << 14,
+  SF_NoBlock  = 1 << 15,
   
   // Thread priorities reserve two bits
   SF_PriMask  = 3 << PRIORITY_SHIFT,
@@ -79,15 +80,15 @@ enum SuspendableFlags {
   
 };
 
-#define FLAGTESTS(FLAG) \
-  int is ## FLAG(void) {         \
-    return flags & SF_ ## FLAG;  \
-  }                              \
-  void set ## FLAG(void) {       \
-    flags |= SF_ ## FLAG;        \
-  }                              \
-  void unset ## FLAG(void) {     \
-    flags &= ~SF_ ## FLAG;       \
+#define FLAGTESTS(FLAG)				\
+  int is ## FLAG(void) {			\
+    return flags & SF_ ## FLAG;			\
+  }						\
+  void set ## FLAG(void) {			\
+    flags |= SF_ ## FLAG;			\
+  }						\
+  void unset ## FLAG(void) {			\
+    flags &= ~SF_ ## FLAG;			\
   }
 
 class Suspendable {
@@ -178,6 +179,7 @@ public:
   FLAGTESTS(Local)
   FLAGTESTS(OFS)
   FLAGTESTS(Failed)
+  FLAGTESTS(Active)
   FLAGTESTS(Unify)
 
   /*

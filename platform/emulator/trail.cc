@@ -2,23 +2,23 @@
  *  Authors:
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Copyright:
  *    Kostja Popov, 1999
  *    Christian Schulte, 1999
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -36,11 +36,11 @@
  *
  */
 
-int Trail::chunkSize(void) { 
+int Trail::chunkSize(void) {
   int ret = 0;
 
   StackEntry * top = tos-1;
-  
+
   while (((TeType) ((int) *top)) != Te_Mark) {
     top -= 3;
     ret++;
@@ -68,21 +68,21 @@ void Trail::pushVariable(TaggedRef * varPtr) {
 
   if (v->isTrailed())
     return;
-  
+
   ensureFree(3);
   Stack::push((StackEntry) varPtr,                 NO);
   Stack::push((StackEntry) oz_var_copyForTrail(v), NO);
   Stack::push((StackEntry) Te_Variable,            NO);
 
   v->setTrailed();
-  
+
 }
 
 void Trail::pushMark(void) {
   // All variables marked as trailed must be unmarked!
-  
+
   StackEntry * top = tos-1;
-  
+
   do {
     switch ((TeType) (int) *top) {
     case Te_Mark:
@@ -100,10 +100,10 @@ void Trail::pushMark(void) {
     }
     top -= 3;
   } while (OK);
-    
+
  exit:
-  Stack::push((StackEntry) Te_Mark); 
-  
+  Stack::push((StackEntry) Te_Mark);
+
 }
 
 
@@ -135,7 +135,7 @@ void Trail::popMark(void) {
   (void) Stack::pop();
 
   StackEntry * top = tos-1;
-  
+
   do {
     switch ((TeType) (int) *top) {
     case Te_Mark:
@@ -153,7 +153,7 @@ void Trail::popMark(void) {
     }
     top -= 3;
   } while (OK);
-  
+
 }
 
 
@@ -170,13 +170,13 @@ void unBind(TaggedRef *p, TaggedRef t) {
 
 
 void Trail::unwind(void) {
-  
+
   Board * cb = oz_currentBoard();
 
   Script & s = cb->getScript();
 
   if (!isEmptyChunk()) {
-    
+
     int n = chunkSize();
 
     Assert(n > 0);
@@ -185,7 +185,7 @@ void Trail::unwind(void) {
 
     // one single suspended thread for all;
     Thread *thr = oz_newThreadPropagate(cb);
-  
+
     for (int i = 0; i < n; i++) {
 
       switch (getTeType()) {
@@ -200,7 +200,7 @@ void Trail::unwind(void) {
 
 	s[i].left  = makeTaggedRef(refPtr);
 	s[i].right = *refPtr;
-      
+
 	TaggedRef vv= *refPtr;
 	DEREF(vv,vvPtr,_vvTag);
 	if (oz_isVariable(vv)) {
@@ -217,7 +217,7 @@ void Trail::unwind(void) {
 	break;
       }
 
-      case Te_Variable: { 
+      case Te_Variable: {
 	TaggedRef * varPtr;
 	OzVariable * copy;
 	popVariable(varPtr, copy);
@@ -225,7 +225,7 @@ void Trail::unwind(void) {
 	Assert(isCVar(*varPtr));
 
 	oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
-	
+
 	Assert(tagged2CVar(*varPtr)->isTrailed());
 
 	tagged2CVar(*varPtr)->unsetTrailed();
@@ -234,15 +234,15 @@ void Trail::unwind(void) {
 
 	s[i].left  = makeTaggedRef(varPtr);
 	s[i].right = makeTaggedRef(newTaggedCVar(copy));
-	
+
 	break;
       }
-    
+
       default:
 	break;
       }
     }
-    
+
   } else {
     s.setEmpty();
   }
@@ -273,7 +273,7 @@ void Trail::unwindFailed(void) {
       Assert(isCVar(*varPtr));
 
       oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
-	
+
       Assert(tagged2CVar(*varPtr)->isTrailed());
 
       tagged2CVar(*varPtr)->unsetTrailed();
@@ -289,9 +289,9 @@ void Trail::unwindFailed(void) {
       Assert(0);
       break;
     }
-    
+
   } while (1);
-  
+
 }
 
 void Trail::unwindEqEq(void) {
@@ -299,7 +299,7 @@ void Trail::unwindEqEq(void) {
   am.emptySuspendVarList();
 
   do {
-    
+
     switch (getTeType()) {
 
     case Te_Bind: {
@@ -330,7 +330,7 @@ void Trail::unwindEqEq(void) {
       Assert(isCVar(*varPtr));
 
       oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
-	
+
       Assert(tagged2CVar(*varPtr)->isTrailed());
 
       tagged2CVar(*varPtr)->unsetTrailed();
@@ -348,7 +348,7 @@ void Trail::unwindEqEq(void) {
       Assert(0);
       break;
     }
-    
+
   } while (1);
 
 }

@@ -2,7 +2,7 @@
  *  Authors:
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
  *
@@ -10,7 +10,8 @@
  *    Kostja Popow, 1997-1999
  *    Michael Mehl, 1997-1999
  *    Christian Schulte, 1997-1999
- * 
+ *    Tobias Mueller, 1998-1999
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
@@ -18,11 +19,11 @@
  *  This file is part of Mozart, an implementation 
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -39,6 +40,7 @@
 #include "susplist.hh"
 #include "value.hh"
 #include "am.hh"
+#include "var_base.hh"
 
 OZ_Return oz_installScript(Script &script);
 
@@ -82,9 +84,9 @@ inline
 void Board::scheduleNonMono(void) {
   for (OrderedSuspList * p = getNonMono();
        p != NULL;
-       p = p->getNext()) 
+       p = p->getNext())
     addToLPQ(p->getPropagator());
-  
+
   setNonMono(NULL);
 
 }
@@ -130,7 +132,7 @@ TaggedRef Board::genSucceeded(Bool isEntailed) {
   SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
 
   stuple->setArg(0, isEntailed ? AtomEntailed : AtomSuspended);
-  
+
   return makeTaggedSRecord(stuple);
 }
 
@@ -165,12 +167,12 @@ TaggedRef Board::genBlocked(TaggedRef arg) {
 
 inline
 Bool Board::isStable(void) {
-  if (getThreads() != 0) 
+  if (getThreads() != 0)
     return NO;
-  
+
   if (oz_isCurrentBoard(this) && !am.trail.isEmptyChunk())
     return NO;
-  
+
   if (isEmptySuspList())
     return OK;
 
@@ -182,13 +184,13 @@ Bool Board::isStable(void) {
 inline
 void Board::incSolveThreads(void) {
   Assert(!isCommitted() && !isRoot());
-  
+
   Board * bb = this;
-  
+
   do {
     bb->incThreads(); bb = bb->getParent();
   } while (!bb->isRoot());
-  
+
 }
 
 // from thr_int.hh
@@ -200,16 +202,16 @@ void Board::decSolveThreads(void) {
   Assert(!isCommitted());
 
   Board * bb = this;
-  
+
   while (!bb->isRoot()) {
-    // ... first - notification board below the failed solve board; 
+    // ... first - notification board below the failed solve board;
 
     if (bb->decThreads()==0 && bb->isStable())
       oz_newThreadInject(bb);
-      
+
     bb = bb->getParent();
   }
-  
+
 }
 
 inline
@@ -217,14 +219,14 @@ void Board::checkSolveThreads(void) {
   Assert(!isCommitted());
 
   Board * bb = this;
-  
+
   while (!bb->isRoot()) {
     if (bb->isStable())
       oz_newThreadInject(bb);
-    
+
     bb = bb->getParent();
   }
-  
+
 }
 
 inline
@@ -288,13 +290,8 @@ oz_BFlag oz_isBetween(Board * to, Board * varHome) {
     s = s->getParentInternal();
 
   } while (1);
-    
+
 }
-
-
-
-
-
 
 /*
  * Implementation of space operations
@@ -308,7 +305,7 @@ void Board::inject(TaggedRef proc, int arity) {
   if (arity == 1) {
     RefsArray args = allocateRefsArray(1, NO);
     args[0] = getRootVar();
-    
+
     it->pushCall(proc, args, 1);
   } else {
     Assert(arity == 0);
@@ -318,7 +315,7 @@ void Board::inject(TaggedRef proc, int arity) {
 
 inline
 OZ_Return Board::merge(Board *bb, Bool sibling) {
-  // this is the board that gets merged 
+  // this is the board that gets merged
   //   --- it is merged with bb
 
   // First the things that must done even for merging with root board
@@ -330,16 +327,27 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
   bb->incSuspCount(getSuspCount());
 
   // Merge constraints
+  DEBUG_CONSTRAIN_CVAR(("========== Merging ======\n"));
+
+#ifdef DEBUG_CHECK
+  am.setMerging();
+#endif
+
   OZ_Return ret = oz_installScript(this->getScript());
+
+#ifdef DEBUG_CHECK
+  am.unsetMerging();
+#endif
+
   if (ret != PROCEED) return FAILED;
 
   // Merge propagators (must be after script installation, since script
   //                    installation might wake some propagators!!!!)
   (bb->lpq).merge(lpq);
   // This might cause to serving threads for the same board!
-  
+
   Assert(oz_isCurrentBoard(bb));
-  
+
   if (bb->isRoot()) {
     scheduleNonMono();
   } else {
@@ -349,12 +357,12 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
 
     // Merge distributors
     bb->setDistBag(bb->getDistBag()->merge(getDistBag()));
-    
+
     // Merge nonmonotonic propagators
     bb->setNonMono(bb->getNonMono()->merge(getNonMono()));
-    
+
   }
-  
+
   return PROCEED;
 }
 
@@ -363,8 +371,9 @@ int Board::commit(int left, int right) {
   ozstat.incSolveAlt();
 
   return getDistBag()->getFirst()->commit(this,left,right);
-  
+
 }
+
 
 inline  
 Bool Board::cacIsMarked(void) {
