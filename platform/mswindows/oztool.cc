@@ -195,6 +195,7 @@ int main(int argc, char **argv)
   if (!strcmp(argv[1],"platform")) {
     if (argc==2) {
       printf("%s\n",ozplatform);
+      exit(0);
     } else if (argc==4 && !strcmp(argv[2],"-o")) {
       FILE *output = fopen(argv[3],"w");
       if (output==NULL) {
