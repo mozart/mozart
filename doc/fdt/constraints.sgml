@@ -43,7 +43,7 @@ recalls the two inference rules of the method,
 constraint propagation and constraint
 distribution.
 
-<section id="subsecFDP">
+<section id="section.constraints.constraints">
   <title/Finite Domains and Constraints/
 
 <p>
@@ -105,7 +105,7 @@ for every variable occurring in it).
 </section>
 
 
-<section id="subsecFDCP">
+<section id="section.constraints.propagation">
   <title/Constraint Propagation/
 
 <p>
@@ -124,7 +124,7 @@ and
 <math display/Y\in24\#33/
 </section>
 
-<section>
+<section id="section.constraints.spaces">
   <title/Spaces, Propagators, and Constraint Stores/
 
 <p>
@@ -327,7 +327,7 @@ propagators.
 </section>
 
 
-<section id="SecFDIntDomProp">
+<section id="section.constraints.intdom">
   <title/Interval and Domain Propagation/
 
 <P>
@@ -371,7 +371,7 @@ Oz offers for some constraints two propagators, one
 for interval and one for domain propagation.
 
 
-<section>
+<section id="section.constraints.incomplete">
   <title/Incompleteness of Propagation/
 
 <p>
@@ -442,7 +442,7 @@ above propagators is inconsistent or can narrow a
 variable domain.
 
 
-<section id="sec.dast">
+<section id="section.constraints.dast">
   <title/Distribution and Search Trees/
 
 <p>
@@ -497,7 +497,8 @@ failed spaces./
 
 </section>
 
-<section><title/An Example/
+<section id="section.constraints.example">
+  <title/An Example/
 
 <p>
 To see the outlined propagate and distribute
@@ -678,7 +679,8 @@ This shows that constraint propagation can reduce
 the size of the search tree considerably.
 </section>
 
-<section><title/Distribution Strategies/
+<section id="section.constraints.distribution">
+  <title/Distribution Strategies/
 
 <p>
 A <def/distributor/ is a computational agent
@@ -736,7 +738,8 @@ For most problems, first-fail strategies yield
 much smaller search trees than naive strategies.
 </section>
 
-<section><title/Search Order/
+<section id="section.constraints.order">
+  <title/Search Order/
 
 <p>
 So far we have not specified in which order
@@ -775,12 +778,13 @@ provided the distribution strategy generating the
 constraints to distribute with is deterministic.
 </section>
 
-<section><title/Models/
+<section id="section.constraints.models">
+  <title/Models/
 
 <p>
 A <def/model/ of a problem is a representation of
 the problem as a finite domain problem (as
-defined in <Ptr to="subsecFDP">).  A model
+defined in <Ptr to="section.constraints.constraints">).  A model
 specifies the variables and the constraints
 representing the problem.
 
@@ -796,4 +800,8 @@ yield a computationally feasible search tree.
 
 
 </chapter>
+
+
+
+
 

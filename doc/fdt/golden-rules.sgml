@@ -73,10 +73,10 @@ A good distribution strategy can reduce the size
 of the search trees dramatically.  Usually, it's a
 good idea to start with a first-fail strategy.
 The Grocery Puzzle (see
-<ptr to=SecFDGrocery>) is an example where
+<ptr to="section.elimination.grocery">) is an example where
 domain splitting is much better than trying the
 least possible value.  Our script for the Queens
-Puzzle (see <ptr to=SecFDQueens>) can solve
+Puzzle (see <ptr to="section.scripts.queens">) can solve
 the puzzle even for large ?{N}'s by using a
 first-fail distribution strategy that tries the
 value in the middle of the domain of the selected
@@ -90,7 +90,7 @@ much on the number of propagators and finite
 domain variables created.  Models that keep these
 numbers low usually lead to more efficient
 scripts.  The model for the Queens Problem in
-<ptr to=SecFDQueens> is particularly
+<ptr to="section.scripts.queens"> is particularly
 successful in keeping the number of propagators
 low.  
 <p>
@@ -105,7 +105,7 @@ performance if they reduce significantly either
 the size of search tree or the number of
 propagation steps (for the latter, see the
 Pythagoras Example in
-<ptr to=SecFDPythagoras>).
+<ptr to="section.propagators.pythagoras">).
 </section>
 
 <section class=unnumbered><title/Eliminate Symmetries/
@@ -113,18 +113,18 @@ Pythagoras Example in
 It is always a good idea to design a model such
 that symmetries are avoided as much as possible.
 The model for the Queens Puzzle (see
-<ptr to=SecFDQueens>) avoids possible
+<ptr to="section.scripts.queens">) avoids possible
 symmetries by having a minimal number of
 variables.  The models for the Grocery and Family
-Puzzles (see &nbsp;<ptr to=SecFDGrocery>
-and&nbsp;<ptr to=SecFDFamily>) eliminate symmetries by
+Puzzles (see &nbsp;<ptr to="section.elimination.grocery">
+and&nbsp;<ptr to="section.elimination.family">) eliminate symmetries by
 imposing a canonical order on the variables by
 means of additional constraints.  The model of the
 Grocery Puzzle eliminates a subtle symmetry by
 stating that the price of the first item must have
 a large prime factor in common with the product of
 the prices of the items.  The Fraction Puzzle (see
-<ptr to=SecFDFractions>) eliminates
+<ptr to="section.propagators.fractions">) eliminates
 symmetries by imposing an order on the three
 occurring fractions.
 </section>
@@ -139,8 +139,8 @@ entailed by the constraints specifying the
 problem.  Try to find redundant constraints that
 yield nonredundant propagators. The models for the
 Fraction and Magic Square puzzles (see
-<ptr to=SecFDFractions>
-and <ptr to=SecFDMagicSquares>) feature good examples
+<ptr to="section.propagators.fractions">
+and <ptr to="section.propagators.squares">) feature good examples
 for nonredundant propagators for redundant
 constraints.
 </section>

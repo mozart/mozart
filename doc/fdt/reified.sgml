@@ -79,7 +79,7 @@ ceases to exist.
 <P>
 To understand these rules, you need to be
 familiar with the definitions in
-<Ptr to="subsecFDCP">.
+<Ptr to="section.constraints.propagation">.
 
 <para><Title>0/1-variables</Title>
 A <Em>0/1-variable</Em> is
@@ -405,7 +405,7 @@ that no preference is satisfied.
 
 
 
-<section>
+<section id="section.reified.srat">
   <title/Example: Self-referential Aptitude Test/
 
 <P>
