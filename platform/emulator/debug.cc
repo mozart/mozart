@@ -153,17 +153,14 @@ OZ_C_proc_begin(BIgetDebugStream,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIsetContFlag,2)
+OZ_C_proc_begin(BIthreadUnleash,2)
 {
   oz_declareThreadArg(0,thread);
-  oz_declareNonvarArg(1,yesno);
-  
-  if (OZ_isTrue(yesno))
-    thread->setCont(OK);
-  else if (OZ_isFalse(yesno))
-    thread->setCont(NO);
-  else
-    oz_typeError(1,"Bool");
+  OZ_declareIntArg(1,frameId);
+
+  if (!thread->isDeadThread() && thread->hasStack())
+    thread->getTaskStackRef()->unleash(frameId);
+
   return PROCEED;
 }
 OZ_C_proc_end
@@ -242,10 +239,9 @@ OZ_C_proc_begin(BIbreakpointAt, 4)
 OZ_C_proc_end
 
 void execBreakpoint(Thread *t) {
-  if (!t->getTrace() || !t->getStep() || t->getCont()) {
+  if (!t->getTrace() || !t->getStep()) {
     t->setTrace(OK);
     t->setStep(OK);
-    t->setCont(NO);
     debugStreamThread(t);
   }
 }
