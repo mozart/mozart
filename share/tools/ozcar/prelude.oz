@@ -37,6 +37,8 @@ Dbg = dbg(on:           proc {$}
 	  unleash:      {`Builtin` 'Thread.unleash' 2}
 	 )
 
+UserActionLock = {NewLock}
+
 proc {EnqueueCompilerQuery M}
    case {Compiler.getOPICompiler} of false then
       skip

@@ -59,7 +59,11 @@ GlobalEnvTitle         = 'Global Variables'
 %%
 
 OzcarMessagePrefix     = fun {$}
-			    'Ozcar[' # {Thread.id {Thread.this}} # ']: '
+			    ThisThread = {Thread.this}
+			 in
+			    'Ozcar[' #
+			    {Thread.id       ThisThread} # '/' #
+			    {Thread.parentId ThisThread} # ']: '
 			 end
 OzcarErrorPrefix       = 'Ozcar ERROR: '
 
