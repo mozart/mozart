@@ -35,7 +35,6 @@
 Bool oz_installScript(Script &script);
 
 InstType oz_installPath(Board *to);
-Bool oz_install(Board *bb);
 void oz_reduceTrailOnSuspend();
 void oz_reduceTrailOnFail();
 void oz_reduceTrailOnEqEq();
