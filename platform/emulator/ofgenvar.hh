@@ -280,6 +280,9 @@ public:
     // Allocate & return _unsorted_ pair list
     TaggedRef getPairs();
 
+    // Allocate & return _unsorted_ list containing all values mapped to:
+    TaggedRef getItems();
+
     // Convert table to Literal, SRecord or LTuple
     TaggedRef toRecord(TaggedRef lbl);
 
