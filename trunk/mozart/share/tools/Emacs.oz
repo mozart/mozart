@@ -4,7 +4,7 @@
 %%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 %%%
 %%% Contributor:
-%%%   Christian Schulte
+%%%   Christian Schulte <schulte@dfki.de>
 %%%
 %%% Copyright:
 %%%   Leif Kornstaedt and Benjamin Lorenz, 1997-1998
@@ -23,36 +23,19 @@
 %%% of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 %%%
 
-functor $
-
+functor
 import
-   System.{get
-	   showInfo
-	   valueToVirtualString
-	   print}
-
-   Error.{formatLine
-	  msg}
-
-   OS.{getEnv
-       stat
-       uName
-       getHostByName
-       tmpnam}
-
-   Open.{socket
-	 text
-	 file}
-
-   Compiler.{genericInterface}
-
+   System.{get showInfo valueToVirtualString print}
+   Error.{formatLine msg}
+   OS.{getEnv stat uName getHostByName tmpnam}
+   Open.{socket text file}
+   Compiler.genericInterface
 export
+   'Emacs':   Emacs
    getOPI:    GetOPI
    condSend:  CondSend
    interface: CompilerInterfaceEmacs
-
 body
-
    TimeoutToConfigBar = 200
    TimeoutToUpdateBar = TimeoutToConfigBar
 
@@ -102,7 +85,7 @@ body
 		 Home # P # '/mozart/share/tools'
 	      end}}
 	 end
-	 
+
 	 OzPathEnv = {OS.getEnv 'OZPATH'}
       in
 	 OzPath = case {OS.getEnv 'HOME'} of false then
@@ -301,4 +284,7 @@ body
 			     end
 			  end)
 
+   Emacs = emacs(getOPI:    GetOPI
+		 condSend:  CondSend
+		 interface: CompilerInterfaceEmacs)
 end
