@@ -1114,7 +1114,9 @@ PRINTLONG(Object)
 	 << "Object: "
 	 << getPrintName() << endl
          << "Features: ";
-  getFreeRecord()->printLong(stream,depth,offset);
+  if (getFreeRecord()) {
+    getFreeRecord()->printLong(stream,depth,offset);
+  }
   stream << endl;
   stream << "State: ";
   if (getState())
