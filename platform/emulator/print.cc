@@ -1166,6 +1166,10 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
       stream << endl << indent(offset) << ">>" << endl;
       break;
     }
+  case PerdioVariable:
+    stream << indent(offset) << "<PerdioVariable "
+           << getVarName(v) << " @" << this << ">" << endl;
+      break;
   case AVAR:
     {
       AVar* me = (AVar *) this;

@@ -149,6 +149,10 @@ private:
   Object *self;
   ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
 
+#ifdef PERDIO
+  int stopCount;
+#endif
+
   //  special allocator for thread's bodies;
   void freeThreadBody ();
 
@@ -366,6 +370,14 @@ public:
     state.flags = state.flags | T_G_stop;
   }
 
+#ifdef PERDIO
+  int pStop() {
+    return stopCount++;
+  }
+  int pCont() {
+    return --stopCount;
+  }
+#endif
 
   int getThrType () { return (state.flags & S_TYPE_MASK); }
 
