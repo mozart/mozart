@@ -167,7 +167,7 @@ functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
 compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
 	$(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
 
-Compiler.ozf: $(COMPILERSRC)
+Compiler.ozf: $(COMPILERSRC) 
 
 
 
@@ -190,7 +190,8 @@ ozvsserver: Standard.ozf MakeOzVSServer.oz
 # Boot compiler
 #---------------------------------------------------------------------
 
-ozc.ozm: compiler-Opcodes.oz compiler-Builtins.oz compiler-Env.oz
+ozc.ozm: compiler-Opcodes.oz compiler-Builtins.oz 
+# Don't use this as target: compiler-Env.oz
 	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
 	mv -f /tmp/$$$$.ozm $@
 
@@ -259,7 +260,7 @@ $(OZBIN)/%: %
 #---------------------------------------------------------------------
 # Automatic Makefile update
 #---------------------------------------------------------------------
- 
+
 Makefile: Makefile.in ../config.status
 	cd .. && ./config.status
 
@@ -278,7 +279,7 @@ clean:
 	-rm -f compiler-Version.oz compiler-Builtins.oz 
 	-rm -f compiler-Opcodes.oz
 	-rm -f envgen compiler-Env.oz
-	-rm -f $(FUNCTORS) Standard.ozf
+	-rm -f $(FUNCTORS) Standard.ozf Init.ozc
 	-rm -f $(SYSLETS)
 
 veryclean: clean
@@ -386,7 +387,6 @@ thorough-check:
 # no suffixes needed
 .SUFFIXES:
 
-	
 #
 # Currently unused
 #
