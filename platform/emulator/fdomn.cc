@@ -1039,7 +1039,7 @@ OZ_Boolean OZ_FiniteDomainImpl::isSingleInterval(void) const {
 inline
 FDBitVector * OZ_FiniteDomainImpl::provideBitVector(int hi) const
 {
-  FDBitVector * bv = get_bv();
+  FDBitVector * bv = (getType() == bv_descr ? get_bv() : (FDBitVector *) NULL);
   if (!bv) {
     return newBitVector(hi);
   } else if (hi > bv->high) {
@@ -1080,7 +1080,7 @@ FDBitVector * OZ_FiniteDomainImpl::asBitVector(void) const
 inline
 FDIntervals * OZ_FiniteDomainImpl::provideIntervals(int max_index) const
 {
-  FDIntervals * iv = get_iv();
+  FDIntervals * iv = (getType() == iv_descr ? get_iv() : (FDIntervals *) NULL);
   if (!iv) {
     return newIntervals(max_index);
   } else if (max_index > iv->high) {

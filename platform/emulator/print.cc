@@ -1044,7 +1044,7 @@ PRINT(Thread)
     stream << " (unknown Priority " << getPriority() << ")";
     break;
   }
-  stream << (isSuspended() ? " S" : " R");
+  stream << (isSuspended() ? " (susp)" : " (run)");
 
   switch (getThrType ()) {
   case S_RTHREAD:
@@ -1071,7 +1071,7 @@ PRINT(Thread)
   if ((getFlags ()) & T_tag)       stream << " T";
   if ((getFlags ()) & T_ltq)       stream << " Q";
   stream << " <";
-  //  getBoard()->printLong(stream, DEC(depth));
+  getBoard()->printLong(stream, DEC(depth));
   stream << ">";
 }
 

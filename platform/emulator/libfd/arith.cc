@@ -675,6 +675,78 @@ failure:
 }
 
 //-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fdp_power, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD);
+  
+  PropagatorExpect pe;
+  int susp_count = 0;
+  
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
+  OZ_EXPECT(pe, 1, expectInt);
+  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+
+  if (susp_count > 1)
+    return pe.suspend(OZ_makeSelfSuspendedThread());
+
+  return pe.impose(new PowerPropagator(OZ_args[0], 
+				       OZ_args[2], 
+				       OZ_intToC(OZ_args[1])));
+}
+OZ_C_proc_end
+
+inline
+double power(int x, int y)
+{
+  return pow(x, y);
+}
+
+inline
+double root(int x, int y)
+{
+  double r = pow(x, 1/double(y));
+  if (x == pow(floor(r), y))
+    return floor(r);
+  else if (x == pow(ceil(r), y))
+    return ceil(r);
+  else
+    return r;
+}
+
+OZ_Return PowerPropagator::propagate(void)
+{
+  int y = reg_c;
+  OZ_FDIntVar x(reg_x), z(reg_y);
+  PropagatorController_V_V P(x, z);
+  
+  if (y == 0) {
+    FailOnEmpty(*z &= 1);
+    return P.leave();
+  }
+  
+  int zmin, zmax;
+  
+  do {
+    FailOnEmpty(*x >= int(ceil(root(z->getMinElem(), y))));
+    FailOnEmpty(*x <= int(floor(root(z->getMaxElem(), y))));
+
+    zmin = z->getMinElem();
+    zmax = z->getMaxElem();
+    
+    FailOnEmpty(*z >= int(ceil(power(x->getMinElem(), y))));
+    FailOnEmpty(*z <= int(floor(power(x->getMaxElem(), y))));
+
+  } while (zmin < z->getMinElem() || zmax > z->getMaxElem());
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+
+
+//-----------------------------------------------------------------------------
 // static members
 
 OZ_CFun TwicePropagator::spawner = fdp_twice;
@@ -686,5 +758,7 @@ OZ_CFun DivPropagator::spawner = fdp_divD;
 OZ_CFun DivIPropagator::spawner = fdp_divI;
 OZ_CFun ModPropagator::spawner = fdp_modD;
 OZ_CFun ModIPropagator::spawner = fdp_modI;
+OZ_CFun PowerPropagator::spawner = fdp_power;
 
 //-----------------------------------------------------------------------------
+// eof
