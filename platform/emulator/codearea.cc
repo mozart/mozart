@@ -294,7 +294,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
   
   TaggedRef pairlist = 
     OZ_cons(OZ_pairA("G", globals),
-	    OZ_cons(OZ_pairAA("Y", "unknown"),
+	    OZ_cons(OZ_pairA("Y", locals),
 		    OZ_cons(OZ_pairA("PC", OZ_int((int) PC)),
     OZ_cons(OZ_pairA("name", OZ_atom(pred ? pred->getPrintName() : "???")),
 	    OZ_cons(OZ_pairA("file", file),
@@ -324,7 +324,8 @@ TaggedRef CodeArea::localVars(ProgramCounter PC, RefsArray Y)
   TaggedRef ret;
   ret = nil();
   for(int i=getRefsArraySize(Y)-1; i>=0; i--)
-    ret = cons(Y[i], ret);
+    if (Y[i])
+      ret = cons(OZ_mkTupleC("#", 2, OZ_atom("???"), Y[i]), ret);
   return ret;
 }
 
