@@ -47,7 +47,7 @@ void banner() {
   printf("%s","%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 }
 #define OZECHAR {                            \
-  printf("\\OzBsl");                         \
+  printf("\\OzBsl ");                         \
   if (yytext[1]=='\\') printf("\\OzBsl ");   \
   else if (index("{}$&#^_%~'`\"",yytext[1])) \
     printf("\\OzChar\\%c",yytext[1]);        \
