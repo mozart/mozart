@@ -105,7 +105,7 @@ private:
 public:
   //
   void* operator new(size_t size) {
-    error("VSMessage allocated using 'new(size_t)'");
+    OZ_error("VSMessage allocated using 'new(size_t)'");
     return ((void *) -1);       // gcc warning;
   }
   void* operator new(size_t, void *place) { return (place); }
@@ -116,7 +116,7 @@ public:
   {
     Assert(mbIn->getSite() == sIn);
   }
-  ~VSMessage() { error("VSMessage destroyed??"); }
+  ~VSMessage() { OZ_error("VSMessage destroyed??"); }
 
   //
   VSMsgBufferOwned* getMsgBuffer() { return (mb); }

@@ -141,8 +141,8 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
   //
   //
   switch (getSiteStatus()) {
-  case SITE_TEMP: error("A virtual site temporarily down???");
-  case SITE_PERM: error("Attempt to send to a 'perm' virtual site!");
+  case SITE_TEMP: OZ_error("A virtual site temporarily down???");
+  case SITE_PERM: OZ_error("Attempt to send to a 'perm' virtual site!");
   case SITE_OK:
     //
     // First, let's try to deliver it *now*.
@@ -189,11 +189,11 @@ Bool VirtualSite::tryToSendToAgain(VSMessage *vsm,
   //
   switch (getSiteStatus()) {
   case SITE_TEMP:
-    error("A virtual site temporarily down???");
+    OZ_error("A virtual site temporarily down???");
     return (TRUE);
 
   case SITE_PERM:
-    error("Attempt to re-send to a 'perm' virtual site!");
+    OZ_error("Attempt to re-send to a 'perm' virtual site!");
     return (PERM_NOT_SENT);
 
   case SITE_OK:
@@ -222,7 +222,7 @@ Bool VirtualSite::tryToSendToAgain(VSMessage *vsm,
     }
 
   default:
-    error("wrong virtual site status!");
+    OZ_error("wrong virtual site status!");
     return (TRUE);
   }
 }
@@ -405,7 +405,7 @@ ProbeReturn VSProbingObject::installProbe(VirtualSite *vs,
     break;
 
   default:
-    error("Virtual sites: unexpected type of probe");
+    OZ_error("Virtual sites: unexpected type of probe");
     break;
   }
 
@@ -441,7 +441,7 @@ ProbeReturn VSProbingObject::deinstallProbe(VirtualSite *vs, ProbeType pt)
     break;
 
   default:
-    error("Virtual sites: unexpected type of probe");
+    OZ_error("Virtual sites: unexpected type of probe");
     ret = PROBE_NONEXISTENT;
     break;
   }

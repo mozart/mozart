@@ -95,9 +95,9 @@ VSMsgChunkPoolSegmentManagerOwned(int chunkSizeIn, int chunksNumIn,
   shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
   if ((int) (shmid = shmget(shmkey, chunkSizeIn*chunksNumIn,
                             (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
-    error("Virtual Sites: failed to allocate a shared memory page");
+    OZ_error("Virtual Sites: failed to allocate a shared memory page");
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
-    error("Virtual Sites:: failed to attach a shared-memory page");
+    OZ_error("Virtual Sites:: failed to attach a shared-memory page");
   //
 #ifdef TRACE_SEGMENTS
   fprintf(stdout, "*** segment created 0x%X (pid %d)\n",
@@ -131,7 +131,7 @@ void VSMsgChunkPoolSegmentManagerOwned::markDestroy()
   //
   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
     if (errno != EIDRM) {
-      error("Virtual Sites: cannot remove the shared memory");
+      OZ_error("Virtual Sites: cannot remove the shared memory");
     }
   }
 }
@@ -164,7 +164,7 @@ void VSMsgChunkPoolSegmentManagerOwned::deleteAndBroadcast()
     if (sendTo_VirtualSiteImpl(vs, mb,  /* messageType */ M_NONE,
                                /* storeSite */ (DSite *) 0,
                                /* storeIndex */ 0) != ACCEPTED) {
-      error("Unable to send 'M_UNUSED_ID' message to a virtual site!");
+      OZ_error("Unable to send 'M_UNUSED_ID' message to a virtual site!");
     }
     //
     vs = importersRegister.getNext();
@@ -176,7 +176,7 @@ VSMsgChunkPoolSegmentManagerOwned::~VSMsgChunkPoolSegmentManagerOwned()
 {
   //
   if (shmdt((char *) mem) < 0) {
-    error("Virtual Sites: can't detach the shared memory.");
+    OZ_error("Virtual Sites: can't detach the shared memory.");
   }
 
   //
@@ -222,7 +222,7 @@ VSMsgChunkPoolSegmentManagerImported::VSMsgChunkPoolSegmentManagerImported(key_t
     return;
   }
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
-    error("Virtual Sites:: failed to attach a shared-memory page");
+    OZ_error("Virtual Sites:: failed to attach a shared-memory page");
   //
 #ifdef TRACE_SEGMENTS
   fprintf(stdout, "*** segment attached 0x%X (pid %d)\n",
@@ -255,7 +255,7 @@ VSMsgChunkPoolSegmentManagerImported::~VSMsgChunkPoolSegmentManagerImported()
 
   //
   if (isNotVoid() && shmdt((char *) mem) < 0) {
-    error("Virtual Sites: can't detach the shared memory.");
+    OZ_error("Virtual Sites: can't detach the shared memory.");
   }
 
   //
