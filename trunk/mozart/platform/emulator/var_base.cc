@@ -357,8 +357,6 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
   }  
 }
 
-extern void oz_forceWakeUp(SuspList **);
-
 /*
  * This is the definitive casting table
  *

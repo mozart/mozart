@@ -67,9 +67,15 @@ OZ_Return ReadOnly::unify(TaggedRef *vPtr, TaggedRef *tPtr)
 // suspension list and change the variable's type.
 OZ_Return ReadOnly::becomeNeeded()
 {
-  // waken the suspension list, and become a needed read-only variable
-  oz_checkSuspensionList(this, pc_all);
+  // become a needed read-only variable, and waken the suspension list
   setType(OZ_VAR_READONLY);
+  if (am.inEqEq()) {
+    am.escapeEqEqMode();
+    oz_forceWakeUp(getSuspListRef());
+    am.restoreEqEqMode();
+  } else {
+    oz_forceWakeUp(getSuspListRef());
+  }
   return PROCEED;
 }
 
