@@ -93,6 +93,10 @@ public:
   int getTag(void) {
     return parentAndFlags.getTag();
   }
+  void setParent(Board * p) {
+    Assert(!parentAndFlags.getTag())
+    parentAndFlags.set(p,0);
+  }
   //
   // Various marks needed during installation, cloning and garbage
   // collection
