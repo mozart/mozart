@@ -96,6 +96,8 @@ define
 	 MogulDBDir  : unit
 	 Topics      : nil
 	 Exe         : default
+	 Makepkgfile : unit
+	 MustExtract : true
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -456,7 +458,12 @@ define
 	 else @OptLevel end
       end
 
-      meth set_grade(G) Grade<-G end
+      meth set_grade(G)
+	 Grade<-G
+	 if G==freshen then
+	    {self set_must_extract(false)}
+	 end
+      end
       meth get_grade($)
 	 if @Superman\=unit
 	 then {@Superman get_grade($)}
@@ -811,5 +818,17 @@ define
 
       meth set_exe(A) Exe<-A end
       meth get_exe($) @Exe end
+
+      meth set_makepkgfile(F)
+	 if {Path.dirname F}\=nil then
+	    raise ozmake(makepkgfile({Path.toString F})) end
+	 else
+	    Makepkgfile<-F
+	 end
+      end
+      meth get_makepkgfile($) @Makepkgfile end
+
+      meth set_must_extract(B) MustExtract<-B end
+      meth get_must_extract($) @MustExtract end
    end
 end

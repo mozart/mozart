@@ -16,19 +16,13 @@ prepare
 define
    class Extractor
 
-      meth extract(writeMakefile:MAK<=true)
-	 %% when we install from a package file, we don't actually
-	 %% need to write the makefile because it is already read
-	 %% in memory when we read the package file: that's the
-	 %% reason for the MAK argument.
+      meth PreExtract(REC)
 	 REC = Extractor,Load({self get_package($)} $)
 	 local ID = {CondSelect {CondSelect REC info unit} mogul unit} in
 	    if ID\=unit then
 	       {self set_xmogul(ID)}
 	    end
 	 end
-	 DIR = {self get_extractdir($)}
-      in
 	 %% a few sanity checks.  however, the main sanity checks
 	 %% will be done when reading in the makefile
 	 if {Not {IsRecord REC}} then
@@ -57,15 +51,33 @@ define
 	       end
 	    else raise ozmake(extract:baddatapair(X)) end end
 	 end
+      end
+
+      meth extract_makefile(?REC)
+	 {self PreExtract(REC)}
+	 {self set_fromPackage(true)}
+	 {self makefile_from_record(REC.info)}
+	 {self set_no_makefile(false)}
+      end
+
+      meth extract_files(REC writeMakefile:MAK<=true writeFiles:WRITE<=true)
+	 %% when we install from a package file, we don't actually
+	 %% need to write the makefile because it is already read
+	 %% in memory when we read the package file: that's the
+	 %% reason for the MAK argument.
+	 DIR = if WRITE then {self get_extractdir($)} else unit end
+      in
 	 %% write out the files
-	 for F#D in REC.data do
-	    {self exec_write_to_file(D {Path.resolve DIR F})}
+	 if WRITE then
+	    for F#D in REC.data do
+	       {self exec_write_to_file(D {Path.resolve DIR F})}
+	    end
 	 end
-	 if MAK then
+	 if MAK andthen WRITE then
 	    Extractor,WriteMakefile(DIR REC.info)
 	    {self set_submakefiles(unit)}
 	 end
-	 if {Not MAK} orelse {self get_justprint($)} then
+	 if {Not MAK} orelse {Not WRITE} orelse {self get_justprint($)} then
 	    %% when installing from a package, we don't actually need to
 	    %% write the makefile and read it again.  Also, during a dry
 	    %% run, we won't do that anyway, but we don't want the errors
@@ -79,6 +91,21 @@ define
 	 end
       end
 
+      meth extract(writeMakefile:MAK<=true writeFiles:WRITE<=true extracted:EX)
+	 REC
+      in
+	 {self extract_makefile(REC)}
+	 if {self get_must_extract($)}
+	    orelse {Not {self database_check_grade($)}}
+	 then
+	    {self extract_files(REC writeMakefile:MAK writeFiles:WRITE)}
+	    EX=true
+	 else
+	    {self xtrace('No need to freshen: skipping extraction')}
+	    EX=false
+	 end
+      end
+
       meth WriteMakefile(DIR R)
 	 {self exec_write_to_file(
 		  {Value.toVirtualString
@@ -86,6 +113,16 @@ define
 		    {Record.subtract R submakefiles}}
 		   1000000 1000000}
 		  {Path.resolve DIR "MAKEPKG.oz"})}
+	 %% write a makefile.oz if none was provided in the package
+	 %% this is for compatibility with older packages
+	 if {Not {Path.exists {Path.resolve DIR "makefile.oz"}}} then
+	    {self exec_write_to_file(
+		     {Value.toVirtualString
+		      {UnByteStringify
+		       {Record.subtract R submakefiles}}
+		      1000000 1000000}
+		     {Path.resolve DIR "makefile.oz"})}
+	 end
 	 for DD#RR in {Record.toListInd {CondSelect R submakefiles o}} do
 	    Extractor,WriteMakefile({Path.resolve DIR DD} RR)
 	 end

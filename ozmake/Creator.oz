@@ -62,7 +62,7 @@ define
 	 %% make sure we also grab the makefile
 	 local F={self get_makefile($)} in
 	    if {Path.exists F} then
-	       Needed.{Path.toAtom F} := true
+	       Needed.{Path.toAtom {Path.basename F}} := true
 	    end
 	 end
 	 %% now track dependencies starting from install targets

@@ -43,7 +43,7 @@ prepare
 
       action(single type:atom(build install clean veryclean
 			      create publish extract list help
-			      uninstall edit mogul
+			      uninstall edit mogul checkneeded
 			      %%again
 			     ))
       build(    char:&b alias:action#build)
@@ -59,15 +59,17 @@ prepare
       uninstall(char:&e alias:action#uninstall)
       edit(             alias:action#edit)
       mogul(            alias:action#mogul)
+      checkneeded(      alias:[action#checkneeded grade#freshen])
       %% again(            alias:action#again)
 
       config(single type:atom(set unset list)
 	     validate:alt(when(action false) when(true optional)))
 
-      grade(single type:atom(none up down same any))
+      grade(single type:atom(none up down same any freshen))
       upgrade(  char:&U alias:[action#install grade#up])
       downgrade(        alias:[action#install grade#down])
       anygrade( char:&A alias:[action#install grade#any])
+      freshen(  char:&F alias:[action#install grade#freshen])
       replacefiles(single type:bool)
       replace(  char:&R alias:[action#install grade#any replacefiles#true])
       extend(   char:&X alias:[action#install grade#any extendpackage#true])
@@ -95,6 +97,7 @@ prepare
       moguldbdir( single type:string)
 
       exe(single type:atom(default no yes both multi))
+      makepkgfile(single type:string)
       )
 
    OPTLIST =
@@ -146,6 +149,7 @@ prepare
     moguldocdir    # set_moguldocdir      # true
     moguldbdir     # set_moguldbdir       # true
     exe            # set_exe              # true
+    makepkgfile    # set_makepkgfile      # true
    ]
       
 define
@@ -172,19 +176,20 @@ define
       {Man set_default_use_makepkg(Args.action==install andthen
 				   {Man get_package_given($)})}
       case Args.action
-      of build     then {Man build(Targets)}
-      [] install   then {Man install(Targets)}
-      [] clean     then {Man clean}
-      [] veryclean then {Man veryclean}
-      [] create    then {Man create}
-      [] publish   then {Man publish}
-      [] extract   then {Man extract}
-      [] list      then {Man list}
-      [] help      then {Help.help}
-      [] uninstall then {Man uninstall}
-      [] edit      then {Man makefileEdit}
-      [] config    then {Man config(Args OPTLIST)}
-      [] mogul     then {Man mogul}
+      of build       then {Man build(Targets)}
+      [] install     then {Man install(Targets)}
+      [] clean       then {Man clean}
+      [] veryclean   then {Man veryclean}
+      [] create      then {Man create}
+      [] publish     then {Man publish}
+      [] extract     then {Man extract}
+      [] list        then {Man list}
+      [] help        then {Help.help}
+      [] uninstall   then {Man uninstall}
+      [] edit        then {Man makefileEdit}
+      [] config      then {Man config(Args OPTLIST)}
+      [] mogul       then {Man mogul}
+      [] checkneeded then {Application.exit {Man checkneeded($)}}
       %% [] again     then {Man again}
       end
       {Application.exit 0}

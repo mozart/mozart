@@ -39,7 +39,6 @@ define
       end
 
       meth makefile_from_record(R)
-
 	 Target2Section<-{NewDictionary}
 	 Target2Rule   <-{NewDictionary}
 	 Target2Depends<-{NewDictionary}
@@ -92,9 +91,9 @@ define
 	 %% process released feature
 
 	 if {HasFeature R released} then
-	   try {self set_released({Utils.dateParse R.released})} catch _ then
-	      raise ozmake(makefile:badreleased(R.released)) end
-	   end
+	    try {self set_released({Utils.dateParse R.released})} catch _ then
+	       raise ozmake(makefile:badreleased(R.released)) end
+	    end
 	 end
 
 	 %% process clean feature

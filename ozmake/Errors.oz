@@ -24,6 +24,10 @@ prepare
 	 error(kind : TITLE
 	       msg  : 'no package file'
 	       items: [line('use -p FILE or --package=FILE in your command')])
+      [] ozmake(makepkgfile(F)) then
+	 error(kind : TITLE
+	       msg  : 'FILE should have no directory in --makepkgfile=FILE'
+	       items: [line(l:'FILE' m:F)])
       [] ozmake(create:hasscheme(PKG S)) then
 	 error(kind : TITLE_CREATE
 	       msg  : 'package to be created should be a filename not a URL'

@@ -23,6 +23,11 @@
    requires : [ ... ] for dependencies on other packages
    topics   : [ ... ] for MOGUL classification
    version  : ... a version number e.g. "2" or "3.2.7"
+** --freshen upgrades only if necessary, and does not report an
+   error if it is not necessary to upgrade
+** ozmake --extract will exceptionally write a makefile.oz if none
+   was included in the package.  This is for compatibility with
+   packages created with earlier versions of ozmake.
 
 * version 0.71
 ** ozmake --extract: default directory changed from current directory

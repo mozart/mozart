@@ -399,7 +399,7 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
 </optentry>
 <optentry>
   <option>
-    <opt>--grade=( none | same | up | down | any )</opt>
+    <opt>--grade=( none | same | up | down | any | freshen )</opt>
   </option>
   <default><opt>none</opt></default>
   <item>what to do if this package is already installed?
@@ -425,6 +425,9 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
       <option><opt>--grade=any</opt></option>
       <item>no conditions</item>
     </optentry>
+    <optentry>
+      <options><opt>--grade=freshen</opt></option>
+      <item>install if the package is newer else do nothing</item>
   </optlist>
   </item>
 </optentry>
@@ -447,6 +450,13 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
     <opt>--anygrade</opt>
   </option>
   <item>equivalent to <opt>--install --grade=any</opt></item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-F</opt>
+    <opt>--freshen</opt>
+  </option>
+  <item>equivalent to <opt>--install --grade=freshen</opt></item>
 </optentry>
 <optentry>
   <option>
