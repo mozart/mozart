@@ -211,7 +211,7 @@ case $platform in
         ;;
     linux*)
         TOOLLDCMD="gcc -shared"
-        EMULDFLAGS="-Wl,-export-dynamic"
+        # kost@ : redundant now; ;; EMULDFLAGS="-Wl,--export-dynamic"
         : ${oz_enable_modules_static=no}
         ;;
     solaris*)
@@ -236,7 +236,7 @@ case $platform in
         ;;
     freebsdelf*)
         TOOLLDCMD="gcc -shared"
-        EMULDFLAGS="-Wl,-export-dynamic"
+        # kost@ : redundant now; ;; EMULDFLAGS="-Wl,--export-dynamic"
         : ${oz_enable_modules_static=no}
         ;;
     freebsd*)
@@ -270,6 +270,27 @@ case $platform in
         oz_enable_modules_static=yes
         ;;
 esac
+
+# gcc's '--export-dynamic': if the linker recognizes it, then let's use it:
+AC_MSG_CHECKING(whether linker understands --export-dynamic),
+AC_CACHE_VAL(ac_cv_understand_export_dynamic,
+[savedKPCXXFLAGS=$CXXFLAGS
+CXXFLAGS="$CXXFLAGS -Wl,--export-dynamic"
+AC_LANG_CPLUSPLUS
+AC_TRY_LINK(,,
+ac_cv_understand_export_dynamic=yes,
+ac_cv_understand_export_dynamic=no)
+CXXFLAGS=$savedKPCXXFLAGS
+AC_LANG_CPLUSPLUS])
+
+if test $ac_cv_understand_export_dynamic = yes; then
+    AC_MSG_RESULT([yes, will use it!])
+    EMULDFLAGS="$EMULDFLAGS -Wl,--export-dynamic"
+else
+    AC_MSG_RESULT([no])
+fi
+unset savedKPCXXFLAGS
+
 
 AC_SUBST(TOOLLDCMD)
 
