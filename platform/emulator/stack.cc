@@ -19,42 +19,28 @@
 
 void Stack::resizeOutline(int n)
 {
-  resize((size*3)/2);  // faster than size*1.5
+  resize(((getMaxSize())*3)/2);  // faster than size*1.5
   ensureFree(n);
 }
 
 void Stack::resize(int newSize)
 {
 #ifdef DEBUG_STACK
-  warning("Resizing stack from %d to %d\n",size,newSize));
+  warning("Resizing stack from %d to %d\n",getMaxSize(),newSize);
 #endif
   DebugCheck(newSize <= 0,error("Resizing stack <= 0\n"));
   int used = tos-array;
-  array = reallocate(array, size, newSize);
+  array = reallocate(array, getMaxSize(), newSize);
   if(!array)
     error("Cannot realloc stack memory at %s:%d.", __FILE__, __LINE__);
-  size     = newSize;
   tos      = array+used;
-  stackEnd = array+size;
-}
-
-
-void Stack::allocate(int sz, void *(*allocfun)(size_t t))
-{
-  array = (StackEntry*) allocfun(size*sizeof(StackEntry));
-  if(!array)
-    error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
-  tos = array;
-  stackEnd = array+size;
+  stackEnd = array+newSize;
 }
 
 Stack::Stack(int sz, void *(*allocfun)(size_t t))
 {
-  size = sz;
   allocate(sz,allocfun);
 }
-
-
 
 void Stack::deallocate(StackEntry *p, int n)
 {

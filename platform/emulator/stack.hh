@@ -28,7 +28,6 @@ typedef void* StackEntry;
 
 class Stack {
 protected:
-  int size;
   StackEntry *tos;   // top of stack: pointer to first UNUSED cell
   StackEntry *array;
   StackEntry *stackEnd;
@@ -37,15 +36,20 @@ protected:
   void resizeOutline(int newSize);
 
   // memory management: default via malloc/free
-  void allocate(int sz, void *(*allocfun)(size_t t));
+  void allocate(int sz, void *(*allocfun)(size_t t))
+  {
+    array = (StackEntry*) allocfun(sz*sizeof(StackEntry));
+    if(!array)
+      error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
+    tos = array;
+    stackEnd = array+sz;
+  }
   virtual void deallocate(StackEntry *p, int n);
   virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
 
 public:
-
   Stack(int sz = 1000, void *(*allocfun)(size_t t) = malloc);
-
-  virtual ~Stack() { deallocate(array,size); }
+  virtual ~Stack() { deallocate(array,stackEnd-array); }
 
   Bool isEmpty(void) { return (tos <= array); }
   StackEntry *ensureFree(int n)
@@ -57,10 +61,9 @@ public:
     }
     return ret;
   }
-
   void checkConsistency()
   {
-    Assert((tos >= array) && (tos <= array+size));
+    Assert((tos >= array) && (tos <= stackEnd));
   }
 
   void push(StackEntry value, Bool check=OK)
@@ -69,8 +72,7 @@ public:
     if (check) { ensureFree(1); }
     *tos = value;
     tos++;
-  };
-
+  }
   StackEntry pop(int n=1)
   {
     checkConsistency();
@@ -79,8 +81,8 @@ public:
     return *tos;
   }
 
-  int getMaxSize()  { return size; }
-  int getUsed()     { return tos-array; }
+  int getMaxSize()  { return (stackEnd-array); }
+  int getUsed()     { return (tos-array); }
 };
 
 
