@@ -116,7 +116,7 @@ loop:
 	   ozconf.stackMaxSize,newMaxSize);
     fflush(stdout);
     char buf[1000];
-    fgets(buf,1000,stdin);
+    osfgets(buf,1000,stdin);
     switch (buf[0]) {
     case 'n':
       am.exitOz(1);

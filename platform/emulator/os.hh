@@ -19,6 +19,7 @@
 
 #include "types.hh"
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <iostream.h>
 
@@ -112,6 +113,8 @@ int osgetpid();
 int osopen(const char *path, int flags, int mode);
 int ossocket(int domain, int type, int protocol);
 void registerSocket(int fd);
+
+char *osfgets(char *s, int n, FILE *stream);
 
 inline
 int osMsToClockTick(int ms)
