@@ -32,6 +32,7 @@ void debugStreamCont(Thread*);
 void debugStreamThread(Thread*,Thread* parent=NULL);
 void debugStreamTerm(Thread*);
 void debugStreamCall(ProgramCounter, char*, int, TaggedRef*, bool);
+void debugStreamExit(TaggedRef);
 
 OZ_C_proc_proto(BItaskStack)
 OZ_C_proc_proto(BIbreakpointAt)
