@@ -58,7 +58,7 @@ public:
 template <class ENGINE, class PFDVAR, class FDVAR>
 void make_PEL_LessEqOffset(ENGINE &engine,
                            PFDVAR &x, int c,
-                           PFDVAR &y, FDVAR * dummy)
+                           PFDVAR &y)
 {
   engine.expectIntVarBounds(x);
   engine.expectIntVarBounds(y);
@@ -83,7 +83,7 @@ public:
 template <class ENGINE, class PFDVAR, class FDVAR>
 void make_PEL_GreaterOffset(ENGINE &engine,
                             PFDVAR &x, int c,
-                            PFDVAR &y, FDVAR * dummy)
+                            PFDVAR &y)
 {
   engine.expectIntVarBounds(x);
   engine.expectIntVarBounds(y);
