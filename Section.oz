@@ -78,6 +78,18 @@ define
 	    {Manager decTrace('<-- updatePkgList section '#@id)}
 	 end
       end
+      %%
+      meth updateAuthorList(DB L $)
+	 {Manager incTrace('--> updateAuthorList section '#@id)}
+	 try
+	    {FoldL {Arity @toc}
+	     fun {$ L K}
+		{DB updateAuthorListFor(K L $)}
+	     end L}
+	 finally
+	    {Manager decTrace('<-- updateAuthorList section '#@id)}
+	 end
+      end
    end
    %%
    %% fix section body for users who just cannot get it right

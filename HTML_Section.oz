@@ -8,6 +8,10 @@ export
 define
    class HTML_Section from HE
       meth formatHeaders($)
+%	 Cs Ps={List.partition {Arity @toc} fun{$ X}
+%					       false
+%					    end	Cs}
+%      in
 	 'div'(
 	    'class' : 'formatheaders'
 	    table(
@@ -17,12 +21,13 @@ define
 	       'border': '0'
 	       {self formatHeader('type' "section" $)}
 	       {self formatHeader('id' tt({HtmlQuote @id}) $)}
-	       if @email==unit then '' else
-		  {self formatHeader(
-			   'email'
-			   a(href:"mailto:"#@email tt({HtmlQuote @email}))
-			   $)}
-	       end
+%	       tr(td(colspan:3 "NIZZE"))
+% 	       if @email==unit then '' else
+% 		  {self formatHeader(
+% 			   'email'
+% 			   a(href:"mailto:"#@email tt({HtmlQuote @email}))
+% 			   $)}
+% 	       end
 	       {self formatHeaderEnum(
 			'entries'
 			{Map {Arity @toc}

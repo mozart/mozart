@@ -4,16 +4,31 @@ import
    Text(
       htmlQuote:HtmlQuote
       makeBS
+      capitalize:Capitalize
       )
    Open(file html)
    Directory(mkDirForFile)
+   HTML_Navigation(getNavigationBar)
 export
    'class' : HTML_Entry
 define
    class HTML_File from Open.file Open.html end
    class HTML_Entry
+      attr NavBar:_
       meth headTitle($) {HtmlQuote @id} end
-      meth bodyTitle($) tt({HtmlQuote @id}) end
+      meth bodyTitle($) {HtmlQuote {self getPackageName($)}} end
+      %%
+      meth getPackageName($)
+	 {Capitalize
+	  {Reverse
+	   {List.takeWhile
+	    {Reverse {VirtualString.toString @id}}
+	    Char.isAlNum}}}
+      end
+      %%
+      meth getNavigationBar($)
+	 {HTML_Navigation.getNavigationBar}
+      end
       %%
       meth toPage($)
 	 CSS           = {Manager getCssLink($)}
@@ -21,39 +36,43 @@ define
 	 BodyTitle     = {self bodyTitle($)}
 	 FormatHeaders = {self formatHeaders($)}
 	 FormatBody    = {self formatBody($)}
+	 NavigationBar = {self getNavigationBar($)}
       in
-	 html(
-	    head(
-	       title(HeadTitle)
-	       CSS)
-	    body(
-	       h1('class':'title' BodyTitle)
-	       'div'(
-		  'class':'entryinfo'
-		  FormatHeaders
-		  FormatBody)))
+	 html(head(
+		 title(HeadTitle)
+		 CSS)
+	      body(
+		 NavigationBar
+		 h1('class':'title' BodyTitle)
+		 'div'(
+		    'class':'entryinfo'
+		    FormatHeaders
+		    FormatBody
+		    )))
       end
       %%
       meth formatHeader(H V $ 'class':C<='header')
-	 tr('class':C
-	    'valign':'top'
-	    td('class':C {HtmlQuote H})
-	    td('class':C ":")
-	    td('class':'value'   V ))
+	 '#'(tr('class':C
+		'valign':'top'
+		td('class':C {HtmlQuote H})
+		td('class':C ":")
+		td('class':'value' V))
+	    )
       end
       meth formatHeaderEnum(H L $ 'class':C<='header')
-	 tr('class':C
-	    'valign':'top'
-	    td('class':C {HtmlQuote H})
-	    td('class':C ":")
-	    {AdjoinAt
-	     {List.toTuple td
-	      {FoldR L fun {$ V Accu}
-			  if Accu==nil then [V] else
-			     V|br|Accu
-			  end
-		       end nil}}
-	     'class' 'value'})
+	 '#'(tr('class':C
+		'valign':'top'
+		td('class':C {HtmlQuote H})
+		td('class':C ":")
+		{AdjoinAt
+		 {List.toTuple td
+		  {FoldR L fun {$ V Accu}
+			      if Accu==nil then [V] else
+				 V|br|Accu
+			      end
+			   end nil}}
+		 'class' 'value'})
+	    )
       end
       %%
       meth formatBody($)

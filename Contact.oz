@@ -46,5 +46,19 @@ define
 	 {Manager trace('Skipping contact '#@id)}
 	 L
       end
+      %%
+      meth updateAuthorList(DB L $)
+	 {Manager trace('Skipping contact '#@id)}
+	 L
+      end
+      %%
+      meth getContributions($)
+	 try
+	    {Manager get_authors($)}.@id
+	 catch _ then
+	    {Manager trace("FAILED 'get_authors': "#@id)}
+	    nil
+	 end
+      end
    end
 end

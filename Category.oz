@@ -4,6 +4,7 @@ import
    Admin(manager:Manager)
    Text(htmlQuote:HtmlQuote)
    Directory(mkDirForFile)
+   HTML_Navigation(getNavigationBar)
 export
    UpdateCatPages UpdatePkgListPage
 define
@@ -14,7 +15,7 @@ define
 	 head(
 	    title(Title)
 	    {Manager getCssLink($)})
-	 body(
+	 body({HTML_Navigation.getNavigationBar}
 	    h1('class':'title' Title)
 	    'div'(
 	       'class':'entryinfo'
