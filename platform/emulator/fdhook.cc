@@ -24,20 +24,6 @@
 
 Suspension* FDcurrentTaskSusp = NULL;
 
-/*
-void reviveCurrentTaskSusp(void)
-{
-  DebugCheck(FDcurrentTaskSusp == NULL,
-	     error("FDcurrentTaskSusp is NULL in reviveCurrentTaskSusp."));
-  DebugCheck(FDcurrentTaskSusp->isResistant() == NO,
-	     error("Cannot revive non-resistant suspension."));
-  DebugCheck(FDcurrentTaskSusp->isDead() == OK,
-	     error("Cannot revive non-resistant suspension."));
-  FDcurrentTaskSusp->unmarkPropagated();
-  FDcurrentTaskSusp->setNode(am.currentBoard);
-  am.currentBoard->incSuspCount();
-}
-*/
 void reviveCurrentTaskSusp(void) {
   DebugCheck(FDcurrentTaskSusp == NULL,
 	     error("FDcurrentTaskSusp is NULL in reviveFDcurrentTaskSusp."));
@@ -50,6 +36,7 @@ void reviveCurrentTaskSusp(void) {
   am.currentBoard->incSuspCount();
   FDcurrentTaskSusp = NULL;
 }
+
 
 void killPropagatedCurrentTaskSusp(void) {
   if (FDcurrentTaskSusp == NULL) return;
@@ -99,7 +86,7 @@ Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 SuspList * addVirtualConstr(SuspList * list, SuspList * elem, Board * home)
 {
   Suspension * susp = elem->getSusp ();
-  updateExtSuspension (home, susp);
+  updateExtSuspension (home->getBoardDeref(), susp);
 
   elem->setNext(list);
   return elem;
