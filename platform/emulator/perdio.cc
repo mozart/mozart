@@ -18,6 +18,7 @@
  *     locks
  *   ?stationary object?, dictionary, array
  *     all
+ *   builtins for threads and spaces
  *   pendlinkHandle simplify
  *   builtin
  *     classify secure/insecure
@@ -5261,6 +5262,8 @@ int loadFile(char *filename,OZ_Term out)
     bs->afterRead(max);
     pos=bs->beginRead(max);
   }
+
+  close(fd);
 
   if (len==0) {
     return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
