@@ -68,6 +68,10 @@
 			     out => ['+int'],
 			     BI  => unix_lSeek},
 
+     'rmDir'		=> { in  => ['+virtualString'],
+			     out => [],
+			     BI  => unix_rmDir},
+
      'unlink'		=> { in  => ['+virtualString'],
 			     out => [],
 			     BI  => unix_unlink},
