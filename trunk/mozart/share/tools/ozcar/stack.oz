@@ -141,7 +141,7 @@ in
 	    StackManager,ReCalculate({Reverse S})
 	    
 	 else              % no stack available
-	    E = {T2VS X}
+	    E = {V2VS X}
 	 in
 	    Status = UserExcText # E # NoStackText
 	    {ForAll [status(Status clear BlockedThreadColor)

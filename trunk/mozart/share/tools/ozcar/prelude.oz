@@ -48,10 +48,6 @@ Dmember  = Dictionary.member
 DcondGet = Dictionary.condGet
 
 fun {V2VS X}
-   {System.valueToVirtualString X PrintDepth PrintWidth}
-end
- 
-fun {T2VS X}
    P = {System.get errors}
 in
    {System.valueToVirtualString X P.depth P.width}
