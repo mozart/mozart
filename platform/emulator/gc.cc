@@ -77,7 +77,7 @@ Bool isInTree(Board *b);
 
 #ifdef DEBUG_GC
 #  define CHECKSPACE
-#  define VERBOSE
+// #  define VERBOSE
 // #  define WIPEOUTFROM
 #endif
 
@@ -356,11 +356,11 @@ static SavedPtrStack savedPtrStack;
 /*
  * set: only used in conjunction with the function setHeapCell ???
  */
-inline int  GCMARK(int S)      { return (S | GCTAG); }
-inline int  GCMARK(void *S)    { return GCMARK((int) S); }
+inline int  GCMARK(void *S)    { return makeTaggedRef(GCTAG,S); }
+inline int  GCMARK(int S)      { return GCMARK((void *) S); }
 
-inline int  GCUNMARK(int S)    { return S & ~GCTAG; }
-inline Bool GCISMARKED(int S)  { return S &  GCTAG ? OK : NO; }
+inline int  GCUNMARK(int S)    { return (int)tagValueOf(S); }
+inline Bool GCISMARKED(int S)  { return GCTAG==tagTypeOf(S); }
 
 
 /*
@@ -380,7 +380,7 @@ inline Bool GCISMARKED(int S)  { return S &  GCTAG ? OK : NO; }
  *
  */
 inline
-void storeForward (int* fromPtr, int newValue)
+void storeForward (int* fromPtr, void *newValue, Bool domark=OK)
 {
   if (opMode == IN_TC) {
     savedPtrStack.pushPtr(fromPtr, (int) *fromPtr);
@@ -391,12 +391,13 @@ void storeForward (int* fromPtr, int newValue)
   DebugGC(opMode == IN_GC
           && from->inChunkChain ((void *) newValue),
           error ("storing (marked) ref in to FROM-space"));
-  *fromPtr = GCMARK(newValue);
+  *fromPtr = domark ? GCMARK(newValue) : (int)newValue;
 }
 
 inline
-void storeForward (int* fromPtr, void *newValue) {
-  storeForward (fromPtr, (int) newValue);
+void storeForward(void* fromPtr, void *newValue)
+{
+  storeForward((int*) fromPtr, newValue);
 }
 
 //*****************************************************************************
@@ -568,7 +569,7 @@ Literal *Literal::gc()
     Name *aux = (Name *) gcRealloc (this,sizeof (*this));
     GCNEWADDRMSG (aux);
     ptrStack.push (aux, PTR_NAME);
-    storeForward((int*) &printName, aux);
+    storeForward(&printName, aux);
     return (aux);
   } else {
     return (this);
@@ -608,11 +609,11 @@ Float *Float::gc()
 inline
 BigInt *BigInt::gc()
 {
-  CHECKCOLLECTED(*(int *)&value.alloc, BigInt *);
+  CHECKCOLLECTED(*(int *)&value.d, BigInt *);
 
   BigInt *ret = new BigInt();
   mpz_set(&ret->value,&value);
-  storeForward((int *)&value.alloc, ret);
+  storeForward(&value.d, ret);
   return ret;
 }
 
@@ -677,9 +678,27 @@ SuspContinuation *SuspContinuation::gcCont()
                               !isInTree(board->gcGetBoardDeref ())),
           error ("non-local board in TC mode is being copied"));
 
-  storeForward((int *)&pc, ret);
+  storeForward(&pc, ret);
   return ret;
 }
+
+#define GCBIT (1<<(BitsPerWord-1))
+
+inline Bool refsArrayIsMarked(RefsArray r)
+{
+  return (r[-1]&GCBIT) ? OK : NO;
+}
+
+inline void refsArrayMark(RefsArray r, void *ptr)
+{
+  storeForward(&r[-1],(void*)((int)ptr|GCBIT),NO);
+}
+
+inline RefsArray refsArrayUnmark(RefsArray r)
+{
+  return (RefsArray) (r[-1]&~GCBIT);
+}
+
 
 // Structure of type 'RefsArray' (see ./tagged.h)
 // r[0]..r[n-1] data
@@ -694,7 +713,9 @@ RefsArray gcRefsArray(RefsArray r)
 
   NOTINTOSPACE(r);
 
-  CHECKCOLLECTED(r[-1], RefsArray);
+  if (refsArrayIsMarked(r)) {
+    return refsArrayUnmark(r);
+  }
 
   int sz = getRefsArraySize(r);
 
@@ -708,7 +729,7 @@ RefsArray gcRefsArray(RefsArray r)
   DebugCheck(isFreedRefsArray(r),
              markFreedRefsArray(aux););
 
-  storeForward((int*) &r[-1], aux);
+  refsArrayMark(r,aux);
 
   for(int i = sz-1; i >= 0; i--)
     gcTagged(r[i],aux[i]);
@@ -734,7 +755,7 @@ CFuncContinuation *CFuncContinuation::gcCont(void)
   CFuncContinuation *ret = (CFuncContinuation*) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CFUNCONT);
-  storeForward((int *)&cFunc, ret);
+  storeForward(&cFunc, ret);
   return ret;
 }
 
@@ -747,7 +768,7 @@ Continuation *Continuation::gc()
   Continuation *ret = (Continuation *) gcRealloc(this,sizeof(Continuation));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CONT);
-  storeForward((int *)&pc, ret);
+  storeForward(&pc, ret);
   return ret;
 }
 
@@ -796,7 +817,7 @@ STuple *STuple::gc()
   STuple *ret = (STuple*) gcRealloc(this,len);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_STUPLE);
-  storeForward((int *)&label, ret);
+  storeForward(&label, ret);
   gcTaggedBlock(getRef(),ret->getRef(),getSize());
   return ret;
 }
@@ -814,7 +835,7 @@ LTuple *LTuple::gc()
 
   gcTaggedBlock(args,ret->args,2);
 
-  storeForward((int*) &args[0], ret);
+  storeForward(&args[0], ret);
   return ret;
 }
 
@@ -873,7 +894,7 @@ SRecord *SRecord::gcSRecord()
   SRecord *ret = (SRecord*) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_SRECORD);
-  storeForward((int *)&u.type, ret);
+  storeForward(&u.type, ret);
   return ret;
 }
 
@@ -928,7 +949,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
   if (this == NULL)
     return ((Suspension *) NULL);
 
-  CHECKCOLLECTED(flag, Suspension*);
+  CHECKCOLLECTED(item.cont, Suspension*);
 
   if (isDead ()) {
     return NULL;
@@ -965,7 +986,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
   DebugCheck(!getBoard()->gcGetBoardDeref(),
              warning("gc: adding dead node (3)"));
 
-  storeForward((int *)&flag, newSusp);
+  storeForward(&item.cont, newSusp);
   return newSusp;
 }
 
@@ -1044,9 +1065,9 @@ TaggedRef gcVariable(TaggedRef var)
     {
       SVariable *cv = tagged2SVar(var);
       INFROMSPACE(cv);
-      if (GCISMARKED(*(int*)cv)) {
-        GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(*(int*)cv)));
-        return makeTaggedSVar((SVariable*)GCUNMARK(*(int*)cv));
+      if (GCISMARKED((int)cv->suspList)) {
+        GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK((int)cv->suspList)));
+        return makeTaggedSVar((SVariable*)GCUNMARK((int)cv->suspList));
       }
 
       Board *newBoard = cv->home->gcBoard();
@@ -1060,7 +1081,7 @@ TaggedRef gcVariable(TaggedRef var)
 
       SVariable *new_cv = (SVariable*)gcRealloc(cv,cv_size);
 
-      storeForward((int *)cv, new_cv);
+      storeForward(&cv->suspList, new_cv);
 
       if (opMode == IN_TC && new_cv->getHome () == fromCopyBoard)
         new_cv->suspList = new_cv->suspList->gc(OK);
@@ -1079,9 +1100,9 @@ TaggedRef gcVariable(TaggedRef var)
       GenCVariable *gv = tagged2CVar(var);
 
       INFROMSPACE(gv);
-      if (GCISMARKED(*(int*)gv)) {
-        GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(*(int*)gv)));
-        return makeTaggedCVar((GenCVariable*)GCUNMARK(*(int*)gv));
+      if (GCISMARKED((int)gv->suspList)) {
+        GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK((int)gv->suspList)));
+        return makeTaggedCVar((GenCVariable*)GCUNMARK((int)gv->suspList));
       }
 
       Board *newBoard = gv->home->gcBoard();
@@ -1094,7 +1115,7 @@ TaggedRef gcVariable(TaggedRef var)
 
       GenCVariable *new_gv = (GenCVariable*)gcRealloc(gv, gv_size);
 
-      storeForward((int *)gv, new_gv);
+      storeForward(&gv->suspList, new_gv);
 
       if (opMode == IN_TC && new_gv->getHome () == fromCopyBoard)
         new_gv->suspList = new_gv->suspList->gc(OK);
@@ -1193,32 +1214,22 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   GCPROCMSG("gcTagged");
   TaggedRef auxTerm = fromTerm;
 
-  TaggedRef *auxTermPtr = NULL;
-
 #ifdef DEBUG_GC
-  auxTermPtr = NULL;
   if (opMode == IN_GC && from->inChunkChain(&toTerm))
     error ("having toTerm in FROM space");
 #endif
 
-  if (IsRef(auxTerm)) {
-
-    do {
-      if (auxTerm == makeTaggedNULL()) {
-        toTerm = auxTerm;
-        return;
-      }
-
-      if (GCISMARKED(auxTerm)) {
-        toTerm = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
-        return;
-      }
-      auxTermPtr = tagged2Ref(auxTerm);
-      auxTerm = *auxTermPtr;
-    } while (IsRef(auxTerm));
+  if (auxTerm == makeTaggedNULL()) {
+    toTerm = auxTerm;
+    return;
   }
 
-  TypeOfTerm auxTermTag = tagTypeOf(auxTerm);
+  DEREF(auxTerm,auxTermPtr,auxTermTag);
+
+  if (GCISMARKED(auxTerm)) {
+    toTerm = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
+    return;
+  }
 
   DebugGCT(NOTINTOSPACE(auxTermPtr));
 
@@ -1264,7 +1275,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
       DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
       if (updateVar(auxTerm)) {
-        storeForward((int*) &fromTerm, makeTaggedRef(&toTerm));
+        storeForward(&fromTerm, (void *)makeTaggedRef(&toTerm));
 
         // updating toTerm AFTER fromTerm:
         toTerm = gcVariable(auxTerm);
@@ -1424,12 +1435,13 @@ void processUpdateStack(void)
         if (auxTerm == (TaggedRef) NULL)
           // kost@: Reachable variables can be quantified in dead boards too;
           goto loop;
-        if (GCISMARKED(auxTerm)) {
-          *Term = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
-          goto loop;
-        }
         auxTermPtr = tagged2Ref(auxTerm);
         auxTerm = *auxTermPtr;
+      }
+
+      if (GCISMARKED(auxTerm)) {
+        *Term = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
+        goto loop;
       }
 
       TaggedRef newVar = gcVariable(auxTerm);
@@ -1460,8 +1472,7 @@ void processUpdateStack(void)
           error("processUpdateStack: variable expected here.");
         } // switch
         INFROMSPACE(auxTermPtr);
-        storeForward((int*) auxTermPtr,
-                     *Term);
+        storeForward(auxTermPtr,(void*)*Term);
       }
     } // while
 
@@ -1671,8 +1682,7 @@ ConstTerm *ConstTerm::gcConstTerm()
     {
       Board *newBoard = ((Board *) this)->gcBoard();
       if (newBoard == (Board *) NULL) {
-        if (opMode == IN_TC) return (toCopyBoard);
-        else return (am.rootBoard);
+        return (opMode == IN_TC) ? toCopyBoard : am.rootBoard;
       } else {
         return (newBoard);
       }
@@ -1688,6 +1698,7 @@ ConstTerm *ConstTerm::gcConstTerm()
   }
 }
 
+
 void Thread::GC()
 {
   GCREF(Head);
@@ -1697,12 +1708,12 @@ void Thread::GC()
 Thread *Thread::gc()
 {
   GCMETHMSG("Thread::gc");
-  CHECKCOLLECTED(flags, Thread *);
+  CHECKCOLLECTED(*getGCField(), Thread *);
   size_t sz = sizeof(Thread);
   Thread *ret = (Thread *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_THREAD);
-  storeForward((int *)&flags, ret);
+  storeForward((int *)getGCField(), ret);
   return ret;
 }
 
@@ -1775,9 +1786,6 @@ Board* Board::gcGetNotificationBoard ()
   }
 }
 
-#define  OUR_SPECS
-// #undef   OUR_SPECS
-#ifdef   OUR_SPECS
 //  The idea:
 //  In canonical version of the Board::gcGetBoardDeref a node can be determined
 // as living, though among its parents there is a dead one. It means, that
@@ -1788,17 +1796,18 @@ Board *Board::gcGetBoardDeref()
   GCMETHMSG("Board::gcGetBoardDeref");
   Board *bb = this;
   while (OK) {
-    if (!bb || GCISMARKED(bb->suspCount)) {
+    if (!bb || GCISMARKED((int)*bb->getGCField())) {
       return bb;
     }
     if (bb->isDiscarded() || bb->isFailed()) {
       return NULL;
-    } else if (bb->isCommitted()) {
+    }
+    if (bb->isCommitted()) {
       bb = bb->u.board;
     } else {
       Board *retB = bb;
       while (OK) {
-        if (!bb || GCISMARKED(bb->suspCount)) {
+        if (!bb || GCISMARKED((int)*bb->getGCField())) {
           return retB;
         }
         if (bb->isDiscarded() || bb->isFailed()) {
@@ -1817,26 +1826,6 @@ Board *Board::gcGetBoardDeref()
   }
   error("Board::gcGetBoardDeref");
 }
-#else
-Board *Board::gcGetBoardDeref()
-{
-  GCMETHMSG("Board::gcGetBoardDeref");
-  Board *bb = this;
-  while (OK) {
-    if (!bb || GCISMARKED(bb->suspCount)) {
-      return bb;
-    }
-    if (bb->isDiscarded() || bb->isFailed()) {
-      return NULL;
-    } else if (bb->isCommitted()) {
-      bb = bb->u.board;
-    } else {
-      return bb;
-    }
-  }
-  error("Board::gcGetBoardDeref");
-}
-#endif
 
 // This procedure derefences cluster chains and collects only the object at
 // the end of such a chain.
@@ -1844,15 +1833,14 @@ Board *Board::gcBoard()
 {
   GCMETHMSG("Board::gcBoard");
 
-  Board *bb;
-  bb=this->gcGetBoardDeref();
+  Board *bb = this->gcGetBoardDeref();
 
   return bb ? bb->gcBoard1() : bb;
 }
 
 Board *Board::gcBoard1()
 {
-  CHECKCOLLECTED(suspCount, Board *);
+  CHECKCOLLECTED(*getGCField(), Board *);
   DebugGC (opMode == IN_TC && !isLocalBoard (this),
             error ("non-local board is copied!"));
   // Kludge: because of allocation of 'y' registers a non-'isInTree' board
@@ -1860,15 +1848,15 @@ Board *Board::gcBoard1()
   // Moreover: because of allocation of 'x' registers (for instance, a
   // 'SuspContinuation' may containt in these registers any ***irrelevant***
   // values) a non-'isInTree' board can be reached;
-  if (opMode == IN_TC && isInTree (this) == NO) {
-    storeForward ((int *) &suspCount, this);
-    return (this);
+  if (opMode == IN_TC && isInTree(this) == NO) {
+    storeForward(getGCField(),this);
+    return this;
   }
   size_t sz = sizeof(Board);
   Board *ret = (Board *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
-  storeForward((int *)&suspCount, ret);
+  storeForward(getGCField(),ret);
   return ret;
 }
 
@@ -1891,7 +1879,7 @@ void Board::gcRecurse()
 Actor *Actor::gc()
 {
   GCMETHMSG("Actor::gc");
-  CHECKCOLLECTED(priority, Actor *);
+  CHECKCOLLECTED(*getGCField(), Actor *);
   // by kost@; flags are needed for getBoardDeref
   size_t sz;
   if (isWait()) {
@@ -1904,7 +1892,7 @@ Actor *Actor::gc()
   Actor *ret = (Actor *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_ACTOR);
-  storeForward((int *)&priority, ret);
+  storeForward((int *)getGCField(), ret);
   return ret;
 }
 
