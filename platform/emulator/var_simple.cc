@@ -30,6 +30,7 @@
 
 #include "simplevar.hh"
 #include "am.hh"
+#include "marshaler.hh"
 
 OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 {
@@ -40,8 +41,13 @@ OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 
 OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 {
-  TaggedRef v = *vPtr;
   Assert(!oz_isRef(t)||oz_isVariable(*tagged2Ref(t)));
+
+  if (isExported()) {
+    OZ_Return aux = export(t);
+    if (aux!=PROCEED) return aux;
+  }
+
   if (oz_isRef(t)) {
     TaggedRef *tPtr=tagged2Ref(t);
     GenCVariable *tv=tagged2CVar(*tPtr);
@@ -49,12 +55,14 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 	&& oz_isBelow(GETBOARD(tv),GETBOARD(this))
 #ifdef VAR_BIND_NEWER
 	// if both are local, then check heap
-	&& (!am.isLocalSVar(this) ||
-	    heapNewer(tPtr,vPtr))
+	&& (!am.isLocalSVar(this) || heapNewer(tPtr,vPtr))
 #endif
 	) {
-      t =    makeTaggedRef(vPtr);
-      v =    *tPtr;
+  
+      if (tagged2SimpleVar(*tPtr)->isExported()) 
+	markExported();
+
+      t    = makeTaggedRef(vPtr);
       vPtr = tPtr;
     }
     oz_bind(vPtr, t);
@@ -64,9 +72,14 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
   return PROCEED;
 }
 
-void addSuspUVar(TaggedRef *v, Suspension susp, int unstable)
+GenCVariable *uvar2SimpleVar(TaggedRef *v)
 {
   GenCVariable *sv = new SimpleVar(tagged2VarHome(*v));
   *v = makeTaggedCVar(sv);
-  sv->addSuspSVar(susp, unstable);
+  return sv;
+}
+
+void addSuspUVar(TaggedRef *v, Suspension susp, int unstable)
+{
+  uvar2SimpleVar(v)->addSuspSVar(susp, unstable);
 }

@@ -268,6 +268,7 @@ Bool isPerdioVar(TaggedRef term)
   return isCVar(term) && (tagged2CVar(term)->getType() == PerdioVariable);
 }
 
+Bool checkExportable(TaggedRef var);
 OldPerdioVar* var2PerdioVar(TaggedRef*);
 
 inline
