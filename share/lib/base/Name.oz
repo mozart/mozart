@@ -23,19 +23,19 @@
 %%%
 
 
-declare 
+declare
    Name IsName NewName
 in
 
 
-%% 
+%%
 %% Global
 %%
 IsName  = {`Builtin` 'IsName'  2}
 NewName = {`Builtin` 'NewName' 1}
 
 
-%% 
+%%
 %% Module
 %%
 Name = name(is:  IsName

@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    Port IsPort NewPort Send
 in
 

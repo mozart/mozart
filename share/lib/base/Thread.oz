@@ -78,5 +78,3 @@ in
 		    location:           {`Builtin` 'Thread.location'        2})
 
 end
-
-

@@ -21,7 +21,7 @@
 %%%
 
 
-declare 
+declare
    Space
    IsSpace
 in
@@ -36,4 +36,3 @@ Space = space(is:         IsSpace
 	      merge:      {`Builtin` 'Space.merge'      2}
 	      inject:     {`Builtin` 'Space.inject'     2}
 	      commit:     {`Builtin` 'Space.commit'     2})
-

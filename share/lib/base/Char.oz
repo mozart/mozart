@@ -51,4 +51,3 @@ Char = char(is:       IsChar
 	    toLower:  {`Builtin` 'Char.toLower'  2}
 	    toAtom:   {`Builtin` 'Char.toAtom'   2}
 	    type:     {`Builtin` 'Char.type'     2})
-

@@ -23,7 +23,7 @@
 %%%
 
 
-declare 
+declare
    Float IsFloat Exp Log Sqrt Ceil Floor Round Sin Cos Tan Asin Acos Atan Atan2
    FloatToInt FloatToString
    `/`
@@ -60,19 +60,19 @@ FloatToString = {`Builtin` 'FloatToString' 2}
 %% Module
 %%
 Float = float(is:       IsFloat
-              '/':      `/`
-              exp:      Exp
-              log:      Log
-              sqrt:     Sqrt
-              ceil:     Ceil
-              floor:    Floor
-              round:    Round
-              sin:      Sin
-              cos:      Cos
-              tan:      Tan
-              asin:     Asin
-              acos:     Acos
-              atan:     Atan
-              atan2:    Atan2
-              toInt:    FloatToInt
-              toString: FloatToString)
+	      '/':      `/`
+	      exp:      Exp
+	      log:      Log
+	      sqrt:     Sqrt
+	      ceil:     Ceil
+	      floor:    Floor
+	      round:    Round
+	      sin:      Sin
+	      cos:      Cos
+	      tan:      Tan
+	      asin:     Asin
+	      acos:     Acos
+	      atan:     Atan
+	      atan2:    Atan2
+	      toInt:    FloatToInt
+	      toString: FloatToString)
