@@ -50,7 +50,10 @@ AC_CHECK_PROGS(ECHO, echo)
 AC_CHECK_PROGS(SH, sh bash)
 AC_CHECK_PROGS(RM, rm)
 
-AC_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+TOPDIRA=`(cd $srcdir; cd ..; pwd)`
+oz_path=$PATH:$TOPDIRA/bin:$TOPDIRA:$prefix/bin
+AC_PATH_PROG(PLATFORMSCRIPT, ozplatform,, $oz_path)
+AC_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs,true, $oz_path)
 
 if test ! -n "$PLATFORMSCRIPT"
 then
