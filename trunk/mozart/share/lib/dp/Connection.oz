@@ -247,25 +247,28 @@ define
       if T.minimal\={Property.get 'perdio.minimal'} then
 	 {Exception.raiseError connection(wrongModel V)}
       end
-      
 
       {Fault.siteWatcher P  Watch}
-      {Fault.injector    P  Handle}      
+      {Fault.injector    P  Handle}
 
       {Send P T#X}
 
       {Fault.removeInjector P Handle}
-      
-      case X#Y
-      of no#_ then
+
+      case {Record.waitOr X#Y}
+      of 1 then
 	 {Fault.removeSiteWatcher P Watch}
-	 {Exception.raiseError connection(refusedTicket V)}
-      [] _#no then
+	 case X
+	 of no then
+	    {Exception.raiseError connection(refusedTicket V)}
+	 [] yes(A) then
+	    Entity=A
+	 end
+      [] 2 then
 	 {Fault.removeSiteWatcher P Watch}
-	 {Exception.raiseError connection(ticketToDeadSite V)}
-      [] yes(A)#_ then
-	 {Fault.removeSiteWatcher P Watch}
-	 Entity=A
+	 if Y==no then
+	    {Exception.raiseError connection(ticketToDeadSite V)}
+	 else error end
       end
    end
 
