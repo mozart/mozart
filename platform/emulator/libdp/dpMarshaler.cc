@@ -2575,9 +2575,10 @@ void MsgTermSnapshotImpl::gcStart()
     Assert(l->getSavedValue() == (OZ_Term) -1);
 
     //
-    // Keep variables. It can also happen that the variable appears in
-    // more than one snapshot currently being GCed:
-    if (!oz_isRef(hv) && !oz_isVariable(hv) && !oz_isGCStubVar(hv)) {
+    // Keep locations of former variables. Note that a single
+    // 'GCStubVar' can be shared between different snapshots during
+    // GC.
+    if (oz_isRef(hv) || !oz_isVariable(hv)) {
       GCStubVar *svp = new GCStubVar(hv);
       *hvp = makeTaggedCVar(svp);
     }
