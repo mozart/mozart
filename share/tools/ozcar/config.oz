@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.5.0 (Apr 97)'
+Version                = '1.5.1 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -57,6 +57,11 @@ WaitForThread          = 'waiting for thread to be added ' # /* end */
 ErrorExcText           = 'Exception: '
 UserExcText            = 'Unhandled User Exception: '
 NoStackText            = ' / no stack available'
+
+FirstSelectThread      = 'You must select a thread first!' /* end */
+IgnoreNoFileStep       = 'Ignoring new thread as there\'s' # /* end */
+                         ' no line information available. ' #
+                         ' Hint: save your Emacs buffer!'
 
 ID                     = fun {$ I} ' (id ' # I # ')' end
 OzcarMessagePrefix     = 'Ozcar: '
@@ -178,7 +183,8 @@ MaxStackBrowseSize     = 15
 TimeoutToCalc          =  90 % ms
 TimeoutToRedraw        = 180
 TimeoutToBlock         = 470
-TimeoutToUpdateEnv     = 920
+TimeoutToUpdateEnv     = 230
+TimeoutToUpdateScroll  = TimeoutToUpdateEnv
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff

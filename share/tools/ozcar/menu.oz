@@ -70,7 +70,14 @@ in
 		  C(label:  'Next Frame'
 		    action: self # neighbourStackFrame(1)
 		    key:    'Down'
-		    event:  '<Down>')]
+		    event:  '<Down>')
+		  separator
+		  C(label:  'Re-Calculate'
+		    action: self # rebuildCurrentStack
+		    key:    ctrl(l))
+		  C(label:  'Browse'
+		    action: self # action(' stack')
+		    key:    ctrl(b))]
 	      feature: stack)
 	   MB(text: 'Options'
 	      menu:
