@@ -29,6 +29,7 @@
 #endif
 
 #include <stdarg.h>
+#include <math.h>
 
 #include "fdbuilti.hh"
 

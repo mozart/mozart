@@ -375,7 +375,7 @@ int atomcmp(Literal *a, Literal *b)
  * Numbers
  *=================================================================== */
 
-#include <math.h>
+// #include <math.h>
 #include <limits.h>
 
 extern "C" {
