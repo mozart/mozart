@@ -55,6 +55,20 @@ dnl *****************************************************************
 case $platform in
     win32*)
 	OZLOADSEP=';'
+	oztmp=`cygpath -a -w $builddir`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr [:upper:] [:lower:]`
+	  oztmphi=`echo $oztmp | tr [:lower:] [:upper:]`
+	  OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	oztmp=`cygpath -a -w $srcdir`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr [:upper:] [:lower:]`
+	  oztmphi=`echo $oztmp | tr [:lower:] [:upper:]`
+	  OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
 	;;
     *)
 	OZLOADSEP=':'
@@ -62,6 +76,7 @@ case $platform in
 esac
 
 AC_SUBST(OZLOADSEP)
+AC_SUBST(OZLOADWIN)
 
 dnl *****************************************************************
 dnl Checks for programs.
