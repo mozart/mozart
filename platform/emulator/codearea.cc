@@ -283,6 +283,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case ALLOCATEL9:
     case ALLOCATEL10:
     case SHALLOWTHEN:
+    case SWITCHCOMPMODE:
           /* Commands with no args.   */
       fprintf(ofile, "\n");
       DISPATCH();
