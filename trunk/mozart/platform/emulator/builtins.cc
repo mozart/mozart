@@ -2788,7 +2788,7 @@ OZ_C_proc_begin(BIassignOptimized,3)
   DEREF(rec,_1,recTag);
 
   if (isSRecord(recTag)) {
-    if (!tagged2SRecord(rec)->replaceFeature(fea,value)) {
+    if (tagged2SRecord(rec)->replaceFeature(fea,value) == makeTaggedNULL()) {
       goto bomb;
     }
     return PROCEED;
@@ -2817,7 +2817,7 @@ OZ_C_proc_begin(BIassign,3)
       }
       goto bomb;
     }
-    if (!tagged2SRecord(rec)->replaceFeature(fea,value)) {
+    if (tagged2SRecord(rec)->replaceFeature(fea,value) == makeTaggedNULL()) {
       goto bomb;
     }
     return PROCEED;
