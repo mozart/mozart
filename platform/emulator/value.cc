@@ -397,17 +397,6 @@ int Object::getWidth ()
 }
 
 
-TaggedRef Object::attachThread()
-{
-  TaggedRef *aux = &threads;
-  while(!isNil(*aux)) {
-    aux = tagged2LTuple(*aux)->getRefTail();
-  }
-  *aux = cons(makeTaggedUVar(am.currentBoard),nil());
-  return head(*aux);
-}
-
-
 Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
                                Bool &defaultsUsed)
 {
