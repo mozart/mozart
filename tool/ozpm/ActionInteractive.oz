@@ -200,7 +200,7 @@ define
 	 handle
 	 parent
       attr
-	 info
+	 info:unit
       meth init(Parent ST Desc)
 	 self.parent=Parent
 	 self.setTitle=ST
@@ -291,7 +291,7 @@ define
 	 handle
 	 parent
       attr
-	 info
+	 info:unit
       meth init(Parent ST Desc)
 	 self.parent=Parent
 	 self.setTitle=ST
