@@ -1170,14 +1170,7 @@ void FiniteDomain::gc(void)
     FDProfiles.inc_item(cp_size_fdvar, getDescrSize());
   });
 
-  descr_type type = getType();
-  if (type == fd_descr) {
-    setType(fd_descr, NULL);
-  } else if (type == bv_descr) {
-    setType(get_bv()->copy());
-  } else {
-    setType(get_iv()->copy());
-  }  
+  copyExtension();
 }
 
 void GenFDVariable::gc(void)
