@@ -1500,6 +1500,11 @@ void printX(FILE *fd, RefsArray X)
   }
 }
 
+void printStack()
+{
+  am.currentThread->getTaskStackRef()->printTaskStack(NOCODE,OK,1000);
+}
+
 void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 {
   message("\n");
