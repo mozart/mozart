@@ -497,16 +497,108 @@ end
       <Chapter>
       <title/Reference Section/
 	<p>
-	This chapter gives a complete description of the
-	debugger's functionality.
+	This chapter gives a complete description of all the
+	menus Ozcar provides.
 	<section>
 	<title/The Main Menu/
+	  <p>
+	  The main menu is located on the top of Ozcar's main window.
 	  <subsection>
 	  <title/Ozcar/
+	  <p>
+	  <figure class="picture">
+	  <caption/The Ozcar menu/
+	    <p><picture.extern gif to="menu-ozcar.gif">
+	  </figure>
+	  <p>
+          <Para class=apropos><Title/About.../
+	  Pops up an info box containing author and compilation information
+	  <p>
+          <Para class=apropos><Title/Destroy/
+	  Closes the internal Ozcar object. Use this menu entry only
+	  if Ozcar hangs, as all information about currently attached
+	  threads gets lost.
+	  <p>
+          <Para class=apropos><Title/Suspend/
+	  Closes the main window, sets the mozart emulator to non debug mode,
+	  and causes the compiler to generate non debug code. Information
+	  about currently attached threads is preserved.
 	  <subsection>
 	  <title/Action/
+	  <p>
+	  <figure class="picture">
+	  <caption/The Action menu/
+	    <p><picture.extern gif to="menu-action.gif">
+	  </figure>
+	  <p>
+          <Para class=apropos><Title/Step Into/
+	  Do exactly one step (stop again at the next step point, enter
+	  procedures). Identical to pressing the <picture.extern inline
+	  gif to="step.gif"> button.
+	  <p>
+          <Para class=apropos><Title/Step Over/
+	  Do one step, jump over procedures or other blocks which constitute
+	  a step point. Identical to pressing the <picture.extern inline
+	  gif to="next.gif"> button.
+	  <p>
+          <Para class=apropos><Title/Unleash/
+	  Continue execution until the marked stack frame is about to be
+	  removed from the stack, or until the stack is empty if
+	  no frame is marked. Identical to pressing the
+	  <picture.extern inline gif to="unleash.gif"> button.
+	  <p>
+          <Para class=apropos><Title/Stop/
+	  Stop the current thread at the next step point it reaches.
+	  Identical to pressing the
+	  <picture.extern inline gif to="stop.gif"> button.
+	  <p>
+          <Para class=apropos><Title/Detach/
+	  Detach one or more attached threads.
+	  <p>
+	  <figure class="picture">
+	  <caption/The Detach submenu/
+	    <p><picture.extern gif to="submenu-detach.gif">
+	  </figure>
+	  <p>
+          <Para class=apropos><Title/-> Current/
+	  Detach the current thread. Identical to pressing the
+	  <picture.extern inline gif to="detach.gif"> button.
+	  <p>
+          <Para class=apropos><Title/-> All But Current/
+	  Leave the current thread alone in Ozcar's thread forest. Detach
+	  all the others, let them continue to run (if they are not dead).
+	  <p>
+          <Para class=apropos><Title/-> All/
+	  Detach all threads, let them continue to run (if they are not dead).
+	  <p>
+          <Para class=apropos><Title/-> All Dead/
+	  Detach all dead threads.
+	  <p>
+          <Para class=apropos><Title/Terminate/
+	  Detach and kill one or more attached threads.
+	  <p>
+	  <figure class="picture">
+	  <caption/The Terminate submenu/
+	    <p><picture.extern gif to="submenu-terminate.gif">
+	  </figure>
+	  <p>
+          <Para class=apropos><Title/-> Current/
+	  Detach and kill the current thread. Identical to pressing the
+	  <picture.extern inline gif to="kill.gif"> button.
+	  <p>
+          <Para class=apropos><Title/-> All But Current/
+	  Leave the current thread alone in Ozcar's thread forest. Detach
+	  and kill all the others.
+	  <p>
+	  <Para class=apropos><Title/-> All/
+	  Detach and kill all threads.
 	  <subsection>
 	  <title/Thread/
+	  <p>
+	  <figure class="picture">
+	  <caption/The Thread menu/
+	    <p><picture.extern gif to="menu-thread.gif">
+	  </figure>
 	  <subsection>
 	  <title/Stack/
 	  <subsection>
