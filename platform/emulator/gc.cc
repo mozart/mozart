@@ -242,6 +242,20 @@ void *gcRealloc(void *ptr, size_t sz)
   return ret;
 }
 
+/*****************************************************************************
+ * makeTaggedRef without consitency check
+ *****************************************************************************/
+
+inline
+TaggedRef makeTaggedRefToFromSpace(TaggedRef *s)
+{
+  CHECK_POINTER(s);
+/*  DebugGCT(extern MemChunks * from);
+  DebugGC(gcing == 0 && !from->inChunkChain ((void *)s),
+          error ("making TaggedRef pointing to 'to' space"));
+          */
+  return (TaggedRef) ToInt32(s);
+}
 
 //*****************************************************************************
 //                        Consistency checks of trails
