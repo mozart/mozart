@@ -41,8 +41,9 @@ define
                   'autoindex'(single type: bool default: false)
                   % HTML options
                   'stylesheet'(single type: string default: unit)
-                  'latexmath'(rightmost type: bool default:true)
-                  'split'(rightmost type: bool default:true)
+                  'latexmath'(rightmost type: bool default: true)
+                  'split'(rightmost type: bool default: true)
+                  'abstract'(rightmost type: bool default: false)
                   % Path names
                   'ozdoc-home'(single type: string default: unit)
                   'author-path'(single type: string default: unit)

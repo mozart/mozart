@@ -213,10 +213,10 @@ define
          end
          {@AuxFile write(vs: '\\citation{'#Key#'}\n')}
       end
-      meth process(?VS)
+      meth process(Reporter ?VS)
          case @AuxFile of unit then
             VS = unit
-         else File in
+         else
             {@AuxFile write(vs: {FoldLTail @Tos
                                  fun {$ In To|Tor}
                                     case Tor of nil then In#To
@@ -226,23 +226,26 @@ define
             {@AuxFile close()}
             {OS.putEnv 'BSTINPUTS' BSTINPUTS}
             {OS.putEnv 'BIBINPUTS' BIBINPUTS}
-            case {OS.system BIBTEX#' '#@AuxFileName} of 0 then skip
+            case {OS.system BIBTEX#' '#@AuxFileName} of 0 then File in
+               File = {New TextFile init(name: @AuxFileName#'.bbl'
+                                         flags: [read])}
+               VS = {ReadBib File @Keys}
+               {File close()}
+               {OS.unlink @AuxFileName#'.bbl'}
+               {OS.unlink @AuxFileName#'.blg'}
             elseof I then
-               {Exception.raiseError ozDoc(bibtex I)}
+               {Reporter error(kind: 'bibliography database'
+                               msg: 'bibtex failed'
+                               items: [hint(l: 'Exit code' m: I)])}
+               VS = ""
             end
-            File = {New TextFile init(name: @AuxFileName#'.bbl'
-                                      flags: [read])}
-            VS = {ReadBib File @Keys}
+            {OS.unlink @AuxFileName#'.aux'}
             {ForAll {Dictionary.entries @Keys}
              proc {$ Key#Text}
                 if {IsFree Text} then   % compensate for unknown entries
                    Text = Key
                 end
              end}
-            {File close()}
-            {OS.unlink @AuxFileName#'.aux'}
-            {OS.unlink @AuxFileName#'.bbl'}
-            {OS.unlink @AuxFileName#'.blg'}
          end
       end
    end
