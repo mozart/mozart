@@ -197,6 +197,14 @@ OZ_Boolean testResetStoreFlag(OZ_Term t)
 }
 
 inline
+OZ_Boolean testStoreFlag(OZ_Term t) 
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+
+  return ((SVariable *) tagValueOf(t))->testStoreFlag();
+}
+
+inline
 OZ_Boolean testResetReifiedFlag(OZ_Term t) 
 {
   Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
