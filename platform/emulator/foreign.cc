@@ -691,11 +691,6 @@ OZ_Term OZ_pair(OZ_Term t1,OZ_Term t2) {
   return out;
 }
 
-int OZ_isPair(OZ_Term t)
-{
-  return OZ_isTuple(t) && OZ_label(t)==OZ_CToAtom("#") && OZ_width(t)==2;
-}
-
 /* -----------------------------------------------------------------
  * record
  * -----------------------------------------------------------------*/
@@ -711,13 +706,13 @@ OZ_Term OZ_record(OZ_Term label, OZ_Term arity)
 }
 
 /* take a label and a property list and construct a record */
-OZ_Term OZ_recordList(OZ_Term label, OZ_Term propList) 
+OZ_Term OZ_recordInit(OZ_Term label, OZ_Term propList) 
 {
   OZ_Term out;
   OZ_Bool ret = adjoinPropList(label,propList,out,NO);
 
   if (ret != PROCEED) {
-    OZ_warning("OZ_recordList(%s,%s): failed",
+    OZ_warning("OZ_recordInit(%s,%s): failed",
 	       OZ_toC(label),OZ_toC(propList));
     return nil();
   }

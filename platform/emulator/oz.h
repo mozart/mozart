@@ -115,14 +115,16 @@ extern OZ_Term OZ_tail      _PROTOTYPE((OZ_Term));
 extern int     OZ_length    _PROTOTYPE((OZ_Term list));
 
 extern OZ_Term OZ_pair      _PROTOTYPE((OZ_Term t1,OZ_Term t2));
-extern int OZ_isPair        _PROTOTYPE((OZ_Term t));
+#define OZ_pairAI(s1,i)     OZ_pair(OZ_CToAtom(s1),OZ_CToInt(i))
+#define OZ_pairAA(s1,s2)    OZ_pair(OZ_CToAtom(s1),OZ_CToAtom(s2))
+
 
 /* records */
 extern OZ_Term OZ_record       _PROTOTYPE((OZ_Term, OZ_Term));
-extern OZ_Term OZ_recordList   _PROTOTYPE((OZ_Term, OZ_Term));
+extern OZ_Term OZ_recordInit   _PROTOTYPE((OZ_Term, OZ_Term));
 extern void OZ_putRecordArg    _PROTOTYPE((OZ_Term, OZ_Term, OZ_Term));
 extern OZ_Term OZ_getRecordArg _PROTOTYPE((OZ_Term, OZ_Term));
-#define OZ_getRecordArgC(t,s) OZ_getRecordArg(t,OZ_CToAtom(s))
+#define OZ_getRecordArgC(t,s)  OZ_getRecordArg(t,OZ_CToAtom(s))
 
 /* unification */
 extern OZ_Bool OZ_unify       _PROTOTYPE((OZ_Term, OZ_Term));
