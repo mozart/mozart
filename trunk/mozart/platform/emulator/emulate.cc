@@ -2145,7 +2145,8 @@ void engine() {
       goto LBLpopTask;
     }
 
-    DebugCheck(WaitActor::Cast(CBB->getActor())->hasOneChild(),
+    DebugCheck((CBB->isWaiting () == OK &&
+		WaitActor::Cast(CBB->getActor())->hasOneChild()),
 	       error("reduce: wait: unit commit can not happen");
 	       goto LBLerror;);
     goto LBLpopTask;
