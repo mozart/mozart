@@ -9,7 +9,7 @@ import
    ZFile at 'zfile.so{native}'
    OS(stat)
    Open(file)
-   FileUtils(withSlash:WithSlash)
+   FileUtils(withSlash:WithSlash fullName:FullName)
 define
    fun {Encode F}
       case F
@@ -98,19 +98,9 @@ define
    
    proc {MakeFrom File Files Home}
       
-      fun{FullName File}
-	 {VirtualString.toString
-	  if {URL.isAbsolute {URL.make File}} then
-	     File
-	  else
-	     if Home==nil then File
-	     else {WithSlash Home}#File
-	     end
-	  end}
-      end
 
       fun {FileInfo File}
-	 F = {FullName {Expand File}}
+	 F = {FullName {Expand File} Home}
 	 R = {OS.stat F}
       in
 	 {Adjoin r(path:{Expand File}

@@ -11,15 +11,17 @@ import
    Pickle
    Open
    Browser(browse:Browse)
-   FileUtils(expand:Expand withSlash:WithSlash)
+   FileUtils(expand:Expand withSlash:WithSlash fullName:FullName)
    Resolve
+   Message(parse:Parse slurp:Slurp)
    
 define
 
    PlatformWindows={Property.get 'platform.os'}==win32
    
    OZPMINFO={Expand "~/.oz/ozpm/ozpm.info"}
-   OZPMMANIFEST='OZPM-MANIFEST'
+   OZPMMANIFEST='OZPMMFT.PKL'
+   OZPMMANIFESTTEXT='OZPMMFT.TXT'
    OZPMPKG={Expand "~/.oz/"}
    MOGUL = "http://www.mozart-oz.org/mogul/" %"./"
    INFO  = "ozpm.info"
@@ -50,25 +52,6 @@ define
       if Stat.type\=dir then % not a directory
 	 raise error(unableToCreateDirectory P) end
       end
-   end
-
-   class TextFile from Open.text Open.file end
-   
-   fun{ParseFile F}
-      File={New TextFile init(name:F)}
-      fun{Loop}
-	 Str={File getS($)}
-      in
-	 if Str==false then nil else
-	    Left Right
-	 in
-	    {List.takeDropWhile Str fun{$ C} C\=&: end Left Right}
-	    r({String.toAtom Left}
-	      {List.drop Right 1})|{Loop}
-	 end
-      end
-   in
-      {Loop}
    end
    
    class ArchiveManagerClass
@@ -169,44 +152,46 @@ define
 	 Info=if L==nil then notFound else L.1 end
       end
 
-      meth create(In Out Info)
-	 
-
-	 
-%	 F={ParseFile Package}
-%	 fun{Filter What}
-%	    {List.map 
-%	     {List.filter F fun{$ I} I.1==What end}
-%	     fun{$ I}
-%		I.2
-%	     end}
-%	 end
-%	 fun{Get What}
-%	    Fi={Filter What}
-%	 in
-%	    if {Length Fi}\=1 then
-%	       raise error(parameterIsNotOccuringOnce What) end
-%	       nil
-%	    else
-%	       Fi.1
-%	    end
-%	 end
-%	 Name={Get name}
-%	 Version={Get version}
-%	 Files={Filter file}
-%	 Desc={Get description}
-%	 Pkg={Get 'pkg-name'}
-%	 Info=package(name:Name
-%		      version:Version
-%		      filelist:Files
-%		      description:Desc
-%		      pkg:Pkg
-%		      text:Package)
-%      in
-%	 {Pickle.save Info OZPMMANIFEST}
-%	 {Archive.make Pkg OZPMMANIFEST|Package|Files}
-%	 {OS.unlink OZPMMANIFEST}
-	 skip
+      meth create(In Out Inf)
+	 TXT={Slurp Inf}
+	 {Show TXT}
+	 O={Parse TXT}
+	 _={O get(id $)} %% id is mandatory
+	 fun{Loop D}
+	    {Show dir#D}
+	    {List.map {List.filter
+		       {OS.getDir {Expand D}}
+		       fun{$ F} F\="." andthen F\=".." end}
+	     fun{$ F}
+		if {OS.stat {WithSlash D}#F}.type==dir then
+		   {List.map
+		    {Loop {WithSlash D}#F}
+		    fun{$ G}
+		       {VirtualString.toAtom {WithSlash F}#G}
+		    end}
+		else
+		   {VirtualString.toAtom F}
+		end
+	     end}
+	 end
+	 Files={List.flatten {Loop In}}
+	 Info={Record.adjoinAt
+	       {Record.map
+		{List.toRecord package {O entries($)}}
+		List.last}
+	       filelist Files}
+	 F
+	 MFTPKL={Expand {FullName OZPMMANIFEST In}}
+	 MFTTXT={Expand {FullName OZPMMANIFESTTEXT In}}
+      in
+	 {Pickle.save Info MFTPKL}
+	 F={New Open.file init(name:MFTTXT
+			       flags:[write create])}
+	 {F write(vs:TXT)}
+	 {F close}
+	 {Archive.makeFrom Out OZPMMANIFEST|OZPMMANIFESTTEXT|Files In}
+	 {OS.unlink MFTPKL}
+	 {OS.unlink MFTTXT}
       end
       
 %      meth create(Package)
@@ -329,7 +314,6 @@ define
    Args={Application.getArgs
 	 record('install'(single type:string char:&i)
 		'create'(single char:&c)
-		'info'(single type:string)
 		'in'(single type:string)
 		'out'(single type:string)
 		'view'(single type:string char:&v)
@@ -346,7 +330,7 @@ define
    Action
    
    local
-      Actions=[list create install info check interactive view remove help]
+      Actions=[list create install check interactive view remove help]
       fun{HasFeats L}
 	 {List.some L fun{$ F} {HasFeature Args F} end}
       end
@@ -408,29 +392,37 @@ define
    proc{Print VS}
       {ShowInfo if VS==nil then "" else {VirtualString.toString VS} end}
    end
-
-   proc{PrintInfo I L}
-      A={VirtualString.toAtom I.text}
-   in
-      {Print "Package name : "#I.name}
-      {Print "version      : "#I.version}
-      {Print "description  : "#I.description}
-      {Print " "}
-      {Print "Contains the following files :"}
-      {ForAll L
-       proc{$ R}
-	  if R.path\=OZPMMANIFEST andthen R.path\=A then 
-	     {Print {LAlign R.size 10}#" "#R.path}
-	  end
-       end}
-   end
-   
-   fun{LAlign VS I}
+  
+   fun{RAlign VS I}
       {List.map
        {List.make {Max I-{Length {VirtualString.toString VS}} 0}}
        fun{$ C} C=32 end}#VS
    end
-   
+ 
+   fun{LAlign VS I}
+      VS#{List.map
+	  {List.make {Max I-{Length {VirtualString.toString VS}} 0}}
+	  fun{$ C} C=32 end}
+   end
+
+   proc{PrintInfo I L}
+      {Print "Package id   : "#I.id}
+      {Record.forAllInd I
+       proc{$ I V}
+	  if I\=filelist andthen I\=id then
+	     {Print {LAlign I 13}#": "#V}
+	  end
+       end}
+      {Print " "}
+      {Print "Contains the following files :"}
+      {ForAll L
+       proc{$ R}
+	  if R.path\=OZPMMANIFEST andthen R.path\=OZPMMANIFESTTEXT then 
+	     {Print {RAlign R.size 10}#" "#R.path}
+	  end
+       end}
+   end
+    
    case Action
    of list then % list all installed packages
       {ForAll {ArchiveManager list($)} Print}
@@ -442,9 +434,11 @@ define
       {PrintInfo I L}
       {Application.exit 0}
    [] create then % create a new package
-      {ArchiveManager create(Args.'in'
+      {Show Args.'info'}
+      {Show {CondFeat Args 'info' {WithSlash {CondFeat Args 'in' "."}}#"OZPMINFO"}}
+      {ArchiveManager create({CondFeat Args 'in' ""}
 			     Args.'out'
-			     {CondFeat Args 'info' {WithSlash Args.'in'}#"OZPMINFO"}
+			     {CondFeat Args 'info' {WithSlash {CondFeat Args 'in' "."}}#"OZPMINFO"}
 			    )}
       {Application.exit 0}
    [] install then % install/update a specified package
@@ -468,7 +462,7 @@ define
 	 {Print "This package is already installed in version "#R.loc.version}
 	 {Application.exit 1}
       end
-   [] info then % displays information about an installed package
+   [] indfo then % displays information about an installed package
       Info
    in
       {ArchiveManager info(Args.'info' Info)}

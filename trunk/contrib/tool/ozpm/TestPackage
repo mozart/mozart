@@ -1,4 +1,5 @@
-name:This is a test package
+title:This is a test package
+id:mogul:/grolaux/qtk
 version:1.0
 file:QTk.ozf
 file:ozpm.exe
