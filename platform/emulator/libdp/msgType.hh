@@ -37,16 +37,15 @@ enum MessageType {
   M_NONE = 0,
 
   M_PORT_SEND,
-  M_REMOTE_SEND,        // OTI STRING DIF (implicit 1 credit)
-  M_ASK_FOR_CREDIT,     // OTI SITE (implicit 1 credit)
+  M_ASK_FOR_CREDIT,     // OTI SITE
   M_OWNER_CREDIT,       // OTI CREDIT
   M_OWNER_SEC_CREDIT,   // NA CREDIT
 
   M_BORROW_CREDIT,      // NA  CREDIT
-  M_REGISTER,           // OTI SITE (implicit 1 credit)
+  M_REGISTER,           // OTI SITE
   M_REDIRECT,           // NA  DIF
-  M_ACKNOWLEDGE,        // NA (implicit 1 credit)
-  M_SURRENDER,          // OTI SITE DIF (implicit 1 credit)
+  M_ACKNOWLEDGE,        // NA
+  M_SURRENDER,          // OTI SITE DIF
 
   M_CELL_LOCK_GET,      // OTI* SITE
   M_CELL_LOCK_FORWARD,  // NA* INTEGER SITE
@@ -71,7 +70,7 @@ enum MessageType {
 
   M_UNASK_ERROR,
 
-  M_GETSTATUS,              // OTI DIF (implicit 1 credit)
+  M_GETSTATUS,              // OTI DIF
   M_SENDSTATUS,
 
   M_REQUESTED,

@@ -27,8 +27,8 @@
 #ifndef __PROTOCOLCREDITHH
 #define __PROTOCOLCREDITHH
 
-void sendPrimaryCredit(DSite *sd,int OTI,Credit c);
-void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c);
-void sendCreditBack(DSite* sd,int OTI,Credit c);
+void sendCreditTo(DSite *toS,DSite *entitysite,int entityOTI,Credit c);
+void sendCreditBack(DSite *entitysite,int entityOTI,Credit c);
+void askForCredit(DSite *entitysite, int entityOTI);
 
 #endif

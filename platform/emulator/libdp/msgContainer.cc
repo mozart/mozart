@@ -29,7 +29,6 @@
 void MsgContainer::init(DSite *site) {
   flags=0;
   destination = site;
-  creditSite = NULL;
   msgTS = (MsgTermSnapshot *) 0;
   next = NULL;
   msgNum=-1;
@@ -93,14 +92,6 @@ Bool MsgContainer::checkFlag(int flag) {
 
 void MsgContainer::clearFlag(int flag) {
   flags &= ~flag;
-}
-
-void MsgContainer::setImplicitMessageCredit(DSite *s) {
-  creditSite = s;
-}
-
-DSite* MsgContainer::getImplicitMessageCredit() {
-  return creditSite;
 }
 
 DSite* MsgContainer::getDestination() {

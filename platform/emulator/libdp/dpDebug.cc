@@ -106,7 +106,8 @@ char *debugTypeStr[LAST] = {
   "CHAIN",        //45
   "PORT",
   "TCP_ERROR",
-  "TCP_CONNECTION"
+  "TCP_CONNECTION",
+  "CREDIT_NEW"
 };
 
 

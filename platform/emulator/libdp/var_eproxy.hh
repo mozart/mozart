@@ -48,10 +48,8 @@ private:
   DebugCode(int bti;);
   Bool isMarshaled;
   int oti;
-  CreditType ct;
   Credit credit;
   DSite *ms;                    // manager site, always;
-  DSite *scm;                   // secondary credit manager, if any;
   short isFuture;               //
   short isToOwner;              //
 

@@ -366,6 +366,14 @@ OZ_BI_define(BIgetConnectWstream,0,1)
 }OZ_BI_end
 
 
+OZ_BI_define(BIprintDPTables,0,0)
+{
+  initDP();
+  ownerTable->print();
+  borrowTable->print();
+  return OZ_ENTAILED;
+}OZ_BI_end
+
 #ifndef MODULES_LINK_STATIC
 
 #include "modDPMisc-if.cc"

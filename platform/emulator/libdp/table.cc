@@ -88,13 +88,15 @@ void NetHashTable::sub(NetAddress *na){
 
 OwnerTable *ownerTable;
 BorrowTable *borrowTable;
-DSite* creditSiteIn;
-DSite* creditSiteOut;
 
-void sendPrimaryCredit(DSite *sd,int OTI,Credit c);
 
 // from var.cc
 void oz_dpvar_localize(TaggedRef *);
+
+void OwnerEntry::setUp(int index){
+  setFlags(0);
+  ocreditHandler.setUp(index);
+}
 
 void OwnerEntry::localize(int index)
 {
@@ -109,17 +111,6 @@ void OwnerEntry::localize(int index)
   }
   OT->freeOwnerEntry(index);
 }
-
-void OwnerEntry::addCreditExtended(Credit back){
-  ReduceCode rc=getOwnerCreditExtension()->addCreditE(back);
-  if(rc==CANNOT_REDUCE) return;
-  if(rc==CAN_REDUCE_LAST){
-    getOwnerCreditExtension()->reduceLast();
-    return;}
-  Assert(rc==CAN_REDUCE_SINGLE);
-  removeExtension();
-  removeFlags(PO_EXTENDED);}
-
 
 void OwnerTable::init(int beg,int end){
   int i=beg;
@@ -143,7 +134,7 @@ void OwnerTable::compactify()
     if(i>=size) break;
     if(array[i].isFree()){
       *base=i;
-      base=&array[i].uOB.nextfree;}
+      base=&array[i].u.nextfree;}
     else used_slot=i;
     i++;}
   *base=END_FREE;
@@ -177,7 +168,7 @@ void OwnerTable::compactify()
     array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
     size=newsize;
     Assert(array[newsize-1].isFree());
-    array[newsize-1].uOB.nextfree = END_FREE;
+    array[newsize-1].u.nextfree = END_FREE;
     Assert(size>=no_used);
     return;}
   PD((TABLE,"owner compactify no realloc\n"));
@@ -202,11 +193,9 @@ int OwnerTable::newOwner(OwnerEntry *&oe){
   Assert(perdioInitialized);
   if(nextfree == END_FREE) resize();
   int index = nextfree;
-  nextfree = array[index].uOB.nextfree;
+  nextfree = array[index].u.nextfree;
   oe = (OwnerEntry *)&(array[index]);
-  oe->setCreditOB(START_CREDIT_SIZE);
-  oe->setFlags(PO_NONE);
-  oe->setOTI(index);
+  oe->setUp(index);
   PD((TABLE,"owner insert: o:%d",index));
   no_used++;
   return index;}
@@ -214,7 +203,7 @@ int OwnerTable::newOwner(OwnerEntry *&oe){
 void OwnerTable::freeOwnerEntry(int i)
 {
   array[i].setFree();
-  array[i].uOB.nextfree=nextfree;
+  array[i].u.nextfree=nextfree;
   nextfree=i;
   no_used--;
   PD((TABLE,"owner delete o:%d",i));
@@ -224,42 +213,43 @@ void OwnerTable::freeOwnerEntry(int i)
 #define PO_getValue(po) \
 ((po)->isTertiary() ? makeTaggedConst((po)->getTertiary()) : (po)->getRef())
 
-OZ_Term OwnerTable::extract_info(){
+OZ_Term OwnerTable::extract_info(){ // AN! reimplement
   OZ_Term list = oz_nil();
-  OZ_Term credit;
+//    OZ_Term credit;
 
-  for(int ctr = 0; ctr<size;ctr++){
-    OwnerEntry *oe = OT->getEntry(ctr);
-    if(oe==NULL){continue;}
-    Assert(oe!=NULL);
-    if(oe->isExtended()) {
-      OwnerCreditExtension *next;
-      next = oe->uOB.oExt;
-      credit = oz_nil();
-      while(next != NULL){
-        credit = oz_cons(OZ_recordInit(oz_atom("ext"),
-                   oz_cons(oz_pairAI("credit0",next->getCredit(0)),
-                   oz_cons(oz_pairAI("credit1",next->getCredit(1)),
-                           oz_nil()))), credit);
-        next = next->getNext();}
-      credit = OZ_recordInit(oz_atom("big"), oz_cons(credit, oz_nil()));}
-    else {
-      if(oe->uOB.credit == -1)
-        credit = oz_atom("persistent");
-      else
-        credit = oz_int(oe->uOB.credit);
-    }
-    list=
-      oz_cons(OZ_recordInit(oz_atom("oe"),
-        oz_cons(oz_pairAI("index", ctr),
-        oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
-        oz_cons(oz_pairA("credit", credit),
-                oz_nil())))), list);
-  }
-  return OZ_recordInit(oz_atom("ot"),
-           oz_cons(oz_pairAI("size", size),
-           oz_cons(oz_pairAI("localized", getLocalized()),
-           oz_cons(oz_pairA("list", list), oz_nil()))));
+//    for(int ctr = 0; ctr<size;ctr++){
+//      OwnerEntry *oe = OT->getEntry(ctr);
+//      if(oe==NULL){continue;}
+//      Assert(oe!=NULL);
+//      if(oe->isExtended()) {
+//        OwnerCreditExtension *next;
+//        next = oe->uOB.oExt;
+//        credit = oz_nil();
+//        while(next != NULL){
+//      credit = oz_cons(OZ_recordInit(oz_atom("ext"),
+//                 oz_cons(oz_pairAI("credit0",next->getCredit(0)),
+//                 oz_cons(oz_pairAI("credit1",next->getCredit(1)),
+//                         oz_nil()))), credit);
+//      next = next->getNext();}
+//        credit = OZ_recordInit(oz_atom("big"), oz_cons(credit, oz_nil()));}
+//      else {
+//        if(oe->uOB.credit == -1)
+//      credit = oz_atom("persistent");
+//        else
+//      credit = oz_int(oe->uOB.credit);
+//      }
+//      list=
+//        oz_cons(OZ_recordInit(oz_atom("oe"),
+//      oz_cons(oz_pairAI("index", ctr),
+//      oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
+//      oz_cons(oz_pairA("credit", credit),
+//              oz_nil())))), list);
+//    }
+//    return OZ_recordInit(oz_atom("ot"),
+//             oz_cons(oz_pairAI("size", size),
+//         oz_cons(oz_pairAI("localized", getLocalized()),
+//             oz_cons(oz_pairA("list", list), oz_nil()))));
+  return list;
 }
 
 void OwnerTable::print(){
@@ -268,407 +258,25 @@ void OwnerTable::print(){
   printf("***********************************************\n");
   printf("Size:%d No_used:%d \n",size,no_used);
   printf("site:%s\n\n",myDSite->stringrep());
-  printf("OI\t OWNER\t Credit\t Flags\n");
+  printf("OI\tCredit\tOWNER\n");
+
   int i;
   for(i=0;i<size;i++){
     if(!(array[i].isFree())){
       OwnerEntry *oe=getOwner(i);
-      if(oe->isExtended()) {
-        int ctr = 1;
-        OwnerCreditExtension *next;
-        next = oe->uOB.oExt;
-        printf("<%d>\t %s\t", i, toC(PO_getValue(oe)));
-        while(next != NULL){
-          printf("ex:%d %d#%d ", ctr, next->getCredit(0),
-                 next->getCredit(1));
-          ctr ++;
-          next = next->getNext();}
-        printf("\n");}
-      else {
-        if(oe->uOB.credit == -1)
-          printf("%d>\t %s\t PERSISTENT\t %d\n", i, toC(PO_getValue(oe)),
-                 oe->getFlags());
-        else
-          printf("%d>\t %s\t %d\t %d\n", i, toC(PO_getValue(oe)),
-                 oe->uOB.credit, oe->getFlags());}
+      printf("<%d>\t", i);
+      oe->ocreditHandler.print();
+      printf("\t%s\n",toC(PO_getValue(oe)));
     }
   }
   printf("-----------------------------------------------\n");
 }
 
-void OwnerCreditExtension::init(Credit c){
-  Assert(c > 0);
-  credit[0]=c;
-  credit[1]=START_CREDIT_SIZE;
-  PD((CREDIT,"owner credit extension init %d %d %d",c, credit[0], credit[1]));
-  next=NULL;}
-
-void OwnerCreditExtension::requestCreditE(Credit req){
-//    printf("requestCreidtE \n");
-  if(credit[0]>=req) {
-    credit[0] -= req;
-    PD((CREDIT,"request from owner credit extension credit[0] %d %d", credit[0], credit[1]));
-    return;}
-  if(credit[1]!=0){
-    credit[1]--;
-    PD((CREDIT,"request from owner credit extension credit[1] %d %d", credit[0],credit[1]));
-    credit[0] += START_CREDIT_SIZE - req;
-    return;}
-  if(next==NULL){
-    expand();
-    requestCreditE(req);
-    return;}
-  next->requestCreditE(1);
-  credit[1]=START_CREDIT_SIZE;
-  requestCreditE(req);}
-
-ReduceCode OwnerCreditExtension::isReducible(){ // called from first
-  OwnerCreditExtension* oce=next;
-  if(oce==NULL){
-    if(credit[1]!=START_CREDIT_SIZE) {return CANNOT_REDUCE;}
-    return CAN_REDUCE_SINGLE;}
-  while(oce->next!=NULL) {oce=oce->next;}
-  if(credit[0]!=START_CREDIT_SIZE) {return CANNOT_REDUCE;}
-  if(credit[1]!=START_CREDIT_SIZE) {return CANNOT_REDUCE;}
-  return CAN_REDUCE_LAST;}
-
-ReduceCode OwnerCreditExtension::addCreditE(Credit ret){
-  if(credit[0]+ret>START_CREDIT_SIZE){
-    credit[0]= credit[0]-START_CREDIT_SIZE+ret;
-    if(credit[1]==START_CREDIT_SIZE){
-      ReduceCode rc=next->addCreditE(1);
-      if(rc==CANNOT_REDUCE) {return CANNOT_REDUCE;}
-      return CAN_REDUCE_LAST;}
-    credit[1]++;
-    if(credit[1]<START_CREDIT_SIZE){return CANNOT_REDUCE;}
-    if(next==NULL) {return CAN_REDUCE_SINGLE;}
-    return CANNOT_REDUCE;}
-  credit[0]+=ret;
-  return CANNOT_REDUCE;}
-
-
-/* expand */
-
-void BorrowCreditExtension::expandSlave(){
-  BorrowCreditExtension* master=newBorrowCreditExtension();
-  master->initMaster(slaveGetSecCredit());
-  uSOB.bce=master;}
-
-void BorrowCreditExtension::expandMaster(){
-  OwnerCreditExtension* oce=newOwnerCreditExtension();
-  oce->init(uSOB.secCredit);
-  uSOB.oce=oce;
-  return;}
-
-/* get secondary credit */
-
-Bool BorrowCreditExtension::getSecCredit_Master(Credit cred){
-  Credit c=masterGetSecCredit();
-  if(c>cred){
-    PD((CREDIT,"Got %d SecCred %d left",cred, c-cred));
-    masterSetSecCredit(c-cred);
-    return NO;}
-  PD((CREDIT,"Wanted %d SecCred %d in store",cred, c));
-  expandMaster();
-  return OK;}
-
-Bool BorrowCreditExtension::getSmall_Slave(Credit &cred){
-  Credit c=slaveGetSecCredit();
-  if(c>BORROW_GIVE_CREDIT_SIZE){
-    cred=BORROW_GIVE_CREDIT_SIZE;
-    slaveSetSecCredit(c-BORROW_GIVE_CREDIT_SIZE);
-    PD((CREDIT,"Got %d SecSlaveCred %d left",cred, c-cred));
-    return NO;}
-  PD((CREDIT,"Wanted %d SecSlaveCred %d in store",cred, c));
-  expandSlave();
-  return OK;}
-
-Bool BorrowCreditExtension::getOne_Slave(){
-  Credit c=slaveGetSecCredit();
-  if(c>1){
-    slaveSetSecCredit(c-1);
-    PD((CREDIT,"Got one SecSlaveCred %d left", c-1));
-    return NO;}
-  PD((CREDIT,"Wanted one SecSlaveCred %d in store", c - 1));
-  expandSlave();
-  return OK;
-}
-
-/* reduce */
-
-Credit BorrowCreditExtension::reduceSlave(Credit more,DSite* &s,Credit &secCredit){
-//    printf("reduce Slave in:%d prim:%d sec:%d\n",more,msGetPrimCredit(),slaveGetSecCredit());
-  Assert(msGetPrimCredit()+more < BORROW_HIGH_THRESHOLD);
-  s=site;
-  secCredit=slaveGetSecCredit();
-  return msGetPrimCredit()+more;}
-
-/* add PrimaryCredit */
-
-Credit BorrowCreditExtension::addPrimaryCredit_Master(Credit more){
-  Assert(more!=INFINITE_CREDIT);
-  Credit c=msGetPrimCredit()+more;
-  if(c>BORROW_HIGH_THRESHOLD) {
-    msSetPrimCredit(BORROW_HIGH_THRESHOLD);
-    return c-BORROW_HIGH_THRESHOLD;}
-  msSetPrimCredit(c);
-  return 0;}
-
-void OwnerCreditExtension::expand(){
-  OwnerCreditExtension *oce=newOwnerCreditExtension();
-  oce->init(0);
-  next=oce;}
-
-void OwnerCreditExtension::reduceLast(){
-  OwnerCreditExtension *oce=getNext();
-  OwnerCreditExtension *tmp;
-  while(oce->next->next!=NULL){
-    oce=oce->next;}
-  tmp=oce->next;
-  Assert(tmp->credit[0]==START_CREDIT_SIZE);
-  Assert(tmp->credit[1]==START_CREDIT_SIZE);
-  Assert(tmp->next==NULL);
-  freeOwnerCreditExtension(tmp);
-  oce->next=NULL;}
-
-void OwnerEntry::extend(){
-  OwnerCreditExtension* oce=newOwnerCreditExtension();
-  oce->init(getCreditOB());
-  addFlags(PO_EXTENDED|PO_BIGCREDIT);
-  setOwnerCreditExtension(oce);}
-
-void OwnerEntry::requestCredit(Credit req){
-//    printf("oe i:%d %d c:-%d\n",oti,osgetpid(),req);
-  if(isExtended()){
-    getOwnerCreditExtension()->requestCreditE(req);
-    return;}
-  Credit credit=getCreditOB();
-  if(credit<=req){
-    extend();
-    requestCredit(req);
-    return;}
-  setCreditOB(credit-req);
-  return;
-}
-
-void OwnerEntry::removeExtension(){
-  OwnerCreditExtension *oce=getOwnerCreditExtension();
-  setCreditOB(oce->reduceSingle());
-  freeOwnerCreditExtension(oce);
-  return;}
-
-/* ********************** private **************************** */
-
-void BorrowEntry::initSecBorrow(DSite *cs,Credit c,DSite *s,int i){
-  Assert(isFree());
-  Assert(c!=INFINITE_CREDIT);
-  unsetFree();
-  netaddr.set(s,i);
-  createSecSlave(c,cs);
-
-//    printf("secondary i:%d %d\n",this->getOTI(),this->getNetAddress()->site->getTimeStamp()->pid);
-}
-
-void BorrowEntry::removeSoleExtension(Credit c){
-  BorrowCreditExtension* bce=getSlave();
-  freeBorrowCreditExtension(bce);
-  removeFlags(PO_MASTER|PO_SLAVE|PO_EXTENDED);
-  setCreditOB(c);}
-
-void BorrowEntry::createSecMaster(){
-  BorrowCreditExtension *bce=newBorrowCreditExtension();
-  bce->initMaster(getCreditOB());
-  setFlags(PO_MASTER|PO_EXTENDED);
-  setMaster(bce);}
-
-void BorrowEntry::createSecSlave(Credit cred,DSite *s){
-  BorrowCreditExtension *bce=newBorrowCreditExtension();
-  bce->initSlave(0,cred,s);
-  setFlags(PO_SLAVE|PO_EXTENDED);
-  setSlave(bce);}
-
-Bool BorrowEntry::getOnePrimaryCredit_E(){
-  Credit c=extendGetPrimCredit();
-  if(c>BORROW_MIN){
-    extendSetPrimCredit(c-1);
-    return OK;}
-  return NO;}
-
-Credit BorrowEntry::getSmallPrimaryCredit_E(){
-  Credit c=extendGetPrimCredit();
-  if(c>BORROW_MIN+BORROW_GIVE_CREDIT_SIZE){
-    extendSetPrimCredit(c-BORROW_GIVE_CREDIT_SIZE);
-    return BORROW_GIVE_CREDIT_SIZE;}
-  if(c>BORROW_MIN+2){
-    extendSetPrimCredit(c-2);
-    return 2;}
-  return 0;}
-
-/* ********************** public **************************** */
-
-DSite* BorrowEntry::getSmallSecondaryCredit(Credit &cred){
-  while(TRUE){
-    switch(getExtendFlags()){
-    case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
-      cred=OWNER_GIVE_CREDIT_SIZE;
-      getSlave()->getMaster()->getBig()->requestCreditE(OWNER_GIVE_CREDIT_SIZE);
-      return myDSite;}
-    case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
-      cred=OWNER_GIVE_CREDIT_SIZE;
-      if(getSlave()->getMaster()->getSecCredit_Master(OWNER_GIVE_CREDIT_SIZE)){
-        addFlags(PO_BIGCREDIT);
-        break;}
-      return myDSite;}
-    case PO_EXTENDED|PO_MASTER:{
-      cred=OWNER_GIVE_CREDIT_SIZE;
-      if(getMaster()->getSecCredit_Master(OWNER_GIVE_CREDIT_SIZE)){
-        addFlags(PO_BIGCREDIT);
-        break;}
-      return myDSite;}
-    case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
-      cred=OWNER_GIVE_CREDIT_SIZE;
-      getMaster()->getBig()->requestCreditE(OWNER_GIVE_CREDIT_SIZE);
-      return myDSite;}
-    case PO_EXTENDED|PO_SLAVE:{
-      if(getSlave()->getSmall_Slave(cred)){
-        addFlags(PO_MASTER);
-        break;}
-      return getSlave()->getSite();}
-    case PO_NONE:{
-      createSecMaster();
-      break;}
-    default:{
-      OZ_error("secondary credit error");
-      Assert(0);}
-    }
-  }
-}
-
-DSite* BorrowEntry::getOneSecondaryCredit(){
-  while(TRUE){
-    switch(getExtendFlags()){
-    case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
-      getSlave()->getMaster()->getBig()->requestCreditE(1);
-      return myDSite;}
-    case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
-      if(getSlave()->getMaster()->getSecCredit_Master(1)){
-        addFlags(PO_BIGCREDIT);
-        break;}
-      return myDSite;}
-    case PO_EXTENDED|PO_MASTER:{
-      if(getMaster()->getSecCredit_Master(1)){
-        addFlags(PO_BIGCREDIT);
-        break;}
-      return myDSite;}
-    case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
-      getMaster()->getBig()->requestCreditE(1);
-      return myDSite;}
-    case PO_EXTENDED|PO_SLAVE:{
-      if(getSlave()->getOne_Slave()){
-        addFlags(PO_MASTER);
-        break;}
-      return getSlave()->getSite();}
-    case PO_NONE:{
-      createSecMaster();
-      break;}
-    default:{
-      OZ_error("secondary credit error");
-      Assert(0);}
-
-    }
-  }
-  return NULL; // stupid compiler
-}
-
-void BorrowEntry::addPrimaryCreditExtended(Credit c){
-  Credit overflow;
-  switch(getExtendFlags()){
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
-    overflow=getSlave()->getMaster()->addPrimaryCredit_Master(c);
-    break;}
-  case PO_EXTENDED|PO_SLAVE:{
-    DSite *s;
-    Credit sec;
-    overflow=getSlave()->reduceSlave(c,s,sec);
-    removeSoleExtension(overflow);
-    giveBackSecCredit(s,sec);
-//      printf("reduce Slave fin %d\n",getCreditOB());
-    overflow=0;
-    break;}
-  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
-  case PO_EXTENDED|PO_MASTER:{
-    overflow=getMaster()->addPrimaryCredit_Master(c);
-    break;
-  default:
-    OZ_error("secondary credit error");
-    Assert(0);}}
-  if(overflow>0){
-    giveBackCredit(overflow);}
-}
-
 void BorrowEntry::print_entry(int nr) {
-  int ctr = 1;
-  char pC[1000], sC[1000];
-  char *temp;
-  char *primCred = (char *) pC,  *secCred = (char *) sC;
-  OwnerCreditExtension *next;
-  switch(getExtendFlags()){
-  case PO_PERSISTENT:
-    printf("<%d>\t %s\t %d\t PERSISTENT\n", nr,
-           toC(PO_getValue(this)), netaddr.index);
-    return;
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
-    sprintf(primCred, "%d(slave)", getSlave()->getMaster()->primCredit);
-    next = getSlave()->getMaster()->uSOB.oce;
-    *secCred = '\0';
-    temp = secCred;
-    while(next != NULL){
-      temp += strlen(temp);
-      sprintf(temp, "ex:%d %d#%d ", ctr, next->getCredit(0),
-              next->getCredit(1));
-      ctr ++;
-      next = next->getNext();}
-    break;
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER:
-    sprintf(primCred, "%d(slave)", getSlave()->getMaster()->primCredit);
-    sprintf(secCred, "%d", getSlave()->getMaster()->uSOB.secCredit);
-    break;
-  case PO_EXTENDED|PO_SLAVE:
-    sprintf(primCred, "%d", getSlave()->primCredit);
-    sprintf(secCred, "%d", getSlave()->uSOB.secCredit);
-    break;
-  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
-    sprintf(primCred, "%d", getMaster()->primCredit);
-    next = getMaster()->uSOB.oce;
-    *secCred = '\0';
-    temp = secCred;
-    while(next != NULL){
-      temp += strlen(temp);
-      sprintf(temp, "ex:%d %d#%d ", ctr, next->getCredit(0),
-              next->getCredit(1));
-      ctr ++;
-      next = next->getNext();}
-    break;
-  case PO_EXTENDED|PO_MASTER:
-    sprintf(primCred, "%d", getMaster()->primCredit);
-    sprintf(secCred, "%d", getMaster()->uSOB.secCredit);
-    break;
-  case PO_NONE:
-    secCred = "0";
-    sprintf(primCred, "%d", uOB.credit);
-
-    break;
-  default:
-    Assert(0);}
-
-  if(!initialized()){
-    printf("<%d>\t not initialized \t %d\t %s\t\t %s\n", nr,
-           netaddr.index, primCred, secCred);
-    return;}
-
-  printf("<%d>\t %s\t %d\t %s\t\t %s\n", nr, toC(PO_getValue(this)),
-         netaddr.index, primCred, secCred);
+  printf("<%d>\t %d\t", nr,
+         bcreditHandler.netaddr.index);
+  bcreditHandler.print();
+  printf("\t\t%s\n",toC(PO_getValue(this)));
 }
 
 void BorrowTable::print(){
@@ -677,7 +285,7 @@ void BorrowTable::print(){
   printf("***********************************************\n");
   printf("Size:%d No_used:%d \n",size,no_used);
   printf("site:%s\n\n",myDSite->stringrep());
-  printf("BI\t BORROW\t OI\t PrimCredit\t SecCredit\n");
+  printf("BI\t OI\t PrimCredit\t SecCredit\t BORROW\n");
   int i;
   BorrowEntry *b;
   for(i=0;i<size;i++){
@@ -689,241 +297,85 @@ void BorrowTable::print(){
 }
 
 OZ_Term BorrowEntry::extract_info(int index) {
-  OwnerCreditExtension *next;
-  OZ_Term primCred, secCred;
-  OZ_Term na=
-    OZ_recordInit(oz_atom("netAddress"),
-      oz_cons(oz_pairA("site", oz_atom(netaddr.site->stringrep_notype())),
-      oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
-/*
-  OZ_Term na=
-    OZ_recordInit(oz_atom("netAddress"),
-      oz_cons(oz_pairA("site",OZ_recordInit(oz_atom("site"),
-          oz_cons(oz_pairAI("port",(int)netaddr.site->getPort()),
-          oz_cons(oz_pairAI("timeint",(int)netaddr.site->getTimeStamp()->start),
-          oz_cons(oz_pairA("timestr",oz_atom(
-                                  ctime(&netaddr.site->getTimeStamp()->start))),
-          oz_cons(oz_pairAI("ipint",(unsigned int)netaddr.site->getAddress()),
-          oz_cons(oz_pairAI("hval",(int)netaddr.site),
-                oz_nil()))))))),
-        oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
-*/
-  switch(getExtendFlags()){
-  case PO_PERSISTENT:
-    primCred = oz_atom("persistent");
-    secCred = oz_atom("persistent");
-    break;
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
-    primCred = OZ_recordInit(oz_atom("slave"),
-                 oz_pairII(1, getSlave()->getMaster()->primCredit));
-    secCred = oz_nil();
-    next = getSlave()->getMaster()->uSOB.oce;
-    while(next != NULL){
-      secCred = oz_cons(OZ_recordInit(oz_atom("big"),
-                    oz_cons(oz_pairAI("credit0",next->getCredit(0)),
-                    oz_cons(oz_pairAI("credit1",next->getCredit(1)),
-                            oz_nil()))), secCred);
-      next = next->getNext();}
-    break;
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER:
-    primCred = OZ_recordInit(oz_atom("slave"),
-                 oz_pairII(1, getSlave()->getMaster()->primCredit));
-    secCred = oz_int(getSlave()->getMaster()->uSOB.secCredit);
-    break;
-  case PO_EXTENDED|PO_SLAVE:
-    primCred = OZ_recordInit(oz_atom("slave"),
-                 oz_pairII(1, getSlave()->getMaster()->primCredit));
-    secCred = oz_int(getSlave()->uSOB.secCredit);
-    break;
-  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
-    primCred = OZ_recordInit(oz_atom("slave"),
-                 oz_pairII(1, getMaster()->primCredit));
-    secCred = oz_nil();
-    next = getMaster()->uSOB.oce;
-    while(next != NULL){
-      secCred = oz_cons(OZ_recordInit(oz_atom("big"),
-                    oz_cons(oz_pairAI("credit0",next->getCredit(0)),
-                    oz_cons(oz_pairAI("credit1",next->getCredit(1)),
-                            oz_nil()))), secCred);
-      next = next->getNext();}
-    break;
-  case PO_EXTENDED|PO_MASTER:
-    primCred = oz_int(getMaster()->primCredit);
-    secCred = oz_int(getMaster()->uSOB.secCredit);
-    break;
-  case PO_NONE:
-    secCred = oz_int(0);
-    primCred = oz_int(uOB.credit);
-    break;
-  default:
-    Assert(0);}
+  return oz_nil();
+//    OwnerCreditExtension *next;
+//    OZ_Term primCred, secCred;
+//    OZ_Term na=
+//      OZ_recordInit(oz_atom("netAddress"),
+//        oz_cons(oz_pairA("site", oz_atom(netaddr.site->stringrep_notype())),
+//        oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
+//  /*
+//    OZ_Term na=
+//      OZ_recordInit(oz_atom("netAddress"),
+//        oz_cons(oz_pairA("site",OZ_recordInit(oz_atom("site"),
+//            oz_cons(oz_pairAI("port",(int)netaddr.site->getPort()),
+//        oz_cons(oz_pairAI("timeint",(int)netaddr.site->getTimeStamp()->start),
+//        oz_cons(oz_pairA("timestr",oz_atom(
+//                                ctime(&netaddr.site->getTimeStamp()->start))),
+//        oz_cons(oz_pairAI("ipint",(unsigned int)netaddr.site->getAddress()),
+//        oz_cons(oz_pairAI("hval",(int)netaddr.site),
+//              oz_nil()))))))),
+//      oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
+//  */
+//    switch(getExtendFlags()){
+//    case PO_PERSISTENT:
+//      primCred = oz_atom("persistent");
+//      secCred = oz_atom("persistent");
+//      break;
+//    case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
+//      primCred = OZ_recordInit(oz_atom("slave"),
+//                   oz_pairII(1, getSlave()->getMaster()->primCredit));
+//      secCred = oz_nil();
+//      next = getSlave()->getMaster()->uSOB.oce;
+//      while(next != NULL){
+//        secCred = oz_cons(OZ_recordInit(oz_atom("big"),
+//                  oz_cons(oz_pairAI("credit0",next->getCredit(0)),
+//                  oz_cons(oz_pairAI("credit1",next->getCredit(1)),
+//                          oz_nil()))), secCred);
+//        next = next->getNext();}
+//      break;
+//    case PO_EXTENDED|PO_SLAVE|PO_MASTER:
+//      primCred = OZ_recordInit(oz_atom("slave"),
+//                   oz_pairII(1, getSlave()->getMaster()->primCredit));
+//      secCred = oz_int(getSlave()->getMaster()->uSOB.secCredit);
+//      break;
+//    case PO_EXTENDED|PO_SLAVE:
+//      primCred = OZ_recordInit(oz_atom("slave"),
+//                   oz_pairII(1, getSlave()->getMaster()->primCredit));
+//      secCred = oz_int(getSlave()->uSOB.secCredit);
+//      break;
+//    case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
+//      primCred = OZ_recordInit(oz_atom("slave"),
+//                   oz_pairII(1, getMaster()->primCredit));
+//      secCred = oz_nil();
+//      next = getMaster()->uSOB.oce;
+//      while(next != NULL){
+//        secCred = oz_cons(OZ_recordInit(oz_atom("big"),
+//                  oz_cons(oz_pairAI("credit0",next->getCredit(0)),
+//                  oz_cons(oz_pairAI("credit1",next->getCredit(1)),
+//                          oz_nil()))), secCred);
+//        next = next->getNext();}
+//      break;
+//    case PO_EXTENDED|PO_MASTER:
+//      primCred = oz_int(getMaster()->primCredit);
+//      secCred = oz_int(getMaster()->uSOB.secCredit);
+//      break;
+//    case PO_NONE:
+//      secCred = oz_int(0);
+//      primCred = oz_int(uOB.credit);
+//      break;
+//    default:
+//      Assert(0);}
 
-  return OZ_recordInit(oz_atom("be"),
-     oz_cons(oz_pairAI("index", index),
-     oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
-     oz_cons(oz_pairA("na", na),
-     oz_cons(oz_pairAI("secCred", secCred),
-     oz_cons(oz_pairA("primCred",primCred),
-             oz_nil()))))));
+//    return OZ_recordInit(oz_atom("be"),
+//       oz_cons(oz_pairAI("index", index),
+//       oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
+//       oz_cons(oz_pairA("na", na),
+//       oz_cons(oz_pairAI("secCred", secCred),
+//       oz_cons(oz_pairA("primCred",primCred),
+//           oz_nil()))))));
 }
 
-
-/************* reduction  all private *****************/
-
-void BorrowEntry::removeBig(BorrowCreditExtension* master){
-  OwnerCreditExtension *oce=master->getBig();
-  master->masterSetSecCredit(oce->reduceSingle());
-  freeOwnerCreditExtension(oce);
-  removeFlags(PO_BIGCREDIT);
-  generalTryToReduce();}
-
-void BorrowEntry::removeMaster_SM(BorrowCreditExtension* master){
-  Assert(!(getExtendFlags() & PO_BIGCREDIT));
-  Assert(master->masterGetSecCredit()==START_CREDIT_SIZE);
-  BorrowCreditExtension *slave=getSlave();
-  Credit c=master->msGetPrimCredit();
-  slave->slaveSetSecCredit(c);
-  removeFlags(PO_EXTENDED|PO_MASTER);
-  freeBorrowCreditExtension(master);
-  generalTryToReduce();}
-
-void BorrowEntry::removeMaster_M(BorrowCreditExtension* master){
-  Assert(!(getExtendFlags() & PO_BIGCREDIT));
-  Assert(!(getExtendFlags() & PO_SLAVE));
-  Assert(master->masterGetSecCredit()==START_CREDIT_SIZE);
-  Credit c=master->msGetPrimCredit();
-  removeFlags(PO_EXTENDED|PO_MASTER);
-  freeBorrowCreditExtension(master);
-  setCreditOB(c);
-  if(isRef()){
-    BT->maybeFreeBorrowEntry(BT->ptr2Index(this));}
-}
-
-void BorrowEntry::removeSlave(){
-  BorrowCreditExtension* slave=getSlave();
-  Credit c=slave->msGetPrimCredit();
-  Assert((c>=BORROW_MIN)||(c==0));
-  giveBackSecCredit(slave->getSite(),slave->slaveGetSecCredit());
-  removeFlags(PO_SLAVE|PO_EXTENDED);
-  freeBorrowCreditExtension(slave);
-  setCreditOB(c);}
-
-void BorrowEntry::generalTryToReduce(){
-  while(TRUE){
-    switch(getExtendFlags()){
-    case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
-      if(getSlave()->getMaster()->isReducibleBig()){
-        removeBig(getSlave()->getMaster());
-        PD((CREDIT,"slave+master removing big"));
-        break;}
-      return;}
-
-    case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
-      if(getSlave()->getMaster()->isReducibleMaster()){
-        removeMaster_SM(getSlave()->getMaster());
-        PD((CREDIT,"slave removing master"));
-        break;}
-      return;}
-
-    case PO_EXTENDED|PO_SLAVE:{
-      if(getSlave()->isReducibleSlave()){
-        PD((CREDIT,"removing slave"));
-        removeSlave();}
-      return;}
-
-    case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
-      if(getMaster()->isReducibleBig()){
-        removeBig(getMaster());
-        PD((CREDIT,"master removing big"));
-        break;}
-      return;}
-
-    case PO_EXTENDED|PO_MASTER:{
-      if(getMaster()->isReducibleMaster()){
-        PD((CREDIT,"removing master"));
-        removeMaster_M(getMaster());
-        break;}
-      return;}
-    case PO_NONE:{
-      return;}
-    default:{
-      Assert(0);}
-    }
-  }
-}
-
-/************* add secondary *****************/
-
-/* private */
-
-void BorrowEntry::addSecCredit_MasterBig(Credit c,BorrowCreditExtension *master){
-  ReduceCode rc=master->getBig()->addCreditE(c);
-  if(rc==CANNOT_REDUCE) return;
-  if(rc==CAN_REDUCE_LAST){
-    master->getBig()->reduceLast();
-    return;}
-  Assert(rc==CAN_REDUCE_SINGLE);
-  generalTryToReduce();}
-
-void BorrowEntry::addSecCredit_Master(Credit c,BorrowCreditExtension *master){
-  Credit cx=master->masterGetSecCredit()+c;
-  master->masterSetSecCredit(cx);
-  if(cx==START_CREDIT_SIZE){
-    generalTryToReduce();}}
-
-Bool BorrowEntry::addSecCredit_Slave(Credit c,BorrowCreditExtension *slave){
-  Credit cx=slave->slaveGetSecCredit()+c;
-  if(cx>START_CREDIT_SIZE){
-    return NO;}
-  slave->slaveSetSecCredit(cx);
-  return OK;}
-
-/* public */
-
-void BorrowEntry::addSecondaryCredit(Credit c,DSite *s){
-  switch(getExtendFlags()){
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
-    if(s==myDSite){
-      addSecCredit_MasterBig(c,getSlave()->getMaster());
-      return;}
-    if(s==getSlave()->getSite()){
-      if(addSecCredit_Slave(c,getSlave())) {return;}}
-    break;}
-
-  case PO_EXTENDED|PO_SLAVE|PO_MASTER:{
-    if(s==myDSite){
-      addSecCredit_Master(c,getSlave()->getMaster());
-      return;}
-    if(s==getSlave()->getSite()){
-      if(addSecCredit_Slave(c,getSlave())) {return;}}
-    break;}
-
-  case PO_EXTENDED|PO_SLAVE:{
-    if(s==getSlave()->getSite()){
-      if(addSecCredit_Slave(c,getSlave())){return;}}
-    break;}
-
-  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
-    if(s==myDSite){
-      addSecCredit_MasterBig(c,getMaster());
-      return;}
-    break;}
-
-  case PO_EXTENDED|PO_MASTER:{
-    if(s==myDSite){
-      addSecCredit_Master(c,getMaster());
-      return;}
-    break;}
-  default:
-    break;
-  }
-#ifdef DEBUG_CHECK
-  if(s==myDSite){
-    OZ_warning("sec credit error: please inform andreas@sics.se");
-    return;}
-#endif
-  giveBackSecCredit(s,c);
-}
 
 void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
   if (from->isTertiary()) {
@@ -941,45 +393,15 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     Assert(from->isRef());
     mkRef(from->getRef(),from->getFlags());
   }
-  uOB.credit = from->getCredit();
-  netaddr.set(from->netaddr.site,from->netaddr.index);
-}
-
-void BorrowEntry::moreCredit(){
-  NetAddress *na = getNetAddress();
-  PD((CREDIT,"Asking for more credit %s",na->site->stringrep()));
-  DSite *cS=getOneMsgCredit();
-
-  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
-  msgC->put_M_ASK_FOR_CREDIT(na->index,myDSite);
-  msgC->setImplicitMessageCredit(cS);
-  send(msgC,3);
-}
-
-void BorrowEntry::giveBackCredit(Credit c){
-//    printf("be i:%d %d c:-%d\n",getOTI(),netaddr.site->getTimeStamp()->pid
-//       ,c);
-  NetAddress *na = getNetAddress();
-  DSite* site = na->site;
-  int index = na->index;
-  sendPrimaryCredit(site,index,c);
-}
-
-void BorrowEntry::giveBackSecCredit(DSite *s,Credit c){
-  NetAddress *na = getNetAddress();
-  DSite* site = na->site;
-  int index = na->index;
-  sendSecondaryCredit(s,site,index,c);
+  bcreditHandler.copyHandler(&(from->bcreditHandler));
 }
 
 void BorrowEntry::freeBorrowEntry(){
-  Assert(!isExtended());
+  Assert(!bcreditHandler.isExtended());
   if(isVar() && typeOfBorrowVar(this)==VAR_PROXY){
     GET_VAR(this,Proxy)->nowGarbage(this);}
-  // AN! nowGarbage could make the structure extended again if
-  // implicit credits are used.
   if(!isPersistent())
-    giveBackCredit(getCreditOB());}
+    bcreditHandler.giveBackAllCredit();}
 
 void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
@@ -991,7 +413,7 @@ void BorrowEntry::gcBorrowRoot(int i) {
       gcPO();}
     return;}
   if(isRef()){
-    Assert(isExtended());
+    Assert(bcreditHandler.isExtended());
     gcPO();
     return;}
   Assert(isTertiary());
@@ -1006,11 +428,11 @@ void BorrowTable::init(int beg,int end)
 {
   int i=beg;
   while(i<end){
-    array[i].uOB.nextfree=i+1;
+    array[i].u.nextfree=i+1;
     array[i].setFree();
     i++;}
   i--;
-  array[i].uOB.nextfree=nextfree;
+  array[i].u.nextfree=nextfree;
   nextfree=beg;
 }
 
@@ -1070,60 +492,51 @@ void BorrowTable::resize()
   Assert(notGCMarked());
   return;}
 
-int BorrowTable::newSecBorrow(DSite *creditSite,Credit c,DSite * sd,int off){
+int BorrowTable::newBorrowPersistent(DSite * sd,int off) {
   if(nextfree == END_FREE) resize();
   int index=nextfree;
-  nextfree= array[index].uOB.nextfree;
-  BorrowEntry* oe = &(array[index]);
-  Assert(oe->isFree());
-  oe->initSecBorrow(creditSite,c,sd,off);
-  Assert(oe->getFlags() != (PO_TYPE)4712);
+  nextfree= array[index].u.nextfree;
+  BorrowEntry* be = &(array[index]);
+  Assert(be->isFree());
+  be->initBorrowPersistent(sd,off);
 
-  hshtbl->add(oe->getNetAddress(),index);
+  hshtbl->add(be->getNetAddress(),index);
   no_used++;
   PD((TABLE,"borrow insert: b:%d",index));
-  return index;}
-
+  return index;
+}
 
 int BorrowTable::newBorrow(Credit c,DSite * sd,int off){
   if(nextfree == END_FREE) resize();
   int index=nextfree;
-  nextfree= array[index].uOB.nextfree;
-  BorrowEntry* oe = &(array[index]);
-  Assert(oe->isFree());
-  oe->initBorrow(c,sd,off);
-  Assert(oe->getFlags() == PO_NONE);
-  /* PER-LOOK
-     what happends if a probe is released when we ask
-     for more credit?
-  */
-  if(c!=PERSISTENT_CRED && c<=BORROW_LOW_THRESHOLD){
-    oe->moreCredit();}
+  nextfree= array[index].u.nextfree;
+  BorrowEntry* be = &(array[index]);
+  Assert(be->isFree());
+  be->initBorrow(c,sd,off);
 
-  hshtbl->add(oe->getNetAddress(),index);
+  hshtbl->add(be->getNetAddress(),index);
   no_used++;
   PD((TABLE,"borrow insert: b:%d",index));
-  return index;}
+  return index;
+}
 
 Bool BorrowTable::maybeFreeBorrowEntry(int index){
   BorrowEntry *b = &(array[index]);
-  if(b->isExtended()){
-    if(b->getExtendFlags() & PO_MASTER) {
-      if(b->isVar()){
-        b->changeToRef();}
-      //Assert(b->initialized());
-      return FALSE;}
-    Assert(b->getExtendFlags() & PO_SLAVE);
-    b->removeSlave();}
-  Assert(!b->isExtended());
+  if(!b->bcreditHandler.maybeFreeCreditHandler()) {
+    if(b->isVar()){
+      b->changeToRef();
+    }
+    return FALSE;
+  }
   b->freeBorrowEntry();
   hshtbl->sub(getBorrow(index)->getNetAddress());
   b->setFree();
-  b->uOB.nextfree=nextfree;
+  b->u.nextfree=nextfree;
   nextfree=index;
   no_used--;
   PD((TABLE,"borrow delete: b:%d",index));
-  return TRUE;}
+  return TRUE;
+}
 
 void BorrowTable::copyBorrowTable(BorrowEntry *oarray,int osize){
   hshtbl->clear();
@@ -1238,7 +651,7 @@ void BorrowTable::gcFrameToProxy(){
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
-    Assert(!b->isRef() || b->isExtended());
+    Assert(!b->isRef() || b->bcreditHandler.isExtended());
     if((b->isTertiary())){
       Tertiary *t=b->getTertiary();
       if(t->isFrame()) {
@@ -1345,8 +758,7 @@ void BorrowTable::closeFrameToProxy(unsigned int ms){
             NetAddress *na=be->getNetAddress();
             LockSec* sec = ((LockFrame*)t)->getLockSec();
             DSite* toS = sec->getNext();
-            DSite *cS=be->getOneMsgCredit();
-            lockSendToken(na->site,na->index,toS,cS);
+            lockSendToken(na->site,na->index,toS);
           }
           else
             Assert(0);
@@ -1406,8 +818,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
               NetAddress *na=be->getNetAddress();
               LockSec* sec = ((LockFrame*)t)->getLockSec();
               DSite* toS = sec->getNext();
-              DSite *cS=be->getOneMsgCredit();
-              lockSendToken(na->site,na->index,toS,cS);
+              lockSendToken(na->site,na->index,toS);
             }
             else
               Assert(0);

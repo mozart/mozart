@@ -73,7 +73,6 @@ void ObjectVar::sendRequest()
 
   //
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
-  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
 
   //
   msgC->put_M_GET_LAZY(na->index, sendClass, myDSite);

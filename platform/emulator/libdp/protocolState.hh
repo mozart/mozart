@@ -34,7 +34,7 @@
 //#include "dpMarshaler.hh"
 
 void cellLockSendForward(DSite *toS,DSite *rS,int mI);
-void cellLockSendGet(BorrowEntry*,DSite*);
+void cellLockSendGet(BorrowEntry*);
 void cellLockSendDump(BorrowEntry*);
 void cellLockReceiveForward(BorrowEntry*,DSite*,DSite*,int);
 void cellLockReceiveDump(OwnerEntry*,DSite *);
@@ -49,10 +49,10 @@ void cellReceiveRemoteRead(BorrowEntry*,DSite*,int,DSite*);
 void cellReceiveRead(OwnerEntry*,DSite*,DSite*);
 void cellReceiveReadAns(Tertiary*,TaggedRef);
 void cellReceiveCantPut(OwnerEntry*,TaggedRef,int,DSite*,DSite*);
-void cellSendReadAns(DSite*,DSite*,int,TaggedRef,DSite*);
+void cellSendReadAns(DSite*,DSite*,int,TaggedRef);
 void cellSendRemoteRead(DSite* toS,DSite* mS,int mI,DSite* fS,DSite*);
-void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI,DSite*);
-void cellSendRead(BorrowEntry *be,DSite *dS,DSite*);
+void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI);
+void cellSendRead(BorrowEntry *be,DSite *dS);
 void cellSendContentsFailure(TaggedRef,DSite*,DSite*,int);
 
 void lockReceiveGet(OwnerEntry* oe,LockManager*,DSite*);
@@ -61,7 +61,7 @@ void lockReceiveTokenManager(OwnerEntry*,int);
 void lockReceiveTokenFrame(BorrowEntry*,DSite*,int);
 void lockReceiveForward(BorrowEntry*,DSite*,DSite*,int);
 void lockReceiveCantPut(OwnerEntry*,int,DSite*,DSite*);
-void lockSendToken(DSite*,int,DSite*,DSite*);
+void lockSendToken(DSite*,int,DSite*);
 void lockReceiveCantPut(LockManager *cm,int mI,DSite* rsite, DSite* dS);
 void lockSendForward(DSite *toS,DSite *fS,int mI);
 void lockSendTokenFailure(DSite*,DSite*,int);
@@ -72,7 +72,7 @@ void chainReceiveAnswer(OwnerEntry*,DSite*,int,DSite*);
 void chainReceiveQuestion(BorrowEntry*,DSite*,int,DSite*);
 void chainSendAnswer(BorrowEntry*,DSite*,int,int,DSite*);
 void chainSendQuestion(DSite*,int,DSite*);
-void chainSendAck(DSite*,int,DSite*);
+void chainSendAck(DSite*,int);
 
 void maybeChainSendQuestion(ChainElem*, Tertiary*, DSite*);
 

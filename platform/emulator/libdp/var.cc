@@ -154,7 +154,6 @@ void sendSurrender(BorrowEntry *be,OZ_Term val){
   NetAddress *na = be->getNetAddress();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_SURRENDER(na->index,myDSite,val);
-  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
   send(msgC,3);
 }
 
@@ -308,7 +307,6 @@ void ManagerVar::gCollectRecurseV(void)
 
 static void sendAcknowledge(DSite* sd,int OTI){
   PD((PD_VAR,"sendAck %s",sd->stringrep()));
-  OT->getOwner(OTI)->getOneCreditOwner();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_ACKNOWLEDGE(myDSite,OTI);
 
@@ -319,7 +317,6 @@ static void sendAcknowledge(DSite* sd,int OTI){
 void sendRedirect(DSite* sd,int OTI,TaggedRef val)
 {
   PD((PD_VAR,"sendRedirect %s",sd->stringrep()));
-  OT->getOwner(OTI)->getOneCreditOwner();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_REDIRECT(myDSite,OTI,val);
 
@@ -398,7 +395,6 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r){
   return bindVInternal(lPtr,r,myDSite);}
 
 void varGetStatus(DSite* site,int OTI, TaggedRef tr){
-  OT->getOwner(OTI)->getOneCreditOwner();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
   msgC->put_M_SENDSTATUS(myDSite,OTI,tr);
 
@@ -547,24 +543,18 @@ Bool triggerVariable(TaggedRef *tPtr){
 
 static void sendRegister(BorrowEntry *be) {
   PD((PD_VAR,"sendRegister"));
-  Assert(creditSiteOut == NULL);
   NetAddress *na = be->getNetAddress();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_REGISTER(na->index,myDSite);
-  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
   send(msgC,3);
 }
 
 static void sendDeRegister(BorrowEntry *be) {
   PD((PD_VAR,"sendDeRegister"));
-  Assert(creditSiteOut == NULL);
 
   NetAddress *na = be->getNetAddress();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_DEREGISTER(na->index,myDSite);
-  // Taking an implicit credit here might extend a non extended structure
-  // and cause errors at freeBorrowEntry that assumes a non extended structure
-//    msgC->setImplicitMessageCredit(be->getOneMsgCredit());
   send(msgC,3);
 }
 
@@ -654,7 +644,6 @@ void sendGetStatus(BorrowEntry *be){
   NetAddress *na = be->getNetAddress();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_GETSTATUS(myDSite,na->index);
-  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
   send(msgC,3);
 }
 

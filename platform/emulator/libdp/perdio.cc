@@ -108,6 +108,7 @@ static void initGateStream()
     int ind = t->getIndex();
     Assert(ind==0);
     OwnerEntry* oe=OT->getOwner(ind);
+    oe->setUp(ind);
     oe->makePersistent();
   }
 }
@@ -458,21 +459,12 @@ OwnerEntry* maybeReceiveAtOwner(DSite* mS,int OTI){
   if(mS==myDSite){
     OwnerEntry *oe=OT->getOwner(OTI);
     Assert(!oe->isFree());
-    if(!oe->isPersistent())
-      oe->receiveCredit(OTI);
-    return oe;}
+    return oe;
+  }
   return NULL;
 }
 
 inline OwnerEntry* receiveAtOwner(int OTI){
-  OwnerEntry *oe=OT->getOwner(OTI);
-  Assert(!oe->isFree());
-  if(!oe->isPersistent())
-    oe->receiveCredit(OTI);
-  return oe;
-}
-
-inline OwnerEntry* receiveAtOwnerNoCredit(int OTI){
   OwnerEntry *oe=OT->getOwner(OTI);
   Assert(!oe->isFree());
   return oe;
@@ -482,37 +474,23 @@ BorrowEntry* receiveAtBorrow(DSite* mS,int OTI){
   NetAddress na=NetAddress(mS,OTI);
   BorrowEntry* be=BT->find(&na);
   Assert(be!=NULL);
-  be->receiveCredit();
-  return be;
-}
-
-inline BorrowEntry* receiveAtBorrowNoCredit(DSite* mS,int OTI){
-  NetAddress na=NetAddress(mS,OTI);
-  BorrowEntry* be=BT->find(&na);
-  Assert(be!=NULL);
   return be;
 }
 
 inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
   NetAddress na=NetAddress(mS,OTI);
   BorrowEntry* be=BT->find(&na);
-  if(be==NULL){
-    sendCreditBack(na.site,na.index,1);}
-  else {
-    be->receiveCredit();}
+
   return be;
 }
 
 void msgReceived(MsgContainer* msgC)
 {
   Assert(oz_onToplevel());
-  Assert(creditSiteIn==NULL);
-  Assert(creditSiteOut==NULL);
 
   globalRecCounter++;
 
   MessageType mt = msgC->getMessageType();
-  creditSiteIn=msgC->getImplicitMessageCredit();
 
   PD((MSG_RECEIVED,"msg type %d",mt));
 
@@ -539,10 +517,11 @@ void msgReceived(MsgContainer* msgC)
       PD((MSG_RECEIVED,"ASK_FOR_CREDIT index:%d site:%s",
           na_index,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(na_index);
-      Credit c= oe->giveMoreCredit();
+      Credit c= oe->getCreditBig();
 
       MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
-      newmsgC->put_M_BORROW_CREDIT(myDSite,na_index,c);
+      Assert(c.owner==NULL);
+      newmsgC->put_M_BORROW_CREDIT(myDSite,na_index,c.credit);
 
       send(newmsgC,3);
       break;
@@ -551,32 +530,44 @@ void msgReceived(MsgContainer* msgC)
   case M_OWNER_CREDIT:
     {
       int index;
+      int cint;
       Credit c;
-      msgC->get_M_OWNER_CREDIT(index,c);
+      msgC->get_M_OWNER_CREDIT(index,cint);
+      c.owner=NULL;
+      c.credit=cint;
+
       PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
-      receiveAtOwnerNoCredit(index)->returnCreditOwner(c,index);
+      receiveAtOwner(index)->addCredit(c);
       break;
     }
 
   case M_OWNER_SEC_CREDIT:
     {
       int index;
+      int cint;
       Credit c;
       DSite* s;
-      msgC->get_M_OWNER_SEC_CREDIT(s,index,c);
+      msgC->get_M_OWNER_SEC_CREDIT(s,index,cint);
+      c.owner=myDSite; // I am the owner of this secondary credit
+      c.credit=cint;
       PD((MSG_RECEIVED,"OWNER_SEC_CREDIT site:%s index:%d credit:%d",
           s->stringrep(),index,c));
-      receiveAtBorrowNoCredit(s,index)->addSecondaryCredit(c,myDSite);
-      creditSiteIn = NULL;
+//        printf("received M_OWNER_SEC_CREDIT %x %d %d %x\n",
+//           (int)s,index,c.credit,(int)c.owner);
+
+      receiveAtBorrow(s,index)->addCredit(c);
       break;
     }
 
   case M_BORROW_CREDIT:
     {
       int si;
+      int cint;
       Credit c;
       DSite* sd;
-      msgC->get_M_BORROW_CREDIT(sd,si,c);
+      msgC->get_M_BORROW_CREDIT(sd,si,cint);
+      c.owner=NULL;
+      c.credit=cint;
       PD((MSG_RECEIVED,"BORROW_CREDIT site:%s index:%d credit:%d",
           sd->stringrep(),si,c));
       //The entry might have been gc'ed. If so send the
@@ -587,7 +578,7 @@ void msgReceived(MsgContainer* msgC)
       if(be==NULL){
         sendCreditBack(na.site,na.index,c);}
       else {
-        be->addPrimaryCredit(c);}
+        be->addCredit(c);}
       break;
     }
 
@@ -612,8 +603,7 @@ void msgReceived(MsgContainer* msgC)
       DSite* rsite;
       msgC->get_M_REGISTER(OTI,rsite);
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
-//        OwnerEntry *oe=receiveAtOwner(OTI);
-      OwnerEntry *oe=receiveAtOwnerNoCredit(OTI); // no implicit credit any more
+      OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe->isVar()) {
         (GET_VAR(oe,Manager))->deregisterSite(rsite);
       } else {
@@ -647,7 +637,6 @@ void msgReceived(MsgContainer* msgC)
           // with the object itself, so object's credits will be
           // handed back when borrow entry is freed by
           // 'ObjectVar::transfer()';
-          oe->getOneCreditOwner();
           //
           MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
 
@@ -661,7 +650,6 @@ void msgReceived(MsgContainer* msgC)
       case OBJECT:
         {
           Assert(oz_isObject(t));
-          oe->getOneCreditOwner();
           //
           MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
 
@@ -804,9 +792,7 @@ void msgReceived(MsgContainer* msgC)
       BorrowEntry *be=BT->find(&na);
       if(be==NULL){
         PD((WEIRD,"receive M_SENDSTATUS after gc"));
-        sendCreditBack(site,OTI,1);
         break;}
-      be->receiveCredit();
       Assert(be->isVar());
       (GET_VAR(be,Proxy))->receiveStatus(status);
       break;
@@ -822,7 +808,6 @@ void msgReceived(MsgContainer* msgC)
       NetAddress na=NetAddress(sd,si);
       BorrowEntry *be=BT->find(&na);
       Assert(be);
-      be->receiveCredit();
 
       Assert(be->isVar());
       GET_VAR(be,Proxy)->acknowledge(be->getPtr(), be);
@@ -1031,9 +1016,6 @@ void msgReceived(MsgContainer* msgC)
     OZ_error("siteReceive: unknown message %d\n",mt);
     break;
   }
-
-  Assert(creditSiteIn==NULL);
-  Assert(creditSiteOut==NULL);
 }
 
 
@@ -1043,11 +1025,12 @@ void msgReceived(MsgContainer* msgC)
 
 // ERIK-LOOK
 
-inline void returnSendCredit(DSite* s,int OTI){
-  if(s==myDSite){
-    OT->getOwner(OTI)->receiveCredit(OTI);
-    return;}
-  sendCreditBack(s,OTI,1);}
+//  inline void returnSendCredit(DSite* s,int OTI){
+//    printf("returnSendCredit\n");
+//    if(s==myDSite){
+//      OT->getOwner(OTI)->receiveCredit(OTI);
+//      return;}
+//    sendCreditBack(s,OTI,1);}
 
 enum CommCase{
     USUAL_OWNER_CASE,
@@ -1064,7 +1047,6 @@ void DSite::communicationProblem(MsgContainer *msgC, FaultCode fc) {
   case M_CELL_CONTENTS: {
     if(fc == COMM_FAULT_PERM_NOT_SENT) {
       msgC->get_M_CELL_CONTENTS(s1,OTI,tr);
-      returnSendCredit(s1,OTI);
       cellSendContentsFailure(tr,this,s1,OTI);
       return;
     }
@@ -1075,7 +1057,6 @@ void DSite::communicationProblem(MsgContainer *msgC, FaultCode fc) {
   case M_LOCK_TOKEN: {
     if(fc == COMM_FAULT_PERM_NOT_SENT) {
       msgC->get_M_LOCK_TOKEN(s1,OTI);
-      returnSendCredit(s1,OTI);
       lockSendTokenFailure(this,s1,OTI);
       return;
     }
@@ -1139,8 +1120,6 @@ void initDPCore()
   dpmInit();
   initNetwork();
 
-  creditSiteIn = NULL;
-  creditSiteOut = NULL;
   borrowTable      = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
   ownerTable       = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);
   resourceTable    = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
@@ -1167,8 +1146,6 @@ void initDPCore()
                                                3, 0, BIfailureDefault, OK)),
          WATCHER_PERSISTENT|WATCHER_SITE_BASED|WATCHER_INJECTOR);
 
-  Assert(sizeof(BorrowCreditExtension)<=sizeof(Construct_3));
-  Assert(sizeof(OwnerCreditExtension)<=sizeof(Construct_3));
   Assert(sizeof(Chain)==sizeof(Construct_4));
   Assert(sizeof(ChainElem)==sizeof(Construct_3));
   Assert(sizeof(InformElem)==sizeof(Construct_3));
@@ -1192,14 +1169,6 @@ void initDPCore()
 /**********************************************************************/
 /*   MISC                                                */
 /**********************************************************************/
-
-// AN! To be removed ?
-void sendPing(DSite* s){
-  MsgContainer *msgC = msgContainerManager->newMsgContainer(s);
-  msgC->put_M_SEND_PING(myDSite,42);
-
-  send(msgC,3);
-}
 
 void marshalDSite(MarshalerBuffer *buf, DSite* s)
 {
@@ -1261,11 +1230,11 @@ OZ_Term getGatePort(DSite* sd){
   NetAddress na = NetAddress(sd,si);
   BorrowEntry *b = borrowTable->find(&na);
   if (b==NULL) {
-    int bi=borrowTable->newBorrow( PERSISTENT_CRED,sd,si);
+    int bi=borrowTable->newBorrowPersistent(sd,si);
     b=borrowTable->getBorrow(bi);
     PortProxy *pp = new PortProxy(bi);
     b->mkTertiary(pp);
-    b->makePersistent();
+//      b->makePersistent(); // Already is
     if(sd->siteStatus()!=SITE_OK){
       if(sd->siteStatus()==SITE_PERM){
         deferProxyTertProbeFault(pp,PROBE_PERM);}

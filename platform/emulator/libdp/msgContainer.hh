@@ -40,13 +40,8 @@ class ByteBuffer;
 class MsgContainerManager;
 
 enum MsgContainerFlags {
-//    MSG_HAS_CREDIT = 1,
   MSG_HAS_MARSHALCONT = 2,
   MSG_HAS_UNMARSHALCONT = 4,
-//    MSG_WRITEMSG = 8,
-//    MSG_READMSG = 0x10,
-//    MSG_HAS_MSGNUM = 0x20,
-//    MSG_HAS_LARGEMSGNUM = 0x40
 };
 
 typedef enum {
@@ -70,7 +65,6 @@ class MsgContainer {
 private:
   MessageType mt;
   int flags;
-  DSite *creditSite;
   // kost@ : currently, MsgContainer can contain at most one OZ_Term.
   // Otherwise MsgTermSnapshot"s are to go into msgField"s;
   MsgTermSnapshot *msgTS;
@@ -108,9 +102,6 @@ public:
   int getFlags();
   Bool checkFlag(int f);
   void clearFlag(int f);
-
-  DSite* getImplicitMessageCredit();
-  void setImplicitMessageCredit(DSite* s);
 
   DSite* getDestination();
 
