@@ -447,8 +447,6 @@ OZ_Return oz_unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 loop:
   int argSize;
 
-  COUNT(totalUnify);
-
   _DEREF(term1,termPtr1,tag1);
   _DEREF(term2,termPtr2,tag2);
 
@@ -478,8 +476,6 @@ loop:
  /*************/
  var_nonvar:
 
-  COUNT(varNonvarUnify);
-
   if (isCVar(tag1)) {
     int res = oz_var_bindINLINE(tagged2CVar(term1),termPtr1, term2, scp);
     if (res == PROCEED)
@@ -503,7 +499,6 @@ loop:
    *   UVAR -> CVAR (prefer binding nonCVars to CVars)
    *   local newer -> local older
    */
-  COUNT(varVarUnify);
   if (isUVar(tag1)) {
     if (isUVar(tag2) && 
 	isMoreLocal(term2,term1) &&

@@ -166,15 +166,15 @@ public:
   // RS
   long freeListAllocated, freeListDisposed;
   long totalAllocated;
-  long varVarUnify, nonvarNonvarUnify, recRecUnify, varNonvarUnify, totalUnify;
+  long varVarUnify, nonvarNonvarUnify, varOptUnify, recRecUnify, varNonvarUnify;
   long maxStackDepth;
   long sizeClosures, numClosures, sizeGs;
-  long sizeObjects,sizeRecords,sizeLists;
+  long sizeObjects,sizeRecords,sizeLists,sizeFloats,sizeFreeListObjs;
   long sizeStackVars;
   long sizeHeapChunks, sizeBitArrays;
   long sizeEnvs, numEnvAllocs, maxEnvSize;
 
-  long fastcalls,bicalls,nonoptcalls,inlinecalls,inlinedots,
+  long fastcalls,optbicalls,nonoptcalls,inlinecalls,inlinedots,
     sendmsg,applmeth,nonoptbicalls,nonoptsendmsg;
   
   long numNewName, numNewNamedName;

@@ -56,6 +56,7 @@ void * freeListMalloc(size_t size) {
     }
   } 
 
+  COUNT1(sizeFreeListObjs,size);
   register void * aux = heapMalloc(size);
   
   DebugMem(memset((char *)aux,0x5A,size));
