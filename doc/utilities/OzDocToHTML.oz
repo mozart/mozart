@@ -779,7 +779,8 @@ define
 	       if {SGML.isOfClass M danger} then
 		  'div'(COMMON: @Common
 			p('class': [margin]
-			  img(src: 'danger.gif' align: top alt: 'Danger')))
+			  img(src: 'danger.gif' align: top alt: 'Danger'))
+			p(OzDocToHTML, Batch(M 1 $)))
 	       else
 		  p(COMMON: @Common
 		    if {SGML.isOfClass M warning} then
@@ -803,6 +804,11 @@ define
 		     p(OzDocToHTML, Batch(M 2 $)))
 	    [] 'div' then
 	       'div'(COMMON: @Common
+		     if {SGML.isOfClass M danger} then
+			p('class': [margin]
+			  img(src: 'danger.gif' align: top alt: 'Danger'))
+		     else EMPTY
+		     end
 		     OzDocToHTML, Batch(M 1 $))
 	    %-----------------------------------------------------------
 	    % Lists
