@@ -19,6 +19,6 @@
 # in addition to the first matching regex or DEFAULT.
 #
 ALL		/home/mozart/CVS/CVSROOT/log.pl -m ps.cvs@news.ps.uni-sb.de %s
-mozart/platform/emulator	mail -s "I have changed %s" perbrand,erik,nilsf,popow
+mozart/platform/emulator	mail -s "I have changed %s" perbrand,erik,nilsf,popow,dragan
 mozart/share/test		mail -s "I have changed %s" popow
 mozart/share/lib		mail -s "I have changed %s" nilsf,popow
