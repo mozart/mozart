@@ -349,7 +349,7 @@ define
       meth exec_mkexec(To)
 	 {self xtrace('chmod -x '#To)}
 	 if {self get_justprint($)} then skip else
-	    try {Shell.executeCommand ['chmod' '-x' To]}
+	    try {Shell.executeCommand ['chmod' '+x' To]}
 	    catch _ then
 	       if {Property.get 'platform.os'}\=win32 then
 		  raise ozmake(mkexec:To) end
