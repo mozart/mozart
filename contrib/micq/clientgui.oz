@@ -46,6 +46,7 @@ require
          messageAck:S_messageAck
          %removeMessage:S_removeMessage
          getUserName:S_getUserName
+         getUserInfo:S_getUserInfo
          %removeApplication:S_removeApplication
         ) at 'methods.ozf'
 import
@@ -97,6 +98,37 @@ define
    ClientGUISettings={NewCell ui(fontsize:8
                                  foreground:nil
                                  background:nil)}
+
+   proc{ViewInfo ID}
+      Info = {Server S_getUserInfo( id: ID info: $)}
+
+      T={New Tk.toplevel tkInit(title:"UserInfo")}
+      B1={New Tk.button tkInit(parent:T text:"Close" action:T#tkClose)}
+
+      Index={NewCell 0}
+
+
+      proc{NewEntry Title Value} O N
+         L={New Tk.label tkInit(parent:T text:Title)}
+         V={New Tk.label tkInit(parent:T text:Value)}
+        in
+         {Exchange Index O N} N=O+1
+         {Tk.batch [grid(L row:N column:0 sticky:e)
+                    grid(V row:N column:1 sticky:w)]}
+      end
+
+      O N
+   in
+      {NewEntry "Userid:" {CondSelect Info id "unknown"}}
+      {NewEntry "Firstname:" {CondSelect Info firstname "unknown"}}
+      {NewEntry "Lastname:" {CondSelect Info lastname "unknown"}}
+      {NewEntry "Organization:" {CondSelect Info organization "unknown"}}
+      {NewEntry "Email:" {CondSelect Info email "unknown"}}
+
+      {Exchange Index O N} N=O+1
+      {Tk.batch [grid(B1 row:N column:0 sticky:ew columnspan:2)]}
+   end
+
 
    proc{UpdateUISettings} S={Access ClientGUISettings} in
       {FontLabel tk(config size:S.fontsize)}
@@ -193,6 +225,8 @@ define
                          else "View Dialog"#proc{$} {self viewDialog} end end
                          separator
                          ("Remove "#E.name)#proc {$}{RemoveFriend E}end
+                         separator
+                         ("View User Info")#proc {$}{ViewInfo ID} end
                         ] self}
               end
          in
@@ -300,7 +334,6 @@ define
          {Client clearHistory(friend: self.id)}
       end
       meth viewDialog E={Dictionary.get DB self.id} in
-         {System.show {Append @oldmessages @sentmessages}}
          {Dialog.view E self {Append @oldmessages @sentmessages} DB proc{$} {self ClearOldAndSentMessages} end}
       end
       meth haveUnreadMail(X)

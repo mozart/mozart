@@ -47,7 +47,8 @@ require
          getUserName:S_getUserName
          removeApplication:S_removeApplication
          getHistory: S_getHistory
-         clearHistory: S_clearHistory) at 'methods.ozf'
+         clearHistory: S_clearHistory
+         getUserInfo: S_getUserInfo) at 'methods.ozf'
 import
    Tk
    System(show showInfo)
@@ -409,6 +410,7 @@ define
          end
       end
 
+
       meth !S_addUser(firstname:F lastname:L friends:Fr<=nil organization:O email:E passwd:P id:U userlevel: UL)
          {WriteLog "Create account for "#U#" ("#F#" "#L#", "#O#")"}
          try
@@ -471,6 +473,12 @@ define
          try
             {DB removeUser( id: Id)}
          catch _ then {WriteLog "Id '"#Id#"' can't be removed!"} end
+      end
+
+      meth !S_getUserInfo( id:Id info:I)
+          try
+            I = {DB getUserInfo(id:Id entry:$)}
+         catch _ then {WriteLog "Can't return info about "#Id} end
       end
 
 

@@ -470,6 +470,18 @@ define
          E={Map {self.applicationDB items($)} fun {$ X} app(id:X.id name:X.name author: X.author) end}
       end
 
+      meth getUserInfo( id: ID entry: E ) Entry En in
+         try
+            {self.membersDB get( id: ID entry: En ) }
+            Entry = {Record.adjoin En store( firstname:{List.take {VirtualString.toString En.firstname#""} 25}
+                                             lastname:{List.take {VirtualString.toString En.lastname#""} 25})}
+            E = {Record.adjoin store( name: Entry.firstname#" "#Entry.lastname
+                                      friends: Friends online: {self isOnline( id:ID online: $)}) Entry }
+         catch _ then
+            raise noSuchEntry( ID ) end
+         end
+      end
+
       meth get( id: ID entry: E ) Entry Friends En in
          try
             {self.membersDB get( id: ID entry: En ) }
