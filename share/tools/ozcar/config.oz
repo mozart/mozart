@@ -191,7 +191,7 @@ AddSubThreadsBitmap    = {VirtualString.toAtom children # '.xbm'}
 TextCursor             = left_ptr
 HelpEvent              = '<3>'
 
-TimeoutToUpdate        = 10         %% the TkSmoother will use this value
+TimeoutToUpdate        = 15         %% the TkSmoother will use this value
 
 BigFloat               = {Int.toFloat 10 * 1000}
 BigInt                 = 1000 * 1000 * 1000
