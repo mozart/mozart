@@ -19,7 +19,7 @@
 #include "types.hh"
 
 #include "am.hh"
-#include "suspension.hh"
+#include "suspensi.hh"
 
 extern Suspension * FDcurrentTaskSusp;
 

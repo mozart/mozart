@@ -20,7 +20,7 @@
 #include "io.hh"
 #include "records.hh"
 #include "thread.hh"
-#include "suspension.hh"
+#include "suspensi.hh"
 
 
 /* TmpBuffer with at LEAST 512 characters,

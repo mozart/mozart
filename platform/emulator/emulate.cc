@@ -503,7 +503,7 @@ void engine() {
   int predArity;
 
 #if THREADED > 0
-#  include "instrTable.hh"
+#  include "instrtab.hh"
 #if THREADED == 2
   CodeArea::globalInstrTable = instrTable;
 #endif

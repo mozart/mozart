@@ -77,7 +77,7 @@ public:
 };
 
 #include "fdgenvar.hh"
-#include "ofsgenvar.hh"
+#include "ofgenvar.hh"
 
 #ifndef OUTLINE
 #include "genvar.icc"

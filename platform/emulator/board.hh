@@ -17,10 +17,10 @@
 #endif
 
 
-#include "constterm.hh"
+#include "constter.hh"
 
 #include "constr.hh"
-#include "suspension.hh"
+#include "suspensi.hh"
 
 enum BoardFlags {
   Bo_Ask        = 0x0001,

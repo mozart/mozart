@@ -17,8 +17,8 @@
 #pragma interface
 #endif
 
-#include "constterm.hh"
-#include "suspension.hh"
+#include "constter.hh"
+#include "suspensi.hh"
 #include "dllstack.hh"
 
 // ------------------------------------------------------------------------
