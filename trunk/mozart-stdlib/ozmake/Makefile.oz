@@ -346,6 +346,7 @@ define
 	       [] ozl(T Options) then Rule=rule(tool:ozl file:T options:Options)
 	       [] cc( T Options) then Rule=rule(tool:cc  file:T options:Options)
 	       [] ld( T Options) then Rule=rule(tool:ld  file:T options:Options)
+	       [] ozg(T Options) then Rule=rule(tool:ozg file:{Path.replaceExtensionAtom T 'ozf'} options:Options)
 	       else raise ozmake(makefile:badrule(F R)) end
 	       end
 	       if {Path.isAbsolute Rule.file} then
@@ -390,6 +391,7 @@ define
 			end
 		     else raise ozmake(makefile:illegaltooloption(ld O)) end end
 		  end
+	       [] ozg then skip
 	       end
 	       %% record the rule
 	       @Target2Rule.A := Rule

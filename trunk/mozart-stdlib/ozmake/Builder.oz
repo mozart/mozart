@@ -34,7 +34,11 @@ define
 	       R={self get_rule(   T $)}
 	    in
 	       for D in L do Builder,build_target(D) end
-	       if Builder,Outdated(T L $) then {self exec_rule(T R)}
+	       if Builder,Outdated(T L $) then
+		  {self exec_rule(T R)}
+		  if Builder,Outdated(T L $) then
+		     raise ozmake(build:outdated(T)) end
+		  end
 	       else {self trace(T#' is up to date')} end
 	    end
 	 finally {self decr} end

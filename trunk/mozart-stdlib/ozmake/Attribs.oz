@@ -39,6 +39,7 @@ define
 	 InfoText   : unit
 	 InfoHtml   : unit
 	 Verbose    : false
+	 VeryVerbose: false
 	 Quiet      : false
 	 JustPrint  : false
 	 OptLevel   : optimize
@@ -356,11 +357,21 @@ define
       meth set_info_html(S) InfoHtml<-S end
       meth get_info_html($) @InfoHtml end
 
-      meth set_verbose(B) Verbose<-B end
+      meth set_verbose(L)
+	 case {Reverse L}
+	 of true|true|_ then VeryVerbose<-true Verbose<-true
+	 [] true|_ then Verbose<-true
+	 else Verbose<-false end
+      end
       meth get_verbose($)
 	 if @Superman\=unit
 	 then {@Superman get_verbose($)}
 	 else @Verbose end
+      end
+      meth get_veryVerbose($)
+	 if @Superman\=unit
+	 then {@Superman get_veryVerbose($)}
+	 else @VeryVerbose end
       end
       meth set_quiet(B) Quiet<-B end
       meth get_quiet($)

@@ -7,7 +7,7 @@ import
 prepare
    OPTIONS =
    record(
-      verbose(     single char:&v type:bool)
+      verbose(multiple char:&v type:bool)
       quiet(       single char:&q type:bool)
       'just-print'(single char:&n type:bool)
       optlevel(    single         type:atom(none debug optimize))
@@ -36,7 +36,7 @@ prepare
 
       action(single type:atom(build install clean veryclean
 			      create publish extract list help
-			      uninstall)
+			      uninstall edit)
 	     default:build)
       build(    char:&b alias:action#build)
       install(  char:&i alias:action#install)
@@ -49,6 +49,7 @@ prepare
       list(     char:&l alias:action#list)
       help(     char:&h alias:action#help)
       uninstall(char:&e alias:action#uninstall)
+      edit(             alias:action#edit)
 
       grade(single type:atom(none up down same any))
       upgrade(  char:&U alias:[action#install grade#up])
@@ -136,6 +137,7 @@ define
       [] list      then {Man list}
       [] help      then {Help.help}
       [] uninstall then {Man uninstall}
+      [] edit      then {Man makefileEdit}
       end
       {Application.exit 0}
    catch E then

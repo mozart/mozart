@@ -182,7 +182,10 @@ define
    end
 
    fun {ListToVS L}
-      {FoldL L fun {$ VS S} if VS==nil then S else VS#' '#S end end nil}
+      {FoldL L fun {$ VS S}
+		  if VS==nil then S
+		  elseif S==nil then VS
+		  else VS#' '#S end end nil}
    end
 
    class TextFile from Open.file Open.text end
