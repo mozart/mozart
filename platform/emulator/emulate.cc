@@ -856,9 +856,8 @@ void engine() {
 
           X[0] = A;
 
-          DEREF(A,APtr,_1);
           OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 1);
-          OZ_addSuspension(APtr,susp);
+          OZ_addSuspension(A,susp);
 
           X[0] = saveX0;
 
@@ -903,10 +902,9 @@ void engine() {
           X[0] = A;
           X[1] = B;
 
-          DEREF(A,APtr,_1); DEREF(B,BPtr,_2);
           OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 2);
-          if (isAnyVar(A)) OZ_addSuspension(APtr,susp);
-          if (isAnyVar(B)) OZ_addSuspension(BPtr,susp);
+          if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
+          if (OZ_isVariable(B)) OZ_addSuspension(B,susp);
 
           X[0] = saveX0;
           X[1] = saveX1;
@@ -960,9 +958,8 @@ void engine() {
           X[0] = A;
           X[1] = newVar;
 
-          DEREF(A,APtr,_1);
           OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 2);
-          OZ_addSuspension(APtr,susp);
+          OZ_addSuspension(A,susp);
 
           X[0] = saveX0;
           X[1] = saveX1;
@@ -1017,15 +1014,14 @@ void engine() {
           X[1] = B;
           X[2] = newVar;
 
-          DEREF(A,APtr,_1); DEREF(B,BPtr,_2);
           OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 3);
-          if (isAnyVar(A))
-            OZ_addSuspension(APtr,susp);
+          if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
+
           extern State BIexchangeCellInline(TaggedRef c, TaggedRef out,
                                             TaggedRef &in);
           // special hack for exchangeCell: suspends only on the first argument
-          if (isAnyVar(B) && fun != BIexchangeCellInline)
-            OZ_addSuspension(BPtr,susp);
+          if (OZ_isVariable(B) && fun != BIexchangeCellInline)
+            OZ_addSuspension(B,susp);
 
           X[0] = saveX0;
           X[1] = saveX1;
@@ -1084,11 +1080,10 @@ void engine() {
 
           X[0] = A; X[1] = B; X[2] = C; X[3] = newVar;
 
-          DEREF(A,APtr,_1); DEREF(B,BPtr,_2); DEREF(C,CPtr,_3);
           OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 4);
-          if (isAnyVar(A)) OZ_addSuspension(APtr,susp);
-          if (isAnyVar(B)) OZ_addSuspension(BPtr,susp);
-          if (isAnyVar(C)) OZ_addSuspension(CPtr,susp);
+          if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
+          if (OZ_isVariable(B)) OZ_addSuspension(B,susp);
+          if (OZ_isVariable(C)) OZ_addSuspension(C,susp);
 
           X[0] = saveX0; X[1] = saveX1;
           X[2] = saveX2; X[3] = saveX3;
@@ -1144,10 +1139,8 @@ void engine() {
                                                   GET_CURRENT_PRIORITY(),
                                                   PC, Y, G, X, argsToSave));
             SVariable *cvar = taggedBecomesSuspVar(APtr);
-            CBB->addSuspension();
-            if (e->setExtSuspension (cvar->getHome (), susp) == OK) {
-              susp->setExtSusp ();
-            }
+            CBB->incSuspCount();
+
             cvar->addSuspension(susp);
           }
           goto LBLreduce;
@@ -1183,22 +1176,16 @@ void engine() {
                                                 PC,Y,G,X,argsToSave));
           SVariable *acvar;
           SVariable *bcvar;
-          CBB->addSuspension();
+          CBB->incSuspCount();
 
           Assert(isAnyVar(ATag) || isAnyVar(BTag));
 
           if (isAnyVar(ATag)) {
             acvar = taggedBecomesSuspVar(APtr);
-            if (e->setExtSuspension (acvar->getHome (), susp) == OK) {
-              susp->setExtSusp ();
-            }
             acvar->addSuspension(susp);
           }
           if (isAnyVar(BTag)) {
             bcvar = taggedBecomesSuspVar(BPtr);
-            if (e->setExtSuspension (bcvar->getHome (), susp) == OK) {
-              susp->setExtSusp ();
-            }
             bcvar->addSuspension(susp);
           }
           goto LBLreduce;
@@ -1225,7 +1212,7 @@ void engine() {
                                             GET_CURRENT_PRIORITY(),
                                             shallowCP, Y, G, X, argsToSave));
 
-      CBB->addSuspension();
+      CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
       shallowCP = NULL;
       goto LBLreduce;
@@ -1382,11 +1369,8 @@ void engine() {
         new Suspension(new SuspContinuation(CBB,
                                             GET_CURRENT_PRIORITY(),
                                             PC, Y, G, X, argsToSave));
-      if (e->setExtSuspension (cvar->getHome (), susp) == OK) {
-        susp->setExtSusp ();
-      }
       cvar->addSuspension (susp);
-      CBB->addSuspension();
+      CBB->incSuspCount();
       goto LBLreduce; // mm2 ???
     } else {
       DISPATCH(3);
@@ -1769,7 +1753,7 @@ void engine() {
 
        // link and commit the board (actor will be committed too);
        solveBB->setCommitted (CBB);
-       CBB->addSuspension (solveBB->getSuspCount ()); // similar to the 'unit commit'
+       CBB->incSuspCount (solveBB->getSuspCount ()); // similar to the 'unit commit'
        DebugCheck (((solveBB->getScriptRef ()).getSize () != 0),
                    error ("non-empty script in solve blackboard"));
 
@@ -1794,7 +1778,7 @@ void engine() {
 #endif
          // add the suspensions of the committed board and remove
          // its suspension itself;
-         CBB->addSuspension (boardToInstall->getSuspCount () - 1);
+         CBB->incSuspCount (boardToInstall->getSuspCount () - 1);
          // get continuation of 'board-to-install' if any;
          if (boardToInstall->isWaitTop () == NO) {
            Continuation *bodyOf = boardToInstall->getBodyPtr ();
@@ -1898,7 +1882,7 @@ void engine() {
         Bool ret = e->installScript(waitBoard->getScriptRef());
         Assert(ret!=NULL);
         waitBoard->setCommitted(CBB);
-        CBB->addSuspension(waitBoard->getSuspCount()-1);
+        CBB->incSuspCount(waitBoard->getSuspCount()-1);
         DISPATCH(1);
       }
 
@@ -1938,7 +1922,7 @@ void engine() {
         Bool ret = e->installScript(bb->getScriptRef());
         Assert(ret != NULL);
         bb->setCommitted(CBB);
-        CBB->addSuspension(bb->getSuspCount());
+        CBB->incSuspCount(bb->getSuspCount());
         CBB->removeSuspension();
         goto LBLreduce;
       }
@@ -2329,6 +2313,15 @@ void engine() {
         CAA = CastWaitActor(aa);
         goto LBLexecuteNext;
       }
+/* rule: or ro (bottom commit) */
+      if ((CastWaitActor (aa))->hasNoChilds()) {
+        aa->setCommitted();
+        HANDLE_FAILURE(0,
+                       message("bottom commit");
+                       CBB->removeSuspension();
+                       goto LBLreduce;
+                       );
+      }
 /* rule: or <sigma> ro (unit commit rule) */
       if ((CastWaitActor (aa))->hasOneChild()) {
         Board *waitBoard = (CastWaitActor (aa))->getChild();
@@ -2345,7 +2338,7 @@ void engine() {
 
           /* add the suspension from the committed board
              remove the suspension for the board itself */
-          CBB->addSuspension(waitBoard->getSuspCount()-1);
+          CBB->incSuspCount(waitBoard->getSuspCount()-1);
 
           /* unit commit & WAITTOP */
           if (waitBoard->isWaitTop()) {

@@ -186,6 +186,7 @@ public:
 
 extern AM am;
 
+void updateExtSuspension(Board *varHome, Suspension *susp);
 
 #ifndef OUTLINE
 #include "am.icc"

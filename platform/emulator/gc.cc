@@ -329,63 +329,6 @@ Bool gcUnprotect(TaggedRef *ref)
 
 
 //*****************************************************************************
-
-
-class ExtRefsCopy;
-static ExtRefsCopy *extRefsCopy = NULL;
-
-class ExtRefsCopy: public DLList {
-friend TaggedRef gcProtectCopy(TaggedRef r);
-public:
-  ExtRefsCopy(DLListEntry el, DLList*p, DLList*n): DLList(el,p,n) {};
-
-  static void gc()
-  {
-    ExtRefsCopy *aux = extRefsCopy;
-    while (aux) {
-      gcTagged((TaggedRef&)aux->elem,(TaggedRef&)aux->elem);
-      aux = (ExtRefsCopy*) aux->next;
-    }
-  }
-
-
-  ExtRefsCopy *find(TaggedRef *r)
-  {
-    ExtRefsCopy *aux = this;
-    while(aux) {
-      if (& aux->elem == (DLListEntry *)r) {
-        break;
-      }
-      aux = (ExtRefsCopy*) aux->next;
-    }
-    return aux;
-  }
-};
-
-TaggedRef gcProtectCopy(TaggedRef r)
-{
-  CHECK_NONVAR(r);
-
-  extRefsCopy = (ExtRefsCopy*) extRefsCopy->add((DLListEntry)r);
-  DebugCheck(r != (TaggedRef)extRefsCopy->elem,
-             error("Expecting 'DLList::add' to add at beginning of list"););
-  return makeTaggedRef((TaggedRef*)&(extRefsCopy->elem));
-}
-
-void gcUnprotectCopy(TaggedRef *r)
-{
-  ExtRefsCopy *f = extRefsCopy->find(r);
-  if (f == NULL) {
-    error("gcUnprotectCopy: cannot find 0x%d",*r);
-  } else {
-    extRefsCopy = (ExtRefsCopy*)extRefsCopy->remove(f);
-  }
-}
-
-
-
-
-//*****************************************************************************
 //                          Global variables
 //*****************************************************************************
 
@@ -772,7 +715,7 @@ TaggedRef gcVariable(TaggedRef var)
       if (GCISMARKED(*(int*)cv))
         return makeTaggedSVar((SVariable*)GCUNMARK(*(int*)cv));
 
-      Board *newBoard = cv->clusterNode->gcBoard();
+      Board *newBoard = cv->home->gcBoard();
       if (!newBoard) {
         return makeTaggedNULL();
       }
@@ -789,10 +732,10 @@ TaggedRef gcVariable(TaggedRef var)
       else
         new_cv->suspList = new_cv->suspList->gc(NO);
 
-      DebugGC(new_cv->clusterNode == newBoard,
+      DebugGC(new_cv->home == newBoard,
               error ("home node of variable is not copied"));
 
-      new_cv->clusterNode = newBoard;
+      new_cv->home = newBoard;
       return makeTaggedSVar(new_cv);
     }
   case CVAR:
@@ -803,7 +746,7 @@ TaggedRef gcVariable(TaggedRef var)
       if (GCISMARKED(*(int*)gv))
         return makeTaggedCVar((GenCVariable*)GCUNMARK(*(int*)gv));
 
-      Board *newBoard = gv->clusterNode->gcBoard();
+      Board *newBoard = gv->home->gcBoard();
       if (!newBoard) {
         return makeTaggedNULL();
       }
@@ -820,10 +763,10 @@ TaggedRef gcVariable(TaggedRef var)
         new_gv->suspList = new_gv->suspList->gc(NO);
       new_gv->gc();
 
-      DebugGC(new_gv->clusterNode == newBoard,
+      DebugGC(new_gv->home == newBoard,
               error ("home node of variable is not copied"));
 
-      new_gv->clusterNode = newBoard;
+      new_gv->home = newBoard;
       return makeTaggedCVar(new_gv);
     }
   default:
@@ -1067,7 +1010,6 @@ void AM::gc(int msgLevel) {
 
   GCPROCMSG("updating external references to terms into heap");
   ExtRefNode::gc();
-  ExtRefsCopy::gc();
 
   performCopying();
 
@@ -1561,7 +1503,7 @@ void SRecord::gcRecurse()
   case R_CELL:
     {
       Cell *c = (Cell *) this;
-      c->clusterNode = c->clusterNode->gcBoard();
+      c->home = c->home->gcBoard();
       gcTagged(c->val,c->val);
       break;
     }

@@ -442,6 +442,13 @@ Bool AM::isBetween(Board *to, Board *varHome)
   return OK;
 }
 
+void updateExtSuspension(Board *varHome, Suspension *susp)
+{
+  if (am.setExtSuspension (varHome, susp) == OK) {
+    susp->setExtSusp ();
+  }
+}
+
 Bool AM::setExtSuspension (Board *varHome, Suspension *susp)
 {
   Board *bb = currentSolveBoard;
@@ -588,7 +595,8 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
     // susp cannot be woken up therefore relink it
     SuspList *first = suspList;
     suspList = suspList->getNext();
-    retSuspList = addSuspension(retSuspList, first);
+    first->setNext(retSuspList);
+    retSuspList = first;
   } // while
 
   return retSuspList;
@@ -767,14 +775,8 @@ void AM::reduceTrailOnSuspend()
                   return;);
       if(!isLocalVariable(oldVal)) { // add susps to global vars
         SVariable *svar = taggedBecomesSuspVar (ptrOldVal);
-        if (setExtSuspension (svar->getHome (), susp) == OK) {
-          susp->setExtSusp ();
-        }
         svar->addSuspension (susp);
       }
-    }
-    if (setExtSuspension (tagged2SuspVar (value)->getHome (), susp) == OK) {
-      susp->setExtSusp ();
     }
     tagged2SuspVar(value)->addSuspension(susp);
 
@@ -810,9 +812,6 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
                error("Non-variable on trail"));
 
     SVariable *svar = taggedBecomesSuspVar(refPtr);
-    if (setExtSuspension (svar->getHome (), susp) == OK) {
-      susp->setExtSusp ();
-    }
     svar->addSuspension(susp);
   }
 
@@ -821,14 +820,14 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 
 void AM::pushCall(Board *n, SRecord *def, int arity, RefsArray args)
 {
-  n->addSuspension();
+  n->incSuspCount();
   ensureTaskStack();
   currentTaskStack->pushCall(n,def,args,arity);
 }
 
 void AM::pushDebug(Board *n, SRecord *def, int arity, RefsArray args)
 {
-  n->addSuspension();
+  n->incSuspCount();
   ensureTaskStack();
   currentTaskStack->pushDebug(n, new OzDebug(def,arity,args));
 }

@@ -7,6 +7,7 @@
 
 #include "genvar.hh"
 #include "fdomn.hh"
+#include "fdAddOn.hh"
 
 //-----------------------------------------------------------------------------
 //                           class GenFDVariable
@@ -54,7 +55,7 @@ public:
       addVirtualConstr(elem);
     else
       fdSuspList[state] =
-        ::addVirtualConstr(fdSuspList[state], elem, clusterNode);
+        ::addVirtualConstr(fdSuspList[state], elem, home);
   }
 
   void addVirtualConstrLocal(SuspList *elem, FDState state) {
@@ -62,12 +63,12 @@ public:
       addVirtualConstr(elem, state);
     else
       fdSuspList[size] =
-        ::addVirtualConstr(fdSuspList[size], elem, clusterNode);
+        ::addVirtualConstr(fdSuspList[size], elem, home);
 
   }
 
   void addVirtualConstr(SuspList *elem) {
-    GenCVariable::addVirtualConstr(elem);
+    ::addVirtualConstr(this,elem);
   }
 
   inline void propagate(TaggedRef var, FDState state, TaggedRef term);

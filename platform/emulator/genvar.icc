@@ -17,12 +17,12 @@
 #endif
 
 
-//#include "fdgenvar.hh"
-
 class GenFDVariable;
 
 inline void GenCVariable::relinkSuspList(GenCVariable* leftVar){
-  leftVar->concSuspList(unlinkSuspension());
+  SuspList *sl = getSuspList();
+  unlinkSuspList();
+  leftVar->appendSuspList(sl);
 }
 
 #endif //__genvar_icc__

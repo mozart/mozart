@@ -130,7 +130,7 @@ void AM::pushTask(Board *n,ProgramCounter pc,
                          RefsArray y,RefsArray g,
                          RefsArray x,int i)
 {
-  n->addSuspension();
+  n->incSuspCount();
   ensureTaskStack();
   currentTaskStack->pushCont(n,pc,y,g,x,i);
 }
@@ -145,7 +145,7 @@ void AM::pushNervous(Board *n)
 inline
 void AM::pushTask(Board *n, OZ_CFun f, RefsArray x, int i)
 {
-  n->addSuspension();
+  n->incSuspCount();
   ensureTaskStack();
   currentTaskStack->pushCont (n, f, (Suspension *) NULL, x, i);
 }
@@ -245,9 +245,11 @@ void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
                                     SVariable *rightVar)
 {
   SVariable* var = tagged2SuspVar(taggedvar);
-  var->concSuspList(checkSuspensionList(var, taggedvar,
-                                        var->unlinkSuspension(),
-                                        term, rightVar));
+  SuspList *from = var->getSuspList();
+  var->unlinkSuspList();
+  SuspList *suspList =
+    checkSuspensionList(var, taggedvar, from, term, rightVar);
+  var->appendSuspList(suspList);
 }
 
 inline

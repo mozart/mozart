@@ -129,6 +129,7 @@ public:
   // returns the first created child; this child is unlinked from the actor;
   void decChilds ();    // for search;
   Bool hasOneChild();
+  Bool hasNoChilds();
   void unsetBoard ();
   void setBoard (Board *bb);
 };
@@ -157,9 +158,9 @@ public:
 
   void incThreads ();
   void decThreads ();
-  void addSuspension (SuspList *l);
   Bool isStable ();  // so simple!
   void addSuspension (Suspension *susp);
+  void addSuspension (SuspList *l);
   Bool areNoExtSuspensions ();
   TaggedRef* getSolveVarRef ();
   TaggedRef getSolveVar ();
