@@ -74,10 +74,12 @@ public:
   HashTable(HtKeyType,int sz);
   ~HashTable();
 
+  int getSize() { return counter; }
   void htAdd(const char *k, void *val);
   void htAdd(intlong k, void *val);
   void *htFind(intlong);
   void *htFind(const char *);
+  void mkEmpty();
   void print();
   void printStatistic();
   unsigned memRequired(int valSize = 0);
