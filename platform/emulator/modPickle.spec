@@ -28,12 +28,17 @@
 			     out    => [],
 			     BI     => BIsave},
 
-    'gzsave'		=> { in     => ['value','+virtualString','+int'],
+    'saveWithHeader'	=> { in     => ['value','+virtualString',
+			                '+virtualString','+int'],
 			     out    => [],
-			     BI     => BIgzsave},
+			     BI     => BIsaveWithHeader},
 
     'load'		=> { in     => ['value','value'],
 			     out    => [],
 			     BI     => BIload},
+
+    'loadWithHeader'	=> { in     => ['+virtualString'],
+			     out    => ['value'],
+			     BI     => BIloadWithHeader},
 
  );
