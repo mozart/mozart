@@ -220,10 +220,10 @@
   <Part id="Part.Constraints">
     <Title/Constraint Programming/
     &chapter.types_modes_constr;
+    &chapter.search;
     &chapter.fd;
     &chapter.schedule;
     &chapter.fs;
-    &chapter.search;
   </Part>
 
   <Part id="Part.Distributed">

@@ -259,6 +259,101 @@ end
   <section id="section.development.system">
     <title/System Modules/
 
+    <p>
+      Mozart provides the following system modules:
+
+    <table>
+      <tr/<th/Module Name/ <th/Description/ <th/Documentation//
+      <tr/<th colspan=3/Application Programming//
+      <tr/<td/<<Application>>/
+          <td/Command processing and application termination/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.application">//
+      <tr/<td/<<Module>>/
+          <td/Module managers/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.module">//
+      <tr/<th colspan=3/Constraint Programming//
+      <tr/<td/<<Search>>/
+          <td/Search engines/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.search">//
+      <tr/<td/<<FD>>/
+          <td/Finite domain propagators and distributors/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.fd">//
+      <tr/<td/<<FS>>/
+          <td/Finite set propagators and distributors/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.fs">//
+      <tr/<td/<<Schedule>>/
+          <td/Scheduling propagators and distributors/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.schedule">//
+      <tr/<th colspan=3/Distributed Programming//
+      <tr/<td/<<Connection>>/
+          <td/Connecting to running Oz processes/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.connection">//
+      <tr/<td/<<Remote>>/
+          <td/Remote module managers/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.remote">//
+      <tr/<td/<<URL>>/
+          <td/URL parsing and resolution routines/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.url">//
+      <tr/<td/<<Resolve>>/
+          <td/URL resolving/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.resolve">//
+      <tr/<td/<<Fault>>/
+          <td/Handling faults in distributed programs/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.fault">//
+      <tr/<th colspan=3/Open Programming//
+      <tr/<td/<<Open>>/
+          <td/Support for files, sockets, and pipes/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.open">//
+      <tr/<td/<<OS>>/
+          <td/POSIX compliant operating system support/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.os">//
+      <tr/<th colspan=3/System Programming//
+      <tr/<td/<<Pickle>>/
+          <td/Saving and loading of persistant values/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.pickle">//
+      <tr/<td/<<Property>>/
+          <td/Querying and configuring engine properties/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.property">//
+      <tr/<td/<<Error>>/
+          <td/Error handling routines/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.error">//
+      <tr/<td/<<ErrorRegistry>>/
+          <td/Registration of error handlers/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.errorregistry">//
+      <tr/<td/<<Finalize>>/
+          <td/Automatic garbage collection for native entities/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.finalize">//
+      <tr/<td/<<System>>/
+          <td/Miscellaneous system related procedures (printing)/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.system">//
+      <tr/<th colspan=3/Window Programming//
+      <tr/<td/<<Tk>>/
+          <td/Classes and procedures for window programming/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.tk">//
+      <tr/<td/<<TkTools>>/
+          <td/Predefined abstractions to handle menus, dialogs, and so on/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.tktools">//
+      <tr/<th colspan=3/Graphical Tools//
+      <tr/<td/<<Browser>>/
+          <td/Incremental display of Oz values/
+          <td/<ptr.extern to="ozdoc:browser">//
+      <tr/<td/<<Panel>>/
+          <td/Monitor and configure the running engine/
+          <td/<ptr.extern to="ozdoc:panel">//
+      <tr/<td/<<Explorer>>/
+          <td/Visual constraint programming tool/
+          <td/<ptr.extern to="ozdoc:explorer">//
+      <tr/<td/<<Ozcar>>/
+          <td/Interactive debugger/
+          <td/<ptr.extern to="ozdoc:ozcar">//
+      <tr/<td/<<Profiler>>/
+          <td/Profiling of Oz programs/
+          <td/<ptr.extern to="ozdoc:profiler">//
+      <tr/<th colspan=3/Miscellaneous//
+      <tr/<td/<<ObjectSupport>>/
+          <td/Generic classes for object oriented applications/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.objectsupport">//
+    </table>
   </section>
 
 <!--
