@@ -548,7 +548,6 @@ private:
 
 public:
   FSetTouched(void) {};
-  FSetTouched(OZ_FSetVar &sv) { *this = sv; };
 
   void operator = (OZ_FSetVar &sv) 
   {
@@ -556,6 +555,8 @@ public:
     _known_not_in = sv->getKnownNotIn();
     _card_size = sv->getCardSize();
   }
+
+  FSetTouched(OZ_FSetVar &sv) { *this = sv; };
 
   OZ_Boolean operator <= (OZ_FSetVar &sv) 
   {

@@ -604,8 +604,8 @@ public:
   USEHEAPMEMORY;
   OZPRINTLONG
   ConstTerm() { Assert(0); }
-  ConstTerm(TypeOfConst t) { init(t); }
   void init(TypeOfConst t) { tag = t<<1; }
+  ConstTerm(TypeOfConst t) { init(t); }
   Bool cacIsMarked(void)    { return tag&1; }
   void cacMark(ConstTerm *) { tag |= 1; }
   void ** cacGetMarkField(void) { return (void **) &tag; }
@@ -649,6 +649,8 @@ public:
   ConstTermWithHome() { Assert(0); }
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
+  Bool hasGName() { return (boardOrGName.getTag()&CWH_GName); }
+
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
 
   Board *getBoardInternal() {
@@ -662,7 +664,6 @@ public:
     Assert(gn);
     boardOrGName.set(gn,CWH_GName);
   }
-  Bool hasGName() { return (boardOrGName.getTag()&CWH_GName); }
   GName *getGName1() {
     return hasGName()?(GName *)boardOrGName.getPtr():(GName *)NULL;
   }
@@ -727,7 +728,18 @@ public:
     freeListDispose(this,sizeof(BigInt));
   }
 /* make a small int if <Big> fits into it, else return big int */
-  inline TaggedRef shrink(); // see below
+  TaggedRef shrink(void) {
+    TaggedRef ret;
+    if (mpz_cmp_si(&value,OzMaxInt) > 0 ||
+	mpz_cmp_si(&value,OzMinInt) < 0)
+      ret = makeTaggedConst(this);
+    else {
+      ret =  newSmallInt((int) mpz_get_si(&value));
+      dispose();
+    }
+    return ret;
+  }
+
 
   /* make an 'int' if <Big> fits into it, else return INT_MAX,INT_MIN */
   int getInt()
@@ -802,20 +814,6 @@ Bool oz_isInt(TaggedRef term) {
 inline
 Bool oz_isNumber(TaggedRef term) {
   return oz_isInt(term) || oz_isFloat(term);
-}
-
-inline
-TaggedRef BigInt::shrink()
-{
-  TaggedRef ret;
-  if (mpz_cmp_si(&value,OzMaxInt) > 0 ||
-      mpz_cmp_si(&value,OzMinInt) < 0)
-    ret = makeTaggedConst(this);
-  else {
-    ret =  newSmallInt((int) mpz_get_si(&value));
-    dispose();
-  }
-  return ret;
 }
 
 inline
@@ -897,6 +895,22 @@ public:
   TertType getTertType()       { return (TertType) tagged.getTag(); }
   void setTertType(TertType t) { tagged.set(tagged.getData(),(int) t); }
 
+  void setInfo(EntityInfo *infoIn) { info = infoIn; }
+
+  void setIndex(int i) { tagged.setVal(i); }
+  int getIndex() { return tagged.getData(); }
+  void setPointer (void *p) { tagged.setPtr(p); }
+  void *getPointer() { return tagged.getPtr(); }
+
+  Bool checkTertiary(TypeOfConst s,TertType t){
+    return (s==getType() && t==getTertType());}
+
+  void setBoard(Board *b) {
+    if (getTertType() == Te_Local) {
+      setPointer(b);
+    }
+  }
+
   NO_DEFAULT_CONSTRUCTORS(Tertiary)
   Tertiary() { Assert(0); }	// keep gcc happy;
   Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
@@ -912,15 +926,6 @@ public:
 
   //
   EntityInfo *getInfo() { return (info); }
-  void setInfo(EntityInfo *infoIn) { info = infoIn; }
-
-  void setIndex(int i) { tagged.setVal(i); }
-  int getIndex() { return tagged.getData(); }
-  void setPointer (void *p) { tagged.setPtr(p); }
-  void *getPointer() { return tagged.getPtr(); }
-
-  Bool checkTertiary(TypeOfConst s,TertType t){
-    return (s==getType() && t==getTertType());}
 
   Bool isLocal()   { return (getTertType() == Te_Local); }
   Bool isManager() { return (getTertType() == Te_Manager); }
@@ -929,12 +934,6 @@ public:
 
   Board *getBoardInternal() {
     return isLocal() ? (Board*)getPointer() : oz_rootBoardOutline();}
-
-  void setBoard(Board *b) {
-    if (getTertType() == Te_Local) {
-      setPointer(b);
-    }
-  }
 
 };
 
@@ -1193,13 +1192,7 @@ public:
     return ::getRecordArity(recordArity);
   }
 
-  TaggedRef normalize()
-  {
-    if (isTuple() && label == AtomCons && getWidth()==2) {
-      return makeTaggedLTuple(new LTuple(getArg(0),getArg(1)));
-    }
-    return makeTaggedSRecord(this);
-  }
+  TaggedRef normalize(void);
 
   void initArgs();
   
@@ -1612,25 +1605,6 @@ public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(Object)
 
-  Object(Board *bb,SRecord *s,ObjectClass *ac,SRecord *feat, OzLock *lck):
-    Tertiary(bb, Co_Object,Te_Local)
-  {
-    setFreeRecord(feat);
-    setClass(ac);
-    setState(s);
-    setGName(NULL);
-    lock = lck;
-  }
-
-  Object(int i): Tertiary(i,Co_Object,Te_Proxy)
-  {
-    setFreeRecord(NULL);
-    setClass(NULL);
-    setState((Tertiary*)NULL);
-    setGName(NULL);
-    lock = 0;
-  }
-
   ObjectClass *getClass()       { return cl1; }
   void setClass(ObjectClass *c) {
     Assert(!c||c->supportsLocking()>=0);
@@ -1702,6 +1676,27 @@ public:
 
   GName *globalize();
   void localize();
+
+  Object(Board *bb,SRecord *s,ObjectClass *ac,SRecord *feat, OzLock *lck):
+    Tertiary(bb, Co_Object,Te_Local)
+  {
+    setFreeRecord(feat);
+    setClass(ac);
+    setState(s);
+    setGName(NULL);
+    lock = lck;
+  }
+
+  Object(int i): Tertiary(i,Co_Object,Te_Proxy)
+  {
+    setFreeRecord(NULL);
+    setClass(NULL);
+    setState((Tertiary*)NULL);
+    setGName(NULL);
+    lock = 0;
+  }
+
+
 };
 
 SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);
@@ -1834,6 +1829,10 @@ public:
   NO_DEFAULT_CONSTRUCTORS(OzArray)
   OZPRINT
 
+  int getLow()      { return offset; }
+  int getWidth()    { return width; }
+  int getHigh()     { return getWidth() + offset - 1; }
+
   OzArray(Board *b, int low, int high, TaggedRef initvalue)
     : ConstTermWithHome(b,Co_Array) 
   {
@@ -1853,9 +1852,6 @@ public:
     }
   }
   
-  int getLow()      { return offset; }
-  int getHigh()     { return getWidth() + offset - 1; }
-  int getWidth()    { return width; }
 
   OZ_Term getArg(int n) 
   { 

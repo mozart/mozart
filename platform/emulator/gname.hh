@@ -116,15 +116,15 @@ public:
   Bool getGCMark()   { return gcMark; }
   void resetGCMark() { gcMark = 0;}
 
+  void gcMarkSite() {
+    site->setGCFlag();
+  }
   void gCollectGName(){
     if (!getGCMark()) {
       setGCMark();
       gcMarkSite();
       oz_gCollectTerm(value,value);}}
 
-  void gcMarkSite() {
-    site->setGCFlag();
-  }
 };
 
 #define GNAME_HASH_TABLE_DEFAULT_SIZE 500

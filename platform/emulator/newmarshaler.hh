@@ -88,6 +88,18 @@ class NMMemoryManager {
 
   //
 public:
+
+  //
+  void operator delete(void *obj, size_t size) {
+    int index = size / sizeof(int32);
+    Assert(index);		// must contain at least one word;
+    Assert(index * sizeof(int32) == size);
+    Assert(index < NMMM_SIZE);
+    //
+    *((int32 **) obj) = freelist[index];
+    freelist[index] = (int32 *) obj;
+  }
+
   // must be empty;
   NMMemoryManager() {}
   ~NMMemoryManager() {}
@@ -116,16 +128,6 @@ public:
     }
   }
 
-  //
-  void operator delete(void *obj, size_t size) {
-    int index = size / sizeof(int32);
-    Assert(index);		// must contain at least one word;
-    Assert(index * sizeof(int32) == size);
-    Assert(index < NMMM_SIZE);
-    //
-    *((int32 **) obj) = freelist[index];
-    freelist[index] = (int32 *) obj;
-  }
 };
 
 //

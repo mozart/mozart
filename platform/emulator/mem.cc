@@ -420,83 +420,96 @@ class SbrkMemory {
   int size;         /* size of this block including size of this class */
   SbrkMemory *next; /* next free block */
 
-  void print() {
-    if (this != NULL) {
-      printf("new = 0x%p\nsize = %d\nnext = 0x%p\n\n\n",
-	     newBrk,size,next);
-      next->print();
-    }
-  }
+  void print();
 
   /* add a block to the free list, ascending order */
-  SbrkMemory *add(SbrkMemory*elem) 
-  {
-    if (this == NULL) {
-      elem->next = NULL;
-      return elem;
-    } else {
-      if (elem->newBrk < newBrk) {
-	elem->next = this;
-	return elem;
-      } else {
-	next = next->add(elem);
-	return this;
-      }
-    }
-  }
-
+  SbrkMemory *add(SbrkMemory*elem);
 
   /* release all blocks, that are on top of our UNIX processes heap */
-
-  SbrkMemory *shrink() 
-  {
-    if (this == NULL) 
-      return NULL;
-
-    next = next->shrink();
-
-    if (newBrk == sbrk(0)) {
-#ifdef DEBUG_TRACEMEM
-      printf("*** Returning %d bytes to the operating system\n",size);
-#endif
-#if defined(NETBSD) || defined(OSF1_ALPHA)
-      int ret = (int)brk((char*)oldBrk);
-#else
-      int ret = brk(oldBrk);
-#endif
-      lastBrk = sbrk(0);
-      if (ret == -1) {
-	OZ_error("*** Something wrong when shrinking memory");
-      }
-      return NULL;
-    }
- 
-    return this;
-  }
-
+  SbrkMemory *shrink();
 
   /* find a free block with size sz and bind it to ptr,
      return new free list */
+  SbrkMemory *find(int sz, void *&ptr);
 
-  SbrkMemory *find(int sz, void *&ptr) 
-  {
-    if (this == NULL) {
-      return NULL;
-    }
-
-    if (sz <= size) {
-      ptr = (void *) (this +1);
-#ifdef DEBUG_TRACEMEM
-      printf("*** Reusing %d bytes from free list\n", size);
-#endif
-      return next;
-    } 
-
-    next = next->find(sz,ptr);
-    return this;
-  }
 };
 
+
+void SbrkMemory::print() {
+  if (this != NULL) {
+    printf("new = 0x%p\nsize = %d\nnext = 0x%p\n\n\n",
+	   newBrk,size,next);
+    next->print();
+  }
+}
+
+/* add a block to the free list, ascending order */
+SbrkMemory * SbrkMemory::add(SbrkMemory*elem) 
+{
+  if (this == NULL) {
+    elem->next = NULL;
+    return elem;
+  } else {
+    if (elem->newBrk < newBrk) {
+      elem->next = this;
+      return elem;
+    } else {
+      next = next->add(elem);
+      return this;
+    }
+  }
+}
+
+
+/* release all blocks, that are on top of our UNIX processes heap */
+
+SbrkMemory * SbrkMemory::shrink() 
+{
+  if (this == NULL) 
+    return NULL;
+  
+  next = next->shrink();
+  
+  if (newBrk == sbrk(0)) {
+#ifdef DEBUG_TRACEMEM
+    printf("*** Returning %d bytes to the operating system\n",size);
+#endif
+#if defined(NETBSD) || defined(OSF1_ALPHA)
+    int ret = (int)brk((char*)oldBrk);
+#else
+    int ret = brk(oldBrk);
+#endif
+    lastBrk = sbrk(0);
+    if (ret == -1) {
+      OZ_error("*** Something wrong when shrinking memory");
+    }
+    return NULL;
+  }
+  
+  return this;
+}
+
+
+/* find a free block with size sz and bind it to ptr,
+   return new free list */
+
+SbrkMemory * SbrkMemory::find(int sz, void *&ptr) 
+{
+  if (this == NULL) {
+    return NULL;
+  }
+  
+  if (sz <= size) {
+    ptr = (void *) (this +1);
+#ifdef DEBUG_TRACEMEM
+    printf("*** Reusing %d bytes from free list\n", size);
+#endif
+    return next;
+  } 
+  
+  next = next->find(sz,ptr);
+  return this;
+}
 
 SbrkMemory *SbrkMemory::freeList = NULL;
 

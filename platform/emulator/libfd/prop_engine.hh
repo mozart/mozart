@@ -235,12 +235,12 @@ public:
   PEL_PropFnctTable(void) {}
   //
   int add(PEL_ParamTable &pt, PEL_PropQueue &pq, 
-	  pf_fnct_t fnct, int x, int y) {
-    return add(pt, pq, fnct, x, y, -1);
-  }
-  int add(PEL_ParamTable &pt, PEL_PropQueue &pq, 
 	  pf_fnct_t fnct, int x, int y, int z) {
     return add(pt, pq, fnct, x, y, z, -1);
+  }
+  int add(PEL_ParamTable &pt, PEL_PropQueue &pq, 
+	  pf_fnct_t fnct, int x, int y) {
+    return add(pt, pq, fnct, x, y, -1);
   }
 };
 
