@@ -99,16 +99,6 @@ AC_SUBST(SRCS)
 AC_SUBST(WINDLLDIR)
 AC_SUBST(INSTALLWINDLLS)
 
-AC_MSG_CHECKING(for S.u.S.E. Linux)
-if test -f "/sbin/SuSEconfig"
-then
-  OZSUSE=yes
-else
-  OZSUSE=no
-fi
-AC_MSG_RESULT($OZSUSE)
-
-
 dnl *****************************************************************
 dnl Try to link system libraries statically
 dnl *****************************************************************
@@ -308,14 +298,6 @@ AC_ARG_WITH(tk_lib_tcl,
 if test -n "${with_tk_lib_tcl}"
 then
     oz_tk_lib_tcl_dir=$with_tk_lib_tcl
-fi
-
-# S.u.S.E. puts tk.tcl in a strange place
-if test "${OZSUSE}" = "yes"
-then
-    : ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib:-/usr/X11R6/lib}/tk8.0}
-else
-    : ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk8.0}
 fi
 
 if test "$oz_coolness" != yes && test ! -f "$oz_tk_lib_tcl_dir/tk.tcl"
