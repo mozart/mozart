@@ -51,11 +51,18 @@ public:
   {
     taskStack.pushDebug(d);
   }
+  void pushExceptionHandler(Chunk *pred)
+  {
+    taskStack.pushExceptionHandler(pred);
+  }
   void setBoard(Board *bb) {
     board=bb;
   }
   Bool discardLocalTasks() {
     return taskStack.discardLocalTasks();
+  }
+  Chunk *findExceptionHandler() {
+    return taskStack.findExceptionHandler();
   }
   void setSuspended() { flags |= T_Suspended; }
   void unsetSuspended() { flags &= ~T_Suspended; }

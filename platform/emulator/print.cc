@@ -1402,6 +1402,14 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
         break;
       }
 
+    case C_EXCEPT_HANDLER:
+      {
+        message("\tException handler: ");
+        Chunk *pred = (Chunk*) pop();
+        pred->print();
+        break;
+      }
+
     case C_DEBUG_CONT:
       {
         OzDebug *deb = (OzDebug*) pop();

@@ -33,6 +33,7 @@ enum ContFlag {
   C_COMP_MODE  = 6,  // switch to seq/par mode
   C_SOLVE      = 7,  // the SOLVE combinator
   C_LOCAL      = 8,  // a local computation space
+  C_EXCEPT_HANDLER = 9
 };
 
 
@@ -129,6 +130,13 @@ public:
     push(ToPointer(C_CALL_CONT), NO);
   }
 
+  void pushExceptionHandler(Chunk *pred)
+  {
+    ensureFree(2);
+    push(pred, NO);
+    push(ToPointer(C_EXCEPT_HANDLER), NO);
+  }
+
   void pushNervous() { push(ToPointer(C_NERVOUS)); }
   void pushSolve()   { push(ToPointer(C_SOLVE)); }
   void pushLocal()   { push(ToPointer(C_LOCAL)); }
@@ -189,6 +197,7 @@ public:
   int getSeqSize();
   void copySeq(TaskStack *newStack,int size);
   Bool discardLocalTasks();
+  Chunk *findExceptionHandler();
 
 private:
 
@@ -206,5 +215,8 @@ private:
     }
   }
 };
+
+int frameSize(ContFlag);
+
 
 #endif

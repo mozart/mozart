@@ -1728,6 +1728,10 @@ void TaskStack::gcRecurse()
       gcQueue(((OzDebug *) oldstack->pop())->gcOzDebug());
       break;
 
+    case C_EXCEPT_HANDLER:
+      gcQueue(((Chunk *) oldstack->pop())->gcConstTerm());
+      break;
+
     case C_CALL_CONT:
       gcQueue(((SRecord *) oldstack->pop())->gcSRecord());
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
