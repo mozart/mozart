@@ -12,6 +12,7 @@
 #pragma implementation "builtins.hh"
 #endif
 
+#include "assembler.hh"
 #include "builtins.hh"
 
 // BuiltinTab
@@ -110,6 +111,8 @@ BuiltinTabEntry *BIinit()
   BIinitCore();
   BIinitSpecial();
   BIinitSystem();
+
+  BIinitAssembler();
 
   BIinitFD();
 

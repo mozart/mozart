@@ -292,6 +292,8 @@ public:
   int getId() {
     return ((int) fun)^((int) suspHandler)^((int) gRegs);
   }
+
+  BuiltinTabEntry *getBITabEntry() {return fun;}
 };
 
 
