@@ -1145,6 +1145,17 @@ Bool withinBorrowTable(int i){
   if(i<borrowTable->getSize()) return OK;
   return NO;}
 
+void OwnerTable::gcOwnerTableRootsTest()
+{
+for(int i=0;i<size;i++) {
+    OwnerEntry* o = getOwner(i); 
+    if(!o->isFree()) {
+      if (o->isVar()){
+	GET_VAR(o ,Manager);
+      }
+    }
+   }
+}
 void OwnerTable::gcOwnerTableRoots()
 {
   PD((GC,"owner gc"));
@@ -1165,6 +1176,16 @@ void OwnerTable::gcOwnerTableFinal()
     OwnerEntry* o = getOwner(i);
     if(!o->isFree()) {
       o->removeGCMark();
+      if (o->isVar()){
+	TaggedRef *ptr = o->getPtr();
+	DEREFPTR(v,ptr,_tag);
+	Assert(oz_isManagerVar(v));
+	/*
+	printf("Fixing pntr i:%d old:%x new:%x var:%d\n",
+	       i,o->getPtr(),ptr,oz_isManagerVar(v));
+	*/
+	o->mkVar(makeTaggedRef(ptr),o->getFlags());
+      }
     }
   }
   compactify();
