@@ -468,7 +468,7 @@ public:
   void gc(int msgLevel);  // ###
   void doGC();
   // coping of trees (and terms);
-  Board* copyTree(Board* node, Bool *isGround);
+  Board* copyTree(Board* node);
 
   // unset the ThreadSwitch flag and reset the counter
   // only needed in emulate.cc

@@ -47,7 +47,6 @@ enum ActorFlags {
   Ac_Solve      = 0x04,
   Ac_Committed  = 0x08,
   Ac_Choice     = 0x10, // in disjunction with Ac_Wait
-  Ac_Ground     = 0x20  // in disjunction with Ac_Solve
 };
 
 class Actor {
@@ -80,12 +79,8 @@ public:
   Bool isAskWait()   { return flags & (Ac_Ask|Ac_Wait); }
   Bool isSolve()     { return flags & Ac_Solve;         }
   Bool isChoice()    { return flags & Ac_Choice;        }
-  Bool isGround()    { return flags & Ac_Ground;        }
 
   void setCommittedActor() { flags |= Ac_Committed; }
-  void setGround()    { flags |= Ac_Ground;    }
-
-  void unsetGround()  { flags &= ~Ac_Ground;   }
 
   void discardActor() { setCommittedActor(); }
 
