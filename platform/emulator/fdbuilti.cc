@@ -298,7 +298,10 @@ OZ_Bool checkDomDescr(TaggedRef descr,
                       OZ_CFun cfun, OZ_Term * args, int arity,
                       int expect)
 {
-  DEREF(descr, descr_ptr, descr_tag);
+  TaggedRef * descr_ptr;
+  TypeOfTerm descr_tag;
+
+  deref(descr, descr_ptr, descr_tag);
 
   if (isNotCVar(descr_tag)) {
     addNonResSuspForDet(descr, descr_ptr, descr_tag,
@@ -1039,4 +1042,5 @@ void BIinitFD(void)
   BIadd("fdNotInKillB", 3, BIfdNotInKillB);
   BIadd("fdNotInKillB_body", 3, BIfdNotInKillB_body);
   BIadd("fdCopyDomain", 2, BIfdCopyDomain);
+  BIadd("fdDivDomCons", 3, BIfdDivDomCons);
 }
