@@ -877,11 +877,11 @@ void engine(Bool init)
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
-  register TaggedRef * const X      = am.xRegs;
-  register RefsArray Y         Reg2 = NULL;
-  register TaggedRef *sPointer Reg3 = NULL;
-  register AM * const e        Reg4 = &am;
-  register RefsArray G         Reg5 = NULL;
+  register TaggedRef * const X Reg2 = am.xRegs;
+  register RefsArray Y         Reg3 = NULL;
+  register TaggedRef *sPointer Reg4 = NULL;
+  register AM * const e        Reg5 = &am;
+  register RefsArray G         Reg6 = NULL;
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
   AWActor *CAA                 = NULL;
