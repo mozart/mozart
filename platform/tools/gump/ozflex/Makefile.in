@@ -33,6 +33,8 @@ YACC = @YACC@
 
 CC = @CC@
 
+STRIP = strip
+
 # You normally do not need to modify anything below this point.
 # ------------------------------------------------------------
 
@@ -63,7 +65,7 @@ PERF_REPORT = -p
 
 
 all: $(FLEX)
-	strip $(FLEX)
+	$(STRIP) $(FLEX)
 include $(SRCTOP)/share/Makefile.boot
 bootstrap: cboot-all
 
