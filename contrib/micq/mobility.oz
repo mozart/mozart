@@ -36,12 +36,12 @@ define
       feat this
    end
 
-   DBGS DBGP={NewPort DBGS}
-   thread
-      {ForAll DBGS proc{$ X}
-		      {System.show X}
-		   end}
-   end
+    DBGS DBGP={NewPort DBGS}
+    thread
+       {ForAll DBGS proc{$ X}
+ 		      {System.show X}
+ 		   end}
+    end
    
    %% Creates a new instance of Class and encapsulates it in a thread (=stationary)
    fun{NewStationaryObject ?Class ?Init}
@@ -58,26 +58,26 @@ define
 	    end
 	 in
 
-	    
+ 	    
 	    %% Failure handling
-	    {Send DBGP installWatcher}
+%	    {Send DBGP tryInstallWatcher(Watcher)}
 %	    {Fault.installWatcher P [permFail] Watcher _}
-
+%	    {Send DBGP sucInstallWatcher(Watcher)}
 
 	    %% Try to send to remote object
 	    try
-	       {Send DBGP send}
+%	       {Send DBGP send}
 	       {Send P M#Sync}
 	    catch _ then
 	       skip
 	    end
 
 	    %% Wait for outcome
-	    {Send DBGP wait}
+%	    {Send DBGP wait}
 	    {Wait Sync}
 	    
 	    %% Unistall watcher
-	    {Send DBGP deInstallWatcher}
+%	    {Send DBGP deInstallWatcher}
 %	    {Fault.deInstallWatcher P Watcher _}
 
 	    %% Ok or not?
@@ -86,7 +86,7 @@ define
       end
    
       proc{ServeObj}
-	 {ForAll S proc{$ X} thread
+	 {ForAll S proc{$ X} thread 
 				try
 				   {Obj X.1} %% Invoke method on object
 				   X.2=unit  %% Signal back that everything went ok
