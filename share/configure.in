@@ -114,7 +114,7 @@ dnl *****************************************************************
 AC_OUTPUT(lib/Makefile lib/support/DefaultURL.oz \
     tools/Makefile tools/ProductionTemplates.oz \
     demo/Makefile test/Makefile \
-    examples/Makefile elisp/Makefile elisp/oz.el \
+    examples/Makefile elisp/Makefile elisp/mozart.el \
     bin/Makefile bin/ozc.bat \
     Makefile)
 
