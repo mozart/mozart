@@ -3,6 +3,9 @@
  *    Michael Mehl (mehl@dfki.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
+ *  Contributors:
+ *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+ *
  *  Copyright:
  *    Michael Mehl, 1997
  *    Christian Schulte, 1997
@@ -1686,16 +1689,22 @@ OZ_BI_define(unix_pipe,2,2) {
 
   if (status != PROCEED)
     return status;
-  
 
 #ifdef WINDOWS
-  //--** missing overflow check!
-  char cmdline[10000];
-  cmdline[0] = '\0';
+  int cmdlen = 0;
+  for (i = 0; i < argno; i++)
+    cmdlen += strlen(argv[i]) + 3;
+  DECL_DYN_ARRAY(char, cmdline, cmdlen);
+  char *p = cmdline;
   for (i = 0; i < argno; i++) {
-    strcat(cmdline,"\"");
-    strcat(cmdline,argv[i]);
-    strcat(cmdline,"\" ");
+    *p++ = '\"';
+    *p = '\0';
+    strcat(p,argv[i]);
+    p += strlen(argv[i]);
+    *p++ = '\"';
+    if (i != argno - 1)
+      *p++ = ' ';
+    *p = '\0';
   }
 
   int sv[2];
@@ -1854,13 +1863,20 @@ OZ_BI_define(unix_exec,3,1){
     return status;
 
 #ifdef WINDOWS
-  //--** missing overflow check!
-  char cmdline[10000];
-  cmdline[0] = '\0';
+  int cmdlen = 0;
+  for (i = 0; i < argno; i++)
+    cmdlen += strlen(argv[i]) + 3;
+  DECL_DYN_ARRAY(char, cmdline, cmdlen);
+  char *p = cmdline;
   for (i = 0; i < argno; i++) {
-    strcat(cmdline, "\"");
-    strcat(cmdline,argv[i]);
-    strcat(cmdline, "\" ");
+    *p++ = '\"';
+    *p = '\0';
+    strcat(p,argv[i]);
+    p += strlen(argv[i]);
+    *p++ = '\"';
+    if (i != argno - 1)
+      *p++ = ' ';
+    *p = '\0';
   }
 
   STARTUPINFO si;
