@@ -311,7 +311,7 @@ public:
   }
 
   void setExtThread () { 
-    Assert (isSuspended () && !(isDeadThread ()));
+    Assert (!(isDeadThread ()));
     state.flags = state.flags | T_ext;
   }
   Bool isExtThread () { 
