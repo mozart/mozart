@@ -87,6 +87,8 @@
 //-----------------------------------------------------------------------------
 // OZ_FiniteDomain 
 
+class OZ_FSetValue;
+
 enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singl};
 
 class OZ_FiniteDomain {
@@ -100,6 +102,7 @@ public:
   OZ_FiniteDomain(OZ_FDState state);
   OZ_FiniteDomain(const OZ_FiniteDomain &);
   OZ_FiniteDomain(OZ_Term);
+  OZ_FiniteDomain(const OZ_FSetValue &);
 
   int initRange(int, int);
   int initSingleton(int);
@@ -154,6 +157,7 @@ enum OZ_FSetState {fs_empty, fs_full};
 
 const int fset_high = 2;
 //const int fset_high = 220;
+const int fsethigh32 = 32*fset_high;
 
 class OZ_FSetConstraint;
 
@@ -167,9 +171,10 @@ public:
   OZ_FSetValue(const OZ_FSetConstraint&);
   OZ_FSetValue(const OZ_Term);
   OZ_FSetValue(const OZ_FSetState);
+  OZ_FSetValue(int, int);
 
   int getCard(void) const { return _card; }
-  int getKnownNotIn(void) const { return 32 * fset_high - _card; }
+  int getKnownNotIn(void) const { return fsethigh32 - _card; }
   OZ_Boolean isIn(int) const;
   OZ_Boolean isNotIn(int) const;
   int getMinElem(void) const;
@@ -220,7 +225,7 @@ public:
   int getKnownIn(void) const { return _known_in; }
   int getKnownNotIn(void) const { return _known_not_in; }
   int getUnknown(void) const { 
-    return 32 * fset_high - _known_in - _known_not_in; 
+    return fsethigh32 - _known_in - _known_not_in; 
   }
 
   OZ_FSetValue getGlbSet(void) const;
@@ -233,6 +238,25 @@ public:
   int getNotInCard(void) const;
   int getUnknownCard(void) const;
 
+  int getGlbMinElem(void) const;
+  int getLubMinElem(void) const;
+  int getNotInMinElem(void) const;
+  int getUnknownMinElem(void) const;
+
+  int getGlbMaxElem(void) const;
+  int getLubMaxElem(void) const;
+  int getNotInMaxElem(void) const;
+  int getUnknownMaxElem(void) const;
+
+  int getGlbNextSmallerElem(int) const;
+  int getLubNextSmallerElem(int) const;
+  int getNotInNextSmallerElem(int) const;
+  int getUnknownNextSmallerElem(int) const;
+
+  int getGlbNextLargerElem(int) const;
+  int getLubNextLargerElem(int) const;
+  int getNotInNextLargerElem(int) const;
+  int getUnknownNextLargerElem(int) const;
 
   int getCardSize(void) const { return _card_max - _card_min + 1; }
   int getCardMin(void) const { return _card_min; } 
