@@ -1268,16 +1268,7 @@ PRINTLONG(Builtin)
   CHECKDEPTHLONG;
   print(stream,depth,offset);
   stream << endl;
-  if (gRegs && getRefsArraySize(gRegs) > 0) {
-    stream << indent(offset) << "gRegs:" << endl;
-    for (int i=0; i < getRefsArraySize(gRegs); i++) {
-      stream << indent(offset+2) << "g[" << i << "] = ";
-      tagged2Stream(gRegs[i],stream,DEC(depth),offset+2);
-      stream << endl;
-    }
-  } else {
-    stream << indent(offset) << "gRegs: -" << endl;
-  }
+  stream << indent(offset) << "gRegs: -" << endl;
 }
 
 

@@ -1401,12 +1401,10 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   BuiltinTabEntry *fun;
   TaggedRef suspHandler; // this one is called, when it must suspend
-protected:
-  RefsArray gRegs;       // context;
 public:
-  Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs = NULL)
-    : suspHandler(handler), fun(fn), ConstTerm(Co_Builtin),
-    gRegs (gregs) {}
+  Builtin(BuiltinTabEntry *fn, TaggedRef handler)
+    : suspHandler(handler), fun(fn), ConstTerm(Co_Builtin)
+    {}
 
   OZPRINT;
   OZPRINTLONG;
