@@ -7,9 +7,9 @@
 <Chapter id="chapter.control">
   <Title/Control/
   <P>
-    This chapter contains control procedures which allow to block threads,
-    and provide functionality dealing with loops, real-time programming and
-    threads.
+    This chapter contains control procedures which allow to block, suspend
+    or terminate threads, and provide functionality dealing with loops,
+    real-time programming and threads.
   <Section>
     <Title/General/
     <P>
@@ -35,10 +35,12 @@
         <Synopsis>
           <<{Value.byNeed ?+{P} ?_{X}}>>
         <Item>
-          creates a <Def/future/&nbsp;<<X>>.  When <<X>> is <Span
-          class=index/requested/, the unary procedure <<P>> is applied
-          to a fresh variable&nbsp;<<Y>>; when <<P>> returns, <<X>>&nbsp;is
-          bound to&nbsp;<<Y>>.
+          creates a <Def/future/&nbsp;<<X>>, &ie;, a variable that cannot
+          be assigned externally.  When <<X>> is <Span class=index/requested/
+          (&ie;, some thread blocks on&nbsp;<<X>>), the unary
+          procedure&nbsp;<<P>> is applied to a fresh variable&nbsp;<<Y>>
+          in a new thread.  When the application of&nbsp;<<P>> is fully
+          reduced, <<X>>&nbsp;is bound to&nbsp;<<Y>>.
       </List>
 
   <Section>
@@ -145,7 +147,7 @@
           <<{Time.time ??{T}}>>
         <Item>
           binds <<T>> to the number of seconds elapsed since January, 1st of
-          the current year (uses <<Unix.localTime>>).
+          the current year.
       </List>
     <SubSection class=unnumbered>
       <Title/The Repeater Class/
@@ -301,7 +303,7 @@ end>>>
   <Section>
     <Title/Threads/
     <P>
-      The module <<Thread>> supports first class threads.
+      The module <<Thread>> provides operations on first class threads.
     <P>
       Threads may be in one of three states, namely <Def/runnable/,
       <Def/blocked/, or <Def/terminated/.  Orthogonally, a thread may be
@@ -368,16 +370,15 @@ end>>>
         <Synopsis>
           <<{Thread.injectException ?+{Thread} ?+{X}}>>
         <Item>
-          raises <<X>> as exception on thread <<Thread>>.  If <<Thread>>
-          is terminated, the current thread gets an error exception of
-          the form <<kernel(deadThread Thread)>>.
+          raises <<X>> as exception on <<Thread>>.  If <<Thread>> is
+          terminated, an error exception is raised in the current thread.
 
         <Entry><<terminate>>
           <Index class=tails/<<Thread>><And><<terminate>>/
         <Synopsis>
           <<{Thread.terminate ?+{Thread}}>>
         <Item>
-          terminates <<Thread>> by deleting all its tasks.
+          raises an exception <<kernel(terminate ...)>> on <<Thread>>.
 
         <Entry><<getPriority>>
           <Index class=tails/<<Thread>><And><<getPriority>>/
@@ -393,7 +394,8 @@ end>>>
           <<{Thread.setPriority ?+{Thread} ?+{A}}>>
         <Item>
           sets priority of thread <<Thread>> to the priority described by
-          atom&nbsp;<<A>>.  <<A>> may be <<low>>, <<medium>>, or <<high>>.
+          atom&nbsp;<<A>>.  <<A>> must be one of <<low>>, <<medium>>, or
+          <<high>>.
 
         <Entry><<getThisPriority>>
           <Index class=tails/<<Thread>><And><<getThisPriority>>/
@@ -409,7 +411,8 @@ end>>>
           <<{Thread.setThisPriority ?+{A}}>>
         <Item>
           sets priority of the current thread to the priority described by
-          atom&nbsp;<<A>>.  <<A>> may be <<low>>, <<medium>>, or <<high>>.
+          atom&nbsp;<<A>>.  <<A>> must be one of <<low>>, <<medium>>, or
+          <<high>>.
 
         <Entry><<preempt>>
           <Index class=tails/<<Thread>><And><<preempt>>/

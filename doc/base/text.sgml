@@ -7,17 +7,14 @@
 <Chapter id="chapter.text">
   <Title/Text/
   <P>
-    This chapter describes modules for handling data that encode textual
+    This chapter describes modules for handling data encoding textual
     information.  <Index/characters/<Def class=noindex/Characters/ are
     encoded as integers.  <Index/strings/<Def class=noindex/Strings/ are
-    lists of characters.  Strings are used as data structure for textual
-    input and for subsequent transformation.  A string can also be used to
-    output textual information.
+    lists of characters.  <Index/virtual strings/<Def class=noindex/Virtual
+    Strings/ are atoms, strings, byte strings, integers, and floats closed
+    under virtual concatenation encoded by tuples with label&nbsp;<<'#'>>.
   <P>
-    <Index/virtual strings/<Def class=noindex/Virtual Strings/ are atoms,
-    strings, byte strings, integers, and floats closed under virtual
-    concatenation encoded by tuples with label&nbsp;<<'#'>>.  Virtual
-    strings are used to output textual information.  For example,
+    For example,
     <<<"Contains "#also#" numbers: "#(1#' '#2.045)>>>
     is a virtual string representing the string
     <<<"Contains also numbers: 1 2.045">>>
@@ -34,8 +31,8 @@
     <P>
       The procedures described herein can be used to compute with strings
       by using the generic procedures of the list module (see <Ptr
-      to="section.records.lists">.  For example,
-      <<<{Filter "r E m O\nv E" Char.isAlpha}>>>
+      to="section.records.lists">).  For example,
+      <<<{Filter "r E!m O\nv7E" Char.isAlpha}>>>
       keeps only the letters of the given string and returns the
       string <<"rEmOvE">>.
       <List>
@@ -50,30 +47,30 @@
         <Entry><<isLower>>
           <Index class=tails/<<Char>><And><<isLower>>/
         <Synopsis>
-          <<{Char.isLower ?+{I} ??{B}}>>
+          <<{Char.isLower ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes a lower-case letter.
+          tests whether <<Char>> encodes a lower-case letter.
 
         <Entry><<isUpper>>
           <Index class=tails/<<Char>><And><<isUpper>>/
         <Synopsis>
-          <<{Char.isUpper ?+{I} ??{B}}>>
+          <<{Char.isUpper ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes an upper-case letter.
+          tests whether <<Char>> encodes an upper-case letter.
 
         <Entry><<isDigit>>
           <Index class=tails/<<Char>><And><<isDigit>>/
         <Synopsis>
-          <<{Char.isDigit ?+{I} ??{B}}>>
+          <<{Char.isDigit ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes a digit.
+          tests whether <<Char>> encodes a digit.
 
         <Entry><<isSpace>>
           <Index class=tails/<<Char>><And><<isSpace>>/
         <Synopsis>
-          <<{Char.isSpace ?+{I} ??{B}}>>
+          <<{Char.isSpace ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes a white space character, &ie;, either
+          tests whether <<Char>> encodes a white space character, &ie;, either
           a space, a form feed (<<&\f>>), a newline (<<&\n>>), a carriage
           return (<<&\r>>), a tab (<<&\t>>), a vertical tab (<<&\v>>) or
           a non-breaking space (<<&\240>>).
@@ -81,84 +78,85 @@
         <Entry><<isPunct>>
           <Index class=tails/<<Char>><And><<isPunct>>/
         <Synopsis>
-          <<{Char.isPunct ?+{I} ??{B}}>>
+          <<{Char.isPunct ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes a punctuation character, &ie;, a
+          tests whether <<Char>> encodes a punctuation character, &ie;, a
           visible character, which is not a space, a digit, or a letter.
 
         <Entry><<isCntrl>>
           <Index class=tails/<<Char>><And><<isCntrl>>/
         <Synopsis>
-          <<{Char.isCntrl ?+{I} ??{B}}>>
+          <<{Char.isCntrl ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes a control character.
+          tests whether <<Char>> encodes a control character.
 
         <Entry><<isAlpha>>
           <Index class=tails/<<Char>><And><<isAlpha>>/
         <Synopsis>
-          <<{Char.isAlpha ?+{I} ??{B}}>>
+          <<{Char.isAlpha ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes a letter.
+          tests whether <<Char>> encodes a letter.
 
         <Entry><<isAlNum>>
           <Index class=tails/<<Char>><And><<isAlNum>>/
         <Synopsis>
-          <<{Char.isAlNum ?+{I} ??{B}}>>
+          <<{Char.isAlNum ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes a letter or a digit.
+          tests whether <<Char>> encodes a letter or a digit.
 
         <Entry><<isGraph>>
           <Index class=tails/<<Char>><And><<isGraph>>/
         <Synopsis>
-          <<{Char.isGraph ?+{I} ??{B}}>>
+          <<{Char.isGraph ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> encodes a visible character.
+          tests whether <<Char>> encodes a visible character.
 
         <Entry><<isPrint>>
           <Index class=tails/<<Char>><And><<isPrint>>/
         <Synopsis>
-          <<{Char.isPrint ?+{I} ??{B}}>>
+          <<{Char.isPrint ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> is a visible character or either the space or
-          non-breaking space character.
+          tests whether <<Char>> is a visible character or either the space
+          or non-breaking space character.
 
         <Entry><<isXDigit>>
           <Index class=tails/<<Char>><And><<isXDigit>>/
         <Synopsis>
-          <<{Char.isXDigit ?+{I} ??{B}}>>
+          <<{Char.isXDigit ?+{Char} ??{B}}>>
         <Item>
-          tests whether <<I>> is a hexadecimal digit.
+          tests whether <<Char>> is a hexadecimal digit.
 
         <Entry><<type>>
           <Index class=tails/<<Char>><And><<type>>/
         <Synopsis>
-          <<{Char.type ?+{I} ??{A}}>>
+          <<{Char.type ?+{Char} ??{A}}>>
         <Item>
-          maps <<I>> to its simple type&nbsp;<<A>>, &ie;, one of to the atoms
-          <<lower>>, <<upper>>, <<digit>>, <<space>>, <<punct>>, or <<other>>.
+          maps <<Char>> to its simple type&nbsp;<<A>>, &ie;, one of the
+          atoms <<lower>>, <<upper>>, <<digit>>, <<space>>, <<punct>>, or
+          <<other>>.
 
         <Entry><<toLower>>
           <Index class=tails/<<Char>><And><<toLower>>/
         <Synopsis>
-          <<{Char.toLower ?+{I1} ??{I2}}>>
+          <<{Char.toLower ?+{Char1} ??{Char2}}>>
         <Item>
-          returns the corresponding lower-case letter if <<I1>> is an
-          upper-case letter, otherwise <<I1>> itself.
+          returns the corresponding lower-case letter if <<Char1>> is an
+          upper-case letter, otherwise <<Char1>> itself.
 
         <Entry><<toUpper>>
           <Index class=tails/<<Char>><And><<toUpper>>/
         <Synopsis>
-          <<{Char.toUpper ?+{I1} ??{I2}}>>
+          <<{Char.toUpper ?+{Char1} ??{Char2}}>>
         <Item>
-          returns the corresponding upper-case letter if <<I1>> is a
-          lower-case letter, otherwise <<I1>> itself.
+          returns the corresponding upper-case letter if <<Char1>> is a
+          lower-case letter, otherwise <<Char1>> itself.
 
         <Entry><<toAtom>>
         <Synopsis>
-          <<{Char.toAtom ?+{I} ??{A}}>>
+          <<{Char.toAtom ?+{Char} ??{A}}>>
         <Item>
-          maps <<I>> to the corresponding atom&nbsp;<<A>>.  If <<I>> is zero,
-          <<A>>&nbsp;will be the empty atom&nbsp;<<''>>.
+          maps <<Char>> to the corresponding atom&nbsp;<<A>>.  If <<Char>>
+          is zero, <<A>>&nbsp;will be the empty atom&nbsp;<<''>>.
       </List>
 
   <Section>
@@ -166,7 +164,7 @@
     <P>
       The module <Span class=index/<<String>>/ contains procedures operating
       on strings.  Strings are lists whose elements are characters (see
-      <Ptr to="section.text.characters">.
+      <Ptr to="section.text.characters">).
       <List>
         <Entry><Span class=index/<<IsString>>/
           <Index class=tails/<<String>><And><<is>>/
@@ -180,8 +178,9 @@
         <Synopsis>
           <<{String.toAtom ?+{S} ??{A}}>>
         <Item>
-          converts a string&nbsp;<<S>> to an atom&nbsp;<<A>>, according to
-          &Oz; concrete syntax.  See also <<Atom.toString>>.
+          converts a string&nbsp;<<S>> to an atom&nbsp;<<A>>.  <<S>>&nbsp;must
+          not contain NUL characters.  This is the inverse of <<Atom.toString>>
+          (which see).
 
         <Entry><<isAtom>>
           <Index class=tails/<<String>><And><<isAtom>>/
@@ -223,14 +222,14 @@
         <Entry><<token>>
           <Index class=tails/<<String>><And><<token>>/
         <Synopsis>
-          <<{String.token ?+{S} ?+{I} ??{S1} ??{S2}}>>
+          <<{String.token ?+{S1} ?_{X} ??{S2} ??{S3}}>>
         <Item>
-          splits the string&nbsp;<<S>> into two substrings <<S1>>
-          and&nbsp;<<S2>>.
-        <P>
-          <<S1>> contains all characters before the first occurence of
-          the character&nbsp;<<I>>, <<S2>> all remaining characters
-          with&nbsp;<<I>> excluded.
+          splits the string&nbsp;<<S1>> into two substrings <<S2>>
+          and&nbsp;<<S3>>.  <<S2>> will contain all characters before the
+          first occurence of&nbsp;<<X>>, <<S3>> all remaining characters
+          with&nbsp;<<X>> excluded.  If <<X>> does not occur in&nbsp;<<S1>>,
+          then <<S2>> will be equal to&nbsp;<<S1>> and <<S3>> will be the
+          empty string.
         <P>
           For example,
           <<<{String.token "a:b:c" &: S1 S2}>>>
@@ -239,10 +238,12 @@
         <Entry><<tokens>>
           <Index class=tails/<<String>><And><<tokens>>/
         <Synopsis>
-          <<{String.tokens ?+{S} ?+{I} ??{Ss}}>>
+          <<{String.tokens ?+{S} ?_{X} ??{Ss}}>>
         <Item>
-          splits the string&nbsp;<<S>> into substrings&nbsp;<<Ss>> deleimited
-          by&nbsp;<<I>> in&nbsp;<<S>>.
+          splits the string&nbsp;<<S>> into substrings&nbsp;<<Ss>> delimited
+          by occurrences of&nbsp;<<X>> in&nbsp;<<S>>.  Note that the final
+          empty string will be omitted if the last element of&nbsp;<<S>> is
+          an&nbsp;<<X>>.
         <P>
           For example,
           <<<{String.tokens "a:bb:cc:d:" &:}>>>
@@ -276,12 +277,13 @@
         <Item>
           converts a virtual string&nbsp;<<V>> to a string&nbsp;<<S>>.
         <P>
-          The transformation is straightforward:  Atoms, integers, floats and
-          byte strings are transformed into strings using <<Atom.toString>>,
-          <<Int.toString>>, <<Float.toString>>, and <<ByteString.toString>>
-          respectively, where in numbers <Samp/-/ is used instead of <Samp/~/.
-          A tuple with label&nbsp;<<'#'>> is transformed by concatenation of
-          the transformed subtrees.  Note that both <<nil>> and <<'#'>> denote
+          The transformation is straightforward:  Atoms (except <<nil>>
+          and&nbsp;<<'#'>>), integers, floats and byte strings are
+          transformed into strings using <<Atom.toString>>, <<Int.toString>>,
+          <<Float.toString>>, and <<ByteString.toString>> respectively, where
+          in numbers <Samp/-/ is used instead of <Samp/~/.  A tuple with
+          label&nbsp;<<'#'>> is transformed by concatenation of the
+          transformed subtrees.  Note that both <<nil>> and <<'#'>> denote
           the empty string.
         <P>
           The following relation holds for all virtual strings <<V1>>
@@ -326,10 +328,10 @@ end>>>
         <Entry><<changeSign>>
           <Index class=tails/<<VirtualString>><And><<changeSign>>/
         <Synopsis>
-          <<{VirtualString.changeSign ?+{V1} V2 ??{V3}}>>
+          <<{VirtualString.changeSign ?+{V1} ?_{X} ??{V2}}>>
         <Item>
           returns a virtual string derived from&nbsp;<<V1>> where all
           occurrences of the unary minus sign for integers and floats
-          are replaced by the virtual string&nbsp;<<V2>>.
+          are replaced by&nbsp;<<X>>.
       </List>
 </Chapter>

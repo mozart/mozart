@@ -15,50 +15,50 @@
         <Entry><Span class=index/<<.>>/
           <Index/<<Value>><And><<'.'>>/
         <Synopsis>
-          <<{Value.'.' ?+{RC} ?+{LI} ??{X}}>>
+          <<{Value.'.' ?+{RC} ?+{LI} ?_{X}}>>
         <Item>
           returns the field&nbsp;<<X>> of&nbsp;<<RC>> at feature&nbsp;<<LI>>.
 
         <Entry><Span class=index/<<HasFeature>>/
           <Index/<<Value>><And><<hasFeature>>/
         <Synopsis>
-          <<{HasFeature ?+{RC} ?+{LI} ??{B}}>>
+          <<{Value.hasFeature ?+{RC} ?+{LI} ??{B}}>>
         <Item>
           tests whether <<RC>> has feature&nbsp;<<LI>>.
 
         <Entry><Span class=index/<<CondSelect>>/
           <Index/<<Value>><And><<condSelect>>/
         <Synopsis>
-          <<{CondSelect ?+{RC} ?+{LI} ?_{X} ??{Y}}>>
+          <<{Value.condSelect ?+{RC} ?+{LI} ?_{X} ?_{Y}}>>
         <Item>
-          returns the field of&nbsp;<<RC>> at&nbsp;<<LI>>, if <<RC>> has
-          feature&nbsp;<<LI>>.  Otherwise, return&nbsp;<<X>>.
+          returns the field&nbsp;<<Y>> of&nbsp;<<RC>> at&nbsp;<<LI>>, if
+          <<RC>> has feature&nbsp;<<LI>>.  Otherwise, returns&nbsp;<<X>>.
 
         <Entry><Span class=index/<<IsChunk>>/
           <Index class=tails/<<Chunk>><And><<is>>/
         <Synopsis>
-          <<{IsChunk ?+{X} ??{B}}>>
+          <<{Chunk.is ?+{X} ??{B}}>>
         <Item>
           tests whether <<X>> is a chunk.
 
         <Entry><Span class=index/<<NewChunk>>/
           <Index class=tails/<<Chunk>><And><<new>>/
         <Synopsis>
-          <<{NewChunk ?+{R} ??{C}}>>
+          <<{Chunk.new ?+{R} ??{C}}>>
         <Item>
           returns a new chunk with the same features and fields as&nbsp;<<R>>.
 
         <Entry><Span class=index/<<ChunkSelectFeature>>/
           <Index class=tails/<<Chunk>><And><<selectFeature>>/
         <Synopsis>
-          <<{ChunkSelectFeature ?+{C} ?+{F} ??{X}}>>
+          <<{Chunk.selectFeature ?+{C} ?+{F} ?_{X}}>>
         <Item>
           returns the field&nbsp;<<X>> of&nbsp;<<C>> at feature&nbsp;<<F>>.
 
         <Entry><Span class=index/<<ChunkHasFeature>>/
           <Index class=tails/<<Chunk>><And><<hasFeature>>/
         <Synopsis>
-          <<{ChunkHasFeature ?+{C} ?+{F} ??{B}}>>
+          <<{Chunk.hasFeature ?+{C} ?+{F} ??{B}}>>
         <Item>
           tests whether <<C>> has feature&nbsp;<<F>>.
       </List>
@@ -73,14 +73,14 @@
         <Entry><Span class=index/<<IsArray>>/
           <Index class=tails/<<Array>><And><<is>>/
         <Synopsis>
-          <<{IsArray ?+{X} ??{B}}>>
+          <<{Array.is ?+{X} ??{B}}>>
         <Item>
           tests whether <<X>> is an array.
 
         <Entry><Span class=index/<<NewArray>>/
           <Index class=tails/<<Array>><And><<new>>/
         <Synopsis>
-          <<{NewArray ?+{LowI} ?+{HighI} ?_{InitX} ??{Array}}>>
+          <<{Array.new ?+{LowI} ?+{HighI} ?_{InitX} ??{Array}}>>
         <Item>
           returns a new array with key range from <<LowI>> to <<HighI>>
           including both.  All items are initialized to <<InitX>>.
@@ -88,14 +88,14 @@
         <Entry><Span class=index/<<Put>>/
           <Index/<<Array>><And><<put>>/
         <Synopsis>
-          <<{Put ?+{Array} ?+{I} ?_{X}}>>
+          <<{Array.put ?+{Array} ?+{I} ?_{X}}>>
         <Item>
           sets the item of <<Array>> under key&nbsp;<<I>> to&nbsp;<<X>>.
 
         <Entry><Span class=index/<<Get>>/
           <Index/<<Array>><And><<get>>/
         <Synopsis>
-          <<{Get ?+{Array} ?+{I} ??{X}}>>
+          <<{Array.get ?+{Array} ?+{I} ?_{X}}>>
         <Item>
           returns the item of <<Array>> under key&nbsp;<<I>>.
 
@@ -118,7 +118,7 @@
         <Synopsis>
           <<{Array.clone ?+{A1} ??{A2}}>>
         <Item>
-          returns a copy of&nbsp;<<A1>>.
+          returns a new array with the same bounds and contents as&nbsp;<<A1>>.
 
         <Entry><<toRecord>>
           <Index class=tails/<<Array>><And><<toRecord>>/
@@ -128,8 +128,6 @@
           returns a record with label&nbsp;L that contains as features
           the integers between <<{Array.low A}>> and <<{Array.high A}>> and
           with the corresponding fields.
-        <P>
-          This procedure is specially optimized for tuples.
       </List>
 
   <Section>
@@ -144,14 +142,14 @@
         <Entry><Span class=index/<<IsDictionary>>/
           <Index class=tails/<<Dictionary>><And><<is>>/
         <Synopsis>
-          <<{IsDictionary ?+{X} ??{B}}>>
+          <<{Dictionary.is ?+{X} ??{B}}>>
         <Item>
           tests whether <<X>> is a dictionary.
 
         <Entry><Span class=index/<<NewDictionary>>/
           <Index class=tails/<<Dictionary>><And><<new>>/
         <Synopsis>
-          <<{NewDictionary ??{Dictionary}}>>
+          <<{Dictionary.new ??{Dictionary}}>>
         <Item>
           returns a new empty dictionary.
 
@@ -165,24 +163,25 @@
         <Entry><<get>>
           <Index class=tails/<<Dictionary>><And><<get>>/
         <Synopsis>
-          <<{Dictionary.get ?+{Dictionary} ?+{LI} ??{X}}>>
+          <<{Dictionary.get ?+{Dictionary} ?+{LI} ?_{X}}>>
         <Item>
-          returns the item of <<Dictionary>> under key&nbsp;<<LI>>.
+          returns the item&nbsp;<<X>> of <<Dictionary>> under key&nbsp;<<LI>>.
 
         <Entry><<condGet>>
           <Index class=tails/<<Dictionary>><And><<condGet>>/
         <Synopsis>
-          <<{Dictionary.condGet ?+{Dictionary} ?+{LI} ?_{X} ??{Y}}>>
+          <<{Dictionary.condGet ?+{Dictionary} ?+{LI} ?_{X} ?_{Y}}>>
         <Item>
-          returns the item of <<Dictionary>> under key&nbsp;<<LI>>, if <<LI>>
-          is a valid key of <<Dictionary>>.  Otherwise returns&nbsp;<<X>>.
+          returns the item&nbsp;<<Y>> of <<Dictionary>> under key&nbsp;<<LI>>,
+          if <<LI>> is a valid key of <<Dictionary>>.  Otherwise,
+          returns&nbsp;<<X>>.
 
         <Entry><<keys>>
           <Index class=tails/<<Dictionary>><And><<keys>>/
         <Synopsis>
           <<{Dictionary.keys ?+{Dictionary} ??{LIs}}>>
         <Item>
-          returns all currently valid keys of <<Dictionary>>.
+          returns a list of all currently valid keys of <<Dictionary>>.
 
         <Entry><<entries>>
           <Index class=tails/<<Dictionary>><And><<entries>>/
@@ -205,15 +204,15 @@
         <Synopsis>
           <<{Dictionary.remove ?+{Dictionary} ?+{LI}}>>
         <Item>
-          if <<LI>> is a valid key of <<Dictionary>>, remove the corresponding
-          item.  Otherwise, do nothing.
+          removes the item under key&nbsp;<<LI>> from <<Dictionary>> if
+          <<LI>> is a valid key.  Otherwise, does nothing.
 
         <Entry><<removeAll>>
           <Index class=tails/<<Dictionary>><And><<removeAll>>/
         <Synopsis>
           <<{Dictionary.removeAll ?+{Dictionary}}>>
         <Item>
-          remove all entries currently in <<Dictionary>>.
+          removes all entries currently in <<Dictionary>>.
 
         <Entry><<member>>
           <Index class=tails/<<Dictionary>><And><<member>>/
@@ -227,8 +226,8 @@
         <Synopsis>
           <<{Dictionary.clone ?+{Dictionary1} ??{Dictionary2}}>>
         <Item>
-          returns a new dictionary <<Dictionary2>> containing the same
-          keys and corresponding items as <<Dictionary1>>.
+          returns a new dictionary <<Dictionary2>> containing the currently
+          valid keys and corresponding items of <<Dictionary1>>.
 
         <Entry><<toRecord>>
           <Index class=tails/<<Dictionary>><And><<toRecord>>/
@@ -258,21 +257,21 @@
         <Entry><Span class=index/<<IsPort>>/
           <Index class=tails/<<Port>><And><<is>>/
         <Synopsis>
-          <<{IsPort ?+{X} ??{B}}>>
+          <<{Port.is ?+{X} ??{B}}>>
         <Item>
           tests whether <<X>> is a port.
 
         <Entry><Span class=index/<<NewPort>>/
           <Index class=tails/<<Port>><And><<new>>/
         <Synopsis>
-          <<{NewPort ?_{Xs} ??{Port}}>>
+          <<{Port.new ?_{Xs} ??{Port}}>>
         <Item>
           returns a new port pointing to the stream&nbsp;<<Xs>>.
 
         <Entry><Span class=index/<<Send>>/
           <Index/<<Port>><And><<send>>/
         <Synopsis>
-          <<{Send ?+{Port} ?_{X}}>>
+          <<{Port.send ?+{Port} ?_{X}}>>
         <Item>
           sends <<X>> to the port <<Port>>:  The stream pointed to by
           <<Port>> is unified with <<X|_>> (in a newly created thread),
@@ -287,14 +286,14 @@
         <Entry><Span class=index/<<IsLock>>/
           <Index class=tails/<<Lock>><And><<is>>/
         <Synopsis>
-          <<{IsLock ?+{X} ??{B}}>>
+          <<{Lock.is ?+{X} ??{B}}>>
         <Item>
           tests whether <<X>> is a lock.
 
         <Entry><Span class=index/<<NewLock>>/
           <Index class=tails/<<Lock>><And><<new>>/
         <Synopsis>
-          <<{NewLock ??{LockC}}>>
+          <<{Lock.new ??{LockC}}>>
         <Item>
           creates and returns a new lock.
       </List>
@@ -315,10 +314,10 @@
         <Entry><Span class=index/<<IsInstanceOf>>/
           <Index/<<Class>><And><<isInstanceOf>>/
         <Synopsis>
-          <<{Class.isInstanceOf ?+{O} ?+{C} ??{B}}>>
+          <<{Class.isInstanceOf ?+{O} ?+{K} ??{B}}>>
         <Item>
-          The object&nbsp;<<O>> is an instance of the class&nbsp;<<C>>,
-          &ie;, <<C>>&nbsp;is above the class of&nbsp;<<O>> in the inheritance
+          The object&nbsp;<<O>> is an instance of the class&nbsp;<<K>>,
+          &ie;, <<K>>&nbsp;is above the class of&nbsp;<<O>> in the inheritance
           hierarchy.
 
         <Entry><<get>>
@@ -333,7 +332,7 @@
         <Synopsis>
           <<{Class.methodNames ?+{K} ??{Ls}}>>
         <Item>
-          <<Ls>> is the alphabetically sorted list of public (atomic) method
+          returns the alphabetically sorted list of public (atomic) method
           names that the instances of the class&nbsp;<<K>> can serve.
           <!--** this is not true currently, names are also returned -->
 
@@ -345,22 +344,21 @@
           <<{Class.parents ?+{K} ??{Ks}}>>
         <Item>
           binds <<Ks>> to the list of direct parents of&nbsp;<<K>> in the
-          order of increasing priority.  Note that parents are always classes,
-          and not objects.
+          order of increasing priority.
 
         <Entry><<getFeature>>
           <Index class=tails/<<Class>><And><<getFeature>>/
         <Synopsis>
-          <<{Class.getFeature ?+{K} ?+{L} ??{X}}>>
+          <<{Class.getFeature ?+{K} ?+{LI} ??{X}}>>
         <Item>
-          returns the class feature&nbsp;<<X>> of&nbsp;<<K>> at&nbsp;<<L>>.
+          returns the class feature&nbsp;<<X>> of&nbsp;<<K>> at&nbsp;<<LI>>.
 
         <Entry><<hasFeature>>
           <Index class=tails/<<Class>><And><<hasFeature>>/
         <Synopsis>
-          <<{Class.hasFeature ?+{K} ?+{L} ??{B}}>>
+          <<{Class.hasFeature ?+{K} ?+{LI} ??{B}}>>
         <Item>
-          tests whether <<K>> has class feature at&nbsp;<<L>>.
+          tests whether <<K>> has class feature at&nbsp;<<LI>>.
       </List>
 
   <Section>
@@ -382,7 +380,7 @@
         <Entry><Span class=index/<<New>>/
           <Index class=tails/<<Object>><And><<new>>/
         <Synopsis>
-          <<{New ?+{K} ?+{InitMessageR} ??{O}}>>
+          <<{Object.new ?+{K} ?+{InitMessageR} ??{O}}>>
         <Item>
           Creates a new object from class&nbsp;<<K>> with initial message
           <<InitMessageR>>.
