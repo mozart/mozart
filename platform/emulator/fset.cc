@@ -761,7 +761,7 @@ OZ_Boolean FSetValue::operator <= (const FSetValue &s) const
       return FALSE;
 
     for (int i = fset_high; i--; ) {
-      if (_in[i] & s._in[i] != _in[i])
+      if ((_in[i] & s._in[i]) != _in[i])
         return FALSE;
     }
   }
@@ -792,7 +792,7 @@ OZ_Boolean FSetValue::operator <= (const FSetValue &s) const
 
 #else
   for (int i = fset_high; i--; ) {
-    if (_in[i] & s._in[i] != _in[i])
+    if ((_in[i] & s._in[i]) != _in[i])
       return FALSE;
   }
 #endif
