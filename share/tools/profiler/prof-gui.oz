@@ -44,7 +44,7 @@ local
    
 in
 
-   class Gui from Menu Dialog Help
+   class Gui from Menu Dialog Help Time.repeat
 
       prop
 	 locking
@@ -88,6 +88,8 @@ in
 	 Dialog,init
 	 Help,init
 
+	 Time.repeat,setRepAll(action:update delay:ConfigUpdate)
+	 
 	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}
 	     F = {New Tk.frame tkInit(parent: self.toplevel
@@ -388,45 +390,51 @@ in
 	 else
 	    Gui,doStatus('Using Emacs Bar')
 	 end
-	 {Config toggle(emacs)}
+	 {Ctoggle emacs}
+      end
+
+      meth update
+	 Stats <- {Filter {Profile.getInfo}
+		   fun {$ S}
+		      P = {StripPath S.file}
+		   in
+		      %% make sure profiling is not reflexive :-)
+		      P \= 'prof-gui.oz'     andthen
+		      P \= 'prof-dialog.oz'  andthen
+		      P \= 'prof-string.oz'  andthen
+		      P \= 'prof-tk.oz'      andthen
+		      P \= 'prof-prelude.oz' andthen
+		      P \= 'prof-source.oz'  andthen
+		      P \= 'prof-config.oz'  andthen
+		      P \= 'TkTools.oz'      andthen
+		      P \= 'Time.oz'
+		   end}
+	 Gui,UpdateBars
+	 Gui,UpdateGenInfo
+      end
+
+      meth reset
+	 {Profile.reset}
+	 Stats      <- nil
+	 StatsCount <- 0
+	 ResetTime  <- {OS.time}
+	 
+	 Gui,DeleteBars
+	 Gui,DeleteSummary
       end
       
       meth action(A)
 	 lock
-	    
 	    case A
 	    of !UpdateButtonText then
 	       Gui,doStatus('Updating...')
-	       
-	       Stats <- {Filter {Profile.getInfo}
-			 fun {$ S}
-			    P = {StripPath S.file}
-			 in
-			    %% make sure profiling is not reflexive :-)
-			    P \= 'prof-gui.oz'     andthen
-			    P \= 'prof-string.oz'  andthen
-			    P \= 'prof-tk.oz'      andthen
-			    P \= 'prof-prelude.oz' andthen
-			    P \= 'prof-source.oz'  andthen
-			    p \= 'prof-config.oz'
-			 end}
-	       Gui,UpdateBars
-	       Gui,UpdateGenInfo
-	       
+	       Gui,update
 	       {Delay 200} %% just to look nice... ;)
 	       Gui,doStatus(' done' append)
 	       
 	    [] !ResetButtonText then
 	       Gui,doStatus('Resetting...')
-	       
-	       {Profile.reset}
-	       Stats      <- nil
-	       StatsCount <- 0
-	       ResetTime  <- {OS.time}
-	       
-	       Gui,DeleteBars
-	       Gui,DeleteSummary
-	       
+	       Gui,reset
 	       {Delay 200} %% just to look nice... ;)
 	       Gui,doStatus(' done' append)
 	    end
