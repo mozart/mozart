@@ -465,18 +465,18 @@ static VarFix varFix;
 
 #define RAGCTag (1<<31)
 
-inline Bool refsArrayIsMarked(RefsArray r)
-{
+inline 
+Bool refsArrayIsMarked(RefsArray r) {
   return (r[-1]&RAGCTag);
 }
 
-inline void refsArrayMark(RefsArray r, void *ptr)
-{
+inline 
+void refsArrayMark(RefsArray r, void *ptr) {
   storeFwd((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),NO);
 }
 
-inline RefsArray refsArrayUnmark(RefsArray r)
-{
+inline 
+RefsArray refsArrayUnmark(RefsArray r) {
   return (RefsArray) ToPointer(r[-1]&(~(RAGCTag)|mallocBase));
 }
 
@@ -485,7 +485,8 @@ inline RefsArray refsArrayUnmark(RefsArray r)
 // r[0]..r[n-1] data
 // r[-1] gc tag set --> has already been copied
 
-RefsArray gcRefsArray(RefsArray r) {
+inline
+RefsArray gcRefsArray(RefsArray r, Bool isUnsafe = NO) {
   if (r == NULL)
     return r;
 
@@ -503,14 +504,22 @@ RefsArray gcRefsArray(RefsArray r) {
 
   refsArrayMark(r,aux);
 
-  OZ_collectHeapBlock(r, aux, sz);
+  if (isUnsafe) {
+    for (int i=sz; i--;) 
+      if (r[i])
+	OZ_collectHeapTerm(r[i],aux[i]);
+      else
+	aux[i]=makeTaggedNULL();
+  } else {
+    OZ_collectHeapBlock(r, aux, sz);
+  }
   
   return aux;
 }
 
 inline
 Abstraction *gcAbstraction(Abstraction *a) {
-  return (Abstraction *) a->gcConstTerm();
+  return a ? ((Abstraction *) a->gcConstTerm()) : a;
 }
 
 /*
@@ -628,7 +637,7 @@ Literal *Literal::gc() {
 }
 
 Object *Object::gcObject() {
-  return (Object *) gcConstTerm();
+  return this ? ((Object *) gcConstTerm()) : this;
 }
 
 /*
@@ -973,7 +982,10 @@ DynamicTable * DynamicTable::gc(void) {
   for (dt_index i=size; i--; ) 
     if (ft[i].ident) {
       OZ_collectHeapTerm(ft[i].ident, tt[i].ident);
-      OZ_collectHeapTerm(ft[i].value, tt[i].value);
+      if (ft[i].value)
+	OZ_collectHeapTerm(ft[i].value, tt[i].value);
+      else
+	tt[i].value = makeTaggedNULL();
     } else {
       tt[i].ident = makeTaggedNULL();
       tt[i].value = makeTaggedNULL();
@@ -1059,8 +1071,6 @@ void Script::gc() {
       TaggedRef *auxTermPtr;
       if (!isInGc && oz_isRef(auxTerm)) {
 	do {
-	  if (auxTerm == makeTaggedNULL ())
-	    OZ_error ("NULL in script");
 	  if (GCISMARKED(auxTerm)) {
 	    auxTerm = ToInt32(GCUNMARK(auxTerm));
 	    continue;
@@ -1128,8 +1138,7 @@ LTuple * LTuple::gc() {
 
 inline
 SRecord *SRecord::gcSRecord() {
-  if (this==NULL)
-    return NULL;
+  Assert(this);
 
   CHECKCOLLECTED(label, SRecord *);
   
@@ -1229,9 +1238,8 @@ ForeignPointer * ForeignPointer::gc(void) {
 TaggedRef gcExtension(TaggedRef term)
 {
   OZ_Extension *ex = oz_tagged2Extension(term);
-  if (ex == NULL) {
-    return makeTaggedNULL();
-  }
+
+  Assert(ex);
 
   // hack alert: write forward into vtable!
   if ((*(int32*)ex)&1) {
@@ -1239,18 +1247,25 @@ TaggedRef gcExtension(TaggedRef term)
   }
 
   Board *bb=(Board*)(ex->__getSpaceInternal());
-  if (bb) {
-    bb = bb->derefBoard();
-    if (!bb->gcIsAlive()) return makeTaggedNULL();
-    if (!isInGc && bb->isMarkedGlobal()) return term;
-  }
-  OZ_Extension *ret = ex->gcV();
-  if (bb) ret->__setSpaceInternal(bb);
 
+  if (bb) {
+    Assert(bb->gcIsAlive());
+    if (!isInGc && bb->isMarkedGlobal()) 
+      return term;
+  }
+  
+  OZ_Extension *ret = ex->gcV();
+
+  if (bb) 
+    ret->__setSpaceInternal(bb);
+  
   gcStack.push(ret,PTR_EXTENSION);
 
   int32 *fromPtr = (int32*)ex;
-  if (!isInGc) cpTrail.save(fromPtr);
+
+  if (!isInGc) 
+    cpTrail.save(fromPtr);
+  
   *fromPtr = ToInt32(ret)|1;
 
   return oz_makeTaggedExtension(ret);
@@ -1338,13 +1353,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
   switch (tagTypeOf(aux)) {
     
   case REF:
-    /* initalized but unused cell in register array */
-    if (aux == makeTaggedNULL()) {
-      to = aux;
-      return;
-    }
-    // fall through
-
+    Assert(aux);
   case REFTAG2:
   case REFTAG3:
   case REFTAG4:
@@ -1558,7 +1567,7 @@ void AM::gc(int msgLevel) {
   initMemoryManagement();
 
   for (int j=NumberOfXRegisters; j--; )
-    xRegs[j] = 0;
+    xRegs[j] = taggedVoidValue;
   
   Assert(trail.isEmpty());
   Assert(cachedSelf==0);
@@ -1995,7 +2004,8 @@ void ConstTerm::gcConstRecurse()
       }
 
       o->setClass(o->getClass()->gcClass());
-      o->setFreeRecord(o->getFreeRecord()->gcSRecord());
+      if (o->getFreeRecord())
+	o->setFreeRecord(o->getFreeRecord()->gcSRecord());
       RecOrCell state = o->getState();
       if (stateIsCell(state)) {
 	if (o->isLocal() && getCell(state)->isLocal()) {
@@ -2007,7 +2017,8 @@ void ConstTerm::gcConstRecurse()
       } else {
 	o->setState(getRecord(state)->gcSRecord());
       }
-      o->lock = (OzLock*) o->getLock()->gcConstTerm();
+      if (o->getLock())
+	o->lock = (OzLock *) o->getLock()->gcConstTerm();
       break;
     }
     
@@ -2018,7 +2029,8 @@ void ConstTerm::gcConstRecurse()
       cl->fastMethods    = (OzDictionary*) cl->fastMethods->gcConstTerm();
       cl->defaultMethods = (OzDictionary*) cl->defaultMethods->gcConstTerm();
       cl->features       = cl->features->gcSRecord();
-      cl->unfreeFeatures = cl->unfreeFeatures->gcSRecord();
+      if (cl->unfreeFeatures)
+	cl->unfreeFeatures = cl->unfreeFeatures->gcSRecord();
       break;
     }
 
@@ -2049,7 +2061,7 @@ void ConstTerm::gcConstRecurse()
     {
       Port *p = (Port*) this;
       if (p->isLocal()) {
-	p->setBoard(p->getBoardInternal()->gcBoard()); /* ATTENTION */
+	p->setBoard(p->getBoardInternal()->gcBoard());
 	PortWithStream *pws = (PortWithStream *) this;
 	OZ_collectHeapTerm(pws->strm,pws->strm);
 	maybeGCForFailure(p);
@@ -2137,11 +2149,8 @@ void ConstTerm::gcConstRecurse()
 
 
 ConstTerm *ConstTerm::gcConstTerm() {
-
-  if (this == NULL) {
-    return NULL;
-  }
-
+  Assert(this);
+  
   if (gcIsMarked())
     return gcGetFwd();
 
@@ -2302,7 +2311,19 @@ ConstTerm *ConstTerm::gcConstTerm() {
    Note- all other Tertiarys are marked in gcConstRecurse
 */
 
+inline
+OzDebug *OzDebug::gcOzDebug() {
+  OzDebug *ret = (OzDebug*) gcReallocStatic(this,sizeof(OzDebug));
+  
+  ret->Y = gcRefsArray(ret->Y);
+  ret->CAP = gcAbstraction(ret->CAP);
+  if (ret->data)
+    OZ_collectHeapTerm(ret->data,ret->data);
+  
+  ret->arguments = gcRefsArray(ret->arguments,OK);
 
+  return ret;
+}
 
 void TaskStack::gc(TaskStack *newstack) {
 
@@ -2339,7 +2360,7 @@ void TaskStack::gc(TaskStack *newstack) {
     } else if (PC == C_LPQ_Ptr) {
       Y = (RefsArray) ((Board *) Y)->gcBoard();
     } else if (PC == C_SET_SELF_Ptr) {
-      Y = (RefsArray) ((Object*)Y)->gcConstTerm();
+      Y = (RefsArray) (Y ? (((Object*)Y)->gcConstTerm()) : 0);
     } else if (PC == C_SET_ABSTR_Ptr) {
       ;
     } else if (PC == C_DEBUG_CONT_Ptr) {
@@ -2626,17 +2647,6 @@ void AM::doGC() {
   ozconf.heapThreshold = wanted;
   
   unsetSFlag(StartGC);
-}
-
-OzDebug *OzDebug::gcOzDebug() {
-  OzDebug *ret = (OzDebug*) gcReallocStatic(this,sizeof(OzDebug));
-  
-  ret->Y = gcRefsArray(ret->Y);
-  ret->CAP = gcAbstraction(ret->CAP);
-  OZ_collectHeapTerm(ret->data,ret->data);
-  ret->arguments = gcRefsArray(ret->arguments);
-
-  return ret;
 }
 
 // special purpose to gc borrowtable entry which is a variable
