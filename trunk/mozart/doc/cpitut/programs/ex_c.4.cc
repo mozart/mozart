@@ -1,10 +1,12 @@
-void ElementProp::updateHeapRefs(OZ_Boolean) {
-  OZ_updateHeapTerm(_n); OZ_updateHeapTerm(_v);
+void ElementProp::gCollect(void) {
+  OZ_gCollectTerm(_n);
+  OZ_gCollectTerm(_v);
+  _d = OZ_gCollectAllocBlock(_d_size, _d);
+}
+
+void ElementProp::sClone(void) {
+  OZ_sCloneTerm(_n); 
+  OZ_sCloneTerm(_v);
   
-  OZ_Term * new_d = OZ_hallocOzTerms(_d_size);
-  for (int i = _d_size; i--; ) {
-    new_d[i] = _d[i];
-    OZ_updateHeapTerm(new_d[i]);
-  }
-  _d = new_d;
-} 
+  _d = OZ_sCloneAllocBlock(_d_size, _d);
+}

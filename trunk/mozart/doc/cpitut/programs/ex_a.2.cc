@@ -10,10 +10,15 @@ public:
   virtual size_t sizeOf(void) { 
     return sizeof(AddProp); 
   }
-  virtual void updateHeapRefs(OZ_Boolean) { 
-    OZ_updateHeapTerm(_x); 
-    OZ_updateHeapTerm(_y); 
-    OZ_updateHeapTerm(_z);
+  virtual void gCollect(void) { 
+    OZ_gCollectTerm(_x); 
+    OZ_gCollectTerm(_y); 
+    OZ_gCollectTerm(_z);
+  } 
+  virtual void sClone(void) { 
+    OZ_sCloneTerm(_x); 
+    OZ_sCloneTerm(_y); 
+    OZ_sCloneTerm(_z);
   } 
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x, 
