@@ -67,7 +67,7 @@ distclean::
         -rm -f Makefile
 
 veryclean::
-        -rm -f *.a *.so Makefile.deps
+        -rm -f *.a *.so Makefile.deps $(CREATEDDPFILES)
 
 dpMarshaler.hh marshalMsg.cc: msgFormat.m4
 
