@@ -102,6 +102,7 @@ OZ_C_proc_proto(fdp_disjointC)
 OZ_C_proc_proto(fdp_distance)
 OZ_C_proc_proto(sched_cpIterate)
 OZ_C_proc_proto(sched_cpIterateCap)
+OZ_C_proc_proto(sched_cpIterateCapUp)
 OZ_C_proc_proto(sched_disjunctive)
 
 // dummies
