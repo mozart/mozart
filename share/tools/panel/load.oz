@@ -111,7 +111,7 @@ in
       end
 
       meth DrawTicks(N D)
-	 Load,tk(crea line 0 D*N LoadWidth D*N stipple:DashLine)
+	 Load,tk(crea line 0 D*N LoadWidth D*N fill:LineColor)
 	 case N>0 then Load,DrawTicks(N-1 D) else skip end
       end
       
