@@ -3958,6 +3958,7 @@ loop:
       RefsArray globals = unmarshallClosure(bs);
       if (pp) {
 	pp->import(globals,unmarshallCode(bs,NO));
+	pp->getPred()->patchFileAndLine();
       } else {
 	(void) unmarshallCode(bs,OK);
       }
