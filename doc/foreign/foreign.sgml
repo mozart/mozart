@@ -494,7 +494,7 @@ exported from a native module.
 <index class=module/OZ_BI_end/
 <code display>
   OZ_BI_define(Name,InArity,OutArity)
-  ... C/C++ code
+  { ... C/C++ code ... }
   OZ_BI_end
 </code>
 <item>Every foreign function imported to &Oz; has to be declared using this
@@ -1513,7 +1513,7 @@ does not run into cycles.
   <index class=tails/<<OZ_Extension>> <and> <<inspectV>>/
 <ITEM>Not used. Idea: hook for debugging tools to get information.
 
-  <ENTRY><<virtual Bool isChunkV()>> // default: return true
+  <ENTRY><<virtual Oz_Boolean isChunkV()>> // default: return true
   <index class=tails/<<OZ_Extension>> <and> <<isChunkV>>/
 <ITEM>Define this to return false is the extension in not a subtype of
       chunk.
@@ -1524,6 +1524,18 @@ does not run into cycles.
       called. If <<getFeatureV>> returns 0 an exception is raised that the
       feature is not available.
 
+  <ENTRY><<virtual OZ_Return getFeatureV(OZ_Term,OZ_Term&amp;)>> //
+  default: return <code/OZ_FAILED/
+  <index class=tails/<<OZ_Extension>> <and> <<getFeatureV>>/
+  <ITEM>The is the more basic version of the above, where a reference
+  to the return value is passed as the 2nd argument.
+
+  <ENTRY><<virtual OZ_Return putFeatureV(OZ_Term,OZ_Term)>> //
+  default: return <code/OZ_FAILED/
+  <index class=tails/<<OZ_Extension>> <and> <<putFeatureV>>/
+  <ITEM>Feature is 1st argument, new value is 2nd argument.  This is
+  used &eg; for <code proglang=oz/:=/ support.
+
   <ENTRY><<virtual OZ_Return eqV(OZ_Term t)>> // default: return false
   <index class=tails/<<OZ_Extension>> <and> <<eqV>>/
 <ITEM>This function is called during unification and equality test
@@ -1531,11 +1543,19 @@ does not run into cycles.
       structural equality. Note that in this case <<isChunkV>> should
       return false.
 
-  <ENTRY><<virtual Bool marshalV(MsgBuffer * bs)>>  // default: return false
-  <index class=tails/<<OZ_Extension>> <and> <<marshalV>>/
-<ITEM>      This is the hook to serialization.  It returns true if the
-      extension is serializable and writes it external representation
-      into the message buffer (see <<oz_registerExtension>> below).
+  <ENTRY><<virtual OZ_Boolean toBePickledV()>>  // default: return false
+  <index class=tails/<<OZ_Extension>> <and> <<toBePickledV>>/
+<ITEM>return true if pickling is defined.
+  
+  <ENTRY><<virtual OZ_Boolean pickleV(MarshalerBuffer *)>>  // default: return false
+  <index class=tails/<<OZ_Extension>> <and> <<pickleV>>/
+<ITEM>This is the hook to serialization.  It returns true if the
+      extension is serializable and writes its external representation
+      into the given buffer (see <<oz_registerExtension>> below).
+
+  <ENTRY><<virtual int minNeededSpace()>>  // default: return 0
+  <index class=tails/<<OZ_Extension>> <and> <<minNeededSpace>>/
+  <ITEM>I DON'T KNOW WHAT THIS IS FOR.
 
   <ENTRY><<OZ_Boolean isLocal()>>
   <index class=tails/<<OZ_Extension>> <and> <<isLocal>>/
@@ -1548,28 +1568,34 @@ does not run into cycles.
 
 <p>
 <LIST CLASS=EXPORTS>
-<ENTRY><<Bool OZ_isExtension(OZ_Term t)>>
+<ENTRY><<Oz_Boolean OZ_isExtension(OZ_Term t)>>
   <index class=module/OZ_isExtension/
 <ITEM>Tests if the OZ_Term is an extension (<<t>> must be dereferenced
 first).
 
-<ENTRY><<Extension * OZ_getExtension(OZ_Term t)>>
+<ENTRY><<OZ_Extension * OZ_getExtension(OZ_Term t)>>
   <index class=module/OZ_getExtension/
 <ITEM>Unbox the OZ_Term into an extension
      (<<t>> must be dereferenced).
 	    
-<ENTRY><<OZ_Term oz_extension(Extension *e)>>
-  <index class=module/oz_extension/
+<ENTRY><<OZ_Term OZ_extension(OZ_Extension *e)>>
+  <index class=module/OZ_extension/
 <ITEM>Box the Extension into an OZ_Term.
 
-<ENTRY><<typedef OZ_Term (*oz_unmarshalProcType)(MsgBuffer*)
+<ENTRY><<typedef OZ_Term (*oz_unmarshalProcType)(void*)
 void oz_registerExtension(int id, oz_unmarshalProcType f)>>
   <index class=module/oz_unmarshalProcType/
+  <index class=module/oz_registerExtension/
 <ITEM>Registers an unmarshal procedure for the extension with the given
 id.
 
-<ENTRY><<int OZ_getUniqueId()>>
-  <index class=module/getUniqueId/
+<ENTRY><<OZ_Term oz_extension_unmarshal(int id, void* bs)>>
+<index class=module/oz_extension_unmarshal/
+<ENTRY>I AM NOT SURE ABOUT THIS!!! unmarshall a serialized extension
+identified by <code/id/ from the given byte stream <code/bs/.
+
+<ENTRY><<int OZ_newUniqueId()>>
+  <index class=module/oz_newUniqueId/
 <ITEM>Returns a new unique number usable as the id of an extension.
 
 </LIST>
@@ -1579,7 +1605,8 @@ id.
   <Title/Example/
 
 <p>The following is a snippet from the implementation of bit arrays
-(bitarray.cc).
+(bitarray.cc).  Look at &eg; <file>mozart/contrib/gdbm/gdbm.cc</file>
+for an exampl of a non-system extension.
 
 <Code.extern display TO="bitarray.cc">
 
