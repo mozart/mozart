@@ -22,6 +22,7 @@
 functor
 import
    Pickle(load)
+   Property(get)
    Module(link)
    GdkNative            at 'GdkNative.so{native}'
    GtkNative            at 'GtkNative.so{native}'
@@ -45,14 +46,21 @@ define
    %% Force Evaluation of Modules in appropriate Order
    %%
 
+   {Wait GOZSignal}
+
+   %% Win32 Input redirection
+   if ({Property.get platform}.os == win32) then {GOZSignal.redirectStdIn} end
+
    {Wait GdkNative}
    {Wait GtkNative}
    {Wait GtkCanvasNative}
    {Wait GdkFieldNative}
    {Wait GtkFieldNative}
    {Wait GtkCanvasFieldNative}
-   {Wait GOZSignal}
 
+   %% Undo Win32 Input redirection
+   if ({Property.get platform}.os == win32) then {GOZSignal.resetStdIn} end
+   
    %%
    %% Native Pointer Import/Export
    %%
