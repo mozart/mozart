@@ -16,7 +16,7 @@
 
 //-----------------------------------------------------------------------------
 
-// to be used inside the method 'propagate'
+// to be used inside the method 'run'
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) 	\
   if (mayBeEqualVars()) { 			\
     if (OZ_isEqualVars(reg_x, reg_y)) { 	\
@@ -157,9 +157,6 @@ public:
   Propagator_VI_VD_I(const Propagator_VI_VD_I_D &);
   Propagator_VI_VD_I(int sz, int sizes[], int single_var[], 
 		     int a[], OZ_Term x[], int c);
-  Propagator_VI_VD_I(int sz, int * a, OZ_Term * x, int c)
-    : reg_sz(sz), reg_a(a), reg_x(x), reg_c(c) {}
-
   virtual ~Propagator_VI_VD_I(void);
 
   virtual void updateHeapRefs(OZ_Boolean = OZ_FALSE);
@@ -296,6 +293,7 @@ protected:
   int reg_sz;
 public:
   Propagator_VD_VI(OZ_Term, OZ_Term);
+  Propagator_VD_VI(int);
   virtual ~Propagator_VD_VI(void);
 
   virtual void updateHeapRefs(OZ_Boolean);
@@ -314,6 +312,7 @@ protected:
   int reg_capacity;
 public:
   Propagator_VD_VI_VI_I(OZ_Term l, OZ_Term offset, OZ_Term use, OZ_Term cap);
+  Propagator_VD_VI_VI_I(int);
   virtual ~Propagator_VD_VI_VI_I(void);
 
   virtual void updateHeapRefs(OZ_Boolean);
@@ -400,5 +399,22 @@ public:
   virtual OZ_Term getParameters(void) const;
 };
 
+//-----------------------------------------------------------------------------
+
+class Propagator_VI_VD_D : public OZ_Propagator {
+protected:
+  int *reg_a,reg_sz,reg_c,dpos;
+  OZ_Term reg_d;
+  OZ_Term *_a,*reg_x;
+public:
+  Propagator_VI_VD_D(OZ_Term, OZ_Term, OZ_Term);
+  virtual ~Propagator_VI_VD_D(void);
+  virtual void updateHeapRefs(OZ_Boolean);
+  virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_D); }
+  virtual OZ_Term getParameters(char *) const;
+  OZ_Boolean simplify(void);
+};
+
 
 #endif // __STD_HH__
+

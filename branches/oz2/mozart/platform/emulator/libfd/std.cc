@@ -239,7 +239,7 @@ Propagator_VI_VD_I::Propagator_VI_VD_I(OZ_Term a, OZ_Term x, OZ_Term d,
 
   if (is_lin) {
     reg_x = vectorToOzTerms(x, d, reg_sz);
-    reg_a = reg_a = vectorToInts1(a, reg_sz);
+    reg_a = vectorToInts1(a, reg_sz);
     
     for (int i = 0; i < reg_sz; i += 1) {
       OZ_FDIntVar xv; // no initialising constructor 'cause it uses method ask
@@ -416,6 +416,12 @@ Propagator_VD_VI::Propagator_VD_VI(OZ_Term l, OZ_Term offset)
   reg_l = vectorToOzTerms(l, reg_sz);
 }
 
+Propagator_VD_VI::Propagator_VD_VI(int size) : reg_sz(size)
+{
+  reg_offset = OZ_hallocCInts(size);
+  reg_l = OZ_hallocOzTerms(size);
+}
+
 Propagator_VD_VI::~Propagator_VD_VI(void) 
 {
   OZ_hfreeCInts(reg_offset, reg_sz);
@@ -448,10 +454,17 @@ OZ_Term Propagator_VD_VI::getParameters(void) const
 
 Propagator_VD_VI_VI_I::Propagator_VD_VI_VI_I(OZ_Term l, OZ_Term offset, OZ_Term use, OZ_Term cap)
 {
-  reg_offset = vectorToInts(offset, reg_sz);
-  reg_l = vectorToOzTerms(l, reg_sz);
-  reg_use = vectorToInts(use, reg_sz);
+  reg_offset   = vectorToInts(offset, reg_sz);
+  reg_l        = vectorToOzTerms(l, reg_sz);
+  reg_use      = vectorToInts(use, reg_sz);
   reg_capacity = OZ_intToC(cap);
+}
+
+Propagator_VD_VI_VI_I::Propagator_VD_VI_VI_I(int size) : reg_sz(size)
+{
+  reg_offset = OZ_hallocCInts(size);
+  reg_use    = OZ_hallocCInts(size);
+  reg_l      = OZ_hallocOzTerms(size);
 }
 
 Propagator_VD_VI_VI_I::~Propagator_VD_VI_VI_I(void) 
@@ -708,4 +721,90 @@ OZ_Term Propagator_D_I_D_I_D::getParameters(void) const
 {
   RETURN_LIST5(reg_x, OZ_int(reg_xd), reg_y, OZ_int(reg_yd), reg_b);
 }
+
+//-----------------------------------------------------------------------------
+
+Propagator_VI_VD_D::Propagator_VI_VD_D(OZ_Term a, OZ_Term x, OZ_Term d)
+  : reg_sz(OZ_vectorSize(x)), reg_d(d)
+{
+  reg_c = 0;
+  dpos = -1; 
+  NUMBERCAST check_inexact = reg_c;
+  reg_x = vectorToOzTerms(x, reg_sz);
+  reg_a = vectorToInts(a, reg_sz);
+  
+  for (int i = 0; i < reg_sz; i += 1) {
+    OZ_FDIntVar xv; // no initialising constructor 'cause it uses method ask
+    xv.ask(reg_x[i]);
+    check_inexact+= double(reg_a[i]<0 ? -reg_a[i]:reg_a[i]) * xv->getMaxElem();
+  }
+  warn_inexact(check_inexact);
+}
+
+Propagator_VI_VD_D::~Propagator_VI_VD_D(void) 
+{
+  OZ_hfreeCInts(reg_a, reg_sz);
+  OZ_hfreeOzTerms(reg_x, reg_sz);
+}
+
+void Propagator_VI_VD_D::updateHeapRefs(OZ_Boolean)
+{
+  OZ_updateHeapTerm(reg_d);
+  int *new_a = OZ_hallocCInts(reg_sz);
+  OZ_Term *new_x = OZ_hallocOzTerms(reg_sz);
+
+  for(int i = reg_sz; i--;) {
+    new_a[i]=reg_a[i];
+    new_x[i]=reg_x[i];
+    OZ_updateHeapTerm(new_x[i]);
+  }
+  
+  reg_a = new_a;
+  reg_x = new_x;
+}
+
+OZ_Term Propagator_VI_VD_D::getParameters(char *lit) const
+{
+  INTVECTOR2LIST(reg_a, reg_sz, a);
+  TERMVECTOR2LIST(reg_x, reg_sz, x);
+  RETURN_LIST4(a,x,OZ_atom(lit),reg_d);
+}
+
+OZ_Boolean Propagator_VI_VD_D::simplify(void)
+{ 
+  if (reg_sz) {
+    DECL_DYN_ARRAY(OZ_Term,xd,reg_sz+1);
+    int j;
+    for(j = reg_sz; j--; ) 
+      xd[j] = reg_x[j];
+    xd[reg_sz] = reg_d;
+    int *is = OZ_findEqualVars(reg_sz+1,xd);
+    dpos = is[reg_sz];
+    for (j = reg_sz; j--; ) {
+      if (is[j] == -1) {      // singleton in x
+	reg_c += int(OZ_intToC(reg_x[j]) * NUMBERCAST(reg_a[j]));
+	reg_x[j] = 0; 
+      } else if (j != is[j]) {   // multiple appearing var in x 
+	reg_a[is[j]] += reg_a[j];
+	reg_x[j] = 0;
+      } 
+    }
+    int from = 0, to = 0;
+    for (; from < reg_sz; from++) {
+     if (reg_x[from] != 0 && reg_a[from] != 0) {
+       if (from != to) {
+         reg_a[to] = reg_a[from];
+         reg_x[to] = reg_x[from];
+       }
+       to++;
+     } else if (dpos != reg_sz && from < dpos) 
+       dpos--;
+    }
+    reg_sz = to;
+  }
+  return (dpos > -1 && dpos < reg_sz);
+}
+
+//-----------------------------------------------------------------------------
+// eof
 
