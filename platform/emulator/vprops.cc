@@ -366,7 +366,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_ATOM(PROP_OS_NAME,ozconf.osname);
   CASE_ATOM(PROP_OS_CPU,ozconf.cpu);
   // INTERNAL
-  CASE_BOOL(PROP_INTERNAL_DEBUG,am.isSetSFlag(DebugMode));
+  CASE_BOOL(PROP_INTERNAL_DEBUG,am.debugmode());
   CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
@@ -611,8 +611,8 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 	     SET_BOOL(AtomCache,ozconf.showCacheLoad););
     // INTERNAL
     CASE_BOOL_DO(PROP_INTERNAL_DEBUG,
-		 if (INT__) am.unsetSFlag(DebugMode);
-		 else       am.setSFlag(DebugMode));
+		 if (INT__) am.setdebugmode(NO);
+		 else       am.setdebugmode(OK));
     CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
     CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
     CASE_NAT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
@@ -620,8 +620,8 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_INTERNAL_PERDIO_DOCOMPATIBLE,ozconf.perdiod0Compatiblity);
     CASE_REC(PROP_INTERNAL,
 	     DO_BOOL(AtomDebug,
-		     if (INT__) am.setSFlag(DebugMode);
-		     else       am.unsetSFlag(DebugMode););
+		     if (INT__) am.setdebugmode(OK);
+		     else       am.setdebugmode(NO));
 	     SET_BOOL(AtomShowSuspension,ozconf.showSuspension);
 	     SET_BOOL(AtomStopOnToplevelFailure,ozconf.stopOnToplevelFailure);
 	     SET_NAT(AtomDebugIP,ozconf.debugIP);
