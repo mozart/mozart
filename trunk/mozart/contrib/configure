@@ -58,9 +58,6 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-contrib-compat
 	whether to build the compat contribution (default: yes)"
-ac_help="$ac_help
---enable-contrib-xml
-	whether to build the xml contribution (default: yes)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -577,7 +574,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:581: checking for $ac_word" >&5
+echo "configure:578: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -616,7 +613,7 @@ done
 
   
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:620: checking for SRCTOP" >&5
+echo "configure:617: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -650,7 +647,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
   
   
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:654: checking for BUILDTOP" >&5
+echo "configure:651: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -709,7 +706,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:713: checking host system type" >&5
+echo "configure:710: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -737,7 +734,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:741: checking for $ac_word" >&5
+echo "configure:738: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -806,13 +803,13 @@ You may find a mirror archive closer to you by consulting:
   else
     
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:810: checking for GNU make" >&5
+echo "configure:807: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
   
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:816: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:813: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -841,7 +838,7 @@ fi
   
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:845: checking whether to unset broken INSTALL" >&5
+echo "configure:842: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -871,7 +868,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:875: checking for a BSD compatible install" >&5
+echo "configure:872: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -935,7 +932,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:939: checking for $ac_word" >&5
+echo "configure:936: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -979,7 +976,7 @@ fi
     
   
   echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:983: checking for oz version" >&5
+echo "configure:980: checking for oz version" >&5
 if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1031,7 +1028,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1035: checking for $ac_word" >&5
+echo "configure:1032: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1086,7 +1083,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1090: checking for $ac_word" >&5
+echo "configure:1087: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1132,7 +1129,7 @@ fi
   esac
   
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1136: checking for --with-inc-dir" >&5
+echo "configure:1133: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -1174,7 +1171,7 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1178: checking for --with-lib-dir" >&5
+echo "configure:1175: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1218,7 +1215,7 @@ fi
   
   
   echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1222: checking for build date" >&5
+echo "configure:1219: checking for build date" >&5
 if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1237,7 +1234,7 @@ CONTRIBDIRS="tk ap"
 
 
 echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
-echo "configure:1241: checking for --enable-contrib-gdbm" >&5
+echo "configure:1238: checking for --enable-contrib-gdbm" >&5
 # Check whether --enable-contrib-gdbm or --disable-contrib-gdbm was given.
 if test "${enable_contrib_gdbm+set}" = set; then
   enableval="$enable_contrib_gdbm"
@@ -1254,7 +1251,7 @@ echo "$ac_t""$oz_cv_enable_contrib_gdbm" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-regex""... $ac_c" 1>&6
-echo "configure:1258: checking for --enable-contrib-regex" >&5
+echo "configure:1255: checking for --enable-contrib-regex" >&5
 # Check whether --enable-contrib-regex or --disable-contrib-regex was given.
 if test "${enable_contrib_regex+set}" = set; then
   enableval="$enable_contrib_regex"
@@ -1271,7 +1268,7 @@ echo "$ac_t""$oz_cv_enable_contrib_regex" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-doc""... $ac_c" 1>&6
-echo "configure:1275: checking for --enable-contrib-doc" >&5
+echo "configure:1272: checking for --enable-contrib-doc" >&5
 # Check whether --enable-contrib-doc or --disable-contrib-doc was given.
 if test "${enable_contrib_doc+set}" = set; then
   enableval="$enable_contrib_doc"
@@ -1288,7 +1285,7 @@ echo "$ac_t""$oz_cv_enable_contrib_doc" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-os""... $ac_c" 1>&6
-echo "configure:1292: checking for --enable-contrib-os" >&5
+echo "configure:1289: checking for --enable-contrib-os" >&5
 # Check whether --enable-contrib-os or --disable-contrib-os was given.
 if test "${enable_contrib_os+set}" = set; then
   enableval="$enable_contrib_os"
@@ -1305,7 +1302,7 @@ echo "$ac_t""$oz_cv_enable_contrib_os" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-dpanel""... $ac_c" 1>&6
-echo "configure:1309: checking for --enable-contrib-dpanel" >&5
+echo "configure:1306: checking for --enable-contrib-dpanel" >&5
 # Check whether --enable-contrib-dpanel or --disable-contrib-dpanel was given.
 if test "${enable_contrib_dpanel+set}" = set; then
   enableval="$enable_contrib_dpanel"
@@ -1322,7 +1319,7 @@ echo "$ac_t""$oz_cv_enable_contrib_dpanel" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-micq""... $ac_c" 1>&6
-echo "configure:1326: checking for --enable-contrib-micq" >&5
+echo "configure:1323: checking for --enable-contrib-micq" >&5
 # Check whether --enable-contrib-micq or --disable-contrib-micq was given.
 if test "${enable_contrib_micq+set}" = set; then
   enableval="$enable_contrib_micq"
@@ -1343,7 +1340,7 @@ subdirs="$CONTRIBDIRS"
 
 
 echo $ac_n "checking for --enable-contrib-lp""... $ac_c" 1>&6
-echo "configure:1347: checking for --enable-contrib-lp" >&5
+echo "configure:1344: checking for --enable-contrib-lp" >&5
 # Check whether --enable-contrib-lp or --disable-contrib-lp was given.
 if test "${enable_contrib_lp+set}" = set; then
   enableval="$enable_contrib_lp"
@@ -1360,7 +1357,7 @@ echo "$ac_t""$oz_cv_enable_contrib_lp" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-ri""... $ac_c" 1>&6
-echo "configure:1364: checking for --enable-contrib-ri" >&5
+echo "configure:1361: checking for --enable-contrib-ri" >&5
 # Check whether --enable-contrib-ri or --disable-contrib-ri was given.
 if test "${enable_contrib_ri+set}" = set; then
   enableval="$enable_contrib_ri"
@@ -1377,7 +1374,7 @@ echo "$ac_t""$oz_cv_enable_contrib_ri" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-davinci""... $ac_c" 1>&6
-echo "configure:1381: checking for --enable-contrib-davinci" >&5
+echo "configure:1378: checking for --enable-contrib-davinci" >&5
 # Check whether --enable-contrib-davinci or --disable-contrib-davinci was given.
 if test "${enable_contrib_davinci+set}" = set; then
   enableval="$enable_contrib_davinci"
@@ -1394,7 +1391,7 @@ echo "$ac_t""$oz_cv_enable_contrib_davinci" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-reflect""... $ac_c" 1>&6
-echo "configure:1398: checking for --enable-contrib-reflect" >&5
+echo "configure:1395: checking for --enable-contrib-reflect" >&5
 # Check whether --enable-contrib-reflect or --disable-contrib-reflect was given.
 if test "${enable_contrib_reflect+set}" = set; then
   enableval="$enable_contrib_reflect"
@@ -1411,7 +1408,7 @@ echo "$ac_t""$oz_cv_enable_contrib_reflect" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-investigator""... $ac_c" 1>&6
-echo "configure:1415: checking for --enable-contrib-investigator" >&5
+echo "configure:1412: checking for --enable-contrib-investigator" >&5
 # Check whether --enable-contrib-investigator or --disable-contrib-investigator was given.
 if test "${enable_contrib_investigator+set}" = set; then
   enableval="$enable_contrib_investigator"
@@ -1428,7 +1425,7 @@ echo "$ac_t""$oz_cv_enable_contrib_investigator" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-fcp""... $ac_c" 1>&6
-echo "configure:1432: checking for --enable-contrib-fcp" >&5
+echo "configure:1429: checking for --enable-contrib-fcp" >&5
 # Check whether --enable-contrib-fcp or --disable-contrib-fcp was given.
 if test "${enable_contrib_fcp+set}" = set; then
   enableval="$enable_contrib_fcp"
@@ -1445,7 +1442,7 @@ echo "$ac_t""$oz_cv_enable_contrib_fcp" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-psql""... $ac_c" 1>&6
-echo "configure:1449: checking for --enable-contrib-psql" >&5
+echo "configure:1446: checking for --enable-contrib-psql" >&5
 # Check whether --enable-contrib-psql or --disable-contrib-psql was given.
 if test "${enable_contrib_psql+set}" = set; then
   enableval="$enable_contrib_psql"
@@ -1462,7 +1459,7 @@ echo "$ac_t""$oz_cv_enable_contrib_psql" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-compat""... $ac_c" 1>&6
-echo "configure:1466: checking for --enable-contrib-compat" >&5
+echo "configure:1463: checking for --enable-contrib-compat" >&5
 # Check whether --enable-contrib-compat or --disable-contrib-compat was given.
 if test "${enable_contrib_compat+set}" = set; then
   enableval="$enable_contrib_compat"
@@ -1476,23 +1473,6 @@ echo "$ac_t""$oz_cv_enable_contrib_compat" 1>&6
 
   if test "$oz_cv_enable_contrib_compat" = yes; then
     CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }compat"
-  fi
-
-echo $ac_n "checking for --enable-contrib-xml""... $ac_c" 1>&6
-echo "configure:1483: checking for --enable-contrib-xml" >&5
-# Check whether --enable-contrib-xml or --disable-contrib-xml was given.
-if test "${enable_contrib_xml+set}" = set; then
-  enableval="$enable_contrib_xml"
-  oz_cv_enable_contrib_xml=$enableval
-else
-  : ${oz_cv_enable_contrib_xml:=$oz_enable_contrib_xml}
-   : ${oz_cv_enable_contrib_xml:=yes}
-fi
-
-echo "$ac_t""$oz_cv_enable_contrib_xml" 1>&6
-
-  if test "$oz_cv_enable_contrib_xml" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }xml"
   fi
 
 
