@@ -1,5 +1,13 @@
 -*-outline-*-
 
+* version 0.88
+  protect against build circularities. added ExpandInCWD functionality -
+  used it to make e.g. src and build dir absolute so that when added to
+  a resolver they function properly even if a temporary chDir is performed.
+
+* version 0.87
+  use compressedFile support instead of Oz pickles if support is available.
+
 * version 0.86
   complete rework of the computation of dependencies. e.g. to take
   into account the run-time dependencies of build-time dependencies.
