@@ -68,12 +68,18 @@ OZC		= @OZC@
 
 OZLOADSEP	= @OZLOADSEP@
 OZLOADWIN	= @OZLOADWIN@
+OZLOADCACHE	= @OZLOADCACHE@
 CYGPATH		= $(SRCDIR)/cygpath.sh
 
 CYG_SRCDIR	= $(shell $(CYGPATH) $(SRCDIR))
 CYG_BUILDDIR	= $(shell $(CYGPATH) $(BUILDDIR))
 CYG_PREFIX	= $(shell $(CYGPATH) $(PREFIX))
 CYG_BUILDEMU	= $(shell $(CYGPATH) $(BUILDEMU))
+ifeq ($(OZLOADCACHE),)
+CYG_OZCACHE	=
+else
+CYG_OZCACHE	= %cache=$(shell $(CYGPATH) $(OZLOADCACHE))/cache
+endif
 
 COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base=$(CYG_SRCDIR)/Base.ozf -b $(CYG_BUILDDIR)/
 COMPILE		= $(COMPILENOMODE) -c
@@ -93,7 +99,7 @@ export OZLIB
 export OZPATH = .$(OZLOADSEP)$(shell $(CYGPATH) $(SRCDIR))
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = $(subst %,$(OZLOADSEP),root=.%prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/%cache=$(CYG_PREFIX)/cache%prefix=/=/$(OZLOADWIN)%=)
+export OZ_LOAD = $(subst %,$(OZLOADSEP),root=.%prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/%cache=$(CYG_PREFIX)/cache%prefix=/=/$(OZLOADWIN)$(CYG_OZCACHE)%=)
 
 export OZMAKE_COPYALWAYS	= no
 export OZMAKE_VERBOSE		= no

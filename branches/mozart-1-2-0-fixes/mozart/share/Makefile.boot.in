@@ -37,7 +37,7 @@ CYG_SOURCELIB	=$(shell $(CYG_PATH) "$(SOURCELIB)")
 CYG_SOURCETOOLS =$(shell $(CYG_PATH) "$(SOURCETOOLS)")
 
 BOOTEMU=$(BUILDTOP)/platform/emulator/@EMULATOR_EXE@
-BOOTENG=$(SRCTOP)/share/ozengine.sh
+BOOTENG=$(BUILDTOP)/share/ozengine.sh
 BOOTCOM=$(BOOTENG) $(BUILDTOP)/share/lib/ozc
 BOOTOZL=$(BOOTENG) $(BUILDTOP)/share/lib/ozl
 BOOTOZTOOL="/bin/sh $(BUILDTOP)/platform/emulator/oztool.sh"
@@ -130,3 +130,6 @@ cboot-%:
 	$(MAKE) $* \
 	OZTOOL=$(BOOTOZTOOL) \
 	OZTOOL_INCLUDES=$(BOOTOZTOOLINC)
+
+Makefile.boot: Makefile.boot.in $(BUILDTOP)/share/config.status
+	cd $(BUILDTOP)/share && ./config.status
