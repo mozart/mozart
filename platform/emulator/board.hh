@@ -110,6 +110,11 @@ public:
   Board(Actor *a,int type);
 
   USEHEAPMEMORY;
+  
+  Bool gcIsMarked(void);
+  void gcMark(Board *);
+  void ** gcGetMarkField(void);
+  Board * gcGetFwd(void);
   Board *gcBoard();
   Board *gcDerefedBoard();
   Board *gcDerefedBoardOutline();
@@ -117,7 +122,6 @@ public:
   Bool gcIsAlive();
   Bool checkAlive();
   Board *gcGetNotificationBoard ();
-  int32 *getGCField() { return body.getGCField(); }
 
   OZPRINT;
   OZPRINTLONG;
