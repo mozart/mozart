@@ -33,6 +33,8 @@ dnl *****************************************************************
 dnl This will check that we are in the Oz directory and initiate
 AC_INIT(gdbm)
 
+AC_CHECK_PROGS(RM, rm)
+
 OZ_INIT
 AC_PROG_MAKE_SET
 BUILDTOP=`cd .. && pwd`
