@@ -9,7 +9,7 @@ local
    Border       = 2
    LargeBorder  = 5
    LabelWidth   = 10
-   SquareSize   = 10
+   SquareSize   = 8
    ButtonWidth  = 6
 
    class Square
@@ -32,7 +32,8 @@ local
       prop final
       attr Saved:0 Clear:0
       meth init(parent:P)
-	 PrintNumber,tkInit(parent:P text:0 anchor:e width:LabelWidth)
+	 PrintNumber,tkInit(parent:P text:0 anchor:e width:LabelWidth
+			    font:MediumFont)
       end
       meth set(N)
 	 case N==@Saved then skip else
@@ -52,7 +53,8 @@ local
       prop final
       attr Saved:0 Clear:0
       meth init(parent:P)
-	 PrintTime,tkInit(parent:P text:'0.00' anchor:e width:LabelWidth)
+	 PrintTime,tkInit(parent:P text:'0.00' anchor:e font:MediumFont
+			  width:LabelWidth)
       end
       meth set(N)
 	 case @Saved==N then skip else
@@ -72,36 +74,6 @@ local
 	 Saved <- 0
       end
    end
-
-   class Scale
-      from Tk.scale
-      prop final
-      attr Saved:0
-      meth init(parent:P range:R action:A state:S)
-	 Tk.scale,tkInit(parent:             P
-			 length:             200
-			 font:               ScaleFont
-			 'from':             R.1
-			 highlightthickness: 0
-			 to:                 R.2
-			 orient:             horizontal
-			 action:             self # noop
-			 width:              8
-			 showvalue:          true)
-	 Tk.scale,tk(set S)
-	 Tk.scale,tkAction(action:A args:[int])
-	 Saved <- S
-      end
-      meth set(N)
-	 case N==@Saved then skip else
-	    Saved <- N
-	    Scale,tk(set N)
-	 end
-      end
-      meth get($)
-	 @Saved
-      end
-   end
    
    class Checkbutton
       from Tk.checkbutton
@@ -116,6 +88,7 @@ local
 			       text:               T
 			       anchor:             w
 			       var:                V
+			       font:               MediumFont
 			       action:             self # invoke)
 	 self.Var    = V
 	 self.Action = A
@@ -142,40 +115,8 @@ local
 			  text:               T
 			  anchor:             w
 			  action:             A
+			  font:               BoldFont
 			  width:              ButtonWidth)
-      end
-   end
-
-   class Entry
-      from Tk.entry
-      prop final
-      feat Action Top
-      attr Save:unit
-      meth init(parent:P action:A top:T)
-	 Tk.entry,tkInit(parent: P
-			 bg:     EnterColor
-			 width:  LabelWidth)
-	 Tk.entry,tkBind(event:  '<Return>'
-			 action: self # take)
-	 self.Action = A
-	 self.Top    = T
-      end
-      meth take
-	 O = @Save
-	 N = Tk.entry,tkReturnInt(get $)
-      in
-	 Save <- N
-	 case {IsInt N} andthen N>=0 then
-	    {self.Action N} {Tk.send focus(self.Top)}
-	 else Entry,set(O)
-	 end
-      end
-      meth set(N)
-	 case N==@Save then skip else
-	    Save <- N
-	    Tk.entry,tk(delete 0 'end')
-	    Tk.entry,tk(insert 0 N)
-	 end
       end
    end
 
@@ -184,25 +125,31 @@ local
       [] L|Lr then TclR TclS in
 	 TclS =
 	 case {Label L}
-	 of scale then
+	 of entry then
+	    RO#CO = case {CondSelect L side left}
+		    of left then 0#0 else ~1#3 end
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
+				      font:   MediumFont
 				      anchor: w)}
-	    S1 = {New Scale init(parent: P
-				 range:  {CondSelect L range 1#100}
-				 action: L.action
-				 state:  L.state)}
+	    S1 = {New NumberEntry tkInit(parent: P
+					 min:    {CondSelect L min 1}
+					 max:    {CondSelect L max ~1}
+					 action: L.action
+					 init:   {CondSelect L init 1})}
 	    L2 = {New Tk.label tkInit(parent: P
 				      anchor: w
-				      text:   {CondSelect L dim ''})}
+				      font:   MediumFont
+				      text:   {CondSelect L dim ''}#'   ')}
 	 in
 	    R.(L.feature)=S1
-	    grid(L1 sticky:w column:0 row:N) |
-	    grid(S1 sticky:e column:1 row:N) | 
-	    grid(L2 sticky:w column:2 row:N) | TclR	    
+	    grid(L1 sticky:w column:0+CO row:N+RO) |
+	    grid(S1 sticky:e column:1+CO row:N+RO) | 
+	    grid(L2 sticky:w column:2+CO row:N+RO) | TclR	    
 	 [] number    then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
+				      font:   MediumFont
 				      anchor: w)}
 	    L2 = {New PrintNumber init(parent:P)}
 	    L3 = case {HasFeature L color} orelse {HasFeature L stipple} then
@@ -219,10 +166,12 @@ local
 	 [] size then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
+				      font:   MediumFont
 				      anchor: w)}
 	    L2 = {New PrintNumber init(parent:P)}
 	    L3 = {New Tk.label tkInit(parent: P
 				      anchor: e
+				      font:   MediumFont
 				      text:   {CondSelect L dim 'KB'})}
 	    L4 = case {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
@@ -239,8 +188,11 @@ local
 	 [] time then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
+				      font:   MediumFont
 				      anchor: w)}
-	    L3 = {New Tk.label  tkInit(parent:P text:s anchor:e)}
+	    L3 = {New Tk.label  tkInit(parent:P
+				       text:s anchor:e
+				       font:MediumFont)}
 	    L2 = {New PrintTime init(parent:P)}
 	    L4 = case {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
@@ -270,17 +222,6 @@ local
 	 in
 	    R.(L.feature)=B
 	    grid(B sticky:w column:0 row:N) | TclR
-	 [] entry then
-	    L1 = {New Tk.label tkInit(parent: P
-				      text:   L.text
-				      anchor: w)}
-	    E2 = {New Entry init(parent: P
-				 action: L.action
-				 top:    L.top)}
-	 in
-	    R.(L.feature)=E2
-	    grid(L1 sticky:w column:0 row:N) |
-	    grid(E2 sticky:w column:1 row:N) | TclR
 	 [] timebar then
 	    F  = {New Tk.frame tkInit(parent:            P
 				      highlightthickness:0)}
@@ -315,7 +256,8 @@ local
 		       fill:x side:top)|TclT
       [] F|Fr then TclR TclS
 	 Border = {New TkTools.textframe tkInit(parent: P
-						text:   F.text)}
+						text:   F.text
+						font:   BoldFont)}
 	 Left   = {New Tk.frame tkInit(parent:            Border.inner
 				       highlightthickness: 0)}
 	 Right  = {New Tk.frame tkInit(parent:            Border.inner
