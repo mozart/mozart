@@ -1365,7 +1365,7 @@ OZ compiler, emulator and error window")
 (defun oz-view-panel ()
   "Feed {System.panel popup} into the Oz Compiler"
   (interactive)
-  (oz-send-string "{System.panel popup}"))
+  (oz-send-string "task {System.panel popup} end"))
 
 (defun oz-feed-file(file)
   "Feed an file into the Oz Compiler"
