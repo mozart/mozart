@@ -65,8 +65,8 @@
 #endif
 
 /* we use function pointers only when creating DLLs 
- * HAVE_CONFIG_H is defined when compiling the emulator */
-#if defined(OZWIN) && !defined(HAVE_CONFIG_H)
+ * STATIC_FUNCTIONS is defined when compiling the emulator */
+#if defined(OZWIN) && !defined(STATIC_FUNCTIONS)
 #define OzFun(fun) (ozcdecl *fun)
 #else
 #define OzFun(fun) (ozcdecl fun)
