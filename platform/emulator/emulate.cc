@@ -163,34 +163,23 @@ TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
   return makeTaggedSRecord(srecord);
 }
 
-// optimized RefsArray allocation
-inline
-RefsArray allocateY(int n)
-{
-  int sz = (n+1) * sizeof(TaggedRef);
-  RefsArray a = (RefsArray) freeListMalloc(sz);
-  a += 1;
-  initRefsArray(a,n,OK);
-  return a;  
+#define allocateY(n) \
+{                                      \
+  int _sz = (n+1) * sizeof(TaggedRef); \
+  Y = (RefsArray) freeListMalloc(_sz); \
+  Y += 1;                              \
+  initRefsArray(Y,n,OK);               \
 }
 
-inline
-void deallocateY(RefsArray a, int sz)
-{
-  Assert(getRefsArraySize(a)==sz);
-  Assert(!isFreedRefsArray(a));
-#ifdef DEBUG_CHECK
-  markFreedRefsArray(a);
-#else
-  freeListDispose(a-1,(sz+1) * sizeof(TaggedRef));
-#endif
+#define deallocateYN(sz) \
+{                                                   \
+  Assert(getRefsArraySize(Y)==sz);                  \
+  freeListDispose(Y-1,(sz+1) * sizeof(TaggedRef));  \
+  Y=NULL;                                           \
 }
 
-inline
-void deallocateY(RefsArray a)
-{
-  deallocateY(a,getRefsArraySize(a));
-}
+#define deallocateY() deallocateYN(getRefsArraySize(Y))
+
 
 void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
 
@@ -880,19 +869,22 @@ LBLdispatcher:
   Case(FUNRETURNX) 
     {
       SetFunReturn(XPC(1));
-      if (Y) { deallocateY(Y); Y = NULL; }
+      if (Y)
+	deallocateY();
       goto LBLpopTaskNoPreempt;
     }
   Case(FUNRETURNY) 
     {
       SetFunReturn(YPC(1));
-      if (Y) { deallocateY(Y); Y = NULL; }
+      if (Y)
+	deallocateY();
       goto LBLpopTaskNoPreempt;
     }
   Case(FUNRETURNG) 
     {
       SetFunReturn(GPC(1));
-      if (Y) { deallocateY(Y); Y = NULL; }
+      if (Y) 
+	deallocateY();
       goto LBLpopTaskNoPreempt;
     }
   
@@ -2489,38 +2481,36 @@ Case(GETVOID)
     {
       int posInt = getPosIntArg(PC+1);
       Assert(posInt > 0);
-      Y = allocateY(posInt);
+      allocateY(posInt);
       DISPATCH(2);
     }
 
-  Case(ALLOCATEL1)  { Y =  allocateY(1); DISPATCH(1); }
-  Case(ALLOCATEL2)  { Y =  allocateY(2); DISPATCH(1); }
-  Case(ALLOCATEL3)  { Y =  allocateY(3); DISPATCH(1); }
-  Case(ALLOCATEL4)  { Y =  allocateY(4); DISPATCH(1); }
-  Case(ALLOCATEL5)  { Y =  allocateY(5); DISPATCH(1); }
-  Case(ALLOCATEL6)  { Y =  allocateY(6); DISPATCH(1); }
-  Case(ALLOCATEL7)  { Y =  allocateY(7); DISPATCH(1); }
-  Case(ALLOCATEL8)  { Y =  allocateY(8); DISPATCH(1); }
-  Case(ALLOCATEL9)  { Y =  allocateY(9); DISPATCH(1); }
-  Case(ALLOCATEL10) { Y = allocateY(10); DISPATCH(1); }
+  Case(ALLOCATEL1)  { allocateY(1);  DISPATCH(1); }
+  Case(ALLOCATEL2)  { allocateY(2);  DISPATCH(1); }
+  Case(ALLOCATEL3)  { allocateY(3);  DISPATCH(1); }
+  Case(ALLOCATEL4)  { allocateY(4);  DISPATCH(1); }
+  Case(ALLOCATEL5)  { allocateY(5);  DISPATCH(1); }
+  Case(ALLOCATEL6)  { allocateY(6);  DISPATCH(1); }
+  Case(ALLOCATEL7)  { allocateY(7);  DISPATCH(1); }
+  Case(ALLOCATEL8)  { allocateY(8);  DISPATCH(1); }
+  Case(ALLOCATEL9)  { allocateY(9);  DISPATCH(1); }
+  Case(ALLOCATEL10) { allocateY(10); DISPATCH(1); }
 
-  Case(DEALLOCATEL1)  { deallocateY(Y,1);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL2)  { deallocateY(Y,2);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL3)  { deallocateY(Y,3);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL4)  { deallocateY(Y,4);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL5)  { deallocateY(Y,5);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL6)  { deallocateY(Y,6);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL7)  { deallocateY(Y,7);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL8)  { deallocateY(Y,8);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL9)  { deallocateY(Y,9);  Y=0; DISPATCH(1); }
-  Case(DEALLOCATEL10) { deallocateY(Y,10); Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL1)  { deallocateYN(1);  DISPATCH(1); }
+  Case(DEALLOCATEL2)  { deallocateYN(2);  DISPATCH(1); }
+  Case(DEALLOCATEL3)  { deallocateYN(3);  DISPATCH(1); }
+  Case(DEALLOCATEL4)  { deallocateYN(4);  DISPATCH(1); }
+  Case(DEALLOCATEL5)  { deallocateYN(5);  DISPATCH(1); }
+  Case(DEALLOCATEL6)  { deallocateYN(6);  DISPATCH(1); }
+  Case(DEALLOCATEL7)  { deallocateYN(7);  DISPATCH(1); }
+  Case(DEALLOCATEL8)  { deallocateYN(8);  DISPATCH(1); }
+  Case(DEALLOCATEL9)  { deallocateYN(9);  DISPATCH(1); }
+  Case(DEALLOCATEL10) { deallocateYN(10); DISPATCH(1); }
 
   Case(DEALLOCATEL)
     {
-      if (Y) {
-	deallocateY(Y);
-	Y = NULL;
-      }
+      if (Y)
+	deallocateY();
       DISPATCH(1);
     }
 // -------------------------------------------------------------------------
