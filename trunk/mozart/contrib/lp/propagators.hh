@@ -81,8 +81,13 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(RILPSolve); }
 
-  virtual void updateHeapRefs(OZ_Boolean) { 
-    fprintf(stderr, "RILPSolve::updateHeapRefs must never be called!\n");
+  virtual void sClone(void) { 
+    fprintf(stderr, "RILPSolve::sClone Must never be called!\n");
+    fflush(stderr);
+  }
+
+  virtual void gCollect(void) { 
+    fprintf(stderr, "RILPSolve::gCollect must never be called!\n");
     fflush(stderr);
   }
 
