@@ -248,7 +248,6 @@ public:
 
   OwnerEntry* index2entry(int oe) 
   { 
-    Assert(oe > 10000);
     return (OwnerEntry*) oe;
   }
   
