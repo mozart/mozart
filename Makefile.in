@@ -239,6 +239,21 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
         done
         mv $(MPD)/winbin $(MPD)/bin
         chmod -R a+x $(MPD)/bin
+        rm -rf mozart-win32
+        $(INSTALL_DIR) mozart-win32
+        $(INSTALL_DIR) mozart-win32/contrib
+        (cd $(MPD); \
+         $(TAR) cf - cache/$(HOMECACHE)/contrib) | \
+         (cd mozart-win32/contrib; $(TAR) xf -)
+        $(INSTALL_DIR) mozart-win32/doc
+        (cd $(MPD); \
+         $(TAR) cf - doc examples share/gump) | \
+         (cd mozart-win32/doc; $(TAR) xf -)
+        $(INSTALL_DIR) mozart-win32/base
+        (cd $(MPD); \
+         $(TAR) cf - $(FILES) bin cache/$(HOMECACHE)/share \
+                     include share/Init.ozf share/elisp platform) | \
+         (cd mozart-win32/base; $(TAR) xf -)
 
 files.base:
         (cd $(PREFIX); \
