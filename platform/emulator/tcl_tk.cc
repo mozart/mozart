@@ -2,8 +2,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: schulte
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
 
 */
 
@@ -11,7 +9,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "am.hh"
+#include "runtime.hh"
 #include "tcl_tk.hh"
 
 #include "builtins.hh"
@@ -38,20 +36,21 @@ TaggedRef tcl_dict;
 
 OZ_Return raise_os_error()
 {
-  return am.raise(E_SYSTEM,E_OS,"os",2,OZ_int(errno),OZ_atom(OZ_unixError(errno)));
+  return oz_raise(E_SYSTEM,E_OS,"os",2,OZ_int(errno),
+		  OZ_atom(OZ_unixError(errno)));
 }
 
 OZ_Return raise_type_error(TaggedRef tcl)
 {
-  TypeErrorT(-1,"Tickle");
+  oz_typeError(-1,"Tickle");
 }
 
 OZ_Return raise_closed(TaggedRef tcl) {
-  return am.raise(E_SYSTEM,E_TK,"alreadyClosed",1,tcl);
+  return oz_raise(E_SYSTEM,E_TK,"alreadyClosed",1,tcl);
 }
 
 OZ_Return raise_toplevel(void) {
-  return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));
+  return oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));
 }
 
 #define CHECK_TOPLEVEL     \

@@ -1,10 +1,7 @@
 /*
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: scheidhr
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
+  Author: scheidhr, mehl, tmueller
   */
 
 #ifndef __OZ_H__
@@ -312,16 +309,16 @@ void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
    OZ_addThread(t2,s);
    */
 
-void _FUNDECL(OZ_suspendOnInternal,(OZ_Term));
-void _FUNDECL(OZ_suspendOnInternal2,(OZ_Term,OZ_Term));
-void _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
+OZ_Return _FUNDECL(OZ_suspendOnInternal,(OZ_Term));
+OZ_Return _FUNDECL(OZ_suspendOnInternal2,(OZ_Term,OZ_Term));
+OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 
 #define OZ_suspendOn(t1) \
-   { OZ_suspendOnInternal(t1); return SUSPEND; }
+   { return OZ_suspendOnInternal(t1); }
 #define OZ_suspendOn2(t1,t2) \
-   { OZ_suspendOnInternal2(t1,t2); return SUSPEND; }
+   { return OZ_suspendOnInternal2(t1,t2); }
 #define OZ_suspendOn3(t1,t2,t3) \
-   { OZ_suspendOnInternal3(t1,t2,t3); return SUSPEND; }
+   { return OZ_suspendOnInternal3(t1,t2,t3); }
 
 /* ------------------------------------------------------------------------ *
  * III. macros
