@@ -259,7 +259,7 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
  }
 
 #define OZ_declareFloatArg(FUN,ARG,VAR) 				      \
- OZ_float VAR; 								      \
+ OZ_Float VAR; 								      \
  OZ_nonvarArg(ARG); 							      \
  if (! OZ_isFloat(OZ_getCArg(ARG))) {					      \
    OZ_typeError(FUN,ARG,"Float",OZ_getCArg(ARG));			      \
