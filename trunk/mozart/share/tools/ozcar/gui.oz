@@ -199,7 +199,7 @@ class Gui from Menu Dialog
 	 Gui,printEnv(frame:0)
       else
 	 {self.StackText title(AltStackTitle # ThrID)}
-	 Gui,printEnv(frame:1 globals:S.1.'G')
+	 Gui,printEnv(frame:1 globals:S.1.'G' locals:S.1.'Y')
 	 %SourceManager,scrollbar(file:S.1.file line:S.1.line
 		%		 color:ScrollbarStackColor what:stack)
 
