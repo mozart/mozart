@@ -153,6 +153,7 @@ public:
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
 
+  Thread *createThread(int prio);
   Thread *newThread(int p,Board *h);
   void disposeThread(Thread *th);
   Bool isScheduled(Thread *th);

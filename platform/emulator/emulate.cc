@@ -2671,17 +2671,8 @@ void engine() {
         prio = defPrio;
       }
 
-      Thread *tt = e->newThread(prio,CBB);
-#ifdef NEWCOUNTER
-      CBB->incSuspCount();
-#endif
-      if (e->currentSolveBoard != (Board *) NULL) {
-        e->incSolveThreads (e->currentSolveBoard);
-        tt->setNotificationBoard (e->currentSolveBoard);
-      }
-      IncfProfCounter(procCounter,sizeof(Thread));
+      Thread *tt = e->createThread(prio);
       tt->pushCont(CBB,newPC,Y,G,NULL,0,OK);
-      e->scheduleThread(tt);
       JUMP(contPC);
     }
 
