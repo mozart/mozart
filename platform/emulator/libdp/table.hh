@@ -41,7 +41,7 @@
 #include "genhashtbl.hh"
 #include "perdio.hh"
 
-typedef long Credit;
+typedef int Credit;
 
 #ifdef DEBUG_CHECK
 Bool withinBorrowTable(int i);

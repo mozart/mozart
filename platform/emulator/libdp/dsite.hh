@@ -172,7 +172,7 @@ protected:
 public:
   //
   void* operator new(size_t size) {
-    Assert(sizeof(DSite)==28);
+    Assert(sizeof(DSite)<=sizeof(Construct_7));
     return ((DSite *) genFreeListManager->getOne_7());}
 
   void freeSite() {

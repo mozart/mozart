@@ -49,7 +49,7 @@ protected:
 public:
 
   void* operator new(size_t size) {
-    Assert(size==12);
+    Assert(size<=sizeof(Construct_3));
     return (ChainElem *)genFreeListManager->getOne_3();}
 
   void free(){
@@ -87,7 +87,7 @@ public:
 public:
 
   void* operator new(size_t size) {
-    Assert(size==12);
+    Assert(size<=sizeof(Construct_3));
     return (InformElem *)genFreeListManager->getOne_3();}
 
   InformElem(DSite *s,EntityCond ec){
@@ -122,7 +122,7 @@ protected:
 
 public:
   void* operator new(size_t size) {
-    Assert(size==16);
+    Assert(size<=sizeof(Construct_4));
     return (Chain *)genFreeListManager->getOne_4();}
 
   void free(){

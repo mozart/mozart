@@ -1081,8 +1081,8 @@ void initDPCore()
                                                3, 0, BIfailureDefault, OK)),
          WATCHER_PERSISTENT|WATCHER_SITE_BASED|WATCHER_INJECTOR);
 
-  Assert(sizeof(BorrowCreditExtension)==sizeof(Construct_3));
-  Assert(sizeof(OwnerCreditExtension)==sizeof(Construct_3));
+  Assert(sizeof(BorrowCreditExtension)<=sizeof(Construct_3));
+  Assert(sizeof(OwnerCreditExtension)<=sizeof(Construct_3));
   Assert(sizeof(Chain)==sizeof(Construct_4));
   Assert(sizeof(ChainElem)==sizeof(Construct_3));
   Assert(sizeof(InformElem)==sizeof(Construct_3));
@@ -1097,7 +1097,7 @@ void initDPCore()
   Assert(sizeof(LockSecEmul)==sizeof(LockSec));
   Assert(sizeof(CellSecEmul)==sizeof(CellSec));
   Assert(sizeof(PortManager)==sizeof(PortLocal));
-  Assert(sizeof(PortProxy)==SIZEOFPORTPROXY);
+  Assert(sizeof(PortProxy)<=SIZEOFPORTPROXY);
   initGateStream();
   dealWithDeferredWatchers();
 }

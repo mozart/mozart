@@ -105,14 +105,14 @@ void unmarshalObjectRT(ObjectFields *o, MsgBuffer *bs);
 void unmarshalObjectAndClassRT(ObjectFields *o, MsgBuffer *bs);
 
 inline void marshalCredit(Credit credit,MsgBuffer *bs){
-  Assert(sizeof(Credit)==sizeof(long));
+  Assert(sizeof(Credit)==sizeof(int));
   Assert(sizeof(Credit)==sizeof(unsigned int));
   PD((MARSHAL,"credit c:%d",credit));
   PD((CREDIT,"marshal:credit c:%d",credit));
   marshalNumber(credit,bs);}
 
 inline Credit unmarshalCredit(MsgBuffer *bs){
-  Assert(sizeof(Credit)==sizeof(long));
+  Assert(sizeof(Credit)==sizeof(int));
   Credit c=unmarshalNumber(bs);
   PD((UNMARSHAL,"credit c:%d",c));
   PD((CREDIT,"unmarshal:credit c:%d",c));
