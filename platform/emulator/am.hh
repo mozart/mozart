@@ -302,17 +302,18 @@ public:
 
   void checkStability();
   int handleFailure(Continuation *&cont, AWActor *&aa);
-  INLINE int commit(Board *bb, Thread *tt=0);
+  int commit(Board *bb, Thread *tt=0);
 
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, ByteCode *scp=0);
   Bool fastUnify(TaggedRef ref1, TaggedRef ref2, ByteCode *);
   Bool fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, ByteCode *);
-  void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term, ByteCode *);
+  void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term,
+		    ByteCode *);
 
   void doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t);
   void doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
-			       GenCVariable * lv, GenCVariable * gv);
+			   GenCVariable * lv, GenCVariable * gv);
 
   Bool isLocalUVarOutline(TaggedRef var,TaggedRef *varPtr);
   Bool isLocalSVarOutline(SVariable *var);

@@ -24,7 +24,6 @@ extern ProgramCounter
   C_DEBUG_CONT_Ptr     , // a continuation for debugging
   C_CALL_CONT_Ptr      , // an application
   C_LOCK_Ptr           , // 
-  C_ACTOR_Ptr          , // an actor task
   C_SET_SELF_Ptr       , // set am.ooRegisters
   C_SET_ABSTR_Ptr      ,
   C_LTQ_Ptr            , // local thread queue
@@ -168,7 +167,6 @@ public:
   void pushDebug(OzDebug *deb)   { pushFrame(C_DEBUG_CONT_Ptr,deb,0); }
   void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
   void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,NULL); }
-  void pushActor(Actor *aa)      { pushFrame(C_ACTOR_Ptr,aa,0); }
 
   int tasks();
 };
