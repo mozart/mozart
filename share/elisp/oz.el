@@ -67,7 +67,7 @@ nil:     Don't start emulator (use command 'run').
 (defvar oz-emulator (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
   "The emulator for gdb mode and for [oz-other]")
 
-(defvar oz-boot (concat (getenv "HOME") "/Oz/Compiler/ozboot.ql")
+(defvar oz-boot (concat (getenv "HOME") "/Oz/Compiler/backend/ozboot.ql")
   "The compiler for tel mode and for [oz-other]")
 
 (defvar oz-emulator-buffer "*Oz Emulator*"
