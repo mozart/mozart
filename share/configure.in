@@ -57,15 +57,18 @@ win32*)
     oztmp=`${SRCTOP}/share/lib/cygpath.sh "${SRCTOP}/platform/mswindows/ozwrapper.bin"`
     OZEXECFILE="--execfile=\"$oztmp\""
     EMULATOR_EXE=emulator.dll
+    BOOTOZTOOL='$(shell $(CYG_PATH) "$(BUILDTOP)/platform/mswindows/oztool.exe")'
     EXE_EXT='.exe'
     ;;
 *)
     EMULATOR_EXE=emulator.exe
+    BOOTOZTOOL='"/bin/sh $(BUILDTOP)/platform/emulator/oztool.sh"'
     EXE_EXT=''
     ;;
 esac
 AC_SUBST(OZEXECFILE)
 AC_SUBST(EMULATOR_EXE)
+AC_SUBST(BOOTOZTOOL)
 AC_SUBST(EXE_EXT)
 
 dnl *****************************************************************
