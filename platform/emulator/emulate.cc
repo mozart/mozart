@@ -1478,10 +1478,19 @@ LBLdispatcher:
         }
 
       case RAISE:            goto LBLraise;
+
+
+/* Must save output register too !!! (RS) */
+#define MaxToSave(OutReg,LivingRegs) \
+        max(getRegArg(PC+OutReg)+1,getPosIntArg(PC+LivingRegs));
+
       case BI_REPLACEBICALL:
-        predArity = getPosIntArg(PC+4);
+        predArity = MaxToSave(3,4);
         PC += 5;
         goto LBLreplaceBICall;
+
+
+
 
       case BI_TYPE_ERROR:
         RAISE_TYPE1_FUN(GetBI(PC+1)->getPrintName(),
@@ -1532,7 +1541,7 @@ LBLdispatcher:
 
 
       case BI_REPLACEBICALL:
-        predArity = getPosIntArg(PC+5);
+        predArity = MaxToSave(4,5);
         PC += 6;
         goto LBLreplaceBICall;
 
@@ -1603,7 +1612,7 @@ LBLdispatcher:
       if (stateIsCell(state)) {
         rec = getState(state,NO,fea,XPC(2));
         if (rec==NULL) {
-          predArity = getPosIntArg(PC+3);
+          predArity = MaxToSave(2,4);
           PC += 6;
           goto LBLreplaceBICall;
         }
