@@ -314,7 +314,6 @@ public:
   Bool unify(TaggedRef ref1, TaggedRef ref2, ByteCode *scp=0);
   Bool fastUnify(TaggedRef ref1, TaggedRef ref2, ByteCode *);
   Bool fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, ByteCode *);
-  Bool performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, ByteCode *);
   void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term, ByteCode *);
 
   void rebind(TaggedRef *ref, TaggedRef ptr);
@@ -331,10 +330,8 @@ public:
   Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
   Bool isMoreLocal(TaggedRef var1, TaggedRef var2);
 
- private:
   void genericBind(TaggedRef *varPtr, TaggedRef var,
 		   TaggedRef *termPtr, TaggedRef term);
- public:
 
   void checkSuspensionList(TaggedRef taggedvar, 
 			   PropCaller calledBy = pc_propagator);
