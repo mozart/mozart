@@ -1,0 +1,68 @@
+<chapter id="chapter.chapter1"><title/Usage/
+
+<p>The Distribution Panel is started in the OPI by feeding the line
+
+ <<{DistributionPanel.open}>>
+
+This opens a window that displays different data on the distributed work done by the current emulator.
+
+<p>Keep in mind that producing and displaying the data is a memory consuming task. Do not use the Distribution Panel with too much load, or the behaviour of the entire emulator will be highly affected and the results will not be the same as without the Distribution Panel.
+
+<p>The Distribution panel polls information at regular intervals. Some data is accumulative, e.g. Message exchange. For this data the number of events since the last poll is displayed. This is interpreted as events per sample period. Other data is transient, e.g. Last RTT. Here the last known value is plotted.
+
+<< Make sample interval a parameter and define its default value. >>
+
+<p>Since the distribution behavior is affected by the garbage collector a red vertical bar is inserted in all graphs when garbage collection occurs. This allows garbage collection related behaviour to be understood.
+
+<Picture.Extern id="RCframeGCbar.gif" to="RCframe.gif" type=gif>
+
+
+//** Chapter 1.1
+
+<section><title/Remote Communication /
+
+<p>The Remote communication frame displays the status and history of any other Mozart sites that our site currently has references too. Each site is given a separate color. The same color is used in the graph windows.
+
+<p>As soon as distribution is initialized, there will be one site marked mine. That is a placeholder for the site representing the current emulator. The other sites present can be marked as follows:
+<list>
+<item><<connected(N)>>: A connection is established and the last measured Round Trip Time to that site was N.
+<item><<passive>> A reference is present but the emulator is currently not connected to that site.
+<item><<perm>> That site is known to be permanently down.
+</list>
+
+<p>Message exchange per sample period shows how many messages have been sent or received since the last poll for data.
+
+<p>Last RTT (ms) shows the last measured Round Trip Time at each poll for data. The RTT is defined as the time between when a message is transferred and its acknowledgement is received back. This value includes the network RTT as well as any delays due to ongoing local or remote computation.
+
+<Picture.Extern id="RCframe.gif" to="RCframe.gif" type=gif>
+
+
+
+<section><title/Exported Entities /
+
+<p>The Exported Entities frame shows all entities that the current site has currently exported to the other sites. Notice that entities exported by the Connection module do not show up as exported until they are taken by an other site.
+
+<p>Number of imported/exported Entities shows how many times a reference to any exported entity has been sent or received by this site.
+
+<p>Number of Entities shows how many entities are currently exported.
+
+<Picture.Extern id="EEframe.gif" to="EEframe.gif" type=gif>
+
+
+<section><title/Imported Entities/
+
+<p>The Imported Entities frame dipslays all entities currently imported to this site. The entities are coloured with their orgin sites colour(see 1.1).
+
+<Picture.Extern id="IEframe.gif" to="IEframe.gif" type=gif>
+
+
+<section><title/Message Statistics/
+
+<p>The Message Statistics frame shows the total number of sent and received messages per message type. The Message type is the internal type used by the Message Passing Layer and the entity protocolls.
+
+<Picture.Extern id="MSframe.gif" to="MSframe.gif" type=gif>
+
+<section><title/Diff type Statistics/
+<p> The Diff type Statistics shows the total number of imported and exported Mozart data structures.
+
+<Picture.Extern id="DSframe.gif" to="DSframe.gif" type=gif>
