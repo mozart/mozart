@@ -1,0 +1,15 @@
+@SET_MAKE@
+BUILDTOP= @BUILDTOP@
+RM      = @RM@
+SUBDIRS = gump
+
+.PHONY: all install clean veryclean realclean depend distclean
+all::
+all install clean veryclean realclean depend distclean::
+        dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
+clean veryclean realclean distclean:: local-clean
+local-clean:
+        -$(RM) *~
+distclean:: local-distclean
+local-distclean:
+        -$(RM) Makefile config.*
