@@ -194,10 +194,6 @@ starts the emulator under gdb")
 (defun oz-set-fontlock-keywords()
   (setq font-lock-keywords (list oz-keywords)))
 
-; workaround for a bug in older font-lock modes  
-;(setq font-lock-mode-hook '(oz-set-fontlock-keywords))
-
-
 ;;------------------------------------------------------------
 ;; Menus
 ;;------------------------------------------------------------
@@ -910,6 +906,10 @@ the GDB commands `cd DIR' and `directory'."
   (setq paragraph-separate paragraph-start)
   (make-local-variable 'paragraph-ignore-fill-prefix)
   (setq paragraph-ignore-fill-prefix t)
+  (make-local-variable 'fill-paragraph-function)
+  (setq fill-paragraph-function 'oz-fill-paragraph)
+  (make-local-variable 'auto-fill-function)
+  (setq auto-fill-function 'oz-auto-fill)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'oz-indent-line)
   (make-local-variable 'comment-start)
@@ -985,6 +985,80 @@ if that value is non-nil."
       (cons (car list)
 	    (oz-insert-menu menu (cdr list))))))
 
+
+;;;; Lisp paragraph filling commands.
+
+(defun oz-fill-paragraph (&optional justify)
+  "Like \\[fill-paragraph], but handle Oz comments.
+If any of the current line is a comment, fill the comment or the
+paragraph of it that point is in, preserving the comment's indentation
+and initial semicolons."
+  (interactive "P")
+  (let (
+	;; Non-nil if the current line contains a comment.
+	has-comment
+
+	;; If has-comment, the appropriate fill-prefix for the comment.
+	comment-fill-prefix
+	)
+
+    ;; Figure out what kind of comment we are looking at.
+    (save-excursion
+      (beginning-of-line)
+      (cond
+
+       ;; A line with nothing but a comment on it?
+       ((looking-at "[ \t]*%[% \t]*")
+	(setq has-comment t
+	      comment-fill-prefix (buffer-substring (match-beginning 0)
+						    (match-end 0))))
+
+       ;; A line with some code, followed by a comment?  Remember that the
+       ;; semi which starts the comment shouldn't be part of a string or
+       ;; character.
+       ((progn
+	  (while (not (looking-at "%\\|$"))
+	    (skip-chars-forward "^%\n\\\\")
+	    (cond
+	     ((eq (char-after (point)) ?\\) (forward-char 2))))
+	  (looking-at "%+[\t ]*"))
+	(setq has-comment t)
+	(setq comment-fill-prefix
+	      (concat (make-string (current-column) ? )
+		      (buffer-substring (match-beginning 0) (match-end 0)))))))
+
+    (if (not has-comment)
+	(fill-paragraph justify)
+
+      ;; Narrow to include only the comment, and then fill the region.
+      (save-restriction
+	(narrow-to-region
+	 ;; Find the first line we should include in the region to fill.
+	 (save-excursion
+	   (while (and (zerop (forward-line -1))
+		       (looking-at "^[ \t]*%")))
+	   ;; We may have gone to far.  Go forward again.
+	   (or (looking-at "^[ \t]*%")
+	       (forward-line 1))
+	   (point))
+	 ;; Find the beginning of the first line past the region to fill.
+	 (save-excursion
+	   (while (progn (forward-line 1)
+			 (looking-at "^[ \t]*%")))
+	   (point)))
+
+	;; Lines with only semicolons on them can be paragraph boundaries.
+	(let ((paragraph-start (concat paragraph-start "\\|^[ \t%]*$"))
+	      (paragraph-separate (concat paragraph-start "\\|^[ \t%]*$"))
+	      (fill-prefix comment-fill-prefix))
+	  (fill-paragraph justify))))
+    t))
+
+
+;; oz auto fill not impl (mm)
+(defun oz-auto-fill ()
+;  (let ((start (oz-comment-start)))
+  (message "Oz auto fill: not implemented"))
 
 ;;------------------------------------------------------------
 ;; Fontification
