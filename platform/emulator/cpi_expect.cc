@@ -815,7 +815,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return PROCEED;                                     
     default:						
-      error("Unexpected return value.");			
+      OZ_error("Unexpected return value.");			
     }							
   }
   

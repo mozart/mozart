@@ -920,7 +920,7 @@ int featureCmp(TaggedRef a,TaggedRef b)
   case OZCONST:
     return tagged2BigInt(a)->cmp(tagged2BigInt(b));
   default:
-    error("featureCmp");
+    OZ_error("featureCmp");
     return 0;
   }
 }

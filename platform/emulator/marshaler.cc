@@ -970,7 +970,7 @@ loop:
     }
 
   default:
-    error("unmarshal: unexpected tag: %d\n",tag); 
+    OZ_error("unmarshal: unexpected tag: %d\n",tag); 
     Assert(0);
     *ret = oz_nil();
     return;

@@ -39,11 +39,6 @@
 
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
 
-extern "C" {
-void error( const char *format ...);
-}
-
-
 extern ozostream *cpi_cout;
 
 #  define DEBUG_FD_IR(COND, CODE) if (COND) { *cpi_cout << CODE << flush;}
@@ -1564,7 +1559,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
 
 	len_arr ++;
       } else {
-	error("Unexpected case when creating finite domain.");
+	OZ_error("Unexpected case when creating finite domain.");
       }
       left_arr.request(len_arr);
       right_arr.request(len_arr);
@@ -1574,7 +1569,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
     return initList(len_arr, left_arr, right_arr, min_arr, max_arr);
   }
  error:
-  error("Unexpected term in finite description list.");
+  OZ_error("Unexpected term in finite description list.");
   return -1;
 }
 
@@ -2253,7 +2248,7 @@ OZ_FiniteDomain::OZ_FiniteDomain(OZ_FDState state)
     CASTTHIS->initBool();
     break;
   default:
-    error("Unexpected OZ_FDState.");
+    OZ_error("Unexpected OZ_FDState.");
     break;
   }
 }
@@ -2500,7 +2495,7 @@ void OZ_FiniteDomainImpl::print(ostream &ofile, int idnt) const
     get_iv()->print(ofile, idnt);
     break;
   default:
-    error("unexpected case");
+    OZ_error("unexpected case");
   }
   //  DEBUG_FD_IR(FALSE, ((getType() == fd_descr) ? 'f' :
   //	      (getType() == bv_descr ? 'b' : 'i')) << '#' << size);

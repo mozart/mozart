@@ -71,12 +71,12 @@
 static int checkzlibversion()
 {
   if (strcmp(ZLIB_VERSION,zlibVersion()) != 0) {
-    error("version mismatch in zlib version: header (%s) != library(%s)\n",
-	  ZLIB_VERSION,zlibVersion());
+    OZ_error("version mismatch in zlib version: header (%s) != library(%s)\n",
+	     ZLIB_VERSION,zlibVersion());
   }
   
   if (strncmp(ZLIB_VERSION,"1.1",3) != 0) {
-    error("zlib version 1.1.x needed: got %s\n",ZLIB_VERSION);
+    OZ_error("zlib version 1.1.x needed: got %s\n",ZLIB_VERSION);
   }
   
   return 1;

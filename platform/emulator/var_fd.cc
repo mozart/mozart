@@ -264,7 +264,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
       break;
     }
   default:
-    error("unexpected case in FD::unify");
+    OZ_error("unexpected case in FD::unify");
     break;
   } // switch (varIsLocal + 2 * termIsLocal) {
   return TRUE;

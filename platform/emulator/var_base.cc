@@ -195,7 +195,7 @@ void oz_var_printStream(ostream &out, const char *s, OzVariable *cv, int depth)
     out << s;
     ((ExtVar *)cv)->printStreamV(out,depth); return;
   default:
-    error("not impl"); return;
+    OZ_error("not impl"); return;
   }
 }
 

@@ -52,7 +52,7 @@ void prefixWarning()
 
 extern char *AMVersion, *AMDate, *ozplatform;
 
-void error(const char *format, ...)
+void OZ_error(const char *format, ...)
 {
   va_list ap;
 
@@ -110,7 +110,7 @@ void OZ_warning(const char *format, ...)
 
 void ozperror(const char *msg)
 {
-  error("UNIX ERROR: %s: %s",msg,OZ_unixError(errno));
+  OZ_error("UNIX ERROR: %s: %s",msg,OZ_unixError(errno));
 }
 
 void ozpwarning(const char *msg)
