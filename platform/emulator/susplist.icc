@@ -38,18 +38,6 @@
 //                           class SuspList
 
 inline
-Bool SuspList::hasSuspAt(Board * b) {
-  b = b->derefBoard();
-  for (SuspList * sl = this; sl ; sl = sl->getNext()) {
-    Suspendable * s = sl->getSuspendable();
-    if (!s->isDead() && !s->isRunnable() &&
-        (b == s->getBoardInternal()->derefBoard()))
-      return OK;
-  }
-  return NO;
-}
-
-inline
 SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
 {
   if (this) {
