@@ -107,7 +107,7 @@ HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 %% Files
 %%
 
-BitMapDir              = {System.get home} # '/lib/images/'
+BitMapDir              = {System.get home} # '/tools/images/'
 BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 
 

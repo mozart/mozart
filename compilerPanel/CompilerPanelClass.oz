@@ -100,7 +100,7 @@ local
       Options = {New OptionsClass init()}
    end
 
-   BitmapPath = '@'#{System.get home}#'/lib/images/'
+   BitmapPath = '@'#{System.get home}#'/tools/images/'
 
    Black = c(0 0 0)
    Gray = c(127 127 127)
