@@ -12,4 +12,4 @@ HTMLEXTRASUPPORTFILES = \
 	danger.gif
 OZDOCHTMLFLAGS = --autoindex
 
-include $(SRCDIR)/../Makefile.common
+include ../Makefile.common
