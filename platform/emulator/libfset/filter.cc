@@ -46,6 +46,6 @@ OZ_Service &OZ_Service::replace_propagator(OZ_Propagator * prop,
     cpivar->dropParameter();
   }
   //
-    _closed = 1;
-    return *this;
+  _closed = 1;
+  return *this;
 }
