@@ -30,6 +30,17 @@
 #include "os.hh"
 #include "value.hh"
 
+inline
+void oz_resetLocalPropagatorQueue(Board *bb) {
+  LocalPropagatorQueue *lpq = bb->getLocalPropagatorQueue();
+  if (!lpq)
+    return;
+
+  lpq->getLPQThread()->getTaskStackRef()->makeEmpty();
+  lpq->dispose();
+  bb->setLocalPropagatorQueue(NULL);
+}
+
 #define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)      \
 {                                               \
   switch (oz_isBetween(prop->getBoardInternal(), home)) { \

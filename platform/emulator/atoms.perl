@@ -17,6 +17,8 @@
           ( AtomCompl,     "compl"),
 
           ( AtomEmpty,     ""),
+          ( AtomNewLine,   "\n"),
+
           ( AtomUpper,     "upper"),
           ( AtomLower,     "lower"),
           ( AtomDigit,     "digit"),
@@ -197,6 +199,11 @@
           ( AtomLock,           "lock" ),
           ( AtomClass,          "class" ),
           ( AtomResource,       "resource" ),
+
+          ( AtomExtension,      "extension" ),
+          ( AtomSituatedExtension, "situatedExtension" ),
+          ( AtomSited,             "sited" ),
+          ( AtomAssembler,       "assembler" ),
 
           ( E_ERROR,            "error"),
           ( E_KERNEL,           "kernel"),

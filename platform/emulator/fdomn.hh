@@ -87,11 +87,11 @@ public:
     return heapMalloc(FDIntervals::sizeOf(hi));
   }
   void * operator new (size_t)  {
-    OZ_error("Unexpected call of FDIntervals::new.");
+    DebugCode(OZ_error("Unexpected call of FDIntervals::new."));
     return NULL;
   }
   void operator delete(void *, size_t) {
-    OZ_error("Unexpected call of FDIntervals::delete.");
+    DebugCode(OZ_error("Unexpected call of FDIntervals::delete."));
   }
   void dispose(void) {
     freeListDispose(this, sizeOf());
@@ -159,13 +159,15 @@ private:
 #endif
 public:
   void * operator new (size_t) {
-    OZ_error("Unexpected call of FDBitVector::new.");
+    DebugCode(OZ_error("Unexpected call of FDBitVector::new."));
     return NULL;
   }
   void operator delete(void *, size_t) {
-    OZ_error("Unexpected call of FDBitVector::delete.");
+    DebugCode(OZ_error("Unexpected call of FDBitVector::delete."));
   }
-  FDBitVector(void) { OZ_error("Unexpected call of FDBitVector::FDBitVector."); }
+  FDBitVector(void) {
+    DebugCode(OZ_error("Unexpected call of FDBitVector::FDBitVector."));
+  }
   FDBitVector(int hi) : high(hi) { Assert(high <= word32(fd_bv_max_elem)); }
 
   static size_t sizeOf(int hi) { return (1 + hi) * sizeof(int); }
