@@ -42,7 +42,7 @@ LINKS=          ozengine text2pickle pickle2text oldpickle2text oztool
 LIB_SCRIPTS=    $(addprefix $(BINDIR)/,$(SCRIPTS))
 LIB_LINKS=      $(addprefix $(BINDIR)/,$(LINKS))
 
-WINEXES=        setup.exe oz.exe ozengine.exe
+WINEXES=        setup.exe oz.exe ozengine.exe ozwrapper.exe
 MSWIN=          @MSWIN@
 
 .PHONY: bootstrap all install clean veryclean distclean depend check
@@ -58,8 +58,7 @@ ifeq ($(MSWIN),yes)
 
 install: $(WINEXES)
         $(INSTALL_DIR) $(PREFIX)/winbin
-        $(INSTALL_BIN) ozwindynld oz.exe oz.ico setup.exe setup.ico\
-                        ozc.bat ozengine.exe $(PREFIX)/winbin
+        $(INSTALL_BIN) $(WINEXES) ozwindynld oz.ico setup.ico $(PREFIX)/winbin
 
 all: $(WINEXES)
 
@@ -108,14 +107,23 @@ ifeq ($(MSWIN),yes)
 
 setup.cc oz.cc ozengine.cc: version.h
 
-ozengine.exe: ozengine.o
+ozengine.exe: ozengine.cc
         $(CC) -s -o $@ $<
+
+oz.o: oz.cc
+        $(CC) -c -o $@ $<
 
 oz.exe: oz.o
         $(CC) -s -o $@ $< -mwindows
 
+setup.o: setup.cc
+        $(CC) -c -o $@ $<
+
 setup.exe: setup.o
         $(CC) -s -o $@ $< -mwindows
+
+ozwrapper.exe: ozwrapper.cc
+        $(CC) -s -o $@ $<
 
 
 version.h: $(SRCTOP)/OZVERSION
