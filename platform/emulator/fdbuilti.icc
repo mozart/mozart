@@ -233,7 +233,9 @@ OZ_Bool BIfdBodyManager::unify_cd(int var, int prime) {
 
 inline
 Bool BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
-
+#ifdef NEWCOUNTER
+  killPropagatedCurrentTaskSusp();
+#endif
   Suspension * s = NULL;
 
   for (int i = curr_num_of_vars; i--; )
