@@ -392,19 +392,19 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
 }
 
 static
-void printLoc(FILE *ofile,OZ_Location *loc) {
-  if (loc->getInArity()) {
+void printLoc(FILE *ofile,Builtin * bi, OZ_Location *loc) {
+  if (bi->getInArity()) {
     fprintf(ofile,"[");
-    for (int i=0; i<loc->getInArity(); i++) {
+    for (int i=0; i<bi->getInArity(); i++) {
       fprintf(ofile,"%sx(%d)",i?" ":"",loc->getIndex(i));
     }
     fprintf(ofile,"]");
   } else
     fprintf(ofile,"nil");
   fprintf(ofile,"#");
-  if (loc->getOutArity()) {
+  if (bi->getOutArity()) {
     fprintf(ofile,"[");
-    for (int i=0; i<loc->getOutArity(); i++) {
+    for (int i=0; i<bi->getOutArity(); i++) {
       fprintf(ofile,"%sx(%d)",i?" ":"",loc->getIndex(i));
     }
     fprintf(ofile,"]");
@@ -747,13 +747,13 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case CALLBI: // mm2
       fprintf(ofile, "(%s ", getBIName(PC+1));
-      printLoc(ofile,GetLoc(PC+2));
+      printLoc(ofile,GetBI(PC+1),GetLoc(PC+2));
       fprintf(ofile, ")\n");
       DISPATCH();
 
     case TESTBI: // mm2
       fprintf(ofile, "(%s ", getBIName(PC+1));
-      printLoc(ofile,GetLoc(PC+2));
+      printLoc(ofile,GetBI(PC+1),GetLoc(PC+2));
       fprintf(ofile, " %p)\n",computeLabelArg(PC,PC+3));
       DISPATCH();
 
@@ -1323,27 +1323,26 @@ ProgramCounter CodeArea::writeAbstractionEntry(AbstractionEntry *p, ProgramCount
 OZ_Location * OZ_ID_LOC;
 
 void initOzIdLoc(void) {
-  OZ_ID_LOC = OZ_Location::newLocation(NumberOfXRegisters,0);
+  OZ_ID_LOC = OZ_Location::newLocation(NumberOfXRegisters);
   for (int i=NumberOfXRegisters; i--;  )
     OZ_ID_LOC->set(i,i);
 }
 
-TaggedRef OZ_Location::getArgs(void) {
+TaggedRef OZ_Location::getArgs(Builtin * bi) {
   TaggedRef out=oz_nil();
   int i;
-  for (i=getOutArity(); i--; ) {
+  for (i=bi->getOutArity(); i--; ) {
     out=oz_cons(oz_newVariable(),out);
   }
-  for (i=getInArity(); i--; ) {
+  for (i=bi->getInArity(); i--; ) {
     out=oz_cons(getInValue(i),out);
   }
   return out;
 }
 
-TaggedRef OZ_Location::getInArgs(void) {
+TaggedRef OZ_Location::getInArgs(Builtin * bi) {
   TaggedRef out=oz_nil();
-  for (int i=getInArity(); i--; )
+  for (int i=bi->getInArity(); i--; )
     out=oz_cons(getInValue(i),out);
   return out;
 }
-
