@@ -548,8 +548,13 @@ define
 
 
    T Online Offline Others Apps StatusV
-
-   proc{ErrorBox M} E={New TkTools.error tkInit(master:T text:M)} in {Tk.send bell} {Wait E.tkClosed} end
+   
+   proc{ErrorBox M}
+      E=if {IsDet T} then {New TkTools.error tkInit(master:T text:M)}
+	else {New TkTools.error tkInit(text:M)} end
+   in
+      {Tk.send bell} {Wait E.tkClosed}
+   end
    
    proc{Shutdown} if {IsDet GUIisStarted} then {T tkClose} end end
 
