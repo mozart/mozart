@@ -1300,10 +1300,12 @@ void WeakStack::recurse(void)
 }
 
 // isNowMarked(t) returns true iff
-//	t is a marked name, extension, ltuple, srecord, const, var
+//	t is a marked name, extension, const, var
 // the logic is adapted from gcTagged(TaggedRef&,TaggedRef&)
+// and simplified according to a suggestion by Christian.
 inline int isNowMarked(OZ_Term t)
 {
+ redo:
   switch (tagTypeOf(t)) {
   case REF:
   case REFTAG2:
@@ -1315,22 +1317,7 @@ inline int isNowMarked(OZ_Term t)
 	ptr = tagged2Ref(t);
 	t   = *ptr;
       } while (oz_isRef(t));
-      switch (tagTypeOf(t)) {
-      case REF: case REFTAG2: case REFTAG3: case REFTAG4: {}
-      case GCTAG     : goto RETURN_YES;
-      case SMALLINT  : goto RETURN_NO;
-      case FSETVALUE : goto RETURN_NO;
-      case LITERAL   : goto DO_LITERAL;
-      case EXT       : goto DO_EXT;
-      case LTUPLE    : goto RETURN_NO;
-      case SRECORD   : goto RETURN_NO;
-      case OZFLOAT   : goto RETURN_NO;
-      case OZCONST   : goto DO_OZCONST;
-      case UNUSED_VAR: goto IMPOSSIBLE;
-      case UVAR      : goto IMPOSSIBLE;
-      case CVAR      : goto DO_CVAR;
-      }
-      Assert(NO);
+      goto redo;
     }
   case GCTAG     : goto RETURN_YES;
   case SMALLINT  : goto RETURN_NO;
