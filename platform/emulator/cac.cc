@@ -1464,13 +1464,6 @@ TaskStack * TaskStack::_cac(void) {
       oz_cacTerm(*CAP, *CAP);
     } else if (PC == C_SET_SELF_Ptr) {
       oz_cacTerm(*CAP, *CAP);
-    } else if (PC == C_DEL_SUSPS_Ptr) {
-      // the Y register bank is really just
-      // a TaggedRef which is the list of
-      // vars on which the thread is suspended
-      // and from which it must deregister itself
-      // upon waking up
-      oz_cacTerm(*(TaggedRef*)Y,*(TaggedRef*)Y);
     } else if (PC == C_SET_ABSTR_Ptr) {
       ;
     } else if (PC == C_DEBUG_CONT_Ptr) {

@@ -73,8 +73,7 @@ static Bool isUninterestingTask(ProgramCounter PC) {
     PC == C_CALL_CONT_Ptr ||
     PC == C_SET_SELF_Ptr ||
     PC == C_SET_ABSTR_Ptr ||
-    PC == C_CATCH_Ptr ||
-    PC == C_DEL_SUSPS_Ptr;
+    PC == C_CATCH_Ptr;
 }
 
 
@@ -227,19 +226,7 @@ Bool TaskStack::findCatch(Thread *thr,
     }
 
     PopFrame(this,PC,Y,G);
-    if (PC==C_DEL_SUSPS_Ptr) {
-      // when we unwind the stack, it is important
-      // to execute any TASKDELSUSPS which it contains.
-      // actually, there can be only at most 1 such task
-      // since it is pushed only when the thread suspends.
-      // The need for this only arises in conjunction
-      // with threadInject into a suspended thread.
-      // Leif suggested this trick to me --denys
-      // the list of what used to be the variables on
-      // which the thread suspended mascarades as the
-      // Y register bank.
-      thr->removeSuspensions((TaggedRef)Y);
-    } else if (PC==C_CATCH_Ptr) {
+    if (PC==C_CATCH_Ptr) {
       if (out) *out = reverseC(*out);
 
       // If there was a set self, push it back!
