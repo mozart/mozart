@@ -7,7 +7,6 @@ srcdir=`cd $srcdir 2> /dev/null && pwd`
 if test "$prefix" = NONE; then
   prefix="$ac_default_prefix"
 fi
-prefix=`cd $prefix 2> /dev/null && pwd`
 dnl
 dnl
 dnl
