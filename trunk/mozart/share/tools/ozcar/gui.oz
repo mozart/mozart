@@ -135,7 +135,6 @@ in
       attr
 	 LastSelectedFrame : 0
 	 EnvSync           : _
-	 StatusSync        : _
 	 MarkStackSync     : _
 	 MarkEnvSync       : _
 
@@ -253,7 +252,7 @@ in
 	    self.subThreadsMenu =
 	    {New TkTools.popupmenu tkInit(parent:   self.ButtonFrame
 					  entries:  SubThreadsList
-					  selected: 3
+					  selected: 2
 					  relief:   raised
 					  padx:     5
 					  pady:     2
@@ -284,14 +283,15 @@ in
 	 end
 
 	 self.StatusText =
-	 {New Tk.text tkInit(parent: self.StatusFrame
-			     state:  disabled
-			     height: 1
-			     width:  0
-			     bd:     0
-			     cursor: TextCursor
-			     font:   StatusFont
-			     wrap:   none)}
+	 {New StatusDisplay
+	  tkInit(parent: self.StatusFrame
+		 state:  disabled
+		 height: 1
+		 width:  0
+		 bd:     0
+		 cursor: TextCursor
+		 font:   StatusFont
+		 wrap:   none)}
 	 {self.StatusText tkBind(event:  HelpEvent
 				 action: self # help(StatusHelp))}
 	 {Tk.send pack(self.StatusText side:left padx:2 fill:x expand:yes)}
@@ -494,8 +494,8 @@ in
 	    case Highlight then
 	       L = case F.line == unit then unit else {Abs F.line} end
 	    in
-	       {SendEmacs bar(file:F.file line:L column:F.column
-			      state:unchanged)}
+	       {SendEmacs delayedBar(file:F.file line:L column:F.column
+				     state:unchanged)}
 	       Gui,SelectStackFrame(F.nr)
 	    else
 	       Gui,SelectStackFrame(0)
@@ -652,7 +652,12 @@ in
 	 else
 	    {self.StackText title(AltStackTitle # I)}
 	    case Depth == 0 then
-	       Gui,Append(W ' The stack is empty.')
+	       case {CheckState @currentThread} == running then
+		  Gui,Append(W (' There is no stack available\n as' #
+				' the thread is still running.'))
+	       else
+		  Gui,Append(W ' The stack is empty.')
+	       end
 	       Gui,Disable(W)
 	       Gui,clearEnv
 	    else
@@ -701,27 +706,11 @@ in
       end
 
       meth status(S M<=clear C<=DefaultForeground)
-	 New in
-	 StatusSync <- New = unit
-	 thread
-	    {WaitOr New {Alarm TimeoutToUpdate}}
-	    case {IsDet New} then skip else
-	       Gui,DoStatus(S M C)
-	    end
-	 end
-      end
-
-      meth DoStatus(S M<=clear C<=DefaultForeground)
-	 W = self.StatusText
-      in
-	 StatusSync <- _ = unit
 	 case M == clear then
-	    Gui,Clear(W)
+	    {self.StatusText replace(S C)}
 	 else
-	    Gui,Enable(W)
+	    {self.StatusText append(S C)}
 	 end
-	 Gui,Append(W S C)
-	 Gui,Disable(W)
       end
 
       meth BlockedStatus(T A)

@@ -336,6 +336,9 @@ in
    PrintDepth = P.depth
 end
 
+TimeoutToSwitch            = 100
+TimeoutToUpdateEnv         = 200
+
 Config =
 {New
  class
@@ -353,8 +356,8 @@ Config =
        useEmacsBar :           ConfigUseEmacsBar
        printWidth:             PrintWidth
        printDepth:             PrintDepth
-       timeoutToSwitch:        0
-       timeoutToUpdateEnv:     0
+       timeoutToSwitch:        TimeoutToSwitch
+       timeoutToUpdateEnv:     TimeoutToUpdateEnv
 
     meth init
        D = {Dictionary.new}

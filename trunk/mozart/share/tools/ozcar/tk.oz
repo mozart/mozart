@@ -139,7 +139,7 @@ class ScrolledTitleText from Tk.text TkSmoother
 		    grid(rowconfigure    self.frame 1 weight:1)
 		    grid(columnconfigure self.frame 0 weight:1)]}
       end
-      %{self.frame tk(conf pady:2)} %% --**
+      Tk.text,tk(conf pady:2)
    end
    meth title(S)=M
       {self.frame M}
@@ -156,5 +156,25 @@ class ScrolledTitleText from Tk.text TkSmoother
       end
    in
       {DoIt NextTag<-self.TagBase}
+   end
+end
+
+class StatusDisplay from Tk.text TkSmoother
+   meth replace(Message Color<=unit)
+      StatusDisplay,DoIt(Message true Color)
+   end
+   meth append(Message Color<=unit)
+      StatusDisplay,DoIt(Message false Color)
+   end
+   meth DoIt(Message Clear Color)
+      {self tk(conf state:normal)}
+      case Clear then
+	 {self tk(delete p(0 0) 'end')}
+      else skip end
+      {self tk(insert 'end' Message)}
+      case Color == unit then skip else
+	 {self tk(conf fg:Color)}
+      end
+      {self tk(conf state:disabled)}
    end
 end
