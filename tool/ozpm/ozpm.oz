@@ -4,7 +4,7 @@ import
    Archive
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
    System(show:Show
-	  showInfo:ShowInfo)
+	  showInfo:Print)
    Application
    Property
    OS
@@ -14,15 +14,16 @@ import
    FileUtils(expand:Expand withSlash:WithSlash fullName:FullName
 	     exists:Exists
 	     mkdir:Mkdir
-	     fileTree:FileTree dirname:Dirname)
+	     fileTree:FileTree
+	     dirname:Dirname
+	     addToPath:AddToPath)
    Resolve
    Message(parse:Parse slurp:Slurp)
    InteractiveManager
 define
 
-   PlatformWindows={Property.get 'platform.os'}==win32
-   
-   OZPMINFO={Expand "~/.oz/ozpm/ozpm.info"}
+   PlatformWindows={Property.get 'platform.os'}==win32   
+   OZPMINFO={Expand ".ozpm.info"}
    OZPMMANIFEST='OZPMMFT.PKL'
    OZPMMANIFESTTEXT='OZPMMFT.TXT'
    OZPMPKG={Expand "~/.oz/"}
@@ -40,7 +41,7 @@ define
 	 raise error(unableToCreateDirectory P) end
       end
    end
-   
+
    class ArchiveManagerClass
 
       feat mogul
@@ -54,12 +55,11 @@ define
 	 skip
       end
 
-      meth list(L)
-	 L={List.map OzpmInfo fun{$ R} R.name end}
+      meth list(L prefix:Prefix<=OZPMPKG)
+	 L={List.map OzpmInfo fun{$ R} R.id end}
       end
 
-      meth install(Package switch:Switch<=none result:Result<=_ prefix:Pref<=OZPMPKG)
-	 Prefix={WithSlash {Expand Pref}}
+      meth install(Package switch:Switch<=none result:Result<=_)
 	 PackageFile={Resolve.localize Package}.1
 	 A = {New Archive.'class' init(PackageFile)}
 	 PLS={A lsla($)}
@@ -76,7 +76,7 @@ define
 	 %%
 	 %% cross checks with the informations of the local installation is done here
 	 %%
-	 if {HasFeature Switch force} then %% always install, ignore all tests
+	 if {CondSelect Switch force false} then %% always install, ignore all tests
 	    skip
 	 else
 	    _={List.takeWhile OzpmInfo
@@ -106,10 +106,11 @@ define
 	    %%
 	    %% getting this far means the package can be installed
 	    %%
+	    {Print Prefix}
 	    {ForAll PInfo.filelist
 	     proc{$ File}
-		{CreatePath {Dirname Prefix#File}}
-		{A extract(File Prefix#File)}
+		{CreatePath {Dirname {AddToPath Prefix File}}}
+		{A extract(File {AddToPath Prefix File})}
 	     end}
 	    %% update ozpminfo
 	    {Pickle.save {Record.adjoinAt PInfo lsla PLS}|
@@ -117,13 +118,15 @@ define
 	      fun{$ Entry}
 		 Entry.id\=PInfo.id %% forcing an install keeps only one version
 	      end}
-	     OZPMINFO}
+	     OzpmInfoFile
+	    }
 	    Result=success(pkg:PInfo)
 	    {A close}
 	 end
       end
       
-      meth info(Id Info)
+      meth info(Id1 Info)
+	 Id={ByteString.make Id1}
 	 L={List.dropWhile OzpmInfo
 	    fun{$ Entry}
 	       Entry.id\=Id
@@ -149,6 +152,7 @@ define
 	    end
 	 in
 	    Files={List.subtract {List.subtract {List.flatten {Loop FT}} OZPMMANIFEST} OZPMMANIFESTTEXT}
+	    {ForAll Files Print}
 	 end
 	 Info={Record.adjoinAt
 	       {Record.map
@@ -164,7 +168,9 @@ define
 			       flags:[write create])}
 	 {F write(vs:TXT)}
 	 {F close}
+	 {Show 1}
 	 {Archive.makeFrom Out OZPMMANIFEST|OZPMMANIFESTTEXT|Files In}
+	 {Show 2}
 	 {OS.unlink MFTPKL}
 	 {OS.unlink MFTTXT}
       end
@@ -229,51 +235,63 @@ define
 		'update'(single type:bool default:false)
 	       )}
 
+   
    Action = Args.action
    InteractiveMode=Action==interactive
+
+   Prefix={CondSelect Args prefix OZPMPKG}
+   
+   OzpmInfoFile={AddToPath Prefix OZPMINFO}
+
    
    OzpmInfo={ByNeed fun{$}
 		       Ret
 		    in
-		       try Ret={Pickle.load OZPMINFO}
-		       catch error(url(load OZPMINFO) ...) then
-			  if InteractiveMode then
-			     %% application not properly installed, try to recover
-			     %% interactively
-			     R
-			     {{QTk.build td(title:"Oz Package Manager"
-					    action:toplevel#close
-					    label(text:"First time installation (or recovery)\n\nContinue installation ?"
-						  padx:10 pady:10)
-					    lr(glue:swe
-					       button(text:"Ok"
-						      action:toplevel#close
-						      return:R)
-					       button(text:"Cancel"
-						      action:toplevel#close)))} show(wait:true)}
-			  in
-			     if R then
-				{CreatePath {Dirname OZPMINFO}}
-				{Pickle.save nil OZPMINFO}
-				Ret=nil
-			     else {Application.exit 1} end
-			  else
-			     {ShowInfo "ozpm not installed properly, please start it in interactive mode or reinstall"}
-			     {Application.exit 1}
-			  end
+		       try
+			  Ret={Pickle.load OzpmInfoFile}
+		       catch error(url(load ...) ...) then
+			  {CreatePath {Dirname OzpmInfoFile}}
+			  {Pickle.save nil OzpmInfoFile}
+			  Ret=nil
 		       end
 		       Ret
 		    end}
+   
+%   OzpmInfo={ByNeed fun{$}
+%		       Ret
+%		    in
+%		       try Ret={Pickle.load OZPMINFO}
+%		       catch error(url(load OZPMINFO) ...) then
+%			  if InteractiveMode then
+%			     %% application not properly installed, try to recover
+%			     %% interactively
+%			     R
+%			     {{QTk.build td(title:"Oz Package Manager"
+%					    action:toplevel#close
+%					    label(text:"First time installation (or recovery)\n\nContinue installation ?"
+%						  padx:10 pady:10)
+%					    lr(glue:swe
+%					       button(text:"Ok"
+%						      action:toplevel#close
+%						      return:R)
+%					       button(text:"Cancel"
+%						      action:toplevel#close)))} show(wait:true)}
+%			  in
+%			     if R then
+%				{CreatePath {Dirname OZPMINFO}}
+%				{Pickle.save nil OZPMINFO}
+%				Ret=nil
+%			     else {Application.exit 1} end
+%			  else
+%			     {ShowInfo "ozpm not installed properly, please start it in interactive mode or reinstall"}
+%			     {Application.exit 1}
+%			  end
+%		       end
+%		       Ret
+%		    end}
 
    ArchiveManager={New ArchiveManagerClass init}
 
-   fun{CondFeat R F D}
-      if {HasFeature R F} then R.F else D end
-   end
-
-   proc{Print VS}
-      {ShowInfo if VS==nil then "" else {VirtualString.toString VS} end}
-   end
   
    fun{RAlign VS I}
       {List.map
@@ -287,11 +305,12 @@ define
 	  fun{$ C} C=&  end}
    end
 
+   
    proc{PrintInfo I L}
       {Print "Package id   : "#I.id}
       {Record.forAllInd I
        proc{$ I V}
-	  if I\=filelist andthen I\=id then
+	  if I\=filelist andthen I\=id andthen {VirtualString.is V} then
 	     {Print {LAlign I 13}#": "#V}
 	  end
        end}
@@ -305,6 +324,7 @@ define
        end}
    end
 
+   
    case Action
    of list then % list all installed packages
       {ForAll {ArchiveManager list($)} Print}
@@ -331,30 +351,33 @@ define
       {PrintInfo I L}
       {Application.exit 0}
    [] create then % create a new package
-      {ArchiveManager create({CondFeat Args 'prefix' ""}
+      {ArchiveManager create({CondSelect Args 'prefix' ""}
 			     Args.'out'
-			     {CondFeat Args 'in' {WithSlash {CondFeat Args 'prefix' "."}}#"OZPMINFO"}
-			    )}
+			     {CondSelect Args 'in' {AddToPath {CondSelect Args 'prefix' "."} OZPMINFO}})}
       {Application.exit 0}
    [] install then % install/update a specified package
       R
    in
-      {ArchiveManager install(Args.'in' switch:if {HasFeature Args 'force'} then
-						  switch(force:unit)
-					       else
-						  switch()
-					       end result:R)}
+      {ArchiveManager install(Args.'in' switch:switch(force:Args.'force') result:R)}
       case {Label R}
       of success then
-	 {Print "Package "#R.pkg.name#" was successfully installed"}
+	 {Print "Package "#R.pkg.id#" was successfully installed"}
 	 {Application.exit 0}
       [] nameclash then
-	 {Print "Unable to install package '"#R.pkg.name#"'"}
-	 {Print "The file '"#R.name#"' is conflicting with the installed package '"#R.loc.name#"'"}
+	 {Print "Unable to install package '"#R.pkg.id#"'"}
+	 {Print "The file '"#R.id#"' is conflicting with the installed package '"#R.loc.id#"'"}
 	 {Application.exit 1}
       [] alreadyinstalled then
-	 {Print "Unable to install package '"#R.pkg.name#"', version "#R.pkg.version}
-	 {Print "This package is already installed in version "#R.loc.version}
+	 if {HasFeature R.pkg version} then
+	    {Print "Unable to install package '"#R.pkg.id#"', version "#R.pkg.version}
+	 else
+	    {Print "Unable to install package '"#R.pkg.id#"'"}
+	 end
+	 if {HasFeature R.loc version} then
+	    {Print "This package is already installed in version "#R.loc.version}
+	 else
+	    {Print "A package of the same id is already installed"}
+	 end
 	 {Application.exit 1}
       end
 %   [] indfo then % displays information about an installed package

@@ -1,9 +1,9 @@
 functor
 export
    Expand FileTree Mkdir Rmtree Exists WithSlash FullName
-   Dirname Basename
+   Dirname Basename AddToPath
 import
-   URL(toVirtualStringExtended isAbsolute make) Resolve(expand)
+   URL(toVirtualStringExtended isAbsolute make toBase toVirtualStringExtended resolve) Resolve(expand)
    OS(getDir stat system unlink)
    Shell(shellCommand isWindows:IsWindows rmdir)
    Property(get)
@@ -103,16 +103,28 @@ define
    %%
    %% adds a trailing slash if not present
    %%
+%   fun{WithSlash N}
+%      V={VirtualString.toString N}
+%   in
+%      if (Windows andthen {List.last V}\=&\\)
+%	 orelse ((Windows==false) andthen {List.last V}\=&/) then
+%	 {VirtualString.toString V#if Windows then "\\" else "/" end}
+%      else
+%	 V
+%      end
+%  end
    fun{WithSlash N}
-      V={VirtualString.toString N}
-   in
-      if (Windows andthen {List.last V}\=&\\)
-	 orelse ((Windows==false) andthen {List.last V}\=&/) then
-	 {VirtualString.toString V#if Windows then "\\" else "/" end}
-      else
-	 V
-      end
+      {VirtualString.toString {URL.toVirtualStringExtended {URL.toBase N} o(full:true raw:true)}}
    end
+   %%
+   %%
+   %%
+   fun{AddToPath Path What}
+      {VirtualString.toString
+       {URL.toVirtualStringExtended
+	{URL.resolve {URL.toBase Path} What} o(full:true raw:true)}}
+   end
+   
    %%
    %%
    %%
@@ -122,7 +134,7 @@ define
 	  File
        else
 	  if Home==nil then File
-	  else {WithSlash Home}#File
+	  else  {AddToPath Home File}
 	  end
        end}
    end
