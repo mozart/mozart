@@ -29,18 +29,10 @@ void printBCDebug(Board * = NULL);
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
 
-Thread * createPropagator (OZ_Propagator * p, int prio);
-
 inline
 Bool isUnifyCurrentPropagator () {
   Assert (am.currentThread->isPropagator ());
   return (am.currentThread->isUnifyThread ());
-}
-
-inline
-Thread *makeHeadThread (OZ_Propagator * p, int prio)
-{
-  return am.mkPropagator(am.currentBoard, prio, p);
 }
 
 #endif
