@@ -64,8 +64,8 @@ define
       
       {Tk.send pack(Menu side:top fill:x)}
       
-      MB0 MB1 MB2 MB3
-      M0 M1 M2 M3
+      MB1 MB2 MB3
+      M1 M2 M3
       AAbout AExit
       
       ALoadSolution
@@ -76,7 +76,7 @@ define
       ALoadProblem
 \endif
    
-      AConstraints AFirstSol AOptimize
+      AFirstSol AOptimize
       AIntrOpt ADispGraphical ADispBrowsing
       ADispTextual
    
@@ -176,12 +176,12 @@ define
 
    in
 
-      {ForAll [ [MB0 "Desk"] [MB1 " File"] [MB2 " Compute"] [MB3 " Output"] ]
+      {ForAll [ [MB1 " File"] [MB2 " Compute"] [MB3 " Output"] ]
        proc {$ MB}
 	  MB.1 = {New Tk.menubutton tkInit(parent:Menu text:MB.2.1)}
        end}
       
-      {ForAll [ [M0 MB0] [M1 MB1] [M2 MB2] [M3 MB3] ]
+      {ForAll [ [M1 MB1] [M2 MB2] [M3 MB3] ]
        proc {$ M} M.1 = {New Tk.menu tkInit(parent:M.2.1)} end}
 
       AAbout = {New Tk.action tkInit(parent: Menu action: About)}
@@ -202,9 +202,7 @@ define
 	       [_             DoFileOp edit read]
 	       [ALoadSolution DoFileOpAlone read read]
 \endif
-	       [AConstraints Compute constrainProblem browse]
 	       [AFirstSol Compute solveProblem graphic]
-%	       [AOptimize Compute optimizeProblem graphic]
 	       [AOptimize TimeTable optimizeProblem none]
 	       [AIntrOpt TimeTable anyTime none]
 	       [ADispGraphical TimeTable graphic none]
@@ -215,7 +213,6 @@ define
 	  Action.1 = {TkAction Action.2.1 Menu Action.2.2.1 Action.2.2.2.1}
        end}
    
-      {M0 tk(add(command(label:"  About this program " command:AAbout)))}
 \ifndef ALONEDEMO
       {ForAll [ ["  Load problem " ALoadProblem]
 		["  Edit problem " AEditProblem]
@@ -226,6 +223,8 @@ define
 		["  Exit " AExit] ]
 \else
        {ForAll [ ["  Load solution " ALoadSolution]
+		 ["--------------"]
+		 ["  About this program " AAbout]
 		 ["--------------"]
 		 ["  Exit " AExit] ]
 \endif       
@@ -238,18 +237,16 @@ define
        {ForAll [ ["  First Solution " AFirstSol]
 		 ["  Optimize Current Solution " AOptimize]
 		 ["--------------"]
-		 ["  Interrupt Solving " AIntrOpt]
-		 ["--------------"]
-		 ["  Constraints " AConstraints] ]
+		 ["  Interrupt Solving " AIntrOpt] ]
 	proc{$ C}
 	   case C.1
 	   of "--------------" then {M2 tk(add(sep))}
 	   else {M2 tk(add(command(label: C.1 command: C.2.1)))}
 	   end
 	end}
-       {ForAll [ ["  Display graphical " ADispGraphical]
-		 ["  Display browsing " ADispBrowsing]
-		 ["  Display textual " ADispTextual]
+       {ForAll [ ["  Display graphically " ADispGraphical]
+		 ["  Display with Browser " ADispBrowsing]
+		 ["  Display textually " ADispTextual]
 	       ]
 	proc{$ C}
 	   case C.1
@@ -258,13 +255,12 @@ define
 	   end
 	end}
       
-       {MB0 tk(conf menu: M0)}
        {MB1 tk(conf menu: M1)}
        {MB2 tk(conf menu: M2)}
        {MB3 tk(conf menu: M3)}
 
-       {Tk.send pack(MB0 MB1 MB2 MB3 side: left)}
-       {Tk.send tk_menuBar(Menu MB0 MB1 MB2 MB3)}
+       {Tk.send pack(MB1 MB2 MB3 side: left)}
+       {Tk.send tk_menuBar(Menu MB1 MB2 MB3)}
 
        ControllerLabel      
    end
