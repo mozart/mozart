@@ -329,9 +329,9 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Take care of linking suspensions
         if (!vLoc) {
             // Add a suspension to the OFSVariable if it is global:
-            Suspension* susp=new Suspension(am.currentBoard);
-            Assert(susp!=NULL);
-            addSuspension(susp);
+            // Suspension* susp=new Suspension(am.currentBoard);
+            // Assert(susp!=NULL);
+            // addSuspension(susp);
         }
         return TRUE;
       }
@@ -406,9 +406,9 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Take care of linking suspensions
         if (!vLoc) {
             // Add a suspension to the OFSVariable if it is global:
-            Suspension* susp=new Suspension(am.currentBoard);
-            Assert(susp!=NULL);
-            addSuspension(susp);
+            // Suspension* susp=new Suspension(am.currentBoard);
+            // Assert(susp!=NULL);
+            // addSuspension(susp);
         }
         return TRUE;
       }
@@ -576,26 +576,26 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
             otherVar->relinkSuspListTo(newVar);
         } else if (vLoc && !tLoc) {
 	    if (mergeWidth>termWidth) {
-                Suspension* susp=new Suspension(am.currentBoard);
-                Assert(susp!=NULL);
-                termVar->addSuspension(susp);
+                // Suspension* susp=new Suspension(am.currentBoard);
+                // Assert(susp!=NULL);
+                // termVar->addSuspension(susp);
 	    } else {
 		relinkSuspListTo(termVar);
 	    }
         } else if (!vLoc && tLoc) {
 	    if (mergeWidth>varWidth) {
-                Suspension* susp=new Suspension(am.currentBoard);
-                Assert(susp!=NULL);
-                addSuspension(susp);
+                // Suspension* susp=new Suspension(am.currentBoard);
+                // Assert(susp!=NULL);
+                // addSuspension(susp);
 	    } else {
 		termVar->relinkSuspListTo(this);
 	    }
         } else if (!vLoc && !tLoc) {
   	    if (prop) {
-	      Suspension* susp=new Suspension(am.currentBoard);
-	      Assert(susp!=NULL);
-	      termVar->addSuspension(susp);
-	      addSuspension(susp);
+	      // Suspension* susp=new Suspension(am.currentBoard);
+	      // Assert(susp!=NULL);
+	      // termVar->addSuspension(susp);
+	      // addSuspension(susp);
 	    }
         } else Assert(FALSE);
 
