@@ -505,6 +505,7 @@ void AM::pushContX(ProgramCounter PC, RefsArray Y, RefsArray G,
 #define Greg(N) RegAccess(G,N)
 
 #define XPC(N) Xreg(getRegArg(PC+N))
+#define GetBI(PC) ((BuiltinTabEntry*) getAdressArg(PC))
 
  
 /* define REGOPT if you want the into register optimization for GCC */
@@ -1493,7 +1494,7 @@ LBLdispatcher:
   Case(CALLBUILTIN)
     {
       COUNT(bicalls);
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
+      BuiltinTabEntry* entry = GetBI(PC+1);
       biFun = entry->getFun();
       predArity = getPosIntArg(PC+2);
 
@@ -1529,14 +1530,12 @@ LBLdispatcher:
   Case(INLINEREL1)
     {
       COUNT(inlinecalls);
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
+      InlineRel1 rel         = (InlineRel1)GetBI(PC+1)->getInlineFun();
 
-  
-      switch(rel(XPC(2))) {
-      case PROCEED:
-	DISPATCH(4);
+      OZ_Return res = rel(XPC(2));
+      if (res==PROCEED) { DISPATCH(4); }
 
+      switch(res) {
       case SUSPEND:
 	if (shallowCP) {
 	  e->trail.pushIfVar(XPC(2));
@@ -1547,14 +1546,14 @@ LBLdispatcher:
 	goto LBLsuspendThread;
       case FAILED:
 	SHALLOWFAIL;
-	HF_APPLY(OZ_atom(entry->getPrintName()),
+	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
 		 cons(XPC(2),nil()));
 
       case RAISE:
 	goto LBLraise;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1(entry->getPrintName(),
+	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
 		    cons(XPC(2),nil()));
 
       case SLEEP:
@@ -1566,12 +1565,12 @@ LBLdispatcher:
   Case(INLINEREL2)
     {
       COUNT(inlinecalls);
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
+      InlineRel2 rel         = (InlineRel2)GetBI(PC+1)->getInlineFun();
 
-      switch(rel(XPC(2),XPC(3))) {
-      case PROCEED:
-	DISPATCH(5);
+      OZ_Return res = rel(XPC(2),XPC(3));
+      if (res==PROCEED) { DISPATCH(5); }
+
+      switch(res) {
 
       case SUSPEND:
 	{
@@ -1587,7 +1586,7 @@ LBLdispatcher:
 	}
       case FAILED:
 	SHALLOWFAIL;
-	HF_APPLY(OZ_atom(entry->getPrintName()),
+	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
 		 cons(XPC(2),cons(XPC(3),nil())));
 
       case RAISE:
@@ -1599,7 +1598,7 @@ LBLdispatcher:
 	goto LBLreplaceBICall;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1(entry->getPrintName(),
+	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
 		    cons(XPC(2),cons(XPC(3),nil())));
 
       case SLEEP:
@@ -1611,13 +1610,12 @@ LBLdispatcher:
   Case(INLINEREL3)
     {
       COUNT(inlinecalls);
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineRel3 rel         = (InlineRel3)entry->getInlineFun();
+      InlineRel3 rel = (InlineRel3)GetBI(PC+1)->getInlineFun();
 
-      switch(rel(XPC(2),XPC(3),XPC(4))) {
-      case PROCEED:
-	DISPATCH(6);
+      OZ_Return res = rel(XPC(2),XPC(3),XPC(4));
+      if (res==PROCEED) { DISPATCH(6); }
 
+      switch(res) {
       case SUSPEND:
 	{
 	  if (shallowCP) {
@@ -1633,14 +1631,14 @@ LBLdispatcher:
 	}
       case FAILED:
 	SHALLOWFAIL;
-	HF_APPLY(OZ_atom(entry->getPrintName()),
+	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
 		 cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))));
 
       case RAISE:
 	goto LBLraise;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1(entry->getPrintName(),
+	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
 		    cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))));
 
 
@@ -1653,14 +1651,17 @@ LBLdispatcher:
   Case(INLINEFUN1)
     {
       COUNT(inlinecalls);
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineFun1 fun         = (InlineFun1)entry->getInlineFun();
+      InlineFun1 fun = (InlineFun1)GetBI(PC+1)->getInlineFun();
 
       // XPC(3) maybe the same register as XPC(2)
-      switch(fun(XPC(2),XPC(3))) {
-      case PROCEED:
-	DISPATCH(5);
+      OZ_Return res = fun(XPC(2),XPC(3));
+      if (res==PROCEED) DISPATCH(5);
+      if (res==FAILED) {
+	SHALLOWFAIL;
+	Assert(0);
+      }
 
+      switch(res) {
       case SUSPEND:
 	{
 	  TaggedRef A=XPC(2);
@@ -1673,10 +1674,6 @@ LBLdispatcher:
 	  goto LBLsuspendThread;
 	}
 
-      case FAILED:
-	SHALLOWFAIL;
-	Assert(0);
-
       case RAISE:            goto LBLraise;
       case BI_REPLACEBICALL: 
 	predArity = getPosIntArg(PC+4);
@@ -1684,7 +1681,7 @@ LBLdispatcher:
 	goto LBLreplaceBICall;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1_FUN(entry->getPrintName(),
+	RAISE_TYPE1_FUN(GetBI(PC+1)->getPrintName(),
 			cons(XPC(2),nil()));
 
       case SLEEP:
@@ -1696,15 +1693,19 @@ LBLdispatcher:
   Case(INLINEFUN2)
     {
       COUNT(inlinecalls);
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineFun2 fun = (InlineFun2)entry->getInlineFun();
-
+      InlineFun2 fun = (InlineFun2)GetBI(PC+1)->getInlineFun();
       
       // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
-      switch(fun(XPC(2),XPC(3),XPC(4))) {
-      case PROCEED:
-	DISPATCH(6);
+      OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
 
+      if (res==PROCEED) DISPATCH(6);
+      if (res==FAILED) {
+	SHALLOWFAIL;
+	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
+		 cons(XPC(2),cons(XPC(3),cons(OZ_newVariable(), nil()))));
+      }
+
+      switch(res) {
       case SUSPEND:
 	{
 	  TaggedRef A=XPC(2);
@@ -1719,12 +1720,6 @@ LBLdispatcher:
 	  goto LBLsuspendThread;
 	}
 
-      case FAILED:
-	SHALLOWFAIL;
-	HF_APPLY(OZ_atom(entry->getPrintName()),
-		 cons(XPC(2),cons(XPC(3),cons(OZ_newVariable(), nil()))));
-	//	error("inlinefun2 fail");
-
       case RAISE:
 	goto LBLraise;
 
@@ -1734,7 +1729,7 @@ LBLdispatcher:
 	goto LBLreplaceBICall;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1_FUN(entry->getPrintName(),
+	RAISE_TYPE1_FUN(GetBI(PC+1)->getPrintName(),
 			cons(XPC(2),cons(XPC(3),nil())));
 
       case SLEEP:
@@ -1760,11 +1755,10 @@ LBLdispatcher:
 	DISPATCH(7);	
       }
       {
-	switch(dotInline(XPC(1),feature,XPC(3))) {
-	case PROCEED: DISPATCH(7);
-	case FAILED:
-	  Assert(0);
+	OZ_Return res = dotInline(XPC(1),feature,XPC(3));
+	if (res==PROCEED) { DISPATCH(7); }
 
+	switch(res) {
 	case SUSPEND:
 	  {
 	    TaggedRef A=XPC(1);
@@ -1886,13 +1880,14 @@ LBLdispatcher:
   Case(INLINEFUN3)
     {
       COUNT(inlinecalls);
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineFun3 fun = (InlineFun3)entry->getInlineFun();
+      InlineFun3 fun = (InlineFun3)GetBI(PC+1)->getInlineFun();
 
       // note XPC(5) is maybe the same as XPC(2) or XPC(3) or XPC(4) !!
-      switch(fun(XPC(2),XPC(3),XPC(4),XPC(5))) {
-      case PROCEED:
-	DISPATCH(7);
+      OZ_Return res = fun(XPC(2),XPC(3),XPC(4),XPC(5));
+      if (res==PROCEED) { DISPATCH(7); }
+      if (res==FAILED)  { SHALLOWFAIL; Assert(0); }
+
+      switch(res) {
 
       case SUSPEND:
 	{
@@ -1910,15 +1905,11 @@ LBLdispatcher:
 	  goto LBLsuspendThread;
 	}
 
-      case FAILED:
-	SHALLOWFAIL;
-	Assert(0);
-
       case RAISE:
 	goto LBLraise;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1_FUN(entry->getPrintName(),
+	RAISE_TYPE1_FUN(GetBI(PC+1)->getPrintName(),
 			cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))));
 
       case SLEEP:
@@ -1929,19 +1920,17 @@ LBLdispatcher:
 
   Case(INLINEEQEQ)
     {
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineFun2 fun = (InlineFun2)entry->getInlineFun();
+      InlineFun2 fun = (InlineFun2)GetBI(PC+1)->getInlineFun();
 
       // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
-      switch (fun(XPC(2),XPC(3),XPC(4))) {
-      case PROCEED:
-	DISPATCH(6);
+      OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
+      if (res==PROCEED) { DISPATCH(6); }
+
+      switch (res) {
       case SUSPEND:
-	{
-	  e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
-	  e->suspendOnVarList(CTT);
-	  goto LBLsuspendThread;
-	}
+	e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
+	e->suspendOnVarList(CTT);
+	goto LBLsuspendThread;
 
       case RAISE:
       case FAILED:
@@ -1966,13 +1955,14 @@ LBLdispatcher:
 
   Case(SHALLOWTEST1)
     {
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
+      InlineRel1 rel = (InlineRel1)GetBI(PC+1)->getInlineFun();
 
-      switch(rel(XPC(2))) {
+      OZ_Return res = rel(XPC(2));
+      if (res==PROCEED) { DISPATCH(5); }
+      if (res==FAILED)  { JUMP(getLabelArg(PC+3)); }
 
-      case PROCEED: DISPATCH(5);
-      case FAILED:  JUMP( getLabelArg(PC+3) );
+      switch(res) {
+
       case SUSPEND:
 	e->pushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	addSusp (XPC(2), CTT);
@@ -1982,8 +1972,7 @@ LBLdispatcher:
 	goto LBLraise;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1(entry->getPrintName(),
-		    cons(XPC(2),nil()));
+	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),cons(XPC(2),nil()));
 
       case SLEEP:
       default:
@@ -1993,13 +1982,13 @@ LBLdispatcher:
 
   Case(SHALLOWTEST2)
     {
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
+      InlineRel2 rel = (InlineRel2)GetBI(PC+1)->getInlineFun();
+      
+      OZ_Return res = rel(XPC(2),XPC(3));
+      if (res==PROCEED) { DISPATCH(6); }
+      if (res==FAILED)  { JUMP(getLabelArg(PC+4)); }
 
-      switch(rel(XPC(2),XPC(3))) {
-
-      case PROCEED: DISPATCH(6);
-      case FAILED:  JUMP( getLabelArg(PC+4) );
+      switch(res) {
 
       case SUSPEND:
 	{
@@ -2017,7 +2006,7 @@ LBLdispatcher:
 	goto LBLraise;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1(entry->getPrintName(),
+	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
 		    cons(XPC(2),cons(XPC(3),nil())));
 
       case SLEEP:
