@@ -326,6 +326,20 @@ You may find a mirror archive closer to you by consulting:
         AC_MSG_WARN([Could not check $CXX version, assuming ok])
       fi
     fi
+    case "$PLATFORM" in
+    *win32*)
+      case "$CXX" in
+      *mno-cygwin*)
+      ;;
+      *)
+        OZ_CXX_OPTIONS(-mno-cygwin,oz_tmp)
+	CXX="$CXX${oz_tmp:+ }$oz_tmp"
+      ;;
+      esac
+    ;;
+    *)
+    ;;
+    esac
     AC_PROG_CXXCPP
     oz_cv_CXX=$CXX
     oz_cv_CXXCPP=$CXXCPP
@@ -443,6 +457,20 @@ You may find a mirror archive closer to you by consulting:
         AC_MSG_WARN([Could not check $CC version, assuming ok])
       fi
     fi
+    case "$PLATFORM" in
+    *win32*)
+      case "$CC" in
+      *mno-cygwin*)
+      ;;
+      *)
+        OZ_CC_OPTIONS(-mno-cygwin,oz_tmp)
+	CC="$CC${oztmp:+ }$oz_tmp"
+      ;;
+      esac
+    ;;
+    *)
+    ;;
+    esac
     AC_PROG_CPP
     oz_cv_CC=$CC
     oz_cv_CPP=$CPP
