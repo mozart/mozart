@@ -1382,6 +1382,15 @@ static void append(int i) {
   xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_int(i));
 }
 
+static int isReadableFile(char *file) {
+  struct stat buf;
+
+  if (access(file, F_OK) < 0 || stat(file, &buf) < 0)
+    return 0;
+
+  return !S_ISDIR(buf.st_mode);
+}
+
 void xyreportError(char *kind, char *msg, const char *file,
 		   int line, int offset) {
   if (strcmp(kind,"warning"))
@@ -1412,6 +1421,10 @@ void xyreportError(char *kind, char *msg, const char *file,
   append(", column ");
   append(offset);
 
+  if (!isReadableFile(file)) {
+    append("\n%**\n");
+    return;
+  }
   FILE *pFile = fopen(file,"r");
   if (pFile == NULL) {
     append("\n%**\n");
