@@ -2,7 +2,7 @@
 <HTML>
 <HEAD>
 <!-- EDIT -->
-<TITLE>Mozart Standard Library</TITLE>
+<TITLE>Mozart Standard Library: Lazy Generators</TITLE>
 <STYLE>
 BODY {
 	background-color: white;
@@ -49,24 +49,27 @@ SPAN.BUILTIN      { color: #DA70D6; }
 </HEAD>
 <BODY>
 <!-- EDIT -->
-<H1>Mozart Standard Library</H1>
+<H1>Lazy Generators</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/Generator.ozf</SPAN>
+</DL>
 <HR>
 
-<P>The standard library currently contains the following sections:
-<UL>
-<LI><A href="../mozart-ozmake/index.html">ozmake tool</A>
-<LI><A href="adt/index.html">Abstract datatypes</A>
-<LI><A href="net/index.html">Network support</A>
-<LI><A href="os/index.html">Operating system support</A>
-<LI><A href="wp/index.html">GUI programming</A>
-<LI><A href="xml/index.html">XML Support</A>
-</UL>
-and the following general modules:
-<UL>
-<LI><A href="generator.html"><CODE>x-oz://system/Generator.ozf</CODE>
-<LI><A href="mapping.html"><CODE>x-oz://system/Mapping.ozf</CODE>
-<LI><A href="string.html"><CODE>x-oz://system/String.ozf</CODE>
-</UL>
+<P>This module provides <I>lazy generators</I>, i.e. functions that
+return lists which are lazily computed concurrently, by-need
+
+<H2>Exports</H2>
+<DL>
+<DT><CODE>{Generator.Tails +L ?Tails}</CODE>
+<DD>returns a lazy list of all non-empty tails of list <CODE>L</CODE>
+<DT><CODE>{Generator.count +From +To +By ?L}</CODE>
+<DD>returns a lazy list of integers starting at <CODE>From</CODE>, ending at
+at most <CODE>To</CODE>, and in steps of <CODE>By</CODE>.  Whether we count
+up or down is determined by the sign of <CODE>By</CODE>
+</DL>
+
 <HR>
 </BODY>
 </HTML>
