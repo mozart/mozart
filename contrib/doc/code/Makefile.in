@@ -42,7 +42,7 @@ $(ELIB_TARGETS): $(ELIB_DIR)/% : %
 	@cp -f $< $@
 
 clean veryclean:
-	-rm *~ *.ozf
+	-rm *~ *.ozf *.elc
 
 distclean: veryclean
 	-rm Makefile config.*
