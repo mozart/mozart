@@ -10,52 +10,21 @@ local
    FindSpace = {NewName}
 
    local
-      NoChoicesLeft = {NewName}
-   
+
       fun {Replace Xs Y Z}
 	 case Xs of nil then nil
 	 [] X|Xr then case X==Y then Z|Xr else X|{Replace Xr Y Z} end
 	 end
       end
    
-      fun {CheckDone Ns}
-	 case Ns of nil then True
-	 [] N|Nr then
-	    case N.kind
-	    of failed then True
-	    [] succeeded then True
-	    else {N NoChoicesLeft($)} andthen {CheckDone Nr}
-	    end
-	 end
-      end
-      
       proc {ReDo S Is}
 	 case Is of nil then skip
 	 [] I|Ir then {ReDo S Ir} {Space.choose S I}
 	 end
       end
 
-      fun {NotHiddenChoices Ns}
-	 case Ns of nil then False
-	 [] N|Nr then
-	    case N.kind
-	    of succeeded then {NotHiddenChoices Nr}
-	    [] failed then {NotHiddenChoices Nr}
-	    [] blocked then True
-	    [] choose then
-	       case {N isHidden($)} orelse {N NoChoicesLeft($)} then
-		  {NotHiddenChoices Nr}
-	       elsecase {N isStepPossible(False $)} then True
-	       else
-		  {NotHiddenChoices {N getKids($)}} orelse
-		  {NotHiddenChoices Nr}
-	       end
-	    end
-	 end
-      end
-
       fun {GetIndex Xs Y N}
-	 !Xs=X|Xr in case X==Y then N else {GetIndex Xr Y N+1} end
+	 X|Xr=!Xs in case X==Y then N else {GetIndex Xr Y N+1} end
       end
       
    in
@@ -69,16 +38,28 @@ local
 	 meth leaveNode(IsSolBelow IsDirty DecChoices)
 	    ChoicesReachZero
 	 in
-	    case IsSolBelow  then isSolBelow <- True          else skip end
-	    case IsDirty     then isDirty    <- True          else skip end
+	    case IsSolBelow  then isSolBelow <- True else skip end
+	    case IsDirty     then isDirty    <- True else skip end
 	    case DecChoices  then
 	       case @choices of 1 then
 		  ChoicesReachZero = True
 		  choices <- 0
-		  case @copy of transient(_) then copy <- False else skip end
+		  case @copy
+		  of transient(_) then
+		     copy <- False
+		  [] flushable(_) then
+		     case IsSolBelow then skip
+		     elsecase
+			{Dictionary.get self.manager.options.search failed}
+		     then
+			copy <- False
+		     else skip
+		     end
+		  else skip
+		  end
 	       elseof Choices then
 		  ChoicesReachZero = False
-		  choices    <- Choices - 1
+		  choices <- Choices - 1
 	       end
 	    else
 	       ChoicesReachZero=False
@@ -92,7 +73,7 @@ local
 	 
 	 meth GotoCopyAbove(CurDepthIn ?CurDepthOut
 			    Node CurDistIn ?CurDistOut ?RevNs ?CurCopy)
-	    !RevNs = {GetIndex @kids Node 1}|RevNr
+	    {GetIndex @kids Node 1}|RevNr = !RevNs
 	 in
 	    case @copy of !False then
 	       {self.mom GotoCopyAbove(CurDepthIn+1 ?CurDepthOut
@@ -148,20 +129,12 @@ local
 	    @isSolBelow
 	 end
 
-	 meth !NoChoicesLeft($)
-	    @choices==0
-	 end
-
-	 meth isNextPossible(LeftToRight $)
-	    @choices>0 andthen
-	    (LeftToRight orelse
-	     (self,isStepPossible(LeftToRight $) orelse
-	      {NotHiddenChoices @kids}))
+	 meth isNextPossible($)
+	    @choices>0
 	 end
 	 
-	 meth isStepPossible(LeftToRight $)
-	    @toDo \= nil andthen
-	    (LeftToRight orelse {Not @isHidden} andthen {CheckDone @kids})
+	 meth isStepPossible($)
+	    @toDo \= nil
 	 end
 
 	 meth Create(PrevSol NextDepth Space Control AllocateCopy $)
@@ -197,7 +170,7 @@ local
 	       NextDist      = CurSearchDist - 1
 	       NextNs        = 1|CurNs
 	       AllocateCopy  = case InfoDist>0 andthen CurDepth mod InfoDist
-			       of 1 then persistent
+			       of 1 then flushable
 			       elsecase NextDist of 0 then transient
 			       else False
 			       end
@@ -225,7 +198,7 @@ local
 		  end
 		  UseNs = NextNs = NextAlt|CurNs
 		  AllocateCopy  = case InfoDist>0 andthen CurDepth mod InfoDist
-				  of 1 then persistent
+				  of 1 then flushable
 				  elsecase NextDist of 0 then transient
 				  else False
 				  end
@@ -335,6 +308,17 @@ local
 	       Sol         = False
 	       IsDirty     = @isDirty
 	       DecChoices  = @choices==0
+	       case DecChoices then
+		  case @isSolBelow then skip
+		  elsecase @copy of flushable(_) then
+		     case {Dictionary.get self.manager.options.search failed}
+		     then copy <- False
+		     else skip
+		     end
+		  else skip
+		  end
+	       else skip
+	       end
 	    end
 	 end
 	 
@@ -427,49 +411,45 @@ local
       end
    end
       
-   local
-      class Leaf
-	 meth isFinished($)
-	    True
-	 end
-	 meth hasSolutions($)
-	    False
-	 end
-	 meth isNextPossible(_ $)
-	    False
-	 end
-	 meth isStepPossible(_ $)
-	    False
+   class Leaf
+      meth isFinished($)
+	 True
+      end
+      meth hasSolutions($)
+	 False
+      end
+      meth isNextPossible($)
+	 False
+      end
+      meth isStepPossible($)
+	 False
+      end
+   end
+
+   class Succeeded from Leaf
+      attr copy: False
+      meth hasSolutions($)
+	 True
+      end
+      meth findSpace($)
+	 case @copy of !False then {self.mom FindSpace(self $)}
+	 elseof TaggedCopy then {Space.clone TaggedCopy.1}
 	 end
       end
-   in
-      class Succeeded from Leaf
-	 attr copy: False
-	 meth hasSolutions($)
-	    True
-	 end
-	 meth findSpace($)
-	    case @copy of !False then {self.mom FindSpace(self $)}
-	    elseof TaggedCopy then {Space.clone TaggedCopy.1}
-	    end
-	 end
-	 meth getOriginalSpace($)
-	    @copy.1
-	 end
-	 meth next(_ _ _ _ $)
-	    False
-	 end
-	 meth step(_ _ $)
-	    False
-	 end
+      meth getOriginalSpace($)
+	 @copy.1
       end
+      meth next(_ _ _ _ $)
+	 False
+      end
+      meth step(_ _ $)
+	 False
+      end
+   end
       
-      Failed = Leaf
-      
-      class Blocked from Leaf
-	 meth isFinished($)
-	    False
-	 end
+   class Blocked from Leaf
+      meth isFinished($)
+	 False
       end
    end
 
@@ -486,7 +466,7 @@ in
    
    SearchNodes = classes(choose:    Choose
 			 succeeded: Succeeded
-			 failed:    Failed
+			 failed:    Leaf
 			 blocked:   Blocked
 			 sentinel:  Sentinel)
 
