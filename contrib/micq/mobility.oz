@@ -44,7 +44,7 @@ define
          else Sync in
             %% Initialize timeout thread
             thread
-               {Delay 20000}
+               {Delay 120000}
                try Sync=exception(networkFailure(timeout(P))) catch _ then skip end
             end
 
