@@ -752,10 +752,16 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
           } else {
             error("Unexpected type found for r_var variable.");
           }
+
+          backup();
+
           if (OZ_unify(l_var, r_var) == FALSE) {
+            restore();
             *bifdbm_dom[idx_b(c)] &= 0;
             goto escape;
           }
+          restore();
+
           introduceLocal(idx_vp(c, fs), l_var);
           introduceLocal(idx_vp(c, v), r_var);
         }
