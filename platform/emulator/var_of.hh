@@ -302,7 +302,7 @@ public:
         // (a future optimization: a second suspList only waiting on features)
         if (prev==makeTaggedNULL()) {
             // propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
-            am.addFeatOFSSuspensionList(suspList,feature,FALSE);
+            am.addFeatOFSSuspensionList(makeTaggedCVar(this),suspList,feature,FALSE);
             return TRUE;
         } else {
             return FALSE;

@@ -254,7 +254,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         else doBindAndTrail(var, vPtr, TaggedRef(term));
 
         // Update the OFS suspensions:
-        if (vLoc) am.addFeatOFSSuspensionList(suspList,NULL,TRUE);
+        if (vLoc) am.addFeatOFSSuspensionList(var,suspList,NULL,TRUE);
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
@@ -303,9 +303,9 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
             // and not in OFS.
             TaggedRef flist = dynamictable->extraSRecFeatures(*termSRec);
             // Add the extra features to S_ofs suspensions:
-            am.addFeatOFSSuspensionList(suspList,flist,TRUE);
+            am.addFeatOFSSuspensionList(var,suspList,flist,TRUE);
         } else if (vLoc && !vExtra) {
-            am.addFeatOFSSuspensionList(suspList,NULL,TRUE);
+            am.addFeatOFSSuspensionList(var,suspList,NULL,TRUE);
         }
 
         // Bind OFSVar to the SRecord:
@@ -441,11 +441,11 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Take care of OFS suspensions, part 2/2 (after merging tables):
         if (vOk && (vWidth>pairlen)) {
             // Add the extra features to S_ofs suspensions:
-            am.addFeatOFSSuspensionList(suspList,vList,FALSE);
+            am.addFeatOFSSuspensionList(var,suspList,vList,FALSE);
         }
         if (tOk && (tWidth>pairlen)) {
             // Add the extra features to S_ofs suspensions:
-            am.addFeatOFSSuspensionList(termVar->suspList,tList,FALSE);
+            am.addFeatOFSSuspensionList(term,termVar->suspList,tList,FALSE);
         }
 
         // Bind both var and term to the (possibly reused) newVar:
