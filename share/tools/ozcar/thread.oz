@@ -194,7 +194,7 @@ in
 		  Stack = {Dictionary.get self.ThreadDic I}
 	       in
 		  {Stack exit(M)}
-		  {SendEmacs bar(file:{CondSelect M file nofile}
+		  {SendEmacs bar(file:{CondSelect M file ''}
 				 line:{CondSelect M line unit}
 				 column:{CondSelect M column unit}
 				 state:runnable)}
@@ -439,7 +439,7 @@ in
 	 Gui,markStack(active)    % stack view has up-to-date content
 	 {Stack entry(Frame)}
 	 case T == @currentThread then
-	    F = {CondSelect Frame file nofile}
+	    F = {CondSelect Frame file ''}
 	 in
 	    case {UnknownFile F} then
 	       {OzcarMessage
