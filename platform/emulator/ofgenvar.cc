@@ -3,6 +3,7 @@
 #pragma implementation "ofgenvar.hh"
 #endif
   
+#include "genvar.hh"
 #include "ofgenvar.hh"
 
 //-------------------------------------------------------------------------
