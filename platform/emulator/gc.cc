@@ -599,23 +599,23 @@ Bool gcUnprotect(TaggedRef *ref)
  ****************************************************************************/
 
 
-DebugCheckT(static int updateStackCount = 0;)
 
 class UpdateStack: public Stack {
+  Bool locked;
 public:
-  UpdateStack() : Stack(1000,Stack_WithMalloc) {}
+  UpdateStack() : Stack(1000,Stack_WithMalloc), locked(NO) {}
   ~UpdateStack() {}
   void push(TaggedRef *t) {
-    DebugGCT(updateStackCount++);
+    Assert(!locked);
     Stack::push((StackEntry)t);
   }
-  TaggedRef *pop() {
-    DebugGCT(updateStackCount--;);
-    return (TaggedRef*) Stack::pop();
-  }
+  TaggedRef *pop() { return (TaggedRef*) Stack::pop(); }
+
+  void lock()   { locked = OK; } 
+  void unlock() { locked = NO; } 
 };
 
-UpdateStack updateStack;
+static UpdateStack updateStack;
 
 
 /****************************************************************************
@@ -1536,6 +1536,7 @@ void AM::gc(int msgLevel)
 // colouring root pointers grey
 //-----------------------------------------------------------------------------
 
+  Assert(updateStack.isEmpty());
   Assert(trail.isEmpty());
   Assert(rebindTrail.isEmpty());
 
@@ -1591,6 +1592,8 @@ void AM::gc(int msgLevel)
   performCopying();
   gcBorrowTableRoots();
   performCopying();
+  gcBorrowTable();
+  gcGNameTable();
 #endif
 
 // -----------------------------------------------------------------------
@@ -1598,15 +1601,9 @@ void AM::gc(int msgLevel)
   GCPROCMSG("updating references");
   processUpdateStack ();
   
-  if(!ptrStack.isEmpty())
-    error("ptrStack should be empty");
+  Assert(ptrStack.isEmpty());
 
   exitCheckSpace();
-
-#ifdef PERDIO
-  gcBorrowTable();
-  gcGNameTable();
-#endif  
 
   oldChain->deleteChunkChain();
 
@@ -1631,8 +1628,8 @@ void AM::gc(int msgLevel)
  */
 void processUpdateStack(void)
 {
- loop:
-  
+  updateStack.lock();
+
   while (!updateStack.isEmpty())
     {
       TaggedRef *tt = updateStack.pop();
@@ -1647,7 +1644,7 @@ void processUpdateStack(void)
 
       if (GCISMARKED(auxTerm)) {
 	*tt = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
-	goto loop;
+	continue;
       }
 
       TaggedRef newVar = gcVariable(auxTerm);
@@ -1678,7 +1675,8 @@ void processUpdateStack(void)
       }
     } // while
 
-  Assert(updateStackCount==0);
+  Assert(updateStack.isEmpty());
+  updateStack.unlock();
 }
 
 
@@ -2721,8 +2719,10 @@ void AM::doGC()
 
 OzDebug *OzDebug::gcOzDebug()
 {
-  gcTagged(info,info);
-  return this;
+  OzDebug *ret = (OzDebug*) gcRealloc(this,sizeof(OzDebug));
+
+  gcTagged(ret->info,ret->info);
+  return ret;
 }
 
 // special purpose to gc borrowtable entry which is a variable
