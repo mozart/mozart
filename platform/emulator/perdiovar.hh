@@ -83,7 +83,7 @@ class PerdioVar: public GenCVariable {
   union {
     PendBinding *bindings;
     ProxyList *proxies;
-    TaggedRef aclass;
+    ObjectClass *aclass;
     GName *gnameClass;
   } u;
 public:
@@ -106,8 +106,8 @@ public:
     ptr = o;
   }
 
-  void setClass(TaggedRef cl) {
-    Assert(isObject() && isClass(deref(cl)));
+  void setClass(ObjectClass *cl) {
+    Assert(isObject());
     u.aclass=cl;
   }
 
@@ -137,7 +137,7 @@ public:
   size_t getSize(void) { return sizeof(PerdioVar); }
   
   Object *getObject() { Assert(isObject() || isObjectGName()); return (Object*)ptr; }
-  TaggedRef getClass() { Assert(isObject()); return u.aclass; }
+  ObjectClass *getClass() { Assert(isObject()); return u.aclass; }
 
   void registerSite(Site* sd) {
     Assert(isManager());
