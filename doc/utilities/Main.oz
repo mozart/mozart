@@ -35,6 +35,7 @@ define
 			% HTML options
 			'stylesheet'( type:string optional:false default:unit)
 			'latexmath'(  type:bool                  default:true)
+			'split'(      type:bool                  default:true)
 			% Path names
 			'ozdoc-home'( type:string optional:false default:unit)
 			'author-path'(type:string optional:false default:unit)
@@ -153,7 +154,8 @@ define
 	  '\n'#
 	  'HTML options\n'#
 	  '--stylesheet=<URL>  What style sheet to use for generated pages.\n'#
-	  '--(no)latexmath     Whether to generate GIFs from LaTeX math.\n'#
+	  '--(no)latexmath     Generate GIF files from LaTeX math.\n'#
+	  '--(no)split         Split the document into several nodes.\n'#
 	  '\n'#
 	  'Parametrization\n'#
 	  '--ozdoc-home=<DIR>  ozdoc installation directory.\n'#
