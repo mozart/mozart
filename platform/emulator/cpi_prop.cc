@@ -245,21 +245,21 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
 
     if (isGenFDVar(v, vtag)) {
       addSuspFDVar(v, prop, staticSpawnVarsProp[i].state.fd);
-      all_local &= am.isLocalSVar(v);
+      all_local &= oz_isLocalVar(tagged2CVar(v));
     } else if (isGenOFSVar(v, vtag)) {
       addSuspOFSVar(v, prop);
-      all_local &= am.isLocalSVar(v);
+      all_local &= oz_isLocalVar(tagged2CVar(v));
     } else if (isGenBoolVar(v, vtag)) {
       addSuspBoolVar(v, prop);  
-      all_local &= am.isLocalSVar(v);
+      all_local &= oz_isLocalVar(tagged2CVar(v));
       // mm2:
       //    } else if (isSVar(vtag)) {
       //      addSuspSVar(v, prop);
-      //      all_local &= am.isLocalSVar(v);
+      //      all_local &= isLocalVar(v);
     } else {
       Assert(isUVar(vtag));
       addSuspUVar(vptr, prop);
-      all_local &= am.isLocalUVar(v,vptr);
+      all_local &= oz_isLocalVar(tagged2CVar(*vptr));
     }
 
     if (isCVar(vtag)) {

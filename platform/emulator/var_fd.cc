@@ -32,7 +32,7 @@
 #include "var_bool.hh"
 #include "fdomn.hh"
 #include "am.hh"
-#include "thr_int.hh"
+#include "unify.hh"
 
 OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 {
@@ -42,7 +42,7 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
     return FAILED;
   }
 
-  Bool isLocalVar = am.isLocalSVar(this);
+  Bool isLocalVar = oz_isLocalVar(this);
   Bool isNotInstallingScript = !am.isInstallingScript();
 
 #ifdef SCRIPTDEBUG
@@ -56,7 +56,7 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
     doBind(vPtr, term);
     dispose();
   } else {
-    am.doBindAndTrail(vPtr, term);
+    doBindAndTrail(vPtr, term);
   }
       
   return PROCEED;
@@ -91,8 +91,8 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
   }
 
   // bind - trail - propagate
-  Bool varIsLocal =  am.isLocalSVar(this);
-  Bool termIsLocal = am.isLocalSVar(termVar);
+  Bool varIsLocal =  oz_isLocalVar(this);
+  Bool termIsLocal = oz_isLocalVar(termVar);
 
   Bool isNotInstallingScript = !am.isInstallingScript();
   Bool varIsConstrained = isNotInstallingScript ||
@@ -158,7 +158,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 	  if (isNotInstallingScript) termVar->propagateUnify();
 	  if (varIsConstrained) propagateUnify();
 	  doBind(vPtr, int_var);
-	  am.doBindAndTrail(tPtr, int_var);
+	  doBindAndTrail(tPtr, int_var);
 	  dispose();
 	} else {
 	  if (intsct == fd_bool) {
@@ -195,7 +195,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 	  if (isNotInstallingScript) propagateUnify();
 	  if (termIsConstrained) termVar->propagateUnify();
 	  doBind(tPtr, int_term);
-	  am.doBindAndTrail(vPtr, int_term);
+	  doBindAndTrail(vPtr, int_term);
 	  termVar->dispose();
 	} else {
 	  if (intsct == fd_bool) {
@@ -232,8 +232,8 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 	  if (varIsConstrained) propagateUnify();
 	  if (termIsConstrained) termVar->propagateUnify();
 	}
-	am.doBindAndTrail(vPtr, int_val);
-	am.doBindAndTrail(tPtr, int_val);
+	doBindAndTrail(vPtr, int_val);
+	doBindAndTrail(tPtr, int_val);
       } else {
 	if (intsct == fd_bool) {
 	  OzBoolVariable * c_var
@@ -326,12 +326,12 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
     // fd is singleton domain --> v becomes integer
     if (fd->getSize() == 1) {
-      if (am.isLocalVariable(v, vptr)) {
+      if (oz_isLocalVariable(vptr)) {
 	if (!isUVar(vtag))
 	  oz_checkSuspensionListProp(tagged2SVarPlus(v));
 	doBind(vptr, OZ_int(fd->getSingleElem()));
       } else {
-	am.doBindAndTrail(vptr, OZ_int(fd->getSingleElem()));
+	doBindAndTrail(vptr, OZ_int(fd->getSingleElem()));
       }
       goto proceed;
     }
@@ -348,14 +348,14 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     }
     OZ_Term *  tcv = newTaggedCVar(cv);
 
-    if (am.isLocalVariable(v, vptr)) {
+    if (oz_isLocalVariable(vptr)) {
       if (!isUVar(vtag)) {
 	oz_checkSuspensionListProp(tagged2SVarPlus(v));
 	cv->setSuspList(tagged2SVarPlus(v)->getSuspList());
       }
       doBind(vptr, makeTaggedRef(tcv));
     } else { 
-      am.doBindAndTrail(vptr, makeTaggedRef(tcv));
+      doBindAndTrail(vptr, makeTaggedRef(tcv));
     }
     
     goto proceed;
@@ -373,16 +373,16 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       goto proceed;
 
     if (dom == fd_singl) {
-      if (am.isLocalSVar(v)) {
+      if (oz_isLocalVar(fdvar)) {
 	fdvar->getDom() = dom;
 	fdvar->becomesSmallIntAndPropagate(vptr);
       } else {
 	int singl = dom.getSingleElem();
 	fdvar->propagate(fd_prop_singl);
-	am.doBindAndTrail(vptr, OZ_int(singl));
+	doBindAndTrail(vptr, OZ_int(singl));
       }
     } else if (dom == fd_bool) {
-      if (am.isLocalSVar(v)) {
+      if (oz_isLocalVar(fdvar)) {
 	fdvar->becomesBoolVarAndPropagate(vptr);
       } else {
 	fdvar->propagate(fd_prop_bounds);
@@ -393,7 +393,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       }
     } else {
       fdvar->propagate(fd_prop_bounds);
-      if (am.isLocalSVar(v)) {
+      if (oz_isLocalVar(fdvar)) {
 	fdvar->getDom() = dom;
       } else {
 	OzFDVariable * locfdvar = new OzFDVariable(dom,oz_currentBoard());
@@ -413,11 +413,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     if (dom == -1) goto proceed;
 
     OzBoolVariable * boolvar = tagged2GenBoolVar(v);
-    if (am.isLocalSVar(v)) {
+    if (oz_isLocalVar(boolvar)) {
       boolvar->becomesSmallIntAndPropagate(vptr, dom);
     } else {
       boolvar->propagate();
-      am.doBindAndTrail(vptr, OZ_int(dom));
+      doBindAndTrail(vptr, OZ_int(dom));
     }
     goto proceed;
 // tell finite domain constraint to integer, i.e. check for compatibility

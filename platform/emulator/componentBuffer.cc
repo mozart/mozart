@@ -67,9 +67,9 @@ Bool isResource(OZ_Term t)
 {
   if (oz_isFree(t) || oz_isFuture(t) || oz_isPort(t))
     return OK;
-
-  return (!ozconf.perdioMinimal &&
-	  (oz_isObject(t) || oz_isLock(t) || oz_isCell(t)));
+  return ozconf.perdioMinimal
+    ? NO
+    : oz_isObject(t) || oz_isLock(t) || oz_isCell(t);
 }
 
 

@@ -2005,7 +2005,7 @@ OZ_Term OZ_newChunk(OZ_Term val)
 {
   val=oz_deref(val);
   if (!oz_isRecord(val)) return 0;
-  return oz_newChunk(val);
+  return oz_newChunk(oz_currentBoard(),val);
 }
 
 int OZ_onToplevel()

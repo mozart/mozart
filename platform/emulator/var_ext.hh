@@ -40,41 +40,37 @@ enum {
 class ExtVar : public OzVariable {
 public:
   ExtVar(Board *bb) : OzVariable(OZ_VAR_EXT,bb) {}
-
   virtual int           getIdV() = 0;
-
   virtual OzVariable*   gcV() = 0;
   virtual void          gcRecurseV() = 0;
-
-  // tell
-  virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*, ByteCode*) = 0;
-  virtual OZ_Return     bindV(TaggedRef*, TaggedRef, ByteCode*) = 0;
-  // ask
+  virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*) = 0;
+  virtual OZ_Return     bindV(TaggedRef*, TaggedRef) = 0;
   virtual Bool          validV(TaggedRef) = 0;
+  virtual VariableStatus statusV() = 0;
+  virtual OZ_Term       isDetV() = 0;
 
   virtual void addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) {
     addSuspSVar(susp, unstable);
   }
-  // printing/debugging
+  virtual int getSuspListLengthV() {
+    return getSuspListLengthS();
+  }
+
   virtual void printStreamV(ostream &out,int depth = 10) {
     out << "<extvar: #" << getIdV() << ">";
   }
   virtual void printLongStreamV(ostream &out,int depth = 10, int offset = 0) {
     printStreamV(out,depth); out << endl;
   }
-
   void print(void) {
     printStreamV(cerr); cerr << endl; cerr.flush();
   }
   void printLong(void) {
     printLongStreamV(cerr); cerr.flush();
   }
-
-  virtual OZ_Term              inspectV() { return 0; } // mm2: not yet
-  virtual VariableStatus       statusV() = 0;
-  virtual OZ_Term              isDetV() = 0;
-
-  virtual int getSuspListLengthV() { return getSuspListLengthS(); }
+  virtual OZ_Term inspectV() {
+    return 0;
+  }
 };
 
 inline
