@@ -18,12 +18,12 @@
 int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
-  case C_SETFINAL:
   case C_CATCH:
     return 1;
 
+  case C_LOCK:
   case C_DEBUG_CONT:
-  case C_SET_OOREGS:
+  case C_SET_SELF:
   case C_LTQ:
   case C_ACTOR:  
     return 2;
@@ -96,29 +96,30 @@ Bool TaskStack::findCatch()
     TaskStackEntry entry=pop();
     TaggedPC topElem = ToInt32(entry);
     ContFlag cFlag = getContFlag(topElem);
-    switch (cFlag) {
-      
-    case C_SETFINAL:
-      am.setFinal();
-      break;
-      
+    switch (cFlag){
+
+    case C_LOCK:
+      {
+	OzLock *lck = (OzLock *) pop();
+	lck->unlock();
+	break;
+      }
     case C_CATCH:
       return TRUE;
-
-    case C_SET_OOREGS:
+      
+    case C_SET_SELF:
       { 
-	Assert(am.isFinal());
-        am.unlockSelf();
-        ChachedOORegs newSelf = ToInt32(pop());
-	am.restoreSelf(newSelf);
+        Object *newSelf = (Object*)ToInt32(pop());
+	am.setSelf(newSelf);
         break;
       }
+    
     default:
       tos = tos - frameSize(cFlag) + 1;
       break;
-
-    } // switch
-  } // while
+      
+    }
+  }
 
   return FALSE;
 }
@@ -195,18 +196,19 @@ TaggedRef TaskStack::reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
         break;
       }
 
-    case C_SETFINAL:
-      out = cons(OZ_atom("objectFinalLock"),out);
+    case C_LOCK:
+      out = cons(OZ_atom("lock"),out);
+      pop();
       break;
 
     case C_CATCH:
       out = cons(OZ_atom("catch"),out);
       break;
 
-    case C_SET_OOREGS:
+    case C_SET_SELF:
       { 
-        ChachedOORegs newSelf = ToInt32(pop());
-	out = cons(OZ_atom("setOORegs"),out);
+        pop();
+	out = cons(OZ_atom("setSelf"),out);
         break;
       }
 

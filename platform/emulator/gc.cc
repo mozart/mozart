@@ -899,8 +899,6 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   GCNEWADDRMSG (ret);
   taskStack.gc(&ret->taskStack);
 
-  ret->u.ooregs = gcChachedOORegs(ret->u.ooregs);
-
 #ifdef LINKEDTHREADS
   gcTagged(ret->parentThread,ret->parentThread);
   gcTagged(ret->childThreads,ret->childThreads);
@@ -1546,7 +1544,7 @@ void AM::gc(int msgLevel)
   Assert(rebindTrail.isEmpty());
 
   rootBoard = rootBoard->gcBoard();   // must go first!
-  Assert(cachedOORegisters==0);
+  Assert(cachedSelf==0);
   Assert(rootBoard);
   setCurrent(currentBoard->gcBoard(),NO);
 
@@ -1892,7 +1890,8 @@ void TaskStack::gc(TaskStack *newstack)
       *(--newtop) = ((AWActor *) *(--oldtop))->gcActor();
       break;
 
-    case C_SETFINAL:
+    case C_LOCK:
+      *(--newtop) = ((OzLock *) *(--oldtop))->gcConstTerm();
       break;
 
     case C_CONT: 
@@ -1936,8 +1935,8 @@ void TaskStack::gc(TaskStack *newstack)
       *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));
       break;
 
-    case C_SET_OOREGS:
-      *(--newtop) = ToPointer(gcChachedOORegs(ToInt32(*(--oldtop))));
+    case C_SET_SELF:
+      *(--newtop) = ((Object*)*(--oldtop))->gcConstTerm();
       break;
 
     case C_LTQ:
@@ -1974,6 +1973,7 @@ void ConstTerm::gcConstRecurse()
       }
       o->setState(o->getState()->gcSRecord());
       gcTagged(o->threads,o->threads);
+      o->lock = (OzLock*) o->lock->gcConstTerm();
       break;
     }
     
@@ -2069,6 +2069,15 @@ void ConstTerm::gcConstRecurse()
       OzDictionary *dict = (OzDictionary *) this;
       dict->home  = dict->home->gcBoard();
       dict->table = dict->table->gc();
+      break;
+    }
+
+  case Co_Lock:
+    {
+      OzLock *lock = (OzLock *) this;
+      lock->home  = lock->home->gcBoard();
+      gcTagged(lock->threads,lock->threads);
+      lock->locker = lock->locker->gcThread();
       break;
     }
 
