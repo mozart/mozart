@@ -256,16 +256,22 @@ void handleRecordArity(ProgramCounter PC, HashTable *ht, Bool makecopy)
 }
 
 
+HTEntry *getNext(HTEntry *e, Bool makecopy)
+{
+  HTEntry *ret = e->getNext();
+  if (!makecopy) delete e;
+  return ret;
+}
+
 static
 void handleHashTable(ProgramCounter PC, HashTable *ht, Bool makecopy)
 {
   IHashTable *table    = (IHashTable *) getAdressArg(PC);
   int sz               = table->size;
-  IHashTable *newtable = makecopy ? new IHashTable(sz,table->elseLabel) : table;
+  IHashTable *newtable = new IHashTable(sz,table->elseLabel);
 
 	
-  if (makecopy)
-    newtable->addList(table->listLabel);
+  newtable->addList(table->listLabel);
 
   int entries = table->numentries;
 
@@ -274,25 +280,23 @@ void handleHashTable(ProgramCounter PC, HashTable *ht, Bool makecopy)
       HTEntry *aux = table->literalTable[i];
       while(aux) {
 	entries--;
-	if (makecopy) {
-	  newtable->add(checkLiteral(aux->getLiteral(),ht),aux->getLabel());
-	} else {
-	  aux->setLiteral(checkLiteral(aux->getLiteral(),ht));
-	}
-	aux = aux->getNext();
+	newtable->add(checkLiteral(aux->getLiteral(),ht),aux->getLabel());
+	aux = getNext(aux,makecopy);
       }
     }
+    if(!makecopy) delete [] table->literalTable;
   }
 
-  if (makecopy && table->numberTable) {
+  if (table->numberTable) {
     for(int i=0; i<sz; i++) {
       HTEntry *aux = table->numberTable[i];
       while(aux) {
 	entries--;
 	newtable->add(aux->getNumber(),aux->getLabel());
-	aux = aux->getNext();
-      }
+	aux = getNext(aux,makecopy);
+       }
     }
+    if(!makecopy) delete [] table->numberTable;
   }
 
   if (table->functorTable) {
@@ -302,18 +306,18 @@ void handleHashTable(ProgramCounter PC, HashTable *ht, Bool makecopy)
 	entries--;
         SRecordArity sra;
         Literal *label = aux->getFunctor(sra);
-	if (makecopy) {
-	  newtable->add(checkLiteral(label,ht),checkSRA(sra,ht),aux->getLabel());
-	} else {
-	  aux->setFunctor(checkLiteral(label,ht),checkSRA(sra,ht));
-	}
-	aux = aux->getNext();
+	newtable->add(checkLiteral(label,ht),checkSRA(sra,ht),aux->getLabel());
+	aux = getNext(aux,makecopy);
       }
     }
+    if(!makecopy) delete [] table->functorTable;
   }
 
-  if (makecopy) { Assert(entries==0); }
+  Assert(entries==0);
   CodeArea::writeIHashTable(newtable, PC);
+  if (!makecopy) {
+    delete table;
+  }
 }
 
 
