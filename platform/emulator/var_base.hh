@@ -292,10 +292,27 @@ SimpleVar *tagged2SimpleVar(TaggedRef t) {
  * Kinded/Free
  * ------------------------------------------------------------------------- */
 
-OZ_Term _var_status(OzVariable *cv);
+
+enum VarStatus {
+  EVAR_STATUS_KINDED,
+  EVAR_STATUS_FREE,
+  EVAR_STATUS_FUTURE,
+  EVAR_STATUS_DET,
+  EVAR_STATUS_UNKNOWN
+};
+
+
+OZ_Term oz_status(OZ_Term term);
+
+/* just check without network ops */
+VarStatus _var_check_status(OzVariable *cv);
+/* really check status, asking manager if necessary */
+OZ_Term   _var_status(OzVariable *cv);
+
+
 
 inline
-OZ_Term oz_var_status(OzVariable *cv)
+VarStatus oz_check_var_status(OzVariable *cv)
 {
   switch (cv->getType()) {
   case OZ_VAR_FD:
@@ -303,16 +320,16 @@ OZ_Term oz_var_status(OzVariable *cv)
   case OZ_VAR_OF:
   case OZ_VAR_FS:
   case OZ_VAR_CT:
-    return AtomKinded;
+    return EVAR_STATUS_KINDED;
   case OZ_VAR_SIMPLE:
-    return AtomFree;
+    return EVAR_STATUS_FREE;
   case OZ_VAR_FUTURE:
-    return AtomFuture;
+    return EVAR_STATUS_FUTURE;
   case OZ_VAR_EXT:
-    return _var_status(cv);
+    return _var_check_status(cv);
   default:
     Assert(0);
-    return AtomUnknown;
+    return EVAR_STATUS_UNKNOWN;
   }
 }
 
@@ -321,26 +338,25 @@ inline
 int oz_isFree(TaggedRef r)
 {
   return isUVar(r) ||
-    (isCVar(r) && literalEq(oz_var_status(tagged2CVar(r)),AtomFree));
+    (isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_FREE);
 }
 
 inline
 int oz_isKinded(TaggedRef r)
 {
-  return isCVar(r) && literalEq(oz_var_status(tagged2CVar(r)),AtomKinded);
+  return isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_KINDED;
+}
+
+inline
+int oz_isFuture(TaggedRef r)
+{
+  return isCVar(r) && oz_check_var_status(tagged2CVar(r))==EVAR_STATUS_FUTURE;
 }
 
 inline
 int oz_isNonKinded(TaggedRef r)
 {
   return oz_isVariable(r) && !oz_isKinded(r);
-}
-
-
-inline
-int oz_isFuture(TaggedRef r)
-{
-  return isCVar(r) && literalEq(oz_var_status(tagged2CVar(r)),AtomFuture);
 }
 
 /* -------------------------------------------------------------------------

@@ -43,9 +43,9 @@ public:
     : ExtVar(bb), index(i) { }
 
   OZ_Term statusV() = 0;
+  VarStatus checkStatusV() = 0;
   Bool validV(TaggedRef v) { return TRUE; }
   virtual int getIdV() = 0;
-  virtual OZ_Term isDetV() = 0;
   virtual ExtVar *gcV(void) = 0;
   virtual void gcRecurseV(void) = 0;
   virtual void disposeV(void) = 0;
@@ -66,7 +66,7 @@ public:
 
   int getIdV() { return OZ_EVAR_PROXY; }
   OZ_Term statusV();
-  OZ_Term isDetV();
+  VarStatus checkStatusV();
   ExtVar *gcV() { return new ProxyVar(*this); }
   void gcRecurseV(void);
   void disposeV(void) {
@@ -122,8 +122,8 @@ public:
   ManagerVar(OzVariable *ov, int index)
     :  ProxyManagerVar(ov->getHome1(),index), proxies(0),origVar(ov) {}
   int getIdV() { return OZ_EVAR_MANAGER; }
-  OZ_Term isDetV() { return OZ_false(); }
   OZ_Term statusV();
+  VarStatus checkStatusV();
   ExtVar *gcV() { return new ManagerVar(*this); }
   void gcRecurseV(void);
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }

@@ -128,31 +128,84 @@ OZ_BI_define(BIisLock, 1,1)
   OZ_RETURN(oz_isLock(term) ? oz_true() : oz_false());
 } OZ_BI_end
 
+
+
+
+OZ_BI_define(BIwaitStatus,2,1)
+{
+  oz_declareNonvarIN(0,status);
+  oz_declareNonvarIN(1,what);
+
+  if (oz_isSRecord(status)) {
+    status = tagged2SRecord(status)->getLabel();
+  }
+  if (oz_isLiteral(status) && oz_isLiteral(what) && literalEq(status,what)) {
+    OZ_RETURN(oz_true());
+  } else {
+    OZ_RETURN(oz_false());
+  }
+} OZ_BI_end
+
+
+#define CheckStatus(var,varstatus,statusAtom)                                           \
+  OzVariable *cv   = tagged2CVar(var);                                                  \
+  VarStatus status = oz_check_var_status(cv);                                           \
+  switch (status) {                                                                     \
+  case varstatus:                                                                       \
+    OZ_RETURN(oz_true());                                                               \
+  case EVAR_STATUS_UNKNOWN:                                                             \
+    {                                                                                   \
+      OZ_Term status = _var_status(cv);                                                 \
+      OZ_Term out = oz_newVariable();                                                   \
+      OZ_out(0) = out;                                                                  \
+      OZ_Term wait = makeTaggedConst(new Builtin("waitStatus", 2,1,BIwaitStatus,OK));   \
+      am.prepareCall(wait,status,statusAtom,out);                                       \
+      return BI_REPLACEBICALL;                                                          \
+    }                                                                                   \
+  default:                                                                              \
+    OZ_RETURN(oz_false());                                                              \
+  }
+
 OZ_BI_define(BIisFree, 1,1)
 {
   oz_declareDerefIN(0,var);
-  OZ_RETURN(oz_isFree(var) ? oz_true() : oz_false());
+  if (isUVar(var))
+    OZ_RETURN(oz_true());
+
+  if (!isCVar(var))
+    OZ_RETURN(oz_false());
+
+  CheckStatus(var,EVAR_STATUS_FREE,AtomFree);
 } OZ_BI_end
 
 OZ_BI_define(BIisKinded, 1,1)
 {
   oz_declareDerefIN(0,var);
-  OZ_RETURN(oz_isKinded(var) ? oz_true() : oz_false());
+  if (!isCVar(var))
+    OZ_RETURN(oz_false());
+
+  CheckStatus(var,EVAR_STATUS_KINDED,AtomKinded);
 } OZ_BI_end
 
 OZ_BI_define(BIisFuture, 1,1)
 {
   oz_declareDerefIN(0,var);
-  OZ_RETURN(oz_isFuture(var) ? oz_true() : oz_false());
-} OZ_BI_end
+  if (!isCVar(var))
+    OZ_RETURN(oz_false());
 
+  CheckStatus(var,EVAR_STATUS_FUTURE,AtomFuture);
+} OZ_BI_end
 
 OZ_BI_define(BIisDet,1,1)
 {
   oz_declareDerefIN(0,var);
-  if (!oz_isVariable(var)) OZ_RETURN(oz_true());
-  if (oz_isExtVar(var)) OZ_RETURN(oz_getExtVar(var)->isDetV());
-  OZ_RETURN(oz_false());
+  if (isUVar(var))
+    OZ_RETURN(oz_false());
+
+  if (!isCVar(var))
+    OZ_RETURN(oz_true());
+
+  CheckStatus(var,EVAR_STATUS_DET,AtomDet);
 } OZ_BI_end
 
 OZ_BI_define(BIisName, 1,1)
@@ -1487,24 +1540,36 @@ OZ_BI_define(BItermType,1,1)
   OZ_RETURN(OZ_termType(term));
 } OZ_BI_end
 
-OZ_BI_define(BIstatus,1,1)
-{
-  oz_declareIN(0,term);
 
+OZ_Term oz_status(OZ_Term term)
+{
   DEREF(term, _1, tag);
 
   switch (tag) {
   case UVAR:
     // FUT
-    OZ_RETURN(AtomFree);
+    return AtomFree;
   case CVAR:
     {
-      OZ_Term status = oz_var_status(tagged2CVar(term));
-      if (!literalEq(status,AtomKinded)) {
-        OZ_RETURN(status);
+      OzVariable *cv = tagged2CVar(term);
+      VarStatus status = oz_check_var_status(cv);
+
+      switch (status) {
+      case EVAR_STATUS_FREE:
+        return AtomFree;
+      case EVAR_STATUS_FUTURE:
+        return AtomFuture;
+      case EVAR_STATUS_DET:
+      case EVAR_STATUS_UNKNOWN:
+        return _var_status(cv);
+      case EVAR_STATUS_KINDED:
+        break;
+      default:
+        Assert(0);
       }
+
       SRecord *t = SRecord::newSRecord(AtomKinded, 1);
-      switch (tagged2CVar(term)->getType()) {
+      switch (cv->getType()) {
       case OZ_VAR_FD:
       case OZ_VAR_BOOL:
         t->setArg(0, AtomInt); break;
@@ -1515,16 +1580,22 @@ OZ_BI_define(BIstatus,1,1)
       default:
         t->setArg(0, AtomOther); break;
       }
-      OZ_RETURN(makeTaggedSRecord(t));
+      return makeTaggedSRecord(t);
     }
   default:
     {
       SRecord *t = SRecord::newSRecord(AtomDet, 1);
       t->setArg(0, OZ_termType(term));
-      OZ_RETURN(makeTaggedSRecord(t));
+      return makeTaggedSRecord(t);
     }
   }
-  return PROCEED;
+  Assert(0);
+}
+
+OZ_BI_define(BIstatus,1,1)
+{
+  oz_declareIN(0,term);
+  OZ_RETURN(oz_status(term));
 } OZ_BI_end
 
 // ---------------------------------------------------------------------
@@ -3973,7 +4044,7 @@ OZ_BI_define(BIat,1,1)
     if (t) {
       OZ_RETURN(t);
     }
-    return oz_raise(E_ERROR,E_OBJECT,"@",2,state,fea);
+    return oz_raise(E_ERROR,E_OBJECT,"@",2,makeTaggedSRecord(rec),fea);
   } else { // perdio
     int ret;
     OZ_Term out;
@@ -4014,7 +4085,7 @@ OZ_BI_define(BIassign,2,0)
     if (t) {
       return PROCEED;
     } else {
-      return oz_raise(E_ERROR,E_OBJECT,"<-",3,state,fea,value);
+      return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedSRecord(rec),fea,value);
     }
   }
 
@@ -4033,7 +4104,7 @@ OZ_BI_define(BIassign,2,0)
   Assert(rec!=NULL);
 
   if (rec->replaceFeature(fea,value) == makeTaggedNULL()) {
-    return oz_raise(E_ERROR,E_OBJECT,"<-",3,state,fea,value);
+    return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedSRecord(rec),fea,value);
   }
   return PROCEED;
 } OZ_BI_end
@@ -4062,7 +4133,7 @@ OZ_BI_define(BIexchange,2,1)
       // mm2: hey men
       return oz_raise(E_ERROR,E_SYSTEM,
                       "ooExchOnDistObjectNotImplemented",3,
-                      state,fea,newVal);
+                      makeTaggedSRecord(rec),fea,newVal);
     }
   } else {
     rec = getRecord(state);
@@ -4077,7 +4148,7 @@ OZ_BI_define(BIexchange,2,1)
     OZ_RETURN(aux);
   }
 
-  return oz_raise(E_ERROR,E_OBJECT,"ooExch",3,state,fea,newVal); // mm2: Error
+  return oz_raise(E_ERROR,E_OBJECT,"ooExch",3,makeTaggedSRecord(rec),fea,newVal); // mm2: Error
 } OZ_BI_end
 
 

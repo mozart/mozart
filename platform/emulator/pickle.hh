@@ -36,9 +36,9 @@
 #define PERDIOMAGICSTART       31
 
 #define PERDIOMAJOR      1
-#define PERDIOMINOR      2
+#define PERDIOMINOR      3
 
-#define PERDIOVERSION     "1#2" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOVERSION     "1#3" /* PERDIOMAJOR "#" PERDIOMINOR */
 
 // the DIFs
 // the protocol layer needs to know about some of these

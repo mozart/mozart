@@ -408,29 +408,25 @@ OZ_Term unmarshalVarImpl(MsgBuffer* bs)
 /* --- IsVar test --- */
 
 static
-OZ_Term sendIsDet(BorrowEntry *be){
+OZ_Term sendGetStatus(BorrowEntry *be){
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   OZ_Term var = OZ_newVariable();
-  marshal_M_ISDET(bs,na->index,var);
-  SendTo(na->site,bs,M_ISDET,na->site,na->index);
+  marshal_M_GETSTATUS(bs,na->index,var);
+  SendTo(na->site,bs,M_GETSTATUS,na->site,na->index);
   return var;
-}
-
-OZ_Term ProxyVar::isDetV()
-{
-  BorrowEntry *be=BT->getBorrow(getIndex());
-  return sendIsDet(be);
 }
 
 OZ_Term ProxyVar::statusV()
 {
-  // mm2
-  // BorrowEntry *be=BT->getBorrow(getIndex());
-  // return sendGetStatus(be);
+  BorrowEntry *be=BT->getBorrow(getIndex());
+  return sendGetStatus(be);
+}
 
-  return oz_atom("free");
+VarStatus ProxyVar::checkStatusV()
+{
+  return EVAR_STATUS_UNKNOWN;
 }
 
 /* --- IsVar test --- */
@@ -447,6 +443,11 @@ void ManagerVar::localize(TaggedRef *vPtr)
 OZ_Term ManagerVar::statusV()
 {
   return origVar->getType()==OZ_VAR_FUTURE ? AtomFuture : AtomFree;
+}
+
+VarStatus ManagerVar::checkStatusV()
+{
+  return origVar->getType()==OZ_VAR_FUTURE ?  EVAR_STATUS_FUTURE : EVAR_STATUS_FREE;
 }
 
 
