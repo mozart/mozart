@@ -356,8 +356,6 @@ Bool gcUnprotect(TaggedRef *ref)
 //                          Global variables
 //*****************************************************************************
 
-// special treatment for static member data
-static char _arityTableOnce;
 
 
 class TaggedRefStack: public Stack {
@@ -1134,7 +1132,6 @@ void AM::gc(int msgLevel)
   unsigned int usedMem = getUsedMemory();
   unsigned int allocMem = getAllocatedMemory();
   INITCHECKSPACE;
-  _arityTableOnce = 0;
   initMemoryManagement();
 
   { /* initialize X regs; this IS necessary ! */
@@ -1392,7 +1389,6 @@ void AbstractionTable::gc()
 void ArityTable::gc ()
 {
   GCMETHMSG("ArityTable::gc");
-  Arity **aux = table;
 
   for (int i = 0; i < size; i++) {
     if (table[i] == (Arity *) NULL)
@@ -1403,12 +1399,16 @@ void ArityTable::gc ()
 
 void Arity::gc ()
 {
-  GCMETHMSG("Arity::gc");
-  // gcTagged (list, list);  // kost@ : don't work ???!!
-  for (int i = 0; i < size; i++) {
-    if (keytable[i] == (Atom *) NULL)
-      continue;
-    keytable[i] = (keytable[i])->gc ();
+  Arity *aux = this;
+  while(aux) {
+    GCMETHMSG("Arity::gc");
+    for (int i = 0; i < aux->size; i++) {
+      if (aux->keytable[i] != NULL) {
+        aux->keytable[i] = aux->keytable[i]->gc ();
+      }
+    }
+    gcTagged(aux->list, aux->list);
+    aux = aux->next;
   }
 }
 
