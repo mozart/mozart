@@ -455,6 +455,9 @@ void engine() {
 	if (c->isWarm()) {
 	  Suspension *susp = c->popSuspension();
 	  tmpBB = susp->getNode();
+	  if (!tmpBB) {
+	    goto LBLfindWork;
+	  }
 	  SuspContinuation *cont = susp->getCont();
 	  if (cont) {
 	    PC = cont->getPC();
