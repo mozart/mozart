@@ -253,7 +253,7 @@ int FDIntervals::operator <= (const int leq)
   } else
     if (i_arr[index].right < leq) index += 1;
 
-  Assert(high >= index + 1);
+  Assert(high >= index);
 
   high = index;
 
@@ -592,22 +592,24 @@ int FDBitVector::findMinElem(void)
     if (b_arr[i] != 0)
       break;
 
-  int word = b_arr[i];
-  if (!(word << 16)) {
-    word >>= 16; v += 16;
-  }
-  if (!(word << 24)) {
-    word >>= 8; v += 8;
-  }
-  if (!(word << 28)) {
-    word >>= 4; v += 4;
-  }
-  if (!(word << 30)) {
-    word >>= 2; v += 2;
-  }
-  if (!(word << 31))
-    v++;
+  if (i < fd_bv_max_high) {
+    int word = b_arr[i];
 
+    if (!(word << 16)) {
+      word >>= 16; v += 16;
+    }
+    if (!(word << 24)) {
+      word >>= 8; v += 8;
+    }
+    if (!(word << 28)) {
+      word >>= 4; v += 4;
+    }
+    if (!(word << 30)) {
+      word >>= 2; v += 2;
+    }
+    if (!(word << 31))
+      v++;
+  }
   return v;
 }
 
@@ -617,22 +619,24 @@ int FDBitVector::findMaxElem(void)
     if (b_arr[i] != 0)
       break;
 
-  int word = b_arr[i];
-  if (!(word >> 16)) {
-    word <<= 16; v -= 16;
-  }
-  if (!(word >> 24)) {
-    word <<= 8; v -= 8;
-  }
-  if (!(word >> 28)) {
-    word <<= 4; v -= 4;
-  }
-  if (!(word >> 30)) {
-    word <<= 2; v -= 2;
-  }
-  if (!(word >> 31))
-    v--;
+  if (i >= 0) {
+    int word = b_arr[i];
 
+    if (!(word >> 16)) {
+      word <<= 16; v -= 16;
+    }
+    if (!(word >> 24)) {
+      word <<= 8; v -= 8;
+    }
+    if (!(word >> 28)) {
+      word <<= 4; v -= 4;
+    }
+    if (!(word >> 30)) {
+      word <<= 2; v -= 2;
+    }
+    if (!(word >> 31))
+      v--;
+  }
   return v;
 }
 
@@ -762,7 +766,6 @@ int FDBitVector::operator >= (const int geq)
   for (int i = 0; i < lower_word; i += 1)
     b_arr[i] = 0;
   b_arr[lower_word] &= toTheUpperEnd[lower_bit];
-
   return findSize();
 }
 
@@ -1205,21 +1208,22 @@ int FiniteDomain::operator <= (const int leq)
   if (leq < min_elem) {
     DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
     return initEmpty();
-  }
-  descr_type type = getType();
-  if (type == fd_descr) {
-    max_elem = min(max_elem, leq);
-    size = findSize();
-  } else if (type == bv_descr) {
-    if (leq <= fd_bv_max_elem) {
-      FDBitVector * bv = get_bv();
-      size = (*bv <= leq);
-      if (size > 0) max_elem = bv->findMaxElem();
+  } else if (leq < max_elem) {
+    descr_type type = getType();
+    if (type == fd_descr) {
+      max_elem = min(max_elem, leq);
+      size = findSize();
+    } else if (type == bv_descr) {
+      if (leq <= fd_bv_max_elem) {
+        FDBitVector * bv = get_bv();
+        size = (*bv <= leq);
+        if (size > 0) max_elem = bv->findMaxElem();
+      }
+    } else if (leq <= fd_iv_max_elem) {
+      FDIntervals * iv = get_iv();
+      size = (*iv <= leq);
+      if (size > 0) max_elem = iv->findMaxElem();
     }
-  } else if (leq <= fd_iv_max_elem) {
-    FDIntervals * iv = get_iv();
-    size = (*iv <= leq);
-    if (size > 0) max_elem = iv->findMaxElem();
   }
   if (isSingleInterval()) setType(fd_descr);
   DEBUG_FD_IR(FALSE, cout << *this << endl);
@@ -1233,19 +1237,20 @@ int FiniteDomain::operator >= (const int geq)
   if (geq > max_elem) {
     DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
     return initEmpty();
-  }
-  descr_type type = getType();
-  if (type == fd_descr) {
-    min_elem = max(min_elem, geq);
-    size = findSize();
-  } else if (type == bv_descr) {
-    FDBitVector * bv = get_bv();
-    size = (geq > fd_bv_max_elem) ? initEmpty() : (*bv >= geq);
-    if (size > 0) min_elem = bv->findMinElem();
-  } else {
-    FDIntervals * iv = get_iv();
-    size = (geq > fd_iv_max_elem) ? initEmpty() : (*iv >= geq);
-    if (size > 0) min_elem = iv->findMinElem();
+  } else if (geq > min_elem) {
+    descr_type type = getType();
+    if (type == fd_descr) {
+      min_elem = max(min_elem, geq);
+      size = findSize();
+    } else if (type == bv_descr) {
+      FDBitVector * bv = get_bv();
+      size = (geq > fd_bv_max_elem) ? initEmpty() : (*bv >= geq);
+      if (size > 0) min_elem = bv->findMinElem();
+    } else {
+      FDIntervals * iv = get_iv();
+      size = (geq > fd_iv_max_elem) ? initEmpty() : (*iv >= geq);
+      if (size > 0) min_elem = iv->findMinElem();
+    }
   }
   if (isSingleInterval()) setType(fd_descr);
   DEBUG_FD_IR(FALSE, cout << *this << endl);

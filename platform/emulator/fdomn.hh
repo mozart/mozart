@@ -100,7 +100,17 @@ extern int fd_bv_right_conv[fd_bv_conv_max_high];
 // Invariants: size < max_elem - min_elem + 1 otherwise reduce to FiniteDomain
 class FDBitVector {
 private:
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  struct {
+    int _b_arr[fd_bv_max_high];
+    int &operator [] (int i) const {
+      Assert(0 <= i && i < fd_bv_max_high);
+      return _b_arr[i];
+    }
+  } b_arr;
+#else
   int b_arr[fd_bv_max_high];
+#endif
 public:
   void * operator new (size_t s) {return heapMalloc(s);}
   void operator delete(void *, size_t) {
