@@ -398,7 +398,7 @@ public:
 //-----------------------------------------------------------------------------
 class PEL_SuspVar {
 public:
-  virtual OZ_Boolean wakeUp(void) = 0;
+  virtual int wakeup(void) = 0;
 };
 
 class PEL_SuspFSetVar : public PEL_SuspVar {
@@ -428,7 +428,7 @@ public:
     _profile = fsetp;
     _fset = & fset;
     _prop_fnct_table = &pft;
-    wakeUp();
+    wakeup();
     return this;
   }
   //
@@ -461,11 +461,11 @@ public:
     int r = (*_fset <<= fset);
     if (r == 0)
       return 0;
-    wakeUp(first);
+    wakeup(first);
     return 1;
   }
   //
-  virtual OZ_Boolean wakeUp(int first = 0) {
+  virtual int wakeup(int first = 0) {
     if (first || _profile.isTouchedSingleValue(*_fset))
       _event_lists->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
     //
@@ -512,7 +512,7 @@ public:
     _profile = fdp;
     _fd = &fd;
     _prop_fnct_table = &pft;
-    wakeUp();
+    wakeup();
     return this;
   }
   PEL_SuspFDIntVar(PEL_FDProfile &fdp, OZ_FiniteDomain &fdv,
@@ -544,11 +544,11 @@ public:
     int r = (*_fd &= fd);
     if (r == 0)
       return 0;
-    wakeUp(first);
+    wakeup(first);
     return 1;
   }
   //
-  virtual OZ_Boolean wakeUp(int first  = 0) {
+  virtual int wakeup(int first = 0) {
     if (first || _profile.isTouchedSingleValue(*_fd))
       _event_lists->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
     //
