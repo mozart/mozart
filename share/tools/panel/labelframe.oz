@@ -96,9 +96,17 @@ in
 	 Y2 = @Height - 2
 	 Y3 = Y2 + 1
       in
- 	 <<Tk.canvas tk(crea line X3 Y0 X5 Y0 X5 Y3 X0 Y3 X0 Y0 X2 Y0
+ 	 <<Tk.canvas tk(crea line X3 Y0 X5+1 Y0
 			fill:DarkColor)>>
- 	 <<Tk.canvas tk(crea line X3 Y1 X4 Y1 X4 Y2 X1 Y2 X1 Y1 X2 Y1
+ 	 <<Tk.canvas tk(crea line X5 Y1 X5 Y3 X1 Y3
+			fill:BrightColor)>>
+ 	 <<Tk.canvas tk(crea line X0 Y3+1 X0 Y0 X2 Y0
+			fill:DarkColor)>>
+ 	 <<Tk.canvas tk(crea line X3 Y1 X5 Y1
+			fill:BrightColor)>>
+ 	 <<Tk.canvas tk(crea line X4 Y1+1 X4 Y2 X1+1 Y2 
+			fill:DarkColor)>>
+ 	 <<Tk.canvas tk(crea line X1 Y3 X1 Y1 X2 Y1
 			fill:BrightColor)>>
       end
       
