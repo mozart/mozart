@@ -230,3 +230,55 @@ failure:
   OZ_DEBUGPRINT("failed " << *this);
   return P.fail();
 }
+
+//--------------------------------------------------------------------
+// Set Difference Propagator (DENYS)
+
+OZ_C_proc_begin(fsp_diff, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FSET","OZ_EM_FSET","OZ_EM_FSET);
+  PropagatorExpect pe;
+  int susp_count=0;
+  OZ_EXPECT_SUSPEND(pe,0,expectFSetVarBounds,susp_count);
+  OZ_EXPECT_SUSPEND(pe,1,expectFSetVarBounds,susp_count);
+  OZ_EXPECT_SUSPEND(pe,2,expectFSetVarBounds,susp_count);
+  if (susp_count>1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  return pe.impose(new FSetDiffPropagator(OZ_args[0],OZ_args[1],OZ_args[2]));
+}
+OZ_C_proc_end
+
+OZ_CFun FSetDiffPropagator::header = fsp_diff;
+
+OZ_Return FSetDiffPropagator::propagate(void)
+{
+  OZ_FSetVar x(_x),y(_y),z(_z);
+  PropagatorController_S_S_S P(x,y,z);
+  FSetTouched xt,yt,zt;
+
+  do {
+    xt=x; yt=y; zt=z;
+    // x-y=z
+    //  disjoint(y,z)
+    //  union(x,z)=union(y,z)
+    //
+    // disjoint(y,z)
+    //
+    FailOnInvalid(*y != *z);
+    FailOnInvalid(*z != *y);
+    //
+    // union(x,y)=union(y,z)
+    //  x subset union(y,z)
+    //  z = x-y
+    //  x supset z
+    //  y supset x-z
+    //
+    FailOnInvalid(*x <= (*y | *z));
+    FailOnInvalid(*z <<= (*x & - *y));
+    FailOnInvalid(*x >= *z);
+    FailOnInvalid(*y >= (*x & - *z));
+  } while (xt <= x || yt <= y || zt <= z);
+
+  return P.leave1();
+failure:
+  return P.fail();
+}

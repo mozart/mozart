@@ -72,6 +72,18 @@ public:
   }
 };
 
+class FSetDiffPropagator : public Propagator_S_S_S {
+private:
+  static OZ_CFun header;
+public:
+  FSetDiffPropagator(OZ_Term x,OZ_Term y,OZ_Term z)
+    : Propagator_S_S_S(x,y,z) {}
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return header;
+  }
+};
+
 #endif /* __STANDARD_HH__ */
 
 // end of file
