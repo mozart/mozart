@@ -18,7 +18,7 @@
 
 
 inline
-void GenCVariable::relinkSuspList(GenCVariable * leftVar)
+void GenCVariable::relinkSuspListTo(GenCVariable * leftVar)
 {
   SuspList * sl = getSuspList();
   unlinkSuspList();
