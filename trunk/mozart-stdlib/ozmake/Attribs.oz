@@ -119,10 +119,14 @@ define
 	 if @Prefix==unit then
 	    if @Superman\=unit then
 	       Prefix<-{@Superman get_prefix($)}
-	    else
-	       Prefix<-{Path.expand
-			{Path.resolve
-			 {Property.get 'user.home'} '.oz'}}
+	    else DOTOZ={Property.condGet 'oz.dotoz' unit} in
+	       if DOTOZ==unit then
+		  Prefix<-{Path.expand
+			   {Path.resolve
+			    {Property.get 'user.home'} '.oz'}}
+	       else
+		  Prefix<-{Path.expand DOTOZ}
+	       end
 	    end
 	 end
 	 @Prefix
@@ -712,15 +716,7 @@ define
 	       SRC={self get_srcdir($)}
 	       BLD={self get_builddir($)}
 	       SEP=[{Property.get 'path.separator'}]
-	       OZHOME={Property.get 'oz.home'}
-	       OZLOAD=case {OS.getEnv 'OZ_SEARCH_LOAD'} of false then
-			 case {OS.getEnv 'OZ_LOAD'} of false then
-			    case {OS.getEnv 'OZLOAD'} of false then
-			       'cache=~/.oz/cache'     #SEP#
-			       'cache='#OZHOME#'/cache'
-			    [] S then S end
-			 [] S then S end
-		      [] S then S end
+	       OZLOAD={Property.get 'oz.search.load'}
 	    in
 	       {OS.putEnv 'OZ_SEARCH_LOAD'
 		OZLOAD                  #SEP#
