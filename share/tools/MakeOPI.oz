@@ -36,7 +36,8 @@ local
 	       'Connection' 'Remote'
 	       'OS' 'Open' 'Component'
 	       'Tk' 'TkTools'
-	       'Compiler']
+	       'Compiler'
+	       'Misc']
 
    ToolNames = ['Panel' 'Browser' 'Explorer' 'CompilerPanel'
 		'Emacs' 'Ozcar' 'Profiler' 'Gump' 'GumpScanner'
@@ -76,12 +77,11 @@ local
    import
       LILO.{loadByFeatures}
       
-      System.{property
-	      show
-	      printError}
+      System.{printError
+	      property}
       
       OS.{getEnv}
-
+      
       Open.{file}
 
       Compiler.{engine}
@@ -92,7 +92,7 @@ local
 
       local
 	 OZVERSION = {System.property.get 'oz.version'}
-	 DATE = {System.property.get 'oz.date'}
+	 DATE      = {System.property.get 'oz.date'}
       in
 	 {System.printError
 	  'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n\n'}
@@ -106,7 +106,6 @@ local
 	 Env = {List.toRecord env
 		{Map LibNames
 		 fun {$ A}
-		    {System.show load(A)}
 		    A#{LILO.loadByFeatures nil A}
 		 end}}
       in
