@@ -374,7 +374,8 @@ proc {NewStat Class Init Object}
 end
 </chunk>
 
-<P>A fault-tolerant version of <<NewStat>> is given in <ptr to="guard.based">.
+<P>
+<!--  A fault-tolerant version of <<NewStat>> is given in <ptr to="guard.based">. -->
 <<NewStat>> is defined in terms of <<MakeStat>>.
 The procedure <<MakeStat>> takes an object or a one-argument
 procedure and returns a one-argument procedure that
