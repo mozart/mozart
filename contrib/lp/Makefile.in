@@ -24,41 +24,57 @@ INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 INSTALL_DLL     = $(INSTALL) -m 555
 
-RM              = rm -f
-LIBS            = -lc -lm
 
-CFLAGS          = -O3
+OZDEPEND        = ozc -c -M
+
+USECPLEX =
+#USECPLEX = 1
+
+
+CFLAGS          =  -O3
+CFLAGS          += -I/usr/local/oz/include
+CFLAGS          += -I$(VPATH)/../ri
+CFLAGS          += -I$(VPATH)/Lpsolve
+CFLAGS          += -Wall -Wno-unused -Wno-reorder -Wno-uninitialized
+
+LDFLAGS          = -L$(VPATH)
+LIBS     = -lc -lm -llpk-$(PLATFORM)
+
+
+
+ifdef USECPLEX
+CFLAGS          += -DINCLUDE_CPLEX -DALLWAYS_CLOSE_CPLEX
+CFLAGS          += -I/linux/CPLEX
+LDFLAGS         += -L/linux/CPLEX
+LIBS            += -lcplex
+endif
 
 CXX             = $(OZTOOL) c++
 LD              = $(OZTOOL) ld
 DEPEND          = $(CXX) $(CFLAGS) -MM
 
-OZDEPEND        = $(OZC) -c -M
 
-#----------------------------------------------------------------------
-# Sources and targets
-#----------------------------------------------------------------------
 
-OZSRCS          = DaVinciObject.oz
 
-OZGSRCS         = DaVinciScanner.ozg
+CPPSRCS         = \
+                aux.cc \
+                propagators.cc \
+                builtins.cc \
+                lp.cc
 
-OZFNCTS         = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
+OZSRCS          = LP.oz
 
-TARGETS         = DaVinci.ozf
+OZGSRCS         =
+
+OZFCTS          = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
+
+TARGETS         = LP.ozf lp.so-$(PLATFORM)
 LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
 
-all:     $(TARGETS)
-install: $(LIB_TARGETS)
+.PHONY: all install clean veryclean distclean bootstrap depend
 
-DaVinci.ozf: $(OZFNCTS)
-        $(OZL) DaVinciObject.ozf -o $@
-
-$(LIB_DIR)/DaVinci.ozf: DaVinci.ozf
-        $(INSTALL_LIB) $< $@
-        for f in *.so-$(PLATFORM) ; do \
-        $(INSTALL_DLL) $$f $(LIB_DIR)/$$f ; \
-        done
+all:            $(TARGETS)
+install:        $(LIB_DIR) $(LIB_TARGETS)
 
 #----------------------------------------------------------------------
 # Oz part
@@ -74,7 +90,7 @@ $(LIB_DIR)/DaVinci.ozf: DaVinci.ozf
 # C part
 #----------------------------------------------------------------------
 
-%.so-$(PLATFORM): $(CSRCS:.cc=.o)
+%.so-$(PLATFORM): $(CPPSRCS:.cc=.o)
         $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 %.o: %.cc

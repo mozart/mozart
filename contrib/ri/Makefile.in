@@ -24,41 +24,44 @@ INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 INSTALL_DLL     = $(INSTALL) -m 555
 
-RM              = rm -f
 LIBS            = -lc -lm
 
 CFLAGS          = -O3
+CFLAGS          += -I/usr/local/oz/include
+
+LDFLAGS         = -L$(VPATH)
 
 CXX             = $(OZTOOL) c++
 LD              = $(OZTOOL) ld
 DEPEND          = $(CXX) $(CFLAGS) -MM
 
-OZDEPEND        = $(OZC) -c -M
-
 #----------------------------------------------------------------------
 # Sources and targets
 #----------------------------------------------------------------------
 
-OZSRCS          = DaVinciObject.oz
+CPPSRCS         = \
+                aux.cc \
+                ri.cc \
+                builtins.cc \
+                propagators.cc
 
-OZGSRCS         = DaVinciScanner.ozg
+ifeq ($(PLATFORM), linux-i486)
+CSRCS           = fpgetset.c sigfpe.c
+CFLAGS          += -DLINUX_IEEE
+endif
 
-OZFNCTS         = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
+OZSRCS          = RI.oz
 
-TARGETS         = DaVinci.ozf
+OZGSRCS         =
+
+TARGETS         = RI.ozf ri.so-$(PLATFORM)
 LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
 
-all:     $(TARGETS)
-install: $(LIB_TARGETS)
+.PHONY: all install clean veryclean distclean bootstrap depend
 
-DaVinci.ozf: $(OZFNCTS)
-        $(OZL) DaVinciObject.ozf -o $@
+all:            $(TARGETS)
+install:        $(LIB_DIR) $(LIB_TARGETS)
 
-$(LIB_DIR)/DaVinci.ozf: DaVinci.ozf
-        $(INSTALL_LIB) $< $@
-        for f in *.so-$(PLATFORM) ; do \
-        $(INSTALL_DLL) $$f $(LIB_DIR)/$$f ; \
-        done
 
 #----------------------------------------------------------------------
 # Oz part
@@ -74,7 +77,7 @@ $(LIB_DIR)/DaVinci.ozf: DaVinci.ozf
 # C part
 #----------------------------------------------------------------------
 
-%.so-$(PLATFORM): $(CSRCS:.cc=.o)
+%.so-$(PLATFORM): $(CPPSRCS:.cc=.o)
         $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 %.o: %.cc
