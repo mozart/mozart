@@ -19,7 +19,7 @@ end
 %% Text
 %%
 
-Version                = 'Jul 8 1997'
+Version                = 'Aug 19 1997'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
@@ -37,8 +37,8 @@ EmailOfBoth            = '{scheidhr,lorenz}@ps.uni-sb.de'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 
 BarCanvasTitle         = 'Procedures'
-BarTextTitle           = 'Proc Info'
-GenTextTitle           = 'Summary'
+ProcTextTitle          = 'Proc Info'
+SumTextTitle           = 'Summary'
 
 UpdateButtonText       = ' update'
 ResetButtonText        = ' reset'
@@ -58,10 +58,10 @@ DotEnd                 = '.end'
 ToplevelGeometry       = '450x290'
 
 BarCanvasWidth         = 300
-BarTextWidth           = 24
-BarTextHeight          = 7
-GenTextWidth           = 24
-GenTextHeight          = 5
+ProcTextWidth          = 24
+ProcTextHeight         = 7
+SumTextWidth           = 24
+SumTextHeight          = 5
 
 NoBorderSize           = 0
 SmallBorderSize        = 1
@@ -174,8 +174,9 @@ end
 %% the config object to read/write changeable options
 %% first, some initial values... (read from a config file someday?)
 
-ConfigEmacs  = true             % should we use Emacs?
-ConfigUpdate = UpdateTimes.1.1  % Automatic update interval
+ConfigEmacs     = true             % should we use Emacs?
+ConfigUpdate    = UpdateTimes.1.1  % Automatic update interval
+ConfigThreshold = t(calls:2 closures:2 samples:2 heap:256)
 
 local
 
@@ -184,8 +185,9 @@ local
     class
        
        attr
-	  emacs  : ConfigEmacs
-	  update : ConfigUpdate
+	  emacs     : ConfigEmacs
+	  update    : ConfigUpdate
+	  threshold : ConfigThreshold
 	  
        meth init
 	  skip
