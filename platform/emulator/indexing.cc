@@ -55,7 +55,13 @@ IHashTable * IHashTable::allocate(int n, int el) {
 IHashTable * IHashTable::clone(void) {
   size_t sz = sizeof(IHashTable) + (getSize()-1) * sizeof(IHashTableEntry);
   IHashTable * t = (IHashTable *) malloc(sz);
-  memcpy(t,this,sz);
+  t->elseLbl = elseLbl;
+  t->listLbl = listLbl;
+  t->hashMsk = hashMsk;
+  for (int i = t->getSize(); i--; ) {
+    t->entries[i].val = makeTaggedNULL();
+    t->entries[i].lbl = elseLbl;
+  }
   return t;
 }
 
