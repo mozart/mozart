@@ -17,6 +17,8 @@ DEPEND="virtual/glibc
         dev-libs/gmp
         sys-libs/zlib
         sys-libs/gdbm
+        dev-lang/tcl
+        dev-lang/tk
 "
 RDEPEND="virtual/glibc
         virtual/emacs
@@ -27,6 +29,8 @@ RDEPEND="virtual/glibc
         dev-libs/gmp
         sys-libs/zlib
         sys-libs/gdbm
+        dev-lang/tcl
+        dev-lang/tk
 "
 
 S="${WORKDIR}/mozart-1.2.5.20030212"

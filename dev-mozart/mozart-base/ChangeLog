@@ -1,3 +1,8 @@
+*mozart-base-1.2.5-r3 (14 May 2003)
+
+  14 May 2003; Denys Duchier (denys.duchier@loria.fr)
+  added dependencies for tcl and tk (as reported by Walt Rarus)
+	
 *mozart-base-1.2.5-r3 (10 Apr 2003)
 
   10 Apr 2003; Denys Duchier (denys.duchier@loria.fr)
