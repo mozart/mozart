@@ -23,6 +23,11 @@ OZ_C_proc_begin(BIfsIsVarB, 2)
 }
 OZ_C_proc_end
 
+void
+makeFSetValue(OZ_Term desc,OZ_Term*fs)
+{
+  *fs = makeTaggedFSetValue(new FSetValue(desc));
+}
 
 OZ_C_proc_begin(BIfsSetValue, 2) 
 {
