@@ -35,9 +35,9 @@ cvs get Oz/ozwish
 
 - ./ozmkmf
 
-- make Makefiles
-
-- make all
+- make World
+   make Makefiles
+   make all
 	include
 	Emulator
 	Compiler/backend
@@ -45,7 +45,7 @@ cvs get Oz/ozwish
 	lib
 		make unixo
 
-- make install
+   make install
 	bin
 	elisp
 	ozwish
