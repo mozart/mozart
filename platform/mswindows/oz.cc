@@ -172,11 +172,6 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
 
   WaitForSingleObject(pinf.hProcess,INFINITE);
 
-#ifdef OZENGINE
-  fprintf(stdout,"\n");
-  fflush(stdout);
-#endif
-
   return 0;
 }
 
