@@ -1,8 +1,8 @@
 PREFIX=		@prefix@
 
-PLATFORM	= @PLATFORM@
+PLATFORM	= @platform@
 INSTALL		= @INSTALL@
-INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_BIN	= $(INSTALL) -s -m 555
 MKINSTALLDIRS	= @MKINSTALLDIRS@
 CC		= @CC@
 
@@ -11,11 +11,21 @@ CPPFLAGS	= @CPPFLAGS@
 CFLAGS		= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 RM		= @RM@ -f
+RMR		= @RM@ -rf
+LN		= @LN@ -s
+CPR             = @CP@ -R
+CHMODR          = @CHMOD@ -R 555
+
+PROVIDETCLLIBS  = @PROVIDETCLLIBS@
+TCLLIBTCLDIR    = @oz_tcl_lib_tcl_dir@
+TKLIBTCLDIR     = @oz_tk_lib_tcl_dir@
+
 
 OZWISH		= oz.wish.bin
 SRCS		= ozMain.c ozAppInit.c
 OBJS		= ${SRCS:.c=.o}
 
+.PHONY: $(PROVIDETCLLIBS)
 
 all: $(OZWISH)
 
@@ -33,9 +43,30 @@ realclean: veryclean
 distclean: veryclean
 	$(RM) config.* Makefile
 
-install: $(PREFIX)/platform/$(PLATFORM) $(OZWISH)
+install: $(PREFIX)/platform/$(PLATFORM) $(OZWISH) \
+	$(PROVIDETCLLIBS) $(PREFIX)/lib/wish
 	$(INSTALL_BIN) $(OZWISH) $(PREFIX)/platform/$(PLATFORM)
 
 $(PREFIX)/platform/$(PLATFORM):
 	$(MKINSTALLDIRS) $@
+
+$(PREFIX)/lib/wish:
+	$(MKINSTALLDIRS) $@
+
+provide-link: $(PREFIX)/lib/wish
+	(cd $(PREFIX)/lib/wish; $(RMR) tcl)
+	(cd $(PREFIX)/lib/wish; $(LN) $(TCLLIBTCLDIR) tcl)
+	(cd $(PREFIX)/lib/wish; $(RMR) tk)
+	(cd $(PREFIX)/lib/wish; $(LN) $(TKLIBTCLDIR) tk)
+
+provide-copy: $(PREFIX)/lib/wish
+	(cd $(PREFIX)/lib/wish; $(RMR) tcl)
+	(cd $(PREFIX)/lib/wish; $(CPR) $(TCLLIBTCLDIR) .)
+	(cd $(PREFIX)/lib/wish; $(LN) tcl8.0 tcl)
+	(cd $(PREFIX)/lib/wish; $(CHMODR) tcl)
+	(cd $(PREFIX)/lib/wish; $(RMR) tk)
+	(cd $(PREFIX)/lib/wish; $(CPR) $(TKLIBTCLDIR) .)
+	(cd $(PREFIX)/lib/wish; $(LN) tk8.0 tk)
+	(cd $(PREFIX)/lib/wish; $(CHMODR) tk)
+
 
