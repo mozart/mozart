@@ -243,6 +243,12 @@ in
 	    Gui,displayTree
 	 else skip end
       end
+
+      meth kill(T I)
+	 {Dbg.trace T false}
+	 ThreadManager,remove(T I kill)
+	 {Thread.terminate T}
+      end
       
       meth forget(T I)
 	 {Dbg.trace T false}      %% thread is not traced anymore
