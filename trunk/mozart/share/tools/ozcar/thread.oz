@@ -27,6 +27,12 @@ local
       ({Cget stepNewNameBuiltin} orelse Name \= 'NewName')
    end
 
+   proc {Detach T}
+      {Dbg.trace T false}
+      {Dbg.step T false}
+      {Thread.resume T}
+   end
+
    proc {OzcarReadEvalLoop S}
       case S
       of H|T then
@@ -46,14 +52,11 @@ in
 
       attr
 	 ReadLoopThread : unit
-	 DelayedThread  : unit
 
 	 currentThread  : unit
 	 currentStack   : unit
 
 	 SkippedProcs   : nil
-	 SkippedThread  : nil
-	 Breakpoint     : false
 
 	 SwitchSync     : _
 
@@ -110,7 +113,7 @@ in
 	 of entry(thr:T ...) then
 	    I = {Thread.id T}
 	 in
-	    case ThreadManager,Exists(I $) then
+	    case ThreadManager,Exists(I $) then %% already attached thread
 	       Name = {CondSelect M data unit}
 	    in
 	       case {Not {IsDet Name}}
@@ -121,45 +124,27 @@ in
 		  ThreadManager,AddToSkippedProcs(Name T I M.frameID)
 	       end
 
-	    else
-	       Data   = {CondSelect M data unit}
-	       %% The following really isn't very nice. A better solution
+	    else %% this is a (not yet) attached thread
+	       Data = {CondSelect M data unit}
+	       Q    = {Thread.parentId T}
+	       %% The following is not very nice. A better solution
 	       %% will be implemented at some time in the near future...
 	       Ignore = case {Not {IsDet Data}} then false
 			else Data == Ozcar orelse
 			   Data == {Compiler.getOPICompiler}
 			end
 	    in
-	       case Ignore then
-		  {OzcarMessage 'message for Ozcar or Compiler detected.'}
-		  case @DelayedThread \= unit then
-		     {OzcarMessage 'killing delayed thread #' #
-		      {Thread.id @DelayedThread}}
-		     {Thread.terminate @DelayedThread}
-		     DelayedThread <- unit
-		  else
-		     {OzcarMessage 'no delayed thread killed'}
+	       case {Cget subThreads} orelse
+		  {Not ThreadManager,Exists(Q $)} then
+		  case Ignore orelse {UnknownFile M.file} then %% don't attach!
+		     {OzcarMessage 'Ignoring new thread'}
+		     {Detach T}
+		  else %% yes, do attach!
+		     ThreadManager,add(T I Q)
 		  end
-
-		  {Dbg.trace T false}
-		  {Dbg.step T false}
-		  {Thread.resume T}
-
-	       elsecase {UnknownFile M.file} then
-		  {Dbg.trace T false}
-		  {Dbg.step T false}
-		  {Thread.resume T}
-		  Gui,status('Ignoring new thread as there\'s' #
-			     ' no file information available.')
-
 	       else
-		  {OzcarMessage WaitForThread}
-		  {Delay 240} % thread should soon be added
-		  case @Breakpoint then
-		     Breakpoint <- false
-		  else
-		     ThreadManager,M
-		  end
+		  {OzcarMessage 'Ignoring new subthread'}
+		  {Detach T}
 	       end
 	    end
 
@@ -172,11 +157,6 @@ in
 	    case Found then
 	       {OzcarMessage 'ignoring exit message for ignored application'}
 	       SkippedProcs  <- {Filter @SkippedProcs fun {$ F} F \= Key end}
-	       SkippedThread <- nil
-	       {Thread.resume T}
-	    elsecase @SkippedThread == T then
-	       {OzcarMessage 'ignoring exit message for ignored thread'}
-	       SkippedThread <- nil
 	       {Thread.resume T}
 	    else
 	       Gui,markNode(I runnable) % thread is not running anymore
@@ -191,62 +171,6 @@ in
 				    state:runnable)}
 		  {Stack printTop}
 	       else skip end
-	    end
-
-	 elseof thr(thr:T ...) then   % thread creation
-	    I = {Thread.id T}
-	    Q = case {CondSelect M par unit} of unit then 0
-		elseof T then {Thread.id T}
-		end
-	    E = ThreadManager,Exists(I $)
-	 in
-	    {OzcarMessage 'parent is ' # case Q > 0 then
-					    'known'
-					 else
-					    'unknown'
-					 end}
-	    case E then
-	       Stack = {Dictionary.get self.ThreadDic I}
-	    in
-	       Gui,status('Thread #' # I # ' has reached a breakpoint') % #
-			  %' or woke up another thread')
-	       {OzcarMessage KnownThread # {ID I}}
-	       {Stack rebuild(true)}
-	    else
-	       {OzcarMessage NewThread   # {ID I}}
-	       case Q == 0 orelse Q == 1 then   % unknown or root thread
-		  thread
-		     local
-			DT = {Thread.this}
-		     in
-			{OzcarMessage 'setting delayed thread to #' #
-			 {Thread.id DT}}
-			DelayedThread <- DT
-		     end
-
-		     case Q == 1 then   % root thread
-			SkippedThread <- T
-			{Thread.resume T}
-		     else skip end
-
-		     {Delay 170}
-
-		     case Q == 1 then
-			SkippedThread <- nil
-		     else skip end
-
-		     case {Thread.state T} == terminated then
-			{OzcarMessage EarlyThreadDeath # I}
-		     else
-			{OzcarMessage 'adding thread #' # I # ' after delay'}
-			ThreadManager,add(T I Q (Q == 0))
-		     end
-		  end
-		  %% give thread above a chance to run:
-		  {Thread.preempt {Thread.this}}
-	       else
-		  ThreadManager,add(T I Q false)
-	       end
 	    end
 
 	 elseof term(thr:T) then
@@ -308,7 +232,7 @@ in
 		     {{Dictionary.get self.ThreadDic I} printException(X)}
 		  else
 		     {OzcarMessage 'still not known -- adding...'}
-		     ThreadManager,add(T I exc(X) false)
+		     ThreadManager,add(T I exc(X))
 		  end
 	       end
 	    end
@@ -344,31 +268,21 @@ in
 			  fun {$ F} F.2 \= I end}
       end
 
-      meth add(T I Q R)
+      meth add(T I Q)
 	 Stack = {New StackManager init(thr:T id:I)}
       in
 	 {Dictionary.put self.ThreadDic I Stack}
-	 case R then
-	    {Stack rebuild(true)}
-	    Breakpoint <- true
-	 else skip end
-
-	 case Q of exc(X) then  %% exception
+	 case Q of exc(X) then     %% exception
 	    Gui,addNode(I 0)
-	    {Stack checkNew(_)} %% _don't_ do a first step here!
 	    ThreadManager,switch(I false)
 	    {Stack printException(X)}
-	 elsecase {IsInt Q} then   %% Q is the ID of the parent thread
+	 else                      %% Q is the ID of the parent thread
+	    {OzcarMessage 'add ' # I # '/' # Q}
 	    Gui,addNode(I Q)
-	    case Q == 0 orelse Q == 1 then
-	       {Stack checkNew(_)}  % don't force a first `step'
+	    {Stack rebuild(true)}
+	    case Q == 1 then       %% all compiler threads have id #1
 	       ThreadManager,switch(I)
-	       case Q == 1 then
-		  Gui,status('Got new query, selecting thread #' # I)
-	       else
-		  Gui,status('Breakpoint reached by thread #' # I #
-				', which has been added and selected')
-	       end
+	       Gui,status('Got new query, selecting thread #' # I)
 	    else skip end
 	 end
       end
@@ -536,50 +450,37 @@ in
 	    currentThread <- T
 	    currentStack  <- Stack
 
-	    case {Stack checkNew($)} then
-	       {OzcarMessage 'Let thread #' # I # ' make its first step'}
-	       {Thread.resume T}
-	    else
-	       case PrintStack then
-		  case S == terminated then
-		     {SendEmacs removeBar}
-		     Gui,printStack(id:I frames:nil depth:0)
+	    case PrintStack then
+	       case S == terminated then
+		  {SendEmacs removeBar}
+		  Gui,printStack(id:I frames:nil depth:0)
+	       else
+		  F L C Exc = {Stack getException($)}
+	       in
+		  {Stack print}
+		  {Stack getPos(file:?F line:?L column:?C)}
+		  case Exc == nil then
+		     {SendEmacs bar(file:F line:L column:C state:S)}
 		  else
-		     F L C Exc = {Stack getException($)}
-		  in
-		     {Stack print}
-		     {Stack getPos(file:?F line:?L column:?C)}
-		     case Exc == nil then
-			{SendEmacs bar(file:F line:L column:C state:S)}
-		     else
-			{SendEmacs bar(file:F line:L column:C state:blocked)}
-			Gui,doStatus(Exc clear BlockedThreadColor)
-		     end
+		     {SendEmacs bar(file:F line:L column:C state:blocked)}
+		     Gui,doStatus(Exc clear BlockedThreadColor)
 		  end
-	       else skip end
-	    end
+	       end
+	    else skip end
 	 end
       end
 
-      meth toggleEmacsThreads(TkV)
-	 Value = case {TkV tkReturnInt($)} == 0 then false else true end
-      in
-	 {OzcarMessage 'toggleEmacsThreads ' # {V2VS Value}}
-	 case Value then
+      meth toggleEmacsThreads
+	 {Ctoggle emacsThreads}
+	 case {Cget emacsThreads} then
 	    {Compile '\\switch +runwithdebugger'}
 	 else
 	    {Compile '\\switch -runwithdebugger'}
 	 end
-	 % If we are using the old compiler:
-	 {Dbg.emacsThreads Value}
       end
 
-      meth toggleSubThreads(TkV)
-	 Value = {TkV tkReturnInt($)} \= 0
-      in
-	 {OzcarMessage 'toggleSubThreads ' # {V2VS Value}}
-	 {Dbg.subThreads Value}
+      meth toggleSubThreads
+	 {Ctoggle subThreads}
       end
-
    end
 end

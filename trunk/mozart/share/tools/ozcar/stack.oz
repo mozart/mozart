@@ -129,19 +129,12 @@ in
 
 	 Exception : nil   % saved exception
 
-	 New : true        % the thread has not made any step yet...
-
       meth init(thr:Thr id:ID)
 	 self.T = Thr
 	 self.I = ID
 	 self.D = {Dictionary.new}
 	 Size    <- 0
 	 Rebuild <- false
-      end
-
-      meth checkNew(R)
-	 R = @New
-	 case R then New <- false else skip end
       end
 
       meth getFrame(Nr $)

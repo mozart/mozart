@@ -38,7 +38,7 @@ local
       meth on
 	 {Tk.batch [update(idletasks)
 		    wm(deiconify self.toplevel)]}
-	 case {CgetTk emacsThreads} then
+	 case {Cget emacsThreads} then
 	    {Compile '\\switch +debuginfo'}
 	 else
 	    {Compile '\\switch +debuginfovarnames +debuginfocontrol'}
@@ -65,16 +65,23 @@ in
    {New class
 
 	   prop
+	      locking
 	      final
 
 	   attr
 	      MyOzcar : unit
 
+	   meth init
+	      skip
+	   end
+
 	   meth reInit
-	      case @MyOzcar == unit then skip else
-		 {@MyOzcar destroy}
+	      lock
+		 case @MyOzcar == unit then skip else
+		    {@MyOzcar destroy}
+		 end
+		 MyOzcar <- {New OzcarClass init}
 	      end
-	      MyOzcar <- {New OzcarClass init}
 	   end
 
 	   meth on
@@ -97,5 +104,7 @@ in
 	      {@MyOzcar M}
 	   end
 
-	end reInit}
+	end init}
+
+   {Ozcar reInit}
 end
