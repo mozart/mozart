@@ -78,8 +78,15 @@ declare
 fun {NewQueueServer}
    Given GivePort={Port.new Given}
    Taken TakePort={Port.new Taken}
+   proc {Equate Xs Ys}
+     case Xs#Ys
+     of nil#nil then skip
+     [] (X|Xr)#(Y|Yr) then
+        X=Y {Equate Xr Yr}
+     end
+   end
 in
-   thread Given=Taken end
+   thread {Equate Given Taken} end
    queue(put:proc {$ X} {Port.send GivePort X} end
          get:proc {$ X} {Port.send TakePort X} end)
 end
@@ -92,12 +99,28 @@ end
 declare
 Q = {NewQueueServer}
 {Q.put 1}
-{Browse {Q.get}}
-{Browse {Q.get}}
-{Browse {Q.get}}
+{Browse {Q.get $}}
+{Browse {Q.get $}}
+{Browse {Q.get $}}
 {Q.put 2}
 {Q.put 3}
 >>>
+
+
+<P><FIGURE ID="concurrentQueue1" CLASS="Figure">
+<CAPTION>Concurrent Queue server</CAPTION>
+<code display>
+declare
+fun {NewQueueServer}
+   Given GivePort={Port.new Given}
+   Taken TakePort={Port.new Taken}
+in
+   thread Given=Taken end
+   queue(put:proc {$ X} {Port.send GivePort X} end
+         get:proc {$ X} {Port.send TakePort X} end)
+end
+</code>
+</FIGURE>
 
 <P CLASS=WARNING>*** Explain the use of logic variables as a mechanism
 to returns value.
