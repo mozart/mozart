@@ -1767,7 +1767,7 @@ void SolveActor::gcRecurse ()
   orActors.gc (SolveActor::StackEntryGC);   // higher order :))
 }
 
-inline
+
 DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
 {
   if (((Actor *) entry)->isCommitted () == OK) {
