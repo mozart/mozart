@@ -95,7 +95,7 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   pm_term_type vartag;
   long prod = 1;
   Suspension * susp;
-  pm_term_type last_tag = pm_none;
+  pm_term_type last_tag = pm_none, prev_tag = pm_none;
 
   int j, fds_found;
   for (j = ts, fds_found = 0; j-- && (fds_found < 2); ) {
@@ -107,8 +107,10 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
       if (prod < OzMinInt || OzMaxInt < prod) return FALSE;
     } else if (vartag == pm_fd || vartag == pm_bool) {
       fds_found += 1;
-      if (last_fdvarptr != NULL)
+      if (last_fdvarptr != NULL) {
 	prev_fdvar = last_fdvar;
+	prev_tag = last_tag;
+      }
       last_fdvar = var;
       last_tag = vartag;
       last_fdvarptr = varptr;
@@ -140,8 +142,16 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   case 2:
     s += 1;
     susp = createNonResSusp(func, xregs, arity);
-    addSuspFDVar(prev_fdvar, new SuspList(susp, NULL), fd_det);
-    addSuspFDVar(last_fdvar, new SuspList(susp, NULL), fd_det);
+    if (prev_tag == pm_fd) 
+      addSuspFDVar(prev_fdvar, new SuspList(susp), fd_det);
+    else
+      addSuspBoolVar(prev_fdvar, new SuspList(susp));
+
+    if (last_tag == pm_fd)
+      addSuspFDVar(last_fdvar, new SuspList(susp), fd_det);
+    else
+      addSuspBoolVar(last_fdvar, new SuspList(susp));
+
     return TRUE;
   case 3:
     s += 1;
@@ -309,7 +319,7 @@ int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
 
 //-----------------------------------------------------------------------------
 // An OZ term describing a finite domain is either:
-// (1) a positive small integer <= fd_iv_max_elem
+// (1) a positive small integer <= fd_sup
 // (2) a 2 tuple of (1)
 // (3) a list of (1) and/or (2)
 
@@ -1257,6 +1267,7 @@ void BIinitFD(void)
   BIadd("fdNotInKillB_body", 3, BIfdNotInKillB_body);
   BIadd("fdCopyDomain", 2, BIfdCopyDomain);
   BIadd("fdDivDomCons", 3, BIfdDivIntervalCons);
+  BIadd("getCopyStat", 1, BIgetCopyStat);
 }
 
 
