@@ -855,7 +855,7 @@ FSetValue FSetValue::operator & (const FSetValue &y) const
     for (int i = fset_high; i--; ) 
       z._in[i] = y._in[i];
     z.toExtended();
-    z._IN &= y._IN;
+    z._IN &= _IN;
     z._card = z._IN.getSize();
     z.maybeToNormal();
   }
@@ -1458,6 +1458,7 @@ void FSetConstraint::DP(const char *s = NULL) const {
   printf("out: %s#%d cmin:%d cmax:%d\n", _Auxout.toString(), _known_not_in,
  	 _card_min, _card_max);
 #endif
+  fflush(stdout);
 }
 
 #ifdef BIGFSET
@@ -2892,8 +2893,8 @@ FSetConstraint FSetConstraint::operator - (const FSetConstraint& y) const
       z._normal = false;
       set_Auxin(y._in, y._otherin);
       set_Auxout(y._not_in, y._otherout);
-      z._IN = _IN & _Auxin;
-      z._OUT = _OUT | _Auxout;
+      z._IN = _IN & _Auxout;
+      z._OUT = _OUT | _Auxin;
     }
     else {
       z._normal = false;
