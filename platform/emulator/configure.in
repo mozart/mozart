@@ -34,11 +34,6 @@ dnl  PS-LAB: prefix and rcp/mv
 dnl  VPATH
 dnl  pmake support
 
-if test -d $OZHOME
-then
-  ac_default_prefix=$OZHOME
-fi
-
 dnl *****************************************************************
 dnl INITIALIZE
 dnl *****************************************************************
@@ -49,6 +44,11 @@ AC_INIT(oz.h)
 AC_CANONICAL_HOST
 
 AC_LANG_CPLUSPLUS
+
+if test -d $OZHOME
+then
+  ac_default_prefix=$OZHOME
+fi
 
 dnl *****************************************************************
 dnl windows cross compilation
@@ -126,6 +126,25 @@ AC_SUBST(CWARN)
 AC_SUBST(tmphack_target)
 AC_SUBST(tmphack_host)
 AC_SUBST(tmphack_programname)
+AC_SUBST(TOPDIR)
+AC_SUBST(OZVERSION)
+
+dnl *****************************************************************
+dnl topdir
+dnl *****************************************************************
+
+case $srcdir in
+    .*)
+	srcdir=`(cd $srcdir; pwd)`
+	;;
+esac
+
+if test "x$TOPDIR" = x
+then
+    TOPDIR=`(cd $srcdir; cd ..; pwd)`
+fi
+
+. $TOPDIR/VERSION
 
 dnl *****************************************************************
 dnl platform
@@ -454,4 +473,4 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
-AC_OUTPUT(Makefile Makefile.rules FDLib/Makefile FSetLib/Makefile)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules FDLib/Makefile FSetLib/Makefile)

@@ -21,10 +21,11 @@
 #  of this file, and for a DISCLAIMER OF ALL 
 #  WARRANTIES.
 
+include ../Makefile.vars
 
 VPATH		= @srcdir@
 FSETDIR		= @srcdir@
-FSETINCS	= -I.. -I$(FSETDIR)/..
+FSETINCS	= -I..
 CFLAGS		+= $(FSETINCS)
 CPPFLAGS	+= $(FSETINCS)
 CXXFLAGS	+= $(FSETINCS)

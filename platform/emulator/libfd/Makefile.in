@@ -21,14 +21,11 @@
 #  of this file, and for a DISCLAIMER OF ALL 
 #  WARRANTIES.
 
+include ../Makefile.vars
 
 VPATH		= @srcdir@
 FDDIR		= @srcdir@
-FDINCS		= -I.. -I$(FDDIR)/..
-CPPFLAGS	+= $(FDINCS)
-CFLAGS		+= $(FDINCS)
-CXXFLAGS	+= $(FDINCS)
-DEPEND		+= $(FDINCS)
+CPPFLAGS	+= -I..
 FDTARGETS	= @FDTARGETS@
 
 FDLIBSRCS = arith.cc fdaux.cc bool.cc \
