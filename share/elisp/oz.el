@@ -1467,9 +1467,9 @@ OZ compiler, emulator and error window")
      (oz-feed-region-browse (car line) (cdr line))))
 
 (defun oz-view-panel ()
-  "Feed {System.panel popup} into the Oz Compiler"
+  "Feed {Panel open} into the Oz Compiler"
   (interactive)
-  (oz-send-string "job {System.panel popup} end"))
+  (oz-send-string "{Panel open}"))
 
 (defun oz-feed-file (file)
   "Feed an file into the Oz Compiler"
