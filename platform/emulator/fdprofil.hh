@@ -78,8 +78,8 @@ private:
   struct {unsigned no; unsigned size;} items2[no_high2];
 public:
   void init(void) { 
-    for (int i = no_high1; i--; ) items1[i] = 0; 
-    for (int i = no_high2; i--; ) items2[i].no = items2[i].size = 0; 
+    { for (int i = no_high1; i--; ) items1[i] = 0; }
+    { for (int i = no_high2; i--; ) items2[i].no = items2[i].size = 0; }
   }
   ProfileData(void) { init(); }
   

@@ -101,26 +101,28 @@ OZ_C_proc_begin(BIfdReset, 0)
 OZ_C_proc_end
 
 void ProfileData::print(void) {
-  for (int i = 0; i < no_high1; i += 1)
+  int i;
+  for (i = 0; i < no_high1; i += 1)
     cout << "\t" << print_msg1[i] << " = " << items1[i] << endl;
-  for (int i = 0; i < no_high2; i += 1)
+  for (i = 0; i < no_high2; i += 1)
     cout << "\t" << print_msg2[i] << ": no=" << items2[i].no 
 	 << " size=" << items2[i].size << endl;
 }
 
 void ProfileDataTotal::printTotal(unsigned n) {
+  int i;
   printf("Average of %d distributions.\n", n);
-  for (int i = 0; i < no_high1; i += 1)
+  for (i = 0; i < no_high1; i += 1)
     printf("\t%s = %u  (%.2f)\n", print_msg1[i], items1[i],
 	   n ? float(items1[i]) / n : 0.0);
 
   unsigned sum = 0;
-  for (int i = 0; i < no_high2; i += 1)
+  for (i = 0; i < no_high2; i += 1)
     sum += items2[i].size;
 
   printf("\n\n Bytes copied: %u\n", sum);
 
-  for (int i = 0; i < no_high2; i += 1)
+  for (i = 0; i < no_high2; i += 1)
     printf("\t%s = no=%u (%.2f) size=%u (%.0f%%) (%u/%.2f/%u)\n", 
 	   print_msg2[i], 
 	   items2[i].no, n ? float(items2[i].no) / n : 0.0,
@@ -137,10 +139,11 @@ inline unsigned min(unsigned a, unsigned b) {return (a < b && 0 < a) ? a : b;}
 inline unsigned max(unsigned a, unsigned b) {return a > b ? a : b;}
 
 void ProfileDataTotal::operator += (ProfileData &y) {
-  for (int i = no_high1; i--; ) {
+  int i;
+  for (i = no_high1; i--; ) {
     items1[i] += y.items1[i];
   }
-  for (int i = no_high2; i--; ) {
+  for (i = no_high2; i--; ) {
     items2[i].no += y.items2[i].no;
     items2[i].size += y.items2[i].size;
     min2[i] = min(y.items2[i].size, min2[i]);
