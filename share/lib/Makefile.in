@@ -290,7 +290,7 @@ install-cache: \
 $(CACHEDIR):
         $(INSTALL_DIR) $(CACHEDIR)
         -rm -rf $(CACHEDIR)
-        $(LN_S) $(PREFIX) $(CACHEDIR)
+        $(LN_S) ../../.. $(CACHEDIR)
 
 $(OZLIB) $(IMAGESDIR) $(OZBIN):
         $(INSTALL_DIR) $@
