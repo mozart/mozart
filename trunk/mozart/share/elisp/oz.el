@@ -1087,7 +1087,7 @@ compiled using a default set of switches."
 
 (defconst oz-class-begin-pattern
   (oz-make-keywords-for-match
-   '("class")))
+   '("class" "functor")))
 (defconst oz-gump-class-begin-pattern
   (oz-make-keywords-for-match
    '("scanner" "parser")))
@@ -1101,7 +1101,7 @@ compiled using a default set of switches."
 
 (defconst oz-class-between-pattern
   (oz-make-keywords-for-match
-   '("from" "prop" "attr" "feat")))
+   '("from" "prop" "attr" "feat" "import" "export")))
 (defconst oz-gump-class-between-pattern
   (oz-make-keywords-for-match
    '("token")))
@@ -1134,15 +1134,15 @@ compiled using a default set of switches."
 
 (defconst oz-any-pattern
   (concat "\\<\\(attr\\|case\\|catch\\|class\\|choice\\|condis\\|"
-	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|"
-	  "feat\\|finally\\|from\\|fun\\|if\\|in\\|"
+	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|export\\|"
+	  "feat\\|finally\\|from\\|fun\\|functor\\|if\\|in\\|import\\|"
 	  "local\\|lock\\|meth\\|not\\|of\\|or\\|proc\\|prop\\|raise\\|"
 	  "then\\|thread\\|try\\|with\\)\\>\\|\\[\\]\\|"
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
   (concat "\\<\\(attr\\|case\\|catch\\|class\\|choice\\|condis\\|"
-	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|"
-	  "feat\\|finally\\|from\\|fun\\|if\\|in\\|"
+	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|export\\|"
+	  "feat\\|finally\\|from\\|fun\\|functor\\|if\\|in\\|import\\|"
 	  "lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|or\\|"
 	  "parser\\|proc\\|prod\\|prop\\|raise\\|scanner\\|syn\\|"
 	  "then\\|thread\\|token\\|try\\|with\\)\\>\\|=>\\|\\[\\]\\|"
@@ -1957,7 +1957,7 @@ and initial percent signs."
 
 (defconst oz-keywords
   '("declare" "local" "in" "end"
-    "proc" "fun"
+    "proc" "fun" "functor" "import" "export"
     "case" "then" "else" "of" "elseof" "elsecase"
     "class" "from" "prop" "attr" "feat" "meth" "self"
     "true" "false" "unit"
@@ -2005,10 +2005,20 @@ The second subexpression matches optional flags, the third subexpression
 matches the definition's identifier (if it is a variable) and is used for
 fontification.")
 
+(defconst oz-functor-matcher
+  (concat "\\<functor\\([ \t]+\\|[ \t]*!\\)"
+	  "\\([A-Z\300-\326\330-\336]"
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|\\$"
+	  "\\|`[^`\n]*`\\)")
+  "Regular expression matching functor definitions.
+The second subexpression matches the definition's identifier (if it is a
+variable) and is used for fontification.")
+
 (defconst oz-class-matcher
   (concat "\\<class\\([ \t]+\\|[ \t]*!\\)"
 	  "\\([A-Z\300-\326\330-\336]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|`[^`\n]*`\\)")
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|\\$"
+	  "\\|`[^`\n]*`\\)")
   "Regular expression matching class definitions.
 The second subexpression matches the definition's identifier
 \(if it is a variable) and is used for fontification.")
@@ -2067,6 +2077,8 @@ and is used for fontification.")
   (append (list (list oz-proc-fun-matcher
 		      '(2 font-lock-variable-name-face)
 		      '(3 font-lock-function-name-face))
+		(list oz-functor-matcher
+		      '(2 font-lock-function-name-face))
 		(list oz-class-matcher
 		      '(2 font-lock-type-face))
 		(list oz-meth-matcher

@@ -211,8 +211,8 @@ void xy_setParserExpect() {
 %token VARIABLE VARIABLE_LABEL
 %token DEFAULT CHOICE LDOTS
 %token attr _case_ catch choice _class_ _condis_ declare dis
-%token _else_ elsecase elseif elseof end fail false FALSE_LABEL
-%token feat finally _from_ _fun_ functor _if_ _in_ local _lock_
+%token _else_ elsecase elseif elseof end export fail false FALSE_LABEL
+%token feat finally _from_ _fun_ functor _if_ import _in_ local _lock_
 %token _meth_ not of or proc prop ozraise self skip then
 %token thread true TRUE_LABEL try unit UNIT_LABEL with
 
@@ -247,6 +247,7 @@ void xy_setParserExpect() {
 %type <t>  hashes
 %type <t>  phrase2
 %type <t>  procFlags
+%type <t>  decls
 %type <t>  compare
 %type <t>  fdCompare
 %type <t>  fdIn
@@ -517,6 +518,9 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 		| _fun_ coord procFlags '{' phrase phraseList '}'
 		  inSequence end
 		  { $$ = newCTerm("fFun",$5,$6,$8,$3,$2); }
+		| functor coord phraseOpt import decls export decls _in_
+		  sequence end
+		  { $$ = newCTerm("fFunctor",$3,$5,$7,$9,$2); }
 		| class
 		  { $$ = $1; }
 		| local coord sequence _in_ sequence end
@@ -560,6 +564,12 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 procFlags	: /* empty */
 		  { $$ = nilAtom; }
 		| atom procFlags
+		  { $$ = consList($1,$2); }
+		;
+
+decls		: /* empty */
+		  { $$ = nilAtom; }
+		| nakedVariable decls
 		  { $$ = consList($1,$2); }
 		;
 
