@@ -11,6 +11,7 @@ IMAGESDIR	= $(OZLIB)/images
 SHELL		= /bin/sh
 LN_S		= @LN_S@
 M4		= @M4@
+PERL            = @PERL@
 
 INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
@@ -291,12 +292,12 @@ Makefile: Makefile.in ../config.status
 .PHONY: clean veryclean distclean tags
 
 clean:
-	-rm -f *~ *.bak
+	-rm -f *~ *.bak ./*/*~ ./*/*.bak
 	-rm -f compiler-Version.oz compiler-Builtins.oz 
 	-rm -f compiler-Opcodes.oz
 	-rm -f module-Peanuts.oz
 	-rm -f envgen compiler-Env.oz
-	-rm -f $(FUNCTORS) Standard.ozf Init.ozp
+	-rm -f $(FUNCTORS) Standard.ozf Init.ozp ozc.ozp
 	-rm -f $(SYSLETS)
 
 veryclean: clean
