@@ -2598,7 +2598,7 @@ of the procedure Browse."
 (defun oz-feed-file (file)
   "Feed a file to the Oz Compiler."
   (interactive "fFeed file: ")
-  (oz-send-string (concat "\\feed '" file "'")))
+  (oz-send-string (concat "\\insert '" file "'")))
 
 (defun oz-find-dvi-file ()
   "View a file from the Oz documentation directory."
