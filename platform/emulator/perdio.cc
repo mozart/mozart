@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.7  1996/08/05 08:23:46  mehl
+  not using -DPERDIO works now
+
   Revision 1.6  1996/08/02 16:25:50  scheidhr
   more Perdio work: send Ports over the net
 
@@ -211,6 +214,17 @@ OwnerTable *ownerTable = NULL;
 
 /**********************************************************************/
 
+NetAddress *exportPort(Port *p)
+{
+  if (p->getAddress()==NULL) {
+    int index = ownerTable->newOTEntry(p,NULL);
+    p->setAddress(new NetAddress(localSite,index));
+  }
+  return addr;
+}
+
+/**********************************************************************/
+
 const int intSize = sizeof(int32);
 
 inline
@@ -409,7 +423,7 @@ loop:
       if (isPort(t)) {
         Port *p = tagged2Port(t);
         CheckCycle(p->getStream());
-        NetAddress *addr = p->export();
+        NetAddress *addr = exportPort(p);
         int credit = addr->getCredit();
 
         bs->put(PORTTAG);

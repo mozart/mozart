@@ -4473,7 +4473,11 @@ OZ_C_proc_begin(BIsendPort,2)
   if (port->isLocal()) {
     OZ_send(prt,msg);
   } else {
+#ifdef PERDIO
     remoteSend(port,msg);
+#else
+    error("no perdio");
+#endif
   }
 
   return PROCEED;
