@@ -1196,7 +1196,7 @@ LBLdispatcher:
 	  OzOFVariable *ofsvar = (OzOFVariable *) cvar;
 	  Literal *lit = tagged2Literal(label);
 	  if (sraIsTuple(sra) && ofsvar->disentailed(lit,getTupleWidth(sra)) ||
-	      ofsvar->disentailed(lit,getRecordArity(sra))) {
+	      !sraIsTuple(sra) && ofsvar->disentailed(lit,getRecordArity(sra))) {
 	    JUMPRELATIVE(getLabelArg(PC+4));
 	  }
 	  SUSP_PC(termPtr,PC);
