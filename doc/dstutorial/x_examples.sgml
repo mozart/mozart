@@ -591,13 +591,13 @@ For example, the following code sends the procedure <<P>>
 to remote object <<D>>:
 <<<
 declare
-R={MakeTuple big 100000}  % A very, very big record
-proc {P X} X=R.2710 end   % Procedure that uses record field 2710
+R={MakeTuple big 100000}  % A very, very big tuple
+proc {P X} X=R.2710 end   % Procedure that uses tuple field 2710
 {D addentry(P)}           % Send P to D, where it is executed
 >>>
-<P>If <<D>> executes <<P>>, then the big record <<R>>
-is transferred to <<D>>'s site where field <<2710>>
-is extracted.
+<P>If <<D>> executes <<P>>, then the big tuple <<R>>
+is transferred to <<D>>'s site,
+where field number <<2710>> is extracted.
 With 100,000 fields, this means 400KB is sent over the network!
 Much better is to extract the field before sending <<P>>:
 <<<
@@ -607,7 +607,7 @@ F=R.2710                  % Extract field 2710 before sending
 proc {P X} X=F end
 {D addentry(P)}
 >>>
-<P>This avoids sending the big record <<R>> across the network.
+<P>This avoids sending the tuple across the network.
 This technique is a kind of partial evaluation.
 It is useful for almost any Oz entity,
 for example procedures, functions, classes, and functors.
