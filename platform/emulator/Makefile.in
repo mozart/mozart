@@ -33,7 +33,7 @@ SRCDIR=	@srcdir@
 include Makefile.vars
 
 MODULE_NAMES =							\
-	PID Fault DPMisc DPB VirtualSite Tk Schedule FDP FSP Parser	\
+	PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser\
 	CompilerSupport Browser Debug
 
 STATIC_MODULES=		@STATIC_MODULES@
@@ -72,7 +72,7 @@ MODSPECS= \
 	PID URL FDB FSB System Finalize CTB \
 	CompilerSupport Profile \
 	Debug Fault Browser Misc DPMisc Distribution \
-	VirtualSite Application \
+	VirtualSite Application DPPane \
 	$(BIMODSPECS)
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
@@ -198,6 +198,10 @@ libFault.a Fault.so:
 
 .PHONY: libDPMisc.a DPMisc.so
 libDPMisc.a DPMisc.so:
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libDPPane.a DPPane.so
+libDPPane.a DPPane.so:
 	cd libdp; $(MAKE) ../$@
 
 .PHONY: libVirtualSite.a VirtualSite.so
