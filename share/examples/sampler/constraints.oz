@@ -93,7 +93,6 @@ in
    N13 + N23 + N33 =: Sum
    N11 + N22 + N33 =: Sum
    N31 + N22 + N13 =: Sum
-   3 * Sum =: 9 * 10 div 2
    {FD.distribute ff Square}
 end
 
@@ -182,7 +181,7 @@ end
 %%%
 %%% Graphical output
 %%%
-\feed sampler/constraints/draw-photo.oz
+\insert sampler/constraints/draw-photo.oz
 
 {Explorer.object add(information DrawPhoto)}
 
