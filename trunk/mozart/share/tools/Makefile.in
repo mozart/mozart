@@ -31,7 +31,7 @@ COMPILERPANELSRC = $(COMPILERPANELSRC1:%=compilerPanel/%) CompilerPanel.oz
 
 PANELSRC1 = \
 	configure.oz load.oz make-notes.oz runtime-bar.oz top.oz \
-	main.oz dialogs.oz
+	main.oz dialogs.oz errors.oz
 PANELSRC = $(PANELSRC1:%=panel/%) Panel.oz
 
 BROWSERSRC1 = \
@@ -50,7 +50,8 @@ EXPLORERSRC1 = \
 	combine-nodes.oz nodes.oz toplevel-manager.oz \
 	default-actions.oz search-nodes.oz stat-nodes.oz \
 	statistics-balloon.oz \
-	dialog-manager.oz shapes-and-images.oz status-manager.oz
+	dialog-manager.oz shapes-and-images.oz status-manager.oz \
+	errors.oz
 EXPLORERSRC = $(EXPLORERSRC1:%=explorer/%) Explorer.oz
 
 EMACSSRC = Emacs.oz
@@ -73,7 +74,8 @@ PROFILERSRC1 = \
 	prof-dialog.oz prof-menu.oz prof-string.oz
 PROFILERSRC = $(PROFILERSRC1:%=profiler/%) Profiler.oz
 
-GUMPSRC1 = Bison.oz Main.oz Output.oz ParserGenerator.oz ScannerGenerator.oz
+GUMPSRC1 = Bison.oz Main.oz Output.oz ParserGenerator.oz ScannerGenerator.oz \
+	Errors.oz
 GUMPSRC = $(GUMPSRC1:%=gump/%) Gump.oz
 
 GUMPSCANNERSRC1 = GumpScannerClass.oz

@@ -29,6 +29,12 @@ import
 	   valueToVirtualString
 	   exit}
 
+   Error.{formatGeneric
+	  format
+	  dispatch}
+   
+   ErrorRegistry.{put}
+
    Open.{file}
 
    Tk
@@ -49,6 +55,7 @@ export
    'Panel': Panel
 
 body
+   \insert 'panel/errors.oz'
    \insert 'panel/main.oz'
 
    Panel = {New PanelClass init}

@@ -33,6 +33,12 @@ import
    System.{get
 	   valueToVirtualString}
 
+   Error.{formatGeneric
+	  format
+	  dispatch}
+
+   ErrorRegistry.{put}
+   
    Foreign.{load}
 
 export
@@ -42,4 +48,5 @@ export
    
 body
    \insert gump/Main.oz
+   \insert gump/Errors.oz
 end
