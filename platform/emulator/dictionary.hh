@@ -341,7 +341,7 @@ void resizeDynamicTable(DynamicTable *&dt)
   dt = ret;
 }
 
-/* a simple sorting routine using atomcmp */
+/* a simple sorting routine using featureCmp */
 void inplace_quicksort(TaggedRef* first, TaggedRef* last);
 
 /*===================================================================

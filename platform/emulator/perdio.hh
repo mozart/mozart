@@ -135,6 +135,7 @@ typedef enum {
   DIF_VIRTUAL,
   DIF_PERM,
   DIF_PASSIVE,
+  DIF_COPYABLENAME,
   DIF_LAST
 } MarshalTag;
 

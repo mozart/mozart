@@ -207,16 +207,15 @@ OZ_BI_define(BIbreakpointAt, 3,1)
   Bool    ok    = NO;
 
   while(info) {
-    if (!atomcmp(file,info->file))
-      if (line == info->line) {
-        ok = OK;
-        // the PC+2 in the next lines is due to the format of the
-        // DEBUGENTRY instruction:
-        if (OZ_isTrue(what))
-          CodeArea::writeTagged(OZ_int(-line),info->PC+2);
-        else
-          CodeArea::writeTagged(OZ_int( line),info->PC+2);
-      }
+    if (literalEq(file,info->file) && line == info->line) {
+      ok = OK;
+      // the PC+2 in the next lines is due to the format of the
+      // DEBUGENTRY instruction:
+      if (OZ_isTrue(what))
+        CodeArea::writeTagged(OZ_int(-line),info->PC+2);
+      else
+        CodeArea::writeTagged(OZ_int( line),info->PC+2);
+    }
     info = info->next;
   }
 

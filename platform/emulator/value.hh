@@ -226,13 +226,16 @@ public:
 /* any combination of the following must be different from GCTAG,
  * otherwise getRef() will not work
  */
-#define Lit_isName        2
-#define Lit_isNamedName   4
-#define Lit_hasGName      8
-#define Lit_isUniqueName 16
+#define Lit_isName          2
+#define Lit_isNamedName     4
+#define Lit_hasGName        8
+#define Lit_isUniqueName   16
+#define Lit_isCopyableName 32
 
-const int sizeOfLitFlags = 5;
-const int litFlagsMask   = (1<<sizeOfLitFlags)-1;
+const int sizeOfLitFlags  = 6;
+const int sizeOfCopyCount = 10;
+const int litFlagsMask    = (1<<sizeOfLitFlags)-1;
+const int copyCountMask   = (1<<sizeOfCopyCount)-1;
 
 class Literal {
   int32 flagsAndOthers;
@@ -246,10 +249,11 @@ public:
   int getOthers() { return flagsAndOthers>>sizeOfLitFlags; }
   void setOthers(int value) { flagsAndOthers = getFlags()|(value<<sizeOfLitFlags); }
 
-  Bool isName()       { return (getFlags()&Lit_isName); }
-  Bool isNamedName()  { return (getFlags()&Lit_isNamedName); }
-  Bool isUniqueName() { return (getFlags()&Lit_isUniqueName); }
-  Bool isAtom()       { return !isName(); }
+  Bool isName()         { return (getFlags()&Lit_isName); }
+  Bool isNamedName()    { return (getFlags()&Lit_isNamedName); }
+  Bool isUniqueName()   { return (getFlags()&Lit_isUniqueName); }
+  Bool isCopyableName() { return (getFlags()&Lit_isCopyableName); }
+  Bool isAtom()         { return !isName(); }
 
   const char *getPrintName();
 
@@ -310,6 +314,7 @@ public:
   NO_DEFAULT_CONSTRUCTORS(NamedName);
   const char *printName;
   static NamedName *newNamedName(const char *str);
+  NamedName *generateCopy();
 };
 
 
@@ -334,16 +339,10 @@ Bool literalEq(TaggedRef a, TaggedRef b)
 }
 
 /*
- * mm2: how should this function handle names ?
- *
  * atomcmp(a,b) is used to construct the arity lists of records.
  * It returns: 0   if   a == b
  *            -1   if   a < b
  *             1   if   a > b
- *
- * Note: if a and b are atoms (not names) than they MUST be compared via
- * strcmp, otherwise the compiler must be changed too!!!!!!
- *
  */
 
 inline
@@ -359,15 +358,6 @@ int atomcmp(Literal *a, Literal *b)
 
   Assert(a->isName() && b->isName());
   return (((Name*)a)->getSeqNumber() < ((Name*)b)->getSeqNumber()) ? -1 : 1;
-}
-
-
-inline
-int atomcmp(TaggedRef a, TaggedRef b)
-{
-  if (a==b) return 0;
-
-  return atomcmp(tagged2Literal(a), tagged2Literal(b));
 }
 
 

@@ -197,8 +197,15 @@ include(EMUDIR/instrDefs.m4)
 undefine(`instruction')
 
 "<N: "[^>]+">" {
-  ozmalval.tagged = OZ_atom(ozmatext);
-  return NAME;
+  strip('<');
+  ozmalval.tagged = OZ_atom(ozmatext + 3);
+  return NAMEDNAME;
+}
+
+"<M: "[^>]+">" {
+  strip('<');
+  ozmalval.tagged = OZ_atom(ozmatext + 3);
+  return COPYABLENAME;
 }
 
 "<U: "[^>]+">" {
@@ -214,10 +221,16 @@ undefine(`instruction')
     return UNIQUENAME;
 }
 
-"<ForeignPointer "{INT}">" {
-  ozmatext[ozmaleng - 1] = '\0';
-  ozmalval.tagged = OZ_CStringToInt(ozmatext + 16);
-  return FOREIGNPOINTER;
+"<P: "{INT}">" {
+  strip('<');
+  ozmalval.tagged = OZ_CStringToInt(ozmatext + 3);
+  return PREDICATEREF;
+}
+
+"<Q: "{INT}">" {
+  strip('<');
+  ozmalval.tagged = OZ_CStringToInt(ozmatext + 3);
+  return COPYABLEPREDICATEREF;
 }
 
 {ATOM} {
