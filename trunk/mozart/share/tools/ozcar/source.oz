@@ -56,8 +56,7 @@ in
       end
 
       meth delayedBar(file:F line:L state:S)
-	 New in
-	 BarSync <- New = unit
+	 New in BarSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToUpdateBar}}
 	    case {IsDet New} then skip else
@@ -67,8 +66,7 @@ in
       end
 
       meth configureBar(State)
-	 New in
-	 BarSync <- New = unit
+	 New in BarSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToConfigBar}}
 	    case {IsDet New} then skip else
@@ -78,6 +76,7 @@ in
       end
       
       meth removeBar
+	 BarSync <- _ = unit
 	 {OzcarMessage 'removing bar...'}
 	 {MagicEmacsBar undef 0 hide}
       end
