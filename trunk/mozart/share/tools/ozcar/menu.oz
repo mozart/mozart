@@ -41,34 +41,16 @@ in
 	  [MB(text: IconName
 	      menu:
 		 [C(label:   'About...'
-		    action:  self # about
-		    key:     ctrl(i))
+		    action:  self # about)
 		  separator
-		  C(label:   'Remove All Threads'
-		    action:  self # action(RemoveAllAction)
-		    key:     ctrl(r))
-		  C(label:   'Remove Dead Threads'
-		    action:  self # action(RemoveAllDeadAction)
-		    key:     ctrl(u))
-		  separator
-		  C(label:   'Destroy Ozcar'
-		    action:  Ozcar # reInit
-		    key:     ctrl(d))
-		  C(label:   'Suspend Debugging'
+		  C(label:   'Destroy'
+		    action:  Ozcar # reInit)
+		  C(label:   'Suspend'
 		    action:  self # off
 		    key:     ctrl(x))])
-	   MB(text: 'Thread'
+	   MB(text: 'Action'
 	      menu:
-		 [C(label:  'Previous'
-		    action: self # previousThread
-		    key:    'Left'
-		    event:  '<Left>')
-		  C(label:  'Next'
-		    action: self # nextThread
-		    key:    'Right'
-		    event:  '<Right>')
-		  separator
-		  C(label:  'Step Into'
+		 [C(label:  'Step Into'
 		    action: self # action(StepButtonBitmap)
 		    key:    s)
 		  C(label:  'Step Over'
@@ -82,12 +64,41 @@ in
 		    action: self # action(StopButtonBitmap)
 		    key:    z)
 		  separator
-		  C(label:  'Detach'
-		    action: self # action(DetachButtonBitmap)
-		    key:    f)
-		  C(label:  'Terminate'
-		    action: self # action(TermButtonBitmap)
-		    key:    t)
+		  CC(label: 'Detach'
+		     menu:
+			[C(label:  'Current'
+			   action: self # action(DetachButtonBitmap)
+			   key:    d)
+			 C(label:  'All But Current'
+			   action: self # action(DetachAllButCurAction)
+			   key:    ctrl(d))
+			 C(label:  'All Dead'
+			   action: self # action(DetachAllDeadAction)
+			   key:    alt(d))
+			 C(label:  'All'
+			   action: self # action(DetachAllAction)
+			   key:    meta(d))])
+		  CC(label: 'Terminate'
+		     menu:
+			[C(label:  'Current'
+			   action: self # action(TermButtonBitmap)
+			   key:    t)
+			 C(label:  'All But Current'
+			   action: self # action(TermAllButCurAction)
+			   key:    ctrl(t))
+			 C(label:  'All'
+			   action: self # action(TermAllAction)
+			   key:    meta(t))])])
+	   MB(text: 'Thread'
+	      menu:
+		 [C(label:  'Previous'
+		    action: self # previousThread
+		    key:    'Left'
+		    event:  '<Left>')
+		  C(label:  'Next'
+		    action: self # nextThread
+		    key:    'Right'
+		    event:  '<Right>')
 		  separator
 		  C(label:   'Status'
 		    action:  self # checkMe
@@ -106,12 +117,12 @@ in
 		  C(label:  'Re-Calculate'
 		    action: self # rebuildCurrentStack
 		    key:    ctrl(l))
-		  C(label:  'Update Environment'
+		  C(label:  'Update Env'
 		    action: self # updateEnv
 		    key:    v)
-		  C(label:  'Browse'
-		    action: self # action(StackAction)
-		    key:    ctrl(b))
+%		  C(label:  'Browse'
+%		    action: self # action(BrowseStackAction)
+%		    key:    ctrl(b))
 		  separator
 		  C(label:  'Query...'
 		    action: self # eval
@@ -138,7 +149,7 @@ in
 		     action:   self # toggleUpdateEnv
 		     key:      ctrl(a))
 		  separator
-		  C(label:    'Other Settings...'
+		  C(label:    'Preferences...'
 		    action:   self # settings
 		    key:      ctrl(o))])]
 	  [MB(text: 'Help'

@@ -71,9 +71,15 @@ NoFileInfo             = ('step message without line number information, ' #
 			  'continuing thread #')
 FirstSelectThread      = 'You must select a thread first!'
 
-StackAction            = {NewName}
-RemoveAllAction        = {NewName}
-RemoveAllDeadAction    = {NewName}
+
+BrowseStackAction      = {NewName}
+
+DetachAllAction        = {NewName}
+DetachAllButCurAction  = {NewName}
+DetachAllDeadAction    = {NewName}
+
+TermAllAction          = {NewName}
+TermAllButCurAction    = {NewName}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,10 +190,10 @@ TextCursor             = left_ptr
 
 %% the timeout variables have critical values --
 %% you should know what you are doing when changing them...
-TimeoutToCalcTree      = 380 % ms
-TimeoutToUpdateEnv     = 430
-TimeoutToSwitch        = 340
-TimeoutToStatus        = 210
+TimeoutToStatus        = 200 % ms
+TimeoutToSwitch        = 300
+TimeoutToCalcTree      = 400
+TimeoutToUpdateEnv     = 500
 
 HelpEvent              = '<3>'
 
@@ -357,6 +363,9 @@ Config =
 
        printWidth:             PrintWidth
        printDepth:             PrintDepth
+
+       timeoutToSwitch:        TimeoutToSwitch
+       timeoutToUpdateEnv:     TimeoutToUpdateEnv
 
     meth init
        skip
