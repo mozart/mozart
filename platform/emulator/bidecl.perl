@@ -943,8 +943,8 @@ $builtins = {
                              bi  => BInewObject,
                              native => false},
 
-    'New'               => { in  => ['+class','+record'],
-                             out => ['+object'],
+    'New'               => { in  => ['+class','+record','value'],
+                             out => [],
                              bi  => BINew,
                              native => false},
 
