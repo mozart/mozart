@@ -1,0 +1,256 @@
+<section id="r_aux">
+<title/Auxiliary Interface Functions/
+<p>
+
+<para class=apropos><title/<<OZ_updateHeapTerm>>/
+<em/function/<p>
+<<
+void OZ_updateHeapTerm(OZ_Term &amp;t);
+>>
+<p>
+This function updates the reference <<t>> to a term on the heap. This
+is typically required when the member function <<updateHeapRefs()>> of
+a propagator is invoked.
+<p>
+
+<para class=apropos><title/<<OZ_isPosSmallInt>>/
+<em/function/<p>
+<<
+OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
+>>
+<p>
+This function returns <<OZ_TRUE>> if <<val>> denotes an integer
+contained in the finite set <math>\{0, \ldots, OZ_getFDSup()\}</math>. 
+Otherwise it returns <<OZ_FALSE>>.
+<p>
+
+<para class=apropos><title/<<OZ_hallocOzTerms>>/
+<em/function/<p>
+<<
+OZ_Term * OZ_hallocOzTerms(int n);
+>>
+<p>
+This function allocates a block of heap memory for <<n>>
+items of type <<OZ_Term>> and returns a pointer to the block.
+<p>
+
+<para class=apropos><title/<<OZ_hallocChars>>/
+<em/function/<p>
+<<
+char * OZ_hallocChars(int n);
+>>
+<p>
+This function allocates a Block Of Heap Memory For <<n>> items of
+type <<char>> and returns a pointer to the block.
+<p>
+
+<para class=apropos><title/<<OZ_hfreeOzTerms>>/
+<em/function/<p>
+<<
+void OZ_hfreeOzTerms(OZ_Term * ts, int n);
+>>
+<p>
+The function frees the heap memory allocated by
+<<OZ_hallocOzTerms()>>. The first argument <<ts>> points to a memory
+block and the value of <<n>> must denote the correct size of the
+block.
+<p>
+
+<para class=apropos><title/<<OZ_hfreeCInts>>/
+<em/function/<p>
+<<
+void OZ_hfreeCInts(int * is, int n);
+>>
+<p>
+The function frees the heap memory allocated by
+<<OZ_hallocCInts>>. The first argument <<is>> points to a memory
+block and the value of <<n>> must denote the correct size of the
+block.
+<p>
+
+<para class=apropos><title/<<OZ_hfreeChars>>/
+<em/function/<p>
+<<
+void OZ_hfreeChars(char * is, int n);
+>>
+<p>
+The function frees the heap memory allocated by
+<<OZ_hallocChars()>>. The first argument <<is>> points to a memory
+block and the value of <<n>> must denote the correct size of the
+block.
+<p>
+  
+<para class=apropos><title/<<OZ_findEqualVars>>/
+<em/function/<p>
+<<
+int * OZ_findEqualVars(int sz, OZ_Term * ts); 
+>>
+<p>
+The function expects <<ts>> to be a pointer to an <<OZ_Term>> array
+of size <<sz>>. It returns an array of <<int>>s indicating
+variables which are equal. Suppose that the <math/i/th field of the
+returned array holds one of the following values.
+<p>
+<table>
+<tr> <th/value/ <th/explanation/
+<tr> <td/<math/-1// <td/The term stored at that position is not a variable./
+<tr> <td/<math/i// <td/This is the first occurrence of a variable
+  stored in the array at position <math/i/./
+<tr> <td/<math/j \neq i// <td/This is a repeated occurrence of a
+  variable stored at position <math/j/ in the array. The first occurrence can
+  be found at position <math/j/. / 
+</table>
+<p>
+The returned <<int>> array is statically allocated, &ie it is
+overridden on every invocation. For details see
+<ptr to="u_advanced.detect">.
+<p>
+
+<para class=apropos><title/<<OZ_isEqualVars>>/
+<em/function/<p>
+<<
+OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2);
+>>
+<p>
+This function returns <<OZ_TRUE>> if <<v1>> and <<v2>> refer to
+the same variable. Otherwise it returns <<OZ_FALSE>>.
+<p>
+
+<para class=apropos><title/<<OZ_findSingletons>>/
+<em/function/<p>
+<<
+int * OZ_findSingletons(int sz, OZ_Term * ts); 
+>>
+<p>
+The function expects <<ts>> to be a pointer to an <<OZ_Term>> array
+of size <<sz>> which expects its elements to refer to finite
+domain variables. It returns an array of <<int>>s indicating
+variables which are singletons. Suppose that the <math/i/th field of the
+returned array holds one of the following values.
+<p>
+<table>
+<tr> <th/value/ <th/explanation/
+<tr> <td/<math/\geq 0// <td/The term stored at that position is a singleton./
+<tr> <td/otherwise/  <td/The term stored at that position is still
+  a finite domain variable./
+</table>
+<p>
+The returned <<int>> array is statically allocated, &ie it is
+overridden on every invocation. 
+<p>
+
+<para class=apropos><title/<<OZ_typeErrorCPI>>/
+<em/function/<p>
+<<
+OZ_Return OZ_typeErrorCPI(char * __typeString,
+                          int pos, 
+                          char * comment);
+>>
+<p>
+The return value of this function indicates the runtime system that an
+exception has to be raised. The message printed is composed using the
+<<pos>>th substring of <<__typeString>> and <<comment>>.
+<p>
+
+
+<para class=apropos><title/<<OZ_getFDInf>>/
+<em/function/<p>
+<<
+int OZ_getFDInf(void);
+>>
+<p>
+This function returns the value of the smallest element a finite domain
+which is represented by an instance of the class <<OZ_FiniteDomain>>
+can take. The current value returned of DFKI Oz is <math/0/.
+<p>
+
+<para class=apropos><title/<<OZ_getFDSup>>/
+<em/function/<p>
+<<
+int OZ_getFDSup(void);
+>>
+<p>
+This function returns the value of the largest element a finite domain
+which is represented by an instance of the class <<OZ_FiniteDomain>>
+can take. The current value returned of DFKI Oz is <math/134\;217\;726/.
+<p>
+
+<para class=apropos><title/<<OZ_getFSetInf>>/
+<em/function/<p>
+<<
+int OZ_getFSetInf(void);
+>>
+<p>
+This function returns the minimal element a Finite Set can hold. The
+current value is <math/0/.
+<p>
+
+<para class=apropos><title/<<OZ_getFSetSup>>/
+<em/function/<p>
+<<
+int OZ_getFSetSup(void);
+>>
+<p>
+This function returns the maximal element a Finite Set can hold. It
+may depend on compiler settings, but normally should be the same as 
+<<OZ_getFDSup()>>.
+<p>
+
+
+<para class=apropos><title/<<OZ_vectorSize>>/
+<em/function/<p>
+<<
+int OZ_vectorSize(OZ_Term t);
+>>
+<p>
+This function returns the size of a vector. In case <<t>> is no
+vector it returns <math/-1/.
+<p>
+<table>
+<tr> <th/type/ <th/returned value/
+<tr> <td/Literal/ <td/The value returned is <math/0/./
+<tr> <td/List/ <td/he value returned is the length of the list./
+<tr> <td/Tuple/ <td/The value returned is the arity of the tuple./
+<tr> <td/Record/ <td/The value returned is the number of features of
+  the record./
+</table>
+<p>
+
+<para class=apropos><title/<<OZ_getOzTermVector>>/
+<em/function/<p>
+<<
+OZ_Term * OZ_getOzTermVector(OZ_Term t, OZ_Term * v);
+>>
+<p>
+This function expects <<t>> to be a vector and <<v>> to be an
+array with minimal <<OZ_vectorSize(t)>> elements. It converts
+<<t>> to an <<OZ_Term>> array and returns a pointer to the next
+free position in the array <<v>> after converting <<t>>. In case
+<<t>> is no vector the function returns <<NULL>>.
+<p>
+
+<para class=apropos><title/<<OZ_getCIntVector>>/
+<em/function/<p>
+<<
+int * OZ_getCIntVector(OZ_Term t, int * v);
+>>
+<p>
+This function expects <<t>> to be a vector of small integers and
+<<v>> to be an array with minimal <<OZ_vectorSize(t)>>
+elements. It converts <<t>> to an <<int>> array and returns a
+pointer to the next free position in the array <<v>> after converting
+<<t>>. In case <<t>> is no vector the function returns
+<<NULL>>.
+<p>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,616 @@
+<section id="r_fsc">
+<title/The class <<OZ_FSetConstraint>>/
+<p>
+An <<OZ_FSetConstraint>> defines (among other things) a
+set of values that are definitely in (the greatest lower bound), a set
+of values that are definitely out of any set
+satisfying the Constraint; and a set of values who may or may not be
+in. These sets will be referred to as <<IN>>, <<OUT>>,  and
+<<UNKNOWN>> sets in the descriptions below.
+<!--
+<<fs_sup>> is set in the file <<mozart_cpi.hh>>. Normally, it will be
+the same as <<fd_sup>>. If the extended Finite Set representation is
+disabled, however, it is <<32*fset_high>>.
+-->
+
+<subsection id="r_fsc.misc">
+<title/Miscellaneous/
+<p>
+<para class=apopos><title/<<FSetPropState>>/
+<em/enumerable type/
+<p>
+<<
+enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val, 
+		       fs_prop_any, fs_prop_bounds};
+>>
+<p>
+[fixme]
+<p>
+
+
+
+<subsection id="r_fsc.constr">
+<title/Constructor Member Functions/
+<p>
+
+<para class=apropos><title/<<OZ_FSetConstraint>>/
+<em/member function/
+<p>
+<<
+OZ_FSetConstraint(void);
+>>
+<p>
+creates an <em/uninitialised/ <<OZ_FSetConstraint>> entity.
+<p>
+
+<<
+OZ_FSetConstraint(const OZ_FSetValue &amp;fs);
+>>
+<p>
+creates a constraint where the <<IN>> set is <<fs>>.
+<p>
+
+<<
+OZ_FSetConstraint(OZ_FSetState state);
+>>
+<p>
+Creates a Finite Set Constraint with <<IN>> set of state <<state>>,
+and <<OUT>> its complement.
+<table>
+
+<tr> <th/value of <<state>>/ <th/constraint/
+<tr> <td/<<fs_empty>>/ <td/the empty set matches/
+<tr> <td/<<fs_full>>/ <td/the set <math/\{0, \ldots, fs_sup\}/ matches./
+</table>
+<p>
+
+<<
+OZ_FSetConstraint(const OZ_FSetConstraint &amp;fsc);
+>>
+<p>
+Copy-constructs a Finite Set Constraint from <<fsc>>.
+<p>
+
+<subsection id="r_fsc.init">
+<title/Initialization Member Functions/
+<p>
+
+<para class=apropos><title/<<init>>/
+<em/member function/
+<p>
+<<
+void init(void);
+>>
+<p>
+Initializes an empty constraint.
+<p>
+
+<<
+void init(const OZ_FSetValue &amp;fs);
+>>
+<p>
+Initializes a constraint that is only matched by <<fs>>.
+<p>
+
+<<
+void init(OZ_FSetState);
+>>
+<p>
+Initializes a Finite Set Constraint with <<IN>> set of state
+<<state>>, and <<OUT>> its complement.
+<table>
+
+<tr> <th/value of <<state>>/ <th/constraint/
+<tr> <td/<<fs_empty>>/ <td/the empty set matches/
+<tr> <td/<<fs_full>>/ <td/the set <math/\{0, \ldots, fs_sup\}/ matches./
+</table>
+<p>
+
+<subsection id="r_fsc.refl">
+<title/Reflection Member Functions/
+<p>
+These all access members of <<*this>>.
+
+<para class=apropos><title/<<getKnownIn>>/
+<em/constant member function/
+<p>
+<<
+int getKnownIn(void) const;
+>>
+<p>
+Returns the cardinality of <<IN>>.
+<p>
+
+<para class=apropos><title/<<getKnownNotIn>>/
+<em/constant member function/
+<p>
+<<
+int getKnownNotIn(void) const;
+>>
+<p>
+Returns the cardinality of <<OUT>>.
+<p>
+
+<para class=apropos><title/<<getUnknown>>/
+<em/constant member function/
+<p>
+<<
+int getUnknown(void) const;
+>>
+<p>
+Returns the cardinality of <<UNKNOWN>>.
+<p>
+
+<para class=apropos><title/<<getGlbSet>>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetValue getGlbSet(void) const;
+>>
+<p>
+Returns <<IN>>.
+<p>
+
+<para class=apropos><title/<<getLubSet>>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetValue getLubSet(void) const;
+>>
+<p>
+Returns the set of values that <em/may/ be in sets satisfying the
+constraint. 
+<p>
+
+<para class=apropos><title/<<getUnknownSet>>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetValue getUnknownSet(void) const;
+>>
+<p>
+Returns <<UNKNOWN>>.
+<p>
+
+<para class=apropos><title/<<getNotInSet>>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetValue getNotInSet(void) const;
+>>
+<p>
+Returns <<OUT>>.
+<p>
+
+<para class=apropos><title/<<getGlbCard>>/
+<em/constant member function/
+<p>
+<<
+int getGlbCard(void) const;
+>>
+<p>
+Returns the cardinality of <<IN>>.
+<p>
+
+<para class=apropos><title/<<getLubCard>>/
+<em/constant member function/
+<p>
+<<
+int getLubCard(void) const;
+>>
+<p>
+Returns the cardinality of the set of <em/all/ values that are in
+<em/some/ a set satisfying the constraint.
+<p>
+
+<para class=apropos><title/<<getNotInCard>>/
+<em/constant member function/
+<p>
+<<
+int getNotInCard(void) const;
+>>
+<p>
+Returns the cardinality of <<OUT>>.
+<p>
+
+<para class=apropos><title/<<getUnknownCard>>/
+<em/constant member function/
+<p>
+<<
+int getUnknownCard(void) const;
+>>
+<p>
+Returns the cardinality of <<UNKNOWN>>. 
+<p>
+
+<para class=apropos><title/Iterators/
+<em/constant member functions/
+<p>
+<<
+int getGlbMinElem(void) const;
+int getLubMinElem(void) const;
+int getNotInMinElem(void) const;
+int getUnknownMinElem(void) const;
+int getGlbMaxElem(void) const;
+int getLubMaxElem(void) const;
+int getNotInMaxElem(void) const;
+int getUnknownMaxElem(void) const;
+int getGlbNextSmallerElem(int) const;
+int getLubNextSmallerElem(int) const;
+int getNotInNextSmallerElem(int) const;
+int getUnknownNextSmallerElem(int) const;
+int getGlbNextLargerElem(int) const;
+int getLubNextLargerElem(int) const;
+int getNotInNextLargerElem(int) const;
+int getUnknownNextLargerElem(int) const;
+>>
+<p>
+
+These functions allow to access and iterate over elements of several
+sets related to the constraint. 
+<p>
+<table>
+<tr> <th/name/ <th/function/
+<tr> <td/<<getMinElem>>/ <td/get the minimal element, <math/-1/ if empty/
+<tr> <td/<<getMaxElem>>/ <td/get the maximal element, <math/-1/ if empty/
+<tr> <td/<<getNextLargerElem(i)>>/ <td/get the next larger element
+above <<i>>, <math/-1/ if there is none/
+<tr> <td/<<getNextSmallerElem(i)>>/ <td/get the next smaller element
+below <<i>>, <math/-1/ if there is none/
+</table>
+<p>
+
+<table>
+<tr> <th/name/ <th/referred set/
+<tr> <td/<<glb>>/ <td/the set of values that are in <em/all/ sets
+satisfying the constraint/
+<tr> <td/<<lub>>/ <td/the set of <em/all/ values that are in <em/some/ sets
+satisfying the constraint/
+<tr> <td/<<unknown>>/ <td/the set of values that are in <em/some/, but
+<em/not all/ sets satisfying the constraint/
+<tr> <td/<<notIn>>/ <td/the set of values that are in <em/no/ sets
+satisfying the constraint/
+</table>
+<p>
+
+<para class=apropos><title/<<getCardMin>>/
+<em/constant member function/
+<p>
+<<
+int getCardMin(void) const; 
+>>
+<p>
+Returns the minimal allowed cardinality.
+<p>
+
+<para class=apropos><title/<<getCardMax>>/
+<em/constant member function/
+<p>
+<<
+int getCardMax(void) const;
+>>
+<p>
+Returns the maximal allowed cardinality (<math/-1/ means the
+constraint cannot be satisfied)
+<p>
+
+<para class=apropos><title/<<getCardSize>>/
+<em/constant member function/
+<p>
+<<
+int getCardSize(void) const;
+>>
+<p>
+Returns the size of the interval between the minimal and maximal
+allowed cardinality.
+<p>
+
+
+<para class=apropos><title/<<getKnownInList>>/
+<em/constant member function/
+<p>
+<<
+OZ_Term getKnownInList(void) const;
+>>
+<p>
+Returns <<IN>> as a list.
+<p>
+
+<para class=apropos><title/<<getKnownNotInList>>/
+<em/constant member function/
+<p>
+<<
+OZ_Term getKnownNotInList(void) const;
+>>
+<p>
+Returns <<OUT>> as a list.
+<p>
+
+<para class=apropos><title/<<getUnknownList>>/
+<em/constant member function/
+<p>
+<<
+OZ_Term getUnknownList(void) const;
+>>
+<p>
+Returns <<UNKNOWN>> as a list.
+<p>
+
+<para class=apropos><title/<<getLubList>>/
+<em/constant member function/
+<p>
+<<
+OZ_Term getLubList(void) const;
+>>
+<p>
+Returns the union of <<IN>> and <<UNKNOWN>> as a list.
+<p>
+
+<para class=apropos><title/<<getCardTuple>>/
+<em/constant member function/
+<p>
+<<
+OZ_Term getCardTuple(void) const;
+>>
+<p>
+returns a tuple consisting of integers giving the minimum and maximum
+allowed cardinality.
+<p>
+
+<subsection id="r_fsc.op">
+<title/Operator Member Functions/
+<p>
+Where an operator member Function returns an <<OZ_Boolean>>, it is
+to indicate whether constraint becomes unsatisfiable in the operation.
+<p>
+
+<para class=apropos><title/<<operator=>>/
+<em/member function/
+<p>
+<<
+OZ_FSetConstraint &amp;operator=(const OZ_FSetConstraint &amp;fsc);
+>>
+<p>
+<<fsc>> gets assigned to <<*this>>.
+<p>
+
+<para class=apropos><title/<<operator->>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetConstraint operator- (void) const;
+>>
+<p>
+The complementary constraint is returned.
+<p>
+
+<para class=apropos><title/<<operator+=>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator+=(int i);
+>>
+<p>
+<<i>> is added to <<*this.IN>>.
+<p>
+
+<para class=apropos><title/<<operator-=>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator-=(int i);
+>>
+<p>
+<<i>> is added to <<*this.OUT>>.
+<p>
+
+<para class=apropos><title/<<operator&lt;&lt;=>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator&lt;&lt;=(const OZ_FSetConstraint &amp;fsc);
+>>
+<p>
+<<fsc>> is added to <<*this>>
+<p>
+
+<para class=apropos><title/<<operator%>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator%(const OZ_FSetConstraint &amp;fsc);
+>>
+<p>
+Returns <<true>> if all values known to be in <<*this>> are known not
+to be in <<fsc>>, and the other way round.
+<p>
+
+<para class=apropos><title/<<operator &amp;>>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetConstraint operator&amp;(const OZ_FSetConstraint &amp;fsc) const;
+>>
+<p>
+Returns the intersection of <<*this>> and <<fsc>>.
+<p>
+
+<para class=apropos><title/<<operator|>>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetConstraint operator|(const OZ_FSetConstraint &amp;fsc) const;
+>>
+<p>
+Returns the union of <<*this>> and <<fsc>>.
+<p>
+
+<para class=apropos><title/<<operator->>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetConstraint operator-(const OZ_FSetConstraint &amp;fsc) const;
+>>
+<p>
+Returns the difference of <<*this>> and <<fsc>>.
+<p>
+
+<para class=apropos><title/<<operator&lt;=>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator&lt;=(const OZ_FSetConstraint &amp;fsc);
+>>
+<p>
+Returns <<true>> if <<*this>> has as least the elements excluded (in
+<<OUT>>) that are excluded by <<fsc>>. 
+<p>
+
+<para class=apropos><title/<<operator&gt;=>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator&gt;=(const OZ_FSetConstraint &amp;);
+>>
+<p>
+Returns <<true>> if <<*this>> has as least the elements included
+(in <<IN>>) that are included by <<fsc>>. 
+<p>
+
+<para class=apropos><title/<<operator!=>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator!=(const OZ_FSetConstraint &amp;fsc);
+>>
+<p>
+The elements known to be in <<fsc>> are excluded from <<*this>>
+<p>
+
+<para class=apropos><title/<<operator==>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean operator==(const OZ_FSetConstraint &amp;fs) const;
+>>
+<p>
+Returns <<true>> if <<*this>> is equivalent to <<fsc>>.
+<p>
+
+<para class=apropos><title/<<operator&lt;=>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator<=(const int i);
+>>
+<p>
+All values above <<i>> are excluded from <<*this>>.
+<p>
+
+<para class=apropos><title/<<operator&gt;=>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean operator>=(const int);
+>>
+<p>
+All values below <<i>> are excluded from <<*this>>.
+<p>
+
+<subsection id="r_fsc.aux">
+<title/Auxiliary Member Functions/
+<p>
+
+<para class=apropos><title/<<putCard>>/
+<em/member function/
+<p>
+<<
+OZ_Boolean putCard(int cardmin, int cardmax);
+>>
+<p>
+The minimum and maximum allowed cardinality is set.
+<p>
+
+<para class=apropos><title/<<isValue>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean isValue(void) const;
+>>
+<p>
+Returns <<true>> if the constraint determines exactly one set.
+<p>
+
+<para class=apropos><title/<<isIn>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean isIn(int i) const;
+>>
+<p>
+Returns <<true>> if <<i>> is known to be in <em/every/(!) set
+satisfying the constraint.
+<p>
+
+<para class=apropos><title/<<isNotIn>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean isNotIn(int i) const;
+>>
+<p>
+Returns <<true>> if <<i>> is in <em/no/ set satisfying the constraint.
+<p>
+
+<para class=apropos><title/<<isEmpty>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean isEmpty(void) const;
+>>
+<p>
+Returns <<true>> if <<*this>> is satisfied only by the empty set.
+<p>
+
+<para class=apropos><title/<<isFull>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean isFull(void) const;
+>>
+<p>
+Returns <<true>> if <<*this>> can only be satisfied by the set
+containing all possible values (&ie , <math/\{0, \ldots, fs\_sup\}/).
+<p>
+
+<para class=apropos><title/<<isSubsumedBy>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean isSubsumedBy(const OZ_FSetConstraint &amp;fsc) const;
+>>
+<p>
+Returns <<true>> if <<*this>> is subsumed by <<fsc>>.
+<p>
+
+<!--
+<para class=apropos><title/<<toString>>/
+<em/member function/
+<p>
+<<
+char * toString(void)
+>>
+<p>
+
+<p>
+-->
+
+
+
+
+
+
+
+
+
+
