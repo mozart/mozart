@@ -35,8 +35,8 @@ OZ_BI_define(fdp_dsum, 3, 0)
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 1, expectLiteral);
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 2, expectIntVarMinMax);
+  OZ_EXPECT(pe, 0, expectVectorIntVarAny);
+  OZ_EXPECT(pe, 2, expectIntVarAny);
 
   switch (getSumOps(OZ_in(1))) {
   case sum_ops_eq:
@@ -60,8 +60,8 @@ OZ_BI_define(fdp_dsumC, 4, 0)
 
   OZ_EXPECT(pe, 2, expectLiteral);
   OZ_EXPECT(pe, 0, expectVectorInt);
-  OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 3, expectIntVarMinMax);
+  OZ_EXPECT(pe, 1, expectVectorIntVarAny);
+  OZ_EXPECT(pe, 3, expectIntVarAny);
   SAMELENGTH_VECTORS(0, 1);
 
   switch (getSumOps(OZ_in(2))) {
