@@ -78,10 +78,10 @@ clean::
 
 veryclean::
 	-rm -f *~
-	-rm -f $(CED) xref.db
+	-rm -f $(CED) xref.db index.db
 
 distclean::
 	-rm -f *~
-	-rm -f $(CED) xref.db
+	-rm -f $(CED) xref.db index.db
 	-rm -f ced.el catalog
 	-rm -f Makefile Makefile.common config.log config.status config.cache
