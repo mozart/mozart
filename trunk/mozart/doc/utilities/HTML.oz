@@ -149,7 +149,7 @@ define
    end
 
    fun {HTMLToVirtualString HTML}
-      {ToVSSub HTML unit unit}#'\n'
+      {ToVSSub HTML unit unit}
    end
 
    fun {Clean HTML}
