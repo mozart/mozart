@@ -35,11 +35,14 @@
 
 #ifndef URLC_DEBUG
 #define URLC_PERROR(s)
+#define URLC_HERROR(s)
 #else
 #if 1 <= URLC_DEBUG
 #define URLC_PERROR(s) perror(s)
+#define URLC_HERROR(s) herror(s)
 #else
 #define URLC_PERROR(s)
+#define URLC_HERROR(s)
 #endif
 #endif
 
@@ -268,10 +271,9 @@ urlc::tcpip_open(const char* h, int p)
 {
     struct sockaddr_in serv_addr;
     struct hostent* serv_hostent;
-    int fd;
 
     if(NULL == (serv_hostent = gethostbyname(h))) {
-        URLC_PERROR("gethostbyname");
+        URLC_HERROR("gethostbyname");
         return (URLC_ESOCK);
     }
     memset((char*)&serv_addr, 0, sizeof(serv_addr));
@@ -282,7 +284,7 @@ urlc::tcpip_open(const char* h, int p)
     memcpy((char*)&serv_addr.sin_addr,
            serv_hostent->h_addr_list[0],
            serv_hostent->h_length);
-    fd = ossocket(PF_INET, SOCK_STREAM, 0);
+    int fd = ossocket(PF_INET, SOCK_STREAM, 0);
     if(0 > fd) {
         URLC_PERROR("socket");
         return (URLC_ESOCK);
