@@ -90,6 +90,9 @@ EOF
    'gchar'                    => 'OZ_int',
    'guchar'                   => 'OZ_int',
 
+   'gchar'                    => 'GOZ_BYTE_STRING',
+   'gchar*'                   => 'GOZ_BYTE_STRING',
+
    'gint'                     => 'OZ_int',
    'guint'                    => 'OZ_int',
    'guint32'                  => 'OZ_int',
@@ -243,11 +246,12 @@ EOF
 # Tags are:
 #   !        Object with corrospondencing Oz object
 #   %        Enumeration type
-#   +        Out value
+#   +        Out value (eg. gchar** in gtk_label_get)
 #   =        In/Out value
 sub clean_type {
   my ($type_str) = @_;
   $type_str =~ s/^[\%\!\+\=]+//s ;
+  $type_str =~ s/const //sg;
   return $type_str;
 }
 
@@ -270,12 +274,12 @@ sub is_array {
 }
 
 # converts C values to Oz terms
-sub c2oz_return_value {
+sub c_value2oz_term {
   my ($arg, $type) = @_;
   my $ctype = clean_type($type);
 
   if ($return_value_translation{$ctype}) {
-      return "$return_value_translation{$ctype} (ret)";
+      return "$return_value_translation{$ctype} ($arg)";
   } elsif (is_array($type)) {
       return '/* array return value not supported */';
 
@@ -314,7 +318,7 @@ sub write_oz_bi_definition {
   #
   # Arguments
   #
-  print "\t" . clean_type($out) . " ret;\n" if $out; # C return value
+  print "\t" . clean_type($out) . " ret;\n" if $out; # Standard C return value
 
   my $i = 0;
   foreach my $arg (@$in) {
@@ -368,6 +372,7 @@ sub write_oz_bi_definition {
   print 'ret = ' if $out;
   print "$meth (";
   for (my $i = 0; $i < ($arity_in + $arity_special_out); $i++) {
+    print '&' if is_return_value($$in[$i]);
     print "arg$i";
     print ', ' unless $i >= ($arity_in + $arity_special_out) - 1;
   }
@@ -378,14 +383,16 @@ sub write_oz_bi_definition {
   #
   if ($arity_out != 0) {
     # input arguments which GTK+ uses as return values
-    my $i = -1;
+    my $ret_number = $arg_number = -1;
     foreach my $arg (@$in) {
-      $i++;
+      $arg_number++;
       next unless is_return_value($arg);
-      print "\tOZ_out($i) = " . c2oz_return_value("arg$i", $arg) . ";\n";
+      $ret_number++;
+      $arg =~ s/\*$//s; # drop last asterisk
+      print "\tOZ_out($ret_number) = " . c_value2oz_term("arg$arg_number", $arg) . ";\n";
     }
     # the regular return value
-    print "\tOZ_out(" . ($arity_out - 1) . ') = ' . c2oz_return_value('ret', $out) . ";\n" if $out;
+    print "\tOZ_out(" . ($arity_out - 1) . ') = ' . c_value2oz_term('ret', $out) . ";\n" if $out;
     print "\treturn OZ_ENTAILED;\n";
   } else {
     print "\treturn OZ_ENTAILED;\n";

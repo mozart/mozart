@@ -236,5 +236,6 @@ OZ_declareGdkFunc(ARG, VAR, GtkDestroyNotify)
 
 #define GOZ_BOOL(val)                        (val)?OZ_true():OZ_false()
 
+#define GOZ_BYTE_STRING(val)                 OZ_mkByteString(val, strlen(val))
 
 #endif /* __GOZ_SUPPORT_H__ */
