@@ -30,6 +30,7 @@ import
    Colour(list)
    Finalize(everyGC)
    NetInfo(netInfo)
+   MessageInfo
 export
    open:Start
    openNetInfo:OpenNetInfo
@@ -73,7 +74,7 @@ define
          %% Start the thread again
          {Access RunSync} = unit
          N=O
-      else ST OT BT NI SD in
+      else ST OT BT NI SD MI in
          {GUI.open RunSync}
 
          N = true
@@ -83,27 +84,28 @@ define
          OT = {New TableInfo.ownerTable init}
          BT = {New TableInfo.borrowTable init(SD)}
          NI = {New NetInfo.netInfo init(GUI)}
-
+         MI = {New MessageInfo.messageInfoClass init(GUI)}
          {ST setGui(GUI)}
          {OT setGui(GUI.osites GUI.oactive GUI.onumber)}
          {BT setGui(GUI.bsites GUI.bactive GUI.bnumber)}
 
          {GCLineDraw}
 
-         thread {Updater ST OT BT NI} end
+         thread {Updater ST OT BT NI MI} end
       end
    end
 
-   proc {Updater ST OT BT NI}
+   proc {Updater ST OT BT NI MI}
       {Wait {Access RunSync}}
       lock MainLock then
          {ST display}
          {TableInfo.fetchInfo OT BT}
+         {MI display}
          {OT display}
          {BT display}
          {NI display}
       end
       {Delay 2000}
-      {Updater ST OT BT NI}
+      {Updater ST OT BT NI MI}
    end
 end
