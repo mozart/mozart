@@ -100,7 +100,6 @@ public:
   size_t getSize(void) { return sizeof(PerdioVar); }
   
   Tertiary *getTertiary() { Assert(isTertProxy()); return u.tert; };
-  GName *getGName();
 
   void registerSite(Site* sd) {
     Assert(isManager());

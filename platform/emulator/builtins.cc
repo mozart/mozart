@@ -2787,6 +2787,15 @@ OZ_C_proc_begin(BInewName,1)
 }
 OZ_C_proc_end 
 
+
+OZ_C_proc_begin(BInewUniqueName,2)
+{
+  oz_declareAtomArg(0,name);
+  OZ_Term out = OZ_getCArg(1);
+  return oz_unify(out,getUniqueName(name));
+}
+OZ_C_proc_end 
+
 // ---------------------------------------------------------------------
 // term type
 // ---------------------------------------------------------------------
@@ -6405,31 +6414,25 @@ DECLAREBI_USEINLINEFUN2(BIooExch,ooExchInline)
 Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, 
 		  Bool iscl, Board *b)
 {
-  Bool deep = (b!=am.rootBoard);
   OzLock *lck = cla->supportsLocking()
     ? new OzLock(am.currentBoard)
     : (OzLock*) NULL;
-  Object *ret = deep
-    ? new DeepObject(st,cla,feat,iscl,b,lck)
-    : new Object(st,cla,feat,iscl,lck);
-  return ret;
+  return new Object(b,st,cla,feat,iscl,lck);
 }
 
 
-OZ_C_proc_begin(BImakeClass,7)
+OZ_C_proc_begin(BImakeClass,6)
 {
   OZ_Term fastmeth   = OZ_getCArg(0); { DEREF(fastmeth,_1,_2); }
-  OZ_Term printname  = OZ_getCArg(1); { DEREF(printname,_1,_2); }
-  OZ_Term features   = OZ_getCArg(2); { DEREF(features,_1,_2); }
-  OZ_Term ufeatures  = OZ_getCArg(3); { DEREF(ufeatures,_1,_2); }
-  OZ_Term defmethods = OZ_getCArg(4); { DEREF(defmethods,_1,_2); }
-  OZ_Term locking    = OZ_getCArg(5); { DEREF(locking,_1,_2); }
-  OZ_Term out        = OZ_getCArg(6);
+  OZ_Term features   = OZ_getCArg(1); { DEREF(features,_1,_2); }
+  OZ_Term ufeatures  = OZ_getCArg(2); { DEREF(ufeatures,_1,_2); }
+  OZ_Term defmethods = OZ_getCArg(3); { DEREF(defmethods,_1,_2); }
+  OZ_Term locking    = OZ_getCArg(4); { DEREF(locking,_1,_2); }
+  OZ_Term out        = OZ_getCArg(5);
 
   SRecord *methods = NULL;
 
   if (!isDictionary(fastmeth))   { oz_typeError(0,"dictionary"); }
-  if (!isLiteral(printname))     { oz_typeError(1,"literal"); }
   if (!isRecord(features))       { oz_typeError(4,"record"); }
   if (!isRecord(ufeatures))      { oz_typeError(5,"record"); }
   if (!isDictionary(defmethods)) { oz_typeError(6,"dictionary"); }
@@ -6437,7 +6440,6 @@ OZ_C_proc_begin(BImakeClass,7)
   SRecord *uf = isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
 
   ObjectClass *cl = new ObjectClass(tagged2Dictionary(fastmeth),
-				    tagged2Literal(printname),
 				    uf,
 				    tagged2Dictionary(defmethods),
 				    locking==NameTrue);
@@ -6447,9 +6449,9 @@ OZ_C_proc_begin(BImakeClass,7)
 			   cl,
 			   OK,
 			   am.currentBoard);
-  TaggedRef ret   = makeTaggedConst(reto);
-  cl->setOzClass(ret);
-  return oz_unify(out,ret);
+  cl->setOzClass(reto);
+  reto->setClass();
+  return oz_unify(out,makeTaggedConst(reto));
 }
 OZ_C_proc_end
 
@@ -6506,7 +6508,7 @@ OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
     out = t;
     return PROCEED;
   }
-  out = ((Object *)tagged2Const(t))->getOzClass();
+  out = makeTaggedConst(((Object *)tagged2Const(t))->getOzClass());
   return PROCEED;
 }
 
@@ -6564,18 +6566,14 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
   }
 
   Object *obj = (Object *)tagged2Const(cla);
-  TaggedRef realclass = obj->getOzClass();
-  { DEREF(realclass,_1,_2); }
-  Assert(isObject(realclass));
-
-  Object *realcl = (Object *)tagged2Const(realclass);
-  TaggedRef attr = realcl->getFeature(NameOoAttr);
+  Object *realclass = obj->getOzClass();
+  TaggedRef attr = realclass->getFeature(NameOoAttr);
   { DEREF(attr,_1,_2); }
   if (isAnyVar(attr)) return SUSPEND;
   
   TaggedRef attrclone = cloneObjectRecord(attr,NO);
 
-  TaggedRef freefeat = realcl->getFeature(NameOoFreeFeatR);
+  TaggedRef freefeat = realclass->getFeature(NameOoFreeFeatR);
   { DEREF(freefeat,_1,_2); }
   Assert(!isAnyVar(freefeat));
   TaggedRef freefeatclone = cloneObjectRecord(freefeat,OK);
@@ -6587,19 +6585,6 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 
 DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
 
-
-
-OZ_C_proc_begin(BIgetOONames,5)
-{
-  if (oz_unify(OZ_getCArg(0),NameOoAttr)       &&
-      oz_unify(OZ_getCArg(1),NameOoFreeFeatR)  &&
-      oz_unify(OZ_getCArg(2),NameOoFreeFlag)   &&
-      oz_unify(OZ_getCArg(3),NameOoDefaultVar) &&
-      oz_unify(OZ_getCArg(4),NameOoRequiredArg))
-    return PROCEED;
-  return FAILED;
-}
-OZ_C_proc_end
 
 
 
@@ -6909,7 +6894,8 @@ BIspec allSpec[] = {
   {"chunkWidth",      2,BIchunkWidth,	0},
   {"recordWidth",     2,BIrecordWidth,  0},
 
-  {"NewName",         1,BInewName,	0},
+  {"NewName",         1,BInewName,	 0},
+  {"NewUniqueName",   2,BInewUniqueName, 0},
 
   {"==",      3,BIeqB,    (IFOR) eqeqInline},
   {"\\=",     3,BIneqB,   (IFOR) neqInline},
@@ -7041,13 +7027,12 @@ BIspec allSpec[] = {
   {"@",               2,BIat,                  (IFOR) atInline},
   {"<-",              2,BIassign,              (IFOR) assignInline},
   {"copyRecord",      2,BIcopyRecord,          0},
-  {"makeClass",       7,BImakeClass,	       0},
+  {"makeClass",       6,BImakeClass,	       0},
   {"setMethApplHdl",  1,BIsetMethApplHdl,      0},
   {"setSendHdl",      1,BIsetSendHdl,          0},
   {"getClass",        2,BIgetClass, 	       (IFOR) getClassInline},
   {"ooGetLock",       1,BIooGetLock, 	       (IFOR) ooGetLockInline},
   {"newObject",       2,BInewObject, 	       (IFOR) newObjectInline},
-  {"getOONames",      5,BIgetOONames, 	       0},
   {"getSelf",         1,BIgetSelf,            0},
   {"setSelf",         1,BIsetSelf,            0},
   {"ooExch",          3,BIooExch,             (IFOR) ooExchInline},
