@@ -103,7 +103,6 @@ void OwnerEntry::localize(int index)
     else return;}
   else {
     if(isTertiary()){
-      return;
       localizeTertiary(getTertiary());}
   }
   OT->freeOwnerEntry(index);
