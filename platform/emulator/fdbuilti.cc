@@ -15,6 +15,7 @@
 
 #include "fdbuilti.hh"
 #include "unify.hh"
+#include "fdprofil.hh"
 
 #if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline 
@@ -371,28 +372,34 @@ void BIfdBodyManager::process(void)
     } else if (vartag == CVAR) {
       if (! isTouched(i)) {
 	vars_left = TRUE;
-      } else if (*bifdbm_dom[i] == fd_singleton) {
-	if (bifdbm_is_local[i]) {
-	  tagged2GenFDVar(bifdbm_var[i])->
-	    becomesSmallIntAndPropagate(bifdbm_varptr[i]);
-	} else {
-	  tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_det,
-						    TaggedRef(bifdbm_varptr[i]));
-	  doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
-			 newSmallInt(bifdbm_dom[i]->singl()));
-	  glob_vars_touched = TRUE;
-	}
       } else {
-	tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_bounds,
-						  TaggedRef(bifdbm_varptr[i]));
-	if (! bifdbm_is_local[i]) {
-	  GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
-	  TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-	  doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
-			 TaggedRef(newtaggedfdvar));
-	  glob_vars_touched = TRUE;
+	if (*bifdbm_dom[i] == fd_singleton) {
+	  if (bifdbm_is_local[i]) {
+	    tagged2GenFDVar(bifdbm_var[i])->
+	      becomesSmallIntAndPropagate(bifdbm_varptr[i]);
+	  } else {
+	    tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_det,
+						      TaggedRef(bifdbm_varptr[i]));
+	    doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+			   newSmallInt(bifdbm_dom[i]->singl()));
+	    glob_vars_touched = TRUE;
+	  }
+	} else {
+	  tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_bounds,
+						    TaggedRef(bifdbm_varptr[i]));
+	  if (! bifdbm_is_local[i]) {
+	    GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
+	    TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
+	    doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+			   TaggedRef(newtaggedfdvar));
+	    glob_vars_touched = TRUE;
+	  }
+	  vars_left = TRUE;
 	}
-	vars_left = TRUE;
+	PROFILE_CODE1(
+		      if (FDVarsTouched.add(bifdbm_var[i]))
+		         FDProfiles.inc_item(no_touched_vars);
+		      )
       }
     } else if (vartag == SVAR) {
       DebugCheck(bifdbm_is_local[i], error("Global SVAR expected."));
@@ -411,6 +418,11 @@ void BIfdBodyManager::process(void)
 		       TaggedRef(newtaggedfdvar));
 	vars_left = TRUE;
       }
+      PROFILE_CODE1(
+		    if (FDVarsTouched.add(bifdbm_var[i]))
+		       FDProfiles.inc_item(no_touched_vars);
+		    )
+      
     } else  {
       error("Unexpected vartag (0x%x) found.", vartag);
     }
@@ -448,10 +460,15 @@ void BIfdBodyManager::processNonRes(void)
 	
 	GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
 	TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-	doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], TaggedRef(newtaggedfdvar));
+	doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
+		       TaggedRef(newtaggedfdvar));
 	glob_vars_touched = TRUE;
       }
     }
+    PROFILE_CODE1(
+		  if (FDVarsTouched.add(bifdbm_var[0]))
+		     FDProfiles.inc_item(no_touched_vars);
+		  )
   } else if (vartag == SVAR) {
     DebugCheck(bifdbm_is_local[0], error("Global SVAR expected."));
     
@@ -470,6 +487,11 @@ void BIfdBodyManager::processNonRes(void)
       doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], TaggedRef(newtaggedfdvar));
       vars_left = TRUE;
     }
+    PROFILE_CODE1(
+		  if (FDVarsTouched.add(bifdbm_var[0]))
+		     FDProfiles.inc_item(no_touched_vars);
+		  )
+    
   }
 } // BIfdBodyManager::processNonRes
 
@@ -630,7 +652,14 @@ Bool BIfdBodyManager::_unifiedVars(void)
 
 void BIinitFD()
 {
-// fdcore.C
+// fdprofil.cc
+  BIadd("fdReset", 0, BIfdReset);
+  BIadd("fdDiscard", 0, BIfdDiscard);
+  BIadd("fdGetNext", 1, BIfdGetNext);
+  BIadd("fdPrint", 0, BIfdPrint);
+  BIadd("fdAverage", 0, BIfdAverage);
+
+// fdcore.cc
   BIadd("fdIs", 1, BIfdIs, FALSE, (InlineFunOrRel) BIfdIsInline);
   BIadd("fdIs", 1, BIfdIs);
   BIadd("fdIsVar", 1, BIisFdVar);
@@ -646,7 +675,7 @@ void BIinitFD()
   BIadd("fdPutList", 3, BIfdPutList);
   BIadd("fdPutNot", 2, BIfdPutNot);
   
-// fdrel.C  
+// fdrel.cc
   BIadd("fdMinimum", 3, BIfdMinimum);
   BIadd("fdMinimum_body", 3, BIfdMinimum_body);
   BIadd("fdMaximum", 3, BIfdMaximum);
@@ -681,7 +710,7 @@ void BIinitFD()
   BIadd("fdImpl", 3, BIfdImpl);
   BIadd("fdImpl_body", 3, BIfdImpl_body);
   
-// fdarith.C  
+// fdarith.cc
   BIadd("fdPlus", 3, BIfdPlus);
   BIadd("fdPlus_body", 3, BIfdPlus_body);
   BIadd("fdTwice_body", 2, BIfdTwice_body);
@@ -698,7 +727,7 @@ void BIinitFD()
   BIadd("fdMinus_rel", 3, BIfdMinus_rel);
   BIadd("fdMult_rel", 3, BIfdMult_rel);
   
-// fdgeneric.C
+// fdgeneric.cc
   BIadd("fdGenLinEq", 3, BIfdGenLinEq);
   BIadd("fdGenLinEq_body", 3, BIfdGenLinEq_body);
   BIadd("fdGenNonLinEq", 3, BIfdGenNonLinEq);
@@ -716,13 +745,13 @@ void BIinitFD()
   BIadd("fdGenLinAbs", 4, BIfdGenLinAbs);
   BIadd("fdGenLinAbs_body", 4, BIfdGenLinAbs_body);
   
-// fdcard.C
+// fdcard.cc
   BIadd("fdElement", 3, BIfdElement);
   BIadd("fdElement_body", 3, BIfdElement_body);
   BIadd("fdAtMost", 3, BIfdAtMost);
   BIadd("fdAtMost_body", 3, BIfdAtMost_body);
 
-// fdwatch.C
+// fdwatch.cc
   BIadd("fdWatchDom1", 2, BIfdWatchDom1);
   BIadd("fdWatchDom2", 4, BIfdWatchDom2);
   BIadd("fdWatchDom3", 6, BIfdWatchDom3);
@@ -731,7 +760,7 @@ void BIinitFD()
   BIadd("fdWatchBounds2", 6, BIfdWatchBounds2);
   BIadd("fdWatchBounds3", 9, BIfdWatchBounds3);
 
-// fdmisc.C
+// fdmisc.cc
   BIadd("fdCardSched", 4, BIfdCardSched);
   BIadd("fdCardSched_body", 4, BIfdCardSched_body);
   BIadd("fdCDSched", 4, BIfdCDSched);
