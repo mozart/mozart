@@ -507,10 +507,6 @@ static void transBody(char c, char *text, int &i, int &j) {
 
 static void stripTrans(char c) {
   if (xytext[0] == c) {
-    if (!xy_systemVariables && c == '`')
-      xyreportError("lexical error",
-                    "use of system variables not allowed in user programs",
-                    xyFileName,xylino,xycharno());
     int i = 0;
     int j = 1;
     transBody(c, xytext, i, j);
@@ -520,6 +516,10 @@ static void stripTrans(char c) {
 
 static void trans(char c) {
   if (xytext[0] == c) {
+    if (!xy_systemVariables && c == '`')
+      xyreportError("lexical error",
+                    "use of system variables not allowed in user programs",
+                    xyFileName,xylino,xycharno());
     int i = 1;
     int j = 1;
     transBody(c, xytext, i, j);
