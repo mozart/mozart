@@ -89,10 +89,6 @@ int Statistics::getNameMemory() {
   return CodeArea::nameTab.memRequired(sizeof(Literal));
 }
 
-int Statistics::getCodeMemory() {
-  return CodeArea::totalSize;
-}
-
 Statistics::Statistics()
 {
   reset();
