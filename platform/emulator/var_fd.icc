@@ -93,13 +93,13 @@ void addSuspFDVar(TaggedRef v, Suspension susp, OZ_FDPropState list_index)
 
   switch (list_index) {
   case fd_prop_singl:
-    AddSuspToList(fv->fdSuspList[fd_prop_singl], susp, fv->home);
+    AddSuspToList(fv->fdSuspList[fd_prop_singl], susp, fv->getHome1());
     break;
   case fd_prop_bounds:
-    AddSuspToList(fv->fdSuspList[fd_prop_bounds], susp, fv->home);
+    AddSuspToList(fv->fdSuspList[fd_prop_bounds], susp, fv->getHome1());
     break;
   case fd_prop_any:
-    AddSuspToList(fv->suspList, susp, fv->home);
+    AddSuspToList(fv->suspList, susp, fv->getHome1());
     break;
   default:
     error("list index out of range.");

@@ -101,7 +101,7 @@ void addSuspBoolVar(TaggedRef v, Suspension susp)
 {
   GenBoolVariable * bv = tagged2GenBoolVar(v);
 
-  AddSuspToList(bv->suspList, susp, bv->home);
+  AddSuspToList(bv->suspList, susp, bv->getHome1());
 }
 
 #endif /* __FDBVAR_ICC__ */
