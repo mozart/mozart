@@ -33,13 +33,14 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameUnit,
   AtomKinded, AtomDet, AtomRecord, AtomLow,
   // Atoms for System.get and System.set
-  AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomChosen, 
+  AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomCommitted, 
   AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth, 
   AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh, 
   AtomHints, AtomIdle, AtomInt, AtomInvoked, AtomLimits, AtomLoad, 
   AtomLocation, AtomMedium, AtomNames, AtomOn, AtomPropagate, 
   AtomPropagators, AtomRun, AtomRunnable, AtomRuns, AtomShowSuspension, 
   AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
+  AtomTotal,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
   AtomDebugIP, AtomDebugPerdio;
 
@@ -97,7 +98,7 @@ void initLiterals()
   AtomAtoms                 = makeTaggedAtom("atoms");
   AtomBuiltins              = makeTaggedAtom("builtins");
   AtomCellHack              = makeTaggedAtom("cellHack");
-  AtomChosen                = makeTaggedAtom("chosen");
+  AtomCommitted             = makeTaggedAtom("committed");
   AtomCloned                = makeTaggedAtom("cloned");
   AtomCode                  = makeTaggedAtom("code");
   AtomCopy                  = makeTaggedAtom("copy");
@@ -137,6 +138,7 @@ void initLiterals()
   AtomThread                = makeTaggedAtom("thread");
   AtomThreshold             = makeTaggedAtom("threshold");
   AtomTolerance             = makeTaggedAtom("tolerance");
+  AtomTotal                 = makeTaggedAtom("total");
   AtomUser                  = makeTaggedAtom("user");
   AtomVariables             = makeTaggedAtom("variables");
   AtomWidth                 = makeTaggedAtom("width");
