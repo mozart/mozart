@@ -20,12 +20,12 @@ ac_help="$ac_help
 --with-cxx=<CXX>	use <CXX> as C++ compiler (default=NONE)"
 ac_help="$ac_help
 --with-tcl=<dir>
-    search tclConfig.sh in <dir> (default: /usr)"
+    search tclConfig.sh in <dir> (default: $oz_tcl_search)"
 ac_help="$ac_help
 --with-tk=<dir>
-    search tkConfig.sh in <dir> (default: /usr)"
+    search tkConfig.sh in <dir> (default: $oz_tk_search)"
 ac_help="$ac_help
---enable-copy-tcl-libs  Copy tcl libraries (rather than drawing a link) (default=yes)"
+--enable-copy-tcl-libs Copy tcl libraries (rather than drawing a link) (default=yes)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -1141,7 +1141,7 @@ fi
   done
   # add them to LDFLAGS and oz_lib_path
   IFS=$oz_tmp_IFS
-  : ${oz_lib_path=""}
+  : ${oz_lib_path="/usr/local/lib"}
   for oz_tmp1 in $oz_tmp_dirs DONE; do
     if test "$oz_tmp1" != DONE; then
       
@@ -2021,7 +2021,7 @@ fi
 
 TCL_LIB_DIR=""
 for d in $oz_tcl_search ; do
-    if test -r $d/tclConfig.sh; then
+    if test -r "$d/tclConfig.sh"; then
 	TCL_LIB_DIR=$d
 	break
     fi
@@ -2058,7 +2058,7 @@ fi
 
 TK_LIB_DIR=""
 for d in $oz_tk_search ; do
-    if test -r $d/tkConfig.sh; then
+    if test -r "$d/tkConfig.sh"; then
 	TK_LIB_DIR=$d
 	break
     fi
@@ -2080,24 +2080,27 @@ echo "$ac_t""$TK_LIB_DIR/tkConfig.sh" 1>&6
 
 
 
-# Check whether --enable-copy-tcl-libs or --disable-copy-tcl-libs was given.
+
+    echo $ac_n "checking for --enable-copy-tcl-libs""... $ac_c" 1>&6
+echo "configure:2086: checking for --enable-copy-tcl-libs" >&5
+    # Check whether --enable-copy-tcl-libs or --disable-copy-tcl-libs was given.
 if test "${enable_copy_tcl_libs+set}" = set; then
   enableval="$enable_copy_tcl_libs"
   :
 fi
 
-
-echo $ac_n "checking whether to copy tcl libraries""... $ac_c" 1>&6
-echo "configure:2092: checking whether to copy tcl libraries" >&5
-
-if test "${enable_copy_tcl_libs}" != no; then
-   echo "$ac_t""yes" 1>&6
+    : ${oz_enable_copy_tcl_libs=yes}
+    if test -n "${enable_copy_tcl_libs}"; then
+	oz_enable_copy_tcl_libs=$enable_copy_tcl_libs
+    fi
+    if test "${oz_enable_copy_tcl_libs}" != no; then
+	echo "$ac_t""yes" 1>&6
    PROVIDETCLLIBS="provide-copy"
-else
-   echo "$ac_t""no" 1>&6
-fi
-
-: ${PROVIDETCLLIBS="provide-link"}
+    else
+	echo "$ac_t""no" 1>&6
+   : ${PROVIDETCLLIBS="provide-link"}
+    fi
+    
 
 
 
