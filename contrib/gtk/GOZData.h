@@ -157,16 +157,13 @@ static inline gchar *GOZ_stringToC(OZ_Term val) {
  */
 static inline OZ_Term goz_import_glist(GList *ptr) {
   GList *anchor = ptr;
-  OZ_Term cons  = OZ_atom("nil");
+  OZ_Term cons  = OZ_nil();
 
   ptr = g_list_reverse(ptr);
   while (ptr != NULL) {
     cons = OZ_cons(OZ_makeForeignPointer(ptr->data), cons);
     ptr  = g_list_next(ptr);
   }
-  /* To be checked */
-  g_list_free(anchor);
-
   return cons;
 }
 
