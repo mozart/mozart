@@ -42,7 +42,7 @@ in
 		  C(label:   'Suspend'
 		    action:  self # off
 		    key:     ctrl(x))
-		  C(label:   'Close'
+		  C(label:   'Destroy'
 		    action:  Ozcar # reInit
 		    key:     ctrl(d))])
 	   MB(text: 'Thread'
