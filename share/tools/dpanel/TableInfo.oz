@@ -260,7 +260,7 @@ define
 	 localized <- 0
 	 self.makeKey = fun {$ E} E.index end
 	 self.makeSite = fun {$ _} mySite end
-	 self.getCredit = fun {$ E} E.credit end
+	 self.getCredit = fun {$ E} E.dist_gc end
 	 self.colorAlloc = {New ColorAlloc init(getCol:GetCol
 						guiActive:self.guiActive
 						guiNumber:self.guiNumber)}
