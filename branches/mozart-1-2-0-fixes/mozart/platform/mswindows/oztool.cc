@@ -355,8 +355,8 @@ int main(int argc, char **argv)
     switch (sys) {
     case SYS_GNU: {
       char *target = NULL;
-      char *tmpfile_a = concat(ostmpnam(),".a");
-      char *tmpfile_def = concat(ostmpnam(),".def");
+      char *tmpfile_a = concat(toUnix(ostmpnam()),".a");
+      char *tmpfile_def = concat(toUnix(ostmpnam()),".def");
       char **dlltoolCmd = new char*[7+argc+1];
       int index = 0;
       int k = 2;
@@ -408,7 +408,7 @@ int main(int argc, char **argv)
       doexit(r);
     }
     case SYS_MSVC: {
-      char *tmpfile = toUnix(ostmpnam());
+      char *tmpfile = toWindows(ostmpnam());
       char *tmpfile_lib = concat(tmpfile,"lib");
       char *tmpfile_exp = concat(tmpfile,"exp");
       char **libCmd = new char *[6];
