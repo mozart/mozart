@@ -3,7 +3,7 @@
  *    Michael Mehl (mehl@dfki.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    derived from lazyvar.hh by Denys Duchier (duchier@ps.uni-sb.de)
  *
  *  Copyright:
  *    Denys Duchier (1998)
