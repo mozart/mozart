@@ -319,7 +319,7 @@ void ComObj::close(CState statetobe,Bool merging) {
 
 void ComObj::preemptTransObj() {
   Assert(state==WORKING);
-  clearTimers(); // And set a closing timer... AN
+  clearTimers(); // And set a closing timer below
   MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
   msgC->put_C_CLOSE_HARD();
   send(msgC,-1);
@@ -748,6 +748,7 @@ Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
     return FALSE;
   case CLOSING_WF_DISCONNECT:
   case CLOSING_WEAK:
+    old->close(CLOSED,TRUE);
     goto adopt_anon;
   default:
     DebugCode(printf("PROBLEM (state %d %d)\n",old->state,state);)
