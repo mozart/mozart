@@ -42,7 +42,7 @@
 #define WF_REOPEN_TIMEOUT       ozconf.dpFirewallReopenTimeout
 
 #define MSG_ACK_TIMEOUT 1000
-#define MSG_ACK_LENGTH 50
+#define MSG_ACK_LENGTH 200
 
 
 #define DO_CONNECT_LOG ozconf.dpLogConnectLog
@@ -89,6 +89,7 @@ void ComObj::init(DSite *site) {
 void ComObj::send(MsgContainer *msgC) {
   // Erik, hack until the prio thing has been properly reworked.
   int priority = -1;
+  globalSendCounter++;
 
   if(DO_MESSAGE_LOG) {
     fprintf(logfile,"send(%s %d %d %d %s)\n",
@@ -428,12 +429,8 @@ Bool ComObj::hasNeed() {
 
 inline OZ_Term ComObj::createCI(int bufferSize) {
   int time,length;
-  if(probing) // should be also when closing down!
-    time=length=0;
-  else {
-    time=MSG_ACK_TIMEOUT;
-    length=MSG_ACK_LENGTH;
-  }
+  time=MSG_ACK_TIMEOUT;
+  length=MSG_ACK_LENGTH;
   return OZ_recordInit(oz_atom("channelinfo"),
                        oz_cons(oz_pairAI("lastReceived",lastReceived),
                          oz_cons(oz_pairAI("msgAckTimeOut",time),
@@ -487,6 +484,8 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       site!=NULL?site->getTimeStamp()->pid:-1));
 
   norm++;
+  globalRecCounter++;
+
 
   MessageType mt=msgC->getMessageType();
   switch(mt) {
@@ -702,7 +701,24 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
         transObj->deliver();
     }
     else errorRec(mt);
+
     break;
+
+  case C_SEND_PING_PONG:
+    {
+      int id, ctr;
+      msgC->get_C_SEND_PING_PONG(id,ctr);
+      ctr--;
+      if(ctr == 0){
+        if(id>0)ResumeSendJobb(id);
+      }
+      else{
+        MsgContainer *newmsgC=msgContainerManager->newMsgContainer(NULL);
+        newmsgC->put_C_SEND_PING_PONG(id,ctr);
+        send(newmsgC);
+      }
+      break;
+    }
   case C_CLEAR_REFERENCE: // If this is what we waited for start to close...
     if(state==WORKING||state==CLOSING_WEAK||state==CLOSING_HARD) {//in is open
       remoteRef=FALSE;
