@@ -53,13 +53,13 @@ private:
 
 public:
   IHashTable *indexTable;
-  Bool dupOnload;  // true iff has to be created newly when loading (for components)
+  Bool copyable;  // true iff may be copied with definitionCopy
 
   AbstractionEntry(Bool fc) { 
     abstr      = 0;
     pc         = NOCODE;
     next       = allEntries; 
-    dupOnload  = fc;
+    copyable   = fc;
     allEntries = this; 
     indexTable = 0;
   }
