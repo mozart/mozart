@@ -287,11 +287,13 @@ end
 ConfigVerbose              = false  %% debug messages in Emulator buffer?
 
 ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
-ConfigStepRecordBuiltin    = false  %% step on builtin 'record'  ?
-ConfigStepDotBuiltin       = false  %% step on builtin '.'       ?
-ConfigStepWidthBuiltin     = false  %% step on builtin 'width'   ?
-ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName' ?
-ConfigStepSetSelfBuiltin   = false  %% step on builtin 'setSelf' ?
+
+ConfigStepRecordBuiltin         = false  %% step on builtin 'record'  ?
+ConfigStepDotBuiltin            = false  %% step on builtin '.'       ?
+ConfigStepWidthBuiltin          = false  %% step on builtin 'width'   ?
+ConfigStepNewNameBuiltin        = false  %% step on builtin 'NewName' ?
+ConfigStepSetSelfBuiltin        = false  %% step on builtin 'setSelf' ?
+ConfigStepWaitForArbiterBuiltin = false  %% step on builtin 'waitForArbiter'?
 
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
@@ -301,17 +303,18 @@ Config =
  class
     
     attr
-       verbose :               ConfigVerbose
+       verbose :                   ConfigVerbose
     
-       stepSystemProcedures :  ConfigStepSystemProcedures
-       stepRecordBuiltin :     ConfigStepRecordBuiltin
-       stepDotBuiltin :        ConfigStepDotBuiltin
-       stepWidthBuiltin :      ConfigStepWidthBuiltin
-       stepNewNameBuiltin :    ConfigStepNewNameBuiltin
-       stepSetSelfBuiltin :    ConfigStepSetSelfBuiltin
+       stepSystemProcedures :      ConfigStepSystemProcedures
+       stepRecordBuiltin :         ConfigStepRecordBuiltin
+       stepDotBuiltin :            ConfigStepDotBuiltin
+       stepWidthBuiltin :          ConfigStepWidthBuiltin
+       stepNewNameBuiltin :        ConfigStepNewNameBuiltin
+       stepSetSelfBuiltin :        ConfigStepSetSelfBuiltin
+       stepWaitForArbiterBuiltin : ConfigStepWaitForArbiterBuiltin
     
-       envSystemVariables :    ConfigEnvSystemVariables
-       envProcedures :         ConfigEnvProcedures
+       envSystemVariables :        ConfigEnvSystemVariables
+       envProcedures :             ConfigEnvProcedures
 
 
     meth init
