@@ -1054,10 +1054,56 @@ fi
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "ozar", so it can be a program name with args.
+set dummy ozar; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1061: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZAR'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$OZAR" in
+  /*)
+  ac_cv_path_OZAR="$OZAR" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZAR="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZAR="$ac_cv_path_OZAR"
+if test -n "$OZAR"; then
+  echo "$ac_t""$OZAR" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    OZAR=`echo $OZAR | sed -e "s|//|/|g"`
+    if test ! -n "$OZAR"
+    then
+	OZAR=undefined
+	
+    fi
+    
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1061: checking for $ac_word" >&5
+echo "configure:1107: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1092,6 +1138,8 @@ fi
 	OZENGINE=$srcdira/lib/oze.sh
     fi
     
+
+
 
 
 trap '' 1 2 15
@@ -1258,6 +1306,7 @@ s%@GZIP@%$GZIP%g
 s%@THEEMACS@%$THEEMACS%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZC@%$OZC%g
+s%@OZAR@%$OZAR%g
 s%@OZENGINE@%$OZENGINE%g
 
 CEOF
