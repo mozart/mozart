@@ -158,6 +158,17 @@ particular, it lists the changes from
 	  to="http://www.ps.uni-sb.de/alice/"/Alice/ programs
       </list>
 
+    <section id="sec.m125.misc">
+      <title/Miscellaneous/
+      <p>
+        <list>
+	  <item>When building from sources, the default is now to ignore an existing
+	  mozart installation (this default can be overriden with the new <file/configure/
+	  option <code proglang=sh/--with-global-oz/).  Previously, the user had to be
+	  very careful to remove from his/her environment all traces of <file/oz/ prior
+	  to invoking <file/configure/.<p>
+	</list>
+
   <chapter id="chapter.m124">
     <title/Mozart 1.2.4/
     <p>Mozart 1.2.4 is a bug-fix and maintenance release, with some
