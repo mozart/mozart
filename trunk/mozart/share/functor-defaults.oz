@@ -2,8 +2,12 @@
 %%% Authors:
 %%%   Christian Schulte (schulte@dfki.de)
 %%%
+%%% Contributors:
+%%%   Denys Duchier (duchier@ps.uni-sb.de)
+%%%
 %%% Copyright:
 %%%   Christian Schulte, 1998
+%%%   Denys Duchier, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -23,7 +27,7 @@
 defaults(dirs:
 	    [lib tools]
 	 lib:
-	    ['Application'
+	    ['Application' 'GetArgs' 'Applet' 'Syslet' 'Servlet'
 	     'Search' 'FD' 'Schedule' 'FS'
 	     'System' 'Error' 'ErrorRegistry' 'Debug' 'Finalize' 'Foreign'
 	     'Fault' 'Connection' 'Remote' 'VirtualSite'
@@ -38,5 +42,5 @@ defaults(dirs:
 	     'GumpParser']
 
 	 volatile:
-	    ['Module' 'URL' 'Applet' 'Syslet' 'Servlet']
+	    ['Module' 'URL']
 	)
