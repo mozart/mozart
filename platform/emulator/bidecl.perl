@@ -2801,6 +2801,7 @@ while (@ARGV) {
     elsif ($option eq '-oztable') { $choice='oztable'; }
     elsif ($option eq '-include') { push @include,split(/\,/,shift); }
     elsif ($option eq '-exclude') { push @exclude,split(/\,/,shift); }
+    elsif ($option eq '-style'  ) { $style=int(shift); }
     else { die "unrecognized option: $option"; }
 }
 
