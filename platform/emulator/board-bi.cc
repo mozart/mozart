@@ -515,34 +515,56 @@ OZ_BI_define(BIdiscardSpace, 1, 0) {
 } OZ_BI_end
 
 
-OZ_BI_define(BIcheckSit, 1, 0) {
-  TaggedRef x = OZ_in(0);
+OZ_BI_define(BIsendFromSpace, 2, 1) {
+  oz_declareNonvarIN(0,prt);
+  if (!oz_isPort(prt)) {
+    oz_typeError(0,"Port");
+  }
+  TaggedRef x = OZ_in(1);
 
-  TaggedRef f,b;
+  Board * prt_home = tagged2Port(prt)->getBoardInternal()->derefBoard();
 
-  oz_currentBoard()->checkSituatedness(&x,&f,&b);
+  /*
+   * Check wether situatedness is okay!
+   *
+   */
 
-  if (!oz_eq(b,AtomNil)) {
-    // There is at least a bad guy!
-    return oz_raise(E_ERROR,E_KERNEL,"spaceSituatedness",1,b);
+  if (prt_home != oz_currentBoard()) {
+    TaggedRef f,b;
+
+    prt_home->checkSituatedness(&x,&f,&b);
+
+    if (!oz_eq(b,AtomNil)) {
+      // There is at least a bad guy!
+      return oz_raise(E_ERROR,E_KERNEL,"spaceSituatedness",1,b);
+    }
+
+    if (!oz_eq(f,AtomNil)) {
+      // There is at least a future, suspend!
+      do {
+        Assert(oz_isCons(f));
+        TaggedRef h = oz_head(f);
+        Assert(oz_isRef(h));
+        TaggedRef * f_ptr = tagged2Ref(h);
+        Assert(isCVar(*f_ptr));
+        Assert(tagged2CVar(*f_ptr)->getType() == OZ_VAR_FUTURE);
+        am.addSuspendVarList(f_ptr);
+        f = oz_tail(f);
+      } while (!oz_eq(f,AtomNil));
+      return SUSPEND;
+    }
   }
 
-  if (!oz_eq(f,AtomNil)) {
-    // There is at least a future, suspend!
-    do {
-      Assert(oz_isCons(f));
-      TaggedRef h = oz_head(f);
-      Assert(oz_isRef(h));
-      TaggedRef * f_ptr = tagged2Ref(h);
-      Assert(isCVar(*f_ptr));
-      Assert(tagged2CVar(*f_ptr)->getType() == OZ_VAR_FUTURE);
-      am.addSuspendVarList(f_ptr);
-      f = oz_tail(f);
-    } while (!oz_eq(f,AtomNil));
-    return SUSPEND;
-  }
+  TaggedRef f = oz_newVar(prt_home);
 
-  return PROCEED;
+  RefsArray args = allocateRefsArray(2, NO);
+  args[0] = prt;
+  args[1] = oz_pair2(x,f);
+
+  Thread * t = oz_newThreadInject(prt_home);
+  t->pushCall(BI_send,args,2);
+
+  OZ_RETURN(f);
 } OZ_BI_end
 
 

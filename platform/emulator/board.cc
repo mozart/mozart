@@ -607,15 +607,13 @@ Bool Board::install(void) {
  */
 
 void Board::setGlobalMarks(void) {
-  Assert(!isRoot());
-
   Board * b = this;
 
-  do {
+  while (!b->isRoot()) {
     b = b->getParentInternal();
     Assert(!b->hasMarkOne());
     b->setMarkOne();
-  } while (!b->isRoot());
+  }
 
 }
 
@@ -624,14 +622,12 @@ void Board::setGlobalMarks(void) {
  */
 
 void Board::unsetGlobalMarks(void) {
-  Assert(!isRoot());
-
   Board * b = this;
 
-  do {
+  while (!b->isRoot()) {
     b = b->getParentInternal();
     Assert(b->hasMarkOne());
     b->unsetMarkOne();
-  } while (!b->isRoot());
+  }
 
 }
