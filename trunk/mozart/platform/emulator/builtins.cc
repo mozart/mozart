@@ -43,7 +43,7 @@
 #include "fdbuilti.hh"
 #include "fdhook.hh"
 #include "solve.hh"
-#include "../FDLib/aux.hh"
+#include "fdinterface.hh"
 
 /*===================================================================
  * Macros
@@ -147,7 +147,7 @@ OZ_C_proc_begin(Name,3)					          \
 							          \
   OZ_Term arg0 = OZ_getCArg(0);				          \
   OZ_Term arg1 = OZ_getCArg(1);				          \
-  State state=InlineName(arg0,arg1,help);		          \
+  OZ_Return state=InlineName(arg0,arg1,help);		          \
   switch (state) {					          \
   case SUSPEND:						          \
     {                                                             \
@@ -1048,7 +1048,18 @@ OZ_Return labelInline(TaggedRef term, TaggedRef &out)
   case SVAR:
     return SUSPEND;
   case CVAR:
-    if (tagged2CVar(term)->getType() == OFSVariable) return SUSPEND;
+    if (tagged2CVar(term)->getType() == OFSVariable) {
+        GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+        TaggedRef lbl = ofsvar->getLabel();
+        TaggedRef tmplbl=lbl;
+        DEREF(tmplbl,_,tmptag);
+        if (isAnyVar(tmptag)) 
+            return SUSPEND;
+        else {
+            out = lbl;
+            return PROCEED;
+        }
+    }
     break;
   default:
     break;
@@ -1058,25 +1069,6 @@ OZ_Return labelInline(TaggedRef term, TaggedRef &out)
 
 DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
 
-
-// This propagator is installed by the WidthC built-in (BIwidthC):
-class WidthPropagator : public OZ_Propagator {
-protected:
-  OZ_Term rawrec, rawwid;
-public:
-  WidthPropagator(OZ_Term r, OZ_Term w)
-    : rawrec(r), rawwid(w) {}
-
-  virtual void gcRecurse(void) {
-    OZ_gcTerm(rawrec);
-    OZ_gcTerm(rawwid);
-  }
-  virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
-  virtual OZ_Return run(void);
-  virtual ostream &print(ostream& o) const {
-    return o << "widthC propagator";
-  }
-};
 
 
 // {RecordC.widthC X W} -- builtin that constrains number of features of X to be
@@ -1149,7 +1141,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     //       }
     //   }
 
-    PropagatorExpect pe;
+    OZ_PropagatorExpect pe;
     EXPECT(pe, 0, expectRecordVar);
     EXPECT(pe, 1, expectIntVarAny);
 
@@ -1332,42 +1324,20 @@ OZ_C_proc_begin(BIlabelC,2)
   // At this point, thelabel is term's label
   // Constrain the term's label to be lbl:
   Assert(thelabel!=makeTaggedNULL());
-  // TaggedRef thelabeldrf=thelabel;
-  // DEREF(thelabeldrf,_1,_2);
+  TaggedRef thelabeldrf=thelabel;
+  DEREF(thelabeldrf,_1,_2);
   // One of the two must be a literal:
-  // if (!isLiteral(thelabeldrf) && !isLiteral(lbldrf)) {
-  //     // Suspend if at least one of the two is a variable:
-  //     return OZ_suspendOnVar2(thelabel,lbl);
-  // }
+  if (!isLiteral(thelabeldrf) && !isLiteral(lbldrf)) {
+      // Suspend if at least one of the two is a variable:
+      OZ_suspendOn2(thelabel,lbl);
+      // return OZ_suspendOnVar2(thelabel,lbl);
+  }
   if (!isAnyVar(lbltag) && !isLiteral(lbldrf)) return FAILED;
   return (am.unify(thelabel,lbl)? PROCEED : FAILED);
 }
 OZ_C_proc_end
 
 // DECLAREBI_USEINLINEREL2(BIlabelC,labelCInline);
-
-
-class MonitorArityPropagator : public OZ_Propagator {
-protected:
-  OZ_Term X, K, L, FH, FT;
-public:
-  MonitorArityPropagator(OZ_Term X1, OZ_Term K1, OZ_Term L1,
-                         OZ_Term FH1, OZ_Term FT1)
-    : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
-
-  virtual void gcRecurse(void) {
-    OZ_gcTerm(X);
-    OZ_gcTerm(K);
-    OZ_gcTerm(L);
-    OZ_gcTerm(FH);
-    OZ_gcTerm(FT);
-  }
-  virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
-  virtual OZ_Return run(void);
-  virtual ostream &print(ostream& o) const {
-    return o << "monitorArity propagator";
-  }
-};
 
 
 // {RecordC.monitorArity X K L} -- builtin that tracks features added to OFS X
@@ -1438,13 +1408,14 @@ OZ_C_proc_begin(BImonitorArity, 3)
 
         if (!am.unify(featlist,arity)) return FAILED;
 
-        PropagatorExpect pe;
+        OZ_PropagatorExpect pe;
         EXPECT(pe, 0, expectRecordVar);
         EXPECT(pe, 1, expectVar);
 
         TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
         return pe.spawn(
-            new MonitorArityPropagator(rec,kill,feattail,uvar,uvar));
+            new MonitorArityPropagator(rec,kill,feattail,uvar,uvar),
+            OFS_flag);
     }
 
     return PROCEED;
