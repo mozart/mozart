@@ -2577,7 +2577,7 @@ Distributor * BaseDistributor::gc(void) {
   BaseDistributor * t = 
     (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
 
-  OZ_collectHeapTerm(t->var, var);
+  OZ_collectHeapTerm(var, t->var);
 
   return (Distributor *) t;
 }
