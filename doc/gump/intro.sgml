@@ -23,14 +23,16 @@
 <Chapter id="chapter.intro">
   <Title/Introduction/
   <P>
-    The <Name type=creature>Gump</Name> is a fictional `creature' in the
-    children's novel <Ref.Extern to="http://almond.srv.cs.cmu.edu/afs/cs.cmu.edu/user/rgs/mosaic/ozland-ftitle.html"
+    The <Span class=index/<Name type=creature>Gump</Name>/ is a fictional
+    `creature' in the children's novel <Ref.Extern
+    to="http://almond.srv.cs.cmu.edu/afs/cs.cmu.edu/user/rgs/mosaic/ozland-ftitle.html"
     ><Q class=quotation>The Marvelous Land of Oz</Q></Ref.Extern> by
-    L.&nbsp;Frank Baum, sequel to <Q class=title>The Wonderful Wizard of Oz</Q
-    >&nbsp;<Ptr to="baum00">.  It is a living flying machine assembled by
-    the main characters from individually selected materials.  The Tin Woodman
-    fastens a gump's head to one end of the machine, explaining that it
-    <Q class=quotation>will show which is the front end of the Thing.</Q>
+    L.&nbsp;Frank Baum<Index/Baum, L.&nbsp;Frank/, sequel to <Q class=title
+    >The Wonderful Wizard of Oz</Q>&nbsp;<Ptr to="baum00">.  It is a living
+    flying machine assembled by the main characters from individually selected
+    materials.  The <Span class=index/Tin Woodman/ fastens a gump's head to
+    one end of the machine, explaining that it <Q class=quotation>will show
+    which is the front end of the Thing.</Q>
   <P>
     &Gump; is also the name of the specification language and tool described
     in this handbook from the user's point of view.  Like the gump's head in
@@ -57,8 +59,9 @@
       as by Prof&dot;&nbsp;Dr&dot; Hans-Wilm Wippermann at the University
       of Kaiserslautern.
     <P>
-      The software makes use of the GNU variants of &lex; and &yacc;,
-      called &flex;&nbsp;<Ptr to="paxson95"> and &bison;&nbsp;<Ptr
+      The software makes use of the GNU variants of <Span class=index/&lex;/
+      and <Span class=index/&yacc;/, called <Span class=index/&flex;/&nbsp;<Ptr
+      to="paxson95"> and <Span class=index/&bison;/&nbsp;<Ptr
       to="donellystallman95"> respectively.
     <P>
       &Oz; is the name of a programming language developed at the Programming

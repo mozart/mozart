@@ -69,6 +69,7 @@
     <Meta name="html.split" value="section.parser.reference">
     <Meta name="html.split" value="appendix.notation">
     <Meta name="html.split.bib" value="">
+    <Meta name="html.split.index" value="">
     <!-- declare proglang emacs modes -->
     <Meta name="proglang.mode" arg1="lambda" arg2="lambda-mode">
     <Meta name="emacs.package" value="lambda.el">
