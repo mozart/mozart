@@ -6460,15 +6460,21 @@ OZ_Return ooExchInline(TaggedRef fea, TaggedRef newAttr, TaggedRef &oldAttr)
   DEREF(fea, _1, feaTag);
 
   RecOrCell state = am.getSelf()->getState();
-  if (!isCell(state)) {
-    SRecord *rec = getRecord(state);
-    Assert(rec!=NULL);
-    if (!isFeature(feaTag)) {
-      if (isAnyVar(feaTag)) {
-        return SUSPEND;
-      }
-      goto bomb;
+
+  if (stateIsCell(state)) {
+    return oz_raise(E_ERROR,E_SYSTEM,"ooExchOnDistObject",
+                    1,makeTaggedConst(am.getSelf()));
+  }
+
+  SRecord *rec = getRecord(state);
+  Assert(rec!=NULL);
+  if (!isFeature(feaTag)) {
+    if (isAnyVar(feaTag)) {
+      return SUSPEND;
     }
+    goto bomb;
+  }
+  {
     TaggedRef aux = rec->getFeature(fea);
     if (aux) {
       oldAttr = aux;
