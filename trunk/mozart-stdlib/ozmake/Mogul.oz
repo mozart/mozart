@@ -330,7 +330,7 @@ define
 	 Table={NewDictionary}
 	 ROOT={self mogul_get_rootid($)}
 	 proc {Enter ID}
-	    if ID\=ROOT then
+	    if ID\=ROOT andthen {Not {Utils.isMogulRootID ID}} then
 	       PID = {Path.dirnameAtom ID}
 	       KEY = {Path.basenameAtom ID}
 	    in

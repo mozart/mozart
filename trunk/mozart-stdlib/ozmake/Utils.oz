@@ -5,7 +5,7 @@ export
    Union Diff
    DateParse DateLess DateToString DateCurrentToString
    DateCurrentToAtom DateCurrent DateToAtom DateToUserVS
-   IsMogulID
+   IsMogulID IsMogulRootID
    NewStack NewStackFromList
    ListToVS
    ReadTextDB
@@ -215,6 +215,14 @@ define
    fun {IsMogulID F}
       case {CondSelect {URL.make F} scheme unit}
       of "mogul" then true
+      else false end
+   end
+
+   fun {IsMogulRootID F}
+      U = {URL.make F}
+   in
+      case {CondSelect U scheme unit}#{CondSelect U path unit}
+      of "mogul"#[_] then true
       else false end
    end
 
