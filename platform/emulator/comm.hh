@@ -198,28 +198,30 @@ class BaseSite{
 friend class Site;
 friend class SiteManager;
 friend class SiteHashTable;
-private:
+  //
 protected:
   ip_address address;
   TimeStamp timestamp;
   port_t port;
   unsigned short flags;
 
-  void init(ip_address ip,port_t p, TimeStamp *t){
-    address=ip;
-    timestamp=*t;
-    port=p;
-    flags=0;}
-
-  void init(ip_address a,port_t p, TimeStamp *t,unsigned short ty){
-    init(a,p,t);
-    flags=ty;}
-
   unsigned short getType(){return flags;}
 
 public:
-  BaseSite(): timestamp(TimeStamp(0,0)) {}
-  BaseSite(ip_address a,port_t p,TimeStamp &t):address(a),port(p),timestamp(t){}
+  // never create these...
+  void* operator new(size_t) {
+    error("BaseSite is created???"); return (0);
+  }
+  void* operator new(size_t, void *) {
+    error("BaseSite is created???"); return (0);
+  }
+
+  //
+  BaseSite() {}			// ... just allocating space for it;
+  BaseSite(ip_address a, port_t p, TimeStamp &t)
+    : address(a), port(p), timestamp(t) {}
+  BaseSite(ip_address a, port_t p, TimeStamp &t, unsigned short ty)
+    : address(a), port(p), timestamp(t), flags(ty) {}
 
   ip_address getAddress(){return address;} // ATTENTION
   port_t getPort(){return port;} // ATTENTION
@@ -408,11 +410,23 @@ protected:
   unsigned short getType(){ return flags;}
 
 public:
+  void* operator new(size_t size) { return (malloc(size)); }
+  // for re-creation of the object;
+  void* operator new(size_t, void *place) { return (place); }
 
-  Site(){}
-  Site(ip_address a,port_t p,TimeStamp  &t):BaseSite(a,p,t){
-    uRVC.readCtr=0;	
-    setType(MY_SITE);}
+  //
+  Site() {}			// ... just allocating space for it;
+  Site(ip_address a, port_t p, TimeStamp &t)
+    : BaseSite(a, p, t), info((VirtualInfo *) 0) {
+    uRVC.readCtr = 0;	
+  }
+  Site(ip_address a, port_t p, TimeStamp &t, unsigned short ty)
+    : BaseSite(a, p, t, ty), info((VirtualInfo *) 0) {
+    uRVC.readCtr = 0;	
+  }
+
+  //
+  void setMySite() { setType(MY_SITE); }
 
   void makeGCMarkSite(){flags |= GC_MARK;}
   void removeGCMarkSite(){flags &= ~(GC_MARK);}
@@ -494,7 +508,6 @@ public:
   void initRemote(){
     info=NULL;
     uRVC.readCtr=0;
-    Assert(!(getType() & MY_SITE)); 
     setType(REMOTE_SITE);}
 
   void initPerm(){
@@ -505,18 +518,15 @@ public:
   void initPassive(){
     info=NULL;
     uRVC.readCtr=0;
-    Assert(!(getType() & MY_SITE)); 
     setType(0);}
 
   void initVirtual(VirtualInfo *vi) {
-    Assert(!((getType()) & VIRTUAL_INFO));
     info = vi;
     Assert(uRVC.readCtr == 0);
     setType(VIRTUAL_SITE | VIRTUAL_INFO);
   }
 
   void initRemoteVirtual(VirtualInfo *vi) {
-    Assert(!((getType()) & VIRTUAL_INFO));
     info = vi;
     uRVC.readCtr = 0;
     setType(REMOTE_SITE | VIRTUAL_INFO);
@@ -539,14 +549,12 @@ public:
   }
 
   void makeActiveVirtual(VirtualInfo *vi) {
-    Assert(!((getType()) & VIRTUAL_INFO));
     info = vi;
     Assert(uRVC.readCtr == 0);
     setType(VIRTUAL_SITE | VIRTUAL_INFO);
   }
 
   void makeActiveRemoteVirtual(VirtualInfo *vi) {
-    Assert(!((getType()) & VIRTUAL_INFO));
     info = vi;
     Assert(uRVC.readCtr == 0);
     setType(REMOTE_SITE | VIRTUAL_INFO);
@@ -744,7 +752,7 @@ public:
 
   //
   // kost@ : applied whenever a "alive acknowledgement"
-  // ('VS_M_SITE_ALIVE') message is received;
+  // (e.g. virtual site's 'VS_M_SITE_ALIVE') message is received;
   void siteAlive() {
     if(connect()) {
       if(getType() & REMOTE_SITE) {

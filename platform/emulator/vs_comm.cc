@@ -30,6 +30,7 @@
 #pragma implementation "vs_lock.hh"
 #endif
 
+#include "am.hh"
 #include "vs_comm.hh"
 
 #ifdef VIRTUALSITES
@@ -64,7 +65,8 @@ VirtualSite::VirtualSite(Site *s,
     isAliveSent(0), aliveAck(0),
     probeAllCnt(0), probePermCnt(0),
     fmp(fmpIn), sq(sqIn),
-    mboxMgr((VSMailboxManagerImported *) 0)
+    mboxMgr((VSMailboxManagerImported *) 0),
+    segKeysNum(0), segKeysArraySize(0), segKeys((key_t *) 0)
 {
   connect();
 }
@@ -90,13 +92,17 @@ void VirtualSite::drop()
 {
   //
   // Throw away all the undeliverable now messages (if any);
-  while (isNotEmpty()) {
-    VSMessage *vsm = dequeue();
-    site->communicationProblem(vsm->getMessageType(),
-			       vsm->getSite(), vsm->getStoreIndex(),
-			       COMM_FAULT_PERM_NOT_SENT,
-			       (FaultInfo) vsm->getMsgBuffer());
-    fmp->dispose(vsm);
+  if (isNotEmpty()) {
+    retractVSSiteQueueNode();
+    //
+    while (isNotEmpty()) {
+      VSMessage *vsm = dequeue();
+      site->communicationProblem(vsm->getMessageType(),
+				 vsm->getSite(), vsm->getStoreIndex(),
+				 COMM_FAULT_PERM_NOT_SENT,
+				 (FaultInfo) vsm->getMsgBuffer());
+      fmp->dispose(vsm);
+    }
   }
 
   //
@@ -108,6 +114,14 @@ void VirtualSite::drop()
   // 'SITE_PERM' is redundant - used for consistency checks only;
   status = SITE_PERM;
   Assert(!isSetVSFlag(VS_PENDING_UNMAP_MBOX));
+
+  //
+  DebugCode(segKeysNum = 0;);
+  if (segKeys)  {
+    free(segKeys);
+    segKeys = (key_t *) 0;
+    segKeysArraySize = 0;
+  }
 }
 
 //
@@ -135,7 +149,8 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
     VirtualInfo *myVI = mySite->getVirtualInfo();
 
     //
-    if (!mbox->enqueue(mb->getSHMKey(), mb->getFirstChunk())) {
+    if (!mbox->enqueue(mb->getFirstChunkSHMKey(),
+		       mb->getFirstChunkNum())) {
       // Failed to enqueue it inline - then create a job which will
       // try to do that later;
       VSMessage *voidM = fmp->allocate();
@@ -144,8 +159,9 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
       //
       // These queues are checked and processed on regular intervals
       // (OS' alarms);
+      if (isEmpty())
+	sq->enqueue(this);
       enqueue(m);
-      sq->enqueue(this);
 
       // Note that there is no 'TEMP_NOT_SENT' now;
     } else {
@@ -187,7 +203,8 @@ Bool VirtualSite::tryToSendToAgain(VSMessage *vsm,
       VirtualInfo *myVI = mySite->getVirtualInfo();
 
       //
-      if (mbox->enqueue(mb->getSHMKey(), mb->getFirstChunk())) {
+      if (mbox->enqueue(mb->getFirstChunkSHMKey(),
+			mb->getFirstChunkNum())) {
 	fmp->dispose(vsm);
 	mb->passChunks();
 	mb->cleanup();
@@ -196,11 +213,7 @@ Bool VirtualSite::tryToSendToAgain(VSMessage *vsm,
 	//
 	return (TRUE);
       } else {
-	// Failed to enqueue it inline - then queue up the message again;
-	enqueue(vsm);
-	sq->enqueue(this);
-
-	//
+	// Failed (again) to enqueue it;
 	return (FALSE);
       }
     }
@@ -229,6 +242,62 @@ void unmarshalUselessVirtualInfo(MsgBuffer *mb)
   (void) unmarshalNumber(mb);
   //
   (void) unmarshalNumber(mb);
+}
+
+//
+void VirtualSite::marshalLocalResources(MsgBuffer *mb,
+					VSMailboxManagerOwned *mbm,
+					VSMsgChunkPoolManagerOwned *cpm)
+{
+  Assert(sizeof(int) <= sizeof(unsigned int));
+  Assert(sizeof(key_t) <= sizeof(unsigned int));
+  int num;
+  key_t mbKey = mbm->getSHMKey();
+
+  //
+  num = cpm->getSegsNum();
+  marshalNumber(num+1, mb);	// mailbox key;
+  //
+  marshalNumber(mbKey, mb);
+  for (int i = 0; i < num; i++)
+    marshalNumber(cpm->getSegSHMKey(i), mb);
+}
+
+//
+// The 'segKeys' array is allocated with "
+void VirtualSite::unmarshalResources(MsgBuffer *mb)
+{
+  segKeysNum = unmarshalNumber(mb);
+  Assert(segKeysNum);
+  if (segKeysNum > segKeysArraySize) {
+    int acc = segKeysNum, bits = 0;
+    while (acc) {
+      acc = acc/2;
+      bits++;
+    }
+    bits = max(bits+2, 4);	// heuristic...
+    segKeysArraySize = (int) (0x1 << bits);
+
+    //
+    if (segKeys) free (segKeys);
+    segKeys = (key_t *) malloc(sizeof(key_t) * segKeysArraySize);
+  }
+  Assert(segKeys);
+  Assert(segKeysArraySize >= segKeysNum);
+
+  //
+  for (int i = 0; i < segKeysNum; i++) 
+    segKeys[i] = (key_t) unmarshalNumber(mb);
+}
+
+//
+void VirtualSite::gcResources(VSMsgChunkPoolManagerImported *cpm)
+{
+  for (int i = 0; i < segKeysNum; i++) {
+    markDestroy(segKeys[i]);
+    // ... aka got an 'VS_M_UNUSED_SHMID' message:
+    cpm->removeSegmentManager(segKeys[i]);
+  }
 }
 
 //
@@ -299,7 +368,7 @@ Site *VSSiteHashTable::getFirst()
 }
 
 //
-Site *VSSiteHashTable::getNext(Site *prev)
+Site *VSSiteHashTable::getNext()
 {
   Site *s;
   seqGHN = GenHashTable::getNext(seqGHN, seqIndex);
@@ -309,6 +378,19 @@ Site *VSSiteHashTable::getNext(Site *prev)
     s = (Site *) 0;
   }
   return (s);
+}
+
+//
+VSProbingObject::VSProbingObject(int size, VSRegister *vsRegisterIn)
+  : VSSiteHashTable(size), 
+      vsRegister(vsRegisterIn),
+      probesNum(0), lastCheck(0), lastPing(0), 
+    minInterval(PROBE_INTERVAL)
+{
+  // kost@ : task manager does not keep track who and which minimal
+  // service interval has requested, virtual sites just say from
+  // scratch "we want to have PROBE_INTERVAL";
+    am.setMinimalTaskInterval(PROBE_INTERVAL);
 }
 
 //
@@ -393,16 +475,23 @@ ProbeReturn VSProbingObject::deinstallProbe(VirtualSite *vs, ProbeType pt)
   return (ret);
 }
 
+#ifdef DEBUG_CHECK
+#define VS_PROBING_BELIEVE_OK
+#endif
+
 //
-Bool VSProbingObject::processProbes(unsigned long clock) {
+Bool VSProbingObject::processProbes(unsigned long clock,
+				    VSMsgChunkPoolManagerImported *cpm)
+{
+  VirtualSite *vs;
+
   //
-  Site *s = getFirst();
-  while (s) {
+  vs = vsRegister->getFirst();
+  while (vs) {
+    Site *s = vs->getSite();
+    //
     if (s->isConnected()) {
-      //
-      VirtualSite *vs = s->getVirtualSite();
       int pid;
-      Assert(vs->hasProbesAll() || vs->hasProbesPerm());
 
       //
       pid = vs->getVSPid();
@@ -411,45 +500,62 @@ Bool VSProbingObject::processProbes(unsigned long clock) {
 	(void) waitpid(pid, (int *) 0, WNOHANG);
 	if (oskill(pid, 0)) {
 	  // no such process;
-	  s->probeFault(PROBE_PERM);
+	  vs->gcResources(cpm);
+	  s->discoveryPerm();
+	  if (check(s)) {
+	    Assert(vs->hasProbesAll() || vs->hasProbesPerm());
+	    s->probeFault(PROBE_PERM);
+	  }
 	}
       }
     }
 
     //
-    s = getNext(s);
+    vs = vsRegister->getNext();
   }
 
   //
   if (clock - lastPing > PROBE_WAIT_TIME) {
     //
-    Site *s = getFirst();
-    while (s) {
+    vs = vsRegister->getFirst();
+    while (vs) {
+      Site *s = vs->getSite();
+      //
       if (s->isConnected()) {
-	//
-	VirtualSite *vs = s->getVirtualSite();
 	int pid;
-	Assert(vs->hasProbesAll() || vs->hasProbesPerm());
 
 	//
 	// First check old pings;
+#ifndef VS_PROBING_BELIEVE_OK
 	if (vs->getTimeIsAliveSent() >= lastPing &&
 	    vs->getTimeIsAliveSent() > vs->getTimeAliveAck()) {
+#else
+	if (0) {
+#endif // VS_DO_VOID_PROBING
 	  // effectively dead;
-	  s->probeFault(PROBE_PERM);
+	  vs->gcResources(cpm);
+	  s->discoveryPerm();
+	  if (check(s))
+	    s->probeFault(PROBE_PERM);
 	} else {
 	  // if it seems to be alive, init a new round...
 	  VSMsgBufferOwned *mb = composeVSSiteIsAliveMsg(s);
 	  if (sendTo_VirtualSite(vs, mb, /* messageType */ M_NONE,
 				 /* storeSite */ (Site *) 0,
-				 /* storeIndex */ 0) != ACCEPTED)
-	    s->probeFault(PROBE_PERM);
+				 /* storeIndex */ 0) != ACCEPTED) {
+	    vs->gcResources(cpm);
+	    s->discoveryPerm();
+	    if (check(s)) {
+	      Assert(vs->hasProbesAll() || vs->hasProbesPerm());
+	      s->probeFault(PROBE_PERM);
+	    }
+	  }
 	  vs->setTimeIsAliveSent(clock);
 	}
       }
 
       //
-      s = getNext(s);
+      vs = vsRegister->getNext();
     }
 
     //

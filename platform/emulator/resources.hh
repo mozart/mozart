@@ -152,9 +152,11 @@
 //
 // Distributed Oz - virtual sites
 #define PERDIO_ID	0xa3
-#define VS_MAILBOX_SIZE (1024*1024)
-#define VS_CHUNK_SIZE   1024
-#define VS_CHUNKS_NUM   4096
+// 128k mailbox (messages 8bytes; so 16k messages);
+#define VS_MAILBOX_SIZE (128*1024)
+// 128k segments - 256 chunks .5k each;
+#define VS_CHUNK_SIZE   512
+#define VS_CHUNKS_NUM   256
 // 12,5% fill-up for 32 sites?
 #define VS_REGISTER_HT_SIZE   256
 //
@@ -164,6 +166,13 @@
 // priority as all other messages. This time is effectively made
 // at least as large as 'PROBE_INTERVAL';
 #define PROBE_WAIT_TIME 30000 /* ms */
+// GCing of chunk pool' segments - see vs_msgbuffer.*;
+#define VS_MSGCHUNKS_USAGE         3
+#define VS_SEGS_MAXIDLE_PHASES     5
+// A new allocation phase starts at most after 'VS_SEGS_MAXPHASE_SECS'
+// (or, in other words, GC takes places at most every XXX ms,
+// regardless whether it's needed or not);
+#define VS_SEGS_MAXPHASE_MS        60000
 
 /*
  * Switches
