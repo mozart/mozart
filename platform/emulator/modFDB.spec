@@ -111,14 +111,4 @@
 			     ifdef => FDCD,
 			     bi  => BIfdTellConstraintCD},
 
-    'debugStable'	=> { in  => [],
-			     out => [],
-			     bi  => debugStable,
-			     ifdef =>DEBUG_STABLE},
-
-    'resetStable'	=> { in  => [],
-			     out => [],
-			     bi  => resetStable,
-			     ifdef =>DEBUG_STABLE},
-
  );
