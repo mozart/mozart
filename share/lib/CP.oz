@@ -10,6 +10,8 @@ declare
 fun {NewCP IMPORT}
    \insert 'Standard.env'
        = IMPORT.'Standard'
+   \insert 'SP.env'
+       = IMPORT.'SP'
 in
    local
       \insert 'Search.oz'
