@@ -141,6 +141,10 @@
 	navigate through the stack by clicking on a frame (search for
 	a position within the line where no arguments are displayed!)
 	or by using the up and down cursor keys.
+	<p>
+	While the current thread is running for a longer time, its
+	stack is printed in grey to visualize that the display
+	is out of date.
       <section>
 	<title/Variable View/
 	<p>
@@ -640,10 +644,9 @@ end
 	    to the bottom of the window, so you will reach an older frame.
             <entry><menu key="Down"/Next Frame/
 	    <item>
-	    Select the next stack frame (if it exists)
-            of the currently selected thread. Note that the stack grows
-	    to the bottom of the window, so you will reach a younger frame.
-            <entry><menu key="C-l"/Re-Calculate/
+	    Select the next stack frame (if it exists) of the
+            currently selected thread; you will reach a younger
+            frame.  <entry><menu key="C-l"/Re-Calculate/
 	    <item>
 	    Update the stack view. You may see special,
 	    compiler-generated stack frames then, as well as some
@@ -651,6 +654,19 @@ end
 	    with their value instead of an underscore. (There is
 	    <em>no</em> automatic update which forces the stack view
 	    to display a variable's value as soon as it becomes known.)
+            <entry><menu key="v"/Update Env/
+	    <item>
+	    Immediately re-calculates and re-displays the environment
+	    of the selected stack frame.
+            <entry><menu key="e"/Query.../
+	    <item>
+	    Opens a dialog box where (small) statements can be
+	    executed or (small) expressions can be evaluated in
+	    the context of the currently selected stack frame. If the
+	    computation needs some more time, you see a spinner
+	    turning around until the computation ends. If it does
+	    never end (for instance because of a blocking thread),
+	    use the Reset button to cancel the operation.
           </list>
 	  <subsection>
 	  <title/Options/
@@ -664,29 +680,72 @@ end
 	  <list>
             <entry><menu key="<"/Types Only/
 	    <item>
-	    This is the default setting. You just see the values type,
-	    which leads to a very compact display.
+	    This is the default setting. You just see type information,
+	    which leads to a very compact display style.
 	    <entry><menu key=">"/Complete/
 	    <item>
 	    You see the actual value, using the function
-	    <span proglang=oz><<Value.toVirtualString>></span>.
+	    <span proglang=oz><<Value.toVirtualString>></span>. This
+	    display mode can be quite unhandy if the values to be printed
+	    are large tuples or records. So you should carefully
+	    adjust the print depth and print width to your needs,
+	    see ??.
+            <entry><menu key="C-e"/Use Emacs/
+	    <item>
+	    If turned off there are no bars printed within Emacs,
+	    so you don't get any position information.
+            <entry><menu key="C-a"/Env Auto Update/
+	    <item>
+	    If you debug threads with huge environments, it may be a good
+	    idea to turn of the auto update of the environment (re-calculation
+	    and re-display every time you make a step) in order to save
+	    time and memory. While the variables display is not up to date,
+	    it is printed in grey. You can always request the newest
+	    environment information by pressing 'v' (see above, function
+	    'Update Env').
+            <entry><menu key="C-o"/Preferences.../
+	    <item>
+	    Opens a dialog box to adjust some self explanatory options.
 	  </list>
-	  <subsection>
-	  <title/Help/
 	<section>
-	<title/The SubThreads Menu/
-	  <subsection>
-	  <title/Ignore/
-	  <subsection>
-	  <title/Attach/
-	  <subsection>
-	  <title/Unleash 0/
-	  <subsection>
-	  <title/Unleash 1/
+	  <title/The SubThreads Menu/
+	  <p>
+	  This menu is located on the right side of the button bar, below
+	  the menu bar. You can select the mode how child threads of
+	  <em>already attached</em> threads should be treated.
+	  <list>
+            <entry><menu /Ignore/
+	    <item>
+	    They will not be attached at all (but can silently run of course).
+	    <entry><menu /Attach/
+	    <item>
+	    They are attached and immediately stopped.
+	    <entry><menu /Unleash 0/
+	    <item>
+	    They are attached and the command 'Unleash 0' is executed.
+	    This gives you a good feeling about the dependencies
+	    between all your threads in a concurrent application. They
+	    are already dead (if they do not block somewhere), but are still
+	    printed in the thread view.
+	    <entry><menu /Unleash 1/
+	    <item>
+	    They are attached and the command 'Unleash 1' is executed. This
+	    makes it possible to even explore the environment of every
+	    child thread just before its termination.
+	  </list> 
 	<section>
-	<title/The Queries Menu/
-	  <subsection>
-	  <title/Ignore/
-	  <subsection>
-	  <title/Attach/
+	  <title/The Queries Menu/
+	  <p>
+	  This menu is located on the right side of the button bar, right
+	  beside the SubThreads menu. You can select the mode how a thread
+	  which is born by setting up an Emacs query is treated by Ozcar.
+	  <list>
+	    <entry><menu /Ignore/
+	    <item>
+	    It is not attached, neither are any of its subthreads
+	    (except, of course, they run into a breakpoint).
+	    <entry><menu /Attach/
+	    <item>
+	    It is attached and immediately stopped.
+          </list>
 </book>
