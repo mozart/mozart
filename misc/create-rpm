@@ -98,7 +98,7 @@ Mozart is jointly developed by DFKI and SICS.
 %package doc
 Summary: Mozart documentation
 Group: Development/Languages
-
+requires: mozart = ${VERSION}
 %description doc
 Mozart is an efficient and distributed implementation of Oz.
 
@@ -107,7 +107,7 @@ Documentation
 %package contrib
 Summary: Mozart contributions
 Group: Development/Languages
-
+requires: mozart = ${VERSION}
 %description contrib
 Mozart is an efficient and distributed implementation of Oz.
 
