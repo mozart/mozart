@@ -683,7 +683,14 @@ void engine() {
 
       ContFlag cFlag = getContFlag(tb);
 
-      if (cFlag == C_CONT) {  /* not in switch --> faster */
+
+      /* RS: Optimize most probable case:
+       *  - do not handle C_CONT in switch --> faster
+       *  - assume cFlag == C_CONT implies stack does not contain empty mark
+       *  - if tb==rootBoard then no need to call getBoardDeref
+       *  - topCache maintained more efficiently
+       */
+      if (cFlag == C_CONT) {
         Assert(!taskStack->isEmpty((TaskStackEntry) tb));
         PC = (ProgramCounter) TaskStackPop(topCache-2);
         Y = (RefsArray) TaskStackPop(topCache-3);
@@ -703,6 +710,7 @@ void engine() {
                     error ("activity under reduced solve actor"));
         goto LBLTaskCont;
       }
+
 
       if (taskStack->isEmpty((TaskStackEntry) tb)) {
         goto LBLTaskEmpty;
@@ -875,6 +883,7 @@ void engine() {
 
 
   LBLTaskCont:
+    /* optimization: no need to maintain counter for rootBoard (RS) */
     if (tmpBB != e->rootBoard) tmpBB->removeSuspension();
 
     INSTALLPATH(tmpBB);
