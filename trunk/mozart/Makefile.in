@@ -125,7 +125,7 @@ CONTRIBS=       $(PLATFORMS:%=%-contrib)
 COMPRESS=	gzip -9
 TAR=		tar
 WINCACHEDIR=	oz/cache/$(HOMECACHE)
-PACKDIR=	pack
+PACKDIR=	/tmp/pack
 
 
 .PHONY: source doc $(PLATFORMS)
@@ -136,18 +136,18 @@ source: $(PACKDIR)
 	  $(TAR) -cf - mozart) | $(TAR) -xf - ; \
 	 find mozart -name CVS -type d -exec rm -rf ';' ; \
 	 find mozart -name '.cvsignore' -type f -exec rm -f ';' ; \
-	 $(TAR) -cf - mozart | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-src.tar.gz; \
-	 rm -rf mozart)
+	 $(TAR) -cf - mozart ) | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-src.tar.gz
+	rm -rf $(PACKDIR)/mozart
 
 doc:	$(PACKDIR)
 	(cd $(PACKDIR); \
 	(cd $(PREFIX); \
 	 $(TAR) -cf - doc) | $(TAR) -xf -; \
 	 rm -rf doc/demo/applets; \
-	 $(TAR) -cf - doc | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-doc.tar.gz; \
-	 rm -rf doc)
+	 $(TAR) -cf - doc ) | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-doc.tar.gz
+	rm -rf $(PACKDIR)/doc
 
 
 $(PACKDIR):
