@@ -329,7 +329,7 @@ Bool AM::hookCheckNeeded()
 #define DISPATCH(INC) {							      \
   intlong aux = *(PC+INC);						      \
   INCFPC(INC);								      \
-  goto* (void*) (aux|textBase);					      \
+  goto* (void*) (aux|textBase);					   	      \
 }
 #endif /* LINUX */
 
@@ -386,8 +386,20 @@ Bool AM::hookCheckNeeded()
 
 
 /* define REGOPT if you want the into register optimization for GCC */
-#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
+#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(LINUX_I486) || defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
 #define Into(Reg) asm(#Reg)
+
+#ifdef LINUX_I486
+/* This does NOT pay off */
+/*   #define Reg1 asm("%esi") */
+#define Reg1 
+#define Reg2
+#define Reg3
+#define Reg4
+#define Reg5
+#define Reg6
+#define Reg7
+#endif
 
 #ifdef SPARC
 #define Reg1 asm("i0")
