@@ -382,6 +382,19 @@ saveDatum(OZ_Term in,OZ_Datum& dat)
   return result;
 }
 
+OZ_Return
+saveDatumWithCells(OZ_Term in,OZ_Datum& dat)
+{
+  ByteSinkDatum sink;
+  OZ_Return result = sink.putTerm(in,"UNKNOWN FILENAME","",0,NO,OK);
+  if (result==PROCEED) {
+    dat=sink.dat;
+  } else {
+    if (sink.dat.data!=0) free(sink.dat.data);
+  }
+  return result;
+}
+
 static
 OZ_Return saveIt(OZ_Term val, char *filename, char *header,
 		 unsigned int hlen,
@@ -1110,6 +1123,11 @@ OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)
   return saveDatum(t,*d);
 }
 
+OZ_Return OZ_valueToDatumWithCells(OZ_Term t, OZ_Datum* d)
+{
+  return saveDatumWithCells(t,*d);
+}
+
 
 OZ_Return OZ_datumToValue(OZ_Datum d, OZ_Term t)
 {
@@ -1120,6 +1138,20 @@ OZ_BI_define(BIpicklePack, 1, 1) {
   OZ_declareTerm(0,term);
   OZ_Datum d;
   OZ_Return r = OZ_valueToDatum(term, &d);
+
+  if (r != PROCEED)
+    return r;
+
+  r = OZ_mkByteString(d.data, d.size);
+  free(d.data);
+
+  OZ_RETURN(r);
+} OZ_BI_end 
+
+OZ_BI_define(BIpicklePackWithCells, 1, 1) {
+  OZ_declareTerm(0,term);
+  OZ_Datum d;
+  OZ_Return r = OZ_valueToDatumWithCells(term, &d);
 
   if (r != PROCEED)
     return r;
