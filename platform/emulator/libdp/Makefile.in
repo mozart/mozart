@@ -38,18 +38,19 @@ REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc		\
 CREATEDCOREFILES = marshalMsg.cc dpMarshaler.hh
 CREATEDCORESRCS  = marshalMsg.cc
 CORESRCS = $(REALCORESRCS) $(CREATEDCORESRCS)
+COREOBJS = $(CORESRCS:.cc=.o)
 
 REALVSSRCS = virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc
 VSSRCS = $(REALVSSRCS)
+VSOBJS = $(VSSRCS:.cc=.o)
 
 MODULESRCS = pidModule.cc faultModule.cc dpMiscModule.cc
+MODULEOBJS = $(MODULESRCS:.cc=.o)
 
 REALSRCS = $(REALCORESRCS) $(REALVSSRCS) $(MODULESRCS)
 
 CREATEDFILES = $(CREATEDCOREFILES)
 
-COREOBJS = $(CORESRCS:.cc=.o)
-VSOBJS = $(VSSRCS:.cc=.o)
 
 # nothing for just "all";
 all:
@@ -69,7 +70,7 @@ pidModule.o: ../modPID-if.cc
 	ln ../dp.so dp.so
 	$(DYNLD) -o $@ pidModule.o dp.so $(LIBS)
 
-../libPID.a: $(COREOBJS) pidModule.o
+../libPID.a: pidModule.o
 	$(AR) -rc $@ pidModule.o && $(RANLIB) $@
 
 #
@@ -80,18 +81,18 @@ faultModule.o: ../modFault-if.cc
 	ln ../dp.so dp.so
 	$(DYNLD) -o $@ faultModule.o dp.so $(LIBS)
 
-../libFault.a: $(COREOBJS) faultModule.o
+../libFault.a: faultModule.o
 	$(AR) -rc $@ faultModule.o && $(RANLIB) $@
 
 #
-dpMiscModule.o: ../modPID-if.cc
+dpMiscModule.o: ../modDPMisc-if.cc
 
 ../DPMisc.so: ../dp.so dpMiscModule.o 
 	rm -f dp.so
 	ln ../dp.so dp.so
 	$(DYNLD) -o $@ dpMiscModule.o dp.so $(LIBS)
 
-../libDPMisc.a: $(COREOBJS) dpMiscModule.o
+../libDPMisc.a: dpMiscModule.o
 	$(AR) -rc $@ dpMiscModule.o && $(RANLIB) $@
 
 #
@@ -100,7 +101,7 @@ dpMiscModule.o: ../modPID-if.cc
 	ln ../dp.so dp.so
 	$(DYNLD) -o $@ $(VSOBJS) dp.so $(LIBS)
 
-../libVirtualSite.a: $(COREOBJS)  $(VSOBJS)
+../libVirtualSite.a: $(VSOBJS)
 	$(AR) -rc $@ $(VSOBJS) && $(RANLIB) $@
 
 #
@@ -120,10 +121,11 @@ distclean::
 	-rm -f Makefile
 
 veryclean::
-	-rm -f *.a *.so Makefile.deps $(CREATEDDPFILES)
+	-rm -f *.a *.so Makefile.deps $(CREATEDFILES)
 
 #
 # special dependencies...
+ALLOBJS=$(COREOBJS) $(VSOBJS) $(MODULEOBJS)
 dpMarshaler.hh marshalMsg.cc: msgFormat.m4
-$(COREOBJS): dpMarshaler.hh
+$(ALLOBJS): dpMarshaler.hh
 
