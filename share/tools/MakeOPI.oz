@@ -78,7 +78,7 @@ local
 in
    functor prop once
    import
-      Module.load
+      Module
       System.printError
       Property.{get put}
       OS.getEnv
@@ -99,11 +99,18 @@ in
       OPICompiler = {New Compiler.engine init()}
       {OPICompiler enqueue(setSwitch(warnunused true))}
 
+\ifdef NEWMODULE
+      ModMan = {New Module.manager init}
+\endif
       local
 	 Env = {List.toRecord env
 		{Map FuncDefaults.lib
 		 fun {$ A}
+\ifdef NEWMODULE
+		    A#{ModMan link(name:A $)}
+\else
 		    A#{Module.load A unit}
+\endif
 		 end}}
       in
 	 {OPICompiler enqueue(mergeEnv(Env))}
@@ -111,7 +118,11 @@ in
 
       {ForAll PrintNames
        proc {$ Key#Feats}
+\ifdef NEWMODULE
+	  Env={LazyAdapt {ModMan link(name:Key $)} Feats}
+\else
 	  Env={LazyAdapt {Module.load Key unit} Feats}
+\endif
        in
 	  {OPICompiler enqueue(mergeEnv(Env))}
        end}
@@ -120,13 +131,21 @@ in
        enqueue(mergeEnv({List.toRecord env
 			 {Map FuncDefaults.volatile
 			  fun {$ A}
+\ifdef NEWMODULE
+			     A#{ModMan link(name:A $)}
+\else
 			     A#{ByNeed fun {$} {Module.load A unit} end}
+\endif
 			  end}}))}
 
       %% QUICK HACK, I WILL TAKE CARE OF IT SOON: CS
 
       local
+\ifdef NEWMODULE
+	 System = {ModMan link(name:'System' $)}
+\else
 	 System = {Module.load 'System' unit}
+\endif
       in
 	 {OPICompiler
 	  enqueue(mergeEnv(env('Show':   System.show
