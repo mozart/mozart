@@ -43,7 +43,6 @@ OZSRCS          = \
 		Aux.oz \
 		History.oz \
 		SingleConstrGraph.oz \
-		CollectConstraints.oz \
 		Main.oz \
 		SingleParamGraph.oz \
 		Config.oz \
