@@ -82,6 +82,8 @@ public:
   // global handler
   int perdioSeifHandler;
 
+  int perdioUseAltVarProtocol;
+
   int dpTableDefaultOwnerTableSize;
   int dpTableDefaultBorrowTableSize;
   int dpTableLowLimit;
