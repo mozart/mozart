@@ -1599,7 +1599,7 @@ Commands:
   (interactive)
   (kill-all-local-variables)
   (use-local-map oz-mode-map)
-  (setq major-mode 'oz-mode)
+  (setq major-mode 'ozm-mode)
   (setq mode-name "Oz-Machine")
   (oz-mode-variables)
 
@@ -1618,7 +1618,7 @@ if that value is non-nil."
   (interactive)
   (kill-all-local-variables)
   (use-local-map oz-mode-map)
-  (setq major-mode 'oz-mode)
+  (setq major-mode 'oz-gump-mode)
   (setq mode-name "Oz-Gump")
   (oz-mode-variables)
   (if (and oz-lucid (not (assoc "Oz" current-menubar)))
