@@ -43,7 +43,7 @@ SRCS= \
 	libdp/faultModule.cc     libdp/protocolState.cc\
 	libdp/flowControl.cc     libdp/state.cc \
 	stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
-	iso-ctype.cc\
+	iso-ctype.cc weakdict.cc\
 	os.cc unix.cc urlc.cc ioHandler.cc\
 	tagged.cc value.cc atoms.cc \
 	dictionary.cc extension.cc bitarray.cc \
