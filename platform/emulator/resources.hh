@@ -127,14 +127,17 @@
 /* if defined the builtin print long is available to print detailed
  * informations about values */
 #ifndef DEBUG_PRINT
-#define DEBUG_PRINT
+# define DEBUG_PRINT
 #endif
 
 /* all debug switches for the emulator */
 #ifdef DEBUG_EMULATOR
 
 #define DEBUG_CHECK	// enable assertions
-#define DEBUG_TRACE	// MM: enable low level debugging: step instructions
+
+#ifdef DEBUG_PRINT
+# define DEBUG_TRACE	// MM: enable low level debugging: step instructions
+#endif
 
 //#define SLOW_DEBUG_CHECK
 //#define DEBUG_GC
