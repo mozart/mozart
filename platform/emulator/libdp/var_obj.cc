@@ -103,19 +103,18 @@ Bool ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
   if (getSuspListLengthS()==0) send=TRUE;
   addSuspSVar(susp, unstable);
   if(send) {
+    MessageType mt = M_GET_OBJECT; 
     if (isObjectClassNotAvail()) {
-      MessageType mt; 
-      if(oz_findGName(getGNameClass())==0) {mt=M_GET_OBJECTANDCLASS;}
-      else {mt=M_GET_OBJECT;}
-      BorrowEntry *be=BT->getBorrow(getObject()->getIndex());
-      sendRequest(mt,be);
+      if(oz_findGName(getGNameClass())==0) {
+	mt = M_GET_OBJECTANDCLASS;
+      }
     } else {
       Assert(isObjectClassAvail());
-      BorrowEntry *be=BT->getBorrow(getObject()->getIndex());      
-      sendRequest(M_GET_OBJECT,be);
     }
+    BorrowEntry *be=BT->getBorrow(getObject()->getIndex());      
+    sendRequest(mt,be);
   }
-  return SUSPEND;
+  return NO;
 }
 
 void ObjectVar::gcRecurseV(void)
