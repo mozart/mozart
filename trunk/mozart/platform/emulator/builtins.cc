@@ -4932,6 +4932,10 @@ OZ_C_proc_end
 #define PATHSEP ':'
 #endif
 
+#ifdef _MSC_VER
+#define F_OK 00
+#endif
+
 char *expandFileName(char *fileName,char *path) {
 
   char *ret;

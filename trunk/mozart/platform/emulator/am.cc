@@ -197,7 +197,7 @@ void AM::init(int argc,char **argv)
 
   if (compStream == NULL) {
     fprintf(stderr,"Cannot open code input\n");
-    sleep(5);
+    ossleep(5);
     osExit(1);
   }
 
@@ -282,7 +282,7 @@ void AM::checkVersion()
   if (ss != NULL && strcmp(ss,OZVERSION) != 0) {
     fprintf(stderr,"*** Wrong version from compiler\n");
     fprintf(stderr,"*** Expected: '%s', got: '%s'\n",OZVERSION,ss);
-    sleep(3);
+    ossleep(3);
     osExit(1);
   }
 }

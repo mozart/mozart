@@ -14,7 +14,8 @@
 #endif
 
 #include <ctype.h>
-#include <strstream.h>
+
+#include "ozstrstream.h"
 
 #include "am.hh"
 
@@ -149,7 +150,7 @@ void tagged2Stream(TaggedRef ref, ostream &stream, int depth, int offset)
     if (isRef(ref)) {
       stream << "PRINT: REF detected";
     } else {
-      stream << "PRINT: unknown tag in term: " << tag;
+      stream << "PRINT: unknown tag in term: " << (int) tag;
     }
     break;
   }
@@ -619,7 +620,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
     if (isRef(ref)) {
       stream << "PRINT: REF detected" << endl;
     } else {
-      stream << "PRINT: unknown tag in term: " << tagTypeOf(ref) << endl;
+      stream << "PRINT: unknown tag in term: " << (int) tagTypeOf(ref) << endl;
     }
     break;
   }
