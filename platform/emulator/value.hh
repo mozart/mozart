@@ -655,8 +655,6 @@ public:
  * BigInt
  *=================================================================== */
 
-const unsigned long OzMaxUnsignedLong = ~0;
-
 BigInt *newBigInt();
 BigInt *newBigInt(long i);
 BigInt *newBigInt(unsigned long i);
@@ -744,8 +742,8 @@ public:
   /* make an 'unsigned long' if <Big> fits into it, else return 0,~0 */
   unsigned long getUnsignedLong(void) {
 
-    if (mpz_cmp_ui(&value,OzMaxUnsignedLong) > 0) {
-      return OzMaxUnsignedLong;
+    if (mpz_cmp_ui(&value,ULONG_MAX) > 0) {
+      return ULONG_MAX;
     } else if (mpz_cmp_si(&value,0) < 0) {
       return 0;
     } else {
