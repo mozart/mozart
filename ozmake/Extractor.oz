@@ -91,7 +91,7 @@ define
 	 end
       end
 
-      meth extract(writeMakefile:MAK<=true writeFiles:WRITE<=true extracted:EX)
+      meth extract(writeMakefile:MAK<=true writeFiles:WRITE<=true extracted:EX<=_)
 	 REC
       in
 	 {self extract_makefile(REC)}

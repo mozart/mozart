@@ -15,7 +15,6 @@ prepare
       queue(put:Put toList:ToList)
    end
 import
-   Open
    Path at 'Path.ozf'
    Utils at 'Utils.ozf'
 define
@@ -59,14 +58,15 @@ define
 	 %% it is assumed that R has been processed by Database,Stringify
 	 PKG = {NewDictionary}
       in
-	 if {HasFeature R author   } then PKG.author    := R.author    end
-	 if {HasFeature R blurb    } then PKG.blurb     := R.blurb     end
-	 if {HasFeature R info_text} then PKG.info_text := R.info_text end
-	 if {HasFeature R info_html} then PKG.info_html := R.info_html end
-	 if {HasFeature R mogul    } then PKG.mogul     := R.mogul     end
-	 if {HasFeature R released } then PKG.released  := R.released  end
-	 if {HasFeature R version  } then PKG.version   := R.version   end
-	 if {HasFeature R requires } then PKG.requires  := R.requires  end
+	 if {HasFeature R author    } then PKG.author      := R.author    end
+	 if {HasFeature R blurb     } then PKG.blurb       := R.blurb     end
+	 if {HasFeature R info_text } then PKG.info_text   := R.info_text end
+	 if {HasFeature R info_html } then PKG.info_html   := R.info_html end
+	 if {HasFeature R mogul     } then PKG.mogul       := R.mogul     end
+	 if {HasFeature R released  } then PKG.released    := R.released  end
+	 if {HasFeature R version   } then PKG.version     := R.version   end
+	 if {HasFeature R requires  } then PKG.requires    := R.requires  end
+	 if {HasFeature R categories} then PKG.categhories := R.categories end
 	 DB.(PKG.mogul) := {Dictionary.toRecord package PKG}
       end
 
@@ -106,20 +106,13 @@ define
 
       meth mogul()
 	 %% here we update the MOGUL entry for this package
-	 {self makefile_read}
+	 {self makefile_read_maybe_from_package}
 	 D  = {self get_moguldbdir($)}
 	 VS = {self ToMogulEntry({self makefile_to_record($)} $)}
 	 F  = {Utils.mogulToFilename {self get_mogul($)}}#'.mogul'
 	 FF = {Path.resolve D F}
-	 {self trace('writing '#FF)}
-	 {Path.makeDirRec {Path.dirname FF}}
       in
-	 if {self get_justprint($)} then skip else
-	    O  = {New Open.file init(name:FF flags:[write create truncate])}
-	 in
-	    try {O write(vs:VS)}
-	    finally try {O close} catch _ then skip end end
-	 end
+	 {self exec_write_to_file(VS FF)}
       end
    end
 end
