@@ -2461,6 +2461,9 @@ LBLdispatcher:
          goto LBLpreemption;
 
       case BI_REPLACEBICALL:
+        if (isTailCall) {
+          PC=NOCODE;
+        }
         goto LBLreplaceBICall;
 
        default: Assert(0);
@@ -2480,8 +2483,11 @@ LBLdispatcher:
          e->pushTask(PC,Y,G,X,predArity);
          CTS->pushFrame(auxPC,auxY,auxG);
        }
-       e->suspendOnVarList(CTT);
-       goto LBLsuspendThread;
+       if (e->suspendVarList) {
+         e->suspendOnVarList(CTT);
+         goto LBLsuspendThread;
+       }
+       goto LBLpopTask;
      }
 // ------------------------------------------------------------------------
 // --- Call: Builtin: raise

@@ -6541,8 +6541,25 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
     oz_typeError(0,"abstraction");
   }
 
+  if (am.methApplHdl) {
+    oz_raise(E_ERROR,E_KERNEL,"internal",1,
+             oz_atom("setMethApplHdlCalledTwice"));
+  }
+
   am.methApplHdl = preed;
   return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIcomma,2)
+{
+  if (!am.methApplHdl) {
+    oz_raise(E_ERROR,E_KERNEL,"internal",1,oz_atom("noMethApplHdl"));
+  }
+
+  oz_currentThread->pushCall(am.methApplHdl,OZ_args,2);
+  am.emptySuspendVarList();
+  return BI_REPLACEBICALL;
 }
 OZ_C_proc_end
 
@@ -6554,11 +6571,28 @@ OZ_C_proc_begin(BIsetSendHdl,1)
     oz_typeError(0,"abstraction");
   }
 
+  if (am.sendHdl) {
+    oz_raise(E_ERROR,E_KERNEL,"internal",1,
+             oz_atom("setSendHdlCalledTwice"));
+  }
+
   am.sendHdl = preed;
   return PROCEED;
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIsend,2)
+{
+  if (!am.sendHdl) {
+    oz_raise(E_ERROR,E_KERNEL,"internal",1,oz_atom("noSendHdl"));
+  }
+
+  oz_currentThread->pushCall(am.sendHdl,OZ_args,2);
+
+  am.emptySuspendVarList();
+  return BI_REPLACEBICALL;
+}
+OZ_C_proc_end
 
 OZ_Return BIisObjectInline(TaggedRef t)
 {
@@ -6722,8 +6756,28 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
   if (!oz_isProcedure(hdl)) oz_typeError(0,"Procedure");
 
   if (tagged2Const(hdl)->getArity() != 1) oz_typeError(0,"Procedure/1");
+
+  if (am.defaultExceptionHandler) {
+    oz_raise(E_ERROR,E_KERNEL,"internal",1,
+             oz_atom("setDefaultExceptionHandlerCalledTwice"));
+  }
+
   am.defaultExceptionHandler = hdl;
   return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIhandleException,1)
+{
+  if (!am.sendHdl) {
+    oz_raise(E_ERROR,E_KERNEL,"internal",1,
+             oz_atom("noDefaultExceptionHandler"));
+  }
+
+  oz_currentThread->pushCall(am.defaultExceptionHandler,OZ_args,2);
+
+  am.emptySuspendVarList();
+  return BI_REPLACEBICALL;
 }
 OZ_C_proc_end
 
@@ -7121,6 +7175,8 @@ BIspec allSpec[] = {
   {"makeClass",       6,BImakeClass,           0},
   {"setMethApplHdl",  1,BIsetMethApplHdl,      0},
   {"setSendHdl",      1,BIsetSendHdl,          0},
+  {",",               2,BIcomma,               0},
+  {"send",            2,BIsend,                0},
   {"getClass",        2,BIgetClass,            (IFOR) getClassInline},
   {"ooGetLock",       1,BIooGetLock,           (IFOR) ooGetLockInline},
   {"newObject",       2,BInewObject,           (IFOR) newObjectInline},
@@ -7140,6 +7196,7 @@ BIspec allSpec[] = {
   {"biExceptionHandler",         1, BIbiExceptionHandler,         0},
   {"setDefaultExceptionHandler", 1, BIsetDefaultExceptionHandler, 0},
   {"getDefaultExceptionHandler", 1, BIgetDefaultExceptionHandler, 0},
+  {"handleException",            1, BIhandleException,            0},
 
   {"raise",      1, BIraise,      0},
   {"raiseError", 1, BIraiseError, 0},
