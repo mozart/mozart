@@ -23,6 +23,7 @@
 
 #include "types.hh"
 #include "error.hh"
+#include "statisti.hh"
 
 
 #ifdef DEBUG_MEM
@@ -116,6 +117,7 @@ inline unsigned int getAllocatedMemory() {
 
 inline void *mallocBody(size_t chunk_size, int align)
 {
+  COUNT1(totalAllocated,chunk_size);
   Assert(ToInt32(heapTop)%sizeof(int32) == 0);
 
 retry:
