@@ -38,6 +38,9 @@ $(ELIB_TARGETS): $(ELIB_DIR)/% : %
         $(EMACS) -q -batch -l compile.el
         @rm -f compile.el
 
+%.el: %.EL
+        @cp -f $< $@
+
 clean veryclean:
         -rm *~ *.ozf
 
