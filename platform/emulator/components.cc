@@ -250,8 +250,6 @@ OZ_Return onlyFutures(OZ_Term l) {
 OZ_Return
 ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
 {
-  perdioInitLocal();
-
   ByteStream* bs=bufferManager->getByteStream();
   if (textmode) 
     bs->setTextmode();
