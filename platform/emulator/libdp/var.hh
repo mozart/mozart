@@ -55,7 +55,7 @@ public:
   Bool addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) = 0;
 
   int getIndex() { return index; }
-  void gcSetIndex(int i) { index =  i; }
+  void gcSetIndex(int i);
 };
 
 class ProxyVar : public ProxyManagerVar {
