@@ -236,4 +236,4 @@ end
 
 {Inspect {NoParent {FASTSAX.new o(url:'/home/denys/Mozart/ozlib/OzMake2/ozmake.xml' prefixmap:PM stripspaces:STRIP)}.root}}
 
-{Show {ByteString.make "a b c"}}
+{Inspect {ByteString.make "a b c"}}
