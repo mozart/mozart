@@ -48,13 +48,19 @@ define
 	 if @DB \= unit then
 	    case @TopEnter of unit then skip
 	    elseof HTML then
-	       {Gdbm.put @DB {VirtualString.toAtom @TopKey}
-		(@Prefix#@TopKey#'/index.html')#HTML}
+	       try
+		  {Gdbm.put @DB {VirtualString.toAtom @TopKey}
+		   (@Prefix#@TopKey#'/index.html')#HTML}
+	       catch error(dp(...) ...) then skip
+	       end
 	    end
 	    {ForAll @ToEnter
 	     proc {$ ID#To#HTML}
-		{Gdbm.put @DB {VirtualString.toAtom @TopKey#':'#ID}
-		 (@Prefix#@TopKey#'/'#To)#HTML}
+		try
+		   {Gdbm.put @DB {VirtualString.toAtom @TopKey#':'#ID}
+		    (@Prefix#@TopKey#'/'#To)#HTML}
+		catch error(dp(...) ...) then skip
+		end
 	     end}
 	    ToEnter <- nil
 	    {Gdbm.close @DB}
