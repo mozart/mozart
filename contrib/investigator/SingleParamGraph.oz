@@ -5,7 +5,7 @@ export
 
 import
 
-   Aux(counterClass)
+   Misc(counterClass)
    Config(paramColour
           edgeColour
           eventColour
@@ -20,7 +20,7 @@ import
 
 define
 
-   IdCounter = {New Aux.counterClass init}
+   IdCounter = {New Misc.counterClass init}
 
    fun {MakePropagatorEdge FailSet
         Hist PropTable Event PropId AllPs MenuAllReachablePs}

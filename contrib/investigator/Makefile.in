@@ -40,7 +40,7 @@ OZDEPEND        = $(OZC) -c -M
 #----------------------------------------------------------------------
 
 OZSRCS          = \
-                Aux.oz \
+                Misc.oz \
                 History.oz \
                 SingleConstrGraph.oz \
                 Main.oz \

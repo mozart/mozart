@@ -12,7 +12,7 @@ import
           unMarkedParamNodeAttr:  UnMarkedParamNodeAttr
          )
 
-   Aux(propIsFailed: PropIsFailed)
+   Misc(propIsFailed: PropIsFailed)
    FS
 
 export

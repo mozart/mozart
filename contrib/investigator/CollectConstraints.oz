@@ -4,7 +4,7 @@ export
    CollectConstraintsClass
 
 import
-   Aux(memberEqVar memberEqProp varReflect vectorToList)
+   Misc(memberEqVar memberEqProp varReflect vectorToList)
 
 define
 \ifdef DEBUG
@@ -16,7 +16,7 @@ define
 
       meth init skip end
 
-      meth is_in(V B) B = {Aux.memberEqVar V @vs} end
+      meth is_in(V B) B = {Misc.memberEqVar V @vs} end
 
       meth put(V) vs <- V | @vs end
 
@@ -47,14 +47,14 @@ define
 
        meth init skip end
 
-       meth is_in(P B) B = {Aux.memberEqProp P @ps} end
+       meth is_in(P B) B = {Misc.memberEqProp P @ps} end
 
        meth not_empty(B) B = @ps \= nil end
 
        meth get(P) P = @ps end
 
        meth put(V VarBucket)
-          SuspLists = {Aux.varReflect V}.susplists
+          SuspLists = {Misc.varReflect V}.susplists
           SuspListNames = {Arity SuspLists}
        in
           {ForAll SuspListNames
@@ -66,7 +66,7 @@ define
                           then skip
                      else
                         ps <- Susp.reference | @ps
-                        {ForAll {Aux.vectorToList Susp.params}
+                        {ForAll {Misc.vectorToList Susp.params}
                          proc {$ V} {VarBucket put(V)} end}
                      end
                   else skip end
@@ -99,7 +99,7 @@ define
        end
 
        meth collect(Vs)
-          {ForAll {Aux.vectorToList Vs}
+          {ForAll {Misc.vectorToList Vs}
            proc {$ V}
               if {@vars is_in(V $)} then skip
               else
