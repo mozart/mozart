@@ -119,7 +119,6 @@ define
    end
 
    CompilerUI = {New Emacs.interface init(OPICompiler Args.host)}
-   Sock = {CompilerUI getSocket($)}
    {Property.put 'opi.compiler' CompilerUI}
 
    %% Make the error handler non-halting
@@ -153,12 +152,5 @@ define
       end
    end
 
-   proc {CompilerReadEvalLoop} VS0 VS in
-      {Sock readQuery(?VS0)}
-      VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
-      {OPICompiler enqueue(feedVirtualString(VS))}
-      {CompilerReadEvalLoop}
-   end
-
-   thread {CompilerReadEvalLoop} end
+   thread {CompilerUI readQueries()} end
 end
