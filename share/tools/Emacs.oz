@@ -195,7 +195,7 @@ define
 		      CompilerInterfaceEmacs, Write({Error.formatLine X})
 		   end
 		   Record}
-	       [] displaySource(Title Ext VS) then Name File in
+	       [] displaySource(_ Ext VS) then Name File in
 		  Name = {OS.tmpnam}#Ext
 		  File = {New Open.file
 			  init(name: Name
