@@ -29,7 +29,7 @@
 <chapter id=chapter.text>
 <title/Input and Output of Text/
 <p>
-The example in <ptr to=section.expand-a> resulted in a very inefficient
+The example in <ptr to=section.files.expand-a> resulted in a very inefficient
 program: reading the entire file to a list and processing it afterwards
 is extremely memory consuming.
 <p>
@@ -39,7 +39,7 @@ thus we provide support for it. The support provided is a mixin
 class <<Open.text>>. This mixin class can be used together with files,
 sockets, and pipes.
 
-<section><title/Expanding TAB Characters Revisited/
+<section id="section.text.expand"><title/Expanding TAB Characters Revisited/
 <p>
 In <ptr to=prog-opprog-expandi/ the revised formulation of the
 <<Expand>> procedure is shown. As before the file objects are created,
