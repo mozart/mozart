@@ -1,3 +1,4 @@
+BUILDTOP        = @BUILDTOP@
 prefix          = @prefix@
 PLATFORM        = @PLATFORM@
 PACKAGE         = @PACKAGE@
@@ -26,7 +27,8 @@ FILES_DLOAD     = gdbm.so
 LIB_FILES_LOAD  = $(addprefix $(DIR_LOAD)/,$(FILES_LOAD))
 LIB_FILES_DLOAD = $(addprefix $(DIR_DLOAD)/,$(FILES_DLOAD))
 
-.PHONY: all install install-load install-dload clean distclean
+.PHONY: all install install-load install-dload \
+        clean realclean veryclean distclean
 
 all: gdbm.so gdbm.ozc
 
@@ -52,8 +54,10 @@ gdbm.so: gdbm.o
 gdbm.ozc: gdbm.oz
         $(OZBATCH) -c gdbm.oz
 
-clean:
+clean realclean veryclean:
         -$(RM) *~ *.bak *.o *.so *.ozc *.oz
 
 distclean: clean
-        -$(RM) config.*
+        -$(RM) config.* Makefile
+
+include ../../share/Makefile.boot

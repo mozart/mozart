@@ -1,5 +1,7 @@
 AC_INIT(gdbm.cc)
 . ../conf.all
+BUILDTOP=`cd ../.. && pwd`
+AC_SUBST(BUILDTOP)
 AC_CANONICAL_HOST
 AC_PROG_CXX
 AC_PROG_CXXCPP

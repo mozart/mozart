@@ -326,15 +326,15 @@ OZ_BI_define(cgdbm_bitor,2,1)
 } OZ_BI_end
 
 OZ_C_proc_interface oz_interface[] = {
-  {"cgdbm_open"         ,4,1},
-  {"cgdbm_fetch"        ,2,1},
-  {"cgdbm_store"        ,4,1},
-  {"cgdbm_firstkey"     ,1,1},
-  {"cgdbm_nextkey"      ,2,1},
-  {"cgdbm_close"        ,1,0},
-  {"cgdbm_error"        ,1,1},
-  {"cgdbm_delete"       ,2,1},
-  {"cgdbm_reorganize"   ,1,1},
-  {"cgdbm_bitor"        ,2,1},
+  {"open"       ,4,1,cgdbm_open},
+  {"fetch"      ,2,1,cgdbm_fetch},
+  {"store"      ,4,1,cgdbm_store},
+  {"firstkey"   ,1,1,cgdbm_firstkey},
+  {"nextkey"    ,2,1,cgdbm_nextkey},
+  {"close"      ,1,0,cgdbm_close},
+  {"error"      ,1,1,cgdbm_error},
+  {"delete"     ,2,1,cgdbm_delete},
+  {"reorganize" ,1,1,cgdbm_reorganize},
+  {"bitor"      ,2,1,cgdbm_bitor},
   {0,0,0}
 };

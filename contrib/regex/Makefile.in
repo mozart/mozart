@@ -1,3 +1,4 @@
+BUILDTOP        = @BUILDTOP@
 prefix          = @prefix@
 PLATFORM        = @PLATFORM@
 PACKAGE         = @PACKAGE@
@@ -31,7 +32,9 @@ LIB_POSIX_LOAD  = $(addprefix $(DIR_LOAD)/,$(POSIX_LOAD))
 LIB_POSIX_DLOAD = $(addprefix $(DIR_DLOAD)/,$(POSIX_DLOAD))
 
 .PHONY: all install install-load install-dload \
-        posix install-posix install-posix-load install-posix-dload
+        posix install-posix install-posix-load install-posix-dload \
+        clean realclean veryclean distclean \
+        bootstrap
 
 all:    posix
 posix:  $(POSIX_LOAD) $(POSIX_DLOAD)
@@ -41,8 +44,8 @@ install-load:   install-posix-load
 install-dload:  install-posix-dload
 
 install-posix:  install-posix-load install-posix-dload
-install-posix-load:     $(LIB_POSIX_LOAD)
-install-posix-dload:    $(LIB_POSIX_DLOAD)
+install-posix-load:     $(DIR_LOAD)  $(LIB_POSIX_LOAD)
+install-posix-dload:    $(DIR_DLOAD) $(LIB_POSIX_DLOAD)
 
 $(DIR_LOAD) $(DIR_DLOAD):
         $(INSTALL_DIR) $@
@@ -62,8 +65,10 @@ $(ALL_DLOAD): %.so : %.o
 %.o: %.c
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-clean:
+clean realclean veryclean:
         -$(RM) *~ *.ozc *.o *.so *.oz
 
 distclean: clean
-        -$(RM) config.*
+        -$(RM) config.* Makefile
+
+include ../../share/Makefile.boot

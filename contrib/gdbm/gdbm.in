@@ -11,16 +11,16 @@ in
    %% open a new `local' to protect redefinitions of
    %% variables already in Base
    local
-      foreign(cgdbm_open        :Open
-              cgdbm_fetch       :Fetch
-              cgdbm_store       :Store
-              cgdbm_firstkey    :FirstKey
-              cgdbm_nextkey     :NextKey
-              cgdbm_close       :Close
-              cgdbm_error       :Error
-              cgdbm_delete      :Delete
-              cgdbm_reorganize  :Reorganize
-              cgdbm_bitor       :BitOr)
+      foreign(open      :Open
+              fetch     :Fetch
+              store     :Store
+              firstkey  :FirstKey
+              nextkey   :NextKey
+              close     :Close
+              error     :Error
+              delete    :Delete
+              reorganize:Reorganize
+              bitor     :BitOr)
       %% Foreign.require will resolve this name in a platform
       %% dependent way
       = {FLoad '@PACKAGE@/gdbm.so'}
