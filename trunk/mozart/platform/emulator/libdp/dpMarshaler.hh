@@ -747,19 +747,27 @@ OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi);
 #else
 OZ_Term unmarshalBorrowRobust(MarshalerBuffer *bs,OB_Entry *&ob,int &bi,int *error);
 #endif
-void marshalToOwner(MarshalerBuffer *bs, int bi);
-void saveMarshalToOwner(int bi, int &oti,
-			CreditType &ct, Credit &c, DSite* &scm);
-void marshalToOwnerSaved(MarshalerBuffer *bs,
-			 CreditType ct, int oti, DSite *scm);
+
 void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi);
 void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
 			   CreditType &ct, Credit &c, DSite* &scm);
 void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
 			    int oti, CreditType ct, Credit c, DSite *scm);
+void discardBorrowHeadSaved(DSite *ms, int oti,
+			    CreditType ct, Credit credit, DSite *scm);
+void marshalToOwner(MarshalerBuffer *bs, int bi);
+void saveMarshalToOwner(int bi, int &oti,
+			CreditType &ct, Credit &c, DSite* &scm);
+void marshalToOwnerSaved(MarshalerBuffer *bs,
+			 int oti, CreditType ct, DSite *scm);
+inline
+void discardToOwnerSaved(DSite *ms, int oti, CreditType ct, DSite *scm) {
+  discardBorrowHeadSaved(ms, oti, ct, 1, scm);
+}
 void marshalOwnHead(MarshalerBuffer *bs, int tag, int i);
 void saveMarshalOwnHead(int oti, Credit &c);
 void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, Credit c);
+void discardOwnHeadSaved(int oti, Credit c);
 
 //
 void marshalTertiary(ByteBuffer *bs, Tertiary *t, MarshalTag tag);
