@@ -44,7 +44,7 @@ EMACS		= emacs
 
 SUBDIRS		= @SUBDIRS@
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend installps
+.PHONY: all quick bootstrap check install clean veryclean distclean depend installps $(DOCDIR)/idx
 
 all bootstrap:: $(CED)
 
@@ -52,7 +52,7 @@ Makefile: Makefile.in config.status
 	./config.status
 
 install:: all $(SHDOCDIR) $(DOCDIR) $(LIBFILES) $(DOCDIR)/.htaccess \
-	$(DOCDIR)/idx.html
+	$(DOCDIR)/idx.html $(DOCDIR)/idx
 
 $(SHDOCDIR) $(DOCDIR):
 	$(INSTALL_DIR) $@
@@ -60,8 +60,11 @@ $(SHDOCDIR) $(DOCDIR):
 $(DOCDIR)/.htaccess: .htaccess
 	$(INSTALL_FILE) $< $@
 
-$(DOCDIR)/idx.html: idx.html
-	$(INSTALL_FILE) $< $@
+$(DOCDIR)/idx/index.html: idx/index.html
+	$(INSTALL_FILE) $< $@ &&
+	$(INSTALL_DIR) $(DOCDIR)/idx && \
+	(cd idx && for i in *; do \
+	$(INSTALL_FILE) $$i $(DOCDIR)/idx/$$i || exit 1; done)
 
 $(LIBFILES): $(SHDOCDIR)/% : %
 	$(INSTALL_FILE) $< $@
@@ -98,10 +101,11 @@ PSDOCDIRS	= apptut base browser bugs changes compiler \
 	opi ozcar ozdoc panel profiler system tools \
 	tutorial wp
 
-idx.html:
-	if [ -r index.db ]; then \
-	$(OZDOC) --in=index.db --out=idx.html --type=html-global-index; \
-	else touch idx.html; fi
+idx/index.html:
+	mkdir idx 2> /dev/null; \
+	if [ -r index.db ]; \
+	then $(OZDOC) --in=index.db --out=idx --type=html-global-index; \
+	else touch idx/index.html; fi
 
 global-xref-db.xml:
 	dirs="$(PSDOCDIRS)"; \
