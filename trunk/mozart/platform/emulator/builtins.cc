@@ -15,7 +15,18 @@
 
 #include "dldwrap.h"
 #if DLOPEN
+
+#ifndef SUNOS_SPARC
 #include <dlfcn.h>
+#else
+
+#define RTLD_NOW 1
+extern "C" void * dlopen(char *, int);
+extern "C" char * dlerror(void);
+extern "C" void * dlsym(void *, char *);
+extern "C" int dlclose(void *);
+
+#endif
 #endif
 
 #ifdef IRIX5_MIPS
@@ -4605,13 +4616,6 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
 #else
   void *handle;
 
-  /*
-   * SunOS 4.1
-   */
-#ifndef RTLD_NOW
-# define RTLD_NOW 1
-#endif
-
   if (!(handle = (void *)dlopen(tempfile, RTLD_NOW ))) {
     OZ_warning("dlopen failed in linkObjectFiles: %s",dlerror());
     unlink(tempfile);
@@ -5789,10 +5793,9 @@ OZ_C_proc_begin(BIshowBuiltins,0)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BItraceBack, 1)
+OZ_C_proc_begin(BItraceBack, 0)
 {
-  OZ_declareIntArg(0,depth)
-  am.currentThread->printLong(cout,depth,0);
+  am.currentThread->printTaskStack(NOCODE);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6209,6 +6212,117 @@ OZ_C_proc_begin(BIsetModeToDeep,0)
 OZ_C_proc_end
 
 
+/*===================================================================
+ * Exceptions
+ *=================================================================== */
+
+OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
+{
+  OZ_declareNonvarArg(0,hdl);
+  if (!OZ_isProcedure(hdl)) TypeErrorT(0,"Procedure");
+
+  am.defaultExceptionHandler = hdl;
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIbiExceptionHandler,2)
+{
+  OZ_Term val=OZ_getCArg(0);
+  OZ_Term list=OZ_getCArg(1);
+
+  if (ozconf.errorVerbosity > 0) {
+    errorHeader();
+    if (OZ_isVariable(val) || !OZ_isRecord(val)) {
+      message("Exception '%s' caught\n",toC(val));
+    } else {
+      OZ_Term lab=OZ_label(val);
+      if (literalEq(lab,OZ_atom("noElse"))) {
+	message("ERROR: Conditional without else failed\n");
+	if (ozconf.errorVerbosity > 1) {
+	  switch (OZ_width(val)) {
+	  case 2:
+	    message("Store: %s\n",toC(OZ_getArg(val,1)));
+	    // fall through
+	  case 1:
+	    message("In line: %s\n",toC(OZ_getArg(val,0)));
+	  default:
+	    break;
+	  }
+	}
+      } else if (literalEq(lab,OZ_atom("toplevelBlocked"))) {
+	message("The toplevel is blocked\n");
+      } else if (literalEq(lab,OZ_atom("apply"))) {
+	message("ERROR: Illtyped application\n");
+	if (OZ_width(val) < 2) {
+	  message("Ups: %s\n",toC(val));
+	} else {
+	  message("In Expression: {%s",toC(OZ_getArg(val,0)));
+	  OZ_Term args = OZ_getArg(val,1);
+	  while (OZ_isCons(args)) {
+	    printf(" %s",toC(OZ_head(args)));
+	    args = OZ_tail(args);
+	  }
+	  printf("}\n");
+	}
+      } else if (literalEq(lab,OZ_atom("tell"))) {
+	message("ERROR: Failure\n");
+	message("Tell:  %s\n",toC(OZ_getArg(val,1)));
+	message("Store: %s\n",toC(OZ_getArg(val,0)));
+      } else if (literalEq(lab,OZ_atom("eq"))) {
+	message("ERROR: Failure\n");
+	message("Constraint:  %s",toC(OZ_getArg(val,0)));
+	printf(" = %s\n",toC(OZ_getArg(val,1)));
+      } else if (literalEq(lab,OZ_atom("fail"))) {
+	message("ERROR: Failure\n");
+	if (ozconf.errorVerbosity > 1) {
+	  if (OZ_width(val)>0) {
+	    for (int i=0; i < OZ_width(val); i++) {
+	      message("[ Hint: %s ]\n",toC(OZ_getArg(val,i)));
+	    }
+	  }
+	}
+      } else if (literalEq(lab,OZ_atom("type")) ||
+		 literalEq(lab,OZ_atom("ftype"))) {
+	message("ERROR: Illtyped application\n");
+	if (OZ_width(val) < 2) {
+	  message("Ups: %s\n",toC(val));
+	} else {
+	  OZ_Term arg0 = OZ_getArg(val,0);
+	  message("In Expression: %s{%s",
+		  literalEq(lab,OZ_atom("ftype")) ? "_ = " : "",
+		  OZ_isAtom(arg0) ?
+		  tagged2Literal(deref(arg0))->getPrintName():toC(arg0));
+	  OZ_Term args = OZ_getArg(val,1);
+	  while (OZ_isCons(args)) {
+	    printf(" %s",toC(OZ_head(args)));
+	    args = OZ_tail(args);
+	  }
+	  printf("}\n");
+
+	  if (ozconf.errorVerbosity > 1) {
+	    if (!OZ_isNil(args)) message("[ UPS: %s ]\n",toC(args));
+	    if (OZ_width(val)>2) {
+	      for (int i=2; i < OZ_width(val); i++) {
+		message("[ Hint: %s ]\n",toC(OZ_getArg(val,i)));
+	      }
+	    }
+	  }
+	}
+      } else if (ozconf.errorVerbosity > 1) {
+	message("???: %s\n",toC(val));
+      }
+    }
+    if (ozconf.errorVerbosity > 1) {
+      am.currentThread->printTaskStack(NOCODE);
+    }
+    errorTrailer();
+  }
+  OZ_Term var = OZ_newVariable();
+  OZ_suspendOn(var);
+}
+OZ_C_proc_end
+
 
 #endif /* BUILTINS2 */
 
@@ -6507,7 +6621,7 @@ BIspec allSpec2[] = {
   {"getStatistics",1,BIgetStatistics},
   {"resetStatistics",0,BIresetStatistics},
   {"System_getPrintName",2,BIgetPrintName},
-  {"traceBack",1,BItraceBack},
+  {"traceBack",0,BItraceBack},
 
   {"ozparser_parse",2,ozparser_parse},
   {"ozparser_init",0,ozparser_init},
@@ -6554,6 +6668,9 @@ BIspec allSpec2[] = {
   {"System.setPrintWidth", 2, BIsetPrintWidth, 0},
   {"System.setErrorDepth", 2, BIsetErrorDepth, 0},
   {"System.setErrorWidth", 2, BIsetErrorWidth, 0},
+
+  {"biExceptionHandler",         2, BIbiExceptionHandler,         0},
+  {"setDefaultExceptionHandler", 1, BIsetDefaultExceptionHandler, 0},
   {0,0,0,0}
 };
 
