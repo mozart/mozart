@@ -28,7 +28,26 @@ local
       INCLUDEDIR = OZHOME#'/include'
    end
 
-   \insert ../../lib/compiler/Misc
+   local
+      proc {EscapeVariableChar Hd C|Cr Tl}
+	 case Cr of nil then Hd = C|Tl   % terminating quote
+	 elsecase C == &` orelse C == &\\ then Hd = &\\|C|Tl
+	 elsecase C < 10 then Hd = &\\|&x|&0|(&0 + C)|Tl
+	 elsecase C < 16 then Hd = &\\|&x|&0|(&A + C - 10)|Tl
+	 elsecase C < 26 then Hd = &\\|&x|&1|(&0 + C - 16)|Tl
+	 elsecase C < 32 then Hd = &\\|&x|&1|(&A + C - 26)|Tl
+	 else Hd = C|Tl
+	 end
+      end
+   in
+      fun {PrintNameToVirtualString PrintName}
+	 case {Atom.toString PrintName} of &`|Sr then
+	    &`|{FoldLTail Sr EscapeVariableChar $ nil}
+	 else PrintName
+	 end
+      end
+   end
+
    \insert ../../lib/compiler/FormatStrings
 
    %--------------------------------------------------------------------
@@ -118,7 +137,7 @@ local
 	 end
 	 meth generate($)
 	    counter <- @counter + 1
-	    {ConcatenateAtomAndInt 'Syn' @counter}
+	    {VirtualString.toAtom 'Syn'#@counter}
 	 end
       end
 
