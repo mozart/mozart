@@ -391,7 +391,6 @@ starts the emulator under gdb")
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
-  (oz-debug-cont)
   (oz-send-string "{Ozcar exit}")
   (oz-send-string "\\sw +optimize -debuginfo"))
   
@@ -405,7 +404,6 @@ starts the emulator under gdb")
 Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (interactive)
   (oz-check-running t)
-  (oz-debug-cont) ;; be sure the debugger is _off_ on startup
   (if (not (equal mode-name "Oz"))
       (oz-new-buffer))
   (oz-show-buffer (get-buffer oz-compiler-buffer)))
