@@ -43,7 +43,7 @@ OZ_LOAD		= root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\:
 export OZ_LOAD
 COMPILE		= $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
 EXEC		= $(OZBATCH) $(OZFLAGS)
-EXECWITHSTD	= $(OZBATCH) $(OZFLAGS) -l AP,SP,OP --include=DumpIntro.oz
+EXECWITHSTD	= $(OZBATCH) $(OZFLAGS) -l AP --include=DumpIntro.oz
 OZMA		= $(OZBATCH) $(OZFLAGS) --ozma
 
 OZVERSION	= $(TOPDIR)/OZVERSION
@@ -79,7 +79,7 @@ APSRC = $(APSRC1:%.oz=AP/%.oz) AP.oz
 CPSRC1 = Search.oz FD.oz FS.oz
 CPSRC = $(CPSRC1:%=CP/%) CP.oz
 
-DPSRC1 = Connection.oz Remote.oz
+DPSRC1 = Connection.oz Remote.oz RemoteServer.oz MakeAllLoader.oz
 DPSRC = $(DPSRC1:%=DP/%) DP.oz
 
 MISCSRC1 = Agenda.oz Server.oz
