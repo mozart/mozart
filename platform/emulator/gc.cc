@@ -20,8 +20,6 @@
 #include <sys/time.h>
 #endif
 
-#include <ctype.h>
-
 #include "am.hh"
 
 #include "gc.hh"

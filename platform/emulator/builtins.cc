@@ -6,7 +6,7 @@
 
 #include "wsock.hh"
 
-#include <ctype.h>
+#include "iso-ctype.hh"
 #include <string.h>
 #include <time.h>
 #include <errno.h>
@@ -2941,7 +2941,7 @@ OZ_C_proc_end
 
 #define TestChar(TEST)                                            \
   FirstCharArg;                                                   \
-  return oz_unify(OZ_getCArg(1), TEST (i) ? NameTrue : NameFalse);
+  return oz_unify(OZ_getCArg(1), TEST ((unsigned char) i) ? NameTrue : NameFalse);
 
 OZ_C_proc_begin(BIcharIs,2) {
  oz_declareNonvarArg(0,c);
@@ -2952,36 +2952,36 @@ OZ_C_proc_begin(BIcharIs,2) {
  return oz_unify(out,(i >=0 && i <= 255) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsAlNum,2) { TestChar(isalnum); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsAlNum,2) { TestChar(iso_isalnum); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsAlpha,2) { TestChar(isalpha); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsAlpha,2) { TestChar(iso_isalpha); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsCntrl,2) { TestChar(iscntrl); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsCntrl,2) { TestChar(iso_iscntrl); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsDigit,2) { TestChar(isdigit); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsDigit,2) { TestChar(iso_isdigit); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsGraph,2) { TestChar(isgraph); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsGraph,2) { TestChar(iso_isgraph); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsLower,2) { TestChar(islower); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsLower,2) { TestChar(iso_islower); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsPrint,2) { TestChar(isprint); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsPrint,2) { TestChar(iso_isprint); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsPunct,2) { TestChar(ispunct); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsPunct,2) { TestChar(iso_ispunct); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsSpace,2) { TestChar(isspace); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsSpace,2) { TestChar(iso_isspace); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsUpper,2) { TestChar(isupper); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsUpper,2) { TestChar(iso_isupper); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsXDigit,2) {TestChar(isxdigit);} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsXDigit,2) {TestChar(iso_isxdigit);} OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToLower,2) {
   FirstCharArg;
-  return oz_unifyInt(OZ_getCArg(1), tolower(i));
+  return oz_unifyInt(OZ_getCArg(1), iso_tolower((unsigned char) i));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToUpper,2) {
   FirstCharArg;
-  return oz_unifyInt(OZ_getCArg(1), toupper(i));
+  return oz_unifyInt(OZ_getCArg(1), iso_toupper((unsigned char) i));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToAtom,2) {
@@ -2996,12 +2996,12 @@ OZ_C_proc_begin(BIcharToAtom,2) {
 OZ_C_proc_begin(BIcharType,2) {
   FirstCharArg;
   TaggedRef type;
-  if (isupper(i))      type = AtomUpper;
-  else if (islower(i)) type = AtomLower;
-  else if (isdigit(i)) type = AtomDigit;
-  else if (isspace(i)) type = AtomCharSpace;
-  else if (ispunct(i)) type = AtomPunct;
-  else                 type = AtomOther;
+  if (iso_isupper(i))      type = AtomUpper;
+  else if (iso_islower(i)) type = AtomLower;
+  else if (iso_isdigit(i)) type = AtomDigit;
+  else if (iso_isspace(i)) type = AtomCharSpace;
+  else if (iso_ispunct(i)) type = AtomPunct;
+  else                     type = AtomOther;
   return oz_unify(OZ_getCArg(1), type);
 } OZ_C_proc_end
 
@@ -4894,13 +4894,11 @@ char **arrayFromList(OZ_Term list, char **array, int size)
   while(OZ_isCons(list)) {
 
     if (i >= size-1) {
-      OZ_warning("linkObjectFiles: too many arguments");
       goto bomb;
     }
 
     OZ_Term hh = head(deref(list));
     if (!OZ_isAtom(hh)) {
-      OZ_warning("linkObjectFiles: List with atoms expected");
       goto bomb;
     }
     char *fileName = OZ_atomToC(hh);
@@ -4908,7 +4906,6 @@ char **arrayFromList(OZ_Term list, char **array, int size)
     char *f = expandFileName(fileName,ozconf.linkPath);
 
     if (!f) {
-      OZ_warning("linkObjectFiles(%s): expand filename failed",fileName);
       goto bomb;
     }
 
@@ -4975,7 +4972,6 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
     for (int i=0; ofiles[i] != NULL; i++) {
       char *f = ofiles[i];
       if (commandUsed + strlen(f) >= commandSize-1) {
-        OZ_warning("linkObjectFiles: too many arguments");
         unlink(tempfile);
         delete [] f;
         goto raise;
@@ -5046,7 +5042,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   return PROCEED;
 
 raise:
-  return oz_raise(E_ERROR,E_KERNEL,"foreign",2,oz_atom("linkFiles"),list);
+  return am.raise(E_ERROR,oz_atom("foreign"),"linkFiles",1,list);
 }
 OZ_C_proc_end
 
@@ -5110,7 +5106,8 @@ OZ_C_proc_begin(BIdlOpen,2)
   return oz_unify(out,ret);
 
 raise:
-  return oz_raise(E_ERROR,E_KERNEL,"foreign",3,oz_atom("dlOpen"),
+
+  return am.raise(E_ERROR,oz_atom("foreign"),"dlOpen",2,
                   OZ_getCArg(0),err);
 }
 OZ_C_proc_end
@@ -5146,8 +5143,7 @@ OZ_C_proc_begin(BIdlClose,1)
   return PROCEED;
 
 raise:
-  return oz_raise(E_ERROR,E_KERNEL,"foreign",2,
-                  oz_atom("dlClose"),oz_int(handle));
+  return am.raise(E_ERROR,oz_atom("foreign"),"dlClose",1,OZ_int(handle));
 }
 OZ_C_proc_end
 
@@ -5200,8 +5196,7 @@ OZ_C_proc_begin(BIfindFunction,3)
 #ifdef WINDOWS
     OZ_warning("error=%d\n",GetLastError());
 #endif
-    return oz_raise(E_ERROR,E_KERNEL,"foreign", 3,
-                    oz_atom("cannotFindFunction"),
+    return am.raise(E_ERROR, oz_atom("foreign"), "cannotFindFunction", 3,
                     OZ_getCArg(0),
                     OZ_getCArg(1),
                     OZ_getCArg(2));
