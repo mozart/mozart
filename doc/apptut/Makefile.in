@@ -15,11 +15,14 @@ HTMLEXTRAFILES = pictures/netscape.gif apptut.gif
 CHUNKFILES = \
         chat-server.oz chat-client.oz chat-gui.oz \
         Webget.oz DB.oz Form.oz LMF.oz
+PROGSRCS1 = \
+        counter.cc counter-obj.cc native-celloid.cc
+PROGSRCS = $(addprefix $(SRCDIR)/,$(PROGSRCS1))
 
 include ../Makefile.common
 
-all:: $(CHUNKFILES)
-quick:: $(CHUNKFILES)
+all:: $(CHUNKFILES) $(PROGSRCS)
+quick:: $(CHUNKFILES) $(PROGSRCS)
 
 chat-server.oz: $(MAIN) $(SGMLSRCS)
         $(DOCIFY) --type=chunk --in=$< --out='Chat Server' >$@
@@ -32,3 +35,6 @@ chat-gui.oz: $(MAIN) $(SGMLSRCS)
 
 install:: $(CHUNKFILES)
         for i in $(CHUNKFILES); do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+install:: $(PROGSRCS)
+        for i in $(PROGSRCS); do $(INSTALL_FILE) $$i $(DOCDIR); done

@@ -192,26 +192,24 @@ contents.
     <title/Native Functor/
     <p>Again, we proceed as before:
 <code display>
-extern "C"
+OZ_C_proc_interface * oz_init_module(void)
 {
-  OZ_C_proc_interface * oz_init_module(void)
-  {
-    static OZ_C_proc_interface table[] = {
-      {"new",1,1,celloid_new},
-      {"is",1,1,celloid_is},
-      {"access",1,1,celloid_access},
-      {"assign",2,0,celloid_assign},
-      {0,0,0,0}
-    };
-    Celloid::id = OZ_getUniqueId();
-    return table;
-  }
+  static OZ_C_proc_interface table[] = {
+    {"new",1,1,celloid_new},
+    {"is",1,1,celloid_is},
+    {"access",1,1,celloid_access},
+    {"assign",2,0,celloid_assign},
+    {0,0,0,0}
+  };
+  Celloid::id = OZ_getUniqueId();
+  return table;
 }
 </code>
-Assuming the code above is put in file <file/native-celloid.cc/, we
+Assuming the code above is put in file
+<ref.extern to="native-celloid.cc"/<file/native-celloid.cc//, we
 first compile and then create a DLL as follows
 <code display proglang=sh>
-oztool c++ -I/usr/local/oz/include -c native-celloid.cc
+oztool c++ -c native-celloid.cc
 oztool ld native-celloid.o -o native-celloid.so-`oztool platform`
 </code></p>
   </section>
