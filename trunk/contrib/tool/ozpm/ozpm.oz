@@ -302,14 +302,14 @@ define
 		%%
 		%% corresponding flags
 		%%
-		'<install>'(single type:bool default:false)
-		'<create>'( single type:bool default:false)
-		'<info>'(   single type:bool default:false)
-		'<list>'(   single type:bool default:false)
-		'<check>'(  single type:bool default:false)
-		'<interactive>'(single type:bool default:false)
-		'<remove>'( single type:bool default:false)
-		'<help>'(   single type:bool default:false)
+		'<install>'(single type:bool)
+		'<create>'( single type:bool)
+		'<info>'(   single type:bool)
+		'<list>'(   single type:bool)
+		'<check>'(  single type:bool)
+		'<interactive>'(single type:bool)
+		'<remove>'( single type:bool)
+		'<help>'(   single type:bool)
 		%%
 		%% arguments
 		%%
