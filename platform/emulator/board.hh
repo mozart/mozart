@@ -158,6 +158,7 @@ public:
   Bool isBlocked(void);
   void incSolveThreads(void);
   void decSolveThreads(void);
+  void checkSolveThreads(void);
 
   //
   // Thread counter

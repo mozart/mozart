@@ -42,12 +42,12 @@ void oz_reduceTrailOnFail();
 void oz_reduceTrailOnEqEq();
 
 void oz_checkExtSuspension(Suspension susp, Board * home);
-void _checkExtSuspension(Suspension susp);
 
-#define CheckExtSuspension(susp)                \
-  if (((Suspension)susp).wasExtSuspension()) {  \
-    _checkExtSuspension(susp);                  \
+#define CheckExtSuspension(susp)               \
+  if (((Suspension)susp).wasExtSuspension()) { \
+    GETBOARDOBJ((Suspension) susp)->checkSolveThreads();   \
   }
+
 
 /* -------------------------------------------------------------------------
  * TODO

@@ -173,6 +173,22 @@ void Board::decSolveThreads(void) {
 
 }
 
+inline
+void Board::checkSolveThreads(void) {
+  Assert(!isCommitted() && !isRoot());
+
+  Board * bb = this;
+
+  do {
+
+    if (bb->isStable())
+      oz_newThreadInject(bb);
+
+    bb = bb->getParent();
+  } while (!bb->isRoot());
+
+}
+
 #ifdef OUTLINE
 #undef inline
 #endif
