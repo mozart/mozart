@@ -1211,6 +1211,20 @@ repeat:
       goto repeat;
     }
 
+  case BT_binary_doGenAction_intermediate:
+    {
+      GetBTTaskPtr1(frame, BuilderGenAction, proc);
+      GetBTTaskPtr2(frame, void*, arg);
+      DiscardBTFrame(frame);
+      //
+      (*proc)(arg);
+
+      //
+      // 'value' is preserved;
+      GetBTTaskTypeNoDecl(frame, type);
+      goto repeat;
+    }
+
   default:
 #ifdef ROBUST_UNMARSHALER
     RAISE_UNMARSHAL_ERROR;
