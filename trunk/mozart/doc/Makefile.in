@@ -30,13 +30,16 @@ DOCDIR		= $(PREFIX)/share/doc
 INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
+CED		= @CED@
 
-FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog ozdoc.ced author.db
+FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog $(CED) author.db
 LIBFILES	= $(addprefix $(DOCDIR)/,$(FILES))
+
+EMACS		= emacs
 
 .PHONY: all bootstrap check install clean veryclean distclean depend
 
-all: ozdoc.ced
+all: $(CED)
 
 bootstrap: all
 
@@ -56,12 +59,12 @@ $(LIBFILES): $(DOCDIR)/% : %
 	$(INSTALL_FILE) $< $@
 
 ozdoc.ced: ozdoc.dtd ozdoc.dcl ced.cat ced.el
-	emacs -batch -l ced.el
+	$(EMACS) -q -batch -l ced.el
 clean:
 	-rm -f *~
 
 veryclean: clean
+	-rm -f $(CED)
 
 distclean: veryclean
-	-rm -f Makefile catalog ced.el config.log config.status config.cache
-	-rm -f ozdoc.ced
+	-rm -f Makefile ced.el catalog config.log config.status config.cache
