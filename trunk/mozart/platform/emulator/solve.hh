@@ -99,8 +99,8 @@ public:
   void setSuspList(SuspList *sl) { suspList=sl; }
   WaitActor * select(int left, int right);
 
-  inline void mergeCPB(Board *bb, int siblings);
-  inline void mergeNonMono(Board *bb);
+  void mergeCPB(Board *bb, int siblings);
+  void mergeNonMono(Board *bb);
 
   void clearResult(Board *bb);
   void patchChoiceResult(int i) {
