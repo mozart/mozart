@@ -571,8 +571,15 @@ define
       end
 
       %% Unprotected methods (will change when methods.oz is recomiled)
-      meth getTextRepresentationOfAllUsers($)
-	 nil
+      meth dumpDB(uid:UID Ans) A Rec={DB toRecord(record:$)} in
+	 {WriteLog UID#" requests database-dump"}
+	 A=db(members:{Map {Record.toList Rec.membersDB} fun{$ X}
+							    user(id:X.id email:X.email firstname:X.firstname lastname:X.lastname
+								 organization:X.organization userlevel:X.userlevel extra:X.extra)
+							 end}
+	      online:{Map {Record.toList Rec.onlineDB} fun{$ X} X.id#X.online end}
+	     )
+	 Ans=A
       end
       
       
