@@ -175,7 +175,7 @@ topdira=`(cd $TOPDIR; pwd)`
 oz_path=$PATH:$topdira/bin:$topdira:$prefix/bin
 AC_PATH_PROG(PLATFORMSCRIPT, ozplatform,       , $oz_path)
 AC_PATH_PROG(DYNLD,          ozdynld,      true, $oz_path)
-AC_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs,    , $oz_path)
+AC_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs,true, $oz_path)
 
 if test -z "${PLATFORMSCRIPT}"
 then
