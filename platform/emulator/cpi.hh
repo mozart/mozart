@@ -61,8 +61,6 @@ OZ_Boolean isPosSmallInt(OZ_Term v);
 OZ_Boolean isPosSmallFDInt(OZ_Term v); 
 OZ_Boolean isPosSmallSetInt(OZ_Term v);
 
-#define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
-
 #define EXPECT_BLOCK(O, P, F)						\
 {									\
   OZ_expect_t r = O.F(OZ_getCArg(P));					\
