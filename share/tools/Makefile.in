@@ -1,3 +1,4 @@
+BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 TOPDIR		= @TOPDIR@
@@ -6,6 +7,7 @@ PREFIX		= @prefix@
 
 OZBIN		= $(PREFIX)/bin
 OZTOOLS		= $(PREFIX)/tools
+OZPATH		= $(PREFIX)/lib:$(PREFIX)/tools
 IMAGESDIR	= $(OZTOOLS)/images
 CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/tools
 CACHEBINDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/bin
@@ -29,8 +31,8 @@ ENV2TYPE	= $(PERL) $(SRCDIR)/../lib/env2type
 OZFLAGS		=
 OZBATCH		= @OZBATCH@
 
-COMPILE		= OZHOME=$(PREFIX) $(OZBATCH) $(OZFLAGS) -c
-EXEC		= OZHOME=$(PREFIX) $(OZBATCH) $(OZFLAGS)
+COMPILE		= $(OZBATCH) $(OZFLAGS) -c
+EXEC		= $(OZBATCH) $(OZFLAGS)
 
 COMPILERPANELSRC1 = \
 	CompilerPanelClass.oz
@@ -129,7 +131,7 @@ IMAGES1 = \
 	browserMIcon.xbm browserIcon.xbm stop.xbm
 IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 
-.PHONY: all
+.PHONY: all bootstrap
 
 all: Makefile $(COMPONENTS) $(SYSLETS)
 
@@ -138,6 +140,25 @@ Makefile: Makefile.in ../config.status
 
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
+
+include ../Makefile.boot
+##---------------------------------------------------------------------
+## Bootstraping
+##	use the local emulator and local libraries
+##---------------------------------------------------------------------
+#
+#URL=http\\://www.ps.uni-sb.de/ozhome
+#BOOTLIB=`pwd`/../lib
+#BOOTCOM=`pwd`/../../platform/emulator/oz.emulator.bin -u $(BOOTLIB)/ozbatch -a
+#export OZBATCH
+#export OZINIT
+#export OZ_LOAD
+#
+#bootstrap:
+#	$(MAKE) all \
+#	OZBATCH="$(BOOTCOM)" \
+#	OZINIT=$(BOOTLIB)/Init.ozc \
+#	OZ_LOAD=root=.:prefix=/=/:prefix=$(URL)/=$(BOOTLIB)/tyc/:prefix=$(URL)/lib/=$(BOOTLIB)/:=
 
 #---------------------------------------------------------------------
 # Components
