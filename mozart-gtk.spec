@@ -29,7 +29,7 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/usr/local/oz
+mkdir -p $RPM_BUILD_ROOT/usr/lib/mozart
 make install
 
 %files
