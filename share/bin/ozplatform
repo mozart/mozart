@@ -24,6 +24,8 @@ case $system in
    ;;
    m68k\ Linux\ *)      OZARCH=linux-m68k
    ;;
+   sparc\ Linux\ *)     OZARCH=linux-sparc
+   ;;
    9000/7*HP-UX*)       OZARCH=hpux-700
    ;;
    *IRIX\ 5*)           OZARCH=irix5-`/bin/uname -p`
@@ -42,6 +44,8 @@ case $system in
    *atari*NetBSD*)      OZARCH=netbsd-m68k
    ;;
    *sparc*NetBSD*)      OZARCH=netbsd-sparc
+   ;;
+   *sparc*OpenBSD*)      OZARCH=netbsd-sparc
    ;;
    *i386*NetBSD*)       OZARCH=netbsd-i486
    ;;
