@@ -31,7 +31,7 @@ state, abstract data types, objects, classes, and inheritance.
 It provides the salient features of functional programming including
 compositional syntax, first-class procedures/functions, and
 lexical scoping.
-It provides the salient features of logic and
+It provides the salient features of logic programming and
 constraint programming including logic variables, constraints,
 disjunction constructs, and programmable search mechanisms.
 It allows users to dynamically create any number of sequential threads.

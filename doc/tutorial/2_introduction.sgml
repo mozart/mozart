@@ -113,9 +113,9 @@
   scoping. In fact, every Oz entity is first class, including
   procedures, threads, classes, methods, and objects.
 
-  <ITEM>Oz provides the salient features of logic and constraint
+  <ITEM>Oz provides the salient features of logic programming and constraint
   programming by providing logic variables, disjunctive constructs,
-  programmable search strategies, and constraint programming.
+  and programmable search strategies.
 
   <ITEM>Oz is a concurrent language where users can create dynamically any
   number of sequential threads that can interact with each

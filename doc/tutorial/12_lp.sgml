@@ -28,8 +28,9 @@
 <P>Many problems, especially frequent in the field of Artificial
 Intelligence, and also found elsewhere, e.g., in operations research,
 are currently solvable only by resorting to some form of search and
-<EM/constraint/ propagation. Such problems admit very concise
-solutions, if the programming language abstracts away the details of
+<EM/constraint/ propagation. Such problems can be specified
+very concisely,
+if the programming language abstracts away the details of
 search by providing don't know nondeterminism. Logic
 programming and Prolog is considered a suitable
 formalism for this class of problems.
