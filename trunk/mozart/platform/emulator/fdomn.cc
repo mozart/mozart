@@ -247,12 +247,15 @@ int FDIntervals::operator <= (const int leq)
 {
   int index = findPossibleIndexOf(leq);
 
-  if (i_arr[index].left <= leq && leq <= i_arr[index].right)
+  if (i_arr[index].left <= leq && leq <= i_arr[index].right) {
     i_arr[index].right = leq;
+    index += 1;
+  } else
+    if (i_arr[index].right < leq) index += 1;
 
   Assert(high >= index + 1);
   
-  high = index + 1;
+  high = index;
 
   Assert(isConsistent());
   
@@ -267,11 +270,13 @@ int FDIntervals::operator >= (const int geq)
   if (i_arr[index].left <= geq && geq <= i_arr[index].right) 
     i_arr[index].left = geq;
   else
-    index += 1;
+    if (i_arr[index].right < geq) index += 1;
 
-  for (int t = 0, f = index; f < high; ) i_arr[t++] = i_arr[f++];
-  high -= index;
-
+  if (index != 0) {
+    for (int t = 0, f = index; f < high; ) i_arr[t++] = i_arr[f++];
+    high -= index;
+  }
+  
   Assert(isConsistent());
   
   return findSize();
