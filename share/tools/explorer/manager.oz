@@ -258,15 +258,13 @@ in
 
       meth stopSearch(Sol Cursor <= False)
 	 case @root==nil then true else
-	    PutCursor = case Cursor==False then
+	    TryCursor = case Cursor==False then
 			   case Sol==False then @curNode
 			   else
 			      case @IsBAB then PrevSol <- Sol
 			      else true
 			      end
-			      case {Sol isHidden($)} then @curNode
-			      else Sol
-			      end
+			      Sol
 			   end
 			else Cursor
 			end
@@ -274,7 +272,8 @@ in
 	    <<StatusManager   stop>>
 	    <<ToplevelManager hideCursor>>
 	    <<Manager         LayoutAfterSearch>>
-	    <<Manager         setCursor(PutCursor)>>
+	    <<Manager         setCursor({TryCursor
+					 getOverHidden(TryCursor $)})>>
 	    <<MenuManager     disable(explorer(halt))>>
 	    <<Manager         idle>>
 	 end
