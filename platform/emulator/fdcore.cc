@@ -184,7 +184,7 @@ OZ_C_proc_begin(BIfdPutLe, 2)
   
   if ((*x <= smallIntValue(n)) == 0) return FAILED;
   
-  return x.releaseNonRes();
+  return x.releaseNonRes(OZ_arity, OZ_args, OZ_self);
 }
 OZ_C_proc_end
 
@@ -207,7 +207,7 @@ OZ_C_proc_begin(BIfdPutGe, 2)
   
   if ((*x >= smallIntValue(n)) == 0) return FAILED;
   
-  return x.releaseNonRes();
+  return x.releaseNonRes(OZ_arity, OZ_args, OZ_self);
 }
 OZ_C_proc_end
 
@@ -270,7 +270,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
   
   if ((*x &= aux) == 0) return FAILED;
   
-  return x.releaseNonRes();
+  return x.releaseNonRes(OZ_arity, OZ_args, OZ_self);
 }
 OZ_C_proc_end
 
@@ -293,7 +293,7 @@ OZ_C_proc_begin(BIfdPutNot, 2)
 
   if ((*x -= smallIntValue(n)) == 0) return FAILED;
   
-  return x.releaseNonRes();
+  return x.releaseNonRes(OZ_arity, OZ_args, OZ_self);
 }
 OZ_C_proc_end
 
@@ -326,6 +326,6 @@ OZ_C_proc_begin(BIfdPutFromTo, 3){
   if ((*x >= smallIntValue(f)) == 0) return FAILED;
   if ((*x <= smallIntValue(t)) == 0) return FAILED;
   
-  return x.releaseNonRes();
+  return x.releaseNonRes(OZ_arity, OZ_args, OZ_self);
 }
 OZ_C_proc_end
