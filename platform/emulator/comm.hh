@@ -184,21 +184,20 @@ protected:
     init(a,p,t);
     flags=ty;}
 
-  ip_address getAddress(){return address;}
-  port_t getPort(){return port;}
-
   unsigned short getType(){return flags;}
 
 public:
   BaseSite(){}
   BaseSite(ip_address a,port_t p,time_t t):address(a),port(p),timestamp(t){}
 
+  ip_address getAddress(){return address;} // ATTENTION
+  port_t getPort(){return port;} // ATTENTION
   time_t getTimeStamp(){return timestamp;} // ATTENTION
   int hashPrimary();
   int hashSecondary();
 
   char* stringrep();
-  
+
   void marshalBaseSite(MsgBuffer* buf){
     marshalNumber(address,buf);
     marshalShort(port,buf);  
