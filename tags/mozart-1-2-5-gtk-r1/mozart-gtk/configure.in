@@ -1,0 +1,231 @@
+AC_INIT(Main.oz)
+AC_PREFIX_DEFAULT(/usr/local/oz)
+AC_CANONICAL_HOST
+SRCDIR=`cd $srcdir && pwd`
+AC_SUBST(SRCDIR)
+SRCTOP="$SRCDIR"
+OZ_PATH_PROG(OZTOOL,oztool,AC_MSG_ERROR([oztool not found]))
+OZ_PATH_PROG(OZDOC,ozdoc,AC_MSG_ERROR([ozdoc not found]))
+PLATFORM=`$OZTOOL platform || exit 1`
+AC_SUBST(PLATFORM)
+OZ_PROG_MAKE
+AC_PROG_MAKE_SET
+OZ_PROG_INSTALL
+AC_SUBST(INSTALL_DIR)
+OZ_CXX_CHOOSE
+AC_SUBST(CPPFLAGS)
+AC_SUBST(CXXFLAGS)
+AC_LANG_CPLUSPLUS
+OZ_PATH_PROG(OZC,ozc,AC_MSG_ERROR([ozc not found]))
+OZ_PATH_PROG(OZL,ozl,AC_MSG_ERROR([ozl not found]))
+OZ_PATH_PROG(OZENGINE, ozengine,AC_MSG_ERROR([ozengine not found]))
+
+dnl Check for flex/bison
+OZ_PROG_FLEX
+OZ_PROG_BISON
+
+dnl Check for preprocessor
+AC_PATH_PROG(CPP, cpp)
+if test -z "$CPP"; then
+  AC_MSG_ERROR(unable to find preprocessor)
+fi
+
+AC_MSG_CHECKING([for tricky preprocessor options])
+if test "${GXX}" = yes; then
+   case "$PLATFORM" in
+     win32*)
+         MOZART_GTK_CPPFLAGS="-undef -D__GNUC__ -std=c99"
+	 ;;
+     *)
+         MOZART_GTK_CPPFLAGS="-D__GNUC__"
+	 ;;
+   esac
+   echo > oz_conftest.c
+   if ! test -z "`${CPP} ${MOZART_GTK_CPPFLAGS} oz_conftest.c 2>&1 1>/dev/null`"; then
+      MOZART_GTK_CPPFLAGS=
+   fi
+   rm -f oz_conftest.c
+fi
+AC_MSG_RESULT($MOZART_GTK_CPPFLAGS)
+AC_SUBST(MOZART_GTK_CPPFLAGS)
+
+dnl check for -s option to oztool ld
+AC_MSG_CHECKING([for -s option to oztool ld])
+echo > oz_conftest.c
+if test -z "`${OZTOOL} c++ -c oz_conftest.c -o oz_conftest.o 2>&1 1>/dev/null`" &&
+   test -z "`${OZTOOL} ld -s oz_conftest.c -o oz_conftest.so 2>&1`" && test -r oz_conftest.so; then
+   MOZART_GTK_STRIP=-s
+   AC_MSG_RESULT(yes)
+else
+   MOZART_GTK_STRIP=
+   AC_MSG_RESULT(no)
+fi
+rm -f oz_conftest.c oz_conftest.o oz_conftest.so
+AC_SUBST(MOZART_GTK_STRIP)
+
+dnl Check for the GTK+ config tool
+AC_PATH_PROG(GTKCONFIG, gtk-config)
+if test -z $GTKCONFIG; then
+    AC_MSG_ERROR(The gtk-config script, which is part of the GTK+ library, could no be found. Please make sure you have a working installation of GTK+ on your system, otherwise GTK+ support can not be enabled. GTK+ can be found at http://www.gtk.org)
+fi
+
+AC_MSG_CHECKING(gtk c flags)
+if test -z "`${GTKCONFIG} --cflags 2>&1 1>/dev/null`"; then
+   GTK_CFLAGS=`${GTKCONFIG} --cflags`
+fi
+AC_MSG_RESULT($GTK_CFLAGS)
+AC_SUBST(GTK_CFLAGS)
+
+AC_MSG_CHECKING([for options to filter from gtk c flags])
+OZ_FILTER_CPPFLAGS(GTK_CFLAGS)
+AC_MSG_RESULT(keeping: $GTK_CFLAGS)
+
+AC_MSG_CHECKING(gtk lib flags)
+if test -z "`${GTKCONFIG} --libs 2>&1 1>/dev/null`"; then
+   GTK_LIBS=`${GTKCONFIG} --libs`
+fi
+AC_MSG_RESULT($GTK_LIBS)
+AC_SUBST(GTK_LIBS)
+
+dnl check for imlib-config
+AC_PATH_PROG(IMLIB_CONFIG, imlib-config)
+if test -n "$IMLIB_CONFIG"; then
+   AC_MSG_CHECKING(imlib c flags)
+   if test -z "`${IMLIB_CONFIG} --cflags 2>&1 1>/dev/null`"; then
+     IMLIB_CFLAGS=`${IMLIB_CONFIG} --cflags`
+   fi
+   AC_MSG_RESULT($IMLIB_CFLAGS)
+
+   AC_MSG_CHECKING([for options to filter from imlib c flags])
+   OZ_FILTER_CPPFLAGS(IMLIB_CFLAGS)
+   AC_MSG_RESULT(keeping: $IMLIB_CFLAGS)
+
+   AC_MSG_CHECKING(imlib lib flags)
+   if test -z "`${IMLIB_CONFIG} --libs 2>&1 1>/dev/null`"; then
+     IMLIB_LIBS=`${IMLIB_CONFIG} --libs`
+   fi
+   AC_MSG_RESULT($IMLIB_LIBS)
+fi
+AC_SUBST(IMLIB_CFLAGS)
+AC_SUBST(IMLIB_LIBS)
+
+dnl check for libart-config
+AC_PATH_PROG(LIBART_CONFIG,libart-config)
+if test -n "$LIBART_CONFIG"; then
+   AC_MSG_CHECKING(libart c flags)
+   LIBART_CFLAGS=`${LIBART_CONFIG} --cflags`
+   AC_MSG_RESULT($LIBART_CFLAGS)
+
+   AC_MSG_CHECKING([for options to filter from libart c flags])
+   OZ_FILTER_CPPFLAGS(LIBART_CFLAGS)
+   AC_MSG_RESULT(keeping: $LIBART_CFLAGS)
+
+   AC_MSG_CHECKING(libart lib flags)
+   LIBART_LIBS=`${LIBART_CONFIG} --libs`
+   AC_MSG_RESULT($LIBART_LIBS)
+fi
+AC_SUBST(LIBART_CFLAGS)
+AC_SUBST(LIBART_LIBS)
+
+dnl Check for the right GTK+ version
+AC_MSG_CHECKING(for GTK+ version)
+GTKVERSION=`$GTKCONFIG --version`
+case $GTKVERSION in
+  1.2.*)
+  AC_MSG_RESULT($GTKVERSION)
+  ;;
+  1.3.*)
+  AC_MSG_RESULT($GTKVERSION)
+  ;;
+  *)  AC_MSG_ERROR(Your GTK+ library is too old. Please update to version 1.2 or later. GTK+ can be found at http://www.gtk.org)
+esac
+
+CPPFLAGS="$IMLIB_CFLAGS $LIBART_CFLAGS $GTK_CFLAGS $CPPFLAGS"
+LIBS="$IMLIB_LIBS $LIBART_LIBS -lart_lgpl -lgdk_imlib $GTK_LIBS $LIBS"
+
+dnl Checking for canvas
+EXPLICIT_CANVAS=no
+AC_MSG_CHECKING(for --with-gtk-canvas-dir)
+AC_ARG_WITH(gtk_canvas_dir,
+    [--with-gtk-canvas-dir=<d>    GTK+ Canvas directory. (default=none)],
+    HAVE_CANVAS=yes
+    EXPLICIT_CANVAS=yes
+    CANVASDIR="$with_gtk_canvas_dir"
+    AC_MSG_RESULT([canvas directory = ]$CANVASDIR),
+    HAVE_CANVAS=no
+    AC_MSG_RESULT(no))
+AC_SUBST(HAVE_CANVAS)
+
+AC_MSG_CHECKING(for gtk-canvas.h)
+if test "$EXPLICIT_CANVAS" = no; then
+   CANVASDIR="/NONE"
+   OZ_CHECK_HEADER_PATH(gtk-canvas.h,
+     HAVE_CANVAS=yes,
+     oz_inc_path_sav=$oz_inc_path
+     oz_inc_path="$oz_inc_path /usr/local/include"
+     OZ_CHECK_HEADER_PATH(gtk-canvas.h,
+       HAVE_CANVAS=yes,
+       HAVE_CANVAS=no
+       oz_inc_path=$oz_inc_path_sav))
+else
+   CPPFLAGS_sav="$CPPFLAGS"
+   CPPFLAGS="-I$CANVASDIR/include $CPPFLAGS"
+   OZ_CHECK_HEADER_PATH(gtk-canvas.h,
+     HAVE_CANVAS=yes,
+     HAVE_CANVAS=no
+     CPPFLAGS="$CPPFLAGS_sav")
+fi
+AC_MSG_RESULT($HAVE_CANVAS)
+
+if test "$HAVE_CANVAS" = no; then
+  AC_MSG_ERROR([gtk-canvas is required for mozart-gtk])
+fi
+
+if test "$EXPLICIT_CANVAS" = no; then
+   OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
+     HAVE_CANVAS=yes,
+     oz_lib_path_sav=$oz_lib_path
+     oz_lib_path="$oz_lib_path /usr/local/lib"
+     OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
+       HAVE_CANVAS=yes,
+       HAVE_CANVAS=no
+       oz_lib_path=$oz_lib_path_sav))
+else
+   LDFLAGS_sav="$LDFLAGS"
+   LDFLAGS="-L$CANVASDIR/lib $LDFLAGS"
+   OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
+     HAVE_CANVAS=yes,
+     HAVE_CANVAS=no
+     LDFLAGS="$LDFLAGS_sav")
+fi
+
+if test "$HAVE_CANVAS" = no; then
+  AC_MSG_CHECKING([for libart.h])
+  OZ_CHECK_HEADER_PATH(libart.h,
+    ERR_HAVE_LIBART=yes,
+    ERR_HAVE_LIBART=no)
+  AC_MSG_RESULT($ERR_HAVE_LIBART)
+  if test "$ERR_HAVE_LIBART" = no; then
+    AC_MSG_ERROR([
+You do not seem to have include file libart.h.  This means that the GNOME
+development support files are probably not installed on your system.  If
+your distribution is RPM-based, the GNOME development support files should
+be available in a RPM named something like gnome-libs-devel.  Install these
+support files, then try building mozart-gtk again.
+])
+  fi
+  AC_MSG_ERROR([
+You do not seem to have gtk-canvas installed.  Please download it from
+the Mozart site and install it first, then try building mozart-gtk again.
+])
+fi
+
+AC_SUBST(CANVASDIR)
+
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))
