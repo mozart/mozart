@@ -148,25 +148,25 @@ ScrollbarColors         = colors(appl  : ScrollbarApplColor
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% the config object to read/write changeable options
-%% first, some initial values...
+%% first, some initial values... (read from a config file someday?)
 
-
-ConfigVerbose          = false
-
+ConfigVerbose          = false  %% debug messages in Emulator buffer?
+ConfigSystemProcedures = false  %% step on system procedures (`...`)?
 
 Config =
 {New
  class
     
     attr
-       verbose : ConfigVerbose         %% debug messages in Emulator buffer?
+       verbose :               ConfigVerbose
+       systemProcedures :      ConfigSystemProcedures
     
     meth init
        skip
     end
     
-    meth toggleVerbose
-       verbose <- {Not @verbose}
+    meth toggle(What)
+       What <- {Not @What}
     end
     
     meth get(What $)
