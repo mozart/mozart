@@ -16,9 +16,9 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "ip.hh"
 #include "oz.h"
 #include "am.hh"
+#include "ip.hh"
 
 #include "perdio_debug.cc"
 
@@ -107,19 +107,19 @@ public:
 #define DEFAULT_BYTE_STREAM_SIZE 1000
 
 class ByteStream {
-  char *array;
+  BYTE *array;
   int size;
-  char *pos;
+  BYTE *pos;
   int len;
 public:
   ByteStream()
   {
     len = ipHeaderSize;
     size = DEFAULT_BYTE_STREAM_SIZE;
-    array = new char[size];
+    array = new BYTE[size];
     pos = array+len;
   }
-  ByteStream(char *buf,int len) : len(len)
+  ByteStream(BYTE *buf,int len) : len(len)
   {
     size=-1;
     array = buf;
@@ -133,7 +133,7 @@ public:
 
   unsigned int get()
   {
-    return pos>=array+len ? BSEOF : (unsigned int) (unsigned char) *pos++;
+    return pos>=array+len ? BSEOF : (unsigned int) (BYTE) *pos++;
   }
 
   void endCheck(){
@@ -141,7 +141,7 @@ public:
   }
 
 
-  void put(char c)
+  void put(BYTE c)
   {
     Assert(size>0);
     if (pos>=array+size)
@@ -149,7 +149,7 @@ public:
     *pos++ = c;
     len++;
   }
-  char *getPtr() { return array; }
+  BYTE *getPtr() { return array; }
   int getLen() { return len; }
 };
 
@@ -913,8 +913,8 @@ typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, ATOMTAG,
               OWNERTAG, BORROWTAG,
               PORTTAG} MarshallTag;
 
-int unmarshallWithDest(char *buf, int len, OZ_Term *t);
-void unmarshallNoDest(char *buf, int len, OZ_Term *t);
+int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t);
+void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t);
 
 /**********************************************************************/
 /*                Help-Classes for Marshalling                        */
@@ -926,12 +926,12 @@ void ByteStream::resize()
   PERDIO_DEBUG(AUXILLARY,"resizing bytestream");
   Assert(size>0);
   int oldsize = size;
-  char *oldarray = array;
-  char *oldpos = pos;
+  BYTE *oldarray = array;
+  BYTE *oldpos = pos;
   size = (size*3)/2;
-  array = new char[size];
+  array = new BYTE[size];
   pos = array;
-  for (char *s=oldarray; s<oldpos;) {
+  for (BYTE *s=oldarray; s<oldpos;) {
     *pos++ = *s++;
   }
   delete oldarray;
@@ -1168,7 +1168,7 @@ Bool unmarshallBorrow(ByteStream *bs,BorrowEntry *&b,int &ib){
   PERDIO_DEBUG(UNMARSHALL,"borrowed miss");
   return FALSE;  }
 
-void unmarshallNoDest(char *buf, int len, OZ_Term *t){
+void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t){
   ByteStream *bs = new ByteStream(buf,len);
   OZ_Term ret;
   refCounter = 0;
@@ -1176,7 +1176,7 @@ void unmarshallNoDest(char *buf, int len, OZ_Term *t){
   bs->endCheck();
   delete bs;}
 
-int unmarshallWithDest(char *buf, int len, OZ_Term *t){
+int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t){
   ByteStream *bs = new ByteStream(buf,len);
   OZ_Term ret;
   refCounter = 0;
@@ -1463,7 +1463,7 @@ ASK_FOR_CREDIT index  b_n_addr         implicit 1 credit
 
 OZ_Term ozport=0;
 
-void siteReceive(char *msg,int len)
+void siteReceive(BYTE *msg,int len)
 {
   OZ_Term recvPort;
 
