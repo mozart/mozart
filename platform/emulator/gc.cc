@@ -318,7 +318,7 @@ public:
     Stack::push((StackEntry)makeTypedPtr(ptr,type));
   }
 
-  TypedPtr pop()  { return (TypedPtr) Stack::pop(); }
+  TypedPtr pop()  { return (TypedPtr) ToInt32(Stack::pop()); }
 };
 
 static TypedPtrStack ptrStack;
@@ -372,7 +372,7 @@ inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
  *   Then return the forward pointer to to-space.
  */
 #define CHECKCOLLECTED(elem,type)  \
-  if (GCISMARKED((int32)elem)) return (type) GCUNMARK((int32) elem);
+  if (GCISMARKED(elem)) return (type) GCUNMARK(elem);
 
 
 /*
@@ -473,7 +473,7 @@ Bool gcUnprotect(TaggedRef *ref)
  ****************************************************************************/
 
 
-DebugGCT(static int updateStackCount = 0);
+DebugGCT(static int updateStackCount = 0)
 
 class UpdateStack: public Stack {
 public:
@@ -565,7 +565,7 @@ Literal *Literal::gc()
 
   if (opMode == IN_GC || isLocalBoard (home) == OK) {
     GCMETHMSG("Literal::gc");
-    CHECKCOLLECTED (printName, Literal *);
+    CHECKCOLLECTED(ToInt32(printName), Literal *);
     varCount++;
     Name *aux = (Name *) gcRealloc (this,sizeof (*this));
     GCNEWADDRMSG (aux);
@@ -680,7 +680,7 @@ SuspContinuation *SuspContinuation::gcCont()
   if (this == NULL) return NULL;
 
   if (pc != NOCODE) {
-    CHECKCOLLECTED(pc, SuspContinuation *)
+    CHECKCOLLECTED(ToInt32(pc), SuspContinuation *)
   }
 
   SuspContinuation *ret = (SuspContinuation*) gcRealloc(this, sizeof(*this));
@@ -700,7 +700,7 @@ SuspContinuation *SuspContinuation::gcCont()
   return ret;
 }
 
-#define GCBIT (1<<(8*sizeof(int32)-1))
+#define GCBIT (((unsigned int32) 1)<<(8*sizeof(int32)-1))
 
 inline Bool refsArrayIsMarked(RefsArray r)
 {
@@ -773,7 +773,7 @@ void CFuncContinuation::gcRecurse(void)
 CFuncContinuation *CFuncContinuation::gcCont(void)
 {
   GCMETHMSG("CFuncContinuation::gcCont");
-  CHECKCOLLECTED(cFunc, CFuncContinuation *);
+  CHECKCOLLECTED(ToInt32(cFunc), CFuncContinuation *);
 
   CFuncContinuation *ret = (CFuncContinuation*) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
@@ -792,7 +792,7 @@ CFuncContinuation *CFuncContinuation::gcCont(void)
 Continuation *Continuation::gc()
 {
   GCMETHMSG("Continuation::gc");
-  CHECKCOLLECTED(pc, Continuation *);
+  CHECKCOLLECTED(ToInt32(pc), Continuation *);
 
   Continuation *ret = (Continuation *) gcRealloc(this,sizeof(Continuation));
   GCNEWADDRMSG(ret);
@@ -998,7 +998,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
   if (this == NULL)
     return ((Suspension *) NULL);
 
-  CHECKCOLLECTED(item.cont, Suspension*);
+  CHECKCOLLECTED(ToInt32(item.cont), Suspension*);
 
   if (isDead ()) {
     return NULL;
@@ -1140,7 +1140,7 @@ TaggedRef gcVariable(TaggedRef var)
     {
       SVariable *cv = tagged2SVar(var);
       INFROMSPACE(cv);
-      if (GCISMARKED((int)cv->suspList)) {
+      if (GCISMARKED(ToInt32(cv->suspList))) {
         GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList))));
         return makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList)));
       }
@@ -1180,7 +1180,7 @@ TaggedRef gcVariable(TaggedRef var)
       GenCVariable *gv = tagged2CVar(var);
 
       INFROMSPACE(gv);
-      if (GCISMARKED((int)gv->suspList)) {
+      if (GCISMARKED(ToInt32(gv->suspList))) {
         GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList))));
         return makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList)));
       }
@@ -1472,7 +1472,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     if (updateVar(auxTerm)) {
       updateStack.push(&toTerm);
       gcVariable(auxTerm);
-      toTerm = (TaggedRef) auxTermPtr;
+      toTerm = makeTaggedRef(auxTermPtr);
       DebugGC((auxTermPtr == NULL), error ("auxTermPtr == NULL"));
     } else {
       toTerm = fromTerm;
@@ -1690,7 +1690,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
     error("ptrStack should be empty");
 
   while (!savedPtrStack.isEmpty()) {
-    int value = (int)  savedPtrStack.pop();
+    int value = ToInt32(savedPtrStack.pop());
     int* ptr  = (int*) savedPtrStack.pop();
     *ptr = value;
   }
@@ -1785,7 +1785,7 @@ void TaskStack::gcRecurse()
 
   while (!oldstack->isEmpty()) {
 
-    TaggedBoard tb = (TaggedBoard) oldstack->pop();
+    TaggedBoard tb = (TaggedBoard) ToInt32(oldstack->pop());
     ContFlag cFlag = getContFlag(tb);
     Board *newBB = getBoard(tb, cFlag)->gcBoard();
 
@@ -2110,7 +2110,7 @@ void WaitActor::gcRecurse()
   board = board->gcBoard ();
   next.gcRecurse ();
 
-  int num = (int) childs[-1];
+  int32 num = ToInt32(childs[-1]);
   Board **newChilds=(Board **) heapMalloc((num+1)*sizeof(Board *));
 
   PROFILE_CODE1(if (opMode == IN_TC) {

@@ -56,8 +56,7 @@ void killPropagatedCurrentTaskSusp(void) {
   FDcurrentTaskSusp->markDead();
   am.checkExtSuspension(FDcurrentTaskSusp);
   FDcurrentTaskSusp = NULL;
-};
-
+}
 
 void dismissCurrentTaskSusp(void) {
   DebugCheck(!FDcurrentTaskSusp->isResistant(),

@@ -87,7 +87,7 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   switch(tag) {
   case UVAR:
     stream << "_"
-           << hex << (int) refPtr << dec;
+           << hex << ToInt32(refPtr) << dec;
     break;
   case SVAR:
     tagged2SVar(ref)->print(stream,depth,offset,origRef);
@@ -1156,7 +1156,7 @@ PRINT(TaskStack)
     TaskStackEntry *p = getTop();
 
     while (!isEmpty()) {
-      TaggedBoard tb = (TaggedBoard) pop();
+      TaggedBoard tb = (TaggedBoard) ToInt32(pop());
       ContFlag flag = getContFlag(tb);
       Board* n = getBoard(tb,flag);
       switch (flag){
@@ -1240,7 +1240,7 @@ PRINTLONG(TaskStack)
   TaskStackEntry *p = getTop();
 
   while (!isEmpty() && depth-- > 0) {
-    TaggedBoard tb = (TaggedBoard) pop();
+    TaggedBoard tb = (TaggedBoard) ToInt32(pop());
     ContFlag flag = getContFlag(tb);
     Board* n = getBoard(tb,flag);
     switch (flag){

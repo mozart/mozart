@@ -68,7 +68,7 @@ void TaskStack::printDebug(Bool verbose, int depth)
   TaskStackEntry *p = getTop();
 
   while (isEmpty() == NO && depth-- > 0) {
-    TaggedBoard tb = (TaggedBoard) pop();
+    TaggedBoard tb = (TaggedBoard) ToInt32(pop());
     ContFlag flag = getContFlag(tb);
     Board* n = getBoard(tb,flag);
     switch (flag){
