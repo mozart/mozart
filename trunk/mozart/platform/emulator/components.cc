@@ -782,7 +782,7 @@ OZ_C_proc_begin(BIload,2)
   args[1] = OZ_getCArg(1);
   Thread*tt=am.currentThread();
   if (loader) tt->pushCall(loader,args,2);
-  else        tt->pushCFun(BIurl_load,args,2,OK);
+  else        tt->pushCall(BI_url_load,args,2);
   disposeRefsArray(args);
   return BI_REPLACEBICALL;
 }
