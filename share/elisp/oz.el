@@ -1044,8 +1044,6 @@ the GDB commands `cd DIR' and `directory'."
 
 ;   (define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
 ;   (define-key map "\C-c\C-b\C-r"    	'oz-feed-region-browse)
-;   (define-key map "\M-n"   		'oz-next-buffer)
-;   (define-key map "\M-p"   		'oz-previous-buffer)
 ;   (define-key map "\C-c\C-c"    	'oz-toggle-compiler)
 
   (define-key map "\M-\C-m"  'oz-feed-buffer)
@@ -1455,7 +1453,7 @@ OZ compiler, emulator and error window")
 
 (defun oz-insert-file (file)
   "Insert an file into the Oz Compiler"
-  (oz-send-string (concat "\\insert '" file "'"))) 
+  (oz-send-string (concat "\\threadedfeed '" file "'"))) 
 
 (defun oz-precompile-file (file)
   "precompile an Oz file"
