@@ -1415,6 +1415,11 @@ void RemoteSite::readConnectionRemoved(){
 /************************************************************/
 
 
+#ifdef WINDOWS
+#define ETIMEDOUT    WSAETIMEDOUT
+#define EHOSTUNREACH WSAEHOSTUNREACH
+#endif
+
 ipReturn tcpError(char *s)
 {
 switch(ossockerrno()){
@@ -1431,11 +1436,9 @@ switch(ossockerrno()){
  case EAGAIN:
  case EINPROGRESS: 
    return IP_TEMP_BLOCK;
-#ifndef WINDOWS
 case ETIMEDOUT:{
   PD((TCP_HERROR,"Connection socket temp: ETIMEDOUT"));
   return IP_TEMP_BLOCK;}
-#endif
 default:{
   PD((TCP_HERROR,"Unhandled error: %d please inform erik@sics.se",
       ossockerrno()));
