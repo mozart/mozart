@@ -38,8 +38,8 @@ import
 define
    Spec=record('ticket'(single char:&t type:string default:DefaultTicket)
 	       'dir'(single char:&d type:string default:DefaultDir)
-	       'url'(single char:&u type:string default:DefaultURL))
-   
+	       'url'(single char:&u type:string default:DefaultURL)
+	       'quickstart'(single char:&q type:bool default:false))
    proc{StartICQ Args}
       T={New Tk.toplevel tkInit(title:"Settings for Server...")}
       V1 V2 %V3
@@ -80,8 +80,14 @@ in
    try
       Args = {Application.getCmdArgs Spec}
    in
-      {Tk.send tk_bisque}
-      {StartICQ Args}
+      if Args.quickstart then
+	 {StartServer start(dbdir: Args.dir ticketSave: Args.ticket
+			    url: Args.url)}
+	 raise quit end
+      else
+	 {Tk.send tk_bisque}
+	 {StartICQ Args}
+      end
    catch X then
       case X of quit then
 	 {Application.exit 0}
@@ -89,13 +95,15 @@ in
 	 {System.printError
 	  'Command line option error: '#M#'\n'#
 	  'Usage: '#{Property.get 'application.url'}#' [options]\n'#
-	  '   --ticket=<File>      Alias: -t <File>\n'#
-	  '   --dir=<Dir>          Alias: -d <Dir>\n'#
-	  '   --url=<URL>          URL to the Server. Alias: -u <Url>\n'}
+	  '   --ticket=<File>\tAlias: -t <File>\n'#
+	  '   --dir=<Dir>\t\tAlias: -d <Dir>\n'#
+	  '   --url=<URL>\t\tURL to the Server. Alias: -u <Url>\n'#
+	  '   --quickstart\t\tDon\'t show the start window. Alias: -q\n'}
 	 {Application.exit 2}
       elseof E then
 	 raise E end
       end
    end
 end
+
 
