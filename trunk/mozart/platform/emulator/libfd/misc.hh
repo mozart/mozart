@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -131,15 +131,12 @@ public:
   virtual void updateHeapRefs(OZ_Boolean dup) {
     Propagator_VD::updateHeapRefs(dup);
 
-    OZ_FiniteDomain * new_aux = (OZ_FiniteDomain *) (void*)
-      OZ_hallocChars(reg_l_sz * sizeof(OZ_FiniteDomain));
-  
+    _aux = (OZ_FiniteDomain *) (void*)
+      OZ_copyChars(reg_l_sz * sizeof(OZ_FiniteDomain), 
+		   (char *) _aux);
+			
     OZ_updateHeapTerm(_v);
 
-    for (int i = reg_l_sz; i--; )
-      new_aux[i] = _aux[i];
-
-    _aux = new_aux;
   }
   virtual OZ_Term getParameters(void) const {  
     TERMVECTOR2LIST(reg_l, reg_l_sz, vd);

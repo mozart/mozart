@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -138,29 +138,17 @@ public:
     return sizeof(BoundsNPropagator);
   }
   virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_Term * new_d  = OZ_hallocOzTerms(_size);
-    OZ_Term * new_s  = OZ_hallocOzTerms(_size);
-    OZ_Term * new_r  = OZ_hallocOzTerms(_size);
-    int * new_d_ub   = OZ_hallocCInts(_size);
+    _d = OZ_copyOzTerms(_size, _d);
+    _s = OZ_copyOzTerms(_size, _s);
+    _r = OZ_copyOzTerms(_size, _r);
+
+    _d_ub = OZ_copyCInts(_size, _d_ub);
+
     _s_ub_t new_s_ub = { OZ_hallocCInts(_size) };
     
-    for (int i = _size; i--; ) {
-      new_d[i] = _d[i];
-      OZ_updateHeapTerm(new_d[i]);
-
-      new_s[i] = _s[i];
-      OZ_updateHeapTerm(new_s[i]);
-
-      new_r[i] = _r[i];
-      OZ_updateHeapTerm(new_r[i]);
-
-      new_d_ub[i] = _d_ub[i];
+    for (int i = _size; i--; )
       new_s_ub.s_ub_card[i] = _s_ub.s_ub_card[i];
-    }
-    _d    = new_d;
-    _s    = new_s;
-    _r    = new_r;
-    _d_ub = new_d_ub;
+    
     _s_ub = new_s_ub;
   }
   virtual OZ_Term getParameters(void) const {
@@ -208,14 +196,8 @@ public:
     _vs = new_vs;
 
     // copy bools
-    OZ_Term * new_vd = OZ_hallocOzTerms(_size);
+    _vd = OZ_copyOzTerms(_size, _vd);
   
-    for (int i = _size; i--; ) {
-      new_vd[i] = _vd[i];
-      OZ_updateHeapTerm(new_vd[i]);
-    }
-    _vd = new_vd;
-
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_nil();
@@ -253,14 +235,8 @@ public:
     _i_sets = _i_sets->copy();
 
     // copy bools
-    OZ_Term * new_vd = OZ_hallocOzTerms(_size);
+    _vd = OZ_copyOzTerms(_size, _vd);
   
-    for (int i = _size; i--; ) {
-      new_vd[i] = _vd[i];
-      OZ_updateHeapTerm(new_vd[i]);
-    }
-    _vd = new_vd;
-
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_nil();
@@ -293,10 +269,7 @@ public:
     
     OZ_updateHeapTerm(_cost);
 
-    int * tmp_min_cost_per_elem = OZ_hallocCInts(_u_max_elem+1);
-    for (int i = _u_max_elem+1; i--; )
-      tmp_min_cost_per_elem[i] = _min_cost_per_elem[i];
-    _min_cost_per_elem = tmp_min_cost_per_elem;
+    _min_cost_per_elem = OZ_copyCInts(_u_max_elem+1, _min_cost_per_elem);
   }
 
 private:
