@@ -75,12 +75,12 @@ public:
   size_t getChunkSize(void) { return chunk_size; }
   void * getChunkData(void) { return (void *)chunk_data; }
 
-  int peek(int i) {
-    if (i<0 || i>=chunk_size) { return -1; }
+  int peek(unsigned int i) {
+    if (i>=chunk_size) { return -1; }
     return oz_char2uint(chunk_data[i]);
   }
-  int poke(int i,char v) {
-    if (i<0 || i>=chunk_size) { return NO; }
+  int poke(unsigned int i,char v) {
+    if (i>=chunk_size) { return NO; }
     chunk_data[i]=v;
     return OK;
   }
