@@ -69,9 +69,10 @@
 	application foo, you just type from the shell ozd foo. This
 	starts an Oz engine, which in turn starts Ozcar and Emacs.
 
-      <section>
-	<title/The Main Window/
+    <chapter>
+      <title/Ozcar's main components/
 	<p>
+
 	<ptr to=ozcar.initial> shows the main window after Ozcar has
 	been invoked for the first time.
 
@@ -80,28 +81,65 @@
 	  <p><picture.extern gif to="ozcar-initial.gif">
 	</figure>
 
-	<Para class=apropos><Title/Thread Forest/
+      <section>
+	<title/Thread View/
+	<p>
+
 	On the left, there is a window labeled <def>Thread
 	Forest</def>. Here you can see all the threads which are
-	currently attached (see attach). The thread's hierarchical
-	dependencies are illustrated by printing all threads as nodes
-	of a tree: Children are always inserted below their parent,
-	indented to the right. Different node colors correspond to
-	different thread states: A thread can be runnable (green),
-	blocked (red) or terminated (grey).
+	currently attached (see attach). The hierarchical dependencies
+	are illustrated by printing all threads as nodes of a tree:
+	Children are always inserted below their parent, indented to
+	the right.
 
 	<p>
 
+	Different node chapes correspond to different thread states:
+	The state of a thread can be seen as a pair of two values.
+	The first one determines if the thread is currently stopped by
+	the debugger. Nodes of stopped threads are printed with a
+	normal font, running threads are printed in bold face. The
+	second component of the pair can have one of the following
+	four states:
+
+	<list>
+	  <entry>runnable
+	  <item>
+
+	  The thread is runnable. This means it can be scheduled by the
+	  virtual machine. Such a thread is printed in green.
+
+	  <entry>blocked
+	  <item>
+
+	  The thread waits for a synchronization condition. It cannot be
+	  scheduled by the virtual machine. Such a thread is printed in
+	  yellow.
+
+	  <entry>crashed
+	  <item>
+
+	  The thread got an unhandled exception. Such a thread is
+	  printed in red.
+
+	  <entry>dead
+	  <item>
+	  The thread is dead. Such a thread is printed in grey.
+
+	</list>
+
 	One thread (if there is any one attached) is the <def>selected
-	thread</def>; its node is printed in bold face. Some actions,
+	thread</def>; its node is marked with an asterix. Some actions,
 	like single stepping or selecting stack frames, are always
 	relative to this thread. You can select a thread by clicking
 	on it with the left mouse button or by using the left and
 	right cursor keys.
 
-	<p>
 
-	<Para class=apropos><Title/Stack/
+
+      <section>
+	<title/Stack View/
+	<p>
 
 	Right beside the thread window, there is another window
 	labeled <def>Stack</def>. It prints the stack of the currently
@@ -119,9 +157,9 @@
 	a position within the line where no arguments are displayed!)
 	or by using the up and down cursor keys.
 
+      <section>
+	<title/Variables View/
 	<p>
-
-	<Para class=apropos><Title/Variables/
 
 	Below the stack window, there are two windows, labeled
 	<def>Local Variables</def> and <def>Global Variables</def>, to
@@ -132,23 +170,15 @@
 	the arguments in the stack window, you can click on the (bold
 	faced) values of the variables to browse them.
 
+      <section>
+	<title/Status Line/
 	<p>
-
-	<Para class=apropos><Title/Menu Bar, Buttons/
-
-	On the top of the main window, there is a menu bar, as well as
-	a button bar. Their functions and dialogs will be
-	discussed in section ...
-
-	<p>
-
-	<Para class=apropos><Title/Status Line/
 
 	At the bottom of the main window, there is a <def>Status
 	Line</def> which is used to display miscellaneous useful
 	information.
 
-      <section>
+      <Chapter>
 	<title/A first interaction
 	<p>
 
@@ -198,7 +228,10 @@ end>>>
 	In Emacs, the source line which contains
 	<<{Value.'='_ hello}>> is highlighted, like this:
 
-	<picture.extern gif to="ozcar-hello3.gif">
+	<figure class="maxi picture">
+	<caption/Emacs shows the exact position of the stopped thread/
+	  <p><picture.extern gif to="ozcar-hello3.gif">
+	</figure>
 
 	<Para class=apropos><Title/Single Stepping/ Now, how can we
 	apply the function <<Value.'='>>? One way is to use the mouse,
