@@ -82,23 +82,9 @@ TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
   return makeTaggedSRecord(srecord);
 }
 
-/*
- * make an List
- * INPUT: number of arguments, X register
- */
-static
-TaggedRef makeListOfX(int arity, TaggedRef *X)
-{
-  TaggedRef l = AtomNil;
-  while (--arity >= 0) {
-    l = cons(X[arity],l);
-  }
-  return l;
-}
-
 Abstraction *dvarApply(Abstraction *pred, int arity, RefsArray X)
 {
-  TaggedRef arglist = makeListOfX(arity,X);
+  TaggedRef arglist = OZ_toList(arity,X);
   X[0] = makeTaggedConst(pred);
   if (am.isToplevel()) {
     X[1] = OZ_mkTupleC("apply",1,arglist);
@@ -158,7 +144,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 
 #define RAISE_BI					\
    RAISE_BI1(builtinTab.getName((void *) biFun),	\
-	     makeListOfX(predArity,X));
+	     OZ_toList(predArity,X));
 
 
 /*
@@ -173,7 +159,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 #define HF_BI								\
    HF_FAIL(OZ_mkTupleC("fail",2,					\
 		       OZ_atom(builtinTab.getName((void *) biFun)),	\
-		       makeListOfX(predArity,X)));
+		       OZ_toList(predArity,X)));
 
 #define NOFLATGUARD   (shallowCP==NULL)
 
@@ -181,7 +167,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 
 #define CheckArity(arityExp,proc)			\
 if (predArity != arityExp && VarArity != arityExp) {	\
-  RAISE_ARITY(proc,makeListOfX(predArity,X));		\
+  RAISE_ARITY(proc,OZ_toList(predArity,X));		\
 }
 
 
@@ -197,19 +183,19 @@ if (predArity != arityExp && VarArity != arityExp) {	\
 // -----------------------------------------------------------------------
 
 
-#define DoSwitchOnTerm(indexTerm,table)						\
-      TaggedRef term = indexTerm;						\
-      DEREF(term,termPtr,_2);							\
-										\
-      if (!isLTuple(term)) {							\
-	TaggedRef *sp = sPointer;						\
-	ProgramCounter offset = switchOnTermOutline(term,termPtr,table,sp);	\
-	sPointer = sp;								\
-	JUMP(offset);								\
-      }										\
-										\
-      ProgramCounter offset = table->listLabel;					\
-      sPointer = tagged2LTuple(term)->getRef();					\
+#define DoSwitchOnTerm(indexTerm,table)					    \
+      TaggedRef term = indexTerm;					    \
+      DEREF(term,termPtr,_2);						    \
+									    \
+      if (!isLTuple(term)) {						    \
+	TaggedRef *sp = sPointer;					    \
+	ProgramCounter offset = switchOnTermOutline(term,termPtr,table,sp); \
+	sPointer = sp;							    \
+	JUMP(offset);							    \
+      }									    \
+									    \
+      ProgramCounter offset = table->listLabel;				    \
+      sPointer = tagged2LTuple(term)->getRef();				    \
       JUMP(offset);
 
 
@@ -2612,7 +2598,7 @@ LBLsuspendThread:
 	   Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
 	   SUSP_PC(predPtr,predArity+1,PC);
 	 }
-	 RAISE_APPLY(taggedPredicate, makeListOfX(predArity,X));
+	 RAISE_APPLY(taggedPredicate, OZ_toList(predArity,X));
        }
 
        if (!isTailCall) PC = PC+3;
@@ -2642,7 +2628,7 @@ LBLsuspendThread:
 	     Object *o = (Object*) predicate;
 	     if (o->isClass()) {
 	       RAISE_APPLY(makeTaggedConst(predicate),
-			   makeListOfX(predArity,X));
+			   OZ_toList(predArity,X));
 	     }
 	     CheckArity(1,makeTaggedConst(o));
 	     def = o->getAbstraction();

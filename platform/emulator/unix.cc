@@ -68,33 +68,34 @@ extern "C" char *inet_ntoa(struct in_addr in);
 // Argument handling
 //
 
-#define OZ_declareVsArg(ARG,VAR) \
- vs_buff(VAR); OZ_nonvarArg(ARG);                                     \
- { int len; OZ_Return status; OZ_Term rest, susp;                     \
-   status = buffer_vs(OZ_getCArg(ARG), VAR, &len, &rest, &susp);      \
-   if (status == SUSPEND) {                                           \
-     if (OZ_isVariable(susp)) {                                       \
-       OZ_suspendOn(susp);                                            \
-     } else {                                                         \
-       return OZ_raise(OZ_mkTupleC("unix",1,OZ_mkTupleC("vs",2,"virtual string too long in arg",ARG+1))); \
-     }                                                                \
-   } else if (status == FAILED) {                                     \
-     return FAILED;                                                   \
-   }                                                                  \
-   *(VAR+len) = '\0';                                                 \
+#define OZ_declareVsArg(ARG,VAR)					\
+ vs_buff(VAR); OZ_nonvarArg(ARG);					\
+ { int len; OZ_Return status; OZ_Term rest, susp;			\
+   status = buffer_vs(OZ_getCArg(ARG), VAR, &len, &rest, &susp);	\
+   if (status == SUSPEND) {						\
+     if (OZ_isVariable(susp)) {						\
+       OZ_suspendOn(susp);						\
+     } else {								\
+       return OZ_raiseC("systemLimitInternal",1,			\
+			OZ_string("virtual string too long"));		\
+     }									\
+   } else if (status != PROCEED) {					\
+     return status;							\
+   }									\
+   *(VAR+len) = '\0';							\
  }
 
-#define DeclareAtomListArg(ARG,VAR) \
-OZ_Term VAR = OZ_getCArg(ARG);               \
-{ OZ_Term arg = VAR;                         \
-  while (OZ_isCons(arg)) {                   \
-    TaggedRef a = OZ_head(arg);              \
-    if (OZ_isVariable(a)) OZ_suspendOn(a);   \
-    if (!OZ_isAtom(a))    return FAILED;     \
-    arg = OZ_tail(arg);                      \
-  }                                          \
-  if (OZ_isVariable(arg)) OZ_suspendOn(arg); \
-  if (!OZ_isNil(arg))     return FAILED;     \
+#define DeclareAtomListArg(ARG,VAR)					\
+OZ_Term VAR = OZ_getCArg(ARG);						\
+{ OZ_Term arg = VAR;							\
+  while (OZ_isCons(arg)) {						\
+    TaggedRef a = OZ_head(arg);						\
+    if (OZ_isVariable(a)) OZ_suspendOn(a);				\
+    if (!OZ_isAtom(a))    return OZ_typeError(ARG,"list(Atom)");	\
+    arg = OZ_tail(arg);							\
+  }									\
+  if (OZ_isVariable(arg)) OZ_suspendOn(arg);				\
+  if (!OZ_isNil(arg))     return OZ_typeError(ARG,"list(Atom)");	\
 }
 
 #define DeclareNonvarArg(ARG,VAR) \
@@ -264,8 +265,7 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
   char c;
   
   if (!OZ_isAtom(atom)) {
-    OZ_warning("illegal atom in virtual string");
-    return FAILED;
+    return OZ_typeError(-1,"VirtualString");
   }
 
   char *string = OZ_atomToC(atom);
@@ -368,8 +368,7 @@ OZ_Return list2buff(OZ_Term list, char **write_buff, int *len,
 	continue;
       }
     }
-    OZ_warning("skipping illegal list element in virtual string");
-    return FAILED;
+    return OZ_typeError(-1,"VirtualString");
   }
 
   if (OZ_isVariable(list)) {
@@ -382,8 +381,7 @@ OZ_Return list2buff(OZ_Term list, char **write_buff, int *len,
     return PROCEED;
 
 
-  OZ_warning("illegal virtual string");
-  return FAILED;
+  return OZ_typeError(-1,"VirtualString");
 }
 
 
@@ -419,8 +417,8 @@ static OZ_Return vs2buff(OZ_Term vs, char **write_buff, int *len,
             }
           }
           return SUSPEND;
-        } else if (status == FAILED) {
-          return FAILED;
+        } else if (status != PROCEED) {
+          return status;
         }
             
       }
@@ -430,8 +428,7 @@ static OZ_Return vs2buff(OZ_Term vs, char **write_buff, int *len,
     } else if (label[0] == '|' && label[1] == '\0' && width == 2) {
       return list2buff(vs, write_buff, len, rest, susp);
     }
-    OZ_warning("skipping illegal virtual string");
-    return FAILED;
+    return OZ_typeError(-1,"VirtualString");
   }
 
   if (OZ_isInt(vs)) {
@@ -448,8 +445,7 @@ static OZ_Return vs2buff(OZ_Term vs, char **write_buff, int *len,
     return SUSPEND;
   }
 
-  OZ_warning("skipping illegal virtual string");
-  return FAILED;
+  return OZ_typeError(-1,"VirtualString");
 }
 
 
@@ -479,8 +475,7 @@ OZ_C_ioproc_begin(unix_fileDesc,2)
   } else if (!strcmp(OzFileDesc,"STDERR_FILENO")) {
     desc=dup(STDERR_FILENO);
   } else {
-    OZ_warning("fileDesc: illegal descriptor");
-    return FAILED;
+    return OZ_typeError(0,"enum(STDIN_FILENO STDOUT_FILENO STDERR_FILENO)");
   }
 
   return OZ_unifyInt(out, desc);
@@ -639,8 +634,7 @@ OZ_C_ioproc_begin(unix_open,4)
     } else if (OZ_unifyAtom(hd,"O_SYNC"    ) == PROCEED) {
       flags |= O_SYNC;
     } else {
-      OZ_warning("open: illegal flag");
-      return FAILED;
+      return OZ_typeError(1,"enum openFlags");
     }
 
     OzFlags = tl;
@@ -649,7 +643,7 @@ OZ_C_ioproc_begin(unix_open,4)
   if (OZ_isVariable(OzFlags)) {
     return SUSPEND;
   } else if (!OZ_isNil(OzFlags)) {
-    return FAILED;
+    return OZ_typeError(1,"enum openFlags");
   }
 
   // Compute modes from their textual representation
@@ -660,8 +654,7 @@ OZ_C_ioproc_begin(unix_open,4)
     if (OZ_isVariable(hd))
       return SUSPEND;
 #ifdef OS2_I486
-    OZ_warning("open: illegal mode");
-    return FAILED;
+    return OZ_typeError(2,"enum openMode");
 #else
     if (OZ_unifyAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
     else if (OZ_unifyAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
@@ -673,8 +666,7 @@ OZ_C_ioproc_begin(unix_open,4)
     else if (OZ_unifyAtom(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
     else if (OZ_unifyAtom(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
     else {
-      OZ_warning("open: illegal mode");
-      return FAILED;
+      return OZ_typeError(2,"enum openMode");
     }
 #endif
     OzMode = tl;
@@ -683,7 +675,7 @@ OZ_C_ioproc_begin(unix_open,4)
   if (OZ_isVariable(OzMode)) {
     return SUSPEND;
   } else if (!OZ_isNil(OzMode)) {
-    return FAILED;
+    return OZ_typeError(2,"enum openMode");
   }
 
   WRAPCALL(osopen(filename, flags, mode),desc,out);
@@ -746,8 +738,8 @@ OZ_C_ioproc_begin(unix_write, 3)
 
   status = buffer_vs(vs, write_buff, &len, &rest, &susp);
 
-  if (status == FAILED)
-    return FAILED;
+  if (status != PROCEED && status != SUSPEND)
+    return status;
   
   WRAPCALL(oswrite(fd, write_buff, len), ret, out);
     
@@ -787,8 +779,7 @@ OZ_C_ioproc_begin(unix_lSeek,4)
   } else if (!strcmp(OzWhence,"SEEK_END")) {
     whence=SEEK_END;
   } else {
-    OZ_warning("lSeek: illegal whence");
-    return FAILED;
+    return OZ_typeError(2,"enum(SEEK_CUR SEEK_END)");
   }
     
   WRAPCALL(lseek(fd, offset, whence),ret,out);
@@ -870,8 +861,7 @@ OZ_C_ioproc_begin(unix_socket,4)
   } else if (!strcmp(OzDomain,"PF_INET")) {
     domain = PF_INET;
   } else {
-    OZ_warning("socket: unknown domain");
-    return FAILED;
+    return OZ_typeError(0,"enum(PF_UNIX PF_INET)");
   }
 
   // compute type
@@ -880,8 +870,7 @@ OZ_C_ioproc_begin(unix_socket,4)
   } else if (!strcmp(OzType,"SOCK_DGRAM")) {
     type = SOCK_DGRAM;
   } else {
-    OZ_warning("socket: unknown type");
-    return FAILED;
+    return OZ_typeError(1,"enum(SOCK_STREAM SOCK_DGRAM)");
   }
 
   // compute protocol   
@@ -891,16 +880,12 @@ OZ_C_ioproc_begin(unix_socket,4)
     proto = getprotobyname(OzProtocol);
     
     if (!proto) {
-      OZ_warning("socket: unknown protocol");
-      return FAILED;
+      return OZ_typeError(0,"enum protocol");
     }
 
     protocol = proto->p_proto;
-  } else if (*OzProtocol == '\0') {
-    protocol = 0;
   } else {
-    OZ_warning("socket: illegal protocol specification");
-    return FAILED;
+    protocol = 0;
   }
 
   WRAPCALL(ossocket(domain, type, protocol), sock, out);
@@ -1110,8 +1095,7 @@ static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
     } else if (OZ_unifyAtom(hd,"MSG_PEEK") == PROCEED) {
       *flags |= MSG_PEEK;
     } else {
-      OZ_warning("send or receive: illegal flag");
-      return FAILED;
+      return OZ_typeError(-1,"enum(MSG_OOB MSG_PEEK)");
     }
 
     OzFlags = tl;
@@ -1120,8 +1104,9 @@ static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
   if (OZ_isVariable(OzFlags))
     return SUSPEND;
 
-  if (!(OZ_nil()))
-    return FAILED;
+  if (!OZ_isNil(OzFlags)) {
+    return OZ_typeError(-1,"enum(MSG_OOB MSG_PEEK)");
+  }
 
   return PROCEED;
 }
@@ -1150,8 +1135,8 @@ OZ_C_ioproc_begin(unix_send, 4)
 
   status = buffer_vs(vs, write_buff, &len, &rest, &susp);
 
-  if (status == FAILED)
-    return FAILED;
+  if (status != PROCEED && status != SUSPEND)
+    return status;
   
   WRAPCALL(send(sock, write_buff, len, flags), ret, out);
     
@@ -1215,8 +1200,8 @@ OZ_C_ioproc_begin(unix_sendToInet, 6)
 
   status = buffer_vs(vs, write_buff, &len, &rest, &susp);
 
-  if (status == FAILED)
-    return FAILED;
+  if (status != PROCEED && status != SUSPEND)
+    return status; 
   
   WRAPCALL(sendto(sock, write_buff, len, flags,
                   (struct sockaddr *) &addr, sizeof(addr)), ret, out);
@@ -1269,8 +1254,8 @@ OZ_C_ioproc_begin(unix_sendToUnix, 5)
 
   status = buffer_vs(vs, write_buff, &len, &rest, &susp);
 
-  if (status == FAILED)
-    return FAILED;
+  if (status != PROCEED && status != SUSPEND)
+    return status; 
       
   WRAPCALL(sendto(sock, write_buff, len, flags,
                   (struct sockaddr *) &addr, sizeof(addr)), ret, out);
@@ -1422,13 +1407,12 @@ OZ_C_ioproc_begin(unix_pipe,4)
     return SUSPEND;
 
   if (!OZ_isNil(argl))
-    return FAILED;
+    return OZ_typeError(1,"list(VirtualString)");
 
   argl=args;
   
   if (argno+2 >= maxArgv) {
-    OZ_warning("pipe: can only handle up to %d arguments, got: %d",maxArgv,argno+2);
-    return FAILED;
+    return OZ_raiseC("systemLimitInternal",1,OZ_string("too many arguments for pipe"));
   }
   argv[0] = s;
   argv[argno+1] = 0;
@@ -1449,12 +1433,11 @@ OZ_C_ioproc_begin(unix_pipe,4)
       if (OZ_isVariable(susp)) {
         return SUSPEND;
       } else {
-        OZ_warning("pipe: virtual string too long in arg 2");
-        return FAILED;
+	return OZ_raiseC("systemLimitInternal",1,OZ_string("virtual string too long")); \
       }
-    } else if (status == FAILED) {
+    } else if (status != PROCEED) {
       free(vsarg);
-      return FAILED;
+      return status;
     }
     *(vsarg+len) = '\0';
 
@@ -1489,8 +1472,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
       !SetStdHandle(STD_INPUT_HANDLE,rh2) ||
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,DETACHED_PROCESS,
 		     NULL,NULL,&si,&pinf)) {
-    OZ_warning("createProcess failed: %d\n",GetLastError());
-    return FAILED;
+    return OZ_raiseC("os",1,OZ_string("Create Process"));
   }
 
   int pid = (int) pinf.hProcess;
@@ -1503,7 +1485,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
   int wsock = _hdopen((int)wh2,O_WRONLY|O_BINARY);
   if (rsock<0 || wsock<0) {
     perror("_hdopen");
-    return FAILED;
+    return OZ_raiseC("os",1,OZ_string("_hdopen"));
   }
 
 #else  /* !WINDOWS */
@@ -1528,8 +1510,9 @@ OZ_C_ioproc_begin(unix_pipe,4)
       if (execvp(s,argv)  < 0) {
         RETURN_UNIX_ERROR(rpid);
       }
+      printf("execvp failed\n");
+      exit(-1);
     }
-    return FAILED;
   case -1:
     RETURN_UNIX_ERROR(rpid);
   default: // parent
@@ -1667,11 +1650,11 @@ OZ_C_ioproc_begin(unix_tempName, 3)
   char *filename; 
 
   if (strlen(prefix) > 5)
-    return FAILED;
+    return OZ_raiseC("systemLimitExternal",1,
+		     OZ_string("max 5 characters for tempName prefix"));
   
   if (!(filename = tempnam(directory, prefix))) {
-    OZ_warning("tempName: no file name accessible");
-    return FAILED;
+    return OZ_raiseC("os",1,OZ_string("tempNam failed"));
   }
   filename = ozstrdup(filename);
 
@@ -1706,7 +1689,7 @@ OZ_C_ioproc_begin(unix_putEnv,2)
   int ret = putenv(buf);
   if (ret != 0) {
     delete buf;
-    return FAILED;
+    return OZ_raiseC("os",1,OZ_string("putenv failed"));
   }
 
   return PROCEED;
@@ -1806,8 +1789,8 @@ OZ_C_proc_end
 #define NotAvail(Name,Arity,Fun)				\
 OZ_C_ioproc_begin(Fun,Arity)					\
 {								\
-  OZ_warning("procedure %s not available under Windows",Name);	\
-  return FAILED;						\
+  return OZ_raiseC("systemLimitExternal",2,			\
+		   OZ_atom(Name));				\
 }								\
 OZ_C_proc_end
 
@@ -1879,7 +1862,7 @@ void BIinitUnix()
 
   int ret = WSAStartup(req_version, &wsa_data);
   if (ret != 0 && ret != WSASYSNOTREADY)
-    OZ_warning("Initialization of socket interface failed failed\n");
+    OZ_warning("Initialization of socket interface failed\n");
 
   //  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
   //  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
