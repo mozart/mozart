@@ -70,7 +70,8 @@ MOGUL_DATABASE_OPTIONS	=	\
 	--update-ozpm-info	\
 	--save-db
 MOGUL_ARCHIVE_OPTIONS	=	\
-	--update-pub
+	--update-pub		\
+	--save-manifest
 MOGUL_HTML_OPTIONS	=	\
 	--update-html		\
 	--update-categories-html \

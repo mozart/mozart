@@ -56,6 +56,8 @@ define
 		   'ignore-url'(type:list(string) default:nil)
 		   %%
 		   'update-ozmake'(type:bool)
+		   %%
+		   'save-manifest'(type:bool)
 		  )}
    catch error(ap(usage Msg) ...) then
       {System.showError Msg}
