@@ -3,14 +3,19 @@
 : ${OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish}
 if [ -f  $OZWISH ]
 then
-  TCL_LIBRARY=$OZWISHHOME/tcl/lib/tcl
-  TK_LIBRARY=$OZWISHHOME/tcl/lib/tk
+  if [ ${TK4-xx} = "-xx" ]; then
+     TCL_LIBRARY=$OZWISHHOME/tcl/lib/tcl
+     TK_LIBRARY=$OZWISHHOME/tcl/lib/tk
+  else
+     TCL_LIBRARY=$OZWISHHOME/lib/tcl
+     TK_LIBRARY=$OZWISHHOME/lib/tk
+  fi
   export TCL_LIBRARY
   export TK_LIBRARY
   exec $OZWISH "$@"
 fi
 
-echo "can't find ozwish trying blt_wish"
+echo "can't find ozwish ($OZWISH) trying blt_wish"
 # if ozwish failed
 exec blt_wish "$@"
 
