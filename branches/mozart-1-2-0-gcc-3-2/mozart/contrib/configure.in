@@ -167,16 +167,6 @@ AC_ARG_ENABLE(contrib-psql,
 AC_MSG_RESULT($oz_cv_enable_contrib_psql)
 OZ_ADDTO_CONTRIBDIRS(psql)
 
-AC_MSG_CHECKING([for --enable-contrib-gtk])
-AC_ARG_ENABLE(contrib-gtk,
-  [--enable-contrib-gtk
-	whether to build the gtk contribution (default: no)],
-  [oz_cv_enable_contrib_gtk=$enableval],
-  [: ${oz_cv_enable_contrib_gtk:=$oz_enable_contrib_gtk}
-   : ${oz_cv_enable_contrib_gtk:=no}])
-AC_MSG_RESULT($oz_cv_enable_contrib_gtk)
-OZ_ADDTO_CONTRIBDIRS(gtk)
-
 AC_MSG_CHECKING([for --enable-contrib-compat])
 AC_ARG_ENABLE(contrib-compat,
   [--enable-contrib-compat
