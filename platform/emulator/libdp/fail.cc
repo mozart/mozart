@@ -48,6 +48,7 @@
 #include "port.hh"
 #include "var.hh"
 #include "var_obj.hh"
+#include "msgContainer.hh"
 
 Twin *usedTwins;
 Watcher* globalWatcher;
@@ -960,6 +961,15 @@ Bool installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
   insertWatcher(t,w,oldC,newC);
   if(t->isManager()){}
   else{
+    // Establish a connection if a watcher is installed. 
+    if (!w->isInjector()) {
+      BorrowEntry* b = BT->getBorrow(t->getIndex());
+      NetAddress *na = b->getNetAddress();
+      DSite* site    = na->site;
+      MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+      msgC->put_M_PING();
+      send(msgC, -1);
+    }
     adjustProxyForFailure(t,oldC,newC);}
   if(w->isTriggered(getEntityCond(t))) deferEntityProblem(t);
   return TRUE;
