@@ -4163,8 +4163,11 @@ void domarshallTerm(TaggedRef url,OZ_Term t, ByteStream *bs)
 
 inline void reliableSendFail(Site * sd, ByteStream *bs,Bool p,int i){
   InterfaceCode ret=reliableSend(sd,bs,p);
+  //  if(ret!=NET_OK && ret!=NET_CRASH){
   if(ret!=NET_OK){
-    OZ_warning("reliableSend %d failed\n",i);}}
+    OZ_warning("reliableSend %d failed\n",i);
+  }
+}
 
 /* engine-interface */
 OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
