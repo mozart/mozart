@@ -84,7 +84,7 @@ class MarshalerBuffer;
 //        Descending data (arrays, etc.) are supposed to be allocated
 //        the same way (no explicit/implicit malloc"s!!);
 
-class OZ_Extension
+class ozdeclspec OZ_Extension
 {
 private:
   void *space;
@@ -102,10 +102,10 @@ public:
   void    __setSpaceInternal(void * sp) { space = sp;   }
 
 public:
-  virtual ~OZ_Extension();
+  virtual ozdeclspec ~OZ_Extension();
 
   void* operator        new(size_t n) { return _OZ_new_OZ_Extension(n); }
-  void operator         delete(void*,size_t);
+  ozdeclspec void operator         delete(void*,size_t);
 
   virtual int           getIdV(void) = 0;
 

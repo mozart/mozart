@@ -370,7 +370,7 @@ emulator.dll: $(PRGDEP)
         $(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator0.def $(OBJS) $(LIBS)
 
 text2pickle.exe: $(TEXT2PICKLEOBJS)
-        $(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
+        $(CXX) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
 install:: install-bin install-inc install-cache
 

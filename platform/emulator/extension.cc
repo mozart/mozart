@@ -37,7 +37,7 @@
 #endif
 
 
-ozdeclspec OZ_Extension::~OZ_Extension() {
+OZ_Extension::~OZ_Extension() {
   OZ_error("invoking destructor ~OZ_Extension()");
 }
 

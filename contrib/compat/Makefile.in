@@ -12,6 +12,9 @@ HOMEURL         = @HOMEURL@
 OZC             = @OZC@
 OZTOOL          = @OZTOOL@
 
+CXX             = @CXX@
+LD              = @CXX@
+
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -28,7 +31,7 @@ CACHE_TARGETS   = $(CACHEDIR)/TextPickle.ozf \
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 %.ozf: %.ozg
-        OZTOOL="$(shell $(CYGPATH) '$(OZTOOL)')" \
+        OZTOOL_CXX="$(CXX)" OZTOOL_LD="$(LD)" OZTOOL="$(shell $(CYGPATH) '$(OZTOOL)')" \
         $(OZC) -z 9 --gump $(OZCFLAGS) -c $(shell $(CYGPATH) "$<") -o $@
 
 all: $(TARGETS)
