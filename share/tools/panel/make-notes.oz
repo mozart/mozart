@@ -192,7 +192,7 @@ local
 	 of scale then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
-				      anchor: e
+				      anchor: w
 				      width:  TextWidth)}
 	    S1 = {New Scale init(parent: P
 				 range:  {CondSelect L range 1#100}
