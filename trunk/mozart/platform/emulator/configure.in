@@ -253,7 +253,7 @@ if test "${GXX}" = yes; then
 	-Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"}
     : ${oz_warn_error="-Werror"}
 
-    oz_opt="-O6 -frisc"
+    oz_opt="-O3 -frisc"
     oz_om=
     if test "${platform}" = linux-i486
     then
