@@ -133,7 +133,7 @@ initffuns.cc oz.c: oz.h
         $(SRCDIR)/makeffuns $(SRCDIR) "$(OZVERSION)"
 
 version:
-        $(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
+        $(SED) -e "s/HEREGOESDATE/`date '+%h %d 19%y \(%T\)'`/" \
              -e "s/OZPLATFORM/$(PLATFORM)/" \
              $(SRCDIR)/version.sed > version.cc
 
@@ -153,6 +153,8 @@ ozlib.lnk: oz.h
 
 scanner.cc: scanner.ll
         $(LEX) $(LFLAGS) -Pxy -t $< > scanner.cc
+
+parser.cc: parser.hh
 
 parser.cc parser.hh: parser.yy
         $(YACC) $(YFLAGS) -p xy $<
