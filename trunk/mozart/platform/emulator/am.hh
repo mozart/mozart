@@ -208,7 +208,7 @@ private:
   TaggedRef xRegs[NumberOfXRegisters];
   TaskStack *cachedStack;
   Object *cachedSelf;
-  char *shallowHeapTop;
+  char *_shallowHeapTop;
   TaggedRef _currentUVarPrototype; // opt: cache
 
   TaggedRef _suspendVarList;
@@ -269,14 +269,16 @@ public:
 
   AM() {};
 
-  Board *currentBoard()         { return _currentBoard; }
-  Board *currentSolveBoard()    { return _currentSolveBoard; }
-  Board *rootBoardGC()          { return _rootBoard; }
-  int isBelowSolveBoard()       { return _currentSolveBoard!=0; }
-  Bool inShallowGuard()         { return shallowHeapTop!=0; }
+  Board *currentBoard()             { return _currentBoard; }
+  Board *currentSolveBoard()        { return _currentSolveBoard; }
+  Board *rootBoardGC()              { return _rootBoard; }
+  int isBelowSolveBoard()           { return _currentSolveBoard!=0; }
+
+  Bool inShallowGuard()             { return _shallowHeapTop!=0; }
+  void setShallowHeapTop(char *sht) { _shallowHeapTop=sht; }
 #ifdef DEBUG_CHECK
-  Bool checkShallow(ByteCode *scp) {
-    return shallowHeapTop && scp || shallowHeapTop==0 && scp==0;
+  Bool checkShallow(ByteCode *scp) { 
+    return inShallowGuard() ? scp!=0 : scp==0;
   }
 #endif
 
@@ -417,10 +419,10 @@ public:
   //  Note also that these methods don't decrement suspCounters, 
   // thread counters or whatever because their home board might 
   // not exist at all - such things should be done outside!
-  INLINE void disposeSuspendedThread(Thread *tt);
+  INLINE void oz_disposeSuspendedThread(Thread *tt);
   //
   //  It marks the thread as dead and disposes it;
-  INLINE void disposeRunnableThread(Thread *tt);
+  INLINE void oz_disposeRunnableThread(Thread *tt);
   //
   INLINE void disposeThread(Thread *tt);
 
@@ -454,7 +456,12 @@ public:
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
 
-  void restartThread();
+  // unset the ThreadSwitch flag and reset the counter
+  // only needed in emulate.cc
+  void restartThread() {
+    unsetSFlag(ThreadSwitch);
+    threadSwitchCounter=osMsToClockTick(TIME_SLICE);
+  }
 
   void handleTasks();
 
