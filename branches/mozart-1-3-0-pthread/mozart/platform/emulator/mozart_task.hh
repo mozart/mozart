@@ -5,7 +5,6 @@
 #include <pthread.h>
 
 class OzTaskQueue;
-class OzTaskAdmin;
 
 // An OzTask represents some work to be done that may block
 // or require a long time to complete.  Since we don't want
@@ -14,13 +13,16 @@ class OzTaskAdmin;
 
 class OzTask {
 private:
+  OzTask * _prev;
   OzTask * _next;
   friend class OzTaskQueue;
+  static inline void gc_linked(OzTask*);
 public:
-  OzTask():_next(0){}
+  OzTask() : _prev(0),_next(0) {};
   virtual ~OzTask() {}
   virtual void execute(void) = 0;
   virtual void finish(void) = 0;
+  virtual void gc(void) = 0;
 };
 
 extern void OZ_taskEnq(OzTask*);
