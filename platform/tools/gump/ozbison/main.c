@@ -49,7 +49,7 @@ void done(OZ_Term k) {
 OZ_BI_define(bison_generate, 2, 1)
 {
   int k;
-  CONST char *verbosefile = OZ_atomToC(OZ_in(1));
+  const char *verbosefile = OZ_atomToC(OZ_in(1));
 
   if ((k = setjmp(env)) != 0)
     return OZ_raiseC("ozbison", 1, (OZ_Term) k);
