@@ -22,28 +22,15 @@
 
 functor
 
+import
+   Tk(font)
+   
 export
    fonts:  Fonts
    colors: Colors
    delays: Delays
    
 prepare
-
-   local
-      HelvFamily        = '-*-helvetica-medium-r-normal--*-'
-      HelvBoldFamily    = '-*-helvetica-bold-r-normal--*-'
-      FontMatch         = '-*-*-*-*-*-*'
-      
-      FontSize          = 120
-
-      [HelvBold Helv] =
-      {Map [HelvBoldFamily    # FontSize  # FontMatch
-	    HelvFamily        # FontSize  # FontMatch]
-       VirtualString.toAtom}
-   in
-      Fonts = fonts(normal: Helv
-		    bold:   HelvBold)
-   end
 
    Colors = colors(glass:   steelblue1
 		   cut:     firebrick
@@ -57,5 +44,13 @@ prepare
 
    Delays = delays(cut:  400
 		   wait: 1200)
+
+define
+
+   Fonts = fonts(normal:
+		    {New Tk.font tkInit(family:helvetica size:~12)} 
+		 bold:
+		    {New Tk.font tkInit(family:helvetica size:~12
+					weight:bold)} )
 
 end

@@ -26,17 +26,16 @@ import
    Tk TkTools Search
 
    Script(compile: Compile)
-
-export
-   page: ComputePage
-   
-require
    Configure(colors: Colors
 	     delays: Delays
 	     fonts:  Fonts)
    
-prepare
 
+export
+   page: ComputePage
+   
+define
+   
    BgColor      = Colors.bg
    
    BadColor     = Colors.bad
@@ -58,8 +57,6 @@ prepare
 
    AnimDelay = Delays.wait
    CutDelay  = Delays.cut
-   
-define
    
    class PlateCanvas
       from Tk.canvas
