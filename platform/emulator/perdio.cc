@@ -1985,7 +1985,7 @@ OZ_BI_define(BIsetNetBufferSize,1,0)
   OZ_Term s = OZ_in(0);
   DEREF(s,_1,tagS);
   int size = 0;
-  if (isSmallInt(tagS))
+  if (isSmallIntTag(tagS))
     size = smallIntValue(s);
   if(size < 0)
     oz_raise(E_ERROR,E_KERNEL,"NetBufferSize must be of type int and larger than 0",0);
@@ -3123,7 +3123,7 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
       if (gnclass) {
         pvar->setGNameClass(gnclass);
       } else {
-        pvar->setClass(tagged2ObjectClass(deref(clas)));
+        pvar->setClass(tagged2ObjectClass(oz_deref(clas)));
       }
       ob->mkVar(val);
       return val;}
@@ -3372,7 +3372,7 @@ void Site::msgReceived(MsgBuffer* bs)
       fillInObject(&of,o);
       ObjectClass *cl;
       if (pv->isObjectClassAvail()) {cl=pv->getClass();}
-      else {cl=tagged2ObjectClass(deref(findGName(pv->getGNameClass())));}
+      else {cl=tagged2ObjectClass(oz_deref(findGName(pv->getGNameClass())));}
       o->setClass(cl);
 
       pv->primBind(be->getPtr(),makeTaggedConst(o));
@@ -4069,7 +4069,7 @@ void CellSec::secReceiveReadAns(TaggedRef val){
     if(pb->exKind==ACCESS) {
       ControlVarUnify(pb->controlvar,pb->old,val);
     } else {
-      val = deref(val);
+      val = oz_deref(val);
       TaggedRef tr = tagged2SRecord(val)->getFeature(pb->nw);
       if(tr) {
         ControlVarUnify(pb->controlvar,tr,pb->old);
@@ -4235,7 +4235,7 @@ OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, Thread *th,
   Bool inplace = (th==am.currentThread());
   switch (exKind){
   case ASSIGN:{
-    contents = deref(contents);
+    contents = oz_deref(contents);
     if (!tagged2SRecord(contents)->replaceFeature(old,nw)) {
       exception = OZ_makeException(E_ERROR,E_OBJECT,"<-",3,contents,old,nw);
       goto exception;
@@ -4243,7 +4243,7 @@ OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, Thread *th,
     goto exit;
   }
   case AT:{
-    contents = deref(contents);
+    contents = oz_deref(contents);
     TaggedRef tr = tagged2SRecord(contents)->getFeature(old);
     if(tr) {
       if (inplace) {
@@ -5997,7 +5997,7 @@ OZ_BI_define(BIcloseCon,1,1)
 OZ_BI_define(BIportWait,2,0)
 {
    oz_declareIN(0,prt);
-   Assert(isPort(prt));
+   Assert(oz_isPort(prt));
    oz_declareIntIN(1,t);
    Tertiary *tert = tagged2Tert(prt);
    int dummy;

@@ -68,13 +68,13 @@ void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v)
 inline
 OZ_Boolean isPosSmallInt(OZ_Term v)
 {
-  return isSmallInt(v) && (smallIntValue(v) >= 0);
+  return oz_isSmallInt(v) && (smallIntValue(v) >= 0);
 }
 
 inline
 OZ_Boolean isPosSmallFDInt(OZ_Term v)
 {
-  if (isSmallInt(v)) {
+  if (oz_isSmallInt(v)) {
     int vv = smallIntValue(v);
     return (0 <= vv) && (vv <= fd_sup);
   }
@@ -84,7 +84,7 @@ OZ_Boolean isPosSmallFDInt(OZ_Term v)
 inline
 OZ_Boolean isPosSmallSetInt(OZ_Term v)
 {
-  if (isSmallInt(v)) {
+  if (oz_isSmallInt(v)) {
     int vv = smallIntValue(v);
     return (0 <= vv) && (vv <= fset_sup);
   }

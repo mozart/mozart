@@ -23,8 +23,6 @@
  *
  */
 
-
-
 #include "value.hh"
 
 ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy);

@@ -57,19 +57,19 @@ static int getMid(TaggedRef var) {
   arg   = vector->getArg(i);                        \
   d_arg = arg;                                      \
   DEREF(d_arg, p_arg, t_arg);                       \
-  if (isSmallInt(t_arg)) continue;                  \
+  if (oz_isSmallInt(t_arg)) continue;                  \
   vector->setArg(new_cur++, arg);                   \
   Assert(isGenFDVar(d_arg) || isGenBoolVar(d_arg));
 
 OZ_C_proc_begin(BIfdDistribute, 5) {
-  TaggedRef tagged_vector = deref(OZ_getCArg(0));
-  TaggedRef order_spec    = deref(OZ_getCArg(1));
-  TaggedRef value_spec    = deref(OZ_getCArg(2));
+  TaggedRef tagged_vector = oz_deref(OZ_getCArg(0));
+  TaggedRef order_spec    = oz_deref(OZ_getCArg(1));
+  TaggedRef value_spec    = oz_deref(OZ_getCArg(2));
   TaggedRef out_variable  = OZ_getCArg(3);
   TaggedRef out_value     = OZ_getCArg(4);
   TaggedRef variable, d_variable, value;
 
-  if (!isSTuple(tagged_vector))
+  if (!oz_isSTuple(tagged_vector))
     return OZ_unify(out_value, makeTaggedSmallInt(-1));
 
   SRecord *vector = tagged2SRecord(tagged_vector);
@@ -79,8 +79,8 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
   // Skip all elements which are small ints already
   do {
     variable   = vector->getArg(cur);
-    d_variable = deref(variable);
-  } while (isSmallInt(d_variable) && (++cur < width));
+    d_variable = oz_deref(variable);
+  } while (oz_isSmallInt(d_variable) && (++cur < width));
 
   // No elements left
   if (cur==width)

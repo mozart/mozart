@@ -85,15 +85,15 @@ if (!am.onToplevel())      \
 
 inline
 TaggedRef findAliveEntry(TaggedRef group) {
-  group = deref(group);
+  group = oz_deref(group);
 
-  while (isCons(group)) {
-      TaggedRef ahead = deref(head(group));
+  while (oz_isCons(group)) {
+      TaggedRef ahead = oz_deref(head(group));
 
-      if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
+      if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
         return group;
 
-      group = deref(tail(group));
+      group = oz_deref(tail(group));
   }
 
   return group;
@@ -103,9 +103,9 @@ TaggedRef findAliveEntry(TaggedRef group) {
 OZ_BI_define(BIaddFastGroup,2,1)
 {
   OZ_nonvarIN(0);
-  TaggedRef group = deref(OZ_in(0));
+  TaggedRef group = oz_deref(OZ_in(0));
 
-  if (isCons(group)) {
+  if (oz_isCons(group)) {
     TaggedRef member = cons(OZ_in(1),findAliveEntry(tail(group)));
     tagged2LTuple(group)->setTail(member);
     OZ_RETURN(member);
@@ -116,9 +116,9 @@ OZ_BI_define(BIaddFastGroup,2,1)
 
 OZ_BI_define(BIdelFastGroup,1,0)
 {
-  TaggedRef member = deref(OZ_in(0));
+  TaggedRef member = oz_deref(OZ_in(0));
 
-  if (isCons(member)) {
+  if (oz_isCons(member)) {
     tagged2LTuple(member)->setHead(NameGroupVoid);
     tagged2LTuple(member)->setTail(findAliveEntry(tail(member)));
   }
@@ -134,21 +134,21 @@ OZ_BI_define(BIgetFastGroup,1,1)
 
   DEREF(group, _1, _2);
 
-  if (isCons(group)) {
+  if (oz_isCons(group)) {
     TaggedRef out = nil();
 
-    group = deref(tail(group));
+    group = oz_deref(tail(group));
 
-    while (isCons(group)) {
-      TaggedRef ahead = deref(head(group));
+    while (oz_isCons(group)) {
+      TaggedRef ahead = oz_deref(head(group));
 
-      if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
+      if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
         out = cons(ahead, out);
 
-      group = deref(tail(group));
+      group = oz_deref(tail(group));
     }
 
-    if (isNil(group)) OZ_RETURN(out);
+    if (oz_isNil(group)) OZ_RETURN(out);
   }
 
   return OZ_typeError(0,"List");
@@ -162,23 +162,23 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
 
   DEREF(group, _1, _2);
 
-  Assert(isCons(group));
+  Assert(oz_isCons(group));
   TaggedRef out = nil();
 
-  group = deref(tail(group));
+  group = oz_deref(tail(group));
 
-  while (isCons(group)) {
-    TaggedRef ahead = deref(head(group));
+  while (oz_isCons(group)) {
+    TaggedRef ahead = oz_deref(head(group));
 
-    if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid))) {
+    if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid))) {
       out = cons(ahead, out);
       tagged2LTuple(group)->setHead(NameGroupVoid);
     }
 
-    group = deref(tail(group));
+    group = oz_deref(tail(group));
   }
 
-  Assert(isNil(group));
+  Assert(oz_isNil(group));
   OZ_RETURN(out);
 } OZ_BI_end
 
@@ -197,7 +197,7 @@ OZ_BI_define(BIgetTclNames,0,3) {
 #define ENTER_TCL_LOCK(TS) { \
   TaggedRef t = (TS)->getLock();                                  \
   DEREF(t, t_ptr, t_tag);                                         \
-  if (isAnyVar(t_tag)) {                                          \
+  if (isVariableTag(t_tag)) {                                          \
     am.addSuspendVarList(t_ptr);                                  \
     return SUSPEND;                                               \
   } else {                                                        \
@@ -401,7 +401,7 @@ public:
   /* Tcl Methods */
 
   void put_int(TaggedRef i) {
-    if (isSmallInt(i)) {
+    if (oz_isSmallInt(i)) {
       int len;
       sprintf(buffer,"%d%n",smallIntValue(i),&len);
       buffer += len;
@@ -426,7 +426,7 @@ public:
   void put_atom(TaggedRef atom) {
     if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
       return;
-    Assert(isAtom(atom));
+    Assert(oz_isAtom(atom));
     Atom *l = (Atom*) tagged2Literal(atom);
     int n = l->getSize();
     const char *s = l->getPrintName();
@@ -441,7 +441,7 @@ public:
     if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
       return;
 
-    Assert(isAtom(atom));
+    Assert(oz_isAtom(atom));
     Atom* l = (Atom*)tagged2Literal(atom);
     int n = l->getSize();
     const char *s = l->getPrintName();
@@ -458,11 +458,11 @@ public:
       TaggedRef h = head(list);
       DEREF(h, h_ptr, h_tag);
 
-      if (isAnyVar(h_tag)) {
+      if (isVariableTag(h_tag)) {
         am.addSuspendVarList(h_ptr);
         return SUSPEND;
       }
-      if (!isSmallInt(h_tag))
+      if (!isSmallIntTag(h_tag))
         return raise_type_error(list);
       int i = smallIntValue(h);
       if (i<0 || i>255)
@@ -474,17 +474,17 @@ public:
       TaggedRef t = tail(list);
       DEREF(t, t_ptr, t_tag);
 
-      if (isAnyVar(t_tag)) {
+      if (isVariableTag(t_tag)) {
         am.addSuspendVarList(t_ptr);
         return SUSPEND;
       }
 
-      if (isLTuple(t_tag)) {
+      if (isLTupleTag(t_tag)) {
         list = t;
         continue;
       }
 
-      if (isLiteral(t_tag) && isNil(t))
+      if (isLiteralTag(t_tag) && oz_isNil(t))
         return PROCEED;
 
       return raise_type_error(list);
@@ -496,11 +496,11 @@ public:
       TaggedRef h = head(list);
       DEREF(h, h_ptr, h_tag);
 
-      if (isAnyVar(h_tag)) {
+      if (isVariableTag(h_tag)) {
         am.addSuspendVarList(h_ptr);
         return SUSPEND;
       }
-      if (!isSmallInt(h_tag))
+      if (!isSmallIntTag(h_tag))
         return raise_type_error(list);
       int i = smallIntValue(h);
       if (i<0 || i>255)
@@ -511,17 +511,17 @@ public:
       TaggedRef t = tail(list);
       DEREF(t, t_ptr, t_tag);
 
-      if (isAnyVar(t_tag)) {
+      if (isVariableTag(t_tag)) {
         am.addSuspendVarList(t_ptr);
         return SUSPEND;
       }
 
-      if (isLTuple(t_tag)) {
+      if (isLTupleTag(t_tag)) {
         list = t;
         continue;
       }
 
-      if (isLiteral(t_tag) && isNil(t))
+      if (isLiteralTag(t_tag) && oz_isNil(t))
         return PROCEED;
 
       return raise_type_error(list);
@@ -529,9 +529,9 @@ public:
   }
 
   OZ_Return put_feature(SRecord * sr, TaggedRef a) {
-    if (isSmallInt(a)) {
+    if (oz_isSmallInt(a)) {
       return put_tcl(sr->getFeature(a));
-    } if (isLiteral(a) && tagged2Literal(a)->isAtom()) {
+    } if (oz_isAtom(a)) {
       put('-');
       put_atom(a);
       put(' ');
@@ -637,7 +637,7 @@ wait_select:
 
   (void) am.select(tcl_fd, SEL_WRITE, NameUnit, var);
   DEREF(var, var_ptr, var_tag);
-  if (isAnyVar(var_tag)) {
+  if (isVariableTag(var_tag)) {
     am.addSuspendVarList(var_ptr);
     return SUSPEND;
   } else {
@@ -680,7 +680,7 @@ OZ_Return TclSession::put_record(SRecord * sr, TaggedRef as) {
   StateReturn(put_feature(sr,a));
   as = tail(as);
 
-  while (isCons(as)) {
+  while (oz_isCons(as)) {
     a = head(as);
     put(' ');
     StateReturn(put_feature(sr,a));
@@ -693,17 +693,17 @@ OZ_Return TclSession::put_batch(TaggedRef batch, char delim) {
 
   DEREF(batch, batch_ptr, batch_tag);
 
-  if (isAnyVar(batch_tag)) {
+  if (isVariableTag(batch_tag)) {
     am.addSuspendVarList(batch_ptr);
     return SUSPEND;
-  } else if (isCons(batch_tag)) {
+  } else if (isLTupleTag(batch_tag)) {
     OZ_Return batch_state = put_tcl(head(batch));
 
     if (batch_state!=PROCEED)
       return batch_state;
 
     batch = tail(batch);
-  } else if (isLiteral(batch_tag) && literalEq(batch,AtomNil)) {
+  } else if (isLiteralTag(batch_tag) && literalEq(batch,AtomNil)) {
     return PROCEED;
   } else {
     return raise_type_error(batch);
@@ -712,10 +712,10 @@ OZ_Return TclSession::put_batch(TaggedRef batch, char delim) {
   while (1) {
     DEREF(batch, batch_ptr, batch_tag);
 
-    if (isAnyVar(batch_tag)) {
+    if (isVariableTag(batch_tag)) {
       am.addSuspendVarList(batch_ptr);
       return SUSPEND;
-    } else if (isCons(batch_tag)) {
+    } else if (isLTupleTag(batch_tag)) {
       put(delim);
       OZ_Return batch_state = put_tcl(head(batch));
 
@@ -723,7 +723,7 @@ OZ_Return TclSession::put_batch(TaggedRef batch, char delim) {
         return batch_state;
 
       batch = tail(batch);
-    } else if (isLiteral(batch_tag) && literalEq(batch,AtomNil)) {
+    } else if (isLiteralTag(batch_tag) && literalEq(batch,AtomNil)) {
       return PROCEED;
     } else {
       return raise_type_error(batch);
@@ -732,7 +732,7 @@ OZ_Return TclSession::put_batch(TaggedRef batch, char delim) {
 }
 
 OZ_Return TclSession::put_record_or_tuple(TaggedRef tcl, int start = 0) {
-  SRecord * st = tagged2SRecord(deref(tcl));
+  SRecord * st = tagged2SRecord(oz_deref(tcl));
 
   if (st->isTuple()) {
     if (start < st->getWidth()) {
@@ -747,18 +747,18 @@ OZ_Return TclSession::put_record_or_tuple(TaggedRef tcl, int start = 0) {
   } else {
     TaggedRef as = st->getArityList();
 
-    if (start==1 && isCons(as)) {
+    if (start==1 && oz_isCons(as)) {
       Assert(smallIntValue(head(as))==1);
       as=tail(as);
     }
-    if (!isCons(as))
+    if (!oz_isCons(as))
       return PROCEED;
 
     StateReturn(put_feature(st,head(as)));
 
     as = tail(as);
 
-    while (isCons(as)) {
+    while (oz_isCons(as)) {
       TaggedRef a = head(as);
       put(' ');
       StateReturn(put_feature(st,a));
@@ -771,23 +771,23 @@ OZ_Return TclSession::put_record_or_tuple(TaggedRef tcl, int start = 0) {
 OZ_Return TclSession::put_vs(TaggedRef vs) {
   DEREF(vs, vs_ptr, vs_tag);
 
-  if (isAnyVar(vs_tag)) {
+  if (isVariableTag(vs_tag)) {
     am.addSuspendVarList(vs_ptr);
     return SUSPEND;
-  } else if (isInt(vs_tag)) {
+  } else if (isSmallIntTag(vs_tag) || oz_isBigInt(vs)) {
     put_int(vs);
     return PROCEED;
-  } else if (isFloat(vs_tag)) {
+  } else if (isFloatTag(vs_tag)) {
     put_float(vs);
     return PROCEED;
-  } else if (isLiteral(vs_tag)) {
+  } else if (isLiteralTag(vs_tag)) {
 
     if (!tagged2Literal(vs)->isAtom())
       return raise_type_error(vs);
 
     put_atom(vs);
     return PROCEED;
-  } else if (isSTuple(vs)) {
+  } else if (oz_isSTuple(vs)) {
     SRecord * sr = tagged2SRecord(vs);
 
     if (!literalEq(sr->getLabel(),AtomPair))
@@ -797,7 +797,7 @@ OZ_Return TclSession::put_vs(TaggedRef vs) {
       StateReturn(put_vs(sr->getArg(i)));
     }
     return PROCEED;
-  } else if (isCons(vs_tag)) {
+  } else if (isLTupleTag(vs_tag)) {
     return put_string(vs);
   } else {
     return raise_type_error(vs);
@@ -808,23 +808,23 @@ OZ_Return TclSession::put_vs(TaggedRef vs) {
 OZ_Return TclSession::put_vs_quote(TaggedRef vs) {
   DEREF(vs, vs_ptr, vs_tag);
 
-  if (isAnyVar(vs_tag)) {
+  if (isVariableTag(vs_tag)) {
     am.addSuspendVarList(vs_ptr);
     return SUSPEND;
-  } else if (isInt(vs_tag)) {
+  } else if (isSmallIntTag(vs_tag) || oz_isBigInt(vs)) {
     put_int(vs);
     return PROCEED;
-  } else if (isFloat(vs_tag)) {
+  } else if (isFloatTag(vs_tag)) {
     put_float(vs);
     return PROCEED;
-  } else if (isLiteral(vs_tag)) {
+  } else if (isLiteralTag(vs_tag)) {
 
     if (!tagged2Literal(vs)->isAtom())
       return raise_type_error(vs);
 
     put_atom_quote(vs);
     return PROCEED;
-  } else if (isSTuple(vs)) {
+  } else if (oz_isSTuple(vs)) {
     SRecord * sr = tagged2SRecord(vs);
 
     if (!literalEq(sr->getLabel(),AtomPair))
@@ -834,7 +834,7 @@ OZ_Return TclSession::put_vs_quote(TaggedRef vs) {
       StateReturn(put_vs_quote(sr->getArg(i)));
     }
     return PROCEED;
-  } else if (isCons(vs_tag)) {
+  } else if (isLTupleTag(vs_tag)) {
     return put_string_quote(vs);
   } else {
     return raise_type_error(vs);
@@ -845,16 +845,16 @@ OZ_Return TclSession::put_vs_quote(TaggedRef vs) {
 OZ_Return TclSession::put_tcl(TaggedRef tcl) {
   DEREF(tcl, tcl_ptr, tcl_tag);
 
-  if (isAnyVar(tcl_tag)) {
+  if (isVariableTag(tcl_tag)) {
     am.addSuspendVarList(tcl_ptr);
     return SUSPEND;
-  } else if (isInt(tcl_tag)) {
+  } else if (isSmallIntTag(tcl_tag) || oz_isBigInt(tcl)) {
     put_int(tcl);
     return PROCEED;
-  } else if (isFloat(tcl_tag)) {
+  } else if (isFloatTag(tcl_tag)) {
     put_float(tcl);
     return PROCEED;
-  } else if (isLiteral(tcl_tag)) {
+  } else if (isLiteralTag(tcl_tag)) {
     if (tagged2Literal(tcl)->isAtom()) {
       start_protect();
       put_atom_quote(tcl);
@@ -871,16 +871,16 @@ OZ_Return TclSession::put_tcl(TaggedRef tcl) {
     } else {
       return raise_type_error(tcl);
     }
-  } else if (isObject(tcl)) {
+  } else if (oz_isObject(tcl)) {
     TaggedRef v = tagged2Object(tcl)->getFeature(NameTclName);
 
     if (v!=makeTaggedNULL()) {
       DEREF(v, v_ptr, v_tag);
 
-      if (isAnyVar(v_tag)) {
+      if (isVariableTag(v_tag)) {
         am.addSuspendVarList(v_ptr);
         return SUSPEND;
-      } else if (isLiteral(v_tag) && literalEq(v,NameTclClosed)) {
+      } else if (isLiteralTag(v_tag) && literalEq(v,NameTclClosed)) {
         return raise_closed(tcl);
       } else {
         return put_vs(v);
@@ -889,11 +889,11 @@ OZ_Return TclSession::put_tcl(TaggedRef tcl) {
       return raise_type_error(tcl);
     }
 
-  } else if (isSTuple(tcl)) {
+  } else if (oz_isSTuple(tcl)) {
     SRecord  * st = tagged2SRecord(tcl);
     TaggedRef l   = st->getLabel();
 
-    if (isAtom(l)) {
+    if (oz_isAtom(l)) {
       if (literalEq(l,AtomCons)) {
         return raise_type_error(tcl);
       } else if (literalEq(l,AtomPair)) {
@@ -909,7 +909,7 @@ OZ_Return TclSession::put_tcl(TaggedRef tcl) {
 
         DEREF(arg, arg_ptr, arg_tag);
 
-        if (isAnyVar(arg_tag)) {
+        if (isVariableTag(arg_tag)) {
           am.addSuspendVarList(arg_ptr);
           return SUSPEND;
         }
@@ -931,12 +931,12 @@ OZ_Return TclSession::put_tcl(TaggedRef tcl) {
 
           DEREF(arg, arg_ptr, arg_tag);
 
-          if (isAnyVar(arg)) {
+          if (oz_isVariable(arg)) {
             am.addSuspendVarList(arg_ptr);
             return SUSPEND;
           }
 
-          if (!isSmallInt(arg_tag))
+          if (!isSmallIntTag(arg_tag))
             return raise_type_error(tcl);
 
           int i = smallIntValue(arg);
@@ -981,7 +981,7 @@ OZ_Return TclSession::put_tcl(TaggedRef tcl) {
     } else {
       return raise_type_error(tcl);
     }
-  } else if (isSRecord(tcl_tag)) {
+  } else if (isSRecordTag(tcl_tag)) {
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef l  = sr->getLabel();
     TaggedRef as = sr->getArityList(); /* arity list is already deref'ed */
@@ -1028,7 +1028,7 @@ OZ_Return TclSession::put_tcl(TaggedRef tcl) {
       return raise_type_error(tcl);
     }
 
-  } else if (isCons(tcl_tag)) {
+  } else if (isLTupleTag(tcl_tag)) {
     start_protect();
     StateReturn(put_string_quote(tcl));
     stop_protect();
@@ -1043,28 +1043,28 @@ OZ_Return TclSession::put_tcl(TaggedRef tcl) {
 OZ_Return TclSession::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
   DEREF(tcl, tcl_ptr, tcl_tag);
 
-  if (isLiteral(tcl_tag)) {
+  if (isLiteralTag(tcl_tag)) {
     return PROCEED;
-  } else if (isSRecord(tcl_tag)) {
+  } else if (isSRecordTag(tcl_tag)) {
     OZ_Return s = PROCEED;
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef as = sr->getArityList(); /* arity list is already deref'ed */
-    fs = deref(fs);
+    fs = oz_deref(fs);
 
-    while (isCons(as) && isCons(fs)) {
+    while (oz_isCons(as) && oz_isCons(fs)) {
       TaggedRef a = head(as);
-      TaggedRef f = deref(head(fs));
+      TaggedRef f = oz_deref(head(fs));
 
-      if (isLiteral(a) && !tagged2Literal(a)->isAtom())
+      if (oz_isName(a))
         return raise_type_error(tcl);
 
       switch (featureCmp(a,f)) {
       case 0:
-        fs = deref(tail(fs));
+        fs = oz_deref(tail(fs));
         as = tail(as);
         break;
       case 1:
-        fs = deref(tail(fs));
+        fs = oz_deref(tail(fs));
         break;
       case -1:
         StateReturn(put_feature(sr,a));
@@ -1075,7 +1075,7 @@ OZ_Return TclSession::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
 
     }
 
-    if (isCons(as)) {
+    if (oz_isCons(as)) {
       return put_record(sr,as);
     } else {
       return PROCEED;
@@ -1090,7 +1090,7 @@ OZ_Return TclSession::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
   *ret = makeTaggedNULL();
   DEREF(tcl, tcl_ptr, tcl_tag);
 
-  if (isSTuple(tcl)) {
+  if (oz_isSTuple(tcl)) {
     SRecord * sr = tagged2SRecord(tcl);
     int w = sr->getWidth();
 
@@ -1105,19 +1105,19 @@ OZ_Return TclSession::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
     *ret = sr->getArg(w-1);
     return PROCEED;
 
-  } else if (isSRecord(tcl_tag)) {
+  } else if (isSRecordTag(tcl_tag)) {
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef as = tail(sr->getArityList()); /* arity list is already deref'ed */
 
-    while (isCons(as)) {
+    while (oz_isCons(as)) {
       TaggedRef a1  = head(as);
       TaggedRef ar  = tail(as);
 
-      if (isSmallInt(a1)) {
-        if (isCons(ar)) {
+      if (oz_isSmallInt(a1)) {
+        if (oz_isCons(ar)) {
           TaggedRef a2 = head(ar);
 
-          if (isSmallInt(a2)) {
+          if (oz_isSmallInt(a2)) {
             put(' ');
             StateReturn(put_tcl(sr->getFeature(a1)));
           } else {
@@ -1129,7 +1129,7 @@ OZ_Return TclSession::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
           return PROCEED;
         }
 
-      } else if (isLiteral(a1) && tagged2Literal(a1)->isAtom()) {
+      } else if (oz_isAtom(a1)) {
         put2(' ','-');
         put_atom(a1);
         put(' ');
@@ -1153,8 +1153,8 @@ OZ_Return TclSession::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
 #define GET_TCL_SESSION                                         \
 TclSession *ts;                                                 \
 {                                                               \
-  OZ_Term sid=deref(OZ_args[0]);                                \
-  if (!isAnyVar(deref(tail(sid)))) {                            \
+  OZ_Term sid=oz_deref(OZ_args[0]);                             \
+  if (!oz_isVariable(oz_deref(tail(sid)))) {                            \
     return oz_raise(E_SYSTEM,E_TK,"sessionAlreadyClosed",0);    \
   }                                                             \
   ts = tcl_sessions[smallIntValue(head(sid))];                  \
@@ -1164,8 +1164,8 @@ TclSession *ts;                                                 \
 #define NEW_GET_TCL_SESSION                                     \
 TclSession *ts;                                                 \
 {                                                               \
-  OZ_Term sid=deref(OZ_in(0));                          \
-  if (!isAnyVar(deref(tail(sid)))) {                            \
+  OZ_Term sid=oz_deref(OZ_in(0));                               \
+  if (!oz_isVariable(oz_deref(tail(sid)))) {                            \
     return oz_raise(E_SYSTEM,E_TK,"sessionAlreadyClosed",0);    \
   }                                                             \
   ts = tcl_sessions[smallIntValue(head(sid))];                  \
@@ -1174,16 +1174,16 @@ TclSession *ts;                                                 \
 
 OZ_BI_define(BIinitTclSession, 3,1) {
   int session_no = get_next_tcl_session();
-  int fd = smallIntValue(deref(OZ_in(0)));
-  tcl_sessions[session_no] = new TclSession(fd, deref(OZ_in(1)), OZ_in(2));
+  int fd = smallIntValue(oz_deref(OZ_in(0)));
+  tcl_sessions[session_no] = new TclSession(fd, oz_deref(OZ_in(1)), OZ_in(2));
   OZ_Term sid = cons(newSmallInt(session_no),oz_newVariable());
   OZ_RETURN(sid);
 } OZ_BI_end
 
 OZ_BI_define(BIcloseTclSession, 1,0) {
-  OZ_Term sid=deref(OZ_in(0));
+  OZ_Term sid=oz_deref(OZ_in(0));
 
-  if (isAnyVar(deref(tail(sid)))) {
+  if (oz_isVariable(oz_deref(tail(sid)))) {
     TclSession ** ts = &tcl_sessions[smallIntValue(head(sid))];
     delete *ts;
     *ts = (TclSession *) NULL;
@@ -1265,12 +1265,12 @@ OZ_BI_define(BItclWriteReturnMess, 5,0) {
     ENTER_TCL_LOCK(ts);
     OZ_Return s;
     TaggedRef ret = NameTclClosed;
-    TaggedRef mess = deref(OZ_in(2));
+    TaggedRef mess = oz_deref(OZ_in(2));
     TaggedRef frst;
 
-    Assert(!isAnyVar(mess));
+    Assert(!oz_isVariable(mess));
 
-    if (!isSRecord(mess)) {
+    if (!oz_isSRecord(mess)) {
       s = raise_type_error(mess);
       goto exit;
     }
@@ -1323,7 +1323,7 @@ OZ_BI_define(BItclWriteBatch,2,0) {
     OZ_Return s;
 
     ts->reset();
-    StateExit(ts->put_batch(deref(OZ_in(1)),';'));
+    StateExit(ts->put_batch(oz_deref(OZ_in(1)),';'));
     ts->put('\n');
 
     ts->start_write();
@@ -1348,15 +1348,15 @@ OZ_BI_define(BItclWriteTuple,3,0) {
     ENTER_TCL_LOCK(ts)
     OZ_Return s;
 
-    TaggedRef mess = deref(OZ_in(2));
+    TaggedRef mess = oz_deref(OZ_in(2));
     TaggedRef frst;
 
-    if (!isSRecord(mess)) {
+    if (!oz_isSRecord(mess)) {
       s = raise_type_error(mess);;
       goto exit;
     }
 
-    Assert(!isAnyVar(mess));
+    Assert(!oz_isVariable(mess));
 
     frst = tagged2SRecord(mess)->getFeature(newSmallInt(1));
 
@@ -1394,12 +1394,12 @@ OZ_BI_define(BItclWriteTagTuple,4,0) {
     // not yet put into buffer!
     ENTER_TCL_LOCK(ts)
     OZ_Return s;
-    TaggedRef tuple = deref(OZ_in(3));
+    TaggedRef tuple = oz_deref(OZ_in(3));
     TaggedRef fst;
 
-    Assert(!isAnyVar(tuple));
+    Assert(!oz_isVariable(tuple));
 
-    if (!isSRecord(tuple)) {
+    if (!oz_isSRecord(tuple)) {
       s = raise_type_error(tuple);
       goto exit;
     }
@@ -1447,7 +1447,7 @@ OZ_BI_define(BItclWriteFilter,6,0) {
     ts->put(' ');
     StateExit(ts->put_vs(OZ_in(2)));
     ts->put(' ');
-    StateExit(ts->put_tcl_filter(OZ_in(3), deref(OZ_in(4))));
+    StateExit(ts->put_tcl_filter(OZ_in(3), oz_deref(OZ_in(4))));
     ts->put(' ');
     StateExit(ts->put_tcl(OZ_in(5)));
     ts->put('\n');
@@ -1473,10 +1473,10 @@ OZ_Return TclSession::close_hierarchy(Object * o) {
 
   DEREF(v, v_ptr, v_tag);
 
-  Assert(!isAnyVar(v_tag));
+  Assert(!isVariableTag(v_tag));
   // since the message has been assembled for closing already!
 
-  if (isLiteral(v_tag) && literalEq(v,NameTclClosed)) {
+  if (isLiteralTag(v_tag) && literalEq(v,NameTclClosed)) {
     // okay, has been closed already
     return PROCEED;
   } else {
@@ -1484,25 +1484,25 @@ OZ_Return TclSession::close_hierarchy(Object * o) {
 
     // close slaves
     if (slaves != makeTaggedNULL()) {
-      slaves = deref(slaves);
+      slaves = oz_deref(slaves);
 
-      while (isCons(slaves)) {
-        TaggedRef slave = deref(head(slaves));
+      while (oz_isCons(slaves)) {
+        TaggedRef slave = oz_deref(head(slaves));
 
-        if (isSmallInt(slave)) {
+        if (oz_isSmallInt(slave)) {
           // this an entry in the event dictionary
 
-          Assert(isDictionary(tcl_dict));
+          Assert(oz_isDictionary(tcl_dict));
           tagged2Dictionary(tcl_dict)->remove(slave);
 
-        } else if (isObject(slave)) {
+        } else if (oz_isObject(slave)) {
           // this is an object which needs to be closed as well
           OZ_Return s = close_hierarchy(tagged2Object(slave));
           if (s != PROCEED)
             return s;
         }
 
-        slaves = deref(tail(slaves));
+        slaves = oz_deref(tail(slaves));
       }
     }
 
@@ -1526,7 +1526,7 @@ OZ_BI_define(BItclClose,3,0) {
     TaggedRef to = OZ_in(2);
     DEREF(to, to_ptr, to_tag);
 
-    Assert(isObject(to));
+    Assert(oz_isObject(to));
 
     Object  * o = tagged2Object(to);
     TaggedRef v = o->getFeature(NameTclName);
@@ -1540,11 +1540,11 @@ OZ_BI_define(BItclClose,3,0) {
     {
       DEREF(v, v_ptr, v_tag);
 
-      if (isAnyVar(v_tag)) {
+      if (isVariableTag(v_tag)) {
         am.addSuspendVarList(v_ptr);
         s = SUSPEND;
         goto exit;
-      } else if (isLiteral(v_tag) && literalEq(v,NameTclClosed)) {
+      } else if (isLiteralTag(v_tag) && literalEq(v,NameTclClosed)) {
         LEAVE_TCL_LOCK(ts);
         return PROCEED;
       }
@@ -1561,9 +1561,9 @@ OZ_BI_define(BItclClose,3,0) {
 
     // remove from parent
     if (slave_entry != makeTaggedNULL()) {
-      slave_entry = deref(slave_entry);
+      slave_entry = oz_deref(slave_entry);
 
-      if (isCons(slave_entry)) {
+      if (oz_isCons(slave_entry)) {
         LTuple * l = tagged2LTuple(slave_entry);
         l->setHead(NameGroupVoid);
         l->setTail(findAliveEntry(tail(slave_entry)));
@@ -1592,7 +1592,7 @@ OZ_BI_define(BItclCloseWeb,2,0) {
   TaggedRef to = OZ_in(1);
   DEREF(to, to_ptr, to_tag);
 
-  Assert(isObject(to));
+  Assert(oz_isObject(to));
 
   Object  * o = tagged2Object(to);
   TaggedRef v = o->getFeature(NameTclName);
@@ -1605,10 +1605,10 @@ OZ_BI_define(BItclCloseWeb,2,0) {
   {
     DEREF(v, v_ptr, v_tag);
 
-    if (isAnyVar(v_tag)) {
+    if (isVariableTag(v_tag)) {
       am.addSuspendVarList(v_ptr);
       return SUSPEND;
-    } else if (isLiteral(v_tag) && literalEq(v,NameTclClosed)) {
+    } else if (isLiteralTag(v_tag) && literalEq(v,NameTclClosed)) {
       return PROCEED;
     }
 
@@ -1636,7 +1636,7 @@ OZ_BI_define(BIgenWidgetName,2,1) {
 
   DEREF(parent, p_ptr, p_tag);
 
-  if (isAnyVar(p_tag))
+  if (isVariableTag(p_tag))
     OZ_suspendOn(makeTaggedRef(p_ptr));
 
   OZ_RETURN(ts->genWidgetName(parent));

@@ -78,7 +78,7 @@ OZ_Term deref(OZ_Term &tr, OZ_Term * &ptr, pm_term_type &tag)
     break;
   case SVAR: tag = pm_svar; break;
   case UVAR: tag = pm_uvar; break;
-  case SRECORD: tag = isSTuple(tr1) ? pm_tuple : pm_none; break;
+  case SRECORD: tag = oz_isSTuple(tr1) ? pm_tuple : pm_none; break;
   case LITERAL: tag = pm_literal; break;
   default: tag = pm_none; break;
   }
@@ -158,7 +158,7 @@ void BIfdHeadManager::initStaticData(void) {
 OZ_Boolean BIfdHeadManager::areIdentVar(int a, int b) {
   AssertFD(0 <= a && a < curr_num_of_items || 0 <= b && b < curr_num_of_items);
 
-  return (bifdhm_varptr[a] == bifdhm_varptr[b] && isAnyVar(bifdhm_var[a]));
+  return (bifdhm_varptr[a] == bifdhm_varptr[b] && oz_isVariable(bifdhm_var[a]));
 }
 
 void BIfdHeadManager::addPropagators (Thread *thr, OZ_FDPropState target) {
@@ -177,7 +177,7 @@ OZ_Return BIfdHeadManager::addSuspFDish(OZ_CFun, OZ_Term *, int) {
 
   for (int i = curr_num_of_items; i--; )
     if (pm_is_noncvar(bifdhm_vartag[i])) {
-      AssertFD(isAnyVar(*bifdhm_varptr[i]));
+      AssertFD(oz_isVariable(*bifdhm_varptr[i]));
       am.addSuspendVarList(bifdhm_varptr[i]);
     }
 
@@ -191,7 +191,7 @@ OZ_Return BIfdHeadManager::addSuspSingl(OZ_CFun, OZ_Term *, int) {
 
   for (int i = curr_num_of_items; i--; )
     if (pm_is_var(bifdhm_vartag[i])) {
-      AssertFD(isAnyVar(*bifdhm_varptr[i]));
+      AssertFD(oz_isVariable(*bifdhm_varptr[i]));
       am.addSuspendVarList(bifdhm_varptr[i]);
     }
 
@@ -217,7 +217,7 @@ OZ_Return BIfdHeadManager::addSuspFDish(OZ_CFun f, OZ_Term * x, int a) {
 
   for (int i = curr_num_of_items; i--; )
     if (pm_is_noncvar(bifdhm_vartag[i])) {
-      AssertFD(isAnyVar(*bifdhm_varptr[i]));
+      AssertFD(oz_isVariable(*bifdhm_varptr[i]));
       OZ_addThread(makeTaggedRef(bifdhm_varptr[i]), th);
     }
 
@@ -229,7 +229,7 @@ OZ_Return BIfdHeadManager::addSuspSingl(OZ_CFun f, OZ_Term * x, int a) {
 
   for (int i = curr_num_of_items; i--; )
     if (pm_is_var(bifdhm_vartag[i])) {
-      AssertFD(isAnyVar(*bifdhm_varptr[i]));
+      AssertFD(oz_isVariable(*bifdhm_varptr[i]));
       OZ_addThread(makeTaggedRef(bifdhm_varptr[i]), th);
     }
 
@@ -521,7 +521,7 @@ OZ_Boolean BIfdBodyManager::areIdentVar(int a, int b) {
   AssertFD(0 <= a && a < curr_num_of_vars || 0 <= b && b < curr_num_of_vars);
 
   if (! isUnifyCurrentPropagator ()) return OZ_FALSE;
-  return bifdbm_varptr[a] == bifdbm_varptr[b] && isAnyVar(bifdbm_var[a]);
+  return bifdbm_varptr[a] == bifdbm_varptr[b] && oz_isVariable(bifdbm_var[a]);
 }
 
 void BIfdBodyManager::restoreDomainOnToplevel(void) {
@@ -609,7 +609,7 @@ void BIfdBodyManager::processLocalFromTo(int from, int to)
     if (bifdbm_var_state[i] == fdbm_speculative)
       continue;
 
-    if (bifdbm_vartag[i] == pm_singl || isSmallInt(*bifdbm_varptr[i])) {
+    if (bifdbm_vartag[i] == pm_singl || oz_isSmallInt(*bifdbm_varptr[i])) {
       continue;
     } else if (!isTouched(i)) {
       vars_left = OZ_TRUE;
@@ -693,7 +693,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
 
     pm_term_type vartag = bifdbm_vartag[i];
 
-    if (vartag == pm_singl || isSmallInt(*bifdbm_varptr[i])) {
+    if (vartag == pm_singl || oz_isSmallInt(*bifdbm_varptr[i])) {
       continue;
     } else if (bifdbm_var[i] != *bifdbm_varptr[i]) { // avoid multiple telling
       continue;                                      // of global vars
@@ -969,7 +969,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
            bifdbm_vartag[idx_v(v)] == pm_bool ||
            bifdbm_vartag[idx_v(v)] == pm_singl);
 
-    if (isAnyVar(bifdbm_var[idx_v(v)]))
+    if (oz_isVariable(bifdbm_var[idx_v(v)]))
       if (! isTaggedIndex(*bifdbm_varptr[idx_v(v)])) {
         *bifdbm_varptr[idx_v(v)] = makeTaggedIndex(v);
       } else {
@@ -990,7 +990,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
             l_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, fs)]);
             bifdbm_vartag[idx_vp(c, fs)] = pm_fd;
             // update arguments
-            SRecord &vp_c = *tagged2SRecord(deref(vp[c]));
+            SRecord &vp_c = *tagged2SRecord(oz_deref(vp[c]));
             vp_c[fs] = l_var;
           } else if (bifdbm_vartag[idx_vp(c, fs)] == pm_singl) {
             l_var = bifdbm_var[idx_vp(c, fs)];
@@ -1009,7 +1009,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
             r_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]);
             bifdbm_vartag[idx_vp(c, v)] = pm_fd;
             // update arguments
-            SRecord &vp_c = *tagged2SRecord(deref(vp[c]));
+            SRecord &vp_c = *tagged2SRecord(oz_deref(vp[c]));
             vp_c[v] = r_var;
           } else if (bifdbm_vartag[idx_vp(c, v)] == pm_singl) {
             r_var = bifdbm_var[idx_vp(c, v)];
@@ -1043,7 +1043,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
 
   // 2nd pass: undo marks
   for (v = 0; v < variables; v++) {
-    if (isAnyVar(bifdbm_var[idx_v(v)]))
+    if (oz_isVariable(bifdbm_var[idx_v(v)]))
       *bifdbm_varptr[idx_v(v)] = bifdbm_var[idx_v(v)];
   }
 }
@@ -1056,7 +1056,7 @@ OZ_Boolean BIfdBodyManager::_unifiedVars(void)
   // 1st pass: mark occ of var and break if you find already touched var
   int i;
   for (i = 0; i < curr_num_of_vars; i += 1)
-    if (isAnyVar(bifdbm_var[i]))
+    if (oz_isVariable(bifdbm_var[i]))
       if (isTaggedIndex(*bifdbm_varptr[i])) {
         ret = OZ_TRUE;
         break;
@@ -1066,7 +1066,7 @@ OZ_Boolean BIfdBodyManager::_unifiedVars(void)
 
   // 2nd pass: undo marks
   for (i = 0; i < curr_num_of_vars; i += 1)
-    if (isAnyVar(bifdbm_var[i]) && isTaggedIndex(*bifdbm_varptr[i]))
+    if (oz_isVariable(bifdbm_var[i]) && isTaggedIndex(*bifdbm_varptr[i]))
       *bifdbm_varptr[i] = bifdbm_var[i];
 
   return ret;

@@ -53,8 +53,8 @@ static Opcode *opcodeTable = NULL;
 static int opcodeIndex = 0, opcodeIndexFactor = 0;
 
 static SRecordArity getArity(TaggedRef arity) {
-  arity = deref(arity);
-  if (isSmallInt(arity)) {
+  arity = oz_deref(arity);
+  if (oz_isSmallInt(arity)) {
     return mkTupleWidth(smallIntValue(arity));
   }
 
@@ -65,7 +65,7 @@ static SRecordArity getArity(TaggedRef arity) {
 }
 
 inline Bool getBool(TaggedRef t) {
-  return literalEq(deref(t),NameTrue);
+  return literalEq(oz_deref(t),NameTrue);
 }
 
 static void lookupLabel(TaggedRef key, int *location) {
@@ -425,7 +425,7 @@ HashTableRef    : HT '(' DefLabel '[' HashTableEntries ']' ')'
                         rec->getLabelLiteral()->getPrintName();
                       if (!strcmp(label,"onScalar")) {
                         TaggedRef value = rec->getArg(0);
-                        if (isLiteral(value))
+                        if (oz_isLiteral(value))
                           lookupLabel(rec->getArg(1),
                                       ht->add(tagged2Literal(value),0));
                         else
@@ -514,8 +514,8 @@ GRegRef         : '[' Registers ']'
                     int numglobals = fastlength(globals);
                     AssRegArray *gregs = new AssRegArray(numglobals);
                     for (int i = 0; i < numglobals; i++) {
-                      SRecord *rec = tagged2SRecord(deref(head(globals)));
-                      globals = deref(tail(globals));
+                      SRecord *rec = tagged2SRecord(oz_deref(head(globals)));
+                      globals = oz_deref(tail(globals));
                       const char *label =
                         rec->getLabelLiteral()->getPrintName();
                       KindOfReg regType;
@@ -528,7 +528,7 @@ GRegRef         : '[' Registers ']'
                       }
                       (*gregs)[i].kind = regType;
                       (*gregs)[i].number =
-                        smallIntValue(deref(rec->getArg(0)));
+                        smallIntValue(oz_deref(rec->getArg(0)));
                     }
                     codeArea->writeAddress(gregs);
                   }

@@ -1,9 +1,10 @@
 /*
  *  Authors:
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Michael Mehl (mehl@dfki.de)
  *
  *  Contributors:
- *    Michael Mehl (mehl@dfki.de)
+ *    optional, Contributor's name (Contributor's email address)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -59,7 +60,7 @@ enum TypeOfTerm {
   SVAR             =  9,   // 1001
   CVAR             =  5,   // 0101
 
-  GCTAG            =  13,  // 1101    --> !!! isAnyVar(GCTAG) = 1 !!!
+  GCTAG            =  13,  // 1101    --> !!! oz_isVariable(GCTAG) = 1 !!!
 
   LTUPLE           =  2,   // 0010
   FSETVALUE        = 14,   // 1110
@@ -70,7 +71,7 @@ enum TypeOfTerm {
   OZCONST          = 10,   // 1010
 
   SMALLINT         =  6,   // 0110
-  BIGINT           =  7,   // 0111
+  UNUSED           =  7,   // 0111 // was BIGINT
   OZFLOAT          = 11    // 1011
 };
 
@@ -176,11 +177,11 @@ Bool isNullPtr(TaggedRef p) { return _isNullPtr(p); }
 // Philosophy:
 //   Arguments which are passed around are never variables, but only
 //     REF or bound data
-#define CHECK_NONVAR(term) Assert(isRef(term) || !isAnyVar(term))
-#define CHECK_ISVAR(term)  Assert(isAnyVar(term))
-#define CHECK_DEREF(term)  Assert(!isRef(term) && !isAnyVar(term))
+#define CHECK_NONVAR(term) Assert(oz_isRef(term) || !oz_isVariable(term))
+#define CHECK_ISVAR(term)  Assert(oz_isVariable(term))
+#define CHECK_DEREF(term)  Assert(!oz_isRef(term) && !oz_isVariable(term))
 #define CHECK_POINTER(s)   Assert(!(ToInt32(s) & 3))
-#define CHECK_POINTER_N(s)  Assert(s != NULL && !(ToInt32(s) & 3))
+#define CHECK_POINTER_N(s) Assert(s != NULL && !(ToInt32(s) & 3))
 #define CHECK_STRPTR(s)    Assert(s != NULL)
 #define CHECKTAG(Tag)      Assert(tagTypeOf(ref) == Tag)
 
@@ -198,7 +199,7 @@ Bool isNullPtr(TaggedRef p) { return _isNullPtr(p); }
 
 #define IsRef(term) ((term & 3) == 0)
 inline
-Bool isRef(TaggedRef term) {
+Bool oz_isRef(TaggedRef term) {
   GCDEBUG(term);
   return IsRef(term);
 }
@@ -207,9 +208,9 @@ Bool isRef(TaggedRef term) {
 // ---------------------------------------------------------------------------
 // Tests for variables and their semantics:
 //                           tag
-// unconstrained var         0001 (UVAR:1)  isUVar   isNotCVar  isAnyVar
-// unconstr. suspending var  1001 (SVAR:9)  isSVar   isNotCVar  isAnyVar
-// constrained-susp. var     0101 (CVAR:5)           isCVar    isAnyVar
+// unconstrained var         0001 (UVAR:1)  isUVar   isNotCVar  oz_isVariable
+// unconstr. suspending var  1001 (SVAR:9)  isSVar   isNotCVar  oz_isVariable
+// constrained-susp. var     0101 (CVAR:5)           isCVar     oz_isVariable
 // ---------------------------------------------------------------------------
 
 
@@ -221,7 +222,7 @@ Bool isSVar(TypeOfTerm tag) {
 inline
 Bool isSVar(TaggedRef term) {
   GCDEBUG(term);
-  Assert(!isRef(term));
+  Assert(!oz_isRef(term));
   return isSVar(tagTypeOf(term));
 }
 
@@ -234,7 +235,7 @@ Bool isCVar(TypeOfTerm tag) {
 inline
 Bool isCVar(TaggedRef term) {
   GCDEBUG(term);
-  Assert(!isRef(term));
+  Assert(!oz_isRef(term));
   return isCVar(tagTypeOf(term));
 }
 
@@ -246,7 +247,7 @@ Bool isCVar(TaggedRef term) {
  * for inline function version
  */
 
-#define _isAnyVar(val)    (((TaggedRef) val&2)==0)       /* mask = 0010 */
+#define _oz_isVariable(val)    (((TaggedRef) val&2)==0)       /* mask = 0010 */
 #define _isDirectVar(val) (((TaggedRef) val&3)==1)       /* mask = 0011 */
 #define _isNotCVar(val)   (((TaggedRef) val&6)==0)       /* mask = 0110 */
 #define _isUVar(val)      (((TaggedRef) val&14)==0)      /* mask = 1110 */
@@ -262,12 +263,13 @@ TaggedRef makeTaggedRef(TaggedRef *s)
 }
 
 
-inline Bool isLTuple(TypeOfTerm tag) { return _isLTuple(tag);}
+inline
+Bool isLTupleTag(TypeOfTerm tag) { return _isLTuple(tag);}
 
 inline
-Bool isLTuple(TaggedRef term) {
+Bool oz_isLTuple(TaggedRef term) {
   GCDEBUG(term);
-  Assert(!isRef(term));
+  Assert(!oz_isRef(term));
   return _isLTuple(term);
 }
 
@@ -277,17 +279,18 @@ inline Bool isUVar(TypeOfTerm tag) { return _isUVar(tag);}
 inline
 Bool isUVar(TaggedRef term) {
   GCDEBUG(term);
-  Assert(!isRef(term));
+  Assert(!oz_isRef(term));
   return _isUVar(term);
 }
 
-inline Bool isAnyVar(TypeOfTerm tag) { return _isAnyVar(tag); }
+inline
+Bool isVariableTag(TypeOfTerm tag) { return _oz_isVariable(tag); }
 
 inline
-Bool isAnyVar(TaggedRef term) {
+Bool oz_isVariable(TaggedRef term) {
   GCDEBUG(term);
-  Assert(!isRef(term));
-  return _isAnyVar(term);
+  Assert(!oz_isRef(term));
+  return _oz_isVariable(term);
 }
 
 inline Bool isDirectVar(TypeOfTerm tag) { return _isDirectVar(tag); }
@@ -302,119 +305,88 @@ inline Bool isNotCVar(TypeOfTerm tag) { return _isNotCVar(tag);}
 inline
 Bool isNotCVar(TaggedRef term) {
   GCDEBUG(term);
-  Assert(!isRef(term));
+  Assert(!oz_isRef(term));
   return _isNotCVar(term);
 }
 
 
 #else
 
-#define isAnyVar(term)    _isAnyVar(term)
-#define isDirectVar(term) _isDirectVar(term)
-#define isNotCVar(term)   _isNotCVar(term)
-#define isUVar(term)      _isUVar(term)
-#define isLTuple(term)    _isLTuple(term)
+#define isVariableTag(term)    _oz_isVariable(term)
+#define oz_isVariable(term)    _oz_isVariable(term)
+#define isDirectVar(term)      _isDirectVar(term)
+#define isNotCVar(term)        _isNotCVar(term)
+#define isUVar(term)           _isUVar(term)
+#define isLTupleTag(term)      _isLTuple(term)
+#define oz_isLTuple(term)      _isLTuple(term)
 
 #endif
 
 
 
 inline
-Bool isFSetValue(TypeOfTerm tag) {
+Bool isFSetValueTag(TypeOfTerm tag) {
   return tag == FSETVALUE;
 }
 
 inline
-Bool isFSetValue(TaggedRef term) {
+Bool oz_isFSetValue(TaggedRef term) {
   GCDEBUG(term);
-  return isFSetValue(tagTypeOf(term));
+  return isFSetValueTag(tagTypeOf(term));
 }
 
 inline
-Bool isLiteral(TypeOfTerm tag) {
+Bool isLiteralTag(TypeOfTerm tag) {
   return tag == LITERAL;
 }
 
 inline
-Bool isLiteral(TaggedRef term) {
+Bool oz_isLiteral(TaggedRef term) {
   GCDEBUG(term);
-  return isLiteral(tagTypeOf(term));
+  return isLiteralTag(tagTypeOf(term));
 }
 
 inline
-Bool isSRecord(TypeOfTerm tag) {
+Bool isSRecordTag(TypeOfTerm tag) {
   return tag == SRECORD;
 }
 
 inline
-Bool isSRecord(TaggedRef term) {
+Bool oz_isSRecord(TaggedRef term) {
   GCDEBUG(term);
-  return isSRecord(tagTypeOf(term));
+  return isSRecordTag(tagTypeOf(term));
 }
 
 inline
-Bool isFloat(TypeOfTerm tag) {
+Bool isFloatTag(TypeOfTerm tag) {
   return (tag == OZFLOAT);
 }
 
 inline
-Bool isFloat(TaggedRef term) {
+Bool oz_isFloat(TaggedRef term) {
   GCDEBUG(term);
-  return isFloat(tagTypeOf(term));
+  return isFloatTag(tagTypeOf(term));
 }
 
 inline
-Bool isSmallInt(TypeOfTerm tag) {
+Bool isSmallIntTag(TypeOfTerm tag) {
   return (tag == SMALLINT);
 }
 
 inline
-Bool isSmallInt(TaggedRef term) {
-  return isSmallInt(tagTypeOf(term));
+Bool oz_isSmallInt(TaggedRef term) {
+  return isSmallIntTag(tagTypeOf(term));
 }
 
 inline
-Bool isBigInt(TypeOfTerm tag) {
-  return (tag == BIGINT);
-}
-
-inline
-Bool isBigInt(TaggedRef term) {
-  GCDEBUG(term);
-  return isBigInt(tagTypeOf(term));
-}
-
-inline
-Bool isInt(TypeOfTerm tag) {
-  return (isSmallInt(tag) || isBigInt(tag));
-}
-
-inline
-Bool isInt(TaggedRef term) {
-  GCDEBUG(term);
-  return isInt(tagTypeOf(term));
-}
-
-inline
-Bool isNumber(TypeOfTerm tag) {
-  return (isInt(tag) || isFloat(tag));
-}
-
-inline
-Bool isNumber(TaggedRef term) {
-  GCDEBUG(term);
-  return isNumber(tagTypeOf(term));
-}
-
-inline
-Bool isConst(TypeOfTerm tag) {
+Bool isConstTag(TypeOfTerm tag) {
   return (tag == OZCONST);
 }
 
 inline
-Bool isConst(TaggedRef term) {
+Bool oz_isConst(TaggedRef term) {
   GCDEBUG(term);
-  return isConst(tagTypeOf(term));
+  return isConstTag(tagTypeOf(term));
 }
 
 // ---------------------------------------------------------------------------
@@ -502,13 +474,6 @@ TaggedRef makeTaggedSmallInt(int32 s)
 }
 
 inline
-TaggedRef makeTaggedBigInt(BigInt *s)
-{
-  CHECK_POINTER_N(s);
-  return makeTaggedRef2p(BIGINT,s);
-}
-
-inline
 TaggedRef makeTaggedFloat(Float *s)
 {
   CHECK_POINTER_N(s);
@@ -542,7 +507,6 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #define makeTaggedLTuple(s)    makeTaggedRef2p(LTUPLE,s)
 #define makeTaggedSRecord(s)   makeTaggedRef2p(SRECORD,s)
 #define makeTaggedLiteral(s)   makeTaggedRef2p(LITERAL,s)
-#define makeTaggedBigInt(s)    makeTaggedRef2p(BIGINT,s)
 #define makeTaggedFloat(s)     makeTaggedRef2p(OZFLOAT,s)
 #define makeTaggedConst(s)     makeTaggedRef2p(OZCONST,s)
 #define makeTaggedTert(s)      makeTaggedRef2p(OZCONST,s)
@@ -573,11 +537,11 @@ TaggedRef tagged2NonVariable(TaggedRef *term)
   GCDEBUG(*term);
   TaggedRef ret = *term;
 #ifdef OPT_VAR_IN_STRUCTURE
-  if (!IsRef(ret) && isAnyVar(ret)) {
+  if (!IsRef(ret) && oz_isVariable(ret)) {
     ret = makeTaggedRef(term);
   }
 #else
-  Assert(IsRef(ret) || !isAnyVar(ret));
+  Assert(IsRef(ret) || !oz_isVariable(ret));
 #endif
   return ret;
 }
@@ -697,15 +661,6 @@ Float *tagged2Float(TaggedRef ref)
 }
 
 inline
-BigInt *tagged2BigInt(TaggedRef ref)
-{
-  GCDEBUG(ref);
-  CHECKTAG(BIGINT);
-  return (BigInt *) tagValueOf2(BIGINT,ref);
-}
-
-
-inline
 ConstTerm *tagged2Const(TaggedRef ref)
 {
   GCDEBUG(ref);
@@ -766,7 +721,7 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
 // void test(TaggedRef a) {
 //   DEREF(a,ptr,tag);
 //   if (isLiteral(tag)) { ... }
-//   if (isAnyVar(tag) { *ptr = ... }
+//   if (oz_isVariable(tag) { *ptr = ... }
 //   ....
 // }
 
@@ -798,19 +753,25 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
   register TaggedRef term = *termPtr;           \
   _DEREF(term,termPtr,tag);
 
-#define SAFE_DEREF(term)                        \
-if (IsRef(term)) {                              \
-  DEREF(term,SAFE__PTR__,SAFE__TAG__);          \
-  if (_isAnyVar(term)) term=makeTaggedRef(SAFE__PTR__); \
+#define SAFE_DEREF(term)                                \
+if (IsRef(term)) {                                      \
+  DEREF(term,SAFE__PTR__,SAFE__TAG__);                  \
+  if (_oz_isVariable(term)) term=makeTaggedRef(SAFE__PTR__);    \
 }
 
-
 inline
-TaggedRef deref(TaggedRef t) {
+TaggedRef oz_deref(TaggedRef t) {
   DEREF(t,_1,_2);
   return t;
 }
 
+inline
+TaggedRef oz_safeDeref(TaggedRef t) {
+  SAFE_DEREF(t);
+  return t;
+}
+
+// mm2: this is the wrong file here
 #define OZ_getCArgDeref(N, V, VPTR, VTAG) \
   OZ_Term V = OZ_getCArg(N); \
   DEREF(V, VPTR, VTAG);
@@ -820,21 +781,23 @@ TaggedRef deref(TaggedRef t) {
 // Binding
 // ---------------------------------------------------------------------------
 
-
+#ifdef DEBUG_CHECK
 inline
-TaggedRef *derefPtr(TaggedRef t) {
+TaggedRef *_derefPtr(TaggedRef t) {
   DEREF(t,tPtr,_1);
   return tPtr;
 }
+#endif
 
 inline
 void doBind(TaggedRef *p, TaggedRef t)
 {
   CHECK_NONVAR(t);
-  Assert(p!=derefPtr(t));
+  Assert(p!=_derefPtr(t));
   *p = t;
 }
 
+// mm2: no assertions???
 inline
 void doBindCVar(TaggedRef *p, GenCVariable *cvar)
 {
@@ -850,7 +813,7 @@ void doBindSVar(TaggedRef *p, SVariable *svar)
 inline
 void unBind(TaggedRef *p, TaggedRef t)
 {
-  Assert(isAnyVar(t));
+  Assert(oz_isVariable(t));
   *p = t;
 }
 
@@ -861,10 +824,9 @@ inline int32  GCMARK(int32 S)    { return makeTaggedRef2i(GCTAG,S); }
 inline void *GCUNMARK(int32 S)   { return tagValueOf2(GCTAG,S); }
 inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
-// ---------------------------------------------------------------------------
-// ------- RefsArray ----------------------------------------------------------
-// ---------------------------------------------------------------------------
-
+/*===================================================================
+ * RefsArray
+ *=================================================================== */
 
 // RefsArray is an array of TaggedRef
 // a[-1] = LL...LLLTTTT,
@@ -1027,6 +989,10 @@ RefsArray resize(RefsArray r, int s)
 } // resize
 
 
+/*===================================================================
+ *
+ *=================================================================== */
+
 //
 // identity test
 //
@@ -1035,7 +1001,7 @@ Bool oz_eq(TaggedRef t1, TaggedRef t2)
 {
   DEREF(t1,t1Ptr,_1);
   DEREF(t2,t2Ptr,_2);
-  if (isAnyVar(t1) || isAnyVar(t2)) {
+  if (oz_isVariable(t1) || oz_isVariable(t2)) {
     return t1Ptr==t2Ptr;
   }
   return t1==t2;
@@ -1046,6 +1012,10 @@ OZ_Term mkTuple(int from, int to) {
   return OZ_pair2(OZ_int(from), OZ_int(to));
 }
 
+
+/*===================================================================
+ * TaggedPtr
+ *=================================================================== */
 
 /*
  * using 32 bit for pointer + 2 tag bits
@@ -1082,6 +1052,10 @@ public:
 
 };
 
+/*===================================================================
+ *
+ *=================================================================== */
+
 inline
 int nextPowerOf2(int n)
 {
@@ -1090,15 +1064,20 @@ int nextPowerOf2(int n)
   }
 }
 
+/*===================================================================
+ * Alternate DEREF interface
+ * Idea: only if the unit is a ref it can be a variable
+ *=================================================================== */
+
 #define DerefIfVarDo(v,v1,Block)                \
- if (isRef(v)) {                                \
+ if (oz_isRef(v)) {                             \
    TaggedRef v1;                                \
    while (1) {                                  \
      v1 = v;                                    \
      v = *tagged2Ref(v);                        \
-     if (!isRef(v)) break;                      \
+     if (!oz_isRef(v)) break;                   \
    }                                            \
-   if (isAnyVar(v)) { Block; }                  \
+   if (oz_isVariable(v)) { Block; }             \
  }
 
 #define DerefReturnVar(v)     DerefIfVarDo(v,_v,return _v);

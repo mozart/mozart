@@ -82,7 +82,7 @@ int *IHashTable::add(TaggedRef number, int label)
   switch (tagTypeOf(number)) {
 
   case OZFLOAT:  hsh = tagged2Float(number)->hash();  break;
-  case BIGINT:   hsh = tagged2BigInt(number)->hash(); break;
+  case OZCONST:  hsh = tagged2BigInt(number)->hash(); break;
   case SMALLINT: hsh = smallIntHash(number);          break;
   default:       Assert(0); return 0;
   }
@@ -175,7 +175,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
                         IHashTable *table, TaggedRef *&sP)
 {
   int offset = table->getElse();
-  if (isSRecord(term)) {
+  if (oz_isSRecord(term)) {
     if (table->functorTable) {
       SRecord *rec = tagged2SRecord(term);
       Literal *lname = rec->getLabelLiteral();
@@ -187,7 +187,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
     return offset;
   }
 
-  if (isLiteral(term)) {
+  if (oz_isLiteral(term)) {
     if (table->literalTable) {
       unsigned int hsh = table->hash(tagged2Literal(term)->hash());
       offset = table->literalTable[hsh]->lookup(tagged2Literal(term),offset);
@@ -199,7 +199,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
     return 0;
   }
 
-  if (isSmallInt(term)) {
+  if (oz_isSmallInt(term)) {
     if (table->numberTable) {
       int hsh = table->hash(smallIntHash(term));
       offset = table->numberTable[hsh]->lookup(term,offset);
@@ -207,7 +207,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
     return offset;
   }
 
-  if (isFloat(term)) {
+  if (oz_isFloat(term)) {
     if (table->numberTable) {
       unsigned int hsh = table->hash(tagged2Float(term)->hash());
       offset = table->numberTable[hsh]->lookup(term,offset);
@@ -215,7 +215,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
     return offset;
   }
 
-  if (isBigInt(term)) {
+  if (oz_isBigInt(term)) {
     if (table->numberTable) {
       unsigned int hsh = table->hash(tagged2BigInt(term)->hash());
       offset =table->numberTable[hsh]->lookup(term,offset);

@@ -145,5 +145,5 @@ OZ_BI_define(BILazyNew,2,0)
 OZ_BI_define(BILazyIs,1,1)
 {
   OZ_declareIN(0,var);
-  OZ_RETURN(isLazyVar(deref(var))?OZ_true():OZ_false());
+  OZ_RETURN(isLazyVar(oz_deref(var))?OZ_true():OZ_false());
 } OZ_BI_end

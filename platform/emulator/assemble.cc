@@ -38,8 +38,8 @@
 static
 SRecordArity getArity(TaggedRef arity)
 {
-  arity = deref(arity);
-  if (isSmallInt(arity)) {
+  arity = oz_deref(arity);
+  if (oz_isSmallInt(arity)) {
     return mkTupleWidth(smallIntValue(arity));
   }
 
@@ -51,7 +51,7 @@ SRecordArity getArity(TaggedRef arity)
 inline
 Bool getBool(TaggedRef t)
 {
-  return literalEq(deref(t),NameTrue);
+  return literalEq(oz_deref(t),NameTrue);
 }
 
 
@@ -103,7 +103,7 @@ OZ_BI_define(BImakeProc,2,1)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,globals);
-  globals = deref(globals);
+  globals = oz_deref(globals);
 
   int numglobals = OZ_length(globals);
   RefsArray gRegs =
@@ -111,9 +111,9 @@ OZ_BI_define(BImakeProc,2,1)
 
   for (int i = 0; i < numglobals; i++) {
     gRegs[i] = head(globals);
-    globals = deref(tail(globals));
+    globals = oz_deref(tail(globals));
   }
-  Assert(isNil(globals));
+  Assert(oz_isNil(globals));
 
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
                                    mkTupleWidth(0),nil(),0,NO);
@@ -129,7 +129,7 @@ OZ_BI_define(BImakeProc,2,1)
 OZ_BI_define(BIaddDebugInfo,3,0)
 {
   NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,file); file = deref(file);
+  OZ_declareNonvarIN(1,file); file = oz_deref(file);
   OZ_declareIntIN(2,line);
   code->writeDebugInfo(file,line);
   return PROCEED;
@@ -150,7 +150,7 @@ OZ_BI_define(BIstoreNumber,2,0)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,arg);
-  arg = deref(arg);
+  arg = oz_deref(arg);
   Assert(OZ_isNumber(arg));
   code->writeTagged(arg);
   return PROCEED;
@@ -161,7 +161,7 @@ OZ_BI_define(BIstoreLiteral,2,0)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,arg);
-  arg = deref(arg);
+  arg = oz_deref(arg);
   Assert(OZ_isLiteral(arg));
   code->writeTagged(arg);
   return PROCEED;
@@ -172,7 +172,7 @@ OZ_BI_define(BIstoreFeature,2,0)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,arg);
-  arg = deref(arg);
+  arg = oz_deref(arg);
   Assert(OZ_isFeature(arg));
   code->writeTagged(arg);
   return PROCEED;
@@ -183,7 +183,7 @@ OZ_BI_define(BIstoreConstant,2,0)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,arg);
-  arg = deref(arg);
+  arg = oz_deref(arg);
   code->writeTagged(arg);
   return PROCEED;
 } OZ_BI_end
@@ -193,8 +193,8 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,builtin);
-  builtin = deref(builtin);
-  Assert(isBuiltin(builtin));
+  builtin = oz_deref(builtin);
+  Assert(oz_isBuiltin(builtin));
   code->writeBuiltin(tagged2Builtin(builtin));
   return PROCEED;
 } OZ_BI_end
@@ -204,7 +204,7 @@ OZ_BI_define(BIstoreVariablename,2,0)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,arg);
-  arg = deref(arg);
+  arg = oz_deref(arg);
   Assert(OZ_isAtom(arg));
   code->writeTagged(arg);
   return PROCEED;
@@ -256,9 +256,9 @@ OZ_BI_define(BIstorePredicateRef,2,0)
 OZ_BI_define(BIstorePredId,6,0)
 {
   NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,name); name = deref(name);
+  OZ_declareNonvarIN(1,name); name = oz_deref(name);
   OZ_declareNonvarIN(2,arity);
-  OZ_declareNonvarIN(3,file); file = deref(file);
+  OZ_declareNonvarIN(3,file); file = oz_deref(file);
   OZ_declareIntIN(4,line);
   OZ_declareNonvarIN(5,copyOnce);
   PrTabEntry *pte = new PrTabEntry(name,getArity(arity),file,line,OZ_isTrue(copyOnce));
@@ -297,11 +297,11 @@ OZ_BI_define(BIstoreHTScalar,4,0)
   OZ_declareNonvarIN(2,value);
   OZ_declareIntIN(3,label);
 
-  value = deref(value);
-  if (isLiteral(value)) {
+  value = oz_deref(value);
+  if (oz_isLiteral(value)) {
     ht->add(tagged2Literal(value),code->computeLabel(label));
   } else {
-    Assert(isNumber(value));
+    Assert(oz_isNumber(value));
     ht->add(value,code->computeLabel(label));
   }
 
@@ -318,7 +318,7 @@ OZ_BI_define(BIstoreHTRecord,5,0)
   OZ_declareIntIN(4,label);
 
   SRecordArity ar   = getArity(arity);
-  reclabel          = deref(reclabel);
+  reclabel          = oz_deref(reclabel);
 
   if (literalEq(reclabel,AtomCons) && sraIsTuple(ar) && getTupleWidth(ar)==2) {
     ht->addList(code->computeLabel(label));
@@ -344,7 +344,7 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
   NEW_declareCodeBlock(0,code);
   OZ_declareIntIN(1,regindex);
   OZ_declareNonvarIN(2,isMethod);
-  OZ_declareNonvarIN(3,name); name = deref(name);
+  OZ_declareNonvarIN(3,name); name = oz_deref(name);
   OZ_declareNonvarIN(4,isTail);
   OZ_declareNonvarIN(5,arity);
 
@@ -359,7 +359,7 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
 OZ_BI_define(BIstoreApplMethInfo,3,0)
 {
   NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,name); name = deref(name);
+  OZ_declareNonvarIN(1,name); name = oz_deref(name);
   OZ_declareNonvarIN(2,arity);
 
   ApplMethInfoClass *ami = new ApplMethInfoClass(name,getArity(arity));
@@ -372,14 +372,14 @@ OZ_BI_define(BIstoreGRegRef,2,0)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,globals);
-  globals = deref(globals);
+  globals = oz_deref(globals);
   int numglobals = OZ_length(globals);
 
   AssRegArray *gregs = new AssRegArray(numglobals);
 
   for (int i = 0; i < numglobals; i++) {
-    SRecord *rec = tagged2SRecord(deref(head(globals)));
-    globals = deref(tail(globals));
+    SRecord *rec = tagged2SRecord(oz_deref(head(globals)));
+    globals = oz_deref(tail(globals));
 
     const char *label = rec->getLabelLiteral()->getPrintName();
     KindOfReg regType;
@@ -392,10 +392,10 @@ OZ_BI_define(BIstoreGRegRef,2,0)
       regType = GReg;
     }
     (*gregs)[i].kind = regType;
-    (*gregs)[i].number = smallIntValue(deref(rec->getArg(0)));
+    (*gregs)[i].number = smallIntValue(oz_deref(rec->getArg(0)));
   }
 
-  Assert(isNil(globals));
+  Assert(oz_isNil(globals));
 
   code->writeAddress(gregs);
   return PROCEED;
@@ -406,29 +406,29 @@ OZ_BI_define(BIstoreLocation,2,0)
 {
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,locs);
-  locs=deref(locs);
-  OZ_Term inLocs = deref(oz_left(locs));
-  OZ_Term outLocs = deref(oz_right(locs));
+  locs=oz_deref(locs);
+  OZ_Term inLocs = oz_deref(oz_left(locs));
+  OZ_Term outLocs = oz_deref(oz_right(locs));
   const int inArity = OZ_length(inLocs);
   const int outArity = OZ_length(outLocs);
 
   OZ_Location *loc = OZ_Location::newLocation(inArity,outArity);
 
   for (int i = 0; i < inArity; i++) {
-    OZ_Term reg = deref(head(inLocs));
-    loc->in(i) = smallIntValue(deref(oz_arg(reg,0)));
-    inLocs = deref(tail(inLocs));
+    OZ_Term reg = oz_deref(head(inLocs));
+    loc->in(i) = smallIntValue(oz_deref(oz_arg(reg,0)));
+    inLocs = oz_deref(tail(inLocs));
   }
 
-  Assert(isNil(inLocs));
+  Assert(oz_isNil(inLocs));
 
   for (int i = 0; i < outArity; i++) {
-    OZ_Term reg = deref(head(outLocs));
-    loc->out(i) = smallIntValue(deref(oz_arg(reg,0)));
-    outLocs = deref(tail(outLocs));
+    OZ_Term reg = oz_deref(head(outLocs));
+    loc->out(i) = smallIntValue(oz_deref(oz_arg(reg,0)));
+    outLocs = oz_deref(tail(outLocs));
   }
 
-  Assert(isNil(outLocs));
+  Assert(oz_isNil(outLocs));
 
   code->writeAddress(loc);
   return PROCEED;

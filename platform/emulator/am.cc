@@ -564,14 +564,14 @@ loop:
     goto next;
   }
 
-  if (isAnyVar(term1)) {
-    if (isAnyVar(term2)) {
+  if (oz_isVariable(term1)) {
+    if (oz_isVariable(term2)) {
       goto var_var;
     } else {
       goto var_nonvar;
     }
   } else {
-    if (isAnyVar(term2)) {
+    if (oz_isVariable(term2)) {
       Swap(term1,term2,TaggedRef);
       Swap(termPtr1,termPtr2,TaggedRef*);
       Swap(tag1,tag2,TypeOfTerm);
@@ -684,13 +684,21 @@ cvar:
     }
 
   case OZFLOAT:
-  case BIGINT:
+    if (floatEq(term1,term2))
+      goto next;
+    else
+      goto fail;
+
   case SMALLINT:
-    if (numberEq(term1,term2))
+    if (smallIntEq(term1,term2))
       goto next;
     goto fail;
 
   case OZCONST:
+    if (bigIntEq(term1,term2))
+      goto next;
+    goto fail;
+
   case LITERAL:
     /* literals and constants unify if their pointers are equal */
   default:
@@ -1025,9 +1033,9 @@ Board *varHome(TaggedRef val) {
 #ifdef DEBUG_CHECK
 static
 Bool checkHome(TaggedRef *vPtr) {
-  TaggedRef val = deref(*vPtr);
+  TaggedRef val = oz_deref(*vPtr);
 
-  return !isAnyVar(val) ||
+  return !oz_isVariable(val) ||
     oz_isBelow(am.currentBoard(),varHome(val));
 }
 #endif
@@ -1064,7 +1072,7 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
 {
   DEREF(var,varPtr,varTag);
 
-  Assert(isAnyVar(var));
+  Assert(oz_isVariable(var));
 
   /* first step: do suspension */
   if (isSVar(var) || isCVar(var)) {
@@ -1091,7 +1099,7 @@ void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
   CHECK_NONVAR(t);
   *vp = t;
 
-  Assert(isRef(*vp) || !isAnyVar(*vp));
+  Assert(oz_isRef(*vp) || !oz_isVariable(*vp));
 }
 
 /*
@@ -1107,7 +1115,7 @@ void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
   CHECK_NONVAR(t);
   *vp = t;
 
-  Assert(isRef(*vp) || !isAnyVar(*vp));
+  Assert(oz_isRef(*vp) || !oz_isVariable(*vp));
 }
 
 /*
@@ -1205,14 +1213,14 @@ void AM::reduceTrailOnSuspend()
 
       trail.popRef(refPtr, value);
 
-      Assert(isRef(*refPtr) || !isAnyVar(*refPtr));
-      Assert(isAnyVar(value));
+      Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
+      Assert(oz_isVariable(value));
 
       bb->setScript(index,refPtr,*refPtr);
 
       TaggedRef vv= *refPtr;
       DEREF(vv,vvPtr,_vvTag);
-      if (isAnyVar(vv)) {
+      if (oz_isVariable(vv)) {
         addSuspAnyVar(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
       }
 
@@ -1246,7 +1254,7 @@ void AM::reduceTrailOnShallow()
     TaggedRef value;
     trail.popRef(refPtr,value);
 
-    Assert(isAnyVar(value));
+    Assert(oz_isVariable(value));
 
     TaggedRef oldVal = makeTaggedRef(refPtr);
     DEREF(oldVal,ptrOldVal,_1);
@@ -1258,7 +1266,7 @@ void AM::reduceTrailOnShallow()
      *  in INLINEREL/FUNs they are only pushed (pushIfVar) onto the trail
      */
     if (refPtr!=ptrOldVal) {
-      if (isAnyVar(oldVal)) {
+      if (oz_isVariable(oldVal)) {
         addSuspAnyVar(ptrOldVal,currentThread());
       }
     }
@@ -1277,14 +1285,14 @@ void AM::reduceTrailOnEqEq()
     TaggedRef value;
     trail.popRef(refPtr,value);
 
-    Assert(isAnyVar(value));
+    Assert(oz_isVariable(value));
 
     TaggedRef oldVal = makeTaggedRef(refPtr);
     DEREF(oldVal,ptrOldVal,_1);
 
     unBind(refPtr,value);
 
-    if (isAnyVar(oldVal)) {
+    if (oz_isVariable(oldVal)) {
       addSuspendVarList(ptrOldVal);
     }
 
@@ -1349,18 +1357,18 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
       // Only add features if the 'kill' variable is undetermined:
       TaggedRef killl=prop->getK();
       DEREF(killl,_,killTag);
-      if (!isAnyVar(killTag)) {
+      if (!isVariableTag(killTag)) {
         suspList=suspList->getNext();
         continue;
       }
 
       // Add the feature or list to the diff. list in FH and FT:
       if (flist) {
-        if (isFeature(flist))
+        if (oz_isFeature(flist))
           prop->setFH(cons(flist,prop->getFH()));
         else {
           // flist must be a list
-          Assert(isLTuple(flist));
+          Assert(oz_isCons(flist));
           TaggedRef tmplist=flist;
           while (tmplist!=AtomNil) {
             prop->setFH(cons(head(tmplist),prop->getFH()));
@@ -1402,7 +1410,7 @@ int AM::awakeIO(int, void *var) {
 void AM::awakeIOVar(TaggedRef var)
 {
   Assert(onToplevel());
-  Assert(isCons(var));
+  Assert(oz_isCons(var));
 
   OZ_unifyInThread(OZ_head(var),OZ_tail(var));
 }
@@ -2174,9 +2182,9 @@ void AM::pushPreparedCalls(Thread *thr)
 
 void AM::suspendOnVarList(Thread *thr)
 {
-  while (isCons(_suspendVarList)) {
+  while (oz_isCons(_suspendVarList)) {
     OZ_Term v=head(_suspendVarList);
-    Assert(isAnyVar(*tagged2Ref(v)));
+    Assert(oz_isVariable(*tagged2Ref(v)));
 
     addSuspAnyVar(tagged2Ref(v),thr);
     _suspendVarList=tail(_suspendVarList);

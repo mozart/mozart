@@ -60,7 +60,7 @@ void initTagged()
   tts[4]        = "REF";       //  4
   tts[CVAR]     = "CVAR";      //  5
   tts[FSETVALUE]= "FSETVALUE"; //  6
-  tts[BIGINT]   = "BIGINT";    //  7
+  tts[UNUSED]   = "UNUSED";    //  7
   tts[8]        = "REF";       //  8
   tts[SVAR]     = "SVAR";      //  9
   tts[OZCONST]  = "OZCONST";   // 10

@@ -90,7 +90,7 @@ RecordFailure,
 BI_controlVarHandler;
 
 
-// mm: hack to avoid imcluding am.hh
+// hack to avoid including am.hh
 extern Board *oz_rootBoardOutline();
 
 /*===================================================================
@@ -328,8 +328,13 @@ unsigned int Literal::hash()
 }
 
 inline
-Bool isAtom(TaggedRef term) {
-  return isLiteral(tagTypeOf(term)) && tagged2Literal(term)->isAtom();
+Bool oz_isAtom(TaggedRef term) {
+  return oz_isLiteral(term) && tagged2Literal(term)->isAtom();
+}
+
+inline
+Bool oz_isName(TaggedRef term) {
+  return oz_isLiteral(term) && tagged2Literal(term)->isName();
 }
 
 
@@ -337,7 +342,7 @@ Bool isAtom(TaggedRef term) {
 inline
 Bool literalEq(TaggedRef a, TaggedRef b)
 {
-  Assert(isLiteral(a) || isLiteral(b));
+  Assert(oz_isLiteral(a) || oz_isLiteral(b));
   return (a==b);
 }
 
@@ -432,7 +437,7 @@ int smallIntValue(TaggedRef t)
 inline
 Bool smallIntLess(TaggedRef A, TaggedRef B)
 {
-  Assert(isSmallInt(A) && isSmallInt(B));
+  Assert(oz_isSmallInt(A) && oz_isSmallInt(B));
   int ahelp = A;
   int bhelp = B;
   return ahelp < bhelp;
@@ -441,7 +446,7 @@ Bool smallIntLess(TaggedRef A, TaggedRef B)
 inline
 Bool smallIntLE(TaggedRef A, TaggedRef B)
 {
-  Assert(isSmallInt(A) && isSmallInt(B));
+  Assert(oz_isSmallInt(A) && oz_isSmallInt(B));
   int ahelp = A;
   int bhelp = B;
   return ahelp <= bhelp;
@@ -457,14 +462,14 @@ unsigned int smallIntHash(TaggedRef n)
 inline
 Bool smallIntEq(TaggedRef a, TaggedRef b)
 {
-  Assert(isSmallInt(a) || isSmallInt(b));
+  Assert(oz_isSmallInt(a) || oz_isSmallInt(b));
   return (a == b);
 }
 
 inline
 Bool smallIntCmp(TaggedRef a, TaggedRef b)
 {
-  Assert(isSmallInt(a) && isSmallInt(b));
+  Assert(oz_isSmallInt(a) && oz_isSmallInt(b));
   return smallIntLess(a,b) ? -1 : (smallIntEq(a,b) ? 0 : 1);
 }
 
@@ -512,13 +517,227 @@ TaggedRef newTaggedFloat(double i)
   return makeTaggedFloat(Float::newFloat(i));
 }
 
+
+
+#define CHECK_LITERAL(lab) \
+Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isLiteral(lab));
+
+
+/*===================================================================
+ * LTuple
+ *=================================================================== */
+
+class LTuple {
+private:
+  TaggedRef args[2];
+
+public:
+  USEHEAPMEMORY32;
+  OZPRINTLONG;
+
+  NO_DEFAULT_CONSTRUCTORS2(LTuple);
+  LTuple(void) {
+    DebugCheckT(args[0]=0;args[1]=0);
+    COUNT1(sizeLists,sizeof(LTuple));
+  }
+  LTuple(TaggedRef head, TaggedRef tail) {
+    COUNT1(sizeLists,sizeof(LTuple));
+    args[0] = head; args[1] = tail;
+  }
+
+  void gcRecurse();
+  LTuple *gc();
+
+  TaggedRef getHead()          { return tagged2NonVariable(args); }
+  TaggedRef getTail()          { return tagged2NonVariable(args+1); }
+  void setHead(TaggedRef term) { args[0] = term;}
+  void setTail(TaggedRef term) { args[1] = term;}
+  TaggedRef *getRef()          { return args; }
+  TaggedRef *getCycleRef()     { return args; }
+  TaggedRef *getRefTail()      { return args+1; }
+  TaggedRef *getRefHead()      { return args; }
+};
+
+inline
+Bool oz_isCons(TaggedRef term) {
+  return oz_isLTuple(term);
+}
+
+inline
+Bool oz_isNil(TaggedRef term) {
+  return literalEq(term,AtomNil);
+}
+
+inline
+TaggedRef nil() { return AtomNil; }
+
+inline
+TaggedRef cons(TaggedRef head, TaggedRef tail)
+{
+  return makeTaggedLTuple(new LTuple(head,tail));
+}
+
+inline
+TaggedRef cons(Literal *head, TaggedRef tail)
+{
+  return cons(makeTaggedLiteral(head),tail);
+}
+
+inline
+TaggedRef cons(char *head, TaggedRef tail)
+{
+  return cons(makeTaggedAtom(head),tail);
+}
+
+inline
+TaggedRef head(TaggedRef list)
+{
+  Assert(oz_isLTuple(list));
+  return tagged2LTuple(list)->getHead();
+}
+
+inline
+TaggedRef tail(TaggedRef list)
+{
+  Assert(oz_isLTuple(list));
+  return tagged2LTuple(list)->getTail();
+}
+
+inline
+int fastlength(OZ_Term l)
+{
+  int len = 0;
+  l = oz_deref(l);
+  while (oz_isCons(l)) {
+    len++;
+    l = oz_deref(tail(l));
+  }
+  return len;
+}
+
+
+/*===================================================================
+ * ConstTerm
+ *=================================================================== */
+
+/* when adding a new type update
+ *   gc and gcRecurse
+ *   print (print.cc and foreign.cc)
+ *   OZ_toVirtualString
+ *   finalizable
+ *   marshaling/unmarshaling
+ */
+const int Co_Bits = 16;
+const int Co_Mask = (1<<Co_Bits)-1;
+
+enum TypeOfConst {
+  Co_BigInt,
+  Co_Foreign_Pointer,
+  Co_Extended,
+  Co_Thread,
+  Co_Abstraction,
+  Co_Builtin,
+  Co_Cell,
+  Co_Space,
+
+  /* chunks must stay together and the first one must be Co_Object
+   * otherwise you'll have to change the "isChunk" test
+   * NOTE: update the builtins: subtree and chunkArity, when adding new chunks
+   */
+  Co_Object,
+  Co_Port,
+  Co_Chunk,
+  Co_HeapChunk,
+  Co_Array,
+  Co_Dictionary,
+  Co_Lock,
+  Co_Class
+};
+
+#define Co_ChunkStart Co_Object
+
+enum TertType {
+  Te_Local   = 0, // 0000
+  Te_Manager = 1, // 0001
+  Te_Proxy   = 2, // 0010
+  Te_Frame   = 3  // 0011
+};
+
+#define DebugIndexCheck(IND) {Assert(IND< (1<<27));Assert(IND>=0);}
+
+class ConstTerm {
+private:
+  int32 tag;
+public:
+  USEHEAPMEMORY;
+  OZPRINTLONG;
+  NO_DEFAULT_CONSTRUCTORS(ConstTerm);
+  ConstTerm(TypeOfConst t) { tag = t<<1; }
+
+  Bool gcIsMarked(void)        { return tag&1; }
+  void gcMark(ConstTerm * fwd) { tag |= 1; }
+  void ** gcGetMarkField(void) { return (void **) &tag; }
+  ConstTerm * gcGetFwd(void) {
+    Assert(gcIsMarked());
+    return (ConstTerm *) (tag&~1);
+  }
+  ConstTerm *gcConstTerm(void);
+  ConstTerm *gcConstTermSpec(void);
+  void gcConstRecurse(void);
+
+  TypeOfConst getType() { return (TypeOfConst) ((tag & Co_Mask)>>1); }
+
+  void setVal(int val) {
+    tag = (tag & Co_Mask) | (val << Co_Bits);
+  }
+  int getVal() {
+    return tag >> Co_Bits;
+  }
+  const char *getPrintName();
+  int getArity();
+
+  TaggedRef *getCycleRef() { return (TaggedRef *) &tag; }
+};
+
+
+#define CWH_Board 0
+#define CWH_GName 1
+
+
+class ConstTermWithHome: public ConstTerm {
+private:
+  TaggedPtr boardOrGName;
+  void setBoard(Board *b)
+  {
+    boardOrGName.setPtr(b);
+    boardOrGName.setType(CWH_Board);
+  }
+public:
+  NO_DEFAULT_CONSTRUCTORS(ConstTermWithHome);
+  ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t) { setBoard(b);  }
+
+  Board *getBoardInternal() {
+    return hasGName() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
+  }
+
+  void gcConstTermWithHome();
+  void setGName(GName *gn) {
+    Assert(gn);
+    boardOrGName.setPtr(gn);
+    boardOrGName.setType(CWH_GName);
+  }
+  Bool hasGName() { return (boardOrGName.getType()&CWH_GName); }
+  GName *getGName1() {
+    return hasGName()?(GName *)boardOrGName.getPtr():(GName *)NULL;
+  }
+};
+
 /*===================================================================
  * BigInt
  *=================================================================== */
 
-class BigInt {
+class BigInt : public ConstTerm {
 private:
-  BigInt *gcForwardPtr;
   MP_INT value;
 
 public:
@@ -527,37 +746,44 @@ public:
 
   NO_DEFAULT_CONSTRUCTORS2(BigInt);
 
-  void init()             { gcForwardPtr = NULL; }
-  BigInt()                { init(); mpz_init(&value); }
-  BigInt(long i)          { init(); mpz_init_set_si(&value,i); }
-  BigInt(unsigned long i) { init(); mpz_init_set_ui(&value,i); }
-  BigInt(int i)           { init(); mpz_init_set_si(&value,i); }
-  BigInt(unsigned int i)  { init(); mpz_init_set_ui(&value,i); }
+  BigInt() : ConstTerm(Co_BigInt)
+  {
+    mpz_init(&value);
+  }
+  BigInt(long i) : ConstTerm(Co_BigInt)
+  {
+    mpz_init_set_si(&value,i);
+  }
+  BigInt(unsigned long i) : ConstTerm(Co_BigInt)
+  {
+    mpz_init_set_ui(&value,i);
+  }
+  BigInt(int i) : ConstTerm(Co_BigInt)
+  {
+    mpz_init_set_si(&value,i);
+  }
+  BigInt(unsigned int i) : ConstTerm(Co_BigInt)
+  {
+    mpz_init_set_ui(&value,i);
+  }
 
-  BigInt(char *s) {
-    init();
+  BigInt(char *s) : ConstTerm(Co_BigInt)
+  {
     if(mpz_init_set_str(&value, s, 10)) {
       Assert(0);
     }
   }
-  BigInt(MP_INT *i) { init(); mpz_init_set(&value, i); }
+  BigInt(MP_INT *i) : ConstTerm(Co_BigInt)
+  {
+    mpz_init_set(&value, i);
+  }
   void dispose()
   {
     mpz_clear(&value);
     freeListDispose(this,sizeof(BigInt));
   }
 /* make a small int if <Big> fits into it, else return big int */
-  TaggedRef shrink() {
-    TaggedRef ret;
-    if (mpz_cmp_si(&value,OzMaxInt) > 0 ||
-        mpz_cmp_si(&value,OzMinInt) < 0)
-      ret = makeTaggedBigInt(this);
-    else {
-      ret =  newSmallInt((int) mpz_get_si(&value));
-      dispose();
-    }
-    return ret;
-  }
+  inline TaggedRef shrink(); // see below
 
   /* make an 'int' if <Big> fits into it, else return INT_MAX,INT_MIN */
   int getInt()
@@ -618,10 +844,47 @@ public:
 };
 
 inline
+Bool oz_isBigInt(TaggedRef term) {
+  return oz_isConst(term) && tagged2Const(term)->getType() == Co_BigInt;
+}
+
+inline
+Bool oz_isInt(TaggedRef term) {
+  GCDEBUG(term);
+  return oz_isSmallInt(term) || oz_isBigInt(term);
+}
+
+inline
+Bool oz_isNumber(TaggedRef term) {
+  return oz_isInt(term) || oz_isFloat(term);
+}
+
+inline
+TaggedRef BigInt::shrink()
+{
+  TaggedRef ret;
+  if (mpz_cmp_si(&value,OzMaxInt) > 0 ||
+      mpz_cmp_si(&value,OzMinInt) < 0)
+    ret = makeTaggedConst(this);
+  else {
+    ret =  newSmallInt((int) mpz_get_si(&value));
+    dispose();
+  }
+  return ret;
+}
+
+inline
+BigInt *tagged2BigInt(TaggedRef term)
+{
+  Assert(oz_isBigInt(term));
+  return (BigInt *)tagged2Const(term);
+}
+
+inline
 TaggedRef makeInt(int i)
 {
   if (i > OzMaxInt || i < OzMinInt)
-    return makeTaggedBigInt(new BigInt(i));
+    return makeTaggedConst(new BigInt(i));
   else
     return newSmallInt(i);
 }
@@ -630,7 +893,7 @@ inline
 TaggedRef oz_unsignedInt(unsigned int i)
 {
   if (i > (unsigned int) OzMaxInt)
-    return makeTaggedBigInt(new BigInt(i));
+    return makeTaggedConst(new BigInt(i));
   else
     return newSmallInt(i);
 }
@@ -638,234 +901,26 @@ TaggedRef oz_unsignedInt(unsigned int i)
 inline
 Bool bigIntEq(TaggedRef a, TaggedRef b)
 {
-  return tagged2BigInt(a)->equal(tagged2BigInt(b));
+  return oz_isBigInt(a) && oz_isBigInt(b)
+    && tagged2BigInt(a)->equal(tagged2BigInt(b));
 }
 
 inline
-Bool numberEq(TaggedRef a, TaggedRef b)
+Bool oz_numberEq(TaggedRef a, TaggedRef b)
 {
-  Assert(tagTypeOf(a)==tagTypeOf(b));
-
   TypeOfTerm tag = tagTypeOf(a);
+  if (tag != tagTypeOf(b)) return NO;
   switch(tag) {
   case OZFLOAT:  return floatEq(a,b);
   case SMALLINT: return smallIntEq(a,b);
-  case BIGINT:   return bigIntEq(a,b);
+  case OZCONST:  return bigIntEq(a,b);
   default:       return NO;
   }
 }
 
-#define CHECK_LITERAL(lab) \
-Assert(!isRef(lab) && !isAnyVar(lab) && isLiteral(lab));
-
-
 /*===================================================================
- * LTuple
+ * Tertiary
  *=================================================================== */
-
-class LTuple {
-private:
-  TaggedRef args[2];
-
-public:
-  USEHEAPMEMORY32;
-  OZPRINTLONG;
-
-  NO_DEFAULT_CONSTRUCTORS2(LTuple);
-  LTuple(void) {
-    DebugCheckT(args[0]=0;args[1]=0);
-    COUNT1(sizeLists,sizeof(LTuple));
-  }
-  LTuple(TaggedRef head, TaggedRef tail) {
-    COUNT1(sizeLists,sizeof(LTuple));
-    args[0] = head; args[1] = tail;
-  }
-
-  void gcRecurse();
-  LTuple *gc();
-
-  TaggedRef getHead()          { return tagged2NonVariable(args); }
-  TaggedRef getTail()          { return tagged2NonVariable(args+1); }
-  void setHead(TaggedRef term) { args[0] = term;}
-  void setTail(TaggedRef term) { args[1] = term;}
-  TaggedRef *getRef()          { return args; }
-  TaggedRef *getCycleRef()     { return args; }
-  TaggedRef *getRefTail()      { return args+1; }
-  TaggedRef *getRefHead()      { return args; }
-};
-
-inline
-Bool isCons(TaggedRef term) {
-  return isLTuple(term);
-}
-
-inline
-Bool isNil(TaggedRef term) {
-  return literalEq(term,AtomNil);
-}
-
-inline
-TaggedRef nil() { return AtomNil; }
-
-inline
-TaggedRef cons(TaggedRef head, TaggedRef tail)
-{
-  return makeTaggedLTuple(new LTuple(head,tail));
-}
-
-inline
-TaggedRef cons(Literal *head, TaggedRef tail)
-{
-  return cons(makeTaggedLiteral(head),tail);
-}
-
-inline
-TaggedRef cons(char *head, TaggedRef tail)
-{
-  return cons(makeTaggedAtom(head),tail);
-}
-
-inline
-TaggedRef head(TaggedRef list)
-{
-  Assert(isLTuple(list));
-  return tagged2LTuple(list)->getHead();
-}
-
-inline
-TaggedRef tail(TaggedRef list)
-{
-  Assert(isLTuple(list));
-  return tagged2LTuple(list)->getTail();
-}
-
-inline
-int fastlength(OZ_Term l)
-{
-  int len = 0;
-  l = deref(l);
-  while (isCons(l)) {
-    len++;
-    l = deref(tail(l));
-  }
-  return len;
-}
-
-
-/*===================================================================
- * ConstTerm
- *=================================================================== */
-
-/* must not match GCTAG (ie <> 13 (1101) !!!! */
-const int Co_Bits = 16;
-const int Co_Mask = (1<<Co_Bits)-1;
-
-enum TypeOfConst {
-  Co_Foreign_Pointer,
-  Co_Extended,
-  Co_Thread,
-  Co_Abstraction,
-
-  Co_Builtin,       /* 4 */
-  Co_Cell,
-  Co_Space,
-
-  /* chunks must stay together and the first one
-   * must be Co_Object
-   * otherwise you'll have to change the "isChunk" test
-   * NOTE: update the builtins: subtree and chunkArity !
-   */
-  Co_Object,
-  Co_Port,
-  Co_Chunk,
-  Co_HeapChunk,
-  Co_Array,
-  Co_Dictionary,    /* 12 */
-  Dummy = GCTAG,
-  Co_Lock,
-  Co_Class
-};
-
-enum TertType {
-  Te_Local   = 0, // 0000
-  Te_Manager = 1, // 0001
-  Te_Proxy   = 2, // 0010
-  Te_Frame   = 3  // 0011
-};
-
-#define DebugIndexCheck(IND) {Assert(IND< (1<<27));Assert(IND>=0);}
-
-class ConstTerm {
-private:
-  int32 tag;
-public:
-  USEHEAPMEMORY;
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(ConstTerm);
-  ConstTerm(TypeOfConst tag) : tag(tag) {}
-
-  Bool gcIsMarked(void)        { return GCISMARKED(tag); }
-  void gcMark(ConstTerm * fwd) { tag = GCMARK(fwd); }
-  void ** gcGetMarkField(void) { return (void **) &tag; }
-  ConstTerm * gcGetFwd(void) {
-    Assert(gcIsMarked());
-    return (ConstTerm *) GCUNMARK(tag);
-  }
-  ConstTerm *gcConstTerm(void);
-  ConstTerm *gcConstTermSpec(void);
-  void gcConstRecurse(void);
-
-  TypeOfConst getType() { return (TypeOfConst) (tag & Co_Mask); }
-
-  void setVal(int val) {
-    tag = (tag & Co_Mask) | (val << Co_Bits);
-  }
-  int getVal() {
-    return tag >> Co_Bits;
-  }
-  const char *getPrintName();
-  int getArity();
-
-  TaggedRef *getCycleRef() { return (TaggedRef *) &tag; }
-
-
-  /* optimized isChunk test */
-  // mm2: why (int) cast?
-  Bool isChunk() { return (int) getType() >= (int) Co_Object; }
-};
-
-
-#define CWH_Board 0
-#define CWH_GName 1
-
-
-class ConstTermWithHome: public ConstTerm {
-private:
-  TaggedPtr boardOrGName;
-  void setBoard(Board *b)
-  {
-    boardOrGName.setPtr(b);
-    boardOrGName.setType(CWH_Board);
-  }
-public:
-  NO_DEFAULT_CONSTRUCTORS(ConstTermWithHome);
-  ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t) { setBoard(b);  }
-
-  Board *getBoardInternal() {
-    return hasGName() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
-  }
-
-  void gcConstTermWithHome();
-  void setGName(GName *gn) {
-    Assert(gn);
-    boardOrGName.setPtr(gn);
-    boardOrGName.setType(CWH_GName);
-  }
-  Bool hasGName() { return (boardOrGName.getType()&CWH_GName); }
-  GName *getGName1() {
-    return hasGName()?(GName *)boardOrGName.getPtr():(GName *)NULL;
-  }
-};
 
 class Tertiary: public ConstTerm {
 private:
@@ -1107,10 +1162,10 @@ public:
  *=================================================================== */
 
 inline
-Bool isFeature(TaggedRef lab) { return isLiteral(lab) || isInt(lab); }
+Bool oz_isFeature(TaggedRef lab) { return oz_isLiteral(lab) || oz_isInt(lab); }
 
 #define CHECK_FEATURE(lab) \
-Assert(!isRef(lab) && !isAnyVar(lab) && isFeature(lab));
+Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isFeature(lab));
 
 
 int featureEqOutline(TaggedRef a, TaggedRef b);
@@ -1140,7 +1195,7 @@ int featureCmp(TaggedRef a,TaggedRef b)
   TypeOfTerm tagB = tagTypeOf(b);
   if (tagA != tagB) {
     if (tagA==SMALLINT) return -1;
-    if (tagA==BIGINT) {
+    if (tagA==OZCONST) {
       if (tagB==SMALLINT) return 1;
       Assert(tagB==LITERAL);
       return -1;
@@ -1153,7 +1208,7 @@ int featureCmp(TaggedRef a,TaggedRef b)
     return atomcmp(tagged2Literal(a),tagged2Literal(b));
   case SMALLINT:
     return smallIntCmp(a,b);
-  case BIGINT:
+  case OZCONST:
     return tagged2BigInt(a)->cmp(tagged2BigInt(b));
   default:
     error("featureCmp");
@@ -1164,7 +1219,7 @@ int featureCmp(TaggedRef a,TaggedRef b)
 
 /*
  * Hash function for Features:
- * NOTE: all bigints are hashed to the same value
+ * NOTE: all bigints are hashed to the same value (mm2)
  */
 inline
 unsigned int featureHash(TaggedRef a)
@@ -1415,7 +1470,7 @@ public:
   {
     CHECK_FEATURE(feature);
     if (isTuple()) {
-      if (!isSmallInt(feature)) return -1;
+      if (!oz_isSmallInt(feature)) return -1;
       int f=smallIntValue(feature);
       return (1 <= f && f <= getWidth()) ? f-1 : -1;
     }
@@ -1457,35 +1512,35 @@ TaggedRef sortlist(TaggedRef list,int len);
 TaggedRef packsort(TaggedRef list);
 
 inline
-Bool isRecord(TaggedRef term) {
+Bool oz_isRecord(TaggedRef term) {
   GCDEBUG(term);
   TypeOfTerm tag = tagTypeOf(term);
-  return isSRecord(tag) || isLTuple(tag) || isLiteral(tag);
+  return isSRecordTag(tag) || isLTupleTag(tag) || isLiteralTag(tag);
 }
 
 
 SRecord *makeRecord(TaggedRef t);
 
 inline
-int isSTuple(TaggedRef term) {
-  return isSRecord(term) && tagged2SRecord(term)->isTuple();
+int oz_isSTuple(TaggedRef term) {
+  return oz_isSRecord(term) && tagged2SRecord(term)->isTuple();
 }
 
 inline
-int isTuple(TaggedRef term) {
-  return isLTuple(term) || isSTuple(term) || isLiteral(term);
+int oz_isTuple(TaggedRef term) {
+  return oz_isLTuple(term) || oz_isSTuple(term) || oz_isLiteral(term);
 }
 
 inline
 OZ_Term getArityList(OZ_Term term)
 {
-  if (isSRecord(term)) {
+  if (oz_isSRecord(term)) {
     return tagged2SRecord(term)->getArityList();
   }
-  if (isLTuple(term)) {
+  if (oz_isLTuple(term)) {
     return makeTupleArityList(2);
   }
-  if (isLiteral(term)) {
+  if (oz_isLiteral(term)) {
     return nil();
   }
   return 0;
@@ -1494,13 +1549,13 @@ OZ_Term getArityList(OZ_Term term)
 inline
 int getWidth(OZ_Term term)
 {
-  if (isSRecord(term)) {
+  if (oz_isSRecord(term)) {
     return tagged2SRecord(term)->getWidth();
   }
-  if (isLTuple(term)) {
+  if (oz_isLTuple(term)) {
     return (2);
   }
-  if (isLiteral(term)) {
+  if (oz_isLiteral(term)) {
     return (0);
   }
   return (0);                   // ???
@@ -1614,8 +1669,8 @@ RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
 
 class Object: public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
-protected:
-  ObjectClass *cl;
+private:
+  ObjectClass *cl1;
   RecOrCell state;
   OzLock *lock;
   SRecord *freeFeatures;
@@ -1640,12 +1695,15 @@ public:
     lock = 0;
   }
 
-  void setClass(ObjectClass *c) { cl=c; }
+  ObjectClass *getClass()       { return cl1; }
+  void setClass(ObjectClass *c) {
+    Assert(!c||c->supportsLocking()>=0);
+    cl1=c;
+  }
 
   OzLock *getLock() { return lock; }
   void setLock(OzLock *l) { lock=l; }
 
-  ObjectClass *getClass()       { return cl; }
   OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
   const char *getPrintName()    { return getClass()->getPrintName(); }
   RecOrCell getState()          { return state; }
@@ -1711,15 +1769,15 @@ Bool isObject(ConstTerm *t)
 }
 
 inline
-Bool isObject(TaggedRef term)
+Bool oz_isObject(TaggedRef term)
 {
-  return isConst(term) && isObject(tagged2Const(term));
+  return oz_isConst(term) && isObject(tagged2Const(term));
 }
 
 inline
 Object *tagged2Object(TaggedRef term)
 {
-  Assert(isObject(term));
+  Assert(oz_isObject(term));
   return (Object *)tagged2Const(term);
 }
 
@@ -1730,22 +1788,16 @@ Bool isObjectClass(ConstTerm *t)
 }
 
 inline
-Bool isObjectClass(TaggedRef term)
+Bool oz_isClass(TaggedRef term)
 {
-  return isConst(term) && isObjectClass(tagged2Const(term));
+  return oz_isConst(term) && isObjectClass(tagged2Const(term));
 }
 
 inline
 ObjectClass *tagged2ObjectClass(TaggedRef term)
 {
-  Assert(isObjectClass(term));
+  Assert(oz_isClass(term));
   return (ObjectClass *)tagged2Const(term);
-}
-
-inline
-Bool isClass(TaggedRef term)
-{
-  return isObjectClass(term);
 }
 
 /*===================================================================
@@ -1762,7 +1814,7 @@ public:
   SChunk(Board *b,TaggedRef v)
     : ConstTermWithHome(b,Co_Chunk), value(v)
   {
-    Assert(v==0||isRecord(v));
+    Assert(v==0||oz_isRecord(v));
     Assert(b);
   };
 
@@ -1773,7 +1825,7 @@ public:
 
   void import(TaggedRef val) {
     Assert(!value);
-    Assert(isRecord(val));
+    Assert(oz_isRecord(val));
     Assert(getGName1());
     value=val;
   }
@@ -1793,23 +1845,24 @@ Bool isSChunk(ConstTerm *t)
 }
 
 inline
-Bool isSChunk(TaggedRef term)
+Bool oz_isSChunk(TaggedRef term)
 {
-  return isConst(term) && isSChunk(tagged2Const(term));
+  return oz_isConst(term) && isSChunk(tagged2Const(term));
 }
 
 inline
 SChunk *tagged2SChunk(TaggedRef term)
 {
-  Assert(isSChunk(term));
+  Assert(oz_isSChunk(term));
   return (SChunk *) tagged2Const(term);
 }
 
 
+/* optimized isChunk test */
 inline
-Bool isChunk(TaggedRef t)
+Bool oz_isChunk(TaggedRef t)
 {
-  return isConst(t) && tagged2Const(t)->isChunk();
+  return oz_isConst(t) && tagged2Const(t)->getType()>=Co_ChunkStart;
 }
 
 /*===================================================================
@@ -1831,7 +1884,7 @@ public:
   OzArray(Board *b, int low, int high, TaggedRef initvalue)
     : ConstTermWithHome(b,Co_Array)
   {
-    Assert(isRef(initvalue) || !isAnyVar(initvalue));
+    Assert(oz_isRef(initvalue) || !oz_isVariable(initvalue));
 
     offset = low;
     width = high-low+1;
@@ -1857,14 +1910,14 @@ public:
       return 0;
 
     OZ_Term out = getArgs()[n];
-    Assert(isRef(out) || !isAnyVar(out));
+    Assert(oz_isRef(out) || !oz_isVariable(out));
 
     return out;
   }
 
   int setArg(int n,TaggedRef val)
   {
-    Assert(isRef(val) || !isAnyVar(val));
+    Assert(oz_isRef(val) || !oz_isVariable(val));
 
     n -= offset;
     if (n>=getWidth() || n<0) return FALSE;
@@ -1876,15 +1929,15 @@ public:
 
 
 inline
-Bool isArray(TaggedRef term)
+Bool oz_isArray(TaggedRef term)
 {
-  return isConst(term) && tagged2Const(term)->getType() == Co_Array;
+  return oz_isConst(term) && tagged2Const(term)->getType() == Co_Array;
 }
 
 inline
 OzArray *tagged2Array(TaggedRef term)
 {
-  Assert(isArray(term));
+  Assert(oz_isArray(term));
   return (OzArray *) tagged2Const(term);
 }
 
@@ -1980,7 +2033,7 @@ public:
               TaggedRef file, int line, Bool co)
   : printname(name), fileName(file), lineno(line)
   {
-    Assert(isLiteral(name));
+    Assert(oz_isLiteral(name));
     methodArity = arityInit;
     arity =  (unsigned short) getWidth(arityInit);
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
@@ -2048,9 +2101,9 @@ public:
 };
 
 inline
-Bool isProcedure(TaggedRef term)
+Bool oz_isProcedure(TaggedRef term)
 {
-  if (!isConst(term)) {
+  if (!oz_isConst(term)) {
     return NO;
   }
   switch (tagged2Const(term)->getType()) {
@@ -2070,15 +2123,15 @@ Bool isAbstraction(ConstTerm *s)
 }
 
 inline
-Bool isAbstraction(TaggedRef term)
+Bool oz_isAbstraction(TaggedRef term)
 {
-  return isConst(term) && isAbstraction(tagged2Const(term));
+  return oz_isConst(term) && isAbstraction(tagged2Const(term));
 }
 
 inline
 Abstraction *tagged2Abstraction(TaggedRef term)
 {
-  Assert(isAbstraction(term));
+  Assert(oz_isAbstraction(term));
   return (Abstraction *)tagged2Const(term);
 }
 
@@ -2140,15 +2193,15 @@ Bool isBuiltin(ConstTerm *s)
 }
 
 inline
-Bool isBuiltin(TaggedRef term)
+Bool oz_isBuiltin(TaggedRef term)
 {
-  return isConst(term) && isBuiltin(tagged2Const(term));
+  return oz_isConst(term) && isBuiltin(tagged2Const(term));
 }
 
 inline
 Builtin *tagged2Builtin(TaggedRef term)
 {
-  Assert(isBuiltin(term));
+  Assert(oz_isBuiltin(term));
   return (Builtin *)tagged2Const(term);
 }
 
@@ -2351,9 +2404,10 @@ public:
 };
 
 
-inline Bool isCell(TaggedRef term)
+inline
+Bool oz_isCell(TaggedRef term)
 {
-  return isConst(term) && tagged2Const(term)->getType() == Co_Cell;
+  return oz_isConst(term) && tagged2Const(term)->getType() == Co_Cell;
 }
 
 /*===================================================================
@@ -2413,8 +2467,9 @@ public:
   PortProxy(int i): Port(0,Te_Proxy) { setIndex(i);}
 };
 
-inline Bool isPort(TaggedRef term)
-{ return isConst(term) && tagged2Const(term)->getType() == Co_Port;}
+inline
+Bool oz_isPort(TaggedRef term)
+{ return oz_isConst(term) && tagged2Const(term)->getType() == Co_Port;}
 
 inline PortWithStream *tagged2PortWithStream(TaggedRef term)
 { return (PortWithStream *) tagged2Const(term);}
@@ -2451,15 +2506,15 @@ public:
 
 
 inline
-Bool isSpace(TaggedRef term)
+Bool oz_isSpace(TaggedRef term)
 {
-  return isConst(term) && tagged2Const(term)->getType() == Co_Space;
+  return oz_isConst(term) && tagged2Const(term)->getType() == Co_Space;
 }
 
 inline
 Space *tagged2Space(TaggedRef term)
 {
-  Assert(isSpace(term));
+  Assert(oz_isSpace(term));
   return (Space *) tagged2Const(term);
 }
 
@@ -2721,9 +2776,9 @@ public:
 
 
 inline
-Bool isLock(TaggedRef term)
+Bool oz_isLock(TaggedRef term)
 {
-  return isConst(term) && tagged2Const(term)->getType() == Co_Lock;
+  return oz_isConst(term) && tagged2Const(term)->getType() == Co_Lock;
 }
 
 /*===================================================================

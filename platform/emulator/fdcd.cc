@@ -54,8 +54,8 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   OZ_getCArgDeref(2, v_tuple, v_tupleptr, v_tupletag);
   OZ_getCArgDeref(3, vp_tuple, vp_tupleptr, vp_tupletag);
 
-  if (! isSTuple(p_tuple)) TypeError(0, "");
-  if (! isSTuple(b_tuple)) TypeError(1, "");
+  if (! oz_isSTuple(p_tuple)) TypeError(0, "");
+  if (! oz_isSTuple(b_tuple)) TypeError(1, "");
 
   SRecord &p = *tagged2SRecord(p_tuple);
   SRecord &b = *tagged2SRecord(b_tuple);
@@ -81,10 +81,10 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   }
 
   // Has already been reduced to sum(b) >= 1
-  if (isLiteral(v_tupletag)) return PROCEED;
+  if (isLiteralTag(v_tupletag)) return PROCEED;
 
-  if (! isSTuple(v_tuple)) TypeError(2, "");
-  if (! isSTuple(vp_tuple)) TypeError(3, "");
+  if (! oz_isSTuple(v_tuple)) TypeError(2, "");
+  if (! oz_isSTuple(vp_tuple)) TypeError(3, "");
 
   SRecord &v = *tagged2SRecord(v_tuple);
   SRecord &vp = *tagged2SRecord(vp_tuple);
@@ -94,7 +94,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   // constrain Vpij to {fd_inf..fd_sup} if Vpij is an uvar
   for (i = clauses; i--; ) {
     DEREF(vp[i], vp_i_ptr, vp_i_tag);
-    if (! isSTuple(vp[i])) TypeError(3, "2-dim-array expected");
+    if (! oz_isSTuple(vp[i])) TypeError(3, "2-dim-array expected");
     SRecord &vp_i = *tagged2SRecord(vp[i]);
 
     if (vp_i.getWidth() != variables) {
@@ -109,7 +109,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
         OZ_Term vj = v[j], vp_i_j_val;
         DEREF(vj, vjptr, vjtag);
 
-        if (isSmallInt(vjtag)) {
+        if (isSmallIntTag(vjtag)) {
           vp_i_j_val = vj;
         } else if (isGenBoolVar(vj,vjtag)) {
           vp_i_j_val = makeTaggedRef(newTaggedCVar(new GenBoolVariable));
@@ -229,7 +229,7 @@ OZ_Return CDPropagator::propagate(void)
       for (v = variables; v--; )
         x.introduceDummy(idx_vp(c, v));
     } else {
-      SRecord &vp_c = *tagged2SRecord(deref(_vp[c]));
+      SRecord &vp_c = *tagged2SRecord(oz_deref(_vp[c]));
       for (v = variables; v--; )
         x.introduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
     }
@@ -299,7 +299,7 @@ OZ_Return CDPropagator::propagate(void)
   // reintroduce Vps
   for (c = 0; c < clauses; c += 1) {  // acendingly counting ('cause of x.add)
     if (x[idx_b(c)] != 0) {
-      SRecord &vp_c = *tagged2SRecord(deref(_vp[c]));
+      SRecord &vp_c = *tagged2SRecord(oz_deref(_vp[c]));
       for (v = variables; v--; ) {
         x.reintroduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
       }
@@ -340,7 +340,7 @@ OZ_Return CDPropagator::propagate(void)
       x[idx_v(v)] &= x[idx_vp(not_failed_clause, v)];
     x[idx_b(not_failed_clause)] &= 1;
 
-    if (unified_vars < unifiedVars(variables, &(*tagged2SRecord(deref(_vp[not_failed_clause])))[0])) {
+    if (unified_vars < unifiedVars(variables, &(*tagged2SRecord(oz_deref(_vp[not_failed_clause])))[0])) {
       // imposed equality to global variables
       int * is = OZ_findEqualVars(variables, &_v[0]);
       for (int i = 0; i < variables; i += 1)
@@ -359,7 +359,7 @@ OZ_Return CDPropagator::propagate(void)
                               idx_vp(not_failed_clause, variables - 1));
   } else if (entailed_clause != -1 &&
              unified_vars == unifiedVars(variables,
-                                         &(*tagged2SRecord(deref(_vp[entailed_clause])))[0])) {                         // top commit
+                                         &(*tagged2SRecord(oz_deref(_vp[entailed_clause])))[0])) {                         // top commit
     for (c = clauses; c--; )
       if (c != entailed_clause)
         x[idx_b(c)] &= 0;
@@ -463,7 +463,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
   OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
 
-  if (isLiteral(v_tupletag)) {
+  if (isLiteralTag(v_tupletag)) {
     SRecord &b = *tagged2SRecord(b_tuple);
     int b_size = b.getWidth();
     int ones = 0;
@@ -471,7 +471,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
     for (int i = 0; i < b_size; i++) {
       OZ_Term b_i = b[i];
       DEREF(b_i, b_i_ptr, b_i_tag);
-      int max_elem = isSmallInt(b_i_tag) ? smallIntValue(b_i) : tagged2GenFDVar(b_i)->getDom().getMaxElem();
+      int max_elem = isSmallIntTag(b_i_tag) ? smallIntValue(b_i) : tagged2GenFDVar(b_i)->getDom().getMaxElem();
 
       switch (max_elem) {
       case 2:
@@ -489,8 +489,8 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   }
 
 
-  if (! isSTuple(b_tuple) || ! isSTuple(v_tuple) ||
-      ! isSTuple(vp_tuple)) {
+  if (! oz_isSTuple(b_tuple) || ! oz_isSTuple(v_tuple) ||
+      ! oz_isSTuple(vp_tuple)) {
     warning("Unexpected type in cd manager");
     return FAILED;
   }

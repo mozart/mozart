@@ -330,7 +330,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Must be literal or variable:
         TaggedRef tmp=label;
         DEREF(tmp,_1,_2);
-        if (!isLiteral(tmp) && !isAnyVar(tmp))
+        if (!oz_isLiteral(tmp) && !oz_isVariable(tmp))
             { pairs->free(); return FALSE; }
 
         // Unify the corresponding feature values in the two variables:
@@ -405,7 +405,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 Bool GenOFSVariable::disentailed(Literal *l, int tupleArity) {
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
-    if (isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
+    if (oz_isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
     return (dynamictable->hasExtraFeatures(tupleArity));
 }
 
@@ -414,18 +414,18 @@ Bool GenOFSVariable::disentailed(Literal *l, int tupleArity) {
 Bool GenOFSVariable::disentailed(Literal *l, Arity *recordArity) {
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
-    if (isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
+    if (oz_isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
     return (dynamictable->hasExtraFeatures(recordArity));
 }
 
 
 Bool GenOFSVariable::valid(TaggedRef val)
 {
-    if (!isLiteral(val)) return FALSE;
+    if (!oz_isLiteral(val)) return FALSE;
     if (getWidth()>0) return FALSE;
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
-    if (isLiteral(tmp) && !literalEq(tmp,val)) return FALSE;
+    if (oz_isLiteral(tmp) && !literalEq(tmp,val)) return FALSE;
     return TRUE;
 }
 

@@ -89,7 +89,7 @@ TaggedRef checkTagged(TaggedRef t, HashTable *ht)
 static
 Literal *checkLiteral(Literal *l, HashTable *ht)
 {
-  return tagged2Literal(deref(checkTagged(makeTaggedLiteral(l),ht)));
+  return tagged2Literal(oz_deref(checkTagged(makeTaggedLiteral(l),ht)));
 }
 
 
@@ -140,11 +140,11 @@ SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
 
   int len = 0, copies = 0;
 
-  while(isCons(list)) {
+  while(oz_isCons(list)) {
     TaggedRef newt = checkTagged(head(list),ht);
     DebugCode(if (OZ_isName(newt)) {
                 len++;
-                copies += literalEq(newt,deref(head(list)));});
+                copies += literalEq(newt,oz_deref(head(list)));});
     newlist = cons(newt,newlist);
     list = tail(list);
   }
@@ -301,7 +301,7 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list, Bool makecopy)
       ht->htAdd(ToInt32(oldentry),newentry);
     } else {
       NamedName *theCopy =
-        ((NamedName *) tagged2Literal(deref(key)))->generateCopy();
+        ((NamedName *) tagged2Literal(oz_deref(key)))->generateCopy();
       ht->htAdd(ToInt32(key),ToPointer(makeTaggedLiteral(theCopy)));
     }
     list = OZ_tail(list);

@@ -77,14 +77,14 @@ enum Recalc_e {lower, upper};
   if (isUnifyCurrentPropagator ()) { \
     OZ_getCArgDeref(0, x, xPtr, xTag); \
     OZ_getCArgDeref(1, y, yPtr, yTag); \
-    if (xPtr == yPtr && isAnyVar(xTag)) { \
+    if (xPtr == yPtr && isVariableTag(xTag)) { \
       return (EQ01); \
     } \
     OZ_getCArgDeref(2, z, zPtr, zTag); \
-    if (xPtr == zPtr && isAnyVar(xTag)) { \
+    if (xPtr == zPtr && isVariableTag(xTag)) { \
       return (EQ02); \
     } \
-    if (yPtr == zPtr && isAnyVar(yTag)) { \
+    if (yPtr == zPtr && isVariableTag(yTag)) { \
       return (EQ12); \
     } \
   }

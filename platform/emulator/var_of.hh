@@ -82,14 +82,14 @@ public:
 
     GenOFSVariable(TaggedRef lbl)
     : GenCVariable(OFSVariable) {
-        Assert(isLiteral(lbl));
+        Assert(oz_isLiteral(lbl));
         label=lbl;
         dynamictable=DynamicTable::newDynamicTable();
     }
 
     GenOFSVariable(TaggedRef lbl, dt_index size)
     : GenCVariable(OFSVariable) {
-        Assert(isLiteral(lbl));
+        Assert(oz_isLiteral(lbl));
         label=lbl;
         dynamictable=DynamicTable::newDynamicTable(size);
     }
@@ -120,7 +120,7 @@ public:
 
     // Return the feature value if feature exists, return NULL if it doesn't exist
     TaggedRef getFeatureValue(TaggedRef feature) {
-        Assert(isFeature(feature));
+        Assert(oz_isFeature(feature));
         return dynamictable->lookup(feature);
     }
 
@@ -129,7 +129,7 @@ public:
     // Return TRUE if feature successfully inserted, FALSE if it already exists
     // ATTENTION: only use this for terms that do not have to be trailed
     Bool addFeatureValue(TaggedRef feature, TaggedRef term) {
-        Assert(isFeature(feature));
+        Assert(oz_isFeature(feature));
         Bool valid;
         if (dynamictable->fullTest()) resizeDynamicTable(dynamictable);
         TaggedRef prev=dynamictable->insert(feature,term,&valid);
@@ -151,7 +151,7 @@ public:
     // Destructively update feature's value, if feature exists
     // Return TRUE if feature exists, FALSE if it does not
     Bool setFeatureValue(TaggedRef feature, TaggedRef term) {
-        Assert(isFeature(feature));
+        Assert(oz_isFeature(feature));
         return dynamictable->update(feature,term);
     }
 

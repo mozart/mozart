@@ -35,13 +35,13 @@ void OZ_Stream::setFlags(void)
 
   DEREF(t, tptr, ttag);
 
-  if (isNil(t)) {
+  if (oz_isNil(t)) {
     eostr = closed = TRUE;
     return;
   } else if (isNotCVar(ttag)) {
     eostr = TRUE;
     return;
-  } else if (isCons(t)) {
+  } else if (oz_isCons(t)) {
     return;
   }
   valid = FALSE;
@@ -54,7 +54,7 @@ OZ_Term OZ_Stream::get(void)
     return 0;
   }
 
-  OZ_Term deref_tail = deref(tail);
+  OZ_Term deref_tail = oz_deref(tail);
   OZ_Term r = head(deref_tail);
   tail = makeTaggedRef(tagged2LTuple(deref_tail)->getRefTail());
   setFlags();

@@ -1478,36 +1478,36 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
 {
   DEREF(d, d_ptr, d_tag);
 
-  if (isSTuple(d) && tagged2SRecord(d)->getWidth() == 1) {
+  if (oz_isSTuple(d) && tagged2SRecord(d)->getWidth() == 1) {
     initDescr((*tagged2SRecord(d))[0]);
     *this = ~ *this;
     return size;
-  } else if (isSmallInt(d_tag)) {
+  } else if (isSmallIntTag(d_tag)) {
     return initSingleton(OZ_intToC(d));
   } else if (AtomSup == d) {
     return initSingleton(fd_sup);
-  } else if (isSTuple(d)) {
+  } else if (oz_isSTuple(d)) {
     SRecord &t = *tagged2SRecord(d);
-    OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
+    OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
     return initRange(AtomSup == t0 ? fd_sup : OZ_intToC(t0),
                      AtomSup == t1 ? fd_sup : OZ_intToC(t1));
   } else if (AtomBool == d) {
     return initRange(0, 1);
-  } else if (isNil(d)) {
+  } else if (oz_isNil(d)) {
     return initEmpty();
-  } else if (isLTuple(d_tag)) {
+  } else if (isLTupleTag(d_tag)) {
     EnlargeableArray<int> left_arr(FDOMNINITSIZE), right_arr(FDOMNINITSIZE);
 
     int min_arr = fd_sup, max_arr = 0;
 
     int len_arr = 0;
-    while (isLTuple(d)) {
+    while (oz_isLTuple(d)) {
       LTuple &list = *tagged2LTuple(d);
       OZ_Term val = list.getHead();
 
       DEREF(val, valptr, valtag);
 
-      if (isSmallInt(valtag)) {
+      if (isSmallIntTag(valtag)) {
         int v = OZ_intToC(val);
         if (v < fd_inf || fd_sup < v) goto for_loop;
 
@@ -1528,9 +1528,9 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
         max_arr = max(max_arr, right_arr[len_arr]);
 
         len_arr ++;
-      } else if (isSTuple(val)) {
+      } else if (oz_isSTuple(val)) {
         SRecord &t = *tagged2SRecord(val);
-        OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
+        OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
 
         int l = max(0, AtomSup == t0 ? fd_sup : OZ_intToC(t0));
         int r = min(fd_sup, AtomSup == t1 ? fd_sup : OZ_intToC(t1));
@@ -1550,7 +1550,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
       left_arr.request(len_arr);
       right_arr.request(len_arr);
     for_loop:
-      d = deref(list.getTail());
+      d = oz_deref(list.getTail());
     } // for
     return initList(len_arr, left_arr, right_arr, min_arr, max_arr);
   }

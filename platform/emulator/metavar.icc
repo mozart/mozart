@@ -34,10 +34,10 @@
 
 
 inline
-Bool isHeapChunk(TaggedRef term)
+Bool oz_isHeapChunk(TaggedRef term)
 {
-  term = deref(term);
-  return isConst(term)
+  term = oz_deref(term);
+  return oz_isConst(term)
     ? tagged2Const(term)->getType() == Co_HeapChunk
     : FALSE;
 }

@@ -281,7 +281,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
     TaggedRef term = RegAccess(HelpReg,getRegArg(PC+3));
     DEREF(term,termPtr,tag);
 
-    if (isAnyVar(term)) {
+    if (oz_isVariable(term)) {
       SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
       if(isCVar(term)){
         // fill w/unb. var.
@@ -304,7 +304,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
       }
     }
 
-    if (isSRecord(tag) &&
+    if (isSRecordTag(tag) &&
         tagged2SRecord(term)->compareSortAndArity(label,ff)) {
       sPointer = tagged2SRecord(term)->getRef();
       SetReadMode;
@@ -342,7 +342,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
           if (isCVar(term) && tagged2CVar(term)->getType() == OFSVariable) {
             TaggedRef lab = ((GenOFSVariable*)tagged2CVar(term))->getLabel();
             DEREF(lab,labPtr,labTag);
-            if (isAnyVar(labTag)) {
+            if (oz_isVariable(labTag)) {
               addSuspPtr(labPtr, CTT);
             }
           }
@@ -366,7 +366,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
           JUMPRELATIVE(getLabelArg(PC+3));
         }
 
-        if (isAnyVar(term)) {
+        if (oz_isVariable(term)) {
           PushContX(PC,Y,G,X,getPosIntArg(PC+5));
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
@@ -384,11 +384,11 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         DEREF(term,termPtr,tag);
 
         /* optimized for integer case */
-        if (isSmallInt(tag)) {
+        if (isSmallIntTag(tag)) {
           JUMPRELATIVE( getLabelArg(smallIntEq(term,i) ? PC+3 : PC+4) );
         }
 
-        if ( tag == tagTypeOf(i) && numberEq(i,term)) {
+        if (oz_numberEq(i,term)) {
           JUMPRELATIVE( getLabelArg(PC+3) );
         }
 
@@ -411,7 +411,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         SRecordArity sra = (SRecordArity) getAdressArg(PC+3);
 
         DEREF(term,termPtr,tag);
-        if (isSRecord(tag)) {
+        if (isSRecordTag(tag)) {
           if (tagged2SRecord(term)->compareSortAndArity(label,sra)) {
             sPointer = tagged2SRecord(term)->getRef();
             JUMPRELATIVE(getLabelArg(PC+4));
@@ -443,7 +443,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
           default:
             break;
           }
-        } else if (isAnyVar(term)) {
+        } else if (oz_isVariable(term)) {
           PushContX(PC,Y,G,X,getPosIntArg(PC+6));
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
@@ -458,7 +458,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         TaggedRef term = Reg1(getRegArg(PC+1));
 
         DEREF(term,termPtr,tag);
-        if (isLTuple(tag)) {
+        if (isLTupleTag(tag)) {
           sPointer = tagged2LTuple(term)->getRef();
           JUMPRELATIVE(getLabelArg(PC+2));
         } else if (isCVar(term)) {
@@ -481,7 +481,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
           default:
             break;
           }
-        } else if (isAnyVar(term)) {
+        } else if (oz_isVariable(term)) {
           PushContX(PC,Y,G,X,getPosIntArg(PC+4));
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
@@ -503,7 +503,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
                    DISPATCH(3);
                  }
 
-                 if ( isLiteral(tag) && literalEq(term,atm) ) {
+                 if ( isLiteralTag(tag) && literalEq(term,atm) ) {
                    DISPATCH(3);
                  }
 
@@ -531,7 +531,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
                    DISPATCH(3);
                  }
 
-                 if ( (tag == tagTypeOf(i)) && numberEq(term,i)) {
+                 if (oz_numberEq(term,i)) {
                    DISPATCH(3);
                  }
 
@@ -553,7 +553,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
                  TaggedRef term = Xreg(getRegArg(PC+1));
                  DEREF(term,termPtr,tag);
 
-                 if(isAnyVar(term)) {
+                 if(oz_isVariable(term)) {
                    register LTuple *ltuple = new LTuple();
                    ltuple->setHead(Reg1(getRegArg(PC+2)));
                    ltuple->setTail(e->currentUVarPrototype());
@@ -577,7 +577,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
                    }
                  }
 
-                 if (isLTuple(term)) {
+                 if (oz_isLTuple(term)) {
                    TaggedRef *argg = tagged2LTuple(term)->getRef();
                    OZ_Return aux = fastUnify(Reg1(getRegArg(PC+2)),
                                              makeTaggedRef(argg),NOFLATGUARD);
@@ -607,7 +607,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
                  register TaggedRef term = Reg1(reg);
                  DEREF(term,termPtr,tag);
 
-                 if(isAnyVar(term)) {
+                 if(oz_isVariable(term)) {
                    LTuple *ltuple = new LTuple();
                    sPointer = ltuple->getRef();
                    if (isCVar(term)) {
@@ -629,7 +629,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
                      oz_bindToNonvar(termPtr,term,makeTaggedLTuple(ltuple),NOFLATGUARD);
                      DISPATCH(2);
                    }
-                 } else if (isLTuple(term)) {
+                 } else if (oz_isLTuple(term)) {
                    sPointer = tagged2LTuple(term)->getRef();
                    SetReadMode;
                    DISPATCH(2);
@@ -770,7 +770,7 @@ Case(UNIFYLITERAL)
          DISPATCH(2);
        }
 
-       if ( isLiteral(tag) && literalEq(term,atm) ) {
+       if ( isLiteralTag(tag) && literalEq(term,atm) ) {
          DISPATCH(2);
        }
 
@@ -805,7 +805,7 @@ Case(UNIFYLITERAL)
         DISPATCH(2);
       }
 
-      if ( (tag == tagTypeOf(i)) && numberEq(term,i)) {
+      if (oz_numberEq(term,i)) {
         DISPATCH(2);
       }
 

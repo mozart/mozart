@@ -79,15 +79,6 @@ void oz_bindToNonvar(OZ_Term *varPtr, OZ_Term var,
  * values
  * -----------------------------------------------------------------------*/
 
-#define oz_isVariable(t) isAnyVar(t)
-#define oz_isInt(t) isInt(t)
-#define oz_isFloat(t) isFloat(t)
-#define oz_isAtom(t) isAtom(t)
-#define oz_isDictionary(t) isDictionary(t)
-#define oz_isThread(t) isThread(t)
-#define oz_isProcedure(t) isProcedure(t)
-#define oz_isTuple(t) isTuple(t)
-
 #define oz_true() NameTrue
 #define oz_false() NameFalse
 #define oz_unit() NameUnit
@@ -118,8 +109,8 @@ OZ_Term oz_unsignedLong(unsigned long i);
 inline
 OZ_Term oz_newChunk(OZ_Term val)
 {
-  Assert(val==deref(val));
-  Assert(isRecord(val));
+  Assert(val==oz_deref(val));
+  Assert(oz_isRecord(val));
   return makeTaggedConst(new SChunk(oz_currentBoard(), val));
 }
 
@@ -153,12 +144,12 @@ OZ_Term oz_isList(OZ_Term l, int checkChar=0)
   OZ_Term old = l;
   Bool updateF = 0;
   int len = 0;
-  while (isCons(l)) {
+  while (oz_isCons(l)) {
     len++;
     if (checkChar) {
       OZ_Term h = head(l);
       DerefReturnVar(h);
-      if (!isSmallInt(h)) return NameFalse;
+      if (!oz_isSmallInt(h)) return NameFalse;
       int i=smallIntValue(h);
       if (i<0 || i>255) return NameFalse;
       if (checkChar>1 && i==0) return NameFalse;
@@ -167,11 +158,11 @@ OZ_Term oz_isList(OZ_Term l, int checkChar=0)
     DerefReturnVar(l);
     if (l==old) return NameFalse; // cyclic
     if (updateF) {
-      old=deref(tail(old));
+      old=oz_deref(tail(old));
     }
     updateF=1-updateF;
   }
-  if (isNil(l)) {
+  if (oz_isNil(l)) {
     return oz_int(len);
   } else {
     return NameFalse;
@@ -181,8 +172,8 @@ OZ_Term oz_isList(OZ_Term l, int checkChar=0)
 inline
 int oz_isPair(OZ_Term term)
 {
-  if (isLiteral(term)) return literalEq(term,AtomPair);
-  if (!isSRecord(term)) return 0;
+  if (oz_isLiteral(term)) return literalEq(term,AtomPair);
+  if (!oz_isSRecord(term)) return 0;
   SRecord *sr = tagged2SRecord(term);
   if (!sr->isTuple()) return 0;
   return literalEq(sr->getLabel(),AtomPair);
@@ -191,7 +182,7 @@ int oz_isPair(OZ_Term term)
 inline
 int oz_isPair2(OZ_Term term)
 {
-  if (!isSRecord(term)) return 0;
+  if (!oz_isSRecord(term)) return 0;
   SRecord *sr = tagged2SRecord(term);
   if (!sr->isTuple()) return 0;
   if (!literalEq(sr->getLabel(),AtomPair)) return 0;
@@ -253,7 +244,7 @@ Arity *oz_makeArity(OZ_Term list)
 #define oz_suspendOn(vin) {                     \
   OZ_Term v=vin;                                \
   DEREF(v,vPtr,___1);                           \
-  Assert(isAnyVar(v));                          \
+  Assert(oz_isVariable(v));                             \
   am.addSuspendVarList(vPtr);                   \
   return SUSPEND;                               \
 }
@@ -266,12 +257,12 @@ Arity *oz_makeArity(OZ_Term list)
 #define oz_suspendOn2(v1in,v2in) {              \
   OZ_Term v1=v1in;                              \
   DEREF(v1,v1Ptr,___1);                         \
-  if (isAnyVar(v1)) {                           \
+  if (oz_isVariable(v1)) {                              \
     am.addSuspendVarList(v1Ptr);                \
   }                                             \
   OZ_Term v2=v2in;                              \
   DEREF(v2,v2Ptr,___2);                         \
-  if (isAnyVar(v2)) {                           \
+  if (oz_isVariable(v2)) {                              \
     am.addSuspendVarList(v2Ptr);                \
   }                                             \
   return SUSPEND;                               \
@@ -280,17 +271,17 @@ Arity *oz_makeArity(OZ_Term list)
 #define oz_suspendOn3(v1in,v2in,v3in) {         \
   OZ_Term v1=v1in;                              \
   DEREF(v1,v1Ptr,___1);                         \
-  if (isAnyVar(v1)) {                           \
+  if (oz_isVariable(v1)) {                              \
     am.addSuspendVarList(v1Ptr);                \
   }                                             \
   OZ_Term v2=v2in;                              \
   DEREF(v2,v2Ptr,___2);                         \
-  if (isAnyVar(v2)) {                           \
+  if (oz_isVariable(v2)) {                              \
     am.addSuspendVarList(v2Ptr);                \
   }                                             \
   OZ_Term v3=v3in;                              \
   DEREF(v3,v3Ptr,___3);                         \
-  if (isAnyVar(v3)) {                           \
+  if (oz_isVariable(v3)) {                              \
     am.addSuspendVarList(v3Ptr);                \
   }                                             \
   return SUSPEND;                               \

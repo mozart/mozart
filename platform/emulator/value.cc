@@ -408,12 +408,12 @@ TaggedRef appendI(TaggedRef x,TaggedRef y)
   TaggedRef ret;
   TaggedRef *out=&ret;
 
-  x=deref(x);
-  while (isCons(x)) {
+  x=oz_deref(x);
+  while (oz_isCons(x)) {
     LTuple *lt=new LTuple(head(x),makeTaggedNULL());
     *out=makeTaggedLTuple(lt);
     out=lt->getRefTail();
-    x=deref(tail(x));
+    x=oz_deref(tail(x));
   }
   *out=y;
   return ret;
@@ -421,12 +421,12 @@ TaggedRef appendI(TaggedRef x,TaggedRef y)
 
 Bool member(TaggedRef elem,TaggedRef list)
 {
-  elem = deref(elem);
-  list = deref(list);
-  while (isCons(list)) {
-    if (elem==deref(head(list)))
+  elem = oz_deref(elem);
+  list = oz_deref(list);
+  while (oz_isCons(list)) {
+    if (elem==oz_deref(head(list)))
       return OK;
-    list = deref(tail(list));
+    list = oz_deref(tail(list));
   }
   return NO;
 }
@@ -437,15 +437,15 @@ Bool member(TaggedRef elem,TaggedRef list)
 TaggedRef reverseC(TaggedRef l)
 {
   TaggedRef out=nil();
-  l=deref(l);
-  while (isCons(l)) {
+  l=oz_deref(l);
+  while (oz_isCons(l)) {
     LTuple *lt=tagged2LTuple(l);
-    TaggedRef next=deref(lt->getTail());
+    TaggedRef next=oz_deref(lt->getTail());
     lt->setTail(out);
     out = l;
     l = next;
   }
-  Assert(isNil(l));
+  Assert(oz_isNil(l));
   return out;
 }
 
@@ -456,7 +456,7 @@ TaggedRef duplist(TaggedRef list, int &len)
   TaggedRef ret = nil();
   TaggedRef *aux = &ret;
 
-  while(isCons(list)) {
+  while(oz_isCons(list)) {
     len++;
     *aux = cons(head(list),*aux);
     aux = tagged2LTuple(*aux)->getRefTail();
@@ -510,8 +510,8 @@ Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity, RefsArr
     return NULL;
 
   DEREF(method,_1,_2);
-  if (isAnyVar(method)) return NULL;
-  Assert(isAbstraction(method));
+  if (oz_isVariable(method)) return NULL;
+  Assert(oz_isAbstraction(method));
 
   Abstraction *abstr = (Abstraction*) tagged2Const(method);
   defaultsUsed = NO;
@@ -527,8 +527,8 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
   if (getDefMethods()->getArg(label,def)!=PROCEED)
     return NO;
 
-  def = deref(def);
-  Assert(isSRecord(def));
+  def = oz_deref(def);
+  Assert(oz_isSRecord(def));
   SRecord *rec = tagged2SRecord(def);
 
   if (rec->isTuple()) {
@@ -538,11 +538,11 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
     int widthDefault  = rec->getWidth();
     int widthProvided = getTupleWidth(arity);
     if (widthDefault < widthProvided ||
-        literalEq(deref(rec->getArg(widthProvided)),NameOoRequiredArg))
+        literalEq(oz_deref(rec->getArg(widthProvided)),NameOoRequiredArg))
       return NO;
 
     for (int i=widthProvided; i<widthDefault; i++) {
-      if (literalEq(deref(rec->getArg(i)),NameOoDefaultVar)) {
+      if (literalEq(oz_deref(rec->getArg(i)),NameOoDefaultVar)) {
         X[i] = oz_newVariable();
       } else {
         X[i] = rec->getArg(i);
@@ -561,11 +561,11 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
 
   int argno;
   int argnoProvided = 0;
-  for (argno = 0; isCons(def); def = tail(def), argno++) {
+  for (argno = 0; oz_isCons(def); def = tail(def), argno++) {
     TaggedRef feat  = head(def);
-    TaggedRef value = deref(rec->getArg(argno));
+    TaggedRef value = oz_deref(rec->getArg(argno));
 
-    if (!isNil(arityList) && featureEq(head(arityList),feat)) {
+    if (!oz_isNil(arityList) && featureEq(head(arityList),feat)) {
       arityList = tail(arityList);
       auxX[argno] = X[argnoProvided];
       argnoProvided++;
@@ -579,7 +579,7 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
   }
 
   /* overspecified? */
-  if (!isNil(arityList))
+  if (!oz_isNil(arityList))
     return NO;
 
   while(argno>0) {
@@ -591,48 +591,48 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
 }
 
 TaggedRef ObjectClass::getFallbackNew() {
-  TaggedRef fbs = deref(classGetFeature(NameOoFallback));
+  TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));
 
-  if (!isSRecord(fbs))
+  if (!oz_isSRecord(fbs))
     return 0;
 
   SRecord * sr = tagged2SRecord(fbs);
 
-  TaggedRef fbn = deref(sr->getFeature(AtomNew));
+  TaggedRef fbn = oz_deref(sr->getFeature(AtomNew));
 
-  if (!isAbstraction(fbn) || tagged2Const(fbn)->getArity() != 3)
+  if (!oz_isAbstraction(fbn) || tagged2Const(fbn)->getArity() != 3)
     return 0;
 
   return fbn;
 }
 
 TaggedRef ObjectClass::getFallbackSend() {
-  TaggedRef fbs = deref(classGetFeature(NameOoFallback));
+  TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));
 
-  if (!isSRecord(fbs))
+  if (!oz_isSRecord(fbs))
     return 0;
 
   SRecord * sr = tagged2SRecord(fbs);
 
-  TaggedRef fbss = deref(sr->getFeature(AtomSend));
+  TaggedRef fbss = oz_deref(sr->getFeature(AtomSend));
 
-  if (!isAbstraction(fbss) || tagged2Const(fbss)->getArity() != 3)
+  if (!oz_isAbstraction(fbss) || tagged2Const(fbss)->getArity() != 3)
     return 0;
 
   return fbss;
 }
 
 TaggedRef ObjectClass::getFallbackApply() {
-  TaggedRef fbs = deref(classGetFeature(NameOoFallback));
+  TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));
 
-  if (!isSRecord(fbs))
+  if (!oz_isSRecord(fbs))
     return 0;
 
   SRecord * sr = tagged2SRecord(fbs);
 
-  TaggedRef fba = deref(sr->getFeature(AtomApply));
+  TaggedRef fba = oz_deref(sr->getFeature(AtomApply));
 
-  if (!isAbstraction(fba) || tagged2Const(fba)->getArity() != 2)
+  if (!oz_isAbstraction(fba) || tagged2Const(fba)->getArity() != 2)
     return 0;
 
   return fba;
@@ -693,15 +693,15 @@ void SRecord::initArgs()
 static
 Bool listequal(TaggedRef lista, TaggedRef listb)
 {
-  while (isCons(lista)) {
-    if (!isCons(listb)) return NO;
+  while (oz_isCons(lista)) {
+    if (!oz_isCons(listb)) return NO;
     if ( !featureEq(head(lista),head(listb)) ) return NO;
 
     lista = tail(lista);
     listb = tail(listb);
   }
-  Assert(isNil(lista));
-  return isNil(listb);
+  Assert(oz_isNil(lista));
+  return oz_isNil(listb);
 }
 
 /*
@@ -715,12 +715,12 @@ Bool listequal(TaggedRef lista, TaggedRef listb)
 static
 TaggedRef insert(TaggedRef a, TaggedRef list) {
 
-  Assert(isFeature(a));
+  Assert(oz_isFeature(a));
 
   TaggedRef out;
   TaggedRef *ptr=&out;
 
-  while (isCons(list)) {
+  while (oz_isCons(list)) {
     TaggedRef oldhead = head(list);
     CHECK_DEREF(oldhead);
 
@@ -744,7 +744,7 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
       return 0;
     }
   }
-  Assert(isNil(list));
+  Assert(oz_isNil(list));
   *ptr=cons(a,nil());
 
   return out;
@@ -764,14 +764,14 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old)
   DEREF(ins,_1,_2);
   CHECK_NONVAR(ins);
 
-  while (isCons(ins)) {
-    old = insert(deref(head(ins)),old);
+  while (oz_isCons(ins)) {
+    old = insert(oz_deref(head(ins)),old);
     CHECK_DEREF(old);
-    ins = deref(tail(ins));
+    ins = oz_deref(tail(ins));
     CHECK_NONVAR(ins);
   }
 
-  Assert(isNil(ins));
+  Assert(oz_isNil(ins));
 
   return old;
 }
@@ -816,12 +816,12 @@ void quicksort(TaggedRef** first, TaggedRef** last)
 
 Bool isSorted(TaggedRef list)
 {
-  list = deref(list);
-  if (isNil(list)) return OK;
+  list = oz_deref(list);
+  if (oz_isNil(list)) return OK;
 
   while(1) {
-    TaggedRef cdr = deref(tail(list));
-    if (isNil(cdr)) return OK;
+    TaggedRef cdr = oz_deref(tail(list));
+    if (oz_isNil(cdr)) return OK;
     if (featureCmp(head(list),head(cdr))!=-1) return NO;
     list = cdr;
   }
@@ -839,7 +839,7 @@ TaggedRef sortlist(TaggedRef list,int len)
   // put pointers to elems of list in array r
   TaggedRef tmp = list;
   int i = 0;
-  while (isCons(tmp)) {
+  while (oz_isCons(tmp)) {
     r[i++] = tagged2LTuple(tmp)->getRef();
     tmp = tail(tmp);
   }
@@ -851,7 +851,7 @@ TaggedRef sortlist(TaggedRef list,int len)
   TaggedRef pElem = list;
   TaggedRef cElem = tagged2LTuple(list)->getTail();
   int p = 0, c = 1;
-  while (isCons(cElem)) {
+  while (oz_isCons(cElem)) {
     LTuple* cElemPtr = tagged2LTuple(cElem);
     if (featureEq(*r[p], *r[c])) {
       tagged2LTuple(pElem)->setTail(cElemPtr->getTail());
@@ -870,23 +870,23 @@ TaggedRef sortlist(TaggedRef list,int len)
 // mm2: cycle test
 TaggedRef packsort(TaggedRef list)
 {
-  list=deref(list);
-  if (isNil(list)) {
+  list=oz_deref(list);
+  if (oz_isNil(list)) {
     return nil();
   }
   int len=0;
 
   TaggedRef tmp = list;
 
-  while (isCons(tmp)) {
+  while (oz_isCons(tmp)) {
     len++;
     LTuple *lt=tagged2LTuple(tmp);
-    lt->setHead(deref(lt->getHead()));
-    tmp=deref(lt->getTail());
+    lt->setHead(oz_deref(lt->getHead()));
+    tmp=oz_deref(lt->getTail());
     lt->setTail(tmp);
   }
 
- if (!isNil(tmp)) return 0;
+ if (!oz_isNil(tmp)) return 0;
 
  return sortlist(list,len);
 }
@@ -946,7 +946,7 @@ Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
   ar->hashmask = size-1;
   int j=0;
   for (int i=0 ; i<size ; ar->table[i++].key = 0);
-  while (isCons(entrylist)) {
+  while (oz_isCons(entrylist)) {
     const TaggedRef entry = head(entrylist);
     const int hsh         = featureHash(entry);
     int i                 = ar->hashfold(hsh);
@@ -1019,9 +1019,9 @@ Bool ArityTable::hashvalue( TaggedRef list, int &ret )
 {
   int i = 0;
   int len = 0;
-  while(isCons(list)){
+  while(oz_isCons(list)){
     TaggedRef it=head(list);
-    if (len>=0 && isSmallInt(it) && smallIntValue(it)==len+1) {
+    if (len>=0 && oz_isSmallInt(it) && smallIntValue(it)==len+1) {
       len++;
     } else {
       len = -1;
@@ -1029,7 +1029,7 @@ Bool ArityTable::hashvalue( TaggedRef list, int &ret )
     i += featureHash(it);
     list = tail(list);
   }
-  Assert(isNil(list));
+  Assert(oz_isNil(list));
   ret = hashfold(i);
   return len < 0 ? NO : OK;
 }
@@ -1100,17 +1100,17 @@ TaggedRef merge(TaggedRef lista, TaggedRef listb)
   TaggedRef *out = &ret;
 
  loop:
-  if (isNil(lista)) {
+  if (oz_isNil(lista)) {
     *out = listb;
     return ret;
   }
 
-  if (isNil(listb)) {
+  if (oz_isNil(listb)) {
     *out = lista;
     return ret;
   }
 
-  Assert(isCons(lista) && isCons(listb));
+  Assert(oz_isCons(lista) && oz_isCons(listb));
 
   TaggedRef a = head(lista);
   TaggedRef b = head(listb);
@@ -1163,7 +1163,7 @@ TaggedRef oz_adjoin(SRecord *lrec, SRecord* hrecord)
   // copy left record to new record
   TaggedRef ar = list1;
   CHECK_DEREF(ar);
-  while (isCons(ar)) {
+  while (oz_isCons(ar)) {
     TaggedRef a = head(ar);
     CHECK_DEREF(a);
     newrec->setFeature(a,lrec->getFeature(a));
@@ -1173,7 +1173,7 @@ TaggedRef oz_adjoin(SRecord *lrec, SRecord* hrecord)
 
   TaggedRef har = list2;
   CHECK_DEREF(har);
-  while (isCons(har)) {
+  while (oz_isCons(har)) {
     TaggedRef a = head(har);
     CHECK_DEREF(a);
     newrec->setFeature(a,hrecord->getFeature(a));
@@ -1203,14 +1203,14 @@ TaggedRef oz_adjoinAt(SRecord *rec, TaggedRef feature, TaggedRef value)
     SRecord *newrec = SRecord::newSRecord(rec->getLabel(),arity);
 
     CHECK_DEREF(oldArityList);
-    while (isCons(oldArityList)) {
+    while (oz_isCons(oldArityList)) {
       TaggedRef a = head(oldArityList);
       CHECK_DEREF(a);
       newrec->setFeature(a,rec->getFeature(a));
       oldArityList = tail(oldArityList);
       CHECK_DEREF(oldArityList);
     }
-    Assert(isNil(oldArityList));
+    Assert(oz_isNil(oldArityList));
     newrec->setFeature(feature,value);
     return newrec->normalize();
   }
@@ -1231,7 +1231,7 @@ TaggedRef oz_adjoinList(SRecord *lrec,TaggedRef arityList,TaggedRef proplist)
 
   TaggedRef ar = lrec->getArityList();
   CHECK_DEREF(ar);
-  while (isCons(ar)) {
+  while (oz_isCons(ar)) {
     TaggedRef a = head(ar);
     CHECK_DEREF(a);
     newrec->setFeature(a,lrec->getFeature(a));
@@ -1248,11 +1248,11 @@ void SRecord::setFeatures(TaggedRef proplist)
 {
   DEREF(proplist,_1,_2);
   CHECK_NONVAR(proplist);
-  while (isCons(proplist)) {
+  while (oz_isCons(proplist)) {
     TaggedRef pair = head(proplist);
     DEREF(pair,_3,_4);
     CHECK_NONVAR(pair);
-    proplist = deref(tail(proplist));
+    proplist = oz_deref(tail(proplist));
     CHECK_NONVAR(proplist);
 
     TaggedRef fea = oz_left(pair);
@@ -1270,7 +1270,7 @@ void SRecord::setFeatures(TaggedRef proplist)
 
   }
 
-  Assert(isNil(proplist));
+  Assert(oz_isNil(proplist));
 }
 
         /*------------------------------*/
@@ -1300,7 +1300,7 @@ TaggedRef SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
   }
 
   TaggedRef oldVal = args[i];
-  if (!isRef(oldVal) && isAnyVar(oldVal)) {
+  if (!oz_isRef(oldVal) && oz_isVariable(oldVal)) {
     return oz_adjoinAt(this,feature,value);
   }
   setArg(i,value);
@@ -1323,8 +1323,8 @@ TaggedRef makeTupleArityList(int i)
  */
 SRecord *makeRecord(TaggedRef t)
 {
-  if (isSRecord(t)) return tagged2SRecord(t);
-  Assert(isLTuple(t));
+  if (oz_isSRecord(t)) return tagged2SRecord(t);
+  Assert(oz_isLTuple(t));
   LTuple *lt=tagged2LTuple(t);
   SRecord *ret = SRecord::newSRecord(AtomCons,
                                      aritytable.find(makeTupleArityList(2)));
@@ -1476,28 +1476,29 @@ int featureEqOutline(TaggedRef a, TaggedRef b)
 {
   Assert(a != b); // already check in featureEq
 
-  return tagTypeOf(a) == BIGINT && tagTypeOf(b) == BIGINT && bigIntEq(a,b);
+  return bigIntEq(a,b);
 }
 
 inline
-Bool isForeignPointer(TaggedRef term)
+Bool oz_isForeignPointer(TaggedRef term)
 {
-  term = deref(term);
-  return isConst(term) && tagged2Const(term)->getType() == Co_Foreign_Pointer;
+  term = oz_deref(term);
+  return oz_isConst(term)
+    && tagged2Const(term)->getType() == Co_Foreign_Pointer;
 }
 
 void* OZ_getForeignPointer(TaggedRef t)
 {
-  if (! isForeignPointer(t)) {
+  if (! oz_isForeignPointer(t)) {
     OZ_warning("Foreign pointer expected in OZ_getForeignPointer.\n Got 0x%x. Result unspecified.\n",t);
     return NULL;
   }
-  return ((ForeignPointer*)tagged2Const(deref(t)))->getPointer();
+  return ((ForeignPointer*)tagged2Const(oz_deref(t)))->getPointer();
 }
 
 int OZ_isForeignPointer(TaggedRef t)
 {
-  return isForeignPointer(deref(t));
+  return oz_isForeignPointer(oz_deref(t));
 }
 
 OZ_Term OZ_makeForeignPointer(void*p)
@@ -1509,7 +1510,7 @@ OZ_Term OZ_makeForeignPointer(void*p)
 ForeignPointer*
 openForeignPointer(TaggedRef t)
 {
-  return (ForeignPointer*)tagged2Const(deref(t));
+  return (ForeignPointer*)tagged2Const(oz_deref(t));
 }
 
 TaggedRef oz_long(long i)

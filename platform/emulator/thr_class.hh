@@ -494,15 +494,15 @@ public:
 };
 
 inline
-Bool isThread(TaggedRef term)
+Bool oz_isThread(TaggedRef term)
 {
-  return isConst(term) && tagged2Const(term)->getType() == Co_Thread;
+  return oz_isConst(term) && tagged2Const(term)->getType() == Co_Thread;
 }
 
 inline
 Thread *tagged2Thread(TaggedRef term)
 {
-  Assert(isThread(term));
+  Assert(oz_isThread(term));
   return (Thread *) tagged2Const(term);
 }
 

@@ -52,12 +52,12 @@ void OZ_FDIntVar::operator delete[](void * p, size_t s)
 
 void OZ_FDIntVar::ask(OZ_Term v)
 {
-  Assert(isRef(v) || !isAnyVar(v));
+  Assert(oz_isRef(v) || !oz_isVariable(v));
 
   _DEREF(v, varPtr, vtag);
   var = v;
 
-  if (isSmallInt(vtag)) {
+  if (isSmallIntTag(vtag)) {
     initial_size = dom.initSingleton(smallIntValue(v));
     domPtr = &dom;
     setSort(sgl_e);
@@ -84,12 +84,12 @@ void OZ_FDIntVar::ask(OZ_Term v)
 
 int OZ_FDIntVar::read(OZ_Term v)
 {
-  Assert(isRef(v) || !isAnyVar(v));
+  Assert(oz_isRef(v) || !oz_isVariable(v));
 
   _DEREF(v, varPtr, vtag);
   var = v;
 
-  if (isSmallInt(vtag)) {
+  if (isSmallIntTag(vtag)) {
 
     initial_size = dom.initSingleton(smallIntValue(v));
     initial_width = 0;
@@ -184,12 +184,12 @@ int OZ_FDIntVar::read(OZ_Term v)
 
 int OZ_FDIntVar::readEncap(OZ_Term v)
 {
-  Assert(isRef(v) || !isAnyVar(v));
+  Assert(oz_isRef(v) || !oz_isVariable(v));
 
   _DEREF(v, varPtr, vtag);
   var = v;
 
-  if (isSmallInt(vtag)) {
+  if (isSmallIntTag(vtag)) {
     initial_size = dom.initSingleton(smallIntValue(v));
     initial_width = 0;
     domPtr = &dom;

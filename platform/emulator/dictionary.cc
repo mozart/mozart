@@ -103,7 +103,7 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize) {
 
     for(dt_index i=size; i--; ) {
       if (table[i].value!=makeTaggedNULL()) {
-        Assert(isFeature(table[i].ident));
+        Assert(oz_isFeature(table[i].ident));
 
         ret->insert(table[i].ident, table[i].value, &valid);
         Assert(valid);
@@ -125,7 +125,7 @@ inline
 dt_index DynamicTable::fullhash(TaggedRef id)
 {
   Assert(isPwrTwo(size));
-  Assert(isFeature(id));
+  Assert(oz_isFeature(id));
   // Function 'hash' may eventually return the literal's seqNumber (see value.hh):
   if (size==0) { return invalidIndex; }
   dt_index size1=(size-1);
@@ -155,7 +155,7 @@ dt_index DynamicTable::fullhash(TaggedRef id)
 // User should test for and increase size of hash table if it becomes too full.
 TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
     Assert(isPwrTwo(size));
-    Assert(isFeature(id));
+    Assert(oz_isFeature(id));
     Assert(!fullTest());
     dt_index i=fullhash(id);
     if (i==invalidIndex) {
@@ -165,7 +165,7 @@ TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
     *valid = TRUE;
     Assert(i<size);
     if (table[i].value!=makeTaggedNULL()) {
-        Assert(isFeature(table[i].ident));
+        Assert(oz_isFeature(table[i].ident));
         // Ident exists already; return value & don't insert
         return table[i].value;
     } else {
@@ -183,7 +183,7 @@ TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
 // Return NULL if nothing is found
 TaggedRef DynamicTable::lookup(TaggedRef id) {
     Assert(isPwrTwo(size));
-    Assert(isFeature(id));
+    Assert(oz_isFeature(id));
     dt_index i=fullhash(id);
     Assert(i==invalidIndex || i<size);
     if (i!=invalidIndex &&
@@ -201,11 +201,11 @@ TaggedRef DynamicTable::lookup(TaggedRef id) {
 // Return TRUE if index id successfully updated, else FALSE
 Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
     Assert(isPwrTwo(size));
-    Assert(isFeature(id));
+    Assert(oz_isFeature(id));
     dt_index i=fullhash(id);
     Assert(i==invalidIndex || i<size);
     if (i!=invalidIndex && table[i].value!=makeTaggedNULL()) {
-        Assert(isFeature(table[i].ident));
+        Assert(oz_isFeature(table[i].ident));
         // Ident exists; update value & return TRUE:
         table[i].value=val;
         return TRUE;
@@ -221,7 +221,7 @@ Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
 Bool DynamicTable::add(TaggedRef id, TaggedRef val)
 {
   Assert(isPwrTwo(size));
-  Assert(isFeature(id));
+  Assert(oz_isFeature(id));
   dt_index i=fullhash(id);
   Assert(i==invalidIndex || i<size);
   if (i!=invalidIndex) {
@@ -240,7 +240,7 @@ Bool DynamicTable::add(TaggedRef id, TaggedRef val)
 Bool DynamicTable::addCond(TaggedRef id, TaggedRef val)
 {
   Assert(isPwrTwo(size));
-  Assert(isFeature(id));
+  Assert(oz_isFeature(id));
   dt_index i=fullhash(id);
   Assert(i==invalidIndex || i<size);
   if (i!=invalidIndex) {
@@ -258,7 +258,7 @@ Bool DynamicTable::addCond(TaggedRef id, TaggedRef val)
 Bool DynamicTable::exchange(TaggedRef id, TaggedRef new_val,
                             TaggedRef * old_val) {
   Assert(isPwrTwo(size));
-  Assert(isFeature(id));
+  Assert(oz_isFeature(id));
   dt_index i=fullhash(id);
   Assert(i==invalidIndex || i<size);
   if (i!=invalidIndex) {
@@ -283,7 +283,7 @@ Bool DynamicTable::exchange(TaggedRef id, TaggedRef new_val,
 // return a smaller table that contains all its entries.  Otherwise, return same table.
 DynamicTable *DynamicTable::remove(TaggedRef id) {
     Assert(isPwrTwo(size));
-    Assert(isFeature(id));
+    Assert(oz_isFeature(id));
     dt_index i=fullhash(id);
     Assert(i==invalidIndex || i<size);
     DynamicTable* ret=this;
@@ -309,7 +309,7 @@ Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
   for (dt_index i=dt->size; i--; ) {
 
     if (dt->table[i].value!=makeTaggedNULL()) {
-      Assert(isFeature(dt->table[i].ident));
+      Assert(oz_isFeature(dt->table[i].ident));
 
       Bool exists=lookup(dt->table[i].ident);
       if (!exists) return TRUE;
@@ -332,7 +332,7 @@ void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
 
     if (table[i].value!=makeTaggedNULL()) {
 
-      Assert(isFeature(table[i].ident));
+      Assert(oz_isFeature(table[i].ident));
 
       if (dt->fullTest())
         resizeDynamicTable(dt);
@@ -373,7 +373,7 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
   for (dt_index i=size; i--; ) {
 
     if (table[i].value!=makeTaggedNULL()) {
-      Assert(isFeature(table[i].ident));
+      Assert(oz_isFeature(table[i].ident));
 
       TaggedRef val=sr.getFeature(table[i].ident);
 
@@ -418,7 +418,7 @@ TaggedRef DynamicTable::extraFeatures(DynamicTable* &dt) {
 TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
   TaggedRef flist=AtomNil;
   TaggedRef arity=sr.getArityList();
-  while (isCons(arity)) {
+  while (oz_isCons(arity)) {
     TaggedRef feat=head(arity);
     if (!lookup(feat)) {
       flist=cons(feat,flist);
@@ -437,7 +437,7 @@ TaggedRef DynamicTable::getArityList(TaggedRef tail) {
         TaggedRef *arr=stuple->getRef();
         for (int ai=0,di=0; di<size; di++) {
             if (table[di].value!=makeTaggedNULL()) {
-               Assert(isFeature(table[di].ident));
+               Assert(oz_isFeature(table[di].ident));
                arr[ai] = table[di].ident;
                ai++;
             }
@@ -456,7 +456,7 @@ TaggedRef DynamicTable::getKeys()
   TaggedRef arity=AtomNil;
   for (int di=0; di<size; di++) {
     if (table[di].value!=makeTaggedNULL()) {
-      Assert(isFeature(table[di].ident));
+      Assert(oz_isFeature(table[di].ident));
       arity=cons(table[di].ident,arity);
     }
   }
@@ -468,7 +468,7 @@ TaggedRef DynamicTable::getPairs() {
   TaggedRef arity=AtomNil;
   for (int di=0; di<size; di++) {
     if (table[di].value!=makeTaggedNULL()) {
-      Assert(isFeature(table[di].ident));
+      Assert(oz_isFeature(table[di].ident));
       SRecord *sr = SRecord::newSRecord(AtomPair,2);
       sr->setArg(0, table[di].ident);
       sr->setArg(1, table[di].value);
@@ -484,7 +484,7 @@ TaggedRef DynamicTable::getItems()
   TaggedRef items=AtomNil;
   for (int di=0; di<size; di++) {
     if (table[di].value!=makeTaggedNULL()) {
-      Assert(isFeature(table[di].ident));
+      Assert(oz_isFeature(table[di].ident));
       items=cons(table[di].value,items);
     }
   }
@@ -499,7 +499,7 @@ Bool DynamicTable::hasExtraFeatures(int tupleArity) {
     for (dt_index i=0; i<size; i++) {
         if (table[i].value!=makeTaggedNULL()) {
             feat=table[i].ident;
-            if (!isSmallInt(feat)) return TRUE;
+            if (!oz_isSmallInt(feat)) return TRUE;
             if (smallIntValue(feat)>tupleArity) return TRUE;
         }
     }

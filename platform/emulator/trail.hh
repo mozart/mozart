@@ -65,7 +65,7 @@ public:
   void pushIfVar(TaggedRef A)
   {
     DEREF(A,Aptr,_1);
-    if (isAnyVar(A)) { pushRef(Aptr,A); }
+    if (oz_isVariable(A)) { pushRef(Aptr,A); }
   }
 
   void pushMark() { Stack::push(trailMark); }

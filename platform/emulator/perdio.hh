@@ -373,7 +373,7 @@ void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI);
 /* RS: have to GC the byte stream again !!!!!!!!!*/
 #define CheckNogoods(bs,msg,Cleanup)                    \
   { OZ_Term nogoods = bs->getNoGoods();                 \
-    if (!isNil(nogoods)) {                              \
+    if (!oz_isNil(nogoods)) {                           \
        Cleanup;                                         \
        return oz_raise(E_ERROR,OZ_atom("dp"),msg,2,     \
                        oz_atom("nogoods"),              \

@@ -315,8 +315,8 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 
 Bool GenBoolVariable::valid(TaggedRef val)
 {
-  Assert(!isRef(val));
-  if (isSmallInt(val)) {
+  Assert(!oz_isRef(val));
+  if (oz_isSmallInt(val)) {
     int intval = OZ_intToC(val);
     return (intval == 0 || intval == 1);
   }

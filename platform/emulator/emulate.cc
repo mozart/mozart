@@ -132,7 +132,7 @@ inline
 Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
                            InlineCache *cache, RefsArray X)
 {
-  Assert(isFeature(label));
+  Assert(oz_isFeature(label));
   return cache->lookup(obj->getClass(),label,arity,X);
 }
 
@@ -140,7 +140,7 @@ inline
 Abstraction *getApplyMethod(ObjectClass *cl, ApplMethInfoClass *ami,
                             SRecordArity arity, RefsArray X)
 {
-  Assert(isFeature(ami->methName));
+  Assert(oz_isFeature(ami->methName));
   return ami->methCache.lookup(cl,ami->methName,arity,X);
 }
 
@@ -276,7 +276,7 @@ void deallocateY(RefsArray a)
       TaggedRef term = indexTerm;                                       \
       DEREF(term,termPtr,_2);                                           \
                                                                         \
-      if (isLTuple(term)) {                                             \
+      if (oz_isLTuple(term)) {                                          \
         int offset = table->listLabel;                                  \
         if (!offset) offset = table->elseLabel;                         \
         sPointer = tagged2LTuple(term)->getRef();                       \
@@ -320,7 +320,7 @@ OZ_Return fastUnify(OZ_Term A, OZ_Term B, ByteCode *scp=0)
     OZ_Term term2 = B;
     DEREF0(term2,term2Ptr,_2);
 
-    if (!isAnyVar(term2)) {
+    if (!oz_isVariable(term2)) {
       if (am.currentUVarPrototypeEq(term1)) {
         COUNT(varNonvarUnify);
         doBind(term1Ptr,term2);
@@ -329,7 +329,7 @@ OZ_Return fastUnify(OZ_Term A, OZ_Term B, ByteCode *scp=0)
       if (term1==term2) {
         goto exit;
       }
-    } else if (!isAnyVar(term1) && am.currentUVarPrototypeEq(term2)) {
+    } else if (!oz_isVariable(term1) && am.currentUVarPrototypeEq(term2)) {
       COUNT(varNonvarUnify);
       doBind(term2Ptr,term1);
       goto exit;
@@ -352,11 +352,11 @@ static
 Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC,
                  TaggedRef *X)
 {
-  Assert(!isRef(pred));
+  Assert(!oz_isRef(pred));
 
   Abstraction *abstr = NULL;
   if (gci->isMethAppl) {
-    if (!isObjectClass(pred)) goto insertMethApply;
+    if (!oz_isClass(pred)) goto insertMethApply;
 
     Bool defaultsUsed;
     abstr = tagged2ObjectClass(pred)->getMethod(gci->mn,gci->arity,
@@ -365,7 +365,7 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC,
     if (abstr==NULL) return NO;
     if (defaultsUsed) goto insertMethApply;
   } else {
-    if(!isAbstraction(pred)) goto bombGenCall;
+    if(!oz_isAbstraction(pred)) goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
     if (abstr->getArity() != getWidth(gci->arity))
@@ -687,7 +687,7 @@ void addSuspPtr(TaggedRef *varPtr, Thread *thr)
 void addSusp(TaggedRef var, Thread *thr)
 {
   DEREF(var,varPtr,tag);
-  Assert(isAnyVar(var));
+  Assert(oz_isVariable(var));
 
   addSuspPtr(varPtr,thr);
 }
@@ -709,9 +709,9 @@ void addSusp(TaggedRef var, Thread *thr)
 static
 void suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
 {
-  if (C) { DEREF (C, ptr, _1); if (isAnyVar(C)) addSuspPtr(ptr, th); }
-  if (B) { DEREF (B, ptr, _1); if (isAnyVar(B)) addSuspPtr(ptr, th); }
-  { DEREF (A, ptr, _1); if (isAnyVar(A)) addSuspPtr(ptr, th); }
+  if (C) { DEREF (C, ptr, _1); if (oz_isVariable(C)) addSuspPtr(ptr, th); }
+  if (B) { DEREF (B, ptr, _1); if (oz_isVariable(B)) addSuspPtr(ptr, th); }
+  { DEREF (A, ptr, _1); if (oz_isVariable(A)) addSuspPtr(ptr, th); }
 }
 
 // -----------------------------------------------------------------------
@@ -1094,12 +1094,12 @@ LBLdispatcher:
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
       TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
 
-      if ( isSmallInt(tagA) && isSmallInt(tagB) ) {
+      if ( isSmallIntTag(tagA) && isSmallIntTag(tagB) ) {
         XPC(3) = makeInt(smallIntValue(A) - smallIntValue(B));
         DISPATCH(5);
       }
 
-      if (isFloat(tagA) && isFloat(tagB)) {
+      if (isFloatTag(tagA) && isFloatTag(tagB)) {
         XPC(3) = oz_float(floatValue(A) - floatValue(B));
         DISPATCH(5);
       }
@@ -1120,12 +1120,12 @@ LBLdispatcher:
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
       TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
 
-      if ( isSmallInt(tagA) && isSmallInt(tagB) ) {
+      if ( isSmallIntTag(tagA) && isSmallIntTag(tagB) ) {
         XPC(3) = makeInt(smallIntValue(A) + smallIntValue(B));
         DISPATCH(5);
       }
 
-      if (isFloat(tagA) && isFloat(tagB)) {
+      if (isFloatTag(tagA) && isFloatTag(tagB)) {
         XPC(3) = oz_float(floatValue(A) + floatValue(B));
         DISPATCH(5);
       }
@@ -1145,7 +1145,7 @@ LBLdispatcher:
 
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
 
-      if (isSmallInt(tagA)) {
+      if (isSmallIntTag(tagA)) {
         /* INTDEP */
         int res = (int)A - (1<<tagSize);
         if ((int)A > res) {
@@ -1169,7 +1169,7 @@ LBLdispatcher:
 
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
 
-      if (isSmallInt(tagA)) {
+      if (isSmallIntTag(tagA)) {
         /* INTDEP */
         int res = (int)A + (1<<tagSize);
         if ((int)A < res) {
@@ -1217,7 +1217,7 @@ LBLdispatcher:
       TaggedRef feature = getLiteralArg(PC+2);
       TaggedRef rec = XPC(1);
       DEREF(rec,_1,_2);
-      if (isSRecord(rec)) {
+      if (oz_isSRecord(rec)) {
         SRecord *srec = tagged2SRecord(rec);
         int index = ((InlineCache*)(PC+5))->lookup(srec,feature);
         if (index<0) {
@@ -1313,7 +1313,7 @@ LBLdispatcher:
       Assert(rec!=NULL);
       int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
       if (index>=0) {
-        Assert(isRef(*rec->getRef(index)) || !isAnyVar(*rec->getRef(index)));
+        Assert(oz_isRef(*rec->getRef(index)) || !oz_isVariable(*rec->getRef(index)));
         rec->setArg(index,XPC(2));
         DISPATCH(6);
       }
@@ -1381,12 +1381,12 @@ LBLdispatcher:
           LT_IF(smallIntLess(A,B));
         }
 
-        if (isFloat(tagA)) {
+        if (isFloatTag(tagA)) {
           LT_IF(floatValue(A) < floatValue(B));
         }
 
         if (tagA == LITERAL) {
-          if (isAtom(A) && isAtom(B)) {
+          if (oz_isAtom(A) && oz_isAtom(B)) {
             LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
                          tagged2Literal(B)->getPrintName()) < 0);
           }
@@ -1432,12 +1432,12 @@ LBLdispatcher:
           LT_IF(smallIntLE(A,B));
         }
 
-        if (isFloat(tagA)) {
+        if (isFloatTag(tagA)) {
           LT_IF(floatValue(A) <= floatValue(B));
         }
 
         if (tagA == LITERAL) {
-          if (isAtom(A) && isAtom(B)) {
+          if (oz_isAtom(A) && oz_isAtom(B)) {
             LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
                          tagged2Literal(B)->getPrintName()) <= 0);
           }
@@ -1549,10 +1549,10 @@ LBLdispatcher:
   int toSave         = getPosIntArg(PC+3);
 
   DEREF(aux,auxPtr,_1);
-  if (isAnyVar(aux)) {
+  if (oz_isVariable(aux)) {
     SUSP_PC(auxPtr,toSave,PC);}
 
-  if (!isLock(aux)) {
+  if (!oz_isLock(aux)) {
     /* arghhhhhhhhhh! fucking exceptions (RS) */
     (void) oz_raise(E_ERROR,E_KERNEL,"type",5,NameUnit,NameUnit,OZ_atom("Lock"),
     OZ_int(1),
@@ -1655,7 +1655,7 @@ LBLdispatcher:
       }
 
       if (isTailCall) {
-        TaggedRef list = deref(Xreg(reg));
+        TaggedRef list = oz_deref(Xreg(reg));
         ProgramCounter preddPC = predd->PC;
 #ifndef DISABLE_DEFINITIONCOPY
         Bool copyOnce = predd->copyOnce;
@@ -1710,7 +1710,7 @@ LBLdispatcher:
  SendMethod:
   {
     TaggedRef label    = getLiteralArg(PC+1);
-    TaggedRef origObj  = RegAccess(HelpReg,getRegArg(PC+2));
+    TaggedRef origObj  = RegAccess(HelpReg,getRegArg(PC+2)); // mm2
     TaggedRef object   = origObj;
     SRecordArity arity = (SRecordArity) getAdressArg(PC+3);
 
@@ -1719,7 +1719,7 @@ LBLdispatcher:
     Assert(HelpReg!=X || getWidth(arity)==regToInt(getRegArg(PC+2)));
 
     DEREF(object,objectPtr,_2);
-    if (isObject(object)) {
+    if (oz_isObject(object)) {
       Object *obj      = tagged2Object(object);
       Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4),X);
       if (def == NULL) {
@@ -1733,11 +1733,11 @@ LBLdispatcher:
       JUMPABSOLUTE(def->getPC());
     }
 
-    if (isAnyVar(object)) {
+    if (oz_isVariable(object)) {
       SUSP_PC(objectPtr,getWidth(arity)+1,PC);
     }
 
-    if (isProcedure(object))
+    if (oz_isProcedure(object))
       goto bombSend;
 
     RAISE_APPLY(object, cons(makeMessage(arity,label,X),nil()));
@@ -1770,7 +1770,7 @@ LBLdispatcher:
     if (!isTailCall) PC = PC+3;
 
     DEREF(cls,clsPtr,clsTag);
-    if (!isObjectClass(cls)) {
+    if (!oz_isClass(cls)) {
       goto bombApply;
     }
     def = getApplyMethod(tagged2ObjectClass(cls),ami,arity,X);
@@ -1813,7 +1813,7 @@ LBLdispatcher:
 
        DEREF(taggedPredicate,predPtr,_1);
 
-       if (isAbstraction(taggedPredicate)) {
+       if (oz_isAbstraction(taggedPredicate)) {
          Abstraction *def = tagged2Abstraction(taggedPredicate);
          PrTabEntry *pte = def->getPred();
          CheckArity(pte->getArity(), taggedPredicate);
@@ -1822,8 +1822,8 @@ LBLdispatcher:
          JUMPABSOLUTE(pte->getPC());
        }
 
-       if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
-         if (isAnyVar(taggedPredicate)) {
+       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
+         if (oz_isVariable(taggedPredicate)) {
            /* compiler ensures: if pred is in X[n], then n == arity+1,
             * so we save one additional argument */
            Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
@@ -2245,8 +2245,8 @@ LBLdispatcher:
       predArity = G ? getRefsArraySize(G) : 0;
 
       DEREF(taggedPredicate,predPtr,predTag);
-      if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
-        if (isAnyVar(predTag)) {
+      if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
+        if (isVariableTag(predTag)) {
           CTS->pushCallNoCopy(makeTaggedRef(predPtr),G);
           addSuspPtr(predPtr,CTT);
           return T_SUSPEND;
@@ -2618,11 +2618,11 @@ LBLdispatcher:
       int tailcallAndArity  = getPosIntArg(PC+2);
 
       DEREF(pred,predPtr,_1);
-      if (isAnyVar(pred)) {
+      if (oz_isVariable(pred)) {
         SUSP_PC(predPtr,tailcallAndArity>>1,PC);
       }
 
-      if (isAbstraction(pred)) {
+      if (oz_isAbstraction(pred)) {
         OZ_unprotect((TaggedRef*)(PC+1));
         Abstraction *abstr = tagged2Abstraction(pred);
         AbstractionEntry *entry = new AbstractionEntry(NO);
@@ -2631,7 +2631,7 @@ LBLdispatcher:
         CodeArea::writeAddress(entry, PC+1);
         DISPATCH(0);
       }
-      if (isBuiltin(pred) || isObject(pred)) {
+      if (oz_isBuiltin(pred) || oz_isObject(pred)) {
         isTailCall = tailcallAndArity & 1;
         if (!isTailCall) PC += 3;
         predArity = tailcallAndArity >> 1;
@@ -2648,7 +2648,7 @@ LBLdispatcher:
       Assert(arity==0); /* is filled in by procedure genCallInfo */
       TaggedRef pred = G[gci->regIndex];
       DEREF(pred,predPtr,_1);
-      if (isAnyVar(pred)) {
+      if (oz_isVariable(pred)) {
         SUSP_PC(predPtr,getWidth(gci->arity),PC);
       }
 

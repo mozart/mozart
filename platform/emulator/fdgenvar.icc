@@ -147,7 +147,7 @@ GenBoolVariable * GenFDVariable::becomesBool(void) {
 inline
 void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 {
-  if (isSmallInt(*trPtr)) return;
+  if (oz_isSmallInt(*trPtr)) return;
 
   Assert(this == tagged2SVarPlus(*trPtr));
 

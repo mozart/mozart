@@ -34,7 +34,7 @@
 
 void Promise::request()
 {
-  if (isRef(requested)) {
+  if (oz_isRef(requested)) {
     oz_bind_global(requested,oz_unit());
   }
   requested=oz_true();
@@ -47,7 +47,7 @@ OZ_Return Promise::waitRequest(TaggedRef *v)
     // fall through
   }
 
-  if (isRef(requested)) {
+  if (oz_isRef(requested)) {
     am.addSuspendVarList(requested);
     return SUSPEND;
   } else {
@@ -85,7 +85,7 @@ OZ_Return promiseAssign(OZ_Term var, OZ_Term val)
     if (cvar->getType()==PROMISE) {
       Promise *l=(Promise *)cvar;
       CheckLocalBoard(l,"promise");
-      if (deref(val)==var) {
+      if (oz_deref(val)==var) {
         return oz_raise(E_ERROR,E_KERNEL,"promiseAssignToItself",
                         1,makeTaggedRef(varPtr));
       }
@@ -121,5 +121,5 @@ OZ_BI_define(BIPromiseWaitRequest,1,0)
 OZ_BI_define(BIPromiseIs,1,1)
 {
   OZ_declareIN(0,var);
-  OZ_RETURN(isPromise(deref(var))?oz_true():oz_false());
+  OZ_RETURN(isPromise(oz_deref(var))?oz_true():oz_false());
 } OZ_BI_end
