@@ -28,7 +28,7 @@
     (
      'is'	=> { in  => ['+value'],
 		     out => ['+bool'],
-		     bi  => BIisObjectB},
+		     bi  => BIisObject},
 
      '@'	=> { in  => ['value'],
 		     out => ['value'],
