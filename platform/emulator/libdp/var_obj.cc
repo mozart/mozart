@@ -96,7 +96,7 @@ void sendRequest(MessageType mt,BorrowEntry *be)
   SendTo(na->site,bs,mt,na->site,na->index);
 }
 
-Bool ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
+OZ_Return ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
 {
   addSuspSVar(susp, unstable);
   if (!requested) {
@@ -109,7 +109,7 @@ Bool ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
     BorrowEntry *be=BT->getBorrow(getObject()->getIndex());      
     sendRequest(mt,be);
   }
-  return NO;
+  return SUSPEND;
 }
 
 
