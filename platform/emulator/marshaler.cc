@@ -894,13 +894,13 @@ loop:
 
   case DIF_VAR_AUTO: 
     {
-      *ret = (*unmarshalVar)(bs,FALSE,FALSE);
+      *ret = (*unmarshalVar)(bs,FALSE,TRUE);
       return;
     }
 
   case DIF_FUTURE_AUTO: 
     {
-      *ret = (*unmarshalVar)(bs,TRUE,FALSE);
+      *ret = (*unmarshalVar)(bs,TRUE,TRUE);
       return;
     }
 
