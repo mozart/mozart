@@ -142,3 +142,7 @@ typedef int socklen_t;
 
 /* whether we have the times/sysconf(_SC_CLK_TCK) bug */
 #undef CLK_TCK_BUG_RATIO
+
+/* endianness */
+#undef ARCH_LITTLE_ENDIAN
+#undef ARCH_BIG_WORDIAN
