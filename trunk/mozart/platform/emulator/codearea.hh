@@ -296,8 +296,8 @@ public:
     return writeWord(p, ptr);
   }
 
-  void CodeArea::writeCache() { wPtr = writeCache(wPtr); }  
-  static ProgramCounter CodeArea::writeCache(ProgramCounter PC);
+  void writeCache() { wPtr = writeCache(wPtr); }  
+  static ProgramCounter writeCache(ProgramCounter PC);
 
   void writeInt(int i)                   { CheckWPtr; wPtr=writeInt(i,wPtr); }
   void writeTagged(TaggedRef t)          { CheckWPtr; wPtr=writeTagged(t,wPtr); }
