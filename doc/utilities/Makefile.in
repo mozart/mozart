@@ -47,7 +47,7 @@ FUNCTORS = \
 	CrossReferencer.ozf Thumbnails.ozf LaTeXToGIF.ozf PostScriptToGIF.ozf \
 	File.ozf HTML.ozf OzDocToHTML.ozf Main.ozf Chunk.ozf
 
-SYSLETS = ozdoc
+SYSLETS = ozdoc$(EXE_EXT)
 SHELLSCRIPTS = latex2gif gif2thumbnail
 
 BINFILES = $(SYSLETS:%=$(BINDIR)/%)
@@ -71,7 +71,7 @@ bootstrap: boot-all
 Makefile: Makefile.in config.status
 	./config.status
 
-ozdoc: $(FUNCTORS)
+ozdoc$(EXE_EXT): $(FUNCTORS)
 	$(OZL) -z 9 -x $(OZEXECFILE) Main.ozf -o $@
 
 %.ozf: %.oz
