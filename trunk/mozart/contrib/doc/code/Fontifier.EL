@@ -22,8 +22,7 @@
 ;;; WARRANTIES.
 ;;;
 
-(require 'font-lock)
-
+;(require 'font-lock)
 (if (fboundp 'font-lock-add-keywords)
     (font-lock-add-keywords
      'emacs-lisp-mode
@@ -39,7 +38,7 @@
     (font-lock-string-face        . string)
     (font-lock-variable-name-face . variable)
     (font-lock-function-name-face . function)
-    (font-lock-builtin-name       . builtin)
+    (font-lock-builtin-face       . builtin)
     (font-lock-reference-face     . reference)
     (font-lock-type-face          . type)
     (font-lock-warning-face       . warning)
