@@ -5,7 +5,7 @@ AC_PROG_CXXCPP
 AC_LANG_CPLUSPLUS
 AC_PROG_INSTALL
 AC_PATH_PROG(DYNLD, ozdynld, ozdynld, ../../bin $path)
-AC_PATH_PROG(PLATFORM, ozplatform, ../../bin $path)
+AC_PATH_PROG(PLATFORM, ozplatform, ozplatform, ../../bin $path)
 AC_PATH_PROG(OZBATCH, ozbatch, ozbatch, ../../bin $path)
 platform=`$PLATFORM`
 AC_SUBST(DYNLD)
