@@ -120,9 +120,7 @@ define
       in
 	 {WriteLog "Received and stored message "#GlobalMID#" from "#SID#" to: "#{Value.toVirtualString ID 30 30}}
 	 {DB storeMessage(receiver:ID id:GlobalMID sender:SID message:M date:D reply_to:R)}
-	 if FAQ\=unit then
-	    E={DB get(id:SID entry:$)}
-	 in
+	 if FAQ\=unit then %E={DB get(id:SID entry:$)} in
 	    {WriteLog "Message "#GlobalMID#" is added to FAQ by "#SID}
 	    {DB storeX(id:GlobalMID data:faq(poster:SID answer:M date:Date question:FAQ))}
 	    MM="-- This message is added to the FAQ --\n"#M#"\n\n-- Answer ----------------------------\n"#FAQ
