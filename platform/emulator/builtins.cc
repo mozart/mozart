@@ -598,6 +598,23 @@ OZ_C_proc_begin(BIsetProcNames,2)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIgetProcPos,3)
+{
+  oz_declareNonvarArg(0,p); p = deref(p);
+  oz_declareArg(1,file);
+  oz_declareArg(2,line);
+
+  if (!isAbstraction(p)) {
+    oz_typeError(0,"Abstraction");
+  }
+  
+  PrTabEntry *pte = tagged2Abstraction(p)->getPred();
+  
+  return oz_unify(file,pte->getFileName()) && oz_unifyInt(line,pte->getLine());
+}
+OZ_C_proc_end
+
+
 OZ_Return isCellInline(TaggedRef cell)
 {
   NONVAR( cell, term);
@@ -4677,10 +4694,9 @@ OZ_Return checkSuspend()
 }
 
 
-OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
+OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef newVal)
 {
   NONVAR(c,rec);
-  newVal = oz_newVariable();
 
   if (!isCell(rec)) {oz_typeError(0,"Cell");}
 
@@ -4692,8 +4708,7 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
 
   CellLocal *cell=(CellLocal*)tert;
   CheckLocalBoard(cell,"cell");
-  TaggedRef old = cell->exchangeValue(newVal);
-  return oz_unify(old,oldVal);
+  return oz_unify(cell->exchangeValue(newVal),oldVal);
 }
 
 /* we do not use here DECLAREBI_USEINLINEFUN2,
@@ -4701,17 +4716,13 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
  */
 OZ_C_proc_begin(BIexchangeCell,3)
 {			
-  OZ_Term help;
-  OZ_Term cell = OZ_getCArg(0);
-  OZ_Term inState = OZ_getCArg(1);
+  OZ_Term cell     = OZ_getCArg(0);
+  OZ_Term inState  = OZ_getCArg(1);
   OZ_Term outState = OZ_getCArg(2);
-  OZ_Return state=BIexchangeCellInline(cell,inState,help);
-  switch (state) {
-  case SUSPEND:
+  OZ_Return state=BIexchangeCellInline(cell,inState,outState);
+  if (state==SUSPEND) {
     oz_suspendOn(cell);
-  case PROCEED:
-    return oz_unify(help,outState);
-  default:
+  } else {
     return state;
   }
 }
@@ -7608,6 +7619,7 @@ BIspec allSpec[] = {
   {"setProcInfo",         2,BIsetProcInfo,         0},
   {"getProcNames",        2,BIgetProcNames,        0},
   {"setProcNames",        2,BIsetProcNames,        0},
+  {"getProcPos",          3,BIgetProcPos,          0},
   {"MakeTuple",           3,BItuple,               (IFOR) tupleInline},
   {"Label",               2,BIlabel,               (IFOR) labelInline},
   {"hasLabel",            2,BIhasLabel,            (IFOR) hasLabelInline},
