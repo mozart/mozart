@@ -27,6 +27,23 @@ support the use of loops as expressions, &ie; loops that return a
 value.  These extensions are supported by means of additional loop
 features.</p>
   <section>
+    <title/While and Until/
+    <p>
+      <list>
+        <entry/<code/while:E//
+        <item/expression <code/E/ is checked on each iteration, just
+        before entering the body of the loop.  If it evaluates to
+        <code/false/, we break out of the loop (see <code/break/
+        feature)./
+        <entry/<code/until:E//
+        <item/expression <code/E/ is checked on each iteration, just
+        after the body of the loop.  If it evaluates to <code/true/,
+        we break out of the loop./
+      </list>
+      Note that it is allowed to use both features in the same loop.
+    </p>
+  </section>
+  <section>
     <title/Find And Return a Value/
     <p>The simplest way for a loop to return a value is to
 <em/explicitly/ do so.
@@ -111,6 +128,18 @@ the sum of a sequence of values.
 <code/{M E}/ multiplies the value of the accumulator by <code/E/./
         </list></p>
     </subsection>
+  </section>
+  <section>
+    <title/Generators/
+    <p>A generator is a nullary function that returns the <em/next/
+    value each time it is invoked, and raises an exception to indicate
+    that all values have been exhausted (any exception will do, as
+    long as it doesn't have label <code/error/ or <code/failure/).
+    Correspondingly, the folowing new iterator syntax is introduced:
+    <list>
+      <entry/<code/X from G//
+      <item/where <code/G/ is a generator.
+    </list>
   </section>
 </chapter>
 <!--
