@@ -41,6 +41,9 @@
 /* a 32 bit integer, the same on alpha and other machines */
 #define int32 int
 
+/* a 32 bit unsigned integer */
+#define uint32 unsigned int
+
 #define intlong long
 
 
@@ -92,12 +95,12 @@
 
 #define textBase 0x0
 
-/* convert an int32 to a pointer and vice versa */
+/* convert an uint32 to a pointer and vice versa */
 #define _ToPointer(i) ((void*) (i))
-#define _ToInt32(p) ((int32)(p))
+#define _ToInt32(p) ((uint32)(p))
 #ifdef DEBUG_CHECK
-inline void* ToPointer(int32 i) { return _ToPointer(i); }
-inline int32 ToInt32(void *p) { return _ToInt32(p); }
+inline void* ToPointer(uint32 i) { return _ToPointer(i); }
+inline uint32 ToInt32(void *p) { return _ToInt32(p); }
 #else
 #define ToPointer(i) _ToPointer(i)
 #define ToInt32(p)   _ToInt32(p)

@@ -51,7 +51,7 @@ unsigned char * initNumOfBitsInHalfWord(void)
   const unsigned int maxHalfWord = 0xffff;
   unsigned char * r = new unsigned char[maxHalfWord+1];
   Assert(r!=NULL);
-  for(int i = 0; i <= maxHalfWord; i++) {
+  for(unsigned int i = 0; i <= maxHalfWord; i++) {
     r[i] = 0;
     int j = i;
     while (j>0) {
