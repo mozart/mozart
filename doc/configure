@@ -727,6 +727,27 @@ fi
     
     #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
     #OZ_PATH_PROG(DYNLD,          ozdynld)
+
+    if test -z "$BUILDTOP"
+    then
+	for BUILDTOP in	`pwd` \
+			`pwd`/.. \
+			`pwd`/../.. \
+			`pwd`/../../.. \
+			`pwd`/../../../.. \
+			`pwd`/../../../../..; do
+	  if test -r $BUILDTOP/config.cache
+	  then
+		break
+	  fi
+	done
+    fi
+    if test ! -r $BUILDTOP/config.cache
+    then
+	{ echo "configure: error: can't find BUILDTOP" 1>&2; exit 1; }
+    fi
+    BUILDTOP=`cd $BUILDTOP && pwd`
+    
     
 BUILDTOP=`cd ..; pwd`
 SRCTOP=`cd $srcdir/..; pwd`
@@ -741,7 +762,7 @@ SRCTOP=`cd $srcdir/..; pwd`
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:745: checking for a BSD compatible install" >&5
+echo "configure:766: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -801,7 +822,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:805: checking for $ac_word" >&5
+echo "configure:826: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -847,7 +868,7 @@ fi
     # Extract the first word of "ozdoc", so it can be a program name with args.
 set dummy ozdoc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:851: checking for $ac_word" >&5
+echo "configure:872: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZDOC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -887,7 +908,7 @@ fi
 
 
 echo $ac_n "checking for --with-psgml-dir""... $ac_c" 1>&6
-echo "configure:891: checking for --with-psgml-dir" >&5
+echo "configure:912: checking for --with-psgml-dir" >&5
 # Check whether --with-psgml-dir or --without-psgml-dir was given.
 if test "${with_psgml_dir+set}" = set; then
   withval="$with_psgml_dir"
@@ -1022,7 +1043,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile catalog ced.el gump/Makefile ozdoc/Makefile compiler/Makefile opi/Makefile constraints/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile catalog ced.el ced.sgml gump/Makefile ozdoc/Makefile compiler/Makefile opi/Makefile constraints/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1062,9 +1083,9 @@ s%@SET_MAKE@%$SET_MAKE%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
+s%@BUILDTOP@%$BUILDTOP%g
 s%@OZENGINE@%$OZENGINE%g
 s%@OZDOC@%$OZDOC%g
-s%@BUILDTOP@%$BUILDTOP%g
 s%@PSGML@%$PSGML%g
 s%@CED@%$CED%g
 s%@SUBDIRS@%$SUBDIRS%g
@@ -1110,7 +1131,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile catalog ced.el gump/Makefile ozdoc/Makefile compiler/Makefile opi/Makefile constraints/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile catalog ced.el ced.sgml gump/Makefile ozdoc/Makefile compiler/Makefile opi/Makefile constraints/Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
@@ -1277,5 +1298,6 @@ if test "$no_recursion" != yes; then
     cd $ac_popdir
   done
 fi
+
 
 
