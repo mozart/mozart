@@ -674,11 +674,13 @@
           </List>
       <Section>
         <Title/Dealing With Errors/
-          <P>
+          <Para class=apropos><Title/Error Messages/
             An <Def/error message/ is either an error or warning message
             issued by the Oz Compiler or an exception displayed by the
-            Emulator.  Where available, <Def/error coordinates/ are associated
-            with error messages, consisting of the file name (or buffer name)
+            Emulator.
+          <Para class=apropos><Title/Error Coordinates/
+            Where available, <Def/error coordinates/ are associated with
+            error messages, consisting of the file name (or buffer name)
             and line number of the corresponding Oz source code.
             <List>
               <Entry class=useroption><<oz-popup-on-error>> (default: <<t>>)
@@ -707,16 +709,66 @@
                   click went into the Compiler buffer).
             </List>
     <Chapter id="chapter.tools">
-      <Title/Interacting with Mozart's Development Tools/
+      <Title/Interacting with the Development Tools/
       <P>
-<!--**
- - oz-browse-{buffer,region,line,paragraph}
- - oz-open-panel
- - oz-open-compiler-panel
- - oz-debugger, oz-breakpoint-at-point, oz-breakpoint-mouse-{set,delete},
-   oz-bar-remove
- - oz-profiler
--->
+        This section only quickly documents how the tools are integrated into
+        the &OPI;; several of these commands are available from the <Key/Oz/
+        menu.  For more details about the tools themselves, see the individual
+        user manuals.
+        <List>
+          <Entry class=command><<oz-browse-buffer>>
+          <Entry class=command><<oz-browse-region START END>>
+          <Entry class=command><<oz-browse-line COUNT>>
+          <Entry class=command><<oz-browse-paragraph COUNT>>
+          <Item>
+            <P.silent><!--**-->
+              Feed the corresponding text region to the Oz Compiler.
+              Assuming it to contain an expression, enclose it by an
+              application of the procedure <Code proglang=oz>Browse</Code>.
+          <Entry class=command><<oz-open-panel>>
+          <Item>
+            <P.silent><!--**-->
+              Open the System Panel by feeding the statement <Code proglang=oz
+              >{Panel.open}</Code> to the Oz Compiler.
+          <Entry class=command><<oz-open-compiler-panel>>
+          <Item>
+            <P.silent><!--**-->
+              Open the Compiler Panel by feeding the statement <Code
+              proglang=oz>{New CompilerPanel.'class' init(`Compiler`) _}</Code
+              > to the Oz Compiler.
+          <Entry class=command><<oz-debugger ARG>> (<Key/C-c C-d/)
+          <Item>
+            <P.silent><!--**-->
+              Open the Oz Debugger by feeding the statement <Code proglang=oz
+              >{Ozcar.open}</Code> to the Oz Compiler.  With <<ARG>>, close
+              it instead by <Code proglang=oz>{Ozcar.close}</Code>.
+          <Entry class=command><<oz-breakpoint-at-point ARG>> (<Key/C-x SPC/)
+          <Item>
+            <P.silent><!--**-->
+              Set a dynamic breakpoint for the Oz Debugger in any code
+              carrying the current source file name (or buffer name) and line
+              number as debugging information.  With <<ARG>>, delete any
+              breakpoints at these coordinates instead.
+          <Entry class=command><<oz-breakpoint-mouse-set>>
+            (<Key/M-S-&lt;button-1>/)
+          <Entry class=command><<oz-breakpoint-mouse-delete>>
+            (<Key/M-S-&lt;button-3>/)
+          <Item>
+            <P.silent><!--**-->
+              Set &resp; delete a dynamic breakpoint at the point clicked with
+              the mouse.  See <<oz-breakpoint-at-point>> for details.
+          <Entry class=command><<oz-profiler ARG>> (<Key/C-c C-f/)
+          <Item>
+            <P.silent><!--**-->
+              Open the Oz Profiler by feeding the statement <Code proglang=oz
+              >{Profiler.open}</Code> to the Oz Compiler.  With <<ARG>>, close
+              it instead by <Code proglang=oz>{Profiler.close}</Code>.
+          <Entry class=command><<oz-bar-remove>>
+          <Item>
+            <P.silent><!--**-->
+              Remove any coloured bar marking an Oz source line.  Such bars are
+              used by the Debugger and Profiler.
+        </List>
     <Chapter id="chapter.gdb">
       <Title/Running Mozart under gdb/
       <P>
