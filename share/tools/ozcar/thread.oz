@@ -87,17 +87,24 @@ in
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
 	    case {Thread.is T} then
-	       %% &` == 96
-	       case {Cget stepSystemProcedures} orelse
-		  Name == ''       orelse
-		  Name == '`,`'    orelse
-		  Name == '`send`' orelse
-		  {Atom.toString Name}.1 \= 96 then
+	       Ok = ({Cget stepRecordBuiltin} orelse Name \= 'record')
+	            andthen
+	            ({Cget stepDotBuiltin}    orelse Name \= '.')
+	            andthen
+	            ({Cget stepWidthBuiltin}  orelse Name \= 'Width')
+	            andthen
+		    ({Cget stepSystemProcedures} orelse
+		     Name == ''       orelse
+		     Name == '`,`'    orelse
+		     Name == '`send`' orelse
+		     {Atom.toString Name}.1 \= 96)
+	    in
+	       case Ok then
 		  ThreadManager,step(file:File line:Line thr:T id:I
 				     name:Name args:Args
 				     builtin:IsBuiltin time:Time)
 	       else
-		  {OzcarMessage 'Skipping system procedure ' # Name}
+		  {OzcarMessage 'Skipping procedure \'' # Name # '\''}
 		  {Thread.resume T}
 	       end
 	    else

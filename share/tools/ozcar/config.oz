@@ -204,7 +204,11 @@ ScrollbarColors         = colors(appl  : ScrollbarApplColor
 %% first, some initial values... (read from a config file someday?)
 
 ConfigVerbose              = false  %% debug messages in Emulator buffer?
+
 ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
+ConfigStepRecordBuiltin    = false  %% step on builtin 'record' ?
+ConfigStepDotBuiltin       = false  %% step on builtin '.'      ?
+ConfigStepWidthBuiltin     = false  %% step on builtin 'width'  ?
 
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
@@ -216,6 +220,9 @@ Config =
     attr
        verbose :               ConfigVerbose
        stepSystemProcedures :  ConfigStepSystemProcedures
+       stepRecordBuiltin :     ConfigStepRecordBuiltin
+       stepDotBuiltin :        ConfigStepDotBuiltin
+       stepWidthBuiltin :      ConfigStepWidthBuiltin
        envSystemVariables :    ConfigEnvSystemVariables
        envProcedures :         ConfigEnvProcedures
     
