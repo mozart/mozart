@@ -125,7 +125,7 @@ case INSTRUCTION(MOVEMOVEXYYX):
     )
 
 
-#define MakeVar makeTaggedRef(newTaggedUVar(e->case currentUVarPrototype))
+#define MakeVar makeTaggedRef(newTaggedUVar(e->currentUVarPrototype))
 
 case INSTRUCTION(CREATEVARIABLEX):
    {
