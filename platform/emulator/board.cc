@@ -509,7 +509,7 @@ void Board::inject(TaggedRef proc) {
 }
 
 inline
-TaggedRef Board::merge(Board *bb, Bool sibling) {
+OZ_Return Board::merge(Board *bb, Bool sibling) {
   // this is the board that gets merged
   //   --- it is merged with bb
 
@@ -526,8 +526,8 @@ TaggedRef Board::merge(Board *bb, Bool sibling) {
   bb->incSuspCount(getSuspCount());
 
   // Merge constraints
-  if (!oz_installScript(this->getScriptRef()))
-    return makeTaggedNULL();
+  OZ_Return ret = oz_installScript(this->getScriptRef());
+  if (ret != PROCEED) return FAILED;
 
   Assert(oz_isCurrentBoard(bb));
 
@@ -546,7 +546,7 @@ TaggedRef Board::merge(Board *bb, Bool sibling) {
 
   }
 
-  return getRootVar();
+  return PROCEED;
 }
 
 inline
@@ -754,13 +754,12 @@ OZ_BI_define(BImergeSpace, 1,1) {
   }
 
 
-  TaggedRef root = space->getSpace()->merge(CBB, isSibling);
+  OZ_result(space->getSpace()->getRootVar());
+
+  OZ_Return ret = space->getSpace()->merge(CBB, isSibling);
   space->markMerged();
 
-  if (root == makeTaggedNULL())
-    return FAILED;
-
-  OZ_RETURN(root);
+  return ret;
 } OZ_BI_end
 
 
