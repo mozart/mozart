@@ -187,6 +187,7 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
   return offset;
 }
 
+inline
 Bool Board::isFailureInBody ()
 {
   Assert(isWaiting());
@@ -753,10 +754,10 @@ loop:
           DebugCheck ((solveBB->hasSuspension () == NO),
                       error ("solve board by the enumertaion without suspensions?"));
 
-          Bool stableWait = (wa->getChildCount() == 2 &&
-                             (wa->getChildRefAt(1))->isFailureInBody() == OK);
+          if (wa->getChildCount()==2 &&
+              wa->getChildRefAt(1)->isFailureInBody()==OK &&
+              solveAA->isEatWaits()) {
 
-          if (stableWait == OK && solveAA->isEatWaits()) {
             Board *waitBoard = wa->getChildRef();
 
             ozstat.incSolveAlt();
@@ -2786,7 +2787,7 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
 
     /* rule: or <sigma> ro (unit commit rule) */
     if (waa->hasOneChild()) {
-      Board *waitBoard = waa->getChild();
+      Board *waitBoard = waa->getLastChild();
       DebugTrace(trace("reduce actor unit commit",waitBoard,waa));
       if (waitBoard->isWaiting()) {
         waitBoard->setCommitted(currentBoard); // do this first !!!
