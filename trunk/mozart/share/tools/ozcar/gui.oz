@@ -98,13 +98,6 @@ in
 	 GlobalEnvText
 	 LocalEnvText
       
-	 ApplFrame
-	 ApplFileFrame
-	 ApplPrefix
-	 ApplText
-	 ApplFilePrefix
-	 ApplFileText
-      
 	 StatusFrame
 	 StatusText
 
@@ -122,8 +115,7 @@ in
 	 Menu,init
 	 Dialog,init
 
-	 {ForAll [self.ButtonFrame   self.ApplFrame
-		  self.ApplFileFrame self.StatusFrame]
+	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}
 	     F = {New Tk.frame tkInit(parent:self.toplevel
 				      bd:BorderSize
@@ -134,10 +126,6 @@ in
 			 sticky:we columnspan:3)
 		    grid(self.ButtonFrame   row:1 column:0
 			 sticky:we columnspan:3)
-		    grid(self.ApplFrame     row:2 column:0
-			 sticky:we columnspan:2)
-		    grid(self.ApplFileFrame row:2 column:2
-			 sticky:we columnspan:1)
 		    grid(self.StatusFrame   row:6 column:0
 			 sticky:we columnspan:3)
 		   ]}
@@ -160,45 +148,6 @@ in
 	    {Tk.send pack(b(Bs) side:left padx:1)}
 	 end
       
-	 %% application frame
-	 self.ApplPrefix =
-	 {New Tk.label tkInit(parent: self.ApplFrame
-			      text:   ApplPrefixText)}
-	 self.ApplText =
-	 {New Tk.text tkInit(parent: self.ApplFrame
-			     state:  disabled
-			     height: 1 width: 0
-			     bd:     SmallBorderSize
-			     cursor: TextCursor
-			     font:   DefaultFont
-			     bg:     DefaultBackground)}
-	 self.ApplFilePrefix =
-	 {New Tk.label tkInit(parent: self.ApplFileFrame
-			      text:   ApplFilePrefixText)}
-	 self.ApplFileText =
-	 {New Tk.text tkInit(parent: self.ApplFileFrame
-			     state:  disabled
-			     height: 1 width: 0
-			     bd:     SmallBorderSize
-			     cursor: TextCursor
-			     font:   DefaultFont
-			     bg:     DefaultBackground)}
-	 
-	 {Tk.batch [pack(self.ApplPrefix side:left)
-		    pack(self.ApplText   side:left fill:x expand:yes)]}
-	 {Tk.batch [pack(self.ApplFilePrefix side:left)
-		    pack(self.ApplFileText   side:left fill:x expand:yes)]}
-	 
-	 %% border line
-	 /*
-	 local
-	    F = {New Tk.frame tkInit(parent:self.toplevel height:3
-				     relief:ridge bd:1)}
-	 in
-	    {Tk.send grid(F row:5 column:0 sticky:we columnspan:3)}
-	 end
-	 */
-	 
 	 %% status line
 	 self.StatusText =
 	 {New Tk.text tkInit(parent: self.StatusFrame
@@ -239,7 +188,7 @@ in
 		    grid(self.GlobalEnvText row:4 column:2 sticky:nswe)
 		    grid(rowconfigure       self.toplevel 3 weight:1)
 		    grid(rowconfigure       self.toplevel 4 weight:1)
-		    grid(columnconfigure    self.toplevel 0 weight:4)
+		    grid(columnconfigure    self.toplevel 0 weight:1)
 		    grid(columnconfigure    self.toplevel 1 weight:1)
 		    grid(columnconfigure    self.toplevel 2 weight:1)
 		   ]}
@@ -270,22 +219,14 @@ in
 	  end}
       end
 
-      meth printEnv(frame:I vars:V<=undef)
+      meth printEnv(frame:I vars:V<=nil)
 	 CV = {Not {Cget envSystemVariables}}
 	 CP = {Not {Cget envProcedures}}
       in
-	 case I == 0 then
-	    {self.LocalEnvText title(LocalEnvTitle)}
-	    {self.GlobalEnvText title(GlobalEnvTitle)}
-	 else
-	    {self.LocalEnvText title(AltLocalEnvTitle # I)}
-	    {self.GlobalEnvText title(AltGlobalEnvTitle # I)}
-	 end
-      
 	 Gui,Clear(self.LocalEnvText)
 	 Gui,Clear(self.GlobalEnvText)
       
-	 case V == undef then
+	 case V == nil then
 	    skip
 	 else
 	    Gui,DoPrintEnv(self.LocalEnvText  V.'Y' CV CP)
@@ -303,15 +244,19 @@ in
 	 L = {Lck is($)}
 	 case L then skip else
 	    Ack
+	    FrameId       = F.id
+	    CurrentThread = ThreadManager,getCurrentThread($)
+	    Vars          = {Dbg.frameVars CurrentThread FrameId}
 	 in
+	    {OzcarMessage 'Selecting frame #' # FrameId}
 	    thread
 	       SourceManager,scrollbar(file:F.file line:{Abs F.line} ack:Ack
 				       color:ScrollbarStackColor what:stack)
 	    end
 	    thread Gui,loadStatus(F.file Ack) end
-
+	    
 	    Gui,SelectStackFrame(T)
-	    Gui,printEnv(frame:F.nr vars:F.env)
+	    Gui,printEnv(frame:F.nr vars:Vars)
 	    /*
 	    case {Cget verbose} then
 	       {Debug.displayCode F.'PC' 5}
@@ -337,7 +282,7 @@ in
 	 LastSelectedFrame <- T
       end
 
-      meth printStackFrame(frame:Frame size:Size)
+      meth printStackFrame(frame:Frame direction:Direction<=enter)
 	 W          = self.StackText
 	 FrameNr    = Frame.nr                 % frame number
 	 FrameName  = Frame.name               % procedure/builtin name
@@ -350,9 +295,18 @@ in
 	  tkInit(parent: W
 		 action: Ozcar # frameClick(frame:Frame tag:LineTag))}
 	 LineEnd    = FrameNr # DotEnd
+	 UpToDate   = SourceManager,isUpToDate(Frame.time $)
       in
+	 Gui,Enable(W)
+	 Gui,DeleteToEnd(W FrameNr+1)
+	 Gui,DeleteLine(W FrameNr)
+	 
 	 {W tk(insert LineEnd
-	       ' ' # FrameNr #
+	       case Direction == enter then
+		  ' -> '
+	       else
+		  ' <- '
+	       end # FrameNr #
 	       ' ' # BraceLeft #
 	       case FrameName == '' then '$' else FrameName end
 	       LineTag)}
@@ -381,18 +335,24 @@ in
 	  end}
 	 
 	 {ForAll [tk(insert LineEnd
-		     case Frame.builtin then BraceRight
-		     else BraceRight # '  ' # BracketLeft # FrameFile #
-			FileLineSeparator # FrameLine # BracketRight end
-		     LineTag)
-		  tk(tag add  LineTag LineEnd) % extend tag to whole line
+		     case Frame.builtin then
+			BraceRight # NL
+		     else
+			BraceRight # '  ' # BracketLeft # FrameFile #
+			FileLineSeparator # FrameLine #
+			case UpToDate then nil else '(?)' end #
+			BracketRight # NL
+		     end LineTag)
+		  %tk(tag add  LineTag LineEnd) % extend tag to whole line
 		  tk(tag bind LineTag '<1>' LineAction)] W}
-	 
+	 /*
 	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
 	    LastSelectedFrame <- undef
 	    Gui,SelectStackFrame(LineTag)
 	    Gui,printEnv(frame:FrameNr vars:Frame.env)
 	 else skip end
+	 */
+	 Gui,Disable(W)
       end
 	 
       meth printStack(id:I size:Size stack:Stack ack:Ack<=unit)
@@ -414,7 +374,7 @@ in
 	    
 	    {ForAll {Ditems Stack}
 	     proc{$ Frame}
-		Gui,printStackFrame(frame:Frame size:Size)
+		Gui,printStackFrame(Frame)
 	     end}
 	    
 	    Gui,Disable(W)
@@ -425,7 +385,7 @@ in
       meth printAppl(id:I name:N args:A builtin:B<=false time:Time<=0
 		     file:F<=undef line:L<=undef)
 	 UpToDate = SourceManager,isUpToDate(Time $)
-	 W        = self.ApplText
+	 W        = self.StackText
       in
 	 Gui,Clear(W)
 	 case N == undef orelse A == undef then
@@ -456,32 +416,26 @@ in
 			     tk(tag conf ArgTag font:BoldFont)] W}
 		 end
 	      end}
-	     {W tk(insert 'end' BraceRight)}
-	    Gui,Disable(W)
+	    {W tk(insert 'end' BraceRight)}
 	 end
-      
-	 local
-	    W = self.ApplFileText
+	 
+	 case F \= undef then
+	    S = ' ' # {StripPath F} # FileLineSeparator # {Abs L}
 	 in
-	    Gui,Clear(W)
-	    case F \= undef then
-	       S = ' ' # {StripPath F} # FileLineSeparator # {Abs L}
+	    case UpToDate then
+	       {W tk(insert 'end' S)}
+	       {OzcarMessage 'mtime ok.'}
+	    else
+	       T = {TagCounter get($)}
 	    in
-	       case UpToDate then
-		  {W tk(insert 'end' S)}
-		  {OzcarMessage 'mtime ok.'}
-	       else
-		  T = {TagCounter get($)}
-	       in
-		  {W tk(insert 'end' S # '(?)' T)}
-		  {W tk(tag conf T foreground:BuiltinColor)}
-		  {OzcarMessage 'mtime NOT ok.'}
-	       end 
-	    
-	    else skip end
-	    Gui,Disable(W)
-	 end
-      
+	       {W tk(insert 'end' S # '(?)' T)}
+	       {W tk(tag conf T foreground:BuiltinColor)}
+	       {OzcarMessage 'mtime NOT ok.'}
+	    end 
+	 else skip end
+	 
+	 Gui,Disable(W)
+	 
       end
    
       meth selectNode(I)
@@ -573,14 +527,7 @@ in
 	       {Thread.resume T}
 	    
 	    elseof ' next' then
-	       O = {Dget ThreadManager,getThreadDic($) I}
-	       B = {O isBuiltin($)}
-	    in
-	       case B then
-		  {OzcarMessage NextOnBuiltin}
-	       else
-		  {Dbg.stepmode T false}
-	       end
+	       {Dbg.stepmode T false}
 	       {Thread.resume T}
 	       
 	    elseof ' finish' then
@@ -621,6 +568,10 @@ in
       
       meth DeleteLine(Widget Nr)
 	 {Widget tk(delete Nr#'.0' Nr#DotEnd)}
+      end
+
+      meth DeleteToEnd(Widget Nr)
+	 {Widget tk(delete Nr#'.0' 'end')}
       end
    end
 end

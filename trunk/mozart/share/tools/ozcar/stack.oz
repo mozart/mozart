@@ -3,26 +3,39 @@
 
 local
    
-   fun {B2F I B}
-      frame(nr      : I
+   fun {B2F Nr B}
+      frame(nr      : Nr
+	    id      : 0
 	    file    : ''
 	    line    : 0
+	    time    : 0
 	    name    : B.name
 	    args    : B.args
-	    env     : undef
 	    builtin : true)
    end
 
-   fun {P2F I P D}
-      frame(nr      : I
+   fun {P2F Nr P D}
+      frame(nr      : Nr
+	    id      : 0
 	    file    : P.file
 	    line    : P.line
+	    time    : 0
 	    name    : P.name
 	    args    : D.1.2
-	    env     : P.vars
 	    builtin : false)
    end
-       
+
+   fun {S2F Nr Id File Line Time Name Args Builtin}
+      frame(nr      : Nr
+	    id      : Id
+	    file    : File
+	    line    : Line
+	    time    : Time
+	    name    : Name
+	    args    : Args
+	    builtin : Builtin)
+   end
+   
    local
       fun {Correct F}
 	 case F == nil then nil else
@@ -63,94 +76,58 @@ in
       feat
 	 T              % the thread...
 	 I              % ...with it's ID
-	 W              % text widget for output
 	 D              % dictionary for stackframes
 
       attr
 	 Size           % current size of stack
       
-      meth init(thr:Thr id:ID output:TextWidget)
+      meth init(thr:Thr id:ID)
 	 self.T = Thr
 	 self.I = ID
-	 self.W = TextWidget
 	 self.D = {Dictionary.new}
 	 Size <- 0
       end
+
+      meth step(name:N args:A builtin:B file:F line:L time:T frame:FrameId)
+	 OldSize = @Size
+	 Frame   = {S2F OldSize+1 FrameId F L T N A B}
+      in
+	 {Dput self.D OldSize Frame}
+	 {Ozcar printStackFrame(frame:Frame direction:enter)}
+	 Size <- OldSize + 1
+      end
+
+      meth exit(FrameId)
+	 Key   = @Size - 1
+	 Frame = {Dget self.D Key}
+      in
+	 {Ozcar printStackFrame(frame:Frame direction:leave)}
+	 Size <- Key
+      end
+      
+      meth clear
+	 %% clear stack widget
+	 skip
+	 %% clear env widgets
+	 skip
+      end
+
+      %% local helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       meth GetStack($)
 	 {Dbg.taskstack self.T MaxStackSize}
       end
       
-      meth Reset
-	 CurrentStack = StackManager,GetStack($)
-	 OldKeys      = {Dkeys self.D}
-      in
-	 lock
-	    {ForAll OldKeys proc {$ K} {Dremove self.D K} end}
-	    case CurrentStack \= nil then
-	       {StackForAllInd CurrentStack
-		proc {$ Ind Proc Debug}
-		   case Debug == nil then  % builtin
-		      {Dput self.D 0         {B2F Ind Proc}}
-		   else                    % procedure
-		      {Dput self.D Debug.1.1 {P2F Ind Proc Debug}}
-		   end
-		end}
-	       Size <- {Length {Dkeys self.D}}
-	    else
-	       Size <- 0
-	    end
-	 end
-	 %{Browse {Dentries self.D}}
+      %% access methods %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      meth getThread($)
+	 self.T
       end
 
-      %% only print changed frames of stack
-      meth update
-	 CurrentStack = StackManager,GetStack($)
-      in
-	 skip
+      meth getPos(file:?F line:?L)
+	 F = undef
+	 L = 0
       end
-      
-      %% completely re-print the stack
-      meth print
-	 skip /*
-	 StackManager,Reset
-	 local
-	    S = @Size
-	    Ack
-	 in
-	    case S > 0 then
-	       thread
-		  {Ozcar printStack(id:self.I size:S stack:self.D ack:Ack)}
-	       end
-	       %{Ozcar stackStatus(S Ack)}
-	    else
-	       StackManager,clear
-	    end
-	 end */
-      end
-      
-      meth Clear
-	 {ForAll [tk(conf state:normal)
-		  tk(delete '0.0' 'end')] self.W}
-      end
-
-      meth Enable
-	 {self.W tk(conf state:normal)}
-      end
-      
-      meth Disable
-	 {self.W tk(conf state:disabled)}
-      end
-      
-      meth clear
-	 %% clear stack widget
-	 StackManager,Clear
-	 StackManager,Disable
-	 {self.W title(StackTitle)}
-	 %% clear env widgets
-	 {Ozcar printEnv(frame:0)}
-      end
-      
+	 
    end
 end
