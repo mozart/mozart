@@ -110,13 +110,14 @@ stateless Oz terms under keys.  A key is an arbitrary virtual string.
           <item>This is the convenient way of creating a gdbm
 object ?_{DB}. ?_{R} is a record that describes how to open the
 database.  The label is the opening method, &EG; <code/read/,
-<code/write/, <code/create/ (or equivalently <code/new/).  The first
+<code/write/, <code/create/, or <code/new/.  The first
 argument of the record is the file name.  For example
 <code>read('/usr/local/people.db')</code> asks to open the database
 located in <file>/usr/local/people.db</file> for reading only.
-<code>create('~/data')</code> creates the new empty database
-<file/data/ in the user's home directory (overwriting it if it already
-existed) and opens it both for reading and writing.
+<code>create('~/data')</code> opens or creates the database
+<file/data/ in the user's home directory and opens it both for reading
+and writing; <code>new('~/data')</code> is similar, but overwrites it
+if it already existed.
             <p>Optional feature <code/mode/ indicates with what
 permissions the file should be created (this of course is only
 relevant for creating a new database).  The mode may be specified as
@@ -201,6 +202,8 @@ database.
 Local Variables:
 mode: sgml
 mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
 adaptive-fill-mode: nil
 End:
 -->
