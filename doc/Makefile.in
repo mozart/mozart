@@ -32,7 +32,8 @@ INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 CED		= @CED@
 
-FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog $(CED) author.db
+FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog $(CED) author.db \
+		  mozart.bib
 LIBFILES	= $(addprefix $(DOCDIR)/,$(FILES))
 
 EMACS		= emacs
