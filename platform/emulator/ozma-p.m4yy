@@ -371,11 +371,11 @@ PredicateRef    : INTEGER
                   }
                 ;
 
-PredId          : PID '(' Atom INTEGER Atom INTEGER ')'
+PredId          : PID '(' Atom INTEGER Atom INTEGER INTEGER ')'
                   {
                     SRecordArity arity = mkTupleWidth(OZ_intToC($4));
                     PrTabEntry *pte =
-                      new PrTabEntry($3,arity,$5,OZ_intToC($6));
+                      new PrTabEntry($3,arity,$5,OZ_intToC($6),OZ_intToC($7));
                     codeArea->writeAddress(pte);
                   }
                 ;
@@ -549,7 +549,7 @@ TaggedRef ozma_readProc(const char *filename) {
 
   RefsArray gRegs = (RefsArray) NULL;
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-                                           mkTupleWidth(0),nil(),0);
+                                           mkTupleWidth(0),nil(),0,NO);
   pte->PC = codeArea->getStart();
   return makeTaggedConst(new Abstraction(pte,gRegs,am.currentBoard()));
 }

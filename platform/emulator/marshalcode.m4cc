@@ -127,6 +127,7 @@ void marshalPredId(PrTabEntry *p,MsgBuffer *bs)
   marshalRecordArity(p->getMethodArity(),bs);
   marshalTerm(p->getFileName(),bs);
   marshalNumber(p->getLine(),bs);
+  marshalNumber(p->copyOnce,bs);
   PD((MARSHAL,"pred id end"));
 }
 
@@ -320,7 +321,7 @@ define(opAction,
         $1,XRegisterIndex,PC=unmarshalReg(PC,bs);,
         $1,YRegisterIndex,PC=unmarshalReg(PC,bs);,
         $1,Arity,PC=unmarshalNum(PC,bs);,
-        $1,Label,PC=unmarshalLabel(PC,lastPC-start,bs);,
+        $1,Label,PC=unmarshalLabel(PC,bs);,
         $1,Count,PC=unmarshalNum(PC,bs);,
         $1,NLiveRegs,PC=unmarshalNum(PC,bs);,
         $1,IsTail,PC=unmarshalNum(PC,bs);,
@@ -376,13 +377,10 @@ ProgramCounter unmarshalBuiltinTabEntry(ProgramCounter PC, MsgBuffer *bs)
 }
 
 inline
-ProgramCounter unmarshalLabel(ProgramCounter PC, int start, MsgBuffer *bs)
+ProgramCounter unmarshalLabel(ProgramCounter PC, MsgBuffer *bs)
 {
-  if (!bs->unmarshallingOld) {
-    start = 0;
-  }
   int offset = unmarshalNumber(bs);
-  return PC ? CodeArea::writeLabel(offset,start,PC,NO) : 0;
+  return PC ? CodeArea::writeLabel(offset,0,PC,NO) : 0;
 }
 
 
@@ -441,8 +439,9 @@ ProgramCounter unmarshalPredId(ProgramCounter PC,ProgramCounter lastPC,
   SRecordArity arity = unmarshalRecordArity(bs);
   OZ_Term file       = unmarshalTerm(bs);
   int line           = unmarshalNumber(bs);
+  int copyOnce       = bs->unmarshallingOld ? NO : unmarshalNumber(bs);
 
-  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,file,line) : 0;
+  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,file,line,copyOnce) : 0;
   return writeAddress(pred,PC);
 }
 
@@ -460,23 +459,14 @@ ProgramCounter unmarshalGenCallInfo(ProgramCounter PC,MsgBuffer *bs)
 }
 
 
-inline
-int getLabel(int offset, MsgBuffer *bs)
-{
-  if (bs->unmarshallingOld)
-    return unmarshalNumber(bs)-offset;
-  else
-    return unmarshalNumber(bs);
-}
-
 ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs)
 {
   int sz               = unmarshalNumber(bs);
-  int label            = getLabel(start,bs); /* the else label */
+  int label            = unmarshalNumber(bs); /* the else label */
   IHashTable *table    = PC ? new IHashTable(sz,label) : 0;
 
-  int pc1 = getLabel(start,bs);
-  int pc2 = getLabel(start,bs);
+  int pc1 = unmarshalNumber(bs);
+  int pc2 = unmarshalNumber(bs);
   if (PC) {
     table->addList(pc1);
     table->addVar(pc2);
@@ -484,7 +474,7 @@ ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs
   int nEntries = unmarshalNumber(bs);
   for (int i = 0; i < nEntries; i++) {
     int termTag = unmarshalNumber(bs);
-    label = getLabel(start,bs);
+    label = unmarshalNumber(bs);
     OZ_Term term = unmarshalTerm(bs);
     switch (termTag) {
     case FUNCTORTAG:

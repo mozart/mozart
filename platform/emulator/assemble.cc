@@ -119,7 +119,7 @@ OZ_C_proc_begin(BImakeProc,3)
   Assert(isNil(globals));
 
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-                                   mkTupleWidth(0),nil(),0);
+                                   mkTupleWidth(0),nil(),0,NO);
   pte->PC = code->getStart();
 
   Assert(am.onToplevel());
@@ -265,14 +265,15 @@ OZ_C_proc_begin(BIstorePredicateRef,2)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIstorePredId,5)
+OZ_C_proc_begin(BIstorePredId,6)
 {
   declareCodeBlock(0,code);
   OZ_declareNonvarArg(1,name); name = deref(name);
   OZ_declareNonvarArg(2,arity);
   OZ_declareNonvarArg(3,file); file = deref(file);
   OZ_declareIntArg(4,line);
-  PrTabEntry *pte = new PrTabEntry(name,getArity(arity),file,line);
+  OZ_declareNonvarArg(5,copyOnce);
+  PrTabEntry *pte = new PrTabEntry(name,getArity(arity),file,line,OZ_isTrue(copyOnce));
   code->writeAddress(pte);
   return PROCEED;
 }
@@ -458,7 +459,7 @@ BIspec biSpec[] = {
   {"storeInt",          2, BIstoreInt,          0},
   {"storeLabel",        2, BIstoreLabel,        0},
   {"storePredicateRef", 2, BIstorePredicateRef, 0},
-  {"storePredId",       5, BIstorePredId,       0},
+  {"storePredId",       6, BIstorePredId,       0},
   {"newHashTable",      4, BInewHashTable,      0},
   {"storeHTVarLabel",   3, BIstoreHTVarLabel,   0},
   {"storeHTScalar",     4, BIstoreHTScalar,     0},

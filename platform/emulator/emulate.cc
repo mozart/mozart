@@ -41,6 +41,7 @@
 #include "fdhook.hh"
 #include "perdio.hh"
 #include "marshaler.hh"
+#include "copycode.hh"
 
 OZ_C_proc_proto(BIfail);     // builtins.cc
 
@@ -2301,10 +2302,13 @@ LBLdispatcher:
 // ------------------------------------------------------------------------
 
   Case(DEFINITIONCOPY)
-    {
-      error("DEFINITIONCOPY: not yet implemented");
-    }
+    isTailCall = OK; // abuse for indicating that we have to copy
+    goto LBLDefinition;
+
   Case(DEFINITION)
+      isTailCall = NO;
+
+    LBLDefinition:
     {
       Reg reg                     = getRegArg(PC+1);
       int nxt                     = getLabelArg(PC+2);
@@ -2312,12 +2316,24 @@ LBLdispatcher:
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
 
-      predd->numClosures++;
-
       if (predd->getPC()==NOCODE) {
         predd->PC = PC+sizeOf(DEFINITION);
       }
 
+      predd->numClosures++;
+
+      if (predd->numClosures > 1 && predd->copyOnce) {
+        (void) oz_raise(E_ERROR,E_SYSTEM,"onceOnlyFunctor",0);
+        goto LBLraise;
+      }
+
+      if (isTailCall) {
+        TaggedRef dict = deref(Xreg(reg));
+        if (isDictionary(dict))
+          predd->PC = copyCode(predd->PC,tagged2Dictionary(dict),predd->copyOnce==NO);
+        else
+          warning("DEFINITIONCOPY: dictionary expected: %s\n",toC(dict));
+      }
       int size = list->getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
