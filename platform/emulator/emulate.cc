@@ -120,7 +120,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 }
 
 
-#define DORAISE(T) { X[0] = (T); goto LBLraise; }
+#define DORAISE(T) { X[0] = (T); X[1] = OZ_atom("system"); goto LBLraise; }
 
 #define RAISE_APPLY(fun,args)                   \
    DORAISE(OZ_mkTupleC("apply",2,fun,args));
@@ -2699,6 +2699,7 @@ LBLsuspendThread:
            switch (bi->getType()) {
 
            case BIraise:
+             X[1] = OZ_atom("user");
              goto LBLraise;
 
            case BIDefault:
@@ -2774,6 +2775,7 @@ LBLsuspendThread:
 
    LBLraise:
      // exception is in X[0];
+     // type is in X[1];
      {
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
@@ -2792,27 +2794,18 @@ LBLsuspendThread:
         *   TODO: should somehow be reflected !!! */
 
        int arity = tagged2Const(pred)->getArity();
-       if (arity !=1 && arity != 3) {
+       if (arity !=1) {
          pred = e->defaultExceptionHandler;
          arity = tagged2Const(pred)->getArity();
-         if (arity != 1 && arity !=3) {
+         if (arity != 1) {
            pred = e->biExceptionHandler;
-           arity = tagged2Const(pred)->getArity();
          }
        }
 
-       if (arity == 1) {
-         RefsArray argsArray = allocateRefsArray(1,NO);
-         argsArray[0]=X[0];
-         e->currentThread->pushCall(pred,argsArray,1);
-       } else {
-         Assert(arity == 3);
-         RefsArray argsArray = allocateRefsArray(3,NO);
-         argsArray[0]=X[0];
-         argsArray[1]=e->dbgGetSpaces();
-         argsArray[2]=traceBack;
-         e->currentThread->pushCall(pred,argsArray,3);
-       }
+       RefsArray argsArray = allocateRefsArray(1,NO);
+       argsArray[0] = OZ_mkTuple(X[1],3,
+                                 X[0],e->dbgGetSpaces(),traceBack);
+       e->currentThread->pushCall(pred,argsArray,1);
        goto LBLpopTask;
      }
    }
@@ -3278,9 +3271,8 @@ LBLsuspendThread:
 
     case CE_RAISE:
       PC=NOCODE;
-      X[0] = e->exception;
       DebugCheckT(currentDebugBoard=e->currentBoard);
-      goto LBLraise;
+      DORAISE(e->exception);
 
     case CE_SUSPEND:
       Assert (e->currentThread);
