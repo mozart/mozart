@@ -2035,6 +2035,7 @@ OZ_Term OZ_newPort(OZ_Term val)
   return oz_newPort(val);
 }
 
+extern OZ_Return sendPort(OZ_Term prt, OZ_Term val);
 void OZ_send(OZ_Term port, OZ_Term val)
 {
   port = deref(port);
