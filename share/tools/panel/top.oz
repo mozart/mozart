@@ -143,11 +143,11 @@ local
 	 {Tk.batch case @InfoVisible then
 		      [pack(forget O.parameter.frame O.gc.frame)
 		       pack(O.showParameter.frame 
-			    after:O.usage.frame side:top fill:x)]
+			    after:O.usage.frame side:top fill:x padx:3)]
 		   else
 		      [pack(forget O.showParameter)
 		       pack(O.parameter.frame O.gc.frame
-			    after:O.usage.frame side:top fill:x)]
+			    after:O.usage.frame side:top fill:x padx:3)]
 		   end}
 	 InfoVisible <- {Not @InfoVisible}
 	 MemoryPage,update(nosample)
