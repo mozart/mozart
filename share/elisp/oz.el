@@ -465,18 +465,25 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
       (error "Oz not running"))
   (message "halting Oz...")
 
-  (if (and (get-process "Oz Compiler")
-	   (get-process "Oz Machine"))
-      (progn
-	(oz-send-string "!halt \n")
-	(sleep-for oz-halt-timeout)))
+  (let ((i oz-halt-timeout))
+    (oz-send-string "!halt \n")
+    (sleep-for 1)
+    (while (and (or (get-process "Oz Compiler")
+		    (get-process "Oz Machine"))
+		(> i 0))
+      (if (get-process "Oz Compiler")
+	  (message "compiler %s" i))
+      (sit-for 1)
+      (setq i (1- i)))
 
-  (if (get-process "Oz Compiler")
-      (delete-process "*Oz Compiler*"))
-  (if (get-process "Oz Machine")
-      (delete-process "*Oz Machine*"))
-  (message "")
-  (oz-reset-title))
+    (if (get-process "Oz Compiler")
+	(delete-process "*Oz Compiler*"))
+    (if (get-process "Oz Machine")
+	(delete-process "*Oz Machine*"))
+    (message "")
+    (oz-reset-title)))
+
+
 
 (defun oz-check-running()
   (if (and (get-process "Oz Compiler")
