@@ -4934,7 +4934,6 @@ State AM::getValue(TaggedRef feat, TaggedRef out)
   STRCASE("isvar",          "no",OZ_unifyString);
 
   STRCASE("cellHack",          ozconf.cellHack,                 OZ_unifyInt);
-  STRCASE("showSolveFailure",  ozconf.showSolveFailure,         OZ_unifyInt);
   STRCASE("gcFlag",            ozconf.gcFlag,                   OZ_unifyInt);
   STRCASE("gcVerbosity",       ozconf.gcVerbosity,              OZ_unifyInt);
   STRCASE("heapMaxSize",       ozconf.heapMaxSize,              OZ_unifyInt);
@@ -5023,9 +5022,6 @@ State AM::setValue(TaggedRef feature, TaggedRef value)
        ozconf.stopOnToplevelFailure = val ? OK : NO;);
   DOIF("cellHack",
        ozconf.cellHack = val;
-       );
-  DOIF("showSolveFailure",
-       ozconf.showSolveFailure = val;
        );
   DOIF("gcFlag",
        ozconf.gcFlag = val;
@@ -5353,11 +5349,12 @@ OZ_C_proc_begin(BImakeObject,4)
     return FAILED;
   }
 
-  Object *out = newObject(tagged2SRecord(ffeatures),
-                          isSRecord(initState) ? tagged2SRecord(initState) : (SRecord*) NULL,
-                          ((Object*)tagged2Const(clas))->getClass(),
-                          NO,
-                          am.currentBoard);
+  Object *out =
+    newObject(isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : (SRecord*) NULL,
+              isSRecord(initState) ? tagged2SRecord(initState) : (SRecord*) NULL,
+              ((Object*)tagged2Const(clas))->getClass(),
+              NO,
+              am.currentBoard);
   return OZ_unify(obj,makeTaggedConst(out));
 }
 OZ_C_proc_end

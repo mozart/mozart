@@ -20,15 +20,9 @@
 
 inline
 Bool AM::isToplevel() {
-  return (currentBoard == rootBoard)
-    || (ozconf.showSolveFailure && currentBoard->isSolve());
+  return (currentBoard == rootBoard);
 }
 
-inline
-Bool AM::isToplevelFailure() {
-  return isToplevel()
-    || (ozconf.showSolveFailure && currentBoard->isSolve());
-}
 
 inline
 void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
@@ -227,10 +221,12 @@ void AM::pushCall(TaggedRef def, int arity, RefsArray args)
 }
 
 inline
-void AM::pushTask(ProgramCounter pc,
-                  RefsArray y,RefsArray g,RefsArray x,int i)
+void AM::pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
 {
-  currentThread->pushCont(pc,y,g,x,i,OK);
+  if (i>0) {
+    x = copyRefsArray(x,i);
+  }
+  cachedStack->pushCont(pc,y,g,x,i);
 }
 
 inline
