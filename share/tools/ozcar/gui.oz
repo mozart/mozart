@@ -735,7 +735,7 @@ in
 			Dir       = case TopFrame == nil
 				    then entry else TopFrame.dir end
 		     in
-			{Dbg.stepmode T false}
+			{Dbg.step T false}
 
 			Gui,UnselectStackFrame
 			Gui,markNode(I running)
@@ -769,7 +769,7 @@ in
 		     in
 			{@currentStack getFrame(@LastSelectedFrame Frame)}
 
-			{Dbg.stepmode T false}
+			{Dbg.step T false}
 			{@currentStack rebuild(true)}
 			{Dbg.unleash T Frame.frameID}
 
@@ -814,7 +814,7 @@ in
 			else
 			   {Stack rebuild(true)}
 			end
-			{Dbg.stepmode T true}
+			{Dbg.step T true}
 			Gui,doStatus('You have stopped thread #' # I)
 		     end
 		  end
@@ -888,6 +888,7 @@ in
 		     relief:raised borderwidth:0
 		     background: SelectedBackground
 		     foreground: SelectedForeground)
+		  tk(see p(Tag 0))
 		 ] self.StackText}
       end
 

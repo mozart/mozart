@@ -192,7 +192,9 @@ in
 	 else
 	    Frames = {Dictionary.items self.D}
 	    Depth  = @Size
-	    Last   = case Depth > 0 then {Dictionary.get self.D Depth} else nil end
+	    Last   = case Depth > 0 then {Dictionary.get self.D Depth}
+		     else nil
+		     end
 	 in
 	    {Ozcar PrivateSend(printStack(id:self.I frames:Frames
 					  depth:Depth last:Last))}
@@ -271,9 +273,7 @@ in
       %% local helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       meth GetStack($)
-	 P = {System.get errors}
-      in
-	 {Reverse {Thread.taskStack self.T P.'thread' false}}
+	 {Reverse {Thread.taskStack self.T ~1 false}}
       end
 
       meth RemoveAllFrames
