@@ -30,6 +30,8 @@
  */
 
 #define NAMEVOLATILE volatile
+//#define HEAPCURVOLATILE volatile
+//#define HEAPENDVOLATILE volatile
 
 // The main engine
 
