@@ -367,7 +367,7 @@ public:
   //
   // Checks
   //
-  int checkSituatedness(TaggedRef*,TaggedRef*,TaggedRef*);
+  void checkSituatedness(TaggedRef*,TaggedRef*,TaggedRef*);
 
   //
   // Misc
