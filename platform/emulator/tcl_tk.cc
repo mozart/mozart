@@ -312,8 +312,6 @@ public:
       char c;
       while ((c = *s++))
         *buffer++=c;
-
-      delete [] s;
     }
   }
 
