@@ -467,13 +467,16 @@ Positions are returned as a pair ( START . END )."
   "Start the Oz debugger.
 With ARG, stop it instead."
   (interactive "P")
-  (oz-send-string (if arg "{Ozcar off}" "{Ozcar on}")))
+  (oz-send-string
+   (if arg
+       "\\switch +threadedqueries\n{Ozcar off}"
+     "\\switch +threadedqueries\n{Ozcar on}")))
 
 (defun oz-debug-stop (arg)
   "Stop the Oz debugger.
 With ARG, start it instead."
   (interactive "P")
-  (oz-send-string (if arg "{Ozcar on}" "{Ozcar off}")))
+  (oz-debug-start (not arg)))
 
 (defun oz-breakpoint-key-set (arg)
   "Set breakpoint at current line.
@@ -2434,7 +2437,9 @@ of the procedure Browse."
   "Feed `{`Compiler` openPanel(Tk TkTools Open Browse)}' to the Oz Compiler."
   (interactive)
   (if oz-using-new-compiler
-      (oz-send-string "{`Compiler` openPanel(Tk TkTools Open Browse)}")
+      (oz-send-string
+       (concat "\\switch +threadedqueries\n"
+	       "{`Compiler` openPanel(Tk TkTools Open Browse)}"))
     (error "Compiler panel not supported with the old compiler")))
 
 (defun oz-feed-file (file)
