@@ -37,6 +37,7 @@
 
 <!ENTITY chapter.hello       SYSTEM "hello.sgml">
 <!ENTITY chapter.development SYSTEM "devel.sgml">
+<!ENTITY chapter.modman      SYSTEM "modman.sgml">
 <!ENTITY chapter.pickle      SYSTEM "pickle.sgml">
 <!ENTITY chapter.mof         SYSTEM "mof.sgml">
 <!ENTITY chapter.deployment  SYSTEM "deploy.sgml">
@@ -66,6 +67,7 @@
 
     <meta name="html.split" value="chapter.hello">
     <meta name="html.split" value="chapter.development">
+    <meta name="html.split" value="chapter.modman">
     <meta name="html.split" value="chapter.pickle">
     <meta name="html.split" value="chapter.mof">
     <meta name="html.split" value="chapter.deployment">
@@ -104,6 +106,7 @@
       <title/Getting Started/
       &chapter.hello;
       &chapter.development;
+      &chapter.modman;
       &chapter.pickle;
       &chapter.mof;
       &chapter.deployment;

@@ -135,8 +135,9 @@ import
    Application at 'x-oz://system/Application'
    Open        at 'x-oz://system/Open'
 </chunk>
-      In <ptr to="section.development.system"> we will discuss system
-      modules in more detail.
+      In <ptr to="section.modman.import"> we will discuss system
+      modules in more detail. In particular, <ptr
+      to="table.modman.system"> lists all availabel system modules.
 
     <para class=apropos><title/Functor body/
       The <def/body of a functor/ is a statement that is executed
