@@ -8,7 +8,7 @@ import
    ActionRemove(remove:Remove)
    ActionInfo(view)
    System(show:Show)
-   Browser(browse:Browse)
+%   Browser(browse:Browse)
    FileUtils(isExtension:IsExtension)
    Tree(treeNode:TreeNode)
    String(capitalize:Capitalize) at 'x-ozlib://duchier/lib/String.ozf'
@@ -21,8 +21,6 @@ define
    FolderOpenIcon={QTk.newImage photo(file:"folder_open_small.gif")}
    Background=c(240 250 242)
 
-   ArchiveManager
-   OzpmInfo
 
    %% two functions on mogul names
    
@@ -113,6 +111,7 @@ define
 	 title
 	 rootNode
 	 dictNode
+	 sel:nil
       meth init(Parent ST Desc)
 	 self.parent=Parent
 	 self.setTitle=ST
@@ -194,6 +193,7 @@ define
 		  {CreateNode I X.id
 		   case {self.parent state(X $)}
 		   of installed then InstalledPackageIcon
+		   [] installedable then InstalledPackageIcon
 		   [] installable then InstallablePackageIcon
 		   else PackageIcon end}
 	       end
@@ -216,16 +216,9 @@ define
 	 Info={List.nth @info.info I}
 	 D=r(info:Info)
       in
-	 local
-	    Coord={self.handle tkReturnListInt(bbox(Node.tag) $)}
-	 in
-	    {self.selTag delete}
-	    {self.handle create(rectangle b(Coord)
-				outline:black
-				stipple:gray50
-				tags:self.selTag)}
-	    {self.selTag 'raise'}
-	 end
+	 if @sel\=nil then {@sel select(state:false)} end
+	 sel<-Node
+	 {Node select(state:true)}
 	 {self.parent displayInfo(D)}
       end
    end
@@ -464,6 +457,7 @@ define
 	 installButton
 	 installTbButton
 	 desinstallButton
+	 downloadButton
 	 toplevel
 
       attr
@@ -581,18 +575,23 @@ define
 				     )
 			 ))
 	 %%
+	 ActionButtonLook={QTk.newLook}
+	 {ActionButtonLook.set button(glue:w
+				      padx:5
+				      state:disabled)}
 	 ActionBarDesc=
 	 lr(glue:swe
-	    button(glue:w
-		   text:"Install"
+	    look:ActionButtonLook
+	    button(text:"Install"
 		   handle:self.installButton
-		   action:self#install
-		   state:disabled)
-	    button(glue:w
-		   text:"Desinstall"
+		   action:self#install)
+	    button(text:"Desinstall"
 		   handle:self.desinstallButton
-		   action:self#desinstall
-		   state:disabled))
+		   action:self#desinstall)
+	    button(text:"Download"
+		   handle:self.downloadButton
+		   action:self#download)
+	   )
 	 %%
 	 StatusBar
 	 StatusBarDesc=
@@ -672,7 +671,7 @@ define
 				  title:"Select a package")}
       in
 	 if File==nil then skip else
-	    Package#List={ActionInfo.view File}
+	    Package#_={ActionInfo.view File}
 	    Info={Record.adjoinAt Package
 		  url_pkg [File]}
 	 in
@@ -686,7 +685,7 @@ define
 	 case {Label Pkg}
 	 of ipackage then installed
 	 [] package then
-	    if {Global.localDB member(Pkg.id $)} then installed
+	    if {Global.localDB member(Pkg.id $)} then installedable
 	    elseif {HasFeature Pkg url_pkg} andthen
 	       {List.some Pkg.url_pkg fun{$ URL}
 					 {IsExtension "pkg" URL}
@@ -700,16 +699,25 @@ define
       end
       
       meth displayInfo(Info)
-	 {ForAll [installButton desinstallButton]
+	 {ForAll [installButton desinstallButton downloadButton]
 	  proc{$ B} {self.B set(state:disabled)} end}
 	 if Info==unit then
 	    curpkg<-unit
 	 else
 	    curpkg<-Info.info
 	    case {self state(@curpkg $)}
-	    of installed then {self.desinstallButton set(state:normal)}
-	    [] installable then {self.installButton set(state:normal)}
-	    else skip end
+	    of installed then
+	       {self.desinstallButton set(state:normal)}
+	    [] installedable then
+	       {self.desinstallButton set(state:normal)}
+	       {self.installButton set(state:normal)}
+	       {self.downloadButton set(state:normal)}
+	    [] installable then
+	       {self.installButton set(state:normal)}
+	       {self.downloadButton set(state:normal)}
+	    else
+	       {self.downloadButton set(state:normal)}
+	    end
 	 end
 	 {@info display({Record.adjoinAt Info info
 			 {Record.adjoin
@@ -718,36 +726,49 @@ define
 		       )}
       end
 
+      meth filterPkg(Pkg Cond $)
+	 %% filter Pkg.url_pkg according to filter
+	 %% add the equivalent mogul adress
+	 fun{Mogul Name}
+	    %%
+	    %% Takes a uri, keeps the last part and adds the correct
+	    %% mogul header
+	    %%
+	    {VirtualString.toString
+	     "http://www.mozart-oz.org/mogul/pkg/"#
+	     {List.drop {VirtualString.toString Pkg.id} 7}#"/"#
+	     {Reverse
+	      {List.takeWhile {Reverse {VirtualString.toString Name}}
+	       fun{$ C} C\=&/ end}}}
+	 end
+	 fun{Loop L}
+	    case L of X|Xs then
+	       if {Cond X} then
+		  if {Global.packageMogulDB member(Pkg.id $)} then
+		     {VirtualString.toString X}|{Mogul X}|{Loop Xs}
+		  else
+		     {VirtualString.toString X}|{Loop Xs}
+		  end
+	       else
+		  {Loop Xs}
+	       end
+	    else nil end
+	 end
+      in
+	 {Loop Pkg.url_pkg}
+      end
+      
       meth install(pkg:Pkg<=@curpkg nu:Nu<=0 force:Force<=false leave:Leave<=false)
-	 Packages={List.filter Pkg.url_pkg fun{$ URL} {IsExtension "pkg" URL} end}
-	 LB
-	 N={NewCell 1}
-	 Ok
+	 Packages={self filterPkg(Pkg fun{$ URL} {IsExtension "pkg" URL} end $)}
+	 N
       in
 	 if Nu==0 then
-	    {{QTk.build td(title:"Install a package"
-			   listbox(padx:10 pady:10
-				   glue:nswe
-				   tdscrollbar:true
-				   handle:LB
-				   action:proc{$}
-					     {Assign N {LB get(firstselection:$)}}
-					  end
-				   height:{Length Packages}
-				   init:Packages)
-			   lr(glue:swe
-			      button(text:"Ok"
-				     action:toplevel#close
-				     return:Ok)
-			      button(text:"Cancel"
-				     action:toplevel#close)))} show(modal:true)}
-	    {LB set(selection:[true])} % select the first element
-	    {Wait Ok} % wait for the window to close
+	    N={self selectPackages("Install a package" Packages $)}
 	 else
-	    Ok=true {Assign N Nu}
+	    N=Nu
 	 end
-	 if Ok andthen {Access N}>0 then
-	    ToInstall={List.nth Packages {Access N}}
+	 if N>0 then
+	    ToInstall={List.nth Packages N}
 	 in
 	    case {Install ToInstall Force Leave}
 	    of success(pkg:P) then
@@ -768,7 +789,7 @@ define
 			      L
 			      Return)}
 	       if Return\=cancel then
-		  {self install(pkg:Pkg nu:{Access N} force:Return==choice1 leave:Return==choice2)}
+		  {self install(pkg:Pkg nu:N force:Return==choice1 leave:Return==choice2)}
 	       end
 	    [] alreadyinstalled(loc:L pkg:P) then
 	       UnInstall Overwrite
@@ -800,10 +821,10 @@ define
 	       if UnInstall then
 		  %% first uninstall the other package
 		  {self desinstall(pkg:Pkg)}
-		  {self install(pkg:Pkg nu:{Access N})}
+		  {self install(pkg:Pkg nu:N)}
 	       elseif Overwrite then
 		  %% force installation of this package
-		  {self install(pkg:Pkg nu:{Access N} force:true)}
+		  {self install(pkg:Pkg nu:N force:true)}
 	       end
 	    end
 	 end
@@ -826,7 +847,7 @@ define
 	    case {Remove Pkg.id false false}
 	    of success(pkg:P) then
 	       {{QTk.build td(title:"Package removal"
-			      label(text:"Package "#Pkg.id#" was successfully uninstalled")
+			      label(text:"Package "#P.id#" was successfully uninstalled")
 			      button(text:"Close" glue:s action:toplevel#close))}
 		show(wait:true modal:true)}
 	       {self displayInstalled}
@@ -860,6 +881,33 @@ define
 	       end
 	    end
 	 else skip end
+      end
+
+      meth download(pkg:Pkg<=@curpkg nu:Nu<=0)
+	 Packages={self filterPkg(Pkg fun{$ _} true end $)}
+	 N
+      in
+	 if Nu==0 then
+	    N={self selectPackages("Download a package" Packages $)}
+	 else
+	    N=Nu
+	 end
+	 if N>0 then
+	    ToInstall={List.nth Packages N}
+	    SaveFile={QTk.dialogbox save($
+					 title:"Save as..."
+					 initialfile:{Reverse
+						      {List.takeWhile
+						       {Reverse ToInstall}
+						       fun{$ C}
+							  C\=&/
+						       end}})}
+	 in
+	    if SaveFile\=nil then
+	       {Show download#{VirtualString.toAtom ToInstall}}
+	       {Show to#SaveFile}
+	    end
+	 end
       end
 
       meth conflict(Title Label Choice1 Choice2 FileList Return)
@@ -917,6 +965,37 @@ define
 		else
 		   cancel
 		end
+      end
+
+      meth selectPackages(Title Packages $)
+	 LB
+	 Ok
+	 N={NewCell 1}
+      in
+	 {{QTk.build td(title:Title
+			listbox(padx:10 pady:10
+				glue:nswe
+				tdscrollbar:true
+				handle:LB
+				action:proc{$}
+					  {Assign N {LB get(firstselection:$)}}
+				       end
+				height:{Length Packages}
+				width:{List.foldL Packages
+				       fun{$ Z S}
+					  if Z>{Length S} then Z
+					  else {Length S} end
+				       end 0}
+				init:Packages)
+			lr(glue:swe
+			   button(text:"Ok"
+				  action:toplevel#close
+				  return:Ok)
+			   button(text:"Cancel"
+				  action:toplevel#close)))} show(modal:true)}
+	 {LB set(selection:[true])} % select the first element
+	 {Wait Ok} % wait for the window to close
+	 if Ok==false then 0 else {Access N} end
       end
       
    end

@@ -10,10 +10,10 @@ define
    
    class TreeNode
       
-      feat canvas font height vtag htag btag itag ltag tag width root parent
+      feat canvas font height vtag htag btag itag ltag tag stag width root parent
 	 Lock:{NewLock} del bg
 
-      attr leaves box label icon eicon expanded shown fill
+      attr leaves box label icon eicon expanded shown fill selmode
 
       meth padX(V)
 %	 V=self.height+(self.height div 2)
@@ -49,6 +49,7 @@ define
 	    self.root=true
 	    self.parent=self
 	 end
+	 selmode<-false
 	 fill<-black
 	 label<-Label
 	 icon<-Icon
@@ -58,7 +59,7 @@ define
 	 end
 	 leaves<-nil
 	 expanded<-false
-	 {ForAll [vtag htag btag itag ltag]
+	 {ForAll [vtag htag btag itag ltag stag]
 	  proc{$ X}
 	     self.X={New Tk.canvasTag tkInit(parent:self.canvas)}
 	  end}
@@ -70,10 +71,17 @@ define
 			   action:self#switch)}
       end
 
+      meth select(state:Sel)
+	 lock self.Lock then
+	    selmode<-Sel
+	    {self drawSel}
+	 end
+      end
+
       meth bind(event:E args:A<=nil action:Act)
-%	 lock
+	 lock self.Lock then
 	    {self.tag tkBind(event:E args:A action:Act)}
-%	 end
+	 end
       end
       
       meth draw(x:X y:Y height:H)
@@ -139,6 +147,7 @@ define
 	       else skip end
 	       {self.canvas tk(lower self.vtag)}
 	       shown<-true
+	       {self drawSel}
 	    else
 	       H=0
 	    end
@@ -153,6 +162,21 @@ define
 				  else
 				     @icon
 				  end)}
+	 end
+      end
+
+      meth drawSel
+	 if @selmode andthen @shown then
+	    Coord={self.canvas tkReturnListInt(bbox(self.tag) $)}
+	 in
+	    {self.canvas tk(delete self.stag)}
+	    {self.canvas tk(create rectangle b(Coord)
+			    outline:black
+			    stipple:gray50
+			    tags:self.stag)}
+	    {self.canvas tk('raise' self.stag)}
+	 else
+	    {self.canvas tk(delete self.stag)}
 	 end
       end
       
@@ -215,6 +239,7 @@ define
 		  H=self.height
 	       end
 	       shown<-false
+	       {self drawSel}
 	    else skip end
 	    if Del then self.del=unit else skip end
 	 end
