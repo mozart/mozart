@@ -2,7 +2,7 @@
 
 : ${BUILDTOP=../..}
 : ${SRCDIR=.}
-: ${OZPLATFORM=`$BUILDTOP/share/bin/ozplatform`}
+: ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
 : ${OZPREFIX=/usr/local/oz}
 
 if test -z "$OZEMULATOR"
