@@ -1,13 +1,21 @@
 functor
 export
    'class' : Builder
-import
+import System
    Path at 'Path.ozf'
+   Resolve
 define
    class Builder
 
       meth build(Targets)
 	 {self makefile_read}
+	 {System.showError "extending resolver"}
+	 {Resolve.addHandler
+	  {Resolve.handler.prefix
+	   "x-ozmake:/srcdir/" {self get_srcdir($)}#"/"}}
+	 {Resolve.addHandler
+	  {Resolve.handler.prefix
+	   "x-ozmake:/builddir/" {self get_builddir($)}#"/"}}
 	 if Targets==nil then Builder,build_all
 	 else for T in Targets do Builder,build_target(T) end end
       end
