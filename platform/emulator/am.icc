@@ -97,7 +97,7 @@ void AM::deinstallCurrent()
 {
   reduceTrailOnSuspend();
   currentBoard->unsetInstalled();
-  Board::SetCurrent(currentBoard->getParentBoard()->getBoardDeref());
+  setCurrent(currentBoard->getParentBoard()->getBoardDeref());
 }
 
 inline
@@ -148,7 +148,7 @@ void AM::pushNervous(Board *n)
 }
 
 inline
-void AM::pushTask(Board *n, OZ_CFun f, RefsArray x, int i)
+void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
 {
   n->incSuspCount();
   ensureTaskStack();

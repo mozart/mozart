@@ -327,18 +327,19 @@ Bool SolveActor::checkExtSuspList ()
 
 //  'OZ_CFun' solveActorWaker;
 // No arguments actually, but the type 'OZ_CFun' is fixed;
-OZ_Bool solveActorWaker (int n, TaggedRef *args)
+OZ_Bool SolveActor::Waker (int n, TaggedRef *args)
 {
-  DebugCheck ((n != 0), error ("arguments in solveActorWaker?"));
+  DebugCheck ((n != 0), error ("arguments in SolveActor::Waker?"));
   Board *bb = am.currentBoard;
-  DebugCheck ((bb == NULL || bb->isSolve () == NO || bb->isCommitted () == OK ||
+  DebugCheck ((bb == NULL || bb->isSolve () == NO
+               || bb->isCommitted () == OK ||
                bb->isDiscarded () == OK || bb->isFailed () == OK),
               error ("the blackboard the solveActor is applied to is gone?"));
-  SolveActor *sa = CastSolveActor (bb->getActor ());
-  // DebugCheckT (message ("solveActorWaker (@0x%x)\n", (void *) sa));
+  SolveActor *sa = SolveActor::Cast(bb->getActor ());
+  // DebugCheckT (message ("SolveActor::Waker (@0x%x)\n", (void *) sa));
 
   DebugCheck ((bb->isReflected () == OK),
-              error ("already reflected board in solveActorWaker"));
+              error ("already reflected board in SolveActor::Waker"));
   sa->unsetSolveDet ();   // sequential part is done;
   sa->decThreads ();      // get rid of threads - '1' in creator;
   // after return we are going to the "reduce" state,
@@ -350,12 +351,16 @@ OZ_Bool solveActorWaker (int n, TaggedRef *args)
 // Note that there is one thread ALREADY AT THE CREATION TIME!
 
 SolveActor::SolveActor (Board *bb, int prio, TaggedRef resTR)
-     : Actor (Ac_Solve, bb, prio), result (resTR),
-     boardToInstall(NULL), suspList (NULL), threads (1)
+ : Actor (Ac_Solve, bb, prio), result (resTR),
+   boardToInstall(NULL), suspList (NULL), threads (1)
 {
-  Board::NewCurrentSolve (this);
-  solveBoard = am.currentBoard;
+  solveBoard = NULL;
+  solveVar= makeTaggedNULL();
   flags |= Ac_SolveDet;
+}
+
+void SolveActor::setSolveBoard(Board *bb) {
+  solveBoard = bb;
   solveVar = makeTaggedRef(newTaggedUVar (solveBoard));
 }
 

@@ -116,6 +116,7 @@ public:
 
   void print();
 
+  void setCurrent(Board *c, Bool checkNotGC=OK);
   InstType installPath(Board *to); // ###
   Bool installScript(ConsList &script);
   Bool install(Board *bb);
@@ -163,7 +164,7 @@ public:
                 RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void pushTaskOutline(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
-  void pushTask (Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
+  void pushCFun(Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
   void pushNervous (Board *n);
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term);

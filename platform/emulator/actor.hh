@@ -67,6 +67,8 @@ public:
 //  'ask' or 'wait' actors;
 
 class AWActor : public Actor {
+public:
+  static AWActor *Cast(Actor *a);
 protected:
   Continuation next;
   int childCount;
@@ -89,11 +91,11 @@ public:
   void nextClause(ProgramCounter pc);
 };
 
-AWActor *CastAWActor(Actor *a);
-
 // ------------------------------------------------------------------------
 
 class AskActor : public AWActor {
+public:
+  static AskActor *Cast(Actor *a);
 private:
   ProgramCounter elsePC;
 public:
@@ -108,12 +110,11 @@ public:
 
 };
 
-AskActor *CastAskActor(Actor *a);
-
 // ------------------------------------------------------------------------
 
 class WaitActor : public AWActor {
-friend class SolveActor;
+public:
+  static WaitActor *Cast(Actor *a);
 private:
   Board **childs;
 public:
@@ -131,18 +132,25 @@ public:
   void decChilds ();    // for search;
   Bool hasOneChild();
   Bool hasNoChilds();
-  void unsetBoard ();
-  void setBoard (Board *bb);
+  void unsetBoard () { board = (Board *) NULL; }
+  void setBoard (Board *bb) {  board = bb; }
 };
-
-WaitActor *CastWaitActor(Actor *a);
 
 // ------------------------------------------------------------------------
 //  'solve' actors;
 
 class SolveActor : public Actor {
 public:
+  static SolveActor *Cast(Actor *a);
   static void Init();
+//  This is 'de facto' the "solve actor";
+//  If BIsolve is applied, CFuncCont is generated containing request to call
+// this procedure (type OZ_CFun!);
+  static OZ_Bool Waker (int n, TaggedRef *args);
+//  Very special thing:
+// The procedure that converts the DLLStackEntry to the Actor* (in our case),
+// collects it and returns the DLLStackEntry again (for gc);
+  static DLLStackEntry StackEntryGC (DLLStackEntry entry);
 private:
   Board *solveBoard;
   DLLStack orActors;
@@ -153,6 +161,7 @@ private:
   int threads;
 public:
   SolveActor (Board *bb, int prio, TaggedRef resTR);
+  void setSolveBoard(Board *bb);
   ~SolveActor ();
 
   void gcRecurse();
@@ -186,18 +195,6 @@ private:
   void unlinkLastWaitActor ();
   Bool checkExtSuspList ();
 };
-
-SolveActor *CastSolveActor (Actor *a);
-
-//  Very special thing:
-// The procedure that converts the DLLStackEntry to the Actor* (in our case),
-// collects it and returns the DLLStackEntry again (for gc);
-DLLStackEntry actorStackEntryGC (DLLStackEntry entry);
-
-//  This is 'de facto' the "solve actor";
-//  If BIsolve is applied, CFuncCont is generated containing request to call
-// this procedure (type OZ_CFun!);
-OZ_Bool solveActorWaker (int n, TaggedRef *args);
 
 // ------------------------------------------------------------------------
 
