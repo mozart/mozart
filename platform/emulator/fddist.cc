@@ -486,10 +486,11 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
     Assert(number_of_jobs[i] <= MAXJOBS);
     for (j=0; j < number_of_jobs[i]; j++) {
       TaggedRef task1      = deref(tasks->getArg(j));
+      Assert(isLiteral(task1));
       TaggedRef tmp1       = start_record->getFeature(task1);
       Assert(tmp1 != makeTaggedNULL());
       TaggedRef fd_var     = deref(tmp1);
-      Assert(isGenFDVar(fd_var));
+      Assert(isGenFDVar(fd_var) || isGenBoolVar(fd_var) || isSmallInt(fd_var));
       TaggedRef tmp2       = dur_record->getFeature(task1);
       Assert(tmp2 != makeTaggedNULL());
       Assert(isSmallInt(deref(tmp2)));
@@ -908,7 +909,7 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
 } OZ_C_proc_end
 
 ////////////////////////////////////////////////////////////
-// for finding the optimal solution
+// task interval distribution for finding the optimal solution
 ////////////////////////////////////////////////////////////
 
 inline
@@ -990,10 +991,11 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
     Assert(number_of_jobs[i] <= MAXJOBS);
     for (j=0; j < number_of_jobs[i]; j++) {
       TaggedRef task1      = deref(tasks->getArg(j));
+      Assert(isLiteral(task1));
       TaggedRef tmp1       = start_record->getFeature(task1);
       Assert(tmp1 != makeTaggedNULL());
       TaggedRef fd_var     = deref(tmp1);
-      Assert(isGenFDVar(fd_var));
+      Assert(isGenFDVar(fd_var) || isGenBoolVar(fd_var) || isSmallInt(fd_var));
       TaggedRef tmp2       = dur_record->getFeature(task1);
       Assert(tmp2 != makeTaggedNULL());
       Assert(isSmallInt(deref(tmp2)));
@@ -1406,6 +1408,249 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
         ? PROCEED :FAILED;
     }
   }
+
+
+} OZ_C_proc_end
+
+
+// ---------------------------------------------------------------------
+//                  Scheduling Distribution using Task Intervals
+// ---------------------------------------------------------------------
+
+#define MAGIC 100
+
+struct min_max_set {
+  int min, max;
+};
+
+
+static int partition(struct min_max_set *tasks, int *fl, int *durs, int flag,
+           int p, int r) {
+//  cout << "partition\n";
+  struct min_max_set current = tasks[p];
+  int current_dur = durs[p];
+  int i = p-1;
+  int j = r+1;
+  while (1) {
+    if (flag==0){
+      do {
+        j--;
+      }
+      while ((current.min < tasks[fl[j]].min) ||
+             ( (current.min == tasks[fl[j]].min) &&
+               (current.max < tasks[fl[j]].max) ) );
+    }
+    else {
+      do {
+        j--;
+      }
+      while ( (current.max+current_dur > tasks[fl[j]].max+durs[fl[j]]) ||
+              ( (current.max+current_dur == tasks[fl[j]].max+durs[fl[j]]) &&
+                (current.min+current_dur > tasks[fl[j]].min+durs[fl[j]]) ) );
+    }
+    if (flag==0){
+      do {
+        i++;
+      }
+      while ((tasks[fl[i]].min < current.min) ||
+             ( (tasks[fl[i]].min == current.min) &&
+               (tasks[fl[i]].max < current.max) ) );
+    }
+    else {
+      do {
+        i++;
+      }
+      while ( (tasks[fl[i]].max+durs[fl[i]] > current.max+current_dur) ||
+              ( (tasks[fl[i]].max+durs[fl[i]] == current.max+current_dur) &&
+                (tasks[fl[i]].min+durs[fl[i]] > current.min+current_dur) ) );
+    }
+    if (i < j) {
+      int tmp = fl[i];
+      fl[i] = fl[j];
+      fl[j] = tmp;
+    }
+    else return j;
+  }
+}
+
+static void quick(struct min_max_set *tasks, int *fl, int *durs, int flag,
+           int p, int r) {
+//  cout << "quick\n";
+  if (p < r) {
+    int q = partition(tasks, fl, durs, flag, p, r);
+    quick(tasks, fl, durs, flag, p, q);
+    quick(tasks, fl, durs, flag, q+1, r);
+  }
+}
+
+inline static int abs(int a) { return a < 0 ? -a : a; }
+
+OZ_C_proc_begin(BIfdGetCandidates, 5) {
+  TaggedRef tagged_vector       = deref(OZ_getCArg(0));
+  TaggedRef tagged_start_record = deref(OZ_getCArg(1));
+  TaggedRef tagged_dur_record   = deref(OZ_getCArg(2));
+  TaggedRef out_tasks           = OZ_getCArg(3);
+  TaggedRef out_atoms           = OZ_getCArg(4);
+
+  SRecord *vector       = tagged2SRecord(tagged_vector);
+  SRecord *start_record = tagged2SRecord(tagged_start_record);
+  SRecord *dur_record   = tagged2SRecord(tagged_dur_record);
+  int width             = vector->getWidth();
+  int fd_sup            = OZ_getFDSup();
+
+  if (width == 0) {
+    cout << "width of tuple must not be zero";
+    return FAILED;
+  }
+  /*
+  struct min_max_set {
+    int min, max;
+  };
+  */
+  // to store FD variables
+  //  DECL_DYN_ARRAY(min_max_set, all_tasks, width);
+  struct min_max_set all_tasks[MAGIC];
+  // to store durations
+  //  DECL_DYN_ARRAY(int, all_durs, width);
+  int all_durs[MAGIC];
+  int i,j,k,l,left,right;
+  int sumDur = 0;
+
+  // copy FDs and durations into the corresponding arrays
+  for (i=0; i < width; i++) {
+    TaggedRef task1      = deref(vector->getArg(i));
+    Assert(isLiteral(task1));
+    TaggedRef tmp1       = start_record->getFeature(task1);
+    Assert(tmp1 != makeTaggedNULL());
+    TaggedRef fd_var     = deref(tmp1);
+    Assert(isGenFDVar(fd_var) || isGenBoolVar(fd_var) || isSmallInt(fd_var));
+    TaggedRef tmp2       = dur_record->getFeature(task1);
+    Assert(tmp2 != makeTaggedNULL());
+    Assert(isSmallInt(deref(tmp2)));
+    int current_dur      = OZ_intToC(tmp2);
+    all_tasks[i].min     = getMin1(fd_var);
+    all_tasks[i].max     = getMax1(fd_var);
+    all_durs[i]          = current_dur;
+    sumDur               = sumDur + current_dur;
+  }
+
+  // to store relase and due without values
+  //DECL_DYN_ARRAY(int, dues, width);
+  //DECL_DYN_ARRAY(int, releases, width);
+  int dues[MAGIC];
+  int releases[MAGIC];
+  for (i=0; i < width; i++) {
+    int release = fd_sup;
+    int due     = 0;
+    for (j=0; j < width; j++) {
+      if (j==i) continue;
+      else {
+        due = intMax(due, all_tasks[j].max + all_durs[j]);
+        release = intMin(release, all_tasks[j].min);
+      }
+    }
+    dues[i] = due;
+    releases[i] = release;
+  }
+
+  // compute firsts and lasts
+  //DECL_DYN_ARRAY(int, firsts, width);
+  //DECL_DYN_ARRAY(int, lasts, width);
+  int firsts[MAGIC];
+  int lasts[MAGIC];
+  int number_of_firsts = 0;
+  int number_of_lasts = 0;
+
+  /*
+  for (i=0; i<width; i++) {
+    struct min_max_set current = all_tasks[i];
+    if (dues[i] - current.min >= sumDur) {
+      // it is a candidate to be first
+      for (j=number_of_firsts-1; j>=0; j--) {
+        struct min_max_set cfirst = all_tasks[firsts[j]];
+        if ( (current.min < cfirst.min) ||
+             ( (current.min == cfirst.min) &&
+               (current.max < cfirst.max) ) )
+          firsts[j+1] = firsts[j];
+        else
+          break;
+      }
+      firsts[j+1] = i;
+      number_of_firsts++;
+    }
+    if (current.max + all_durs[i] - releases[i] >= sumDur) {
+      // it is a candidate to be last
+      for (j=number_of_lasts-1; j>=0; j--) {
+        int cl = lasts[j];
+        struct min_max_set clast = all_tasks[cl];
+        int current_dur = all_durs[i];
+        int last_dur    = all_durs[cl];
+        if ( (current.max+current_dur > clast.max+last_dur) ||
+             ( (current.max+current_dur == clast.max+last_dur) &&
+               (current.min+current_dur > clast.min+last_dur) ) )
+          lasts[j+1] = lasts[j];
+        else
+          break;
+      }
+      lasts[j+1] = i;
+      number_of_lasts++;
+    }
+  }
+  */
+
+  for (i=0; i<width; i++) {
+    if (dues[i] - all_tasks[i].min >= sumDur) {
+      firsts[number_of_firsts] = i;
+      number_of_firsts++;
+    }
+    if (all_tasks[i].max + all_durs[i] - releases[i] >= sumDur) {
+      lasts[number_of_lasts] = i;
+      number_of_lasts++;
+    }
+  }
+
+  quick(all_tasks, firsts, all_durs, 0, 0, number_of_firsts-1);
+  quick(all_tasks, lasts, all_durs, 1, 0, number_of_lasts-1);
+
+
+  OZ_Term nil = OZ_nil();
+  OZ_Term ret = nil;
+
+  if ( (number_of_lasts==0) || (number_of_firsts==0) )
+    return FAILED;
+  else if (number_of_lasts < number_of_firsts) goto imposeLasts;
+  else if (number_of_lasts > number_of_firsts) goto imposeFirsts;
+  else if (number_of_firsts == 1) goto imposeFirsts;
+  else if (number_of_lasts == 1) goto imposeLasts;
+  else {
+    int diff1 = abs(all_tasks[number_of_firsts-1].min -
+                    all_tasks[number_of_firsts-2].min);
+    int diff2 = abs(all_tasks[number_of_lasts-1].max +
+                    all_durs[number_of_lasts-1] -
+                    all_tasks[number_of_lasts-2].max -
+                    all_durs[number_of_lasts-2]);
+    if (diff1 > diff2)
+      goto imposeFirsts;
+    else goto imposeLasts;
+  }
+
+imposeLasts:
+  for (i=number_of_lasts-1; i>=0; i--) {
+    TaggedRef task1 = deref(vector->getArg(lasts[i]));
+    ret = OZ_cons(task1, ret);
+  }
+  return ( (OZ_unify(out_atoms, makeTaggedAtom("lasts"))) &&
+           (OZ_unify(out_tasks, ret)) )
+    ? PROCEED :FAILED;
+
+imposeFirsts:
+  for (i=number_of_firsts-1; i>=0; i--) {
+    TaggedRef task1 = deref(vector->getArg(firsts[i]));
+    ret = OZ_cons(task1, ret);
+  }
+  return ( (OZ_unify(out_atoms, makeTaggedAtom("firsts"))) &&
+           (OZ_unify(out_tasks, ret)) )
+    ? PROCEED :FAILED;
 
 
 } OZ_C_proc_end
