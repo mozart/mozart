@@ -2868,7 +2868,7 @@ LBLdispatcher:
       TaggedRef   info   = ozdeb->info;
 
       Y = NULL;
-      delete ozdeb;
+      ozdeb->dispose();
 
       switch (dothis) {
       case DBG_NOOP : {
