@@ -150,6 +150,8 @@
 	  arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.time"
 	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.env"
+	  arg2="llp{0.6\linewidth}">
 
     <!-- Splitting the document into different HTML nodes -->
 
@@ -234,6 +236,7 @@
 
 
     <Meta name="html.split"       value="chapter.property">
+    <Meta name="html.split"       value="section.property.intro">  
     <Meta name="html.split"       value="section.property.application">  
     <Meta name="html.split"       value="section.property.dp">  
     <Meta name="html.split"       value="section.property.dplog">  
@@ -250,6 +253,7 @@
     <Meta name="html.split"       value="section.property.spaces">  
     <Meta name="html.split"       value="section.property.threads">  
     <Meta name="html.split"       value="section.property.time">  
+    <Meta name="html.split"       value="section.property.env">  
 
     <Meta name="html.split"       value="chapter.error">
     <Meta name="html.split"       value="chapter.errorformatters">
