@@ -254,9 +254,18 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
     } else if (PC==C_LOCK_Ptr) {
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){
-      case Te_Local: ((LockLocal*)lck)->unlock();break;
-      case Te_Frame: ((LockFrameEmul*)lck)->unlock(thr);break;
-      case Te_Manager: ((LockManagerEmul*)lck)->unlock(thr);break;
+      case Te_Local:
+        if (((LockLocal*)lck)->hasLock(thr))
+          ((LockLocal*)lck)->unlock();
+        break;
+      case Te_Frame:
+        if (((LockFrameEmul*)lck)->hasLock(thr))
+          ((LockFrameEmul*)lck)->unlock(thr);
+        break;
+      case Te_Manager:
+        if (((LockManagerEmul*)lck)->hasLock(thr))
+          ((LockManagerEmul*)lck)->unlock(thr);
+        break;
       case Te_Proxy: OZ_error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) {
       Object *newSelf = (Object*)Y;

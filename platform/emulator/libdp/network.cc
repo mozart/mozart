@@ -2629,13 +2629,9 @@ Bool tcpAckReader(ReadConnection *r, int ack){
   PD((TCP,"tcpAckReader r:%x a:%d",r, ack));
   *buf=(BYTE) TCP_MSG_ACK_FROM_READER;
   uniquefyInt(buf + 1, ack);
-  while((buf - buffer) < INT_IN_BYTES_LEN + 1){
-    PD((TCP,"Writing byte: %d diff: %d tot: %d",*buf,buf - buffer,INT_IN_BYTES_LEN ));
-    ret=writeI(fd,buf++);
-    if(ret!=IP_OK){
-      PD((TCP,"Write fail in Acking"));
-      return FALSE;}}
-  return TRUE;}
+  return ossafewrite(fd,(char*)buf,INT_IN_BYTES_LEN+1) < 0 ? FALSE : TRUE;
+}
+
 
 inline
 int tcpRead(int fd,BYTE *buf,int size,Bool &readAll)
