@@ -215,6 +215,9 @@ public:
     push(makeCompMode(mode));
   }
 
+  int getSeqSize();
+  void copySeq(TaskStack *newStack,int size);
+
 private:
 
   void gcInit()                     { tos = array+size-1; }

@@ -180,3 +180,73 @@ void nodeCheckY(Board *n)
 }
 
 #endif
+
+/*
+ * getSeqSize:
+ *   calculate the size of the sequential part of the taskstack
+ *   and update the tos ("remove" all sequential tasks)
+ * NOTE: the entry must not be destroyed, because copySeq needs them
+ */
+int TaskStack::getSeqSize()
+{
+  TaskStackEntry *oldTos=tos;
+
+  while (1) {
+    Assert(!isEmpty());
+    TaskStackEntry entry=*(--tos);
+    TaggedBoard tb = (TaggedBoard) ToInt32(entry);
+    ContFlag cFlag = getContFlag(tb);
+    if (cFlag == C_COMP_MODE) {
+      Assert(getCompMode(entry)==PARMODE);
+      break;
+    }
+
+    switch (cFlag){
+
+    case C_NERVOUS:
+      break;
+
+    case C_COMP_MODE:
+      Assert(0);
+      break;
+
+    case C_CONT:
+      tos-=3; // PC Y G
+      break;
+      
+    case C_XCONT:
+      tos-=4; // PC Y G X
+      break;
+
+    case C_DEBUG_CONT: 
+      tos--;
+      break;
+
+    case C_CALL_CONT: 
+      tos-=2;
+      break;
+
+    case C_CFUNC_CONT:
+      tos-=3;
+      break;
+
+    default:
+      Assert(0);
+      break;
+    }
+  } // while not task stack is empty
+
+  return oldTos-tos-1;
+} // TaskStack::getSeqSize
+
+/*
+ * copySeq: copy the sequential part of newStack
+ *  NOTE: the tos of newStack points to the compMode task
+ */
+void TaskStack::copySeq(TaskStack *newStack,int len)
+{
+  TaskStackEntry *next=newStack->tos+1;
+  for (;len>0;len--) {
+    push(*next++);
+  }
+}
