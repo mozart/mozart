@@ -15,10 +15,12 @@
 \newif\if@coverPage \@coverPagetrue
 \newif\if@titlePage \@titlePagetrue
 \newif\if@tableofcontents \@tableofcontentstrue
+\newif\if@pdf \@pdffalse
 
 \DeclareOption{nocover}{\@coverPagefalse}
 \DeclareOption{notitle}{\@titlePagefalse}
 \DeclareOption{notableofcontents}{\@tableofcontentsfalse}
+\DeclareOption{pdf}{\@pdftrue}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
 
 % Execution of Options
@@ -35,6 +37,9 @@
 \RequirePackage{pst-node}
 \RequirePackage{latexsym}
 \RequirePackage{epsf}
+\if@pdf
+\RequirePackage{ozhyperref}
+\fi
 
 % Main Code
 %
@@ -324,6 +329,16 @@
 \fi
 }
 
+\newcommand{\ozhttp}{http://www.ps.uni-sb.de/oz}
+\newcommand{\ozftp}{ftp://ftp.ps.uni-sb.de/pub/oz}
+\if@pdf
+  \newcommand{\@ozhref}[1]{\href{#1}{#1}}
+\else
+  \newcommand{\@ozhref}{}
+\fi
+\newcommand{\@ozhttp}{\@ozhref{\ozhttp}}
+\newcommand{\@ozftp}{\@ozhref{\ozftp}}
+
 \newcommand{\front@two}{%
 \if@coverPage
 \clearpage
@@ -337,9 +352,9 @@
 \vfill
   More information about Oz and DFKI Oz
   can be obtained via WWW at
-  \[\texttt{http://www.ps.uni-sb.de/oz/}\]
+  \[\texttt{\@ozhttp}\]
   and via anonymous ftp at
-  \[\texttt{ftp.ps.uni-sb.de/pub/oz}\]
+  \[\texttt{\@ozftp}\]
 
 \vfill
   For specific questions and bug reports, you may mail to
@@ -531,7 +546,11 @@ referenced is defined on this page.}
    \protect\addcontentsline{toc}{chapter}{Index}}
 % \proofmodetrue
 \indexproofstyle{\sc}
-\newcommand{\id}{\textbf}
+\if@pdf
+  \renewcommand{\id}{\textbf}
+\else
+  \newcommand{\id}{\textbf}
+\fi
 
 % redefine \see so that it looks like a subitem inside an item, like
 % a subsubitem inside a subitem, etc... This is done by letting the
