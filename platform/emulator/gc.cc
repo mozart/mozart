@@ -1008,6 +1008,22 @@ SuspList * SuspList::gc(Bool tcFlag)
   return (ret);
 }
 
+inline
+void GenCVariable::gc(void)
+{
+  Assert(getType()==FDVariable || getType()==OFSVariable);
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable*)this)->gc();
+    break;
+  case OFSVariable:
+    ((GenOFSVariable*)this)->gc();
+    break;
+  default:
+    break;
+  }
+}
+
 
 // This procedure collects the entry points into heap provided by variables, 
 // without copying the tagged reference of the variable itself.
@@ -1142,22 +1158,6 @@ void GenOFSVariable::gc(void)
     dynamictable.gc();
 }
 
-
-inline
-void GenCVariable::gc(void)
-{
-  Assert(getType()==FDVariable || getType()==OFSVariable);
-  switch (getType()){
-  case FDVariable:
-    ((GenFDVariable*)this)->gc();
-    break;
-  case OFSVariable:
-    ((GenOFSVariable*)this)->gc();
-    break;
-  default:
-    break;
-  }
-}
 
 inline
 Bool updateVar(TaggedRef var)
