@@ -1,21 +1,20 @@
 /*
  *  Authors:
- *    Martin Henz (henz@iscs.nus.sg)
- *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
+ *    Martin Henz <henz@iscs.nus.sg>
+ *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
  *
  *  Copyright:
- *    Martin Henz and Leif Kornstaedt, 1996, 1997
+ *    Martin Henz and Leif Kornstaedt, 1996-1999
  *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
  *
- *  This file is part of Mozart, an implementation
- *  of Oz 3:
- *     http://www.mozart-oz.org
+ *  This file is part of Mozart, an implementation of Oz 3:
+ *    http://www.mozart-oz.org
  *
  *  See the file "LICENSE" or
- *     http://www.mozart-oz.org/LICENSE.html
+ *    http://www.mozart-oz.org/LICENSE.html
  *  for information on usage and redistribution
  *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
@@ -1548,5 +1547,13 @@ OZ_BI_define(parser_parseVirtualString, 2, 1)
     return OZ_typeError(1, "ParseOptions");
   xy_init_from_string(str, defines);
   OZ_RETURN(parse());
+}
+OZ_BI_end
+
+OZ_BI_define(parser_expandFileName, 1, 1)
+{
+  OZ_declareVirtualString(0, in);
+  char *out = xy_expand_file_name(in);
+  OZ_RETURN(out == NULL? OZ_false(): OZ_atom(out));
 }
 OZ_BI_end
