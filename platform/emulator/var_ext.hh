@@ -48,13 +48,12 @@ public:
   virtual Bool          validV(TaggedRef) = 0;
   virtual VariableStatus statusV() = 0;
   virtual OZ_Term       isDetV() = 0;
+  virtual void          disposeV() = 0;
 
   virtual void addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) {
     addSuspSVar(susp, unstable);
   }
-  virtual int getSuspListLengthV() {
-    return getSuspListLengthS();
-  }
+  virtual int getSuspListLengthV() { return getSuspListLengthS(); }
 
   virtual void printStreamV(ostream &out,int depth = 10) {
     out << "<extvar: #" << getIdV() << ">";
@@ -62,14 +61,11 @@ public:
   virtual void printLongStreamV(ostream &out,int depth = 10, int offset = 0) {
     printStreamV(out,depth); out << endl;
   }
-  void print(void) {
-    printStreamV(cerr); cerr << endl; cerr.flush();
-  }
-  void printLong(void) {
-    printLongStreamV(cerr); cerr.flush();
-  }
-  virtual OZ_Term inspectV() {
-    return 0;
+  void print(void) { printStreamV(cerr); cerr << endl; cerr.flush(); }
+  void printLong(void) { printLongStreamV(cerr); cerr.flush(); }
+  virtual OZ_Term inspectV() { return 0; }
+  virtual OZ_Return     forceBindV(TaggedRef*p, TaggedRef v) {
+    return bindV(p,v);
   }
 };
 

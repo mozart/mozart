@@ -45,6 +45,7 @@ public:
     : OzVariable(OZ_VAR_FUTURE,bb), function(function) {}
   OZ_Return bind(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
   OZ_Return unify(TaggedRef* vPtr,TaggedRef* tPtr,ByteCode* scp);
+  OZ_Return forceBind(TaggedRef* vPtr,TaggedRef v,ByteCode* scp);
   OZ_Return valid(TaggedRef /* val */) {
     return TRUE;
   }
@@ -56,6 +57,8 @@ public:
   }
   void addSusp(TaggedRef*, Suspension, int);
   void dispose(void) {
+    disposeS();
+    DebugCode(function=0);
     freeListDispose(this, sizeof(Future));
   }
   void printStream(ostream &out,int depth = 10);

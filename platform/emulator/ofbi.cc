@@ -162,7 +162,7 @@ void addFeatOFSSuspensionList(TaggedRef var,
           Assert(tl==AtomNil);
           break;
         case UVAR:
-          doBind(tailPtr, AtomNil);
+          DoBind(tailPtr, AtomNil);
           break;
         default:
           Assert(FALSE);

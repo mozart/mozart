@@ -178,9 +178,6 @@ OZ_BI_define(BIisDet,1,1)
   OZ_RETURN(oz_false());
 } OZ_BI_end
 
-
-
-
 OZ_Return isNameInline(TaggedRef t)
 {
   SUSPEND_ON_NONKINDED_VAR( t, term, tag );
@@ -241,6 +238,12 @@ OZ_Return isChunkInline(TaggedRef t)
   return oz_isChunk(term) ? PROCEED : FAILED;
 }
 OZ_DECLAREBOOLFUN1(BIisChunkB,isChunkInline)
+
+OZ_BI_define(BIisExtension, 1,1)
+{
+  oz_declareNonvarIN(0,t);
+  OZ_RETURN(oz_isExtensionPlus(t) ? oz_true() : oz_false());
+} OZ_BI_end
 
 OZ_BI_define(BIprocedureArity, 1,1)
 {
@@ -1746,19 +1749,23 @@ OZ_BI_define(BIstatus,1,1)
     case OZ_OTHER:
       OZ_RETURN(AtomOther);
     case OZ_KINDED:
-      SRecord *t = SRecord::newSRecord(AtomKinded, 1);
-      switch (tagged2CVar(term)->getType()) {
-      case OZ_VAR_FD:
-      case OZ_VAR_BOOL:
-        t->setArg(0, AtomInt); break;
-      case OZ_VAR_FS:
-        t->setArg(0, AtomFSet); break;
-      case OZ_VAR_OF:
-        t->setArg(0, AtomRecord); break;
-      default:
-        t->setArg(0, AtomOther); break;
+      {
+        SRecord *t = SRecord::newSRecord(AtomKinded, 1);
+        switch (tagged2CVar(term)->getType()) {
+        case OZ_VAR_FD:
+        case OZ_VAR_BOOL:
+          t->setArg(0, AtomInt); break;
+        case OZ_VAR_FS:
+          t->setArg(0, AtomFSet); break;
+        case OZ_VAR_OF:
+          t->setArg(0, AtomRecord); break;
+        default:
+          t->setArg(0, AtomOther); break;
+        }
+        OZ_RETURN(makeTaggedSRecord(t));
       }
-      OZ_RETURN(makeTaggedSRecord(t));
+    default:
+      Assert(0);
     }
   default:
     {

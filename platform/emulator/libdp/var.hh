@@ -31,78 +31,54 @@
 #pragma interface
 #endif
 
-#include "base.hh"
-#include "debug.hh"
 #include "var_ext.hh"
+#include "dpBase.hh"
 #include "table.hh"
 
-class ProxyList {
-public:
-  DSite* sd;
-  ProxyList *next;
-public:
-  ProxyList(DSite* s,ProxyList *nxt) :sd(s),next(nxt) {}
-
-  USEFREELISTMEMORY;
-
-  void dispose()
-  {
-    freeListDispose(this,sizeof(ProxyList));
-  }
-  ProxyList *gcProxyList();
-};
-
-class PerdioVar: public ExtVar {
-public:
-  PerdioVar(Board *bb) : ExtVar(bb) {}
-
-  virtual int getIdV() = 0;
-  virtual VariableStatus statusV() = 0;
-  virtual OZ_Term isDetV() = 0;
-  virtual PerdioVar *gcV(void) = 0;
-  virtual void gcRecurseV(void) = 0;
-  virtual Bool validV(TaggedRef v) = 0;
-  virtual void printStreamV(ostream &out,int depth = 10) = 0;
-  virtual OZ_Return bindV(TaggedRef *vptr, TaggedRef t) = 0;
-
-  OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);
-};
-
-class ProxyManagerVar : public PerdioVar {
+class ProxyManagerVar : public ExtVar {
 protected:
   int index;
-  TaggedRef binding;
 public:
   ProxyManagerVar(Board *bb,int i)
-    : PerdioVar(bb), index(i), binding(0) { }
+    : ExtVar(bb), index(i) { }
 
-  VariableStatus statusV() { return OZ_FREE; }
+  VariableStatus statusV() = 0;
   Bool validV(TaggedRef v) { return TRUE; }
   virtual int getIdV() = 0;
   virtual OZ_Term isDetV() = 0;
-  virtual PerdioVar *gcV(void) = 0;
+  virtual ExtVar *gcV(void) = 0;
   virtual void gcRecurseV(void) = 0;
+  virtual void disposeV(void) = 0;
   virtual void printStreamV(ostream &out,int depth = 10) = 0;
   virtual OZ_Return bindV(TaggedRef *vptr, TaggedRef t) = 0;
+  OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);
 
   int getIndex() { return index; }
   void gcSetIndex(int i) { index =  i; }
 };
 
 class ProxyVar : public ProxyManagerVar {
+private:
+  TaggedRef binding;
 public:
-  ProxyVar(Board *bb, int i) : ProxyManagerVar(bb,i) { }
+  ProxyVar(Board *bb, int i) : ProxyManagerVar(bb,i), binding(0) { }
 
   int getIdV() { return OZ_EVAR_PROXY; }
-  VariableStatus statusV() { return OZ_FREE; }
+  VariableStatus statusV() { Assert(0); return OZ_OTHER; }
   OZ_Term isDetV();
-  PerdioVar *gcV() { return new ProxyVar(*this); }
+  ExtVar *gcV() { return new ProxyVar(*this); }
   void gcRecurseV(void);
+  void disposeV(void) {
+    disposeS();
+    freeListDispose(this,sizeof(ProxyVar));
+  }
+
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:pxy>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
+  void addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE);
 
-  void proxyBind(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
-  void proxyAck(TaggedRef *vPtr, BorrowEntry *be);
+  void redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
+  void acknowledge(TaggedRef *vPtr, BorrowEntry *be);
   void marshal(MsgBuffer*);
 };
 
@@ -117,24 +93,54 @@ ProxyVar *oz_getProxyVar(TaggedRef v) {
   return (ProxyVar*) oz_getExtVar(v);
 }
 
-// #define ORIG
+class ProxyList {
+public:
+  DSite* sd;
+  ProxyList *next;
+public:
+  ProxyList(DSite* s,ProxyList *nxt) :sd(s),next(nxt) {}
+
+  USEFREELISTMEMORY;
+
+  ProxyList *dispose()
+  {
+    ProxyList *n=next;
+    freeListDispose(this,sizeof(ProxyList));
+    return n;
+  }
+  ProxyList *gcProxyList();
+};
+
 class ManagerVar : public ProxyManagerVar {
 private:
   ProxyList *proxies;
-#ifdef ORIG
   OzVariable *origVar;
-#endif
 protected:
   OZ_Return sendRedirectToProxies(OZ_Term val, DSite* ackSite);
 public:
-  ManagerVar(Board *bb, int index) :  ProxyManagerVar(bb,index), proxies(0) {}
-
+  ManagerVar(OzVariable *ov, int index)
+    :  ProxyManagerVar(ov->getHome1(),index), proxies(0),origVar(ov) {}
   int getIdV() { return OZ_EVAR_MANAGER; }
   OZ_Term isDetV() { return OZ_false(); }
-  PerdioVar *gcV() { return new ManagerVar(*this); }
+  VariableStatus statusV();
+  ExtVar *gcV() { return new ManagerVar(*this); }
   void gcRecurseV(void);
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
+  OZ_Return forceBindV(TaggedRef*p, TaggedRef v);
+  void disposeV(void) {
+    disposeS();
+    ProxyList *pl = proxies;
+    while (pl) {
+      pl=pl->dispose();
+    }
+    DebugCode(proxies=0);
+    if (origVar) {
+      oz_var_dispose(origVar);
+      DebugCode(origVar=0);
+    }
+    freeListDispose(this,sizeof(ManagerVar));
+  }
 
   void registerSite(DSite* sd) {
     // test if already registered
@@ -148,10 +154,12 @@ public:
     }
     proxies = new ProxyList(sd,proxies);
   }
-  ProxyList *getProxies() { return proxies; }
-  void managerBind(TaggedRef *vPtr, TaggedRef val,
-                   OwnerEntry *oe, DSite *rsite);
+
+  void surrender(TaggedRef*, TaggedRef);
   void marshal(MsgBuffer*);
+
+  inline
+  void localize(TaggedRef *vPtr);
 };
 
 inline
@@ -165,86 +173,9 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
   return (ManagerVar*) oz_getExtVar(v);
 }
 
-enum PV_TYPES {
-  PV_OBJECTCLASSAVAIL,     // class available
-  PV_OBJECTCLASSNOTAVAIL   // only the class's gname known
-};
-
-class ObjectVar : public PerdioVar {
-protected:
-  short pvtype;
-  Object *obj;
-  union {
-    ObjectClass *aclass;
-    GName *gnameClass;
-  } u;
-
-protected:
-  void setpvType(PV_TYPES t) { pvtype = (short) t; }
-  PV_TYPES getpvType()       { return (PV_TYPES) pvtype; }
-
-public:
-  ObjectVar(Board *bb,Object *o,ObjectClass *cl) : PerdioVar(bb) {
-    setpvType(PV_OBJECTCLASSAVAIL);
-    obj   = o;
-    u.aclass=cl;
-  }
-  ObjectVar(Board *bb,Object *o,GName *gn) : PerdioVar(bb) {
-    setpvType(PV_OBJECTCLASSNOTAVAIL);
-    obj   = o;
-    u.gnameClass=gn;
-  }
-
-  int getIdV() { return OZ_EVAR_OBJECT; }
-  VariableStatus statusV() { return OZ_OTHER; } // mm2: OZ_LAZY!
-  OZ_Term isDetV() { return OZ_true(); }
-  void addSuspV(TaggedRef *v, Suspension susp, int unstable);
-  Bool validV(TaggedRef v) { return FALSE; }
-  PerdioVar *gcV() { return new ObjectVar(*this); }
-  void gcRecurseV(void);
-  void printStreamV(ostream &out,int depth = 10) { out << "<dist:oprxy>"; }
-  OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
-
-  void disposeV();
-
-private:
-  Bool isObjectClassAvail()    { return getpvType()==PV_OBJECTCLASSAVAIL; }
-  Bool isObjectClassNotAvail() { return getpvType()==PV_OBJECTCLASSNOTAVAIL; }
-
-  void setClass(ObjectClass *cl) {
-    Assert(isObjectClassAvail());
-    u.aclass=cl;
-  }
-
-  GName *getGNameClass() {
-    Assert(isObjectClassNotAvail());
-    return u.gnameClass;
-  }
-  Object *getObject() { return obj; }
-  ObjectClass *getClass() { Assert(isObjectClassAvail()); return u.aclass; }
-
-public:
-  void marshal(MsgBuffer*);
-  void sendObject(DSite*, int, ObjectFields&, BorrowEntry*);
-  void sendObjectAndClass(ObjectFields&, BorrowEntry*);
-};
-
-inline
-Bool oz_isObjectVar(TaggedRef v) {
-  return oz_isExtVar(v) && oz_getExtVar(v)->getIdV()==OZ_EVAR_OBJECT;
-}
-
-inline
-ObjectVar *oz_getObjectVar(TaggedRef v) {
-  Assert(oz_isObjectVar(v));
-  return (ObjectVar*) oz_getExtVar(v);
-}
-
-
 /* ---------------------------------------------------------------------- */
 
 OZ_Return sendRedirect(DSite*, int, TaggedRef);
-TaggedRef newObjectProxy(Object*, GName*, GName*, TaggedRef);
 OZ_Term unmarshalVar(MsgBuffer*);
 Bool marshalVariable(TaggedRef *tPtr, MsgBuffer *bs);
 

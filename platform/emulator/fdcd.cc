@@ -380,7 +380,7 @@ OZ_Return BIfdBodyManager::entailmentClause(int from_b, int to_b,
           tagged2GenBoolVar(bifdbm_var[j])->
             relinkSuspListTo(tagged2GenFDVar(bifdbm_var[i]));
         }
-        doBind(bifdbm_varptr[j], makeTaggedRef(bifdbm_varptr[i]));
+        DoBind(bifdbm_varptr[j], makeTaggedRef(bifdbm_varptr[i]));
       } else if (bifdbm_vartag[i] == pm_bool) {
         if (bifdbm_vartag[j] == pm_fd) {
           tagged2GenFDVar(bifdbm_var[j])->
@@ -389,7 +389,7 @@ OZ_Return BIfdBodyManager::entailmentClause(int from_b, int to_b,
           tagged2GenBoolVar(bifdbm_var[j])->
             relinkSuspListTo(tagged2GenBoolVar(bifdbm_var[i]));
         }
-        doBind(bifdbm_varptr[j], makeTaggedRef(bifdbm_varptr[i]));
+        DoBind(bifdbm_varptr[j], makeTaggedRef(bifdbm_varptr[i]));
       } else {
         process(j);
       }
@@ -598,7 +598,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
             becomesSmallIntAndPropagate(bifdbm_varptr[i]);
         } else {
           tagged2GenFDVar(bifdbm_var[i])->propagate(fd_prop_singl);
-          doBindAndTrail(bifdbm_varptr[i],
+          DoBindAndTrail(bifdbm_varptr[i],
                          OZ_int(bifdbm_dom[i]->getSingleElem()));
         }
       } else if (*bifdbm_dom[i] == fd_bool) {
@@ -639,7 +639,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
           becomesSmallIntAndPropagate(bifdbm_varptr[i], *bifdbm_dom[i]);
       } else {
         tagged2GenBoolVar(bifdbm_var[i])->propagate();
-        doBindAndTrail(bifdbm_varptr[i],
+        DoBindAndTrail(bifdbm_varptr[i],
                        OZ_int(bifdbm_dom[i]->getSingleElem()));
       }
     } else {
@@ -650,12 +650,12 @@ void BIfdBodyManager::processFromTo(int from, int to)
       if (*bifdbm_dom[i] == fd_singl) {
         OZ_Term smallInt = OZ_int(bifdbm_dom[i]->getSingleElem());
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
-        doBindAndTrail(bifdbm_varptr[i], smallInt);
+        DoBindAndTrail(bifdbm_varptr[i], smallInt);
       } else if (*bifdbm_dom[i] == fd_bool) {
         OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
-        doBindAndTrail(bifdbm_varptr[i],
+        DoBindAndTrail(bifdbm_varptr[i],
                        makeTaggedRef(newtaggedboolvar));
         vars_left = OZ_TRUE;
       } else {
@@ -663,7 +663,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
           = new OzFDVariable(*bifdbm_dom[i],oz_currentBoard());
         OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
-        doBindAndTrail(bifdbm_varptr[i],
+        DoBindAndTrail(bifdbm_varptr[i],
                        makeTaggedRef(newtaggedfdvar));
         vars_left = OZ_TRUE;
       }
@@ -692,7 +692,7 @@ void BIfdBodyManager::processNonRes(void)
           becomesSmallIntAndPropagate(bifdbm_varptr[0]);
       } else {
         tagged2GenFDVar(bifdbm_var[0])->propagate(fd_prop_singl);
-        doBindAndTrail(bifdbm_varptr[0],
+        DoBindAndTrail(bifdbm_varptr[0],
                        OZ_int(bifdbm_dom[0]->getSingleElem()));
       }
     } else if (*bifdbm_dom[0] == fd_bool) {
@@ -727,7 +727,7 @@ void BIfdBodyManager::processNonRes(void)
         becomesSmallIntAndPropagate(bifdbm_varptr[0], *bifdbm_dom[0]);
     } else {
       tagged2GenBoolVar(bifdbm_var[0])->propagate();
-      doBindAndTrail(bifdbm_varptr[0],
+      DoBindAndTrail(bifdbm_varptr[0],
                      OZ_int(bifdbm_dom[0]->getSingleElem()));
     }
   } else {
@@ -738,20 +738,20 @@ void BIfdBodyManager::processNonRes(void)
     if (*bifdbm_dom[0] == fd_singl) {
       OZ_Term smallInt = OZ_int(bifdbm_dom[0]->getSingleElem());
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
-      doBindAndTrail(bifdbm_varptr[0], smallInt);
+      DoBindAndTrail(bifdbm_varptr[0], smallInt);
     } else if (*bifdbm_dom[0] == fd_bool) {
       OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
       OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
-      doBindAndTrail(bifdbm_varptr[0],
-                        makeTaggedRef(newtaggedboolvar));
+      DoBindAndTrail(bifdbm_varptr[0],
+                     makeTaggedRef(newtaggedboolvar));
       vars_left = OZ_TRUE;
     } else {
       OzFDVariable * newfdvar
         = new OzFDVariable(*bifdbm_dom[0],oz_currentBoard());
       OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
-      doBindAndTrail(bifdbm_varptr[0],
+      DoBindAndTrail(bifdbm_varptr[0],
                      makeTaggedRef(newtaggedfdvar));
       vars_left = OZ_TRUE;
     }
@@ -815,8 +815,8 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
       oz_checkSuspensionListProp(tagged2SVarPlus(v));
-      fdvar->setSuspList(tagged2SVarPlus(v)->getSuspList()); // mm2
-      doBind(vptr, makeTaggedRef(taggedfdvar));
+      fdvar->setSuspList(tagged2SVarPlus(v)->unlinkSuspList()); // mm2
+      DoBind(vptr, makeTaggedRef(taggedfdvar));
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);
       bifdbm_vartag[0] = pm_fd;
     } else {
@@ -837,7 +837,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
-      doBind(vptr, makeTaggedRef(taggedfdvar));
+      DoBind(vptr, makeTaggedRef(taggedfdvar));
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);
       bifdbm_vartag[0] = pm_fd;
     } else {
@@ -1123,7 +1123,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     Assert(isUVar(bi));
     OzFDVariable * fdvar = new OzFDVariable(oz_currentBoard());
     fdvar->getDom().initRange(0, OZ_intToC(p[i]) + 2);
-    doBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
+    DoBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
   }
 
   // Has already been reduced to sum(b) >= 1
@@ -1169,7 +1169,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
           OzFDVariable * fdvar = new OzFDVariable(oz_currentBoard());
           vp_i_j_val = makeTaggedRef(newTaggedCVar(fdvar));
         }
-        doBind(vp_i_j_ptr, vp_i_j_val);
+        DoBind(vp_i_j_ptr, vp_i_j_val);
       }
     }
   }

@@ -40,7 +40,7 @@ Bool OzFSVariable::valid(TaggedRef val)
 }
 
 void OzFSVariable::dispose(void) {
-  suspList->disposeList();
+  disposeS();
   freeListDispose(this, sizeof(OzFSVariable));
 }
 
@@ -74,10 +74,10 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
     propagate(fs_prop_val);
 
   if (isLocalVar) {
-    doBind(vptr, term);
+    DoBind(vptr, term);
     dispose();
   } else {
-    doBindAndTrail(vptr, term);
+    DoBindAndTrail(vptr, term);
   }
 
 #ifdef DEBUG_FSUNIFY
@@ -136,8 +136,8 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
         OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
         term_var->propagateUnify();
         propagateUnify();
-        doBind(vptr, new_fset_var);
-        doBind(tptr, new_fset_var);
+        DoBind(vptr, new_fset_var);
+        DoBind(tptr, new_fset_var);
         dispose();
         term_var->dispose();
       } else if (heapNewer(vptr, tptr)) { // bind var to term
@@ -145,14 +145,14 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
         propagateUnify();
         term_var->propagateUnify();
         relinkSuspListTo(term_var);
-        doBind(vptr, makeTaggedRef(tptr));
+        DoBind(vptr, makeTaggedRef(tptr));
         dispose();
       } else { // bind term to var
         setSet(new_fset);
         term_var->propagateUnify();
         propagateUnify();
         term_var->relinkSuspListTo(this);
-        doBind(tptr, makeTaggedRef(vptr));
+        DoBind(tptr, makeTaggedRef(vptr));
         term_var->dispose();
       }
       break;
@@ -166,8 +166,8 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
             = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
           if (is_not_installing_script) term_var->propagateUnify();
           if (var_is_constrained) propagateUnify();
-          doBind(vptr, new_fset_var);
-          doBindAndTrail(tptr, new_fset_var);
+          DoBind(vptr, new_fset_var);
+          DoBindAndTrail(tptr, new_fset_var);
           dispose();
         } else {
           setSet(new_fset);
@@ -180,7 +180,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
         if (is_not_installing_script) term_var->propagateUnify();
         if (var_is_constrained) propagateUnify();
         relinkSuspListTo(term_var, TRUE);
-        doBind(vptr, makeTaggedRef(tptr));
+        DoBind(vptr, makeTaggedRef(tptr));
         dispose();
       }
       break;
@@ -194,8 +194,8 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
             = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
           if (is_not_installing_script) propagateUnify();
           if (term_is_constrained) term_var->propagateUnify();
-          doBind(tptr, new_fset_var);
-          doBindAndTrail(vptr, new_fset_var);
+          DoBind(tptr, new_fset_var);
+          DoBindAndTrail(vptr, new_fset_var);
           term_var->dispose();
         } else {
           term_var->setSet(new_fset);
@@ -208,7 +208,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
         if (term_is_constrained) term_var->propagateUnify();
         if (is_not_installing_script) propagateUnify();
         term_var->relinkSuspListTo(this, TRUE);
-        doBind(tptr, makeTaggedRef(vptr));
+        DoBind(tptr, makeTaggedRef(vptr));
         term_var->dispose();
       }
       break;
@@ -222,8 +222,8 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
           if (var_is_constrained) propagateUnify();
           if (term_is_constrained) term_var->propagateUnify();
         }
-        doBindAndTrail(vptr, new_fset_var);
-        doBindAndTrail(tptr, new_fset_var);
+        DoBindAndTrail(vptr, new_fset_var);
+        DoBindAndTrail(tptr, new_fset_var);
       } else {
         OzFSVariable *c_var
           = new OzFSVariable(new_fset,oz_currentBoard());
@@ -274,9 +274,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       if (oz_isLocalVariable(vptr)) {
         if (!isUVar(vtag))
           oz_checkSuspensionListProp(tagged2SVarPlus(v));
-        doBind(vptr, makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
+        DoBind(vptr, makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
       } else {
-        doBindAndTrail(vptr,
+        DoBindAndTrail(vptr,
                        makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
       }
       goto proceed;
@@ -293,11 +293,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
     if (oz_isLocalVariable(vptr)) {
       if (!isUVar(vtag)) {
         oz_checkSuspensionListProp(tagged2SVarPlus(v));
-        fsv->setSuspList(tagged2SVarPlus(v)->getSuspList());
+        fsv->setSuspList(tagged2SVarPlus(v)->unlinkSuspList());
       }
-      doBind(vptr, makeTaggedRef(tfsv));
+      DoBind(vptr, makeTaggedRef(tfsv));
     } else {
-      doBindAndTrail(vptr, makeTaggedRef(tfsv));
+      DoBindAndTrail(vptr, makeTaggedRef(tfsv));
     }
 
     goto proceed;
@@ -320,7 +320,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
         fsvar->becomesFSetValueAndPropagate(vptr);
       } else {
         fsvar->propagate(fs_prop_val);
-        doBindAndTrail(vptr, makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &set))));
+        DoBindAndTrail(vptr, makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &set))));
       }
     } else {
       fsvar->propagate(fs_prop_bounds);

@@ -92,6 +92,39 @@ OZ_Return oz_var_bindINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
 }
 
 inline
+OZ_Return oz_var_forceBindINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
+                            ByteCode *scp)
+{
+  switch (cv->getType()){
+  case OZ_VAR_SIMPLE:  return ((SimpleVar *) cv)->bind(ptr,val,scp);
+  case OZ_VAR_FUTURE:  return ((Future *) cv)->forceBind(ptr,val,scp);
+  case OZ_VAR_BOOL:    return ((OzBoolVariable*) cv)->bind(ptr,val,scp);
+  case OZ_VAR_FD:      return ((OzFDVariable*) cv)->bind(ptr,val,scp);
+  case OZ_VAR_OF:      return ((OzOFVariable*) cv)->bind(ptr,val,scp);
+  case OZ_VAR_FS:      return ((OzFSVariable*) cv)->bind(ptr,val,scp);
+  case OZ_VAR_CT:      return ((OzCtVariable*) cv)->bind(ptr,val,scp);
+  case OZ_VAR_EXT:     return ((ExtVar *) cv)->forceBindV(ptr,val);
+  default:  error("not impl"); return FAILED;
+  }
+}
+
+inline
+void oz_var_disposeINLINE(OzVariable *cv)
+{
+  switch (cv->getType()){
+  case OZ_VAR_SIMPLE:  ((SimpleVar *) cv)->dispose(); break;
+  case OZ_VAR_FUTURE:  ((Future *) cv)->dispose(); break;
+  case OZ_VAR_BOOL:    ((OzBoolVariable*) cv)->dispose(); break;
+  case OZ_VAR_FD:      ((OzFDVariable*) cv)->dispose(); break;
+  case OZ_VAR_OF:      ((OzOFVariable*) cv)->dispose(); break;
+  case OZ_VAR_FS:      ((OzFSVariable*) cv)->dispose(); break;
+  case OZ_VAR_CT:      ((OzCtVariable*) cv)->dispose(); break;
+  case OZ_VAR_EXT:     ((ExtVar *) cv)->disposeV(); break;
+  default:  error("not impl");
+  }
+}
+
+inline
 void oz_var_addSuspINLINE(OzVariable *cv, TaggedRef *v, Suspension susp,
                           int unstable = TRUE)
 {

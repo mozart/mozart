@@ -88,12 +88,16 @@ DSite* creditSiteOut;
 
 void sendPrimaryCredit(DSite *sd,int OTI,Credit c);
 
+// from var.cc
+void oz_dpvar_localize(TaggedRef *);
 
 void OwnerEntry::localize(int index)
 {
   if (isRef()) {
-    //OT->freeOwnerEntry(index);
-    return;
+    OT->freeOwnerEntry(index);
+  } else if (isVar()) {
+    oz_dpvar_localize(getPtr());
+    OT->freeOwnerEntry(index);
   }
 }
 

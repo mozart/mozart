@@ -46,7 +46,10 @@ public:
   OzVariable* gc() { return new SimpleVar(*this); }
   void gcRecurse() {}
 
-  void dispose(void) { freeListDispose(this, sizeof(SimpleVar)); }
+  void dispose(void) {
+    disposeS();
+    freeListDispose(this, sizeof(SimpleVar));
+  }
 
   void printStream(ostream &out,int depth = 10) {
     out << "<simple>";

@@ -33,13 +33,22 @@
 
 // this is only needed for the becomesBool hack
 #include "var_bool.hh"
+#include "unify.hh"
 
 inline
 void OzFDVariable::dispose(void) {
   finiteDomain.disposeExtension();
-  fdSuspList[fd_prop_singl]->disposeList();
-  fdSuspList[fd_prop_bounds]->disposeList();
-  suspList->disposeList();
+  SuspList *sl=fdSuspList[fd_prop_singl];
+  while (sl) {
+    sl=sl->dispose();
+  }
+  DebugCode(fdSuspList[fd_prop_singl]=0);
+  sl = fdSuspList[fd_prop_bounds];
+  while (sl) {
+    sl=sl->dispose();
+  }
+  DebugCode(fdSuspList[fd_prop_bounds]=0);
+  disposeS();
   freeListDispose(this, sizeof(OzFDVariable));
 }
 
@@ -123,7 +132,7 @@ void OzFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 
   TaggedRef si_val = OZ_int(finiteDomain.getSingleElem());
   propagate(fd_prop_singl);
-  doBind(trPtr, si_val);
+  DoBind(trPtr, si_val);
   dispose();
 }
 

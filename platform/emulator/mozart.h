@@ -370,6 +370,7 @@ extern void _FUNDECL(OZ_registerAcceptHandler,(int,OZ_IOHandler,void *));
 /* garbage collection */
 extern int _FUNDECL(OZ_protect,(OZ_Term *));
 extern int _FUNDECL(OZ_unprotect,(OZ_Term *));
+extern void _FUNDECL(OZ_collect,(OZ_Term *));
 
 /* raise exception */
 extern OZ_Return _FUNDECL(OZ_typeError,(int pos,char *type));

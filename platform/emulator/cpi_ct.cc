@@ -217,13 +217,13 @@ OZ_Boolean OZ_CtVar::tell(void)
         // a _local_ variable becomes a value
 
         ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
-        doBind(varPtr, constr->toValue());
+        DoBind(varPtr, constr->toValue());
 
       } else {
         // a _global_ variable becomes a value
 
         ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
-        doBindAndTrail(varPtr, constr->toValue());
+        DoBindAndTrail(varPtr, constr->toValue());
 
         ctRestoreConstraint();
       }

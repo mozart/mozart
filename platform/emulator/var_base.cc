@@ -153,9 +153,18 @@ OZ_Return oz_var_bind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
   return oz_var_bindINLINE(cv,ptr,val,scp);
 }
 
+OZ_Return oz_var_forceBind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
+                      ByteCode *scp) {
+  return oz_var_forceBindINLINE(cv,ptr,val,scp);
+}
+
 void oz_var_addSusp(OzVariable *cv, TaggedRef *v, Suspension susp,
                    int unstable = TRUE) {
   oz_var_addSuspINLINE(cv, v, susp, unstable);
+}
+
+void oz_var_dispose(OzVariable *cv) {
+  oz_var_disposeINLINE(cv);
 }
 
 void oz_var_printStream(ostream &out, const char *s, OzVariable *cv, int depth)

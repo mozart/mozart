@@ -199,7 +199,7 @@ OZ_Boolean OZ_FSetVar::tell(void)
         OZ_FSetValue setvalue = *setPtr;
         *setPtr = set;
         tagged2GenFSetVar(var)->propagate(fs_prop_val);
-        doBindAndTrail(varPtr,
+        DoBindAndTrail(varPtr,
                        makeTaggedFSetValue(new OZ_FSetValue(setvalue)));
       }
       goto f;

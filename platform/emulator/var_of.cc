@@ -68,8 +68,8 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
       Bool vLoc=oz_isLocalVar(this);
 
       // Bind OFSVar to the Literal:
-      if (vLoc) doBind(vPtr, term);
-      else doBindAndTrail(vPtr, term);
+      if (vLoc) DoBind(vPtr, term);
+      else DoBindAndTrail(vPtr, term);
 
       // Unify the labels:
       if (!oz_unify(term,label,scp)) return FALSE; // mm_u
@@ -121,8 +121,8 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
       }
 
       // Bind OFSVar to the LTuple:
-      if (vLoc) doBind(vPtr, bindInRecordCaseHack);
-      else doBindAndTrail(vPtr, bindInRecordCaseHack);
+      if (vLoc) DoBind(vPtr, bindInRecordCaseHack);
+      else DoBindAndTrail(vPtr, bindInRecordCaseHack);
 
       // Unify the labels:
       if (!oz_unify(AtomCons,label,scp)) return FALSE; // mm_u
@@ -171,8 +171,8 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
     }
 
     // Bind OFSVar to the SRecord:
-    if (vLoc) doBind(vPtr, bindInRecordCaseHack);
-    else doBindAndTrail(vPtr, bindInRecordCaseHack);
+    if (vLoc) DoBind(vPtr, bindInRecordCaseHack);
+    else DoBindAndTrail(vPtr, bindInRecordCaseHack);
 
     // Unify the labels:
     if (!oz_unify(termSRec->getLabel(),label,scp))  // mm_u
@@ -322,14 +322,14 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
   // the local to the global and relink the local's suspension list
   if (vLoc && tLoc) {
     // bind to var without trailing:
-    doBind(otherPtr, makeTaggedRef(nvRefPtr));
+    DoBind(otherPtr, makeTaggedRef(nvRefPtr));
   } else if (vLoc && !tLoc) {
     // Global term is constrained if result has more features than term:
     if (mergeWidth>termWidth) {
       DoBindAndTrailAndIP(tPtr, makeTaggedRef(vPtr),
                           newVar, otherVar);
     } else {
-      doBind(vPtr, makeTaggedRef(tPtr));
+      DoBind(vPtr, makeTaggedRef(tPtr));
     }
   } else if (!vLoc && tLoc) {
     // Global var is constrained if result has more features than var:
@@ -337,7 +337,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
       DoBindAndTrailAndIP(vPtr, makeTaggedRef(tPtr),
                           newVar, otherVar);
     } else {
-      doBind(tPtr, makeTaggedRef(vPtr));
+      DoBind(tPtr, makeTaggedRef(vPtr));
     }
   } else if (!vLoc && !tLoc) {
     // bind to new term with trailing:

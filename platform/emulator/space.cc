@@ -364,7 +364,7 @@ Bool oz_isInSolveDebug (Board *bb)
 inline
 Bool oz_solve_areNoExtSuspensions(SolveActor *sa)
 {
-  if (sa->getSuspList() == NULL)
+  if (sa->isEmptySuspList())
     return (OK);
   else
     return (oz_solve_checkExtSuspList(sa));

@@ -84,7 +84,7 @@ SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
                           PropCaller calledBy);
 
 #define oz_checkSuspensionList(var,calledBy)                            \
-  (var)->setSuspList(oz_checkAnySuspensionList((var)->getSuspList(),    \
+  (var)->setSuspList(oz_checkAnySuspensionList((var)->unlinkSuspList(), \
                                                GETBOARD(var),calledBy))
 
 #define oz_checkSuspensionListProp(var)         \
@@ -94,13 +94,32 @@ SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
  * Binding
  * -----------------------------------------------------------------------*/
 
-// mm2: interface (see also oz_bind)
-void doBindAndTrail(TaggedRef * vp, TaggedRef t);
+inline
+void doBind(TaggedRef *p, TaggedRef t)
+{
+  CHECK_NONVAR(t);
+  Assert(p!=_derefPtr(t));
+  *p = t;
+}
+
+// mm2: interface for constraints
+#define DoBind(vp,t) \
+  doBind(vp,t)
+
+#define DoBindAndTrail(vp,t) {                  \
+  am.trail.pushRef(vp, *vp);                    \
+  DoBind(vp,t);                                 \
+}
 
 #define DoBindAndTrailAndIP(vp,t,lv,gv) {       \
   lv->installPropagators(gv);                   \
-  doBindAndTrail(vp,t);                         \
-  }
+  DoBindAndTrail(vp,t);                         \
+}
+
+#define DoBindAndTrailAndP(vp,t,lv) {           \
+  lv->propagate();                              \
+  DoBindAndTrail(vp,t);                         \
+}
 
 void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);
 void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);

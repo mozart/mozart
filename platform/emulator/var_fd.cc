@@ -53,10 +53,10 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
     propagate(fd_prop_singl);
 
   if (isLocalVar) {
-    doBind(vPtr, term);
+    DoBind(vPtr, term);
     dispose();
   } else {
-    doBindAndTrail(vPtr, term);
+    DoBindAndTrail(vPtr, term);
   }
 
   return PROCEED;
@@ -110,8 +110,8 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
         TaggedRef int_var = OZ_int(intsct.getSingleElem());
         termVar->propagateUnify();
         propagateUnify();
-        doBind(vPtr, int_var);
-        doBind(tPtr, int_var);
+        DoBind(vPtr, int_var);
+        DoBind(tPtr, int_var);
         dispose();
         termVar->dispose();
       } else if (heapNewer(vPtr, tPtr)) { // bind var to term
@@ -120,13 +120,13 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
           propagateUnify();
           tbvar->propagateUnify();
           relinkSuspListTo(tbvar);
-          doBind(vPtr, makeTaggedRef(tPtr));
+          DoBind(vPtr, makeTaggedRef(tPtr));
         } else {
           termVar->setDom(intsct);
           propagateUnify();
           termVar->propagateUnify();
           relinkSuspListTo(termVar);
-          doBind(vPtr, makeTaggedRef(tPtr));
+          DoBind(vPtr, makeTaggedRef(tPtr));
         }
         dispose();
       } else { // bind term to var
@@ -135,13 +135,13 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
           termVar->propagateUnify();
           bvar->propagateUnify();
           termVar->relinkSuspListTo(bvar);
-          doBind(tPtr, makeTaggedRef(vPtr));
+          DoBind(tPtr, makeTaggedRef(vPtr));
         } else {
           setDom(intsct);
           termVar->propagateUnify();
           propagateUnify();
           termVar->relinkSuspListTo(this);
-          doBind(tPtr, makeTaggedRef(vPtr));
+          DoBind(tPtr, makeTaggedRef(vPtr));
         }
         termVar->dispose();
       }
@@ -157,8 +157,8 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
           TaggedRef int_var = OZ_int(intsct.getSingleElem());
           if (isNotInstallingScript) termVar->propagateUnify();
           if (varIsConstrained) propagateUnify();
-          doBind(vPtr, int_var);
-          doBindAndTrail(tPtr, int_var);
+          DoBind(vPtr, int_var);
+          DoBindAndTrail(tPtr, int_var);
           dispose();
         } else {
           if (intsct == fd_bool) {
@@ -179,7 +179,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
         if (isNotInstallingScript) termVar->propagateUnify();
         if (varIsConstrained) propagateUnify();
         relinkSuspListTo(termVar, TRUE);
-        doBind(vPtr, makeTaggedRef(tPtr));
+        DoBind(vPtr, makeTaggedRef(tPtr));
         dispose();
       }
       break;
@@ -194,8 +194,8 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
           TaggedRef int_term = OZ_int(intsct.getSingleElem());
           if (isNotInstallingScript) propagateUnify();
           if (termIsConstrained) termVar->propagateUnify();
-          doBind(tPtr, int_term);
-          doBindAndTrail(vPtr, int_term);
+          DoBind(tPtr, int_term);
+          DoBindAndTrail(vPtr, int_term);
           termVar->dispose();
         } else {
           if (intsct == fd_bool) {
@@ -216,7 +216,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
         if (termIsConstrained) termVar->propagateUnify();
         if (isNotInstallingScript) propagateUnify();
         termVar->relinkSuspListTo(this, TRUE);
-        doBind(tPtr, makeTaggedRef(vPtr));
+        DoBind(tPtr, makeTaggedRef(vPtr));
         termVar->dispose();
       }
       break;
@@ -232,8 +232,8 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
           if (varIsConstrained) propagateUnify();
           if (termIsConstrained) termVar->propagateUnify();
         }
-        doBindAndTrail(vPtr, int_val);
-        doBindAndTrail(tPtr, int_val);
+        DoBindAndTrail(vPtr, int_val);
+        DoBindAndTrail(tPtr, int_val);
       } else {
         if (intsct == fd_bool) {
           OzBoolVariable * c_var
@@ -329,9 +329,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       if (oz_isLocalVariable(vptr)) {
         if (!isUVar(vtag))
           oz_checkSuspensionListProp(tagged2SVarPlus(v));
-        doBind(vptr, OZ_int(fd->getSingleElem()));
+        DoBind(vptr, OZ_int(fd->getSingleElem()));
       } else {
-        doBindAndTrail(vptr, OZ_int(fd->getSingleElem()));
+        DoBindAndTrail(vptr, OZ_int(fd->getSingleElem()));
       }
       goto proceed;
     }
@@ -351,11 +351,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     if (oz_isLocalVariable(vptr)) {
       if (!isUVar(vtag)) {
         oz_checkSuspensionListProp(tagged2SVarPlus(v));
-        cv->setSuspList(tagged2SVarPlus(v)->getSuspList());
+        cv->setSuspList(tagged2SVarPlus(v)->unlinkSuspList());
       }
-      doBind(vptr, makeTaggedRef(tcv));
+      DoBind(vptr, makeTaggedRef(tcv));
     } else {
-      doBindAndTrail(vptr, makeTaggedRef(tcv));
+      DoBindAndTrail(vptr, makeTaggedRef(tcv));
     }
 
     goto proceed;
@@ -379,7 +379,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       } else {
         int singl = dom.getSingleElem();
         fdvar->propagate(fd_prop_singl);
-        doBindAndTrail(vptr, OZ_int(singl));
+        DoBindAndTrail(vptr, OZ_int(singl));
       }
     } else if (dom == fd_bool) {
       if (oz_isLocalVar(fdvar)) {
@@ -417,7 +417,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       boolvar->becomesSmallIntAndPropagate(vptr, dom);
     } else {
       boolvar->propagate();
-      doBindAndTrail(vptr, OZ_int(dom));
+      DoBindAndTrail(vptr, OZ_int(dom));
     }
     goto proceed;
 // tell finite domain constraint to integer, i.e. check for compatibility

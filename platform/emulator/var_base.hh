@@ -148,18 +148,22 @@ public:
   Bool isExported()   { return homeAndFlags&SVAR_EXPORTED; }
   void markExported() { homeAndFlags |= SVAR_EXPORTED; }
 
-  void dispose(void) {
-    suspList->disposeList();
-    // mm2: what does this mean? NOTHING!!!
-    freeListDispose(this,sizeof(*this));
+  void disposeS(void) {
+    for (SuspList * l = suspList; l; l = l->dispose());
+    DebugCode(suspList=0);
   }
 
   Board *getBoardInternal() { return getHome1(); }
-  SuspList *getSuspList() { return suspList; }
+  Bool isEmptySuspList() { return suspList==0; }
   int getSuspListLengthS() { return suspList->length(); }
 
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
-  void unlinkSuspList() { suspList = NULL; }
+  SuspList *getSuspList() { return suspList; }
+  SuspList *unlinkSuspList() {
+    SuspList *sl=suspList;
+    suspList= NULL;
+    return sl;
+  }
 
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
@@ -251,7 +255,9 @@ void addSuspUVar(TaggedRef * v, Suspension susp, int unstable = TRUE);
 Bool oz_var_valid(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*, ByteCode* = 0);
 OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef, ByteCode* = 0);
+OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef, ByteCode* = 0);
 void oz_var_addSusp(OzVariable*, TaggedRef*, Suspension, int = TRUE);
+void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);
 
