@@ -587,7 +587,7 @@
 	  <Grammar.Rule/?={in statement}
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}//
 	  <Grammar.Rule/?={in expression}
-	    <Grammar.Alt/[ ?={declaration part} <<in>> [ ?={statement} ] ]
+	    <Grammar.Alt/[ ?={declaration part} <<in>> ] [ ?={statement} ]
 	      ?={expression}//
 	  <Grammar.Rule/?={possibly escaped variable}
 	    <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable}//
