@@ -38,6 +38,17 @@ typedef StackEntry TaskStackEntry;
 class TaskStack: public Stack {
 private:
 
+  StackEntry *ensureFree(int n)
+  {
+    StackEntry *ret = tos;
+    if (stackEnd <= tos+n) {
+      checkMax();
+      resize(n);
+      ret = tos;
+    }
+    return ret;
+  }
+
   void pushFrame(ProgramCounter pc,void *y, void *g)
   {
     TaskStackEntry *newTop = ensureFree(frameSz);
@@ -75,16 +86,6 @@ public:
   Bool isEmpty() { return *(tos-1)==C_EMPTY_STACK; }
 
   void checkMax();
-  StackEntry *ensureFree(int n)
-  {
-    StackEntry *ret = tos;
-    if (stackEnd <= tos+n) {
-      checkMax();
-      resize(n);
-      ret = tos;
-    }
-    return ret;
-  }
 
   TaskStackEntry *getTop()            { return tos; }
   void setTop(TaskStackEntry *newTos) { tos = newTos; }
