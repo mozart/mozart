@@ -3,10 +3,12 @@ import
    OS(system)
    Admin(manager:Manager)
    URL(make)
+   Directory(mkDir:MkDir)
 export
    WgetPkg WgetDoc
 define
    proc {WgetPkg PkgUrl PkgDir}
+      {MkDir PkgDir}
       Cmd = {Manager get_wget($)}
       #if {Manager is_verbose($)} then ' -v' else ' -nv' end
       #' -N -nH -nd -P "'#PkgDir#'" "'#PkgUrl#'"'
@@ -17,6 +19,7 @@ define
       catch _ then {Raise mogul(wget_pkg(PkgUrl))} end
    end
    proc {WgetDoc DocUrl DocDir}
+      {MkDir DocDir}
       Cuts = {Length {URL.make DocUrl}.path} - 1
       Cmd  = {Manager get_wget($)}
       #if {Manager is_verbose($)} then ' -v' else ' -nv' end
