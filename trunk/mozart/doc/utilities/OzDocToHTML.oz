@@ -29,6 +29,7 @@ import
    Open(file)
    AuthorDB('class')
    BibliographyDB('class')
+   Indexer('class')
    Fontifier('class' noProgLang)
    Thumbnails('class')
    MathToGIF('class')
@@ -230,6 +231,9 @@ define
 	 % back matter:
 	 MyBibliographyDB: unit
 	 BibNode: unit
+	 MyIndexer: unit
+	 IdxNode: unit
+	 IndexSortAs: unit
       meth init(Mode SGML Args)
 	 FontifyMode <- Mode
 	 StyleSheet <- {Property.get 'ozdoc.stylesheet'}
@@ -243,7 +247,7 @@ define
 			end
 	 Split <- Args.'split'
 	 SomeSplit <- false
-	 CurrentNode <- "index.html"
+	 CurrentNode <- 'index.html'
 	 NodeCounter <- 0
 	 ToWrite <- nil
 	 ProgLang <- Fontifier.noProgLang
@@ -368,6 +372,8 @@ define
 	       MyBibliographyDB <- {New BibliographyDB.'class'
 				    init(@OutputDirectory)}
 	       BibNode <- _
+	       MyIndexer <- {New Indexer.'class' init()}
+	       IdxNode <- _
 	       HTML = [OzDocToHTML, Process(M.1=front(...) $)
 		       if {HasFeature M 3} then
 			  OzDocToHTML, Process(M.3=back(...) $)
@@ -385,6 +391,18 @@ define
 			  HTML = SEQ([HTML1
 				      h1(a(name: Label Title))
 				      VERBATIM(VS)])   %--** VERBATIM?
+			  OzDocToHTML, FinishNode(Title X HTML $)
+		       end
+		       case {@MyIndexer process($)} of unit then EMPTY
+		       elseof HTML2 then Title Label X HTML1 HTML in
+			  Title = PCDATA('Index')
+			  OzDocToHTML, PrepareIdxNode(?X ?HTML1)
+			  ToGenerate <- Label|@ToGenerate
+			  TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
+			  @IdxNode = @CurrentNode
+			  HTML = SEQ([HTML1
+				      h1(a(name: Label Title))
+				      HTML2])
 			  OzDocToHTML, FinishNode(Title X HTML $)
 		       end]
 	       TopTOC = if @SomeSplit then EMPTY
@@ -829,12 +847,47 @@ define
 	    %-----------------------------------------------------------
 	    % Index
 	    %-----------------------------------------------------------
-	    [] index then
-	       {Exception.raiseError
-		ozDoc(sgmlToHTML unsupported M)} unit   %--**
-	    [] and then
-	       {Exception.raiseError
-		ozDoc(sgmlToHTML unsupported M)} unit   %--**
+	    [] index then Ands L in
+	       %--** scope?
+	       IndexSortAs <- {CondSelect M 'sort.as' unit}
+	       OzDocToHTML, BatchSub(M 1 ?Ands)
+	       case {CondSelect M id unit} of unit then
+		  ToGenerate <- L|@ToGenerate
+	       elseof X then HTML in
+		  L = X
+		  HTML = SEQ({List.foldRTail Ands
+			      fun {$ _#A|Ar In}
+				 A|case Ar of _|_ then PCDATA(', ')
+				   else EMPTY
+				   end|In
+			      end nil})
+		  OzDocToHTML, ID(L @IdxNode HTML)
+	       end
+	       case {CondSelect M see unit} of unit then
+		  {@MyIndexer enter(Ands a(href: @CurrentNode#"#"#L
+					   PCDATA('here')))}   %--**
+	       elseof X then Node HTML in
+		  OzDocToHTML, ID(X ?Node ?HTML)
+		  {@MyIndexer enter(Ands SEQ([PCDATA('see ')
+					      a(href: Node#"#"#X HTML)]))}
+	       end
+	       a(name: L)
+	    [] and then SortAs0 Item SortAs in
+	       %--** scope?
+	       if {HasFeature M see} then
+		  {Exception.raiseError ozDoc(sgmlToHTML unsupportedSee M)}
+	       end
+	       SortAs0 = case {CondSelect M 'sort.as' unit}
+			 of unit then @IndexSortAs
+			 elseof X then X
+			 end
+	       IndexSortAs <- unit
+	       OzDocToHTML, Batch(M 1 ?Item)
+	       SortAs = case SortAs0 of unit then
+			   {HTML.toVirtualString {HTML.clean Item}}
+			else SortAs0
+			end
+	       SortAs#Item
 	    [] see then
 	       {Exception.raiseError
 		ozDoc(sgmlToHTML unsupported M)} unit   %--**
@@ -1018,6 +1071,21 @@ define
 	    SomeSplit <- true
 	    X = @CurrentNode#@TOC#@TOCMode
 	    CurrentNode <- 'bib.html'
+	    TOC <- nil
+	    HTML = EMPTY
+	 else
+	    X = unit
+	    HTML = if @TOCMode then hr()
+		   else EMPTY
+		   end
+	 end
+	 TOCMode <- false
+      end
+      meth PrepareIdxNode(?X ?HTML)
+	 if @Split andthen {Dictionary.member @Meta 'html.split.index'} then
+	    SomeSplit <- true
+	    X = @CurrentNode#@TOC#@TOCMode
+	    CurrentNode <- 'idx.html'
 	    TOC <- nil
 	    HTML = EMPTY
 	 else
