@@ -467,27 +467,27 @@ stage1:
 
 # stage2: create the 2nd compiler from the stage1 compiler
 stage2:
-        $(MAKE) install-main install-ozma PREFIX=$(STAGE2) \
+        $(MAKE) $(TYPS) $(TYCS) install-main install-ozma PREFIX=$(STAGE2) \
         OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/:.:=\
         OZBATCH=$(STAGE1)/bin/ozbatch \
         OZINIT=$(STAGE1)/lib/Init.ozc
 
 stage2b:
-        $(MAKE) install-main install-ozma PREFIX=$(STAGE2B) \
+        $(MAKE) $(TYPS) $(TYCS) install-main install-ozma PREFIX=$(STAGE2B) \
         OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/:.:=\
         OZBATCH=$(STAGE2)/bin/ozbatch \
         OZINIT=$(STAGE2)/lib/Init.ozc
 
 # stage2: create the 3nd compiler from the stage2 compiler
 stage3:
-        $(MAKE) install-main install-ozma PREFIX=$(STAGE3) \
+        $(MAKE) $(TYPS) $(TYCS) install-main install-ozma PREFIX=$(STAGE3) \
         OZ_LOAD=all=.:all=tyc:= \
         OZBATCH=$(SRCDIR)/ozbatch.sh \
         OZINIT=$(STAGE2)/lib/Init.ozc \
         OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
 
 stage3b:
-        $(MAKE) install-main install-ozma PREFIX=$(STAGE3B) \
+        $(MAKE) $(TYPS) $(TYCS) install-main install-ozma PREFIX=$(STAGE3B) \
         OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE3)/lib/:.:=\
         OZBATCH=$(STAGE3)/bin/ozbatch \
         OZINIT=$(STAGE3)/lib/Init.ozc
