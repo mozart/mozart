@@ -194,7 +194,7 @@ public:
 
   //
   void localize();
-  ~OwnerEntry() { DebugCode(setFlags(-1);); }
+  ~OwnerEntry() { DebugCode(setFlags(~0);); }
 
   // credits;
   inline RRinstance *getCreditBig() {

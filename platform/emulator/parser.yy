@@ -1836,7 +1836,7 @@ void xyreportError(char *kind, char *msg, OZ_Term coord) {
 
 void xyreportError(char *kind, char *msg, const char *file,
 		   int line, int column) {
-  xyreportError(kind,msg,OZ_mkTupleC("pos",3,OZ_atom((char*)file),
+  xyreportError(kind,msg,OZ_mkTupleC("pos",3,OZ_atom(const_cast<char*>(file)),
 				     oz_int(line),oz_int(column)));
 }
 

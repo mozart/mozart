@@ -283,7 +283,7 @@ PxyVarPatch::PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
     isToOwner = NO;
     saveMarshalBorrowHead(bi, ms, oti, remoteRef);
     ec = pv->getInfo() ?
-      (pv->getInfo()->getEntityCond()&PERM_FAIL) : ENTITY_NORMAL;
+      (pv->getInfo()->getEntityCond()&PERM_FAIL) : (EntityCond)ENTITY_NORMAL;
   }
 }
 
@@ -360,7 +360,7 @@ void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex)
 		      (hasIndex ? DIF_FUTURE_DEF : DIF_FUTURE) :
 		      (hasIndex ? DIF_VAR_DEF : DIF_VAR));
     BYTE ec = (getInfo() ?
-	       (getInfo()->getEntityCond() & PERM_FAIL) : ENTITY_NORMAL);
+	       (getInfo()->getEntityCond() & PERM_FAIL) : (EntityCond)ENTITY_NORMAL);
     marshalDIFcounted(bs, tag);
     marshalBorrowHead(bs, bti, ec);
   }
@@ -1098,7 +1098,7 @@ void marshalTertiary(ByteBuffer *bs,
 	//
       } else {
 	EntityInfo *ei = t->getInfo(); 
-	BYTE ec = (ei?(ei->getEntityCond() & (PERM_FAIL)):ENTITY_NORMAL);
+	BYTE ec = (ei?(ei->getEntityCond() & (PERM_FAIL)):(EntityCond)ENTITY_NORMAL);
 	marshalDIFcounted(bs, (hasIndex ? defmap[tag] : tag));
 	marshalBorrowHead(bs, BTI, ec);
       }
