@@ -36,10 +36,6 @@ in
 	 end
       end
 
-      meth getCurrentThread($)
-	 @currentThread
-      end
-      
       meth getThreadDic($)
 	 self.ThreadDic
       end
@@ -123,17 +119,14 @@ in
 	       SkippedThread <- nil
 	       {Thread.resume T}
 	    else
-	       Ack F L
+	       F L
 	       Stack   = {Dget self.ThreadDic I}
 	    in
 	       {ForAll [exit(Frame) getPos(file:F line:L)] Stack}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
-	       thread
-		  SourceManager,scrollbar(file:F line:L ack:Ack
-					  color:ScrollbarApplColor what:appl)
-	       end
-	       thread Gui,loadStatus(F Ack) end
-	       thread {Stack printTop} end
+	       SourceManager,scrollbar(file:F line:L
+				       color:ScrollbarApplColor what:appl)
+	       {Stack printTop}
 	    end
 	    
 	 [] thr then
@@ -170,7 +163,7 @@ in
 
 		     case
 			{Thread.state T} == terminated then
-			{OzcarMessage EarlyThreadDeath}
+			{OzcarMessage EarlyThreadDeath # I}
 		     else
 			case Q == 0 then
 			   ThreadManager,add(T I Q true)
@@ -192,7 +185,7 @@ in
 	    case E then
 	       ThreadManager,remove(T I noKill)
 	    else
-	       {OzcarMessage UnknownTermThread}
+	       {OzcarMessage EarlyTermThread}
 	    end
 	    
 	 [] block then
@@ -211,16 +204,18 @@ in
 	       Ack
 	    in
 	       thread
-		  {StackObj blockMsg(Ack)}
 		  {OzcarMessage
 		   'checking if blocking of thread #'#I#' is persistent...'}
+		  {StackObj blockMsg(Ack)}
 		  case Ack == ok then
-		     {OzcarMessage '...yes!'}
-		     {Dbg.contflag T false}
-		     {Dbg.stepmode T true}
-		     {Thread.suspend T}
-		     ThreadManager,block(thr:T id:I file:F line:L name:N
-					 args:A builtin:B time:Time)
+		     lock
+			{OzcarMessage '...yes!'}
+			{Dbg.contflag T false}
+			{Dbg.stepmode T true}
+			{Thread.suspend T}
+			ThreadManager,block(thr:T id:I file:F line:L name:N
+					    args:A builtin:B time:Time)
+		     end
 		  else
 		     {OzcarMessage 'blocking of thread #'#I#' was temporary'}
 		     {Thread.resume T}
@@ -246,16 +241,19 @@ in
 	       StackObj = {Dget self.ThreadDic I}
 	       Ack
 	    in
-	       {StackObj contMsg(Ack)}
-	       case Ack == ok then
-		  Gui,markNode(I runnable)
-		  case T == @currentThread then
-		     F L in
-		     {StackObj getPos(file:F line:L)}
-		     SourceManager,scrollbar(file:F line:L what:appl
-					     color:ScrollbarApplColor)
+	       lock
+		  {OzcarMessage 'serving cont message'}
+		  {StackObj contMsg(Ack)}
+		  case Ack == ok then
+		     Gui,markNode(I runnable)
+		     case T == @currentThread then
+			F L in
+			{StackObj getPos(file:F line:L)}
+			SourceManager,scrollbar(file:F line:L what:appl
+						color:ScrollbarApplColor)
+		     else skip end
 		  else skip end
-	       else skip end
+	       end
 	    else
 	       {OzcarError UnknownWokenThread}
 	    end
@@ -384,18 +382,15 @@ in
 	       {OzcarMessage NoFileInfo # I}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
 	       {Thread.resume T}
-	    else Ack in
+	    else
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
-	       thread
-		  SourceManager,scrollbar(file:F line:L ack:Ack
-					  color:ScrollbarApplColor what:appl)
-	       end
-	       thread Gui,loadStatus(F Ack) end
-	       thread {Stack printTop} end
+	       SourceManager,scrollbar(file:F line:L
+				       color:ScrollbarApplColor what:appl)
+	       {Stack printTop}
 	    end
 	 else skip end
       end
-
+      
       meth block(thr:T id:I file:F line:L name:N args:A builtin:B time:Time)
 	 Stack = {Dget self.ThreadDic I}
       in
@@ -406,16 +401,13 @@ in
 	    case {UnknownFile F} then
 	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
-	    else Ack in
+	    else
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
-	       thread
-		  SourceManager,scrollbar(file:F line:L ack:Ack
-					  color:ScrollbarBlockedColor
-					  what:appl)
-	       end
-	       thread Gui,loadStatus(F Ack) end
+	       SourceManager,scrollbar(file:F line:L
+				       color:ScrollbarBlockedColor
+				       what:appl)
 	    end
-	    thread {Stack printTop} end
+	    {Stack printTop} 
 	 else skip end
       end
       
@@ -435,19 +427,16 @@ in
 	    case S == terminated then
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
 	       Gui,printStack(id:I frames:nil depth:0)
-	    else Ack in
+	    else
 	       {ForAll [print getPos(file:F line:L)] Stack}
-	       thread
-		  SourceManager,
-		  scrollbar(file:F line:L ack:Ack
-			    color:
-			       case S
-			       of runnable then ScrollbarApplColor
-			       [] blocked  then ScrollbarBlockedColor
-			       end
-			    what:appl)
-	       end
-	       thread Gui,loadStatus(F Ack) end
+	       SourceManager,
+	       scrollbar(file:F line:L
+			 color:
+			    case S
+			    of runnable then ScrollbarApplColor
+			    [] blocked  then ScrollbarBlockedColor
+			    end
+			 what:appl)
 	    end
 	    SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	 end
