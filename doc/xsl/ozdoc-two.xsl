@@ -117,29 +117,49 @@
        mean \par.
     -->
   <txt:define name="text">
-    <txt:escape char="#">\mozHash </txt:escape>
-    <txt:escape char="$">\mozDollar </txt:escape>
-    <txt:escape char="%">\mozPercent </txt:escape>
+    <txt:escape char="#"    >\mozHash </txt:escape>
+    <txt:escape char="$"    >\mozDollar </txt:escape>
+    <txt:escape char="%"    >\mozPercent </txt:escape>
     <txt:escape char="%amp;">\mozAmpersand </txt:escape>
-    <txt:escape char="~">\mozTilde </txt:escape>
-    <txt:escape char="_">\mozUnderscore </txt:escape>
-    <txt:escape char="^">\mozCaret </txt:escape>
-    <txt:escape char="\">\mozBackslash </txt:escape>
-    <txt:escape char="{{">\mozLeftbrace </txt:escape>
-    <txt:escape char="}}">\mozRightbrace </txt:escape>
-    <txt:escape char="&lt;">\mozLessthan </txt:escape>
-    <txt:escape char="&gt;">\mozGreaterthan </txt:escape>
-    <txt:escape char="|">\mozVbar </txt:escape>
-    <txt:escape char="&#10;">\mozNewline
+    <txt:escape char="~"    >\mozTilde </txt:escape>
+    <txt:escape char="_"    >\mozUnderscore </txt:escape>
+    <txt:escape char="^"    >\mozCaret </txt:escape>
+    <txt:escape char="\"    >\mozBackslash </txt:escape>
+    <txt:escape char="{{"   >\mozLeftbrace </txt:escape>
+    <txt:escape char="}}"   >\mozRightbrace </txt:escape>
+    <txt:escape char="&lt;" >\mozLessthan </txt:escape>
+    <txt:escape char="&gt;" >\mozGreaterthan </txt:escape>
+    <txt:escape char="|"    >\mozVbar </txt:escape>
+    <txt:escape char="&#10;"> \mozEmpty
 </txt:escape>
   </txt:define>
   <!-- code escaping is the same except that space is
        also escaped because it must be preserved for
        proper indentation
     -->
-  <txt:define name="code">
-    <txt:include name="text"/>
-    <txt:escape char=" ">\mozSpace </txt:escape>
+  <txt:define name="code.inline">
+    <txt:escape char="#"    >\mozCodeHash </txt:escape>
+    <txt:escape char="$"    >\mozCodeDollar </txt:escape>
+    <txt:escape char="%"    >\mozCodePercent </txt:escape>
+    <txt:escape char="%amp;">\mozCodeAmpersand </txt:escape>
+    <txt:escape char="~"    >\mozCodeTilde </txt:escape>
+    <txt:escape char="_"    >\mozCodeUnderscore </txt:escape>
+    <txt:escape char="^"    >\mozCodeCaret </txt:escape>
+    <txt:escape char="\"    >\mozCodeBackslash </txt:escape>
+    <txt:escape char="{{"   >\mozCodeLeftbrace </txt:escape>
+    <txt:escape char="}}"   >\mozCodeRightbrace </txt:escape>
+    <txt:escape char="&lt;" >\mozCodeLessthan </txt:escape>
+    <txt:escape char="&gt;" >\mozCodeGreaterthan </txt:escape>
+    <txt:escape char="|"    >\mozCodeVbar </txt:escape>
+    <txt:escape char="&#10;">\mozCodeSpace
+</txt:escape>
+    <txt:escape char=" ">\mozCodeSpace </txt:escape>
+  </txt:define>
+  <!-- code display -->
+  <txt:define name="code.display">
+    <txt:include name="code.inline"/>
+    <txt:escape char="&#10;">\mozCodeDisplayNewline
+</txt:escape>
   </txt:define>
   <!-- within \index{...} additional characters meaningful
        to makeindex must be quoted with a preceding `"'
@@ -165,8 +185,12 @@
     <txt:include name="text"/>
     <txt:include name="index.common"/>
   </txt:define>
-  <txt:define name="index.code">
-    <txt:include name="code"/>
+  <txt:define name="index.code.inline">
+    <txt:include name="code.inline"/>
+    <txt:include name="index.common"/>
+  </txt:define>
+  <txt:define name="index.code.display">
+    <txt:include name="code.display"/>
     <txt:include name="index.common"/>
   </txt:define>
 </template>
