@@ -572,7 +572,7 @@ FILENAME     ([-0-9a-zA-Z/_~]|\..)+|'["-~]+'
 REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 %x COMMENT
-%x DIRECTIVE
+%x IGNOREDIRECTIVE DIRECTIVE
 %x LINE SWITCHDIR INPUTFILE INSERT DEFINE IFDEF IFNDEF UNDEF
 
 %s LEX
@@ -639,6 +639,16 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                }
 \\u(n(d(ef?)?)?)?              { BEGIN(UNDEF);}
 
+<IGNOREDIRECTIVE>{
+  {BLANK}                      ;
+  .                            ;
+  \n                           { BEGIN(INITIAL);
+                               }
+  <<EOF>>                      { BEGIN(DIRECTIVE);
+                                 if (pop_insert())
+                                   return ENDOFFILE;
+                               }
+}
 <DIRECTIVE>{
   {BLANK}                      ;
   .                            { errorFlag = 1; }
@@ -656,7 +666,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                }
 }
 <LINE>{
-  [0-9]+                       { xylino = atol(xytext) - 1; }
+  [0-9]+                       { xylino = atol(xytext); }
   {FILENAME}                   { strip('\'');
                                  char *fullname = scExpndFileName(xytext,xyFileName);
                                  if (fullname != NULL) {
@@ -1004,8 +1014,14 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 {SPACE}                        ;
 
+\\[a-zA-Z]+                    { xyreportError("lexical error",
+                                               "unknown directive",
+                                               xyFileName,xylino,xycharno());
+                                 BEGIN(IGNOREDIRECTIVE);
+                               }
+
 .                              { xyreportError("lexical error",
-                                               "illegal (pseudo-)character",
+                                               "illegal character",
                                                xyFileName,xylino,xycharno());
                                }
 
