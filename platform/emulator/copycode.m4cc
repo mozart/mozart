@@ -287,24 +287,27 @@ void handleHashTable(ProgramCounter PC, HashTable *ht)
 
 
 
-ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy)
+ProgramCounter copyCode(ProgramCounter start, TaggedRef list, Bool makecopy)
 {
-  HashTable *ht = new HashTable(HT_INTKEY,100);
-
-  // copy alist into ht
-  while(OZ_isCons(alist)) {
-    TaggedRef pair = OZ_head(alist);
-    TaggedRef key = deref(oz_left(deref(pair)));
-    TaggedRef value = deref(oz_right(deref(pair)));
-    if (OZ_isForeignPointer(key))
-      ht->htAdd(ToInt32(OZ_getForeignPointer(key)),
-                OZ_getForeignPointer(value));
-    else   // a name
-      ht->htAdd(ToInt32(key), ToPointer(value));
-    alist = OZ_tail(alist);
-  }
-
 #ifndef DISABLE_DEFINITIONCOPY
+  HashTable *ht = new HashTable(HT_INTKEY,100);
+  while(OZ_isCons(list)) {
+    TaggedRef key = OZ_head(list);
+    if (OZ_isForeignPointer(key)) {
+      AbstractionEntry *oldentry =
+        (AbstractionEntry *) OZ_getForeignPointer(key);
+      Assert(oldentry->copyable);
+      AbstractionEntry *newentry = new AbstractionEntry(NO);
+      ht->htAdd(ToInt32(oldentry),newentry);
+    } else {
+      NamedName *theCopy =
+        ((NamedName *) tagged2Literal(deref(key)))->generateCopy();
+      ht->htAdd(ToInt32(key),ToPointer(makeTaggedLiteral(theCopy)));
+    }
+    list = OZ_tail(list);
+  }
+  Assert(OZ_isNil(list));
+
   int sizeOfDef = sizeOf(DEFINITION);
   start -= sizeOfDef; // copy DEFINITION instructions as well (for debugging)
 
@@ -348,6 +351,15 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy)
   delete ht;
   return ret+sizeOfDef;
 #else
+  while(OZ_isCons(list)) {
+    TaggedRef key = OZ_head(list);
+    if (OZ_isForeignPointer(key))
+      ((AbstractionEntry *) OZ_getForeignPointer(key))->copyable = NO;
+    else
+      ((NamedName *) tagged2Literal(key))->clearFlag(Lit_isCopyableName);
+    list = OZ_tail(list);
+  }
+  Assert(OZ_isNil(list));
   return start;
 #endif
 }

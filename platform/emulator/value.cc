@@ -328,12 +328,14 @@ NamedName *NamedName::generateCopy()
 
   NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
   ret->init();
-  //--** Assert(am.onToplevel() && isCopyableName());
+  Assert(am.onToplevel() && isCopyableName());
   ret->homeOrGName = ToInt32(am.currentBoard());
   int seqNumber = getOthers();
-  setOthers(seqNumber++);
+  seqNumber++;
+  Assert(seqNumber);
+  setOthers(seqNumber);
   ret->setOthers(seqNumber);
-  ret->setFlag(Lit_isName|Lit_isNamedName);
+  ret->setFlag(getFlags() & ~Lit_isCopyableName);
   ret->printName = printName;
   return ret;
 }

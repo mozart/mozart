@@ -5579,12 +5579,6 @@ OZ_BI_define(BInop,0,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIsetProcNames,2,0)
-{
-  return PROCEED;
-} OZ_BI_end
-
-
 // ------------------------------------------------------------------------
 // --- Apply
 // ------------------------------------------------------------------------
@@ -6439,34 +6433,6 @@ OZ_BI_define(BIisCopyablePredicateRef,1,1)
   OZ_declareForeignPointerIN(0,p);
   AbstractionEntry *entry = (AbstractionEntry *) p;
   OZ_RETURN(entry->copyable? NameTrue: NameFalse);
-} OZ_BI_end
-
-OZ_BI_define(BIgenerateCopies,1,1)
-{
-  oz_declareNonvarIN(0,list);
-  TaggedRef alist = OZ_nil();
-  while(OZ_isCons(list)) {
-    TaggedRef key = OZ_head(list);
-    TaggedRef value;
-    if (OZ_isForeignPointer(key)) {
-      //--** Assert(((AbstractionEntry *) OZ_getForeignPointer(key))->copyable);
-      AbstractionEntry *entry = new AbstractionEntry(NameFalse);
-      value = OZ_makeForeignPointer(entry);
-    } else {
-      NamedName *theCopy = ((NamedName *) tagged2Literal(key))->generateCopy();
-      value = makeTaggedLiteral(theCopy);
-    }
-    alist = cons(OZ_pair2(key, value), alist);
-    list = OZ_tail(list);
-  }
-  OZ_RETURN(alist);
-} OZ_BI_end
-
-OZ_BI_define(BIgenerateAbstractionTableID,1,1)
-{
-  oz_declareNonvarIN(0,copyable);
-  AbstractionEntry *entry = new AbstractionEntry(OZ_isTrue(copyable));
-  OZ_RETURN(OZ_makeForeignPointer(entry));
 } OZ_BI_end
 
 #define BITS_PER_INT (sizeof(int) * 8)

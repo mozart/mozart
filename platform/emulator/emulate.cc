@@ -1654,13 +1654,13 @@ LBLdispatcher:
       }
 
       if (isTailCall) {
-        TaggedRef alist = deref(Xreg(reg));
+        TaggedRef list = deref(Xreg(reg));
         ProgramCounter preddPC = predd->PC;
 #ifndef DISABLE_DEFINITIONCOPY
         Bool copyOnce = predd->copyOnce;
         predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
                                predd->getFileName(), predd->getLine(), NO);
-        predd->PC = copyCode(preddPC,alist,copyOnce==NO);
+        predd->PC = copyCode(preddPC,list,copyOnce==NO);
 #else
         predd->copyOnce = OK;
         copyCode(preddPC,alist,NO);

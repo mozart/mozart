@@ -139,6 +139,8 @@ Opcode CodeArea::adressToOpcode(AdressOpcode adr) { return adr; }
 
 void AbstractionEntry::setPred(Abstraction *ab)
 {
+  Assert(!copyable && !abstr);
+
   abstr = ab;
   pc    = abstr->getPC();
   g     = abstr->getGRegs();
