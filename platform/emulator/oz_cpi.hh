@@ -244,7 +244,7 @@ public:
 
   void ask(OZ_Term);
   void read(OZ_Term);
-  void readLocal(OZ_Term);
+  void readEncap(OZ_Term);
   OZ_Boolean leave(void) { return isSort(sgl_e) ? OZ_FALSE : tell(); }
   void fail(void);
 };
