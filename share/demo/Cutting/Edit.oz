@@ -26,12 +26,12 @@ import
    Tk
    TkTools
 
-export
-   page: EditPage
-   
-require
    Configure(colors: Colors
 	     fonts:  Fonts)
+   
+
+export
+   page: EditPage
    
 prepare
    
@@ -40,6 +40,8 @@ prepare
    PlateWidth = 5
    Pad        = 3
 
+define
+   
    EntryColor   = Colors.entry
    
    BadColor     = Colors.bad
@@ -47,8 +49,6 @@ prepare
    NeutralColor = Colors.neutral
    
    GlassColor   = Colors.glass
-   
-define
    
    class PlateBar
       from Tk.canvas
