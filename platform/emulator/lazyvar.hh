@@ -43,6 +43,7 @@ private:
   OZ_Term function;
   OZ_Term result;
 public:
+  NO_DEFAULT_CONSTRUCTORS(GenLazyVariable);
   GenLazyVariable(OZ_Term fun,OZ_Term res)
     :GenCVariable(LazyVariable),function(fun),result(res){}
   void gc();
