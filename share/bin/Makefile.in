@@ -51,7 +51,7 @@ $(LIB_SCRIPTS): $(BINDIR)/% : %
         $(INSTALL_BIN) $< $(BINDIR)
 
 $(LIB_LINKS): $(BINDIR)/oz
-        rm -f $@; $(LN_S) $< $@
+        cd $(BINDIR); rm -f $@; $(LN_S) oz $@
 
 $(BINDIR):
         $(INSTALL_DIR) $@
