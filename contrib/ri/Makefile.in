@@ -43,6 +43,8 @@ DEPEND          = $(CXX) $(CFLAGS) -MM
 
 OZDEPEND        = $(OZC) -c -M
 
+FCPDECL         = $(SRCDIR)/../../platform/emulator/bidecl.perl
+
 #----------------------------------------------------------------------
 # Sources and targets
 #----------------------------------------------------------------------
@@ -111,7 +113,7 @@ first: $(GENERATED_FILES)
         $(CC) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 %-table.cc: %.spec
-        $(PERL) $(SRCTOP)/platform/emulator/bidecl.perl -file $< -interface > $@
+        $(PERL) $(FCPDECL) -file $< -interface > $@
 
 #----------------------------------------------------------------------
 # Maintenance
