@@ -944,7 +944,7 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
 
             // Add the feature or list to the diff. list in xregs[3] and xregs[4]:
             if (flist) {
-                if (isLiteral(flist))
+                if (isFeature(flist))
                     xregs[3]=cons(flist,xregs[3]);
                 else {
                     // flist must be a list
