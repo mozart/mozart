@@ -24,9 +24,7 @@
 %%% WARRANTIES.
 %%%
 
-defaults(dirs:
-	    [lib tools]
-	 lib:
+defaults(lib:
 	    ['Application' 'GetArgs' 'Applet' 'Syslet' 'Servlet'
 	     'Search' 'FD' 'Schedule' 'FS'
 	     'Error' 'ErrorRegistry' 'Debug' 'Finalize' 'Foreign'
@@ -36,11 +34,11 @@ defaults(dirs:
 	     'Compiler'
 	     'Misc']
 
+	 volatile:
+	    ['Module' 'Resolve' 'OS' 'Property' 'Pickle' 'System']
+
 	 tools:
 	    ['Panel' 'Browser' 'Explorer' 'CompilerPanel'
 	     'Emacs' 'Ozcar' 'Profiler' 'Gump' 'GumpScanner'
 	     'GumpParser']
-
-	 volatile:
-	    ['Module' 'URL' 'OS' 'Property' 'Pickle' 'System']
 	)

@@ -43,13 +43,13 @@ boot-%:
 	OZC="$(BOOTCOM)" \
 	OZINIT=$(BUILDLIB)/Init.ozf \
 	OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-	OZ_LOAD=root=.:prefix=/=/:prefix=$(URL)/lib/=$(BUILDLIB)/:prefix=$(URL)/tools/=$(BUILDTOOLS)/:=
+	OZ_LOAD=root=.:prefix=/=/:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:=
 
 # stage1-all: create the components using the BUILDTOP/share/lib/stage1
 STAGE1_LIB=$(BUILDLIB)/stage1
 STAGE1_TOOLS=$(BUILDTOOLS)/stage1
 stage1-%:
 	$(MAKE) $* \
-	OZ_LOAD=root=.:prefix=$(URL)=$(STAGE1_LIB):prefix=$(URL)/tools=.:prefix=/=/:= \
+	OZ_LOAD=root=.:prefix=$(URL)=$(STAGE1_LIB):prefix=$(URL)/share=.:prefix=/=/:= \
 	OZINIT=$(STAGE1_LIB)/lib/Init.ozf \
 	OZC=$(STAGE1_LIB)/bin/ozc

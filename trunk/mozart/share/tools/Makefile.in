@@ -6,8 +6,8 @@ SRCTOP		= @SRCTOP@
 PREFIX		= @prefix@
 
 OZBIN		= $(PREFIX)/bin
-OZTOOLS		= $(PREFIX)/tools
-OZPATH		= .:$(PREFIX)/lib:$(PREFIX)/tools
+OZTOOLS		= $(PREFIX)/share
+OZPATH		= .:$(PREFIX)/share
 IMAGESDIR	= $(OZTOOLS)/images
 
 SHELL		= /bin/sh
