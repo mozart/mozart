@@ -791,6 +791,7 @@ prepare
 	    of &[ then Parser,ScanDoctypeBody($)
 	    [] &" then Parser,ScanDQ(_) Parser,ScanDoctypeHead($)
 	    [] &' then Parser,ScanSQ(_) Parser,ScanDoctypeHead($)
+	    [] &> then Parser,ScanToken($)
 	    else Parser,ScanName(_) Parser,ScanDoctypeHead($)
 	    end
 	 end
@@ -800,7 +801,14 @@ prepare
 	 Parser,SkipSpaces
 	 case @Buffer
 	 of nil then Parser,TERROR(doctypeEOF) unit
-	 [] &]|&>|L then Buffer<-L Parser,ScanToken($)
+	 [] &]|L then
+	    Buffer<-L
+	    Parser,SkipSpaces
+	    case @Buffer of &>|L then
+	       Buffer<-L
+	       Parser,ScanToken($)
+	    end
+	 %%[] &]|&>|L then Buffer<-L Parser,ScanToken($)
 	 [] &<|&!|&E|&N|&T|&I|&T|&Y|L then Name in Buffer<-L
 	    Parser,SkipSpaces
 	    Parser,ScanName(Name)
