@@ -23,6 +23,7 @@
 
 include ../Makefile.vars
 
+BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 FDDIR		= @srcdir@
 INCS		= -I. -I$(FDDIR)/.. -I..
@@ -64,8 +65,9 @@ install-prop:
 
 depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
 	$(DEPEND) $(FDLIBSRCS:%=$(FDDIR)/%) $(SCHEDLIBSRCS:%=$(FDDIR)/%) \
-		>> Makefile
+		> Makefile.deps
 
+-include Makefile.deps
 include ../Makefile.rules
 
 distclean::
