@@ -81,6 +81,8 @@ public:
   Bool unify(TaggedRef *, TaggedRef, TypeOfTerm,
 	     TaggedRef *, TaggedRef, TypeOfTerm);
 
+  int getSuspListLength(void);
+
   // is X=val still valid
   Bool valid(TaggedRef val);
   
