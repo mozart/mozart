@@ -250,8 +250,8 @@ The guard-based technique is the shortest and simplest to understand.
 The exception-based technique is similar to what one would
 do in standard languages such as Java.
 
-<P>But first, let's see how simple it is to create a remote
-stationary object.
+<P>But first, let's see how simple it is to create and use
+a remote stationary object.
 
 <SUBSECTION><TITLE>Using fault-tolerant stationary objects</TITLE>
 
@@ -271,8 +271,8 @@ end
 
 <P>Then we define a functor that creates
 an instance of <<Counter>> with <<NewSafeStat>>.
-Note that the object is not created yet,
-but only when the functor is applied.
+Note that the object is not created yet.
+It will be only when the functor is applied.
 
 <<<.
 declare
@@ -287,9 +287,10 @@ F=functor
 <P>Now let's create a remote site and make an instance
 of <<Counter>> called <<StatObj>>.
 The class <<Remote.manager>> gives several ways
-to create a remote site; this example uses option <<fork:sh>>,
+to create a remote site; this example uses the option <<fork:sh>>,
 which just creates another process on the same machine.
-The process is accessible through the module manager <<MM>>, which
+The process is accessible through the module manager <<MM>>,
+which
 allows to install functors ("<<apply>>") on the remote site.
 
 <<<
@@ -316,7 +317,7 @@ catch X then
 end
 >>>
 
-<SUBSECTION id="guard.based"><TITLE>Guard-based stationary objects</TITLE>
+<SUBSECTION id="guard.based"><TITLE>Guard-based fault tolerance</TITLE>
 
 <P>The simplest way to implement fault-tolerant stationary objects
 is by using a <EM>guard</EM>.  A guard watches
@@ -340,8 +341,8 @@ Guards are defined in <ptr to="guards">.
 <P>With the procedure <<Guard>>, we define <<NewSafeStat>> as follows.
 Note that this definition is almost identical to the
 definition of stationary objects in <ptr to="making.stationary.objects">.
-The only difference is that all distributed operations are placed
-inside of guards.
+The only difference is that all distributed operations are put
+in guards.
 
 <chunk><title/Guard-based stationary object/
 proc {MakeStat PO ?StatP}
@@ -363,8 +364,7 @@ end
 a problem with the server:
 <chunk><title/Client side/
 proc {StatP M}
-   R
-in
+R in
    {Fault.enable R 'thread'(this) nil _}
    {Guard P [permFail]
     proc {$}
@@ -391,7 +391,7 @@ thread
 end
 </chunk>
 
-<P>There is a minor point related to the system default.
+<P>There is a minor point related to the default enabled exceptions.
 This example calls <<Fault.enable>> before <<Guard>>
 to guarantee
 that no exceptions are raised on <<R>>.
@@ -432,7 +432,7 @@ in
 end
 >>>
 
-<SUBSECTION id="exception.based"><TITLE>Exception-based stationary objects</TITLE>
+<SUBSECTION id="exception.based"><TITLE>Exception-based fault tolerance</TITLE>
 
 <P>We show how to implement <<NewSafeStat>>
 by means of exceptions only, i.e., using the basic failure model.
