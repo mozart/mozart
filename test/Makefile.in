@@ -144,8 +144,13 @@ test_gtkcanvas_SOURCES =  	canvas.c			canvas-primitives.c		canvas-arrowhead.c		c
 
 EXTRA_DIST =  	bomb.xpm		flower.png		toroid.png
 
-
-test_gtkcanvas_LDADD =  	$(top_builddir)/gtk-canvas/libgtk-canvas.la 		$(top_builddir)/libart_lgpl/libart_lgpl.la $(LIBGTK_CANVAS_LIBS)
+HAVE_LIBART = @HAVE_LIBART@
+ifeq ($(HAVE_LIBART),yes)
+LIBART_LGPL_LA =
+else
+LIBART_LGPL_LA = $(top_builddir)/libart_lgpl/libart_lgpl.la
+endif
+test_gtkcanvas_LDADD =  	$(top_builddir)/gtk-canvas/libgtk-canvas.la 	$(LIBART_LGPL_LA)	$(LIBGTK_CANVAS_LIBS)
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
@@ -161,7 +166,7 @@ test_gtkcanvas_OBJECTS =  canvas.o canvas-primitives.o \
 canvas-arrowhead.o canvas-features.o canvas-fifteen.o test-gtkcanvas.o
 test_gtkcanvas_DEPENDENCIES =  \
 $(top_builddir)/gtk-canvas/libgtk-canvas.la \
-$(top_builddir)/libart_lgpl/libart_lgpl.la
+$(LIBART_LGPL_LA)
 test_gtkcanvas_LDFLAGS = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -238,7 +243,7 @@ maintainer-clean-libtool:
 
 test-gtkcanvas: $(test_gtkcanvas_OBJECTS) $(test_gtkcanvas_DEPENDENCIES)
 	@rm -f test-gtkcanvas
-	$(LINK) $(test_gtkcanvas_LDFLAGS) $(test_gtkcanvas_OBJECTS) $(test_gtkcanvas_LDADD) $(LIBS)
+	$(LINK) $(test_gtkcanvas_LDFLAGS) $(test_gtkcanvas_OBJECTS) $(test_gtkcanvas_LDADD) @ART_LIBS@ $(LIBS)
 
 tags: TAGS
 
