@@ -78,7 +78,7 @@ define
       proc {RmLoop R}
 	 case R.type
 	 of dir then
-	    for Ri in R.contents do {RmLoop Ri} end
+	    for Ri in R.entries do {RmLoop Ri} end
 	    if {Shell.rmdir R.path}\=0 then
 	       raise ozpm(rmdir R.path commandFailed) end
 	    end
