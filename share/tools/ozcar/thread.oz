@@ -495,7 +495,15 @@ in
 	 S     = {CheckState T}
       in
 	 case @currentStack == unit then skip else
+	    CurT = @currentThread
+	    CurS = @currentStack
+	 in
 	    Gui,resetLastSelectedFrame
+	    case {CheckState CurT} == running then
+	       {OzcarMessage 'setting `rebuild\' flag' #
+		' of (running) thread #' # {Thread.id CurT}}
+	       {CurS rebuild(true)}
+	    else skip end
 	 end
 
 	 {OzcarMessage 'switching to thread #' # I}
