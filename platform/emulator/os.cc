@@ -45,7 +45,9 @@
 #ifdef HAVE_DLOPEN
 
 #ifdef HAVE_DLFCN_H
+extern "C" {
 #include <dlfcn.h>
+}
 #else
 extern "C" void * dlopen(char *, int);
 extern "C" char * dlerror(void);
