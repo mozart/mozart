@@ -37,7 +37,7 @@
 #include "genhashtbl.hh"
 #include "perdio_debug.hh"
 
-#define PERDIOMINOR      "12"
+#define PERDIOMINOR      "13"
 #define PERDIOMAJOR      OZVERSION
 #define PERDIOVERSION    PERDIOMAJOR "#" PERDIOMINOR
 
