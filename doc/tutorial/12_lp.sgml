@@ -410,6 +410,6 @@ in
    thread if E==unit then L = nil end end
 end
 >>>
-A binary-merge <<{Merge X Y Z}>> is simply <<{MMerge [X Y] Z>>.
+A binary-merge <<{Merge X Y Z}>> is simply <<{MMerge [X Y] Z}>>.
 
 </CHAPTER>
