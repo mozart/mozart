@@ -1,0 +1,26 @@
+#!/bin/sh
+
+cd tcl7.4
+make distclean
+./configure --prefix=/project/ps/soft/tcl7.4
+make
+
+cd ../tk4.0/
+make distclean
+./configure --prefix=/project/ps/soft/tcl7.4
+make
+
+cd ../blt-1.8/
+make distclean
+./configure --prefix=/project/ps/soft/tcl7.4 << EOF
+../tcl7.4
+../tk4.0/
+EOF
+make
+
+cd ..
+
+LIBDIR=/project/ps/soft/tcl7.4/platform/`ozplatform`
+mkdir -p $LIBDIR/lib
+cp tcl7.4/libtcl.a tk4.0/libtk.a blt-1.8/src/libBLT.a $LIBDIR/lib
+ranlib $LIBDIR/lib/*.a
