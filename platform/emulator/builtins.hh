@@ -321,19 +321,24 @@ public:
 
 extern BuiltinTab builtinTab;
 
+/*
+ * Essential Note:
+ *  If gregs == NULL, *that* builtin was already applied,
+ *  and 'isSeen' says 'OK'!
+ *  'hasSeen' removes simply the gregs;
+ */
 class OneCallBuiltin: public Builtin {
-private:
-  Bool seen;
 public:
   USEHEAPMEMORY;
 
   OneCallBuiltin (BuiltinTabEntry *fn, RefsArray gregs,
                   Arity *arity, RefsArray features)
-  : Builtin ((BuiltinTabEntry *)fn, (TaggedRef) 0, gregs, arity, features),
-    seen (NO) {}
-  inline Bool isSeen () { return (seen); }
-  inline void hasSeen () { seen = OK; }
+  : Builtin ((BuiltinTabEntry *)fn, (TaggedRef) 0, gregs, arity, features)
+  {}
+
+  inline Bool isSeen () { return ((gRegs == (RefsArray) NULL) ? OK : NO); }
   inline RefsArray &getGRegs() { return(gRegs); }
+  inline void hasSeen () { gRegs = (RefsArray) NULL; }
 };
 
 class SolvedBuiltin: public Builtin {

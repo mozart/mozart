@@ -66,7 +66,7 @@ Bool isInTree(Board *b);
 //// switches for debug macros
 #define CHECKSPACE  // check if object is really copied from heap (1 chunk)
 // #define INITFROM    // initialise copied object
-#define VERBOSE     // inform user about current state of gc
+// #define VERBOSE     // inform user about current state of gc
 // Note: in VERBOSE modus big external file (verb-out.txt) is produced.
 // It contains very detailed debug (trace) information;
 
@@ -736,8 +736,9 @@ SRecord *SRecord::gcSRecord()
     switch (((Builtin *) this)->getType()) {
     case BIsolveCont:
       sz = sizeof(OneCallBuiltin);
-      if (((OneCallBuiltin *) this)->isSeen())
-        ((Builtin *) this)->gRegs = NULL;
+      //: kost@ 21.12.94: not necessary any more;
+      //: if (((OneCallBuiltin *) this)->isSeen())
+      //:       ((Builtin *) this)->gRegs = NULL;
       break;
     case BIsolved:
       sz = sizeof(SolvedBuiltin);
@@ -1189,7 +1190,7 @@ void AM::gc(int msgLevel)
   trail.gc();
   rebindTrail.gc();
 
-  rootBoard=rootBoard->gcBoard();   // must go first!
+  rootBoard = rootBoard->gcBoard();   // must go first!
   setCurrent(currentBoard->gcBoard(),NO);
 
   GCPROCMSG("Predicate table");
@@ -1353,10 +1354,18 @@ void unsetPathMarks (Board *bb)
  */
 Board* AM::copyTree (Board* bb, Bool *isGround)
 {
-  GCMETHMSG(" ********** AM::copyTree **********");
+#ifdef VERBOSE
+  if (verbOut == (FILE *) NULL)
+    verbReopen ();
+#endif
+  if (isGround == (Bool *) NULL) {
+    GCMETHMSG(" ********** AM::copyTree **********");
+  } else {
+    GCMETHMSG(" ********** AM::copyTree (groundnes) **********");
+  }
   opMode = IN_TC;
   gcing = 0;
-  varCount=0;
+  varCount = 0;
   stat.timeForCopy -= usertime();
 
   DebugGCT(updateStackCount = 0);
@@ -1531,7 +1540,17 @@ ConstTerm *ConstTerm::gcConstTerm()
 
   switch (typeOf()) {
   case Co_Board:
-    return ((Board *) this)->gcBoard();
+    //: kost@ 22.12.94: work-around for current! register allocation;
+    //: return ((Board *) this)->gcBoard();
+    {
+      Board *newBoard = ((Board *) this)->gcBoard();
+      if (newBoard == (Board *) NULL) {
+        if (opMode == IN_TC) return (toCopyBoard);
+        else return (am.rootBoard);
+      } else {
+        return (newBoard);
+      }
+    }
   case Co_Actor:
     return ((Actor *) this)->gc();
   case Co_Thread:
