@@ -347,7 +347,7 @@ PRINT(Cell)
 {
   stream << "C:"
 	 << getPrintName()
-	 <<"@" << getId();
+	 <<"@" << (void*) getId();
 }
 
 PRINT(Abstraction)
