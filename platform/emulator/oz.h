@@ -33,7 +33,13 @@
 #define FINALIZATION
 #endif
 
-#undef OZ_DEBUG_INTERFACE // don't use 'extern "C"' (may cause trouble!!)
+/*
+ * define this for debugging the emulator:
+ *   the C++ compiler does more type checking on interface functions
+ *   by removing the extern "C" declarations
+ * NOTE: all symbol names in object files change!
+ */
+#undef OZ_DEBUG_INTERFACE
 
 /* ------------------------------------------------------------------------ *
  * 0. intro
