@@ -134,15 +134,11 @@ DESCRIPTION
 <xsl:template match="title" mode="SUBSECTION">
 .SS
 <xsl:apply-templates/>
-<xsl:text>
-</xsl:text>
 </xsl:template>
 
 <xsl:template match="title" mode="SUBSUBSECTION">
 .B
 <xsl:apply-templates/>
-<xsl:text>
-</xsl:text>
 </xsl:template>
 
 <!-- And do not reprocess -->
