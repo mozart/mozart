@@ -53,4 +53,4 @@ unix		posix/unix stuff
 variable	class variable
 verbose		debugging
 version		version number
-xdl		dynamic linking
+
