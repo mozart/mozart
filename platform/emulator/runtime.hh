@@ -31,6 +31,25 @@
 
 #include "am.hh"
 
+
+/* -----------------------------------------------------------------------
+ * Spaces
+ * -----------------------------------------------------------------------*/
+
+inline
+int oz_isRootBoard(Board *bb) { return bb==oz_rootBoard(); }
+
+inline
+Board *oz_rootBoard() { return am._rootBoard; }
+
+inline
+Board *oz_currentBoard() { return am._currentBoard; }
+
+#define CheckLocalBoard(Object,Where);					\
+  if (!am.onToplevel() && !am.isCurrentBoard(GETBOARD(Object))) {	\
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom(Where));	\
+  }
+
 /* -----------------------------------------------------------------------
  * equality, unification
  * -----------------------------------------------------------------------*/
@@ -75,14 +94,14 @@ void oz_bindToNonvar(OZ_Term *varPtr, OZ_Term var,
 
 #define oz_atom(s) makeTaggedAtom(s)
 
-#define oz_newName() makeTaggedLiteral(Name::newName(am.currentBoard()))
+#define oz_newName() makeTaggedLiteral(Name::newName(oz_currentBoard()))
 
 #define oz_newPort(val) \
-  makeTaggedConst(new PortWithStream(am.currentBoard(), (val)))
+  makeTaggedConst(new PortWithStream(oz_currentBoard(), (val)))
 
 #define oz_sendPort(p,v) sendPort(p,v)
 
-#define oz_newCell(val) makeTaggedConst(new CellLocal(am.currentBoard(), (val)))
+#define oz_newCell(val) makeTaggedConst(new CellLocal(oz_currentBoard(), (val)))
   // access, assign
 
 #define oz_float(f)       newTaggedFloat((f))
@@ -101,11 +120,12 @@ OZ_Term oz_newChunk(OZ_Term val)
 {
   Assert(val==deref(val));
   Assert(isRecord(val));
-  return makeTaggedConst(new SChunk(am.currentBoard(), val));
+  return makeTaggedConst(new SChunk(oz_currentBoard(), val));
 }
 
-#define oz_newVariable() makeTaggedRef(newTaggedUVar(am.currentBoard()))
-#define oz_newToplevelVariable() makeTaggedRef(newTaggedUVar(oz_rootBoard()))
+#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
+#define oz_newVariable()         oz_newVar(oz_currentBoard())
+#define oz_newToplevelVariable() oz_newVar(oz_rootBoard())
 
 /* -----------------------------------------------------------------------
  * # - tuples
@@ -280,8 +300,8 @@ Arity *oz_makeArity(OZ_Term list)
  * control variables
  * -----------------------------------------------------------------------*/
 
-#define ControlVarNew(var,home)				\
-OZ_Term var = makeTaggedRef(newTaggedUVar(home));	\
+#define ControlVarNew(var,home)			\
+OZ_Term var = oz_newVar(home);			\
 am.addSuspendVarList(var);
 
 #define _controlVarUnify(var,val) oz_bind_global(var,val)
@@ -474,17 +494,6 @@ OZ_Return typeError(int pos, char *comment, char *typeString);
 #define ExpectedTypes(S) char * __typeString = S;
 #define TypeError(Pos, Comment) return typeError(Pos,Comment,__typeString);
 
-
-/* -----------------------------------------------------------------------
- * Spaces
- * -----------------------------------------------------------------------*/
-
-inline
-int oz_isRootBoard(Board *bb) { return bb==oz_rootBoard(); }
-
-inline
-Board *oz_rootBoard() { return am._rootBoard; }
-
 /* -----------------------------------------------------------------------
  * MISC
  * -----------------------------------------------------------------------*/
@@ -557,13 +566,13 @@ void BIaddSpec(BIspec *spec); // add specification to builtin table
 inline
 Thread *oz_newSuspendedThread()
 {
-  return am.mkSuspendedThread(am.currentBoard(), DEFAULT_PRIORITY);
+  return am.mkSuspendedThread(oz_currentBoard(), DEFAULT_PRIORITY);
 }
 
 inline
 Thread *oz_newRunnableThread(int prio=DEFAULT_PRIORITY)
 {
-  Thread *tt = am.mkRunnableThreadOPT(prio, am.currentBoard());
+  Thread *tt = am.mkRunnableThreadOPT(prio, oz_currentBoard());
   am.scheduleThread(tt);
   return tt;
 }
