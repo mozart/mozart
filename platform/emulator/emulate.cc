@@ -1094,10 +1094,8 @@ void engine() {
                                                   PC, Y, G, X, argsToSave));
             SVariable *cvar = taggedBecomesSuspVar(APtr);
             CBB->addSuspension();
-            if (e->currentSolveBoard != (Board *) NULL &&
-                e->isInScope (e->currentSolveBoard, cvar->getHome ()) == NO) {
+            if (e->setExtSuspension (cvar->getHome (), susp) == OK) {
               susp->setExtSusp ();
-              e->currentSolveBoard->addSuspension (susp);
             }
             cvar->addSuspension(susp);
           }
@@ -1141,19 +1139,15 @@ void engine() {
 
           if (isAnyVar(ATag)) {
             acvar = taggedBecomesSuspVar(APtr);
-            if (e->currentSolveBoard != (Board *) NULL &&
-                e->isInScope (e->currentSolveBoard, acvar->getHome ()) == NO) {
+            if (e->setExtSuspension (acvar->getHome (), susp) == OK) {
               susp->setExtSusp ();
-              e->currentSolveBoard->addSuspension (susp);
             }
             acvar->addSuspension(susp);
           }
           if (isAnyVar(BTag)) {
             bcvar = taggedBecomesSuspVar(BPtr);
-            if (e->currentSolveBoard != (Board *) NULL &&
-                e->isInScope (e->currentSolveBoard, bcvar->getHome ()) == NO) {
+            if (e->setExtSuspension (bcvar->getHome (), susp) == OK) {
               susp->setExtSusp ();
-              e->currentSolveBoard->addSuspension (susp);
             }
             bcvar->addSuspension(susp);
           }
@@ -1339,10 +1333,8 @@ void engine() {
         new Suspension(new SuspContinuation(CBB,
                                             GET_CURRENT_PRIORITY(),
                                             PC, Y, G, X, argsToSave));
-      if (e->currentSolveBoard != (Board *) NULL &&
-          e->isInScope (e->currentSolveBoard, cvar->getHome ()) == NO) {
+      if (e->setExtSuspension (cvar->getHome (), susp) == OK) {
         susp->setExtSusp ();
-        e->currentSolveBoard->addSuspension (susp);
       }
       cvar->addSuspension (susp);
       CBB->addSuspension();
@@ -1840,6 +1832,7 @@ void engine() {
        // put ~'solve actor';
        // Note that CBB is already the 'solve' board;
        e->pushTask(CBB, (BIFun) solveActorWaker);    // no args;
+       e->trail.pushMark ();
 
        // apply the predicate;
        predArity = 1;
@@ -1881,7 +1874,7 @@ void engine() {
        // adjoin the list of or-actors to the list in actual solve actor!!!
        Board *currentSolveBB = am.currentSolveBoard;
        if (currentSolveBB == (Board *) NULL) {
-         DebugCheckT (message ("solveCont is applied not inside search problem?"));
+         DebugCheckT (message ("solveCont is applied not inside search problem?\n"));
        } else {
          CastSolveActor (currentSolveBB->getActor ())->pushWaitActorsStackOf (solveAA);
        }
@@ -1945,7 +1938,7 @@ void engine() {
                      solveBB->isDiscarded () == OK ||
                      solveBB->isFailed () == OK),
                     error ("Solve board in solve continuation builtin is gone"));
-         DebugCheck((solveBB->getBoard () != NULL),
+         DebugCheck((solveBB->getParentBoard () != NULL),
                     error ("SolveCont: taken board is linked to computation tree?"));
          SolveActor *solveAA = CastSolveActor (solveBB->getActor ());
 
@@ -2132,6 +2125,10 @@ void engine() {
       CAA = new WaitActor(CBB, GET_CURRENT_PRIORITY(),
                           NOCODE, Y, G, X, argsToSave);
       CAA->setDisWait();
+      if (e->currentSolveBoard != (Board *) NULL) {
+        SolveActor *sa= CastSolveActor (e->currentSolveBoard->getActor ());
+        sa->pushWaitActor (CastWaitActor (CAA));
+      }
       DISPATCH(3);
     }
 
