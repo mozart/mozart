@@ -352,12 +352,12 @@ in
 	     Tree,Enqueue(o(Canvas crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
 			    width:2 capstyle:projecting fill:TrunkColor))
 	     case R then
-		case Y > 2 andthen DY == 1 then
-		   %% the stippled line to separate thread trees
-		   Tree,Enqueue(o(Canvas crea line SFX (Y-DY+1)*SFY-7
-				  10*SFX (Y-DY+1)*SFY-7
-				  stipple:OzcarBitmapDir#'line.xbm'))
-		else skip end
+%		case Y > 2 andthen DY == 1 then
+%		   %% the stippled line to separate thread trees
+%		   Tree,Enqueue(o(Canvas crea line SFX (Y-DY+1)*SFY-7
+%				  10*SFX (Y-DY+1)*SFY-7
+%				  stipple:OzcarBitmapDir#'line.xbm'))
+%		else skip end
 		Tree,Enqueue(o(Canvas crea line (X-1)*SFX-OS Y*SFY
 			       (X-1)*SFX-OS (Y-DY+1)*SFY-5
 			       width:2 capstyle:projecting fill:TrunkColor))
