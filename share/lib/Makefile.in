@@ -59,7 +59,7 @@ INITSRC = $(INITSRC1:%=$(SRCDIR)/Init/%) $(SRCDIR)/Init.oz
 SPSRC1 = System.oz Debug.oz Foreign.oz Error.oz Finalize.oz
 SPSRC = $(SPSRC1:%=$(SRCDIR)/SP/%) $(SRCDIR)/SP.oz
 
-OPSRC1 = OS.oz Open.oz Component.oz ArgParser.oz CgiParser.oz
+OPSRC1 = OS.oz Open.oz Component.oz
 OPSRC = $(OPSRC1:%.oz=$(SRCDIR)/OP/%.oz) $(SRCDIR)/OP.oz
 
 APSRC1 = Application.oz
