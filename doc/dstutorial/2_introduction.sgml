@@ -52,24 +52,33 @@ in the Mozart platform.
 <P>Essentially all the distribution abilities of Mozart are
 given by four modules:
 <LIST>
-<ITEM> The module <<Connection>> 
+<ITEM> The module <ref.extern to="ozdoc:system"
+key="chapter.connection"/<<Connection>>/
 provides the basic mechanism (known as <EM>tickets</EM>)
 for active applications to connect with each other.
-<ITEM> The module <<Remote>>
+<ITEM> The module <ref.extern to="ozdoc:system"
+key="chapter.remote"/<<Remote>>/
 allows an active application to create
 a new site on another host machine and connect with it.
-<ITEM> The module <<Pickle>> gives the basic primitives
+<ITEM> The module <ref.extern to="ozdoc:system"
+key="chapter.pickle"/<<Pickle>>/ gives the basic primitives
 for storing and retrieving
 arbitrary stateless data from files and URLs.
-<ITEM> The module <<Fault>> gives the basic primitives
+<ITEM> The module <ref.extern to="ozdoc:system"
+key="chapter.fault"/<<Fault>>/ gives the basic primitives
 for fault detection and handling.
 </LIST>
-The first three modules, <<Connection>>, <<Remote>>,
-and <<Pickle>>, are extremely simple to use.
+The first three modules, <ref.extern to="ozdoc:system"
+key="chapter.connection"/<<Connection>>/, <ref.extern to="ozdoc:system"
+key="chapter.remote"/<<Remote>>/,
+and <ref.extern to="ozdoc:system"
+key="chapter.pickle"/<<Pickle>>/, are extremely simple to use.
 In each case, there are just one or two basic operations.
-For example, <<Connection>> has just two basic operations:
+For example, <ref.extern to="ozdoc:system"
+key="chapter.connection"/<<Connection>>/ has just two basic operations:
 offering a ticket and taking a ticket.
-The fourth module, <<Fault>>, is the base on which
+The fourth module, <ref.extern to="ozdoc:system"
+key="chapter.fault"/<<Fault>>/, is the base on which
 fault-tolerant abstractions are built.
 This release provides a few of the most useful abstractions
 to get you started.

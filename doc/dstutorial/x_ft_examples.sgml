@@ -192,8 +192,8 @@ The function <<FOneOf>> is defined as follows:
 <<<
 declare
 fun {FOneOf F AFS}
-   if AFS==nil then false
-   else AF2|AFS2=AFS in
+   case AFS of nil then false
+   [] AF2|AFS2 then
       case F#AF2
       of permFail#permFail(...) then true
       [] tempFail#tempFail(...) then true
@@ -213,8 +213,8 @@ The function <<FSomeOf>> is defined as follows:
 <<<
 declare
 fun {FSomeOf FS AFS}
-   if FS==nil then false
-   else F2|FS2=FS in 
+   case FS of nil then false
+   [] F2|FS2 then
       {FOneOf F2 AFS} orelse {FSomeOf FS2 AFS}
    end
 end
