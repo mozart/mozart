@@ -16,7 +16,7 @@
 
 #include "genvar.hh"
 #include "bignum.hh"
-
+#include "fdprofil.hh"
 
 // unify expects either two GenFDVariables or at least one
 // GenFDVariable and one non-variable
@@ -34,7 +34,10 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
   switch (tTag){
   case SMALLINT:
     {
-      if (! finiteDomain.contains(smallIntValue(term))) return FALSE;
+      if (! finiteDomain.contains(smallIntValue(term))) {
+        PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
+        return FALSE;
+      }
       if (prop) propagate(var, fd_det, term, pc_propagator);
 
       if (prop && isLocalVariable()) {
@@ -45,6 +48,10 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
         doBindAndTrail(var, vPtr, term);
       }
 
+      PROFILE_CODE1(if (FDVarsTouched.add(term))
+                      FDProfiles.inc_item(no_touched_vars);
+                    FDProfiles.inc_item(no_succ_fdunify_vars);
+                    )
       return TRUE;
     }
   case CVAR:
@@ -56,10 +63,21 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
       FiniteDomain &termDom = termVar->finiteDomain;
       LocalFD intsct;
 
-      if ((intsct = finiteDomain & termDom) == fd_empty) return FALSE;
+      if ((intsct = finiteDomain & termDom) == fd_empty) {
+        PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
+        return FALSE;
+      }
       FDPropState l_dom = intsct.checkAgainst(finiteDomain);
       FDPropState r_dom = intsct.checkAgainst(termDom);
 
+      PROFILE_CODE1(if (l_dom != fd_any)
+                      if (FDVarsTouched.add(var))
+                        FDProfiles.inc_item(no_touched_vars);
+                    if (r_dom != fd_any)
+                      if (FDVarsTouched.add(term))
+                        FDProfiles.inc_item(no_touched_vars);
+                    FDProfiles.inc_item(no_succ_fdunify_vars);
+                    )
 // bind - trail - propagate
       Bool varIsLocal =  (prop && isLocalVariable());
       Bool termIsLocal = (prop && termVar->isLocalVariable());

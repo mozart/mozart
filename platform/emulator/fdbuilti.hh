@@ -90,8 +90,24 @@ if (FORCE_ALL || COND) { \
 //-----------------------------------------------------------------------------
 // Macros
 
+#if PROFILE_FD == 1
+#define FailFD (_PROFILE_CODE1(FDProfiles.inc_item(no_failed_props)), FAILED)
+#define SuspendFD (_PROFILE_CODE1(FDProfiles.inc_item(no_susp_props)), PROCEED)
+#define EntailFD (_PROFILE_CODE1(FDProfiles.inc_item(no_ent_props)), PROCEED)
+#else
+#define FailFD FAILED
+#define SuspendFD PROCEED
+#define EntailFD PROCEED
+#endif
+
 #define FailOnEmpty(X) \
-{if((X) == 0) {BIfdBodyManager::restoreDomainOnToplevel(); return FAILED;}}
+{ \
+  if((X) == 0) { \
+    BIfdBodyManager::restoreDomainOnToplevel(); \
+    PROFILE_CODE1(FDProfiles.inc_item(no_failed_props);) \
+    return FailFD; \
+  } \
+}
 
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentTaskSusp()) { \
@@ -746,8 +762,6 @@ public:
   }
 
   OZ_Bool entailment(void) {
-    PROFILE_CODE1(FDProfiles.inc_item(no_ent_props);)
-
     if (only_local_vars) {
       processLocal();
     } else {
@@ -755,9 +769,7 @@ public:
       if (glob_vars_touched) dismissCurrentTaskSusp();
     }
 
-    curr_num_of_vars = 0;
-
-    return PROCEED;
+    return EntailFD;
   }
 
   OZ_Bool release(void) {
@@ -772,24 +784,23 @@ public:
         dismissCurrentTaskSusp();
    }
 
-    curr_num_of_vars = 0;
-
-    return PROCEED;
+    return vars_left ? SuspendFD : EntailFD;
   }
 
-  OZ_Bool release1(void) {
-    curr_num_of_vars = 1;
-    return PROCEED;
+  OZ_Bool release1(void) { // used by square and twice
+    process();
+    return EntailFD;
   }
 
-  OZ_Bool releaseNonRes(void) {
+  OZ_Bool releaseNonRes(void) { // used by putList, putNot, putLe, putGe
     processNonRes();
-    return PROCEED;
+    return EntailFD;
   }
 
   int simplifyOnUnify(STuple &a, Bool sign_bits[], float coeffs[], STuple &x) {
     if (isUnifyCurrentTaskSusp())
-      curr_num_of_vars = simplifyBody(curr_num_of_vars, a, x, sign_bits, coeffs);
+      curr_num_of_vars =
+        simplifyBody(curr_num_of_vars, a, x, sign_bits, coeffs);
     return curr_num_of_vars;
   }
 

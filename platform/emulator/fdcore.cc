@@ -185,13 +185,16 @@ OZ_C_proc_begin(BIfdPutLe, 2)
 
   BIfdBodyManager x;
 
-  if (! x.introduce(OZ_getCArg(0))) return FAILED;
+  if (! x.introduce(OZ_getCArg(0))) {
+    error("Should never happen.");
+    return FAILED;
+  }
 
   FailOnEmpty(*x <= smallIntValue(n));
 
   return x.releaseNonRes();
 }
-OZ_C_proc_end
+OZ_C_proc_end // BIfdPutLe
 
 
 OZ_C_proc_begin(BIfdPutGe, 2)
@@ -220,13 +223,16 @@ OZ_C_proc_begin(BIfdPutGe, 2)
 
   BIfdBodyManager x;
 
-  if (! x.introduce(OZ_getCArg(0))) return FAILED;
+  if (! x.introduce(OZ_getCArg(0))) {
+    error("Should never happen.");
+    return FAILED;
+  }
 
   FailOnEmpty(*x >= smallIntValue(n));
 
   return x.releaseNonRes();
 }
-OZ_C_proc_end
+OZ_C_proc_end // BIfdPutGe
 
 
 OZ_C_proc_begin(BIfdPutList, 3)
@@ -247,7 +253,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
   if (isNotCVar(listtag)) {
     return addNonResSuspForDet(list, listptr, listtag,
                                createNonResSusp(OZ_self, OZ_args, OZ_arity));
-  } else if (isNil(list)) {
+  } else if (isNil(list)) { // empty list represents empty domain, ie failure
     return FAILED;
   } else if (! isLTuple(listtag)) {
     TypeError(1, "");
@@ -320,7 +326,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
 
   BIfdBodyManager x;
 
-  if (! x.introduce(OZ_getCArg(0))) return FAILED;
+  if (! x.introduce(OZ_getCArg(0))) TypeError(0, "");
 
   LocalFD aux; aux.initList(len_arr, left_arr, right_arr, min_arr, max_arr);
 
@@ -330,7 +336,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
 
   return x.releaseNonRes();
 }
-OZ_C_proc_end
+OZ_C_proc_end // BIfdPutList
 
 
 OZ_C_proc_begin(BIfdPutNot, 2)
@@ -348,7 +354,7 @@ OZ_C_proc_begin(BIfdPutNot, 2)
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
-  if (! (isGenFDVar(var,vartag) || isSmallInt(vartag))) {
+  if (! (isGenFDVar(var, vartag) || isSmallInt(vartag))) {
     if (isNotCVar(vartag)) {
       return addNonResSuspForCon(var, varptr, vartag,
                                  createNonResSusp(OZ_self, OZ_args, OZ_arity));
@@ -359,10 +365,13 @@ OZ_C_proc_begin(BIfdPutNot, 2)
 
   BIfdBodyManager x;
 
-  if (! x.introduce(OZ_getCArg(0))) return FAILED;
+  if (! x.introduce(OZ_getCArg(0))) {
+    error("Should never happen.");
+    return FAILED;
+  }
 
   FailOnEmpty(*x -= smallIntValue(n));
 
   return x.releaseNonRes();
 }
-OZ_C_proc_end
+OZ_C_proc_end // BIfdPutNot

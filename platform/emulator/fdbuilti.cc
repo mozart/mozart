@@ -313,7 +313,6 @@ void BIfdBodyManager::initStaticData(void) {
   bifdbm_vartag = static_vartag;
   index_offset = static_index_offset;
   index_size = static_index_size;
-  curr_num_of_vars = 0;
 }
 
 //-----------------------------------------------------------------------------
