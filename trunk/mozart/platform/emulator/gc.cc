@@ -2193,6 +2193,11 @@ ConstTerm *ConstTerm::gcConstTerm()
     sz = sizeof(OzDictionary);
     break;
 
+  case Co_Lock:
+    CheckLocal((OzLock *) this);
+    sz = sizeof(OzLock);
+    break;
+
   case Co_Thread:
     {
       Thread *th = ((Thread *)this)->gcThread();
