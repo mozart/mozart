@@ -278,7 +278,6 @@ files.doc:
 		-path './print/*' -or \
 		-path './cache/x-oz/system/gump/examples/*' -or \
 		-path './cache/x-oz/doc/*' -or \
-		-path './cache/http/www.mozart-oz.org/home-'`$(OZVERSION)`'/doc/*' -or \
 		-path './examples/*' \
 	\) -and \! \( -path './doc/Mozart.hh?' \) ) > $@
 
