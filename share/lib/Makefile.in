@@ -207,7 +207,8 @@ OZCARBITMAPS1 = \
 	step.xbm stop.xbm term.xbm unleash.xbm
 OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
-.PHONY: all install clean realclean veryclean tags bootstrap
+.PHONY: all install install-main install-main2 install-bitmaps install-src
+.PHONY: clean realclean veryclean tags bootstrap
 
 all: Makefile env $(TYPS) $(TYCS) $(COMPONENTS) ozbatch ozserver
 
