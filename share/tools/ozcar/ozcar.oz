@@ -46,7 +46,7 @@ local
 	 end
 	 {Dbg.on}
 	 case @currentThread == unit then
-	    Gui,status(TitleName # ' initialized')
+	    Gui,status('Ready to attach threads')
 	 else skip end
       end
 
@@ -55,6 +55,17 @@ local
 	 {Tk.send wm(withdraw self.toplevel)}
 	 {EnqueueCompilerQuery setSwitch(debuginfo false)}
 	 {Emacs removeBar}
+      end
+
+      meth conf(...)=M
+	 {Record.forAllInd M
+	  proc {$ F V}
+	     case {Config confAllowed(F $)} then
+		{Config set(F V)}
+	     else
+		raise ozcar(badConfigFeature(F)) end
+	     end
+	  end}
       end
    end
 
@@ -91,6 +102,10 @@ in
 
 	   meth off
 	      {@MyOzcar off}
+	   end
+
+	   meth conf(...)=M
+	      {@MyOzcar M}
 	   end
 
 	   meth bpAt(_ _ _)=M
