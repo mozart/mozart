@@ -22,7 +22,7 @@ fi
 
 : ${oztool_cxx="@OZTOOL_CXX@ @CDYNOPT@ $oztool_includes"}
 : ${oztool_cc="cc @CDYNOPT@ $oztool_includes"}
-: ${oztool_ld="ld @TOOLLDFLAGS@"}
+: ${oztool_ld="$oztool_cxx @TOOLLDFLAGS@"}
 : ${oztool_platform="@platform@"}
 
 cmd=$1
