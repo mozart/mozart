@@ -67,3 +67,14 @@ OZ_BI_define(ostime_localime,1,1) {
 
   OZ_RETURN(make_time(localtime(&timebuf)));
 } OZ_BI_end
+
+
+/*
+ * The builtin table
+ */
+
+#ifndef MODULES_LINK_STATIC
+
+#include "modOsTime-if.cc"
+
+#endif
