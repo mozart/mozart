@@ -48,6 +48,12 @@ Ditems   = Dictionary.items
 Dremove  = Dictionary.remove
 Dmember  = Dictionary.member
 
+BreakpointStaticHelp   = {NewName}
+BreakpointDynamicHelp  = {NewName}
+ThreadTreeHelp         = {NewName}
+StackHelp              = {NewName}
+EnvHelp                = {NewName}
+
 local
    fun {MakeSpace N}
       case N < 1 then nil else 32 | {MakeSpace N-1} end
