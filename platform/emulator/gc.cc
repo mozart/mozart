@@ -25,8 +25,6 @@
 #include "gc.hh"
 #include "tcl_tk.hh"
 
-#include "dllist.hh"
-
 #include "genvar.hh"
 
 #include "fdhook.hh"
@@ -524,23 +522,65 @@ void storeForward(void* fromPtr, void *newValue)
 class ExtRefNode;
 static ExtRefNode *extRefs = NULL;
 
-class ExtRefNode: public DLList {
+class ExtRefNode {
 public:
-  ExtRefNode(DLListEntry el, DLList*p, DLList*n): DLList(el,p,n) {};
+  USEHEAPMEMORY;
 
-  static void gc()
+  TaggedRef *elem;
+  ExtRefNode *next;
+
+  ExtRefNode(TaggedRef *el, ExtRefNode *n): elem(el), next(n){ Assert(elem); }
+
+  void remove()                  { elem = NULL; }
+  ExtRefNode *add(TaggedRef *el) { return new ExtRefNode(el,this); }
+  
+  ExtRefNode *gc()
   {
-    ExtRefNode *help = extRefs;
-#ifdef PROFILE
-    ozstat.protectedCounter = 0;
-#endif
-    while(help) {
-      gcTagged(*(TaggedRef*)help->elem, *(TaggedRef*)help->elem);
-      help = (ExtRefNode*) help->next;
-#ifdef PROFILE
-      ozstat.protectedCounter++;
-#endif
+    ExtRefNode *aux = this;
+    ExtRefNode *ret = NULL;
+    while(aux) {
+      if (aux->elem) {
+	ret = new ExtRefNode(aux->elem,ret);
+	gcTagged(*ret->elem, *ret->elem);
+      }
+      aux = aux->next;
     }
+    return ret;
+  }
+
+
+  ExtRefNode *protect(TaggedRef *el)
+  {
+    Assert(!find(el));
+    return add(el);
+  }
+
+
+  Bool unprotect(TaggedRef *el) 
+  {
+    Assert(el);
+    ExtRefNode *aux = extRefs;
+    while(aux) {
+      if (aux->elem==el) {
+	aux->remove();
+	return OK;
+      }
+      aux = aux->next;
+    }
+    return NO;
+  }
+
+
+  ExtRefNode *find(TaggedRef *el)
+  {
+    Assert(el);
+    ExtRefNode *aux = extRefs;
+    while(aux) {
+      if (aux->elem==el)
+	break;
+      aux = aux->next;
+    }
+    return aux;
   }
 };
 
@@ -567,12 +607,7 @@ Bool needsNoCollection(TaggedRef t)
 
 Bool gcProtect(TaggedRef *ref)
 {
-  if (extRefs->find(ref)) {
-    Assert(0);
-    return NO;
-  }
-
-  extRefs = (ExtRefNode*) extRefs->add(ref);
+  extRefs = extRefs->protect(ref);
   return OK;
 }
 
@@ -589,12 +624,12 @@ Bool gcStaticProtect(TaggedRef *ref)
 
 Bool gcUnprotect(TaggedRef *ref)
 {
-  ExtRefNode *aux = (ExtRefNode*) extRefs->find(ref);
+  ExtRefNode *aux = extRefs->find(ref);
 
   if (aux == NULL)
     return NO;
 
-  extRefs = (ExtRefNode*) extRefs->remove(aux);
+  aux->remove();
   return OK;
 } 
 
@@ -1543,7 +1578,7 @@ void AM::gc(int msgLevel)
   am.toplevelVars = gcRefsArray(am.toplevelVars);
 
   GCPROCMSG("updating external references to terms into heap");
-  ExtRefNode::gc();
+  extRefs = extRefs->gc();
   
   PROFILE_CODE1(FDProfiles.gc());
 
