@@ -82,7 +82,7 @@ class ByteSource {
 public:
   virtual OZ_Return maybeSkipHeader();
   virtual OZ_Return getBytes(BYTE*,int&,int&);
-  virtual OZ_Return getTerm(OZ_Term);
+  virtual OZ_Return getTerm(OZ_Term, const char *compname);
   virtual OZ_Return makeByteStream(ByteStream*&);
   virtual char*     emptyMsg();
 };
@@ -352,7 +352,7 @@ ByteSource::emptyMsg()
 }
 
 OZ_Return
-ByteSource::getTerm(OZ_Term out)
+ByteSource::getTerm(OZ_Term out, const char *compname)
 {
   OZ_Return result = maybeSkipHeader();
   if (result!=PROCEED) return result;
@@ -378,8 +378,9 @@ ByteSource::getTerm(OZ_Term out)
   if (versiongot) {
     OZ_Term vergot = oz_atom(versiongot);
     delete versiongot;
-    return oz_raise(E_ERROR,OZ_atom("dp"),"load",3,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"load",4,
 		    oz_atom("versionMismatch"),
+		    oz_atom(compname),
 		    oz_atom(PERDIOVERSION),
 		    vergot);
   } else {
@@ -464,16 +465,16 @@ ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
   return PROCEED;
 }
 
-OZ_Return loadDatum(OZ_Datum dat,OZ_Term out)
+OZ_Return loadDatum(OZ_Datum dat,OZ_Term out, const char *compname)
 {
   ByteSourceDatum src(dat,TRUE);
-  return src.getTerm(out);
+  return src.getTerm(out,compname);
 }
 
-OZ_Return loadFD(int fd, OZ_Term out)
+OZ_Return loadFD(int fd, OZ_Term out, const char *compname)
 {
   ByteSourceFD src(fd,TRUE);
-  return src.getTerm(out);
+  return src.getTerm(out,compname);
 }
 
 OZ_Return loadFile(char *filename,OZ_Term out)
@@ -485,7 +486,7 @@ OZ_Return loadFile(char *filename,OZ_Term out)
 		    oz_atom(OZ_unixError(errno)),
 		    oz_atom(filename));
   }
-  return loadFD(fd,out);
+  return loadFD(fd,out,filename);
 }
 
 
@@ -587,7 +588,7 @@ int pipeHandler(int, void *arg)
 	  doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
 	} else {
 	  OZ_Term other = oz_newVariable();
-	  OZ_Return aux = loadFD(fd,other);
+	  OZ_Return aux = loadFD(fd,other,pi->file);
 	  if (aux==RAISE) {
 	    ControlVarRaise(controlvar,am.getExceptionValue());
 	  } else {
@@ -745,7 +746,7 @@ url_local:
       int fd = osopen(url,O_RDONLY,0);
       if (fd<0) goto kaboom;
       OZ_Term   val    = oz_newVariable();
-      OZ_Return status = loadFD(fd,val);
+      OZ_Return status = loadFD(fd,val,url);
       if (status==PROCEED) out=val;
       return status;
     }
@@ -799,7 +800,7 @@ OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)
 
 OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 {
-  return loadDatum(d,t);
+  return loadDatum(d,t,"unknown");
 }
 
 static
@@ -869,8 +870,7 @@ OZ_BI_define(BISendPID,4,0)
 		    OZ_atom("badTime"),OZ_in(2));
   }
     
-  struct hostent *hostaddr;
-  hostaddr = gethostbyname(host);
+  struct hostent *hostaddr = gethostbyname(host);
   if (!hostaddr) {
     return oz_raise(E_ERROR,E_SYSTEM,"PID.send",2,
 		    OZ_atom("gethostbyname"),OZ_in(0));
@@ -880,8 +880,7 @@ OZ_BI_define(BISendPID,4,0)
   ip_address addr;
   addr = ntohl(tmp.s_addr);
 
-  Site *site;
-  site = findSite(addr,port,time);
+  Site *site = findSite(addr,port,time);
 
   if (!site) {
     return oz_raise(E_ERROR,E_SYSTEM,"PID.send",5,
@@ -889,11 +888,11 @@ OZ_BI_define(BISendPID,4,0)
 		    OZ_in(2),val);
   }
 
-  MsgBuffer *bs;
-  bs = msgBufferManager->getMsgBuffer(site);
+  MsgBuffer *bs = msgBufferManager->getMsgBuffer(site);
   marshal_M_SEND_GATE(bs,val);
-  int ret = site->sendTo(bs,M_SEND_GATE,0,0);
-  Assert(ret == ACCEPTED);
+  
+  CheckNogoods(bs,"send");
+  SendTo(site,bs,M_SEND_GATE,0,0);
   return PROCEED;
 } OZ_BI_end
 
