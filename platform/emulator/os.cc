@@ -72,7 +72,19 @@ static long openMax;
 
 
 #ifdef WINDOWS
-int runningUnderNT = 0;
+int runningUnderNT()
+{
+  static int underNT = -1;
+  if (underNT==-1) {
+    OSVERSIONINFO vi;
+    vi.dwOSVersionInfoSize = sizeof(vi);
+    BOOL b = GetVersionExA(&vi);
+    Assert(b==TRUE);
+    underNT = (vi.dwPlatformId==VER_PLATFORM_WIN32_NT);
+  }
+  return underNT;
+}
+
 
 typedef long long verylong;
 
@@ -105,7 +117,7 @@ unsigned int getTime()
 unsigned int osUserTime()
 {
 #ifdef WINDOWS
-  if (!runningUnderNT) {
+  if (!runningUnderNT()) {
     return getTime();
   }
 
@@ -126,7 +138,7 @@ unsigned int osUserTime()
 unsigned int osSystemTime()
 {
 #ifdef WINDOWS
-  if (!runningUnderNT) {
+  if (!runningUnderNT()) {
     return 0;
   }
 
@@ -697,10 +709,6 @@ void osInit()
 #endif
 
 #ifdef WINDOWS
-  OSVERSIONINFO vi;
-  vi.dwOSVersionInfoSize = sizeof(vi);
-  BOOL b = GetVersionExW(&vi);
-  runningUnderNT = (vi.dwPlatformId==VER_PLATFORM_WIN32_NT);
   /* make sure everything is opened in binary mode */
   setmode(fileno(stdin),O_BINARY);  // otherwise input blocks!!
   _fmode = O_BINARY;
