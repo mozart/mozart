@@ -28,41 +28,55 @@ $(LIB_DIR)/%.oza: %.oza
 	$(INSTALL_LIB) $< $@
 $(DEMO_DIR)/MIM.oza: client.oza
 	$(INSTALL_LIB) $< $@
+BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
 
-%.ozf: %.oz
-	$(COMPILE) -c $< -o $@
+ 
 
 server.oza: micq
 	$(OZL) -z 9 $< -o $@
 client.oza: client
 	$(OZL) -z 9 $< -o $@
 
-micq: startserver.oz server.ozf defaultsettings.ozf
+micq: startserver.oz server.ozf 
 	$(COMPILE) -x $< -o $@
 
 client: startclient.oz client.ozf 
 	$(COMPILE) -x $< -o $@
 
-BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
+%.ozf: %.oz
+	$(COMPILE) -c $< -o $@
 
-server.ozf: server.oz $(BMETH) database.ozf mobility.ozf newaccountgui.ozf \
+
+server.ozf: server.oz $(BMETH) defaultsettings.ozf database.ozf mobility.ozf newaccountgui.ozf \
 	log.ozf  sysadm.ozf
 	$(COMPILE) -c $< -o $@
 
+
 addapplicationgui.ozf: addapplicationgui.oz $(BMETH)
 	$(COMPILE) -c $< -o $@
-sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
+editapplicationgui.ozf: editapplicationgui.oz $(BMETH)
+	$(COMPILE) -c $< -o $@
+editaccount.ozf: editaccount.oz $(BMETH)
+	$(COMPILE) -c $< -o $@
+newaccountgui.ozf: newaccountgui.oz $(BMETH)
+	$(COMPILE) -c $< -o $@
+newfriendsgui.ozf: newfriendsgui.oz $(BMETH)
+	$(COMPILE) -c $< -o $@
+sysadm.ozf: sysadm.oz $(BMETH) addapplicationgui.ozf editapplicationgui.ozf
 	$(COMPILE) -c $< -o $@
 client.ozf : client.oz $(BMETH) clientgui.ozf newfriendsgui.ozf \
 	defaultsettings.ozf dialoggui.ozf mobility.ozf
 	$(COMPILE) -c $< -o $@
-clientgui.ozf : clientgui.oz messagedisplay.ozf manager.ozf \
+clientgui.ozf : clientgui.oz $(BMETH) messagedisplay.ozf manager.ozf \
 	defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf \
 	draganddrop.ozf addapplicationgui.ozf configureclient.ozf \
 	editapplicationgui.ozf
 	$(COMPILE) -c $< -o $@
 messagegui.ozf : messagegui.oz popup.ozf
 	$(COMPILE) -c $< -o $@
+
+$(BMETH): methods.ozf.orig
+	  cp $< $@
 
 clean veryclean:
 	-rm -f *~ *.ozf *.oza micq client
