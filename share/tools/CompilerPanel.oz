@@ -26,6 +26,8 @@ fun
    instantiate
 \endif
    {NewCompilerPanel IMPORT}
+   \insert 'SP.env'
+   = IMPORT.'SP'
    \insert 'OP.env'
    = IMPORT.'OP'
    \insert 'WP.env'
