@@ -1,27 +1,9 @@
 AC_INIT(FlexLexer.h)
 OZ_INIT
-OZ_CC_CHOOSE
-OZ_CXX_CHOOSE
-OZ_CXX_OPTIONS(-fpic,CDYNOPT)
-AC_SUBST(CDYNOPT)
-AC_LANG_CPLUSPLUS
 AC_PROG_LN_S
 AC_CHECK_PROGS(RM, rm)
-OZ_PATH_PROG(DYNLD, ozdynld)
-OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-: ${platform=`$PLATFORMSCRIPT`}
-AC_SUBST(platform)
-if test "${GXX}" = yes; then
-    : ${oz_copt_disable_extension="-fno-exceptions -fno-rtti"}
-fi
-
-OZ_CXX_OPTIONS($oz_copt_disable_extension,oz_a)
-if test "$ac_test_CXXFLAGS" != set
-then
-    CXXFLAGS=
-fi
-
-CXXFLAGS="$CXXFLAGS $oz_a"
+OZ_PATH_PROG(OZTOOL, oztool)
+AC_SUBST(OZTOOL)
 AC_CONFIG_SUBDIRS(ozflex)
 AC_OUTPUT(Makefile ozbison/Makefile)
 
