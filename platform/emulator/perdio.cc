@@ -4495,12 +4495,11 @@ Bool cellReceiveContentsFrame(CellFrame *cf,TaggedRef val,Site *mS,int mI){
 
   pendThreadResumeAll(cf->getPending());
   DebugCode(cf->setPending(NULL));
-
-  TaggedRef head=cf->getHead();
+  SiteUnify(cf->getHead(),val);
   if(state & Cell_Next){
     if(cf->getCtr()==0){
       Site *toSite=cf->getNext();
-      cellSendContents(val,toSite,mS,mI);
+      cellSendContents(cf->getContents(),toSite,mS,mI);
       networkSiteCheck(toSite);
       cf->setState(Cell_Invalid);
       return FALSE;}
@@ -4509,7 +4508,6 @@ Bool cellReceiveContentsFrame(CellFrame *cf,TaggedRef val,Site *mS,int mI){
       return TRUE;
     }}
   cf->setState(Cell_Valid);
-  SiteUnify(head,val);
   return TRUE;
 }
 
