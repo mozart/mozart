@@ -77,11 +77,21 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   } else if (stricmp(progname,"ozdemo.exe")==0) {
     sprintf(buffer,"%s/platform/%s/ozemulator -f %s/demo/rundemo",
 	    ozhome,ozplatform,ozhome);
+#ifdef CONSOLEAPP
+  } else if (stricmp(progname,"ozsac.exe")==0) {
+    if (argc!=3) {
+      fprintf(stderr,"usage: ozsac infile outfile\n");
+      exit(1);
+    }
+    sprintf(buffer,"%s/platform/%s/ozcompiler +p /dev/null +c %s +dn %s",
+	    ozhome,ozplatform,argv[1],argv[2]);
+#else
   } else if (stricmp(progname,"ozsa.exe")==0) {
     char *rest = splitFirstArg(lpszCmdLine);
     sprintf(buffer,"%s/platform/%s/ozemulator -E -quiet -f %s %s %s",
 	    ozhome,ozplatform,lpszCmdLine,((*rest)==0) ? "" : "-a", rest);
     // console = CREATE_NEW_CONSOLE;
+#endif
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
   }
@@ -93,6 +103,11 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   if (ret!=TRUE) {
     OzPanic(1,"Cannot start Oz.\nError = %d.\nDid you run setup?",errno);
   }
+#ifdef CONSOLEAPP
+  WaitForSingleObject(pinf.hProcess,INFINITE);
+  fprintf(stdout,"\n");
+  fflush(stdout);
+#endif
   return 0;
 }
 
