@@ -815,7 +815,7 @@ end
 </chunk>
 
 <P>The server uses a concurrent ForAll procedure that
-invokes all commands concurrently and waits until
+starts all sends concurrently and waits until
 they are all finished.  This is important for implementing
 broadcasts.  With the concurrent ForAll, the total
 time for the broadcast is the <em>maximum</em> of
