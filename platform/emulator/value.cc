@@ -349,6 +349,18 @@ TaggedRef appendI(TaggedRef x,TaggedRef y)
   return ret;
 }
 
+Bool member(TaggedRef elem,TaggedRef list)
+{
+  elem = deref(elem);
+  list = deref(list);
+  while (isCons(list)) {
+    if (elem==deref(head(list)))
+      return OK;
+    list = deref(tail(list));
+  }
+  return NO;
+}
+
 /*
  * destructive reverse of a list
  */
