@@ -6150,7 +6150,7 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
     OZ_protect(&methApplHdl);
   } else {
     methApplHdl = preed;
-    warning("setMethApplHdl called twice (hint: prelude may not be fed twice)");
+    // warning("setMethApplHdl called twice (hint: prelude may not be fed twice)");
   }
   return PROCEED;
 }
