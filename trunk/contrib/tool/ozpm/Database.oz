@@ -14,7 +14,7 @@ define
       prop final
       attr db:unit file:unit
       meth init(File)
-	 file <- {{Path.make File} expand($)}
+	 file <- {{{Path.make File} expand($)} toString($)}
 	 db   <- {LoadDB @file}
       end
       meth get(K V) {Dictionary.get @db {ToKey K} V} end
