@@ -26,17 +26,15 @@ Oz/FDLib	mail -s "I have changed %s" scheidhr,tmueller,wuertz
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
 Oz/Toto		mail -s "I have changed %s" henz,reiter
 Oz/include	mail -s "I have changed %s" scheidhr,tmueller,henz
-Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,schulte,tmueller
-Oz/demo		mail -s "I have changed %s" schulte,wuertz
+Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,tmueller
+Oz/demo		mail -s "I have changed %s" wuertz
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz/plugin	mail -s "I have changed %s" paralic
-Misc/papers/ozam 	mail -s "I have changed %s" mehl scheidhr schulte
 Misc/papers/TypeMemo	mail -s "I have changed %s" niehren mmueller
 Misc/papers/TypeType	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Rolls	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Style	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Oz20        mail -s "I have changed %s" mmueller,tmueller
-Misc/papers/oopp        mail -s "I have changed %s" mmueller henz schulte
 Misc/papers/WLP-FDCD	mail -s "I have changed %s" tmueller,wuertz
 Misc/papers/Ines	mail -s "I have changed %s" mmueller niehren 
 Misc/papers/Elephant	mail -s "I have changed %s" mmueller tmueller vanroy
