@@ -699,6 +699,23 @@ PRINTLONG(Actor)
   stream << endl;
 }
 
+PRINT(SolveActor)
+{
+}
+
+PRINTLONG(SolveActor)
+{
+  stream  << indent(offset) << "solveVar=";
+  tagged2Stream(solveVar,stream,depth-1,0);
+  stream << endl;
+  stream << indent(offset) << "result=";
+  tagged2Stream(result,stream,depth-1,0);
+  stream << endl;
+  stream << indent(offset) << "threads=" << threads << endl;
+  stream << indent(offset) << "SuspList:" << endl;
+  suspList->print(stream,depth-1,offset+2);
+}
+
 void Thread::Print()
 {
   cout << "class Thread" << endl
