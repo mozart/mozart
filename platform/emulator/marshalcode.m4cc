@@ -86,6 +86,9 @@ define(opAction,
 inline
 void marshalBuiltin(Builtin *entry,MsgBuffer *bs)
 {
+  if (entry->isNative()) {
+    //warning("marshalling native builtin: %s",toC(entry->getName()));
+  }
   marshalTerm(entry->getName(),bs);
 }
 
@@ -137,7 +140,9 @@ void marshalPredId(PrTabEntry *p,MsgBuffer *bs)
   PD((MARSHAL,"pred id begin"));
   marshalTerm(p->getName(),bs);
   marshalRecordArity(p->getMethodArity(),bs);
-  marshalTerm(p->getPos(),bs);
+  marshalTerm(p->getFile(),bs);
+  marshalNumber(p->getLine(),bs);
+  marshalNumber(p->getColumn(),bs);
   marshalTerm(p->getFlagsList(),bs);
   marshalNumber(p->getMaxX(),bs);
   PD((MARSHAL,"pred id end"));
@@ -211,10 +216,10 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
   start -= sizeOf(DEFINITION);
 
   Reg reg;
-  int nxt;
+  int nxt,line,colum;
   PrTabEntry *pred;
-  TaggedRef pos,predName;
-  CodeArea::getDefinitionArgs(start,reg,nxt,pos,predName);
+  TaggedRef file,predName;
+  CodeArea::getDefinitionArgs(start,reg,nxt,file,line,colum,predName);
 
   ProgramCounter ende = start+nxt;
 
@@ -465,11 +470,13 @@ ProgramCounter unmarshalPredId(ProgramCounter PC,ProgramCounter lastPC,
 { 
   OZ_Term name       = unmarshalTerm(bs);
   SRecordArity arity = unmarshalRecordArity(bs);
-  OZ_Term pos        = unmarshalTerm(bs);
+  OZ_Term file       = unmarshalTerm(bs);
+  int line           = unmarshalNumber(bs);
+  int column         = unmarshalNumber(bs);
   OZ_Term flags      = unmarshalTerm(bs);
   int maxX           = unmarshalNumber(bs);
 
-  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,pos,flags,maxX) : 0;
+  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,file,line,column,flags,maxX) : 0;
   return writeAddress(pred,PC);
 }
 
