@@ -31,8 +31,24 @@
  functor $
 
  import
-    SP
-    OP
+    SP.{System          = 'System'
+	Exit            = 'Exit'
+	Print           = 'Print'
+	Show            = 'Show'
+	PutProperty     = 'PutProperty'
+	GetProperty     = 'GetProperty'
+	CondGetProperty = 'CondGetProperty'
+	Foreign         = 'Foreign'
+	Debug           = 'Debug'
+	Error           = 'Error'
+	Finalize        = 'Finalize'}
+
+    OP.{OS   = 'OS'
+	Open = 'Open'
+	Load = 'Load'
+	Save = 'Save'
+	URL  = 'URL'}
+	    
     AP
     CP
     DP
@@ -51,11 +67,9 @@
     Misc
 
  export
-    StartOpi
+    'StartOpi': StartOPI
 
  body
-    System = SP.'System'
-    Open   = OP.'Open'
 
     ImportEnv = i('SP':            SP
 		  'OP':            OP
