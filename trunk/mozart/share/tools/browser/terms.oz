@@ -132,7 +132,7 @@ in
 	 %%
       in
 	 %%
-	 fun {GenAtomPrintName Atom}   
+	 fun {GenAtomPrintName Atom}
 	    case Atom of '' then "\'\'"
 	    else
 	       Is={AtomToString Atom}
@@ -2188,12 +2188,11 @@ in
 	    job
 	       ChVar = {TestVarFun self.term}
 	    end
-	    %%
 
 	    %% Note that this conditional may not block the state;
 	    %% relational;
 	    job
-	       if ChVar = True then 
+	       if ChVar = True then
 		  {self.parentObj renewNum(self Depth)}
 	       [] CancelVar = True then true
 	       end
