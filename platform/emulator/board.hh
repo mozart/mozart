@@ -71,7 +71,7 @@ enum BoardFlags {
   Bo_PathMark   = 0x0080,
   Bo_Failed     = 0x0100,
   Bo_Committed  = 0x0200,
-  Bo_Waiting    = 0x0800,
+  Bo_Waiting    = 0x0800
 };
 
 

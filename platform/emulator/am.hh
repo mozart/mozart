@@ -45,7 +45,7 @@ typedef enum {
   UserAlarm     = 1 << 4, // Alarm handler has signaled User Alarm
   StartGC       = 1 << 5, // need a GC
   DebugMode     = 1 << 6,
-  StopThread    = 1 << 7,
+  StopThread    = 1 << 7
 } StatusBit;
 
 
@@ -174,7 +174,7 @@ public:
   unsigned int lastFrameID;
 
   // Debugging stuff
-  bool suspendDebug, runChildren;
+  Bool suspendDebug, runChildren;
   TaggedRef threadStreamTail;
   Toplevel *toplevelQueue;
 

@@ -24,7 +24,7 @@ enum PV_TYPES {
   PV_MANAGER,
   PV_PROXY,
   PV_OBJECT,
-  PV_URL,
+  PV_URL
 };
 
 class ProxyList {
@@ -32,7 +32,7 @@ public:
   Site* sd;
   ProxyList *next;
 public:
-  ProxyList(Site* sd,ProxyList *next) :sd(sd),next(next) {}
+  ProxyList(Site* s,ProxyList *nxt) :sd(s),next(nxt) {}
 
   USEFREELISTMEMORY;
 
@@ -51,8 +51,8 @@ public:
   PendBinding *next;
 public:
   PendBinding() { DebugCheckT(val=4711; thread=0; next=this;) }
-  PendBinding(TaggedRef val,Thread *th,PendBinding *next)
-    : val(val), thread(th), next(next) {}
+  PendBinding(TaggedRef v,Thread *th,PendBinding *nxt)
+    : val(v), thread(th), next(nxt) {}
   USEFREELISTMEMORY;
 
   void dispose()
