@@ -11,10 +11,10 @@
   -
   - This file is part of Mozart, an implementation
   - of Oz 3
-  -    http://mozart.ps.uni-sb.de
+  -    http://www.mozart-oz.org
   -
   - See the file "LICENSE" or
-  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  -    http://www.mozart-oz.org/LICENSE.html
   - for information on usage and redistribution
   - of this file, and for a DISCLAIMER OF ALL
   - WARRANTIES.
@@ -28,7 +28,7 @@
 
 <list ENUM>
 <item> You have to install GNU Emacs first.
-<p>Download <Ref.Extern to="ftp://mozart.ps.uni-sb.de/pub/mozart/extras/emacs-20.3.1.exe">emacs-20.3.1.exe</Ref.Extern>
+<p>Download <Ref.Extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/emacs-20.3.1.exe">emacs-20.3.1.exe</Ref.Extern>
 execute it, and follow the instructions.
 <p>
 More information about  GNU Emacs for MS Windows can be found under
@@ -38,7 +38,7 @@ http://www.cs.washington.edu/homes/voelker/ntemacs.html</Ref.Extern>
 <item> Afterwards you install Mozart. (If you upgrade to
 a newer version of Mozart you only have to perform the second step).
 <p>
-Get the self-extracting executable from the<Ref.Extern to="http://mozart.ps.uni-sb.de/download/winarchive.shtml">download page</Ref.Extern>,
+Get the self-extracting executable from the<Ref.Extern to="http://www.mozart-oz.org/download/winarchive.shtml">download page</Ref.Extern>,
 execute it, and follow the instructions.
 </list>
 
@@ -72,7 +72,7 @@ After installation you should make your web browser Mozart application enabled, 
 <list ENUM>
 <item>Download the binary tarballs for your particular platform from
 <Ref.Extern
-to="http://mozart.ps.uni-sb.de/download/">http://mozart.ps.uni-sb.de/download</Ref.Extern>.
+to="http://www.mozart-oz.org/download/">http://www.mozart-oz.org/download</Ref.Extern>.
 <item>Unpack the tarballs by executing
 <code display>
 % cd /usr/local

@@ -48,7 +48,7 @@ ac_help="$ac_help
         whether to build the davinci contribution (default: yes)"
 ac_help="$ac_help
 --enable-contrib-reflect
-        whether to build the reflect contribution (default: yes)"
+        whether to build the reflect contribution (default: no)"
 ac_help="$ac_help
 --enable-contrib-investigator
         whether to build the investigator contribution (default: yes)"
@@ -923,8 +923,8 @@ fi
 
     fi
 
-  HOMEURL="http://mozart.ps.uni-sb.de/home"
-  HOMECACHE="http/mozart.ps.uni-sb.de/home"
+  HOMEURL="http://www.mozart-oz.org/home"
+  HOMECACHE="http/www.mozart-oz.org/home"
 
 
 

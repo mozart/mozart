@@ -12,10 +12,10 @@
   -
   - This file is part of Mozart, an implementation
   - of Oz 3
-  -    http://mozart.ps.uni-sb.de
+  -    http://www.mozart-oz.org
   -
   - See the file "LICENSE" or
-  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  -    http://www.mozart-oz.org/LICENSE.html
   - for information on usage and redistribution
   - of this file, and for a DISCLAIMER OF ALL
   - WARRANTIES.
@@ -137,9 +137,7 @@
   <P CLASS=WARNING>You can learn about the Mozart programming system, its
   programming interface and associated tools by looking to the
   documentation on the web <REF.EXTERN
-  TO="http://www.ps.uni-sb.de/mozart">http://www.ps.uni-sb.de/mozart</REF.EXTERN>
-  or <REF.EXTERN
-  TO="http://www.sics.se/mozart">http://www.sics.se/mozart</REF.EXTERN>
+  TO="http://www.mozart-oz.org">http://www.mozart-oz.org</REF.EXTERN>.
 -->
 
 

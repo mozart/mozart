@@ -12,10 +12,10 @@
 #
 #  This file is part of Mozart, an implementation
 #  of Oz 3:
-#     http://mozart.ps.uni-sb.de
+#     http://www.mozart-oz.org
 #
 #  See the file "LICENSE" or
-#     http://mozart.ps.uni-sb.de/LICENSE.html
+#     http://www.mozart-oz.org/LICENSE.html
 #  for information on usage and redistribution
 #  of this file, and for a DISCLAIMER OF ALL
 #  WARRANTIES.
@@ -152,7 +152,7 @@ Release: ${BUILD}
 Summary: Mozart, an efficient and distributed implementation of Oz
 Copyright: BSD (similar)
 Vendor: Programming Systems Lab Saarbrücken
-Url: http://mozart.ps.uni-sb.de/
+Url: http://www.mozart-oz.org/
 Group: Development/Languages
 Packager: Christian Schulte <schulte@ps.uni-sb.de>
 Icon: mozart.xpm

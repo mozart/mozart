@@ -345,7 +345,7 @@ end
 
 declare
 Images={TkTools.images
-        ['http://mozart.ps.uni-sb.de/home/'#
+        ['http://www.mozart-oz.org/home/'#
          'doc/demo/applets/images/trucks/truck-right.ppm']}
 TruckImage = Images.'truck-right'
 class Truck from Tk.canvasTag Time.repeat

@@ -21,13 +21,13 @@ The GDBM module looks up IMPORTS.'SP'.'Foreign'.load in its IMPORTS
 argument.  Interactively, you could instantiate it as follows:
 
 declare GDBM =
- {{Load 'http://mozart.ps.uni-sb.de/home/tools/gdbm/gdbm.ozc'}
+ {{Load 'http://www.mozart-oz.org/home/tools/gdbm/gdbm.ozc'}
   m('SP':x('Foreign':Foreign))}
 
 For use by the Application module, you can declare it as follows:
 
 {Application.register 'GDBM'
- x(src:url('http://mozart.ps.uni-sb.de/home/tools/gdbm/gdbm.ozc')
+ x(src:url('http://www.mozart-oz.org/home/tools/gdbm/gdbm.ozc')
    args:x('SP':'SP'))}
 
 and subsequently refer to module named 'GDBM' in your application

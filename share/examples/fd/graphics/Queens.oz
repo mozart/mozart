@@ -32,7 +32,7 @@ define
 
 
    %% Parameters
-   URL           = 'http://mozart.ps.uni-sb.de/home/doc/demo/applets/images/animated-queens/'
+   URL           = 'http://www.mozart-oz.org/home/doc/demo/applets/images/animated-queens/'
    WinTitle      = 'N-Queens'
    ExplorerTitle = 'Draw '#WinTitle
    MaxWidth      = 600
