@@ -40,13 +40,13 @@ int GDBM::id;
 inline Bool oz_isGdbm(OZ_Term t)
 {
   return oz_isExtension(t) &&
-    tagged2Extension(t)->getIdV()==GDBM::id;
+    oz_tagged2Extension(t)->getIdV()==GDBM::id;
 }
 
 inline GDBM* tagged2Gdbm(OZ_Term t)
 {
   Assert(oz_isGDBM(t));
-  return (GDBM*) tagged2Extension(t);
+  return (GDBM*) oz_tagged2Extension(t);
 }
 
 void GDBM::printStreamV(ostream &out,int depth = 10)
@@ -112,7 +112,7 @@ OZ_BI_define(cgdbm_open,4,1)
     return GdbmError("open",gdbm_strerror(gdbm_errno));
   else {
     GDBM* db = new GDBM(strdup(name),file);
-    OZ_RETURN(makeTaggedConst(db));
+    OZ_RETURN(oz_makeTaggedExtension(db));
   }
 } OZ_BI_end
 
