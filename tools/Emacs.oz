@@ -25,7 +25,7 @@
 
 functor
 import
-   Property.get
+   Property.{get condGet}
    System.{showInfo valueToVirtualString print}
    Error.{formatLine msg}
    OS.{getEnv stat uName getHostByName tmpnam}
@@ -273,7 +273,9 @@ body
       end
    end
 
-   GetOPI = {`Builtin` getOPICompiler 1}
+   fun {GetOPI}
+      {Property.condGet 'opi.compiler' false}
+   end
 
    CondSend = condSend(interface:
 			  proc {$ M}
