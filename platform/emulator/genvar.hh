@@ -24,7 +24,6 @@
 #endif
 
 #include "term.hh"
-#include "am.hh"
 
 //-----------------------------------------------------------------------------
 //                       Generic Constrained Variable
