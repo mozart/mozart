@@ -95,6 +95,17 @@ void ThreadsPool::scheduleThread (Thread *th) {
   }
 }
 
+
+Board * ThreadsPool::getHighestSolveDebug(void)
+{
+  for (int i = TAB_SIZE; i--; ) {
+    Board * b = queues[i].getHighestSolveDebug();
+    if (b)
+      return b;
+  }
+  return NULL;
+}
+
 #ifdef OUTLINE
 #define inline
 #include "thrspool.icc"

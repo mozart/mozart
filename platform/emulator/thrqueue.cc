@@ -64,3 +64,20 @@ Bool ThreadQueue::isScheduled (Thread *thr)
 
   return (NO);
 }
+
+Board * ThreadQueueImpl::getHighestSolveDebug(void)
+{
+  int asize = size;
+  int ahead = head;
+  int mod = maxsize - 1;
+
+  while (asize) {
+    Board * c = queue[ahead]->getBoardFast()->getHighestSolveDebug();
+    if (c)
+      return c;
+    ahead = (ahead + 1) & mod;
+    asize--;
+  }
+
+  return NULL;
+}

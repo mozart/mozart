@@ -413,7 +413,7 @@ Bool AM::isNotPreemtiveScheduling(void)
     else
       return FALSE;
   }
-  return TRUE;
+  return !isSetSFlag(StartGC);
 }
 
 inline

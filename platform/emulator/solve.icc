@@ -63,12 +63,13 @@ TaggedRef SolveActor::merge(Board *bb) {
 
   // adjoin the list of or-actors to the list in actual solve actor!
 
-  if (hasChoices()) {
-    if (bb->isWait()) {
+  if (bb->isWait()) {
+    if (hasChoices())
       WaitActor::Cast(bb->getActor())->pushChoices(cps);
-    } else if (bb->isSolve()) {
+  } else if (bb->isSolve()) {
+    if (hasChoices())
       SolveActor::Cast(bb->getActor())->pushChoices(cps);
-    }
+    threads += SolveActor::Cast(bb->getActor())->getThreads();
   }
 
   // merge local thread queue
