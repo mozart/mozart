@@ -28,7 +28,7 @@ import
    Gdbm at 'x-oz://contrib/gdbm'
 export
    'class': IndexerClass
-   MakeIndex
+   MakeSplitIndex
 prepare
    %%--** Sorting should be language-dependent!
    %%--** unsupported: &Ð &Þ &ð &þ
@@ -193,6 +193,34 @@ define
                        a(name: [&_ G] {GroupName G}))
                     SEQ({MakeHierarchy Es}))
            end})
+   end
+
+   fun {MakeSplitIndex Entries Name} Es SortedEs Groups in
+      Es = {Map Entries
+            fun {$ Ands0#EntryHTML} Ands in
+               %%--** remove any id attributes
+               Ands = {Map Ands0
+                       fun {$ X}
+                          case X of _#_ then X
+                          else {HTML.toVirtualString {HTML.clean X}}#X
+                          end
+                       end}
+               {Map Ands MakeSortKey}#Ands#EntryHTML
+            end}
+      SortedEs = {Sort Es fun {$ X Y} {KeyLess X.1 Y.1} end}
+      Groups = {Group SortedEs}
+      center(table(border: 1 cellpadding: 2
+                   tr(SEQ({Map Groups
+                           fun {$ G#_}
+                              td(a(href: [G]#'.html' {GroupName G}))
+                           end}))))#
+      {Map Groups
+       fun {$ G#Es}
+          {GroupName G}#(Name#'/'#[G]#'.html')#
+          'div'(h3('class': [margin]
+                   a(name: [&_ G] {GroupName G}))
+                SEQ({MakeHierarchy Es}))
+       end}
    end
 
    class IndexerClass

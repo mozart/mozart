@@ -33,7 +33,7 @@ import
    URL
    Chunk(getChunk processSpecs)
    %% for html-global-index
-   Indexer(makeIndex)
+   Indexer(makeSplitIndex)
    Gdbm at 'x-oz://contrib/gdbm'
    File(write)
    HTML(seq: SEQ pcdata: PCDATA toVirtualString)
@@ -188,33 +188,47 @@ define
          {OzDocToHTML.translate mono Args}
       elseof "html-stylesheets" then
          {OzDocToHTML.translate stylesheets Args}
-      elseof "html-global-index" then DB Xs HTML1 HTML2 DocType in
+      elseof "html-global-index" then
+         DB Xs Table Pages DocType Address HTML2
+      in
          DB = {Gdbm.new read(Args.'in')}
          Xs = {Gdbm.entries DB}
-         HTML1 = {Indexer.makeIndex
-                  {FoldR Xs
-                   fun {$ Prefix#(DocumentTitle#Entries) Rest}
-                      {FoldR Entries
-                       fun {$ Ands#(RURL#SectionTitle)#_ Rest}
-                          Ands#a(href: Prefix#'/'#RURL
-                                 SEQ([DocumentTitle PCDATA(', ')
-                                      SectionTitle]))|Rest
-                       end Rest}
-                   end nil}}
+         Table#Pages = {Indexer.makeSplitIndex
+                        {FoldR Xs
+                         fun {$ Prefix#(DocumentTitle#Entries) Rest}
+                            {FoldR Entries
+                             fun {$ Ands#(RURL#SectionTitle)#_ Rest}
+                                Ands#a(href: '../'#Prefix#'/'#RURL
+                                       SEQ([DocumentTitle PCDATA(', ')
+                                            SectionTitle]))|Rest
+                             end Rest}
+                         end nil} Args.'out'}
          {Gdbm.close DB}
+         DocType = ('<!DOCTYPE html PUBLIC '#
+                    '"-//W3C//DTD HTML 4.0 Transitional//EN">\n')
+         Address = address(span('class':[version]
+                                PCDATA('Version '#
+                                       {Property.get 'oz.version'}#
+                                       ' ('#{Property.get 'oz.date'}#
+                                       ')')))
          HTML2 = html(head(title(PCDATA('Global Index'))
                            link(rel: stylesheet
                                 type: 'text/css'
                                 href: {Property.get 'ozdoc.stylesheet'}))
-                      'body'(h1(PCDATA('Global Index')) HTML1 hr()
-                             address(span('class':[version]
-                                          PCDATA('Version '#
-                                                 {Property.get 'oz.version'}#
-                                                 ' ('#{Property.get 'oz.date'}#
-                                                 ')')))))
-         DocType = ('<!DOCTYPE html PUBLIC '#
-                    '"-//W3C//DTD HTML 4.0 Transitional//EN">\n')
-         {File.write DocType#{HTML.toVirtualString HTML2}#'\n' Args.'out'}
+                      'body'(h1(PCDATA('Global Index'))
+                             Table hr() Address))
+         {File.write DocType#{HTML.toVirtualString HTML2}#'\n'
+          Args.'out'#'/index.html'}
+         {ForAll Pages
+          proc {$ GroupName#Name#HTML1} HTML2 in
+             HTML2 = html(head(title(PCDATA('Global Index - ') GroupName)
+                               link(rel: stylesheet
+                                    type: 'text/css'
+                                    href: {Property.get 'ozdoc.stylesheet'}))
+                          'body'(h1(PCDATA('Global Index - ') GroupName)
+                                 Table HTML1 hr() Address))
+             {File.write DocType#{HTML.toVirtualString HTML2}#'\n' Name}
+          end}
       elseof "chunk" then
          {System.showInfo
           {Chunk.getChunk Args.'in' Args.'out'}}
