@@ -54,13 +54,14 @@ RUNFUNCTORS = \
 	$(SPSRC:%=%.ozf) \
 	$(OPSRC:%=%.ozf) \
 	$(APSRC:%=%.ozf) \
-	$(CPSRC:%=%.ozf) \
-	$(DPSRC:%=%.ozf) \
-	$(WPSRC:%=%.ozf) \
-	$(MISCSRC:%=%.ozf)
+	$(CPSRC:%=%.ozf)
 
 FUNCTORS = \
-	$(RUNFUNCTORS) Compiler.ozf 
+	$(RUNFUNCTORS) \
+	$(DPSRC:%=%.ozf) \
+	$(WPSRC:%=%.ozf) \
+	$(MISCSRC:%=%.ozf) \
+	Compiler.ozf 
 
 PEANUTS = \
 	System OS Pickle Finalize
