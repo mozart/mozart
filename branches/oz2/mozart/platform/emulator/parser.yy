@@ -26,8 +26,8 @@ static unsigned int parseVirtualString(char *str);
 
 #include "../include/config.h"
 #include "oz.h"
-
 #include "types.hh"
+#include "error.hh"
 
 typedef OZ_Term CTerm;
 
@@ -65,8 +65,10 @@ OZ_C_proc_begin(ozparser_parseFile, 3)
   if (res == PROCEED) {
     OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
     if (x == 0) {
-      if (xy_errorMessages != OZ_nil())
-	printf("%s%c", OZ_virtualStringToC(xy_errorMessages), MSG_ERROR);
+      if (!OZ_isNil(xy_errorMessages)) {
+	prefixError();	
+	printf("%s", OZ_virtualStringToC(xy_errorMessages));
+      }
       return PROCEED;
     } else
       return OZ_unify(x, xy_errorMessages);
@@ -88,8 +90,10 @@ OZ_C_proc_begin(ozparser_parseVirtualString, 3)
   if (res == PROCEED) {
     OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
     if (x == 0) {
-      if (xy_errorMessages != OZ_nil())
-	printf("%s%c", OZ_virtualStringToC(xy_errorMessages), MSG_ERROR);
+      if (!OZ_isNil(xy_errorMessages)) {
+	prefixError();	
+	printf("%s", OZ_virtualStringToC(xy_errorMessages));
+      }
       return PROCEED;
     } else
       return OZ_unify(x, xy_errorMessages);
@@ -316,6 +320,7 @@ static CTerm decls[DEPTH];
 %type <t>  phrase
 %type <t>  hashes
 %type <t>  phrase2
+%type <t>  procFlags
 %type <t>  compare
 %type <t>  fdCompare
 %type <t>  fdIn
@@ -586,10 +591,12 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 		  { $$ = $2; }
 		| '{' coord phrase phraseList '}'
 		  { $$ = newCTerm("fApply",$3,$4,$2); }
-		| proc coord '{' phrase phraseList '}' inSequence end
-		  { $$ = newCTerm("fProc",$4,$5,$7,$2); }
-		| _fun_ coord '{' phrase phraseList '}' inSequence end
-		  { $$ = newCTerm("fFun",$4,$5,$7,$2); }
+		| proc coord procFlags '{' phrase phraseList '}'
+		  inSequence end
+		  { $$ = newCTerm("fProc",$5,$6,$8,$3,$2); }
+		| _fun_ coord procFlags '{' phrase phraseList '}'
+		  inSequence end
+		  { $$ = newCTerm("fFun",$5,$6,$8,$3,$2); }
 		| class
 		  { $$ = $1; }
 		| local coord sequence _in_ sequence end
@@ -628,6 +635,12 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 		  { $$ = $1; }
 		| parserSpecification
 		  { $$ = $1; }
+		;
+
+procFlags	: /* empty */
+		  { $$ = nilAtom; }
+		| atom procFlags
+		  { $$ = consList($1,$2); }
 		;
 
 compare		: COMPARE
@@ -1386,9 +1399,13 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
     return;
   }
 
-  append("%**     in file \"");
-  append(file);
-  append("\", line ");
+  append("%**     in ");
+  if (strcmp(file,"nofile")) {
+    append("file \"");
+    append(file);
+    append("\", ");
+  }
+  append("line ");
   append(line);
   append(", column ");
   append(offset);
