@@ -66,6 +66,9 @@ typedef void *OZ_Arity;
 
 typedef OZ_Return _FUNDECL((*OZ_CFun),(int, OZ_Term *));
 
+typedef int _FUNDECL((*OZ_IOHandler),(int,OZ_Term));
+
+
 
 /* for tobias */
 typedef int OZ_Boolean;
@@ -232,11 +235,15 @@ extern OZ_Term _FUNDECL(OZ_newChunk,(OZ_Term));
 extern OZ_Term _FUNDECL(OZ_newCell,(OZ_Term));
 /* exchangeCell, deepFeed */
 
+/* port */
+extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
+
 /* name */
 extern OZ_Term OZ_newName ();
 
 /* print warning */
 extern void _FUNDECL(OZ_warning,(char * ...));
+extern void _FUNDECL(OZ_fail,(char * ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
 char * _FUNDECL(OZ_unixError,(int err));
@@ -262,6 +269,12 @@ extern OZ_Return _FUNDECL(OZ_readSelect,(int, OZ_Term, OZ_Term));
 extern OZ_Return _FUNDECL(OZ_writeSelect,(int, OZ_Term, OZ_Term));
 extern OZ_Return _FUNDECL(OZ_acceptSelect,(int, OZ_Term, OZ_Term));
 extern void      _FUNDECL(OZ_deSelect,(int));
+
+extern void      _FUNDECL(OZ_registerReadHandler,
+			  (int fd,OZ_IOHandler fun,OZ_Term val));
+
+extern void      _FUNDECL(OZ_registerAcceptHandler,
+			  (int fd,OZ_IOHandler fun,OZ_Term val));
 
 /* garbage collection */
 extern int _FUNDECL(OZ_protect,(OZ_Term *));
