@@ -121,6 +121,10 @@ case "$cmd" in
 	$OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $@ &
    ;;
 
+   ozdemo) 
+	exec $OZHOME/demo/rundemo $@
+   ;;
+
    ozemacs) 
 	exec $OZEMACS $@
    ;;
