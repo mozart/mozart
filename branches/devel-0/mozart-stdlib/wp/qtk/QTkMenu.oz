@@ -84,7 +84,6 @@ define
 			   borderwidth:pixel
 			   cursor:cursor
 			   disabledforeground:color
-			   font:font
 			   foreground:color fg:color
 			   highlightbackground:color
 			   highlightcolor:color
@@ -108,9 +107,7 @@ define
 		    uninit:r
 		    unset:GlobalUnsetType
 		    unget:{Record.adjoin GlobalUngetType
-			   r(font:unit
-			     image:unit)
-			  }
+			   r(image:unit)}
 			  )
 	 Act
 	 

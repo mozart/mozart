@@ -30,6 +30,7 @@ import
    QTkDevel(tkInit:             TkInit
 	    init:               Init
 	    mapLabelToObject:   MapLabelToObject
+	    grid:               Grid
 	    builder:            Builder
 %	    subtracts:          Subtracts
 	    execTk:             ExecTk
@@ -78,8 +79,7 @@ define
 			     container:unit
 			     visual:unit)}
 		    unget:{Record.adjoin GlobalUngetType
-			   r(bitmap:unit
-			     font:unit)})
+			   r(bitmap:unit)})
       attr Child Pack
 	 
       meth !Init(...)=M
@@ -115,7 +115,7 @@ define
 	       elseif {Label B}==empty then
 		  NC=empty
 	       else
-		  NC={self.toplevel.Builder MapLabelToObject({Record.adjoinAt B parent self} $)}
+		  NC={self.parent.Builder MapLabelToObject({Record.adjoinAt B parent self} $)}
 %		  if {HasFeature B feature} then
 %		     try
 %			self.(B.feature)=NC
@@ -133,13 +133,16 @@ define
 	       end
 	       if {IsFree NC} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
 	       if NC\=empty then {ForAll @Pack proc{$ R} if R.obj==NC then P=R end end} end
-	       if @Child\=empty then {Tk.send grid(forget @Child)} end
+	       if @Child\=empty then
+		  {self.parent.Builder Grid(forget @Child)}
+	       end
 	       if NC\=empty then
 		  if {IsFree P} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
-		  {ExecTk unit grid(NC row:0 column:0
-				    sticky:P.sticky
-				    padx:P.padx
-				    pady:P.pady)}
+		  {self.parent.Builder Grid(configure
+					    NC row:0 column:0
+					    sticky:P.sticky
+					    padx:P.padx
+					    pady:P.pady)}
 	       end
 	       Child<-NC
 	    end

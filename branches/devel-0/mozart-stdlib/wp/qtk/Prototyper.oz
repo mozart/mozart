@@ -14,7 +14,7 @@
 functor
 
 import
-   QTk %at 'x-oz://system/wp/QTk.ozf'
+   QTk at 'x-oz://system/wp/QTk.ozf'
    Compiler Open OS System Application Error
 require Open OS
 prepare

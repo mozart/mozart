@@ -93,7 +93,6 @@ define
 			     bitmap:unit
 			     image:unit
 			     selectimage:unit
-			     font:unit
 			     key:unit
 			     group:unit)}
 		   )

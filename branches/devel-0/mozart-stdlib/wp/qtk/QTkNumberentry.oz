@@ -98,8 +98,7 @@ define
 		    unget:{Record.adjoin GlobalUngetType
 			   r(init:unit
 			     min:unit
-			     max:unit
-			     font:unit)}
+			     max:unit)}
 		   )
 	 action
 	 Entry Inc Dec EReturn

@@ -128,7 +128,6 @@ define
 			     tdscrollbar:unit
 			     scrollwidth:unit
 			     init:unit
-			     font:unit
 			     selectmode:unit)}
 		   )
 	 action

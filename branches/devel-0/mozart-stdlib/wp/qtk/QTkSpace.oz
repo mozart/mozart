@@ -81,7 +81,7 @@ define
 				 highlightthickness:0
 				 width:if self.Horiz then 1 else W end
 				 height:if self.Horiz then W else 1 end)}
-	       {ExecTk unit update}
+%	       {ExecTk unit update}
 	       {self DrawLine}
 	    end
 	 end

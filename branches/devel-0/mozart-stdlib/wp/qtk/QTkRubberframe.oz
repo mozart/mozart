@@ -249,7 +249,7 @@ define
 	       self.Children={List.make {Length B}+{Length B}-1}
 	       {List.forAllInd B
 		proc{$ I Desc}
-		   Obj={self.toplevel.Builder MapLabelToObject({Record.adjoinAt Desc parent self} $)}
+		   Obj={self.parent.Builder MapLabelToObject({Record.adjoinAt Desc parent self} $)}
 		in
 		   {List.nth self.Children (I-1)*2+1}=Obj
 		end}

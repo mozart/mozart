@@ -26,25 +26,44 @@
 functor
 
 import
-   QTkDevel(execTk:    ExecTk
-	    init:      Init
-	    returnTk:  ReturnTk
-	    subtracts: Subtracts
-	    assert:    Assert
-	    setGet:    SetGet)
+   QTkDevel(execTk:      ExecTk
+	    splitParams: SplitParams
+	    init:        Init
+	    returnTk:    ReturnTk
+	    subtracts:   Subtracts
+	    assert:      Assert
+	    setGet:      SetGet)
    Pickle
    Open
    Tk
    Module
+   System(show:Show)
    
 export 
    NewImage
+   GetImageId
+   IsImage
    NewImageLibrary
    LoadImageLibrary
    SaveImageLibrary
    BuildImageLibrary
+   GetImageFromTclId
+   
 define
 
+   Images={WeakDictionary.new _}
+   {WeakDictionary.close Images}
+   
+   proc{Add Ob}
+      {WeakDictionary.put Images {VirtualString.toAtom {Tk.getTclName Ob}} Ob}
+   end
+
+   fun{GetImageFromTclId Id}
+      {WeakDictionary.condGet Images {VirtualString.toAtom Id} unit}
+   end
+   
+   ToByteString=VirtualString.toByteString
+   
    CArray={NewArray 0 63 0}
    {List.forAllInd "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     proc{$ I C}
@@ -97,7 +116,7 @@ define
 	    end
 	 end
       in
-	 32|32|32|32|{Loop Dump 0}
+	 {ToByteString 32|32|32|32|{Loop Dump 0}}
       end
    end
 
@@ -106,7 +125,7 @@ define
    in
       Handler={New Open.file init(url:File
 				  flags:[read])}
-      Dump={Handler read(list:$ size:all)}
+      Dump={ToByteString {Handler read(list:$ size:all)}}
       {Handler close}
       Dump
    end
@@ -120,13 +139,13 @@ define
 	     {Record.subtract M file}}
 	 elseif {HasFeature M url} then
 	    {Record.adjoin r(name:{VirtualString.toAtom M.url}
-			     data:if M.type==photo then {Encode M.file}
-				  else {Insert M.file} end
+			     data:if M.type==photo then {Encode M.url}
+				  else {Insert M.url} end
 			    )
 	     {Record.subtract M url}}
-	 elseif {HasFeature M name}==false then
-	    {Exception.raiseError qtk(missingParameter name image M)}
-	    nil
+% 	 elseif {HasFeature M name}==false then
+% 	    {Exception.raiseError qtk(missingParameter name image M)}
+% 	    nil
 	 else
 	    M
 	 end
@@ -139,7 +158,7 @@ define
 	  maskdata {Encode M.maskurl}}
       else R1 end
    end
-   
+
    class QTkImage
 
       from Tk.image SetGet
@@ -163,13 +182,31 @@ define
 			  width:natural)
 		    uninit:r
 		    unset:r
-		    unget:r
+		    unget:r(background:unit
+			    file:unit
+			    url:unit
+			    foreground:unit
+			    maskfile:unit
+			    maskurl:unit
+			    channel:unit
+			    format:unit
+			    gamma:unit
+			    palette:unit)
 		   )
+	 Data
+	 MaskData
+	 Type
 			  
-      meth !Init(...)=M
+      meth !Init(...)=M1
 	 lock
-	    {Assert self.widgetType self.typeInfo M}
-	    Tk.image,{Record.adjoin M tkInit}
+	    {Assert self.widgetType self.typeInfo M1}
+	    M={EncodeRec M1}
+	 in
+	    self.Data={CondSelect M data nil}
+	    self.MaskData={CondSelect M maskdata nil}
+	    self.Type=M.type
+	    Tk.image,{Record.adjoin {Record.subtract M name} tkInit}
+	    {Add self}
 	 end
       end
 
@@ -188,8 +225,20 @@ define
       
       meth get(...)=M
 	 lock
+	    A B
+	 in
 	    {Assert self.widgetType self.typeInfo M}
-	    SetGet,M
+	    {Record.forAllInd M
+	     proc{$ I V}
+		V=case I
+		  of data then self.Data
+		  [] maskdata then self.MaskData
+		  [] type then self.Type
+		  [] height then {Tk.returnInt image(height self)}
+		  [] width then {Tk.returnInt image(widht self)}
+		  end
+		{Wait V}
+	     end}
 	 end
       end
    
@@ -232,6 +281,14 @@ define
 
    fun{NewImage R}
       {New QTkImage {Record.adjoin R Init(type:{Label R})}}
+   end
+
+   fun{GetImageId Obj}
+      {VirtualString.toAtom {Tk.getTclName Obj}}
+   end
+
+   fun{IsImage Obj}
+      {CondSelect Obj widgetType unit}==image
    end
 
    class QTkImageLibrary

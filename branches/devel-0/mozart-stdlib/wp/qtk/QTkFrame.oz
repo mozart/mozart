@@ -68,7 +68,7 @@ define
 		     [] empty then skip
 		     [] continue then skip
 		     else
-			O={self.toplevel.Builder MapLabelToObject(R $)}
+			O={self.parent.Builder MapLabelToObject(R $)}
 		     end
 		     if {IsFree O} then Re
 		     else

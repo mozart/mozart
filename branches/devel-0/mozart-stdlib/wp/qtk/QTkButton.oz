@@ -71,7 +71,7 @@ define
 			   relief:relief
 			   takefocus:boolean
 			   text:vs
-			   underline:natural
+			   underline:integer
 			   wraplength:pixel
 			   ipadx:pixel
 			   ipady:pixel
@@ -91,7 +91,6 @@ define
 			   r(init:unit
 			     bitmap:bitmap
 			     image:image
-			     font:font
 			     return:unit
 			     key:unit)}
 		   )
