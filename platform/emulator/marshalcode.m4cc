@@ -351,8 +351,8 @@ ProgramCounter unmarshalNum(ProgramCounter PC, MsgBuffer *bs)
 inline
 ProgramCounter unmarshalReg(ProgramCounter PC, MsgBuffer *bs)
 {
-  int index = unmarshalNumber(bs);
-  return PC ? CodeArea::writeRegIndex(index,PC) : 0;
+  int idx = unmarshalNumber(bs);
+  return PC ? CodeArea::writeRegIndex(idx,PC) : 0;
 }
 
 inline
