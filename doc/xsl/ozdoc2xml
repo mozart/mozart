@@ -1,0 +1,76 @@
+#! /usr/bin/env perl
+
+%attr = ();
+
+sub encode {
+    my $txt = shift;
+    $txt =~ s/([<>&])/&encodeChar($1)/ge;
+    return $txt;
+}
+
+sub encodeChar {
+    my $c = shift;
+    if    ($c eq '<') { '&lt;';  }
+    elsif ($c eq '>') { '&gt;';  }
+    elsif ($c eq '&') { '&amp;'; }
+    else { die "bad encodeChar($c)"; }
+}
+
+sub decode {
+    my $txt = shift;
+    $txt =~ s/\\(\\|n|[0-7][0-7][0-7])/&decodeChar($1)/ge;
+    return $txt;
+}
+
+sub decodeChar {
+    my $c = shift;
+    if    ($c eq '\\') { '\\'; }
+    elsif ($c eq 'n' ) { "\n"; }
+    else { chr(oct($c)); }
+}
+
+%empty = (
+          'AUTHOR.EXTERN'       => 1,
+          'META'                => 1,
+          'BIBTEX.EXTERN'       => 1,
+          'MATH.EXTERN'         => 1,
+          'PICTURE.EXTERN'      => 1,
+          'CODE.EXTERN'         => 1,
+          'PTR.EXTERN'          => 1
+          );
+
+while (<>) {
+    if (/^\((.+)$/) {
+        my $tag = $1;
+        print "<$tag";
+        while (($key,$val) = each %attr) {
+            $val=&encode($val);
+            print " $key=\"$val\"";
+        }
+        %attr=();
+        if ($empty{$tag}) { print "/>"; }
+        else { print ">"; }
+    }
+    elsif (/^\)(.+)$/) {
+        print "</$1>" unless $empty{$1};
+        %attr=();
+    }
+    elsif (/^A(\S+) IMPLIED/) {}
+    elsif (/^A(\S+) (\S+) /) {
+        my $key = $1;
+        my $val = $'; chop($val); $val=&decode($val);
+        $attr{$key} = $val;
+    }
+    elsif (/^-/) {
+        my $txt = $'; chop($txt);
+        print &encode(&decode($txt));
+    }
+    elsif (/^\?/) {
+        my $txt = $'; chop($txt);
+        print "<?",&decode($txt),"?>";
+    }
+    elsif (/^s/) {}
+    elsif (/^N/) {}
+    elsif (/^C/) {}
+    else { die "unexpected output from nsgmls: $_"; }
+}
