@@ -292,6 +292,11 @@ QTKDEPS2        = $(QTKDEPS1)   \
 QTKDEPS3        = $(QTKDEPS2)   \
         QTkDropdownlistbox.ozf QTkNumberentry.ozf
 
+QTKCLEAN        = $(QTKDEPS3) QTkBare.ozf QTkDropdownbutton_bitmap.ozf \
+        QTkDropdownbutton_gen_bitmap.ozf QTkImageLibBoot.ozf \
+        QTkNumberentry_bitmap.ozf QTkNumberentry_gen_bitmap.ozf \
+        mini-dec.xbm mini-down.xbm mini-inc.xbm
+
 
 QTkBare.ozf:qtk/QTk.oz qtk/Frame.oz qtk/QTkClipboard.oz qtk/QTkFont.oz qtk/QTkDialogbox.oz
         $(COMPILE) --define=FULLLOAD $< -o $@
@@ -490,7 +495,7 @@ CLEANFILES = \
         CpSupport.ozf ParWorkerTmp.ozf ParLoggingTmp.ozf ParSearchTmp.ozf \
         $(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
         $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc \
-        gtkclasses.oz gtkexports.oz
+        gtkclasses.oz gtkexports.oz $(QTKCLEAN)
 
 clean:
         -rm -f $(CLEANFILES)
