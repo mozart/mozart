@@ -329,7 +329,7 @@ void AM::suspendEngine()
       handleUser();
     }
 
-    if (isSetSFlag(IOReady) || !compStream->bufEmpty()) {
+    if (isSetSFlag(IOReady) || (compStream && !compStream->bufEmpty())) {
       handleIO();
     }
 
@@ -337,11 +337,11 @@ void AM::suspendEngine()
       break;
     }
 
-    if (isStandalone() && !compStream->cseof()) {
+    if (compStream && isStandalone() && !compStream->cseof()) {
       loadQuery(compStream);
       continue;
     }
-    Assert(compStream->bufEmpty());
+    Assert(!compStream || compStream->bufEmpty());
 
     int ticksleft = osBlockSelect(userCounter);
     setSFlag(IOReady);

@@ -342,5 +342,7 @@ GName *newGName(PrTabEntry *);
 
 PrTabEntry *findCodeGName(GName *);
 
+int loadURL(char *url, OZ_Term &out);
+
 /* __PERDIOHH */
 #endif
