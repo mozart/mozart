@@ -3,10 +3,6 @@ export
    Run
 import
    Message(slurp:Slurp parse:Parse)
-   FileUtils(fileTree      : FileTree
-	     fullName      : FullName
-	     expand        : Expand
-	     addToPath     : AddToPath)
    System(showInfo:Print)
    Global(fileMftPkl     : FILEMFTPKL
 	  fileMftTxt     : FILEMFTTXT
@@ -17,34 +13,30 @@ import
    Archive(makeFrom)
    OS(unlink)
    Application(exit)
+   Path(make) at 'x-ozlib://duchier/sp/Path.ozf'
 define   
    proc {Create In Out Inf}
       TXT = {Slurp Inf}
       O   = {Parse TXT}
       {O check_keys([id])}	% id is mandatory
-      FT  = {FileTree if In=="" then "." else In end}
-      Files
-      local
-	 L={Length {VirtualString.toString FT.path}}+1
-	 fun {Loop R}
-	    if R.type==dir then
-	       {List.map R.entries Loop}
-	    else
-	       {String.toAtom {List.drop {VirtualString.toString R.path} L}}
-	    end
-	 end
-      in
-	 Files={List.subtract {List.subtract {List.flatten {Loop FT}} FILEMFTPKL} FILEMFTTXT}
-	 {ForAll Files Print}
-      end
+      IN  = {{{{Path.make if In=="" then "." else In end}
+	       expand($)} toBase($)} dirname($)}
+      N   = {Length {IN toString($)}}+1
+      Files =
+      {Filter {Map {IN leaves($)}
+	       fun {$ F}
+		  {String.toAtom {List.drop {{Path.make F} toString($)} N}}
+	       end}
+       fun {$ F} F\=FILEMFTPKL andthen F\=FILEMFTTXT end}
+      {ForAll Files Print}
       Info={Record.adjoinAt
 	    {Record.map
 	     {List.toRecord package {O entries($)}}
 	     List.last}
 	    filelist Files}
       F
-      MFTPKL={Expand {FullName FILEMFTPKL In}}
-      MFTTXT={Expand {FullName FILEMFTTXT In}}
+      MFTPKL={{{IN resolve(FILEMFTPKL $)} expand($)} toString($)}
+      MFTTXT={{{IN resolve(FILEMFTTXT $)} expand($)} toString($)}
    in
       try
 	 {Pickle.save Info MFTPKL}
@@ -63,7 +55,11 @@ define
    %%
    proc {Run}
       {Create {CondSelect Args 'prefix' ""} Args.'out'
-       {CondSelect Args 'in' {AddToPath {CondSelect Args 'prefix' "."} FILEPKGDFT}}}
+       case {CondSelect Args 'in' unit}
+       of unit then
+	  {{{{Path.make {CondSelect Args 'prefix' "."}}
+	      toBase($)} resolve(FILEPKGDFT $)} toString($)}
+       [] P then P end}
       {Application.exit 0}
    end
 end
