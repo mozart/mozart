@@ -184,7 +184,8 @@ in
       meth printException(X)
 	 Status
       in
-	 case {HasFeature X debug} andthen {HasFeature X.debug stack} then
+	 if {IsDet X} andthen {HasFeature X debug}
+	    andthen {IsDet X.debug} andthen {HasFeature X.debug stack} then
 	    Stack = X.debug.stack
 	    (F#L)#C#Time = case Stack of Frame|_ then
 			      case X of error(kernel(noElse F L ...) ...) then
