@@ -104,6 +104,9 @@ define
      float(is: IsFloat
            fromOz: fun {$ F} F end
            toOz: fun {$ X} X end)
+     bool(is: IsBool
+          fromOz: fun {$ B} B end
+          toOz: fun {$ X} X end)
      boolean(is: IsBool
              fromOz: fun {$ B} if B then 1 else 0 end end
              toOz: fun {$ X} X \= 0 end)
