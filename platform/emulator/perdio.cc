@@ -3793,6 +3793,7 @@ void msgReceived(MsgBuffer* bs)
     }
 
   case M_INIT_VS:
+#ifdef VIRTUALSITES
     {
       Site *ms;
       VirtualInfo *vi;
@@ -3804,19 +3805,23 @@ void msgReceived(MsgBuffer* bs)
       unmarshal_M_INIT_VS(bs, ms);
 
       //
-      Assert(!mySite->getVirtualInfo());
+      Assert(!mySite->hasVirtualInfo());
       // The 'mySite' and 'ms' share the same master (which might be
       // 'ms' itself), so virtual infos differ in the mailbox key
       // only, which is to be set later:
-      vi = ms->getVirtualInfo();
-      mySite->getVirtualInfo()->setMailboxKey((key_t) 0);
+      vi = new VirtualInfo(ms->getVirtualInfo());
       mySite->makeMySiteVirtual(vi);
 
       //
       // Change the type of 'ms': this is a virtual site (per
       // definition);
-      ms->setVirtual();
+      ms->makeActiveVirtual();
+      break;
     }
+#else
+    error("siteReceive: 'M_INIT_VS' received without 'VIRTUALSITES'?");
+    break;
+#endif
 
   default:
     error("siteReceive: unknown message %d\n",mt);

@@ -32,11 +32,13 @@
 
 #include "vs_comm.hh"
 
+#ifdef VIRTUALSITES
+
 //
 void VirtualSite::connect()
 {
   //
-  if (mboxMgr == (VSMailboxManager *) 0) {
+  if (mboxMgr == (VSMailboxManagerImported *) 0) {
     if (isSetVSFlag(VS_PENDING_UNMAP_MBOX)) {
       clearVSFlag(VS_PENDING_UNMAP_MBOX);
     } else {
@@ -45,7 +47,7 @@ void VirtualSite::connect()
       // into our address space (that is, a "write" connection is
       // established;
       key_t mboxKey = site->getVirtualInfo()->getMailboxKey();
-      mboxMgr = new VSMailboxManager(mboxKey);
+      mboxMgr = new VSMailboxManagerImported(mboxKey);
     }
   }
 }
@@ -56,7 +58,7 @@ VirtualSite::VirtualSite(Site *s,
                          VSFreeMessagePool *fmpIn,
                          VSSiteQueue *sqIn)
   : site(s), status(SITE_OK), vsStatus(0), fmp(fmpIn), sq(sqIn),
-    mboxMgr((VSMailboxManager *) 0)
+    mboxMgr((VSMailboxManagerImported *) 0)
 {
   connect();
 }
@@ -70,7 +72,8 @@ void VirtualSite::disconnect()
   } else {
     mboxMgr->unmap();
     delete mboxMgr;
-    mboxMgr = (VSMailboxManager *) 0;
+    clearVSFlag(VS_PENDING_UNMAP_MBOX);
+    mboxMgr = (VSMailboxManagerImported *) 0;
   }
 }
 
@@ -93,22 +96,23 @@ void VirtualSite::drop()
   //
   // should result in unmapping:
   disconnect();
-  Assert(mboxMgr == (VSMailboxManager *) 0);
+  Assert(mboxMgr == (VSMailboxManagerImported *) 0);
 
   //
   // 'SITE_PERM' is redundant - used for consistency checks only;
   status = SITE_PERM;
-  vsStatus = 0;
+  Assert(!isSetVSFlag(VS_PENDING_UNMAP_MBOX));
 }
 
 //
 // The message type, store site and store index parameters
 // are opaque data (just stored);
-int VirtualSite::sendTo(VSMsgBuffer *mb, MessageType mt,
-                        Site *storeSite, int storeIndex)
+int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
+                        Site *storeSite, int storeIndex,
+                        FreeListDataManager<VSMsgBufferOwned> *freeMBs)
 {
   //
-  // 'mb' must be indeed an object of the 'VSMsgBuffer' type;
+  // 'mb' must be indeed an object of the 'VSMsgBufferOwned' type;
   Assert(mb->getSite()->virtualComm());
 
   //
@@ -121,17 +125,15 @@ int VirtualSite::sendTo(VSMsgBuffer *mb, MessageType mt,
     // First, let's try to deliver it *now*.
     // If it fails, a message (job) for delayed delivery is created;
     Assert(mboxMgr);            // must be already connected;
-    VSMailbox *mbox = mboxMgr->getMailbox();
+    VSMailboxImported *mbox = mboxMgr->getMailbox();
     VirtualInfo *myVI = mySite->getVirtualInfo();
 
     //
     if (!mbox->enqueue(mb->getSHMKey(), mb->getFirstChunk())) {
       // Failed to enqueue it inline - then create a job which will
       // try to do that later;
-      VSMessage *m = fmp->allocate();
-#ifdef VIRTUALSITES
-      m->VSMessage::VSMessage(mb, mt, storeSite, storeIndex);
-#endif
+      VSMessage *voidM = fmp->allocate();
+      VSMessage *m = new (voidM) VSMessage(mb, mt, storeSite, storeIndex);
 
       //
       // These queues are checked and processed on regular intervals
@@ -140,6 +142,10 @@ int VirtualSite::sendTo(VSMsgBuffer *mb, MessageType mt,
       sq->enqueue(this);
 
       // Note that there is no 'TEMP_NOT_SENT' now;
+    } else {
+      mb->passChunks();
+      mb->cleanup();
+      freeMBs->dispose(mb);
     }
 
     //
@@ -151,7 +157,8 @@ int VirtualSite::sendTo(VSMsgBuffer *mb, MessageType mt,
 //
 // ... retry to send it with (it takes un unsent message, compared to
 // 'sendTo()');
-int VirtualSite::tryToSendToAgain(VSMessage *vsm)
+int VirtualSite::tryToSendToAgain(VSMessage *vsm,
+                                  FreeListDataManager<VSMsgBufferOwned> *freeMBs)
 {
   //
   //
@@ -167,13 +174,16 @@ int VirtualSite::tryToSendToAgain(VSMessage *vsm)
     //
     // First, let's try to deliver it *now*.
     // If it fails, a message (job) for delayed delivery is created;
-    VSMsgBuffer *mb = vsm->getMsgBuffer();
-    VSMailbox *mbox = mboxMgr->getMailbox();
+    VSMsgBufferOwned *mb = vsm->getMsgBuffer();
+    VSMailboxImported *mbox = mboxMgr->getMailbox();
     VirtualInfo *myVI = mySite->getVirtualInfo();
 
     //
     if (mbox->enqueue(mb->getSHMKey(), mb->getFirstChunk())) {
       fmp->dispose(vsm);
+      mb->passChunks();
+      mb->cleanup();
+      freeMBs->dispose(mb);
     } else {
       // Failed to enqueue it inline - then queue up the message again;
       enqueue(vsm);
@@ -191,9 +201,19 @@ int VirtualSite::tryToSendToAgain(VSMessage *vsm)
 // buffer;
 void unmarshalUselessVirtualInfo(MsgBuffer *mb)
 {
-  int size =
-    sizeof(unsigned int) + sizeof(unsigned short) +
-    sizeof(unsigned int) + sizeof(unsigned int) + sizeof(unsigned int);
-  for (; size > 0; size--)
-    (void) mb->get();
+  Assert(sizeof(ip_address) <= sizeof(unsigned int));
+  Assert(sizeof(port_t) <= sizeof(unsigned short));
+  Assert(sizeof(time_t) <= sizeof(unsigned int));
+  Assert(sizeof(int) <= sizeof(unsigned int));
+  Assert(sizeof(key_t) <= sizeof(unsigned int));
+
+  //
+  (void) unmarshalNumber(mb);
+  (void) unmarshalShort(mb);
+  (void) unmarshalNumber(mb);
+  (void) unmarshalNumber(mb);
+  //
+  (void) unmarshalNumber(mb);
 }
+
+#endif // VIRTUALSITES

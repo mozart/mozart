@@ -17,78 +17,142 @@
 
 #include "vs_mailbox.hh"
 
+#ifdef VIRTUALSITES
+
+#include <errno.h>
+#include <sys/stat.h>
+
 //
 // defined in vs_msgbuffer.cc;
 key_t vsTypeToKey(int type);
 
 //
-VSMailboxManager::VSMailboxManager(long memSizeIn)
-  : memSize(memSizeIn)
+VSMailboxManagerOwned::VSMailboxManagerOwned(key_t shmkeyIn)
 {
-#ifdef VIRTUALSITES
-  int msgsNum = (memSize - sizeof(VSMailbox))/sizeof(VSMailboxMsg);
-  // There must be a place for at least one message;
+  //
+  shmkey = shmkeyIn;
+  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
+    error("Virtual Sites: failed to get the shared memory page");
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
+    error("Virtual Sites:: failed to attach the shared-memory page");
+
+  //
+  // We cannot mark it for destruction right here, since then it
+  // cannot be accessed by any other process:
+  // markDestroy();
+
+  //
+  mbox = (VSMailboxOwned *) mem;
+  mbox->init(osgetpid());
+  //
+  memSize = mbox->getMemSize();
+}
+
+//
+VSMailboxManagerImported::VSMailboxManagerImported(key_t shmkeyIn)
+{
+  //
+  shmkey = shmkeyIn;
+  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
+    error("Virtual Sites: failed to get the shared memory page");
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
+    error("Virtual Sites:: failed to attach the shared-memory page");
+
+  //
+  mbox = (VSMailboxImported *) mem;
+  mbox->init();
+  //
+  memSize = mbox->getMemSize();
+}
+
+//
+VSMailboxManagerCreated::VSMailboxManagerCreated(int memSizeIn)
+{
+  memSize = memSizeIn;
+  int restSize = memSize - sizeof(VSMailbox);
+  // add padding:
+  restSize = (restSize / sizeof(VSMailboxMsg)) * sizeof(VSMailboxMsg);
+  // one msg is allocated statically:
+  int msgsNum = restSize / sizeof(VSMailboxMsg) + 1;
+  // There must be place for at least one message;
   Assert(msgsNum);
 
   //
   shmkey = vsTypeToKey(VS_MAILBOX_KEY);
-  if ((shmid = shmget(shmkey, memSizeIn, IPC_CREAT)) < 0)
+  if ((int) (shmid = shmget(shmkey, memSizeIn,
+                            (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
     error("Virtual Sites: failed to allocate a shared memory page");
-  if ((mem = shmat(shmkey, (char *) 0, 0)) < 0)
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
     error("Virtual Sites:: failed to attach a shared-memory page");
 
   //
-  mbox = (VSMailbox *) mem;
-  mbox->VSMailbox::VSMailbox(shmkey, memSize, msgsNum);
-  // Note that the mailbox is not yet ready - 'virtual info' is missing;
-#endif
+  mbox = (VSMailboxCreated *) mem;
+  mbox->init(memSize, msgsNum);
 }
 
-#ifdef VIRTUALSITES
 //
-VSMailboxManager::VSMailboxManager(key_t shmkeyIn)
-  : shmkey(shmkeyIn)
+void VSMailboxManagerOwned::unmap()
 {
-  //
-  if ((shmid = shmget(shmkey, /* size */ 0, /* flags */0)) < 0)
-    error("Virtual Sites: failed to get the shared memory page");
-  if ((mem = shmat(shmkey, (char *) 0, 0)) < 0)
-    error("Virtual Sites:: failed to attach the shared-memory page");
-
-  //
-  mbox = (VSMailbox *) mem;
-  mbox->VSMailbox::VSMailbox();
-  //
-  memSize = mbox->getMemSize();
-}
-#endif
-
-//
-void VSMailboxManager::unmap()
-{
-#ifdef VIRTUALSITES
   if (shmdt((char *) mem) < 0) {
     error("Virtual Sites: can't detach the shared memory.");
   }
-  DebugCode(mbox = (VSMailbox *) 0);
+  DebugCode(mbox = (VSMailboxOwned *) 0);
   DebugCode(mem = (void *) 0);
-#endif
+  DebugCode(memSize = -1);
 }
 
 //
-void VSMailboxManager::destroy()
+void VSMailboxManagerImported::unmap()
 {
-#ifdef VIRTUALSITES
-  unmap();
+  if (shmdt((char *) mem) < 0) {
+    error("Virtual Sites: can't detach the shared memory.");
+  }
+  DebugCode(mbox = (VSMailboxImported *) 0);
+  DebugCode(mem = (void *) 0);
+  DebugCode(memSize = -1);
+}
 
+//
+void VSMailboxManagerCreated::unmap()
+{
+  if (shmdt((char *) mem) < 0) {
+    error("Virtual Sites: can't detach the shared memory.");
+  }
+  DebugCode(mbox = (VSMailboxCreated *) 0);
+  DebugCode(mem = (void *) 0);
+  DebugCode(memSize = -1);
+}
+
+//
+void VSMailboxManagerOwned::markDestroy()
+{
   //
   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
-    error("Virtual Sites: cannot remove the shared memory");
+    if (errno != EIDRM)
+      error("Virtual Sites: cannot mark the shared memory for destroying");
   }
+}
+
+//
+void VSMailboxManagerOwned::destroy()
+{
+  markDestroy();
+  unmap();
   DebugCode(shmid = 0);
   DebugCode(shmkey = (key_t) 0);
-  DebugCode(memSize = -1);
-#endif
+}
+
+//
+//
+void markDestroy(key_t shmkey)
+{
+  //
+  int shmid;
+
+  //
+  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
+    return;                     // already destroyed;
+  (void) shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0);
 }
 
 //
@@ -110,7 +174,7 @@ unsigned int VSMailboxRegister::hash(key_t key)
 }
 
 //
-VSMailboxManager* VSMailboxRegister::find(key_t key)
+VSMailboxManagerImported* VSMailboxRegister::find(key_t key)
 {
   int hvalue = hash(key);
   GenHashNode *aux = htFindFirst(hvalue);
@@ -120,9 +184,9 @@ VSMailboxManager* VSMailboxRegister::find(key_t key)
 
     //
     if (key == auxKey) {
-      VSMailboxManager *mailboxManager;
+      VSMailboxManagerImported *mailboxManager;
       GenCast(aux->getEntry(), GenHashEntry*,
-              mailboxManager, VSMailboxManager*);
+              mailboxManager, VSMailboxManagerImported*);
       return (mailboxManager);
     }
 
@@ -131,11 +195,11 @@ VSMailboxManager* VSMailboxRegister::find(key_t key)
   }
 
   //
-  return ((VSMailboxManager *) 0);
+  return ((VSMailboxManagerImported *) 0);
 }
 
 //
-void VSMailboxRegister::add(key_t key, VSMailboxManager *pool)
+void VSMailboxRegister::add(key_t key, VSMailboxManagerImported *pool)
 {
   GenHashBaseKey* ghn_bk;
   GenHashEntry* ghn_e;
@@ -143,7 +207,9 @@ void VSMailboxRegister::add(key_t key, VSMailboxManager *pool)
 
   //
   GenCast(key, key_t, ghn_bk, GenHashBaseKey*);
-  GenCast(pool, VSMailboxManager*, ghn_e, GenHashEntry*);
+  GenCast(pool, VSMailboxManagerImported*, ghn_e, GenHashEntry*);
   //
   htAdd(hvalue, ghn_bk, ghn_e);
 }
+
+#endif // VIRTUALSITES

@@ -30,25 +30,29 @@
 #pragma interface
 #endif
 
-#include <sys/types.h>
+#include "base.hh"
+
 #ifdef VIRTUALSITES
+
+#include "genhashtbl.hh"
+#include "msgbuffer.hh"
+
+#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
-#else
-#define key_t int
-#endif
 #include <errno.h>
-
-#include "base.hh"
-#include "genhashtbl.hh"
-#include "msgbuffer.hh"
 
 //
 // IDs of IPC keys used for different things (4 bits);
 #define VS_KEYTYPE_SIZE      4
 #define VS_MSGBUFFER_KEY     0x1
 #define VS_WAKEUPSEM_KEY     0x2
+//
+#define VS_SEQ_SIZE          12
+// altogether - 32 bits, so sizeof(key_t) >= sizeof(int32)
+#define VS_PID_SIZE          16
+#define VS_PID_MASK          0xffff
 
 //
 // Pieces of memory composing a 'VSMsgBuffer'.
@@ -56,89 +60,178 @@
 // outgoing messages;
 // They are designed to fit into a 'VS_BLOCKSIZE' block;
 class VSMsgChunk {
-  friend class VSMsgBuffer;
-private:
+protected:
   int next;                     // next chunk if any (and -1 otherwise);
   volatile Bool busy;           // set by owner and dropped by receiver;
-  BYTE buffer[0];               // fills a chunk;
+  BYTE buffer[0];               // actually more - fills up the chunk;
 
   //
 public:
-  // The body of the chunk contains garbage initially;
-  VSMsgChunk() : next(-1), busy(FALSE) {}
+  // These objects are unusable;
+  VSMsgChunk()  { error("VSMsgChunk allocated???"); }
   ~VSMsgChunk() { error("VSMsgChunk deallocated???"); }
+
+  //
+  BYTE *getDataAddr() { return (&buffer[0]); }
+  int getNext() { return (next); }
+};
+
+//
+class VSMsgChunkOwned : public VSMsgChunk {
+public:
+  // The body of the chunk contains garbage initially.
+  // (Chunks are initialized lazily - prior usage;)
+  void init() {
+    next = -1;
+    busy = TRUE;
+  }
 
   //
   Bool isBusy() { return (busy); }
   void markFree() { busy = FALSE; }
+
+  //
+  void setNext(int nIn) { next = nIn; }
 };
 
-class VSMsgChunkPoolManager;
 //
-// The pool object identifies the pool; it is located (together with
-// data chunks) in the shared memory page (since its 'wakeupMode' and
-// 'semkey' are to be shared);
+class VSMsgChunkImported : public VSMsgChunk {
+public:
+  //
+  void markFree() { busy = FALSE; }
+};
+
 //
-class VSMsgChunkPool {
-  friend class VSMsgChunkPoolManager;
-private:
+class VSMsgChunkReserved : public VSMsgChunk {
+public:
+  //
+  void initReservedChunk() {
+    next = -1;
+    busy = TRUE;
+  }
+};
+
+//
+// The pool object identifies the pool; it is located in the shared
+// memory page as a zeroth special "reserved" data chunk (since its
+// 'wakeupMode' and 'semkey' are to be shared);
+//
+class VSMsgChunkPool : protected VSMsgChunkReserved {
+protected:
   int chunkSize, chunksNum;     // used by receiver sites;
   volatile Bool wakeupMode;     // 'OK' if receiver(s) has to increment;
+  key_t shmkey;                 // for consistency check;
   key_t semkey;                 // the id of the 'wakeupMode' semaphor;
 
   //
 public:
-  //
-  // The first constructor is for the "owner" site,
-  // and another - for a "receiver" one;
-  VSMsgChunkPool(int chunkSizeIn, int chunksNumIn);
-  // There might be some consistency checks, but otherwise it's already
-  // initialized (by the owner);
-  VSMsgChunkPool() {}
+  // These objects are unusable;
+  VSMsgChunkPool() { error("VSMsgChunkPool allocated?"); }
   ~VSMsgChunkPool() { error("VSMsgChunkPool destroyed?"); }
 
   //
-  key_t getSemkey() { return (semkey); }
-  int getChunkSize() { return (chunkSize); }
-  int getChunkDataSize() { return (chunkSize - sizeof(VSMsgChunk)); }
-  int getchunksNum() { return (chunksNum); }
+#ifdef DEBUG_CHECK
+  void checkConsistency() {
+    // check for overwriting...
+    Assert(wakeupMode == TRUE || wakeupMode == FALSE);
+  }
+#endif
+
   //
-  void startWakeupMode() { wakeupMode = TRUE; }
-  void stopWakeupMode() { wakeupMode = FALSE; }
+  key_t getSemkey()  { DebugCode(checkConsistency()); return (semkey); }
+  int getChunkSize() { DebugCode(checkConsistency()); return (chunkSize); }
+  int getChunksNum() { DebugCode(checkConsistency()); return (chunksNum); }
 };
 
 //
-// Some systems have the structure already defined, while others
-// (e.g. Solaris) have not;
-#if defined(LINUX) || defined(NETBSD)
-typedef union semun SemOptArg;
-#else
+class VSMsgChunkPoolOwned : public VSMsgChunkPool {
+public:
+  //
+  VSMsgChunkPoolOwned() { error("VSMsgChunkPoolOwned allocated?"); }
+  ~VSMsgChunkPoolOwned() { error("VSMsgChunkPoolOwned destroyed?"); }
+
+  //
+  void init(key_t shmkeyIn, int chunkSizeIn, int chunksNumIn);
+
+  //
+  void startWakeupMode() {
+    DebugCode(checkConsistency());
+    wakeupMode = TRUE;
+  }
+  void stopWakeupMode() {
+    DebugCode(checkConsistency());
+    wakeupMode = FALSE;
+  }
+  DebugCode(Bool isInWakeupMode() { return (wakeupMode); })
+};
+
+//
+class VSMsgChunkPoolImported : public VSMsgChunkPool {
+public:
+  //
+  VSMsgChunkPoolImported() { error("VSMsgChunkPoolImported allocated?"); }
+  ~VSMsgChunkPoolImported() { error("VSMsgChunkPoolImported destroyed?"); }
+
+  //
+  void init(key_t shmkeyIn) {
+    Assert(shmkey == shmkeyIn);
+  }
+
+  //
+  Bool isInWakeupMode() { return (wakeupMode); }
+};
+
+//
+// E.g. Linux has the structure already defined (which is what i'd
+// expect), while Solaris has not;
+#if defined(SOLARIS)
 typedef union semun {
   int val;
   struct semid_ds *buf;
   unsigned short *array;
 } SemOptArg;
+#else  // defined(LINUX) || defined(NETBSD)
+typedef union semun SemOptArg;
 #endif
 
 //
 // The 'Manager' class, like the mailbox's one, is visible to the
-// owner Oz process only. (Actually, there is some redundancy in data);
+// local Oz process only. (Actually, 'key_t' keys are replicated);
 class VSMsgChunkPoolManager {
-private:
+protected:
   //
-  int chunkSize, chunksNum;     // just to remember;
+  int chunkSize, chunksNum;     //
   //
-  key_t shmkey;                 // for the shared memory;
+  key_t shmkey;                 // shared memory;
   int shmid;                    //
   //
-  // These three addresses are actually the same;
-  // Note that the first chunk is permanently busy;
-  void *mem;                    // the address of the shm page;
-  VSMsgChunkPool *pool;
-  VSMsgChunk *chunks;           // data chunks;
-  //
-  key_t semkey;                 // for the "wakeup" semaphore;
+  key_t semkey;                 // run-over semaphore;
   int semid;                    //
+  //
+  // Pointers ('mem', 'chunks' and 'pool') are actually the same;
+  // Note that the first chunk is permanently busy (reserved);
+  void *mem;                    // the address of the shm page;
+
+  //
+public:
+  //
+  VSMsgChunkPoolManager() {
+    DebugCode(chunkSize = chunksNum = 0);
+    DebugCode(shmid = 0);
+    DebugCode(shmkey = (key_t) 0);
+    DebugCode(semid = 0);
+    DebugCode(semkey = (key_t) 0);
+    DebugCode(mem = (void *) 0);
+  }
+  ~VSMsgChunkPoolManager() {}
+};
+
+//
+class VSMsgChunkPoolManagerOwned : public VSMsgChunkPoolManager {
+private:
+  //
+  VSMsgChunkOwned *chunks;
+  VSMsgChunkPoolOwned *pool;
   //
   int mapSize;                  // chunksNum/32;
   int32 *map;                   // the usage bitmap - '1' if free;
@@ -147,14 +240,17 @@ private:
 private:
   //
   void markFreeInMap(int cn) {
+    DebugCode(pool->checkConsistency());
     Assert(cn > 0 && cn < chunksNum);
-    int wordNum = cn >> 5;      // 5 bits for a 'int32' value;
-    int bitNum = cn & 0x1f;
-    map[wordNum] |= bitNum;
+    int wordNum = cn/32;        // in an 'int32' value;
+    int bitNum = cn%32;
+    map[wordNum] |= (0x1 << bitNum);
   }
+
   //
   // find the first free page in the map;
   int allocateFromMap() {
+    DebugCode(pool->checkConsistency());
     for (int i = 0; i < mapSize; i++) {
       if (map[i]) {
         int32 seg = map[i];
@@ -168,7 +264,9 @@ private:
 
         //
         map[i] &= ~(0x1 << j);  // got it;
-        return ((i << 5) | j);  // 5 bits for 'int32' value;
+        int num = i*32 + j;
+        Assert(num != 0);       // zeroth is always busy;
+        return (num);
       }
     }
     return (-1);                // none found;
@@ -182,18 +280,29 @@ private:
   int getMsgChunkOutline();
 
   //
-  // ... to be used by the receiver site in the "wakeup" mode;
-  void wakeupOwner();
-
-  //
 public:
-  // There are as well two constructors - for owner and receivers;
-  VSMsgChunkPoolManager(int chunkSizeIn, int chunksNumIn);
-  VSMsgChunkPoolManager(key_t shmkey);
+  //
+  VSMsgChunkPoolManagerOwned(int chunkSizeIn, int chunksNumIn);
+  ~VSMsgChunkPoolManagerOwned();
 
   //
-  void destroy();               // unmap & destroy;
-  ~VSMsgChunkPoolManager() {}
+  void markDestroy();           // mark for destruction;
+
+  //
+  VSMsgChunkOwned *getChunkAddr(int i) {
+    Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkOwned));
+    return ((VSMsgChunkOwned *) (((char *) chunks) + i*chunkSize));
+  }
+  int getChunkDataSize() {
+    Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkOwned));
+    return (chunkSize - sizeof(VSMsgChunkOwned));
+  }
+
+  //
+  key_t getSHMKey() {
+    DebugCode(pool->checkConsistency());
+    return (shmkey);
+  }
 
   //
   // 'getMsgChunk' tries first to find out an unused chunk in the map,
@@ -202,30 +311,66 @@ public:
   // calls the "outline" version which blocks on the semaphore which
   // must be stepped up by a VS that frees a chunk (see the first
   // assertion in the constructor);
-  //
-  // (to be used by the sender site;)
   int getMsgChunk() {
+    DebugCode(pool->checkConsistency());
     //
     int chunkNum = allocateFromMap();
+    if (chunkNum < 0)
+      chunkNum = getMsgChunkOutline();
     //
-    if (chunkNum < 0) return (getMsgChunkOutline());
-    else return (chunkNum);
+    getChunkAddr(chunkNum)->init();
+    //
+    return (chunkNum);
   }
-  VSMsgChunk *getChunkAddr(int i) { return (&chunks[i]); }
-  int getChunkDataSize() { return (chunkSize - sizeof(VSMsgChunk)); }
 
   //
-  // To be used by the receiver site - drop the "busy" flag(s) in its
-  // chunk(s) and rises the semaphor if necessary. Note that it does
-  // not immediately frees it;
-  void releaseChunk(VSMsgChunk *chunk) {
+  // (sender site release - when e.g. message cannot be sent);
+  void releaseChunk(VSMsgChunkOwned *chunk) {
+    DebugCode(pool->checkConsistency());
     chunk->markFree();
-    if (pool->wakeupMode)
+    Assert(!pool->isInWakeupMode());
+  }
+
+  //
+  // one chunk is permanently reserved;
+  int getChunksNum() { return (pool->getChunksNum()-1); }
+};
+
+//
+class VSMsgChunkPoolManagerImported : public VSMsgChunkPoolManager {
+private:
+  VSMsgChunkImported *chunks;
+  VSMsgChunkPoolImported *pool;
+
+  //
+private:
+  //
+  void wakeupOwner();
+
+  //
+public:
+  //
+  VSMsgChunkPoolManagerImported(key_t shmkey);
+  ~VSMsgChunkPoolManagerImported();
+
+  //
+  // At the receiver site the semaphore must checked as well;
+  void releaseChunk(VSMsgChunkImported *chunk) {
+    DebugCode(pool->checkConsistency());
+    chunk->markFree();
+    if (pool->isInWakeupMode())
       wakeupOwner();
   }
 
   //
-  key_t getSHMKey() { return (shmkey);  }
+  VSMsgChunkImported *getChunkAddr(int i) {
+    Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkImported));
+    return ((VSMsgChunkImported *) (((char *) chunks) + i*chunkSize));
+  }
+  int getChunkDataSize() {
+    Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkImported));
+    return (chunkSize - sizeof(VSMsgChunkImported));
+  }
 };
 
 //
@@ -237,8 +382,8 @@ private:
 
   //
 private:
-  VSMsgChunkPoolManager* find(key_t key);
-  void add(key_t key, VSMsgChunkPoolManager *pool);
+  void add(key_t key, VSMsgChunkPoolManagerImported *pool);
+  void remove(key_t key);
 
   //
 public:
@@ -246,135 +391,318 @@ public:
   ~VSChunkPoolRegister() {}
 
   //
+  VSMsgChunkPoolManagerImported* find(key_t key);
+
   //
-  VSMsgChunkPoolManager *import(key_t key) {
-    VSMsgChunkPoolManager *aux;
+  VSMsgChunkPoolManagerImported* import(key_t key) {
+    VSMsgChunkPoolManagerImported *aux;
 
     //
     aux = find(key);
     if (!aux) {
-      aux = new VSMsgChunkPoolManager(key);
+      aux = new VSMsgChunkPoolManagerImported(key);
       add(key, aux);
     }
 
     //
     return (aux);
   }
+
+  //
+  void forget(key_t key) {
+    remove (key);
+  }
 };
 
 //
 // The message buffer used for communications between VS"s.
 //
-// Objects of this class reside in the private VS memory and used
-// for constructing/reading message buffers. These objects are allocated
-// from a special "free list";
+// Objects of this (and inherited) class(es) reside in the private
+// memory and used for constructing/reading message buffers.
 //
 class VSMsgBuffer : public MsgBuffer {
-private:
-  // chunks;
-  Site *site;
-  VSMsgChunkPoolManager *cpm;
+protected:
+  //
   int first, current;           // chunk indexes;
-  VSMsgChunk *currentAddr;      // chunk itself;
-  // within the current chunk;
-  BYTE *end;
-  BYTE *ptr;
+  // 'BYTE *posMB' and BYTE *endMB' are inherited from 'MsgBuffer';
+
+  //
+public:
+  VSMsgBuffer() : first(-1) {
+    // Ralf Scheidhauer' liebe fuer 'init()' anstatt class
+    // constructors, $%@#$# @#$ #@$*@#$ $#$$*@&#*$* &@ $@#^@#
+    // $**#& !!!!!!!!!!!!!
+    MsgBuffer::init();
+    DebugCode(current = -1);
+    // this should be in MsgBuffer's constructor (or initializer,
+    // whichever is preferred);
+    DebugCode(posMB = endMB = (BYTE *) 0);
+  }
+  virtual ~VSMsgBuffer() { error("VSMsgBuffer destroyed?"); }
+
+  //
+  // Various special stuff;
+  // SB guys changed the interface without notifying us:
+  Bool isPersistentBuffer() { return (NO); }
+  // ... EK???
+  void unmarshalReset() {}
+};
+
+//
+// The message buffer used for sending out messages.
+//
+// Note that these objects can be used for both marshaling AND
+// unmarshaling. The last happens e.g. when the message cannot be sent
+// out;
+//
+// These objects are allocated from a special "free list" (defined in
+// virtual.cc);
+//
+class VSMsgBufferOwned : public VSMsgBuffer {
+private:
+  //
+  Site *site;                   // has to know the site when marshaling;
+  VSMsgChunkPoolManagerOwned *cpm;
+  VSMsgChunkOwned *currentAddr; // of the current chunk;
+  int allocatedChunks;          // keep track of size;
 
   //
 private:
-  // Called whenever 'put' faces no space in the buffer (sender);
+  //
+  // Called whenever 'put' faces no space in the buffer;
   void allocateNextChunk() {
-    int next = cpm->getMsgChunk();
-    VSMsgChunk *nextAddr = cpm->getChunkAddr(next);
+    //
+    if (allocatedChunks >= cpm->getChunksNum())
+      error("no space for a message to a virtual site!");
 
     //
-    ptr = &(nextAddr->buffer[0]);
-    end = ptr + cpm->getChunkDataSize(); // in bytes;
+    // 'getMsgChunk()' ultimately gets new chunks (including waiting
+    // in there if needed);
+    int next = cpm->getMsgChunk();
+    allocatedChunks++;
+    VSMsgChunkOwned *nextAddr = cpm->getChunkAddr(next);
+
+    //
+    posMB = nextAddr->getDataAddr();
+    endMB = posMB + cpm->getChunkDataSize() - 1; // in bytes; // kost@ : TODO
 
     // link it up;
-    currentAddr->next = next;
+    currentAddr->setNext(next);
     current = next;
     currentAddr = nextAddr;
   }
 
   //
-  // Jump to the next buffer (receiver);
+  // Jump to the next buffer (when unmarshaling);
   void gotoNextChunk() {
-    current = currentAddr->next;
+    current = currentAddr->getNext();
     Assert(current >= 0);
 
     //
     currentAddr = cpm->getChunkAddr(current);
 
     //
-    ptr = &(currentAddr->buffer[0]);
-    end = ptr + cpm->getChunkDataSize(); // in bytes;
+    posMB = currentAddr->getDataAddr();
+    endMB = posMB + cpm->getChunkDataSize(); // in bytes;
+  }
+
+  //
+private:
+  //
+  BYTE getNext() {
+    Assert(posMB == endMB);
+    gotoNextChunk();
+    return (*posMB++);
+  }
+  void putNext(BYTE byte) {
+    Assert(posMB == endMB+1);   // kost@ : TODO
+    allocateNextChunk();
+    *posMB++ = byte;
   }
 
   //
 public:
-  // There are two constructors for the buffer: for usage at the
-  // sender and receiver sites (or, as a variation of the last one, at
-  // the sender site when an unsent message needs to be unmarshaled
-  // back);
-  VSMsgBuffer(VSMsgChunkPoolManager *cpmIn, Site *siteIn);
-  VSMsgBuffer(VSMsgChunkPoolManager *cpmIn, int chunkIndex);
-  virtual ~VSMsgBuffer() { error("VSMsgBuffer destroyed?"); }
+  //
+  void* operator new(size_t size) {
+    error("VSMsgBufferOwned allocated using 'new(size_t)'");
+    return ((void *) -1);       // gcc warning;
+  }
+  void* operator new(size_t, void *place) { return (place); }
 
   //
-  // Mark (shared) memory chunks free (so the sender could reuse them);
+  VSMsgBufferOwned(VSMsgChunkPoolManagerOwned *cpmIn, Site *siteIn)
+    : cpm(cpmIn), site(siteIn) {
+    DebugCode(currentAddr = (VSMsgChunkOwned *) 0);
+  }
+  virtual ~VSMsgBufferOwned() {
+    error("VSMsgBufferOwned destroyed?");
+  }
+
+  //
+  // Mark (shared) memory chunks free - when unmarshaling unsent
+  // message back;
   void releaseChunks() {
+    Assert(first >= 0);
     current = first;
-    Assert(current >= 0);
-
-    //
-    while (current >= 0) {
-      currentAddr = cpm->getChunkAddr(current);
-      int next = currentAddr->next;
-
-      //
-      cpm->releaseChunk(currentAddr);
-
-      //
-      current = next;
-    }
+    do {
+      VSMsgChunkOwned *chunkAddr = cpm->getChunkAddr(current);
+      current = chunkAddr->getNext(); // this&next in this order;
+      cpm->releaseChunk(chunkAddr);
+    } while (current >= 0);
     Assert(current == -1);
 
     //
     DebugCode(first = -1);
-    DebugCode(ptr = (BYTE *) 0);
-    DebugCode(end = (BYTE *) 0);
+    DebugCode(currentAddr = (VSMsgChunkOwned *) 0);
+    DebugCode(posMB = endMB = (BYTE *) 0);
+  }
+
+  //
+  // ... hand them over (to a receiver);
+  void passChunks() {
+    Assert(first >= 0);
+    //
+    DebugCode(first = -1);
+    DebugCode(current = -1);
+    DebugCode(currentAddr = (VSMsgChunkOwned *) 0);
+    DebugCode(posMB = endMB = (BYTE *) 0);
+  }
+
+  //
+  // (Consistency check - must be released/passed already:)
+  void cleanup() {
+    Assert(first == -1);
+    Assert(current == -1);
+    Assert(currentAddr == (VSMsgChunk *) 0);
+    Assert(posMB == (BYTE *) 0);
+    Assert(endMB == (BYTE *) 0);
   }
 
   //
   // "to be provided" methods;
-  void marshalBegin();          // allocates first chunk;
+  void marshalBegin() {         // allocates first chunk;
+    Assert(first < 0);
+    // allocate the first chunk unconditionally
+    // (there are no empty messages?)
+    current = first = cpm->getMsgChunk();
+    allocatedChunks = 1;
+    currentAddr = cpm->getChunkAddr(current);
+    //
+    posMB = currentAddr->getDataAddr();
+    endMB = posMB + cpm->getChunkDataSize() - 1; // in bytes; // kost@ : TODO
+  }
   void marshalEnd() {}          // no special action now;
-  void unmarshalBegin() {}      //
-  void unmarshalEnd();          // marks chunks free;
-
-  //
-  BYTE get() {
-    if (ptr >= end)
-      gotoNextChunk();
-    return (*ptr++);
-  }
-  void put(BYTE byte) {
-    if (ptr >= end)
-      allocateNextChunk();
-      *ptr++ = byte;
+  void unmarshalBegin() {}      // already initialized (allocated);
+  void unmarshalEnd() {
+    releaseChunks();
   }
 
   //
-  // Yields the first chunk's address - for putting in a mailbox;
+  // Yields the first chunk's address - for putting it in a mailbox;
   int getFirstChunk() { return (first); }
   key_t getSHMKey() { return (cpm->getSHMKey()); }
 
   //
-  // Special stuff;
   // ('siteStringrep' exists just for debugging;)
-  char* siteStringrep() { return ("virtual site"); }
+  char* siteStringrep();
+  // The reasons for having 'getSite()' are:
+  // (a) the marshaling routine has to know sometimes where the
+  //     stuff is to be sent;
+  // (b) while discarding unsent messages, we have to know the type
+  //     of each particular buffer;
   Site* getSite() { return (site); }
 };
+
+//
+// The message buffer used for feeding in incoming messages.
+//
+// (There is a single object of this type, which is re-initialized
+// each time a message arrives);
+//
+class VSMsgBufferImported : public VSMsgBuffer {
+private:
+  //
+  VSMsgChunkPoolManagerImported *cpm;
+  VSMsgChunkImported *currentAddr; // chunk itself;
+
+  //
+private:
+  //
+  void gotoNextChunk() {
+    current = currentAddr->getNext();
+    Assert(current >= 0);
+
+    //
+    currentAddr = cpm->getChunkAddr(current);
+
+    //
+    posMB = currentAddr->getDataAddr();
+    endMB = posMB + cpm->getChunkDataSize(); // in bytes;
+  }
+
+  //
+private:
+  //
+  BYTE getNext() {
+    Assert(posMB == endMB);
+    gotoNextChunk();
+    return (*posMB++);
+  }
+
+  //
+public:
+  //
+  VSMsgBufferImported(VSMsgChunkPoolManagerImported *cpmIn, int chunkIndex)
+    : cpm(cpmIn) {
+    current = first = chunkIndex;
+    currentAddr = cpm->getChunkAddr(current);
+    posMB = currentAddr->getDataAddr();
+    endMB = posMB + cpm->getChunkDataSize(); // in bytes;
+  }
+  virtual ~VSMsgBufferImported() {
+    error("VSMsgBufferImported destroyed?");
+  }
+
+  //
+  // Mark (shared) memory chunks free (so the sender could reuse them);
+  void releaseChunks() {
+    Assert(first >= 0);
+    current = first;
+    do {
+      VSMsgChunkImported *chunkAddr = cpm->getChunkAddr(current);
+      current = chunkAddr->getNext(); // this&next in this order;
+      cpm->releaseChunk(chunkAddr);
+    } while (current >= 0);
+    Assert(current == -1);
+
+    //
+    DebugCode(first = -1);
+    DebugCode(currentAddr = (VSMsgChunkImported *) 0);
+    DebugCode(posMB = endMB = (BYTE *) 0);
+  }
+
+  //
+  // Consistency check - must be released already:
+  void cleanup() {
+    Assert(first == -1);
+    Assert(current == -1);
+    Assert(currentAddr == (VSMsgChunkImported *) 0);
+    Assert(posMB == (BYTE *) 0);
+    Assert(endMB == (BYTE *) 0);
+  }
+
+  //
+  // "to be provided" methods;
+  void marshalBegin() { error("VSMsgBufferImported::marshalBegin?"); }
+  void marshalEnd()   { error("VSMsgBufferImported::marshalBegin?"); }
+  void unmarshalBegin() {}      // already initialized (allocated);
+  void unmarshalEnd() { releaseChunks(); }
+
+  //
+  // ('siteStringrep' exists just for debugging;)
+  char* siteStringrep();
+};
+
+#endif // VIRTUALSITES
 
 #endif  // __VS_MSGBUFFER_HH

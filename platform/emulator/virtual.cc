@@ -27,6 +27,7 @@
 #include "conf.h"
 #endif
 
+#include "resources.hh"
 #include "perdio.hh"
 #include "perdio_debug.hh"
 #include "genvar.hh"
@@ -42,35 +43,36 @@
 #include "vs_msgbuffer.hh"
 #include "vs_comm.hh"
 
+#ifdef VIRTUALSITES
+
 ///
 /// (semi?) constants;
 ///
 
 //
 // The size of a mailbox in messages;
-const int vs_mailbox_size = (1024 * 1024) / sizeof(VSMailboxMsg);
+const int vs_mailbox_size = VS_MAILBOX_SIZE / sizeof(VSMailboxMsg);
 
 //
 // The number of chunks in a message buffers pool
 // (currently that's just a constant, but that could be changed);
-const int vs_chunk_size = 1024;
-const int vs_chunks_num = 4096;
+const int vs_chunk_size = VS_CHUNK_SIZE;
+const int vs_chunks_num = VS_CHUNKS_NUM;
 //
 // Currently 4MB altogether;
 
 //
-// 12,5% fill-up for 32 sites?
-const int vsRegisterHTSize = 256;
+const int vsRegisterHTSize = VS_REGISTER_HT_SIZE;
 
 ///
 /// Static managers
 /// (in the *file* scope, and most of them - with indefinite extent);
 ///
 //
-// Free bodies of "message buffers" (message buffers are used storing
-// incoming/outgoing messages while marshaling-sending resp.
-// receiving-unmarshaling):
-static FreeListDataManager<VSMsgBuffer> freeMsgBufferPool(malloc);
+// Free bodies of "message buffers" (message buffers are used for
+// storing incoming/outgoing messages while marshaling&sending;
+static FreeListDataManager<VSMsgBufferOwned> freeMsgBufferPool(malloc);
+static VSMsgBufferImported *myVSMsgBufferImported;
 
 //
 // Free bodies of "messages" (which are used for keeping unsent
@@ -98,8 +100,8 @@ static VSSiteQueue vsSiteQueue;
 
 //
 // There are also two managers that are allocated explicitly:
-static VSMailboxManager *myVSMailboxManager;
-static VSMsgChunkPoolManager *myVSChunksPoolManager;
+static VSMailboxManagerOwned *myVSMailboxManager;
+static VSMsgChunkPoolManagerOwned *myVSChunksPoolManager;
 
 //
 //
@@ -136,15 +138,13 @@ void marshalVirtualInfo(VirtualInfo *vi, MsgBuffer *mb)
 //
 VirtualInfo* unmarshalVirtualInfo(MsgBuffer *mb)
 {
-  VirtualInfo *vi = freeVirtualInfoPool.allocate();
-#ifdef VIRTUALSITES
-  vi->VirtualInfo::VirtualInfo(mb);
-#endif
+  VirtualInfo *voidVI = freeVirtualInfoPool.allocate();
+  VirtualInfo *vi = new (voidVI) VirtualInfo(mb);
   return (vi);
 }
 //
 // Defined in vs_comm.cc;
-void unmarshalUselessVirtualInfo(MsgBuffer*);
+void unmarshalUselessVirtualInfo(MsgBuffer *);
 
 //
 void zeroRefsToVirtual(VirtualSite *vs)
@@ -159,7 +159,8 @@ void zeroRefsToVirtual(VirtualSite *vs)
 int sendTo_VirtualSite(VirtualSite *vs, MsgBuffer *mb,
                        MessageType mt, Site *storeSite, int storeIndex)
 {
-  return (vs->sendTo((VSMsgBuffer *) mb, mt, storeSite, storeIndex));
+  return (vs->sendTo((VSMsgBufferOwned *) mb, mt, storeSite, storeIndex,
+                     &freeMsgBufferPool));
 }
 
 //
@@ -206,13 +207,13 @@ ProbeReturn
 installProbe_VirtualSite(VirtualSite *vs,
                          ProbeType pt, int frequency, void *storePtr)
 {
-  return (PROBE_NONEXISTENT);
+  return (PROBE_INSTALLED);
 }
 
 //
 ProbeReturn deinstallProbe_VirtualSite(VirtualSite*, ProbeType pt)
 {
-  return (PROBE_NONEXISTENT);
+  return (PROBE_DEINSTALLED);
 }
 
 //
@@ -233,13 +234,37 @@ GiveUpReturn giveUp_VirtualSite(VirtualSite* vs)
 }
 
 //
+// While iterating over the 'vsSiteQueue' we need to stop somewhere:
+#define VSQueueMark     ((VirtualSite *) -1)
+
+//
 // 'discoveryPerm' means that a site is known (from a third party) to
 // be dead.
 void discoveryPerm_VirtualSite(VirtualSite *vs)
 {
+  //
+  // If there are unsent messages, then the site is in the vsSiteQueue
+  // and must be removed out there;
+  if (vs->isNotEmpty()) {
+    vsSiteQueue.enqueue(VSQueueMark);
+
+    //
+    while (1) {
+      VirtualSite *vsq = vsSiteQueue.dequeue();
+      if (vs == VSQueueMark)
+        break;                  // ready;
+      if (vsq != vs)
+        vsSiteQueue.enqueue(vsq);
+    }
+  }
+
+  //
   vs->drop();
   delete vs;
 }
+
+//
+#undef  VSQueueMark
 
 //
 void dumpVirtualInfo(VirtualInfo* vi)
@@ -251,13 +276,12 @@ void dumpVirtualInfo(VirtualInfo* vi)
 //
 MsgBuffer* getVirtualMsgBuffer(Site* site)
 {
-  VSMsgBuffer *buf = freeMsgBufferPool.allocate();
-#ifdef VIRTUALSITES
-  buf->VSMsgBuffer::VSMsgBuffer(myVSChunksPoolManager, site);
-#endif
+  VSMsgBufferOwned *voidBUF = freeMsgBufferPool.allocate();
+  VSMsgBufferOwned *buf =
+    new (voidBUF) VSMsgBufferOwned(myVSChunksPoolManager, site);
 
   //
-  return (buf);                 // upcast;
+  return (buf);                 // upcast (actually, even 2 steps);
 }
 
 //
@@ -265,7 +289,7 @@ MsgBuffer* getVirtualMsgBuffer(Site* site)
 static Bool checkVSMessages(void *vMBox)
 {
   // unsafe by now - some magic number should be added;
-  VSMailbox *mbox = (VSMailbox *) vMBox;
+  VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
   return ((Bool) mbox->getSize());
 }
 
@@ -273,7 +297,7 @@ static Bool checkVSMessages(void *vMBox)
 static void readVSMessages(void *vMBox)
 {
   // unsafe by now - some magic number(s) should be added;
-  VSMailbox *mbox = (VSMailbox *) vMBox;
+  VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
   int msgs = MAX_MSGS_ATONCE;
 
   //
@@ -286,18 +310,16 @@ static void readVSMessages(void *vMBox)
     if (mbox->dequeue(msgChunkPoolKey, chunkNumber)) {
       // got a message;
       //
-      VSMsgBuffer *buf = freeMsgBufferPool.allocate();
-      VSMsgChunkPoolManager *cpm = chunkPoolRegister.import(msgChunkPoolKey);
-#ifdef VIRTUALSITES
-      buf->VSMsgBuffer::VSMsgBuffer(cpm, chunkNumber);
-#endif
+      VSMsgChunkPoolManagerImported *cpm =
+        chunkPoolRegister.import(msgChunkPoolKey);
+      myVSMsgBufferImported->
+        VSMsgBufferImported::VSMsgBufferImported(cpm, chunkNumber);
       //
       // Note that the mailbox is NOT locked at this place;
-      msgReceived(buf);
+      msgReceived(myVSMsgBufferImported);
 
       //
-      buf->releaseChunks();
-      freeMsgBufferPool.dispose(buf);
+      myVSMsgBufferImported->cleanup();
     } else {
       // is locked - then let's try to read later;
       return;
@@ -351,7 +373,7 @@ static void processMessageQueue(void *sqi)
         break;                  // ready;
 
       //
-      vs->tryToSendToAgain(vsm);
+      vs->tryToSendToAgain(vsm, &freeMsgBufferPool);
     }
   }
 }
@@ -363,9 +385,10 @@ static void processMessageQueue(void *sqi)
 //
 void dumpVirtualMsgBuffer(MsgBuffer* m)
 {
-  VSMsgBuffer *buf = (VSMsgBuffer *) m;
+  VSMsgBufferOwned *buf = (VSMsgBufferOwned *) m;
 
   buf->releaseChunks();
+  buf->cleanup();
   freeMsgBufferPool.dispose(buf);
 }
 
@@ -375,18 +398,28 @@ void dumpVirtualMsgBuffer(MsgBuffer* m)
 OZ_BI_define(BIVSnewMailbox,0,1)
 {
   //
-  VSMailboxManager *mbm;
-  char keyChars[sizeof(key_t)+3]; // in the form "0xNNNNNNNN";
+  VSMailboxManagerCreated *mbm;
+  VSMsgBufferOwned *voidBUF, *buf;
+  char keyChars[sizeof(key_t)*2 + 3]; // in the form "0xNNNNNNNN";
 
   //
   // Check whether this site is (already) a virtual one:
-  if (mySite->hasVirtualInfo()) {
+  if (!mySite->hasVirtualInfo()) {
     VirtualInfo *vi;
+    key_t myMBoxKey;
 
     //
-    myVSMailboxManager = new VSMailboxManager((long) vs_mailbox_size);
+    mbm = new VSMailboxManagerCreated(vs_mailbox_size);
+    myMBoxKey = mbm->getSHMKey();
+    mbm->unmap();
+    delete mbm;
+    DebugCode(mbm = (VSMailboxManagerCreated *) 0);
+
+    myVSMailboxManager = new VSMailboxManagerOwned(myMBoxKey);
     myVSChunksPoolManager =
-      new VSMsgChunkPoolManager(vs_chunk_size, vs_chunks_num);
+      new VSMsgChunkPoolManagerOwned(vs_chunk_size, vs_chunks_num);
+    myVSMsgBufferImported =
+      (VSMsgBufferImported *) malloc(sizeof(VSMsgBufferImported));
 
     //
     vi = new VirtualInfo(mySite, myVSMailboxManager->getSHMKey());
@@ -403,15 +436,24 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   //
   // The 'VSMailboxManager' always creates a proper object (or crashes
   // the system if it can't);
-  mbm = new VSMailboxManager((long) vs_mailbox_size);
+  mbm = new VSMailboxManagerCreated(vs_mailbox_size);
+
+  //
+  // Put the 'M_INIT_VS' message into it;
+  voidBUF = freeMsgBufferPool.allocate();
+  buf = new (voidBUF) VSMsgBufferOwned(myVSChunksPoolManager, (Site *) -1);
+  marshal_M_INIT_VS(buf, mySite);
+  if (!mbm->getMailbox()->enqueue(buf->getSHMKey(),
+                                  buf->getFirstChunk()))
+    error("Virtual sites: unable to put the M_INIT_VS message");
+
+  //
   mbm->unmap();                 // we don't need that object now anymore;
+  Assert(sizeof(key_t) <= sizeof(int));
+  sprintf(keyChars, "0x%x", mbm->getSHMKey());
   delete mbm;
 
   //
-  Assert(sizeof(key_t) <= sizeof(int));
-#ifdef VIRTUALSITES
-  sprintf(keyChars, "0x%x", mbm->getSHMKey());
-#endif
   OZ_RETURN(OZ_string(keyChars));
 } OZ_BI_end
 
@@ -426,19 +468,29 @@ OZ_BI_define(BIVSinitServer,1,0)
   int chunkNumber;
   OZ_declareVirtualStringIN(0, mbKeyChars);
   Assert(sizeof(key_t) <= sizeof(int));
-  key_t mbKey = (key_t) atoi(mbKeyChars);
-  key_t cpKey = myVSChunksPoolManager->getSHMKey();
-  VSMailbox *mbox;
+  key_t mbKey;
+  VSMailboxOwned *mbox;
+
+  //
+  Assert(sizeof(key_t) == sizeof(int));
+  if (sscanf(mbKeyChars, "%i", &mbKey) != 1)
+    return oz_raise(E_ERROR,E_SYSTEM,"VSinitServer: invalid arg",0);
+
+  //
+  // new process group - otherwise failed virtual sites will kill
+  // the whole virtual site group ;-)
+  if (setpgid(0, 0))
+    error("failed to form a new process group");
 
   //
   if (myVSMailboxManager)
-    return oz_raise(E_ERROR,E_SYSTEM,"initServer again",0);
+    return oz_raise(E_ERROR,E_SYSTEM,"VSinitServer again",0);
 
   //
   // We know here the id of the mailbox, so let's fetch it:
-  myVSMailboxManager = new VSMailboxManager(mbKey);
+  myVSMailboxManager = new VSMailboxManagerOwned(mbKey);
   myVSChunksPoolManager =
-    new VSMsgChunkPoolManager(vs_chunk_size, vs_chunks_num);
+    new VSMsgChunkPoolManagerOwned(vs_chunk_size, vs_chunks_num);
 
   //
   // Now, let's process the initialization message (M_INIT_VS).
@@ -456,12 +508,14 @@ OZ_BI_define(BIVSinitServer,1,0)
   }
 
   //
-  VSMsgBuffer *buf = freeMsgBufferPool.allocate();
-  VSMsgChunkPoolManager *cpm = chunkPoolRegister.import(msgChunkPoolKey);
-#ifdef VIRTUALSITES
-  buf->VSMsgBuffer::VSMsgBuffer(cpm, chunkNumber);
-#endif
-  msgReceived(buf);
+  myVSMsgBufferImported =
+    (VSMsgBufferImported *) malloc(sizeof(VSMsgBufferImported));
+  VSMsgChunkPoolManagerImported *cpm =
+    chunkPoolRegister.import(msgChunkPoolKey);
+  myVSMsgBufferImported->
+    VSMsgBufferImported::VSMsgBufferImported(cpm, chunkNumber);
+  msgReceived(myVSMsgBufferImported);
+  myVSMsgBufferImported->cleanup();
 
   //
   // Now, mySite's virtual info is updated to have a shared memory key
@@ -480,6 +534,25 @@ OZ_BI_define(BIVSinitServer,1,0)
   return (PROCEED);
 } OZ_BI_end
 
+//
+//
+OZ_BI_define(BIVSremoveMailbox,1,0)
+{
+  //
+  OZ_declareVirtualStringIN(0, mbKeyChars);
+  Assert(sizeof(key_t) <= sizeof(int));
+  key_t mbKey;
+
+  //
+  Assert(sizeof(key_t) == sizeof(int));
+  if (sscanf(mbKeyChars, "%i", &mbKey) != 1)
+    return oz_raise(E_ERROR,E_SYSTEM,"VSremoveMailbox: invalid arg",0);
+  markDestroy(mbKey);
+
+  //
+  return (PROCEED);
+} OZ_BI_end
+
 ///
 /// An exit hook - reclaim shared memory;
 ///
@@ -488,11 +561,169 @@ void virtualSitesExit()
   if (myVSMailboxManager) {
     myVSMailboxManager->destroy();
     delete myVSMailboxManager;
-    myVSMailboxManager = (VSMailboxManager *) 0;
+    myVSMailboxManager = (VSMailboxManagerOwned *) 0;
   }
   if (myVSChunksPoolManager) {
-    myVSChunksPoolManager->destroy();
     delete myVSChunksPoolManager;
-    myVSChunksPoolManager = (VSMsgChunkPoolManager *) 0;
+    myVSChunksPoolManager = (VSMsgChunkPoolManagerOwned *) 0;
+  }
+  if (myVSMsgBufferImported) {
+    free(myVSMsgBufferImported);
+    myVSMsgBufferImported = (VSMsgBufferImported *) 0;
   }
 }
+
+#else  // VIRTUALSITES
+
+//
+VirtualSite* createVirtualSite(Site *)
+{
+  error("'createVirtualSite' called without 'VIRTUALSITES'?");
+  return ((VirtualSite *) 0);
+}
+
+//
+void marshalVirtualInfo(VirtualInfo *, MsgBuffer *)
+{
+  error("'marshalVirtualInfo' called without 'VIRTUALSITES'?");
+}
+//
+VirtualInfo* unmarshalVirtualInfo(MsgBuffer *)
+{
+  error("'unmarshalVirtualInfo' called without 'VIRTUALSITES'?");
+  return ((VirtualInfo *) 0);
+}
+//
+void unmarshalUselessVirtualInfo(MsgBuffer *)
+{
+  error("'unmarshalUselessVirtualInfo' called without 'VIRTUALSITES'?");
+}
+
+//
+void zeroRefsToVirtual(VirtualSite *)
+{
+  error("'zeroRefsToVirtual' called without 'VIRTUALSITES'?");
+}
+
+//
+int sendTo_VirtualSite(VirtualSite*, MsgBuffer*, MessageType, Site*, int)
+{
+  error("'sendTo_VirtualSite' called without 'VIRTUALSITES'?");
+  return (-1);
+}
+
+//
+int discardUnsentMessage_VirtualSite(VirtualSite*, int)
+{
+  error("'discardUnsentMessage_VirtualSite' called without 'VIRTUALSITES'?");
+  return (-1);
+}
+
+//
+int getQueueStatus_VirtualSite(VirtualSite*, int &)
+{
+  error("'getQueueStatus_VirtualSite' called without 'VIRTUALSITES'?");
+  return (-1);
+}
+
+//
+SiteStatus siteStatus_VirtualSite(VirtualSite *)
+{
+  error("'siteStatus_VirtualSite' called without 'VIRTUALSITES'?");
+  return ((SiteStatus) -1);
+}
+
+//
+MonitorReturn monitorQueue_VirtualSite(VirtualSite*, int, int, void*)
+{
+  error("'monitorQueue_VirtualSite' called without 'VIRTUALSITES'?");
+  return ((MonitorReturn) -1);
+}
+
+//
+MonitorReturn demonitorQueue_VirtualSite(VirtualSite *)
+{
+  error("'demonitorQueue_VirtualSite' called without 'VIRTUALSITES'?");
+  return ((MonitorReturn) -1);
+}
+
+//
+ProbeReturn installProbe_VirtualSite(VirtualSite*, ProbeType, int, void*)
+{
+  error("'installProbe_VirtualSite' called without 'VIRTUALSITES'?");
+  return ((ProbeReturn) -1);
+}
+
+//
+ProbeReturn deinstallProbe_VirtualSite(VirtualSite*, ProbeType pt)
+{
+  error("'installProbe_VirtualSite' called without 'VIRTUALSITES'?");
+  return ((ProbeReturn) -1);
+}
+
+//
+ProbeReturn probeStatus_VirtualSite(VirtualSite*, ProbeType&, int&, void*&)
+{
+  error("'probeStatus_VirtualSite' called without 'VIRTUALSITES'?");
+  return ((ProbeReturn) -1);
+}
+
+//
+GiveUpReturn giveUp_VirtualSite(VirtualSite *)
+{
+  error("'giveUp_VirtualSite' called without 'VIRTUALSITES'?");
+  return ((GiveUpReturn) -1);
+}
+
+//
+void discoveryPerm_VirtualSite(VirtualSite *)
+{
+  error("'discoveryPerm_VirtualSite' called without 'VIRTUALSITES'?");
+}
+
+//
+void dumpVirtualInfo(VirtualInfo *)
+{
+  error("'dumpVirtualInfo' called without 'VIRTUALSITES'?");
+}
+
+//
+MsgBuffer* getVirtualMsgBuffer(Site *)
+{
+  error("'getVirtualMsgBuffer' called without 'VIRTUALSITES'?");
+  return ((MsgBuffer *) 0);
+}
+
+//
+void dumpVirtualMsgBuffer(MsgBuffer *)
+{
+  error("'dumpVirtualMsgBuffer' called without 'VIRTUALSITES'?");
+}
+
+//
+// Builtins for virtual sites - only two of them are needed:
+// (I) Creating a new mailbox (at the master site):
+OZ_BI_define(BIVSnewMailbox,0,1)
+{
+  return oz_raise(E_ERROR, E_SYSTEM,
+                  "VSnewMailbox: virtual sites not configured", 0);
+} OZ_BI_end
+
+//
+// (II) Initializing a virtual site given its mailbox (which contains
+// also the parent's id);
+OZ_BI_define(BIVSinitServer,1,0)
+{
+  return oz_raise(E_ERROR, E_SYSTEM,
+                  "VSinitServer: virtual sites not configured", 0);
+} OZ_BI_end
+
+//
+//
+OZ_BI_define(BIVSremoveMailbox,1,0)
+{
+  return oz_raise(E_ERROR, E_SYSTEM,
+                  "VSremoveMailbox: virtual sites not configured", 0);
+} OZ_BI_end
+
+#endif // VIRTUALSITES

@@ -325,10 +325,6 @@ void AM::init(int argc,char **argv)
 
   //
   taskNodes = new TaskNode[MAXTASKS];
-#ifdef VIRTUALSITES
-  for (int i = 0; i < MAXTASKS; i++)
-    taskNodes[i].TaskNode::TaskNode();
-#endif
 
   //
   osInitSignals();
@@ -411,13 +407,17 @@ void AM::init(int argc,char **argv)
   profileMode = NO;
 }
 
+#ifdef VIRTUALSITES
 //
 // We have to reclaim the shared memory somehow;
 extern void virtualSitesExit();
+#endif
 
 void AM::exitOz(int status)
 {
+#ifdef VIRTUALSITES
   virtualSitesExit();
+#endif
   osExit(status);
 }
 
@@ -1644,6 +1644,10 @@ void AM::suspendEngine()
 
   osBlockSignals(OK);
 
+  // kost@ : Alarm timer will be reset later (and we don't need to
+  // disturb 'select' when we know how long to wait in it);
+  osSetAlarmTimer(0);
+
   while (1) {
 
     if (isSetSFlag(UserAlarm)) {
@@ -1672,12 +1676,18 @@ void AM::suspendEngine()
 
     unsigned long idle_start = osTotalTime();
 
-#ifdef SLOWNET
-    int msleft = osBlockSelect(CLOCK_TICK/1000);
+#if defined(VIRTUALSITES) || defined(SLOWNET)
+    osBlockSelect(CLOCK_TICK/1000);
 #else
-    int msleft = osBlockSelect(nextUser());
+    osBlockSelect(nextUser());
 #endif
+    //
     setSFlag(IOReady);
+
+    //
+    // kost@ : we have to simulate an effect of the alarm (since no
+    // explicit alarm signal is sent while in 'osBlockSelect()');
+    handlerALRM();
 
     ozstat.timeIdle += (osTotalTime() - idle_start);
 
@@ -1953,6 +1963,14 @@ void handlerALRM()
   am.handleAlarm();
 }
 
+#ifdef VIRTUALSITES
+//
+void handlerUSR2()
+{
+  am.handleUSR2();
+}
+#endif
+
 /* -------------------------------------------------------------------------
  * Alarm handling
  * -------------------------------------------------------------------------*/
@@ -1982,8 +2000,18 @@ void AM::handleAlarm()
 
   checkIO();
 
+  // tasks are actually checked twice - here and in the 'USR2'
+  // handler; but these are very light-weight checks;
   checkTasks();
 }
+
+#ifdef VIRTUALSITES
+//
+void AM::handleUSR2()
+{
+  checkTasks();
+}
+#endif
 
 /* handleUserAlarm:
     if UserAlarm-SFLAG is set this method is called

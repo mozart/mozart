@@ -2044,6 +2044,12 @@ $builtins = {
                                   module => vs,
                                   native => true},
 
+    'VirtualSite.removeMailbox' => { in     => ['+string'],
+                                  out    => [],
+                                  BI     => BIVSremoveMailbox,
+                                  module => vs,
+                                  native => true},
+
     #* Tools
 
     ##* WIF (Wish InterFace)

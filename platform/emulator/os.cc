@@ -308,7 +308,11 @@ OsSigFun *osSignal(int signo, OsSigFun *fun)
   act.sa_flags = 0;
 
   /* The following piece of code is from Stevens: Advanced UNIX Programming */
-  if (signo == SIGALRM) {
+  if (signo == SIGALRM
+#ifdef VIRTUALSITES
+      || signo == SIGUSR2
+#endif
+      ) {
 #ifdef SA_INTERUPT /* SunOS */
     act.sa_flags |= SA_INTERUPT;
 #endif
@@ -574,16 +578,15 @@ TimerThread::TimerThread(int w)
 
 
 // 't' is in miliseconds;
-void osSetAlarmTimer(int t, Bool interval)
+void osSetAlarmTimer(int t)
 {
 #ifdef DEBUG_DET
-  if (interval==OK)
     return;
 #endif
 
 #ifdef WINDOWS
 
-  Assert(t>0 && interval==OK);
+  Assert(t>0);
   if (timerthread==NULL) {
     unsigned tid;
     timerthread = new TimerThread(t);
@@ -596,8 +599,8 @@ void osSetAlarmTimer(int t, Bool interval)
 
   int sec  = t/1000;
   int usec = (t*1000)%1000000;
-  newT.it_interval.tv_sec  = (interval ? sec : 0);
-  newT.it_interval.tv_usec = (interval ? usec : 0);
+  newT.it_interval.tv_sec  = sec;
+  newT.it_interval.tv_usec = usec;
   newT.it_value.tv_sec     = sec;
   newT.it_value.tv_usec    = usec;
 
@@ -630,40 +633,57 @@ int osGetAlarmTimer()
 #endif
 
 
-/* wait *timeout msecs on given fds
+/*
+ * wait *timeout msecs on given fds
  * return number of fds ready and return in *timeout msecs left
+ * (kost@ last one is not used now);
  */
 static
-int osSelect(fd_set *readfds, fd_set *writefds, int *timeout)
+int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
 {
 #ifdef WINDOWS
 
-  return win32Select(readfds,writefds,timeout);
+  return win32Select(readfds,writefds,ptimeout);
 
 #else
 
   struct timeval timeoutstruct, *timeoutptr;
-  if (timeout == WAIT_NULL) {
+  int currentSystemTime;
+
+  if (ptimeout == WAIT_NULL) {
     timeoutstruct.tv_sec = 0;
     timeoutstruct.tv_usec = 0;
     timeoutptr = &timeoutstruct;
   } else {
-    timeoutptr=NULL;
-    osSetAlarmTimer(*timeout,NO);
+    int timeout = *ptimeout;
+    if (timeout == 0) {
+      timeoutptr = NULL;        // indefinitely;
+    } else {
+      timeoutstruct.tv_sec = timeout/1000;
+      timeoutstruct.tv_usec = (timeout*1000)%1000000;
+      timeoutptr = &timeoutstruct;
+    }
+
+    //
+    currentSystemTime = osSystemTime();
+    // note that the alarm clock is untouched here now;
     osUnblockSignals();
   }
 
-/* The prototypes for select are wrong on HP-UX 9.x */
+  /* The prototypes for select are wrong on HP-UX 9.x */
 #ifdef HPUX_700
   int ret = select(openMax,(int*)readfds,(int*)writefds,NULL,timeoutptr);
 #else
   int ret = select(openMax,readfds,writefds,NULL,timeoutptr);
 #endif
 
-  if (timeout!=WAIT_NULL) {
-    *timeout = osGetAlarmTimer();
+  if (ptimeout != WAIT_NULL) {
+    // kost@ : Note that effectively the time spent in wait
+    // may be greater than specified;
+    *ptimeout = max(0, (*ptimeout) - (osSystemTime() - currentSystemTime));
     osBlockSignals();
   }
+
   return ret;
 #endif  /* WINDOWS */
 }
@@ -672,6 +692,10 @@ void osInitSignals()
 {
 #ifndef WINDOWS
   osSignal(SIGALRM,handlerALRM);
+#ifdef VIRTUALSITES
+  // 'SIGUSR2' notifies a virtual site about pending messages;
+  osSignal(SIGUSR2,handlerUSR2);
+#endif
 #endif
 #ifndef DEBUG_DET
   osSignal(SIGINT,handlerINT);
@@ -828,18 +852,17 @@ Bool osIsWatchedFD(int fd, int mode)
 }
 
 
-/* do a select, that waits "ms".
+/*
+ * do a select, that waits "ms".
  * if "ms" <= 0 do a blocking select
- * return number of ms left
  */
-int osBlockSelect(int ms)
+void osBlockSelect(int ms)
 {
   fd_set copyFDs[2];
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
   int wait = ms;
   (void) osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&wait);
-  return wait;
 }
 
 /* osClearSocketErrors
