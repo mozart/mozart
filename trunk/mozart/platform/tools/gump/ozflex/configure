@@ -716,12 +716,12 @@ test -n "$MAKE" || MAKE="NONE"
 GNU make is needed to build the system.
 It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/make/
 
-The latest version at this time is 3.77 and is available
+The latest version at this time is 3.80 and is available
 packaged as the following archive:
 
-	make-3.77.tar.gz
+	make-3.80.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -1528,8 +1528,8 @@ fi
           echo "configure: warning: dont know how to check egcs version, assuming ok" 1>&2
 	else
           
-  echo $ac_n "checking $CC version is at least 2.7""... $ac_c" 1>&6
-echo "configure:1533: checking $CC version is at least 2.7" >&5
+  echo $ac_n "checking $CC version is at least 2.95.3""... $ac_c" 1>&6
+echo "configure:1533: checking $CC version is at least 2.95.3" >&5
   oz_tmp_ok=no
   if oz_tmp_version1=`$CC -dumpversion || $CC --version 2>/dev/null`; then
     # first we try to locate the string "version"
@@ -1555,7 +1555,7 @@ echo "configure:1533: checking $CC version is at least 2.7" >&5
     if test -n "$oz_tmp_version"; then
       
   oz_tmp_got="$oz_tmp_version"
-  oz_tmp_want="2.7"
+  oz_tmp_want="2.95.3"
   
   oz_tmp="$oz_tmp_got"
 
@@ -1627,15 +1627,15 @@ echo "configure:1533: checking $CC version is at least 2.7" >&5
           if test "$oz_tmp_ok" = no; then
             { echo "configure: error: 
 configure found the GNU C compiler $CC version $oz_tmp_version
-but version 2.7 or higher is required to build the
+but version 2.95.3 or higher is required to build the
 system.  It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is ??? and is available
+The latest version at this time is 3.3.2 and is available
 packaged as the following archive:
 
-	???
+	gcc-3.3.2.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -1960,12 +1960,12 @@ echo "configure:1857: checking $YACC version is at least 1.25" >&5
 GNU bison version 1.25 or higher is needed to build the system.
 It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/bison/
 
-The latest version at this time is 1.30 and is available
+The latest version at this time is 1.875 and is available
 packaged as the following archive:
 
-	bison-1.30.tar.gz
+	bison-1.875.tar.gz
 
 
 You may find a mirror archive closer to you by consulting:
