@@ -757,7 +757,7 @@ Credit BorrowCreditHandler::getCreditBig() {
   if(c.credit) {
     c.owner=NULL;
   } else {
-    printf("new:getSecondary %d\n",osgetpid());
+//      printf("new:getSecondary %d\n",osgetpid());
     c.owner = getSmallSecondaryCredit(c.credit);
   }
   PD((CREDIT_NEW,"borrow::getCreditBig %x %x %d %x",
@@ -771,7 +771,7 @@ Credit BorrowCreditHandler::getCreditSmall() {
   if (getOnePrimaryCredit()) {
     c.owner=NULL;
   } else {
-    printf("new:getOneSecondary\n");
+//      printf("new:getOneSecondary\n");
     c.owner = getOneSecondaryCredit();
   }
   PD((CREDIT_NEW,"borrow::getCreditSmall %x %x %d %x",
@@ -817,8 +817,8 @@ NetAddress* BorrowCreditHandler::getNetAddress() {
 Bool BorrowCreditHandler::maybeFreeCreditHandler() {
   if(isExtended()){
     if(getExtendFlags() & CH_MASTER) {
-      printf("maybeFreeCreditHandler & master %d\n",osgetpid());
-      Assert(0);
+//        printf("maybeFreeCreditHandler & master %d\n",osgetpid());
+//        Assert(0);
       return FALSE;
     }
     Assert(getExtendFlags() & CH_SLAVE);
