@@ -41,6 +41,7 @@
 <!ENTITY eg PI "eg">
 <!ENTITY ie PI "ie">
 <!ENTITY emdash PI "emdash">
+<!ENTITY slash PI "slash">
 
 ]>
 
@@ -286,7 +287,7 @@
 	  <Grammar.Rule proglang=oz>?={keyword}
 	    <Grammar.Alt><<andthen>> | <<at>> | <<attr>> | <<case>> |
 	      <<catch>> | <<choice>></Grammar.Alt>
-	    <Grammar.Alt><<class>> | <<cond>> | <<condis>> | <<declare>> |
+	    <Grammar.Alt><<class>> | <<cond>> | <<declare>> |
 	      <<define>> | <<dis>></Grammar.Alt>
 	    <Grammar.Alt><<div>> | <<else>> | <<elsecase>> | <<elseif>> |
 	      <<end>></Grammar.Alt>
@@ -680,24 +681,14 @@
 	    <Grammar.Alt/<<dis>> ?={dis statement clause}
 	      { <Q class=terminal/<<[]>>/
 	      ?={dis statement clause} }+ <<end>>/
-	    <Grammar.Alt/<<choice>> ?={choice statement clause}
-	      { <Q class=terminal/<<[]>>/
-	      ?={choice statement clause} } <<end>>/
-	    <Grammar.Alt/<<condis>> ?={condis clause}
-	      { <Q class=terminal/<<[]>>/ ?={condis clause} }+ <<end>>//
+	    <Grammar.Alt/<<choice>> ?={in statement}
+	      { <Q class=terminal/<<[]>>/ ?={in statement} } <<end>>//
 	  <Grammar.Rule/?={cond statement clause}
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}
 	      <<then>> ?={in statement}//
 	  <Grammar.Rule/?={dis statement clause}
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}
 	      [ <<then>> ?={in statement} ]//
-	  <Grammar.Rule/?={choice statement clause}
-	    <Grammar.Alt/[ [ ?={declaration part} <<in>> ]
-	      ?={statement} <<then>> ]
-	    <Grammar.Alt type=space/?={in statement}//
-	  <Grammar.Rule/?={condis clause}
-	    <Grammar.Alt/?={fd compare}/
-	    <Grammar.Alt/?={fd in}//
 	<Para class=apropos><Title/Expressions/
 	  <Grammar.Rule/?={expression}
 	    <Grammar.Alt type=add/?={fd compare}/
@@ -714,18 +705,12 @@
 	    <Grammar.Alt/<<dis>> ?={cond expression clause}
 	      { <Q class=terminal/<<[]>>/
 	      ?={cond expression clause} }+ <<end>>/
-	    <Grammar.Alt/<<choice>> ?={choice expression clause}
+	    <Grammar.Alt/<<choice>> ?={in expression}
 	      { <Q class=terminal/<<[]>>/
-	      ?={choice expression clause} } <<end>>/
-	    <Grammar.Alt/<<condis>> ?={condis clause}
-	      { <Q class=terminal/<<[]>>/ ?={condis clause} }+ <<end>>//
+	      ?={in expression} } <<end>>//
 	  <Grammar.Rule/?={cond expression clause}
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}
 	      <<then>> ?={in expression}//
-	  <Grammar.Rule/?={choice expression clause}
-	    <Grammar.Alt/[ [ ?={declaration part} <<in>> ]
-	      ?={statement} <<then>> ]/
-	    <Grammar.Alt type=space/?={in expression}//
 	  <Grammar.Rule/?={fd compare}
 	    <Grammar.Alt/?={expression} (
 	      <Q class=terminal/<<=:>>/ |
@@ -1000,22 +985,6 @@
 	  <Grammar.Rule/?={feature}
 	    <Grammar.Alt/?={variable} | ?={atom} | ?={int}//
       <Section>
-	<Title/Combinators/
-	<P>
-	  <Grammar.Rule/?={statement}
-	    <Grammar.Alt type=add/<<cond>> ?={clause}
-	      { <Q class=terminal/<<[]>>/ ?={clause} }
-	      <<else>> ?={statement} <<end>>/
-	    <Grammar.Alt/<<or>> ?={clause}
-	      { <Q class=terminal/<<[]>>/ ?={clause} }+ <<end>>/
-	    <Grammar.Alt/<<dis>> ?={clause}
-	      { <Q class=terminal/<<[]>>/ ?={clause} }+ <<end>>/
-	    <Grammar.Alt/<<choice>> ?={clause}
-	      { <Q class=terminal/<<[]>>/ ?={clause} } <<end>>//
-	  <Grammar.Rule/?={clause}
-	    <Grammar.Alt/[ { ?={variable} }+ <<in>> ] ?={statement}
-	      <<then>> ?={statement}//
-      <Section>
 	<Title/Class Extensions/
 	<P>
 	  <Grammar.Rule/?={statement}
@@ -1106,7 +1075,8 @@
 	    <TD/?={case statement clause} or ?={case expression clause}/
 	  <TR>
 	    <TD/?{L}, ?{L1}, &ellipsis;, ?{Ln}/
-	    <TD/?={cond statement clause} or ?={cond expression clause}/
+	    <TD/?={cond statement clause} or ?={cond expression clause}
+	      or ?={dis statement clause}/
 	  <TR>
 	    <TD/?{l}/
 	    <TD/?={label}/
@@ -1423,7 +1393,8 @@ end>>/
 	      <Rewrite.Condition/where the omitted parts of the exception
 		are implementation-dependent./
 	    </Rewrite>
-	    <!--** missing: expansion of case statement/expression to cond -->
+	    <Note><!--**-->Missing: expansion of <<case>>
+	      statement&slash;expression to <<cond>></Note>
 	<SubSection class=unnumbered>
 	  <Title/Locks/
 	  <P>
@@ -1607,7 +1578,7 @@ end
 	      <Rewrite.From/<<?{EP1}#&ellipsis;#?{EPn}>>/
 	      <Rewrite.To/<<'#'(?{EP1} &ellipsis; ?{EPn})>>/
 	    </Rewrite>
-	    <!--** missing: dots, omitted features -->
+	    <Note><!--**-->Missing: dots, omitted features</Note>
 	<SubSection class=unnumbered>
 	  <Title/Wildcard/
 	  <P>
@@ -1651,7 +1622,7 @@ end
 	<SubSection class=unnumbered>
 	  <Title/Operators/
 	  <P>
-	    <!--** missing: fd compare -->
+	    <Note><!--**-->Missing: fd compare</Note>
 	    <Rewrite>?={statement}
 	      <Rewrite.From/<<?{E1} :: ?{E2}>>/
 	      <Rewrite.To/<<{`FD.int` ?{E2} ?{E1}}>>/
@@ -1704,16 +1675,7 @@ end>>/
 	      <Rewrite.Condition/where the omitted parts of the exception
 		are implementation-dependent./
 	    </Rewrite>
-	    <Rewrite>?={dis statement clause}
-	      <Rewrite.From/[ <<?{D} in >> ] ?{S}/
-	      <Rewrite.To/[ <<?{D} in >> ] <<?{S} then skip>>/
-	    </Rewrite>
-	    <Rewrite>?={choice statement clause} ?={choice expression clause}
-	      <Rewrite.From/?{SE}/
-	      <Rewrite.To/<<skip then ?{SE}>>/
-	    </Rewrite>
 	    <Rewrite>?={cond statement clause} ?={dis statement clause}
-	      ?={choice statement clause}
 	      <Rewrite.From/<<?{D} in ?{S1} >>[ <<then ?{S2}>> ]/
 	      <Rewrite.To
 /<<?{x1} &ellipsis; ?{xn} in ?{D'} ?{S1} >>[ <<then ?{S2}>> ]/
@@ -1722,7 +1684,7 @@ end>>/
 		and ?{D'} is ?{D} with singleton variables and escapes
 		removed./
 	    </Rewrite>
-	    <Rewrite>?={cond expression clause} ?={choice expression clause}
+	    <Rewrite>?={cond expression clause}
 	      <Rewrite.From/<<?{D} in ?{S} then ?{E}>>/
 	      <Rewrite.To/<<?{x1} &ellipsis; ?{xn} in ?{D'} ?{S} then ?{E}>>/
 	      <Rewrite.Condition/if ?{D} is not a sequence of distinct
@@ -1730,14 +1692,47 @@ end>>/
 		and ?{D'} is ?{D} with singleton variables and escapes
 		removed./
 	    </Rewrite>
-	    <!--** missing: ?{x} = cond/or/dis/choice => statement -->
-	<SubSection class=unnumbered>
-	  <Title/Constructive Disjunction/
-	  <P>
-	    <!--** missing: constructive disjunction -->
-	    Constructive disjunction is currently not specified.
-	    See <Ptr.Extern to="ozdoc:system" key="section.fd.condis">
-	    for some information about constructive disjunction.
+	    <Note><!--**-->Missing: translation of
+	      <<cond>>&slash;<<or>>&slash;<<dis>>&slash;<<choice>>
+	      expression into statement</Note>
+	    The following rewrite rules make use of an auxiliary
+	    function ?{Proc}, defined as follows:
+	    <Table>
+	      <TR>
+		<TH/?{L}/
+		<TH/?{Proc}(?{L})/
+	      <TR>
+		<TD/<<?{S1} in ?{S2}>>/
+		<TD/<<proc {$} ?{S1} in ?{S2} end>>/
+	      <TR>
+		<TD/<<?{S1} in ?{S2} then ?{S3}>>/
+		<TD/<<fun {$} ?{S1} in ?{S2} proc {$} ?{S3} end end>>/
+	    </Table>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<cond ?{L1} [] &ellipsis; [] ?{Ln}
+else ?{S}
+end>>/
+	      <Rewrite.To/<<{`Combinators.'cond'` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)
+ proc {$} ?{S} end}>>/
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<or ?{L1} [] &ellipsis; [] ?{Ln}
+end>>/
+	      <Rewrite.To/<<{`Combinators.'or` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)>>/
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<dis ?{L1} [] &ellipsis; [] ?{Ln}
+end>>/
+	      <Rewrite.To/<<{`Combinators.'dis'` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)>>/
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<choice ?{S1} [] &ellipsis; [] ?{Sn}>>/
+	      <Rewrite.To
+/<<case {`Space.choose` ?{n}} of 1 then ?{S1}
+[] &ellipsis;
+[] ?{n} then ?{Sn}
+end>>/
+	    </Rewrite>
       <Section id="section.translation.classes">
 	<Title/Class Extensions/
 	<SubSection class=unnumbered>
