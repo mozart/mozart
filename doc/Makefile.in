@@ -67,7 +67,7 @@ clean:
         -rm -f *~
 
 veryclean: clean
-        -rm -f $(CED)
+        -rm -f $(CED) xref.db
 
 distclean: veryclean
         -rm -f Makefile ced.el catalog config.log config.status config.cache

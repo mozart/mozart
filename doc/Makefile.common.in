@@ -37,7 +37,8 @@ $(SRCTOP)/doc/Makefile.common: $(SRCTOP)/doc/Makefile.common.in \
 
 $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
-        --type=html-stylesheets --stylesheet=ozdoc.css && \
+        --type=html-stylesheets --stylesheet=ozdoc.css \
+        --xrefdb=$(SRCTOP)/doc/xref.db --xrefdir=$(WHAT) && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(HTMLEXTRAFILES); do cp -p $$i $(WHAT)-html; done
 
