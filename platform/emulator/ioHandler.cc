@@ -70,7 +70,7 @@ int hasPendingSelect()
 void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
   if (!oz_onToplevel()) {
-    warning("select only on toplevel");
+    OZ_warning("select only on toplevel");
     return;
   }
   IONode *ion = findIONode(fd);
@@ -83,7 +83,7 @@ void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val)
 void oz_io_acceptSelect(int fd, OZ_IOHandler fun, void *val)
 {
   if (!oz_onToplevel()) {
-    warning("select only on toplevel");
+    OZ_warning("select only on toplevel");
     return;
   }
 
@@ -111,7 +111,7 @@ int oz_io_awake(int, void *var)
 int oz_io_select(int fd, int mode,TaggedRef l,TaggedRef r)
 {
   if (!oz_onToplevel()) {
-    warning("select only on toplevel");
+    OZ_warning("select only on toplevel");
     return OK;
   }
   if (osTestSelect(fd,mode)==1) {
@@ -130,7 +130,7 @@ int oz_io_select(int fd, int mode,TaggedRef l,TaggedRef r)
 void oz_io_acceptSelect(int fd,TaggedRef l,TaggedRef r)
 {
   if (!oz_onToplevel()) {
-    warning("acceptSelect only on toplevel");
+    OZ_warning("acceptSelect only on toplevel");
     return;
   }
 

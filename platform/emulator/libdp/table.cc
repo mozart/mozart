@@ -156,7 +156,7 @@ void OwnerTable::compactify()  /* TODO - not tested */
 
 void OwnerTable::resize(){
 #ifdef BTRESIZE_CRITICAL
-  warning("OwnerTable::resize: maybe incorrect");
+  OZ_warning("OwnerTable::resize: maybe incorrect");
 #endif
   int newsize = ((int) (TABLE_EXPAND_FACTOR *size));
   PD((TABLE,"TABLE:resize owner old:%d no_used:%d new:%d",
@@ -834,7 +834,7 @@ void BorrowTable::compactify(){
 void BorrowTable::resize()
 {
 #ifdef BTRESIZE_CRITICAL
-  warning("BorrowTable::resize: maybe incorrect");
+  OZ_warning("BorrowTable::resize: maybe incorrect");
 #endif
   Assert(no_used==size);
   int newsize = int (TABLE_EXPAND_FACTOR*size);

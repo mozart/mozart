@@ -90,8 +90,8 @@ void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
 {
   OZ_Term nogoods = bs->getNoGoods();
   if (!literalEq(oz_nil(),nogoods)) {
-    warning("send message '%s' contains nogoods: %s",
-	    mess_names[mt],toC(nogoods));
+    OZ_warning("send message '%s' contains nogoods: %s",
+	       mess_names[mt],toC(nogoods));
   }
 
   int ret=toS->sendTo(bs,mt,sS,sI);
@@ -978,7 +978,7 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
 
     case M_FILE:{
       Assert(0);
-      warning("impossible\n");
+      OZ_warning("impossible\n");
       return;}
 
     case M_CHAIN_ACK:{
@@ -1022,7 +1022,7 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
       return;}
 
   default:
-    warning("communication problem - impossible");
+    OZ_warning("communication problem - impossible");
     Assert(0);
   }
 
