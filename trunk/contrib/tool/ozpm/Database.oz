@@ -3,6 +3,7 @@ export
    'class' : Database
 import
    Path(make) at 'x-oz://duchier/sp/Path.ozf'
+   Pickle(load save)
 define
    fun lazy {LoadDB F}
       try {Record.toDictionary {Pickle.load F}}
@@ -14,7 +15,7 @@ define
       attr db:unit file:unit
       meth init(File)
 	 file <- {{Path.make File} expand($)}
-	 db   <- {LoadDB}
+	 db   <- {LoadDB @file}
       end
       meth get(K V) {Dictionary.get @db {ToKey K} V} end
       meth put(K V) {Dictionary.put @db {ToKey K} V} end
