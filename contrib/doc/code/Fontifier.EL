@@ -40,6 +40,7 @@
     (font-lock-function-name-face . function)
     (font-lock-builtin-face       . builtin)
     (font-lock-reference-face     . reference)
+    (font-lock-constant-face      . reference)
     (font-lock-type-face          . type)
     (font-lock-warning-face       . warning)
     (nil                          . text)))
@@ -291,4 +292,4 @@ the result spec."
     (while (not (eobp))
       (ozdoc-process-request))
     (set-buffer out-buffer)
-    (write-file out)))
+    (write-region (point-min) (point-max) out)))
