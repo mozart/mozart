@@ -94,7 +94,11 @@ void OZ_error(OZ_CONST char *format, ...)
   //
   // send a signal to all forked processes, including the emulator itself
   DebugCode(ossleep(30));
+#if defined(SIGQUIT) && defined(SIGUSR1)
   oskill(0,ozconf.dumpCore?SIGQUIT:SIGUSR1);
+#else
+  oskill(0,SIGINT);
+#endif
 }
 
 void OZ_warning(OZ_CONST char *format, ...)
