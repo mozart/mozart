@@ -1703,7 +1703,7 @@ void engine() {
        // adjoin the list of or-actors to the list in actual solve actor!!!
        Board *currentSolveBB = e->currentSolveBoard;
        if (currentSolveBB == (Board *) NULL) {
-	 DebugCheckT (message ("solveCont is applied not inside search problem?\n"));
+	 DebugCheckT (message ("solveCont is applied not inside of a search problem?\n"));
        } else {
 	 SolveActor::Cast (currentSolveBB->getActor ())->pushWaitActorsStackOf (solveAA);
        }
@@ -1730,9 +1730,11 @@ void engine() {
 	 CBB->incSuspCount (boardToInstall->getSuspCount () - 1); 
 	 // get continuation of 'board-to-install' if any;
 	 if (boardToInstall->isWaitTop () == NO) {
-	   Continuation *bodyOf = boardToInstall->getBodyPtr ();
-	   e->pushTaskOutline(CBB, bodyOf->getPC (), bodyOf->getY (),
-			bodyOf->getG (), bodyOf->getX (), bodyOf->getXSize ());
+	   if (isExecute == NO)
+	     e->pushTask(CBB,PC,Y,G);
+	   else
+	     isExecute = NO;
+	   LOADCONT(boardToInstall->getBodyPtr ());
 	 }
        }
        // NB: 
@@ -1751,7 +1753,7 @@ void engine() {
        if (isExecute) {
 	 goto LBLreduce;
        }
-       JUMP(PC);
+       goto LBLemulate;
      }
 
 // ------------------------------------------------------------------------
