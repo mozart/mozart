@@ -1570,18 +1570,6 @@ OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
     TypeErrorT(0, "Space");                             \
   Space *space = (Space *) tagged2Const(tagged_space);
 
-#define declareUnmergedSpace()                          \
-  declareSpace()                                        \
-  if (space->isMerged())                                \
-    return raiseKernel("spaceMerged",1,tagged_space);
-
-#define declareStableSpace()                                            \
-  declareUnmergedSpace();                                               \
-  {                                                                     \
-    TaggedRef result = space->getSolveActor()->getResult();             \
-    DEREF(result, result_ptr, result_tag);                              \
-    if (isAnyVar(result_tag)) OZ_suspendOn(makeTaggedRef(result_ptr));  \
-  }
 
 OZ_C_proc_begin(BInewSpace, 2) {
   OZ_Term proc = OZ_getCArg(0);
@@ -1675,7 +1663,10 @@ OZ_C_proc_begin(BIaskVerboseSpace, 2) {
 
 
 OZ_C_proc_begin(BImergeSpace, 2) {
-  declareUnmergedSpace();
+  declareSpace();
+
+  if (space->isMerged())
+    return raiseKernel("spaceMerged",1,tagged_space);
 
   if (am.isBelow(am.currentBoard,space->getSolveBoard()->derefBoard()))
     return raiseKernel("spaceSuper",1,tagged_space);
@@ -1703,7 +1694,10 @@ OZ_C_proc_begin(BImergeSpace, 2) {
 
 
 OZ_C_proc_begin(BIcloneSpace, 2) {
-  declareStableSpace();
+  declareSpace();
+
+  if (space->isMerged())
+    return raiseKernel("spaceMerged",1,tagged_space);
 
   Board* CBB = am.currentBoard;
 
@@ -1711,6 +1705,11 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
     return OZ_unify(OZ_getCArg(1),
                     makeTaggedConst(new Space(CBB, (Board *) 0)));
 
+  TaggedRef result = space->getSolveActor()->getResult();
+
+  DEREF(result, result_ptr, result_tag);
+  if (isAnyVar(result_tag))
+    OZ_suspendOn(makeTaggedRef(result_ptr));
 
   return OZ_unify(OZ_getCArg(1),
                   makeTaggedConst(new Space(CBB,
@@ -1738,7 +1737,16 @@ OZ_C_proc_begin(contChooseInternal, 2) {
 
 
 OZ_C_proc_begin(BIchooseSpace, 2) {
-  declareStableSpace();
+  declareSpace();
+
+  if (space->isMerged())
+    return raiseKernel("spaceMerged",1,tagged_space);
+
+  Board* CBB = am.currentBoard;
+
+  if (space->isFailed())
+    return PROCEED;
+
   TaggedRef choice = OZ_getCArg(1);
 
   DEREF(choice, choice_ptr, choice_tag);
@@ -1792,7 +1800,10 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
 
 
 OZ_C_proc_begin(BIinjectSpace, 2) {
-  declareUnmergedSpace();
+  declareSpace();
+
+  if (space->isMerged())
+    return raiseKernel("spaceMerged",1,tagged_space);
 
   // Check whether space is failed!
   if (space->isFailed())
@@ -1826,8 +1837,6 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
 
 
 #undef declareSpace
-#undef declareUnmergedSpace
-#undef declareStableSpace
 
 
 // ---------------------------------------------------------------------
