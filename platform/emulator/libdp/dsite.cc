@@ -40,156 +40,42 @@
 #include "comm.hh"
 #include "mbuffer.hh"
 #include "genhashtbl.hh"
-
+#include "byteBuffer.hh"
 #define SITE_CUTOFF           100
 
 /**********************************************************************/
 /*   SECTION ::  Site Hash Table                                     */
 /**********************************************************************/
 
-enum FindType{
-  SAME,
-  NONE,
-  I_AM_YOUNGER,
-  I_AM_OLDER};
 
 #define PRIMARY_SITE_TABLE_SIZE    10
 #define SECONDARY_SITE_TABLE_SIZE  50
 
 
-class DSiteHashTable : public GenHashTable {
 
-public:
-  DSiteHashTable(int size):GenHashTable(size){}
-
-  FindType findPrimary(DSite *s,unsigned int hvalue,DSite* &found){
-    GenHashNode *ghn=htFindFirstU(hvalue);
-    while(ghn!=NULL){
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);
-      if(s->compareSitesNoTimestamp(found)==0) {
-        int ft=s->compareSites(found);
-        if(ft==0) {return SAME;}
-        if(ft<0) {return I_AM_YOUNGER;}
-        return I_AM_OLDER;}
-      ghn=htFindNextU(ghn,hvalue);}
-    found=NULL; // optimize
-    return NONE;}
-
-  DSite* findSecondary(DSite *s, unsigned int hvalue){
-    GenHashNode *ghn=htFindFirstU(hvalue);
-    DSite* found;
-    while(ghn!=NULL){
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);
-      if(s->compareSites(found)==0) return found;
-      ghn=htFindNextU(ghn,hvalue);}
-    return NULL;}
-
-  void insertPrimary(DSite *s,unsigned int hvalue){
-    GenHashBaseKey *ghn_bk;
-    GenHashEntry *ghn_e=NULL;
-    GenCast(s,DSite*,ghn_bk,GenHashBaseKey*);
-    PD((SITE,"add hvalue:%d site:%s",hvalue,s->stringrep()));
-    htAddU(hvalue,ghn_bk,ghn_e);}
-
-  void insertSecondary(DSite *s,int hvalue){
-    insertPrimary(s,hvalue);}
-
-  void removePrimary(DSite *s,unsigned int hvalue){
-    GenHashNode *ghn=htFindFirstU(hvalue);
-    DSite* found;
-    while(ghn!=NULL){
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);
-      if(s->compareSites(found)==0){
-        htSubU(hvalue,ghn);
-        return;}
-      ghn=htFindNextU(ghn,hvalue);}
-    Assert(0);}
-
-  void removeSecondary(DSite *s,int hvalue){
-    removePrimary(s,hvalue);}
-
-  void cleanup();
-};
-
-
-DSiteHashTable* primarySiteTable=new DSiteHashTable(PRIMARY_SITE_TABLE_SIZE);
-DSiteHashTable* secondarySiteTable=new DSiteHashTable(SECONDARY_SITE_TABLE_SIZE);
-
-void DSiteHashTable::cleanup(){
-  GenHashNode *ghn,*ghn1;
-  DSite* s;
-  int i=0;
-  ghn=getFirst(i);
-  while(ghn!=NULL){
-    GenCast(ghn->getBaseKey(),GenHashBaseKey*,s,DSite*);
-
-    if(!(s->isGCMarkedSite())){
-      PD((SITE,"Head: Not Marked Site %x %s",s, s->stringrep()));
-      if(s->canBeFreed()){
-        s->freeSite();
-        deleteFirst(ghn);
-        ghn=getByIndex(i);
-        continue;}}
-    else{
-      PD((SITE,"Head: Marked Site %x %s",s, s->stringrep()));
-      s->removeGCMarkSite();}
-    ghn1=ghn->getNext();
-    while(ghn1!=NULL){
-      GenCast(ghn1->getBaseKey(),GenHashBaseKey*,s,DSite*);
-      if(s->isGCMarkedSite()){
-        PD((SITE,"      : Marked Site %x %s",s, s->stringrep()));
-        s->removeGCMarkSite();}
-      else{
-        if(s->canBeFreed()){
-          PD((SITE,"      : Not Marked Site %x %s",s, s->stringrep()));
-          s->freeSite();
-          deleteNonFirst(ghn,ghn1);
-          ghn1=ghn->getNext();
-          continue;}}
-      ghn=ghn1;
-      ghn1=ghn1->getNext();}
-    i++;
-    ghn=getByIndex(i);}
-  return;
-}
+DSiteHT* primarySiteTable=new DSiteHT(PRIMARY_SITE_TABLE_SIZE);
+DSiteHT* secondarySiteTable=new DSiteHT(SECONDARY_SITE_TABLE_SIZE);
 
 void gcDSiteTable(){
   primarySiteTable->cleanup();
-  secondarySiteTable->cleanup();}
-
-/**********************************************************************/
-/*   SECTION ::  NetworkStatistics                                   */
-/**********************************************************************/
-
-GenHashNode *getPrimaryNode(GenHashNode* node, int &indx){
-  if(node == NULL)
-    return primarySiteTable->getFirst(indx);
-  return primarySiteTable->getNext(node,indx);}
-
-GenHashNode *getSecondaryNode(GenHashNode* node, int &indx){
-  if(node == NULL)
-    return secondarySiteTable->getFirst(indx);
-  return secondarySiteTable->getNext(node,indx);}
-
+  secondarySiteTable->cleanup();
+}
 
 /**********************************************************************/
 /*   SECTION ::  General unmarshaling routines                        */
 /**********************************************************************/
 
-inline void primaryToSecondary(DSite *s, int hvalue) {
-  primarySiteTable->removePrimary(s,hvalue);
-  int hvalue2=s->hashSecondary();
-//    s->discoveryPerm(); // AN!
+inline void primaryToSecondary(DSite *s) {
+  primarySiteTable->remove(s);
   s->putInSecondary();
-  secondarySiteTable->insertSecondary(s,hvalue2);}
+  secondarySiteTable->insert(s);}
 
 static
 DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
 {
   DSite *s;
-  int hvalue = tryS->hashPrimary();
 
-  FindType rc = primarySiteTable->findPrimary(tryS,hvalue,s);
+  FindType rc = primarySiteTable->find(tryS,s);
   switch(rc){
   case SAME: {
     PD((SITE,"unmarshalsite SAME"));
@@ -211,26 +97,25 @@ DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
 
   case I_AM_YOUNGER:{
     PD((SITE,"unmarshalsite I_AM_YOUNGER"));
-    int hvalue=tryS->hashSecondary();
-    s=secondarySiteTable->findSecondary(tryS,hvalue);
-    if(s){return s;}
+    if (secondarySiteTable->find(tryS,s) == SAME)
+      {
+        return s;
+      }
     s = new DSite(tryS->getAddress(), tryS->getPort(), tryS->getTimeStamp(),
                   PERM_SITE);
-    secondarySiteTable->insertSecondary(s,hvalue);
+    secondarySiteTable->insert(s);
     return s;}
 
   case I_AM_OLDER:{
     PD((SITE,"unmarshalsite I_AM_OLDER"));
-    primaryToSecondary(s,hvalue);
+    primaryToSecondary(s);
     break;}
 
   default: Assert(0);}
 
-  // none
-
   // type is left blank here:
   s = new DSite(tryS->getAddress(), tryS->getPort(), tryS->getTimeStamp());
-  primarySiteTable->insertPrimary(s,hvalue);
+  primarySiteTable->insert(s);
 
   //
   if(mt==DIF_SITE_PERM){
@@ -250,30 +135,23 @@ DSite *findDSite(ip_address a,int port,TimeStamp &stamp)
   return (unmarshalDSiteInternal(NULL, &tryS, DIF_SITE));
 }
 
-#ifdef USE_FAST_UNMARSHALER
-DSite* unmarshalDSite(MarshalerBuffer *buf)
-{
-  PD((UNMARSHAL,"site"));
-  MarshalTag mt = (MarshalTag) buf->get();
-  Assert(mt == DIF_SITE || mt == DIF_SITE_PERM);
-  DSite tryS;
-
-  tryS.unmarshalBaseSite(buf);
-  return unmarshalDSiteInternal(buf, &tryS, mt);
-}
-#else
 DSite* unmarshalDSiteRobust(MarshalerBuffer *buf, int *error)
 {
   PD((UNMARSHAL,"site"));
   MarshalTag mt = (MarshalTag) buf->get();
-  Assert(mt == DIF_SITE || mt == DIF_SITE_PERM);
+
+  // Shortcut when sending own site.
+  if (mt == DIF_SITE_SENDER)
+    {
+      *error = NO;
+      return   ((ByteBuffer *)buf)->getSite();
+    }
   DSite tryS;
 
   tryS.unmarshalBaseSiteRobust(buf, error);
   if (*error) return ((DSite *) 0);
   return unmarshalDSiteInternal(buf, &tryS, mt);
 }
-#endif
 
 /**********************************************************************/
 /*   SECTION :: BaseSite object methods                               */
@@ -325,9 +203,6 @@ char *DSite::stringrep_notype()
 char *oz_site2String(DSite *s) { return s->stringrep(); }
 
 //
-unsigned int DSite::hashWOTimestamp(){
-  return ((unsigned int) address) + ((unsigned int) port);
-}
 
 /**********************************************************************/
 /*   SECTION :: Site object methods                                   */
@@ -344,7 +219,7 @@ void DSite::marshalDSite(MarshalerBuffer *buf){
   Assert((type & REMOTE_SITE) || (this==myDSite) );
   marshalDIF(buf,DIF_SITE);
   marshalBaseSite(buf);
-  return;}
+}
 
 
 /**********************************************************************/
@@ -361,8 +236,38 @@ DSite* myDSite =  NULL;
 DSite* makeMyDSite(ip_address a, port_t p, TimeStamp &t) {
   DSite *s = new DSite(a,p,t);
   s->setMyDSite();
-  int hvalue = s->hashPrimary();
-  primarySiteTable->insertPrimary(s,hvalue);
+  primarySiteTable->insert(s);
   s->initMyDSite();
   return s;
+}
+
+OZ_Term DSite::getOzRep(){
+  int sent = 0, received = 0, lastrtt = -1;
+  if(remoteComm() && isConnected())
+    {
+      ComObj *c= getComObj();
+      received = getNORM_ComObj(c);
+      sent     = getNOSM_ComObj(c);
+      lastrtt  = getLastRTT_ComObj(c);
+    }
+  TimeStamp *ts = getTimeStamp();
+  ip_address a=getAddress();
+  char ip[100];
+  sprintf(ip,"%d.%d.%d.%d",
+          (a/(256*256*256))%256,
+          (a/(256*256))%256,
+          (a/256)%256,
+          a%256);
+  return OZ_recordInit(oz_atom("site"),
+      oz_cons(oz_pairA("siteid", oz_atom(stringrep_notype())),
+      oz_cons(oz_pairAI("port",(int)getPort()),
+      oz_cons(oz_pairAI("timestamp",(int)ts->start),
+      oz_cons(oz_pairAI("addr",a),
+      oz_cons(oz_pairAA("ip",ip),
+      oz_cons(oz_pairAI("sent",sent),
+      oz_cons(oz_pairAI("received",received),
+      oz_cons(oz_pairAI("lastRTT",lastrtt),
+      oz_cons(oz_pairAI("pid",ts->pid),
+      oz_cons(oz_pairA("state",getStateStatistics()),
+              oz_nil())))))))))));
 }
