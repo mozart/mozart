@@ -112,26 +112,28 @@ unsigned int dummy;
 class GenHashNode {
 friend class GenHashTable;
 protected:
-  int key;
+  unsigned int key;
   GenHashBaseKey * basekey;
   GenHashEntry *entry;
   GenHashNode *next;
   int getLength();
   Bool isEmpty()  {return entry==FREE_ENTRY;}
 
-  void makeEmpty() {entry=FREE_ENTRY;}
+  void makeEmpty() {
+    entry=FREE_ENTRY;}
 
-  void b_set(int k,GenHashBaseKey *kb,GenHashEntry *e) {
+
+  void b_set(unsigned int k,GenHashBaseKey *kb,GenHashEntry *e) {
     Assert(e!=FREE_ENTRY);
     key=k;
     basekey=kb;
     entry=e;}
 
-  void set(int k,GenHashBaseKey *kb,GenHashEntry *e) {
+  void set(unsigned int k,GenHashBaseKey *kb,GenHashEntry *e) {
     b_set(k,kb,e);
     next=NULL;}
 
-  void setWithNext(int k,GenHashBaseKey *kb,GenHashEntry *e,GenHashNode *ne) {
+  void setWithNext(unsigned int k,GenHashBaseKey *kb,GenHashEntry *e,GenHashNode *ne) {
     set(k,kb,e);
     next=ne;}
 
@@ -170,7 +172,6 @@ public:
     return;}
 };
 
-
 class GenHashTable {
 protected:
   int counter;      // number of entries
@@ -183,7 +184,7 @@ protected:
     int i;
     for(i=low; i<high; i++) {
       table[i].makeEmpty();}}
-  void basic_htAdd(int,GenHashBaseKey *,GenHashEntry *);
+  void basic_htAddU(unsigned int,GenHashBaseKey *,GenHashEntry *);
   void rehash(GenHashNode *,int);
   void resize();
   void calc_percents();
@@ -194,17 +195,24 @@ public:
   GenHashNode * table; /* TODO -move to private */
   void clear(){
     counter=0;
-    init(0,tableSize);
+    for(int i=0; i<tableSize; i++) {
+      if(!table[i].isEmpty()){
+        GenHashNode *tmp, *next = table[i].next;
+        while(next){
+          tmp = next;
+          next = next->next;
+          manager->deleteGenHashNode(tmp);}
+        table[i].makeEmpty();}}
   }
   int getSize(){return tableSize;}
   int getUsed(){return counter;}
   GenHashTable(int);
-  void htAdd(int,GenHashBaseKey*,GenHashEntry*);
-  Bool htSub(int,GenHashNode*);
-  GenHashNode* htFindFirst(int);
+  void htAddU(unsigned int,GenHashBaseKey*,GenHashEntry*);
+  Bool htSubU(unsigned int,GenHashNode*);
+  GenHashNode* htFindFirstU(unsigned int);
   GenHashNode* getFirst(int&);
   GenHashNode* getNext(GenHashNode*,int&);
-  GenHashNode* htFindNext(GenHashNode*,int);
+  GenHashNode* htFindNextU(GenHashNode*,unsigned int);
   GenHashBaseKey *htGetBaseKey(int i) {return table[i].getBaseKey();}
   GenHashEntry *htGetEntry(int i) {return table[i].getEntry();}
   int htGetKey(int i) {return table[i].getKey();}
@@ -212,6 +220,8 @@ public:
   void deleteNonFirst(GenHashNode*,GenHashNode*);
   GenHashNode *getElem(int);
 };
+
+
 
 
 
