@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.344  1996/07/12 16:19:18  schulte
+  Scaled down default error handler; removed error verbosity
+
   Revision 1.343  1996/07/11 12:03:08  scheidhr
   BIwaitIdle removed again
 
@@ -1713,19 +1716,6 @@ LBLsuspendThread:
     // the case of blocking the root thread;
     e->currentThread->setBoard (CBB);
     SaveSelf(e,NULL,NO);
-    if (e->currentThread == e->rootThread) {
-#ifdef RESTART_ROOT
-      e->rootThread = 
-	e->mkRunnableThread (e->currentThread->getPriority (), e->rootBoard,0);
-      e->checkToplevel ();
-      e->currentThread->markPropagated();
-      DORAISE(OZ_atom("toplevelBlocked"));
-#else
-      if (ozconf.errorVerbosity>1) {
-	warning("The toplevel thread is blocked.");
-      }
-#endif
-    }
 
     e->currentThread = (Thread *) NULL;
 
