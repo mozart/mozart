@@ -1,0 +1,15 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+PREFIX		= @prefix@
+CYGPATH		= $(SRCDIR)/cygpath.sh
+CYG_PREFIX	= $(shell $(CYGPATH) $(PREFIX))
+OZENGINE	= $(PREFIX)/bin/ozengine
+
+all: build.ozmake
+	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX)
+
+build.ozmake:
+	cd ozmake && $(MAKE) ozmake.ozf
+
+install: all
+	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX) --install --nosavedb
