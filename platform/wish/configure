@@ -2295,8 +2295,8 @@ echo "$ac_t""$oztmp" 1>&6
 
 
 : ${oz_tcltk_search="$WITH_TCLTK $WITH_TCLTK/lib  $prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
-: ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.3 /usr/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/lib/tcl8.2 /usr/local/lib/tcl8.0 /usr/lib/tcl8.0"}
-: ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.3 /usr/lib/tk8.3 /usr/local/lib/tk8.2 /usr/lib/tk8.2 /usr/local/lib/tk8.0 /usr/lib/tk8.0"}
+: ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.4 /usr/lib/tcl8.4 /usr/local/lib/tcl8.3 /usr/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/lib/tcl8.2 /usr/local/lib/tcl8.0 /usr/lib/tcl8.0"}
+: ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.4 /usr/lib/tk8.4 /usr/local/lib/tk8.3 /usr/lib/tk8.3 /usr/local/lib/tk8.2 /usr/lib/tk8.2 /usr/local/lib/tk8.0 /usr/lib/tk8.0"}
 
 
 echo $ac_n "checking for tclConfig.sh""... $ac_c" 1>&6
