@@ -128,7 +128,7 @@ public:
 
   Board *getParentAndTest() {
     Assert(!isCommitted());
-    if (isFailed() || isRoot() || u.actor->isCommitted()) return 0;
+    if (isFailed() || _isRoot() || u.actor->isCommitted()) return 0;
     return getParent();
   }
 
@@ -161,7 +161,7 @@ public:
   Bool isWaitTop() { return flags & Bo_WaitTop ? OK : NO; }
   Bool isWait() { return flags & Bo_Wait ? OK : NO; }
   Bool isWaiting() { return flags & Bo_Waiting ? OK : NO; }
-  Bool isRoot() { return flags & Bo_Root ? OK : NO; }
+  Bool _isRoot() { return flags & Bo_Root ? OK : NO; }
   Bool isSolve () { return ((flags & Bo_Solve) ? OK : NO); }
 
   void newScript(int size) {

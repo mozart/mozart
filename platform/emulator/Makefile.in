@@ -1,4 +1,4 @@
-# DFKI Oz (C) DFKI 1991-1996
+# DFKI Oz (C) DFKI 1991-1997
 
 # Programs
 srcdir          = @srcdir@
@@ -20,39 +20,6 @@ LDFLAGS         = @LDFLAGS@
 
 COPT            = @COPT@
 DEFS            = @DEFS@
-PROF_DEFS       = \
-        -DTHREADED -DFASTREGACCESS -DREGOPT -DPROFILE \
-        -DWANT_INSTRPROFILE -DDEBUG_DET
-DEBUG_DEFS      = \
-        -DDEBUG_TRACE \
-        -DDEBUG_CHECK \
-        -DINTERFACE \
-        -DXXSLOW_DEBUG_CHECK \
-        -DXXTHREADED \
-        -DXXFASTREGACESS \
-        -DXXREGOPT \
-        -DXXDEBUG_GC \
-        -DXXDEBUG_VERBOSE \
-        -DXXRECINSTRFETCH=500 \
-        -DDEBUG_FD \
-        -DXXDEBUG_FDCD \
-        -DDEBUG_DET \
-        -DXXPROFILE_FD \
-        -DDEBUG_MEM \
-        -DOUTLINE \
-        -DXXDEBUG_META \
-        -DXXDEBUG_STACK \
-        -DXXDEBUG_STABLE \
-        -DXXDEBUG_THREADS \
-        -DDEBUG_FSET \
-        -DXXDEBUG_LTQ \
-        -DXXDEBUG_INDICES \
-        -DXXDEBUG_PROPAGATORS \
-        -DXXALLDIFF \
-        -DPRINT_LONG \
-        -DXXMM_DEBUG \
-        -DDEBUG_PERDIO
-
 CFLAGS          = $(COPT) $(DEFS) $(CDYN) $(CUSR)
 CXXFLAGS        = $(CFLAGS) $(CCINCLUDES)
 CXXDEPEND       = $(CXX) $(CXXFLAGS) -MM

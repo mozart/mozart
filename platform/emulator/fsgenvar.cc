@@ -303,7 +303,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       goto proceed;
 
     if (set.isValue()) {
-      if (am.isLocalCVar(v)) {
+      if (am.isLocalSVar(v)) {
         fsvar->getSet() = set;
         fsvar->becomesFSetValueAndPropagate(vptr);
       } else {
@@ -312,7 +312,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       }
     } else {
       fsvar->propagate(v, fs_prop_bounds);
-      if (am.isLocalCVar(v)) {
+      if (am.isLocalSVar(v)) {
         fsvar->getSet() = set;
       } else {
         GenFSetVariable * locfsvar = new GenFSetVariable(set);

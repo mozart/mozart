@@ -583,19 +583,19 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     }
   }
 
-  Thread * thr = am.mkPropagator(am.currentBoard, prio, p);
+  Thread * thr = am.mkPropagator(am.currentBoard(), prio, p);
   ozstat.propagatorsCreated.incf();
 
   // only monotonic propagator are run on imposition
   if (is_monotonic) {
     ozstat.propagatorsInvoked.incf();
 
-    Thread * backup_currentThread = am.currentThread;
-    am.currentThread = thr;
+    Thread * backup_currentThread = am.currentThread();
+    am.setCurrentThread(thr);
     switch (am.runPropagator(thr)) {
     case FAILED:
       am.closeDonePropagator(thr);
-      am.currentThread = backup_currentThread;
+      am.setCurrentThread(backup_currentThread);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
     return FAILED;
     case SLEEP:
@@ -606,13 +606,13 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
       break;
     case PROCEED:
       am.closeDonePropagator(thr);
-      am.currentThread = backup_currentThread;
+      am.setCurrentThread(backup_currentThread);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return PROCEED;
     default:
       error("Unexpected return value.");
     }
-    am.currentThread = backup_currentThread;
+    am.setCurrentThread(backup_currentThread);
   }
 
 // only if a propagator survives its first run proper suspension are created
@@ -631,16 +631,16 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 
       if (isGenFDVar(v, vtag)) {
         addSuspFDVar(v, thr, staticSpawnVars[i].state.fd);
-        all_local &= am.isLocalCVar(v);
+        all_local &= am.isLocalSVar(v);
       } else if (isGenFSetVar(v, vtag)) {
         addSuspFSetVar(v, thr, staticSpawnVars[i].state.fs);
-        all_local &= am.isLocalCVar(v);
+        all_local &= am.isLocalSVar(v);
       } else if (isGenOFSVar(v, vtag)) {
         addSuspOFSVar(v, thr);
-        all_local &= am.isLocalCVar(v);
+        all_local &= am.isLocalSVar(v);
       } else if (isGenBoolVar(v, vtag)) {
         addSuspBoolVar(v, thr);
-        all_local &= am.isLocalCVar(v);
+        all_local &= am.isLocalSVar(v);
       } else if (isSVar(vtag)) {
         addSuspSVar(v, thr);
         all_local &= am.isLocalSVar(v);
@@ -661,7 +661,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
       Assert(isCVar(vtag));
 
       addSuspCVar(vptr, thr);
-      all_local &= am.isLocalCVar(v);
+      all_local &= am.isLocalSVar(v);
     }
   }
 

@@ -95,7 +95,7 @@ void GenFSetVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
   Assert(!isFSetValue(*trPtr));
   if (isFSetValue(*trPtr)) return;
 
-  Assert(this == tagged2SuspVar(*trPtr));
+  Assert(this == tagged2SVarPlus(*trPtr));
 
   OZ_Term set_val = makeTaggedFSetValue(new OZ_FSetValue(_fset));
 

@@ -60,7 +60,7 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
     return makeTaggedNULL();
   }
 
-  Assert(bb==am.currentBoard);
+  Assert(am.isCurrentBoard(bb));
 
   // adjoin the list of or-actors to the list in actual solve actor!
 
@@ -78,7 +78,7 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
   // merge local thread queue
   if (localThreadQueue) {
     // Merge in current solve board but not elsewhere
-    bb = am.currentSolveBoard;
+    bb = am.currentSolveBoard();
 
     if (bb && bb->isSolve()) {
       // merge local thread queue to another solve space
@@ -114,7 +114,7 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
   // merge nonmonotonic susp lists
   if (nonMonoSuspList) {
     // Merge in current solve board but not elsewhere
-    bb = am.currentSolveBoard;
+    bb = am.currentSolveBoard();
 
     if (bb && bb->isSolve()) {
       // merge nonmonotonic susp list to another solve space
@@ -180,7 +180,7 @@ int SolveActor::choose(int left, int right)
     Board *bb = wa->getChildRef();
     Assert(bb->isWait());
 
-    Assert(am.currentBoard==solveBoard);
+    Assert(am.isCurrentBoard(solveBoard));
     return am.commit(bb) ? 1 : 0;
   } else {
     return 1;

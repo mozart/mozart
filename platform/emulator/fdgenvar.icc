@@ -134,7 +134,7 @@ void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 {
   if (isSmallInt(*trPtr)) return;
 
-  Assert(this == tagged2SuspVar(*trPtr));
+  Assert(this == tagged2SVarPlus(*trPtr));
 
   TaggedRef si_val = OZ_int(finiteDomain.getSingleElem());
   propagate(*trPtr, fd_prop_singl);

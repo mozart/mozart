@@ -49,6 +49,9 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
   BI_Unify,BI_Show,BI_send;
 
+
+extern Board *ozx_rootBoard();
+
 /*===================================================================
  * Literal
  *=================================================================== */
@@ -113,7 +116,7 @@ public:
 
   Board *getBoardInternal() {
     return (hasGName() || isNamedName())
-      ? rootBoard() : (Board*)ToPointer(homeOrGName);
+      ? ozx_rootBoard() : (Board*)ToPointer(homeOrGName);
   }
 
   int getSeqNumber() { return getOthers(); }
@@ -643,10 +646,6 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  Bool unify(TaggedRef, ByteCode *) { return NO; }
-  Bool install(TaggedRef t) { return unify(t,0); };
-  Bool deinstall(TaggedRef) { return OK; };
-
   /* optimized isChunk test */
   Bool isChunk() { return (int) getType() >= (int) Co_Object; }
 };
@@ -668,7 +667,7 @@ public:
   ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t) { setBoard(b);  }
 
   Board *getBoardInternal() {
-    return hasGName() ? rootBoard() : (Board*)boardOrGName.getPtr();
+    return hasGName() ? ozx_rootBoard() : (Board*)boardOrGName.getPtr();
   }
 
   void gcConstTermWithHome();
@@ -707,7 +706,7 @@ public:
     return (s==getType() && t==getTertType());}
 
   Board *getBoardInternal() {
-    return isLocal() ? (Board*)getPointer() : rootBoard();
+    return isLocal() ? (Board*)getPointer() : ozx_rootBoard();
   }
   void setBoard(Board *b);
 

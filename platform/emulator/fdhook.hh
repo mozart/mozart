@@ -19,8 +19,8 @@
 
 inline
 Bool isUnifyCurrentPropagator () {
-  Assert (am.currentThread->isPropagator ());
-  return (am.currentThread->isUnifyThread ());
+  Assert (am.currentThread()->isPropagator ());
+  return (am.currentThread()->isUnifyThread ());
 }
 
 #endif

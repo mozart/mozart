@@ -71,7 +71,7 @@
  *     builtin can return SUSPEND_EXTERNAL
  *        immediately stop the current thread (suspends on external event)
  *        idea: use return SUSPEND, and if am.suspVarList=0 do nothing.
- *        add to oz_stop am.suspVarList = 0!
+ *        add to oz_suspendOnThread am.suspVarList = 0!
  *        don't forget to save X register!
  *   ConstTerm/Tertiary
  *     unify and rename to Entity
@@ -246,7 +246,8 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
     OZ_unify(val1,val2);
     return;
   }
-  Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.rootBoard);
+  Assert(am.onToplevel());
+  Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.currentBoard());
 #ifdef PERDIO_DEBUG
   PD((SITE_OP,"SITE_OP: site unify called"));
   if(DV->on(SITE_OP)){
@@ -1119,7 +1120,7 @@ void OwnerTable::returnCreditAndCheck(int OTI,Credit c)
       // localize a variable
       if (oe->isVar()) {
         PerdioVar *pvar = oe->getVar();
-        SVariable *svar = new SVariable(am.rootBoard);
+        SVariable *svar = new SVariable(GETBOARD(pvar));
         svar->setSuspList(pvar->getSuspList());
         doBindSVar(oe->getPtr(),svar);
       }
@@ -1952,7 +1953,7 @@ inline void pendThreadResumeAll(PendThread *pt){
     Assert(t!=MoveThread);
     if(isRealThread(t)){
       PD((THREAD_D,"start thread ResumeAll %x",t));
-      oz_resume(t);}
+      oz_resumeFromNet(t);}
     tmp=pt;
     pt=pt->next;
     tmp->dispose();}}
@@ -1963,7 +1964,7 @@ inline Thread* pendThreadResumeFirst(PendThread **pt){
   Thread *t=tmp->thread;
   Assert(isRealThread(t));
   PD((THREAD_D,"start thread ResumeFirst %x",t));
-  oz_resume(t);
+  oz_resumeFromNet(t);
   *pt=tmp->next;
   tmp->dispose();
   return t;}
@@ -1977,7 +1978,7 @@ inline void pendThreadRemoveFirst(PendThread **pt){
 
 inline void pendThreadAddToEnd(PendThread **pt,Thread *t){
   if(isRealThread(t)){
-    oz_stop(t);
+    oz_suspendOnNet(t);
     PD((THREAD_D,"stop thread addToEnd %x",t));}
   while(*pt!=NULL){pt= &((*pt)->next);}
   *pt=new PendThread(t,NULL);
@@ -1985,7 +1986,7 @@ inline void pendThreadAddToEnd(PendThread **pt,Thread *t){
 
 inline void pendThreadAddToNonFirst(PendThread **pt,Thread *t){
   if(isRealThread(t)){
-    oz_stop(t);
+    oz_suspendOnNet(t);
     PD((THREAD_D,"stop thread addToNonFirst %x",t));}
   if(*pt!=NULL){pt= &((*pt)->next);}
   *pt=new PendThread(t,NULL);
@@ -2366,7 +2367,8 @@ void CellManager::localize(){
   Assert(cf->getState()==Cell_Valid);
   TaggedRef tr=cf->getContents();
   setTertType(Te_Local);
-  setBoard(am.rootBoard);
+  Assert(am.onToplevel());
+  setBoard(am.currentBoard());
   CellLocal *cl=(CellLocal*) this;
   cl->setValue(tr);}
 
@@ -2375,7 +2377,8 @@ void LockManager::localize(){
   Assert(lf->getState()==Lock_Valid);
   Thread *t=lf->getLocker();
   setTertType(Te_Local);
-  setBoard(am.rootBoard);
+  Assert(am.onToplevel());
+  setBoard(am.currentBoard());
   LockLocal *ll=(LockLocal*) this;
   ll->convertToLocal(t,lf->getPending());}
 
@@ -2450,7 +2453,8 @@ void Tertiary::localize()
       Assert(getTertType()==Te_Manager);
       PD((GLOBALIZING,"GLOBALIZING: localizing tertiary manager"));
       setTertType(Te_Local);
-      setBoard(am.rootBoard);
+      Assert(am.onToplevel());
+      setBoard(am.currentBoard());
       return;
     }
   case Co_Cell:{
@@ -2471,7 +2475,8 @@ void Tertiary::localize()
     Assert(getTertType()==Te_Manager);
     PD((GLOBALIZING,"localizing object/space/thread manager"));
     setTertType(Te_Local);
-    setBoard(am.rootBoard);
+    Assert(am.onToplevel());
+    setBoard(am.currentBoard());
     return;}
   default:
     Assert(0);
@@ -3501,7 +3506,8 @@ void unmarshallTert(ByteStream *bs, TaggedRef *ret, MarshallTag tag,
 void unmarshallDict(ByteStream *bs, TaggedRef *ret)
 {
   int size = unmarshallNumber(bs);
-  OzDictionary *aux = new OzDictionary(am.currentBoard,size);
+  Assert(am.onToplevel());
+  OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
   aux->markSafe();
   *ret = makeTaggedConst(aux);
   gotRef(bs,*ret);
@@ -3562,7 +3568,8 @@ OZ_Term unmarshallTerm(ByteStream *bs)
 
 inline
 ObjectClass *newClass(GName *gname) {
-  ObjectClass *ret = new ObjectClass(NULL,NULL,NULL,NULL,NO,am.rootBoard);
+  Assert(am.onToplevel());
+  ObjectClass *ret = new ObjectClass(NULL,NULL,NULL,NULL,NO,am.currentBoard());
   ret->setGName(gname);
   return ret;
 }
@@ -3588,7 +3595,8 @@ loop:
 
   case DIF_NEWNAME:
     {
-      *ret = makeTaggedLiteral(Name::newName(am.currentBoard));
+      Assert(am.onToplevel());
+      *ret = makeTaggedLiteral(Name::newName(am.currentBoard()));
       gotRef(bs,*ret);
       return;
     }
@@ -3603,7 +3611,7 @@ loop:
       if (gname) {
         Name *aux;
         if (strcmp("",printname)==0) {
-          aux = Name::newName(am.currentBoard);
+          aux = Name::newName(am.currentBoard());
         } else {
           aux = NamedName::newNamedName(ozstrdup(printname));
         }
@@ -3794,7 +3802,8 @@ loop:
 
       SChunk *sc;
       if (gname) {
-        sc=new SChunk(am.rootBoard,0);
+        Assert(am.onToplevel());
+        sc=new SChunk(am.currentBoard(),0);
         sc->setGName(gname);
         *ret = makeTaggedConst(sc);
         addGName(gname,*ret);
@@ -3806,7 +3815,8 @@ loop:
           warning("mm2: chunk gname mismatch");
           return;
         }
-        sc=new SChunk(am.rootBoard,0);
+        Assert(am.onToplevel());
+        sc=new SChunk(am.currentBoard(),0);
         sc->setGName(pv->getGName());
         *ret=makeTaggedConst(sc);
         SiteUnify(makeTaggedRef(chPtr),*ret);
@@ -3918,7 +3928,8 @@ loop:
       Abstraction *pp;
       if (gname || hasNames) {
         PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
-        pp = new Abstraction(pr,0,am.rootBoard);
+        Assert(am.onToplevel());
+        pp = new Abstraction(pr,0,am.currentBoard());
         *ret = makeTaggedConst(pp);
         if (!hasNames) {
           pp->setGName(gname);
@@ -3932,7 +3943,8 @@ loop:
           return;
         }
         PrTabEntry *pr=new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
-        pp=new Abstraction(pr,0,am.rootBoard);
+        Assert(am.onToplevel());
+        pp=new Abstraction(pr,0,am.currentBoard());
         pp->setGName(pv->getGName());
         *ret = makeTaggedConst(pp);
         SiteUnify(makeTaggedRef(chPtr),*ret);
@@ -4014,7 +4026,7 @@ OZ_Term ozport=0;
 
 void siteReceive(ByteStream* bs)
 {
-  Assert(am.currentBoard==am.rootBoard);
+  Assert(am.onToplevel());
 
   bs->unmarshalBegin();
   refTable->reset();
@@ -4683,7 +4695,7 @@ void PerdioVar::acknowledge(OZ_Term *p)
     PD((WEIRD,"dead thread acknowledge %x",u.bindings->thread));
   } else {
     PD((THREAD_D,"start thread ackowledge %x",u.bindings->thread));
-    oz_resume(u.bindings->thread);
+    oz_resumeFromNet(u.bindings->thread);
   }
 
   PendBinding *tmp=u.bindings->next;
@@ -4710,7 +4722,7 @@ void PerdioVar::redirect(OZ_Term val) {
       u.bindings->thread->pushCall(BI_Unify,args,2);
       PD((PD_VAR,"redirect pending unify =%s",toC(u.bindings->val)));
       PD((THREAD_D,"start thread redirect %x",u.bindings->thread));
-      oz_resume(u.bindings->thread);
+      oz_resumeFromNet(u.bindings->thread);
     }
 
     PendBinding *tmp=u.bindings->next;
@@ -5493,7 +5505,8 @@ OZ_C_proc_begin(BIStartSite,2)
     return OZ_raiseC("startSite",1,OZ_string("ran out of tries"));}
   PD((USER,"startSite succeeded"));
   Tertiary *tert;
-  ozport = makeTaggedConst(new PortWithStream(am.rootBoard, stream));
+  Assert(am.onToplevel());
+  ozport = makeTaggedConst(new PortWithStream(am.currentBoard(), stream));
   tert=tagged2Tert(ozport);
   tert->setTertType(Te_Manager);
   ownerTable->newOZPort(tert);
@@ -6166,7 +6179,7 @@ int pipeHandler(int,void *p)
       unlink(pi->file);
     }
     pushUnify(th,pi->out,other);
-    oz_resume(th);
+    oz_resumeFromNet(th);
   }
 
 exit:
@@ -6257,8 +6270,9 @@ void getURL(char *url, TaggedRef out, TaggedRef trigger, Bool load)
 #endif
 
   PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,
-                              makeTaggedConst(oz_currentThread),trigger,load);
-  oz_stop(oz_currentThread);
+                              makeTaggedConst(am.currentThread()),
+                              trigger,load);
+  oz_suspendOnNet(am.currentThread());
   OZ_registerReadHandler(rfd,pipeHandler,pi);
 }
 

@@ -1973,7 +1973,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
   printf("\n");
 #endif
 
-  thr = am.mkSuspendedThread(am.currentBoard, DEFAULT_PRIORITY);
+  thr = am.mkSuspendedThread(am.currentBoard(), DEFAULT_PRIORITY);
   thr->pushCFun(fun, args, arity, OK);
 
   return ((OZ_Thread) thr);
@@ -1992,7 +1992,7 @@ void OZ_pushCall(OZ_Thread thr,OZ_Term fun,OZ_Term *args,int arity)
 
 void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
-  Thread *tt = am.mkRunnableThreadOPT(DEFAULT_PRIORITY, am.currentBoard);
+  Thread *tt = am.mkRunnableThreadOPT(DEFAULT_PRIORITY, am.currentBoard());
   tt->pushCFun(fun, args, arity, OK);
   am.scheduleThread (tt);
 }
@@ -2052,7 +2052,7 @@ OZ_Term OZ_newChunk(OZ_Term val)
 
 int OZ_onToplevel()
 {
-  return am.isToplevel() ? 1 : 0;
+  return am.onToplevel() ? 1 : 0;
 }
 
 /* -----------------------------------------------------------------

@@ -20,7 +20,7 @@
 #include "genvar.hh"
 
 GenCVariable::GenCVariable(TypeOfGenCVariable t, Board * n) :
-SVariable(n == NULL ? am.currentBoard : n)
+SVariable(n == NULL ? am.currentBoard() : n)
 {
   setType(t);
 }
@@ -29,7 +29,7 @@ SVariable(n == NULL ? am.currentBoard : n)
 void GenCVariable::propagate(TaggedRef var, SuspList * &sl,
                              PropCaller unifyVars)
 {
-  sl = am.checkSuspensionList(tagged2SuspVar(var), sl, unifyVars);
+  sl = am.checkSuspensionList(tagged2SVarPlus(var), sl, unifyVars);
 }
 
 

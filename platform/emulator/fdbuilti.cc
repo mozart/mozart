@@ -244,10 +244,10 @@ void BIfdHeadManager::addPropagator (int i, Thread *thr, OZ_FDPropState target)
     return;
   } else if (tag == pm_fd) {
     addSuspFDVar(bifdhm_var[i], thr, target);
-    if (! am.isLocalCVar(bifdhm_var[i])) global_vars += 1;
+    if (! am.isLocalSVar(bifdhm_var[i])) global_vars += 1;
   } else if (tag == pm_bool) {
     addSuspBoolVar(bifdhm_var[i], thr);
-    if (! am.isLocalCVar(bifdhm_var[i])) global_vars += 1;
+    if (! am.isLocalSVar(bifdhm_var[i])) global_vars += 1;
   } else if (tag == pm_uvar) {
     if (bifdhm_var[i] != *bifdhm_varptr[i]) return;
     if (am.isLocalUVar(bifdhm_var[i],&bifdhm_var[i])) {
@@ -294,12 +294,12 @@ BIfdBodyManager::BIfdBodyManager(int s) {
   DebugCodeFD(backup_count = 0);
   AssertFD(0 <= s && s < MAXFDBIARGS);
   curr_num_of_vars = s;
-  AssertFD(am.currentThread);
-  only_local_vars = am.currentThread->isLocalThread ();
+  AssertFD(am.currentThread());
+  only_local_vars = am.currentThread()->isLocalThread ();
 }
 
 void BIfdBodyManager::saveDomainOnTopLevel(int i) {
-  if (am.currentBoard->isRoot()) {
+  if (am.onToplevel()) {
     if (bifdbm_vartag[i] == pm_fd)
       bifdbm_domain[i] = tagged2GenFDVar(bifdbm_var[i])->getDom();
   }
@@ -403,7 +403,7 @@ void BIfdBodyManager::backup(void)
   backup_curr_num_of_vars1 = curr_num_of_vars;
   backup_vars_left1 = vars_left;
   backup_only_local_vars1 = only_local_vars;
-  backup_FDcurrentThread = am.currentThread;
+  backup_FDcurrentThread = am.currentThread();
 
   bifdbm_var += backup_curr_num_of_vars1;
   bifdbm_varptr += backup_curr_num_of_vars1;
@@ -437,7 +437,7 @@ void BIfdBodyManager::restore(void)
   curr_num_of_vars = backup_curr_num_of_vars1;
   vars_left = backup_vars_left1;
   only_local_vars = backup_only_local_vars1;
-  am.currentThread = backup_FDcurrentThread;
+  am.setCurrentThread(backup_FDcurrentThread);
 }
 
 int BIfdBodyManager::initCache(void) {
@@ -509,7 +509,7 @@ OZ_Boolean BIfdBodyManager::areIdentVar(int a, int b) {
 }
 
 void BIfdBodyManager::restoreDomainOnToplevel(void) {
-  if (am.currentBoard->isRoot()) {
+  if (am.onToplevel()) {
     for (int i = curr_num_of_vars; i--; )
       if (bifdbm_vartag[i] == pm_fd)
         tagged2GenFDVar(bifdbm_var[i])->getDom() = bifdbm_domain[i];
@@ -637,10 +637,10 @@ void BIfdBodyManager::_introduce(int i, OZ_Term v)
   } else if (vtag == pm_bool) {
     bifdbm_init_dom_size[i] = bifdbm_domain[i].initBool();
     bifdbm_dom[i] = &bifdbm_domain[i];
-    bifdbm_var_state[i] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
+    bifdbm_var_state[i] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
   } else if (vtag == pm_fd) {
     GenFDVariable * fdvar = tagged2GenFDVar(v);
-    OZ_Boolean var_state = bifdbm_var_state[i] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
+    OZ_Boolean var_state = bifdbm_var_state[i] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
     bifdbm_domain[i].initEmpty();
     if (var_state == fdbm_local) {
       bifdbm_dom[i] = &fdvar->getDom();
@@ -873,16 +873,16 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
   } else if (vtag == pm_bool) {
     bifdbm_init_dom_size[0] = bifdbm_domain[0].initBool();
     bifdbm_dom[0] = &bifdbm_domain[0];
-    bifdbm_var_state[0] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
+    bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
     bifdbm_var[0] = v;
     bifdbm_varptr[0] = vptr;
     bifdbm_vartag[0] = vtag;
   } else if (vtag == pm_fd) {
     GenFDVariable * fdvar = tagged2GenFDVar(v);
-    fdbm_var_state var_state = bifdbm_var_state[0] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
+    fdbm_var_state var_state = bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
     if (var_state == fdbm_local) {
       bifdbm_dom[0] = &fdvar->getDom();
-      if (am.currentBoard->isRoot())
+      if (am.onToplevel())
         bifdbm_domain[0] = fdvar->getDom();
     } else {
       bifdbm_domain[0] = fdvar->getDom();
