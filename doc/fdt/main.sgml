@@ -2,7 +2,6 @@
   - Authors:
   -   Christian Schulte <schulte@dfki.de>
   -   Gert Smolka <smolka@dfki.de>
-  -   Jörg Würtz
   -
   - Contributors:
   -   Daniel Simon <dansim@ps.uni-sb.de> (porting to sgml))
@@ -12,7 +11,6 @@
   - Copyright:
   -   Christian Schulte, 1998
   -   Gert Smolka, 1998
-  -   Jörg Würtz, 1997
   -
   - Last change:
   -   $Date$ by $Author$
@@ -177,9 +175,8 @@
     <Meta name=latex.input   value="fdt.tex">
 
     <Title/Finite Domain Constraint Programming in &Oz;. A Tutorial./
-      <Author.Extern to="author.db" key="Gert.Smolka">
       <Author.Extern to="author.db" key="Christian.Schulte">
-      <Author.Extern to="author.db" key="Joerg.Wuertz">
+      <Author.Extern to="author.db" key="Gert.Smolka">
     <Comic>
       <Picture.Choice>
         <Picture.Extern to="fdt.gif" type=gif>
