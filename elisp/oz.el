@@ -259,7 +259,7 @@ starts the emulator under gdb")
     ("Find"
      ("Documentation Demo"      . oz-find-docdemo-file)
      ("Other Demo"              . oz-find-demo-file)
-     ("Library Demo"            . oz-find-lib-file)
+     ("Modules File"            . oz-find-modules-file)
      )
     ("Print"
      ("Region"                  . oz-print-region)
@@ -309,7 +309,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (oz-check-running t)
   (if (not (equal mode-name "Oz"))
       (oz-new-buffer))
-  (oz-toggle-compiler))
+  (oz-show-buffer (get-buffer oz-compiler-buffer)))
 
 (defvar oz-halt-timeout 15
   "How long to wait in oz-halt after sending the directive halt")
@@ -1245,10 +1245,10 @@ OZ compiler, emulator and error window")
   (interactive)
   (oz-find-file "Find demo file: " "demo/documentation/"))
 
-(defun oz-find-lib-file()
+(defun oz-find-modules-file()
   "find a Oz file in the lib directory"
   (interactive)
-  (oz-find-file "Find library file: " "lib/"))
+  (oz-find-file "Find modules file: " "lib/"))
 
 (defun oz-find-file(prompt file)
   (find-file (read-file-name prompt
