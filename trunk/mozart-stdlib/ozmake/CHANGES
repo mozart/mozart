@@ -1,5 +1,12 @@
 -*-outline-*-
 
+* version 0.81.4
+** forgot to enter changes
+** gumpdir support still unusable in 1.2.3. turned off
+** --publish: don't try to install docs when there is none
+   otherwise publishing contact complains about missing mogul id
+** don't try to chdir in dry-run mode (the dir may be missing)
+
 * version 0.79
 ** fixed "fast" compiler invocation to also pass debug switch
 
