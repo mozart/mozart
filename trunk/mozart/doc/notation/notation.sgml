@@ -465,7 +465,7 @@
 	    <Grammar.Alt/<<skip>>//
 	  <Grammar.Rule/?={case statement clause}
 	    <Grammar.Alt/?={pattern}
-	      [ <<andthen>> [ { ?={variable} }+ <<in>> ] ?={expression} ]/
+	      [ <<andthen>> [ ?={declaration part} <<in>> ] ?={expression} ]/
 	    <Grammar.Alt type=space/<<then>> ?={in statement}//
 	  <Grammar.Rule/?={else statement}
 	    <Grammar.Alt/<<elseif>> ?={expression} <<then>> ?={in statement}/
@@ -570,7 +570,7 @@
 	  <Grammar.Rule/?={in statement}
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}//
 	  <Grammar.Rule/?={in expression}
-	    <Grammar.Alt/[ ?={declaration part} <<in>> [ ?={statment} ] ]
+	    <Grammar.Alt/[ ?={declaration part} <<in>> [ ?={statement} ] ]
 	      ?={expression}//
 	  As procedure or method body both a statements and an expression may
 	  be possible, depending on whether the procedure's or method's head
