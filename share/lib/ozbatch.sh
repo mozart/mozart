@@ -6,7 +6,7 @@
 #
 
 : ${SRCDIR=.}
-: ${OZMAFILE=$SRCDIR/ozbatch.ozm}
+: ${OZMAFILE=-b $SRCDIR/ozbatch.ozm}
 : ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
 : ${OZPREFIX=/usr/local/oz}
 
@@ -31,4 +31,4 @@ export OZINIT
 echo "Using OZEMULATOR: $OZEMULATOR"
 echo "Using OZMAFILE: $OZMAFILE"
 
-exec $OZEMULATOR -b $OZMAFILE -a "$@"
+exec $OZEMULATOR $OZMAFILE -a "$@"
