@@ -334,48 +334,169 @@
   \@setnobreak
   \@setminipage}
 
+\floatstyle{ruled}
+\newfloat{FIGURE}{htbp}{lof}[chapter]
+\floatname{FIGURE}{Figure}
+
+\newlength{\mozart@len}
+
+\renewcommand{\floatc@ruled}[2]{
+  \setlength{\mozart@len}{\mozart@fullwidth}%
+  \addtolength{\mozart@len}{-2\fboxsep}%
+  \colorbox{menucolor}{\parbox{\mozart@len}{{\@fs@cfont #1} #2}}}
+
 % XSL SUPPORT
 
 % support for strange characters
 
-\DeclareRobustCommand{\usechar}[1]{\csname usechar@\string#1\endcsname}
-\newcommand{\newusechar}[2]{%
-  \@namedef{usechar@\string#1}{#2}}
-\DeclareRobustCommand{\usevchar}[1]{\csname usevchar@\string#1\endcsname}
-\newcommand{\newusevchar}[2]{%
-  \@namedef{usevchar@\string#1}{#2}}
+\DeclareRobustCommand\mozart@text@HASH{\#}
+\DeclareRobustCommand\mozart@text@DOLLAR{\$}
+\DeclareRobustCommand\mozart@text@PERCENT{\%}
+\DeclareRobustCommand\mozart@text@AMPERSAND{\&}
+\DeclareRobustCommand\mozart@text@TILDE{\~}
+\DeclareRobustCommand\mozart@text@UNDERSCORE{\_}
+\DeclareRobustCommand\mozart@text@CARET{\char`\^}
+\DeclareRobustCommand\mozart@text@BSLASH{\ensuremath{\backslash}}
+\DeclareRobustCommand\mozart@text@LBRACE{\ensuremath{\{}}
+\DeclareRobustCommand\mozart@text@RBRACE{\ensuremath{\}}}
+\DeclareRobustCommand\mozart@text@LT{\ensuremath{<}}
+\DeclareRobustCommand\mozart@text@GT{\ensuremath{>}}
+\DeclareRobustCommand\mozart@text@VBAR{\ensuremath{\vert}}
 
-\newusechar{\#}{\#}
-\newusechar{\$}{\$}
-\newusechar{\%}{\%}
-\newusechar{\&}{\&}
-\newusechar{\~}{\char`\~}
-\newusechar{\_}{\_}
-\newusechar{\^}{\char`\^}
-\newusechar{\\}{\ensuremath{\backslash}}
-\newusechar{\{}{\ensuremath{\{}}
-\newusechar{\}}{\ensuremath{\}}}
-\newusechar{\<}{\ensuremath{<}}
-\newusechar{\>}{\ensuremath{>}}
-\newusechar{\|}{\ensuremath{\vert}}
+\newcommand{\mozartHASH}[1]{\mozart@HASH}
+\newcommand{\mozartDOLLAR}[1]{\mozart@DOLLAR}
+\newcommand{\mozartPERCENT}[1]{\mozart@PERCENT}
+\newcommand{\mozartAMPERSAND}[1]{\mozart@AMPERSAND}
+\newcommand{\mozartTILDE}[1]{\mozart@TILDE}
+\newcommand{\mozartUNDERSCORE}[1]{\mozart@UNDERSCORE}
+\newcommand{\mozartCARET}[1]{\mozart@CARET}
+\newcommand{\mozartBSLASH}[1]{\mozart@BSLASH}
+\newcommand{\mozartLBRACE}[1]{\mozart@LBRACE}
+\newcommand{\mozartRBRACE}[1]{\mozart@RBRACE}
+\newcommand{\mozartLT}[1]{\mozart@LT}
+\newcommand{\mozartGT}[1]{\mozart@GT}
+\newcommand{\mozartVBAR}[1]{\mozart@VBAR}
+\newcommand{\mozartSPACE}[1]{\mozart@SPACE}
+\newcommand{\mozartNEWLINE}[1]{\mozart@NEWLINE}
 
-\newusevchar{\#}{\char`\#}
-\newusevchar{\$}{\char`\$}
-\newusevchar{\%}{\char`\%}
-\newusevchar{\&}{\char`\&}
-\newusevchar{\~}{\char`\~}
-\newusevchar{\_}{\char`\_}
-\newusevchar{\^}{\char`\^}
-\newusevchar{\\}{\char`\\}
-\newusevchar{\{}{\char`\{}
-\newusevchar{\}}{\char`\}}
-\newusevchar{\<}{<}
-\newusevchar{\>}{>}
-\newusevchar{\|}{|}
+\newcommand{\mozartEMPTY}{}
 
-\let\mozart@citex\@citex
-\def\@citex[#1]#2{\bgroup
-  \def\usechar##1{/}\mozart@citex[{#1}]{#2}\egroup}
+\newcommand{\mozart@specials@text}{%
+  \let\mozart@HASH	\mozart@text@HASH
+  \let\mozart@DOLLAR	\mozart@text@DOLLAR
+  \let\mozart@PERCENT	\mozart@text@PERCENT
+  \let\mozart@AMPERSAND	\mozart@text@AMPERSAND
+  \let\mozart@TILDE	\mozart@text@TILDE
+  \let\mozart@UNDERSCORE\mozart@text@UNDERSCORE
+  \let\mozart@CARET	\mozart@text@CARET
+  \let\mozart@BSLASH	\mozart@text@BSLASH
+  \let\mozart@LBRACE	\mozart@text@LBRACE
+  \let\mozart@RBRACE	\mozart@text@RBRACE
+  \let\mozart@LT	\mozart@text@LT
+  \let\mozart@GT	\mozart@text@GT
+  \let\mozart@VBAR	\mozart@text@VBAR
+}
+\mozart@specials@text
+
+\DeclareRobustCommand\mozart@code@HASH{\char`\#}
+\DeclareRobustCommand\mozart@code@DOLLAR{\char`\$}
+\DeclareRobustCommand\mozart@code@PERCENT{\char`\%}
+\DeclareRobustCommand\mozart@code@AMPERSAND{\char`\&}
+\DeclareRobustCommand\mozart@code@TILDE{\char`\~}
+\DeclareRobustCommand\mozart@code@UNDERSCORE{\char`\_}
+\DeclareRobustCommand\mozart@code@CARET{\char`\^}
+\DeclareRobustCommand\mozart@code@BSLASH{\char`\\}
+\DeclareRobustCommand\mozart@code@LBRACE{\char`\{}
+\DeclareRobustCommand\mozart@code@RBRACE{\char`\}}
+\DeclareRobustCommand\mozart@code@LT{<}
+\DeclareRobustCommand\mozart@code@GT{>}
+\DeclareRobustCommand\mozart@code@VBAR{|}
+\DeclareRobustCommand\mozart@code@SPACE{\nobreakspace}
+\DeclareRobustCommand\mozart@code@NEWLINE{\nobreakspace}
+
+\newcommand{\mozart@specials@code@inline}{%
+  \let\mozart@HASH	\mozart@code@HASH
+  \let\mozart@DOLLAR	\mozart@code@DOLLAR
+  \let\mozart@PERCENT	\mozart@code@PERCENT
+  \let\mozart@AMPERSAND	\mozart@code@AMPERSAND
+  \let\mozart@TILDE	\mozart@code@TILDE
+  \let\mozart@UNDERSCORE\mozart@code@UNDERSCORE
+  \let\mozart@CARET	\mozart@code@CARET
+  \let\mozart@BSLASH	\mozart@code@BSLASH
+  \let\mozart@LBRACE	\mozart@code@LBRACE
+  \let\mozart@RBRACE	\mozart@code@RBRACE
+  \let\mozart@LT	\mozart@code@LT
+  \let\mozart@GT	\mozart@code@GT
+  \let\mozart@VBAR	\mozart@code@VBAR
+  \let\mozart@SPACE	\mozart@code@SPACE
+  \let\mozart@NEWLINE	\mozart@code@NEWLINE
+}
+
+\DeclareRobustCommand\mode@code@NEWLINE@display{\par}
+
+\newcommand{\mozart@specials@code@display}{%
+  \mozart@specials@code@inline
+  \let\mozart@NEWLINE	\mode@code@NEWLINE@display}
+
+\newcommand{\mozart@DOT}{.}
+
+\newcommand{\mozart@specials@ref}{%
+  \let\mozart@HASH	\mozart@DOT
+  \let\mozart@DOLLAR	\mozart@DOT
+  \let\mozart@PERCENT	\mozart@DOT
+  \let\mozart@AMPERSAND	\mozart@DOT
+  \let\mozart@TILDE	\mozart@DOT
+  \let\mozart@UNDERSCORE\mozart@DOT
+  \let\mozart@CARET	\mozart@DOT
+  \let\mozart@BSLASH	\mozart@DOT
+  \let\mozart@LBRACE	\mozart@DOT
+  \let\mozart@RBRACE	\mozart@DOT
+  \let\mozart@LT	\mozart@DOT
+  \let\mozart@GT	\mozart@DOT
+  \let\mozart@VBAR	\mozart@DOT
+  \let\mozart@SPACE	\mozart@DOT
+  \let\mozart@NEWLINE	\mozart@DOT
+}
+
+\newcommand{\mozart@defochar}[2]{%
+  \def\mozart@tmp##1##2{%
+    \newcommand#1{##2}}
+  \expandafter\mozart@tmp\string#2}
+\mozart@defochar{\mozart@other@HASH}{\#}
+\mozart@defochar{\mozart@other@DOLLAR}{\$}
+\mozart@defochar{\mozart@other@PERCENT}{\%}
+\mozart@defochar{\mozart@other@AMPERSAND}{\&}
+\mozart@defochar{\mozart@other@TILDE}{\~}
+\mozart@defochar{\mozart@other@UNDERSCORE}{\_}
+\mozart@defochar{\mozart@other@CARET}{\^}
+\mozart@defochar{\mozart@other@BACKSLASH}{\\}
+\mozart@defochar{\mozart@other@LBRACE}{\{}
+\mozart@defochar{\mozart@other@RBRACE}{\}}
+\mozart@defochar{\mozart@other@LT}{\<}
+\mozart@defochar{\mozart@other@GT}{\>}
+\mozart@defochar{\mozart@other@VBAR}{\|}
+
+\newcommand{\mozart@specials@other}{%
+  \let\mozart@HASH	\mozart@other@HASH
+  \let\mozart@DOLLAR	\mozart@other@DOLLAR
+  \let\mozart@PERCENT	\mozart@other@PERCENT
+  \let\mozart@AMPERSAND	\mozart@other@AMPERSAND
+  \let\mozart@TILDE	\mozart@other@TILDE
+  \let\mozart@UNDERSCORE\mozart@other@UNDERSCORE
+  \let\mozart@CARET	\mozart@other@CARET
+  \let\mozart@BSLASH	\mozart@other@BSLASH
+  \let\mozart@LBRACE	\mozart@other@LBRACE
+  \let\mozart@RBRACE	\mozart@other@RBRACE
+  \let\mozart@LT	\mozart@other@LT
+  \let\mozart@GT	\mozart@other@GT
+  \let\mozart@VBAR	\mozart@other@VBAR
+  \let\mozart@SPACE	\mozart@other@SPACE
+  \let\mozart@NEWLINE	\mozart@other@NEWLINE
+}
+
+\let\latex@citex\@citex
+\def\@citex[#1]#2{\bgroup\mozart@specials@ref
+  \latex@citex[{#1}]{#2}\egroup}
 
 % processing instructions
 
@@ -393,6 +514,7 @@
 \newcommand{\usepi@slash}{/}
 \newcommand{\usepi@cdots}{\ensuremath{\cdots}}
 \newcommand{\usepi@emdash}{--}
+\newcommand{\usepi@EG}{\usepi@eg}
 
 % sectioning commands
 
@@ -417,13 +539,12 @@
   \fontencoding{\encodingdefault}%
   \fontfamily{\familydefault}%
   \fontshape{\shapedefault}\ttfamily\selectfont}
-\newcommand{\@CODEINLINE}[1]{\mozart@code@font#1\egroup}
-\newcommand{\CODEINLINE}{\bgroup\let\FACETEXT\INLINEFACETEXT
-  \obeyspaces\@CODEINLINE}
+\newcommand{\@CODEINLINE}[1]{\mozart@code@font\mozart@specials@code@inline#1\egroup}
+\DeclareRobustCommand{\CODEINLINE}{\bgroup\let\FACETEXT\INLINEFACETEXT\@CODEINLINE}
 \newcommand{\CODEEXTERN}[1]{%
   \begin{DISPLAY}\mozart@code@font\verbatiminput{#1}\end{DISPLAY}}
 \newenvironment{CODEDISPLAY}
-  {\begin{DISPLAY}\mozart@code@font\begin{alltt}}
+  {\begin{DISPLAY}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{DISPLAY}}
 
 \definecolor{comment}{rgb}{0.698039,0.133333,0.133333}
@@ -435,22 +556,24 @@
 \definecolor{reference}{rgb}{0.372549,0.619608,0.627451}
 \definecolor{builtin}{rgb}{0.854902,0.439216,0.839216}
 
-\newcommand{\FACECOMMENT}{\textcolor{comment}}
-\newcommand{\FACEKEYWORD}[1]{\textbf{\color{keyword}#1}}
-\newcommand{\FACESTRING}{\textcolor{string}}
-\newcommand{\FACEVARIABLE}{\textcolor{variable}}
-\newcommand{\FACEFUNCTION}{\textcolor{function}}
-\newcommand{\FACEBUILTIN}{\textcolor{builtin}}
-\newcommand{\FACEREFERENCE}{\textcolor{reference}}
-\newcommand{\FACETYPE}{\textcolor{type}}
-\newcommand{\FACETEXT}{}
+\DeclareRobustCommand{\FACECOMMENT}{\textcolor{comment}}
+\DeclareRobustCommand{\FACEKEYWORD}[1]{\textbf{\color{keyword}#1}}
+\DeclareRobustCommand{\FACESTRING}{\textcolor{string}}
+\DeclareRobustCommand{\FACEVARIABLE}{\textcolor{variable}}
+\DeclareRobustCommand{\FACEFUNCTION}{\textcolor{function}}
+\DeclareRobustCommand{\FACEBUILTIN}{\textcolor{builtin}}
+\DeclareRobustCommand{\FACEREFERENCE}{\textcolor{reference}}
+\DeclareRobustCommand{\FACETYPE}{\textcolor{type}}
+\DeclareRobustCommand{\FACETEXT}{}
 
 \definecolor{chunkborder}{rgb}{1.0,0.647,0}
 \definecolor{chunktitle}{rgb}{0.4196,0.556862745,0.1372549}
 \definecolor{chunkref}{rgb}{0.4156862745,0.352941,0.803921}
 
 \definecolor{inlinecode}{rgb}{0.4,0.2,0.4}
-\newcommand{\INLINEFACETEXT}{\textcolor{inlinecode}}
+\DeclareRobustCommand{\INLINEFACETEXT}{\textcolor{inlinecode}}
+
+\definecolor{menucolor}{rgb}{0.8,0.8,0.8}
 
 % variables and annotations
 
@@ -479,6 +602,21 @@
 \newcommand{\REFEXTKEY}[1]{ (#1)}
 \newcommand{\DEFAULTREFEXT}{\texttt}
 
+\let\latex@ref\ref
+\let\latex@pageref\pageref
+
+\newcommand{\mozart@noweird}{\useochar@defs\def\usechar##1{##1}\def\protect{}}
+
+\def\ref#1{{\mozart@specials@ref\latex@ref{#1}}}
+\def\pageref#1{{\mozart@specials@ref\latex@pageref{#1}}}
+\def\label#1{\@bsphack
+  {\mozart@specials@ref\xdef\mozart@temp{#1}}%
+  \expandafter\mozart@label\expandafter{\mozart@temp}}
+\def\mozart@label#1{%
+  \protected@write\@auxout{}%
+         {\string\newlabel{#1}{{\@currentlabel}{\thepage}}}%
+  \@esphack}
+
 % figures
 
 \newcommand{\CAPTIONID}[1]{\caption{\label{#1}\kern0pt\relax}}
@@ -486,8 +624,8 @@
   {\begin{center}\large\bf}
   {\end{center}}
 
-\newcommand{\PICEXT}[1]{%
-  \epsfig{file=#1,width=0.7\linewidth}}
+\newcommand{\PICEXT}[1]{{\mozart@specials@other
+  \epsfig{file=#1,width=0.7\linewidth}}}
 \newenvironment{PICEXTDISPLAY}
   {\begin{center}\begin{minipage}{\linewidth}}
   {\end{minipage}\end{center}}
@@ -509,7 +647,7 @@
      \item[\mbox{\bf$\color{chunkborder}\langle$%
        \textcolor{chunktitle}{#1}$\color{chunkborder}\rangle\equiv$}]%
      \topsep\z@\parskip\z@\partopsep\z@\parsep\z@\itemsep\z@
-     \hfill\hbox{}\begin{alltt}}
+     \hfill\hbox{}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{list}}
 
 \newcommand{\CHUNKREF}[1]{%
@@ -553,3 +691,11 @@
 
 \let\my@item\@item
 \long\def\@item[#1]{\def\foo{#1}\my@item[\foo]}
+
+\newcommand{\MENU}[3]{%
+  \colorbox{menucolor}{%
+    \begin{tabular}[b]{@{}p{\mozart@leftmarginwidth}p{1cm}p{1cm}@{}}%
+      #1&#2&#3%
+    \end{tabular}}}
+
+\newcommand{\MOUSE}[1]{\hbox{\lower3mm\hbox{\epsfig{file=mouse-#1.ps,width=1cm}}}}
