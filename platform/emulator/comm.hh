@@ -613,3 +613,9 @@ public:
 
 Site* initMySite(ip_address,port_t,time_t);
 Site* initMySiteVirtual(ip_address,port_t,time_t,VirtualInfo*);
+
+/**********************************************************************
+ *   SECTION :: new gate support
+ **********************************************************************/
+
+Site *findSite(ip_address a,int port,time_t stamp);

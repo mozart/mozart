@@ -268,7 +268,7 @@ Site *unmarshalPSite(MsgBuffer *buf){
   return s;}
 
 
-Site *findRemoteSite(ip_address a,int port,time_t stamp)
+Site *findSite(ip_address a,int port,time_t stamp)
 {
   Site tryS(a,port,stamp);
   int hvalue=tryS.hashPrimary();
