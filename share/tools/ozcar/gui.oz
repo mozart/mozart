@@ -383,6 +383,11 @@ in
 	 end
       end
 
+      meth ProcessClick(V)
+	 {Browse V}
+	 LastClicked <- V
+      end
+
       meth updateEnv
 	 V = Gui,getEnv(unit $)
       in
@@ -405,9 +410,7 @@ in
 		W  = {Widget w($)}
 		Ac = {New Tk.action
 		      tkInit(parent: W
-			     action: proc {$}
-					{Browse Value} LastClicked <- Value
-				     end)}
+			     action: self # ProcessClick(Value))}
 	     in
 		Gui,Enqueue(env o(W insert 'end'
 				  {PrintF ' ' # Name {EnvVarWidth}}))
@@ -553,9 +556,9 @@ in
 	 LineAction = {New Tk.action
 		       tkInit(parent: W
 			      action: self # FrameClick(frame:Frame))}
-	 LineEnd     = p(FrameNr 'end')
-	 UpToDate    = 1 > 0 %{Emacs isUpToDate(Frame.time $)}
-	 Arrow       = case Frame.dir == entry then ' -> ' else ' <- ' end
+	 LineEnd    = p(FrameNr 'end')
+	 UpToDate   = 1 > 0 %{Emacs isUpToDate(Frame.time $)}
+	 Arrow      = case Frame.dir == entry then ' -> ' else ' <- ' end
       in
 	 case Delete then
 	    Gui,Enable(stack W)
@@ -574,10 +577,7 @@ in
 	    ProcTag    = {self.StackText newTag($)}
 	    ProcAction = {New Tk.action
 			  tkInit(parent: W
-				 action: proc {$}
-					    {Browse FrameData}
-					    LastClicked <- FrameData
-					 end)}
+				 action: self # ProcessClick(FrameData))}
 	 in
 	    Gui,Enqueue(stack
 			o(W insert LineEnd Arrow # FrameNr # ' {'
@@ -601,10 +601,7 @@ in
 		ArgTag    = {self.StackText newTag($)}
 		ArgAction = {New Tk.action
 			     tkInit(parent: W
-				    action: proc {$}
-					       {Browse V}
-					       LastClicked <- V
-					    end)}
+				    action: self # ProcessClick(V))}
 	     in
 		Gui,Enqueue(stack o(W insert LineEnd ' '
 				    q(StackTag LineActTag LineColTag)))
