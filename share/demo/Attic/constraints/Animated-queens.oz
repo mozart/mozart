@@ -34,6 +34,8 @@ local
       Applet
       
    body
+      Applet.spec = single(title(type:string default:"Animated Queens"))
+      
       URL = 'http://www.ps.uni-sb.de/ozhome/demo/images/animated-queens/'
       
       MaxWidth      = 600 % How large can the drawing area be
@@ -564,13 +566,7 @@ local
    end
 
 in
-   
-   {Application.applet
-    'animated-queens.oza'
     
     MakeQueens
-
-    single(title(type:string default:"Animated Queens"))
-   }
 
 end

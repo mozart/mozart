@@ -42,6 +42,7 @@ local
       Applet
 
    body
+      Applet.spec = single(title(type:string default:"Truck Race"))
 
       Url = 'http://www.ps.uni-sb.de/ozhome/demo/images/trucks/'
 
@@ -123,14 +124,8 @@ local
    end
 
 in
-
-   {Application.applet
-    'trucks.oza'
     
     MakeTruckRace
-
-    single(title(type:string default:"Truck Race"))
-   }
 
 end 
 
