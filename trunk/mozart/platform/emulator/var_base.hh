@@ -160,16 +160,21 @@ void addSuspSVar(TaggedRef v, Suspension susp,int unstable = TRUE)
 
 // #define SIMPLEVAR
 #ifdef SIMPLEVAR
-extern void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE);
+SVariable *oz_newSVar(Board *bb);
 #else
+inline
+SVariable *oz_newSVar(Board *bb) {
+  return new SVariable(bb);
+}
+#endif
+
 inline
 void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE)
 {
-  SVariable *sv = new SVariable(tagged2VarHome(*v));
+  SVariable *sv = oz_newSVar(tagged2VarHome(*v));
   *v = makeTaggedSVar(sv);
   sv->addSuspSVar(susp, unstable);
 }
-#endif
 
 extern
 void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable);
