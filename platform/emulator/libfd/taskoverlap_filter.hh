@@ -71,165 +71,144 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
                         &_cl3_o, &cl3_o);
   CMD(engine_cl3.getPropTable().print(engine_cl3));
   //
-  int nb_failed_clauses = 0, not_first_iteration = 0;
-
-  while (1) {
-    //--------------------------------------------------
-    // 2. step
-    int _x_card, _y_card, _o_card;
-    do {
-      _x_card = x->getSize();
-      _y_card = y->getSize();
-      _o_card = o->getSize();
-      //
-      if (!engine_cl1.isFailed()) {
-        CDM(("cl1 propagating to\n"));
-        if (!(cl1_t1.propagate_to(*x, _first) &
-              cl1_t2.propagate_to(*y, _first) &
-              cl1_o.propagate_to(*o, _first))) {
-          CDM(("cl1 failed while propagating to clause\n"));
-          engine_cl1.setFailed();
-        }
+  //--------------------------------------------------
+  int x_card, y_card, o_card;
+  int x_init_card = x->getSize();
+  int y_init_card = y->getSize();
+  int o_init_card = o->getSize();
+  do {
+    x_card = x->getSize();
+    y_card = y->getSize();
+    o_card = o->getSize();
+    //
+    if (!engine_cl1.isFailed()) {
+      CDM(("cl1 propagating to\n"));
+      if (!(cl1_t1.propagate_to(*x, _first) &
+            cl1_t2.propagate_to(*y, _first) &
+            cl1_o.propagate_to(*o, _first))) {
+        CDM(("cl1 failed while propagating to clause\n"));
+        engine_cl1.setFailed();
       }
-      if (!engine_cl2.isFailed()) {
-        CDM(("cl2 propagating to\n"));
-        if (!(cl2_t1.propagate_to(*x, _first) &
-              cl2_t2.propagate_to(*y, _first) &
-              cl2_o.propagate_to(*o, _first))) {
-          CDM(("cl2 failed while propagating to clause\n"));
-          engine_cl2.setFailed();
-        }
+    }
+    if (!engine_cl2.isFailed()) {
+      CDM(("cl2 propagating to\n"));
+      if (!(cl2_t1.propagate_to(*x, _first) &
+            cl2_t2.propagate_to(*y, _first) &
+            cl2_o.propagate_to(*o, _first))) {
+        CDM(("cl2 failed while propagating to clause\n"));
+        engine_cl2.setFailed();
       }
-      if (!engine_cl3.isFailed()) {
-        CDM(("cl3 propagating to\n"));
-        if (!(cl3_t1.propagate_to(*x, _first) &
-              cl3_t2.propagate_to(*y, _first) &
-              cl3_o.propagate_to(*o, _first))) {
-          CDM(("cl3 failed propagating to clause\n"));
-          engine_cl3.setFailed();
-        }
+    }
+    if (!engine_cl3.isFailed()) {
+      CDM(("cl3 propagating to\n"));
+      if (!(cl3_t1.propagate_to(*x, _first) &
+            cl3_t2.propagate_to(*y, _first) &
+            cl3_o.propagate_to(*o, _first))) {
+        CDM(("cl3 failed propagating to clause\n"));
+        engine_cl3.setFailed();
       }
-      // 4.step
-      CDM(("cl1 running propagation queue\n"));
-      engine_cl1.propagate();
-      CDM(("cl2 running propagation queue\n"));
-      engine_cl2.propagate();
-      CDM(("cl3 running propagation queue\n"));
-      engine_cl3.propagate();
-    //--------------------------------------------------
-    // 1. step
-      if (1 || not_first_iteration) {
-        FDM u_t1, u_t2, u_o;
-        u_t1.initEmpty(); u_t2.initEmpty(); u_o.initEmpty();
-        if (!engine_cl1.isFailed()) {
-          u_t1 = u_t1 | *cl1_t1;
-          u_t2 = u_t2 | *cl1_t2;
-          u_o  = u_o  | *cl1_o;
-        }
-        if (!engine_cl2.isFailed()) {
-          u_t1 = u_t1 | *cl2_t1;
-          u_t2 = u_t2 | *cl2_t2;
-          u_o  = u_o  | *cl2_o;
-        }
-        if (!engine_cl3.isFailed()) {
-          u_t1 = u_t1 | *cl3_t1;
-          u_t2 = u_t2 | *cl3_t2;
-          u_o  = u_o  | *cl3_o;
-        }
-        FailOnEmpty(*x &= u_t1);
-        FailOnEmpty(*y &= u_t2);
-        FailOnEmpty(*o  &= u_o);
-      }
-    } while (_x_card > x->getSize() ||
-             _y_card > y->getSize() ||
-             _o_card > o->getSize());
-
-    //--------------------------------------------------
-    not_first_iteration = 1;
+    }
     _first = 0;
-    // 3. step
-    if (engine_cl1.hasReachedFixPoint() &&
-        engine_cl2.hasReachedFixPoint() &&
-        engine_cl3.hasReachedFixPoint()) {
-      CDM(("all propagation queues are empty\n"));
-      int nb_failed_clauses = (engine_cl1.isFailed() +
-                               engine_cl2.isFailed() +
-                               engine_cl3.isFailed());
-      // 3.a step
-      if (nb_failed_clauses == 3) {
-        goto failure;
-      }
-      // 3.b step
-      if (nb_failed_clauses == 2) {
-        if (!engine_cl1.isFailed()) {
-          CDM(("cl1 unit committed\n"));
-          // t1 + d1 > t2
-          {
-            int r;
-            make_lessEqOffset(r, *s, y, x, OZ_int(xd-1));
-          }
-          // t2 + d2 > t1
-          {
-            int r;
-            make_lessEqOffset(r, *s, x, y, OZ_int(yd-1));
-          }
-          // o = 1
-          FailOnEmpty(*o &= 1);
-          goto vanish;
-        }
-        if (!engine_cl2.isFailed()) {
-          CDM(("cl2 unit committed\n"));
-          // t1 + d1 <= t2
-          {
-            int r;
-            make_lessEqOffset(r, *s, x, y, OZ_int(-xd));
-          }
-          // o = 1
-          FailOnEmpty(*o &= 0);
-          goto vanish;
-        }
-        if (!engine_cl3.isFailed()) {
-          CDM(("cl3 unit committed\n"));
-          // t2 + d2 <= t1
-          {
-            int r;
-            make_lessEqOffset(r, *s, y, x, OZ_int(-yd));
-          }
-          // o = 1
-          FailOnEmpty(*o &= 0);
-          goto vanish;
-        }
-        CDM(("oops 1\n"));
-      } // step 3.b
-      // step 3.c
-      //   a clause is entailed if no prop fncts are left and
-      //   the basic constraints are subsumed
-      if (engine_cl1.isBasic() &&
-          x->getSize() <= cl1_t1->getSize() &&
-          y->getSize() <= cl1_t2->getSize() &&
-          o->getSize()  <= cl1_o->getSize()) {
-          CDM(("cl1 entailed\n"));
-            goto vanish;
-      }
-      if (engine_cl2.isBasic() &&
-          x->getSize() <= cl2_t1->getSize() &&
-          y->getSize() <= cl2_t2->getSize() &&
-          o->getSize()  <= cl2_o->getSize()) {
-          CDM(("cl2 entailed\n"));
-        goto vanish;
-      }
-      if (engine_cl3.isBasic() &&
-          x->getSize() <= cl3_t1->getSize() &&
-          y->getSize() <= cl3_t2->getSize() &&
-          o->getSize()  <= cl3_o->getSize()) {
-          CDM(("cl3 entailed\n"));
-        goto vanish;
-      }
-      CDM(("propagation fix-point reached\n"));
-      break;
-    } // step 3.
-  } // while(1)
-  //
+    CDM(("cl1 running propagation queue\n"));
+    engine_cl1.propagate();
+    CDM(("cl2 running propagation queue\n"));
+    engine_cl2.propagate();
+    CDM(("cl3 running propagation queue\n"));
+    engine_cl3.propagate();
+    //--------------------------------------------------
+    FDM u_t1, u_t2, u_o;
+    u_t1.initEmpty(); u_t2.initEmpty(); u_o.initEmpty();
+    if (!engine_cl1.isFailed()) {
+      u_t1 = u_t1 | *cl1_t1;
+      u_t2 = u_t2 | *cl1_t2;
+      u_o  = u_o  | *cl1_o;
+    }
+    if (!engine_cl2.isFailed()) {
+      u_t1 = u_t1 | *cl2_t1;
+      u_t2 = u_t2 | *cl2_t2;
+      u_o  = u_o  | *cl2_o;
+    }
+    if (!engine_cl3.isFailed()) {
+      u_t1 = u_t1 | *cl3_t1;
+      u_t2 = u_t2 | *cl3_t2;
+      u_o  = u_o  | *cl3_o;
+    }
+    FailOnEmpty(*x &= u_t1);
+    FailOnEmpty(*y &= u_t2);
+    FailOnEmpty(*o  &= u_o);
+  } while (x_card > x->getSize() ||
+           y_card > y->getSize() ||
+           o_card > o->getSize());
+
+  //--------------------------------------------------
+  _first = 0;
+  // 3. step
+  CDM(("all propagation queues are empty\n"));
+  int nb_failed_clauses = (engine_cl1.isFailed() +
+                           engine_cl2.isFailed() +
+                           engine_cl3.isFailed());
+  // 3.a step
+  if (nb_failed_clauses == 3) {
+    goto failure;
+  }
+  // 3.b step
+  if (nb_failed_clauses == 2) {
+    if (!engine_cl1.isFailed()) {
+      CDM(("cl1 unit committed\n"));
+      // t1 + d1 > t2
+      int r;
+      make_lessEqOffset(r, *s, y, x, OZ_int(xd-1));
+      // t2 + d2 > t1
+      make_lessEqOffset(r, *s, x, y, OZ_int(yd-1));
+      // o = 1
+      FailOnEmpty(*o &= 1);
+      goto vanish;
+    }
+    if (!engine_cl2.isFailed()) {
+      CDM(("cl2 unit committed\n"));
+      // t1 + d1 <= t2
+      int r;
+      make_lessEqOffset(r, *s, x, y, OZ_int(-xd));
+      // o = 1
+      FailOnEmpty(*o &= 0);
+      goto vanish;
+    }
+    if (!engine_cl3.isFailed()) {
+      CDM(("cl3 unit committed\n"));
+      // t2 + d2 <= t1
+      int r;
+      make_lessEqOffset(r, *s, y, x, OZ_int(-yd));
+      // o = 1
+      FailOnEmpty(*o &= 0);
+      goto vanish;
+    }
+    CDM(("oops 1\n"));
+  } // step 3.b
+  // step 3.c
+  //   a clause is entailed if no prop fncts are left and
+  //   the basic constraints are subsumed
+  if (engine_cl1.hasNoPropsLeft() &&
+      x_init_card <= cl1_t1->getSize() &&
+      y_init_card <= cl1_t2->getSize() &&
+      o_init_card <= cl1_o->getSize()) {
+    CDM(("cl1 entailed\n"));
+    goto vanish;
+  }
+  if (engine_cl2.hasNoPropsLeft() &&
+      x_init_card <= cl2_t1->getSize() &&
+      y_init_card <= cl2_t2->getSize() &&
+      o_init_card <= cl2_o->getSize()) {
+    CDM(("cl2 entailed\n"));
+    goto vanish;
+  }
+  if (engine_cl3.hasNoPropsLeft() &&
+      x_init_card <= cl3_t1->getSize() &&
+      y_init_card <= cl3_t2->getSize() &&
+      o_init_card <= cl3_o->getSize()) {
+    CDM(("cl3 entailed\n"));
+    goto vanish;
+  }
+  CDM(("propagation fix-point reached\n"));
   //  printf("gaga %s",(*s).toString());
   CDM(("leaving\n"));
   OZ_DEBUGPRINTTHIS("out: ");
