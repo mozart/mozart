@@ -69,7 +69,7 @@ private:
   FDIntervals * asIntervals(void) const;
 
   Bool isConsistent(void) const;
-  
+  Bool contains(int i) const;
 public:
   void dispose(void);
   void FiniteDomainInit(void * d);
@@ -103,7 +103,7 @@ public:
   int maxElem(void) const {return max_elem;}
   int singl(void) const;
    
-  Bool contains(int i) const;
+  Bool isIn(int i) const;
   FDPropState checkAgainst(FiniteDomain &dom);
   OZ_Term getAsList(void) const;
   Bool next(int i, int &n) const; 

@@ -33,7 +33,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
   switch (tTag){
   case SMALLINT:
     {
-      if (! finiteDomain.contains(smallIntValue(term))) {
+      if (! finiteDomain.isIn(smallIntValue(term))) {
 	PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
 	return FALSE;
       }
@@ -210,7 +210,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 Bool GenFDVariable::valid(TaggedRef val)
 {
   Assert(!isRef(val));
-  return (isSmallInt(val) && finiteDomain.contains(smallIntValue(val)));
+  return (isSmallInt(val) && finiteDomain.isIn(smallIntValue(val)));
 }
 
 
