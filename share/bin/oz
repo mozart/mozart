@@ -152,6 +152,10 @@ case "$cmd" in
         exec $OZWINDOWMANAGER "$@"
    ;;
 
+   ozdo)
+        exec "$@"
+   ;;
+
    *)
        echo "Unknown invocation of Oz via '$cmd'" 1>&2
        exit 1
