@@ -1116,7 +1116,7 @@ if test "${with_documents+set}" = set; then
   oz_doc_dirs=${with_documents}
 fi
 
-: ${oz_doc_dirs=all}
+: ${oz_doc_dirs=}
 echo "$ac_t""$oz_doc_dirs" 1>&6
 
 test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations"
