@@ -2215,7 +2215,7 @@ LBLdispatcher:
          Abstraction *def = tagged2Abstraction(taggedPredicate);
 	 PrTabEntry *pte = def->getPred();
          CheckArity(pte->getArity(), taggedPredicate);
-         if (!isTailCall) { CallPushCont(PC); }
+         if (!isTailCall) { CallPushCont(PC+3); }
          CallDoChecks(def,def->getGRegs());
          JUMP(pte->getPC());
        }
