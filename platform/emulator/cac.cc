@@ -1498,11 +1498,22 @@ void Propagator::_cacRecurse(Propagator * fr) {
 }
 
 inline 
-Suspendable * Suspendable::_cacSuspendableInline(void) {
+Suspendable * Suspendable::_cacSuspendableInline(Bool compress) {
   Assert(this);
 
-  if (isCacMarked())
-    return cacGetFwd();
+  if (isCacMarked()) {
+    Suspendable * t = cacGetFwd();
+    if (compress) {
+      if (t->isMultiMark()) {
+	return NULL;
+      } else {
+	t->setMultiMark();
+	return t;
+      }
+    } else {
+      return t;
+    }
+  }
 
   if (isDead())
     return (Suspendable *) NULL;
@@ -1533,7 +1544,12 @@ Suspendable * Suspendable::_cacSuspendableInline(void) {
     return NULL;
   }
 
-  to->flags = flags;
+  if (compress) {
+    to->flags = flags|SF_MultiMark;
+  } else {
+    to->flags = flags;
+  }
+
   STOREFWDFIELD(this, to);
 
   return to;
@@ -1584,11 +1600,20 @@ Propagator * Propagator::_cacLocalInline(Board * bb) {
 
 inline
 SuspList * SuspList::_cacRecurse(SuspList ** last) {
+#ifdef S_CLONE
+  const Bool compress = NO;
+#else
+  const Bool compress = OK;
+#endif
   SuspList * sl = this;
   SuspList * pl = SuspList::_gc_sentinel;
 
+  /*
+   * Stage 1: collect
+   *
+   */
   while (sl) {
-    Suspendable * to = sl->getSuspendable()->_cacSuspendableInline();
+    Suspendable * to = sl->getSuspendable()->_cacSuspendableInline(compress);
     
     if (to) {
       SuspList * nl = new SuspList(to);
@@ -1604,6 +1629,18 @@ SuspList * SuspList::_cacRecurse(SuspList ** last) {
 
   if (last)
     *last = pl;
+
+  /*
+   * Stage 2: reset marks
+   *
+   */
+
+  if (compress) {
+    for (sl = SuspList::_gc_sentinel->getNext(); sl; sl = sl->getNext()) {
+      Assert(sl->getSuspendable()->isMultiMark());
+      sl->getSuspendable()->unsetMultiMark();
+    }
+  }
 
   return SuspList::_gc_sentinel->getNext();
 }
@@ -1996,7 +2033,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
 
 //
 Suspendable * Suspendable::_cacSuspendable(void) {
-  return (this == NULL) ? (Suspendable *) NULL : _cacSuspendableInline();
+  return (this == NULL) ? (Suspendable *) NULL : _cacSuspendableInline(NO);
 }
 
 OZ_Term * OZ_cacAllocBlock(int n, OZ_Term * frm) {
