@@ -784,6 +784,128 @@ OZ_ENABLE(miscbuiltins,[   include misc builtins],no,
 	,
 	)
 
+dnl *****************************************************************
+dnl Find out which alignment assembler uses
+dnl *****************************************************************
+
+AC_MSG_CHECKING(whether .align is multiple)
+AC_TRY_RUN([
+#ifdef __GNUC__
+
+#include <stdio.h>
+
+static int nonsense(int);
+int main(void) {
+  int j;
+
+  goto leave;
+  
+ start:
+  asm volatile(".align 16");
+ la1:
+  asm volatile(".long 1");
+  asm volatile(".align 16");
+ la2:
+  j=nonsense(42);
+  goto leave;
+  
+  asm volatile(".align 16");
+ lb1:
+  asm volatile(".long 2");
+  asm volatile(".align 16");
+ lb2:
+  j=nonsense(4711);
+  goto leave;
+
+ leave:
+  static void * fake[] = {
+    && start, && la1, && la2,
+    && lb1, && lb2, && leave};
+
+  if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
+      ((((char *) && la2) - ((char *) && la1)) == 16) &&
+      (*((char *) && la1)==1) &&
+      (*((char *) && lb1)==2)) {
+    return 0;
+  } 
+  return -1;
+    
+}
+static int nonsense(int i) {
+  return i*i;
+}
+
+#else
+
+BOOOOOOOM
+
+#endif
+],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(AS_HAS_MULTIPLE_ALIGN),
+  AC_MSG_RESULT(no),
+  AC_MSG_RESULT(no))
+
+
+AC_MSG_CHECKING(whether .align is power of 2)
+AC_TRY_RUN([
+#ifdef __GNUC__
+
+#include <stdio.h>
+
+static int nonsense(int);
+int main(void) {
+  int j;
+
+  goto leave;
+  
+ start:
+  asm volatile(".align 4");
+ la1:
+  asm volatile(".long 1");
+  asm volatile(".align 4");
+ la2:
+  j=nonsense(42);
+  goto leave;
+  
+  asm volatile(".align 4");
+ lb1:
+  asm volatile(".long 2");
+  asm volatile(".align 4");
+ lb2:
+  j=nonsense(4711);
+  goto leave;
+
+ leave:
+  static void * fake[] = {
+    && start, && la1, && la2,
+    && lb1, && lb2, && leave};
+
+  if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
+      ((((char *) && la2) - ((char *) && la1)) == 16) &&
+      (*((char *) && la1)==1) &&
+      (*((char *) && lb1)==2)) {
+    return 0;
+  } 
+  return -1;
+    
+}
+static int nonsense(int i) {
+  return i*i;
+}
+
+#else
+
+BOOOOOOOM
+
+#endif
+],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(AS_HAS_POWER_ALIGN),
+  AC_MSG_RESULT(no),
+  AC_MSG_RESULT(no))
+
+
 dnl ------------------------------------------------------------------
 dnl Configure oztool.sh
 dnl ------------------------------------------------------------------

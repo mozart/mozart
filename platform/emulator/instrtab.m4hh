@@ -28,13 +28,13 @@ define(readArg,$1)
 define(writeArg,$1)
 
 define(instruction,
-	`INSTR(TOUPPER($1)LBL)
+	`INSTR(TOUPPER($1))
 ')
 
 
 #ifdef __GNUC__
 
-#define INSTR(instr) && instr,
+#define INSTR(instr) && instr##LBL,
 static void *instrTable[OZERROR+1] = {
 
 #else
@@ -60,3 +60,19 @@ static void *instrTable[OZERROR+1];
 0};
 #else
 #endif
+
+#undef INSTR
+
+#ifdef INLINEOPCODEMAP
+
+#define INSTR(instr) && instr##FAKE,
+
+static void * instrFakeTable[OZERROR+1] = {
+  include(EMUDIR/instrDefs.m4)
+0};
+
+#undef INSTR
+
+#endif
+
+
