@@ -399,8 +399,6 @@ enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 // virtual base class; never create an object from this class
 class OZ_Propagator {
   friend class Propagator;
-private:
-  OZ_Propagator * cac(void);
 public:
   OZ_Propagator(void) {}
   virtual ~OZ_Propagator(void) {}
