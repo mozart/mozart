@@ -85,7 +85,8 @@ define
 	    if {CondSelect U scheme unit}\="mogul" then
 	       raise ozmake(makefile:mogulbadscheme(R.mogul)) end
 	    else
-	       {self set_mogul({Path.toAtom U})}
+	       %% normalize MOGUL ID, i.e. no trailing slash
+	       {self set_mogul({Utils.cleanMogulID U})}
 	    end
 	 end
 
@@ -133,19 +134,31 @@ define
 	    if S==nil then skip
 	    elseif {IsVirtualString S} then
 	       if {Utils.authorOK S} then
-		  {self set_author([{MakeByteString S}])}
+		  %% normalize MOGUL ID, i.e. no trailing slash
+		  S2 = if {Utils.isMogulID S}
+		       then {Utils.cleanMogulID S}
+		       else S end
+	       in
+		  {self set_author([{MakeByteString S2}])}
 	       else
 		  raise ozmake(makefile:authornotok(S)) end
 	       end
 	    elseif {Not {IsList S}} orelse {Not {All S IsVirtualString}} then
 	       raise ozmake(makefile:badauthor(S)) end
 	    else
-	       for X in S do
-		  if {Utils.authorOK X} then skip else
-		     raise ozmake(makefile:authornotok(X)) end
-		  end
-	       end
-	       {self set_author({Map S MakeByteString})}
+	       {self set_author(
+			for X in S collect:COL do
+			   if {Utils.authorOK X} then
+			      {COL
+			       {MakeByteString
+				%% normalize MOGUL ID, i.e. no trailing slash
+				if {Utils.isMogulID X}
+				then {Utils.cleanMogulID X}
+				else X end}}
+			   else
+			      raise ozmake(makefile:authornotok(X)) end
+			   end
+			end)}
 	    end
 	 end
 
@@ -247,7 +260,15 @@ define
 		  raise ozmake(makefile:badcontact(C)) end
 	       end
 	    end
-	    {self set_contact(L)}
+	    {self set_contact(
+		     %% make sure that MOGUL IDs have been normalized
+		     %% i.e. no trailing slahes
+		     {Map L
+		      fun {$ C}
+			 if {HasFeature C mogul} then
+			    {AdjoinAt C mogul {Utils.cleanMogulID C.mogul}}
+			 else C end
+		      end})}
 	 end
 
 	 %% process subdirs feature

@@ -3,7 +3,7 @@ functor
 export
    ToURL
    ToBaseURL		ToBase
-   ToNonBaseURL		ToNonBase
+   ToNonBaseURL		ToNonBase       ToNonBaseAtom
    ResolveURL		Resolve		ResolveAtom
    IsRelative IsAbsolute ToString ToAtom
    ExpandURL 		Expand
@@ -83,6 +83,7 @@ define
       else U end
    end
    fun {ToNonBase P} {ToString {ToNonBaseURL P}} end
+   fun {ToNonBaseAtom P} {ToAtom {ToNonBaseURL P}} end
       
    fun {ResolveURL Base Rel}
       {URL.resolve {ToBase Base} {ToURL Rel}}
