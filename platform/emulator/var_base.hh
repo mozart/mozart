@@ -97,10 +97,9 @@ public:
   void unlinkSuspList() { suspList = NULL; }
 
   Bool gcIsMarked(void);
-  void gcMark(SVariable *);
-  void ** gcGetMarkField(void);
-  SVariable * gcGetFwd(void);
-  void gc();
+  void gcMark(Bool, TaggedRef *);
+  TaggedRef * gcGetFwd(void);
+  SVariable * gc();
 
   void setStoreFlag(void) {
     suspList = (SuspList *) (((long) suspList) | STORE_FLAG);

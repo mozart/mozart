@@ -87,20 +87,20 @@ public:
   static void *operator new(size_t chunk_size) \
     { return freeListMalloc(chunk_size); } \
   static void operator delete(void *,size_t ) \
-    { error("deleting free list mem"); }
+    { Assert(NO); }
 
 
 #define USEHEAPMEMORY \
   static void *operator new(size_t chunk_size) \
     { return heapMalloc(chunk_size); }\
   static void operator delete(void *,size_t) \
-    { error("deleting heap mem");}
+    { Assert(NO); }
 
 #define USEHEAPMEMORY32 \
   static void *operator new(size_t chunk_size) \
     { return int32Malloc(chunk_size); }\
   static void operator delete(void *,size_t) \
-    { error("deleting heap mem");}
+    { Assert(NO); }
 
 // Heap Memory
 //  concept: allocate dynamically
@@ -201,7 +201,7 @@ Bool reallyHeapNever(void *ptr1, void *ptr2)
 
 
 // free list management
-#define freeListMaxSize 1000
+#define freeListMaxSize 2048
 
 extern void *FreeList[freeListMaxSize];
 
