@@ -1,7 +1,7 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-class ThreadManager from UrObject
+class ThreadManager
 
    meth init
       skip
