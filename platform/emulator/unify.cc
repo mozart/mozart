@@ -118,14 +118,6 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
  * Unification
  * -------------------------------------------------------------------------*/
 
-inline
-Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
-{
-  Board *board1 = tagged2Var(var1)->getBoardInternal();
-  Board *board2 = tagged2Var(var2)->getBoardInternal()->derefBoard();
-  return oz_isBelow(board1,board2);
-}
-
 //
 // kost@ : Variables with GREATER types are bound to variables with
 // SMALLER types;
@@ -225,25 +217,27 @@ loop:
   /*
    * Specially optimized: local simple vars without suspensions
    */
+  {
+    const OZ_Term ov = am.getCurrentOptVar();
 
-  if (oz_isOptVar(term1)) {
-    // Both have the same home, order them according to age
-    if (term1 == term2 && heapNewer(termPtr2, termPtr1))
-      doBind(termPtr2, makeTaggedRef(termPtr1));
-    else
-      doBind(termPtr1, makeTaggedRef(termPtr2));
-    goto next;
+    if (term1 == ov) {
+      // Both have the same home, order them according to age
+      if (term1 == term2 && heapNewer(termPtr2, termPtr1))
+        doBind(termPtr2, makeTaggedRef(termPtr1));
+      else
+        doBind(termPtr1, makeTaggedRef(termPtr2));
+     goto next;
+    }
+
+    if (term2 == ov) {
+      // Both have the same home, order them according to age
+      if (term1 == term2 && heapNewer(termPtr1, termPtr2))
+        doBind(termPtr1, makeTaggedRef(termPtr2));
+      else
+        doBind(termPtr2, makeTaggedRef(termPtr1));
+      goto next;
+    }
   }
-
-  if (oz_isOptVar(term2)) {
-    // Both have the same home, order them according to age
-    if (term1 == term2 && heapNewer(termPtr1, termPtr2))
-      doBind(termPtr1, makeTaggedRef(termPtr2));
-    else
-      doBind(termPtr2, makeTaggedRef(termPtr1));
-    goto next;
-  }
-
 
   /*
    * Prescribe in which order to bind:
@@ -252,26 +246,30 @@ loop:
    */
 
   {
-    Board * tb1 = tagged2Var(term1)->getBoardInternal()->derefBoard();
-    Board * tb2 = tagged2Var(term2)->getBoardInternal()->derefBoard();
+    OzVariable *v1 = tagged2Var(term1);
+    OzVariable *v2 = tagged2Var(term2);
+    Board* tb1 = v1->getBoardInternal()->derefBoard();
+    Board* tb2 = v2->getBoardInternal()->derefBoard();
+    DebugCode(term1 = (OZ_Term) -1;);
+    DebugCode(term2 = (OZ_Term) -1;);
 
-    if (oz_isBelow(tb2, tb1)) {
-      // t2 should be bound to t1
-      Swap(term1, term2, TaggedRef);
+    if (tb1 == tb2) {
+      if (CMPVAR(v1, v2) < 0) {
+        Swap(termPtr1, termPtr2, TaggedRef*);
+        tb2 = tb1; DebugCode(tb1 = (Board *) -1);
+      }
+    } else if (oz_isBelow(tb2, tb1)) {            // strictly above;
       Swap(termPtr1, termPtr2, TaggedRef*);
-      Swap(tb1, tb2, Board*);
-    } else if (tb1 == tb2 &&
-               CMPVAR(tagged2Var(term1), tagged2Var(term2)) < 0) {
-      Swap(term1, term2, TaggedRef);
-      Swap(termPtr1, termPtr2, TaggedRef*);
-      Swap(tb1, tb2, Board *);
+      tb2 = tb1; DebugCode(tb1 = (Board *) -1);
+    } else {
+      Assert(tb1 != tb2 && oz_isBelow(tb1, tb2)); // strictly below;
+      DebugCode(tb1 = (Board *) -1);
     }
 
+    //
     // Make the variable to which the binding is done fit!
-
-    int res = oz_var_cast(termPtr2, tb2, tagged2Var(term1)->getType());
-
-    // termPtr2 is changed!
+    int res = oz_var_cast(termPtr2, tb2, v1->getType());
+    // *termPtr2 can be changed!
 
     if (res != PROCEED) {
       result = res;
