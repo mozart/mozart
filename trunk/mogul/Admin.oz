@@ -349,8 +349,10 @@ define
 	       if @db==unit then
 		  {Raise mogul('update-ozpm-info'(no_db_is_opened))}
 	       end
-	       {Pickle.save {@db get_ozpm_info($)}
-		{RelativeTo @mogulDIR 'ozpm.info'}}
+	       {Pickle.saveCompressed
+		{@db get_ozpm_info($)}
+		{RelativeTo @mogulDIR 'ozpm.info'}
+		9}
 	    catch mogul(...)=E then
 	       Admin,addReport(M E)
 	    end
@@ -381,6 +383,22 @@ define
       end
       meth ignoreURL(URL $)
 	 {Some @ignoreURL fun {$ RE} {Regex.search RE URL}\=false end}
+      end
+      %%
+      meth 'update-ozmake'(B)=M
+	 if B then
+	    try
+	       if @db==unit then
+		  {Raise mogul('update-ozmake'(no_db_is_opened))}
+	       end
+	       {Pickle.saveCompressed
+		{@db get_ozpm_info($)}
+		{RelativeTo @mogulDIR 'pkg/database.ozf'}
+		9}
+	    catch mogul(...)=E then
+	       Admin,addReport(M E)
+	    end
+	 end
       end
    end
 

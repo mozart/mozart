@@ -80,6 +80,9 @@ mogul-export:
 mogul-import:
 	$(MOGUL_LIBRARIAN) $(MOGUL_IMPORT_OPTIONS) --print-reports
 
+mogul-ozmake:
+	$(MOGUL_LIBRARIAN) --update-ozmake --print-reports
+
 MOGUL_ARCHIVE_DIRS = $(addprefix $(MOGUL_DIRECTORY)/,pkg doc)
 MOGUL_HTML_DIRS    = $(addprefix $(MOGUL_DIRECTORY)/,info info/category)
 MOGUL_CSS_FILES    = $(addprefix $(MOGUL_DIRECTORY)/,$(HTMLEXTRA))
