@@ -75,7 +75,7 @@ public:
 
   virtual void deallocate(StackEntry *p, int n);
   virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
-  void dispose () { deallocate(array,size); }
+  void dispose () { deallocate(array,getMaxSize()); }
   virtual void resize(int newSize);
 
   OZPRINT;
@@ -204,7 +204,7 @@ public:
 
 private:
 
-  void gcInit()                     { tos = array+size-1; }
+  void gcInit()                     { tos = stackEnd-1; }
 
   void gcQueue(TaskStackEntry elem) { *(tos--) = elem; }
 
@@ -212,7 +212,7 @@ private:
   {
     TaskStackEntry *saveTop = tos+1;
     makeEmpty();
-    while(saveTop < array+size) {
+    while(saveTop < stackEnd) {
       push(*saveTop,NO);
       saveTop++;
     }
