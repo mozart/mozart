@@ -5598,6 +5598,13 @@ ByteSink::allocateBytes(int n)
 }
 
 OZ_Return
+ByteSink::maybeSaveHeader(ByteStream*bs)
+{
+  saveHeader(bs);
+  return PROCEED;
+}
+
+OZ_Return
 ByteSink::putTerm(OZ_Term in,
                   OZ_Term url,
                   OZ_Term dosave,
@@ -5607,7 +5614,13 @@ ByteSink::putTerm(OZ_Term in,
   INIT_IP(0);
 
   ByteStream* bs = bufferManager->getByteStreamMarshal();
-  saveHeader(bs);
+  {
+    OZ_Return r = maybeSaveHeader(bs);
+    if (r!=PROCEED) {
+      bufferManager->freeByteStream(bs);
+      return r;
+    }
+  }
 
   MarshallInfo mi(dosave,urls);
   marshallString(PERDIOVERSION,bs);
@@ -5707,6 +5720,12 @@ ByteSinkDatum::putBytes(BYTE*pos,int len)
 {
   memcpy(&(dat.data[idx]),pos,len);
   idx += len;
+  return PROCEED;
+}
+
+OZ_Return
+ByteSinkDatum::maybeSaveHeader(ByteStream*)
+{
   return PROCEED;
 }
 
