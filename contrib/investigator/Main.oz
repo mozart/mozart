@@ -10,49 +10,47 @@ export
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
 
+   FS
    ConstrGraph
    ParamGraph
    SingleConstrGraph
    SingleParamGraph
    DaVinci at 'x-oz://contrib/DaVinci'
-   CollectConstraints
-   Tables
+   Reflect(spaceReflect: ReflectSpace) at 'x-oz://contrib/Reflect'
    Explorer
    Browser
-   Aux(propLocation)
    Emacs
    History
-   Config(
-      unMarkedPropNodeAttr:   UnMarkedPropNodeAttr
-      unMarkedParamNodeAttr:  UnMarkedParamNodeAttr
-      )
-\ifdef DEBUG
+   Config(unMarkedPropNodeAttr:  UnMarkedPropNodeAttr
+          unMarkedParamNodeAttr: UnMarkedParamNodeAttr)
+
    System
-\endif
+
+   Aux(vectorToList: VectorToList varEq: VarEq)
 
    Error
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
 
-   proc {Loop VarTable PropTable Hist DaVin Stream AllVars AllConstrs Result}
+   proc {Loop VarTable PropTable Hist DaVin Stream Result}
       case Stream.1
       of quit then skip
       [] popup_selection_node(_ C) then
-         {MakeAction VarTable PropTable Hist DaVin Stream C AllVars AllConstrs Result}
+         {MakeAction VarTable PropTable Hist DaVin Stream C Result}
       [] popup_selection_edge(_ C) then
-         {MakeAction VarTable PropTable Hist DaVin Stream C AllVars AllConstrs Result}
+         {MakeAction VarTable PropTable Hist DaVin Stream C Result}
       [] node_selections_labels([cn(C)]) then
-         {MakeAction VarTable PropTable Hist DaVin Stream cn(C) AllVars AllConstrs Result}
+         {MakeAction VarTable PropTable Hist DaVin Stream cn(C) Result}
       [] error(...) then
          {Error.printException Stream.1}
-         {Loop VarTable PropTable Hist DaVin Stream.2 AllVars AllConstrs Result}
+         {Loop VarTable PropTable Hist DaVin Stream.2 Result}
       else
-         {Loop VarTable PropTable Hist DaVin Stream.2 AllVars AllConstrs Result}
+         {Loop VarTable PropTable Hist DaVin Stream.2 Result}
       end
    end
 
-   proc {MakeAction VarTable PropTable Hist DaVin Stream C AllVars AllConstrs Result}
+   proc {MakeAction VarTable PropTable Hist DaVin Stream C Result}
       Skip
       NextResult
       NextArgs
@@ -64,8 +62,7 @@ define
       elseof vg  then NextArgsType = v Skip = no  ParamGraph.make
       elseof svg then NextArgsType = v Skip = no  SingleParamGraph.make
       elseof cn  then
-         P = {Tables.getProp PropTable C.1}
-         LocationProp  = {Aux.propLocation P}
+         LocationProp  = PropTable.(C.1).location
       in
          {Emacs.condSend.interface
           bar(file:   {VirtualString.toAtom LocationProp.path#"/"
@@ -83,7 +80,9 @@ define
          NextArgsType = unit
          Skip         = yes
          if MarkParam == unit then skip else
-            {DaVin sendVS("graph(change_attr([node(\"vn<"#MarkParam#">\",[a(\"BORDER\",\""#UnMarkedParamNodeAttr#"\")])]))")}
+            {DaVin sendVS("graph(change_attr([node(\"vn<"
+                          #MarkParam#">\",[a(\"BORDER\",\""
+                          #UnMarkedParamNodeAttr#"\")])]))")}
          end
          {Hist markup_param(DaVin C.1)}
          unit
@@ -93,7 +92,9 @@ define
          NextArgsType = unit
          Skip         = yes
          if MarkParam == unit then skip else
-            {DaVin sendVS("graph(change_attr([node(\"vn<"#MarkParam#">\",[a(\"BORDER\",\""#UnMarkedParamNodeAttr#"\")])]))")}
+            {DaVin sendVS("graph(change_attr([node(\"vn<"
+                          #MarkParam#">\",[a(\"BORDER\",\""
+                          #UnMarkedParamNodeAttr#"\")])]))")}
          end
          {Hist unmark_param}
          unit
@@ -101,7 +102,9 @@ define
          MarkProp = {Hist get_mark_prop($)}
       in
          if MarkProp == unit then skip else
-            {DaVin sendVS("graph(change_attr([node(\"cn<"#MarkProp#">\",[a(\"BORDER\",\""#UnMarkedParamNodeAttr#"\")])]))")}
+            {DaVin sendVS("graph(change_attr([node(\"cn<"
+                          #MarkProp#">\",[a(\"BORDER\",\""
+                          #UnMarkedParamNodeAttr#"\")])]))")}
          end
          NextArgsType = unit
          Skip         = yes
@@ -113,7 +116,9 @@ define
          NextArgsType = unit
          Skip         = yes
          if MarkProp == unit then skip else
-            {DaVin sendVS("graph(change_attr([node(\"cn<"#MarkProp#">\",[a(\"BORDER\",\""#UnMarkedPropNodeAttr#"\")])]))")}
+            {DaVin sendVS("graph(change_attr([node(\"cn<"
+                          #MarkProp#">\",[a(\"BORDER\",\""
+                          #UnMarkedPropNodeAttr#"\")])]))")}
          end
          {Hist unmark_prop}
          unit
@@ -125,6 +130,46 @@ define
          NextArgsType = unit
          Skip         = display
          {Hist get_next_action($ NextArgs)}
+      elseof corrcg then
+         CurrVars = {Hist get_curr_action(_ $)} % add assertion
+         NextAction = ConstrGraph.make
+      in
+         Skip         = display
+         NextArgs     = {FoldR {FS.reflect.lowerBoundList CurrVars}
+                         fun {$ L R}
+                            {FS.union VarTable.L.propagators R}
+                         end {FS.value.make nil}}
+         {Hist add_action(NextAction NextArgs)}
+         NextAction
+      elseof corrvg then
+         CurrProps = {Hist get_curr_action(_ $)} % add assertion
+         NextAction = ParamGraph.make
+      in
+         Skip         = display
+         NextArgs     = {FoldR {FS.reflect.lowerBoundList CurrProps}
+                         fun {$ L R}
+                            {FS.union PropTable.L.parameters R}
+                         end {FS.value.make nil}}
+         {Hist add_action(NextAction NextArgs)}
+         NextAction
+      elseof addconcg then
+         CurrProps    = {Hist get_curr_action(_ $)} % add assertion
+         NextAction   = ConstrGraph.make
+         ConnectProps = PropTable.(C.1).connected_props
+      in
+         Skip         = display
+         NextArgs     = {FS.union ConnectProps CurrProps}
+         {Hist add_action(NextAction NextArgs)}
+         NextAction
+      elseof addconvg then
+         CurrVars    = {Hist get_curr_action(_ $)} % add assertion
+         NextAction  = ParamGraph.make
+         ConnectVars = VarTable.(C.1).connected_vars
+      in
+         Skip         = display
+         NextArgs     = {FS.union ConnectVars CurrVars}
+         {Hist add_action(NextAction NextArgs)}
+         NextAction
       else
          {Exception.raiseError vc("Unexpected case" "Loop1")} error
       end
@@ -133,21 +178,12 @@ define
          NextArgs =
          case {Map {Arity C} fun {$ F} C.F end}
          of [all] then
-            if NextArgsType == v then AllVars else AllConstrs end
-         elseof [sub] then
-            if NextArgsType == v then
-               {Map {Tables.getVarAllIds VarTable}
-                fun {$ Id} {Tables.getVar VarTable Id} end}
-            else
-               {Map {Tables.getPropAllIds PropTable}
-                fun {$ Id} {Tables.getProp PropTable Id} end}
-            end
+            {FS.value.make 1#{Width if NextArgsType == v
+                                    then VarTable
+                                    else PropTable end}}
+         elseof [solvar] then NextArgsType = v {Hist get_sol_var_set($)}
          elseof L then
-            if NextArgsType == v then
-               {Map L fun {$ Id} {Tables.getVar VarTable Id} end}
-            else
-               {Map L fun {$ Id} {Tables.getProp PropTable Id} end}
-            end
+            {FS.value.make L}
          end
          {Hist add_action(NextAction NextArgs)}
          NextResult = {NextAction VarTable PropTable Hist NextArgs}
@@ -158,68 +194,70 @@ define
       else
          NextResult = Result
       end
-      {Loop VarTable PropTable Hist DaVin Stream.2 AllVars AllConstrs NextResult}
+      {Loop VarTable PropTable Hist DaVin Stream.2 NextResult}
    end
 
    proc {InvestigateConstraints Root}
-      Stream Result AllVars AllConstrs
-      CC    = {New CollectConstraints.collectConstraintsClass init}
+      Stream Result
       DaVin = {New DaVinci.daVinciClass init(Stream)}
       Hist  = {New History.historyClass init}
-      VarTable = {Tables.makeVarTable}
-      PropTable = {Tables.makePropTable}
+      reflect_space(varsTable:  VarTable
+                    propTable:  PropTable
+                    failedProp: FailPropId) = {ReflectSpace Root}
+
+      SolVars = {FS.value.make
+                 {Map {VectorToList Root}
+                  fun {$ E}
+                     {Record.foldL VarTable
+                      fun {$ L var(reference: Ref id: Id...)}
+                         if L == unit then
+                            if {VarEq Ref E} then Id else unit end
+                         else L end
+                      end unit}
+                  end}}
    in
-\ifdef DEBUG
-      {System.showInfo '\tCollecting space ...'}
-\endif
+      {Hist set_sol_vars(SolVars)}
 
-      {CC collect(Root)}
-
-      AllVars = {CC get_vars($)}
-\ifdef DEBUG
-      {System.showInfo '\tGetting '#{Length AllVars}#' variables.'}
-\endif
-
-      AllConstrs = {CC get_props($)}
-\ifdef DEBUG
-      {System.showInfo '\tGetting '#{Length AllConstrs}#' constraints.'}
-\endif
-
-      {Hist add_action(ConstrGraph.make AllConstrs)}
 \ifdef DEBUG
       {System.showInfo '\tConstructing Graph ...'}
 \endif
+      if FailPropId == unit then
+         What = SolVars
+      in
+         {Hist add_action(ParamGraph.make What)}
+         Result = {ParamGraph.make VarTable PropTable Hist What}
+      else
+         What = {FS.value.make FailPropId}
+      in
+         {Hist add_action(ParamGraph.make What)}
+         Result = {SingleConstrGraph.make VarTable PropTable Hist What}
+      end
 
-      Result = {ConstrGraph.make VarTable PropTable Hist AllConstrs}
-%      Result = {ParamGraph.make VarTable PropTable Hist AllVars}
 \ifdef DEBUG
       {System.showInfo '\tDrawing graph.'}
 \endif
-
       {DaVin graph(Result.graph)}
+
 \ifdef DEBUG
       {System.showInfo '\tDone and looping.'}
 \endif
 
-      {Loop VarTable PropTable Hist DaVin Stream AllVars AllConstrs Result}
+      {Loop VarTable PropTable Hist DaVin Stream Result}
    end
 
    local
       proc {InvestigateConstraintsBrowser Root}
-         Stream Result AllVars AllConstrs
-         CC    = {New CollectConstraints.collectConstraintsClass init}
+         Stream Result
          DaVin = {New DaVinci.daVinciClass init(Stream)}
          Hist  = {New History.historyClass init}
-         VarTable = {Tables.makeVarTable}
-         PropTable = {Tables.makePropTable}
+         reflect_space(varsTable:  VarTable
+                       propTable:  PropTable
+                       failedProp: FailPropId)  = {ReflectSpace Root}
       in
-         {CC collect(Root)}
-         AllVars = {CC get_vars($)}
-         AllConstrs = {CC get_props($)}
          {Hist add_action(SingleParamGraph.make [Root])}
          Result = {SingleParamGraph.make VarTable PropTable Hist [Root]}
          {DaVin graph(Result.graph)}
-         thread {Loop VarTable PropTable Hist DaVin Stream AllVars AllConstrs Result} end
+         thread {Loop VarTable PropTable Hist DaVin Stream Result} end
       end
    in
       proc {BrowserPluginActivate}

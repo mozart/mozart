@@ -8,24 +8,16 @@ export
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
 
-   FS(value intersect reflect include var)
+   FS
    System
-   Tables(getVar getVarId getPropId)
-   Aux(propReflect varReflect vectorToList propLocation mergeSuspLists)
    Config(edgeColour)
 
 define
 
-   fun {ShareVars VarTable Vs1 Vs2}
+   fun {ShareVars S1 S2}
 \ifdef DEBUG
       {System.show shareVars}
 \endif
-
-      S1 = {FS.value.make
-            {Map Vs1 fun {$ V} {Tables.getVarId VarTable V} end}}
-      S2 = {FS.value.make
-            {Map Vs2 fun {$ V} {Tables.getVarId VarTable V} end}}
-   in
       {FS.reflect.lowerBoundList {FS.intersect S1 S2}}
    end
 
@@ -36,7 +28,7 @@ define
 
       if T == nil then ""
       else
-         SharedVars = {ShareVars VarTable H.p T.1.p}
+         SharedVars = {ShareVars H.parameters T.1.parameters}
       in
          if SharedVars == nil then ""
          else
@@ -46,18 +38,16 @@ define
             #{Hist insert_menu($)}
             #"menu_entry(\"vg<all>\",\"Variables graph of all variables\")"
             #",menu_entry(\"vg<"
-
             #SharedVars.1
             #{FoldL SharedVars.2 fun {$ L R} if R == nil then L
                                           else L#'|'#R
                                           end
                                  end ""}
-
             #">\",\"Variables graph of all variables shared by these two constraints\")"
             #{FoldL SharedVars
               fun {$ L R}
                  L#",menu_entry(\"svg<"#R#">\",\"Single variable graph of "
-                 #{System.printName {Tables.getVar VarTable R}}#"\")"
+                 #VarTable.R.name#"\")"
               end ""}
             #"])], r(\"cn<"
             #T.1.id#">\")))"
@@ -67,88 +57,64 @@ define
       end
    end
 
-   fun {MakeNode Hist VarTable H}
+   fun {MakeNode Ignore Hist VarTable PropTable H}
 \ifdef DEBUG
       {System.show makeNode}
 \endif
-      Location = if H.loc == noLoc then ""
-                 else H.loc.file#":"#H.loc.line
+      Location = if H.location == unit then ""
+                 else H.location.file#":"#H.location.line
                  end
 
+      Name = H.name
+\ifdef SHOW_ID
+      #" ["#H.id#"]"
+\endif
    in
       "l(\"cn<"#H.id#">\",n(\"\",["
-      #"a(\"OBJECT\",\""#H.n#"\\n"#Location#"\"),"
-      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.ref $)}#"\"),"
+      #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
+      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.reference $)}#"\"),"
       #{Hist get_prop_node_attr(H.id $)}
       #"m(["
       #{Hist insert_menu($)}
-      #{Hist insert_menu_mark_prop(H.id H.n#" ("#Location#")" $)}
+      #{Hist insert_menu_mark_prop(H.id H.name#" ("#Location#")" $)}
       #"menu_entry(\"cg<all>\",\"Constraint graph all constraints\")"
+      #",menu_entry(\"corrvg\",\"Corresponding variable graph\")"
+      #",menu_entry(\"addconcg<"#H.id#">\",\"Add constraints #"
+      #{FS.card H.connected_props}#" connected to "
+      #H.name#" ("#Location#")\")"
       #",menu_entry(\"scg<"#H.id#">\",\"Single constraint graph of "
-      #H.n
-      #if H.loc == noLoc then ""
-       else " ("#H.loc.file#":"#H.loc.line#")"
+      #H.name
+      #if H.location == unit then ""
+       else " ("#H.location.file#":"#H.location.line#")"
        end
       #"\")])"
       #"],["
-      #{MakeEdges Hist VarTable H H.ps}#"]))"
+      #{MakeEdges Hist VarTable H
+        {FoldR {FS.reflect.lowerBoundList {FS.diff H.connected_props Ignore}}
+         fun {$ L R} (PropTable.L)|R end nil}}#"]))"
    end
 
-   fun {MakeNodes Hist VarTable L}
-\ifdef DEBUG
-      {System.show makeNodes}
-\endif
-
+   fun {MakeNodes IgnoreIn Hist VarTable PropTable L}
+      {System.printInfo '.'}
       if L == nil then ""
       else
-         {MakeNode Hist VarTable L.1}
-         #","
-         #{MakeNodes Hist VarTable L.2}
+         Ignore = {FS.union {FS.value.make L.1.id} IgnoreIn}
+      in
+         {MakeNode Ignore Hist VarTable PropTable L.1}#","
+         #{MakeNodes Ignore Hist VarTable PropTable L.2}
       end
    end
 
    fun {Make VarTable PropTable Hist Ps}
-\ifdef DEBUG
-      {System.show make}
-\endif
-
-      Ignore = {FS.var.decl}
-   in
-      {Hist reset_mark}
+      {Hist reset_mark} % tmueller ?
 
       cg(graph:
-            case {Map Ps
-                  fun {$ P}
-                     ReflectedProp = {Aux.propReflect P}
-                     LocationProp  = {Aux.propLocation P}
-                     AllParamsOfP  = {Aux.vectorToList ReflectedProp.params}
-                     Id = {Tables.getPropId PropTable P}
-                     {FS.include Id Ignore}
-                  in
-                     p(id: Id
-                       p:  AllParamsOfP
-                       ps: {Map {Aux.mergeSuspLists PropTable
-                                 {FS.reflect.lowerBound Ignore}
-                                 {Map AllParamsOfP Aux.varReflect}}
-                            fun {$ P}
-                               ReflectedProp = {Aux.propReflect P}
-                            in
-                               p(id: {Tables.getPropId PropTable P}
-                                 p:  {Aux.vectorToList ReflectedProp.params}
-                                 n:  ReflectedProp.name)
-                            end}
-                       n:   ReflectedProp.name
-                       loc: if LocationProp == unit then noLoc
-                            else loc(file:   LocationProp.file
-                                     path:   LocationProp.path
-                                     line:   LocationProp.line
-                                     column: LocationProp.column)
-                            end
-                       ref: P
-                      )
-                  end}
+            case {FoldR {FS.reflect.lowerBoundList Ps}
+                  fun {$ L R} (PropTable.L)|R end nil}
             of nil then ""
-            [] L then "["#{MakeNodes Hist VarTable L}#"]"
+            [] L then "["#{MakeNodes
+                           {FS.diff {FS.value.make 1#{Width PropTable}} Ps}
+                           Hist VarTable PropTable L}#"]"
             end
         )
    end
