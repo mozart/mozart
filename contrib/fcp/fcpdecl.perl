@@ -150,11 +150,11 @@ sub FUNCTOR {
 
 
     $import_module_name = $module_name;
-    if ($import_module_name eq "FD") {
-	$import_module_name = "FDP";
+    if ($module_name eq "FDP") {
+	$module_name = "FD";
     }
-    if ($import_module_name eq "FS") {
-	$import_module_name = "FSP";
+    if ($module_name eq "FSP") {
+	$module_name = "FS";
     }
     printf ("\tFCPExport at 'mod%s.fcp.so{native}'\n", $import_module_name);
     printf ("\t%s\n", $module_name);
@@ -410,7 +410,9 @@ foreach $file (@files) {
     require $file;
     $builtins = { %builtins_all };
     $init_fun_name = $module_init_fun_name;
-    $module_name   = $module_name;
+    if ($boot_module_name) {
+	$module_name = $boot_module_name;
+    }
 
     if    ($choice eq 'interface' ) { &INTERFACE($file, $init_fun_name, $module_name); }
     elsif ($choice eq 'functor' )   { &FUNCTOR($file, $init_fun_name, $module_name); }
