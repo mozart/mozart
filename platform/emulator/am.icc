@@ -219,7 +219,7 @@ inline
 void AM::restartThread()
 {
   unsetSFlag(ThreadSwitch);
-  threadSwitchCounter=osMsToClockTick(ozconf.timeSlice);
+  threadSwitchCounter=osMsToClockTick(TIME_SLICE);
 }
 
 inline
