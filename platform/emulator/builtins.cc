@@ -6616,9 +6616,11 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
     oz_typeError(0,"Procedure/2 (no builtin)");
   }
 
-  if (am.methApplHdl) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-                    oz_atom("setMethApplHdl"));
+  if (am.methApplHdl && am.methApplHdl!=preed) {
+    OZ_warning("reinstalling methApplHandler");
+    return PROCEED;
+    //    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+    //              oz_atom("setMethApplHdl"));
   }
 
   am.methApplHdl = preed;
@@ -6647,9 +6649,11 @@ OZ_C_proc_begin(BIsetSendHdl,1)
     oz_typeError(0,"Procedure/3 (no builtin)");
   }
 
-  if (am.sendHdl) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-                    oz_atom("setSendHdl"));
+  if (am.sendHdl && am.sendHdl!=preed) {
+    OZ_warning("reinstalling sendHandler");
+    return PROCEED;
+    //return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+    //      oz_atom("setSendHdl"));
   }
 
   am.sendHdl = preed;
@@ -6785,9 +6789,11 @@ OZ_C_proc_begin(BIsetNewHdl,1)
     oz_typeError(0,"Procedure/3 (no builtin)");
   }
 
-  if (am.newHdl) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-                    oz_atom("setNewHdl"));
+  if (am.newHdl && am.newHdl!=preed) {
+    OZ_warning("reinstalling newHandler");
+    return PROCEED;
+    //    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+    //              oz_atom("setNewHdl"));
   }
 
   am.newHdl = preed;
@@ -6853,9 +6859,11 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
     oz_typeError(0,"Procedure/1");
   }
 
-  if (am.defaultExceptionHandler) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-                    oz_atom("setDefaultExceptionHandler"));
+  if (am.defaultExceptionHandler && am.defaultExceptionHandler!=hdl) {
+    OZ_warning("reinstalling defaultExceptionHandler");
+    return PROCEED;
+    //     return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+    //              oz_atom("setDefaultExceptionHandler"));
   }
 
   am.defaultExceptionHandler = hdl;
