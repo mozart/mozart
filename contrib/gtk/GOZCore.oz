@@ -37,7 +37,6 @@ export
    'GOZCore' : GOZCore
 define
    Dispatcher
-   
    %%
    %% Force Evaluation of Modules in appropriate Order
    %%
@@ -132,16 +131,22 @@ define
 	    end
 	 end
 	 %% Import OzClasses
+	 %% Need to drop the parental information
+	 %% which is used by Alice Binding
 	 ClassList    = {Filter
-			 {Pickle.load "x-oz://system/gtk/ClassNames.ozp"}
-			 fun {$ OzClass}
-			    case OzClass
-			    of 'Gdk'(...)    then false
-			       %% Not implemented under Windows
-			    [] 'Gtk'(socket) then false
-			    [] _             then true
-			    end
-			 end}
+			 {Map
+			  {Pickle.load "x-oz://system/gtk/ClassNames.ozp"}
+			   fun {$ 'class'(_ OzClass)}
+			      OzClass
+			   end}
+			  fun {$ OzClass}
+			     case OzClass
+			     of 'Gdk'(...)    then false
+				%% Not implemented under Windows
+			     [] 'Gtk'(socket) then false
+			     [] _             then true
+			     end
+			  end}
 	 Classes      = {Map ClassList GetOzClass}
 	 ClassKeys    = {Map ClassList
 			 fun {$ OzClass}
@@ -188,8 +193,11 @@ define
 	    case Object
 	    of nil then
 	       %% New Pointer occured
+	       %% none: No information, import as OzBase
+	       %% auto: Search for Class Type
+	       %% Class: class is known
 	       case Hint
-	       of none  then Pointer
+	       of none  then {CreateClass OzBase Pointer}
 	       [] auto  then {CreateClass {SearchClass Pointer} Pointer}
 	       [] Class then {CreateClass Class Pointer}
 	       end
@@ -211,84 +219,37 @@ define
 	 {Map Ls ObjectToPointer}
       end
    end
-
-   %%
-   %% Gdk Event Import (Conversion)
-   %%
    
-   local
-      fun {Id X}
-	 X
-      end
-      fun {RGW X}
-	 {PointerToObject GDK.window X}
-      end
-      fun {RGT X}
-	 {PointerToObject GDK.rectangle X}
-      end
-      fun {ITB X}
-	 X == 1
-      end
-      
-      ExposeFs     = [window#RGW send#ITB area#RGT count#Id]
-      MotionFs     = [window#RGW send#ITB time#Id x#Id y#Id
-		      pressure#Id xtilt#Id ytilt#Id state#Id
-		      is_hint#Id source#Id deveceid#Id x_root#Id y_root#Id]
-      ButtonFs     = [window#RGW send#ITB time#Id x#Id y#Id
-		      pressure#Id xtilt#Id ytilt#Id state#Id
-		      button#Id source#Id deveceid#Id x_root#Id y_root#Id]
-      KeyFs        = [window#RGW send#ITB time#Id state#Id
-		      keyval#Id length#Id string#Id]
-      CrossingFs   = [window#RGW send#ITB subwindow#RGW time#Id
-		      x#Id y#Id x_root#Id y_root#Id
-		      mode#Id detail#Id focus#ITB state#Id]
-      FocusFs      = [window#RGW send#ITB hasFocus#ITB]
-      ConfigureFs  = [window#RGW send#ITB x#Id y#Id width#Id height#Id]
-      VisibilityFs = [window#RGW send#ITB state#Id]
+   %%
+   %% Alice Canvas Helper
+   %%
 
-      fun {First X#_} X end
-      
-      fun {MakeEvent Label FeatS Event}
-	 GdkEvent = {Record.make Label {Map FeatS First}}
+   local
+      Canvas = {Value.byNeed fun {$}
+				{New GTKCANVAS.canvas new}
+			     end}
+
+
+      fun {UnwrapArgument Key#Value}
+	 NewKey   = {ByteString.toString Key}
+	 NewValue = case Value
+		    of 'INT'(V)    then V
+		    [] 'DOUBLE'(V) then V
+		    [] 'STRING'(V) then V
+		    [] 'OBJECT'(V) then V
+		    [] 'POINTS'(V) then V
+		    end
       in
-	 {List.forAllInd FeatS
-	  proc {$ I X#F} GdkEvent.X = {F Event.I} end} GdkEvent
+	 NewKey#NewValue
       end
    in
-      fun {GetGdkEvent GdkEvent}
-	 GdkLabel = {Label GdkEvent}
-      in
-	 case GdkLabel
-	 of 'GDK_EXPOSE'            then {MakeEvent GdkLabel ExposeFs GdkEvent}
-	 [] 'GDK_MOTION_NOTIFY'     then {MakeEvent GdkLabel MotionFs GdkEvent}
-	 [] 'GDK_BUTTON_PRESS'      then {MakeEvent GdkLabel ButtonFs GdkEvent}
-	 [] 'GDK_2BUTTON_PRESS'     then {MakeEvent GdkLabel ButtonFs GdkEvent}
-	 [] 'GDK_3BUTTON_PRESS'     then {MakeEvent GdkLabel ButtonFs GdkEvent}
-	 [] 'GDK_BUTTON_RELEASE'    then {MakeEvent GdkLabel ButtonFs GdkEvent}
-	 [] 'GDK_KEY_PRESS'         then {MakeEvent GdkLabel KeyFs GdkEvent}
-	 [] 'GDK_KEY_RELEASE'       then {MakeEvent GdkLabel KeyFs GdkEvent}
-	 [] 'GDK_ENTER_NOTIFY'      then
-	    {MakeEvent GdkLabel CrossingFs GdkEvent}
-	 [] 'GDK_LEAVE_NOTIFY'      then
-	    {MakeEvent GdkLabel CrossingFs GdkEvent}
-	 [] 'GDK_FOCUS_CHANGE'      then {MakeEvent GdkLabel FocusFs GdkEvent}
-	 [] 'GDK_CONFIGURE'         then
-	    {MakeEvent GdkLabel ConfigureFs GdkEvent}
-	 [] 'GDK_VISIBILITY_NOTIFY' then
-	    {MakeEvent GdkLabel VisibilityFs GdkEvent}
-	 [] 'GDK_NO_EXPOSE'         then {MakeEvent GdkLabel ExposeFs GdkEvent}
-	 [] Name                    then Name
-	 end
+      fun {CanvasItemNew Group Type Args}
+	 {Canvas newItem(Group Type {Map UnwrapArgument Args} $)}
       end
-   end
-   
-   %%
-   %% Gtk Canvas Helper
-   %%
-
-   fun {PointsPut Points I Val}
-      {GOZSignal.pointsPut Points I Val}
-      unit
+      fun {CanvasItemConfigure Item Args}
+	 {Canvas configureItem(Item {Map UnwrapArgument Args})}
+	 unit
+      end
    end
    
    %%
@@ -387,50 +348,163 @@ define
 	 unit
       end
    end
+
+   %%
+   %% Oz/Alice GdkEvent Creation
+   %%
+   local
+      fun {Id X}
+	 X
+      end
+      fun {RGW X}
+	 {PointerToObject GDK.window X}
+      end
+      fun {RGT X}
+	 {PointerToObject GDK.rectangle X}
+      end
+      fun {ITB X}
+	 X == 1
+      end
+      
+      ExposeFs     = [window#RGW send#ITB area#RGT count#Id]
+      MotionFs     = [window#RGW send#ITB time#Id x#Id y#Id
+		      pressure#Id xtilt#Id ytilt#Id state#Id
+		      is_hint#Id source#Id deveceid#Id x_root#Id y_root#Id]
+      ButtonFs     = [window#RGW send#ITB time#Id x#Id y#Id
+		      pressure#Id xtilt#Id ytilt#Id state#Id
+		      button#Id source#Id deveceid#Id x_root#Id y_root#Id]
+      KeyFs        = [window#RGW send#ITB time#Id state#Id
+		      keyval#Id length#Id string#Id]
+      CrossingFs   = [window#RGW send#ITB subwindow#RGW time#Id
+		      x#Id y#Id x_root#Id y_root#Id
+		      mode#Id detail#Id focus#ITB state#Id]
+      FocusFs      = [window#RGW send#ITB hasFocus#ITB]
+      ConfigureFs  = [window#RGW send#ITB x#Id y#Id width#Id height#Id]
+      VisibilityFs = [window#RGW send#ITB state#Id]
+      
+      fun {First X#_} X end
+      
+      fun {MakeEvent Label FeatS Event}
+	 GdkEvent = {Record.make Label {Map FeatS First}}
+      in
+	 {List.forAllInd FeatS
+	  proc {$ I X#F} GdkEvent.X = {F Event.I} end} GdkEvent
+      end
+   in
+      fun {ComputeGdkEvent GdkEvent}
+	 GdkLabel = {Label GdkEvent}
+      in
+	 case GdkLabel
+	 of 'GDK_EXPOSE'         then {MakeEvent GdkLabel ExposeFs GdkEvent}
+	 [] 'GDK_MOTION_NOTIFY'  then {MakeEvent GdkLabel MotionFs GdkEvent}
+	 [] 'GDK_BUTTON_PRESS'   then {MakeEvent GdkLabel ButtonFs GdkEvent}
+	 [] 'GDK_2BUTTON_PRESS'  then {MakeEvent GdkLabel ButtonFs GdkEvent}
+	 [] 'GDK_3BUTTON_PRESS'  then {MakeEvent GdkLabel ButtonFs GdkEvent}
+	 [] 'GDK_BUTTON_RELEASE' then {MakeEvent GdkLabel ButtonFs GdkEvent}
+	 [] 'GDK_KEY_PRESS'      then {MakeEvent GdkLabel KeyFs GdkEvent}
+	 [] 'GDK_KEY_RELEASE'    then {MakeEvent GdkLabel KeyFs GdkEvent}
+	 [] 'GDK_ENTER_NOTIFY'   then {MakeEvent GdkLabel CrossingFs GdkEvent}
+	 [] 'GDK_LEAVE_NOTIFY'   then {MakeEvent GdkLabel CrossingFs GdkEvent}
+	 [] 'GDK_FOCUS_CHANGE'   then {MakeEvent GdkLabel FocusFs GdkEvent}
+	 [] 'GDK_CONFIGURE'      then {MakeEvent GdkLabel ConfigureFs GdkEvent}
+	 [] 'GDK_VISIBILITY_NOTIFY' then
+	    {MakeEvent GdkLabel VisibilityFs GdkEvent}
+	 [] 'GDK_NO_EXPOSE'         then {MakeEvent GdkLabel ExposeFs GdkEvent}
+	 [] Name                    then Name
+	 end
+      end
+   end
    
    %%
    %% Argument Conversion
    %%
 
-   fun {ConvertArgument Arg}
-      case Arg
-      of int(Val)      then Val
-      [] double(Val)   then Val
-      [] string(Val)   then Val
-      [] pointer(Val)  then Val
-      [] object(Val)   then {PointerToObject auto Val}
-	 %% GTK Object which are not GTK Objects also need special care
-      [] accel(Val)    then {PointerToObject GTK.accelGroup Val}
-      [] style(Val)    then {PointerToObject GTK.style Val}
-	 %% GDK Events need special care
-      [] event(Val)    then {GetGdkEvent Val}
-      [] color(Val)    then {PointerToObject GDK.color Val}
-      [] context(Val)  then {PointerToObject GDK.colorContext Val}
-      [] map(Val)      then {PointerToObject GDK.colormap Val}
-      [] cursor(Val)   then {PointerToObject GDK.cursor Val}
-      [] drag(Val)     then {PointerToObject GDK.dragContext Val}
-      [] drawable(Val) then {PointerToObject GDK.drawable Val}
-      [] font(Val)     then {PointerToObject GDK.font Val}
-      [] gc(Val)       then {PointerToObject GDK.gc Val}
-      [] image(Val)    then {PointerToObject GDK.image Val}
-      [] visual(Val)   then {PointerToObject GDK.visual Val}
-      [] window(Val)   then {PointerToObject GDK.window Val}
+   local
+      fun {ConvertArgument Arg}
+	 case Arg
+	 of int(Val)      then Val
+	 [] double(Val)   then Val
+	 [] string(Val)   then Val
+	 [] pointer(Val)  then Val
+	 [] object(Val)   then {PointerToObject auto Val}
+	    %% GTK Object which are not GTK Objects also need special care
+	 [] accel(Val)    then {PointerToObject GTK.accelGroup Val}
+	 [] style(Val)    then {PointerToObject GTK.style Val}
+	    %% GDK Events need special care
+	 [] event(Val)    then {ComputeGdkEvent Val}
+	 [] color(Val)    then {PointerToObject GDK.color Val}
+	 [] context(Val)  then {PointerToObject GDK.colorContext Val}
+	 [] map(Val)      then {PointerToObject GDK.colormap Val}
+	 [] cursor(Val)   then {PointerToObject GDK.cursor Val}
+	 [] drag(Val)     then {PointerToObject GDK.dragContext Val}
+	 [] drawable(Val) then {PointerToObject GDK.drawable Val}
+	 [] font(Val)     then {PointerToObject GDK.font Val}
+	 [] gc(Val)       then {PointerToObject GDK.gc Val}
+	 [] image(Val)    then {PointerToObject GDK.image Val}
+	 [] visual(Val)   then {PointerToObject GDK.visual Val}
+	 [] window(Val)   then {PointerToObject GDK.window Val}
+	 end
+      end
+   in
+      proc {ConvertOzArgs Args ?R}
+	 case Args
+	 of Arg|Ar then
+	    NewR
+	 in
+	    R = {ConvertArgument Arg}|NewR
+	    {ConvertOzArgs Ar NewR}
+	 [] nil then R = nil
+	 end
+      end
+      fun {GetArg Arg}
+	 {ConvertArgument {GOZSignal.getArg Arg}}
       end
    end
 
-   proc {ConvertArgs Args ?R}
-      case Args
-      of Arg|Ar then
-	 NewR
-      in
-	 R = {ConvertArgument Arg}|NewR
-	 {ConvertArgs Ar NewR}
-      [] nil then R = nil
+   %%
+   %% Alice Argument Conversion
+   %%
+
+   local
+      fun {ConvertArgument Arg}
+	 case Arg
+	 of int(Val)      then 'INT'(Val)
+	 [] double(Val)   then 'DOUBLE'(Val)
+	 [] string(Val)   then 'STRING'({ByteString.make Val})
+	 [] pointer(Val)  then 'OBJECT'({PointerToObject none Val})
+	 [] object(Val)   then 'OBJECT'({PointerToObject auto Val})
+	    %% GTK Object which are not GTK Objects also need special care
+	 [] accel(Val)    then 'OBJECT'({PointerToObject GTK.accelGroup Val})
+	 [] style(Val)    then 'OBJECT'({PointerToObject GTK.style Val})
+	    %% GDK Events need special care
+	 [] event(Val)    then {ComputeGdkEvent Val}
+	 [] color(Val)    then 'OBJECT'({PointerToObject GDK.color Val})
+	 [] context(Val)  then 'OBJECT'({PointerToObject GDK.colorContext Val})
+	 [] map(Val)      then 'OBJECT'({PointerToObject GDK.colormap Val})
+	 [] cursor(Val)   then 'OBJECT'({PointerToObject GDK.cursor Val})
+	 [] drag(Val)     then 'OBJECT'({PointerToObject GDK.dragContext Val})
+	 [] drawable(Val) then 'OBJECT'({PointerToObject GDK.drawable Val})
+	 [] font(Val)     then 'OBJECT'({PointerToObject GDK.font Val})
+	 [] gc(Val)       then 'OBJECT'({PointerToObject GDK.gc Val})
+	 [] image(Val)    then 'OBJECT'({PointerToObject GDK.image Val})
+	 [] visual(Val)   then 'OBJECT'({PointerToObject GDK.visual Val})
+	 [] window(Val)   then 'OBJECT'({PointerToObject GDK.window Val})
+	 end
       end
-   end
-   
-   fun {GetArg Arg}
-      {ConvertArgument {GOZSignal.getArg Arg}}
+   in
+      proc {ConvertAliceArgs Args ?R}
+	 case Args
+	 of Arg|Ar then
+	    NewR
+	 in
+	    R = {ConvertArgument Arg}|NewR
+	    {ConvertAliceArgs Ar NewR}
+	 [] nil then R = nil
+	 end
+      end
+      fun {GetAliceArg Arg}
+	 {ConvertArgument {GOZSignal.getArg Arg}}
+      end
    end
    
    %%
@@ -462,6 +536,7 @@ define
 	       signalPort  %% Signal Port
 	       fillerId    %% Filler Thread Id
 	       dispatchId  %% Dispatch Thread Id
+	       conv        %% Argument Converter
 	    meth create
 	       Stream SignalPort
 	    in
@@ -536,13 +611,19 @@ define
 	       elsecase Stream
 	       of (Id|Data)|Tail then
 		  case {Dictionary.condGet @handlerDict Id EmptyHandler}
-		  of Handler then {Handler {ConvertArgs Data}}
+		  of Handler then {Handler {@conv Data}}
 		  end
 		  stream <- Tail
 		  {Dispatcher Dispatch}
 	       [] nil then
 		  DispatcherObject, exit
 	       end
+	    end
+	    meth setMode(Mode)
+	       conv <- case Mode
+		       of oz    then ConvertOzArgs
+		       [] alice then ConvertAliceArgs
+		       end
 	    end
 	    meth exit
 	       {GtkNative.exit}               %% Terminate C side system
@@ -554,6 +635,10 @@ define
    in
       proc {Exit}
 	 {Dispatcher exit}
+      end
+
+      proc {SetMode Mode}
+	 {Dispatcher setMode(Mode)}
       end
       
       %% Create Interface
@@ -575,6 +660,7 @@ define
 			  makeEmptyArg         : GOZSignal.makeEmptyArg
 			  makeArg              : GOZSignal.makeArg
 			  getArg               : GetArg
+			  getAliceArg          : GetAliceArg
 			  %% String Handling
 			  allocStr             : GOZSignal.allocStr
 			  getStr               : GOZSignal.getStr
@@ -585,12 +671,14 @@ define
 			  %% Color Array Handling
 			  makeColorArr         : GOZSignal.makeColorArr
 			  getColorList         : GOZSignal.getColorList
-			  %% GDK Event Import
-			  getGdkEvent          : GetGdkEvent
-			  %% GTK Canvas Helper
-			  pointsPut            : PointsPut
+			  %% Oz/Alice Canvas Helper
+			  pointsPut            : GOZSignal.pointsPut
+			  canvasItemNew        : CanvasItemNew
+			  canvasItemConfigure  : CanvasItemConfigure
 			  %% OzBase Class
 			  ozBase               : OzBase
+			  %% Set Dispatcher Mode
+			  setMode              : SetMode
 			  %% Termination Function
 			  exit                 : Exit)
       
@@ -607,6 +695,7 @@ define
 	 end
       end
       Dispatcher = {NewServer {New DispatcherObject create}}
+      {Dispatcher setMode(oz)}
       {Dispatcher Start}
    end
 end
