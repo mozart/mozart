@@ -448,8 +448,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	/* type: OP PredicateRef */
 	AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 	Abstraction *abstr = entry->getAbstr();
-	fprintf(ofile, "(%s,%d)\n", abstr->getPrintName(),
-		abstr->getArity());
+	if (abstr) {  /* may be NULL during loading */
+	  fprintf(ofile, "(%s,%d)\n", abstr->getPrintName(),abstr->getArity());
+	} else {
+	  fprintf(ofile, "(??,??)\n");
+	}
 	DISPATCH();
       }
     case METHAPPLX:
@@ -588,9 +591,27 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	TaggedRef line      = getNumberArg(PC+4);
 	PrTabEntry *pred    = getPredArg(PC+5);
 	
-	fprintf(ofile, "(%d,0x%x,%s,%s,%s)\n",reg,next,
+	fprintf(ofile, "(%d,0x%x,%s,%s,%s,[",reg,next,
 		pred ? pred->getPrintName() : "(NULL)",
 		OZ_toC(file), OZ_toC(line));
+
+	AssRegArray &list = pred->gRegs;
+	
+	for (int k = 0; k < list.getSize(); k++) {
+	  switch (list[k].kind) {
+	  case XReg:
+	    fprintf(ofile,"X%d ",list[k].number);
+	    break;
+	  case YReg:
+	    fprintf(ofile,"Y%d ",list[k].number);
+	    break;
+	  case GReg:
+	    fprintf(ofile,"G%d ",list[k].number);
+	    break;
+	  }
+	}
+
+	fprintf(ofile, "])\n");
       }
       DISPATCH();
 
