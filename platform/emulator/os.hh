@@ -87,6 +87,7 @@ void addChildProc(pid_t pid);
 #define SEL_WRITE 1
 
 int osTestSelect(int fd, int mode);
+void osWatchAccept(int fd);
 
 void osWatchFD(int fd, int mode);
 Bool osIsWatchedFD(int fd, int mode);
@@ -107,8 +108,13 @@ void osExit();
 #define oskill(pid,sig) kill(pid,sig)
 #endif
 
+/* abstract acess to OS file handles */
 int osread(int fd, void *buf, unsigned int len);
 int oswrite(int fd, void *buf, unsigned int len);
+int osclose(int fd);
+int osopen(const char *path, int flags, int mode);
+int ossocket(int domain, int type, int protocol);
+void registerSocket(int fd);
 
 inline
 int osMsToClockTick(int ms)
