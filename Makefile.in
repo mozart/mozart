@@ -71,10 +71,10 @@ PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
 
 DISTDIR=        dist
 
-FILES=          LICENSE
+FILES=          LICENSE LICENSE.html
 ALLFILES=       $(FILES:%=$(PREFIX)/%)
 
-COMMONFILES=    LICENSE \
+COMMONFILES=    LICENSE LICENSE.html \
                 bin include share cache
 
 DEMOFILES=      demo examples
