@@ -312,7 +312,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
     }
 
     list = tagged2LTuple(list)->getTail();
-    while(isRef(list)) list = *TaggedRefPtr(list);
+    while(isRef(list)) list = *tagged2Ref(list);
   }
 
   if (len_arr >= MAXFDBIARGS)

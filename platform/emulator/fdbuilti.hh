@@ -371,7 +371,7 @@ inline
 TaggedRef deref(TaggedRef tr)
 {
   while (isRef(tr))
-    tr = * (TaggedRef *) tr;
+    tr = *tagged2Ref(tr);
   return tr;
 }
 
