@@ -33,6 +33,7 @@ local
 
    class Status
       from Tk.frame
+      prop final
       attr
          MaxDepth:        0
          CurNodes:        0
