@@ -492,8 +492,8 @@
 \newcommand{\doindex}{\clearpage\printindex}
 
 \newcommand{\getindexintro}{%
-\section*{Index}%
-\addcontentsline{toc}{section}{Index}%
+\chapter*{Index}%
+\addcontentsline{toc}{chapter}{Index}%
 This Index contains different kinds of items. It consists of concept
 entries (they are displayed in the usual font), and of references to
 technical items. They are displayed in the respective font used
