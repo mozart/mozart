@@ -560,7 +560,8 @@ cleaner::
 veryclean::
         -rm -f version.cc $(TARGETS) \
                 *.exe *.map *.imp *.sym \
-                $(CREATEDFILES) TAGS Makefile.deps
+                $(CREATEDFILES) TAGS Makefile.deps \
+                $(DYNAMIC_MODULETARGETS)
 
 distclean::
         -rm -f OZCONF.h conf-others.h config.cache config.log config.status \
