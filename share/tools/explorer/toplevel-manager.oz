@@ -262,9 +262,9 @@ local
    end
 
    proc {MakeDirty Ns}
-      case Ns of nil then true
+      case Ns of nil then skip
       [] N|Nr then
-	 case N.mom of !False then true elseof Mom then {Mom dirtyUp} end
+	 case N.mom of !False then skip elseof Mom then {Mom dirtyUp} end
 	 {MakeDirty Nr}
       end
    end
@@ -318,8 +318,8 @@ in
       in
 	 scale <- Scale
 	 {Canvas scale(Scale)}
-	 case @curFont of !Font then true elseof CF then
-	    case @NumberNodes==nil then true else
+	 case @curFont of !Font then skip elseof CF then
+	    case @NumberNodes==nil then skip else
 	       case Font==False then {Numbers tk(delete)}
 	       elsecase CF==False then
 		  {ForAll @NumberNodes
@@ -334,7 +334,7 @@ in
       end
 
       meth scaleToFit
-	 case {self.canvas scaleToFit($)} of !False then true
+	 case {self.canvas scaleToFit($)} of !False then skip
 	 elseof NewScale then
 	    <<ToplevelManager scale(NewScale)>>
 	 end
@@ -372,14 +372,14 @@ in
 			  Scale}
 		    fill:CursorColor outline: '' tags:Cursor)}
 	 {Cursor tk(lower)}
-	 case CurNode==@curNode orelse IsVisible then true else
+	 case CurNode==@curNode orelse IsVisible then skip else
 	    {Canvas scrollTo(X Y)}
 	 end
 	 curNode <- CurNode
 	 case @cmpNode of !False then
 	    {Connection tk(delete)}
 	 elseof CmpNode then
-	    case CmpNode==CurNode then true else
+	    case CmpNode==CurNode then skip else
 	       CmpX CmpY
 	    in
 	       {CmpNode getCenter(?CmpX ?CmpY)}
@@ -409,7 +409,7 @@ in
 	 case NewNumber==N then
 	    CurNumber   <- NewNumber + 1
 	    NumberNodes <- Node|@NumberNodes
-	 else true
+	 else skip
 	 end
       end
       
@@ -423,7 +423,7 @@ in
       meth hideNumbers
 	 case @curFont\=False andthen @NumberNodes\=nil then
 	    {self.canvas.numbers tk(delete)}
-	 else true
+	 else skip
 	 end
       end
 
@@ -437,7 +437,7 @@ in
 	     proc {$ Node}
 		{Node redrawNumber(Scale Font)}
 	     end}
-	 else true
+	 else skip
 	 end
       end
       

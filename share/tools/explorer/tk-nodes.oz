@@ -36,7 +36,7 @@ local
 	    N = TakeNumber
 	    number <- TakeNumber
 	    <<getCenterAbove(X Y Above)>>
-	    case Font==False then true else
+	    case Font==False then skip else
 	       {Canvas tk(crea text
 			  Scale * {IntToFloat X}
 			  Scale * {IntToFloat case <<isHidden($)>> then
@@ -110,7 +110,7 @@ local
 
    local
       proc {Purge Ks}
-	 case Ks of nil then true
+	 case Ks of nil then skip
 	 [] K|Kr then {K purge} {Purge Kr}
 	 end
       end
@@ -130,7 +130,7 @@ local
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - CircleWidthI)})}
 	    {Canvas tk(move Node Scale*{IntToFloat MyByX} 0)}
-	    case @toDo\=nil orelse @isHidden then true else
+	    case @toDo\=nil orelse @isHidden then skip else
 	       {Canvas tk(itemconfigure Node
 			  fill:  ChooseTermColor
 			  width: ThickNodeBorderWidth)}
@@ -151,7 +151,7 @@ local
 
       
 	 meth DrawKids(Ks Break MomTree MomX MyY Scale Font)
-	    case Ks of nil then true
+	    case Ks of nil then skip
 	    [] K|Kr then
 	       {K drawTree(Break MomTree MomX MyY Scale Font)}
 	       <<DrawKids(Kr Break MomTree MomX MyY Scale Font)>>
@@ -210,8 +210,8 @@ local
 				      end
 			     width:   NodeBorderWidth
 			     outline: LineColor)}
-		  case @number of !False then true elseof N then
-		     case Font==False then true else
+		  case @number of !False then skip elseof N then
+		     case Font==False then skip else
 			{Canvas tk(crea text
 				   ScaledMyX
 				   ScaledMyY +
@@ -235,8 +235,8 @@ local
 				  width: NodeBorderWidth)
 			     end
 			     tags: q(Node Tree Actions))}
-		  case @number of !False then true elseof N then
-		     case Font==False then true else
+		  case @number of !False then skip elseof N then
+		     case Font==False then skip else
 			{Canvas tk(crea text ScaledMyX ScaledMyY
 				   font: Font
 				   text: N
@@ -439,8 +439,8 @@ local
 			  width:   Width
 			  outline: LineColor
 			  tags:    q(Node Tree MomTree Actions))}
-	       case @number of !False then true elseof N then
-		  case Font==False then true else
+	       case @number of !False then skip elseof N then
+		  case Font==False then skip else
 		     {Canvas tk(crea text ScaledMyX ScaledMyY
 				font: Font
 				text: N

@@ -15,9 +15,9 @@ local
 	 case {Dictionary.member D I} then I else {FindNext I-1 D} end
       end
       proc {DeleteAll Ks D}
-	 case Ks of nil then true
+	 case Ks of nil then skip
 	 [] K|Kr then
-	    case K<2 then true else
+	    case K<2 then skip else
 	       {{Dictionary.get D K}.2 close}
 	       {Dictionary.remove D K}
 	    end
@@ -68,7 +68,7 @@ local
 	    case Num==@cur then
 	       cur <- {FindNext Num-1 self.dict}
 	       <<Tk.variable tkSet(@cur)>>
-	    else true end
+	    else skip end
 	 end
 
 	 meth deleteAll
@@ -86,7 +86,7 @@ local
    end
    
    proc {DoEntries M Es W}
-      case Es of nil then true
+      case Es of nil then skip
       [] E|Er then {DoEntries M E W} {DoEntries M Er W}
       elsecase {IsAtom Es} then {M.Es W}
       else {DoEntries M.{Label Es} Es.1 W}

@@ -52,7 +52,7 @@ in
          MyManager:  False
 
       meth Init()
-	 case @MyManager\=False then true else
+	 case @MyManager\=False then skip else
 	    MyManager <- {New Manager init(self)}
 	    <<ExplorerClass
 	       %% Include the standard actions
@@ -124,7 +124,7 @@ in
 	       end
 	    else False
 	    end
-	 then true
+	 then skip
 	 else {OpiError 'Action adding' Add}
 	 end
       end
@@ -146,7 +146,7 @@ in
 	       end
 	    else False
 	    end
-	 then true
+	 then skip
 	 else {OpiError 'Action deletion' Del}
 	 end
       end
@@ -242,7 +242,7 @@ in
       end
       
       meth close
-	 case @MyManager of !False then true elseof M then {M close} end
+	 case @MyManager of !False then skip elseof M then {M close} end
 	 <<UrObject close>>
       end
 

@@ -35,7 +35,7 @@ in
 	    ThisPanelTop <- thread
 			       {New PanelTop init(manager:self)}
 			    end
-	 else true
+	 else skip
 	 end
       end
 
@@ -45,7 +45,7 @@ in
 
       meth close
 	 <<UrObject close>>
-	 case @ThisPanelTop of !Unit then true elseof T then
+	 case @ThisPanelTop of !Unit then skip elseof T then
 	    thread {T close} end
 	 end
       end

@@ -204,7 +204,7 @@ local
 
    
    proc {AdjustKids Ks Break MomTree MyX MyByX KidsY Scale Font}
-      case Ks of nil then true
+      case Ks of nil then skip
       [] K|Kr then
 	 {K Adjust(Break MomTree MyX MyByX KidsY Scale Font)}
 	 {AdjustKids Kr Break MomTree MyX MyByX KidsY Scale Font}
@@ -251,7 +251,7 @@ local
 	       isDirty <- False
 	       offset  <- NewOffset
 	       <<moveNode(MomX MyX MyByX MyY Scale)>>
-	       case @isHidden then true else
+	       case @isHidden then skip else
 		  Suffix = self.suffix
 	       in
 		  {AdjustKids @kids Break TreePrefix#Suffix
@@ -262,7 +262,7 @@ local
 	    end
 	 else
 	    offset <- NewOffset
-	    case MyByX==0 then true else
+	    case MyByX==0 then skip else
 	       <<moveTree(MomX MyX MyByX MyY Scale)>>
 	    end
 	 end
