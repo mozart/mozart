@@ -33,8 +33,7 @@ OZ_Term reflect_variable(OZ_Term var)
   DEBUGPRINT(("reflect_variable (in)\n"));
   
   OZ_Term var_itself = var;
-  DEREF(var, varptr, vartag);
-  
+  DEREF(var, varptr);
 
   OZ_Term sl   = (OZ_Term) 0;
   OZ_Term type = OZ_nil();
@@ -43,8 +42,8 @@ OZ_Term reflect_variable(OZ_Term var)
     type = atom_any;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any, (isCVarTag(vartag) ? 
-			   reflect_susplist(tagged2CVar(var)->getSuspList()) 
+      {OZ_pair2(atom_any, (oz_isVar(var) ? 
+			   reflect_susplist(tagged2Var(var)->getSuspList()) 
 			   : OZ_nil()))},      
       {(OZ_Term) 0}
     };
@@ -57,7 +56,7 @@ OZ_Term reflect_variable(OZ_Term var)
 
     OZ_Term susp_arity_def[] = {
       {OZ_pair2(atom_any, 
-		reflect_susplist(tagged2CVar(var)->
+		reflect_susplist(tagged2Var(var)->
 				 getSuspList()))},
       {OZ_pair2(atom_bounds, 
 		reflect_susplist(tagged2GenFDVar(var)->
@@ -76,7 +75,7 @@ OZ_Term reflect_variable(OZ_Term var)
     
     OZ_Term susp_arity_def[] = {
       {OZ_pair2(atom_any, 
-		reflect_susplist(tagged2CVar(var)->getSuspList()))},
+		reflect_susplist(tagged2Var(var)->getSuspList()))},
       {(OZ_Term) 0}
     };
     
@@ -88,7 +87,7 @@ OZ_Term reflect_variable(OZ_Term var)
 
     OZ_Term susp_arity_def[] = {
       {OZ_pair2(atom_any, 
-		reflect_susplist(tagged2CVar(var)->getSuspList()))},
+		reflect_susplist(tagged2Var(var)->getSuspList()))},
       {OZ_pair2(atom_glb, 
 		reflect_susplist(tagged2GenFSetVar(var)->
 				 getSuspList(fs_prop_glb)))},
@@ -115,7 +114,7 @@ OZ_Term reflect_variable(OZ_Term var)
     OZ_Term susp_arity_def[ind_offset + numOfSuspLists];
 
     susp_arity_def[0] = OZ_pair2(atom_any, 
-				 reflect_susplist(tagged2CVar(var)->
+				 reflect_susplist(tagged2Var(var)->
 						  getSuspList()));
     susp_arity_def[numOfSuspLists + ind_offset - 1] = (OZ_Term) 0;
    

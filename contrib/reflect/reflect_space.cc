@@ -35,9 +35,9 @@ void _reflect_space_params(ReflectStack &rec_stack,
 {
   DEBUGPRINT(("_reflect_space_params (in)"));
 
-  DEREF(params, paramsptr, paramstag);
+  DEREF(params, paramsptr);
   
-  if (isUVarTag(paramstag) || isCVarTag(paramstag)) {
+  if (oz_isVar(params)) {
 
     Bool is_reflected;
     int id = vtable.add(paramsptr, is_reflected);
@@ -189,7 +189,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
   DEBUGPRINT(("reflect_space_variable (in)"));
 
   OZ_Term var_itself = var;
-  DEREF(var, varptr, vartag);
+  DEREF(var, varptr);
   
   OZ_Term term_id       = (OZ_Term) 0;
   OZ_Term term_susplist = (OZ_Term) 0;
@@ -211,9 +211,9 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
     OZ_Term susp_arity_def[] = {
       {OZ_pair2(atom_any, 
-		(isCVarTag(vartag) ? 
+		(oz_isVar(var) ? 
 		 reflect_space_susplist(rec_stack, ptable, 
-					tagged2CVar(var)->getSuspList()) 
+					tagged2Var(var)->getSuspList()) 
 		 : OZ_nil()))},      
       {(OZ_Term) 0}
     };
@@ -241,7 +241,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     OZ_Term susp_arity_def[] = {
       {OZ_pair2(atom_any, 
 		reflect_space_susplist(rec_stack, ptable, 
-				       tagged2CVar(var)->
+				       tagged2Var(var)->
 				       getSuspList()))},
       {OZ_pair2(atom_bounds, 
 		reflect_space_susplist(rec_stack, ptable, 
@@ -278,7 +278,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     OZ_Term susp_arity_def[] = {
       {OZ_pair2(atom_any, 
 		reflect_space_susplist(rec_stack, ptable, 
-				       tagged2CVar(var)->getSuspList()))},
+				       tagged2Var(var)->getSuspList()))},
       {(OZ_Term) 0}
     };
     
@@ -303,7 +303,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     OZ_Term susp_arity_def[] = {
       {OZ_pair2(atom_any, 
 		reflect_space_susplist(rec_stack, ptable, 
-				       tagged2CVar(var)->getSuspList()))},
+				       tagged2Var(var)->getSuspList()))},
       {OZ_pair2(atom_glb, 
 		reflect_space_susplist(rec_stack, ptable, 
 				       tagged2GenFSetVar(var)->
@@ -347,7 +347,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     susp_arity_def[0] 
       = OZ_pair2(atom_any, 
 		 reflect_space_susplist(rec_stack, ptable, 
-					tagged2CVar(var)->getSuspList()));
+					tagged2Var(var)->getSuspList()));
 
     susp_arity_def[numOfSuspLists + ind_offset - 1] = (OZ_Term) 0;
    
@@ -403,8 +403,8 @@ OZ_Term reflect_space(OZ_Term v)
 
   while (!rec_stack.isEmpty()) {
     OZ_Term se = (OZ_Term) rec_stack.pop();
-    void * ptr = tagValueOf(se);
-    TypeOfReflStackEntry what = (TypeOfReflStackEntry) tagTypeOf(se);
+    void * ptr = __unstag_ptr(void*,se,__tagged2stag(se));
+    TypeOfReflStackEntry what = (TypeOfReflStackEntry) __tagged2stag(se);
     
     switch (what) {
     case Entry_Propagator:
