@@ -41,6 +41,7 @@
 #include "genhashtbl.hh"
 #include "perdio.hh"
 #include "referenceConsistency.hh"
+#include "bucketHashTable.hh"
 
 class HomeReference;
 class RemoteReference;
@@ -50,78 +51,6 @@ Bool withinBorrowTable(int i);
 #endif
 
 #define END_FREE -1
-
-class BucketHashNode {
-friend class BucketHashTable;
-protected:
-  unsigned int prim_key;
-  unsigned int sec_key;
-  BucketHashNode *next;
-public:
-  BucketHashNode(unsigned int k,unsigned int kb) {
-    prim_key=k;
-    sec_key=kb;
-    next=NULL;}
-
-  BucketHashNode(unsigned int k,unsigned int kb, BucketHashNode* ne){
-    prim_key=k;
-    sec_key=kb;
-    next=ne;}
-  
-  void setNext(BucketHashNode *n){next=n;}
-  BucketHashNode *getNext(){return next;}
-  unsigned int getSecKey(){return sec_key;}
-  unsigned int getPrimKey(){return prim_key;}
-};
-
-
-
-class BucketHashTable {
-protected:
-  int counter;      // number of entries
-  double top_percent;      // if more than percent is used, we reallocate
-  double bottom_percent;
-  int minSize;
-  int tableSize;
-  
-  void init(int low,int high) {
-    int i;
-    for(i=low; i<high; i++) {
-      table[i] = NULL;}}
-  void basic_htAdd(unsigned int,BucketHashNode *);
-  void rehash(BucketHashNode**,int);
-  void resize();
-  void calc_percents();
-
-public:
-  void compactify();
-  BucketHashNode **table;
-  void clear(){
-    counter=0;
-    for(int i=0; i<tableSize; i++) 
-      {
-	BucketHashNode *tmp, *next = table[i];
-	while(next)
-	  {
-	    tmp = next;
-	    next = next->next;
-	    delete tmp;
-	  }
-	table[i]=NULL;
-      }
-  }
-  
-  int getSize(){return tableSize;}
-  int getUsed(){return counter;}
-  BucketHashNode* getBucket(int i){return table[i];}
-  BucketHashTable(int);
-  void htAdd(unsigned int,BucketHashNode*);
-  void htSubPkEn(unsigned int,BucketHashNode *);
-  void* htSubPkSk(unsigned int,unsigned int);
-  BucketHashNode* htFindPk(unsigned int);
-  BucketHashNode* htFindPkSk(unsigned int,unsigned int);
-  
-};
 
 enum PO_TYPE {
   PO_Var,
@@ -144,7 +73,7 @@ protected:
     TaggedRef tert;
   } u;
 public:
-  ProtocolObject()            { DebugCode(type=(PO_TYPE)4711; )}
+  ProtocolObject()            { type=(PO_TYPE)4711;}
   Bool isTertiary()           { return type==PO_Tert; }
   Bool isRef()                { return type==PO_Ref; }
   Bool isVar()                { return type==PO_Var; }
