@@ -16,6 +16,8 @@ OZLOADSEP	= @OZLOADSEP@
 CYG_SRCDIR	= $(shell $(SRCTOP)/share/lib/cygpath.sh "$(SRCDIR)")
 
 export OZPATH = .$(OZLOADSEP)$(CYG_SRCDIR)
+export SRCDIR
+export OZPLATFORM
 
 # Test for spaces
 SPACELOCAL = \
@@ -98,7 +100,7 @@ OTHERS= dp/TestMisc.ozf
 COMPRESSLEVEL   = @oz_picklecompression@
 COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
 
-OZENGINE =
+OZENGINE = @OZENGINE@
 OZC = @OZC@
 OZFLAGS = $(COMPRESSFLAGS)
 OZTOOL = @OZTOOL@
@@ -165,7 +167,7 @@ make-test: lib/make-test.oz
 
 BENCHSRCS=make-bench engine compute-tests help-bench
 ozbench: dirs $(BENCHSRCS:%=./lib/%.oz) $(BENCHCOMPONENTS) $(OTHERS)
-	$(OZC) $(OZFLAGS) -x $(OZEXECFILE) lib/make-bench.oz -o make-bench
+	$(OZC) $(OZFLAGS) -x $(OZEXECFILE) $(CYG_SRCDIR)/lib/make-bench.oz -o make-bench
 	$(OZENGINE) ./make-bench --verbose $(BENCHCOMPONENTS)
 	chmod +x ozbench
 	-rm -f ./make-bench
