@@ -163,7 +163,7 @@ inline
 void * gcReallocStatic(void * p, size_t sz) {
   // Use for blocks where size is known statically at compile time
   DebugCheck(sz%sizeof(int) != 0,
-	     error("gcReallocStatic: can only handle word sized blocks"););
+	     OZ_error("gcReallocStatic: can only handle word sized blocks"););
 
   register int32 * frm = (int32 *) p;
   register int32 * to  = (int32 *) freeListMalloc(sz);
@@ -1167,7 +1167,7 @@ void Script::gc() {
       if (!isInGc && oz_isRef(auxTerm)) {
 	do {
 	  if (auxTerm == makeTaggedNULL ())
-	    error ("NULL in script");
+	    OZ_error ("NULL in script");
 	  if (GCISMARKED(auxTerm)) {
 	    auxTerm = ToInt32(GCUNMARK(auxTerm));
 	    continue;
@@ -1179,7 +1179,7 @@ void Script::gc() {
 	  }
 	  if (oz_isVariable (auxTerm))
 	    break;   // ok;
-	  error ("non-variable is found at left side in Script");
+	  OZ_error ("non-variable is found at left side in Script");
 	} while (1);
       }
 #endif
@@ -1850,7 +1850,7 @@ Board* AM::copyTree(Board* bb, Bool *getIsGround) {
 #ifdef CS_PROFILE
 redo: 
   if (across_redid)
-    error("Redoing cloning twice acress chunk boundarys. Fuck!\n");
+    OZ_error("Redoing cloning twice acress chunk boundarys. Fuck!\n");
   
   if (across_chunks)
     across_redid = OK;
@@ -2979,7 +2979,7 @@ void CodeArea::gcCollectCodeBlocks()
 void * OZ_hrealloc(void * p, size_t sz) {
   // Use for blocks where size is not known at compile time
   DebugCheck(sz%sizeof(int) != 0,
-	     error("OZ_hrealloc: can only handle word sized blocks"););
+	     OZ_error("OZ_hrealloc: can only handle word sized blocks"););
 
   int32 * frm = (int32 *) p;
   int32 * to  = (int32 *) heapMalloc(sz);
