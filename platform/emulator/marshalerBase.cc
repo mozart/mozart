@@ -552,8 +552,7 @@ static void putRealRecordArityCA(GTAbstractEntity *arg, OZ_Term value) {
   CodeAreaLocation *loc = (CodeAreaLocation *) arg;
 
   //
-  Assert(isSorted(value));
-  SRecordArity sra = makeRealRecordArity(value);
+  SRecordArity sra = makeRealRecordArity(packlist(value));
   CodeArea::writeWordAllocated(sra, loc->getPtr());
   delete loc;
 }
@@ -569,7 +568,8 @@ static void getPredIdNameCA(GTAbstractEntity *arg, OZ_Term value)
   //
   if (!sra) {
     // must be a record:
-    sra = makeRealRecordArity(loc->getArityList());
+    OZ_Term aritylist = packlist(loc->getArityList());
+    sra = makeRealRecordArity(aritylist);
   }
 
   //
@@ -617,7 +617,8 @@ static void getCallMethodInfoNameCA(GTAbstractEntity *arg, OZ_Term value)
   //
   if (!sra) {
     // must be a record:
-    sra = makeRealRecordArity(loc->getArityList());
+    OZ_Term aritylist = packlist(loc->getArityList());
+    sra = makeRealRecordArity(aritylist);
   }
 
   //
@@ -647,9 +648,8 @@ void getHashTableRecordEntryLabelCA(GTAbstractEntity *arg, OZ_Term value)
 
   //
   if (!sra) {
-    OZ_Term recordArity = desc->getArityList();
-    Assert(isSorted(recordArity));
-    sra = makeRealRecordArity(recordArity);
+    OZ_Term aritylist = packlist(desc->getArityList());
+    sra = makeRealRecordArity(aritylist);
   }
   //
   (desc->getTable())->addRecord(value, sra, desc->getLabel());
@@ -735,7 +735,8 @@ Bool mIsConstant(TaggedRef t)
           oz_isLiteral(t) ||
           oz_isLTuple(t) ||
           oz_isProcedure(t) ||
-          oz_isSRecord(t));
+          oz_isSRecord(t) ||
+          oz_isExtension(t));
 }
 
 #endif

@@ -1591,7 +1591,7 @@ OZ_Term OZ_pair2(OZ_Term t1,OZ_Term t2) {
 
 OZ_Arity OZ_makeArity(OZ_Term list)
 {
-  list=packsort(list);
+  list = packsortlist(list);
   if (!list) return 0;
   return aritytable.find(list);
 }
@@ -1648,7 +1648,8 @@ OZ_Term OZ_adjoinAt(OZ_Term rec, OZ_Term fea, OZ_Term val)
   if (!oz_isFeature(fea) || !oz_isRecord(rec)) return 0;
 
   if (oz_isLiteral(rec)) {
-    SRecord *srec = SRecord::newSRecord(rec,aritytable.find(oz_cons(fea,oz_nil())));
+    SRecord *srec =
+      SRecord::newSRecord(rec, aritytable.find(oz_cons(fea, oz_nil())));
     srec->setArg(0,val);
     return makeTaggedSRecord(srec);
   } else {

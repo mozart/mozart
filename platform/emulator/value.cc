@@ -665,23 +665,27 @@ void quicksort(TaggedRef** first, TaggedRef** last)
   quicksort(i+1, last);
 }
 
+//
+// 'list' must be packed;
 Bool isSorted(TaggedRef list)
 {
-  list = oz_deref(list);
+  Assert(!oz_isRef(list));
   if (oz_isNil(list)) return OK;
 
   while(1) {
-    TaggedRef cdr = oz_deref(oz_tail(list));
-    if (oz_isNil(cdr)) return OK;
+    Assert(!oz_isRef(oz_tail(list)));
+    TaggedRef cdr = oz_tail(list);
+    if (oz_isNil(cdr))
+      return OK;
     Assert(!oz_isRef(oz_head(list)) && !oz_isVar(oz_head(list)));
     Assert(!oz_isRef(oz_head(cdr)) && !oz_isVar(oz_head(cdr)));
-    if (featureCmp(oz_head(list),oz_head(cdr))!=-1) return NO;
+    if (featureCmp(oz_head(list), oz_head(cdr)) != -1)
+      return NO;
     list = cdr;
   }
   return OK;
 
 }
-
 
 // mm2: optimize for already sorted list! (see isSorted)
 // sort list using quicksort and duplicants
@@ -724,21 +728,43 @@ TaggedRef sortlist(TaggedRef list,int len)
   return list;
 }
 
-// mm2: cycle test
-TaggedRef packsort(TaggedRef list)
+// Destructive packing of a list. Requires a non-cyclic, possibly
+// incomplete list;
+TaggedRef packlist(TaggedRef list)
 {
   list = oz_deref(list);
-  if (oz_isNil(list)) {
+  if (oz_isNil(list))
     return oz_nil();
-  }
-  int len=0;
 
   TaggedRef tmp = list;
-
   Assert(!oz_isRef(tmp));
+
+  while (oz_isLTupleOrRef(tmp)) {
+    LTuple *lt = tagged2LTuple(tmp);
+    lt->setHead(oz_deref(lt->getHead()));
+    tmp = oz_deref(lt->getTail());
+    lt->setTail(tmp);
+    Assert(!oz_isRef(tmp));
+  }
+
+  return (list);
+}
+
+// destructive packing&sorting of a list. Returns 0 if malformed;
+// mm2: cycle test
+TaggedRef packsortlist(TaggedRef list)
+{
+  list = oz_deref(list);
+  if (oz_isNil(list))
+    return oz_nil();
+
+  int len=0;
+  TaggedRef tmp = list;
+  Assert(!oz_isRef(tmp));
+
   while (oz_isLTupleOrRef(tmp)) {
     len++;
-    LTuple *lt=tagged2LTuple(tmp);
+    LTuple *lt = tagged2LTuple(tmp);
     lt->setHead(oz_deref(lt->getHead()));
     tmp = oz_deref(lt->getTail());
     lt->setTail(tmp);
@@ -749,7 +775,6 @@ TaggedRef packsort(TaggedRef list)
 
  return sortlist(list,len);
 }
-
 
 //************************************************************************
 //                        Class Arity
@@ -890,8 +915,10 @@ Bool ArityTable::hashvalue( TaggedRef list, int &ret )
  * If list is already registered in aritytable, then return the associated
  * Arity. Otherwise, create a Hashtable, insert the new pair of
  * arity and Arity into aritytable, and return the new Arity.
+ *
+ * list must be packed and sorted;
  */
-Arity *ArityTable::find( TaggedRef list)
+Arity *ArityTable::find(TaggedRef list)
 {
   int hsh;
   int isTuple = hashvalue(list,hsh);
@@ -1185,8 +1212,9 @@ SRecord *makeRecord(TaggedRef t)
   if (oz_isSRecord(t)) return tagged2SRecord(t);
   Assert(oz_isLTuple(t));
   LTuple *lt=tagged2LTuple(t);
-  SRecord *ret = SRecord::newSRecord(AtomCons,
-                                     aritytable.find(makeTupleArityList(2)));
+  SRecord *ret =
+    SRecord::newSRecord(AtomCons,
+                        aritytable.find(makeTupleArityList(2)));
   ret->setArg(0,lt->getHead());
   ret->setArg(1,lt->getTail());
   return ret;

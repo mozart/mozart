@@ -637,6 +637,7 @@ repeat:
         RAISE_UNMARSHAL_ERROR;
 #endif
       //
+      arity = packlist(arity);
       OZ_Term sortedArity = arity;
       if (!isSorted(arity)) {
         int arityLen;
