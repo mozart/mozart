@@ -7,6 +7,7 @@ manual so far. It explains implementation techniques rather than
 giving ready-to-use code.
 
 <p>
+<!-- ********************************************************************** -->
 <SubSection id="u_advanced.detect">
 <Title/Detecting Equal Variables in a Vector/
 
@@ -74,53 +75,51 @@ static array, &ie another application of this function will override
 the previous values.
 
 <p>
+<!-- ********************************************************************** -->
 <SubSection id="u_advanced.redundant">
 <Title/Avoiding Redundant Copying/
 
 <p>
 In <ptr to="u_vector.class"> we learned that data structures
 referenced by the state of a propagator have to be copied whenever the
-Oz runtime system calls the member function
-<<void updateHeapRefs(OZ_Boolean duplicate)>>.
-But constant data structures, &ie
-data structures which do not change during the propagator's lifetime,
-need only to be duplicated in case of a garbage collection. Otherwise it
-is sufficient to have a reference to such a constant data
-structure. Thus it is useful to use a reference counting technique to
-keep track of the number of references to the constant data structure,
-so that the destructor of the propagator can dispose the data structure
-when there is no reference left.
+Oz runtime system calls either the member function <<gCollect()>> or
+<<sClone()>>.  But constant data structures, &ie data structures which
+do not change during the propagator's lifetime, need only to be
+duplicated in case of a garbage collection. Otherwise it is sufficient
+to have a reference to such a constant data structure. Thus it is
+useful to use a reference counting technique to keep track of the
+number of references to the constant data structure, so that the
+destructor of the propagator can dispose the data structure when there
+is no reference left.
 
 <p>
-The value of the argument <<duplicate>> is <<OZ_TRUE>> whenever a
-fresh copy event of constant data structures allocated on the heap of the
-Oz runtime system is required. In turn, the value of <<duplicate>> is
-<<OZ_FALSE>> whenever a reference is sufficient and a reference
-counting technique is appropriate.
+That is one reason why there are distinct member functions for garbage
+collection and space cloning. Garbage collection requires a fresh copy
+of constant data structures while space cloning requires only a
+reference and a reference counting technique is applicable.
 
 <p>
 The code presented in this section defines the class <<ConstDataHdl>>
-which can be used to avoid redundant copying of constant data structures
-by evaluating the <<duplicate>> argument of
-<<OZ_Propagator::updateHeapRefs()>>. The class <<ConstDataHdl>>
-implements a reference counting scheme and holds in its state, apart
-from the actual constant data structure, the reference counter
-<<_refCount>> and the forward reference <<_newLoc>>. In our
-example the constant data structure is the string <<"Constant data">>.
+which can be used to avoid redundant copying of constant data
+structures by approptiate actions in <<gCollect()>> and
+<<sClone()>>. The class <<ConstDataHdl>> implements a reference
+counting scheme and holds in its state, apart from the actual constant
+data structure, the reference counter <<_refCount>> and the forward
+reference <<_newLoc>>. In our example the constant data structure is
+the string <<"Constant data">>.
 
 <p>
 The constructor of <<ConstDataHdl>> creates the constant data
-structure and initialises the reference counting mechanism. The operator
-<<new>> is redefined to allocate instances of <<ConstDataHdl>> on
-the heap of the runtime system. The operator <<delete>> decrements
-the reference counter and deallocates the instance of
-<<ConstDataHdl>> from the heap if there is no reference left.  The
-member function <<getRef>> is to be used if a new reference to an
-instance of <<ConstDataHdl>> is needed. It increments
-<<_refCount>> and returns the self-reference <<this>>. The member
-function <<copy()>> is to be used if the constant data structure has to
-be duplicated which is the case if the value passed to
-<<updateHeapRefs()>> is <<OZ_TRUE>>.
+structure and initialises the reference counting mechanism.  The
+operator <<new>> is redefined to allocate instances of
+<<ConstDataHdl>> on the heap. The operator <<delete>> decrements the
+reference counter and deallocates the instance of <<ConstDataHdl>>
+from the heap if there is no reference left.  The member function
+<<getRef()>> is to be used if a new reference to an instance of
+<<ConstDataHdl>> is needed (<<sClone()>>). It increments <<_refCount>>
+and returns the self-reference <<this>>. The member function
+<<copy()>> is to be used if the constant data structure has to be
+duplicated which is the case in <<gCollect()>>.
 
 <p>
 <Code.Extern display proglang=cc to="programs/constData.1.cc" class=linenumbers>
@@ -132,32 +131,38 @@ the location of the duplicate, and returns the reference to the
 duplicate. All subsequent invocations only increment the reference
 counter of the duplicate and return a reference to the duplicate.
 <p>
-To use the presented reference counting scheme in a propagator add to
+To use the presented reference counting scheme in a propagator add to ...
 <p>
+
 <List>
-<Entry> the class definition of the propagator:
+<Entry> ... the class definition of the propagator:
 
 <Item>
 <Code.Extern display proglang=cc to="programs/constData.4.cc" class=linenumbers>
 
-<Entry> the constructor definition of the propagator:
+<Entry> ... the constructor definition of the propagator:
 <Item>
 <Code.Extern display proglang=cc to="programs/constData.3.cc" class=linenumbers>
 
-<Entry> the destructor definition of the propagator:
+<Entry> ... the destructor definition of the propagator:
 <Item>
 <Code.Extern display proglang=cc to="programs/constData.5.cc" class=linenumbers>
 
-<Entry> the definition of the member function <<updateHeapRefs()>>:
+<Entry> ... the definition of the member function <<gCollect()>>:
 <Item>
-<Code.Extern display proglang=cc to="programs/constData.2.cc" class=linenumbers>
+<Code.Extern display proglang=cc to="programs/constData.2b.cc" class=linenumbers>
+
+<Entry> ... the definition of the member function <<sClone()()>>:
+<Item>
+<Code.Extern display proglang=cc to="programs/constData.2a.cc" class=linenumbers>
 </List>
 
 <p>
 The presented class definition of <<ConstDataHdl>> can be adopted by
-redefining the embedded data structure
-<<ConstDataHdl::_constData>> appropriately.
+redefining the embedded data structure <<ConstDataHdl::_constData>>
+appropriately.
 
+<!-- ********************************************************************** -->
 <p>
 <SubSection id="u_advanced.reified">
 <Title/Reified Constraints/

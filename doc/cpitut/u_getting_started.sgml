@@ -101,13 +101,15 @@ member function <<sizeOf()>> implements this
 functionality. Its return type is defined in the standard header
 <<&lt;stddef.h&gt>>.
 
-<para class=apropos><title/<<updateHeapRefs()>>/
-Further, on garbage collection references into heap
-which is held in the state of the propagator (or somehow reachable by a
+<para class=apropos><title/<<gCollect()>> and <<sClone()>>/ Further, on
+garbage collection and space cloning references into heap which are
+held in the state of the propagator (or somehow reachable by a
 propagator) have to be updated, since items stored on the heap are
-occasionally moved to a new location. The member function
-<<updateHeapRefs()>> is provided for that purpose. For
-the time being the argument can be safely ignored.
+occasionally moved to a new location. The member functions
+<<gcollect()>> and <<sClone>> are provided for that purpose. The
+definition of these functions is identical for most propagators. For
+an example where the difference of both functions matters see <ptr
+to="u_advanced.redundant">.
 
 <para class=apropos><title/<<propagate()>>/
 The most important member function is <<propagate()>>.
@@ -133,14 +135,15 @@ data members with the arguments of the corresponding Oz application.
 
 The member function <<sizeOf()>> returns the number of bytes occupied
 by the addition propagator using &ccpp;'s <<sizeof>> operator.  The
-&cpi provides for the function <<updateHeapTerm()>>, which is used for
-implementing the member function <<updateHeapRefs()>>, which applies
-<<updateHeapTerm()>> to all data members of type <<OZ_Term>>. The
-construction of lists is supported by the interface abstractions <<OZ_cons()>>
-and <<OZ_nil()>> (see <Ptr.Extern to="ozdoc:foreign"
-key="section.term_access">). The function <<getParameters()>>
-straightforwardly composes a list containing the references to the
-arguments hold in the propagator's state.
+&cpi provides for the functions <<OZ_gCollectTerm()>> and
+<<OZ_sCloneTerm()>>, which are used for the implemention of the member
+functions <<gcollect()>> and <<sClone()>>, which apply
+<<gCollectTerm()>> resp. <<sCloneTerm()>> to all data members of type
+<<OZ_Term>>. The construction of lists is supported by the interface
+abstractions <<OZ_cons()>> and <<OZ_nil()>> (see <Ptr.Extern
+to="ozdoc:foreign" key="section.term_access">). The function
+<<getParameters()>> straightforwardly composes a list containing the
+references to the arguments hold in the propagator's state.
 <p>
 
 <SubSubSection id="u_getting_started.propagation">
