@@ -48,6 +48,31 @@ fi
 AC_SUBST(PSGML)
 AC_SUBST(CED)
 
+AC_MSG_CHECKING(for --with-java-bin)
+AC_ARG_WITH(java,
+  [--with-java-bin='DIR'
+       directory where java executables/wrappers reside],
+  oz_java_bin=${with_java_bin})
+: ${oz_java_bin=}
+AC_MSG_RESULT($oz_java_bin)
+if test -n "${oz_java_bin}" &&
+   ! expr "${oz_java_bin}" : '.*/$'
+then
+    oz_java_bin=${oz_java_bin}/
+fi
+JAVA_BIN=${oz_java_bin}
+AC_SUBST(JAVA_BIN)
+
+AC_MSG_CHECKING(for --with-java-threads)
+AC_ARG_WITH(java-threads,
+  [--with-java-threads='OPTION'
+       option for java threads support selection (default=-green)],
+  oz_java_threads=${with_java_threads})
+: ${oz_java_threads=-green}
+AC_MSG_RESULT($oz_java_threads)
+JAVA_THREADS=${oz_java_threads}
+AC_SUBST(JAVA_THREADS)
+
 AC_MSG_CHECKING(for --with-documents)
 AC_ARG_WITH(documents,
   [--with-documents='DIR1 ... DIRN' (or all)
