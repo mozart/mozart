@@ -127,9 +127,8 @@
      &abstract;
     </ABSTRACT>
   <BODY>
-<!--
+
    &opi;
--->
    &introduction;
    &basics;
    &equality;
