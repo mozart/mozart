@@ -159,8 +159,8 @@ class Gui from Menu Dialog
    meth printStack(id:ThrID stack:Stack)
       W = self.StackText
       S = {List.filter Stack fun{$ X}
-				{Label X} == 'proc' andthen
-				X.name \= 'Toplevel abstraction'
+				{Label X} == 'proc'
+				% andthen X.name \= 'Toplevel abstraction'
 			     end}
    in
       case S == nil then
@@ -271,9 +271,10 @@ class Gui from Menu Dialog
    
    meth action(A)
       T = @currentThread
-      I = {Thread.id T}
+      I
    in
       case T \= undef then
+	 I = {Thread.id T}
 	 case {Label A}
 	    
 	 of step then

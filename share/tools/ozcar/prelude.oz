@@ -17,6 +17,11 @@ NL = [10]  %% newline
 
 %% send a warning/error message
 
+proc {OzcarShow X}
+   %{Show X}
+   skip
+end
+
 proc {OzcarMessage M}
    %{System.showInfo OzcarMessagePrefix # M}
    skip
@@ -46,18 +51,17 @@ end
 
 fun {ArgType X}
    case {IsDet X} then
-      case     {IsUnit X}       then '<unit>'
+      case     {IsUnit X}       then 'unit'
       elsecase {IsArray X}      then '<array>'
-      elsecase {IsAtom X}       then '<atom \''    # case X
-						     of nil then "nil"
-						     else        X      end
-						   # '\'>'
-      elsecase {IsBool X}       then '<bool>'
+      elsecase {IsAtom X}       then '\'' # case X of nil then "nil" else X
+					    end	# '\''
+      elsecase {IsBool X}       then case X of true then 'true' else 'false'
+				     end
       elsecase {IsCell X}       then '<cell>'
       elsecase {IsClass X}      then '<class>'
       elsecase {IsDictionary X} then '<dictionary>'
       elsecase {IsFloat X}      then '<float>'
-      elsecase {IsInt   X}      then '<int '       # X # '>'
+      elsecase {IsInt X}        then X
       elsecase {IsList X}       then '<list>'
       elsecase {IsLiteral X}    then '<literal>'
       elsecase {IsLock X}       then '<lock>'
