@@ -6,7 +6,8 @@
  *  Contributors:
  *    Benjamin Lorenz (lorenz@ps.uni-sb.de)
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
- * 
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
  * 
