@@ -2,25 +2,25 @@
 
 set -x
 
-TK=tk4.1b3
-TCL=tcl7.5b3
+TK=tk4.1
+TCL=tcl7.5
 
 cd $TCL/unix
 rm -rf dltest
 make -k distclean
-./configure --prefix=/project/ps/soft/$TCL
+./configure --prefix=/project/ps/soft/$TCL --enable-gcc
 make
 
 cd ../../$TK/unix
 rm -rf dltest
 make -k distclean
-./configure --prefix=/project/ps/soft/$TCL
+./configure --prefix=/project/ps/soft/$TCL --enable-gcc
 make
 
 cd ../..
 
 LIBDIR=/project/ps/soft/$TCL/platform/`ozplatform`
 mkdir -p $LIBDIR/lib
-cp $TCL/unix/libtcl7.5.a $LIBDIR/lib/libtcl.a
-cp $TK/unix/libtk4.1.a $LIBDIR/lib/libtk.a
+cp $TCL/unix/libtcl75.a $LIBDIR/lib/libtcl.a
+cp $TK/unix/libtk41.a $LIBDIR/lib/libtk.a
 ranlib $LIBDIR/lib/*.a
