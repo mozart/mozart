@@ -286,6 +286,9 @@ void osBlockSignals(Bool check)
   sigdelset(&s,SIGINT);
   sigdelset(&s,SIGHUP);
   sigdelset(&s,SIGTERM);
+#if defined(PROFILE_EMULATOR) && defined(SIGPROF)
+  sigdelset(&s,SIGPROF);
+#endif
 
   sigprocmask(SIG_SETMASK,&s,&sOld);
 
