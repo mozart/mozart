@@ -649,8 +649,10 @@ in
 	    Gui,clearEnv
 	 else
 	    {self.StackText title(AltStackTitle # I)}
-	    case Depth == 0 then
-	       case {CheckState @currentThread} == running then
+	    case Depth == 0 then T = @currentThread in
+	       case T == unit then
+		  {OzcarError 'Gui,printStack: @currentThread == unit'}
+	       elsecase {CheckState T} == running then
 		  Gui,Append(W (' There was no stack computed (yet)\n' #
 				' for this thread;' #
 				' stop it to compute one!'))
