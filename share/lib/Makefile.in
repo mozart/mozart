@@ -47,7 +47,7 @@ SPSRC = System Debug Foreign Error ErrorRegistry Finalize
 OPSRC = OS Open Pickle
 APSRC = Application
 CPSRC = Search FD Schedule FS
-DPSRC = Connection Remote VirtualSite
+DPSRC = Connection Remote VirtualSite Fault
 WPSRC = Tk TkTools
 MISCSRC = Misc
 
@@ -139,7 +139,7 @@ Application.ozf: ap/ArgParser.oz init/Module.oz init/RURL.oz
 
 Application.ozf: $(PEANUTSFUNCTORS) module-Peanuts.oz
 
-Application.ozf: ../url-defaults.oz
+Application.ozf: ../url-defaults.oz ../functor-defaults.oz
 
 module-Peanuts.oz:
 	echo "[$(PEANUTS:%='%')]" > module-Peanuts.oz
