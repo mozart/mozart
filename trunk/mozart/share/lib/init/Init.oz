@@ -244,7 +244,7 @@ define
 \endif
       
       %% Link root functor (i.e. application)
-      {RM link(url:{GET 'application.url'})}
+      {Wait {RM link(url:{GET 'application.url'} $)}}
    end
 end
 
