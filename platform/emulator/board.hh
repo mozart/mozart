@@ -59,9 +59,9 @@ class Script {
 public:
   void gc();
 
-  NO_DEFAULT_CONSTRUCTORS2(Script);
   Script() { numbOfCons = 0; first = (Equation *)NULL; }
   Script(int sizeInit);
+  ~Script();
   OZPRINT;
   void allocate(int sizeInit);
   void dealloc();

@@ -21,7 +21,6 @@
 #  of this file, and for a DISCLAIMER OF ALL 
 #  WARRANTIES.
 
-TOPDIRA		= @TOPDIRA@
 SHELL		= @SH@
 LEX		= @LEX@
 LFLAGS		= -8
@@ -35,7 +34,7 @@ M4_S		= @M4_S@
 RM		= @RM@ -f
 CXX		= @CXX@
 CXXCPP		= @CXXCPP@
-LD		= @LD@
+LD		= @CXX@
 DYNLD		= @DYNLD@
 RANLIB		= @RANLIB@
 AR		= @AR@
@@ -48,12 +47,12 @@ LIBS            = @LIBS@
 LDFLAGS		= @LDFLAGS@ $(CUSR)
 
 DEFS		= @DEFS@
-CWARN		= @CWARN@
-DWARN		= @DWARN@
+OZ_WARN		= @oz_warn@
+OZ_WARN_ERROR	= @oz_warn_error@
 CPPFLAGS	= @CPPFLAGS@ $(INCS) $(DEFS)
-COPT		= @CFLAGS@
-CFLAGS		= $(COPT) $(CWARN) $(CUSR)
-CXXFLAGS	= $(CFLAGS)
+COPT		= @COPT@
+CXXFLAGS	= $(COPT) $(OZ_WARN) $(OZ_WARN_ERROR) $(CUSR)
+CXXFLAGS_NO_ERROR= $(COPT) $(OZ_WARN) $(CUSR)
 DEPEND		= @DEPEND@ $(CPPFLAGS)
 
 PREFIX		= @prefix@

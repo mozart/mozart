@@ -20,16 +20,16 @@ make install
 
 - Configure options
 
-The default is such that an optimized system is generated
+The default is such that an optimized system is generated.a
 
   --enable-opt
-     default is to compile with maximal optimization
+     default is to compile with maximal optimization ($oz_copt_optimize)
 
      --enable-opt=d
-        compile with debug switches (-g3 -DDEBUG_EMUALATOR)
+        compile with debug switches ($oz_copt_debug)
 
      --enable-opt=p
-        compile with profiling switches (-pg)
+        compile with profiling switches ($oz_copt_profile)
 
   --with-pgcc
      use Pentium GCC if available
@@ -56,6 +56,20 @@ The default is such that an optimized system is generated
 
  - OZHOME: if it is defined this is used as the default prefix
 
+ - oz_copt_optimize: compiler options if $oz_enable-opt=yes
+ - oz_copt_debug:    compiler options if $oz_enable-opt=d*
+ - oz_copt_profile:  compiler options if $oz_enable-opt=p*
+ - oz_warn:          compiler options for warnings
+ - oz_warn_error:    compiler option to turn warnings into errors
+ - oz_lopt_profile:  linker options if  $oz_enable-opt=p*
+ - oz_gmp_inc_dir
+ - oz_gmp_lib_dir
+ - oz_enable_peanuts
+ - oz_malloc_obj
+ - oz_tmphack_host
+ - oz_enable_threaded
+ - oz_enable_fastreg
+ - oz_enable_regopt
 
 - At compile time 'make CUSR=...' can be used to set additional
   compiler switches (e.g. make CUSR="-DMM").
