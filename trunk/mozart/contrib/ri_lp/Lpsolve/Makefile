@@ -1,5 +1,7 @@
-#CC= gcc -fno-exceptions -fno-rtti 
-CC= oztool cc
+PLATFORM = $(shell ozplatform)
+
+CC= gcc -fno-exceptions -fno-rtti 
+#CC= oztool cc
 
 #should be OK in most situations:
 #CFLAGS= -O
@@ -73,6 +75,7 @@ quantify: lp_solve.o $(LPKLIB)
 $(LPKLIB): $(LPKOBJ)
 	ar rv $@ $(LPKOBJ)
 	ranlib $(LPKLIB)
+	cp -f $(LPKLIB) ../$(LPKLIB:%.a=%-$(PLATFORM).a)
 
 $(YACCFILE.o): $(LEXFILE.c)
 
