@@ -771,8 +771,6 @@ Bool checkAtom(const char *s)
 	&& strcmp(t, "true") && strcmp(t, "try")? OK: NO;
   case 'u':
     return strcmp(t, "unit")? OK: NO;
-  case 'w':
-    return strcmp(t, "with")? OK: NO;
   default:
     return OK;
   }
