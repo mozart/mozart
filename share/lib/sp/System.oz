@@ -50,15 +50,15 @@ local
    PrintInfo  = {`Builtin` 'System.printInfo'  1}
    proc {ShowInfo V}
       {PrintInfo V # '\n'}
-   end   
+   end
    PrintError = {`Builtin` 'System.printError' 1}
    proc {ShowError V}
       {PrintError V # '\n'}
-   end   
+   end
 
    %%
    %% StringToValue and vice versa
-   %% 
+   %%
    local
       fun {Trans X}
 	 case X of fAtom(A _) then A
@@ -114,7 +114,7 @@ local
 	    catch notAValue then
 	       {`RaiseError` system(virtualStringToValue VS)} unit
 	    end
-         else
+	 else
 	    {`RaiseError` system(virtualStringToValue VS)} unit
 	 end
       end
@@ -130,7 +130,7 @@ local
       SetMessages   = {`Builtin` 'SystemSetMessages'   1}
       SetInternal   = {`Builtin` 'SystemSetInternal'   1}
       SetFD         = {`Builtin` 'SystemSetFD'         1}
-   in 
+   in
       proc {SystemSet W}
 	 case {Label W}
 	 of threads    then {SetThreads W}
@@ -145,7 +145,7 @@ local
 	 end
       end
    end
-   
+
    local
       GetThreads    = {`Builtin` 'SystemGetThreads'    1}
       GetPriorities = {`Builtin` 'SystemGetPriorities' 1}
@@ -162,7 +162,7 @@ local
       GetStandalone = {`Builtin` 'SystemGetStandalone' 1}
       GetHome       = {`Builtin` 'SystemGetHome'       1}
       GetPlatform   = {`Builtin` 'SystemGetPlatform'   1}
-   in 
+   in
       fun {SystemGet C}
 	 case C
 	 of threads    then
@@ -220,7 +220,7 @@ local
    end
 
 in
-   
+
    System = system(%% Querying and configuring system parameters
 		   get:        SystemGet
 		   set:        SystemSet
@@ -231,24 +231,24 @@ in
 		   showInfo:   ShowInfo
 		   %% printing and showing of trees
 		   print:      Print
-		   show:       Show 
+		   show:       Show
 		   %% test for pointer equality
 		   eq:         {`Builtin` 'System.eq' 3}
 		   %% system related inquiry functions
-                   nbSusps:    {`Builtin` 'System.nbSusps' 2}
+		   nbSusps:    {`Builtin` 'System.nbSusps' 2}
 		   printName:  {`Builtin` 'System.printName' 2}
-		   %% system control functionality 
+		   %% system control functionality
 		   gcDo:       {`Builtin` 'System.gcDo' 0}
 		   %% misc functionality
-                   apply:                {`Builtin` 'System.apply' 2}
-                   tellRecordSize:       `tellRecordSize`
+		   apply:                {`Builtin` 'System.apply' 2}
+		   tellRecordSize:       `tellRecordSize`
 		   virtualStringToValue: SystemVirtualStringToValue
 		   valueToVirtualString:
 		      {`Builtin` 'System.valueToVirtualString' 4}
 		   exit: Exit
 		   %% interface to system registry
-%		   registry(get:RegistryGet
-%			    put:RegistryPut
-%			    condGet:RegistryCondGet)
+%                  registry(get:RegistryGet
+%                           put:RegistryPut
+%                           condGet:RegistryCondGet)
 		  )
 end
