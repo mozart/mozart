@@ -167,7 +167,7 @@ public:
     Assert(isProxy());
     Assert(u.bindings==0);
     ControlVarNew(controlvar,GETBOARD(this));
-    PD((THREAD_D,"stop thread setVal %x",am.currentThread()));
+    PD((THREAD_D,"stop thread setVal %x",oz_currentThread()));
     u.bindings=new PendBinding(t,controlvar,0);
     SuspendOnControlVar;
   }
@@ -175,7 +175,7 @@ public:
     Assert(isProxy());
     Assert(u.bindings!=0);
     ControlVarNew(controlvar,GETBOARD(this));
-    PD((THREAD_D,"stop thread pushVal %x",am.currentThread()));
+    PD((THREAD_D,"stop thread pushVal %x",oz_currentThread()));
     u.bindings->next=new PendBinding(t,controlvar,u.bindings->next);
     SuspendOnControlVar;
   }

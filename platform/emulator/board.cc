@@ -216,9 +216,9 @@ void Board::pushToLPQ(Propagator * prop) {
   if (localPropagatorQueue) {
     localPropagatorQueue->enqueue(prop);
   } else {
-    Thread * lpq_thr = am.mkLPQ(this, PROPAGATOR_PRIORITY);
+    Thread * lpq_thr = oz_mkLPQ(this, PROPAGATOR_PRIORITY);
     localPropagatorQueue = new LocalPropagatorQueue(lpq_thr, prop);
-    am.scheduleThreadInline(lpq_thr, PROPAGATOR_PRIORITY);
+    am.threadsPool.scheduleThreadInline(lpq_thr, PROPAGATOR_PRIORITY);
 #ifdef DEBUG_THREADCOUNT
     existingLTQs += 1;
     //    printf("+LTQ=%p\n", localPropagatorQueue); fflush(stdout);

@@ -145,7 +145,7 @@ OZ_BI_define(BIdeepFeed,2,0)
   Board *savedNode = am.currentBoard();
   Board *home1 = GETBOARD(cell);
 
-  switch (am.installPath(home1)) {
+  switch (oz_installPath(home1)) {
   case INST_FAILED:
   case INST_REJECTED:
     error("deep: install");
@@ -157,7 +157,7 @@ OZ_BI_define(BIdeepFeed,2,0)
   TaggedRef old = cell->exchangeValue(newVar);
   OZ_Return ret = oz_unify(old,oz_cons(val,newVar));
 
-  switch (am.installPath(savedNode)) {
+  switch (oz_installPath(savedNode)) {
   case INST_FAILED:
   case INST_REJECTED:
     error("deep: install back");

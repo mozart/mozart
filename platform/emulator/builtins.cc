@@ -386,7 +386,7 @@ OZ_BI_define(BInewSpace, 1,1) {
   if (!oz_isProcedure(proc))
     oz_typeError(0, "Procedure");
 
-  Board* CBB = am.currentBoard();
+  Board* CBB = oz_currentBoard();
 
   ozstat.incSolveCreated();
   // creation of solve actor and solve board
@@ -490,7 +490,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
   if (space->isFailed())
     return FAILED;
 
-  Board *CBB = am.currentBoard();
+  Board *CBB = oz_currentBoard();
   Board *SBB = space->getSolveBoard()->derefBoard();
   Board *SBP = SBB->getParent()->derefBoard();
 
@@ -526,7 +526,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
   if (OZ_isVariable(result)) {
 
     if (isSibling) {
-      switch (am.installPath(SBP)) {
+      switch (oz_installPath(SBP)) {
       case INST_FAILED: case INST_REJECTED: return FAILED;
       case INST_OK: break;
       }
@@ -534,7 +534,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
       if (oz_unify(result, AtomMerged) == FAILED) // mm2
 	return FAILED;
 
-      switch (am.installPath(CBB)) {
+      switch (oz_installPath(CBB)) {
       case INST_FAILED: case INST_REJECTED: return FAILED;
       case INST_OK: break;
       }
@@ -567,7 +567,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
-  Board* CBB = am.currentBoard();
+  Board* CBB = oz_currentBoard();
 
   if (space->isFailed())
     OZ_RETURN(makeTaggedConst(new Space(CBB, (Board *) 0)));
@@ -662,8 +662,8 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   sa->unsetGround();
   sa->clearResult(GETBOARD(space));
 
-  am.suspThreadToRunnable(tt);
-  am.scheduleThread(tt);
+  oz_suspThreadToRunnable(tt);
+  am.threadsPool.scheduleThread(tt);
 
   return BI_PREEMPT;
 } OZ_BI_end
@@ -1513,7 +1513,7 @@ OZ_BI_define(BInewChunk,1,1)
 
 OZ_BI_define(BIthreadThis,0,1)
 {
-  OZ_RETURN(makeTaggedConst(am.currentThread()));
+  OZ_RETURN(makeTaggedConst(oz_currentThread()));
 } OZ_BI_end
 
 /*
@@ -1551,16 +1551,16 @@ OZ_BI_define(BIthreadSetPriority,2,0)
   int oldPrio = th->getPriority();
   th->setPriority(prio);
 
-  if (am.currentThread() == th) {
+  if (oz_currentThread() == th) {
     if (prio <= oldPrio) {
       am.setSFlag(ThreadSwitch);
       return BI_PREEMPT;
     }
   } else {
     if (th->isRunnable()) {
-      am.rescheduleThread(th);
+      am.threadsPool.rescheduleThread(th);
     }
-    if (prio > am.currentThread()->getPriority()) {
+    if (prio > oz_currentThread()->getPriority()) {
       return BI_PREEMPT;
     }
   }
@@ -1635,7 +1635,7 @@ OZ_C_proc_proto(BIraise);
 OZ_C_proc_proto(BIraiseDebug);
 
 void threadRaise(Thread *th,OZ_Term E,int debug) {
-  Assert(am.currentThread() != th);
+  Assert(oz_currentThread() != th);
 
   if (th->isDeadThread()) return;
 
@@ -1647,10 +1647,10 @@ void threadRaise(Thread *th,OZ_Term E,int debug) {
   th->setStop(NO);
 
   if (th->isSuspended())
-    am.suspThreadToRunnable(th);
+    oz_suspThreadToRunnable(th);
   
-  if (!am.isScheduledSlow(th))
-    am.scheduleThread(th);
+  if (!am.threadsPool.isScheduledSlow(th))
+    am.threadsPool.scheduleThread(th);
 }
 
 OZ_BI_define(BIthreadRaise,2,0)
@@ -1662,7 +1662,7 @@ OZ_BI_define(BIthreadRaise,2,0)
     return remoteSend(th,"Thread.raise",E);
   }
 
-  if (am.currentThread() == th) {
+  if (oz_currentThread() == th) {
     return OZ_raise(E);
   }
 
@@ -1683,7 +1683,7 @@ OZ_BI_define(BIthreadSuspend,1,0)
   }
 
   th->setStop(OK);
-  if (th == am.currentThread()) {
+  if (th == oz_currentThread()) {
     return BI_PREEMPT;
   }
   return PROCEED;
@@ -1694,8 +1694,8 @@ void threadResume(Thread *th) {
 
   if (th->isDeadThread()) return;
 
-  if (th->isRunnable() && !am.isScheduledSlow(th)) {
-    am.scheduleThread(th);
+  if (th->isRunnable() && !am.threadsPool.isScheduledSlow(th)) {
+    am.threadsPool.scheduleThread(th);
   }
 }
 
@@ -1754,7 +1754,7 @@ OZ_BI_define(BIthreadPreempt,1,0)
   if (th->isProxy())
     return oz_raise(E_ERROR,E_SYSTEM,"threadPreempt Proxy not impl",0);
 
-  if (th == am.currentThread()) {
+  if (th == oz_currentThread()) {
     return BI_PREEMPT;
   }
   return PROCEED;
@@ -1794,13 +1794,13 @@ OZ_BI_define(BIthreadCreate,1,0)
     oz_typeError(0,"Nullary Abstraction");
   }
   
-  int prio   = min(am.currentThread()->getPriority(),DEFAULT_PRIORITY);
-  Thread *tt = am.mkRunnableThreadOPT(prio,am.currentBoard());
+  int prio   = min(oz_currentThread()->getPriority(),DEFAULT_PRIORITY);
+  Thread *tt = oz_mkRunnableThreadOPT(prio,oz_currentBoard());
   
   tt->getTaskStackRef()->pushCont(a->getPC(),NULL,a);
   tt->setAbstr(a->getPred());
   
-  am.scheduleThread (tt);
+  am.threadsPool.scheduleThread (tt);
 
   return PROCEED;
 } OZ_BI_end
@@ -1955,11 +1955,11 @@ OZ_Return AM::eqeq(TaggedRef Ain,TaggedRef Bin)
       return PROCEED;
     }
 
-    reduceTrailOnEqEq();
+    oz_reduceTrailOnEqEq();
     return SUSPEND;
   }
 
-  reduceTrailOnFail();
+  oz_reduceTrailOnFail();
   return ret;
 }
 
@@ -3411,7 +3411,7 @@ OZ_BI_define(BIsendPort,2,0)
 OZ_BI_define(BInewLock,0,1)
 {
 
-  OZ_RETURN(makeTaggedConst(new LockLocal(am.currentBoard())));
+  OZ_RETURN(makeTaggedConst(new LockLocal(oz_currentBoard())));
 } OZ_BI_end
 
 
@@ -3430,20 +3430,20 @@ OZ_BI_define(BIlockLock,1,0)
       if (!oz_isCurrentBoard(GETBOARD(ll))) {
 	return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));
       }}
-    ll->lock(am.currentThread());
+    ll->lock(oz_currentThread());
     return PROCEED;}
   if(!oz_onToplevel()){
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}    
     
   switch(t->getTertType()){
   case Te_Manager:{
-    ((LockManager *)t)->lock(am.currentThread());
+    ((LockManager *)t)->lock(oz_currentThread());
     return PROCEED;}
   case Te_Proxy:{
-    ((LockProxy*)t)->lock(am.currentThread());
+    ((LockProxy*)t)->lock(oz_currentThread());
     return PROCEED;}
   case Te_Frame:{
-    ((LockFrame*)t)->lock(am.currentThread());
+    ((LockFrame*)t)->lock(oz_currentThread());
     return PROCEED;}
   default:
     Assert(0);}
@@ -3466,12 +3466,12 @@ OZ_BI_define(BIunlockLock,1,0)
     ((LockLocal*)t)->unlock();
     return PROCEED;}
   case Te_Manager:{
-    ((LockManager*)t)->unlock(am.currentThread());
+    ((LockManager*)t)->unlock(oz_currentThread());
     return PROCEED;}
   case Te_Proxy:{
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}
   case Te_Frame:{
-    ((LockFrame*)t)->unlock(am.currentThread());
+    ((LockFrame*)t)->unlock(oz_currentThread());
     return PROCEED;}
   }
   Assert(0);
@@ -3574,7 +3574,7 @@ OZ_BI_define(BIarrayNew,3,1)
   oz_declareIntIN(1,ihigh);
   oz_declareIN(2,initValue);
 
-  OZ_RETURN(makeTaggedConst(new OzArray(am.currentBoard(),
+  OZ_RETURN(makeTaggedConst(new OzArray(oz_currentBoard(),
 					ilow,ihigh,initValue)));
 } OZ_BI_end
 
@@ -3761,7 +3761,7 @@ bomb:
 
 OZ_BI_define(BIdictionaryNew,0,1)
 {
-  OZ_RETURN(makeTaggedConst(new OzDictionary(am.currentBoard())));
+  OZ_RETURN(makeTaggedConst(new OzDictionary(oz_currentBoard())));
 } OZ_BI_end
 
 OZ_BI_define(BIdictionaryKeys,1,1)
@@ -3800,7 +3800,7 @@ OZ_BI_define(BIdictionaryClone,1,1)
 {
   oz_declareDictionaryIN(0,dict);
 
-  OZ_RETURN(dict->clone(am.currentBoard()));
+  OZ_RETURN(dict->clone(oz_currentBoard()));
 } OZ_BI_end
 
 
@@ -4105,7 +4105,11 @@ OZ_BI_define(BIstatisticsGetProcs, 0,1)
 OZ_BI_define(BIsetProfileMode, 1,0)
 {
   oz_declareIN(0,onoff);
-  am.setProfileMode(literalEq(oz_deref(onoff),NameTrue));
+  if (literalEq(oz_deref(onoff),NameTrue)) {
+    am.setProfileMode();
+  } else {
+    am.unsetProfileMode();
+  }
   return PROCEED;
 } OZ_BI_end
 
@@ -4692,7 +4696,7 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
   COUNT1(sizeRecords,-sizeOf(feat)-sizeOf(st));
   OzLock *lck=NULL;
   if (cla->supportsLocking()) {
-    lck = new LockLocal(am.currentBoard());
+    lck = new LockLocal(oz_currentBoard());
     COUNT1(sizeObjects,sizeof(LockLocal));
   }
   return new Object(b,st,cla,feat,lck);
@@ -4721,7 +4725,7 @@ OZ_BI_define(BImakeClass,6,1)
 				    tagged2Dictionary(defmethods),
 				    literalEq(locking,NameTrue),
 				    literalEq(native,NameTrue),
-				    am.currentBoard());
+				    oz_currentBoard());
 
   OZ_RETURN(makeTaggedConst(cl));
 } OZ_BI_end
@@ -4839,7 +4843,7 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
     newObject(oz_isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : (SRecord*) NULL,
 	      tagged2SRecord(initState),
 	      clas,
-	      am.currentBoard());
+	      oz_currentBoard());
   
   return makeTaggedConst(out);
 }
