@@ -441,7 +441,7 @@ the file format.
 <<<
 declare
 fun {Fact N}
-   if N=<1 then 1 else X*{Fact N-1} end
+   if N=<1 then 1 else N*{Fact N-1} end
 end
 
 {Pickle.save Fact "~pvr/public_html/fact"}
@@ -482,18 +482,44 @@ declare
 R={New Remote.manager init(host:"sinuhe.sics.se")}
 >>>
 
-<P> Let's make the process do some work:
+<P> Let's make the process do some work.
+We define a functor that does the work
+when we evaluate it:
 <<<
-declare F X in
-F=functor define X={Fact 30} end
+declare F M
+F=functor export x:X define X={Fact 30} end 
 
-{R apply(name:"" F)}  % Do the calculation remotely
+M={R apply(url:'./' F $)}  % Do the calculation remotely
 
-{Browse X}            % See the answer
+{Browse M.x}               % See the answer
 >>>
 
-<P> If the remote computation needs resources,
-you have to specify the base URL for the resources.
+<SUBSECTION><TITLE>Remote computations and functors</TITLE>
+
+<P> A better solution than the one given
+in the previous section is for the functor
+to make a compute server on the remote site.
+This completely <EM>separates</EM> the distribution aspect
+(setting up the remote site to do the right thing)
+from the computation(s) that we want to do.
+We give this solution later in the tutorial.
+
+<P> Another solution is to use a functor with
+an external reference:
+<<<
+declare F M
+F=functor define X={Fact 30} end
+
+M={R apply(url:'./' F $)}
+{Browse X}
+>>>
+
+<P> This functor is not stateless,
+but it's all right since we are not pickling the functor.
+In fact, it's quite possible for
+functors to have external references.
+We discuss this later when we
+talk about computed functors.
 
 <SECTION><TITLE>Servers</TITLE>
 
