@@ -39,9 +39,6 @@
 #include "cpi_heap.hh"
 #include "var_base.hh"
 
-// exports
-Propagator * oz_mkPropagator(Board *bb, OZ_Propagator *pro);
-
 inline
 Propagator * oz_newPropagator(OZ_Propagator * p)
 {
