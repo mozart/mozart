@@ -167,12 +167,14 @@ See <file /getcwd(3)/.
 <item>
 Returns a record describing the status of the file ?_{PathV}.
 <p>
-?_{StatR} has features <<size>> and <<type>>. The
+?_{StatR} has features <<size>>, <<type>>, and <<mtime>>. The
 subtree at the feature <<size>> is an integer that gives the size of
 the file ?_{PathV}. The subtree at the feature <<type>> is one of the
 following atoms: <<reg>> (regular file), <<dir>> (directory), <<chr>>
 (character special file), <<blk>> (block special file), <<fifo>> (pipe
-or FIFO special file), <<unknown>> (something else).
+or FIFO special file), <<unknown>> (something else).  <<mtime>> is the
+time of last modification measured in seconds since the dawn of the
+world, which, as we all know, was January 1, 1970.
 <p>
 See <file /stat(2)/.
 </list>
