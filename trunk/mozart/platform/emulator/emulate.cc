@@ -2900,7 +2900,6 @@ LBLdispatcher:
       Thread *tt = e->mkRunnableThreadOPT(prio, CBB);
 
       COUNT(numThreads);
-      ozstat.createdThreads.incf();
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
 
       tt->getTaskStackRef()->pushCont(newPC,newY,G);
@@ -2927,7 +2926,6 @@ LBLdispatcher:
       Thread *tt = e->mkRunnableThreadOPT(prio, CBB);
 
       COUNT(numThreads);
-      ozstat.createdThreads.incf();
 
       tt->getTaskStackRef()->pushCont(newPC,0,G);
       tt->getTaskStackRef()->pushX(X,n);
