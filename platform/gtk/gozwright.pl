@@ -247,7 +247,7 @@ sub c_name_to_oz_variable($) {
     my @substrings;
     my $string;
 
-    $name =~ s/^ozgtk_//s;
+    $name =~ s/^ozg[dt]k_//s;
     @substrings = split /_/, $name;
     foreach $string (@substrings) {
         $string = ucfirst $string;
