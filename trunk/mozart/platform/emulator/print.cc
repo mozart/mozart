@@ -340,7 +340,6 @@ PRINT(SRecord)
   case R_BUILTIN:
     ((Builtin *) this)->print(stream,depth,offset);
     break;
-  case R_CHUNK:
   case R_RECORD:
     tagged2Stream(getLabel(),stream,depth,offset);
     break;
@@ -1178,9 +1177,7 @@ PRINTLONG(SRecord)
   case R_BUILTIN:
     ((Builtin *) this)->printLong(stream,depth,offset);
     break;
-  case R_CHUNK:
-    stream << "Chunk @" << this << ":\n";
-    break;
+
   case R_RECORD:
     stream << "Record @"
 	   << this << ":\n"
