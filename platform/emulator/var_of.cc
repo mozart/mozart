@@ -114,7 +114,8 @@ dt_index DynamicTable::fullhash(TaggedRef id, Bool *valid) {
     // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
     // Theorem: semi-quadratic probing is covering in size steps (proof: PVR+JN)
     Bool notvalid;
-    while((notvalid=(table[i].ident!=makeTaggedNULL() && table[i].ident!=id))
+    while((notvalid=(table[i].ident!=makeTaggedNULL() &&
+                     !featureEq(table[i].ident,id)))
            && s!=0) {
         i+=s;
         i&=size1;
@@ -161,7 +162,9 @@ TaggedRef DynamicTable::lookup(TaggedRef id) {
     Bool valid;
     dt_index i=fullhash(id,&valid);
     Assert(!valid || i<size);
-    if (valid && table[i].ident==id && table[i].value!=makeTaggedNULL()) {
+    if (valid &&
+        table[i].value!=makeTaggedNULL() &&
+        featureEq(table[i].ident,id)) {
         // Val is found
         return table[i].value;
     } else {
@@ -739,7 +742,7 @@ GenOFSVariable* tagged2GenOFSVar(TaggedRef term)
 }
 
 /*
- * inplace quicksort using atomcmp
+ * inplace quicksort using featureCmp
  */
 
 // Swap TaggedRef array elements:
@@ -757,14 +760,14 @@ void inplace_quicksort(TaggedRef* first, TaggedRef* last) {
   if (first >= last)
     return;
   for (i = first, j = last; ; j--) {
-    while (i != j && atomcmp(*i, *j) <= 0)
+    while (i != j && featureCmp(*i, *j) <= 0)
       j--;
     if (i == j)
       break;
     inplace_swap(i, j);
     do
       i++;
-    while (i != j && atomcmp(*i, *j) <= 0);
+    while (i != j && featureCmp(*i, *j) <= 0);
     if (i == j)
       break;
     inplace_swap(i, j);
