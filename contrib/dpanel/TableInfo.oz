@@ -203,7 +203,7 @@ define
 	     Data = self.table.K
 	     Us = self.usedCounter.K
 	  in
-	     {self.guiSites update(K Data.index#'   '#Data.type#' used:'#Us)}
+	     {self.guiSites updateEntry(K Data.index#'   '#Data.type#' used:'#Us)}
 	  end}
 	 
 	 
