@@ -24,7 +24,7 @@ HTMLSUPPORTFILES = \
 
 .PHONY: all bootstrap quick validate verify install clean veryclean distclean
 
-all: Makefile ../Makefile.common $(WHAT)-html/index.html
+all:: Makefile ../Makefile.common $(WHAT)-html/index.html
 
 include $(SRCTOP)/share/Makefile.boot
 
@@ -54,7 +54,7 @@ $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
 	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(TEXEXTRAFILES)) NONE; \
 	do { test $$i = NONE || cp -p $$i $(WHAT)-tex; } done
 
-quick: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
 	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
 	--type=html-stylesheets --stylesheet=ozdoc.css --keeppictures \
 	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
@@ -71,13 +71,13 @@ verify: $(MAIN)
 validate: $(WHAT)-html/index.html
 	nsgmls -cHTML4.soc -sB $(WHAT)-html/*.html
 
-install: $(WHAT)-html/index.html $(DOCDIR)
+install:: $(WHAT)-html/index.html $(DOCDIR)
 	for i in $(WHAT)-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
 
 $(DOCDIR):
 	$(INSTALL_DIR) $@
 
-clean:
+clean::
 	-rm -rf $(WHAT)-html $(WHAT)-tex *~
 
 veryclean: clean
