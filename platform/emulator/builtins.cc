@@ -5298,6 +5298,7 @@ OZ_C_proc_begin(BIprintVS,1)
 {
   OZ_Term t=OZ_getCArg(0);
   OZ_printVirtualString(t);
+  fflush(stdout);
   return PROCEED;
 }
 OZ_C_proc_end
