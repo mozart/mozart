@@ -76,13 +76,25 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     vst[i] = vs[i];
   }
 
-  OZ_Boolean doagain;
+  // treatment of equal variables
+  int * is = OZ_findEqualVars(_vs_size, _vs);
+  for (i= _vs_size; i--; ) {
+    int j = is[i];
+    if (j >= 0 &&  // is a variable
+        j < i  &&  // occured previously at j
+        is[j] >= 0 // has not been tagged yet
+        )
+      {
+        is[j] = -2;
+        FailOnInvalid(*vs[j] <= fs_empty);
+      }
+  }
 
+  OZ_Boolean doagain;
   do {
     doagain = OZ_FALSE;
 
     OZ_FSetValue u = _u;
-
     for (i = _vs_size; i--; ) {
       OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
 
@@ -106,12 +118,18 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
       } // for
     }
   } while (doagain);
-
+  //
   {
+    int is_entailed = 1;
     int j = 0;
+    OZ_FSetValue union_ub(fs_empty);
 
     for (i = 0; i < _vs_size; i += 1) {
-
+      if (is_entailed) {
+        OZ_FSetValue ub(vs[i]->getLubSet());
+        is_entailed = ((union_ub & ub).getCard() == 0);
+        union_ub |= ub;
+      }
       if (vs[i]->isValue()) {
         _u |= vs[i]->getGlbSet();
         continue;
@@ -120,12 +138,10 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
       j += 1;
     }
     _vs_size = j;
-
+    //
+    _OZ_DEBUGPRINTTHIS("out ");
+    return is_entailed ? P.vanish() : P.leave();
   }
-
-  _OZ_DEBUGPRINTTHIS("out ");
-  return P.leave();
-
  failure:
   _OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
