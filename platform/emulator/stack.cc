@@ -25,7 +25,7 @@ void Stack::reallocate(int newsize)
 
   allocate(newsize);
 
-  for (int i=0; i < oldsize; i++) {
+  for (int i=oldsize; i--; ) {
     array[i] = savearray[i];
   }
   
