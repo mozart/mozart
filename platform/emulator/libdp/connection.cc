@@ -215,15 +215,18 @@ OZ_BI_define(BIhandover,3,0){
       if(ret!=OZ_ENTAILED)
         return ret;
 
-      // Using the site from comObj here might not work since comObj might
-      // be corrupted if not in use and deleted! AN!
-      DSite *site=comObj->getSite();
-      if(site==NULL) // this comObj has been reused for accept or unused
+      // The comObj might be returned and not used which is checked with valid,
+      // or it may be reused which is checked by comparing the sites.
+      if(comController->valid(comObj)) {
+        DSite *site=comObj->getSite();
+        if(site==NULL) // this comObj has been reused for accept
+          return OZ_ENTAILED;
+        else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site
+          return OZ_ENTAILED;
+        // The right one! Go ahead
+      }
+      else
         return OZ_ENTAILED;
-      else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site
-                                                   // or unused
-        {//printf("cmp %d %s %s\n",strcmp(site->stringrep(),siteid),site->stringrep(),siteid);
-          return OZ_ENTAILED;}
     }
 
     TransObj *transObj=(TransObj *) OZ_intToC(t);
@@ -282,10 +285,18 @@ OZ_BI_define(BIconnFailed,2,0) {
   ret=parseRequestor(requestor,comObj,siteid);
   if(ret!=OZ_ENTAILED)
     return ret;
-  site=comObj->getSite();
-  if(site==NULL) // this comObj has been reused for accept
-    return OZ_ENTAILED;
-  else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site
+
+  // The comObj might be returned and not used which is checked with valid,
+  // or it may be reused which is checked by comparing the sites.
+  if(comController->valid(comObj)) {
+    site=comObj->getSite();
+    if(site==NULL) // this comObj has been reused for accept
+      return OZ_ENTAILED;
+    else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site
+      return OZ_ENTAILED;
+    // The right one! Go ahead
+  }
+  else
     return OZ_ENTAILED;
 
   if(oz_eq(reason,oz_atom("perm"))) {

@@ -179,7 +179,7 @@ void comController_acceptHandler(TransObj *);
 
 class ComController: public FreeListManager {
 private:
-  ComObj *list; // To be divided in open, closed and closedRemote
+  ComObj *list;
 
 public:
   ComController():FreeListManager(ComObj_CUTOFF) {
@@ -196,8 +196,7 @@ public:
   void gcComObjs();
   void finishGCComObjs();
   int closeDownCount();
-private:
-  Bool inList(ComObj *list,ComObj *testObj);
+  Bool valid(ComObj *testObj);
 };
 
 extern ComController *comController;

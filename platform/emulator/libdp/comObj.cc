@@ -1095,6 +1095,16 @@ int ComController::closeDownCount() {
   return count;
 }
 
+Bool ComController::valid(ComObj *testObj) {
+  ComObj *tmp=list;
+  while(tmp!=NULL) {
+    if(tmp==testObj)
+      return TRUE;
+    tmp=tmp->next;
+  }
+  return FALSE;
+}
+
 ComObj *ComController::newComObj(DSite *site){
   FreeListEntry *f=getOne();
   ComObj *comObj;
