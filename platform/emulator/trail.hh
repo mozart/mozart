@@ -101,4 +101,7 @@ public:
 
 };
 
+extern Trail trail;
+
+
 #endif
