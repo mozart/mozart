@@ -140,7 +140,7 @@
 	in the current working directory.  These will be named after your
 	<<scanner>> specification.  Suppose your scanner was called&nbsp;<<S>>,
 	then you will find files <File/S.l/, <File/S.C/, <File/S.o/ and
-	<File/S.dl/.  The first three are intermediate results (respectively
+	<File/S.so/.  The first three are intermediate results (respectively
 	the input file for &flex;, the &flex;-generated C++&nbsp;file and
 	the object code produced by the C++&nbsp;compiler) and the last one is
 	the resulting dynamic library used by the generated scanner, loaded
