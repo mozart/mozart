@@ -1310,21 +1310,7 @@ $cmode='stat';
 
 
 
-    ######
-    ###### TO EXPIRE
-    ######
-    ###* Foreign Pointers
-
-    'setDefaultExceptionHandler'=> { in  => ['+procedure/1'],
-				     out => [],
-				     BI  => BIsetDefaultExceptionHandler,
-				     native => true},
-
-    'getDefaultExceptionHandler'=> { in  => [],
-				     out => ['+procedure/1'],
-				     BI  => BIgetDefaultExceptionHandler,
-				     native => true},
-
+ 
     ##* Browser Support
 
     'getsBoundB'	=> { in  => ['value','value'],
