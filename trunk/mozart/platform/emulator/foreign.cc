@@ -1021,9 +1021,6 @@ OZ_Thread OZ_makeThread(OZ_Bool (*fun)(int,OZ_Term[]),
   printf("\n");
 #endif
 
-#ifndef NEWCOUNTER
-  am.currentBoard->incSuspCount();
-#endif
   /* create a CFuncContinuation */
   return (OZ_Thread)
     new Thread (am.currentBoard,
