@@ -931,8 +931,11 @@ void disposeRefsArray(RefsArray a)
 inline
 RefsArray allocateY(int n)
 {
+  COUNT(numEnvAllocs);
+
   int sz = (n+1) * sizeof(TaggedRef);
   COUNT1(sizeEnvs,sz);
+  CountMax(maxEnvSize,sz);
   RefsArray a = (RefsArray) freeListMalloc(sz);
   a += 1;
   initRefsArray(a,n,OK);

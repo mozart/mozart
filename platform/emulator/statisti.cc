@@ -225,11 +225,10 @@ void Statistics::initCount() {
   freeListDisposed = 0;
   totalAllocated = 0;
   varVarUnify = recRecUnify = totalUnify = 0;
-  applBuiltin = applProc =0;
   maxStackDepth = 0;
   maxEnvSize = 0;
-  numClosures = 0;
-  sizeStackVars = sizeEnvs = 0;
+  sizeClosures = numClosures = sizeGs = 0;
+  sizeStackVars = sizeEnvs = numEnvAllocs = 0;
   numDerefs = longestDeref = 0;
   for(int i=0; i<=maxDerefLength; i++) {
     lengthDerefs[i] = 0;
@@ -237,6 +236,8 @@ void Statistics::initCount() {
 
   fastcalls=bicalls=nonoptcalls=inlinecalls=inlinedots=sendmsg=applmeth=0;
   nonoptbicalls=nonoptsendmsg=0;
+  numNewName=numNewNamedName=0;
+  numThreads=0;
 }
 
 #include "ofgenvar.hh"
@@ -244,8 +245,11 @@ void Statistics::initCount() {
 #define PrintVar(Var) \
   printf("%20s:          %8d\n",OZStringify(Var),Var)
 
+#define PrintFloat(Var) \
+  printf("%20s:          %8.2f\n",OZStringify(Var),Var)
+
 #define PrintVarPercent(Var,Total) \
-  printf("%15s:          %8d (%4.1f%%)\n",OZStringify(Var),Var,((double)Var*100.0)/(double)Total)
+  printf("%20s:          %8d (%5.2f%%)\n",OZStringify(Var),Var,((double)Var*100.0)/(double)Total)
 
 void Statistics::printCount() {
   printf("Heap after last GC:\n\n");
@@ -303,16 +307,31 @@ void Statistics::printCount() {
   PrintVar(freeListAllocated);
   PrintVar(freeListDisposed);
   PrintVar(totalAllocated);
-  PrintVar(varVarUnify);
-  PrintVar(recRecUnify);
   PrintVar(totalUnify);
-  PrintVar(applBuiltin);
-  PrintVar(applProc);
+  PrintVarPercent(varVarUnify,totalUnify);
+  PrintVarPercent(recRecUnify,totalUnify);
   PrintVar(maxStackDepth);
   PrintVar(maxEnvSize);
+
+  int szAbstr = sizeof(Abstraction);
+  int sztr = sizeof(TaggedRef);
+  double avrgNumGs = sizeGs / (double) numClosures;
   PrintVar(numClosures);
-  PrintVar(sizeStackVars);
+  PrintVarPercent(sizeClosures,totalAllocated);
+  PrintVar(szAbstr);
+  PrintFloat(avrgNumGs);
+
+  PrintVarPercent(sizeStackVars,totalAllocated);
+
+  double avrgEnvSize = ((double) sizeEnvs) / (double) numEnvAllocs;
   PrintVar(sizeEnvs);
+  PrintVar(numEnvAllocs);
+  PrintFloat(avrgEnvSize);
+
+  PrintVar(numNewName);
+  PrintVar(numNewNamedName);
+  PrintVar(numThreads);
+
   printDeref();
 
   int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls
@@ -329,18 +348,26 @@ void Statistics::printCount() {
   PrintVarPercent(nonoptcalls,totCalls);
   PrintVar(nonoptbicalls);
   PrintVar(nonoptsendmsg);
+
+  int userCalls = fastcalls+sendmsg+nonoptcalls-nonoptbicalls;
+  int envsPerUserCall = numEnvAllocs;
+  printf("\n");
+  PrintVar(userCalls);
+  PrintVarPercent(envsPerUserCall,userCalls);
 }
 
 
 void Statistics::printDeref()
 {
+  printf("\n");
   PrintVar(numDerefs);
   PrintVar(longestDeref);
-  for(int i=0; i<maxDerefLength; i++) {
-    if (lengthDerefs[i])
-      printf("lengthDerefs[%d]=%d\n",i,lengthDerefs[i]);
+  for(int i=0; i<=maxDerefLength; i++) {
+    if (lengthDerefs[i] || i==maxDerefLength)
+      printf("\tlengthDerefs[%s%d]=%9d (%4.2f%%)\n",
+             i==maxDerefLength ? ">=" : "",
+             i,lengthDerefs[i],((double)lengthDerefs[i]*100)/(double)numDerefs);
   }
-  printf("lengthDerefs[>=%d]=%d\n",maxDerefLength,lengthDerefs[maxDerefLength]);
 }
 
 void Statistics::derefChain(int n)

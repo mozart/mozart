@@ -2216,6 +2216,10 @@ LBLdispatcher:
 
       Abstraction *p = new Abstraction (predd, gRegs, CBB);
 
+      COUNT1(sizeClosures,sizeof(Abstraction)+(size+1)*sizeof(TaggedRef));
+      COUNT(numClosures);
+      COUNT1(sizeGs,size);
+
       if (predEntry) {
         predEntry->setPred(p);
       }
@@ -2296,7 +2300,6 @@ LBLdispatcher:
 
  SendMethod:
   {
-    COUNT(sendmsg);
     TaggedRef label    = getLiteralArg(PC+1);
     TaggedRef origObj  = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object   = origObj;
@@ -2314,6 +2317,7 @@ LBLdispatcher:
         goto bombSend;
       }
 
+      COUNT(sendmsg);
       if (!isTailCall) CallPushCont(PC+6);
       ChangeSelf(obj);
       CallDoChecks(def,def->getGRegs());
@@ -2782,6 +2786,7 @@ LBLdispatcher:
 
       Thread *tt = e->mkRunnableThread(prio, CBB);
 
+      COUNT(numThreads);
       ozstat.createdThreads.incf();
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
 
