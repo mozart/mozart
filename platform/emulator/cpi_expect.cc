@@ -257,6 +257,8 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 	return r;
     }
     return expectProceed(1, 1);
+  } else if (oz_isNil(descr) && (level == 3)) {
+    return expectProceed(1, 1);
   } else if (isLTupleTag(descr_tag) && (level == 3)) {
     
     do {
@@ -368,60 +370,11 @@ OZ_expect_t OZ_Expect::expectFloat(OZ_Term t)
 //*****************************************************************************
 
 //-----------------------------------------------------------------------------
-// An OZ term describing a finite set is either:
-// (1) a positive small integer <= FS.sup
-// (2) a 2 tuple of (1)
-// (3) a possibly empty list of (1) and/or (2)
+// An OZ term describing a finite set is the same as for a finite domain
 
-OZ_expect_t OZ_Expect::_expectFSetDescr(OZ_Term descr, int level)
+OZ_expect_t OZ_Expect::expectFSetDescr(OZ_Term descr, int level)
 {
-  DEREF(descr, descr_ptr, descr_tag);
-  
-  if (isPosSmallSetInt(descr) && (level == 1 || level == 2)) { // (1)
-    return expectProceed(1, 1);
-  } else if (isGenFDVar(descr, descr_tag) && (level == 1 || level == 2)) {
-    addSuspend(fd_prop_singl, descr_ptr);
-    return expectSuspend(1, 0);
-  } else if (isGenBoolVar(descr, descr_tag) && (level == 1 || level == 2)) {
-    addSuspend(descr_ptr);
-    return expectSuspend(1, 0);
-  } else if (oz_isSTuple(descr) && (level == 2)) {
-    SRecord &tuple = *tagged2SRecord(descr);
-    if (tuple.getWidth() != 2) 
-      return expectFail();  
-    for (int i = 0; i < 2; i++) {
-      //mm2: use tagged2Ref
-      OZ_expect_t r = expectDomDescr(makeTaggedRef(&tuple[i]), 1);
-      if (isSuspending(r) || isFailing(r) || isExceptional(r))
-	return r;
-    }
-    return expectProceed(1, 1);
-  } else if (oz_isNil(descr) && (level == 3)) {
-    return expectProceed(1, 1);
-  } else if (isLTupleTag(descr_tag) && (level == 3)) {
-    
-    do {
-      LTuple &list = *tagged2LTuple(descr);
-      //mm2: use tagged2Ref
-      OZ_expect_t r = expectDomDescr(makeTaggedRef(list.getRefHead()), 2);
-      if (isSuspending(r) || isFailing(r) || isExceptional(r))
-	return r;
-      //mm2: use tagged2Ref
-      descr = makeTaggedRef(list.getRefTail());
-      
-      __DEREF(descr, descr_ptr, descr_tag);
-    } while (isLTupleTag(descr_tag));
-    
-    if (oz_isNil(descr)) return expectProceed(1, 1);
-    return expectDomDescr(makeTaggedRef(descr_ptr), 0);
-  } else if (oz_isFree(descr) || oz_isKinded(descr)) {
-    addSuspend(descr_ptr);
-    return expectSuspend(1, 0);
-  } else if (oz_isNonKinded(descr)) {
-    addSuspend(descr_ptr);
-    return expectExceptional();
-  }
-  return expectFail();  
+  return expectDomDescr(descr, level);
 }
 
 OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
