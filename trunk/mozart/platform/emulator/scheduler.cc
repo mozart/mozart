@@ -212,6 +212,7 @@ LBLpreemption:
   e->unsetCurrentThread();
   goto LBLstart;
 
+
   /* -----------------------------------------------------------------------
    * An error occured
    * ----------------------------------------------------------------------- */
@@ -629,14 +630,12 @@ LBLraise:
       }
     }
     // else
-    RefsArray argsArray = allocateRefsArray(1,NO);
-    argsArray[0] = e->exception.value;
     if (e->defaultExceptionHdl) {
-      CTT->pushCall(e->defaultExceptionHdl,argsArray,1);
+      CTT->pushCall(e->defaultExceptionHdl,e->exception.value);
     } else {
       if (!am.isStandalone()) 
 	printf("\021");
-      printf("Exception raise:\n   %s\n",toC(argsArray[0]));
+      printf("Exception raise:\n   %s\n",toC(e->exception.value));
       fflush(stdout);
     }
     goto LBLrunThread; // changed from LBLpopTaskNoPreempt; -BL 26.3.97
