@@ -645,7 +645,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
   struct timeval timeoutstruct, *timeoutptr;
   unsigned int currentSystemTime;
 
-  if (ptimeout == WAIT_NULL) {
+  if (ptimeout == (unsigned int*) WAIT_NULL) {
     timeoutstruct.tv_sec = 0;
     timeoutstruct.tv_usec = 0;
     timeoutptr = &timeoutstruct;
@@ -672,7 +672,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
   int ret = select(openMax,readfds,writefds,NULL,timeoutptr);
 #endif
 
-  if (ptimeout != WAIT_NULL) {
+  if (ptimeout != (unsigned int*) WAIT_NULL) {
     // kost@ : Note that effectively the time spent in wait
     // may be greater than specified;
     *ptimeout = (int) (osTotalTime() - currentSystemTime);
@@ -930,7 +930,8 @@ int osFirstSelect()
   tmpFDs[SEL_READ]  = globalFDs[SEL_READ];
   tmpFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 
-  int numbOfFDs = osSelect(&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE],WAIT_NULL);
+  int numbOfFDs = osSelect(&tmpFDs[SEL_READ], &tmpFDs[SEL_WRITE],
+                           (unsigned int *) WAIT_NULL);
 
   if (numbOfFDs < 0) {
     if (ossockerrno() == EINTR) {
@@ -970,7 +971,8 @@ int osCheckIO()
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 
-  int numbOfFDs = osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],WAIT_NULL);
+  int numbOfFDs = osSelect(&copyFDs[SEL_READ], &copyFDs[SEL_WRITE],
+                           (unsigned int *) WAIT_NULL);
   if (numbOfFDs < 0) {
     if (ossockerrno() == EINTR) goto loop;
     if (ossockerrno() != EBADF) { /* some pipes may have been closed */
