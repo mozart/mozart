@@ -19,6 +19,61 @@
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
 
+local
+   Timeout = 15 % ms
+in
+   class Smoother
+      prop
+	 locking
+      attr
+	 QueueSync : _
+	 MsgList   : nil
+	 MsgListTl : nil
+      meth tk(...)=M
+	 Smoother,Enqueue(o(self d(M)))
+      end
+      meth Enqueue(Ticklet)
+	 lock
+	    case Ticklet
+	    of nil  then skip
+	    [] T|Tr then
+	       Smoother,Enqueue(T)
+	       Smoother,Enqueue(Tr)
+	    else NewTl in
+	       if {IsDet @MsgListTl} then
+		  MsgList <- Ticklet|NewTl
+	       else
+		  @MsgListTl = Ticklet|NewTl
+	       end
+	       MsgListTl <- NewTl
+	       Smoother,ClearQueue
+	    end
+	 end
+      end
+      meth ClearQueue
+	 New in
+	 QueueSync <- New = unit
+	 thread
+	    {WaitOr New {Alarm Timeout}}
+	    if {IsDet New} then skip else
+	       Smoother,DoClearQueue
+	    end
+	 end
+      end
+      meth DoClearQueue
+	 lock
+	    @MsgListTl = nil
+	    try
+	       {Tk.batch @MsgList}
+	    catch _ then  %% maybe the window has been closed already?
+	       skip
+	    end
+	    MsgList <- nil
+	 end
+      end
+   end
+end
+
 class TitleFrame from Tk.frame
    feat Label
    meth tkInit(title:T<=unit ...)=M
@@ -40,7 +95,7 @@ class TitleFrame from Tk.frame
    end
 end
 
-class ScrolledTitleCanvas from Tk.canvas TkTools.smoother
+class ScrolledTitleCanvas from Tk.canvas Smoother
    feat
       frame
    meth tkInit(parent:P title:T ...)=M
@@ -63,7 +118,7 @@ class ScrolledTitleCanvas from Tk.canvas TkTools.smoother
    end
 end
 
-class ScrolledTitleText from Tk.text TkTools.smoother
+class ScrolledTitleText from Tk.text Smoother
    feat
       frame TagBase
    attr
@@ -104,7 +159,7 @@ class ScrolledTitleText from Tk.text TkTools.smoother
    end
 end
 
-class StatusDisplay from Tk.text TkTools.smoother
+class StatusDisplay from Tk.text Smoother
    meth replace(Message Color<=unit)
       StatusDisplay,DoIt(Message true Color)
    end
