@@ -31,25 +31,22 @@ dnl INITIALIZE
 dnl *****************************************************************
 
 dnl This will check that we are in the Oz directory and initiate
-AC_INIT(Emulator/oz.h)
+AC_INIT(OZVERSION)
 
-AC_CANONICAL_HOST
-
-#AC_PREFIX_DEFAULT(${oz_default_prefix=/usr/local})
-if test -n "${oz_default_prefix}" && test -d $oz_default_prefix
-then
-  ac_default_prefix=$oz_default_prefix
-fi
+OZ_INIT
 
 AC_PROG_INSTALL
 
-topdira=`(cd $TOPDIR; pwd)`
-oz_path=$PATH:$topdira/bin:$topdira:$prefix/bin
-#AC_PATH_PROG(PLATFORMSCRIPT, ozplatform,   true, $oz_path)
-#AC_PATH_PROG(DYNLD,          ozdynld,      true, $oz_path)
-AC_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs,true, $oz_path)
+#OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+#OZ_PATH_PROG(DYNLD,          ozdynld)
+OZ_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs)
 
-#not yet
-#AC_CONFIG_SUBDIRS(Emulator lib bin elisp)
+AC_CONFIG_SUBDIRS(bin elisp ozwish Emulator lib)
 
 AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))
