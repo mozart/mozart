@@ -174,8 +174,9 @@
 		  <Var type=env/PATH/, this is used.
 	    </List>
       <Section>
-	<Title/Invoking the &OPI; Under <Span class=index/Windows//
+	<Title/Invoking the &OPI; Under Windows/
 	  <P>
+	    <Index/Windows/
 	    <!--** add a reference to the installation manual -->
 	    The installation procedure will have created a <Span class=index
 	    /program group/ for the Mozart system.  The &OPI; is started
@@ -578,7 +579,7 @@
       <Para class=apropos><Title/Emulator and Compiler/
 	<Index/emulator<And>buffer/<Index/buffer<And>emulator/
 	<Index/compiler<And>buffer/<Index/buffer<And>compiler/
-	<Index/temporary<And>buffer/<Index/buffer<And>temporary/
+	<Index/temporary buffer/<Index/buffer<And>temporary/
 	The output of the process is redirected into an Emacs buffer called
 	<Name type=buffer/*Oz Emulator*/.  Additionally, the <File/OPI.ozf/
 	program instantiates an Oz compiler and attaches its input and
@@ -657,7 +658,7 @@
 	<P>
 	  <Index/emulator<And>buffer/<Index/buffer<And>emulator/
 	  <Index/compiler<And>buffer/<Index/buffer<And>compiler/
-	  <Index/temporary<And>buffer/<Index/buffer<And>temporary/
+	  <Index/temporary buffer/<Index/buffer<And>temporary/
 	  Several commands make inspecting the Oz Emulator and Oz Compiler
 	  buffers easier.
 	  <List>
@@ -789,8 +790,8 @@
 	  <Para class=apropos><Title/Error Coordinates/
 	    Where available, <Def/error coordinates/ are associated with
 	    error messages, consisting of the <Span class=index/file name/
-	    (or <Span class=index/buffer name/) and <Index/line<And
-	    >number/line number of the corresponding Oz source code.
+	    (or <Span class=index/buffer name/) and <Span class=index
+	    /line number/ of the corresponding Oz source code.
 	    <List>
 	      <Entry class=useroption><Span class=index/<<oz-popup-on-error>>/
 		(default: <<t>>)
