@@ -58,7 +58,7 @@ BENCH = $(FBENCH:%=./bench/%.ozf)
 DP1= \
 	url mini maxi equality table port cell cellAndLock variable object \
         objectAndLock injectors watchers basicfault fault_state \
-	parallel-search
+	parallel-search variable2
 
 DP2=
 DP=	$(DP1:%=./dp/%.ozf) $(DP2:%=./dp/%.ozf)
@@ -199,3 +199,4 @@ gump-examples:
 	$(OZTOOL) ld $< -o $@
 %.o: %.cc
 	$(OZTOOL) c++ -I$(SRCTOP)/platform/emulator -c $< -o $@
+
