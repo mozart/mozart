@@ -66,7 +66,7 @@ void ComObj::init(DSite *site) {
   retryTimeout=ozconf.perdioTempRetryFloor;
 
   nosm=norm=0;
-
+  connectVar=0;
   queues.init();
 }
 
@@ -278,6 +278,7 @@ void ComObj::close(CState statetobe,Bool merging) {
           (statetobe==CLOSED || statetobe==CLOSED_PROBLEM))
     // No transObj but yet expecting one => cancel
     comObjDone(this);
+  Assert(connectVar==0);
   queues.clear5();
 
   switch(statetobe) {
@@ -775,7 +776,7 @@ void ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
   case CLOSING_WF_DISCONNECT:
     goto adopt_anon;
   default:
-    printf("PROBLEM (state %d %d)\n",old->state,state);
+    DebugCode(printf("PROBLEM (state %d %d)\n",old->state,state);)
     Assert(0);
     return;
   }
@@ -916,9 +917,9 @@ void ComObj::connectionLost() {
     break;
   case CLOSING_WF_DISCONNECT: // Now the connection was closed as expected.
     close(CLOSED_WF_REMOTE);
-//      PD((TCPCACHE,"Closed remote, setting timer"));
-//      timers->setTimer(reopentimer,WF_REMOTE_TIMEOUT,
-//                   comObj_reopen,(void *) this);
+    PD((TCPCACHE,"Closed remote, setting timer"));
+    timers->setTimer(reopentimer,WF_REMOTE_TIMEOUT,
+                     comObj_reopen,(void *) this);
     break;
   case CLOSED: // We accepted gc initiated by him
     close(CLOSED);
@@ -1120,6 +1121,7 @@ void ComController::deleteComObj(ComObj* comObj){
   PD((TCPCACHE,"ComObj being deleted %x",comObj));
   //  printf("dl %x\n",(int) comObj);
   comObj->shutDown();
+  Assert(comObj->connectVar==0);
 
   FreeListEntry *f;
   --wc;

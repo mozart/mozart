@@ -41,6 +41,7 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board*);
 // Order from comObj to connect.
 
 void doConnect(ComObj *comObj) {
+  Assert(comObj->connectVar==0);
   DSite *site=comObj->getSite();
   /*  Thread *tt = oz_newThreadToplevel();
       tt->pushCall(defaultConnectionProcedure,
@@ -142,9 +143,12 @@ OZ_BI_define(BIgetConnGrant,4,0){
     ret=parseRequestor(requestor,comObj,unused);
     if(ret!=OZ_ENTAILED)
       return ret;
+    Assert(comObj->connectVar==0);
     comObj->connectVar=var;
-    OZ_protect(&(comObj->connectVar)); // Protects connectVar from GC,
-                                       // must be unprotected when done
+    comObj->transType=type;
+    OZ_protect(&comObj->connectVar); // Protects connectVar from GC,
+                                    // must be unprotected when done
+    OZ_protect(&comObj->transType);
     transController->getTransObj(comObj);
     // When the transObj is ready var will be bound
   }
@@ -167,7 +171,6 @@ OZ_BI_define(BIgetConnGrant,4,0){
 OZ_BI_define(BIfreeConnGrant,2,0){
   oz_declareNonvarIN(0,requestor);
   oz_declareNonvarIN(1,grant);
-
   char *unused;
   ComObj *comObj;
   OZ_Return ret;
@@ -189,12 +192,19 @@ OZ_BI_define(BIfreeConnGrant,2,0){
 // The transController delivers a transObj(= a right to use a resource)
 void transObjReady(ComObj *comObj,TransObj *transObj) {
   //  printf("got a transobj, now unifying\n");
-  OZ_unprotect(&(comObj->connectVar));
-  OZ_unify(comObj->connectVar,
-           OZ_recordInit(oz_atom("grant"),
-                         oz_cons(oz_pairAI("key",
-                                           (int) transObj),
-                                 oz_nil())));
+  if(comObj->connectVar!=0) {
+    OZ_unify(comObj->connectVar,
+             OZ_recordInit(oz_atom("grant"),
+                           oz_cons(oz_pairAI("key",
+                                             (int) transObj),
+                                   oz_nil())));
+    OZ_unprotect(&comObj->connectVar);
+    OZ_unprotect(&comObj->transType);
+    comObj->connectVar=0;
+  }
+  else
+    Assert(0);
+//      printf("transObjReady for noone\n");
 }
 
 OZ_BI_define(BIhandover,3,0){
@@ -251,7 +261,20 @@ void handback(ComObj *comObj, TransObj *transObj) {
 // The comObj is informing us that it no longer needs the connection
 // it was waiting for.
 void comObjDone(ComObj *comObj) {
-//    printf("comObjDone %d %x\n",getpid(),comObj);
+  if(comObj->connectVar!=0) {
+    // No grant yet issued but one is requested.
+    OZ_Term tcp=oz_atom("tcp");
+    TransController *transController;
+    if(oz_eq(comObj->transType,tcp))
+      transController=tcptransController;
+    else
+      OZ_error("Unknown transport media");
+    transController->comObjDone(comObj);
+    OZ_unify(comObj->connectVar,oz_atom("abort"));
+    OZ_unprotect(&comObj->connectVar);
+    OZ_unprotect(&comObj->transType);
+    comObj->connectVar=0;
+  }
   // Requestor=requestor(id:SiteId req:comObj)
   OZ_Term Requestor=OZ_recordInit(oz_atom("requestor"),
                                   oz_cons(oz_pairAA("id",
@@ -263,13 +286,6 @@ void comObjDone(ComObj *comObj) {
                                                  Requestor),
                                         oz_nil()));
   doPortSend(((PortWithStream *) tagged2Const(ConnectPort)), command, NULL);
-}
-
-// For now the accept procedure is initiated as a tcp accepter opened in
-// c and a thread listening to it
-Bool initAccept() {
-  return TRUE;
-  // return tcpInitAccept();
 }
 
 OZ_BI_define(BIconnFailed,2,0) {
@@ -294,7 +310,7 @@ OZ_BI_define(BIconnFailed,2,0) {
     // has its own timer to discover this.
     ;
   }
-  else { // AN! For now do as for temp. Could go ahead and inform comObj.
+  else { // AN: For now do as for temp. Could go ahead and inform comObj.
 //      printf("connFailed due to");
 //      printf(" %s\n",OZ_atomToC(reason));
     ;

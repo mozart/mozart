@@ -40,9 +40,6 @@ void handback(ComObj *comObj, TransObj *transObj);
 // it was waiting for.
 void comObjDone(ComObj *comObj);
 
-// Init the proper accepthandler.
-Bool initAccept();
-
 void changeMaxTCPCacheImpl();
 
 // Used by dpMiscModule to set parameters such as what transport layer to use
