@@ -49,6 +49,7 @@
     <Meta name="html.split" value="chapter.editing">
     <Meta name="html.split" value="chapter.running">
     <Meta name="html.split" value="chapter.tools">
+    <Meta name="html.split" value="chapter.profiles">
     <Meta name="html.split" value="appendix.keybindings">
     <Meta name="html.split" value="appendix.devel">
     <Meta name="html.split" value="appendix.api">
@@ -115,8 +116,9 @@
         feature being described applies to both GNU Emacs and XEmacs.</Note>.
         <Ptr to="chapter.editing">, <Ptr to="chapter.running">, and <Ptr
         to="chapter.tools"> are dedicated to the three main features mentioned
-        above respectively.  <Ptr to="appendix.keybindings"> summarizes all
-        Oz-specific key bindings.
+        above respectively.  <Ptr to="chapter.profiles"> describes how
+        to manage multiple Oz mode settings using profiles.  <Ptr
+        to="appendix.keybindings"> summarizes all Oz-specific key bindings.
       <P>
         The last three appendices provide information for advanced users.
         <Ptr to="appendix.devel"> details how to test Mozart system components
@@ -965,6 +967,30 @@
             Open the Oz Profiler by feeding the statement <Code proglang=oz
             >{Profiler.open}</Code> to the Oz Compiler.  With ?_{ARG}, close
             it instead by <Code proglang=oz>{Profiler.close}</Code>.
+        </List>
+    <Chapter id="chapter.profiles">
+      <Title/Using Profiles/
+      <P>
+        To make it easy to run multiple versions of Oz and also customize
+        them through the <File/.emacs/ file, there is the notion of
+        <Def/profiles/.  A profile is an alist providing values for the
+        Oz mode variables you want to set different from their default.
+        Besides the ability to have profiles for multiple versions of
+        Mozart, you can also define profiles for build and debug directories
+        (with possibly different gdb setting for interactive debugging
+        for debug directories).
+        <List>
+          <Entry class=useroption><Span class=index/<<oz-profiles>>/
+            (default: <<nil>>)
+          <Item>
+            An alist of profiles for different Oz mode configurations.
+          <Entry class=command><Span class=index/<<oz-set-profile>>/
+            <<?_{NAME}>>
+          <Item>
+            Select profile ?_{NAME} from those defined in <<oz-profiles>>.
+          <Entry class=command><Span class=index/<<oz-profile-undo>>/
+          <Item>
+            Undo the bindings established by the current profile.
         </List>
     <Appendix id="appendix.keybindings">
       <Title/Summary of Oz-Specific Emacs Key Bindings/
