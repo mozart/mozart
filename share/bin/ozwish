@@ -3,13 +3,8 @@
 : ${OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish}
 if [ -f  $OZWISH ]
 then
-  if [ ${OZTK4-xx} = "xx" ]; then
-     TCL_LIBRARY=$OZWISHHOME/tcl/lib/tcl
-     TK_LIBRARY=$OZWISHHOME/tcl/lib/tk
-  else
-     TCL_LIBRARY=$OZWISHHOME/lib/tcl
-     TK_LIBRARY=$OZWISHHOME/lib/tk
-  fi
+  TCL_LIBRARY=$OZWISHHOME/lib/tcl
+  TK_LIBRARY=$OZWISHHOME/lib/tk
   export TCL_LIBRARY
   export TK_LIBRARY
   exec $OZWISH "$@"
