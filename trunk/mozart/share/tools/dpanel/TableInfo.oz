@@ -177,7 +177,7 @@ define
 	       end
 	       
 	       new <- entry(key:Key fg:Col
-			   text: Data.index#'   '#Data.type#' exp/imp'#1)|@new 
+			   text: Key#'   '#Data.type#' exp/imp'#1)|@new 
 	       self.usedCounter.Key:=Used
 	       Table, increment(self.diff Site)
 	    end 
@@ -220,7 +220,7 @@ define
       in
 	 remove <- _
 	 {List.map RemovedKeys proc {$ K I}
-				  I = {Dictionary.get self.table K}.index
+				  I = {self.makeKey {Dictionary.get self.table K}}
 				  {Dictionary.remove self.table K}
 			       end @remove}
 	 Table, removeDictObsolete(self.diff)
@@ -240,7 +240,7 @@ define
 	     Data = self.table.K
 	     Us = self.usedCounter.K
 	  in
-	     {self.guiSites updateEntry(K Data.index#'   '#Data.type#' exp/imp:'#Us)}
+	     {self.guiSites updateEntry(K {self.makeKey Data}#'   '#Data.type#' exp/imp:'#Us)}
 	  end}
 	 Table, displayGraph(self.counter self.guiNumber)
 	 Table, displayGraph(self.diff self.guiActive)
@@ -258,7 +258,7 @@ define
       in
 	 Table, initialize
 	 localized <- 0
-	 self.makeKey = fun {$ E} E.index end
+	 self.makeKey = fun {$ E} E.odi end
 	 self.makeSite = fun {$ _} mySite end
 	 self.getCredit = fun {$ E} E.dist_gc end
 	 self.colorAlloc = {New ColorAlloc init(getCol:GetCol
@@ -290,7 +290,7 @@ define
 	 end
       in
 	 Table, initialize
-	 self.makeKey = fun {$ E} E.index end
+	 self.makeKey = fun {$ E} E.na.index end
 	 self.makeSite = fun {$ E} E.na.site end
 	 self.getCredit = fun {$ E} credit(E.dist_gc) end
 	 self.colorAlloc = {New ColorAlloc init(getCol:GetCol
