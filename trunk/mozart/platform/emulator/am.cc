@@ -1075,29 +1075,6 @@ InstType AM::installPath(Board *to)
   return INST_OK;
 }
 
-void AM::reduceTrailOnUnitCommit()
-{
-  int numbOfCons = trail.chunkSize();
-
-  Board *bb = currentBoard;
-
-  bb->newScript(numbOfCons);
-
-  for (int index = 0; index < numbOfCons; index++) {
-    TaggedRef *refPtr;
-    TaggedRef value;
-    trail.popRef(refPtr,value);
-
-    Assert(isRef(*refPtr) || !isAnyVar(*refPtr));
-    Assert(isAnyVar(value));
-
-    bb->setScript(index,refPtr,*refPtr);
-
-    unBind(refPtr,value);
-  }
-  trail.popMark();
-}
-
 // only used in deinstall
 // Three cases may occur:
 // any global var G -> ground ==> add susp to G
@@ -1146,7 +1123,6 @@ void AM::reduceTrailOnSuspend()
   trail.popMark();
 }
 
-
 void AM::reduceTrailOnFail()
 {
   while(!trail.isEmptyChunk()) {
@@ -1166,7 +1142,6 @@ inline void mkSusp(TaggedRef *ptr, Thread *t)
     am.addSuspendVarList(ptr);
   }
 }
-
 
 /*
  * shallow guards sometimes do not bind variables but only push them
@@ -1205,97 +1180,98 @@ void AM::reduceTrailOnShallow(Thread *thread)
 /* -------------------------------------------------------------------------
  * OFS
  * -------------------------------------------------------------------------*/
-// Check if there exists an S_ofs (Open Feature Structure) suspension in the suspList
-// (Used only for monitorArity)
+// Check if there exists an S_ofs (Open Feature Structure) suspension
+// in the suspList (Used only for monitorArity)
 Bool AM::hasOFSSuspension(SuspList *suspList)
 {
-    while (suspList) {
-        Thread *thr = suspList->getElem ();
-        if (!thr->isDeadThread () &&
-            thr->isPropagator() && thr->isOFSThread ()) return TRUE;
-        suspList = suspList->getNext();
-    }
-    return FALSE;
+  while (suspList) {
+    Thread *thr = suspList->getElem ();
+    if (!thr->isDeadThread () &&
+	thr->isPropagator() && thr->isOFSThread ()) return TRUE;
+    suspList = suspList->getNext();
+  }
+  return FALSE;
 }
 
 
-// Add list of features to each OFS-marked suspension list
-// 'flist' has three possible values: a single feature (literal or integer), a
-// nonempty list of features, or NULL (no extra features).  'determined'==TRUE iff
-// the unify makes the OFS determined.  'var' (which must be deref'ed) is used to
-// make sure that features are added only to variables that are indeed waiting for
-// features. This routine is inspired by am.checkSuspensionList, and must track all
-// changes to it.
+/* Add list of features to each OFS-marked suspension list 'flist' has
+ * three possible values: a single feature (literal or integer), a
+ * nonempty list of features, or NULL (no extra features).
+ * 'determined'==TRUE iff the unify makes the OFS determined.  'var'
+ * (which must be deref'ed) is used to make sure that features are
+ * added only to variables that are indeed waiting for features. This
+ * routine is inspired by am.checkSuspensionList, and must track all
+ * changes to it.  */
 void AM::addFeatOFSSuspensionList(TaggedRef var,
                                   SuspList* suspList,
 				  TaggedRef flist,
 				  Bool determ)
 {
-    while (suspList) {
-        Thread *thr = suspList->getElem ();
+  while (suspList) {
+    Thread *thr = suspList->getElem ();
 
-        // The added condition ' || thr->isRunnable () ' is incorrect
-        // since isPropagated means only that the thread is runnable
-        if (thr->isDeadThread ()) {
-            suspList=suspList->getNext();
-            continue;
-        }
-
-        if (thr->isPropagator() && thr->isOFSThread ()) {
-            MonitorArityPropagator *prop =
-                (MonitorArityPropagator *) thr->getPropagator();
-
-            Assert(sizeof(MonitorArityPropagator)==prop->sizeOf());
-
-            // Only add features if var and fvar are the same:
-            TaggedRef fvar=prop->getX();
-            DEREF(fvar,_1,_2);
-            if (var!=fvar) {
-                suspList=suspList->getNext();
-                continue;
-            }
-            // Only add features if the 'kill' variable is undetermined:
-            TaggedRef killl=prop->getK();
-            DEREF(killl,_,killTag);
-            if (!isAnyVar(killTag)) {
-                suspList=suspList->getNext();
-                continue;
-            }
-
-            // Add the feature or list to the diff. list in FH and FT:
-            if (flist) {
-                if (isFeature(flist))
-                    prop->setFH(cons(flist,prop->getFH()));
-                else {
-                    // flist must be a list
-                    Assert(isLTuple(flist));
-                    TaggedRef tmplist=flist;
-                    while (tmplist!=AtomNil) {
-                        prop->setFH(cons(head(tmplist),prop->getFH()));
-                        tmplist=tail(tmplist);
-                    }
-                }
-            }
-            if (determ) {
-                // FS is det.: tail of list must be bound to nil: (always succeeds)
-                // Do *not* use unification to do this binding!
-                TaggedRef tl=prop->getFT();
-                DEREF(tl,tailPtr,tailTag);
-                switch (tailTag) {
-                case LITERAL:
-                    Assert(tl==AtomNil);
-                    break;
-                case UVAR:
-                    doBind(tailPtr, AtomNil);
-                    break;
-                default:
-                    Assert(FALSE);
-                }
-            }
-        }
-
-        suspList = suspList->getNext();
+    // The added condition ' || thr->isRunnable () ' is incorrect
+    // since isPropagated means only that the thread is runnable
+    if (thr->isDeadThread ()) {
+      suspList=suspList->getNext();
+      continue;
     }
+
+    if (thr->isPropagator() && thr->isOFSThread ()) {
+      MonitorArityPropagator *prop =
+	(MonitorArityPropagator *) thr->getPropagator();
+
+      Assert(sizeof(MonitorArityPropagator)==prop->sizeOf());
+
+      // Only add features if var and fvar are the same:
+      TaggedRef fvar=prop->getX();
+      DEREF(fvar,_1,_2);
+      if (var!=fvar) {
+	suspList=suspList->getNext();
+	continue;
+      }
+      // Only add features if the 'kill' variable is undetermined:
+      TaggedRef killl=prop->getK();
+      DEREF(killl,_,killTag);
+      if (!isAnyVar(killTag)) {
+	suspList=suspList->getNext();
+	continue;
+      }
+
+      // Add the feature or list to the diff. list in FH and FT:
+      if (flist) {
+	if (isFeature(flist))
+	  prop->setFH(cons(flist,prop->getFH()));
+	else {
+	  // flist must be a list
+	  Assert(isLTuple(flist));
+	  TaggedRef tmplist=flist;
+	  while (tmplist!=AtomNil) {
+	    prop->setFH(cons(head(tmplist),prop->getFH()));
+	    tmplist=tail(tmplist);
+	  }
+	}
+      }
+      if (determ) {
+	// FS is det.: tail of list must be bound to nil: (always succeeds)
+	// Do *not* use unification to do this binding!
+	TaggedRef tl=prop->getFT();
+	DEREF(tl,tailPtr,tailTag);
+	switch (tailTag) {
+	case LITERAL:
+	  Assert(tl==AtomNil);
+	  break;
+	case UVAR:
+	  doBind(tailPtr, AtomNil);
+	  break;
+	default:
+	  Assert(FALSE);
+	}
+      }
+    }
+
+    suspList = suspList->getNext();
+  }
 }
 
 /* -------------------------------------------------------------------------
@@ -1881,8 +1857,7 @@ void AM::checkDebugOutline(Thread *tt)
     }
 }
 
-//
-//  Make a runnable thread with a single task stack entry <local trhread queue>
+//  Make a runnable thread with a single task stack entry <local thread queue>
 Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
 {
   Thread *th = new Thread(S_RTHREAD | T_runnable | T_ltq,prio,bb,newId());
@@ -1900,7 +1875,9 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
   return th;
 }
 
-void AM::stopThread(Thread *th) {
+// mm2: stop/resume has to be overhauled
+void AM::stopThread(Thread *th)
+{
   if (th->pStop()==0) {
     if (th==currentThread) {
       setSFlag(StopThread);
@@ -1911,7 +1888,8 @@ void AM::stopThread(Thread *th) {
   }
 }
 
-void AM::resumeThread(Thread *th) {
+void AM::resumeThread(Thread *th)
+{
   if (th->pCont()==0) {
     th->cont();
 
@@ -1930,9 +1908,6 @@ void AM::resumeThread(Thread *th) {
 
 
 Board *rootBoard() { return am.rootBoard; }
-
-
-OZ_C_proc_proto(BIfail);     // builtins.cc
 
 int AM::commit(Board *bb, Thread *tt)
 {
@@ -2016,7 +1991,6 @@ void AM::setExtThreadOutlined(Thread *tt, Board *varHome)
   if (wasFound) tt->setExtThread();
 }
 
-//
 void AM::checkExtThreadOutlined(Thread *tt)
 {
   Assert(tt->wasExtThread());
@@ -2034,7 +2008,6 @@ void AM::checkExtThreadOutlined(Thread *tt)
   }
 }
 
-//
 void AM::removeExtThreadOutlined(Thread *tt)
 {
   Assert(tt->wasExtThread());
