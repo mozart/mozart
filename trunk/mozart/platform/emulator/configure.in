@@ -183,7 +183,10 @@ if test "${GXX}" = yes; then
 	oz_warn_error="-Werror"
     fi
 
-    oz_opt="-O3 -pipe -fstrict-aliasing"
+    case `$CXX -dumpversion` in
+    2.95.*) oz_opt="-O3 -pipe";;
+    *)      oz_opt="-O3 -pipe -fstrict-aliasing";;
+    esac
     oz_om=
     if test "${platform}" = linux-i486
     then
