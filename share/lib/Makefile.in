@@ -26,7 +26,7 @@ OZENGINE        = @OZENGINE@
 COMPRESSLEVEL   = @oz_picklecompression@
 COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 
-OZCFLAGS        = $(COMPRESSFLAGS) --noallowdeprecated
+OZCFLAGS        = $(COMPRESSFLAGS)
 OZC             = @OZC@
 
 COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base -b $(BUILDDIR)/
