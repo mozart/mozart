@@ -1347,7 +1347,8 @@ LBLpopTask:
       goto LBLemulate;
     }
 
-    if (taskstack->isEmpty (topElem)) { 
+    if (taskstack->isEmpty(topElem)) {
+      taskstack->setTop(topCache);
       if (e->isToplevel ()) {
 	goto LBLkillToplevelThread;
       } else {
