@@ -54,6 +54,7 @@
 SendRecvCounter dif_counter[DIF_LAST];
 SendRecvCounter misc_counter[MISC_LAST];
 
+//
 char *misc_names[MISC_LAST] = {
   "string",
   "gname",
@@ -103,7 +104,6 @@ void deleteGName(GName*);
 OZ_Term unmarshalTerm(MsgBuffer *);
 void marshalTerm(OZ_Term, MsgBuffer *);
 ProgramCounter unmarshalCode(MsgBuffer*,Bool);
-SRecord *unmarshalSRecord(MsgBuffer *);
 void unmarshalTerm(MsgBuffer *, OZ_Term *);
 
 #define CheckD0Compatibility \
@@ -285,7 +285,7 @@ inline void trailCycle(void *l, MsgBuffer *bs)
 void trailCycleOutLine(void *l, MsgBuffer *bs){ trailCycle(l, bs);}
 Bool checkCycleOutLine(void *l, MsgBuffer *bs){ return checkCycle(l, bs);}
 
-void marshalSRecord(SRecord *sr, MsgBuffer *bs)
+static inline void marshalSRecord(SRecord *sr, MsgBuffer *bs)
 {
   TaggedRef t = oz_nil();
   if (sr) {
@@ -320,11 +320,12 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
 
 void marshalNoGood(TaggedRef term, MsgBuffer *bs, Bool trail)
 {
-  if (ozconf.perdioMinimal || bs->getSite()==NULL){
+  if (ozconf.perdioMinimal || bs->getSite() == NULL) {
     bs->addNogood(term);
-    marshalTerm(NameNonExportable,bs);} // to make bs consistent
-  else{
-    (*marshalSPP)(term,bs, trail); }
+    marshalTerm(NameNonExportable, bs); // to make bs consistent
+  } else {
+    OZ_error("No no-goods with the old marshaler!");
+  }
 }
 
 
@@ -431,15 +432,14 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       if(o->getClass()->isSited()) 
 	goto bomb;
       if (!bs->globalize()) return;
-      (*marshalObject)(t, bs, NULL);
+      OZ_error("No objects with the old marshaler!");
       return;
     }
 
 #define HandleTert(string,tag,check)			\
     if (check) { CheckD0Compatibility; }		\
     if (!bs->globalize()) return;			\
-    if ((*marshalTertiary)((Tertiary *) t,tag,bs)) return;	\
-    trailCycle(t,bs);					\
+    OZ_error("No tertiaries with the old marshaler!");	\
     return;
 
   case Co_Lock: HandleTert("lock",DIF_LOCK,OK); 
@@ -599,13 +599,8 @@ loop:
   case CVAR:
     if (!bs->visit(makeTaggedRef(tPtr))) 
       break;
-    if((*triggerVariable)(tPtr)){
-      marshalTerm(makeTaggedRef(tPtr),bs);
-      return;}
-    if((*marshalVariable)(tPtr, bs, NULL)) 
-      break;
-    t=makeTaggedRef(tPtr);
-    goto bomb;
+    OZ_error("No variables with the old marshaler!");
+    break;
 
   default:
   bomb:
@@ -643,6 +638,10 @@ void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
   return;
 }
 
+static inline SRecord *unmarshalSRecord(MsgBuffer *bs){
+  TaggedRef t = unmarshalTerm(bs);
+  return oz_isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
+}
 
 void unmarshalClass(ObjectClass *cl, MsgBuffer *bs)
 {
@@ -674,11 +673,6 @@ ObjectClass *newClass(GName *gname) {
   ObjectClass *ret = new ObjectClass(NULL,NULL,NULL,NULL,NO,NO,am.currentBoard());
   ret->setGName(gname);
   return ret;
-}
-
-SRecord *unmarshalSRecord(MsgBuffer *bs){
-  TaggedRef t = unmarshalTerm(bs);
-  return oz_isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
 }
 
 /* *********************************************************************/
@@ -840,9 +834,10 @@ loop:
   case DIF_OWNER:
   case DIF_OWNER_SEC:
     {
-      *ret = (*unmarshalOwner)(bs, tag);
+      OZ_error("'DIF_OWNER' for the old unmarshaler??!");
       return;
     }
+
   case DIF_RESOURCE_T:
   case DIF_PORT:
   case DIF_THREAD_UNUSED:
@@ -851,14 +846,12 @@ loop:
   case DIF_LOCK:
   case DIF_OBJECT:
     {
-      *ret = (*unmarshalTertiary)(bs, tag);
-      int refTag = unmarshalRefTag(bs);
-      gotRef(*ret,refTag);
+      OZ_error("A tertiary for the old unmarshaler??!");
       return;
     }
   case DIF_RESOURCE_N:
     {
-      *ret = (*unmarshalTertiary)(bs, tag);
+      OZ_error("'DIF_RESOURCE_N' for the old unmarshaler??!");
       return;
     }
     
@@ -906,26 +899,11 @@ loop:
     }
 
   case DIF_VAR: 
-    {
-      *ret = (*unmarshalVar)(bs,FALSE,FALSE);
-      return;
-    }
-
   case DIF_FUTURE: 
-    {
-      *ret = (*unmarshalVar)(bs,TRUE,FALSE);
-      return;
-    }
-
   case DIF_VAR_AUTO: 
-    {
-      *ret = (*unmarshalVar)(bs,FALSE,TRUE);
-      return;
-    }
-
   case DIF_FUTURE_AUTO: 
     {
-      *ret = (*unmarshalVar)(bs,TRUE,TRUE);
+      OZ_error("A variable for the old unmarshaler??!");
       return;
     }
 
@@ -1037,7 +1015,7 @@ void initMarshaler()
    * following tests fails: increase PERDIOMINOR
    */
   Assert(OZERROR == 223);  /* new instruction(s) added? */
-  Assert(DIF_LAST == 43);  /* new dif(s) added? */
+  Assert(DIF_LAST == 45);  /* new dif(s) added? */
 }
 
 

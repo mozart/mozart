@@ -39,7 +39,7 @@
 #include "dpMarshaler.hh"
 #include "dpInterface.hh"
 #include "marshaler.hh"
-#include "gentraverser.hh"
+#include "newmarshaler.hh"
 #include "var.hh"
 #include "gname.hh"
 #include "state.hh"
@@ -182,34 +182,68 @@ MessageType unmarshalHeader(MsgBuffer *bs){
 /*   objects                                  */
 /* *********************************************************************/
 
-void marshalFullObjectRT(Object *o,MsgBuffer* bs){
-  Assert(refTrail->isEmpty());
-  marshalFullObject(o,bs);
-  refTrail->unwind();}
+static void marshalFullObjectInternal(Object *o);
+static void marshalFullObjectAndClassInternal(Object *o);
 
-void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs){
-  Assert(refTrail->isEmpty());
-  marshalFullObjectAndClass(o, bs);
-  refTrail->unwind();}
-
-void marshalObjectImpl(Object *o, MsgBuffer *bs, GName *gnclass, GenTraverser *gt)
+void marshalFullObject(Object *o, MsgBuffer* bs)
 {
-  if (marshalTertiaryImpl(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
+  newMarshalerStartBatch(bs);
+  marshalFullObjectInternal(o);
+  newMarshalerFinishBatch();
+}
+
+void marshalFullObjectAndClass(Object *o, MsgBuffer* bs)
+{
+  newMarshalerStartBatch(bs);
+  marshalFullObjectAndClassInternal(o);
+  newMarshalerFinishBatch();
+}
+
+//
+// kost@ : both 'DIF_VAR_OBJECT' and 'DIF_OBJECT' (currently) should
+// contain the same representation, since both are unmarshaled using
+// 'unmarshalTertiary';
+void marshalVarObject(Object *o, MsgBuffer *bs, GName *gnclass)
+{
+  Assert(o->getTertType() == Te_Proxy);
+
+  //
+  int BTI = o->getIndex();
+  DSite* sd = bs->getSite();
+  if (sd && borrowTable->getOriginSite(BTI) == sd) {
+    marshalToOwner(BTI, bs);
+  } else {
+    marshalBorrowHead(DIF_VAR_OBJECT, BTI, bs);
+
+    //
+    Assert(o->getGName1());
+    marshalGName(globalizeConst(o,bs),bs);
+    marshalGName(gnclass,bs);
+  }
+}
+
+static
+void marshalObjectInternal(Object *o, MsgBuffer *bs, GName *gnclass)
+{
+  Assert(o->getTertType() == Te_Local || o->getTertType() == Te_Manager);
+  if (o->getTertType() == Te_Local)
+    globalizeTert(o);
+  Assert(o->getTertType() == Te_Manager);
+  marshalOwnHead(DIF_OBJECT, o->getIndex(), bs);
+
+  //
   Assert(o->getGName1());
   marshalGName(globalizeConst(o,bs),bs);
   marshalGName(gnclass,bs);
-#ifdef NEWMARSHALER
-  if (gt)
-    gt->rememberNode(makeTaggedConst(o),bs);
-  else
-#endif
-    trailCycleOutLine(o,bs);
 }
 
-void unmarshalObject(ObjectFields *o, MsgBuffer *bs){
-  o->feat = unmarshalSRecord(bs);
-  o->state=unmarshalTerm(bs);
-  o->lock=unmarshalTerm(bs);}
+void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs)
+{
+  TaggedRef t = newUnmarshalTerm(bs);
+  o->feat  =  oz_isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
+  o->state = newUnmarshalTerm(bs);
+  o->lock  = newUnmarshalTerm(bs);
+}
 
 void fillInObject(ObjectFields *of, Object *o){
   o->setFreeRecord(of->feat);
@@ -221,9 +255,11 @@ void unmarshalUnsentObject(MsgBuffer *bs){
   unmarshalUnsentTerm(bs);
   unmarshalUnsentTerm(bs);}
 
-void unmarshalObjectAndClass(ObjectFields *o, MsgBuffer *bs){
-  unmarshalObject(o,bs);
-  o->clas = unmarshalTerm(bs);}
+void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs)
+{
+  unmarshalFullObject(o,bs);
+  o->clas = newUnmarshalTerm(bs);
+}
 
 void unmarshalUnsentObjectAndClass(MsgBuffer *bs){
   unmarshalUnsentObject(bs);
@@ -233,34 +269,38 @@ void fillInObjectAndClass(ObjectFields *of, Object *o){
   fillInObject(of,o);
   o->setClass(tagged2ObjectClass(of->clas));}
 
-void unmarshalObjectRT(ObjectFields *o, MsgBuffer *bs){
-  refTable->reset();
-  Assert(refTrail->isEmpty());
-  unmarshalObject(o,bs);
-  refTrail->unwind();}
+static void marshalFullObjectInternal(Object *o)
+{
+  //
+  SRecord *sr = o->getFreeRecord();
+  OZ_Term tsr;
+  if (sr)
+    tsr = makeTaggedSRecord(sr);
+  else
+    tsr = oz_nil();
+  newMarshalTermInBatch(tsr);
 
-void unmarshalObjectAndClassRT(ObjectFields *o, MsgBuffer *bs){
-  refTable->reset();
-  Assert(refTrail->isEmpty());
-  unmarshalObjectAndClass(o, bs);
-  refTrail->unwind();}
+  //
+  newMarshalTermInBatch(makeTaggedConst(getCell(o->getState())));
 
-void marshalFullObject(Object *o,MsgBuffer* bs){
-  marshalSRecord(o->getFreeRecord(),bs);
-  marshalTerm(makeTaggedConst(getCell(o->getState())),bs);
-  if (o->getLock()) {marshalTerm(makeTaggedConst(o->getLock()),bs);}
-  else {marshalTerm(oz_nil(),bs);}}
-  
-void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
-  ObjectClass *oc=o->getClass();
-  marshalFullObject(o,bs);
-  marshalClass(oc,bs);}
+  //
+  if (o->getLock())
+    newMarshalTermInBatch(makeTaggedConst(o->getLock()));
+  else
+    newMarshalTermInBatch(oz_nil());
+}
+ 
+static void marshalFullObjectAndClassInternal(Object *o)
+{
+  marshalFullObjectInternal(o);
+  newMarshalTermInBatch(makeTaggedConst(o->getClass()));
+}
 
 /* *********************************************************************/
 /*   interface to Oz-core                                  */
 /* *********************************************************************/
 
-void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs, GenTraverser *gt) 
+void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs) 
 {
   PD((MARSHAL,"object"));
   Object *o = (Object*) t;
@@ -268,9 +308,10 @@ void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs, GenTraverser *gt)
 
   ObjectClass *oc = o->getClass();
   globalizeConst(o,bs);
-  marshalObjectImpl(o,bs,globalizeConst(oc,bs),gt);}
+  marshalObjectInternal(o, bs, globalizeConst(oc, bs));
+}
 
-Bool marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
+void marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
 {
   PD((MARSHAL,"Tert"));
   switch(t->getTertType()){
@@ -290,16 +331,15 @@ Bool marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
       PD((MARSHAL,"proxy"));
       int BTI=t->getIndex();
       DSite* sd=bs->getSite();
-      if (sd && borrowTable->getOriginSite(BTI)==sd) {
-	marshalToOwner(BTI,bs);
-	return OK;}
-      marshalBorrowHead(tag,BTI,bs);
+      if (sd && borrowTable->getOriginSite(BTI)==sd)
+	marshalToOwner(BTI, bs);
+      else
+	marshalBorrowHead(tag, BTI, bs);
       break;
     }
   default:
     Assert(0);
   }
-  return NO;
 }
 
 void marshalSPPImpl(TaggedRef entity, MsgBuffer *bs, Bool trail)
@@ -361,6 +401,7 @@ OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
       Tertiary *t=ob->getTertiary();
       break;}
     case DIF_OBJECT:
+    case DIF_VAR_OBJECT:
       TaggedRef obj;
       (void) unmarshalGName(&obj,bs);
       TaggedRef clas;

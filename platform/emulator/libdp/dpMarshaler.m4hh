@@ -94,15 +94,13 @@ define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mx
 include(EMUDIR/msgFormat.m4)
 
 void marshalDSite(DSite *, MsgBuffer *);
-void marshalObjectImpl(Object *o, MsgBuffer *bs, GName *gnclass,GenTraverser *);
-void marshalFullObject(Object *o,MsgBuffer* bs);
-void marshalFullObjectAndClass(Object *o,MsgBuffer* bs);
-void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs);
-void marshalFullObjectRT(Object *o,MsgBuffer* bs);
+void marshalVarObject(Object *o, MsgBuffer *bs, GName *gnclass);
+void marshalFullObjectAndClass(Object *o, MsgBuffer* bs);
+void marshalFullObject(Object *o, MsgBuffer* bs);
 
 MessageType unmarshalHeader(MsgBuffer *bs);
-void unmarshalObjectRT(ObjectFields *o, MsgBuffer *bs);
-void unmarshalObjectAndClassRT(ObjectFields *o, MsgBuffer *bs);
+void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs);
+void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs);
 
 inline void marshalCredit(Credit credit,MsgBuffer *bs){  
   Assert(sizeof(Credit)==sizeof(int));
@@ -133,10 +131,10 @@ void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs);
 void marshalOwnHead(int tag,int i,MsgBuffer *bs);
 
 //
-Bool marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
+void marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
 OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag);
 OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt);
-void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs, GenTraverser *);
+void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs);
 void marshalSPPImpl(TaggedRef entity, MsgBuffer *bs, Bool trail);
 
 #endif // __MARSHALER_M4HH

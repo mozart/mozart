@@ -35,10 +35,13 @@
 const char SYSLETHEADER = 2;
 
 
-#define PERDIOMAJOR      1
-#define PERDIOMINOR      5
-
 #define PERDIOVERSION     "1#5" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOMAJOR          1
+#define PERDIOMINOR          5
+
+#define NEWMARSHALER_PV   "2#0" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define NEWMARSHALER_PMAJOR  2
+#define NEWMARSHALER_PMINOR  0
 
 // the DIFs
 // the protocol layer needs to know about some of these 
@@ -87,6 +90,8 @@ typedef enum {
   DIF_VAR_AUTO,
   DIF_FUTURE_AUTO,
   DIF_EOF,
+  DIF_CODEAREA,
+  DIF_VAR_OBJECT,
   DIF_LAST
 } MarshalTag;
 
@@ -113,7 +118,7 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_BUILTIN,      "BUILTIN"},
   { DIF_DICT,         "DICT"},
   { DIF_OBJECT,       "OBJECT"},
-  { DIF_THREAD_UNUSED,	      "THREAD"},
+  { DIF_THREAD_UNUSED,"THREAD"},
   { DIF_SPACE,	      "SPACE"},
   { DIF_CHUNK,        "CHUNK"},
   { DIF_PROC,	      "PROC"},
@@ -129,12 +134,14 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_PASSIVE,      "PASSIVE"},
   { DIF_COPYABLENAME, "COPYABLENAME"},
   { DIF_EXTENSION,    "EXTENSION"},
-  { DIF_RESOURCE_T,     "RESOURCE_T"},
-  { DIF_RESOURCE_N,     "RESOURCE_N"},
-  { DIF_FUTURE,       "LAZY MAN!"},
-  { DIF_VAR_AUTO,     "LAZY MAN!"},
-  { DIF_FUTURE_AUTO,  "LAZY MAN!"},
+  { DIF_RESOURCE_T,   "RESOURCE_T"},
+  { DIF_RESOURCE_N,   "RESOURCE_N"},
+  { DIF_FUTURE,       "LAZY_MAN!"},
+  { DIF_VAR_AUTO,     "LAZY_MAN!"},
+  { DIF_FUTURE_AUTO,  "LAZY_MAN!"},
   { DIF_EOF,          "EOF"},
+  { DIF_CODEAREA,     "CODE_AREA_SEGMENT"},
+  { DIF_VAR_OBJECT,   "VAR_OBJECT"},
   { DIF_LAST,         "LAST"}
 };
 
@@ -149,6 +156,8 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
 #define TAG_COMMENT   '#'
 #define TAG_CODESTART 'C'
 #define TAG_CODEEND   'c'
+#define TAG_NEWCODESTART 'E'
+#define TAG_NEWCODEEND   'e'
 #define TAG_TERMREF   'T'
 #define TAG_TERMDEF   't'
 #define TAG_EOF       -1
@@ -158,12 +167,17 @@ class MsgBuffer;
 
 void marshalNumber(unsigned int i, MsgBuffer *bs);
 unsigned int unmarshalNumber(MsgBuffer *bs);
+void skipNumber(MsgBuffer *bs);
 BYTE unmarshalByte(MsgBuffer *bs);
 void marshalCode(ProgramCounter,MsgBuffer*);
 void marshalLabel(ProgramCounter,int,MsgBuffer*);
 void marshalOpCode(int lbl, Opcode op, MsgBuffer *bs, int showLabel = 1);
-void marshalCodeEnd(MsgBuffer *bs);
+// old (recursive) marshaler:
 void marshalCodeStart(int codesize, MsgBuffer *bs);
+void marshalCodeEnd(MsgBuffer *bs);
+// new (iterative) marshaler:
+void newMarshalCodeStart(MsgBuffer *bs);
+void newMarshalCodeEnd(MsgBuffer *bs);
 void putComment(char *s,MsgBuffer *bs);
 void putString(const char *s, MsgBuffer *bs);
 void putTag(char tag, MsgBuffer *bs);

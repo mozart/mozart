@@ -153,7 +153,6 @@ void putNumber(unsigned int i,MsgBuffer *bs)
 
 
 
-
 void putComment(char *s,MsgBuffer *bs)
 {
   if (bs->textmode()) {
@@ -261,8 +260,14 @@ unsigned int unmarshalNumber(MsgBuffer *bs)
   ret |= (c<<shft);
   return ret;
 }
-#endif
 
+void skipNumber(MsgBuffer *bs)
+{
+  unsigned int c = bs->get();
+  while (c >= SBit)
+    c = bs->get();
+}
+#endif
 
 void marshalLabel(int start, int lbl, MsgBuffer *bs)
 {
@@ -301,7 +306,7 @@ void marshalOpCode(int lbl, Opcode op, MsgBuffer *bs, Bool showLabel)
   bs->put(op);
 }
 
-
+// kost@: these two are used by the old (recursive) marshaer:
 void marshalCodeStart(int codesize, MsgBuffer *bs)
 {	
   if (bs->textmode()) {
@@ -311,11 +316,28 @@ void marshalCodeStart(int codesize, MsgBuffer *bs)
   marshalNumber(codesize,bs);
 }
 
-
+//
 void marshalCodeEnd(MsgBuffer *bs)
 {	
   if (bs->textmode()) {
     putTag(TAG_CODEEND,bs);
+  }
+}
+
+//
+void newMarshalCodeStart(MsgBuffer *bs)
+{	
+  if (bs->textmode()) {
+    putTag(TAG_NEWCODESTART,bs);
+    return;
+  }
+}
+
+//
+void newMarshalCodeEnd(MsgBuffer *bs)
+{	
+  if (bs->textmode()) {
+    putTag(TAG_NEWCODEEND,bs);
   }
 }
 
