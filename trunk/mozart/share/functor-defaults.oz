@@ -41,5 +41,5 @@ defaults(lib:
 	 tools:
 	    ['Panel' 'Browser' 'Explorer' 'CompilerPanel'
 	     'Emacs' 'Ozcar' 'Profiler' 'Gump' 'GumpScanner'
-	     'GumpParser' 'ProductionTemplates']
+	     'GumpParser' 'ProductionTemplates' 'Inspector']
 	)

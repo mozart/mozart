@@ -59,7 +59,10 @@ AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
 
 OZ_PATH_PROG(OZPLATFORM, ozplatform)
 OZ_PATH_PROG(OZC, ozc, OZC=`pwd`/lib/ozc)
+OZ_PATH_PROG(OZAR,ozar)
 OZ_PATH_PROG(OZENGINE, ozengine, OZENGINE=$srcdira/lib/oze.sh)
+
+AC_SUBST(OZAR)
 
 dnl *****************************************************************
 dnl FINALIZE
