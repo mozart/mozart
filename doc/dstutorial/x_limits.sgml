@@ -31,6 +31,8 @@ of these entities can exist per site.
 
 <item>The fault state <<tempFail>> is indicated only after
 a long delay.
+In future releases, the delay will be very short and
+based on adaptive observation of actual network behavior.
 
 <item>If an exception is raised or a handler or watcher
 is invoked for an <EM>object</EM>,
