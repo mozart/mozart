@@ -17,8 +17,6 @@
 #include "dictionary.hh"
 #include "fdhook.hh"
 
-#define PROP_TIME
-
 OZ_C_proc_proto(BIfail);     // builtins.cc
 
 // -----------------------------------------------------------------------
@@ -966,7 +964,6 @@ LBLstart:
       }
       CTT = 0;
 
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLstart;
 
     case SCHEDULED:
@@ -977,19 +974,15 @@ LBLstart:
       }
       CTT = 0;
 
-      //      ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLstart;
 
     case PROCEED:
       // Note: CTT must be reset in 'LBLkillXXX';
 
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLterminateThread;
 
       //  Note that *propagators* never yield 'SUSPEND';
     case FAILED:
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-
       // propagator failure never catched
       if (!e->isToplevel()) goto LBLfailure;
 
@@ -2935,9 +2928,10 @@ LBLdispatcher:
 
        Assert(!ltq->isEmpty());
 
-#ifdef PROP_TIME
-       unsigned int starttime = osUserTime();
-#endif
+       unsigned int starttime = 0;
+
+       if (ozconf.timeDetailed)
+         starttime = osUserTime();
 
        Thread * backup_currentThread = CTT;
 
@@ -2955,9 +2949,10 @@ LBLdispatcher:
          } else if (r == FAILED) {
            e->closeDonePropagator(thr);
            CTT = backup_currentThread;
-#ifdef PROP_TIME
-           ozstat.timeForPropagation.incf(osUserTime()-starttime);
-#endif
+
+           if (ozconf.timeDetailed)
+             ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
            CTS->pushLTQ(sa); // RS: is this needed ???
            // failure of propagator is never catched !
            goto LBLfailure; // top-level failure not possible
@@ -2968,9 +2963,10 @@ LBLdispatcher:
        }
 
        CTT = backup_currentThread;
-#ifdef PROP_TIME
-       ozstat.timeForPropagation.incf(osUserTime()-starttime);
-#endif
+
+       if (ozconf.timeDetailed)
+         ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
 
        if (ltq->isEmpty()) {
          sa->resetLocalThreadQueue();

@@ -1314,7 +1314,10 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
 
 Bool AM::loadQuery(CompStream *fd)
 {
-  unsigned int starttime = osUserTime();
+  unsigned int starttime = 0;
+
+  if (ozconf.timeDetailed)
+    starttime = osUserTime();
 
   ProgramCounter pc;
 
@@ -1324,7 +1327,8 @@ Bool AM::loadQuery(CompStream *fd)
     addToplevel(pc);
   }
 
-  ozstat.timeForLoading.incf(osUserTime()-starttime);
+  if (ozconf.timeDetailed)
+    ozstat.timeForLoading.incf(osUserTime()-starttime);
 
   return ret;
 }
