@@ -1081,7 +1081,7 @@ void engine() {
 	    goto LBLcall;
 	  }
 	  
-	  HANDLE_FAILURE(PC+6,message("susp handler for ==F, \\=F not set"));
+	  HANDLE_FAILURE(PC+6,message("susp handler for ==B, \\=B not set"));
 	}
 	  
       case FAILED:
