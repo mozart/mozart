@@ -6,7 +6,9 @@ endif
 JAR	= $(OZLIB)/OzMake2/XT.jar
 STYLE	= $(OZLIB)/OzMake2/ozmake.xsl
 
-doc: index.xml $(STYLE)
+.PHONY: doc
+doc: index.html
+index.html: index.xml $(STYLE)
 	case `java -version 2>&1` in \
 	Kaffe*) JAVACP=-addclasspath;; \
 	*) JAVACP=-classpath;; \
