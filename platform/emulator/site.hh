@@ -94,7 +94,7 @@ public:
   TimeStamp *getTimeStamp() { return (&timestamp); }
 
   //
-  int hash();
+  unsigned int hash();
 
   //
   void marshalBaseSite(MarshalerBuffer* buf);
@@ -179,30 +179,30 @@ public:
   SiteHashTable(int size): GenHashTable(size) {}
 
   //
-  Site *find(Site *s, int hvalue) {
-    GenHashNode *ghn = htFindFirst(hvalue);
+  Site *find(Site *s, unsigned int hvalue) {
+    GenHashNode *ghn = htFindFirstU(hvalue);
     Site* found;
     while (ghn!=NULL) {
       GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,Site*);    
       if(s->compareSites(found)==0) return found;
-      ghn=htFindNext(ghn,hvalue);}
+      ghn=htFindNextU(ghn,hvalue);}
     return NULL;}
 
-  void insert(Site *s, int hvalue) {
+  void insert(Site *s, unsigned int hvalue) {
     GenHashBaseKey *ghn_bk;
     GenHashEntry *ghn_e=NULL;  
     GenCast(s,Site*,ghn_bk,GenHashBaseKey*);
-    htAdd(hvalue,ghn_bk,ghn_e);}
+    htAddU(hvalue,ghn_bk,ghn_e);}
 
-  void remove(Site *s, int hvalue) {
-    GenHashNode *ghn=htFindFirst(hvalue);
+  void remove(Site *s, unsigned int hvalue) {
+    GenHashNode *ghn=htFindFirstU(hvalue);
     Site* found;
     while(ghn!=NULL){
       GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,Site*);    
       if(s->compareSites(found)==0){
-	htSub(hvalue,ghn);
+	htSubU(hvalue,ghn);
 	return;}
-      ghn=htFindNext(ghn,hvalue);}
+      ghn=htFindNextU(ghn,hvalue);}
     Assert(0);}
 
   //
