@@ -198,7 +198,7 @@ OZ_gdkEvent(GdkEvent *event) {
 
 /* Convert a GList to an Oz list of foreign elements */
 OZ_Term
-GOZ_GLIST_TO_OZTERM (GList *list) {
+goz_glist_to_ozterm (GList *list) {
   OZ_Term ozlist;
   GList   *list_ptr;
 
@@ -216,7 +216,7 @@ GOZ_GLIST_TO_OZTERM (GList *list) {
 
 /* Convert a GSList to an Oz list of foreign elements */
 OZ_Term
-GOZ_GSLIST_TO_OZTERM (GSList *list) {
+goz_gslist_to_ozterm (GSList *list) {
   OZ_Term ozlist;
   GSList  *list_ptr;
 
