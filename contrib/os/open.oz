@@ -38,7 +38,7 @@ in
 \endif
 
       class IOBase
-	 prop native locking
+	 prop locking
 	 attr
 	    !ReadFD	: unit
 	    !ReadLock
