@@ -126,8 +126,14 @@
 <!ENTITY % p.mix "%p.mix.noindex; | index">
 <!ENTITY % p.chars.mix "#PCDATA|%p.mix;">
 
-<!ENTITY % p.level "(p|para|div)">
-<!ENTITY % p.model "(p|para|div|index)*">
+<!ENTITY % optional.exercise "IGNORE">
+<![ %optional.exercise; [
+<!ENTITY % optional.exercise.mix "|exercise|answer">
+]]>
+<!ENTITY % optional.exercise.mix "">
+
+<!ENTITY % p.level "(p|para|div%optional.exercise.mix;)">
+<!ENTITY % p.model "(p|para|div|index%optional.exercise.mix;)*">
 <!ENTITY % p.chars.model "p.silent,(%p.model;)">
 
 <!ENTITY % input.local.2 "">
@@ -233,11 +239,17 @@
 <!ELEMENT p        - O (%p.chars.mix;)*>
 <!ELEMENT p.silent O O (%p.chars.mix;)*>
 <!ELEMENT para     - O (title ,(%p.chars.mix;)*)>
-<!ELEMENT div      - O (title?,(%p.model;))>
+<!ELEMENT (div%optional.exercise.mix;) - O (title?,(%p.model;))>
 
 <!ATTLIST (p|p.silent|para|div)
         %common.attr;
 >
+<![ %optional.exercise; [
+<!ATTLIST (%optional.exercise.mix;)
+        %common.attr;
+        %to.attr;
+>
+]]>
 
 <!--==================== LISTS ====================================-->
 <!--
