@@ -21,7 +21,9 @@ INSTALL_DIR	= @INSTALL_DIR@
 
 OZENGINE        = @OZENGINE@
 
-OZFLAGS		= 
+COMPRESSFLAGS   = 
+
+OZFLAGS		= $(COMPRESSFLAGS)
 OZC		= @OZC@
 
 COMPILE		= $(OZC) $(OZFLAGS) -l Base -c
@@ -30,7 +32,7 @@ COMPILESYSLET	= $(OZC) $(OZFLAGS) -l Base -x
 
 P2T		= $(SRCDIR)/p2t.sh
 T2P		= $(SRCDIR)/t2p.sh
-OZAR		= ozar
+OZAR		= ozar $(COMPRESSFLAGS)
 
 # exports
 export BUILDTOP
