@@ -626,7 +626,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIcondGetProperty,3)
 {
   OZ_declareArg(0,key);
-  OZ_declareArg(0,def);
+  OZ_declareArg(1,def);
   OZ_declareArg(2,val);
   OZ_Return status = GetProperty(key,val);
   if (status == PROP__NOT__READABLE)
