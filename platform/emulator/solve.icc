@@ -158,34 +158,26 @@ Board *SolveActor::clone(Board *bb) {
 }
 
 inline
-int SolveActor::choose(int left, int right)
+Thread *SolveActor::select(int left, int right)
 {
   ozstat.incSolveAlt();
 
   if (cpb==0)
-    return -1;
+    return 0;
 
   WaitActor *wa = cpb->access();
 
   if (!wa)
-    return -1;
+    return 0;
 
   int n = wa->selectOrFailChildren(left, right);
 
-  if (n==0) {
-    return 0;
-  } else if (n==1) {
+  if (n==1)
     this->removeChoice();
 
-    Board *bb = wa->getChildRef();
-    Assert(bb->isWait());
-
-    Assert(am.isCurrentBoard(solveBoard));
-    return am.commit(bb) ? 1 : 0;
-  } else {
-    return 1;
-  }
+  return wa->getThread();
 }
+
 
 inline
 void SolveActor::clearResult(Board* bb) {
@@ -194,6 +186,7 @@ void SolveActor::clearResult(Board* bb) {
 
   result = makeTaggedRef(newTaggedUVar(bb));
 }
+
 
 inline
 void SolveActor::pushToLTQ(Thread * thr, Board * b) {

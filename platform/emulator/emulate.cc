@@ -51,7 +51,7 @@ int canOptimizeFailure(AM *e, Thread *tt)
   if (tt->hasCatchFlag() || e->onToplevel()) { // catch failure
     if (tt->isSuspended()) {
       tt->pushCFun(BIfail,0,0,NO);
-      e->suspThreadToRunnable(tt);
+      e->suspThreadToRunnableOPT(tt);
       e->scheduleThread(tt);
     } else {
       printf("WEIRD: failure detected twice");
@@ -2683,8 +2683,19 @@ LBLdispatcher:
 
   Case(TASKACTOR)
     {
-      Assert(0);
-      error("TASKACTOR: never");
+      // this is the second part of Space.choose (see builtin.cc)
+      WaitActor *wa = WaitActor::Cast((Actor *) Y);
+      CTS->restoreFrame();
+      if (wa->getChildCount() != 1) {
+        goto LBLsuspendThread;
+      }
+      Board *bb = wa->getChildRef();
+      Assert(bb->isWait());
+
+      if (!am.commit(bb,CTT)) {
+        goto LBLfailure; // ???
+      }
+      goto LBLpopTask;
     }
 
   Case(TASKPROFILECALL)
@@ -3294,7 +3305,7 @@ LBLfailure:
                        tmpCont->getY(), tmpCont->getG());
           if (tmpCont->getX()) ts->pushX(tmpCont->getX());
           aa->disposeAsk();
-          e->suspThreadToRunnable(tt);
+          e->suspThreadToRunnableOPT(tt);
           e->scheduleThread(tt);
         }
       }
