@@ -557,8 +557,9 @@ public:
 //-----------------------------------------------------------------------------
 // Miscellaneous
 
-extern void OZ_updateHeapTerm(OZ_Term &);
-extern void OZ_collectHeapBlock(OZ_Term *, OZ_Term *, int);
+extern void   OZ_updateHeapTerm(OZ_Term &);
+extern void   OZ_collectHeapBlock(OZ_Term *, OZ_Term *, int);
+extern void * OZ_hrealloc(void *, size_t);
 
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
 
@@ -566,7 +567,9 @@ OZ_Term * OZ_hallocOzTerms(int);
 int *     OZ_hallocCInts(int);
 char *    OZ_hallocChars(int);
 OZ_Term * OZ_copyOzTerms(int, OZ_Term *);
-int *     OZ_copyCInts(int, int *);
+inline int * OZ_copyCInts(int n, int * frm) {
+  return (n>0) ? ((int *) OZ_hrealloc(frm, n*sizeof(int))) : ((int *) 0);
+}
 char *    OZ_copyChars(int, char *);
 void      OZ_hfreeOzTerms(OZ_Term *, int);
 void      OZ_hfreeCInts(int *, int);
