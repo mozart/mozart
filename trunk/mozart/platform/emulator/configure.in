@@ -217,9 +217,11 @@ if test "${GXX}" = yes; then
 	AC_MSG_RESULT(no)
     fi
 
+    : ${oz_enable_warnings=no}
     AC_MSG_CHECKING(for --enable-warnings)
     AC_ARG_ENABLE(warnings,
-	[--enable-warnings  print c warnings (default=yes)])
+	[--enable-warnings  print c warnings (default=no)],,
+	[enable_warnings=$oz_enable_warnings])
 
     if test "${enable_warnings}" != no
     then
