@@ -42,6 +42,9 @@ int static_int_b[MAXFDBIARGS];
 float static_float_a[MAXFDBIARGS];
 float static_float_b[MAXFDBIARGS];
 
+int static_index_offset[MAXFDBIARGS];
+int static_index_size[MAXFDBIARGS];
+
 //-----------------------------------------------------------------------------
 // Member functions
 
@@ -293,11 +296,15 @@ Bool BIfdBodyManager::bifdbm_is_local[MAXFDBIARGS];
 int BIfdBodyManager::curr_num_of_vars;
 Bool BIfdBodyManager::vars_left;
 Bool BIfdBodyManager::glob_vars_touched;
+int * BIfdBodyManager::index_offset;
+int * BIfdBodyManager::index_size;
 
 void BIfdBodyManager::initStaticData(void) {
   bifdbm_var = static_var;
   bifdbm_varptr = static_varptr;
   bifdbm_vartag = static_vartag;
+  index_offset = static_index_offset;
+  index_size = static_index_size;
   curr_num_of_vars = 0;
 }
 
@@ -687,12 +694,15 @@ void BIinitFD()
   BIadd("fdGenLinEq", 3, BIfdGenLinEq);
   BIadd("fdGenLinEq_body", 3, BIfdGenLinEq_body);
   BIadd("fdGenNonLinEq", 3, BIfdGenNonLinEq);
+  BIadd("fdGenNonLinEq_body", 3, BIfdGenNonLinEq_body);
   BIadd("fdGenLinNotEq", 3, BIfdGenLinNotEq);
   BIadd("fdGenLinNotEq_body", 3, BIfdGenLinNotEq_body);
   BIadd("fdGenNonLinNotEq", 3, BIfdGenNonLinNotEq);
+  BIadd("fdGenNonLinNotEq_body", 3, BIfdGenNonLinNotEq_body);
   BIadd("fdGenLinLessEq", 3, BIfdGenLinLessEq);
   BIadd("fdGenLinLessEq_body", 3, BIfdGenLinLessEq_body);
   BIadd("fdGenNonLinLessEq", 3, BIfdGenNonLinLessEq);
+  BIadd("fdGenNonLinLessEq_body", 3, BIfdGenNonLinLessEq_body);
   BIadd("fdGenLinAbs", 4, BIfdGenLinAbs);
   BIadd("fdGenLinAbs_body", 4, BIfdGenLinAbs_body);
   
