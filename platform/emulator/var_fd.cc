@@ -342,10 +342,12 @@ OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
       }
       GenCVariable::unifyGenCVariables = NO;
       if (OZ_unify(auxvar, makeTaggedRef(varPtr))) {
+        GenCVariable::unifyGenCVariables = OK;
         while (isRef(*varPtr)) varPtr = (TaggedRef*) *varPtr;
         var = *varPtr;
         return PROCEED;
       }
+      GenCVariable::unifyGenCVariables = OK;
       return FAILED;
     }
   default:
