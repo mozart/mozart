@@ -35,6 +35,8 @@
 ]>
 <book proglang=sh>
     <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
+    <meta name="entry.category" value="option">
+    <meta name="entry.category" value="variable">
     <title/Installation Manual/
     <author.extern to="author.db" key="Denys.Duchier">
 
