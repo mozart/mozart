@@ -922,7 +922,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
 
 
   case "$target" in
-    i386-mingw32)
+    i386-mingw32|i386-mingw32msvc)
         PLATFORM=win32-i486
         platform="win32-i486"
         ozplatform=$platform
