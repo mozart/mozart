@@ -292,29 +292,12 @@ OZ_BI_define(BIlabel, 1, 1)
  oz_typeError(0,"Record");
 } OZ_BI_end
 
-// mm2: who needs this?
-OZ_BI_define(BIhasLabel, 1, 1)
-{
-  oz_declareDerefIN(0,rec);
-  // Wait for term to be a record with determined label:
-  // Get the term's label, if it exists
-  if (oz_isVariable(rec)) {
-    if (isGenOFSVar(rec)) {
-      TaggedRef thelabel=tagged2GenOFSVar(rec)->getLabel();
-      DEREF(thelabel,lPtr,_2);
-      OZ_RETURN(oz_bool(!oz_isVariable(thelabel)));
-    }
-    OZ_RETURN(oz_false());
-  }
-  if (oz_isRecord(rec)) OZ_RETURN(oz_true());
-  oz_typeError(0,"Record");
-} OZ_BI_end
 
 /*
  * NOTE: similar functions are dot, genericSet, uparrow
  */
-OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot)
-{
+inline
+OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
   DEREF(fea, _1,feaTag);
 
   DEREF(term, _2, termTag);
@@ -462,21 +445,14 @@ raise:
 }
 
 // extern
-OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
-{
+OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out) {
   return genericDot(term,fea,&out,TRUE);
 }
 OZ_DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
 
-inline
-OZ_Return hasFeatureInline(TaggedRef term, TaggedRef fea)
-{
-  return genericDot(term,fea,0,FALSE);
-}
-
 OZ_BI_define(BIhasFeature,2,1)
 {
-  OZ_Return r = hasFeatureInline(OZ_in(0),OZ_in(1));
+  OZ_Return r = genericDot(OZ_in(0),OZ_in(1),0,FALSE);
   switch (r) {
   case PROCEED: OZ_RETURN(oz_true());
   case FAILED : OZ_RETURN(oz_false());
@@ -490,18 +466,12 @@ OZ_BI_define(BIhasFeature,2,1)
  *    if X in Term.Attr = X then X else Defau fi
  * end
  */
-inline
-OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
-{
-  return genericDot(term,fea,&out,FALSE);
-}
 
-OZ_BI_define(BImatchDefault,3,1)
-{
+OZ_BI_define(BImatchDefault,3,1) {
   OZ_Term aux=0;
   oz_declareIN(0,rec);
   oz_declareIN(1,fea);
-  OZ_Return ret=subtreeInline(rec,fea,aux);
+  OZ_Return ret = genericDot(rec,fea,&aux,FALSE);
   if (ret==SUSPEND) {
     oz_suspendOn2(rec,fea);
   } else if (ret==PROCEED) {
@@ -512,8 +482,7 @@ OZ_BI_define(BImatchDefault,3,1)
   }
 } OZ_BI_end
 
-OZ_Return widthInline(TaggedRef term, TaggedRef &out)
-{
+OZ_Return widthInline(TaggedRef term, TaggedRef &out) {
   DEREF(term,_,tag);
 
   switch (tag) {

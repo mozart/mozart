@@ -73,8 +73,8 @@ OZ_BI_define(BIGetPID,0,1)
     hostaddr=gethostbyname(nodename);
     OZ_warning("Unable to reach the net, using localhost instead\n");
   }
-  OZ_Term host = oz_pairA("host",oz_string(osinet_ntoa(hostaddr->h_addr_list[0])));
-  OZ_Term port = oz_pairA("port",OZ_int(myDSite->getPort()));
+  OZ_Term host = oz_pairA("host",OZ_string(osinet_ntoa(hostaddr->h_addr_list[0])));
+  OZ_Term port = oz_pairA("port",oz_int(myDSite->getPort()));
   OZ_Term time =
     oz_pairA("time",
              OZ_pair2(OZ_unsignedLong((unsigned long) myDSite->getTimeStamp()->start),

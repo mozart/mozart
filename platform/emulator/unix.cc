@@ -256,38 +256,13 @@ static char* h_strerror(const int err) {
   }                                                     \
 }
 
-static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tl) {
-  // gives back a list of length len which elments are taken from a C-string
-  // the tail of the list is given by list
-  OZ_Term prev, hd;
-
-  if (len == 0)
-    return tl;
-
-  hd = OZ_tupleC("|", 2);
-  OZ_putArg(hd, 0, OZ_int((unsigned char) *s++));
-  prev = hd;
-
-  while (--len) {
-    OZ_Term next = OZ_tupleC("|", 2);
-
-    OZ_putArg(next, 0, OZ_int((unsigned char) *s++));
-    OZ_putArg(prev, 1, next);
-    prev = next;
-  }
-
-  OZ_putArg(prev, 1, tl);
-  return hd;
-}
-
-
 //
 // Handling of virtual strings
 //
 
-inline OZ_Term buff2list(int len, const char *s)
-{
-  return openbuff2list(len, s, oz_nil());
+inline
+OZ_Term buff2list(const int len, const char *s)  {
+  return oz_string(s, len, AtomNil);
 }
 
 
@@ -592,10 +567,9 @@ OZ_BI_iodefine(unix_stat,1,1)
     fileType = "unknown";
 
   OZ_Term pairlist=
-    oz_cons(OZ_pairAA("type",fileType),
-            oz_cons(OZ_pairAI("size",buf.st_size),
-                 oz_cons(OZ_pairAI("mtime",buf.st_mtime),
-                    oz_nil())));
+    oz_mklist(oz_pairAA("type",fileType),
+              oz_pairAI("size",buf.st_size),
+              oz_pairAI("mtime",buf.st_mtime));
   OZ_RETURN(OZ_recordInit(OZ_atom("stat"),pairlist));
 } OZ_BI_ioend
 
@@ -620,7 +594,7 @@ OZ_BI_iodefine(unix_uName,0,1)
   OZ_Term t6=OZ_pairAS("version",buf.version);
 
 #endif
-  OZ_Term pairlist = oz_cons(t2,oz_cons(t3,oz_cons(t4,oz_cons(t5,oz_cons(t6,oz_nil())))));
+  OZ_Term pairlist = oz_mklist(t2,t3,t4,t5,t6);
 
 #if defined(SUNOS_SPARC) || defined(LINUX)
   char dname[65];
@@ -793,7 +767,7 @@ OZ_BI_iodefine(unix_read,5,0)
 
   WRAPCALL("read",osread(fd, buf, maxx), ret);
 
-  OZ_Term hd = openbuff2list(ret, buf, outTail);
+  OZ_Term hd = oz_string(buf, ret, outTail);
 
   free(buf);
 
@@ -1294,7 +1268,7 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
   struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
                                             fromlen, AF_INET);
 
-  OZ_Term localhead = openbuff2list(ret, buf, tl);
+  OZ_Term localhead = oz_string(buf, ret, tl);
 
   free(buf);
 
@@ -1674,7 +1648,7 @@ OZ_BI_iodefine(unix_getHostByName, 1,1)
   OZ_Term t1=OZ_pairAS("name", hostaddr->h_name);
   OZ_Term t2=OZ_pairA("aliases",mkAliasList(hostaddr->h_aliases));
   OZ_Term t3=OZ_pairA("addrList",mkAddressList(hostaddr->h_addr_list));
-  OZ_Term pairlist= oz_cons(t1,oz_cons(t2,oz_cons(t3,oz_nil())));
+  OZ_Term pairlist= oz_mklist(t1,t2,t3);
 
   OZ_RETURN(OZ_recordInit(OZ_atom("hostent"),pairlist));
 } OZ_BI_ioend

@@ -46,8 +46,6 @@
 TaggedRef
   RecordFailure,
 
-  _NameTrue, _NameFalse,
-
   BI_Unify,BI_send, BI_wait,
   BI_load, BI_fail, BI_skip, BI_url_load, BI_obtain_native,
 
@@ -149,9 +147,6 @@ void Name::import(GName *name)
 void initLiterals()
 {
   initAtomsAndNames();
-
-  _NameTrue  = oz_uniqueName(NAMETRUE);
-  _NameFalse = oz_uniqueName(NAMEFALSE);
 
   RecordFailure = OZ_recordInitC("failure",
                                  oz_list(OZ_pairA("debug",NameUnit),0));
@@ -552,7 +547,7 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
     }
   }
   Assert(oz_isNil(list));
-  *ptr=oz_cons(a,oz_nil());
+  *ptr=oz_mklist(a);
 
   return out;
 }
@@ -1459,3 +1454,29 @@ void gCollectPendThreadEmul(PendThread **pt)
     pt=&(tmp->next);
   }
 }
+
+#define STRING_BLOCK_SZ 64
+
+OZ_Term oz_string(const char * s, const int len, const OZ_Term tail) {
+  int i     = len;
+  OZ_Term t = tail;
+
+  while (i > 0) {
+    int j = min(STRING_BLOCK_SZ,i);
+
+    LTuple * lb = (LTuple *) heapMalloc(j * sizeof(LTuple));
+
+    lb[--j].setBoth(newSmallInt((unsigned char) s[--i]),t);
+
+    while (j-- > 0) {
+      lb[j].setBoth(newSmallInt((unsigned char) s[--i]),
+                    makeTaggedLTuple(lb + j + 1));
+    }
+
+    t = makeTaggedLTuple(lb);
+  }
+
+  return t;
+}
+
+#undef STRING_BLOCK_SZ
