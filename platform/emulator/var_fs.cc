@@ -265,7 +265,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 
 
 // tell finite set constraint to unconstrained variable
-  if (isNotCVar(vtag)) {
+  if (oz_isFree(v)) {
     if (! fs) goto fsvariable;
 
     // fs denotes a set value --> v becomes set value

@@ -203,7 +203,7 @@ int oz_isFree(TaggedRef r)
 {
   return oz_isVariable(r) && (!isCVar(r) || !tagged2CVar(r)->isKinded());
 }
-  
+
 // only SVar and their descendants can be exclusive
 inline
 void setStoreFlag(OZ_Term t) 
