@@ -1444,3 +1444,34 @@ int featureEqOutline(TaggedRef a, TaggedRef b)
 
   return tagTypeOf(a) == BIGINT && tagTypeOf(b) == BIGINT && bigIntEq(a,b);
 }
+
+#ifdef FOREIGN_POINTER
+inline
+Bool isForeignPointer(TaggedRef term)
+{
+  term = deref(term);
+  return isConst(term) && tagged2Const(term)->getType() == Co_Foreign_Pointer;
+}
+void* OZ_getForeignPointer(TaggedRef t)
+{
+  if (! isForeignPointer(t)) {
+    OZ_warning("Foreign pointer expected in OZ_getForeignPointer.\n Got 0x%x. Result unspecified.\n",t);
+    return NULL;
+  }
+  return ((ForeignPointer*)tagged2Const(deref(t)))->getPointer();
+}
+int OZ_isForeignPointer(TaggedRef t)
+{
+  return isForeignPointer(deref(t));
+}
+OZ_Term OZ_makeForeignPointer(void*p)
+{
+  ForeignPointer * fp = new ForeignPointer(p);
+  return makeTaggedConst(fp);
+}
+ForeignPointer*
+openForeignPointer(TaggedRef t)
+{
+  return (ForeignPointer*)tagged2Const(deref(t));
+}
+#endif

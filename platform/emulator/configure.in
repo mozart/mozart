@@ -468,6 +468,36 @@ else
 fi
 
 dnl *****************************************************************
+dnl FINALIZATION SUPPORT
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --enable-finalization)
+AC_ARG_ENABLE(finalization,
+  [--enable-finalization
+                      provide support for finalization (default=yes)])
+if test "x$enable_finalization" = xno; then
+        AC_MSG_RESULT(no)
+        AC_DEFINE(NOFINALIZATION)
+else
+        AC_MSG_RESULT(yes)
+fi
+
+dnl *****************************************************************
+dnl FOREIGN POINTER SUPPORT
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --enable-foreign-pointer)
+AC_ARG_ENABLE(foreign-pointer,
+  [--enable-foreign-pointer,
+                      provide support for foreign pointers (default=yes)])
+if test "x$enable_foreign_pointer" = xno; then
+        AC_MSG_RESULT(no)
+        AC_DEFINE(NOFOREIGN_POINTER)
+else
+        AC_MSG_RESULT(yes)
+fi
+
+dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 

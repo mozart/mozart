@@ -799,6 +799,10 @@ PRINTLONG(ConstTerm)
     break;
   case Co_Thread:     ((Thread *) this)->printLong(stream,depth,offset);    break;
   case Co_Builtin:    ((BuiltinTabEntry *) this)->printLong(stream,depth,offset);     break;
+#ifdef FOREIGN_POINTER
+  case Co_Foreign_Pointer:
+    ((ForeignPointer*)this)->printLong(stream,depth,offset); break;
+#endif
   default:            Assert(NO);
   }
 }
@@ -820,6 +824,10 @@ PRINT(ConstTerm)
   case Co_Lock:        ((LockLocal *) this)->print(stream,depth,offset);break;
   case Co_Thread:      ((Thread *) this)->print(stream,depth,offset);    break;
   case Co_Builtin:     ((BuiltinTabEntry *) this)->print(stream,depth,offset);     break;
+#ifdef FOREIGN_POINTER
+  case Co_Foreign_Pointer:
+    ((ForeignPointer*)this)->print(stream,depth,offset); break;
+#endif
   default:             Assert(NO);
   }
 }
@@ -845,7 +853,20 @@ PRINTLONG(HeapChunk)
          << "heap chunk: " << (int) chunk_size << " bytes at " << this << '.';
 }
 
-
+#ifdef FOREIGN_POINTER
+PRINT(ForeignPointer)
+{
+  CHECKDEPTH;
+  stream << indent(offset)
+         << "foreign pointer: " << getPointer() << " at " << this << '.';
+}
+PRINTLONG(ForeignPointer)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+         << "foreign pointer: " << getPointer() << " at " << this << '.';
+}
+#endif
 
 PRINTLONG(ObjectClass)
 {

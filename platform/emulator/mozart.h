@@ -29,6 +29,14 @@
 #ifndef __OZ_H__
 #define __OZ_H__
 
+#ifndef NOFINALIZATION
+#define FINALIZATION
+#endif
+
+#ifndef NOFOREIGN_POINTER
+#define FOREIGN_POINTER
+#endif
+
 /* ------------------------------------------------------------------------ *
  * 0. intro
  * ------------------------------------------------------------------------ */
@@ -488,6 +496,19 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
    VAR = OZ_virtualStringToC(OZ_getCArg(ARG));          \
  }
 
+#ifdef FOREIGN_POINTER
+#define OZ_declareForeignPointerArg(ARG,VAR)    \
+void *VAR;                                      \
+{                                               \
+  OZ_declareNonvarArg(ARG,_VAR);                \
+  if (!OZ_isForeignPointer(_VAR)) {             \
+    return OZ_typeError(ARG,"ForeignPointer");  \
+  } else {                                      \
+    VAR = OZ_getForeignPointer(_VAR);           \
+  }                                             \
+}
+#endif
+
 /* ------------------------------------------------------------------------ *
  * end
  * ------------------------------------------------------------------------ */
@@ -526,6 +547,9 @@ typedef enum {
   OZ_Type_Record,
   OZ_Type_Tuple,
   OZ_Type_Var,
+#ifdef FOREIGN_POINTER
+  OZ_Type_ForeignPointer,
+#endif
   OZ_Type_Unknown
 } OZ_TermType;
 
@@ -579,9 +603,14 @@ typedef struct {
 extern OZ_Return _FUNDECL(OZ_valueToDatum,(OZ_Term  t, OZ_Datum* d));
 extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 
-
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef FOREIGN_POINTER
+extern OZ_Term  _FUNDECL(OZ_makeForeignPointer,(void*));
+extern void*    _FUNDECL(OZ_getForeignPointer,(OZ_Term));
+extern int      _FUNDECL(OZ_isForeignPointer,(OZ_Term));
 #endif
 
 #endif /* __OZ_H__ */

@@ -5722,6 +5722,11 @@ OZ_C_proc_begin(BIFindFile,3)
   char Name[NAMESIZE];
   char Path[NAMESIZE];
   strcpy(Name,N);
+  if (Name[0]=='/') {           // absolute path
+    struct stat buf;
+    if (stat(Name,&buf)==0)
+      return OZ_unify(Fullpath,OZ_atom(Name));
+  }
   switch (find_file(R,Name,Path)) {
   case  1: return OZ_unify(Fullpath,OZ_false());
   case  0: return OZ_unify(Fullpath,OZ_atom(Path));
@@ -7598,7 +7603,12 @@ static int finalizable(OZ_Term& x)
       ConstTerm* xp = tagged2Const(x);
       Board*b;
       switch (xp->getType()) {
+#ifdef FOREIGN_POINTER
+      case Co_Foreign_Pointer:
+        return 1;
+#else
       case Co_UNUSED1:
+#endif
       case Co_UNUSED2:
         return 2;
         // Tertiary Consts

@@ -1563,7 +1563,6 @@ void GenOFSVariable::gc(void)
     dynamictable=dynamictable->gc();
 }
 
-
 inline
 void GenCVariable::gc(void)
 {
@@ -1694,6 +1693,18 @@ TaggedRef gcVariable(TaggedRef var)
 
 }
 
+#ifdef FOREIGN_POINTER
+ForeignPointer * ForeignPointer::gc(void)
+{
+  GCMETHMSG("ForeignPointer::gc");
+  ForeignPointer * ret =
+    (ForeignPointer*) gcReallocStatic(this,sizeof(ForeignPointer));
+  ret->ptr = ptr;
+  GCNEWADDRMSG(ret);
+  storeForward(getGCField(),ret);
+  return ret;
+}
+#endif
 
 // ===================================================================
 // Finalization
@@ -2741,6 +2752,11 @@ ConstTerm *ConstTerm::gcConstTerm()
   /* builtins are allocate dusing malloc */
   case Co_Builtin:
     return this;
+
+#ifdef FOREIGN_POINTER
+  case Co_Foreign_Pointer:
+    return ((ForeignPointer*)this)->gc();
+#endif
 
   default:
     Assert(0);
