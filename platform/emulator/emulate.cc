@@ -31,6 +31,7 @@
 #include "board.hh"
 #include "thread.hh"
 #include "fdhook.hh"
+#include "verbose.hh"
 
 
 extern State BIexchangeCellInline(TaggedRef c, TaggedRef out,TaggedRef &in);
@@ -462,6 +463,12 @@ SRecord *newSRecordOutline(Arity *ff, TaggedRef label)
 {
   return new SRecord(ff,label,-1,NO);
 }
+
+// aux debugging;
+#define VERBMSG(S,A1,A2)                                                   \
+    fprintf(verbOut,"(em) %s (arg#1 0x%x, arg#2 0x%x) :%d\n",              \
+	    S,A1,A2,__LINE__);                                             \
+    fflush(verbOut);
 
 void engine() {
   
@@ -1749,9 +1756,11 @@ void engine() {
 	 HANDLE_FAILURE(PC, message("not first call of solve continuation"));
        }
 
-       ((OneCallBuiltin *) bi)->hasSeen ();
        Board *solveBB =
 	 (Board *) tagValueOf ((((OneCallBuiltin *) bi)->getGRegs ())[0]);
+       // VERBMSG("solve continuation",((void *) bi),((void *) solveBB));
+       // kost@ 22.12.94: 'hasSeen' has new implementation now;
+       ((OneCallBuiltin *) bi)->hasSeen ();
        DebugCheck ((solveBB->isSolve () == NO),
 		   error ("no 'solve' blackboard  in solve continuation builtin"));
        DebugCheck((solveBB->isCommitted () == OK ||
@@ -1835,6 +1844,7 @@ void engine() {
        if (tagTypeOf (valueIn) == CONST) {
 	 Board *solveBB =
 	   (Board *) tagValueOf ((((SolvedBuiltin *) bi)->getGRegs ())[0]);
+	 // VERBMSG("solved",((void *) bi),((void *) solveBB));
 	 DebugCheck ((solveBB->isSolve () == NO),
 		     error ("no 'solve' blackboard  in solve continuation builtin"));
 	 DebugCheck((solveBB->isCommitted () == OK ||
