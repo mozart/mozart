@@ -132,7 +132,7 @@ void Thread::terminate()
     PopFrame(tos,PC,Y,G);
     if (PC==C_EMPTY_STACK) {
       ts->makeEmpty();
-      return NO;
+      return;
     }
   }
 }
