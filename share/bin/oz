@@ -80,7 +80,6 @@ case "$cmd" in
 	     OZEMACS=${OZHOME}/lemacs/lemacs
 	  else
 
-	     echo -n "checking for emacs: "
 	     IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
              for name in lemacs emacs; do
 	       for dir in $PATH; do
@@ -94,14 +93,13 @@ case "$cmd" in
              done
 	     IFS="$saveifs"
 	     if [ ${OZEMACS-0} = 0 ]; then
-		echo "not found" 1>&2
+		echo "Cannot find emacs" 1>&2
 		echo "Try setting environment variable OZEMACS" 1>&2
 		exit 1
 	     fi
-	     echo "${OZEMACS}"
-
 	  fi
 	fi
+        echo "Using emacs '${OZEMACS}'"
 
 	exec $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $*
    ;;
@@ -131,6 +129,14 @@ case "$cmd" in
 
    oz-)
 	exec $ILE $OZCOMPILER $*
+   ;;
+
+   ozc)
+	set -e
+        for file in $@; do
+	    $OZCOMPILER +c $file
+        done
+        exit $?
    ;;
 
    *)
