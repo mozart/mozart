@@ -44,28 +44,32 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#if defined(LINUX) || defined(SOLARIS) || defined(SUNOS_SPARC) || defined(IRIX) || defined(OSF1_ALPHA) || defined(FREEBSD) || defined(NETBSD) || defined(IRIX6)
-#   define DLOPEN 1
-#if defined(FREEBSD)
-#define RTLD_NOW 1
-#endif
-#endif
+#ifdef HAVE_DLOPEN
 
-#ifdef DLOPEN
-#ifdef SUNOS_SPARC
-#define RTLD_NOW 1
+#ifdef HAVE_DLFCN_H
+#include <dlfcn.h>
+#else
 extern "C" void * dlopen(char *, int);
 extern "C" char * dlerror(void);
 extern "C" void * dlsym(void *, char *);
 extern "C" int dlclose(void *);
-#else
-#include <dlfcn.h>
 #endif
+
+#if !defined(RTLD_NOW)
+#define RTLD_NOW 1
 #endif
+
+#if !defined(RTLD_GLOBAL)
+#define RTLD_GLOBAL 0
+#endif
+
+#endif
+
 #ifdef IRIX
 #include <bstring.h>
 #include <sys/time.h>
 #endif
+
 #ifdef HPUX_700
 #include <dl.h>
 #endif
@@ -1208,7 +1212,7 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
     message("Linking file %s\n",filename);
   }
 
-#ifdef DLOPEN
+#ifdef HAVE_DLOPEN
 #ifdef HPUX_700
   {
     shl_t handle;
@@ -1228,11 +1232,7 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
     // are linked against symbols coming from already
     // liked objects (example: libfd and libschedule)
 
-#ifdef RTLD_GLOBAL
     void *handle=dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
-#else
-    void *handle=dlopen(filename, RTLD_NOW);
-#endif
 
     if (!handle) {
       err=oz_atom(dlerror());
@@ -1262,7 +1262,7 @@ raise:
 
 int osDlclose(void* handle)
 {
-#ifdef DLOPEN
+#ifdef HAVE_DLOPEN
   if (dlclose(handle)) {
     return -1;
   }
@@ -1275,7 +1275,7 @@ int osDlclose(void* handle)
   return 0;
 }
 
-#if defined(DLOPEN)
+#if defined(HAVE_DLOPEN)
 void *osDlsym(void *handle,const char *name) { return dlsym(handle,name); }
 #elif defined(HPUX_700)
 void *osDlsym(void *handle,const char *name)
