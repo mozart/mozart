@@ -324,12 +324,6 @@ Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
 }
 
 
-/* we prefer binding of newer variables to older ones */
-inline Bool heapNewer(TaggedRef *termPtr1, TaggedRef *termPtr2)
-{
-  return termPtr1 > termPtr2;
-}
-
 #define Swap(A,B,Type) { Type help=A; A=B; B=help; }
 
 Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
@@ -393,7 +387,7 @@ start:
   if (isNotCVar(tag1)) {
     if ( isNotCVar(tag2) && isLocalVariable(term2) &&
 	 (!isLocalVariable(term1) || heapNewer(termPtr2,termPtr1))) {
-      bind(termPtr2, term2, termPtr1, prop);
+      bind(termPtr2, term2, termPtr1, prop); /* prefer binding of newer to older variables */
     } else {
       bind(termPtr1, term1, termPtr2, prop);
     }
