@@ -32,6 +32,7 @@
 #include <pwd.h>
 #endif
 
+#include "conf.h"
 #include "base.hh"
 #include "os.hh"
 #include "dictionary.hh"
