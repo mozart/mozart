@@ -19,7 +19,7 @@
 // ------------------------------------------------------------------------
 
 class Actor : public ConstTerm {
-private:
+protected:
   int flags;
   Continuation next;
   Board *board;
@@ -32,7 +32,8 @@ public:
   ~Actor();
 
   USEHEAPMEMORY;
-  void gc();
+  Actor *gc();
+  void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
 
@@ -40,7 +41,7 @@ public:
   void failChild(Board *n);
   Continuation *getNext();
   int getPriority();
-  Board *getBoardDeref();
+  Board *getBoard();
   Bool hasNext();
   Bool isCommitted();
   Bool isAsk();
@@ -79,9 +80,11 @@ public:
             ProgramCounter p,RefsArray y,RefsArray g,RefsArray x,int i);
   ~WaitActor();
 
+  void gcRecurse();
+
   void addChildInternal(Board *n);
   void failChildInternal(Board *n);
-  WaitBoard *getChild();
+  Board *getChild();
   Bool isThereOneChild();
 };
 

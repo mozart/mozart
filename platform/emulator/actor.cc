@@ -40,10 +40,11 @@ enum ActorFlags {
 
 // ------------------------------------------------------------------------
 
-inline Actor::Actor(int type,Board *s,int prio,ProgramCounter p,RefsArray y,
+inline Actor::Actor(int type,Board *bb,int prio,ProgramCounter p,RefsArray y,
                      RefsArray g,RefsArray x,int i)
-: ConstTerm(Co_Actor),flags(type),board(s),priority(prio)
+: ConstTerm(Co_Actor),flags(type),board(bb),priority(prio)
 {
+  bb->addSuspension();
   next.setPC(p);
   next.setY(y);
   next.setG(g);
@@ -84,9 +85,9 @@ inline int Actor::getPriority()
   return priority;
 }
 
-inline Board *Actor::getBoardDeref()
+inline Board *Actor::getBoard()
 {
-  return board->getBoardDeref();
+  return board;
 }
 
 inline Bool Actor::hasNext()
@@ -190,7 +191,7 @@ void WaitActor::failChildInternal(Board *n)
   error("mm2: not impl");
 }
 
-WaitBoard *WaitActor::getChild()
+Board *WaitActor::getChild()
 {
   error("mm2: not impl");
 }

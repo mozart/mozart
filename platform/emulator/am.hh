@@ -12,6 +12,7 @@
 #ifndef __AMH
 #define __AMH
 
+#include <setjmp.h>
 #include <unistd.h>
 #include <sys/types.h>
 
@@ -35,17 +36,26 @@ typedef enum {
 } AMModus;
 
 typedef enum {
-  SecureTrace   = 1 << 0,
-  TraceMode     = 1 << 1,
   ThreadSwitch  = 1 << 2, // choose a new process
   IOReady       = 1 << 3, // IO handler has signaled IO ready
   UserAlarm     = 1 << 4, // Alarm handler has signaled User Alarm
   StartGC       = 1 << 5, // need a GC
 } StatusBit;
 
+enum JumpReturns {
+  NOEXCEPTION = 0,
+  SEGVIO = 1,
+  BUSERROR = 2
+};
 
+enum InstType {
+  INST_OK,
+  INST_FAILED,
+  INST_REJECTED
+};
 
 extern AM am;
+extern jmp_buf engineEnvironment;
 
 class AM {
 
@@ -77,7 +87,7 @@ public:
   friend void engine();                   // the main loop
 
 // tree move
-  Bool installPath(Board *to,Bool &isDead);
+  InstType installPath(Board *to);
   Bool installScript(ConsList &script);
   Bool installOne();
   void reduceTrailFrame(Bool writeScript);
@@ -184,6 +194,8 @@ public:
 // debugging --> see file ../builtins/debug.C
   State getValue(TaggedRef feature, TaggedRef out);
   State setValue(TaggedRef feature, TaggedRef value);
+
+  void undoTrailing(int n);
 
 // ----------------------------------------
 // IO
