@@ -170,13 +170,13 @@ just like a <<tempFail>>.
 <P>Even if there exists a remote problem,
 it is not always possible to
 return a <<remoteProblem>> fault state.
-For example,
-if the owner site is inaccessible
-then it might not be possible to learn
+This happens if there are problems
+with a proxy
+that the owner site does not know about.
+This also happens 
+if the owner site is inaccessible.
+In that case it might not be possible to learn
 anything about the remote sites.
-But if there is no <<tempFail>>
-or <<permFail>>, then it is always possible
-to get a <<remoteProblem>> fault state.
 
 <P>The complete fault state of an
 entity consists of at most one
@@ -426,17 +426,22 @@ the operation after they return.
 <P>Fault handlers detect failure when an operation is attempted.
 One often wants to be informed earlier.
 The advanced model allows the application to be informed
+asynchronously, that is,
 as soon as the site finds out about the failure.
 Two operations are provided:
 <LIST>
-<ENTRY> <<proc {Fault.installWatcher Entity FStates WatcherProc}>>
-<ITEM>The procedure <<Fault.installWatcher>> creates a new thread
+<ENTRY> <<fun {Fault.installWatcher Entity FStates WatcherProc}>>
+<ITEM>The function <<Fault.installWatcher>> creates a new thread
 on the current site, in which <<WatcherProc>> will be invoked
 as soon as the site detects that
-a fault state in <<FStates>> occurs.
-<ENTRY> <<proc {Fault.deInstallWatcher Entity WatcherProc}>>
-<ITEM>The procedure <<Fault.deInstallWatcher>> removes the given
-watcher from the current site.
+a fault state in <<FStates>> occurs for the entity.
+The function always returns <<true>>, since it is always
+possible to install a watcher.
+<ENTRY> <<fun {Fault.deInstallWatcher Entity WatcherProc}>>
+<ITEM>The function <<Fault.deInstallWatcher>> removes one instance of
+the given watcher from the entity on the current site.
+If no instance of <<WatcherProc>> was not installed as a watcher, then
+the function returns <<false>>.  Otherwise, it returns <<true>>.
 </LIST>
 <P>A watcher <<WatcherProc>> is a two-argument
 procedure that is called as <<{WatcherProc E FS}>>.
