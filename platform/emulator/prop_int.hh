@@ -183,7 +183,7 @@ OZ_Return oz_runPropagator(Propagator * p)
 }
 
 inline
-void oz_scheduledPropagator(Propagator * prop)
+void oz_preemptedPropagator(Propagator * prop)
 {
   Assert(prop);
   Assert(!prop->isDeadPropagator());
@@ -200,7 +200,7 @@ void oz_scheduledPropagator(Propagator * prop)
 //
 //  (re-)Suspend the propagator again (former 'reviveCurrentTaskSusp');
 inline
-void oz_suspendPropagator(Propagator * prop)
+void oz_sleepPropagator(Propagator * prop)
 {
   Assert(prop);
   Assert(!prop->isDeadPropagator());

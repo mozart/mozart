@@ -2426,7 +2426,7 @@ LBLdispatcher:
            OZ_Return r = oz_runPropagator(prop);
 
            if (r == SLEEP) {
-             oz_suspendPropagator(prop);
+             oz_sleepPropagator(prop);
            } else if (r == PROCEED) {
              oz_closeDonePropagator(prop);
            } else if (r == FAILED) {
@@ -2453,7 +2453,7 @@ LBLdispatcher:
              RAISE_THREAD;
            } else {
              Assert(r == SCHEDULED);
-             oz_scheduledPropagator(prop);
+             oz_preemptedPropagator(prop);
            }
            Assert(prop->isDeadPropagator() || !prop->isRunnable());
          }

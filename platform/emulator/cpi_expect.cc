@@ -851,10 +851,10 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return FAILED;
     case SLEEP:
-      oz_suspendPropagator(prop);
+      oz_sleepPropagator(prop);
       break;
     case SCHEDULED:
-      oz_scheduledPropagator(prop);
+      oz_preemptedPropagator(prop);
       break;
     case PROCEED:
       oz_closeDonePropagator(prop);
@@ -929,7 +929,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 #ifdef DEBUG_NONMONOTONIC
     printf("Setting nonmono prop runnable.\n"); fflush(stdout);
 #endif
-    oz_scheduledPropagator(prop);
+    oz_preemptedPropagator(prop);
   }
   return PROCEED;
 }
