@@ -121,9 +121,9 @@ in
 	 EnvSync    : _
 	 StatusSync : _
 
-	 LastClicked : nil
+	 LastClicked : unit
 
-      meth lastValue(?V)
+      meth lastClickedValue(?V)
 	 try
 	    V = @LastClicked
 	 catch failure(...) then skip
@@ -673,18 +673,19 @@ in
 	       Gui,doStatus('Killing and removing all threads...')
 	       ThreadManager,killAll(N)
 	       {Delay 200} %% just to look nice... ;)
-%	       Gui,doStatus(case N == 1 then
-%			       ' 1 thread collected'
-%			    else
-%			       ' ' # N # ' threads collected'
-%			    end append)
-	       Gui,doStatus(' done' append)
+	       Gui,doStatus(case N == 1 then
+			       ' done  (1 thread collected)'
+			    else
+			       ' done  (' # N # ' threads collected)'
+			    end append)
 
 	    elsecase A == RemoveAllDeadAction then
 	       Gui,doStatus('Removing all dead threads...')
+	       thread
+		  {Delay 200}
+		  Gui,doStatus(' done' append)
+	       end
 	       ThreadManager,removeAllDead
-	       {Delay 200}
-	       Gui,doStatus(' done' append)
 
 	    elsecase A == StepButtonBitmap then
 	       T = @currentThread
