@@ -49,6 +49,9 @@ MSWIN=          @MSWIN@
 
 all:
 
+oz:
+        true
+
 bootstrap:
 
 ifeq ($(MSWIN),yes)
