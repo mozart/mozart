@@ -31,6 +31,14 @@
  *   make michael.o
  *   ozdynld -o libMichael.so michael.o
  *
+ * declare M=
+ * local
+ *    P={Property.get 'platform'}
+ * in
+ *    {Foreign.load 'http://www.ps.uni-sb.de/~mehl/mozart/addon/platform/'
+ *                  #P.1#'-'#P.2#'/libMichael.so'}
+ * end
+ *
  */
 
 #include "builtins.hh"
@@ -41,77 +49,6 @@
 #include "trace.hh"
 
 #include <stdio.h>
-
-/*===================================================================
- * Value.type/status
- *=================================================================== */
-
-/*
- * declare M=
- * local
- *    P={Property.get 'platform'}
- * in
- *    {Foreign.load 'http://www.ps.uni-sb.de/~mehl/mozart/addon/platform/'
- *                  #P.1#'-'#P.2#'/libMichael.so'}
- * end
- *
- * {M.status X} returns
- *   var_<vt>, if X is a variable, where <vt> is one of
- *               future, free,
- *               int,fset,record,other
- *   det_<dt>, if X is determined, where <dt> is one of
- *               int, float, 
- *               atom, name, cons, pair, tuple, record,
- *               procedure, cell, object, port, heapChunk, bitArray, array,
- *                dictionary, lock, class, space, thread, fset,
- *                foreignPointer, (...maybe more built-in chunks ...),
- *                chunk
- *
- *    NOTE: pair <=> {IsTuple X} and {Label X}='#' and {Width X}>1
- *          cons <=> {IsTuple X} and {Label X}='|' and {Width X}=2
- */
-
-OZ_Term oz_valueType(OZ_Term term);
-
-OZ_BI_define(BIstatusNew,1,1)
-{
-  oz_declareIN(0,term);
-
-  DEREF(term, _1, tag);
-
-  switch (tag) {
-  case UVAR: 
-    // FUT
-    OZ_RETURN_ATOM("var_free");
-  case CVAR:
-    switch (tagged2CVar(term)->getType()) {
-    case FDVariable:
-    case BoolVariable:
-      OZ_RETURN_ATOM("var_int");
-    case FSetVariable:
-      OZ_RETURN_ATOM("var_fset");
-    case OFSVariable:
-      OZ_RETURN_ATOM("var_record");
-    case OZ_VAR_FUTURE:
-      OZ_RETURN_ATOM("var_future");
-    default:
-      if (oz_isFree(term)) {
-	OZ_RETURN_ATOM("var_free");
-      } else {
-	OZ_RETURN_ATOM("var_other");
-      }
-    }
-  default:
-    {
-      OZ_Term t=oz_valueType(term);
-      static char buf[1000];
-      strcpy(buf,"det_");
-      strcpy(buf+4,toC(t));
-      OZ_RETURN(oz_atom(buf));
-    }
-  }
-  return PROCEED;
-} OZ_BI_end
 
 /*===================================================================
  * Debugging aids
@@ -300,7 +237,6 @@ OZ_C_proc_interface oz_interface[] = {
   {"stop",0,0,BIstop},
   {"halt",0,0,BIhalt},
   {"debugRef",0,0,BIdebugRef},
-  {"status",1,1,BIstatusNew},
   {"displayDef",2,0,BIdisplayDef},
   {"displayCode",2,0,BIdisplayCode},
   {"procedureCode",1,1,BIprocedureCode},
