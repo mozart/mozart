@@ -61,6 +61,7 @@ case "$target" in
         cross_compiling=yes
 
         CXX=${target}-gcc
+        CC=${CXX}
         RANLIB=${target}-ranlib
         AR=${target}-ar
 
