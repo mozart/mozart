@@ -13,6 +13,8 @@ case $system in
    ;;
    sun4*\ SunOS\ 5*)	OZARCH=solaris-sparc
    ;;
+   i86pc*\ SunOS\ 5*)	OZARCH=solaris-i486
+   ;;
    RISC\ ULTRIX\ 4.*)	OZARCH=ultrix-mips
    ;;
    i[3456]86\ Linux\ *)	OZARCH=linux-i486
