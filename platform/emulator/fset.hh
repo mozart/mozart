@@ -78,8 +78,9 @@ public:
   void init(const FSetValue&);
   void init(OZ_FSetState);
 
-  OZ_FSetImpl unify (const OZ_FSetImpl &) const;
-  OZ_Boolean unify (const FSetValue &) const;
+  OZ_FSetImpl unify(const OZ_FSetImpl &) const;
+  //  OZ_Boolean unify(const FSetValue &);
+  OZ_Boolean valid(const FSetValue &) const;
 
   int getCardMin(void) const { return _card_min; }
   int getCardMax(void) const { return _card_max; }

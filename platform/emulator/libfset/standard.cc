@@ -181,7 +181,9 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
 
   } while (xt <= x || yt <= y || zt <= z);
 
-    return OZ_DEBUGRETURNPRINT(P.leave1());
+  OZ_DEBUGPRINTTHIS("out ");
+
+  return OZ_DEBUGRETURNPRINT(P.leave1());
 
 failure:
   OZ_DEBUGPRINTTHIS("failed ");
@@ -258,15 +260,23 @@ failure:
 OZ_Return FSetDisjointPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
+
   OZ_FSetVar x(_x), y(_y);
   PropagatorController_S_S P(x, y);
 
-  FailOnInvalid(*x != *y);
-  FailOnInvalid(*y != *x);
+  FSetTouched xt, yt;
+
+  do {
+    xt = x;  yt = y;
+
+    FailOnInvalid(*x != *y);
+    FailOnInvalid(*y != *x);
+
+  } while (xt <= x || yt <= y);
 
   OZ_DEBUGPRINTTHIS("out ");
-  return P.leave1(); /* is entailed if only
-                        one var is left */
+  return  OZ_DEBUGRETURNPRINT(P.leave1());
+  /* is entailed if only one var is left */
 
 failure:
   OZ_DEBUGPRINTTHIS("failed ");

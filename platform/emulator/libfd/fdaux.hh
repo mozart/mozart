@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 // debug macros
 
-//#define OZ_DEBUG
+#define OZ_DEBUG
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
 
@@ -46,7 +46,7 @@ extern "C" void oz_debugprint(char *format ...);
 #define _OZ_DEBUGPRINTTHIS(string)              \
    _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
 
-#define OZ_DEBUGPRINTTHIS(string) _OZ_DEBUGPRINTTHIS(string)
+#define OZ_DEBUGPRINTTHIS(string) /* _OZ_DEBUGPRINTTHIS(string) */
 
 //-----------------------------------------------------------------------------
 // misc macros

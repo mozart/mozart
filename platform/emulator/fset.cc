@@ -19,9 +19,10 @@
 #include "fset.hh"
 #include "tagged.hh"
 #include "value.hh"
+#include "fddebug.hh"
 
 //*****************************************************************************
-//#define DEBUG_FSET
+#undef DEBUG_FSET
 #ifdef DEBUG_FSET
 
 
@@ -425,22 +426,55 @@ void OZ_FSetImpl::printDebug(void) const
   cout << endl << flush;
 }
 
-OZ_Boolean OZ_FSetImpl::unify(const FSetValue &fs) const
+OZ_Boolean OZ_FSetImpl::valid(const FSetValue &fs) const
 {
+  DEBUG_FSETIR("( " << *this << " valid " << fs << " ) = ");
+
   if (fs._card < _card_min || _card_max < fs._card)
-    return OZ_FALSE;
+    goto failure;
 
   for (int i = fset_high; i--; ) {
     if (_in[i] & ~fs._in[i])
-      return OZ_FALSE;
+      goto failure;
     if (_not_in[i] & fs._in[i])
-      return OZ_FALSE;
+      goto failure;
   }
 
+  DEBUG_FSETIR("TRUE" << endl);
   return OZ_TRUE;
+
+failure:
+  DEBUG_FSETIR("FALSE" << endl);
+  return OZ_FALSE;
 }
+/*
+OZ_Boolean OZ_FSetImpl::unify(const FSetValue &fs)
+{
+  DEBUG_FSETIR("( " << *this << " unify (val)" << fs << " ) = ");
 
+  if (fs._card < _card_min || _card_max < fs._card)
+    goto failure;
 
+  _card_min = _card_max = fs._card;
+
+  for (int i = fset_high; i--; ) {
+    _in[i] = _in[i] | fs._in[i];
+
+    if (_in[i] & ~fs._in[i])
+      goto failure;
+    if (_not_in[i] & fs._in[i])
+      goto failure;
+  }
+
+  normalize();
+  return OZ_TRUE;
+
+failure:
+  DEBUG_FSETIR("FALSE" << endl);
+  _card_min = -1;
+  return OZ_FALSE;
+}
+*/
 OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
 {
   DEBUG_FSETIR("( " << *this << " unify " << y << " ) = ");
@@ -451,8 +485,7 @@ OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
   z._card_max = min(_card_max, y._card_max);
 
   if (z._card_max < z._card_min) {
-    z._card_min = -1;
-    goto end;
+    goto failure;
   }
 
   {
@@ -460,8 +493,7 @@ OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
       z._in[i]     = _in[i]     | y._in[i];
       z._not_in[i] = _not_in[i] | y._not_in[i];
       if (z._in[i] & z._not_in[i]) {
-        z._card_min = -1;
-        goto end;
+        goto failure;
       }
     }
   }
@@ -473,7 +505,11 @@ OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
     z._card_max = min(z._card_max, (32 * fset_high) - z._known_not_in);
     */
   z.normalize();
-end:
+  return z;
+
+failure:
+  DEBUG_FSETIR("FALSE" << endl);
+  z._card_min = -1;
   return z;
 }
 
@@ -910,6 +946,15 @@ int OZ_FSetValue::getNextSmallerElem(int i) const
   return CASTTHIS->getNextSmallerElem(i);
 }
 
+
+char * OZ_FSetValue::toString() const
+{
+  static ozstrstream str;
+  str.reset();
+  CASTTHIS->print(str);
+  return str.str();
+}
+
 //-----------------------------------------------------------------------------
 
 #undef CASTPTR
@@ -1066,16 +1111,7 @@ OZ_FSetValue OZ_FSetConstraint::getNotInSet(void) const
   return CASTTHIS->getNotInSet();
 }
 
-
-char *OZ_FSetValue::toString() const
-{
-  static ozstrstream str;
-  str.reset();
-  CASTTHIS->print(str);
-  return str.str();
-}
-
-char *OZ_FSetConstraint::toString() const
+char * OZ_FSetConstraint::toString() const
 {
   static ozstrstream str;
   str.reset();
