@@ -1078,15 +1078,14 @@ void engine() {
 
       switch(rel(XPC(2))) {
       case PROCEED:
-	DISPATCH(3);
+	DISPATCH(4);
 
       case SUSPEND:
 	if (shallowCP) {
 	  e->trail.pushIfVar(XPC(2));
-	  DISPATCH(3);
+	  DISPATCH(4);
 	}
-	DebugCheckT(warning("big shit: saving 20 X registers"));
-	e->pushTask(CBB,PC+3,Y,G,X,20);
+	e->pushTask(CBB,PC+4,Y,G,X,getPosIntArg(PC+3));
 	e->suspendInline(CBB,CPP,entry->getFun(),1,XPC(2));
 	CHECKSEQ;
       case FAILED:
@@ -1102,18 +1101,17 @@ void engine() {
 
       switch(rel(XPC(2),XPC(3))) {
       case PROCEED:
-	DISPATCH(4);
+	DISPATCH(5);
 
       case SUSPEND:
 	{
 	  if (shallowCP) {
 	    e->trail.pushIfVar(XPC(2));
 	    e->trail.pushIfVar(XPC(3));
-	    DISPATCH(4);
+	    DISPATCH(5);
 	  }
 
-	  DebugCheckT(warning("big shit: saving 20 X registers"));
-	  e->pushTask(CBB,PC+4,Y,G,X,20);
+	  e->pushTask(CBB,PC+5,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(CBB,CPP,entry->getFun(),2,XPC(2),XPC(3));
 	  CHECKSEQ;
 	}
@@ -1131,7 +1129,7 @@ void engine() {
       // XPC(3) maybe the same register as XPC(2)
       switch(fun(XPC(2),XPC(3))) {
       case PROCEED:
-	DISPATCH(4);
+	DISPATCH(5);
 
       case SUSPEND:
 	{
@@ -1139,10 +1137,9 @@ void engine() {
 	  TaggedRef B=XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
 	  if (shallowCP) {
 	    e->trail.pushIfVar(A);
-	    DISPATCH(4);
+	    DISPATCH(5);
 	  }
-	  DebugCheckT(warning("big shit: saving 20 X registers"));
-	  e->pushTask(CBB,PC+4,Y,G,X,20);
+	  e->pushTask(CBB,PC+5,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(CBB,CPP,entry->getFun(),2,A,B);
 	  CHECKSEQ;
 	}
@@ -1161,7 +1158,7 @@ void engine() {
       // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       switch(fun(XPC(2),XPC(3),XPC(4))) {
       case PROCEED:
-	DISPATCH(5);
+	DISPATCH(6);
 
       case SUSPEND:
 	{
@@ -1171,10 +1168,9 @@ void engine() {
 	  if (shallowCP) {
 	    e->trail.pushIfVar(A);
 	    e->trail.pushIfVar(B);
-	    DISPATCH(5);
+	    DISPATCH(6);
 	  }
-	  DebugCheckT(warning("big shit: saving 20 X registers"));
-	  e->pushTask(CBB,PC+5,Y,G,X,20);
+	  e->pushTask(CBB,PC+6,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(CBB,CPP,entry->getFun(),3,A,B,C);
 	  CHECKSEQ;
 	}
@@ -1194,7 +1190,7 @@ void engine() {
       // note XPC(5) is maybe the same as XPC(2) or XPC(3) or XPC(4) !!
       switch(fun(XPC(2),XPC(3),XPC(4),XPC(5))) {
       case PROCEED:
-	DISPATCH(6);
+	DISPATCH(7);
 
       case SUSPEND:
 	{
@@ -1206,10 +1202,9 @@ void engine() {
 	    e->trail.pushIfVar(A);
 	    e->trail.pushIfVar(B);
 	    e->trail.pushIfVar(C);
-	    DISPATCH(6);
+	    DISPATCH(7);
 	  }
-	  DebugCheckT(warning("big shit: saving 20 X registers"));
-	  e->pushTask(CBB,PC+6,Y,G,X,20);
+	  e->pushTask(CBB,PC+7,Y,G,X,getPosIntArg(PC+6));
 	  e->suspendInline(CBB,CPP,entry->getFun(),4,A,B,C,D);
 	  CHECKSEQ;
 	}
@@ -1235,8 +1230,7 @@ void engine() {
 	  TaggedRef A=XPC(2);
 	  TaggedRef B=XPC(3);
 	  TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
-	  DebugCheckT(warning("big shit: saving 20 X registers"));
-	  e->pushTask(CBB,PC+6,Y,G,X,20);
+	  e->pushTask(CBB,PC+6,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(CBB,CPP,entry->getFun(),3,A,B,C);
 	  CHECKSEQ;
 	}
