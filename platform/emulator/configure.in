@@ -259,7 +259,7 @@ if test "${GXX}" = yes; then
 
     fi
 
-    oz_opt="-O3 -frisc -pipe"
+    oz_opt="-O9 -frisc -pipe"
     oz_om=
     if test "${platform}" = linux-i486
     then
