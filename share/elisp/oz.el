@@ -392,11 +392,13 @@ if that value is non-nil."
 
 	(if (get-buffer "*Oz Machine*")
 	    (kill-buffer "*Oz Machine*"))
+	(if (get-buffer "*Oz Errors*")
+	    (kill-buffer "*Oz Errors*"))
 	(oz-set-state 'oz-machine-state "booting...")
 	(make-comint "Oz Machine" oz-machine nil "-S" file)
 
         (save-excursion
-          (switch-to-buffer "*Oz Compiler*")
+          (set-buffer "*Oz Compiler*")
           (oz-input-mode))
         (set-process-filter  (get-process "Oz Compiler") 'oz-compiler-filter)
         (set-process-filter  (get-process "Oz Machine") 'oz-machine-filter)
