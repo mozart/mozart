@@ -125,19 +125,24 @@ define
 	 end
       end
 
-      fun {FormatTOCLevel TOC Level LIss}
+      fun {FormatTOCLevel TOC Level LIs1 LIss}
 	 case TOC of Entry|TOCr then N#Label#Node#Text = Entry in
-	    if N < Level then LIs1|LIs2|LIsr = LIss in
-	       {FormatTOCLevel TOC Level - 1
-		(ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))|LIs2)|LIsr}
+	    if N < Level then
+	       case LIss of LIs2|LIsr then
+		  {FormatTOCLevel TOC Level - 1
+		   ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))|LIs2 LIsr}
+	       [] nil then
+		  {FormatTOCLevel TOC Level - 1
+		   [ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))] nil}
+	       end
 	    elseif N > Level then
-	       {FormatTOCLevel TOC Level + 1 nil|LIss}
-	    else LIs|LIsr = LIss in
+	       {FormatTOCLevel TOC Level + 1 nil LIs1|LIss}
+	    else
 	       {FormatTOCLevel TOCr Level
-		(li(a(href: Node#"#"#Label Text))|LIs)|LIsr}
+		li(a(href: Node#"#"#Label Text))|LIs1 LIss}
 	    end
 	 [] nil then
-	    {FoldL LIss
+	    {FoldL LIs1|LIss
 	     fun {$ In LIs} LIs1 in
 		LIs1 = case In of unit then LIs else In|LIs end
 		ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))
@@ -150,7 +155,7 @@ define
 	    NewTOC = case Depth of ~1 then TOC
 		     else {Filter TOC fun {$ M#_#_#_} M < N + Depth end}
 		     end
-	    {FormatTOCLevel NewTOC N [nil]}
+	    {FormatTOCLevel NewTOC N nil nil}
 	 [] nil then SEQ(nil)
 	 end
       end
@@ -304,7 +309,7 @@ define
 	 CurTableCols: unit
 	 % for List:
 	 ListType: unit
-	 OLTypes: (X='1'|'a'|'i'|'A'|'I'|X in X)
+	 OLTypes: (X = '1'|'a'|'i'|'A'|'I'|X in X)
 	 % back matter:
 	 MyBibliographyDB: unit
 	 BibNode: unit
