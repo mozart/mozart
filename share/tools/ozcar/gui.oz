@@ -282,7 +282,7 @@ in
 	 LastSelectedFrame <- T
       end
 
-      meth printStackFrame(frame:Frame direction:Direction<=enter)
+      meth printStackFrame(frame:Frame delete:Delete<=true)
 	 W          = self.StackText
 	 FrameNr    = Frame.nr                 % frame number
 	 FrameName  = Frame.name               % procedure/builtin name
@@ -297,12 +297,17 @@ in
 	 LineEnd    = FrameNr # DotEnd
 	 UpToDate   = SourceManager,isUpToDate(Frame.time $)
       in
-	 Gui,Enable(W)
-	 Gui,DeleteToEnd(W FrameNr+1)
-	 Gui,DeleteLine(W FrameNr)
+	 
+	 {OzcarMessage '  printing frame #' # FrameNr}
+	 
+	 case Delete then
+	    Gui,Enable(W)
+	    Gui,DeleteToEnd(W FrameNr+1)
+	    Gui,DeleteLine(W FrameNr)
+	 else skip end
 	 
 	 {W tk(insert LineEnd
-	       case Direction == enter then
+	       case Frame.dir == enter then
 		  ' -> '
 	       else
 		  ' <- '
@@ -336,14 +341,14 @@ in
 	 
 	 {ForAll [tk(insert LineEnd
 		     case Frame.builtin then
-			BraceRight # NL
+			BraceRight # case Delete then NL else nil end
 		     else
 			BraceRight # '  ' # BracketLeft # FrameFile #
 			FileLineSeparator # FrameLine #
 			case UpToDate then nil else '(?)' end #
-			BracketRight # NL
+			BracketRight # case Delete then NL else nil end
 		     end LineTag)
-		  %tk(tag add  LineTag LineEnd) % extend tag to whole line
+		  tk(tag add  LineTag LineEnd) % extend tag to whole line
 		  tk(tag bind LineTag '<1>' LineAction)] W}
 	 /*
 	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
@@ -352,34 +357,30 @@ in
 	    Gui,printEnv(frame:FrameNr vars:Frame.env)
 	 else skip end
 	 */
-	 Gui,Disable(W)
+	 case Delete then
+	    Gui,Disable(W)
+	 else skip end
       end
 	 
-      meth printStack(id:I size:Size stack:Stack ack:Ack<=unit)
-	 lock
-	    W = self.StackText
-	 in
-	    {OzcarMessage 'printing complete stack of size ' # Size}
-	    {W title(AltStackTitle # I)}
-	    /*
-	    local
-	       AllTags = {{W w($)} tkReturn(tag names $)}
-	    in
-	       {Show AllTags}
-	       {W tk(tag delete AllTags)}
-	    end
-	    */ 
-	    Gui, Clear(W)
-	    Gui,Append(W {MakeLines Size})  % Tk is _really_ stupid...
-	    
-	    {ForAll {Ditems Stack}
-	     proc{$ Frame}
-		Gui,printStackFrame(Frame)
-	     end}
-	    
+      meth printStack(id:I frames:Frames depth:Depth ack:Ack<=unit)
+	 W = self.StackText
+      in
+	 {OzcarMessage 'printing complete stack of size ' # Depth}
+	 case I == 0 then
+	    {W title(StackTitle)}
+	    Gui,Clear(W)
 	    Gui,Disable(W)
-	    case {IsDet Ack} then skip else Ack = unit end
+	 else
+	    {W title(AltStackTitle # I)}
+	    Gui,Clear(W)
+	    Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
+	    {ForAll Frames
+	     proc{$ Frame}
+		Gui,printStackFrame(frame:Frame delete:false)
+	     end}
+	    Gui,Disable(W)
 	 end
+	 case {IsDet Ack} then skip else Ack = unit end
       end
       
       meth printAppl(id:I name:N args:A builtin:B<=false time:Time<=0
