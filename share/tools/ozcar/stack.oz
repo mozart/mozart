@@ -2,6 +2,10 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 local
+
+   fun {FormatExceptionLine E}
+      ErrorExcText # E.title
+   end
    
    fun {S2F Nr Id Dir File Line Time Name Args Vars Builtin}
       frame(nr      : Nr
@@ -128,7 +132,7 @@ in
       end
       
       meth printException(X)
-	 SavedStatus
+	 Status
       in
 	 case {HasFeature X debug} andthen {HasFeature X.debug stack} then
 	    Stack = X.debug.stack
@@ -140,26 +144,22 @@ in
 		       else H end
 		    else H end
 	    S = builtin(name:'Raise' args:[X]) | debug([0 999999999]) | C | T
-	    Status
 	 in
-	    {Error.debug.doOzError X}
-	    {Error.debug.last Status}
-
-	    SavedStatus = ErrorExcText # Status.1 # {Lines Status.2}
-	    {ForAll [status(SavedStatus clear BlockedThreadColor)
+	    Status = {FormatExceptionLine {Error.formatExc X}}
+	    {ForAll [status(Status clear BlockedThreadColor)
 		     bar(file:C.file line:C.line state:blocked)] Ozcar}
 	    StackManager,ReCalculate({Reverse S})
-
+	    
 	 else              % no stack available
 	    E = {T2VS X}
 	 in
-	    SavedStatus = UserExcText # E # NoStackText
-	    {ForAll [status(SavedStatus clear BlockedThreadColor)
+	    Status = UserExcText # E # NoStackText
+	    {ForAll [status(Status clear BlockedThreadColor)
 		     removeBar] Ozcar}
 	    StackManager,ReCalculate(nil)
 	 end
 
-	 Exception <- SavedStatus
+	 Exception <- Status
       end
       
       meth print

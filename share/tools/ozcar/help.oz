@@ -1,4 +1,3 @@
-%%% oz-mode is stupid, so we use -*-text-mode-*-
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
@@ -15,82 +14,97 @@ local
    
    {ForAll
     [
-      nil # ('The Ozcar Help System' #
-	('For most of the widgets in the Ozcar GUI you can ' #
-	'get some help.\nJust click ' #
-	'with the right mouse button on the widget.'))
-
-      StatusHelp # ('The Status Line' #
-	('Important events like reaching a breakpoint or raising ' #
-	'an exception are reported here.'))
-
-      IgnoreFeeds # ('Ignore Emacs Queries' #
-	('Activate this checkbutton if you want to feed some code ' #
-	'from Emacs without Ozcar taking over control.'))
-
-      IgnoreThreads # ('Ignore Subthreads' #
-	('Activate this checkbutton if you don\'t want Ozcar ' #
-	'to debug any subthreads of your initial query thread.'))
-
-      BreakpointStaticHelp # ('Static Breakpoints' #
-	('You can set a Static Breakpoint by inserting ' #
-	'{Debug.breakpoint} into ' #
-	'your code, just before the line where you want ' #
-	'the thread to stop.'))
-
-      BreakpointDynamicHelp # ('Dynamic Breakpoints' #
-	('You can set / delete a Dynamic Breakpoint at the current line of ' #
-	'an Emacs buffer by entering C-c C-d C-b / C-c C-d C-d.\n' #
-	'Alternatively, click with the left / right mouse button ' #
-	'on the line where you wish to set / delete a breakpoint, while ' #
-	'holding down the Shift and Meta key.'))
-
-      TreeTitle # ('The Thread Tree' #
-	('Threads can be added to the tree by feeding code from Emacs. ' #
-	'When added this way, new threads get selected automatically.\n' # 
-	'\nYou can select another thread by clicking on it.\n' #
-	'\nThe different colors correspond to the ' #
-	'following thread states:\n' #
-	'green -> runnable, red -> blocked, black -> terminated\n' #
-	'\nA thread can be removed from the tree by ' #
-	'pressing f or clicking on the forget button.'))
-
-      StackTitle # ('The Stack' #
-	('You can navigate through the stack either by clicking on a ' #
-	'specific line or by using the Up and Down (cursor) keys.\n' #
-	'\nYou can browse an argument by clicking ' #
-	'on its type information.'))
-
-      LocalEnvTitle # ('The Local Environment' #
-	('You can browse a local variable by clicking ' #
-	'on its type information.'))
-
-      GlobalEnvTitle # ('The Global Environment' #
-	('You can browse a global variable by clicking ' #
-	'on its type information.'))
-
-      StepButtonText   # ('Step' #
-	('Let the current thread continue to run until ' #
-	'it reaches the next procedure call.'))
-
-      NextButtonText   # ('Next' #
-	('Let the current thread continue to run until ' #
-	'it reaches the next procedure call in the current stack frame.'))
-
-      ContButtonText   # ('Continue' #
-	('Let the current thread continue to run until ' #
-	'it terminates, blocks, reaches a breakpoint ' #
-	'or raises an unhandled exception.'))
-
-      ForgetButtonText # ('Forget' #
-	('Do not trace current thread anymore, let it ' #
-	'continue to run, and remove it ' #
-	'from the thread tree. It will come back when it reaches ' #
-	'a breakpoint or raises an unhandled exception.'))
-
-      TermButtonText   # ('Terminate' #
-	('Terminate current thread and remove it from the thread tree.'))
-
+     nil #
+     ('The Ozcar Help System' #
+      ('For most of the widgets in the Ozcar GUI you can ' #
+       'get some help.\nJust click ' #
+       'with the right mouse button on the widget.'))
+     
+     StatusHelp #
+     ('The Status Line' #
+      ('Important events like reaching a breakpoint or raising ' #
+       'an exception are reported here.'))
+     
+     IgnoreFeeds #
+     ('Ignore Emacs Queries' #
+      ('Activate this checkbutton if you want to feed some code ' #
+       'from Emacs without Ozcar taking over control.'))
+     
+     IgnoreThreads #
+     ('Ignore Subthreads' #
+      ('Activate this checkbutton if you don\'t want Ozcar ' #
+       'to debug any subthreads of your initial query thread.'))
+     
+     BreakpointStaticHelp # 
+     ('Static Breakpoints' #
+      ('You can set a Static Breakpoint by inserting ' #
+       '{Debug.breakpoint} into ' #
+       'your code, just before the line where you want ' #
+       'the thread to stop.'))
+     
+     BreakpointDynamicHelp #
+     ('Dynamic Breakpoints' #
+      ('You can set / delete a Dynamic Breakpoint at the current line of ' #
+       'an Emacs buffer by entering C-c C-d C-b / C-c C-d C-d.\n' #
+       'Alternatively, click with the left / right mouse button ' #
+       'on the line where you wish to set / delete a breakpoint, while ' #
+       'holding down the Shift and Meta key.'))
+     
+     TreeTitle #
+     ('The Thread Tree' #
+      ('Threads can be added to the tree by feeding code from Emacs. ' #
+       'When added this way, new threads get selected automatically.\n' # 
+       '\nYou can select another thread by clicking on it.\n' #
+       '\nThe different colors correspond to the ' #
+       'following thread states:\n' #
+       'green -> runnable, red -> blocked, black -> terminated\n' #
+       '\nA thread can be removed from the tree by ' #
+       'pressing f or clicking on the forget button.'))
+     
+     StackTitle #
+     ('The Stack' #
+      ('You can navigate through the stack either by clicking on a ' #
+       'specific line or by using the Up and Down (cursor) keys.\n' #
+       '\nYou can browse an argument by clicking ' #
+       'on its type information.'))
+     
+     LocalEnvTitle #
+     ('The Local Environment' #
+      ('You can browse a local variable by clicking ' #
+       'on its type information.'))
+     
+     GlobalEnvTitle #
+     ('The Global Environment' #
+      ('You can browse a global variable by clicking ' #
+       'on its type information.'))
+     
+     StepButtonText #
+     ('Step' #
+      ('Let the current thread continue to run until ' #
+       'it reaches the next procedure call.'))
+     
+     NextButtonText #
+     ('Next' #
+      ('Let the current thread continue to run until ' #
+       'it reaches the next procedure call in the current stack frame.'))
+     
+     ContButtonText #
+     ('Continue' #
+      ('Let the current thread continue to run until ' #
+       'it terminates, blocks, reaches a breakpoint ' #
+       'or raises an unhandled exception.'))
+     
+     ForgetButtonText #
+     ('Forget' #
+      ('Do not trace current thread anymore, let it ' #
+       'continue to run, and remove it ' #
+       'from the thread tree. It will come back when it reaches ' #
+       'a breakpoint or raises an unhandled exception.'))
+     
+     TermButtonText #
+     ('Terminate' #
+      ('Terminate current thread and remove it from the thread tree.'))
+     
     ]
     proc {$ S}
        {Dput HelpDict S.1 S.2}
@@ -123,14 +137,14 @@ local
 	 HelpDialog,tkPack
       end
    end
-
+   
    class OzcarHelp from HelpDialog
       meth init(master:Master topic:Topic)
 	 self.topic # self.help = {DcondGet HelpDict Topic NoTopic#NoHelp}
 	 HelpDialog,init(master:Master)
       end
    end
-
+   
 in
    
    class Help
@@ -138,7 +152,7 @@ in
       meth init
 	 skip
       end
-
+      
       meth help(Topic)
 	 {Wait {New OzcarHelp init(master:self.toplevel topic:Topic)}.tkClosed}
       end
