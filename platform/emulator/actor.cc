@@ -163,7 +163,7 @@ void SolveActor::Init()
     = new BuiltinTabEntry("*solved*", 1, BIsolved);       // local Entry;
 
   TaggedRef solveContFList = cons(makeTaggedAtom(SEARCH_STATUS),nil());
-  SolveContArity = SRecord::aritytable.find(solveContFList);
+  SolveContArity = aritytable.find(solveContFList);
 
   solvedAtom     = makeTaggedAtom (SEARCH_SOLVED);
   enumedAtom     = makeTaggedAtom (SEARCH_ENUMED);

@@ -915,7 +915,7 @@ void AM::reduceTrailOnUnitCommit()
 
     bb->setScript(index,refPtr,*refPtr);
 
-    doBind(refPtr,value);
+    unBind(refPtr,value);
   }
   trail.popMark();
 }
@@ -946,7 +946,7 @@ void AM::reduceTrailOnSuspend()
       TaggedRef oldVal = makeTaggedRef(refPtr);
       DEREF(oldVal,ptrOldVal,tagOldVal);
 
-      doBind(refPtr,value);
+      unBind(refPtr,value);
 
       if (isNotCVar(value)) {
 	taggedBecomesSuspVar(refPtr)->addSuspension(susp);
@@ -979,7 +979,7 @@ void AM::reduceTrailOnFail()
     TaggedRef *refPtr;
     TaggedRef value;
     trail.popRef(refPtr,value);
-    *refPtr=value;      /* don't use doBind */
+    unBind(refPtr,value);
   }
   trail.popMark();
 }
@@ -999,7 +999,7 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
     TaggedRef oldVal = makeTaggedRef(refPtr);
     DEREF(oldVal,ptrOldVal,_1);
 
-    *refPtr=value; /* dont use doBind */
+    unBind(refPtr,value);
 
     /* test if only trailed to create suspension and not bound ? */
     if (refPtr!=ptrOldVal) {
