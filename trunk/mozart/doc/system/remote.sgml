@@ -65,8 +65,6 @@
           <<'rsh'>> (remote shell command) and <<'ssh'>> (secure shell
           command). 
 
-can only be used, if ?_{HostV} is <<localhost>>. It
-
         <para class=apropos proglang=sh><title/<<sh>> configuration/
           If <<'sh'>> is used as fork method, 
           a new Oz engine is created on the current host by using the Unix <code
