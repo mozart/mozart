@@ -37,7 +37,6 @@ define
 
    class ColorAlloc
       feat
-	 retCol
 	 getCol
 	 colorDict
 	 guiActive
@@ -45,8 +44,7 @@ define
       attr
 	 freeIndexList
 	 nextIndex
-      meth init(retCol:RC getCol:GC guiActive:GuiActive guiNumber:GuiNumber)
-	 self.retCol = RC
+      meth init(getCol:GC guiActive:GuiActive guiNumber:GuiNumber)
 	 self.getCol = GC
 	 self.colorDict = {NewDictionary}
 	 self.guiActive = GuiActive
@@ -84,7 +82,6 @@ define
 	 else
 	    freeIndexList <- I|freeIndexList
 	 end
-	 {self.retCol S}
       end
    end
    
@@ -175,7 +172,7 @@ define
 		  raise notFound end
 	       end
 	       
-	       new <- site(key:Key fg:Col
+	       new <- entry(key:Key fg:Col
 			   text: Data.index#'   '#Data.type#' exp/imp'#1)|@new 
 	       self.usedCounter.Key:=Used
 	       Table, increment(self.diff Site)
@@ -229,10 +226,10 @@ define
       
       meth display
 	 if @new \= nil then
-	    {self.guiSites addSite(@new)}
+	    {self.guiSites addEntries(@new)}
 	 end
 	 if @remove \= nil then
-	    {self.guiSites deleteSite(@remove)}
+	    {self.guiSites deleteEntries(@remove)}
 	 end
 	 {ForAll @updates
 	  proc{$ K}
@@ -254,16 +251,13 @@ define
 	 fun {GetCol _}
 	    c(22 155 0)
 	 end
-	 proc {RetCol _ _}
-	    skip
-	 end
       in
 	 Table, initialize
 	 localized <- 0
 	 self.makeKey = fun {$ E} E.index end
 	 self.makeSite = fun {$ _} mySite end
 	 self.getCredit = fun {$ E} E.credit end
-	 self.colorAlloc = {New ColorAlloc init(retCol:RetCol getCol:GetCol
+	 self.colorAlloc = {New ColorAlloc init(getCol:GetCol
 						guiActive:self.guiActive
 						guiNumber:self.guiNumber)}
       end
@@ -285,18 +279,15 @@ define
    
    class BorrowTable from Table
       meth init(SD)
-	 fun {RetCol S}
-	    {{SD getSite(S $)} retCol(who:bor $)}
-	 end
 	 proc {GetCol S C}
-	    {{SD getSite(S $)} getCol(who:bor C)}
+	    {{SD getSite(S $)} getCol(C)}
 	 end
       in
 	 Table, initialize
 	 self.makeKey = fun {$ E} E.index end
 	 self.makeSite = fun {$ E} E.na.site end
 	 self.getCredit = fun {$ E} credit(E.secCred E.primCred) end
-	 self.colorAlloc = {New ColorAlloc init(retCol:RetCol getCol:GetCol
+	 self.colorAlloc = {New ColorAlloc init(getCol:GetCol
 						guiActive:self.guiActive
 						guiNumber:self.guiNumber)}
       end
