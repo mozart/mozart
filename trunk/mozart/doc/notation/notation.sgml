@@ -1065,7 +1065,7 @@
 	    <TD/?{P}, ?{P1}, &ellipsis;, ?{Pk}, ?{Pn}/
 	    <TD/?={pattern}/
 	  <TR>
-	    <TD/?{EP}, ?{P1}, &ellipsis;, ?{EPn}/
+	    <TD/?{EP}, ?{EP1}, &ellipsis;, ?{EPn}/
 	    <TD/?={expression} or ?={pattern}/
 	  <TR>
 	    <TD/?{C}, ?{C1}, &ellipsis;, ?{Cn}/
@@ -1073,6 +1073,12 @@
 	  <TR>
 	    <TD/?{L}, ?{L1}, &ellipsis;, ?{Ln}/
 	    <TD/?={cond statement clause} or ?={cond expression clause}/
+	  <TR>
+	    <TD/?{l}/
+	    <TD/?={label}/
+	  <TR>
+	    <TD/?{f1}, &ellipsis; ?{fn}/
+	    <TD/?={feature}/
 	</Table>
       <Para class=apropos><Title/Core Variables/
 	The result of the transformation may have references to so-called
@@ -1092,7 +1098,85 @@
 	<SubSection class=unnumbered>
 	  <Title/Declarations/
 	  <P>
-	    <!--** missing: define pattern variables and positions -->
+	    <!--** motivate the definition of pattern variables -->
+	    <!--** define pattern positions -->
+	    <Table>
+	      <TR>
+		<TH/?{D}/
+		<TH/?{PV}(?{D})/
+	      <TR>
+		<TD/<<(?{S})>>/
+		<TD/?{PV}(?{S})/
+	      <TR>
+		<TD/<<(?{D} in ?{S})>>/
+		<TD/?{PV}(?{S}) - ?{PV}(?{D})/
+	      <TR>
+		<TD/<<?{D1} ?{D2}>>/
+		<TD/?{PV}(?{D1}) <Math/\cup/ ?{PV}(?{D2})/
+	      <TR>
+		<TD/<<?{x}>>/
+		<TD/{?{x}}/
+	      <TR>
+		<TD/<<local ?{D} in ?{S} end>>/
+		<TD/?{PV}(?{S}) - ?{PV}(?{D})/
+	      <TR>
+		<TD/<<proc &ellipsis; {?{E} &ellipsis;} &ellipsis; end>>/
+		<TD/?{PV}(?{E})/
+	      <TR>
+		<TD/<<fun &ellipsis; {?{E} &ellipsis;} &ellipsis; end>>/
+		<TD/?{PV}(?{E})/
+	      <TR>
+		<TD/<<class ?{E} &ellipsis; end>>/
+		<TD/?{PV}(?{E})/
+	      <TR>
+		<TD/<<functor ?{E} &ellipsis; end>>/
+		<TD/?{PV}(?{E})/
+	      <TR>
+		<TD/<<?{E} = &ellipsis;>>/
+		<TD/?{PV}(?{E})/
+	      <TR>
+		<TD/otherwise/
+		<TD/<Math/\emptyset//
+	    </Table>
+	    <Table>
+	      <TR>
+		<TH/?{E}/
+		<TH/?{PV}(?{E})/
+	      <TR>
+		<TD/<<(?{E})>>/
+		<TD/?{PV}(?{E})/
+	      <TR>
+		<TD/<<(?{D} in >>[ ?{S} ]<< ?{E})>>/
+		<TD/(?{PV}(?{S}) <Math/\cup/ ?{PV}(?{E})) - ?{PV}(?{D})/
+	      <TR>
+		<TD/<<?{x}>>/
+		<TD/{?{x}}/
+	      <TR>
+		<TD/<<local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
+		<TD/(?{PV}(?{S}) <Math/\cup/ ?{PV}(?{E})) - ?{PV}(?{D})/
+	      <TR>
+		<TD/<<?{E1} = ?{E2}>>/
+		<TD/?{PV}(?{E1}) <Math/\cup/ ?{PV}(?{E2})/
+	      <TR>
+		<TD/<<[?{E1} &ellipsis; ?{En}]>>/
+		<TD/?{PV}(?{E1}) <Math/\cup/ &ellipsis;
+		  <Math/\cup/ ?{PV}(?{En})/
+	      <TR>
+		<TD/<<?{E1}|?{E2}]>>/
+		<TD/?{PV}(?{E2}) <Math/\cup/ ?{PV}(?{E2})/
+	      <TR>
+		<TD/<<?{E1}#&ellipsis;#?{En}>>/
+		<TD/?{PV}(?{E1}) <Math/\cup/ &ellipsis;
+		  <Math/\cup/ ?{PV}(?{En})/
+	      <TR>
+		<TD/<<?{l}(>>[ ?{f1}<<:>> ]<< ?{E1} &ellipsis; >>[ ?{fn}<<:>>
+		  ]<< ?{En} >>[ <<...>> ]<<)>>/
+		<TD/?{PV}(?{E1}) <Math/\cup/ &ellipsis;
+		  <Math/\cup/ ?{PV}(?{En})/
+	      <TR>
+		<TD/otherwise/
+		<TD/<Math/\emptyset//
+	    </Table>
 	    <Rewrite>?={in statement}
 	      <Rewrite.From/<<?{D} in ?{S}>>/
 	      <Rewrite.To/<<local ?{D} in ?{S} end>>/
@@ -1100,6 +1184,12 @@
 	    <Rewrite>?={in expression}
 	      <Rewrite.From/<<?{D} in >>[ ?{S} ]<< ?{E}>>/
 	      <Rewrite.To/<<local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
+	    </Rewrite>
+	    <Rewrite>?={declaration part}
+	      <Rewrite.From/?{D}/
+	      <Rewrite.To/?{x1} &ellipsis; ?{xn}/
+	      <Rewrite.Condition/if ?{D} is not a sequence of distinct
+		variables and where {?{x1}, &ellipsis;, ?{xn}} = ?{PV}(?{D})./
 	    </Rewrite>
 	<SubSection class=unnumbered>
 	  <Title/Grouping/
@@ -1253,19 +1343,19 @@ end>>/
 	  <Title/Locks/
 	  <P>
 	    <Rewrite>?={statement} ?={expression}
-	      <Rewrite.From/<<lock ?{E} then ?{S} end>>/
+	      <Rewrite.From/<<lock ?{E} then ?{SE} end>>/
 	      <Rewrite.To
 /<<local X in
    X = ?{E}
-   lock X then ?{S} end
+   lock X then ?{SE} end
 end>>/
 	      <Rewrite.Condition/if ?{E} is no variable./
 	    </Rewrite>
 	    <Rewrite>?={expression}
-	      <Rewrite.From/<<lock ?{E} then ?{E} end>>/
+	      <Rewrite.From/<<lock ?{E1} then ?{E2} end>>/
 	      <Rewrite.To
 /<<local X in
-   lock ?{E} then X = ?{E} end
+   lock ?{E1} then X = ?{E2} end
    X
 end>>/
 	    </Rewrite>
@@ -1582,6 +1672,24 @@ end>>/
 	    <Rewrite>?={method head} ?={method head label}
 	      <Rewrite.From/<<false>>/
 	      <Rewrite.To/<<!`Bool.'false'`>>/
+	    </Rewrite>
+	<SubSection class=unnumbered>
+	  <Title/Locks/
+	  <P>
+	    <Rewrite>?={expression}
+	      <Rewrite.From/<<lock ?{E} end>>/
+	      <Rewrite.To
+/<<local X in
+   lock X = ?{E} end
+   X
+end>>/
+	    </Rewrite>
+	<SubSection class=unnumbered>
+	  <Title/Equations/
+	  <P>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x} = class >>[<< $ >>]<< &ellipsis; end>>/
+	      <Rewrite.To/class ?{x} &ellipsis; end>>/
 	    </Rewrite>
 	<SubSection class=unnumbered>
 	  <Title/Operators/
