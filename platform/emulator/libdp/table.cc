@@ -981,12 +981,18 @@ int BorrowTable::newSecBorrow(DSite *creditSite,Credit c,DSite * sd,int off){
   PD((TABLE,"borrow insert: b:%d",index));
   return index;}
 
+
 int BorrowTable::newBorrow(Credit c,DSite * sd,int off){
   if(nextfree == END_FREE) resize();
   int index=nextfree;
   nextfree= array[index].uOB.nextfree;
   BorrowEntry* oe = &(array[index]);
-  oe->initBorrow(c,sd,off);
+  oe->initBorrow(c,sd,off); 
+  Assert(oe->getFlags() == PO_NONE);
+  /* PER-LOOK
+     what happends if a probe is released when we ask
+     for more credit?
+  */
   if(c!=PERSISTENT_CRED && c<=BORROW_LOW_THRESHOLD){
     oe->moreCredit();}
   
