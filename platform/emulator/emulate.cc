@@ -548,18 +548,16 @@ void AM::suspendCond(AskActor *aa)
   aa->setThread (th);
 }
 
-void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C,OZ_Term D)
+void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
 {
-  static RefsArray X = allocateStaticRefsArray(4);
-  X[0]=A;
-  X[1]=B;
-  X[2]=C;
-  X[3]=D;
-
-  Thread *thr = mkSuspThread ();
-  while (--n>=0) {
-    DEREF (X[n], ptr, _1);
-    if (isAnyVar (X[n])) addSusp (ptr, thr);
+  Thread *thr = mkSuspThread();
+  switch(n) { /* no break's used!! */
+  case 3: { DEREF (C, ptr, _1); if (isAnyVar(C)) addSusp(ptr, thr); }
+  case 2: { DEREF (B, ptr, _1); if (isAnyVar(B)) addSusp(ptr, thr); }
+  case 1: { DEREF (A, ptr, _1); if (isAnyVar(A)) addSusp(ptr, thr); }
+    break;
+  default:
+    Assert(0);
   }
 
   suspendVarList = makeTaggedNULL();   // mm2 please check
@@ -1951,14 +1949,13 @@ LBLsuspendThread:
       case SUSPEND:
         {
           TaggedRef A=XPC(2);
-          TaggedRef B=XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
           if (shallowCP) {
             e->emptySuspendVarList();
             e->trail.pushIfVar(A);
             DISPATCH(5);
           }
           e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
-          e->suspendInline(2,A,B);
+          e->suspendInline(1,A);
           CHECK_CURRENT_THREAD;
         }
 
@@ -1990,7 +1987,6 @@ LBLsuspendThread:
         {
           TaggedRef A=XPC(2);
           TaggedRef B=XPC(3);
-          TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
           if (shallowCP) {
             e->emptySuspendVarList();
             e->trail.pushIfVar(A);
@@ -1998,7 +1994,7 @@ LBLsuspendThread:
             DISPATCH(6);
           }
           e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+5));
-          e->suspendInline(3,A,B,C);
+          e->suspendInline(2,A,B);
           CHECK_CURRENT_THREAD;
         }
 
@@ -2010,7 +2006,38 @@ LBLsuspendThread:
       default:
         Assert(0);
       }
-    }
+     }
+
+  Case(INLINEDOT)
+    {
+      TaggedRef feature = getLiteralArg(PC+2);
+      OZ_Bool ret = dotInline(XPC(1),feature,XPC(3));
+      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
+      switch(ret) {
+      case PROCEED:
+        DISPATCH(7);
+
+      case SUSPEND:
+        {
+          TaggedRef A=XPC(1);
+          if (shallowCP) {
+            e->emptySuspendVarList();
+            e->trail.pushIfVar(A);
+            DISPATCH(7);
+          }
+          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+          e->suspendInline(1,A);
+          CHECK_CURRENT_THREAD;
+        }
+
+      case FAILED:
+        SHALLOWFAIL;
+        HF_FAIL2("bi",OZ_CToAtom("."), mkTuple("args",2,feature,XPC(3)));
+      case SLEEP:
+      default:
+        Assert(0);
+      }
+     }
 
 
   Case(INLINEFUN3)
@@ -2028,7 +2055,6 @@ LBLsuspendThread:
           TaggedRef A=XPC(2);
           TaggedRef B=XPC(3);
           TaggedRef C=XPC(4);
-          TaggedRef D=XPC(5) = makeTaggedRef(newTaggedUVar(CBB));
           if (shallowCP) {
             e->emptySuspendVarList();
             e->trail.pushIfVar(A);
@@ -2037,7 +2063,7 @@ LBLsuspendThread:
             DISPATCH(7);
           }
           e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+6));
-          e->suspendInline(4,A,B,C,D);
+          e->suspendInline(3,A,B,C);
           CHECK_CURRENT_THREAD;
         }
 
@@ -2064,9 +2090,8 @@ LBLsuspendThread:
         {
           TaggedRef A=XPC(2);
           TaggedRef B=XPC(3);
-          TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
           e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+5));
-          e->suspendInline(3,A,B,C);
+          e->suspendInline(2,A,B);
           CHECK_CURRENT_THREAD;
         }
       case FAILED:
@@ -3107,7 +3132,6 @@ LBLsuspendThread:
   Case(TEST3)
   Case(TEST4)
 
-  Case(INLINEDOT)
   Case(INLINEUPARROW)
 
   Case(ENDOFFILE)

@@ -312,4 +312,8 @@ public:
   inline RefsArray &getGRegs() { return(gRegs); }
 };
 
+
+extern State dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
+
+
 #endif
