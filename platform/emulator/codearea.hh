@@ -27,6 +27,7 @@
 #ifndef __CODE_AREAH
 #define __CODE_AREAH
 
+
 /**********************************************************************
  *                                                                    *
  *    class AbstractionTable: represented as hash table               *
@@ -116,6 +117,7 @@ protected:
   int size;               /* size of this block */
   CodeArea *nextBlock;
   ProgramCounter wPtr;    /* write pointer for the code block */
+  ProgramCounter curInstr;/* start of current instruction */
   time_t timeStamp;       /* feed time */
 #define CheckWPtr Assert(wPtr < codeBlock+size)
 
@@ -150,7 +152,7 @@ public:
                              int frameId = -1);
   static TaggedRef getFrameVariables(ProgramCounter, RefsArray, RefsArray);
   static void getDefinitionArgs(ProgramCounter PC, Reg &reg,
-                                ProgramCounter &next, TaggedRef &file,
+                                int &next, TaggedRef &file,
                                 TaggedRef &line, TaggedRef &column,
                                 TaggedRef &predName);
 
@@ -216,7 +218,7 @@ private:
   void scanPredicateRef(CompStream *fd);
   void scanGenCallInfo(CompStream *fd);
   void scanApplMethInfo(CompStream *fd);
-  void scanLabel(CompStream *fd, ProgramCounter start);
+  void scanLabel(CompStream *fd, int offset);
   SRecordArity parseRecordArity(CompStream *fd);
   void scanRecordArity(CompStream *fd);
   TaggedRef parseRecordArity (CompStream *fd, int length);
@@ -258,12 +260,12 @@ public:
     return writeWord(i,ptr);
   }
 
-  static ProgramCounter writeLabel(int label, ProgramCounter start, ProgramCounter ptr,
+  static ProgramCounter writeLabel(int label, int offset, ProgramCounter ptr,
                                    Bool checkLabel)
   {
     //  label==0 means fail in createCond
     //  in this case do not add start
-    return writeWord(checkLabel && label==0 ? NOCODE : start+label,ptr);
+    return writeWord(checkLabel && label==0 ? NOCODE : ToPointer(label-offset), ptr);
   }
 
   static ProgramCounter writeBuiltin(BuiltinTabEntry *bi, ProgramCounter ptr)
@@ -321,11 +323,12 @@ public:
   void writeInt(int i)                   { CheckWPtr; wPtr=writeInt(i,wPtr); }
   void writeTagged(TaggedRef t)          { CheckWPtr; wPtr=writeTagged(t,wPtr); }
   void writeBuiltin(BuiltinTabEntry *bi) { CheckWPtr; wPtr=writeBuiltin(bi,wPtr); }
-  void writeOpcode(Opcode oc)            { CheckWPtr; wPtr=writeOpcode(oc,wPtr); }
+  void writeOpcode(Opcode oc)            { CheckWPtr; curInstr=wPtr; wPtr=writeOpcode(oc,wPtr); }
   void writeSRecordArity(SRecordArity ar){ CheckWPtr; wPtr=writeSRecordArity(ar,wPtr); }
   void writeAddress(void *ptr)           { CheckWPtr; wPtr=writeWord(ptr,wPtr); }
   void writeReg(int i)                   { CheckWPtr; wPtr=writeRegIndex(i,wPtr); }
-  void writeLabel(int lbl)         { CheckWPtr; wPtr=writeLabel(lbl,codeBlock,wPtr,OK); }
+  void writeLabel(int lbl) { CheckWPtr; wPtr=writeLabel(lbl,curInstr-codeBlock,wPtr,OK); }
+  int computeLabel(int lbl) { return lbl-(curInstr-codeBlock); }
   void writeDebugInfo(TaggedRef file, int line) {
     CheckWPtr; allDbgInfos = new DbgInfo(wPtr,file,line,allDbgInfos);
   }
@@ -359,7 +362,7 @@ inline void printNameTab()
 #define getLiteralArg(PC) getTaggedArg(PC)
 #define getAdressArg(PC)  (ToPointer(getWord(PC)))
 #define getPredArg(PC)   ((PrTabEntry *) getAdressArg(PC))
-#define getLabelArg(PC)  ((ProgramCounter) getAdressArg(PC))
+#define getLabelArg(PC)  ((int) getWord(PC))
 
 
 void displayCode(ProgramCounter from, int ssize);

@@ -221,7 +221,7 @@ void CodeArea::printDef(ProgramCounter PC)
   }
 
   Reg reg;
-  ProgramCounter next;
+  int next;
   TaggedRef file, line, column, comment, predName;
   getDefinitionArgs(definitionPC,reg,next,file,line,column,predName);
   getNextDebugInfoArgs(PC,file,line,column,comment);
@@ -245,7 +245,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
                               int frameId)
 {
   Reg reg;
-  ProgramCounter next;
+  int next;
   TaggedRef file, line, column, comment, predName;
   // file & line might be overwritten some lines later ...
   getDefinitionArgs(definitionPC,reg,next,file,line,column,predName);
@@ -322,7 +322,7 @@ ProgramCounter CodeArea::definitionStart(ProgramCounter from)
   if (ret == NOCODE)
     return ret;
   else
-    return getLabelArg(ret+1);
+    return ret+getLabelArg(ret+1);
 }
 
 
@@ -345,7 +345,7 @@ Bool CodeArea::getNextDebugInfoArgs(ProgramCounter PC,
       comment = getTaggedArg(PC+4);
       return OK;
     case DEFINITION:
-      PC = getLabelArg(PC+2);
+      PC += getLabelArg(PC+2);
       break;
     case ENDOFFILE:
     case OZERROR:
@@ -365,7 +365,7 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
     Opcode op = getOpcode(PC);
     switch (op) {
     case DEFINITION:
-      PC = getLabelArg(PC+2);
+      PC += getLabelArg(PC+2);
       break;
     case ENDDEFINITION:
       return PC;
@@ -406,8 +406,15 @@ void displayDef(ProgramCounter from, int ssize)
 }
 
 
+inline
+ProgramCounter computeLabelArg(ProgramCounter pc, ProgramCounter arg)
+{
+  return pc+getLabelArg(arg);
+}
+
+
 void CodeArea::getDefinitionArgs(ProgramCounter PC,
-                                 Reg &reg, ProgramCounter &next,
+                                 Reg &reg, int &next,
                                  TaggedRef &file, TaggedRef &line,
                                  TaggedRef &column, TaggedRef &predName)
 {
@@ -559,7 +566,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                "(%s x(%d) %p %d)\n",
                getBIName(PC+1),
                regToInt(getRegArg(PC+2)),
-               getLabelArg(PC+3),
+               computeLabelArg(PC,PC+3),
                getPosIntArg(PC+4));
       DISPATCH();
 
@@ -575,8 +582,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                  "(%d %s %p %p %d)\n",
                  regToInt(getRegArg(PC+1)),
                  toC(tagged),
-                 getLabelArg(PC+3),
-                 getLabelArg(PC+4),
+                 computeLabelArg(PC,PC+3),
+                 computeLabelArg(PC,PC+4),
                  getPosIntArg(PC+5));
         DISPATCH();
       }
@@ -588,9 +595,9 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         fprintf (ofile,
                  "(%d %p %p %p %d)\n",
                  regToInt(getRegArg(PC+1)),
-                 getLabelArg(PC+2),
-                 getLabelArg(PC+3),
-                 getLabelArg(PC+4),
+                 computeLabelArg(PC,PC+2),
+                 computeLabelArg(PC,PC+3),
+                 computeLabelArg(PC,PC+4),
                  getPosIntArg(PC+5));
         DISPATCH();
       }
@@ -601,7 +608,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                getBIName(PC+1),
                regToInt(getRegArg(PC+2)),
                regToInt(getRegArg(PC+3)),
-               getLabelArg(PC+4),
+               computeLabelArg(PC,PC+4),
                getPosIntArg(PC+5));
       DISPATCH();
 
@@ -839,12 +846,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         defCount++;
 
         Reg reg;
-        ProgramCounter next;
+        int next;
         TaggedRef file, line, column, predName;
         getDefinitionArgs(PC,reg,next,file,line,column,predName);
         AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
         AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
-        fprintf(ofile,"(x(%d) %p pid(%s ",reg,next,toC(predName));
+        fprintf(ofile,"(x(%d) %d pid(%s ",reg,next,toC(predName));
         fprintf(ofile,"_ %s ",toC(file));
         fprintf(ofile,"%s) %p ",toC(line),predEntry);
 
@@ -913,7 +920,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
 
     case ENDDEFINITION:
-      fprintf(ofile, "(%p)\n", getLabelArg (PC+1));
+      fprintf(ofile, "(%p)\n", computeLabelArg(PC,PC+1));
       if (sz<=0 && defCount<=1) return;
       defCount--;
       DISPATCH();
@@ -922,11 +929,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case NEXTCLAUSE:
     case THREAD:
     case EXHANDLER:
-      fprintf(ofile, "(%p)\n", getLabelArg (PC+1));
+      fprintf(ofile, "(%p)\n", computeLabelArg(PC,PC+1));
       DISPATCH();
 
     case THREADX:
-      fprintf(ofile, "(%d %p)\n", getPosIntArg(PC+1), getLabelArg(PC+2));
+      fprintf(ofile, "(%d %p)\n", getPosIntArg(PC+1), computeLabelArg(PC,PC+2));
       DISPATCH();
 
     case BRANCHONNONVARX:
@@ -934,7 +941,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case BRANCHONNONVARG:
       {
         Reg reg = regToInt(getRegArg(PC+1));
-        fprintf(ofile, "(%d %p)\n", reg, getLabelArg (PC+2));
+        fprintf(ofile, "(%d %p)\n", reg, computeLabelArg(PC,PC+2));
       }
       DISPATCH();
 
@@ -950,7 +957,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case SHALLOWGUARD:
     case CREATECOND:
       {
-        ProgramCounter lbl = getLabelArg(PC+1);
+        ProgramCounter lbl = computeLabelArg(PC,PC+1);
         int n = getPosIntArg(PC+2);
         fprintf(ofile, "(%p %d)\n", lbl, n);
       }
@@ -958,7 +965,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case LOCKTHREAD:
       {
-        ProgramCounter lbl = getLabelArg(PC+1);
+        ProgramCounter lbl = computeLabelArg(PC,PC+1);
         int n      = regToInt(getRegArg(PC+2));
         int toSave = getPosIntArg(PC+3);
         fprintf(ofile, "(%p x(%d) %d)\n", lbl, n, toSave);

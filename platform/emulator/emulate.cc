@@ -191,20 +191,20 @@ TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
 
 #define IMPOSSIBLE(INSTR) error("%s: impossible instruction",INSTR)
 
-#define DoSwitchOnTerm(indexTerm,table)                                     \
-      TaggedRef term = indexTerm;                                           \
-      DEREF(term,termPtr,_2);                                               \
-                                                                            \
-      if (!isLTuple(term)) {                                                \
-        TaggedRef *sp = sPointer;                                           \
-        ProgramCounter offset = switchOnTermOutline(term,termPtr,table,sp); \
-        sPointer = sp;                                                      \
-        JUMP(offset);                                                       \
-      }                                                                     \
-                                                                            \
-      ProgramCounter offset = table->listLabel;                             \
-      sPointer = tagged2LTuple(term)->getRef();                             \
-      JUMP(offset);
+#define DoSwitchOnTerm(indexTerm,table)                                 \
+      TaggedRef term = indexTerm;                                       \
+      DEREF(term,termPtr,_2);                                           \
+                                                                        \
+      if (!isLTuple(term)) {                                            \
+        TaggedRef *sp = sPointer;                                       \
+        int offset = switchOnTermOutline(term,termPtr,table,sp);        \
+        sPointer = sp;                                                  \
+        JUMPRELATIVE(offset);                                                   \
+      }                                                                 \
+                                                                        \
+      int offset = table->listLabel;                                    \
+      sPointer = tagged2LTuple(term)->getRef();                         \
+      JUMPRELATIVE(offset);
 
 
 
@@ -432,7 +432,8 @@ void pushContX(TaskStack *stk,
 
 #endif
 
-#define JUMP(absAdr) Assert(absAdr!=0 && absAdr!=NOCODE); PC=absAdr; DISPATCH(0)
+#define JUMPRELATIVE(offset) Assert(offset!=0); INCFPC(offset); DISPATCH(0)
+#define JUMPABSOLUTE(absaddr) PC=absaddr; DISPATCH(0)
 
 #define ONREG(Label,R)      HelpReg = (R); goto Label
 #define ONREG2(Label,R1,R2) HelpReg1 = (R1); HelpReg2 = (R2); goto Label
@@ -1239,7 +1240,7 @@ LBLsuspendThread:
   asmLbl(EMULATE);
   Assert(CBB==currentDebugBoard);
 
-  JUMP( PC );
+  JUMPABSOLUTE( PC );
 
   asmLbl(END_EMULATE);
 #ifndef THREADED
@@ -1293,9 +1294,10 @@ LBLdispatcher:
 
       IHashTable *table = entry->indexTable;
       if (table) {
+        PC = entry->getPC();
         DoSwitchOnTerm(X[0],table);
       } else {
-        JUMP(entry->getPC());
+        JUMPABSOLUTE(entry->getPC());
       }
     }
 
@@ -1825,7 +1827,7 @@ LBLdispatcher:
 #endif
       OZ_Return res = rel(XPC(2));
       if (res==PROCEED) { DISPATCH(5); }
-      if (res==FAILED)  { JUMP(getLabelArg(PC+3)); }
+      if (res==FAILED)  { JUMPRELATIVE(getLabelArg(PC+3)); }
 
       switch(res) {
 
@@ -1858,7 +1860,7 @@ LBLdispatcher:
 #endif
       OZ_Return res = rel(XPC(2),XPC(3));
       if (res==PROCEED) { DISPATCH(6); }
-      if (res==FAILED)  { JUMP(getLabelArg(PC+4)); }
+      if (res==FAILED)  { JUMPRELATIVE(getLabelArg(PC+4)); }
 
       switch(res) {
 
@@ -1968,7 +1970,7 @@ LBLdispatcher:
   Case(EXHANDLER)
     PushCont(PC+2,Y,G);
     e->currentThread()->pushCatch();
-    JUMP(getLabelArg(PC+1));
+    JUMPRELATIVE(getLabelArg(PC+1));
 
   Case(POPEX)
     {
@@ -1981,7 +1983,7 @@ LBLdispatcher:
 
   Case(LOCKTHREAD)
 {
-  ProgramCounter lbl = getLabelArg(PC+1);
+  int lbl = getLabelArg(PC+1);
   TaggedRef aux      = XPC(2);
   int toSave         = getPosIntArg(PC+3);
 
@@ -2029,16 +2031,16 @@ LBLdispatcher:
     Assert(0);}
 
   got_lock:
-    PushCont(lbl,Y,G);
+    PushCont(PC+lbl,Y,G);
     CTS->pushLock(t);
     DISPATCH(4);
 
   has_lock:
-    PushCont(lbl,Y,G);
+    PushCont(PC+lbl,Y,G);
     DISPATCH(4);
 
   no_lock:
-    PushCont(lbl,Y,G);
+    PushCont(PC+lbl,Y,G);
     CTS->pushLock(t);
     CheckLiveness(PC+4,toSave);
     PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
@@ -2057,7 +2059,7 @@ LBLdispatcher:
       LBLpopTaskNoPreempt:
         Assert(CTS==CTT->getTaskStackRef());
         PopFrameNoDecl(CTS,PC,Y,G);
-        JUMP(PC);
+        JUMPABSOLUTE(PC);
       }
 
 
@@ -2069,7 +2071,7 @@ LBLdispatcher:
   Case(DEFINITION)
     {
       Reg reg                     = getRegArg(PC+1);
-      ProgramCounter nxt          = getLabelArg(PC+2);
+      int nxt                     = getLabelArg(PC+2);
       PrTabEntry *predd           = getPredArg(PC+3);
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
@@ -2101,7 +2103,7 @@ LBLdispatcher:
         }
       }
       Xreg(reg) = makeTaggedConst(p);
-      JUMP(nxt);
+      JUMPRELATIVE(nxt);
     }
 
 // -------------------------------------------------------------------------
@@ -2109,7 +2111,7 @@ LBLdispatcher:
 // -------------------------------------------------------------------------
 
   Case(BRANCH)
-    JUMP( getLabelArg(PC+1) );
+    JUMPRELATIVE( getLabelArg(PC+1) );
 
 
   /*
@@ -2167,7 +2169,7 @@ LBLdispatcher:
       ChangeSelf(obj);
       CallDoChecks(def,def->getGRegs());
       COUNT(sendmsg);
-      JUMP(def->getPC());
+      JUMPABSOLUTE(def->getPC());
     }
 
     if (isAnyVar(object)) {
@@ -2218,7 +2220,7 @@ LBLdispatcher:
     if (!isTailCall) { PushCont(PC,Y,G); }
     COUNT(applmeth);
     CallDoChecks(def,def->getGRegs());
-    JUMP(def->getPC());
+    JUMPABSOLUTE(def->getPC());
 
 
   bombApply:
@@ -2256,7 +2258,7 @@ LBLdispatcher:
          CheckArity(pte->getArity(), taggedPredicate);
          if (!isTailCall) { PushCont(PC+3,Y,G); }
          CallDoChecks(def,def->getGRegs());
-         JUMP(pte->getPC());
+         JUMPABSOLUTE(pte->getPC());
        }
 
        if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
@@ -2305,7 +2307,7 @@ LBLdispatcher:
          if (!isTailCall) { PushCont(PC,Y,G); }
 
          CallDoChecks(def,def->getGRegs());
-         JUMP(def->getPC());
+         JUMPABSOLUTE(def->getPC());
        }
 
 // -----------------------------------------------------------------------
@@ -2338,7 +2340,7 @@ LBLdispatcher:
          if (isTailCall) {
            goto LBLpopTask;
          }
-         JUMP(PC);
+         JUMPABSOLUTE(PC);
 
        case SLEEP:         Assert(0);
        case RAISE:         goto LBLraise;
@@ -2579,7 +2581,7 @@ LBLdispatcher:
 
   Case(CREATECOND)
     {
-      ProgramCounter elsePC = getLabelArg(PC+1);
+      ProgramCounter elsePC = PC+getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
       CAA = new AskActor(CBB,CTT,
@@ -2667,7 +2669,7 @@ LBLdispatcher:
     }
 
   Case(NEXTCLAUSE)
-      CAA->nextClause(getLabelArg(PC+1));
+      CAA->nextClause(PC+getLabelArg(PC+1));
       DISPATCH(2);
 
   Case(LASTCLAUSE)
@@ -2677,7 +2679,7 @@ LBLdispatcher:
   Case(THREAD)
     {
       ProgramCounter newPC = PC+2;
-      ProgramCounter contPC = getLabelArg(PC+1);
+      int contPC = getLabelArg(PC+1);
 
       int prio = CPP;
 
@@ -2697,14 +2699,14 @@ LBLdispatcher:
 
       e->scheduleThread (tt);
 
-      JUMP(contPC);
+      JUMPRELATIVE(contPC);
     }
 
   Case(THREADX)
     {
       ProgramCounter newPC = PC+2;
       int n = getPosIntArg(PC+1);
-      ProgramCounter contPC = getLabelArg(PC+2);
+      int contPC = getLabelArg(PC+2);
 
       int prio = CPP;
 
@@ -2724,7 +2726,7 @@ LBLdispatcher:
 
       e->scheduleThread(tt);
 
-      JUMP(contPC);
+      JUMPRELATIVE(contPC);
     }
 
 // -------------------------------------------------------------------------
@@ -3258,10 +3260,10 @@ LBLshallowFail:
     } else {
       e->reduceTrailOnFail();
     }
-    ProgramCounter nxt = getLabelArg(shallowCP+1);
-    shallowCP         = NULL;
-    e->shallowHeapTop = NULL;
-    JUMP(nxt);
+    PC                 = shallowCP;
+    shallowCP          = NULL;
+    e->shallowHeapTop  = NULL;
+    JUMPRELATIVE(getLabelArg(PC+1));
   }
 
   /*

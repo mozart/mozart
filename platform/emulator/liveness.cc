@@ -47,7 +47,7 @@
 
 #define BREAK           current->pcEnd = PC; goto outerLoop;
 
-#define PUSH(PC)        todo = new Segment(PC,todo,current->writer);
+#define PUSH(offset)     todo = new Segment(PC+offset,todo,current->writer);
 
 #define CONTINUE(newpc) PUSH(newpc); current->pcEnd = PC; goto outerLoop2;
 
@@ -313,7 +313,7 @@ outerLoop2:
 
       case BRANCH:
         {
-          ProgramCounter lbl = getLabelArg(PC+1);
+          int lbl = getLabelArg(PC+1);
           CONTINUE(lbl);
         }
 
