@@ -102,7 +102,7 @@ public:
 
   int statusReg;
   Trail trail;
-  RefsArray xRegs;  
+  TaggedRef xRegs[NumberOfXRegisters];  
   
   RefsArray toplevelVars;
   int toplevelVarsCount;
