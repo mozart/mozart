@@ -36,6 +36,10 @@ define
       end
    end
 
+   fun {GetBaseName Name}
+      {List.last {String.tokens {VirtualString.toString Name} &/}}
+   end
+
    fun {FilenameExplode Name}
       Prefix Suffix
    in
@@ -88,7 +92,7 @@ define
       end
       meth convertPostScript(InName Info ?OutName)
          Basename#_ = {FilenameExplode InName}
-         !OutName   = Basename#'.gif'
+         !OutName   = {GetBaseName Basename#'.gif'}
          FullName   = @DirName#'/'#OutName
       in
          if {Not @Keep andthen {Exists FullName}} then
