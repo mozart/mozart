@@ -74,7 +74,6 @@ enum ThreadFlag {
   T_S_tag    = 0x000800,   // a special stuff for fd 
 			   // (Tobias, please comment?);
   T_S_ofs    = 0x001000,   // the OFS thread (needed for DynamicArity);
-  T_S_stable = 0x002000,   // do wake up on stablity of a search actor;
 
   //
   M_max    = 0x800000      // MAXIMAL FLAG;
@@ -327,19 +326,6 @@ public:
     return (state.flags & T_S_tag);
   }
 
-  void markStable () { 
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags | T_S_stable;
-  }
-  void unmarkStable () { 
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags & ~T_S_stable;
-  }
-  Bool isStable () { 
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    return (state.flags & T_S_stable);
-  }
-
   //  stack;
   Bool hasStack () { 
     Assert (!(isDeadThread ()));
@@ -502,10 +488,6 @@ private:
   void setExtThreadOutlined (Board *varHome);
   //  it asserts that the suspended thread is 'external' (see beneath);
   void checkExtThreadOutlined ();
-
-  //
-  //  Adds the thread to the 'stable' list in the current solve actor;
-  void addStableThreadOutlined ();
 
   //  
   //  ... with furhter assertions;
