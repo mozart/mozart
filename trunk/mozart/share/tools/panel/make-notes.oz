@@ -42,7 +42,7 @@ local
 		   fill:C stipple:S)
       end
    end
-   
+
    class PrintNumber
       from Tk.label
       prop final
@@ -90,7 +90,7 @@ local
 	 Saved <- 0
       end
    end
-   
+
    class Checkbutton
       from Tk.checkbutton
       prop final
@@ -121,7 +121,7 @@ local
 	 end
       end
    end
-   
+
    class Button
       from Tk.button
       prop final
@@ -141,7 +141,7 @@ local
       from TkTools.numberentry
       prop final
       attr SetMode:true
-	 
+
       meth tkInit(...) = M
 	 TkTools.numberentry,M
 	 NumberEntry,tkBind(event:  '<FocusIn>'
@@ -161,7 +161,7 @@ local
 	 TkTools.numberentry,tkGet($)
       end
    end
-	 
+
    fun {MakeSide Ls N P R TclT}
       case Ls of nil then TclT
       [] L|Lr then TclR TclS in
@@ -186,8 +186,8 @@ local
 	 in
 	    R.(L.feature)=S1
 	    grid(L1 sticky:w column:0+CO row:N+RO) |
-	    grid(S1 sticky:e column:1+CO row:N+RO) | 
-	    grid(L2 sticky:w column:2+CO row:N+RO) | TclR	    
+	    grid(S1 sticky:e column:1+CO row:N+RO) |
+	    grid(L2 sticky:w column:2+CO row:N+RO) | TclR
 	 [] number    then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
@@ -203,7 +203,7 @@ local
 	 in
 	    R.(L.feature)=L2
 	    grid(L1 sticky:w column:0 row:N) |
-	    grid(L2 sticky:e column:1 row:N) | 
+	    grid(L2 sticky:e column:1 row:N) |
 	    grid(L3 padx:Pad sticky:e column:2 row:N) | TclR
 	 [] size then
 	    L1 = {New Tk.label tkInit(parent: P
@@ -224,8 +224,8 @@ local
 	 in
 	    R.(L.feature)=L2
 	    grid(L1 sticky:w column:0 row:N) |
-	    grid(L2 sticky:e column:1 row:N) | 
-	    grid(L3 sticky:e column:2 row:N) | 
+	    grid(L2 sticky:e column:1 row:N) |
+	    grid(L3 sticky:e column:2 row:N) |
 	    grid(L4 padx:Pad sticky:e column:3 row:N) | TclR
 	 [] time then
 	    L1 = {New Tk.label tkInit(parent: P
@@ -245,8 +245,8 @@ local
 	 in
 	    R.(L.feature)=L2
 	    grid(L1 sticky:w column:0 row:N) |
-	    grid(L2 sticky:e column:1 row:N) | 
-	    grid(L3 sticky:w column:2 row:N) | 
+	    grid(L2 sticky:e column:1 row:N) |
+	    grid(L3 sticky:w column:2 row:N) |
 	    grid(L4 padx:Pad sticky:e column:3 row:N) | TclR
 	 [] button  then
 	    B = {New Button init(parent: P
@@ -289,14 +289,14 @@ local
    end
 
    fun {GetFeature X} X.feature end
-   
+
    fun {MakeFrames Fs P R TclT}
       case Fs
       of nil then pack({New Tk.frame tkInit(parent:P
 					    highlightthickness: 0
 					    height:             3)}
 		       fill:x side:top)|TclT
-      [] F|Fr then TclR TclS
+      [] F|Fr then
 	 Border = {New TkTools.textframe tkInit(parent: P
 						text:   F.text
 						font:   BoldFont)}
@@ -322,7 +322,7 @@ local
    end
 
 in
-   
+
    fun {MakePage Class Mark Book Top Add PageSpec}
       R    = {MakeRecord a {Map PageSpec GetFeature}}
       Page = {New Class init(parent:Book top:Top options:R text:' '#Mark#' ')}

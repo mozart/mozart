@@ -24,26 +24,26 @@
 %%%
 %  Programming Systems Lab, University of Saarland,
 %  Geb. 45, Postfach 15 11 50, D-66041 Saarbruecken.
-%  Author: Konstantin Popov & Co. 
+%  Author: Konstantin Popov & Co.
 %  (i.e. all people who make proposals, advices and other rats at all:))
 %  Last modified: $Date$ by $Author$
 %  Version: $Revision$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 
-%%% 
+%%%
+%%%
 %%%  Representation manager
 %%%
 %%%  - keeps track of a term's representation structure;
 %%%  - performs all the "draw" work;
-%%% 
-%%% 
-%%% 
+%%%
+%%%
+%%%
 
 local
    %%
-   MetaRepManagerObject		% some generic functionality;
+   MetaRepManagerObject         % some generic functionality;
 
    %%
    %% Local features & attributes;
@@ -56,7 +56,6 @@ local
    UsedIndentOut    = {NewName}
    RefName          = {NewName}
    RefNameSize      = {NewName}
-   Subterms         = {NewName}
 
    %%
    %% ... methods;
@@ -70,9 +69,7 @@ local
    LayoutWrong      = {NewName}
    %%
    AnchorLB         = {NewName}
-   AnchorGroup      = {NewName}
    %%
-   NeedsLineBreak   = {NewName}
    %% 'SetCursorAt' has global extent - it has to be used by
    %% 'RootTermObject';
    SetCursorAfter   = {NewName}
@@ -80,7 +77,7 @@ local
    SkipAuxBegin     = {NewName}
    SkipAuxEnd       = {NewName}
    GetAuxSize       = {NewName}
-   GetAuxSizeB      = {NewName} 
+   GetAuxSizeB      = {NewName}
    GetAuxSizeE      = {NewName}
    %%
    PutOP            = {NewName}
@@ -112,8 +109,8 @@ in
    %% so it pays off to generate strings etc. at the Oz side and
    %% transmit it to the wish, compared to an iterative "space
    %% maker" written in Tcl and executed directly by wish!
-   fun {CreateSpaces N} 
-      case N 
+   fun {CreateSpaces N}
+      case N
       of 0  then ''
       [] 1  then ' '
       [] 2  then '  '
@@ -165,18 +162,18 @@ in
       [] 48 then '                                                '
       [] 49 then '                                                 '
       [] 50 then '                                                  '
-      else 
+      else
 	 H V
       in
 	 H = {`div` N 2}
-	 case H + H == N then 
+	 case H + H == N then
 	    V = {CreateSpaces H}
 	    V # V
-	 else 
+	 else
 	    V = {CreateSpaces H}
 	    ' ' # V # V
-	 end 
-      end 
+	 end
+      end
    end
 
    %%
@@ -184,13 +181,13 @@ in
    %% 'AnchorGroup': a virtual token (marker) moving backward from
    %% the position we are interested in. So, offsets & indents are
    %% accumulated "backwards", i.e. from larger groups to smaller
-   %% ones; 
+   %% ones;
    class ScanToken from Object.base
       attr
-	 mark:      InitValue	% none at the begin;
-	 offset:    0		% originallt - 0;
-	 gotIndent: false	% ... originally;
-	 indent:    0		% 
+	 mark:      InitValue   % none at the begin;
+	 offset:    0           % originallt - 0;
+	 gotIndent: false       % ... originally;
+	 indent:    0           %
 
       %%
       meth init skip end
@@ -264,7 +261,7 @@ in
 	    of left then
 	       LeftObjs = Obj|NewLeftObjs
 	       RightObjs = NewRightObjs
-	    [] right then 
+	    [] right then
 	       LeftObjs = NewLeftObjs
 	       RightObjs = Obj|NewRightObjs
 	    else
@@ -284,11 +281,11 @@ in
       %% limited by the number of different term infix constructors;
       %%
       %% 'Objs' is a non-empty list, for both functions;
-      %% 
+      %%
       fun {GetOuterMostObj Objs}
 	 case
 	    {Filter Objs
-	     fun {$ Obj}	% 'has no parent';
+	     fun {$ Obj}        % 'has no parent';
 		{Some Objs fun {$ CmpObj} Obj.ParentObj == CmpObj end}
 		== false
 	     end}
@@ -297,7 +294,7 @@ in
 	    InitValue
 	 [] Obj|R then
 \ifdef DEBUG_RM
-	    case R \= nil then 
+	    case R \= nil then
 	       {BrowserWarning 'GetTargetObj: multiple outer-most objects?'}
 	    else skip
 	    end
@@ -310,7 +307,7 @@ in
       fun {GetInnerMostObj Objs}
 	 case
 	    {Filter Objs
-	     fun {$ Obj}	% 'has no child(ren)';
+	     fun {$ Obj}        % 'has no child(ren)';
 		{Some Objs fun {$ CmpObj} CmpObj.ParentObj == Obj end}
 		== false
 	     end}
@@ -319,7 +316,7 @@ in
 	    InitValue
 	 [] Obj|R then
 \ifdef DEBUG_RM
-	    case R \= nil then 
+	    case R \= nil then
 	       {BrowserWarning 'GetTargetObj: multiple inner-most objects?'}
 	    else skip
 	    end
@@ -333,7 +330,7 @@ in
 
 %%%
 %%%
-%%% 
+%%%
 %%%
 %%%
 
@@ -342,10 +339,10 @@ in
    %%
    class MetaRepManagerObject from Object.base
       %%
-      feat 
-	 !WidgetObj		%
-	 !HeadMark		%
-	 !TailMark		%
+      feat
+	 !WidgetObj             %
+	 !HeadMark              %
+	 !TailMark              %
 
       %%
       attr
@@ -355,7 +352,7 @@ in
 	 !UsedIndentIn: InitValue
       %%
 	 !RefName:      ''
-	 !RefNameSize:  0	% ... and its size together with '=';
+	 !RefNameSize:  0       % ... and its size together with '=';
 
 \ifdef DEBUG_RM
       meth debugShow
@@ -393,7 +390,7 @@ in
 	    %% 'Size'/'SavedSize' are initialized already;
 
 	    %%
-	    case IsEncRep then MetaRepManagerObject , PutOP 
+	    case IsEncRep then MetaRepManagerObject , PutOP
 	    else skip
 	    end
 
@@ -428,7 +425,7 @@ in
 	 %%
 	 local HM TM in
 	    HM = self.HeadMark
-	    TM = self.TailMark 
+	    TM = self.TailMark
 
 	    %%
 	    {self.WidgetObj [deleteRegion(HM TM)
@@ -466,7 +463,7 @@ in
 	 {self.WidgetObj [setMarkGravity(self.HeadMark left)
 			  setMarkGravity(self.TailMark right)]}
       end
-      meth !ShutRep 
+      meth !ShutRep
 	 %%
 	 {self.WidgetObj [setMarkGravity(self.HeadMark right)
 			  setMarkGravity(self.TailMark left)]}
@@ -478,18 +475,14 @@ in
 \ifdef DEBUG_RM
 	 {Show 'MetaRepManagerObject::BeginUpdate is applied'}
 \endif
-	 local WO in
-	    WO = self.WidgetObj 
+	 %%
+	 SavedSize <- @Size
 
-	    %%
-	    SavedSize <- @Size
+	 %%
+	 {self.ParentObj BeginUpdateSubterm(self.numberOf)}
 
-	    %%
-	    {self.ParentObj BeginUpdateSubterm(self.numberOf)}
-
-	    %%
-	    MetaRepManagerObject , OpenRep
-	 end
+	 %%
+	 MetaRepManagerObject , OpenRep
 
 	 %%
 \ifdef DEBUG_RM
@@ -498,15 +491,14 @@ in
       end
 
       %%
-      %% ... toggle gravities back, and apply 'SizeChanged' whenever 
+      %% ... toggle gravities back, and apply 'SizeChanged' whenever
       %% size has changed;
       meth !EndUpdate
 \ifdef DEBUG_RM
 	 {Show 'MetaRepManagerObject::EndUpdate is applied'}
 \endif
 	 %%
-	 local WO OldSize NewSize in
-	    WO = self.WidgetObj
+	 local OldSize NewSize in
 	    OldSize = @SavedSize
 	    NewSize = @Size
 
@@ -605,7 +597,7 @@ in
 	 SavedSize <- @Size
       end
 
-      %% 
+      %%
       meth !LayoutWrong
 	 SavedSize <- 0
       end
@@ -673,7 +665,7 @@ in
       meth !SkipAuxEnd
 	 %%
 	 case @HaveBraces then {self.WidgetObj advanceCursor(DSpace)}
-	 else skip		% no parentheses;
+	 else skip              % no parentheses;
 	 end
       end
 
@@ -722,7 +714,7 @@ in
    %%
    %% ... for primitive objects;
    %%
-   class RepManagerObject from MetaRepManagerObject 
+   class RepManagerObject from MetaRepManagerObject
       %%
 
       %%
@@ -742,7 +734,7 @@ in
       %%
       meth !PutTailMark
 	 local WO in
-	    WO = self.WidgetObj 
+	    WO = self.WidgetObj
 
 	    %%
 	    %% Now, put both: the leading one with the default right
@@ -834,7 +826,7 @@ in
       %%
       %% Note that this is correct only for primitive terms. For
       %% compound terms, 'IndentOut' is different from that sum, of
-      %% course. 
+      %% course.
       meth !CheckLayout(IndentIn ?IndentOut)
 	 UsedIndentIn <- IndentIn
 	 IndentOut = IndentIn + @Size
@@ -846,19 +838,19 @@ in
    %%
    %% ... for compound objects;
    %%
-   class CompoundRepManagerObject from MetaRepManagerObject 
+   class CompoundRepManagerObject from MetaRepManagerObject
       %%
 
       %%
       feat
       %% subterm objects;
-	 Subterms		% 
+	 Subterms               %
 
       %%
       attr
 	 !UsedIndentOut: InitValue
-         CurrentBlock: 0	% 'MakeRep' make an empty zeroth group;
-	 MaxBlock: 0		%
+	 CurrentBlock: 0        % 'MakeRep' make an empty zeroth group;
+	 MaxBlock: 0            %
 
       %%
       %%
@@ -926,14 +918,14 @@ in
 	 %%
 	 CompoundRepManagerObject , UnsetMarks
 
-	 %% 
+	 %%
 	 %% This way around - unset glue marks, after that - subterm'
 	 %% and self marks, and flush them;
 	 MetaRepManagerObject , CloseRep
 
 	 %%
 	 %% Note: don't drop the subterms dictionary, because it's
-	 %% still needed! 
+	 %% still needed!
 \ifdef DEBUG_RM
 	 {Show 'CompoundRepManagerObject::CloseRep is finished'}
 \endif
@@ -1029,7 +1021,7 @@ in
 	    Group = CompoundRepManagerObject , GetGroup(b:B ln:N group:$)
 
 	    %%
-	    case 
+	    case
 	       case {Label Group}
 	       of e   then false
 	       [] t   then false
@@ -1083,7 +1075,7 @@ in
 	 %% (a) the current block is the last one, then this is ok.
 	 %% (b) the current block is not a last one, then we use the
 	 %%     'AnchorGroup' method (see comments in the 'block'
-	 %%     method); 
+	 %%     method);
 	 %%
 	 case @CurrentBlock == @MaxBlock then skip
 	 else B N in
@@ -1111,7 +1103,7 @@ in
 
 	 %%
 	 %% Trust it. It's updated during 'CheckLayout' (if ever
-	 %% necessary); 
+	 %% necessary);
 	 %%
 	 %% 'UsedIndentOut' must either contain a correct value, or
 	 %% the term's layout must be checked in the futher (when a
@@ -1163,10 +1155,10 @@ in
       %%    block!)  should be taken, and cursor set after it). A new
       %%    block is created as ususal.
       %% 4. A used, non-zeroth block is declared. There are three
-      %%    further subcases: 
+      %%    further subcases:
       %%    (a) if a previous used block is a direct predecessor
       %%        and the block itself is empty, then the cursor is not
-      %%        touched; 
+      %%        touched;
       %%    (b) ... in general - the cursor is set after the nearest
       %%        smaller group;
       %%    (c) ... and if there is none, anchor to the leading mark;
@@ -1187,7 +1179,7 @@ in
 	    then
 	       {BrowserError
 		'CompoundRepManagerObject::block: out of order!'}
-	    else skip		% ok
+	    else skip           % ok
 	    end
 	 end
 \endif
@@ -1208,10 +1200,10 @@ in
 		  %% #3': some other block - move cursor?
 
 		  %%
-		  case 
+		  case
 		     CompoundRepManagerObject
 		     , GetPrevBlock(sb:N-1 b:PB found:$)
-		  then PLN in 
+		  then PLN in
 		     %%
 		     PLN = {Dictionary.get self.Subterms PB*DInfinite}
 
@@ -1243,7 +1235,7 @@ in
 	       %% #2'' & #3'': ... in any case, a new block is created;
 	       {Dictionary.put self.Subterms Base 0}
 	       MaxBlock <- N
-	    else 		                       % @MaxBlock >= N > 0
+	    else                                       % @MaxBlock >= N > 0
 	       %% #4: a used block;
 	       %%
 	       %% Do we enter a (still) empty block after a direct
@@ -1252,7 +1244,7 @@ in
 	       case
 		  PrevBlock == N - 1 andthen
 		  {Dictionary.get self.Subterms Base} == 0
-	       then skip 
+	       then skip
 	       else PB in
 		  %%
 		  case
@@ -1321,7 +1313,7 @@ in
 	    elsecase CM + 1 \= LN then
 	       {BrowserError
 		'CompoundRepManagerObject::StoreNewGroup: out of order!'}
-	    else skip		% ok
+	    else skip           % ok
 	    end
 	 end
 \endif
@@ -1356,7 +1348,7 @@ in
 	    elsecase LN < 1 orelse LN > CM then
 	       {BrowserError
 		'CompoundRepManagerObject::ReplaceGroup: no group!'}
-	    else skip		% ok
+	    else skip           % ok
 	    end
 	 end
 \endif
@@ -1380,7 +1372,7 @@ in
 	    elsecase LN < 1 orelse LN > CM then
 	       {BrowserError
 		'CompoundRepManagerObject::GetGroup: no group!'}
-	    else skip		% ok
+	    else skip           % ok
 	    end
 	 end
 \endif
@@ -1405,7 +1397,7 @@ in
 	    elsecase CM < 1 then
 	       {BrowserError
 		'CompoundRepManagerObject::RemoveLastGroup: no group!'}
-	    else skip		% ok
+	    else skip           % ok
 	    end
 	 end
 \endif
@@ -1502,14 +1494,14 @@ in
       %%
       meth DecNumber(sb:B sln:N b:?PB ln:?PN found:$)
 \ifdef DEBUG_RM
-	 local Out in Out = 
+	 local Out in Out =
 \endif
 	    %%
 	    case N > 1 then
 	       PB = B  PN = N-1
 	       true
 	    elsecase
-	       B > 0 andthen 
+	       B > 0 andthen
 	       CompoundRepManagerObject , GetPrevBlock(sb:(B-1) b:PB found:$)
 	    then
 	       PN = {Dictionary.get self.Subterms PB*DInfinite}
@@ -1527,7 +1519,7 @@ in
       end
       meth IncNumber(sb:B sln:N b:?NB ln:?NN found:$)
 \ifdef DEBUG_RM
-	 local Out in Out = 
+	 local Out in Out =
 \endif
 	    %%
 	    case N >= {Dictionary.get self.Subterms B*DInfinite} then
@@ -1555,7 +1547,7 @@ in
       end
 
       %%
-      %% Loops over groups in blocks - any directions and steps; 
+      %% Loops over groups in blocks - any directions and steps;
       %%
       %% 'B' and 'N' are starting group numbers;
       %% 'NextMeth' is a method which search for a next group number,
@@ -1582,11 +1574,11 @@ in
 	    case {self  LM(group:Group b:B ln:N arg:Arg cont:$)}
 	    then NB NN in
 	       case {self  NextMeth(sb:B sln:N b:NB ln:NN found:$)}
-	       then 
+	       then
 		  CompoundRepManagerObject
 		  , ApplyGroups(b:NB ln:NN next:NextMeth
 				lm:LM arg:Arg cont:$)
-	       else true	% all done;
+	       else true        % all done;
 	       end
 	    else false
 	    end
@@ -1635,7 +1627,7 @@ in
       %%
       meth ApplyObj(group:Group b:_ ln:_ arg:Message cont:$)
 	 %%
-	 case 
+	 case
 	    case {Label Group}
 	    of e   then false
 	    [] t   then true
@@ -1657,7 +1649,7 @@ in
 	 end
 
 	 %%
-	 true			% always continue;
+	 true                   % always continue;
       end
 
       %%
@@ -1679,7 +1671,7 @@ in
       %%
       meth UnsetMark(group:Group b:B ln:LN arg:Arg cont:$)
 	 %%
-	 case 
+	 case
 	    case {Label Group}
 	    of e   then false
 	    [] t   then false
@@ -1701,7 +1693,7 @@ in
 	 end
 
 	 %%
-	 true			% always continue;
+	 true                   % always continue;
       end
 
       %%
@@ -1716,7 +1708,7 @@ in
       %% one, and what would happen if it is not. There are the
       %% following cases (note - they are ordered):
       %% 1.  if there are no subterms, then it can be computed
-      %%     from a 'UsedIndentIn' value, and either 
+      %%     from a 'UsedIndentIn' value, and either
       %%     (a) it's correct, then a value obtained is also
       %%         correct.
       %%     (b) it's not correct, then obviously  a value
@@ -1735,7 +1727,7 @@ in
       %%     (b) it's not - but this can happen only if that
       %%         subter's, and, therefore, 'self's layout will be
       %%         checked too (because it is a father of that
-      %%         subterm;) 
+      %%         subterm;)
       %% 3.  if a glue with a line break was found, then an
       %%     indent-out value obtained this way is always correct.
       %%
@@ -1750,7 +1742,7 @@ in
 	    %%
 	    %% If we still have not succeeded in getting of something,
 	    %% use 'HeadMark' and 'UsedIndentIn':
-	    case 
+	    case
 	       CompoundRepManagerObject
 	       , ApplyGroups(b:B ln:LN next:DecNumber
 			     lm:AnchorGroupRec arg:Token cont:$)
@@ -1766,12 +1758,12 @@ in
 
 	       %%
 	       case {Token gotIndent($)} then skip
-	       else 
+	       else
 		  AuxSizeB = CompoundRepManagerObject , GetAuxSizeB($)
 	       in
 		  {Token setIndent(@UsedIndentIn + AuxSizeB)}
 	       end
-	    else skip		% both anchor and its offset are here;
+	    else skip           % both anchor and its offset are here;
 	    end
 
 	    %%
@@ -1800,7 +1792,7 @@ in
 	       {Token setMark(Group.obj.TailMark)}
 	    [] s   then
 	       {Token incOffset(Group.strSize)}
-	    [] st  then 
+	    [] st  then
 	       %% tail mark;
 	       {Token setMark(Group.obj.TailMark)}
 	    [] sgs then
@@ -1810,7 +1802,7 @@ in
 	    [] sgt then
 	       %% tail mark;
 	       {Token setMark(Group.obj.TailMark)}
-	    [] gs  then 
+	    [] gs  then
 	       %% glue mark;
 	       {Token setMarkIncOffset(Group.mark
 				       (Group.strSize + Group.glueSize))}
@@ -1831,28 +1823,28 @@ in
 	       {Token setIndent({Group.obj GetIndentOut($)})}
 	    [] s   then
 	       {Token incIndent(Group.strSize)}
-	    [] st  then 
+	    [] st  then
 	       %% 'UsedIndentOut' ...
 	       {Token setIndent({Group.obj GetIndentOut($)})}
-	    [] sgs then 
+	    [] sgs then
 	       {Token
 		incIndent(Group.strSize + Group.glueSize + Group.str2Size)}
-	    [] sgt then 
+	    [] sgt then
 	       %% 'UsedIndentOut' ...
 	       {Token setIndent({Group.obj GetIndentOut($)})}
-	    [] gs  then 
+	    [] gs  then
 	       {Token incIndent(Group.strSize + Group.glueSize)}
-	    [] gt  then 
+	    [] gt  then
 	       %% 'UsedIndentOut' ...
 	       {Token setIndent({Group.obj GetIndentOut($)})}
-	    else fail		% will fail ever before;
+	    else fail           % will fail ever before;
 	    end
 
 	    %%
 	    %% Now, if both the mark and indent came here, terminate
 	    %% the loop:
 	    case {Token gotMark($)} andthen {Token gotIndent($)}
-	    then false else true 
+	    then false else true
 	    end
 	 end
       end
@@ -1886,12 +1878,12 @@ in
 	    %%
 
 	    %%
-	    Needs = 
+	    Needs =
 	    case
 	       CompoundRepManagerObject
 	       , DecNumber(sb:B sln:N b:?PB ln:?PN found:$) == false orelse
 	       CompoundRepManagerObject
-	       , ApplyGroups(b:PB ln:PN next:DecNumber 
+	       , ApplyGroups(b:PB ln:PN next:DecNumber
 			     lm:SearchMLSubterms arg:?LNeeds cont:$)
 	    then
 	       %% have not decided: searched through all available
@@ -1911,7 +1903,7 @@ in
 
       %%
       %% The method's name stays for "search for a multi-lined
-      %% subterm"; 
+      %% subterm";
       meth SearchMLSubterms(group:Group b:_ ln:_ arg:Needs cont:$)
 	 local GrType in
 	    GrType = {Label Group}
@@ -1919,7 +1911,7 @@ in
 	    %%
 	    %% first, check the case 1.
 	    case
-	       case GrType 
+	       case GrType
 	       of e   then false
 	       [] t   then true
 	       [] s   then false
@@ -1933,7 +1925,7 @@ in
 		   'CompoundRepManagerObject::SarchMLSubterms: group type??!'}
 		  false
 	       end
-	    then 
+	    then
 	       %% found a subterm:
 	       Needs = {Group.obj IsMultiLined($)}
 	       false
@@ -1941,7 +1933,7 @@ in
 	       %%
 	       %% now, look at the case 2.:
 	    elsecase
-	       case GrType 
+	       case GrType
 	       of e   then false
 	       [] t   then false
 	       [] s   then false
@@ -1959,8 +1951,8 @@ in
 	       %% found a glue:
 	       Needs = false
 	       false
-	    else 
-	       true		% continue;
+	    else
+	       true             % continue;
 	    end
 	 end
       end
@@ -2000,7 +1992,7 @@ in
 	    , ApplyAllGroups(lm:CheckLayoutGroup arg:InitValue cont:_)
 
 	    %%
-	    IndentOut = 
+	    IndentOut =
 	    @UsedIndentOut + MetaRepManagerObject , GetAuxSizeE($)
 	    UsedIndentOut <- IndentOut
 
@@ -2028,7 +2020,7 @@ in
 	  # B # N # @UsedIndentOut}
 \endif
 	 %%
-	 UsedIndentOut <- 
+	 UsedIndentOut <-
 	 case {Label Group}
 	 of e   then @UsedIndentOut     % rare case?
 	 [] t   then {Group.obj CheckLayout(@UsedIndentOut $)}
@@ -2056,13 +2048,13 @@ in
 
 	    %%
 	    {Group.obj CheckLayout(@UsedIndentOut $)}
-	 [] gs  then 
+	 [] gs  then
 	    %%
 	    CompoundRepManagerObject , CheckGlue(group:Group b:B ln:N)
 
 	    %%
 	    @UsedIndentOut + Group.strSize
-	 [] gt  then 
+	 [] gt  then
 	    %%
 	    CompoundRepManagerObject , CheckGlue(group:Group b:B ln:N)
 
@@ -2087,14 +2079,14 @@ in
 	    ReqNL = CompoundRepManagerObject , EvalDesc(Group.desc $)
 
 	    %%
-	    ReqGlueSize = 
+	    ReqGlueSize =
 	    case
 	       ReqNL orelse
 	       CompoundRepManagerObject , NeedsLineBreak(b:B ln:N needs:$)
 	    then
 	       %% requested to be expanded;
 	       %%
-	       ReqIndent = @UsedIndentIn + 
+	       ReqIndent = @UsedIndentIn +
 	       {Max
 		CompoundRepManagerObject , EvalDesc(self.indentDesc $)
 		0}       % it cannot be less than 0. Per definition :-)
@@ -2166,9 +2158,9 @@ in
 
 	       %%
 	       UsedIndentOut <- ReqIndent
-	    else NewGroup in	% ReqGlueSize == 0 and Group.glueSize \= 0
+	    else NewGroup in    % ReqGlueSize == 0 and Group.glueSize \= 0
 	       %% that is, there may be no glue but there is one -
-	       %% remove it; 
+	       %% remove it;
 	       %%
 	       {WO [setCursor(Group.mark @UsedIndentOut)
 		    deleteForward(Group.glueSize)]}
@@ -2206,7 +2198,7 @@ in
 
 	       %%
 	       %% 'SavedSize' is unequal to 'Size' - 'CheckLayout' is
-	       %% requested; 
+	       %% requested;
 	       MyNewSize = MyOldSize - OldSize + NewSize
 	       Size <- MyNewSize
 	       MetaRepManagerObject , LayoutWrong
@@ -2330,7 +2322,7 @@ in
       %% temporarily set with the left gravity - this has to be
       %% toggled later;
       meth PutGlue(ln:LN dp:DP gm:?GlueMark gs:?GlueSize)
-	 local WO LineSize GlueIndent in 
+	 local WO LineSize GlueIndent in
 	    WO = self.WidgetObj
 	    LineSize = {self.store read(StoreTWWidth $)}
 
@@ -2342,7 +2334,7 @@ in
 	    %%
 	    %% Decide whether this glue should be extended or not,
 	    %% what is done using the 'decision procedure'.
-	    GlueSize = 
+	    GlueSize =
 	    case
 	       {DP @UsedIndentIn GlueIndent LineSize} orelse
 	       CompoundRepManagerObject
@@ -2351,7 +2343,7 @@ in
 	       %% line break is requested;
 
 	       %%
-	       ReqIndent = @UsedIndentIn + 
+	       ReqIndent = @UsedIndentIn +
 	       {Max
 		CompoundRepManagerObject , EvalDesc(self.indentDesc $)
 		0}       % it cannot be less than 0. Per definition :-)
@@ -2364,16 +2356,16 @@ in
 
 	       %%
 	       case ReqIndent < GlueIndent then Spaces in
-		  %% 
+		  %%
 		  %% ... it makes sense to break the line here;
 		  Spaces = {CreateSpaces ReqIndent}
 		  {WO [insertNL insert(Spaces _)]}
 		  %% the (Browser) Tcl/Tk interface keeps now new
 		  %% column#;
-		  ReqIndent + DSpace	% i.e. + '\n';
-	       else 0		% no line break - an empty glue;
+		  ReqIndent + DSpace    % i.e. + '\n';
+	       else 0           % no line break - an empty glue;
 	       end
-	    else 0		% no line break has been ever requested;
+	    else 0              % no line break has been ever requested;
 	    end
 	 end
       end
@@ -2406,7 +2398,7 @@ in
 
 	    %%
 	    ObjSize = {Obj GetSize($)}
-	    Size <- @Size + StrSize + ObjSize 
+	    Size <- @Size + StrSize + ObjSize
 
 	    %%
 	    Group = sgt(strSize:  StrSize
@@ -2445,7 +2437,7 @@ in
 	    Str2Size = {WO [insert(Str2 $) setMarkGravity(GlueMark right)]}
 
 	    %%
-	    Size <- @Size + StrSize + Str2Size 
+	    Size <- @Size + StrSize + Str2Size
 
 	    %%
 	    Group = sgs(strSize:  StrSize
@@ -2522,7 +2514,7 @@ in
 
 	    %%
 	    ObjSize = {Obj GetSize($)}
-	    Size <- @Size + ObjSize 
+	    Size <- @Size + ObjSize
 
 	    %%
 	    Group = gt(mark:     GlueMark
@@ -2545,7 +2537,7 @@ in
 	 %%
 	 case {Int.is IndExpr} then IndExpr
 	 elsecase IndExpr
-	 of st_size(N) then B LN in 
+	 of st_size(N) then B LN in
 	    N = B#LN
 	    %%
 	    case CompoundRepManagerObject , isGroup(b:B ln:LN is:$)
@@ -2555,7 +2547,7 @@ in
 
 	       %%
 \ifdef DEBUG_RM
-	       case 
+	       case
 		  case {Label Group}
 		  of e   then false
 		  [] t   then true
@@ -2570,7 +2562,7 @@ in
 		      'CompoundRepManagerObject::EvalDesc: group type??!'}
 		     false
 		  end
-	       then skip	% fine - there is an object;
+	       then skip        % fine - there is an object;
 	       else
 		  {BrowserError
 		   'CompoundRepManagerObject::EvalDesc: no object in a group!'}
@@ -2582,7 +2574,7 @@ in
 	    else 0
 	    end
 
-	 [] gr_size(N) then B LN in 
+	 [] gr_size(N) then B LN in
 	    N = B#LN
 	    %%
 	    case CompoundRepManagerObject , isGroup(b:B ln:LN is:$)
@@ -2616,19 +2608,19 @@ in
 	    %% Note that 'UsedIndentOut' contains the current
 	    %% position in a line in the 'refineLayout' context, where
 	    %% 'EvalDesc' is used!
-	 [] current then @UsedIndentOut 
+	 [] current then @UsedIndentOut
 
-	 [] st_indent(N) then B LN in 
+	 [] st_indent(N) then B LN in
 	    N = B#LN
 	    %%
 	    case CompoundRepManagerObject , isGroup(b:B ln:LN is:$)
 	    then Group in
-	       Group = 
+	       Group =
 	       CompoundRepManagerObject , GetGroup(b:B ln:LN group:$)
 
 	       %%
 \ifdef DEBUG_RM
-	       case 
+	       case
 		  case {Label Group}
 		  of e   then false
 		  [] t   then true
@@ -2643,7 +2635,7 @@ in
 		      'CompoundRepManagerObject::EvalDesc: group type??!'}
 		     false
 		  end
-	       then skip	% fine - there is an object;
+	       then skip        % fine - there is an object;
 	       else
 		  {BrowserError
 		   'CompoundRepManagerObject::EvalDesc: no object in a group!'}
@@ -2689,7 +2681,7 @@ in
 	    %%
 	    {Max R1 R2}
 
-	 [] '>'(A1 A2) then R1 R2 in 
+	 [] '>'(A1 A2) then R1 R2 in
 	    %%
 	    CompoundRepManagerObject , EvalDesc(A1 R1)
 	    CompoundRepManagerObject , EvalDesc(A2 R2)
@@ -2697,7 +2689,7 @@ in
 	    %%
 	    R1 > R2
 
-	 [] '<'(A1 A2) then R1 R2 in 
+	 [] '<'(A1 A2) then R1 R2 in
 	    %%
 	    CompoundRepManagerObject , EvalDesc(A1 R1)
 	    CompoundRepManagerObject , EvalDesc(A2 R2)
@@ -2756,7 +2748,7 @@ in
 
 	    %%
 	    %% ... but before, set the cursor at a right position;
-	    local OGObj = OldGroup.obj in 
+	    local OGObj = OldGroup.obj in
 	       OldSize = {OGObj GetSize($)}
 	       {OGObj SetCursorAt}
 	       {OGObj Close}
@@ -2769,7 +2761,7 @@ in
 	    CurrentBlock <- InitValue
 
 	    %%
-	    NewObj = 
+	    NewObj =
 	    CompoundControlObject
 	    , PutSubterm(n:        FN
 			 st:       Term
@@ -2798,7 +2790,7 @@ in
 \endif
       end
 
-      %% 
+      %%
       %% Currently only the removing of a last group in a block is
       %% implemented. Basically, one have to use 'AnchorGroup' in
       %% order a "starting" point ('CurrentBlock' is going lost), and
@@ -2813,8 +2805,8 @@ in
 	 %%
 	 case
 	    LN == {Dictionary.get self.Subterms (@CurrentBlock*DInfinite)}
-	 then skip		% ok;
-	 else 
+	 then skip              % ok;
+	 else
 	    {BrowserError
 	     'CompoundRepManagerObject::removeG: not the last group!!!'}
 	 end
@@ -2828,11 +2820,11 @@ in
 	    CompoundRepManagerObject , RemoveLastGroup
 
 	    %%
-	    Size <- @Size - 
+	    Size <- @Size -
 	    case {Label Group}
 	    of e   then 0
 
-	    [] t   then Size GObj = Group.obj in 
+	    [] t   then Size GObj = Group.obj in
 	       Size = {GObj GetSize($)}
 	       {GObj Close}
 	       Size
@@ -2841,7 +2833,7 @@ in
 	       {WO deleteBackward(Group.strSize)}
 	       Group.strSize
 
-	    [] st  then GObj = Group.obj ObjSize in 
+	    [] st  then GObj = Group.obj ObjSize in
 	       ObjSize = {GObj GetSize($)}
 	       {GObj Close}
 	       {WO deleteBackward(Group.strSize)}
@@ -2852,17 +2844,17 @@ in
 	       {WO deleteBackward(Size + Group.glueSize)}
 	       Size
 
-	    [] sgt then GObj = Group.obj ObjSize in  
+	    [] sgt then GObj = Group.obj ObjSize in
 	       ObjSize = {GObj GetSize($)}
 	       {GObj Close}
 	       {WO deleteBackward(Group.glueSize + Group.strSize)}
 	       ObjSize + Group.strSize
 
-	    [] gs  then 
+	    [] gs  then
 	       {WO deleteBackward(Group.glueSize + Group.strSize)}
 	       Group.strSize
 
-	    [] gt  then GObj = Group.obj ObjSize in 
+	    [] gt  then GObj = Group.obj ObjSize in
 	       ObjSize = {GObj GetSize($)}
 	       {GObj Close}
 	       {WO deleteBackward(Group.glueSize)}
@@ -2886,4 +2878,3 @@ in
 
    %%
 end
-

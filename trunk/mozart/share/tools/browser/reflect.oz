@@ -24,23 +24,22 @@
 %%%
 %  Programming Systems Lab, University of Saarland,
 %  Geb. 45, Postfach 15 11 50, D-66041 Saarbruecken.
-%  Author: Konstantin Popov & Co. 
+%  Author: Konstantin Popov & Co.
 %  (i.e. all people who make proposals, advices and other rats at all:))
 %  Last modified: $Date$ by $Author$
 %  Version: $Revision$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 
+%%%
 %%% Checking whether the current blackboard is a deep one, and if yes,
 %%% reflect a term (i.e. replace all free vairables with atoms);
-%%% 
+%%%
 %%% Note: the equality of variables in reflected term is not detected!
-%%% 
-%%% 
+%%%
+%%%
 
 local
-   AtomConcat
    AtomConcatAll
    %%
    IsSeen
@@ -55,17 +54,12 @@ local
 in
 
    %%
-   fun {AtomConcat A1 A2}
-      {String.toAtom {Append {Atom.toString A1} {Atom.toString A2}}}
-   end
-
-   %%
    local
       fun {All As}
 	 case As of nil then nil
 	 [] A|Ar then {Append {All A} {All Ar}}
 	 else {Atom.toString As}
-	 end 
+	 end
       end
    in
       fun {AtomConcatAll As}
@@ -74,16 +68,16 @@ in
    end
 
    %%
-   %% Aux: check whether the actual blackboard is a deep one; 
-   %% 
+   %% Aux: check whether the actual blackboard is a deep one;
+   %%
    fun {IsDeepGuard}
       {Not {OnToplevel}}
    end
 
    %%
    %% Check whether the given term (Term) was already seen.
-   %% Otherwise insert it list of seen terms; 
-   %% 
+   %% Otherwise insert it list of seen terms;
+   %%
    fun {IsSeen Term ReflectedTerm ListOfSeen ?NewList}
       %%
       %% ReflectedTerm is in/out both;
@@ -107,8 +101,8 @@ in
       end
    end
 
-   %% 
-   %% 
+   %%
+   %%
    fun {TupleSubterms T}
       local ListOf in
 	 ListOf = {List.make {Width T}}
@@ -128,14 +122,14 @@ in
    fun {TupleReflectLoop Subterms Num ListIn RFun}
       %%
       case Subterms
-      of T|R then TmpList in 
+      of T|R then TmpList in
 	 {TupleReflectLoop R {RFun Num T ListIn TmpList} TmpList RFun}
       else ListIn
       end
    end
 
    %%
-   %% HO: ... for records; 
+   %% HO: ... for records;
    fun {RecordReflectLoop RArity ListIn RFun}
       %%
       case RArity
@@ -149,7 +143,7 @@ in
    fun {GetWFList LIn}
       %%
       case {Value.status LIn}
-      of det(_) then 
+      of det(_) then
 	 case LIn
 	 of E|R then E|{GetWFList R}
 	 else nil
@@ -159,18 +153,18 @@ in
    end
 
    %%
-   %% The reflect function itself; 
+   %% The reflect function itself;
    fun {ReflectTerm TermIn ListIn ?TermOut}
       local Status TmpList in
 	 Status = {IsSeen TermIn TermOut ListIn TmpList}
 
 	 %%
 	 case Status then TmpList
-	 elsecase {IsVar TermIn} then 
+	 elsecase {IsVar TermIn} then
 	    %%
-	    %% 
+	    %%
 	    case {IsRecordCVar TermIn} then
-	       RArity KillP KnownRArity KnownRefRArity RLabel L 
+	       RArity KillP KnownRArity KnownRefRArity RLabel L
 	    in
 	       %%
 	       %%  convert an OFS to the proper record non-monotonically;
@@ -203,21 +197,21 @@ in
 	       %%
 	       TermOut = {Record.make RLabel KnownRefRArity}
 	       {RecordReflectLoop KnownRArity TmpList
-		fun {$ F ListIn} RF in 
+		fun {$ F ListIn} RF in
 		   RF = {ReflectTerm F nil $ _}
 		   {ReflectTerm TermIn.F ListIn TermOut.RF}
 		end}
-	    else 
+	    else
 	       %%  a variable;
-	       case {IsFdVar TermIn} then 
+	       case {IsFdVar TermIn} then
 		  %%
 		  TermOut =
 		  {String.toAtom {System.valueToVirtualString TermIn 1 1}}
-	       elsecase {IsFSetVar TermIn} then 
+	       elsecase {IsFSetVar TermIn} then
 		  %%
 		  TermOut =
 		  {String.toAtom {System.valueToVirtualString TermIn 1 1}}
-	       elsecase {IsMetaVar TermIn} then 
+	       elsecase {IsMetaVar TermIn} then
 		  %%
 		  TermOut = {AtomConcatAll [{System.printName TermIn}
 					    '<' {MetaGetNameAsAtom TermIn}
@@ -229,7 +223,7 @@ in
 	       %%
 	       TmpList
 	    end
-	 else 
+	 else
 	    case {Type.ofValue TermIn}
 	    of name then
 	       TermOut =
@@ -251,7 +245,7 @@ in
 	       TermOut = {AtomConcatAll
 			  ['<Procedure: '
 			   {System.printName TermIn } '/'
-			   {IntToAtom {Procedure.arity TermIn}} ' @ ' 
+			   {IntToAtom {Procedure.arity TermIn}} ' @ '
 			   {IntToAtom {AddrOf TermIn}} '>']}
 	       TmpList
 	    [] cell then
@@ -271,10 +265,10 @@ in
 	       LabelOf = {ReflectTerm L nil $ _}
 
 	       %%
-	       %% 
+	       %%
 	       TermOut = {Record.make LabelOf RefRArity}
 	       {RecordReflectLoop RArity TmpList
-		fun {$ F ListIn} RF in 
+		fun {$ F ListIn} RF in
 		   RF = {ReflectTerm F nil $ _}
 		   {ReflectTerm TermIn.F ListIn TermOut.RF}
 		end}
@@ -285,32 +279,32 @@ in
 
 	       %%
 	       %%  convert the chunk to a record...
-	       LabelOf = 
+	       LabelOf =
 	       case {IsObject TermIn} then
 		  {AtomConcatAll
 		   ['<Object: '
 		    {System.printName TermIn} ' @ '
 		    {IntToAtom {AddrOf TermIn}} '>']}
-	       elsecase {IsClass TermIn} then 
+	       elsecase {IsClass TermIn} then
 		  {AtomConcatAll
 		   ['<Class: '
 		    {System.printName TermIn} ' @ '
 		    {IntToAtom {AddrOf TermIn}} '>']}
-	       elsecase {IsArray TermIn} then 
+	       elsecase {IsArray TermIn} then
 		  {AtomConcatAll
 		   ['<Array: @ '
 		    {IntToAtom {AddrOf TermIn}} '>']}
-	       elsecase {IsDictionary TermIn} then 
+	       elsecase {IsDictionary TermIn} then
 		  {AtomConcatAll
 		   ['<Dictionary: @ '
 		    {IntToAtom {AddrOf TermIn}} '>']}
 	       else {System.printName TermIn}
 	       end
 
-	       %% 
+	       %%
 	       TermOut = {Record.make LabelOf RefRArity}
 	       {RecordReflectLoop RArity TmpList
-		fun {$ F ListIn} RF in 
+		fun {$ F ListIn} RF in
 		   RF = {ReflectTerm F nil $ _}
 		   {ReflectTerm TermIn.F ListIn TermOut.RF}
 		end}
@@ -329,13 +323,13 @@ in
 	       TmpList
 	    end
 	 end
-      end 
+      end
    end
 
    %%
    %% The 'final' reflect procedure;
    %% Should be used in a deep guard only;
-   %% 
+   %%
    fun {Reflect Term}
       local IsDeep S ReflectedTerm in
 	 IsDeep = {IsDeepGuard}
@@ -350,10 +344,9 @@ in
 	    else 'error by the reflection'
 	    end
 	 else Term
-	 end 
-      end 
+	 end
+      end
    end
 
    %%
 end
-

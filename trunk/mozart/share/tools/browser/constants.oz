@@ -24,7 +24,7 @@
 %%%
 %% Programming Systems Lab, University of Saarland,
 %% Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5337
-%% Author: Konstantin Popov & Co. 
+%% Author: Konstantin Popov & Co.
 %%  (i.e. all people who make proposals, advices and other rats at all:))
 %% Last modified: $Date$ by $Author$
 %% Version: $Revision$
@@ -34,25 +34,25 @@
 %%%
 %%%
 %%%  Local constants;
-%%%  This file should be included in a declaration part 
+%%%  This file should be included in a declaration part
 %%% (i.e. local ... \insert 'constants.oz' ... in ... end)
 %%%
 %%%
 
 %%%
-%%% 
+%%%
 %%%  *Real* constants
 %%% (i.e. don't touch them at all - they must be different names);
-%%% 
+%%%
 
-%% 
-%% INIT value; 
-%% 
+%%
+%% INIT value;
+%%
 InitValue       = {NewName}
 
 %%
 %% Types of Terms -
-%% should be parametric, because Oz has the strong trend to be modified :)) 
+%% should be parametric, because Oz has the strong trend to be modified :))
 %% You have to modify 'terms.oz', 'textWidget.oz' and 'TermsStore.oz' if
 %% you change types;
 %%
@@ -84,7 +84,7 @@ T_FCons         = {NewName}
 T_Tuple         = {NewName}
 %%
 T_HashTuple     = {NewName}
-%% 
+%%
 T_Record        = {NewName}
 %% these are derived from records;
 T_CompChunk     = {NewName}
@@ -105,9 +105,9 @@ T_Space         = {NewName}
 %% we say that this is *something* of the type T_Variable;
 %% Of course, such operation is not monotonic, but we need it in browser.
 T_Variable      = {NewName}
-%%  ... and FD variable; 
+%%  ... and FD variable;
 T_FDVariable    = {NewName}
-%%  ... and Meta variable; 
+%%  ... and Meta variable;
 T_MetaVariable  = {NewName}
 %%  ... and finite set variable resp. finite set value;
 T_FSet          = {NewName}
@@ -118,14 +118,14 @@ T_Unknown       = {NewName}
 
 %%
 %% group #5: specials (not constraint-system dependent);
-%% Reference; 
+%% Reference;
 T_Reference     = {NewName}
-%% Unshown (sub)term (leaf); 
+%% Unshown (sub)term (leaf);
 T_Shrunken      = {NewName}
 
 %%
-%% There are actually the following parameters in browser's store 
-%% (these are the names of corresponding features in store)": 
+%% There are actually the following parameters in browser's store
+%% (these are the names of corresponding features in store)":
 %%
 StoreTWWidth         = {NewName}
 StoreXSize           = {NewName}
@@ -155,7 +155,7 @@ StoreStreamObj       = {NewName}
 StoreOrigWindow      = {NewName}
 StoreScreen          = {NewName}
 StoreProcessAction   = {NewName}
-%% 
+%%
 StoreBreak           = {NewName}
 %%
 StoreSeqNum          = {NewName}
@@ -173,28 +173,20 @@ NoArity              = {NewName}
 TrueArity            = {NewName}
 
 %%%
-%%% 
+%%%
 %%%  (configurable) parameters (i.e. touch them at your own risk :-));
-%%% 
+%%%
 
-%% big enough:)) 
+%% big enough:))
 DInfinite       = 1000000
 
 %%
 OzHome = {System.get home}
 
-%% 
-%% window(graphic) parameters; 
+%%
+%% window(graphic) parameters;
 %%
 %%
-
-%% initial size of a 'browse' text widget (in cols/lines);
-ITWWidth    = 60
-ITWHeight   = 20
-
-%% initial size of a messages' text widget; 
-IMWidth     = 45
-IMHeight    = 5
 
 %%
 ITitle      = 'Oz Browser'
@@ -207,11 +199,9 @@ ILOTitle    = ITitle#': Layout Options'
 
 %%
 IITitle     = ITitle
-IMITitle    = 'Messages'
 
 %%
 IIBitmap    = !OzHome # '/lib/bitmaps/browserIcon.xbm'
-IMIBitmap   = !OzHome # '/lib/bitmaps/browserMIcon.xbm'
 %%
 IStopBitmap = '@' # !OzHome # '/lib/bitmaps/stop.xbm'
 IStopWidth  = 20
@@ -223,7 +213,7 @@ IStopAFG    = firebrick2
 IXTransDist  = 10
 IYTransDist  = 5
 
-%% curosr name (see include file X11/cursorfont.h); 
+%% curosr name (see include file X11/cursorfont.h);
 ICursorName    = 'left_ptr'
 ICursorClock   = 'watch'
 
@@ -232,8 +222,8 @@ IAboutColor = blue
 IEntryColor  = wheat
 
 %%
-%% The following two are in pixels (no subwindows are gridded); 
-%% hese sizes are used if there is(are) no buttons and/or menus frame(s); 
+%% The following two are in pixels (no subwindows are gridded);
+%% hese sizes are used if there is(are) no buttons and/or menus frame(s);
 IXMinSize   = 200
 IYMinSize   = 150
 
@@ -241,29 +231,24 @@ IYMinSize   = 150
 IXSize      = 500
 IYSize      = 350
 
-%%  ... for messages' window (but it is gridded, so - in chars); 
-IMXMinSize  = 40
-IMYMinSize  = 5
-
 %% colours on text widget;
 IBackGround   = 'white'
 IForeGround   = 'black'
 
-%% borders and scrollbars' sizes are in pixels; 
+%% borders and scrollbars' sizes are in pixels;
 IBigBorder    = 1
 ISmallBorder  = 1
 
 %% ext widgets are raised,
-%% while menus, buttons and scrollbars frames are sunken; 
+%% while menus, buttons and scrollbars frames are sunken;
 ITextRelief   = raised
 IFrameRelief  = sunken
-IButtonRelief = raised
 
-%% width (or height) of scrollbars (pixels); 
+%% width (or height) of scrollbars (pixels);
 ISWidth       = 13
 
 %%
-%% default font for text widgets, 'x' and 'y' resolutions for it; 
+%% default font for text widgets, 'x' and 'y' resolutions for it;
 ITWFontUnknown = font(size:14 wght:medium
 		      font:'-*-*-*-*-*-*-*-*-*-*-*-*-*-1'
 		      xRes:0 yRes:0)   % these are just some values!
@@ -282,7 +267,7 @@ ITWFont3       = font(size:14 wght:medium
 %% Note: actually, precise dimentions of the courier fonts are not
 %% known (and even more, they depend on many other factors!). So, we
 %% just left them unspecified (i.e. == 0).
-%% 
+%%
 IKnownCourFonts = [font(size:24 wght:medium
 			font:'-*-courier-medium-r-*-*-24-*-*-*-*-*-*-*'
 			xRes:0 yRes:0)
@@ -315,38 +300,21 @@ IKnownCourFonts = [font(size:24 wght:medium
 			xRes:0 yRes:0)]
 
 %%
-%% (external) pads (pixels); 
+%% (external) pads (pixels);
 IPad          = 1
-IButtonPad    = 1
 ITWPad        = 3
 IBigPad       = 4
 ISEntryWidth  = 8
-
-%% width of a button (in cm); 
-IButtonWidth  = 10
-
-%%
-IBFont1       = '-*-lucida-bold-r-*-sans-12-*-*-*-*-*-*-*'
-IBFont2       = '-*-courier-bold-r-*-*-12-*-*-*-*-*-*-1'
-IBFont3       = '-*-*-*-r-*-*-12-*-*-*-*-*-*-1'
 
 %%
 IAFont1       = '-*-times-bold-r-*-*-24-*-*-*-*-*-*-*'
 IAFont2       = '-*-*-bold-r-*-*-24-*-*-*-*-*-*-1'
 IAFont3       = '-*-*-*-r-*-*-24-*-*-*-*-*-*-1'
 
-%%  "any" font: if the specified one is not found;
-IReservedFont = '-*-*-*-*-*-*-*-*-*-*-*-*-*-1'
-
-%%
-%% offset (<x,y> from the upper left conner) for a message window; 
-IMWXOffset    = 50
-IMWYOffset    = 50
-
 %%%
-%%% 
+%%%
 %%%  defaults section (for "store") (i.e. it should be changeable);
-%%% 
+%%%
 
 %%
 IDepth            = 15
@@ -362,8 +330,6 @@ ISeparators       = true
 IRepMode          = !TreeRep
 %% ... only one of the previous two should be toggled one;
 IBufferSize       = 15
-%% would the menus frame come at start? 
-IWithMenus        = true
 
 %%
 %% template sizes;
@@ -425,12 +391,9 @@ TermsStoreGCRatio  = 5
 %% else skip
 %% end
 TermsStoreGCBase    = 100
-%% How much a real size of a 'ResizableArray' can be bigger
-%% han 'visible';
-RArrayRRatio       = 10
 
 %%%
-%%% 
+%%%
 %%%  Various definitions for debugging
 %%% (turning them on will end up with many debug Show"s);
 %%%
@@ -491,26 +454,19 @@ RArrayRRatio       = 10
 %%%
 
 %% spacing between atoms, etc. in output:
-%% size of blank, hash, colon, braces and '='; 
+%% size of blank, hash, colon, braces and '=';
 DSpace          = 1
 DDSpace         = 2
 DTSpace         = 3
 DQSpace         = 4
-
-%% spacing to subterms of a {record, tuple}; 
-DOffset         = 3
-
-%% max approx; 
-DReference      = 2
-%% 'R?' 
 
 %%
 %% Note that glues, etc. below *must be atoms*. Otherwise, the
 %% CoreTerms.delimiterLEQ must be updated;
 %%
 %% glues; should be of the same length (DSpace);
-DSpaceGlue      = ' '		% DSpace;
-DHashGlue       = "#"		% note: it must be a string!
+DSpaceGlue      = ' '           % DSpace;
+DHashGlue       = "#"           % note: it must be a string!
 DVBarGlue       = '|'
 
 %% symbols;
@@ -526,18 +482,16 @@ DLCBraceS       = '{'
 DRCBraceS       = '}'
 
 %%
-DNameUnshown    = ',,,'		% DTSpace;
-DOpenFS         = '...'		% DTSpace;
-DDblPeriod      = '..'		% DDSpace;
+DNameUnshown    = ',,,'         % DTSpace;
+DOpenFS         = '...'         % DTSpace;
+DDblPeriod      = '..'          % DDSpace;
 DDBar           = '||'          % DDSpace;
-DUnderscore     = '_'		% DSpace;
-DUnshownPFs     = '?'		% DSpace
+DUnshownPFs     = '?'           % DSpace
 
-%% char values; 
+%% char values;
 CNameDelimiter  = &:
 BQuote          = &`
-CharDot         = &.
-CharSpace       = & 
+CharSpace       = &
 /* ` oz emacs modus problems; */
 %%
 
@@ -569,7 +523,7 @@ DLSBraceGroup   = 1
 DCommasGroup    = 1
 %% within a special block, there can be following groups:
 DEllipsesGroup  = 1
-%% or, 
+%% or,
 DDBarGroup      = 1
 DLTGroup        = 2
 

@@ -24,7 +24,7 @@
 %%%
 %  Programming Systems Lab, University of Saarland,
 %  Geb. 45, Postfach 15 11 50, D-66041 Saarbruecken.
-%  Author: Konstantin Popov & Co. 
+%  Author: Konstantin Popov & Co.
 %  (i.e. all people who make proposals, advices and other rats at all:))
 %  Last modified: $Date$ by $Author$
 %  Version: $Revision$
@@ -33,7 +33,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 %%%
-%%%   FBrowserClass - this is class which is given to users and which 
+%%%   FBrowserClass - this is class which is given to users and which
 %%%  instance is used for the default Oz browser;
 %%%
 %%%
@@ -45,36 +45,36 @@
 %%%
 %%% Non-local methods which are denoted by names are used primarily
 %%% as event handlers in window manager (aka e.g. 'Help');
-%%% 
-%%% 
+%%%
+%%%
 class FBrowserClass
    from MyClosableObject
    prop locking
    feat
    %%
    %% some (internal) objects;
-      Store			%  parameters store;
-      BrowserBuffer		%  currently browsed terms (queue);
-      BrowserStream		%  draw requests (queue);
+      Store                     %  parameters store;
+      BrowserBuffer             %  currently browsed terms (queue);
+      BrowserStream             %  draw requests (queue);
    %%
-      GetTermObjs		%  a function;
-
-   %% 
-   attr 
-      selected: InitValue	%  selected term's object;
+      GetTermObjs               %  a function;
 
    %%
+   attr
+      selected: InitValue       %  selected term's object;
+
    %%
-   %% 
+   %%
+   %%
    meth init(origWindow:       OrigWindow         <= InitValue
 	     screen:           Screen             <= InitValue)
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::init is applied'}
 \endif
       lock
-	 %% 
+	 %%
 	 self.Store =
-	 {New StoreClass 
+	 {New StoreClass
 	  [init
 	   store(StoreXSize IXSize)
 	   store(StoreYSize IYSize)
@@ -134,8 +134,8 @@ class FBrowserClass
    end
 
    %%
-   %% Terminate browsing ASAP - by means of setting of 
-   %% a global flag ('StoreBreak') which is respected when new 
+   %% Terminate browsing ASAP - by means of setting of
+   %% a global flag ('StoreBreak') which is respected when new
    %% term objects are created;
    %% This flag must be reset by the drawing process (sitting
    %% behind the 'BrowserStream') when a currently last entry
@@ -154,7 +154,7 @@ class FBrowserClass
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::clear is applied'}
 \endif
-      lock 
+      lock
 	 %%
 	 FBrowserClass , break
 
@@ -175,7 +175,7 @@ class FBrowserClass
 	 {Show 'FBrowserClass::clear is finished'}
 \endif
       end
-   end      
+   end
 
    %%
    %%  ... and close the window;
@@ -212,12 +212,12 @@ class FBrowserClass
 \endif
    end
 
-   %% 
+   %%
    meth close
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::close is applied'}
 \endif
-      %%  
+      %%
       lock
 	 FBrowserClass , break
 
@@ -254,7 +254,7 @@ class FBrowserClass
 	    {self.BrowserStream enq(createWindow)}
 
 	    %%
-	    case {self.Store read(StoreWithMenus $)} then 
+	    case {self.Store read(StoreWithMenus $)} then
 	       FBrowserClass , createMenus
 	    else skip
 	    end
@@ -311,7 +311,7 @@ class FBrowserClass
 \endif
       %%
       lock
-	 FBrowserClass , 
+	 FBrowserClass ,
 	 case {self.Store read(StoreAreMenus $)} then closeMenus
 	 else createMenus
 	 end
@@ -366,17 +366,17 @@ class FBrowserClass
       end
    end
 
-   %% 
+   %%
    %%  'browse' method (+ buffer maintaining);
    %% This method may suspend the caller thread if the buffer is full
    %% (but the object state is released);
-   %% 
+   %%
    meth browse(Term)
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::browse is applied'#Term}
 \endif
       local RootTermObj Sync ProceedProc DiscardProc in
-	 lock 
+	 lock
 	    %%
 	    FBrowserClass , createWindow    % check it;
 
@@ -384,13 +384,13 @@ class FBrowserClass
 	    case
 	       {self.BrowserBuffer getSize($)} >=
 	       {self.Store read(StoreBufferSize $)}
-	    then 
+	    then
 	       %% Startup a thread which eventually cleans up some place
 	       %% in the buffer;
 	       thread
 		  {self UndrawWait}
 	       end
-	    else skip		% just put a new one;
+	    else skip           % just put a new one;
 	    end
 
 	    %%
@@ -431,11 +431,11 @@ class FBrowserClass
 	 %%
 	 %% the object state is free;
 	 {Wait Sync}
-      end 
+      end
    end
 
    %%
-   %% update the size of a buffer, and if necessary - 
+   %% update the size of a buffer, and if necessary -
    %% wakeup suspended 'Browse' threads;
    meth !SetBufferSize(NewSize)
 \ifdef DEBUG_BO
@@ -443,14 +443,14 @@ class FBrowserClass
 \endif
       %%
       lock
-	 case {IsInt NewSize} andthen NewSize > 0 then CurrentSize in 
+	 case {IsInt NewSize} andthen NewSize > 0 then CurrentSize in
 	    {self.Store store(StoreBufferSize NewSize)}
 	    CurrentSize = {self.BrowserBuffer getSize($)}
 
 	    %%
 	    {self.BrowserBuffer resize(NewSize)}
 
-	    %%  
+	    %%
 	    case NewSize < CurrentSize then
 	       %%
 	       FBrowserClass , Undraw(CurrentSize - NewSize)
@@ -470,20 +470,20 @@ class FBrowserClass
    meth !ChangeBufferSize(Inc)
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::ChangeBufferSize is applied'}
-\endif 
+\endif
       FBrowserClass
       , SetBufferSize({self.Store read(StoreBufferSize $)} + Inc)
    end
 
-   %% 
-   %% 
+   %%
+   %%
    meth rebrowse
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::rebrowse is applied'}
 \endif
       %%
-      lock 
-	 case @selected == InitValue then skip 
+      lock
+	 case @selected == InitValue then skip
 	 else Obj in
 	    Obj = @selected
 
@@ -495,12 +495,12 @@ class FBrowserClass
 	 %%
 \ifdef DEBUG_BO
 	 {Show 'FBrowserClass::rebrowse is finished'}
-\endif 
+\endif
       end
-   end 
+   end
 
-   %% 
-   %% 	 
+   %%
+   %%
    meth clearAllButLast
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::ClearAllButLast is applied'}
@@ -537,7 +537,7 @@ class FBrowserClass
       {Show 'FBrowserClass::Undraw is applied'}
 \endif
       %%
-      case N > 0 andthen {self.BrowserBuffer getSize($)} > 0 then 
+      case N > 0 andthen {self.BrowserBuffer getSize($)} > 0 then
 	 RootTermObj Sync ProceedProc DiscardProc
       in
 	 %%
@@ -553,7 +553,7 @@ class FBrowserClass
 	    Sync = unit
 	 end
 
-	 %%  
+	 %%
 	 {self.BrowserBuffer deq(RootTermObj ProceedProc DiscardProc)}
 
 	 %%
@@ -598,7 +598,7 @@ class FBrowserClass
 \endif
       %%
       lock
-	 case {self.BrowserBuffer getSize($)} > 0 then RootTermObj in
+	 case {self.BrowserBuffer getSize($)} > 0 then
 	    %%
 	    %% state is free already;
 	    {self Undraw(1)}
@@ -608,7 +608,7 @@ class FBrowserClass
 	    %% not become processed before browse requests;
 	    skip
 	 end
-	 
+
 	 %%
 \ifdef DEBUG_BO
 	 {Show 'FBrowserClass::UndrawWait is finished'}
@@ -632,14 +632,14 @@ class FBrowserClass
 	  proc {$ F}
 	     case F
 	     of !BrowserXSize                  then
-		case {IsInt M.F} andthen M.F > 1 then 
+		case {IsInt M.F} andthen M.F > 1 then
 		   {self.Store store(StoreXSize M.F)}
 		   {self.BrowserStream enq(resetWindowSize)}
 		else {BrowserError 'Illegal value for browser\'s "xSize"'}
 		end
 
 	     [] !BrowserYSize                  then
-		case {IsInt M.F} andthen M.F > 1 then 
+		case {IsInt M.F} andthen M.F > 1 then
 		   {self.Store store(StoreYSize M.F)}
 		   {self.BrowserStream enq(resetWindowSize)}
 		else
@@ -647,7 +647,7 @@ class FBrowserClass
 		end
 
 	     [] !BrowserXMinSize               then
-		case {IsInt M.F} andthen M.F >= IXMinSize then 
+		case {IsInt M.F} andthen M.F >= IXMinSize then
 		   {self.Store store(StoreXMinSize M.F)}
 		   {self.BrowserStream enq(resetWindowSize)}
 		else {BrowserError
@@ -655,7 +655,7 @@ class FBrowserClass
 		end
 
 	     [] !BrowserYMinSize               then
-		case {IsInt M.F} andthen M.F > IYMinSize then 
+		case {IsInt M.F} andthen M.F > IYMinSize then
 		   {self.Store store(StoreYMinSize M.F)}
 		   {self.BrowserStream enq(resetWindowSize)}
 		else {BrowserError
@@ -698,9 +698,9 @@ class FBrowserClass
 	 {ForAll {Filter {Arity M} fun {$ F} F \= 1 end}
 	  proc {$ F}
 	     case F
-	     of !BrowserRepMode                then 
+	     of !BrowserRepMode                then
 		{self.Store
-		 store(StoreRepMode 
+		 store(StoreRepMode
 		       case M.F
 		       of tree     then TreeRep
 		       [] graph    then GraphRep
@@ -711,7 +711,7 @@ class FBrowserClass
 			  {self.Store read(StoreRepMode $)}
 		       end)}
 
-	     [] !BrowserChunkFields            then 
+	     [] !BrowserChunkFields            then
 		case M.F of true then
 		   %%
 		   {self.Store store(StoreArityType TrueArity)}
@@ -735,7 +735,7 @@ class FBrowserClass
 		    'Illegal value of parameter browser\'s "detailedNamesAndProcedurs" option'}
 		end
 
-	     [] !BrowserStrings                then 
+	     [] !BrowserStrings                then
 		case M.F of true then
 		   %%
 		   {self.Store store(StoreAreStrings true)}
@@ -747,7 +747,7 @@ class FBrowserClass
 		    'Illegal value of parameter BrowserStrings'}
 		end
 
-	     [] !BrowserVirtualStrings         then 
+	     [] !BrowserVirtualStrings         then
 		case M.F of true then
 		   %%
 		   {self.Store store(StoreAreVSs true)}
@@ -793,7 +793,7 @@ class FBrowserClass
 	 {ForAll {Filter {Arity M} fun {$ F} F \= 1 end}
 	  proc {$ F}
 	     case F
-	     of !BrowserFontSize               then StoredFN Fonts in 
+	     of !BrowserFontSize               then StoredFN Fonts in
 		StoredFN = {self.Store read(StoreTWFont $)}
 		Fonts = {Filter IKnownCourFonts
 			 fun {$ Font}
@@ -803,10 +803,10 @@ class FBrowserClass
 
 		%%
 		case Fonts
-		of [Font] then 
+		of [Font] then
 		   %%
 		   %%  must leave the object's state!
-		   thread 
+		   thread
 		      case {self.BrowserStream enq(setTWFont(Font $))}
 		      then skip
 		      else {BrowserError
@@ -828,9 +828,9 @@ class FBrowserClass
 
 		%%
 		case Fonts
-		of [Font] then 
+		of [Font] then
 		   %%
-		   thread 
+		   thread
 		      case {self.BrowserStream enq(setTWFont(Font $))}
 		      then skip
 		      else {BrowserError
@@ -873,7 +873,7 @@ class FBrowserClass
 			   end)
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::add is applied'}
-\endif 
+\endif
       {self.BrowserStream enq(addAction(Action Label))}
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::addProcessAction is finished'}
@@ -885,7 +885,7 @@ class FBrowserClass
    meth set(Action)
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::setProcessAction is applied'}
-\endif 
+\endif
       {self.BrowserStream enq(setAction(Action))}
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::set is finished'}
@@ -897,24 +897,24 @@ class FBrowserClass
    meth delete(Action)
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::delete is applied'}
-\endif 
+\endif
       {self.BrowserStream enq(removeAction(Action))}
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::removeProcessAction is finished'}
 \endif
    end
 
-   %% 
+   %%
    %% SetSelected ('<1>' event for a term);
    %% The 'AreCommas' argument means whether the term that is selected
    %% have been "width"-constrained;
-   %% 
+   %%
    meth !SetSelected(Obj AreCommas)
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::SetSelected is applied'#Obj.term#Obj.type}
-\endif 
+\endif
       %%
-      lock 
+      lock
 	 FBrowserClass , UnsetSelected
 
 	 %%
@@ -932,7 +932,7 @@ class FBrowserClass
 	 elseof !T_Reference then
 	    {self.BrowserStream [enq(entriesDisable([expand shrink]))
 				 enq(entriesEnable([deref]))]}
-	 elsecase AreCommas then 
+	 elsecase AreCommas then
 	    {self.BrowserStream [enq(entriesDisable([deref]))
 				 enq(entriesEnable([expand shrink]))]}
 	 else
@@ -943,12 +943,12 @@ class FBrowserClass
 	 %%
 \ifdef DEBUG_BO
 	 {Show 'FBrowserClass::SetSelected is finished'}
-\endif 
+\endif
       end
    end
 
-   %% 
-   %%  
+   %%
+   %%
    meth !UnsetSelected
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::UnsetSelected is applied'}
@@ -965,12 +965,12 @@ class FBrowserClass
 	 %%
 \ifdef DEBUG_BO
 	 {Show 'FBrowserClass::UnsetSelected is finished'}
-\endif 
+\endif
       end
    end
 
-   %% 
-   %% 
+   %%
+   %%
    meth !SelExpand
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::SelExpand is applied'}
@@ -991,10 +991,10 @@ class FBrowserClass
 	 {Show 'FBrowserClass::SelExpand is finished'}
 \endif
       end
-   end 
+   end
 
-   %% 
-   %% 
+   %%
+   %%
    meth !SelShrink
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::SelShrink is applied'}
@@ -1015,17 +1015,17 @@ class FBrowserClass
 	 {Show 'FBrowserClass::SelShrink is finished'}
 \endif
       end
-   end 
+   end
 
-   %% 
-   %% 
+   %%
+   %%
    meth !Process
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::Process is applied'}
 \endif
       %%
       local Selected in
-	 Selected = @selected	% a snapshot;
+	 Selected = @selected   % a snapshot;
 
 	 %%
 	 case Selected == InitValue then skip
@@ -1053,17 +1053,17 @@ class FBrowserClass
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::Process is finished'}
 \endif
-   end 
+   end
 
-   %% 
-   %% 
+   %%
+   %%
    meth !SelDeref
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::SelDeref is applied'}
 \endif
       %%
       lock
-	 case @selected == InitValue then skip 
+	 case @selected == InitValue then skip
 	 else
 	    %%
 	    {self.BrowserStream enq(deref(@selected))}
@@ -1077,9 +1077,9 @@ class FBrowserClass
 	 {Show 'FBrowserClass::SelDeref is finished'}
 \endif
       end
-   end 
+   end
 
-   %% 
+   %%
    meth !About
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::About is applied'}
@@ -1167,7 +1167,7 @@ class FBrowserClass
    meth !UpdateSizes
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::UpdateSizes is applied'}
-\endif 
+\endif
       %%
       lock
 	 {ForAll {self.BrowserBuffer getContent($)}
@@ -1178,7 +1178,7 @@ class FBrowserClass
 	 %%
 \ifdef DEBUG_BO
 	 {Show 'FBrowserClass::UpdateSizes is finished'}
-\endif 
+\endif
       end
    end
 
@@ -1187,9 +1187,9 @@ class FBrowserClass
    meth refineLayout
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::checkLayt is applied'}
-\endif 
+\endif
       lock
-	 local CLProc in 
+	 local CLProc in
 	    %%
 	    proc {CLProc RootTermObj}
 	       {self.BrowserStream enq(refineLayoutReq(RootTermObj))}
@@ -1204,10 +1204,10 @@ class FBrowserClass
       end
    end
 
-   %% 
+   %%
    %% In fact, this is the 'ConfigureNotify' (X11 event) handler;
    %% It's here 'cause browser buffer's content is necessary;
-   %%  
+   %%
    meth !SetTWWidth(Width)
 \ifdef DEBUG_BO
       {Show 'FBrowserClass::SetTWWidth is applied'}
@@ -1226,8 +1226,7 @@ class FBrowserClass
 	 {Show 'FBrowserClass::SetTWWidth is finished'}
 \endif
       end
-   end 
+   end
 
    %%
-end 
-
+end

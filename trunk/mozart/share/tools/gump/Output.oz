@@ -30,16 +30,6 @@ local
       end
    end
 
-   fun {EscapeVariableChar C}
-      case C == &` orelse C == &\\ then [&\\ C]
-      elsecase C < 10 then [&\\ &x &0 (&0 + C)]
-      elsecase C < 16 then [&\\ &x &0 (&A + C - 10)]
-      elsecase C < 26 then [&\\ &x &1 (&0 + C - 16)]
-      elsecase C < 32 then [&\\ &x &1 (&A + C - 26)]
-      else [C]
-      end
-   end
-
    IN = format(indent)
    EX = format(exdent)
    NL = format(break)

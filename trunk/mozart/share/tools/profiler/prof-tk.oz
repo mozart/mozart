@@ -102,13 +102,6 @@ in
       end
    end
 
-   class YScrolledTitleText from YScrolledTitleWidget
-      meth tkInit(...)=M
-	 self.widget = Tk.text
-	 YScrolledTitleWidget,M
-      end
-   end
-
    class YScrolledTitleCanvas from YScrolledTitleWidget
       meth tkInit(...)=M
 	 self.widget = Tk.canvas

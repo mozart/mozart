@@ -24,7 +24,7 @@
 %%%
 %  Programming Systems Lab, University of Saarland,
 %  Geb. 45, Postfach 15 11 50, D-66041 Saarbruecken.
-%  Author: Konstantin Popov & Co. 
+%  Author: Konstantin Popov & Co.
 %  (i.e. all people who make proposals, advices and other rats at all:))
 %  Last modified: $Date$ by $Author$
 %  Version: $Revision$
@@ -40,7 +40,7 @@
 %%%
 
 local
-   %% Generator of reference names; 
+   %% Generator of reference names;
    NewRefNameGen
 
    %%
@@ -55,30 +55,20 @@ in
    %% Check for a cycle - and yield an equal object if found,
    %% and 'InitValue' otherwise;
    %% Goes bottom-up from an 'Obj' till a "root" object;
-   %% 
+   %%
    fun {CheckCycleFun Term Obj}
-      local IsEQ in
-	 %%
-	 %% We could use also the logical equality between terms
-	 %% (in order to find "shortest" cycles), but it would not
-	 %% reflect the constraint store contents;
+      %%
+      %% We could use also the logical equality between terms
+      %% (in order to find "shortest" cycles), but it would not
+      %% reflect the constraint store contents;
 
+      %%
+      case {EQ Obj.term Term} then
 	 %%
-	 case {EQ Obj.term Term} then 
-	    %%
-	    case Obj.type == T_RootTerm then InitValue
-	    elsecase {IsFree Obj.closed} then Obj
-	    else PO in
-	       %% i.e., this is garbage (or lack of synchronization);
-	       PO = Obj.ParentObj
-
-	       %%
-	       case PO
-	       of !InitValue then InitValue
-	       else {CheckCycleFun Term PO}
-	       end
-	    end
-	 else PO in 
+	 case Obj.type == T_RootTerm then InitValue
+	 elsecase {IsFree Obj.closed} then Obj
+	 else PO in
+	    %% i.e., this is garbage (or lack of synchronization);
 	    PO = Obj.ParentObj
 
 	    %%
@@ -86,6 +76,14 @@ in
 	    of !InitValue then InitValue
 	    else {CheckCycleFun Term PO}
 	    end
+	 end
+      else PO in
+	 PO = Obj.ParentObj
+
+	 %%
+	 case PO
+	 of !InitValue then InitValue
+	 else {CheckCycleFun Term PO}
 	 end
       end
    end
@@ -116,26 +114,26 @@ in
 %%%
 %%%   "Generic" part of "master" term objects.
 %%%
-%%% 
+%%%
    class ControlObject from MyClosableObject
       %%
       feat
-	 term			% browsed term itself;
-	 numberOf		% a number of its group;
-	 store			% a global store;
-	 !TermsStore		% a 'terms' store (co-references);
-	 !ParentObj		%
-	 !IsPrimitive: true	% 
+	 term                   % browsed term itself;
+	 numberOf               % a number of its group;
+	 store                  % a global store;
+	 !TermsStore            % a 'terms' store (co-references);
+	 !ParentObj             %
+	 !IsPrimitive: true     %
       %% the type field is added to particular objects (e.g.
       %% AtomObject);
 
       %%
-      attr 
+      attr
 	 !TDepth:     InitValue
 
       %%
       %% Generic 'make' method;
-      %% 
+      %%
       meth !Make(term:       Term
 		 depth:      Depth
 		 numberOf:   NumberOf
@@ -160,9 +158,9 @@ in
 	 %%
 	 %% either with parentheses or not;
 	 {self  MakeRep(isEnc:  case self.IsPrimitive then false
-			        else {BrowserTerm.delimiterLEQ
+				else {BrowserTerm.delimiterLEQ
 				      self.delimiter ParentObjIn.delimiter}
-			        end)}
+				end)}
       end
 
       %%
@@ -210,7 +208,7 @@ in
 
 	    %%
 	    (RepMode == GraphRep andthen
-	     {BrowserTerm.checkGraph self.type} andthen 
+	     {BrowserTerm.checkGraph self.type} andthen
 	     {CheckCycleFun self.term self.ParentObj} \= InitValue)
 	    orelse
 	    (RepMode == MinGraphRep andthen
@@ -237,7 +235,7 @@ in
       %%
       %% To be used when a watch point hits - it just queues
       %% a request in order to execute '{self checkTerm}'.
-      %% 
+      %%
       %% Note that one *may not* queue a "direct" request for it,
       %% because it should be enclosed by a 'BeginUpdate'/'EndUpdate'
       %% pair;
@@ -257,7 +255,7 @@ in
 
       %%
       %% A 'BeginUpdate'/'EndUpdate' wrapper for the 'checkTerm' (see
-      %% above); 
+      %% above);
       meth !CheckTerm
 	 %%
 	 {self BeginUpdate}
@@ -281,11 +279,11 @@ in
 	 end
       end
 
-      %% 
+      %%
       %% Send to the 'RefObj' its name (a name of a reference
       %% (refVar)). If none is yet defined, generate one via the
       %% NewRefNameGen;
-      %% 
+      %%
       meth !GenRefName(ReferenceObj Type)
 \ifdef DEBUG_CO
 	 {Show 'ControlObject::GenRefName: term ' # self.term}
@@ -296,13 +294,13 @@ in
 	    StoredRefName = RepManagerObject , GetRefName($)
 
 	    %%
-	    case StoredRefName == '' then NeedBraces in 
+	    case StoredRefName == '' then NeedBraces in
 	       %%
 	       RefName = Type # {NewRefNameGen gen($)}
 	       %%
 	       %% So, we have to compare '=' and a parent's constructor;
 	       NeedBraces =
-	       {BrowserTerm.delimiterLEQ DEqualS self.ParentObj.delimiter} 
+	       {BrowserTerm.delimiterLEQ DEqualS self.ParentObj.delimiter}
 
 	       %%
 	       {self BeginUpdate}
@@ -338,27 +336,27 @@ in
 
       %%
       meth !Process
-         ControlObject , SetSelected
-         {{self.store read(StoreBrowserObj $)} Process}
+	 ControlObject , SetSelected
+	 {{self.store read(StoreBrowserObj $)} Process}
       end
 
       %%
       %% General comment: event processing should be done sequentially
       %% with all other actions on terms, i.e. it has to be controlloed
       %% by a manager object too.
-      %% 
-      %% Handler for button click events; 
+      %%
+      %% Handler for button click events;
       meth !ButtonsHandler(Button)
-	 %% 
+	 %%
 	 {self  case Button
 		of '1' then SetSelected
 		[] '2' then Process
 		[] '3' then noop   % 'UnsetSelected';
 		end}
-      end 
+      end
 
-      %% 
-      %% Handler for buttons double-click events; 
+      %%
+      %% Handler for buttons double-click events;
       meth !DButtonsHandler(Button)
 	 %%
 	 {self  case Button
@@ -366,7 +364,7 @@ in
 		[] '2' then Deref
 		[] '3' then Shrink
 		end}
-      end 
+      end
 
       %%
       %%  A control primitive. It is used when
@@ -410,7 +408,7 @@ in
 
       %%
       meth processOtherwise(Type Message)
-	 local PM in 
+	 local PM in
 	    PM = case {Type.ofValue Message}
 		 of atom then Message
 		 [] name then {System.printName Message}
@@ -445,7 +443,7 @@ in
       from ControlObject
       %%
       feat
-	 !IsPrimitive: false	% override the control object's value;
+	 !IsPrimitive: false    % override the control object's value;
 
       %%
       %%
@@ -461,7 +459,7 @@ in
 
 	 %%
 	 ControlObject , Close
-      end 
+      end
 
       %%
       meth !FastClose
@@ -490,7 +488,7 @@ in
       %% manager (sub-)object and by the "root term" object;
       %%
       %% Note that in some sense it does not manipulate the 'self' -
-      %% it just puts a subterm. So, the presence of surrounding 
+      %% it just puts a subterm. So, the presence of surrounding
       %% 'BeginUpdate'/'EndUpdate' cannot be (is not!) checked inside;
       meth !PutSubterm(n:N st:ST obj:?Obj)
 \ifdef DEBUG_CO
@@ -512,7 +510,7 @@ in
 	    ObjClass =
 	    case
 	       STDepth > 0 andthen CompoundControlObject , mayContinue($)
-	    then STType in 
+	    then STType in
 	       STType = {BrowserTerm.getTermType ST Store}
 
 	       %%
@@ -529,7 +527,7 @@ in
 	       end
 
 	       %%
-	       case RefObj == InitValue then 
+	       case RefObj == InitValue then
 		  %% none found -- proceed;
 		  {BrowserTerm.getObjClass STType}
 	       else ReferenceTermObject
@@ -556,13 +554,13 @@ in
 	       %%
 	       %% 'RefObj' can lie on the same path with 'Obj'. This
 	       %% implies that we cannot just apply it right here.
-	       %% Therefore, we write: 
+	       %% Therefore, we write:
 	       {StreamObj enq(genRefName(RefObj Obj RefType))}
 
 	       %%
 	       %% Note that 'RefObj' could get closed even before it
 	       %% processes the 'genRefName' message - let's check
-	       %% that; 
+	       %% that;
 	       thread
 		  {Wait RefObj.closed}
 		  {Obj rebrowse}
@@ -594,7 +592,7 @@ in
 	       %%
 	       %% ok, that's still a subterm object;
 	       CurDepth = @TDepth
-	       TDepth <- Depth + 1	% because it's "my" depth;
+	       TDepth <- Depth + 1      % because it's "my" depth;
 
 	       %%
 	       CompoundRepManagerObject , BeginUpdate
@@ -603,7 +601,7 @@ in
 
 	       %%
 	       TDepth <- CurDepth
-	    else skip 		% junk - ignore;
+	    else skip           % junk - ignore;
 	    end
 	 end
       end
@@ -672,7 +670,7 @@ in
 \endif
 	 %%
 	 case Depth == 0 then {self  Shrink}
-	 else MaxWidth ActWidth ObjsList NewDepth in
+	 else MaxWidth ActWidth NewDepth in
 	    %%
 	    TDepth <- Depth
 
@@ -700,7 +698,7 @@ in
       end
 
       %%
-   end 
+   end
 
 %%%
 %%%
@@ -731,12 +729,12 @@ in
       feat
       %% 'type' and 'delimiter' are necesary since there is no proper
       %% "slave subobject;
-	 type: T_RootTerm	%  ... of the term object;
+	 type: T_RootTerm       %  ... of the term object;
 	 delimiter: DSpaceGlue  %  per definition;
       %%
-	 !WidgetObj		% 
-	 seqNumber		%  sequential number;
-	 underline		%  ... a (dotted) line after a term;
+	 !WidgetObj             %
+	 seqNumber              %  sequential number;
+	 underline              %  ... a (dotted) line after a term;
 
       %%
       %%  ... in additin to the "control" object;
@@ -762,10 +760,10 @@ in
 \endif
 	 %%
 	 %% These values must be already instantiated!
-	 %% We avoid this way such checking in term object's methods; 
-	 self.numberOf = InitValue	        % ...
+	 %% We avoid this way such checking in term object's methods;
+	 self.numberOf = InitValue              % ...
 	 self.store = Store
-	 self.term = Term		        % ever used?
+	 self.term = Term                       % ever used?
 	 self.TermsStore = {New TermsStoreClass init}
 	 self.ParentObj = InitValue             % must be 'InitValue';
 
@@ -789,8 +787,8 @@ in
 
 	 %%
 	 {WidgetObjIn insertNL}
-	 self.underline = 
-	 case {Store read(StoreAreSeparators $)} then 
+	 self.underline =
+	 case {Store read(StoreAreSeparators $)} then
 	    %%
 	    %% Note that 'makeUnderline' inserts yet another '\n'. The
 	    %% general convention is that outside the
@@ -805,7 +803,7 @@ in
       end
 
       %%
-      %%  
+      %%
       meth !Close
 \ifdef DEBUG_CO
 	 {Show 'RootTermObject::Close is applied: ' # self.term}
@@ -819,7 +817,7 @@ in
 
 	 %%
 	 {self.WidgetObj removeNL}
-	 case self.underline \= InitValue then 
+	 case self.underline \= InitValue then
 	    {self.WidgetObj removeUnderline(self.underline)}
 	 else skip
 	 end
@@ -888,7 +886,7 @@ in
 	  # self.term # self.type}
 \endif
 	 %%
-	 case Obj.numberOf == DRootGroup andthen Obj == @termObj then 
+	 case Obj.numberOf == DRootGroup andthen Obj == @termObj then
 	    %%
 	    {@termObj SetCursorAt}
 	    {@termObj Close}
@@ -919,7 +917,7 @@ in
 \endif
 	 %%
 	 case Obj.numberOf == DRootGroup andthen Obj == @termObj
-	 then CurDepth in 
+	 then CurDepth in
 	    %%
 	    CurDepth = @TDepth
 	    TDepth <- Depth + 1
@@ -948,8 +946,8 @@ in
 	 skip
       end
 
-      %% 
-      %% empty event handlers. 
+      %%
+      %% empty event handlers.
       meth !ButtonsHandler(_) skip end
       meth !DButtonsHandler(_) skip end
 
@@ -973,7 +971,7 @@ in
    class ReferenceTermObject
       from
 	 ControlObject
-	 RepManagerObject 
+	 RepManagerObject
 
       %%
       %%
@@ -982,7 +980,7 @@ in
 
       %%
       attr
-	 master: InitValue	% reference to a 'master' copy;
+	 master: InitValue      % reference to a 'master' copy;
 
       %%
       meth makeTerm
@@ -1063,10 +1061,10 @@ in
 	 type: T_Shrunken
 
       %%
-      meth makeTerm 
+      meth makeTerm
 \ifdef DEBUG_CO
 	 {Show 'ShrunkenTermObject::makeTerm is applied' # self.term}
-\endif 
+\endif
 	 %%
 	 RepManagerObject , insert(str: DNameUnshown)
       end
@@ -1077,7 +1075,7 @@ in
       %%
       %%
       meth !Expand
-	 local DepthInc StreamObj in 
+	 local DepthInc StreamObj in
 	    {self.store [read(StoreDepthInc DepthInc)
 			 read(StoreStreamObj StreamObj)]}
 
@@ -1097,7 +1095,7 @@ in
       meth hasCommas($) false end
 
       %%
-      %% 
+      %%
       meth otherwise(Message)
 	 ControlObject , processOtherwise('ShrunkenTermObject::' Message)
       end
@@ -1108,36 +1106,34 @@ in
 %%%
 %%%
 %%%  Local auxiliary stuff;
-%%% 
-%%% 
+%%%
+%%%
 
    %%
-   %% 
-   %% Generator of new reference names; 
-   %% 
+   %%
+   %% Generator of new reference names;
+   %%
    NewRefNameGen = {New class $ from Object.base
 			   prop final
 			   %%
 			   attr number: 1
 
 			   %%
-			   %%  
+			   %%
 			   meth gen(?Number)
 			      Number = @number
 			      number <- @number + 1
-			   end 
-			   
+			   end
+
 			   %%
 			   %% Special method: get the length of the current
-			   %% reference; 
-			   %% We use it by the calculating of MetaSize; 
+			   %% reference;
+			   %% We use it by the calculating of MetaSize;
 			   meth getLen($)
 			      {VirtualString.length @number}
-			   end 
+			   end
 			end
 		    noop}
 
    %%
-end 
-
-
+end

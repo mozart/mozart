@@ -33,29 +33,25 @@
 %%%
 
 local
-   CompileDate
-   
-   Head       = fun {$ H|_} H end
-   Tail       = fun {$ _|T} T end
-   Last       = List.last
-   GetElement = fun {$ T} T.1 end
-   GetWeight  = fun {$ T} T.2 end
-   
+   Head = fun {$ H|_} H end
+   Tail = fun {$ _|T} T end
+   Last = List.last
+
    fun {ExpandList TupleList}
       {FoldR TupleList
        fun {$ E T}
 	  case E of L#U then {Append {List.number L U 1} T} else E|T end
        end nil}
    end
-      
-   
+
+
    local
       HasForeignFDP = {{`Builtin` foreignFDProps 1}}
-      
+
       fun {GetBiArity Spec}
 	 BiName # BiArity = Spec in BiArity
       end
-      
+
       fun {GetBi Spec}
 	 BiName # BiArity = Spec in {`Builtin` BiName BiArity}
       end
@@ -68,10 +64,10 @@ local
 	    ObjectFile  = '/home/ps-home3/tmueller/Oz/Emulator/' # LibName
 	    {Show {StringToAtom
 		   {VirtualString.toString '   Loading: ' # ObjectFile}}}
-\else	    
+\else
 	    ObjectFile  = OzHome#'/platform/'#OS#'-'#CPU#'/'#LibName
-\endif	    
-	 in 
+\endif
+	 in
 	    {Foreign.dload
 	     ObjectFile
 	     {Record.map LibSpec GetBiArity}
@@ -82,7 +78,7 @@ local
 	 end
       end
    end
-   
+
    FSP = {LoadLibrary 'fsetlib.so'
 	  fsp(init:              fsp_init              #1
 	      isIn:              fsp_isIn              #3
@@ -119,9 +115,9 @@ local
    FSMatch      = FSP.match
    FSMinN       = FSP.minN
    FSMaxN       = FSP.maxN
-   FSSeq        = FSP.seq  
+   FSSeq        = FSP.seq
    FSIsIn       = FSP.isIn
-   
+
    local
       FSIsInR = FSP.isInR
    in
@@ -130,29 +126,31 @@ local
 	 {FSIsInR E S B}
       end
    end
-   
+
    FSSetValue   = {`Builtin` fsSetValue 2}
    FSSet        = {`Builtin` fsSet 3}
    FSDisjoint   = FSP.disjoint
    FSDistinct   = FSP.distinct
+\ifdef CONSTRAINT_N_NAIVE
    fun {FSDisjointWith S1}
       proc {$ S2}{FSDisjoint S1 S2} end
    end
+\endif
    fun {FSDistinctWith S1}
       proc {$ S2} {FSDistinct S1 S2} end
    end
    FSUnion      = FSP.union
    FSIntersect  = FSP.intersection
    FSSubset     = FSP.subsume
-   FSDiff	= FSP.diff
-   FSMin	= FSP.min
-   FSMax	= FSP.max
-   FSConvex	= FSP.convex
+   FSDiff       = FSP.diff
+   FSMin        = FSP.min
+   FSMax        = FSP.max
+   FSConvex     = FSP.convex
 
    FSisVar         = {`Builtin` fsIsVarB 2}
    FSisValue       = {`Builtin` fsIsValueB 2}
    FSvalueToString = {`Builtin` fsValueToString 2}
-   
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %% DISTRIBUTION
 
@@ -177,12 +175,12 @@ local
 	  fun {$ I E} case {C I E} then I else E end end
 	  {Head L}}
       end
-				       
-      MinElement = 
+
+      MinElement =
       fun {$ CL}
 	 Y = {Head CL} in case Y of L#_ then L else Y end
       end
-      
+
       MaxElement =
       fun {$ CL}
 	 Y = {Last CL} in case Y of _#R then R else Y end
@@ -194,29 +192,29 @@ local
       LESS =
       fun {$ X Y}
 	 case X#Y
-	 of     MINELEM#MINELEM then false            
+	 of     MINELEM#MINELEM then false
 	 elseof MINELEM#_       then true
 	 elseof       _#MINELEM then false
 	 elseof MAXELEM#MAXELEM then false
-	 elseof MAXELEM#_       then false 
+	 elseof MAXELEM#_       then false
 	 elseof       _#MAXELEM then true
 	 else X < Y
 	 end
       end
 
-      GREATER = 
+      GREATER =
       fun {$ X Y}
 	 case X#Y
 	 of     MINELEM#MINELEM then false
 	 elseof MINELEM#_       then false
 	 elseof       _#MINELEM then true
 	 elseof MAXELEM#MAXELEM then false
-	 elseof MAXELEM#_       then true 
+	 elseof MAXELEM#_       then true
 	 elseof       _#MAXELEM then false
 	 else X > Y
 	 end
       end
-      
+
       WeightMin =
       fun {$ DF}
 	 fun {$ CL WT}
@@ -225,7 +223,7 @@ local
 	    end
 	 end
       end
-      
+
       WeightMax =
       fun {$ DF}
 	 fun {$ CL WT}
@@ -239,22 +237,22 @@ local
       fun {$ CL WT}
 	 {FD.sum {Map {ExpandList CL} fun {$ X} {WT X} end} '=:'} = {FD.decl}
       end
-      
+
       OrderFun =
       fun {$ Spec Select WT}
 
 	 CardTable =
-	 c(unknown:    fun {$ S} {FSGetNumOfUnknown {Select S}} end 
+	 c(unknown:    fun {$ S} {FSGetNumOfUnknown {Select S}} end
 	   lowerBound: fun {$ S} {FSGetNumOfGlb {Select S}} end
-	   upperBound: fun {$ S} {FSGetNumOfLub {Select S}} end)      
-	 
+	   upperBound: fun {$ S} {FSGetNumOfLub {Select S}} end)
+
 	 MakeCompTableWeight =
 	 fun {$ F}
 	    c(unknown:    fun {$ S} {F {FSGetUnknown {Select S}} WT} end
 	      lowerBound: fun {$ S} {F {FSGetGlb     {Select S}} WT} end
 	      upperBound: fun {$ S} {F {FSGetLub     {Select S}} WT} end)
 	 end
-	 
+
 	 OrderFunTable =
 	 s(min: c(card:      CardTable
 		  weightMin: {MakeCompTableWeight {WeightMin MAXELEM}}
@@ -265,9 +263,9 @@ local
 		  weightMax: {MakeCompTableWeight {WeightMax MINELEM}}
 		  weightSum: {MakeCompTableWeight WeightSum})
 	  )
-	 
+
 	 OrderFunTableRel = s(min: LESS max: GREATER)
-	 
+
       in
 	 case {IsProcedure Spec} then Spec
 	 else
@@ -275,7 +273,7 @@ local
 	    else
 	       OrderFunRel =
 	       {GetFeaturePath OrderFunTableRel Spec [sel#min]}
-	       
+
 	       OrderFun =
 	       {GetFeaturePath OrderFunTable Spec [sel#min cost#card comp#unknown]}
 	    in
@@ -285,8 +283,8 @@ local
 	    end
 	 end
       end
-      
-      ElementFun = 
+
+      ElementFun =
       fun {$ Spec Select WT}
 	 ElementFunTable =
 	 v(min: v(unknown: fun {$ S}
@@ -304,14 +302,14 @@ local
 			      {{WeightMax error}
 			       {FS.reflect.unknown {Select S}} WT}
 			   end
-		 ) 
+		 )
 	  )
       in
 	 case {IsProcedure Spec} then Spec
 	 else {GetFeaturePath ElementFunTable Spec [sel#min wrt#unknown]}
 	 end
       end % fun
-      
+
       FilterFun =
       fun {$ Spec Select}
 	 case Spec
@@ -320,10 +318,10 @@ local
 	 else
 	    fun {$ X} Y = {Select X} in
 	       {FSGetNumOfUnknown Y} > 0 andthen  {Spec Y}
-	    end 
+	    end
 	 end % case
       end
-      
+
       SelectFun =
       fun {$ Spec}
 	 case Spec
@@ -331,7 +329,7 @@ local
 	 else Spec
 	 end
       end
-      
+
       RRobinFun =
       fun {$ Spec}
 	 case Spec then fun {$ H|T} {Append T [H]} end
@@ -339,7 +337,7 @@ local
 	 end
       end
 
-      FSDistNaive = 
+      FSDistNaive =
       proc {$ SL}
 	 case SL == nil then skip
 	 else
@@ -349,27 +347,27 @@ local
 	       elseof Unknown then
 		  UnknownVal = {MinElement Unknown}
 	       in
-		  choice 
+		  choice
 		     {FS.include UnknownVal {Head SL}}
-		   
+
 		     {FSDistNaive SL}
 		  []
 		     {FS.exclude UnknownVal {Head SL}}
-		  
+
 		     {FSDistNaive SL}
 		  end % dis
 	       end % case
 	    end % choice
-	 end % case 
+	 end % case
       end % proc
-      
-      FSDistGeneric = 
+
+      FSDistGeneric =
       proc {$ Vs Order FCond Elem RRobin Sel Proc}
 	 SL = {VectorToList Vs}
       in
 	 choice
 	    {Proc}
-	    
+
 	    choice
 	       SortedSL = {Order {Filter SL FCond}}
 	    in
@@ -378,22 +376,22 @@ local
 		  UnknownVal = {Elem {Head SortedSL}}
 		  DistVar    = {Sel {Head SortedSL}}
 	       in
-		  choice 
+		  choice
 		     {FS.include UnknownVal DistVar}
-		     
+
 \ifdef DEBUG_FSET_DIST
 		     {Show include(UnknownVal DistVar)}
 \endif
-		     
+
 		     {FSDistGeneric {RRobin SortedSL} Order FCond Elem RRobin Sel Proc}
 		  []
 		     {FS.exclude UnknownVal DistVar}
-		     
+
 \ifdef DEBUG_FSET_DIST
 		     {Show exclude(UnknownVal DistVar)}
 \endif
 		     {FSDistGeneric {RRobin SortedSL} Order FCond Elem RRobin Sel Proc}
-		  end % dis 
+		  end % dis
 	       end % case
 	    end % choice
 	 end% choice
@@ -425,11 +423,11 @@ local
       end % proc
 
    end % local
-   
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% WATCHING BOUNDS OF FD DOMAINS 
 
-   
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% WATCHING BOUNDS OF FD DOMAINS
+
+
    %% {FDWatchMax I P}
    %% I is a finite domain variable and P is a unary procedure.
    %% P is invoked each time the max of I's domain changes.  It is
@@ -444,7 +442,7 @@ local
 	 then {FDWatchMax I P} else skip end
       end
    end
-   
+
    %% similarly with the min.
    proc {FDWatchMin I P}
       case {IsDet I} then {P I}
@@ -460,38 +458,36 @@ local
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %% SHORTHANDS
 
-   local 
+   local
       FSCardBI = FSP.card
    in
       proc {FSCard S C}
-	 {FD.decl C} 
-	 {FSCardBI S C} 
+	 {FD.decl C}
+	 {FSCardBI S C}
       end
    end
-   
+
    FSCardRange     = {`Builtin` fsCardRange 3}
-   
+
    FSGetUnknown    = {`Builtin` fsGetUnknown 2}
    FSGetGlb        = {`Builtin` fsGetGlb 2}
    FSGetLub        = {`Builtin` fsGetLub 2}
-   
-   FSGetKnownIn    = {`Builtin` fsGetKnownIn 2}
-   FSGetKnownNotIn = {`Builtin` fsGetKnownNotIn 2}
+
    FSGetCard       = {`Builtin` fsGetCard 2}
-   
+
    FSGetNumOfGlb     = {`Builtin` fsGetNumOfKnownIn 2}
    FSGetNumOfLub     = {`Builtin` fsGetNumOfKnownNotIn 2}
    FSGetNumOfUnknown = {`Builtin` fsGetNumOfUnknown 2}
 
+\ifdef CONSTRAINT_N_NAIVE
    FSEmpty         = {FSSetValue nil}
+\endif
    FSSup           = {{`Builtin` fsSup 1}}
    FSInf           = 0
    FSUniversalRefl = [0#FSSup]
    FSUniversal     = {FSSetValue FSUniversalRefl}
-   
-   While           = List.takeWhile
 
-   VectorToList = 
+   VectorToList =
    fun {$ Vector}
       case     {IsList Vector}   then Vector
       elsecase {IsRecord Vector} then {Record.toList Vector}
@@ -510,7 +506,7 @@ in
 
    FS = set(include:      FSIsIncl
 	    exclude:      FSIsExcl
-	    intersect:    FSIntersect 
+	    intersect:    FSIntersect
 	    intersectN:   fun {$ Vs} Xs = {VectorToList Vs}
 			  in
 			     {FoldR Xs FSIntersect FSUniversal}
@@ -533,14 +529,14 @@ in
 	    end
 \endif
 	    subset:       FSSubset
-	       
+
 	    disjoint:     FSDisjoint
 	    disjointN:
 \ifndef CONSTRAINT_N_NAIVE
 	    FSP.disjointN
 \else
 	    proc {$ Vs} Xs = {VectorToList Vs}
-	    in     
+	    in
 	       {ForAllTail Xs
 		proc {$ Ts}
 		   case Ts
@@ -552,7 +548,7 @@ in
 \endif
 	    distinct:     FSDistinct
 	    distinctN:    proc {$ Vs} Xs = {VectorToList Vs}
-			  in     
+			  in
 			     {ForAllTail Xs
 			      proc {$ Ts}
 				 case Ts
@@ -567,9 +563,9 @@ in
 	    FSP.partition
 \else
 	    fun {$ Vs} Xs = {VectorToList Vs}
-	    in     
+	    in
 	       {FS.disjointN Xs}
-	       {FS.unionN Xs}		     
+	       {FS.unionN Xs}
 	    end
 \endif
 	    newWeights:   fun {$ WL}
@@ -580,7 +576,7 @@ in
 				of (default#W)|T then
 				   {Dictionary.put WeightTable default W}
 				   {ScanWeightDescr T}
-				elseof ((E1#E2)#W)|T then 
+				elseof ((E1#E2)#W)|T then
 				   {Dictionary.put WeightTable E1 W}
 				   {ScanWeightDescr
 				    case E1 < E2 then (((E1+1)#E2)#W)|T
@@ -596,20 +592,20 @@ in
 			     {Dictionary.put WeightTable default 0}
 			     {ScanWeightDescr WL}
 			     Default = {Dictionary.get WeightTable default}
-			     
-			     fun {$ E} 
+
+			     fun {$ E}
 				{Dictionary.condGet WeightTable E Default}
 			     end
 			  end
-   
+
 	    card:         FSCard
 	    cardRange:    FSCardRange
 
 
 	    sup:          FSSup
-   
+
 	    inf:          FSInf
-	    
+
 
 	    diff:         FSDiff
 
@@ -617,8 +613,8 @@ in
 			     {FS.diff FSUniversal S}
 			  end
 
-	    complIn:      proc {$ S1 A S2}     
-			     {FSDisjoint S1 S2} 
+	    complIn:      proc {$ S1 A S2}
+			     {FSDisjoint S1 S2}
 			     {FSUnion S1 S2 A}
 			  end
 
@@ -627,9 +623,9 @@ in
 	    forAllIn:     proc {$ S P}
 			     {ForAll {FS.monitorIn S} P}
 			  end
-	    
+
 	    var:          v(is:    FSisVar
-			    
+
 			    decl:  fun {$}
 				      {FSSet nil FSUniversalRefl}
 				   end
@@ -637,39 +633,39 @@ in
 			       fun {$ B}
 				  {FSSet nil B}
 			       end
-			       
+
 			    lowerBound: fun {$ A}
 					   {FSSet A FSUniversalRefl}
 					end
 
 			    new:   FSSet
-   
+
 			    list:  l(decl: proc {$ Len Ss}
 					      Ss = {MakeList Len}
 					      {ForAll Ss
 					       proc {$ X}
-						  {FS.var.decl X} 
+						  {FS.var.decl X}
 					       end}
 					   end
 				     upperBound:  proc {$ Len A Ss}
 					      Ss = {MakeList Len}
 					      {ForAll Ss
 					       proc {$ X}
-						  {FS.var.upperBound A X} 
+						  {FS.var.upperBound A X}
 					       end}
 					   end
 				     lowerBound:  proc {$ Len A Ss}
 					      Ss = {MakeList Len}
 					      {ForAll Ss
 					       proc {$ X}
-						  {FS.var.lowerBound A X} 
+						  {FS.var.lowerBound A X}
 					       end}
 					   end
 				     new:  proc {$ Len GLB LUB Ss}
 					      Ss = {MakeList Len}
 					      {ForAll Ss
 					       proc {$ X}
-						  {FS.var.new GLB LUB X} 
+						  {FS.var.new GLB LUB X}
 					       end}
 					   end
 				    )
@@ -677,58 +673,58 @@ in
 					      Ss = {MakeTuple L Size}
 					      {Record.forAll Ss
 					       proc {$ X}
-						  {FS.var.decl X} 
+						  {FS.var.decl X}
 					       end}
 					   end
 				     upperBound:  proc {$ L Size A Ss}
 					      Ss = {MakeTuple L Size}
 					      {Record.forAll Ss
 					       proc {$ X}
-						  {FS.var.upperBound A X} 
+						  {FS.var.upperBound A X}
 					       end}
 					   end
 				     lowerBound:  proc {$ L Size A Ss}
 					      Ss = {MakeTuple L Size}
 					      {Record.forAll Ss
 					       proc {$ X}
-						  {FS.var.lowerBound A X} 
+						  {FS.var.lowerBound A X}
 					       end}
 					   end
 				     new:  proc {$ L Size GLB LUB Ss}
 					      Ss = {MakeTuple L Size}
 					      {Record.forAll Ss
 					       proc {$ X}
-						  {FS.var.new GLB LUB X} 
+						  {FS.var.new GLB LUB X}
 					       end}
 					   end
 				    )
-			       
+
 			    record: r(decl: proc {$ L Ls Ss}
 					       Ss = {MakeRecord L Ls}
 					       {Record.forAll Ss
 						proc {$ X}
-						   {FS.var.decl X} 
+						   {FS.var.decl X}
 						end}
 					    end
 				      upperBound:  proc {$ L Ls A Ss}
 					       Ss = {MakeRecord L Ls}
 					       {Record.forAll Ss
 						proc {$ X}
-						   {FS.var.upperBound A X} 
+						   {FS.var.upperBound A X}
 						end}
 					    end
 				      lowerBound:  proc {$ L Ls A Ss}
 					       Ss = {MakeRecord L Ls}
 					       {Record.forAll Ss
 						proc {$ X}
-						   {FS.var.lowerBound A X} 
+						   {FS.var.lowerBound A X}
 						end}
 					    end
 				      new:  proc {$ L Ls GLB LUB Ss}
 					       Ss = {MakeRecord L Ls}
 					       {Record.forAll Ss
 						proc {$ X}
-						   {FS.var.new GLB LUB X} 
+						   {FS.var.new GLB LUB X}
 						end}
 					    end
 				     )
@@ -753,7 +749,7 @@ in
 					 = {Map WList
 					    fun {$ E} {FSIsInReif E S} end}
 				      end
-	                    include:  FSP.includeR
+			    include:  FSP.includeR
 			    bounds:   FSP.bounds
 			    boundsN:  FSP.boundsN
 			    partition: FSP.partitionReified
@@ -766,25 +762,24 @@ in
 			  upperBound:        FSGetLub
 
 			  card:       FSGetCard
-			  
+
 			  cardOf:     c(lowerBound:     FSGetNumOfGlb
 					upperBound:     FSGetNumOfLub
 					unknown: FSGetNumOfUnknown)
-			  
+
 			) % r
 
 	    int:  i(match:        FSMatch
-		    minN:         FSMinN 
-		    maxN:         FSMaxN 
-		    seq:          FSSeq  
+		    minN:         FSMinN
+		    maxN:         FSMaxN
+		    seq:          FSSeq
 		    min:          FSMin
 		    max:          FSMax
 		    convex:       FSConvex
 		   )
-	    
+
 	    distribute:  FSDistribute
 	   ) % set
 
    _ = {FSP.init}
 end
-

@@ -135,7 +135,6 @@ local
 	    {OU.threshold  set(G.threshold div KiloByteI)}
 	    case @InfoVisible then
 	       OP  = O.parameter
-	       OU  = O.usage
 	    in
 	       {OP.minSize    set(G.min div MegaByteI)}
 	       {OP.maxSize    set(G.max div MegaByteI)}

@@ -45,7 +45,6 @@ local
    \insert manager.oz
 
    NoLabel       = {NewName}
-   MyManager     = {NewName}
    ManagerClosed = {NewName}
    
    ActionKinds   = [information compare statistics]
