@@ -67,13 +67,11 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
   _OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
-  DECL_DYN_ARRAY(FSetTouchedGlb, vst, _vs_size);
   PropagatorController_VS P(_vs_size, vs);
   int i;
 
   for (i = _vs_size; i--; ) {
     vs[i].read(_vs[i]);
-    vst[i] = vs[i];
   }
 
   // treatment of equal variables
@@ -107,12 +105,12 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     if (u.getCard() > 0) {
       for (i = _vs_size; i--; ) {
 	OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
+	int card_glb = vsi_glb.getCard();
 
 	FailOnInvalid(*vs[i] != (u - vsi_glb));
 
-	if (vst[i] <= vs[i]) {
+	if (card_glb < vs[i]->getGlbSet().getCard()) {
 	  doagain = OZ_TRUE;
-	  vst[i] = vs[i];
 	  u |= vs[i]->getGlbSet();
 	}
       } // for
