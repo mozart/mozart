@@ -133,8 +133,6 @@ PROPOBJ = $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
 
 DESTBIN = $(OZHOME)/platform/@platform@
 
-EMUEXE = oz.emulator.bin
-
 .NOEXPORT: emulate.o @EMUEXE@ peanuts.o
 
 all:: @EMUEXE@
@@ -238,6 +236,9 @@ ozma-p.yy: ozma-p.m4yy
         $(M4) ozma-p.m4yy > $@
 
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
+
+.cc.o:
+        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && mv /tmp/$$$$.o $@
 
 .cc.s:
         $(CXX) $(CXXFLAGS) -S -o $@ $<
