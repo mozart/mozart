@@ -1498,8 +1498,6 @@ ExtendedConst * ExtendedConst::gc(void) {
 // ===================================================================
 // Finalization
 
-#ifdef FINALIZATION
-
 extern OZ_Term guardian_list;
 extern OZ_Term finalize_list;
 extern OZ_Term finalize_handler;
@@ -1542,8 +1540,6 @@ void gc_finalize()
     finalize_list = oz_nil();
   }
 }
-#endif
-
 
 
 inline
@@ -1897,11 +1893,9 @@ void AM::gc(int msgLevel)
   PrTabEntry::gcPrTabEntries();
   extRefs = extRefs->gc();
   
-#ifdef FINALIZATION
   OZ_collectHeapTerm(finalize_handler,finalize_handler);
   gcStack.recurse();
   gc_finalize();
-#endif
 
   gcPerdioRoots();
   gcStack.recurse();
