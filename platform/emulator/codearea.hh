@@ -69,11 +69,11 @@ class CodeAreaList {
   CodeAreaList(CodeArea *e,CodeAreaList *n) : elem(e), next(n) {};
 };
 
-#if defined THREADED && THREADED > 0
+#ifdef THREADED
   typedef void* AdressOpcode;
-#else // THREADED == 0
+#else
   typedef Opcode AdressOpcode;
-#endif //THREADED
+#endif
 
 
 class CodeArea {
@@ -114,15 +114,14 @@ public:
   /* load statements from "codeFile" until "ENDOFFILE", acknowledge if ok*/
   static Bool load(CompStream *fd, ProgramCounter &newPC);
 
-  static unsigned int getShort(ProgramCounter PC) { return (*PC); }
-  static unsigned int getWord(ProgramCounter PC)  { return getShort(PC);}
+  static unsigned int getWord(ProgramCounter PC)  { return (*PC);}
 
-#if defined THREADED && THREADED == 2
+#ifdef THREADED
   static void **globalInstrTable;
 #endif
 
   static AdressOpcode getOP(ProgramCounter PC)
-  { return (AdressOpcode) getShort(PC); }
+  { return (AdressOpcode) getWord(PC); }
   static Opcode adressToOpcode(AdressOpcode);
   static AdressOpcode opcodeToAdress(Opcode);
 
@@ -170,17 +169,15 @@ private:
     return ptr+1;
   }
 
-  static ProgramCounter writeShort(ByteCode c, ProgramCounter ptr)
+  static ProgramCounter writeWord(void *p, ProgramCounter ptr)
   {
-    return writeWord(c,ptr);
+    return writeWord((ByteCode)ToInt32(p),ptr);
   }
 
 public:
   static ProgramCounter writeIHashTable(IHashTable *ht, ProgramCounter ptr)
   {
-    *(IHashTable*) ptr = *ht;
-    Assert(SizeofIHashTable == sizeof(IHashTable) / sizeof(ptr));
-    return ptr + SizeofIHashTable;
+    return writeWord(ht,ptr);
   }
 
   static ProgramCounter writeLiteral(TaggedRef literal, ProgramCounter ptr)
@@ -199,17 +196,17 @@ public:
   {
     //  label==0 means fail in switchOnTerm and createCond
     //  in this case do not add start
-    return writeWord((ByteCode)(label == 0 ? NOCODE : start+label),ptr);
+    return writeWord(label == 0 ? NOCODE : start+label,ptr);
   }
 
   static ProgramCounter writeBuiltin(BuiltinTabEntry *bi, ProgramCounter ptr)
   {
-    return writeWord((ByteCode)bi,ptr);
+    return writeWord(bi,ptr);
   }
 
   static ProgramCounter writeOpcode(Opcode oc, ProgramCounter ptr)
   {
-    return writeWord((ByteCode)opcodeToAdress(oc),ptr);
+    return writeWord(opcodeToAdress(oc),ptr);
   }
 
   static ProgramCounter writeRegIndex(int index, ProgramCounter ptr)
@@ -217,28 +214,28 @@ public:
 #ifdef FASTREGACCESS
     index *= sizeof(TaggedRef);
 #endif
-    return writeShort((ByteCode)index,ptr);
+    return writeWord((ByteCode)index,ptr);
   }
 
   static ProgramCounter writeArity(int ar, ProgramCounter ptr)
   {
-    return writeShort((ByteCode)ar,ptr);
+    return writeWord((ByteCode)ar,ptr);
   }
 
   static ProgramCounter writeRecordArity(Arity *ar, ProgramCounter ptr)
   {
-    return writeWord((ByteCode)ar,ptr);
+    return writeWord(ar,ptr);
   }
 
   static ProgramCounter writeInt(int i, ProgramCounter ptr)
   {
-    return writeShort((ByteCode)i,ptr);
+    return writeWord((ByteCode)i,ptr);
   }
 
   static ProgramCounter writePredicateRef(int i, ProgramCounter ptr)
   {
     AbstractionEntry *entry = addAbstractionTab(i);
-    return writeWord((ByteCode) entry, ptr);
+    return writeWord(entry, ptr);
   }
 };
 
@@ -264,12 +261,12 @@ inline void printNameTab()
 
 inline Reg getRegArg(ProgramCounter PC)
 {
-  return (Reg) CodeArea::getShort(PC);
+  return (Reg) CodeArea::getWord(PC);
 }
 
 inline int getPosIntArg(ProgramCounter PC)
 {
-  return (int) CodeArea::getShort(PC);
+  return (int) CodeArea::getWord(PC);
 }
 
 inline TaggedRef getNumberArg(ProgramCounter PC)
@@ -282,19 +279,19 @@ inline  TaggedRef getLiteralArg(ProgramCounter PC)
   return (TaggedRef) CodeArea::getWord(PC);
 }
 
-inline PrTabEntry *getPredArg(ProgramCounter PC)
-{
-  return(PrTabEntry *) CodeArea::getWord(PC);
-}
-
 inline void *getAdressArg(ProgramCounter PC)
 {
-  return (void *) CodeArea::getWord(PC);
+  return ToPointer(CodeArea::getWord(PC));
+}
+
+inline PrTabEntry *getPredArg(ProgramCounter PC)
+{
+  return (PrTabEntry *) getAdressArg(PC);
 }
 
 inline ProgramCounter getLabelArg(ProgramCounter PC)
 {
-  return (ProgramCounter) CodeArea::getWord(PC);
+  return (ProgramCounter) getAdressArg(PC);
 }
 
 
