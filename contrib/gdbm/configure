@@ -1020,7 +1020,7 @@ fi
         if expr "$oz_tmp" : egcs >/dev/null; then
           :
 
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
 
           echo $ac_n "checking $CXX version is at least 2.7""... $ac_c" 1>&6
 echo "configure:1027: checking $CXX version is at least 2.7" >&5
@@ -1299,7 +1299,7 @@ else
   rm -rf conftest*
   
         for oz_tmp in $oz_inc_path; do
-          CPPFLAGS="$oz_tmp_cppflags -I$p"
+          CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
           cat > conftest.$ac_ext <<EOF
 #line 1305 "configure"
 #include "confdefs.h"
@@ -1311,7 +1311,7 @@ ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
   
-            oz_tmp_ok="-I$p"
+            oz_tmp_ok="-I$oz_tmp"
             break
 else
   echo "$ac_err" >&5
@@ -1356,7 +1356,7 @@ oz_inc_path=$oz_saved_inc_path
 
 if test "$oz_gdbm_found_inc" = yes; then
   oz_saved_lib_path=oz_lib_path
-  oz_lib_path="/usr/local/include /opt/gnu/include $oz_lib_path"
+  oz_lib_path="/usr/lib /usr/local/lib /opt/gnu/lib $oz_lib_path"
   if test "$oz_cv_with_gdbm_lib" != NONE; then
     oz_lib_path="$oz_cv_with_gdbm_lib $oz_lib_path"
   fi
