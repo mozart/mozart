@@ -431,15 +431,19 @@ Bool isLocalBoard (Board* b)
 inline
 Atom *Atom::gc()
 {
-  if (isNonTopXName () == OK) {
-    if (opMode == IN_GC) {
-      home == home->gcBoard ();
-      return (this);
-    } else if (isLocalBoard (home) == OK) {
-      varCount++;
-      return (new Atom (home->gcBoard (), name.string ()));
-    }
+  if (!isNonTopXName()) {
+    return this;
   }
+
+  if (opMode == IN_GC) {
+    home == home->gcBoard();
+    return this;
+  }
+  if (isLocalBoard(home)) {
+    varCount++;
+    return new Atom(home->gcBoard(), name.string());
+  }
+  return this;
 }
 
 // WARNING: the value field of floats has no bit left for a gc mark
