@@ -40,6 +40,17 @@
       (defalias 'delete-extent 'delete-overlay)
       (defalias 'make-extent 'make-overlay)))
 
+;; ---------------------------------------------------------------------
+;; win32 support
+;;    primary change: emulator is started by compiler, 
+;;    so its output goes into the compiler buffer
+;; ---------------------------------------------------------------------
+
+(if (string-match "nt3" (emacs-version))  ;; for now
+    (setq oz-win32 t)
+  (setq oz-win32 nil))
+
+
 ;;------------------------------------------------------------
 ;; Variables/Initialization
 ;;------------------------------------------------------------
@@ -104,8 +115,11 @@ starts the emulator under gdb")
   "how compiler and engine signal errors")
 
 (defconst oz-remove-pattern
-  (concat oz-error-string "\\|" (format "%c" 18) "\\|" (format "%c" 19))
+  (concat oz-error-string 
+	  "\\|" (char-to-string 18) "\\|" (char-to-string 19) "\\|
+")
   "")
+
 
 (defvar oz-want-font-lock t
   "*If t means that font-lock mode is switched on")
@@ -366,7 +380,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (message "halting Oz...")
   (if (get-buffer "*Oz Temp*") (kill-buffer "*Oz Temp*"))
   (if (and (get-buffer-process oz-compiler-buffer)
-	   (get-buffer-process oz-emulator-buffer))
+	   (or oz-win32 (get-buffer-process oz-emulator-buffer)))
       (if (null force)
 	  (let ((i (* 2 oz-halt-timeout))
 		(eproc (get-buffer-process oz-emulator-buffer))
@@ -385,7 +399,8 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (oz-reset-title))
 
 (defun oz-check-running (start-flag)
-  (if (and (get-buffer-process oz-compiler-buffer)
+  (if (and (not oz-win32)
+	   (get-buffer-process oz-compiler-buffer)
 	   (not (get-buffer-process oz-emulator-buffer)))
       (progn
 	(message "Emulator died.")
@@ -401,7 +416,9 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 			":"
 			(oz-make-temp-name "/tmp/ozpipein"))))
       (if (not start-flag) (message "Oz died. Restarting ..."))
-      (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
+      (if oz-win32
+	  (make-comint "Oz Compiler" "ozcompiler" nil "-emacs")
+	(make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file))
       (setq oz-compiler-buffer "*Oz Compiler*") 
       (oz-create-buffer oz-compiler-buffer t)
       (save-excursion
@@ -424,10 +441,12 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 	  (funcall oz-emulator-hook file)
 	(setq oz-emulator-buffer "*Oz Emulator*")
 	(if oz-wait-time (sleep-for oz-wait-time))
-	(make-comint "Oz Emulator" "oz.emulator" nil "-emacs" "-S" file)
+	(if (not oz-win32)
+	    (make-comint "Oz Emulator" "oz.emulator" nil "-emacs" "-S" file))
 	(oz-create-buffer oz-emulator-buffer nil)
-	(set-process-filter (get-buffer-process oz-emulator-buffer)
-			    'oz-emulator-filter)
+	(if (not oz-win32)
+	    (set-process-filter (get-buffer-process oz-emulator-buffer)
+				'oz-emulator-filter))
 	)
 
       (bury-buffer oz-emulator-buffer)
@@ -601,14 +620,13 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-send-string (string)
   (oz-check-running nil)
   (let ((proc (get-buffer-process oz-compiler-buffer)))
-;  (comint-send-string  proc string)
-;  (comint-send-string proc "\n")
     (comint-send-string proc string)
     (comint-send-string proc "\n")
     (save-excursion
        (set-buffer oz-compiler-buffer)
        (setq compilation-parsing-end (point))
-       (comint-send-eof)
+;       (comint-send-eof)
+       (comint-send-string proc "") ;; works under win32 as well
        (erase-buffer)
        (setq compilation-parsing-end (point-min)))
     ))
@@ -1205,15 +1223,47 @@ and initial semicolons."
 ;;------------------------------------------------------------
 
 (defun oz-emulator-filter (proc string)
-  (oz-filter proc string))
+  (oz-filter proc string (process-buffer proc)))
+
+
+;; 
+;; Under Win32 emulator is started by compiler, 
+;; so its output goes into the compiler buffer
+;; 
+
+;; if you ever change these constants
+;; adapt Compiler/frontend/cFunctions.cc
+(setq oz-emulator-output-start (char-to-string 5))
+(setq oz-emulator-output-end   (char-to-string 6))
+
+(setq oz-read-emulator-output nil)
+
+(defun oz-current-switch ()
+  (if oz-read-emulator-output 
+      oz-emulator-output-end
+    oz-emulator-output-start))
+
+(defun oz-current-outbuffer ()
+  (if oz-read-emulator-output 
+      oz-emulator-buffer
+    oz-compiler-buffer))
 
 (defun oz-compiler-filter (proc string)
-  (oz-filter proc string))
+  (if (not oz-win32)
+      (oz-filter proc string (process-buffer proc))
 
-(defun oz-filter (proc string)
+    (let ((switch (string-match (oz-current-switch) string)))
+      (if (null switch)
+	  (oz-filter proc string (oz-current-outbuffer))
+	(oz-filter proc (substring string 0 switch) (oz-current-outbuffer))
+	(setq oz-read-emulator-output (not oz-read-emulator-output))
+	(oz-compiler-filter proc (substring string (1+ switch)))
+))))
+
+
+(defun oz-filter (proc string newbuf)
 ;; see elisp manual: "Filter Functions"
   (let ((old-buffer (current-buffer))
-	(newbuf (process-buffer proc))
 	(errs-found (and oz-popup-on-error (string-match oz-error-string string))))
     (unwind-protect
 	(let (moving old-point index)
@@ -1244,6 +1294,7 @@ and initial semicolons."
       (set-buffer old-buffer))
 
     (if errs-found (oz-show-buffer newbuf))))
+
 
 ;;------------------------------------------------------------
 ;; buffers
