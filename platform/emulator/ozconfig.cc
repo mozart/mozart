@@ -83,6 +83,7 @@ void ConfigData::init() {
 
   gcFlag                = GC_FLAG;
   gcVerbosity           = GC_VERBOSITY;
+  codeGCcycles          = CODE_GC_CYLES;
 
   stackMaxSize          = STACKMAXSIZE * TASKFRAMESIZE;
   stackMinSize          = STACKMINSIZE * TASKFRAMESIZE;

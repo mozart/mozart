@@ -55,6 +55,7 @@ public:
 
   int gcFlag;                 // request GC to run
   int gcVerbosity;            // GC verbosity level
+  int codeGCcycles;           // after that many GCs a code GC will be done
 
   int heapThreshold;
   int heapMaxSize;
