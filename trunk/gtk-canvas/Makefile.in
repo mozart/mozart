@@ -141,7 +141,7 @@ AUTOMAKE_OPTIONS = 1.3
 @COMPILE_TEST_GTK_CANVAS_TRUE@test_gtk_canvas = test
 @COMPILE_TEST_GTK_CANVAS_FALSE@test_gtk_canvas = 
 
-SUBDIRS = libart_lgpl 	gtk-canvas 	test
+SUBDIRS = @LIBART_SUBDIR@ 	gtk-canvas 	test
 
 
 include_HEADERS = gtk-canvas.h

@@ -130,11 +130,11 @@ AC_CHECK_LIB(z, inflate,
   AC_CHECK_HEADER(zlib.h,
     Z_LIBS="-lz";  AC_DEFINE(HAVE_LIBZ)))
 AC_CHECK_LIB(z, compress, , 
-   AC_MSG_ERROR([[
+   AC_MSG_ERROR([[[
 *** Incorrect libz version found.  Please make sure you do not have
 *** an outdated libz.a or libz.so hiding in your X11 distribution or
 *** elsewhere on your system.  Versions of libz with the "compress" and
-*** "uncompress" symbols are sufficiently recent to build GNOME.]]))
+*** "uncompress" symbols are sufficiently recent to build GNOME.]]]))
 
 dnl Test for libjpeg
 AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
@@ -216,21 +216,36 @@ if test x$define_imlib_1_9 = xtrue; then
     AC_DEFINE(HAVE_IMLIB_1_9)
 fi
 
-
-
-dnl These are for using lib*
-ART_LIBS="-lart_lgpl"
-LIBGTK_CANVAS_LIBS="$GDK_IMLIB_LIBS $GTK_LIBS"
-GTK_CANVAS_LIBS="-lgtk-canvas $ART_LIBS $GDK_IMLIB_LIBS $GTK_LIBS"
-
-AC_ARG_ENABLE(test-gtk-canvas, [  --enable-test-gtk-canvas     compile the test-gtk-canvas examples [default=yes]],[compile_test_gtk_canvas="$enableval"],[compile_test_gtk_canvas=yes])
-AM_CONDITIONAL(COMPILE_TEST_GTK_CANVAS, test x$compile_test_gtk_canvas = xyes)
-
 dnl
 dnl LibART_LGPL
 dnl
-AC_CONFIG_SUBDIRS(libart_lgpl)
+dnl test whether libART is already on the system
+AC_CHECK_PROGS(LIBART_CONFIG,libart-config)
+if test -z "$LIBART_CONFIG"; then
+  AC_MSG_RESULT([we will provide our own libart_lgpl])
+  LIBART_SUBDIR=libart_lgpl
+  HAVE_LIBART=no
+  ART_LIBS="-lart_lgpl"
+else
+  HAVE_LIBART=yes
+  AC_MSG_CHECKING(for libart libs flags)
+  ART_LIBS=`${LIBART_CONFIG} --libs`
+  AC_MSG_RESULT($ART_LIBS)
+fi
+export HAVE_LIBART
+export ARTS_LIBS
+AC_SUBST(ART_LIBS)
+AC_SUBST(HAVE_LIBART)
+AC_SUBST(LIBART_SUBDIR)
 
+dnl These are for using lib*
+LIBGTK_CANVAS_LIBS="$GDK_IMLIB_LIBS $GTK_LIBS"
+GTK_CANVAS_LIBS="-lgtk-canvas $ART_LIBS $GDK_IMLIB_LIBS $GTK_LIBS"
+
+AC_CONFIG_SUBDIRS($LIBART_SUBDIR)
+
+AC_ARG_ENABLE(test-gtk-canvas, [  --enable-test-gtk-canvas     compile the test-gtk-canvas examples [default=yes]],[compile_test_gtk_canvas="$enableval"],[compile_test_gtk_canvas=yes])
+AM_CONDITIONAL(COMPILE_TEST_GTK_CANVAS, test x$compile_test_gtk_canvas = xyes)
 
 dnl
 dnl Substitutions
