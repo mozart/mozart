@@ -4,7 +4,7 @@
  
 <index see=idx.agent/mobile agent/
 <P>This chapter shows how to program mobile agents in Mozart.
-<index id=idx.agent/agent<and>/
+<index id=idx.agent/agent/
 We call <EM>agent</EM> any distributed
 computation that is organized as a set of tasks.
 <index/task/
@@ -77,7 +77,7 @@ Then, we will program the agents.
 <SUBSECTION><TITLE>Installing the agent servers</TITLE>
 
 <P>To go to a site, there has to be something at the site
-<index/agent server<and>/
+<index/agent server/
 <index/agent<and>agent server/
 that accepts the agent.  We call it an <EM>agent server</EM>.
 An agent server accepts functors (which represent agents or parts

@@ -163,7 +163,7 @@ semantics in Oz.
 distributed semantics:
 <LIST>
 <ITEM> <EM>Thread</EM>:
-<index id=idx.thread/thread<and>/
+<index id=idx.thread/thread/
 A thread actively executes a sequence of instructions.
 The thread is stationary on the site it is created.
 Threads communicate through shared data and
@@ -174,7 +174,7 @@ This makes Oz a data-flow language.
 Threads are <EM>sited</EM> entities (see <ptr to="sited.entities">).
 
 <ITEM> <EM>Port</EM>:
-<index id=idx.port/port<and>/
+<index id=idx.port/port/
 <index id=idx.channel/channel<and>port (asynchronous many-to-one)/
 <index id=idx.amtochannel/asynchronous many-to-one channel/
 A port is an asynchronous many-to-one channel
@@ -240,7 +240,7 @@ exclusion algorithm.
 are those that can be assigned only to one value:
 <LIST>
 <ITEM> <EM>Logic variable</EM>:
-<index/logic variable<and>/
+<index/logic variable/
 <index/variable<and>logic variable/
 Logic variables have two operations:
 they can be bound (i.e., assigned)
@@ -352,7 +352,7 @@ can exist on a site:
 
 <ITEM> <EM>Records and numbers</EM>:
 <index id=idx.distributedsemanticsrecord/distributed semantics<and>record/
-<index id=idx.record/record<and>/
+<index id=idx.record/record/
 <index id=idx.distributedsemanticsnumber/distributed semantics<and>number/
 <index id=idx.number/number/
 <index id=idx.distributedsemanticslist/distributed semantics<and>list/
@@ -387,7 +387,7 @@ chunks, atoms, and names</EM>:
 <index/distributed semantics<and>class/
 <index/class/
 <index/distributed semantics<and>functor/
-<index/functor<and>/
+<index/functor/
 <index/distributed semantics<and>chunk/
 <index/chunk/
 <index/distributed semantics<and>atom/

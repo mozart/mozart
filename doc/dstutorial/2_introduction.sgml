@@ -10,7 +10,7 @@ a global infrastructure for distributed applications:
 a global namespace (URLs) and
 a global communications protocol (TCP/IP).
 Both platforms based on
-<index id=idx.java/Java language<and>/
+<index id=idx.java/Java language/
 the Java language and on
 <index id=idx.corba/CORBA/
 the CORBA standard take advantage
@@ -63,14 +63,14 @@ in the Mozart platform.
 given by four modules:
 <LIST>
 <ITEM> The module
-<index/<<Connection>> module<and>/
+<index/<<Connection>> module/
 <index id=idx.moduleconnection/module<and>system<and><<Connection>>/
 <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/
 provides the basic mechanism (known as <EM>tickets</EM>)
 for active applications to connect with each other.
 <ITEM> The module
-<index/<<Remote>> module<and>/
+<index/<<Remote>> module/
 <index id=idx.moduleremote/module<and>system<and><<Remote>>/
 <ref.extern to="ozdoc:system"
 key="chapter.remote"/<<Remote>>/
@@ -78,7 +78,7 @@ allows an active application to create
 a new site (local or remote operating system process) and connect with it.
 The site may be on the same machine or a remote machine.
 <ITEM> The module
-<index/<<Pickle>> module<and>/
+<index/<<Pickle>> module/
 <index id=idx.modulepickle/module<and>system<and><<Pickle>>/
 <ref.extern to="ozdoc:system"
 key="chapter.pickle"/<<Pickle>>/ allows an application
