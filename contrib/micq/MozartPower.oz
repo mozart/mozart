@@ -1,7 +1,7 @@
 functor
 import
    Tk
-   Powered_by_oz_100_gif(image:Logo)
+   Powered_by_oz_gif(image:Logo)
 export
    ShowLogo
 define
