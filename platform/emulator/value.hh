@@ -49,7 +49,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomMin, AtomMax, AtomMid, AtomLow,
        AtomNaive, AtomSize, AtomNbSusps,
        AtomDebugCallC, AtomDebugCallF, AtomDebugCondC, AtomDebugCondF,
-       AtomDebugLockC, AtomDebugLockF,
+       AtomDebugLockC, AtomDebugLockF, AtomDebugNameC, AtomDebugNameF,
        AtomException, AtomUnify,
 
        NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,

@@ -62,6 +62,12 @@ public:
                       (RefsArray) NULL : copyRefsArray(d.arguments);
   }
 
+  void setSingleArgument(TaggedRef x) {
+    arguments = allocateRefsArray(2,NO);
+    arguments[0] = x;
+    arguments[1] = makeTaggedNULL();
+  }
+
   // providing a frameId means that the variable names of the
   // procedure may be found by looking into the thread stack;
   // not providin a frameId (-1) means that the variable names
