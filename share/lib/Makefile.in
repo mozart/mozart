@@ -55,7 +55,8 @@ export OZMAKE_VERBOSE           = no
 SPSRC   = Error ErrorFormatters Finalize
 OPSRC   = Open
 APSRC   = Application
-CPSRC   = Search FD Schedule FS
+CPSRC1  = Search FD FS
+CPSRC2  = Schedule ParSearch ParWorker
 DPSRC   = Connection Remote RemoteServer Fault URL
 WPSRC   = Tk TkTools
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
@@ -64,7 +65,7 @@ RUNFUNCTORS = \
         $(SPSRC:%=%.ozf) \
         $(OPSRC:%=%.ozf) \
         $(APSRC:%=%.ozf) \
-        $(CPSRC:%=%.ozf) \
+        $(CPSRC1:%=%.ozf) \
         Init.ozf
 
 FUNCTORS = \
@@ -72,6 +73,7 @@ FUNCTORS = \
         $(DPSRC:%=%.ozf) \
         $(WPSRC:%=%.ozf) \
         $(SUPPSRC:%=%.ozf) \
+        $(CPSRC2:%=%.ozf) \
         Compiler.ozf
 
 SYSLETS = ozc ozl
@@ -144,6 +146,30 @@ CpSupport.ozf: cp/CpSupport.oz Base.ozf
         $(COMPILE) $< -o $@
 %.ozf: cp/%.oz CpSupport.ozf Base.ozf
         $(COMPILE) $< -o $@
+
+PARSEARCHFUNCTORS = \
+        ParBarChart.ozf ParFindLimit.ozf ParGetColor.ozf \
+        ParLogging.ozf ParManager.ozf ParProcess.ozf \
+        ParSearch.ozf ParServer.ozf ParStatistics.ozf \
+        ParTraceSpace.ozf ParWorker.ozf
+ParBarChart.ozf: ParGetColor.ozf ParFindLimit.ozf ParServer.ozf
+ParLogging.ozf: ParStatistics.ozf
+ParStatistics.ozf: ParBarChart.ozf
+ParManager.ozf: ParLogging.ozf
+ParSearchTmp.ozf: cp/par/ParSearch.oz \
+        ParServer.ozf
+        $(COMPILE) $< -o $@
+ParWorkerTmp.ozf: cp/par/ParWorker.oz \
+        ParLogging.ozf ParTraceSpace.ozf ParServer.ozf
+        $(COMPILE) $< -o $@
+ParWorker.ozf: ParWorkerTmp.ozf ozl
+        $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf \
+        ParLogging.ozf ozl
+        $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+%.ozf: cp/par/%.oz Base.ozf
+        $(COMPILE) $< -o $@
+
 
 %.ozf: dp/%.oz Base.ozf
         $(COMPILE) $< -o $@
@@ -319,7 +345,7 @@ CLEANFILES = \
         compiler-Version.oz \
         $(COMPILERSRCEXTRA) \
         CpSupport.ozf \
-        $(FUNCTORS) $(FUNFUNCTORS) \
+        $(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
         $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
 
 clean:
