@@ -258,7 +258,7 @@ define
       in
 	 Table, initialize
 	 localized <- 0
-	 self.makeKey = fun {$ E} E.odi end
+	 self.makeKey = fun {$ E} E.extOTI end
 	 self.makeSite = fun {$ _} mySite end
 	 self.getCredit = fun {$ E} E.dist_gc end
 	 self.colorAlloc = {New ColorAlloc init(getCol:GetCol
