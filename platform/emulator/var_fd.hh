@@ -71,6 +71,10 @@ public:
   void gc(void);
   inline void dispose(void);
 
+  // methods for trailing
+  OzVariable * copyForTrail(void);
+  void restoreFromCopy(OzFDVariable *);
+
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
   void becomesBoolVarAndPropagate(TaggedRef * trPtr);
 

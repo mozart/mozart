@@ -1,12 +1,11 @@
 /*
  *  Authors:
  *    Kostja Popow (popow@ps.uni-sb.de)
- *
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Kostja Popov, 1999
+ *    Christian Schulte, 1999
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -24,10 +23,6 @@
  *
  */
 
-/*
-   Trail class.
-*/
-
 #ifndef __TRAILH
 #define __TRAILH
 
@@ -40,11 +35,10 @@
 #include "stack.hh"
 
 enum TeType {
-  Te_Mark     = 1,
-  Te_Bind     = 2,
-  Te_Variable = 3,
-  Te_Cast     = 4,
-  Te_Mask     = 7
+  Te_Mark     = 0,
+  Te_Bind     = 1,
+  Te_Variable = 2,
+  Te_Cast     = 3
 };
 
 class  Trail: public Stack {
@@ -58,26 +52,15 @@ public:
    */
 
   TeType getTeType(void) {
-    return (TeType) (((int) *(tos-1)) & Te_Mask);
+    return (TeType) (int) Stack::topElem();
   }
 
   Bool isEmptyChunk() {
     return getTeType() == Te_Mark;
   }
 
-  int chunkSize(void) {
-    int ret = 0;
+  int chunkSize(void);
 
-    StackEntry * top = tos-1;
-
-    while (((TeType) ((int) *top)) != Te_Mark) {
-      top = top-3;
-      ret++;
-      Assert(top>=array);  /* there MUST be a mark on the trail! */
-    }
-
-    return ret;
-  }
 
   /*
    * Pushing
@@ -88,22 +71,11 @@ public:
     Stack::push((StackEntry) Te_Mark);
   }
 
-  void pushBind(TaggedRef *val, TaggedRef old) {
-    ensureFree(3);
-    Stack::push((StackEntry) val,            NO);
-    Stack::push((StackEntry) ToPointer(old), NO);
-    Stack::push((StackEntry) Te_Bind,        NO);
-  }
+  void pushBind(TaggedRef *);
 
-  void pushVariable(TaggedRef * var) {
-    ensureFree(3);
-    Stack::push((StackEntry) Te_Variable, NO);
-  }
+  void pushVariable(TaggedRef *);
 
-  void pushCast(TaggedRef var) {
-    ensureFree(3);
-    Stack::push((StackEntry) Te_Cast, NO);
-  }
+  void pushCast(TaggedRef *);
 
 
   /*
@@ -123,9 +95,9 @@ public:
     val = (TaggedRef*) Stack::pop();
   }
 
-  void popVariable(void) {}
+  void popVariable(void);
 
-  void popCast(void) {}
+  void popCast(void);
 
 };
 

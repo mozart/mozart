@@ -50,132 +50,143 @@ void addFeatOFSSuspensionList(TaggedRef var, SuspList * suspList,
 
 class OzOFVariable: public OzVariable {
 
-    friend class OzVariable;
-    friend inline void addSuspOFSVar(TaggedRef, Suspendable *);
+  friend class OzVariable;
+  friend inline void addSuspOFSVar(TaggedRef, Suspendable *);
 
 private:
-    TaggedRef label;
-    DynamicTable* dynamictable;
+  TaggedRef label;
+  DynamicTable* dynamictable;
 
 public:
-    OzOFVariable(DynamicTable &dt,Board *bb)
+  OzOFVariable(TaggedRef l, DynamicTable * dt,Board *bb)
     : OzVariable(OZ_VAR_OF,bb) {
-        label=oz_newVariable();
-        dynamictable= &dt;
-    }
+    label        = l;
+    dynamictable = dt;
+  }
 
-    OzOFVariable(Board *bb)
+  OzOFVariable(DynamicTable &dt,Board *bb)
     : OzVariable(OZ_VAR_OF,bb) {
-        label=oz_newVariable();
-        dynamictable=DynamicTable::newDynamicTable();
-    }
+    label=oz_newVariable();
+    dynamictable= &dt;
+  }
 
-    // With new table of given size (must be pwr. of 2):
-    OzOFVariable(dt_index size,Board *bb)
+  OzOFVariable(Board *bb)
     : OzVariable(OZ_VAR_OF,bb) {
-        label=oz_newVariable();
-        dynamictable=DynamicTable::newDynamicTable(size);
-    }
+    label=oz_newVariable();
+    dynamictable=DynamicTable::newDynamicTable();
+  }
 
-    OzOFVariable(TaggedRef lbl,Board *bb)
+  // With new table of given size (must be pwr. of 2):
+  OzOFVariable(dt_index size,Board *bb)
     : OzVariable(OZ_VAR_OF,bb) {
-        Assert(oz_isLiteral(lbl));
-        label=lbl;
-        dynamictable=DynamicTable::newDynamicTable();
-    }
+    label=oz_newVariable();
+    dynamictable=DynamicTable::newDynamicTable(size);
+  }
 
-    OzOFVariable(TaggedRef lbl, dt_index size,Board *bb)
+  OzOFVariable(TaggedRef lbl,Board *bb)
     : OzVariable(OZ_VAR_OF,bb) {
-        Assert(oz_isLiteral(lbl));
-        label=lbl;
-        dynamictable=DynamicTable::newDynamicTable(size);
-    }
+    Assert(oz_isLiteral(lbl));
+    label=lbl;
+    dynamictable=DynamicTable::newDynamicTable();
+  }
 
-    // Methods relevant for term copying (gc and solve)
-    void gcRecurse(void);
+  OzOFVariable(TaggedRef lbl, dt_index size,Board *bb)
+    : OzVariable(OZ_VAR_OF,bb) {
+    Assert(oz_isLiteral(lbl));
+    label=lbl;
+    dynamictable=DynamicTable::newDynamicTable(size);
+  }
 
-    TaggedRef getLabel(void) {
-        return label;
-    }
+  // Methods relevant for term copying (gc and solve)
+  void gcRecurse(void);
 
-    long getWidth(void) {
-        return (long)(dynamictable->numelem);
-    }
+  // methods for trailing
+  OzVariable * copyForTrail(void);
+  void restoreFromCopy(OzOFVariable *);
 
-    DynamicTable* getTable(void) {
-        return dynamictable;
-    }
 
-    // Return a sorted difference list of all the features currently in the OFS
-    // The head is the return value and the tail is returned through an argument.
-    TaggedRef getOpenArityList(TaggedRef*,Board*);
+  TaggedRef getLabel(void) {
+    return label;
+  }
 
-    // Return a sorted list of all features currently in the OFS
-    TaggedRef getArityList();
+  long getWidth(void) {
+    return (long)(dynamictable->numelem);
+  }
 
-    // Return the feature value if feature exists, return NULL if it doesn't exist
-    TaggedRef getFeatureValue(TaggedRef feature) {
-        Assert(oz_isFeature(feature));
-        return dynamictable->lookup(feature);
-    }
+  DynamicTable* getTable(void) {
+    return dynamictable;
+  }
+
+  // Return a sorted difference list of all the features currently in the OFS
+  // The head is the return value and the tail is returned through an argument.
+  TaggedRef getOpenArityList(TaggedRef*,Board*);
+
+  // Return a sorted list of all features currently in the OFS
+  TaggedRef getArityList();
+
+  // Return the feature value if feature exists, return NULL if it doesn't exist
+  TaggedRef getFeatureValue(TaggedRef feature) {
+    Assert(oz_isFeature(feature));
+    return dynamictable->lookup(feature);
+  }
 
   void installPropagators(OzOFVariable * glob_var) {
     installPropagatorsG(glob_var);
   }
 
-    // Add the feature and its value
-    // If the feature already exists, do not insert anything
-    // Return TRUE if feature successfully inserted, FALSE if it already exists
-    // ATTENTION: only use this for terms that do not have to be trailed
-    Bool addFeatureValue(TaggedRef feature, TaggedRef term) {
-        Assert(oz_isFeature(feature));
-        Bool valid;
-        if (dynamictable->fullTest()) resizeDynamicTable(dynamictable);
-        TaggedRef prev=dynamictable->insert(feature,term,&valid);
-        if (!valid) {
-            resizeDynamicTable(dynamictable);
-            prev=dynamictable->insert(feature,term,&valid);
-        }
-        Assert(valid);
-        // (future optimization: a second suspList only waiting on features)
-        if (prev==makeTaggedNULL()) {
-            // propagate(suspList, pc_propagator);
-            addFeatOFSSuspensionList(makeTaggedCVar(this),suspList,feature,FALSE);
-            return TRUE;
-        } else {
-            return FALSE;
-        }
+  // Add the feature and its value
+  // If the feature already exists, do not insert anything
+  // Return TRUE if feature successfully inserted, FALSE if it already exists
+  // ATTENTION: only use this for terms that do not have to be trailed
+  Bool addFeatureValue(TaggedRef feature, TaggedRef term) {
+    Assert(oz_isFeature(feature));
+    Bool valid;
+    if (dynamictable->fullTest()) resizeDynamicTable(dynamictable);
+    TaggedRef prev=dynamictable->insert(feature,term,&valid);
+    if (!valid) {
+      resizeDynamicTable(dynamictable);
+      prev=dynamictable->insert(feature,term,&valid);
     }
-
-    // Destructively update feature's value, if feature exists
-    // Return TRUE if feature exists, FALSE if it does not
-    Bool setFeatureValue(TaggedRef feature, TaggedRef term) {
-        Assert(oz_isFeature(feature));
-        return dynamictable->update(feature,term);
+    Assert(valid);
+    // (future optimization: a second suspList only waiting on features)
+    if (prev==makeTaggedNULL()) {
+      // propagate(suspList, pc_propagator);
+      addFeatOFSSuspensionList(makeTaggedCVar(this),suspList,feature,FALSE);
+      return TRUE;
+    } else {
+      return FALSE;
     }
+  }
 
-    // Remove the feature from the OFS
-    // Reclaims memory if table becomes too sparse
-    void removeFeature(TaggedRef feature) {
-        dynamictable=dynamictable->remove(feature);
-    }
+  // Destructively update feature's value, if feature exists
+  // Return TRUE if feature exists, FALSE if it does not
+  Bool setFeatureValue(TaggedRef feature, TaggedRef term) {
+    Assert(oz_isFeature(feature));
+    return dynamictable->update(feature,term);
+  }
 
-    // Used to propagate suspensions (addFeatureValue, getLabel don't do it):
-    void propagateOFS(void) {
-      /* third argument must be ignored --> use AtomNil */
-      propagate(suspList, pc_propagator);
-    }
+  // Remove the feature from the OFS
+  // Reclaims memory if table becomes too sparse
+  void removeFeature(TaggedRef feature) {
+    dynamictable=dynamictable->remove(feature);
+  }
 
-    int getSuspListLength(void) {
-        // see suspension.{hh,cc}:
-        return suspList->length();
-    }
+  // Used to propagate suspensions (addFeatureValue, getLabel don't do it):
+  void propagateOFS(void) {
+    /* third argument must be ignored --> use AtomNil */
+    propagate(suspList, pc_propagator);
+  }
 
-    int getNumOfFeatures(void) {
-        return (int) dynamictable->numelem;
-    }
+  int getSuspListLength(void) {
+    // see suspension.{hh,cc}:
+    return suspList->length();
+  }
 
-    // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see OzFDVariable::valid)
+  int getNumOfFeatures(void) {
+    return (int) dynamictable->numelem;
+  }
+
+  // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see OzFDVariable::valid)
   Bool valid(TaggedRef val);
   OZ_Return bind(TaggedRef *vPtr, TaggedRef term);
   OZ_Return unify(TaggedRef *vPtr, TaggedRef *tPtr);

@@ -453,6 +453,25 @@ TaggedRef OzOFVariable::getArityList()
     return dynamictable->getArityList();
 }
 
+/*
+ * Trailing support
+ *
+ */
+
+OzVariable * OzOFVariable::copyForTrail(void) {
+  return new OzOFVariable(label,
+                          dynamictable->copyDynamicTable(),
+                          oz_currentBoard());
+}
+
+void OzOFVariable::restoreFromCopy(OzOFVariable * c) {
+  TaggedRef l      = c->label;
+  DynamicTable * d = c->dynamictable;
+  c->label        = label;
+  c->dynamictable = dynamictable;
+  label        = l;
+  dynamictable = d;
+}
 
 
 // ---------------------------------------------------------------------
