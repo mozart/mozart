@@ -833,7 +833,8 @@ OZ_BI_iodefine(unix_write, 2,1)
 	OZ_RETURN_INT(len);
       } else {
 	Assert(len > ret);
-	NEW_RETURN_SUSPEND(OZ_int(ret), oz_nil(), rest);
+	NEW_RETURN_SUSPEND(OZ_int(ret), oz_nil(),
+			   OZ_mkByteString(write_buff+ret,len-ret));
       }
     } else {
       Assert(status == SUSPEND);
@@ -841,8 +842,9 @@ OZ_BI_iodefine(unix_write, 2,1)
 	NEW_RETURN_SUSPEND(OZ_int(ret), susp, rest);
       } else {
 	Assert(len > ret);
-	NEW_RETURN_SUSPEND(OZ_int(ret), susp, 
-		       OZ_pair2(buff2list(len - ret, write_buff + ret), rest));
+	NEW_RETURN_SUSPEND(OZ_int(ret), susp,
+			   OZ_pair2(OZ_mkByteString(write_buff+ret,len-ret),
+				    rest));
       }
     }
   }
