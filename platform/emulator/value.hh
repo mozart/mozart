@@ -1268,13 +1268,6 @@ public:
  * Object
  */
 
-typedef enum {
-  OFlagClass  = 1
-} OFlag;
-
-
-#define ObjFlagMask ~3
-
 
 typedef int32 RecOrCell;
 
@@ -1298,45 +1291,39 @@ inline
 RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
 
 
-class Object: public ConstTermWithHome {
+class Object: public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
   // ObjectClass *cl is in ptr field of ConstTerm
   RecOrCell state;
-  int32 flagsAndLock;
+  OzLock *lock;
   SRecord *freeFeatures;
 public:
   Object();
   ~Object();
   Object(Object&);
 
-  void setFlag(OFlag f)   { flagsAndLock |= (int) f; } 
-  void unsetFlag(OFlag f) { flagsAndLock &= ~((int) f); } 
-  int  getFlag(OFlag f)   { return (flagsAndLock & ((int) f)); } 
-
   Object(Board *bb,SRecord *s,ObjectClass *ac,SRecord *feat, OzLock *lck):
-    ConstTermWithHome(bb,Co_Object)
+    Tertiary(bb, Co_Object,Te_Local)
   {
     setFreeRecord(feat);
     setClass(ac);
     setState(s);
-    flagsAndLock = ToInt32(lck);
+    lock = lck;
   }
 
-  Object(Board *bb, GName *gn):
-    ConstTermWithHome(bb,Co_Object)
+  Object(int i): Tertiary(i,Co_Object,Te_Proxy)
   {
     setFreeRecord(NULL);
     setClass(NULL);
     setState((Tertiary*)NULL);
-    flagsAndLock = 0;
-    setGName(gn);
+    lock = 0;
   }
 
   void setClass(ObjectClass *c) { setPtr(c); }
 
-  OzLock *getLock() { return (OzLock*)ToPointer(flagsAndLock&ObjFlagMask); }
-  void setLock(OzLock *l) { flagsAndLock |= ToInt32(l); }
+  OzLock *getLock() { return lock; }
+  void setLock(OzLock *l) { lock=l; }
 
   ObjectClass *getClass() { return (ObjectClass*) getPtr(); }
 
@@ -1400,12 +1387,6 @@ public:
   int getWidth ();
 
   Object *gcObject();
-
-  GName *getGName() {
-    GName *gn = getGName1();
-    return gn ? gn : globalize();
-  }
-  GName *globalize();
 
   OZPRINT;
   OZPRINTLONG;
