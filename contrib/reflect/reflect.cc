@@ -57,7 +57,7 @@ OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
   atom_bounds, atom_val, atom_glb, atom_lub, atom_oops, atom_prop,
   atom_params, atom_name, atom_space, atom_susp, atom_thread, atom_ct,
   atom_susplists, atom_ref, atom_id, atom_loc, atom_vars, atom_props,
-  atom_reflect, atom_reflect_vartable, atom_reflect_proptable;
+  atom_reflect, atom_reflect_vartable, atom_reflect_proptable, atom_novar;
 
 //=============================================================================
 // interface to the Oz loader
@@ -107,6 +107,7 @@ extern "C"
     atom_reflect           = OZ_atom("reflect");
     atom_reflect_vartable  = OZ_atom("reflect_vartable");
     atom_reflect_proptable = OZ_atom("reflect_proptable");
+    atom_novar             = OZ_atom("novar");
 
     PropagatorReference::_id = oz_newUniqueId();
 
