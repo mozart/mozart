@@ -150,6 +150,7 @@ _FUNDECL(int,OZ_isFSetValue,(OZ_Term));
 _FUNDECL(int,OZ_isList,(OZ_Term, OZ_Term *));
 _FUNDECL(int,OZ_isString,(OZ_Term, OZ_Term *));
 _FUNDECL(int,OZ_isProperString,(OZ_Term, OZ_Term *));
+_FUNDECL(int,OZ_isVirtualStringNoZero,(OZ_Term, OZ_Term *));
 _FUNDECL(int,OZ_isVirtualString,(OZ_Term, OZ_Term *));
 
 /* heap chunks */
@@ -620,6 +621,8 @@ VAR = (TYPE) OZ_getForeignPointer(OZ_in(ARG));
 #define OZ_expectString(ARG)			\
 OZ_expectRecType(ARG,"String",OZ_isProperString);
 
+#define OZ_expectVirtualStringNoZero(ARG)		\
+OZ_expectRecType(ARG,"VirtualStringNoZero",OZ_isVirtualStringNoZero);
 #define OZ_expectVirtualString(ARG)		\
 OZ_expectRecType(ARG,"VirtualString",OZ_isVirtualString);
 
@@ -651,12 +654,12 @@ OZ_setRecType(ARG,VAR,char*,"String",	\
 	OZ_isProperString,oz_str2c);
 
 #define OZ_declareVirtualString(ARG,VAR)	\
-OZ_declareRecType(ARG,VAR,char*,"VirtualString",\
-	OZ_isVirtualString,oz_vs2c);
+OZ_declareRecType(ARG,VAR,char*,"VirtualStringNoZero",\
+	OZ_isVirtualStringNoZero,oz_vs2c);
 
 #define OZ_setVirtualString(ARG,VAR)	\
-OZ_setRecType(ARG,VAR,char*,"VirtualString",\
-	OZ_isVirtualString,oz_vs2c);
+OZ_setRecType(ARG,VAR,char*,"VirtualStringNoZero",\
+	OZ_isVirtualStringNoZero,oz_vs2c);
 
 /*
  * OZ_declareVS(ARG,VAR,LEN)
@@ -666,12 +669,12 @@ OZ_setRecType(ARG,VAR,char*,"VirtualString",\
  */
 
 #define OZ_declareVS(ARG,VAR,LEN)		\
-OZ_expectVirtualString(ARG);			\
+OZ_expectVirtualString(ARG);		        \
 int LEN;					\
 char* VAR = OZ_vsToC(OZ_in(ARG),&LEN);
 
 #define OZ_setVS(ARG,VAR,LEN)			\
-OZ_expectVirtualString(ARG);			\
+OZ_expectVirtualString(ARG);		        \
 VAR = OZ_vsToC(OZ_in(ARG),&LEN);
 
 /* ------------------------------------------------------------------------ *
