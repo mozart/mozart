@@ -29,30 +29,6 @@
 
 #include "fsstd.hh"
 
-/*
-class MonitorInPropagator : public OZ_Propagator {
-  friend INIT_FUNC(fsp_init);
-private:
-  OZ_FSetValue _in_sofar;
-  OZ_Term _fsetvar, _stream;
-  static OZ_PropagatorProfile profile;
-public:
-  MonitorInPropagator(OZ_Term fsetvar, OZ_Term stream) 
-    : _fsetvar(fsetvar) , _stream(stream), _in_sofar(fs_empty) { }
-
-  virtual size_t sizeOf(void) { return sizeof(MonitorInPropagator); }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_stream);
-    OZ_updateHeapTerm(_fsetvar);
-  }
-  virtual OZ_Return propagate(void); 
-  virtual OZ_Term getParameters(void) const { 
-    return OZ_cons(_fsetvar, OZ_cons(_stream, OZ_nil()));
-  }
-  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
-};
-*/
-
 class MonitorPropagator : public OZ_Propagator {
 private:
   OZ_FSetValue _present_sofar;
