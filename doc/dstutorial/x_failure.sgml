@@ -19,14 +19,19 @@ distributed systems to become more robust.
 are recognized by the system
 and how they are reflected in the language.
 The system recognizes
-<index/failure<and>fail-stop/
-<index/fail-stop assumption/
-permanent site failures that are instantaneous (fail-stop)
+<index/failure<and>fail-silent/
+<index/fail-silent assumption/
+permanent site failures that are instantaneous
 <index/failure<and>temporary network problem/
 <index/failure<and>permanent network problem/
 <index/communication failure/
 <index/network failure/
 and both temporary and permanent communication failures.
+The permanent site failure mode is more
+generally known as fail-silent with failure detection,
+that is, a site stops working instantaneously, does
+not communicate with other sites from that point onwards,
+and the stop can be detected from the outside.
 The system provides mechanisms
 to program with language entities that are subject
 to failures.

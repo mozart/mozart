@@ -293,6 +293,7 @@ monitor or signal concept--rather,
 logic variables let threads
 wait for data availability,
 <index id=idx.dataavailability/thread<and>data availability/
+<index/concurrency<and>90% rule/
 which is 90% of the needs of concurrency.
 A further 9% is provided by reentrant locking,
 which is implemented by logic variables and cells.
