@@ -23,45 +23,43 @@
 
 PREFIX          = @prefix@
 SRCDIR          = @srcdir@
-PLATFORM        = @PLATFORM@
 BINDIR          = $(PREFIX)/bin
-SHELL           = @SH@
 RM              = @RM@ -f
+LN_S            = @LN_S@
 INSTALL         = @INSTALL@
-INSTALL_DIR     = @MKINSTALLDIRS@
+MKINSTALLDIRS   = @MKINSTALLDIRS@
 INSTALL_BIN     = $(INSTALL) -m 555
-INSTALL_OTHER   = $(INSTALL) -m 444
 
 SCRIPTS = oz ozplatform oz.wish ozdynld
 LINKS   = oz- ozc ozsa ozcs ozsac oz.compiler oz.emulator ozdo \
           ozemacs ozdemo oze oznc ozapplet
 
-.PHONY: all install clean distclean
+.PHONY: all install clean distclean win-install
 
 all:
 
 install: $(BINDIR)
-        $(INSTALL_BIN) $(SCRIPTS) $(BINDIR)
+        $(INSTALL_BIN) $(SCRIPTS:%=$(SRCDIR)/%) $(BINDIR)
         @set -x; cd $(BINDIR);\
         for file in $(LINKS); \
         do\
-           rm -f $$file; \
-           ln -s oz $$file; \
+           $(RM) $$file; \
+           $(LN_S) oz $$file; \
         done
 
 $(BINDIR):
-        $(INSTALL_DIR) $<
+        $(MKINSTALLDIRS) $@
 
 ozdemo.exe: oz.exe
         cp oz.exe ozdemo.exe
 
-
-win-install:: setup.exe oz.exe ozdemo.exe ozsaw.exe ozsa.exe ozsac.exe
-        cp setup.exe oz.exe ozdemo.exe $(PREFIX)
-        cp ozsaw.exe ozsa.exe ozsac.exe $(PREFIX)/platform/$(PLATFORM)
+win-install: setup.exe oz.exe ozdemo.exe ozsaw.exe ozsa.exe ozsac.exe
+        $(INSTALL_BIN) setup.exe oz.exe ozdemo.exe $(PREFIX)
+        $(INSTALL_BIN) ozsaw.exe ozsa.exe ozsac.exe \
+                $(PREFIX)/platform/win32-i486
 
 clean:
-        rm -f *.exe *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp
+        $(RM) *.exe *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp
 
 distclean: clean
         $(RM) Makefile config.cache config.log config.status

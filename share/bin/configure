@@ -11,6 +11,7 @@
 ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
+ac_default_prefix=/usr/local/oz
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -539,13 +540,16 @@ ac_config_sub=$ac_aux_dir/config.sub
 ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
 
 
+
+
+
 # Make sure we can run config.sub.
 if $ac_config_sub sun4 >/dev/null 2>&1; then :
 else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:549: checking host system type" >&5
+echo "configure:553: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -566,10 +570,21 @@ host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 echo "$ac_t""$host" 1>&6
 
 
-if test "x$oz_default_prefix" != x && test -d $oz_default_prefix
-then
-  ac_default_prefix=$oz_default_prefix
-fi
+    if test -z "$TOPDIR"
+    then
+        TOPDIR=$srcdir
+        if test ! -r $TOPDIR/OZVERSION
+        then
+            TOPDIR=$srcdir/..
+        fi
+    fi
+    if test ! -r $TOPDIR/OZVERSION
+    then
+        { echo "configure: error: can't find TOPDIR" 1>&2; exit 1; }
+    fi
+
+    oz_topdira=`cd $TOPDIR; pwd`
+
 
 
 # Find a good install program.  We prefer a C program (faster),
@@ -583,7 +598,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:587: checking for a BSD compatible install" >&5
+echo "configure:602: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -632,79 +647,34 @@ test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
-
-for ac_prog in echo
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:642: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_ECHO'+set}'`\" = set"; then
+echo $ac_n "checking whether ln -s works""... $ac_c" 1>&6
+echo "configure:652: checking whether ln -s works" >&5
+if eval "test \"`echo '$''{'ac_cv_prog_LN_S'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  if test -n "$ECHO"; then
-  ac_cv_prog_ECHO="$ECHO" # Let the user override the test.
+  rm -f conftestdata
+if ln -s X conftestdata 2>/dev/null
+then
+  rm -f conftestdata
+  ac_cv_prog_LN_S="ln -s"
 else
-  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_ECHO="$ac_prog"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
+  ac_cv_prog_LN_S=ln
 fi
 fi
-ECHO="$ac_cv_prog_ECHO"
-if test -n "$ECHO"; then
-  echo "$ac_t""$ECHO" 1>&6
+LN_S="$ac_cv_prog_LN_S"
+if test "$ac_cv_prog_LN_S" = "ln -s"; then
+  echo "$ac_t""yes" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
 
-test -n "$ECHO" && break
-done
-
-for ac_prog in sh bash
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:675: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_SH'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$SH"; then
-  ac_cv_prog_SH="$SH" # Let the user override the test.
-else
-  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_SH="$ac_prog"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-fi
-fi
-SH="$ac_cv_prog_SH"
-if test -n "$SH"; then
-  echo "$ac_t""$SH" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-test -n "$SH" && break
-done
 
 for ac_prog in rm
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:708: checking for $ac_word" >&5
+echo "configure:678: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -731,45 +701,14 @@ fi
 
 test -n "$RM" && break
 done
+test -n "$RM" || RM="rm"
 
 
-TOPDIRA=`(cd $srcdir; cd ..; pwd)`
-oz_path=$PATH:$TOPDIRA/bin:$TOPDIRA:$prefix/bin
-# Extract the first word of "ozplatform", so it can be a program name with args.
-set dummy ozplatform; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:742: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_PLATFORMSCRIPT'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$PLATFORMSCRIPT" in
-  /*)
-  ac_cv_path_PLATFORMSCRIPT="$PLATFORMSCRIPT" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $oz_path$ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_PLATFORMSCRIPT="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-PLATFORMSCRIPT="$ac_cv_path_PLATFORMSCRIPT"
-if test -n "$PLATFORMSCRIPT"; then
-  echo "$ac_t""$PLATFORMSCRIPT" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
 
-# Extract the first word of "mkinstalldirs", so it can be a program name with args.
+    # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:773: checking for $ac_word" >&5
+echo "configure:712: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_MKINSTALLDIRS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -779,7 +718,7 @@ else
   ;;
   *)
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $oz_path$ac_dummy; do
+  for ac_dir in $PATH:$oz_topdira/bin:$oz_topdira$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
       ac_cv_path_MKINSTALLDIRS="$ac_dir/$ac_word"
@@ -787,7 +726,6 @@ else
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_MKINSTALLDIRS" && ac_cv_path_MKINSTALLDIRS="true"
   ;;
 esac
 fi
@@ -798,24 +736,11 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+    if test ! -n "$MKINSTALLDIRS"
+    then
+        MKINSTALLDIRS=undefined
 
-if test ! -n "$PLATFORMSCRIPT"
-then
-  { echo "configure: error: "required ozplatform script not found"" 1>&2; exit 1; }
-fi
-
-
-if test "x$platform" = x
-then
-    platform=`$PLATFORMSCRIPT`
-fi
-
-
-PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
-cat >> confdefs.h <<EOF
-#define $PLATFORM 1
-EOF
-
+    fi
 
 
 
@@ -967,15 +892,12 @@ s%@host_alias@%$host_alias%g
 s%@host_cpu@%$host_cpu%g
 s%@host_vendor@%$host_vendor%g
 s%@host_os@%$host_os%g
+s%@TOPDIR@%$TOPDIR%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
-s%@ECHO@%$ECHO%g
-s%@SH@%$SH%g
+s%@LN_S@%$LN_S%g
 s%@RM@%$RM%g
-s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
 s%@MKINSTALLDIRS@%$MKINSTALLDIRS%g
-s%@platform@%$platform%g
-s%@PLATFORM@%$PLATFORM%g
 
 CEOF
 EOF

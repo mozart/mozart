@@ -33,49 +33,26 @@ dnl *****************************************************************
 dnl This will check that we are in the Oz directory and initiate
 AC_INIT(oz)
 
-AC_CANONICAL_HOST
-
-if test "x$oz_default_prefix" != x && test -d $oz_default_prefix
-then
-  ac_default_prefix=$oz_default_prefix
-fi
+OZ_INIT
 
 dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
 AC_PROG_INSTALL
+AC_PROG_LN_S
 
-AC_CHECK_PROGS(ECHO, echo)
-AC_CHECK_PROGS(SH, sh bash)
-AC_CHECK_PROGS(RM, rm)
+AC_CHECK_PROGS(RM, rm, rm)
 
-TOPDIRA=`(cd $srcdir; cd ..; pwd)`
-oz_path=$PATH:$TOPDIRA/bin:$TOPDIRA:$prefix/bin
-AC_PATH_PROG(PLATFORMSCRIPT, ozplatform,, $oz_path)
-AC_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs,true, $oz_path)
-
-if test ! -n "$PLATFORMSCRIPT"
-then
-  AC_MSG_ERROR("required ozplatform script not found")
-fi
-
-dnl *****************************************************************
-dnl platform
-dnl *****************************************************************
-
-if test "x$platform" = x
-then
-    platform=`$PLATFORMSCRIPT`
-fi
-AC_SUBST(platform)
-
-PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
-AC_DEFINE_UNQUOTED($PLATFORM)
-AC_SUBST(PLATFORM)
+OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
 
 dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
 AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))
