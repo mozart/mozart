@@ -45,6 +45,24 @@
 ;;{{{ Customization
 
 (eval-and-compile
+  (condition-case ()
+      (require 'custom)
+    (error nil))
+  (if (and (featurep 'custom)
+	   (fboundp 'custom-declare-variable)
+	   (fboundp 'custom-declare-group))
+      nil
+    (defmacro defgroup (&rest args)
+      nil)
+    (defmacro defcustom (symbol value doc &rest args)
+      (` (defvar (, symbol) (, value) (, doc))))))
+
+(eval-and-compile
+  (eval '(defgroup oz nil
+	   "Oz Programming Interface."
+	   :group 'languages)))
+
+(eval-and-compile
   (eval '(defgroup mozart nil
 	   "Running a Mozart sub-process."
 	   :group 'oz)))
