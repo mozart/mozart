@@ -167,10 +167,9 @@
         <Synopsis><<{Error.exceptionToMessage ?+{Exception} ??{Message}}>>
         <Item>
           constructs a ?={message} from an exception, using the formatters
-          defined in the error registry (see <Ptr to="Chapter.ErrorRegistry">)
-          or a generic formatter if none is defined for the exception.  The
-          message returned by the formatter is enriched with additional
-          fields copied from the exception.
+          defined in the error registry or a generic formatter if none is
+          defined for the exception.  The message returned by the formatter
+          is enriched with additional fields copied from the exception.
 
         <Entry><<messageToVirtualString>>
           <Index class=tails/<<Error>><And><<messageToVirtualString>>/
