@@ -116,26 +116,21 @@ if (FORCE_ALL || COND) { \
   } \
 }
 
-
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentTaskSusp()) { \
     OZ_getCArgDeref(0, x, xPtr, xTag); \
     OZ_getCArgDeref(1, y, yPtr, yTag); \
     if (xPtr == yPtr && isAnyVar(xTag)) { \
-      killPropagatedCurrentTaskSusp(); \
       return (EQ01); \
     } \
     OZ_getCArgDeref(2, z, zPtr, zTag); \
     if (xPtr == zPtr && isAnyVar(xTag)) { \
-      killPropagatedCurrentTaskSusp(); \
       return (EQ02); \
     } \
     if (yPtr == zPtr && isAnyVar(yTag)) { \
-      killPropagatedCurrentTaskSusp(); \
       return (EQ12); \
     } \
   }
-
 
 enum pm_term_type {pm_none = 0x0, pm_singl = 0x1,
                    pm_bool = 0x2, pm_fd = 0x4,
@@ -232,85 +227,6 @@ Bool isBoolSmallInt(TaggedRef val)
     return (ival == 0 || ival == 1);
   }
   return NO;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(2 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  return a;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(3 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  a[2] = t3;
-  return a;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
-                         TaggedRef t4)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(4 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  a[2] = t3;
-  a[3] = t4;
-  return a;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
-                         TaggedRef t4, TaggedRef t5)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(5 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  a[2] = t3;
-  a[3] = t4;
-  a[4] = t5;
-  return a;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
-                         TaggedRef t4, TaggedRef t5, TaggedRef t6)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(6 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  a[2] = t3;
-  a[3] = t4;
-  a[4] = t5;
-  a[5] = t6;
-  return a;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
-                         TaggedRef t4, TaggedRef t5, TaggedRef t6,
-                         TaggedRef t7, TaggedRef t8, TaggedRef t9,
-                         TaggedRef t10, TaggedRef t11)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(11 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  a[2] = t3;
-  a[3] = t4;
-  a[4] = t5;
-  a[5] = t6;
-  a[6] = t7;
-  a[7] = t8;
-  a[8] = t9;
-  a[9] = t10;
-  a[10] = t11;
-  return a;
 }
 
 // return TRUE if i is not negative
@@ -447,6 +363,15 @@ public:
   OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Bool spawnPropagator(FDPropState, FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term, ...);
+  static
+  OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *,
+                       OZ_Term *);
+  static
+  OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *,
+                       OZ_Term *, OZ_Term *);
+  static
+  OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *,
+                       OZ_Term *, OZ_Term *, OZ_Term *);
 
   Bool areIdentVar(int a, int b) {
     DebugCheck((a < 0 || a >= curr_num_of_items) ||
@@ -805,6 +730,12 @@ public:
           tagged2GenFDVar(bifdbm_var[i])->getDom() = *bifdbm_dom[i];
     }
   }
+  static
+  OZ_Bool replacePropagator(OZ_CFun, int, OZ_Term *);
+  static
+  OZ_Bool replacePropagator(OZ_CFun, int, OZ_Term, ...);
+  static
+  OZ_Bool replacePropagator(OZ_Term, OZ_Term);
 }; // BIfdBodyManager
 
 

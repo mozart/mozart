@@ -346,6 +346,58 @@ OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t,
   return f(a, x);
 }
 
+#ifdef FDBISTUCK
+
+OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
+                                      OZ_Term * t)
+{
+  return OZ_suspendOnVar(makeTaggedRef(t));
+}
+
+OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
+                                      OZ_Term * t1, OZ_Term * t2)
+{
+  return OZ_suspendOnVar2(makeTaggedRef(t1),
+                          makeTaggedRef(t2));
+}
+
+OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
+                                      OZ_Term * t1, OZ_Term * t2, OZ_Term * t3)
+{
+  return OZ_suspendOnVar3(makeTaggedRef(t1),
+                          makeTaggedRef(t2),
+                          makeTaggedRef(t3));
+}
+
+#else
+
+OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
+                                      OZ_Term * t)
+{
+  OZ_addSuspension(makeTaggedRef(t), OZ_makeSuspension(f, x, a));
+  return PROCEED;
+}
+
+OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
+                                      OZ_Term * t1, OZ_Term * t2)
+{
+  OZ_Thread th = OZ_makeSuspension(f, x, a);
+  OZ_addSuspension(makeTaggedRef(t1), th);
+  OZ_addSuspension(makeTaggedRef(t2), th);
+  return PROCEED;
+}
+
+OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
+                                      OZ_Term * t1, OZ_Term * t2, OZ_Term * t3)
+{
+  OZ_Thread th = OZ_makeSuspension(f, x, a);
+  OZ_addSuspension(makeTaggedRef(t1), th);
+  OZ_addSuspension(makeTaggedRef(t2), th);
+  OZ_addSuspension(makeTaggedRef(t3), th);
+  return PROCEED;
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // An OZ term describing a finite domain is either:
 // (1) a positive small integer <= fd_sup
@@ -1058,6 +1110,41 @@ Bool BIfdBodyManager::_unifiedVars(void)
 
 }
 
+OZ_Bool BIfdBodyManager::replacePropagator(OZ_CFun f, int a, OZ_Term * x)
+{
+  RefsArray xregs = allocateRefsArray(a, FALSE);
+
+  for (int i = 0; i < a; i += 1)
+    xregs[i] = x[i];
+
+  FDcurrentTaskSusp->getCCont()->setCFuncRegs(f, xregs);
+  return f(a, xregs);
+}
+
+OZ_Bool BIfdBodyManager::replacePropagator(OZ_CFun f, int a, OZ_Term t1, ...)
+{
+  RefsArray xregs = allocateRefsArray(a, FALSE);
+
+  xregs[0] = t1;
+
+  va_list ap;
+  va_start(ap, t1);
+
+  for (int i = 1; i < a; i += 1)
+    xregs[i] = va_arg(ap, OZ_Term);
+
+  va_end(ap);
+
+  FDcurrentTaskSusp->getCCont()->setCFuncRegs(f, xregs);
+  return f(a, xregs);
+}
+
+OZ_Bool BIfdBodyManager::replacePropagator(OZ_Term a, OZ_Term b)
+{
+  killPropagatedCurrentTaskSusp();
+  return OZ_unify(a, b);
+}
+
 //-----------------------------------------------------------------------------
 // Introduce FD Built-ins to the Emulator
 
@@ -1071,7 +1158,7 @@ void BIinitFD(void)
   BIadd("fdTotalAverage", 0, BIfdTotalAverage);
 
 // fdcore.cc
-  BIadd("fdIs", 1, BIfdIs, FALSE, (InlineFunOrRel) BIfdIsInline);
+  BIadd("fdIs", 1, BIfdIs);
   BIadd("fdIsVar", 1, BIisFdVar);
   BIadd("fdGetLimits", 2, BIgetFDLimits);
   BIadd("fdGetMin", 2, BIfdMin);

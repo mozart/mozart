@@ -380,8 +380,7 @@ OZ_Bool cd_wrapper_a(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
     return EntailFD;
   }
   if (x[0] == 1) {
-    FDcurrentTaskSusp->getCCont()->setCFuncAndArity(BI_body, last_index);
-    return BI_body(last_index, OZ_args);
+    return BIfdBodyManager::replacePropagator(BI_body,last_index, OZ_args);
   }
 
   x.backup();
@@ -631,18 +630,18 @@ OZ_C_proc_begin(BIfdCDSched_body, 4)
   if (xu + xd <= yl) return a.entailment();
   if (yu + yd <= xl) return a.entailment();
 
-  if (xl + xd > yu){
-    killPropagatedCurrentTaskSusp();
-    return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(y),
-                                         OZ_getCArg(x),
-                                         newSmallInt(-yd)));
+  if (xl + xd > yu) {
+    return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
+                                              OZ_getCArg(y),
+                                              OZ_getCArg(x),
+                                              newSmallInt(-yd));
   }
 
-  if (yl + yd > xu){
-    killPropagatedCurrentTaskSusp();
-    return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(x),
-                                         OZ_getCArg(y),
-                                         newSmallInt(-xd)));
+  if (yl + yd > xu) {
+    return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
+                                              OZ_getCArg(x),
+                                              OZ_getCArg(y),
+                                              newSmallInt(-xd));
   }
 
   LocalFD la, lb, lc, ld, l1, l2;
@@ -666,8 +665,9 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdCDSchedControl, 5)
 {
-  return genericHead_x_y_c_d_b(OZ_arity, OZ_args, OZ_self, BIfdCDSchedControl_body,
-                             fd_bounds);
+  return genericHead_x_y_c_d_b(OZ_arity, OZ_args, OZ_self,
+                               BIfdCDSchedControl_body,
+                               fd_bounds);
 }
 OZ_C_proc_end
 
@@ -699,33 +699,34 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
   if (xl + xd > yu){
     FailOnEmpty(a[control] &= 1);
     a.process(control);
-    killPropagatedCurrentTaskSusp();
-    return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(y),
-                                         OZ_getCArg(x),
-                                         newSmallInt(-yd)));
+    return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
+                                              OZ_getCArg(y),
+                                              OZ_getCArg(x),
+                                              newSmallInt(-yd));
   }
 
   if (yl + yd > xu){
     FailOnEmpty(a[control] &= 0);
     a.process(control);
-    killPropagatedCurrentTaskSusp();
-    return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(x),
-                                         OZ_getCArg(y),
-                                         newSmallInt(-xd)));
+    return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
+                                              OZ_getCArg(x),
+                                              OZ_getCArg(y),
+                                              newSmallInt(-xd));
   }
 
   if (a[control] == fd_singleton) {
     if (a[control].singl() == 0) {
-      killPropagatedCurrentTaskSusp();
-      return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(x),
-                                           OZ_getCArg(y),
-                                           newSmallInt(-xd)));
+      BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
+                                         OZ_getCArg(x),
+                                         OZ_getCArg(y),
+                                         newSmallInt(-xd));
     }
+
     else {
-      killPropagatedCurrentTaskSusp();
-      return BIfdLessEqOff(3, allocateRegs(OZ_getCArg(y),
-                                           OZ_getCArg(x),
-                                           newSmallInt(-yd)));
+      BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
+                                         OZ_getCArg(y),
+                                         OZ_getCArg(x),
+                                         newSmallInt(-yd));
     }
   }
 
