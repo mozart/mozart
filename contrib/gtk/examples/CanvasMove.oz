@@ -73,7 +73,7 @@ define
                    "font"#
                    "-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1"
                    "fill_color_gdk"#Black
-                   "anchor"#GTK.aNCHOR_NORTH_WEST]
+                   "anchor"#GTK.'ANCHOR_NORTH_WEST']
    _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
                          TextItemPars $)}
 

@@ -22,17 +22,20 @@
 functor $
 import
 export
-   tokens        : Tokens
-   toString      : ToString
-   toAtom        : ToAtom
-   checkPrefix   : CheckPrefix
-   stripPrefix   : StripPrefix
-   cutPrefix     : CutPrefix
-   translateName : TranslateName
-   downTranslate : MakeClassPrefix
-   firstLower    : FirstLower
-   firstUpper    : FirstUpper
-   indent        : Indent
+   tokens            : Tokens
+   toString          : ToString
+   toAtom            : ToAtom
+   checkPrefix       : CheckPrefix
+   stripPrefix       : StripPrefix
+   cutPrefix         : CutPrefix
+   translateName     : TranslateName
+   downTranslate     : MakeClassPrefix
+   firstLower        : FirstLower
+   firstUpper        : FirstUpper
+   indent            : Indent
+   filterGdkTypes    : FilterGdkTypes
+   filterGtkTypes    : FilterGtkTypes
+   filterCanvasTypes : FilterCanvasTypes
 define
    %%
    %% Tokenizer
@@ -181,5 +184,44 @@ define
 
    fun {Indent N}
       if N == 0 then "" else "   "#{Indent (N - 1)} end
+   end
+
+   %%
+   %% Gdk/Gtk/GtkCanvas Function Filter
+   %%
+
+   fun {FilterGdkTypes Type}
+      if {IsName Type}
+      then false
+      else
+         TypeS = {TranslateName {ToString Type}}
+      in
+         {CheckPrefix "gdk" TypeS}
+      end
+   end
+
+   fun {FilterGtkTypes Type}
+      if {IsName Type}
+      then false
+      else
+         TypeS = {TranslateName {ToString Type}}
+      in
+         if {CheckPrefix "gdk" TypeS}
+         then false
+         elseif {CheckPrefix "gtkCanvas" TypeS}
+         then false
+            else true
+         end
+      end
+   end
+
+   fun {FilterCanvasTypes Type}
+      if {IsName Type}
+      then false
+      else
+         TypeS = {TranslateName {ToString Type}}
+      in
+         {CheckPrefix "gtkCanvas" TypeS}
+      end
    end
 end

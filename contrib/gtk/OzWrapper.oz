@@ -1012,41 +1012,6 @@ define
    end
 
    local
-      fun {FilterGtkTypes Type}
-         if {IsName Type}
-         then false
-         else
-            TypeS = {Util.translateName {Util.toString Type}}
-         in
-            if {Util.checkPrefix "gdk" TypeS}
-            then false
-            elseif {Util.checkPrefix "gtkCanvas" TypeS}
-            then false
-            else true
-            end
-         end
-      end
-
-      fun {FilterGdkTypes Type}
-         if {IsName Type}
-         then false
-         else
-            TypeS = {Util.translateName {Util.toString Type}}
-         in
-            {Util.checkPrefix "gdk" TypeS}
-         end
-      end
-
-      fun {FilterCanvasTypes Type}
-         if {IsName Type}
-         then false
-         else
-            TypeS = {Util.translateName {Util.toString Type}}
-         in
-            {Util.checkPrefix "gtkCanvas" TypeS}
-         end
-      end
-
       fun {CopyTypes SourceD Keys DestD}
          case Keys
          of Key|Kr then
@@ -1059,9 +1024,9 @@ define
       proc {CreateFuncs AllTypes}
          AllKeys = {Dictionary.keys AllTypes}
       in
-         {ForAll [FilterGtkTypes#GtkClasses#"GTK.oz"
-                  FilterGdkTypes#GdkClasses#"GDK.oz"
-                  FilterCanvasTypes#CanvasClasses#"GTKCANVAS.oz"]
+         {ForAll [Util.filterGtkTypes#GtkClasses#"GTK.oz"
+                  Util.filterGdkTypes#GdkClasses#"GDK.oz"
+                  Util.filterCanvasTypes#CanvasClasses#"GTKCANVAS.oz"]
           proc {$ Fil#Class#File}
              Keys  = {Filter AllKeys Fil}
              Types = {CopyTypes AllTypes Keys {Dictionary.new}}
