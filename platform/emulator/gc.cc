@@ -806,10 +806,14 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
   
   CHECKCOLLECTED(flag, Suspension*);
   
+  if (isDead ()) {
+    return NULL;
+  }
+
   Board *el = getNode()->gcGetBoardDeref();
 
-  if (isDead () || el == (Board *) NULL) {
-    return ((Suspension *) NULL);
+  if (el == NULL) {
+    return NULL;
   }
 
   // mm2: el may be a GCMARK'ed board
