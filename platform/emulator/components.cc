@@ -1311,13 +1311,16 @@ OZ_BI_define(BItestUnmarshaler, 2, 0)
   return PROCEED;
 } OZ_BI_end
 
-// Oz value + number of iterations;
-OZ_BI_define(BItestDPMarshaler, 2, 0)
+// Oz value, number of iterations, buffer size (kb) --> total bytes written;
+OZ_BI_define(BItestDPMarshaler, 3, 1)
 {
   OZ_declareDetTerm(0, val);
   OZ_declareInt(1, iterations);
-  const int bbSize = 1024*64;
+  OZ_declareInt(2, bufferSize);
+
+  const int bbSize = 1024*bufferSize;
   BYTE *bb = new BYTE[bbSize];
+  int bytes = 0;
 
   DPMarshaler *dpm = (DPMarshaler *) new DPMarshaler;
   ByteBuffer* buf = new ByteBuffer();
@@ -1326,15 +1329,55 @@ OZ_BI_define(BItestDPMarshaler, 2, 0)
   for (int i = iterations; i--; ) {
     buf->reinit();
     buf->marshalBegin();
-    if (dpMarshalTerm(val, buf, dpm, (DSite *) 0))
-      return (TestMError("testDPMarshaler", "value too large for test!"));
+    DPMarshaler *dpmC;
+    if ((dpmC = dpMarshalTerm(val, buf, dpm, (DSite *) 0))) {
+      do {
+        buf->marshalEnd();
+        bytes += buf->getUsed();
+        buf->reinit();
+        buf->marshalBegin();
+      } while ((dpmC = dpMarshalContTerm(buf, dpmC)));
+    }
     buf->marshalEnd();
+    bytes += buf->getUsed();
     dpm->reset();
   }
 
   delete buf;
   delete dpm;
   delete bb;
+  OZ_RETURN_INT(bytes);
+} OZ_BI_end
+
+// Oz value, number of iterations, buffer size (in kb);
+OZ_BI_define(BItestDPUnmarshaler, 3, 0)
+{
+  OZ_declareDetTerm(0, val);
+  OZ_declareInt(1, iterations);
+  OZ_declareInt(2, bufferSize);
+
+  const int bbSize = 1024*bufferSize;
+  BYTE *bb = new BYTE[bbSize];
+  int bytes = 0;
+
+  DPMarshaler *dpm = (DPMarshaler *) new DPMarshaler;
+  ByteBuffer* buf = new ByteBuffer();
+  buf->init(bbSize, bb);
+  Builder *b = new Builder;
+
+  buf->reinit();
+  buf->marshalBegin();
+  if (dpMarshalTerm(val, buf, dpm, (DSite *) 0)) {
+    return (TestMError("testDPUnmarshaler", "too large value!"));
+  }
+  buf->marshalEnd();
+
+  for (int i = iterations; i--; ) {
+    buf->unmarshalBegin();
+    (void) dpUnmarshalTerm(buf, b);
+    buf->unmarshalEnd();
+  }
+
   return (PROCEED);
 } OZ_BI_end
 
@@ -1349,9 +1392,12 @@ OZ_BI_define(BItestDPMarshaler, 2, 0)
     'testUnmarshaler'   => { in     => ['+value', '+int'],
                               out    => [],
                               BI     => BItestUnmarshaler},
-    'testDPMarshaler'   => { in     => ['+value', '+int'],
-                              out    => [],
-                              BI     => BItestDPMarshaler},
+    'testDPMarshaler'   => { in     => ['+value', '+int', '+int'],
+                             out    => ['int'],
+                             BI     => BItestDPMarshaler},
+    'testDPUnmarshaler' => { in     => ['+value', '+int', '+int'],
+                             out    => [],
+                             BI     => BItestUnmarshaler},
  */
 
-#endif
+#endif // defined(PROFILE_MARSHALER)
