@@ -30,7 +30,7 @@ import
 prepare
    Spec = record('in'(single char: &i type: string optional: false)
                  'out'(single char: &o type: string optional: false)
-                 'help'(rightmost char: &h type: bool default: false))
+                 'help'(rightmost char: [&h &?] default: false))
 define
    Args HasError
    try
@@ -43,6 +43,7 @@ define
    if HasError orelse Args.help then
       {System.printInfo
        'Usage: '#{Property.get 'application.url'}#' <option> ...\n'#
+       '-h, -?, --help        Display this text.\n'#
        '-i FILE, --in=FILE    Read text pickle from FILE.\n'#
        '-o FILE, --out=FILE   Write binary pickle to FILE.\n'}
       {Application.exit if HasError then 2 else 0 end}
