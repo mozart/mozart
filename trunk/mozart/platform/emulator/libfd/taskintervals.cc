@@ -592,7 +592,7 @@ static int ozcdecl CompareIntervals(const Interval *Int1, const Interval *Int2)
 {
   int left1 = Int1->left;
   int left2 = Int2->left;
-  if (left1 >= left2) return 0;
+  if (left1 > left2) return 0;
   else {
     if (left1 == left2) {
       if (Int1->right < Int2->right) return 1;
@@ -953,7 +953,7 @@ tiloop:
     }
 	  
 
-  for (i=0; i<ts; i++) {
+  for (i=ts; i--; ) {
     MinMax[i].min = x[i]->getMinElem();	
     MinMax[i].max = x[i]->getMaxElem();	
   }
