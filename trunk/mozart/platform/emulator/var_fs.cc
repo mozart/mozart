@@ -13,6 +13,8 @@
 #pragma implementation "fsgenvar.hh"
 #endif
 
+#include "ozostream.hh"
+#include "fddebug.hh"
 #include "am.hh"
 #include "genvar.hh"
 
@@ -44,7 +46,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
   case FSETVALUE:
     {
 #ifdef DEBUG_FSUNIFY 
-      (*cpi_cout) << "fsunify: (" << _fset << " = " 
+      (*cpi_cout) << "fsunify: (" << _fset.toString() << " = " 
 		<< *((FSetValue *)tagged2FSetValue(term)) << " )";
 #endif
       
@@ -52,7 +54,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	goto f;
       
 #ifdef DEBUG_FSUNIFY 
-      (*cpi_cout) << " -> " <<  _fset;
+      (*cpi_cout) << " -> " <<  _fset.toString();
 #endif
       
       Bool isLocalVar = am.isLocalSVar(this);
