@@ -31,6 +31,7 @@
 
 #include "var_future.hh"
 #include "builtins.hh"
+#include "unify.hh"
 #include "thr_int.hh"
 
 // bind a future, don't care about the variable, e.g. for byNeed
@@ -38,7 +39,7 @@ void oz_bindFuture(OZ_Term fut,OZ_Term val)
 {
   DEREF(fut,vPtr,_);
   Assert(isFuture(fut));
-  oz_bind(vPtr,val);
+  oz_bindVar(tagged2CVar(fut),vPtr,val);
 }
 
 // this builtin is only internally available
@@ -49,7 +50,7 @@ OZ_BI_define(BIbyNeedAssign,2,0)
   OZ_Term val = OZ_in(1);
 
   Assert(isFuture(var));
-  oz_bind(varPtr,val);
+  oz_bindVar(tagged2CVar(var),varPtr,val);
   return PROCEED;
 } OZ_BI_end
 
@@ -123,7 +124,7 @@ OZ_BI_define(VarToFuture,2,0)
   OZ_Term f = OZ_in(1);
   DEREF(f,fPtr,_);
   Assert(isFuture(f));
-  oz_bind(fPtr,v);
+  oz_bindVar(tagged2CVar(f),fPtr,v);
   return PROCEED;
 } OZ_BI_end
 

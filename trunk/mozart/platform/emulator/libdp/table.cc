@@ -903,8 +903,8 @@ void BorrowEntry::freeBorrowEntry(){
 void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
     PD((GC,"BT1 b:%d variable found",i));
-    PerdioVar *pv=(PerdioVar *)oz_getExtVar(*getPtr());
-    if (pv->gcIsAliveV()) {
+    // mm2
+    if (tagged2CVar(*getPtr())->getSuspList()!=0) {
       PD((WEIRD,"BT1 b:%d pending unmarked var found",i));
       gcPO();
     }

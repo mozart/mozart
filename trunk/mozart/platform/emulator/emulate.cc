@@ -323,13 +323,15 @@ void deallocateY(RefsArray a)
 // if (isUVar(var) && isCurrentBoard(tagged2VarHome(var))) {
 // more efficient:
 inline
-void oz_bindOPT(OZ_Term *varPtr, OZ_Term a, ByteCode *scp=0)
+void bindOPT(OZ_Term *varPtr, OZ_Term term, ByteCode *scp)
 {
-  if (am.currentUVarPrototypeEq(*varPtr) && scp==0) {
-    doBind(varPtr,a);
-  } else {
-    oz_bind(varPtr,a);
+  Assert(isUVar(*varPtr));
+  if (!am.currentUVarPrototypeEq(*varPtr) || scp!=0) {
+    if (!oz_isLocalUVar(varPtr)) {
+      am.trail.pushRef(varPtr,*varPtr);
+    }
   }
+  doBind(varPtr,term);
 }
 
 /* specially optimized unify: test two most probable cases first:
