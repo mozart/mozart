@@ -1030,6 +1030,7 @@ LBLdispatcher:
         if (oz_isTrue(X[loc->out(0)])) {
           DISPATCH(4);
         } else {
+          Assert(oz_isFalse(X[loc->out(0)]));
           JUMPRELATIVE(getLabelArg(PC+3));
         }
       }
@@ -1038,7 +1039,8 @@ LBLdispatcher:
       case RAISE:
         if (e->exception.debug) set_exception_info_call(bi,X,loc->mapping());
         RAISE_THREAD;
-      case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
+      case BI_TYPE_ERROR:
+        RAISE_TYPE_NEW(bi,loc);
 
       case SUSPEND:
         PushContX(PC);
