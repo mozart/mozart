@@ -481,7 +481,9 @@ OZ_CFun CDPropagator::spawner = BIfdConstrDisj;
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b) 
 {
-  thr = (OZ_Thread) new Thread(am.currentBoard, OZ_getPropagatorPrio() + 1, p);
+  thr = (OZ_Thread) am.mkPropagator(am.currentBoard,
+				    OZ_getPropagatorPrio() + 1,
+				    p);
 }
 
 void CDSuppl::gcRecurse(void) {

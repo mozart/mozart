@@ -1912,8 +1912,10 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   args[0] = left;
   args[1] = right;
 
-  Thread *it = new Thread(am.currentThread->getPriority(), 
-			  space->getSolveBoard(), OK);
+  Thread *it = am.mkRunnableThread(am.currentThread->getPriority(), 
+				space->getSolveBoard(),
+				am.currentThread->getValue(), 
+				OK);
   it->pushCFunCont(contChooseInternal, args, 2, NO);
   am.scheduleThread(it);
 
@@ -2485,10 +2487,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringToAtom,2)
 {
-  OZ_declareStringArg(0,str);
+  OZ_declareProperStringArg(0,str);
   OZ_Term out = OZ_getCArg(1);
-
-  if (!str) return OZ_raiseC("stringNoAtom",1,OZ_getCArg(0));
 
   OZ_Return ret = OZ_unifyAtom(out,str);
 
@@ -2803,50 +2803,34 @@ OZ_C_proc_end
  * Threads
  * --------------------------------------------------------------------- */
 
-OZ_C_proc_begin(BIsetThreadPriority,1)
-{
-  OZ_declareIntArg(0,prio);
-
-  if (prio > OZMAX_PRIORITY || prio < OZMIN_PRIORITY) {
-    TypeErrorT(0,"Int [0 ... 100]");
-  }
-  Thread *tt = am.currentThread;
-  int oldPrio = tt->getPriority();
-  tt->setPriority(prio);
-
-  if (prio <= oldPrio) {
-    am.setSFlag(ThreadSwitch);
-  }
-		
-  return PROCEED;
-}
-OZ_C_proc_end 
-
-OZ_C_proc_begin(BIgetThreadPriority,1)
-{
-  OZ_Term out = OZ_getCArg(0);
-
-  return OZ_unifyInt(out,am.currentThread->getPriority());
-}
-OZ_C_proc_end 
-
-
-
-#ifdef NEW_THREAD
 int OZ_isThread(OZ_Term t)
 {
-  return 0;
+  t = deref(t);
+  return isThread(t);
 }
 
-#define OZ_declareThreadArg(ARG,VAR)				\
- Thread *VAR;							\
- OZ_nonvarArg(ARG);						\
- if (! OZ_isThread(OZ_getCArg(ARG))) {				\
-   return OZ_typeError(ARG,"Thread");				\
- } else {							\
-   VAR = (Thread *) tagged2Const(OZ_deref(OZ_getCArg(ARG)));	\
+#define OZ_declareThreadArg(ARG,VAR)			\
+ Thread *VAR;						\
+ OZ_nonvarArg(ARG);					\
+ if (! OZ_isThread(OZ_getCArg(ARG))) {			\
+   return OZ_typeError(ARG,"Thread");			\
+ } else {						\
+   VAR = tagged2Thread(OZ_deref(OZ_getCArg(ARG)));	\
  }
 
+OZ_C_proc_begin(BIthreadThis,1)
+{
+  OZ_declareArg(0,out);
+
+  return OZ_unify(out, makeTaggedConst(am.currentThread));
+}
+OZ_C_proc_end
+
+/*
+ * change priority of a thread
+ *  if my priority is lowered, then preempt me
+ *  if priority of other thread become higher than mine, then preempt me
+ */
 OZ_C_proc_begin(BIthreadSetPriority,2)
 {
   OZ_declareThreadArg(0,th);
@@ -2856,16 +2840,25 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
     TypeErrorT(0,"Int [0 ... 100]");
   }
 
+  if (th->isDeadThread()) return PROCEED;
+
   int oldPrio = th->getPriority();
   th->setPriority(prio);
 
-  if (prio <= oldPrio) {
-    am.setSFlag(ThreadSwitch);
+  if (am.currentThread == th) {
+    if (prio <= oldPrio) {
+      am.setSFlag(ThreadSwitch);
+      return BI_PREEMPT;
+    }
+  } else {
+    if (th->isRunnable()) {
+      am.rescheduleThread(th);
+    }
+    if (prio > am.currentThread->getPriority()) {
+      return BI_PREEMPT;
+    }
   }
 
-  if (am.currentThread != th && th->isRunnable()) {
-    am.rescheduleThread(th);
-  }
   return PROCEED;
 }
 OZ_C_proc_end 
@@ -2879,21 +2872,120 @@ OZ_C_proc_begin(BIthreadGetPriority,2)
 }
 OZ_C_proc_end 
 
+OZ_C_proc_begin(BIthreadIs,2)
+{
+  OZ_declareNonvarArg(0,th);
+  OZ_declareArg(1,out);
+
+  return OZ_unify(out,OZ_isThread(th)?NameTrue:NameFalse);
+}
+OZ_C_proc_end 
+
+/*
+ * terminate a thread
+ *   in deep guard == failed
+ */
 OZ_C_proc_begin(BIthreadTerminate,1)
 {
   OZ_declareThreadArg(0,th);
 
-  if (am.currentThread == th) {
-    am.setSFlag(ThreadSwitch);
-  } else if (th->isRunnable()) {
-    am.deleteThread(th);
-  }
-  am.terminateThread(th);
+  if (th->isDeadThread()) return PROCEED;
 
+  Bool isLocal=th->terminate();
+
+  if (am.currentThread == th) {
+    if (isLocal) return FAILED;
+    return BI_TERMINATE;
+  }
+
+  if (isLocal) th->getBoard()->setFailed();
+  if (!th->isRunnable()) {
+    am.scheduleThread(th);
+  }
   return PROCEED;
 }
 OZ_C_proc_end 
-#endif
+
+OZ_C_proc_begin(BIthreadExchange,3)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareArg(1,out);
+  OZ_declareArg(2,in);
+
+  OZ_Term old=th->getValue();
+  th->setValue(in);
+  if (!old) old = nil();
+
+  return OZ_unify(out,old);
+}
+OZ_C_proc_end 
+
+/*
+ * suspend a thread
+ *   is done lazy: when the thread becomes running the stop flag is tested
+ */
+OZ_C_proc_begin(BIthreadSuspend,1)
+{
+  OZ_declareThreadArg(0,th);
+  
+  th->stop();
+  if (th == am.currentThread) {
+    return BI_PREEMPT;
+  }
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIthreadResume,1)
+{
+  OZ_declareThreadArg(0,th);
+
+  th->cont();
+
+  if (th->isDeadThread()) return PROCEED;
+
+  if (th->isRunnable() && !am.isScheduled(th)) {
+    am.scheduleThread(th);
+  }
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIthreadIsSuspended,2)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareArg(1,out);
+
+  return OZ_unify(out,th->stopped()?NameTrue:NameFalse);
+}
+OZ_C_proc_end 
+
+OZ_C_proc_begin(BIthreadState,2)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareArg(1,out);
+
+  if (th->isDeadThread()) {
+    return OZ_unifyAtom(out,"terminated");
+  }
+  if (th->isRunnable()) {
+    return OZ_unifyAtom(out,"runnable");
+  }
+  return OZ_unifyAtom(out,"blocked");
+}
+OZ_C_proc_end 
+
+OZ_C_proc_begin(BIthreadPreempt,1)
+{
+  OZ_declareThreadArg(0,th);
+  
+  if (th == am.currentThread) {
+    return BI_PREEMPT;
+  }
+  return PROCEED;
+}
+OZ_C_proc_end
 
 // ---------------------------------------------------------------------
 // NAMES
@@ -3046,6 +3138,20 @@ OZ_C_proc_begin(BIisString,2)
 
   OZ_Term var;
   if (!OZ_isString(in,&var)) {
+    if (var == 0) return OZ_unify(out,NameFalse);
+    OZ_suspendOn(var);
+  }
+  return OZ_unify(out,NameTrue);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIisProperString,2)
+{
+  OZ_Term in=OZ_getCArg(0);
+  OZ_Term out=OZ_getCArg(1);
+
+  OZ_Term var;
+  if (!OZ_isProperString(in,&var)) {
     if (var == 0) return OZ_unify(out,NameFalse);
     OZ_suspendOn(var);
   }
@@ -3635,7 +3741,7 @@ OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if (tagB == SMALLINT && smallIntValue(B) == 0) {
-    return OZ_raiseC("div0",2,A);
+    return OZ_raiseC("div0",1,A);
   }
   
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -3653,7 +3759,7 @@ OZ_Return BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if ((tagB == SMALLINT && smallIntValue(B) == 0)) {
-    return OZ_raiseC("mod0",2,A);
+    return OZ_raiseC("mod0",1,A);
   }
   
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -4237,10 +4343,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringToFloat, 2)
 {
-  OZ_declareStringArg(0,str);
+  OZ_declareProperStringArg(0,str);
   OZ_declareArg(1,out);
-
-  if (!str) return OZ_raiseC("stringNoFloat",1,OZ_getCArg(0));
 
   char *end = OZ_parseFloat(str);
   if (!end || *end != 0) {
@@ -4253,7 +4357,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringIsFloat, 2)
 {
-  OZ_declareStringArg(0,str);
+  OZ_declareProperStringArg(0,str);
   OZ_declareArg(1,out);
 
   if (!str) return OZ_unify(out,NameFalse);
@@ -4270,7 +4374,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringToInt, 2)
 {
-  OZ_declareStringArg(0,str);
+  OZ_declareProperStringArg(0,str);
   OZ_declareArg(1,out);
 
   if (!str) return OZ_raiseC("stringNoInt",1,OZ_getCArg(0));
@@ -4287,7 +4391,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstringIsInt, 2)
 {
-  OZ_declareStringArg(0,str);
+  OZ_declareProperStringArg(0,str);
   OZ_declareArg(1,out);
 
   if (!str) return OZ_unify(out,NameFalse);
@@ -4528,59 +4632,6 @@ DECLAREBI_USEINLINEFUN1(BIabs,BIabsInline)
 DECLAREBI_USEINLINEFUN1(BIadd1,BIadd1Inline)
 DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 
-
-/* ------------------------------------------------------------
- * Groups
- * ------------------------------------------------------------ */
-
-OZ_C_proc_begin(BInewGroup,2)
-{
-  OZ_Term proc = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  DEREF(proc,procPtr,_1);
-  if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
-  if (!isProcedure(proc)) {
-    TypeErrorT(0,"Procedure");
-  }
-
-  Group *gr = new Group(am.currentThread->getGroup());
-  Thread *tt = new Thread (am.currentThread->getPriority(),am.currentBoard);
-  tt->setGroup(gr);
-  tt->pushCall(proc,0,0);
-  am.scheduleThread(tt);
-  return OZ_unify(out,makeTaggedConst(gr));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BInewGroupHdl,3)
-{
-  OZ_Term proc = OZ_getCArg(0);
-  OZ_Term hdl = OZ_getCArg(1);
-  OZ_Term out = OZ_getCArg(2);
-
-  DEREF(proc,procPtr,_1);
-  if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
-  if (!isProcedure(proc)) {
-    TypeErrorT(0,"Procedure");
-  }
-
-  DEREF(hdl,hdlPtr,_2);
-  if (isAnyVar(hdl)) OZ_suspendOn(makeTaggedRef(hdlPtr));
-  if (!isProcedure(hdl)) {
-    TypeErrorT(1,"Procedure");
-  }
-
-  Group *gr = new Group(am.currentThread->getGroup());
-  gr->setExceptionHandler(hdl);
-  Thread *tt = new Thread (am.currentThread->getPriority(),am.currentBoard);
-  tt->setGroup(gr);
-  tt->pushCall(proc,0,0);
-  am.scheduleThread(tt);
-  return OZ_unify(out,makeTaggedConst(gr));
-}
-OZ_C_proc_end
-
 // ---------------------------------------------------------------------
 // Cell
 // ---------------------------------------------------------------------
@@ -4794,7 +4845,7 @@ OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 {
   GetDictAndKey(d,k,dict,key,OK);
   if (dict->getArg(key,out) != PROCEED) {
-    TypeErrorM("invalid key");
+    return OZ_raiseC("dict",2,d,k);
   }
   return PROCEED;
 }
@@ -5309,7 +5360,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIgarbageCollection,0)
 {
   am.setSFlag(StartGC);
-  return PROCEED;
+
+  return BI_PREEMPT;
 }
 OZ_C_proc_end
 
@@ -6053,7 +6105,7 @@ int AM::setValue(TaggedRef feature, TaggedRef value)
 }
 #undef DOIF
 
-OZ_C_proc_begin(BIconfigure,2)
+OZ_C_proc_begin(BIsystemSetParameter,2)
 {
   OZ_declareNonvarArg(0,fea);
   OZ_declareArg(1,val);
@@ -6063,12 +6115,12 @@ OZ_C_proc_begin(BIconfigure,2)
   }
 
   if (am.setValue(deref(fea),val)) return PROCEED;
-  return OZ_raiseC("configure",1,fea);
+  return OZ_raiseC("systemParameter",1,fea);
 }
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIconfigureValue,2)
+OZ_C_proc_begin(BIsystemGetParameter,2)
 {
   OZ_declareNonvarArg(0,fea);
   OZ_declareArg(1,out);
@@ -6078,7 +6130,7 @@ OZ_C_proc_begin(BIconfigureValue,2)
   }
 
   if (am.getValue(deref(fea),out)) return PROCEED;
-  return OZ_raiseC("configure",1,fea);
+  return OZ_raiseC("systemParameter",1,fea);
 }
 OZ_C_proc_end
 
@@ -6174,8 +6226,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIcurrentThread,1)
 {
   return OZ_unify(OZ_getCArg(0),
-		  makeTaggedConst(new OzThread(am.currentBoard,
-					       am.currentThread)));
+		  makeTaggedConst(am.currentThread));
 }
 OZ_C_proc_end
 
@@ -6185,7 +6236,7 @@ OZ_C_proc_begin(BIsetStepMode,2)
   char   *onoff = toC(OZ_getCArg(1));
   
   ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = ((OzThread*) rec)->th();
+  Thread *thread = (Thread*) rec;
  
   if (!strcmp(onoff, "on"))
     thread->startStepMode();
@@ -6202,7 +6253,7 @@ OZ_C_proc_begin(BIstartTraceMode,2)
   OZ_Term out   = OZ_getCArg(1);
   
   ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = ((OzThread*) rec)->th();
+  Thread *thread = (Thread*) rec;
  
   TaggedRef tail = OZ_newVariable();
   thread->setStreamTail(tail);
@@ -6216,7 +6267,7 @@ OZ_C_proc_begin(BIstopTraceMode,1)
   OZ_Term chunk = OZ_deref(OZ_getCArg(0));
   
   ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = ((OzThread*) rec)->th();
+  Thread *thread = (Thread*) rec;
  
   thread->setStreamTail(OZ_atom("noStream"));
   thread->stopTraceMode();
@@ -6228,7 +6279,7 @@ OZ_C_proc_begin(BIstopThread,1)
 {
   OZ_Term chunk  = OZ_deref(OZ_getCArg(0));
   ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = ((OzThread*) rec)->th();
+  Thread *thread = (Thread*) rec;
   
   thread->stop();
   return PROCEED;
@@ -6239,7 +6290,7 @@ OZ_C_proc_begin(BIcontThread,1)
 {
   OZ_Term chunk  = OZ_deref(OZ_getCArg(0));
   ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = ((OzThread*) rec)->th();
+  Thread *thread = (Thread*) rec;
   
   thread->cont();
   am.scheduleThread(thread);
@@ -6253,7 +6304,7 @@ OZ_C_proc_begin(BIqueryDebugState,2)
   OZ_Term out   = OZ_getCArg(1);
   
   ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = ((OzThread*) rec)->th();
+  Thread *thread = (Thread*) rec;
 
   return OZ_unify(out, OZ_mkTupleC("debugState",
 				   3,
@@ -6724,7 +6775,7 @@ OZ_Return objectIsFreeInline(TaggedRef tobj, TaggedRef &out)
   Object *obj = (Object *) tagged2Const(tobj);
 
   if (am.currentBoard != obj->getBoardFast()) {
-    TypeErrorM("object application in local computation space not allowed");
+    return OZ_raiseC("globalState",1,OZ_atom("obj"));
   }
 
   if (obj->isClosed()) {
@@ -6823,16 +6874,19 @@ static
 void printX(char *what, OZ_Term vs)
 {
   if (!OZ_isNil(vs)) {
+    message("%s",what);
     if (OZ_isVirtualString(vs,0)) {
-      message("%s",what);
       OZ_printVirtualString(vs);
-      printf("\n");
     } else {
-      message("Ups: %s: %s\n",what,toC(vs));
+      printf("%s",toC(vs));
     }
+    printf("\n");
   }
 }
 
+/*
+ * the builtin exception handler
+ */
 OZ_C_proc_begin(BIbiExceptionHandler,3)
 {
   OZ_Term val=OZ_getCArg(0);
@@ -6965,9 +7019,11 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
 	  }
 	}
       } else {
-	message("UNKNOWN EXCEPTION: %s\n",toC(OZ_label(val)));
+	message("EXCEPTION: %s\n",toC(OZ_label(val)));
 	if (ozconf.errorVerbosity > 1) {
-	  message("Value: %s\n",toC(val));
+	  for (int i=0; i < OZ_width(val); i++) {
+	    printX("Hint: ",OZ_getArg(val,i));
+	  }
 	}
       }
     }
@@ -6991,7 +7047,11 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
     }
     errorTrailer();
   }
-  return PROCEED;
+
+  // see BIthreadTerminate
+  Bool isLocal=am.currentThread->terminate();
+  if (isLocal) return FAILED;
+  return BI_TERMINATE;
 }
 OZ_C_proc_end
 
@@ -7090,9 +7150,6 @@ BIspec allSpec1[] = {
   {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
-  {"NewGroup",	        2,BInewGroup,    0},
-  {"NewGroupHdl",       3,BInewGroupHdl, 0},
-
   {"NewCell",	      2,BInewCell,	 0},
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
 
@@ -7143,6 +7200,7 @@ BIspec allSpec2[] = {
   {"IsObject", 2,BIisObjectB, 	  (IFOR) BIisObjectBInline},
   {"IsClass", 2,BIisClassB,	  (IFOR) BIisClassBInline},
   {"IsString", 2,BIisString,      0},
+  {"IsProperString", 2,BIisProperString, 0},
 
   {"Det",2,BIdet,        	  (IFOR) 0},
   {"Wait",1,BIisValue,            (IFOR) isValueInline},
@@ -7224,9 +7282,6 @@ BIspec allSpec2[] = {
 
   {"NewName",         1,BInewName,	0},
 
-  {"setThreadPriority", 1, BIsetThreadPriority,	0},
-  {"getThreadPriority", 1, BIgetThreadPriority,	0},
-
   {"==",      3,BIeqB,    (IFOR) eqeqInline},
   {"\\=",     3,BIneqB,   (IFOR) neqInline},
   {"==Rel",   2,BIeq,     0},
@@ -7282,8 +7337,8 @@ BIspec allSpec2[] = {
   {"printError",1,BIprintError},
   {"Show",1,BIshow,  (IFOR) showInline},
 
-  {"configure",2,BIconfigure},
-  {"configureValue",2,BIconfigureValue},
+  {"System.setParameter",2,BIsystemSetParameter},
+  {"System.getParameter",2,BIsystemGetParameter},
   {"onToplevel",1,BIonToplevel},
   {"addr",2,BIaddr},
   {"suspensions",2,BIsuspensions},
@@ -7295,15 +7350,24 @@ BIspec allSpec2[] = {
   // Debugging
   {"globalThreadStream",1,BIglobalThreadStream},
   {"currentThread",1,BIcurrentThread},
-  {"Thread.this",1,BIcurrentThread},
   {"startTraceMode",2,BIstartTraceMode},
   {"stopTraceMode",1,BIstopTraceMode},
   {"setStepMode",2,BIsetStepMode},
   {"stopThread",1,BIstopThread},
   {"contThread",1,BIcontThread},
-  {"Thread.suspend",1,BIstopThread},
-  {"Thread.continue",1,BIcontThread},
   {"queryDebugState",2,BIqueryDebugState},
+
+  {"Thread.is",2,BIthreadIs},
+  {"Thread.this",1,BIthreadThis},
+  {"Thread.suspend",1,BIthreadSuspend},
+  {"Thread.resume",1,BIthreadResume},
+  {"Thread.terminate",1,BIthreadTerminate},
+  {"Thread.preempt",1,BIthreadPreempt},
+  {"Thread.exchange",3,BIthreadExchange},
+  {"Thread.setPriority",2,BIthreadSetPriority},
+  {"Thread.getPriority",2,BIthreadGetPriority},
+  {"Thread.isSuspended",2,BIthreadIsSuspended},
+  {"Thread.state",2,BIthreadState},
 
   {"printLong",1,BIprintLong},
 
