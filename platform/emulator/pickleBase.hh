@@ -57,7 +57,6 @@
 
 #define MSGFLAG_TEXTMODE  0x1
 #define MSGFLAG_ATEND     0x2
-#define MSGFLAG_CLONECELLS 0x4
 
 //
 class PickleBuffer : public MarshalerBuffer {
@@ -73,9 +72,6 @@ public:
 
   void markEnd()  { flags |= MSGFLAG_ATEND; }
   Bool atEnd()    { return (flags&MSGFLAG_ATEND); }
-
-  void setCloneCells() { flags |= MSGFLAG_CLONECELLS; }
-  Bool cloneCells()    { return (flags&MSGFLAG_CLONECELLS); }
 };
 
 #endif

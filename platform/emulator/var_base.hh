@@ -81,7 +81,7 @@ enum TypeOfVariable {
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
 
-#define SVAR_EXPORTED  0x1
+#define SVAR_UNUSED    0x1
 #define CVAR_TRAILED   0x2
 #define SVAR_FLAGSMASK 0x3
 
@@ -150,13 +150,6 @@ public:
   }
   void setHome(Board *h) {
     homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h);
-  }
-
-  Bool isExported(void) {
-    return homeAndFlags&SVAR_EXPORTED;
-  }
-  void markExported() {
-    homeAndFlags |= SVAR_EXPORTED;
   }
 
   Bool isTrailed(void) {
