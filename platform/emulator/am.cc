@@ -166,23 +166,6 @@ void AM::init(int argc,char **argv)
   ozconf.argV = NULL;
   ozconf.argC = 0;
 
-  // Denys:
-  // in case the emulator is invoked as the script `ozx'
-  // then assume `-quiet' and use 1st arg as url
-
-  if (argc>=2) {
-    if (strcmp(argv[0],"ozx")==0) {
-      quiet = TRUE;
-      url   = argv[1];
-    } else {
-      int n = strlen(argv[0]);
-      if (n >= 4 && strcmp(argv[0]+n-4,"/ozx")==0) {
-        quiet = TRUE;
-        url   = argv[1];
-      }
-    }
-  }
-
   for (int i=url?2:1; i<argc; i++) {
     if (strcmp(argv[i],"-E")==0) {
       ozconf.runningUnderEmacs = 1;
