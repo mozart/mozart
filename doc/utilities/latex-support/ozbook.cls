@@ -247,15 +247,17 @@
   \expandafter\def\expandafter\@ozrefs\expandafter{%
 	\@ozrefs\space#1}}
 \defozref{survey}{A Survey of Oz}
-\defozref{crash}{An Oz Primer}
 \defozref{kernel}{The Definition of Kernel Oz}
 \defozref{prog}{Programming in Oz}
-\defozref{tk}{Window Programming in DFKI Oz}
-\defozref{open}{Open Programming in DFKI Oz}
 \defozref{constraints}{Constraint Programming in Oz}
 \defozref{demos}{DFKI Oz Demos}
-\defozref{system}{DFKI Oz User's Manual}
+\defozref{crash}{An Oz Primer}
+\defozref{tips}{Tips on Oz}
+\defozref{tk}{Window Programming in DFKI Oz}
+\defozref{open}{Open Programming in DFKI Oz}
 \defozref{modules}{The Oz Standard Modules}
+\defozref{system}{DFKI Oz User's Manual}
+\defozref{fd}{The Constraint Propagator Interface of DFKI Oz}
 \defozref{notation}{The Oz Notation}
 
 \newcommand{\@ozreferr}[2]{%
@@ -310,13 +312,17 @@
         \begin{minipage}[c]{0.5\fullwidth}%
   	\raggedleft
   	{\titlefontone\@bursttitle\\[1cm]}%
-  	{\titlefonttwo\@burstauthor}%
+  	{\titlefonttwo\@burstauthor\\[1cm]}%
         \end{minipage}}%
       \vfill
       \titlefontthree
       \tabcolsep0pt%
       \begin{tabular*}{\fullwidth}%
 	{@{}l@{\extracolsep\fill}r@{\extracolsep{0pt}}@{}}%
+%	{%
+	{\titlefonttwo Describing the Programming Language Oz \ozversion}\\[2mm]
+	{\titlefonttwo Implemented by DFKI Oz \dfkiozversion}\\[2mm]
+	{\titlefonttwo Released on \dfkiozreleasedate}\\[1cm]
 	Programming Systems Lab\\
 	German Research Center for Artificial Intelligence (DFKI)\\
 	Stuhlsatzenhausweg 3, D-66123 Saarbr\"ucken, Germany &
@@ -332,28 +338,32 @@
 
   Gert Smolka and Ralf Treinen, editors
   \begin{itemize}%
+  %\item \ozrefplain{constraints}%
+  %\item \ozrefplain{prog}%
+  %\item \ozrefplain{kernel}%
+  %\item \ozrefplain{demos}%
+%
   \item \ozrefplain{crash}%
-  \item \ozrefplain{constraints}%
-  \item \ozrefplain{prog}%
 %
-  \item \ozrefplain{kernel}%
-  \item \ozrefplain{notation}%
-  \item \ozrefplain{modules}%
-%
-  \item \ozrefplain{system}%
+  \item \ozrefplain{tips}%
   \item \ozrefplain{tk}%
   \item \ozrefplain{open}%
-  \item \ozrefplain{demos}%
+%
+  \item \ozrefplain{modules}%
+  \item \ozrefplain{system}%
+  \item \ozrefplain{fd}%
+  \item \ozrefplain{notation}%
   \end{itemize}%
 \vfill
   More information about DFKI Oz, the documentation, and the system
   can be obtained via WWW from
-  \[\texttt{http://ps-www.dfki.uni-sb.de/oz/}\]
+  \[\texttt{http://www.ps.uni-sb.de/oz/}\]
   The documentation and the system are also available by anonymous ftp
-  from \[\texttt{ps-ftp.dfki.uni-sb.de:/pub/oz}\]
+  from \[\texttt{ftp.ps.uni-sb.de/pub/oz}\]
 
-  This document describes Oz \ozversion\ implemented by
-  DFKI Oz \ozversion\ released on \ozreleasedate.
+  This document describes the programming language 
+  Oz \ozversion\ implemented by
+  DFKI Oz \dfkiozversion\ released on \dfkiozreleasedate.
 
   For specific questions and bug reports, you may mail to
   \texttt{oz@dfki.uni-sb.de}.  To join the Oz users mailing list,
