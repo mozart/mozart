@@ -117,6 +117,36 @@ OZ_Term mkSTupleX(char *label,char *fun, RefsArray A,int n)
   return mkSTupleX(label,OZ_atom(fun),A,n);
 }
 
+static
+TaggedRef makeListOfX(int arity, TaggedRef *X)
+{
+  TaggedRef l = AtomNil;
+  while (--arity >= 0) {
+    l = cons(X[arity],l);
+  }
+  return l;
+}
+
+Abstraction *dvarApply(Abstraction *pred, int arity, RefsArray X)
+{
+  TaggedRef arglist = makeListOfX(arity,X);
+  X[0] = makeTaggedConst(pred);
+  if (am.isToplevel()) {
+    X[1] = OZ_mkTupleC("apply",1,arglist);
+  } else {
+    TaggedRef syncvar = makeTaggedRef(newTaggedUVar(am.rootBoard));
+    X[1] = OZ_mkTupleC("askApply",2,syncvar,arglist);
+
+    RefsArray args = allocateRefsArray(2,NO);
+    args[0] = makeTaggedConst(pred);
+    args[1] = OZ_mkTupleC("getApply",2,syncvar,OZ_int(arity));
+
+    spawnThread(am.dVarHandler, args, 2, am.rootBoard);
+  }
+
+  return tagged2Abstraction(am.dVarHandler);
+}
+
 OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 {
   if (!isSTuple(tuple)) {
@@ -173,26 +203,26 @@ if (predArity != arityExp && VarArity != arityExp) {                       \
 // -----------------------------------------------------------------------
 
 
-#define DoSwitchOnTerm(indexTerm,table)                                       \
-      TaggedRef term = indexTerm;                                             \
-      DEREF(term,_1,_2);                                                      \
-                                                                              \
-      if (!isLTuple(term)) {                                                  \
-        TaggedRef *sp = sPointer;                                             \
-        ProgramCounter offset = switchOnTermOutline(term,table,sp);           \
-        sPointer = sp;                                                        \
-        JUMP(offset);                                                         \
-      }                                                                       \
-                                                                              \
-      ProgramCounter offset = table->listLabel;                               \
-      sPointer = tagged2LTuple(term)->getRef();                               \
-      JUMP(offset);                                                           \
+#define DoSwitchOnTerm(indexTerm,table)                                         \
+      TaggedRef term = indexTerm;                                               \
+      DEREF(term,termPtr,_2);                                                   \
+                                                                                \
+      if (!isLTuple(term)) {                                                    \
+        TaggedRef *sp = sPointer;                                               \
+        ProgramCounter offset = switchOnTermOutline(term,termPtr,table,sp);     \
+        sPointer = sp;                                                          \
+        JUMP(offset);                                                           \
+      }                                                                         \
+                                                                                \
+      ProgramCounter offset = table->listLabel;                                 \
+      sPointer = tagged2LTuple(term)->getRef();                                 \
+      JUMP(offset);
 
 
 
 static
-ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
-                                   TaggedRef *&sP)
+ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
+                                   IHashTable *table, TaggedRef *&sP)
 {
   ProgramCounter offset = table->getElse();
   if (isSRecord(term)) {
@@ -243,7 +273,7 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
     return offset;
   }
 
-  if (isCVar(term) && !table->disentailed(tagged2CVar(term))) {
+  if (isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
     return table->varLabel;
   }
 
@@ -280,7 +310,8 @@ void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
       return;
     }
   } else {
-    if(!isAbstraction(pred)) goto bombGenCall;
+    if(!isAbstraction(pred) || tagged2Abstraction(pred)->isDistributed())
+      goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
     if (abstr->getArity() != getWidth(gci->arity))
@@ -561,18 +592,25 @@ Bool AM::hookCheckNeeded()
    addSusp(TermPtr,e->mkSuspThread ());         \
    CHECK_CURRENT_THREAD;
 
+
+void addSusp(TaggedRef *varPtr, Thread *thr)
+{
+  taggedBecomesSuspVar(varPtr)->addSuspension (thr);
+
+  /* spawn askHandler threads for dvars */
+  if (isDVar(*varPtr)) {
+    handleAsk(varPtr);
+  }
+}
+
 void addSusp(TaggedRef var, Thread *thr)
 {
   DEREF(var,varPtr,_1);
   Assert(isAnyVar(var));
 
-  taggedBecomesSuspVar(varPtr)->addSuspension (thr);
+  addSusp(varPtr,thr);
 }
 
-void addSusp(TaggedRef *varPtr, Thread *thr)
-{
-  taggedBecomesSuspVar(varPtr)->addSuspension (thr);
-}
 
 /*
  * create the suspension for builtins returning SUSPEND
@@ -2558,8 +2596,7 @@ LBLsuspendThread:
       e->pushTask(shallowCP,Y,G,X,argsToSave);
       Thread *thr = e->mkSuspThread ();
       shallowCP = NULL;
-      e->reduceTrailOnShallow ();
-      e->suspendOnVarList (thr);
+      e->reduceTrailOnShallow(thr);
       CHECK_CURRENT_THREAD;
     }
 
@@ -2882,6 +2919,10 @@ LBLsuspendThread:
              // o->deepness handelt by 'objectIsFree'
            } else {
              def = (Abstraction *) predicate;
+             if (def->isDistributed() && !def->isFetched()) {
+               def = dvarApply(def,predArity,X);
+               predArity = 2;
+             }
              CheckArity(def->getArity(), makeTaggedConst(def));
              if (!isTailCall) { CallPushCont(PC); }
            }

@@ -120,6 +120,8 @@ public:
 
   TaggedRef aVarUnifyHandler;
   TaggedRef aVarBindHandler;
+  TaggedRef dVarHandler;
+
   Toplevel *toplevelQueue;
 
   void printBoards();
@@ -193,7 +195,7 @@ public:
   void reduceTrailOnUnitCommit();
   void reduceTrailOnSuspend();
   void reduceTrailOnFail();
-  void reduceTrailOnShallow();
+  void reduceTrailOnShallow(Thread *);
 
   // in emulate.cc
   Bool emulateHookOutline(Abstraction *def=NULL,
@@ -289,7 +291,9 @@ public:
 
   void handleAlarm();
   void handleUser();
-  inline int setUserAlarmTimer(int ms);
+
+  void setUserAlarmTimer(int ticks) { userCounter=ticks; }
+  int getUserAlarmTimer() { return userCounter; }
 
   OzSleep *sleepQueue;
   void insertUser(int t,TaggedRef node);

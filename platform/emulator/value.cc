@@ -24,7 +24,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomCharSpace, AtomPunct, AtomOther,
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
   AtomMin, AtomMax, AtomMid,
-  AtomNaive, AtomSize, AtomConstraints;
+  AtomNaive, AtomSize, AtomConstraints,
+  AtomDistributed, AtomMobile, AtomFetched;
 
 
 // Some often used constants
@@ -63,7 +64,11 @@ void initLiterals()
   AtomMid          = makeTaggedAtom("mid");
   AtomNaive        = makeTaggedAtom("naive");
   AtomSize         = makeTaggedAtom("size");
-  AtomConstraints   = makeTaggedAtom("constraints");
+  AtomConstraints  = makeTaggedAtom("constraints");
+
+  AtomMobile      = makeTaggedAtom("mobile");
+  AtomFetched     = makeTaggedAtom("fetched");
+  AtomDistributed = makeTaggedAtom("distributed");
 }
 
 
@@ -184,6 +189,28 @@ Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity)
   }
 
   return abstr;
+}
+
+/*===================================================================
+ * Abstractions and cells
+ *=================================================================== */
+
+Abstraction::Abstraction(Bool mobile) :
+  DistObject(am.rootBoard,Co_Abstraction), gRegs(0)
+{
+  pred = new PrTabEntry(AtomNil, 0, 0);
+
+  setDistFlag(Distributed);
+  if (mobile)
+    setDistFlag(Mobile);
+}
+
+Cell::Cell(TaggedRef v, Bool mobile) :
+  DistObject(am.rootBoard, Co_Cell), val(v)
+{
+  setDistFlag(Distributed);
+  if (mobile)
+    setDistFlag(Mobile);
 }
 
 /*===================================================================

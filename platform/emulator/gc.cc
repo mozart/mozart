@@ -1157,12 +1157,6 @@ SuspList * SuspList::gc()
 inline
 void GenCVariable::gc(void)
 {
-  Assert(getType() == FDVariable ||
-         getType() == OFSVariable ||
-         getType() == MetaVariable ||
-         getType() == BoolVariable ||
-         getType() == AVAR
-         );
   switch (getType()){
   case FDVariable:
     ((GenFDVariable*)this)->gc();
@@ -1183,8 +1177,11 @@ void GenCVariable::gc(void)
   case AVAR:
     ((AVar *) this)->gc();
     break;
-  default:
+  case DVAR:
+    ((DVar *) this)->gcDVar();
     break;
+  default:
+    Assert(0);
   }
 }
 
@@ -1297,10 +1294,21 @@ void GenMetaVariable::gc(void)
   gcTagged(data, data);
 }
 
-void AVar::gc(void)
+inline
+void AorDVar::gcADVar(void)
 {
-  GCMETHMSG("AVar::gc");
+  GCMETHMSG("AorDVar::gc");
   gcTagged(value, value);
+}
+
+void AVar::gcAVar(void)
+{
+  AorDVar::gc();
+}
+
+void DVar::gcDVar(void)
+{
+  AorDVar::gc();
 }
 
 DynamicTable* DynamicTable::gc(void)
@@ -1514,6 +1522,7 @@ void AM::gc(int msgLevel)
 
   gcTagged(aVarUnifyHandler,aVarUnifyHandler);
   gcTagged(aVarBindHandler,aVarBindHandler);
+  gcTagged(dVarHandler,dVarHandler);
 
   GCPROCMSG("ioNodes");
   for(int i = 0; i < osOpenMax(); i++) {

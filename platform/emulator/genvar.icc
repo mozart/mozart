@@ -22,13 +22,6 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
                          TaggedRef * tptr2, TaggedRef term2,
                          Bool prop)
 {
-  Assert(getType() == FDVariable ||
-         getType() == OFSVariable ||
-         getType() == MetaVariable ||
-         getType() == BoolVariable ||
-         getType() == AVAR
-         );
-
   LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
                            localPropStore.isInLocalPropagation()););
 
@@ -57,12 +50,12 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
     }
     break;
   case AVAR:
-    {
-      if (! ((AVar *)this)->unifyAVar(tptr1, term1, tptr2, term2, prop))
-        return FALSE;
-    }
+  case DVAR:
+    if (! ((AorDVar *)this)->unifyADVar(tptr1, tptr2==0?&term2:tptr2, prop))
+      return FALSE;
     break;
   default:
+    Assert(0);
     return FALSE;
   }
 
@@ -74,12 +67,8 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 inline
 int GenCVariable::getSuspListLength(void)
 {
-  Assert(getType() == FDVariable ||
-         getType() == OFSVariable ||
-         getType() == MetaVariable ||
-         getType() == BoolVariable ||
-         getType() == AVAR
-         );
+  GenVarCheckType(getType());
+
   switch (getType()){
   case FDVariable:
     return ((GenFDVariable *)this)->getSuspListLength();
@@ -96,50 +85,29 @@ int GenCVariable::getSuspListLength(void)
 inline
 size_t GenCVariable::getSize(void)
 {
-  Assert(getType() == FDVariable ||
-         getType() == OFSVariable ||
-         getType() == MetaVariable ||
-         getType() == BoolVariable ||
-         getType() == AVAR
-         );
   switch (getType()){
-  case FDVariable:
-    return ((GenFDVariable*)this)->getSize();
-  case OFSVariable:
-    return ((GenOFSVariable*)this)->getSize();
-  case MetaVariable:
-    return ((GenMetaVariable*)this)->getSize();
-  case BoolVariable:
-    return ((GenBoolVariable*)this)->getSize();
-  case AVAR:
-    return ((AVar *)this)->getSize();
-  default:
-    break;
+  case FDVariable:   return ((GenFDVariable*)this)->getSize();
+  case OFSVariable:  return ((GenOFSVariable*)this)->getSize();
+  case MetaVariable: return ((GenMetaVariable*)this)->getSize();
+  case BoolVariable: return ((GenBoolVariable*)this)->getSize();
+  case AVAR:         return ((AVar *)this)->getSize();
+  case DVAR:         return ((DVar *)this)->getSize();
+  default:           Assert(0);
   }
   return 0;
 }
 
 inline
-Bool GenCVariable::valid(TaggedRef val)
+Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
 {
-  Assert(getType() == FDVariable ||
-         getType() == OFSVariable ||
-         getType() == MetaVariable ||
-         getType() == AVAR ||
-         getType() == BoolVariable);
   switch (getType()){
-  case FDVariable:
-    return ((GenFDVariable*)this)->valid(val);
-  case OFSVariable:
-    return ((GenOFSVariable*)this)->valid(val);
-  case MetaVariable:
-    return ((GenMetaVariable*)this)->valid(val);
-  case AVAR:
-    return ((AVar *)this)->valid(val);
-  case BoolVariable:
-    return ((GenBoolVariable*)this)->valid(val);
-  default:
-    break;
+  case FDVariable:   return ((GenFDVariable*)this)->valid(val);
+  case OFSVariable:  return ((GenOFSVariable*)this)->valid(val);
+  case MetaVariable: return ((GenMetaVariable*)this)->valid(val);
+  case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
+  case AVAR:         return ((AVar *)this)->valid(val);
+  case DVAR:         return ((DVar *)this)->valid(ptr,val);
+  default: Assert(0); break;
   }
   return FALSE;
 }
@@ -148,12 +116,6 @@ Bool GenCVariable::valid(TaggedRef val)
 inline
 void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
 {
-  Assert(getType() == FDVariable ||
-         getType() == OFSVariable ||
-         getType() == MetaVariable ||
-         getType() == AVAR ||
-         getType() == BoolVariable);
-
   Assert(getType() == glob_var->getType() ||
          (getType() == BoolVariable && glob_var->getType() == FDVariable));
   Assert(!prop || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
@@ -169,10 +131,13 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
   case BoolVariable:
     ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
     break;
-  case OFSVariable: case MetaVariable: case AVAR:
+  case OFSVariable:
+  case MetaVariable:
+  case AVAR:
+  case DVAR:
     break;
   default:
-    break;
+    Assert(0);
   }
 }
 
