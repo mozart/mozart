@@ -38,7 +38,7 @@ import
         block: BLOCK
         pcdata: PCDATA
         verbatim: VERBATIM
-        toVirtualString)
+        toVirtualString clean)
    Property(get)
 export
    Translate
@@ -246,6 +246,10 @@ define
          ToGenerate <- nil
          OzDocToHTML, Process(SGML unit)
          OzDocToHTML, GenerateLabels()
+         {ForAll {Dictionary.items @Labels}
+          proc {$ N#T}
+             if {IsFree N} then N#T = 'file:///dev/null'#PCDATA('???') end
+          end}
          {ForAll @ToWrite
           proc {$ Node#File}
              {WriteFile
@@ -534,7 +538,7 @@ define
                SEQ([HTML1 HTML4])
             [] subsubsection then X HTML1 HTML2 HTML3 HTML4 Title in
                OzDocToHTML, PrepareNode(M ?X ?HTML1)
-               OzDocToHTML, MakeTitle('Section&nbsp;'
+               OzDocToHTML, MakeTitle('Section '
                                       fun {$} "" end
                                       ""
                                       fun {$ N} h4(N) end
@@ -931,7 +935,13 @@ define
                         else SEQ([VERBATIM(NumberVS#Sep) Title])
                         end
             if {HasFeature M id} then
-               OzDocToHTML, ID(M.id @CurrentNode VERBATIM(PtrText#NumberVS))
+               case {Label M} of subsubsection then
+                  OzDocToHTML, ID(M.id @CurrentNode
+                                  SEQ([VERBATIM(PtrText)
+                                       PCDATA('``') NodeTitle PCDATA('\'\'')]))
+               else
+                  OzDocToHTML, ID(M.id @CurrentNode VERBATIM(PtrText#NumberVS))
+               end
             end
          end
          TOC <- {Append @TOC [Level#TheLabel#@CurrentNode#NodeTitle]}
@@ -1006,7 +1016,7 @@ define
       end
       meth MakeNode(Title BodyContents) Node in
          %--** convert Title to simple text (it might contain tags!)
-         Node = html(head(title(Title)
+         Node = html(head(title({HTML.clean Title})
                           link(rel: stylesheet
                                type: 'text/css'
                                href: @StyleSheet))
