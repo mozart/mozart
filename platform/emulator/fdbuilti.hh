@@ -204,12 +204,6 @@ OZ_C_proc_proto(BIfdCardSched);
 OZ_C_proc_proto(BIfdCDSched);
 OZ_C_proc_proto(BIfdNoOverlap);
 OZ_C_proc_proto(BIfdNoOverlap1);
-OZ_C_proc_proto(BIfdGreaterBool);
-OZ_C_proc_proto(BIfdLessBool);
-OZ_C_proc_proto(BIfdEqualBool);
-OZ_C_proc_proto(BIfdLepcBool);
-OZ_C_proc_proto(BIfdLepcBool1);
-OZ_C_proc_proto(BIfdJoergCard);
 OZ_C_proc_proto(BIfdGenLinEqB);
 OZ_C_proc_proto(BIfdGenNonLinEqB);
 OZ_C_proc_proto(BIfdGenLinNotEqB);
@@ -223,6 +217,13 @@ OZ_C_proc_proto(BIfdInKillB);
 OZ_C_proc_proto(BIfdNotInB);
 OZ_C_proc_proto(BIfdIsIntB);
 OZ_C_proc_proto(BIfdCardBIBin);
+OZ_C_proc_proto(BIfdCardBIKill);
+OZ_C_proc_proto(BIfdCardNestableBI);
+OZ_C_proc_proto(BIfdInKillB);
+OZ_C_proc_proto(BIfdNotInKillB);
+OZ_C_proc_proto(BIfdCardNestableBIBin);
+OZ_C_proc_proto(BIfdGenLinEqKillB);
+OZ_C_proc_proto(BIfdGenLinLessEqKillB);
 
 // fdwatch.cc
 OZ_C_proc_proto(BIfdWatchDom1);
@@ -278,12 +279,6 @@ OZ_C_proc_proto(BIfdMaximum_body);
 OZ_C_proc_proto(BIfdMinimum_body);
 OZ_C_proc_proto(BIfdSubsume_body);
 OZ_C_proc_proto(BIfdUnion_body);
-OZ_C_proc_proto(BIfdGreaterBool_body);
-OZ_C_proc_proto(BIfdLessBool_body);
-OZ_C_proc_proto(BIfdEqualBool_body);
-OZ_C_proc_proto(BIfdLepcBool_body)
-OZ_C_proc_proto(BIfdLepcBool1_body);
-OZ_C_proc_proto(BIfdJoergCard_body);
 OZ_C_proc_proto(BIfdGenLinEqB_body);
 OZ_C_proc_proto(BIfdGenNonLinEqB_body);
 OZ_C_proc_proto(BIfdGenLinNotEqB_body);
@@ -297,6 +292,13 @@ OZ_C_proc_proto(BIfdInB_body);
 OZ_C_proc_proto(BIfdInKillB_body);
 OZ_C_proc_proto(BIfdNotInB_body);
 OZ_C_proc_proto(BIfdIsIntB_body);
+OZ_C_proc_proto(BIfdCardNestableBI_body);
+OZ_C_proc_proto(BIfdCardBIKill_body);
+OZ_C_proc_proto(BIfdCardNestableBIBin_body);
+OZ_C_proc_proto(BIfdInKillB_body);
+OZ_C_proc_proto(BIfdNotInKillB_body);
+OZ_C_proc_proto(BIfdGenLinEqKillB_body);
+OZ_C_proc_proto(BIfdGenLinLessEqKillB_body);
 
 //-----------------------------------------------------------------------------
 // Prototypes for Heads of Built-ins
@@ -328,9 +330,6 @@ OZ_Bool genericHead_x_y(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 			Bool nestable = FALSE);
 
 
-OZ_Bool genericHead_x_y_z_z(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-			  OZ_CFun BI_body, FDPropState target_list);
-
 OZ_Bool genericHead_a_x_c_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 			  OZ_CFun BI_body, FDPropState target_list);
 
@@ -339,6 +338,9 @@ OZ_Bool genericHead_x_c_d(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 
 OZ_Bool genericHead_x_D_d(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 			  OZ_CFun BI_body, FDPropState target_list);
+
+OZ_Bool genericHead_x_c_d_e(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
+			    OZ_CFun BI_body, FDPropState target_list);
 
 //-----------------------------------------------------------------------------
 // Auxiliary stuff
