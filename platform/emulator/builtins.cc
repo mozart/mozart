@@ -3277,8 +3277,25 @@ OZ_C_proc_begin(BIcharToAtom,2) {
   return oz_unify(OZ_getCArg(1), AtomEmpty);
 } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharType,2) {
-  FirstCharArg;
+#define FirstCharIN		    \
+ TaggedRef tc = OZ_in(0);	    \
+ int i;				    \
+ { DEREF(tc, tc_ptr, tc_tag);       \
+ if (isAnyVar(tc_tag)) {            \
+   am.addSuspendVarList(tc_ptr);    \
+   return SUSPEND;                  \
+ }                                  \
+ if (!isSmallInt(tc)) {             \
+   oz_typeError(1,"Char");	    \
+ } else {			    \
+   i = smallIntValue(tc);	    \
+   if ((i < 0) || (i > 255)) {	    \
+     oz_typeError(1,"Char");	    \
+   }				    \
+ } }
+
+OZ_BI_define(BIcharType,1,1) {
+  FirstCharIN;
   TaggedRef type;
   if (iso_isupper(i))      type = AtomUpper; 
   else if (iso_islower(i)) type = AtomLower;
@@ -3286,8 +3303,9 @@ OZ_C_proc_begin(BIcharType,2) {
   else if (iso_isspace(i)) type = AtomCharSpace;
   else if (iso_ispunct(i)) type = AtomPunct;
   else                     type = AtomOther;
-  return oz_unify(OZ_getCArg(1), type);
-} OZ_C_proc_end
+  OZ_result(type);
+  return PROCEED;
+}
 
 
 /********************************************************************
