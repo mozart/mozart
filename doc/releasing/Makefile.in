@@ -1,0 +1,12 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT = releasing
+WHATCLASS=misc
+PRINTNAME=Releasing
+MAIN = main.sgml
+SGMLSRCS =
+HTMLEXTRAFILES =
+
+include ../Makefile.common
