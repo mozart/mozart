@@ -269,17 +269,7 @@ void (*gcDistLockRecurse)(Tertiary *t)
 void (*gcDistPortRecurse)(Tertiary *t)
   = gcDistPortRecurseStub;
 //
-// (Only) gc method - for cells & locks (because we have to know
-// whether they are accessible locally or not);
-ConstTerm* (*auxGcDistCell)(Tertiary *t)
-  = auxGcDistCellStub;
-ConstTerm* (*auxGcDistLock)(Tertiary *t)
-  = auxGcDistLockStub;
-
 //
-ConstTerm* (*gcStatefulSpec)(Tertiary *t)
-  = gcStatefulSpecStub;
-
 //
 void (*gcBorrowTableUnusedFrames)()
   = gcBorrowTableUnusedFramesStub;

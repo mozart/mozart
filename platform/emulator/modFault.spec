@@ -36,4 +36,12 @@
 			     out => ['value'],
 			     BI  => BIgetEntityCond},
 
+    'distHandlerInstall'=>  { in  => ['value','value'],
+			     out => [],
+			     BI  => BIdistHandlerInstall},
+
+    'distHandlerDeInstall'=>{ in  => ['value','value'],
+			     out => [],
+			     BI  => BIdistHandlerDeInstall},
+
  );

@@ -73,14 +73,7 @@ extern void (*gcDistCellRecurse)(Tertiary *t);
 extern void (*gcDistLockRecurse)(Tertiary *t);
 extern void (*gcDistPortRecurse)(Tertiary *t);
 //
-// (Only) gc method - for cells & locks (because we have to know
-// whether they are accessible locally or not);
-extern ConstTerm* (*auxGcDistCell)(Tertiary *t);
-extern ConstTerm* (*auxGcDistLock)(Tertiary *t);
-
 //
-extern ConstTerm* (*gcStatefulSpec)(Tertiary *t);
-
 //
 extern void (*gcBorrowTableUnusedFrames)();
 extern void (*gcFrameToProxy)();
