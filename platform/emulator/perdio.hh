@@ -54,6 +54,13 @@ enum MessageType {
   M_CELL_REMOTEREAD,    // NA* DIF
   M_CELL_FORWARD,       // NA* INTEGER SITE
   M_CELL_DUMP,          // OTI* SITE
+  M_CELL_ACK,           // OTI* SITE
+  M_CELL_CANTPUT,
+  M_CELL_DIDSEND,
+  M_CELL_ANS_DIDSEND,
+  M_CELL_DIDGET,
+  M_CELL_ANS_DIDGET,
+
   M_LOCK_GET,           // OTI* SITE
   M_LOCK_TOKEN,          // NA* 
   M_LOCK_FORWARD,       // NA* SITE
@@ -323,6 +330,13 @@ void initComponents();
 Site* stringToSite(char*, char* &);
 int makeOwnerRef(OZ_Term);
 OZ_Term makeBorrowRef(Site*,int);
+
+/* ************************************************************************ */
+/*  SECTION ::  provided to engine                                      */
+/* ************************************************************************ */
+void networkTimer();
+extern int tempTimeCtr;
+#define TIME_CTR_THRESHOLD 100
 
 /* __PERDIOHH */
 #endif 
