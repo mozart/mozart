@@ -137,8 +137,7 @@ void * oz_heapMalloc(const size_t sz)
     Assert(oz_isHeapAligned(_oz_heap_cur));
 
     /* _oz_heap_cur might be negative!! */
-    if (((long) _oz_heap_end) > ((long) _oz_heap_cur)) {
-      Assert(((long) _oz_heap_end) > 0);
+    if (((unsigned long) _oz_heap_end) > ((unsigned long) _oz_heap_cur)) {
       _oz_getNewHeapChunk(a_sz);
       goto retry;
     }

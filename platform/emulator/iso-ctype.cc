@@ -124,11 +124,11 @@ const unsigned char iso_conv_tab[]
    return SUSPEND;                  \
  }                                  \
  if (!oz_isSmallInt(tc)) {          \
-   oz_typeError(1,"Char");	    \
+   oz_typeError(0,"Char");	    \
  } else {			    \
    i = tagged2SmallInt(tc);	    \
    if ((i < 0) || (i > 255)) {	    \
-     oz_typeError(1,"Char");	    \
+     oz_typeError(0,"Char");	    \
    }				    \
  } }
 
@@ -188,11 +188,11 @@ OZ_BI_define(BIcharToAtom,1,1) {
    return SUSPEND;                  \
  }                                  \
  if (!oz_isSmallInt(tc)) {          \
-   oz_typeError(1,"Char");	    \
+   oz_typeError(0,"Char");	    \
  } else {			    \
    i = tagged2SmallInt(tc);	    \
    if ((i < 0) || (i > 255)) {	    \
-     oz_typeError(1,"Char");	    \
+     oz_typeError(0,"Char");	    \
    }				    \
  } }
 

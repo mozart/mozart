@@ -730,11 +730,16 @@ public:
     mpz_clear(&value);
     oz_freeListDispose(this,sizeof(BigInt));
   }
-/* make a small int if <Big> fits into it, else return big int */
+/* make a small int if <Big> fits into it, else return big int */   
   TaggedRef shrink(void) {
     TaggedRef ret;
-    if (mpz_cmp_si(&value,OzMaxInt) > 0 ||
-	mpz_cmp_si(&value,OzMinInt) < 0)
+    // kost@ : having 'omi' is the GMP kludge: 'mpz_cmp_si' is a macro
+    // that references 'mpz_cmp_ui' in the right case, which causes a
+    // compiler warning for OzMinInt when the last one is defined as
+    // -(OzMaxInt+1);
+    const long int omi = OzMinInt;
+    if (mpz_cmp_si(&value, OzMaxInt) > 0 ||
+	mpz_cmp_si(&value, omi) < 0)
       ret = makeTaggedConst(this);
     else {
       ret =  makeTaggedSmallInt((int) mpz_get_si(&value));
