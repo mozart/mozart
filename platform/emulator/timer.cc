@@ -3,6 +3,9 @@
 
 #include "base.hh"
 
+extern void OZ_setTimer(int);
+extern unsigned int osTotalTime();
+
 OZ_BI_define(BItimer_setTimer,1,0)
 {
   OZ_declareInt(0,t);
