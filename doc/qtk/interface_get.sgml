@@ -1,2 +1,0 @@
-<ITEM> <<get(parameter1:Variable1 ... parameterX:VariableX)>> : Obtains the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<VariableX>> must be free variables which will receive the current value of the parameters.
-

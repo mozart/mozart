@@ -1,1 +1,0 @@
-<ITEM> <<tdscrollbar:B>> : Determines whether the widget has got a vertical bar at the right. This option can be specified at creation time only. <<B>> must be a boolean.

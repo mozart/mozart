@@ -1,3 +1,0 @@
-<ITEM> <<highlightthickness:P>> : Specifies a non-negative value indicating the width of the highlight rectangle to draw around the outside of the widget when it has
-    the input focus. If the value is zero, no focus highlight is drawn
-    around the widget. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).

@@ -1,3 +1,0 @@
-<ITEM> <<borderwidth:P>> : Specifies a non-negative value indicating the width of the 3-D border to draw around the outside of the widget (if such a border is
-    being drawn; the <<relief>> option typically determines this). The value may also be used when drawing 3-D effects in the interior of
-    the widget. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).

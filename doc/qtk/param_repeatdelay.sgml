@@ -1,1 +1,0 @@
-<ITEM> <<repeatdelay:I>> : Specifies the number of milliseconds a button or key must be held down before it begins to auto-repeat. Used, for example, on the up- and down-arrows in scrollbars. <<I>> must be an integer.

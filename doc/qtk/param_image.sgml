@@ -1,3 +1,0 @@
-<ITEM> <<image:I>> : Specifies an image to display in the widget. Typically, if the image
-    option is specified then it overrides other options that specify a bitmap or textual value to display in the widget; the image option
-    may be reset to an empty string to re-enable a bitmap or text display. This parameter can't be get at runtime, however it can be set. <<I>> must be a valid image (see <ptr to="misc.image">)
