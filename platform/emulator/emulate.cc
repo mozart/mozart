@@ -318,10 +318,13 @@ Bool hookCheckNeeded(AM *e)
 
 //#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(sparc)
-#   define INSTRUCTION(INSTR)   INSTR##LBL: asm(" " #INSTR ":");
+#define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
-#   define INSTRUCTION(INSTR)   INSTR##LBL: 
+#define asmLbl(INSTR)
 #endif
+
+#define INSTRUCTION(INSTR)   INSTR##LBL: asmLbl(INSTR);
+
 
 // let gcc fill in the delay slot of the "jmp" instruction:
 #   define DISPATCH(INC) { int help=*(PC+INC); INCFPC(INC); DODISPATCH; }
@@ -617,6 +620,7 @@ void engine() {
 // ------------------------------------------------------------------------
  LBLpopTask:
   {
+    asmLbl(popTask);
     DebugCheckT(Board *fsb);
     if (emulateHook0(e)) {
       goto LBLschedule;
@@ -625,7 +629,8 @@ void engine() {
     DebugCheckT(CAA = NULL);
 
     // POPTASK
-    if (!e->currentTaskStack) {
+    TaskStack *stk = e->currentTaskStack;
+    if (stk == NULL) {
       {
 	Thread *c = e->currentThread;
 	if (c->isNervous()) {
@@ -675,28 +680,41 @@ void engine() {
 	goto LBLTaskEmpty;
       }
     } else {
-      TaskStack *taskStack = e->currentTaskStack;
-      TaskStackEntry *topCache = taskStack->getTop() - 1;
-      TaggedBoard tb = (TaggedBoard) TaskStackPop(topCache);
-      if (taskStack->isEmpty((TaskStackEntry) tb)) {
-	goto LBLTaskEmpty;
-      }
-      ContFlag cFlag = getContFlag(tb);
-      tmpBB = getBoard(tb,cFlag)->getBoardDeref();
+      TaskStack *taskStack = stk;
+      TaskStackEntry *topCache = taskStack->getTop();
+      TaggedBoard tb = (TaggedBoard) TaskStackPop(topCache-1);
 
-      switch (cFlag){
-      case C_CONT:
-	PC = (ProgramCounter) TaskStackPop(--topCache);
-	Y = (RefsArray) TaskStackPop(--topCache);
-	G = (RefsArray) TaskStackPop(--topCache);
-	taskStack->setTop(topCache);
-	if (!tmpBB) {
-	  goto LBLpopTask;
+      ContFlag cFlag = getContFlag(tb);
+      
+      if (cFlag == C_CONT) {  /* not in switch --> faster */
+	Assert(!taskStack->isEmpty((TaskStackEntry) tb));
+	PC = (ProgramCounter) TaskStackPop(topCache-2);
+	Y = (RefsArray) TaskStackPop(topCache-3);
+	G = (RefsArray) TaskStackPop(topCache-4);
+	taskStack->setTop(topCache-4);
+	Board *rb = e->rootBoard;
+	if (getBoard(tb,cFlag) != rb) {
+	  tmpBB = getBoard(tb,cFlag)->getBoardDeref();
+	  if (tmpBB == NULL) {
+	    goto LBLpopTask;
+	  }
+	} else {
+	  tmpBB = rb;
 	}
 	DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
 		     fsb->isReflected () == OK),
 		    error ("activity under reduced solve actor"));
 	goto LBLTaskCont;
+      }
+
+      if (taskStack->isEmpty((TaskStackEntry) tb)) {
+	goto LBLTaskEmpty;
+      }
+
+      topCache--;
+      
+      tmpBB = getBoard(tb,cFlag)->getBoardDeref();
+      switch (cFlag){
       case C_XCONT:
 	PC = (ProgramCounter) TaskStackPop(--topCache);
 	Y = (RefsArray) TaskStackPop(--topCache);
@@ -857,8 +875,8 @@ void engine() {
     } // switch
 
 
-  LBLTaskCont:
-    tmpBB->removeSuspension();
+  LBLTaskCont:    
+    if (tmpBB != e->rootBoard) tmpBB->removeSuspension();
 
     INSTALLPATH(tmpBB);
 
@@ -1165,8 +1183,9 @@ void engine() {
 
       switch(res) {
 
-      case PROCEED:
-	DISPATCH(5);
+      case PROCEED: DISPATCH(5);
+
+      case FAILED:  JUMP( getLabelArg(PC+3) );
 
       case SUSPEND:
         {
@@ -1175,8 +1194,6 @@ void engine() {
 	  goto LBLcheckEntailment;
 	}
 
-      case FAILED:
-	JUMP( getLabelArg(PC+3) );
       }
     }
 
@@ -1189,9 +1206,11 @@ void engine() {
 
       switch(res) {
 
-      case PROCEED:
-	DISPATCH(6);
+      case PROCEED: DISPATCH(6);
 
+      case FAILED:  JUMP( getLabelArg(PC+4) );
+
+      default:
       case SUSPEND:
 	{
 	  TaggedRef A    = XPC(2);
@@ -1214,9 +1233,6 @@ void engine() {
 	  }
 	  goto LBLcheckEntailment;
 	}
-      case FAILED:
-	JUMP( getLabelArg(PC+4) );
-
       }
     }
 
