@@ -39,7 +39,6 @@
 
 #include <errno.h>
 #include <limits.h>
-#include <malloc.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
