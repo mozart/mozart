@@ -763,6 +763,30 @@
 	      <Index/error message/error messages and to include debugging
 	      information in the generated machine code.
 	  </List>
+      <Section id="section.compiling">
+	<Title/Running the Command-Line Tools/
+	<P>
+	  <List>
+	    <Entry class=command><Span class=index/<<oz-compile-file>>/
+	    <Item>
+	      Compile an Oz program non-interactively.
+	    <Entry class=useroption><Span class=index/<<oz-compile-command>>/
+	      (default: <<"ozc -c %s">>)
+	    <Item>
+	      Default shell command to do a compilation.  This may contain
+	      at most one occurrence of <Samp/%s/, which is replaced by the
+	      current buffer's file name.  Used by <<oz-compile-file>>.
+	    <Entry class=command><Span class=index/<<oz-debug-application>>/
+	    <Item>
+	      Invoke <File/ozd/.
+	    <Entry class=useroption><Span class=index
+	      /<<oz-application-command>>/ (default: <<"%s">>)
+	    <Item>
+	      Default shell command to do execute an Oz application.  This may
+	      contain at most one occurrence of <Samp/%s/, which is replaced
+	      by the current buffer's file name, minus the <File/.oz/ or
+	      <File/.ozg/ extension.  Used by <<oz-debug-application>>.
+	  </List>
       <Section>
 	<Title/Dealing With Errors/
 	  <Para class=apropos><Title/Error Messages/
@@ -825,7 +849,7 @@
 	    <TR/<TD/<<Show>>/<TD/<<System.show>>//
 	    <TR/<TD/<<Print>>/<TD/<<System.print>>//
 	    <TR/<TD/<<Browse>>/<TD/<<Browser.browse>>//
-<!--	    <TR/<TD/<<Inspect>>/<TD/<<Inspector.inspect>>//-->
+	    <TR/<TD/<<Inspect>>/<TD/<<Inspector.inspect>>//
 	    <TR/<TD/<<Load>>/<TD/<<Pickle.load>>//
 	    <TR/<TD/<<Save>>/<TD/<<Pickle.save>>//
 	    <TR/<TD/<<SearchOne>>/<TD/<<Search.base.one>>//
@@ -884,7 +908,6 @@
 	    Assuming it to contain an expression, enclose it by an
 	    application of the procedure <Code proglang=oz/Browse/.
 	</List>
-<!--
       <Para class=apropos><Title/<Span class=index/Inspector//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-inspect-buffer>>/
@@ -900,7 +923,6 @@
 	    Assuming it to contain an expression, enclose it by an
 	    application of the procedure <Code proglang=oz>Inspect</Code>.
 	</List>
--->
       <Para class=apropos><Title/<Span class=index/System Panel//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-open-panel>>/
