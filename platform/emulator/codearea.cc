@@ -216,7 +216,7 @@ void CodeArea::printDef(ProgramCounter PC)
 #endif
 
   pc = definitionStart(PC);
-  if (pc == NOCODE) {
+  if (pc == NOCODE || pc == NOCODE_GLOBALVARNAME) {
     message("\tOn toplevel\n");
     return;
   }
