@@ -210,8 +210,8 @@ enum closeInitiator{
 #define WKUPTMP 1
 #define WKUPPRB 3
 
-#define WKUPMYC_TIME 4000
-#define WKUPTMP_TIME 12000
+#define WKUPMYC_TIME 1000
+#define WKUPTMP_TIME 4000
 #define WKUPPRB_TIME 180000
 
 /* ************************************************************************ */
@@ -1791,7 +1791,7 @@ public:
     if(((WriteConnection*)w)->isTmpDwn()){
       //printf("WriteCon closed by him %s\n",
       //	     w->remoteSite->site->stringrep());
-      //printf("Tmps %x %x %x time:%d\n",(int)tmpHead, (int)tmpTail,(int)w,(int)tmpTime);
+      //printf("Tmps %x %x %x open:%d time:%d\n",(int)tmpHead, (int)tmpTail,(int)w,(int)openCon,(int)tmpTime);
       if(openCon) newTmpDwn();
       addToFront(w, tmpHead, tmpTail);
       return;}
@@ -1880,8 +1880,10 @@ Bool TcpCache::openTmpBlockedConnection(){
   PD((TCPCACHE,"OpeningTmps %x %x",tmpHead, tmpTail));
   if(tmpHead!=NULL){
     WriteConnection *w = ((WriteConnection *) getLast(tmpHead, tmpTail));
-    //printf("Opening con closed by him %s\n",
-    //	   w->remoteSite->site->stringrep());
+    /*
+      printf("Opening con closed by him %s\n",
+    	   w->remoteSite->site->stringrep());
+    */
     w->clearTmpDwn();
     w->open();}
   return tmpHead!=NULL;}
@@ -3868,7 +3870,10 @@ ipBlockSend:
 /**********************************************************************/
 
 RemoteSite* createRemoteSite(DSite* site, int readCtr){
-  return remoteSiteManager->allocRemoteSite(site, readCtr);}
+  RemoteSite *rSite = remoteSiteManager->allocRemoteSite(site, readCtr);
+  //(void) rSite->installProbe(PROBE_TYPE_PERM); // All site must be probed 
+  return rSite;
+}
 
 void zeroRefsToRemote(RemoteSite *s){s->zeroReferences();}
 
