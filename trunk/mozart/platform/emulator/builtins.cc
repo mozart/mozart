@@ -5723,6 +5723,18 @@ OZ_C_proc_begin(BIgensym,2)
 OZ_C_proc_end 
 
 /* ---------------------------------------------------------------------
+ * idle message
+ * --------------------------------------------------------------------- */
+
+OZ_C_proc_begin(BIwaitIdle,2)
+{
+  VarIdle    = OZ_getCArg(0);
+  VarRunning = OZ_getCArg(1);
+  return PROCEED;
+}
+OZ_C_proc_end 
+
+/* ---------------------------------------------------------------------
  * Browser: special builtins: getsBound, intToAtom
  * --------------------------------------------------------------------- */
 
@@ -7533,6 +7545,8 @@ BIspec allSpec2[] = {
   {"SubtreeIf",      4, BImatchDefault,         (IFOR) matchDefaultInline},
 
   {"gensym",         2, BIgensym,		0},
+
+  {"waitIdle",       2, BIwaitIdle,		0},
 
   {"getsBound",      1, BIgetsBound,		0},
   {"getsBoundB",     2, BIgetsBoundB,		0},
