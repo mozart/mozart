@@ -107,7 +107,7 @@ void AM::enrichTypeException(char *fun, OZ_Term args)
  * Handle Failure macros (HF)
  */
 
-bool hf_raise_failure(AM *e, TaggedRef t)
+Bool hf_raise_failure(AM *e, TaggedRef t)
 {
   if (!e->isToplevel() &&
       (!e->currentThread->hasCatchFlag() ||

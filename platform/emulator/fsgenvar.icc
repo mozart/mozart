@@ -41,11 +41,12 @@ void GenFSetVariable::propagate(OZ_Term var, OZ_FSetPropState state,
 {
   if (prop_eq == pc_propagator) {
     switch (state) {
-    case fs_prop_val  : // no break
+    case fs_prop_val: { // no break
       for (int i = fs_prop_any; i--; )
         if (fsSuspList[i])
           GenCVariable::propagate(var, fsSuspList[i], prop_eq);
-    case fs_prop_lub: case fs_prop_glb:
+    }
+           case fs_prop_lub: case fs_prop_glb:
       if (fsSuspList[state])
         GenCVariable::propagate(var, fsSuspList[state], prop_eq);
       break;

@@ -362,7 +362,7 @@ public:
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
-#ifndef _MSC_VER
+#ifdef __GNUC__
   // mm2: portability ?
   static void * operator new[](size_t);
   static void operator delete[](void *, size_t);
@@ -407,7 +407,7 @@ public:
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
-#ifndef _MSC_VER
+#ifdef __GNUC__
   // mm2: portability ?
   static void * operator new[](size_t);
   static void operator delete[](void *, size_t);

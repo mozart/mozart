@@ -873,8 +873,8 @@ private:
   int size;             // size is always a power of 2
   int hashmask;         // size-1, used as mask for hashing
   int width;            // next unused index in RefsArray (for add())
-  DebugCheckT(int numberofentries);
-  DebugCheckT(int numberofcollisions);
+  DebugCheckT(int numberofentries;)
+  DebugCheckT(int numberofcollisions;)
   Bool isTupleFlag;
 
   TaggedRef *keytable;
@@ -1661,7 +1661,7 @@ public:
       int numCalled;
       static PrTabEntry *allPrTabEntries;
       static void printPrTabEntries();
-      static void profileReset());
+      static void profileReset();)
 
   ProgramCounter PC;
 
