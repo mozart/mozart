@@ -55,7 +55,7 @@ GName *getGNameForUnify(TaggedRef val) {
   }
 }
 
-Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
+Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
 {
   TaggedRef rVal = *rPtr;
   TaggedRef lVal = *lPtr;
@@ -93,7 +93,7 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
 
     PD((PD_VAR,"unify i:%d i:%d",lVar->getIndex(),rVar->getIndex()));
 
-    if (prop) {
+    if (scp==0) {
       if (am.isLocalSVar(lVar)) {
 	if (am.isLocalSVar(rVar)) {
 	  int cmp = compareNetAddress(lVar,rVar);
@@ -117,11 +117,11 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
 
   if (!valid(lPtr,rVal)) return FALSE;
 
-  if (prop && am.isLocalSVar(lVar)) {
+  if (scp==0 && am.isLocalSVar(lVar)) {
     bindPerdioVar(lVar,lPtr,rVal);
     return TRUE;
   } else {
-    if (prop) am.checkSuspensionList(lVal,pc_std_unif);
+    if (scp==0) am.checkSuspensionList(lVal,pc_std_unif);
     am.doBindAndTrail(lVal, lPtr,rVal);
     return TRUE;
   }

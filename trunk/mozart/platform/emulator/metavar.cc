@@ -39,7 +39,7 @@ GenMetaVariable::GenMetaVariable(MetaTag * t, TaggedRef tr)
 // or a determined term. Unification with other GenCVariables will fail.
 Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 				TaggedRef * tptr, TaggedRef t,
-				Bool prop)
+				ByteCode *scp)
 {
   Assert(! isNotCVar(t));
   
@@ -63,8 +63,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 
     // start unification for meta-var and meta-var
     
-    Bool v_is_local = (prop && am.isLocalSVar(this));
-    Bool t_is_local = (prop && am.isLocalSVar(term));
+    Bool v_is_local = (scp==0 && am.isLocalSVar(this));
+    Bool t_is_local = (scp==0 && am.isLocalSVar(term));
     switch (v_is_local + 2 * t_is_local) {
     case TRUE + 2 * TRUE: // v and t are local
       if (heapNewer(vptr, tptr)) { // bind v to t
@@ -107,7 +107,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  setData(result);
 	  propagate(v, suspList, pc_cv_unif);
 	  term->propagate(t, term->suspList, pc_cv_unif);
-	  am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term, prop);
+	  am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term, scp);
 	}
       } else {
 	propagate(v, suspList, pc_cv_unif);
@@ -129,7 +129,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  term->setData(result);
 	  propagate(v, suspList, pc_cv_unif);
 	  term->propagate(t, term->suspList, pc_cv_unif);
-	  am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this, prop);
+	  am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this, scp);
 	}
       } else {
 	propagate(v, suspList, pc_cv_unif);
@@ -142,7 +142,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 
     case FALSE + 2 * FALSE: // v and t is global
       if (ret_value & meta_det){
-	if (prop) {
+	if (scp==0) {
 	  propagate(v, suspList, pc_cv_unif);
 	  term->propagate(t, term->suspList, pc_cv_unif);
 	}
@@ -151,12 +151,12 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
       } else {
 	GenMetaVariable * meta_var = new GenMetaVariable(tag, result);
 	TaggedRef * var_val = newTaggedCVar(meta_var);
-	if (prop) {
+	if (scp==0) {
 	  propagate(v, suspList, pc_cv_unif);
 	  term->propagate(t, term->suspList, pc_cv_unif);
 	}
-	am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(var_val), meta_var, this, prop);
-	am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term, prop);
+	am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(var_val), meta_var, this, scp);
+	am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term, scp);
       }
       break;
       
@@ -180,9 +180,9 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     
     if (ret_value == meta_fail) return FALSE;
     
-    if (prop) propagate(v, suspList, pc_propagator);
+    if (scp==0) propagate(v, suspList, pc_propagator);
 
-    if (prop && am.isLocalSVar(this)) {
+    if (scp==0 && am.isLocalSVar(this)) {
       doBind(vptr, result);
     } else {
       am.doBindAndTrail(v, vptr, result);

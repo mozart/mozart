@@ -60,7 +60,7 @@ public:
   void dispose(void);
   
   Bool unifyFD(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
-	       Bool, Bool = TRUE);
+	       ByteCode *, Bool = TRUE);
 
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
   void becomesBoolVarAndPropagate(TaggedRef * trPtr);
