@@ -1270,7 +1270,11 @@ FiniteDomain &FiniteDomain::operator | (const FiniteDomain &y) const
 
   FiniteDomain &z = return_var; z.setEmpty();
 
-  if (max(max_elem, y.max_elem) > fd_bv_max_elem) {
+  if (*this == fd_empty) {
+    z = y;
+  } else if (y == fd_empty) {
+    z = *this;
+  } else if (max(max_elem, y.max_elem) > fd_bv_max_elem) {
     FDIntervals * x_v = asIntervals();
     FDIntervals * y_v = y.asIntervals();
     FDIntervals * z_v;
