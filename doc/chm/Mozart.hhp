@@ -10,7 +10,7 @@ Language=0x409 English (United States)
 Title=Mozart Documentation
 
 [WINDOWS]
-Help Viewer=,"Mozart.hhc",,"index.html","index.html",,,,,0x23520,,0x384e,[64,64,864,576],,,,,,,0
+Help Viewer=,"Mozart.hhc",,"index.html","index.html",,,,,0x63520,,0x384e,[64,64,864,576],,,,,,,0
 
 
 [FILES]
@@ -37,6 +37,7 @@ howtoread\page.gif
 idx\page.gif
 install\page.gif
 limitations\page.gif
+loop\page.gif
 macro\page.gif
 notation\page.gif
 op\page.gif
