@@ -24,4 +24,15 @@ public class Meta {
         else
             return mode.toLowerCase();
     }
+    private static Hashtable picwid_map = new Hashtable();
+    public static boolean pictureWidthPut(String id,String wd) {
+        picwid_map.put(id.toUpperCase(),wd);
+        return true;
+    }
+    public static boolean pictureWidthExists(String id) {
+        return picwid_map.containsKey(id.toUpperCase());
+    }
+    public static String pictureWidthGet(String id) {
+        return (String) picwid_map.get(id.toUpperCase());
+    }
 }
