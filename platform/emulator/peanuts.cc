@@ -47,6 +47,7 @@
 #pragma implementation "thrspool.hh"
 #pragma implementation "verbose.hh"
 #pragma implementation "iso-ctype.hh"
+#pragma implementation "lazyvar.hh"
 
 #endif
 
