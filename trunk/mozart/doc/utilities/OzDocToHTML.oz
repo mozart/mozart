@@ -1004,14 +1004,18 @@ define
 	    %-----------------------------------------------------------
 	    % Phrasal Elements
 	    %-----------------------------------------------------------
-	    [] file then
-	       code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
-	    [] kbd then
-	       kbd(COMMON: @Common OzDocToHTML, Batch(M 1 $))
-	    [] key then
-	       span(COMMON: @Common 'class': [key] OzDocToHTML, Batch(M 1 $))
-	    [] samp then
-	       code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	    [] file then HTML in
+	       HTML = code(OzDocToHTML, Batch(M 1 $))
+	       OzDocToHTML, MakeDisplay(M HTML $)
+	    [] kbd then HTML in
+	       HTML = kbd(OzDocToHTML, Batch(M 1 $))
+	       OzDocToHTML, MakeDisplay(M HTML $)
+	    [] key then HTML in
+	       HTML = span('class': [key] OzDocToHTML, Batch(M 1 $))
+	       OzDocToHTML, MakeDisplay(M HTML $)
+	    [] samp then HTML in
+	       HTML = code(OzDocToHTML, Batch(M 1 $))
+	       OzDocToHTML, MakeDisplay(M HTML $)
 	    [] name then
 	       case {CondSelect M type unit} of unit then
 		  span(COMMON: @Common 'class': [name]
@@ -1023,7 +1027,7 @@ define
 		       OzDocToHTML, Batch(M 1 $))
 	       end
 	    [] q then
-	       %--** use different quotes, depending on class and/or lang?
+	       %--** use different quotes, depending on lang?
 	       if {SGML.isOfClass M terminal} then
 		  span(COMMON: @Common
 		       PCDATA('"') OzDocToHTML, Batch(M 1 $) PCDATA('"'))
@@ -1036,11 +1040,21 @@ define
 	       end
 	    [] span then HTML1 HTML in
 	       OzDocToHTML, Batch(M 1 ?HTML1)
-	       HTML = span(COMMON: @Common HTML1)
-	       if {SGML.isOfClass M index} then HTML2 in
-		  OzDocToHTML, Index(M [HTML1] ?HTML2)
-		  SEQ([HTML2 HTML])
-	       else HTML
+	       HTML = span(HTML1)
+	       case M.display of inline then
+		  if {SGML.isOfClass M index} then HTML2 in
+		     OzDocToHTML, Index(M [HTML1] ?HTML2)
+		     SEQ([HTML2 {AdjoinAt HTML COMMON @Common}])
+		  else
+		     {AdjoinAt HTML COMMON @Common}
+		  end
+	       [] display then
+		  if {SGML.isOfClass M index} then HTML2 in
+		     OzDocToHTML, Index(M [HTML1] ?HTML2)
+		     BLOCK(blockquote(COMMON: @Common HTML2 HTML))
+		  else
+		     BLOCK(blockquote(COMMON: @Common HTML))
+		  end
 	       end
 	    [] def then HTML1 HTML in
 	       OzDocToHTML, Batch(M 1 ?HTML1)
@@ -1470,6 +1484,11 @@ define
 					   {FormatDate {OS.localTime}}))))
 	 ToWrite <- (('<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n')#Node#
 		     (@OutputDirectory#'/'#@CurrentNode))|@ToWrite
+      end
+      meth MakeDisplay(M HTML $)
+	 case M.display of inline then {AdjoinAt HTML COMMON @Common}
+	 [] display then BLOCK(blockquote(COMMON: @Common HTML))
+	 end
       end
       meth FlushFloats($) HTML in
 	 case @Floats of F|Fr then OldCommon in
