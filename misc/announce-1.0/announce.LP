@@ -11,7 +11,7 @@ logic programming, constraint programming, and distributed
 programming.  Mozart implements the Oz language and is the fruit of a
 decade of research into concurrent constraint, logic, and distributed
 programming.  The platform is released with a very liberal license
-(BSD style) that allows both commercial and non-commercial use.  Full
+(X11-style) that allows both commercial and non-commercial use.  Full
 source code is available.  There is extensive documentation including
 a full set of tutorials and reference manuals, and many demos.
 Performance is competitive with commercial Prolog and Lisp systems.

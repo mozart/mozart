@@ -10,7 +10,7 @@ announce the release of Mozart 1.0, a major development platform for
 open fault-tolerant distributed applications, constraint programming
 applications, and logic programming applications.  The platform
 implements the Oz language and is the fruit of a decade of research.
-The platform is released with a very liberal license (BSD style) that
+The platform is released with a very liberal license (X11-style) that
 allows both commercial and non-commercial use.  Full source code is
 available.  The platform includes a full-fledged interactive
 development environment with many libraries and tools.  There is
