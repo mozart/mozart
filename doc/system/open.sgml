@@ -97,7 +97,7 @@ init(url:  ?+{UrlV}
 </code><item>
 <index class=module/Open<AND>file<AND>init/
 Initializes the file object and associates it with a Unix file.
-<p>
+<p><index/stdin/<index<stdout/<index/stderr/
 ?_{NameV} is either a valid filename or one of the atoms <<stdin>>,
 <<stdout>>, and <<stderr>>. In this case, the standard input, standard
 output, or standard error stream is opened, respectively.  
