@@ -63,16 +63,16 @@ local
    fun {CompileScanner Flex T Rep}
       case Flex of noLexer then noLexer
       else FlexFile = {MakeFileName T ".l"} in
-	 {Rep logSubPhase('writing flex input file ...')}
+	 {Rep startSubPhase('writing flex input file')}
 	 {WriteVSFile Flex FlexFile}
-	 {Rep logSubPhase('generating scanner tables ...')}
+	 {Rep startSubPhase('generating scanner tables')}
 	 if {OS.system PLATFORMDIR#'/oz.flex.bin -Cem '#FlexFile} \= 0
 	 then
 	    {Rep error(kind: 'system error'
 		       msg: 'invocation of oz.flex.bin failed')}
 	    stop
 	 else
-	    {Rep logSubPhase('compiling scanner ...')}
+	    {Rep startSubPhase('compiling scanner')}
 	    if {OS.system
 		'g++ -fno-rtti -O3 '#
 		'-I'#{Property.get 'oz.home'}#'/include -I'#INCLUDEDIR#
@@ -387,7 +387,7 @@ in
    fun {TransformScanner T From Prop Attr Feat Ms Rules P Flags ImportFV Rep}
       Globals FS Imports
    in
-      {Rep logPhase('processing scanner "'#{SymbolToVirtualString T}#'" ...')}
+      {Rep startPhase('processing scanner "'#{SymbolToVirtualString T}#'"')}
       Globals = {New ScannerSpecification init()}
       {Globals setFlags(Flags)}
       {Globals enterFrom(From)}
@@ -401,13 +401,13 @@ in
 	 Imports = nil
 	 fSkip(unit)
       else
-	 {Rep logSubPhase('analysing scanner ...')}
+	 {Rep startSubPhase('analysing scanner')}
 	 {Globals analyse(Rep)}
 	 if {Rep hasSeenError($)} then
 	    Imports = nil
 	    fSkip(unit)
 	 else Flex Local Locals LexMeth MakeLexer in
-	    {Rep logSubPhase('extracting lexical rules ...')}
+	    {Rep startSubPhase('extracting lexical rules')}
 	    {Globals generate(Globals {MakeFileName T ".C"}
 			      ?Flex ?Local|?Locals ?LexMeth)}
 	    MakeLexer = {CompileScanner Flex T Rep}
@@ -415,7 +415,7 @@ in
 	       Imports = nil
 	       fSkip(unit)
 	    else LexerLoad Locals2 Descrs Meths in
-	       {Rep logSubPhase('building class definition ...')}
+	       {Rep startSubPhase('building class definition')}
 	       case MakeLexer of continue then From in
 		  From = {VirtualString.toAtom
 			  {MakeFileName T ".so"}#'{native}'}
