@@ -137,7 +137,6 @@ libFSP.a FSP.so: \
         libfset modFSP-if.cc
         cd libfset; $(MAKE) $@
 
-
 Wif.so: wif.o
         $(DYNLD) -o $@ wif.o
 
