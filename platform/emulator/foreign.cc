@@ -1237,6 +1237,15 @@ void vsatom2buffer(ostream &out, OZ_Term term)
   out << s;
 }
 
+#include "bytedata.hh"
+inline
+void byteString2buffer(ostream &out,OZ_Term term)
+{
+  ByteString* bs = tagged2ByteString(term);
+  int n = bs->getWidth();
+  for (int i=0;i<n;i++) out << bs->get(i);
+}
+
 void virtualString2buffer(ostream &out,OZ_Term term)
 {
   OZ_Term t=oz_deref(term);
@@ -1260,6 +1269,9 @@ void virtualString2buffer(ostream &out,OZ_Term term)
   if (oz_isFloat(t)) {
     float2buffer(out,t);
     return;
+  }
+  if (oz_isByteString(t)) {
+    byteString2buffer(out,t);
   }
 
   if (!oz_isPair(t)) {
@@ -1321,6 +1333,10 @@ void OZ_printVirtualString(OZ_Term term)
       p++;
     }
     printf("%s",s);
+  } else if (oz_isByteString(t)) {
+    ByteString* bs = tagged2ByteString(t);
+    int n = bs->getWidth();
+    for (int i=0;i<n;i++) putchar(bs->get(i));
   } else {
     if (!oz_isPair(t)) {
       OZ_warning("OZ_printVirtualString: no virtual string: %s",toC(term));
@@ -1346,7 +1362,7 @@ OZ_Term OZ_toVirtualString(OZ_Term t,int depth, int width)
   case LTUPLE:
   case SRECORD:
   case OZCONST:
-    if (oz_isBigInt(t)) return t;
+    if (oz_isBigInt(t) || oz_isByteString(t)) return t;
     return OZ_string(OZ_toC(t,depth,width));
   case LITERAL:
     if (OZ_isAtom(t)) return t;
