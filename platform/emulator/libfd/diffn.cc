@@ -63,13 +63,12 @@ OZ_C_proc_end
 DiffnPropagator::DiffnPropagator(OZ_Term xtasks, OZ_Term xdurs,
                                  OZ_Term ytasks, OZ_Term ydurs)
 {
-  int i=0;
 
-  reg_x = vectorToOzTerms(xtasks, reg_size);
-  reg_y = vectorToOzTerms(ytasks, reg_size);
+  reg_x       = vectorToOzTerms(xtasks, reg_size);
+  reg_y       = vectorToOzTerms(ytasks, reg_size);
   reg_xdurs   = vectorToInts(xdurs, reg_size);
   reg_ydurs   = vectorToInts(ydurs, reg_size);
-  int limit   = reg_size * reg_size;
+  int limit   = reg_size*reg_size;
   reg_ordered = OZ_hallocCInts(limit);
 
   VectorIterator vix(xtasks);
@@ -78,9 +77,8 @@ DiffnPropagator::DiffnPropagator(OZ_Term xtasks, OZ_Term xdurs,
   VectorIterator vidy(ydurs);
 
 
-  for (i=0; i<limit; i++) {
+  for (int i=limit; i--; )
     reg_ordered[i] = 0;
-  }
 
 }
 
