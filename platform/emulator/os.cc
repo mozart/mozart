@@ -238,7 +238,6 @@ unsigned int osTotalTime()
 class TimerThread {
 public:
   HANDLE thrd;
-  Bool die;
   int wait;
   TimerThread(int w);
 };
@@ -554,8 +553,6 @@ unsigned __stdcall timerFun(void *p)
   TimerThread *ti = (TimerThread*) p;
   while(1) {
     Sleep(ti->wait);
-    if (ti->die)
-      break;
     handlerALRM();
   }
   delete ti;
@@ -566,7 +563,6 @@ unsigned __stdcall timerFun(void *p)
 TimerThread::TimerThread(int w)
 {
   wait = w;
-  die = NO;
   unsigned tid;
   thrd = CreateThread(NULL,10000,&timerFun,this,0,&tid);
   if (thrd==NULL) {
@@ -585,14 +581,17 @@ void osSetAlarmTimer(int t)
 
 #ifdef WINDOWS
 
-  Assert(t>0);
   if (timerthread==NULL) {
     unsigned tid;
     timerthread = new TimerThread(t);
   }
-  //  timerthread->die = OK;
-  timerthread->wait = t;
-  ResumeThread(timerthread->thrd);
+
+  if (t==0) {
+    SuspendThread(timerthread->thrd);
+  } else {
+    timerthread->wait = t;
+    ResumeThread(timerthread->thrd);
+  }
 #else
   struct itimerval newT;
 
@@ -1178,7 +1177,8 @@ int osconnect(int s, struct sockaddr *addr, int namelen)
 int ossockerrno()
 {
 #ifdef WINDOWS
-  return WSAGetLastError();
+  int ret = WSAGetLastError();
+  return ret != 0 ? ret : errno;
 #else
   return errno;
 #endif
