@@ -33,6 +33,9 @@ CYG_BUILDEMU	=$(shell $(CYG_PATH) "$(BUILDEMU)")
 SOURCELIB=$(SRCTOP)/share/lib
 SOURCETOOLS=$(SRCTOP)/share/tools
 
+CYG_SOURCELIB	=$(shell $(CYG_PATH) "$(SOURCELIB)")
+CYG_SOURCETOOLS =$(shell $(CYG_PATH) "$(SOURCETOOLS)")
+
 BOOTEMU=$(BUILDTOP)/platform/emulator/@EMULATOR_EXE@
 BOOTENG=$(SRCTOP)/share/ozengine.sh
 BOOTCOM=$(BOOTENG) $(BUILDTOP)/share/lib/ozc
@@ -109,7 +112,7 @@ boot-%:
 	OZENGINE=$(BOOTENG) \
 	OZC="$(BOOTCOM)" \
 	OZINIT=$(BUILDLIB)/Init.ozf \
-	OZPATH="$(subst %,$(OZLOADSEP),.%$(BUILDLIB)%$(BUILDTOOLS)%$(SOURCELIB)%$(SOURCETOOLS))" \
+	OZPATH="$(subst %,$(OZLOADSEP),.%$(CYG_BUILDLIB)%$(CYG_BUILDTOOLS)%$(CYG_SOURCELIB)%$(CYG_SOURCETOOLS))" \
 	OZ_LOAD=root="$(subst %,$(OZLOADSEP),.%prefix=/=/%prefix=./=./$(OZLOADWIN)%prefix=x-oz://system/=$(CYG_BUILDLIB)/%prefix=x-oz://system/=$(CYG_BUILDTOOLS)/%prefix=x-oz://contrib/=$(CYG_BUILDCONTRIB)/%prefix=x-oz://contrib/=$(CYG_BUILDGDBM)/%prefix=x-oz://contrib/os/=$(CYG_BUILDOS)/%prefix=x-oz://boot/=$(CYG_BUILDEMU)/%prefix=x-oz://system/=$(CYG_BUILDGUMP)/%prefix=x-oz://system/=$(CYG_BUILDBISON)/:%=)" \
 	OZL="$(BOOTOZL)" \
 	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
