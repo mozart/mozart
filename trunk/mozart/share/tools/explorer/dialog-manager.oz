@@ -11,12 +11,12 @@ local
       from TkTools.dialog
 
       meth init(master:Master)
-	 <<TkTools.dialog tkInit(master:  Master
-				 title:   TitleName#': About'
-				 buttons: ['Okay'#close]
-				 focus:   1
-				 pack:    False
-				 default: 1)>>
+	 TkTools.dialog,tkInit(master:  Master
+			       title:   TitleName#': About'
+			       buttons: ['Okay'#close]
+			       focus:   1
+			       pack:    False
+			       default: 1)
 	 Title = {New Tk.label tkInit(parent:     self
 				      font:       AboutFont
 				      text:       TitleName
@@ -27,7 +27,7 @@ local
 					      '(schulte@dfki.uni-sb.de)\n'))}
       in
 	 {Tk.send pack(Title Author side:top expand:1 padx:BigPad pady:BigPad)}
-	 <<AboutDialog pack>>
+	 AboutDialog,pack
       end
 
    end
@@ -52,11 +52,11 @@ local
 	    end
 	 end
 
-	 <<TkTools.dialog tkInit(master:  M
-				 title:   TitleName#': Postscript'
-				 buttons: ['Okay'#Okay 'Cancel'#close]
-				 pack:    False
-				 default: 1)>>
+	 TkTools.dialog,tkInit(master:  M
+			       title:   TitleName#': Postscript'
+			       buttons: ['Okay'#Okay 'Cancel'#close]
+			       pack:    False
+			       default: 1)
 	 Color     = {New TkTools.textframe tkInit(parent: self
 						   text:   'Color Mode')}
 	 ColorVar  = {New Tk.variable tkInit({Dictionary.get O color})}
@@ -99,7 +99,7 @@ local
 			 SizeEntry side:left pady:Pad)
 		    pack(Color Orient Size side:top fill:x)
 		    focus(SizeEntry)]}
-	 <<PostscriptDialog pack>>
+	 PostscriptDialog,pack
       end
 
    end
@@ -121,11 +121,11 @@ local
 	    end
 	 end
 	 
-	 <<TkTools.dialog tkInit(master:  M
-				 title:   TitleName#': Drawing'
-				 default: 1
-				 pack:    False
-				 buttons: ['Okay'#Okay 'Cancel'#close])>>
+	 TkTools.dialog,tkInit(master:  M
+			       title:   TitleName#': Drawing'
+			       default: 1
+			       pack:    False
+			       buttons: ['Okay'#Okay 'Cancel'#close])
 
 	 Drawing  = {New TkTools.textframe tkInit(parent:self
 						  text:  'Drawing')}
@@ -160,7 +160,7 @@ local
 			 row:3 column:2) 
 		    pack(Drawing)
 		    focus(Update)]}
-	 <<DrawingDialog pack>>
+	 DrawingDialog,pack
       end
       
    end
@@ -203,11 +203,11 @@ local
 	       end
 	    end
 
-	    <<TkTools.dialog tkInit(master:  M
-				    title:   TitleName#': Search Options'
-				    default: 1
-				    pack:    False
-				    buttons: ['Okay'#Okay 'Cancel'#close])>>
+	    TkTools.dialog,tkInit(master:  M
+				  title:   TitleName#': Search Options'
+				  default: 1
+				  pack:    False
+				  buttons: ['Okay'#Okay 'Cancel'#close])
 	    Recomp = {New TkTools.textframe tkInit(parent: self
 						   text:   'Recomputation')}
 	    Left   = {New Tk.frame tkInit(parent:Recomp.inner)}
@@ -267,7 +267,7 @@ local
 		       pack(Only  side:left anchor:n)
 
 		       pack(Recomp Order side:top fill:x)]}
-	    <<SearchDialog pack>>
+	    SearchDialog,pack
 	 end
 
       end

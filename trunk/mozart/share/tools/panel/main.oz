@@ -44,7 +44,7 @@ in
       end
 
       meth close
-	 <<UrObject close>>
+	 UrObject,close
 	 case @ThisPanelTop of !Unit then skip elseof T then
 	    thread {T close} end
 	 end

@@ -75,14 +75,14 @@ in
       meth init(parent:P maxy:Y dim:Dim colors:Cs stipple:Ss)
 	 Limit = {GetLimit Y}
       in
-	 <<Tk.canvas tkInit(parent:             P
-			    width:              LoadWidth+LeftWidth+1
-			    height:             Height+1+2*Border
-			    highlightthickness: 0
-			    xscrollincrement:   1
-			    yscrollincrement:   1)>>
-	 <<Tk.canvas tk(yview scroll ~Height-Border units)>>
-	 <<Tk.canvas tk(xview scroll ~LeftWidth     units)>>
+	 Tk.canvas,tkInit(parent:             P
+			  width:              LoadWidth+LeftWidth+1
+			  height:             Height+1+2*Border
+			  highlightthickness: 0
+			  xscrollincrement:   1
+			  yscrollincrement:   1)
+	          ,tk(yview scroll ~Height-Border units)
+	          ,tk(xview scroll ~LeftWidth     units)
 	 LeftTag      <- {New Tk.canvasTag tkInit(parent: self)}
 	 RightTag     <- {New Tk.canvasTag tkInit(parent: self)}
 	 self.BothTag   =  {New Tk.canvasTag tkInit(parent: self)} 
@@ -95,31 +95,30 @@ in
 	 CurLimit  <- Limit
 	 LeftMaxY  <- Y
 	 RightMaxY <- 0.0
-	 <<Tk.canvas tk(crea rectangle 0 0 LoadWidth ~Height
-			fill:ActiveColor)>>
-	 <<Load DrawTicks(5 ~ Height div 5)>>
-	 <<Tk.canvas tk(crea rectangle
-			~LeftWidth-4 Border ~1 ~Height - Border
-			outline: {TclGetConf self bg}
-			fill:    {TclGetConf self bg}
-			tags:    self.CoverTag)>>
-	 <<Tk.canvas tk(crea rectangle 0 0 LoadWidth ~Height)>>
-	 <<Load DrawLabel(5 ~ Height div 5 Limit / 5.0)>>
+	 Tk.canvas,tk(crea rectangle 0 0 LoadWidth ~Height fill:ActiveColor)
+	 Load,DrawTicks(5 ~ Height div 5)
+	 Tk.canvas,tk(crea rectangle
+		      ~LeftWidth-4 Border ~1 ~Height - Border
+		      outline: {TclGetConf self bg}
+		      fill:    {TclGetConf self bg}
+		      tags:    self.CoverTag)
+	          ,tk(crea rectangle 0 0 LoadWidth ~Height)
+	 Load,DrawLabel(5 ~ Height div 5 Limit / 5.0)
       end
 
       meth DrawTicks(N D)
-	 <<Load tk(crea line 0 D*N LoadWidth D*N stipple:DashLine)>>
-	 case N>0 then <<Load DrawTicks(N-1 D)>> else skip end
+	 Load,tk(crea line 0 D*N LoadWidth D*N stipple:DashLine)
+	 case N>0 then Load,DrawTicks(N-1 D) else skip end
       end
       
       meth DrawLabel(N D Y)
-	 <<Load tk(crea text 0 D*N
-		   font: TickFont
-		   text: N*{FloatToInt Y}#' '#self.Dimension
-		   anchor: e
-		   tags:   self.TextTag)>>
-	 <<Load tk(raise self.TextTag)>>
-	 case N>0 then <<Load DrawLabel(N-1 D Y)>> else skip end
+	 Load,tk(crea text 0 D*N
+		 font: TickFont
+		 text: N*{FloatToInt Y}#' '#self.Dimension
+		 anchor: e
+		 tags:   self.TextTag)
+	     ,tk(raise self.TextTag)
+	 case N>0 then Load,DrawLabel(N-1 D Y) else skip end
       end
       
       meth DisplayLoads(Y1s Y2s X1 X2 Cs Ss T)
@@ -132,25 +131,25 @@ in
 	    Y3   = case Y1r of nil then 0.0 [] Y|_ then Y end
 	    Y4   = case Y2r of nil then 0.0 [] Y|_ then Y end
 	 in
-	    <<Tk.canvas tk(crea polygon
-			   X1 CS*Y3 X1 CS*Y1 X2 CS*Y2 X2 CS*Y4
-			   fill: C stipple: S
-			   tags: q(T self.BothTag))>>
-	    <<Tk.canvas tk(crea line
-			   X1 CS*Y1 X2 CS*Y2
-			   tags: q(T self.BothTag))>>
-	    <<Load tk(lower self.BothTag self.CoverTag)>>
-	    <<Load DisplayLoads(Y1r Y2r X1 X2 Cr Sr T)>>
+	    Tk.canvas,tk(crea polygon
+			 X1 CS*Y3 X1 CS*Y1 X2 CS*Y2 X2 CS*Y4
+			 fill: C stipple: S
+			 tags: q(T self.BothTag))
+	             ,tk(crea line
+			 X1 CS*Y1 X2 CS*Y2
+			 tags: q(T self.BothTag))
+	    Load,tk(lower self.BothTag self.CoverTag)
+	        ,DisplayLoads(Y1r Y2r X1 X2 Cr Sr T)
 	 end
       end
 
       meth ReScale(NewLimit)
 	 NewScale = {IntToFloat Height} / NewLimit
       in
-	 <<Tk.canvas tk(scale self.BothTag 0 0 1 NewScale / @CurScale)>>
+	 Tk.canvas,tk(scale self.BothTag 0 0 1 NewScale / @CurScale)
 	 CurScale <- NewScale
 	 {self.TextTag tk(delete)}
-	 <<Load DrawLabel(5 ~Height div 5 NewLimit / 5.0)>>
+	 Load,DrawLabel(5 ~Height div 5 NewLimit / 5.0)
       end
 
       meth clear
@@ -160,14 +159,14 @@ in
 	 {@RightTag tk(delete)}
 	 CurX <- 0
 	 case NewLimit==@CurLimit then skip else
-	    <<Load ReScale(NewLimit)>>
+	    Load,ReScale(NewLimit)
 	    CurLimit <- NewLimit
 	 end
       end
 
       meth slice(S)
 	 Slice <- S
-	 <<Load clear>>
+	 Load,clear
       end
       
       meth display(Ys)
@@ -188,7 +187,7 @@ in
 	    case NeedsScale then skip
 	    else RightLimit = {GetLimit @RightMaxY} in
 	       case RightLimit < L then
-		  <<Load ReScale(RightLimit)>>
+		  Load,ReScale(RightLimit)
 		  CurLimit  <- RightLimit
 	       else skip
 	       end
@@ -199,17 +198,17 @@ in
 	 end
 	 %% Check whether display needs to be rescaled
 	 case NeedsScale then NewLimit = {GetLimit Y} in
-	    <<Load ReScale(NewLimit)>>
+	    Load,ReScale(NewLimit)
 	    CurLimit <- NewLimit
 	 else skip
 	 end
 	 case @CurX+S < HalfWidth then LeftMaxY <- {Max @LeftMaxY Y}
 	 else RightMaxY <- {Max @RightMaxY Y}
 	 end 
-	 <<Load DisplayLoads(@PrevYs Ys @CurX @CurX+S self.Colors self.Stipple
-			     case @CurX+S < HalfWidth then @LeftTag
-			     else @RightTag
-			     end)>>
+	 Load,DisplayLoads(@PrevYs Ys @CurX @CurX+S self.Colors self.Stipple
+			   case @CurX+S < HalfWidth then @LeftTag
+			   else @RightTag
+			   end)
 	 PrevYs <- Ys
 	 CurX   <- @CurX+S
       end

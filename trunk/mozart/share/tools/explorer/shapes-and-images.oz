@@ -70,10 +70,8 @@ local
 	 from Tk.canvas
 	 
 	 meth init(parent:Parent tcl:Tcl)
-	    <<Tk.canvas tkInit(parent: Parent
-			       width:  ImageSize
-			       height: ImageSize)>>
-	    <<Tk.canvas tk(crea Tcl)>>
+	    Image,tkInit(parent:Parent width:ImageSize height:ImageSize)
+	         ,tk(crea Tcl)
 	 end
       
       end
@@ -84,54 +82,54 @@ local
 	 feat Tag
 	 meth init(parent:Parent)
 	    self.Tag = {Tk.server tkGet($)}
-	    <<Image init(parent: Parent
-			 tcl:    o({ChooseShape ImageCenter ImageCenter
-				    ImageScale}
-				   fill:    ChooseColor
-				   outline: LineColor
-				   width:   NodeBorderWidth
-				   tags:    self.Tag))>>
+	    Image,init(parent: Parent
+		       tcl:    o({ChooseShape ImageCenter ImageCenter
+				  ImageScale}
+				 fill:    ChooseColor
+				 outline: LineColor
+				 width:   NodeBorderWidth
+				 tags:    self.Tag))
 	 end
 	 meth finish
-	    <<ChooseImage tk(itemconf self.Tag
-			     fill:ChooseTermColor width:ThickNodeBorderWidth)>>
+	    ChooseImage,tk(itemconf self.Tag
+			   fill:ChooseTermColor width:ThickNodeBorderWidth)
 	 end
 	 meth clear
-	    <<ChooseImage tk(itemconf self.Tag
-			     fill:ChooseColor width:NodeBorderWidth)>>
+	    ChooseImage,tk(itemconf self.Tag
+			   fill:ChooseColor width:NodeBorderWidth)
 	 end
       end
       
       class FailedImage from Image
 	 meth init(parent:Parent)
-	    <<Image init(parent: Parent
-			 tcl:    o({FailedShape ImageCenter ImageCenter
-				    ImageScale}
-				   fill:    FailedColor
-				   outline: LineColor
-				   width:   NodeBorderWidth))>>
+	    Image,init(parent: Parent
+		       tcl:    o({FailedShape ImageCenter ImageCenter
+				  ImageScale}
+				 fill:    FailedColor
+				 outline: LineColor
+				 width:   NodeBorderWidth))
 	 end
       end
 
       class SucceededImage from Image
 	 meth init(parent:Parent)
-	    <<Image init(parent: Parent
-			 tcl:    o({SucceededShape ImageCenter ImageCenter
-				    ImageScale}
-				   fill:    EntailedColor
-				   outline: LineColor
-				   width:   NodeBorderWidth))>>
+	    Image,init(parent: Parent
+		       tcl:    o({SucceededShape ImageCenter ImageCenter
+				  ImageScale}
+				 fill:    EntailedColor
+				 outline: LineColor
+				 width:   NodeBorderWidth))
 	 end
       end
 
       class BlockedImage from Image
 	 meth init(parent:Parent)
-	    <<Image init(parent: Parent
-			 tcl:    o({BlockedShape ImageCenter ImageCenter
-				    ImageScale}
-				   fill:    BlockedColor
-				   outline: LineColor
-				   width:   NodeBorderWidth))>>
+	    Image,init(parent: Parent
+		       tcl:    o({BlockedShape ImageCenter ImageCenter
+				  ImageScale}
+				 fill:    BlockedColor
+				 outline: LineColor
+				 width:   NodeBorderWidth))
 	 end
       end
 

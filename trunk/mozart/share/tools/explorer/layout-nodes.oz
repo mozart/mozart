@@ -167,8 +167,8 @@ local
 	 Canvas = self.canvas
 	 Suffix = self.suffix
       in
-	 <<LayoutLeaf Layout(_ 0)>>
-	 <<LayoutLeaf Adjust(Break TreePrefix#Suffix RootX 0 RootY Scale Font)>>
+	 LayoutLeaf,Layout(_ 0)
+	           ,Adjust(Break TreePrefix#Suffix RootX 0 RootY Scale Font)
 	 %% move away root link
 	 {Canvas tk(move LinkPrefix#Suffix 0 ~VerSpaceF * MaxScale)}
 	 {Canvas bounding(~HalfHorSpaceI HalfHorSpaceI VerSpaceI)}
@@ -186,10 +186,10 @@ local
 	    MyX                 = MomX   + NewOffset
 	    MyByX               = MomByX + NewOffset - OldOffset
 	 in
-	    <<moveNode(MomX MyX MyByX MyY Scale)>>
+	    self,moveNode(MomX MyX MyByX MyY Scale)
 	    offset <- NewOffset
 	 else
-	    <<drawTree(Break MomTree MomX MyY Scale Font)>>
+	    self,drawTree(Break MomTree MomX MyY Scale Font)
 	 end
       end
 
@@ -220,11 +220,11 @@ local
       meth layout(Break Scale Font)
 	 Canvas = self.canvas
 	 Suffix = self.suffix
-	 Shape = <<LayoutNode Layout($ 0)>>
+	 Shape  = LayoutNode,Layout($ 0)
       in
 	 {Canvas {GetBoundingBox Shape}}
-	 <<LayoutNode Adjust(Break TreePrefix#Suffix
-			     RootX 0 RootY Scale Font)>>
+	 LayoutNode,Adjust(Break TreePrefix#Suffix
+			   RootX 0 RootY Scale Font)
 	 {Canvas tk(move LinkPrefix#Suffix 0 ~VerSpaceF * MaxScale)}
       end
 
@@ -250,7 +250,7 @@ local
 	    case @isDrawn then
 	       isDirty <- False
 	       offset  <- NewOffset
-	       <<moveNode(MomX MyX MyByX MyY Scale)>>
+	       self,moveNode(MomX MyX MyByX MyY Scale)
 	       case @isHidden then skip else
 		  Suffix = self.suffix
 	       in
@@ -258,12 +258,12 @@ local
 		   MyX MyByX MyY+VerSpaceI Scale Font}
 		  {self.canvas tk(addtag MomTree withtag TreePrefix#Suffix)}
 	       end
-	    else <<drawTree(Break MomTree MomX MyY Scale Font)>>
+	    else self,drawTree(Break MomTree MomX MyY Scale Font)
 	    end
 	 else
 	    offset <- NewOffset
 	    case MyByX==0 then skip else
-	       <<moveTree(MomX MyX MyByX MyY Scale)>>
+	       self,moveTree(MomX MyX MyByX MyY Scale)
 	    end
 	 end
       end
