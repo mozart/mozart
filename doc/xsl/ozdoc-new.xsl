@@ -175,6 +175,13 @@
     <txt:usemap>}
 </txt:usemap>
   </if>
+  <if test="ABSTRACT">
+    <txt:usemap>\mozAbstract{</txt:usemap>
+    <apply-templates select="ABSTRACT" mode="abstract"/>
+    <txt:usemap>}
+</txt:usemap>
+  </if>
+  <apply-templates select="COMIC[1]" mode="comic"/>
 </template>
 
 <!-- ignore FRONT otherwise -->
@@ -189,7 +196,13 @@
         CHUNK/TITLE | CHUNK/TITLE/P.SILENT | CHUNK.SILENT |
         NAME | NOTE/P.SILENT | EXERCISE/P.SILENT | ANSWER/P.SILENT |
         REWRITE.FROM/P.SILENT | REWRITE.TO/P.SILENT |
-        REWRITE.CONDITION/P.SILENT">
+        REWRITE.CONDITION/P.SILENT | ABSTRACT/P.SILENT">
+  <apply-templates/>
+</template>
+
+<!-- only go through on purpose, as indicated by the
+     choice of mode="abstract" -->
+<template match="ABSTRACT" mode="abstract">
   <apply-templates/>
 </template>
 
@@ -728,6 +741,25 @@
   </if>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
+</template>
+
+<!-- comic pictures -->
+
+<template match="COMIC" mode="comic">
+  <apply-templates mode="comic"
+                   select="PICTURE.CHOICE/PICTURE.EXTERN[@TYPE='PS'][1]"/>
+</template>
+
+<template match="PICTURE.EXTERN[@TYPE='PS']" mode="comic">
+  <txt:usemap>\mozComic{</txt:usemap>
+  <value-of select="@TO"/>
+  <txt:usemap>}
+</txt:usemap>
+</template>
+
+<template match="*" mode="comic" priority="-2.0">
+  <if test="msg:say('UNEXPECTED ELEMENT IN mode=comic: ') and
+            msg:saynl(string(local-part()))"/>
 </template>
 
 <!-- pictures -->
