@@ -394,6 +394,7 @@ STAGE2=./stage2
 STAGE3=./stage3
 
 stage1:
+	make all
 	make install-main PREFIX=$(STAGE1)
 
 stage1-bootstrap:
