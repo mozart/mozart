@@ -6,9 +6,11 @@
 ;;;
 ;;; Contributor:
 ;;;   Benjamin Lorenz <lorenz@ps.uni-sb.de>
+;;;   Denys Duchier <duchier@ps.uni-sb.de>
 ;;;
 ;;; Copyright:
 ;;;   Leif Kornstaedt, Michael Mehl, and Ralf Scheidhauer, 1993-1998
+;;;   Denys Duchier, 1998
 ;;;
 ;;; Last change:
 ;;;   $Date$ by $Author$
@@ -81,6 +83,14 @@
 (autoload 'oz-browse-line "mozart"
   "Feed the current line to the Oz Compiler." t)
 (autoload 'oz-browse-paragraph "mozart"
+  "Feed the current paragraph to the Oz Compiler." t)
+(autoload 'oz-show-buffer "mozart"
+  "Feed the current buffer to the Oz Compiler." t)
+(autoload 'oz-show-region "mozart"
+  "Feed the current region to the Oz Compiler." t)
+(autoload 'oz-show-line "mozart"
+  "Feed the current line to the Oz Compiler." t)
+(autoload 'oz-show-paragraph "mozart"
   "Feed the current paragraph to the Oz Compiler." t)
 ;; (autoload 'oz-inspect-buffer "mozart"
 ;;   "Feed the current buffer to the Oz Compiler." t)
