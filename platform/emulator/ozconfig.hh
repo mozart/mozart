@@ -76,6 +76,11 @@ public:
   int maxTcpCache;
   int maxUdpPacket;
   int tcpPacketSize;
+  
+  // Info needed for flowcontrol in ports
+  int perdioFlowBufferSize;
+  int perdioFlowBufferTime;
+  
 
   int numToplevelVars;
 

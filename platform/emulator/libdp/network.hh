@@ -67,9 +67,18 @@ Bool openClosedConnection(int);
 int openclose(int);
 
 //
-// kost@ : i've put the missing declarations here;
+// Usaed by distpane
 int getNORM_RemoteSite(RemoteSite*);
 int getNOSM_RemoteSite(RemoteSite*);
+
+//
+// Used when "disconnecting" a site
 int openclose(int Type);
+
+//
+// ShutDwn stuff
+int startNiceClose();
+int niceCloseProgres();
+
 
 #endif // __NETWORK_HH

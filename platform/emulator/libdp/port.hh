@@ -48,18 +48,32 @@ public:
 class PortProxy: public Port {
 friend void ConstTerm::gcConstRecurse(void);
 public:
+  PendThread* pending;
   NO_DEFAULT_CONSTRUCTORS(PortProxy);
-  PortProxy(int i): Port(0,Te_Proxy) { setIndex(i);}
+  PortProxy(int i): Port(0,Te_Proxy) { setIndex(i); pending = NULL;}
+  Bool canSend();
+  void wakeUp();
 };
 
 EntityCond getEntityCondPort(Tertiary* );
-
-extern int PortSendTreash;
-extern int PortWaitTimeSlice;
-extern int PortWaitTimeK;
-
+void port_Temp(PortProxy*);
+void port_Ok(PortProxy*);
+void port_Perm(PortProxy*);
+PendThread *getPendThreadStartFromPort(Tertiary* t);
 //
 OZ_Return portSendImpl(Tertiary *p, TaggedRef msg);
 void gcDistPortRecurseImpl(Tertiary *p);
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
