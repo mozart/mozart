@@ -76,6 +76,15 @@ LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
 all:            $(TARGETS)
 install:        $(LIB_DIR) $(LIB_TARGETS)
 
+$(LIB_DIR):
+        $(INSTALL_DIR) $@
+
+$(LIB_DIR)/%.ozf: %.ozf
+        $(INSTALL_LIB) $< $@
+
+$(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
+        $(INSTALL_DLL) $< $@
+
 #----------------------------------------------------------------------
 # Oz part
 #----------------------------------------------------------------------
