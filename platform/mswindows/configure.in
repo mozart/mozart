@@ -40,16 +40,35 @@ dnl windows cross compilation
 dnl *****************************************************************
 
 case "$target" in
+   NONE)
+   ;;
    i386-mingw32) 
         AC_MSG_RESULT(cross compiling for windows)
 	CXX=${target}-g++
-	AC_SUBST(CXX)
+	platform=win32-i486
    ;;
-
    *)
 	AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
     ;;
 esac
+
+OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+: ${platform=`$PLATFORMSCRIPT`}
+AC_SUBST(platform)
+
+case "$platform" in
+   win32-i486)
+	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
+	: ${CXX=c++}
+	CXX="$CXX $oz_a"
+   ;;
+
+   *)
+    ;;
+esac
+
+AC_SUBST(CXX)
+
 
 dnl *****************************************************************
 dnl FINALIZE
