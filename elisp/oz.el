@@ -676,7 +676,9 @@ the GDB commands `cd DIR' and `directory'."
 	 (oz-search-matching-paren))
 	((looking-at oz-between-pattern)
 	 (+ (oz-search-matching-begin nil) oz-indent-chars))
-	((or (looking-at oz-begin-pattern) (looking-at oz-left-pattern))
+	((or (looking-at oz-begin-pattern)
+	     (looking-at oz-left-pattern)
+	     (looking-at "$"))
 	 (oz-search-matching-begin t)
 	 (cond ((looking-at oz-declare-pattern)
 		(current-column))
@@ -732,7 +734,8 @@ the GDB commands `cd DIR' and `directory'."
 	     ;; we are the first token after 'then of'
 	     (+ (oz-search-matching-begin nil) oz-indent-chars))
 	    ((looking-at oz-between-pattern)
-	     ;; we are the first token after 'then of'
+	     ;; we are the first token after 'attr feat'
+	     ;; (+ (oz-search-matching-begin nil) oz-indent-chars))
 	     (+ (current-column) oz-indent-chars))
 	    ((looking-at oz-end-pattern)
 	     ;; we are the first token after an 'fi' 'end'
