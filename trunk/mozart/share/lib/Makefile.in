@@ -147,8 +147,8 @@ TkTools.ozf: ../url-defaults.oz
 
 # compiler dependencies
 COMPILERSRC1 = \
-	CompilerClass.oz Misc.oz Reporter.oz ParseOz.oz FormatStrings.oz \
-	CheckTupleSyntax.oz Builtins.oz CoreLanguage.oz Annotate.oz \
+	CompilerClass.oz PrintName.oz Reporter.oz ParseOz.oz FormatStrings.oz \
+	CheckTupleSyntax.oz Builtins.oz Core.oz Annotate.oz \
 	StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
 	UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz \
@@ -179,37 +179,36 @@ functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
 compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
 	$(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
 
-FUNFUNCTORS = FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCodeGen.ozf \
-	FunCore.ozf FunRunTime.ozf FunUnnest.ozf FunAssembler.ozf \
-	FunCompiler.ozf
+FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
+	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf Main.ozf RunTime.ozf
 
-FunMisc.ozf: compiler/Misc.oz
+PrintName.ozf: compiler/PrintName.oz
 
-FunBuiltins.ozf: compiler/Builtins.oz compiler-Builtins.oz
+Builtins.ozf: compiler/Builtins.oz compiler-Builtins.oz
 
-FunSA.ozf: Search.ozf compiler/POTypes.oz compiler/StaticAnalysis.oz
-	$(COMPILE) -l Search=Search.ozf compiler/FunSA.oz -o $@
+Unnester.ozf: compiler/Unnester.oz compiler/TupleSyntax.oz \
+	compiler/BindingAnalysis.oz compiler/UnnestFD.oz
 
-FunCodeGen.ozf: compiler/CodeStore.oz compiler/CodeEmitter.oz \
-	compiler/CodeGen.oz
+Core.ozf: compiler/Core.oz compiler/Annotate.oz
 
-FunCore.ozf: compiler/Annotate.oz compiler/CoreLanguage.oz
+StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz Search.ozf
+	$(COMPILE) -l Search=Search.ozf compiler/StaticAnalysis.oz -o $@
 
-FunRunTime.ozf: compiler/RunTime.oz
+CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
 
-FunUnnest.ozf: compiler/TupleSyntax.oz compiler/BindingAnalysis.oz \
-	compiler/UnnestFD.oz compiler/Unnester.oz
+Assembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
 
-FunAssembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
-
-FunCompiler.ozf: compiler-Env.oz compiler/FormatStrings.oz \
+Main.ozf: compiler/Main.oz compiler-Env.oz compiler/FormatStrings.oz \
 	compiler/CheckTupleSyntax.oz compiler/Reporter.oz compiler/ParseOz.oz \
 	compiler/CompilerClass.oz compiler/GenericInterface.oz \
 	compiler/QuietInterface.oz compiler/Abstractions.oz \
 	compiler/Errors.oz compiler-Version.oz
 
-Compiler.ozf: $(FUNFUNCTORS) compiler/FunMake.oz compiler/FunMain.oz
-	$(COMPILE) -l Pickle compiler/FunMake.oz -o Compiler.ozf
+RunTime.ozf: compiler/RunTime.oz
+
+Compiler.ozf: $(FUNFUNCTORS) ozar
+	$(OZENGINE) ozar -in=Main.ozf -out=Compiler.ozf \
+	-exclude=ProductionTemplates
 
 #---------------------------------------------------------------------
 # Syslets
