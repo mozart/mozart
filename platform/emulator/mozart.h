@@ -306,6 +306,7 @@ typedef struct {
 /* declare here, so C linkage is used and symbol is exported */
 #ifndef WINDOWS_EMULATOR
 #if defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
+__declspec(dllexport) extern char oz_module_name[];
 __declspec(dllexport) OZ_C_proc_interface * ozcdecl oz_init_module();
 #else
 OZ_C_proc_interface * ozcdecl oz_init_module();
