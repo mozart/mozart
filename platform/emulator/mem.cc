@@ -669,9 +669,11 @@ void MemChunks::print() {
 
 #endif
 
+#define HEAP_SAFETY_FOR_ALIGN 16
 
-void _oz_getNewHeapChunk(const size_t sz) {
-  int thisBlockSz = max(HEAPBLOCKSIZE, (int) sz+WordSize);
+void _oz_getNewHeapChunk(const size_t raw_sz) {
+  size_t sz          = (raw_sz + HEAP_SAFETY_FOR_ALIGN) & ~7;
+  size_t thisBlockSz = max(HEAPBLOCKSIZE,sz);
 
   heapTotalSize      += thisBlockSz/KB;
   heapTotalSizeBytes += thisBlockSz;
