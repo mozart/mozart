@@ -436,26 +436,6 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
 }
 
 /* *********************************************************************/
-/*   SECTION 8: URLs  marshaling/unmarshaling                          */
-/* *********************************************************************/
-
-GName *getGName(TaggedRef t)
-{
-  t = deref(t);
-  /* the following does not work, since the class might be marked
-   * already. I love it!  
-  if (isClass(t)) {
-    return tagged2ObjectClass(t)->getGName();
-  }
-  */
-  if (isConst(t)) {
-    return ((ObjectClass*)tagged2Const(t))->getGName();
-  }
-  Assert(isPerdioVar(t));
-  return tagged2PerdioVar(t)->getGName();
-}
-
-/* *********************************************************************/
 /*   SECTION 9: term marshaling routines                               */
 /* *********************************************************************/
 
@@ -1266,7 +1246,7 @@ void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
     PD((MARSHAL,"var objectproxy"));
     if (checkCycle(*(pvar->getObject()->getRef()),bs))
       return;
-    marshalObject(pvar->getObject(),bs,getGName(pvar->getClass()));
+    marshalObject(pvar->getObject(),bs,pvar->getClass()->getGName());
     return;
   }
 
