@@ -1387,14 +1387,6 @@ ForeignPointer * ForeignPointer::gc(void) {
   return ret;
 }
 
-ExtendedConst * ExtendedConst::gc(void) {
-  switch (getXType()) {
-  default:
-    Assert(0);
-  }
-  return 0;
-}
-
 // ===================================================================
 // Finalization
 
@@ -1846,9 +1838,9 @@ void VarFix::fix(void) {
     TaggedRef   aux     = *aux_ptr;
 
     TaggedRef * to_ptr  = 
-      ((tagTypeOf(aux) == UVAR) ? 
-       newTaggedUVar(tagged2VarHome(aux)->derefBoard()->gcGetFwd()) :
-       (TaggedRef *) GCUNMARK(aux));
+      (tagTypeOf(aux) == UVAR) ?
+      newTaggedUVar(tagged2VarHome(aux)->derefBoard()->gcGetFwd()) :
+      (TaggedRef *) GCUNMARK(aux);
     
     Assert(tagTypeOf(aux) == UVAR || tagTypeOf(aux) == GCTAG);
     
@@ -2493,9 +2485,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
 
   case Co_Foreign_Pointer:
     return ((ForeignPointer*)this)->gc();
-
-  case Co_Extended:
-    return ((ExtendedConst*)this)->gc();
 
   default:
     Assert(0);
