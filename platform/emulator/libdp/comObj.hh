@@ -193,6 +193,7 @@ public:
     list=NULL;
     wc = 0;
   }
+  ~ComController();
   int wc;
 
   ComObj *newComObj(DSite *site);
