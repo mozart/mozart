@@ -301,9 +301,10 @@ int PrioQueues::msgAcked(int num,Bool resend,Bool calcrtt) {
   else
     unackedList=NULL;
   if(calcrtt && cur!=NULL) {
-    int sendtime=cur->getSendTime();
-    if(sendtime!=-1) // else probing wasn't on
-      ret=am.getEmulatorClock() - cur->getSendTime();
+    LongTime *sendtime=cur->getSendTime();
+    LongTime zero;
+    if(*sendtime!=zero) // else probing wasn't on
+      ret=*am.getEmulatorClock() - *sendtime;
   }
   while(cur!=NULL) {
     prev=cur;

@@ -117,9 +117,10 @@ Bool FlowControler::doTask(){
 }
 #else
 
-void FlowControler::wakeUpExecute(unsigned int t){
+void FlowControler::wakeUpExecute(LongTime *t){
   FlowControlElement *ptr,*back;
-  time = t + ozconf.dpFlowBufferTime; // Check the user put value....
+  time=*t;
+  time.increaseTime(ozconf.dpFlowBufferTime); // Check the user put value....
 
   while(first!=NULL && first->canSend()){
     ptr=first;
@@ -151,11 +152,11 @@ void FlowControler::gcEntries(){
       ptr = ptr->next;}}
 
 #ifndef DENYS_EVENTS
-Bool FlowControlCheck(unsigned long time, void *v){
+Bool FlowControlCheck(LongTime *time, void *v){
   return flowControler->wakeUpCheck(time);
 }
 
-Bool FlowControlExecute(unsigned long time, void *v){
+Bool FlowControlExecute(LongTime *time, void *v){
   flowControler->wakeUpExecute(time);
   return TRUE;
 }

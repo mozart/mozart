@@ -306,6 +306,7 @@ class RunnableThreadBody;
 class Trail;
 
 class TaskStack;
+class LongTime;
 class CallList;
 
 class SuspQueue;

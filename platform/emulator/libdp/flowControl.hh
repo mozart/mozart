@@ -74,25 +74,22 @@ public:
 class FlowControler{
   FlowControlElement *first, *last;
 #ifndef DENYS_EVENTS
-  unsigned int time;
+  LongTime time;
 #endif
 public:
 
   FlowControler(){
     first = last = NULL;
-#ifndef DENYS_EVENTS
-    time = 0;
-#endif
   }
 
   void addElement(TaggedRef e);
   void addElement(TaggedRef e,DSite*,int);
 
 #ifndef DENYS_EVENTS
-  Bool wakeUpCheck(unsigned int t){
-    return first != NULL && t > time;}
+  Bool wakeUpCheck(LongTime *t){
+    return first != NULL && t > &time;}
 
-  void wakeUpExecute(unsigned int t);
+  void wakeUpExecute(LongTime *t);
 #else
   Bool doTask();
 #endif
@@ -105,9 +102,9 @@ public:
 extern FlowControler *flowControler;
 
 
-Bool FlowControlCheck(unsigned long time, void *v);
+Bool FlowControlCheck(LongTime *, void *v);
 
-Bool FlowControlExecute(unsigned long time, void *v);
+Bool FlowControlExecute(LongTime *, void *v);
 
 
 #endif

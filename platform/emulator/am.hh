@@ -80,6 +80,77 @@ public:
   void dispose() { oz_freeListDispose(this,sizeof(*this)); }
 };
 
+/* -----------------------------------------------------------------------
+ * clock
+ * -----------------------------------------------------------------------*/
+
+inline
+int oz_msToClockTick(int ms)
+{
+  int clockMS = CLOCK_TICK/1000;
+  return (ms+clockMS-1) / clockMS;
+}
+
+inline
+int oz_clockTickToMs(int cl)
+{
+  int clockMS = CLOCK_TICK/1000;
+  return cl * clockMS;
+}
+
+// Using only one unsigned long for time (in ms) gives a maximum lifetime
+// of 49 days for an emulator. Therefore, use two unsigned longs in an ADT.
+#define WRAP_TIME ULONG_MAX
+
+class LongTime {
+private:
+  unsigned long low;
+  unsigned long high;
+
+public:
+  LongTime() {low=high=0;}
+
+  inline void increaseTime(unsigned int interval) {
+    if(WRAP_TIME-interval>low)      // No overflow
+      low+=interval;
+    else {                          // Would create overflow
+      low -= (WRAP_TIME-interval);
+      high++;                       // Assumes interval << WRAP_TIME
+    }
+  }
+
+  inline Bool operator<=(const LongTime &t2) {
+    return (high<t2.high) ||
+      ( (high==t2.high) && (low<=t2.low) );
+  }
+
+  inline Bool operator>(const LongTime &t2) {
+    return (high>t2.high) ||
+      ( (high==t2.high) && (low>t2.low) );
+  }
+
+  inline Bool operator!=(const LongTime &t2) {
+    return ((low != t2.low) || (high != t2.high));
+  }
+
+  // This is assumed to be used only to compare times that are rather close
+  // to each other and thus fit in an int.
+  inline int operator-(const LongTime &t2) {
+    if(this->high==t2.high)
+      return this->low-t2.low;
+    else if(this->high==t2.high+1) {
+      return (WRAP_TIME-t2.low)+this->low; // this->low+WRAP_TIME - t2.low
+                                           // rewritten to avoid
+                                           // overflow
+    }
+    else
+      OZ_error("Taking difference with times too far apart.");
+    return -1;
+  }
+
+  char *toString();
+};
+
 /*
  * -----------------------------------------------------------------------
  * Tasks
@@ -88,11 +159,11 @@ public:
 #ifndef DENYS_EVENTS
 //
 // "check" says 'TRUE' if there is some pending processing;
-typedef Bool (*TaskCheckProc)(unsigned long clock, void *arg);
+typedef Bool (*TaskCheckProc)(LongTime *clock, void *arg);
 // 'process' says 'TRUE' if all the tasks are done;
-typedef Bool (*TaskProcessProc)(unsigned long clock, void *arg);
+typedef Bool (*TaskProcessProc)(LongTime *clock, void *arg);
 
-Bool NeverDo_CheckProc(unsigned long, void*);
+Bool NeverDo_CheckProc(LongTime *, void*);
 
 //
 class TaskNode {
@@ -184,23 +255,6 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
   return (ToInt32(o)|(regs&0x3));
 }
 
-/* -----------------------------------------------------------------------
- * clock
- * -----------------------------------------------------------------------*/
-
-inline
-int oz_msToClockTick(int ms)
-{
-  int clockMS = CLOCK_TICK/1000;
-  return (ms+clockMS-1) / clockMS;
-}
-
-inline
-int oz_clockTickToMs(int cl)
-{
-  int clockMS = CLOCK_TICK/1000;
-  return cl * clockMS;
-}
 
 /* -----------------------------------------------------------------------
  * class AM
@@ -294,7 +348,7 @@ private:
 
 public:
   // internal clock in 'ms';
-  unsigned long emulatorClock;
+  LongTime emulatorClock;
 
   void setProfileMode()   { _profileMode=TRUE; }
   void unsetProfileMode() { _profileMode=FALSE; }
@@ -512,7 +566,7 @@ public:
   void checkTasks();
 #endif
   //
-  unsigned long getEmulatorClock() { return (emulatorClock); }
+  LongTime *getEmulatorClock() { return (&emulatorClock); }
 
   // yields time for blocking in 'select()';
   unsigned int waitTime();
