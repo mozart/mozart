@@ -9,13 +9,13 @@ local
       fun {$ B}
 	 {FoldL B
 	  fun {$ A L}
-	     A # ' / ' # {FormatLine {CondSelect L l nil} V2VS} #
-	     ': ' # {FormatLine {CondSelect L m nil} V2VS}
+	     A # ' / ' # {FormatLine {CondSelect L l nil}} #
+	     ': ' # {FormatLine {CondSelect L m nil}}
 	  end nil}
       end
    in
       fun {FormatExceptionLine E}
-	 ErrorExcText # {CondSelect E title ""} #
+	 ErrorExcText # {CondSelect E msg ""} #
 	 {FormatBody {CondSelect E body ""}}
       end
    end
