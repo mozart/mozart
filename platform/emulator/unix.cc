@@ -191,24 +191,16 @@ static char* h_strerror(const int err) {
 // check file descriptors
 // -------------------------------------------------
 
-
-
-#define CHECK_READ(FD,OUT) \
-{ fd_set fds;                                                    \
-  struct timeval timeout;                                        \
-  FD_ZERO(&fds); FD_SET(FD,&fds);                                \
-  timeout.tv_sec=0; timeout.tv_usec=0;                           \
-  WRAPCALL(osSelect(FD+1, &fds, NULL, NULL, &timeout),ret,OUT);  \
-  if (ret == 0) { RETURN_UNABLE(OUT); }                          \
+#define CHECK_READ(FD,OUT) 						      \
+{ int ret = osTestSelect(FD,SEL_READ);					      \
+  if (ret < 0)  { RETURN_UNIX_ERROR(OUT); }				      \
+  if (ret == 0) { RETURN_UNABLE(OUT); }					      \
 }
 			     
-#define CHECK_WRITE(FD,OUT,REST) \
-{ fd_set fds;                                                    \
-  struct timeval timeout;                                        \
-  FD_ZERO(&fds); FD_SET(FD,&fds);                                \
-  timeout.tv_sec=0; timeout.tv_usec=0;                           \
-  WRAPCALL(osSelect(FD+1, NULL, &fds, NULL, &timeout),ret,OUT);  \
-  if (ret == 0) { RETURN_UNABLE_REST(OUT,REST); }                \
+#define CHECK_WRITE(FD,OUT,REST)					      \
+{ int ret = osTestSelect(FD,SEL_WRITE);					      \
+  if (ret < 0)  { RETURN_UNIX_ERROR(OUT); }				      \
+  if (ret == 0) { RETURN_UNABLE_REST(OUT,REST); }                	      \
 }
 			     
 
@@ -669,7 +661,6 @@ OZ_C_ioproc_begin(unix_open,4)
     return FAILED;
   }
 
-
   WRAPCALL(open(filename, flags, mode),desc,out);
 
   return OZ_unifyInt(out,desc);
@@ -698,13 +689,11 @@ OZ_C_ioproc_begin(unix_read,5)
   OZ_declareArg(3, outTail);
   OZ_declareArg(4, outN);
 
-
   CHECK_READ(fd,outN);
 
   char *buf = (char *) malloc(maxx+1);
 
   WRAPCALL(read(fd, buf, maxx), ret, outN);
-
 
   OZ_Term hd = openbuff2list(ret, buf, outTail);
 
@@ -787,21 +776,12 @@ OZ_C_ioproc_begin(unix_lSeek,4)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(unix_select,2)
+OZ_C_proc_begin(unix_readSelect,2)
 {
-  OZ_declareIntArg("select",0,fd);
+  OZ_declareIntArg("readSelect",0,fd);
   OZ_declareArg(1, out);
 
-  fd_set fds;
-  FD_ZERO(&fds);
-  FD_SET(fd,&fds);
-
-  // call select in non-blocked mode
-  struct timeval timeout;
-  timeout.tv_sec = 0;
-  timeout.tv_usec = 0;  // wait 0 ms
-
-  WRAPCALL(osSelect(fd+1, &fds, NULL, NULL, &timeout), sel, out);
+  WRAPCALL(osTestSelect(fd,SEL_READ),sel,out);
 
   if (sel == 0) {
     return OZ_readSelect(fd,OZ_CToInt(0),out);
@@ -810,6 +790,30 @@ OZ_C_proc_begin(unix_select,2)
 }
 OZ_C_proc_end
 
+
+OZ_C_proc_begin(unix_writeSelect,2)
+{
+  OZ_declareIntArg("writeSelect",0,fd);
+  OZ_declareArg(1, out);
+
+  WRAPCALL(osTestSelect(fd,SEL_WRITE),sel,out);
+
+  if (sel == 0) {
+    return OZ_writeSelect(fd,OZ_CToInt(0),out);
+  }
+  return OZ_unifyInt(out,0);
+}
+OZ_C_proc_end
+
+
+
+OZ_C_proc_begin(unix_deSelect,1)
+{
+  OZ_declareIntArg("deSelect",0,fd);
+  OZ_deSelect(fd);
+  return PROCEED;
+}
+OZ_C_proc_end
 
 
 
@@ -1437,14 +1441,11 @@ OZ_C_ioproc_begin(unix_pipe,4)
   case 0: // child
     {
       int i;
-      for (i = 0;
-	     i < FD_SETSIZE;
-	     i++)
-	{
-	  if (i != sv[1]) {
-	    close(i);
-	  }
+      for (i = 0; i < FD_SETSIZE; i++) {
+	if (i != sv[1]) {
+	  close(i);
 	}
+      }
       dup(sv[1]);
       dup(sv[1]);
       dup(sv[1]);
@@ -1727,7 +1728,12 @@ void BIinitUnix()
   OZ_addBuiltin("unix_lSeek",4,unix_lSeek);
   OZ_addBuiltin("unix_unlink",2,unix_unlink);
   OZ_addBuiltin("unix_getServByName",4,unix_getServByName);
-  OZ_addBuiltin("unix_select",2,unix_select);
+
+
+  OZ_addBuiltin("unix_readSelect",2,unix_readSelect);
+  OZ_addBuiltin("unix_writeSelect",2,unix_writeSelect);
+  OZ_addBuiltin("unix_deSelect",1,unix_deSelect);
+
   OZ_addBuiltin("unix_system",2,unix_system);
   OZ_addBuiltin("unix_wait",2,unix_wait);
   OZ_addBuiltin("unix_getEnv",3,unix_getEnv);

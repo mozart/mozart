@@ -105,7 +105,7 @@ OsSigFun *osSignal(int signo, OsSigFun *fun)
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
 
-  /* The following peace of code is from Stevens: Advanced Programming */
+  /* The following piece of code is from Stevens: Advanced UNIX Programming */
   if (signo == SIGALRM) {
 #ifdef SA_INTERUPT /* SunOS */
     act.sa_flags |= SA_INTERUPT;
@@ -190,8 +190,8 @@ extern "C" void __builtin_delete (void *ptr)
 
 /* The prototypes for select are wrong on HP-UX 9.x */
 
-int osSelect(int nfds, fd_set *readfds, fd_set *writefds,
-	     fd_set *exceptfds, struct timeval *timeout)
+static int osSelect(int nfds, fd_set *readfds, fd_set *writefds,
+		    fd_set *exceptfds, struct timeval *timeout)
 {
 #ifdef HPUX_700
   return select(nfds, (int*)readfds,(int*)writefds,(int*)exceptfds,timeout);
@@ -215,26 +215,38 @@ void osInitSignals()
 #endif
 }
 
-int osSetAlarmTimer(int t)
+void osSetAlarmTimer(int t, Bool interval)
 {
 #ifdef DEBUG_DET
-//  warning("setTimer: not allowed in DEBUG_DET mode");
-  return 0;
+  return;
 #else
   struct itimerval newT;
-  struct itimerval oldT;
 
-  newT.it_interval.tv_sec = 0;
-  newT.it_interval.tv_usec = t;
-  newT.it_value.tv_sec = 0;
-  newT.it_value.tv_usec = t;
+  int sec  = t/1000;
+  int usec = (t*1000)%1000000;
+  newT.it_interval.tv_sec  = (interval ? sec : 0);
+  newT.it_interval.tv_usec = (interval ? usec : 0);
+  newT.it_value.tv_sec     = sec;
+  newT.it_value.tv_usec    = usec;
 
-  if (setitimer(ITIMER_REAL,&newT,&oldT) < 0) {
+  if (setitimer(ITIMER_REAL,&newT,NULL) < 0) {
     ozpwarning("setitimer");
+  }
+#endif
+}
+
+int osGetAlarmTimer()
+{
+#ifdef DEBUG_DET
+  return 0;
+#else
+  struct itimerval timer;
+  if (getitimer(ITIMER_REAL,&timer) < 0) {
+    ozpwarning("getitimer");
     return -1;
   }
 
-  return (oldT.it_value.tv_sec * 1000) + (oldT.it_value.tv_usec/1000);
+  return (timer.it_value.tv_sec * 1000) + (timer.it_value.tv_usec/1000);
 #endif
 }
 
@@ -249,12 +261,14 @@ Bool osHasJobControl()
 #endif
 }
 
-/*
- * Sockets
- */
 
-long openMax;
-fd_set globalReadFDs;	// mask of active read FDs
+
+/*********************************************************
+ *       Sockets				       	 *
+ *********************************************************/
+
+static long openMax;
+static fd_set globalFDs[2];	// mask of active read/write FDs
 
 int osOpenMax()
 {
@@ -289,29 +303,46 @@ void osInit()
   openMax=osOpenMax();
   DebugCheckT(printf("openMax: %d\n",openMax));
 
-  FD_ZERO(&globalReadFDs);
+  FD_ZERO(&globalFDs[SEL_READ]);
+  FD_ZERO(&globalFDs[SEL_WRITE]);
 }
 
-void osWatchReadFD(int fd)
+#define CheckMode(mode) Assert(mode==SEL_READ || mode==SEL_WRITE)
+
+
+void osWatchFD(int fd, int mode)
 {
-  FD_SET(fd,&globalReadFDs);
-}
-void osClrWatchedReadFD(int fd)
-{
-  FD_CLR(fd,&globalReadFDs);
+  CheckMode(mode);
+  FD_SET(fd,&globalFDs[mode]); 
 }
 
-Bool osIsWatchedReadFD(int fd)
+void osClrWatchedFD(int fd, int mode)
 {
-  return FD_ISSET(fd,&globalReadFDs);
+  CheckMode(mode);
+  FD_CLR(fd,&globalFDs[mode]); 
 }
 
-void osBlockSelect()
+Bool osIsWatchedFD(int fd, int mode)
 {
-  fd_set copyReadFDs = globalReadFDs;
+  CheckMode(mode);
+  return (FD_ISSET(fd,&globalFDs[mode])); 
+}
+
+
+/* do a select, that waits "ticks" ticks.
+ * if "ticks" <= 0 do a blocking select
+ * return number of ticks left
+ */
+int osBlockSelect(int ticks)
+{
+  fd_set copyFDs[2]  = globalFDs;
+  int wait = osClockTickToMs(ticks);
+  osSetAlarmTimer(wait,NO);
   osUnblockSignals();
-  int numbOfFDs = osSelect( openMax, &copyReadFDs, NULL, NULL, NULL );
+  int ret = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],NULL,NULL);
   osBlockSignals();
+  int ticksleft = osMsToClockTick(osGetAlarmTimer());
+  return ticksleft;
 }
 
 /* osClearSocketErrors
@@ -320,60 +351,60 @@ void osBlockSelect()
 void osClearSocketErrors()
 {
   for (int i = 0; i < openMax; i++) {
-    if (FD_ISSET(i,&globalReadFDs)) {
-      fd_set copyReadFDs;
-      FD_ZERO(&copyReadFDs);
-      FD_SET(i,&copyReadFDs);
-
-      struct timeval timeout;
-    loop:
-      timeout.tv_sec = 0;
-      timeout.tv_usec = 0;
-
-      if (osSelect(i+1,&copyReadFDs,NULL,NULL,&timeout) < 0) {
-	if (errno == EINTR) {
-	  goto loop;
-	}
-	FD_CLR(i,&globalReadFDs);
+    for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
+      if (FD_ISSET(i,&globalFDs[mode]) && osTestSelect(i,mode) < 0) {
+	FD_CLR(i,&globalFDs[mode]);
       }
     }
   }
 }
 
-Bool osTestSelect(int fd)
+
+
+/* returns: 1 if select succeeded on fd
+ *          0 did not succeed
+ *         -1 on error
+ */
+int osTestSelect(int fd, int mode)
 {
-  fd_set copyReadFDs;
+  CheckMode(mode);
+  while(1) {
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
 
-  struct timeval timeout;
-  timeout.tv_sec = 0;
-  timeout.tv_usec = 0;
-
-  FD_ZERO(&copyReadFDs);
-  FD_SET(fd,&copyReadFDs);
-  if (osSelect( fd+1, &copyReadFDs, NULL, NULL, &timeout ) == 1) {
-    return OK;
+    fd_set fdset, *readFDs=NULL, *writeFDs=NULL;
+    FD_ZERO(&fdset);
+    FD_SET(fd,&fdset);
+    
+    if (mode==SEL_READ) {
+      readFDs = &fdset;
+    } else {
+      writeFDs = &fdset;
+    }
+    int ret = osSelect(fd+1, readFDs, writeFDs, NULL, &timeout);
+    if (ret >= 0 || errno != EINTR) {
+      return ret;
+    }
   }
-  return NO;
 }
 
 /* -------------------------------------------------------------------------
  * subroutines for AM::handleIO
  * ------------------------------------------------------------------------- */
    
-static fd_set tmpReadFDs;
+static fd_set tmpFDs[2];
 
 /* signals are blocked */
-int osFirstReadSelect()
+int osFirstSelect()
 {
-  struct timeval timeout;
-  int index, numbOfFDs;
-
  loop:
+  struct timeval timeout;
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
-  tmpReadFDs = globalReadFDs;
+  tmpFDs  = globalFDs;
 
-  numbOfFDs = osSelect(openMax, &tmpReadFDs, NULL, NULL, &timeout );
+  int numbOfFDs = osSelect(openMax,&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE], NULL,&timeout);
 
   if (numbOfFDs < 0) {
     if (errno == EINTR) {
@@ -389,11 +420,13 @@ int osFirstReadSelect()
   return numbOfFDs;
 }
 
-Bool osNextReadSelect(int fd)
+Bool osNextSelect(int fd, int mode)
 {
   Assert(fd<openMax);
-  if (FD_ISSET(fd, &tmpReadFDs)) {
-    FD_CLR(fd, &tmpReadFDs);
+  CheckMode(mode);
+
+  if (FD_ISSET(fd,&tmpFDs[mode])) {
+    FD_CLR(fd,&tmpFDs[mode]);
     return OK;
   }
   return NO;
@@ -411,8 +444,8 @@ int osCheckIO()
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
   
-  fd_set copyReadFDs = globalReadFDs;
-  int numbOfFDs = osSelect( openMax, &copyReadFDs, NULL, NULL, &timeout );
+  fd_set copyFDs[2]  = globalFDs;
+  int numbOfFDs = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],NULL,&timeout);
   if (numbOfFDs < 0) {
     if (errno == EINTR) goto loop;
     if (errno != EBADF) { /* the compiler may have terminated (rs) */
@@ -424,7 +457,7 @@ int osCheckIO()
 }
 
 
-void osKillChilds()
+void osKillChildren()
 {
   if (osHasJobControl()) {
     // terminate all our children
