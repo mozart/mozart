@@ -7341,10 +7341,13 @@ OZ_C_proc_end
 
 // Copyright © by Denys Duchier, Jan 1998, Universität des Saarlandes
 //
-// The service registry is for plugins that provide (improved)
+// The system registry serves several purposes.  (1) it serves to
+// record properties much like the Java properties.  For example
+// property 'user.home' records the current user's home directory.
+// (2) it also serves to register `plugins' that provide (improved)
 // services.  For example, search path and cache mechanisms for
-// loading etc...  In particular, the emulator itself can take advantage
-// of services implemented in Oz.
+// loading etc...  In particular, the emulator itself can take
+// advantage of services implemented in Oz.
 //
 // see value.hh for:
 //	service_get(OZ_Term)
@@ -7352,11 +7355,11 @@ OZ_C_proc_end
 //	service_put(OZ_Term,OZ_Term)
 //	service_put(char*s,OZ_Term)
 
-OZ_Term service_registry;
+OZ_Term system_registry;
 
-OZ_C_proc_begin(BIservice_registry,1)
+OZ_C_proc_begin(BIsystem_registry,1)
 {
-  return oz_unify(service_registry,OZ_getCArg(0));
+  return oz_unify(system_registry,OZ_getCArg(0));
 }
 OZ_C_proc_end
 
@@ -7820,7 +7823,7 @@ BIspec allSpec[] = {
   {"GetCloneDiff", 2, BIgetCloneDiff, 0},
 #endif
 
-  {"ServiceRegistry",1,BIservice_registry,0},
+  {"SystemRegistry",             1, BIsystem_registry,            0},
 
   {0,0,0,0}
 };
@@ -7866,8 +7869,8 @@ BuiltinTabEntry *BIinit()
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);
 
-  service_registry = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
-  OZ_protect(&service_registry);
+  system_registry = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
+  OZ_protect(&system_registry);
 
   return bi;
 }
