@@ -33,9 +33,9 @@ then
         $BUILDTOP/platform/emulator/$OZPLATFORM \
         $OZPREFIX/platform/$OZPLATFORM
     do
-        if test -x $d/text2pickle
+        if test -x $d/text2pickle.exe
         then
-            TEXT2PICKLE=$d/text2pickle
+            TEXT2PICKLE=$d/text2pickle.exe
             break
         fi
     done
