@@ -15,7 +15,7 @@
 
 #include "cpi.hh"
 
-char * ctHeap, * ctHeapTop = new char[MAXFDBIARGS * 100];
+CpiHeapClass CpiHeap;
 
 EnlargeableArray<_spawnVars_t> staticSpawnVars(MAXFDBIARGS);
 EnlargeableArray<_spawnVars_t> staticSpawnVarsProp(MAXFDBIARGS);

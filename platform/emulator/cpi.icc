@@ -32,20 +32,6 @@ void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v)
   staticSpawnVars.request(staticSpawnVarsNumber);
 }
 
-inline
-void * heap_new(size_t s)  // aligned to 8
-{
-  char * tmp = ctHeap;
-  ctHeap += (s + (8 - (s & 7)));
-  return tmp;
-}
-
-inline
-void heap_delete(void *, size_t)
-{
-  // reserved for future extensions
-}
-
 inline 
 OZ_Boolean isPosSmallInt(OZ_Term v) 
 {

@@ -20,6 +20,7 @@
 #include "oz_cpi.hh"
 #include "am.hh"
 #include "genvar.hh"
+#include "cpi_heap.hh"
 
 #if defined(OUTLINE)
 #define inline
@@ -38,9 +39,6 @@ extern EnlargeableArray<OZ_Term *> staticSuspendVars;
 extern int staticSpawnVarsNumber, 
            staticSpawnVarsNumberProp, 
            staticSuspendVarsNumber;
-
-extern char * ctHeap, * ctHeapTop;
-
 
 class ExpectOnly : public OZ_Expect {
 private:
