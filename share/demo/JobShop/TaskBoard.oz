@@ -215,9 +215,14 @@ define
       meth getSpec($)
 	 {List.mapInd @Tasks
 	  fun {$ I T}
-	     {GetTaskName self.Number I} # {T getDuration($)} #
-	     if I==1 then [pa] else [{GetTaskName self.Number I-1}] end #
-	     {GetResourceName {T getResource($)}}
+	     Task={GetTaskName self.Number I}
+	     Dur ={T getDuration($)}
+	     Res ={GetResourceName {T getResource($)}}
+	     Pre = if I==1 then [pa]
+		   else [{GetTaskName self.Number I-1}]
+		   end 
+	  in
+	     Task(dur:Dur pre:Pre res:Res)
 	  end}
       end
       
@@ -310,13 +315,13 @@ define
       end
       
       meth getSpec($)
-	 pa # 0 # nil # noResource |
-	 pe # 0 # {ForThread 1 MaxJobs 1
-		   fun {$ Js J}
-		      {Append {{Get self.Jobs J}
-			       getLastSpec($)}
-		       Js}
-		   end nil} # noResource |
+	 pa(dur:0) |
+	 pe(dur:0 pre:{ForThread 1 MaxJobs 1
+		       fun {$ Js J}
+			  {Append {{Get self.Jobs J}
+				   getLastSpec($)}
+			   Js}
+		       end nil}) |
 	 {ForThread 1 MaxJobs 1
 	  fun {$ Ss J}
 	     {Append {{Get self.Jobs J} getSpec($)} Ss}
