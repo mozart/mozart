@@ -38,7 +38,6 @@ local
 in
 
    class PanelClass
-      from BaseObject
       prop locking final
       feat Options
       attr ThisPanelTop:unit
