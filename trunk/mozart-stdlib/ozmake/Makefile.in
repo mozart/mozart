@@ -28,6 +28,11 @@ export OZHOME
 OZLOAD = prefix=$(SRCDIR)=$(BUILDDIR):root=$(BUILDDIR):root=$(SRCDIR):cache=~/.oz/cache:cache=$(OZHOME)/cache
 export OZLOAD
 
+XSLTPROC	= @VAR_XSLTPROC@
+LYNX		= @VAR_LYNX@
+ELINKS		= @VAR_ELINKS@
+HTML_TO_TEXT	= @VAR_HTML_TO_TEXT@
+
 #=====================================================================
 # FILL IN THE BLANKS!
 #    if possible do not change this file directly, instead:

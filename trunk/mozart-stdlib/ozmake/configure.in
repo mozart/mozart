@@ -64,6 +64,28 @@ AC_SUBST(VAR_OZTOOL)
 dnl
 dnl
 dnl
+AC_PATH_PROGS(VAR_XSLTPROC,xsltproc xsltproc.exe,UNDEFINED,$prefix/bin:$PATH)
+AC_SUBST(VAR_XSLTPROC)
+dnl
+dnl
+dnl
+AC_PATH_PROGS(VAR_LYNX,lynx lynx.exe,UNDEFINED,$prefix/bin:$PATH)
+if test "$VAR_LYNX" = UNDEFINED; then
+    AC_PATH_PROGS(VAR_ELINKS,elinks elinks.exe,UNDEFINED,$prefix/bin:$PATH)
+    if test "$VAR_ELINKS" = UNDEFINED; then
+	VAR_HTML_TO_TEXT=UNDEFINED
+    else
+	VAR_HTML_TO_TEXT=elinks
+    fi
+else
+    VAR_HTML_TO_TEXT=lynx
+fi
+AC_SUBST(VAR_HTML_TO_TEXT)
+AC_SUBST(VAR_LYNX)
+AC_SUBST(VAR_ELINKS)
+dnl
+dnl
+dnl
 VAR_OZINSTALL="$srcdir/ozinstall"
 AC_SUBST(VAR_OZINSTALL)
 AC_OUTPUT(Makefile)
