@@ -32,4 +32,4 @@ export OZINIT
 echo "Using OZEMULATOR: $OZEMULATOR"
 echo "Using OZMAFILE: $OZMAFILE"
 
-exec $OZEMULATOR -ozma $OZMAFILE -- "$@"
+exec $OZEMULATOR $OZMAFILE -- "$@"
