@@ -539,7 +539,8 @@ schedule the construction of the bridge shown  in
 <figure id=fig.bridgeProblem>
 <caption/The Bridge Problem./
 <picture.choice>
-<picture.extern id="pic.bridgeProblem" to="pictures/bridge.ps" type=ps info="-width 400">
+<picture.extern to="bridge.gif" type=gif>
+<picture.extern id="pic.bridgeProblem" to="pictures/bridge.ps" type=ps>
 </picture.choice>
 </figure>
 
@@ -826,7 +827,8 @@ same resource have the same texture.
 <figure  id=fig.gantt>
 <caption/The Gantt-chart for the bridge problem./
 <picture.choice>
-<picture.extern id="pic.gantt" to="pictures/gantt.ps" type=ps  info="-width 400">
+<picture.extern to="gantt.gif" type=gif>
+<picture.extern id="pic.gantt" to="pictures/gantt.ps" type=ps>
 </picture.choice>
 </figure>
 

@@ -491,7 +491,8 @@ priori constrained to finite domains.
 <caption/A search tree.  Diamonds represent solved spaces and boxes represent
 failed spaces./
 <picture.choice>
-<picture.extern to="pictures/search-tree.ps" info="-width 200" type=ps>
+<picture.extern to="search-tree.gif" type=gif>
+<picture.extern to="pictures/search-tree.ps" type=ps>
 </picture.choice>
 </figure>
 
