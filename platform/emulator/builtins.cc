@@ -5354,7 +5354,7 @@ OZ_C_proc_begin(BImakeObject,4)
   }
 
   Object *out = newObject(tagged2SRecord(ffeatures),
-			  isSRecord(initState) ? tagged2SRecord(initState) : NULL,
+			  isSRecord(initState) ? tagged2SRecord(initState) : (SRecord*) NULL,
 			  ((Object*)tagged2Const(clas))->getClass(),
 			  NO,
 			  am.currentBoard);
