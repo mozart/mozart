@@ -95,6 +95,9 @@ has still not been garbage collected; only at the next
 garbage collection after the call to ?_{Finalizer} has returned, and
 assuming ?_{Value} is no longer referenced at all, not even by the
 guardian, will it really be garbage collected.
+<p class=danger>
+The ?_{Register} procedure cannot be used in a (subordinated) space
+other than where ?_{Finalize.guardian} has been called.
       <entry/<code/Finalize.register/
 <index/<code/Finalize/<and><code/register///
       <synopsis/<code/{Finalize.register ?+{Value} ?+{Handler}}//
