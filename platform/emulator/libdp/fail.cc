@@ -43,7 +43,7 @@
 #include "protocolFail.hh"
 #include "protocolState.hh"
 #include "port.hh"
-
+#include "builtins.hh"
 
 Twin *usedTwins;
 Watcher* globalWatcher;
@@ -58,6 +58,7 @@ void adjustManagerForFailure(Tertiary*,EntityCond,EntityCond);
 /**********************************************************************/
 /*   deferoperations                                          */
 /**********************************************************************/
+
 
 TaggedRef BI_defer;
 
@@ -1070,5 +1071,18 @@ void EntityInfo::gcWatchers(){
 
 void gcGlobalWatcher(){
     if(globalWatcher==NULL) return;
-    Watcher* newW=(Watcher*) OZ_hrealloc(globalWatcher,sizeof(Watcher));
+    globalWatcher = (Watcher*) OZ_hrealloc(globalWatcher,sizeof(Watcher));
     OZ_collectHeapTerm(globalWatcher->proc,globalWatcher->proc);}
+
+
+
+/**********************************************************************/
+/*   SeifHandler                                                      */
+/**********************************************************************/
+
+
+OZ_BI_define(BIseifHandler,2,0){
+  oz_declareIN(0,entity);
+  oz_declareIN(1,what);
+  return oz_raise(E_ERROR,E_SYSTEM,"seifHandler",2,entity,what);
+}OZ_BI_end

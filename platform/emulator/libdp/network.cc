@@ -1457,7 +1457,7 @@ public:
     FreeListManager(WRITE_CONNECTION_CUTOFF){wc = 0;}
 
   void freeConnection(WriteConnection *r){
-    PD((TCP_INTERFACE,"freed r:%x nr%d",r,--wc));
+    //printf("freed r:%d nr%d\n",(int)r,--wc);
     r->clearFlag(WRITE_CON);
     //Assert(r->isRemovable());
     deleteConnection(r);
@@ -1465,7 +1465,7 @@ public:
 
   WriteConnection *allocConnection(RemoteSite *s,int f){
     WriteConnection *r=newConnection(s,f);
-    PD((TCP_INTERFACE,"allocated r:%x s:%x fd:%d nr:%d",r,s,f,++wc));
+    //printf("allocated r:%d s:%d fd:%d nr:%d\n",(int)r,(int)s,f,++wc);
     return r;}
  };
 
@@ -1676,6 +1676,7 @@ public:
     PD((TCPCACHE,"ClosingConnections fakingTmp"));
     Connection *c=currentHead, *cc;
     while(c!=NULL){
+      //printf("closing %d %s\n",(int)c,myDSite->stringrep());
       cc = c->next;
       if(!c->isClosing())
         {
@@ -1730,7 +1731,6 @@ public:
   Bool CanOpen(){return openCon;}
 
   void adjust(){
-    // PD((TCPCACHE,"adjusting size:%d maxsize:%d",open_size,max_size));
     if(myHead!=NULL && open_size<max_size){
       openMyClosedConnection();
       return;}
@@ -1744,8 +1744,8 @@ public:
       accept = TRUE;}
 
   void add(Connection *w) {
-    PD((TCPCACHE,"cache add connection r:%x site:%x o:%d c:%d",w,
-        w->getRemoteSite(),open_size,close_size));
+    //    printf("cache add connection r:%x site:%x o:%d c:%d \n",(int)w,
+    //   (int)w->getRemoteSite(),open_size,close_size);
     if(w->isOpening()){
       addToFront(w, currentHead, currentTail);
       open_size++;
@@ -1760,14 +1760,15 @@ public:
     Assert(w->isWriteCon());
     if(((WriteConnection*)w)->isMyInitiative()){
       PD((TCPCACHE,"Starting wakeups"));
-      //      printf("WriteCon closed by me %s\n",
+      //printf("WriteCon closed by me %s\n",
       //             w->remoteSite->site->stringrep());
       newMyDwn();
       addToFront(w, myHead, myTail);
       return;}
     if(((WriteConnection*)w)->isTmpDwn()){
-      //      printf("WriteCon closed by him %s\n",
+      //printf("WriteCon closed by him %s\n",
       //             w->remoteSite->site->stringrep());
+      //printf("Tmps %x %x %x time:%d\n",(int)tmpHead, (int)tmpTail,(int)w,(int)tmpTime);
       if(openCon) newTmpDwn();
       addToFront(w, tmpHead, tmpTail);
       return;}
@@ -1775,8 +1776,8 @@ public:
     Assert(0);}
 
   void remove(Connection *w){
-    PD((TCPCACHE,"cache remove connection r:%x site:%x o:%d c:%d",w,
-        w->getRemoteSite(),open_size, close_size));
+    //printf("cache remove connection r:%x site:%x o:%d c:%d\n",(int)w,
+    //     (int)w->getRemoteSite(),open_size, close_size);
     //EK remove thisone?
     if(w->isOpening()){
       unlink(w, currentHead, currentTail);
@@ -1853,7 +1854,7 @@ Bool TcpCache::openTmpBlockedConnection(){
   PD((TCPCACHE,"OpeningTmps %x %x",tmpHead, tmpTail));
   if(tmpHead!=NULL){
     WriteConnection *w = ((WriteConnection *) getLast(tmpHead, tmpTail));
-    //    printf("Opening con closed by him %s\n",
+    //printf("Opening con closed by him %s\n",
     //     w->remoteSite->site->stringrep());
     w->clearTmpDwn();
     w->open();}
@@ -1863,7 +1864,7 @@ Bool TcpCache::openMyClosedConnection(){
   PD((TCPCACHE,"OpeningMys %x %x",myHead, myTail));
   if(myHead!=NULL){
     WriteConnection *w = ((WriteConnection *)getLast(myHead, myTail));
-    //    printf("Opening con closed by me %s\n",
+    //printf("Opening con closed by me %s\n",
     //w->remoteSite->site->stringrep());
     w->clearMyInitiative();
     w->open();}
@@ -3405,13 +3406,17 @@ int RemoteSite::readRecMsgCtr(){
 /************************************************************/
 
 void RemoteSite::sitePrmDwn(){
+  //printf("Site prm %s\n",site->stringrep());
   status = SITE_PERM;
   if(readConnection!=NULL && readConnection->isReading()){
     readConnection->setCrashed();
     return;}
 
   if(writeConnection!=NULL){
-    if(writeConnection->getFD() != LOST)
+    /* If we are in a Tmp state we must now remove the
+       writeconnection from TC. I dont know about the LOST....
+    */
+    if(writeConnection->getFD() != LOST || writeConnection->isTmpDwn())
       writeConnection->prmDwn();
     writeConnectionManager->freeConnection(writeConnection);
     writeConnection = NULL;}
@@ -3429,14 +3434,8 @@ void RemoteSite::sitePrmDwn(){
 
 
 void RemoteSite::siteTmpDwn(closeInitiator ci){
-  if(status ==  SITE_OK) {
+  if(status ==  SITE_OK)
     status = SITE_TEMP;
-    Message* m = writeQueue.getFirst();
-    while(m != NULL) {
-      site->communicationProblem(m->msgType, m->site, m->storeIndx,
-                                 COMM_FAULT_TEMP_NOT_SENT,
-                                 (int) m->bs);
-      m = m->getNext();}}
   if(writeConnection!=NULL)
     writeConnection->close(ci);}
 
@@ -3450,7 +3449,7 @@ void ReadConnection::prmDwn(){
     messageManager->freeMessage(getCurQueue());}
 
 void WriteConnection::prmDwn(){
-  osclose(fd);
+  if(fd!=LOST)  osclose(fd);
   PD((TCP,"WriteConnection is taken down fd: %d %d",fd,getFD()));
   tcpCache->remove(this);
   if(isProbingPrm()){
@@ -3461,23 +3460,24 @@ void WriteConnection::prmDwn(){
     remoteSite->site->probeFault(PROBE_PERM);
   }
   Message *m = sentMsg;
-    sentMsg = NULL;
-    while(m != NULL){
-      PD((ACK_QUEUE,"Emptying ackqueue m:%x bs: %x",m, m->bs));
-      m->bs->resend();
+  sentMsg = NULL;
+  while(m != NULL){
+    PD((ACK_QUEUE,"Emptying ackqueue m:%x bs: %x",m, m->bs));
+    m->bs->resend();
       remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
-                                 COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
+                                             COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
       Message *tmp = m;
       m = m->next;
 
       messageManager->freeMessageAndMsgBuffer(tmp);}
+  if(fd!=LOST)
     OZ_unregisterRead(fd);
 
-    if(!isWritePending())
-      return;
-    if(isInWriteQueue())
-      clearInWriteQueue();
-    OZ_unregisterWrite(fd);
+  if(!isWritePending())
+    return;
+  if(isInWriteQueue())
+    clearInWriteQueue();
+    if(fd!=LOST)OZ_unregisterWrite(fd);
 
     if(isIncomplete()) {
       clearIncomplete();
@@ -3537,8 +3537,8 @@ void WriteConnection::closeConnection(){
   default:  Assert(0);}}
 
 void WriteConnection::close(closeInitiator type){
-  PD((TCP_CONNECTIONH,"close r:%x fd:%d type(%d:MY %d:HIS %d:TMP): %d",
-      this,fd, MY_INITIATIVE,HIS_INITIATIVE,TMP_INITIATIVE,type));
+  //printf("close r:%x fd:%d type(%d:MY %d:HIS %d:TMP): %d \n",
+  //   (int)this,fd, MY_INITIATIVE,HIS_INITIATIVE,TMP_INITIATIVE,type);
   if(fd >0)
     {OZ_unregisterRead(fd);
     OZ_unregisterWrite(fd);

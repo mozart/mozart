@@ -100,25 +100,21 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
   Assert(p->getTertType()==Te_Proxy);
   OZ_Return ret;
   if(getEntityCond(p)!= ENTITY_NORMAL){
-    /*
-      pendThreadAddToEnd(&(((PortProxy*)p)->pending),
-      msg,msg,NOEX);
-      if(getEntityCond(p) & PERM_ME)
+    /*    pendThreadAddToEnd(&(((PortProxy*)p)->pending),
+                       msg,msg,NOEX);
+    if(getEntityCond(p) & PERM_ME)
       addEntityCond(p, PERM_BLOCKED);
-      else
+    else
       addEntityCond(p, TEMP_BLOCKED);
-      deferEntityProblem(p);
-      return SuspendOnControlVarReturnValue;
-    */
+    deferEntityProblem(p);
+    return SuspendOnControlVarReturnValue;*/
 
   }
   if(((PortProxy*)p)->pending!= NULL || !((PortProxy*)p)->canSend()){
-    /*
-      pendThreadAddToEnd(&(((PortProxy*)p)->pending),
-      msg,msg,NOEX);
-      flowControler->addElement(makeTaggedTert(p));
-      return SuspendOnControlVarReturnValue;
-    */
+    pendThreadAddToEnd(&(((PortProxy*)p)->pending),
+                       msg,msg,NOEX);
+    flowControler->addElement(makeTaggedTert(p));
+    return SuspendOnControlVarReturnValue;
   }
   Assert(((PortProxy*)p)->pending == NULL);
   return portSendInternal(p,msg);

@@ -152,6 +152,7 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_DEBUG_IP,
   PROP_INTERNAL,
 
+  PROP_PERDIO_SEIFHANDLER,
   PROP_PERDIO_FLOWBUFFERSIZE,
   PROP_PERDIO_FLOWBUFFERTIME,
   PROP_PERDIO_DEBUG,
@@ -428,6 +429,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
   CASE_INT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
+  CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
   CASE_INT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
   CASE_INT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
   CASE_BOOL(PROP_PERDIO_MINIMAL,ozconf.perdioMinimal);
@@ -435,6 +437,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
            (4,oz_atom("minimal"),oz_atom("debug"),
             oz_atom("flowbuffersize"),oz_atom("flowbuffertime")),
            SET_BOOL(oz_atom("minimal"), ozconf.perdioMinimal);
+           SET_BOOL(oz_atom("seifHandler"), ozconf.perdioSeifHandler);
            SET_INT(oz_atom("debug"), ozconf.debugPerdio);
            SET_INT(oz_atom("flowbuffersize"), ozconf.perdioFlowBufferSize);
            SET_INT(oz_atom("flowbuffertime"), ozconf.perdioFlowBufferTime);
@@ -704,6 +707,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
                    return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
                                                     "modelChoose",0));
                  ozconf.perdioMinimal=INT__);
+    CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
 
@@ -711,6 +715,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
              SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
              SET_NAT(oz_atom("flowbuffersize"),ozconf.perdioFlowBufferSize);
              SET_NAT(oz_atom("flowbuffertime"),ozconf.perdioFlowBufferTime);
+             SET_BOOL(oz_atom("seifHandler"),ozconf.perdioSeifHandler);
              DO_BOOL(oz_atom("minimal"),
                  if ((*isPerdioInitialized)())
                    return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
@@ -960,6 +965,7 @@ void initVirtualProperties()
   VirtualProperty::add("perdio.minimal",PROP_PERDIO_MINIMAL);
   VirtualProperty::add("perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERTIME);
   VirtualProperty::add("perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERSIZE);
+  VirtualProperty::add("perdio.seifHandler",PROP_PERDIO_SEIFHANDLER);
   VirtualProperty::add("perdio",PROP_PERDIO);
   //CLOSE
   VirtualProperty::add("close.time",PROP_CLOSE_TIME);

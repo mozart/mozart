@@ -79,6 +79,9 @@ public:
   int perdioFlowBufferSize;
   int perdioFlowBufferTime;
 
+  // global handler
+  int perdioSeifHandler;
+
   int closetime;
 
   int numToplevelVars;
