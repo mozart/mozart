@@ -19,6 +19,8 @@ in
 
    class RuntimeBar
       from Tk.canvas
+      prop final
+	 
       feat
 	 RunTag
 	 GcTag

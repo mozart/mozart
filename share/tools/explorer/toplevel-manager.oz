@@ -9,6 +9,7 @@ local
 
    class Toplevel
       from Tk.toplevel
+      prop final
 
       feat
 	 manager
@@ -73,6 +74,7 @@ local
    
    class ScrollCanvas
       from Tk.canvas
+      prop final
 
       attr
 	 scale:   DefScale
