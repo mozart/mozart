@@ -100,7 +100,7 @@ define
     "   MakeColor  = GOZCore.makeColor"
     "   class OzColorBase from OzBase"
     "      meth new(R G B)"
-    "         GtkObject <- {GOZCore.allocColor R G B}"
+    "         self.GtkObject = {GOZCore.allocColor R G B}"
     "      end"
     "   end"
     "   \\insert 'GDKFIELDS.oz'"
@@ -152,10 +152,10 @@ define
    
    CanvasInitStub =
    ["define"
-    "   GtkObject    = GOZCore.ozObject"
-    "   P2O          = GOZCore.pointerToObject"
-    "   O2P          = GOZCore.objectToPointer"
-    "   ImportList   = GOZCore.importList"
+    "   GtkObject  = GOZCore.ozObject"
+    "   P2O        = GOZCore.pointerToObject"
+    "   O2P        = GOZCore.objectToPointer"
+    "   ImportList = GOZCore.importList"
     "  \\insert 'GTKCANVASFIELDS.oz'"
     "  \\insert 'OzCanvasBase.oz'"
    ]
@@ -170,7 +170,7 @@ define
    ["      meth get(String Result)"
     "         Arg = {GOZCore.makeEmptyArg String}"
     "      in"
-    "         {GtkNative.gtkWidgetGet @GtkObject Arg}"
+    "         {GtkNative.gtkWidgetGet self.GtkObject Arg}"
     "         Result = {GOZCore.getArg Arg}"
     "         {GOZCore.freeData Arg}"
     "      end"
@@ -181,7 +181,7 @@ define
     "      meth getColor($)"
     "         Array = {GOZCore.makeColorArr [0.0 0.0 0.0 0.0]}"
     "      in"
-    "         {GtkNative.gtkColorSelectionGetColor @GtkObject Array}"
+    "         {GtkNative.gtkColorSelectionGetColor self.GtkObject Array}"
     "         {GOZCore.getColorList Array}"
     "      end"
    ]
@@ -191,7 +191,7 @@ define
     "      meth setColor(Cols)"
     "         Array = {GOZCore.makeColorArr Cols}"
     "      in"
-    "         {GtkNative.gtkColorSelectionSetColor @GtkObject Array}"
+    "         {GtkNative.gtkColorSelectionSetColor self.GtkObject Array}"
     "      end"
    ]
 
@@ -199,7 +199,7 @@ define
    [
     "      meth new(WithVisual)"
     "         if WithVisual then {self pushVisual} end"
-    "         GtkObject <- {GtkCanvasNative.gtkCanvasNew }"
+    "         self.GtkObject = {GtkCanvasNative.gtkCanvasNew}"
     "         {self addToObjectTable}"
     "      end"
     ]
@@ -787,10 +787,10 @@ define
 		    then nil
 		    else GtkClasses, checkResStart(RetType $)
 		    end
-	 ResStart = if IsNew then "GtkObject <- " elseif OA == 1
+	 ResStart = if IsNew then "self.GtkObject = " elseif OA == 1
 		    then "Res = "#CheckRes else "" end
 	 ResEnd   = if IsNew orelse CheckRes == nil then "" else "}" end
-	 Self     = if HasSelf then "@GtkObject " else "" end
+	 Self     = if HasSelf then "self.GtkObject " else "" end
       in
 	 case Name
 	 of "gtkWidgetGet" then
@@ -822,7 +822,7 @@ define
 	 in
 	    TextFile, putS({Util.indent 2}#"meth ref()")
 	    TextFile, putS({Util.indent 3}#"{"#@module#
-			   "."#Name#" @GtkObject"#Var#"}")
+			   "."#Name#" self.GtkObject"#Var#"}")
 	    TextFile, putS({Util.indent 2}#"end")
 	 else
 	    TextFile, putS({Util.indent 2}#"meth "#
@@ -1166,14 +1166,14 @@ define
       meth emitConstructors(Name)
 	 SName   = {Util.firstLower {Util.cutPrefix @stdPrefix {ToS Name}}}
 	 AccName = {Util.firstLower {Util.toString Name#"NativeAlloc"}}
-	 Alloc   = "GtkObject <- {"#@module#"."#AccName#"}"
+	 Alloc   = "self.GtkObject = {"#@module#"."#AccName#"}"
       in
 	 TextFile, putS({ToS {Util.indent 2}#"meth "#SName#"NativeNew"})
 	 TextFile, putS({ToS {Util.indent 3}}#Alloc)
 	 TextFile, putS({ToS {Util.indent 2}#"end"})
 	 TextFile, putS({ToS {Util.indent 2}#"meth "#SName#"NativeDestroy"})
-	 TextFile, putS({ToS {Util.indent 3}#"{GOZCore.freeData @GtkObject}"})
-	 TextFile, putS({ToS {Util.indent 3}#"GtkObject <- unit"})
+	 TextFile,
+	 putS({ToS {Util.indent 3}#"{GOZCore.freeData self.GtkObject}"})
 	 TextFile, putS({ToS {Util.indent 2}#"end"})
       end
       meth emitAccessors(Name Items First)
@@ -1239,7 +1239,7 @@ define
 	    CStr      = if Convert == nil then nil else "}" end
 	 in
 	    TextFile, putS({ToS {Util.indent 3}#OStr#Convert#"{"#@module#
-			    "."#FunName#" @GtkObject}"#CStr})
+			    "."#FunName#" self.GtkObject}"#CStr})
 	 end
       end
    end
