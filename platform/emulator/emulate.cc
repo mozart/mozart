@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.343  1996/07/11 12:03:08  scheidhr
+  BIwaitIdle removed again
+
   Revision 1.342  1996/07/09 05:44:36  scheidhr
   BIwaitIdle for Christians Panel
 
@@ -998,11 +1001,7 @@ void engine()
 
   /* process switch */
   if (e->threadQueueIsEmpty()) {
-    OZ_unify(VarIdle,NameUnit);  /* inform Panel */
-    if (e->threadQueueIsEmpty()) {
-      e->suspendEngine();
-      OZ_unify(VarRunning,NameUnit);
-    }
+    e->suspendEngine();
   }
 
 LBLinstallThread:
