@@ -1538,6 +1538,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
   for (i=1 ; i<argno ; i++)
     free(argv[i]);
     
+  addChildProc(pid);
+
   TaggedRef rw = OZ_pair(OZ_CToInt(rsock),OZ_CToInt(wsock));
   return OZ_unifyInt(rpid,pid) == PROCEED
     && OZ_unify(rwsock,rw) == PROCEED ? PROCEED : FAILED;
