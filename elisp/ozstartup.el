@@ -12,7 +12,7 @@
 
 ;;; where lemacs searches for elisp files:
 (setq load-path (append (list "." 
-			      (concat (ozhome) "/elisp"))
+			      (concat (ozhome) "/lib/elisp"))
 		      load-path))
 
 ;;; where lemacs searches for online documentation
