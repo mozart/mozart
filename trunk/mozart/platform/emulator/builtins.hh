@@ -214,40 +214,6 @@ public:
   }
 
   ~BuiltinTabEntry () {}
-  Bool operator== (BuiltinTabEntry &data)
-  {
-    error("mm2");
-    return (((printname == ((BuiltinTabEntry &) data).printname) &&
-	     (arity == ((BuiltinTabEntry &) data).arity)) ? OK : NO);
-  }
-  Bool operator< (BuiltinTabEntry &data)
-  {
-    return (((*tagged2Atom(printname)
-	      < *tagged2Atom(((BuiltinTabEntry &) data).printname)) ||
-	     ((printname == ((BuiltinTabEntry &) data).printname) &&
-	      (arity < ((BuiltinTabEntry &) data).arity))) ? OK : NO);
-  }
-  Bool operator> (BuiltinTabEntry &data)
-  {
-    return (((*tagged2Atom(printname)
-	      > *tagged2Atom(((BuiltinTabEntry &) data).printname)) ||
-	     ((printname == ((BuiltinTabEntry &) data).printname) &&
-	      (arity > ((BuiltinTabEntry &) data).arity))) ? OK : NO);
-  }
-
-  Bool operator== (char *s) {
-    return printname == makeTaggedAtom(s) ? OK : NO;
-  }
-  Bool operator<  (char *s) {
-    error("not impl");
-    // return (*tagged2Atom(printname) < s);
-    return NO;
-  }
-  Bool operator>  (char *s) {
-    error("not impl");
-    // return (*tagged2Atom(printname) > s);
-    return NO;
-  }
 
   OZPRINT;
   OZ_CFun getFun() { return fun; }
