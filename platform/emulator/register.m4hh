@@ -382,7 +382,7 @@ INSTRUCTION(CREATEVARIABLEX)
             isCVar(term) && tagged2CVar(term)->valid(atm)) {
           suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
                        CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-          goto LBLcheckEntailment;
+          goto LBLpopTask;
         }
 
         JUMP( getLabelArg(PC+4) );
@@ -409,7 +409,7 @@ INSTRUCTION(CREATEVARIABLEX)
             isCVar(term) && tagged2CVar(term)->valid(i)) {
           suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
                        CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-          goto LBLcheckEntailment;
+          goto LBLpopTask;
         }
 
         JUMP( getLabelArg(PC+4) );

@@ -567,15 +567,16 @@ PRINT(SuspList)
   }
 
   for (SuspList* sl = this; sl != NULL; sl = sl->getNext()) {
-    if (isEffectiveSusp(sl) == NO)
-      continue;
-    if (sl->isCondSusp())
-      stream << indent(offset)
-             << ((CondSuspList*)sl)->getCondNum() << " conds";
-    else
-      stream << indent(offset) << "true";
-    sl->getSusp()->print(stream);
-    stream << endl;
+    if (isEffectiveSusp(sl) ) {
+      stream << indent(offset);
+      if (sl->isCondSusp()) {
+        stream << ((CondSuspList*)sl)->getCondNum() << " conds";
+      } else {
+        stream << "true";
+      }
+      sl->getSusp()->print(stream);
+      stream << endl;
+    }
   } // for
 }
 
@@ -780,8 +781,9 @@ void AM::print()
 
 PRINT(Board)
 {
+  stream << indent(offset);
   if (!this) {
-    stream << indent(offset) << "(NULL Board)";
+    stream << "(NULL Board)";
     return;
   }
 
@@ -795,17 +797,17 @@ PRINT(Board)
     stream << "Solve";
   }
 
-  stream << "Board @" << this->getBoardDeref() << " [";
+  stream << "Board @" << this << " [";
 
-  if (isCommitted()) stream << 'C';
-  if (isReflected()) stream << 'R';
   if (isInstalled()) stream << 'I';
   if (isNervous())   stream << 'N';
   if (isWaitTop())   stream << 'T';
   if (isPathMark())  stream << 'P';
   if (isFailed())    stream << 'F';
+  if (isCommitted()) stream << 'C';
   if (isDiscarded()) stream << 'D';
   if (isWaiting())   stream << 'W';
+  if (isReflected()) stream << 'R';
 
   stream << " #" << suspCount;
   stream << ']';
@@ -813,8 +815,23 @@ PRINT(Board)
 
 PRINTLONG(Board)
 {
-  print(stream,depth,offset);
-  stream << endl;
+  print(stream,depth,offset); stream << endl;
+  if (depth <= 0) {
+    stream << indent(offset) << "..." << endl;
+    return;
+  }
+  stream << indent(offset) << "Flags: " << (void *) flags << endl;
+  stream << indent(offset) << "Script: " << endl;
+  script.printLong(stream,depth-1,offset+2);
+  if (u.board) {
+    if (isCommitted()) {
+      stream << indent(offset) << "Board:" << endl;
+      u.board->printLong(stream,depth-1,offset+2);
+    } else {
+      stream << indent(offset) << "Actor:" << endl;
+      u.actor->printLong(stream,depth-1,offset+2);
+    }
+  }
 }
 
 void Board::Print()
@@ -828,6 +845,37 @@ void Board::Print()
   cout << endl;
 }
 
+PRINT(Script)
+{
+  stream << indent(offset);
+  if (getSize() <= 0) {
+    stream << "- empty -";
+    return;
+  }
+  for (int i = 0; i < getSize(); i++) {
+    (*this)[i].print(stream,depth,offset);
+    stream << ", ";
+  }
+}
+
+PRINTLONG(Script)
+{
+  print(stream,depth,offset);
+  stream << endl;
+}
+
+PRINT(Equation)
+{
+  tagged2Stream(getLeft(),stream,depth,offset);
+  stream << " = ";
+  tagged2Stream(getRight(),stream,depth,offset);
+}
+
+PRINTLONG(Equation)
+{
+  print(stream,depth,offset);
+}
+
 PRINT(Actor)
 {
   if (!this) {
@@ -835,15 +883,39 @@ PRINT(Actor)
     return;
   }
 
-  stream << indent(offset)
-    << "Actor @"
-    << this;
+  stream << indent(offset);
+  if (isAsk()) {
+    stream << "Ask";
+  } else if (isWait()) {
+    stream << "Wait";
+  } else if (isSolve()) {
+    stream << "Solve";
+  } else if (isDisWait()) {
+    stream << "DisWait";
+  } else {
+    stream << "Unknown";
+  }
+  stream << "Actor @"
+         << this;
+  if (isCommitted()) {
+    stream << " (committed)";
+  }
 }
 
 PRINTLONG(Actor)
 {
   print(stream,depth,offset);
   stream << endl;
+  if (depth <= 0) {
+    stream << indent(offset) << "..." << endl;
+    return;
+  }
+  stream << indent(offset) << "Priority: " << priority << endl;
+  if (isSolve()) {
+    ((SolveActor *)this)->printLong(stream,depth,offset);
+  }
+  stream << indent(offset) << "Board: " << endl;
+  board->printLong(stream,depth-1,offset+2);
 }
 
 PRINT(SolveActor)
@@ -951,18 +1023,11 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v
          << getVarName(v)
          << " @"
          << this
-         << endl
-         << indent(offset)
-         << "Any SuspList:\n";
+         << endl;
+
+  stream << indent(offset)
+         << "Suspension List:\n";
   suspList->print(stream, 0, offset+3);
-
-  if (getType() == FDVariable) {
-    stream << indent(offset) << "Det SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[fd_det]->print(stream, 0, offset+3);
-
-    stream << indent(offset) << "Bounds SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, 0, offset+3);
-  }
 
   stream << indent(offset) << "HomeNode: ";
   home->getBoardDeref()->print(stream,0);
@@ -970,7 +1035,13 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v
 
   switch(getType()){
   case FDVariable:
-    ((GenFDVariable*)this)->getDom().printLong(stream, offset);
+    stream << indent(offset) << "FD Det SuspList:\n";
+    ((GenFDVariable*)this)->fdSuspList[fd_det]->print(stream, 0, offset+3);
+
+    stream << indent(offset) << "FD Bounds SuspList:\n";
+    ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, 0, offset+3);
+    stream << indent(offset) << "FD Domain:\n";
+    ((GenFDVariable*)this)->getDom().printLong(stream, offset+3);
     break;
   case OFSVariable:
     {
@@ -1078,6 +1149,16 @@ PRINTLONG(Builtin)
 {
   print(stream,depth,offset);
   stream << endl;
+  if (gRegs && getRefsArraySize(gRegs) > 0) {
+    stream << indent(offset) << "gRegs:" << endl;
+    for (int i=0; i < getRefsArraySize(gRegs); i++) {
+      stream << indent(offset+2) << "g[" << i << "] = ";
+      tagged2Stream(gRegs[i],stream,depth-1,offset+2);
+      stream << endl;
+    }
+  } else {
+    stream << indent(offset) << "gRegs: -" << endl;
+  }
 }
 
 
@@ -1195,7 +1276,7 @@ PRINT(TaskStack)
         break;
       case C_NERVOUS:
         {
-          stream << "NERVOUS ";
+          stream << "  NERVOUS ";
           stream << endl;
         }
         break;
@@ -1276,7 +1357,7 @@ PRINTLONG(TaskStack)
       }
       break;
     case C_NERVOUS:
-      stream << "WAKEUP\n";
+      stream << "NERVOUS\n";
       n->print(stream,depth,offset); stream << endl;
       break;
     case C_CFUNC_CONT:

@@ -203,6 +203,8 @@ public:
   void pushTaskOutline(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void pushCFun(Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
+  void pushNervous(Board *n);
+
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term, Bool prop);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop);
@@ -224,8 +226,9 @@ public:
       return _checkExtSuspension(susp);
     return NO;
   }
-  void incSolveThreads (Board *bb);
+  void incSolveThreads (Board *bb,int n=1);
   void decSolveThreads (Board *bb);
+  Board *findStableSolve(Board *bb);
 
 // debugging --> see file ../builtins/debug.C
   State getValue(TaggedRef feature, TaggedRef out);

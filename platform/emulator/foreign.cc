@@ -7,7 +7,6 @@
   State: $State$
   */
 
-
 #include <ctype.h>
 #include <errno.h>
 
@@ -847,11 +846,14 @@ OZ_Suspension OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
   printf("\n");
 #endif
 
+#ifndef NEWCOUNTER
   am.currentBoard->incSuspCount();
+#endif
+  /* create a CFuncContinuation */
   return (OZ_Suspension)
-    new Suspension(new CFuncContinuation(am.currentBoard,
-                                         am.currentThread->getPriority(),
-                                         fun, args, arity));
+    new Suspension(am.currentBoard,
+                   am.currentThread->getPriority(),
+                   fun, args, arity);
 }
 
 void OZ_addSuspension(OZ_Term var, OZ_Suspension susp)

@@ -26,27 +26,27 @@
 Suspension* FDcurrentTaskSusp = NULL;
 
 void reviveCurrentTaskSusp(void) {
-  DebugCheck(FDcurrentTaskSusp == NULL,
-             error("FDcurrentTaskSusp is NULL in reviveFDcurrentTaskSusp."));
-  DebugCheck(!FDcurrentTaskSusp->isResistant(),
-             error("Cannot revive non-resistant suspension."));
-  DebugCheck(FDcurrentTaskSusp->isDead(),
-             error("Cannot revive dead suspension."));
+  Assert(FDcurrentTaskSusp != NULL);
+  Assert(FDcurrentTaskSusp->isResistant());
+  Assert(!FDcurrentTaskSusp->isDead());
+  Assert(am.currentBoard==FDcurrentTaskSusp->getBoard()->getBoardDeref());
   FDcurrentTaskSusp->unmarkPropagated();
   FDcurrentTaskSusp->unmarkUnifySusp();
-  FDcurrentTaskSusp->setBoard(am.currentBoard);
+#ifndef NEWCOUNTER
   am.currentBoard->incSuspCount();
+#endif
+  Assert(am.currentBoard==FDcurrentTaskSusp->getBoard()->getBoardDeref());
+  FDcurrentTaskSusp->setBoard(am.currentBoard);
   FDcurrentTaskSusp = NULL;
 }
 
 
-void killPropagatedCurrentTaskSusp(void) {
+void killPropagatedCurrentTaskSusp() {
   if (FDcurrentTaskSusp == NULL) return;
 
-  DebugCheck(!FDcurrentTaskSusp->isResistant(),
-             error("Cannot kill non-resistant suspension."));
-  DebugCheck(FDcurrentTaskSusp->isDead(),
-             error("Suspension already dead."));
+  Assert(am.currentBoard==FDcurrentTaskSusp->getBoard()->getBoardDeref());
+  Assert(FDcurrentTaskSusp->isResistant());
+  Assert(!FDcurrentTaskSusp->isDead());
 
   if (!FDcurrentTaskSusp->isPropagated()) {
     FDcurrentTaskSusp = NULL;
@@ -54,17 +54,19 @@ void killPropagatedCurrentTaskSusp(void) {
   }
 
   FDcurrentTaskSusp->markDead();
+#ifdef NEWCOUNTER
+  am.currentBoard->decSuspCount();
+#endif
   am.checkExtSuspension(FDcurrentTaskSusp);
   FDcurrentTaskSusp = NULL;
 }
 
 void dismissCurrentTaskSusp(void) {
-  DebugCheck(!FDcurrentTaskSusp->isResistant(),
-             error("Cannot dismiss non-resistant suspension."));
-  DebugCheck(FDcurrentTaskSusp->isDead(),
-             error("Suspension is dead."));
-
-  FDcurrentTaskSusp->cContToBoard(am.currentBoard);
+  Assert(FDcurrentTaskSusp != NULL);
+  Assert(FDcurrentTaskSusp->isResistant());
+  Assert(!FDcurrentTaskSusp->isDead());
+  Assert(am.currentBoard==FDcurrentTaskSusp->getBoard()->getBoardDeref());
+  FDcurrentTaskSusp->cContToBoard(am.currentBoard); // mm2 opt
   FDcurrentTaskSusp = NULL;
 }
 
@@ -82,11 +84,9 @@ void activateCurrentTaskSusp(void) {
 Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
                                 OZ_Term * args, int arity)
 {
-  CFuncContinuation * c =
-    new CFuncContinuation(am.currentBoard,
-                          am.currentThread->getPriority(),
-                          fun, args, arity);
-  return new Suspension(c);
+  return new Suspension(am.currentBoard,
+                        am.currentThread->getPriority(),
+                        fun, args, arity);
 }
 
 

@@ -99,7 +99,7 @@ void Thread::Init()
   FreeList = (Thread *) NULL;
   ToplevelQueue = (Toplevel *) NULL;
   am.currentThread = (Thread *) NULL;
-  am.rootThread = new Thread(am.conf.defaultPriority);
+  am.rootThread = new Thread(am.conf.defaultPriority,am.rootBoard);
 }
 
 /*
@@ -154,7 +154,7 @@ Thread *Thread::GetTail()
 
 void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
 {
-  Thread *t = newThread(c->getPriority());
+  Thread *t = newThread(c->getPriority(),c->getBoard());
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     Board *nb = c->getBoard ();
     am.incSolveThreads (nb);
@@ -168,7 +168,7 @@ void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
 void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
                                Suspension *s)
 {
-  Thread *t = newThread(c->getPriority());
+  Thread *t = newThread(c->getPriority(),c->getBoard());
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     Board *nb = c->getBoard();
     am.incSolveThreads(nb);
@@ -179,30 +179,43 @@ void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
 }
 
 
-// create a new thread after wakeup (nervous)
-void Thread::ScheduleWakeup(Board *b, Bool wasExtSusp)
-{
-  Thread *t = newThread(b->getActor()->getPriority());
-  if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    am.incSolveThreads (b);
-    t->setNotificationBoard (b);
-  }
-  t->taskStack.pushNervous(b);
-  b->setNervous();
-  t->schedule();
-}
-
 // create a new thread to reduce a solve actor;
 void Thread::ScheduleSolve (Board *b)
 {
   DebugCheck ((b->isCommitted () == OK || b->isSolve () == NO),
               error ("no solve board in Thread::ScheduleSolve ()"));
-  // DebugCheckT (message("Thread::ScheduleSolve (@0x%x)\n", (void *) b->getActor ()));
-  Thread *t = new Thread(b->getActor()->getPriority());
+  // message("Thread::ScheduleSolve (@0x%x)\n", (void *) b->getActor ());
+#ifdef NEWCOUNTER
+  if (b->isNervousSolve()) {
+    return;
+  }
+#endif
+
+  Thread *t = newThread(b->getActor()->getPriority(),NULL);
+#ifdef NEWCOUNTER
+  t->taskStack.pushNervousSolve(b);
+  b->setNervousSolve();
+#else
   Board *nb = (b->getParentBoard ())->getSolveBoard ();
   am.incSolveThreads (nb);
   t->setNotificationBoard (nb);
   t->taskStack.pushNervous(b);
   b->setNervous();
+#endif
   t->schedule();
 }
+
+#ifndef NEWCOUNTER
+// create a new thread after wakeup (nervous)
+void Thread::ScheduleWakeup(Board *b, Bool wasExtSusp)
+{
+  Thread *t = newThread(b->getActor()->getPriority(),b);
+  if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
+    am.incSolveThreads (b);
+    t->setNotificationBoard(b);
+  }
+  t->taskStack.pushNervous(b);
+  b->setNervous();
+  t->schedule();
+}
+#endif
