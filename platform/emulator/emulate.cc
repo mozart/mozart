@@ -2272,10 +2272,10 @@ LBLdispatcher:
   Case(DEALLOCATEL)
     {
       Assert(!isFreedRefsArray(Y));
-      if (!isDirtyRefsArray(Y)) {
+      if (Y) {
 	deallocateY(Y);
+	Y = NULL;
       }
-      Y=NULL;
       DISPATCH(1);
     }
 // -------------------------------------------------------------------------
@@ -2838,8 +2838,6 @@ LBLdispatcher:
       CBB->setBody(PC+1, Y, G,NULL,0);
 
     LBLsuspendBoardWaitTop:
-      markDirtyRefsArray(Y);
-
       Assert(CAA == AWActor::Cast (CBB->getActor()));
 
       e->deinstallCurrent();
@@ -2930,7 +2928,6 @@ LBLdispatcher:
 
   Case(THREAD)
     {
-      markDirtyRefsArray(Y);
       ProgramCounter newPC = PC+2;
       ProgramCounter contPC = getLabelArg(PC+1);
 
@@ -2949,7 +2946,8 @@ LBLdispatcher:
 #endif
 
       ozstat.createdThreads.incf();
-      tt->pushCont(newPC,Y,G,NULL,0);
+      RefsArray newY = Y==NULL ? NULL : copyRefsArray(Y);
+      tt->pushCont(newPC,newY,G,NULL,0);
       e->scheduleThread (tt);
 
 #ifdef LINKEDTHREADS

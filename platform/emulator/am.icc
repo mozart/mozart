@@ -348,11 +348,7 @@ Thread *AM::mkRunnableThread(int prio, Board *bb, TaggedRef val,
 inline
 Thread *AM::mkWakeupThread(Board *bb) 
 {
-  Thread *th = new Thread(S_WAKEUP,bb->getActor()->getPriority(),bb,0);
-
-  markDirtyRefsArray ((bb->getBodyPtr())->getY());
-
-  return th;
+  return new Thread(S_WAKEUP,bb->getActor()->getPriority(),bb,0);
 }
 
 //
