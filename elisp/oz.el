@@ -47,8 +47,9 @@
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
 
-(defvar oz-compiler "oz.compiler")
-(defvar oz-machine "oz.machine")
+(defvar oz-compiler nil)
+(defvar oz-machine nil)
+(defvar oz-machine-buffer "*Oz Machine*")
 
 (defvar oz-machine-hook nil
   "Hook used if non nil for starting machine.
@@ -408,9 +409,10 @@ For example
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
   (define-key map "\C-c\C-r"    'run-oz)
-  (define-key map "\C-cc"    'oz-precompile-file)
-  (define-key map "\C-cm"    'oz-set-gdb-machine)
-  (define-key map "\C-cd"    'oz-gdb)
+  (define-key map "\C-cc"       'oz-precompile-file)
+  (define-key map "\C-cm"       'oz-set-machine)
+  (define-key map "\C-co"       'oz-other)
+  (define-key map "\C-cd"       'oz-gdb)
 
   )
 
@@ -447,7 +449,7 @@ if that value is non-nil."
 Input and output via buffers *Oz Compiler* and *Oz Machine*."
   (interactive)
   (oz-check-running)
-  (if (or (get-process "Oz Compiler") (get-process "Oz Machine"))
+  (if (or (get-process "Oz Compiler") (get-buffer-process oz-machine-buffer))
       (error "Oz already running, try halting Oz"))
   (start-oz-process)
   (if (not (equal mode-name "Oz"))
@@ -461,11 +463,11 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 
   (message "halting Oz...")
   (if (and (get-process "Oz Compiler")
-	   (get-process "Oz Machine"))
+	   (get-buffer-process oz-machine-buffer))
       (let ((i oz-halt-timeout))
 	(oz-send-string "!halt \n")
 	(while (and (or (get-process "Oz Compiler")
-			(get-process "Oz Machine"))
+			(get-buffer-process oz-machine-buffer))
 		    (> i 0))
 	  (sit-for 1)
 	  (sleep-for 1)
@@ -473,8 +475,8 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 
   (if (get-process "Oz Compiler")
       (delete-process "*Oz Compiler*"))
-  (if (get-process "Oz Machine")
-      (delete-process "*Oz Machine*"))
+  (if (get-buffer-process oz-machine-buffer)
+      (delete-process oz-machine-buffer))
   (message "")
   (oz-reset-title))
 
@@ -482,12 +484,12 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 
 (defun oz-check-running()
   (if (and (get-process "Oz Compiler")
-	   (not (get-process "Oz Machine")))
+	   (not (get-buffer-process oz-machine-buffer)))
       (progn 
 	(oz-set-state 'oz-machine-state "???")
 	(error "Machine has died, for some unknown reason, try halting Oz")))
   (if (and (not (get-process "Oz Compiler"))
-	   (get-process "Oz Machine"))
+	   (get-buffer-process oz-machine-buffer))
       (progn 
 	(oz-set-state 'oz-compiler-state "???")
 	(error "Compiler has died, for some unknown reason, try halting Oz"))))
@@ -495,7 +497,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 (defun start-oz-process()
   (or (get-process "Oz Compiler")
       (let ((file (oz-make-temp-name "/tmp/ozsock")))
-	(setq oz-machine-visible (get-buffer-window "*Oz Machine*"))
+	(setq oz-machine-visible (get-buffer-window oz-machine-buffer))
 
 	(oz-set-state 'oz-compiler-state "booting")
         (make-comint "Oz Compiler" oz-compiler nil "-S" file)
@@ -507,14 +509,16 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 	    (funcall oz-machine-hook file)
 	  (if oz-wait-for-compiler (sleep-for oz-wait-for-compiler))
 	  (oz-set-state 'oz-machine-state "booting")
-	  (make-comint "Oz Machine" oz-machine nil "-S" file)
-	  (oz-create-buffer "*Oz Machine*")
-	  (set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
-	  (bury-buffer "*Oz Machine*")
-	  (save-excursion
-	    (set-buffer (get-buffer "*Oz Machine*"))
-	    (delete-region (point-min) (point-max))
-	    )
+	  (setq oz-machine-buffer "*Oz Machine*")
+	  (make-comint "Oz Machine" "oz.machine" nil "-S" file)
+	  (set-process-filter (get-buffer-process oz-machine-buffer)
+			      'oz-machine-filter)
+	  )
+	(oz-create-buffer oz-machine-buffer)
+	(bury-buffer oz-machine-buffer)
+	(save-excursion
+	  (set-buffer (get-buffer oz-machine-buffer))
+	  (delete-region (point-min) (point-max))
 	  )
 
 	;; make sure buffers exist
@@ -529,14 +533,9 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 ;; GDB support
 ;;------------------------------------------------------------
 
-(defvar oz-gdb-machine "oz.machine.bin"
-  "the oz machine for running under gdb")
-
-(autoload 'gdb-mode "gdb")
-
-(defun oz-set-gdb-machine()
+(defun oz-set-machine()
   (interactive)
-  (setq oz-gdb-machine 
+  (setq oz-machine 
 	(expand-file-name 
 	 (read-file-name "Choose Machine: "
 			 nil
@@ -561,36 +560,38 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 
   (if oz-machine-hook
       (setq oz-machine-hook nil)
-    (setq oz-machine-hook 'oz-gdb-machine)
+    (setq oz-machine-hook 'oz-start-gdb-machine)
     )
-  
-  (if oz-machine-hook
-      (message "set gdb machine: %s" oz-gdb-machine)
-    (message "set global machine")))
 
-(defun oz-gdb-machine (tmpfile)
-  "Run gdb on oz-machine in buffer *Oz Machine*.
+  (if oz-machine-hook
+      (message "gdb enabled: %s" oz-machine)
+    (message "gdb disabled")))
+
+
+(defun oz-other()
+  (interactive)
+  (if (getenv "OZMACHINE")
+      (setenv "OZMACHINE" nil)
+    (setenv "OZMACHINE" oz-machine))
+
+  (if (getenv "OZMACHINE")
+      (message "Oz Machine: %s" oz-machine)
+    (message "Oz Machine: global")))
+
+
+(defun oz-start-gdb-machine (tmpfile)
+  "Run gdb on oz-machine
 The directory containing FILE becomes the initial working directory
 and source-file directory for GDB.  If you wish to change this, use
 the GDB commands `cd DIR' and `directory'."
-  (oz-set-state 'oz-machine-state "running under gdb")
-  (let* ((path (expand-file-name oz-gdb-machine))
-	(file (file-name-nondirectory path)))
-
-    (make-comint "Oz Machine" "gdb" nil "-fullname"
-		 "-cd" (file-name-directory path) file)
-    (save-excursion
-      (set-buffer (get-buffer-create "*Oz Machine*"))
-      (delete-region (point-min) (point-max))
-      (gdb-mode)
-      )
-    (set-process-filter (get-process "Oz Machine") 'gdb-filter)
-    (set-process-sentinel (get-process "Oz Machine") 'gdb-sentinel)
-    (comint-send-string (get-process "Oz Machine")
-			 (concat "run -S " tmpfile "\n"))
-    (setq current-gdb-buffer (get-buffer "*Oz Machine*"))
-    )
-  )
+  (let ((old-buffer (current-buffer)))
+    (oz-set-state 'oz-machine-state "running under gdb")
+    (if oz-gnu19 (gdb (concat "gdb " oz-machine)))
+    (if oz-lucid (gdb oz-machine))
+    (setq oz-machine-buffer (buffer-name (current-buffer)))
+    (comint-send-string (get-buffer-process oz-machine-buffer)
+			(concat "run -S " tmpfile "\n"))
+    (switch-to-buffer old-buffer)))
 
 ;;------------------------------------------------------------
 ;; Feeding the compiler
@@ -639,7 +640,7 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-continue()
   "continue the Oz Machine after an error"
   (interactive)
-  (comint-send-string "Oz Machine" "c\n"))
+  (comint-send-string (get-buffer-process oz-machine-buffer) "c\n"))
 
 ;;------------------------------------------------------------
 ;;Indent
@@ -1152,7 +1153,7 @@ OZ compiler, machine and error window")
 (defun oz-show-buffer (buffer)
   (save-excursion
     (let* ((edges (window-edges (selected-window)))
-	   (win (or (get-buffer-window "*Oz Machine*")
+	   (win (or (get-buffer-window oz-machine-buffer)
 		    (get-buffer-window "*Oz Compiler*")
 		    (get-buffer-window "*Oz Errors*")
 		    (split-window (selected-window)
@@ -1163,7 +1164,7 @@ OZ compiler, machine and error window")
       )
     )
 
-  (bury-buffer "*Oz Machine*")
+  (bury-buffer oz-machine-buffer)
   (bury-buffer "*Oz Compiler*")
   (bury-buffer "*Oz Errors*")
   (bury-buffer buffer))
@@ -1186,7 +1187,7 @@ OZ compiler, machine and error window")
 (defun oz-hide-errors()
   (interactive)
   (setq oz-errors-found nil)
-  (let ((show-machine (or (get-buffer-window "*Oz Machine*")
+  (let ((show-machine (or (get-buffer-window oz-machine-buffer)
 			  (get-buffer-window "*Oz Temp*")
 			  (get-buffer-window "*Oz Compiler*")
 			  (get-buffer-window "*Oz Errors*"))))
@@ -1195,7 +1196,7 @@ OZ compiler, machine and error window")
     (if (get-buffer "*Oz Temp*") 
 	(delete-windows-on "*Oz Temp*"))
     (if (and oz-machine-visible show-machine)
-	(oz-show-buffer "*Oz Machine*"))))
+	(oz-show-buffer oz-machine-buffer))))
 
 
 (defun oz-show-error(string)
@@ -1230,14 +1231,14 @@ OZ compiler, machine and error window")
       (progn
 	(delete-windows-on "*Oz Compiler*")
 	(if oz-machine-visible
-	    (oz-show-buffer "*Oz Machine*")))
+	    (oz-show-buffer oz-machine-buffer)))
     (oz-toggle-window "*Oz Compiler*")))
 
 
 (defun oz-toggle-machine()
   (interactive)
-  (oz-toggle-window "*Oz Machine*")
-  (setq oz-machine-visible (get-buffer-window "*Oz Machine*")))
+  (oz-toggle-window oz-machine-buffer)
+  (setq oz-machine-visible (get-buffer-window oz-machine-buffer)))
 
 
 (defun oz-toggle-errors()
