@@ -1235,7 +1235,7 @@ in
 		    pack(Column1 Column2 Column3 side: left fill: y)
 		    pack(GlobalFrame WarningsFrame padx: 8 pady: 8 anchor: w)
 		    pack(WarningsLabel WarnRedeclSw WarnUnusedSw
-			 WarnUnusedFormals WarnForwardSw anchor: w)
+			 WarnUnusedFormalsSw WarnForwardSw anchor: w)
 		    pack(GlobalLabel CompilerPassesSw ShowInsertSw
 			 EchoQueriesSw ErrorsFrame anchor: w)
 		    pack(DoMaxErrors self.MaxNumberOfErrors ErrorsLabel
