@@ -232,7 +232,7 @@ void *ozMalloc(int chunk_size)
     void *old = sbrk(0);
     void *ret_val = sbrk(chunk_size);
     if (ret_val == (caddr_t) - 1) {
-      message("Virtual memory exhausted");
+      message("Virtual memory exhausted\n");
       IO::exitOz(1);
     }
 
@@ -360,8 +360,8 @@ void *heapMallocOutline
 void getMemFromOS(size_t sz)
 {
   if (sz > heapBlockSize) {
-    message("memory exhausted: required chunk bigger thank max size");
-    message(" hint: look for an endless recursion");
+    message("memory exhausted: required chunk bigger than max size\n");
+    message(" hint: look for an endless recursion\n");
     IO::exitOz(1);
   }
 
