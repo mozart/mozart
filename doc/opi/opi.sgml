@@ -861,12 +861,48 @@
     <Chapter id="chapter.internals">
       <Title/Internal Functions/
       <P>
-<!--**
- - oz-is-quoted
- - oz-backward-keyword, oz-forward-keyword
- - oz-backward-begin, oz-forward-end,
-   oz-backward-paren, oz-forward-paren
--->
+        This section documents some internal functions that might be
+        useful to user's wanting to write their own Oz-syntax-aware
+        commands.  All of these commands respect Oz syntax &wrt; quoted
+        elements.
+        <List>
+          <Entry class=function><<oz-is-quoted>>
+          <Item>
+            <P.silent><!--**-->
+              Return non-<<nil>> iff point is inside a string, quoted atom,
+              backquote variable, ampersand-denoted character or one-line
+              comment.  In this case, move the point to the beginning of the
+              corresponding token.  Else point is not moved.
+          <Entry class=function><<oz-backward-keyword>>
+          <Entry class=function><<oz-forward-keyword>>
+          <Item>
+            <P.silent><!--**-->
+              Search backward &resp; forward for the last &resp; next keyword
+              or parenthesis preceding &resp; following point.  Return
+              non-<<nil>> iff such was found.  Ignore quoted keywords.
+              Point is left at the first character of the keyword.
+          <Entry class=function><<oz-backward-begin>>
+          <Item>
+            <P.silent><!--**-->
+              Move to the last unmatched start of a bracketed Oz construct and
+              return column of point.
+          <Entry class=function><<oz-forward-end>>
+          <Item>
+            <P.silent><!--**-->
+              Move point to the next unmatched <Code proglang=oz>end</Code>.
+          <Entry class=function><<oz-backward-paren>>
+          <Item>
+            <P.silent><!--**-->
+              Move to the last unmatched opening parenthesis and return column
+              of point.
+          <Entry class=function><<oz-forward-paren>>
+          <Item>
+            <P.silent><!--**-->
+              Move to the next unmatched closing parenthesis.
+        </List>
+      <P>
+        Please send any interesting commands you formulate using these
+        functions to the author.
   <Back>
     <Bib.Extern id="kornstaedt96" to="../gump/gump.bib" key="kornstaedt96">
 </Book>
