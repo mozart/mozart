@@ -1766,7 +1766,7 @@ define
                                        SEQ([As br()])
                                     end
                                     span('class':[version]
-                                         PCDATA('Version: '#
+                                         PCDATA('Version '#
                                                 {Property.get 'oz.version'}#
                                                 ' ('#
                                                 {Property.get 'oz.date'}#
