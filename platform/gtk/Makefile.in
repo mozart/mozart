@@ -29,6 +29,8 @@ SHAREDIR        = $(PREFIX)/share
 ### files to install
 ifeq ($(ENABLE_CANVAS),yes)
     SHAREFILES_AUX = $(SHAREDIR)/GnomeCanvas.so-$(PLATFORM)
+else
+    SHAREFILES_AUX =
 endif
 
 SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM) \
@@ -37,6 +39,8 @@ SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM) \
 
 ifeq ($(ENABLE_CANVAS),yes)
     PLATFORMFILES_AUX = $(PLATFORMDIR)/GnomeCanvas.so-$(PLATFORM)
+else
+    PLATFORMFILES_AUX =
 endif
 
 PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM) \
@@ -52,7 +56,12 @@ ALL_INCLUDES         = -I$(VPATH)/../emulator
 BUILD_SCRIPT         = $(VPATH)/goz_build_native.perl
 BUILD                = $(PERL) $(BUILD_SCRIPT)
 BUILD_GTK            = $(BUILD) --includes="gtk/gtk.h"
-BUILD_CANVAS         = $(BUILD) --includes=$(CANVAS_HEADER)
+ifeq ($(HAVE_GTK_CANVAS),yes)
+   GTK_CANVAS_RENAMER = --includes=gnome-gtk-canvas-renamer.h
+else
+   GTK_CANVAS_RENAMER =
+endif
+BUILD_CANVAS         = $(BUILD) --includes=$(CANVAS_HEADER) $(GTK_CANVAS_RENAMER)
 
 # specs
 SPECS_PATH           = $(VPATH)/../../share/lib/gtk/specs
@@ -63,14 +72,8 @@ CANVAS_SPECS         = $(SPECS_PATH)/gnome-canvas/*.spec
 # objects
 GTK_OBJECTS          = goz_gtk_interface.o goz_gtk_wrappers.o
 GDK_OBJECTS          = goz_gdk_interface.o goz_gdk_wrappers.o
-# The canvas api uses the gome_canvas prefix.
-# If we use the gtk+ canvas we have to rename the names via macros.
-# This is done in gnome_gtk_canvas_renamer
-ifeq ($(HAVE_GTK_CANVAS),yes)
-    GTK_CANVAS_OBJECTS = gnome_gtk_canvas_renamer.o
-endif
 ifeq ($(ENABLE_CANVAS),yes)
-    CANVAS_OBJECTS = goz_gnome_canvas_interface.o goz_gnome_canvas_wrappers.o $(GTK_CANVAS_OBJECTS)
+    CANVAS_OBJECTS = goz_gnome_canvas_interface.o goz_gnome_canvas_wrappers.o
 else
     CANVAS_OBJECTS =
 endif
@@ -129,7 +132,7 @@ goz_gnome_canvas_interface.c: goz_gnome_canvas_wrappers.c
 GnomeCanvas.so-$(PLATFORM): $(CANVAS_OBJECTS) goz_support.o
         $(OZTOOL) ld $(LDFLAGS) `gnome-config --libs gnomeui` $(CANVAS_OBJECTS) goz_support.o -o $@
 
-gnome_gtk_canvas_renamer.c: $(CANVAS_SPECS)
+gnome-gtk-canvas-renamer.h: $(CANVAS_SPECS)
         $(BUILD_CANVAS) --gnome $^ > $@
 
 ### end of Canvas

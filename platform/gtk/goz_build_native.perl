@@ -488,13 +488,13 @@ sub gnome_save {
 }
 
 sub gnome_clean_type {
-  my ($type_str) = @_;
-  if ($type_str) {
-      $type_str =~ s/^[\%\!\+\=\^]+//s ;
-      $type_str =~ s/const //sg;
-      $type_str =~ s/[*]//g;
-  }
-  return $type_str;
+    my ($type_str) = @_;
+    if ($type_str) {
+        $type_str =~ s/^[\%\!\+\=\^]+//s ;
+        $type_str =~ s/const //sg;
+        $type_str =~ s/[*]//g;
+    }
+    return $type_str;
 }
 
 sub gnome_process_map {
