@@ -72,15 +72,6 @@
       <Figure class=program id="program.intro.start">
                  <Caption/Program that creates a capitalization window./
                  <p>
-<chunk><title/Change capitalization/
-fun {$ I}
-   case {Char.type I}
-   of lower then {Char.toUpper I}
-   [] upper then {Char.toLower I}
-   else I
-   end
-end
-</chunk>
 <chunk class=anonymous><title/Capitalization/
 T = {New Tk.toplevel tkInit(title:'Capitalization')}
 E = {New class $ from Tk.entry

@@ -22,10 +22,24 @@
   -->
 
 <appendix id=appendix.data>
-  <title/Example Data/
+  <title/Data and Program Fragments/
 
-<p> The following appendix features some data specifications omitted
+<p> The following appendix features some program fragments and data specifications omitted
 in the chapters' text.
+
+<section id="section.data.started">
+  <title/Getting Started/
+
+<p>
+<chunk><title/Change capitalization/
+fun {$ I}
+   case {Char.type I}
+   of lower then {Char.toUpper I}
+   [] upper then {Char.toLower I}
+   else I
+   end
+end
+</chunk>
 
 <section id="section.data.widgets-2">
   <title/More on Widgets/
@@ -106,6 +120,53 @@ in the chapters' text.
 'industrial practice.  Computation spaces have '#
 'shown their practicability in the constraint '#
 'programming system Oz.'
+</chunk>
+
+<p>
+<chunk><title/Sample ToyText/
+hyper(canvas:
+         e(head:'Canvas'
+           body:['A canvas widget displays items. '
+                 'An item is of one the following types: '
+                 a(ref:arc       ['arc']) ', '
+                 a(ref:bitmap    ['bitmap']) ', '
+                 a(ref:image     ['image']) ', '
+                 a(ref:line      ['line']) ', '
+                 a(ref:oval      ['oval']) ', '
+                 a(ref:polygon   ['polygon']) ', '
+                 a(ref:rectangle ['rectangle']) ', '
+                 a(ref:text      ['text']) ', and '
+                 a(ref:window    ['window']) '.'])
+      arc:
+         e(head:'Arc'
+           body:['An arc item displays a piece of a circle.'])
+      bitmap:
+         e(head:'Bitmap'
+           body:['A bitmap item displays a bitmap with a given name.'])
+      image:
+         e(head:'Image'
+           body:['Displays an image.'])
+      line:
+         e(head:'Line'
+           body:['A line item consists of several connected segments.'])
+      oval:
+         e(head:'Oval'
+           body:['An oval can either be a circle or an ellipsis.'])
+      polygon:
+         e(head:'Polygon'
+           body:['A polygon is described by three or more '
+                 a(ref:line ['line']) ' segments.'])
+      rectangle:
+         e(head:'Rectangle'
+           body:['Displays a rectangle.'])
+      text:
+         e(head:'Text'
+           body:['Displays text consisting of a single or several lines.'])
+      window:
+         e(head:'Window'
+           body:['Displays a widget in the canvas where the canvas '
+                 'widget serves as geometry manager for the widget. '
+                 'See also ' a(ref:canvas ['the canvas widget']) '.']))
 </chunk>
 
 
