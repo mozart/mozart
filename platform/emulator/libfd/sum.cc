@@ -168,8 +168,10 @@ OZ_Return LinNotEqPropagator::propagate(void)
   // if possible reduce to ternary propagator 
   if (sz == 2 && mayBeEqualVars()) {
     if ((a[0] == 1) && (a[1] == -1)) {
+      OZ_DEBUGPRINTTHIS("out (replace 1)");
       return replaceBy(new NotEqOffPropagator(reg_x[0], reg_x[1], -c));
     } else if ((a[0] == -1) && (a[1] == 1)) {
+      OZ_DEBUGPRINTTHIS("out (replace 2)");
       return replaceBy(new NotEqOffPropagator(reg_x[1], reg_x[0], -c));
     }
   }
@@ -194,12 +196,15 @@ OZ_Return LinNotEqPropagator::propagate(void)
       if (last_nonsingl != i)
 	sum += NUMBERCAST(a[i]) * x[i]->getSingleElem();
 
-    if ((int(sum) % a[last_nonsingl]) != 0) 
+    if ((int(sum) % a[last_nonsingl]) != 0) {
+      OZ_DEBUGPRINTTHIS("out (1) ");
       return P.vanish();
-    else 
+    } else 
       sum /= -NUMBERCAST(a[last_nonsingl]);
 
     *x[last_nonsingl] -= int(sum);    
+    
+    OZ_DEBUGPRINTTHIS("out (2) ");
     return P.vanish();
   }
 
@@ -210,10 +215,15 @@ OZ_Return LinNotEqPropagator::propagate(void)
       ent += NUMBERCAST(a[i]) * x[i]->getSingleElem();
     }
 
-    if (ent != 0) return P.vanish();
+    if (ent != 0) {
+      OZ_DEBUGPRINTTHIS("out (3) ");
+      return P.vanish();
+    }
+    OZ_DEBUGPRINTTHIS("out (fail) ");
     return P.fail();
   }
   
+  OZ_DEBUGPRINTTHIS("out (4) ");
   return P.leave();
 }
 
