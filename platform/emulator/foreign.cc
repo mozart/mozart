@@ -1598,6 +1598,16 @@ OZ_Return OZ_readSelect(int fd,OZ_Term l,OZ_Term r)
   return am.select(fd,SEL_READ,l,r) ? PROCEED : FAILED;
 }
 
+void OZ_registerReadHandler(int fd,OZ_IOHandler fun,OZ_Term val)
+{
+  am.select(fd,SEL_READ,fun,val);
+}
+
+void OZ_registerAcceptHandler(int fd,OZ_IOHandler fun,OZ_Term val)
+{
+  am.acceptSelect(fd,fun,val);
+}
+
 OZ_Return OZ_writeSelect(int fd,OZ_Term l,OZ_Term r)
 {
   return am.select(fd,SEL_WRITE,l,r) ? PROCEED : FAILED;
@@ -1846,4 +1856,36 @@ void OZ_main(int argc,char **argv)
   am.init(argc,argv);
   engine();
   am.exitOz(0);
+}
+
+OZ_C_proc_proto(BIfail);
+void OZ_fail(char *format, ...)
+{
+  va_list ap;
+
+  va_start(ap,format);
+
+  prefixWarning();
+
+  fprintf(stderr, "*** Failure: ");
+  vfprintf(stderr,format,ap);
+  fprintf(stderr, "\n");
+
+  va_end(ap);
+
+  OZ_makeRunnableThread(BIfail,0,0);
+}
+
+void OZ_send(OZ_Term port, OZ_Term val)
+{
+  port = deref(port);
+  if (!isPort(port)) return;
+
+  LTuple *lt = new LTuple(val,am.currentUVarPrototype);
+
+  OZ_Term old=tagged2Port(port)->exchangeStream(lt->getTail());
+
+  if (OZ_unify(makeTaggedLTuple(lt),old)!=PROCEED) {
+    OZ_fail("OZ_send failed\n");
+  }
 }

@@ -70,11 +70,9 @@ enum InstType {
 };
 
 
-typedef int (*IOHandler)(int fd,OZ_Term val);
-
 class IONode {
 public:
-  IOHandler handler[2];
+  OZ_IOHandler handler[2];
   TaggedRef readwritepair[2];
 };
 
@@ -311,7 +309,8 @@ public:
 
   void handleIO();
   Bool loadQuery(CompStream *fd);
-  void select(int fd, int mode, IOHandler fun, TaggedRef val);
+  void select(int fd, int mode, OZ_IOHandler fun, TaggedRef val);
+  void acceptSelect(int fd, OZ_IOHandler fun, TaggedRef val);
   int select(int fd,int mode, TaggedRef l, TaggedRef r);
   void acceptSelect(int fd, TaggedRef l, TaggedRef r);
   void deSelect(int fd);

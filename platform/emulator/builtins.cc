@@ -4456,8 +4456,6 @@ OZ_C_proc_begin(BInewPort,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_proto(BIfail);
-
 OZ_C_proc_begin(BIsendPort,2)
 {
   OZ_Term prt1 = OZ_getCArg(0);
@@ -4472,13 +4470,8 @@ OZ_C_proc_begin(BIsendPort,2)
   Port *port = tagged2Port(prt);
   CheckLocalBoard(port,"port");
 
-  TaggedRef newStream = OZ_newVariable();
-  TaggedRef old = port->exchangeStream(newStream);
+  OZ_send(prt,msg);
 
-  OZ_Return ret = OZ_unify(cons(msg,newStream),old);
-  if (ret != FAILED) return ret;
-
-  OZ_makeRunnableThread(BIfail,0,0);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -5245,7 +5238,7 @@ OZ_C_proc_begin(BIunify,2)
   OZ_Term t0 = OZ_getCArg(0);
   OZ_Term t1 = OZ_getCArg(1);
 
-  return (OZ_unify(t0,t1));
+  return OZ_unify(t0,t1);
 }
 OZ_C_proc_end
 
@@ -6180,6 +6173,8 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   DoBoolFeature(stop,       t, AtomStopOnToplevelFailure);
   DoBoolFeature(cell,       t, AtomCellHack);
   DoNatFeature(stack,       t, AtomStackMaxSize);
+  DoNatFeature(debugIP,     t, AtomDebugIP);
+  DoNatFeature(debugPerdio, t, AtomDebugPerdio);
 
   if (debugmode == 0) {
     am.unsetSFlag(DebugMode);
@@ -6191,6 +6186,8 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   SetIfPos(ozconf.stopOnToplevelFailure, stop,       1);
   SetIfPos(ozconf.cellHack,              cell,       1);
   SetIfPos(ozconf.stackMaxSize,          stack,      KB);
+  SetIfPos(ozconf.debugIP,               debugIP,    1);
+  SetIfPos(ozconf.debugPerdio,           debugPerdio,1);
 
   return PROCEED;
 }
@@ -6875,12 +6872,6 @@ OZ_C_proc_begin(BIbiExceptionHandler,1)
 }
 OZ_C_proc_end
 
-/********************************************************************
- * PERDIO
- ******************************************************************** */
-
-
-
 #endif /* BUILTINS2 */
 
 
@@ -7292,7 +7283,10 @@ BuiltinTabEntry *BIinit()
   BIinitDVar();
   BIinitUnix();
   BIinitTclTk();
+
+#ifdef PERDIO
   BIinitPerdio();
+#endif
 
   return bi;
 }

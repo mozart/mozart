@@ -1081,7 +1081,7 @@ void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
   pushTaskInline(pc,y,g,x,i);
 }
 
-void AM::select(int fd, int mode, IOHandler fun, TaggedRef val)
+void AM::select(int fd, int mode, OZ_IOHandler fun, TaggedRef val)
 {
   if (!isToplevel()) {
     warning("select only on toplevel");
@@ -1090,9 +1090,20 @@ void AM::select(int fd, int mode, IOHandler fun, TaggedRef val)
   ioNodes[fd].readwritepair[mode]=val;
   ioNodes[fd].handler[mode]=fun;
   osWatchFD(fd,mode);
-  return;
 }
 
+
+void AM::acceptSelect(int fd, OZ_IOHandler fun, TaggedRef val)
+{
+  if (!isToplevel()) {
+    warning("select only on toplevel");
+    return;
+  }
+
+  ioNodes[fd].readwritepair[SEL_READ]=val;
+  ioNodes[fd].handler[SEL_READ]=fun;
+  osWatchAccept(fd);
+}
 
 int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
 {

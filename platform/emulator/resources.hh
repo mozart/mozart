@@ -58,3 +58,7 @@
 #define NameOfUnknown   "unknown"
 
 #define OzCompiler      "oz.compiler"
+
+#define MAX_TCP_CACHE     5
+#define MAX_UDP_PACKET    100*1024  /* 100k */
+#define TCP_PACKET_SIZE   1*1024    /* 1k */
