@@ -12,6 +12,9 @@ INSTALL_LIB	= $(INSTALL) -m 444
 EMACS		= emacs
 HOMEURL         = @HOMEURL@
 PLATFORM	= @PLATFORM@
+OZTOOL		= @OZTOOL@
+OZTOOL_INCLUDES	= $(PREFIX)/include
+OZFLEX		= @OZFLEX@
 
 TARGETS		= xsl-attribute.ozf \
 		  XSL_Attribute_Scanner.so-$(PLATFORM) \
