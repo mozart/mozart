@@ -601,10 +601,11 @@ enum TypeOfConst {
 enum TertType {
   Te_Local   = 0, // 0000
   Te_Manager = 1, // 0001
-  Te_Proxy   = 2  // 0010
+  Te_Proxy   = 2, // 0010
+  Te_Frame   = 3  // 0011
 };
 
-
+#define DebugIndexCheck(IND) {Assert(IND< (1<<27));Assert(IND>=0);}
 
 class ConstTerm {
 protected:
@@ -619,6 +620,7 @@ public:
   USEHEAPMEMORY;
 
   ConstTerm *gcConstTerm(void);
+  ConstTerm *gcConstTermSpec(void);
   void gcConstRecurse(void);
 
   void setTagged(TypeOfConst t, void *p) {
@@ -634,6 +636,19 @@ public:
   }
   void setPtr(void *p)  { setTagged(getType(),p); }
   TaggedRef *getRef()   { return &ctu.tagged; }
+
+  void setPrimIndex(int i){
+    int j=i+1;
+    DebugIndexCheck(j);    
+    unsigned int k= (unsigned int)j;
+    k= (k<<2);
+    ctu.tagged=makeTaggedRef((TypeOfTerm)getType(),(void *)k);}
+    
+  int getPrimIndex(){
+    unsigned int tmp= (unsigned int)tagValueOf(ctu.tagged);
+    tmp=tmp>>2;
+    int tmp2= (int)tmp;
+    return (tmp2-1);}
 
   OZPRINT;
   OZPRINTLONG;
@@ -665,8 +680,9 @@ public:
 
   Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
     setTertType(t);
-    setBoard(b);
-  }
+    setBoard(b);}
+  Tertiary(TypeOfConst s,TertType t) : ConstTerm(s) {
+    setTertType(t);}
 
   void setIndex(int i) { tagged.setIndex(i); }
   int getIndex() { return tagged.getIndex(); }
@@ -687,6 +703,9 @@ public:
   void globalize();
   void localize();
 
+  void gcProxy();
+  void gcManager();
+  void gcBorrowSec(int);
   void gcTertiary();
 };
 
@@ -1534,7 +1553,6 @@ public:
   TaggedRef file;
   int line;
   DbgInfo *next;
-
   DbgInfo(ProgramCounter pc, TaggedRef f, int l, DbgInfo *nxt) 
     : PC(pc), file(f), line(l), next(nxt) {};
 };
@@ -1738,13 +1756,15 @@ BuiltinTabEntry *tagged2Builtin(TaggedRef term)
  * Cell
  *=================================================================== */
 
-class Cell: public ConstTermWithHome {
+#define NO_INDEX (0-1)
+
+class CellLocal:public Tertiary{
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef val;
-public:
-  Cell(Board *b,TaggedRef v) : ConstTermWithHome(b, Co_Cell), val(v) {}
+public:                
 
+  CellLocal(Board *b,TaggedRef v) : Tertiary(b, Co_Cell,Te_Local), val(v) {}  
   OZPRINT;
   OZPRINTLONG;
 
@@ -1753,22 +1773,177 @@ public:
   TaggedRef exchangeValue(TaggedRef v) {
     TaggedRef ret = val;
     val = v;
-    return ret;
-  }
+    return ret;}
+
+  void globalize(int);
 };
+
+
+#define Cell_Invalid     0
+#define Cell_Requested   1
+#define Cell_Next        2
+#define Cell_Valid       4
+#define Cell_Dump_Asked  8
+#define Cell_Access_Bit 16
+
+class CellSec{
+friend class CellFrame;
+friend class CellManager;
+private:
+  short state;
+  short int readCtr;
+  TaggedRef head;
+  PendThread* pending;
+  int nextIndex;
+  TaggedRef contents;
+
+public:
+  CellSec(TaggedRef val){ // on globalize
+    state=Cell_Valid;
+    readCtr=0;
+    pending=NULL;
+    nextIndex=NO_INDEX; // debug
+    contents=val;}
+
+  CellSec(){ // on Proxy becoming Frame
+    state=Cell_Invalid;
+    readCtr=0;    
+    
+    DebugCode(head=makeTaggedNULL()); 
+    DebugCode(contents=makeTaggedNULL());
+    DebugCode(pending=NULL);
+    DebugCode(nextIndex=NO_INDEX);}
+};
+
+class CellManager:public Tertiary{
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  CellSec *sec;
+public:
+  OZPRINT;
+  OZPRINTLONG;       
+
+  CellManager() : Tertiary(Co_Cell,Te_Manager){Assert(0);}  
+    
+  void incCtr(){sec->readCtr++;}
+  int getAndInitCtr(){int i=sec->readCtr;sec->readCtr=0;return i;}
+
+  void setOwnCurrent(){
+    setPrimIndex(NO_INDEX);}
+  Bool isOwnCurrent(){
+    if(getPrimIndex()==NO_INDEX) return TRUE;
+    return FALSE;}
+  void setCurrent(int i){
+    DebugIndexCheck(i);
+    setPrimIndex(i);}
+  int getCurrent(){
+    return getPrimIndex();}
+
+  int getOwnerIndex(){return getIndex();}  
+  void setOwnerIndex(int i){
+    DebugIndexCheck(i);
+    setIndex(i);}
+
+  void localize();
+  void gcCellManager();
+};
+
+class CellProxy:public Tertiary{
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  int * dummy;
+public:
+  OZPRINT;
+  OZPRINTLONG;       
+
+ CellProxy(int manager):Tertiary(Co_Cell,Te_Proxy){  // on import
+   DebugIndexCheck(manager);
+   DebugCode(setPrimIndex(NO_INDEX));
+   setIndex(manager);}
+
+  void convertToFrame(int myIndex);
+
+  int getManagerIndex(){return getIndex();}
+};
+
+class CellFrame:public Tertiary{
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  CellSec *sec;
+public:
+  OZPRINT;
+  OZPRINTLONG;       
+
+  CellFrame():Tertiary(NULL,Co_Cell,Te_Frame){Assert(0);}
+  short getState(){
+    Assert(sec!=NULL);
+    return sec->state;}
+  void setState(short s){
+    Assert(sec!=NULL);
+    sec->state=s;}
+  
+  Bool isAccessBit(){
+    if(getState() & Cell_Access_Bit) return TRUE;
+    return FALSE;}
+  void setAccessBit(){
+    setState(getState()| Cell_Access_Bit);}
+  void resetAccessBit(){setState(getState() & (~Cell_Access_Bit));}
+
+  void myStoreForward(void* forward){setPtr(forward);}
+  void* getForward(){return getPtr();}
+
+  int getManagerIndex(){return getIndex();}
+  void setManagerIndex(int i){
+    DebugIndexCheck(i);
+    setIndex(i);}
+
+  int getOwnerIndex(){return getPrimIndex();}
+  void setOwnerIndex(int i){  
+    DebugIndexCheck(i);
+    setPrimIndex(i);}
+
+  void setPending(PendThread *pt){
+    sec->pending=pt;}
+  PendThread* getPending(){return sec->pending;}
+
+  void incCtr(){sec->readCtr++;}
+  void decCtr(int i){sec->readCtr -= i;}
+  int getCtr(){return sec->readCtr;}
+  
+  TaggedRef getHead(){return sec->head;}
+  void setHead(TaggedRef val){sec->head=val;}
+
+  void setNext(int n){
+    DebugIndexCheck(n);
+    sec->nextIndex=n;}
+  int getNext(){return sec->nextIndex;}
+
+  TaggedRef getContents(){
+    Assert(getState()&(Cell_Valid|Cell_Requested));return sec->contents;}
+  void setContents(TaggedRef tr){sec->contents=tr;}    
+
+  void initFromProxy(int myIndex){
+    DebugIndexCheck(myIndex);
+    setOwnerIndex(myIndex);
+    sec=new CellSec();}
+
+  void initFromGlobalize(TaggedRef val){
+    sec=new CellSec(val);}
+    
+  void convertToProxy(){
+    DebugCode(setOwnerIndex(NO_INDEX)); 
+    setTertType(Te_Proxy);
+    DebugCode(sec=NULL);} 
+  
+  void gcCellFrame();
+  void gcCellFrameSec();
+};
+
 
 inline Bool isCell(TaggedRef term)
 {
   return isConst(term) && tagged2Const(term)->getType() == Co_Cell;
 }
-
-inline
-Cell *tagged2Cell(TaggedRef term)
-{
-  Assert(isCell(term));
-  return (Cell *) tagged2Const(term);
-}
-
                   
 /*===================================================================
  * Ports          

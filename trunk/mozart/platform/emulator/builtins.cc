@@ -4440,12 +4440,14 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   Assert(isPort(prt));
 
   Port *port  = tagged2Port(prt);
-
-  if (port->isProxy()) {
-    return remoteApplication("Send",port,val);
-  } 
+  TertType tt = port->getTertType();
 
   CheckLocalBoard(port,"port");
+
+  if(tt==Te_Proxy) {
+    remoteSend((PortProxy*) port,val);  
+    return PROCEED;
+  } 
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());
     
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
@@ -4455,6 +4457,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   }
   return PROCEED;
 }
+
 
 OZ_C_proc_begin(BIsendPort,2)
 {
@@ -4474,13 +4477,14 @@ OZ_Return closePort(OZ_Term prt)
   Assert(isPort(prt));
 
   Port *port  = tagged2Port(prt);
-
-  if(port->isProxy()) {
-    return remoteApplication("Port.close",port);
-  }
+  TertType tt = port->getTertType();
 
   CheckLocalBoard(port,"port");
 
+  if(tt==Te_Proxy) {
+    remoteClose((PortProxy*) port);
+    return PROCEED;
+  } 
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(nil());
     
   if (oz_unify(nil(),old)!=PROCEED) {
@@ -4488,6 +4492,7 @@ OZ_Return closePort(OZ_Term prt)
   }
   return PROCEED;
 }
+
 
 OZ_C_proc_begin(BIclosePort,1)
 {
@@ -4574,13 +4579,15 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outSta
   NONVAR(c,rec);
   outState = makeTaggedRef(newTaggedUVar(am.currentBoard));
 
-  if (!isCell(rec)) {
-    oz_typeError(0,"Cell");
-  }
-  Cell *cell = tagged2Cell(rec);
+  if (!isCell(rec)) {oz_typeError(0,"Cell");}
 
+  Tertiary *tert = tagged2Tert(rec);
+  if(tert->getTertType()!=Te_Local){
+    cellDoExchange(tert,inState,outState,oz_currentThread);
+    return PROCEED;}
+
+  CellLocal *cell=(CellLocal*)tert;
   CheckLocalBoard(cell,"cell");
-
   TaggedRef old = cell->exchangeValue(outState);
   return oz_unify(old,inState);
 }
@@ -4614,8 +4621,11 @@ OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
   if (!isCell(rec)) {
     oz_typeError(0,"Cell");
   }
-  Cell *cell = tagged2Cell(rec);
-
+  Tertiary *tert=tagged2Tert(rec);
+  if(tert->getTertType()!=Te_Local){
+    cellDoAccess(tert,out);
+    return PROCEED;}
+  CellLocal *cell = (CellLocal*)tert;
   out = cell->getValue();
   return PROCEED;
 }
@@ -4629,10 +4639,15 @@ OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
   if (!isCell(rec)) {
     oz_typeError(0,"Cell");
   }
-  Cell *cell = tagged2Cell(rec);
+  
+  Tertiary *tert = tagged2Tert(rec);
+  if(tert->getTertType()!=Te_Local){
+    TaggedRef tr=makeTaggedRef(newTaggedUVar(am.currentBoard));
+    BIexchangeCellInline(c,tr,in);
+    return PROCEED;}
 
+  CellLocal *cell=(CellLocal*)tert;
   CheckLocalBoard(cell,"cell");
-
   cell->setValue(in);
   return PROCEED;
 }
@@ -5442,7 +5457,7 @@ OZ_C_proc_begin(BIdeepFeed,2)
     oz_typeError(0,"Cell");
   }
 
-  Cell *cell = tagged2Cell(c);
+  CellLocal *cell = (CellLocal*)tagged2Tert(c);
 
   Board *savedNode = am.currentBoard;
   Board *home1 = cell->getBoard();

@@ -42,7 +42,9 @@ char *debugTypeStr[LAST] = {
   "WRITE",        // 35
   "CONTENTS",
   "SPECIAL",
-  "PD_VAR"
+  "PD_VAR",
+  "CELL",
+  "SITE_OP"
 };
 
 void dvset(int i){
