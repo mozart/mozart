@@ -1,9 +1,25 @@
-%%%  Programming Systems Lab, DFKI Saarbruecken,
-%%%  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-%%%  Author: Christian Schulte
-%%%  Email: schulte@dfki.uni-sb.de
-%%%  Last modified: $Date$ by $Author$
-%%%  Version: $Revision$
+%%%
+%%% Authors:
+%%%   Christian Schulte (schulte@dfki.de)
+%%%
+%%% Copyright:
+%%%   Christian Schulte, 1997
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    $MOZARTURL$
+%%%
+%%% See the file "LICENSE" or
+%%%    $LICENSEURL$
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 
 local
 
