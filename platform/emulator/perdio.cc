@@ -2407,16 +2407,8 @@ RefTable *refTable;
 inline
 void gotRef(ByteStream *bs, TaggedRef val)
 {
-#ifdef RS_HACK
-  int n1 = unmarshallNumber(bs);
-  int n2 = unmarshallNumber(bs);
-  int n = unmarshallNumber(bs);
-#endif
   int counter = refTable->set(val);
   PD((REF_COUNTER,"got: %d",counter));
-#ifdef RS_HACK
-  Assert(n==counter);
-#endif
 }
 
 class RefTrail: public Stack {
@@ -2841,11 +2833,6 @@ void trailCycle(OZ_Term *t, ByteStream *bs,int n)
   int counter = refTrail->trail(t);
   PD((REF_COUNTER,"trail: %d",counter));
   *t = ((counter)<<tagSize)|GCTAG;
-#ifdef RS_HACK
-  marshallNumber(27,bs);
-  marshallNumber(n,bs);
-  marshallNumber(counter,bs);
-#endif
 }
 
 void marshallClosure(Site *sd,Abstraction *a,ByteStream *bs) {
@@ -3025,9 +3012,10 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       marshallGName(gname,bs);
       marshallTerm(sd,pp->getName(),bs);
       marshallNumber(pp->getArity(),bs);
+      ProgramCounter pc = pp->getPC();
       trailCycle(t->getRef(),bs,5);
       marshallClosure(sd,pp,bs);
-      marshallCode(sd,pp->getPC(),bs);
+      marshallCode(sd,pc,bs);
       return;
     }
 
