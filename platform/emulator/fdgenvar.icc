@@ -27,19 +27,19 @@ void GenFDVariable::propagate(TaggedRef var, FDPropState state,
 
   switch (state) {
   case fd_det:
-    GenCVariable::propagate(var, fdSuspList[fd_det], term);
+    GenCVariable::propagate(var, fdSuspList[fd_det], term, prop_eq);
   case fd_bounds:
-    GenCVariable::propagate(var, fdSuspList[fd_bounds], term);
+    GenCVariable::propagate(var, fdSuspList[fd_bounds], term, prop_eq);
   case fd_size:
-    GenCVariable::propagate(var, fdSuspList[fd_size], term);
+    GenCVariable::propagate(var, fdSuspList[fd_size], term, prop_eq);
   case fd_any:
-    GenCVariable::propagate(var, term);
+    GenCVariable::propagate(var, suspList, term, prop_eq);
     break;
   default:
     error("unexpected case");
   }
   if (prop_eq)
-    GenCVariable::propagate(var, fdSuspList[fd_eqvar], term);
+    GenCVariable::propagate(var, fdSuspList[fd_eqvar], term, prop_eq);
 }
 
 inline
