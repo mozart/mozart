@@ -178,7 +178,7 @@ public:
     return FALSE;
   }
 
-  Suspension gcSuspension(void);
+  Suspension gcSuspension(int);
 }; // class Suspension 
 
 inline

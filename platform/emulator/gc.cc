@@ -659,8 +659,13 @@ Literal *Literal::gc() {
   return ((Name*) this)->gcName();
 }
 
-Object *Object::gcObject() {
+inline
+Object *Object::gcObjectInline() {
   return this ? ((Object *) gcConstTerm()) : this;
+}
+
+Object *Object::gcObject() {
+  return gcObjectInline();
 }
 
 /*
@@ -670,8 +675,7 @@ Object *Object::gcObject() {
  *  If threads is dead, returns (Thread *) NULL;
  */
 
-inline
-Thread *Thread::gcThreadInline() {
+Thread *Thread::gcThread() {
   if (!this)
     return (Thread *) NULL;
 
@@ -703,10 +707,6 @@ Thread *Thread::gcThreadInline() {
   storeFwdField(this, newThread);
 
   return newThread;
-}
-
-Thread * Thread::gcThread(void) {
-  return gcThreadInline();
 }
 
 //-----------------------------------------------------------------------------
@@ -763,7 +763,9 @@ Propagator * Propagator::gcPropagator(void)
 
   Board * bb = _b;
 
-  if (bb && bb->gcIsAlive()) {
+  Assert(bb);
+  
+  if (bb->gcIsAlive()) {
     Assert(isInGc || (!isRunnable()));
     
     Assert(!bb->derefBoard()->hasMarkOne());
@@ -808,10 +810,9 @@ void Propagator::gcRecurse(void)
 }
 
 inline 
-Suspension Suspension::gcSuspension(void)
-{
-  if (_isThread()) {
-    return _getThread()->gcThreadInline();
+Suspension Suspension::gcSuspension(int thread) {
+  if (thread && _isThread()) {
+    return _getThread()->gcThread();
   } else {
     return _getPropagator()->gcPropagator();
   }
@@ -824,12 +825,13 @@ Suspension Suspension::gcSuspension(void)
  * 'The Definition of Kernel Oz';
  *
  */
+
 inline
-SuspList * SuspList::gc(void) {
+SuspList * SuspList::gc(int thread) {
   SuspList * ret = NULL;
 
   for (SuspList * help = this; help != NULL; help = help->getNext()) {
-    Suspension susp = help->getSuspension().gcSuspension();
+    Suspension susp = help->getSuspension().gcSuspension(thread);
     if (! susp.isNull()) {
       ret = new SuspList(susp, ret);
     }
@@ -871,55 +873,35 @@ void OZ_FiniteDomainImpl::gc(void) {
 }
 
 inline
-void OzFDVariable::gc(OzFDVariable * frm) {
-  finiteDomain = frm->finiteDomain;
+void OzFDVariable::gc(void) {
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
   
   for (int i = fd_prop_any; i--; )
-    fdSuspList[i] = frm->fdSuspList[i]->gc();
+    fdSuspList[i] = fdSuspList[i]->gc(NO);
 }
 
 inline
-void OzBoolVariable::gc(OzBoolVariable * frm) {
-  store_patch = frm->store_patch;  
-}
-
-inline
-void OzFSVariable::gc(OzFSVariable * frm) {
-  _fset = frm->_fset;
+void OzFSVariable::gc(void) {
 
 #ifdef BIGFSET
   _fset.copyExtension();
 #endif
 
   for (int i = fs_prop_any; i--; )
-    fsSuspList[i] = frm->fsSuspList[i]->gc();
+    fsSuspList[i] = fsSuspList[i]->gc(NO);
 }
 
-
-OzVariable * OzCtVariable::gc(void) 
-{
-  OzCtVariable * to = new OzCtVariable(* (OzCtVariable*) this);
-
-  // common stuff
-  to->u        = u;
-  to->suspList = suspList;
-  to->setHome(getHome1());
-  
-  // stuff specific to `OzCtVariable's
-  to->_constraint = _constraint;
-  to->_definition = _definition;
-
+inline
+void OzCtVariable::gc(void) {
   // gc suspension lists
   int noOfSuspLists = getNoOfSuspLists();
   // copy
-  to->_susp_lists = (SuspList **) 
+  _susp_lists = (SuspList **) 
     heapMalloc(sizeof(SuspList *) * noOfSuspLists);
   // collect
   for (int i = noOfSuspLists; i--; )
-   to->_susp_lists[i] = _susp_lists[i]->gc();
+    _susp_lists[i] = _susp_lists[i]->gc(OK);
 
-  return to;
 }
 
 inline
@@ -929,62 +911,51 @@ void OzCtVariable::gcRecurse(void)
   _constraint = _constraint->copy();  
 }
 
+const int varSizes[] = {
+  sizeof(ExtVar),         // OZ_VAR_EXT
+  sizeof(SimpleVar),      // OZ_VAR_SIMPLE
+  sizeof(Future),         // OZ_VAR_FUTURE 
+  sizeof(OzBoolVariable), // OZ_VAR_BOOL
+  sizeof(OzFDVariable),   // OZ_VAR_FD 
+  sizeof(OzOFVariable),   // OZ_VAR_OF
+  sizeof(OzFSVariable),   // OZ_VAR_FS
+  sizeof(OzCtVariable),   // OZ_VAR_CT
+};
+
 
 OzVariable * OzVariable::gcVar(void) {
   GCDBG_INFROMSPACE(this);
 
   Assert(!gcIsMarked())
     
-  Board * bb = getHome1()->gcBoard();
-  
-  Assert(bb);
+  TypeOfVariable t = getType();
 
-  SuspList * sl = suspList->gc();
-  
-  OzVariable * to;
-  
-  switch (getType()){
+  OzVariable * to = (OzVariable *) oz_hrealloc(this,varSizes[t]);
+
+  to->suspList = to->suspList->gc(OK);
+  to->setHome(to->getHome1()->gcBoard());
+
+  switch (t){
   case OZ_VAR_FD:
-    to = new OzFDVariable((DummyClass *)0);
-    ((OzFDVariable *) to)->gc((OzFDVariable *) this);
-    to->u        = u;
-    to->suspList = sl;
-    to->setHome(bb);
+    ((OzFDVariable *) to)->gc();
     return to;
-
-  case OZ_VAR_BOOL:
-    to = new OzBoolVariable((DummyClass*)0);
-    ((OzBoolVariable *) to)->gc((OzBoolVariable *) this);
-    to->u        = u;
-    to->suspList = sl;
-    to->setHome(bb);
-    return to;
-
   case OZ_VAR_FS:
-    to = new OzFSVariable((DummyClass*)0);
-    ((OzFSVariable *) to)->gc((OzFSVariable *) this);
-    to->u        = u;
-    to->suspList = sl;
-    to->setHome(bb);
+    ((OzFSVariable *) to)->gc();
     return to;
+  case OZ_VAR_BOOL:
+    return to;
+  case OZ_VAR_CT:     
+    ((OzCtVariable*) to)->gc(); 
+    break;
+  case OZ_VAR_EXT:    
+    ((ExtVar *) to)->gcV(); 
+    break;
 
-
-  case OZ_VAR_SIMPLE: to = ((SimpleVar *)this)->gc(); break;
-  case OZ_VAR_FUTURE: to = ((Future *)this)->gc(); break;
-  case OZ_VAR_OF:     to = new OzOFVariable(*(OzOFVariable*) this);break;
-  case OZ_VAR_CT:     to = ((OzCtVariable*)this)->gc(); break;
-  case OZ_VAR_EXT:    to = ((ExtVar *)this)->gcV(); break;
   default: 
-    Assert(0);
+    break;
   }
 
-  // The generic part
-  Assert(!isInGc || this->getHome1() != bb);
-
   gcStack.push(to, PTR_CVAR);
-
-  to->suspList = sl;
-  to->setHome(bb);
 
   return to;
 }
@@ -1078,7 +1049,7 @@ BigInt * BigInt::gc() {
   return ret;
 }
 
-
+inline
 void Script::gc() {
 
   if (first){
@@ -1086,8 +1057,10 @@ void Script::gc() {
     
     Equation *aux = (Equation*) heapMalloc(sz);
 
-    for (int i = numbOfCons; i--; ){
+    Assert(sizeof(Equation) == 2*sizeof(TaggedRef));
+
 #ifdef DEBUG_CHECK
+    for (int i = numbOfCons; i--; ){
       //  This is the very useful consistency check.
       //  'Equations' with non-variable at the left side are figured out;
       TaggedRef auxTerm = first[i].left;
@@ -1108,13 +1081,14 @@ void Script::gc() {
 	  OZ_error ("non-variable is found at left side in Script");
 	} while (1);
       }
-#endif
-      OZ_collectHeapTerm(first[i].left,  aux[i].left); 
-      OZ_collectHeapTerm(first[i].right, aux[i].right);
     }
-    
-    first = aux;
+#endif
+
+  OZ_collectHeapBlock((TaggedRef *) first, (TaggedRef *) aux, 
+		      numbOfCons * 2);
+  first = aux;
   }
+  
 }
 
 
@@ -1209,8 +1183,8 @@ void Thread::gcRecurse() {
 
     setBoardInternal(getBoardInternal()->gcBoard());    
 
-    item.threadBody = item.threadBody->gcRTBody();
-    setSelf(getSelf()->gcObject());
+    threadBody = threadBody->gcRTBody();
+    setSelf(getSelf()->gcObjectInline());
 
   } else {
     //  The following assertion holds because suspended threads
@@ -2566,7 +2540,7 @@ void Board::gcRecurse() {
   
   OZ_collectHeapTerm(status,status);
 
-  suspList         = suspList->gc();
+  suspList         = suspList->gc(OK);
   setDistBag(getDistBag()->gc());
   nonMonoSuspList  = nonMonoSuspList->gc();
 

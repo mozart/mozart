@@ -46,7 +46,6 @@ private:
   SuspList * fsSuspList[fs_prop_any];
   
 public:
-  OzFSVariable(DummyClass *) : OzVariable(OZ_VAR_FS,(DummyClass*)0) {}
   OzFSVariable(Board *bb) : OzVariable(OZ_VAR_FS,bb) { 
     _fset.init(); 
     for (int i = fs_prop_any; i--; )
@@ -59,7 +58,7 @@ public:
       fsSuspList[i] = NULL;
   }
 
-  void gc(OzFSVariable *); 
+  void gc(void); 
   void dispose(void);
   
   OZ_Return bind(OZ_Term *, OZ_Term);
