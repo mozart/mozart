@@ -41,9 +41,21 @@
 
 #define RESOURCE_HASH_TABLE_DEFAULT_SIZE 25
 #define RESOURCE_NOT_IN_TABLE 0-1
-/*===================================================================
- * RESOURCE
- *=================================================================== */
+
+enum DPResourceType{
+  UD_unknown = 0,
+
+  UD_thread,
+  UD_array,
+  UD_dictionary,
+  UD_last
+};
+
+extern char *dpresource_names[];
+
+/************************************************************/
+/*  Defines                                                 */
+/************************************************************/
 
 class DistResource: public Tertiary{
   friend void ConstTerm::gcConstRecurse(void);
@@ -59,7 +71,8 @@ public:
 
 class ResourceHashTable: public GenHashTable{
   int hash(TaggedRef entity){
-    return (int) entity;}
+    int val = abs((int) entity) ;
+    return val;}
   
 public:
   ResourceHashTable(int i):GenHashTable(i){}
@@ -71,11 +84,12 @@ public:
 			(GenHashEntry*)index);}
   
   int find(TaggedRef entity){
-     int hvalue = hash(entity);
-     GenHashNode *aux = htFindFirst(hvalue);
-     if(aux)
-       return (int)aux->getEntry();
-     return RESOURCE_NOT_IN_TABLE;
+    fprintf(stderr,"finding %d \n",(int) this);
+    int hvalue = hash(entity);
+    GenHashNode *aux = htFindFirst(hvalue);
+    if(aux)
+      return (int)aux->getEntry();
+    return RESOURCE_NOT_IN_TABLE;
   }
   
   void gcResourceTable();
