@@ -27,7 +27,7 @@ functor
 import
    %% System Modules
    OS(system localTime)
-   Open(file)
+   Open(text file)
    Narrator('class')
    ErrorListener('class')
    %% Application Modules
@@ -232,6 +232,24 @@ define
             end
          elseof nil then skip
          end
+      end
+   end
+
+   local
+      class TextFile from Open.file Open.text
+         prop final
+         meth readAll($)
+            case TextFile, getS($) of false then ""
+            elseof S then S#'\n'#TextFile, readAll($)
+            end
+         end
+      end
+   in
+      proc {ReadFile File ?VS}
+         F = {New TextFile init(name: File flags: [read])}
+      in
+         {F readAll(?VS)}
+         {F close()}
       end
    end
 
@@ -859,7 +877,7 @@ define
             %-----------------------------------------------------------
             [] picture then
                case {CondSelect M type unit}
-               of 'latex' then FileName in
+               of 'LATEX' then FileName in
                   {@MyLaTeXToGIF convertPicture(M.1 ?FileName)}
                   OzDocToHTML, PictureExtern("" M FileName $)
                elseof N then
@@ -876,6 +894,9 @@ define
                   {@MyPostScriptToGIF
                    convertPostScript(M.to {CondSelect M info ''} ?To)}
                   OzDocToHTML, PictureExtern(@OutputDirectory#'/' M To $)
+               [] 'latex' then FileName in
+                  {@MyLaTeXToGIF convertPicture({ReadFile M.to} ?FileName)}
+                  OzDocToHTML, PictureExtern("" M FileName $)
                [] unit then
                   %--** the notation should be derived from the file name
                   {@Reporter error(kind: OzDocError
