@@ -57,7 +57,6 @@ define
 			      {self categoriesToHrefs($)}
 			      $)}
 		  end
-		  try {Manager trace('before format')}
 		  if @format==nil then
 		     {self formatHeader(
 			      'format'
@@ -71,9 +70,6 @@ define
 			      'class':'headerdoc'
 			      $)}
 		  end
-		  finally
-		  {Manager trace('after format')}
-		  end
 		  /*
 		  if @keywords==nil then '' else
 		     {self formatHeader(
@@ -82,22 +78,6 @@ define
 			      $)}
 		  end
 		  */
-		  if @provides==nil then '' else
-		     {self formatHeaderEnum(
-			      'provides'
-			      {Map @provides
-			       fun {$ S} tt({HtmlQuote S}) end}
-			      $)}
-		  end
-		  if @requires==nil then '' else
-		     {self formatHeaderEnum(
-			      'requires'
-			      {Map @requires
-			       fun {$ S}
-				  {self requiresToHrefs(S $)}
-			       end}
-			      $)}
-		  end
 		  local Docs = {self docHrefs($)} in
 		     if Docs==nil then '' else
 			{self formatHeader(
@@ -114,6 +94,22 @@ define
 				 'class':'headerdoc'
 				 $)}
 		     end
+		  end
+		  if @requires==nil then '' else
+		     {self formatHeaderEnum(
+			      'requires'
+			      {Map @requires
+			       fun {$ S}
+				  {self requiresToHrefs(S $)}
+			       end}
+			      $)}
+		  end
+		  if @provides==nil then '' else
+		     {self formatHeaderEnum(
+			      'provides'
+			      {Map @provides
+			       fun {$ S} tt({HtmlQuote S}) end}
+			      $)}
 		  end
 		  )
 	       )
