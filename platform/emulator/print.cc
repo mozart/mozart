@@ -53,7 +53,7 @@ inline Bool isEffectiveSusp(SuspList* sl)
   Suspension* s = sl->getSusp();
   if (s->isDead())
     return NO;
-  if (!s->getNode()->getBoardDeref())
+  if (!s->getBoard()->getBoardDeref())
     return NO;
   return OK;
 }
@@ -460,7 +460,7 @@ PRINT(Suspension)
     } else {
       stream << "board ";
     }
-    getNode()->print(stream, 0);
+    getBoard()->print(stream, 0);
 }
 
 
@@ -479,7 +479,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 
   if (isRef(ref)) {
     stream << indent(offset)
-           << "@"
+           << '@'
            << (void *) tagged2Ref(ref)
            << ": "
            << (void *) *tagged2Ref(ref)

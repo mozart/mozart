@@ -34,7 +34,7 @@ void reviveCurrentTaskSusp(void) {
              error("Cannot revive dead suspension."));
   FDcurrentTaskSusp->unmarkPropagated();
   FDcurrentTaskSusp->unmarkUnifySusp();
-  FDcurrentTaskSusp->setNode(am.currentBoard);
+  FDcurrentTaskSusp->setBoard(am.currentBoard);
   am.currentBoard->incSuspCount();
   FDcurrentTaskSusp = NULL;
 }
@@ -65,7 +65,7 @@ void dismissCurrentTaskSusp(void) {
   DebugCheck(FDcurrentTaskSusp->isDead(),
              error("Suspension is dead."));
 
-  FDcurrentTaskSusp->cContToNode(am.currentBoard);
+  FDcurrentTaskSusp->cContToBoard(am.currentBoard);
   FDcurrentTaskSusp = NULL;
 }
 

@@ -594,7 +594,7 @@ void engine() {
         }
         if (c->isSuspCont()) {
           SuspContinuation *cont = c->popSuspCont();
-          tmpBB = cont->getNode()->getBoardDeref();
+          tmpBB = cont->getBoard()->getBoardDeref();
           if (!tmpBB) {
             goto LBLTaskEmpty;
           }
@@ -612,7 +612,7 @@ void engine() {
         }
         if (c->isSuspCCont()) {
           CFuncContinuation *ccont = c->popSuspCCont();
-          tmpBB = ccont->getNode()->getBoardDeref();
+          tmpBB = ccont->getBoard()->getBoardDeref();
           if (!tmpBB) {
             goto LBLTaskEmpty;
           }

@@ -481,7 +481,7 @@ void AM::setExtSuspension (Board *varHome, Suspension *susp)
 Bool AM::checkExtSuspension (Suspension *susp)
 {
   if (susp->isExtSusp()) {
-    Board *sb = susp->getNode ();
+    Board *sb = susp->getBoard ();
     DebugCheck ((sb == (Board *) NULL),
                 error ("no board is found in AM::checkExtSuspension"));
     sb = sb->getSolveBoard ();
@@ -580,7 +580,7 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
     }
 
     // suspension points to an already reduced branch of the computation tree
-    if (! susp->getNode()->getBoardDeref()) {
+    if (! susp->getBoard()->getBoardDeref()) {
       susp->markDead();
       checkExtSuspension (susp);
       suspList = suspList->dispose();
@@ -600,7 +600,7 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
         }
       }
     } else if (calledByUnify && susp->isResistant() && ! susp->isUnifySusp())
-      if (isBetween(susp->getNode(), var->getHome()))
+      if (isBetween(susp->getBoard(), var->getHome()))
         susp->markUnifySusp();
 
     // susp cannot be woken up therefore relink it
