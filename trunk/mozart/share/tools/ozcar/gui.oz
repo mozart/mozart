@@ -67,6 +67,8 @@ local
 					else
 					   {V2VS X}
 					end
+%	 elsecase {IsChar X}       then CharType
+%	 elsecase {FD.is X}        then FDValueType
 	 elsecase {IsInt X}        then case X >= BigInt then
 					   BigIntType
 					else
@@ -83,6 +85,13 @@ local
 	 elsecase {IsRecord X}     then RecordType
 	 elsecase {IsChunk X}      then ChunkType
 	 elsecase {IsSpace X}      then SpaceType
+	 elsecase {FS.value.is X}  then FSValueType
+	 else                           UnknownType
+	 end
+      elsecase {IsKinded X} then
+	 case     {FD.is X}        then FDVarType
+	 elsecase {FS.var.is X}    then FSVarType
+	 elsecase {IsRecordC X}    then KindedRecordType
 	 else                           UnknownType
 	 end
       else                              UnboundType
@@ -95,6 +104,8 @@ local
    end
 
    StackTag
+
+   QueueLock = {NewLock}
 
 in
 
@@ -682,6 +693,7 @@ in
       meth doStatus(S M<=clear C<=DefaultForeground)
 	 W = self.StatusText
       in
+	 StatusSync <- _ = unit
 	 case M == clear then
 	    Gui,Clear(status W)
 	 else
@@ -967,30 +979,34 @@ in
       end
 
       meth Enqueue(W Ticklet)
-	 case Ticklet
-	 of nil  then skip
-	 [] T|Tr then
-	    Gui,Enqueue(W T)
-	    Gui,Enqueue(W Tr)
-	 else
-	    NewTl
-	    MsgList # MsgListTl = Gui,GetQueue(W $)
-	 in
-	    case {IsDet @MsgListTl} then
-	       MsgList <- Ticklet|NewTl
+	 lock QueueLock then
+	    case Ticklet
+	    of nil  then skip
+	    [] T|Tr then
+	       Gui,Enqueue(W T)
+	       Gui,Enqueue(W Tr)
 	    else
-	       @MsgListTl = Ticklet|NewTl
+	       NewTl
+	       MsgList # MsgListTl = Gui,GetQueue(W $)
+	    in
+	       case {IsDet @MsgListTl} then
+		  MsgList <- Ticklet|NewTl
+	       else
+		  @MsgListTl = Ticklet|NewTl
+	       end
+	       MsgListTl <- NewTl
 	    end
-	    MsgListTl <- NewTl
 	 end
       end
 
       meth ClearQueue(W)
-	 MsgList # MsgListTl = Gui,GetQueue(W $)
-      in
-	 @MsgListTl = nil
-	 {Tk.batch @MsgList}
-	 MsgList <- nil
+	 lock QueueLock then
+	    MsgList # MsgListTl = Gui,GetQueue(W $)
+	 in
+	    @MsgListTl = nil
+	    {Tk.batch @MsgList}
+	    MsgList <- nil
+	 end
       end
 
       meth DeactivateLine(Tag)
