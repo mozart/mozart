@@ -35,7 +35,7 @@
 
 ;; automatically switch into Oz-Mode when loading
 ;; files ending in ".oz"
-(or (assoc "\\.oz$" auto-mode-alist)
+(or (assoc "\\.oz\\'" auto-mode-alist)
     (setq auto-mode-alist
 	  (append '(("/\\.ozrc\\'" . oz-mode)
 		    ("\\.oz\\'" . oz-mode)
@@ -552,7 +552,9 @@ variables oz-compiler-buffer and oz-emulator-buffer."
   (interactive "P")
   (oz-check-running
    t (if toggle-new-compiler (not oz-use-new-compiler) oz-use-new-compiler))
-  (if (not (equal mode-name "Oz"))
+  (if (not (or (equal mode-name "Oz")
+	       (equal mode-name "Oz-Gump")
+	       (equal mode-name "Oz-Machine")))
       (oz-new-buffer))
   (oz-show-buffer (get-buffer oz-compiler-buffer)))
 
@@ -611,7 +613,7 @@ If FORCE is non-nil, kill the processes immediately."
     (if (not running)
 	(let ((file (concat (oz-make-temp-name "/tmp/ozpipeout") ":"
 			    (oz-make-temp-name "/tmp/ozpipein"))))
-	  (if (not start-flag) (message "Oz died. Restarting ..."))
+	  (if (not start-flag) (message "Oz died.  Restarting ..."))
 	  (setq oz-using-new-compiler use-new-compiler)
 	  (cond (oz-using-new-compiler
 		 t)
@@ -880,7 +882,8 @@ paragraph."
   (oz-make-keywords-for-match
    '("from" "prop" "attr" "feat")))
 (defconst oz-gump-class-between-pattern
-  (oz-make-keywords-for-match '("token")))
+  (oz-make-keywords-for-match
+   '("token")))
 
 (defconst oz-begin-pattern
   (oz-make-keywords-for-match
@@ -1589,7 +1592,7 @@ if that value is non-nil."
   (run-hooks 'oz-mode-hook))
 
 (defun ozm-mode ()
-  "Major mode for editing Oz machine code.
+  "Major mode for displaying Oz machine code.
 
 Commands:
 \\{oz-mode-map}"
