@@ -1455,7 +1455,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
         ProgramCounter PC = getPC(C_CONT,topElem);
         RefsArray Y = (RefsArray) pop();
         RefsArray G = (RefsArray) pop();
-        out = cons(CodeArea::dbgGetDef(PC),out);
+        out = cons(CodeArea::dbgGetDef(PC,G,Y),out);
       }
       break;
 
@@ -1465,7 +1465,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
         RefsArray Y = (RefsArray) pop();
         RefsArray G = (RefsArray) pop();
         RefsArray X = (RefsArray) pop();
-        out = cons(CodeArea::dbgGetDef(PC),out);
+        out = cons(CodeArea::dbgGetDef(PC,G,Y),out);
         break;
       }
 

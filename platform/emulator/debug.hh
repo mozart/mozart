@@ -35,6 +35,8 @@ void enterCall(Board *b, TaggedRef def,int arity, TaggedRef *args);
 void exitCall(OZ_Return,OzDebug *);
 void exitBuiltin(OZ_Return, TaggedRef bi, int arity, TaggedRef *args);
 
+OZ_C_proc_proto(BItaskStack)
+OZ_C_proc_proto(BIgetThreadByID)
 OZ_C_proc_proto(BIspy)
 OZ_C_proc_proto(BInospy)
 OZ_C_proc_proto(BItraceOn)

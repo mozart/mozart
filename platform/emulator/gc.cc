@@ -892,7 +892,11 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   taskStack.gc(&ret->taskStack);
 
   ret->u.self = ret->u.self->gcObject();
-  gcTagged(ret->streamTail,ret->streamTail);
+
+#ifdef LINKEDTHREADS
+  gcTagged(ret->parentThread,ret->parentThread);
+  gcTagged(ret->childThreads,ret->childThreads);
+#endif
 
   return (ret);
 }
@@ -1006,6 +1010,15 @@ SRecord *SRecord::gcSRecord()
   return ret;
 }
 
+
+inline
+Thread* isCollected(Thread *t,void *p)
+{
+  CHECKCOLLECTED(ToInt32(p), Thread*);
+  return NULL;
+}
+
+
 /*
  *  Preserve runnable threads which home board is dead, because
  * solve counters have to be updated (while, of course, discard
@@ -1018,7 +1031,8 @@ Thread *Thread::gcThread ()
   GCMETHMSG ("Thread::gcThread");
 
   if (this == (Thread *) NULL) return ((Thread *) NULL);
-  CHECKCOLLECTED (ToInt32 (item.threadBody), Thread*);
+  Thread *ret = isCollected(this,item.threadBody);
+  if (ret) return ret;
 
   if (isDeadThread ()) return ((Thread *) NULL);
 
@@ -1045,19 +1059,10 @@ Thread *Thread::gcThread ()
   GCNEWADDRMSG (newThread);
 
   Assert(opMode==IN_TC || opMode==IN_GC);
-#ifdef DEBUG_CHECK
-  if (opMode == IN_TC) {
-    extern int tCounter;
-    newThread->id=tCounter++;
-  }
-#endif
 
   if (isRunnable () || hasStack ()) {
     ThreadList::add (newThread);
   }
-
-  gcTagged(name,newThread->name);
-  gcTagged(cell,newThread->cell);
 
   ptrStack.push (newThread, PTR_THREAD);
 
@@ -1082,6 +1087,7 @@ Thread *Thread::gcDeadThread()
 
   storeForward (&item.threadBody, newThread);
 
+  gcTagged(name,newThread->name);
   gcTagged(cell,newThread->cell);
 
   return (newThread);
@@ -1136,6 +1142,9 @@ void Thread::gcRecurse ()
   default:
     error ("Unknown type of a runnable thread?\n");
   }
+
+  gcTagged(name,name);
+  gcTagged(cell,cell);
 }
 
 /*
@@ -1553,6 +1562,7 @@ void AM::gc(int msgLevel)
   gcTagged(biExceptionHandler,biExceptionHandler);
   gcTagged(defaultExceptionHandler,defaultExceptionHandler);
 
+  gcTagged(threadStream,threadStream);
   gcTagged(threadStreamTail,threadStreamTail);
 
   GCPROCMSG("ioNodes");
@@ -1597,6 +1607,8 @@ void AM::gc(int msgLevel)
 
   Assert(currentThread==NULL);
   cachedStack = NULL;
+
+  // HERE !!!!!!!!!!!!!!
 
   ozstat.printGcMsg(msgLevel);
 

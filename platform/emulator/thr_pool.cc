@@ -39,8 +39,14 @@ void ThreadsPool::initThreads ()
   // public part;
   currentThread = (Thread *) NULL;
   ozstat.createdThreads.incf();
-  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard,0);
 
+#ifndef LINKEDTHREADS
+  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard,0);
+#else
+  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard,0,NO,OK);
+  rootThread->setParent(makeTaggedConst(rootThread));// has itself as daddy -BL
+#endif
+  //am.threadArray[1] = makeTaggedConst(rootThread);
   //
   threadBodyFreeList = NULL;
 }

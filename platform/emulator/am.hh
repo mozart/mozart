@@ -137,7 +137,12 @@ public:
   TaggedRef biExceptionHandler;
   TaggedRef defaultExceptionHandler;
 
+  unsigned long lastThreadID;
+
+  TaggedRef threadStream;
   TaggedRef threadStreamTail;
+
+  //TaggedRef *threadArray;
 
   Toplevel *toplevelQueue;
 
@@ -223,7 +228,7 @@ public:
   void reduceTrailOnShallow(Thread *);
 
   // in emulate.cc
-  Bool emulateHookOutline(Abstraction *def=NULL,
+  Bool emulateHookOutline(ProgramCounter PC, Abstraction *def=NULL,
                           int arity=0, TaggedRef *arguments=NULL);
   Bool hookCheckNeeded();
   Bool isNotPreemtiveScheduling(void);
@@ -231,7 +236,7 @@ public:
   inline RunnableThreadBody* allocateBody();
   inline Thread *mkRunnableThread(int prio, Board *bb,
                                   TaggedRef val,
-                                  Bool inSolve=NO);
+                                  Bool inSolve=NO, Bool link=NO);
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
   Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);

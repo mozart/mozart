@@ -2787,6 +2787,15 @@ OZ_C_proc_begin(BIthreadGetPriority,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIthreadID,2)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareArg(1,out);
+
+  return OZ_unifyInt(out, th->getID());
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIthreadIs,2)
 {
   OZ_declareNonvarArg(0,th);
@@ -2886,9 +2895,8 @@ OZ_C_proc_begin(BIthreadState,2)
   }
   if (th->isRunnable()) {
     /* terminated but not yet removed from scheduler */
-    if (th!=am.currentThread && th->isEmpty()) {
-      return OZ_unifyAtom(out,"terminated");
-    }
+    if (th!=am.currentThread && th->isEmpty() && th!=am.rootThread)
+        return OZ_unifyAtom(out,"terminated");
     return OZ_unifyAtom(out,"runnable");
   }
   return OZ_unifyAtom(out,"blocked");
@@ -2909,10 +2917,27 @@ OZ_C_proc_begin(BIthreadSetName,2)
   OZ_declareThreadArg(0,th);
   OZ_declareArg(1,in);
   th->setName(in);
-
   return PROCEED;
 }
 OZ_C_proc_end
+
+#ifdef LINKEDTHREADS
+ OZ_C_proc_begin(BIthreadParent,2)
+ {
+   OZ_declareThreadArg(0,th);
+   OZ_declareArg(1,out);
+   return OZ_unify(out, th->getParent());
+ }
+ OZ_C_proc_end
+
+ OZ_C_proc_begin(BIthreadChildren,2)
+ {
+   OZ_declareThreadArg(0,th);
+   OZ_declareArg(1,out);
+   return OZ_unify(out, th->getChildren());
+ }
+ OZ_C_proc_end
+#endif
 
 OZ_C_proc_begin(BIthreadPreempt,1)
 {
@@ -6467,34 +6492,6 @@ OZ_C_proc_begin(BIsetStepMode,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIstartTraceMode,2)
-{
-  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
-  OZ_Term out   = OZ_getCArg(1);
-
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-
-  TaggedRef tail = OZ_newVariable();
-  thread->setStreamTail(tail);
-  thread->startTraceMode();
-  return OZ_unify(out, tail);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIstopTraceMode,1)
-{
-  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
-
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-
-  thread->setStreamTail(OZ_atom("noStream"));
-  thread->stopTraceMode();
-  return PROCEED;
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BIstopThread,1)
 {
   OZ_Term chunk  = OZ_deref(OZ_getCArg(0));
@@ -6595,23 +6592,6 @@ OZ_C_proc_begin(BItime2localTime,2)
     time_t time = time_t(OZ_intToC(in));
     return OZ_unify(out, make_time(localtime(&time)));
   }
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIglobalVarNames,2)
-{
-  OZ_Term in  = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  ProgramCounter PC = ProgramCounter(OZ_intToC(in));
-
-  //TaskStackEntry *p = getTop();
-  //TaggedPC topElem = ToInt32(pop());
-  //am.currentThread->printTaskStack(NOCODE);
-
-  TaggedRef globals = CodeArea::globalVarNames(PC);
-
-  return OZ_unify(out, globals);
 }
 OZ_C_proc_end
 
@@ -7428,8 +7408,6 @@ BIspec allSpec2[] = {
   // Debugging
   {"globalThreadStream",1,BIglobalThreadStream},
   {"currentThread",1,BIcurrentThread},
-  {"startTraceMode",2,BIstartTraceMode},
-  {"stopTraceMode",1,BIstopTraceMode},
   {"setStepMode",2,BIsetStepMode},
   {"stopThread",1,BIstopThread},
   {"contThread",1,BIcontThread},
@@ -7439,10 +7417,11 @@ BIspec allSpec2[] = {
   {"topVars",2,BItopVars},
   {"index2Tagged",2,BIindex2Tagged},
   {"time2localTime",2,BItime2localTime},
-  {"globalVarNames",2,BIglobalVarNames},
+
   //
 
   {"Thread.is",2,BIthreadIs},
+  {"Thread.id",2,BIthreadID},
   {"Thread.this",1,BIthreadThis},
   {"Thread.suspend",1,BIthreadSuspend},
   {"Thread.resume",1,BIthreadResume},
@@ -7456,8 +7435,15 @@ BIspec allSpec2[] = {
   {"Thread.getName",2,BIthreadGetName},
   {"Thread.setName",2,BIthreadSetName},
 
+#ifdef LINKEDTHREADS
+  {"Thread.parent",2,BIthreadParent},
+  {"Thread.children",2,BIthreadChildren},
+#endif
+
   {"printLong",1,BIprintLong},
 
+  {"taskstack",   2, BItaskStack},
+  {"getThreadByID",2,BIgetThreadByID},
   {"spy",         1, BIspy},
   {"nospy",       1, BInospy},
   {"traceOn",     0, BItraceOn},
