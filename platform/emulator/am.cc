@@ -503,6 +503,8 @@ void AM::incSolveThreads (Board *bb)
   while (bb != (Board *) NULL && bb->isCommitted () == OK)
     bb = bb->getBoard ();
   while (bb != (Board *) NULL && bb != rootBoard) {
+//     DebugCheck ((bb == (Board *) NULL),
+//              error ("NULL board is reached in AM::incSolveThreads"));
     if (bb->isSolve () == OK) {
       SolveActor *sa = CastSolveActor (bb->getActor ());
       DebugCheck ((sa->getBoard () == (Board *) NULL),
@@ -524,6 +526,8 @@ void AM::decSolveThreads (Board *bb)
   while (bb != (Board *) NULL && bb->isCommitted () == OK)
     bb = bb->getBoard ();
   while (bb != (Board *) NULL && bb != rootBoard) {
+//     DebugCheck ((bb == (Board *) NULL),
+//              error ("NULL board is reached in AM::decSolveThreads"));
     if (bb->isSolve () == OK) {
       SolveActor *sa = CastSolveActor (bb->getActor ());
       if (sa->getBoard () != (Board *) NULL) {     // i.e. no abstraction;

@@ -1827,9 +1827,12 @@ void engine() {
          DebugCheck((solveBB->getParentBoard () != NULL),
                     error ("SolveCont: taken board is linked to computation tree?"));
 
+         CastSolveActor (solveBB->getActor ())->setBoard (CBB);
+
          Bool isGround;
-         solveBB = (Board *) e->copyTree (solveBB, &isGround);
-         SolveActor *solveAA = CastSolveActor (solveBB->getActor ());
+         Board *newSolveBB = (Board *) e->copyTree (solveBB, &isGround);
+         CastSolveActor (solveBB->getActor ())->unsetBoard ();
+         SolveActor *solveAA = CastSolveActor (newSolveBB->getActor ());
 
          if (isGround == OK) {
            TaggedRef solveTRef = solveAA->getSolveVar ();  // copy of;
@@ -1839,8 +1842,8 @@ void engine() {
          }
 
          // link and commit the board;
-         solveBB->setCommitted (CBB);
-         DebugCheck (((solveBB->getScriptRef ()).getSize () != 0),
+         newSolveBB->setCommitted (CBB);
+         DebugCheck (((newSolveBB->getScriptRef ()).getSize () != 0),
                      error ("non-empty script in solve blackboard"));
 
          if ( !e->fastUnify (solveAA->getSolveVar (), X[0]) ) {
@@ -2202,10 +2205,10 @@ void engine() {
       Board *solveBB = CBB;
       Board::SetCurrent ((CBB->getParentBoard ())->getBoardDeref ());
       CBB->removeSuspension ();
-      solveAA->unsetBoard ();   // unlink from the computation tree;
 
       if (solveBB->hasSuspension () == NO) {
         // 'solved';
+        solveAA->unsetBoard ();   // unlink from the computation tree;
         if ( !e->fastUnify (solveAA->getResult (), solveAA->genSolved ()) ) {
           warning ("unification of solved tuple with variable has failed");
           HANDLE_FAILURE (NULL, ;);
@@ -2215,22 +2218,25 @@ void engine() {
         WaitActor *wa = solveAA->getDisWaitActor ();
         if (wa == (WaitActor *) NULL) {
           // "stuck" (stable without distributing waitActors);
+          solveAA->unsetBoard ();   // unlink from the computation tree;
           if ( !e->fastUnify (solveAA->getResult (), solveAA->genStuck ()) ) {
             warning ("unification of solved tuple with variable has failed");
             HANDLE_FAILURE (NULL, ;);
           }
         } else {
           // to enumerate;
+          DebugCheck ((wa->hasOneChild () == OK),
+                      error ("wait actor for enumeration with single clause?"));
+          DebugCheck (((CastWaitActor (wa))->hasNext () == OK),
+                      error ("wait actor for distribution has a continuation"));
           DebugCheck ((solveBB->hasSuspension () == NO),
                       error ("solve board by the enumertaion without suspensions?"));
           Board *waitBoard = wa->getChild ();
           wa->decChilds ();
           WaitActor *nwa = new WaitActor (wa);
-          solveBB->removeSuspension ();   // since WaitActor::WaitActor add one;
-          DebugCheck ((solveBB->hasSuspension () == NO),
-                      error ("solve board by the enumertaion without suspensions?"));
+          solveBB->removeSuspension ();   // since WaitActor::WaitActor adds one;
           waitBoard->setActor (nwa);
-          nwa->addChildInternal (waitBoard);
+          ((AWActor *) nwa)->addChild (waitBoard);
           wa->unsetBoard ();  // may not copy the actor and rest of boards too;
           solveAA->setBoardToInstall (waitBoard);
 
@@ -2243,6 +2249,8 @@ void engine() {
           // ... and now set the original waitActor backward;
           nwa->setCommitted ();     // this subtree is discarded;
           wa->setBoard (solveBB);   // original waitActor;
+          CastSolveActor (newSolveBB->getActor ())->unsetBoard ();
+          solveAA->unsetBoard ();
           if (wa->hasOneChild () == OK) {
             solveAA->setBoardToInstall (wa->getChild ());
           } else {
@@ -2253,10 +2261,6 @@ void engine() {
             // distributed again ... Moreover, it must be considered first.
           }
           // ... and now there are two proper branches of search problem;
-          DebugCheck ((solveBB->hasSuspension () == NO),
-                      error ("solve board by the enumertaion without suspensions?"));
-          DebugCheck ((newSolveBB->hasSuspension () == NO),
-                      error ("solve board by the enumertaion without suspensions?"));
 
           if ( !e->fastUnify (solveAA->getResult (),
                               solveAA->genEnumed (newSolveBB) )) {

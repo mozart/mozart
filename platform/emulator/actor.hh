@@ -169,6 +169,7 @@ public:
   void pushWaitActorsStackOf (SolveActor *sa);
   WaitActor *getDisWaitActor ();
   void unsetBoard ();
+  void setBoard (Board *bb);
   void setBoardToInstall (Board *bb);
   Board* getBoardToInstall ();
   TaggedRef genSolved ();
