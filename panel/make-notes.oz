@@ -8,7 +8,7 @@
 local
    Border       = 2
    LargeBorder  = 5
-   LabelWidth   = 8
+   LabelWidth   = 10
    SquareSize   = 10
    ButtonWidth  = 6
 
