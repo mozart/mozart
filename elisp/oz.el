@@ -1102,6 +1102,7 @@ the GDB commands `cd DIR' and `directory'."
 
     )
 
+  (define-key map "\M-\C-x"	'oz-feed-paragraph)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (if oz-lucid
       ;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
