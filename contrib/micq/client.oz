@@ -164,7 +164,7 @@ define
       end
 
       meth pingServer()
-	 {Delay 60000 * 1}
+	 {Delay 60*1000}
 	 {@server ping}
 	 {self pingServer()}
       end
@@ -172,15 +172,19 @@ define
       meth startgui(settings:S<=nil)
 	 if @GUIStarted then skip
 	 else
-	    try	H = {self load($)} in
+	    try	H={self load($)} in
 	       {StartGUI self.this @server @id H S}
 	       GUIStarted <- true
 	    catch X then {Browse exception(startgui X)} end
 	 end
       end
-
+      
       meth load($)
-	 {@server S_getHistory(id: @id history: $)}
+	 thread
+	    try
+	       {@server S_getHistory(id:@id history:$)}
+	    catch _ then nil end
+	 end
       end
       
       meth haltApplication( application: Instance )
