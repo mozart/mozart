@@ -915,12 +915,15 @@ the end of this whitespace after indentation."
   (let ((old-cc case-fold-search))
     (setq case-fold-search nil) ; respect case
     (unwind-protect
-	(let ((col (save-excursion
-		     (oz-calc-indent dont-change-empty-lines))))
-	  ;; a negative result means: do not change indentation
-	  (cond ((>= col 0)
-		 (delete-horizontal-space)
-		 (indent-to col))))
+	(save-excursion
+	  (beginning-of-line)
+	  (skip-chars-forward " \t")
+	  (let ((col (save-excursion
+		       (oz-calc-indent dont-change-empty-lines))))
+	    ;; a negative result means: do not change indentation
+	    (cond ((>= col 0)
+		   (delete-horizontal-space)
+		   (indent-to col)))))
       (if (oz-is-left)
 	  (skip-chars-forward " \t"))
       (setq case-fold-search old-cc))))
