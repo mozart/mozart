@@ -1,6 +1,7 @@
 dnl -*-sh-*-
 AC_INIT(gdbm.cc)
 OZ_CONTRIB_INIT_CXX
+OZ_LIB_GMP
 
 AC_MSG_CHECKING([for --with-gdbm-inc])
 AC_ARG_WITH(gdbm-inc,
