@@ -672,6 +672,26 @@ OZ_Boolean OZ_FSetImpl::operator != (const OZ_FSetImpl &y)
   return normalize();
 }
 
+OZ_Boolean OZ_FSetImpl::operator == (const OZ_FSetImpl &y)
+{
+  DEBUG_FSETIR('(' << *this << " != " << y << ") = ");
+
+  if (!isValue() || !y.isValue())
+    return OZ_FALSE;
+
+  if (_card_min != y._card_min || 
+      _card_max != y._card_max ||
+      _known_not_in != y._known_not_in ||
+      _known_in != y._known_in) 
+    return FALSE;
+
+  for (int i = fset_high; i--; ) 
+    if (_in[i] != y._in[i] || _not_in[i] != y._not_in[i])
+      return FALSE;
+  
+  return TRUE;
+}
+
 OZ_FSetImpl OZ_FSetImpl::operator & (const OZ_FSetImpl& y) const
 {
   DEBUG_FSETIR(*this << " & " << y << " = ");
@@ -877,6 +897,11 @@ OZ_Boolean OZ_FSetConstraint::operator >= (const OZ_FSetConstraint &y)
 OZ_Boolean OZ_FSetConstraint::operator != (const OZ_FSetConstraint &y)
 {
   return CASTTHIS->operator != (CASTREF y);
+}
+
+OZ_Boolean OZ_FSetConstraint::operator == (const OZ_FSetConstraint &y)
+{
+  return CASTTHIS->operator == (CASTREF y);
 }
 
 OZ_Boolean OZ_FSetConstraint::putCard(int min_card, int max_card)
