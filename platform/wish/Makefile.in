@@ -3,6 +3,7 @@ BUILDTOP=       @BUILDTOP@
 PREFIX=         @prefix@
 
 PLATFORM        = @platform@
+PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
 INSTALL         = @INSTALL@
 INSTALL_BIN     = $(INSTALL) -s -m 555
 INSTALL_DIR     = @INSTALL_DIR@
@@ -42,29 +43,30 @@ distclean: veryclean
         -rm -f config.* Makefile
         -rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
 
-install: $(PREFIX)/platform/$(PLATFORM) $(OZWISH) \
-        $(PROVIDETCLLIBS) $(PREFIX)/share/wish
-        $(INSTALL_BIN) $(OZWISH) $(PREFIX)/platform/$(PLATFORM)
+install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS)
+        $(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
 
-$(PREFIX)/platform/$(PLATFORM):
+$(PLATFORMDIR):
         $(INSTALL_DIR) $@
 
-provide-link:
-        rm -rf $(PREFIX)/share/wish
-        $(INSTALL_DIR) $(PREFIX)/share/wish
-        (cd $(PREFIX)/share/wish; rm -rf tcl)
-        (cd $(PREFIX)/share/wish; $(LN_S) $(TCLLIBTCLDIR) tcl)
-        (cd $(PREFIX)/share/wish; rm -rf tk)
-        (cd $(PREFIX)/share/wish; $(LN_S) $(TKLIBTCLDIR) tk)
+provide-link: $(PLATFORMDIR)
+        rm -rf $(PLATFORMDIR)/wish
+        $(INSTALL_DIR) $(PLATFORMDIR)/wish
+        (cd $(PLATFORMDIR)/wish; \
+                rm -rf tcl; \
+                rm -rf tk; \
+                $(LN_S) $(TCLLIBTCLDIR) tcl; \
+                $(LN_S) $(TKLIBTCLDIR) tk)
 
-provide-copy:
-        rm -rf $(PREFIX)/share/wish
-        $(INSTALL_DIR) $(PREFIX)/share/wish
-        (cd $(PREFIX)/share/wish; rm -rf tcl)
-        (cd $(PREFIX)/share/wish; cp -r $(TCLLIBTCLDIR) .)
-        (cd $(PREFIX)/share/wish; $(LN_S) tcl8.0 tcl)
-        (cd $(PREFIX)/share/wish; rm -rf tk)
-        (cd $(PREFIX)/share/wish; cp -r $(TKLIBTCLDIR) .)
-        (cd $(PREFIX)/share/wish; $(LN_S) tk8.0 tk)
+provide-copy: $(PLATFORMDIR)
+        rm -rf $(PLATFORMDIR)/wish
+        $(INSTALL_DIR) $(PLATFORMDIR)/wish
+        (cd $(PLATFORMDIR)/wish; \
+                rm -rf tcl; \
+                rm -rf tk; \
+                cp -r $(TCLLIBTCLDIR) .; \
+                cp -r $(TKLIBTCLDIR) .; \
+                $(LN_S) tcl8.0 tcl; \
+                $(LN_S) tk8.0 tk)
 
 check:
