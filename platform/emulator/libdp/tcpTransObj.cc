@@ -179,6 +179,7 @@ inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
   writeBuffer->fixsite=site;       // Fix because the marshaler uses site
   msgC->marshal(writeBuffer, tcptransController);
 
+  Assert(writeBuffer->availableSpace()>=0); // Room for trailer?
   if(msgC->checkFlag(MSG_HAS_MARSHALCONT)) {
     globalContCounter++;
     comObj->msgPartlySent(msgC);
