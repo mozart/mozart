@@ -53,7 +53,7 @@ void panic(bool isSystem, char *format, ...)
   } else {
     MessageBeep(MB_ICONEXCLAMATION);
     MessageBox(NULL, buf, "Mozart Fatal Error",
-	       MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+	       MB_ICONSTOP | MB_SETFOREGROUND);
   }
 
   ExitProcess(1);
