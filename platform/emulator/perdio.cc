@@ -104,6 +104,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #include "runtime.hh"
 #include "ip.hh"
 #include "codearea.hh"
