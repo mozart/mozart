@@ -864,3 +864,25 @@ int osgetpid()
 {
   return getpid();
 }
+
+#ifdef XXWINDOWS
+
+// execution of C++ initializers
+
+extern "C" {
+
+extern void (*__CTOR_LIST__)();
+
+int WINAPI dll_entry(int a,int b,int c)
+{
+  void (**pfunc)() = &__CTOR_LIST__;
+
+  for (int i = 1; pfunc[i]; i++) {
+    (pfunc[i])();
+  }
+  return 1;
+}
+
+}
+
+#endif
