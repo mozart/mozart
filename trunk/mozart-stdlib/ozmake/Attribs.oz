@@ -7,6 +7,7 @@ import
    OS
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
+   URL
 define
    class Attribs
       attr
@@ -20,6 +21,7 @@ define
 	 LibRoot    : unit
 	 DocRoot    : unit
 	 TmpDir     : unit
+	 UseMakePkg : unit
 	 MakeFile   : unit
 	 MakeFileGiven : false
 	 Uri        : unit
@@ -81,6 +83,12 @@ define
 	 SubResolverStack : nil
 	 FromPackage: false
 	 XMogul     : unit
+	 MogulDatabase : unit
+	 MogulDatabaseGiven : false
+	 MogulPkgURL : unit
+	 MogulDocURL : unit
+	 MogulSecURL : unit
+	 ConfigFile  : unit
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -246,6 +254,15 @@ define
 	 @ExtractDir
       end
 
+      meth set_default_use_makepkg(B)
+	 if @UseMakePkg==unit then
+	    UseMakePkg<-(B==true)
+	 end
+      end
+      meth set_use_makepkg(B)
+	 UseMakePkg<-(B==true)
+      end
+
       meth set_makefile(F)
 	 MakeFile<-{Path.expand F}
 	 MakeFileGiven<-true
@@ -258,9 +275,14 @@ define
 	 in
 	    MakeFile<-{Path.resolve {Path.resolve D @AsSubdir} B}
 	 end
-	 if @MakeFile==unit then
+	 if @MakeFile==unit andthen @UseMakePkg\=false then
 	    %% get_srcdir cannot call get_makefile but must look at
 	    %% @MakeFile directly
+	    F = {Path.resolve Attribs,get_srcdir($) 'MAKEPKG.oz'}
+	 in
+	    if {Path.exists F} then MakeFile<-F end
+	 end
+	 if @MakeFile==unit then
 	    MakeFile<-{Path.resolve Attribs,get_srcdir($) 'makefile.oz'}
 	 end
 	 @MakeFile
@@ -692,5 +714,46 @@ define
 	    @FromPackage
 	 end
       end
+
+      meth set_moguldatabase(F)
+	 MogulDatabase<-{Path.expand F}
+	 MogulDatabaseGiven<-true
+      end
+      meth get_moguldatabase($)
+	 if @MogulDatabase==unit then
+	    if @Superman\=unit then
+	       MogulDatabase<-{@Superman get_moguldatabase($)}
+	    else
+	       MogulDatabase<-{Path.resolve Attribs,get_prefix($) 'mogul/DATABASE'}
+	    end
+	 end
+	 @MogulDatabase
+      end
+      meth get_moguldatabase_given($) @MogulDatabaseGiven end
+
+      meth set_configfile(F)
+	 ConfigFile <- {Path.resolve Attribs,get_prefix($) F}
+      end
+      meth get_configfile($)
+	 if @ConfigFile==unit then
+	    {self set_configfile('apps/ozmake/DATABASE')}
+	 end
+	 @ConfigFile
+      end
+
+      meth set_mogulpkgurl(U)
+	 MogulPkgURL <- {URL.toBase U}
+      end
+      meth set_moguldocurl(U)
+	 MogulDocURL <- {URL.toBase U}
+      end
+      meth set_mogulsecurl(U)
+	 MogulSecURL <- {URL.toBase U}
+      end
+
+      meth get_mogulpkgurl($) @MogulPkgURL end
+      meth get_moguldocurl($) @MogulDocURL end
+      meth get_mogulsecurl($) @MogulSecURL end
+      
    end
 end

@@ -2,8 +2,6 @@ functor
 export
    'class' : Database
 import
-   Pickle
-   Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
 prepare
    VSToString = VirtualString.toString
@@ -22,18 +20,12 @@ define
       meth database_read
 	 if @Mogul2Package==unit then
 	    F={self get_database($)}
+	    fun {FromTxt E}
+	       Database,ByteStringify(E $)
+	    end
+	    L={self databaselib_read(F FromTxt $)}
 	 in
-	    if {Path.exists F#'.txt'} then
-	       L = try
-		      {self trace('reading pickled database '#F#'.ozf')}
-		      {Pickle.load F#'.ozf'}
-		   catch error(...) then
-		      {self trace('...failed')}
-		      {self trace('retrying with text database '#F#'.txt')}
-		      {Map {Utils.readTextDB F#'.txt'}
-		       fun {$ E} Database,ByteStringify(E $) end}
-		   end
-	    in
+	    if L\=unit then
 	       Database,Init(L)
 	    elseif {self get_database_given($)} then
 	       raise ozmake(database:filenotfound(F#'.txt')) end
@@ -121,6 +113,9 @@ define
 
       %% replace byte strings by strings for textual output
 
+      meth database_stringify(E $)
+	 Database,Stringify(E $)
+      end
       meth Stringify(E $)
 	 Author = {CondSelect E author    unit}
 	 Blurb  = {CondSelect E blurb     unit}
@@ -178,17 +173,11 @@ define
 		then {Dictionary.toRecord package E} else E end
 	     end}
 	    DB = {self get_database($)}
+	    fun {ToTxt E}
+	       Database,Stringify(E $)
+	    end
 	 in
-	    {self trace('writing pickled database '#DB#'.ozf')}
-	    if {self get_justprint($)} then skip else
-	       {Pickle.save Entries DB#'.ozf'}
-	    end
-	    {self trace('writing textual database '#DB#'.txt')}
-	    if {self get_justprint($)} then skip else
-	       {Utils.writeTextDB
-		{Map Entries fun {$ E} Database,Stringify(E $) end}
-		DB#'.txt'}
-	    end
+	    {self databaselib_save(DB ToTxt Entries)}
 	 end
       end
 

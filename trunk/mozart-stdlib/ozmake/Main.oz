@@ -28,16 +28,22 @@ prepare
       docroot(   single type:string)
       extractdir(single type:string)
       publishdir(single type:string)
+      mogulpkgurl(single type:string)
+      moguldocurl(single type:string)
+      mogulsecurl(single type:string)
       archive(   single type:string)
       tmpdir(    single type:string)
 
       makefile(single char:&m type:string)
+      usemakepkg( single type:bool)
       package( single char:&p type:string)
       database(single         type:string)
+      moguldatabase(single    type:string)
+      configdatabase(single   type:string)
 
       action(single type:atom(build install clean veryclean
 			      create publish extract list help
-			      uninstall edit
+			      uninstall edit config
 			      %%again
 			     )
 	     default:build)
@@ -53,6 +59,7 @@ prepare
       help(     char:&h alias:action#help)
       uninstall(char:&e alias:action#uninstall)
       edit(             alias:action#edit)
+      config(           alias:action#config)
       %% again(            alias:action#again)
 
       grade(single type:atom(none up down same any))
@@ -100,11 +107,17 @@ prepare
     docroot        # set_docroot
     extractdir     # set_extractdir
     publishdir     # set_publishdir
+    mogulpkgurl    # set_mogulpkgurl
+    moguldocurl    # set_moguldocurl
+    mogulsecurl    # set_mogulsecurl
     archive        # set_archive
     tmpdir         # set_tmpdir
     makefile       # set_makefile
+    usemakepkg     # set_use_makepkg
     package        # set_package
+    moguldatabase  # set_moguldatabase
     database       # set_database
+    configfile     # set_configfile
     grade          # set_grade
     replacefiles   # set_replacefiles
     keepzombies    # set_keepzombies
@@ -131,6 +144,10 @@ define
       for O#M in OPTLIST do
 	 if {HasFeature Args O} then {Man M(Args.O)} end
       end
+      %% only use MAKEPKG.oz if installing from a package and not
+      %% explicitly disabled by the user
+      {Man set_default_use_makepkg(Args.action==install andthen
+				   {Man get_package_given($)})}
       case Args.action
       of build     then {Man build(Targets)}
       [] install   then {Man install(Targets)}
@@ -143,6 +160,7 @@ define
       [] help      then {Help.help}
       [] uninstall then {Man uninstall}
       [] edit      then {Man makefileEdit}
+      [] config    then {Man config}
       %% [] again     then {Man again}
       end
       {Application.exit 0}
