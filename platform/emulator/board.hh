@@ -68,6 +68,7 @@ public:
   void addSuspension (Suspension *susp);
   // should be applied only for 'solve' boards;
   Board *gcGetBoardDeref();
+  Board *gcGetNotificationBoard ();
   Actor *getActor();
   Board *getBoard() { return u.board; }
   Board *getBoardDeref();
