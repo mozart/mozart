@@ -35,8 +35,14 @@ EMACS		= @THEEMACS@
 HOMEURL         = @HOMEURL@
 PLATFORM	= @PLATFORM@
 
+COMPILE_ELISP	= @COMPILE_ELISP@
+
 TARGETS		= Fontifier.ozf
-ETARGETS	= Fontifier.elc
+ifeq ($(COMPILE_ELISP),yes)
+ETARGETS	= Fontifier.el Fontifier.elc
+else
+ETARGETS	= Fontifier.el
+endif
 LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
 ELIB_TARGETS	= $(addprefix $(ELIB_DIR)/,$(ETARGETS))
 NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/doc/code
