@@ -279,6 +279,7 @@ OZ_C_proc_begin(BIstorePredId,5)
 OZ_C_proc_end
 
 
+
 OZ_C_proc_begin(BInewHashTable,4)
 {
   declareCodeBlock(0,code);
@@ -286,7 +287,7 @@ OZ_C_proc_begin(BInewHashTable,4)
   OZ_declareIntArg(2,elseLabel);
   OZ_declareArg(3,ret);
 
-  IHashTable *ht = new IHashTable(size,code->getStart()+elseLabel);
+  IHashTable *ht = new IHashTable(size,code->computeLabel(elseLabel));
 
   code->writeAddress(ht);
   return OZ_unifyInt(ret, ToInt32(ht));
@@ -304,9 +305,8 @@ OZ_C_proc_begin(BIstoreHTVarLabel,3)
   declareCodeBlock(0,code);
   declareHTable(1,ht);
   OZ_declareIntArg(2,label);
-  ByteCode *absaddr = code->getStart() + label;
 
-  ht->addVar(absaddr);
+  ht->addVar(code->computeLabel(label));
   return PROCEED;
 }
 OZ_C_proc_end
@@ -318,14 +318,13 @@ OZ_C_proc_begin(BIstoreHTScalar,4)
   declareHTable(1,ht);
   OZ_declareNonvarArg(2,value);
   OZ_declareIntArg(3,label);
-  ByteCode *absaddr = code->getStart() + label;
 
   value = deref(value);
   if (isLiteral(value)) {
-    ht->add(tagged2Literal(value),absaddr);
+    ht->add(tagged2Literal(value),code->computeLabel(label));
   } else {
     Assert(isNumber(value));
-    ht->add(value,absaddr);
+    ht->add(value,code->computeLabel(label));
   }
 
   return PROCEED;
@@ -343,12 +342,11 @@ OZ_C_proc_begin(BIstoreHTRecord,5)
 
   SRecordArity ar   = getArity(arity);
   reclabel          = deref(reclabel);
-  ByteCode *absaddr = code->getStart() + label;
 
   if (literalEq(reclabel,AtomCons) && sraIsTuple(ar) && getTupleWidth(ar)==2) {
-    ht->addList(absaddr);
+    ht->addList(code->computeLabel(label));
   } else {
-    ht->add(tagged2Literal(reclabel),ar,absaddr);
+    ht->add(tagged2Literal(reclabel),ar,code->computeLabel(label));
   }
 
   return PROCEED;

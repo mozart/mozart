@@ -44,7 +44,7 @@ EntryTable newEntryTable(int sz)
 }
 
 
-ProgramCounter *IHashTable::add(Literal *constant, ProgramCounter label) 
+int *IHashTable::add(Literal *constant, int label) 
 {
   numentries++;
   unsigned int hsh = hash(constant->hash());
@@ -58,8 +58,8 @@ ProgramCounter *IHashTable::add(Literal *constant, ProgramCounter label)
   return literalTable[hsh]->getLabelRef();
 }
 
-ProgramCounter *IHashTable::add(Literal *name, SRecordArity arity,
-				ProgramCounter label)
+int *IHashTable::add(Literal *name, SRecordArity arity,
+				int label)
 {
   numentries++;
   unsigned int hsh = hash(name->hash());
@@ -74,7 +74,7 @@ ProgramCounter *IHashTable::add(Literal *name, SRecordArity arity,
 }
 
 
-ProgramCounter *IHashTable::add(TaggedRef number, ProgramCounter label)
+int *IHashTable::add(TaggedRef number, int label)
 {
   numentries++;
 
@@ -84,7 +84,7 @@ ProgramCounter *IHashTable::add(TaggedRef number, ProgramCounter label)
   case OZFLOAT:  hsh = tagged2Float(number)->hash();  break;
   case BIGINT:   hsh = tagged2BigInt(number)->hash(); break;
   case SMALLINT: hsh = smallIntHash(number);          break;    
-  default:       { static ProgramCounter x = NOCODE; Assert(0); return &x; }
+  default:       Assert(0); return 0;
   }
 
   hsh = hash(hsh);
@@ -170,10 +170,10 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
   }
 }
 
-ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
+int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
 				   IHashTable *table, TaggedRef *&sP)
 {
-  ProgramCounter offset = table->getElse();
+  int offset = table->getElse();
   if (isSRecord(term)) {
     if (table->functorTable) {
       SRecord *rec = tagged2SRecord(term);

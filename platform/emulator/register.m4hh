@@ -334,7 +334,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	DEREF(term,termPtr,tag);
 
 	if (literalEq(term,atm)) {
-	  JUMP( getLabelArg(PC+3) );
+	  JUMPRELATIVE( getLabelArg(PC+3) );
 	}
 
         if (isNotCVar(term) ||
@@ -360,7 +360,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	  goto LBLsuspendThread;
 	}
 
-	JUMP( getLabelArg(PC+4) );
+	JUMPRELATIVE( getLabelArg(PC+4) );
     }''
     )
 
@@ -370,11 +370,11 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	DEREF(term,termPtr,tag);
 
 	if (literalEq(term,NameTrue)) {
-	  JUMP(getLabelArg(PC+2));
+	  JUMPRELATIVE(getLabelArg(PC+2));
 	}
 
 	if (literalEq(term,NameFalse)) {
-	  JUMP(getLabelArg(PC+3));
+	  JUMPRELATIVE(getLabelArg(PC+3));
 	}
 
         if (isAnyVar(term)) {
@@ -383,7 +383,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	  goto LBLsuspendThread;
 	}
 
-	JUMP( getLabelArg(PC+4) );
+	JUMPRELATIVE( getLabelArg(PC+4) );
     }''
     )
 
@@ -396,11 +396,11 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
 	/* optimized for integer case */
 	if (isSmallInt(tag)) {
-	  JUMP( getLabelArg(smallIntEq(term,i) ? PC+3 : PC+4) );
+	  JUMPRELATIVE( getLabelArg(smallIntEq(term,i) ? PC+3 : PC+4) );
 	}
 
 	if ( tag == tagTypeOf(i) && numberEq(i,term)) {
-	  JUMP( getLabelArg(PC+3) );
+	  JUMPRELATIVE( getLabelArg(PC+3) );
 	}
 
         if (isNotCVar(term) ||
@@ -410,7 +410,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	  goto LBLsuspendThread;
 	}
 
-	JUMP( getLabelArg(PC+4) );
+	JUMPRELATIVE( getLabelArg(PC+4) );
     }''
     )
 
@@ -770,7 +770,7 @@ Case(UNIFYLITERAL)
 	       TaggedRef term = Reg1(getRegArg(PC+1));
 	       DEREF(term,_1,_2);
 	       if (!isAnyVar(term)) {
-		 JUMP( getLabelArg(PC+2) );
+		 JUMPRELATIVE( getLabelArg(PC+2) );
 	       }
 	       DISPATCH(3);
 	       ''
