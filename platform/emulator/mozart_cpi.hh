@@ -1403,13 +1403,15 @@ typedef OZ_Return (*make_prop_fn_2)(OZ_Term, OZ_Term);
 typedef OZ_Return (*make_prop_fn_3)(OZ_Term, OZ_Term, OZ_Term);
 typedef OZ_Return (*make_prop_fn_4)(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
 
+// To fool Microsoft Visual C++
+const int OZ_Filter__max_actions = 10;
+
 template <class PROPAGATOR>
 class OZ_Filter {
 private:
   int _closed;
   PROPAGATOR * _prop;
   OZ_ParamIterator * _iter;
-  static const int _max_actions = 10;
   struct _actions_t {
     enum {
       _serv_failed = 0,
@@ -1422,7 +1424,7 @@ private:
       PROPAGATOR * _replacement;
       struct { OZ_Term _x, _y; } _equat;
     } _action_params;
-  } _actions[_max_actions];
+  } _actions[OZ_Filter__max_actions];
   int _nb_actions;
   OZ_Return update_return(OZ_Return  o, OZ_Return n) {
     if (o == OZ_ENTAILED) {
@@ -1448,7 +1450,7 @@ public:  //
       _actions[_nb_actions]._what = _actions_t::_serv_leave;
       _actions[_nb_actions]._action_params._vars_left = vars_left;
       _nb_actions += 1;
-      Assert(_nb_actions <= _max_actions);
+      Assert(_nb_actions <= OZ_Filter__max_actions);
     }
     _closed = 1;
     return *this;
@@ -1458,7 +1460,7 @@ public:  //
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_entailed;
       _nb_actions += 1;
-      Assert(_nb_actions <= _max_actions);
+      Assert(_nb_actions <= OZ_Filter__max_actions);
     }
     _closed = 1;
     return *this;
@@ -1468,7 +1470,7 @@ public:  //
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_failed;
       _nb_actions += 1;
-      Assert(_nb_actions <= _max_actions);
+      Assert(_nb_actions <= OZ_Filter__max_actions);
     }
     _closed = 1;
     return *this;
@@ -1480,7 +1482,7 @@ public:  //
       _actions[_nb_actions]._action_params._equat._x = x;
       _actions[_nb_actions]._action_params._equat._y = y;
       _nb_actions += 1;
-      Assert(_nb_actions <= _max_actions);
+      Assert(_nb_actions <= OZ_Filter__max_actions);
     }
     _closed = 1;
     return *this;
