@@ -9,6 +9,7 @@ import
    OS(getDir stat system unlink)
    Shell(shellCommand isWindows:IsWindows rmdir)
    Property(get)
+   System(show:Show)
 define
    Windows=({Property.get 'platform.os'}==win32)
    %%
@@ -112,6 +113,8 @@ define
    %%
    %%
    fun{AddToPath Path What}
+      {Show Path}
+      {Show What}
       {VirtualString.toString
        {URL.toVirtualStringExtended
 	{URL.resolve {URL.toBase Path} What} o(full:true raw:true)}}

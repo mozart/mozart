@@ -15,6 +15,35 @@ define
    ArchiveManager
    OzpmInfo
 
+   %% two functions on mogul names
+   
+   fun{GetParent X}
+      %%
+      %% returns the parent mogul name
+      %% ignore last /, my return a name with an ending /
+      %%
+      {VirtualString.toAtom
+       {Reverse
+	{List.dropWhileInd {Reverse {VirtualString.toString X}}
+	 fun{$ I C} C\=&/ orelse I==1 end}}}
+   end
+   fun{GetLabel X}
+      %%
+      %% returns the last basename of a mogul name
+      %% ignore last last /
+      %%
+      VS={VirtualString.toString
+	  {Reverse
+	   {List.takeWhileInd {Reverse {VirtualString.toString X}}
+	    fun{$ I C} C\=&/ orelse I==1 end}}}
+   in
+      if {List.last VS}\=&/ then
+	 VS
+      else
+	 {List.take VS {Length VS}-1}
+      end
+   end	       
+
    class ListDataView
       feat
 	 parent
@@ -97,66 +126,52 @@ define
 	 if @rootNode\=nil then
 	    {@rootNode delete(height:_)}
 	 end
-	 rootNode<-{New TreeNode init(canvas:self.handle
-				      font:"Times 12"
-				      height:16
-				      label:"mogul")}
-	 dictNode<-{NewDictionary}
-	 {Dictionary.put @dictNode 'mogul:/' @rootNode}
-	 local
-	    fun{ToKey X}
-	       {VirtualString.toAtom
-		if {List.last {VirtualString.toString X}}\=&/ then
-		   X#"/" else X end}
-	    end
-	    fun{GetParent X}
-	       {VirtualString.toAtom
-		{Reverse
-		 {List.dropWhileInd {Reverse {VirtualString.toString X}}
-		  fun{$ I C} C\=&/ orelse I==1 end}}}
-	    end
-	    fun{GetLabel X}
-	       VS={VirtualString.toString
-		   {Reverse
-		    {List.takeWhileInd {Reverse {VirtualString.toString X}}
-		     fun{$ I C} C\=&/ orelse I==1 end}}}
-	    in
-	       if {List.last VS}\=&/ then
-		  VS
-	       else
-		  {List.take VS {Length VS}-1}
+	 if Info.info==nil then
+	    rootNode<-nil
+	 else
+	    rootNode<-{New TreeNode init(canvas:self.handle
+					 font:"Times 12"
+					 height:16
+					 label:"mogul")}
+	    dictNode<-{NewDictionary}
+	    {Dictionary.put @dictNode 'mogul:/' @rootNode}
+	    local
+	       fun{ToKey X}
+		  {VirtualString.toAtom
+		   if {List.last {VirtualString.toString X}}\=&/ then
+		      X#"/" else X end}
 	       end
-	    end	       
-	    proc{CreateNode I X}
-	       Parent={GetParent X}
-	       ParentNode={Dictionary.condGet @dictNode Parent
-			   {ByNeed fun{$}
-				      {CreateNode 0 Parent}
-				      {Dictionary.get @dictNode Parent}
-				   end}
-			  }
-	       {Wait ParentNode}
-	       Node={New TreeNode init(parent:ParentNode
-				       label:{GetLabel X})}
+	       proc{CreateNode I X}
+		  Parent={GetParent X}
+		  ParentNode={Dictionary.condGet @dictNode Parent
+			      {ByNeed fun{$}
+					 {CreateNode 0 Parent}
+					 {Dictionary.get @dictNode Parent}
+				      end}
+			     }
+		  {Wait ParentNode}
+		  Node={New TreeNode init(parent:ParentNode
+					  label:{GetLabel X})}
+	       in
+		  {Dictionary.put @dictNode {ToKey X} Node}
+		  {ParentNode addLeaf(node:Node)}
+		  {Node expand}
+		  if I\=0 then
+		     {Node bind(event:"<1>"
+				action:{self.parent.toplevel newAction(self#select(I) $)})}
+		  end
+	       end
 	    in
-	       {Dictionary.put @dictNode {ToKey X} Node}
-	       {ParentNode addLeaf(node:Node)}
-	       {Node expand}
-	       if I\=0 then
-		  {Node bind(event:"<1>"
-			     action:{self.parent.toplevel newAction(self#select(I) $)})}
+	       for
+		  X in @info.info
+		  I in 1 ; I+1
+	       do
+		  {CreateNode I X.id}
 	       end
 	    end
-	 in
-	    for
-	       X in @info.info
-	       I in 1 ; I+1
-	    do
-	       {CreateNode I X.id}
-	    end
+	    {@rootNode draw(x:2 y:2 height:_)}
+	    {@rootNode expand}
 	 end
-	 {@rootNode draw(x:2 y:2 height:_)}
-	 {@rootNode expand}
 	 %%
 	 %% 
 	 %%
@@ -175,7 +190,9 @@ define
 	 {self.parent displayInfo(D)}
       end
    end
-
+   %%
+   %%
+   %%
    class InfoView
       feat
 	 setTitle
@@ -245,6 +262,103 @@ define
 	 C=InfoView
       end
    end
+   %%
+   %%
+   %%
+   TitleLook={QTk.newLook}
+   {TitleLook.set label(font:{QTk.newFont font(family:'Times' size:16)}
+			
+		       )}
+   
+   class NiceInfoView
+      feat
+	 setTitle
+	 handle
+	 parent
+      attr
+	 info
+      meth init(Parent ST Desc)
+	 self.parent=Parent
+	 self.setTitle=ST
+	 Desc=scrollframe(glue:nswe
+			  bg:white
+			  tdscrollbar:true
+			  td(glue:nswe
+			     handle:self.handle
+			     label(glue:nwe
+				   look:TitleLook
+				   feature:title)
+			     lr(glue:nwe
+				feature:f1
+				label(glue:w
+				      text:"Author : ")
+				label(glue:nw
+				      look:AuthorLook
+				      feature:author))
+			     lr(glue:nwe
+				feature:f2
+				label(glue:nw
+				      text:"Description : ")
+				label(glue:nswe
+				      anchor:nw
+				      justify:left
+				      feature:description))
+			     
+			     ))
+      end
+      meth display(Inf)
+	 info<-Inf
+	 {self.handle set(nil)}
+	 if Inf==unit then
+	    {self.setTitle ""}
+	 else
+	    Info=Inf.info
+	 in
+	    {self.setTitle {VirtualString.toString Info.id}}
+	    local
+	       L1={List.filter
+		   {List.map
+		    {Record.toListInd Info}
+		    fun{$ En}
+		       I#V=En
+		    in
+		       case I
+		       of lsla then unit
+		       [] filelist then unit
+		       [] id then unit
+		       else
+			  if {List.is V} then
+			     I#":"#{List.drop
+				    {VirtualString.toString
+				     {List.foldL V fun{$ S X} S#","#X end ""}}
+				    1}
+			  elseif {VirtualString.is V} then
+			     I#":"#{VirtualString.toString V}
+			  else
+			     unit
+			  end
+		       end
+		    end}
+		   fun{$ L} L\=unit end}
+	       L2=if {HasFeature Info filelist} then
+		     ""|"Contains the following files :"|""|{List.map Info.filelist fun{$ R} R end}
+		  else
+		     nil
+		  end
+	       L={List.append L1 L2}
+	    in
+	       {ForAll L proc{$ Line} {self.handle insert('end' Line#"\n")} end}
+	    end
+	 end
+      end
+      meth get(Info)
+	 Info=@info
+	 skip
+      end
+      meth getClass(C)
+	 C=NiceInfoView
+      end
+   end
    
    class InteractiveManager
 
@@ -308,26 +422,37 @@ define
 					    show(modal:true wait:true)}
 					end))))
 	 %%
+	 ToolbarLook={QTk.newLook}
+	 {ToolbarLook.set tbradiobutton(glue:w pady:2)}
+	 {ToolbarLook.set tdline(glue:nsw)}
 	 ToolbarDesc=lr(glue:nwe relief:sunken borderwidth:1
-			tbbutton(text:'Installed'
-				 action:self#displayInstalled
-				 glue:w)
-			tbbutton(text:'Mogul'
-				 action:self#displayMogul
-				 glue:w)
-			tbbutton(text:'File...'
-				 action:self#displayFile
-				 glue:w)
-			tdline(glue:nsw)
-			tbradiobutton(glue:w
-				      text:'List'
-				      group:dataview
-				      action:self#displayDataAs(ListDataView))
-			tbradiobutton(glue:w
-				      text:'Tree'
+			look:ToolbarLook
+			tbradiobutton(text:'Installed'
+				      init:true
+				      action:self#displayInstalled
+				      group:viewmode)
+			tbradiobutton(text:'Mogul'
+				      action:self#displayMogul
+				      group:viewmode)
+			tbradiobutton(text:'File...'
+				      action:self#displayFile
+				      group:viewmode)
+			tdline
+			tbradiobutton(text:'Tree'
 				      init:true
 				      group:dataview
 				      action:self#displayDataAs(TreeDataView))
+			tbradiobutton(text:'List'
+				      group:dataview
+				      action:self#displayDataAs(ListDataView))
+			tdline
+			tbradiobutton(text:'Nice'
+				      init:true
+				      group:infoview
+				      action:self#displayInfoAs(NiceInfoView))
+			tbradiobutton(text:'All'
+				      group:infoview
+				      action:self#displayInfoAs(InfoView))
 		       )
 				 
 %			tbbutton(text:'Install' glue:w)
@@ -420,6 +545,17 @@ define
 			       Desc)}
 	 {self.dataPlace set(Desc)}
 	 {@data display(Info)}
+      end
+
+      meth displayInfoAs(Class)
+	 Desc
+	 Info={@info get($)}
+      in
+	 info<-{New Class init(self
+			       proc{$ Title} {self.infoLabel set(text:Title)} end
+			       Desc)}
+	 {self.infoPlace set(Desc)}
+	 {@info display(Info)}
       end
       
       meth displayInstalled
