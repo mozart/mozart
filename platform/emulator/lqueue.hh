@@ -148,7 +148,7 @@ public:
   }
   static void initFreeList() {
     LQ_TRACE(cerr << "init free list" << endl);
-    // to be called for system initialization and gc
+    // to be called for system initialization and
     memset(freelist,0,FreeListSize*sizeof(LinkedQueueBlock*));
   }
 };

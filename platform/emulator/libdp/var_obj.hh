@@ -80,8 +80,10 @@ public:
   VarStatus checkStatusV();
   OZ_Return addSuspV(TaggedRef *v, Suspendable * susp, int unstable);
   Bool validV(TaggedRef v) { return FALSE; }
-  OzVariable *gcV() { return new ObjectVar(*this); }
-  void gcRecurseV(void);
+  OzVariable * gCollectV() { return new ObjectVar(*this); }
+  OzVariable * sCloneV() { Assert(0); return NULL; }
+  void gCollectRecurseV(void);
+  void sCloneRecurseV(void) { Assert(0); }
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:oprxy>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
   OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);

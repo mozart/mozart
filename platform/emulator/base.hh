@@ -446,14 +446,18 @@ void oz_io_awakeVar(TaggedRef var);
 
 
 
-// see gc.cc
 Bool oz_staticProtect(TaggedRef *);
 Bool oz_protect(TaggedRef *);
 Bool oz_unprotect(TaggedRef *);
 
 inline 
-void OZ_collectHeapTerm(TaggedRef & f, TaggedRef & t) {
-  OZ_collectHeapBlock(&f, &t, 1);
+void oz_gCollectTerm(TaggedRef & f, TaggedRef & t) {
+  OZ_gCollectBlock(&f, &t, 1);
+}
+
+inline 
+void oz_sCloneTerm(TaggedRef & f, TaggedRef & t) {
+  OZ_sCloneBlock(&f, &t, 1);
 }
 
 // builtins.cc

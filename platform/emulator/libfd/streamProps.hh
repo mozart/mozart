@@ -45,7 +45,10 @@ public:
   DisjunctivePropagatorStream(OZ_Term, OZ_Term, OZ_Term);
   ~DisjunctivePropagatorStream();
   virtual size_t sizeOf(void) { return sizeof(DisjunctivePropagatorStream); }
-  virtual void updateHeapRefs(OZ_Boolean);
+
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
@@ -67,7 +70,10 @@ public:
   DistinctPropagatorStream(OZ_Term, OZ_Term);
   ~DistinctPropagatorStream();
   virtual size_t sizeOf(void) { return sizeof(DistinctPropagatorStream); }
-  virtual void updateHeapRefs(OZ_Boolean);
+
+  virtual void gCollect(void);
+  virtual void sClone(void);
+
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }

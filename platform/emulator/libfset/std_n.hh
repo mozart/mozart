@@ -45,9 +45,13 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(FSetDisjointNPropagator); }
 
-  virtual void updateHeapRefs(OZ_Boolean dup) {
-    Propagator_VS::updateHeapRefs(dup);
-    
+  virtual void gCollect(void) {
+    Propagator_VS::gCollect();
+    _u.copyExtension();
+  }
+
+  virtual void sClone(void) {
+    Propagator_VS::sClone();
     _u.copyExtension();
   }
 
@@ -98,8 +102,19 @@ public:
     return &profile;
   }
 
-  virtual void updateHeapRefs(OZ_Boolean dup) {
-    Propagator_VS_S::updateHeapRefs(dup);
+  virtual void gCollect(void) {
+    Propagator_VS_S::gCollect();
+
+    OZ_FSetConstraint * new_aux = (OZ_FSetConstraint *) (void*)
+      OZ_hallocChars(_vs_size * sizeof(OZ_FSetConstraint));
+  
+    for (int i = _vs_size; i--; )
+      new_aux[i] = _aux[i];
+    
+    _aux = new_aux;
+  }
+  virtual void sClone(void) {
+    Propagator_VS_S::sClone();
 
     OZ_FSetConstraint * new_aux = (OZ_FSetConstraint *) (void*)
       OZ_hallocChars(_vs_size * sizeof(OZ_FSetConstraint));

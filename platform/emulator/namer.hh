@@ -47,8 +47,8 @@
 // to be derived from `GCMe'
 class GCMe {
 public:
-  virtual void gc(void) = 0;
-  virtual void copyTree(void) = 0;
+  virtual void gCollect(void) = 0;
+  virtual void sClone(void) = 0;
 };
 
 class GCMeManager {
@@ -82,32 +82,32 @@ public:
     *next_before = tmp->_next; // skip `tmp'
     delete tmp;
   }
-  static void gc(void) {
+  static void gCollect(void) {
     for (GCMeManager * tmp = _head; tmp; tmp = tmp->_next)
-      tmp->_object->gc();
+      tmp->_object->gCollect();
   }
-  static void copyTree(void) {
+  static void sClone(void) {
     for (GCMeManager * tmp = _head; tmp; tmp = tmp->_next)
-      tmp->_object->copyTree();
+      tmp->_object->sClone();
   }
 };
 
 
 //=============================================================================
 
-Bool isGcMarkedNamer(OZ_Term);
-void GcIndexNamer(OZ_Term &);
-void GcDataNamer(const char * &);
+Bool isCacMarkedNamer(OZ_Term);
+void GCollectIndexNamer(OZ_Term &);
+void GCollectDataNamer(const char * &);
 OZ_Term derefIndexNamer(OZ_Term);
 const char * toStringNamer(const char *);
 
-Bool isGcMarkedNamer(Propagator *);
-void GcIndexNamer(Propagator * &p);
-void GcDataNamer(OZ_Term &);
+Bool isCacMarkedNamer(Propagator *);
+void GCollectIndexNamer(Propagator * &p);
+void GCollectDataNamer(OZ_Term &);
 Propagator * derefIndexNamer(Propagator *);
 const char * toStringNamer(OZ_Term);
-OZ_Term getGcForward(OZ_Term t);
-Propagator * getGcForward(Propagator * p);
+OZ_Term getCacForward(OZ_Term t);
+Propagator * getCacForward(Propagator * p);
 
 template <class T_INDEX, class T_NAME>
 class Namer : public GCMe {
@@ -154,18 +154,18 @@ public:
     
     addName(index_clone, name);
   }
-  void gc(void) {
+  void gCollect(void) {
     Namer<T_INDEX, T_NAME> * tmp = _head;
     _head = NULL;
 
     while (tmp) {
       NEW_NAMER_DEBUG_PRINT(("gc namer: what 0x%x ", (OZ_Term) tmp->_index));
 
-      if (isGcMarkedNamer(tmp->_index)) {
+      if (isCacMarkedNamer(tmp->_index)) {
 	NEW_NAMER_DEBUG_PRINT(("keeping %s\n", toStringNamer(tmp->_name)));
 
-	GcIndexNamer(tmp->_index);
-	GcDataNamer(tmp->_name);
+	GCollectIndexNamer(tmp->_index);
+	GCollectDataNamer(tmp->_name);
 	Namer<T_INDEX, T_NAME> * tmp_add = tmp;
 	tmp = tmp->_next;
 	tmp_add->_next = _head;
@@ -180,15 +180,15 @@ public:
       
     }
   }
-  void copyTree(void) {
+  void sClone(void) {
     Namer<T_INDEX, T_NAME> * tmp = _head;
 
     while (tmp) {
-      NEW_NAMER_DEBUG_PRINT(("copytree namer what 0x%x ", (OZ_Term) tmp->_index));
+      NEW_NAMER_DEBUG_PRINT(("sClone namer what 0x%x ", (OZ_Term) tmp->_index));
 
-      if (isGcMarkedNamer(tmp->_index)) {
+      if (isCacMarkedNamer(tmp->_index)) {
 	NEW_NAMER_DEBUG_PRINT(("copied %s\n", toStringNamer(tmp->_name)));
-	addName(getGcForward(tmp->_index), tmp->_name);
+	addName(getCacForward(tmp->_index), tmp->_name);
       } else {
 	NEW_NAMER_DEBUG_PRINT(("untouched %s\n", toStringNamer(tmp->_name)));
       }

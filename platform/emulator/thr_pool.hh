@@ -47,7 +47,7 @@ public:
 
   void init(void);
 
-  void gc();
+  void gCollect(void);
 
   void scheduleThread(Thread *th) {
     Assert(!isScheduledSlow(th));

@@ -224,7 +224,7 @@ public:
 extern SiteHashTable* siteTable;
 
 //
-void gcSiteTable();
+void gCollectSiteTable();
 
 //
 // Marshaller uses that;

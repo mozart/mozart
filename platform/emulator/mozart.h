@@ -351,8 +351,10 @@ _FUNDECL(void ,OZ_registerAcceptHandler,(int,OZ_IOHandler,void *));
 /* garbage collection */
 _FUNDECL(int ,OZ_protect,(OZ_Term *));
 _FUNDECL(int ,OZ_unprotect,(OZ_Term *));
-_FUNDECL(void ,OZ_collect,(OZ_Term *));
-_FUNDECL(void ,OZ_collectHeapBlock,(OZ_Term *, OZ_Term *, int));
+_FUNDECL(void ,OZ_gCollect,(OZ_Term *));
+_FUNDECL(void ,OZ_sClone,(OZ_Term *));
+_FUNDECL(void ,OZ_sCloneBlock,(OZ_Term *, OZ_Term *, int));
+_FUNDECL(void ,OZ_gCollectBlock,(OZ_Term *, OZ_Term *, int));
 
 /* raise exception */
 _FUNDECL(OZ_Return ,OZ_typeError,(int pos,char *type));

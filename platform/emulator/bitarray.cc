@@ -64,7 +64,8 @@ public:
   }
 
   virtual
-  OZ_Extension *gcV(void);
+  OZ_Extension *gCollectV(void);
+  OZ_Extension *sCloneV(void);
   BitArray operator=(const BitArray &);  // fake for compiler
   BitArray(int lower, int upper): OZ_Extension() {
     Assert(lower <= upper);
@@ -120,7 +121,12 @@ BitArray *tagged2BitArray(TaggedRef term)
  * Bit Arrays
  *=================================================================== */
 
-OZ_Extension *BitArray::gcV(void) {
+OZ_Extension *BitArray::gCollectV(void) {
+  BitArray *ret = new BitArray(this);
+  return ret;
+}
+
+OZ_Extension *BitArray::sCloneV(void) {
   BitArray *ret = new BitArray(this);
   return ret;
 }

@@ -51,28 +51,28 @@ void oz_varAddName(OZ_Term v, const char *nm)
   varNamer.addName(makeTaggedRef(vptr), nm);
 }
 
-Bool isGcMarkedNamer(OZ_Term t) 
+Bool isCacMarkedNamer(OZ_Term t) 
 { 
   OZ_Term t_deref = oz_deref(t);
   return oz_isRef(t) && (GCISMARKED(t_deref) || 
 			 (isCVar(t_deref) && 
-			  tagged2CVar(t_deref)->gcIsMarked()));
+			  tagged2CVar(t_deref)->cacIsMarked()));
 }
 
-void GcIndexNamer(OZ_Term &t)
+void GCollectIndexNamer(OZ_Term &t)
 {
-  OZ_collectHeapTerm(t, t);
+  oz_gCollectTerm(t, t);
 }
 
-OZ_Term getGcForward(OZ_Term t) 
+OZ_Term getCacForward(OZ_Term t) 
 {
   OZ_Term t_deref = oz_deref(t);
   return (isCVar(t_deref) 
-	  ? makeTaggedRef(tagged2CVar(t_deref)->gcGetFwd()) 
+	  ? makeTaggedRef(tagged2CVar(t_deref)->cacGetFwd()) 
 	  : (OZ_Term) GCUNMARK(t));
 }
 
-void GcDataNamer(const char * &)
+void GCollectDataNamer(const char * &)
 {
   // nothing to be done
 }
@@ -96,23 +96,23 @@ PropNamer * PropNamer::_head;
 
 PropNamer propNamer; 
 
-Bool isGcMarkedNamer(Propagator * p)
+Bool isCacMarkedNamer(Propagator * p)
 { 
-  return p->isGcMarked(); 
+  return p->isCacMarked(); 
 }
-void GcIndexNamer(Propagator * &p) 
+void GCollectIndexNamer(Propagator * &p) 
 {
-  p = SuspToPropagator(p->gcSuspendable());
-}
-
-Propagator *  getGcForward(Propagator * p) 
-{
-  return (Propagator *) p->gcGetFwd();
+  p = SuspToPropagator(p->gCollectSuspendable());
 }
 
-void GcDataNamer(OZ_Term &t)
+Propagator *  getCacForward(Propagator * p) 
 {
-  OZ_collectHeapTerm(t, t);
+  return (Propagator *) p->cacGetFwd();
+}
+
+void GCollectDataNamer(OZ_Term &t)
+{
+  oz_gCollectTerm(t, t);
 }
 
 Propagator * derefIndexNamer(Propagator * p)

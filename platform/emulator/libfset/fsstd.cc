@@ -41,11 +41,19 @@ Propagator_S_VD::~Propagator_S_VD(void)
   OZ_hfreeOzTerms(_vd, _vd_size);
 }
 
-void Propagator_S_VD::updateHeapRefs(OZ_Boolean)
+void Propagator_S_VD::gCollect(void)
 {
-  OZ_updateHeapTerm(_s);
+  OZ_gCollectTerm(_s);
 
-  _vd = OZ_copyOzTerms(_vd_size, _vd);
+  _vd = OZ_gCollectAllocBlock(_vd_size, _vd);
+
+}
+
+void Propagator_S_VD::sClone(void)
+{
+  OZ_sCloneTerm(_s);
+
+  _vd = OZ_sCloneAllocBlock(_vd_size, _vd);
 
 }
 
@@ -69,9 +77,14 @@ Propagator_VS::~Propagator_VS(void)
   OZ_hfreeOzTerms(_vs, _vs_size);
 }
 
-void Propagator_VS::updateHeapRefs(OZ_Boolean)
+void Propagator_VS::gCollect(void)
 {
-  _vs = OZ_copyOzTerms(_vs_size, _vs);
+  _vs = OZ_gCollectAllocBlock(_vs_size, _vs);
+}
+
+void Propagator_VS::sClone(void)
+{
+  _vs = OZ_sCloneAllocBlock(_vs_size, _vs);
 }
 
 OZ_Term Propagator_VS::getParameters(void) const
@@ -87,10 +100,16 @@ Propagator_VS_S::Propagator_VS_S(OZ_Term vs, OZ_Term s)
 {
 }
 
-void Propagator_VS_S::updateHeapRefs(OZ_Boolean dup)
+void Propagator_VS_S::gCollect(void)
 {
-  Propagator_VS::updateHeapRefs(dup);
-  OZ_updateHeapTerm(_s);
+  Propagator_VS::gCollect();
+  OZ_gCollectTerm(_s);
+}
+
+void Propagator_VS_S::sClone(void)
+{
+  Propagator_VS::sClone();
+  OZ_sCloneTerm(_s);
 }
 
 OZ_Term Propagator_VS_S::getParameters(void) const

@@ -149,17 +149,21 @@ public:
   // Garbage collection and copying
   //
 public:
-  Bool gcIsMarked(void);
-  void gcMark(Board *);
-  Board * gcGetFwd(void);
-  Board *gcBoard();
-  void gcRecurse(void);
-  Bool gcIsAlive();
-  Board *gcGetNotificationBoard ();
+  Bool    cacIsMarked(void);
+  Board * cacGetFwd(void);
+  Bool    cacIsAlive(void);
+  Board * cacGetNotificationBoard(void);
+
+  Board * sCloneBoard(void);
+  void    sCloneRecurse(void);
+  void    sCloneMark(Board *);
+
+  Board * gCollectBoard(void);
+  void    gCollectRecurse(void);
+  void    gCollectMark(Board *);
 
   void unsetGlobalMarks(void);
   void setGlobalMarks(void);
-  Board * clone(void);
   
   //
   // Suspension counter
@@ -297,6 +301,7 @@ public:
   //
   // Operations
   //
+  Board * clone(void);
   void fail(Thread *);
   int commit(int, int);
   void inject(TaggedRef, int arity = 1);

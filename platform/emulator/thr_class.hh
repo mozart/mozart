@@ -75,7 +75,8 @@ public:
 
   OZPRINTLONG;
 
-  void gcRecurse(Thread *);
+  void gCollectRecurse(Thread *);
+  void sCloneRecurse(Thread *);
 
   unsigned int getID() { 
     return id; 

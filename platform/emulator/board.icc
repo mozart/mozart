@@ -366,6 +366,76 @@ int Board::commit(int left, int right) {
   
 }
 
+inline  
+Bool Board::cacIsMarked(void) {
+  return hasMarkTwo();
+}
+
+inline
+Bool Board::cacIsAlive() {
+  Board * s = this;
+
+  do {
+    int t = s->getTag();
+
+    if (t & (BoTag_MarkOne | BoTag_MarkOne))
+      return OK;
+
+    if (t == BoTag_Root) {
+      return OK;
+    } 
+
+    if (t == BoTag_Failed) {
+      return NO;
+    }
+
+    s = s->getParentInternal();
+  } while (1);
+
+}
+
+inline
+Board * Board::cacGetFwd(void) {
+  Assert(cacIsMarked());
+  return getParentInternal();
+}
+
+
+/*
+ * notification board == home board of thread
+ * Although this may be discarded/failed, the solve actor must be announced.
+ * Therefore this procedures searches for another living board.
+ */
+inline
+Board* Board::cacGetNotificationBoard() {
+  Assert(this);
+
+  Board *bb = derefBoard();
+
+  Board *nb = bb;
+  
+  while (1) {
+  
+    if (bb->cacIsMarked() || bb->isRoot())  
+      return nb;
+    
+    Assert(!bb->isCommitted());
+
+    if (bb->isFailed()) {
+      /*
+       * notification board must be changed
+       */
+      bb = bb->getParent();
+      nb = bb;   // probably not dead;
+      continue;
+    }
+
+    bb = bb->getParent();
+    
+  }
+}
+
+
 #ifdef OUTLINE
 #undef inline
 #endif

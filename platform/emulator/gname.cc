@@ -115,7 +115,7 @@ Bool checkGName(GName *gn)
 }
 
 /* OBSERVE - this must be done at the end of other gc */
-void GNameTable::gcGNameTable()
+void GNameTable::gCollectGNameTable()
 {
   int i=0;
   GenHashNode *ghn1,*ghn=getFirst(i);

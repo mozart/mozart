@@ -121,12 +121,12 @@ OZ_Return ObjectVar::addSuspV(TaggedRef * v, Suspendable * susp, int unstable)
 }
 
 
-void ObjectVar::gcRecurseV(void)
+void ObjectVar::gCollectRecurseV(void)
 {
   BT->getBorrow(getObject()->getIndex())->gcPO();
-  obj = getObject()->gcObject();
+  obj = getObject()->gCollectObject();
   if (isObjectClassAvail()) {
-    u.aclass = u.aclass->gcClass();}
+    u.aclass = u.aclass->gCollectClass();}
   setInfo(gcEntityInfoInternal(getInfo()));
 }
 

@@ -60,7 +60,8 @@ public:
   void print(ostream &stream, int depth=10, int offset=0) const;
   void printDebug(void) const {print(cerr,10,0); cerr << endl; cerr.flush();}
 
-  FSetValue * gc(void);
+  FSetValue * gCollect(void);
+  FSetValue * sClone(void);
   void copyExtension(void);
   void disposeExtension(void);
 
@@ -136,7 +137,8 @@ public:
   void init(const FSetConstraint &);
   void init(OZ_FSetState);
 
-  FSetConstraint * gc(void);
+  FSetConstraint * gCollect(void);
+  FSetConstraint * sClone(void);
   void copyExtension(void);
   void disposeExtension(void);
 

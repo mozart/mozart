@@ -95,7 +95,7 @@ DSite* getSiteFromTertiaryProxy(Tertiary*);
 // MERGER CON OZ_Return raiseGeneric(char *msg, OZ_Term arg);
 OZ_Return raiseGeneric(char *id,char *msg, OZ_Term arg);
 
-void gcPendThread(PendThread **pt);
+void gCollectPendThread(PendThread **pt);
 
 BorrowEntry *receiveAtBorrow(DSite*,int);
 OwnerEntry *maybeReceiveAtOwner(DSite*,int);

@@ -53,7 +53,7 @@
 inline
 void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
   if (frm)
-    OZ_collectHeapTerm(frm,to);
+    oz_gCollectTerm(frm,to);
   else
     to=frm;
 }
@@ -114,7 +114,7 @@ DeferElement* newDeferElement(){
 void gcDeferEvents(){
   DeferElement* ptr = DeferdEvents;
   while(ptr!=NULL) {
-    ptr->tert=(Tertiary*)ptr->tert->gcConstTerm();
+    ptr->tert=(Tertiary*)ptr->tert->gCollectConstTerm();
     if(ptr->type==DEFER_MANAGER_PROBLEM)
       ptr->site->makeGCMarkSite();
     ptr=ptr->next;}
@@ -1168,7 +1168,7 @@ void EntityInfo::gcWatchers(){
 	w=*base;
 	continue;}}
     if(w->isInjector()){
-      nth= SuspToThread(w->thread->gcSuspendable());
+      nth= SuspToThread(w->thread->gCollectSuspendable());
       if(((nth==NULL) && !(w->isSiteBased()))){
 	*base= w->next;
 	w=*base;

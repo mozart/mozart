@@ -68,7 +68,8 @@ public:
   FirstsLasts(OZ_Term, OZ_Term, OZ_Term, OZ_Term, int);
   ~FirstsLasts();
   virtual size_t sizeOf(void) { return sizeof(FirstsLasts); }
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }

@@ -101,12 +101,20 @@ DiffnPropagator::~DiffnPropagator()
 // COPYING
 //////////
 
-void DiffnPropagator::updateHeapRefs(OZ_Boolean duplicate) {
+void DiffnPropagator::gCollect(void) {
   reg_ordered = OZ_copyCInts(getLimit(reg_size), reg_ordered);
-  reg_x       = OZ_copyOzTerms(reg_size, reg_x);
-  reg_y       = OZ_copyOzTerms(reg_size, reg_y);
   reg_xdurs   = OZ_copyCInts(reg_size, reg_xdurs);
   reg_ydurs   = OZ_copyCInts(reg_size, reg_ydurs);
+  reg_x       = OZ_gCollectAllocBlock(reg_size, reg_x);
+  reg_y       = OZ_gCollectAllocBlock(reg_size, reg_y);
+}
+
+void DiffnPropagator::sClone(void) {
+  reg_ordered = OZ_copyCInts(getLimit(reg_size), reg_ordered);
+  reg_xdurs   = OZ_copyCInts(reg_size, reg_xdurs);
+  reg_ydurs   = OZ_copyCInts(reg_size, reg_ydurs);
+  reg_x       = OZ_sCloneAllocBlock(reg_size, reg_x);
+  reg_y       = OZ_sCloneAllocBlock(reg_size, reg_y);
 }
 
 OZ_Term DiffnPropagator::getParameters(void) const

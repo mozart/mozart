@@ -45,7 +45,7 @@
 inline
 void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
   if (frm)
-    OZ_collectHeapTerm(frm,to);
+    oz_gCollectTerm(frm,to);
   else
     to=frm;
 }
@@ -972,9 +972,9 @@ void BorrowEntry::gcBorrowRoot(int i) {
     gcPO();
     return;}
   Assert(isTertiary());
-  if(getTertiary()->gcIsMarked()){
+  if(getTertiary()->cacIsMarked()){
     makeGCMark();    
-    u.tert=(Tertiary *)u.tert->gcConstTerm();
+    u.tert=(Tertiary *)u.tert->gCollectConstTerm();
     return;}
   if(isTertiaryPending(getTertiary())) gcPO();
 }
@@ -1128,7 +1128,7 @@ void OB_Entry::gcPO() {
   makeGCMark();
   if (isTertiary()) {
     PD((GC,"OT tertiary found"));
-    u.tert=(Tertiary *)u.tert->gcConstTerm();
+    u.tert=(Tertiary *)u.tert->gCollectConstTerm();
   } else {
     Assert(isRef() || isVar());
     PD((GC,"OT var/ref"));
@@ -1393,7 +1393,7 @@ int OwnerTable::notGCMarked() {
       if(be->isGCMarked())
 	return FALSE;
       if(be->isTertiary()) {
-	if(be->getTertiary()->gcIsMarked())
+	if(be->getTertiary()->cacIsMarked())
 	  return FALSE;
 	Assert(be->getTertiary()->getIndex() == i);
       }
@@ -1410,7 +1410,7 @@ int BorrowTable::notGCMarked() {
       if(be->isGCMarked())
 	return FALSE;
       if(be->isTertiary()) {
-	if(be->getTertiary()->gcIsMarked())
+	if(be->getTertiary()->cacIsMarked())
 	  return FALSE;
 	Assert(be->getTertiary()->getIndex() == i);
       }
