@@ -262,23 +262,10 @@ FUNCTION {format.editors}
   if$
 }
 
-FUNCTION {cleanup.braces}
-{ 't :=
-  ""
-    { t empty$ not }
-    { t #1 #1 substring$ duplicate$ "{" = swap$ "}" = or
-        'skip$
-        { t #1 #1 substring$ * }
-      if$
-      t #2 global.max$ substring$ 't :=
-    }
-  while$
-}
-
 FUNCTION {format.title}
 { title empty$
     { "" }
-    { title "t" change.case$ cleanup.braces }
+    { title "t" change.case$ }
   if$
 }
 
@@ -318,7 +305,7 @@ FUNCTION {format.date}
 }
 
 FUNCTION {format.btitle}
-{ title cleanup.braces emphasize
+{ title emphasize
 }
 
 FUNCTION {tie.or.space.connect}
@@ -373,8 +360,8 @@ FUNCTION {format.edition}
 { edition empty$
     { "" }
     { output.state mid.sentence =
-        { edition "l" change.case$ cleanup.braces " edition" * }
-        { edition "t" change.case$ cleanup.braces " edition" * }
+        { edition "l" change.case$ " edition" * }
+        { edition "t" change.case$ " edition" * }
       if$
     }
   if$
@@ -439,7 +426,7 @@ FUNCTION {format.chapter.pages}
     'format.pages
     { type empty$
         { "chapter" }
-        { type "l" change.case$ cleanup.braces }
+        { type "l" change.case$ }
       if$
       chapter tie.or.space.connect
       pages empty$
@@ -475,7 +462,7 @@ FUNCTION {format.thesis.type}
 { type empty$
     'skip$
     { pop$
-      type "t" change.case$ cleanup.braces
+      type "t" change.case$
     }
   if$
 }
@@ -486,7 +473,7 @@ FUNCTION {format.tr.number}
     'type
   if$
   number empty$
-    { "t" change.case$ cleanup.braces }
+    { "t" change.case$ }
     { number tie.or.space.connect }
   if$
 }
@@ -947,7 +934,7 @@ READ
 
 FUNCTION {sortify}
 { purify$
-  "l" change.case$ cleanup.braces
+  "l" change.case$
 }
 
 INTEGERS { len }
