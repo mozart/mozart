@@ -24,6 +24,8 @@
 #ifndef __EXTVAR__H__
 #define __EXTVAR__H__
 
+// mm2: this file is not yet used anywhere and not tested at all
+
 #include "genvar.hh"
 
 class ExtentedVar : public GenCVariable {
@@ -57,6 +59,9 @@ public:
   void                  printLong(void)
     { printLongStreamV(cerr); cerr.flush(); }
   virtual OZ_Term       inspectV();
+
+  virtual OZ_Term       statusV();
+
   virtual int           getSuspListLengthV()
     { return getSuspListLengthS(); }
 };

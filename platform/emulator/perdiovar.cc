@@ -8,7 +8,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Copyright:
- *    Michael Mehl (1997)
+ *    Michael Mehl (1997,1998)
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -128,9 +128,10 @@ PerdioVar *var2PerdioVar(TaggedRef *tPtr)
   if (isPerdioVar(*tPtr) ) {
     return tagged2PerdioVar(*tPtr);
   }
+
+  // mm2: handle futures
   if (!oz_isFree(*tPtr)) return 0;
 
-  // mm2: handle future
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
   PD((GLOBALIZING,"globalize var index:%d",i));

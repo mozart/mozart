@@ -43,12 +43,12 @@ TaggedRef term = X;				\
 }
 
 // Suspend on free variables
-#define SUSPEND_ON_FREE_VAR(X,term,tag)		\
+#define SUSPEND_ON_NONKINDED_VAR(X,term,tag)	\
 TaggedRef term = X;				\
 TypeOfTerm tag;					\
 { DEREF(term,_myTermPtr,myTag);			\
   tag = myTag;					\
-  if (oz_isFree(term)) return SUSPEND;		\
+  if (oz_isNonKinded(term)) return SUSPEND;	\
 }
 
 

@@ -107,7 +107,10 @@
 
 	  ( AtomKinded,      "kinded"),
 	  ( AtomDet,         "det"),
-  
+	  ( AtomFuture,      "future"),
+	  ( AtomDistributed, "distributed"),
+          # AtomOther: already somewhere else
+
 	  ( AtomDebugIP,     "debugIP"),
 	  ( AtomDebugPerdio, "debugPerdio"),
 

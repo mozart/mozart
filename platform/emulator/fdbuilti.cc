@@ -77,7 +77,7 @@ OZ_Term deref(OZ_Term &tr, OZ_Term * &ptr, pm_term_type &tag)
     case FDVariable: tag = pm_fd; break;
     case BoolVariable: tag = pm_bool; break;
     default: 
-      tag = oz_isFree(tr1) ? pm_svar : pm_none; break;
+      tag = oz_isNonKinded(tr1) ? pm_svar : pm_none; break;
     }
     break;
   // mm2 FUT
