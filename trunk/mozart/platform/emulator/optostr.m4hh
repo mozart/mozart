@@ -3,6 +3,8 @@
 
 define(`OPCODE',0) dnl
 
+define(readArg,$1)
+define(writeArg,$1)
 define(instruction,
 	`ifelse(numOfRegs($2,$3,$4),1,`incrop(3)',
 		numOfRegs($2,$3,$4),2,`incrop(9)',

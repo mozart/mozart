@@ -263,6 +263,31 @@ OZ_C_proc_begin(BIdisplayCode, 2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIprocedureCode, 2)
+{
+  oz_declareNonvarArg(0,proc);
+  oz_declareArg(1,out);
+  if (!isProcedure(proc)) {
+    oz_typeError(0,"Procedure");
+  }
+  if (isBuiltin(proc)) {
+    oz_typeError(0,"Procedure (no builtin)");
+  }
+
+  Abstraction *a=tagged2Abstraction(proc);
+  return oz_unifyInt(out,ToInt32(a->getPred()->getPC()));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIlivenessX, 2)
+{
+  OZ_declareIntArg(0,pc);
+  oz_declareArg(1,out);
+
+  return oz_unifyInt(out,CodeArea::livenessX((ProgramCounter)ToPointer(pc),0,0));
+}
+OZ_C_proc_end
+
 
 /*----------------------------------------------------------------------
  * the machine level debugger starts here
