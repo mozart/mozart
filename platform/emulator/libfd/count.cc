@@ -45,7 +45,10 @@ OZ_Return ExactlyPropagator::propagate(void)
   OZ_FDIntVar n_var(reg_n);
   DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
   PropagatorController_VV_V P(l_sz, l, n_var);
-
+  /*
+    tn denotes number items in list which are v and tnn number of
+    items which are definitively not v
+  */
   int tn = 0, tnn = 0, i;
 
   for (i = l_sz; i--; ) {
@@ -66,7 +69,7 @@ OZ_Return ExactlyPropagator::propagate(void)
   tn = reg_tn;
   tnn = reg_tnn;
 
-
+loop:
   if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
     if ( (oldSize - tnn < n) || (tn > n) ) {
@@ -84,6 +87,8 @@ OZ_Return ExactlyPropagator::propagate(void)
       return P.vanish();
     }
   } else {
+    int oldIn=0, newIn=0;
+    if (n_var->isIn(v)) oldIn = 1;
     if ( (oldSize - tnn < n_var->getMinElem()) ||
          (tn > n_var->getMaxElem()) ) {
       goto failure;
@@ -103,6 +108,17 @@ OZ_Return ExactlyPropagator::propagate(void)
     }
     FailOnEmpty(*n_var <= oldSize - tnn);
     FailOnEmpty(*n_var >= tn);
+    if (n_var->isIn(v)) newIn = 1;
+    if (newIn != oldIn) {
+      reg_tnn++; tnn=reg_tnn;
+      goto loop;
+    }
+    else {
+      if ((oldIn==1) && (*n_var == fd_singl)) {
+      reg_tn++; tn=reg_tn;
+      goto loop;
+      }
+    }
   }
 
   int from, to;
@@ -184,6 +200,7 @@ OZ_Return AtLeastPropagator::propagate(void)
   tn = reg_tn;
   tnn = reg_tnn;
 
+loop:
   if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
     if (oldSize - tnn == n) {
@@ -197,6 +214,8 @@ OZ_Return AtLeastPropagator::propagate(void)
       return P.vanish();
     }
   } else {
+    int oldIn=0, newIn=0;
+    if (n_var->isIn(v)) oldIn = 1;
     if (oldSize - tnn == n_var->getMinElem()) {
       for (i = l_sz; i--; )
         if (l[i]->isIn(v))
@@ -210,6 +229,17 @@ OZ_Return AtLeastPropagator::propagate(void)
     }
 
     FailOnEmpty(*n_var <= oldSize - tnn);
+    if (n_var->isIn(v)) newIn = 1;
+    if (newIn != oldIn) {
+      reg_tnn++; tnn=reg_tnn;
+      goto loop;
+    }
+    else {
+      if ((oldIn==1) && (*n_var == fd_singl)) {
+      reg_tn++; tn=reg_tn;
+      goto loop;
+      }
+    }
   }
 
   int from, to;
@@ -287,6 +317,7 @@ OZ_Return AtMostPropagator::propagate(void)
   tn = reg_tn;
   tnn = reg_tnn;
 
+loop:
   if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
     if (tn == n) {
@@ -300,6 +331,8 @@ OZ_Return AtMostPropagator::propagate(void)
       return P.vanish();
     }
   } else {
+    int oldIn=0, newIn=0;
+    if (n_var->isIn(v)) oldIn = 1;
     if (n_var->getMaxElem() == tn) {
       for (i = l_sz; i--; )
         if (*l[i] != fd_singl)
@@ -313,6 +346,17 @@ OZ_Return AtMostPropagator::propagate(void)
     }
 
     FailOnEmpty(*n_var >= tn);
+    if (n_var->isIn(v)) newIn = 1;
+    if (newIn != oldIn) {
+      reg_tnn++; tnn=reg_tnn;
+      goto loop;
+    }
+    else {
+      if ((oldIn==1) && (*n_var == fd_singl)) {
+      reg_tn++; tn=reg_tn;
+      goto loop;
+      }
+    }
   }
 
   int from, to;
