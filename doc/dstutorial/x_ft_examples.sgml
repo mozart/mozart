@@ -691,9 +691,9 @@ local
 in
    {For 1 1000 1
       proc {$ I}
-      {C sendMessage('hello'#I)}
-      {Delay 800}
-   end}
+         {C sendMessage('hello'#I)}
+         {Delay 800}
+      end}
 
    {C close}
 end
@@ -847,7 +847,14 @@ namely <<register>>, <<unregister>>, and <<broadcast>>.
 A client can register to the broadcast channel by calling the
 <<register>> method and unregister by calling
 the <<unregister>> method.
-A client can broadcast a message on the channel
+Note that clients are identified uniquely by references
+to the client object <<Client>>,
+and not by the client's user ID <<UserID>>.
+This means that the channel will still work
+if there are clients with the same user ID.
+The users may get confused, but the channel will not.
+
+<P>A client can broadcast a message on the channel
 by calling the <<broadcast>> method.
 The server will concurrently forward the message
 to all registered clients.
