@@ -2,51 +2,68 @@ functor
 export
    ExecuteProgram
    ExecuteCommand
-   ToUserVS ToProgramVS ToCommandVS
+   ToUserVS
 import
    Property(get)
-   OS(system getEnv)
-   Open(pipe)
-   Misc(
-      isWindows        : IsWindows
-      isWindowsAncient : IsWindowsAncient)
-   at 'x-oz://system/os/Misc.ozf'
-define
-   QUOTE = if Misc.isWindows then '"' else '\'' end
-   fun {Quote CMD Q}
+   OS(getEnv system)
+prepare
+   VS2S = VirtualString.toString
+   ToLower = Char.toLower
+
+   fun {QuoteUsing CMD Quote}
+      %% CMD is a list: we are going to quote each element of
+      %% this list using the Quote string specified and then
+      %% we are going to concatenate all of them separated by
+      %% single spaces
       {FoldL CMD
-       fun {$ VS I} VS#' '#Q#I#Q end nil}
+       %% in principle, we should be careful about embedded
+       %% occurrences of characters used for quoting.  We will
+       %% ignore this issue for the time being.
+       fun {$ VS I} VS#' '#Quote#I#Quote end nil}
    end
-   fun {ToUserVS CMD} {Quote CMD ''} end
+
+   %% and advantage of using an arbitrary VS as a Quote is that
+   %% we can also use an empty VS, which is useful when we want
+   %% to display commands in a readable way to the user.
+   
+   fun {ToUserVS CMD} {QuoteUsing CMD ''} end
+define
    ToProgramVS
-   if IsWindowsAncient then
-      fun {ToProgramVS CMD}
-	 'COMMAND.COM /C'#{Quote CMD QUOTE}
-      end
-   else
-      fun {ToProgramVS CMD}
-	 {Quote CMD QUOTE}
-      end
-   end
    ToCommandVS
-   if IsWindowsAncient then
-      fun {ToCommandVS CMD|Args}
-	 'COMMAND.COM /C '#CMD#{Quote Args QUOTE}
+
+   %% arguments on the command given to the shell for execution
+   %% need to be quoted to avoid problems with embedded spaces
+   %% in filenames and special shell characters
+   
+   case {Property.get 'platform.os'}
+   of 'win32' then
+      SHELL
+   in
+      case {Reverse {Map {VS2S {OS.getEnv 'COMSPEC'}} ToLower}}
+      of &e|&x|&e|&.|&d|&m|&c|_ then
+	 SHELL = nil
+      else
+	 SHELL = 'COMMAND.COM /C '
       end
-   elseif IsWindows then
-      fun {ToCommandVS CMD|Args}
-	 CMD|{Quote Args QUOTE}
+      fun {!ToProgramVS CMD}
+	 SHELL#{QuoteUsing CMD '"'}
+      end
+      fun {!ToCommandVS CMD}
+	 case CMD of H|T then
+	    SHELL#H#{QuoteUsing T '"'}
+	 end
       end
    else
-      fun {ToCommandVS CMD}
-	 {Quote CMD QUOTE}
+      fun {!ToProgramVS CMD}
+	 {QuoteUsing CMD '\''}
       end
+      !ToCommandVS = ToProgramVS
    end
+
    proc {Execute VS}
-      if {OS.system VS}\=0 then
-	 {Exception.raiseError shell(VS)}
-      end
+      if {OS.system VS}\=0 then raise shell(VS) end end
    end
+
    proc {ExecuteProgram CMD} {Execute {ToProgramVS CMD}} end
-   proc {ExecuteCommand CMD} {Execute {ToCommandVS CMD}} end
+   proc {ExecuteCommand CMD} {Execute {ToProgramVS CMD}} end
 end

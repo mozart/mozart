@@ -1,302 +1,307 @@
 functor
 export
-   ToURL ToString ToAtom
-   ToBaseURL ToBase ToBaseAtom
-   ToNonBaseURL ToNonBase ToNonBaseAtom
-   ResolveURL Resolve ResolveAtom
-   IsRelative
+   Is Make 'class':Path
+
    IsAbsolute
-   ExpandURL Expand ExpandAtom
-   BasenameURL Basename BasenameAtom IsBasename
-   DirnameURL Dirname DirnameAtom
-   SplitExtension
-   Extension ExtensionAtom
-   DropExtensionURL DropExtension DropExtensionAtom
-   AddExtensionURL AddExtension AddExtensionAtom
-   ReplaceExtensionURL ReplaceExtension ReplaceExtensionAtom
-   AddPlatformURL AddPlatform AddPlatformAtom
-   MaybeAddPlatformURL MaybeAddPlatform MaybeAddPlatformAtom
-   ToCacheURL ToCache ToCacheAtom
-   Stat SafeStat Dir Exists IsDir IsFile
-   UnresolveURL Unresolve UnresolveAtom
-   IsAncestor
-   MakeDirectory MakeDirectoryRecursive
-   Remove RemoveRecursive
-   Copy
-import
-   URL
-   Misc(
-      isWindowsAncient : IsWindowsAncient)
-   at 'os/Misc.ozf'
-   RESOLVE at 'x-oz://system/Resolve.ozf'
-   OS
-   Shell at 'Shell.ozf'
-   Property
+   IsRelative
+   Dirname
+   Basename
+   Exists
+   Stat
+   IsDir
+   IsFile
+   Size
+   Mtime
+   Resolve
+   Getcwd
+   Mkdir
+   Mkdirs
+   IsRoot
+   Readdir
+   Extension DropExtension AddExtension
+   MaybeAddPlatform
+
 prepare
-   VSToString = VirtualString.toString
-   VSToAtom   = VirtualString.toAtom
-   TakeDropWhile = List.takeDropWhile
-   fun {NotIsDot S} S\="." andthen S\=".." end
-   FULL_RAW_CACHE = o(cache:true full:true raw:true)
-   NOT_FOUND = notFound(type:unknown size:0)
-   IsPrefix = List.isPrefix
-define
+   VS2S = VirtualString.toString
+   S2A  = String.toAtom
+   IS_PATH = {NewName}
+   Token = String.token
 
-   ToURL
-   local
-      proc {State0 S U}
-	 case S
-	 of D|&:|T then U.device=D    {State1 T U}
-	 else           U.device=unit {State1 S U} end
-      end
-      proc {State1 S U}
-	 case S
-	 of &/ |T then U.absolute=true  {State2 T nil nil U}
-	 [] &\\|T then U.absolute=true  {State2 T nil nil U}
-	 else          U.absolute=false {State2 S nil nil U} end
-      end
-      proc {State2 S Comp Comps U}
-	 case S
-	 of nil then U.path={Reverse {Reverse Comp}|Comps}
-	 [] &/|T then {State2 T nil {Reverse Comp}|Comps U}
-	 []  H|T then {State2 T H|Comp Comps U}
-	 end
-      end
-   in
-      fun {ToURL S}
-	 if {URL.is S} then S
-	 else U=url(device:_ absolute:_ path:_) in
-	    {State0 {VSToString S} U}
-	    U
-	 end
-      end
-   end
+   fun {Is X} {HasFeature X IS_PATH} end
 
-   SLASH = if IsWindowsAncient then &\\ else &/ end
+   %% {Split L P} returns a list of subsequences of L
+   %% separated by an element for which P is true.
+   %% The code was stolen from Christian's Tokens
+   %% function from String.oz
 
-   ToString
-   local
-      fun {State0 U}
-	 if U.device\=unit then
-	    U.device|&:|{State1 U}
-	 else {State1 U} end
-      end
-      fun {State1 U}
-	 if U.absolute then SLASH|{State2 U.path}
-	 else {State2 U.path} end
-      end
-      fun {State2 L}
-	 case L
-	 of nil then nil
-	 [] H|T then {Append H {State2 T}}
-	 end
-      end
-   in
-      fun {ToString U}
-	 {State0 {ToURL U}}
-      end
-   end
-   fun {ToAtom P} {VSToAtom {ToString P}} end
-
-   fun {ToBaseURL P} {URL.toBase {ToURL P}} end
-   fun {ToBase    P} {ToString {ToBaseURL P}} end
-   fun {ToBaseAtom P} {VSToAtom {ToBase P}} end
-
-   fun {ToNonBaseURL P} U={ToURL P} in
-      case {Reverse {CondSelect U path nil}}
-      of [nil] then U
-      [] nil|T then {AdjoinAt U path {Reverse T}}
-      else U end
-   end
-   fun {ToNonBase P} {ToString {ToNonBaseURL P}} end
-   fun {ToNonBaseAtom P} {VSToAtom {ToNonBase P}} end
-
-   fun {ResolveURL Base Rel}
-      {URL.resolve {ToBaseURL Base} {ToURL Rel}}
-   end
-   fun {Resolve Base Rel}
-      {ToString {ResolveURL Base Rel}}
-   end
-   fun {ResolveAtom Base Rel}
-      {VSToAtom {Resolve Base Rel}}
-   end
-
-   fun {IsRelative P} {URL.isRelative {ToURL P}} end
-   fun {IsAbsolute P} {URL.isAbsolute {ToURL P}} end
-
-   fun {ExpandURL  P} {RESOLVE.expand {ToURL P}} end
-   fun {Expand     P} {ToString {ExpandURL P}} end
-   fun {ExpandAtom P} {VSToAtom {Expand P}} end
-
-   fun {BasenameURL P} U={ToURL P} in
-      case {Reverse {CondSelect U path nil}}
-      of H|_ then url(path:[H])
-      else url(unit) end
-   end
-   fun {Basename P} {ToString {BasenameURL P}} end
-   fun {BasenameAtom P} {VSToAtom {Basename P}} end
-
-   fun {IsBasename P} U={ToURL P} in
-      {IsRelative U} andthen
-      case {CondSelect U path unit}
-      of [S] then S\=nil
-      else false end
-   end
-
-   fun {DirnameURL P} U={ToURL P} in
-      case {Reverse {CondSelect U path nil}}
-      of _|T then {AdjoinAt U path {Reverse T}}
-      else url(unit) end
-   end
-   fun {Dirname P} {ToString {DirnameURL P}} end
-   fun {DirnameAtom P} {VSToAtom {Dirname P}} end
-
-   proc {SplitExtension P U E}
-      UU={ToURL P}
-   in
-      case {Reverse {CondSelect UU path nil}}
-      of H|T then Ext Rest in
-	 {TakeDropWhile {Reverse H} NotIsDot Ext Rest}
-	 case Rest of &.|Rest then
-	    U={AdjoinAt UU path {Reverse {Reverse Rest}|T}}
-	    E={Reverse Ext}
-	 else U=UU E=unit end
-      else U=UU E=unit end
-   end
-   fun {Extension P} {SplitExtension P _ $} end
-   fun {ExtensionAtom P} E={Extension P} in
-      if E==unit then unit else {VSToAtom E} end
-   end
+   fun {Split L P} S in {SplitAux L P S S} end
    
-   fun {DropExtensionURL  P} {SplitExtension P $ _} end
-   fun {DropExtension     P} {ToString {DropExtensionURL P}} end
-   fun {DropExtensionAtom P} {VSToAtom {DropExtension P}} end
-
-   fun {AddExtensionURL P E} U={ToURL P} in
-      case {Reverse {CondSelect U path nil}}
-      of H|T then {AdjoinAt U path
-		   {Reverse {Append H &.|{VSToString E}}|T}}
-      end
-   end
-   fun {AddExtension P E} {ToString {AddExtensionURL P E}} end
-   fun {AddExtensionAtom P E} {VSToAtom {AddExtension P E}} end
-
-   fun {ReplaceExtensionURL P E}
-      {AddExtensionURL {DropExtensionURL P} E}
-   end
-   fun {ReplaceExtension P E}
-      {ToString {ReplaceExtensionURL P E}}
-   end
-   fun {ReplaceExtensionAtom P E}
-      {VSToAtom {ReplaceExtension P E}}
-   end
-
-   PLATFORM = {Property.get 'platform'}
-
-   fun {AddPlatformURL P} U={ToURL P} in
-      case {Reverse {CondSelect U path nil}}
-      of H|T then {AdjoinAt U path
-		   {Reverse
-		    {VSToString H#'-'#PLATFORM.name}|T}}
-      else U end
-   end
-   fun {AddPlatform P} {VSToString {AddPlatformURL P}} end
-   fun {AddPlatformAtom P} {VSToAtom {AddPlatform P}} end
-
-   fun {MaybeAddPlatformURL P} U={ToURL P} in
-      if {ExtensionAtom P}=='so' then
-	 {AddPlatformURL U}
-      else U end
-   end
-   fun {MaybeAddPlatform P}
-      {VSToString {MaybeAddPlatformURL P}}
-   end
-   fun {MaybeAddPlatformAtom P}
-      {VSToAtom {MaybeAddPlatform P}}
-   end
-
-   fun {ToCache P}
-      {URL.toVirtualStringExtended {URL.make P} FULL_RAW_CACHE}
-   end
-   fun {ToCacheURL P} {ToURL {ToCache P}} end
-   fun {ToCacheAtom P} {VSToAtom {ToCache P}} end
-
-   fun {Stat P} {OS.stat {ToString P}} end
-   fun {SafeStat P}
-      try {Stat P} catch _ then NOT_FOUND end
-   end
-
-   fun {Dir P}
-      {Filter {OS.getDir {ToString P}} NotIsDot}
-   end
-
-   fun {Exists P} {SafeStat P}.type\=unknown end
-   fun {IsDir  P} {SafeStat P}.type==dir end
-   fun {IsFile P} {SafeStat P}.type==reg end
-
-   fun {Unresolve Base Path}
-      B={Append {Expand {ToBase Base}} "/"}
-      P={Expand Path}
-   in
-      if {IsPrefix B P} then {Append B $ P} else P end
-   end
-   fun {UnresolveURL Base Path}
-      {ToURL {Unresolve Base Path}}
-   end
-   fun {UnresolveAtom Base Path}
-      {VSToAtom {Unresolve Base Path}}
-   end
-
-   fun {IsAncestor Base Path}
-      B={Append {Expand {ToBase Base}} "/"}
-      P={Expand Path}
-   in
-      {IsPrefix B P} 
-   end
-
-   proc {MakeDirectory P}
-      U = {ExpandURL {ToNonBaseURL P}}
-   in
-      case {SafeStat U}.type
-      of 'unknown' then {OS.mkDir {ToString U}}
-      [] 'dir'     then skip
-      else
-	 {Exception.raiseError path(mkdir({ToAtom U}))}
+   fun {SplitAux L P Js Jr}
+      case L
+      of nil then Jr=nil
+	 case Js of nil then nil else [Js] end
+      [] H|T then
+	 if {P H} then NewJs in
+	    Jr=nil Js|{SplitAux T P NewJs NewJs}
+	 else NewJr in
+	    Jr=H|NewJr {SplitAux T P Js NewJr}
+	 end
       end
    end
 
-   proc {MakeDirectoryRecursive P}
-      U = {ExpandURL {ToNonBaseURL P}}
-   in
-      case {CondSelect U path nil}
-      of nil then skip
-      [] [nil] then skip
-      else
-	 {MakeDirectoryRecursive {DirnameURL U}}
-	 {MakeDirectory U}
+   fun {IsSlashOrBackslash C} C==&/ orelse C==&\\ end
+   fun {IsSlash C} C==&/ end
+
+   fun {SplitWindows S} {Split S IsSlashOrBackslash} end
+   fun {SplitPosix   S} {Split S IsSlash} end
+import
+   OS Property
+define
+   
+   fun {Make X}
+      if {Is X} then X else {New Path init(X)} end
+   end
+
+   IS_WINDOWS = {Property.get 'platform.os'}=='win32'
+
+   %% we provide no locking for concurrent processing because,
+   %% at worst, we only perform redundant work
+
+   class Path
+      feat !IS_PATH:unit
+      attr info
+	 as_string
+	 windows : false
+	 parsed  : unit
+      meth INIT(R)
+	 info <- R
+      end
+      meth init(S windows:WIN<=IS_WINDOWS exact:Exact<=false)
+	 STR1 = {VS2S S}
+	 STR2 =
+	 if Exact then STR1 else
+	    case {Reverse STR1}
+	    of nil then nil
+	    [] H|T then
+	       Pred = if IS_WINDOWS then IsSlashOrBackslash else IsSlash end
+	    in
+	       if {Pred H} then
+		  {Reverse {List.dropWhile T Pred}}
+	       end
+	    end	       
+	 end
+	 Drive
+	 NonDrive
+	 Items Items2 Items3
+	 SlashInitial
+	 SlashFinal
+      in
+	 if WIN then
+	    case STR2
+	    of C|&:|L then Drive=C    NonDrive=L
+	    []      L then Drive=unit NonDrive=L
+	    end
+	 else Drive=unit NonDrive=STR2 end
+	 Items = {if @windows then SplitWindows else SplitPosix end
+		  NonDrive}
+	 case Items
+	 of nil|L then SlashInitial=true Items2=L
+	 else SlashInitial=false Items2=Items
+	 end
+	 case {Reverse Items2}
+	 of nil|L then SlashFinal=true Items3={Reverse L}
+	 else SlashFinal=false Items3=Items2
+	 end
+	 Path,INIT(
+		 unit(
+		    string       : STR2
+		    windows      : WIN
+		    drive        : Drive
+		    slashinitial : SlashInitial
+		    slashfinal   : SlashFinal
+		    components   : Items3
+		    ))
+      end
+      meth toString($) @info.string end
+      meth toAtom($) {S2A @info.string} end
+      meth length($) {Length @info.string} end
+      meth isAbsolute($) @info.slashinitial end
+      meth isRelative($) {Not Path,isAbsolute($)} end
+      meth dirname($)
+	 INFO = @info
+      in
+	 if INFO.slashfinal then
+	    {New Path INIT({AdjoinAt INFO slashfinal false})}
+	 else
+	    COM = INFO.components
+	 in
+	    {New Path
+	     INIT_STRING(
+		{Adjoin INFO
+		 unit(
+		    string       : _
+		    slashinitial :
+		       if COM==nil then false else INFO.slashinitial end
+		    slashfinal   : false
+		    components   :
+		       if COM==nil then nil
+		       else {Reverse {Reverse COM}.2} end
+		    )})}
+	 end
+      end
+      meth INIT_STRING(INFO)
+	 Path,INIT(INFO)
+	 DEV = INFO.drive
+	 INI = INFO.slashinitial
+	 FIN = INFO.slashfinal
+	 COM = INFO.components
+	 L1  = if DEV==unit then nil else [DEV &:] end
+	 L2  = if INI then L1#'/' else L1 end
+	 L3  = L2 # {FoldL COM
+		     fun {$ Accu C}
+			Accu#(if Accu==nil then C else Accu#'/'#C end)
+		     end nil}
+	 L4  = if FIN then L3#'/' else L3 end
+      in
+	 INFO.string = {VS2S L4}
+      end
+      meth basenameString($)
+	 INFO = @info
+      in
+	 if INFO.slashfinal then nil else
+	    case {Reverse INFO.components}
+	    of nil then nil
+	    [] H|_ then [H] end
+	 end
+      end
+      meth basename($)
+	 INFO = @info
+      in
+	 if INFO.slashfinal then
+	    {New Path init(nil windows:INFO.windows)}
+	 else
+	    {New Path
+	     INIT_STRING(
+		unit(
+		   string       : _
+		   drive        : unit
+		   slashinitial : false
+		   slashfinal   : false
+		   components   :
+		      case {Reverse INFO.components}
+		      of nil then nil
+		      [] H|_ then [H] end
+		   windows      : INFO.windows))}
+	 end
+      end
+      meth exists($)
+	 try Path,stat(_) true catch _ then false end
+      end
+      meth stat($)
+	 {OS.stat @info.string}
+      end
+      meth isDir($)
+	 (Path,stat($)).type == 'dir'
+      end
+      meth isFile($)
+	 (Path,stat($)).type == 'reg'
+      end
+      meth size($)
+	 (Path,stat($)).size
+      end
+      meth mtime($)
+	 (Path,stat($)).mtime
+      end
+      meth GetInfo($) @info end
+      meth resolve(X $)
+	 P = {Make X}
+      in
+	 if {P isAbsolute($)} then P else
+	    INFO  = @info
+	    INFO2 = {P GetInfo($)}
+	 in
+	    {New Path
+	     INIT_STRING(
+		unit(
+		   string       : _
+		   drive        : INFO.drive
+		   slashinitial : INFO.slashinitial
+		   slashfinal   : INFO2.slashfinal
+		   components   : {Append INFO.components INFO2.components}
+		   windows      : INFO.windows))}
+	 end
+      end
+      meth getcwd($)
+	 {Getcwd}
+      end
+      meth mkdir()
+	 {OS.mkDir @info.string}
+      end
+      meth mkdirs()
+	 if @info.components==nil then skip else
+	    {Path,dirname($) mkdirs}
+	 end
+	 if Path,exists($) then skip else
+	    Path,mkdir
+	 end
+      end
+      meth isRoot($)
+	 @info.components==nil
+      end
+      meth readdir($)
+	 for S in {OS.getDir @info.string} collect:COL do
+	    if S=="." orelse S==".." then skip else
+	       {COL Path,resolve(S $)}
+	    end
+	 end
+      end
+      meth SplitExtension(Base Ext)
+	 BaseSTR = Path,basenameString($)
+      in
+	 if  {Member &. BaseSTR} then S1 S2 in
+	    {Token {Reverse BaseSTR} &. S1 S2}
+	    Base={Reverse S2} Ext={Reverse S1}
+	 else Base=BaseSTR Ext=unit end
+      end
+      meth extension($)
+	 Path,SplitExtension(_ $)
+      end
+      meth dropExtension($)
+	 {Path,dirname($) resolve(Path,SplitExtension($ _) $)}
+      end
+      meth addExtension(Ext $)
+	 {Path,dirname($) resolve((Path,basenameString($))#'.'#Ext $)}
+      end
+      meth maybeAddPlatform($)
+	 case Path,extension($)
+	 of "so" then
+	    {Path,dirname($)
+	     resolve((Path,basenameString($))
+		     #'-'#{Property.get 'platform.name'} $)}
+	 else self end
       end
    end
 
-   proc {Remove P}
-      U = {ExpandURL {ToNonBaseURL P}}
-   in
-      if {IsFile U} then {OS.unlink {ToString U}}
-      elseif {IsDir U} then
-	 {Shell.executeCommand [rmdir {ToString U}]}
-      else {Exception.raiseError path(rm({ToString U}))} end
-   end
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   proc {RemoveRecursive P}
-      U = {ExpandURL {ToNonBaseURL P}}
-   in
-      if     {IsFile U} then {OS.unlink {ToString U}}
-      elseif {IsDir  U} then
-	 for E in {Dir U} do {RemoveRecursive {ResolveURL U E}} end
-	 {Remove U}
-      else {Exception.raiseError path(rm({ToString U}))} end
-   end
-
-   proc {Copy P1 P2}
-      {Shell.executeCommand [cp {Expand P1} {Expand P2}]}
-   end
+   fun {IsAbsolute P} {{Make P} isAbsolute($)} end
+   fun {IsRelative P} {{Make P} isRelative($)} end
+   fun {Dirname    P} {{{Make P} dirname($)} toString($)} end
+   fun {Basename   P} {{{Make P} basename($)} toString($)} end
+   fun {Exists     P} {{Make P} exists($)} end
+   fun {Stat       P} {{Make P} stat($)} end
+   fun {IsDir      P} {{Make P} isDir($)} end
+   fun {IsFile     P} {{Make P} isFile($)} end
+   fun {Size       P} {{Make P} size($)} end
+   fun {Mtime      P} {{Make P} mtime($)} end
+   fun {Resolve P1 P2} {{{Make P1} resolve(P2 $)} toString($)} end
+   fun {Getcwd} {Make {OS.getCWD}} end
+   fun {Mkdir      P} {{Make P} mkdir} end
+   fun {Mkdirs     P} {{Make P} mkdirs} end
+   fun {IsRoot     P} {{Make P} isRoot($)} end
+   fun {Readdir    P} {{Make P} readdir($)} end
+   fun {Extension  P} {{Make P} extension($)} end
+   fun {DropExtension P} {{{Make P} dropExtension($)} toString($)} end
+   fun {AddExtension P E} {{{Make P} addExtension(E $)} toString($)} end
+   fun {MaybeAddPlatform P} {{{Make P} maybeAddPlatform(P $)} toString($)} end
 end
