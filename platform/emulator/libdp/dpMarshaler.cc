@@ -312,7 +312,7 @@ void PxyVarPatch::disposeV()
   DebugCode(ms = (DSite *) -1;);
   DebugCode(isFuture = isToOwner = -1;);
   DebugCode(ec = (BYTE) -1;);
-  oz_freeListDispose(this, sizeof(MgrVarPatch));
+  oz_freeListDispose(this, sizeof(PxyVarPatch));
 }
 
 //
