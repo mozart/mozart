@@ -125,7 +125,9 @@ datum2term(datum dat,OZ_Term& out)
   // of performing unify internally. when that happens, we can
   // dispense with the allocation of a new variable.
   out = OZ_newVariable();
-  return OZ_datumToValue(d,out);
+  OZ_Return ret = OZ_datumToValue(d,out);
+  if (d.dat!=0) { free(d.dat); d.dat=0; }
+  return ret;
 }
 
 OZ_Return
