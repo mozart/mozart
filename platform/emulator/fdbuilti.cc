@@ -1216,7 +1216,7 @@ BIspec fdSpec[] = {
 
   {"counter", 2, fdtest_counter},
   {"firstFail", 2, fdtest_firstFail},
-  {"taskIntervalsProof", 5, sched_taskIntervalsProof},
+  {"sched_taskIntervalsProof", 5, sched_taskIntervalsProof},
   {"spawnLess", 2, fdtest_spawnLess},
   {"dplus", 3, fdtest_plus},
 
