@@ -194,7 +194,7 @@ define
 	  '--sbin-path=<Search Path>\n'#
 	  '                    Where to look for author databases,\n'#
 	  '                    bib files, bst files, and ozdoc scripts.\n'#
-	  '--catalog           Specify the catalog file to use for parsing.\n'}
+	  '--catalog=<File>    Specify the catalog file to use for parsing.\n'}
 	 {Application.exit 2}
       elseof error then
 	 {Application.exit 1}
