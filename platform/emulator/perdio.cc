@@ -2661,7 +2661,7 @@ char *unmarshallString(ByteStream *bs)
 }
 
 inline
-void marshallString(char *s, ByteStream *bs)
+void marshallString(const char *s, ByteStream *bs)
 {
   misc_counter[MISC_STRING].send();
   marshallNumber(strlen(s),bs);
@@ -3551,9 +3551,11 @@ loop:
   case DIF_RECORD:
     {
       TaggedRef arity = unmarshallTerm(bs);
-      TaggedRef sortedarity = sortlist(arity,length(arity));
-      int argno       = length(arity);
-      PD((UNMARSHALL,"record no:%d",argno));
+      TaggedRef sortedarity = arity;
+      if (!isSorted(arity)) {
+	sortedarity = sortlist(arity,length(arity));
+      }
+      PD((UNMARSHALL,"record no:%d",length(arity)));
       TaggedRef label = unmarshallTerm(bs);
       SRecord *rec    = SRecord::newSRecord(label,mkArity(sortedarity));
       *ret = makeTaggedSRecord(rec);
@@ -5477,12 +5479,6 @@ int saveFile(OZ_Term in,char *filename,OZ_Term url)
 {
   INIT_IP(0);
 
-  ByteStream *bs = bufferManager->getByteStreamMarshal();
-
-  domarshallTerm(url,in,bs);
-
-  bs->marshalEnd();
-
   int fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0) {
     return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
@@ -5490,6 +5486,14 @@ int saveFile(OZ_Term in,char *filename,OZ_Term url)
 		    oz_atom(OZ_unixError(errno)),
 		    oz_atom(filename));
   }
+
+  ByteStream *bs = bufferManager->getByteStreamMarshal();
+
+  marshallString(PERDIOVERSION,bs);
+  domarshallTerm(url,in,bs);
+
+  bs->marshalEnd();
+
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
 
@@ -5603,6 +5607,17 @@ int loadFile(char *filename,OZ_Term out)
   }
   bs->beforeInterpret(0);
   bs->unmarshalBegin();
+
+  char *versiongot = unmarshallString(bs);
+  if (strcmp(PERDIOVERSION,versiongot)!=0) {
+    delete versiongot;
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+		    oz_atom("versionMismatch"),
+		    oz_atom(PERDIOVERSION),
+		    oz_atom(versiongot));
+  }
+
+  delete versiongot;
 
   refTable->reset();
   OZ_Term val = unmarshallTerm(bs);
