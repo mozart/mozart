@@ -47,7 +47,7 @@ class ExportedManagerVar : public ExtVar {
 private:
   Bool isMarshaled;
   int oti;
-  Credit credit;
+  RRinstance *remoteRef;
   int tag;                      // isFuture + isAuto;
 
   //

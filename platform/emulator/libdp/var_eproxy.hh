@@ -48,11 +48,11 @@ private:
   DebugCode(int bti;);
   Bool isMarshaled;
   int oti;
-  Credit credit;
+  RRinstance *remoteRef;
   DSite *ms;                    // manager site, always;
   short isFuture;               //
   short isToOwner;              //
-
+  BYTE  ec;                     // Entity Condition
   //
 public:
   ExportedProxyVar(ProxyVar *pv, DSite *dest);

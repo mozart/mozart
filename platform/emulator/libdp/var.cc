@@ -573,56 +573,21 @@ void ProxyVar::nowGarbage(BorrowEntry* be){
   PD((PD_VAR,"nowGarbage"));
   sendDeRegister(be);}
 
-#ifdef USE_FAST_UNMARSHALER
-
-OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
-{
-  OB_Entry *ob;
-  int bi;
-  OZ_Term val1 = unmarshalBorrow(bs,ob,bi);
-
-  if (val1) {
-    PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
-    return val1;}
-
-  PD((UNMARSHAL,"var miss: b:%d",bi));
-  ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isFuture);
-
-  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
-  ob->changeToVar(val); // PLEASE DONT CHANGE THIS
-  if(!isAuto) {
-    sendRegister((BorrowEntry *)ob);}
-  else{
-    pvar->makeAuto();}
-
-  switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
-  case SITE_OK:{
-    break;}
-  case SITE_PERM:{
-    deferProxyVarProbeFault(val,PROBE_PERM);
-    break;}
-  case SITE_TEMP:{
-    deferProxyVarProbeFault(val,PROBE_TEMP);
-    break;}
-  default:
-    Assert(0);
-  }
-
-  return val;
-}
-
-#else
 
 OZ_Term unmarshalVarRobust(MarshalerBuffer* bs, Bool isFuture,
                              Bool isAuto, int *error)
 {
+
   OB_Entry *ob;
   int bi;
-  OZ_Term val1 = unmarshalBorrowRobust(bs, ob, bi, error);
+  BYTE ec;
+  OZ_Term val1 = unmarshalBorrowRobust(bs, ob, bi, ec, error);
   if (*error) return ((OZ_Term) 0);
 
   if (val1) {
     PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
+    // If the entity had a failed condition, propagate it.
+    if (ec & PERM_FAIL)deferProxyVarProbeFault(val1,PROBE_PERM);
     return val1;}
 
   PD((UNMARSHAL,"var miss: b:%d",bi));
@@ -634,23 +599,33 @@ OZ_Term unmarshalVarRobust(MarshalerBuffer* bs, Bool isFuture,
     sendRegister((BorrowEntry *)ob);}
   else{
     pvar->makeAuto();}
+   // If the entity carries failure info react to it
+  // othervise check the local environment. The present
+  // representation of the entities site might have information
+  // about the failure state.
 
-  switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
-  case SITE_OK:{
-    break;}
-  case SITE_PERM:{
-    deferProxyVarProbeFault(val,PROBE_PERM);
-    break;}
-  case SITE_TEMP:{
-    deferProxyVarProbeFault(val,PROBE_TEMP);
-    break;}
-  default:
-    Assert(0);
-  }
+  if (ec & PERM_FAIL)
+    {
+      deferProxyVarProbeFault(val,PROBE_PERM);
+    }
+  else
+    {
+      switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
+      case SITE_OK:{
+        break;}
+      case SITE_PERM:{
+        deferProxyVarProbeFault(val,PROBE_PERM);
+        break;}
+      case SITE_TEMP:{
+        deferProxyVarProbeFault(val,PROBE_TEMP);
+        break;}
+      default:
+        Assert(0);
+      }
+    }
   return val;
 }
 
-#endif
 
 /* --- IsVar test --- */
 
@@ -851,6 +826,7 @@ void ManagerVar::probeFault(DSite *s,int pr){
 }
 
 void ProxyVar::probeFault(int pr){
+  if (info && (info->getEntityCond() & (PERM_FAIL))) return;
   if(pr==PROBE_PERM){
     addEntityCond(PERM_FAIL|PERM_SOME);
     return;}
