@@ -45,22 +45,22 @@ unsigned int heapTotalSize;
 unsigned int heapTotalSizeBytes;
 
 
-#ifndef HEAPTOPINTOREGISTER
-char *heapTop;
+#ifndef HEAPCURINTOREGISTER
+char * _oz_heap_cur;
 #endif
-
-char *heapEnd;
+char * _oz_heap_end;
 
 
 void initMemoryManagement(void) {
 
   // init heap memory
   heapTotalSizeBytes = heapTotalSize = 0;
-  heapTop            = NULL;
+  _oz_heap_cur       = NULL;
+  _oz_heap_end       = NULL;
 
   // allocate first chunk of memory;
   MemChunks::list = NULL;
-  (void) getMemFromOS(0);
+  _oz_getNewHeapChunk(0);
 
   // init free memory list
   FL_Manager::init();
@@ -68,9 +68,8 @@ void initMemoryManagement(void) {
 }
 
 
-static
-Bool checkAddress(void *ptr)
-{
+inline
+Bool checkAddress(void *ptr) {
   void *aux = tagValueOf(makeTaggedMiscp(ptr));
   return (aux == ptr);
 }
@@ -501,7 +500,7 @@ void *ozMalloc(int chunk_size)
     void *ret_val = sbrk(chunk_size);
     lastBrk = sbrk(0);
     if (ret_val == (caddr_t) - 1) {
-      fprintf(stderr,"Virtual memory exhausted\n");
+      fprintf(stderr,"Mozart: Virtual memory exhausted\n");
       am.exitOz(1);
     }
 
@@ -677,7 +676,7 @@ void MemChunks::print() {
 #endif
 
 
-char *getMemFromOS(size_t sz) {
+void _oz_getNewHeapChunk(const size_t sz) {
   int thisBlockSz = max(HEAPBLOCKSIZE, (int) sz+WordSize);
 
   heapTotalSize      += thisBlockSz/KB;
@@ -698,41 +697,39 @@ char *getMemFromOS(size_t sz) {
     ozconf.heapMaxSize = newSize;
   }
 
-  heapEnd = (char *) ozMalloc(thisBlockSz);
+  size_t malloc_size  = thisBlockSz;
+  char * malloc_block = (char *) ozMalloc(malloc_size);
 
-  if (heapEnd == NULL) {
-    fprintf(stderr,"Virtual memory exceeded\n");
+  _oz_heap_end = malloc_block;
+
+  if (_oz_heap_end == NULL) {
+    OZ_warning("Mozart: virtual memory exhausted.\n");
     am.exitOz(1);
   }
 
-  /* align heapEnd to word boundaries */
-  while (ToInt32(heapEnd)%WordSize != 0) {
-    // OZ_warning("*** WEIRD: getMemFromOS: alignment problem***\n");
+  /* align _oz_heap_end to word boundaries */
+  while (ToInt32(_oz_heap_end) % WordSize != 0) {
     thisBlockSz--;
-    heapEnd++;
+    _oz_heap_end++;
   }
-  // mm2: I recommend this patch (not tested)
-  // thisBlockSz -= (thisBlockSz%WordSize);  // round down to next word
 
-  /* initialize with zeros */
-  DebugCheckT(memset(heapEnd,0,thisBlockSz));
+  DebugCheckT(memset(_oz_heap_end,0,thisBlockSz));
 
-  heapTop = heapEnd+thisBlockSz;
+  _oz_heap_cur = _oz_heap_end + thisBlockSz;
 
-  if (!checkAddress(heapTop)) {
-    OZ_warning("Oz address space exhausted: %p != %p (%d)\n",
-               tagValueOf(makeTaggedMiscp(heapTop)), heapTop,sz);
+  if (!checkAddress(_oz_heap_cur)) {
+    OZ_warning("Mozart: address space exhausted.\n");
     am.exitOz(1);
   }
 
-  MemChunks::list = new MemChunks(heapEnd,MemChunks::list,thisBlockSz);
+  MemChunks::list = new MemChunks(malloc_block,MemChunks::list,malloc_size);
 
 #ifdef CS_PROFILE
   across_chunks = OK;
 #endif
 
-  heapTop -= sz;
-  return heapTop;
+  _oz_heap_cur -= sz;
+
 }
 
 /*
