@@ -114,6 +114,10 @@ class ByteStream {
 public:
   /* init */
 
+  void print() {
+    printf("byte stream\n");
+    printf("refCounter: %d",refCounter);
+  }
   int refCounter;
   ByteStream():first(NULL),last(NULL),pos(NULL),type(BS_None){}
 
