@@ -10,7 +10,7 @@ AC_PATH_PROG(OZBATCH,ozbatch,ozbatch,../../share/lib $prefix/bin $path)
 AC_PATH_PROG(OZDYNLD,ozdynld,ozdynld,../../share/bin $prefix/bin $path)
 AC_PATH_PROG(OZPLATFORM,ozplatform,ozplatform,../../share/bin $prefix/bin $path)
 AC_PATH_PROG(MKINSTALLDIRS,mkinstalldirs,mkinstalldirs,../.. $path)
-: ${PLATFORM=`$OZPLATFORM`}
+PLATFORM=`$OZPLATFORM`
 AC_SUBST(OZBATCH)
 AC_SUBST(OZDYNLD)
 AC_SUBST(PLATFORM)
