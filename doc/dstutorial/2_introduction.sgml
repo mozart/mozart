@@ -85,6 +85,16 @@ to get you started.
 The development of more powerful ones is still ongoing
 research and will be provided in future releases.
 
+<P>This tutorial attempts to give a precise specification
+of the distribution model and the failure model.
+The tutorial carefully indicates where the current release
+is incomplete with respect to the specification
+(this is called a <EM>limitation</EM>)
+or has a different behavior (this is called a <EM>modification</EM>).
+All limitations and modifications are listed where they occur.
+In addition,
+they are listed together at the end of the tutorial.
+
 <P>We say two or more applications are <EM>connected</EM>
 if they share a reference to a language entity that allows
 them to exchange information.
