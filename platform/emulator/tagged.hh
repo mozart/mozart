@@ -62,7 +62,7 @@ enum TypeOfTerm {
 //  4 = 0100 unusable /
 };
 
-char * TypeOfTermString[16];
+extern char * TypeOfTermString[];
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: CLASS / BASIC ACCESS FUNCTIONS
