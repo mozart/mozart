@@ -211,13 +211,14 @@ const char *getBIName(ProgramCounter PC)
 }
 
 
-void CodeArea::printDef(ProgramCounter PC)
+ProgramCounter CodeArea::printDef(ProgramCounter PC,FILE *out)
 {
   ProgramCounter definitionPC = definitionStart(PC);
   if (definitionPC == NOCODE) {
-    message("\tspecial task or on toplevel (PC=%s)\n",
+    fprintf(out,"***\tspecial task or on toplevel (PC=%s)\n",
 	    opToString[(int)getOpcode(PC)]);
-    return;
+    fflush(out);
+    return definitionPC;
   }
 
   Reg reg;
@@ -227,19 +228,13 @@ void CodeArea::printDef(ProgramCounter PC)
   getNextDebugInfoArgs(PC,file,line,column,comment);
 
   const char *name = OZ_atomToC(predName);
-  if (*name && column != makeTaggedNULL())
-    message("\tprocedure '%s' in file \"%s\", line %d, column %d, PC=%p\n",
-	    name,OZ_atomToC(file),OZ_intToC(line),OZ_intToC(column),
-	    definitionPC);
-  else if (*name)
-    message("\tprocedure '%s' in file \"%s\", line %d, PC=%p\n",
-	    name,OZ_atomToC(file),OZ_intToC(line),definitionPC);
-  else if (column != makeTaggedNULL())
-    message("\tprocedure in file \"%s\", line %d, column %d, PC=%p\n",
-	    OZ_atomToC(file),OZ_intToC(line),OZ_intToC(column),definitionPC);
-  else
-    message("\tprocedure in file \"%s\", line %d, PC=%p\n",
-	    OZ_atomToC(file),OZ_intToC(line),definitionPC);
+  fprintf(out,"***\tprocedure");
+  if (*name) fprintf(out," '%s'",name);
+  fprintf(out," f: \"%s\" l: %d",OZ_atomToC(file),OZ_intToC(line));
+  if (column) fprintf(out," c: %d",OZ_intToC(column));
+  fprintf(out," PC: %p\n",definitionPC);
+  fflush(out);
+  return definitionPC;
 }
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
@@ -407,8 +402,8 @@ void displayCode(ProgramCounter from, int ssize)
 
 void displayDef(ProgramCounter from, int ssize)
 {
-  CodeArea::display(CodeArea::definitionStart(from),ssize,stderr,from);
-  fflush(stderr);
+  ProgramCounter start=CodeArea::printDef(from,stderr);
+  if (start != NOCODE) CodeArea::display(start,ssize,stderr,from);
 }
 
 
@@ -435,6 +430,7 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
   predName = OZ_atom(pred != NULL? pred->getPrintName() : "");
 }
 
+static
 void printLoc(FILE *ofile,OZ_Location *loc) {
   if (loc->getInArity()) {
     fprintf(ofile,"[");
@@ -455,18 +451,23 @@ void printLoc(FILE *ofile,OZ_Location *loc) {
     fprintf(ofile,"nil");
 }
 
-void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter to)
+void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
+		       ProgramCounter to)
 {
   ProgramCounter PC = from;
   int defCount = 0; // counter for nested defintions
   for (int i = 1; i <= sz || sz <= 0 ; i++) {
 
-    if (sz <=0 && to != NOCODE && PC > to) return;
+    if (sz <=0 && to != NOCODE && PC > to) {
+      fflush(ofile);
+      return;
+    }
 
     fprintf(ofile, "%p:\t", PC);
     Opcode op = getOpcode(PC);
     if (op == OZERROR || op == ENDOFFILE) {
-      message("End of code block reached\n");
+      fprintf(ofile,"End of code block reached\n");
+      fflush(ofile);
       return;
     }
 
@@ -1034,7 +1035,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter
 
     case ENDDEFINITION:
       fprintf(ofile, "(%p)\n", computeLabelArg(PC,PC+1));
-      if (sz<=0 && defCount<=1) return;
+      if (sz<=0 && defCount<=1) {
+	fflush(ofile);
+	return;
+      }
       defCount--;
       DISPATCH();
 
@@ -1111,8 +1115,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter
       }
 
     default:
+      fprintf(ofile,"Illegal instruction");
       fflush(ofile);
-      warning("CodeArea::display: Illegal instruction");
       return;
     }
   }
@@ -1188,6 +1192,7 @@ void CodeArea::writeInstr(void){
     fprintf(stderr,
 	    "Wrote the %d most recently fetched instructions in file '%s'\n",
 	    RECINSTRFETCH, InstrDumpFile);
+    fflush(stderr);
   } else
     error("Cannot open file '%s'.", InstrDumpFile);
 } // CodeArea::writeInstr

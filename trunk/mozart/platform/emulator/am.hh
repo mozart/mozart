@@ -128,7 +128,7 @@ private:
   char *shallowHeapTop;
   TaggedRef _currentUVarPrototype; // opt: cache
 
-  TaggedRef suspendVarList;
+  TaggedRef _suspendVarList;
   CallList *preparedCalls;      // for BI_REPLACEBICALL
 
   int threadSwitchCounter;
@@ -242,28 +242,26 @@ public:
 
   Bool isStandalone() { return isStandaloneF; }
 
-  TaggedRef getSuspendVarList(void) { return suspendVarList; }
-  void emptySuspendVarList(void) { suspendVarList = 0; }
+  TaggedRef getSuspendVarList(void) { return _suspendVarList; }
+  void emptySuspendVarList(void) { _suspendVarList = nil(); }
+  int isEmptySuspendVarList(void) { return _suspendVarList == nil(); }
   void addSuspendVarList(TaggedRef t)
   {
     Assert(isAnyVar(deref(t)));
 
-    if (suspendVarList==0)
-      suspendVarList = nil();
-
-    suspendVarList=cons(t,suspendVarList);
+    _suspendVarList=cons(t,_suspendVarList);
   }
   void addSuspendVarList(TaggedRef * t)
   {
     addSuspendVarList(makeTaggedRef(t));
   }
-
+  void suspendOnVarList(Thread *thr);
   void prepareCall(TaggedRef pred, TaggedRef arg0=0, TaggedRef arg1=0, 
 		   TaggedRef arg2=0, TaggedRef arg3=0, TaggedRef arg4=0);
 
   void prepareCall(TaggedRef pred, RefsArray args);
 
-  void pushPreparedCalls();
+  void pushPreparedCalls(Thread *thr=0);
 
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();

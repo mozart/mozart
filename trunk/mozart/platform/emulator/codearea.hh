@@ -152,7 +152,7 @@ public:
   CodeArea(CompStream *fd, int size, ProgramCounter &pc);
   CodeArea(int sz);
 
-  static void printDef(ProgramCounter PC);
+  static ProgramCounter printDef(ProgramCounter PC,FILE *out=stderr);
   static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
 			     int frameId, RefsArray Y, RefsArray G);
   static TaggedRef getFrameVariables(ProgramCounter, RefsArray, RefsArray);

@@ -990,7 +990,7 @@ RefsArray copyRefsArray(RefsArray a)
 {
   int n = getRefsArraySize(a);
   RefsArray r = allocateRefsArray(n,NO);
-  for (int i = n-1; i >= 0; i--) {
+  for (int i = n; i--;) {
     r[i] = tagged2NonVariable(&a[i]);
   }
   return r;
@@ -1000,7 +1000,7 @@ inline
 RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) 
 {
   RefsArray r = allocateRefsArray(n,init);
-  for (int i = n-1; i >= 0; i--) {
+  for (int i = n; i--;) {
     CHECK_NONVAR(a[i]);
     r[i] = a[i];
   }
@@ -1019,7 +1019,7 @@ RefsArray resize(RefsArray r, int s)
   
   if (s > size){
     RefsArray aux = allocateRefsArray(s);
-    for(int j = size-1; j >= 0; j--)
+    for(int j = size; j--;)
       aux[j] = r[j];
     return aux;
   }

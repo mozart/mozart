@@ -66,10 +66,12 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
     case RAISE:
     case BI_TYPE_ERROR:
     case SUSPEND:
+      // restore X
+      for (int j=outAr; j--; ) {
+	X[inAr+j]=savedX[j];
+      }
       return ret1;
     case PROCEED:
-    case SCHEDULED: // prop ?
-    case SLEEP:     // prop ?
     case BI_PREEMPT:
     case BI_REPLACEBICALL:
       break;
@@ -79,8 +81,31 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
     }
   }
   for (int i=outAr;i--;) {
-    OZ_Return ret2 = oz_unify(X[inAr+i],savedX[i]); // mm_u
-    if (ret2!=PROCEED) return ret2;
+    OZ_Return ret2 = oz_unify(X[inAr+i],savedX[i]);
+    if (ret2!=PROCEED) {
+      switch (ret2) {
+      case FAILED:
+      case RAISE:
+      case BI_TYPE_ERROR:
+	// restore X in case of error
+	for (int j=outAr; j--; ) {
+	  X[inAr+j]=savedX[j];
+	}
+	return ret2;
+      case SUSPEND:
+	DebugCheckT(printf("oz_bi_wrapper: unify suspend\n"));
+	am.emptySuspendVarList();
+	am.prepareCall(BI_Unify,X[inAr+i],savedX[i]);
+	ret1=BI_REPLACEBICALL;
+	break;
+      case BI_REPLACEBICALL:
+	DebugCheckT(printf("oz_bi_wrapper: unify replcall\n"));
+	ret1=BI_REPLACEBICALL;
+	break;
+      default:
+	Assert(0);
+      }
+    }
   }
   return ret1;
 }
@@ -279,16 +304,12 @@ TaggedRef fastnewTaggedUVar(AM *e)
 
 /* specially optimized unify: test two most probable cases first:
  *
- *     1. bind a variable
- *     2. test two non-variables
- *     3. but don't forget to check identical variables
+ *     1. bind a unconstraint local variable to a non-var
+ *     2. test two non-variables for equality
  */
-// mm_u: should return OZ_Return
 inline
 OZ_Return fastUnify(OZ_Term A, OZ_Term B, ByteCode *scp=0)
 {
-  Assert(PROCEED);
-  Assert(!FAILED);
   if (scp) goto fallback;
 
   {
@@ -654,11 +675,11 @@ extern void checkLiveness(ProgramCounter PC, int n, TaggedRef *X, int max);
 #define SUSP_PC(TermPtr,RegsToSave,PC)		\
    CheckLiveness(PC,RegsToSave);		\
    PushContX(PC,Y,G,X,RegsToSave);		\
-   addSusp(TermPtr,CTT);			\
+   addSuspPtr(TermPtr,CTT);			\
    return T_SUSPEND;
 
 
-void addSusp(TaggedRef *varPtr, Thread *thr)
+void addSuspPtr(TaggedRef *varPtr, Thread *thr)
 {
   //  if(thr->getPStop()==0) ???????????????
   addSuspAnyVar(varPtr,thr);
@@ -671,7 +692,7 @@ void addSusp(TaggedRef var, Thread *thr)
   DEREF(var,varPtr,tag);
   Assert(isAnyVar(var));
 
-  addSusp(varPtr,thr);
+  addSuspPtr(varPtr,thr);
 }
 
 
@@ -682,36 +703,18 @@ void addSusp(TaggedRef var, Thread *thr)
  */
 
 
-static
-void suspendOnVarList(TaggedRef varList,Thread *thr)
-{
-  while (isCons(varList)) {
-    addSusp(head(varList),thr);
-    varList=tail(varList);
-  }
-}
-
 #define SUSPENDONVARLIST			\
 {						\
-  suspendOnVarList(e->suspendVarList,CTT);	\
-  e->suspendVarList=0;				\
-  return T_SUSPEND;			\
+  e->suspendOnVarList(CTT);			\
+  return T_SUSPEND;				\
 }
-
-
-
-#define SUSPENDONCONTROLVAR					\
-  return suspendOnControlVar(e->suspendVarList,e)
-
-
-
 
 static
 void suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
 {
-  if (C) { DEREF (C, ptr, _1); if (isAnyVar(C)) addSusp(ptr, th); }
-  if (B) { DEREF (B, ptr, _1); if (isAnyVar(B)) addSusp(ptr, th); }
-  { DEREF (A, ptr, _1); if (isAnyVar(A)) addSusp(ptr, th); }
+  if (C) { DEREF (C, ptr, _1); if (isAnyVar(C)) addSuspPtr(ptr, th); }
+  if (B) { DEREF (B, ptr, _1); if (isAnyVar(B)) addSuspPtr(ptr, th); }
+  { DEREF (A, ptr, _1); if (isAnyVar(A)) addSuspPtr(ptr, th); }
 }
 
 // -----------------------------------------------------------------------
@@ -780,9 +783,8 @@ void AM::checkStability()
       setCurrent(currentBoard()->getParent());
       // don't decrement counter of parent board!
 
-      int ret = oz_unify(solveAA->getResult(),  // mm_u
-			 solveAA->genSolved());
-      Assert(ret);
+      int ret = oz_unify(solveAA->getResult(), solveAA->genSolved());
+      Assert(ret==PROCEED);
       return;
     }
 
@@ -802,9 +804,8 @@ void AM::checkStability()
 
       // don't decrement counter of parent board!
 
-      int ret = oz_unify(solveAA->getResult(),  // mm_u
-			 solveAA->genStuck());
-      Assert(ret);
+      int ret = oz_unify(solveAA->getResult(), solveAA->genStuck());
+      Assert(ret==PROCEED);
       return;
     }
 
@@ -828,9 +829,9 @@ void AM::checkStability()
 
     // don't decrement counter of parent board!
 
-    int ret = oz_unify(solveAA->getResult(), // mm_u
+    int ret = oz_unify(solveAA->getResult(), 
 		       solveAA->genChoice(wa->getChildCount()));
-    Assert(ret);
+    Assert(ret==PROCEED);
     return;
   }
 
@@ -844,9 +845,8 @@ void AM::checkStability()
 
     solveAA->setResult(newVar);
 
-    int ret = oz_unify(result, // mm_u
-		       solveAA->genUnstable(newVar));
-    Assert(ret);
+    int ret = oz_unify(result, solveAA->genUnstable(newVar));
+    Assert(ret==PROCEED);
     return;
   } 
 
@@ -1747,7 +1747,7 @@ LBLdispatcher:
       case SUSPEND:
 	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+4));
-	addSusp (XPC(2), CTT);
+	addSusp(XPC(2), CTT);
 	return T_SUSPEND;
 
       case RAISE:
@@ -2000,7 +2000,7 @@ LBLdispatcher:
 
     LBLsuspendShallow:
       {
-	e->emptySuspendVarList();
+	e->emptySuspendVarList(); // mm2: done twice
 	int argsToSave = getPosIntArg(shallowCP+2);
 	CheckLiveness(shallowCP,argsToSave);
 	PushContX(shallowCP,Y,G,X,argsToSave);
@@ -2492,7 +2492,7 @@ LBLdispatcher:
 
        e->pushPreparedCalls();
 
-       if (e->suspendVarList) {
+       if (!e->isEmptySuspendVarList()) {
 	 SUSPENDONVARLIST;
        }
        goto LBLpopTask;
@@ -2736,7 +2736,7 @@ LBLdispatcher:
       tt->setAbstr(ozstat.currAbstr);
 
       e->scheduleThread (tt);
-      
+
       JUMPRELATIVE(contPC);
     }
 
@@ -2752,7 +2752,7 @@ LBLdispatcher:
 	prio = DEFAULT_PRIORITY;
       }
 
-      Thread *tt = e->mkRunnableThreadOPT(prio, CBB);
+      Thread *tt = e->mkRunnableThreadOPT(prio,CBB);
 
       COUNT(numThreads);
 
@@ -2761,8 +2761,8 @@ LBLdispatcher:
       tt->setSelf(e->getSelf());
       tt->setAbstr(ozstat.currAbstr);
 
-      e->scheduleThread(tt);
-      
+      e->scheduleThread (tt);
+
       JUMPRELATIVE(contPC);
     }
 
@@ -2811,7 +2811,7 @@ LBLdispatcher:
       if (!isProcedure(taggedPredicate) && !isObject(taggedPredicate)) {
 	if (isAnyVar(predTag)) {
 	  CTS->pushCallNoCopy(makeTaggedRef(predPtr),G);
-	  addSusp(predPtr,CTT);
+	  addSuspPtr(predPtr,CTT);
 	  return T_SUSPEND;
 	}
 	RAISE_APPLY(taggedPredicate,OZ_toList(predArity,G));

@@ -1792,7 +1792,8 @@ void AM::gc(int msgLevel)
   board_constraints = board_constraints->gc ();
 #endif
   
-  suspendVarList=makeTaggedNULL(); /* no valid data */
+  // mm2: Assert(isEmptySuspendVarList());
+  emptySuspendVarList();
 
   OZ_collectHeapTerm(defaultExceptionHdl,defaultExceptionHdl);
   OZ_collectHeapTerm(opiCompiler,opiCompiler);

@@ -3780,7 +3780,6 @@ OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnNumbers(A,B);
 }
 
-
 OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,_11);
