@@ -130,21 +130,22 @@ public:
   Board * getParentInternal(void) {
     return (Board *) parentAndFlags.getPtr();
   }
-  Board *derefBoard() {
+  Board *derefBoard(void) {
     Board *bb;
     for (bb=this; bb->isCommitted(); bb=bb->getParentInternal()) {}
     return bb;
   }
-  Board *getParent() {
+  Board *getParent(void) {
     Assert(!isCommitted());
     return getParentInternal()->derefBoard();
   }
-  int isAlive() {
+  int isAlive(void) {
     for (Board * s = this; !s->isRoot() ; s=s->getParent())
       if (s->isFailed())
         return NO;
     return OK;
   }
+  int isAdmissible(void);
 
   //
   // Garbage collection and copying

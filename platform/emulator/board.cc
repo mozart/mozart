@@ -94,8 +94,6 @@ TaggedRef Board::genBlocked(TaggedRef arg) {
 void Board::bindStatus(TaggedRef t) {
   TaggedRef s = getStatus();
   DEREF(s, sPtr, _);
-
-  // STRANGE
   if (oz_isFuture(s))
     oz_bindFuture(sPtr, t);
 }
@@ -103,7 +101,6 @@ void Board::bindStatus(TaggedRef t) {
 void Board::clearStatus() {
   if (oz_isFuture(oz_deref(getStatus())))
     return;
-
   status = oz_newFuture(getParent());
 }
 

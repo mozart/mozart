@@ -198,6 +198,9 @@ OZ_BI_define(BIaskSpace, 1,1) {
   if (space->isMarkedMerged())
     OZ_RETURN(AtomMerged);
 
+  if (!space->getSpace()->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
+
   TaggedRef answer = space->getSpace()->getStatus();
 
   DEREF(answer, answer_ptr, answer_tag);
@@ -224,6 +227,9 @@ OZ_BI_define(BIaskVerboseSpace, 1, 1) {
 
   Board * s = space->getSpace();
 
+  if (!s->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
+
   if (s->isBlocked() && !s->isStable()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, s->getStatus());
@@ -243,6 +249,9 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   if (isFailedSpace)
     return FAILED;
+
+  if (!space->getSpace()->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
   Board *CBB = oz_currentBoard();
   Board *SBB = space->getSpace()->derefBoard();
@@ -269,9 +278,6 @@ OZ_BI_define(BImergeSpace, 1,1) {
   Bool isSibling = (!CBB->isRoot() &&
                     CBB->getParent() == SBP &&
                     CBB != SBB);
-
-  if (!isSibling && CBB != SBP)
-    return oz_raise(E_ERROR,E_KERNEL,"spaceSuper",1,tagged_space);
 
   Assert(!oz_isBelow(CBB,SBB));
 
@@ -316,6 +322,9 @@ OZ_BI_define(BIcloneSpace, 1,1) {
   if (isFailedSpace)
     OZ_RETURN(makeTaggedConst(new Space(CBB, (Board *) 0)));
 
+  if (!space->getSpace()->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
+
   TaggedRef status = space->getSpace()->getStatus();
 
   DEREF(status, status_ptr, status_tag);
@@ -348,6 +357,11 @@ OZ_BI_define(BIcommitSpace, 2,0) {
 
   if (isFailedSpace)
     return PROCEED;
+
+  Board * sb = space->getSpace();
+
+  if (!sb->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
   TaggedRef status = space->getSpace()->getStatus();
 
@@ -385,11 +399,6 @@ OZ_BI_define(BIcommitSpace, 2,0) {
     oz_typeError(1, "Integer or pair of integers");
   }
 
-  if (!oz_isCurrentBoard(space->getSpace()->getParent()))
-    return oz_raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
-
-  Board * sb = space->getSpace()->derefBoard();
-
   if (!sb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 
@@ -419,8 +428,10 @@ OZ_BI_define(BIinjectSpace, 2,0)
   if (isFailedSpace)
     return PROCEED;
 
-  if (!oz_isCurrentBoard(space->getSpace()->getParent()))
-    return oz_raise(E_ERROR,E_KERNEL,"spaceParent", 1, tagged_space);
+  Board * sb = space->getSpace();
+
+  if (!sb->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
   DEREF(proc, proc_ptr, proc_tag);
 
@@ -429,8 +440,6 @@ OZ_BI_define(BIinjectSpace, 2,0)
 
   if (!oz_isProcedure(proc))
     oz_typeError(1, "Procedure");
-
-  Board *sb = space->getSpace();
 
   // clear status
   sb->clearStatus();
@@ -502,10 +511,10 @@ OZ_BI_define(BIdiscardSpace, 1, 0) {
   if (isFailedSpace)
     return PROCEED;
 
-  if (!oz_isCurrentBoard(space->getSpace()->getParent()))
-    return oz_raise(E_ERROR,E_KERNEL,"spaceParent", 1, tagged_space);
-
   Board *sb = space->getSpace();
+
+  if (!sb->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
   // clear status
   sb->clearStatus();
