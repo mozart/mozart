@@ -1,0 +1,106 @@
+<section ID="chapter.widgets.button">
+  <TITLE>Button widget</TITLE>
+
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+A button is a widget that displays a textual string, bitmap or image. If text is displayed, it must all be in a single font, but it can occupy multiple lines on the screen (if it contains newlines or if wrapping occurs because of the
+<<wrapLength>> option) and one of the characters may optionally be underlined using the underline option. It can display itself in either of three different ways, according to the <<state>> option; it can be made to appear raised,
+sunken, or flat; and it can be made to flash. When a user invokes the button (by pressing mouse button 1 with the
+cursor over the button), then the command specified in the <<action>> option is invoked. 
+</P>
+
+<subsection> <TITLE>Parameters</TITLE>
+
+<P>
+<LIST>
+<ITEM> <<1:VS>> : Specifies the text displayed inside the widget (same as text). This parameter can be only used with the <<set()>> and <<get()>> methods.
+&param_init_text;
+
+<ITEM> <<return:V>> : If the execution of the action of the button closes the window, <<V>> is bound to true. In all other cases where the window is closed, <<V>> is bound to false. This parameter is valid at creation time only. <<V>> must be a free variable.
+
+&param_activebackground;
+&param_activeforeground;
+&param_anchor;
+&param_background;
+&param_bitmap;
+&param_borderwidth;
+&param_cursor;
+&param_disabledforeground;
+&param_font;
+&param_foreground;
+&param_highlightbackground;
+&param_highlightcolor;
+&param_highlightthickness;
+&param_image;
+&param_justify;
+&param_relief;
+&param_takefocus;
+&param_text;
+&param_underline;
+&param_wraplength;
+&param_ipadx;
+&param_ipady;
+
+<ITEM> <<action:C>> : Specifies an action to execute juste after the user clicked the button. <<C>> can take several different forms (see <ptr to="basics.events">).
+
+<ITEM> <<default:A>> : Specifies one of three states for the default ring: <<normal>>, <<active>>, or <<disabled>>. In active state, the button is
+    drawn with the platform specific appearance for a default button. In normal state, the button is drawn
+    with the platform specific appearance for a non-default button, leaving enough space to draw the default
+    button appearance. The normal and active states will result in buttons of the same size. In disabled state,
+    the button is drawn with the non-default button appearance without leaving space for the default
+    appearance. The disabled state may result in a smaller button than the active state ring. <<A>> must be one of these three atoms : <<normal>>, <<active>>, or <<disabled>>.
+
+<ITEM> <<height:P>> : Specifies a desired height for the button. If an image or bitmap is being displayed in the button then the
+    value is in screen units; for text it is in lines of text. If
+    this option isn't specified, the button's desired height is computed from the size of the image or bitmap or
+    text being displayed in it. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).
+
+<ITEM> <<state:A>> : Specifies one of three states for the button: <<normal>>, <<active>>, or <<disabled>>. In normal state the button is
+    displayed using the foreground and background options. The active state is typically used when the
+    pointer is over the button. In active state the button is displayed using the activeforeground and
+    activebackground options. Disabled state means that the button should be insensitive: the default
+    bindings will refuse to activate the widget and will ignore mouse button presses. In this state the
+    disabledforeground and background options determine how the button is displayed. <<A>> must be one of these three atoms : <<normal>>, <<active>>, or <<disabled>>.
+
+<ITEM> <<width:P>> : Specifies a desired width for the button. If an image or bitmap is being displayed in the button then the
+    value is in screen units; for text it is in characters. If
+    this option isn't specified, the button's desired width is computed from the size of the image or bitmap or
+    text being displayed in it. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).
+
+<ITEM> <<key:VS>> : Specifies a key equivalent to clicking the button. An usual use is the <<"Return">> code for the Ok button of dialog boxes, and to use the <<"Escape">> code for the Cancel button. This parameter is valid at creation time only. <<VS>> must be a virtual string describing a key code (see ....)
+
+&param_glue;
+&param_padx;
+&param_pady;
+&param_feature;
+&param_handle;
+&param_tooltips;
+
+
+</LIST>
+
+</P>
+
+<subsection> <TITLE>Interface</TITLE>
+
+<P>
+The object you get by an handle on the widget implements the following methods :
+
+<LIST>
+
+&interface_set;
+&interface_get;
+&interface_bind;
+&interface_getFocus;
+&interface_setGrab;
+&interface_releaseGrab;
+&interface_getGrabStatus;
+&interface_raise;
+&interface_lower;
+&interface_winfo;
+
+</LIST>
+
+
+</section>

@@ -1,0 +1,4 @@
+<ITEM> <<insertbackground:C>> : Specifies the color to use as background in the area covered by the insertion cursor. This color will
+    normally override either the normal background for the widget (or the selection background if the
+    insertion cursor happens to fall in the selection). <<C>> must be a valid color (see <ptr to="misc.color">).
+

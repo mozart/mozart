@@ -1,0 +1,2 @@
+<ITEM> <<insertofftime:I>> : Specifies a non-negative integer value indicating the number of milliseconds the insertion cursor should
+    remain ``off'' in each blink cycle. If this option is zero then the cursor doesn't blink: it is on all the time. <<I>> must be a positive integer value.

@@ -1,0 +1,14 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+
+WHAT	= http
+MAIN	= http.sgml
+WHATCLASS=tools
+PRINTNAME=DistributedProgramming
+SGMLSRCS = 1_introduction.sgml 2_httpclient.sgml \
+   	   3_examples.sgml 4_apps.sgml\
+          
+include ../Makefile.common
+ 
