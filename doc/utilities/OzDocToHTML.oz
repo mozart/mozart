@@ -853,7 +853,7 @@ define
                GrammarAltType <- 'or'
                Out <- @Out#'</TD><TD>'
                OzDocToHTML, Batch(M 1)
-               Out <- @Out#'</TD><TR valign=top>\n'
+               Out <- @Out#'</TD>\n'
             [] 'grammar.note' then
                Out <- @Out#'<TD align=left><I>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;% '
                OzDocToHTML, Batch(M 1)
@@ -1020,7 +1020,7 @@ define
          end
       end
       meth StartNode(Title)
-         Out <- ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">\n'#
+         Out <- ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0//EN">\n'#
                  '<HTML>\n'#
                  '<HEAD>\n'#
                  '<TITLE>'#Title#'</TITLE>\n'#
