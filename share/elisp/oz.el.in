@@ -1041,7 +1041,8 @@ compiled using a default set of switches."
 	(setq compilation-last-buffer (current-buffer))
 	(setq oz-compiler-output-start
 	      (marker-position
-	       (process-mark (get-buffer-process (current-buffer))))))
+	       (process-mark (get-buffer-process (current-buffer)))))
+	(setq compilation-error-list nil))
       (if system
 	  (comint-send-string
 	   proc
