@@ -55,7 +55,7 @@ WaitForThread          = 'waiting for thread to be added ' # /* end */
                          'to dictionary of debugged threads...' /* end */
 
 ErrorExcText           = 'Exception: '
-UserExcText            = 'Unhandled User Exception: '
+UserExcText            = 'Exception: '
 NoStackText            = ' / no stack available'
 
 FirstSelectThread      = 'You must select a thread first!' /* end */
