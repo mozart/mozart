@@ -211,7 +211,8 @@ in&nbsp;<ptr to=baptiste.95a>.
 <<taskIntervalsDistP>>
 <synopsis>
 <<<
-{Schedule.taskIntervalsDistP ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
+{Schedule.taskIntervalsDistP ?+{TasksLIvv} ?+{StartR} 
+                             ?+{DurR}}
 >>>
 <item>
 distributes  the tasks occurring in <<?{TasksLIvv}>>, such that every
@@ -228,7 +229,8 @@ described in&nbsp;<ptr to=caseau.95>.
 <<taskIntervalsDistO>>
 <synopsis>
 <<<
-{Schedule.taskIntervalsDistO ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
+{Schedule.taskIntervalsDistO ?+{TasksLIvv} ?+{StartR} 
+                             ?+{DurR}}
 >>>
 <item>
 distributes  the tasks occurring in <<?{TasksLIvv}>>, such that every
@@ -273,7 +275,8 @@ and <<?{CapIv}>> must be equal.
 <<cumulative>>
 <synopsis>
 <<<
-{Schedule.cumulative ?+{TasksLIvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+{Schedule.cumulative ?+{TasksLIvv} ?+{StartR} ?+{DurR} 
+                     ?+{UseR} ?+{CapIv}}
 >>>
 <item>
 creates a propagator, which states that for all resources <math/i/ and time
@@ -319,7 +322,8 @@ capacities (for <<FD.record>> see&nbsp;<ptr to="FD.record">).
 <<cumulativeEF>>
 <synopsis>
 <<<
-{Schedule.cumulativeED ?+{TasksLIvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+{Schedule.cumulativeED ?+{TasksLIvv} ?+{StartR} ?+{DurR} 
+                       ?+{UseR} ?+{CapIv}}
 >>>
 <item>
 creates a propagator, which states that for all resources <math/i/ and time
@@ -338,7 +342,8 @@ This propagator  generalizes the edge-finding propagation in
 <<cumulativeTI>>
 <synopsis>
 <<<
-{Schedule.cumulativeTI ?+{TasksLIvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+{Schedule.cumulativeTI ?+{TasksLIvv} ?+{StartR} ?+{DurR} 
+                       ?+{UseR} ?+{CapIv}}
 >>>
 <item>
 creates a propagator, which states that for all resources <math/i/ and time
@@ -357,7 +362,8 @@ This propagator generalizes the edge-finding propagation in
 <<cumulativeUp>>
 <synopsis>
 <<<
-{Schedule.cumulativeUp ?+{TasksLIvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+{Schedule.cumulativeUp ?+{TasksLIvv} ?+{StartR} ?+{DurR} 
+                       ?+{UseR} ?+{CapIv}}
 >>>
 <item>
 creates a propagator, which states that for all resources <math/i/ and time
