@@ -51,204 +51,204 @@ void OzFSVariable::dispose(void) {
 #endif
 
 
-OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
+OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 {
-  if (oz_isFSetValue(term)) {
+  Assert(!oz_isRef(term));
+  if (!oz_isFSetValue(term)) return FAILED;
+
 #ifdef DEBUG_FSUNIFY 
-    (*cpi_cout) << "fsunify(value): (" << _fset.toString() << " = " 
-		<< *((FSetValue *)tagged2FSetValue(term)) << " )";
+  (*cpi_cout) << "fsunify(value): (" << _fset.toString() << " = " 
+	      << *((FSetValue *)tagged2FSetValue(term)) << " )";
 #endif
       
-    if (! ((FSetConstraint *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(term)))
-      goto f;
-
-    Bool isLocalVar = am.isLocalSVar(this);
-    Bool isNotInstallingScript = !am.isInstallingScript();
-      
-    if (scp==0 && (isNotInstallingScript || isLocalVar)) 
-      propagate(fs_prop_val);
-      
-    if (isLocalVar) {
-      doBind(vptr, term);
-      dispose();
-    } else {
-      am.doBindAndTrail(vptr, term);
-    }
-      
+  if (! ((FSetConstraint *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(term))) {
 #ifdef DEBUG_FSUNIFY 
-    (*cpi_cout) << " -> " <<  _fset.toString();
+    (*cpi_cout) << "false" << endl << flush;
 #endif
+    return FALSE;
+  }
+
+  Bool isLocalVar = am.isLocalSVar(this);
+  Bool isNotInstallingScript = !am.isInstallingScript();
       
-    goto t;
-  } // case FSETVALUE:
-
-  if (oz_isRef(term)) {
-    TaggedRef *tptr=tagged2Ref(term);
-    term = *tptr;
-    OzVariable *cv=tagged2CVar(term);
-    if (cv->getType() == OZ_VAR_FS) {
-      OzFSVariable * term_var = (OzFSVariable *)cv;
-      OZ_FSetConstraint * t_fset = (OZ_FSetConstraint *) &term_var->getSet();
-      OZ_FSetConstraint * fset = (OZ_FSetConstraint *) &getSet();
-      OZ_FSetConstraint new_fset;
-
-#ifdef DEBUG_FSUNIFY 
-      (*cpi_cout) << "fsunify(var): (" << *fset << " = " << *t_fset << " )";
-#endif
+  if (scp==0 && (isNotInstallingScript || isLocalVar)) 
+    propagate(fs_prop_val);
       
-      if ((new_fset = ((FSetConstraint *) t_fset)->unify(*(FSetConstraint *) fset)).getCardMin() == -1)
-	goto f;
-
-#ifdef DEBUG_FSUNIFY 
-      (*cpi_cout) << " -> " << new_fset << " " << new_fset.isValue();
-#endif
+  if (isLocalVar) {
+    doBind(vptr, term);
+    dispose();
+  } else {
+    am.doBindAndTrail(vptr, term);
+  }
       
-      Bool var_is_local  = am.isLocalSVar(this);
-      Bool term_is_local = am.isLocalSVar(term_var);
-      Bool is_not_installing_script = !am.isInstallingScript();
-      Bool var_is_constrained
-	= (is_not_installing_script ||
-	   ((FSetConstraint *) fset)
-	   ->isWeakerThan(*((FSetConstraint *) &new_fset)));
-      Bool term_is_constrained
-	= (is_not_installing_script ||
-	   ((FSetConstraint *) t_fset)
-	   ->isWeakerThan(*((FSetConstraint *) &new_fset)));
-
-
-      switch (var_is_local + 2 * term_is_local) {
-      case TRUE + 2 * TRUE: // var and term are local
-	{
-	  if (new_fset.isValue()) {
-	    OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
-	    term_var->propagateUnify();
-	    propagateUnify();
-	    doBind(vptr, new_fset_var);
-	    doBind(tptr, new_fset_var);
-	    dispose(); 
-	    term_var->dispose(); 
-	  } else if (heapNewer(vptr, tptr)) { // bind var to term
-	    term_var->setSet(new_fset);
-	    propagateUnify();
-	    term_var->propagateUnify();
-	    relinkSuspListTo(term_var);
-	    doBind(vptr, makeTaggedRef(tptr));
-	    dispose();
-	  } else { // bind term to var
-	    setSet(new_fset);
-	    term_var->propagateUnify();
-	    propagateUnify();
-	    term_var->relinkSuspListTo(this);
-	    doBind(tptr, makeTaggedRef(vptr));
-	    term_var->dispose();
-	  }
-	  break;
-	} // TRUE + 2 * TRUE:
-      case TRUE + 2 * FALSE: // var is local and term is global
-	{
-	  if (((FSetConstraint *) t_fset)
-	      ->isWeakerThan(*((FSetConstraint *) &new_fset))) {
-	    if (new_fset.isValue()) {
-	      OZ_Term new_fset_var
-		= makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
-	      if (is_not_installing_script) term_var->propagateUnify();
-	      if (var_is_constrained) propagateUnify();
-	      doBind(vptr, new_fset_var);
-	      am.doBindAndTrail(tptr, new_fset_var);
-	      dispose();
-	    } else {
-	      setSet(new_fset);
-	      if (is_not_installing_script) term_var->propagateUnify();
-	      if (var_is_constrained) propagateUnify();
-	      DoBindAndTrailAndIP(tptr, makeTaggedRef(vptr),
-				  this, term_var);
-	    }
-	  } else {
-	    if (is_not_installing_script) term_var->propagateUnify();
-	    if (var_is_constrained) propagateUnify();
-	    relinkSuspListTo(term_var, TRUE);
-	    doBind(vptr, makeTaggedRef(tptr));
-	    dispose();
-	  }
-	  break;
-	} // TRUE + 2 * FALSE:
-      case FALSE + 2 * TRUE: // var is global and term is local
-	{
-	  if (((FSetConstraint *) fset)
-	      ->isWeakerThan(*((FSetConstraint *) &new_fset))) {
-	    if(new_fset.isValue()) {
-	      OZ_Term new_fset_var
-		= makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
-	      if (is_not_installing_script) propagateUnify();
-	      if (term_is_constrained) term_var->propagateUnify();
-	      doBind(tptr, new_fset_var);
-	      am.doBindAndTrail(vptr, new_fset_var);
-	      term_var->dispose();
-	    } else {
-	      term_var->setSet(new_fset);
-	      if (is_not_installing_script) propagateUnify();
-	      if (term_is_constrained) term_var->propagateUnify();
-	      DoBindAndTrailAndIP(vptr, makeTaggedRef(tptr),
-				  term_var, this);
-	    }
-	  } else {
-	    if (term_is_constrained) term_var->propagateUnify();
-	    if (is_not_installing_script) propagateUnify();
-	    term_var->relinkSuspListTo(this, TRUE);
-	    doBind(tptr, makeTaggedRef(vptr));
-	    term_var->dispose();
-	  }
-	  break;
-	} // FALSE + 2 * TRUE:
-      case FALSE + 2 * FALSE: // var and term is global
-	{
-	  if (new_fset.isValue()){
-	    OZ_Term new_fset_var
-	      = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
-	    if (scp==0) {
-	      if (var_is_constrained) propagateUnify();
-	      if (term_is_constrained) term_var->propagateUnify();
-	    }
-	    am.doBindAndTrail(vptr, new_fset_var);
-	    am.doBindAndTrail(tptr, new_fset_var);
-	  } else {
-	    OzFSVariable *c_var
-	      = new OzFSVariable(new_fset,oz_currentBoard());
-	    TaggedRef * var_val = newTaggedCVar(c_var);
-	    if (scp==0) {
-	      if (var_is_constrained) propagateUnify();
-	      if (term_is_constrained) term_var->propagateUnify();
-	    }
-	    DoBindAndTrailAndIP(vptr, makeTaggedRef(var_val),
-				c_var, this);
-	    DoBindAndTrailAndIP(tptr, makeTaggedRef(var_val),
-				c_var, term_var);
-	  }
-	  break;
-	} // FALSE + 2 * FALSE: 
-      default:
-	error("unexpected case in unifyFSet");
-	break;
-      } // switch (varIsLocal + 2 * termIsLocal) 
-      goto t;
-    } // case OZ_VAR_FS:
-    goto f;
-  } // if (tagged2CVar(term)->getType() == OZ_VAR_FS)
-
-  goto f;
-
-t:
 #ifdef DEBUG_FSUNIFY 
-  
+  (*cpi_cout) << " -> " <<  _fset.toString();
   (*cpi_cout) << toC(*vptr) << " true" << endl << flush;
 #endif
   return TRUE;
+}
 
-f:
+
+OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
+{
+  OZ_Term term = *tptr;
+  OzVariable *cv=tagged2CVar(term);
+  if (cv->getType() != OZ_VAR_FS) {
+  f:
 #ifdef DEBUG_FSUNIFY 
-  (*cpi_cout) << "false" << endl << flush;
+    (*cpi_cout) << "false" << endl << flush;
 #endif
-  return FALSE;
+    return FALSE;
+  }
+
+  OzFSVariable * term_var = (OzFSVariable *)cv;
+  OZ_FSetConstraint * t_fset = (OZ_FSetConstraint *) &term_var->getSet();
+  OZ_FSetConstraint * fset = (OZ_FSetConstraint *) &getSet();
+  OZ_FSetConstraint new_fset;
+
+#ifdef DEBUG_FSUNIFY 
+  (*cpi_cout) << "fsunify(var): (" << *fset << " = " << *t_fset << " )";
+#endif
+  new_fset = ((FSetConstraint *) t_fset)->unify(*(FSetConstraint *) fset);
+  if (new_fset.getCardMin() == -1)
+    goto f;
+
+#ifdef DEBUG_FSUNIFY 
+  (*cpi_cout) << " -> " << new_fset << " " << new_fset.isValue();
+#endif
+      
+  Bool var_is_local  = am.isLocalSVar(this);
+  Bool term_is_local = am.isLocalSVar(term_var);
+  Bool is_not_installing_script = !am.isInstallingScript();
+  Bool var_is_constrained
+    = (is_not_installing_script ||
+       ((FSetConstraint *) fset)
+       ->isWeakerThan(*((FSetConstraint *) &new_fset)));
+  Bool term_is_constrained
+    = (is_not_installing_script ||
+       ((FSetConstraint *) t_fset)
+       ->isWeakerThan(*((FSetConstraint *) &new_fset)));
+
+
+  switch (var_is_local + 2 * term_is_local) {
+  case TRUE + 2 * TRUE: // var and term are local
+    {
+      if (new_fset.isValue()) {
+	OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
+	term_var->propagateUnify();
+	propagateUnify();
+	doBind(vptr, new_fset_var);
+	doBind(tptr, new_fset_var);
+	dispose(); 
+	term_var->dispose(); 
+      } else if (heapNewer(vptr, tptr)) { // bind var to term
+	term_var->setSet(new_fset);
+	propagateUnify();
+	term_var->propagateUnify();
+	relinkSuspListTo(term_var);
+	doBind(vptr, makeTaggedRef(tptr));
+	dispose();
+      } else { // bind term to var
+	setSet(new_fset);
+	term_var->propagateUnify();
+	propagateUnify();
+	term_var->relinkSuspListTo(this);
+	doBind(tptr, makeTaggedRef(vptr));
+	term_var->dispose();
+      }
+      break;
+    } // TRUE + 2 * TRUE:
+  case TRUE + 2 * FALSE: // var is local and term is global
+    {
+      if (((FSetConstraint *) t_fset)
+	  ->isWeakerThan(*((FSetConstraint *) &new_fset))) {
+	if (new_fset.isValue()) {
+	  OZ_Term new_fset_var
+	    = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
+	  if (is_not_installing_script) term_var->propagateUnify();
+	  if (var_is_constrained) propagateUnify();
+	  doBind(vptr, new_fset_var);
+	  am.doBindAndTrail(tptr, new_fset_var);
+	  dispose();
+	} else {
+	  setSet(new_fset);
+	  if (is_not_installing_script) term_var->propagateUnify();
+	  if (var_is_constrained) propagateUnify();
+	  DoBindAndTrailAndIP(tptr, makeTaggedRef(vptr),
+			      this, term_var);
+	}
+      } else {
+	if (is_not_installing_script) term_var->propagateUnify();
+	if (var_is_constrained) propagateUnify();
+	relinkSuspListTo(term_var, TRUE);
+	doBind(vptr, makeTaggedRef(tptr));
+	dispose();
+      }
+      break;
+    } // TRUE + 2 * FALSE:
+  case FALSE + 2 * TRUE: // var is global and term is local
+    {
+      if (((FSetConstraint *) fset)
+	  ->isWeakerThan(*((FSetConstraint *) &new_fset))) {
+	if(new_fset.isValue()) {
+	  OZ_Term new_fset_var
+	    = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
+	  if (is_not_installing_script) propagateUnify();
+	  if (term_is_constrained) term_var->propagateUnify();
+	  doBind(tptr, new_fset_var);
+	  am.doBindAndTrail(vptr, new_fset_var);
+	  term_var->dispose();
+	} else {
+	  term_var->setSet(new_fset);
+	  if (is_not_installing_script) propagateUnify();
+	  if (term_is_constrained) term_var->propagateUnify();
+	  DoBindAndTrailAndIP(vptr, makeTaggedRef(tptr),
+			      term_var, this);
+	}
+      } else {
+	if (term_is_constrained) term_var->propagateUnify();
+	if (is_not_installing_script) propagateUnify();
+	term_var->relinkSuspListTo(this, TRUE);
+	doBind(tptr, makeTaggedRef(vptr));
+	term_var->dispose();
+      }
+      break;
+    } // FALSE + 2 * TRUE:
+  case FALSE + 2 * FALSE: // var and term is global
+    {
+      if (new_fset.isValue()){
+	OZ_Term new_fset_var
+	  = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
+	if (scp==0) {
+	  if (var_is_constrained) propagateUnify();
+	  if (term_is_constrained) term_var->propagateUnify();
+	}
+	am.doBindAndTrail(vptr, new_fset_var);
+	am.doBindAndTrail(tptr, new_fset_var);
+      } else {
+	OzFSVariable *c_var
+	  = new OzFSVariable(new_fset,oz_currentBoard());
+	TaggedRef * var_val = newTaggedCVar(c_var);
+	if (scp==0) {
+	  if (var_is_constrained) propagateUnify();
+	  if (term_is_constrained) term_var->propagateUnify();
+	}
+	DoBindAndTrailAndIP(vptr, makeTaggedRef(var_val),
+			    c_var, this);
+	DoBindAndTrailAndIP(tptr, makeTaggedRef(var_val),
+			    c_var, term_var);
+      }
+      break;
+    } // FALSE + 2 * FALSE: 
+  default:
+    error("unexpected case in unifyFSet");
+    break;
+  } // switch (varIsLocal + 2 * termIsLocal) 
+
+#ifdef DEBUG_FSUNIFY 
+  (*cpi_cout) << toC(*vptr) << " true" << endl << flush;
+#endif
+  return TRUE;
 }
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)

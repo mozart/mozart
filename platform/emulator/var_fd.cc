@@ -34,13 +34,41 @@
 #include "am.hh"
 #include "thr_int.hh"
 
+OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
+{
+  Assert(!oz_isRef(term));
+  if (!oz_isSmallInt(term)) return FAILED;
+  if (! finiteDomain.isIn(OZ_intToC(term))) {
+    return FAILED;
+  }
+
+  Bool isLocalVar = am.isLocalSVar(this);
+  Bool isNotInstallingScript = !am.isInstallingScript();
+
+#ifdef SCRIPTDEBUG
+  printf("fd-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
+#endif
+
+  if (scp==0 && (isNotInstallingScript || isLocalVar)) 
+    propagate(fd_prop_singl);
+
+  if (isLocalVar) {
+    doBind(vPtr, term);
+    dispose();
+  } else {
+    am.doBindAndTrail(vPtr, term);
+  }
+      
+  return PROCEED;
+}
+
 // unify expects either two OzFDVariables or at least one
 // OzFDVariable and one non-variable
 // invariant: left term (ie var)  == *this
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
+OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 {
 #ifdef SCRIPTDEBUG
   printf(am.isInstallingScript()
@@ -48,228 +76,198 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 	 : "fd NOT installing script\n");
   fflush(stdout);
 #endif
-
-  if (oz_isSmallInt(term)) {
-    if (! finiteDomain.isIn(OZ_intToC(term))) {
-      return FALSE;
-    }
-
-    Bool isLocalVar = am.isLocalSVar(this);
-    Bool isNotInstallingScript = !am.isInstallingScript();
-
-#ifdef SCRIPTDEBUG
-    printf("fd-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
-#endif
-
-    if (scp==0 && (isNotInstallingScript || isLocalVar)) 
-      propagate(fd_prop_singl);
-
-    if (isLocalVar) {
-      doBind(vPtr, term);
-      dispose();
-    } else {
-      am.doBindAndTrail(vPtr, term);
-    }
-      
-    return TRUE;
-  }
     
-  if (oz_isRef(term)) {
-    TaggedRef *tPtr = tagged2Ref(term);
-    term = *tPtr;
-    OzVariable *cv=tagged2CVar(term);
-    if (cv->getType()!=OZ_VAR_FD) return FAILED;
+  TaggedRef term = *tPtr;
+  OzVariable *cv=tagged2CVar(term);
+  if (cv->getType()!=OZ_VAR_FD) return FAILED;
 
-    // compute intersection of domains ...
-    OzFDVariable * termVar = (OzFDVariable *)cv;
-    OZ_FiniteDomain &termDom = termVar->finiteDomain;
-    OZ_FiniteDomain intsct;
+  // compute intersection of domains ...
+  OzFDVariable * termVar = (OzFDVariable *)cv;
+  OZ_FiniteDomain &termDom = termVar->finiteDomain;
+  OZ_FiniteDomain intsct;
 
-    if ((intsct = finiteDomain & termDom) == fd_empty) {
-      return FALSE;
-    }
+  if ((intsct = finiteDomain & termDom) == fd_empty) {
+    return FALSE;
+  }
 
-    // bind - trail - propagate
-    Bool varIsLocal =  am.isLocalSVar(this);
-    Bool termIsLocal = am.isLocalSVar(termVar);
+  // bind - trail - propagate
+  Bool varIsLocal =  am.isLocalSVar(this);
+  Bool termIsLocal = am.isLocalSVar(termVar);
 
-    Bool isNotInstallingScript = !am.isInstallingScript();
-    Bool varIsConstrained = isNotInstallingScript ||
-      (intsct.getSize() < finiteDomain.getSize());
-    Bool termIsConstrained = isNotInstallingScript ||
-      (intsct.getSize() < termDom.getSize());
+  Bool isNotInstallingScript = !am.isInstallingScript();
+  Bool varIsConstrained = isNotInstallingScript ||
+    (intsct.getSize() < finiteDomain.getSize());
+  Bool termIsConstrained = isNotInstallingScript ||
+    (intsct.getSize() < termDom.getSize());
 
-    switch (varIsLocal + 2 * termIsLocal) {
-    case TRUE + 2 * TRUE: // var and term are local
-      {
+  switch (varIsLocal + 2 * termIsLocal) {
+  case TRUE + 2 * TRUE: // var and term are local
+    {
 #ifdef SCRIPTDEBUG
-	printf("fd-fd local local\n"); fflush(stdout);
+      printf("fd-fd local local\n"); fflush(stdout);
 #endif
-	if (intsct == fd_singl) {
-	  TaggedRef int_var = OZ_int(intsct.getSingleElem());
+      if (intsct == fd_singl) {
+	TaggedRef int_var = OZ_int(intsct.getSingleElem());
+	termVar->propagateUnify();
+	propagateUnify();
+	doBind(vPtr, int_var);
+	doBind(tPtr, int_var);
+	dispose();
+	termVar->dispose();
+      } else if (heapNewer(vPtr, tPtr)) { // bind var to term
+	if (intsct == fd_bool) {
+	  OzBoolVariable * tbvar = termVar->becomesBool();
+	  propagateUnify();
+	  tbvar->propagateUnify();
+	  relinkSuspListTo(tbvar);
+	  doBind(vPtr, makeTaggedRef(tPtr));
+	} else {
+	  termVar->setDom(intsct);
+	  propagateUnify();
+	  termVar->propagateUnify();
+	  relinkSuspListTo(termVar);
+	  doBind(vPtr, makeTaggedRef(tPtr));
+	}
+	dispose();
+      } else { // bind term to var
+	if (intsct == fd_bool) {
+	  OzBoolVariable * bvar = becomesBool();
+	  termVar->propagateUnify();
+	  bvar->propagateUnify();
+	  termVar->relinkSuspListTo(bvar);
+	  doBind(tPtr, makeTaggedRef(vPtr));
+	} else {
+	  setDom(intsct);
 	  termVar->propagateUnify();
 	  propagateUnify();
-	  doBind(vPtr, int_var);
-	  doBind(tPtr, int_var);
-	  dispose();
-	  termVar->dispose();
-	} else if (heapNewer(vPtr, tPtr)) { // bind var to term
-	  if (intsct == fd_bool) {
-	    OzBoolVariable * tbvar = termVar->becomesBool();
-	    propagateUnify();
-	    tbvar->propagateUnify();
-	    relinkSuspListTo(tbvar);
-	    doBind(vPtr, makeTaggedRef(tPtr));
-	  } else {
-	    termVar->setDom(intsct);
-	    propagateUnify();
-	    termVar->propagateUnify();
-	    relinkSuspListTo(termVar);
-	    doBind(vPtr, makeTaggedRef(tPtr));
-	  }
-	  dispose();
-	} else { // bind term to var
-	  if (intsct == fd_bool) {
-	    OzBoolVariable * bvar = becomesBool();
-	    termVar->propagateUnify();
-	    bvar->propagateUnify();
-	    termVar->relinkSuspListTo(bvar);
-	    doBind(tPtr, makeTaggedRef(vPtr));
-	  } else {
-	    setDom(intsct);
-	    termVar->propagateUnify();
-	    propagateUnify();
-	    termVar->relinkSuspListTo(this);
-	    doBind(tPtr, makeTaggedRef(vPtr));
-	  }
-	  termVar->dispose();
+	  termVar->relinkSuspListTo(this);
+	  doBind(tPtr, makeTaggedRef(vPtr));
 	}
-	break;
+	termVar->dispose();
       }
-    case TRUE + 2 * FALSE: // var is local and term is global
-      {
+      break;
+    }
+  case TRUE + 2 * FALSE: // var is local and term is global
+    {
 #ifdef SCRIPTDEBUG
-	printf("fd-fd local global\n"); fflush(stdout);
+      printf("fd-fd local global\n"); fflush(stdout);
 #endif
-	if (intsct.getSize() != termDom.getSize()){
-	  if (intsct == fd_singl) {
-	    TaggedRef int_var = OZ_int(intsct.getSingleElem());
-	    if (isNotInstallingScript) termVar->propagateUnify();
-	    if (varIsConstrained) propagateUnify();
-	    doBind(vPtr, int_var);
-	    am.doBindAndTrail(tPtr, int_var);
-	    dispose();
-	  } else {
-	    if (intsct == fd_bool) {
-	      OzBoolVariable * bvar = becomesBool();
-	      if (isNotInstallingScript) termVar->propagateUnify();
-	      if (varIsConstrained) bvar->propagateUnify();
-	      DoBindAndTrailAndIP(tPtr, makeTaggedRef(vPtr),
-				  bvar, termVar);
-	    } else {
-	      setDom(intsct);
-	      if (isNotInstallingScript) termVar->propagateUnify();
-	      if (varIsConstrained) propagateUnify();
-	      DoBindAndTrailAndIP(tPtr, makeTaggedRef(vPtr),
-				  this, termVar);
-	    }
-	  }
-	} else {
+      if (intsct.getSize() != termDom.getSize()){
+	if (intsct == fd_singl) {
+	  TaggedRef int_var = OZ_int(intsct.getSingleElem());
 	  if (isNotInstallingScript) termVar->propagateUnify();
 	  if (varIsConstrained) propagateUnify();
-	  relinkSuspListTo(termVar, TRUE);
-	  doBind(vPtr, makeTaggedRef(tPtr));
+	  doBind(vPtr, int_var);
+	  am.doBindAndTrail(tPtr, int_var);
 	  dispose();
+	} else {
+	  if (intsct == fd_bool) {
+	    OzBoolVariable * bvar = becomesBool();
+	    if (isNotInstallingScript) termVar->propagateUnify();
+	    if (varIsConstrained) bvar->propagateUnify();
+	    DoBindAndTrailAndIP(tPtr, makeTaggedRef(vPtr),
+				bvar, termVar);
+	  } else {
+	    setDom(intsct);
+	    if (isNotInstallingScript) termVar->propagateUnify();
+	    if (varIsConstrained) propagateUnify();
+	    DoBindAndTrailAndIP(tPtr, makeTaggedRef(vPtr),
+				this, termVar);
+	  }
 	}
-	break;
+      } else {
+	if (isNotInstallingScript) termVar->propagateUnify();
+	if (varIsConstrained) propagateUnify();
+	relinkSuspListTo(termVar, TRUE);
+	doBind(vPtr, makeTaggedRef(tPtr));
+	dispose();
       }
-    case FALSE + 2 * TRUE: // var is global and term is local
-      {
+      break;
+    }
+  case FALSE + 2 * TRUE: // var is global and term is local
+    {
 #ifdef SCRIPTDEBUG
-	printf("fd-fd global local\n"); fflush(stdout);
+      printf("fd-fd global local\n"); fflush(stdout);
 #endif
-	if (intsct.getSize() != finiteDomain.getSize()){
-	  if(intsct == fd_singl) {
-	    TaggedRef int_term = OZ_int(intsct.getSingleElem());
+      if (intsct.getSize() != finiteDomain.getSize()){
+	if(intsct == fd_singl) {
+	  TaggedRef int_term = OZ_int(intsct.getSingleElem());
+	  if (isNotInstallingScript) propagateUnify();
+	  if (termIsConstrained) termVar->propagateUnify();
+	  doBind(tPtr, int_term);
+	  am.doBindAndTrail(vPtr, int_term);
+	  termVar->dispose();
+	} else {
+	  if (intsct == fd_bool) {
+	    OzBoolVariable * tbvar = termVar->becomesBool();
+	    if (isNotInstallingScript) propagateUnify();
+	    if (termIsConstrained) tbvar->propagateUnify();
+	    DoBindAndTrailAndIP(vPtr, makeTaggedRef(tPtr),
+				tbvar, this);
+	  } else {
+	    termVar->setDom(intsct);
 	    if (isNotInstallingScript) propagateUnify();
 	    if (termIsConstrained) termVar->propagateUnify();
-	    doBind(tPtr, int_term);
-	    am.doBindAndTrail(vPtr, int_term);
-	    termVar->dispose();
-	  } else {
-	    if (intsct == fd_bool) {
-	      OzBoolVariable * tbvar = termVar->becomesBool();
-	      if (isNotInstallingScript) propagateUnify();
-	      if (termIsConstrained) tbvar->propagateUnify();
-	      DoBindAndTrailAndIP(vPtr, makeTaggedRef(tPtr),
-				     tbvar, this);
-	    } else {
-	      termVar->setDom(intsct);
-	      if (isNotInstallingScript) propagateUnify();
-	      if (termIsConstrained) termVar->propagateUnify();
-	      DoBindAndTrailAndIP(vPtr, makeTaggedRef(tPtr),
-				  termVar, this);
-	    }
+	    DoBindAndTrailAndIP(vPtr, makeTaggedRef(tPtr),
+				termVar, this);
 	  }
-	} else {
-	  if (termIsConstrained) termVar->propagateUnify();
-	  if (isNotInstallingScript) propagateUnify();
-	  termVar->relinkSuspListTo(this, TRUE);
-	  doBind(tPtr, makeTaggedRef(vPtr));
-	  termVar->dispose();
 	}
-	break;
+      } else {
+	if (termIsConstrained) termVar->propagateUnify();
+	if (isNotInstallingScript) propagateUnify();
+	termVar->relinkSuspListTo(this, TRUE);
+	doBind(tPtr, makeTaggedRef(vPtr));
+	termVar->dispose();
       }
-    case FALSE + 2 * FALSE: // var and term is global
-      {
+      break;
+    }
+  case FALSE + 2 * FALSE: // var and term is global
+    {
 #ifdef SCRIPTDEBUG
-	printf("fd-fd global global\n"); fflush(stdout);
+      printf("fd-fd global global\n"); fflush(stdout);
 #endif
-	if (intsct == fd_singl){
-	  TaggedRef int_val = OZ_int(intsct.getSingleElem());
+      if (intsct == fd_singl){
+	TaggedRef int_val = OZ_int(intsct.getSingleElem());
+	if (scp==0) {
+	  if (varIsConstrained) propagateUnify();
+	  if (termIsConstrained) termVar->propagateUnify();
+	}
+	am.doBindAndTrail(vPtr, int_val);
+	am.doBindAndTrail(tPtr, int_val);
+      } else {
+	if (intsct == fd_bool) {
+	  OzBoolVariable * c_var
+	    = new OzBoolVariable(oz_currentBoard());
+	  TaggedRef * var_val = newTaggedCVar(c_var);
 	  if (scp==0) {
 	    if (varIsConstrained) propagateUnify();
 	    if (termIsConstrained) termVar->propagateUnify();
 	  }
-	  am.doBindAndTrail(vPtr, int_val);
-	  am.doBindAndTrail(tPtr, int_val);
+	  DoBindAndTrailAndIP(vPtr, makeTaggedRef(var_val),
+			      c_var, this);
+	  DoBindAndTrailAndIP(tPtr, makeTaggedRef(var_val),
+			      c_var, termVar);
 	} else {
-	  if (intsct == fd_bool) {
-	    OzBoolVariable * c_var
-	      = new OzBoolVariable(oz_currentBoard());
-	    TaggedRef * var_val = newTaggedCVar(c_var);
-	    if (scp==0) {
-	      if (varIsConstrained) propagateUnify();
-	      if (termIsConstrained) termVar->propagateUnify();
-	    }
-	    DoBindAndTrailAndIP(vPtr, makeTaggedRef(var_val),
-				c_var, this);
-	    DoBindAndTrailAndIP(tPtr, makeTaggedRef(var_val),
-				c_var, termVar);
-	  } else {
-	    OzFDVariable * c_var
-	      = new OzFDVariable(intsct,oz_currentBoard());
-	    TaggedRef * var_val = newTaggedCVar(c_var);
-	    if (scp==0) {
-	      if (varIsConstrained) propagateUnify();
-	      if (termIsConstrained) termVar->propagateUnify();
-	    }
-	    DoBindAndTrailAndIP(vPtr, makeTaggedRef(var_val),
-				c_var, this);
-	    DoBindAndTrailAndIP(tPtr, makeTaggedRef(var_val),
-				c_var, termVar);
+	  OzFDVariable * c_var
+	    = new OzFDVariable(intsct,oz_currentBoard());
+	  TaggedRef * var_val = newTaggedCVar(c_var);
+	  if (scp==0) {
+	    if (varIsConstrained) propagateUnify();
+	    if (termIsConstrained) termVar->propagateUnify();
 	  }
+	  DoBindAndTrailAndIP(vPtr, makeTaggedRef(var_val),
+			      c_var, this);
+	  DoBindAndTrailAndIP(tPtr, makeTaggedRef(var_val),
+			      c_var, termVar);
 	}
-	break;
       }
-    default:
-      error("unexpected case in FD::unify");
       break;
-    } // switch (varIsLocal + 2 * termIsLocal) {
-    return TRUE;
-  }
-
-  return FALSE;  
+    }
+  default:
+    error("unexpected case in FD::unify");
+    break;
+  } // switch (varIsLocal + 2 * termIsLocal) {
+  return TRUE;
 } // OzFDVariable::unify
 
 Bool OzFDVariable::valid(TaggedRef val)
