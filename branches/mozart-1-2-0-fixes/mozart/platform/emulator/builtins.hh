@@ -247,6 +247,27 @@ int VAR;					\
   }                                             \
 }
 
+#define oz_declareSmallIntIN(ARG,VAR) \
+int VAR;					\
+{						\
+  register OZ_Term _VAR = OZ_in(ARG);           \
+  while (OK) {                                  \
+    if (oz_isSmallInt(_VAR)) {                  \
+      VAR = tagged2SmallInt(_VAR);              \
+      break;                                    \
+    }                                           \
+    if (oz_isRef(_VAR)) {                       \
+      _VAR = * tagged2Ref(_VAR);                \
+      continue;                                 \
+    }                                           \
+    Assert(!oz_isRef(_VAR));			\
+    if (oz_isVarOrRef(_VAR)) {                  \
+      oz_suspendOn(OZ_in(ARG));			\
+    }                                           \
+    oz_typeError(ARG, "Small Int");             \
+  }                                             \
+}
+
 #define oz_declareBoolIN(ARG,VAR) \
 Bool VAR;					\
 {						\
