@@ -101,17 +101,16 @@ local
 				  fg:BlockedThreadColor
 				  text:'Compile Error')}
 		  {System.printInfo {C getVS($)}}
-	       else R R0 in
+	       else R Sync in
 		  thread try
-			    R  = {{C getEnv($)}.'`result`' Self}
-			    R0 = R
+			    R = {{C getEnv($)}.'`result`' Self}
 			 finally
-			    R0 = case {IsFree R} then unit else R end
+			    Sync = unit
 			 end
 		  end
 		  {Thread.preempt {Thread.this}}
-		  {Dots self.Result R0}
-		  {self.Result tk(conf text:{V2VS R0})}
+		  {Dots self.Result Sync}
+		  {self.Result tk(conf text:{V2VS R})}
 	       end
 	       EvalThread <- unit
 	    else
