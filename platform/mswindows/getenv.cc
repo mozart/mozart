@@ -23,13 +23,12 @@
 
 #include "startup.hh"
 
-bool console = false;
-
-int WINAPI
-WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
-	LPSTR /*lpszCmdLine*/, int /*nCmdShow*/)
+char *ozGetenv(const char *var)
 {
-  publishPid();
-
-  return createProcess(makeCmdLine(false));
+  static char buffer[2048];
+  int n = GetEnvironmentVariable(var,buffer,sizeof(buffer));
+  if (n == 0 || n > sizeof(buffer))
+    return NULL;
+  else
+    return buffer;
 }

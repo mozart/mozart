@@ -1,55 +1,50 @@
 /*
- *  Authors:
- *    Ralf Scheidhauer (scheidhr@dfki.de)
- * 
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *  Author:
+ *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Leif Kornstaedt, 1999
  * 
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
  * 
- *  This file is part of Mozart, an implementation 
- *  of Oz 3:
- *     http://www.mozart-oz.org
+ *  This file is part of Mozart, an implementation of Oz 3:
+ *    http://www.mozart-oz.org
  * 
  *  See the file "LICENSE" or
- *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *    http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
- *
  */
 
-
-/*
- * wrapper for syslets. Does something like
- *     "exec ozengine $0 $@"
- */
-
-#include <string.h>
 #include <windows.h>
-#include <process.h>
+#include <string.h>
 
-void main(int argc, char **argv)
+#include "startup.hh"
+
+bool console = true;
+
+int main(int argc, char **argv)
 {
-  char buffer[5000];
-  buffer[0] = '"';
-  GetModuleFileName(NULL, &buffer[1], sizeof(buffer) - 2);
-  strcat(buffer, "\"");
+  publishPid();
 
-  char **newargs = new char*[argc+1];
+  char *cmdline = makeCmdLine(true);
 
-  newargs[0] = "ozengine";
-  newargs[1] = buffer;
-  int i=2;
-  for(; i<=argc; i++) {
-    newargs[i] = argv[i-1];
+  STARTUPINFO si;
+  ZeroMemory(&si,sizeof(si));
+  si.cb = sizeof(si);
+  PROCESS_INFORMATION pi;
+  BOOL ret = CreateProcess(NULL,cmdline,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
+  if (ret == FALSE) {
+    panic(true,"Cannot run '%s'.\n",cmdline);
   }
-  newargs[i] = 0;
+  WaitForSingleObject(pi.hProcess,INFINITE);
 
-  return spawnvp(P_WAIT,newargs[0],newargs);
+  DWORD code;
+  if (GetExitCodeProcess(pi.hProcess,&code) != FALSE)
+    return code;
+  else
+    return 0;
 }
