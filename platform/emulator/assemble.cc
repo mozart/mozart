@@ -19,7 +19,7 @@ OZ_C_proc_begin(BIstringToOp,2)
   OZ_Term out = OZ_getCArg(1);
 
   Opcode oc = CodeArea::stringToOp(str);
-  if (oc == ERROR) {
+  if (oc == OZERROR) {
     return OZ_unifyInt(out,-1);
   } else {
     return OZ_unifyInt(out,(int)oc);
@@ -34,7 +34,7 @@ OZ_C_proc_begin(BIsizeOfOp,2)
   OZ_declareIntArg("sizeOfOp",0,opcode);
   OZ_Term out = OZ_getCArg(1);
 
-  if (opcode > (int) ERROR || opcode < 0) {
+  if (opcode > (int) OZERROR || opcode < 0) {
     return OZ_unifyInt(out,-1);
   }
 
