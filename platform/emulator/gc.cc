@@ -532,20 +532,20 @@ Abstraction *gcAbstraction(Abstraction *a) {
 
 inline
 int NEEDSCOPYING(Board * bb) {
- Assert(isInGc ? !bb->isMarkedGlobal() : 1);
- return !bb->isMarkedGlobal();
+ Assert(isInGc ? !bb->hasMarkOne() : 1);
+ return !bb->hasMarkOne();
 }
 
 #else
 
-#define NEEDSCOPYING(bb) (!(bb)->isMarkedGlobal())
+#define NEEDSCOPYING(bb) (!(bb)->hasMarkOne())
 
 #endif
 
 
 inline
 Bool Board::gcIsMarked(void) {
-  return IsMarkedPointer(suspList,1);
+  return hasMarkTwo();
 }
 
 inline
@@ -556,7 +556,7 @@ Bool Board::gcIsAlive() {
     if (bb->isFailed())
       return NO;
 
-    if (bb->isRoot() || bb->gcIsMarked() || bb->isMarkedGlobal())
+    if (bb->isRoot() || bb->hasMarkOne() || bb->hasMarkTwo())
       return OK;
 
     bb = bb->getParent();
@@ -568,14 +568,14 @@ inline
 void Board::gcMark(Board * fwd) {
   Assert(!gcIsMarked());
   if (!isInGc)
-    cpTrail.save((int32 *) &suspList);
-  suspList = (SuspList *) MarkPointer(fwd,1);
+    cpTrail.save((int32 *) &parentAndFlags);
+  parentAndFlags.set((void *) fwd, BoTag_MarkTwo);
 }
 
 inline
 Board * Board::gcGetFwd(void) {
   Assert(gcIsMarked());
-  return (Board *) UnMarkPointer(suspList,1);
+  return getParentInternal();
 }
 
 inline
@@ -583,7 +583,7 @@ Board * Board::gcBoard() {
   GCDBG_INFROMSPACE(this);
 
   // Do not clone a space above or collect a space above root ;-(
-  Assert(this && !isMarkedGlobal());
+  Assert(this && !hasMarkOne());
 
   Board * bb = derefBoard();
 
@@ -623,7 +623,7 @@ Name *Name::gcName() {
     gn = getGName1();
   }
 
-  if (isInGc && isOnHeap() || !isInGc && !getBoardInternal()->isMarkedGlobal()) {
+  if (isInGc && isOnHeap() || !isInGc && !getBoardInternal()->hasMarkOne()) {
 
     Name *aux = (Name*) gcReallocStatic(this,sizeof(Name));
 
@@ -757,7 +757,7 @@ Propagator * Propagator::gcPropagator(void)
   if (bb && bb->gcIsAlive()) {
     Assert(isInGc || (!isRunnable()));
 
-    Assert(!bb->derefBoard()->isMarkedGlobal());
+    Assert(!bb->derefBoard()->hasMarkOne());
 
     Propagator * newPropagator
       = (Propagator *) heapMalloc(sizeof(Propagator));
@@ -1404,7 +1404,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
             return;
           }
 
-          Assert(isInGc || !bb->isMarkedGlobal());
+          Assert(isInGc || !bb->hasMarkOne());
 
           bb = bb->gcBoard();
 
@@ -1497,7 +1497,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
       Assert(bb);
 
       if (NEEDSCOPYING(bb)) {
-        Assert(isInGc || !bb->isMarkedGlobal());
+        Assert(isInGc || !bb->hasMarkOne());
         bb = bb->gcBoard();
         Assert(bb);
         to = makeTaggedUVar(bb);
@@ -1695,7 +1695,7 @@ static Bool across_redid = NO;
  * test does not do a dereference!
  *
  */
-inline
+
 void Board::setGlobalMarks(void) {
   Assert(!isRoot());
 
@@ -1703,8 +1703,8 @@ void Board::setGlobalMarks(void) {
 
   do {
     b = b->getParentInternal();
-    Assert(!b->isMarkedGlobal());
-    b->setGlobalMark();
+    Assert(!b->hasMarkOne());
+    b->setMarkOne();
   } while (!b->isRoot());
 
 }
@@ -1712,7 +1712,7 @@ void Board::setGlobalMarks(void) {
 /*
  * Purge marks after copying
  */
-inline
+
 void Board::unsetGlobalMarks(void) {
   Assert(!isRoot());
 
@@ -1720,8 +1720,8 @@ void Board::unsetGlobalMarks(void) {
 
   do {
     b = b->getParentInternal();
-    Assert(b->isMarkedGlobal());
-    b->unsetGlobalMark();
+    Assert(b->hasMarkOne());
+    b->unsetMarkOne();
   } while (!b->isRoot());
 
 }
@@ -2468,8 +2468,8 @@ void Board::gcRecurse() {
 
   // Do not recurse over root board (be it the global one or
   // the root board for cloning!)
-  if (!isRoot() && !getParentInternal()->isMarkedGlobal())
-    setParentInternal(getParentInternal()->gcBoard());
+  if (!isRoot() && !getParentInternal()->hasMarkOne())
+    parentAndFlags.set(getParentInternal()->gcBoard(),0);
 
   localPropagatorQueue = localPropagatorQueue->gc();
 

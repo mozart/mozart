@@ -1019,6 +1019,19 @@ public:
     tagged = (val<<tagged4Bits) | tag;
   }
 
+  void setTag(int tag) {
+    checkTag(tag);
+    tagged = (tagged & ~tagged4Mask) | tag;
+  }
+  void borTag(int tag) {
+    checkTag(tag);
+    tagged = tagged | tag;
+  }
+  void bandTag(int tag) {
+    checkTag(tag);
+    tagged = tagged & (tag | ~tagged4Mask);
+  }
+
   uint32* getRef() { return &tagged; }
   int     getTag() { return (tagged&tagged4Mask); }
   uint32  getData(){ return tagged>>tagged4Bits; }

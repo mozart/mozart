@@ -75,10 +75,22 @@ private:
 };
 
 
+enum BoardTags {
+  BoTag_Root       = 1,
+  BoTag_Failed     = 2,
+  BoTag_Committed  = 3,
+  BoTag_MarkOne    = 4,
+  BoTag_MarkTwo    = 8
+};
+
+#define BoTag_StatusMask 3
+#define BoTag_AllMask    15
+
 class Board {
 friend int engine(Bool init);
 public:
   NO_DEFAULT_CONSTRUCTORS(Board);
+  Board(void);
   Board(Board *b);
 
   USEHEAPMEMORY;
@@ -87,30 +99,63 @@ public:
   // Home and parent access
   //
 private:
-  void * parent;
+  Tagged4 parentAndFlags;
 
 public:
-  int isCommitted(void) {
-    return IsMarkedPointer(parent,1);
-  }
-  void setCommitted(void) {
-    parent = MarkPointer(parent,1);
+  //
+  // State of the space
+  //
+  int isRoot(void) {
+    return (parentAndFlags.getTag() & BoTag_StatusMask) == BoTag_Root;
   }
   int isFailed(void) {
-    return IsMarkedPointer(parent,2);
+    return (parentAndFlags.getTag() & BoTag_StatusMask) == BoTag_Failed;
+  }
+  int isCommitted(void) {
+    return (parentAndFlags.getTag() & BoTag_StatusMask) == BoTag_Committed;
+  }
+
+  void setCommitted(Board * b) {
+    Assert(parentAndFlags.getTag() == 0);
+    parentAndFlags.set((void *) b, BoTag_Committed);
   }
   void setFailed(void) {
-    parent = MarkPointer(parent,2);
+    Assert(parentAndFlags.getTag() == 0);
+    parentAndFlags.setTag(BoTag_Failed);
   }
+
+  //
+  // Various marks needed during installation, cloning and garbage
+  // collection
+  //
+
+  int hasMarkOne(void) {
+    return parentAndFlags.getTag() & BoTag_MarkOne;
+  }
+  int hasMarkTwo(void) {
+    return parentAndFlags.getTag() & BoTag_MarkTwo;
+  }
+
+  void setMarkOne(void) {
+    parentAndFlags.borTag(BoTag_MarkOne);
+  }
+  void setMarkTwo(void) {
+    parentAndFlags.borTag(BoTag_MarkTwo);
+  }
+
+  void unsetMarkOne(void) {
+    parentAndFlags.bandTag((~BoTag_MarkOne) & BoTag_AllMask);
+  }
+  void unsetMarkTwo(void) {
+    parentAndFlags.bandTag((~BoTag_MarkTwo) & BoTag_AllMask);
+  }
+
+
+  //
+  // Parent access
+  //
   Board * getParentInternal(void) {
-    return (Board *) UnMarkPointer(parent,3);
-  }
-  void setParentInternal(Board * p) {
-    parent = (void *) p;
-  }
-  Bool isRoot() {
-    Assert(UnMarkPointer(parent,3) || (!isCommitted() && !isFailed()));
-    return !parent;
+    return (Board *) parentAndFlags.getPtr();
   }
   Board *derefBoard() {
     Board *bb;
@@ -256,39 +301,14 @@ public:
   // distributors
   //
 private:
-  void * bag;
-
-  //
-  // Installation and global marks
-  //
-public:
-  int isMarkedAsInstalled(void) {
-    return IsMarkedPointer(bag,1);
-  }
-  void markAsInstalled(void) {
-    bag = MarkPointer(bag,1);
-  }
-  void unMarkAsInstalled() {
-    bag = UnMarkPointer(bag,1);
-  }
-  int isMarkedGlobal(void) {
-    return IsMarkedPointer(bag,1);
-  }
-  void setGlobalMark(void) {
-    bag = MarkPointer(bag,1);
-  }
-  void unsetGlobalMark() {
-    bag = UnMarkPointer(bag,1);
-  }
+  DistBag * bag;
 
 public:
   DistBag * getDistBag(void) {
-    Assert(!isMarkedAsInstalled() && !isMarkedGlobal());
-    return (DistBag *) bag;
+    return bag;
   }
   void setDistBag(DistBag * db) {
-    Assert(!isMarkedAsInstalled() && !isMarkedGlobal());
-    bag = (void *) db;
+    bag = db;
   }
   void addToDistBag(Distributor * d);
   Distributor * getDistributor(void);
