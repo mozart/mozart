@@ -137,6 +137,10 @@ SPAN.BIBAUTHOR {
   font-style:italic;
 }
 
+SPAN.VERSION {
+  font-size:10pt;
+}
+
 P.LI {
   margin-top:0px;
   margin-bottom:0px;

@@ -27,7 +27,7 @@ functor
 import
    %% System Modules
    Property(get)
-   OS(system localTime)
+   OS(system)
    Narrator('class')
    ErrorListener('class')
    %% Application Modules
@@ -146,34 +146,6 @@ define
 	    {FormatTOCLevel NewTOC N nil nil}
 	 [] nil then SEQ(nil)
 	 end
-      end
-   end
-
-   local
-      WeekDays = weekDays('Sunday' 'Monday' 'Tuesday' 'Wednesday'
-			  'Thursday' 'Friday' 'Saturday')
-
-      Months = months('January' 'February' 'March' 'April' 'May' 'June'
-		      'July' 'August' 'September' 'October' 'November'
-		      'December')
-
-      Ordinals = ordinals(1: 'st' 2: 'nd' 3: 'rd'
-			  21: 'st' 22: 'nd' 23: 'rd' 31: 'st')
-
-      fun {TwoDig N}
-	 if N < 10 then '0'#N
-	 else N
-	 end
-      end
-   in
-      fun {FormatDate Date}
-	 WeekDays.(Date.wDay + 1)#', '#
-	 Months.(Date.mon + 1)#' '#
-	 Date.mDay#{CondSelect Ordinals Date.mDay 'th'}#' '#
-	 (Date.year + 1900)#', '#
-	 {TwoDig Date.hour}#':'#
-	 {TwoDig Date.min}#':'#
-	 {TwoDig Date.sec}
       end
    end
 
@@ -1793,8 +1765,12 @@ define
 				       OzDocToHTML, FormatAuthors(@Authors ?As)
 				       SEQ([As br()])
 				    end
-				    PCDATA('Generated on '#
-					   {FormatDate {OS.localTime}}))))
+				    span('class':[version]
+					 PCDATA('Version: '#
+						{Property.get 'oz.version'}#
+						' ('#
+						{Property.get 'oz.date'}#
+						')')))))
 	 ToWrite <- (('<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n')#Node#
 		     (@OutputDirectory#'/'#@CurrentNode))|@ToWrite
       end
