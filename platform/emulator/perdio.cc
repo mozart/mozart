@@ -123,7 +123,7 @@ public:
 
   Bool same(NetAddress *na) { return na->site==site && na->index==index; }
 
-  Bool isLocal() { return site==localSite; }
+  Bool isLocal() { return ipIsLocal(site); }
 };
 
 
@@ -1523,7 +1523,7 @@ void marshallSite(int sd,ByteStream *bs){
 
 inline
 void marshallMySite(ByteStream *bs){
-  marshallSite(localSite,bs);}
+  marshallSite(lookupLocalSite(),bs);}
 
 inline
 void marshallNetAddress2(int site,int index,ByteStream *bs){
@@ -1550,7 +1550,7 @@ void marshallOwnHead(int tag,int i,ByteStream *bs){
   bs->put(tag);
 
   OwnerEntry *o=ownerTable->getOwner(i);
-  marshallNetAddress2(localSite,i,bs);
+  marshallNetAddress2(lookupLocalSite(),i,bs);
   marshallNumber(o->getSendCredit(),bs);
   PERDIO_DEBUG2(MARSHALL,"MARSHALL:owned=%d remCredit=%d ",i,o->getCredit());
 }
@@ -1596,7 +1596,7 @@ Bool unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   int si=unmarshallNumber(bs);
   Credit cred = unmarshallCredit(bs);
   PERDIO_DEBUG3(UNMARSHALL,"UNMARSHALL:borrowed sd:%d si=%d cr=%d",sd,si,cred);
-  if (sd==localSite) {
+  if (ipIsLocal(sd)) {
     OwnerEntry *o = ownerTable->getOwner(si);
     o->returnCredit(cred);
     ob=o;
@@ -2142,7 +2142,7 @@ void siteReceive(BYTE *msg,int len)
       Credit c= o->giveMoreCredit();
       ByteStream *bs1=new ByteStream();
       bs1->put(BORROW_CREDIT);
-      NetAddress na = NetAddress(localSite,na_index);
+      NetAddress na = NetAddress(lookupLocalSite(),na_index);
       marshallNetAddress(&na,bs1);
       marshallCredit(c,bs1);
       PERDIO_DEBUG1(MSG_SENT,"MSG_SENT:BORROW_CREDIT %d",c);
@@ -2192,7 +2192,7 @@ void siteReceive(BYTE *msg,int len)
 
       ByteStream *bs1=new ByteStream();
       bs1->put(SEND_CODE);
-      NetAddress na = NetAddress(localSite,na_index);
+      NetAddress na = NetAddress(lookupLocalSite(),na_index);
       marshallNetAddress(&na,bs1);
 
       refCounter = 0;
@@ -2347,8 +2347,15 @@ void getCode(ProcProxy *pp)
 /*              BUILTINS themselves                                       */
 /* ********************************************************************** */
 
+#define CHECK_INIT                                              \
+  if (!ipIsInit()) {                                            \
+    return am.raise(E_ERROR,OZ_atom("ip"),"uninitialized",0);   \
+  }
+
 OZ_C_proc_begin(BIreliableSend3,3)
 {
+  CHECK_INIT;
+
   PERDIO_DEBUG(SEND_EMIT,"SEND_EMIT:reliable send3");
   OZ_declareIntArg(0,sd);
   OZ_declareArg(1,value);
@@ -2363,6 +2370,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIreliableSend,2)
 {
+  CHECK_INIT;
+
   PERDIO_DEBUG(SEND_EMIT,"SEND_EMIT:reliable send");
   OZ_declareIntArg(0,sd);
   OZ_declareArg(1,value);
@@ -2378,6 +2387,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIunreliableSend,2)
 {
+  CHECK_INIT;
+
   PERDIO_DEBUG(SEND_EMIT,"SEND_EMIT:unreliable send");
   OZ_declareIntArg(0,sd);
   OZ_declareArg(1,value);
@@ -2441,6 +2452,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIlookupSite,4)
 {
+  CHECK_INIT;
+
   OZ_declareVirtualStringArg(0,host);
   OZ_declareIntArg(1,port);
   OZ_declareIntArg(2,timestamp);

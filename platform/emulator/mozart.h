@@ -66,10 +66,6 @@ typedef void *OZ_Arity;
 
 typedef OZ_Return _FUNDECL((*OZ_CFun),(int, OZ_Term *));
 
-typedef int _FUNDECL((*OZ_IOHandler),(int,OZ_Term));
-
-
-
 /* for tobias */
 typedef int OZ_Boolean;
 #define OZ_FALSE 0
@@ -273,11 +269,22 @@ extern OZ_Return _FUNDECL(OZ_writeSelect,(int, OZ_Term, OZ_Term));
 extern OZ_Return _FUNDECL(OZ_acceptSelect,(int, OZ_Term, OZ_Term));
 extern void      _FUNDECL(OZ_deSelect,(int));
 
+/*
+ * OZ_IOHandler is called with fd + static pointer given when registered
+ *   if it returns TRUE, it is unregistered
+ *   else (return FALSE) its called again, when something is available
+ */
+
+typedef int _FUNDECL((*OZ_IOHandler),(int,void *));
+
 extern void      _FUNDECL(OZ_registerReadHandler,
-                          (int fd,OZ_IOHandler fun,OZ_Term val));
+                          (int fd,OZ_IOHandler fun,void *val));
+
+extern void      _FUNDECL(OZ_registerWriteHandler,
+                          (int fd,OZ_IOHandler fun,void *val));
 
 extern void      _FUNDECL(OZ_registerAcceptHandler,
-                          (int fd,OZ_IOHandler fun,OZ_Term val));
+                          (int fd,OZ_IOHandler fun,void *val));
 
 /* garbage collection */
 extern int _FUNDECL(OZ_protect,(OZ_Term *));

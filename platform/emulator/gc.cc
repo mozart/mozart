@@ -1574,19 +1574,6 @@ void AM::gc(int msgLevel)
   gcTagged(tcl_rets, tcl_rets);
   gcTagged(tcl_dict, tcl_dict);
 
-  GCPROCMSG("ioNodes");
-  for(int i = 0; i < osOpenMax(); i++) {
-    for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
-      if (osIsWatchedFD(i,mode) && i != compStream->csfileno()) {
-        TaggedRef &t = ioNodes[i].readwritepair[mode];
-        gcTagged(t,t);
-        if (t == makeTaggedNULL()) {
-          osClrWatchedFD(i,mode);
-          DebugCheckT(warning("selectNode discarded/failed"));
-        }
-      }
-    }
-  }
   performCopying();
 
   GCPROCMSG("toplevelVars");
