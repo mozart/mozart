@@ -1785,6 +1785,11 @@ void ArityTable::gc()
   }
 }
 
+void PrTabEntry::gcPrTabEntry()
+{
+  gcTagged(info,info);
+}
+
 void AbstractionEntry::gcAbstractionEntries()
 {
   // there may be NULL entries in the table during gc
@@ -2017,6 +2022,7 @@ void ConstTerm::gcConstRecurse()
       Abstraction *a = (Abstraction *) this;
       a->gRegs = gcRefsArray(a->gRegs);
       a->gcConstTermWithHome();
+      a->getPred()->gcPrTabEntry();
       break;
     }
     
