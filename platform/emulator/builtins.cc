@@ -961,7 +961,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     //       }
     //   }
 
-    OZ_PropagatorExpect pe;
+    OZ_Expect pe;
     EXPECT(pe, 0, expectRecordVar);
     EXPECT(pe, 1, expectIntVarAny);
 
@@ -1236,7 +1236,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
 
         if (!am.unify(featlist,arity)) return FAILED;
 
-        OZ_PropagatorExpect pe;
+        OZ_Expect pe;
         EXPECT(pe, 0, expectRecordVar);
         EXPECT(pe, 1, expectVar);
 
