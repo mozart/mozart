@@ -417,6 +417,7 @@ void BIfdBodyManager::introduceLocal(int i, TaggedRef v)
   } else if (isGenFDVar(var, vartag)) {
     bifdbm_dom[i] = &tagged2GenFDVar(var)->getDom();
     bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
+    Assert(bifdbm_init_dom_size[i] > 1);
   } else if (vartag == LITERAL) {
     bifdbm_dom[i] = &__CDVoidFiniteDomain;
     bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
@@ -488,6 +489,7 @@ void BIfdBodyManager::_introduce(int i, TaggedRef v)
       bifdbm_dom[i] = &bifdbm_domain[i];
     }
     bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
+    Assert(bifdbm_init_dom_size[i] > 1);
   } else if (vtag == SVAR) {
     bifdbm_domain[i].setFull();
     bifdbm_dom[i] = &bifdbm_domain[i];
