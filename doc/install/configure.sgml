@@ -11,21 +11,34 @@ env/CONFIG_SITE/ prior to invoking the configure script:
 <code display>
 setenv CONFIG_SITE ~/mozart.config
 </code>
+Below, we always describe command line options and related
+configuration variables together.  They are always displayed with
+their default value or implied setting.  Other possible values are
+described in the text.  If a default option is <code/--enable-foo/
+then you can supply <code/--disable-foo/ to turn it off (and
+reciprocally).  If the default value for a configuration variable
+<code/oz_enable_foo/ is <code/yes/, then you can set it to <code/no/
+to turn it off.
+</p>
   <subsection>
     <title/General Parameters/
     <p><list>
-        <entry class=option><code>--prefix=$HOME/mozart-install</code></entry>
-        <entry class=variable><code>prefix=$HOME/mozart-install</code></entry>
-        <item>Use <file>~/mozart-install</file> as the default
-installation directory.  The installation directory can also be
-overriden when installing by supplying an overriding setting for the
-make variable <var env/PREFIX/:
+        <entry class=option><code>--prefix=/usr/local/oz</code></entry>
+        <entry class=variable><code>prefix=/usr/local/oz</code></entry>
+        <item>You can change the default installation directory
+to &eg; <file>~/mozart-install</file> using
+<code>--prefix=$HOME/mozart-install</code> or
+<code>prefix=$HOME/mozart-install</code>.  The installation directory
+can also be overriden when invoking <code/make install/ by supplying
+an overriding setting for the make variable <var env/PREFIX/ on the
+command line:
 <code display>
 % make install PREFIX=$HOME/mozart-install
 </code></item>
       </list>
 </p>
   </subsection>
+
   <subsection id=contrib>
     <title/Contributions/
     <p>The <q/contributions/ are not an intrinsic part of the Mozart
@@ -34,14 +47,14 @@ packages: for example the <file/gdbm/ contribution requires that you
 install the gdbm package. Some have not yet been ported to Windows.
 <list>
         <entry class=option/<code/--enable-contrib//
-        <entry class=option/<code/--disable-contrib//
         <entry class=variable/<code/oz_enable_contrib=contrib//
-        <item>By default, the contributions will be configured and
+        <item/By default, the contributions are configured and
 built.  You can completely omit them using <code/--disable-contrib/ or
-setting the variable to an empty value, &ie; <code/oz_enable_contrib=/
+<code/oz_enable_contrib=//
       </list>
 </p>
   </subsection>
+
   <subsection>
     <title/Documentation/
     <p>Processing the documentation requires the contributions (<ptr
@@ -49,29 +62,30 @@ to=contrib>).  Also you need additional packages such as LaTeX,
 netpbm, ghostscript, and a very recent version of nsgmls.
 <list>
         <entry class=option/<code/--enable-doc//
-        <entry class=option/<code/--disable-doc//
         <entry class=variable/<code/oz_enable_doc=doc//
-        <item>You can omit the documentation using option
-<code/--disable-doc/ or by setting the variable to an empty value,
-&ie; <code/oz_enable_doc=/</item>
-      </list></p>
+        <item/You can omit the documentation using
+<code/--disable-doc/ or <code/oz_enable_doc=//
+      </list>
+</p>
   </subsection>
+
   <subsection>
     <title/Emulator/
     <p>The emulator has quite a few configuration parameters.
 <list>
         <entry class=option/<code/--with-cxx=?{c++-compiler}//
         <entry class=variable/<code/oz_with_cxx=?{c++-compiler}//
-        <item>Overrides the default C++ compiler.</item>
+        <item>Overrides the default C++ compiler.  Noone has ever
+needed this option (or lived to tell).</item>
 
         <entry class=option/<code/--enable-warnings//
-        <entry class=variable/<code/oz_enable_warnings=yes//
-        <item>By default, the value is <code/no/.  Enabling it causes
-the C++ compiler to print all warnings.</item>
+        <entry class=variable/<code/oz_enable_warnings=no//
+        <item>Enabling this option causes the C++ compiler to become
+frighteningly anal retentive and to print out all sorts of warnings.</item>
 
         <entry class=option/<code/--enable-errors//
-        <entry class=variable/<code/oz_enable_errors=yes//
-        <item>By default, the value is <code/no/.  When enabled, every
+        <entry class=variable/<code/oz_enable_errors=no//
+        <item>When this option is enabled, every
 warning from the C++ compiler will cause the build process to fail.
 This is only really useful for the developers of the system.</item>
 
@@ -79,11 +93,70 @@ This is only really useful for the developers of the system.</item>
         <entry class=variable/<code/oz_copt_profile=-pg//
         <entry class=variable/<code/oz_copt_debug="-g"//
         <item>Compiler options to use when optimizing, profiling, and
-debugging respectively.</item>
+debugging respectively.  Don't use these!  See
+<ref to=enable-opt/<code/--enable-opt// instead.</item>
 
+        <entry class=option/<code/--with-gmp=?{DIR}//
+        <entry class=variable><code>oz_gmp_lib_dir=/usr/local/lib</code></entry>
+        <entry class=variable><code>oz_gmp_inc_dir=/usr/local/include</code></entry>
+        <item>Mozart needs the <em/GNU Multiple Precision Arithmetic
+Library/ also known as <file/gmp/.  You can set the variables to point
+to the directories where the library and the <file/gmp.h/ include file
+are to be found.  The command line option can be used to set both
+variables to the same directory argument.</item>
+
+        <entry class=option><code>--with-zlib=?{DIR}</code></entry>
+        <entry class=variable><code>oz_zlib_lib_dir=</code></entry>
+        <entry class=variable><code>oz_zlib_inc_dir=</code></entry>
+        <item>Mozart needs <file/zlib/, the <em/General Purpose
+Compression Library/.  The details are as above.</item>
+
+        <entry class=option/<code/--without-ccmalloc//
+        <item>Option <code/--with-ccmalloc/ enables the use of the
+debugging malloc library.  Only for developers.</item>
+
+        <entry class=option id=enable-opt/<code/--enable-opt=no//
+        <item>Select the optimization settings:
+<code/--enable-opt=yes/ for maximum optimization,
+<code/--enable-opt=debug/ for debugging the emulator,
+<code/--enable-opt=profile/ for profiling,
+<code/--enable-opt=rsp/ also for profiling, but only if you happen to
+be Ralf Scheidhauer.</item>
+
+        <entry class=option/<code/--enable-threaded//
+        <entry class=variable/<code/oz_enable_threaded=yes//
+        <item>By default, the emulator uses threaded byte code if
+possible, unless <code/--enable-opt=debug/.  Turning this off would be
+foolish.</item>
+
+        <entry class=option/<code/--enable-fastreg//
+        <entry class=variable/<code/oz_enable_fastreg=yes//
+        <item>By default, the emulator uses fast register
+access.</item>
+
+        <entry class=option/<code/--enable-regopt//
+        <entry class=variable/<code/oz_enable_regopt=yes//
+        <item>By default, the emulator uses register
+optimization.</item>
+
+        <entry class=option/<code/--enable-modules-static=no//
         <entry class=variable/<code/oz_enable_modules_static=no//
         <item>By default, all boot modules are linked dynamically.
-Setting this variable to <code/yes/ will link them statically.</item>
+Setting this variable to <code/yes/ will link them statically.  You
+should only do this if DLLs cannot be made to work on your
+platform.</item>
+
+        <entry class=option/<code/--with-malloc=?{FILE}//
+        <entry class=variable/<code/oz_malloc_obj=?{FILE}//
+        <item>Use this option to link with the malloc function in
+object file ?{FILE}.  This can be useful if your system malloc is
+broken.  This option is overriden by <code/--with-ccmalloc/.</item>
+
+        <entry class=option/<code/--enable-virtualsites//
+        <entry class=variable/<code/oz_enable_virtualsites=?{YESORNO}//
+        <item>Whether to enable support for <em/virtual sites/.  The
+default depends on whether virtual sites can be supported on your
+platform, &ie; it depends on support for shared memory.</item>
       </list>
   </subsection>
 </section>
