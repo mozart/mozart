@@ -1890,7 +1890,14 @@ void Thread::gcThreadRecurse()
 
   GCMETHMSG("Thread::gcRecurse");
 
-  home=home->gcBoard();
+  Board *newHome = home->gcBoard();
+#ifdef NEWCOUNTER
+  if (!newHome) {
+    newHome=home->gcGetNotificationBoard()->gcBoard();
+    markDead();
+  }
+#endif
+  home=newHome;
   // Assert(home);
 
   taskStack.gcRecurse();

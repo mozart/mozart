@@ -216,7 +216,8 @@ public:
   // entailment check
   Bool entailment();
   Bool isEmptyTrailChunk();
-  Bool checkEntailment(Continuation *&contAfter,int &prio);
+  int checkEntailment(Continuation *&contAfter,int &prio);
+  int checkStable(Continuation *&contAfter,int &prio);  // mm2 todo
 
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
