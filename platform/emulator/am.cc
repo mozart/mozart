@@ -554,6 +554,12 @@ start:
   }
 
   Assert(isCVar(tag1) && isCVar(tag2));
+  /* prefered binding of perdio vars */
+  if (isPerdioVar(term2)) {
+    Swap(term1,term2,TaggedRef);
+    Swap(termPtr1,termPtr2,TaggedRef*);
+    Swap(tag1,tag2,TypeOfTerm);
+  }
   return tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,scp);
 
 
