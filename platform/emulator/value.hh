@@ -1055,6 +1055,21 @@ OZ_Term getArityList(OZ_Term term)
   return 0;
 }
 
+inline
+int getWidth(OZ_Term term)
+{
+  if (isSRecord(term)) {
+    return tagged2SRecord(term)->getWidth();
+  }
+  if (isLTuple(term)) {
+    return (2);
+  }
+  if (isLiteral(term)) {
+    return (0);
+  }
+  return (0);			// ???
+}
+
 
 /*===================================================================
  * ObjectOrClass incl. ObjectClass, DeepObjectOrClass
@@ -1203,6 +1218,7 @@ public:
   }
 
   TaggedRef getArityList();
+  int getWidth ();
 
   Object *gcObject();
 
@@ -1282,6 +1298,7 @@ public:
   TaggedRef getValue() { return value; }
   TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
   TaggedRef getArityList() { return ::getArityList(value); }
+  int getWidth () { return ::getWidth(value); }
   Board *getBoardFast();
 };
 

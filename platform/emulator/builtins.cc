@@ -533,20 +533,20 @@ OZ_C_proc_begin(BIsystemTellSize,3)
     break;
   case UVAR:
   case SVAR:
-    return SUSPEND;
+    OZ_suspendOn (makeTaggedRef(labelPtr));
   case CVAR:
     switch (tagged2CVar(label)->getType()) {
     case OFSVariable:
       {
         GenOFSVariable *ofsvar=tagged2GenOFSVar(label);
-        if (ofsvar->getWidth()>0) return FAILED;
-        return SUSPEND;
+        if (ofsvar->getWidth()>0) return FAILED; 
+       OZ_suspendOn (makeTaggedRef(labelPtr));
       }
     case FDVariable:
     case BoolVariable:
       return FAILED;
     default:
-      return SUSPEND;
+      OZ_suspendOn (makeTaggedRef(labelPtr));
     }
   default:
     TypeErrorT(0,"Literal");
@@ -605,20 +605,20 @@ OZ_C_proc_begin(BIrecordTell,2)
     break;
   case UVAR:
   case SVAR:
-    return SUSPEND;
+    OZ_suspendOn (makeTaggedRef(labelPtr));
   case CVAR:
     switch (tagged2CVar(label)->getType()) {
     case OFSVariable:
       {
         GenOFSVariable *ofsvar=tagged2GenOFSVar(label);
         if (ofsvar->getWidth()>0) return FAILED;
-        return SUSPEND;
+        OZ_suspendOn (makeTaggedRef(labelPtr));
       }
     case FDVariable:
     case BoolVariable:
       return FAILED;
     default:
-      return SUSPEND;
+      OZ_suspendOn (makeTaggedRef(labelPtr));
     }
   default:
     TypeErrorT(0,"Literal");
@@ -673,7 +673,7 @@ OZ_C_proc_begin(BIrecordC,1)
     case BoolVariable:
       return FAILED;
     default:
-      return SUSPEND;
+      OZ_suspendOn (makeTaggedRef(tPtr));
     }
   case UVAR:
   case SVAR:
@@ -1508,7 +1508,7 @@ OZ_C_proc_begin(BIlabelC,2)
           // Label argument is not a literal:
           TypeErrorT(1,"Literal");
       }
-      // return OZ_suspendOnVar2(thelabel,lbl);
+      // OZ_suspendOnVar2(thelabel,lbl);
   }
   if (!isAnyVar(lbltag) && !isLiteral(lbldrf)) return FAILED;
   return (am.unify(thelabel,lbl)? PROCEED : FAILED);
@@ -2612,6 +2612,30 @@ OZ_C_proc_begin(BIchunkArity,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIchunkWidth,2)
+{
+  OZ_Term ch =  OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  if (OZ_isVariable(ch)) OZ_suspendOn(ch);
+  ch=deref(ch);
+  if (!isChunk(ch)) TypeErrorT(0,"Chunk");
+
+  switch (tagged2Const(ch)->getType()) {
+  case Co_Object:
+    return
+      OZ_unify(out, makeTaggedSmallInt (tagged2Object(ch)->getWidth ()));
+  case Co_Chunk:
+    return
+      OZ_unify(out, makeTaggedSmallInt (tagged2SChunk(ch)->getWidth ()));
+  case Co_Dictionary:
+  case Co_Array:
+  default:
+    // no features
+    return OZ_unify(out,makeTaggedSmallInt (0));
+  }
+}
+OZ_C_proc_end
 
 // ---------------------------------------------------------------------
 
@@ -2962,7 +2986,7 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
       case BoolVariable:
           TypeErrorT(1,"Record");
       default:
-          return SUSPEND;
+          return SUSPEND; 
       }
     default:
       TypeErrorT(1,"Record");
@@ -5337,19 +5361,20 @@ OZ_C_proc_begin(BIgenericSet, 3)
   OZ_Term fea = OZ_getCArg(1);
   OZ_Term val = OZ_getCArg(2);
 
-  DEREF(term, _2, termTag);
-  DEREF(fea, _1,feaTag);
+  DEREF(term, termPtr, termTag);
+  DEREF(fea, feaPtr, feaTag);
 
   if (isAnyVar(feaTag)) {
     switch (termTag) {
     case LTUPLE:
     case SRECORD:
+      OZ_suspendOn (makeTaggedRef(feaPtr));
     case SVAR:
     case UVAR:
-      return SUSPEND;
+      OZ_suspendOn2 (makeTaggedRef(feaPtr),makeTaggedRef(termPtr));
     case CVAR:
       if (tagged2CVar(term)->getType()!=OFSVariable) return FAILED;
-      return SUSPEND;
+      OZ_suspendOn2 (makeTaggedRef(feaPtr),makeTaggedRef(termPtr));
     default:
       return FAILED;
     }
@@ -5391,7 +5416,7 @@ OZ_C_proc_begin(BIgenericSet, 3)
     if (!isFeature(feaTag)) {
       return FAILED;
     }
-    return SUSPEND;
+    OZ_suspendOn (makeTaggedRef(termPtr));
 
   case CVAR:
     {
@@ -5399,7 +5424,7 @@ OZ_C_proc_begin(BIgenericSet, 3)
         return FAILED;
       }
       if (tagged2CVar(term)->getType()!=OFSVariable) return FAILED;
-      return SUSPEND;
+      OZ_suspendOn (makeTaggedRef(termPtr));
     }
 
   default:
@@ -5682,11 +5707,11 @@ OZ_C_proc_begin(BIgetTermSize,4)
   OZ_Term wt = OZ_getCArg (2);
   OZ_Term out = OZ_getCArg (3);
 
-  DEREF(dt, _1, dtTag);
-  DEREF(wt, _2, wtTag);
+  DEREF(dt, dtPtr, dtTag);
+  DEREF(wt, wtPtr, wtTag);
 
   if (isAnyVar(dtTag)) {
-    return (SUSPEND);
+    OZ_suspendOn (makeTaggedRef(dtPtr));
   } else if (!isSmallInt(dt)) {
     TypeErrorT(1,"(valid) Int)");
     TypeErrorT(1,"Int");
@@ -5695,7 +5720,7 @@ OZ_C_proc_begin(BIgetTermSize,4)
   }
 
   if (isAnyVar(wtTag)) {
-    return (SUSPEND);
+    OZ_suspendOn (makeTaggedRef(wtPtr));
   } else if (!isSmallInt(wt)) {
     TypeErrorT(2,"(valid) Int)");
     TypeErrorT(2,"Int");
@@ -7055,6 +7080,7 @@ BIspec allSpec2[] = {
 
   {"NewChunk",	      2,BInewChunk,	0},
   {"chunkArity",      2,BIchunkArity,	0},
+  {"chunkWidth",      2,BIchunkWidth,	0},
 
   {"NewName",         1,BInewName,	0},
 
