@@ -24,7 +24,7 @@
  *  WARRANTIES.
  *
  */
-
+#include "wsock.hh"
 #include "base.hh"
 #include "dpBase.hh"
 
@@ -35,7 +35,12 @@
 #include "builtins.hh"
 #include "os.hh"
 #include "newmarshaler.hh"
-
+#ifndef WINDOWS
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#endif
 #ifdef VIRTUALSITES
 #define USE_VS_MSGBUFFERS
 #endif
@@ -132,10 +137,12 @@ OZ_BI_define(BIinitIPConnection,1,1)
     int index = srec->getIndex(ipf);
     if (index>=0) { 
       OZ_Term t = srec->getArg(index);
-      if(!oz_isInt(t))
-	oz_typeError(-1,"Int");
-      ip = OZ_intToC(t);
-      //      setIPAddress(ip);
+      /* if(!oz_isString(t))
+	oz_typeError(-1,"String");
+      */
+      char *s=oz_str2c(t);
+      ip = (int)inet_addr(s);
+      setIPAddress(ip);
     }
     index = srec->getIndex(portf);
     if (index>=0) { 
@@ -143,7 +150,7 @@ OZ_BI_define(BIinitIPConnection,1,1)
       if(!oz_isInt(t))
 	oz_typeError(-1,"Int");
       port = OZ_intToC(t);
-      //setIPPort(port);
+      setIPPort(port);
     }
     index = srec->getIndex(fwf);
     if (index>=0) { 
@@ -151,18 +158,26 @@ OZ_BI_define(BIinitIPConnection,1,1)
       if(!oz_isBool(t))
 	oz_typeError(-1,"Bool");
       fw = OZ_boolToC(t);
-      //setFirewallStatus(fv);
+      setFirewallStatus(fw);
     }
   } else {
     oz_typeError(0,"Record");
   }
 
   initDP();
-
-  OZ_Term ret = OZ_nil(); 
-  OZ_RETURN(ret);
-
-  // OZ_RETURN(getIPInfo());
+  ip = ntohl(getIPAddress());
+  int *pip= &ip;
+  OZ_RETURN(OZ_recordInit(oz_atom("ipInfo"),
+			  oz_cons(
+				  oz_pairA("ip",OZ_string(osinet_ntoa((char *) pip)))
+				  , 
+				  oz_cons(oz_pairAI("port",getIPPort()),
+					  oz_cons(oz_pairA("firewall",oz_bool(getFireWallStatus())), oz_nil()
+						  )
+					  )
+				  )
+			  )
+	    );
 } OZ_BI_end
 
 
