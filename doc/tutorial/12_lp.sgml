@@ -424,20 +424,112 @@ specification of a problem.
 choice point without specifying how they will be explored. A completely
 separate program can then specify the search strategy.
 
-<SUBSECTION><TITLE/Choice Construct/
+<SUBSECTION><TITLE/<<dis>> Construct/
 <P>
-
+The following program uses the <<dis>> construct of Oz to create
+a choice point when necessary.
 <<<
-proc {DApp Xs Ys Zs}
-   choice
+proc {Append Xs Ys Zs}
+   dis
       Xs = nil Ys = Zs then skip
    [] X Xr Zr in
       Xs = X|Xr Zs = X|Zr then
-      {DApp Xr Ys Zr}
+      {Append Xr Ys Zr}
    end
 end
 >>>
+<p>
+It corresponds roughly to the <<append/3>> program of Prolog:
+<<<
+append([], Ys, Ys).
+append([X|Xr], Ys, [X|Zr]) :- append(Xr, Yr, Zr).
+>>>
+<p>
+In fact the same kind of abbreviations that hold for <<or>> hold also for
+<<dis>>. That is the above program have the following abbreviated form.
+<<<
+proc {Append Xs Ys Zs}
+   dis
+      Xs = nil Ys = Zs
+   [] X Xr Zr in
+      Xs = X|Xr Zs = X|Zr then
+      {Append Xr Ys Zr}
+   end
+end
+>>>
+Assume the following procedure call:
+<<<
+local X in
+   {Append [1 2 3] [a b c] X}
+   {Browse X}
+end
+>>>
+<p>
+This will behave exactly as the <<or>> construct, i.e. it will
+deterministically bind <<X>> to <<[1 2 3 a b c]>>.
+If we on the other hand try:
+<<<
+local X Y in
+  {Append X Y [1 2 3 a b c]}
+  {Browse X#Y}
+end
+>>>
+the bahavior will look the same as with the <<or>> construct; the thread
+executing this sequence of calls will suspend while executing
+<<{Append X Y [1 2 3 a b c]}>>. There is however a difference. The call
+of <<Append>> will create a choice-point with two alternatives:
+<list>
+<item> <<X = nil Y = [1 2 3 a b c] then skip>>
+<item>
+<<<Xr Xr in
+    X = 1|Xr Zr = [2 3 a b c] then
+    {Append Xr Y Zr}
+>>>
+</item>
 
+<<<
+or
+   ?{G1} then ?{S1}
+[] ?{G2} then ?{S2}
+   ...
+[] ?{GN} then ?{SN}
+end
+>>>
+
+<P>An <<or>>-statement has the following semantics. Assume a thread is
+executing the statement in space ?{SP}.
+
+<LIST>
+
+<ITEM>The thread is blocked.
+
+<ITEM><MATH/N/ spaces are created <MATH/SP_1, \ldots, SP_N/ with
+<MATH/N/ new threads executing the guards <MATH/G_1, \ldots, G_N/.
+
+<ITEM>Execution of the father thread remains blocked until at most
+one of the child spaces is not failed.
+
+<ITEM>If all children spaces are failed, the parent thread raises a
+failure condition in its space.
+<!-- DENYS: this is wrong! a failure exception is always raised.
+it is the semantics of an escaping failure exception which varies
+according to whether the space is top level or not -->
+This means that if the space of
+the parent thread is the top space, a failure exception is raised.
+Otherwise the space is local and it becomes a failed space.
+
+<ITEM>Only one space remains that is not failed which
+corresponds to the clause <MATH/G_i/ <<then>> <MATH/S_i/. Assume also that
+<MATH/G_i/ has been reduced to the goal <MATH/G'_i/ and the
+constraint <MATH/\theta/. In this case, the space is merged
+with the parent space. <MATH/\theta/ and the variables of
+the store are added to that of the parent store.
+<MATH/G'_i/ executes in its own thread, and the original suspending
+thread resumes executing the statement <MATH/S_i/.
+This rule of execution is called <EM>unit commit</EM> in Oz because
+execution commits to one alternative disjunct (the only one that is left).
+
+</LIST>
 <SUBSECTION><TITLE/Define Clause Grammer/
 <P>
 
