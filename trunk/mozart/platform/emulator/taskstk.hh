@@ -77,7 +77,7 @@ typedef StackEntry TaskStackEntry;
 
 
 /* if you ever change this check POPTASK */
-const TaskStackEntry emptyTaskStackEntry = (TaskStackEntry)-1;
+const TaskStackEntry emptyTaskStackEntry = (TaskStackEntry)(unsigned int32)-1;
 
 class TaskStack: public Stack {
 public:
