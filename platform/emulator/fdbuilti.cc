@@ -1687,6 +1687,7 @@ BIspec fdSpec[] = {
   {"fdPutNotCD", 3, BIfdPutNotCD},
 
 // fdwatch.cc
+  {"fdWatchDomB", 3, BIfdWatchDomB},
   {"fdWatchDom1", 2, BIfdWatchDom1},
   {"fdWatchDom2", 4, BIfdWatchDom2},
   {"fdWatchDom3", 6, BIfdWatchDom3},
