@@ -34,12 +34,10 @@ Oz/lib		mail -s "I have changed %s" henz,tmueller,nilsf,popow
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz/plugin	mail -s "I have changed %s" paralic
 Oz/tools/compiler	mail -s "I have changed %s" scheidhr,nilsf
-Misc/papers/Style	mail -s "I have changed %s" niehren mmueller
 Misc/papers/WLP-FDCD	mail -s "I have changed %s" tmueller
 Misc/papers/FD-CDR	mail -s "I have changed %s" tmueller
 Misc/papers/ICLP97	mail -s "I have changed %s" tmueller
 Misc/papers/FD-JICSLP96-WS	mail -s "I have changed %s" tmueller
-Misc/papers/fset	mail -s "I have changed %s" tmueller,mmueller
 Misc/papers/Indexicals  mail -s "I have changed %s" tmueller,duchier
 Hiwis			mail -s "I have changed %s" tmueller
 Hiwis/voelz		mail -s "I have changed %s" voelz
