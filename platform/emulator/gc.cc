@@ -1793,7 +1793,7 @@ void AM::gc(int msgLevel)
   Assert(gcStack.isEmpty());
 
   GT.gcGNameTable();
-  //gcSiteTable();
+  gcSiteTable();
   gcPerdioFinal();
   Assert(gcStack.isEmpty());
 
