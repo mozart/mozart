@@ -166,7 +166,7 @@ in
 	 in
 	    Status = {FormatExceptionLine {Error.formatExc X}}
 	    {Ozcar status(Status clear BlockedThreadColor)}
-	    {Ozcar bar(file:F line:L column:C state:blocked)}
+	    {Emacs bar(file:F line:L column:C state:blocked)}
 	    StackManager,ReCalculate({Reverse S})
 
 	 else              % no stack available
@@ -174,7 +174,7 @@ in
 	 in
 	    Status = UserExcText # E # NoStackText
 	    {Ozcar status(Status clear BlockedThreadColor)}
-	    {Ozcar removeBar}
+	    {Emacs removeBar}
 	    StackManager,ReCalculate(nil)
 	 end
 

@@ -22,7 +22,7 @@ Ozcar =
 	   {Dbg.off}
 	   {Tk.send wm(withdraw self.toplevel)}
 	   {Compile '\\switch -debuginfo'}
-	   SourceManager,removeBar
+	   {Emacs removeBar}
 	end
 
 	meth on

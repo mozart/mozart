@@ -8,7 +8,7 @@ PROFILER  = $(OZLIB)/profiler
 
 LOCALFILES = \
 	prof-gui.oz prof-prelude.oz prof-tk.oz \
-	prof-config.oz prof-help.oz prof-source.oz profiler.oz \
+	prof-config.oz prof-help.oz profiler.oz \
 	prof-dialog.oz prof-menu.oz prof-string.oz
 
 
