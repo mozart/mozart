@@ -1,59 +1,18 @@
-PREFIX		= @prefix@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
-BUILDTOP	= @BUILDTOP@
-SRCTOP		= @SRCTOP@
-OZENGINE	= @OZENGINE@
-OZDOC		= @OZDOC@
-OZDOCFLAGS	=
-DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
-DOCDIR		= /www/mozart/documentation/system
-
-INSTALL		= @INSTALL@
-INSTALL_FILE	= $(INSTALL) -m 444
-INSTALL_BIN	= $(INSTALL) -m 555
-INSTALL_DIR	= @INSTALL_DIR@
+WHAT = system
+MAIN = main.sgml
 
 SGMLSRCS = \
 	main.sgml application.sgml constraints.sgml \
 	distributed.sgml open.sgml system.sgml \
 	window.sgml
 
-.PHONY: all validate install clean veryclean distclean
 
-all: system-html
+HTMLEXTRAFILES = 
 
-include $(SRCDIR)/../../share/Makefile.boot
+OZDOCHTMLFLAGS = --autoindex
 
-bootstrap: boot-all
+include $(SRCDIR)/../Makefile.common
 
-Makefile: Makefile.in ../config.status
-	cd .. && ./config.status
-
-system-html: $(SGMLSRCS)
-	$(DOCIFY) --in=$(SRCDIR)/main.sgml --out=$@ \
-	--type=html-stylesheets --autoindex \
-	--stylesheet=ozdoc.css && \
-	cp $(SRCTOP)/doc/utilities/ozdoc.css system-html
-
-verify: main.sgml
-	nsgmls -c/usr/local/oz/share/doc/catalog $< > /dev/null
-
-validate: system-html
-	nsgmls -cHTML4.soc -sB explorer-html/*.html
-
-install: system-html $(DOCDIR)
-	for i in explorer-html/*.*; do $(INSTALL_FILE) $$i $(DOCDIR); done
-
-$(DOCDIR):
-	$(INSTALL_DIR) $@
-
-clean:
-	-rm -rf system-html
-	-rm -f *~
-
-veryclean: clean
-
-distclean: veryclean
-	-rm -f Makefile
