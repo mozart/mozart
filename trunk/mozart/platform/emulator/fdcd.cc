@@ -514,11 +514,10 @@ OZ_Bool cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
 {
   int last_index = OZ_arity - 1;
   
-  BIfdBodyManager x(1);
+  BIfdBodyManager x;
   
-  x.introduce(0, OZ_getCArg(last_index));
+  x.introduce(OZ_getCArg(last_index));
 
-  Assert(x.allVarsAreLocal());
   Assert(x[0] != 1); // clause cannot already be entailed
   
   if (x[0] == 0) {
