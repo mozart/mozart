@@ -1204,6 +1204,9 @@ void GenCVariable::gc(void)
   case FSetVariable:
     ((GenFSetVariable *) this)->gc();
     break;
+  case LazyVariable:
+    ((GenLazyVariable*) this)->gc();
+    break;
   default:
     Assert(0);
   }
@@ -1322,6 +1325,15 @@ void GenFSetVariable::gc(void)
 FSetValue * FSetValue::gc(void) 
 {
   return (FSetValue *) gcRealloc(this, sizeof(*this));
+}
+
+void GenLazyVariable::gc(void)
+{
+  GCMETHMSG("GenLazyVariable::gc");
+  if (function!=0) {
+    gcTagged(function,function);
+    gcTagged(result  ,result  );
+  }
 }
 
 void GenMetaVariable::gc(void)
