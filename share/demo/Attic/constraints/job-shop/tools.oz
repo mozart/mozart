@@ -91,7 +91,7 @@ in
 
       meth toTop
          {self.Board setEdit}
-         {Explorer close}
+         {Explorer.object close}
       end
 
    end
