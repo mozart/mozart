@@ -93,7 +93,7 @@ OZ_Term oz_newChunk(OZ_Term val)
 }
 
 #define oz_newVariable() makeTaggedRef(newTaggedUVar(am.currentBoard()))
-#define oz_newToplevelVariable() makeTaggedRef(newTaggedUVar(am.rootBoard()))
+#define oz_newToplevelVariable() makeTaggedRef(newTaggedUVar(ozx_rootBoard()))
 
 // stop thread: {Wait v}
 void oz_suspendOnNet(Thread *th);
