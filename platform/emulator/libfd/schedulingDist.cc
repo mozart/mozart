@@ -668,14 +668,19 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      }
 	      if (v <= g_costs) {
 		g_costs = v;
-		if (side == 1) {
+		p1 = best_left;
+		p2 = firsts_l;
+		/*
+		  // Caseau original code
+		  if (side == 1) {
 		  p1 = best_left;
 		  p2 = firsts_l;
-		}
-		else {
+		  }
+		  else {
 		  p1 = firsts_l;
 		  p2 = best_left;
-		}
+		  }
+		  */
 	      }
 	    }
 	    
@@ -764,14 +769,19 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      }
 	      if (v <= g_costs) {
 		g_costs = v;
-		if (side == 1) {
+		p1 = lasts_l;
+		p2 = best_right;
+		/*
+		  // Caseau original code
+		  if (side == 1) {
 		  p1 = lasts_l;
 		  p2 = best_right;
-		}
-		else {
+		  }
+		  else {
 		  p1 = best_right;
 		  p2 = lasts_l;
-		}
+		  }
+		  */
 	      }
 	    }
 	    

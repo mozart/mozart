@@ -77,8 +77,6 @@ failure:
 static OZ_FDIntVar * xx;
 static int * dd;
 
-static int *constraints;
-static int initConstraints[INITIALSIZE];
 
 static int compareDescRel(const void *a, const void *b) {
   return(xx[*(int*)b]->getMinElem()-xx[*(int*)a]->getMinElem());
@@ -111,6 +109,7 @@ public:
 
 struct Set {
   int cSi, dSi, mSi, sUp, sLow, extSize, val;
+  int min,max;
   int * ext;
 };
 
@@ -141,10 +140,6 @@ OZ_Return CPIteratePropagator::propagate(void)
   int dur0;
   int mSi;
 
-  constraints = initConstraints;
-  int * constraintsExtension = NULL;
-
-  int constraintLimit = INITIALSIZE;
 
   DECL_DYN_ARRAY(int, set0, ts);
   DECL_DYN_ARRAY(int, compSet0, ts);
@@ -163,7 +158,6 @@ OZ_Return CPIteratePropagator::propagate(void)
   int set0Size;
   int compSet0Size;
   int outSideSize;
-  int constraintsSize = 0;
   int mysup = OZ_getFDSup();
   
   DECL_DYN_ARRAY(Set, Sets, ts);
@@ -215,7 +209,6 @@ cploop:
   // UPPER PHASE
   //////////  
 
-  constraintsSize = 0;
 
   /*
   // it's not worth it
@@ -246,9 +239,11 @@ cploop:
     kDown = MinMax[upTask].min;
     dur0 = 0;
     mSi = mysup;
+    int maxSi = 0;
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
+    int maxEst = 0;
 
     //////////  
     // compute set S0 
@@ -260,7 +255,9 @@ cploop:
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
 	dur0 =+ dl;
+	maxEst = max(maxEst,xlMin+dl); 
 	mSi = min( mSi, xlMin+dl );
+	maxSi = max( maxSi, MinMax[l].max );
 	set0[set0Size++] = l;
       }
       else {
@@ -279,9 +276,12 @@ cploop:
     if (kUp-kDown < dur0) return FAILED;
     
     struct Set *oset = &Sets[0];	
-    oset->cSi = kDown + dur0;
+//    oset ->cSi = kDown +dur0;
+    oset ->cSi = max(kDown +dur0, maxEst);
     oset->dSi = dur0;
     oset->mSi = mSi;
+    oset->min = mSi;
+    oset->max = maxSi;
     oset->sUp = kUp;
     oset->sLow = kDown;
     oset->extSize = set0Size;
@@ -312,6 +312,8 @@ cploop:
 	  cset->cSi = newCSi;
 	  cset->dSi = dSi;
 	  cset->mSi = min(bset->mSi, minL+dur[realL]);
+	  cset->min = cset->mSi;
+	  cset->max = max(bset->max, MinMax[realL].max);
 	  cset->sUp = kUp;
 	  cset->sLow = minL;
 	  cset->extSize = bset->extSize+1;
@@ -350,21 +352,6 @@ cploop:
     }
     */
 
-    //////////  
-    // resize constraints if necessary
-    //////////  
-    while (constraintsSize + 2 * ts * ts * 3
-	> constraintLimit) {
-      cout << "limit reached " << constraintLimit << endl;
-      if (constraintLimit > INITIALSIZE)
-	::delete [] constraintsExtension;
-      constraintsExtension = ::new int[constraintLimit*2];
-      for (i=0; i<constraintsSize; i++)
-	constraintsExtension[i] = constraints[i];
-      constraints = constraintsExtension;
-      constraintLimit = constraintLimit * 2;
-    }
-
 
     //////////  
     // Do the edge-finding
@@ -379,7 +366,10 @@ cploop:
       int durL = dur[l];
 
       if (maxL+durL > s->sUp) {
-	if (s->sUp - s->sLow >= s->dSi + durL) {
+	if ( (s->sUp - s->sLow >= s->dSi + durL) &&
+	     (minL+durL <= s->max) &&
+	     (s->min <= maxL) )
+	     {
 	  // case 4: l may be inside
           if (s->sUp - minL >= s->dSi + durL) {
 	    // case 5: L may be first
@@ -388,9 +378,6 @@ cploop:
 	  }
 	  else {
 	    // it cannot be first
-  	    constraints[constraintsSize] = l;
-	    constraints[constraintsSize+1] = 1;
-	    constraintsSize +=2;
 	    setCount--;
 	    FailOnEmpty(*x[l] >= s->mSi);
 	  }
@@ -405,10 +392,6 @@ cploop:
 	    // l must be last
             if (minL < s->cSi) {
 	      upFlag = 1;
-	      constraints[constraintsSize] = l;
-	      constraints[constraintsSize+1] = 1;
-	      constraintsSize +=2;
-
 	      FailOnEmpty(*x[l] >= s->cSi);
 	      for (i=0; i < Sets[0].extSize; i++) {
 		int sext = Sets[0].ext[i];
@@ -416,9 +399,6 @@ cploop:
 		if (right < 0) 
 		  return FAILED;
 		if (MinMax[sext].max > right) {
-		  constraints[constraintsSize] = sext;
-		  constraints[constraintsSize+1] = 0;
-		  constraintsSize +=2;
 		  FailOnEmpty(*x[sext] <= right);
 		}
 	      }
@@ -429,9 +409,6 @@ cploop:
 		if (right < 0) 
 		  return FAILED;
 		if (MinMax[sext].max > right) {
-		  constraints[constraintsSize] = sext;
-		  constraints[constraintsSize+1] = 0;
-		  constraintsSize +=2;
 		  FailOnEmpty(*x[sext] <= right);
 		}
 	      }
@@ -448,25 +425,15 @@ cploop:
   }
   }
 
-  //////////  
-  // constrain the variables as memorized
-  //////////  
-  for (i=0; i<constraintsSize; i+=2) {
-    int ci = constraints[i];
-    if (constraints[i+1]==0) {
-      MinMax[ci].max = x[ci]->getMaxElem();	
-    }
-    else {  
-      MinMax[ci].min = x[ci]->getMinElem();	
-    }
+  for (i=0; i<ts; i++) {
+    MinMax[i].min = x[i]->getMinElem();	
+    MinMax[i].max = x[i]->getMaxElem();	
   }
-
 
   //////////  
   // DOWN PHASE
   //////////  
 
-  constraintsSize = 0;
   
   //////////  
   // sort by ascending due date; ie. max(s1)+dur(s1) < max(s2)+dur(s2)
@@ -481,10 +448,11 @@ cploop:
     kDown = MinMax[downTask].min;
     dur0 = 0;
     mSi = 0;
+    int minSi = mysup;
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
-    
+    int minLst =  mysup;
     
     //////////  
     // compute set S0 
@@ -493,10 +461,13 @@ cploop:
 	 for (l=0; l<ts; l++) {
 	   int dl = dur[l];
 	   int xlMin = MinMax[l].min;
-	   int xlMaxDL = MinMax[l].max + dl;
+	   int xlMax = MinMax[l].max;
+	   int xlMaxDL = xlMax + dl;
 	   if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
 	     dur0 =+ dl;
-	     mSi = max( mSi, MinMax[l].max );
+	     mSi = max( mSi, xlMax );
+	     minSi = min( minSi, xlMin+dl );
+	     minLst = min(minLst,xlMax);
 	     set0[set0Size++] = l;
 	   }
 	   else {
@@ -516,9 +487,12 @@ cploop:
     if (kUp-kDown < dur0) return FAILED;
 
     struct Set *oset = &Sets[0];
-    oset->cSi = kUp - dur0;
+    oset->cSi = min(kUp - dur0,minLst);
+//    oset->cSi = kUp - dur0;
     oset->dSi = dur0;
     oset->mSi = mSi;
+    oset->max = mSi;
+    oset->min = minSi;
     oset->sUp = kUp;
     oset->sLow = kDown;
     oset->extSize = set0Size;
@@ -552,6 +526,8 @@ cploop:
 	    cset->cSi = newCSi;
 	    cset->dSi = dSi;
 	    cset->mSi = max(bset->mSi, maxL-durL);
+	    cset->min = min(bset->min, MinMax[realL].min+dur[realL]);
+	    cset->max = cset->mSi;
 	    cset->sUp = maxL;
 	    cset->sLow = kDown;
 	    cset->extSize = bset->extSize+1;
@@ -593,21 +569,6 @@ cploop:
     */
 
     //////////  
-    // resize constraints if necessary
-    //////////  
-    while (constraintsSize + 2 * ts * ts * 3
-	> constraintLimit) {
-      cout << "limit reached " << constraintLimit << endl;
-      if (constraintLimit > INITIALSIZE)
-	::delete [] constraintsExtension;
-      constraintsExtension = ::new int[constraintLimit*2];
-      for (i=0; i<constraintsSize; i++)
-	constraintsExtension[i] = constraints[i];
-      constraints = constraintsExtension;
-      constraintLimit = constraintLimit * 2;
-    }
-
-    //////////  
     // DO the edge finding
     //////////  
     int lCount = 0;
@@ -620,7 +581,10 @@ cploop:
       int durL = dur[l];
 
       if (minL < s->sLow) {
-	if (s->sUp - s->sLow >= s->dSi + durL) {
+	if ( (s->sUp - s->sLow >= s->dSi + durL) &&
+	     (minL+durL <= s->max) &&
+	     (s->min <= maxL) )
+	     {
 	  // case 4: l may be inside
 	    if (maxL + durL - s->sLow >= s->dSi + durL) {
 	    // case 5: L may be last
@@ -629,9 +593,6 @@ cploop:
 	  }
 	  else {
 	    // it cannot be last
-	      constraints[constraintsSize] = l;
-	      constraints[constraintsSize+1] = 0;
-	      constraintsSize +=2;
 	      setCount--;
 	      FailOnEmpty(*x[l] <= s->mSi - durL);
 	  }
@@ -649,18 +610,12 @@ cploop:
 	      int right = s->cSi - durL;
 	      if (right < 0)
 	        return FAILED;
-	      constraints[constraintsSize] = l;
-	      constraints[constraintsSize+1] = 0;
-	      constraintsSize +=2;
 	      FailOnEmpty(*x[l] <= right);
 
 	      int minDL = minL + durL;
 	      for (i=0; i < Sets[0].extSize; i++) {
 		int element = Sets[0].ext[i];
 		if (MinMax[element].min < minDL) {
-		  constraints[constraintsSize] = element;
-		  constraints[constraintsSize+1] = 1;
-		  constraintsSize +=2;
 		  FailOnEmpty(*x[element] >= minDL);
 		}
 	      }
@@ -668,9 +623,6 @@ cploop:
 	      for (i=1; i <= setCount; i++) {
 		int element = Sets[i].val;
 		if (MinMax[element].min < minDL) {
-		  constraints[constraintsSize] = element;
-		  constraints[constraintsSize+1] = 1;
-		  constraintsSize +=2;
 		  FailOnEmpty(*x[element] >= minDL);
 		}
 	      }
@@ -689,18 +641,11 @@ cploop:
   }
   }
 
-  //////////  
-  // impose memorized constraints					    
-  //////////  
-  for (i=0; i<constraintsSize; i+=2) {
-    int ci = constraints[i];
-    if (constraints[i+1]==0) {
-      MinMax[ci].max = x[ci]->getMaxElem();
-    }
-    else { 
-      MinMax[ci].min = x[ci]->getMinElem();
-    }
+  for (i=0; i<ts; i++) {
+    MinMax[i].min = x[i]->getMinElem();	
+    MinMax[i].max = x[i]->getMaxElem();	
   }
+
   
   if ((upFlag == 1)||(downFlag==1)) {
     upFlag = 0;
@@ -751,15 +696,10 @@ reifiedloop:
     goto reifiedloop;
   }
 
-  if (constraintLimit > INITIALSIZE)
-    :: delete [] constraintsExtension;
 
   return P.leave();
 
 failure:
-  if (constraintLimit > INITIALSIZE)
-    :: delete [] constraintsExtension;
-
   return P.fail();
 }
 
@@ -957,11 +897,6 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int dur0;
   int mSi;
 
-  constraints = initConstraints;
-  int * constraintsExtension = NULL;
-
-  int constraintLimit = INITIALSIZE;
-
   DECL_DYN_ARRAY(int, set0, ts);
   DECL_DYN_ARRAY(int, compSet0, ts);
   DECL_DYN_ARRAY(int, forCompSet0Up, ts);
@@ -979,7 +914,6 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int set0Size;
   int compSet0Size;
   int outSideSize;
-  int constraintsSize;
   int mysup = OZ_getFDSup();
   
   DECL_DYN_ARRAY(Set2, Sets, ts);
@@ -1038,7 +972,6 @@ cploop:
   //////////  
   qsort(forCompSet0Up, ts, sizeof(int), compareDescRel);
 
-  constraintsSize = 0;
   {
   for (int upTask=0; upTask < ts; upTask++) {
 
@@ -1115,21 +1048,6 @@ cploop:
 	}
       }
     }
-    
-    //////////  
-    // resize constraints if necessary
-    //////////  
-    while (constraintsSize + 2 * ts * ts * 3
-	> constraintLimit) {
-      cout << "limit reached " << constraintLimit << endl;
-      if (constraintLimit > INITIALSIZE)
-	::delete [] constraintsExtension;
-      constraintsExtension = ::new int[constraintLimit*2];
-      for (i=0; i<constraintsSize; i++)
-	constraintsExtension[i] = constraints[i];
-      constraints = constraintsExtension;
-      constraintLimit = constraintLimit * 2;
-    }
 
     //////////  
     // Do the edge-finding
@@ -1169,12 +1087,8 @@ cploop:
 	      int val = s->sLow + (int) ceil((double) rest / (double) useL);
 	      if (minL < val) {
 		upFlag = 1;
-//		FailOnEmpty(*x[l] >= val);
+		FailOnEmpty(*x[l] >= val);
 //		MinMax[l].min = x[l]->getMinElem();
-                constraints[constraintsSize] = l;
-		constraints[constraintsSize+1] = 1;
-		constraints[constraintsSize+2] = val;
-		constraintsSize +=3;
 	      }
 	      lCount++;
 	    }
@@ -1187,26 +1101,15 @@ cploop:
   }
   }
 
-
-  //////////
-  // Impose memorized constraints  
-  //////////
-  for (i=0; i<constraintsSize; i+=3) {
-    if (constraints[i+1]==0) {
-      FailOnEmpty( *x[constraints[i]] <= constraints[i+2]);
-      MinMax[constraints[i]].max = x[constraints[i]]->getMaxElem();	
-    }
-    else {  
-      FailOnEmpty( *x[constraints[i]] >= constraints[i+2]);
-      MinMax[constraints[i]].min = x[constraints[i]]->getMinElem();	
-    }
+  for (i=0; i<ts; i++) {
+    MinMax[i].min = x[i]->getMinElem();	
+    MinMax[i].max = x[i]->getMaxElem();	
   }
 
   //////////
   // DOWN PHASE
   //////////
 
-  constraintsSize = 0;
   
 
   //////////
@@ -1293,22 +1196,6 @@ cploop:
       }
     }
 
-    //////////  
-    // resize constraints if necessary
-    //////////  
-    while (constraintsSize + 2 * ts * ts * 3
-	> constraintLimit) {
-      cout << "limit reached " << constraintLimit << endl;
-      if (constraintLimit > INITIALSIZE)
-	::delete [] constraintsExtension;
-      constraintsExtension = ::new int[constraintLimit*2];
-      for (i=0; i<constraintsSize; i++)
-	constraintsExtension[i] = constraints[i];
-      constraints = constraintsExtension;
-      constraintLimit = constraintLimit * 2;
-    }
-
-
     //////////
     // Do the edge-finding
     //////////
@@ -1353,12 +1240,8 @@ cploop:
 		int right = val - durL;
 		if (right < 0)
 		  return FAILED;
-//		FailOnEmpty(*x[l] <= right);
+		FailOnEmpty(*x[l] <= right);
 //		MinMax[l].max = x[l]->getMaxElem();
-            constraints[constraintsSize] = l;
-	    constraints[constraintsSize+1] = 0;
-	    constraints[constraintsSize+2] = right;
-	    constraintsSize +=3;
 	      }
 	      lCount++;
 	    }
@@ -1370,20 +1253,11 @@ cploop:
     }
   }
   }
-
-  //////////
-  // Impoes memorized constraints
-  //////////
-  for (i=0; i<constraintsSize; i+=3) {
-    if (constraints[i+1]==0) {
-      FailOnEmpty( *x[constraints[i]] <= constraints[i+2]);
-      MinMax[constraints[i]].max = x[constraints[i]]->getMaxElem();
-    }
-    else { 
-      FailOnEmpty( *x[constraints[i]] >= constraints[i+2]);
-      MinMax[constraints[i]].min = x[constraints[i]]->getMinElem();
-    }
+  for (i=0; i<ts; i++) {
+    MinMax[i].min = x[i]->getMinElem();	
+    MinMax[i].max = x[i]->getMaxElem();	
   }
+
 
   if ((upFlag == 1)||(downFlag==1)) {
     upFlag = 0;
@@ -1700,14 +1574,10 @@ capLoop:
 
 
 finish:  
-return P.leave();
-if (constraintLimit > INITIALSIZE)
-  :: delete [] constraintsExtension;
 
+  return P.leave();
 
 failure:
-if (constraintLimit > INITIALSIZE)
-  :: delete [] constraintsExtension;
 
   return P.fail();
 }
