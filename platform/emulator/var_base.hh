@@ -103,14 +103,11 @@ class OzVariable {
   //
 private:
   union {
-    TypeOfVariable      var_type;
-    OZ_FiniteDomain   * patchDomain;
-    OZ_FSetConstraint * patchFSet;
-    OZ_Ct             * patchCt;
-    OZ_FDIntVar * cpi_fd_var;
-    OZ_FSetVar  * cpi_fs_var;
-    OZ_CtVar    * cpi_ct_var;
-    void        * cpi_raw;
+    TypeOfVariable var_type;
+    OZ_FDIntVar  * cpi_fd_var;
+    OZ_FSetVar   * cpi_fs_var;
+    OZ_CtVar     * cpi_ct_var;
+    void         * cpi_raw;
   } u;
 
   // these enumerables have to be comaptible!
@@ -234,12 +231,6 @@ public:
   OZ_Boolean testStoreFlag(void) {
     return ((long)suspList) & STORE_FLAG;
   }
-  OZ_Boolean testResetStoreFlag(void) {
-    OZ_Boolean r = testStoreFlag();
-    resetStoreFlag();
-    return r;
-  }
-
   void setReifiedFlag(void) {
     suspList = (SuspList *) (((long) suspList) | REIFIED_FLAG);
   }
@@ -248,11 +239,6 @@ public:
   }
   OZ_Boolean testReifiedFlag(void) {
     return ((long)suspList) & REIFIED_FLAG;
-  }
-  OZ_Boolean testResetReifiedFlag(void) {
-    OZ_Boolean r = testReifiedFlag();
-    resetReifiedFlag();
-    return r;
   }
   //
   void dropPropagator(Propagator *);
@@ -330,35 +316,6 @@ public:
                                      glob_var->getBoardInternal());
   }
 
-  // needed to catch multiply occuring reified vars in propagators
-  void patchReified(OZ_FiniteDomain * d, Bool isBool) {
-    u.patchDomain = d;
-    if (isBool) {
-      u.patchDomain =
-        (OZ_FiniteDomain*) ToPointer(ToInt32(u.patchDomain) | u_bool);
-    }
-    setReifiedFlag();
-  }
-  void unpatchReified(Bool isBool) {
-    setType(isBool ? OZ_VAR_BOOL : OZ_VAR_FD);
-    resetReifiedFlag();
-  }
-  OZ_Boolean isBoolPatched(void) {
-    return (u.var_type & u_mask) == u_bool;
-  }
-  OZ_Boolean isFDPatched(void) {
-    return (u.var_type & u_mask) == u_fd;
-  }
-  OZ_Boolean isFSetPatched(void) {
-    return (u.var_type & u_mask) == u_fset;
-  }
-  OZ_Boolean isCtPatched(void) {
-    return (u.var_type & u_mask) == u_ct;
-  }
-
-  OZ_FiniteDomain * getReifiedPatch(void) {
-    return (OZ_FiniteDomain *)  (u.var_type & ~u_mask);
-  }
 };
 
 /* ---------------------------------------------------------------------- */
@@ -488,64 +445,6 @@ int oz_isNonKinded(TaggedRef r)
 /* -------------------------------------------------------------------------
  *
  * ------------------------------------------------------------------------- */
-
-// only SVar and their descendants can be exclusive
-inline
-void setStoreFlag(OZ_Term t)
-{
-  tagged2CVar(t)->setStoreFlag();
-}
-
-inline
-void setReifiedFlag(OZ_Term t)
-{
-  tagged2CVar(t)->setReifiedFlag();
-}
-
-inline
-OZ_Boolean testReifiedFlag(OZ_Term t)
-{
-  return tagged2CVar(t)->testReifiedFlag();
-}
-
-inline
-void patchReified(OZ_FiniteDomain * fd, OZ_Term t, Bool isBool)
-{
-  tagged2CVar(t)->patchReified(fd, isBool);
-}
-
-inline
-OZ_Boolean testBoolPatched(OZ_Term t)
-{
-  return tagged2CVar(t)->isBoolPatched();
-}
-
-inline
-OZ_Boolean testResetStoreFlag(OZ_Term t)
-{
-  return tagged2CVar(t)->testResetStoreFlag();
-}
-
-inline
-OZ_Boolean testStoreFlag(OZ_Term t)
-{
-  return tagged2CVar(t)->testStoreFlag();
-}
-
-inline
-OZ_Boolean testResetReifiedFlag(OZ_Term t)
-{
-  return tagged2CVar(t)->testResetReifiedFlag();
-}
-
-inline
-OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
-{
-  OzVariable * v = tagged2CVar(t);
-
-  v->unpatchReified(isBool);
-  return v->getReifiedPatch();
-}
 
 // dealing with global variables
 void bindGlobalVar(OZ_Term *, OZ_Term *);

@@ -928,7 +928,6 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     DEREF(v, vptr, vtag);
 
     if (isVariableTag(vtag)) {
-      Assert(!isCVarTag(vtag) || (!testStoreFlag(v) && !testReifiedFlag(v)));
 
       if (OZ_CPIVar::is_in_vars_removed(vptr)) {
 #ifdef DEBUG_REMOVE_PARAMS

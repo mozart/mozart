@@ -96,59 +96,34 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 
         OzVariable * cv = tagged2CVar(h);
 
-        if (cv->testReifiedFlag()) {
-
-          if (cv->isBoolPatched())
-            goto bool_lbl;
-          if (cv->isFDPatched())
-            goto fd_lbl;
-          if (cv->isFSetPatched())
-            goto fs_lbl;
-          if (cv->isCtPatched())
-            goto ct_lbl;
-        } else if (cv->isParamTagged() ) {
-          switch (cv->getTypeMasked()) {
-          case OZ_VAR_FD:
-            goto fd_lbl;
-          case OZ_VAR_BOOL:
-            goto bool_lbl;
-          case OZ_VAR_FS:
-            goto fs_lbl;
-          case OZ_VAR_CT:
-            goto ct_lbl;
-          default:
-            goto problem;
-          }
-        } else if (cv->getType() == OZ_VAR_FD) {
-        fd_lbl:
+        switch (cv->getTypeMasked()) {
+        case OZ_VAR_FD:
           o << ((OzFDVariable *) cv)->getDom().toString();
-        } else if (cv->getType() == OZ_VAR_BOOL) {
-        bool_lbl:
+          break;
+        case OZ_VAR_BOOL:
           o << "{0#1}";
-        } else if (cv->getType() == OZ_VAR_FS) {
-        fs_lbl:
+          break;
+        case OZ_VAR_FS:
           o << ((OzFSVariable *) cv)->getSet().toString();
-        } else if (cv->getType() == OZ_VAR_CT) {
-        ct_lbl:
+          break;
+        case OZ_VAR_CT:
           o << ((OzCtVariable *) cv)->getConstraint()->toString(0);
-        } else {
+          break;
+        default:
           goto problem;
         }
       }
-      break;
 
-    default:
-      goto problem;
+      not_first = TRUE;
     }
-
-    not_first = TRUE;
   }
-
-  if (!OZ_isNil(args)) goto problem;
-  if (not_top) o << ']' << flush;
+  if (!OZ_isNil(args))
+    goto problem;
+  if (not_top)
+    o << ']' << flush;
   return;
 
-problem:
+ problem:
   OZ_warning("Unexpected term found in argument list "
              "of propagator while printing %x, %x.", args, tagTypeOf(args));
 }

@@ -50,17 +50,6 @@ Bool isGenFSetVar(TaggedRef term)
 }
 
 inline
-OZ_FSetConstraint * unpatchReifiedFSet(OZ_Term t)
-{
-  Assert(!oz_isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-  OzFSVariable * fsv = ((OzFSVariable *) tagValueOf(t));;
-
-  fsv->unpatchReified();
-  return fsv->getReifiedPatch();
-}
-
-
-inline
 void OzFSVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
 {
   Assert(!oz_isFSetValue(*trPtr));
