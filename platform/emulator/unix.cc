@@ -1797,15 +1797,36 @@ OZ_BI_define(unix_exec,3,1){
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError  = GetStdHandle(STD_ERROR_HANDLE);
 
+  char ozppidbuf[100];
+  if (!do_kill) {
+    if (GetEnvironmentVariable("OZPPID", ozppidbuf, sizeof(ozppidbuf)) == 0) {
+      ozppidbuf[0] = 0;
+    } else {
+      SetEnvironmentVariable("OZPPID", NULL);
+      Assert(ozppidbuf[0] != 0);
+    }
+  } else {
+    ozppidbuf[0] = 0;
+  }
+  // If don't want the child to be killed and we did have the OZPPID,
+  // then OZPPID is unset and saved in the buffer.  Otherwise, the
+  // buffer contains an empty string.
+
   PROCESS_INFORMATION pinf;
 
   if (!CreateProcess(NULL,buf,NULL,NULL,FALSE,
-                     0,NULL,NULL,&si,&pinf)) {
+                     (do_kill ? 0 : DETACHED_PROCESS),
+                     NULL,NULL,&si,&pinf)) {
+    if (ozppidbuf[0] != 0)
+      SetEnvironmentVariable("OZPPID", ozppidbuf);
     return raiseUnixError("exec",0, "Cannot exec process.",
                           "os");
   }
-  CloseHandle(pinf.hProcess);
   CloseHandle(pinf.hThread);
+  CloseHandle(pinf.hProcess);
+
+  if (ozppidbuf[0] != 0)
+    SetEnvironmentVariable("OZPPID", ozppidbuf);
 
   int pid = pinf.dwProcessId;
 

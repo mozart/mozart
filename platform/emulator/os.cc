@@ -559,27 +559,7 @@ int oskill(int pid, int sig)
 int osSystem(char *cmd)
 {
 #ifdef WINDOWS
-  if (!runningUnderNT())
-    return system(cmd);
-
-  // RS: don't know why but NT hangs when I use system(3)
-  STARTUPINFO si;
-  memset(&si,0,sizeof(si));
-  si.cb = sizeof(si);
-  si.dwFlags = STARTF_FORCEOFFFEEDBACK;
-
-  PROCESS_INFORMATION pinf;
-
-  if (CreateProcess(NULL,cmd,NULL,NULL,FALSE,0,NULL,NULL,&si,&pinf) == FALSE)
-    return 1;
-  CloseHandle(pinf.hThread);
-  DWORD ret = WaitForSingleObject(pinf.hProcess,INFINITE);
-  if (ret == WAIT_FAILED ||
-      GetExitCodeProcess(pinf.hProcess,&ret) == FALSE)
-    ret = 1;
-
-  CloseHandle(pinf.hProcess);
-  return ret;
+  return system(cmd);
 #else
   if (cmd == NULL) {
     return 1;
@@ -1090,15 +1070,6 @@ void osInit()
   int aux = ossocketpair(PF_UNIX,SOCK_STREAM,0,sv);
   createReader(sv[0],GetStdHandle(STD_INPUT_HANDLE));
   wrappedStdin = sv[1];
-
-  /* win32 does not support process groups,
-   * so we set OZPPID such that a subprocess can check whether
-   * its father still lives
-   */
-  char auxbuf[100];
-  int ppid = GetCurrentProcessId();
-  sprintf(auxbuf,"%d",ppid);
-  SetEnvironmentVariable("OZPPID",strdup(auxbuf));
 
 #else
 

@@ -157,14 +157,6 @@ char *OZ_Propagator::toString() const
   return strdup(str.str());
 }
 
-
-#ifdef WINDOWS
-OZ_Boolean OZ_Propagator::mayBeEqualVars(void)
-{
-  return Propagator::getRunningPropagator()->isUnify();
-}
-#endif
-
 OZ_Return OZ_Propagator::replaceBy(OZ_Propagator * p)
 {
   Propagator::getRunningPropagator()->setPropagator(p);

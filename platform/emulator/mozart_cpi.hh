@@ -663,14 +663,10 @@ public:
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
-#ifdef WINDOWS
-  OZ_Boolean mayBeEqualVars(void);
-#else
   OZ_Boolean mayBeEqualVars(void) {
     extern int __OZ_rp_isUnify;
     return __OZ_rp_isUnify;
   }
-#endif
   OZ_Return replaceBy(OZ_Propagator *);
   OZ_Return replaceBy(OZ_Term, OZ_Term);
   OZ_Return replaceByInt(OZ_Term, int);

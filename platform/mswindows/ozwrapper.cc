@@ -28,8 +28,6 @@ bool console = true;
 
 int main(int argc, char **argv)
 {
-  publishPid();
-
   char *cmdline = makeCmdLine(true);
 
   STARTUPINFO si;
