@@ -1161,7 +1161,6 @@ for (i=0; i<ts; i++) {
     if ( capacity*(val - ra) < sum2) {
       int up = (int) ceil( (double) sum1 / (double) capacity);
       if (ra + up > x[i]->getMinElem()) {
-      cout << "gaga" << endl;
 	FailOnEmpty(*x[i] >= ra + up);
       }
     }
@@ -1178,7 +1177,6 @@ for (i=0; i<ts; i++) {
     if ( capacity*(val - ra) < sum2) {
       int up = (int) ceil( (double) sum1 / (double) capacity);
       if (ra + up > x[i]->getMinElem()) {
-      cout << "gaga" << endl;
 	FailOnEmpty(*x[i] >= ra + up);
       }
     }
@@ -1401,7 +1399,9 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
     
-    if ( (kUp-kDown)*capacity < use0) goto failure;
+    if ( (kUp-kDown)*capacity < use0) {
+      goto failure;
+    }
 
     struct Set2 *oset = &Sets[0];
     oset->dSi = use0;
@@ -1431,7 +1431,9 @@ cploop:
 	  int dSi = bset->dSi + durL*use[realL];
 	  int maxL = MinMax[realL].max+durL;
 	  if ( (maxL - kDown)*capacity < dSi)
-	    goto failure;
+	    {
+	      goto failure;
+	    }
 	  else {
 	    struct Set2 *cset = &Sets[setSize];	
 	    cset->dSi = dSi;
@@ -1473,7 +1475,7 @@ cploop:
 	  }
 	}
 	else {
-	  if (maxL + durL - s->sLow >= s->dSi + durL) {
+	  if ((maxL + durL - s->sLow) * capacity >= s->dSi + durL*useL) {
 	    // case 5: L may be last
 	    lCount++;
 	  }
@@ -1656,7 +1658,6 @@ capLoop:
       }
       left_pt = right_pt;
     }
-
 
     int last = 0;
     //////////
