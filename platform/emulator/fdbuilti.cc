@@ -27,7 +27,7 @@
 //-----------------------------------------------------------------------------
 // class BIfdHeadManager
 //-----------------------------------------------------------------------------
-// Global data
+// Global data which are shared between different pieces of code
 
 TaggedRef static_var[MAXFDBIARGS];
 TaggedRefPtr static_varptr[MAXFDBIARGS];
@@ -45,6 +45,8 @@ float static_float_b[MAXFDBIARGS];
 
 int static_index_offset[MAXFDBIARGS];
 int static_index_size[MAXFDBIARGS];
+
+FiniteDomain __CDVoidFiniteDomain(fd_full);
 
 //-----------------------------------------------------------------------------
 // Member functions
@@ -232,7 +234,7 @@ void BIfdHeadManager::addForFDishSusp(int i, Suspension * susp)
 
 // functions used by BIfdHeadManager::simplifyHead and
 // BIfdBodyManager::simplifyBody
-const int taggedIndex = 0x00000008;
+const int taggedIndex = 0x00000008; // produces GCTAG 8 + 5 = 13
 inline TaggedRef makeTaggedIndex(TaggedRef t) {return (t | taggedIndex);}
 inline TaggedRef getIndex(TaggedRef t) {return (t & ~taggedIndex);}
 inline Bool isTaggedIndex(TaggedRef t) {return (t & taggedIndex);}
@@ -293,12 +295,12 @@ int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
 TaggedRef * BIfdBodyManager::bifdbm_var;
 TaggedRefPtr * BIfdBodyManager::bifdbm_varptr;
 TypeOfTerm * BIfdBodyManager::bifdbm_vartag;
-FiniteDomainPtr BIfdBodyManager::bifdbm_dom[MAXFDBIARGS];
-FiniteDomain BIfdBodyManager::bifdbm_domain[MAXFDBIARGS];
-int BIfdBodyManager::bifdbm_init_dom_size[MAXFDBIARGS];
-Bool BIfdBodyManager::bifdbm_is_local[MAXFDBIARGS];
-int BIfdBodyManager::cache_from[MAXFDBIARGS];
-int BIfdBodyManager::cache_to[MAXFDBIARGS];
+FiniteDomainPtr * BIfdBodyManager::bifdbm_dom;
+FiniteDomain * BIfdBodyManager::bifdbm_domain;
+int * BIfdBodyManager::bifdbm_init_dom_size;
+Bool * BIfdBodyManager::bifdbm_is_local;
+int * BIfdBodyManager::cache_from;
+int * BIfdBodyManager::cache_to;
 
 int BIfdBodyManager::curr_num_of_vars;
 Bool BIfdBodyManager::vars_left;
@@ -313,6 +315,13 @@ void BIfdBodyManager::initStaticData(void) {
   bifdbm_vartag = static_vartag;
   index_offset = static_index_offset;
   index_size = static_index_size;
+
+  bifdbm_dom = new FiniteDomainPtr[MAXFDBIARGS];
+  bifdbm_domain = new FiniteDomain[MAXFDBIARGS];
+  bifdbm_init_dom_size = new int[MAXFDBIARGS];
+  bifdbm_is_local = new Bool[MAXFDBIARGS];
+  cache_from = new int[MAXFDBIARGS];
+  cache_to = new int[MAXFDBIARGS];
 }
 
 //-----------------------------------------------------------------------------
@@ -352,19 +361,23 @@ void BIfdBodyManager::_introduce(int i, TaggedRef v)
     bifdbm_domain[i].setFull();
     bifdbm_dom[i] = &bifdbm_domain[i];
     bifdbm_is_local[i] = am.isLocalSVar(v);
+  } else if (vtag == LITERAL) {
+    bifdbm_dom[i] = &__CDVoidFiniteDomain;
+    bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
   } else {
     error("Found unexpected term tag.");
   }
   bifdbm_var[i] = v;
   bifdbm_varptr[i] = vptr;
   bifdbm_vartag[i] = vtag;
-}
+} // BIfdBodyManager::_introduce
 
-void BIfdBodyManager::process(void)
+inline
+void BIfdBodyManager::processFromTo(int from, int to)
 {
   vars_left = glob_vars_touched = FALSE;
   
-  for (int i = curr_num_of_vars; i--; ) {
+  for (int i = from; i < to; i += 1) {
     TypeOfTerm vartag = bifdbm_vartag[i];
 
     if (vartag == SMALLINT) {
@@ -429,6 +442,9 @@ void BIfdBodyManager::process(void)
   } // for
 } // BIfdBodyManager::process
 
+void BIfdBodyManager::process(void) {
+  processFromTo(0, curr_num_of_vars);
+}
 
 void BIfdBodyManager::processNonRes(void)
 {
@@ -567,7 +583,6 @@ Bool BIfdBodyManager::introduce(TaggedRef v)
     return FALSE;
   }
 
-  saveDomainOnTopLevel();
   return TRUE;
 } // BIfdBodyManager::introduce
 
@@ -625,6 +640,73 @@ int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
   return to;
 } // simplifyBody
 
+
+void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
+					  STuple &vp)
+{
+  // 1st pass: mark first occ of a var
+  for (int v = 0; v < variables; v++) {
+    Assert(isCVar(bifdbm_vartag[idx_v(v)]) ||
+	   isSmallInt(bifdbm_vartag[idx_v(v)]));
+    if (isAnyVar(bifdbm_var[idx_v(v)]))
+      if (! isTaggedIndex(*bifdbm_varptr[idx_v(v)])) {
+	*bifdbm_varptr[idx_v(v)] = makeTaggedIndex(v);
+      } else {
+	int fs = getIndex(*bifdbm_varptr[idx_v(v)]);
+	
+	// unify corresponding local variables
+	for (int c = 0; c < clauses; c++) {
+	  // check void variables
+	  TaggedRef l_var, r_var;
+	  
+	  if (isLiteral(bifdbm_vartag[idx_vp(c, fs)])) {
+	    // convert void variable to heap variable
+	    GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, fs)]);
+	    l_var = TaggedRef(newTaggedCVar(fv));
+	    // update arguments
+	    STuple &vp_c = *tagged2STuple(deref(vp[c]));
+	    vp_c[fs] = l_var;
+	  } else if (isSmallInt(bifdbm_vartag[idx_vp(c, fs)])) {
+	    l_var = bifdbm_var[idx_vp(c, fs)];
+	  } else if (isCVar(bifdbm_vartag[idx_vp(c, fs)])) {
+	    l_var = TaggedRef(bifdbm_varptr[idx_vp(c, fs)]);
+	  } else {
+	    error("Unexpected type found for l_var variable.");
+	  }
+	  
+	  if (isLiteral(bifdbm_vartag[idx_vp(c, v)])) {
+	    // convert void variable to heap variable
+	    GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, v)]);
+	    r_var = TaggedRef(newTaggedCVar(fv));
+	    // update arguments
+	    STuple &vp_c = *tagged2STuple(deref(vp[c]));
+	    vp_c[v] = r_var;
+	  } else if (isSmallInt(bifdbm_vartag[idx_vp(c, v)])) {
+	    r_var = bifdbm_var[idx_vp(c, v)];
+	  } else if (isCVar(bifdbm_vartag[idx_vp(c, v)])) {
+	    r_var  = TaggedRef(bifdbm_varptr[idx_vp(c, v)]);
+	  } else {
+	    error("Unexpected type found for r_var variable.");
+	  }
+	  if (OZ_unify(l_var, r_var) == FALSE) {
+	    *bifdbm_dom[idx_b(c)] &= 0;
+	    goto escape;
+	  }
+	  introduceLocal(idx_vp(c, fs), l_var);
+	  introduceLocal(idx_vp(c, v), r_var);
+	}
+      }
+  }
+  
+ escape:
+  // 2nd pass: undo marks
+  for (v = 0; v < variables; v++) {
+    if (isAnyVar(bifdbm_vartag[idx_v(v)]))
+      *bifdbm_varptr[idx_v(v)] = bifdbm_var[idx_v(v)];
+  }
+}
+
+
 Bool BIfdBodyManager::_unifiedVars(void)
 {
   Bool ret = FALSE;
@@ -658,11 +740,10 @@ void BIinitFD()
   BIadd("fdDiscard", 0, BIfdDiscard);
   BIadd("fdGetNext", 1, BIfdGetNext);
   BIadd("fdPrint", 0, BIfdPrint);
-  BIadd("fdAverage", 0, BIfdAverage);
+  BIadd("fdTotalAverage", 0, BIfdTotalAverage);
 
 // fdcore.cc
   BIadd("fdIs", 1, BIfdIs, FALSE, (InlineFunOrRel) BIfdIsInline);
-  BIadd("fdIs", 1, BIfdIs);
   BIadd("fdIsVar", 1, BIisFdVar);
   BIadd("fdGetLimits", 2, BIgetFDLimits);
   BIadd("fdGetMin", 2, BIfdMin);
@@ -674,6 +755,7 @@ void BIinitFD()
   BIadd("fdPutLe", 2, BIfdPutLe);
   BIadd("fdPutGe", 2, BIfdPutGe);
   BIadd("fdPutList", 3, BIfdPutList);
+  BIadd("fdPutInterval", 3, BIfdPutInterval);
   BIadd("fdPutNot", 2, BIfdPutNot);
   
 // fdrel.cc
@@ -725,7 +807,6 @@ void BIinitFD()
   BIadd("fdMod", 3, BIfdMod);
   BIadd("fdMod_body", 3, BIfdMod_body);
   BIadd("fdPlus_rel", 3, BIfdPlus_rel);
-  BIadd("fdMinus_rel", 3, BIfdMinus_rel);
   BIadd("fdMult_rel", 3, BIfdMult_rel);
   
 // fdgeneric.cc
@@ -746,11 +827,69 @@ void BIinitFD()
   BIadd("fdGenLinAbs", 4, BIfdGenLinAbs);
   BIadd("fdGenLinAbs_body", 4, BIfdGenLinAbs_body);
   
-// fdcard.cc
+// fdcount.cc
   BIadd("fdElement", 3, BIfdElement);
   BIadd("fdElement_body", 3, BIfdElement_body);
   BIadd("fdAtMost", 3, BIfdAtMost);
   BIadd("fdAtMost_body", 3, BIfdAtMost_body);
+  BIadd("fdAtLeast", 3, BIfdAtLeast);
+  BIadd("fdAtLeast_body", 3, BIfdAtLeast_body);
+  BIadd("fdCount", 3, BIfdCount);
+  BIadd("fdCount_body", 3, BIfdCount_body);
+
+// fdcard.cc
+  BIadd("fdCardBIBin", 2, BIfdCardBIBin); 
+  BIadd("fdCardBIBin_body", 2, BIfdCardBIBin_body);
+  BIadd("fdCardNestableBI", 4, BIfdCardNestableBI); 
+  BIadd("fdCardNestableBI_body", 4, BIfdCardNestableBI_body);
+  BIadd("fdCardNestableBIBin", 3, BIfdCardNestableBIBin); 
+  BIadd("fdCardNestableBIBin_body", 3, BIfdCardNestableBIBin_body);
+  BIadd("fdInB", 3, BIfdInB); 
+  BIadd("fdInB_body", 3, BIfdInB_body);
+  BIadd("fdNotInB", 3, BIfdNotInB); 
+  BIadd("fdNotInB_body", 3, BIfdNotInB_body);
+  BIadd("fdGenLinEqB", 4, BIfdGenLinEqB);
+  BIadd("fdGenNonLinEqB", 4, BIfdGenNonLinEqB); 
+  BIadd("fdGenLinEqB_body", 4, BIfdGenLinEqB_body);
+  BIadd("fdGenLinNotEqB", 4, BIfdGenLinNotEqB); 
+  BIadd("fdGenNonLinNotEqB", 4, BIfdGenNonLinNotEqB); 
+  BIadd("fdGenLinNotEqB_body", 4, BIfdGenLinNotEqB_body);
+  BIadd("fdGenLinLessEqB", 4, BIfdGenLinLessEqB);
+  BIadd("fdGenLinLessEqB_body", 4, BIfdGenLinLessEqB_body);
+  BIadd("fdGenNonLinLessEqB", 4, BIfdGenNonLinLessEqB); 
+
+// fdcd.cc
+  BIadd("fdConstrDisjSetUp", 4, BIfdConstrDisjSetUp);
+  BIadd("fdConstrDisj", 3, BIfdConstrDisj);
+  BIadd("fdConstrDisj_body", 3, BIfdConstrDisj_body);
+  
+  BIadd("fdGenLinEqCD", 4, BIfdGenLinEqCD);
+  BIadd("fdGenLinEqCD_body", 4, BIfdGenLinEqCD_body);
+  BIadd("fdGenNonLinEqCD", 4, BIfdGenNonLinEqCD);
+  BIadd("fdGenLinNotEqCD", 4, BIfdGenLinNotEqCD);
+  BIadd("fdGenLinNotEqCD_body", 4, BIfdGenLinNotEqCD_body);
+  BIadd("fdGenNonLinNotEqCD", 4, BIfdGenNonLinNotEqCD);
+  BIadd("fdGenLinLessEqCD", 4, BIfdGenLinLessEqCD);
+  BIadd("fdGenLinLessEqCD_body", 4, BIfdGenLinLessEqCD_body);
+  BIadd("fdGenNonLinLessEqCD", 4, BIfdGenNonLinLessEqCD);
+
+  BIadd("fdPlusCD", 4, BIfdPlusCD_rel);
+  BIadd("fdPlusCD_body", 4, BIfdPlusCD_rel_body);
+  BIadd("fdMultCD", 4, BIfdMultCD_rel);
+  BIadd("fdMultCD_body", 4, BIfdMultCD_rel_body);
+
+  BIadd("fdLessEqOffCD", 4, BIfdLessEqOffCD);
+  BIadd("fdLessEqOffCD_body", 4, BIfdLessEqOffCD_body);
+  BIadd("fdNotEqCD", 3, BIfdNotEqCD);
+  BIadd("fdNotEqCD_body", 3, BIfdNotEqCD_body);
+  BIadd("fdNotEqOffCD", 4, BIfdNotEqOffCD);
+  BIadd("fdNotEqOffCD_body", 4, BIfdNotEqOffCD_body);
+
+  BIadd("fdPutLeCD", 3, BIfdPutLeCD);
+  BIadd("fdPutGeCD", 3, BIfdPutGeCD);
+  BIadd("fdPutListCD", 4, BIfdPutListCD);
+  BIadd("fdPutIntervalCD", 4, BIfdPutIntervalCD);
+  BIadd("fdPutNotCD", 3, BIfdPutNotCD);
 
 // fdwatch.cc
   BIadd("fdWatchDom1", 2, BIfdWatchDom1);
@@ -766,54 +905,18 @@ void BIinitFD()
   BIadd("fdCardSched_body", 4, BIfdCardSched_body);
   BIadd("fdCDSched", 4, BIfdCDSched);
   BIadd("fdCDSched_body", 4, BIfdCDSched_body);
-  BIadd("fdCapacity1", 4, BIfdCapacity1);
-  BIadd("fdCapacity1_body", 4, BIfdCapacity1_body);
-  BIadd("fdCapacity2", 4, BIfdCapacity2);
-  BIadd("fdCapacity2_body", 4, BIfdCapacity2_body);
-  BIadd("fdCapacity3", 4, BIfdCapacity3);
-  BIadd("fdCapacity3_body", 4, BIfdCapacity3_body);
   BIadd("fdNoOverlap", 6, BIfdNoOverlap);
   BIadd("fdNoOverlap_body", 6, BIfdNoOverlap_body);
-  BIadd("fdNoOverlap1", 6, BIfdNoOverlap1);
-  BIadd("fdNoOverlap1_body", 6, BIfdNoOverlap1_body);
-  BIadd("fdGenLinEqB", 4, BIfdGenLinEqB);
   BIadd("fdGenLinEqKillB", 4, BIfdGenLinEqKillB); 
-  BIadd("fdGenNonLinEqB", 4, BIfdGenNonLinEqB); 
-  BIadd("fdGenLinEqB_body", 4, BIfdGenLinEqB_body);
   BIadd("fdGenLinEqKillB_body", 4, BIfdGenLinEqKillB_body);
-  BIadd("fdGenLinNotEqB", 4, BIfdGenLinNotEqB); 
-  BIadd("fdGenNonLinNotEqB", 4, BIfdGenNonLinNotEqB); 
-  BIadd("fdGenLinNotEqB_body", 4, BIfdGenLinNotEqB_body);
-  BIadd("fdGenLinLessEqB", 4, BIfdGenLinLessEqB);
-  BIadd("fdGenLinLessEqB_body", 4, BIfdGenLinLessEqB_body);
-  BIadd("fdGenNonLinLessEqB", 4, BIfdGenNonLinLessEqB); 
-  BIadd("fdGenLinLessEqCD", 4, BIfdGenLinLessEqCD);
-  BIadd("fdGenLinLessEqCD_body", 4, BIfdGenLinLessEqCD_body);
   BIadd("fdGenLinLessEqKillB", 4, BIfdGenLinLessEqKillB); 
   BIadd("fdGenLinLessEqKillB_body", 4, BIfdGenLinLessEqKillB_body);
-  BIadd("fdCardBI", 3, BIfdCardBI); 
-  BIadd("fdCardBI_body", 3, BIfdCardBI_body);
   BIadd("fdCardBIKill", 4, BIfdCardBIKill); 
   BIadd("fdCardBIKill_body", 4, BIfdCardBIKill_body);
-  BIadd("fdCardNestableBI", 4, BIfdCardNestableBI); 
-  BIadd("fdCardNestableBI_body", 4, BIfdCardNestableBI_body);
-  BIadd("fdInB", 3, BIfdInB); 
-  BIadd("fdInB_body", 3, BIfdInB_body);
   BIadd("fdInKillB", 3, BIfdInKillB); 
   BIadd("fdInKillB_body", 3, BIfdInKillB_body);
-  BIadd("fdNotInB", 3, BIfdNotInB); 
-  BIadd("fdNotInB_body", 3, BIfdNotInB_body);
   BIadd("fdNotInKillB", 3, BIfdNotInKillB); 
   BIadd("fdNotInKillB_body", 3, BIfdNotInKillB_body);
-  BIadd("fdIsIntB", 2, BIfdIsIntB); 
-  BIadd("fdIsIntB_body", 2, BIfdIsIntB_body);
-  BIadd("fdCardBIBin", 2, BIfdCardBIBin); 
-  BIadd("fdCardBIBin_body", 2, BIfdCardBIBin_body);
-  BIadd("fdCardNestableBIBin", 3, BIfdCardNestableBIBin); 
-  BIadd("fdCardNestableBIBin_body", 3, BIfdCardNestableBIBin_body);
-  BIadd("fdCDManagerUnion", 4, BIfdCDManagerUnion); 
-  BIadd("fdCDManagerUnion_body", 4, BIfdCDManagerUnion_body);
-  BIadd("fdCDManagerIntersection", 4, BIfdCDManagerIntersection); 
-  BIadd("fdCDManagerIntersection_body", 4, BIfdCDManagerIntersection_body);
 }
+
 
