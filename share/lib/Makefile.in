@@ -168,7 +168,6 @@ TYPS = $(ENVS1:%.env=%.typ)
 TYCS = $(TYPS:%.typ=tyc/%.tyc)
 
 LIBFILES = \
-        $(ALLSRCS:%=$(OZLIB)/%) \
         $(GUMPEXAMPLES:%=$(OZLIB)/gump/examples/%) \
         $(ENVS1:%=$(OZLIB)/%) \
         $(TYCS:tyc/%=$(OZLIB)/%)
@@ -231,6 +230,8 @@ install: all \
         $(OZLIB) $(OZLIBDIRS) $(LIBFILES) $(LIBCOMPONENTS) \
         $(BITMAPDIR) $(BITMAPS) $(OZCARBITMAPDIR) $(OZCARBITMAPS) \
         $(OZBIN) $(BINFILES)
+
+install-src: $(ALLSRCS:%=$(OZLIB)/%)
 
 clean:
         $(RM) *~ *.bak
@@ -363,3 +364,31 @@ tags:
 
 bootstrap: ${OZMA_LIB}
         make Init.ozc all OZBATCH=$(SRCDIR)/ozbatch.sh
+
+#
+# testing components locally
+#  create stage1 components and compile again with the stage1 use
+#    make check
+#  test a new emulator with
+#    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
+.PHONY: stage1 stage2
+
+STAGE1=./stage1
+stage1:
+        make install OZHOME=$(STAGE1)
+
+stage1-bootstrap:
+        make bootstrap OZHOME=$(STAGE1)
+
+stage2:
+        make \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/ \
+        OZBATCH=$(STAGE1)/bin/ozbatch \
+        OZINIT=$(STAGE1)/lib/Init.ozc \
+        OZ_TRACE_LOAD=1
+
+check:
+        make stage1-bootstrap clean stage2
+
+realclean:
+        $(RM) -r $(STAGE1)
