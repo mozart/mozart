@@ -12,7 +12,7 @@ export
    'class'	: Message
    ParseInternal Parse ParseNodup
    BurstInternal Burst BurstNodup
-   Slurp
+   Slurp ParseOptions
 define
    class Message
       attr head body:unit
@@ -120,4 +120,37 @@ define
    end
    %%
    RE_WORD_SEPARATOR = {Regex.make '[[:space:],;]+'}
+   %%
+   RE_OPTIONS_VALUE = {Regex.make '^(\\[[^]]*\\][[:space:]]*)((.|\n)*)$'}
+   RE_OPTIONS       = {Regex.make '\\[([^]]*)\\]'}
+   RE_OPTION        = {Regex.make '([^,]+),?'}
+   RE_OPTION_EQUAL  = {Regex.make '^([^=]+)=(.*)$'}
+   fun {ParseOptions S}
+      M = {Regex.search RE_OPTIONS_VALUE S}
+   in
+      if M==false then o(options:nil value:S)
+      else
+	 Options = {Strip {Regex.group 1 M S}}
+	 Value   = {Strip {Regex.group 2 M S}}
+      in
+	 o(options:
+	      {Regex.foldR RE_OPTIONS Options
+	       fun {$ M L}
+		  Opts = {Strip {Regex.group 1 M Options}}
+	       in
+		  {Regex.foldR RE_OPTION Opts
+		   fun {$ M L}
+		      O = {Strip {Regex.group 1 M Opts}}
+		      M2 = {Regex.search RE_OPTION_EQUAL O}
+		   in
+		      if M2==false then O else
+			 {Strip {Regex.group 1 M2 O}}#
+			 {Strip {Regex.group 2 M2 O}}
+		      end
+		      |L
+		   end L}
+	       end nil}
+	   value: Value)
+      end
+   end
 end
