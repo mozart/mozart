@@ -132,6 +132,8 @@ void oz_registerExtension(int type, oz_unmarshalProcType f)
 void initExtensions() {
   extern void BitString_init();
   extern void ByteString_init();
+  extern void Word_init();
   BitString_init();
   ByteString_init();
+  Word_init();
 }
