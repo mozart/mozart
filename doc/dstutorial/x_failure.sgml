@@ -1,20 +1,41 @@
 <CHAPTER ID="chapter.failure">
   <TITLE>Handling Failure</TITLE>
 
-<P>This chapter first introduces the Mozart failure model:
-what we assume can go wrong with the system
-and how this is reflected in the language entities.
-We then show how to program with this model.
+<P>This chapter introduces the Mozart failure model
+and gives examples of how to use it to build
+robust distributed applications.
+The failure model defines what failures are handled
+and how they are reflected in the language entities.
 We first present
 basic fault-tolerant versions of
-the common language operations.
+common language operations.
 Then we present
 fault-tolerant versions of the server examples.
-Finally
-we summarize the basic fault-detection
-and handling primitives of the language.
-These primitives are used to build
-the fault-tolerant abstractions.
+We conclude with a bigger example:
+reliable objects with recovery.
+
+<P>In its current state,
+the Mozart system provides only the
+primitive operations needed to detect failure
+and reflect it in the language.
+The design and implementation of
+fault-tolerant abstractions
+within the language
+by means of these primitives
+is the subject of ongoing research.
+This chapter gives the first results
+of this research.
+All comments and suggestions for improvements are welcome.
+We particularly encourage the development of other
+abstractions than the ones covered here.
+
+<P>The Mozart failure model is accessed
+through the module <<Fault>>,
+which is documented in the System Modules manual,
+part III: Distributed Programming.
+This chapter explains and justifies this
+functionality, and gives examples
+showing how to use it.
 
 <SECTION><TITLE>Failure model</TITLE>
 
@@ -154,7 +175,7 @@ fault states given above, i.e., a subset of
 <SUBSUBSECTION><TITLE>Handler levels</TITLE>
 
 <P>There are three levels of handlers:
-globally, on a site, and in a thread.
+global, on a site, and in a thread.
 The level determines <EM>which</EM> handler is called.
 A thread-based handler overrides
 a site-based handler, which overrides a global handler.
@@ -162,6 +183,9 @@ It does not matter what the fault condition is.
 If a thread-based handler exists for
 the current thread, then none of the
 others will ever be called there.
+If a site-based handler exists on the
+current site, then the global handler
+will never be called there.
 
 <P>For example, let's say that the cell <<C>>
 has two handlers:
@@ -169,15 +193,24 @@ The first has level <<thread(T1)>> and
 set of conditions <<[permFail]>>.
 The second has level <<global>> and
 set of conditions <<[tempFail,permFail]>>.
-Let's say that the fault state is <<tempFail>>
-and that there are a bunch of threads trying
+Let's say that the cell's fault state is <<tempFail>>
+and that many threads are trying
 to do exchange on <<C>>.
-Then thread <<T1>> will block--its handler is only
+Then thread <<T1>> will block, since its handler is only
 waiting for <<permFail>>, and no action is
 defined for any other fault state.
-All other threads will call the
+All other threads will replace the exchange
+by a call to the
 global handler with condition <<permFail>>.
 
+
+<SUBSUBSECTION><TITLE>Installing and deinstalling handlers</TITLE>
+
+<SUBSUBSECTION><TITLE>How handlers are called</TITLE>
+
+<SUBSUBSECTION><TITLE>Conveniences</TITLE>
+
+<SUBSUBSECTION><TITLE>Limitations of the current release</TITLE>
 
 <P>There are two ways to make this state
 known to an application:
