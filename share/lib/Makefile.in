@@ -83,7 +83,7 @@ Makefile: Makefile.in ../config.status
 # Init
 #---------------------------------------------------------------------
 
-INITSRC1 = URL.oz Prop.oz Module.oz RURL.oz
+INITSRC1 = Resolve.oz Prop.oz Module.oz RURL.oz
 INITSRC = $(INITSRC1:%=init/%) Init.oz \
 	../url-defaults.oz ../functor-defaults.oz
 
