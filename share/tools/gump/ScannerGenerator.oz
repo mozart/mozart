@@ -126,7 +126,8 @@ local
                           items: {Map Ss fun {$ S} line(S) end})}
                1
             end
-         catch _ then
+         catch E then
+            {Error.printException E}
             {Rep error(kind: 'scanner generator'
                        msg: 'invocation of flex.exe failed')}
             1
