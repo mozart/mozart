@@ -200,6 +200,7 @@
 
 		   end}}
 
+
 local
    fun {SelectVar VsPair}
       case VsPair
@@ -214,14 +215,12 @@ local
 	 {Browse VsPair} unit
       end
    end   
-   
    fun {DuplicateRIs Vs}
       {Map Vs fun {$ V} {RI.var.bounds
 			 {RI.getLowerBound V}
 			 {RI.getUpperBound V}}
 	      end}	 
    end
-   
    proc {DistributeKnapSackLP Vs ObjFn Constraints MaxProfit}
       choice
 	 DupVs = {DuplicateRIs Vs}
@@ -232,7 +231,6 @@ local
 			 {RI.getUpperBound MaxProfit}}
 	 
 	 {LP.solve DupVs ObjFn Constraints DupMaxProfit optimal}
-	 
 	 V#DupV = {SelectVar Vs#DupVs}
 	 
 	 if {IsDet V} then
@@ -249,7 +247,6 @@ local
 	 end     
       end
    end
-   
    fun {KnapsackFDLP Problem}
       NumProducts = {Length Problem.profit}
       Resources   = Problem.resources
@@ -271,12 +268,9 @@ local
 	  in
 	     {FD.sumC Resource.npp FDProducts '=<:' Resource.ta}
 	  end}
-	 
 	 {ForAll Products proc {$ V} {RI.var.bounds 0.0 RI.sup V} end}
-	 
 	 ObjFn = objfn(row: {Map Problem.profit fun {$ I} {IntToFloat I} end}
 		       opt: max)
-	 
 	 Constraints = 
 	 {Map {Arity Resources}
 	  fun {$ ResourceName}
@@ -286,15 +280,11 @@ local
 		    type: '=<'
 		    rhs: {IntToFloat Resource.ta})
 	  end}
-	 
 	 {RI.intBounds MaxProfit FDMaxProfit}
 	 {Map Products proc {$ R D} {RI.intBounds R D} end FDProducts}
-	 
-	 
 	 {DistributeKnapSackLP Products ObjFn Constraints MaxProfit}
       end
    end
-   
    Problem =
    problem(
       resources: resource(
