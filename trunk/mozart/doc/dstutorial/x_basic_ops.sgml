@@ -698,6 +698,7 @@ end
 to add extra functionality or to fix a bug.
 We show how to upgrade the server
 without stopping it.
+This cannot be done in Java.
 In practice, one can even do it interactively,
 where a person using the OPI
 (interactive development environment)
