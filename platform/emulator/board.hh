@@ -262,33 +262,33 @@ private:
   // Installation and global marks
   //
 public:
-  int isInstalled(void) {
+  int isMarkedAsInstalled(void) {
     return IsMarkedPointer(bag,1);
   }
-  void setInstalled(void) {  
+  void markAsInstalled(void) {  
     bag = MarkPointer(bag,1);
   }
-  void unsetInstalled() { 
+  void unMarkAsInstalled() { 
     bag = UnMarkPointer(bag,1);
   }
   int isMarkedGlobal(void) {
-    return IsMarkedPointer(bag,2);
+    return IsMarkedPointer(bag,1);
   }
   void setGlobalMark(void) {  
-    bag = MarkPointer(bag,2);
+    bag = MarkPointer(bag,1);
   }
   void unsetGlobalMark() { 
-    bag = UnMarkPointer(bag,2);
+    bag = UnMarkPointer(bag,1);
   }
 
 public:
   DistBag * getDistBag(void) {
-    Assert(!isMarkedGlobal());
-    return (DistBag *) UnMarkPointer(bag,3);
+    Assert(!isMarkedAsInstalled() && !isMarkedGlobal());
+    return (DistBag *) bag;
   }
   void setDistBag(DistBag * db) {
-    Assert(!isMarkedGlobal());
-    bag = MarkPointer(db,IsMarkedPointer(bag,3));
+    Assert(!isMarkedAsInstalled() && !isMarkedGlobal());
+    bag = (void *) db;
   }
   void addToDistBag(Distributor * d);
   Distributor * getDistributor(void);
@@ -334,7 +334,6 @@ public:
   TaggedRef getRootVar() {
     return makeTaggedRef(&rootVar);
   }
-
 
   //
   // Misc
