@@ -17,9 +17,8 @@
 #include "oz.h"
 
 #include "tagged.hh"
-#include "term.hh"
-#include "constter.hh"
-
+#include "value.hh"
+#include "cont.hh"
 #include "board.hh"
 #include "stack.hh"
 #include "taskstk.hh"

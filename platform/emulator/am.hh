@@ -21,8 +21,9 @@
 #include "types.hh"
 
 #include "tagged.hh"
-#include "term.hh"
-#include "constter.hh"
+#include "value.hh"
+
+#include "cont.hh"
 
 #include "stack.hh"
 #include "taskstk.hh"
@@ -283,17 +284,11 @@ extern AM am;
 #include "opcodes.hh"
 #include "codearea.hh"
 
-#include "bignum.hh"
-
-#include "records.hh"
-
 #include "builtins.hh"
 #include "compiler.hh"
 #include "debug.hh"
 #include "os.hh"
 #include "verbose.hh"
-#include "cell.hh"
-#include "objects.hh"
 
 #ifndef OUTLINE
 #include "am.icc"

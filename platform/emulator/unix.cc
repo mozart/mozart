@@ -68,7 +68,7 @@ extern "C" char *inet_ntoa(struct in_addr in);
 // Argument handling
 //
 
-#define OZ_declareVsArg(FUN,ARG,VAR) \
+#define OZ_declareVsArg(ARG,VAR) \
  vs_buff(VAR); OZ_nonvarArg(ARG);                                     \
  { int len; OZ_Bool status; OZ_Term rest, susp;                       \
    status = buffer_vs(OZ_getCArg(ARG), VAR, &len, &rest, &susp);      \
@@ -76,8 +76,7 @@ extern "C" char *inet_ntoa(struct in_addr in);
      if (OZ_isVariable(susp)) {                                            \
        return SUSPEND;                                                \
      } else {                                                         \
-       OZ_warning("%s: virtual string too long in arg %d",FUN,ARG+1); \
-       return FAILED;                                                 \
+       return OZ_raise(OZ_mkTupleC("unix",1,OZ_mkTupleC("vs",2,"virtual string too long in arg",ARG+1))); \
      }                                                                \
    } else if (status == FAILED) {                                     \
      return FAILED;                                                   \
@@ -461,7 +460,7 @@ inline OZ_Bool buffer_vs(OZ_Term vs, char *write_buff, int *len,
 
 OZ_C_ioproc_begin(unix_fileDesc,2)
 {
-  OZ_declareAtomArg("fileDesc", 0, OzFileDesc);
+  OZ_declareAtomArg( 0, OzFileDesc);
   OZ_declareArg(1, out);
 
   int desc;
@@ -496,7 +495,7 @@ OZ_C_proc_begin(unix_getDir,2)
 {
   DIR *dp;
   OZ_Term dirValue;
-  OZ_declareVsArg("getDir", 0, path);
+  OZ_declareVsArg(0, path);
   OZ_declareArg(1, out);
 
   if ((dp = opendir(path)) == NULL)
@@ -517,7 +516,7 @@ OZ_C_proc_begin(unix_stat,2)
   struct stat buf;
   char *fileType;
   off_t fileSize;
-  OZ_declareVsArg("stat", 0, filename);
+  OZ_declareVsArg(0, filename);
   OZ_declareArg(1, out);
 
   if (stat(filename, &buf) < 0)
@@ -596,7 +595,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_open,4)
 {
-  OZ_declareVsArg("open", 0, filename);
+  OZ_declareVsArg(0, filename);
   OZ_declareArg(1, OzFlags);
   OZ_declareArg(2, OzMode);
   OZ_declareArg(3, out);
@@ -688,7 +687,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_close,2)
 {
-  OZ_declareIntArg("close",0,fd);
+  OZ_declareIntArg(0,fd);
   OZ_declareArg(1,out);
 
   WRAPCALL(close(fd),ret,out);
@@ -700,8 +699,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_read,5)
 {
-  OZ_declareIntArg("read",0,fd);
-  OZ_declareIntArg("read",1,maxx);
+  OZ_declareIntArg(0,fd);
+  OZ_declareIntArg(1,maxx);
   OZ_declareArg(2, outHead);
   OZ_declareArg(3, outTail);
   OZ_declareArg(4, outN);
@@ -725,7 +724,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_write, 3)
 {
-  OZ_declareIntArg("write", 0, fd);
+  OZ_declareIntArg(0, fd);
   OZ_declareArg(1, vs);
   OZ_declareArg(2, out);
 
@@ -768,9 +767,9 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_lSeek,4)
 {
-  OZ_declareIntArg("lSeek", 0, fd);
-  OZ_declareIntArg("lSeek", 1, offset);
-  OZ_declareAtomArg("lSeek", 2, OzWhence);
+  OZ_declareIntArg(0, fd);
+  OZ_declareIntArg(1, offset);
+  OZ_declareAtomArg(2, OzWhence);
   OZ_declareArg(3, out);
 
   int whence;
@@ -795,7 +794,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(unix_readSelect,2)
 {
-  OZ_declareIntArg("readSelect",0,fd);
+  OZ_declareIntArg(0,fd);
   OZ_declareArg(1, out);
 
   WRAPCALL(osTestSelect(fd,SEL_READ),sel,out);
@@ -810,7 +809,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(unix_writeSelect,2)
 {
-  OZ_declareIntArg("writeSelect",0,fd);
+  OZ_declareIntArg(0,fd);
   OZ_declareArg(1, out);
 
   WRAPCALL(osTestSelect(fd,SEL_WRITE),sel,out);
@@ -826,7 +825,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(unix_deSelect,1)
 {
-  OZ_declareIntArg("deSelect",0,fd);
+  OZ_declareIntArg(0,fd);
   OZ_deSelect(fd);
   return PROCEED;
 }
@@ -841,9 +840,9 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_socket,4)
 {
-  OZ_declareAtomArg("socket", 0, OzDomain);
-  OZ_declareAtomArg("socket", 1, OzType);
-  OZ_declareVsArg("socket", 2, OzProtocol);
+  OZ_declareAtomArg(0, OzDomain);
+  OZ_declareAtomArg(1, OzType);
+  OZ_declareVsArg(2, OzProtocol);
   OZ_declareArg(3, out);
 
   int domain, type, protocol;
@@ -895,8 +894,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_bindInet,3)
 {
-  OZ_declareIntArg("bindInet",0,sock);
-  OZ_declareIntArg("bindInet",1,port);
+  OZ_declareIntArg(0,sock);
+  OZ_declareIntArg(1,port);
   OZ_declareArg(2, out);
 
   struct sockaddr_in addr;
@@ -918,8 +917,8 @@ OZ_C_proc_end
 #ifndef WINDOWS
 OZ_C_ioproc_begin(unix_bindUnix,3)
 {
-  OZ_declareIntArg("bindUnix",0,s);
-  OZ_declareVsArg("bindUnix",1,path);
+  OZ_declareIntArg(0,s);
+  OZ_declareVsArg(1,path);
   OZ_declareArg(2, out);
 
   struct sockaddr_un addr;
@@ -937,8 +936,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_connectUnix,3)
 {
-  OZ_declareIntArg("connectUnix",0,s);
-  OZ_declareVsArg("connect",1,path);
+  OZ_declareIntArg(0,s);
+  OZ_declareVsArg(1,path);
   OZ_declareArg(2, out);
 
   struct sockaddr_un addr;
@@ -968,7 +967,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_acceptUnix,3)
 {
-  OZ_declareIntArg("acceptUnix", 0, sock);
+  OZ_declareIntArg(0, sock);
   OZ_declareArg(1, path);
   OZ_declareArg(2, out);
 
@@ -986,7 +985,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_getSockName,2)
 {
-  OZ_declareIntArg("getSockName",0,s);
+  OZ_declareIntArg(0,s);
   OZ_Term out = OZ_getCArg(1);
 
   struct sockaddr_in addr;
@@ -1001,8 +1000,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_listen,3)
 {
-  OZ_declareIntArg("listen", 0, s);
-  OZ_declareIntArg("listen", 1, n);
+  OZ_declareIntArg(0, s);
+  OZ_declareIntArg(1, n);
   OZ_declareArg(2, out);
 
   WRAPCALL(listen(s,n), ret, out);
@@ -1014,9 +1013,9 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_connectInet,4)
 {
-  OZ_declareIntArg("connectInet", 0, s);
-  OZ_declareVsArg("connectInet", 1, host);
-  OZ_declareIntArg("connectInet", 2, port);
+  OZ_declareIntArg(0, s);
+  OZ_declareVsArg(1, host);
+  OZ_declareIntArg(2, port);
   OZ_declareArg(3, out);
 
   struct hostent *hostaddr;
@@ -1053,7 +1052,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_acceptInet,4)
 {
-  OZ_declareIntArg("acceptInet", 0, sock);
+  OZ_declareIntArg(0, sock);
   OZ_declareArg(1, host);
   OZ_declareArg(2, port);
   OZ_declareArg(3, out);
@@ -1113,7 +1112,7 @@ static OZ_Bool get_send_recv_flags(OZ_Term OzFlags, int * flags)
 
 OZ_C_ioproc_begin(unix_send, 4)
 {
-  OZ_declareIntArg("send", 0, sock);
+  OZ_declareIntArg(0, sock);
   OZ_declareArg(1, vs);
   OZ_declareArg(2, OzFlags);
   OZ_declareArg(3, out);
@@ -1165,11 +1164,11 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_sendToInet, 6)
 {
-  OZ_declareIntArg("sendToInet", 0, sock);
+  OZ_declareIntArg(0, sock);
   OZ_declareArg(1, vs);
   OZ_declareArg(2, OzFlags);
-  OZ_declareVsArg("sendToInet", 3, host);
-  OZ_declareIntArg("sendToInet", 4, port);
+  OZ_declareVsArg(3, host);
+  OZ_declareIntArg(4, port);
   OZ_declareArg(5, out);
 
   int flags;
@@ -1233,10 +1232,10 @@ OZ_C_proc_end
 #ifndef WINDOWS
 OZ_C_ioproc_begin(unix_sendToUnix, 5)
 {
-  OZ_declareIntArg("sendToUnix", 0, sock);
+  OZ_declareIntArg(0, sock);
   OZ_declareArg(1, vs);
   OZ_declareArg(2, OzFlags);
-  OZ_declareVsArg("sendToUnix", 3, path);
+  OZ_declareVsArg(3, path);
   OZ_declareArg(4, out);
 
   int flags;
@@ -1291,8 +1290,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_shutDown, 3)
 {
-  OZ_declareIntArg("shutDown",0,sock);
-  OZ_declareIntArg("shutDown",1,how);
+  OZ_declareIntArg(0,sock);
+  OZ_declareIntArg(1,how);
   OZ_declareArg(2, out);
 
   WRAPCALL(shutdown(sock, how), ret, out);
@@ -1305,8 +1304,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_receiveFromInet,8)
 {
-  OZ_declareIntArg("receiveFromInet",0,sock);
-  OZ_declareIntArg("receiveFromInet",1,maxx);
+  OZ_declareIntArg(0,sock);
+  OZ_declareIntArg(1,maxx);
   OZ_declareArg(2, OzFlags);
   OZ_declareArg(3, hd);
   OZ_declareArg(4, tl);
@@ -1350,8 +1349,8 @@ OZ_C_proc_end
 #ifndef WINDOWS
 OZ_C_ioproc_begin(unix_receiveFromUnix,7)
 {
-  OZ_declareIntArg("receiveFromUnix",0,sock);
-  OZ_declareIntArg("receiveFromUnix",1,maxx);
+  OZ_declareIntArg(0,sock);
+  OZ_declareIntArg(1,maxx);
   OZ_declareArg(2, OzFlags);
   OZ_declareArg(3, hd);
   OZ_declareArg(4, tl);
@@ -1394,7 +1393,7 @@ static char* argv[maxArgv];
 
 OZ_C_ioproc_begin(unix_pipe,4)
 {
-  OZ_declareVsArg("pipe",0,s);
+  OZ_declareVsArg(0,s);
   OZ_declareArg(1, args);
   OZ_declareArg(2, rpid);
   OZ_declareArg(3, rwsock);
@@ -1569,7 +1568,7 @@ static OZ_Term mkAddressList(char **lstptr)
 
 OZ_C_ioproc_begin(unix_getHostByName, 2)
 {
-  OZ_declareVsArg("getHostByName", 0, name);
+  OZ_declareVsArg(0, name);
   OZ_declareArg(1, out);
 
   struct hostent *hostaddr;
@@ -1593,7 +1592,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_unlink, 2)
 {
-  OZ_declareVsArg("unlink",0,path);
+  OZ_declareVsArg(0,path);
   OZ_declareArg(1, out);
 
   WRAPCALL(unlink(path),ret,out);
@@ -1604,7 +1603,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_system,2)
 {
-  OZ_declareVsArg("system", 0, vs);
+  OZ_declareVsArg(0, vs);
   OZ_declareArg(1, out);
 
   int ret = osSystem(vs);
@@ -1630,8 +1629,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_getServByName, 3)
 {
-  OZ_declareVsArg("getServByName", 0, name);
-  OZ_declareVsArg("getServByName", 1, proto);
+  OZ_declareVsArg(0, name);
+  OZ_declareVsArg(1, proto);
   OZ_Term out = OZ_getCArg(2);
 
   struct servent *serv;
@@ -1652,8 +1651,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_tempName, 3)
 {
-  OZ_declareVsArg("tempName", 0, directory);
-  OZ_declareVsArg("tempName", 1, prefix);
+  OZ_declareVsArg(0, directory);
+  OZ_declareVsArg(1, prefix);
   OZ_declareArg(2, name);
 
   char *filename;
@@ -1674,7 +1673,7 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_getEnv,2)
 {
-  OZ_declareVsArg("getEnv", 0, envVar);
+  OZ_declareVsArg(0, envVar);
 
   char *envValue;
 
@@ -1690,8 +1689,8 @@ OZ_C_proc_end
 /* putenv is NOT POSIX !!! */
 OZ_C_ioproc_begin(unix_putEnv,2)
 {
-  OZ_declareVsArg("putEnv", 0, envVar);
-  OZ_declareVsArg("putEnv", 1, envValue);
+  OZ_declareVsArg(0, envVar);
+  OZ_declareVsArg(1, envValue);
 
   char *buf = new char[strlen(envVar)+strlen(envValue)+2];
   sprintf(buf,"%s=%s",envVar,envValue);
@@ -1755,7 +1754,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(unix_srand, 1)
 {
-  OZ_declareIntArg("srand",0, seed);
+  OZ_declareIntArg(0, seed);
 
   if (seed) {
     srand((unsigned int) seed);

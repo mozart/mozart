@@ -14,7 +14,6 @@
 #include "oz.h"
 
 #include "am.hh"
-#include "bignum.hh"
 
 
 /* TmpBuffer with at LEAST 512 characters,
@@ -332,7 +331,7 @@ char *OZ_intToCString(OZ_Term term)
 
 OZ_Term OZ_CToFloat(OZ_Float i)
 {
-  return makeTaggedFloat(Float::newFloat(i));
+  return makeTaggedFloat(i);
 }
 
 OZ_Float OZ_floatToC(OZ_Term term)
@@ -724,6 +723,35 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
   return makeTaggedSTuple(STuple::newSTuple(label,width));
 }
 
+#include <stdarg.h>
+OZ_Term OZ_mkTupleC(char *label,int arity,...)
+{
+  va_list ap;
+  va_start(ap,arity);
+
+  STuple *st=STuple::newSTuple(OZ_CToAtom(label),arity);
+  for (int i = 0; i < arity; i++) {
+    st->setArg(i,va_arg(ap,OZ_Term));
+  }
+
+  va_end(ap);
+  return makeTaggedSTuple(st);
+}
+
+OZ_Term OZ_mkTuple(OZ_Term label,int arity,...)
+{
+  va_list ap;
+  va_start(ap,arity);
+
+  STuple *st=STuple::newSTuple(label,arity);
+  for (int i = 0; i < arity; i++) {
+    st->setArg(i,va_arg(ap,OZ_Term));
+  }
+
+  va_end(ap);
+  return makeTaggedSTuple(st);
+}
+
 int OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
 {
   DEREF(term,_1,tag);
@@ -1091,6 +1119,7 @@ char *OZ_unixError(int aErrno) {
 
 OZ_Bool OZ_typeError(int pos,char *type)
 {
-  return OZ_raise(mkTuple("typeError",1,
-                          mkTuple("pos",2,OZ_CToInt(pos),OZ_CToAtom(type))));
+  return OZ_raise(OZ_mkTupleC("typeError",1,
+                              OZ_mkTupleC("pos",2,OZ_CToInt(pos),
+                                          OZ_CToAtom(type))));
 }

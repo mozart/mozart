@@ -122,6 +122,8 @@ extern OZ_Term OZ_label     _PROTOTYPE((OZ_Term));
 extern int     OZ_width     _PROTOTYPE((OZ_Term));
 extern OZ_Term OZ_tuple     _PROTOTYPE((OZ_Term, int));
 #define OZ_tupleC(s,n) OZ_tuple(OZ_CToAtom(s),n)
+extern OZ_Term OZ_mkTuple   _PROTOTYPE((OZ_Term label,int arity,...));
+extern OZ_Term OZ_mkTupleC  _PROTOTYPE((char *label,int arity,...));
 
 extern int     OZ_putArg    _PROTOTYPE((OZ_Term, int, OZ_Term));
 extern OZ_Term OZ_getArg    _PROTOTYPE((OZ_Term , int));
@@ -286,7 +288,7 @@ OZ_C_proc_begin(Name,Arity)                                                   \
   }                                                                           \
 }
 
-#define OZ_declareIntArg(FUN,ARG,VAR)                                         \
+#define OZ_declareIntArg(ARG,VAR)                                             \
  int VAR;                                                                     \
  OZ_nonvarArg(ARG);                                                           \
  if (! OZ_isInt(OZ_getCArg(ARG))) {                                           \
@@ -295,7 +297,7 @@ OZ_C_proc_begin(Name,Arity)                                                   \
    VAR = OZ_intToC(OZ_getCArg(ARG));                                          \
  }
 
-#define OZ_declareFloatArg(FUN,ARG,VAR)                                       \
+#define OZ_declareFloatArg(ARG,VAR)                                           \
  OZ_Float VAR;                                                                \
  OZ_nonvarArg(ARG);                                                           \
  if (! OZ_isFloat(OZ_getCArg(ARG))) {                                         \
@@ -306,7 +308,7 @@ OZ_C_proc_begin(Name,Arity)                                                   \
  }
 
 
-#define OZ_declareAtomArg(FUN,ARG,VAR)                                        \
+#define OZ_declareAtomArg(ARG,VAR)                                            \
  char *VAR;                                                                   \
  OZ_nonvarArg(ARG);                                                           \
  if (! OZ_isAtom(OZ_getCArg(ARG))) {                                          \
@@ -314,9 +316,6 @@ OZ_C_proc_begin(Name,Arity)                                                   \
  } else {                                                                     \
    VAR = OZ_atomToC(OZ_getCArg(ARG));                                         \
  }
-
-/* the following one is obsolete */
-#define OZ_declareStringArg(FUN,ARG,VAR) OZ_declareAtomArg(FUN,ARG,VAR)
 
 /* ------------------------------------------------------------------------ *
  * end

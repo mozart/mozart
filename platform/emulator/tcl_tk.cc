@@ -651,7 +651,7 @@ State tcl_write(int fd, char * buff, int len, TaggedRef out) {
 
 
 OZ_C_proc_begin(BItclWrite,3) {
-  OZ_declareIntArg("tclWrite", 0, fd);
+  OZ_declareIntArg(0, fd);
 
   init_tcl_buffer();
   tcl2buffer(OZ_getCArg(1));
@@ -664,7 +664,7 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteBatch,3) {
-  OZ_declareIntArg("tclWriteBatch", 0, fd);
+  OZ_declareIntArg(0, fd);
   TaggedRef batch = deref(OZ_getCArg(1));
 
   init_tcl_buffer();
@@ -683,7 +683,7 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteTuple,4) {
-  OZ_declareIntArg("tclWriteTuple", 0, fd);
+  OZ_declareIntArg(0, fd);
 
   init_tcl_buffer();
   tcl2buffer(OZ_getCArg(1));
@@ -699,7 +699,7 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteTagTuple,5) {
-  OZ_declareIntArg("tclWriteTagTuple", 0, fd);
+  OZ_declareIntArg(0, fd);
   TaggedRef tuple = deref(OZ_getCArg(3));
 
   init_tcl_buffer();
@@ -719,7 +719,7 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteFilter,7) {
-  OZ_declareIntArg("tclWriteFilter", 0, fd);
+  OZ_declareIntArg(0, fd);
 
   init_tcl_buffer();
   vs2buffer(OZ_getCArg(1));
@@ -788,8 +788,8 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteCont,3) {
-  OZ_declareIntArg("tclWriteCont", 0, fd);
-  OZ_declareIntArg("tclWriteCont", 1, written);
+  OZ_declareIntArg(0, fd);
+  OZ_declareIntArg(1, written);
 
   return tcl_write(fd, tcl_buffer_start + written,
                    tcl_buffer-tcl_buffer_start-written,
