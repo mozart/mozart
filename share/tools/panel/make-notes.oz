@@ -309,7 +309,10 @@ local
    
    fun {MakeFrames Fs P R TclT}
       case Fs
-      of nil then TclT
+      of nil then pack({New Tk.frame tkInit(parent:P
+					    highlightthickness: 0
+					    height:             3)}
+		       fill:x side:top)|TclT
       [] F|Fr then TclR TclS
 	 Border = {New TkTools.textframe tkInit(parent: P
 						text:   F.text)}
