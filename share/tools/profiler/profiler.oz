@@ -5,20 +5,18 @@ Profiler =
 {New class
 	from
 	   Gui
-	   SourceManager
 
 	meth init
 	   Gui,init
-	   SourceManager,init
 	end
-	
+
 	meth off
 	   Time.repeat,stop
 	   {Tk.send wm(withdraw self.toplevel)}
 	   {Compile "\\switch -profile"}
 	   {Profile.mode false}
 	end
-	
+
 	meth on
 	   {Tk.batch [update(idletasks)
 		      wm(deiconify self.toplevel)]}
@@ -29,5 +27,5 @@ Profiler =
 	      Time.repeat,go
 	   else skip end
 	end
-	
+
      end init}

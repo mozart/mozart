@@ -166,10 +166,10 @@ in
 		  Stack = {Dget self.ThreadDic I}
 	       in
 		  {Stack exit(M)}
-		  SourceManager,bar(file:{CondSelect M file nofile}
+		  {Emacs bar(file:{CondSelect M file nofile}
 				    line:{CondSelect M line unit}
 				    column:{CondSelect M column unit}
-				    state:runnable)
+				    state:runnable)}
 		  {Stack printTop}
 	       else skip end
 	    end
@@ -248,7 +248,7 @@ in
 	       case {Dbg.checkStopped T} then
 		  Gui,markNode(I runnable)
 		  case T == @currentThread then
-		     SourceManager,configureBar(runnable)
+		     {Emacs configureBar(runnable)}
 		     %Gui,doStatus('Thread #' # I # ' is runnable again')
 		  else skip end
 	       else
@@ -348,7 +348,7 @@ in
 	    case ThreadManager,EmptyTree($) then
 	       currentThread <- undef
 	       currentStack  <- undef
-	       SourceManager,removeBar
+	       {Emacs removeBar}
 	       Gui,selectNode(0)
 	       Gui,clearStack
 	       case Select then
@@ -369,7 +369,7 @@ in
 	       end
 	    else
 	       Gui,status('Thread #' # I # ' died')
-	       SourceManager,removeBar
+	       {Emacs removeBar}
 	       Gui,printStack(id:I frames:nil depth:0)
 	    end
 	 else skip end
@@ -423,13 +423,13 @@ in
 	 in
 	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
-	       SourceManager,removeBar
+	       {Emacs removeBar}
 	       {Thread.resume T}
 	    else
 	       L = {CondSelect Frame line unit}
 	       C = {CondSelect Frame column unit}
 	    in
-	       SourceManager,bar(file:F line:L column:C state:runnable)
+	       {Emacs bar(file:F line:L column:C state:runnable)}
 	       {Stack printTop}
 	    end
 	 else skip end
@@ -488,7 +488,7 @@ in
 	    else
 	       case PrintStack then
 		  case S == terminated then
-		     SourceManager,removeBar
+		     {Emacs removeBar}
 		     Gui,printStack(id:I frames:nil depth:0)
 		  else
 		     F L C Exc = {Stack getException($)}
@@ -496,9 +496,9 @@ in
 		     {Stack print}
 		     {Stack getPos(file:?F line:?L column:?C)}
 		     case Exc == nil then
-			SourceManager,bar(file:F line:L column:C state:S)
+			{Emacs bar(file:F line:L column:C state:S)}
 		     else
-			SourceManager,bar(file:F line:L column:C state:blocked)
+			{Emacs bar(file:F line:L column:C state:blocked)}
 			Gui,doStatus(Exc clear BlockedThreadColor)
 		     end
 		  end
