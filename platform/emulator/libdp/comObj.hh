@@ -122,6 +122,7 @@ public:
   void init(DSite *site);
 
   DSite *getSite() {return site;}
+  CState getState() {return state;}
 
   // For Site:
   // Specifying priority -1 means accepting the default as in msgFormat.m4 and
