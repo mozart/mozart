@@ -273,32 +273,84 @@ define
    %%
 
    local
-      Canvas = {Value.byNeed fun {$}
-                                {New GTKCANVAS.canvas new}
-                             end}
+      fun {ToInt V}
+         if {IsInt V} then V else {Float.toInt V} end
+      end
 
-      fun {UnwrapArgument Key#Value}
-         NewKey   = {ByteString.toString Key}
-         NewValue = case Value
-                    of 'INT'(V)    then V
-                    [] 'DOUBLE'(V) then V
-                    [] 'STRING'(V) then V
-                    [] 'OBJECT'(V) then V
-                    [] 'POINTS'(V) then V
-                    end
-      in
-         NewKey#NewValue
+      %% Wait is necessary to get rid of byneeds.
+      fun {UnwrapValue V}
+         case V
+         of 'INT'(V)    then {Wait V} V
+         [] 'DOUBLE'(V) then {Wait V} V
+         [] 'STRING'(V) then {Wait V} V
+         [] 'OBJECT'(V) then {ObjectToPointer V}
+         [] 'POINTS'(V) then {Map V ToInt}
+         end
+      end
+
+      fun {PutArgs Item Args}
+         case Args
+         of (Key#Value)|Ar then
+            {GtkCanvasNative.itemSet Item Key {UnwrapValue Value}}
+            {PutArgs Item Ar}
+         [] nil then {PointerToObject GTKCANVAS.canvasItem Item}
+         end
+      end
+
+      fun {SplitArgs Pts As Args}
+         case Args
+         of (Key#Value)|Ar then
+            case {VirtualString.toAtom Key}
+            of 'points' then {SplitArgs {UnwrapValue Value} As Ar}
+            [] _        then {SplitArgs Pts (Key#Value)|As Ar}
+            end
+         [] nil then Pts#As
+         end
       end
    in
       fun {CanvasItemNew Group Type Args}
-         {Canvas newItem(Group Type {Map Args UnwrapArgument} $)}
-      end
-      fun {CanvasItemSet Item Type Arg}
-         case {UnwrapArgument Type#Arg}
-         of Type#Arg then
-            {Item set(Type Arg)}
-            unit
+         Parent = {ObjectToPointer Group}
+      in
+         case Type
+         of 'GROUP' then
+            {PutArgs {GtkCanvasNative.groupNew Parent} Args}
+         [] 'WIDGET' then
+            {PutArgs {GtkCanvasNative.itemNew Parent 2} Args}
+         [] 'TEXT' then
+            {PutArgs {GtkCanvasNative.itemNew Parent 0} Args}
+         [] 'RECTANGLE' then
+            {PutArgs {GtkCanvasNative.itemNew Parent 3} Args}
+         [] 'ELLIPSE' then
+            {PutArgs {GtkCanvasNative.itemNew Parent 5} Args}
+         [] 'LINE' then
+            Pts#Ar = {SplitArgs unit nil Args}
+         in
+            {PutArgs {GtkCanvasNative.polygonNew Parent 4 Pts} Ar}
+         [] 'POLYGON' then
+            Pts#Ar = {SplitArgs unit nil Args}
+         in
+            {PutArgs {GtkCanvasNative.polygonNew Parent 6 Pts} Ar}
+         [] 'IMAGE' then
+            ImageArgs = {List.toRecord args {Map Args
+                                             fun {$ Key#Value}
+                                                Key#{UnwrapValue Value}
+                                             end}}
+         in
+            case ImageArgs
+            of args(image: I x: X y: Y width: W height: H anchor: A) then
+               {PointerToObject
+                GTKCANVAS.canvasItem
+                {GtkCanvasNative.imageNew Parent I X Y W H A}}
+            else raise 'CanvasItemNew: illegal image arguments' end
+            end
          end
+      end
+      fun {CanvasItemSet Item Key Value}
+         ItemPtr = {ObjectToPointer Item}
+         ItemVal = {UnwrapValue Value}
+      in
+         {GtkCanvasNative.itemSet ItemPtr Key ItemVal}
+         unit
       end
    end
 
