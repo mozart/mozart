@@ -1,0 +1,154 @@
+@SET_MAKE@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PREFIX          = @prefix@
+PLATFORM        = @PLATFORM@
+LIB_DIR         = $(PREFIX)/contrib
+HOMEURL         = @HOMEURL@
+
+OZC             = @OZC@
+OZL             = @OZL@
+COMPILE         = $(OZC) -c
+OZTOOL          = @OZTOOL@
+CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
+		  -I$(SRCDIR) \
+		  -I$(SRCDIR)/../reflect \
+		  -I$(BUILDTOP)/platform/emulator \
+		  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS        = @CXXFLAGS@
+LDFLAGS         = @LDFLAGS@
+LIBS            = @LIBS@
+
+INSTALL         = @INSTALL@
+INSTALL_DIR     = @INSTALL_DIR@
+INSTALL_LIB     = $(INSTALL) -m 444
+INSTALL_DLL     = $(INSTALL) -m 555
+
+VPATH           += $(SRCTOP)/platform/emulator
+
+RM              = rm -f
+
+LIBS            =
+
+CXXFLAGS        += -UDEBUG
+
+CXX             = $(OZTOOL) c++
+LD              = $(OZTOOL) ld
+DEPEND          = $(CXX) $(CPPFLAGS) $(CFLAGS) -MM
+
+OZDEPEND        = $(OZC) -c -M
+
+FCPDECL         = $(SRCDIR)/fcpdecl.perl
+
+#----------------------------------------------------------------------
+# Sources and targets
+#----------------------------------------------------------------------
+
+MODULE        = FDP # FSP Schedule
+MODULE_CC     = $(addsuffix .fcp.cc, $(addprefix mod,$(MODULE)))
+FUNCTOR_OZ    = $(addsuffix .fcp.oz, $(addprefix mod,$(MODULE)))
+
+CSRCS           =
+
+
+OZSRCS          = Propagator.oz
+
+OZGSRCS         =
+
+OZFNCTS         = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
+
+TARGETS         = modFDP.fcp.ozf Propagator.ozf fcp.so-$(PLATFORM)
+#TARGETS                = fcp.so-$(PLATFORM)
+LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
+
+.PHONY: depend clean distclean bootstrap
+.PRECIOUS: %.o %.fcp.oz %.fcp.cc
+
+all:     $(TARGETS)
+install: $(LIB_DIR) $(LIB_TARGETS)
+
+new: clean all
+
+$(LIB_DIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_DIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
+
+$(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+#----------------------------------------------------------------------
+# Generating first-class propagators
+#----------------------------------------------------------------------
+
+%.fcp.cc: %.spec
+	perl $(FCPDECL) -file $< -interface > $@
+
+%.fcp.oz: %.spec
+	perl $(FCPDECL) -file $< -functor > $@
+
+#----------------------------------------------------------------------
+# Oz part
+#----------------------------------------------------------------------
+
+%.ozf: %.oz
+	$(OZC) -c $< -o $@
+
+%.ozf: %.ozg
+	$(OZC) -c --gump $< -o $@
+
+#----------------------------------------------------------------------
+# C part
+#----------------------------------------------------------------------
+
+%.so-$(PLATFORM): $(CSRCS:.cc=.o) $(MODULE_CC:.cc=.o)
+	$(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+%.o: %.cc
+	$(CXX) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+#----------------------------------------------------------------------
+# Maintenance
+#----------------------------------------------------------------------
+
+depend: Makefile $(MODULE_CC) $(FUNCTOR_OZ) $(CSRCS) $(OZSRCS) $(OZGSRCS)
+	#$(DEPEND) $(CSRCS:%=$(SRCDIR)/%) > Makefile.deps
+	$(DEPEND) $(MODULE_CC) >> Makefile.deps
+	$(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) >> Makefile.deps
+	$(OZDEPEND) $(FUNCTOR_OZ) >> Makefile.deps
+
+clean:
+	$(RM) *.ozf
+	$(RM) *.o
+	$(RM) *.so-$(PLATFORM)
+	$(RM) *.so
+	$(RM) *.l
+	$(RM) *.C
+	$(RM) $(MODULE_CC)
+	$(RM) $(FUNCTOR_OZ)
+	$(RM) *~
+
+distclean: clean
+	$(RM) config.* Makefile*
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#----------------------------------------------------------------------
+# Automatic Makefile update
+#----------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+#----------------------------------------------------------------------
+# Dependencies
+#----------------------------------------------------------------------
+-include Makefile.deps
