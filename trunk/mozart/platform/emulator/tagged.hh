@@ -873,6 +873,12 @@ void unBind(TaggedRef *p, TaggedRef t)
 }
 
 
+inline int32  GCMARK(void *S)    { return makeTaggedRef2p(GCTAG,S); }
+inline int32  GCMARK(int32 S)    { return makeTaggedRef2i(GCTAG,S); }
+
+inline void *GCUNMARK(int32 S)   { return tagValueOf2(GCTAG,S); }
+inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
+
 // ---------------------------------------------------------------------------
 // ------- RefsArray ----------------------------------------------------------
 // ---------------------------------------------------------------------------

@@ -72,10 +72,20 @@ protected:
 public:
   USEHEAPMEMORY;
 
-  Bool gcIsMarked(void);
-  void gcMark(Actor *);
-  void ** gcGetMarkField(void);
-  Actor * gcGetFwd(void);
+  Bool gcIsMarked(void) {
+    return (gcField != 0);
+  }
+  void gcMark(Actor * fwd) {
+    gcField = fwd;
+  }
+  void ** gcGetMarkField(void) {
+    return (void **) &gcField;
+  }
+  Actor * gcGetFwd(void) {
+    Assert(gcIsMarked());
+    return gcField;
+  }
+
   Actor * gcActor();
   void gcRecurse(void);
   OZPRINT;
