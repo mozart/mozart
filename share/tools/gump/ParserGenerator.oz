@@ -661,14 +661,16 @@ local
    class SynExpression
       meth synCompareResult(Result Expected Rep OzTerm)
 	 if Result == Expected then skip
-	 else
+	 else Coord in
+	    Coord = case OzTerm of unit then unit
+		    [] pos(_ _ _) then OzTerm
+		    else {CoordinatesOf OzTerm}
+		    end
 	    case Expected of term then
-	       {Rep error(coord: {CoordinatesOf OzTerm}
-			  kind: ParserGeneratorError
+	       {Rep error(coord: Coord kind: ParserGeneratorError
 			  msg: 'statement at expression position')}
 	    [] expr then
-	       {Rep error(coord: {CoordinatesOf OzTerm}
-			  kind: ParserGeneratorError
+	       {Rep error(coord: Coord kind: ParserGeneratorError
 			  msg: 'expression at statement position')}
 	    end
 	 end
@@ -1039,10 +1041,11 @@ local
 
    class SynSequence from SynExpression
       prop final
-      attr localVariables: unit synExpressions: unit visibles: unit
-      meth init(LocalVariables SynExpressions)
+      attr localVariables: unit synExpressions: unit coord: unit visibles: unit
+      meth init(LocalVariables SynExpressions Coord <= unit)
 	 localVariables <- LocalVariables
 	 synExpressions <- SynExpressions
+	 coord <- Coord
       end
       meth coordinates($)
 	 case @synExpressions of E|_ then {E coordinates($)}
@@ -1079,7 +1082,7 @@ local
       end
       meth simplify(Globals TemplI Rep Expected $)
 	 case @synExpressions of nil then
-	    SynExpression, synCompareResult(expr Expected Rep unit)   %--** position
+	    SynExpression, synCompareResult(expr Expected Rep @coord)
 	    self
 	 [] Exs=_|_ then Vs NewTemplI Results Alt in
 	    SynSequence, EnterDeclarations(Exs)
@@ -1796,8 +1799,8 @@ local
 	    {New SynApplication init(F Actuals)}
 	 [] fSynAction(E) then
 	    {New SynAction init(E)}
-	 [] fSynSequence(Vs As) then
-	    {New SynSequence init(Vs {TransformSyns As Rep})}
+	 [] fSynSequence(Vs As C) then
+	    {New SynSequence init(Vs {TransformSyns As Rep} C)}
 	 [] fSynAlternative(As) then
 	    {New SynAlternative init({TransformSyns As Rep})}
 	 [] fSynAssignment(X A) then
