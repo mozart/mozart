@@ -372,6 +372,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     GenFDVariable * fdvar = tagged2GenFDVar(v);
     OZ_FiniteDomain dom = (fdvar->getDom() & *fd);
 
+    if (dom == fd_empty)
+      goto failed;
+
     if (dom.getSize() == fdvar->getDom().getSize()) 
       goto proceed;
 
