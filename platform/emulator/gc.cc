@@ -1202,8 +1202,8 @@ void GenCVariable::gc(void)
   case AVAR:
     ((AVar *) this)->gcAVar();
     break;
-  case DVAR:
-    ((DVar *) this)->gcDVar();
+  case PerdioVariable:
+    ((PerdioVar *) this)->gcPerdioVar();
     break;
   case FSetVariable:
     ((GenFSetVariable *) this)->gc();
@@ -1331,21 +1331,16 @@ void GenMetaVariable::gc(void)
   gcTagged(data, data);
 }
 
-inline
-void AorDVar::gcADVar(void)
-{
-  GCMETHMSG("AorDVar::gc");
+void AVar::gcAVar(void)
+{ 
+  GCMETHMSG("AVar::gc");
   gcTagged(value, value);
 }
 
-void AVar::gcAVar(void)
-{
-  gcADVar();
-}
-
-void DVar::gcDVar(void)
-{
-  gcADVar();
+void PerdioVar::gcPerdioVar(void)
+{ 
+  GCMETHMSG("PerdioVar::gc");
+  error("not impl");
 }
 
 DynamicTable* DynamicTable::gc(void)
@@ -1567,7 +1562,6 @@ void AM::gc(int msgLevel)
 #endif
   gcTagged(aVarUnifyHandler,aVarUnifyHandler);
   gcTagged(aVarBindHandler,aVarBindHandler);
-  gcTagged(dVarHandler,dVarHandler);
 
   gcTagged(methApplHdl,methApplHdl);
 
