@@ -40,6 +40,30 @@
 #include "vs_mailbox.hh"
 
 //
+// Perdio messages contain a "virtual sites" header;
+//
+enum VSMsgType {
+  VS_M_INVALID = 0,
+  VS_M_PERDIO,                  // perdio messages - passed up;
+  VS_M_INIT_VS,                 // initializing a slave;
+  VS_M_SITE_IS_ALIVE,           // "ping" probing;
+  VS_M_SITE_ALIVE,              //
+  VS_M_UNUSED_SHMID             // GCing of messages' shm segments;
+};
+
+//
+// defined in virtual.cc (require static memory managers, etc.);
+VSMsgBufferOwned* composeVSInitMsg();
+VSMsgBufferOwned* composeVSSiteIsAliveMsg(Site *s);
+VSMsgBufferOwned* composeVSSiteAliveMsg(Site *s);
+VSMsgBufferOwned* composeVSUnusedShmIdMsg(Site *s, key_t shmid);
+//
+void decomposeVSInitMsg(VSMsgBuffer *mb, Site* &s);
+void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, Site* &s);
+void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, Site* &s);
+void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, Site* &s, key_t &shmid);
+
+//
 // The 'VirtualInfo' class serves two purposes:
 // (a) identifies the virtual sites group (the id of the master
 //     in this implementation).
@@ -335,6 +359,44 @@ public:
   VSSiteQueueNode()
     : isInFlag(NO), nextSiteInQueue((VirtualSite *) 0) {}
   ~VSSiteQueueNode() { Assert(!isInFlag); }
+};
+
+//
+// Internal message header;
+class VSMsgHeader {
+protected:
+  VSMsgType type;
+
+public:
+  VSMsgHeader() { DebugCode(type = VS_M_INVALID;); }
+  ~VSMsgHeader() {}
+};
+
+//
+class VSMsgHeaderOwned : public VSMsgHeader {
+public:
+  VSMsgHeaderOwned(VSMsgType typeIn) {
+    type = typeIn;
+  }
+  ~VSMsgHeaderOwned() {}
+
+  //
+  void marshal(VSMsgBuffer *mb) {
+    Assert(sizeof(VSMsgType) <= sizeof(unsigned int));
+    marshalNumber((unsigned int) type, mb);
+  }
+};
+//
+class VSMsgHeaderImported : public VSMsgHeader {
+public:
+  VSMsgHeaderImported(VSMsgBuffer *mb) {
+    Assert(sizeof(VSMsgType) <= sizeof(unsigned int));
+    type = (VSMsgType) unmarshalNumber(mb);
+  }
+  ~VSMsgHeaderImported() {}
+
+  //
+  VSMsgType getMsgType() { return (type); }
 };
 
 //

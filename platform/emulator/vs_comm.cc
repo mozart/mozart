@@ -439,10 +439,10 @@ Bool VSProbingObject::processProbes(unsigned long clock) {
           s->probeFault(PROBE_PERM);
         } else {
           // if it seems to be alive, init a new round...
-          MsgBuffer *mb = getVirtualMsgBuffer(s);
-          marshal_M_SITE_IS_ALIVE(mb, mySite);
-          if (sendTo_VirtualSite(vs, mb, M_SITE_IS_ALIVE, (Site *) 0, 0)
-              != ACCEPTED)
+          VSMsgBufferOwned *mb = composeVSSiteIsAliveMsg(s);
+          if (sendTo_VirtualSite(vs, mb, /* messageType */ M_NONE,
+                                 /* storeSite */ (Site *) 0,
+                                 /* storeIndex */ 0) != ACCEPTED)
             s->probeFault(PROBE_PERM);
           vs->setTimeIsAliveSent(clock);
         }

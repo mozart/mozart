@@ -220,6 +220,8 @@ int PortWaitTimeK = 1;
 SendRecvCounter mess_counter[M_LAST];
 
 char *mess_names[M_LAST] = {
+  "none",
+
   "port_send",
   "remote_send",
   "ask_for_credit",
@@ -231,36 +233,35 @@ char *mess_names[M_LAST] = {
   "redirect",
   "acknowledge",
   "surrender",
-  "request_future",
 
+  "request_future",
   "cell_lock_get",
   "cell_lock_forward",
   "cell_lock_dump",
   "cell_contents",
-  "cell_read",
 
+  "cell_read",
   "cell_remoteread",
   "cell_readans",
   "cell_cantput",
   "lock_token",
-  "lock_cantput",
 
+  "lock_cantput",
   "chain_ack",
   "chain_question",
   "chain_answer",
   "ask_error",
-  "tell_error",
 
+  "tell_error",
   "get_object",
   "get_objectandclass",
   "send_object",
   "send_objectandclass",
-  "register virtual site",
 
   "file",
-  "init virtual site",
-  "unask_error",
-  "send_gate",
+  "export",
+  "unask error",
+  "send gate"
 };
 
 /* *********************************************************************/
@@ -3793,69 +3794,6 @@ void msgReceived(MsgBuffer* bs)
       break;
     }
 
-  case M_INIT_VS:
-#ifdef VIRTUALSITES
-    {
-      Site *ms;
-      VirtualInfo *vi;
-
-      //
-      // The father's virtual site is registered during unmarshaling,
-      // but it is NOT recognized as a virtual one (since 'mySite' has
-      // not been yet initialized - a bootstrapping problem! :-))
-      unmarshal_M_INIT_VS(bs, ms);
-
-      //
-      Assert(!mySite->hasVirtualInfo());
-      // The 'mySite' and 'ms' share the same master (which might be
-      // 'ms' itself), so virtual infos differ in the mailbox key
-      // only, which is to be set later:
-      vi = new VirtualInfo(ms->getVirtualInfo());
-      mySite->makeMySiteVirtual(vi);
-
-      //
-      // Change the type of 'ms': this is a virtual site (per
-      // definition);
-      ms->makeActiveVirtual();
-      break;
-    }
-#else
-    error("siteReceive: 'M_INIT_VS' received without 'VIRTUALSITES'?");
-    break;
-#endif
-
-  case M_SITE_IS_ALIVE:
-#ifdef VIRTUALSITES
-    {
-      Site *s;
-
-      //
-      unmarshal_M_INIT_VS(bs, s);
-      MsgBuffer *bs = msgBufferManager->getMsgBuffer(s);
-      marshal_M_SITE_ALIVE(bs, mySite);
-      SendTo(s, bs, M_SITE_ALIVE, (Site *) 0, 0);
-
-      //
-      break;
-    }
-#else
-    error("siteReceive: 'M_SITE_IS_ALIVE' received without 'VIRTUALSITES'?");
-    break;
-#endif
-
-  case M_SITE_ALIVE:
-#ifdef VIRTUALSITES
-    {
-      Site *s;
-      unmarshal_M_INIT_VS(bs, s);
-      s->siteAlive();
-      break;
-    }
-#else
-    error("siteReceive: 'M_SITE_ALIVE' received without 'VIRTUALSITES'?");
-    break;
-#endif
-
   default:
     error("siteReceive: unknown message %d\n",mt);
     break;
@@ -6151,9 +6089,6 @@ void Site::communicationProblem(MessageType mt,Site*
 
     case M_SEND_GATE:{
       return;}
-
-  case M_INIT_VS:
-    return;
 
   default:
     warning("communication problem - impossible");

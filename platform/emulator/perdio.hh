@@ -52,7 +52,11 @@
 /*  SECTION ::  ENUMs common to protocol/marshaler                          */
 /* ************************************************************************ */
 
+//
+// kost@ : those who update this, must update 'mess_names' as well!!
 enum MessageType {
+  M_NONE = 0,
+
   M_PORT_SEND,
   M_REMOTE_SEND,        // OTI STRING DIF (implicit 1 credit)
   M_ASK_FOR_CREDIT,     // OTI SITE (implicit 1 credit)
@@ -89,16 +93,12 @@ enum MessageType {
   M_SEND_OBJECT,        //
   M_SEND_OBJECTANDCLASS,//
 
-  M_SITE_ALIVE,
   M_FILE,
   M_EXPORT,
-  M_INIT_VS,
   M_UNASK_ERROR,
-
   M_SEND_GATE,
-  M_LAST,
 
-  M_SITE_IS_ALIVE
+  M_LAST
 };
 
 extern char *mess_names[];
