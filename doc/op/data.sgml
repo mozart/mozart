@@ -25,13 +25,6 @@
   -
   -->
 
-
-<!--
-  Translated to SGML by:
-     Daniel Simon, dansim@ps.uni-sb.de
-     Andy Walter, anwalt@ps.uni-sb.de
--->
-
 <Chapter id="chapter.data">
   <Title/Data Structures/
   <P>
@@ -40,7 +33,7 @@
     class=noindex/strings/<Index/string/.  In the following we review
     these data types and show some operations which may prove helpful
     in the context of Open Programming.  Additional information on these
-    data types can be found in <Ptr to="Mozart-Base">.
+    data types can be found in <Ptr.extern to="ozdoc:base" key="chapter.text">.
   <Section>
     <Title/Strings/
     <P>
@@ -87,7 +80,7 @@
       Instead of creating an atom from the cleaned string, the browser offers
       functionality to display strings directly in a convenient form.  The
       functionality can be selected in the <Span class=menu/Representation,
-      Type/ option, see also <Ptr to=Mozart-Browser>.  For Example,
+      Type/ option, see also <Ptr.extern to="ozdoc:tools" key="chapter.browser">.  For Example,
       <<<{Browse {Filter S Char.isAlpha}}>>>
       displays in the browser window the character sequence <<"ClEaN">>.
     <P>
@@ -132,6 +125,6 @@
     <P>
       Note that in order to display virtual strings in readable form in the
       &Oz; Browser, you have to configure the <Span class=menu/Representation,
-      Type/ option, see also <Ptr to="Mozart-Browser">.  In the following we
+      Type/ option, see also <Ptr.extern to="ozdoc:tools" key="chapter.browser">.  In the following we
       assume that the Browser is configured for displaying virtual strings.
 </Chapter>
