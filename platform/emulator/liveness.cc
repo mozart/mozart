@@ -95,7 +95,7 @@ Segment::~Segment()
 int CodeArea::livenessX(ProgramCounter from, TaggedRef *X,int maxX)
 {
   if (maxX<=0) maxX = NumberOfXRegisters;
-  int xUsage[maxX];
+  int *xUsage = new int[maxX];
   for (int i=0;i<maxX; i++) xUsage[i]=0;
 
   Segment *todo = new Segment(from,0,0);
@@ -140,6 +140,7 @@ outerLoop2:
 	}
       }	
 
+      delete [] xUsage;
       return nextI;
     }
 

@@ -85,7 +85,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
-  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParameters(SUM_OP_EQ); }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParametersC(SUM_OP_EQ); }
 };
 
 class NonLinEqPropagator : public LinEqPropagator {
@@ -112,7 +112,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
-  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParameters(SUM_OP_NEQ); }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParametersC(SUM_OP_NEQ); }
 };
 
 class NonLinNotEqPropagator : public LinNotEqPropagator {
@@ -145,7 +145,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
-  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParameters(SUM_OP_LEQ); }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParametersC(SUM_OP_LEQ); }
 };
 
 class NonLinLessEqPropagator : public LinLessEqPropagator {
@@ -167,7 +167,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
-  virtual OZ_Term getParameters(void) const { return Propagator_VI_VVD_I::getParameters(SUM_OP_EQ); }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VVD_I::getParametersC(SUM_OP_EQ); }
 };
 
 //-----------------------------------------------------------------------------
@@ -181,7 +181,8 @@ public:
   
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
-  virtual OZ_Term getParameters(void) const { return Propagator_VI_VVD_I::getParameters(SUM_OP_LEQ); }};
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VVD_I::getParametersC(SUM_OP_LEQ); }
+};
 
 //=============================================================================
 

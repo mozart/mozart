@@ -547,8 +547,9 @@ void doRaise(Thread *th, char *msg, const char *url,URLAction act)
 				  oz_atom(url)),1);
 }
 
-int pipeHandler(int, PipeInfo *pi)
+int pipeHandler(int, void *arg)
 {
+  PipeInfo *pi = (PipeInfo *) arg;
   char retloc = 0;
   int n = osread(pi->fd,&retloc,sizeof(retloc));
   osclose(pi->fd);

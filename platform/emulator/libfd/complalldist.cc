@@ -285,9 +285,9 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
 #ifdef DISTINCT
   OZ_FiniteDomain u(fd_empty);   
 
-  for  (int i = size; i--; )
-    if (*reg[i] == fd_singl) {
-      int s = reg[i]->getSingleElem();
+  for  (int i1 = size; i1--; )
+    if (*reg[i1] == fd_singl) {
+      int s = reg[i1]->getSingleElem();
       if (u.isIn(s)) {
 	//goto failure;
         return PC.fail();
@@ -297,12 +297,12 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
     }
 
  loop:
-  for (int i = size; i--; ) {
-    if (*reg[i] != fd_singl) {
-      //FailOnEmpty(*reg[i] -= u);
-      if ((*reg[i] -= u) == 0) return PC.fail();
-      if (*reg[i] == fd_singl) {
-	u += reg[i]->getSingleElem();
+  for (int i2 = size; i2--; ) {
+    if (*reg[i2] != fd_singl) {
+      //FailOnEmpty(*reg[i2] -= u);
+      if ((*reg[i2] -= u) == 0) return PC.fail();
+      if (*reg[i2] == fd_singl) {
+	u += reg[i2]->getSingleElem();
 	goto loop;
       }
     }
