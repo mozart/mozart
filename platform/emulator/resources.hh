@@ -39,8 +39,8 @@
  */
 
 
-#define PRINT_DEPTH             2
-#define PRINT_WIDTH             10
+#define PRINT_DEPTH             5
+#define PRINT_WIDTH             20
 #define ERROR_PRINT_DEPTH       PRINT_DEPTH
 #define ERROR_PRINT_WIDTH       PRINT_WIDTH
 #define ERROR_THREAD_DEPTH      50

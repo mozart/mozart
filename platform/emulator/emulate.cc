@@ -1710,7 +1710,7 @@ LBLdispatcher:
       if (isTailCall) { // was DEFINITIONCOPY?
         TaggedRef list = oz_deref(Xreg(reg));
         ProgramCounter preddPC = predd->PC;
-        Bool copyOnce = predd->isCopyOnce() && !ozconf.copyallways;
+        Bool copyOnce = predd->isCopyOnce() && !ozconf.copyalways;
         predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
                                predd->getFile(), predd->getLine(), predd->getColumn(),
                                oz_nil(), // mm2: inherit native?

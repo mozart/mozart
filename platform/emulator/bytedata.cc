@@ -209,7 +209,7 @@ OZ_BI_define(BIBitString_conj,2,1)
   oz_declareBitStringIN(0,b1);
   oz_declareBitStringIN(1,b2);
   if (b1->getWidth() != b2->getWidth())
-    return oz_raise(E_ERROR,E_SYSTEM,"BitString.conj",3,
+    return oz_raise(E_ERROR,E_KERNEL,"BitString.conj",3,
                     oz_atom("widthMismatch"),
                     OZ_in(0),OZ_in(1));
   BitString*b3 = b1->clone();
@@ -222,7 +222,7 @@ OZ_BI_define(BIBitString_disj,2,1)
   oz_declareBitStringIN(0,b1);
   oz_declareBitStringIN(1,b2);
   if (b1->getWidth() != b2->getWidth())
-    return oz_raise(E_ERROR,E_SYSTEM,"BitString.disj",3,
+    return oz_raise(E_ERROR,E_KERNEL,"BitString.disj",3,
                     oz_atom("widthMismatch"),
                     OZ_in(0),OZ_in(1));
   BitString*b3 = b1->clone();
@@ -243,7 +243,7 @@ OZ_BI_define(BIBitString_get,2,1)
   oz_declareBitStringIN(0,b1);
   oz_declareIntIN(1,i);
   if (!b1->checkIndex(i))
-    return oz_raise(E_ERROR,E_SYSTEM,"BitString.get",3,
+    return oz_raise(E_SYSTEM,E_KERNEL,"BitString.get",3,
                     oz_atom("indexOutOfBound"),
                     OZ_in(0),OZ_in(1));
   OZ_RETURN((b1->get(i))?OZ_true():OZ_false());
@@ -258,7 +258,7 @@ OZ_BI_define(BIBitString_put,3,1)
     oz_typeError(2,"bool");
   }
   if (!b1->checkIndex(i))
-    return oz_raise(E_ERROR,E_SYSTEM,"BitString.put",3,
+    return oz_raise(E_SYSTEM,E_KERNEL,"BitString.put",3,
                     oz_atom("indexOutOfBound"),
                     OZ_in(0),OZ_in(1));
   BitString *b3 = b1->clone();
@@ -394,7 +394,7 @@ OZ_BI_define(BIByteString_get,2,1)
   oz_declareByteStringIN(0,b1);
   oz_declareIntIN(1,i);
   if (!b1->checkIndex(i))
-    return oz_raise(E_ERROR,E_SYSTEM,"ByteString.get",3,
+    return oz_raise(E_SYSTEM,E_KERNEL,"ByteString.get",3,
                     oz_atom("indexOutOfBound"),
                     OZ_in(0),OZ_in(1));
   OZ_RETURN_INT(b1->get(i));
@@ -418,7 +418,7 @@ OZ_BI_define(BIByteString_slice,3,1)
   oz_declareIntIN(2,to);
   int w = b1->getWidth();
   if (from<0 || to<0 || from>w || to>w || from>to)
-    return oz_raise(E_ERROR,E_SYSTEM,"ByteString.slice",4,
+    return oz_raise(E_SYSTEM,E_KERNEL,"ByteString.slice",4,
                     oz_atom("indexOutOfBound"),
                     OZ_in(0),OZ_in(1),OZ_in(2));
   ByteString *b3 = new ByteString(to-from);
