@@ -194,19 +194,21 @@ int execute(char **argv, bool dontQuote)
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
   PROCESS_INFORMATION pi;
-  DWORD ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi);
-  if (ret == FALSE) {
+  if (!CreateProcess(NULL,buffer,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi)) {
     panic(true,"Cannot run '%s'.\n",buffer);
   }
-
-  ret = WaitForSingleObject(pi.hProcess,INFINITE);
-  if (ret == WAIT_FAILED || GetExitCodeProcess(pi.hProcess,&ret) == FALSE)
-    ret = 1;
-
   CloseHandle(pi.hThread);
+
+  if (WaitForSingleObject(pi.hProcess,INFINITE) == WAIT_FAILED) {
+    panic(true,"Wait for subprocess failed.\n");
+  }
+
+  DWORD code;
+  if (GetExitCodeProcess(pi.hProcess,&code) == FALSE)
+    code = 1;
   CloseHandle(pi.hProcess);
 
-  return ret;
+  return code;
 }
 
 static char *getIncDir(int &argc, char **argv) {

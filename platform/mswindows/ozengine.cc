@@ -32,12 +32,11 @@ typedef void (*MAIN)(int, char **);
 static DWORD __stdcall watchParentThread(void *arg)
 {
   HANDLE handle = (HANDLE) arg;
-  DWORD ret = WaitForSingleObject(handle,INFINITE);
-  if (ret != WAIT_OBJECT_0) {
-    panic(true,"Watching parent thread failed.\n");
+  if (WaitForSingleObject(handle,INFINITE) == WAIT_FAILED) {
+    panic(true,"Wait for parent process failed.\n");
   }
   ExitProcess(0);
-  return 1;
+  return 0;
 }
 
 static void watchParent()
@@ -48,14 +47,14 @@ static void watchParent()
 
   //--** this should really store an inherited handle instead of a pid
   int pid = atoi(buf);
-  HANDLE handle = OpenProcess(SYNCHRONIZE, 0, pid);
-  if (handle == NULL) {
-    panic(true,"Opening the parent process failed.\n");
-  } else {
-    DWORD thrid;
-    HANDLE th = CreateThread(0,0,watchParentThread,handle,0,&thrid);
-    CloseHandle(th);
+  HANDLE handle = OpenProcess(SYNCHRONIZE,0,pid);
+  if (!handle) {
+    panic(true,"Could not access open parent process.\n");
   }
+
+  DWORD thrid;
+  HANDLE hThread = CreateThread(0,0,watchParentThread,handle,0,&thrid);
+  CloseHandle(hThread);
 }
 
 int main(int argc, char **argv)
