@@ -46,10 +46,6 @@ public:
   // isSolve() replace by hasNotificationBoard()
   Bool hasNotificationBoard () { return notificationBoard!=NULL; }
   void setNotificationBoard (Board *b) { notificationBoard = b; }
-#ifdef NEWCOUNTER
-  void markDead() {compMode=-1;} /* special hack for stable test (mm2) */
-  int isDead() { return compMode==-1; }
-#endif
   void pushDebug(Board *b, OzDebug *d)
   {
 #ifndef NEWCOUNTER
