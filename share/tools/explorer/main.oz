@@ -71,7 +71,7 @@ in
 	    MyManager <- {New Manager init(self self.Options)}
 	    %% Include the standard actions
                \insert default-actions.oz
-	    {ForAll @Stacked proc {$ M} {self M} end}
+	    {ForAll {Reverse @Stacked} self}
 	    Stacked <- nil
 	 end
       end
