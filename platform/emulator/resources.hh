@@ -98,7 +98,6 @@
 
 #define SHOW_IDLE_MESSAGE       0
 #define SHOW_SUSPENSION         0
-#define ONLY_FUTURES            0
 #define STOP_ON_TOPLEVEL_FAILURE        0
 
 #define GC_FLAG         1
