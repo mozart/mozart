@@ -27,6 +27,7 @@ local
       of H|T then
 	 {OzcarMessage 'readloop:'} {OzcarShow H}
 	 {Ozcar readStreamMessage(H)}
+	 {OzcarMessage 'preparing for next stream message...'}
 	 {ReadLoop T}
       end
    end
@@ -38,7 +39,7 @@ in
 	 Stream                %% info stream of the emulator
 	 ThreadDic             %% dictionary that holds various information
                                %% about debugged threads
-	 ReadLoopThread        %% we need to kill it when closing the manager
+	 ReadLoopThread
 
       attr
 	 currentThread : undef
@@ -56,6 +57,10 @@ in
 	 end
       end
 
+      meth checkMe %% to be improved... :-)
+	 Gui,status('I am doing well, thanks!')
+      end
+      
       meth getThreadDic($)
 	 self.ThreadDic
       end
@@ -100,7 +105,7 @@ in
 		     (Args.1 == off orelse {Label Args.1} == bpAt) then
 		     {OzcarMessage 'message from Emacs detected.'}
 		  else
-		     Gui,rawStatus(IgnoreNoFileStep)
+		     Gui,status(IgnoreNoFileStep)
 		  end
 	       else
 		  {OzcarMessage WaitForThread}
@@ -155,7 +160,7 @@ in
 	    case E then
 	       Stack = {Dget self.ThreadDic I}
 	    in
-	       Gui,rawStatus('Thread #' # I # ' has reached a breakpoint')
+	       Gui,status('Thread #' # I # ' has reached a breakpoint')
 	       {OzcarMessage KnownThread # {ID I}}
 	       {Stack rebuild(true)}
 	    else
@@ -323,9 +328,9 @@ in
 	    case Q == 0 orelse Q == 1 then 
 	       ThreadManager,switch(I)       %% does Gui,displayTree
 	       case Q == 1 then
-		  Gui,rawStatus('Got new query, selecting thread #' # I)
+		  Gui,status('Got new query, selecting thread #' # I)
 	       else
-		  Gui,rawStatus('Breakpoint reached by thread #' # I #
+		  Gui,status('Breakpoint reached by thread #' # I #
 				', which has been added and selected')
 	       end
 	    else
@@ -425,9 +430,11 @@ in
 	 Stack = @currentStack
       in
 	 case Stack == undef then
-	    Gui,rawStatus(FirstSelectThread)
+	    Gui,status(FirstSelectThread)
 	 else
+	    Gui,status(RebuildMessage # {Thread.id @currentThread} # '...')
 	    {ForAll [rebuild(true) print] Stack}
+	    Gui,status(DoneMessage append)
 	 end
       end
       

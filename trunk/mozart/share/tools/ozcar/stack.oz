@@ -137,8 +137,8 @@ in
 	    {Error.debug.doOzError X}
 	    {Error.debug.last Status}
 	    
-	    {Ozcar rawStatus(ErrorExcText # Status.1 # {Lines Status.2}
-			     clear BlockedThreadColor)}
+	    {Ozcar status(ErrorExcText # Status.1 # {Lines Status.2}
+			  clear BlockedThreadColor)}
 	    
 	    StackManager,ReCalculate({Reverse S})
 	    {Ozcar scrollbar(file:C.file line:C.line
@@ -147,8 +147,8 @@ in
 	 else              % user exception
 	    E = {T2VS X}
 	 in
-	    {Ozcar rawStatus(UserExcText # E # NoStackText
-			     clear BlockedThreadColor)}
+	    {Ozcar status(UserExcText # E # NoStackText
+			  clear BlockedThreadColor)}
 	    StackManager,ReCalculate(nil)
 	    {Ozcar scrollbar(file:'' line:0 color:undef what:both)}
 	 end

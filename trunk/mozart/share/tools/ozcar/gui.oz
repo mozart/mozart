@@ -521,7 +521,7 @@ in
 	 self.StackText
       end
       
-      meth rawStatus(S M<=clear C<=DefaultForeground)
+      meth status(S M<=clear C<=DefaultForeground)
 	 W = self.StatusText
       in
 	 case M == clear then
@@ -540,18 +540,18 @@ in
       in
 	 case L == ' reset' then
 	    N in
-	    Gui,rawStatus(ResetStatus)
+	    Gui,status(ResetStatus)
 	    ThreadManager,killAll(N)
 	    {self.StackText title(StackTitle)}
 	    {Delay 200} %% just to look nice... ;)
-	    Gui,rawStatus(case N == 1 then
-			     ' (1 thread has been killed)'
-			  else
-			     ' (' # N # ' threads have been killed)'
-			  end append)
+	    Gui,status(case N == 1 then
+			  ' (1 thread has been killed)'
+		       else
+			  ' (' # N # ' threads have been killed)'
+		       end append)
 	 else
 	    case T == undef then
-	       Gui,rawStatus(FirstSelectThread)
+	       Gui,status(FirstSelectThread)
 	    else
 	       I = {Thread.id T}
 	       
@@ -583,12 +583,12 @@ in
 	       elseof ' forget' then
 		  ThreadManager,forget(T I)
 		  {self.StackText title(StackTitle)}
-		  Gui,rawStatus(ForgetMessage # I # ForgetMessage2)
+		  Gui,status(ForgetMessage # I # ForgetMessage2)
 	  
 	       elseof ' term' then
 		  ThreadManager,kill(T I)
 		  {self.StackText title(StackTitle)}
-		  Gui,rawStatus(TerminateMessage # I # TerminateMessage2)
+		  Gui,status(TerminateMessage # I # TerminateMessage2)
 		  
 	       elseof ' stack' then
 		  {Browse {Dbg.taskstack T MaxStackBrowseSize}}
