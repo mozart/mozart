@@ -5,7 +5,7 @@ proc{SaveText}
    Name={QTk.dialogbox save($)}
 in 
    try 
-      File={New Open.file init(name:Name flags:[write create])}
+      File={New Open.file init(name:Name flags:[write create truncate])}
       Contents={TextHandle get($)}
    in 
       {File write(vs:Contents)}
