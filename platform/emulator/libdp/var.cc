@@ -161,7 +161,7 @@ Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Boo
     if((*base)->isSiteBased()) break;
     if(th==(*base)->thread) break;
     base= &((*base)->next);}
-  if(!((*base)->watchcond) & ec) return FALSE;
+  if(!((((*base)->watchcond)) & ec)) return FALSE;
   (*base)->varInvokeInjector(t,(*base)->watchcond & ec,term);
   hit=TRUE;
   if((*base)->isPersistent()) return FALSE;
