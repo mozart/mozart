@@ -245,6 +245,9 @@ error include resources.hh before mozart.h
 // test if the liveness routine for X registers works
 //#define DEBUG_LIVENESS
 
+// thoroughly check whether all accesses to registers a consistent
+//#define CHECKREGACCESS
+
 #endif
 
 #ifdef PROFILE_EMULATOR

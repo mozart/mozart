@@ -139,7 +139,7 @@ OZ_BI_define(BIprocedureCoord, 1,1)
   ProgramCounter PC = a->getPred()->getPC();
   ProgramCounter definitionPC = CodeArea::definitionStart(PC);
   if (definitionPC != NOCODE) {
-    Reg reg;
+    XReg reg;
     int next,line,colum;
     TaggedRef file, predName;
     CodeArea::getDefinitionArgs(definitionPC,reg,next,file,line,colum,predName);

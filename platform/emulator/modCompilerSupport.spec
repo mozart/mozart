@@ -123,9 +123,17 @@
                                      out => [],
                                      BI  => BIstoreBuiltinname},
 
-    'storeRegisterIndex'        => { in  => ['+foreignPointer','+int'],
+    'storeXRegisterIndex'       => { in  => ['+foreignPointer','+int'],
                                      out => [],
-                                     BI  => BIstoreRegisterIndex},
+                                     BI  => BIstoreXRegisterIndex},
+
+    'storeYRegisterIndex'       => { in  => ['+foreignPointer','+int'],
+                                     out => [],
+                                     BI  => BIstoreYRegisterIndex},
+
+    'storeGRegisterIndex'       => { in  => ['+foreignPointer','+int'],
+                                     out => [],
+                                     BI  => BIstoreGRegisterIndex},
 
     'storeInt'                  => { in  => ['+foreignPointer','+int'],
                                      out => [],

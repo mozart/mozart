@@ -413,7 +413,7 @@ Bool Marshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   start = pp->getPC() - sizeOf(DEFINITION);
 
   //
-  Reg reg;
+  XReg reg;
   int nxt, line, colum;
   TaggedRef file, predName;
   CodeArea::getDefinitionArgs(start, reg, nxt, file, line, colum, predName);

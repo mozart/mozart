@@ -27,11 +27,7 @@
 #include "codearea.hh"
 #include "indexing.hh"
 
-#ifdef FASTREGACCESS
-#define GETREGARG(pc)   (getRegArg(pc)>>2)
-#else
-#define GETREGARG(pc)   getRegArg(pc)
-#endif
+#define GETREGARG(pc) XRegToInt(getXRegArg(pc))
 
 #define ISREAD(i) { int _i=(i); if (_i<maxX && xUsage[_i]==0) xUsage[_i]=1; }
 
@@ -321,10 +317,8 @@ outerLoop2:
           AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
           int size = list->getSize();
           for (int i = 0; i < size; i++) {
-            switch ((*list)[i].kind) {
-            case XReg: ISREAD((*list)[i].number); break;
-            default: break;
-            }
+            if (((*list)[i].kind) == K_XReg)
+              ISREAD((*list)[i].number);
           }
 
           if (op==DEFINITIONCOPY) { // Michael please check !!!

@@ -1250,7 +1250,7 @@ void PrTabEntry::profileReset()
 
 void PrTabEntry::patchFileAndLine()
 {
-  Reg reg;
+  XReg reg;
   int next;
   TaggedRef predName, fil;
   int lin,colu;

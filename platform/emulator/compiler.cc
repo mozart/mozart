@@ -223,7 +223,7 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIstoreRegisterIndex,2,0)
+OZ_BI_define(BIstoreXRegisterIndex,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
@@ -231,7 +231,33 @@ OZ_BI_define(BIstoreRegisterIndex,2,0)
     return oz_raise(E_ERROR,AtomAssembler,
                     "registerIndexOutOfRange",1,OZ_in(1));
   }
-  code->writeReg(i);
+  code->writeXReg(i);
+  return PROCEED;
+} OZ_BI_end
+
+
+OZ_BI_define(BIstoreYRegisterIndex,2,0)
+{
+  OZ_declareCodeBlockIN(0,code);
+  oz_declareIntIN(1,i);
+  if (i < 0) {
+    return oz_raise(E_ERROR,AtomAssembler,
+                    "registerIndexOutOfRange",1,OZ_in(1));
+  }
+  code->writeYReg(i);
+  return PROCEED;
+} OZ_BI_end
+
+
+OZ_BI_define(BIstoreGRegisterIndex,2,0)
+{
+  OZ_declareCodeBlockIN(0,code);
+  oz_declareIntIN(1,i);
+  if (i < 0) {
+    return oz_raise(E_ERROR,AtomAssembler,
+                    "registerIndexOutOfRange",1,OZ_in(1));
+  }
+  code->writeGReg(i);
   return PROCEED;
 } OZ_BI_end
 
@@ -413,11 +439,11 @@ OZ_BI_define(BIstoreGRegRef,2,0)
     const char *label = rec->getLabelLiteral()->getPrintName();
     KindOfReg regType;
     if (!strcmp(label,"x")) {
-      regType = XReg;
+      regType = K_XReg;
     } else if (!strcmp(label,"y")) {
-      regType = YReg;
+      regType = K_YReg;
     } else if (!strcmp(label,"g")) {
-      regType = GReg;
+      regType = K_GReg;
     } else {
       oz_typeError(1,"RegisterList");
     }

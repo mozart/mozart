@@ -1102,13 +1102,13 @@ void AssReg::printStream(ostream &stream, int depth)
 {
   char c;
   switch (kind) {
-  case XReg:
+  case K_XReg:
     c = 'X';
     break;
-  case YReg:
+  case K_YReg:
     c = 'Y';
     break;
-  case GReg:
+  case K_GReg:
   default:
     c = 'G';
     break;

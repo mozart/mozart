@@ -34,21 +34,7 @@ changequote([[,]])
 define(readArg,$1)
 define(writeArg,$1)
 define(instruction,
-        [[ifelse(numOfRegs($2,$3,$4),1,
-                    case TOUPPER($1)X:
-                    case TOUPPER($1)Y:
-                    case TOUPPER($1)G:,
-         numOfRegs($2,$3,$4),2,
-            case TOUPPER($1)XX:
-            case TOUPPER($1)XY:
-            case TOUPPER($1)XG:
-            case TOUPPER($1)YX:
-            case TOUPPER($1)YY:
-            case TOUPPER($1)YG:
-            case TOUPPER($1)GX:
-            case TOUPPER($1)GY:
-            case TOUPPER($1)GG:,
-         case TOUPPER($1):)
+        case TOUPPER($1):
            opAction($2)
            opAction($3)
            opAction($4)
@@ -57,7 +43,7 @@ define(instruction,
            opAction($7)
            opAction($8)
            opAction($9)
-          break;]])
+          break;)
 
 define(opAction,
 [[ifelse($1,Number,m->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
@@ -65,10 +51,9 @@ define(opAction,
         $1,Feature,m->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
         $1,Constant,m->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
         $1,Builtinname,marshalBuiltin(m,(Builtin*)getAdressArg(PC++));ozValuesCnt--;,
-        $1,Register,marshalNumber(regToInt(getRegArg(PC++)),bs);,
-        $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
-        $1,YRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
-        $1,GRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
+        $1,XRegisterIndex,marshalNumber(XRegToInt(getXRegArg(PC++)),bs);,
+        $1,YRegisterIndex,marshalNumber(YRegToInt(getYRegArg(PC++)),bs);,
+        $1,GRegisterIndex,marshalNumber(GRegToInt(getGRegArg(PC++)),bs);,
         $1,Arity,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Label,marshalLabel(instrstart-start,getLabelArg(PC++),bs);,
         $1,Count,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
@@ -340,10 +325,9 @@ define(opAction,
         $1,Feature,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
         $1,Constant,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
         $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
-        $1,Register,PC=unmarshalReg(PC,bs);,
-        $1,XRegisterIndex,PC=unmarshalReg(PC,bs);,
-        $1,YRegisterIndex,PC=unmarshalReg(PC,bs);,
-        $1,GRegisterIndex,PC=unmarshalReg(PC,bs);,
+        $1,XRegisterIndex,PC=unmarshalXReg(PC,bs);,
+        $1,YRegisterIndex,PC=unmarshalYReg(PC,bs);,
+        $1,GRegisterIndex,PC=unmarshalGReg(PC,bs);,
         $1,Arity,PC=unmarshalNum(PC,bs);,
         $1,Label,PC=unmarshalLabel(PC,bs);,
         $1,Count,PC=unmarshalNum(PC,bs);,
@@ -410,10 +394,26 @@ ProgramCounter unmarshalNum(ProgramCounter pc, MsgBuffer *bs)
 
 //
 inline static
-ProgramCounter unmarshalReg(ProgramCounter pc, MsgBuffer *bs)
+ProgramCounter unmarshalXReg(ProgramCounter pc, MsgBuffer *bs)
 {
   int idx = unmarshalNumber(bs);
-  return (pc ? CodeArea::writeRegIndex(idx, pc) : (ProgramCounter) 0);
+  return (pc ? CodeArea::writeXRegIndex(idx, pc) : (ProgramCounter) 0);
+}
+
+//
+inline static
+ProgramCounter unmarshalYReg(ProgramCounter pc, MsgBuffer *bs)
+{
+  int idx = unmarshalNumber(bs);
+  return (pc ? CodeArea::writeYRegIndex(idx, pc) : (ProgramCounter) 0);
+}
+
+//
+inline static
+ProgramCounter unmarshalGReg(ProgramCounter pc, MsgBuffer *bs)
+{
+  int idx = unmarshalNumber(bs);
+  return (pc ? CodeArea::writeGRegIndex(idx, pc) : (ProgramCounter) 0);
 }
 
 //

@@ -509,16 +509,9 @@ void pushContX(TaskStack *stk,
 
 #define SETAUX(V)   { auxTaggedA = (V); };
 
-
-#ifdef FASTREGACCESS
-#define RegAccess(Reg,Index) (*(RefsArray)((intlong) Reg + Index))
-#else
-#define RegAccess(Reg,Index) (Reg[Index])
-#endif
-
-#define XPC(N) RegAccess(X,getRegArg(PC+N))
-#define YPC(N) RegAccess(Y,getRegArg(PC+N))
-#define GPC(N) RegAccess((CAP->getGRef()),getRegArg(PC+N))
+#define XPC(N) (*(XRegToPtr(getXRegArg(PC+N))))
+#define YPC(N) (*(YRegToPtr(Y,getYRegArg(PC+N))))
+#define GPC(N) (*(GRegToPtr((CAP->getGRef()),getGRegArg(PC+N))))
 
 /* define REGOPT if you want the into register optimization for GCC */
 #if defined(REGOPT) && __GNUC__ >= 2 && (defined(ARCH_I486) || defined(ARCH_MIPS) || defined(OSF1_ALPHA) || defined(ARCH_SPARC)) && !defined(DEBUG_CHECK)
@@ -716,12 +709,12 @@ int engine(Bool init)
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
+  register RefsArray Y         Reg3 = NULL;
 #ifdef MANY_REGISTERS
   register TaggedRef *X        Reg2 = am.xRegs;
 #else
   register TaggedRef * const X Reg2 = am.xRegs;
 #endif
-  register RefsArray Y         Reg3 = NULL;
   register TaggedRef *sPointer Reg4 = NULL;
   register AM * const e        Reg5 = &am;
   register Abstraction * CAP   Reg6 = NULL;
@@ -1920,6 +1913,61 @@ Case(GETVOID)
 
   Case(INLINEMINUS)
     {
+
+#if defined(ASSEM_ARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+
+      {
+        register TaggedRef A, B;
+
+        asm volatile("movl   4(%2),%0
+                      movl   8(%2),%1
+
+                     "
+                     : "=r" (A),
+                       "=r" (B)
+                     : "r" (PC));
+
+      retryINLINEMINUSAF:
+        A = A ^ SMALLINT;
+        if (!(A & tagMask)) {
+        retryINLINEMINUSBF:
+          B = B ^ SMALLINT;
+          if (!(B & tagMask)) {
+
+            asm volatile("   subl %2,%1
+                             jo   0f
+                             addl $16,%3
+                             orl  %0,%1
+                             movl %1,-4(%3)
+                             jmp *(%3)
+                          0:
+                       "
+                       :  /* OUTPUT */
+                       :  /* INPUT  */
+                          "i" (SMALLINT),
+                          "r" (A),
+                          "r" (B),
+                          "r" (PC)
+                       );
+
+          } else {
+            B = B ^ SMALLINT;
+            if (oz_isRef(B)) {
+              B = oz_derefOne(B);
+              goto retryINLINEMINUSBF;
+            }
+          }
+        } else {
+          A = A ^ SMALLINT;
+          if (oz_isRef(A)) {
+            A = oz_derefOne(A);
+            goto retryINLINEMINUSAF;
+          }
+        }
+      }
+
+#endif
+
       TaggedRef A = XPC(1);
 
     retryINLINEMINUSA:
@@ -1930,38 +1978,8 @@ Case(GETVOID)
       retryINLINEMINUSB1:
 
         if (oz_isSmallInt(B)) {
-
-#if defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTREGACCESS)
-
-          Assert(SMALLINT == 6);
-          asm volatile("   xorl $6,%1
-                           subl %1,%0
-                           jo   0f
-                           movl 12(%3),%1
-                           movl %0,(%2,%1)
-                           addl $16,%3
-                           jmp *(%3)
-                        0:
-                       "
-                       :  /* OUTPUT */
-                       :  /* INPUT  */
-                          "r" (A),
-                          "r" (B),
-                          "r" (&(am.xRegs[0])),
-                          "r" (PC)
-                       );
-          XPC(3) = oz_int(smallIntValue(oz_deref(XPC(1))) -
-                          smallIntValue(oz_deref(XPC(2))));
-          DISPATCH(4);
-
-#else
-
           XPC(3)=oz_int(smallIntValue(A) - smallIntValue(B));
           DISPATCH(4);
-
-#endif
-
-
         }
 
         if (oz_isRef(B)) {
@@ -2004,6 +2022,61 @@ Case(GETVOID)
 
   Case(INLINEPLUS)
     {
+
+#if defined(ASSEM_ARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+
+      {
+        register TaggedRef A, B;
+
+        asm volatile("movl   4(%2),%0
+                      movl   8(%2),%1
+
+                     "
+                     : "=r" (A),
+                       "=r" (B)
+                     : "r" (PC));
+
+      retryINLINEPLUSAF:
+        A = A ^ SMALLINT;
+        if (!(A & tagMask)) {
+        retryINLINEPLUSBF:
+          B = B ^ SMALLINT;
+          if (!(B & tagMask)) {
+
+            asm volatile("   addl %2,%1
+                             jo   0f
+                             orl  %0,%1
+                             movl %1,12(%3)
+                             addl $16,%3
+                             jmp *(%3)
+                          0:
+                       "
+                       :  /* OUTPUT */
+                       :  /* INPUT  */
+                          "i" (SMALLINT),
+                          "r" (A),
+                          "r" (B),
+                          "r" (PC)
+                       );
+
+          } else {
+            B = B ^ SMALLINT;
+            if (oz_isRef(B)) {
+              B = oz_derefOne(B);
+              goto retryINLINEPLUSBF;
+            }
+          }
+        } else {
+          A = A ^ SMALLINT;
+          if (oz_isRef(A)) {
+            A = oz_derefOne(A);
+            goto retryINLINEPLUSAF;
+          }
+        }
+      }
+
+#endif
+
       TaggedRef A = XPC(1);
 
     retryINLINEPLUSA:
@@ -2013,37 +2086,8 @@ Case(GETVOID)
 
       retryINLINEPLUSB1:
         if (oz_isSmallInt(B)) {
-
-#if defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTREGACCESS)
-
-          Assert(SMALLINT == 6);
-          asm volatile("   xorl $6,%0
-                           addl %1,%0
-                           jo   0f
-                           movl 12(%3),%1
-                           movl %0,(%2,%1)
-                           addl $16,%3
-                           jmp *(%3)
-                        0:
-                       "
-                       :  /* OUTPUT */
-                       :  /* INPUT  */
-                          "r" (A),
-                          "r" (B),
-                          "r" (&(am.xRegs[0])),
-                          "r" (PC)
-                       );
-          XPC(3) = oz_int(smallIntValue(oz_deref(XPC(1))) +
-                          smallIntValue(oz_deref(XPC(2))));
-          DISPATCH(4);
-
-#else
-
           XPC(3)=oz_int(smallIntValue(A) + smallIntValue(B));
           DISPATCH(4);
-
-#endif
-
         }
 
         if (oz_isRef(B)) {
@@ -2117,6 +2161,46 @@ Case(GETVOID)
 
   Case(INLINEPLUS1)
     {
+
+#if defined(ASSEM_ARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+
+      {
+        register TaggedRef A;
+
+        asm volatile("movl   4(%1),%0
+
+                     "
+                     : "=r" (A)
+                     : "r" (PC));
+
+      retryINLINEPLUS1:
+        A = A ^ SMALLINT;
+        if (!(A & tagMask)) {
+          asm volatile("   addl %0,%1
+                           jo   0f
+                           movl %3,%1
+                        0: movl %1,8(%2)
+                           addl $12,%2
+                           jmp *(%2)
+                       "
+                       :  /* OUTPUT */
+                       :  /* INPUT  */
+                       "i" (SMALLINT + (1 << tagSize)),
+                       "r" (A),
+                       "r" (PC),
+                       "m" (TaggedOzOverMaxInt)
+                       );
+        } else {
+          A = A ^ SMALLINT;
+          if (oz_isRef(A)) {
+            A = oz_derefOne(A);
+            goto retryINLINEPLUS1;
+          }
+        }
+      }
+
+#else
+
       TaggedRef A = XPC(1);
 
     retryINLINEPLUS1:
@@ -2136,6 +2220,8 @@ Case(GETVOID)
         A = oz_derefOne(A);
         goto retryINLINEPLUS1;
       }
+
+#endif
 
       auxTaggedA = XPC(1);
       auxTaggedB = makeTaggedSmallInt(1);
@@ -2567,9 +2653,9 @@ Case(GETVOID)
 
       for (int i = 0; i < size; i++) {
         switch ((*list)[i].kind) {
-        case XReg: p->initG(i, X[(*list)[i].number]); break;
-        case YReg: p->initG(i, Y[(*list)[i].number]); break;
-        case GReg: p->initG(i, CAP->getG((*list)[i].number)); break;
+        case K_XReg: p->initG(i, X[(*list)[i].number]); break;
+        case K_YReg: p->initG(i, Y[(*list)[i].number]); break;
+        case K_GReg: p->initG(i, CAP->getG((*list)[i].number)); break;
         }
       }
       XPC(1) = makeTaggedConst(p);

@@ -38,29 +38,8 @@ define(Size,`ifelse($1,`',0,
 
 define(instruction,
         `define(`sz',eval(1+Size($2)+Size($3)+Size($4)+Size($5)+Size($6)+Size($7)+Size($8)))dnl
-         ifelse(numOfRegs($2,$3,$4),1,oneReg($1,`sz'),
-                numOfRegs($2,$3,$4),2,twoRegs($1,sz),
-                `{"$1",sz},') dnl
+         {"$1",sz}, dnl
 ')
-
-define(oneReg,``
-        {"$1X",$2},
-        {"$1Y",$2},
-        {"$1G",$2},
-'')
-
-define(twoRegs,``
-         {"$1XX",$2},
-         {"$1XY",$2},
-         {"$1XG",$2},
-         {"$1YX",$2},
-         {"$1YY",$2},
-         {"$1YG",$2},
-         {"$1GX",$2},
-         {"$1GY",$2},
-         {"$1GG",$2},
-'')
-
 
 include(EMUDIR/instrDefs.m4)
 
