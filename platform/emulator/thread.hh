@@ -51,7 +51,6 @@ enum ThreadFlag {
   T_G_trace= 0x010000,   // thread is being traced
   T_G_step = 0x020000,   // step mode turned on
   T_G_stop = 0x040000,   // no permission to run
-  T_G_cont = 0x080000,   // continue flag
 
   T_max    = 0x800000    // MAXIMAL FLAG;
 };
@@ -299,9 +298,6 @@ public:
   void setStop(Bool yesno) {
     state.flags = yesno ? state.flags | T_G_stop  : state.flags & ~T_G_stop;
   }
-  void setCont(Bool yesno) {
-    state.flags = yesno ? state.flags | T_G_cont  : state.flags & ~T_G_cont;
-  }
 
   // ...and check them
   Bool getTrace() {
@@ -312,9 +308,6 @@ public:
   }
   Bool getStop() {
     return (state.flags & T_G_stop);
-  }
-  Bool getCont() {
-    return (state.flags & T_G_cont);
   }
 
 

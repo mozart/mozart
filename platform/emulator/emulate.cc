@@ -2483,7 +2483,6 @@ LBLdispatcher:
          else {
            CTT->setTrace(OK);
            CTT->setStep(OK);
-           CTT->setCont(NO);
            debugStreamException(CTT,e->exception.value);
            goto LBLpreemption;
          }
@@ -3087,7 +3086,7 @@ LBLdispatcher:
           PushContX(PC,Y,G,X,regsToSave);
           goto LBLpreemption;
         } else {
-          CTT->pushDebug(dbg,DBG_NEXT);
+          CTT->pushDebug(dbg,DBG_NOSTEP);
         }
       }
 
@@ -3106,7 +3105,7 @@ LBLdispatcher:
 
         switch (dothis) {
         case DBG_STEP:
-          if (CTT->getTrace() && !CTT->getCont()) {
+          if (CTT->getTrace()) {
             dbg->PC = PC;
             CTT->pushDebug(dbg,DBG_EXIT);
             debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
@@ -3114,15 +3113,7 @@ LBLdispatcher:
             goto LBLpreemption;
           }
           break;
-        case DBG_NEXT:
-          if (CTT->getTrace() && CTT->getStep()) {
-            dbg->PC = PC;
-            CTT->pushDebug(dbg,DBG_EXIT);
-            debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
-            PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-            goto LBLpreemption;
-          }
-          break;
+        case DBG_NOSTEP:
         case DBG_EXIT:
           break;
         }
