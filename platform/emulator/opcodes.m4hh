@@ -47,25 +47,36 @@ OZERROR  /* this should always be the last one */
 } Opcode;
 
 
+#ifdef INLINEOPCODEMAP
+
+changecom(comment,COMMENT)
+
+define(`OPCODE',0)
+define(CATUPPER,`$1`'TOUPPER($2)')
+define(`instruction',`#define CATUPPER(OPM_,$1) ".long OPCODE" incrop(1)')
+
+include(EMUDIR/instrDefs.m4)
+
+#define OPM_OZERROR ".long OPCODE"
+
+#endif
 
 class OpcodeInfo {
 public:
-  char *printname;
+  const char * printname;
   int size;
 };
 
 extern OpcodeInfo opcodes[];
 
 inline
-int sizeOf(Opcode oc)
-{
+int sizeOf(Opcode oc) {
   Assert((int)oc < OZERROR);
   return opcodes[(int)oc].size;
 }
 
 inline
-char *opcodeToString(Opcode oc)
-{
+const char * opcodeToString(Opcode oc) {
   Assert((int)oc < OZERROR);
   return opcodes[(int)oc].printname;
 }
