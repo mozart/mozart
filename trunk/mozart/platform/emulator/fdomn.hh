@@ -13,10 +13,13 @@
 #define __FDOMN__H__
 
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "types.hh"
 #include "term.hh"
 #include "bignum.hh"
-
 
 enum FDPropState {fd_det = 0, fd_bounds, fd_any};
 enum FDState {fd_empty, fd_full, fd_discrete, fd_singleton};
