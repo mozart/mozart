@@ -142,9 +142,8 @@
 ### permits selective inclusion or exclusion through command line options
 ### -include or -exclude.
 ###
-### native => true|false|dontknow specifies whether the builtin
-### is non-exportable. "dontknow" only used until all are 
-### classified (behaves as "false")
+### native => true|false specifies whether the builtin
+### is non-exportable.
 
 
 $builtins = {
@@ -1039,17 +1038,12 @@ $builtins = {
     'monitorArity'	=> { in  => ['*recordC','value','[feature]'],
 			     out => [],
 			     BI  => BImonitorArity,
-			     native => dontknow},
+			     native => true},
 
     'tellRecordSize'	=> { in  => ['+literal','+int','record'],
 			     out => [],
 			     BI  => BIsystemTellSize,
-			     native => dontknow},
-
-    'recordCIsVarB'	=> { in  => ['value'],
-			     out => ['+bool'],
-			     BI  => BIisRecordCVarB,
-			     native => dontknow},
+			     native => true},
 
     ###* Records and Chunks
 
@@ -1083,26 +1077,17 @@ $builtins = {
 			     ibi => widthInline,
 			     native => false},
 
+    'recordWidth'	=> { in  => ['record'],
+			     out => ['int'],
+			     BI  => BIrecordWidth,
+			     native => false,
+			     unused => true},
+
     ###* Chunks
 
     'NewChunk'		=> { in  => ['+record'],
 			     out => ['+chunk'],
 			     BI  => BInewChunk,
-			     native => false},
-
-    'chunkArity'	=> { in  => ['+chunk'],
-			     out => ['+[feature]'],
-			     BI  => BIchunkArity,
-			     native => false},
-
-    'chunkWidth'	=> { in  => ['+chunk'],
-			     out => ['+int'],
-			     BI  => BIchunkWidth,
-			     native => false},
-
-    'recordWidth'	=> { in  => ['record'],
-			     out => ['int'],
-			     BI  => BIrecordWidth,
 			     native => false},
 
     ###* Names
@@ -1124,39 +1109,6 @@ $builtins = {
 			     bi  => BIprocedureArity,
 			     ibi => procedureArityInline,
 			     native => false},
-
-    'procedureEnvironment'=> { in  => ['+procedure'],
-			       out => ['+tuple'],
-			       BI  => BIprocedureEnvironment,
-			       native => dontknow},
-
-    'getProcInfo'	=> { in  => ['+procedure'],
-			     out => ['value'],
-			     BI  => BIgetProcInfo,
-			     native => dontknow},
-
-    'setProcInfo'	=> { in  => ['+procedure','value'],
-			     out => [],
-			     BI  => BIsetProcInfo,
-			     native => dontknow},
-
-    'getProcNames'	=> { in  => ['+procedure'],
-			     out => ['+[name]'],
-			     BI  => BIgetProcNames,
-			     native => dontknow},
-
-    'setProcNames'	=> { in  => ['+procedure','+[name]'],
-			     out => [],
-			     BI  => BIsetProcNames,
-			     native => dontknow},
-
-    'getProcPos'	=> { in  => ['+procedure'],
-			     out => ['+literal','+int'],
-			     BI  => BIgetProcPos,
-			     native => dontknow},
-
-
-
 
     ###* Object-Oriented Primitives
 
@@ -1373,12 +1325,12 @@ $builtins = {
     'isForeignPointer'	=> { in  => ['+value'],
 			     out => ['+bool'],
 			     BI  => BIisForeignPointer ,
-			     native => dontknow},
+			     native => false},
 
     'ForeignPointerToInt'=> { in  => ['+foreignPointer'],
 			      out => ['+int'],
 			      BI  => BIForeignPointerToInt,
-			      native => dontknow},
+			      native => false},
 
 
     ##* Misc Operations
@@ -1496,18 +1448,18 @@ $builtins = {
     'Finalize.register'	=> { in  => ['+value','+value'],
 			     out => [],
 			     BI  => BIfinalize_register,
-			     native => dontknow},
+			     native => true},
 
     'Finalize.setHandler'=> { in  => ['+value'],
 			      out => [],
 			      BI  => BIfinalize_setHandler,
-			      native => dontknow},
+			      native => true},
 
     'GetCloneDiff'	=> { in  => ['+space'],
 			     out => ['+value'],
 			     BI  => BIgetCloneDiff,
 			     ifdef=>'CS_PROFILE',
-			     native => dontknow},
+			     native => true},
 
 
 
@@ -1519,13 +1471,13 @@ $builtins = {
 			     out => [],
 			     BI  => BILazyNew,
 			     module=>'lazy',
-			     native => dontknow},
+			     native => true},
 
     'Lazy.is'		=> { in  => ['value'],
 			     out => ['+bool'],
 			     BI  => BILazyIs,
 			     module=>'lazy',
-			     native => dontknow},
+			     native => true},
 
     ###* Metavar
 
@@ -1533,76 +1485,43 @@ $builtins = {
 			     out => [],
 			     BI  => BImetaIsVar,
 			     module=>'metavar',
-			     native => dontknow},
+			     native => true},
 
     'metaIsVarB'	=> { in  => ['value'],
 			     out => ['+bool'],
 			     BI  => BImetaIsVarB,
 			     module=>'metavar',
-			     native => dontknow},
+			     native => true},
 
     'metaWatchVar'	=> { in  => ['value','value'],
 			     out => [],
 			     BI  => BImetaWatchVar,
 			     module=>'metavar',
-			     native => dontknow},
+			     native => true},
     
     'metaWatchVarB'	=> { in  => ['value','value','+bool'],
 			     out => [],
 			     BI  => BImetaWatchVarB,
 			     module=>'metavar',
-			     native => dontknow},
+			     native => true},
 
     'metaGetDataAsAtom'	=> { in  => ['value','atom'],
 			     out => [],
 			     BI  => BImetaGetDataAsAtom,
 			     module=>'metavar',
-			     native => dontknow},
+			     native => true},
 
     'metaGetNameAsAtom'	=> { in  => ['value','atom'],
 			     out => [],
 			     BI  => BImetaGetNameAsAtom,
 			     module=>'metavar',
-			     native => dontknow},
+			     native => true},
 
     'metaGetStrength'	=> { in  => ['value','value'],
 			     out => [],
 			     BI  => BImetaGetStrength,
 			     module=>'metavar',
-			     native => dontknow},
-
-    ###* Attributed Variables
-
-    'isAVarB'		=> { in  => ['value'],
-			     out => ['+bool'],
-			     BI  => BIisAVarB,
-			     module=>'avar',
-			     native => dontknow},
-
-    'newAVar'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BInewAVar,
-			     module=>'avar',
-			     native => dontknow},
-
-    'readAVar'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIreadAVar,
-			     module=>'avar',
-			     native => dontknow},
-
-    'aVarHandler'	=> { in  => ['+procedure','+procedure'],
-			     out => [],
-			     BI  => BIaVarHandler,
-			     module=>'avar',
-			     native => dontknow},
-
-    '==='		=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BIaVarBind,
-			     module=>'avar',
-			     native => dontknow},
-
+			     native => true},
 
     #* System Stuff
 
@@ -1612,19 +1531,19 @@ $builtins = {
 			     out => ['value'],
 			     BI  => BIgetProperty,
 			     module=>'vprop',
-			     native => dontknow},
+			     native => true},
 
     'CondGetProperty'	=> { in  => ['+literal','value'],
 			     out => ['value'],
 			     BI  => BIcondGetProperty,
 			     module=>'vprop',
-			     native => dontknow},
+			     native => true},
 
     'PutProperty'	=> { in  => ['+literal','value'],
 			     out => [],
 			     BI  => BIputProperty,
 			     module=>'vprop',
-			     native => dontknow},
+			     native => true},
 
 
 
@@ -1724,12 +1643,27 @@ $builtins = {
     'getsBoundB'	=> { in  => ['value','value'],
 			     out => [],
 			     BI  => BIgetsBoundB,
-			     native => false},
+			     native => true},
 
     'addr'		=> { in  => ['value'],
 			     out => ['+int'],
 			     BI  => BIaddr,
-			     native => false},
+			     native => true},
+
+    'recordCIsVarB'	=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => BIisRecordCVarB,
+			     native => true},
+
+    'deepFeed'		=> { in  => ['+cell','value'],
+			     out => [],
+			     BI  => BIdeepFeed,
+			     native => true},
+
+    'chunkWidth'	=> { in  => ['+chunk'],
+			     out => ['+int'],
+			     BI  => BIchunkWidth,
+			     native => true},
 
     ##* Misc. System Procs
 
@@ -1777,12 +1711,6 @@ $builtins = {
 			     out => [],
 			     BI  => BInop,
 			     native => false},
-
-    'deepFeed'		=> { in  => ['+cell','value'],
-			     out => [],
-			     BI  => BIdeepFeed,
-			     native => dontknow},
-
 
     'onToplevel'	=> { in  => [],
 			     out => ['+bool'],
@@ -2064,61 +1992,63 @@ $builtins = {
 			     out => ['+bool'],
 			     BI  => PerdioVar_is,
 			     module=>'perdiovar',
-			     native => dontknow},
+			     native => true},
+
     'probe'		=> { in  => ['value'],
 			     out => [],
 			     BI  => BIprobe,
-			     native => dontknow},
+			     native => true},
 
     'perdioRestop'	=> { in  => ['value'],
 			     out => [],
 			     BI  => BIrestop,
-			     native => dontknow},
+			     native => true},
 
     'crash'		=> { in  => [],
 			     out => [],
 			     BI  => BIcrash,
 			     doesNotReturn=>1,
-			     native => dontknow},
+			     native => true},
 
     'hwInstall'	=>         { in  => ['+value','+value','value'],
 			     out => [],
 			     BI  => BIhwInstall,
-			     native => dontknow},
+			     native => true},
 
     'controlVarHandler'	=> { in  => ['+value'],
 			     out => [],
 			     BI  => BIcontrolVarHandler,
-			     native => dontknow},
+			     native => true},
+
     'checkCVH'	        => { in  => ['+value'],
 			     out => [],
 			     BI  => BIcheckCVH,
-			     native => dontknow},
+			     native => true},
 
     'dvset'		=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIdvset,
 			     ifdef=>DEBUG_PERDIO,
 			     module=>'perdio',
-			     native => dontknow},
+			     native => true},
 
     'NetCloseCon'	=> { in  => ['+int'],
 			     out => [],
 			     BI  => BIcloseCon,
 			     module=>'perdio',
-			     native => dontknow},
+			     native => true},
 
     'startTmp'		=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIstartTmp,
 			     module=>'perdio',
-			     native => dontknow},
+			     native => true},
 
     'siteStatistics'	=> { in  => [],
 			     out => ['+[value]'],
 			     BI  => BIsiteStatistics,
 			     module=>'perdio',
-			     native => dontknow},
+			     native => true},
 
     'printBorrowTable'	=> { in  => [],
 			     out => [],
@@ -2137,7 +2067,7 @@ $builtins = {
 			     out => [],
 			     BI  => BIportWait,
 			     module=>'perdio',
-			     native => dontknow},
+			     native => true},
 
 
     'perdioStatistics'	=> { in  => [],
@@ -2151,7 +2081,7 @@ $builtins = {
 			     out => [],
 			     bi  => BIatRedo,
 			     ibi => atInlineRedo,
-			     native => dontknow},
+			     native => true},
 
     #* Pickles
 
@@ -2159,55 +2089,59 @@ $builtins = {
 			     out => [],
 			     BI  => BIsmartSave,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
 
     'load'		=> { in  => ['value','value'],
 			     out => [],
 			     BI  => BIload,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
+
+    #* Connection
 
     'PID.get'		=> { in  => [],
 			     out => ['+record'],
 			     BI  => BIGetPID,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
 
     'PID.received'	=> { in  => ['value'],
 			     out => [],
 			     BI  => BIReceivedPID,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
 
     'PID.close'		=> { in  => [],
 			     out => [],
 			     BI  => BIClosePID,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
 
     'PID.send'		=> { in  => ['+virtualString','+int','+int','value'],
 			     out => [],
 			     BI  => BISendPID,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
+
+    #* URL
 
     'URL.localize'	=> { in  => ['+virtualString'],
 			     out => ['+record'],
 			     BI  => BIurl_localize,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
 
     'URL.open'		=> { in  => ['+virtualString'],
 			     out => ['+int'],
 			     BI  => BIurl_open,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
 
     'URL.load'		=> { in  => ['+virtualString'],
 			     out => ['value'],
 			     BI  => BIurl_load,
 			     module=>components,
-			     native => dontknow},
+			     native => true},
 
     #* Tools
 
@@ -2217,128 +2151,128 @@ $builtins = {
 			     out => ['value','value','value'],
 			     BI  => BIgetTclNames,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'initTclSession'	=> { in  => ['value','value','value'],
 			     out => ['value'],
 			     BI  => BIinitTclSession,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'closeTclSession'	=> { in  => ['value'],
 			     out => [],
 			     BI  => BIcloseTclSession,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'Tk.send'		=> { in  => ['value','!value'],
 			     out => [],
 			     BI  => BItclWrite,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'tclWriteReturn'	=> { in  => ['!value','value','value','value'],
 			     out => [],
 			     BI  => BItclWriteReturn,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'tclWriteReturnMess'=> { in  => ['!value','value','value','value','value'],
 			     out => [],
 			     BI  => BItclWriteReturnMess,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'Tk.batch'		=> { in  => ['value','!value'],
 			     out => [],
 			     BI  => BItclWriteBatch,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'tclWriteTuple'	=> { in  => ['value','!value','value'],
 			     out => [],
 			     BI  => BItclWriteTuple,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'tclWriteTagTuple'	=> { in  => ['value','!value','value','value'],
 			     out => [],
 			     BI  => BItclWriteTagTuple,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'tclWriteFilter'	=> { in  => ['value','!value','value','value',
 				     'value','value'],
 			     out => [],
 			     BI  => BItclWriteFilter,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'tclClose'		=> { in  => ['value','!value','value'],
 			     out => [],
 			     BI  => BItclClose,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'tclCloseWeb'	=> { in  => ['value','!value'],
 			     out => [],
 			     BI  => BItclCloseWeb,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'addFastGroup'	=> { in  => ['+value','value'],
 			     out => ['value'],
 			     BI  => BIaddFastGroup,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'delFastGroup'	=> { in  => ['value'],
 			     out => [],
 			     BI  => BIdelFastGroup,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'getFastGroup'	=> { in  => ['+value'],
 			     out => ['+value'],
 			     BI  => BIgetFastGroup,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'delAllFastGroup'	=> { in  => ['+value'],
 			     out => ['+value'],
 			     BI  => BIdelAllFastGroup,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'genTopName'	=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIgenTopName,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'genWidgetName'	=> { in  => ['value','value'],
 			     out => ['value'],
 			     BI  => BIgenWidgetName,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'genTagName'	=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIgenTagName,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'genVarName'	=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIgenVarName,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     'genImageName'	=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIgenImageName,
 			     module=>'tcl_tk',
-			     native => dontknow},
+			     native => true},
 
     ##* Debugger
 
@@ -2380,6 +2314,16 @@ $builtins = {
 			     out => [],
 			     BI  => BIdebugPrintLong,
 			     ifdef=>'DEBUG_PRINT',
+			     native => true},
+
+    'procedureEnvironment'=> { in  => ['+procedure'],
+			       out => ['+tuple'],
+			       BI  => BIprocedureEnvironment,
+			       native => true},
+
+    'chunkArity'	=> { in  => ['+chunk'],
+			     out => ['+[feature]'],
+			     BI  => BIchunkArity,
 			     native => true},
 
     ###* Debugger External
@@ -2459,88 +2403,113 @@ $builtins = {
     'isBuiltin'		=> { in  => ['+value'],
 			     out => ['+bool'],
 			     BI  => BIisBuiltin,
-			     native => dontknow},
+			     native => true},
 
     'getBuiltinName'	=> { in  => ['+value'],
 			     out => ['+atom'],
 			     BI  => BIgetBuiltinName,
-			     native => false},
+			     native => true},
 
     'nameVariable'	=> { in  => ['value','+atom'],
 			     out => [],
 			     BI  => BInameVariable,
-			     native => false},
+			     native => true},
 
     'newNamedName'	=> { in  => ['+atom'],
 			     out => ['+literal'],
 			     BI  => BInewNamedName,
-			     native => false},
+			     native => true},
 
     'isUniqueName'	=> { in  => ['+value'],
 			     out => ['+bool'],
 			     BI  => BIisUniqueName,
-			     native => false},
+			     native => true},
 
     'generateAbstractionTableID'=> { in  => ['+bool'],
 				     out => ['+foreignPointer'],
 				     BI  => BIgenerateAbstractionTableID,
-				     native => false},
+				     native => true},
 
     'concatenateAtomAndInt'	=> { in  => ['+atom','+int'],
 				     out => ['+atom'],
 				     BI  => BIconcatenateAtomAndInt,
-				     native => false},
+				     native => true},
+
+    'getProcInfo'	=> { in  => ['+procedure'],
+			     out => ['value'],
+			     BI  => BIgetProcInfo,
+			     native => true},
+
+    'setProcInfo'	=> { in  => ['+procedure','value'],
+			     out => [],
+			     BI  => BIsetProcInfo,
+			     native => true},
+
+    'getProcNames'	=> { in  => ['+procedure'],
+			     out => ['+[name]'],
+			     BI  => BIgetProcNames,
+			     native => true},
+
+    'setProcNames'	=> { in  => ['+procedure','+[name]'],
+			     out => [],
+			     BI  => BIsetProcNames,
+			     native => true},
+
+    'getProcPos'	=> { in  => ['+procedure'],
+			     out => ['+literal','+int'],
+			     BI  => BIgetProcPos,
+			     native => true},
 
     ###* RegSets for the Compiler
     'RegSet.new'	=> { in  => ['+int','+int'],
 			     out => ['+chunk'],
 			     BI  => BIregSet_new,
-			     native => false},
+			     native => true},
 
     'RegSet.copy'	=> { in  => ['+chunk'],
 			     out => ['+chunk'],
 			     BI  => BIregSet_copy,
-			     native => false},
+			     native => true},
 
     'RegSet.adjoin'	=> { in  => ['+chunk','+int'],
 			     out => [],
 			     BI  => BIregSet_adjoin,
-			     native => false},
+			     native => true},
 
     'RegSet.remove'	=> { in  => ['+chunk','+int'],
 			     out => [],
 			     BI  => BIregSet_remove,,
-			     native => false},
+			     native => true},
 
     'RegSet.member'	=> { in  => ['+int','+chunk'],
 			     out => ['+bool'],
 			     BI  => BIregSet_member,
-			     native => false},
+			     native => true},
 
     'RegSet.union'	=> { in  => ['+chunk','+chunk'],
 			     out => [],
 			     BI  => BIregSet_union,
-			     native => false},
+			     native => true},
 
     'RegSet.intersect'	=> { in  => ['+chunk','+chunk'],
 			     out => [],
 			     BI  => BIregSet_intersect,
-			     native => false},
+			     native => true},
 
     'RegSet.subtract'	=> { in  => ['+chunk','+chunk'],
 			     out => [],
 			     BI  => BIregSet_subtract,
-			     native => false},
+			     native => true},
 
     'RegSet.toList'	=> { in  => ['+chunk'],
 			     out => ['+[int]'],
 			     BI  => BIregSet_toList,
-			     native => false},
+			     native => true},
 
     'RegSet.complementToList'	=> { in  => ['+chunk'],
 				     out => ['+[int]'],
 				     BI  => BIregSet_complementToList,
-				     native => false},
+				     native => true},
 
     ###* Oz Parser
 
@@ -2562,7 +2531,7 @@ $builtins = {
     'copyCode'		=> { in  => ['+abstraction','+dictionary'],
 			     out => [],
 			     BI  => BIcopyCode,
-			     native => dontknow},
+			     native => true},
 
 
     ###* CodeArea: Allocation, Modification
@@ -2570,289 +2539,289 @@ $builtins = {
     'newCodeBlock'	=> { in  => ['+int'],
 			     out => ['+int'],
 			     BI  => BInewCodeBlock,
-			     native => dontknow},
+			     native => true},
 
     'getOpcode'		=> { in  => ['+atom'],
 			     out => ['+int'],
 			     BI  => BIgetOpcode,
-			     native => dontknow},
+			     native => true},
 
     'getInstructionSize'=> { in  => ['+atom'],
 			     out => ['+int'],
 			     BI  => BIgetInstructionSize,
-			     native => dontknow},
+			     native => true},
 
     'makeProc'		=> { in  => ['+int','+[value]'],
 			     out => ['+procedure/0'],
 			     BI  => BImakeProc,
-			     native => dontknow},
+			     native => true},
 
     'addDebugInfo'	=> { in  => ['+int','+atom','+int'],
 			     out => [],
 			     BI  => BIaddDebugInfo,
-			     native => dontknow},
+			     native => true},
 
     'storeOpcode'	=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIstoreOpcode,
-			     native => dontknow},
+			     native => true},
 
     'storeNumber'	=> { in  => ['+int','+number'],
 			     out => [],
 			     BI  => BIstoreNumber,
-			     native => dontknow},
+			     native => true},
 
     'storeLiteral'	=> { in  => ['+int','+literal'],
 			     out => [],
 			     BI  => BIstoreLiteral,
-			     native => dontknow},
+			     native => true},
 
     'storeFeature'	=> { in  => ['+int','+feature'],
 			     out => [],
 			     BI  => BIstoreFeature,
-			     native => dontknow},
+			     native => true},
 
     'storeConstant'	=> { in  => ['+int','+value'],
 			     out => [],
 			     BI  => BIstoreConstant,
-			     native => dontknow},
+			     native => true},
 
     'storeBuiltinname'	=> { in  => ['+int','+procedure'],
 			     out => [],
 			     BI  => BIstoreBuiltinname,
-			     native => dontknow},
+			     native => true},
 
     'storeVariablename'	=> { in  => ['+int','+atom'],
 			     out => [],
 			     BI  => BIstoreVariablename,
-			     native => dontknow},
+			     native => true},
 
     'storeRegisterIndex'=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIstoreRegisterIndex,
-			     native => dontknow},
+			     native => true},
 
     'storeInt'		=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIstoreInt,
-			     native => dontknow},
+			     native => true},
 
     'storeLabel'	=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIstoreLabel,
-			     native => dontknow},
+			     native => true},
 
     'storePredicateRef'	=> { in  => ['+int','+value'],
 			     out => [],
 			     BI  => BIstorePredicateRef,
-			     native => dontknow},
+			     native => true},
 
     'storePredId'	=> { in  => ['+int','+atom','+value','+atom',
 				     '+int','+bool'],
 			     out => [],
 			     BI  => BIstorePredId,
-			     native => dontknow},
+			     native => true},
 
     'newHashTable'	=> { in  => ['+int','+int','+int'],
 			     out => ['+int'],
 			     BI  => BInewHashTable,
-			     native => dontknow},
+			     native => true},
 
     'storeHTVarLabel'	=> { in  => ['+int','+int','+int'],
 			     out => [],
 			     BI  => BIstoreHTVarLabel,
-			     native => dontknow},
+			     native => true},
 
     'storeHTScalar'	=> { in  => ['+int','+int','+value','+int'],
 			     out => [],
 			     BI  => BIstoreHTScalar,
-			     native => dontknow},
+			     native => true},
 
     'storeHTRecord'	=> { in  => ['+int','+int','+literal','+value','+int'],
 			     out => [],
 			     BI  => BIstoreHTRecord,
-			     native => dontknow},
+			     native => true},
 
     'storeRecordArity'	=> { in  => ['+int','+value'],
 			     out => [],
 			     BI  => BIstoreRecordArity,
-			     native => dontknow},
+			     native => true},
 
     'storeGenCallInfo'	=> { in  => ['+int','+int','+bool','+literal',
 				     '+bool','+value'],
 			     out => [],
 			     BI  => BIstoreGenCallInfo,
-			     native => dontknow},
+			     native => true},
 
     'storeApplMethInfo'	=> { in  => ['+int','+literal','+value'],
 			     out => [],
 			     BI  => BIstoreApplMethInfo,
-			     native => dontknow},
+			     native => true},
 
     'storeGRegRef'	=> { in  => ['+int','+[tuple]'],
 			     out => [],
 			     BI  => BIstoreGRegRef,
-			     native => dontknow},
+			     native => true},
 
     'storeLocation'	=> { in  => ['+int','+list#list'],
 			     out => [],
 			     BI  => BIstoreLocation,
-			     native => dontknow},
+			     native => true},
 
     'storeCache'	=> { in  => ['+int','+value'],
 			     out => [],
 			     BI  => BIstoreCache,
-			     native => dontknow},
+			     native => true},
 
     #* Finite Domains
 
     'foreignFDProps'	=> { in  => [],
 			     out => ['+bool'],
 			     BI  => BIforeignFDProps,
-			     native => dontknow},
+			     native => true},
 
     'fdReset'		=> { in  => [],
 			     out => [],
 			     bi  =>BIfdReset,
 			     ifdef=>PROFILE_FD,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdDiscard'		=> { in  => [],
 			     out => [],
 			     bi  => BIfdDiscard,
 			     ifdef=>PROFILE_FD,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetNext'		=> { in  => ['value'],
 			     out => [],
 			     bi  => BIfdGetNext,
 			     ifdef=>PROFILE_FD,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdPrint'		=> { in  => [],
 			     out => [],
 			     bi  => BIfdPrint,
 			     ifdef=>PROFILE_FD,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdTotalAverage'	=> { in  => [],
 			     out => [],
 			     bi  => BIfdTotalAverage,
 			     ifdef=>PROFILE_FD,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdIs'		=> { in  => ['*value','bool'],
 			     out => [],
 			     bi  => BIfdIs,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdIsVar'		=> { in  => ['value'],
 			     out => [],
 			     BI  => BIisFdVar,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdIsVarB'		=> { in  => ['value'],
 			     out => ['+bool'],
 			     BI  => BIisFdVarB,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetLimits'	=> { in  => [],
 			     out => ['+int','+int'],
 			     BI  => BIgetFDLimits,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetMin'		=> { in  => ['*int','int'],
 			     out => [],
 			     bi  => BIfdMin,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetMid'		=> { in  => ['*int','int'],
 			     out => [],
 			     bi  => BIfdMid,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetMax'		=> { in  => ['*int','int'],
 			     out => [],
 			     bi  => BIfdMax,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetDom'		=> { in  => ['*int','+[value]'],
 			     out => [],
 			     bi  => BIfdGetAsList,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetCard'		=> { in  => ['*int','int'],
 			     out => [],
 			     bi  => BIfdGetCardinality,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetNextSmaller'	=> { in  => ['+int','*int','int'],
 			     out => [],
 			     bi  => BIfdNextSmaller,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdGetNextLarger'	=> { in  => ['+int','*int','int'],
 			     out => [],
 			     bi  => BIfdNextLarger,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdTellConstraint'	=> { in  => ['int','+value'],
 			     out => [],
 			     bi  => BIfdTellConstraint,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdWatchSize'	=> { in  => ['*int','+int','bool'],
 			     out => [],
 			     bi  => BIfdWatchSize,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdWatchMin'	=> { in  => ['*int','+int','bool'],
 			     out => [],
 			     bi  => BIfdWatchMin,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdWatchMax'	=> { in  => ['*int','+int','bool'],
 			     out => [],
 			     bi  => BIfdWatchMax,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdConstrDisjSetUp'	=> { in  => ['+value','+value','+value','+value'],
 			     out => [],
 			     bi  => BIfdConstrDisjSetUp,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdConstrDisj'	=> { in  => ['+value','+value','+value'],
 			     out => [],
 			     bi  => BIfdConstrDisj,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdTellConstraintCD'=> { in  => ['value','value','value'],
 			     out => [],
 			     bi  => BIfdTellConstraintCD,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_init'		=> { in  => ['atom'],
 			     out => [],
@@ -3377,103 +3346,103 @@ $builtins = {
 			     out => ['+string'],
 			     BI  => BIfsValueToString,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsIsVarB'		=> { in  => ['value'],
 			     out => ['+bool'],
 			     BI  => BIfsIsVarB,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsIsValueB'	=> { in  => ['+value','bool'],
 			     out => [],
 			     bi  => BIfsIsValueB,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsSetValue'	=> { in  => ['+value','fset'],
 			     out => [],
 			     bi  => BIfsSetValue,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsSet'		=> { in  => ['+value','+value','fset'],
 			     out => [],
 			     bi  => BIfsSet,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsSup'		=> { in  => [],
 			     out => ['+int'],
 			     BI  => BIfsSup,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsGetKnownIn'	=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetKnownIn,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsGetKnownNotIn'	=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetKnownNotIn,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsGetUnknown'	=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetUnknown,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsGetGlb'		=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetKnownIn,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsGetLub'		=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetLub,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsGetCard'		=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetCard,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsCardRange'	=> { in  => ['int','int','fset'],
 			     out => [],
 			     bi  => BIfsCardRange,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsGetNumOfKnownIn'	=> { in  => ['fset','int'],
 			     out => [],
 			     bi  => BIfsGetNumOfKnownIn,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsGetNumOfKnownNotIn'=> { in  => ['fset','int'],
 			       out => [],
 			       bi  => BIfsGetNumOfKnownNotIn,
 			       module=>fset,
-			       native => dontknow},
+			       native => true},
     
     'fsGetNumOfUnknown'	=> { in  => ['fset','int'],
 			     out => [],
 			     bi  => BIfsGetNumOfUnknown,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsClone'		=> { in  => ['fset','fset'],
 			     out => [],
 			     bi  => BIfsClone,
 			     module=>fset ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_init'		=> { in  => [],
 			     out => ['+atom'],
@@ -3695,17 +3664,17 @@ $builtins = {
     'System.nbSusps'	=> { in  => ['value'],
 			     out => ['+int'],
 			     BI  => BIconstraints,
-			     native => false},
+			     native => true},
 
 #    'SystemRegistry'	=> { in  => [],
 #			     out => ['+dictionary'],
 #			     BI  => BIsystem_registry,
-#                            native => dontknow},
+#                            native => true},
 #
 #    'ServiceRegistry'	=> { in  => [],
 #			     out => ['+dictionary'],
 #			     BI  => BIsystem_registry,
-#                            native => dontknow},
+#                            native => true},
 
 
 };
@@ -3727,14 +3696,12 @@ sub CTABLE {
 	foreach $macro (@ifdef)  { print "#ifdef $macro\n"; }
 	foreach $macro (@ifddef) { print "#ifndef $macro\n"; }
 	my $native = $info->{native};
-	if ( $native eq "dontknow") {
-	    $native = "NO";   # defaults to NO for now
-	} elsif ( $native eq "true") {
+	if ( $native eq "true") {
 	    $native = "OK";
 	} elsif ( $native eq "false") {
 	    $native = "NO";
 	} else {
-	    die "*** native flag for $key must be 'true', 'dontknow' or 'false'";
+	    die "*** native flag for $key must be 'true' or 'false'";
 	}
 	if ($BI) {
 	    # new style
@@ -3872,7 +3839,6 @@ sub checkNative {
 }
 
 sub SORTNATIVENESS {
-    &checkNative("dontknow");
     &checkNative("true");
     &checkNative("false");
 }
