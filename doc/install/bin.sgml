@@ -28,42 +28,58 @@
 
 <list ENUM>
 <item> You have to install GNU Emacs first.
-<item> Afterwards you install Mozart. (If you upgrade to
-a newer version of Mozart you only have to perform the second step).
-</list>
-
-<section><title/Installing Emacs/
-
-<p>Download <Ref.Extern to="ftp://ftp.ps.uni-sb.de/pub/oz2/system/oz-win/emacs-20.3.1.exe">emacs-20.34.1.exe</Ref.Extern>
+<p>Download <Ref.Extern to="ftp://mozart.ps.uni-sb.de/pub/mozart/extras/emacs-20.3.1.exe">emacs-20.3.1.exe</Ref.Extern>
 execute it, and follow the instructions.
 <p>
 More information about  GNU Emacs for MS Windows can be found under
 <Ref.Extern to="http://www.cs.washington.edu/homes/voelker/ntemacs.html">
 http://www.cs.washington.edu/homes/voelker/ntemacs.html</Ref.Extern>
 <P>
-
-</section>
-<section><title/Installing Mozart/
+<item> Afterwards you install Mozart. (If you upgrade to
+a newer version of Mozart you only have to perform the second step).
 <p>
-
-Get <Ref.Extern to="ftp://ftp.ps.uni-sb.de/pub/oz2/system/oz-win/oz-2.0.4b.exe">oz-2.0.4b.exe</Ref.Extern>,
+Get the <Ref.Extern to="http://mozart.ps.uni-sb.de/download/winarchive.shtml">self-extracting executable</Ref.Extern>,
 execute it, and follow the instructions.
-<p>
+</list>
 
-</section>
+
 </chapter>
 
 
 <chapter id=chapter.unix>
-    <title/Unix/
-
-    <section><title/Installing Mozart on a UNIX based system/
-<p>First get the binaries for your particular platform:
+    <title/Unix/ 
 <p>
+To install Oz on Unix you only have to read <ptr to=sec.installunix>
+and optionally <ptr to=sec.emacsunix> if you have not yet installed
+Emacs.
+
+    <section id=sec.installunix><title/Installing a Binary Mozart Release/
+<p>
+A binary Mozart release can be installed in any directory. There are
+no paths compiled into the binaries. The system configures itself on
+startup. In the following we explain the installation of Mozart into
+the directory
+<code display>
+/usr/local/mozart
+</code>
+Replace this string in the following if you want to install into a
+different directory.
+<p>
+
+<list ENUM>
+<item>Download the binary tarballs from <Ref.Extern to="http://mozart.ps.uni-sb.de/download/">http://mozart.ps.uni-sb.de/download</Ref.Extern> for your particular platform.
+<p>
+<item>Unpack the tarballs by executing
 <code display>
 % cd /usr/local
-% gunzip -cd mozart-version-platform.tar.gz | tar -xvf
+% gunzip -cd mozart-?{version}-?{platform}.tar.gz         | tar -xvf
+% gunzip -cd mozart-?{version}-?{platform}-contrib.tar.gz | tar -xvf
+% gunzip -cd mozart-?{version}-?{platform}-doc.tar.gz     | tar -xvf
 </code>
+Replace ?{version} and ?{platform} appropriately.
+Depending on which packages you selected during download you may skip
+one or more of the last three commands.
+</list>
     </section>
 
     <section id=sec.emacsunix><title/Getting a UNIX version of Emacs/

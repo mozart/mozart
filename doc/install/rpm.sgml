@@ -64,8 +64,8 @@
       <samp/root/:
       <<<su ->>>
       Then install the <file/mozart/ package first (it will have a 
-      filename similar to <file/mozart-1.0.0beta-120698-1.i386.rpm/):
-      <<<rpm -Uvh mozart-1.0.0beta-120698-1.i386.rpm>>>
+      filename similar to <file/mozart-1.0.0beta.120698-1.i386.rpm/):
+      <<<rpm -Uvh mozart-1.0.0beta.120698-1.i386.rpm>>>
       Similarly, you can install the <file/mozart-doc/ and
       <file/mozart-contrib/ packages.
 

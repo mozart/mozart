@@ -64,7 +64,7 @@
         super-user privileges or special knowledge about system
         administration. A Mozart binary distribution configures itself
         on startup. Therefore installation of Mozart only consists in
-        unpacking an archive file.
+        unpacking one or more archive file.
       &chapter.bin;
       &chapter.rpm;
     </part>
