@@ -2742,9 +2742,11 @@ fi
 
 case $platform in
     linux*)
+        if ! test -f /lib/libc.so.6
+        then
 
     echo $ac_n "checking for --enable-lstatic""... $ac_c" 1>&6
-echo "configure:2748: checking for --enable-lstatic" >&5
+echo "configure:2750: checking for --enable-lstatic" >&5
     # Check whether --enable-lstatic or --disable-lstatic was given.
 if test "${enable_lstatic+set}" = set; then
   enableval="$enable_lstatic"
@@ -2756,20 +2758,21 @@ fi
     fi
     if test "${oz_enable_lstatic}" != no; then
         echo "$ac_t""yes" 1>&6
-                LIBS=`echo $LIBS | sed -e 's/ -ldl//g'`
-                LIBS="-ldl -Xlinker -Bstatic $LIBS"
+                    LIBS=`echo $LIBS | sed -e 's/ -ldl//g'`
+                    LIBS="-ldl -Xlinker -Bstatic $LIBS"
 
     else
         echo "$ac_t""no" 1>&6
     fi
 
+        fi
         ;;
 esac
 
 
 
     echo $ac_n "checking for --enable-finalization""... $ac_c" 1>&6
-echo "configure:2773: checking for --enable-finalization" >&5
+echo "configure:2776: checking for --enable-finalization" >&5
     # Check whether --enable-finalization or --disable-finalization was given.
 if test "${enable_finalization+set}" = set; then
   enableval="$enable_finalization"
