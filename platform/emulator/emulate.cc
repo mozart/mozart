@@ -1631,7 +1631,7 @@ LBLkillThread:
     Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
     asmLbl(killThread);
 
-    DebugCheckT(printf("thread finished\n"));
+    // DebugCheckT(printf("thread finished\n"));
 
     e->currentThread = (Thread *) NULL;
     tmpThread->disposeRunnableThread ();

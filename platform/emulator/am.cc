@@ -53,11 +53,9 @@ void printBanner()
 {
   version();
 
-#ifdef DEBUG_DET
-  warning("DEBUG_DET implies eager waking of sleep.");
-#elif defined(WINDOWS)
-  // windows dumps without this printf at the beginnning
-  printf(" ");
+#if defined(DEBUG_DET) && !defined(WINDOWS)
+  // windows dumps if I activate this
+  warning("DEBUG_DET implies eager weaking of sleep.");
 #endif
 
 #ifdef DEBUG_CHECK
