@@ -168,7 +168,7 @@ ALLSRCS= $(SRCS) \
 ### TARGETS
 ############################################################################
 
-.NOEXPORT: emulate.o @PROGRAMNAME@ peanuts.o
+.NOEXPORT: emulate.o @PROGRAMNAME@
 .PHONY:	all win win-install first install install-bin install-inc \
 	install-dir depend tags clean distclean veryclean \
 	install-module
