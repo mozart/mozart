@@ -39,6 +39,7 @@
 
 //-----------------------------------------------------------------------------
 #include <stdarg.h>
+#include "bits.hh"
 
 void print_to_fdfile (const char *format, ...)
 {
@@ -57,8 +58,6 @@ FILE * _fdomn_file = stdout;
 
 //-----------------------------------------------------------------------------
 // Miscellaneous --------------------------------------------------------------
-
-unsigned char *numOfBitsInByte, *numOfBitsInHalfWord;
 
 int toTheLowerEnd[32] = {
   0x00000001,0x00000003,0x00000007,0x0000000f,
@@ -86,9 +85,6 @@ int fd_bv_max_high, fd_bv_max_elem, fd_bv_conv_max_high;
 int * fd_bv_left_conv, * fd_bv_right_conv;
 intptr fd_iv_ptr_sort[FDOMNINITSIZE];
 int fd_iv_left_sort[FDOMNINITSIZE], fd_iv_right_sort[FDOMNINITSIZE];
-
-const unsigned int maxByte     = 0xff;
-const unsigned int maxHalfWord = 0xffff;
 
 inline
 int _word32(int n) { return mod32(n) ? div32(n) + 1 : div32(n); }
@@ -122,28 +118,6 @@ void initFDs()
 
   fd_bv_left_conv = ::new int[fd_bv_conv_max_high];
   fd_bv_right_conv = ::new int[fd_bv_conv_max_high];
-
-  unsigned int i;
-
-  /* initialize numOfBitsInByte */
-  numOfBitsInByte = new unsigned char[maxByte+1];
-  Assert(numOfBitsInByte!=NULL);
-  for(i=0; i<=maxByte; i++) {
-    numOfBitsInByte[i] = 0;
-    int j = i;
-    while (j>0) {
-      if (j&1)
-        numOfBitsInByte[i]++;
-      j>>=1;
-    }
-  }
-
-  /* initialize numOfBitsInHalfWord */
-  numOfBitsInHalfWord = new unsigned char[maxHalfWord+1];
-  Assert(numOfBitsInHalfWord!=NULL);
-  for(i=0; i<=maxHalfWord; i++) {
-    numOfBitsInHalfWord[i] = numOfBitsInByte[i&0xff] + numOfBitsInByte[i>>8];
-  }
 
 }
 
@@ -755,15 +729,12 @@ void FDBitVector::initList(int list_len,
 }
 
 inline
-int FDBitVector::findSize(void)
-{
-  int s, i;
-  for (s = 0, i = high; i--; ) {
-    s += numOfBitsInHalfWord[unsigned(b_arr[i]) & 0xffff];
-    s += numOfBitsInHalfWord[unsigned(b_arr[i]) >> 16];
-  }
-
-  return s;
+int FDBitVector::findSize(void) {
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  return get_num_of_bits(high, (int *) &b_arr);
+#else
+  return get_num_of_bits(high, b_arr);
+#endif
 }
 
 inline
