@@ -1,9 +1,6 @@
-parse.c
-parse.h
 *.o
 *.a
 .bootstrap
-scan.c
 Makefile
 config.*
 skel.c
