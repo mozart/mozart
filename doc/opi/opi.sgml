@@ -1,0 +1,118 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Abbreviations -->
+<!ENTITY OPI "OPI">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book>
+  <Front>
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+    <Title/The Oz Programming Interface/
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Abstract>
+      <P.silent><!--**-->
+	The Oz Programming Interface (&OPI;) is the primary tool for
+	interaction with the Mozart development system.  It offers special
+	support for editing Oz code, running Mozart as a sub-process and
+	running Mozart's development tools.
+    </Abstract>
+  <Body>
+    <Chapter>
+      <Title/Introduction/
+      <P>
+	The Mozart Programming System provides a powerful environment for
+	the development of software systems, called the <Q/Oz Programming
+	Interface/ (&OPI;).  The &OPI; is built around the extensible Emacs
+	editor and runs (at least) under GNU Emacs Version&nbsp;19.28 or
+	greater and XEmacs in Versions&nbsp;19.14 or greater.  Its main
+	features are:
+      <Para><Title/Features/
+	<List>
+	  <Entry>Editing Oz code.
+	  <Item>
+	    <P.silent><!--**-->
+	      The &OPI; automatically indents program lines and colorizes
+	      Oz source code to ease reading and writing of Oz programs.
+	      Due to its awareness of the syntactical structure of Oz, one
+	      can navigate through programs by jumping over whole constructs
+	      such as procedure or class definitions.
+	  <Entry>Running Mozart as a sub-process.
+	  <Item>
+	    <P.silent><!--**-->
+	      The &OPI; handles input to and output from a Mozart sub-process,
+	      providing a convenient interface for the interactive use of the
+	      Mozart system and explorative programming.
+	  <Entry>Starting Mozart's development tools.
+	  <Item>
+	    <P.silent><!--**-->
+	      The &OPI; provides menus and shortcuts to interact with the
+	      development system's graphical tools, &eg;, setting breakpoints
+	      for the thread debugger or displaying the current position in
+	      the source file being debugged.
+	  <!--** it also will allow to invoke online documentation -->
+	</List>
+      <Para><Title/The Manual's Structure/
+	This manual is structured as follows.  First, <Ptr to="chapter.general"
+	> will give an overview about the general integration of the &OPI;
+	into the standard framework provided by Emacsen<Note foot><Q/Emacsen/
+	is the plural of <Q/Emacs/.  This term is used in this manual when the
+	described feature applies to both GNU Emacs and XEmacs.</Note>.  Then
+	will follow <Ptr to="chapter.editing">, <Ptr to="chapter.running"> and
+	<Ptr to="chapter.tools">, dedicated to the three main points mentioned
+	above respectively.
+      <Para><Title/Learning Emacs/
+	In order to exploit the power of the &OPI; you will have to get
+	some acquaintance with Emacs.  A good place to start is the Emacs
+	on-line tutorial, available from the Emacs Help menu.  This manual
+	will assume some familiarity with the general workings of Emacsen.
+    <Chapter id="chapter.general">
+      <Title/General Emacs Features of the &OPI;/
+	<P>
+<!--** the .emacs file, running from the shell, running from Emacs,
+convention: variables and functions start with oz-;
+C-h v: if the description starts with a "*", then it's meant for the
+user to set (also: M-x set-variable, M-x customize-variable);
+C-h f: if there's a description, then it's meant for the user to use;
+oz-mode, oz-gump-mode, ozm-mode, auto-save-alist/autoload, C-h m,
+menu bar menu, buffer menu in XEmacs, M-x customize in Emacs 20,
+oz-change-title, oz-frame-title, oz-pc-keys, oz-new-buffer,
+oz-previous-buffer, oz-next-buffer -->
+    <Chapter id="chapter.editing">
+      <Title/Editing Oz Code/
+	<P>
+<!--** oz-auto-indent, oz-indent-chars, oz-pedantic-spaces, abbrevs
+(see ~kornstae/.emacs), oz-remove-annoying-spaces, oz-electric-terminate-line,
+oz-indent-*, forward-oz-expr, backward-oz-expr, mark-oz-expr,
+transpose-oz-exprs, kill-oz-expr, backward-kill-oz-expr, oz-fill-paragraph,
+the three levels of fontification, oz-fontify-buffer, oz-(un)comment-region,
+oz-to-{coresyntax,emulatorcode}-* -->
+    <Chapter id="chapter.running">
+      <Title/Running Mozart from the &OPI;/
+	<P>
+<!--** variable oz-home, oz-prepend-line, oz-other-buffer-size,
+oz-popup-on-error-t, oz-halt-timeout, oz-emulator,
+oz-components-path, oz-root-functor, run-oz, oz-halt, oz-set-other,
+oz-set-emulator, oz-set-components, oz-other, oz-other-emulator,
+oz-other-components, oz-feed-*, oz-send-string, oz-toggle-*,
+oz-feed-*-browse, oz-mouse-goto-error, oz-goto-next-error -->
+    <Chapter id="chapter.tools">
+      <Title/Interacting with Mozart's Development Tools/
+	<P>
+<!--** oz-debug-{start,stop}, oz-breakpoint-key-set etc,
+oz-profiler-{start,stop}, oz-bar-remove, oz-view-panel, oz-compiler-panel -->
+    <Chapter id="chapter.gdb">
+      <Title/Running Mozart under gdb/
+	<P>
+<!--** oz-gdb-autostart, oz-emulator, oz-gdb -->
+    <Chapter id="chapter.internals">
+      <Title/Internal Functions/
+<!--** oz-forward-keyword, oz-backward-keyword, oz-is-quoted,
+oz-backward-begin, oz-backward-paren, oz-forward-end, oz-forward-paren -->
+
+</Book>
