@@ -163,7 +163,7 @@ define
       case E of error(ap(usage M) ...) then
          {System.printError
           'Command line option error: '#M#'\n'#
-          'Usage: '#{Property.get 'root.url'}#' [options]\n'#
+          'Usage: '#{Property.get 'application.url'}#' [options]\n'#
           '--in=<File>         The input SGML file.\n'#
           '--type=<Type>       What format to generate\n'#
           '                    (supported: '#
