@@ -198,11 +198,13 @@ EMUSRCDIR=$(SRCDIR)/../../platform/emulator
 BIDECL=$(EMUSRCDIR)/bidecl.perl
 BIMODFILES = $(BIMODSPECS:%=$(EMUSRCDIR)/mod%.spec)
 
+first: $(COMPILERSRCEXTRA) compiler-Version.oz
+
 compiler-Builtins.oz: $(BIMODFILES)
-        perl $(BIDECL) -srcdir $(EMUSRCDIR) -builtins $(BIMODSPECS) > $@
+        $(PERL) $(BIDECL) -srcdir $(EMUSRCDIR) -builtins $(BIMODSPECS) > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
-        $(M4) -DEMUDIR=$(EMUSRCDIR) < $< > $@ \
+        $(M4) -DEMUDIR=$(EMUSRCDIR) $< > $@ \
         || (rm -f $@; exit 1)
 
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
@@ -312,8 +314,8 @@ $(OZLIB)/boot-%: boot-%
 .PHONY: clean veryclean distclean
 
 CLEANFILES = \
-        compiler-Version.oz compiler-Builtins.oz \
-        compiler-Opcodes.oz \
+        compiler-Version.oz \
+        $(COMPILERSRCEXTRA) \
         Base.ozf CpSupport.ozf \
         $(FUNCTORS) $(FUNFUNCTORS) \
         $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
