@@ -32,8 +32,9 @@ ALL_INCLUDES    = -I$(VPATH)/../emulator
 
 BUILD           = $(PERL) $(VPATH)/goz_build_native.perl
 
-GTK_SPECS       = $(VPATH)/specs/gtk/*.spec
-GDK_SPECS       = $(VPATH)/specs/gdk/*.spec
+SPECS_PATH      = $(VPATH)/../../share/lib/gtk/specs
+GTK_SPECS       = $(SPECS_PATH)/gtk/*.spec
+GDK_SPECS       = $(SPECS_PATH)/gdk/*.spec
 
 GTK_OBJECTS     = goz_gtk_interface.o goz_gtk_wrappers.o
 GDK_OBJECTS = goz_gdk_interface.o goz_gdk_wrappers.o
