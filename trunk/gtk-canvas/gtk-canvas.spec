@@ -35,10 +35,14 @@ make install
 
 %files
 /usr/local/lib/libart_lgpl.so.2.2.0
+/usr/local/lib/libart_lgpl.so.2
+/usr/local/lib/libart_lgpl.so
 /usr/local/lib/libart_lgpl.la
 /usr/local/lib/libart_lgpl.a
 /usr/local/lib/libartConf.sh
 /usr/local/lib/libgtk-canvas.so.1.0.1
+/usr/local/lib/libgtk-canvas.so.1
+/usr/local/lib/libgtk-canvas.so
 /usr/local/lib/libgtk-canvas.la
 /usr/local/lib/libgtk-canvas.a
 /usr/local/bin/libart-config
