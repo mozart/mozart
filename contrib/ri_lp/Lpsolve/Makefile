@@ -1,6 +1,6 @@
 PLATFORM = $(shell ozplatform)
 
-CC= gcc -fno-exceptions -fno-rtti 
+CC= gcc -fno-exceptions -fno-rtti -fpic
 #CC= oztool cc
 
 #should be OK in most situations:
