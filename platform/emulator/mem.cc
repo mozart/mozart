@@ -83,7 +83,7 @@ Bool checkAddress(void *ptr) {
 // Linux-i486 (2.0.7-based) and Solaris-Sparc. And don't risk
 // otherwise...
 
-#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC))
+#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC) || defined(__FreeBSD__))
 #undef HAVE_MMAP
 #endif
 
