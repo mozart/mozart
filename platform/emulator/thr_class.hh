@@ -355,15 +355,9 @@ class RunnableThreadBody {
 friend class Thread;
 private:
   TaskStack taskStack;
+  RunnableThreadBody *next;  // for linking in the freelist
 public:
-  void* operator new (size_t size) { 
-    error ("'RunnableThreadBody::new ()' is applied!");
-    return ((void *) NULL);	// just to keep gcc happy;
-  }
-  static void operator delete (void *ptr, size_t size) {
-    error ("'RunnableThreadBody::delete ()' is applied!");
-  }
-
+  USEHEAPMEMORY;
   // 
   //  Note that 'RunnableThreadBody'"s
   // are allocated in pre-defined regions, and, therefore, 
@@ -372,10 +366,11 @@ public:
   // are treated specially beacuse of the memory efficiency and 
   // low probability that they become a proper running thread 
   // (i.e. with a taskstack);
-  void init (int size);		// size of the stack;
+
   void reInit ();		// for the root thread only;
 
   //  gc methods;
+  RunnableThreadBody(int sz) : taskStack(sz) {}
   RunnableThreadBody *gcRTBody ();
   void gcRecurse ();
 };
@@ -609,7 +604,7 @@ public:
   //  'getJob' yields a *suspended* thread!
   Thread *getJob ();
   //
-  DebugCode (Bool hasJobDebug (););
+  DebugCode (Bool hasJobDebug ();)
 
 #ifdef DEBUG_CHECK
   //  redefined from the ThreadState - because of assertion;
@@ -646,14 +641,14 @@ public:
   (void removePropagator () { 
     Assert (isPropagator ());
     item.ccont->cFunc = (OZ_CFun) NULL;
-  });
+  })
 
   //  For debugging only - get a reference to the 'cFunc';
   DebugCode 
   (OZ_CFun getPropagator () { 
     Assert (isPropagator ());
     return (item.ccont->cFunc);
-  });
+  })
 
   //  
   //  (re-)Suspend a propagator again; (was: 'reviveCurrentTaskSusp');
