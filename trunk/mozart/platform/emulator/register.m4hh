@@ -113,35 +113,23 @@ define(M4INSTRTWOREGS,``''
     ``
     {
       int regIndex = getRegArg(PC+1);
+      Atom *name   = getAtomArg(PC+2);
       DebugCheck(&Reg1(0)!= &(e->toplevelVars[0]),
 		 error("createNamedVar: e->toplevelVars expected"););
-      int size = getRefsArraySize(e->toplevelVars);
-      if (LessIndex(size,regIndex)) {
-	int newSize = int(size*1.5);
-	message("resizing store for toplevel vars from %d to %d\n",size,newSize);
-	e->toplevelVars = resize(e->toplevelVars,newSize);
-	Y = e->toplevelVars;
-	// no deletion of old array --> GC does it
-      }
-      SVariable *svar = new SVariable(CBB, makeTaggedAtom(getAtomArg(PC+2)));
-      Reg1(regIndex) = makeTaggedRef(newTaggedSVar(svar));
+      Reg1(regIndex) = createNamedVariable(regIndex,name,e,Y);
     }
     ''
     DISPATCH(3);
     );
 
   M4INSTRONEREG( CREATEVARIABLE,
-	       ``
-		 // create a local unbound variable (i.e. not reference)
-		 // and bind the reference in X reg to it.
-		 
-		 Reg1(getRegArg(PC+1)) =
-		   makeTaggedRef(newTaggedUVar(e->currentUVarPrototype));
+    ``
+       Reg1(getRegArg(PC+1)) = makeTaggedRef(newTaggedUVar(e->currentUVarPrototype));
 
-		 IncfProfCounter(localVariableCounter,sizeof(TaggedRef));
-	       ''
-	       DISPATCH(2);
-	       );
+       IncfProfCounter(localVariableCounter,sizeof(TaggedRef));
+     ''
+     DISPATCH(2);
+     );
   
   M4INSTRONEREG( CREATEVARIABLEMOVE,
 	       ``{
@@ -186,11 +174,9 @@ define(M4INSTRTWOREGS,``''
 	       ``
 		 TaggedRef label = makeTaggedAtom(getAtomArg(PC+1));
 		 Arity *ff = (Arity *) getAdressArg(PC+2);
-		 SRecord *srecord = new SRecord(ff,label);
+		 SRecord *srecord = new SRecord(ff,label,-1,NO);
 		 
-		 TaggedRef term = makeTaggedSRecord(srecord);
-
-		 Reg1(getRegArg(PC+3)) = term;
+		 Reg1(getRegArg(PC+3)) = makeTaggedSRecord(srecord);
 		 sPointer = srecord->getRef();
 
 		 DISPATCH(4);''
@@ -274,14 +260,23 @@ define(M4INSTRTWOREGS,``''
 		 TaggedRef term = Reg1( getRegArg(PC+3) );
 		 DEREF(term,termPtr,tag);
 
-		 if (isNotCVar(term)) {
-		   // then produce new .
+		 if (isAnyVar(term)) {
 		   STuple *stuple = STuple::newSTuple(atom,arity);
-		   e->bindToNonvar(termPtr, term,makeTaggedSTuple(stuple));
 
-		   sPointer = stuple->getRef();
-		   mode = WRITE;
-		   DISPATCH(4);
+		   if (isCVar(term)) {
+		     if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
+						  makeTaggedSTuple(stuple), STUPLE)) {
+		       DISPATCH(4);
+		     }
+
+		   } else {
+
+		     e->bindToNonvar(termPtr, term,makeTaggedSTuple(stuple));
+
+		     sPointer = stuple->getRef();
+		     mode = WRITE;
+		     DISPATCH(4);
+		   }
 		 }
 		   
 		 if (isSTuple(tag) &&
@@ -290,15 +285,8 @@ define(M4INSTRTWOREGS,``''
 		   mode = READ;
 		   DISPATCH(4);
 		 }
-		 if (isCVar(term)) {
-		   STuple *stuple = STuple::newSTuple(atom,arity);
-		   if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
-						makeTaggedSTuple(stuple), STUPLE)) {
-		     DISPATCH(4);
-		   }
-		 }
 		 HANDLE_FAILURE(PC+4,
-				STuple *stuple = STuple::newSTuple(atom,arity);
+				STuple *stuple = newSTupleOutline(atom,arity);
 				mode = WRITE;
 				sPointer = stuple->getRef();
 				message("getstructure %s/%d = %s",
@@ -318,14 +306,21 @@ define(M4INSTRTWOREGS,``''
 		 TaggedRef term = Reg1( getRegArg(PC+3) );
 		 DEREF(term,termPtr,tag);
 
-		 if (isNotCVar(term)) {
-		   // then produce new record
-		   SRecord *srecord = new SRecord(ff,label);
-		   e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord));
+		 if (isAnyVar(term)) {
+		   SRecord *srecord = new SRecord(ff,label,-1,NO);
+		   if(isCVar(term) == OK){
+		     if(tagged2CVar(term)->unify(termPtr, term, tag, NULL,
+						 makeTaggedSRecord(srecord), SRECORD)) {
+		       DISPATCH(4);
+		     }
+		   } else {
 
-		   sPointer = srecord->getRef();
-		   mode = WRITE;
-		   DISPATCH(4);
+		     e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord));
+		     
+		     sPointer = srecord->getRef();
+		     mode = WRITE;
+		     DISPATCH(4);
+		   }
 		 }
 		 
 		 if (isSRecord(tag) &&
@@ -335,16 +330,8 @@ define(M4INSTRTWOREGS,``''
 		   DISPATCH(4);
 		 }
 
-		 if(isCVar(term) == OK){
-		   SRecord *srecord = new SRecord(ff,label);
-		   if(tagged2CVar(term)->unify(termPtr, term, tag, NULL,
-					       makeTaggedSRecord(srecord), SRECORD)) {
-		     DISPATCH(4);
-		   }
-		 }
-
 		 HANDLE_FAILURE(PC+4,
-				SRecord *srecord = new SRecord(ff,label);
+				SRecord *srecord = newSRecordOutline(ff,label);
 				mode = WRITE;
 				sPointer = srecord->getRef();
 				message("getrecord %s/%d = %s",
@@ -354,6 +341,51 @@ define(M4INSTRTWOREGS,``''
 	       }''
 	       );
 
+
+  M4INSTRONEREG(TESTCONST,
+    ``{
+        TaggedRef term = Reg1(getRegArg(PC+1));
+        TaggedRef atom = makeTaggedAtom(getAtomArg(PC+2));
+
+	DEREF(term,termPtr,tag);
+
+	if (sameAtom(atom,term)) {
+	  JUMP( getLabelArg(PC+3) );
+	}
+
+        if (isNotCVar(term) ||
+	    isCVar(term) && tagged2CVar(term)->valid(atom)) {
+	  suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
+		       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	  goto LBLcheckEntailment;
+	}
+
+	JUMP( getLabelArg(PC+4) );
+    }''
+    );
+
+  M4INSTRONEREG(TESTNUMBER,
+    ``{
+        TaggedRef term = Reg1(getRegArg(PC+1));
+	TaggedRef i = getNumberArg(PC+2);
+
+
+	DEREF(term,termPtr,tag);
+
+	if ( tag == tagTypeOf(i) && numberEq(i,term)) {
+	  JUMP( getLabelArg(PC+3) );
+	}
+
+        if (isNotCVar(term) ||
+	    isCVar(term) && tagged2CVar(term)->valid(i)) {
+	  suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
+		       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	  goto LBLcheckEntailment;
+	}
+
+	JUMP( getLabelArg(PC+4) );
+    }''
+    );
 
   M4INSTRONEREG( GETCONSTANT,
 	       ``{
@@ -430,12 +462,20 @@ define(M4INSTRTWOREGS,``''
 		 TaggedRef term = Xreg(reg1);
 		 DEREF(term,termPtr,tag);
 
-		 if(isNotCVar(term)) {
+		 if(isAnyVar(term)) {
 		   LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
-		   e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
-		   Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
 
-		   DISPATCH(4);
+		   if (isCVar(term) == OK) {
+		     if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
+						  makeTaggedLTuple(ltuple), LTUPLE)) {
+		       DISPATCH(4);
+		     }
+		   } else {
+		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
+		     Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
+
+		     DISPATCH(4);
+		   }
 		 }
 		   
 		 if (isLTuple(term)) {
@@ -445,17 +485,8 @@ define(M4INSTRTWOREGS,``''
 		     
 		     DISPATCH(4);
 		   }
-		 } else {
-
-		   if (isCVar(term) == OK) {
-		     LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
-		     if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
-						  makeTaggedLTuple(ltuple), LTUPLE)) {
-		       DISPATCH(4);
-		     }
-		   }
-
 		 }
+
 		 HANDLE_FAILURE(PC+4,
 				LTuple *ltuple = new LTuple(Reg1(reg2),
 							    e->currentUVarPrototype);
@@ -473,17 +504,24 @@ define(M4INSTRTWOREGS,``''
 		 register TaggedRef term = Reg1(reg);
 		 DEREF(term,termPtr,tag);
 
-		 if(isNotCVar(term)) {
+		 if(isAnyVar(term)) {
 		   LTuple *ltuple = new LTuple();
+		   if (isCVar(term) == OK) {
+		     if(tagged2CVar(term)->unify(termPtr, term, tag, NULL,
+						 makeTaggedLTuple(ltuple), LTUPLE)) {
+		       DISPATCH(2);
+		     }
+		   } else {
 #ifdef FASTSS
-		   e->fastUnify(termPtr?makeTaggedRef(termPtr):term,
-				makeTaggedLTuple(ltuple));
+		     e->fastUnify(termPtr?makeTaggedRef(termPtr):term,
+				  makeTaggedLTuple(ltuple));
 #else
-		   e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
+		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
 #endif
-		   sPointer = ltuple->getRef();
-		   mode = WRITE;
-		   DISPATCH(2);
+		     sPointer = ltuple->getRef();
+		     mode = WRITE;
+		     DISPATCH(2);
+		   }
 		 }
 
 		 if (isLTuple(term)) {
@@ -492,13 +530,6 @@ define(M4INSTRTWOREGS,``''
 		   DISPATCH(2);
 		 }
 		 
-		 if (isCVar(term) == OK) {
-		   LTuple *ltuple = new LTuple();
-		   if(tagged2CVar(term)->unify(termPtr, term, tag, NULL,
-					       makeTaggedLTuple(ltuple), LTUPLE)) {
-		     DISPATCH(2);
-		   }
-		 }
 
 		 HANDLE_FAILURE(PC+2,
 				LTuple *ltuple = new LTuple();
