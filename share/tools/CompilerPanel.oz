@@ -33,8 +33,8 @@ import
    Browser.browse
    Emacs.condSend
 export
-   panel:           CompilerPanel
-   'CompilerPanel': CompilerPanel
+   'class':           CompilerPanel
+
 body
    local
       UrlDefaults = \insert '../url-defaults.oz'
