@@ -1920,8 +1920,8 @@ void ConstTerm::gcConstRecurse()
 	((DeepObject*)o)->home = o->getBoard()->gcBoard();
       }
       o->setState(o->getState()->gcSRecord());
-      gcTagged(o->threads,o->threads);
-      o->lock = (OzLock*) o->lock->gcConstTerm();
+      int oldFlags = o->flagsAndLock&(~ObjFlagMask);
+      o->flagsAndLock = ToInt32(o->getLock()->gcConstTerm())|oldFlags;
       break;
     }
     
