@@ -991,7 +991,10 @@ char *ostmpnam(char *s)
 int osdup(int fd)
 {
   //--** no dup yet
-  return fd;
+  if (fd == STDIN_FILENO)
+    return wrappedStdin;
+  else
+    return fd;
 }
 
 char *osgetenv(char *var)
