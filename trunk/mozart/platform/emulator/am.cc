@@ -418,12 +418,12 @@ static Stack rebindTrail(100,Stack_WithMalloc);
 
 inline
 static
-void rebind(TaggedRef *refPtr, TaggedRef *ptr2)
+void rebind(TaggedRef *refPtr, TaggedRef term2)
 {
   rebindTrail.ensureFree(2);
   rebindTrail.push(refPtr,NO);
   rebindTrail.push(ToPointer(*refPtr),NO);
-  doBind(refPtr,makeTaggedRef(ptr2));
+  doBind(refPtr,term2);
 }
 
 #define PopRebindTrail(value,refPtr)			\
@@ -441,14 +441,16 @@ OZ_Return oz_unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 
   TaggedRef term1 = t1;
   TaggedRef term2 = t2;
+  TaggedRef *termPtr1 = &term1;
+  TaggedRef *termPtr2 = &term2;
 
 loop:
   int argSize;
 
   COUNT(totalUnify);
 
-  DEREF(term1,termPtr1,tag1);
-  DEREF(term2,termPtr2,tag2);
+  _DEREF(term1,termPtr1,tag1);
+  _DEREF(term2,termPtr2,tag2);
 
   // identical terms ?
   if (isUVar(term1) ? termPtr1 == termPtr2 : term1 == term2) {
@@ -561,7 +563,7 @@ cvar:
       LTuple *lt1 = tagged2LTuple(term1);
       LTuple *lt2 = tagged2LTuple(term2);
 
-      if (termPtr1 && termPtr2) rebind(termPtr2,termPtr1);
+      rebind(termPtr2,term1);
       argSize = 2;
       termPtr1 = lt1->getRef();
       termPtr2 = lt2->getRef();
@@ -577,7 +579,7 @@ cvar:
       if (! sr1->compareFunctor(sr2))
 	goto fail;
 
-      if (termPtr1 && termPtr2) rebind(termPtr2,termPtr1);
+      rebind(termPtr2,term1);
       argSize  = sr1->getWidth();
       termPtr1 = sr1->getRef();
       termPtr2 = sr2->getRef();
