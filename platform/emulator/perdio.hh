@@ -7,6 +7,9 @@
   Version: $Revision$
   State: $State$
   $Log$
+  Revision 1.4  1996/08/06 13:30:39  mehl
+  bug fixes and ports
+
   Revision 1.3  1996/08/02 16:25:50  scheidhr
   more Perdio work: send Ports over the net
 
@@ -33,6 +36,7 @@ enum MessageType {
 };
 
 void remoteSend(Port *p, TaggedRef msg);
+Bool isLocalAddress(NetAddress *na);
 
 #endif /* __PERDIOHH */
 
