@@ -27,14 +27,7 @@
 #ifndef __REFL_CONSTR__HH__
 #define __REFL_CONSTR__HH__
 
-#include "am.hh"
 #include "var_all.hh"
-
-#include "extension.hh"
-#include "thr_class.hh"
-#include "builtins.hh"
-
-#include "mozart.h"
 
 //#define DEBUG
 
