@@ -41,9 +41,9 @@ ozdemo.exe: oz.exe
 	cp oz.exe ozdemo.exe
 
 
-win-install:: setup.exe oz.exe ozdemo.exe ozsa.exe
+win-install:: setup.exe oz.exe ozdemo.exe ozsa.exe ozsac.exe
 	cp setup.exe oz.exe ozdemo.exe $(OZHOME)
-	cp ozsa.exe $(OZHOME)/platform/win32-i486
+	cp ozsa.exe ozsac.exe $(OZHOME)/platform/win32-i486
 
 
 clean::
