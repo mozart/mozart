@@ -46,13 +46,6 @@
  * ------------------------------------------------------------------------ */
 
 inline
-void SolveActor::addSuspension(SuspList *l)
-{
-  l->setNext(suspList);
-  suspList = l;
-}
-
-inline
 void SolveActor::addSuspension (Suspension susp)
 {
   suspList = new SuspList (susp, suspList);
