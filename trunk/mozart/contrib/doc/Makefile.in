@@ -3,6 +3,7 @@ VPATH	= @scrdir@
 SRCTOP	= @SRCTOP@
 BUILDTOP= @BUILDTOP@
 SUBDIRS	= @SUBDIRS@
+HOMEURL = @HOMEURL@
 
 .PHONY:	bootstrap all install clean distclean veryclean depend
 

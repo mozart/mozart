@@ -3,6 +3,7 @@ BUILDDIR        = $(BUILDTOP)/share/demo
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
+HOMEURL         = @HOMEURL@
 
 PREFIX		= @prefix@
 OZDEMO		= $(PREFIX)/doc/demo/applets

@@ -132,6 +132,10 @@ AC_DEFUN(OZ_INIT, [
   OZ_PROG_MAKE
   AC_PROG_MAKE_SET
   OZ_PROG_INSTALL
+  HOMEURL="http://mozart.ps.uni-sb.de/home"
+  HOMECACHE="http/mozart.ps.uni-sb.de/home"
+  AC_SUBST(HOMEURL)
+  AC_SUBST(HOMECACHE)
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 ])
