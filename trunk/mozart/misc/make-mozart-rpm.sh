@@ -43,15 +43,13 @@ echo "Packages in: $packageroot"
 use_src=mozart
 
 case $PLAT in
-    linux-i486)
-        LDFLAGS=-s
+linux-i486)
+    LDFLAGS=-s
     ;;
-    solaris-sparc)
-        LDFLAGS=-s
-    ;;
-    *)
-	echo "Unknown platform: $PLAT" 2>& 1
-	exit 1
+
+*)
+    echo "Unknown platform: $PLAT" 2>& 1
+    exit 1
     ;;
 esac
 
