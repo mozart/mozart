@@ -1743,11 +1743,11 @@ echo "configure:1718: checking $CXX version is at least 2.7" >&5
   oz_tmp_want="2.7"
   oz_tmp_IFS="$IFS"
   IFS="$IFS._-"
-  oz_tmp_got="$oz_tmp_got"
-  oz_tmp_want="$oz_tmp_want"
+  oz_tmp_got=`echo $oz_tmp_got`
+  oz_tmp_want=`echo $oz_tmp_want`
+  set $oz_tmp_got DONE
   IFS=""
   IFS="$oz_tmp_IFS"
-  set $oz_tmp_got DONE
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
     if test "$1" = DONE; then
