@@ -7,7 +7,8 @@
 
 : ${OZEMULATOR=$HOME/Oz/Emulator/oz.emulator.bin}
 : ${OZQUIET=-quiet}
+: ${SRCDIR=.}
 OZINIT=${OZMAINIT}
 export OZINIT
 
-exec $OZEMULATOR $OZQUIET -b ./ozbatch.ozm -a "$@"
+exec $OZEMULATOR $OZQUIET -b $SRCDIR/ozbatch.ozm -a "$@"
