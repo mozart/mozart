@@ -874,10 +874,12 @@
                               [self::P[node()[last()=1 and
                                               @DISPLAY='DISPLAY']]
                                or
-                               node()[@DISPLAY='DISPLAY']]]"
+                               @DISPLAY='DISPLAY']]"
 	  priority="2.0">
   <if test="msg:say('FOUND LEIF EXAMPLE ID=') and
-            msg:saynl(string(@ID))"/>
+            msg:say(string(@ID)) and
+            msg:say(' CAPTION: ') and
+            msg:saynl(string(CAPTION))"/>
   <txt:usemap>\begin{FIGURENODISPLAY}</txt:usemap>
   <apply-templates/>
   <if test="@ID and not(CAPTION)">
@@ -951,7 +953,7 @@
 </template>
 
 <template match="PICTURE.EXTERN[@DISPLAY='INLINE']|TD/P.SILENT/PICTURE.EXTERN" priority="2.0">
-  <txt:usemap>\PICEXT</txt:usemap>
+  <txt:usemap>\PICEXTINLINE</txt:usemap>
   <if test="@ID and meta:pictureWidthExists(string(@ID))">
     <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
   </if>
@@ -1059,6 +1061,7 @@
 </template>
 
 <!-- literate programming: chunks -->
+<!-- \begin{CHUNK}{CHUNK.ID}{CHUNK.NUM} -->
 
 <template match="CHUNK">
   <variable name="env">
@@ -1069,6 +1072,10 @@
   </variable>
   <txt:usemap>\begin{<value-of select="$env"/>}{</txt:usemap>
   <apply-templates select="TITLE"/>
+  <txt:usemap>}{</txt:usemap>
+  <value-of select="@CHUNK.ID"/>
+  <txt:usemap>}{</txt:usemap>
+  <value-of select="@CHUNK.NUM"/>
   <txt:usemap>}</txt:usemap>
   <call-template name="maybe.label"/>
   <txt:usemap name="code">
