@@ -73,8 +73,7 @@ This limit can be changed, but this requires rebooting the machine.
 Since at least two pages are needed for efficient
 communications,
 the default value results in poor
-performance if there are more than three virtual sites
-connected together.
+performance if a site connects to more than three virtual sites.
 
 <item>The Mozart system does its best to reclaim shared
 memory identifiers, even upon process crashes, but it is
