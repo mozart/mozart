@@ -31,7 +31,7 @@ EntryTable newEntryTable(int sz)
 void IHashTable::add(Literal *constant, ProgramCounter label) 
 {
   numentries++;
-  int hsh = constant->hash() % size;
+  int hsh = hash(constant->hash());
   
   if (literalTable == NULL)
     literalTable = newEntryTable(size); 
@@ -43,7 +43,7 @@ void IHashTable::add(Literal *constant, ProgramCounter label)
 void IHashTable::add(Literal *name, SRecordArity arity, ProgramCounter label) 
 {
   numentries++;
-  int hsh = name->hash() % size;
+  int hsh = hash(name->hash());
   
   if (functorTable == NULL)
     functorTable = newEntryTable(size); 
@@ -60,11 +60,13 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
   int hsh;
   switch (tagTypeOf(number)) {
 
-  case OZFLOAT:  hsh = tagged2Float(number)->hash() % size;  break;
-  case BIGINT:   hsh = tagged2BigInt(number)->hash() % size; break;
-  case SMALLINT: hsh = smallIntHash(number) % size;          break;    
-  default:       Assert(0);                                  return;
+  case OZFLOAT:  hsh = tagged2Float(number)->hash();  break;
+  case BIGINT:   hsh = tagged2BigInt(number)->hash(); break;
+  case SMALLINT: hsh = smallIntHash(number);          break;    
+  default:       Assert(0);                           return;
   }
+
+  hsh = hash(hsh);
 
   if (numberTable == NULL)
     numberTable = newEntryTable(size); 
@@ -135,7 +137,7 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
     }
 
   case AVAR:
-    return ((GenCVariable *)this)->valid(ptr,OZ_int(4711));
+    return ((GenCVariable *)cvar)->valid(ptr,OZ_int(4711));
 
   default:    
     return NO;
