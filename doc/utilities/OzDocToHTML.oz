@@ -1163,6 +1163,9 @@ define
                               p('class': [margin]
                                 OzDocToHTML,Batch(M 1 $)
                                 img(src: 'note-gui-'#M.mouse#'.gif'
+                                    align: middle
+                                    vspace: ''
+                                    hspace: ''
                                     alt: case M.mouse
                                          of l1 then 'Left mouse click'
                                          [] l2 then 'Left mouse double-click'
