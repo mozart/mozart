@@ -261,7 +261,7 @@ in
       %% Implementation of ``Search'' functionality
       %%
 
-      meth startSearch($)
+      meth startSearch($ <= _)
 	 <<Manager         busy>>
 	 <<MenuManager     normal(explorer(halt))>>
 	 <<ToplevelManager configurePointer(searching)>>
@@ -303,11 +303,12 @@ in
       end
       
       meth all
-	 <<Manager DoAll(<<Manager startSearch($)>>
-			 <<DialogManager getUpdateSol($)>>)>>
+	 <<Manager startSearch>>
+	 <<Manager DoAll(<<DialogManager getUpdateSol($)>>)>>
       end
 
-      meth DoAll(Break NoSol)
+      meth DoAll(NoSol)
+	 Break   = <<StatusManager getBreakFlag($)>>
 	 CurNode = @curNode
 	 Sol     = case @IsBAB then
 		      {CurNode next(Break @PrevBABSol
@@ -318,7 +319,7 @@ in
 				 <<getInfoDist($)>> $)}
 		   end
       in
-	 case Sol\=False andthen {System.isVar Break} then
+	 case Sol\=False andthen <<StatusManager getBreakStatus($)>>==none then
 	    case @IsBAB then PrevBABSol <- {Sol getInfo($)}
 	    else true
 	    end
@@ -327,9 +328,9 @@ in
 	       <<Manager       hideCursor>>
 	       <<Manager       LayoutAfterSearch>>
 	       <<StatusManager unbreak>>
-	       <<Manager       DoAll(Break <<DialogManager getUpdateSol($)>>)>>
+	       <<Manager       DoAll(<<DialogManager getUpdateSol($)>>)>>
 	    else
-	       <<Manager DoAll(Break NoSol-1)>>
+	       <<Manager DoAll(NoSol-1)>>
 	    end
 	 else <<Manager stopSearch(Sol)>>
 	 end
