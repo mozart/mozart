@@ -94,6 +94,13 @@ int     cs_copy_size  = 0;
 static void gCollectCode(CodeArea *block);
 static void gCollectCode(ProgramCounter PC);
 
+#else
+
+inline 
+void oz_sCloneTerm(TaggedRef & f, TaggedRef & t) {
+  OZ_sCloneBlock(&f, &t, 1);
+}
+
 #endif
 
 /*
