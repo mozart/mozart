@@ -5,12 +5,15 @@
 <!ELEMENT Em - - (#PCDATA)>
 
 <!-- Include Files -->
+<!ENTITY directives SYSTEM "directives.sgml">
+<!ENTITY ozbatch SYSTEM "ozbatch.sgml">
+<!ENTITY panel SYSTEM "panel.sgml">
+<!ENTITY api SYSTEM "api.sgml">
 <!ENTITY engines SYSTEM "engines.sgml">
 <!ENTITY interfaces SYSTEM "interfaces.sgml">
 <!ENTITY switches SYSTEM "switches.sgml">
 <!ENTITY queries SYSTEM "queries.sgml">
 <!ENTITY notifications SYSTEM "notifications.sgml">
-<!ENTITY abstractions SYSTEM "abstractions.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY dot "." -- to distinguish it from periods -->
@@ -26,24 +29,22 @@
   <Front>
     <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split" value="chapter.intro">
-    <Meta name="html.split" value="chapter.engines">
-    <Meta name="html.split" value="chapter.interfaces">
-    <Meta name="html.split" value="chapter.reference">
-    <Meta name="html.split" value="section.reference.switches">
-    <Meta name="html.split" value="section.reference.queries">
-    <Meta name="html.split" value="section.reference.notifications">
-    <Meta name="html.split" value="section.reference.abstractions">
+    <Meta name="html.split" value="chapter.directives">
+    <Meta name="html.split" value="chapter.ozbatch">
+    <Meta name="html.split" value="chapter.panel">
+    <Meta name="html.split" value="chapter.api">
+    <Meta name="html.split" value="appendix.switches">
+    <Meta name="html.split" value="appendix.queries">
+    <Meta name="html.split" value="appendix.notifications">
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Mozart Compiler/
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Abstract>
-      This document describes how to use the Oz Compiler in the Mozart
-      implementation from within Oz programs.
-    <P class=warning>
-      The material in this document is still incomplete and subject
-      to change.
+      This document describes how to use the Oz Compiler in Mozart.
+      This includes the descriptions of the batch compiler and compiler
+      panel as well as of the application programmer's interface.
     </Abstract>
   <Body>
     <Chapter id="chapter.intro">
@@ -59,24 +60,14 @@
 	The Oz Compiler does this by first translating the source text into
 	a more efficient representation (bytecode for the virtual machine) and
 	bringing it to execution.
-      <P>
-	We distinguish between <Def>Compiler Engines</Def> described in
-	<Ptr to="chapter.engines">, which store the state of a compiler and
-	perform the compilation proper, and <Def>Compiler Interfaces</Def>
-	described in <Ptr to="chapter.interfaces">, which allow the activities
-	of Compiler Engines to be observed and reacted to.
-      <P>
-	Finally, <Ptr to="chapter.reference"> contains a detailed
-	reference about the compiler switches, queries and notifications.
-	For most users, the provided abstractions described in <Ptr
-	to="section.reference.abstractions"> should prove sufficient.
-    &engines;
-    &interfaces;
-    <Chapter id="chapter.reference">
-      <Title/Reference/
-      &switches;
-      &queries;
-      &notifications;
-      &abstractions;
+    <!-- Main Chapters -->
+    &directives;
+    &ozbatch;
+    &panel;
+    &api;
+    <!-- Appendices -->
+    &switches;
+    &queries;
+    &notifications;
   </Body>
 </Book>
