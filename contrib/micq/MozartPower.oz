@@ -2,6 +2,7 @@ functor
 import
    Tk
    Powered_by_oz_gif(image:Logo)
+   Application
 export
    ShowLogo
 define
@@ -17,12 +18,16 @@ define
 				 font:{New Tk.font tkInit(family:helvetica size:Mess2.size weight:normal)})}
 	 ImageL1={New Tk.label tkInit(parent:F image:Logo bg:white)}
 	 TX TY
+	 L2={New Tk.label tkInit(parent:F text:"Cancel" bg:white fg:red
+				 font:{New Tk.font tkInit(family:helvetica size:9 weight:normal)})}
       in
 	 {Tk.batch [grid(L0 row:0 column:0 sticky:we ipadx:5 ipady:5)
 		    grid(L1 row:1 column:0 sticky:we ipadx:5 ipady:0)
 		    grid(ImageL1 row:2 column:0 ipadx:10 ipady:5 sticky:we)
+		    grid(L2 row:3 column:0 sticky:e ipadx:5 ipady:0)
 		    grid(F row:0 column:0)
 		   ]}
+	 {L2 tkBind(event:'<1>' action:Application.exit#0)}
 	 {Delay StartD.delay} % Should at least be 100ms, otherwise following winfo-calls will fail
 	 TY={Tk.returnInt winfo(height(F))}
 	 TX={Tk.returnInt winfo(width(F))}
@@ -45,31 +50,9 @@ end
 
 /*
 
-declare [A]={Module.apply [AA]}
+declare [A]={Module.link ['MozartPower.ozf']}
 ShowLogo=A.showLogo
 
-%%% Typical use
-
-{ShowLogo
- main(size:24 fg:red bg:white text:"W  e  b  M  e  e  t  i  n  g")
- sub(size:10 fg:black bg:white text:"(c) 1999 Swedish Institute of Computer Science")
- start(delay:1000)
- stop(delay:6000)}
-
-
-*/
-
-/*
-
-%%% Delayed Stop
-
-declare Stop
-{ShowLogo
- main(size:34 fg:deeppink bg:darkslategrey text:"W e b M e e t i n g")
- sub(size:10 fg:black bg:white text:"(c) 1999 Swedish Institute of Computer Science")
- start(delay:1000)
- stop(delay:Stop)}
-
-Stop=1 % Feed this line to close window
-
+declare A {ShowLogo 2000 A}
+A=0
 */
