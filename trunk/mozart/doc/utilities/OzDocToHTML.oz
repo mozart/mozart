@@ -575,7 +575,9 @@ define
 	       TopTOC = if @SomeSplit then EMPTY
 			else SEQ([hr() {FormatTOC @TOC} hr()])
 			end
-	       {@MyLaTeXToGIF process(@Reporter)}
+	       {@MyLaTeXToGIF
+		process({Dictionary.condGet @Meta 'latex.package' nil}
+			@Reporter)}
 	       {@MyThumbnails process(@Reporter)}
 	       unit
 	    %-----------------------------------------------------------
