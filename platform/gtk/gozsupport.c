@@ -26,10 +26,11 @@
 /*#include <gozsupport.h>*/
 #define GOZ_DECLARE_GTKOBJECT(i, val)            OZ_declareForeignType (i, val, GtkObject*)
 
-static OZ_Term signal_port;
+OZ_Term signal_port;
 
 OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
 {
+  OZ_warning ("native entered");
   OZ_declareTerm (0, port);
   signal_port = port;
   return OZ_ENTAILED;
