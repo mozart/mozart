@@ -677,16 +677,14 @@ the GDB commands `cd DIR' and `directory'."
    (concat
     (oz-make-keywords-for-match
      '(
-       "proc" "fun"
-       "local" "declare"
-       "if" "or" "dis" "choice" "case" "then" "else" "elseif" "of" "elseof" "elsecase"
-       "end"
+       "proc" "fun" "local" "declare" "in" "end"
+       "if" "or" "dis" "choice" "case" "then" "andthen" "orelse" 
+       "else" "elseif" "of" "elseof" "elsecase"
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false" "touch" "unit"
-       "div" "mod" "andthen" "orelse"
-       "thread" "in"
+       "div" "mod" 
        "condis" "not"
-       "try" "catch" "finally" "skip" "fail"
+       "thread" "try" "catch" "lock" "finally" "skip" "fail"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@\\|\\,"
     ))
@@ -700,7 +698,7 @@ the GDB commands `cd DIR' and `directory'."
 		   "local"
 		   "if" "or" "dis" "choice" "case"
 		   "class" "create" "meth" "extern"
-		   "not" "thread"
+		   "not" "thread" "lock"
 		   "condis"
 		   )))
 
