@@ -1,4 +1,4 @@
-<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
 <!ENTITY % p.mix.local "|Em">
@@ -45,6 +45,7 @@
     <Meta name="html.split" value="section.parser.example">
     <Meta name="html.split" value="section.parser.reference">
     <Meta name="html.split" value="appendix.notation">
+    <Meta name="html.split.bib" value="">
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value="revised">
@@ -65,7 +66,7 @@
     &parser;
     &syntax;
   <Back>
-    <Bib.Extern id="OzWizard" to="gump.bib" key="OzWizard">
+    <Bib.Extern id="baum00" to="gump.bib" key="baum00">
     <Bib.Extern id="paxson95" to="gump.bib" key="paxson95">
     <Bib.Extern id="donellystallman95" to="gump.bib" key="donellystallman95">
     <Bib.Extern id="kornstaedt96" to="gump.bib" key="kornstaedt96">
