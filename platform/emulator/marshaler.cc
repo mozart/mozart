@@ -1155,7 +1155,7 @@ loop:
 	PerdioVar *pv;
 	if (!isPerdioVar(*ret)) {
 	  // mm2
-	  warning("unmarshal proc gname mismatch: %s",toC(makeTaggedRef(chPtr)));
+	  warning("unmarshal proc gname mismatch: %s",toC(makeTaggedRef(ret)));
 	  return;
 	}
 	PrTabEntry *pr=new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
