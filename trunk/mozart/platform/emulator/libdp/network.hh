@@ -28,9 +28,16 @@
 #ifndef __NETWORK_HH
 #define __NETWORK_HH
 
+#include "base.hh"
+#include "dpBase.hh"
+#include "msgType.hh"
+#include "comm.hh"
+
 #ifdef INTERFACE  
 #pragma interface
 #endif
+
+class RemoteSite;
 
 RemoteSite* createRemoteSite(DSite*, int readCtr);
 void zeroRefsToRemote(RemoteSite *);
@@ -63,5 +70,6 @@ int openclose(int);
 // kost@ : i've put the missing declarations here;
 int getNORM_RemoteSite(RemoteSite*);
 int getNOSM_RemoteSite(RemoteSite*);
+int openclose(int Type);
 
 #endif // __NETWORK_HH
