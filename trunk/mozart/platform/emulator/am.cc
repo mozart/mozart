@@ -1495,11 +1495,9 @@ void AM::handleIO()
 
 	numbOfFDs--;
 
-	//  EKS 
-	// Assert(ioNodes[index].handler[mode]);
 	IONode *ion = findIONode(index);
-	if ((ion->handler[mode])
-	    (index, ion->readwritepair[mode])) {
+	if ((ion->handler[mode]) &&  /* Perdio: handlers may do a deselect for other fds*/
+	    (ion->handler[mode])(index, ion->readwritepair[mode])) {
 	  ion->readwritepair[mode] = 0;
 	  (void) gcUnprotect((TaggedRef *)&(ion->readwritepair[mode]));
 	  ion->handler[mode] = 0;
