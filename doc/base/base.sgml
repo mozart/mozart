@@ -119,9 +119,7 @@
 
     <Title/The &Oz; Base Environment/
     <Author.Extern to="author.db" key="Denys.Duchier">
-    <Author.Extern to="author.db" key="Martin.Henz">
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
-    <Author.Extern to="author.db" key="Martin.Mueller">
     <Author.Extern to="author.db" key="Christian.Schulte">
     <Comic>
       <Picture.Choice>
