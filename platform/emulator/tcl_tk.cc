@@ -512,7 +512,7 @@ void StringBuffer::resize(void) {
 
 
 
-OZ_Return StringBuffer::put_tuple(SRecord *st, int start = 0) {
+OZ_Return StringBuffer::put_tuple(SRecord *st, int start) {
   if (start < st->getWidth()) {
     StateReturn(put_tcl(st->getArg(start)));
 

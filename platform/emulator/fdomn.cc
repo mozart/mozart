@@ -1954,9 +1954,10 @@ int OZ_FiniteDomainImpl::operator += (const int put_in)
       } else if (put_in <= fd_bv_max_elem) {
         FDBitVector * bv_backup = bv;
         bv = newBitVector(word32(put_in));
-        for (int i = bv_backup->high; i--; )
+        int i;
+        for (i = bv_backup->high; i--; )
           bv->b_arr[i] = bv_backup->b_arr[i];
-        for (int i = bv_backup->high; i < bv->high; i++)
+        for (i = bv_backup->high; i < bv->high; i++)
           bv->b_arr[i] = 0;
         bv_backup->dispose();
         bv->setBit(put_in);

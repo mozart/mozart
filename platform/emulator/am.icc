@@ -214,7 +214,7 @@ void AM::pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g)
 }
 
 inline
-void AM::pushCFun(OZ_CFun f, RefsArray x=0, int i=0)
+void AM::pushCFun(OZ_CFun f, RefsArray x, int i)
 {
   currentThread->pushCFunCont(f, x, i, OK);
 }
@@ -358,7 +358,7 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio, TaggedRef val)
 
 
 inline
-int AM::commit(Board *bb, Thread *tt=0)
+int AM::commit(Board *bb, Thread *tt)
 {
   Assert(!currentBoard->isCommitted());
   Assert(bb->getParent()==currentBoard);

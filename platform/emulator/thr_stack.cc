@@ -75,8 +75,8 @@ Bool TaskStack::findCatch()
 }
 
 
-TaggedRef TaskStack::reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
-                             ProgramCounter pc=NOCODE)
+TaggedRef TaskStack::reflect(TaskStackEntry *from,TaskStackEntry *to,
+                             ProgramCounter pc)
 {
   Assert(this);
 

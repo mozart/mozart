@@ -117,13 +117,14 @@ OZ_Boolean FSetValue::operator == (const FSetValue &fs) const
 OZ_FSetImpl::OZ_FSetImpl(int c_min, int c_max, OZ_Term ins, OZ_Term outs)
   : _card_min(c_min), _card_max(c_max)
 {
-  for (int i = fset_high; i--; )
+  int i;
+  for (i = fset_high; i--; )
     _in[i] = _not_in[i] = 0;
 
   setBits(ins, fset_high, _in);
   setBits(outs, fset_high, _not_in);
 
-  for (int i = fset_high; i--; )
+  for (i = fset_high; i--; )
     if (_in[i] & _not_in[i]) {
       _card_min = -1;
       return;
@@ -138,13 +139,14 @@ OZ_FSetImpl::OZ_FSetImpl(int c_min, int c_max, OZ_Term ins, OZ_Term outs)
 
 OZ_FSetImpl::OZ_FSetImpl(OZ_Term ins, OZ_Term outs)
 {
-  for (int i = fset_high; i--; )
+  int i;
+  for (i = fset_high; i--; )
     _in[i] = _not_in[i] = 0;
 
   setBits(ins, fset_high, _in);
   setBits(outs, fset_high, _not_in, 1);
 
-  for (int i = fset_high; i--; )
+  for (i = fset_high; i--; )
     if (_in[i] & _not_in[i]) {
       _card_min = -1;
       return;
