@@ -2458,7 +2458,8 @@ LBLdispatcher:
 	OzDebug *dbg = new OzDebug(PC,Y,G);
 
 	TaggedRef kind = getTaggedArg(PC+4);
-	if (literalEq(kind,AtomDebugCall)) {
+	if (literalEq(kind,AtomDebugCallC) ||
+	    literalEq(kind,AtomDebugCallF)) {
 	  // save abstraction and arguments:
 	  int arity = -1;
 	  switch (CodeArea::getOpcode(PC+6)) {
@@ -2513,7 +2514,8 @@ LBLdispatcher:
 	    }
 	    dbg->arguments[arity] = makeTaggedNULL();
 	  }
-	} else if (literalEq(kind, AtomDebugLock)) {
+	} else if (literalEq(kind,AtomDebugLockC) ||
+		   literalEq(kind,AtomDebugLockF)) {
 	  // save the lock:
 	  switch (CodeArea::getOpcode(PC+6)) {
 	  case LOCKTHREAD:
@@ -2522,7 +2524,8 @@ LBLdispatcher:
 	  default:
 	    break;
 	  }
-	} else if (literalEq(kind, AtomDebugCond)) {
+	} else if (literalEq(kind,AtomDebugCondC) ||
+		   literalEq(kind,AtomDebugCondF)) {
 	  // look whether we can determine the arbiter:
 	  switch (CodeArea::getOpcode(PC+6)) {
 	  case TESTLITERALX:
@@ -2580,7 +2583,8 @@ LBLdispatcher:
 	Assert(dbg->Y == Y && dbg->G == G);
 
 	if (dothis != DBG_EXIT
-	    && literalEq(getLiteralArg(PC+4), AtomDebugCall)
+	    && (literalEq(getLiteralArg(PC+4),AtomDebugCallC) ||
+		literalEq(getLiteralArg(PC+4),AtomDebugCallF))
 	    && CodeArea::getOpcode(dbg->PC+6) == CALLBI) {
 	  Builtin *bi = GetBI(dbg->PC+7);
 	  int iarity = bi->getInArity(), oarity = bi->getOutArity();
