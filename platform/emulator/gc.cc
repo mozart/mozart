@@ -704,7 +704,7 @@ Name *Name::gcName() {
   GName * gn = NULL;
 
   if (hasGName()) {
-    gn = getGName();
+    gn = getGName1();
   }
 
   if (isInGc && isOnHeap() ||
@@ -943,9 +943,9 @@ SVariable * SVariable::gc() {
   SVariable * to = (SVariable *) freeListMalloc(sizeof(SVariable));
   
   to->suspList = suspList->gc();
-  to->home     = home->gcBoard();
+  to->setHome(getHome1()->gcBoard());
 
-  Assert(to->home);
+  Assert(to->getHome1());
 
   return to;
 }
@@ -990,7 +990,7 @@ GenCVariable * GenCtVariable::gc(void)
   // common stuff
   to->u        = u;
   to->suspList = suspList;
-  to->home     = home;
+  to->setHome(getHome1());
   
   // stuff specific to `GenCtVariable's
   to->_constraint = _constraint;
@@ -1021,7 +1021,7 @@ GenCVariable * GenCVariable::gcG(void) {
 
   Assert(!gcIsMarked())
     
-  Board * bb = home->gcBoard();
+  Board * bb = getHome1()->gcBoard();
   
   // mm2: assertion disabled: dead value may appear in the wrong space
 #define DEEP_GARBAGE
@@ -1041,7 +1041,7 @@ GenCVariable * GenCVariable::gcG(void) {
     ((GenFDVariable *) to)->gc((GenFDVariable *) this);
     to->u        = u;
     to->suspList = sl;
-    to->home     = bb;
+    to->setHome(bb);
     return to;
 
   case BoolVariable:
@@ -1049,7 +1049,7 @@ GenCVariable * GenCVariable::gcG(void) {
     ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
     to->u        = u;
     to->suspList = sl;
-    to->home     = bb;
+    to->setHome(bb);
     return to;
 
   case FSetVariable:
@@ -1057,7 +1057,7 @@ GenCVariable * GenCVariable::gcG(void) {
     ((GenFSetVariable *) to)->gc((GenFSetVariable *) this);
     to->u        = u;
     to->suspList = sl;
-    to->home     = bb;
+    to->setHome(bb);
     return to;
 
 
@@ -1072,12 +1072,12 @@ GenCVariable * GenCVariable::gcG(void) {
   }
 
   // The generic part
-  Assert(!isInGc || this->home != bb);
+  Assert(!isInGc || this->getHome1() != bb);
     
   gcStack.push(to, PTR_CVAR);
 
   to->suspList = sl;
-  to->home     = bb;
+  to->setHome(bb);
 
   return to;
 }
@@ -2322,7 +2322,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
       Object *o = (Object *) this;
       CheckLocal(o);
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(Object));
-      gn = o->hasGName();
+      gn = o->getGName1();
       break;
     }
   case Co_Class: 
