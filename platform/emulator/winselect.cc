@@ -277,34 +277,42 @@ unsigned __stdcall selectThread(void *arg)
 {
   SelectInfo *si = (SelectInfo *) arg;
 
-  /* cache everything locally; a change of timestamp means: we werwe canceled */
+  /* cache everything locally; a change of timestamp means: we were canceled */
   int timeout = si->timeout;
   if (timeout==INFINITE)
     timeout = 1<<30;  /* use a very long timeout */
 
-  fd_set rfds = si->rfds;
-  fd_set wfds = si->wfds;
+  fd_set origrfds = si->rfds;
+  fd_set origwfds = si->wfds;
   int timestamp = si->timestamp;
 
   while(1) {
-    /* poll every second */
-    int mstowait = (timeout > 1000) ? 1000 : timeout;
+    /* poll every 5 seconds */
+    int mstowait = min(timeout,5000);
     timeout -= mstowait;
 
     struct timeval tv;
     tv.tv_sec  = mstowait/1000;
     tv.tv_usec = (mstowait*1000)%1000000;
 
+    // select annulls rfds and wfds
+    fd_set rfds = origrfds;
+    fd_set wfds = origwfds;
     int ret = select(maxSocket,&rfds,&wfds,NULL,&tv);
-    if (ret<0 || ret>0 || ret==0 && si->timeout<=0 || si->timestamp!=timestamp)
+
+    if (ret<0 || ret>0 || ret==0 && si->timeout<=0 || si->timestamp!=timestamp) {
+      origrfds = rfds;
+      origwfds = wfds;
       break;
+    }
   }
 
   if (si->timestamp==timestamp) {
-    si->rfds = rfds;
-    si->wfds = wfds;
+    si->rfds = origrfds;
+    si->wfds = origwfds;
     SetEvent(si->event);
   }
+
   _endthreadex(1);
   return 1;
 }
@@ -336,6 +344,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
   if (numsockets > 0) {
     ResetEvent(si->event);
     wait_hnd[nh++] = si->event;
+    si->timeout = timeout;
     unsigned tid;
     HANDLE ret = _beginthreadex(NULL,0,&selectThread,si,0,&tid);
     Assert(ret!=0);
@@ -384,7 +393,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
 void printfds(fd_set *fds)
 {
   printf("FDS: ");
-  for(int i=0; i<50; i++) {
+  for(int i=0; i<10000; i++) {
     if (FD_ISSET(i,fds)) {
       printf("%d,",i);
     }
