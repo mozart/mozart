@@ -54,10 +54,10 @@ int staticSuspendVarsNumber = 0;
 void OZ_CPIVar::dropParameter(void)
 {
   if (oz_isVariable(var)) {
-    OzVariable * cvar    = tagged2CVar(var);
-    int isNonEncapTagged = cvar->isParamNonEncapTagged();
-    int isEncapTagged    = cvar->isParamEncapTagged();
-    void * cpi_raw       = cvar->getRawAndUntag();
+    OzVariable *ov    = tagged2Var(var);
+    int isNonEncapTagged = ov->isParamNonEncapTagged();
+    int isEncapTagged    = ov->isParamEncapTagged();
+    void * cpi_raw       = ov->getRawAndUntag();
     
     OZ_CPIVar * forward = (OZ_CPIVar *) cpi_raw;
 #ifdef DEBUG_REMOVE_PARAMS
@@ -75,19 +75,19 @@ void OZ_CPIVar::dropParameter(void)
 	OZ_CPIVar::add_vars_removed(varPtr);
       } else {
 	Propagator * prop = Propagator::getRunningPropagator();
-	cvar->dropPropagator(prop);
+	ov->dropPropagator(prop);
       }
     }
     //
     // tag parameter again
     //
     if (isNonEncapTagged) {
-      cvar->setStoreFlag();
+      ov->setStoreFlag();
     }
     if (isEncapTagged) {
-      cvar->setReifiedFlag();
+      ov->setReifiedFlag();
     }
-    cvar->putRawTag(cpi_raw);
+    ov->putRawTag(cpi_raw);
     forward->_nb_refs -= 1;
   }
   setState(drop_e);
@@ -147,8 +147,8 @@ void OZ_CPIVar::operator delete[](void * p, size_t s)
 
 OZ_CPIVar * _getCPIVar(OZ_Term v)
 {
-  OzVariable * cvar = tagged2CVar(oz_deref(v));
-  return (OZ_CPIVar *) cvar->getRaw();
+  OzVariable *ov = tagged2Var(oz_deref(v));
+  return (OZ_CPIVar *) ov->getRaw();
 }
 #endif
 

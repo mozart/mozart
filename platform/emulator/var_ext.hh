@@ -79,18 +79,18 @@ public:
 inline
 int oz_isExtVar(TaggedRef r)
 {
-  return oz_isCVar(r) && tagged2CVar(r)->getType()==OZ_VAR_EXT;
+  return oz_isVar(r) && tagged2Var(r)->getType()==OZ_VAR_EXT;
 }
 
 inline
 ExtVar *oz_getExtVar(TaggedRef r) {
   Assert(oz_isExtVar(r));
-  return (ExtVar *) tagged2CVar(r);
+  return (ExtVar *) tagged2Var(r);
 }
 
 inline
 OZ_Term oz_makeExtVar(ExtVar *ev) {
-  return makeTaggedCVar(ev);
+  return makeTaggedVar(ev);
 }
 
 #endif

@@ -57,7 +57,7 @@ OZ_Return LazyVar::bindV(TaggedRef *lPtr, TaggedRef r)
 // mm2: deep as future!
 OZ_Return LazyVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
 {
-  return oz_var_bind(tagged2CVar(*rPtr),rPtr,makeTaggedRef(lPtr));
+  return oz_var_bind(tagged2Var(*rPtr),rPtr,makeTaggedRef(lPtr));
 }
 
 OZ_Return LazyVar::addSuspV(TaggedRef * v, Suspendable * susp)

@@ -48,11 +48,11 @@ enum TypeOfTerm {
   TAG_REF2      =  4,   // 0100
   TAG_REF3      =  8,   // 1000
   TAG_REF4      = 12,   // 1100
-  
-  TAG_UVAR      =  1,   // 0001
-  TAG_UNUSED    =  9,   // 1001
-  TAG_CVAR      =  5,   // 0101
-  
+
+  // oz_isVariable checks for last two bits.
+  TAG_UNUSED_UVAR   =  1,   // 0001
+  TAG_UNUSED_SVAR   =  9,   // 1001
+  TAG_VAR       =  5,   // 0101
   TAG_GCMARK    = 13,   // 1101    --> !!! oz_isVariable(TAG_GCMARK) = 1 !!!
 	    
   TAG_LTUPLE    =  2,   // 0010
@@ -112,13 +112,13 @@ enum TypeOfTerm {
 
 #if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__)
 
-#define OzMaxInt 134217727
-#define OzMinInt ~134217728
+#define OzMaxInt (134217727)
+#define OzMinInt (~134217727)
 
 #else 
 
 #define OzMaxInt (INT_MAX>>TAG_SIZE)
-#define OzMinInt (-OzMaxInt)
+#define OzMinInt (-(OzMaxInt+1))
 
 #endif
 
@@ -231,7 +231,6 @@ inline TaggedRef * tagged2Ref(TaggedRef ref) {
 // The following tests are specially optimized
 #define _isLTuple(val)      (((TaggedRef) val&13)==0)      /* mask = 1101 */
 #define _isVariable(val)    (((TaggedRef) val&2)==0)       /* mask = 0010 */
-#define _isUVar(val)        (((TaggedRef) val&14)==0)      /* mask = 1110 */
 
 // This is the normal tag test
 #define _hasTag(term,tag)   (tagTypeOf(term)==(tag))
@@ -243,11 +242,8 @@ inline TaggedRef * tagged2Ref(TaggedRef ref) {
 inline Bool isVariableTag(TypeOfTerm tag) { 
   return _isVariable(tag);
 }
-inline Bool isUVarTag(TypeOfTerm tag) { 
-  return _isUVar(tag); 
-}
-inline Bool isCVarTag(TypeOfTerm tag) { 
-  return tag == TAG_CVAR; 
+inline Bool isVarTag(TypeOfTerm tag) { 
+  return tag == TAG_VAR; 
 }
 inline Bool isLTupleTag(TypeOfTerm tag) {   
   return _isLTuple(tag);
@@ -280,8 +276,7 @@ inline Bool isGcMarkTag(TypeOfTerm tag) {
 #else
 
 #define isVariableTag(tag)  _isVariable(tag)
-#define isUVarTag(tag)      _isUVar(tag)
-#define isCVarTag(tag)      ((tag) == TAG_CVAR)
+#define isVarTag(tag)      ((tag) == TAG_VAR)
 #define isLTupleTag(tag)    _isLTuple(tag)
 #define isFSetValueTag(tag) ((tag)==TAG_FSETVALUE)
 #define isLiteralTag(tag)   ((tag)==TAG_LITERAL)
@@ -307,11 +302,8 @@ inline Bool isGcMarkTag(TypeOfTerm tag) {
 inline Bool oz_isVariable(TaggedRef term) {
   GCDEBUG(term); Assert(!oz_isRef(term)); return _isVariable(term);
 }
-inline Bool oz_isUVar(TaggedRef term) { 
-  GCDEBUG(term); Assert(!oz_isRef(term)); return _isUVar(term);
-}
-inline Bool oz_isCVar(TaggedRef term) {
-  GCDEBUG(term); Assert(!oz_isRef(term)); return _hasTag(term,TAG_CVAR);
+inline Bool oz_isVar(TaggedRef term) {
+  GCDEBUG(term); Assert(!oz_isRef(term)); return _hasTag(term,TAG_VAR);
 }
 inline Bool oz_isLTuple(TaggedRef term) {
   GCDEBUG(term); return _isLTuple(term);
@@ -344,8 +336,7 @@ inline Bool oz_isGcMark(TaggedRef term) {
 #else
 
 #define oz_isVariable(term)    _isVariable(term)
-#define oz_isUVar(term)        _isUVar(term)
-#define oz_isCVar(term)        _hasTag(term,TAG_CVAR)
+#define oz_isVar(term)         _hasTag(term,TAG_VAR)
 #define oz_isLTuple(term)      _isLTuple(term)
 #define oz_isFSetValue(term)   _hasTag(term,TAG_FSETVALUE)
 #define oz_isLiteral(term)     _hasTag(term,TAG_LITERAL)
@@ -377,13 +368,9 @@ inline Bool oz_isGcMark(TaggedRef term) {
 
 #ifdef DEBUG_CHECK
 
-inline Board * tagged2VarHome(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_UVAR);
-  return (Board *) tagValueOf2(TAG_UVAR,ref);
-}
-inline OzVariable * tagged2CVar(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_CVAR);
-  return (OzVariable *) tagValueOf2(TAG_CVAR,ref);
+inline OzVariable * tagged2Var(TaggedRef ref) {
+  GCDEBUG(ref); CHECK_TAG(TAG_VAR);
+  return (OzVariable *) tagValueOf2(TAG_VAR,ref);
 }
 inline OZ_FSetValue * tagged2FSetValue(TaggedRef ref) {
   GCDEBUG(ref); CHECK_TAG(TAG_FSETVALUE);
@@ -443,10 +430,8 @@ inline TaggedRef tagged2NonVariable(TaggedRef *term) {
 #else
 
 
-#define tagged2VarHome(ref) \
-  ((Board *) tagValueOf2(TAG_UVAR,((TaggedRef) (ref))))
-#define tagged2CVar(ref) \
-  ((OzVariable *) tagValueOf2(TAG_CVAR,((TaggedRef) (ref))))
+#define tagged2Var(ref) \
+  ((OzVariable *) tagValueOf2(TAG_VAR,((TaggedRef) (ref))))
 #define tagged2FSetValue(ref) \
   ((OZ_FSetValue *) tagValueOf2(TAG_FSETVALUE,((TaggedRef) (ref))))
 #define tagged2SRecord(ref) \
@@ -495,11 +480,8 @@ inline TaggedRef tagged2NonVariable(TaggedRef *term) {
 
 #ifdef DEBUG_CHECK
 
-inline TaggedRef makeTaggedUVar(Board *s) {
- CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_UVAR,s);
-}
-inline TaggedRef makeTaggedCVar(OzVariable *s) {
-  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_CVAR, s);
+inline TaggedRef makeTaggedVar(OzVariable *s) {
+  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_VAR, s);
 }
 inline TaggedRef makeTaggedFSetValue(OZ_FSetValue * s) {
   CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_FSETVALUE, s);
@@ -537,8 +519,7 @@ inline TaggedRef makeTaggedMiscp(void * s) {
 
 #else
 
-#define makeTaggedUVar(s)      makeTaggedRef2p(TAG_UVAR,      s)
-#define makeTaggedCVar(s)      makeTaggedRef2p(TAG_CVAR,      s)
+#define makeTaggedVar(s)       makeTaggedRef2p(TAG_VAR,      s)
 #define makeTaggedFSetValue(s) makeTaggedRef2p(TAG_FSETVALUE, s)
 #define makeTaggedLTuple(s)    makeTaggedRef2p(TAG_LTUPLE,    s)
 #define makeTaggedSRecord(s)   makeTaggedRef2p(TAG_SRECORD,   s)
@@ -555,6 +536,7 @@ inline TaggedRef makeTaggedMiscp(void * s) {
 
 #define makeTaggedNULL()       ((TaggedRef) 0)
 #define taggedVoidValue        _makeTaggedSmallInt(0)
+#define taggedInvalidVar       makeTaggedRef2p(TAG_VAR, (TaggedRef *) -1)
 
 
 
@@ -569,34 +551,17 @@ inline TaggedRef * newTaggedRef(TaggedRef *t) {
   return ref;
 }
 
-inline TaggedRef * newTaggedUVar(TaggedRef proto) {
+inline TaggedRef * newTaggedOptVar(TaggedRef proto) {
+  Assert(proto != taggedInvalidVar);
   TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
   *ref = proto;
-  return ref;
+  return (ref);
 }
 
-inline TaggedRef * newTaggedUVar(Board * c) {
-  return newTaggedUVar(makeTaggedUVar(c));
-}
-
-inline TaggedRef * newTaggedCVar(OzVariable * c) {
+inline TaggedRef * newTaggedVar(OzVariable * c) {
   TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
-  *ref = makeTaggedCVar(c);
+  *ref = makeTaggedVar(c);
   return ref;
-}
-
-
-#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
-
-
-inline OzVariable * oz_getVar(TaggedRef * v) {
-  if (oz_isUVar(*v)) {
-    OzVariable * sv = oz_newSimpleVar(tagged2VarHome(*v));
-    *v = makeTaggedCVar(sv);
-    return sv;
-  } else {
-    return tagged2CVar(*v);
-  }
 }
 
 

@@ -49,11 +49,11 @@ void OZ_FDIntVar::ask(OZ_Term v)
     // 
     // found variable
     //
-    Assert(oz_isCVar(v));
+    Assert(oz_isVar(v));
     //
-    OzVariable * cvar = tagged2CVar(v);
+    OzVariable * var = tagged2Var(v);
     //
-    if (cvar->getType() == OZ_VAR_BOOL) {
+    if (var->getType() == OZ_VAR_BOOL) {
       //
       // 0/1-variable
       //
@@ -64,9 +64,9 @@ void OZ_FDIntVar::ask(OZ_Term v)
       //
       // finite domain variable
       //
-      Assert(cvar->getType() == OZ_VAR_FD);
+      Assert(var->getType() == OZ_VAR_FD);
       //
-      _domain = &((OzFDVariable *) cvar)->getDom();
+      _domain = &((OzFDVariable *) var)->getDom();
       initial_size = CAST_FD_PTR(_domain)->getSize();
       setSort(int_e);
       //
@@ -96,24 +96,24 @@ int OZ_FDIntVar::read(OZ_Term v)
     //
     // found variable
     //
-    Assert(oz_isCVar(v));
+    Assert(oz_isVar(v));
     //
-    OzVariable * cvar = tagged2CVar(v);
+    OzVariable * var = tagged2Var(v);
     //
-    int is_bool = (cvar->getTypeMasked() == OZ_VAR_BOOL);
+    int is_bool = (var->getTypeMasked() == OZ_VAR_BOOL);
     //
     // check if this variable has already been read as encapsulated
     // parameter and if so, initilize forward reference appropriately
     //
-    OZ_FDIntVar * forward = (cvar->isParamEncapTagged() 
+    OZ_FDIntVar * forward = (var->isParamEncapTagged() 
 			     ? (is_bool 
-				? ((OzBoolVariable *) cvar)->getTag() 
-				: ((OzFDVariable *) cvar)->getTag()
+				? ((OzBoolVariable *) var)->getTag() 
+				: ((OzFDVariable *) var)->getTag()
 				) 
 				: this);
     //
     if (Propagator::getRunningPropagator()->isLocal()
-	|| oz_isLocalVar(cvar)) {
+	|| oz_isLocalVar(var)) {
       //
       // local variable
       //
@@ -125,13 +125,13 @@ int OZ_FDIntVar::read(OZ_Term v)
 	//
 	setSort(bool_e);
 	//
-	if (cvar->isParamNonEncapTagged()) {
+	if (var->isParamNonEncapTagged()) {
 	  //
 	  // has already been read
 	  //
 	  // get previous 
 	  //
-	  OZ_FDIntVar * prev = ((OzBoolVariable *) cvar)->getTag();
+	  OZ_FDIntVar * prev = ((OzBoolVariable *) var)->getTag();
 	  _domain = &(prev->_copy);
 	  prev->_nb_refs += 1;
 	  //
@@ -141,7 +141,7 @@ int OZ_FDIntVar::read(OZ_Term v)
 	  //
 	  CAST_FD_OBJ(forward->_copy).initBool();
 	  _domain = &(forward->_copy);
-	  ((OzBoolVariable *) cvar)->tagNonEncapParam(forward);
+	  ((OzBoolVariable *) var)->tagNonEncapParam(forward);
 	  forward->_nb_refs += 1;
 	  //
 	}
@@ -151,13 +151,13 @@ int OZ_FDIntVar::read(OZ_Term v)
 	//
 	setSort(int_e);
 	//
-	if (cvar->isParamNonEncapTagged()) {
+	if (var->isParamNonEncapTagged()) {
 	  //
 	  // has already been read
 	  //
 	  // get previous 
 	  //
-	  OZ_FDIntVar * prev = ((OzFDVariable *) cvar)->getTag();
+	  OZ_FDIntVar * prev = ((OzFDVariable *) var)->getTag();
 	  _domain = prev->_domain;
 	  prev->_nb_refs += 1;
 	  //
@@ -165,12 +165,12 @@ int OZ_FDIntVar::read(OZ_Term v)
 	  //
 	  // is being read the first time
 	  //
-	  _domain = &((OzFDVariable *) cvar)->getDom();
+	  _domain = &((OzFDVariable *) var)->getDom();
 	  // special treatment of top-level variables
 	  if (oz_onToplevel()) {
 	    forward->_copy = *_domain;
 	  }
-	  ((OzFDVariable *) cvar)->tagNonEncapParam(forward);
+	  ((OzFDVariable *) var)->tagNonEncapParam(forward);
 	  forward->_nb_refs += 1;
 	  //
 	}
@@ -189,11 +189,11 @@ int OZ_FDIntVar::read(OZ_Term v)
 	//
 	setSort(bool_e);
 	//
-	if (cvar->isParamNonEncapTagged()) {
+	if (var->isParamNonEncapTagged()) {
 	  //
 	  // has already been read
 	  //
-	  OZ_FDIntVar * prev = ((OzBoolVariable *) cvar)->getTag();
+	  OZ_FDIntVar * prev = ((OzBoolVariable *) var)->getTag();
 	  _domain = &(prev->_copy);
 	  prev->_nb_refs += 1;
 	  //
@@ -203,7 +203,7 @@ int OZ_FDIntVar::read(OZ_Term v)
 	  //
 	  CAST_FD_OBJ(forward->_copy).initBool();
 	  _domain = &(forward->_copy);
-	  ((OzBoolVariable *) cvar)->tagNonEncapParam(forward);
+	  ((OzBoolVariable *) var)->tagNonEncapParam(forward);
 	  forward->_nb_refs += 1;
 	}
       } else {
@@ -213,13 +213,13 @@ int OZ_FDIntVar::read(OZ_Term v)
 	setSort(int_e);
 	//
 	//
-	if (cvar->isParamNonEncapTagged()) {
+	if (var->isParamNonEncapTagged()) {
 	  //
 	  // has already been read
 	  //
 	  // get previous 
 	  //
-	  OZ_FDIntVar * prev = ((OzFDVariable *) cvar)->getTag();
+	  OZ_FDIntVar * prev = ((OzFDVariable *) var)->getTag();
 	  _domain = &(prev->_copy);
 	  prev->_nb_refs += 1;
 	  //
@@ -227,9 +227,9 @@ int OZ_FDIntVar::read(OZ_Term v)
 	  //
 	  // is being read the first time
 	  //
-	  forward->_copy = ((OzFDVariable *) cvar)->getDom();
+	  forward->_copy = ((OzFDVariable *) var)->getDom();
 	  _domain = &(forward->_copy);
-	  ((OzFDVariable *) cvar)->tagNonEncapParam(forward);
+	  ((OzFDVariable *) var)->tagNonEncapParam(forward);
 	  forward->_nb_refs += 1;
 	  //
 	}
@@ -264,32 +264,32 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
     //
     // found variable
     //
-    Assert(oz_isCVar(v));
+    Assert(oz_isVar(v));
     //
     setState(encap_e);
     //
-    OzVariable * cvar = tagged2CVar(v);
+    OzVariable * var = tagged2Var(v);
     //
-    int is_bool = (cvar->getTypeMasked() == OZ_VAR_BOOL);
+    int is_bool = (var->getTypeMasked() == OZ_VAR_BOOL);
     //
     // check if this variable has already been read as non-encapsulated
     // parameter and if so, initilize forward reference appropriately
     //
-    OZ_FDIntVar * forward = (cvar->isParamNonEncapTagged() 
+    OZ_FDIntVar * forward = (var->isParamNonEncapTagged() 
 			     ? (is_bool 
-				? ((OzBoolVariable *) cvar)->getTag() 
-				: ((OzFDVariable *) cvar)->getTag()
+				? ((OzBoolVariable *) var)->getTag() 
+				: ((OzFDVariable *) var)->getTag()
 				) 
 			     : this);
     //
-    if (cvar->isParamEncapTagged()) {
+    if (var->isParamEncapTagged()) {
       //
       // has already been read
       //
       setSort(is_bool ? bool_e : int_e);
       OZ_FDIntVar * prev = (is_bool 
-			    ? ((OzBoolVariable *) cvar)->getTag() 
-			    : ((OzFDVariable *) cvar)->getTag() 
+			    ? ((OzBoolVariable *) var)->getTag() 
+			    : ((OzFDVariable *) var)->getTag() 
 			    );
       _domain = &(prev->_encap);
       prev->_nb_refs += 1;
@@ -301,19 +301,19 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
       setSort(bool_e);
       CAST_FD_OBJ(forward->_encap).initBool();
       _domain = &(forward->_encap);
-      cvar->tagEncapParam(forward);
+      var->tagEncapParam(forward);
       forward->_nb_refs += 1;
       //
     } else {
       // 
       // found finite domain
       //
-      Assert(cvar->getTypeMasked() == OZ_VAR_FD);
+      Assert(var->getTypeMasked() == OZ_VAR_FD);
       //
       setSort(int_e);
-      forward->_encap = ((OzFDVariable *) cvar)->getDom();
+      forward->_encap = ((OzFDVariable *) var)->getDom();
       _domain = &(forward->_encap);
-      cvar->tagEncapParam(forward);
+      var->tagEncapParam(forward);
       forward->_nb_refs += 1;
       //
       Assert((CAST_FD_PTR(_domain)->getSize() > 1) && (*_domain != fd_bool));
@@ -336,7 +336,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
   //
   // if the parameter is a variable it returns 1 else 0
   //
-  DEBUG_CONSTRAIN_CVAR(("OZ_FDIntVar::tell "));
+  DEBUG_CONSTRAIN_VAR(("OZ_FDIntVar::tell "));
   //
   // this parameter has become an integer by a previous tell
   //
@@ -346,11 +346,11 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     //
   } else {
     //
-    OzVariable * cvar = tagged2CVar(var);
+    OzVariable *ov = tagged2Var(var);
     //
-    int is_non_encap = cvar->isParamNonEncapTagged();
+    int is_non_encap = ov->isParamNonEncapTagged();
     //
-    cvar->untagParam();
+    ov->untagParam();
     //
     if (! is_non_encap) {
       //
@@ -379,7 +379,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	  //
 	  // local variable
 	  //
-	  ((OzFDVariable *) cvar)->becomesSmallIntAndPropagate(varPtr);
+	  ((OzFDVariable *) ov)->becomesSmallIntAndPropagate(varPtr);
 	  //
 	} else {
 	  //
@@ -389,7 +389,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	  //	
 	  // wake up
 	  //
-	  ((OzFDVariable *) cvar)->propagate(fd_prop_singl);
+	  ((OzFDVariable *) ov)->propagate(fd_prop_singl);
 	  bindGlobalVarToValue(varPtr, makeTaggedSmallInt(int_val));
 	  //
 	}
@@ -404,19 +404,19 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	  //
 	  // local variable
 	  //
-	  ((OzFDVariable *) cvar)->becomesBoolVarAndPropagate(varPtr);
+	  ((OzFDVariable *) ov)->becomesBoolVarAndPropagate(varPtr);
 	  //
 	} else {
 	  //
 	  // global variable
 	  //
-	  OzFDVariable * fdvar = (OzFDVariable *) cvar;
+	  OzFDVariable * fdvar = (OzFDVariable *) ov;
 	  //
 	  // wake up
 	  fdvar->propagate(CHECK_BOUNDS);
 	  // cast store variable to 0/1-varaible
 	  Board * fdvarhome = fdvar->getBoardInternal();
-	  OZ_Term * newboolvar = newTaggedCVar(new OzBoolVariable(fdvarhome));
+	  OZ_Term * newboolvar = newTaggedVar(new OzBoolVariable(fdvarhome));
 	  castGlobalVar(varPtr, newboolvar);
 	  //
 	}
@@ -424,7 +424,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	//
 	// a finite domain variable stays a finite domain variable
 	//
-	((OzFDVariable *) cvar)->propagate(CHECK_BOUNDS);
+	((OzFDVariable *) ov)->propagate(CHECK_BOUNDS);
 	if (isState(glob_e)) {
 	  //
 	  // tell basic constraint to global variable
@@ -456,7 +456,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	//
 	// global variable
 	//
-	((OzBoolVariable *) cvar)->propagate();
+	((OzBoolVariable *) ov)->propagate();
 	int int_val = CAST_FD_PTR(_domain)->getSingleElem();
 	bindGlobalVarToValue(varPtr, makeTaggedSmallInt(int_val));
       }
@@ -472,14 +472,14 @@ OZ_Boolean OZ_FDIntVar::tell(void)
   //
   // variable is determined
   //
-  DEBUG_CONSTRAIN_CVAR(("FALSE\n"));
+  DEBUG_CONSTRAIN_VAR(("FALSE\n"));
   return OZ_FALSE;
   //
  oz_true:
   //
   // variable is still undetermined
   //
-  DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
+  DEBUG_CONSTRAIN_VAR(("TRUE\n"));
   return OZ_TRUE;  
 }
 
@@ -489,11 +489,11 @@ void OZ_FDIntVar::fail(void)
     return; 
   } else {
     //
-    OzVariable * cvar = tagged2CVar(var);
+    OzVariable *ov = tagged2Var(var);
     //
-    int is_non_encap = cvar->isParamNonEncapTagged();
+    int is_non_encap = ov->isParamNonEncapTagged();
     //
-    cvar->untagParam();
+    ov->untagParam();
     //
     if (! is_non_encap) {
       //

@@ -274,7 +274,7 @@ void AM::init(int argc,char **argv)
   cachedStack  = NULL;
   cachedSelf   = NULL;
   setInEqEq(FALSE);
-  setCurrent(_rootBoard);
+  setCurrent(_rootBoard, _rootBoard->getOptVar());
 
   lastThreadID    = 0;
   debugMode       = NO;
@@ -1057,3 +1057,10 @@ OZ_Return AM::suspendOnVarList(Thread *thr)
   return SUSPEND;
 }
 
+//
+TaggedRef oz_newVariable(Board *b)
+{
+  TaggedRef *ret = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  *ret = b->getOptVar();
+  return makeTaggedRef(ret);
+}
