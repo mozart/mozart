@@ -162,5 +162,11 @@ define
 	      if Accu==nil then [X] else X|", "|Accu end
 	   end nil}}
       end
+      %%
+      meth getPackageTitle($)
+	 if @title\=unit then @title else
+	    {self getPackageName($)}
+	 end
+      end
    end
 end

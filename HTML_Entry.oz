@@ -5,6 +5,7 @@ import
       htmlQuote:HtmlQuote
       makeBS
       capitalize:Capitalize
+      join:Join
       )
    Open(file html)
    Directory(mkDirForFile)
@@ -17,14 +18,23 @@ define
    class HTML_Entry
       attr NavBar:_
       meth headTitle($) {HtmlQuote @id} end
-      meth bodyTitle($) {HtmlQuote {self getPackageName($)}} end
+      meth bodyTitle($) {HtmlQuote {self getPackageTitle($)}} end
+      %%
+      meth getPackageTitle($)
+	 {self getPackageName($)}
+      end
       %%
       meth getPackageName($)
-	 {Capitalize
-	  {Reverse
-	   {List.takeWhile
-	    {Reverse {VirtualString.toString @id}}
-	    Char.isAlNum}}}
+	 {VirtualString.toString
+	  {Join
+	   {Map {String.tokens
+		 {Reverse
+		  {List.takeWhile
+		   {Reverse {VirtualString.toString @id}}
+		   fun {$ C} C\=&/ end}}
+		 &-}
+	    Capitalize}
+	   " "}}
       end
       %%
       meth getNavigationBar($)
