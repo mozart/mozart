@@ -125,6 +125,7 @@
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
+    <Meta name=latex.package value="pstricks">
 
     <TITLE>Tutorial of Oz</TITLE>
     <Author.Extern to="author.db" key="Seif.Haridi">
