@@ -76,7 +76,7 @@
         <ptr to=ozcar.initial> shows the main window after Ozcar has
         been invoked for the first time.
 
-        <figure class="maxi picture" id=ozcar.initial>
+        <figure class="picture" id=ozcar.initial>
           <caption/The main window/
           <p><picture.extern gif to="ozcar-initial.gif">
         </figure>
@@ -200,7 +200,7 @@ end>>>
         Emacs function <span proglang=elisp><<oz-feed-paragraph>></span>
         (<Key/C-c C-p/). You will see Ozcar printing the following:
 
-        <figure class="maxi picture" id=ozcar.hello>
+        <figure class="picture" id=ozcar.hello>
           <caption/The main window after feeding the program/
           <p><picture.extern gif to="ozcar-hello.gif">
         </figure>
@@ -228,7 +228,7 @@ end>>>
         In Emacs, the source line which contains
         <<{Value.'='_ hello}>> is highlighted, like this:
 
-        <figure class="maxi picture">
+        <figure class="picture">
         <caption/Emacs shows the exact position of the stopped thread/
           <p><picture.extern gif to="ozcar-hello3.gif">
         </figure>
