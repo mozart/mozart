@@ -187,7 +187,7 @@ INSTRUCTION(CREATEVARIABLEX)
 
 		 Reg1(getRegArg(PC+3)) = term;
 		 sPointer = stuple->getRef();
-
+		 
 		 DISPATCH(4);''
 	       );
 
@@ -207,21 +207,17 @@ INSTRUCTION(CREATEVARIABLEX)
 	    DISPATCH(4);
           }
 
-  M4INSTRONEREG( PUTCONSTANT,
-	       ``
-	       Reg1(getRegArg(PC+2)) = getLiteralArg(PC+1);
-	       DISPATCH(3);
-	       ''
-	       );
-  
+  INSTRUCTION(PUTCONSTANTX)
+  INSTRUCTION(PUTINTX)
+     Xreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
-  M4INSTRONEREG( PUTINT,
-	       ``
-	       Reg1(getRegArg(PC+2)) = getNumberArg(PC+1);
-	       DISPATCH(3);
-	       ''
-	       );
+  INSTRUCTION(PUTCONSTANTY)
+  INSTRUCTION(PUTINTY)
+     Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
+  INSTRUCTION(PUTCONSTANTG)
+  INSTRUCTION(PUTINTG)
+     Greg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
   M4INSTRONEREG( PUTLIST,
 	       ``{
@@ -252,15 +248,9 @@ INSTRUCTION(CREATEVARIABLEX)
 
 
   INSTRUCTION(SETCONSTANT)
-    {
-      *sPointer++ = getLiteralArg(PC+1);
-      DISPATCH(2);
-    }
-
-
   INSTRUCTION(SETINT)
     {
-      *sPointer++ = getNumberArg(PC+1);
+      *sPointer++ = getTaggedArg(PC+1);
       DISPATCH(2);
     }
 
@@ -299,7 +289,7 @@ INSTRUCTION(CREATEVARIABLEX)
 				     NOFLATGUARD());
 
 		     sPointer = stuple->getRef();
-		     mode = WRITE;
+		     SetWriteMode;
 		     DISPATCH(4);
 		   }
 		 }
@@ -307,7 +297,7 @@ INSTRUCTION(CREATEVARIABLEX)
 		 if (isSTuple(tag) &&
 		     tagged2STuple(term)->compareSortAndSize(label,arity)) {
 		   sPointer = tagged2STuple(term)->getRef();
-		   mode = READ;
+		   SetReadMode;
 		   DISPATCH(4);
 		 }
 
@@ -339,14 +329,14 @@ INSTRUCTION(CREATEVARIABLEX)
 	       if(tagged2CVar(term)->unifyOutline(termPtr, term, 
 						  &srecordRef, srecordRef,NOFLATGUARD())) {
 		 sPointer = srecord->getRef();
-		 mode = READ;
+		 SetReadMode;
 		 DISPATCH(4);
 	       }
 	     } else {
 	       e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),NOFLATGUARD());
 		     
 	       sPointer = srecord->getRef();
-	       mode = WRITE;
+	       SetWriteMode;
 	       DISPATCH(4);
 	     }
 	   }
@@ -354,7 +344,7 @@ INSTRUCTION(CREATEVARIABLEX)
 	   if (isSRecord(tag) &&
 	       tagged2SRecord(term)->compareSortAndArity(label,ff)) {
 	     sPointer = tagged2SRecord(term)->getRef();
-	     mode = READ;
+	     SetReadMode;
 	     DISPATCH(4);
 	   }
 
@@ -551,14 +541,14 @@ INSTRUCTION(CREATEVARIABLEX)
 		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
 				     NOFLATGUARD());
 		     sPointer = ltuple->getRef();
-		     mode = WRITE;
+		     SetWriteMode;
 		     DISPATCH(2);
 		   }
 		 }
 
 		 if (isLTuple(term)) {
 		   sPointer = tagged2LTuple(term)->getRef();
-		   mode = READ;
+		   SetReadMode;
 		   DISPATCH(2);
 		 }
 		 
@@ -603,20 +593,16 @@ INSTRUCTION(CREATEVARIABLEX)
 
   M4INSTRONEREG( UNIFYVARIABLE,
 	       ``{
-		 switch(mode) {
-		 case WRITE:
-		   {
-		     Reg reg = getRegArg(PC+1);
-		     *sPointer = e->currentUVarPrototype;
-		     Reg1(reg) = makeTaggedRef(sPointer++);
-		     DISPATCH(2);
-		   }
-//		 case READ:
-		 default:
+		 if(InWriteMode) {
+		   Reg reg = getRegArg(PC+1);
+		   TaggedRef *sp = GetSPointerWrite(sPointer);
+		   *sp = e->currentUVarPrototype;
+		   Reg1(reg) = makeTaggedRef(sp);
+		 } else {
 		   Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
-		   sPointer++;
-		   DISPATCH(2);
 		 }
+		 sPointer++;
+		 DISPATCH(2);
 	       }''
 	       );
 
@@ -625,15 +611,13 @@ INSTRUCTION(CREATEVARIABLEX)
 	       ``{
 		 Reg reg = getRegArg(PC+1);
 	
-		 switch(mode) {
-		 case WRITE:
-		   *sPointer++ = Reg1(reg);
+		 if(InWriteMode) {
+		   TaggedRef *sp = GetSPointerWrite(sPointer);
+		   *sp = Reg1(reg);
+		   sPointer++;
 		   DISPATCH(2);
-
-//		 case READ:
-		 default:
-		   if (e->fastUnify(Reg1(reg), makeTaggedRef(sPointer++),
-				    NOFLATGUARD()) ) {
+		 } else {
+		   if (e->fastUnify(Reg1(reg), makeTaggedRef(sPointer++),NOFLATGUARD()) ) {
 		     DISPATCH(2);
 		   }
 		   SHALLOWFAIL;
@@ -661,16 +645,18 @@ INSTRUCTION(CREATEVARIABLEX)
      {
        Reg reg = getRegArg(PC+1);
 	
-       if (mode == WRITE) {
-	 *sPointer = RegAccess(HelpReg,reg);
+       if (InWriteMode) {
+	 TaggedRef *sp = GetSPointerWrite(sPointer);
+	 *sp = RegAccess(HelpReg,reg);
 
-	 *(sPointer+1) = e->currentUVarPrototype;
-	 RegAccess(HelpReg2,getRegArg(PC+2)) = makeTaggedRef(sPointer+1);
+	 *(sp+1) = e->currentUVarPrototype;
+	 RegAccess(HelpReg2,getRegArg(PC+2)) = makeTaggedRef(sp+1);
 
 	 sPointer += 2;
 	 DISPATCH(3);
        }
-       if ( !e->fastUnify(RegAccess(HelpReg,reg), makeTaggedRef(sPointer), NOFLATGUARD()) ) {
+       if ( !e->fastUnify(RegAccess(HelpReg,reg), makeTaggedRef(sPointer),
+			  NOFLATGUARD()) ) {
 	 SHALLOWFAIL;
 	 HF_UNIFY("%s = %s failed\n",
 		  *sPointer,
@@ -686,45 +672,22 @@ INSTRUCTION(CREATEVARIABLEX)
   
 
   INSTRUCTION(UNIFYCONSTANT) 
-    {
-      switch(mode) {
-      case WRITE:
-	*sPointer++ = getLiteralArg(PC+1);
-	DISPATCH(2);
-//      case READ:
-      default:
-	if (e->fastUnify(makeTaggedRef(sPointer++),
-			 getLiteralArg(PC+1),
-			 NOFLATGUARD()) ) {
-	  DISPATCH(2);
-	}
-
-	SHALLOWFAIL;
-	HF_UNIFY("%s = %s failed\n",
-		 getLiteralArg(PC+1),
-		 *(sPointer-1),
-		 "In instruction UNIFYCONSTANT\n"
-		 );
-      }
-    }
-
-
   INSTRUCTION(UNIFYINT)
     {
-      switch(mode) {
-      case WRITE:
-	*sPointer++ = getNumberArg(PC+1);
+      if (InWriteMode) {
+	TaggedRef *sp = GetSPointerWrite(sPointer);
+	*sp = getTaggedArg(PC+1);
+	sPointer++;
 	DISPATCH(2);
-//      case READ:
-      default:
-	if ( e->fastUnify(makeTaggedRef(sPointer++),getNumberArg(PC+1),
+      } else {
+	if ( e->fastUnify(makeTaggedRef(sPointer++),getTaggedArg(PC+1),
 			   NOFLATGUARD()) ) {
 	  DISPATCH(2);
 	}
 
 	SHALLOWFAIL;
 	HF_UNIFY("%s = %s failed\n",
-		 getNumberArg(PC+1),
+		 getTaggedArg(PC+1),
 		 *(sPointer-1),
 		 "In instruction UNIFYINT\n"
 		 );
@@ -735,19 +698,15 @@ INSTRUCTION(CREATEVARIABLEX)
   INSTRUCTION(UNIFYVOID)
     {
       int n = getPosIntArg(PC+1);
-      switch(mode) {
-      case WRITE:
-	{
-	  TaggedRef newVar = e->currentUVarPrototype;
-	  for (int i = n-1; i >=0; i-- ) {
-	    *sPointer++ = newVar;
-	  }
-	  DISPATCH(2);
+      if (InWriteMode) {
+	TaggedRef newVar = e->currentUVarPrototype;
+	TaggedRef *sp = GetSPointerWrite(sPointer);
+	for (int i = n-1; i >=0; i-- ) {
+	  *sp++ = newVar;
 	}
-      default:
-	sPointer += n;
-	DISPATCH(2);
       }
+      sPointer += n;
+      DISPATCH(2);
     }
 
   M4INSTRONEREG(SWITCHONTERM,
