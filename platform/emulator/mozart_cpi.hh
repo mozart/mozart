@@ -504,10 +504,10 @@ public:
   // these member functions support automatically generated set
   // propagators: the following operators throw an execption of type
   // 'OZ_FSetConstraint' in case a failure occurs.
-  void operator <= (const int);
-  void operator >= (const int);
-  void operator |= (const OZ_FSetValue &);
-  void operator &= (const OZ_FSetValue &);
+  OZ_Boolean operator <= (const int);
+  OZ_Boolean operator >= (const int);
+  OZ_Boolean operator |= (const OZ_FSetValue &);
+  OZ_Boolean operator &= (const OZ_FSetValue &);
   int lbc(void) const { return getCardMin(); }
   int ubc(void) const { return getCardMax(); };
   OZ_FSetValue lb(void) const { return getGlbSet(); }
