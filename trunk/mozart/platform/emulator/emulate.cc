@@ -946,7 +946,6 @@ void engine(Bool init)
     e->suspendEngine();
   }
 
-LBLinstallThread:
   CTT = e->getFirstThread();
   Assert(CTT);
 
@@ -2641,7 +2640,6 @@ LBLdispatcher:
 // -------------------------------------------------------------------------
 
   Case(WAIT)
-    LBLwait:
     {
       CBB->setWaiting();
       CBB->decSuspCount();
