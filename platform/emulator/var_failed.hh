@@ -63,7 +63,7 @@ public:
   // raph: use this method for adding demanding suspensions only
   OZ_Return addSusp(TaggedRef*, Suspendable *);
 
-  OZ_Return valid(TaggedRef /* val */) {
+  Bool valid(TaggedRef /* val */) {
     return TRUE;
   }
   void gCollectRecurse(void);

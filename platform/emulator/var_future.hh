@@ -44,7 +44,7 @@ public:
   OZ_Return bind(TaggedRef* vPtr,TaggedRef t);
   OZ_Return unify(TaggedRef* vPtr,TaggedRef* tPtr);
   OZ_Return forceBind(TaggedRef* vPtr,TaggedRef v);
-  OZ_Return valid(TaggedRef /* val */) {
+  Bool valid(TaggedRef /* val */) {
     return TRUE;
   }
   void gCollectRecurse(void);

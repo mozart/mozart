@@ -58,7 +58,7 @@ public:
   // raph: use this method for adding demanding suspensions only
   OZ_Return addSusp(TaggedRef*, Suspendable *);
 
-  OZ_Return valid(TaggedRef /* val */) { return TRUE; }
+  Bool valid(TaggedRef /* val */) { return TRUE; }
   void dispose(void) {
     disposeS();
     oz_freeListDispose(this, sizeof(ReadOnly));
