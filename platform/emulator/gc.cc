@@ -1445,8 +1445,6 @@ void Thread::gcRecurse () {
     setSelf(getSelf()->gcObject());
     getAbstr()->gcPrTabEntry();
   
-    gcTertiary();
-
     break; 
 
   case S_WAKEUP: 
@@ -1468,6 +1466,8 @@ void Thread::gcRecurse () {
   default:
     Assert(0);
   }
+  gcTertiary();
+    
 }
 
 
