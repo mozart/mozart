@@ -354,9 +354,8 @@ public:
     const char *s = l->getPrintName();
 
     ensure(n);
-    for (int i = 0; i < n; i++) {
-      *buffer++ = *s++;
-    }
+    memcpy(buffer, s, n * sizeof(char));
+    buffer += n;
   }
 
   void put_atom_quote(TaggedRef atom) {
