@@ -329,9 +329,9 @@
             Several commands assist in formatting existing Oz code.
             <List>
               <Entry class=command><Span class=index/<<oz-indent-line>>/
-                <<&amp;optional COUNT>> (<Key/TAB/)
+                <<&amp;optional ?_{COUNT}>> (<Key/TAB/)
               <Item>
-                Reindent the current line.  If <<COUNT>> is given, reindent
+                Reindent the current line.  If ?_{COUNT} is given, reindent
                 that many lines above and below point as well.
               <Entry class=command><Span class=index/<<oz-indent-region>>/
               <Item>
@@ -393,10 +393,10 @@
                 this via <<global-font-lock-mode>>, you can set this to
                 <<nil>>.
               <Entry class=command><Span class=index/<<oz-fontify-buffer>>/
-                <<&amp;optional ARG>> (<Key/M-l/)
+                <<&amp;optional ?_{ARG}>> (<Key/M-l/)
               <Item>
                 Center point in window, redisplay frame and re-fontify
-                buffer.  The <<ARG>> is interpreted just as with the
+                buffer.  The ?_{ARG} is interpreted just as with the
                 <<recenter>> command (usually bound to <Key/C-l/).
             </List>
             You might like the following user option and command if you care
@@ -425,7 +425,7 @@
             <Index/Comments/
             <List>
               <Entry class=command><Span class=index/<<oz-fill-paragraph>>/
-                <<&amp;optional JUSTIFY>>
+                <<&amp;optional ?_{JUSTIFY}>>
               <Item>
                 Like the <Span class=index/<<fill-paragraph>>/ command,
                 but handles Oz comments.  If any of the current line is
@@ -436,16 +436,16 @@
                 it will also be invoked by <Key/M-x fill-paragraph/
                 (<Key/M-q/).
               <Entry class=command><Span class=index/<<oz-comment-region>>/
-                <<START END &amp;optional ARG>>
+                <<?_{START} ?_{END} &amp;optional ?_{ARG}>>
               <Item>
                 Comment or uncomment each line in the region.  With just
                 <Key/C-u/ as prefix argument, uncomment each line in region.
-                A numeric prefix argument <<ARG>> means use <<ARG>> comment
-                characters.  If <<ARG>> is negative, delete that many
+                A numeric prefix argument ?_{ARG} means use ?_{ARG} comment
+                characters.  If ?_{ARG} is negative, delete that many
                 comment characters instead.  Blank lines do not get
                 comments.
               <Entry class=command><Span class=index/<<oz-uncomment-region>>/
-                <<START END &amp;optional ARG>>
+                <<?_{START} ?_{END} &amp;optional ?_{ARG}>>
               <Item>
                 Comment or uncomment each line in the region.  See the
                 <<oz-comment-region>> command for more information; note
@@ -466,47 +466,47 @@
           <P>
             <List>
               <Entry class=command><Span class=index/<<forward-oz-expr>>/
-                <<&amp;optional COUNT>> (<Key/M-C-f/)
+                <<&amp;optional ?_{COUNT}>> (<Key/M-C-f/)
               <Item>
                 Move point forward by one balanced Oz expression.  With
-                <<COUNT>>, do it that many times.  Negative <<COUNT>> means
+                ?_{COUNT}, do it that many times.  Negative ?_{COUNT} means
                 backwards.
               <Entry class=command><Span class=index/<<backward-oz-expr>>/
-                <<&amp;optional COUNT>> (<Key/M-C-b/)
+                <<&amp;optional ?_{COUNT}>> (<Key/M-C-b/)
               <Item>
                 <Index/Oz expression<And>moving over/
                 Move point backward by one balanced Oz expression.  With
-                <<COUNT>>, do it that many times.  <<COUNT>> must be
+                ?_{COUNT}, do it that many times.  ?_{COUNT} must be
                 positive.
               <Entry class=command><Span class=index/<<mark-oz-expr>>/
-                <<COUNT>> (<Key/M-C-@/, <Key/M-C-SPC/)
+                <<?_{COUNT}>> (<Key/M-C-@/, <Key/M-C-SPC/)
               <Item>
                 <Index/Oz expression<And>marking/
-                Set mark <<COUNT>> balanced Oz expressions from point.  The
+                Set mark ?_{COUNT} balanced Oz expressions from point.  The
                 place mark goes to is the same place the <<forward-oz-expr>>
                 command would move to with the same argument.
               <Entry class=command><Span class=index/<<transpose-oz-exprs>>/
-                <<ARG>> (<Key/M-C-t/)
+                <<?_{ARG}>> (<Key/M-C-t/)
               <Item>
                 Like the <<transpose-words>> command (<Key/M-t/) but applies
                 to balanced Oz expressions.  Caveat:  This might not produce
                 nice results in all cases.
               <Entry class=command><Span class=index/<<kill-oz-expr>>/
-                <<COUNT>> (<Key/M-C-k/)
+                <<?_{COUNT}>> (<Key/M-C-k/)
               <Item>
                 <Index/killing/<Index/Oz expression<And>killing/
                 Kill the balanced Oz expression following point.  With
-                <<COUNT>>, kill that many Oz expressions after point.
-                Negative <<COUNT>> means kill <<-COUNT>> Oz expressions
+                ?_{COUNT}, kill that many Oz expressions after point.
+                Negative ?_{COUNT} means kill <<-?_{COUNT}>> Oz expressions
                 before point.
               <Entry class=command><Span class=index/<<backward-kill-oz-expr>>/
-                <<COUNT>>
+                <<?_{COUNT}>>
                 (<Key/M-C-DEL/<Note foot>Note that under some configurations,
-                this key combination kills the X server.</Note>)
+                this key combination kills the X&nbsp;server.</Note>)
               <Item>
                 Kill the balanced Oz expression preceding point.  With
-                <<COUNT>>, kill that many Oz expressions before point.
-                Negative <<COUNT>> means kill <<-COUNT>> Oz expressions
+                ?_{COUNT}, kill that many Oz expressions before point.
+                Negative ?_{COUNT} means kill <<-?_{COUNT}>> Oz expressions
                 after point.
               <Entry class=command><Span class=index/<<oz-beginning-of-defun>>/
                 (<Key/M-C-a/)
@@ -629,7 +629,7 @@
               Percentage of screen to use for Oz Compiler, Emulator or
               Temp window.
           </List>
-      <Section>
+      <Section id="section.feeding">
         <Title/Feeding Code to the Compiler/
         <Para class=apropos><Title/Feedable Regions/
           The commands that send regions of the current buffer to the Oz
@@ -659,25 +659,25 @@
             <Entry class=command><Span class=index/<<oz-feed-buffer>>/
               (<Key/M-RET/)
             <Entry class=command><Span class=index/<<oz-feed-region>>/
-              <<START END>>
+              <<?_{START} ?_{END}>>
               (<Key/M-r/<Note foot>This key binding is only available if the
               <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
             <Entry class=command><Span class=index/<<oz-feed-line>>/
-              <<COUNT>>
+              <<?_{COUNT}>>
               (<Key/M-l/<Note foot>This key binding is only available if the
               <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
             <Entry class=command><Span class=index/<<oz-feed-paragraph>>/
-              <<COUNT>> (<Key/C-c C-p/)
+              <<?_{COUNT}>> (<Key/C-c C-p/)
             <Item>
               The corresponding text region is fed to the compiler and
               processed with its currently active switches.
             <Entry class=command><Span class=index/<<oz-to-coresyntax-buffer>>/
             <Entry class=command><Span class=index/<<oz-to-coresyntax-region>>/
-              <<START END>>
+              <<?_{START} ?_{END}>>
             <Entry class=command><Span class=index/<<oz-to-coresyntax-line>>/
-              <<COUNT>>
+              <<?_{COUNT}>>
             <Entry class=command><Span class=index
-              /<<oz-to-coresyntax-paragraph>>/ <<COUNT>>
+              /<<oz-to-coresyntax-paragraph>>/ <<?_{COUNT}>>
             <Item>
               <Index/compiler<And>core syntax/
               <Index/core syntax/
@@ -686,26 +686,11 @@
               and fed to the Oz Compiler.  If compilation succeeds, the
               resulting source file will be displayed in the Oz Temporary
               buffer.
-            <Entry class=command><Span class=index
-              /<<oz-to-emulatorcode-buffer>>/
-            <Entry class=command><Span class=index
-              /<<oz-to-emulatorcode-region>>/ <<START END>>
-            <Entry class=command><Span class=index/<<oz-to-emulatorcode-line>>/
-              <<COUNT>>
-            <Entry class=command><Span class=index
-              /<<oz-to-emulatorcode-paragraph>>/ <<COUNT>>
-            <Item>
-              <Index/emulator<And>byte code/
-              The corresponding text region is prefixed by
-              <Code.Extern display proglang=oz to="emulatorcode.oz">
-              and fed to the Oz Compiler.  If compilation succeeds, the
-              resulting source file will be displayed in the Oz Temporary
-              buffer.
             <Entry class=command><Span class=index/<<oz-send-string>>/
-              <<STRING &amp;optional SYSTEM>>
+              <<?_{STRING} &amp;optional ?_{SYSTEM}>>
             <Item>
-              Feed <<STRING>> to the Oz Compiler, restarting it if it died.
-              If <<SYSTEM>> is non-<<nil>>, it is a command for the system
+              Feed ?_{STRING} to the Oz Compiler, restarting it if it died.
+              If ?_{SYSTEM} is non-<<nil>>, it is a command for the system
               and is prefixed by
               <Code.Extern display proglang=oz to="system.oz">
             <Entry class=useroption><Span class=index/<<oz-prepend-line>>/
@@ -752,7 +737,7 @@
                 When in Compiler buffer, visit error message surrounding
                 point.
               <Entry class=command><Span class=index/<<oz-mouse-goto-error>>/
-                <<EVENT>> (<Key/S-&lt;button-2>/)
+                <<?_{EVENT}>> (<Key/S-&lt;button-2>/)
               <Item>
                 <P.silent>
                   Visit the error coordinates associated with the error message
@@ -808,7 +793,8 @@
         This section briefly documents how Mozart's development tools are
         integrated into the &OPI;; several of these commands are available
         from the <Key/Oz/ <Span class=index/menu/.  For more details about
-        the tools themselves, see the individual user manuals.
+        the tools themselves, see the individual user manuals.  For a
+        description of the feedable regions, see <Ptr to="section.feeding">.
         <!--** references to browser, ... -->
       <P>
         The following command is useful for several of the tools.
@@ -822,13 +808,13 @@
         <List>
           <Entry class=command><Span class=index/<<oz-browse-buffer>>/
           <Entry class=command><Span class=index/<<oz-browse-region>>/
-            <<START END>> (<Key/C-c C-b/)
+            <<?_{START} ?_{END}>> (<Key/C-c C-b/)
           <Entry class=command><Span class=index/<<oz-browse-line>>/
-            <<COUNT>>
+            <<?_{COUNT}>>
             (<Key/C-c b/<Note foot>This key binding is only available if the
             <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
           <Entry class=command><Span class=index/<<oz-browse-paragraph>>/
-            <<COUNT>>
+            <<?_{COUNT}>>
           <Item>
             Feed the corresponding text region to the Oz Compiler.
             Assuming it to contain an expression, enclose it by an
@@ -838,11 +824,11 @@
         <List>
           <Entry class=command><Span class=index/<<oz-inspect-buffer>>/
           <Entry class=command><Span class=index/<<oz-inspect-region>>/
-            <<START END>> (<Key/C-c C-i/)
+            <<?_{START} ?_{END}>> (<Key/C-c C-i/)
           <Entry class=command><Span class=index/<<oz-inspect-line>>/
-            <<COUNT>>
+            <<?_{COUNT}>>
           <Entry class=command><Span class=index/<<oz-inspect-paragraph>>/
-            <<COUNT>>
+            <<?_{COUNT}>>
           <Item>
             Feed the corresponding text region to the Oz Compiler.
             Assuming it to contain an expression, enclose it by an
@@ -870,18 +856,18 @@
       <Para class=apropos><Title/<Span class=index/Debugger//
         <List>
           <Entry class=command><Span class=index/<<oz-debugger>>/
-            <<ARG>> (<Key/C-c C-d/)
+            <<?_{ARG}>> (<Key/C-c C-d/)
           <Item>
             Open the Oz Debugger by feeding the statement <Code proglang=oz
-            >{Ozcar.open}</Code> to the Oz Compiler.  With <<ARG>>, close
+            >{Ozcar.open}</Code> to the Oz Compiler.  With ?_{ARG}, close
             it instead by <Code proglang=oz>{Ozcar.close}</Code>.
           <Entry class=command><Span class=index/<<oz-breakpoint-at-point>>/
-            <<ARG>> (<Key/C-x SPC/)
+            <<?_{ARG}>> (<Key/C-x SPC/)
           <Item>
             <Index/breakpoints/
             Set a dynamic breakpoint for the Oz Debugger in any code
             carrying the current source file name (or buffer name) and line
-            number as debugging information.  With <<ARG>>, delete any
+            number as debugging information.  With ?_{ARG}, delete any
             breakpoints at these coordinates instead.
           <Entry class=command><Span class=index/<<oz-breakpoint-mouse-set>>/
             (<Key/M-S-&lt;button-1>/)
@@ -894,10 +880,10 @@
       <Para class=apropos><Title/<Span class=index/Profiler//
         <List>
           <Entry class=command><Span class=index/<<oz-profiler>>/
-            <<ARG>> (<Key/C-c C-f/)
+            <<?_{ARG}>> (<Key/C-c C-f/)
           <Item>
             Open the Oz Profiler by feeding the statement <Code proglang=oz
-            >{Profiler.open}</Code> to the Oz Compiler.  With <<ARG>>, close
+            >{Profiler.open}</Code> to the Oz Compiler.  With ?_{ARG}, close
             it instead by <Code proglang=oz>{Profiler.close}</Code>.
         </List>
     <Appendix id="appendix.devel">
@@ -911,6 +897,37 @@
       <P>
         For completeness and as a reference for the developers themselves,
         they are described here nevertheless.
+      <Section>
+        <Title/Viewing Emulator Bytecode/
+        <P>
+          The <Span class=index/bytecode/ produced by the compiler can
+          be displayed conveniently in an Emacs buffer.  See <Ptr
+          to="section.feeding"> for a description of the feedable regions.
+          <List>
+            <Entry class=command><Span class=index
+              /<<oz-to-emulatorcode-buffer>>/
+            <Entry class=command><Span class=index
+              /<<oz-to-emulatorcode-region>>/ <<?_{START} ?_{END}>>
+            <Entry class=command><Span class=index/<<oz-to-emulatorcode-line>>/
+              <<?_{COUNT}>>
+            <Entry class=command><Span class=index
+              /<<oz-to-emulatorcode-paragraph>>/ <<?_{COUNT}>>
+            <Item>
+              <Index/emulator<And>byte code/
+              The corresponding text region is prefixed by
+              <Code.Extern display proglang=oz to="emulatorcode.oz">
+              and fed to the Oz Compiler.  If compilation succeeds, the
+              resulting source file will be displayed in the Oz Temporary
+              buffer.
+            <Entry class=command><Span class=index
+              /<<ozm-mode>>/
+            <Item>
+              This is the major mode for displaying (especially fontifying)
+              bytecode.  Loading a file with extension <File/.ozm/
+              automatically puts a buffer into Oz-Machine mode.  You can
+              tell a buffer is in Oz-Machine mode by the string <Samp
+              /Oz-Machine/ in its <Span class=index/mode line/.
+          </List>
       <Section>
         <Title/Testing Locally/
         <P>
@@ -956,9 +973,9 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
               Name of the <Index/functor<And>root/<Span class=index
               /root functor/ to load on startup.
             <Entry class=command><Span class=index/<<oz-set-other>>/
-              <<SET-COMPONENTS>> (<Key/C-c C-m/)
+              <<?_{SET-COMPONENTS}>> (<Key/C-c C-m/)
             <Item>
-              If <<SET-COMPONENTS>> is <<nil>>, call <<oz-set-emulator>>,
+              If ?_{SET-COMPONENTS} is <<nil>>, call <<oz-set-emulator>>,
               else call <<oz-set-components>>.
             <Entry class=command><Span class=index/<<oz-set-emulator>>/
               (<Key/C-c C-m/)
@@ -973,9 +990,9 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
               <<oz-components-path>>.  Also, if the environment variable
               <Var type=env/OZ_LOAD/ is set, replace its value by this one.
             <Entry class=command><Span class=index/<<oz-other>>/
-              <<SET-COMPONENTS>> (<Key/C-c C-o/)
+              <<?_{SET-COMPONENTS}>> (<Key/C-c C-o/)
             <Item>
-              If <<SET-COMPONENTS>> is <<nil>>, call <<oz-other-emulator>>,
+              If ?_{SET-COMPONENTS} is <<nil>>, call <<oz-other-emulator>>,
               else call <<oz-other-components>>.
             <Entry class=command><Span class=index/<<oz-other-emulator>>/
               (<Key/C-c C-o/)
