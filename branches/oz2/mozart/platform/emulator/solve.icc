@@ -68,11 +68,9 @@ TaggedRef SolveActor::merge(Board *bb) {
   // adjoin the list of or-actors to the list in actual solve actor!
 
   if (bb->isWait()) {
-    if (hasChoices()) 
-      WaitActor::Cast(bb->getActor())->pushChoices(cps);
+    WaitActor::Cast(bb->getActor())->mergeChoices(cpb);
   } else if (bb->isSolve()) {
-    if (hasChoices()) 
-      SolveActor::Cast(bb->getActor())->pushChoices(cps);
+    SolveActor::Cast(bb->getActor())->mergeChoices(cpb);
     threads += SolveActor::Cast(bb->getActor())->getThreads();
   }
 
@@ -136,7 +134,7 @@ Board *SolveActor::clone(Board *bb) {
 inline
 int SolveActor::choose(int left, int right) {
   ozstat.incSolveAlt();
-  WaitActor *wa = this->topChoice();
+  WaitActor *wa = cpb->access();
   
   if (!wa)
     return -1;
@@ -146,10 +144,7 @@ int SolveActor::choose(int left, int right) {
   if (n==0) {
     return 0;
   } else if (n==1) {
-    this->popChoice();
-
-
-
+    removeChoice();
 
     Board *bb = wa->getChildRef();
     Assert(bb->isWait());

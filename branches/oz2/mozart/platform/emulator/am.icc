@@ -386,14 +386,13 @@ int AM::commit(Board *bb, Thread *tt)
     Assert(bb->isWaiting());
 
     WaitActor *wa = WaitActor::Cast(aw);
-    if (wa->hasChoices()) {
-      if (currentBoard->isWait()) {
-	WaitActor::Cast(currentBoard->getActor())->pushChoices(wa->getCps());
-      } else if (currentBoard->isSolve()) {
-	SolveActor::Cast(currentBoard->getActor())->pushChoices(wa->getCps());
-      } else {
-	// forget the choice stack when committing to a conditional
-      }
+
+    if (currentBoard->isWait()) {
+      WaitActor::Cast(currentBoard->getActor())->mergeChoices(wa->getCpb());
+    } else if (currentBoard->isSolve()) {
+      SolveActor::Cast(currentBoard->getActor())->mergeChoices(wa->getCpb());
+    } else {
+      // forget the choice stack when committing to a conditional
     }
 
     if (!installScriptOutline(bb->getScriptRef())) {

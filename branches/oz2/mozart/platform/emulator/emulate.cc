@@ -661,7 +661,7 @@ void AM::checkEntailment()
       return;
     }
 
-    WaitActor *wa = solveAA->topChoice();
+    WaitActor *wa = solveAA->getChoice();
 
     if (wa == NULL) {
       // "stuck" (stable without distributing waitActors);
@@ -683,8 +683,6 @@ void AM::checkEntailment()
 
     if (wa->getChildCount()==1) {
       Assert(wa->isChoice());
-
-      solveAA->popChoice();
 
       Board *waitBoard = wa->getChildRef();
 
@@ -2501,9 +2499,9 @@ LBLdispatcher:
       CTS->pushActor(CAA);
 
       if (bb->isWait()) {
-	WaitActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
+	WaitActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
       } else if (bb->isSolve()) {
-	SolveActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
+	SolveActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
       }
 
       DISPATCH(1);
@@ -2516,10 +2514,12 @@ LBLdispatcher:
       CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, 0, OK);
       CTS->pushActor(CAA);
 
+      Assert(CAA->isChoice());
+
       if (bb->isWait()) {
-	WaitActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
+	WaitActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
       } else if (bb->isSolve()) {
-	SolveActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
+	SolveActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
       }
 
       DISPATCH(1);
