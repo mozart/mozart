@@ -1015,20 +1015,11 @@ OZ_C_ioproc_begin(unix_connectUnix, 2)
   addr.sun_family = AF_UNIX;
   strcpy(addr.sun_path, path); 
 
-// critical region  
-  osBlockSignals();
-
-  int ret;
-  while ((ret = connect(s,(struct sockaddr *) &addr,
-                        sizeof(struct sockaddr_un)))<0) {
-    if (errno != EINTR) {
-      osUnblockSignals();
-      RETURN_UNIX_ERROR;
-    }
+  int ret = osconnect(s,(struct sockaddr *) &addr,sizeof(struct sockaddr_un));
+  if(ret<0) {
+    Assert(errno != EINTR);
+    RETURN_UNIX_ERROR;
   }
-
-// end of critical region
-  osUnblockSignals();
 
   return PROCEED;
 }
@@ -1098,19 +1089,11 @@ OZ_C_ioproc_begin(unix_connectInet,3)
   memcpy(&addr.sin_addr,hostaddr->h_addr_list[0],sizeof(addr.sin_addr));
   addr.sin_port = htons ((unsigned short) port);
 
-// critical region  
-  osBlockSignals();
-
-  int ret;
-  while ((ret = connect(s,(struct sockaddr *) &addr,sizeof(addr)))<0) {
-    if (errno != EINTR) {
-      osUnblockSignals();
-      RETURN_UNIX_ERROR;
-    }
+  int ret = osconnect(s,(struct sockaddr *) &addr,sizeof(addr));
+  if (ret<0) {
+    Assert(errno != EINTR);
+    RETURN_UNIX_ERROR;
   }
-
-// end of critical region
-  osUnblockSignals();
 
   return PROCEED;
 }
