@@ -4,3 +4,4 @@ config.log
 config.status
 Makefile
 Makefile.boot
+ozengine.sh
