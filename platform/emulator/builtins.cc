@@ -1252,7 +1252,9 @@ OZ_Return eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   case FAILED:
     out = oz_false();
     return PROCEED;
-  case SUSPEND:
+  case BI_REPLACEBICALL:
+    return (BI_REPLACEBICALL);
+    // case SUSPEND:
   default:
     return SUSPEND;
   }
@@ -1268,7 +1270,9 @@ OZ_Return neqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   case FAILED:
     out = oz_true();
     return PROCEED;
-  case SUSPEND:
+  case BI_REPLACEBICALL:
+    return (BI_REPLACEBICALL);
+    // case SUSPEND:
   default:
     return SUSPEND;
   }
