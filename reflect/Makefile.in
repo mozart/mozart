@@ -9,6 +9,7 @@ LIB_DIR		= $(PREFIX)/contrib
 HOMEURL         = @HOMEURL@
 
 OZC		= @OZC@
+OZL		= @OZL@
 COMPILE		= $(OZC) -c
 OZTOOL		= @OZTOOL@
 CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
@@ -33,13 +34,11 @@ CFLAGS   	+= -UDEBUG
 CFLAGS   	+= -I$(SRCTOP)/platform/emulator 
 CFLAGS  	+= -I$(BUILDTOP)/platform/emulator
 
-CXX      	= oztool c++
-LD       	= oztool ld
+CXX      	= $(OZTOOL) c++
+LD       	= $(OZTOOL) ld
 DEPEND   	= $(CXX) $(CFLAGS) -MM
 
-OZC      	= ozc
-OZL      	= ozl
-OZDEPEND 	= ozc -c -M
+OZDEPEND 	= $(OZC) -c -M
 
 #----------------------------------------------------------------------
 # Sources and targets
