@@ -416,9 +416,17 @@ switchList	: /* empty */
 		;
 
 switch		: '+' SWITCHNAME
-		  { $$ = newCTerm("on",newCTerm(xytext),pos()); }
+		  { if (!strcmp(xytext,"showinsert")) xy_showInsert = 1;
+		    if (!strcmp(xytext,"gump")) xy_gumpSyntax = 1;
+		    if (!strcmp(xytext,"system")) xy_systemVariables = 1;
+		    $$ = newCTerm("on",newCTerm(xytext),pos());
+		  }
 		| '-' SWITCHNAME
-		  { $$ = newCTerm("off",newCTerm(xytext),pos()); }
+		  { if (!strcmp(xytext,"showinsert")) xy_showInsert = 0;
+		    if (!strcmp(xytext,"gump")) xy_gumpSyntax = 0;
+		    if (!strcmp(xytext,"system")) xy_systemVariables = 0;
+		    $$ = newCTerm("off",newCTerm(xytext),pos());
+		  }
 		;
 
 sequence	: phrase
