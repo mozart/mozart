@@ -1,3 +1,17 @@
+/*
+ *
+ * ###   #     # ######  ####### ######  #######    #    #     # #######
+ *  #    ##   ## #     # #     # #     #    #      # #   ##    #    #
+ *  #    # # # # #     # #     # #     #    #     #   #  # #   #    #
+ *  #    #  #  # ######  #     # ######     #    #     # #  #  #    #
+ *  #    #     # #       #     # #   #      #    ####### #   # #    #
+ *  #    #     # #       #     # #    #     #    #     # #    ##    #
+ * ###   #     # #       ####### #     #    #    #     # #     #    #
+ *
+ * Whenever you change this file, make sure that you also change the
+ * appropriate handbook chapter: system/system.raw!!!!!!!!
+ */
+
 #define COMPILER_TIMEOUT        100 /* ms */
 
 #define IO_BUF_SIZE             10000
@@ -64,3 +78,17 @@
 #define MAX_TCP_CACHE     5
 #define MAX_UDP_PACKET    100*1024  /* 100k */
 #define TCP_PACKET_SIZE   1*1024    /* 1k */
+
+/*
+ *
+ * ###   #     # ######  ####### ######  #######    #    #     # #######
+ *  #    ##   ## #     # #     # #     #    #      # #   ##    #    #
+ *  #    # # # # #     # #     # #     #    #     #   #  # #   #    #
+ *  #    #  #  # ######  #     # ######     #    #     # #  #  #    #
+ *  #    #     # #       #     # #   #      #    ####### #   # #    #
+ *  #    #     # #       #     # #    #     #    #     # #    ##    #
+ * ###   #     # #       ####### #     #    #    #     # #     #    #
+ *
+ * Whenever you change this file, make sure that you also change the
+ * appropriate handbook chapter: system/system.raw!!!!!!!!
+ */
