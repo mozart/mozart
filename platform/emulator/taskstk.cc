@@ -115,6 +115,10 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
     GetFrame(auxframe,auxPC,auxY,auxG);
     while (isUninterestingTask(auxPC))
       GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
+    if (auxPC == C_EMPTY_STACK) {
+      frame = NULL;
+      return makeTaggedNULL();
+    }
     // now we also ignore the frame with the next normal continuation,
     // to see whether it is followed by a debug frame:
     lastframe = auxframe;
