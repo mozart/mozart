@@ -26,6 +26,9 @@ import
    Property(get)
    Fontifier at 'x-oz://contrib/doc/code/Fontifier'
    HTML(seq: SEQ pcdata: PCDATA verbatim: VERBATIM)
+   URL(toVs)
+   Resolve(localize)
+   OS(unlink)
 export
    'class': FontifierClass
    NoProgLang
@@ -47,10 +50,19 @@ define
 	 meta <- Meta
       end
       meth enqueueFile(ProgLang FileName Result)
-	 lock R DIR={Property.get 'ozdoc.src.dir'} in
+	 lock R DIR={Property.get 'ozdoc.src.dir'}
+	    FILE = try {Resolve.localize FileName}
+		   catch _ then
+		      {Resolve.localize DIR#'/'#FileName}
+		   end
+	    case FILE of new(PATH) then
+	       thread {Wait Result} {OS.unlink PATH} end
+	    else skip end
+	    PATH = {URL.toVs FILE.1}
+	 in
 	    q <- (R#Result)|@q
 	    FontifierBase,enqueueFile(
-			     {self toMode(ProgLang $)} DIR#'/'#FileName R)
+			     {self toMode(ProgLang $)} PATH R)
 	 end
       end
       meth enqueueVirtualString(ProgLang VS Result)
