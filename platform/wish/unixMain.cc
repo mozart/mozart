@@ -51,16 +51,6 @@
 #else
 #include <tk.h>
 #endif
-/*
- * Declarations for various library procedures and variables (don't want
- * to include tkInt.h or tkConfig.h here, because people might copy this
- * file out of the Tk source directory to make their own modified versions).
- */
-
-extern void		exit _ANSI_ARGS_((int status));
-extern int		isatty _ANSI_ARGS_((int fd));
-extern int		read _ANSI_ARGS_((int fd, char *buf, size_t size));
-extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 
 /*
  * Global variables used by the main program:
@@ -212,10 +202,7 @@ main(int argc, char **argv)
      * Set the "tcl_interactive" variable.
      */
 
-    tty = isatty(0);
-    Tcl_SetVar(interp, "tcl_interactive",
-	       ((char *) (((fileName == NULL) && tty) ? "1" : "0")), 
-	       TCL_GLOBAL_ONLY);
+    Tcl_SetVar(interp, "tcl_interactive", ((char *) "0"), TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
