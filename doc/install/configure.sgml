@@ -85,6 +85,21 @@ netpbm, ghostscript, and a very recent version of nsgmls.
 	<entry class=variable/<code/oz_enable_doc=doc//
 	<item/You can omit the documentation using
 <code/--disable-doc/ or <code/oz_enable_doc=//
+	<entry class=option/<code/--with-documents=D1,...,Dn//
+	<entry class=option/<code/--with-documents=all//
+	<entry class=variable/<code/oz_doc_dirs=//
+	<item/Specify the documents to be automatically processed by
+recursing into their directories.  The special value <code/all/
+indicates that all documents should be processed./
+	<entry class=option/<code/--with-java-bin=DIR//
+	<entry class=variable/<code/oz_java_bin=//
+	<item/directory where java executables and wrappers reside./
+	<entry class=option/<code/--with-java-threads//
+	<entry class=variable/<code/oz_java_threads=-green//
+	<item/select implementation of java threads./
+	<entry class=option/<code/--enable-chm//
+	<entry class=variable/<code/oz_enable_chm=no//
+	<item/Construct CHM table of contents files (for windows)/
       </list>
 </p>
   </subsection>
