@@ -205,7 +205,7 @@ in
 	 
 	 ShowInsertSwitch <- ShowInsert
 	 GumpSyntax <- UseGumpSyntax
-	 filename <- 'unknown'
+	 filename <- ''
 	 col <- 0
 	 line <- 1
 	 Reporter <- Report
