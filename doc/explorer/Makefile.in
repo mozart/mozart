@@ -3,6 +3,8 @@ SRCDIR          = @srcdir@
 
 WHAT = explorer
 MAIN = main.sgml
+WHATCLASS=tools
+PRINTNAME=Explorer
 
 SGMLSRCS0 = \
         actions interface menu status \

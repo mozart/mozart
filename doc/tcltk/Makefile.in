@@ -36,6 +36,7 @@ HOMEURL         = @HOMEURL@
 
 all quick bootstrap:: $(TKDOCBASE)
 
+installps:
 bootquick:
 
 install:: all $(DOCDIR)/tcltk

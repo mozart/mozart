@@ -3,6 +3,8 @@
 VPATH  = @srcdir@
 SRCDIR = @srcdir@
 
+WHATCLASS=tools
+PRINTNAME=Ozcar
 WHAT = ozcar
 MAIN = ozcar.sgml
 SGMLSRCS = \

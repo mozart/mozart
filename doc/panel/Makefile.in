@@ -3,6 +3,8 @@ SRCDIR          = @srcdir@
 
 WHAT = panel
 MAIN = main.sgml
+WHATCLASS=tools
+PRINTNAME=Panel
 
 HTMLEXTRAFILES0 = \
         memory-heap \

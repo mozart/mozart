@@ -3,6 +3,8 @@ SRCDIR          = @srcdir@
 VPATH           = @srcdir@
 
 WHAT = apptut
+WHATCLASS=tutorial
+PRINTNAME=ApplicationProgramming
 MAIN = main.sgml
 SGMLSRCS = \
         deploy.sgml devel.sgml hello.sgml \

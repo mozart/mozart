@@ -3,6 +3,8 @@ SRCDIR          = @srcdir@
 
 WHAT = tools
 MAIN = main.sgml
+WHATCLASS=tools
+PRINTNAME=ShellTools
 
 SGMLSRCS0 = \
         linker compiler debugger profiler oztool ozengine convert

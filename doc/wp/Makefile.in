@@ -2,6 +2,8 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 
 WHAT = wp
+WHATCLASS=tutorial
+PRINTNAME=WindowProgramming
 MAIN = main.sgml
 SGMLSRCS = \
         intro.sgml started.sgml widgets-1.sgml geometry.sgml widgets-2.sgml \

@@ -3,7 +3,8 @@ SRCDIR          = @srcdir@
 
 WHAT = fdt
 MAIN = main.sgml
-
+WHATCLASS=tutorial
+PRINTNAME=FiniteDomainProgramming
 SGMLSRCS0 = \
          bab constraints elimination golden-rules intro main \
         minimizing packing problem propagators scheduling scripts \

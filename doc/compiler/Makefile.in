@@ -9,5 +9,6 @@ SGMLSRCS = \
         switches.sgml narrator.sgml syntax.sgml \
         EvalExpression.oz VirtualStringToValue.oz
 HTMLEXTRAFILES =
-
+PRINTNAME=Compiler
+WHATCLASS=reference
 include ../Makefile.common

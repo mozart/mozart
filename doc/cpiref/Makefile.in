@@ -3,6 +3,8 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 
 WHAT = cpiref
+WHATCLASS=reference
+PRINTNAME=CPI
 MAIN = 0.sgml
 SGMLSRCS =      r_aux.sgml \
                 r_expect.sgml \

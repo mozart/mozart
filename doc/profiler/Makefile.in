@@ -3,6 +3,8 @@
 VPATH  = @srcdir@
 SRCDIR = @srcdir@
 
+WHATCLASS=tools
+PRINTNAME=Profiler
 WHAT = profiler
 MAIN = profiler.sgml
 SGMLSRCS =

@@ -3,6 +3,8 @@ SRCDIR          = @srcdir@
 
 WHAT = system
 MAIN = main.sgml
+WHATCLASS=reference
+PRINTNAME=SystemModules
 
 SGMLSRCS0 = \
     # Application programming \

@@ -3,6 +3,8 @@ SRCDIR          = @srcdir@
 
 WHAT = gump
 MAIN = gump.sgml
+WHATCLASS=tools
+PRINTNAME=Gump
 SGMLSRCS = \
         intro.sgml parser.sgml scanner.sgml syntax.sgml \
         LambdaParser.ozg LambdaScanner.ozg TestParser.ozg TestScanner.ozg \

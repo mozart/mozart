@@ -3,6 +3,8 @@ SRCDIR          = @srcdir@
 
 WHAT = browser
 MAIN = main.sgml
+WHATCLASS=tools
+PRINTNAME=Browser
 
 HTMLEXTRAFILES0 = \
         note-gui-l1 note-gui-l2 \

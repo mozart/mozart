@@ -4,6 +4,8 @@ SRCDIR          = @srcdir@
 WHAT = fst
 
 MAIN = 0.sgml
+WHATCLASS=tutorial
+PRINTNAME=FiniteSetProgramming
 
 SGMLSRCS = \
         fset_tutorial.sgml              \
