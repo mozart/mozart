@@ -1,91 +1,108 @@
-#!/bin/csh -f
+#!/bin/sh
 # Script that configures the environment to
 # start lemacs for a standalone version of Oz
 # MUST reside in <oz dist dir>/bin
 
-
+#set -vx
 
 # where Oz resides:
 
-set howcalled=$0
+howcalled=$0
+: ${OZHOME=`dirname \`dirname $howcalled\``}; export OZHOME
+echo "Setting Oz installation directory to: $OZHOME"
 
-if (! $?OZHOME) then
-   set whereami = `pwd`
-   cd $howcalled:h/..
-   setenv OZHOME `pwd`
-   cd $whereami
-   echo "Setting Oz installation directory to: $OZHOME"
-endif
+# determine machine architecture
+if [ ${OZARCH-0} = 0 ]; then
+  if   [ -f /bin/arch ]; then OZARCH=`/bin/arch`
+  elif [ -f /bin/machine ]; then OZARCH=`/bin/machine`
+  else echo 1>&2 "error: cannot determine machine type"
+       exit 1;
+  fi
+fi
+export OZARCH
+: ${ARCHBIN=$OZHOME/bin/$OZARCH}
 
 
 # Where ispgm sits:
-if (! $?ISPGM) setenv ISPGM $OZHOME/bin/ispgm
+: ${ISPGM=$OZHOME/bin/ispgm}; export ISPGM
 
 
 # where Oz searches for files:
-if (! $?OZPATH ) setenv OZPATH .:${OZHOME}:${OZHOME}/lib:${OZHOME}/demo
+: ${OZPATH=.:${OZHOME}:${OZHOME}/lib:${OZHOME}/demo}; export OZPATH
 
 
 # increment path
-setenv PATH ${PATH}:$OZHOME/bin
+PATH=${PATH}:$OZHOME/bin; export PATH
 
 
 # where is lucid emacs?
-if (! $?LEMACS) then
-  if ( -x $OZHOME/lemacs/lemacs ) then
-     set LEMACS=$OZHOME/lemacs/lemacs
-  else if ( -x /usr/share/dfki/gnu/bin/lemacs ) then
-     set LEMACS=/usr/share/dfki/gnu/bin/lemacs
+if [ ${LEMACS-0} = 0 ]; then
+  if [ -f $OZHOME/lemacs/lemacs ]; then
+     LEMACS=$OZHOME/lemacs/lemacs
+  elif [ -f /usr/share/dfki/gnu/bin/lemacs ]; then
+     LEMACS=/usr/share/dfki/gnu/bin/lemacs
   else
-     set LEMACS=lemacs
-  endif
-endif
+     LEMACS=lemacs
+  fi
+fi
+export LEMACS
 
 
 # load fonts
-if ( -d $OZHOME/demo/fonts ) xset +fp $OZHOME/demo/fonts
+if [ -d $OZHOME/demo/fonts ]; then
+   xset +fp $OZHOME/demo/fonts
+fi
 
 
 # want to use an older version?
-if ($?OZVERSION) then
-  setenv PATH ${OZVERSION}:$PATH
-  setenv OZPATH ${OZVERSION}:$OZPATH
-endif
+if [ ${OZVERSION-0} = 0 ];  then
+  PATH=${OZVERSION}:$PATH; export PATH
+  OZPATH=${OZVERSION}:$OZPATH; export OZPATH
+fi
 
 
-set cmd=`basename $howcalled`
-
-if ($cmd == "oz+") then
-  exec $LEMACS -l $OZHOME/elisp/ozstartup.el
-endif
-
-
-
-#setting line editor
-set ILE=ile
-if ($TERM == emacs) set ILE=""  # running under emacs
+# setting line editor
+if [ ! -f /usr/share/gs/bin/ile -o $TERM = emacs ]; then
+   ILE=""  # running under emacs
+else
+   ILE=/usr/share/gs/bin/ile
+fi
 
 
-# set echo
 
-if ($cmd == "oz.compiler") then
-    if ($TERM == "emacs") then
-       exec oz.compiler.bin +E `echo $* |  sed -e 's/-/+/g'`
-    else
-       exec xterm -name "OzCompiler" \
-            -T "Oz Compiler Input Window" \
-            -e $ILE oz.compiler.bin `echo $* |  sed -e 's/-/+/g'`
-    endif
-endif
+cmd=`basename $howcalled`
 
+case "$cmd" in
 
-if ($cmd == "oz.machine") then
-   if ($TERM == "emacs") then
-     exec oz.machine.bin -E $*
-   else
-     (xterm -title 'Oz Machine' -e oz.machine.bin $* &) >& /dev/null
-   endif
-  exit 0
-endif
+   oz)
+       exec $LEMACS -l $OZHOME/elisp/ozstartup.el
+   ;;
 
-exec $ILE oz.compiler.bin $*
+   oz.compiler)
+       if [ $TERM = "emacs" ]; then
+          exec $ARCHBIN/oz.compiler.bin +E `echo $* |  sed -e 's/-/+/g'`
+       else
+          exec xterm -name "OzCompiler" \
+               -T "Oz Compiler Input Window" \
+               -e $ILE $ARCHBIN/oz.compiler.bin `echo $* |  sed -e 's/-/+/g'`
+       fi
+   ;;
+
+   oz.machine)
+      if [ $TERM = "emacs" ]; then
+        exec $ARCHBIN/oz.machine.bin -E $*
+      else
+        xterm -title 'Oz Machine' -e $ARCHBIN/oz.machine.bin $* > /dev/null 2>&1 &
+      fi
+      exit 0
+   ;;
+
+   oz-)
+       exec $ILE oz.compiler.bin $*
+   ;;
+
+   *)
+       echo "Unknown invocation of Oz via '$cmd'" 1>&2
+       exit 1
+   ;;
+esac

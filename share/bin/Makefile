@@ -1,26 +1,15 @@
-SHELL = /bin/sh
+SHELL=/bin/sh
+SCRIPTS = oz oz2lpr
+LINKS = oz- oz.compiler oz.machine
 
+BINDIR = /usr/share/gs/soft/oz/bin
+#BINDIR = ./bin
 
-
-
-
-
-
-
-
-
-help:
-        @echo ""
-        @echo "The following targets are available"
-        @echo "(use 'make <target>' for installation)"
-        @echo " oz2lpr          mehl@dfki.uni-sb.de"
-        @echo ""
-
-Makefile: Makefile.m4
-        m4 Makefile.m4 > Makefile
-
-
-oz2lpr: /usr/share/gs/soft/oz/bin/oz2lpr
-
-/usr/share/gs/soft/oz/bin/oz2lpr:   oz2lpr.csh
-        install -m 555 $< $@
+install:
+        install -m 555 $(SCRIPTS) $(BINDIR)
+        @cd  $(BINDIR); set -x; \
+        for file in $(LINKS); \
+        do\
+           rm -f $$file; \
+           ln -s oz $$file; \
+        done
