@@ -609,7 +609,7 @@ int pipeHandler(int, void *arg)
           if (aux==RAISE) {
             ControlVarRaise(controlvar,am.getExceptionValue());
           } else {
-            Assert(aux==PROCEED);
+            Assert(aux==PROCEED); // mm_u
             unlink(pi->file);
             ControlVarUnify(controlvar,pi->out,other);
           }
