@@ -1161,7 +1161,7 @@ void PrTabEntry::printPrTabEntries()
     samplesTotal += aux->samples;
     if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples ||
         aux->szVars) {
-      char *name = ozstrdup(toC(aux->printname)); // cannot have 2 toC in one line
+      char *name = strdup(toC(aux->printname)); // cannot have 2 toC in one line
       printf("%20.20s Created: %5u Called: %6u Heap: %5u B, Samples: %5u, Vars: %5u",
              name,aux->numClosures,aux->numCalled,aux->heapUsed,
              aux->samples,aux->szVars);

@@ -68,7 +68,7 @@ Literal *addToLiteralTab(const char *str, HashTable *table,
   }
 
   if (needsDup)
-    str = ozstrdup(str);
+    str = strdup(str);
 
   if (isName) {
     found = NamedName::newNamedName(str);

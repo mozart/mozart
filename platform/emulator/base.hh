@@ -48,6 +48,10 @@
 
 // more includes at end!
 
+#ifdef __FCC_VERSION
+#undef HAVE_STRDUP
+#endif
+
 #if !defined(__GNUC__) && !defined(NULL)
 # define NULL 0
 #endif
@@ -459,13 +463,13 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val);
 // var_simple.cc
 OzVariable *oz_newSimpleVar(Board *bb);
 
-/* Ultrix does not have 'strdup' */
-inline char *ozstrdup(const char *s)
-{
+#ifndef HAVE_STRDUP
+inline char * strdup(const char *s) {
   char *ret = new char[strlen(s)+1];
   strcpy(ret,s);
   return ret;
 }
+#endif
 
 inline
 int oz_char2uint(char c) {

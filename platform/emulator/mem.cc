@@ -38,6 +38,14 @@
 Bool across_chunks;
 #endif
 
+#ifdef __FCC_VERSION
+#define caddr_t void *
+extern "C" {
+  int brk(void *);
+  void * sbrk(ptrdiff_t);
+}
+#endif
+
 // ----------------------------------------------------------------
 // heap memory
 

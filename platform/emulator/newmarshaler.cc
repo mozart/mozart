@@ -470,7 +470,7 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
           if (strcmp("", printname) == 0) {
             aux = Name::newName(am.currentBoard());
           } else {
-            aux = NamedName::newNamedName(ozstrdup(printname));
+            aux = NamedName::newNamedName(strdup(printname));
           }
           aux->import(gname);
           value = makeTaggedLiteral(aux);
@@ -492,7 +492,7 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
         char *printname = unmarshalString(bs);
         OZ_Term value;
 
-        NamedName *aux = NamedName::newCopyableName(ozstrdup(printname));
+        NamedName *aux = NamedName::newCopyableName(strdup(printname));
         value = makeTaggedLiteral(aux);
         b->buildValue(value);
         b->set(value, refTag);

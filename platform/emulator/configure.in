@@ -388,6 +388,8 @@ if test -z "${enable_wincross}"; then
     AC_CHECK_FUNCS(sbrk dlopen mmap)
 fi
 
+AC_CHECK_FUNC(strdup,AC_DEFINE(HAVE_STRDUP))
+
 dnl *****************************************************************
 dnl MISC
 dnl *****************************************************************

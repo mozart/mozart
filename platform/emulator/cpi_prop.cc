@@ -160,7 +160,7 @@ char *OZ_Propagator::toString() const
 {
   ozstrstream str;
   str << (*this);
-  return ozstrdup(str.str());
+  return strdup(str.str());
 }
 
 

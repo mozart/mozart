@@ -605,7 +605,7 @@ OZ_BI_iodefine(unix_uName,0,1) {
   if (uname(&buf) < 0)
     RETURN_UNIX_ERROR("uname");
 
-#if defined(SUNOS_SPARC) || defined(LINUX)
+#if (defined(SUNOS_SPARC) || defined(LINUX)) && !defined(__FCC_VERSION)
 
   char dname[65];
   if (getdomainname(dname, 65)) {
@@ -1752,7 +1752,7 @@ OZ_BI_iodefine(unix_tmpnam,0,1) {
   if (!(filename = ostmpnam(NULL))) {
     return raiseUnixError("tmpnam",0, "OS.tmpnam failed.", "os");
   }
-  filename = ozstrdup(filename);
+  filename = strdup(filename);
 
   OZ_RETURN_STRING(filename);
 } OZ_BI_ioend
@@ -1769,6 +1769,12 @@ OZ_BI_iodefine(unix_getEnv,1,1)
 
   OZ_RETURN_STRING(envValue);
 } OZ_BI_ioend
+
+#ifdef __FCC_VERSION
+extern "C" {
+  int putenv(char *);
+}
+#endif
 
 
 /* putenv is NOT POSIX !!! */

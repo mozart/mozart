@@ -110,7 +110,7 @@ void ConfigData::init() {
    * so split it up */
   extern char *ozplatform;
 
-  osname = ozstrdup(ozplatform);
+  osname = strdup(ozplatform);
   cpu = osname;
   while(1) {
     if (*cpu=='-') {

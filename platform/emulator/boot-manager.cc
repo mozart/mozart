@@ -490,7 +490,7 @@ OZ_BI_define(BIObtainNative, 2, 1) {
   }
 
   if (mod_name)
-    mod_name = ozstrdup(mod_name);
+    mod_name = strdup(mod_name);
 
   OZ_RETURN(ozInterfaceToRecord((*init_function)(), mod_name, OK));
 

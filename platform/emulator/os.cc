@@ -39,6 +39,7 @@
 #include "ozconfig.hh"
 
 #include <errno.h>
+#include <string.h>
 #include <limits.h>
 
 #ifdef HAVE_DLOPEN

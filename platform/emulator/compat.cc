@@ -95,7 +95,7 @@ OZ_BI_define(compat_importName, 2, 1)
     if (printName[0] == '\0')
       nm = Name::newName(am.currentBoard());
     else
-      nm = NamedName::newNamedName(ozstrdup(printName));
+      nm = NamedName::newNamedName(strdup(printName));
     nm->import(gname);
 
     ret = makeTaggedLiteral(nm);
