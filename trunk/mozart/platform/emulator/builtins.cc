@@ -6379,12 +6379,19 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &va
   }
 
   TaggedRef old = cellGetContentsFast(getCell(state));
-  if (old)     
-    return tagged2SRecord(deref(old));
+  if (old) {
+    old = deref(old);
+    if (!isAnyVar(old))
+      return tagged2SRecord(old);
+  }
   
   old = makeTaggedRef(newTaggedUVar(am.currentBoard));
-  cellDoExchange(getCell(state),old,old,NULL);
-  OZ_suspendOnInternal(old);
+  //cellDoAccess(getCell(state),old);
+  cellDoExchange(getCell(state),old,old,am.currentThread);
+  if (!isAnyVar(deref(old)))
+    return tagged2SRecord(deref(old));
+
+  // OZ_suspendOnInternal(old);
 
   RefsArray x = allocateRefsArray(3,NO);
   x[0] = old;
