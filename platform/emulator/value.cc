@@ -1403,3 +1403,36 @@ OZ_Term __OMR_dynamic(const int width, OZ_Term label, Arity * arity,
 
   return makeTaggedSRecord(sr);
 }
+
+
+TaggedRef oz_getPrintName(TaggedRef t) {
+  TaggedRef ot = t;
+  DEREF(t, tPtr, tTag);
+  switch (tTag) {
+  case TAG_CONST:
+    {
+      ConstTerm *rec = tagged2Const(t);
+      switch (rec->getType()) {
+      case Co_Builtin:
+        return ((Builtin *) rec)->getName();
+      case Co_Abstraction:
+        return ((Abstraction *) rec)->getName();
+      case Co_Class:
+        return oz_atom((OZ_CONST char*)((ObjectClass *) rec)->getPrintName());
+      default:
+        break;
+      }
+      break;
+    }
+  case TAG_UVAR: case TAG_CVAR: // FUT
+    return oz_atom((OZ_CONST char*) oz_varGetName(ot));
+  case TAG_LITERAL:
+    {
+      const char *s = tagged2Literal(t)->getPrintName();
+      return (s ? oz_atom(s) : AtomEmpty);
+    }
+  default:
+    break;
+  }
+  return AtomEmpty;
+}

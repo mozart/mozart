@@ -552,11 +552,6 @@ void pushContX(TaskStack *stk,
 #define GetSPointerWrite(ptr) (TaggedRef*)(((long)ptr)-1)
 
 
-/* spointer also abused for return values of functions */
-#define SetFunReturn(val) sPointer = (TaggedRef*) val
-#define GetFunReturn()    (TaggedRef)sPointer
-
-
 #ifdef DEBUG_LIVENESS
 extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);
 #define CheckLiveness(PC) checkLiveness(PC,XREGS,CAP->getPred()->getMaxX())

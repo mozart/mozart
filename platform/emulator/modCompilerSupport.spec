@@ -82,6 +82,14 @@
 
     ##* Assembler Support
 
+    'getInstructionSizes'       => { in  => [],
+                                     out => ['+record'],
+                                     BI  => BIgetInstructionSizes},
+
+    'storeInstr'                => { in  => ['+record','+foreignPointer','+dictionary'],
+                                     out => [],
+                                     BI  => BIstoreInstr},
+
     'allocateCodeBlock'         => { in  => ['+int','+[value]'],
                                      out => ['+foreignPointer','+procedure/0'],
                                      BI  => BIallocateCodeBlock},
@@ -89,10 +97,6 @@
     'getOpcode'                 => { in  => ['+atom'],
                                      out => ['+int'],
                                      BI  => BIgetOpcode},
-
-    'getInstructionSizes'       => { in  => [],
-                                     out => ['+record'],
-                                     BI  => BIgetInstructionSizes},
 
     'addDebugInfo'              => { in  => ['+foreignPointer','+atom','+int'],
                                      out => [],
