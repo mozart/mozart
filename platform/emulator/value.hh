@@ -78,9 +78,10 @@ public:
   int getOthers() { return flagsAndOthers>>sizeOfLitFlags; }
   void setOthers(int value) { flagsAndOthers = getFlags()|(value<<sizeOfLitFlags); }
 
-  Bool isName()      { return (getFlags()&Lit_isName); }
-  Bool isNamedName() { return (getFlags()&Lit_isNamedName); }
-  Bool isAtom()      { return !isName(); }
+  Bool isName()       { return (getFlags()&Lit_isName); }
+  Bool isNamedName()  { return (getFlags()&Lit_isNamedName); }
+  Bool isUniqueName() { return (getFlags()&Lit_isUniqueName); }
+  Bool isAtom()       { return !isName(); }
 
   Literal() { Assert(0); }
 
