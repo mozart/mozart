@@ -281,11 +281,8 @@ TaggedRef Object::getArityList()
 {
   TaggedRef ret = oz_nil();
 
-  SRecord *feat=getFreeRecord();
-  if (feat) ret = feat->getArityList();
-
   SRecord *rec=getClass()->getUnfreeRecord();
-  if (rec) ret=appendI(ret,rec->getArityList());
+  if (rec) ret=rec->getArityList();
   return ret;
 }
 

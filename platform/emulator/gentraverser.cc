@@ -511,7 +511,7 @@ repeat:
 
       //
       SRecord *feat = tagged2SRecord(value);
-      TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
+      TaggedRef ff = feat->getFeature(NameOoFeat);
       // RALF IS WORKING HERE
 #if 0
       Bool locking = oz_isTrue(oz_deref(feat->getFeature(NameOoLocking)));

@@ -829,7 +829,7 @@ LBLagain:
         t = tagged2ObjectClass(term)->classGetFeature(fea);
         if (!t) {
           TaggedRef cfs;
-          cfs = oz_deref(tagged2ObjectClass(term)->classGetFeature(NameOoUnFreeFeat));
+          cfs = oz_deref(tagged2ObjectClass(term)->classGetFeature(NameOoFeat));
           if (oz_isSRecord(cfs)) {
             t = tagged2SRecord(cfs)->getFeature(fea);
             if (t) {
@@ -4255,23 +4255,23 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
 }
 
 
-OZ_BI_define(BImakeClass,6,1)
-{
-  OZ_Term fastmeth   = OZ_in(0); { DEREF(fastmeth,_1,_2); }
-  OZ_Term features   = OZ_in(1); { DEREF(features,_1,_2); }
-  OZ_Term ufeatures  = OZ_in(2); { DEREF(ufeatures,_1,_2); }
-  OZ_Term defmethods = OZ_in(3); { DEREF(defmethods,_1,_2); }
-  OZ_Term locking    = OZ_in(4); { DEREF(locking,_1,_2); }
-  OZ_Term sited      = OZ_in(5); { DEREF(sited,_1,_2); }
+OZ_BI_define(BInewClass,3,1) {
+  OZ_Term features   = OZ_in(0); { DEREF(features,_1,_2); }
+  OZ_Term locking    = OZ_in(1); { DEREF(locking,_1,_2); }
+  OZ_Term sited      = OZ_in(2); { DEREF(sited,_1,_2); }
 
-  if (!oz_isDictionary(fastmeth))   { oz_typeError(0,"dictionary"); }
-  if (!oz_isRecord(features))       { oz_typeError(1,"record"); }
-  if (!oz_isRecord(ufeatures))      { oz_typeError(2,"record"); }
-  if (!oz_isDictionary(defmethods)) { oz_typeError(3,"dictionary"); }
+  SRecord * fr = tagged2SRecord(features);
+
+  OZ_Term fastmeth   = fr->getFeature(NameOoFastMeth);
+  { DEREF(fastmeth,_1,_2); }
+  OZ_Term ufeatures  = fr->getFeature(NameOoFeat);
+  { DEREF(ufeatures,_1,_2); }
+  OZ_Term defmethods = fr->getFeature(NameOoDefaults);
+  { DEREF(defmethods,_1,_2); }
 
   SRecord *uf = oz_isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
 
-  ObjectClass *cl = new ObjectClass(tagged2SRecord(features),
+  ObjectClass *cl = new ObjectClass(fr,
                                     tagged2Dictionary(fastmeth),
                                     uf,
                                     tagged2Dictionary(defmethods),
@@ -4414,7 +4414,7 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 
   TaggedRef attrclone = cloneObjectRecord(attr,NO);
 
-  TaggedRef freefeat = realclass->classGetFeature(NameOoFreeFeatR);
+  TaggedRef freefeat = realclass->classGetFeature(NameOoFreeFeat);
   { DEREF(freefeat,_1,_2); }
   Assert(!oz_isVariable(freefeat));
   TaggedRef freefeatclone = cloneObjectRecord(freefeat,OK);

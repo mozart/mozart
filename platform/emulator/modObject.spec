@@ -42,14 +42,13 @@
                      out => ['value'],
                      bi  => BIexchange},
 
-     'copyRecord'=> { in  => ['+record'],
-                      out => ['+record'],
-                      BI  => BIcopyRecord},
+     'copyRecord'=>{ in  => ['+record'],
+                     out => ['+record'],
+                     BI  => BIcopyRecord},
 
-     'makeClass'=> { in  => ['+dictionary','+record','+record',
-                             '+dictionary','+bool','+bool'],
+     'getClass' => { in  => ['+object'],
                      out => ['+class'],
-                     BI  => BImakeClass},
+                     bi  => BIgetClass},
 
      ','        => { in  => ['+class','+record'],
                      out => [],
