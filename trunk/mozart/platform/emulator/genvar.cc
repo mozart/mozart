@@ -15,14 +15,18 @@
 #endif
 
 
-#include "fdgenvar.hh"
+#include "genvar.hh"
 #include "am.hh"
 
-GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn, Board * n)
-: type(t), SVariable(n == NULL ? am.currentBoard : n, pn){}
+GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn, Board * n) :
+  SVariable(n == NULL ? am.currentBoard : n, pn)
+{
+  setType(t);
+}
 
 
-Bool GenCVariable::isLocalVariable(void){
+Bool GenCVariable::isLocalVariable(void)
+{
   Board * home_board = getHome1();
 
   return (home_board == am.currentBoard ||
@@ -34,59 +38,6 @@ void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term,
 			     Bool unifyVars)
 {
   sl = am.checkSuspensionList(tagged2SuspVar(var), var, sl, term, NULL, unifyVars);
-}
-
-
-Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
-			 TaggedRef * tptr2, TaggedRef term2, TypeOfTerm ttag2)
-{
-  switch (type){
-  case FDVariable:
-    return ((GenFDVariable *)this)->unifyFD(tptr1, term1, ttag1,
-					    tptr2, term2, ttag2);
-  default:
-    error("Unexpected type generic variable at %s:%d.",
-	  __FILE__, __LINE__);
-    break;
-  }
-  return NO;
-} 
-
-int GenCVariable::getSuspListLength(void)
-{
-  switch (type){
-  case FDVariable:
-    return ((GenFDVariable *)this)->getSuspListLength();
-  default:
-    error("Unexpected type generic variable at %s:%d.",
-	  __FILE__, __LINE__);
-    break;
-  }
-  return -1;
-}
-
-
-size_t GenCVariable::getSize(void){
-  switch (type){
-  case FDVariable:
-    return ((GenFDVariable*)this)->getSize();
-  default:
-    error("Unexpected type generic variable at %s:%d.",
-	  __FILE__, __LINE__);
-    break;
-  }
-  return 0;
-} 
-
-
-Bool GenCVariable::valid(TaggedRef val)
-{
-  Assert(type==FDVariable);
-  switch (type){
-  case FDVariable:
-  default:
-    return ((GenFDVariable*)this)->valid(val);
-  }  
 }
 
 
