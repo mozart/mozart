@@ -1377,7 +1377,7 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t)
 {
   PD((MARSHAL_BE,"unmarshal begin: %s s:%s","$1",buf->siteStringrep()));
   refTable->reset();
-  Assert(creditSite==NULL);	
+  Assert(creditSiteIn==NULL);	
   Assert(refTrail->isEmpty());
   if(buf->get()==DIF_SECONDARY) {Assert(0);return NO;}
   vers=unmarshalString(buf);

@@ -117,6 +117,8 @@ enum PO_TYPE {
  *     PO_EXTENDED | PO_BIGCREDIT                              (owner)
  *     PO_EXTENDED | PO_MASTER                                 (borrow)
  *     PO_EXTENDED | PO_MASTER | PO_BIGCREDIT                  (borrow)
+ *     PO_EXTENDED | PO_SLAVE                                  (borrow)
+ *     PO_EXTENDED | PO_SLAVE  | PO_MASTER                     (borrow)
  *     PO_EXTENDED | PO_SLAVE  | PO_MASTER | PO_BIGCREDIT      (borrow)
  */
 
@@ -221,7 +223,8 @@ static double TABLE_EXPAND_FACTOR=2.00;
 #define TABLE_BUFFER 50
 #define TABLE_WORTHWHILE_REALLOC 200
 
-extern Site* creditSite;
+extern Site* creditSiteIn;
+extern Site* creditSiteOut;
 extern Site* mySite;
 extern void sendSecondaryCredit(Site* s,Site* site,int index,Credit c);
 
@@ -263,7 +266,7 @@ protected:
     Assert(uOB.credit>c);
     Assert(!isExtended());
     uOB.credit -=c;}
-
+  
   void setCreditOB(Credit c){
     uOB.credit=c;}    
 
@@ -316,6 +319,8 @@ public:
     Assert(credit[1]==START_CREDIT_SIZE);
     Assert(next==NULL);
     return credit[0];}
+  Credit getCredit(int Index){
+    return credit[Index];}
   void expand();
     
 };
@@ -387,11 +392,11 @@ public:
 
   void removeExtension();
   void receiveCredit(int i){
-    if(creditSite==NULL){
+    if(creditSiteIn==NULL){
       addCredit(1);
       return;}
-    sendSecondaryCredit(creditSite,mySite,i,1);
-    creditSite=NULL;}
+    sendSecondaryCredit(creditSiteIn,mySite,i,1);
+    creditSiteIn=NULL;}
 
   void removeGCMark(){ removeFlags(PO_GC_MARK); }
   
@@ -422,6 +427,7 @@ public:
   OwnerEntry* array;  /* TODO move to private */
 
   void print();
+  OZ_Term extract_info();
 
   OwnerEntry *getOwner(int i)  { Assert(i>=0 && i<size); return &array[i];}
   
@@ -569,6 +575,7 @@ private:
   void thresholdCheck(Credit c){
     if((getCreditOB()+c>BORROW_LOW_THRESHOLD) &&
        (getCreditOB()<=BORROW_LOW_THRESHOLD)){
+      Assert(!isExtended());
       moreCredit();}}
 
   void removeSoleExtension(Credit);
@@ -604,6 +611,8 @@ public:
     return getFlags() & (~PO_GC_MARK|PO_EXTENDED);}
 
   void print();
+  void print_entry(int);
+  OZ_Term extract_info(int);
 
   void gcBorrowRoot(int);
   void gcBorrowUnusedFrame(int);
@@ -644,42 +653,55 @@ public:
 	oz_site2String(getNetAddress()->site),
 	getNetAddress()->index,c,cur));
     if(cur>BORROW_HIGH_THRESHOLD){
-      giveBackCredit(cur-BORROW_HIGH_THRESHOLD);
+      giveBackCredit(c+cur-BORROW_HIGH_THRESHOLD);
       setCreditOB(BORROW_HIGH_THRESHOLD);
       return;}
     setCreditOB(cur+c);}
 
   Bool getOnePrimaryCredit(){
-    if(isPersistent())
-      return OK;
+    PD((CREDIT,"Trying to get one primary credit"));
+    if(isPersistent()) {
+      PD((CREDIT,"Persistent, no credit needed"));
+      PD((CREDIT,"%d credit left", getCreditOB()));
+      return OK;}
     if(isExtended()){
       PD((CREDIT,"Structure extended, no primary"));
       return NO;}
     Credit tmp=getCreditOB();
     Assert(tmp>0);
     if(tmp-1<BORROW_MIN) {
-      PD((CREDIT,"low credit %d",tmp));
+      PD((CREDIT,"gopc low credit %d",tmp));
+      PD((CREDIT,"got no credit"));
       return NO;}
     setCreditOB(tmp-1);
     thresholdCheck(1);
+    PD((CREDIT,"Got one credit, %d credit left", tmp-1));
     return OK;}
 
   Credit getSmallPrimaryCredit(){
+    PD((CREDIT,"Trying to get %d primary credit",
+	BORROW_GIVE_CREDIT_SIZE));
     if(isPersistent())
       return PERSISTENT_CRED;
     if(isExtended()){
+      PD((CREDIT,"Structure extended, no primary"));
       return NO;}      
     Credit tmp=getCreditOB();
     Assert(tmp>0);
     if(tmp-BORROW_GIVE_CREDIT_SIZE >= BORROW_MIN){
       setCreditOB(tmp-BORROW_GIVE_CREDIT_SIZE);
+      PD((CREDIT,"Got %d credit, %d credit left", 
+	  BORROW_GIVE_CREDIT_SIZE, 
+	  tmp-BORROW_GIVE_CREDIT_SIZE));
       thresholdCheck(BORROW_GIVE_CREDIT_SIZE);
       return BORROW_GIVE_CREDIT_SIZE;}
-    PD((CREDIT,"low credit %d",tmp));
+    PD((CREDIT,"gspc low credit %d",tmp));
     if(tmp-2>=BORROW_MIN){
       setCreditOB(tmp-2);
+      PD((CREDIT,"Got 2 credit, %d credit left", tmp-2));
       thresholdCheck(2);      
       return 2;}
+    PD((CREDIT,"got no credit"));
     return 0;}
 
   Site *getOneSecondaryCredit();
@@ -690,20 +712,20 @@ public:
   void moreCredit();
 
   void receiveCredit(){
-    if(creditSite==NULL){
+    if(creditSiteIn==NULL){
       addPrimaryCredit(1);
       return;}
-    addSecondaryCredit(1,creditSite);
-    creditSite=NULL;}
+    addSecondaryCredit(1,creditSiteIn);
+    creditSiteIn=NULL;}
 
   void getOneMsgCredit(){
     if(getOnePrimaryCredit()){
       PD((CREDIT,"Got one primary"));
-      Assert(creditSite==NULL);
+      Assert(creditSiteOut==NULL);
       return;}
-    creditSite=getOneSecondaryCredit();
-    PD((CREDIT,"Got one secondary %s",oz_site2String(creditSite)));
-    Assert(creditSite);
+    creditSiteOut=getOneSecondaryCredit();
+    PD((CREDIT,"Got one secondary %s",oz_site2String(creditSiteOut)));
+    Assert(creditSiteOut);
     return;}
 
   void removeGCMark(){
