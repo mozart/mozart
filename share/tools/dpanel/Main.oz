@@ -88,6 +88,7 @@ define
    end
    
    class ClientCntrler
+      feat sd
       attr
 	 clients:nil
       meth getClient(S $)
@@ -97,15 +98,28 @@ define
       meth memberClient(S $)
 	 {Filter @clients fun{$ CS} CS.site == S end} \= nil
       end
-      meth init skip end
-      meth connecting(P S)
-	 {System.show connectionAtempt#S}
+      meth init(SD)  self.sd = SD end
+      meth connecting(P S Id)
 	 if {Not {self memberClient(S $)}} then
 	    {Send P connected}
 	    clients<-{New ClientClass init(S P)}|@clients 
+	    thread
+	       %% Ok, this is UGLY
+	       %% The site might not be present in the sitedict yet. One could
+	       %% offcourse think of syncronisation, but I'm feed up with this
+	       %% poorly designed shit. I'll do some old fashined polling.
+	       %% Erik, proud of producing ugly code.
+	       
+	       {For 1 10 1 proc{$ _}
+			      {Delay 1000}
+			      try 
+				 {{self.sd getSite(Id $)} paneClient}
+			      catch _ then skip end
+			   end}
+	    end
 	 end
       end
-
+      
       meth data(Sstat Site)
 	 if {self memberClient(Site $)} then
 	    Client =  {self getClient(Site $)}
@@ -128,7 +142,9 @@ define
 	       {ST setGui(MGUI)}
 	       {Client setup(gui:MGUI sd:SD st:ST)}
 	       {Client setState(start(1000))}
-	       {Send Client.port start(1000)}
+	       try
+		  {Send Client.port start(1000)}
+	       catch _ then skip end
 	    end
 	 end
       end
@@ -141,7 +157,9 @@ define
 	       {Client setState(connected)}
 	       {{Client getGui($)}.top tkClose}
 	       {Client setup(gui:none sd:none st:none)}
-	       {Send Client.port stop}
+	       try 
+		  {Send Client.port stop}
+	       catch _ then skip end
 	    end
 	 end
       end
@@ -162,17 +180,17 @@ define
 			   end}
       end
 
-      ClientControler = {New ClientCntrler init}
    in
       OpenNetInfo=GUI.openNetInfo
-      {System.show apa}
       {Exchange Running O N}
       if O\=false then
 	 {GUI.reOpen}
 	 %% Start the thread again
 	 {Access RunSync} = unit
 	 N=O
-      else ST OT BT NI SD MI in
+      else ST OT BT NI SD MI
+	 ClientControler
+      in
 	 {GUI.open RunSync}
 	 
 	 N = true
@@ -192,6 +210,7 @@ define
 							received:{S getTotReceived($)})}
 			       end)}
 	 {GCLineDraw}
+	 ClientControler = {New ClientCntrler init(SD)}
 	 
 	 thread {Updater ST OT BT NI MI} end
 	 thread
@@ -219,7 +238,6 @@ define
    fun{Server}
       PickledPort
    end
-   {System.show loadingmain}
 end
 
 

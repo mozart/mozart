@@ -26,6 +26,7 @@ functor
 import
    DPPane(siteStatistics) at 'x-oz://boot/DPPane'
    DPB at 'x-oz://boot/DPB'
+   System
 export
    sitesDict:SitesDict
    sites:SiteInfo
@@ -101,7 +102,8 @@ define
 	 deltaReceived
 	 graphKey
 	 state
-      
+	 paneClient:false
+	 
       meth init(S G SD)
 	 self.key = S.siteid
 	 self.info = S
@@ -112,12 +114,13 @@ define
 	 act <- false
 	 col <- none
 	 gen <- 0
-	 sent <- 0
-	 received <- 0
+	 sent <- S.sent
+	 received <- S.received
 	 lastRTT <- {IntToFloat ~1}
-	 deltaSent <- 0
-	 deltaReceived <- 0
+	 deltaSent <- ~S.sent
+	 deltaReceived <- ~S.received
 	 state <- S.state
+	 {System.show S}
       end
 
       meth getCol(who:W $)
@@ -138,6 +141,7 @@ define
 	    col <- none
 	 else skip end
       end
+      meth paneClient paneClient <- true end 
       meth getGen($) @gen end
       meth setGen(G) gen<-G end
       meth getSent($) @deltaSent end
@@ -150,7 +154,7 @@ define
       meth getLastRTT($) @lastRTT end
       meth setGraphKey(K) graphKey<-K end
       meth getGraphKey($) @graphKey end
-      meth getText($) self.info.ip#":"#self.info.port#"\t"#@state#if @state==connected then "("#{self getLastRTT($)}#")" else "" end
+      meth getText($) if @paneClient then "*" else "" end#self.info.ip#":"#self.info.port#"\t"#@state#if @state==connected then "("#{self getLastRTT($)}#")" else "" end
       end
       meth updateState(NewS ?Updated)
 	 Updated = NewS \= (state<-NewS)
@@ -269,6 +273,8 @@ define
 	     in
 		self.ActiveSites.(S.siteid):=Si
 		{Si setGraphKey(Id)}
+		{Si sent(0)}
+		{Si received(0)}
 		{self.GUI.sactivity addGraph(key:Id col:Col stp:'' val:0.0)}
 		{self.GUI.srtt addGraph(key:Id col:Col stp:'' val:0.0)}
 	     end		
