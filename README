@@ -28,17 +28,14 @@ The Mozart repository structure is as follows:
       test/
 		-- testfiles
 
-      core/
-		-- Oz library source code needed to boot the system
+      lib/
+		-- Oz library source code
 	compiler/	
 	init/		(Initial url resolver...)
 	ap/		(Application programming)
 	op/		(Open programming)
 	sp/     	(System programming)
 	cp/		(Constraint programming)
-
-      lib/
-		-- Oz library source code not needed for booting system
 	wp/		(Window programming)
 	dp/		(Distributed programming)
 
