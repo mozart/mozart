@@ -33,7 +33,7 @@ LIB_POSIX_DLOAD = $(addprefix $(DIR_DLOAD)/,$(POSIX_DLOAD))
 
 .PHONY: all install install-load install-dload \
         posix install-posix install-posix-load install-posix-dload \
-        clean realclean veryclean distclean \
+        clean veryclean distclean \
         bootstrap
 
 all:    posix
@@ -65,7 +65,7 @@ $(ALL_DLOAD): %.so : %.o
 %.o: %.c
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-clean realclean veryclean:
+clean veryclean:
         -$(RM) *~ *.ozc *.o *.so *.oz
 
 distclean: clean

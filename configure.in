@@ -38,13 +38,6 @@ OZ_INIT
 BUILDTOP=`pwd`
 AC_SUBST(BUILDTOP)
 
-AC_PROG_MAKE_SET
-AC_PROG_INSTALL
-
-#OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-#OZ_PATH_PROG(DYNLD,          ozdynld)
-OZ_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs)
-
 AC_CONFIG_SUBDIRS(platform share contrib)
 
 AC_OUTPUT(Makefile)

@@ -45,68 +45,41 @@ then
   then
      OZPATH=.
   fi
-  OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/tools:${OZHOME}/platform/${OZPLATFORM}
+  OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/tools
   export OZPATH
   # increment path
   PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
   export PATH
-  MANPATH=${OZHOME}/man:${MANPATH}
-  export MANPATH
   OZ_PI=1
   export OZ_PI
 fi
 
-# where is Emacs?
-if test "$cmd" = "oz" -a -z "${OZEMACS}"
-then
-
-    IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
-    for name in emacs lemacs xemacs; do
-       for dir in $PATH; do
-         test -z "$dir" && dir=.
-            if test -f $dir/$name; then
-            # Not all systems have dirname.
-                OZEMACS=$dir/$name
-                break 2
-            fi
-        done
-        done
-        IFS="$saveifs"
-        if test -z "${OZEMACS}"
-        then
-            echo "Cannot find emacs" 1>&2
-            echo "Try setting environment variable OZEMACS" 1>&2
-            exit 1
-        fi
-    fi
-
-    export OZEMACS
-
-
 case "$cmd" in
 
    oz)
-        # store cmd line args starting from "-a" in $OZARGV
-        OZARGV=""
-        EMACSARGV=""
-        while test $# -gt 0
-        do
-           case "$1" in
-            -a|--)  shift
-                 while test $# -gt 0
-                 do
-                    OZARGV="$OZARGV $1"
-                    shift
-                 done
-            ;;
-            *)   EMACSARGV="$EMACSARGV $1"
-                 shift
-            ;;
-           esac
-        done
-        export OZARGV
-        exec  $OZEMACS -l $OZHOME/lib/elisp/oz.elc -f run-oz $EMACSARGV
-   ;;
+        if test -z "${OZEMACS}"
+        then
+            IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
+            for name in emacs lemacs xemacs; do
+                for dir in $PATH; do
+                    test -z "$dir" && dir=.
+                    if test -f $dir/$name; then
+                        # Not all systems have dirname.
+                        OZEMACS=$dir/$name
+                        break 2
+                    fi
+                done
+            done
+            IFS="$saveifs"
+            if test -z "${OZEMACS}"
+            then
+                echo "Cannot find emacs" 1>&2
+                echo "Try setting environment variable OZEMACS" 1>&2
+                exit 1
+            fi
+        fi
+        exec $OZEMACS -l $OZHOME/lib/elisp/oz.elc -f run-oz "$@"
+        ;;
 
    ozengine)  # that is the real thing
         if test $# -lt 1
@@ -116,11 +89,11 @@ case "$cmd" in
         fi
         url=$1
         shift
-        exec $OZEMULATOR -u $url -a "$@"
-   ;;
+        exec $OZEMULATOR -u $url -- "$@"
+        ;;
 
    *)
-       echo "Unknown invocation of Oz via '$cmd'" 1>&2
-       exit 1
-   ;;
+        echo "Unknown invocation of Oz via '$cmd'" 1>&2
+        exit 1
+        ;;
 esac

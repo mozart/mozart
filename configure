@@ -570,33 +570,28 @@ host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 echo "$ac_t""$host" 1>&6
 
 
-    if test -z "$TOPDIR"
+    if test -z "$SRCTOP"
     then
-        for TOPDIR in   $srcdir \
+        for SRCTOP in   $srcdir \
                         $srcdir/.. \
                         $srcdir/../.. \
                         $srcdir/../../.. \
                         $srcdir/../../../..; do
-          if test -r $TOPDIR/OZVERSION
+          if test -r $SRCTOP/OZVERSION
           then
                 break
           fi
         done
     fi
-    if test ! -r $TOPDIR/OZVERSION
+    if test ! -r $SRCTOP/OZVERSION
     then
-        { echo "configure: error: can't find TOPDIR in $TOPDIR" 1>&2; exit 1; }
+        { echo "configure: error: can't find SRCTOP" 1>&2; exit 1; }
     fi
-
-    oz_topdira=`cd $TOPDIR; pwd`
-    TOPDIR=$oz_topdira
+    SRCTOP=`cd $SRCTOP && pwd`
 
 
-BUILDTOP=`pwd`
-
-
-echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:600: checking whether ${MAKE-make} sets \${MAKE}" >&5
+    echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
+echo "configure:595: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -622,7 +617,7 @@ else
   SET_MAKE="MAKE=${MAKE-make}"
 fi
 
-# Find a good install program.  We prefer a C program (faster),
+    # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
 # incompatible versions:
 # SysV /etc/install, /usr/sbin/install
@@ -633,7 +628,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:637: checking for a BSD compatible install" >&5
+echo "configure:632: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -683,28 +678,25 @@ test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
 
-#OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-#OZ_PATH_PROG(DYNLD,          ozdynld)
-
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e "s/:://g" | sed -e "s/\(^\|:\)\.\(\$\|:\|\/\)/\1$dummy_PWD\2/g"`
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:695: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_MKINSTALLDIRS'+set}'`\" = set"; then
+echo "configure:687: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  case "$MKINSTALLDIRS" in
+  case "$INSTALL_DIR" in
   /*)
-  ac_cv_path_MKINSTALLDIRS="$MKINSTALLDIRS" # Let the user override the test with a path.
+  ac_cv_path_INSTALL_DIR="$INSTALL_DIR" # Let the user override the test with a path.
   ;;
   *)
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $dummy_PATH:$oz_topdira/share/bin:$oz_topdira$ac_dummy; do
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_path_MKINSTALLDIRS="$ac_dir/$ac_word"
+      ac_cv_path_INSTALL_DIR="$ac_dir/$ac_word"
       break
     fi
   done
@@ -712,18 +704,64 @@ else
   ;;
 esac
 fi
-MKINSTALLDIRS="$ac_cv_path_MKINSTALLDIRS"
-if test -n "$MKINSTALLDIRS"; then
-  echo "$ac_t""$MKINSTALLDIRS" 1>&6
+INSTALL_DIR="$ac_cv_path_INSTALL_DIR"
+if test -n "$INSTALL_DIR"; then
+  echo "$ac_t""$INSTALL_DIR" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
 
-    if test ! -n "$MKINSTALLDIRS"
+    if test ! -n "$INSTALL_DIR"
     then
-        MKINSTALLDIRS=undefined
+        INSTALL_DIR=undefined
 
     fi
+
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e "s/\(^\|:\)\.\(\$\|:\|\/\)/\1$dummy_PWD\2/g"`
+    # Extract the first word of "ozinstallsrc", so it can be a program name with args.
+set dummy ozinstallsrc; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:727: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_INSTALL_SRC'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$INSTALL_SRC" in
+  /*)
+  ac_cv_path_INSTALL_SRC="$INSTALL_SRC" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_INSTALL_SRC="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+INSTALL_SRC="$ac_cv_path_INSTALL_SRC"
+if test -n "$INSTALL_SRC"; then
+  echo "$ac_t""$INSTALL_SRC" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    if test ! -n "$INSTALL_SRC"
+    then
+        INSTALL_SRC=undefined
+
+    fi
+
+    #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+    #OZ_PATH_PROG(DYNLD,          ozdynld)
+
+
+BUILDTOP=`pwd`
 
 
 subdirs="platform share contrib"
@@ -877,12 +915,13 @@ s%@host_alias@%$host_alias%g
 s%@host_cpu@%$host_cpu%g
 s%@host_vendor@%$host_vendor%g
 s%@host_os@%$host_os%g
-s%@TOPDIR@%$TOPDIR%g
-s%@BUILDTOP@%$BUILDTOP%g
+s%@SRCTOP@%$SRCTOP%g
 s%@SET_MAKE@%$SET_MAKE%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
-s%@MKINSTALLDIRS@%$MKINSTALLDIRS%g
+s%@INSTALL_DIR@%$INSTALL_DIR%g
+s%@INSTALL_SRC@%$INSTALL_SRC%g
+s%@BUILDTOP@%$BUILDTOP%g
 s%@subdirs@%$subdirs%g
 
 CEOF

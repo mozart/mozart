@@ -4,22 +4,22 @@
 
 @SET_MAKE@
 
+VPATH           = @srcdir@
 BUILDTOP        = @BUILDTOP@
 PREFIX          = @prefix@
 SRCDIR          = @srcdir@
-TOPDIR          = @TOPDIR@
+SRCTOP          = @SRCTOP@
 SUBDIRS         = ozflex ozbison
 
 RM              = @RM@ -f
 DYNLD           = @DYNLD@
 CXX             = @CXX@
-CPPFLAGS        = -I. -I$(TOPDIR)/platform/emulator @CPPFLAGS@
+CPPFLAGS        = -I$(SRCDIR) -I. -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 CXXFLAGS        = @CXXFLAGS@ $(CFLAGS)
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
 CFLAGS          = -O6
 
-OZHOME          = @prefix@
 DYNLDIR         = $(PREFIX)/platform/@platform@/tools/gump
 INCDIR          = $(PREFIX)/include
 
@@ -40,10 +40,18 @@ HEADERS = $(HEADERS1:%=$(INCDIR)/%)
 
 all: Makefile subdirs GumpScanner.dl
 
-subdirs:
-        for i in $(SUBDIRS); do (cd $$i && $(MAKE) all); done
+bootstrap: all
 
-GumpScanner.dl: GumpScanner.C $(TOPDIR)/platform/emulator/oz.h
+subdirs:
+        dirs="$(SUBDIRS)"; \
+        for i in $$dirs; do \
+          if (cd $$i && $(MAKE) all); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+GumpScanner.dl: GumpScanner.C $(SRCTOP)/platform/emulator/oz.h
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
         $(DYNLD) -o $@ GumpScanner.o $(LDFLAGS) $(LIBS)
 
@@ -71,7 +79,7 @@ $(DYNLDIR)/ozbison.dl $(CACHE_DIR)/ozbison.dl: ozbison/ozbison.dl
 $(INCDIR)/%: %
         $(INSTALLSRC) $< $@
 
-clean veryclean realclean:
+clean veryclean:
         $(RM) *~ *.o *.dl
         for i in $(SUBDIRS); do (cd $$i && $(MAKE) clean); done
 
@@ -84,3 +92,5 @@ Makefile: Makefile.in config.status
 
 config.status: configure
         ./config.status --recheck
+
+check:

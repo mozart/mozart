@@ -34,12 +34,12 @@ dnl This will check that we are in the Oz directory and initiate
 AC_INIT(lib)
 
 OZ_INIT
+
 BUILDTOP=`cd .. && pwd`
 AC_SUBST(BUILDTOP)
-AC_PROG_MAKE_SET
 
 dnl *****************************************************************
-dnl set TOPDIR
+dnl locations
 dnl *****************************************************************
 
 srcdira=`(cd $srcdir; pwd)`
@@ -52,20 +52,10 @@ dnl *****************************************************************
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-AC_CHECK_PROGS(SH, sh bash ksh)
-AC_CHECK_PROGS(RM, rm)
-AC_CHECK_PROGS(MV, mv)
-AC_CHECK_PROGS(CP, cp)
-AC_CHECK_PROGS(MKDIR, mkdir)
-AC_CHECK_PROGS(RMDIR, rmdir true)
-AC_CHECK_PROGS(ECHO, echo)
-AC_CHECK_PROGS(M4, gm4 m4)
-AC_CHECK_PROGS(TRUE, true)
-AC_CHECK_PROGS(PERL, perl)
-AC_CHECK_PROGS(THEEMACS, emacs xemacs)
+AC_CHECK_PROGS(M4, gm4 m4, m4)
+AC_CHECK_PROGS(PERL, perl, perl)
+AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
 
-OZ_PATH_PROG(INSTALLSRC, ozinstallsrc)
-OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
 OZ_PATH_PROG(OZPLATFORM, ozplatform)
 OZ_PATH_PROG(OZBATCH, ozbatch, OZBATCH=`pwd`/lib/ozbatch)
 

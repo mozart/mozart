@@ -1,22 +1,18 @@
 BUILDTOP        = @BUILDTOP@
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
-TOPDIR          = @TOPDIR@
+SRCTOP          = @SRCTOP@
 
 PREFIX          = @prefix@
 OZDEMO          = $(PREFIX)/demo
 
-SHELL           = @SH@
-RM              = @RM@ -f
-MKDIR           = @MKDIR@
-ECHO            = @ECHO@
-M4              = @M4@
-LN              = @LN_S@
+SHELL           = /bin/sh
+LN_S            = @LN_S@
 
 INSTALL         = @INSTALL@
-INSTALLFILE     = $(INSTALL) -m 444
-INSTALLSRC      = @INSTALLSRC@
-INSTALLDIR      = $(INSTALL) -m 775 -d
+INSTALL_FILE    = $(INSTALL) -m 444
+INSTALL_SRC     = @INSTALL_SRC@
+INSTALL_DIR     = @INSTALL_DIR@
 
 OZBATCH         = @OZBATCH@
 OZCA            = $(OZBATCH) -l AP,OP
@@ -45,12 +41,12 @@ OZDIRS = $(DIRS:%=$(OZDEMO)/%)
 install:: $(OZDEMO) $(OZDIRS)
 
 $(OZDEMO):
-        $(INSTALLDIR) $@
+        $(INSTALL_DIR) $@
 
 $(OZDIRS):
-        $(INSTALLDIR) $@
-        $(LN) $@/../demo.css $@
-        $(LN) $@/../demo.gif $@
+        $(INSTALL_DIR) $@
+        $(LN_S) $@/../demo.css $@
+        $(LN_S) $@/../demo.gif $@
 
 #
 # Web pages
@@ -73,29 +69,37 @@ WEBC = \
 all:: $(WEBPAGES) $(WEBC)
 
 ozc2html: make-ozc2html.oz
-        $(OZCA) make-ozc2html.oz
+        $(OZCA) $<
 
 $(WEBPAGES): ozc2html
 
+OZENGINE=ozengine
+OZC2HTML=$(OZENGINE) ./ozc2html
 constraints/%.html: constraints/%-html.ozc
-        ./ozc2html --ozc=$< > $@
+        @mkdir constraints 2> /dev/null || true
+        $(OZC2HTML) --ozc=$< > $@
 concurrent/%.html: concurrent/%-html.ozc
-        ./ozc2html --ozc=$< > $@
+        @mkdir concurrent 2> /dev/null || true
+        $(OZC2HTML) --ozc=$< > $@
 distributed/%.html: distributed/%-html.ozc
-        ./ozc2html --ozc=$< > $@
+        @mkdir distributed 2> /dev/null || true
+        $(OZC2HTML) --ozc=$< > $@
 
 constraints/%-html.ozc: constraints/%-html.oz
+        @mkdir constraints 2> /dev/null || true
         $(OZCA) -c $< -o $@
 concurrent/%-html.ozc: concurrent/%-html.oz
+        @mkdir concurrent 2> /dev/null || true
         $(OZCA) -c $< -o $@
 distributed/%-html.ozc: distributed/%-html.oz
+        @mkdir distributed 2> /dev/null || true
         $(OZCA) -c $< -o $@
 
 clean::
-        $(RM) $(WEBC) ozc2html
+        -rm -f $(WEBC) ozc2html
 
 veryclean::
-        $(RM) $(WEBPAGES)
+        -rm -f $(WEBPAGES)
 
 
 ALLWEB = \
@@ -109,18 +113,18 @@ OZALLWEB = $(ALLWEB:%=$(OZDEMO)/%)
 install:: $(OZALLWEB)
 
 $(OZDEMO)/%.html: %.html
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZDEMO)/%.css: %.css
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZDEMO)/%.gif: %.gif
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 $(OZDEMO)/constraints/%.html: constraints/%.html
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZDEMO)/concurrent/%.html: concurrent/%.html
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZDEMO)/distributed/%.html: distributed/%.html
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 #
 # Compiling the applets
@@ -138,10 +142,13 @@ APPLETS = \
 all:: $(APPLETS)
 
 constraints/%.oza: constraints/%.oz
+        @mkdir constraints 2> /dev/null || true
         (cd constraints && $(OZCA) ../$<)
 concurrent/%.oza: concurrent/%.oz
+        @mkdir concurrent 2> /dev/null || true
         (cd concurrent && $(OZCA) ../$<)
 distributed/%.oza: distributed/%.oz
+        @mkdir distributed 2> /dev/null || true
         (cd distributed && $(OZCA) ../$<)
 
 JOBSHOP = \
@@ -157,18 +164,18 @@ concurrent/transport.oza: $(TRANSPORT:%=concurrent/transport/%.oz)
 
 
 veryclean::
-        $(RM) $(APPLETS)
+        -rm -f $(APPLETS)
 
 OZAPPLETS = $(APPLETS:%=$(OZDEMO)/%)
 
 install:: $(OZAPPLETS)
 
 $(OZDEMO)/constraints/%.oza: constraints/%.oza
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZDEMO)/concurrent/%.oza: concurrent/%.oza
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZDEMO)/distributed/%.oza: distributed/%.oza
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 
 #
@@ -214,18 +221,17 @@ OZIMAGES = \
 install:: $(OZIMGDIRS) $(OZIMAGES)
 
 $(OZIMGDIRS):
-        $(INSTALLDIR) $@
-
+        $(INSTALL_DIR) $@
 $(OZIMG)/animated-queens/%.xbm: images/animated-queens/%.xbm
-        $(INSTALLSRC) $< $@
+        $(INSTALL_SRC) $< $@
 $(OZIMG)/diagnosis/%.xbm: images/diagnosis/%.xbm
-        $(INSTALLSRC) $< $@
+        $(INSTALL_SRC) $< $@
 $(OZIMG)/lift/%.xbm: images/lift/%.xbm
-        $(INSTALLSRC) $< $@
+        $(INSTALL_SRC) $< $@
 $(OZIMG)/transport/%.xbm: images/transport/%.xbm
-        $(INSTALLSRC) $< $@
+        $(INSTALL_SRC) $< $@
 $(OZIMG)/trucks/%.gif: images/trucks/%.gif
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 
 #
@@ -233,8 +239,22 @@ $(OZIMG)/trucks/%.gif: images/trucks/%.gif
 #
 
 clean::
-        $(RM) *~ ./*/*~ ./*/*/*~
+        -rm -f *~ ./*/*~ ./*/*/*~
 
 veryclean:: clean
 
-realclean: veryclean
+distclean: veryclean
+        -rm -f Makefile config.cache config.status config.log
+
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
+
+../config.status: ../configure
+        cd .. && ./config.status --recheck
+
+include $(SRCDIR)/../Makefile.boot
+
+bootstrap:
+        $(MAKE) boot-all
+
+check:

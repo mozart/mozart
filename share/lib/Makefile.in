@@ -1,7 +1,6 @@
 BUILDTOP        = @BUILDTOP@
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
-TOPDIR          = @TOPDIR@
 
 PREFIX          = @prefix@
 OZPREFIX        = $(PREFIX)
@@ -11,23 +10,15 @@ OZLIB           = $(PREFIX)/lib
 IMAGESDIR       = $(OZLIB)/images
 CACHEDIR        = $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/lib
 
-SHELL           = @SH@
-RM              = @RM@ -f
-MV              = @MV@
-CP              = @CP@
-LN              = @LN_S@
-MKDIR           = @MKDIR@
-RMDIR           = @RMDIR@
-ECHO            = @ECHO@
+SHELL           = /bin/sh
+LN_S            = @LN_S@
 M4              = @M4@
-TRUE            = @TRUE@
 
 INSTALL         = @INSTALL@
-INSTALLFILE     = $(INSTALL) -m 444
-INSTALLPRG      = $(INSTALL) -m 555
-INSTALLSRC      = @INSTALLSRC@
-MKINSTALLDIRS   = @MKINSTALLDIRS@
-INSTALLDIR      = $(MKINSTALLDIRS)
+INSTALL_FILE    = $(INSTALL) -m 444
+INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_SRC     = @INSTALL_SRC@
+INSTALL_DIR     = @INSTALL_DIR@
 
 PERL            = @PERL@
 ENV2TYPE        = $(PERL) $(SRCDIR)/env2type
@@ -41,11 +32,12 @@ EXECWITHSTD     = $(OZBATCH) $(OZFLAGS) -l AP --include=DumpIntro.oz
 OZMA            = $(OZBATCH) $(OZFLAGS) -DOZM --ozma
 
 # exports
+export BUILDTOP
 export SRCDIR
 export OZPREFIX
 export OZLIB
 export OZMAINIT = Init.ozc
-export OZMAFILE = -u $(SRCDIR)/ozbatch.ozc
+export OZMAFILE = -u ozbatch.ozc
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
@@ -159,9 +151,9 @@ Makefile: Makefile.in ../config.status
 #---------------------------------------------------------------------
 
 $(LOCAL_TOOLENVS): tyc/tools/%.env : ../tools/%.env
-        @$(MKDIR) tyc 2> /dev/null || $(TRUE)
-        @$(MKDIR) tyc/tools 2> /dev/null || $(TRUE)
-        $(CP) $< $@
+        @mkdir tyc 2> /dev/null || true
+        @mkdir tyc/tools 2> /dev/null || true
+        cp $< $@
 
 $(LOCAL_TOOLTYPS): %.typ : %.env
         $(ENV2TYPE) $< > $@
@@ -170,8 +162,8 @@ $(LOCAL_TOOLTYCS): %.tyc : %.typ Init.ozc
         $(COMPILE) $< -o $@
 
 $(LOCAL_LIBTYPS): tyc/lib/%.typ : %.env
-        @$(MKDIR) tyc 2> /dev/null || $(TRUE)
-        @$(MKDIR) tyc/lib 2> /dev/null || $(TRUE)
+        @mkdir tyc 2> /dev/null || true
+        @mkdir tyc/lib 2> /dev/null || true
         $(ENV2TYPE) $< > $@
 
 $(LOCAL_LIBTYCS): %.tyc : %.typ Init.ozc
@@ -190,7 +182,7 @@ Init.ozc: $(DUMPINTRO) $(INITSRC)
         OZMAINIT="" $(COMPILE) Init.oz
 
 Base.ozc: Standard.ozc
-        @$(ECHO) > /dev/null
+        @echo > /dev/null
 
 Standard.ozc: $(STANDARDSRC) Base.env Standard.env
         OZMAINIT="" $(EXEC) DumpInitial.oz
@@ -209,12 +201,15 @@ WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
 
 Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
 
-ozbatch.ozm: MakeAssembly.oz \
-        $(STANDARDSRC) Base.env Standard.env \
-        $(SPSRC) SP.env $(CPSRC) CP.env \
-        $(OPSRC) OP.env $(COMPILERSRC) Compiler.env BatchCompile.oz
+# dependencies removed to avoid automatic recreation
+#ozbatch.ozm: MakeAssembly.oz \
+#       $(STANDARDSRC) Base.env Standard.env \
+#       $(SPSRC) SP.env $(CPSRC) CP.env \
+#       $(OPSRC) OP.env $(COMPILERSRC) Compiler.env BatchCompile.oz
+
+ozbatch.ozm:
         $(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
-        $(MV) -f /tmp/$$$$.ozm $@
+        mv -f /tmp/$$$$.ozm $@
 
 ozbatch.ozc: ozbatch.ozm
         OZMAINIT="" OZMAFILE="-b $(SRCDIR)/ozbatch.ozm" $(SRCDIR)/ozbatch.sh
@@ -271,14 +266,16 @@ $(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env ../tools/Gump.env Compiler.env \
         -c compiler/FunMake.oz -o Compiler.ozc
 
 compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
-        $(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@
+        echo 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@ \
+        || (rm -f $@; exit 1)
 
 compiler-Builtins.oz: ../../platform/emulator/bidecl.perl
         $(PERL) $< -oztable \
         -exclude wif,fd,libfd,libschedule,fset,libfset,libparser > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
-        $(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@
+        $(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@ \
+        || (rm -f $@; exit 1)
 
 #---------------------------------------------------------------------
 # Installation
@@ -299,61 +296,59 @@ install-images: \
 
 install-cache: $(CACHEDIR) $(CACHECOMPONENTS) $(CACHETYCS)
 $(CACHEDIR):
-        $(MKINSTALLDIRS) $(CACHEDIR)
+        $(INSTALL_DIR) $(CACHEDIR)
 $(CACHECOMPONENTS): $(CACHEDIR)/%.ozc : %.ozc
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 $(CACHETYCS): $(CACHEDIR)/%.tyc : tyc/lib/%.tyc
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 #$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
 #       $(PREFIX)/cache/http/www.ps.uni-sb.de
-#       cd $(PREFIX)/cache/http/www.ps.uni-sb.de && $(LN) ../../.. ozhome
+#       cd $(PREFIX)/cache/http/www.ps.uni-sb.de && $(LN_S) ../../.. ozhome
 
 #$(PREFIX)/cache/http/www.ps.uni-sb.de:
-#       $(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
+#       $(INSTALL_DIR) $(PREFIX)/cache/http/www.ps.uni-sb.de
 
 $(OZLIB) $(IMAGESDIR) $(OZBIN):
-        $(INSTALLDIR) $@
+        $(INSTALL_DIR) $@
 
 $(OZLIB)/%.ozc: %.ozc
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 $(OZLIB)/%.ozm: %.ozm
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 $(IMAGESDIR)/%: images/%
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 $(OZLIB)/%.env: %.env
-        $(INSTALLSRC) $< $@
+        $(INSTALL_SRC) $< $@
 
 $(OZLIB)/%.tyc: tyc/lib/%.tyc
-        $(INSTALLFILE) $< $@
+        $(INSTALL_FILE) $< $@
 
 $(OZBIN)/%: %
-        $(INSTALLPRG) $< $@
+        $(INSTALL_BIN) $< $@
 
 #---------------------------------------------------------------------
 # Cleaning up
 #---------------------------------------------------------------------
 
-.PHONY: clean realclean veryclean distclean tags
+.PHONY: clean veryclean distclean tags
 
 clean:
-        $(RM) *~ *.bak
-        $(RM) compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
-        $(RM) -r tyc
-        $(RM) Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc
-        $(RM) ozbatch ozserver
+        -rm -f *~ *.bak
+        -rm -f compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
+        -rm -f -r tyc
+        -rm -f Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc
+        -rm -f ozbatch ozserver
 
-realclean: clean
-        $(RM) -r $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)
-
-veryclean: realclean
-        $(RM) TAGS
+veryclean: clean
+        -rm -f -r TAGS $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)
+        -rm -f ozbatch.ozc
 
 distclean: veryclean
-        $(RM) Makefile
+        -rm -f Makefile
 
 tags:
         etags --language=none \
@@ -435,7 +430,7 @@ newozma:
          OZINIT=$(STAGE1)/lib/Init.ozc
 
 check:
-        $(MAKE) clean bootstrap stage1
+        $(MAKE) bootstrap stage1
         $(MAKE) clean stage2
         $(MAKE) clean stage3
 

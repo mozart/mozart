@@ -1,21 +1,18 @@
+VPATH=          @srcdir@
 BUILDTOP=       @BUILDTOP@
 PREFIX=         @prefix@
 
 PLATFORM        = @platform@
 INSTALL         = @INSTALL@
 INSTALL_BIN     = $(INSTALL) -s -m 555
-MKINSTALLDIRS   = @MKINSTALLDIRS@
+INSTALL_DIR     = @INSTALL_DIR@
 CC              = @CC@
 
 LIBS            = @LIBS@
 CPPFLAGS        = @CPPFLAGS@
 CFLAGS          = @CFLAGS@
 LDFLAGS         = @LDFLAGS@
-RM              = @RM@ -f
-RMR             = @RM@ -rf
-LN              = @LN@ -s
-CPR             = @CP@ -R
-CHMODR          = @CHMOD@ -R 555
+LN_S            = @LN_S@
 
 PROVIDETCLLIBS  = @PROVIDETCLLIBS@
 TCLLIBTCLDIR    = @oz_tcl_lib_tcl_dir@
@@ -30,45 +27,44 @@ OBJS            = ${SRCS:.c=.o}
 
 all: $(OZWISH)
 
+bootstrap: all
+
 $(OZWISH): $(OBJS)
         $(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean:
-        $(RM) $(OBJS)
-        $(RM) *~
+        -rm -f $(OBJS) *~
 
 veryclean: clean
-        $(RM) $(OZWISH)
-
-realclean: veryclean
+        -rm -f $(OZWISH)
 
 distclean: veryclean
-        $(RM) config.* Makefile
-        $(RM) ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
+        -rm -f config.* Makefile
+        -rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
 
 install: $(PREFIX)/platform/$(PLATFORM) $(OZWISH) \
         $(PROVIDETCLLIBS) $(PREFIX)/lib/wish
         $(INSTALL_BIN) $(OZWISH) $(PREFIX)/platform/$(PLATFORM)
 
 $(PREFIX)/platform/$(PLATFORM):
-        $(MKINSTALLDIRS) $@
+        $(INSTALL_DIR) $@
 
 provide-link:
-        $(RMR) $(PREFIX)/lib/wish
-        $(MKINSTALLDIRS) $(PREFIX)/lib/wish
-        (cd $(PREFIX)/lib/wish; $(RMR) tcl)
-        (cd $(PREFIX)/lib/wish; $(LN) $(TCLLIBTCLDIR) tcl)
-        (cd $(PREFIX)/lib/wish; $(RMR) tk)
-        (cd $(PREFIX)/lib/wish; $(LN) $(TKLIBTCLDIR) tk)
+        rm -rf $(PREFIX)/lib/wish
+        $(INSTALL_DIR) $(PREFIX)/lib/wish
+        (cd $(PREFIX)/lib/wish; rm -rf tcl)
+        (cd $(PREFIX)/lib/wish; $(LN_S) $(TCLLIBTCLDIR) tcl)
+        (cd $(PREFIX)/lib/wish; rm -rf tk)
+        (cd $(PREFIX)/lib/wish; $(LN_S) $(TKLIBTCLDIR) tk)
 
 provide-copy:
-        $(RMR) $(PREFIX)/lib/wish
-        $(MKINSTALLDIRS) $(PREFIX)/lib/wish
-        (cd $(PREFIX)/lib/wish; $(RMR) tcl)
-        (cd $(PREFIX)/lib/wish; $(CPR) $(TCLLIBTCLDIR) .)
-        (cd $(PREFIX)/lib/wish; $(LN) tcl8.0 tcl)
-        (cd $(PREFIX)/lib/wish; $(CHMODR) tcl)
-        (cd $(PREFIX)/lib/wish; $(RMR) tk)
-        (cd $(PREFIX)/lib/wish; $(CPR) $(TKLIBTCLDIR) .)
-        (cd $(PREFIX)/lib/wish; $(LN) tk8.0 tk)
-        (cd $(PREFIX)/lib/wish; $(CHMODR) tk)
+        rm -rf $(PREFIX)/lib/wish
+        $(INSTALL_DIR) $(PREFIX)/lib/wish
+        (cd $(PREFIX)/lib/wish; rm -rf tcl)
+        (cd $(PREFIX)/lib/wish; cp -r $(TCLLIBTCLDIR) .)
+        (cd $(PREFIX)/lib/wish; $(LN_S) tcl8.0 tcl)
+        (cd $(PREFIX)/lib/wish; rm -rf tk)
+        (cd $(PREFIX)/lib/wish; cp -r $(TKLIBTCLDIR) .)
+        (cd $(PREFIX)/lib/wish; $(LN_S) tk8.0 tk)
+
+check:

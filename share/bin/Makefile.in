@@ -21,54 +21,71 @@
 #  of this file, and for a DISCLAIMER OF ALL
 #  WARRANTIES.
 
+SRCTOP=         @SRCTOP@
 BUILDTOP=       @BUILDTOP@
 PREFIX=         @prefix@
-
-SRCDIR          = @srcdir@
+SRCDIR=         @srcdir@
+VPATH=          @srcdir@
 BINDIR          = $(PREFIX)/bin
-RM              = @RM@ -f
+
+@SET_MAKE@
 LN_S            = @LN_S@
 INSTALL         = @INSTALL@
-MKINSTALLDIRS   = @MKINSTALLDIRS@
+INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_BIN     = $(INSTALL) -m 555
 
 SCRIPTS = oz ozplatform ozdynld
 LINKS   = ozengine
 
-.PHONY: bootstrap all install clean distclean win-install
+.PHONY: bootstrap all install clean veryclean distclean
 
-all: version.h
+all:
+
 bootstrap: all
 
 install: $(BINDIR)
         $(INSTALL_BIN) $(SCRIPTS:%=$(SRCDIR)/%) $(BINDIR)
-        @set -x; cd $(BINDIR);\
+        set -x; cd $(BINDIR);\
         for file in $(LINKS); \
         do\
-           $(RM) $$file; \
+           rm -f $$file; \
            $(LN_S) oz $$file; \
         done
 
 $(BINDIR):
-        $(MKINSTALLDIRS) $@
+        $(INSTALL_DIR) $@
+
+clean:
+
+veryclean: clean
+
+distclean: clean
+        rm -f Makefile
+
+
+# Windows
+.PHONY: win-install
+
+all:  version.h
+
+clean:
+        rm -f *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp version.h
+
+win-install: setup.exe oz.exe ozdemo.exe ozengine.exe
+        $(INSTALL_BIN) setup.exe oz.exe ozdemo.exe ozengine.exe $(PREFIX)
+
 
 ozdemo.exe ozengine.exe: oz.exe
         cp oz.exe ozdemo.exe
         cp oz.exe ozengine.exe
 
-version.h: ../../OZVERSION
+version.h: $(SRCTOP)/OZVERSION
         echo "#define OZVERSION \"`$<`\"" > $@
 
+check:
 
-win-install: setup.exe oz.exe ozdemo.exe ozengine.exe
-        $(INSTALL_BIN) setup.exe oz.exe ozdemo.exe ozengine.exe $(PREFIX)
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
 
-clean:
-        $(RM) *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp version.h
-
-veryclean: clean
-
-realclean: clean
-
-distclean: clean
-        $(RM) Makefile
+../config.status: ../configure
+        cd .. && ./config.status --recheck
