@@ -52,8 +52,9 @@
 ###
 ### A type may be simple or complex:
 ###
-### SIMPLE    ::= abstraction		(not yet known to compiler)
+### SIMPLE    ::= unit
 ###		| atom
+###		| nilAtom
 ###		| array
 ###		| bool
 ###		| cell
@@ -64,8 +65,11 @@
 ###		| dictionary
 ###		| feature
 ###		| float
-###		| foreignPointer	(not yet known to compiler)
+###		| foreignPointer
+###		| fset
 ###		| int
+###		| fdint
+###		| intC
 ###		| literal
 ###		| lock
 ###		| name
@@ -73,17 +77,29 @@
 ###		| object
 ###		| port
 ###		| procedure
+###		| procedure/0
 ###		| procedure/1
-###		| procedureOrObject	(not yet known to compiler)
+###		| procedure/2
+###		| procedure/3
+###		| procedure/4
+###		| procedure/5
+###		| procedure/6
+###		| procedure/>6
+###		| procedureOrObject
+###		| unaryProcOrObject
 ###		| record
+###		| recordOrChunk
 ###		| recordC
 ###		| recordCOrChunk
 ###		| space
-###		| string
 ###		| thread
 ###		| tuple
-###		| value
+###		| pair
+###		| cons
+###		| list
+###		| string
 ###		| virtualString
+###		| value
 ###
 ### COMPLEX   ::= [SIMPLE]		(list of SIMPLE)
 ###		| [SIMPLE#SIMPLE]	(list of pairs of SIMPLE)
@@ -107,7 +123,7 @@
 ### used in shallow guards.  This is indicated by: 'shallow' => 'REL' where
 ### REL is the string by which the rel is known to the emulator.
 ###
-### eqeq => 1, indicates that the builtin can be specially compiled using
+### eqeq => 1, indicates that the builtin must be specially compiled using
 ### the eqeq instruction.
 ###
 ### ifdef => MACRO, indicates that the entry for this builtin in the
@@ -3164,54 +3180,40 @@ sub OZTABLE {
 	    push @oowns,($own?'true':'false');
 	}
 	print "'$key':\n\tbuiltin(\n";
-	if ($style>0) {
-	    if (@ityps) {
-		print "\t\titypes:[",join(' ',@ityps),"]\n";
-	    } else {
-		print "\t\titypes:nil\n";
-	    }
-	    if (@otyps) {
-		print "\t\totypes:[",join(' ',@otyps),"]\n";
-	    } else {
-		print "\t\totypes:nil\n";
-	    }
-	    if (@idets) {
-		print "\t\tidets:[",join(' ',@idets),"]\n";
-	    } else {
-		print "\t\tidets:nil\n";
-	    }
-	    if (@odets) {
-		print "\t\todets:[",join(' ',@odets),"]\n";
-	    } else {
-		print "\t\todets:nil\n";
-	    }
-	    if (@imods) {
-		print "\t\timods:[",join(' ',@imods),"]\n";
-	    } else {
-		print "\t\timods:nil\n";
-	    }
-	    if (@oowns) {
-		print "\t\toowns:[",join(' ',@oowns),"]\n";
-	    } else {
-		print "\t\toowns:nil\n";
-	    }
+	if ((@ityps+@otyps)>0) {
+	    print "\t\ttypes: [",join(' ',@ityps,@otyps),"]\n";
+	    print "\t\tdet: [",join(' ',@idets,@odets),"]\n";
+	} else {
+	    print "\t\ttypes: nil\n";
+	    print "\t\tdet: nil\n";
 	}
 	if ($style<2) {
-	    if ((@ityps+@otyps)>0) {
-		print "\t\ttypes:[",join(' ',@ityps,@otyps),"]\n";
-		print "\t\tdet:[",join(' ',@idets,@odets),"]\n";
+	    print "\t\teqeq: true\n" if $info->{eqeq};
+	    print "\t\tdestroysArguments: true\n" if $destroys;
+	    print "\t\tinlineFun: true\n"
+		if $info->{ibi} && (@{$info->{out}}==1);
+	    print "\t\tinlineRel: true\n"
+		if $info->{ibi} && (@{$info->{out}}==0);
+	    my $shallow = $info->{shallow};
+	    print "\t\trel: '$shallow'\n" if $shallow;
+	}
+	if ($style>0) {
+	    if (@imods) {
+		print "\t\timods: [",join(' ',@imods),"]\n";
 	    } else {
-		print "\t\ttypes:nil\n";
-		print "\t\tdet:nil\n";
+		print "\t\timods: nil\n";
+	    }
+	    if (@oowns) {
+		print "\t\toowns: [",join(' ',@oowns),"]\n";
+	    } else {
+		print "\t\toowns: nil\n";
+	    }
+	    if ($#otyps == 0 && $otyps[0] eq '\'bool\''
+		&& $odets[0] eq 'any(det)') {
+		print "\t\ttest: true\n";
 	    }
 	}
-	print "\t\teqeq:true\n" if $info->{eqeq};
-	print "\t\tdestroysArguments:true\n" if $destroys;
-	print "\t\tdoesNotReturn:true\n" if $info->{doesNotReturn};
-	print "\t\tinlineFun:true\n" if $info->{ibi} && (@{$info->{out}}==1);
-	print "\t\tinlineRel:true\n" if $info->{ibi} && (@{$info->{out}}==0);
-	my $shallow = $info->{shallow};
-	print "\t\trel:'$shallow'\n" if $shallow;
+	print "\t\tdoesNotReturn: true\n" if $info->{doesNotReturn};
 	print "\t)\n";
     }
 }
