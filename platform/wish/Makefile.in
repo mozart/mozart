@@ -51,16 +51,17 @@ install: $(PREFIX)/platform/$(PLATFORM) $(OZWISH) \
 $(PREFIX)/platform/$(PLATFORM):
         $(MKINSTALLDIRS) $@
 
-$(PREFIX)/lib/wish:
-        $(MKINSTALLDIRS) $@
-
-provide-link: $(PREFIX)/lib/wish
+provide-link:
+        $(RMR) $(PREFIX)/lib/wish
+        $(MKINSTALLDIRS) $(PREFIX)/lib/wish
         (cd $(PREFIX)/lib/wish; $(RMR) tcl)
         (cd $(PREFIX)/lib/wish; $(LN) $(TCLLIBTCLDIR) tcl)
         (cd $(PREFIX)/lib/wish; $(RMR) tk)
         (cd $(PREFIX)/lib/wish; $(LN) $(TKLIBTCLDIR) tk)
 
-provide-copy: $(PREFIX)/lib/wish
+provide-copy:
+        $(RMR) $(PREFIX)/lib/wish
+        $(MKINSTALLDIRS) $(PREFIX)/lib/wish
         (cd $(PREFIX)/lib/wish; $(RMR) tcl)
         (cd $(PREFIX)/lib/wish; $(CPR) $(TCLLIBTCLDIR) .)
         (cd $(PREFIX)/lib/wish; $(LN) tcl8.0 tcl)
