@@ -87,8 +87,8 @@ class CodeArea {
   friend Literal *addToAtomTab(char *str);
   friend Literal *addToNameTab(char *str);
   friend AbstractionEntry *addAbstractionTab(int id);
-  friend void printAtomTab();
-  friend void printNameTab();
+  friend inline void printAtomTab();
+  friend inline void printNameTab();
 
  protected:
   ByteCode *codeBlock;    /* a block of abstract machine code */
