@@ -168,9 +168,9 @@ void marshalPredicateRef(AbstractionEntry *entry,MsgBuffer *bs)
   Bool copyable = entry && entry->copyable;
   marshalNumber(copyable,bs);
   if (copyable) {
-    if (checkCycle(ToInt32(entry->indexTable),bs)) return;
+    if (checkCycle(ToInt32(entry->indexTable),bs,REFTAG1)) return;
     marshalDIF(bs,DIF_ABSTRENTRY);
-    trailCycle((OZ_Term *)&entry->indexTable, bs,0);
+    trailCycle((OZ_Term *)&entry->indexTable,bs);
   } else {
     Assert(entry==NULL || entry->getAbstr() != NULL);
   }
@@ -581,7 +581,7 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
       int line = smallIntValue(getNumberArg(lastPC+2));
       CodeArea::writeDebugInfo(lastPC,file,line);
     }
-    // if (!discard) { displayCode(lastPC,1); }
+    //if (!discard) { displayCode(lastPC,1); }
   }
   
   Assert(discard==OK || CodeArea::getOpcode(start)==DEFINITION || 
