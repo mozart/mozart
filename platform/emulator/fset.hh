@@ -23,16 +23,16 @@
 
 class FSetValue : public OZ_FSetValue {
 
-friend class OZ_FSetImpl;
+friend class FSetConstraint;
 
 public:
   FSetValue(void) {}
-  FSetValue(const OZ_FSetImpl &s);
+  FSetValue(const FSetConstraint &s);
   FSetValue(OZ_Term);
   FSetValue(const int *);
   FSetValue(OZ_FSetState s);
 
-  void init(const OZ_FSetImpl &);
+  void init(const FSetConstraint &);
   void init(const OZ_Term);
   void init(OZ_FSetState);
 
@@ -72,7 +72,7 @@ ostream &operator << (ostream &ofile, const FSetValue &fs) {
 const int fset_inf = 0;
 const int fset_sup = (32 * fset_high) - 1;
 
-class OZ_FSetImpl : public OZ_FSetConstraint {
+class FSetConstraint : public OZ_FSetConstraint {
 friend class FSetValue;
 protected:
   void printGlb(ostream &) const;
@@ -80,20 +80,20 @@ protected:
   /* _card_min is -1 if the set is not valid */
   OZ_Boolean normalize(void);
 public:
-  OZ_FSetImpl(void) { init(); }
-  OZ_FSetImpl(int, int, OZ_Term, OZ_Term);
-  OZ_FSetImpl(OZ_Term, OZ_Term);
-  OZ_FSetImpl(const FSetValue& s) { init(s); }
+  FSetConstraint(void);
+  FSetConstraint(int, int, OZ_Term, OZ_Term);
+  FSetConstraint(OZ_Term, OZ_Term);
+  FSetConstraint(const FSetValue& s);
 
-  OZ_FSetImpl(const OZ_FSetImpl &);
-  OZ_FSetImpl &operator = (const OZ_FSetImpl &);
+  FSetConstraint(const FSetConstraint &);
+  FSetConstraint &operator = (const FSetConstraint &);
 
   void init(void);
   void init(const FSetValue &);
-  void init(const OZ_FSetImpl &);
+  void init(const FSetConstraint &);
   void init(OZ_FSetState);
 
-  OZ_FSetImpl unify(const OZ_FSetImpl &) const;
+  FSetConstraint unify(const FSetConstraint &) const;
   OZ_Boolean valid(const FSetValue &) const;
 
   int getCardMin(void) const { return _card_min; }
@@ -103,16 +103,16 @@ public:
   OZ_Boolean isValue(void) const {
     return (_card_min == _card_max) && (_card_min == _known_in);
   }
-  OZ_Boolean isWeakerThan(const OZ_FSetImpl &) const;
+  OZ_Boolean isWeakerThan(const FSetConstraint &) const;
 
   ostream &print(ostream &) const;
   void printDebug(void) const;
-  OZ_FSetImpl &operator =(const FSetValue &); 
+  FSetConstraint &operator =(const FSetValue &); 
   OZ_Boolean isIn(int) const;
   OZ_Boolean isNotIn(int) const;
   OZ_Boolean isEmpty(void) const;
   OZ_Boolean isFull(void) const;
-  OZ_Boolean isSubsumedBy(const OZ_FSetImpl &) const;
+  OZ_Boolean isSubsumedBy(const FSetConstraint &) const;
   OZ_Term getKnownInList(void) const;
   OZ_Term getKnownNotInList(void) const;
   OZ_Term getUnknownList(void) const;
@@ -124,27 +124,25 @@ public:
   FSetValue getUnknownSet(void) const;
   FSetValue getNotInSet(void) const;
 
-  OZ_FSetImpl operator - (void) const;
+  FSetConstraint operator - (void) const;
   OZ_Boolean operator += (int i); // assert i is in *this
   OZ_Boolean operator -= (int i); // assert i is in _not_ *this
-  OZ_Boolean operator <<= (const OZ_FSetImpl &);
-  OZ_FSetImpl operator & (const OZ_FSetImpl &) const;
-  OZ_FSetImpl operator | (const OZ_FSetImpl &) const;
-  OZ_FSetImpl operator - (const OZ_FSetImpl &) const;
-  OZ_Boolean operator <= (const OZ_FSetImpl &);
-  OZ_Boolean operator >= (const OZ_FSetImpl &);
-  OZ_Boolean operator != (const OZ_FSetImpl &);
-  OZ_Boolean operator == (const OZ_FSetImpl &) const;
+  OZ_Boolean operator <<= (const FSetConstraint &);
+  FSetConstraint operator & (const FSetConstraint &) const;
+  FSetConstraint operator | (const FSetConstraint &) const;
+  FSetConstraint operator - (const FSetConstraint &) const;
+  OZ_Boolean operator <= (const FSetConstraint &);
+  OZ_Boolean operator >= (const FSetConstraint &);
+  OZ_Boolean operator != (const FSetConstraint &);
+  OZ_Boolean operator == (const FSetConstraint &) const;
   OZ_Boolean operator <= (const int);
   OZ_Boolean operator >= (const int);
 };
 
 inline
-ostream &operator << (ostream &ofile, const OZ_FSetImpl &fs) {
+ostream &operator << (ostream &ofile, const FSetConstraint &fs) {
   return fs.print(ofile);
 }
-
-typedef OZ_FSetImpl OZ_FSet;
 
 
 #endif // __FSET_HH__

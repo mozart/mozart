@@ -276,19 +276,47 @@ OZ_CFunHeader FSetPartitionPropagator::header = fsp_partition;
 OZ_Return FSetPartitionPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
-
-  DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
-  OZ_FSetVar s(_s);
+  
   OZ_FSetConstraint * aux = _aux;
+  OZ_FSetVar s(_s);
+      
+  {
+    DECL_DYN_ARRAY(OZ_FSetVar, vss, _vs_size);
+    int i;
+    for (i = _vs_size; i--; ) 
+      vss[i].ask(_vs[i]);
+
+    i = 0;
+    int j = 0;
+    for (; i < _vs_size; i += 1) {
+      if (vss[i]->isEmpty() && i < _vs_size - 1) {
+	if (!((i < _vs_size - 1 ? _aux[i+1] :  *s) <<= _aux[i])) {
+	  s.fail();
+	  return FAILED;
+	}
+	continue;
+      }
+      if (i != j) {
+	_vs[j] = _vs[i];
+	_aux[j] = _aux[i];
+      }
+      j += 1;
+    }
+    _OZ_DEBUGPRINT(("%d:%d", j, _vs_size));
+
+    _vs_size = j;
+  }
+  
+  DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   DECL_DYN_ARRAY(FSetTouched, vst, _vs_size);
   PropagatorController_VS_S P(_vs_size, vs, s);
   int i;
-
+  
   for (i = _vs_size; i--; ) 
     vs[i].read(_vs[i]);
-
+  
   OZ_Boolean doagain;
-
+    
   if (_vs_size == 0) {
     OZ_DEBUGPRINTTHIS("_vs_size == 0");
     FailOnInvalid(*s <<= OZ_FSetConstraint(fs_empty));
@@ -335,7 +363,7 @@ OZ_Return FSetPartitionPropagator::propagate(void)
 	  }
 	}
       
-
+      
       int first = doagain ? -1 : -2;
       
 
@@ -388,3 +416,6 @@ failure:
   return P.fail();  
 
 }
+
+// eof 
+//-----------------------------------------------------------------------------

@@ -19,6 +19,10 @@
 
 //-----------------------------------------------------------------------------
 
+#ifdef OUTLINE
+#define inline
+#endif
+
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
 
 extern "C" {

@@ -51,7 +51,7 @@ public:
   Bool unifyFSet(OZ_Term *, OZ_Term, OZ_Term *, OZ_Term,
 		 ByteCode *, Bool = TRUE);
   OZ_FSetConstraint &getSet(void) { return _fset; }
-  void setSet(OZ_FSet fs) { _fset = fs; }
+  void setSet(OZ_FSetConstraint fs) { _fset = fs; }
 
   Bool valid(OZ_Term val);
 
@@ -88,7 +88,7 @@ public:
 
 void addSuspFSetVar(OZ_Term, SuspList *, OZ_FSetPropState = fs_prop_any);
 void addSuspFSetVar(OZ_Term, Thread *, OZ_FSetPropState = fs_prop_any);
-OZ_Return tellBasicConstraint(OZ_Term, OZ_FSet *);
+OZ_Return tellBasicConstraint(OZ_Term, OZ_FSetConstraint *);
 
 #if !defined(OUTLINE)
 #include "fsgenvar.icc"
