@@ -216,7 +216,6 @@ define
       F = {Face2Font Face}
    in if F==unit then {HtmlEscape Text}
       else F({HtmlEscape Text}) end
-      #L
    end
 
    fun {ToHtmlMono L}
