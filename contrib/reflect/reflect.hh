@@ -80,6 +80,7 @@ OZ_Term reflect_propagator(Suspension);
 OZ_Term reflect_thread(Suspension);
 OZ_Term reflect_susplist(SuspList *);
 OZ_Term reflect_variable(OZ_Term);
+OZ_Term reflect_space(OZ_Term);
 
 //-----------------------------------------------------------------------------
 // prototypes of built-ins
@@ -90,6 +91,7 @@ OZ_BI_proto(BIIsPropagatorFailed);
 OZ_BI_proto(BIReflectPropagatorCoordinates);
 OZ_BI_proto(BIReflectVariable);
 OZ_BI_proto(BIPropagatorEq);
+OZ_BI_proto(BIReflectSpace);
 
 //-----------------------------------------------------------------------------
 

@@ -66,6 +66,7 @@ extern "C"
   OZ_C_proc_interface * oz_init_module(void)
   {
     static OZ_C_proc_interface i_table[] = {
+      {"spaceReflect",          1, 1, BIReflectSpace},
       {"variableReflect",       1, 1, BIReflectVariable},
       {"propagatorEq",          2, 1, BIPropagatorEq},
       {"propagatorReflect",     1, 1, BIReflectPropagator},
