@@ -12,6 +12,7 @@
 	  ( AtomPair,      "#"),
 	  ( AtomVoid,      "_"),
 	  ( AtomDot,       "."),
+	  ( AtomComma,     ","),
 	  ( AtomHat,       "^"),
 	  ( AtomTilde,     "~"),
 	  ( AtomDExcl,     "!!"),
