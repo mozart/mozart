@@ -390,7 +390,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_MEMORY_ATOMS,ozstat.getAtomMemory());
     CASE_INT(PROP_MEMORY_NAMES,ozstat.getNameMemory());
     CASE_INT(PROP_MEMORY_FREELIST,FL_Manager::getSize());
-    CASE_INT(PROP_MEMORY_CODE,CodeArea::totalSize);
+    CASE_INT(PROP_MEMORY_CODE,CodeArea::getTotalSize());
     CASE_INT(PROP_MEMORY_HEAP,ozstat.heapUsed.total+getUsedMemory());
     CASE_REC(PROP_MEMORY,"memory",
 	     (5,AtomAtoms,AtomNames,AtomFreelist,
@@ -398,7 +398,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	     SET_INT(AtomAtoms,ozstat.getAtomMemory());
 	     SET_INT(AtomNames,ozstat.getNameMemory());
 	     SET_INT(AtomFreelist,FL_Manager::getSize());
-	     SET_INT(AtomCode,CodeArea::totalSize);
+	     SET_INT(AtomCode,CodeArea::getTotalSize());
 	     SET_INT(AtomHeap,ozstat.heapUsed.total+getUsedMemory()););
     // LIMITS
     CASE_INT(PROP_LIMITS_INT_MIN,OzMinInt);
