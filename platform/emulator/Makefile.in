@@ -142,22 +142,13 @@ win-install:
 
 first: version $(M4FILES) $(SRCS)
 
-$(FDLIB):
-        cd FDLib; make
-        $(DYNLD) -o $@ $(FDLIBOBJS)
-
-$(SCHEDLIB): $(SCHEDLIBOBJS)
-        $(DYNLD) -o $@ $(SCHEDLIBOBJS)
-
-$(FSETLIB): $(FSETLIBOBJS)
-        $(DYNLD) -o $@ $(FSETLIBOBJS)
-
 $(PROGRAMNAME): first main.o $(OBJS) $(PROPOBJS)
         $(LD) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
            main.o $(OBJS) $(PROPOBJS) $(LIBS); \
-        echo 'moving ...'; $(MV) /tmp/$@.$$$$ $@
+        echo 'moving ...'; rcp /tmp/$@.$$$$ fs-home:`pwd`/$@
 
 install: install-dir install-bin install-inc
+        for d in $(SUBDIRS); do (cd $$d; $(MAKE) install); done
 
 install-bin: $(TARGETS)
         $(INSTALL_BIN) $(TARGETS) $(bindir)
@@ -170,7 +161,6 @@ install-dir:
         if test ! -d $(platformdir) ; then $(INSTALL_DIR) $(platformdir) ; fi
         if test ! -d $(bindir); then $(INSTALL_DIR) $(bindir) ; fi
         if test ! -d $(incdir); then $(INSTALL_DIR) $(incdir) ; fi
-
 
 version.cc: version
 
@@ -185,9 +175,9 @@ version:
              $(srcdir)/version.sed > version.cc
 
 
-depend: $(M4FILES) $(SRCS) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS)
-        $(DEPEND) $(SRCS) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS) \
-                >> Makefile
+depend: $(M4FILES) $(SRCS)
+        $(DEPEND) $(SRCS) >> Makefile
+        for d in $(SUBDIRS); do (cd $$d; $(MAKE) depend); done
 
 $(M4FILES): $(INSTRDEFS)
 
@@ -199,8 +189,8 @@ clean+: clean
         $(RM) $(TARGETS)
 
 clean:
-        $(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt \
-                $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
+        $(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt
+        for d in $(SUBDIRS); do (cd $$d; $(MAKE) clean); done
 
 realclean: clean
         $(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
@@ -208,8 +198,8 @@ realclean: clean
                 ozlib.lnk *.exe *.map *.imp *.sym *.so \
                 $(M4FILES) \
                 oz.c initffuns.cc TAGS \
-                conf.h Makefile config.cache config.log config.status \
-                $(FDLIB) $(SCHEDLIB) $(FSETLIB)
+                conf.h Makefile config.cache config.log config.status
+        for d in $(SUBDIRS); do (cd $$d; $(MAKE) realclean); done
 
 veryclean: realclean
 
@@ -256,7 +246,8 @@ ozma-p.yy: ozma-p.m4yy
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
 
 .cc.o:
-        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && $(MV) /tmp/$$$$.o $@
+        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && \
+                rcp /tmp/$$$$.o fs-home:`pwd`/$@
 
 .cc.s:
         $(CXX) $(CXXFLAGS) -S -o $@ $<
