@@ -1,7 +1,6 @@
 # -*- Makefile -*-
 
 PREFIX          = @prefix@
-BUILDTOP        = @BUILDTOP@
 SRCTOP          = @SRCTOP@
 OZENGINE        = @OZENGINE@
 OZDOC           = @OZDOC@
@@ -24,23 +23,22 @@ HTMLSUPPORTFILES = \
 
 .PHONY: all bootstrap quick validate verify install clean veryclean distclean
 
-all:: Makefile $(BUILDTOP)/Makefile.common $(WHAT)-html/index.html
+all: Makefile ../Makefile.common $(WHAT)-html/index.html
 
 include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
-Makefile: $(SRCDIR)/Makefile.in $(BUILDTOP)/config.status
-        cd $(BUILDTOP) && ./config.status
+Makefile: $(SRCDIR)/Makefile.in ../config.status
+        cd .. && ./config.status
 
-$(BUILDTOP)/Makefile.common: $(SRCTOP)/doc/Makefile.common.in \
-        $(BUILDTOP)/config.status
-        cd $(BUILDTOP) && ./config.status
+../Makefile.common: $(SRCTOP)/doc/Makefile.common.in ../config.status
+        cd .. && ./config.status
 
 $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=ozdoc.css \
-        --xrefdb=$(BUILDTOP)/xref.db --xrefdir=$(WHAT) && \
+        --xrefdb=../xref.db --xrefdir=$(WHAT) && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)); do cp -p $$i $(WHAT)-html; done
 
