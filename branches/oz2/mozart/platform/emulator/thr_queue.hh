@@ -21,7 +21,7 @@ typedef Thread* ThreadPtr;
 //
 //  A queue a'la 'LocalPropagationQueue' by Tobias;
 
-#define INC(a)  { a = (a==maxsize ? 0 : a+1); }
+#define INC(a)  { (a) = ((a) + 1); if ((a)==maxsize) (a)=0; }
 
 class ThreadQueueImpl {
 protected:
