@@ -1,22 +1,53 @@
-%%%  Programming Systems Lab,
-%%%  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5609
-%%%  Author: Leif Kornstaedt <kornstae@ps.uni-sb.de>
+%%%
+%%% Authors:
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+%%%   Andreas Sundstroem <andreas@sics.se>
+%%%
+%%% Copyright:
+%%%   Leif Kornstaedt, 1998
+%%%   Andreas Sundstroem, 1998
+%%%
+%%% Last change:
+%%%   $Date$Author: 
+%%%   $Revision: 
+%%%
+%%% This file is part of Mozart, an implementation of Oz 3:
+%%%    http://mozart.ps.uni-sb.de
+%%%
+%%% See the file "LICENSE" or
+%%%    http://mozart.ps.uni-sb.de/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+OzScanner
+GS = GumpScanner.'class'
 
 local
-   OZVERSION = '2.1.0'   %--** take this from Oz/include/config.m4 instead
-
-   Windows = ({System.get platform}.1 == win32)
-
+   Windows = ({Property.get platform}.os == win32)
+   
+   fun {GetUserHome _} "" end
+   
+   fun {FileExists FileName}
+      try F in
+	 F = {New Open.file init(name: FileName flags: [read])}
+	 {F close()}
+	 true
+      catch _ then false
+      end
+   end
+   
    %--------------------------------------------------------------------
    % Scanner Auxiliary Functions
    %--------------------------------------------------------------------
-
+   
    %--------------------------------------------------------------------
    % File Name Handling
-
+   
    local
-      PathSeparator = case Windows then &; else &: end
-
+      PathSeparator = if Windows then &; else &: end
+      
       fun {IsAbsoluteFileName S}
 	 case S of &/|_ then true
 	 elseof _|&:|_ then Windows   % good old DOS filename like E:...
@@ -24,13 +55,10 @@ local
 	 end
       end
 
-      ozc(getUserHome: GetUserHome isReadableFile: IsReadableFile) =
-      {Foreign.require 'ozc.o' ozc(getUserHome: 2 isReadableFile: 2)}
-
       fun {CheckAccess FileName}
-	 case {IsReadableFile FileName} then FileName
+	 if {FileExists FileName} then FileName
 	 else FileName2 = {Append FileName ".oz"} in
-	    case {IsReadableFile FileName2} then FileName2
+	    if {FileExists FileName2} then FileName2
 	    else ""
 	    end
 	 end
@@ -52,25 +80,29 @@ local
       end
    in
       fun {ExpandFileName FileName CurrentFileName}
-	 case {IsAbsoluteFileName FileName} then {CheckAccess FileName}
-	 elsecase FileName of &~|Sr then FileRest UserHome in   % expand `~'
-	    case Sr of &/|Srr then
-	       FileRest = Srr
-	       UserHome = {OS.getEnv "HOME"}
-	    else User in
-	       FileRest = {List.takeDropWhile Sr fun {$ C} C \= &/ end ?User}
-	       UserHome = {GetUserHome User}
+	 if {IsAbsoluteFileName FileName} then {CheckAccess FileName}
+	 else
+	    case FileName of &~|Sr then FileRest UserHome in   % expand `~'
+	       case Sr of &/|Srr then
+		  FileRest = Srr
+		  UserHome = {OS.getEnv "HOME"}
+	       else User in
+		  FileRest = {List.takeDropWhile Sr
+			      fun {$ C} C \= &/ end ?User}
+		  UserHome = {GetUserHome User}
+	       end
+	       case UserHome of "" then ""
+	       [] _|_ then {CheckAccess {Append UserHome &/|FileRest}}
+	       end
+	    elsecase {CheckAccess
+		      {Append {GetDirName CurrentFileName} FileName}}
+	    of S2=_|_ then S2
+	    [] "" then {SearchPath {OS.getEnv "OZPATH"} FileName}
 	    end
-	    case UserHome of "" then ""
-	    [] _|_ then {CheckAccess {Append UserHome &/|FileRest}}
-	    end
-	 elsecase {CheckAccess {Append {GetDirName CurrentFileName} FileName}}
-	 of S2=_|_ then S2
-	 [] "" then {SearchPath {OS.getEnv "OZPATH"} FileName}
 	 end
       end
    end
-
+   
    %--------------------------------------------------------------------
    % String Handling
 
@@ -97,24 +129,24 @@ local
    %--------------------------------------------------------------------
 
    class ConditionalClass from BaseObject
-      attr Conds AllTrue
+      attr Conds AllTrue 
       meth init()
 	 Conds <- nil
 	 AllTrue <- true
       end
       meth pushCondition(Flag)
 	 Conds <- Flag|@Conds
-	 AllTrue <- case Flag then @AllTrue else false end
+	 AllTrue <- if Flag then @AllTrue else false end
       end
       meth popCondition()
 	 Conds <- @Conds.2
-	 case @AllTrue then skip
+	 if @AllTrue then skip
 	 else AllTrue <- {All @Conds fun {$ C} C end}
 	 end
       end
       meth negateCondition() C|Cs = @Conds in
 	 Conds <- {Not C}|Cs
-	 case C then AllTrue <- false
+	 if C then AllTrue <- false
 	 else AllTrue <- {All @Conds fun {$ C} C end}
 	 end
       end
@@ -128,10 +160,10 @@ local
 
    class MacroClass from BaseObject
       attr Dict
-      meth init()
-	 Dict <- {NewDictionary}
+      meth init(Dict0)
+	 Dict <- Dict0
       end
-      meth define(V)
+      meth 'define'(V)
 	 {Dictionary.put @Dict V true}
       end
       meth undefine(V)
@@ -141,30 +173,14 @@ local
 	 {Dictionary.member @Dict V}
       end
    end
-
-   proc {EnterVersions Cs Macros Hd Tl}
-      case Cs of C1|Cr then
-	 case C1 of &_ then NewTl in
-	    Tl = nil
-	    {Macros define({String.toAtom Hd})}
-	    {EnterVersions Cr Macros {Append Hd C1|NewTl} NewTl}
-	 else NewTl in
-	    Tl = C1|NewTl
-	    {EnterVersions Cr Macros Hd NewTl}
-	 end
-      else
-	 Tl = nil
-	 {Macros define({String.toAtom Hd})}
-      end
-   end
 in
    %--------------------------------------------------------------------
    % The Scanner
    %--------------------------------------------------------------------
 
-   \gumpscannerprefix zz
+%   \gumpscannerprefix zz
 
-   scanner OzScanner from GumpScanner
+   scanner OzScanner from GS
       attr
 	 ErrorFlag ErrorCoord
 	 Conditionals Macros
@@ -172,46 +188,103 @@ in
 	 BufferStack
 	 filename line col
 	 savedFilename savedLine savedCol
+	 % coordinations for parse errors, the last tokens coordinates
+	 peFilename peLine peCol
 	 CommentLastMode CommentCoord CommentDepth
 	 NewLineNumber LineErrorFlag
-      feat GumpSyntax: false
+	 Reporter GumpSyntax
+	 parserExpect scannerPrefix
 
-      meth init(ShowInsert GumpIsActive) VersionString X in
-	 GumpScanner, init()
+      meth init(gump:UseGumpSyntax showInsert:ShowInsert reporter:Report
+		macros:Dict)
+	 GS, init()
 	 ErrorFlag <- false
-	 Conditionals <- {New ConditionalClass init()}
-	 VersionString = &O|&z|&_|
-			 {Map {Atom.toString OZVERSION}
-			  fun {$ C} case C == &. then &_ else C end end}
-	 Macros <- {New MacroClass init()}
-	 {EnterVersions VersionString @Macros X X}
-	 ShowInsertSwitch <- ShowInsert
-	 self.GumpSyntax = GumpIsActive
 	 BufferStack <- nil
-	 filename <- ''
-	 line <- 1
+	 Macros <- {New MacroClass init(Dict)}
+	 Conditionals <- {New ConditionalClass init()}
+	 
+	 ShowInsertSwitch <- ShowInsert
+	 GumpSyntax <- UseGumpSyntax
+	 filename <- 'unknown'
 	 col <- 0
+	 line <- 1
+	 Reporter <- Report
+	 parserExpect <- 0
+	 scannerPrefix <- ''
+
+	 _ = DIRECTIVEWITHARGS \= DIRECTIVE_FATHER
       end
 
-      meth putToken1(T)
-	 case {@Conditionals testCondition($)} then
-	    GumpScanner, putToken1(T)
+      meth getParserExpect($)
+	 @parserExpect
+      end
+      meth getScannerPrefix($)
+	 @scannerPrefix
+      end
+
+      meth gumpSyntax(X)
+	 case X
+	 of on then GumpSyntax <- true 
+	 [] off then GumpSyntax <- false
+	 end
+      end
+      
+      meth reportError(C K M) 
+	 {@Reporter error(coord:C kind:K msg:M)}
+      end
+
+      meth setParseErrorCoords()
+	 peFilename <- @filename
+	 peLine <- @line
+	 peCol <- @col
+      end
+
+
+      % sets parse error coordinates and updates col
+      meth updateCol(C)
+	 if C \= none then 
+	    peFilename <- @filename
+	    peLine <- @line
+	    peCol <- @col
+	    col <- @col + C
+	 end
+      end
+
+      %put token, sets parse error coordinates and updates col
+      meth pt1(T ColDiff)
+	 if {@Conditionals testCondition($)} then
+	    OzScanner, updateCol(ColDiff)
+	    GS, putToken1(T)
 	 else skip
 	 end
       end
-      meth putToken(T V)
-	 case {@Conditionals testCondition($)} then
-	    GumpScanner, putToken(T V)
+      meth pt(T V ColDiff)
+	 if {@Conditionals testCondition($)} then
+	    OzScanner, updateCol(ColDiff)
+	    GS, putToken(T V)
 	 else skip
 	 end
       end
 
+      meth scanFile(FN) Stripped FileName AtomFileName in
+	 Stripped = {Strip &' FN}
+	 FileName = {ExpandFileName Stripped {Atom.toString @filename}}
+	 if @ShowInsertSwitch then
+	    {System.showInfo '%%%     inserting file "'#FileName#'"'}
+	 else skip
+	 end
+
+	 AtomFileName = {String.toAtom FileName}
+	 filename <- AtomFileName
+	 GS, scanFile(AtomFileName)
+      end
+      
       %--------------------------------------------------------------------
       % Handle Coordinate Information and Multiple Buffers
 
       meth PushBuffer(FileName)
 	 try
-	    GumpScanner, scanFile(FileName)
+	    GS, scanFile(FileName)
 	    BufferStack <- (@filename#@line#@col#@Conditionals)|@BufferStack
 	    filename <- {String.toAtom FileName}
 	    line <- 1
@@ -220,27 +293,28 @@ in
 	 catch gump(fileNotFound _) then C in
 	    OzScanner, getCoordinates(?C)
 	    {self reportError(C 'macro directive error'
-			      ['could not open file to insert'])}
+			      'could not open file to insert')}
 	 end
       end
       meth PopBuffer()
-	 case {@Conditionals currentlyConditional($)} then C in
+	 if {@Conditionals currentlyConditional($)} then C in
 	    OzScanner, getCoordinates(?C)
 	    {self reportError(C 'macro directive error'
-			      ['unterminated \\ifdef of \\ifndef'])}
+			      'unterminated \\ifdef of \\ifndef')}
 	 else skip
 	 end
 	 ErrorFlag <- false
-	 GumpScanner, closeBuffer()
+	 GS, closeBuffer()
 	 case @BufferStack of (F#L#C#Cond)|BufferStackRest then
 	    BufferStack <- BufferStackRest
+	    OzScanner, setParseErrorCoords()
 	    filename <- F
 	    line <- L
 	    col <- C
 	    Conditionals <- Cond
-	    GumpScanner, setMode(DIRECTIVE)
+	    OzScanner, setMode(DIRECTIVE)
 	 [] nil then
-	    GumpScanner, putToken1('EOF')
+	    GS, putToken1('EOF')
 	 end
       end
 
@@ -273,50 +347,60 @@ in
 	 [] nil then skip
 	 end
       end
+      meth parseErrorCoordinates($)
+	 pos(@peFilename @peLine @peCol)
+      end
 
       meth ConvertPseudoChars(S Col $)
 	 case S of &\\|C1|Cr then
-	    case C1 of &a then &\a|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
+	    case C1
+	    of &a then &\a|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &b then &\b|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &f then &\f|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &n then &\n|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &r then &\r|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &t then &\t|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &v then &\v|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
-	    [] &x then C2|C3|Crr = Cr C in
-	       C = Hex.C2 * 16 + Hex.C3
-	       case C == 0 then
-		  case {@Conditionals testCondition($)} then
-		     {self reportError(pos(@filename @line Col) 'lexical error'
-				       ['character in hexadecimal notation == 0'])}
-		  else skip
-		  end
-		  (OzScanner, ConvertPseudoChars(Crr Col + 4 $))
-	       else
-		  C|(OzScanner, ConvertPseudoChars(Crr Col + 4 $))
-	       end
 	    [] &\\ then &\\|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &` then &`|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &" then &"|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
 	    [] &' then &'|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
-	    else C2|C3|Crr = Cr C in   % must be an octal constant
-	       C = Hex.C1 * 64 + Hex.C2 * 8 + Hex.C3
-	       case C == 0 then
-		  case {@Conditionals testCondition($)} then
-		     {self reportError(pos(@filename @line Col) 'lexical error'
-				       ['character in octal notation == 0'])}
-		  else skip
+	    [] && then &&|(OzScanner, ConvertPseudoChars(Cr Col + 2 $))
+	    else
+	       if C1 == &x orelse C1 == &X then C2|C3|Crr = Cr C in
+		  C = Hex.C2 * 16 + Hex.C3
+		  if C == 0 then
+		     if {@Conditionals testCondition($)} then
+			{self reportError(pos(@filename @line Col)
+					  'lexical error'
+				   'character in hexadecimal notation == 0')}
+		     else skip
+		     end
+		     (OzScanner, ConvertPseudoChars(Crr Col + 4 $))
+		  else
+		     C|(OzScanner, ConvertPseudoChars(Crr Col + 4 $))
 		  end
-		  (OzScanner, ConvertPseudoChars(Crr Col + 4 $))
-	       elsecase C >= 256 then
-		  case {@Conditionals testCondition($)} then
-		     {self reportError(pos(@filename @line Col) 'lexical error'
-				       ['character in octal notation >= 256'])}
-		  else skip
+	       else C2|C3|Crr = Cr C in   % must be an octal constant
+		  C = Hex.C1 * 64 + Hex.C2 * 8 + Hex.C3
+		  if C == 0 then
+		     if {@Conditionals testCondition($)} then
+			{self reportError(pos(@filename @line Col)
+					  'lexical error'
+				       'character in octal notation == 0')}
+		     else skip
+		     end
+		     (OzScanner, ConvertPseudoChars(Crr Col + 4 $))
+		  elseif C >= 256 then
+		     if {@Conditionals testCondition($)} then
+			{self reportError(pos(@filename @line Col)
+					  'lexical error'
+				      'character in octal notation >= 256')}
+		     else skip
+		     end
+		     (C - 256)|(OzScanner, ConvertPseudoChars(Crr Col + 4 $))
+		  else
+		     C|(OzScanner, ConvertPseudoChars(Crr Col + 4 $))
 		  end
-		  (C - 256)|(OzScanner, ConvertPseudoChars(Crr Col + 4 $))
-	       else
-		  C|(OzScanner, ConvertPseudoChars(Crr Col + 4 $))
 	       end
 	    end
 	 elseof C|Cr then
@@ -334,9 +418,9 @@ in
       lex <"/*">
 	 CommentDepth <- 1
 	 CommentCoord <- OzScanner, getCoordinates($)
-	 CommentLastMode <- GumpScanner, currentMode($)
+	 CommentLastMode <- GS, currentMode($)
 	 col <- @col + 2
-	 GumpScanner, setMode(COMMENT)
+	 OzScanner, setMode(COMMENT)
       end
       mode COMMENT
 	 lex <"/*">
@@ -345,19 +429,19 @@ in
 	 end
 	 lex <"*/">
 	    CommentDepth <- @CommentDepth - 1
-	    case @CommentDepth == 0 then
-	       GumpScanner, setMode(@CommentLastMode)
+	    if @CommentDepth == 0 then
+	       OzScanner, setMode(@CommentLastMode)
 	    else skip
 	    end
 	    col <- @col + 2
 	 end
-	 lex <[^*/\n]+> col <- @col + GumpScanner, getLength($) end
+	 lex <[^*/\n]+> col <- @col + GS, getLength($) end
 	 lex <\n> line <- @line + 1 col <- 0 end
 	 lex <[*/]> col <- @col + 1 end
 	 lex <<EOF>>
-	    case {@Conditionals testCondition($)} then
+	    if {@Conditionals testCondition($)} then
 	       {self reportError(@CommentCoord 'lexical error'
-				 ['unterminated comment'])}
+				 'unterminated comment')}
 	    else skip
 	    end
 	    OzScanner, PopBuffer()
@@ -381,51 +465,198 @@ in
       lex variableChar = <[^`\\\x00]> end
       lex atomChar = <[^'\\\x00]> end
       lex stringChar = <[^\"\\\x00]> end
-      lex escape = <[abfnrtv\\'\"`]> end
+      lex escape = <[abfnrtv\\'\"`&]> end
       lex bin = <[0-1]> end
       lex oct = <[0-7]> end
       lex hex = <[0-9a-fA-F]> end
       lex pseudoChar = <\\({oct}{3}|[xX]{hex}{2}|{escape})> end
       lex anyChar = <{char}|{pseudoChar}> end
 
+      lex atom = <{lower}{alphaNum}*> end
+      lex atomQuoted = <"'"({atomChar}|{pseudoChar})*"'"> end
+      lex int = <~?(0{oct}*|0[Xx]{hex}+|0[Bb]{bin}+|{nonzerodigit}{digit}*)> end
+
       %-----------------------------------------------------------------
       % Compiler Directives
       %-----------------------------------------------------------------
-
-      lex <\\he(lp?)?>
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('help')
-	 GumpScanner, setMode(DIRECTIVE)
+      
+      lex <\\switch>
+	 OzScanner, pt1('switch' GS, getLength($))
+	 OzScanner, setMode(SWITCH)
+      end
+      mode SWITCH from DIRECTIVE
+	 lex <"+">
+	    OzScanner, pt1('+' 1)
+	 end
+	 lex <"-">
+	    OzScanner, pt1('-' 1)
+	 end
+	 lex <{alphaNum}+>
+	    OzScanner, pt('SWITCHNAME' GS, getAtom($) GS, getLength($))
+	 end
       end
 
-      lex <\\l(i(ne?)?)?>
-	 col <- @col + GumpScanner, getLength($)
-	 case {@Conditionals testCondition($)} then
+      lex <\\showSwitches>
+	 OzScanner, pt1('showSwitches' GS, getLength($))
+	 OzScanner, setMode(DIRECTIVE)
+      end
+      lex <\\pushSwitches>
+	 OzScanner, pt1('pushSwitches' GS, getLength($))
+	 OzScanner, setMode(DIRECTIVE)
+      end
+      lex <\\popSwitches>
+	 OzScanner, pt1('popSwitches' GS, getLength($))
+	 OzScanner, setMode(DIRECTIVE)
+      end
+      lex <\\localSwitches>
+	 OzScanner, pt1('localSwitches' GS, getLength($))
+	 OzScanner, setMode(DIRECTIVE)
+      end	 
+      
+      lex <\\insert>
+	 ErrorCoord <- OzScanner, getCoordinates($)
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(INSERT)
+      end
+      mode INSERT from DIRECTIVEWITHARGS
+	 lex <{filename}>
+	    col <- @col + GS, getLength($)
+	    if {@Conditionals testCondition($)} then Stripped FileName in
+	       Stripped = {Strip &' GS, getString($)}
+	       FileName = {ExpandFileName Stripped {Atom.toString @filename}}
+	       case FileName of "" then C in
+		  OzScanner, getCoordinates(?C)
+		  {self reportError(C 'macro directive error'
+				    'could not open file to insert')}
+		  OzScanner, setMode(DIRECTIVE)
+	       else
+		  if @ShowInsertSwitch then
+		     {System.showInfo '%%%     inserting file "'#FileName#'"'}
+		  else skip
+		  end
+		  OzScanner, PushBuffer(FileName)
+		  OzScanner, setMode(INITIAL)
+	       end
+	    else
+	       OzScanner, setMode(DIRECTIVE)
+	    end
+	 end
+      end
+
+      lex <\\define>
+	 ErrorCoord <- OzScanner, getCoordinates($)
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(DEFINE)
+      end
+      mode DEFINE from DIRECTIVEWITHARGS
+	 lex <{variable}>
+	    col <- @col + GS, getLength($)
+	    if {@Conditionals testCondition($)} then
+	       {@Macros 'define'(GS, getAtom($))}
+	    else skip
+	    end
+	    OzScanner, setMode(DIRECTIVE)
+	 end
+      end
+
+      lex <\\undef>
+	 ErrorCoord <- OzScanner, getCoordinates($)
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(UNDEF)
+      end
+      mode UNDEF from DIRECTIVEWITHARGS
+	 lex <{variable}>
+	    col <- @col + GS, getLength($)
+	    if {@Conditionals testCondition($)} then
+	       {@Macros undefine(GS, getAtom($))}
+	    else skip
+	    end
+	    OzScanner, setMode(DIRECTIVE)
+	 end
+      end
+
+      lex <\\ifdef>
+	 ErrorCoord <- OzScanner, getCoordinates($)
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(IFDEF)
+      end
+      mode IFDEF from DIRECTIVEWITHARGS
+	 lex <{variable}>
+	    col <- @col + GS, getLength($)
+	    {@Conditionals
+	     pushCondition({@Macros isDefined(GS, getAtom($) $)})}
+	    OzScanner, setMode(DIRECTIVE)
+	 end
+      end
+
+      lex <\\ifndef>
+	 ErrorCoord <- OzScanner, getCoordinates($)
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(IFNDEF)
+      end
+      mode IFNDEF from DIRECTIVEWITHARGS
+	 lex <{variable}>
+	    col <- @col + GS, getLength($)
+	    {@Conditionals
+	     pushCondition({Not {@Macros isDefined(GS, getAtom($) $)}})}
+	    OzScanner, setMode(DIRECTIVE)
+	 end
+      end
+
+      lex <\\else>
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(DIRECTIVE)
+	 if {@Conditionals currentlyConditional($)} then
+	    {@Conditionals negateCondition()}
+	 else C in
+	    OzScanner, getCoordinates(?C)
+	    {self reportError(C 'macro directive error'
+			      '\\else without previous corresponding '#
+			      '\\ifdef or \\ifndef')}
+	 end
+      end
+
+      lex <\\endif>
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(DIRECTIVE)
+	 if {@Conditionals currentlyConditional($)} then
+	    {@Conditionals popCondition()}
+	 else C in
+	    OzScanner, getCoordinates(?C)
+	    {self reportError(C 'macro directive error'
+			      '\\endif without previous corresponding '#
+			      '\\ifdef or \\ifndef')}
+	 end
+      end
+
+      lex <\\line>
+	 col <- @col + GS, getLength($)
+	 if {@Conditionals testCondition($)} then
 	    NewLineNumber <- ~1   % meaning: expecting line number first
 	    LineErrorFlag <- false
 	    ErrorFlag <- true
-	    GumpScanner, setMode(LINE)
+	    OzScanner, setMode(LINE)
 	 else skip
 	 end
       end
       mode LINE from DIRECTIVEWITHARGS
 	 lex <[0-9]+>
-	    col <- @col + GumpScanner, getLength($)
-	    case @NewLineNumber == ~1 then
-	       NewLineNumber <- {String.toInt GumpScanner, getString($)}
+	    col <- @col + GS, getLength($)
+	    if @NewLineNumber == ~1 then
+	       NewLineNumber <- {String.toInt GS, getString($)}
 	    else
 	       LineErrorFlag <- true
 	       ErrorCoord <- OzScanner, getCoordinates($)
 	    end
 	 end
 	 lex <{filename}>
-	    col <- @col + GumpScanner, getLength($)
-	    case @NewLineNumber == ~1 then
+	    col <- @col + GS, getLength($)
+	    if @NewLineNumber == ~1 then
 	       ErrorFlag <- true
 	       ErrorCoord <- OzScanner, getCoordinates($)
 	    else Stripped FileName in
 	       line <- @NewLineNumber
-	       Stripped = {Strip &' GumpScanner, getString($)}
+	       Stripped = {Strip &' GS, getString($)}
 	       FileName = {ExpandFileName Stripped {Atom.toString @filename}}
 	       case FileName of "" then
 		  filename <- {String.toAtom Stripped}
@@ -434,213 +665,84 @@ in
 	       end
 	       ErrorFlag <- @LineErrorFlag
 	    end
-	    GumpScanner, setMode(DIRECTIVE)
+	    OzScanner, setMode(DIRECTIVE)
 	 end
       end
 
-      lex <\\s(w(i(t(ch?)?)?)?)?>
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('switch')
-	 GumpScanner, setMode(SWITCH)
+      %-----------------------------------------------------------------
+      % Gump Directives
+
+      lex <\\gumpscannerprefix>
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(SCANNERPREFIX)
       end
-      mode SWITCH from DIRECTIVE
-	 lex <"+">
-	    col <- @col + 1
-	    OzScanner, putToken1('+')
+      mode SCANNERPREFIX from DIRECTIVEWITHARGS
+	 lex <{atom}>
+	    OzScanner, SaveCoordinates()
+	    col <- @col + GS, getLength($)
+	    scannerPrefix <- {String.toAtom GS, getString($)}
+	    OzScanner, setMode(DIRECTIVE)
 	 end
-	 lex <"-">
-	    col <- @col + 1
-	    OzScanner, putToken1('-')
-	 end
-	 lex <{alphaNum}+>
-	    col <- @col + GumpScanner, getLength($)
-	    OzScanner, putToken('SWITCHNAME' GumpScanner, getAtom($))
+	 lex <{atomQuoted}> S1 S2 in
+	    OzScanner, SaveCoordinates()
+	    GS, getString(?S1)
+	    OzScanner, ConvertPseudoChars({Strip &' S1} @col ?S2)
+	    OzScanner, UpdateCoordinates(S1)
+	    scannerPrefix <- {String.toAtom S2}
+	    OzScanner, setMode(DIRECTIVE)
 	 end
       end
 
-      lex <\\sh(o(w(Switches)?)?)?>
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('showSwitches')
-	 GumpScanner, setMode(DIRECTIVE)
+      lex<\\gumpparserexpect>
+	 col <- @col + GS, getLength($)
+	 OzScanner, setMode(PARSEREXPECT)
       end
-      lex <\\pu(s(h(Switches)?)?)?>
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('pushSwitches')
-	 GumpScanner, setMode(DIRECTIVE)
-      end
-      lex <\\po(p(Switches)?)?>
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('popSwitches')
-	 GumpScanner, setMode(DIRECTIVE)
-      end
-
-      lex <\\f(e(ed?)?)?>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('feed')
-	 GumpScanner, setMode(INPUTFILE)
-      end
-      lex <\\threadedfeed>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('threadedfeed')
-	 GumpScanner, setMode(INPUTFILE)
-      end
-      lex <\\c(o(re?)?)?>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('core')
-	 GumpScanner, setMode(INPUTFILE)
-      end
-      lex <\\m(a(c(h(i(ne?)?)?)?)?)?>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken1('machine')
-	 GumpScanner, setMode(INPUTFILE)
-      end
-      mode INPUTFILE from DIRECTIVEWITHARGS
-	 lex <{filename}> Stripped FileName in
-	    col <- @col + GumpScanner, getLength($)
-	    Stripped = {Strip &' GumpScanner, getString($)}
-	    FileName = {ExpandFileName Stripped {Atom.toString @filename}}
-	    case FileName of "" then
-	       OzScanner, putToken('FILENAME' {String.toAtom Stripped})
-	    else
-	       OzScanner, putToken('FILENAME' {String.toAtom FileName})
-	    end
-	    GumpScanner, setMode(DIRECTIVE)
+      mode PARSEREXPECT from DIRECTIVEWITHARGS
+	 lex <{int}>
+	    OzScanner, SaveCoordinates()
+	    col <- @col + GS, getLength($)
+	    parserExpect <- {String.toInt GS, getString($)}
+	    OzScanner, setMode(DIRECTIVE)
 	 end
       end
-
-      lex <\\in(s(e(rt?)?)?)?>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 GumpScanner, setMode(INSERT)
-      end
-      mode INSERT from DIRECTIVEWITHARGS
-	 lex <{filename}>
-	    col <- @col + GumpScanner, getLength($)
-	    case {@Conditionals testCondition($)} then Stripped FileName in
-	       Stripped = {Strip &' GumpScanner, getString($)}
-	       FileName = {ExpandFileName Stripped {Atom.toString @filename}}
-	       case FileName of "" then C in
-		  OzScanner, getCoordinates(?C)
-		  {self reportError(C 'macro directive error'
-				    ['could not open file to insert'])}
-		  GumpScanner, setMode(DIRECTIVE)
-	       else
-		  case @ShowInsertSwitch then
-		     {System.showInfo '%%%     inserting file "'#FileName#'"'}
-		  else skip
-		  end
-		  OzScanner, PushBuffer(FileName)
-		  GumpScanner, setMode(INITIAL)
-	       end
-	    else
-	       GumpScanner, setMode(DIRECTIVE)
-	    end
-	 end
-      end
-
-      lex <\\d(e(f(i(ne?)?)?)?)?>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 GumpScanner, setMode(DEFINE)
-      end
-      mode DEFINE from DIRECTIVEWITHARGS
-	 lex <{variable}>
-	    col <- @col + GumpScanner, getLength($)
-	    case {@Conditionals testCondition($)} then
-	       {@Macros define(GumpScanner, getAtom($))}
-	    else skip
-	    end
-	    GumpScanner, setMode(DIRECTIVE)
-	 end
-      end
-
-      lex <\\u(n(d(ef?)?)?)?>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 GumpScanner, setMode(UNDEF)
-      end
-      mode UNDEF from DIRECTIVEWITHARGS
-	 lex <{variable}>
-	    col <- @col + GumpScanner, getLength($)
-	    case {@Conditionals testCondition($)} then
-	       {@Macros undefine(GumpScanner, getAtom($))}
-	    else skip
-	    end
-	    GumpScanner, setMode(DIRECTIVE)
-	 end
-      end
-
-      lex <\\ifd(ef?)?>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 GumpScanner, setMode(IFDEF)
-      end
-      mode IFDEF from DIRECTIVEWITHARGS
-	 lex <{variable}>
-	    col <- @col + GumpScanner, getLength($)
-	    {@Conditionals
-	     pushCondition({@Macros isDefined(GumpScanner, getAtom($) $)})}
-	    GumpScanner, setMode(DIRECTIVE)
-	 end
-      end
-
-      lex <\\ifn(d(ef?)?)?>
-	 ErrorCoord <- OzScanner, getCoordinates($)
-	 col <- @col + GumpScanner, getLength($)
-	 GumpScanner, setMode(IFNDEF)
-      end
-      mode IFNDEF from DIRECTIVEWITHARGS
-	 lex <{variable}>
-	    col <- @col + GumpScanner, getLength($)
-	    {@Conditionals
-	     pushCondition({Not {@Macros isDefined(GumpScanner, getAtom($) $)}})}
-	    GumpScanner, setMode(DIRECTIVE)
-	 end
-      end
-
-      lex <\\el(se?)?>
-	 col <- @col + GumpScanner, getLength($)
-	 GumpScanner, setMode(DIRECTIVE)
-	 case {@Conditionals currentlyConditional($)} then
-	    {@Conditionals negateCondition()}
-	 else C in
-	    OzScanner, getCoordinates(?C)
-	    {self reportError(C 'macro directive error'
-			      ['\\else without previous corresponding '#
-			       '\\ifdef or \\ifndef'])}
-	 end
-      end
-
-      lex <\\en(d(if?)?)?>
-	 col <- @col + GumpScanner, getLength($)
-	 GumpScanner, setMode(DIRECTIVE)
-	 case {@Conditionals currentlyConditional($)} then
-	    {@Conditionals popCondition()}
-	 else C in
-	    OzScanner, getCoordinates(?C)
-	    {self reportError(C 'macro directive error'
-			['\\endif without previous corresponding '#
-			 '\\ifdef or \\ifndef'])}
-	 end
-      end
-
-      mode DIRECTIVEWITHARGS from DIRECTIVE
+	       
+      mode DIRECTIVE from DIRECTIVE_FATHER
 	 lex <<EOF>>
-	    {self reportError(OzScanner, getCoordinates($) 'directive error'
-			      ['unterminated directive'])}
 	    OzScanner, PopBuffer()
 	 end
       end
-      mode DIRECTIVE
+      mode DIRECTIVEWITHARGS from DIRECTIVE_FATHER
+	 lex <<EOF>>
+	    {self reportError(OzScanner, getCoordinates($) 'directive error'
+			      'unterminated directive')}
+	    OzScanner, PopBuffer()
+	 end
+      end
+      mode DIRECTIVE_FATHER
 	 % common layout rules valid for all directives
-	 lex <{blank}+> col <- @col + GumpScanner, getLength($) end
+	 lex <"%".*\n> 
+	    line <- @line + 1 col <- 0
+	    if @ErrorFlag then
+	       {self reportError(@ErrorCoord 'directive error'
+				 'illegal directive syntax')}
+	       ErrorFlag <- false
+	    else skip
+	    end
+	    OzScanner, setMode(INITIAL)
+	 end
+
+      lex <"/*">
+	    CommentDepth <- 1
+	    CommentCoord <- OzScanner, getCoordinates($)
+	    CommentLastMode <- GS, currentMode($)
+	    col <- @col + 2
+	    OzScanner, setMode(COMMENT)
+	 end
+
+	 lex <{blank}+> col <- @col + GS, getLength($) end
 	 lex <.>
-	    OzScanner, UpdateCoordinates(GumpScanner, getString($))
-	    case @ErrorFlag then skip
+	    OzScanner, UpdateCoordinates(GS, getString($))
+	    if @ErrorFlag then skip
 	    else
 	       ErrorFlag <- true
 	       ErrorCoord <- OzScanner, getCoordinates($)
@@ -648,187 +750,156 @@ in
 	 end
 	 lex <\n>
 	    line <- @line + 1 col <- 0
-	    case @ErrorFlag then
+	    if @ErrorFlag then
 	       {self reportError(@ErrorCoord 'directive error'
-				 ['illegal directive syntax'])}
+				 'illegal directive syntax')}
 	       ErrorFlag <- false
 	    else skip
 	    end
-	    GumpScanner, setMode(INITIAL)
-	 end
-	 lex <<EOF>>
-	    OzScanner, PopBuffer()
+	    OzScanner, setMode(INITIAL)
 	 end
       end
-
+      
       %--------------------------------------------------------------------
       % Gump Extensions
       %--------------------------------------------------------------------
 
       lex regexChar = <"["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]> end
 
-      lex <"=>"> col <- @col + 2 OzScanner, putToken1('=>') end
-      lex <"//"> col <- @col + 2 OzScanner, putToken1('//') end
+      lex <"=>"> OzScanner, pt1('=>' 2) end
+      lex <"//"> OzScanner, pt1('//' 2) end
 
       lex <lex>
-	 case self.GumpSyntax then
-	    col <- @col + 3
-	    OzScanner, putToken1('lex')
-	    GumpScanner, setMode(LEX)
+	 if @GumpSyntax then
+	    OzScanner, pt1('lex' 3)
+	    OzScanner, setMode(LEX)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 3
-	    OzScanner, putToken('ATOM' 'lex')
+	    OzScanner, pt('ATOM' 'lex' 3)
 	 end
       end
       lex <mode>
-	 case self.GumpSyntax then
-	    col <- @col + 4
-	    OzScanner, putToken1('mode')
+	 if @GumpSyntax then
+	    OzScanner, pt1('mode' 4)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 4
-	    OzScanner, putToken('ATOM' 'mode')
+	    OzScanner, pt('ATOM' 'mode' 4)
 	 end
       end
       lex <parser>
-	 case self.GumpSyntax then C in
+	 if @GumpSyntax then C in
 	    OzScanner, getCoordinates(?C)
-	    col <- @col + 6
-	    OzScanner, putToken('parser' C)
+	    OzScanner, pt('parser' C 6)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 6
-	    OzScanner, putToken('ATOM' 'parser')
+	    OzScanner, pt('ATOM' 'parser' 6)
 	 end
       end
       lex <prod>
-	 case self.GumpSyntax then
-	    col <- @col + 4
-	    OzScanner, putToken1('prod')
+	 if @GumpSyntax then
+	    OzScanner, pt1('prod' 4)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 4
-	    OzScanner, putToken('ATOM' 'prod')
+	    OzScanner, pt('ATOM' 'prod' 4)
 	 end
       end
       lex <scanner>
-	 case self.GumpSyntax then C in
+	 if @GumpSyntax then C in
 	    OzScanner, getCoordinates(?C)
-	    col <- @col + 7
-	    OzScanner, putToken('scanner' C)
+	    OzScanner, pt('scanner' C 7)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 7
-	    OzScanner, putToken('ATOM' 'scanner')
+	    OzScanner, pt('ATOM' 'scanner' 7)
 	 end
       end
       lex <syn>
-	 case self.GumpSyntax then
-	    col <- @col + 3
-	    OzScanner, putToken1('syn')
+	 if @GumpSyntax then
+	    OzScanner, pt1('syn' 3)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 3
-	    OzScanner, putToken('ATOM' 'syn')
+	    OzScanner, pt('ATOM' 'syn' 3)
 	 end
       end
       lex <token>
-	 case self.GumpSyntax then
-	    col <- @col + 5
-	    OzScanner, putToken1('token')
+	 if @GumpSyntax then
+	    OzScanner, pt1('token' 5)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 5
-	    OzScanner, putToken('ATOM' 'token')
+	    OzScanner, pt('ATOM' 'token' 5)
 	 end
       end
 
       lex <lex/\(>
-	 case self.GumpSyntax then
-	    col <- @col + 3
-	    OzScanner, putToken1('lex')
-	    GumpScanner, setMode(LEX)
+	 if @GumpSyntax then
+	    OzScanner, pt1('lex' 3)
+	    OzScanner, setMode(LEX)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 3
-	    OzScanner, putToken('ATOM()' 'lex')
+	    OzScanner, pt('ATOM()' 'lex' 3)
 	 end
       end
       lex <mode/\(>
-	 case self.GumpSyntax then
-	    col <- @col + 4
-	    OzScanner, putToken1('mode')
+	 if @GumpSyntax then
+	    OzScanner, pt1('mode' 4)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 4
-	    OzScanner, putToken('ATOM()' 'mode')
+	    OzScanner, pt('ATOM()' 'mode' 4)
 	 end
       end
       lex <parser/\(>
-	 case self.GumpSyntax then C in
+	 if @GumpSyntax then C in
 	    OzScanner, getCoordinates(?C)
-	    col <- @col + 6
-	    OzScanner, putToken('parser' C)
+	    OzScanner, pt('parser' C 6)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 6
-	    OzScanner, putToken('ATOM()' 'parser')
+	    OzScanner, pt('ATOM()' 'parser' 6)
 	 end
       end
       lex <prod/\(>
-	 case self.GumpSyntax then
-	    col <- @col + 4
-	    OzScanner, putToken1('prod')
+	 if @GumpSyntax then
+	    OzScanner, pt1('prod' 4)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 4
-	    OzScanner, putToken('ATOM()' 'prod')
+	    OzScanner, pt('ATOM()' 'prod' 4)
 	 end
       end
       lex <scanner/\(>
-	 case self.GumpSyntax then C in
+	 if @GumpSyntax then C in
 	    OzScanner, getCoordinates(?C)
-	    col <- @col + 7
-	    OzScanner, putToken('scanner' C)
+	    OzScanner, pt('scanner' C 7)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 7
-	    OzScanner, putToken('ATOM()' 'scanner')
+	    OzScanner, pt('ATOM()' 'scanner' 7)
 	 end
       end
       lex <syn/\(>
-	 case self.GumpSyntax then
-	    col <- @col + 3
-	    OzScanner, putToken1('syn')
+	 if @GumpSyntax then
+	    OzScanner, pt1('syn' 3)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 3
-	    OzScanner, putToken('ATOM()' 'syn')
+	    OzScanner, pt('ATOM()' 'syn' 3)
 	 end
       end
       lex <token/\(>
-	 case self.GumpSyntax then
-	    col <- @col + 5
-	    OzScanner, putToken1('token')
+	 if @GumpSyntax then
+	    OzScanner, pt1('token' 5)
 	 else
 	    OzScanner, SaveCoordinates()
-	    col <- @col + 5
-	    OzScanner, putToken('ATOM()' 'token')
+	    OzScanner, pt('ATOM()' 'token' 5)
 	 end
       end
 
       mode LEX from INITIAL
 	 lex <"<<EOF>>">
-	    col <- @col + 7
-	    OzScanner, putToken('REGEX' GumpScanner, getAtom($))
-	    GumpScanner, setMode(INITIAL)
+	    OzScanner, pt('REGEX' GS, getString($) 7)
+	    OzScanner, setMode(INITIAL)
 	 end
-	 lex <"<"{regexChar}+">"> S in
-	    GumpScanner, getString(?S)
+	 lex <"<"{regexChar}+">"> S in  
+	    GS, getString(?S)
+	    OzScanner, setParseErrorCoords()
 	    OzScanner, UpdateCoordinates(S)
-	    OzScanner, putToken('REGEX' {String.toAtom {ButLast S.2}})
-	    GumpScanner, setMode(INITIAL)
+	    OzScanner, pt('REGEX' {ButLast S.2} none)
+	    OzScanner, setMode(INITIAL)
 	 end
       end
 
@@ -839,164 +910,165 @@ in
       %-----------------------------------------------------------------
       % Keywords
 
-      lex <else>        col <- @col + 4 OzScanner, putToken1('else')     end
-      lex <elseof>      col <- @col + 6 OzScanner, putToken1('elseof')   end
-      lex <finally>     col <- @col + 7 OzScanner, putToken1('finally')  end
-      lex <in>          col <- @col + 2 OzScanner, putToken1('in')       end
-      lex <of>          col <- @col + 2 OzScanner, putToken1('of')       end
-      lex <then>        col <- @col + 4 OzScanner, putToken1('then')     end
-      lex <with>        col <- @col + 4 OzScanner, putToken1('with')     end
+      lex <else>        OzScanner, pt1('else' 4)     end
+      lex <elseof>      OzScanner, pt1('elseof' 6)   end
+      lex <finally>     OzScanner, pt1('finally' 7)  end
+      lex <in>          OzScanner, pt1('in' 2)       end
+      lex <of>          OzScanner, pt1('of' 2)       end
+      lex <then>        OzScanner, pt1('then' 4)     end
+      lex <with>        OzScanner, pt1('with' 4)     end
 
-      lex <else/\(>     col <- @col + 4 OzScanner, putToken1('else')     end
-      lex <elseof/\(>   col <- @col + 6 OzScanner, putToken1('elseof')   end
-      lex <finally/\(>  col <- @col + 7 OzScanner, putToken1('finally')  end
-      lex <in/\(>       col <- @col + 2 OzScanner, putToken1('in')       end
-      lex <of/\(>       col <- @col + 2 OzScanner, putToken1('of')       end
-      lex <then/\(>     col <- @col + 4 OzScanner, putToken1('then')     end
-      lex <with/\(>     col <- @col + 4 OzScanner, putToken1('with')     end
+      lex <else/\(>     OzScanner, pt1('else' 4)     end
+      lex <elseof/\(>   OzScanner, pt1('elseof' 6)   end
+      lex <finally/\(>  OzScanner, pt1('finally' 7)  end
+      lex <in/\(>       OzScanner, pt1('in' 2)       end
+      lex <of/\(>       OzScanner, pt1('of' 2)       end
+      lex <then/\(>     OzScanner, pt1('then' 4)     end
+      lex <with/\(>     OzScanner, pt1('with' 4)     end
 
-      lex <andthen>     C in OzScanner, getCoordinates(?C) col <- @col + 7 OzScanner, putToken('andthen' C)  end
-      lex <attr>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('attr' C)     end
-      lex <case>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('case' C)     end
-      lex <catch>       C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('catch' C)    end
-      lex <choice>      C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('choice' C)   end
-      lex <class>       C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('class' C)    end
-      lex <condis>      C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('condis' C)   end
-      lex <declare>     C in OzScanner, getCoordinates(?C) col <- @col + 7 OzScanner, putToken('declare' C)  end
-      lex <dis>         C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('dis' C)      end
-      lex <elsecase>    C in OzScanner, getCoordinates(?C) col <- @col + 8 OzScanner, putToken('elsecase' C) end
-      lex <elseif>      C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('elseif' C)   end
-      lex <end>         C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('end' C)      end
-      lex <fail>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('fail' C)     end
-      lex <false>       C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('false' C)    end
-      lex <feat>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('feat' C)     end
-      lex <from>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('from' C)     end
-      lex <fun>         C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('fun' C)      end
-      lex <if>          C in OzScanner, getCoordinates(?C) col <- @col + 2 OzScanner, putToken('if' C)       end
-      lex <local>       C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('local' C)    end
-      lex <lock>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('lock' C)     end
-      lex <meth>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('meth' C)     end
-      lex <not>         C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('not' C)      end
-      lex <or>          C in OzScanner, getCoordinates(?C) col <- @col + 2 OzScanner, putToken('or' C)       end
-      lex <orelse>      C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('orelse' C)   end
-      lex <proc>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('proc' C)     end
-      lex <prop>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('prop' C)     end
-      lex <raise>       C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('raise' C)    end
-      lex <self>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('self' C)     end
-      lex <skip>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('skip' C)     end
-      lex <thread>      C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('thread' C)   end
-      lex <true>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('true' C)     end
-      lex <try>         C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('try' C)      end
-      lex <unit>        C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('unit' C)     end
+      lex <andthen>     C in OzScanner, getCoordinates(?C) OzScanner, pt('andthen' C 7)  end
+      lex <at>          C in OzScanner, getCoordinates(?C) OzScanner, pt('at' C 2)       end
+      lex <attr>        C in OzScanner, getCoordinates(?C) OzScanner, pt('attr' C 4)     end
+      lex <case>        C in OzScanner, getCoordinates(?C) OzScanner, pt('case' C 4)     end
+      lex <catch>       C in OzScanner, getCoordinates(?C) OzScanner, pt('catch' C 5)    end
+      lex <choice>      C in OzScanner, getCoordinates(?C) OzScanner, pt('choice' C 6)   end
+      lex <class>       C in OzScanner, getCoordinates(?C) OzScanner, pt('class' C 5)    end
+      lex <cond>        C in OzScanner, getCoordinates(?C) OzScanner, pt('cond' C 4)     end
+      lex <condis>      C in OzScanner, getCoordinates(?C) OzScanner, pt('condis' C 6)   end
+      lex <declare>     C in OzScanner, getCoordinates(?C) OzScanner, pt('declare' C 7)  end
+      lex <define>      C in OzScanner, getCoordinates(?C) OzScanner, pt('define' C 6)   end
+      lex <dis>         C in OzScanner, getCoordinates(?C) OzScanner, pt('dis' C 3)      end
+      lex <elsecase>    C in OzScanner, getCoordinates(?C) OzScanner, pt('elsecase' C 8) end
+      lex <elseif>      C in OzScanner, getCoordinates(?C) OzScanner, pt('elseif' C 6)   end
+      lex <end>         C in OzScanner, getCoordinates(?C) OzScanner, pt('end' C 3)      end
+      lex <export>      C in OzScanner, getCoordinates(?C) OzScanner, pt('export' C 6)   end
+      lex <fail>        C in OzScanner, getCoordinates(?C) OzScanner, pt('fail' C 4)     end
+      lex <false>       C in OzScanner, getCoordinates(?C) OzScanner, pt('false' C 5)    end
+      lex <feat>        C in OzScanner, getCoordinates(?C) OzScanner, pt('feat' C 4)     end
+      lex <from>        C in OzScanner, getCoordinates(?C) OzScanner, pt('from' C 4)     end
+      lex <fun>         C in OzScanner, getCoordinates(?C) OzScanner, pt('fun' C 3)      end
+      lex <functor>     C in OzScanner, getCoordinates(?C) OzScanner, pt('functor' C 7)  end
+      lex <if>          C in OzScanner, getCoordinates(?C) OzScanner, pt('if' C 2)       end
+      lex <import>      C in OzScanner, getCoordinates(?C) OzScanner, pt('import' C 6)   end
+      lex <local>       C in OzScanner, getCoordinates(?C) OzScanner, pt('local' C 5)    end
+      lex <lock>        C in OzScanner, getCoordinates(?C) OzScanner, pt('lock' C 4)     end
+      lex <meth>        C in OzScanner, getCoordinates(?C) OzScanner, pt('meth' C 4)     end
+      lex <not>         C in OzScanner, getCoordinates(?C) OzScanner, pt('not' C 3)      end
+      lex <or>          C in OzScanner, getCoordinates(?C) OzScanner, pt('or' C 2)       end
+      lex <orelse>      C in OzScanner, getCoordinates(?C) OzScanner, pt('orelse' C 6)   end
+      lex <prepare>     C in OzScanner, getCoordinates(?C) OzScanner, pt('prepare' C 7)  end
+      lex <proc>        C in OzScanner, getCoordinates(?C) OzScanner, pt('proc' C 4)     end
+      lex <prop>        C in OzScanner, getCoordinates(?C) OzScanner, pt('prop' C 4)     end
+      lex <require>     C in OzScanner, getCoordinates(?C) OzScanner, pt('require' C 7)  end
+      lex <raise>       C in OzScanner, getCoordinates(?C) OzScanner, pt('raise' C 5)    end
+      lex <self>        C in OzScanner, getCoordinates(?C) OzScanner, pt('self' C 4)     end
+      lex <skip>        C in OzScanner, getCoordinates(?C) OzScanner, pt('skip' C 4)     end
+      lex <thread>      C in OzScanner, getCoordinates(?C) OzScanner, pt('thread' C 6)   end
+      lex <true>        C in OzScanner, getCoordinates(?C) OzScanner, pt('true' C 4)     end
+      lex <try>         C in OzScanner, getCoordinates(?C) OzScanner, pt('try' C 3)      end
+      lex <unit>        C in OzScanner, getCoordinates(?C) OzScanner, pt('unit' C 4)     end
 
-      lex <andthen/\(>  C in OzScanner, getCoordinates(?C) col <- @col + 7 OzScanner, putToken('andthen' C)  end
-      lex <attr/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('attr' C)     end
-      lex <catch/\(>    C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('catch' C)    end
-      lex <case/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('case' C)     end
-      lex <choice/\(>   C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('choice' C)   end
-      lex <class/\(>    C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('class' C)    end
-      lex <condis/\(>   C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('condis' C)   end
-      lex <declare/\(>  C in OzScanner, getCoordinates(?C) col <- @col + 7 OzScanner, putToken('declare' C)  end
-      lex <dis/\(>      C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('dis' C)      end
-      lex <elsecase/\(> C in OzScanner, getCoordinates(?C) col <- @col + 8 OzScanner, putToken('elsecase' C) end
-      lex <elseif/\(>   C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('elseif' C)   end
-      lex <end/\(>      C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('end' C)      end
-      lex <fail/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('fail' C)     end
-      lex <false/\(>    C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('false()' C)  end
-      lex <feat/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('feat' C)     end
-      lex <from/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('from' C)     end
-      lex <fun/\(>      C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('fun' C)      end
-      lex <if/\(>       C in OzScanner, getCoordinates(?C) col <- @col + 2 OzScanner, putToken('if' C)       end
-      lex <local/\(>    C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('local' C)    end
-      lex <lock/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('lock' C)     end
-      lex <meth/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('meth' C)     end
-      lex <not/\(>      C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('not' C)      end
-      lex <or/\(>       C in OzScanner, getCoordinates(?C) col <- @col + 2 OzScanner, putToken('or' C)       end
-      lex <orelse/\(>   C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('orelse' C)   end
-      lex <proc/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('proc' C)     end
-      lex <prop/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('prop' C)     end
-      lex <raise/\(>    C in OzScanner, getCoordinates(?C) col <- @col + 5 OzScanner, putToken('raise' C)    end
-      lex <self/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('self' C)     end
-      lex <skip/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('skip' C)     end
-      lex <thread/\(>   C in OzScanner, getCoordinates(?C) col <- @col + 6 OzScanner, putToken('thread' C)   end
-      lex <true/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('true()' C)   end
-      lex <try/\(>      C in OzScanner, getCoordinates(?C) col <- @col + 3 OzScanner, putToken('try' C)      end
-      lex <unit/\(>     C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('unit()' C)   end
-
-      lex <unit/"<<">   C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('unit()' C)   end
-      lex <true/"<<">   C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('true()' C)   end
-      lex <false/"<<">  C in OzScanner, getCoordinates(?C) col <- @col + 4 OzScanner, putToken('false()' C)  end
+      lex <andthen/\(>  C in OzScanner, getCoordinates(?C) OzScanner, pt('andthen' C 7)  end
+      lex <at/\(>       C in OzScanner, getCoordinates(?C) OzScanner, pt('at' C 2)       end
+      lex <attr/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('attr' C 4)     end
+      lex <catch/\(>    C in OzScanner, getCoordinates(?C) OzScanner, pt('catch' C 5)    end
+      lex <case/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('case' C 4)     end
+      lex <choice/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('choice' C 6)   end
+      lex <class/\(>    C in OzScanner, getCoordinates(?C) OzScanner, pt('class' C 5)    end
+      lex <cond/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('cond' C 4)     end
+      lex <condis/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('condis' C 6)   end
+      lex <declare/\(>  C in OzScanner, getCoordinates(?C) OzScanner, pt('declare' C 7)  end
+      lex <define/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('define' C 6)   end
+      lex <dis/\(>      C in OzScanner, getCoordinates(?C) OzScanner, pt('dis' C 3)      end
+      lex <elsecase/\(> C in OzScanner, getCoordinates(?C) OzScanner, pt('elsecase' C 8) end
+      lex <elseif/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('elseif' C 6)   end
+      lex <end/\(>      C in OzScanner, getCoordinates(?C) OzScanner, pt('end' C 3)      end
+      lex <export/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('export' C 6)   end
+      lex <fail/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('fail' C 4)     end
+      lex <false/\(>    C in OzScanner, getCoordinates(?C) OzScanner, pt('false()' C 5)  end
+      lex <feat/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('feat' C 4)     end
+      lex <from/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('from' C 4)     end
+      lex <fun/\(>      C in OzScanner, getCoordinates(?C) OzScanner, pt('fun' C 3)      end
+      lex <functor/\(>  C in OzScanner, getCoordinates(?C) OzScanner, pt('functor' C 7)  end
+      lex <if/\(>       C in OzScanner, getCoordinates(?C) OzScanner, pt('if' C 2)       end
+      lex <import/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('import' C 6)   end
+      lex <local/\(>    C in OzScanner, getCoordinates(?C) OzScanner, pt('local' C 5)    end
+      lex <lock/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('lock' C 4)     end
+      lex <meth/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('meth' C 4)     end
+      lex <not/\(>      C in OzScanner, getCoordinates(?C) OzScanner, pt('not' C 3)      end
+      lex <or/\(>       C in OzScanner, getCoordinates(?C) OzScanner, pt('or' C 2)       end
+      lex <orelse/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('orelse' C 6)   end
+      lex <prepare/\(>  C in OzScanner, getCoordinates(?C) OzScanner, pt('prepare' C 7)  end
+      lex <proc/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('proc' C 4)     end
+      lex <prop/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('prop' C 4)     end
+      lex <require/\(>  C in OzScanner, getCoordinates(?C) OzScanner, pt('require' C 7)  end
+      lex <raise/\(>    C in OzScanner, getCoordinates(?C) OzScanner, pt('raise' C 5)    end
+      lex <self/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('self' C 4)     end
+      lex <skip/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('skip' C 4)     end
+      lex <thread/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('thread' C 6)   end
+      lex <true/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('true()' C 4)   end
+      lex <try/\(>      C in OzScanner, getCoordinates(?C) OzScanner, pt('try' C 3)      end
+      lex <unit/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('unit()' C 4)   end
 
       lex add = <"+"|"-"> end
       lex <{add}>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + 1
-	 OzScanner, putToken('Add' GumpScanner, getAtom($))
+	 OzScanner, pt('Add' GS, getAtom($) 1)
       end
 
       lex fdmul = <"*"|"/"> end
       lex <{fdmul}>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + 1
-	 OzScanner, putToken('FdMul' GumpScanner, getAtom($))
+	 OzScanner, pt('FdMul' GS, getAtom($) 1)
       end
 
       lex othermul = <div|mod> end
       lex <{othermul}>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + 3
-	 OzScanner, putToken('OtherMul' GumpScanner, getAtom($))
+	 OzScanner, pt('OtherMul' GS, getAtom($) 3)
       end
-      lex <{othermul}/(\(|"<<")>
+      lex <{othermul}/\(>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + 3
-	 OzScanner, putToken('OtherMul' GumpScanner, getAtom($))
+	 OzScanner, pt('OtherMul' GS, getAtom($) 3)
       end
 
       lex compare = <"<"|">"|"=<"|">="|"\\="> end
       lex <"=="|{compare}>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('Compare' GumpScanner, getAtom($))
+	 OzScanner, pt('Compare' GS, getAtom($) GS, getLength($))
       end
 
       lex fdin = <"::"|":::"> end
       lex <{fdin}>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('FdIn' GumpScanner, getAtom($))
+	 OzScanner, pt('FdIn' GS, getAtom($) GS, getLength($))
       end
 
       lex <(=|{compare}):>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('FdCompare' GumpScanner, getAtom($))
+	 OzScanner, pt('FdCompare' GS, getAtom($) GS, getLength($))
       end
 
-      lex <"..."> col <- @col + 3 OzScanner, putToken1('...') end
-      lex <"[]">  col <- @col + 2 OzScanner, putToken1('[]')  end
-      lex <"<<">  col <- @col + 2 OzScanner, putToken1('<<')  end
-      lex <">>">  col <- @col + 2 OzScanner, putToken1('>>')  end
+      lex <"..."> OzScanner, pt1('...' 3) end
+      lex <"[]">  OzScanner, pt1('[]' 2)  end
+      lex <"!!">  OzScanner, pt1('!!' 2)  end
 
       lex <"<-"> C in
 	 OzScanner, getCoordinates(?C)
-	 col <- @col + 2
-	 OzScanner, putToken('<-' C)
+	 OzScanner, pt('<-' C 2)
       end
       lex <"<="> C in
 	 OzScanner, getCoordinates(?C)
-	 col <- @col + 2
-	 OzScanner, putToken('<=' C)
+	 OzScanner, pt('<=' C 2)
       end
 
       lex <"{"|"["|"|"|"#"|"="|"."|"^"|"@"|"$"|"!"|"~"|"_"|","> C in
 	 OzScanner, getCoordinates(?C)
-	 col <- @col + 1
-	 OzScanner, putToken(GumpScanner, getAtom($) C)
+	 OzScanner, pt(GS, getAtom($) C 1)
       end
-      lex <"}"|"("|")"|"]"|":">
-	 col <- @col + 1
-	 OzScanner, putToken1(GumpScanner, getAtom($))
+      lex <"}"|"("|")"|"]"|":"> C in
+	 OzScanner, getCoordinates(?C)
+	 OzScanner, pt(GS, getAtom($) C 1)
       end
 
       %-----------------------------------------------------------------
@@ -1006,152 +1078,152 @@ in
       lex variableQuoted = <`({variableChar}|{pseudoChar})*`> end
       lex <{variable}>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('VARIABLE' GumpScanner, getAtom($))
+	 OzScanner, pt('VARIABLE' GS, getAtom($) GS, getLength($))
       end
-      lex <{variableQuoted}> S1 S2 in
+      lex <{variableQuoted}> S1 S2 in 
 	 OzScanner, SaveCoordinates()
-	 GumpScanner, getString(?S1)
+	 GS, getString(?S1)
 	 OzScanner, ConvertPseudoChars(S1 @col ?S2)
+	 OzScanner, setParseErrorCoords()
 	 OzScanner, UpdateCoordinates(S1)
-	 OzScanner, putToken('VARIABLE' {String.toAtom S2})
+	 OzScanner, pt('VARIABLE' {String.toAtom S2} none)
       end
-      lex <{variable}/(\(|"<<")>
+      lex <{variable}/\(>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('VARIABLE()' GumpScanner, getAtom($))
+	 col <- @col + GS, getLength($)
+	 OzScanner, pt('VARIABLE()' GS, getAtom($) GS, getLength($))
       end
-      lex <{variableQuoted}/(\(|"<<")> S1 S2 in
+      lex <{variableQuoted}/\(> S1 S2 in
 	 OzScanner, SaveCoordinates()
-	 GumpScanner, getString(?S1)
+	 GS, getString(?S1)
 	 OzScanner, ConvertPseudoChars(S1 @col ?S2)
+	 OzScanner, setParseErrorCoords()
 	 OzScanner, UpdateCoordinates(S1)
-	 OzScanner, putToken('VARIABLE()' {String.toAtom S2})
+	 OzScanner, pt('VARIABLE()' {String.toAtom S2})
       end
 
-      lex atom = <{lower}{alphaNum}*> end
-      lex atomQuoted = <"'"({atomChar}|{pseudoChar})*"'"> end
       lex <{atom}>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('ATOM' GumpScanner, getAtom($))
+	 OzScanner, pt('ATOM' GS, getAtom($) GS, getLength($))
       end
-      lex <{atomQuoted}> S1 S2 in
+      lex <{atomQuoted}> S1 S2 in 
 	 OzScanner, SaveCoordinates()
-	 GumpScanner, getString(?S1)
+	 GS, getString(?S1)
 	 OzScanner, ConvertPseudoChars({Strip &' S1} @col ?S2)
+	 OzScanner, setParseErrorCoords()
 	 OzScanner, UpdateCoordinates(S1)
-	 OzScanner, putToken('ATOM' {String.toAtom S2})
+	 OzScanner, pt('ATOM' {String.toAtom S2} none)
       end
-      lex <{atom}/(\(|"<<")>
+      lex <{atom}/\(>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('ATOM()' GumpScanner, getAtom($))
+	 OzScanner, pt('ATOM()' GS, getAtom($) GS, getLength($))
       end
-      lex <{atomQuoted}/(\(|"<<")> S1 S2 in
+      lex <{atomQuoted}/\(> S1 S2 in
 	 OzScanner, SaveCoordinates()
-	 GumpScanner, getString(?S1)
+	 GS, getString(?S1)
 	 OzScanner, ConvertPseudoChars({Strip &' S1} @col ?S2)
+	 OzScanner, setParseErrorCoords()
 	 OzScanner, UpdateCoordinates(S1)
-	 OzScanner, putToken('ATOM()' {String.toAtom S2})
+	 OzScanner, pt('ATOM()' {String.toAtom S2} none)
       end
 
       lex string = <\"({stringChar}|{pseudoChar})*\"> end
-      lex <{string}> S1 S2 in
+      lex <{string}> S1 S2 in 
 	 OzScanner, SaveCoordinates()
-	 GumpScanner, getString(?S1)
+	 GS, getString(?S1)
 	 OzScanner, ConvertPseudoChars({Strip &" S1} @col ?S2)
+	 OzScanner, setParseErrorCoords()
 	 OzScanner, UpdateCoordinates(S1)
-	 OzScanner, putToken('STRING' S2)
+	 OzScanner, pt('STRING' S2 none)
       end
 
-      lex int = <~?(0{oct}*|0[Xx]{hex}+|0[Bb]{bin}+|{nonzerodigit}{digit}*)> end
       lex <{int}>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('INT' {String.toInt GumpScanner, getString($)})
+	 OzScanner, pt('INT' {String.toInt GS, getString($)}
+			     GS, getLength($))
       end
       lex <"."{space}*{digit}+> S C in
 	 OzScanner, getCoordinates(C)
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 S = GumpScanner, getString($)
+	 S = GS, getString($)
 	 % This special case rule ensures that "X.1.1" is tokenized as
 	 %   "X" "." "1" "." "1"
 	 % and not as
 	 %   "X" "." "1.1".
 	 % Caveat: comments are not allowed between `.' and number.
-	 OzScanner, putToken('.' C)
-	 OzScanner, putToken('INT' {String.toInt
+	 OzScanner, pt('.' C 1)
+	 OzScanner, pt('INT' {String.toInt
 				    {List.dropWhile S
 				     fun {$ C}
 					{Not {Char.isDigit C}}
-				     end}})
+				     end}}
+			     GS, getLength($) -1)
       end
       lex <{digit}+/\.\.\.>
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
 	 % This special case rule ensures that "1..." is tokenized as
 	 %   "1" "..."
 	 % and not as
 	 %   "1." "." "."
-	 OzScanner, putToken('INT' {String.toInt GumpScanner, getString($)})
+	 OzScanner, pt('INT' {String.toInt GS, getString($)}
+			     GS, getLength($))
       end
 
       lex float = <~?{digit}+"."{digit}*([eE]~?{digit}+)?> end
       lex <{float}> F in
 	 OzScanner, SaveCoordinates()
-	 col <- @col + GumpScanner, getLength($)
-	 F = {String.toFloat GumpScanner, getString($)}
-	 OzScanner, putToken('FLOAT' F)
+	 F = {String.toFloat GS, getString($)}
+	 OzScanner, pt('FLOAT' F GS, getLength($))
       end
 
       lex <"&"{anyChar}> S1 S2 in
 	 OzScanner, SaveCoordinates()
-	 S1 = GumpScanner, getString($)
+	 S1 = GS, getString($)
 	 OzScanner, ConvertPseudoChars(S1.2 @col ?S2)
-	 col <- @col + GumpScanner, getLength($)
-	 OzScanner, putToken('INT' S2.1)
+	 OzScanner, pt('INT' S2.1  GS, getLength($))
       end
 
-      lex <{spacenonl}+> col <- @col + GumpScanner, getLength($) end
-      lex <\n+> line <- @line + GumpScanner, getLength($) col <- 0 end
+      lex <{spacenonl}+> col <- @col + GS, getLength($) end
+      lex <\n+> line <- @line + GS, getLength($) col <- 0 end
 
       lex <\'[^']+\'>
-	 case {@Conditionals testCondition($)} then
+	 if {@Conditionals testCondition($)} then
 	    {self reportError(OzScanner, getCoordinates($) 'lexical error'
-			      ['illegal quoted atom syntax'])}
+			      'illegal quoted atom syntax')}
 	 else skip
 	 end
-	 OzScanner, UpdateCoordinates(GumpScanner, getString($))
-	 OzScanner, putToken1('error')
+	 OzScanner, UpdateCoordinates(GS, getString($))
+	 OzScanner, setParseErrorCoords()
+	 OzScanner, pt1('error' none)
       end
       lex <`[^`]*`>
-	 case {@Conditionals testCondition($)} then
+	 if {@Conditionals testCondition($)} then
 	    {self reportError(OzScanner, getCoordinates($) 'lexical error'
-			      ['illegal backquote variable syntax'])}
+			      'illegal backquote variable syntax')}
 	 else skip
 	 end
-	 OzScanner, UpdateCoordinates(GumpScanner, getString($))
-	 OzScanner, putToken1('error')
+	 OzScanner, UpdateCoordinates(GS, getString($))
+	 OzScanner, setParseErrorCoords()
+	 OzScanner, pt1('error' none)
       end
       lex <\"[^"]+\">
-	 case {@Conditionals testCondition($)} then
+	 if {@Conditionals testCondition($)} then
 	    {self reportError(OzScanner, getCoordinates($) 'lexical error'
-			      ['illegal string syntax'])}
+			      'illegal string syntax')}
 	 else skip
 	 end
-	 OzScanner, UpdateCoordinates(GumpScanner, getString($))
-	 OzScanner, putToken1('error')
+	 OzScanner, UpdateCoordinates(GS, getString($))
+	 OzScanner, setParseErrorCoords()
+	 OzScanner, pt1('error' none)
       end
 
       lex <.>
-	 case {@Conditionals testCondition($)} then
+	 if {@Conditionals testCondition($)} then
 	    {self reportError(OzScanner, getCoordinates($) 'lexical error'
-			      ['illegal (pseudo-)character'])}
+			      'illegal (pseudo-)character')}
 	 else skip
 	 end
-	 OzScanner, UpdateCoordinates(GumpScanner, getString($))
+	 OzScanner, UpdateCoordinates(GS , getString($))
       end
 
       lex <<EOF>>
