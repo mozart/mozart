@@ -5,7 +5,7 @@
 
 # INSTALL_DIR_CHMOD=775 to also give write permission to group members
 
-if test -z "INSTALL_DIR_CHMOD"; then
+if test -z "$INSTALL_DIR_CHMOD"; then
 dochmod(){ true; }
 else
 dochmod() { 
