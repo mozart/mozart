@@ -63,10 +63,6 @@ case "$target" in
 
 	# -DINTERFACE does not work
 	oz_copt_debug="-g"
-
-	AC_DEFINE(WINDOWS)
-	AC_DEFINE(ARCH_I486)
-	CPPFLAGS="-DWINDOWS_EMULATOR $CPPFLAGS"
    ;;
 
    *)
@@ -242,6 +238,14 @@ case $platform in
         ;;
     win32*)
 	oz_enable_modules_static=yes
+	AC_DEFINE(WINDOWS)
+	AC_DEFINE(ARCH_I486)
+	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
+	LDFLAGS="$oz_a $LDFLAGS"
+	CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
+	if test "$host_os" = cygwin32
+	then LD=gcc # otherwise it allways uses -lm which has reference to _errno
+	fi
     ;;
     *)
 	AC_MSG_WARN(Unknown platform "$platform")

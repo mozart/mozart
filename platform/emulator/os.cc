@@ -84,11 +84,6 @@ extern "C" int dlclose(void *);
 #include <sys/time.h>
 #include <process.h>
 
-#ifndef __MINGW32__
-extern "C" int _fmode;
-extern "C" void setmode(int,mode_t);
-#endif
-
 #else
 #include <sys/times.h>
 #include <sys/wait.h>
@@ -698,7 +693,7 @@ int rawwrite(int fd, void *buf, int sz)
 
 Bool createReader(int fd);
 
-int _hdopen(int handle, int flags)
+int oshdopen(int handle, int flags)
 {
   WrappedHandle *wh = WrappedHandle::getHandle((HANDLE)handle);
   if ((flags&O_WRONLY)==0) {
@@ -1101,7 +1096,7 @@ void osInit()
   SystemTimeToFileTime(&st,&emuStartTime);
 
   /* allow select on stdin */
-  wrappedStdin = _hdopen(STD_INPUT_HANDLE, O_RDONLY);
+  wrappedStdin = oshdopen(STD_INPUT_HANDLE, O_RDONLY);
   
   /* init sockets */
   WSADATA wsa_data;
