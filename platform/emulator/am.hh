@@ -227,7 +227,6 @@ friend void scheduler();
 private:
   Board *_currentBoard;
   Board *_rootBoard;
-  Board *_currentSolveBoard;       // current 'solve' board or NULL if none;
 
   // source level debugger
   TaggedRef debugStreamTail;
@@ -248,8 +247,6 @@ private:
 
   int threadSwitchCounter;
   int userCounter;
-
-  Bool wasSolveSet; 
 
   TaskNode *taskNodes;
 
@@ -310,10 +307,8 @@ public:
   AM() {};
 
   Board *currentBoard()             { return _currentBoard; }
-  Board *currentSolveBoard()        { return _currentSolveBoard; }
   Board *rootBoardGC()              { return _rootBoard; }
   Board *rootBoard()                { return _rootBoard; }
-  int isBelowSolveBoard()           { return _currentSolveBoard!=0; }
 
   Bool inShallowGuard()             { return _shallowHeapTop!=0; }
   void setShallowHeapTop(char *sht) { _shallowHeapTop=sht; }

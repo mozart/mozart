@@ -215,16 +215,6 @@ void oz_resetLocalPropagatorQueue(Board *bb) {
   if (!lpq)
     return;
 
-#ifdef DEBUG_THREADCOUNT
-  //  existingLTQs -= 1;
-  //  printf("-LTQ=%p\n", localPropagatorQueue); fflush(stdout);
-
-  //  printf("-");fflush(stdout); 
-  if (am.isBelowSolveBoard()) {
-;    //printf("!");fflush(stdout);
-  }
-#endif
-
   lpq->getLPQThread()->getTaskStackRef()->makeEmpty();
   lpq->dispose();
   bb->setLocalPropagatorQueue(NULL);

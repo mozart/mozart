@@ -2122,8 +2122,6 @@ LBLdispatcher:
        	 Assert(0);
 #endif
        Y = NULL;  // sa here unused
-       //       Assert(e->currentBoard()->isSolve());
-       //Assert(!oz_onToplevel());
        Assert(CTS->isEmpty()); // approximates one LTQ task
        
        // postpone poping task from taskstack until 

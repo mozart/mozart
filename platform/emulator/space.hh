@@ -53,7 +53,6 @@ void oz_decSolveThreads(Board *bb, char *);
 #else
 void oz_decSolveThreads(Board *bb);
 #endif
-DebugCode(Bool oz_isInSolveDebug(Board *bb);)
 
 void oz_removeExtThread(Thread *tt);
 

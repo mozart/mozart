@@ -309,11 +309,6 @@ LBLterminate:
     Assert(CBB != (Board *) NULL);
     Assert(!CBB->isFailed());
 
-    Assert(oz_onToplevel() ||
-	   ((CTT->isInSolve() || !am.isBelowSolveBoard()) &&
-	    (am.isBelowSolveBoard() || !CTT->isInSolve())));
-
-
     CBB->decSuspCount();
 
     oz_disposeThread(CTT);
@@ -347,7 +342,8 @@ LBLcheckEntailmentAndStability:
      */ 
 
     // maybe optimize?
-    if (oz_onToplevel()) goto LBLstart;
+    if (oz_onToplevel()) 
+      goto LBLstart;
 
     Board *nb = 0; // notification board
 
@@ -355,45 +351,35 @@ LBLcheckEntailmentAndStability:
     //  First, look at the current board, and if it's a solve one, 
     // decrement the (runnable) threads counter manually _and_
     // skip the 'AM::decSolveThreads ()' for it; 
-    if (e->isBelowSolveBoard()) {
-      if (CBB->isSolve ()) {
-	SolveActor *sa;
+    
+    Assert(!CBB->isRoot() && !CBB->isFailed() && !CBB->isCommitted());
 
-	//
-	sa = SolveActor::Cast (CBB->getActor ());
-	//  'nb' points to some board above the current one,
-	// so, 'decSolveThreads' will start there!
-	nb = GETBOARD(sa);
+    SolveActor *sa = SolveActor::Cast(CBB->getActor ());
 
-	//
-	//  kost@ : optimize the most probable case!
-	if (sa->decThreads () != 0) {
-	  DECSOLVETHREADS (nb, "a");
-	  goto LBLstart;
-	}
-      } else {
-	nb = CBB;
-      }
+    //  'nb' points to some board above the current one,
+    nb = GETBOARD(sa);
+
+    //  kost@ : optimize the most probable case!
+    if (sa->decThreads () != 0) {
+      DECSOLVETHREADS (nb, "a");
+      goto LBLstart;
     }
-
+    
     // 
     //  ... and now, check the entailment here!
     //  Note again that 'decSolveThreads' should be done from 
     // the 'nb' board which is probably modified above!
     // 
     DebugCode(am.threadsPool.unsetCurrentThread());
+    
+    Assert(!CBB->isRoot());
 
-#ifdef DEBUG_NONMONOTONIC
-    cout << "checkEntailment" << endl << flush;
-#endif
-
-    if (CBB->isSolve()) {
-      oz_checkStability();
-    }
-
-    // 
+    oz_checkStability();
+    
     //  deref nb, because it maybe just committed!
-    if (nb) DECSOLVETHREADS (nb->derefBoard(), "b");
+    if (nb) 
+      DECSOLVETHREADS(nb->derefBoard(), "b");
+
     goto LBLstart;
   }
 
@@ -426,24 +412,18 @@ LBLdiscardThread:
     GETBOARD(CTT)->resetLocalPropagatorQueue();
 #endif
 
-    //
-    //  Note that we may not use the 'currentSolveBoard' test here,
-    // because it may point to an irrelevant board!
-    if (CTT->isInSolve()) {
-      Board *tmpBB = GETBOARD(CTT);
+    Board *tmpBB = GETBOARD(CTT);
 
-      if (tmpBB->isSolve()) {
-	//
-	//  The same technique as by 'LBLterminateThread';
-	SolveActor *sa = SolveActor::Cast (tmpBB->getActor ());
-	Assert (sa);
-	Assert (sa->getSolveBoard () == tmpBB);
+    if (!tmpBB->isRoot()) {
 
-	DECSOLVETHREADS(GETBOARD(sa), "c");
-      } else {
-	DECSOLVETHREADS (tmpBB, "d");
-      }
+      SolveActor *sa = SolveActor::Cast (tmpBB->getActor ());
+      Assert (sa);
+	
+      Assert (sa->getSolveBoard()==tmpBB);
+
+      DECSOLVETHREADS(GETBOARD(sa), "c");
     }
+
     oz_disposeThread(CTT);
     am.threadsPool.unsetCurrentThread();
 
@@ -486,9 +466,6 @@ LBLsuspend1:
 
     Assert(CBB);
     Assert(!CBB->isFailed());
-    //  see the note for the 'LBLterminateThread';
-    Assert(CTT->isInSolve() || !e->isBelowSolveBoard());
-    Assert(e->isBelowSolveBoard() || !CTT->isInSolve());
 
     //
     //  First, set the board and self, and perform special action for 
@@ -537,23 +514,18 @@ LBLfailure:
 
      oz_failBoard();
 
-     // currentThread is a thread forked in a local space or a propagator
-     if (aa->isSolve()) {
+     //  Reduce (i.e. with failure in this case) the solve actor;
+     //  The solve actor goes simply away, and the 'failed' atom is bound to
+     // the result variable; 
+     aa->setCommittedActor();
+     SolveActor *saa=SolveActor::Cast(aa);
+     // don't decrement parent counter
 
-       //  Reduce (i.e. with failure in this case) the solve actor;
-       //  The solve actor goes simply away, and the 'failed' atom is bound to
-       // the result variable; 
-       aa->setCommittedActor();
-       SolveActor *saa=SolveActor::Cast(aa);
-       // don't decrement parent counter
-
-       if (!oz_unify(saa->getResult(),saa->genFailed())) { // mm_u
-	 // this should never happen?
-	 Assert(0);
-       }
-
+     if (!oz_unify(saa->getResult(),saa->genFailed())) { // mm_u
+       // this should never happen?
+       Assert(0);
      }
-     
+
      DECSOLVETHREADS(CBB, "e");
 
 
