@@ -283,7 +283,9 @@ ProcColor
 BuiltinColor
 OldStackColor
 
-case Tk.isColor andthen Platform \= WindowsPlatform then
+UseColors = Tk.isColor andthen Platform \= WindowsPlatform
+
+case UseColors then
    %% main window
    DefaultBackground       = '#f0f0f0'
    DefaultForeground       = black
