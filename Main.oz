@@ -54,6 +54,8 @@ define
 		   %%
 		   'ignore-id'(type:list(string) default:nil)
 		   'ignore-url'(type:list(string) default:nil)
+		   %%
+		   'update-ozmake'(type:bool)
 		  )}
    catch error(ap(usage Msg) ...) then
       {System.showError Msg}
