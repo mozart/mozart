@@ -508,7 +508,7 @@ dnl ------------------------------------------------------------------
 AC_DEFUN(OZ_PROG_LEX,[OZ_PROG_FLEX])
 AC_DEFUN(OZ_VERSION_FLEX,[2.5.3])
 AC_DEFUN(OZ_PROG_LEX_GNU,[
-  if `$LEX -S --version 2>/dev/null >/dev/null`; then
+  if `$LEX -S/dev/null --version 2>/dev/null >/dev/null`; then
     GNU_LEX=yes
   else
     GNU_LEX=no
