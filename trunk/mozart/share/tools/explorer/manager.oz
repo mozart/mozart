@@ -477,7 +477,7 @@ in
 		  Manager,reset
 	       elseof Mom then
 		  {Mom  removeLast(Manager,GetPrevSol($))}
-		  {Node close}
+		  {Node deleteTree}
 		  {self.status removeBlocked}
 		  curNode <- Mom
 		  Manager,step
@@ -527,9 +527,6 @@ in
       meth close
 	 {self.explorer ManagerClosed}
 	 lock
-	    case @root of false then skip elseof Root then
-	       {Root close}
-	    end
 	    Manager,         ClearDialogs
 	    ToplevelManager, close
 	 end

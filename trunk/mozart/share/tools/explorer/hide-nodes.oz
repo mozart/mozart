@@ -114,7 +114,6 @@ local
       meth hide
 	 TkNodes.choose,deleteTree
 	 Inner,dirtyUp
-	 isDrawn  <- false
 	 case @isHidden then
 	    isHidden <- false
 	 else
@@ -125,7 +124,6 @@ local
 
       meth !Hide
 	 isDirty  <- true
-	 isDrawn  <- false
 	 shape    <- nil
 	 %% The invariant guarantees that we do not have to take care
 	 %% of still hidden subtrees
@@ -148,7 +146,6 @@ local
 	 isDirty  <- true
 	 case @isHidden then
 	    isHidden <- false
-	    isDrawn  <- false
 	    TkNodes.choose,deleteTree
 	 else skip
 	 end
@@ -180,7 +177,6 @@ local
 	    end
 	 else
 	    isHidden <- true
-	    isDrawn  <- false
 	    isDirty  <- true
 	    TkNodes.choose,deleteTree
 	    {HideKids @kids}
@@ -208,7 +204,6 @@ local
 	    %% Since we know (from the testing routines above) that there is
 	    %% indeed something to unhide we do not have to analyse this node
 	    %% further!
-	    isDrawn <- false
 	    TkNodes.choose,deleteTree
 	    Inner,UnhideButFailedBelowHidden
 	 else
@@ -232,7 +227,7 @@ local
       meth hideUndrawn
 	 case @isDirty then
 	    case @isHidden then skip else
-	       case @isDrawn then {HideUndrawn @kids}
+	       case @item>0 then {HideUndrawn @kids}
 	       else isHidden <- true Inner,Hide
 	       end
 	    end
