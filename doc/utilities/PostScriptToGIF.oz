@@ -1,5 +1,5 @@
 %%%
-%%% Author:
+%%% Authors:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%   Tobias Mueller <tmueller@ps.uni-sb.de>
 %%%
@@ -23,68 +23,52 @@
 %%% WARRANTIES.
 %%%
 
-%\define VERBOSE
-
 functor
 import
    OS(system tmpnam unlink)
-\ifdef VERBOSE
-   System(showError)
-\endif
+   File(baseName changeExtension)
 export
    'class': PostScriptToGIFClass
 define
-
-   proc {PsToPpm PsName PpmName}
+   proc {PsToPpm PsName PpmName} Cmd in
       Cmd = ('(cat '#PsName#'; echo quit) | '#
 	     'gs -q -dNOPAUSE '#
 	     '-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 '#
 	     '-sDEVICE=ppmraw -sOutputFile='#PpmName#' - 1>&2')
-\ifdef VERBOSE
-      {System.showError Cmd}
-\endif
-      Stat = {OS.system Cmd}
-   in
-      if Stat\=0 then
-	 {Exception.raiseError ozDoc(gs(PsName) Stat)}
+      case {OS.system Cmd} of 0 then skip
+      elseof I then
+	 {Exception.raiseError ozDoc(gs PsName PpmName I)}
       end
    end
 
-   proc {PpmToGif PpmName Info GifName}
-      Cmd  = ('pnmcrop < '#PpmName#' 2>/dev/null | '#
-	      if Info=='' then ''
-	      else 'pnmscale '#Info#'  2>/dev/null | '
-	      end #
-	      'ppmquant 256 2>/dev/null | ' #
-	      'ppmtogif -interlace -transparent rgbi:1/1/1 2>/dev/null > '#
+   proc {PpmToGif PpmName Info GifName} Cmd in
+      Cmd  = ('pnmcrop < '#PpmName#' 2> /dev/null | '#
+	      if Info == '' then ''
+	      else 'pnmscale '#Info#' | '
+	      end#
+	      'ppmquant 256 2> /dev/null | '#
+	      'ppmtogif -interlace -transparent rgbi:1/1/1 2> /dev/null > '#
 	      GifName)
-\ifdef VERBOSE
-      {System.showError Cmd}
-\endif
-      Stat = {OS.system Cmd}
-   in
-      if Stat\=0 then
-	 {Exception.raiseError ozDoc(ppmtogif(GifName) Stat)}
+      case {OS.system Cmd} of 0 then skip
+      elseof I then
+	 {Exception.raiseError ozDoc(ppmtogif GifName GifName I)}
       end
    end
 
    class PostScriptToGIFClass
-      attr
-	 DirName: unit
-
+      attr DirName: unit
       meth init(Dir)
 	 DirName <- Dir
       end
-
-      meth convertPostScript(InName Info $)
-	 OutName = InName#'.gif'
+      meth convertPostScript(InName Info ?OutName) PpmName in
+	 OutName = {File.changeExtension {File.baseName InName} '.ps' '.gif'}
 	 PpmName = {OS.tmpnam}
-      in
-	 {PsToPpm InName PpmName}
-	 {PpmToGif PpmName Info @DirName#'/'#OutName}
-	 {OS.unlink PpmName}
-	 OutName
+	 try
+	    {PsToPpm InName PpmName}
+	    {PpmToGif PpmName Info @DirName#'/'#OutName}
+	 finally
+	    {OS.unlink PpmName}
+	 end
       end
    end
 end
-
