@@ -122,7 +122,7 @@ void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
 
   OZ_Term args=nil();
   for (int j = iarity; j--;) {
-    cons(X[map == OZ_ID_MAP? j : map[j]],args);
+    args=cons(X[map == OZ_ID_MAP? j : map[j]],args);
   }
   am.setExceptionInfo(OZ_mkTupleC("fapply",3,
                                   makeTaggedConst(bi),
