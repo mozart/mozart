@@ -185,26 +185,6 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_BI_define(fdp_minus, 3, 0)
-{
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
-
-  PropagatorExpect pe;
-  int susp_count = 0;
-
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
-
-  if (susp_count > 1) 
-    return pe.suspend();
-
-  return pe.impose(new PlusPropagator(OZ_in(2), OZ_in(1), OZ_in(0)));
-}
-OZ_BI_end
-
-//-----------------------------------------------------------------------------
-
 OZ_BI_define(fdp_times, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
@@ -783,26 +763,6 @@ OZ_Return PlusDPropagator::propagate(void)
 failure: 
   return P.fail(); 
 }
-
-//-----------------------------------------------------------------------------
-
-OZ_BI_define(fdp_minusD, 3, 0)
-{
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
-
-  PropagatorExpect pe;
-  int susp_count = 0;
-
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
-
-  if (susp_count > 1) 
-    return pe.suspend();
-
-  return pe.impose(new PlusDPropagator(OZ_in(2), OZ_in(1), OZ_in(0)));
-}
-OZ_BI_end
 
 //-----------------------------------------------------------------------------
 
