@@ -54,6 +54,7 @@ void initNetwork();
 
 int getNORM_ComObj(ComObj*);
 int getNOSM_ComObj(ComObj*);
+int getLastRTT_ComObj(ComObj*);
 
 int getComControllerInfo(int &size);
 int getTransControllerInfo(int &size);

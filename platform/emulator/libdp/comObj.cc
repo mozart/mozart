@@ -66,6 +66,7 @@ void ComObj::init(DSite *site) {
   retryTimeout=ozconf.perdioTempRetryFloor;
 
   nosm=norm=0;
+  lastrtt=-1;
   connectVar=0;
   queues.init();
 }
@@ -319,44 +320,6 @@ void ComObj::preemptTransObj() {
   timers->setTimer(closetimer,CLOSE_TIMEOUT,
 		   comObj_closeTimerExpired,(void *) this);
 }
-
-//  Bool ComObj::canBeFreed() {
-//    localRef=FALSE;
-//    if(!hasNeed()) {
-//      if(transObj!=NULL) { 
-//        if(state!=CLOSED) {
-//  	// It is important at exit (dpExit) not to send too many clearrefs.
-//  	if(!sentclearref) {
-//  	  MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
-//  	  msgC->put_C_CLEAR_REFERENCE();
-//  	  send(msgC,4); // 4 avoids sending when not working
-//  	  sentclearref=TRUE;
-//  	}
-//  	if(!remoteRef && state==WORKING) {
-//  	  MsgContainer *msgC2=msgContainerManager->newMsgContainer(NULL);
-//  	  msgC2->put_C_CLOSE_WEAK();
-//  	  send(msgC2,5);
-//  	  state=CLOSING_WEAK; // State change "closes" outgoing channel do
-//  	                      // after send.
-//  	  timers->setTimer(closetimer,CLOSE_TIMEOUT,
-//  			   comObj_closeTimerExpired,(void *) this);
-//  	}
-//  	return FALSE;        // Will hopefully be gc:ed next time!
-//        }
-//        else
-//  	return FALSE;
-//      }
-//      else {
-//        // Can we be sure to be removed now?
-//        // If so, do clear timers:
-//        clearTimers();
-//  printf("pid %d canBeFreed by pid %d\n",site->getTimeStamp()->pid,myDSite->getTimeStamp()->pid);
-//        return TRUE;
-//      }
-//    }
-//    else 
-//      return FALSE;
-//  }
 
 Bool ComObj::canBeFreed() {
   localRef=FALSE;
@@ -797,6 +760,7 @@ void ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
 void ComObj::msgAcked(int num) {
   PD((TCP_INTERFACE,"---msgAcked: %d",num));
   int rtt=queues.msgAcked(num,FALSE,probing && state==WORKING);
+  if(rtt!=-1) lastrtt=rtt;
   if(probing && state==WORKING) {
     if(!probeFired) {
       if(rtt==-1 || (rtt>=minrtt && rtt<=maxrtt)) {
@@ -1030,6 +994,17 @@ int ComObj::getNORM() {
   int tmp=nosm;
   nosm=0;
   return tmp;
+}
+
+int ComObj::getLastRTT() {
+  return lastrtt;
+}
+
+OZ_Term ComObj::getStateStatistics() {
+  if(state==WORKING)
+    return oz_atom("connected");
+  else
+    return oz_atom("passive");
 }
 
 int ComObj::getQueueStatus() {

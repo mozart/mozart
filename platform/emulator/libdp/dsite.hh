@@ -396,10 +396,9 @@ public:
   */
 
   // misc - statistics;
-  unsigned short getTypeStatistics() { return (getType()); }
+//    unsigned short getTypeStatistics() { return (getType()); }
+  OZ_Term getStateStatistics();
 
-  //
-  // Debug stuff;
   char* stringrep();
   char* stringrep_notype();
 };
