@@ -456,8 +456,7 @@ void unmarshalUnsentString(MsgBuffer *bs)
 
 OZ_BI_define(BIperdioStatistics,0,1)
 {
-  if(!isPerdioInitialized()) 
-    perdioInitLocal();
+  perdioInitLocal();
 
   OZ_Term dif_send_ar=oz_nil();
   OZ_Term dif_recv_ar=oz_nil();

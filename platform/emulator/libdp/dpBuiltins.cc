@@ -63,6 +63,7 @@ static int perdioTrigger = 1;
 static OZ_Term GateStream;
 
 //
+// Interface method, BTW
 Bool isPerdioInitialized() {
   return (!perdioTrigger);
 }
@@ -285,8 +286,7 @@ OZ_BI_define(BIgetEntityCond,1,1)
 
 OZ_BI_define(BItablesExtract,0,1)
 {
-  if(!isPerdioInitialized()) 
-    perdioInitLocal();
+  perdioInitLocal();
 
   OZ_Term borrowlist = oz_nil();
   int bt_size=BT->getSize();
@@ -303,8 +303,7 @@ OZ_BI_define(BItablesExtract,0,1)
 
 OZ_BI_define(BIsiteStatistics,0,1)
 {
-  if(!isPerdioInitialized()) 
-    perdioInitLocal();
+  perdioInitLocal();
 
   int indx;
   DSite* found;

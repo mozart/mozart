@@ -29,6 +29,7 @@
 
 #include "base.hh"
 #include "dpBase.hh"
+#include "dpInterface.hh"
 
 #ifdef INTERFACE  
 #pragma interface
@@ -110,8 +111,6 @@ public:
 
 extern DebugVector *DV;
 extern void resize_hash();
-
-Bool isPerdioInitialized();
 
 inline
 void _PD(int i,char *format,...)

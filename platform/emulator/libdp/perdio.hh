@@ -40,7 +40,6 @@
 #include "dsite.hh"
 
 //
-Bool isPerdioInitialized();
 void perdioInitLocal();
 
 //

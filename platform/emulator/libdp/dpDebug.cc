@@ -138,8 +138,7 @@ void wakeUpTmp(int i, int time) {
 
 OZ_BI_define(BIdvset,2,0)
 {
-  if(!isPerdioInitialized()) 
-    perdioInitLocal();
+  perdioInitLocal();
 
   OZ_declareIntIN(0,what);
   OZ_declareIntIN(1,val);
