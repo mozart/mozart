@@ -439,12 +439,14 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Object:
     {
       CheckD0Compatibility;
+      if (!bs->globalize()) return;
       marshalObject(t, bs);
       return;
     }
 
 #define HandleTert(string,tag,check)                    \
     if (check) { CheckD0Compatibility; }                \
+    if (!bs->globalize()) return;                       \
     if (marshalTertiary((Tertiary *) t,tag,bs)) return; \
     trailCycle(t->getCycleRef(),bs);                    \
     return;

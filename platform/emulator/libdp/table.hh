@@ -366,8 +366,12 @@ private:
 
 public:
 
-  void returnCreditOwner(Credit c) {
-    addCredit(c);}
+  void localize(int index);
+  void returnCreditOwner(Credit c, int index) {
+    addCredit(c);
+    if (hasFullCredit())
+      localize(index);
+  }
 
   Bool hasFullCredit(){
     if(isPersistent()) return NO;

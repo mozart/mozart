@@ -89,6 +89,14 @@ DSite* creditSiteOut;
 void sendPrimaryCredit(DSite *sd,int OTI,Credit c);
 
 
+void OwnerEntry::localize(int index)
+{
+  if (isRef()) {
+    //OT->freeOwnerEntry(index);
+    return;
+  }
+}
+
 void OwnerEntry::addCreditExtended(Credit back){
   ReduceCode rc=getOwnerCreditExtension()->addCreditE(back);
   if(rc==CANNOT_REDUCE) return;

@@ -93,7 +93,7 @@ void perdioInitLocal()
   OZ_protect(&GateStream);
   {
     Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
-    globalizeTert(t,0);
+    globalizeTert(t);
     int ind = t->getIndex();
     Assert(ind == 0);
     OwnerEntry* oe=OT->getOwner(ind);

@@ -105,11 +105,12 @@ MsgBuffer* getComponentMsgBuffer();
 void freeComponentMsgBuffer(MsgBuffer *buf);
 
 /* RS: have to GC the byte stream again !!!!!!!!!*/
-#define CheckNogoods(val,bs,msg,Cleanup)                                \
+#define CheckNogoods(val,bs,id,msg,Cleanup)                             \
   { OZ_Term nogoods = bs->getNoGoods();                                 \
     if (!oz_isNil(nogoods)) {                                           \
        Cleanup;                                                         \
-       return raiseGeneric(msg,                                         \
+       return raiseGeneric(id,                                          \
+                           msg,                                         \
                            oz_mklist(OZ_pairA("Resources",nogoods),     \
                                      OZ_pairA("Contained in",val)));    \
     }                                                                   \

@@ -65,8 +65,11 @@ enum ByteStreamType{
 inline
 Bool isResource(OZ_Term t)
 {
-  return (oz_isObject(t) || oz_isVariable(t) || oz_isLock(t) ||
-          oz_isCell(t) || oz_isPort(t));
+  if (oz_isFree(t) || oz_isFuture(t) || oz_isPort(t))
+    return OK;
+
+  return (!ozconf.perdioMinimal &&
+          (oz_isObject(t) || oz_isLock(t) || oz_isCell(t)));
 }
 
 
@@ -96,7 +99,7 @@ public:
     }
     return OK;
   }
-  virtual OZ_Term getResources()    { return resources; }
+  OZ_Term getResources()    { return resources; }
 
   DSite *getSite() { return ((DSite*) NULL); }
   Bool isPersistentBuffer() { return OK; }
@@ -289,25 +292,24 @@ public:
 };
 
 class Exporter: public MsgBuffer {
-  OZ_Term resources, vars;
+  OZ_Term vars;
 
 public:
-  virtual void marshalBegin() {}
-  virtual void marshalEnd() {}
-  virtual void unmarshalBegin() { Assert(0); }
-  virtual void unmarshalEnd() { Assert(0); }
+  void marshalBegin()        { Assert(0); }
+  void marshalEnd()          { Assert(0); }
+  void unmarshalBegin()      { Assert(0); }
+  void unmarshalEnd()        { Assert(0); }
+  char* siteStringrep()      { Assert(0); return 0; }
+  DSite* getSite()           { Assert(0); return 0; }
+  virtual BYTE getNext()     { Assert(0); return 0; }
+  virtual void putNext(BYTE) { Assert(0); }
 
-  virtual char* siteStringrep() {Assert(0); return 0; }
-  virtual DSite* getSite() {Assert(0); return 0; }
   virtual Bool isPersistentBuffer() { return NO; }
-  virtual Bool globalize() { return NO; }
-  virtual BYTE getNext() {Assert(0); return 0; }
-  virtual void putNext(BYTE) {Assert(0); }
+  virtual Bool globalize()          { return NO; }
 
   Exporter() {
-    posMB = endMB = 0;
+    posMB = endMB = 0; // so not data will be written nowhere
     MsgBuffer::init();
-    resources = oz_nil();
     vars      = oz_nil();
   }
 
@@ -317,15 +319,10 @@ public:
   {
     OZ_Term t = val;
     DEREF(t,tPtr,_2);
-    if (isResource(t)) {
-      resources = oz_cons(val,resources);
-      return NO;
-    }
     if (oz_isVariable(t))
       vars = oz_cons(val,vars);
     return OK;
   }
-  virtual OZ_Term getResources()    { return resources; }
 };
 
 

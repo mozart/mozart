@@ -91,7 +91,7 @@ public:
 
 extern MsgBufferManager *msgBufferManager;
 
-void globalizeTert(Tertiary *t, MsgBuffer *bs);
+void globalizeTert(Tertiary *t);
 GName *globalizeConst(ConstTerm *t, MsgBuffer *bs);
 
 inline Bool SEND_SHORT(DSite* s){
@@ -99,7 +99,7 @@ inline Bool SEND_SHORT(DSite* s){
   return NO;}
 
 DSite* getSiteFromTertiaryProxy(Tertiary*);
-OZ_Return raiseGeneric(char *msg, OZ_Term arg);
+OZ_Return raiseGeneric(char *id,char *msg, OZ_Term arg);
 void gcProxy(Tertiary*);
 void gcManager(Tertiary*);
 
