@@ -254,7 +254,7 @@ A future can be created explicitly from a logic variable.
 Futures are useful to protect logic variables from being
 bound by unauthorized sites.
 Futures are also used to distribute constrained variables
-(see <ptr to="sited.entities").
+(see <ptr to="sited.entities">).
 
 <ITEM> <EM>Stream</EM>:
 A stream is an asynchronous one-to-many communication channel.
