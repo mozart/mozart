@@ -5787,44 +5787,33 @@ TaggedRef Abstraction::DBGgetGlobals() {
 OZ_BI_define(BIgetPrintName,1,1)
 {
   oz_declareDerefIN(0,t);
-
   switch (tTag) {
   case OZCONST:
-    if (isConst(t)) {
+    {
       ConstTerm *rec = tagged2Const(t);
       switch (rec->getType()) {
-      case Co_Builtin:     OZ_RETURN(((Builtin *) rec)->getName());
-      case Co_Abstraction: OZ_RETURN(((Abstraction *) rec)->getName());
-      case Co_Object:  	   OZ_RETURN_ATOM(tagged2Object(t)->getPrintName());
-      case Co_Class:       OZ_RETURN_ATOM(tagged2ObjectClass(t)->getPrintName());
-
-      case Co_Cell:
-      case Co_Dictionary:
-      case Co_Array:
-      default:    	   OZ_RETURN_ATOM("_");
+      case Co_Builtin:
+	OZ_RETURN(((Builtin *) rec)->getName());
+      case Co_Abstraction:
+	OZ_RETURN(((Abstraction *) rec)->getName());
+      case Co_Class:
+	OZ_RETURN_ATOM(((ObjectClass *) rec)->getPrintName());
+      default:
+	break;
       }
+      break;
     }
+  case UVAR: case SVAR: case CVAR:
+    OZ_RETURN_ATOM(VariableNamer::getName(OZ_in(0)));
+  case LITERAL:
+    {
+      const char *s = tagged2Literal(t)->getPrintName();
+      OZ_RETURN(s? oz_atom(s): AtomEmpty);
+    }
+  default:
     break;
-
-  case UVAR:
-  case SVAR:
-  case CVAR:    OZ_RETURN_ATOM(VariableNamer::getName(OZ_in(0)));
-  case LITERAL: {
-    Literal *l = tagged2Literal(t);
-    const char *s = l->getPrintName();
-    if (s && *s) {
-      OZ_RETURN_ATOM(s);
-    } else {
-      static char buf[100];
-      sprintf(buf,"::%d",l->hash());
-      OZ_RETURN_ATOM(buf);
-    }
   }
-
-  default:      break;
-  }
-
-  OZ_RETURN_ATOM("");
+  OZ_RETURN(AtomEmpty);
 } OZ_BI_end
 
 // ---------------------------------------------------------------------------
