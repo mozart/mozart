@@ -158,14 +158,16 @@ OZ_Term reflect_space_susplist(ReflectStack &rec_stack,
     if (susp.isPropagator()) {
       Propagator * prop = susp.getPropagator();
       
-      Bool is_reflected;
-      DEBUGPRINT(("ptable.add(%p)", prop));
-      int id = ptable.add(prop, is_reflected);
-      
-      ADD_TO_LIST(term_props, OZ_int(id));
-
-      if (!is_reflected) { 
-	rec_stack.push(prop);
+      if (!prop->isDeadPropagator()) {
+	Bool is_reflected;
+	DEBUGPRINT(("ptable.add(%p)", prop));
+	int id = ptable.add(prop, is_reflected);
+	
+	ADD_TO_LIST(term_props, OZ_int(id));
+	
+	if (!is_reflected) { 
+	  rec_stack.push(prop);
+	}
       }
     }
   }
@@ -409,12 +411,14 @@ OZ_Term reflect_space(OZ_Term v)
       DEBUGPRINT(("reflect_space -- switch entry propagator\n"));
       {
 	Propagator * prop = (Propagator *) ptr; 
+
+	DEBUG_ASSERT (!prop->isDeadPropagator());
+
 	(void) reflect_space_prop(rec_stack, 
 				  prop_list, 
 				  vtable, 
 				  ptable, 
 				  prop);
-
       }
       break;
 
