@@ -34,8 +34,7 @@ enum ContFlag {
   C_LOCAL          = 6, // a local computation space
   C_EXCEPT_HANDLER = 7, // 
   C_SET_CAA        = 8, // supply the emulator with the CAA pointer;
-  C_SET_CUROBJECT  = 9, // set am.curObject
-  C_SET_MODETOP    =10 
+  C_SET_CUROBJECT  = 9  // set am.curObject
 };
 
 
@@ -131,13 +130,6 @@ public:
     push(ToPointer(C_CALL_CONT), NO);
   }
 
-  void pushExceptionHandler(TaggedRef pred)
-  {
-    ensureFree(2);
-    push(ToPointer(pred), NO);
-    push(ToPointer(C_EXCEPT_HANDLER), NO);
-  }
-
   void pushLocal()   { push(ToPointer(C_LOCAL)); }
 
   void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
@@ -179,28 +171,21 @@ public:
 	     cont->getX(),cont->getXSize(),NO);
   }
 
-  void pushDebug(OzDebug *deb)
+  void pushPair(void *p, ContFlag cf)
   {
-    push(deb);
-    push(ToPointer(C_DEBUG_CONT));
+    TaskStackEntry *newTop = ensureFree(2);
+    *newTop = p;
+    *(newTop+1) = ToPointer(cf);
+    tos = newTop+2;
   }
 
-  void pushSetCaa (AskActor *aa)
-  {
-    push (aa);
-    push (ToPointer(C_SET_CAA));
+  void pushDebug(OzDebug *deb)       { pushPair(deb,C_DEBUG_CONT); }
+  void pushSetCaa (AskActor *aa)     { pushPair(aa,C_SET_CAA); }
+  void pushSetCurObject(Object *obj) { pushPair(obj,C_SET_CUROBJECT); }
+  void pushExceptionHandler(TaggedRef pred) { 
+    pushPair(ToPointer(pred),C_EXCEPT_HANDLER);
   }
 
-  void pushSetCurObject(Object *obj)
-  {
-    push(obj);
-    push(ToPointer(C_SET_CUROBJECT));
-  }
-
-  void pushSetModeTop()
-  {
-    push(ToPointer(C_SET_MODETOP));
-  }
 
   static TaskStackEntry makeJobEntry(Bool hasJob)
   {
