@@ -120,7 +120,7 @@ GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef t,ByteCode*scp)
   kickLazy();
 
   oz_bind(vPtr,*vPtr,t);
-  dispose();
+  //  dispose();
   return OK;
 }
 
