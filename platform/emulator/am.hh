@@ -278,7 +278,7 @@ public:
   }
 
   Bool isSetSFlag(StatusBit flag) { return ( statusReg & flag ) ? OK : NO; }
-  int isSetSFlag()                { return statusReg; }
+  int isSetSFlag()                { return statusReg & ~DebugMode; }
 
   Bool debugmode() { return isSetSFlag(DebugMode); }
   void checkDebug(Thread *tt) {
