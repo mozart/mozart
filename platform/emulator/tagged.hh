@@ -96,14 +96,14 @@ enum TypeOfTerm {
 
 #define _makeTaggedRef2i(tag,ptr) _makeTaggedRef2(tag,(int32)ToInt32(ptr))
 
-#ifdef NEW_TAGGING
-#define _makeTaggedRef(s) _makeTaggedRef2i(REF,s)
-#define _isRef(term)      (tagTypeOf(term)==REF)
-#define _tagged2Ref(ref)  ((TaggedRef *) tagValueOf2(REF,ref))
-#else
+#ifdef OLD_TAGGING
 #define _makeTaggedRef(s) ((TaggedRef) ToInt32(s))
 #define _isRef(term)      ((term & 3) == 0)
 #define _tagged2Ref(ref)  ((TaggedRef *) ToPointer(ref))
+#else
+#define _makeTaggedRef(s) _makeTaggedRef2i(REF,s)
+#define _isRef(term)      (tagTypeOf(term)==REF)
+#define _tagged2Ref(ref)  ((TaggedRef *) tagValueOf2(REF,ref))
 #endif
 
 // ------------------------------------------------------
