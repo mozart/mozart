@@ -4,6 +4,9 @@
 #include <process.h>
 #include <io.h>
 
+#include "../include/config.h"
+
+
 BOOL getFileName(char *fname)
 {
   static char   filterList[] = "Emacs binary (emacs.exe)" \
@@ -43,6 +46,15 @@ OzPanic(int quit, char *format,...)
     ExitProcess(1);
 }
 
+void normalizePath(char *path)
+{
+  for(char *aux=path; *aux; aux++) {
+    if (*aux == '\\') {
+      *aux = '/';
+    }
+  }
+}
+
 char *getParent(char *path, int levelsup)
 {
   char *ret = strdup(path);
@@ -55,6 +67,7 @@ char *getParent(char *path, int levelsup)
   }
   return ret;
 }
+
 char *getEmacsHome(char *path)
 {
   char buf[MAX_PATH];
@@ -72,11 +85,22 @@ char *getEmacsHome(char *path)
 
 char *getOzHome(char *path)
 {
-  char *ret = getParent(path,3);
+  char *ret = getParent(path,1);
   if (ret == NULL) {
     OzPanic(1,"Cannot determine Oz installation directory.\nTry setting OZHOME environment variable.");
   }
   return ret;
+}
+
+char *getProgname(char *path)
+{
+  char *aux = path+strlen(path)-1;
+  while(*aux != '\\' && *aux!='/') {
+    if (aux == path)
+      return strdup(path);
+    aux--;
+  }
+  return strdup(aux+1);
 }
 
 void ozSetenv(const char *var, const char *value)
@@ -88,7 +112,7 @@ void ozSetenv(const char *var, const char *value)
 
 
 /* Todo: version should not be wired. */
-char *reg_path = "SOFTWARE\\DFKI\\Oz\\1.9.9";
+char *reg_path = "SOFTWARE\\DFKI\\Oz\\" OZVERSION;
 
 char *getRegistry(char *var)
 {
@@ -154,12 +178,15 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
     ozhome = getRegistry("OZHOME");
   }
 
+  GetModuleFileName(NULL, buffer, sizeof(buffer));
+  char *progname = getProgname(buffer);
+
   if (ozhome == NULL) {
-    GetModuleFileName(NULL, buffer, sizeof(buffer));
     ozhome = getOzHome(buffer);
-    ozSetenv("OZHOME",ozhome);
-    setRegistry("OZHOME",ozhome);
   }
+  normalizePath(ozhome);
+  ozSetenv("OZHOME",ozhome);
+  setRegistry("OZHOME",ozhome);
 
   const char *ozplatform = "win32-i486";
   ozSetenv("OZPLATFORM",ozplatform);
@@ -174,22 +201,18 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
           ozhome,ozplatform,getenv("PATH"));
   ozSetenv("PATH",buffer);
 
+  /*
+   * TCL/TK
+   */
   sprintf(buffer,"%s/ozwish/lib/tcl",ozhome);
   ozSetenv("TCL_LIBRARY",buffer);
   sprintf(buffer,"%s/ozwish/lib/tk",ozhome);
   ozSetenv("TK_LIBRARY",buffer);
 
-  STARTUPINFO si;
-  ZeroMemory(&si,sizeof(si));
-  si.cb = sizeof(si);
 
-  SECURITY_ATTRIBUTES sa;
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = TRUE;
-
-  PROCESS_INFORMATION pinf;
-
+  /*
+   * Emacs
+   */
   char *ehome = getenv("EMACSHOME");
   if (ehome==NULL && (ehome=getRegistry("EMACSHOME"))==NULL) {
   getehome:
@@ -200,6 +223,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
     setRegistry("EMACSHOME",ehome);
   }
 
+  normalizePath(ehome);
   sprintf(buffer,"%s/bin/emacs.exe",ehome);
   char *ebin = strdup(buffer);
 
@@ -227,8 +251,25 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   ozSetenv("EMACSDOTERM","CMD");
 
-  sprintf(buffer,"%s -l %s/lib/elisp/oz.elc -f run-oz",
-          ebin,ozhome);
+  STARTUPINFO si;
+  ZeroMemory(&si,sizeof(si));
+  si.cb = sizeof(si);
+
+  SECURITY_ATTRIBUTES sa;
+  sa.nLength = sizeof(sa);
+  sa.lpSecurityDescriptor = NULL;
+  sa.bInheritHandle = TRUE;
+
+  PROCESS_INFORMATION pinf;
+
+  if (stricmp(progname,"oz.exe")==0) {
+    sprintf(buffer,"%s -l %s/lib/elisp/oz.elc -f run-oz",
+            ebin,ozhome);
+  } else if (stricmp(progname,"ozemacs.exe")==0) {
+    sprintf(buffer,"%s",ebin);
+  } else {
+    OzPanic(1,"Unknown invocation: %s", progname);
+  }
 
   BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
                            DETACHED_PROCESS,NULL,NULL,&si,&pinf);
