@@ -34,7 +34,7 @@
 
 // optimize: inline ....
 
-inline
+INLINE
 void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
 		      TaggedRef a, ByteCode *scp) 
 {
@@ -56,7 +56,7 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
  *     3. but don't forget to check identical variables
  */
 
-inline
+INLINE
 Bool AM::fastUnify(TaggedRef A, TaggedRef B, ByteCode *scp)
 {
   TaggedRef term1 = A;
@@ -87,7 +87,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, ByteCode *scp)
   return OK;
 }
 
-inline
+INLINE
 void AM::deinstallCurrent()
 {
   reduceTrailOnSuspend();
@@ -95,7 +95,7 @@ void AM::deinstallCurrent()
   setCurrent(currentBoard()->getParent());
 }
 
-inline
+INLINE
 void AM::deinstallPath(Board *top)
 {
   Assert(!top->isCommitted() && !top->isFailed());
@@ -108,7 +108,7 @@ void AM::deinstallPath(Board *top)
 #define ShallowCheckLocal(ptr)						\
    if (shallowHeapTop) return reallyHeapNever(ptr,shallowHeapTop);
 
-inline
+INLINE
 Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
 {
   // variables are usually bound 
@@ -119,18 +119,18 @@ Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
 }
 
 
-inline
+INLINE
 Bool AM::isLocalSVar(SVariable *var) {
   ShallowCheckLocal(var);
   return (isCurrentBoard(var->getHome1())) || isLocalSVarOutline(var);
 }
 
-inline
+INLINE
 Bool AM::isLocalSVar(TaggedRef var) {
   return isLocalSVar(tagged2SVarPlus(var));
 }
 
-inline
+INLINE
 Bool AM::isLocalVariable(TaggedRef var,TaggedRef *varPtr)
 {
   CHECK_ISVAR(var);
@@ -139,7 +139,7 @@ Bool AM::isLocalVariable(TaggedRef var,TaggedRef *varPtr)
   return isLocalSVar(var);
 }
 
-inline
+INLINE
 void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
 {
   SVariable *var = tagged2SVarPlus(taggedvar);
@@ -153,7 +153,7 @@ void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
 
 // unset the ThreadSwitch flag and reset the counter
 // only in emulate.cc (problem with INTERFACE declaration!)
-inline
+INLINE
 void AM::restartThread()
 {
   unsetSFlag(ThreadSwitch);
@@ -166,7 +166,7 @@ void AM::restartThread()
 
 //
 //  An allocator for thread's bodies;
-inline
+INLINE
 RunnableThreadBody* AM::allocateBody()
 {
   RunnableThreadBody *body = threadBodyFreeList;
@@ -181,7 +181,7 @@ RunnableThreadBody* AM::allocateBody()
   return body;
 }
 
-inline
+INLINE
 void AM::freeThreadBody(Thread *tt) {
   RunnableThreadBody *it = tt->getBody();
   it->next = threadBodyFreeList;
@@ -190,7 +190,15 @@ void AM::freeThreadBody(Thread *tt) {
 }
 
 
-inline
+INLINE
+int AM::newId() {
+  unsigned int currentThreadID = currentThread() ?
+    currentThread()->getID() & THREAD_ID_MASK : 1;
+  lastThreadID = (lastThreadID + 1) & THREAD_ID_MAX;
+  return lastThreadID | (currentThreadID << THREAD_ID_SIZE);
+}
+
+INLINE
 Thread *AM::newThreadInternal(int prio, Board *bb) {
   Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb,newId());
   th->setBody(allocateBody());
@@ -201,7 +209,7 @@ Thread *AM::newThreadInternal(int prio, Board *bb) {
 
 //
 //  Make a runnable thread with a task stack;
-inline 
+INLINE 
 Thread *AM::mkRunnableThread(int prio, Board *bb)
 {
   Thread *th = newThreadInternal(prio,bb);
@@ -215,7 +223,7 @@ Thread *AM::mkRunnableThread(int prio, Board *bb)
 
 //
 //  Make a runnable thread with a task stack;
-inline 
+INLINE 
 Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 {
   Thread *th = newThreadInternal(prio,bb);
@@ -237,7 +245,7 @@ Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 //    suspension with a 'C' function;
 //    suspended sequential thread (with a task stack);
 //
-inline
+INLINE
 Thread *AM::mkWakeupThread(Board *bb) 
 {
   Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,newId());
@@ -247,7 +255,7 @@ Thread *AM::mkWakeupThread(Board *bb)
 }
 
 //
-inline
+INLINE
 Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
 {
   Thread *th = new Thread(S_PR_THR,prio,bb,newId());
@@ -259,7 +267,7 @@ Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
 }
 
 //
-inline 
+INLINE 
 Thread *AM::mkSuspendedThread(Board *bb, int prio)
 {
   Thread *th = new Thread(S_RTHREAD,prio,bb,newId());
@@ -270,16 +278,15 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio)
   return th;
 }
 
-inline
-int AM::newId() {
-  unsigned int currentThreadID = currentThread() ?
-    currentThread()->getID() & THREAD_ID_MASK : 1;
-  lastThreadID = (lastThreadID + 1) & THREAD_ID_MAX;
-  return lastThreadID | (currentThreadID << THREAD_ID_SIZE);
+INLINE
+void AM::removeExtThread(Thread *tt) 
+{
+  if (tt->wasExtThread()) {
+     removeExtThreadOutlined(tt);
+  }
 }
- 
 
-inline 
+INLINE 
 void AM::suspThreadToRunnableOPT(Thread *tt)
 {
   Assert(tt->isSuspended() || tt->getPStop());
@@ -307,7 +314,7 @@ void AM::suspThreadToRunnableOPT(Thread *tt)
   }
 }
 
-inline 
+INLINE 
 void AM::suspThreadToRunnable(Thread *tt)
 {
   Assert(tt->isSuspended() || tt->getPStop());
@@ -328,7 +335,7 @@ void AM::suspThreadToRunnable(Thread *tt)
   }
 }
 
-inline
+INLINE
 void AM::wakeupToRunnable(Thread *tt)
 {
   Assert(tt->isSuspended());
@@ -343,7 +350,7 @@ void AM::wakeupToRunnable(Thread *tt)
   }
 }
   
-inline 
+INLINE 
 void AM::updateSolveBoardPropagatorToRunnable(Thread *tt)
 {
   if (isBelowSolveBoard() || tt->isExtThread()) {
@@ -355,7 +362,7 @@ void AM::updateSolveBoardPropagatorToRunnable(Thread *tt)
   }
 }
 
-inline
+INLINE
 void AM::propagatorToRunnable(Thread *tt)
 {
   tt->markRunnable();
@@ -363,31 +370,13 @@ void AM::propagatorToRunnable(Thread *tt)
   updateSolveBoardPropagatorToRunnable(tt);
 }
 
-inline
-void AM::scheduledPropagator(Thread *tt)
-{
-  Assert(tt);
-  Assert(!tt->isDeadThread());
-  Assert(tt->isPropagator());
-  Assert(isCurrentBoard(GETBOARD(tt)));
-
-  tt->unmarkRunnable();
-  wakeUpPropagator(tt,currentBoard(), pc_propagator);
-}
-
-
 //
-//  (re-)Suspend the propagator again (former 'reviveCurrentTaskSusp');
-inline
-void AM::suspendPropagator(Thread *tt)
+INLINE
+void AM::checkExtThread(Thread *tt) 
 {
-  Assert(tt);
-  Assert(!tt->isDeadThread());
-  Assert(tt->isPropagator());
-  Assert(isCurrentBoard(GETBOARD(tt)));
-
-  tt->unmarkRunnable();
-  tt->unmarkUnifyThread();
+  if (tt->wasExtThread()) {
+    checkExtThreadOutlined(tt);
+  }
 }
 
 #define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)	\
@@ -417,7 +406,7 @@ void AM::suspendPropagator(Thread *tt)
   }						\
 }
 
-inline 
+INLINE 
 Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
 {
   Assert(tt->isSuspended());
@@ -465,10 +454,36 @@ Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
 		    scheduleThreadInline(tt, tt->getPriority()));
 } 
 
+INLINE
+void AM::scheduledPropagator(Thread *tt)
+{
+  Assert(tt);
+  Assert(!tt->isDeadThread());
+  Assert(tt->isPropagator());
+  Assert(isCurrentBoard(GETBOARD(tt)));
+
+  tt->unmarkRunnable();
+  wakeUpPropagator(tt,currentBoard(), pc_propagator);
+}
+
+
+//
+//  (re-)Suspend the propagator again (former 'reviveCurrentTaskSusp');
+INLINE
+void AM::suspendPropagator(Thread *tt)
+{
+  Assert(tt);
+  Assert(!tt->isDeadThread());
+  Assert(tt->isPropagator());
+  Assert(isCurrentBoard(GETBOARD(tt)));
+
+  tt->unmarkRunnable();
+  tt->unmarkUnifyThread();
+}
 
 //
 //  Dispose a thread. That's a private method!
-inline
+INLINE
 void AM::disposeThread(Thread *tt)
 {
   tt->markDeadThread();
@@ -494,7 +509,7 @@ void AM::disposeThread(Thread *tt)
 }
 
 //
-inline
+INLINE
 void AM::disposeSuspendedThread(Thread *tt)
 {
   Assert(tt->isSuspended());
@@ -505,7 +520,7 @@ void AM::disposeSuspendedThread(Thread *tt)
 
 //
 //  It marks also the thread as dead;
-inline 
+INLINE 
 void AM::disposeRunnableThread(Thread *tt)
 {
   Assert(tt->isRunnable());
@@ -518,7 +533,7 @@ void AM::disposeRunnableThread(Thread *tt)
 //  Actually, terminating a thread should be done through 
 // 'LBLkillxxxx' in emulate.cc, but one cannot jump from the local 
 // propagation queue there;
-inline
+INLINE
 void AM::closeDonePropagator(Thread *tt)
 {
   Assert(tt);
@@ -552,7 +567,7 @@ void AM::closeDonePropagator(Thread *tt)
   //  I don't know how to check this assertion right now;
 }
 
-inline
+INLINE
 void AM::closeDonePropagatorThreadCD(Thread *tt)
 {
   tt->markRunnable();
@@ -561,7 +576,7 @@ void AM::closeDonePropagatorThreadCD(Thread *tt)
   checkExtThread(tt);
 }
 
-inline 
+INLINE 
 void AM::closeDonePropagatorCD(Thread *tt) 
 {
   tt->markRunnable();
@@ -571,23 +586,7 @@ void AM::closeDonePropagatorCD(Thread *tt)
   checkExtThread(tt);
 }
 
-//
-inline
-void AM::checkExtThread(Thread *tt) 
-{
-  if (tt->wasExtThread()) {
-    checkExtThreadOutlined(tt);
-  }
-}
-
-inline
-void AM::removeExtThread(Thread *tt) 
-{
-  if (tt->wasExtThread()) {
-     removeExtThreadOutlined(tt);
-  }
-}
-
+INLINE
 OZ_Return AM::runPropagator(Thread *tt)
 {
   Assert(tt->isPropagator());
@@ -640,7 +639,7 @@ OZ_Return AM::runPropagator(Thread *tt)
  * OO stuff
  * ------------------------------------------------------------------------ */
 
-inline
+INLINE
 void AM::changeSelf(Object *o)
 {
   Object *oldSelf = cachedSelf;
@@ -650,7 +649,7 @@ void AM::changeSelf(Object *o)
   }
 }
 
-inline
+INLINE
 void AM::saveSelf()
 {
   if (cachedSelf != 0) {

@@ -32,7 +32,7 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include "base.hh"
 
 #define htEmpty ((void*) -1L)
 

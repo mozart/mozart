@@ -31,18 +31,14 @@
 
 #include "iso-ctype.hh"
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
-#include "oz.h"
-
 #include "runtime.hh"
 
 #include "genvar.hh"
 #include "ofgenvar.hh"
 
 #include "gmp.h"
+#include "os.hh"
+#include "builtins.hh"
 
 /* ------------------------------------------------------------------------ *
  * tests

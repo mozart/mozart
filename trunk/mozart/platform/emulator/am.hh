@@ -31,18 +31,19 @@
 #include "oz.h"
 #include "oz_cpi.hh"
 
-#include "types.hh"
+#include "base.hh"
 
-#include "tagged.hh"
 #include "value.hh"
 
 #include "cont.hh"
 
-#include "stack.hh"
 #include "taskstk.hh"
+
 #include "trail.hh"
 
 #include "thrspool.hh"
+
+// more include's at end!
 
 // -----------------------------------------------------------------------
 
@@ -501,7 +502,6 @@ extern AM am;
 #include "compiler.hh"
 #include "os.hh"
 
-#include "perdio.hh"
 
 #ifndef OUTLINE
 #include "am.icc"

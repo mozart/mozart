@@ -30,6 +30,7 @@
 #pragma implementation "variable.hh"
 #endif
 
+#include "variable.hh"
 #include "oz.h"
 
 #include "tagged.hh"

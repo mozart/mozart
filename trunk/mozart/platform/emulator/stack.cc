@@ -28,11 +28,11 @@
 #pragma implementation "stack.hh"
 #endif
 
-#include <malloc.h>
-
-#include "types.hh"
+#include "base.hh"
 #include "mem.hh"
 #include "stack.hh"
+
+#include <malloc.h>
 
 inline
 void Stack::reallocate(int newsize) 

@@ -34,10 +34,14 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include "base.hh"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include <sys/types.h>
+#include <signal.h>
 
 #ifdef AIX3_RS6000
 #include <sys/select.h>
@@ -120,6 +124,11 @@ int  osCheckIO();
 
 void osInit();
 void osExit(int status);
+
+
+#ifndef SIGQUIT
+#define SIGQUIT SIGINT
+#endif
 
 #ifdef WINDOWS
 #define oskill(pid,sig) raise(sig)
