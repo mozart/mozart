@@ -1281,6 +1281,7 @@ void dpExitWithTimer(unsigned int timeUntilClose)
     osBlockSelect(ts);
     osBlockSignals(NO);
     timeUntilClose -= (osTotalTime() - idle_start);
+    oz_io_check();
     oz_io_handle();
   } while ((int) timeUntilClose > 0 && remaining);
   */
@@ -1337,6 +1338,7 @@ void dpExitWithTimer(unsigned int timeUntilClose)
     osBlockSignals(NO);
     timeUntilClose -= (osTotalTime() - idle_start);
     am.doGCollect();
+    oz_io_check();
     oz_io_handle();
   } while ((int) timeUntilClose > 0);
   timeUntilClose = tuc;
@@ -1355,11 +1357,13 @@ void dpExitWithTimer(unsigned int timeUntilClose)
 //        fprintf(stderr, "... closing, remaining %d frames (pid %d)!\n",
 //  	      remaining, osgetpid());
 //        fflush(stderr);
+      oz_io_check();
       oz_io_handle();
       osUnblockSignals();
       unsigned int ts = TIME_SLICE;
       osBlockSelect(ts);
       osBlockSignals(NO);
+      oz_io_check();
       oz_io_handle();
       timeUntilClose -= (osTotalTime() - idle_start);
     } while ((int) timeUntilClose > 0 && remaining);
@@ -1372,6 +1376,7 @@ void dpExitWithTimer(unsigned int timeUntilClose)
     timeUntilClose = tuc;
     do {
       unsigned long idle_start = osTotalTime();
+      oz_io_check();
       oz_io_handle();
       osUnblockSignals();
       unsigned int ts = TIME_SLICE;
@@ -1398,6 +1403,7 @@ void dpExitWithTimer(unsigned int timeUntilClose)
     osBlockSelect(ts);
     osBlockSignals(NO);
     timeUntilClose -= (osTotalTime() - idle_start);
+    oz_io_check();
     oz_io_handle();
   }
   */
