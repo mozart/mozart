@@ -66,6 +66,8 @@ in
 		 byNeed:          ByNeed
 		 byNeedDot:       ByNeedDot
 		 byNeedFail:      Boot_Value.'byNeedFail'
+		 readOnly:        Boot_Value.readOnly
+		 failed:          Boot_Value.failedValue
 
 		 toVirtualString: Boot_Value.toVirtualString
 		)

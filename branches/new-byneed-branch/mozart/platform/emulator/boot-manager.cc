@@ -521,6 +521,8 @@ void initBuiltins() {
   BI_bindFuture        = string2Builtin("INTERNAL", "bindFuture");
   BI_waitStatus        = string2Builtin("INTERNAL", "waitStatus");
   BI_varToFuture       = string2Builtin("INTERNAL", "varToFuture");
+  BI_varToReadOnly     = string2Builtin("INTERNAL", "varToReadOnly");
+  BI_readOnlyToVar     = string2Builtin("INTERNAL", "readOnlyToVar");
 
   // to execute boot functor in am.cc
   BI_dot           = string2Builtin("Value", ".");

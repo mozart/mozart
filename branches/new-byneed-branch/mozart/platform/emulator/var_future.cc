@@ -36,6 +36,7 @@
 #include "thr_int.hh"
 #include "value.hh"
 #include "atoms.hh"
+#include "var_failed.hh"
 
 // this builtin is only internally available
 OZ_BI_define(BIbindFuture,2,0)
@@ -224,6 +225,7 @@ OZ_BI_define(BIwaitQuiet,1,0)
   oz_declareDerefIN(0,fut);
   Assert(!oz_isRef(fut));
   if (oz_isVarOrRef(fut)) {
+    if (oz_isFailed(fut)) return PROCEED;   // added by raph
     if (oz_isFuture(fut)) {
       Future* p = (Future*)tagged2Var(fut);
       if (p->isFailed()) return PROCEED;
@@ -242,8 +244,9 @@ OZ_BI_define(BIisFailed,1,1)
   Assert(!oz_isRef(fut));
   OZ_RETURN(
 	    (oz_isVarOrRef(fut) &&
-	     oz_isFuture(fut) &&
-	     ((Future*)tagged2Var(fut))->isFailed())
+	     // added by raph
+	     (oz_isFailed(fut) ||
+	      (oz_isFuture(fut) && ((Future*)tagged2Var(fut))->isFailed())))
 	    ? oz_true() : oz_false() );
 } OZ_BI_end
 

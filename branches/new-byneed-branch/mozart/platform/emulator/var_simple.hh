@@ -3,7 +3,8 @@
  *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Alfred Spiessens (fsp@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Michael Mehl (1998)
@@ -24,9 +25,6 @@
  *
  */
 
-// fred+raph: A SimpleVar is a free variable whose value is demanded.
-// The operation WaitNeeded does not block on that kind of variable.
-
 #ifndef __SIMPLEVAR__H__
 #define __SIMPLEVAR__H__
 
@@ -37,22 +35,27 @@
 #include "var_base.hh"
 #include "unify.hh"
 
+/*
+ * fred+raph:
+ * A SimpleVar object implements a free variable whose value can be
+ * demanded or not.
+ * A non-demanded, or quiet, variable has the type OZ_VAR_SIMPLE_QUIET.
+ * A demanded, or needed, variable has the type OZ_VAR_SIMPLE.
+ */
+
 class SimpleVar: public OzVariable {
 public:
-  SimpleVar(Board *bb) : OzVariable(OZ_VAR_SIMPLE,bb) {}
+  // raph: a new SimpleVar is quiet by default
+  SimpleVar(Board *bb) : OzVariable(OZ_VAR_SIMPLE_QUIET,bb) {}
 
-  OZ_Return bind(TaggedRef* vPtr, TaggedRef t) {
-    oz_bindVar(this,vPtr, t);
-    return PROCEED;
-  }
+  OZ_Return bind(TaggedRef* vPtr, TaggedRef t);
+  OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr);
 
-  // getType(vPtr) == OZ_VAR_SIMPLE
-  // getBoard(lvp) != getBoard(rvp) || getType(vPtr) >= getType(tPtr)
-  // in particular (*tPtr) can not be OZ_VAR_OPT [when in the same space]
-  OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr) {
-    oz_bindVar(this,vPtr, makeTaggedRef(tPtr));
-    return (PROCEED);
-  }
+  // raph: the variable must be quiet; makes it needed
+  OZ_Return becomeNeeded();
+
+  // raph: use this method for adding demanding suspensions only
+  OZ_Return addSusp(TaggedRef*, Suspendable *);
 
   OZ_Return valid(TaggedRef /* val */) { return OK; }
 
@@ -62,7 +65,11 @@ public:
   }
 
   void printStream(ostream &out,int depth = 10) {
-    out << "<simple>";
+    if (getType() == OZ_VAR_SIMPLE_QUIET) {
+      out << "<simple quiet>";
+    } else {
+      out << "<simple>";
+    }
   }
   void printLongStream(ostream &out,int depth = 10,
 			int offset = 0) {
