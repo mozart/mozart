@@ -62,7 +62,7 @@
 <chapter class=unnumbered><title/Limitations/
 <P>In general, Mozart has very few system limitations.
 Memory allocation is dynamic.
-The number of record fields, the size of arrays and dictionarys,
+The number of record fields, the size of arrays and dictionaries,
 the number of characters in an atom,
 the number of threads, integer precision, etc.,
 are all limited only by available memory.
