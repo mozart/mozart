@@ -64,6 +64,11 @@ define
 	 Submakefiles:unit
 	 IncludeDirs: nil
 	 LibraryDirs: nil
+	 %% tools
+	 OzEngine   : unit
+	 OzC        : unit
+	 OzL        : unit
+	 OzTool     : unit
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -277,10 +282,46 @@ define
 
       meth get_oz_home($) {Path.expand {Property.get 'oz.home'}} end
       meth get_oz_bindir($) {Path.resolve Attribs,get_oz_home($) 'bin'} end
-      meth get_oz_engine($) {Path.resolveAtom Attribs,get_oz_bindir($) 'ozengine'} end
-      meth get_oz_ozc($) {Path.resolveAtom Attribs,get_oz_bindir($) 'ozc'} end
-      meth get_oz_ozl($) {Path.resolveAtom Attribs,get_oz_bindir($) 'ozl'} end
-      meth get_oz_oztool($) {Path.resolveAtom Attribs,get_oz_bindir($) 'oztool'} end
+      meth get_oz_engine($)
+	 if @OzEngine==unit then
+	    P={Path.resolveAtom Attribs,get_oz_bindir($) 'ozengine.exe'}
+	 in
+	    if {Path.exists P} then OzEngine<-P else
+	       OzEngine<-{Path.resolveAtom Attribs,get_oz_bindir($) 'ozengine'}
+	    end
+	 end
+	 @OzEngine
+      end
+      meth get_oz_ozc($)
+	 if @OzC==unit then
+	    P={Path.resolveAtom Attribs,get_oz_bindir($) 'ozc.exe'}
+	 in
+	    if {Path.exists P} then OzC<-P else
+	       OzC<-{Path.resolveAtom Attribs,get_oz_bindir($) 'ozc'}
+	    end
+	 end
+	 @OzC
+      end
+      meth get_oz_ozl($)
+	 if @OzL==unit then
+	    P={Path.resolveAtom Attribs,get_oz_bindir($) 'ozl.exe'}
+	 in
+	    if {Path.exists P} then OzL<-P else
+	       OzL<-{Path.resolveAtom Attribs,get_oz_bindir($) 'ozl'}
+	    end
+	 end
+	 @OzL
+      end
+      meth get_oz_oztool($)
+	 if @OzTool==unit then
+	    P={Path.resolveAtom Attribs,get_oz_bindir($) 'oztool.exe'}
+	 in
+	    if {Path.exists P} then OzTool<-P else
+	       OzTool<-{Path.resolveAtom Attribs,get_oz_bindir($) 'oztool'}
+	    end
+	 end
+	 @OzTool
+      end
 
       meth set_bin_targets(L) BinTargets<-L end
       meth get_bin_targets($) @BinTargets end
