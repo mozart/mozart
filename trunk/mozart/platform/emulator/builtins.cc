@@ -5410,6 +5410,25 @@ OZ_BI_define(BIbitArray_nimpl,2,0)
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
 
+OZ_BI_define(BIbitArray_disjoint,2,1)
+{
+  oz_declareBitArrayIN(0,b1);
+  oz_declareBitArrayIN(1,b2);
+  if (b1->checkBounds(b2)) {
+    OZ_RETURN(b1->disjoint(b2) ? NameTrue : NameFalse);
+  } else
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+
+OZ_BI_define(BIbitArray_card,1,1)
+{
+  oz_declareBitArrayIN(0,b1);
+  OZ_RETURN_INT(b1->card());
+} OZ_BI_end
+
+
+
 OZ_BI_define(BIbitArray_toList,1,1)
 {
   oz_declareBitArrayIN(0,b);

@@ -671,6 +671,31 @@ void BitArray::nimpl(const BitArray *b) {
     array[i] &= ~b->array[i];
 }
 
+Bool BitArray::disjoint(const BitArray *b) {
+  Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
+  int size = getSize();
+  for (int i = 0; i < size; i++) {
+    if ((array[i] & b->array[i]) != 0)
+      return NO;
+  }
+  return OK;
+}
+
+int BitArray::card() {
+  int ret = 0;
+  int size = getSize();
+  for (int i = 0; i < size; i++) {
+    unsigned int aux = array[i];
+    while(aux) {
+      if (aux&1) ret++;
+      aux = aux>>1;
+    }
+  }
+  return ret;
+}
+
+
+
 TaggedRef BitArray::toList(void) {
   TaggedRef list = AtomNil;
   int offset =
