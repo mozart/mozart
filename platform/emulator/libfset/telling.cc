@@ -32,8 +32,10 @@ OZ_BI_define(fsp_include, 2, 0)
 
   PropagatorExpect pe;
 
-  OZ_EXPECT(pe, 0, expectIntVarAny);
-  OZ_EXPECT(pe, 1, expectFSetVarBounds);
+  int dummy = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarAny, dummy);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, dummy);
   
   return pe.impose(new IncludePropagator(OZ_in(1),
 					 OZ_in(0)));
@@ -47,8 +49,10 @@ OZ_BI_define(fsp_exclude, 2, 0)
 
   PropagatorExpect pe;
 
-  OZ_EXPECT(pe, 0, expectIntVarAny);
-  OZ_EXPECT(pe, 1, expectFSetVarBounds);
+  int dummy = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarAny, dummy);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, dummy);
   
   return pe.impose(new ExcludePropagator(OZ_in(1),
 					 OZ_in(0)));
