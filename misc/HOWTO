@@ -1,0 +1,58 @@
+-*-outline-*-
+
+In the following, $SRC, $BUILD, $INSTALL denote respectively the
+source directory for the release, the build directory, and the install
+directory.
+
+* configure, build and install the release
+
+	cd $BUILD
+	$SRC/configure --with-documents=all --enable-chm
+	make depend bootstrap
+	make PREFIX=$INSTALL install
+
+Note that --prefix is NOT supplied: the release should be built using
+the default prefix.  I believe this only affects the sgml catalog.
+(this ought to be fixed: the right catalog should be generated at
+_installation_ time).
+
+* build and install the ps/pdf documentation
+
+	cd $BUILD/doc
+	make ps pdf
+	make PREFIX=$INSTALL installps
+
+* create the src and doc tars
+
+	cd $BUILD
+	make PREFIX=$INSTALL src tar
+
+* create the RPMs
+
+	become root
+	$SRC/misc/create-rpm $BUILD $BUILD
+
+* create and populate the ftp tree for the release
+
+Of course, this needs to be done on the ftp server.  In the following,
+$REL stands for the release number (e.g. 1.2.2).
+
+	become root
+	become ftp: su -s /bin/sh ftp
+
+create the directory structure:
+
+	$SRC/misc/mkftp --release=$REL --create
+
+move the documentation into place:
+
+	$SRC/misc/mkftp --release=$REL --doc=$INSTALL
+
+move the RPMs into place.  $LINUX stands for your linux distribution
+(e.g. redhat-7.1):
+
+	$SRC/misc/mkftp --release=$REL --rpm=$LINUX $BUILD/*.rpm
+
+move the TARs into place:
+
+	$SRC/misc/mkftp --release=$REL --tar $BUILD/*.tar.gz
