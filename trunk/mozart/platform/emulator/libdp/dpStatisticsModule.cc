@@ -50,63 +50,47 @@ OZ_BI_define(BItablesExtract,0,1)
   OZ_RETURN(ret);
 } OZ_BI_end
 
+/*
+OZ_BI_define(BItablesBTinfo,0,1)
+{
+  initDP();
+  int limit = BT->getSize();
+  for(int ctr = 0; ctr<limit;ctr++)
+    {
+      BucketHashNode* o = BT->getBucket(ctr);
+      while(o){
+	BorrowEntry *be = (BorrowEntry *)o;
+	o = o->getNext();
+	ans = oz_cons(be->extract_info(),ans);
+      }
+    }
+}
+*/
 OZ_BI_define(BIsiteStatistics,0,1)
 {
   initDP();
-
-  int indx;
-  DSite* found;
-  GenHashNode *node = getPrimaryNode(NULL, indx);
   OZ_Term sitelist = oz_nil(); 
-  int sent, received, lastrtt;
-  Bool primary = TRUE;
-  while(node!=NULL){
-    GenCast(node->getBaseKey(),GenHashBaseKey*,found,DSite*);  
-    if(found->remoteComm() && found->isConnected()){
-      ComObj *c=found->getComObj();
-      received = getNORM_ComObj(c);
-      sent     = getNOSM_ComObj(c);
-      lastrtt  = getLastRTT_ComObj(c);
+  int limit = primarySiteTable->getSize();
+  for(int ctr = 0; ctr<limit;ctr++)
+    {
+      DSite *found = (DSite *) primarySiteTable->getBucket(ctr);
+      while (found){
+	sitelist = oz_cons(found->getOzRep(),sitelist);
+	found = (DSite *)found->getNext();
+      }
     }
-    else{
-      received = 0;
-      sent = 0;
-      lastrtt = -1;
+
+  limit = secondarySiteTable->getSize();
+  for(int ctr = 0; ctr<limit;ctr++)
+    {
+      DSite *found = (DSite *) secondarySiteTable->getBucket(ctr);
+      while (found){
+	sitelist = oz_cons(found->getOzRep(),sitelist);
+	found = (DSite *)found->getNext();
+      }
     }
-    TimeStamp *ts = found->getTimeStamp();
-    ip_address a=found->getAddress();
-    char ip[100];
-    sprintf(ip,"%d.%d.%d.%d",
-	    (a/(256*256*256))%256,
-	    (a/(256*256))%256,
-	    (a/256)%256,
-	    a%256);
-    sitelist=
-      oz_cons(OZ_recordInit(oz_atom("site"),
-      oz_cons(oz_pairA("siteid", oz_atom(found->stringrep_notype())),
-      oz_cons(oz_pairAI("port",(int)found->getPort()),
-      oz_cons(oz_pairAI("timestamp",(int)ts->start),
-//        oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts->start))),
-//        oz_cons(oz_pairAI("ipint",(unsigned int)found->getAddress()),
-//        oz_cons(oz_pairAI("hval",(int)found),
-      oz_cons(oz_pairAI("addr",a),
-      oz_cons(oz_pairAA("ip",ip),
-      oz_cons(oz_pairAI("sent",sent),
-      oz_cons(oz_pairAI("received",received),
-      oz_cons(oz_pairAI("lastRTT",lastrtt),
-      oz_cons(oz_pairA("table", oz_atom(primary?"p":"s")),
-      oz_cons(oz_pairAI("pid",ts->pid),
-      oz_cons(oz_pairA("state",found->getStateStatistics()),
-//        oz_cons(oz_pairAI("type",(int)found->getTypeStatistics()),
-	      oz_nil())))))))))))),sitelist);
-    if(primary){
-      node = getPrimaryNode(node,indx);
-      if(node!=NULL) {
-	continue;}
-      else primary = FALSE;}
-    node = getSecondaryNode(node,indx);}
-  OZ_RETURN(sitelist);
   
+  OZ_RETURN(sitelist);
 } OZ_BI_end
 
 
@@ -216,6 +200,7 @@ const struct {
   { DIF_SUSPEND,      "marshaling_suspended"},
   { DIF_LIT_CONT,     "literal_continuation"},
   { DIF_EXT_CONT,     "extension_continuation"},
+  { DIF_SITE_SENDER,  "site_opt"},
   { DIF_LAST,         "last"}
 };
 
