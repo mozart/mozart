@@ -24,9 +24,7 @@ install:: $(BINDIR)
 $(BINDIR):
         install -d -m 775 $@
 
-tar: oz-$(VERS)-common
-
-oz-$(VERS)-common:
+common:
         (cd $(OZHOME)/..; \
         tar -cf - oz/bin oz/demo oz/include oz/lib oz/README oz/doc \
                 oz/ozwish/tcl ) | \
