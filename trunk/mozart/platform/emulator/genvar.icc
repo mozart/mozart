@@ -18,14 +18,9 @@
 
 
 inline
-void GenCVariable::relinkSuspListTo(GenCVariable * leftVar)
-{
-  SuspList * sl = getSuspList();
-  unlinkSuspList();
-  leftVar->appendSuspList(sl);
+void GenCVariable::relinkSuspListTo(GenCVariable * lv) {
+  suspList = suspList->appendToAndUnlink(lv->suspList);
 }
-
-
 
 inline
 Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
@@ -38,21 +33,20 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
     return ((GenFDVariable *)this)->unifyFD(tptr1, term1, ttag1,
 					    tptr2, term2, ttag2);
   }
-  return NO;
+  return FALSE;
 } 
 
 inline
 int GenCVariable::getSuspListLength(void)
 {
-  Assert(getType()==FDVariable);
+  Assert(getType() == FDVariable);
   switch (getType()){
   case FDVariable:
   default:
-    return ((GenFDVariable *)this)->getSuspListLength();
+    return ((GenFDVariable *) this)->getSuspListLength();
   }
   return -1;
 }
-
 
 inline
 size_t GenCVariable::getSize(void)
@@ -61,11 +55,10 @@ size_t GenCVariable::getSize(void)
   switch (getType()){
   case FDVariable:
   default:
-    return ((GenFDVariable*)this)->getSize();
+    return ((GenFDVariable *) this)->getSize();
   }
   return 0;
 } 
-
 
 inline
 Bool GenCVariable::valid(TaggedRef val)
@@ -77,8 +70,6 @@ Bool GenCVariable::valid(TaggedRef val)
     return ((GenFDVariable*)this)->valid(val);
   }  
 }
-
-
 
 #endif //__genvar_icc__
 
