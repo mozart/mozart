@@ -33,7 +33,7 @@ SRCDIR=	@srcdir@
 include Makefile.vars
 
 MODULE_NAMES =							\
-	DPB PID Fault DPMisc VirtualSite Tk Schedule FDP FSP Parser	\
+	PID Fault DPMisc DPB VirtualSite Tk Schedule FDP FSP Parser	\
 	CompilerSupport Browser Debug
 
 STATIC_MODULES=		@STATIC_MODULES@
