@@ -26,6 +26,7 @@ public:
   void printCall();
 };
 
+void setBreakpoint(Thread*);
 void debugStreamSuspend(ProgramCounter, Thread*, TaggedRef, TaggedRef, bool);
 void debugStreamCont(Thread*);
 void debugStreamThread(Thread*,Thread* parent=NULL);
