@@ -23,58 +23,58 @@
 local
 
    \insert 'explorer/configure-static.oz'
-   
+
    \insert 'explorer/misc.oz'
 
    \insert 'explorer/combine-nodes.oz'
 
 in
-   
-   functor $ prop once
-      
+
+   functor
+
    import
-      Property.{get}
-      
-      System.{show
-	      printName}
+      Property(get)
 
-      Error.{formatGeneric
-	     format
-	     dispatch}
+      System(show
+	     printName)
 
-      ErrorRegistry.{put}
-      
+      Error(formatGeneric
+	    format
+	    dispatch)
+
+      ErrorRegistry(put)
+
       Tk
-      
+
       TkTools
-      
-      Browser.{browse}
-      
+
+      Browser(browse)
+
    export
       'class':  ExplorerClass
       'object': Explorer
-      
+
       'one':    ExploreOne
       'all':    ExploreAll
       'best':   ExploreBest
 
       'close':  CloseExplorer
-      
-   body
-      
+
+   define
+
       \insert 'explorer/errors.oz'
       \insert 'explorer/main.oz'
-      
+
       Explorer = {New ExplorerClass init}
-      
+
       proc {ExploreOne P}
 	 {Explorer one(P)}
       end
-      
+
       proc {ExploreAll P}
 	 {Explorer all(P)}
       end
-      
+
       proc {ExploreBest P O}
 	 {Explorer all(P O)}
       end
@@ -82,7 +82,7 @@ in
       proc {CloseExplorer}
 	 {Explorer close}
       end
-      
+
    end
 
 end

@@ -1,4 +1,4 @@
-functor $ prop once
+functor
 
 import
 
@@ -8,8 +8,8 @@ import
 
 export
    Return
-body
-   
+define
+
    KnapSack =
    fun {$ Weights Capacity}
       LB = {FoldL Weights Number.'+' 0} div Capacity

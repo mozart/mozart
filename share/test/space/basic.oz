@@ -20,16 +20,16 @@
 %%% WARRANTIES.
 %%%
 
-functor $ prop once
+functor
 
 import
    FD
    Search
-   
+
 export
    Return
 
-body
+define
    Return=
    space({Map
 	  [failure(equal(fun {$}

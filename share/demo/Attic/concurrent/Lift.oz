@@ -29,16 +29,16 @@ functor
 import
    Tk
    TkTools
-   Application   
+   Application
 
-body
+define
    %%
    %% Lift Simulation -- Randomised and Interactive Lift Requests
    %%
    %% The Scheduling Algorithm is taken from the book
    %% 'Concurrent Programming in Erlang', Chapter 11: Real-Time Control
    %%
-   
+
    %%
    %% Colors
    %%

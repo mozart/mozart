@@ -21,7 +21,7 @@
 %%%
 
 
-functor $ prop once
+functor
 
 import
 
@@ -33,8 +33,8 @@ import
 
 export
    Return
-body
-   
+define
+
    proc {Trace Msg}
       skip
    end

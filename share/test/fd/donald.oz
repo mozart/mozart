@@ -1,4 +1,4 @@
-functor $ prop once
+functor
 
 import
 
@@ -8,8 +8,8 @@ import
 
 export
    Return
-body
- 
+define
+
    Money = 
    proc {$ Root}
       S E N D M O R Y

@@ -1,4 +1,4 @@
-functor $ prop once
+functor
 
 import
 
@@ -8,8 +8,8 @@ import
 
 export
    Return
-body
-   
+define
+
    proc {Money SOL}
       local
 	 [S E N D M O R Y] = !SOL

@@ -20,43 +20,43 @@
 %%% WARRANTIES.
 %%%
 
-functor $ prop once
+functor
 
 import
-   Property.{get
-	     put}
-   
-   System.{gcDo
-	   valueToVirtualString
-	   exit}
+   Property(get
+	    put)
 
-   Error.{formatGeneric
-	  format
-	  dispatch}
-   
-   ErrorRegistry.{put}
+   System(gcDo
+	  valueToVirtualString
+	  exit)
 
-   Open.{file}
+   Error(formatGeneric
+	 format
+	 dispatch)
+
+   ErrorRegistry(put)
+
+   Open(file)
 
    Tk
-   
-   TkTools.{error
-	    dialog
-	    note
-	    notebook
-	    scale
-	    textframe
-	    numberentry
-	    menubar}
-   
+
+   TkTools(error
+	   dialog
+	   note
+	   notebook
+	   scale
+	   textframe
+	   numberentry
+	   menubar)
+
 export
    'class':  PanelClass
    'object': Panel
-   
+
    'open':   OpenPanel
    'close':  ClosePanel
-   
-body
+
+define
    \insert 'panel/errors.oz'
    \insert 'panel/main.oz'
 
@@ -65,9 +65,9 @@ body
    proc {OpenPanel}
       {Panel open}
    end
-   
+
    proc {ClosePanel}
       {Panel close}
    end
-   
+
 end

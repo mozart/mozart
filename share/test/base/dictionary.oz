@@ -93,13 +93,13 @@ local
          put(276) put(277) put(278)]
 
 in
-   
-   functor $ prop once
+
+   functor
 
    export
       Return
 
-   body
+   define
       Return=
       dictionary([dynamics(fun {$} 
 			      D = {Dictionary.new}

@@ -1,16 +1,16 @@
-functor $ prop once
+functor
 
 import
 
    FD
 
    Schedule
-   
+
    Search
 
 export
    Return
-body
+define
 
 
    BridgeProb =
