@@ -1263,39 +1263,12 @@ int WINAPI dll_entry(int a,int b,int c)
    stack dump
    ----------------------------------------------------------------- */
 
-/* This code "inspired" by ccmalloc */
+#if !defined(WINDOWS)
 
-#define MAXCALLCHAINLENGTH 20
-
-#if defined(__GNUC__) && !defined(WINDOWS)
-
-#define RA(a) case a: return (caddr_t) __builtin_return_address(a);
-
-static caddr_t return_address(unsigned i)
-{
-  switch(i)
-    {
-RA(0);RA(1);RA(2);RA(3);RA(4);RA(5);RA(6);RA(7);RA(8);RA(9);RA(10);
-RA(11);RA(12);RA(13);RA(14);RA(15);RA(16);RA(17);RA(18);RA(19);RA(20);
-      default: return 0;
-    }
-}
-
-#include <setjmp.h>
-
-static jmp_buf backtrace_jump;
-
-static void handlerIgnore()
-{
-  longjmp(backtrace_jump, 1);
-}
-
+/* try to attach gdb to us and print a stack dump */
 
 void osStackDump()
 {
-  osSignal(SIGSEGV,handlerIgnore);
-  osSignal(SIGBUS,handlerIgnore);
-
   fprintf(stderr,"Stack Dump:\n");
   
   char *tmpfile = ostmpnam(NULL);
@@ -1303,21 +1276,11 @@ void osStackDump()
   if (tmpout==NULL)
     tmpout = stdout;
 
-  if(setjmp(backtrace_jump) == 0) {
-    int i=1;
-    while(i<MAXCALLCHAINLENGTH) {
-      caddr_t pc = return_address(i);
-      i++;
-      if(pc==NULL) break;
-      fprintf(tmpout,"info line *%p\n",pc);
-    }
-  }
-
-
+  fprintf(tmpout,"backtrace\n");
   if (tmpout != stdout) {
     fclose(tmpout);
     char buf[1000];
-    sprintf(buf,"gdb -batch -n -x %s %s %d",tmpfile,ozconf.emuexe,getpid());
+    sprintf(buf,"gdb -batch -n -x %s -c %d %s",tmpfile,getpid(),ozconf.emuexe);
     osSystem(buf);
   }
   
