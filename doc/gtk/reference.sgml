@@ -78,57 +78,53 @@
      <P>
        <List>
          <Entry><<new>>
-         <Synopsis><<{New GTKCANVAS.canvas new(?+{ImageSupport}) ??{Canvas}}>>
+         <Synopsis>
+           <<{New GTKCANVAS.canvas new(?+{ImageSupportB}) ??{CanvasO}}>>
          <Item>
-           creates are new Canvas Object ?_{Canvas}.
-           ?_{ImageSupport} is a boolean value
-           indicating whether the canvas supports ImageItems or not. <<true>>
-           yields the call of <<pushVisual>>. It it is
-           therefore required to call
-          <<popVisual>> after the last image item has been created for that
-          canvas.
+           creates are new canvas widget ?_{CanvasO}.  ?_{ImageSupportB}
+           indicates whether the canvas supports image items; if <<true>>,
+           <<pushVisual>> is called.  You are required to call <<popVisual>>
+           after the last image item has been created for that canvas.
          <P>
-          Trying to create image items without image
-          support being enabled yields a segementation
-          violation of the mozart process.
-          This is due to implementation limitations.
+           Trying to create image items without image support being enabled
+           causes a segmentation violation of the Mozart process due to
+           implementation limitations.
          <Entry><<newItem>>
          <Synopsis>
-           <<{?+{Canvas} newItem(?+{Group} ?+{ItemType} ?+{Vs} ??{CanvasItem})}>>
+           <<{CanvasO newItem(?+{GroupO} ?+{TypeA} ?+{Ts} ??{O})}>>
          <Item>
-           creates a new CanvasItem ?_{CanvasItem} of type
-           ?_{ItemType} which lives in group ?_{Group} and which
-           default properties are overwritten with the values given in ?_{Vs}.
+           creates a new item ?_{O} of type ?_{TypeA}, belonging to
+           group ?_{GroupO} and with properties given by ?_{Ts}.
          <P>
-           ?_{Vs} denotes a list of properties given as a tuple
-           <<?+{NameS}#?+{PropValue}>>. ?_{PropValue} denotes the value
-           to be assigned to the property denoted by string ?_{NameS}.
+           ?_{Ts} denotes a list of properties given as pairs
+           <<?_{NameV}#?_{X}>>, where ?_{X} is the value assigned to the
+           property named ?_{NameV}.
          <Entry><<configureItem>>
          <Synopsis>
-           <<{?+{Canvas} configureItem(?+{CanvasItem} ?+{Vs})}>>
+           <<{CanvasO configureItem(?+{CanvasItemO} ?+{Ts})}>>
          <Item>
-           configures the properties of ?_{CanvasItem}
-           to the values given in ?_{Vs}.
+           configures the properties of ?_{CanvasItemO} as specified by ?_{Ts}.
          <Entry><<pushVisual>>
          <Synopsis>
-           <<{?+{Canvas} pushVisual}>>
+           <<{CanvasO pushVisual()}>>
          <Item>
-           Pushes the default visual onto the gtk widget stack.
-           This function should never be used directly
-           since it will be called by the canvas constructor.
+           pushes the default visual onto the GTK+ widget stack.
+           This method should not be invoked directly; instead,
+           it should be invoked through the canvas constructor.
          <Entry><<popVisual>>
          <Synopsis>
-           <<{?+{Canvas} popVisual}>>
+           <<{CanvasO popVisual()}>>
          <Item>
-           Pops the default visual from the gtk widget stack.
-           This function must be called after the last Image Item has been
-           created in a canvas created with image support.
+           pops the default visual from the GTK+ widget stack.
+           This method must be invoked after the last image item
+           has been created in a canvas with image support.
          <Entry><<newImageItem>>
          <Synopsis>
-           <<{?+{Canvas} newImageItem(?+{Group} ?+{Image} ?+{X} ?+{Y} ?+{Width} ?+{Height} ?+{Anchor} ??{Item}}>>
+           <<{Canvas newImageItem(?+{GroupO} ?+{ImageO} ?+{X_I} ?+{Y_I} ?+{WidthI} ?+{HeightI} ?+{AnchorI} ??{O}}>>
          <Item>
-          creates a new CanvasItem ?_{Item} of type image which lives in group
-          ?_{Group} and is scaled to fit into the rectangle described by ?_{X},
-          ?_{Y}, ?_{Width} and ?_{Height} in relation to the anchor ?+{Anchor}.
+           creates a new item ?_{O} of type image, belonging to group
+           ?_{GroupO} and scaled to fit into the rectangle described by
+           ?_{X_I}, ?_{Y_I}, ?_{WidthI} and ?_{HeightI} in relation to the
+           anchor ?+{AnchorI}.
        </List>
 </Chapter>
