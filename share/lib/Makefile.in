@@ -133,6 +133,12 @@ $(FUNCTORS): Base.ozf
         $(COMPILE) $< -o $@
 %.ozf: ap/%.oz Base.ozf
         $(COMPILE) $< -o $@
+FD.ozf: cp/FD.oz CpSupport.ozf Base.ozf
+        $(COMPILE) -l CpSupport $< -o $@
+FS.ozf: cp/FS.oz CpSupport.ozf Base.ozf
+        $(COMPILE) -l CpSupport $< -o $@
+Schedule.ozf: cp/Schedule.oz CpSupport.ozf Base.ozf
+        $(COMPILE) -l CpSupport $< -o $@
 %.ozf: cp/%.oz Base.ozf
         $(COMPILE) $< -o $@
 %.ozf: dp/%.oz Base.ozf
@@ -307,7 +313,7 @@ $(OZLIB)/boot-%: boot-%
 CLEANFILES = \
         compiler-Version.oz compiler-Builtins.oz \
         compiler-Opcodes.oz \
-        Base.ozf BaseBuiltins.ozf \
+        Base.ozf BaseBuiltins.ozf CpSupport.ozf \
         $(FUNCTORS) $(FUNFUNCTORS) \
         $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
 
