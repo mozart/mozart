@@ -77,12 +77,16 @@ class SiteManager: public FreeListManager{
 
   Site* newSite(){
     Site* s;
+    return new Site();
     FreeListEntry *f=getOne();
     if(f==NULL) {s=new Site();}
-    else{GenCast(f,FreeListEntry*,s,Site*);}
+    else{GenCast(f,FreeListEntry*,s,Site*);
+    Assert(s->getPort() == 0 &&
+	   s->getTimeStamp() == 0)}
     return s;}
 
   void deleteSite(Site *s){
+    s->init(0,0,0);
     FreeListEntry *f;
     GenCast(s,Site*,f,FreeListEntry*);
     if(putOne(f)) {return;}
@@ -247,6 +251,7 @@ Site *unmarshalPSite(MsgBuffer *buf){
   Site *s;
   tryS.unmarshalBaseSite(buf);
   PD((UNMARSHAL,"Psite base site fin %s",tryS.stringrep()));
+  PD((SITE,"Psite found %s",tryS.stringrep()));
   int hvalue=tryS.hashPrimary();  
   FindType rc=primarySiteTable->findPrimary(&tryS,hvalue,s);    
   switch(rc) {
@@ -259,10 +264,10 @@ Site *unmarshalPSite(MsgBuffer *buf){
     PD((SITE,"unmarshalPsite NONE"));
     break;
   case I_AM_YOUNGER:{
-    PD((SITE,"unmarshalPsite I_AM_YOUNGER"));
     int hvalue=tryS.hashSecondary();
     s=secondarySiteTable->findSecondary(&tryS,hvalue);
-    if(s){return s;}
+    if(s){ PD((SITE,"unmarshalPsite I_AM_YOUNGER site found"));return s;}
+    PD((SITE,"unmarshalPsite I_AM_YOUNGER site inserted"));
     s=siteManager.allocSite(&tryS,PERM_SITE);
     secondarySiteTable->insertSecondary(s,hvalue);
     return s;}
