@@ -2199,27 +2199,27 @@ case $platform in
         TOOLLDFLAGS=""
         ;;
     linux*)
-        TOOLLDFLAGS="-Wl,-shared"
+        TOOLLDFLAGS="-shared"
         EMULDFLAGS="-Wl,-export-dynamic"
         ;;
     solaris*)
-        TOOLLDFLAGS="-Wl,-G"
+        TOOLLDFLAGS="-G"
         ;;
     irix*)
-        TOOLLDFLAGS="-Wl,-shared -Wl,-check_registry -Wl,/dev/null"
+        TOOLLDFLAGS="-shared -check_registry /dev/null"
         ;;
     osf1*)
-        TOOLLDFLAGS="-Wl,-shared -Wl,-expect_unresolved -Wl,'*'"
+        TOOLLDFLAGS="-shared -expect_unresolved '*'"
                 EMULDFLAGS="-Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
         ;;
     hpux*)
-        TOOLLDFLAGS="-Wl,-b"
+        TOOLLDFLAGS="-b"
         ;;
     freebsd*)
-        TOOLLDFLAGS="-Wl,-Bshareable"
+        TOOLLDFLAGS="-Bshareable"
         ;;
     netbsd*)
-        TOOLLDFLAGS="-Wl,-Bshareable"
+        TOOLLDFLAGS="-Bshareable"
         ;;
 esac
 
