@@ -5,25 +5,25 @@
 <P>Oz provides functional notation as syntactic convenience. We have seen
 that a procedure call:
 
-<<<{P ?{X1} ... ?{Xn} ?{R}}>>>
+<<<{P X1 ... Xn R}>>>
 
-<P>could be used in a nested expression as a function call:
+could be used in a nested expression as a function call:
 
-<<<{P ?{X1} ... ?{Xn}}>>>
+<<<{P X1 ... Xn}>>>
 
-<P>Oz also allows functional abstractions directly as syntactic notation
+Oz also allows functional abstractions directly as syntactic notation
 for procedures. Therefore, the following function definition:
 
-<<<fun{?{F} ?{X1} ... ?{Xn}} ?{S} ?{E} end>>>
+<<<fun {F X1 ... Xn} ?{S} ?{E} end>>>
 
-<P>where ?{S} is a statement and ?{E} is an expression corresponds to the
+where ?{S} is a statement and ?{E} is an expression corresponds to the
 following procedure definition:
 
-<<<proc{?{F} ?{X1} ... ?{Xn} ?{R}} ?{S} ?{R}=?{E} end>>>
+<<<proc {F X1 ... Xn R} ?{S} R=?{E} end>>>
 
 <P CLASS=WARNING>The exact syntax for functions as well as their
-unfolding into procedure definitions is defined in <EM>Oz Notation</EM>,
-the Oz Documentation Series.
+unfolding into procedure definitions is defined in the
+<ref.extern to="ozdoc:notation"/<EM>The Oz Notation Reference Manual</EM>/.
 
 <P>Here we rely on the reader's intuition. Roughly speaking, the
 general rule for syntax formation of functions looks very similar to
@@ -40,8 +40,8 @@ are legal Oz programs.
 
 <<<
 fun {AndThen BP1 BP2}
-   case {BP1} then
-      case {BP2} then true else false end
+   if {BP1} then
+      if {BP2} then true else false end
    else false end
 end
 >>>
@@ -50,8 +50,8 @@ end
 
 <<<
 proc {AndThen BP1 BP2 B}
-   B = case {BP1} then
-          case {BP2} then true else false end
+   B = if {BP1} then
+          if {BP2} then true else false end
        else false end
 end
 >>>
@@ -61,8 +61,8 @@ to make it a <EM>case-statement</EM>:
 
 <<<
 proc {AndThen BP1 BP2 B}
-   case {BP1} then
-      B = case {BP2} then true else false end
+   if {BP1} then
+      B = if {BP2} then true else false end
    else B = false end
 end
 >>>
@@ -72,8 +72,8 @@ to make it a <EM>case-statement</EM>, and we are done:
 
 <<<
 proc {AndThen BP1 BP2 B}
-   case {BP1} then
-      case {BP2} then B = true else B = false end
+   if {BP1} then
+      if {BP2} then B = true else B = false end
    else B = false end
 end
 >>>
@@ -84,16 +84,17 @@ end
 % Syntax Convenience: functional notation
 local
    fun {AndThen BP1 BP2}
-      case {BP1} then
-       case {BP2} then true else false end
+      if {BP1} then
+         if {BP2} then true else false end
       else false end
    end
    fun {BinaryTree T}
       case T
       of nil then true
-      [] tree(K V T1 T2) then
-     {AndThen fun {$}{BinaryTree T1} end
-              fun {$}{BinaryTree T2} end}
+      elseof tree(K V T1 T2) then
+         {AndThen
+          fun {$} {BinaryTree T1} end
+          fun {$}{BinaryTree T2} end}
       else false end
    end
 end
@@ -137,7 +138,7 @@ defines the final version of the function <<BinaryTree>>.
 <<<
 fun {BinaryTree T}
     case T of nil then true 
-    [] tree(K V T1 T2) then 
+    elseof tree(K V T1 T2) then 
        {BinaryTree T1} andthen {BinaryTree T2} 
     else false end 
 end

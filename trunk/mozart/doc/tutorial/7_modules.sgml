@@ -7,7 +7,9 @@ constructed together to provide certain related functionality. A
 module typically has a number of private procedures that are not
 visible outside the module and a number of interface procedures that
 provides the external services of the module. The interface procedures
-provide the services of the module. In Oz, there is no syntactic
+provide the services of the module.
+<!-- DENYS: mozart supports functors -->
+In Oz, there is no syntactic
 support for modules or interfaces. Instead, the lexical scoping of the
 language and the record data-type suffices to construct modules. The
 general module construction looks as follows. Assume that we would
@@ -36,6 +38,7 @@ done by using the field <<append>> from the <EM>record</EM> <<List>>:
 <<MergeSort>> is private to the module. Most of the library modules of
 DFKI Oz follow the above structure.
 
+<!-- DENYS: global makes sense only in the OPI -->
 <P>Often some of the procedures in a module are made global without
 the module prefix. There are several ways to do this. Here is one way
 to make <<Append>> externally visible:
@@ -53,6 +56,7 @@ in
 end
 >>>
 
+<!-- DENYS: we definitely don't do this much anymore: we use imports -->
 <P>Modules are often stored on files, for example the <<List>> module
 could be stored on the file <FILE>List.oz</FILE>. This file may be
 inserted into another file by using the compiler directive 

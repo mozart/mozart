@@ -22,7 +22,7 @@
   can also be equated with another variable. Using logic variables do
   not mean that you cannot model state-change because a variable, as you
   will see later, could be bound to a cell, which is stateful, i.e. the
-  content of cell can be changed.</P>
+  content of a cell can be changed.</P>
 
   <P>A thread executing the statement: <<<local X Y Z in S end>>>
   
@@ -41,7 +41,7 @@
   <P>Another form of declaration is: <<<declare X Y Z in S>>>
 
   <P>This is an open-ended declaration that makes <<X>>, <<Y>>, and
-  <<Z>> visible globally in <<S>>, as well as all statements the follows
+  <<Z>> visible globally in <<S>>, as well as in all statements that follow
   <<S>> textually, unless overridden again by another variable
   declaration of the same textual variables. <<X>>, <<Y>>, <<Z>> are
   global variables.</P>
@@ -75,8 +75,8 @@
   <SECTION><TITLE>Hello World</TITLE>
   <P>Let us do like everybody else. If you are unfamiliar with Oz, here
   is your first Oz program. Start your Mozart system. You typically
-  start it by writing the command: <FILE>mozart</FILE> and
-  <KEY>return</KEY>. This will start the Mozart Programming Interface
+  start it by typing the command <FILE>mozart</FILE> and pressing
+  <KEY>RETURN</KEY>. This will start the Mozart Programming Interface
   OPI having the <NAME TYPE=TOOL>EMACS</NAME> editor as your
   interface. You will see two buffers. The upper buffer is called
   <EM>Oz</EM>, where you can enter programs and the lower buffer is
@@ -174,8 +174,13 @@ line. All characters can be written as <<&\>><EM>ooo</EM>, where
 <EM>o</EM> is an octal digit.
 
 <P>Operations on characters, integers, and floats can be found in the
-library modules <<Char>>, <<Float>>, and <<Int>>. Additional generic
-operations on all numbers are found in the module <<Number>>.
+library modules
+<ref.extern to="ozdoc:base" key="section.text.characters"/<<Char>>/,
+<ref.extern to="ozdoc:base" key="section.numbers.floats"/<<Float>>/, and
+<ref.extern to="ozdoc:base" key="section.numbers.integers"/<<Int>>/.
+Additional generic
+operations on all numbers are found in the module
+<ref.extern to="ozdoc:base" key="section.numbers.general"/<<Number>>/.
 
 <SECTION><TITLE>Literals</TITLE>
 <P>Another important category of atomic types, i.e. types whose
@@ -200,7 +205,7 @@ programs relying on their definition. There is also the type <<Unit>>
 that consists of the single name <<unit>>. This is used as
 synchronization token in many concurrent programs.
 <<<
-local X Y B in>
+local X Y B in
    X = foo
    {NewName Y}
    B = true
@@ -259,15 +264,15 @@ W = tree(I Y LT RT)
 
 <SECTION><TITLE>Operations on records</TITLE>
 <P>We discuss some basic operations on records. Most operations are
-found in the module <<Record>>. To select a field of a record
-component, we use the infix operator <<.>>
-<P><EM>Record.Feature</EM>
-
+found in the module
+<ref.extern to="ozdoc:base" key="section.records.records"/<<Record>>/.
+To select a field of a record component, we use the infix dot
+operator, &eg; <code/?{Record}.?{Feature}/
 <<<
 % Selecting a Component
 {Browse T.key}
 {Browse W.1}
-% will show seif twice on the display.
+% will show seif twice in the browser
 seif
 seif
 >>>
@@ -312,16 +317,19 @@ eeva
 seif
 >>>
 
-<P>A common infix tuple-operator used in Oz is <<`#`>>. So, <<1#2>> is a
+<P>A common infix tuple-operator used in Oz is <<#>>. So, <<1#2>> is a
 tuple of two elements, and observe that <<1#2#3>> is a single tuple of
 three elements:
 
 <<<
-`#`(1 2 3)
+'#'(1 2 3)
 >>>
 
-<P>and not the pair <<1#(2#3)>>. With the <<`#`>> operator there is no
-empty tuple notation. A single element tuple is written as <<`#`(X)>>.
+<P>and not the pair <<1#(2#3)>>.   With the <<#>> operator, you cannot
+directly write an empty or a single element tuple.  Instead, you must
+fall back on the usual prefix record syntax:
+the empty tuple must be written <<'#'()>> or just <<'#'>>, and a single
+element tuple <<'#'(X)>>.
 
 <P>The operation <<{AdjoinAt R1 F X R2}>> binds <<R2>> to the record
 resulting from adjoining the field <<X>> to <<R1>> at feature
@@ -351,18 +359,18 @@ end
 
 <SECTION><TITLE>Lists</TITLE>
 <P>As in many other symbolic programming languages, e.g. Scheme and
-Prolog, <EM>lists</EM> forms an important class of data structures in
+Prolog, <EM>lists</EM> form an important class of data structures in
 Oz. The category of lists does not belong to a single data type in
 Oz. They are rather a conceptual structure. A list is either the atom
 <<nil>> representing the empty list, or is a tuple using the infix
-operator <<`|`>> and two arguments which are respectively the head and
+operator <<|>> and two arguments which are respectively the head and
 the tail of the list. Thus, a list of the first three positive
 integers is represented as:
 
 <<<1|2|3|nil>>>
 
 <P>Another convenient special notation for a <EM>closed list</EM>,
-i.e. list with determined number of elements is:
+ &ie; a list with a determined number of elements is:
 
 <<<[1 2 3]>>>
 
@@ -372,9 +380,9 @@ first two elements are <<1>> and <<2>>, but whose tail is the variable
 
 <<<1|2|X>>>
 
-<P>One can also use the standard notation for lists:
+<P>One can also use the standard record notation for lists:
 
-<<<`|`(1 `|`(2 X))>>>
+<<<'|'(1 '|'(2 X))>>>
 
 <P>Further notational variant is allowed for lists whose elements
 correspond to character codes. Lists written in this notation are
@@ -394,8 +402,8 @@ called <EM>strings</EM>, e.g.
 <P>A virtual string is a special tuple that represents a string with
 virtual concatenation, i.e. the concatenation is performed when really
 needed. Virtual strings are used for I/O with files, sockets, and
-windows. All atoms, except <<nil>> and <<`#`>>, as well as numbers,
-strings, or <<`#`>>-labeled tuples can be used to compose virtual
+windows. All atoms, except <<nil>> and <<'#'>>, as well as numbers,
+strings, or <<'#'>>-labeled tuples can be used to compose virtual
 strings. Here is one example:
 
 <<<123#"-"#23#" is "#100>>>
@@ -407,7 +415,7 @@ strings. Here is one example:
 <P CLASS=WARNING>For each data type discussed in section, there is a
 corresponding module in the Mozart system. The modules define
 operations on the corresponding data type. You may find more about
-these operations in <REF.EXTERN TO="http://www.sics.se/mozart">The Oz
+these operations in <REF.EXTERN TO="ozdoc:base">The Oz
 Base Environment documentation</REF.EXTERN>
 
 </CHAPTER>

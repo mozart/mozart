@@ -2,6 +2,9 @@ SRCTOP		= @SRCTOP@
 SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 
+HTMLEXTRAFILES = \
+	image1.gif image33.gif image57.gif
+
 WHAT	= tutorial
 MAIN	= tutorial.sgml
 SGMLSRCS = 10_classes.sgml 11_objectscc.sgml 12_lp.sgml \

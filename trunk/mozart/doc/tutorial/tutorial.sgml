@@ -29,6 +29,7 @@
 <!ENTITY eg PI "eg">
 <!ENTITY ie PI "ie">
 <!ENTITY nbsp PI "nbsp">
+<!entity resp PI "resp">
 ]>
 
 <BOOK PROGLANG=OZ>
@@ -38,12 +39,47 @@
     <Meta name="html.split" value="chapter.basics">
     <Meta name="html.split" value="chapter.equality">
     <Meta name="html.split" value="chapter.control">
+    <Meta name="html.split" value="control.if">
+    <Meta name="html.split" value="control.procedure">
+    <Meta name="html.split" value="control.lexical">
+    <Meta name="html.split" value="control.anonymous">
+    <Meta name="html.split" value="control.pattern">
+    <Meta name="html.split" value="control.nesting">
+    <Meta name="html.split" value="control.procasvals">
+    <Meta name="html.split" value="control.controlabs">
+    <Meta name="html.split" value="control.exception">
+    <Meta name="html.split" value="control.sysexcept">
     <Meta name="html.split" value="chapter.functional">
     <Meta name="html.split" value="chapter.modules">
     <Meta name="html.split" value="chapter.concurrency">
+    <Meta name="html.split" value="section.concurrency.time">
+    <Meta name="html.split" value="section.concurrency.stream">
+    <Meta name="html.split" value="section.concurrency.priority">
+    <Meta name="html.split" value="section.concurrency.demanddriven">
+    <Meta name="html.split" value="section.concurrency.termination">
     <Meta name="html.split" value="chapter.stateful">
+    <meta name="html.split" value="section.stateful.port">
+    <meta name="html.split" value="section.stateful.clientserver">
+    <meta name="html.split" value="section.stateful.chunk">
+    <meta name="html.split" value="section.stateful.cell">
     <Meta name="html.split" value="chapter.classes">
+    <Meta name="html.split" value="section.classes.classprinciples">
+    <Meta name="html.split" value="section.classes.objectprinciples">
+    <Meta name="html.split" value="section.classes.forreal">
+    <Meta name="html.split" value="section.classes.inheritance">
+    <Meta name="html.split" value="section.classes.features">
+    <Meta name="html.split" value="section.classes.parametrized">
+    <Meta name="html.split" value="section.classes.self">
+    <Meta name="html.split" value="section.classes.attributes">
+    <Meta name="html.split" value="section.classes.private">
+    <Meta name="html.split" value="section.classes.defaultargs">
     <Meta name="html.split" value="chapter.objectscc">
+    <Meta name="html.split" value="section.objectscc.lock">
+    <Meta name="html.split" value="section.objectscc.reentrant">
+    <Meta name="html.split" value="section.objectscc.lockobject">
+    <Meta name="html.split" value="section.objectscc.fifo">
+    <Meta name="html.split" value="section.objectscc.monitor">
+    <Meta name="html.split" value="section.objectscc.active">
     <Meta name="html.split.bib" value="">
 
     <Meta name=ozversion value="3.0">
@@ -75,6 +111,7 @@
     <Bib.Extern id="duchier98" to="bibliography.bib" key="duchier98">
     <Bib.Extern id="schulte98" to="bibliography.bib" key="schulte98">
     <Bib.Extern id="pvr97" to="bibliography.bib" key="pvr97">
+    <Bib.Extern id="seif98" to="bibliography.bib" key="seif98">
 </BOOK>
 
 
