@@ -699,6 +699,7 @@ public:
   // conversion operator: OZ_CPIVar -> OZ_Term
   operator OZ_Term () const { return varPtr == NULL ? var : (OZ_Term) varPtr; }
   int operator == (OZ_CPIVar &v) const { return v.var == var; } // tmueller: new stuff
+  int operator != (OZ_CPIVar &v) const { return v.var != var; } // tmueller: new stuff
 };
 
 
