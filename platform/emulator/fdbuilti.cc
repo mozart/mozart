@@ -214,7 +214,7 @@ void BIfdHeadManager::addForFDishSusp(int i, Suspension * susp)
   if (!(vtag == SMALLINT || vtag == CVAR))
     if (vtag == UVAR) {
       addSuspOnlyToUVar(bifdhm_varptr[i],
-		  new CondSuspList(susp, NULL, isConstrained));
+			new CondSuspList(susp, NULL, isConstrained));
     } else if (vtag == SVAR) {
       addSuspSVar(bifdhm_var[i], new CondSuspList(susp, NULL, isConstrained));
     } else {
@@ -231,7 +231,7 @@ void BIfdHeadManager::addForFDishSusp(int i, Suspension * susp)
 
 // functions used by BIfdHeadManager::simplifyHead and
 // BIfdBodyManager::simplifyBody
-const int taggedIndex = 0x80000000;
+const int taggedIndex = 0x00000008;
 inline TaggedRef makeTaggedIndex(TaggedRef t) {return (t | taggedIndex);}
 inline TaggedRef getIndex(TaggedRef t) {return (t & ~taggedIndex);}
 inline Bool isTaggedIndex(TaggedRef t) {return (t & taggedIndex);}
@@ -239,7 +239,8 @@ inline Bool isTaggedIndex(TaggedRef t) {return (t & taggedIndex);}
 int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
 {
   // 1st pass: mark first occ of a var and sum up coeffs of further occs 
-  for (int i = 0; i < ts; i++)
+  for (int i = 0; i < ts; i++) {
+    Assert(isCVar(bifdhm_vartag[i]) || isSmallInt(bifdhm_vartag[i]));
     if (isAnyVar(bifdhm_var[i]))
       if (! isTaggedIndex(*bifdhm_varptr[i])) {
 	*bifdhm_varptr[i] = makeTaggedIndex(i);
@@ -248,6 +249,7 @@ int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
 	a[ind] = newSmallInt(bifdhm_coeff[ind] += bifdhm_coeff[i]);
 	bifdhm_var[i] = 0;
       }
+  }
   
   // 2nd pass: undo marks and compress vector
   for (int from = 0, to = 0; from < ts; from += 1) {
@@ -551,7 +553,8 @@ int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
 				  Bool sign_bits[], float coeffs[])
 {
   // 1st pass: mark first occ of a var and sum up coeffs of further occs 
-  for (int i = 0; i < ts; i++)
+  for (int i = 0; i < ts; i++) {
+    Assert(isCVar(bifdbm_vartag[i]) || isSmallInt(bifdbm_vartag[i]));
     if (isAnyVar(bifdbm_var[i]))
       if (! isTaggedIndex(*bifdbm_varptr[i])) {
 	*bifdbm_varptr[i] = makeTaggedIndex(i);
@@ -560,6 +563,7 @@ int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
 	a[ind] = newSmallInt(int(coeffs[ind] += coeffs[i]));
 	bifdbm_var[i] = 0;
       }
+  }
   
   // 2nd pass: undo marks and compress vector
   for (int from = 0, to = 0; from < ts; from += 1) {
