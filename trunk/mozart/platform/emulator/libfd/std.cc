@@ -653,7 +653,7 @@ void Propagator_D_FD_D::updateHeapRefs(OZ_Boolean)
 OZ_Term Propagator_D_FD_D::getParameters(void) const
 {
   ostrstream tmp;
-  tmp << reg_domain << ends;
+  tmp << reg_domain.toString() << ends;
   char * str = tmp.str();
   OZ_Term d = OZ_atom(str);
   delete str;

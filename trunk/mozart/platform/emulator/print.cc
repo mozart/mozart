@@ -6,7 +6,7 @@
   ------------------------------------------------------------------------
 */
 
-#include "ozstrstream.h"
+#include "ozostream.hh"
 
 #include "am.hh"
 
@@ -110,7 +110,7 @@ void tagged2Stream(TaggedRef ref, ostream &stream, int depth, int offset)
   switch(tag) {
   case UVAR:
     stream << "_"
-	   << hex << ToInt32(refPtr) << dec;
+	   << ToInt32(refPtr);
     break;
   case SVAR:
     tagged2SVar(ref)->print(stream,depth,offset,origRef);
@@ -192,7 +192,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 	       << '/'
 	       << me->fdSuspList[fd_prop_bounds]->lengthProp()
 	       << ')';
-      stream << ' ' <<  me->getDom() << ">";
+      stream << ' ' <<  me->getDom().toString() << ">";
       break;
     }
 
@@ -237,7 +237,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 	       << '/'
 	       << me->fsSuspList[fs_prop_lub]->lengthProp()
 	       << ')';
-      stream << ' ' <<  me->getSet() << ">";
+      stream << ' ' <<  me->getSet().toString() << ">";
       break;
     }
 
@@ -1097,7 +1097,7 @@ PRINT(Thread)
     break;
 
   case S_PR_THR:
-    stream << " P: " << *getPropagator();
+    stream << " P: " << getPropagator()->toString();
     break;
 
   default:
@@ -1822,9 +1822,8 @@ char *tagged2String(TaggedRef ref,int depth,int offset)
 
   tagged2Stream(ref,*out,depth,offset);
 
-  (*out) << ends;
+  (*out).ends();
   char *s = ozstrdup(out->str());
-  out->freeze(0);
   delete out;  
 
   return s;

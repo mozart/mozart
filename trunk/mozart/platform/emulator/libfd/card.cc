@@ -119,7 +119,7 @@ OZ_C_proc_end
 
 OZ_Return LinEqBPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   int &c = reg_c, &sz = reg_sz, * a = reg_a;
 
@@ -181,7 +181,7 @@ OZ_Return LinEqBPropagator::propagate(void)
   }
     
   if (*b == fd_singl) {
-    OZ_DEBUGPRINT("imposing (not) eq " << b->getSingleElem());
+    OZ_DEBUGPRINT(("imposing (not) eq %d",b->getSingleElem()));
     P.vanish();
     OZ_Propagator *prop; 
     if (b->getSingleElem() == 1)
@@ -191,11 +191,11 @@ OZ_Return LinEqBPropagator::propagate(void)
     return replaceBy(prop);
   }
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
 
   return P.fail();
 }
@@ -204,7 +204,7 @@ failure:
 
 OZ_Return LinLessEqBPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   int &c = reg_c, &sz = reg_sz, * a = reg_a;
 
@@ -229,7 +229,7 @@ OZ_Return LinLessEqBPropagator::propagate(void)
   Reify(check_calc_txu(sz, a, x, c) <= 0, 1);
   
   if (*b == fd_singl) {
-    OZ_DEBUGPRINT("imposing lesseq " << b->getSingleElem());
+    OZ_DEBUGPRINT(("imposing lesseq %d", b->getSingleElem()));
     P.vanish();
     if (b->getSingleElem() == 1) {
       return replaceBy(new LinLessEqPropagator(*this));
@@ -242,11 +242,11 @@ OZ_Return LinLessEqBPropagator::propagate(void)
     }
   }
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
 
   return P.fail();
 }
@@ -258,7 +258,7 @@ if ((X) == 0) {FailOnEmpty(x[ts] &= 1); return x.entailment();}
 
 OZ_Return LinNotEqBPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
   int &c = reg_c, &sz = reg_sz, * a = reg_a;
 
   simplify_on_equality();
@@ -320,7 +320,7 @@ OZ_Return LinNotEqBPropagator::propagate(void)
   }
     
   if (*b == fd_singl) {
-    OZ_DEBUGPRINT("imposing (not) eq " << b->getSingleElem());
+    OZ_DEBUGPRINT(("imposing (not) eq %d", b->getSingleElem()));
     P.vanish();
     OZ_Propagator *prop; 
     if (b->getSingleElem() == 0)
@@ -330,11 +330,11 @@ OZ_Return LinNotEqBPropagator::propagate(void)
     return replaceBy(prop);
   }
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
 
   return P.fail();
 }
@@ -357,7 +357,7 @@ OZ_C_proc_end
 
 OZ_Return InBPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   OZ_FiniteDomain &domain = reg_domain;
   OZ_FDIntVar v(reg_v), b(reg_b);
@@ -365,27 +365,27 @@ OZ_Return InBPropagator::propagate(void)
 
   if (*b == fd_singl) {
     FailOnEmpty(*v &= b->getSingleElem() ? domain : ~domain);
-    OZ_DEBUGPRINT("vanish out " << *this);
+    OZ_DEBUGPRINTTHIS("vanish out ");
     return P.vanish();
   }
 
   if ((*v & domain) == fd_empty) {
     FailOnEmpty(*b &= 0);
-    OZ_DEBUGPRINT("vanish out " << *this);
+    OZ_DEBUGPRINTTHIS("vanish out ");
     return P.vanish();
   }
 
   if ((*v & domain).getSize() == v->getSize()) {
     FailOnEmpty(*b &= 1);
-    OZ_DEBUGPRINT("vanish out " << *this);
+    OZ_DEBUGPRINTTHIS("vanish out ");
     return P.vanish();
   } 
   
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   return P.leave();
   
 failure:
-  OZ_DEBUGPRINT("failure out " << *this);
+  OZ_DEBUGPRINTTHIS("failure out ");
 
   return P.fail();
 }

@@ -35,7 +35,7 @@ OZ_C_proc_end
 
 OZ_Return SchedCardPropagator::propagate(void) 
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   int &xd = reg_xd, &yd = reg_yd;
 
@@ -59,12 +59,12 @@ OZ_Return SchedCardPropagator::propagate(void)
   }
   
   
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail" << *this);
+  OZ_DEBUGPRINTTHIS("fail");
   return P.fail();
 }
 
@@ -2061,11 +2061,11 @@ capLoop:
 	  }
 	  else {
 	    if ( (mini < left) && (left < maxi) && (maxi < right) )
-	      cout << "Fatal1: " << mini <<" "<<left<<" "<<maxi<<" "<<right<<endl;
+	      printf("Fatal1: %d %d %d %d\n",mini,left,maxi,right);
 	    else if ( (left < mini) && (mini < right) && (right < maxi) )
-	      cout << "Fatal2: " << mini <<" "<<left<<" "<<maxi<<" "<<right<<endl;
+	      printf("Fatal2: %d %d %d %d\n",mini,left,maxi,right);
 	    else if ( (left < mini) && (maxi < right) )
-	      cout << "Fatal3: " << mini <<" "<<left<<" "<<maxi<<" "<<right<<endl;
+	      printf("Fatal3: %d %d %d %d\n",mini,left,maxi,right);
 	    else;
 	    // note that this can happen because of smaller intervals.
 	    // But because we are looping, everything is fine.
