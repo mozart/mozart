@@ -1,0 +1,30 @@
+# $Id$
+# Benjamin Lorenz <lorenz@ps.uni-sb.de>
+
+
+OZLIB     = $(OZHOME)/lib
+PROFILER   = $(OZLIB)/profiler
+
+
+LOCALFILES = \
+	prof-gui.oz prof-prelude.oz prof-tk.oz \
+	prof-config.oz prof-help.oz prof-source.oz profiler.oz \
+	prof-dialog.oz prof-menu.oz prof-string.oz
+
+
+LIBFILES = ${LOCALFILES:%.oz=$(PROFILER)/%.oz}
+
+all::
+
+clean::
+	rm -f *~ *.oz?
+
+install:: $(PROFILER) $(LIBFILES)
+
+
+$(PROFILER):
+	$(INSTALL) -m 775 -d $@
+
+$(PROFILER)/%.oz: %.oz
+	$(INSTALL) -m 444 '$<' '$@'
+
