@@ -51,6 +51,7 @@ public:
   Stack(int sz = 1000, void *(*allocfun)(size_t t) = malloc);
   virtual ~Stack() { deallocate(array,stackEnd-array); }
 
+  void mkEmpty(void) { tos = array; }
   Bool isEmpty(void) { return (tos <= array); }
   StackEntry *ensureFree(int n)
   {

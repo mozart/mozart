@@ -90,6 +90,9 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
       doBind(term2Ptr,term1);
       goto exit;
     }
+    if (term1==term2 && !isAnyVar(term1)) {
+      goto exit;
+    }
   }
  bomb:
   return unify(A,B,prop);
