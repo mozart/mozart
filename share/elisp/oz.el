@@ -1182,6 +1182,8 @@ Point is left at the first character of the keyword."
 
 (defconst oz-directive-pattern
   "\\\\[a-zA-Z]+\\>")
+(defconst oz-directives-to-indent
+  "\\\\\\(in\\|ins\\|inse\\|inser\\|insert\\|l\\|li\\|lin\\|line\\)\\>")
 
 (defun oz-is-quoted ()
   "Return non-nil iff the position of the point is quoted.
@@ -1416,7 +1418,8 @@ Return a negative value if the indentation is not to be changed,
 else return the column up to where the line should be indented."
   (cond ((looking-at oz-declare-pattern)
 	 0)
-	((looking-at "\\\\")   ; directive
+	((and (looking-at "\\\\") (not (looking-at oz-directives-to-indent)))
+	 ;; directive
 	 0)
 	((looking-at "%%%")
 	 0)
