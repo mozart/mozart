@@ -17,6 +17,7 @@ local
       
       meth init(Manager Menu Canvas Status ?PackMe)
 	 Tk.toplevel,tkInit(title:              TitleName
+			    'class':            'OzTools'
 			    delete:
 			       proc {$}
 				  {self.manager.status kill}
@@ -27,12 +28,10 @@ local
 
 	 ScrX  = {New Tk.scrollbar tkInit(parent: self
 					  relief: sunken
-					  bd:     Border
 					  width:  ScrollerWidth
 					  orient: horizontal)}
 	 ScrY  = {New Tk.scrollbar tkInit(parent: self
 					  relief: sunken
-					  bd:     Border
 					  width:  ScrollerWidth)}
 	 Scale = {New Tk.scale tkInit(parent:     self
 				      'from':     MinScale
@@ -101,7 +100,6 @@ local
 			  width:              StartSizeX
 			  height:             StartSizeY
 			  background:         BackColor
-			  bd:                 Border
 			  highlightthickness: 0)
 	 Tk.canvas,tkBind(event:  '<Configure>'
 			  action: self # Resized
