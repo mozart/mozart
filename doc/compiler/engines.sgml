@@ -206,8 +206,13 @@
       </List>
     <Para class=apropos><Title/Custom Front-Ends/
       <List>
-        <Entry><<setFrontEnd(?+{P1} ?+{P2})>>
+        <Entry><<setFrontEnd(?+{ParseFileP} ?+{ParseVirtualStringP})>>
         <Item>
-          <P.silent><!--**-->
+          Replace the front-end used by the compiler by a custom
+          front-end implemented by procedures ?_{ParseFileP} and
+          ?_{ParseVirtualStringP}.  These procedures have the
+          same signature as <<Compiler.parseOzFile>> and
+          <<Compiler.parseOzVirtualString>>, documented above.
+          Indeed, these procedures implement the default Oz front-end.
       </List>
 </Section>
