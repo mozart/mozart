@@ -62,6 +62,12 @@ RUNFUNCTORS = \
 FUNCTORS = \
         $(RUNFUNCTORS) Compiler.ozf
 
+PEANUTS = \
+        System OS Pickle Finalize
+
+PEANUTSFUNCTORS = \
+        $(PEANUTS:%=%.ozf)
+
 SYSLETS = \
         ozc ozserver # ozvsserver
 
@@ -127,6 +133,11 @@ Standard.ozf: Init.ozp
 
 # ap dependencies
 Application.ozf: ap/ArgParser.oz init/Module.oz init/RURL.oz
+
+Application.ozf: $(PEANUTSFUNCTORS) module-Peanuts.oz
+
+module-Peanuts.oz:
+        echo "[$(PEANUTS:%='%')]" > module-Peanuts.oz
 
 # op dependencies
 Open.ozf: op/HtmlTable.oz
@@ -279,6 +290,7 @@ clean:
         -rm -f *~ *.bak
         -rm -f compiler-Version.oz compiler-Builtins.oz
         -rm -f compiler-Opcodes.oz
+        -rm -f module-Peanuts.oz
         -rm -f envgen compiler-Env.oz
         -rm -f $(FUNCTORS) Standard.ozf Init.ozp
         -rm -f $(SYSLETS)
