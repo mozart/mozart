@@ -640,6 +640,5 @@ OZ_BI_define(ozma_readProc,1,1)
   pte->setGSize(1);
   Abstraction *ab = Abstraction::newAbstraction(pte,am.currentBoard());
   ab->initG(0,makeTaggedConst(runTimeDict));
-fprintf(stderr,"%s\n",toC(makeTaggedConst(ab)));
   OZ_RETURN(makeTaggedConst(ab));
 } OZ_BI_end
