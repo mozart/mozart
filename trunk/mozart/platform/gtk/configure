@@ -2041,8 +2041,8 @@ fi
 if test -z $gtkpath; then
     { echo "configure: error: You need the GTK library to enable GTK support. It can be found at http://www.gtk.org" 1>&2; exit 1; }
 fi
-echo $ac_n "checking for Gtk compile flags""... $ac_c" 1>&6
-echo "configure:2046: checking for Gtk compile flags" >&5
+echo $ac_n "checking for GTK compile flags""... $ac_c" 1>&6
+echo "configure:2046: checking for GTK compile flags" >&5
 GTK_CFLAGS=`$gtkpath --cflags`
 GTK_LIBS=`$gtkpath --libs`
 GTK_HDRS=`$gtkpath --prefix`/include/gtk
@@ -2052,6 +2052,56 @@ LIBS="$LIBS $GTK_LIBS"
 
 
 echo "$ac_t""ok" 1>&6
+
+
+ENABLE_GLADE="no"
+GLADE_FAIL="not found. Glade support will be disabled."
+# Extract the first word of "libglade-config", so it can be a program name with args.
+set dummy libglade-config; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:2063: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_libglade_config'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$libglade_config" in
+  /*)
+  ac_cv_path_libglade_config="$libglade_config" # Let the user override the test with a path.
+  ;;
+  ?:/*)			 
+  ac_cv_path_libglade_config="$libglade_config" # Let the user override the test with a dos path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$PATH"
+  for ac_dir in $ac_dummy; do 
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_libglade_config="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  test -z "$ac_cv_path_libglade_config" && ac_cv_path_libglade_config="$GLADE_FAIL"
+  ;;
+esac
+fi
+libglade_config="$ac_cv_path_libglade_config"
+if test -n "$libglade_config"; then
+  echo "$ac_t""$libglade_config" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+if test "$libglade_config" != "$GLADE_FAIL"; then
+    ENABLE_GLADE="yes"
+    GLADE_CFLAGS=`$libglade_config --cflags`
+    GLADE_LIBS=`$libglade_config --libs`
+    GFLAGS="$CFLAGS $GLADE_CFLAGS"
+    LIBS="$LIBS $GLADE_LIBS"
+    
+    
+fi
+
 
 
 trap '' 1 2 15
@@ -2233,6 +2283,10 @@ s%@glibpath@%$glibpath%g
 s%@gtkpath@%$gtkpath%g
 s%@GTK_HDRS@%$GTK_HDRS%g
 s%@GDK_HDRS@%$GDK_HDRS%g
+s%@libglade_config@%$libglade_config%g
+s%@GLADE_CFLAGS@%$GLADE_CFLAGS%g
+s%@GLADE_LIBS@%$GLADE_LIBS%g
+s%@ENABLE_GLADE@%$ENABLE_GLADE%g
 
 CEOF
 EOF
