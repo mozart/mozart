@@ -25,7 +25,7 @@
   -
   -->
 
-  <Chapter id="Chapter.URL">
+  <Chapter id="Chapter.URLURL">
     <Title/Referring To Distributed Entities: <<URL>>/
     <p>In the age of the <em/World Wide Web/, resources needed by a
 running system don't just reside in files, they reside at URLs.  The
