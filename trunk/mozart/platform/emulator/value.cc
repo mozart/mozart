@@ -1219,20 +1219,23 @@ TaggedRef PrTabEntry::getProfileStats()
   TaggedRef closures = oz_atom("closures");
   TaggedRef name     = oz_atom("name");
   TaggedRef line     = oz_atom("line");
+  TaggedRef column   = oz_atom("column");
   TaggedRef file     = oz_atom("file");
 
   TaggedRef list = oz_cons(file,
-			oz_cons(line,
-			     oz_cons(name,
-				  oz_cons(samples,
-				       oz_cons(heap,
-					    oz_cons(calls,
-						 oz_cons(closures,oz_nil())))))));
+		   oz_cons(line,
+		   oz_cons(column,
+		   oz_cons(name,
+		   oz_cons(samples,
+		   oz_cons(heap,
+		   oz_cons(calls,
+		   oz_cons(closures,
+		   oz_nil()))))))));
   Arity *arity = aritytable.find(sortlist(list,oz_fastlength(list)));
 
   {
     PrTabEntry *aux = allPrTabEntries;
-    while(aux) {    
+    while(aux) {
       if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
 	SRecord *rec = SRecord::newSRecord(ps,arity);
 	rec->setFeature(samples,oz_unsignedInt(aux->samples));
@@ -1240,6 +1243,7 @@ TaggedRef PrTabEntry::getProfileStats()
 	rec->setFeature(heap,oz_unsignedInt(aux->heapUsed));
 	rec->setFeature(closures,oz_unsignedInt(aux->numClosures));
 	rec->setFeature(line,OZ_int(aux->line));
+	rec->setFeature(column,OZ_int(aux->colum));
 	rec->setFeature(name,aux->printname);
 	rec->setFeature(file,aux->file);
 	ret = oz_cons(makeTaggedSRecord(rec),ret);
