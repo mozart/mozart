@@ -1,27 +1,40 @@
-;; PLEASE USE CVS TO CHANGE THIS FILE:
-;;  cvs get Oz/elisp
-;;  ... edit ...
-;;  make oz
-;;  cvs commit
+;; Major mode for editing Oz, and for running Oz under Emacs
+;; Copyright (C) 1993 DFKI GmbH
+;; Author: Ralf Scheidhauer and Michael Mehl ([scheidhr|mehl]@dfki.uni-sb.de)
+
+
+;; TODO
+;; - state only in initial Screens for GNU ?? Should we use the mode-line ???
+
+
+(require 'comint)
+
+;; ---------------------------------------------------------------------
+;; global effects
+
+(setq completion-ignored-extensions
+      (append '(".load" ".sym")
+	      completion-ignored-extensions))
+
+
 ;; ----------------------------------------------------------------------
-;; OZ-Mode
-;; credits to mm and rs
-;; ----------------------------------------------------------------------
+;; support for different emacs versions: gnu19 and lucid
 
 
-(if (string-match "^18" emacs-version)
-    (error "This version of 'oz.el' does not support Emacs 18"))
-
-(defvar lucid-emacs 
-  (string-match "Lucid" emacs-version)
-  "Use Lucid-Emacs functions for fontifying for example")
+(defvar oz-emacs-version
+  (cond ((string-match "Lucid" emacs-version) 'lucid)
+	((string-match "19" emacs-version) 'gnu19))
+  "use the right functions for fontifying etc")
 
 
 ;(byte-compiler-options (optimize t) (warnings (- free-vars))
 ;  (file-format emacs18))
 
-(require 'comint)
 
+
+(defmacro oz-version (lucid gnu)
+  (` (cond (,(cons '(eq oz-emacs-version 'lucid) lucid))
+	   (,(cons '(eq oz-emacs-version 'gnu19) gnu)))))
 
 ;;------------------------------------------------------------
 ;; Screen title bars
@@ -31,16 +44,28 @@
 (defvar oz-machine-state  "???")
 
 (defvar oz-old-screen-title
-  (if lucid-emacs
-      screen-title-format
-    (cdr (assoc 'name (frame-parameters)))))
+  (oz-version
+   (screen-title-format)
+   ((cdr (assoc 'name (frame-parameters))))))
 
 
-;; only for FSF Emacs
-(defun oz-set-screen-name(scr name)
-  (modify-frame-parameters 
-       scr
-       (list (cons 'name name))))
+(defun oz-reset-state()
+  (oz-version
+   ((setq screen-title-format oz-old-screen-title))
+   ((mapcar '(lambda(scr)
+	       (modify-frame-parameters 
+		scr
+		(list (cons 'name oz-old-screen-title))))
+	    (visible-screen-list)))))
+
+(defun oz-set-screen-name(name)
+  (oz-version
+   ((setq screen-title-format name))
+   ((mapcar '(lambda(scr)
+	       (modify-frame-parameters 
+		scr
+		(list (cons 'name name))))
+	    (visible-screen-list)))))
 
 (defvar oz-title-format "Oz Console          C: %s  M: %s")
 
@@ -49,7 +74,6 @@
 	((string-match "\\<running\\>" s) "running")
 	((string-match "\\<halted\\>" s) "halted")
 	((string-match "\\<booting\\>" s) "booting")
-;	( t s)))
 	( t "???")))
 
 
@@ -61,14 +85,9 @@
 	 (format "%-30s" 
 		 (substring string 0 
 			    (min 30 (length string)))))
-    (if (not lucid-emacs)
-	(mapcar '(lambda(scr)
-		   (oz-set-screen-name scr
-				       (format oz-title-format 
-					       oz-compiler-state 
-					       oz-machine-state)))
-		(visible-screen-list)))))
-
+    (oz-set-screen-name (format oz-title-format 
+				oz-compiler-state 
+				oz-machine-state))))
 
 
 
@@ -124,10 +143,9 @@ For example
 ;; some wrappers for FSF Emacs
 ;;------------------------------------------------------------
 
-
-(if lucid-emacs
-    t
-  (defalias 'screen-list 'frame-list)
+(oz-version
+ ()
+ ((defalias 'screen-list 'frame-list)
   (defalias 'modify-screen-parameters 'modify-frame-parameters)
   (defalias 'visible-screen-list 'visible-frame-list)
   (defalias 'iconify-screen 'iconify-frame)
@@ -137,30 +155,25 @@ For example
   (defalias 'new-screen 'new-frame)
   (defalias 'delete-extent 'delete-overlay)
   (defalias 'make-extent 'make-overlay))
+ )
 
 
 (defun oz-make-screen-visible(scr)
-  (if lucid-emacs
-      (make-screen-visible scr)
-    (if (eq (frame-visible-p scr) 'icon)
+  (oz-version
+   ((make-screen-visible scr))
+   ((if (eq (frame-visible-p scr) 'icon)
 	(progn
 	  (select-frame scr)
 	  (iconify-or-deiconify-frame)))
-    (raise-frame scr)))
+    (raise-frame scr))))
 
  
 
 (defun oz-display-buffer (buf bool scr)
-  (if lucid-emacs
-      (display-buffer buf bool scr)
-    (select-frame scr)
-    (display-buffer buf bool)))
-
-
-(setq completion-ignored-extensions
-      (append '(".load" ".sym")
-	      completion-ignored-extensions))
-
+  (oz-version 
+   ((display-buffer buf bool scr))
+   ((select-frame scr)
+    (display-buffer buf bool))))
 
 
 (if oz-mode-syntax-table
@@ -212,18 +225,12 @@ For example
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler-window)
 
-  (if lucid-emacs
-      (progn
-	;; do not show it as "C-c C-RET" but as "C-c C-m" in menu bar
-	(define-key map [(control c) (control m)] 'oz-toggle-machine-window)
-	(define-key map [(control c) (control h)] 'halt-oz)
-	(define-key map [(control c) (control i)] 'oz-include-file)
-	(define-key map [(control button1)]       'oz-feed-region-browse)
-	)
-    (define-key map "\C-c\C-m"    'oz-toggle-machine-window)
-    (define-key map "\C-c\C-h"    'halt-oz)
-    (define-key map "\C-c\C-i"    'oz-include-file))
-
+  (oz-version
+   ((define-key map [(control button1)]       'oz-feed-region-browse))
+   nil)
+  (define-key map "\C-c\C-m"    'oz-toggle-machine-window)
+  (define-key map "\C-c\C-h"    'halt-oz)
+  (define-key map "\C-c\C-i"    'oz-include-file)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-prettyprint)
   (define-key map "\C-c\C-r"    'run-oz)
@@ -259,10 +266,11 @@ For example
 
 (defun oz-set-default-font(font)
   (let ((scr (selected-screen)))
-    (if lucid-emacs
-	(set-face-font 'default (concat (car font) "medium-r" (cdr font)) scr)
-      (modify-screen-parameters scr
-			       (list (cons 'font  (concat (car font) "medium-r" (cdr font))))))
+    (oz-version
+     ((set-face-font 'default (concat (car font) "medium-r" (cdr font)) scr))
+     ((modify-screen-parameters
+       scr
+       (list (cons 'font  (concat (car font) "medium-r" (cdr font)))))))
 
     (set-face-font 'bold nil scr)
     (set-face-font 'bold (concat (car font) "bold-r" (cdr font)) scr)
@@ -274,94 +282,97 @@ For example
 ;; Menus
 ;;------------------------------------------------------------
 
-(defun oz-make-menu (name list)
-  (global-set-key (vector 'menu-bar name)
-       (cons (symbol-name name) (make-sparse-keymap (symbol-name name))))
-  (mapcar '(lambda(entry)
-	     (global-set-key 
-	          (vector 'menu-bar name (car entry))
-		  (cons (symbol-name (car entry)) (cdr entry))))
-	  (reverse list))
-  (setq menu-bar-final-items (list name)))
- 
-;;; OZ MODE
-(if lucid-emacs
-    (defvar oz-menubar 
-      '(("Oz"     
-	 ["Feed buffer"            oz-feed-buffer t]
-	 ["Feed region"            oz-feed-region t]
-	 ["Feed line"              oz-feed-line t]
-	 "-----"
-	 ["Include file"           oz-include-file t]
-	 ["Compile file"           oz-precompile-file t]
-	 ("Find "
-	  ["Demo file"              oz-find-demo-file t]
-	  ["Library file"           oz-find-lib-file t]
-	  ["Documentation"          oz-find-docu-file t]
-	  )
-	 "-----"
-	 ["New Oz buffer"          oz-new-buffer t]
-	 ["Refresh buffer"         oz-prettyprint t]
-	 ("Print"
-	  ["buffer"      oz-print-buffer t]
-	  ["region"      oz-print-region t]
-	  )
-	 ("Core Syntax"
-	  ["buffer"      oz-ks-buffer t]
-	  ["region"      oz-ks-region t]
-	  ["line"        oz-ks-line   t]
-	  )
-	 ("Indent"
-	  ["line" oz-indent-line t]
-	  ["region" oz-indent-region t]
-	  ["buffer" oz-indent-buffer t]
-	  )
-	 ("Show/hide"
-	  ["errors"       oz-toggle-errors t]
-	  ["compiler"     oz-toggle-compiler-window t]
-	  ["machine"      oz-toggle-machine-window t]
-	  )
-	 ["Browse"   oz-feed-region-browse t]
-	 "-----"
-	 ["Start Oz" run-oz t]
-	 ["Halt Oz"  halt-oz t]
-	 )
-	("Font"
-	 ["Small"      oz-small-font      t]
-	 ["Default"    oz-default-font     t]
-	 ["Large"      oz-large-font      t]
-	 ["Very Large" oz-very-large-font t]
-	 )
-	))
+(defvar oz-menubar nil)
 
-  ;; else FSF Emacs 19
-  (oz-make-menu 'Oz
-	     '( (Feed\ buffer         . oz-feed-buffer)
-		(Feed\ region         . oz-feed-region)
-		(Feed\ line           . oz-feed-line)
-		(New\ Oz\ buffer      . oz-new-buffer)
-		(Refresh\ buffer      . oz-prettyprint)
-		(Indent\ line         . oz-indent-line)
-		(Indent\ region       . oz-indent-region)
-		(Indent\ buffer       . oz-indent-buffer)
-		(Region\ to\ printer  . oz-print-region)
-		(Buffer\ to\ printer  . oz-print-buffer)
-		(Include\ file        . oz-include-file)
-		(Compile\ file        . oz-precompile-file)
-		(Find\ demo\ file     . oz-find-demo-file)
-		(Find\ doc\ file      . oz-find-docu-file)
-		(Find\ library\ file  . oz-find-lib-file)
-		(Show/hide\ compiler  . oz-toggle-compiler-window)
-		(Show/hide\ machine   . oz-toggle-machine-window)
-		(Show/hide\ errors    . oz-toggle-errors)
-		(Core\ Syntax\ Buffer . oz-ks-buffer)
-		(Core\ Syntax\ Region . oz-ks-region)
-		(Core\ Syntax\ Line   . oz-ks-line)
-		(Show\ Documentation  . oz-doc)
-		(Start\ Oz            . run-oz)
-		(Halt\ Oz             . halt-oz)
-		)))
-  
+(defun oz-make-menu(list)
+  (oz-version
+   ((setq oz-menubar (oz-make-menu-lucid list)))
+   ((oz-make-menu-gnu19 oz-mode-map
+			(list (cons "menu-bar" list))))))
+
+(defun oz-make-menu-lucid (list)
+  (if (eq list nil)
+      nil
+    (cons
+     (let* ((entry (car list))
+	    (name (car entry))
+	    (aname (intern name))
+	    (rest (cdr entry)))
+;;;      (message "entry: %s %s" name rest) (sleep-for 1)
+       (if (atom rest)
+	   (vector name rest t)
+	 (cons name (oz-make-menu-lucid rest))))
+     (oz-make-menu-lucid (cdr list)))))
+
+
+;; for gnu19
+(defun oz-make-menu-gnu19 (map list)
+  (if (eq list nil)
+      nil
+    (let* ((entry (car list))
+	   (name (car entry))
+	   (aname (intern name))
+	   (rest (cdr entry)))
+;;;      (message "entry: %s %s" name rest) (sleep-for 1)
+      (if (atom rest)
+	  (define-key map (vector aname) entry)
+	(let ((newmap (make-sparse-keymap name)))
+	  (define-key map (vector aname)
+	    (cons (concat "< " name " >")
+		  newmap))
+;;;	  (message "rest: %s" rest) (sleep-for 1)
+	  (oz-make-menu-gnu19 newmap rest))))
+    (oz-make-menu-gnu19 map (cdr list))))
+
+;;; OZ MODE
+(oz-make-menu
+ '(("Oz"
+    ("Feed buffer"            . oz-feed-buffer)
+    ("Feed region"            . oz-feed-region)
+    ("Feed line"              . oz-feed-line)
+;;;     "-----"
+    ("Include file"           . oz-include-file)
+    ("Compile file"           . oz-precompile-file)
+    ("Find"
+     ("Demo file"              . oz-find-demo-file)
+     ("Library file"           . oz-find-lib-file)
+     ("Documentation"          . oz-find-docu-file)
+     )
+;;;     "-----"
+    ("New Oz buffer"          . oz-new-buffer)
+    ("Refresh buffer"         . oz-prettyprint)
+    ("Print"
+     ("buffer"      . oz-print-buffer)
+     ("region"      . oz-print-region)
+     )
+    ("Core Syntax"
+     ("buffer"      . oz-ks-buffer)
+     ("region"      . oz-ks-region)
+     ("line"        . oz-ks-line  )
+     )
+    ("Indent"
+     ("line" . oz-indent-line)
+     ("region" . oz-indent-region)
+     ("buffer" . oz-indent-buffer)
+     )
+    ("Show/hide"
+     ("errors"       . oz-toggle-errors)
+     ("compiler"     . oz-toggle-compiler-window)
+     ("machine"      . oz-toggle-machine-window)
+     )
+    ("Browse"   . oz-feed-region-browse)
+;;;       "-----"
+    ("Start Oz" . run-oz)
+    ("Halt Oz"  . halt-oz)
+    )
+   ("Font"
+    ("Small"      . oz-small-font     )
+    ("Default"    . oz-default-font    )
+    ("Large"      . oz-large-font     )
+    ("Very Large" . oz-very-large-font)
+    )
+   ))
+
 (defun oz-mode ()
   "Major mode for editing Oz code.
 Commands:
@@ -374,8 +385,9 @@ if that value is non-nil."
   (setq major-mode 'oz-mode)
   (setq mode-name "Oz")
   (oz-mode-variables)
-  (if lucid-emacs
-      (set-buffer-menubar (append current-menubar oz-menubar)))
+  (oz-version
+   ((set-buffer-menubar (append current-menubar oz-menubar)))
+   nil)
   (run-hooks 'oz-mode-hook))
 
 (defun run-oz ()
@@ -435,11 +447,11 @@ if that value is non-nil."
 	;; make sure buffers exist
 	(oz-create-buffer "*Oz Errors*")
 
-	(if lucid-emacs
-	    (setq screen-title-format
-		  '(("Oz Console           C:  "   (-30 . oz-compiler-state))
-		    ("   M:  " (-30 . oz-machine-state))))))))
-
+	(oz-version
+	 ((setq screen-title-format
+		'(("Oz Console           C:  "   (-30 . oz-compiler-state))
+		  ("   M:  " (-30 . oz-machine-state)))))
+	 nil))))
 
 
 (defvar gdb-oz-machine "oz.machine.bin")
@@ -479,8 +491,9 @@ the GDB commands `cd DIR' and `directory'."
     (use-local-map oz-mode-map)
     (setq mode-name "Oz-View")
     (setq major-mode 'oz-mode)
-    (if lucid-emacs
-	(set-buffer-menubar (append current-menubar oz-menubar)))
+    (oz-version
+     ((set-buffer-menubar (append current-menubar oz-menubar)))
+     nil)
 
     (delete-region (point-min) (point-max))))
 
@@ -695,10 +708,7 @@ the GDB commands `cd DIR' and `directory'."
       (delete-process "*Oz Machine*"))
   (message "")
 
-  (if lucid-emacs
-      (setq screen-title-format oz-old-screen-title)
-    (mapcar '(lambda(scr) (oz-set-screen-name scr oz-old-screen-title))
-	    (visible-screen-list))))
+  (oz-set-screen-name oz-old-screen-title))
     
 
 
@@ -1073,9 +1083,9 @@ the GDB commands `cd DIR' and `directory'."
 
 
 (defun oz-change-match-face (face beg end)
-  (if lucid-emacs
-      (set-extent-face (make-extent beg end) face)
-    (overlay-put (make-extent beg end) 'face face)))
+  (oz-version
+   ((set-extent-face (make-extent beg end) face))
+   ((overlay-put (make-extent beg end) 'face face))))
 
 
 (defconst ozKeywords
@@ -1093,8 +1103,9 @@ the GDB commands `cd DIR' and `directory'."
 
 
 
-(if (not lucid-emacs)
-    (defalias 'map-extents 'map-overlays))
+(oz-version
+ nil
+ ((defalias 'map-extents 'map-overlays)))
 
 
 ;; stolen from "cl-extra.el"
