@@ -1,0 +1,8 @@
+SRCTOP          = @SRCTOP@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+
+WHAT    = opi_tutorial
+MAIN    = opi.sgml
+
+include ../Makefile.common
