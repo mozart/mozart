@@ -1403,12 +1403,27 @@ void gc_finalize()
     OZ_Term pair = oz_head(old_guardian_list);
     old_guardian_list = oz_tail(old_guardian_list);
     OZ_Term obj = oz_head(pair);
-    if (tagged2Const(obj)->gcIsMarked())
-      // reachable through live data
-      guardian_list = oz_cons(pair,guardian_list);
-    else
-      // unreachable
-      finalize_list = oz_cons(pair,finalize_list);
+    switch (tagTypeOf(obj)) {
+    case EXT	:
+      // same check as Michael's hack in gcExtension
+      if ((*(int32*)oz_tagged2Extension(obj))&1)
+	// reachable through live data
+	guardian_list = oz_cons(pair,guardian_list);
+      else
+	// unreachable
+	finalize_list = oz_cons(pair,finalize_list);
+      break;
+    case OZCONST:
+      if (tagged2Const(obj)->gcIsMarked())
+	// reachable through live data
+	guardian_list = oz_cons(pair,guardian_list);
+      else
+	// unreachable
+	finalize_list = oz_cons(pair,finalize_list);
+      break;
+    default	:
+      error("unexpected tag type in gc_finalize: %d",tagTypeOf(obj));
+    }
   }
   // gc both these list normally.
   // since these lists have been freshly consed in the new half space
