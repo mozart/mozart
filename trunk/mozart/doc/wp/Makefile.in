@@ -22,6 +22,8 @@ WIDGETS2 = \
 	menu entry scale file listbox help
 CANVAS = \
 	barchart tags waitdone
+TEXT = \
+	display
 TOOLS = \
 	dialog error menubar
 	
@@ -31,6 +33,7 @@ HTMLEXTRAFILES0 = \
 	$(GEOMETRY:%=geometry/%.gif) \
 	$(WIDGETS2:%=widgets-2/%.gif) \
 	$(CANVAS:%=canvas/%.gif) \
+	$(TEXT:%=text/%.gif) \
 	$(TOOLS:%=tools/%.gif) \
 	queen.xbm magnifier.xbm \
 	truck-left.ppm truck-right.ppm \

@@ -32,8 +32,58 @@
     flow of text.
 
   <section id="section.text.widget">
-    <title/Getting Started/
+    <title/Inserting Text/
 
+    <p>
+      Let us start with a very simple example where we want to display
+      a given text in a text widget. <ptr to="figure.text.started">
+      shows a program that does the job.
+
+    <p>
+      <figure id="figure.text.started">
+        <caption/Displaying text./
+        <p>
+          <picture.extern to="display.gif" type=gif>
+<chunk class=anonymous><title/text display/
+Te={New Tk.text tkInit(parent:T width:40 height:10 bg:ivory)}
+{Te tk(insert 'end' 
+       <chunk.ref/Sample text/)}
+</chunk>          
+      </figure>
+
+    <p>
+      You will immediately note two things. Firstly, not the whole
+      text is visible. Similar to <ref
+      to="section.widgets-2.listbox"/listboxes/, a text widget
+      supports scanning: The text can be scanned by pressing the
+      second mouse button and moving the mouse pointer while the
+      button is still being pressed. Secondly, the text is wrapped
+      where word boundaries (that is, spaces) are not taken into
+      account. Changing the wrapping such that word boundaries are
+      preserved, can be done as follows:
+<chunk class=anonymous><title/wrap:word/
+{Te tk(configure wrap:word)}
+</chunk>
+
+    <p>
+      Positions in the displayed text can be referred to by
+      <def/positions/.
+
+    <p>
+      Getting text.
+
+    <p>
+      Inserting text.
+
+    <p>
+      Deleting text.
+
+    <p>
+      Special positions.
+
+    <p>
+      Display only.
+   
   </section>
 
   <section id="section.text.tags">
@@ -41,13 +91,13 @@
 
   </section>
 
-  <section id="section.text.marks">
-    <title/Text Marks/
+  <section id="section.text.events">
+    <title/Events and Actions/
 
   </section>
 
-  <section id="section.text.events">
-    <title/Events and Actions/
+  <section id="section.text.marks">
+    <title/Text Marks/
 
   </section>
 
@@ -58,6 +108,14 @@
 %%%
 %%% Chapter: Text Widgets
 %%%
+
+%%
+%% Inserting Text
+%%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/text display/
 
 
 
