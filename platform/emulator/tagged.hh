@@ -1042,4 +1042,36 @@ public:
   Continuation * gc();
 }; // Continuation
 
+inline
+TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2)
+{
+  TaggedRef * a = (TaggedRef *) heapMalloc(2 * sizeof(TaggedRef));
+  a[0] = t1;
+  a[1] = t2;
+  return a;  
+}
+
+inline
+TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3)
+{
+  TaggedRef * a = (TaggedRef *) heapMalloc(3 * sizeof(TaggedRef));
+  a[0] = t1;
+  a[1] = t2;
+  a[2] = t3;
+  return a;  
+}
+
+inline
+TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
+                         TaggedRef t4, TaggedRef t5)
+{
+  TaggedRef * a = (TaggedRef *) heapMalloc(5 * sizeof(TaggedRef));
+  a[0] = t1;
+  a[1] = t2;
+  a[2] = t3;
+  a[3] = t4;
+  a[4] = t5;
+  return a;  
+}
+
 #endif
