@@ -174,7 +174,7 @@ lmf: lmf-server lmf-book.cgi lmf-process.cgi
 OZIMG = $(OZDEMO)/images
 
 IMGDIRS = \
-        animated-queens diagnosis lift transport trucks college dict-client
+        animated-queens lift transport trucks college dict-client
 
 OZIMGDIRS = $(IMGDIRS:%=$(OZIMG)/%)
 
@@ -184,9 +184,6 @@ QUEENSIMGS0 = \
         middle-cross middle-gray middle-queen middle-solid \
         small-gray small-queen small-solid \
         tiny-gray tiny-queen tiny-solid
-
-DIAGIMGS0 = \
-        and or xor
 
 LIFTIMGS0 = \
         downE downF lift liftDown liftUp upE upF
@@ -208,7 +205,6 @@ DICTCLIENTIMGS0 = \
 
 OZIMAGES = \
         $(QUEENSIMGS0:%=$(OZIMG)/animated-queens/%.xbm) \
-        $(DIAGIMGS0:%=$(OZIMG)/diagnosis/%.xbm) \
         $(LIFTIMGS0:%=$(OZIMG)/lift/%.xbm) \
         $(TRANSPORTIMGS0:%=$(OZIMG)/transport/%.xbm) \
         $(TRUCKSIMGS0:%=$(OZIMG)/trucks/%.ppm) \
