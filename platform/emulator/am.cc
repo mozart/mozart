@@ -1544,7 +1544,7 @@ int AM::wakeUser()
 
 
 
-OZ_Term AM::dbgGetSpaces() {
+OZ_Term AM::dbgGetLoc() {
   if (!ozconf.moreInfo) return NameUnit;
   OZ_Term out = nil();
   Board *bb = currentBoard;
