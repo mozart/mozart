@@ -320,7 +320,7 @@ public:
   void fail(void);
   int commit(int, int);
   void inject(TaggedRef, int arity = 1);
-  OZ_Return merge(Board *);
+  OZ_Return merge(Board *, Bool);
 
   //
   // Status variable
