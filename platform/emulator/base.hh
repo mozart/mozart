@@ -412,8 +412,6 @@ void displayDef(ProgramCounter from, int ssize);
 // see builtins.cc
 Builtin *BIinit();
 extern OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
-extern OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea,
-                                       TaggedRef &out);
 OZ_Return BIarityInline(TaggedRef, TaggedRef &);
 OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
                              Bool recordFlag);
