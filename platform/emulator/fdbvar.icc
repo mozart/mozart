@@ -9,8 +9,8 @@
   ------------------------------------------------------------------------
 */
 
-#ifndef __fdbvar_icc__
-#define __fdbvar_icc__
+#ifndef __FDBVAR_ICC__
+#define __FDBVAR_ICC__
 
 #if defined(INTERFACE) && !defined(OUTLINE) && !defined(FDOUTLINE)
 #pragma interface
@@ -24,14 +24,19 @@ void GenBoolVariable::dispose(void) {
 
 
 inline
+void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr, int e)
+{
+  if (isSmallInt(*trPtr)) return;
+  propagate(*trPtr);
+  doBind(trPtr, e);
+  dispose();
+}
+
+inline
 void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr,
 						  OZ_FiniteDomain & fd)
 {
-  if (isSmallInt(*trPtr)) return;
-  TaggedRef si_val = OZ_int(fd.getSingleElem());
-  propagate(*trPtr);
-  doBind(trPtr, si_val);
-  dispose();
+  becomesSmallIntAndPropagate(trPtr, OZ_int(fd.getSingleElem()));
 }
 
 
@@ -84,9 +89,4 @@ void addSuspBoolVar(TaggedRef v, Thread * el)
   bv->suspList = addSuspToList(bv->suspList, el, bv->home);
 }
 
-#endif
-
-
-
-
-
+#endif /* __FDBVAR_ICC__ */
