@@ -1,0 +1,210 @@
+# DFKI Oz (C) DFKI 1991-1996
+
+# Programs
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+SHELL           = @SH@
+LEXFLAGS        = -8
+MV              = @MV@
+SED             = @SED@
+ECHO            = @@ECHO@
+M4              = @M4@
+RM              = @RM@ -f
+CFLAGS          = @DEFS@ @DEFINES@ @PLATFORM@ @COPT@ $(CDYN) $(CUSR)
+CCFLAGS         = $(CFLAGS) $(CCINCLUDES)
+CXXDEPEND       = $(CXX) $(CCFLAGS) -MM
+LIBS =          = @LIBS@
+
+INSTRDEFS = ../include/instrDefs.m4
+
+
+.SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
+
+all::
+
+help::
+        $(ECHO) "The following targets are available"
+        $(ECHO) "   all        : compile files (default target)"
+        $(ECHO) "   clean      : remove dirt"
+        $(ECHO) "   realclean  : remove more dirt"
+        $(ECHO) "   depend     : generate dependencies"
+
+
+M4FILES = scancode.cc instrtab.hh opcodes.hh optostr.hh\
+          register.hh opcodes.cc marshallcode.cc
+
+PEANUTS = am.cc genvar.cc \
+        indexing.cc fdhook.cc taskstk.cc mem.cc \
+        assemble.cc error.cc fdprofil.cc \
+        statisti.cc fdgenvar.cc \
+        codearea.cc debug.cc lps.cc \
+        solve.cc variable.cc thrqueue.cc thrspool.cc \
+        avar.cc perdiovar.cc \
+        lazyvar.cc print.cc
+
+FASTCOMPILESRCS = $(PEANUTS)
+
+CXXSRCS = actor.cc board.cc thread.cc dictionary.cc stack.cc \
+        susplist.cc cpbag.cc \
+        tagged.cc value.cc cont.cc config.cc trail.cc types.cc \
+        foreign.cc gc.cc compiler.cc ofgenvar.cc opcodes.cc \
+        scancode.cc genhashtbl.cc ozostream.cc\
+        scanner.cc parser.cc runtime.cc unix.cc tcl_tk.cc \
+        version.cc metavar.cc ip.cc perdio.cc initffuns.cc \
+        urlc.cc iso-ctype.cc hashtbl.cc os.cc \
+        emulate.cc builtins.cc \
+        $(FASTCOMPILESRCS)
+
+FDSRCS =        fdbuilti.cc fdomn.cc fdcore.cc fdcd.cc \
+                fdbvar.cc fddist.cc
+
+CPISRCS =       cpi.cc cpi_fd.cc cpi_prop.cc cpi_fs.cc \
+                cpi_expect.cc cpi_misc.cc cpi_stream.cc \
+                cpi_profile.cc
+
+FSETSRCS =      fset.cc fsetcore.cc fsgenvar.cc
+
+SRCS = $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS)
+
+FDOBJS = $(FDSRCS:.cc=.o)
+OBJS = $(CXXSRCS:.cc=.o) $(FDOBJS)
+
+FDLIB_O = fdlib.o
+SCHEDLIB_O = schedlib.o
+ARGS += -DOPTIMIZED
+
+FDLIB = $(FDLIBPATH)/$(FDLIB_O)
+SCHEDLIB = $(FDLIBPATH)/$(SCHEDLIB_O)
+
+FDLIBLINKED = $(FDLIB) $(SCHEDLIB)
+ARGS += -DLINKFOREIGNFD
+
+$(FDLIB)::
+        (cd $(FDLIBPATH); make)
+
+$(SCHEDLIB)::
+        (cd $(FDLIBPATH); make)
+
+Makefile::
+        (cd $(FDLIBPATH); ozmkmf $(ARGS) $(MAKEMAKEFILEOPT))
+
+clean::
+        (cd $(FDLIBPATH); make clean)
+
+realclean::
+        (cd $(FDLIBPATH); make realclean)
+
+depend::
+        (cd $(FDLIBPATH); make depend)
+
+install::
+        (cd $(FDLIBPATH); make install)
+
+DESTBIN = $(OZHOME)/platform/OzPlatform
+
+
+EMUEXE = oz.emulator.bin
+
+.NOEXPORT: emulate.o $(EMUEXE) peanuts.o
+
+all:: $(EMUEXE)
+
+win:: ozlib.lnk $(M4FILES)
+
+win-install::
+        Install(ozemulator.exe,775,$(OZHOME)/platform/win32-i486)
+
+first: version $(M4FILES) $(SRCS)
+
+
+fd: $(FDLIB) $(SCHEDLIB)
+
+$(EMUEXE): first main.o $(OBJS) $(FDLIB) $(SCHEDLIB)
+        $(CXX) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
+           main.o $(OBJS) $(FDLIBLINKED) $(LIBS); \
+        echo 'moving ...'; mv /tmp/$@.$$$$ $@
+
+oz.emulator.o: first $(OBJS)
+        $(CXX) -r $(LDOPT) -o /tmp/$@.$$$$ $(OBJS);\
+        echo 'moving ...'; mv /tmp/$@.$$$$ $@
+
+install:: $(DESTBIN)/oz.emulator.bin \
+        $(OZHOME)/include/oz.h \
+        $(OZHOME)/include/oz_cpi.hh
+
+$(DESTBIN)/oz.emulator.bin: oz.emulator.bin
+        Install(oz.emulator.bin,755,$(DESTBIN))
+
+$(OZHOME)/include/oz.h: oz.h
+        Install($<,755,$(OZHOME)/include)
+
+$(OZHOME)/include/oz_cpi.hh: oz_cpi.hh
+        Install($<,755,$(OZHOME)/include)
+
+
+version.cc: version
+
+emulate.cc:: register.hh
+
+ThePlatform=OzPlatform
+version::
+        $(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
+             -e "s/OZPLATFORM/${ThePlatform}/" \
+             $(srcdir)/version.sed > version.cc
+
+
+depend:: $(M4FILES) $(SRCS)
+        ozmkmf $(ARGS)
+        $(CXXDEPEND) $(CCINCLUDES) $(SRCS) >> Makefile
+
+
+$(M4FILES): $(INSTRDEFS)
+
+
+MAKEMAKEFILEOPT =
+
+MAKEMAKEFILEOPT += -DLINKFOREIGNFD
+
+
+tags:   $(M4FILES) version.cc
+        etags -C $(SRCS) *.hh
+
+clean::
+        $(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt
+
+realclean::
+        $(RM) version.cc $(EMUEXE)
+        $(RM) ozlib.lnk *.exe *.map *.imp *.sym
+        $(RM) $(M4FILES)
+
+ozlib.lnk: oz.h
+        grep FUNDECL oz.h | grep -v typedef | grep -v define | \
+        sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
+
+
+builtins1.o: builtins.cc
+builtins2.o: builtins.cc
+
+linkdir:
+        dir=../Emulator-`ozplatform`; \
+        mkdir $$dir; cd $$dir; \
+        ln -s ../Emulator/version.sed \
+              ../Emulator/?*c ../Emulator/?*h \
+              ../Emulator/Imakefile .; ../ozmkmf; \
+        rm -f version.cc; make version
+
+
+.cc.o:
+        $(CXX) $(CCFLAGS) -c -o $@ $<
+
+.cc.s:
+        $(CXX) $(CCFLAGS) -S -o $@ $<
+
+.cc.E:
+        $(CXX) $(CCFLAGS) -E -o $@ $<
+
+.m4cc.cc:
+        $(M4) $< > $@
+
+.m4hh.hh:
+        $(M4) $< > $@
