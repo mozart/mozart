@@ -114,6 +114,8 @@ enum EmulatorPropertyIndex {
   PROP_OZ_DATE,
   PROP_OS_NAME,
   PROP_OS_CPU,
+  // DISTRIBUTION
+  PROP_DISTRIBUTION_VIRTUALSITES,
   // INTERNAL
   PROP_INTERNAL_DEBUG,
   PROP_INTERNAL_SUSPENSION,
@@ -376,6 +378,12 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_ATOM(PROP_OZ_DATE,AMDate);
   CASE_ATOM(PROP_OS_NAME,ozconf.osname);
   CASE_ATOM(PROP_OS_CPU,ozconf.cpu);
+  // DISTRIBUTION
+#ifdef VIRTUALSITES
+  CASE_BOOL(PROP_DISTRIBUTION_VIRTUALSITES,OK);
+#else
+  CASE_BOOL(PROP_DISTRIBUTION_VIRTUALSITES,NO);
+#endif
   // INTERNAL
   CASE_BOOL(PROP_INTERNAL_DEBUG,am.debugmode());
   CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
@@ -878,6 +886,9 @@ void initVirtualProperties()
   VirtualProperty::add("oz.date",PROP_OZ_DATE);
   VirtualProperty::add("os.name",PROP_OS_NAME);
   VirtualProperty::add("os.cpu",PROP_OS_CPU);
+  // Distribution
+  VirtualProperty::add("distribution.virtualsites",
+                       PROP_DISTRIBUTION_VIRTUALSITES);
   // INTERNAL
   VirtualProperty::add("internal.debug",PROP_INTERNAL_DEBUG);
   VirtualProperty::add("internal.suspension",PROP_INTERNAL_SUSPENSION);
