@@ -180,7 +180,7 @@ char *getString(MsgBuffer *bs, unsigned int i)
   char *ret = new char[i+1];
   if (ret==NULL)
     return NULL;
-  for (int k=0; k<i; k++) {
+  for (unsigned int k=0; k<i; k++) {
     if (bs->atEnd()) {
       delete ret;
       return NULL;
