@@ -62,7 +62,7 @@ BIMODSPECS = \
 
 MODSPECS= \
 	FDP FSP Schedule Tk Parser OS Property Pickle \
-	PID URL FDB FSB System Finalize CTB \
+	PID URL FDB FSB Space System Finalize CTB \
 	CompilerSupport Profile \
 	Debug Fault Browser Misc DPMisc Distribution \
 	VirtualSite Application DPPane \
