@@ -57,36 +57,41 @@ enum file_mode_t {writing, reading};
 #define FOPEN(FILE_PTR, FILE_NAME, FILE_MODE)				 \
 FILE * FILE_PTR = fopen(FILE_NAME, FILE_MODE == writing ? "w" : "r");	 \
 if (FILE_PTR == NULL) {							 \
-  ret_val = OZ_raiseErrorC(EXCEPTION, 0, 				 \
-			   OZ_atom(FILE_MODE == writing 		 \
+  free(input);								 \
+  free(maple_str);							 \
+  return OZ_raiseErrorC(EXCEPTION, 0,					 \
+			   OZ_atom(FILE_MODE == writing			 \
 				   ? "Could not open file for writing"	 \
 				   : "Could not open file for reading"), \
 			   OZ_string(FILE_NAME));			 \
-  goto exit;								 \
 }
 
 #define FCLOSE(FILE_PTR, FILE_NAME)				\
 if (fclose(FILE_PTR)) {						\
-  ret_val = OZ_raiseErrorC(EXCEPTION, 0, 			\
+  free(input);							\
+  free(maple_str);						\
+  return OZ_raiseErrorC(EXCEPTION, 0,				\
 			   OZ_atom("Could not close file"),	\
 			   OZ_string(FILE_NAME));		\
-  goto exit;							\
 }
 
 //-----------------------------------------------------------------------------
 
 inline
-OZ_Term add_list(char c, OZ_Term t = OZ_nil()) {
-  return OZ_cons(OZ_int(c), t);
+void add_list(OZ_Term &t, char c) {
+  t = OZ_cons(OZ_int(c), t);
 }
 
 inline
 OZ_Term close_list(OZ_Term rl) {
   OZ_Term l = OZ_nil();
   while (!OZ_isNil(rl)) {
+    putchar(OZ_intToC(OZ_head(rl)));
+
     l = OZ_cons(OZ_head(rl), l);
     rl = OZ_tail(rl);
   }
+  return l;
 }
 
 //-----------------------------------------------------------------------------
