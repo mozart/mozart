@@ -617,16 +617,16 @@
             <Entry class=command><Span class=index/<<oz-halt>>/
               <<FORCE>> (<Key id="key.oz-halt"/C-. h/)
             <Item>
-              Halt the Mozart sub-process.  If <<FORCE>> is <<nil>>, feed
-              an <Index/<Code proglang=oz/System.exit//<Code proglang=oz
+              Halt the Mozart sub-process.  With no prefix argument, feed
+              an <Index/<Code proglang=oz/Application.exit//<Code proglang=oz
               >{Application.exit 0}</Code> statement and wait for the process
               to terminate.  Waiting time is limited by the user option
               <<oz-halt-timeout>>; after this delay, the process is sent
               a SIGHUP if still living.
             <P>
-              If <<FORCE>> is the symbol <<'->>, send the process a SIGKILL.
-              If <<FORCE>> is non-<<nil>> and not the symbol <<'->>, send
-              it a SIGHUP.
+              With <Key/C-u/ as prefix argument, send the process a SIGHUP
+              without delay.  With <Key/C-u C-u/ as prefix argument, send
+              it a SIGKILL instead.
             <Entry class=useroption><Span class=index/<<oz-halt-timeout>>/
               (default: <<30>>)
             <Item>
