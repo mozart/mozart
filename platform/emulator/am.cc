@@ -202,6 +202,7 @@ void AM::init(int argc,char **argv)
   char *url = NULL;
   char *initFile = getenv("OZINIT");
   char *assemblyCodeFile = NULL;
+  //int denys = 0;
   
   /* process command line arguments */
   ozconf.argV = NULL;
@@ -233,8 +234,14 @@ void AM::init(int argc,char **argv)
     }
     if (strcmp(argv[i],"-u")==0) {
       url = getOptArg(i,argc,argv);
+      ozconf.url = url;
       continue;
     }
+    //    if (strcmp(argv[i],"-denys")==0) {
+    //      url = getOptArg(i,argc,argv);
+    //      denys = 1;
+    //      continue;
+    //    }
 
     if (strcmp(argv[i],"-b")==0) {
       assemblyCodeFile = getOptArg(i,argc,argv);
@@ -254,8 +261,18 @@ void AM::init(int argc,char **argv)
     usage(argc,argv);
   }
 
-  if ((!url && !assemblyCodeFile) || (url && assemblyCodeFile)) {
-    fprintf(stderr,"Exactly one of '-u', '-b' required.\n");
+  //  if ((!url && !assemblyCodeFile) || (url && assemblyCodeFile)) {
+  //    fprintf(stderr,"Exactly one of '-u', '-b' required.\n");
+  //    usage(argc,argv);
+  //  }
+  //  else ozconf.url = url;
+  if (url && assemblyCodeFile) {
+    fprintf(stderr,"Options '-u' and '-b' are mutually exclusive.\n");
+    usage(argc,argv);
+  }
+
+  if (initFile && *initFile && assemblyCodeFile) {
+    fprintf(stderr,"no init file allowed with assembly code file.\n");
     usage(argc,argv);
   }
 
@@ -263,7 +280,7 @@ void AM::init(int argc,char **argv)
   ozconf.showIdleMessage=1;
 #endif
 
-  if (!initFile) {
+  if (!initFile && !assemblyCodeFile) {
     char* ini = "/lib/Init.ozp";
     int m = strlen(ozconf.ozHome);
     int n = m+strlen(ini)+1;
@@ -274,6 +291,11 @@ void AM::init(int argc,char **argv)
     else delete[] s;
   }
   if (initFile && *initFile=='\0') initFile=0;
+
+  if (!initFile && !assemblyCodeFile) {
+    fprintf(stderr,"neither init file nor assembly code.\n");
+    usage(argc,argv);
+  }
 
   printBanner(initFile);
   if (getenv("OZ_TRACE_LOAD"))
@@ -337,11 +359,12 @@ void AM::init(int argc,char **argv)
 
   Thread *tt = oz_newRunnableThread();
 
-  if (url) {
-    TaggedRef proc = oz_newVariable();
-    tt->pushCall(proc);
-    tt->pushCall(BI_load,oz_atom(url),proc);
-  }
+  //  if (denys) {
+  //    initFile = assemblyCodeFile = 0;
+  //    TaggedRef proc = oz_newVariable();
+  //    tt->pushCall(proc);
+  //    tt->pushCall(BI_load,oz_atom(url),proc);
+  //  }
 
   if (assemblyCodeFile) {
 
@@ -399,9 +422,23 @@ void AM::init(int argc,char **argv)
   }
 
   if (initFile) {
-    TaggedRef proc = oz_newVariable();
-    tt->pushCall(proc);
-    tt->pushCall(BI_load,oz_atom(initFile),proc);
+    TaggedRef functor   = oz_newVariable();
+    TaggedRef procedure = oz_newVariable();
+    TaggedRef export    = oz_newVariable();
+    extern TaggedRef AtomApply; // value.cc
+    extern TaggedRef BI_dot;	// value.cc builtins.cc
+    // Task3: execute functor's code
+    // argument should probably be import(builtin:BUILTIN)
+    // where BUILTIN would be a record of builtins
+    // but for the time being we simply used an empty record
+    // which is being ignored anyway -- we use AtomApply
+    // because it make no difference what it is.
+    // note that the export should be empty (but we dont care)
+    tt->pushCall(procedure,AtomApply,export);
+    // Task2: lookup functor's code
+    tt->pushCall(BI_dot,functor,AtomApply,procedure);
+    // Task1: load functor
+    tt->pushCall(BI_load,oz_atom(initFile),functor);
   }
 
   //
