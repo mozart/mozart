@@ -159,6 +159,7 @@ enum tcpMessageType {
   TCP_PACKET,        // from WRITER
   TCP_MYSITE,        // from WRITER
   TCP_MYSITE_ACK,
+  TCP_MYSITE_HANDOVER,
   TCP_PING_REQUEST,
   TCP_NONE
 
@@ -169,19 +170,20 @@ enum ConnectionFlags{
   OPENING           = 2,        // has made connection
   WANTS_TO_CLOSE    = 4,        // is blocked on trying to send CLOSE
   CURRENT           = 8,        // incompleteRead or Write
-  WRITE_QUEUE       = 16,       // has something in write queue
-  CAN_CLOSE         = 32,       // Zero refs to site, but still something to send
-  ACK_MSG_INCOMMING = 64,       // incomplete on back-channel
-  WRITE_CON         = 128,      // connection type is WRITE
-  MY_DWN            = 256,      // Closed by me
-  REFERENCE         = 512,      // There are references to this site
-  OK_PROBE          = 2048,     // Probe for Ok
-  TMP_DWN           = 4096,     // Closed due to Tmp problem
-  RC_READING        = 8192,     // ReadCon in midle of read
-  RC_CRASHED        = 16384,    // ReadCon crashed during read
-  HIS_DWN           = 32768,    // WriteCon closed by reader
-  PROBE             = 65536,    // WriteCon in probe list
-  HIS_MY_TMP        = 131072    // WriteCon in closed by initiative and Tmp
+  WRITE_QUEUE       = 0x10,       // has something in write queue
+  CAN_CLOSE         = 0x20,       // Zero refs to site, but still something to send
+  ACK_MSG_INCOMMING = 0x40,       // incomplete on back-channel
+  WRITE_CON         = 0x80,      // connection type is WRITE
+  MY_DWN            = 0x100,      // Closed by me
+  REFERENCE         = 0x200,      // There are references to this site
+  OK_PROBE          = 0x400,     // Probe for Ok
+  TMP_DWN           = 0x800,     // Closed due to Tmp problem
+  RC_READING        = 0x1000,     // ReadCon in midle of read
+  RC_CRASHED        = 0x2000,    // ReadCon crashed during read
+  HIS_DWN           = 0x4000,    // WriteCon closed by reader
+  PROBE             = 0x8000,    // WriteCon in probe list
+  HIS_MY_TMP        = 0x10000,    // WriteCon in closed by initiative and Tmp
+  HANDOVER_OPENING  = 0x20000    // WriteCon is used for opening a readconnection
 };
 
 enum ByteStreamType {
@@ -2117,6 +2119,7 @@ ipReturn WriteConnection::open(){
   ipReturn ret;
   PD((TCP_INTERFACE,"OpenConnection"));
   setOpening();
+  // debug  setFlag(HANDOVER_OPENING);
   tcpCache->add(this);
   ret = tcpOpen(remoteSite, this);
   return ret;}
@@ -2861,28 +2864,7 @@ inline Message* newReadCur(Message *m,NetMsgBuffer *bs,
 int accHbufSize = 9 + strlen(PERDIOVERSION);
 BYTE *accHbuf = new BYTE[accHbufSize];
 
-static int acceptHandler(int fd,void *unused)
-{
-  PD((TCP_INTERFACE,"acceptHandler: %d",fd));
-  struct sockaddr_in from;
-  int fromlen = sizeof(from);
-  int newFD=osaccept(fd,(struct sockaddr *) &from, &fromlen);
-
-  if (newFD < 0) {
-    return 0;}
-
-  if (!tcpCache->Accept()|| !tcpCache->CanOpen()){
-    PD((TCP_INTERFACE,"Connection Refused"));
-    osclose(newFD);
-    return 0;}
-
-  ip_address ip=from.sin_addr.s_addr;
-  port_t port=from.sin_port;
-  Bool accept = tcpCache->Accept();
-#ifdef PERDIOLOGLOW
-  printf("!!!oa%d;%d\n",(int)ip,(int)port);
-#endif
-
+void tcpPresentPassiveSite(int newFD){
   BYTE *auxbuf = accHbuf;
 
   *auxbuf = TCP_CONNECTION;
@@ -2896,8 +2878,6 @@ static int acceptHandler(int fd,void *unused)
     *auxbuf++ = *pv++;}
 
   Assert(auxbuf-accHbuf == accHbufSize);
-  // EK!!
-  // fcntl(newFD,F_SETFL,O_NONBLOCK);
 #ifdef WINDOWS
   osSetNonBlocking(newFD,OK);
 #else
@@ -2910,21 +2890,29 @@ static int acceptHandler(int fd,void *unused)
     if(written==accHbufSize) break;
     if(ret<=0 && ossockerrno()!=EINTR && ossockerrno()!=EWOULDBLOCK && ossockerrno()!=EAGAIN ) {
       OZ_warning("Error in OPening, we're closing");
-#ifdef PERDIOLOGLOW
-      printf("!!!oc\n");
-#endif
       osclose(newFD);
-      return 0;}}
+      return;}}
 
   ReadConnection *r=readConnectionManager->allocConnection(NULL,newFD);
-#ifdef PERDIOLOGLOW
-  printf("!!!od%d\n",newFD);
-#endif
   r->setOpening();
   tcpCache->add(r);
   PD((TCP_CONNECTIONH,"acceptHandler success r:%x",r));
-  OZ_registerReadHandler(newFD,tcpPreReadHandler,(void *)r);
-  return 0; }
+  OZ_registerReadHandler(newFD,tcpPreReadHandler,(void *)r);}
+
+static int acceptHandler(int fd,void *unused)
+{
+  struct sockaddr_in from;
+  int fromlen = sizeof(from);
+  int newFD=osaccept(fd,(struct sockaddr *) &from, &fromlen);
+
+  if (newFD < 0) {return 0;}
+
+  if (!tcpCache->Accept()|| !tcpCache->CanOpen()){
+    osclose(newFD);
+    return 0;}
+  tcpPresentPassiveSite(newFD);
+  return 0 ;}
+
 
 int tcpPreReadHandler(int fd,void *r0){
   ReadConnection *r=(ReadConnection *)r0, *old;
@@ -2938,7 +2926,7 @@ int tcpPreReadHandler(int fd,void *r0){
   pos +=5;
   header =  tcpOpenMsgBuffer->readyForRead(todo);
 
-  if(header!=TCP_MYSITE && header!=TCP_MYSITE_ACK)
+  if(header!=TCP_MYSITE && header!=TCP_MYSITE_ACK && header!=TCP_MYSITE_HANDOVER)
     goto tcpPreFailure;
   if(smallMustRead(fd,pos,todo,PREREAD_HANDLER_TRIES))
     goto tcpPreFailure;
@@ -2946,16 +2934,29 @@ int tcpPreReadHandler(int fd,void *r0){
   ackStartNr = unmarshalNumber(tcpOpenMsgBuffer);
   maxNrSize= unmarshalNumber(tcpOpenMsgBuffer);
   si = unmarshalDSite(tcpOpenMsgBuffer);
+  tcpOpenMsgBuffer->unmarshalEnd();
+
   if(si->getRemoteSite() == NULL)
     goto tcpPreFailure;
 
-
+  // The connection established is not intended
+  // as a readconnection but as a writeconnection.
+  if(header==TCP_MYSITE_HANDOVER){
+    Assert(si->getRemoteSite()->getWriteConnection() ==  NULL);
+    // get rid of the read connection. Its not needed any longer.
+    tcpCache->remove(r);
+    readConnectionManager->freeConnection(r);
+    WriteConnection *w = writeConnectionManager->allocConnection(si->getRemoteSite(),fd);
+    si->getRemoteSite()->setWriteConnection(w);
+    w->setOpening();
+    tcpCache->add(w);
+    OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)w);
+    return 0;
+  }
   old = si->getRemoteSite()->getReadConnection();
   if(old!=NULL){old->close();}
 
   si->getRemoteSite()->setReadConnection(r);
-
-  tcpOpenMsgBuffer->unmarshalEnd();
 
   if(header==TCP_MYSITE_ACK) if(!r->resend()) goto tcpPreFailure;
 
@@ -3218,10 +3219,6 @@ retry:
   fd=ossocket(PF_INET,SOCK_STREAM,0);
   if (fd < 0) {
     if(ossockerrno()==ENOBUFS){goto  ipOpenNoAnswer;}
-    //fprintf(stderr,"fd < 0 = %d  - interpreted as perm:%d \n",fd,ossockerrno());
-#ifdef PERDIOLOGLOW
-    printf("!!!of%d\n",remoteSite->site->getTimeStamp()->pid);
-#endif
     r->connectionLost();
     return IP_PERM_BLOCK;}
 
@@ -3320,9 +3317,18 @@ int tcpConnectionHandler(int fd,void *r0){
 #endif
     goto tcpConPermLost; }
 
+  // Here the site we connected to is clearly the corect one.
+  // Depending on if we need to open a write for the other site
+  // different procedures will be choosen.
+
   PD((TCP,"Sending My Site Message..%s",myDSite->stringrep()));
-  if(r->isAcked()) msgType = TCP_MYSITE;
-  else msgType = TCP_MYSITE_ACK;
+  if(r->testFlag(HANDOVER_OPENING)){
+    msgType = TCP_MYSITE_HANDOVER;
+  }
+  else{
+    if(r->isAcked()) msgType = TCP_MYSITE;
+    else msgType = TCP_MYSITE_ACK;
+  }
 
   tcpOpenMsgBuffer->marshalBegin();
   marshalNumber(r->getMsgCtr(), tcpOpenMsgBuffer);
@@ -3344,19 +3350,23 @@ int tcpConnectionHandler(int fd,void *r0){
         goto tcpConClosed;}
   }
 
-  PD((OS,"unregister READ fd:%d",fd));
-  // fcntl(fd,F_SETFL,O_NONBLOCK);
-  // fcntl(fd,F_SETFL,O_NDELAY);
-  OZ_registerReadHandler(fd,tcpCloseHandler,(void *)r);
-  PD((OS,"register READ - close fd:%d",fd));
+  // The just opened writeconnection is handedover to the other peer.
+  // A readconnection is created that will use the socket, a new writeconnection
+  // must be created.
+  if(r->testFlag(HANDOVER_OPENING)){
+    r->clearFlag(HANDOVER_OPENING);
+    tcpPresentPassiveSite(fd);
+    delete buf1;
+    if(buf2)delete buf2;
+    tcpOpen(r->remoteSite, r);
+    return 0;}
 
-  if(r->isWritePending())
+  OZ_registerReadHandler(fd,tcpCloseHandler,(void *)r);
+
 #ifndef SLOWNET
+  if(r->isWritePending())
     OZ_registerWriteHandler(fd,tcpWriteHandler,(void *)r);
-#else
-  ;
 #endif
-  PD((TCP,"tcpConnectionHandler ord fin"));
 
 #ifdef PERDIOLOGLOW
   printf("!!!or%d\n",r->remoteSite->site->getTimeStamp()->pid);
