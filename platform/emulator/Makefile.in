@@ -44,7 +44,7 @@ MODULEINSTALL   = @MODULEINSTALL@
 SUBDIRS		= libfd libfset
 OZVERSION	= $(SRCTOP)/OZVERSION
 
-MODSPECS = FDP Schedule Wif Parser OS Property
+MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle PID URL FDB FSB
 
 CREATEDOTHERS= \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
@@ -231,12 +231,7 @@ wif.o: modWif.tbl modWif.dcl
 
 parsertable.o: modParser.dcl modParser.tbl
 
-bootmanager.o: \
-	modWif.tbl modWif.dcl \
-	modFDP.tbl modFDP.dcl modSchedule.tbl modSchedule.dcl \
-	modFSP.tbl modFSP.dcl \
-	modParser.tbl modParser.dcl \
-	modOS.tbl modOS.dcl modProperty.tbl modProperty.dcl
+boot-manager.o: $(MODSPECS:%=mod%.dcl) $(MODSPECS:%=mod%.tbl)
 
 %.tbl: %.spec
 	perl $(SRCDIR)/bidecl.perl -file $< -ctable > $@
