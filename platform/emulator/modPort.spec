@@ -30,7 +30,7 @@
                      out => ['+bool'],
                      bi  => BIisPort},
 
-     'new'      => { in  => ['value'],
+     'new'      => { in  => ['list'],
                      out => ['+port'],
                      BI  => BInewPort},
 
