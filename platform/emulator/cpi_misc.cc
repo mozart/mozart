@@ -195,11 +195,9 @@ OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
   return isVariableTag(vtag1) && (vptr1 == vptr2);
 }
 
-OZ_Return OZ_typeError(char * __typeString, 
-                       int pos, 
-		       char * comment) 
+OZ_Return OZ_typeError(char * typeString, int pos, char * comment) 
 {
-  TypeError(pos, comment);
+  return typeError(pos, comment, typeString);
 }
 
 int OZ_getFDInf(void) 
