@@ -106,6 +106,8 @@ public:
 
   Bool failurePreemption();
   void wakeAll();
+
+  TaggedRef getTaggedRef();
 };
 
 inline
@@ -216,6 +218,7 @@ public:
 
   void subEntityCond(EntityCond);
   void newWatcher(Bool);
+  TaggedRef getTaggedRef();
 };
 
 inline

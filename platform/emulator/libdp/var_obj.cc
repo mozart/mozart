@@ -151,7 +151,6 @@ VarStatus ObjectVar::checkStatusV()
 }
 
 
-
 void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
                            BorrowEntry *be)
 {
@@ -173,6 +172,7 @@ void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
   be->changeToRef();
   BT->maybeFreeBorrowEntry(o->getIndex());
   o->localize();
+  maybeHandOver(info,makeTaggedConst(o));
 }
 
 void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
@@ -188,6 +188,7 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
   be->changeToRef();
   BT->maybeFreeBorrowEntry(o->getIndex());
   o->localize();
+  maybeHandOver(info,makeTaggedConst(o));
 }
 
 // failure stuff
@@ -196,10 +197,9 @@ Bool ObjectVar::failurePreemption(){
   Bool hit=FALSE;
   Assert(info!=NULL);
   EntityCond oldC=info->getSummaryWatchCond();
-  if(varFailurePreemption(oz_makeExtVar(this),info,hit)){
+  if(varFailurePreemption(getTaggedRef(),info,hit)){
     EntityCond newC=info->getSummaryWatchCond();
-    //    varPOAdjustForFailure(getIndex(),oldC,newC);} PER-LOOK
-  }
+    varAdjustPOForFailure(getObject()->getIndex(),oldC,newC);}
   return hit;
 }
 
@@ -210,7 +210,7 @@ void ObjectVar::addEntityCond(EntityCond ec){
   if(isInjectorCondition(ec)){
     wakeAll();
     return;}
-  info->dealWithWatchers(oz_makeExtVar(this),ec);
+  info->dealWithWatchers(getTaggedRef(),ec);
 }
 
 void ObjectVar::subEntityCond(EntityCond ec){
@@ -251,5 +251,8 @@ void ObjectVar::newWatcher(Bool b){
   if(b){
     wakeAll();
     return;}
-  info->dealWithWatchers(oz_makeExtVar(this),info->getEntityCond());
+  info->dealWithWatchers(getTaggedRef(),info->getEntityCond());
 }
+
+TaggedRef ObjectVar::getTaggedRef(){
+  return borrowTable->getBorrow(getObject()->getIndex())->getRef();}

@@ -333,7 +333,9 @@ void cellifyObject(Object* o){
   SRecord *r = getRecord(state);
   Assert(r!=NULL);
   Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
-  o->setState(cell);}
+  o->setState(cell);
+  transferWatchers(o);
+}
 
 void globalizeTert(Tertiary *t)
 {

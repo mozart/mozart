@@ -58,6 +58,7 @@ enum EntityCondFlags{
   TEMP_SOME     = 32,
   PERM_ME       = 64,
   TEMP_ME       = 128,
+  UNREACHABLE   = 256,
   TEMP_FLOW     = 512
 };
 
@@ -97,15 +98,13 @@ public:
 
   EntityCond getSummaryWatchCond();
 
-  void dealWithWatchers();
+  void dealWithWatchers(TaggedRef,EntityCond);
 
   void gcWatchers();
 
-  void meToBlocked();
+  Bool meToBlocked();
 
   Watcher** getWatcherBase(){return &watchers;}
-
-  void dealWithWatchers(TaggedRef t,EntityCond);
 };
 
 #define TWIN_GC    1
@@ -213,8 +212,8 @@ public:
 
   Watcher* getNext(){return next;}
 
-  void varInvokeInjector(TaggedRef t,EntityCond,Bool &);
-  void invokeInjector(TaggedRef t,EntityCond,TaggedRef, Bool &);
+  void varInvokeInjector(TaggedRef t,EntityCond);
+  void invokeInjector(TaggedRef t,EntityCond,TaggedRef);
   void invokeWatcher(TaggedRef t,EntityCond);
 
   Thread* getThread(){Assert(thread!=NULL);return thread;}
@@ -257,7 +256,7 @@ inline Bool someTempCondition(EntityCond ec){
   return ec & (TEMP_SOME|TEMP_BLOCKED|TEMP_ME|TEMP_ALL);}
 
 inline Bool isInjectorCondition(EntityCond ec){
-  return ec & (TEMP_BLOCKED|PERM_BLOCKED);}
+  return ec & (TEMP_BLOCKED|PERM_BLOCKED|UNREACHABLE);}
 
 inline Bool somePermCondition(EntityCond ec){
   return ec & (PERM_SOME|PERM_BLOCKED|PERM_ME|PERM_ALL);}
@@ -344,6 +343,9 @@ void varAdjustPOForFailure(int,EntityCond,EntityCond);
 
 void triggerInforms(InformElem**,OwnerEntry*,int,EntityCond);
 void triggerInformsOK(InformElem**,OwnerEntry*,int,EntityCond);
+
+void maybeHandOver(EntityInfo*, TaggedRef);
+void transferWatchers(Object *o);
 
 /* __FAILHH */
 #endif

@@ -68,6 +68,12 @@ int compareNetAddress(ProxyManagerVar *lVar,ProxyManagerVar *rVar)
   return lOTI<rOTI ? -1 : 1;
 }
 
+TaggedRef ProxyVar::getTaggedRef(){
+  return borrowTable->getBorrow(getIndex())->getRef();}
+
+TaggedRef ManagerVar::getTaggedRef(){
+  return ownerTable->getOwner(getIndex())->getRef();}
+
 inline
 OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
 {
@@ -159,17 +165,15 @@ Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Boo
   Watcher** base= info->getWatcherBase();
   while(TRUE){
     if((*base)==NULL) return FALSE;
-    if(((*base)->watchcond) & ec){
-      if(((*base)->isSiteBased())) break;
-      else{
-        if(th==(*base)->thread) break;}}
-    base = &((*base)->next);}
-  (*base)->varInvokeInjector(t,ec,hit);
+    if((*base)->isSiteBased()) break;
+    if(th==(*base)->thread) break;
+    base= &((*base)->next);}
+  if(!((*base)->watchcond) & ec) return FALSE;
+  (*base)->varInvokeInjector(t,(*base)->watchcond & ec);
   hit=TRUE;
-  if(!(*base)->isPersistent()){
-    return TRUE;
-    *base=(*base)->next;}
-  return FALSE;
+  if((*base)->isPersistent()) return FALSE;
+  *base=(*base)->next;
+  return TRUE;
 }
 
 inline EntityCond injectorPart(EntityCond ec){
@@ -182,10 +186,11 @@ Bool varFailurePreemption(TaggedRef t,EntityInfo* info,Bool &hit){
 
 Bool ProxyVar::failurePreemption(){
   Assert(info!=NULL);
-  info->meToBlocked();
+  if(info->meToBlocked()){
+    info->dealWithWatchers(getTaggedRef(),info->getEntityCond());}
   Bool hit=FALSE;
   EntityCond oldC=info->getSummaryWatchCond();
-  if(varFailurePreemption(oz_makeExtVar(this),info,hit)){
+  if(varFailurePreemption(getTaggedRef(),info,hit)){
     EntityCond newC=info->getSummaryWatchCond();
     varAdjustPOForFailure(getIndex(),oldC,newC);}
   return hit;
@@ -223,9 +228,11 @@ void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
     DebugCode(binding=0);
     PD((PD_VAR,"REDIRECT while pending"));
   }
+  EntityInfo* ei=info;
   oz_bindLocalVar(this,vPtr,val);
   be->changeToRef();
   BT->maybeFreeBorrowEntry(BTI);
+  maybeHandOver(ei,val);
 }
 
 void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
@@ -233,10 +240,12 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
   int BTI=getIndex();
   PD((PD_VAR,"acknowledge"));
 
+  EntityInfo* ei=info;
   oz_bindLocalVar(this,vPtr,binding);
 
   be->changeToRef();
   BT->maybeFreeBorrowEntry(BTI);
+  maybeHandOver(ei,binding);
 }
 
 /* --- ManagerVar --- */
@@ -314,7 +323,6 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
     if(isFuture()){
-      //    if (origVar->getType()==OZ_VAR_FUTURE) {
       am.addSuspendVarList(lPtr);
       return SUSPEND;
     }
@@ -322,10 +330,13 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
     // can now localize this variable
 
     // send redirect done first to check if r is exportable
+    EntityInfo *ei=info;
     OZ_Return ret = sendRedirectToProxies(r, myDSite);
+    Assert((ozconf.perdioMinimal) || (ret==PROCEED));
     if (ret != PROCEED) return ret;
     oz_bindLocalVar(this,lPtr,r);
     OT->getOwner(OTI)->changeToRef();
+    maybeHandOver(ei,r);
     return PROCEED;
   } else {
     oz_bindGlobalVar(this,lPtr,r);
@@ -355,12 +366,12 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
   if (isLocal) {
     // send redirect done first to check if r is exportable
     OZ_Return ret = sendRedirectToProxies(r, myDSite);
+    Assert((ozconf.perdioMinimal) || (ret==PROCEED));
     if (ret != PROCEED) return ret;
+    EntityInfo *ei=info;
     oz_bindLocalVar(this,lPtr,r);
     OT->getOwner(OTI)->changeToRef();
-    if (OT->getOwner(OTI)->hasFullCredit()) {
-      PD((WEIRD,"SURRENDER: full credit"));
-    }
+    maybeHandOver(ei,r);
     return PROCEED;
   } else {
     oz_bindGlobalVar(this,lPtr,r);
@@ -623,13 +634,13 @@ void ProxyVar::addEntityCond(EntityCond ec){
   if(isInjectorCondition(ec)) {
     wakeAll();
     return;}
-  info->dealWithWatchers(oz_makeExtVar(this),ec);}
+  info->dealWithWatchers(getTaggedRef(),ec);}
 
 void ProxyVar::newWatcher(Bool b){
   if(b){
     wakeAll();
     return;}
-  info->dealWithWatchers(oz_makeExtVar(this),info->getEntityCond());
+  info->dealWithWatchers(getTaggedRef(),info->getEntityCond());
 }
 
 void ProxyVar::subEntityCond(EntityCond ec){
@@ -639,7 +650,7 @@ void ProxyVar::subEntityCond(EntityCond ec){
 
 void ManagerVar::newWatcher(Bool b){
   if(b) return;
-  info->dealWithWatchers(oz_makeExtVar(this),info->getEntityCond());
+  info->dealWithWatchers(getTaggedRef(),info->getEntityCond());
 }
 
 void ManagerVar::addEntityCond(EntityCond ec){
@@ -650,7 +661,7 @@ void ManagerVar::addEntityCond(EntityCond ec){
   int i=getIndex();
   OwnerEntry* oe=OT->getOwner(i);
   triggerInforms(&inform,oe,i,ec);
-  info->dealWithWatchers(oz_makeExtVar(this),ec);
+  info->dealWithWatchers(getTaggedRef(),ec);
 }
 
 void ManagerVar::subEntityCond(EntityCond ec){
@@ -671,7 +682,6 @@ Bool ManagerVar::siteInProxyList(DSite* s){
 }
 
 void ManagerVar::probeFault(DSite *s,int pr){
-  if(inform==NULL) return;
   if(!siteInProxyList(s)) return;
   if(pr==PROBE_PERM){
     addEntityCond(PERM_SOME);
