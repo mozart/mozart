@@ -114,48 +114,9 @@ public:
 
   DSite* getDestination(); 
 
-  //
-  void takeSnapshot() {
-    Assert(!checkFlag(MSG_HAS_MARSHALCONT));
-    Assert(!checkFlag(MSG_HAS_UNMARSHALCONT));
+  void takeSnapshot();
+  void deleteSnapshot();
 
-    //
-    for(int i = 0 ; i < MAX_NOF_FIELDS; i++) {
-      switch(msgFields[i].ft) {
-      case FT_FULLTOPTERM:
-      case FT_TERM:
-	{
-	  OZ_Term t = (OZ_Term) msgFields[i].arg;
-	  // currently at most one term per message:
-	  Assert(msgTS == (MsgTermSnapshot *) 0);
-	  msgTS = takeTermSnapshot(t, destination);
-	}
-	break;
-
-      case FT_NUMBER:
-      case FT_CREDIT:
-      case FT_STRING:
-      case FT_SITE:
-      case FT_NONE:
-	break;
-
-      default:
-	Assert(0);
-	break;
-      }
-    }
-  }
-
-  //
-  void deleteSnapshot() {
-    if (msgTS) {
-      deleteTermSnapshot(msgTS);
-      // should not be reused before 'init':
-      DebugCode(msgTS = (MsgTermSnapshot *) -1);
-    }
-  }
-
-  //
   void gcStart() { if (msgTS) mtsStartGC(msgTS); }
   void gcFinish() { if (msgTS) mtsFinishStartGC(msgTS); }
 
