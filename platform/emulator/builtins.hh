@@ -19,9 +19,8 @@ enum BIType {
   BIDefault,
   BIsolve,
   BIsolveEatWait,
-  BIsolveGuided,
-  BIsolveGuidedEatWait,
-  BIsolveDebugGuided,
+  BIsolveDebug,
+  BIsolveDebugEatWait,
   BIsolveCont,
   BIsolved
 };
@@ -309,12 +308,6 @@ class OneCallBuiltin: public Builtin {
 public:
   USEHEAPMEMORY;
 
-  OneCallBuiltin (BuiltinTabEntry *fn, RefsArray gregs, Arity *arity, TaggedRef fea)
-  : Builtin (fn, (TaggedRef) 0, gregs, arity)
-  {
-    getRecord()->setArg(0,fea);
-  }
-
   OneCallBuiltin (BuiltinTabEntry *fn, RefsArray gregs)
     : Builtin (fn, (TaggedRef) 0, gregs) {}
 
@@ -332,8 +325,6 @@ public:
   {
     getRecord()->setArg(0,fea);
   }
-  SolvedBuiltin(BuiltinTabEntry *fn, RefsArray gregs)
-    : Builtin (fn, (TaggedRef) 0, gregs) {}
 
   inline RefsArray &getGRegs() { return(gRegs); }
 };

@@ -51,7 +51,8 @@ public:
                         /* sinceIdle == memory reported during last idle */
 
   // for the solve combinator
-  StatCounter solveDistributed;
+  StatCounter solveAlt;
+  StatCounter solveClone;
   StatCounter solveSolved;
   StatCounter solveFailed;
 
@@ -73,9 +74,10 @@ public:
     localVariableCounter, protectedCounter;
 #endif
 
-  void incSolveDistributed(void) { solveDistributed.incf();}
-  void incSolveSolved(void)      { solveSolved.incf(); }
-  void incSolveFailed(void)      { solveFailed.incf(); }
+  void incSolveAlt(void)    { solveAlt.incf();}
+  void incSolveClone(void)  { solveClone.incf();}
+  void incSolveSolved(void) { solveSolved.incf(); }
+  void incSolveFailed(void) { solveFailed.incf(); }
 };
 
 extern Statistics ozstat;

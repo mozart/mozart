@@ -105,10 +105,11 @@ void Statistics::print(FILE *fd)
 	  sum, 	  (sum*100)/occupied );
 #endif
 
-  fprintf(fd,"  Solve:\n");
-  fprintf(fd,"    distributions: %d\n",   solveDistributed.total);
-  fprintf(fd,"    solutions:     %d\n",   solveSolved.total);
-  fprintf(fd,"    failures:      %d\n\n", solveFailed.total);
+  fprintf(fd,"  Search:\n");
+  fprintf(fd,"    alternatives: %d\n",   solveAlt.total);
+  fprintf(fd,"    clones:       %d\n",   solveClone.total);
+  fprintf(fd,"    solutions:    %d\n",   solveSolved.total);
+  fprintf(fd,"    failures:     %d\n\n", solveFailed.total);
   
   fprintf(fd,"******************************\n");
   fprintf(fd,"***   End of Statistics    ***\n");
@@ -135,7 +136,8 @@ void Statistics::reset()
   timeForCopy.reset();
   timeForLoading.reset();
 
-  solveDistributed.reset();
+  solveAlt.reset();
+  solveClone.reset();
   solveSolved.reset();
   solveFailed.reset();
 }
@@ -157,7 +159,7 @@ static void recSetArg(OZ_Term record, char *feat, unsigned int val)
  * fill two records of the form
  *
  *        statistics(r:_  g:_  l:_  c:_  h:_  s:_  u:_  e:_)
- *        enum(d:_  s:_  f:_)
+ *        enum(a:_  c:_  s:_  f:_)
  */
 
 void Statistics::getStatistics(TaggedRef rec, TaggedRef enu)
@@ -172,7 +174,8 @@ void Statistics::getStatistics(TaggedRef rec, TaggedRef enu)
   recSetArg(rec,"s",osSystemTime());
   recSetArg(rec,"u",timeNow);
 
-  recSetArg(enu,"d",solveDistributed.total);
+  recSetArg(enu,"a",solveAlt.total);
+  recSetArg(enu,"c",solveClone.total);
   recSetArg(enu,"s",solveSolved.total);
   recSetArg(enu,"f",solveFailed.total);
 }

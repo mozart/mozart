@@ -711,12 +711,12 @@ loop:
 	DebugCheckT (solveBB->setReflected ());
 	// statistic
 	ozstat.incSolveSolved();
-	if ( !fastUnifyOutline(solveAA->getResult(), solveAA->genSolved(), OK) ) {
+	if (!fastUnifyOutline(solveAA->getResult(), 
+			      solveAA->genSolved(), OK) ) {
 	  return CE_FAIL;
 	}
 	return CE_NOTHING;
       } else {
-	// 'stable' (stuck) or enumeration;
  
 	// wake up propagators to be woken up on stablity
 	if (solveAA->stable_wake()) {
@@ -739,7 +739,8 @@ loop:
 	  currentBoard->decSuspCount ();
 
 	  DebugCheckT (solveBB->setReflected ());
-	  if ( !fastUnifyOutline(solveAA->getResult(), solveAA->genStuck(), OK) ) {
+	  if ( !fastUnifyOutline(solveAA->getResult(), 
+				 solveAA->genStuck(), OK) ) {
 	    return CE_FAIL;
 	  }
 	  return CE_NOTHING;
@@ -758,6 +759,8 @@ loop:
 	  if (stableWait == OK && solveAA->isEatWaits()) {
 	    Board *waitBoard = wa->getChildRef();
 
+	    ozstat.incSolveAlt();
+
 	    waitBoard->setCommitted(solveBB);
 	    if (!installScript(waitBoard->getScriptRef())) {
 	      return CE_FAIL;
@@ -774,158 +777,90 @@ loop:
 	    return CE_SOLVE_CONT;
 	  }
 
-	  if (solveAA->isGuided()) {
-
-	    TaggedRef guide = deref(solveAA->getGuidance());
+	  TaggedRef guide = deref(solveAA->getGuidance());
 	    
-	    if (isCons(guide)) {
-	      // it is asserted that each element is an int or an pair of 
-	      // ints (see above)
-	      TaggedRef guideHead = headDeref(guide);
+	  if (isCons(guide)) {
+	    // it is asserted that each element is an int or an pair of 
+	    // ints (see above)
+	    
+	    ozstat.incSolveAlt();
 
-	      solveAA->setGuidance(tail(guide));
+	    TaggedRef guideHead = tagged2LTuple(guide)->getHead();
+	    DEREF(guideHead, _1, guideTag);
 
-	      int clauseNo, noOfClauses;
+	    solveAA->setGuidance(tagged2LTuple(guide)->getTail());
 
-	      if (isInt(guideHead)) {
-		clauseNo = smallIntValue(guideHead) - 1;
-		noOfClauses = ((clauseNo >= 0) && 
-			       (clauseNo < wa->getChildCount())) ? 1 : 0;
-	      } else {
-		// now we have a pair of integers
-		clauseNo = 0;
-		noOfClauses = 
-		  wa->selectChildren(smallIntValue(leftDeref(guideHead))-1,
-				     smallIntValue(rightDeref(guideHead))-1);
+	    int clauseNo, noOfClauses;
+
+	    if (isSmallInt(guideTag)) {
+	      clauseNo = smallIntValue(guideHead) - 1;
+	      noOfClauses = ((clauseNo >= 0) && 
+			     (clauseNo < wa->getChildCount())) ? 1 : 0;
+	    } else {
+	      // now we have a pair of integers
+	      clauseNo = 0;
+	      noOfClauses = 
+		wa->selectChildren(
+		    smallIntValue(deref(
+                      tagged2STuple(guideHead)->getArg(0)))-1,
+		    smallIntValue(deref(
+                      tagged2STuple(guideHead)->getArg(1)))-1);
+	    }
+
+	    if (noOfClauses == 0) {
+	      trail.popMark ();
+	      currentBoard->unsetInstalled ();
+	      setCurrent (currentBoard->getParentFast());
+	      currentBoard->decSuspCount ();
+	      
+	      if (!fastUnifyOutline(solveAA->getResult(),
+				    solveAA->genFailed(),
+				    OK)) {
+		return CE_FAIL;
+	      }
+	      return CE_NOTHING;
+
+	    } else if (noOfClauses == 1) {
+
+	      Board *waitBoard = wa->getChildRefAt(clauseNo);
+
+	      waitBoard->setCommitted(solveBB);
+
+	      if (!installScript(waitBoard->getScriptRef())) {
+		return CE_FAIL;
 	      }
 
-	      if (noOfClauses == 0) {
-		trail.popMark ();
-		currentBoard->unsetInstalled ();
-		setCurrent (currentBoard->getParentFast());
-		currentBoard->decSuspCount ();
+	      solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
-		if (!fastUnifyOutline(solveAA->getResult(),
-				      solveAA->genFailed(),
-				      OK)) {
-		  return CE_FAIL;
-		}
-		return CE_NOTHING;
-	      } else if (noOfClauses == 1) {
-
-		Board *waitBoard = wa->getChildRefAt(clauseNo);
-
-		waitBoard->setCommitted(solveBB);
-
-		if (!installScript(waitBoard->getScriptRef())) {
-		  return CE_FAIL;
-		}
-
-		solveBB->incSuspCount(waitBoard->getSuspCount()-1);
-
-		if (waitBoard->isWaitTop()) {
-		  goto loop;
-		}
-
-		aa=wa;
-		contAfter=waitBoard->getBodyPtr();
-		return CE_SOLVE_CONT;
-		
-	      } else {
-		solveAA->pushWaitActor(wa);
+	      if (waitBoard->isWaitTop()) {
 		goto loop;
 	      }
-	      
+
+	      aa=wa;
+	      contAfter=waitBoard->getBodyPtr();
+	      return CE_SOLVE_CONT;
+		
 	    } else {
-	      // put back wait actor
 	      solveAA->pushWaitActor(wa);
-	      // give back number of clauses
-	      trail.popMark ();
-	      currentBoard->unsetInstalled ();
-	      setCurrent (currentBoard->getParentFast());
-	      currentBoard->decSuspCount ();
-
-	      DebugCheckT (solveBB->setReflected ());
-	      if (!fastUnifyOutline(solveAA->getResult(),
-				       solveAA->genChoice(wa->getChildCount()),
-				       OK)) {
-		return CE_FAIL;
-	      }
-	      return CE_NOTHING;
+	      goto loop;
 	    }
+	      
 	  } else {
+	    // put back wait actor
+	    solveAA->pushWaitActor(wa);
+	    // give back number of clauses
+	    trail.popMark ();
+	    currentBoard->unsetInstalled ();
+	    setCurrent (currentBoard->getParentFast());
+	    currentBoard->decSuspCount ();
 
-	    Board *waitBoard = wa->getChild();
-	    wa->decChilds();
-
-	    if (stableWait) {
-	      (void) wa->getChild ();  // remove the last child;
-	      wa->decChilds ();
-	      DebugCheck((wa->hasNoChilds () == NO),
-			 error ("error in the '... [] true then false ro' case"));
-	      trail.popMark ();
-	      currentBoard->unsetInstalled ();
-	      setCurrent (currentBoard->getParentFast());
-	      currentBoard->decSuspCount ();
-
-	      waitBoard->setActor (wa);
-	      ((AWActor *) wa)->addChild (waitBoard);
-	      solveAA->setBoardToInstall (waitBoard,wa->getCompMode());
-	      DebugCheckT (solveBB->setReflected ());
-	      // statistics
-	      ozstat.incSolveDistributed();
-	      if ( !fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
-		return CE_FAIL;
-	      }
-	      return CE_NOTHING;
-	    } else {
-	      // 'proper' enumeration; 
-	      trail.popMark ();
-	      currentBoard->unsetInstalled ();
-	      setCurrent (currentBoard->getParentFast());
-	      currentBoard->decSuspCount ();
-
-	      WaitActor *nwa = new WaitActor (wa);
-	      solveBB->decSuspCount ();   // since WaitActor::WaitActor adds one; 
-	      waitBoard->setActor (nwa);
-	      ((AWActor *) nwa)->addChild (waitBoard);
-	      wa->unsetBoard ();  // may not copy the actor and rest of boards too;
-	      solveAA->setBoardToInstall (waitBoard,wa->getCompMode());
-
-	      //  Now, the following state has been reached:
-	      // The waitActor with the 'rest' of actors is unlinked from the 
-	      // computation space; instead, a new waitActor (*nwa) is linked to it, 
-	      // and all the tree from solve blackboard (*solveBB) will be now copied.
-	      // Moreover, the copy has already the 'boardToInstall' setted properly;
-	      Board *newSolveBB = copyTree (solveBB, (Bool *) NULL);
-
-	      // ... and now set the original waitActor backward;
-	      waitBoard->setFailed();   // this subtree is discarded;
-	      wa->setBoard (solveBB);          // original waitActor;
-	      // the subtrees (new and old ones) are still linked to the
-	      // computation tree; 
-	      if (wa->hasOneChild () == OK) {
-		solveAA->setBoardToInstall (wa->getChild (),wa->getCompMode());
-	      } else {
-		solveAA->setBoardToInstall ((Board *) NULL,0);
-		// ... since we have set previously board-to-install for copy;
-		solveAA->pushWaitActor (wa);
-		//  If this waitActor has yet more than one clause, it can be
-		// distributed again ... Moreover, it must be considered first. 
-	      }
-	      DebugCheckT (solveBB->setReflected ());
-	      DebugCheckT (newSolveBB->setReflected ());
-	      // ... and now there are two proper branches of search problem;
-
-	      // statistics
-	      ozstat.incSolveDistributed();
-	      if ( !fastUnifyOutline(solveAA->getResult(),
-					solveAA->genEnumed(newSolveBB),
-					OK)) {
-		return CE_FAIL;
-	      }
-	      return CE_NOTHING;
+	    DebugCheckT (solveBB->setReflected ());
+	    if (!fastUnifyOutline(solveAA->getResult(),
+				  solveAA->genChoice(wa->getChildCount()),
+				  OK)) {
+	      return CE_FAIL;
 	    }
+	    return CE_NOTHING;
 	  }
 	}
       }
@@ -1003,7 +938,6 @@ void engine()
 
   /* which kind of solve combinator to choose */
   Bool isEatWaits    = NO;
-  Bool isSolveGuided = NO;
   Bool isSolveDebug  = NO;
   
   Chunk *predicate; NoReg(predicate);
@@ -2124,30 +2058,13 @@ LBLkillThread:
 	switch (bi->getType()) {
 
 	case BIsolve:
-	  {
-	    isSolveGuided = NO;  isEatWaits = NO;  isSolveDebug = NO;
-	    goto LBLBIsolve;
-	  }
+	  { isEatWaits = NO; isSolveDebug = NO; goto LBLBIsolve; }
 	case BIsolveEatWait:
-	  {
-	    isSolveGuided = NO;  isEatWaits = OK;  isSolveDebug = NO;
-	    goto LBLBIsolve;
-	  }
-	case BIsolveGuided:
-	  {
-	    isSolveGuided = OK;  isEatWaits = NO;  isSolveDebug = NO;
-	    goto LBLBIsolve;
-	  }
-	case BIsolveGuidedEatWait:
-	  {
-	    isSolveGuided = OK;  isEatWaits = OK;  isSolveDebug = NO;
-	    goto LBLBIsolve;
-	  }
-	case BIsolveDebugGuided:
-	  {
-	    isSolveGuided = OK;  isSolveDebug = OK;
-	    goto LBLBIsolve;
-	  }
+	  { isEatWaits = OK; isSolveDebug = NO; goto LBLBIsolve; }
+	case BIsolveDebug:
+	  { isEatWaits = NO; isSolveDebug = OK; goto LBLBIsolve; }
+	case BIsolveDebugEatWait:
+	  { isEatWaits = OK; isSolveDebug = OK; goto LBLBIsolve; }
 	case BIsolveCont:    goto LBLBIsolveCont;
 	case BIsolved:       goto LBLBIsolved;
 
@@ -2245,82 +2162,50 @@ LBLkillThread:
 
        }
 
-       TaggedRef output, guidance;
-       
-       if (isSolveDebug) {
-	 // Check the third argument whether it is true or false
-	 TaggedRef flag = isSolveGuided ? X[2] : X[1];
-	 DEREF(flag, _1, flagTag);
+       TaggedRef x1 = deref(X[1]);
+       TaggedRef guide = x1;
 
-	 if (isAnyVar(flagTag)) {
-	   predicate = bi->getSuspHandler();
-	   if (!predicate) {
-	     HF_WARN(applFailure(bi),
-		     message("No suspension handler\n"));
-	   }
-	   goto LBLcall;
-	 }
-
-	 if (isLiteral(flagTag)) {
-	   if (sameLiteral(flag,NameTrue)) {
-	     isEatWaits = OK;
-	   } else if (sameLiteral(flag,NameFalse)) {
-	     isEatWaits = NO;
-	   } else {
-	     HF_FAIL (,
-             message("Illegal wait flag in solve combinator\n"));
-	   }
-	 } else {
-	   HF_FAIL (,
-             message("Illegal wait flag in solve combinator\n"));
-	 }
-       }
-	
-       if (isSolveGuided) {
-	 // This is a guided solver, check whether the input list is ground
-	 TaggedRef guide = deref(X[1]);
-
-	 while (isCons(guide)) {
-	   TaggedRef head = headDeref(guide);
+       while (isCons(guide)) {
+	 TaggedRef head = tagged2LTuple(guide)->getHead();
+	 guide = deref(tagged2LTuple(guide)->getTail());
+	 DEREF(head, _h, headTag);
 	   
-	   if (!(isInt(head) || 
-		 (isPair(head) && 
-		  isInt(leftDeref(head)) && 
-		  isInt(rightDeref(head)))))
-	     break;
+	 if (isSmallInt(headTag))
+	   continue;
+	 
+	 if (isSTuple(headTag) && 
+	     tagged2Literal(AtomPair)
+	     == tagged2STuple(head)->getLabelLiteral()) {
+	   TaggedRef left  = tagged2STuple(head)->getArg(0);
+	   TaggedRef right = tagged2STuple(head)->getArg(1);
+	   DEREF(left, _l, leftTag);
+	   DEREF(right, _r, rightTag);
+	   if (isSmallInt(leftTag) && isSmallInt(rightTag))
+	     continue;
+	 } 
+	 
+	 break;
 
-	   guide = tailDeref(guide);
-	 }
-
-	 if (!isNil(guide)) {
-	   predicate = bi->getSuspHandler();
-	   if (!predicate) {
-	     HF_WARN(applFailure(bi),
-		     message("No suspension handler\n"));
-	   }
-	   goto LBLcall;
-	 }
-
-
-	 output   = isSolveDebug ? X[3] : X[2];
-	 guidance = X[1];
-       } else {
-	 output   = isSolveDebug ? X[2] : X[1];
-	 guidance = 0;
        }
-       
+
+       if (!isNil(guide)) {
+	 predicate = bi->getSuspHandler();
+	 if (!predicate) {
+	   HF_WARN(applFailure(bi),
+		   message("No suspension handler\n"));
+	 }
+	 goto LBLcall;
+       }
 
        // put continuation if any;
        if (isTailCall == NO)
 	 e->pushTaskOutline(PC, Y, G);
 
-       // create solve actor(x1);
-       // Note: don't perform any derefencing on X[1];
+       // Note: don't perform any derefencing on X[2];
        SolveActor *sa = new SolveActor (CBB,CPP,
 					e->currentThread->getCompMode(),
-					output, guidance);
+					X[2], x1);
 
-       if (isSolveGuided) sa->setGuided();
        if (isEatWaits)    sa->setEatWaits();
        if (isSolveDebug)  sa->setDebug();
        
@@ -2381,54 +2266,6 @@ LBLkillThread:
 	 SolveActor::Cast (currentSolveBB->getActor ())->pushWaitActorsStackOf (solveAA);
        }
 
-       // install (i.e. perform 'unit commit') 'board-to-install' if any;
-       int compMode;
-       Board *boardToInstall = solveAA->getBoardToInstall (compMode);
-       if (boardToInstall != (Board *) NULL) {
-	 DebugCheck ((boardToInstall->isCommitted () == OK ||
-		      boardToInstall->isFailed () == OK),
-		     error ("boardToInstall is already committed")); 
-	 boardToInstall->setCommitted (CBB);
-#ifdef DEBUG_CHECK
-	 if ( !e->installScript (boardToInstall->getScriptRef ()) ) {
-	   LOCAL_PROPAGATION(HF_FAIL(,));	
-	   // error ("installScript has failed in solveCont");
-	   message("installScript has failed in solveCont (0x%x to 0x%x)\n",
-		    (void *) boardToInstall, (void *) solveBB);
-	 }
-#else
-
-	 LOCAL_PROPAGATION(
-	   if (!e->installScript (boardToInstall->getScriptRef ())) {
-	     HF_NOMSG;
-	   }
-	 )
-
-	 NO_LOCAL_PROPAGATION(
-	   (void) e->installScript (boardToInstall->getScriptRef ());
-	 )
-#endif
-	 // add the suspensions of the committed board and remove
-	 // its suspension itself;
-	 CBB->incSuspCount (boardToInstall->getSuspCount () - 1); 
-	 // get continuation of 'board-to-install' if any;
-	 if (boardToInstall->isWaitTop () == NO) {
-	   if (isTailCall == NO)
-	     e->pushTaskOutline(PC,Y,G);
-	   else
-	     isTailCall = NO;
-	   e->currentThread->checkCompMode(compMode);
-	   LOADCONT(boardToInstall->getBodyPtr ());
-	 }
-       }
-       // NB: 
-       //    Every 'copyTree' call should compress a path in a computation space, 
-       //    and not only for copy of, but for an original subtree too. 
-       //    Otherwise we would get a long chain of already-commited blackboards 
-       //    of former solve-actors; 
-       // NB2:
-       //    CBB can not become reducible after the applying of solveCont,
-       //    since its childCount can not become smaller. 
        if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
 	 HF_NOMSG;
        }
