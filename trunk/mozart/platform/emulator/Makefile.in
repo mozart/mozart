@@ -92,10 +92,7 @@ OBJS = $(SRCS:.cc=.o)
 .PHONY:	all subdirs win win-install first install install-bin install-inc \
 	install-dir version depend tags clean+ clean realclean veryclean
 
-all: subdirs $(TARGETS)
-
-subdirs:
-	for d in $(SUBDIRS); do (cd $$d; $(MAKE) all); done
+all::
 
 win: ozlib.lnk $(CREATEDFILES)
 
@@ -115,8 +112,7 @@ first: version $(CREATEDFILES) $(SRCS)
 	 rcp $$tmp @tmphack_host@:`pwd`/$@ && \
 	 $(RM) $$tmp
 
-install: install-dir install-bin install-inc
-	for d in $(SUBDIRS); do (cd $$d; $(MAKE) install); done
+install:: install-dir install-bin install-inc
 
 install-bin: $(TARGETS)
 	$(INSTALL_BIN) $(TARGETS) $(BINDIR)
@@ -141,10 +137,9 @@ version:
 	     $(SRCDIR)/version.sed > version.cc
 
 
-depend: $(CREATEDFILES) $(SRCS)
+depend:: $(CREATEDFILES) $(SRCS)
 	$(DEPEND) `for f in $(SRCS1); do echo $(SRCDIR)/$$f; done` \
 		$(CREATEDSRCS) >> Makefile
-	for d in $(SUBDIRS); do (cd $$d; $(MAKE) depend); done
 
 tags::	$(CREATEDFILES) version.cc
 
@@ -152,11 +147,9 @@ clean+:	clean
 	$(RM) $(TARGETS)
 
 clean::
-	for d in $(SUBDIRS); do (cd $$d; $(MAKE) clean); done
 	$(RM) gmon.out  fetchedInstr.dump verb_out.txt
 
 realclean::
-	for d in $(SUBDIRS); do (cd $$d; $(MAKE) realclean); done
 	$(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
 		ozma-s.cc ozma-p.cc ozma.hh \
 		ozlib.lnk *.exe *.map *.imp *.sym *.so \
@@ -204,6 +197,9 @@ ozma-p.yy: ozma-p.m4yy
 #	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
 
 include Makefile.rules
+
+# should be after make all in subdirs (see Makefiles.rules)
+all:: $(TARGETS)
 
 # dependencies
 marshaler.hh marshalMsg.cc: $(SRCDIR)/msgFormat.m4
