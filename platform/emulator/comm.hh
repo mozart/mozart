@@ -574,16 +574,17 @@ public:
     Assert(!(t & SECONDARY_TABLE_SITE));
     if(t & PERM_SITE) return;
     if(t & CONNECTED){
-      makePermConnected();
       if(t & REMOTE_SITE){
         if(t & VIRTUAL_SITE) {
           dumpVirtualInfo(info);
           info=NULL;}
         discoveryPerm_RemoteSite(getRemoteSite());
+        makePermConnected();
         return;}
       dumpVirtualInfo(info);
       info=NULL;
       discoveryPerm_VirtualSite(getVirtualSite());
+      makePermConnected();
       return;}
     makePerm();
     if(t & VIRTUAL_SITE){
