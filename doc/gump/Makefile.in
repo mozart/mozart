@@ -11,5 +11,6 @@ SGMLSRCS = \
 	Lambda.in gump.bib
 HTMLEXTRAFILES = \
 	gump.gif
+OZDOCHTMLFLAGS = --autoindex
 
 include ../Makefile.common
