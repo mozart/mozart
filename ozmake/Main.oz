@@ -15,6 +15,7 @@ prepare
       optimize(           char:&O alias:optlevel#optimize)
       gnu(         single         type:bool)
       linewidth(   single         type:int)
+      'local'(     single         type:bool)
       
       prefix(    single type:string)
       dir(       single type:string)
@@ -100,6 +101,7 @@ prepare
     extendpackage  # set_extendpackage
     fullbuild      # set_fullbuild
     linewidth      # set_linewidth
+    'local'        # set_local
    ]
       
 define

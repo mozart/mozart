@@ -66,6 +66,12 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
   <item>perform a dry run, i.e. just print what would happen without
         actually performing the actions</item>
 </optentry>
+<optentry>
+  <option>
+    <opt>--local</opt>
+  </option>
+  <item>do not recurse into subdirectories</item>
+</optentry>
 </optlist>
 
 </subsection>
@@ -653,6 +659,7 @@ recommended except for features <oz>blurb</oz>, <oz>info_text</oz> and
           blurb    : TEXT
           info_text: TEXT
           info_html: TEXT
+          subdirs  : [ DIRS... ]
         )
 </oz.display>
 <p>Features bin, lib and doc list targets to be installed in
@@ -895,6 +902,19 @@ checks that the <oz>src</oz> files are present but will not attempt to
 build them.  If you have the sources, you can force building the
 <oz>src</oz> targets if necessary using <opt>--fullbuild</opt>.</p>
 </subsubsection>
+
+<subsubsection><title>subdirs</title>
+
+<p>feature <oz>subdirs</oz> is a list of bare filenames representing
+subdirectories of the project.  By default, when necessary,
+<tool>ozmake</tool> will recurse into these subdirectories.  It is
+expected that each subdirectory should provide its own makefile.  The
+mogul id is automatically inherited to subdirectories and the uri is
+automatically extended by appending the name of the subdirectory: thus
+submakefiles can be simpler since they don't need to be concerned with
+package-level features.</p>
+</subsubsection>
+
 </subsection>
 </section>
 </doc>

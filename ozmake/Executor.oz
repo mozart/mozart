@@ -22,11 +22,27 @@ define
 	 RMFILE<-{NewDictionary}
       end
 
-      meth incr Indent<-'  '#@Indent end
-      meth decr Indent<-@Indent.2 end
+      meth incr
+	 S={self get_superman($)}
+      in
+	 if S\=unit then {S incr}
+	 else Indent<-'  '#@Indent end
+      end
+      
+      meth decr
+	 S={self get_superman($)}
+      in
+	 if S\=unit then {S decr}
+	 else Indent<-@Indent.2 end
+      end
+
+      meth GetIndent($) S={self get_superman($)} in
+	 if S\=unit then {S GetIndent($)} else @Indent end
+      end
+
       meth trace(Msg)
 	 if {self get_quiet($)} then skip
-	 elseif {self get_verbose($)} then {Print @Indent#Msg} end
+	 elseif {self get_verbose($)} then {Print Executor,GetIndent($)#Msg} end
       end
       %% xtrace gives feedback even in non verbose mode
       %% but it can be shut up with --quiet
@@ -34,7 +50,7 @@ define
       %% see that something is happening
       meth xtrace(Msg)
 	 if {self get_quiet($)} then skip
-	 elseif {self get_verbose($)} then {Print @Indent#Msg}
+	 elseif {self get_verbose($)} then {Print Executor,GetIndent($)#Msg}
 	 else {Print Msg} end
       end
       meth print(Msg)
@@ -180,26 +196,39 @@ define
 
       meth exec_simulated_touch(F) Executor,SimulatedTouch(F) end
 
-      meth SimulatedTouch(DST) Key={Path.toAtom DST} in
-	 {Dictionary.remove @RMFILE Key}
-	 @MKFILE.Key := {OS.time}
+      meth SimulatedTouch(DST) S={self get_superman($)} in
+	 if S\=unit then {S SimulatedTouch(DST)}
+	 else Key={Path.toAtom DST} in
+	    {Dictionary.remove @RMFILE Key}
+	    @MKFILE.Key := {OS.time}
+	 end
       end
 
-      meth SimulatedDelete(DST) Key={Path.toAtom DST} in
-	 {Dictionary.remove @MKFILE Key}
-	 @RMFILE.Key := {OS.time}
+      meth SimulatedDelete(DST) S={self get_superman($)} in
+	 if S\=unit then {S SimulatedDelete(DST)}
+	 else Key={Path.toAtom DST} in
+	    {Dictionary.remove @MKFILE Key}
+	    @RMFILE.Key := {OS.time}
+	 end
       end
 
-      meth simulated_exists(F $) Key={Path.toAtom F} in
-	 {HasFeature @MKFILE Key}
+      meth simulated_exists(F $) S={self get_superman($)} in
+	 if S\=unit then {S simulated_exists(F $)}
+	 else Key={Path.toAtom F} in
+	    {HasFeature @MKFILE Key}
+	 end
       end
 
-      meth simulated_deleted(F $) Key={Path.toAtom F} in
-	 {HasFeature @RMFILE Key}
+      meth simulated_deleted(F $) S={self get_superman($)} in
+	 if S\=unit then {S simulated_deleted(F $)}
+	 else Key={Path.toAtom F} in
+	    {HasFeature @RMFILE Key}
+	 end
       end
 
-      meth get_simulated_mtime(F $)
-	 @MKFILE.{Path.toAtom F}
+      meth get_simulated_mtime(F $) S={self get_superman($)} in
+	 if S\=unit then {S get_simulated_mtime(F $)}
+	 else @MKFILE.{Path.toAtom F} end
       end
 
       %% creating a directory hierarchy

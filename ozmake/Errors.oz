@@ -274,6 +274,25 @@ prepare
 	 error(kind : TITLE_MAKEFILE
 	       msg  : 'makefile not found'
 	       items: [hint(l:'Filename' m:F)])
+      [] ozmake(makefile:subdirnotvs(D)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'non virtual string in subdirs list'
+	       items: [hint(l:'Value' m:oz(D))])
+      [] ozmake(makefile:subdirnotbasename(D)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'element of subdirs list should be a simple filename (no slash)'
+	       items: [hint(l:'Value' m:D)])
+      [] ozmake(makefile:badsubdirs(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'feature `subdirs\' should be a list of filenames'
+	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(makefile:badsubmakefiles(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'feature `submakefiles\' should be a record of makefile records'
+	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(makefile:submakefilesnotallowed) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'feature `submakefile\' not allowed in user makefile')
       [] ozmake(uninstall:missingpackageormogul) then
 	 error(kind : TITLE_UNINSTALL
 	       msg  : 'no package or makefile'

@@ -13,8 +13,13 @@ define
       end
 
       meth build_all
-	 for T in {self get_lib_targets($)} do Builder,build_target(T) end
-	 for T in {self get_bin_targets($)} do Builder,build_target(T) end
+	 if {self get_includelibs($)} then
+	    for T in {self get_lib_targets($)} do Builder,build_target(T) end
+	 end
+	 if {self get_includebins($)} then
+	    for T in {self get_bin_targets($)} do Builder,build_target(T) end
+	 end
+	 {self recurse(build_all)}
       end
 
       meth build_target(T)

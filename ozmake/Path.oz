@@ -20,6 +20,7 @@ export
    MakeDir MakeDirRec
    Remove RemoveDir RemoveRec
    CopyFile
+   IsBasename
 prepare
    %% Introduce some vars so we don't have to close over
    %% entire base modules
@@ -254,5 +255,14 @@ define
 
    proc {CopyFile P1 P2}
       {Shell.execute [cp {Expand P1} {Expand P2}]}
+   end
+
+   fun {IsBasename F}
+      U={ToURL F}
+   in
+      {IsRelative U} andthen
+      case {CondSelect U path unit}
+      of [S] then S\=nil
+      else false end
    end
 end
