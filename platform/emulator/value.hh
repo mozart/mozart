@@ -1279,6 +1279,32 @@ public:
     return fr ?  fr->getFeature(lit) : makeTaggedNULL();
   }
 
+  TaggedRef replaceFeature(TaggedRef lit, TaggedRef value) {
+    SRecord *freefeat = getFreeRecord();
+    if (freefeat) {
+      int ind = freefeat->getIndex(lit);
+      if (ind != -1) {
+        TaggedRef ret = freefeat->getArg(ind);
+        freefeat->setArg(ind, value);
+        return ret;
+      }
+    }
+    SRecord *fr = getUnfreeRecord();
+
+    if (!fr)
+      return makeTaggedNULL();
+
+    int ind = fr->getIndex(lit);
+
+    if (ind == -1)
+      return makeTaggedNULL();
+
+    TaggedRef ret = fr->getArg(ind);
+    fr->setArg(ind, value);
+
+    return ret;
+  }
+
   TaggedRef getArityList();
   int getWidth ();
 

@@ -21,6 +21,7 @@
 #include "fdbuilti.hh"
 #include "solve.hh"
 
+#include "dictionary.hh"
 
 TaggedRef NameTclName,
   AtomTclOption, AtomTclList, AtomTclPosition,
@@ -28,7 +29,12 @@ TaggedRef NameTclName,
   AtomTclBatch, AtomTclColor,
   AtomError,
   AtomDot, AtomTagPrefix, AtomVarPrefix, AtomImagePrefix,
-  NameGroupVoid;
+  NameGroupVoid,
+  NameTclClosed,
+  NameTclSlaves,
+  NameTclSlaveEntry;
+
+TaggedRef tcl_dict;
 
 OZ_Return raise_os_error() {
   SRecord * exc       = SRecord::newSRecord(AtomSystem,
@@ -53,6 +59,136 @@ OZ_Return raise_type_error(TaggedRef tcl) {
   am.exception = makeTaggedSRecord(exc);
   return RAISE;
 }
+
+OZ_Return raise_closed(TaggedRef tcl) {
+  SRecord * exc       = SRecord::newSRecord(AtomSystem,
+                      (Arity *) OZ_makeArity(OZ_cons(OZ_atom("tk"),nil())));
+  SRecord * err_tuple = SRecord::newSRecord(OZ_atom("tkAlreadyClosed"),1);
+
+  err_tuple->setArg(0, tcl);
+  exc->setArg(0, makeTaggedSRecord(err_tuple));
+  am.exception = makeTaggedSRecord(exc);
+  return RAISE;
+}
+
+OZ_Return raise_toplevel(void) {
+  return OZ_raiseC("globalState",1,OZ_atom("io"));
+}
+
+#define CHECK_TOPLEVEL     \
+if (!am.isToplevel())      \
+  return raise_toplevel();
+
+
+/*
+ * Groups
+ */
+
+
+inline
+TaggedRef findAliveEntry(TaggedRef group) {
+  group = deref(group);
+
+  while (isCons(group)) {
+      TaggedRef ahead = deref(head(group));
+
+      if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
+        return group;
+
+      group = deref(tail(group));
+  }
+
+  return group;
+}
+
+
+OZ_C_proc_begin(BIaddFastGroup,3)
+{
+  OZ_nonvarArg(0);
+  TaggedRef group = deref(OZ_getCArg(0));
+
+  if (isCons(group)) {
+    TaggedRef member = cons(OZ_getCArg(1),findAliveEntry(tail(group)));
+    tagged2LTuple(group)->setTail(member);
+    return OZ_unify(member,OZ_getCArg(2));
+  }
+  return OZ_typeError(0,"List");
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdelFastGroup,1)
+{
+  TaggedRef member = deref(OZ_getCArg(0));
+
+  if (isCons(member)) {
+    tagged2LTuple(member)->setHead(NameGroupVoid);
+    tagged2LTuple(member)->setTail(findAliveEntry(tail(member)));
+  }
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIgetFastGroup,2)
+{
+  OZ_nonvarArg(0);
+  TaggedRef group = OZ_getCArg(0);
+
+  DEREF(group, _1, _2);
+
+  if (isCons(group)) {
+    TaggedRef out = nil();
+
+    group = deref(tail(group));
+
+    while (isCons(group)) {
+      TaggedRef ahead = deref(head(group));
+
+      if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
+        out = cons(ahead, out);
+
+      group = deref(tail(group));
+    }
+
+    if (isNil(group)) return OZ_unify(out,OZ_getCArg(1));
+  }
+
+  return OZ_typeError(0,"List");
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdelAllFastGroup,2)
+{
+  OZ_nonvarArg(0);
+  TaggedRef group = OZ_getCArg(0);
+
+  DEREF(group, _1, _2);
+
+  Assert(isCons(group));
+  TaggedRef out = nil();
+
+  group = deref(tail(group));
+
+  while (isCons(group)) {
+    TaggedRef ahead = deref(head(group));
+
+    if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid))) {
+      out = cons(ahead, out);
+      tagged2LTuple(group)->setHead(NameGroupVoid);
+    }
+
+    group = deref(tail(group));
+  }
+
+  Assert(isNil(group));
+  return OZ_unify(out,OZ_getCArg(1));
+}
+OZ_C_proc_end
+
+
 
 /*
  * Locking
@@ -140,13 +276,13 @@ public:
   }
 
   void put(char c) {
-    ensure(1);
     *buffer++ = c;
+    ensure(0);
   }
   void put2(char c1,char c2) {
-    ensure(2);
     *buffer++ = c1;
     *buffer++ = c2;
+    ensure(0);
   }
 
   void start_protect(void) {
@@ -164,19 +300,20 @@ public:
     case '{':   case '}':   case '\\':  case '$':
     case '[':   case ']':   case '"':   case ';':
     case ' ':
-      put2('\\', c); break;
+      *buffer++ = '\\';
+      *buffer++ = c;
+      break;
     default:
       if ((uc<33) || (uc>127)) {
         unsigned char c1 = (((unsigned char) c & '\300') >> 6) + '0';
         unsigned char c2 = (((unsigned char) c & '\070') >> 3) + '0';
         unsigned char c3 = ((unsigned char) c & '\007') + '0';
-        ensure(4);
         *buffer++ = '\\';
         *buffer++ = c1;
         *buffer++ = c2;
         *buffer++ = c3;
       } else {
-        put(c);
+        *buffer++ = c;
       }
     }
   }
@@ -225,11 +362,15 @@ public:
     if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
       return;
 
-    char *s = tagged2Literal(atom)->getPrintName();
+    Literal * l = tagged2Literal(atom);
+    int       n = l->getSize();
+    char *    s = l->getPrintName();
     char c;
+    ensure(4*n);
 
     while ((c = *s++))
       put_quote(c);
+
   }
 
   OZ_Return put_string_quote(TaggedRef list) {
@@ -248,6 +389,7 @@ public:
         return raise_type_error(list);
 
       put_quote((char) i);
+      ensure(0);
 
       TaggedRef t = tail(list);
       DEREF(t, t_ptr, t_tag);
@@ -609,6 +751,8 @@ OZ_Return StringBuffer::put_tcl(TaggedRef tcl) {
       if (isAnyVar(v_tag)) {
         am.addSuspendVarList(v_ptr);
         return SUSPEND;
+      } else if (isLiteral(v_tag) && literalEq(v,NameTclClosed)) {
+        return raise_closed(tcl);
       } else {
         return put_vs(v);
       }
@@ -881,8 +1025,16 @@ OZ_Return StringBuffer::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
 
 StringBuffer tcl_buffer;
 
-OZ_C_proc_begin(BIgetTclName,1) {
-  return OZ_unify(OZ_getCArg(0), NameTclName);
+OZ_C_proc_begin(BIgetTclNames,3) {
+  (void) OZ_unify(OZ_getCArg(0), NameTclSlaves);
+  (void) OZ_unify(OZ_getCArg(1), NameTclSlaveEntry);
+  (void) OZ_unify(OZ_getCArg(2), NameTclName);
+  return PROCEED;
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIsetTclDict, 1) {
+  tcl_dict = deref(OZ_args[0]);
+  return PROCEED;
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIsetTclFD,2) {
@@ -899,6 +1051,7 @@ OZ_C_proc_begin(BItclWrite,1) {
   if (OZ_args[0] == makeTaggedNULL()) {
     return tcl_buffer.write();
   } else {
+    CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK;
     OZ_Return s;
@@ -924,6 +1077,7 @@ OZ_C_proc_begin(BItclWriteReturn, 3) {
   if (OZ_args[0] == makeTaggedNULL()) {
     return tcl_buffer.write();
   } else {
+    CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK;
     OZ_Return s;
@@ -956,13 +1110,36 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteReturnMess, 4) {
+  /*
+   * OZ_args[0]: tickle object and modifier (for tags and marks)
+   * OZ_args[1]: return message
+   * OZ_args[2]: modifier to be put after arg 1 of above (may be unit)
+   * OZ_args[3]: type cast for return value
+   */
   if (OZ_args[0] == makeTaggedNULL()) {
     return tcl_buffer.write();
   } else {
+    CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK;
     OZ_Return s;
-    TaggedRef ret  = makeTaggedNULL();
+    TaggedRef ret = makeTaggedNULL();
+    TaggedRef mess = deref(OZ_args[1]);
+    TaggedRef frst;
+
+    Assert(!isAnyVar(mess));
+
+    if (!isSRecord(mess)) {
+      s = raise_type_error(mess);
+      goto exit;
+    }
+
+    frst = tagged2SRecord(mess)->getFeature(newSmallInt(1));
+
+    if (!frst) {
+      s = raise_type_error(mess);;
+      goto exit;
+    }
 
     tcl_buffer.reset();
     tcl_buffer.put2('o', 'z');
@@ -970,9 +1147,12 @@ OZ_C_proc_begin(BItclWriteReturnMess, 4) {
     tcl_buffer.put('[');
     StateExit(tcl_buffer.put_tcl(OZ_args[0]));
     tcl_buffer.put(' ');
-    StateExit(tcl_buffer.put_tcl(OZ_args[1]));
+    StateExit(tcl_buffer.put_tcl(frst));
+    tcl_buffer.put(' ');
+    StateExit(tcl_buffer.put_tcl(OZ_args[2]));
+    tcl_buffer.put(' ');
 
-    StateExit(tcl_buffer.put_tcl_return(OZ_args[2], &ret));
+    StateExit(tcl_buffer.put_tcl_return(mess, &ret));
     tcl_buffer.put2(']','\n');
 
     // Enter return variable and cast
@@ -1001,6 +1181,7 @@ OZ_C_proc_begin(BItclWriteBatch,1) {
   if (OZ_args[0] == makeTaggedNULL()) {
     return tcl_buffer.write();
   } else {
+    CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK;
     OZ_Return s;
@@ -1026,9 +1207,27 @@ OZ_C_proc_begin(BItclWriteTuple,2) {
   if (OZ_args[0] == makeTaggedNULL()) {
     return tcl_buffer.write();
   } else {
+    CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK;
     OZ_Return s;
+
+    TaggedRef mess = deref(OZ_args[1]);
+    TaggedRef frst;
+
+    if (!isSRecord(mess)) {
+      s = raise_type_error(mess);;
+      goto exit;
+    }
+
+    Assert(!isAnyVar(mess));
+
+    frst = tagged2SRecord(mess)->getFeature(newSmallInt(1));
+
+    if (!frst) {
+      s = raise_type_error(mess);;
+      goto exit;
+    }
 
     tcl_buffer.reset();
     StateExit(tcl_buffer.put_tcl(OZ_args[0]));
@@ -1055,15 +1254,31 @@ OZ_C_proc_begin(BItclWriteTagTuple,3) {
   if (OZ_args[0] == makeTaggedNULL()) {
     return tcl_buffer.write();
   } else {
+    CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK;
     OZ_Return s;
     TaggedRef tuple = deref(OZ_args[2]);
+    TaggedRef fst;
+
+    Assert(!isAnyVar(tuple));
+
+    if (!isSRecord(tuple)) {
+      s = raise_type_error(tuple);
+      goto exit;
+    }
+
+    fst = tagged2SRecord(tuple)->getFeature(newSmallInt(1));
+
+    if (!fst) {
+      s = raise_type_error(tuple);
+      goto exit;
+    }
 
     tcl_buffer.reset();
     StateExit(tcl_buffer.put_tcl(OZ_args[0]));
     tcl_buffer.put(' ');
-    StateExit(tcl_buffer.put_tcl(tagged2SRecord(tuple)->getFeature(newSmallInt(1))));
+    StateExit(tcl_buffer.put_tcl(fst));
     tcl_buffer.put(' ');
     StateExit(tcl_buffer.put_tcl(OZ_args[1]));
     tcl_buffer.put(' ');
@@ -1086,6 +1301,7 @@ OZ_C_proc_begin(BItclWriteFilter,5) {
   if (OZ_args[0] == makeTaggedNULL()) {
     return tcl_buffer.write();
   } else {
+    CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK;
     OZ_Return s;
@@ -1113,134 +1329,124 @@ OZ_C_proc_begin(BItclWriteFilter,5) {
 OZ_C_proc_end
 
 
-/*
- * Groups
- */
+OZ_Return close_hierarchy(Object * o) {
+  TaggedRef v = o->replaceFeature(NameTclName, NameTclClosed);
 
-
-inline
-TaggedRef findAliveEntry(TaggedRef group) {
-  group = deref(group);
-
-  while (isCons(group)) {
-      TaggedRef ahead = deref(head(group));
-
-      if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
-        return group;
-
-      group = deref(tail(group));
+  if (v == makeTaggedNULL()) {
+    return raise_type_error(makeTaggedConst(o));;
   }
 
-  return group;
-}
+  DEREF(v, v_ptr, v_tag);
 
+  Assert(!isAnyVar(v_tag));
+  // since the message has been assembled for closing already!
 
-OZ_C_proc_begin(BIaddFastGroup,3)
-{
-  OZ_nonvarArg(0);
-  TaggedRef group = deref(OZ_getCArg(0));
+  if (isLiteral(v_tag) && literalEq(v,NameTclClosed)) {
+    // okay, has been closed already
+    return PROCEED;
+  } else {
+    TaggedRef slaves      = o->getFeature(NameTclSlaves);
 
-  if (isCons(group)) {
-    TaggedRef member = cons(OZ_getCArg(1),findAliveEntry(tail(group)));
-    tagged2LTuple(group)->setTail(member);
-    return OZ_unify(member,OZ_getCArg(2));
-  }
-  return OZ_typeError(0,"List");
-}
-OZ_C_proc_end
+    // close slaves
+    if (slaves != makeTaggedNULL()) {
+      slaves = deref(slaves);
 
+      while (isCons(slaves)) {
+        TaggedRef slave = deref(head(slaves));
 
-OZ_C_proc_begin(BIdelFastGroup,1)
-{
-  TaggedRef member = deref(OZ_getCArg(0));
+        if (isSmallInt(slave)) {
+          // this an entry in the event dictionary
 
-  if (isCons(member)) {
-    tagged2LTuple(member)->setHead(NameGroupVoid);
-    tagged2LTuple(member)->setTail(findAliveEntry(tail(member)));
-  }
+          Assert(isDictionary(tcl_dict));
+          tagged2Dictionary(tcl_dict)->remove(slave);
 
-  return PROCEED;
-}
-OZ_C_proc_end
+        } else if (isObject(slave)) {
+          // this is an object which needs to be closed as well
+          OZ_Return s = close_hierarchy(tagged2Object(slave));
+          if (s != PROCEED)
+            return s;
+        }
 
-OZ_C_proc_begin(BIdelAndTestFastGroup,2)
-{
-  TaggedRef member = deref(OZ_getCArg(0));
-  OZ_declareArg(1,out);
-
-  if (isCons(member)) {
-    if (literalEq(deref(head(member)),NameGroupVoid)) {
-      return OZ_unify(out,NameFalse);
-    } else {
-      tagged2LTuple(member)->setHead(NameGroupVoid);
-      tagged2LTuple(member)->setTail(findAliveEntry(tail(member)));
-      return OZ_unify(out,NameTrue);
-    }
-  }
-
-  /* e.g. toplevel is nobodys slave */
-  return OZ_unify(out,NameTrue);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIgetFastGroup,2)
-{
-  OZ_nonvarArg(0);
-  TaggedRef group = OZ_getCArg(0);
-
-  DEREF(group, _1, _2);
-
-  if (isCons(group)) {
-    TaggedRef out = nil();
-
-    group = deref(tail(group));
-
-    while (isCons(group)) {
-      TaggedRef ahead = deref(head(group));
-
-      if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
-        out = cons(ahead, out);
-
-      group = deref(tail(group));
+        slaves = deref(tail(slaves));
+      }
     }
 
-    if (isNil(group)) return OZ_unify(out,OZ_getCArg(1));
+    return PROCEED;
   }
 
-  return OZ_typeError(0,"List");
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIdelAllFastGroup,2)
-{
-  OZ_nonvarArg(0);
-  TaggedRef group = OZ_getCArg(0);
+OZ_C_proc_begin(BItclClose,2) {
+  if (OZ_args[0] == makeTaggedNULL()) {
+    return tcl_buffer.write();
+  } else {
+    CHECK_TOPLEVEL;
+    // not yet put into buffer!
+    ENTER_TCL_LOCK;
+    OZ_Return s;
 
-  DEREF(group, _1, _2);
+    // Perform closing of objects
+    TaggedRef to = OZ_args[1];
+    DEREF(to, to_ptr, to_tag);
 
-  Assert(isCons(group));
-  TaggedRef out = nil();
+    Assert(isObject(to));
 
-  group = deref(tail(group));
+    Object  * o = tagged2Object(to);
+    TaggedRef v = o->getFeature(NameTclName);
+    TaggedRef slave_entry;
 
-  while (isCons(group)) {
-    TaggedRef ahead = deref(head(group));
-
-    if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid))) {
-      out = cons(ahead, out);
-      tagged2LTuple(group)->setHead(NameGroupVoid);
+    if (v == makeTaggedNULL()) {
+      s = raise_type_error(to);;
+      goto exit;
     }
 
-    group = deref(tail(group));
-  }
+    {
+      DEREF(v, v_ptr, v_tag);
 
-  Assert(isNil(group));
-  return OZ_unify(out,OZ_getCArg(1));
+      if (isAnyVar(v_tag)) {
+        am.addSuspendVarList(v_ptr);
+        s = SUSPEND;
+        goto exit;
+      } else if (isLiteral(v_tag) && literalEq(v,NameTclClosed)) {
+        LEAVE_TCL_LOCK;
+        return PROCEED;
+      }
+    }
+
+    // Create close tcl
+    tcl_buffer.reset();
+    StateExit(tcl_buffer.put_tcl(OZ_args[0]));
+    tcl_buffer.put('\n');
+
+
+    // okay, let us close it
+    slave_entry = o->getFeature(NameTclSlaveEntry);
+
+    // remove from parent
+    if (slave_entry != makeTaggedNULL()) {
+      slave_entry = deref(slave_entry);
+
+      if (isCons(slave_entry)) {
+        LTuple * l = tagged2LTuple(slave_entry);
+        l->setHead(NameGroupVoid);
+        l->setTail(findAliveEntry(tail(slave_entry)));
+      }
+    }
+
+    close_hierarchy(o);
+
+    tcl_buffer.start_write();
+    OZ_args[0] = makeTaggedNULL();
+    return tcl_buffer.write();
+
+  exit:
+    tcl_buffer.reset();
+    LEAVE_TCL_LOCK;
+    return s;
+  }
 }
 OZ_C_proc_end
-
 
 
 // ---------------------------------------------------------------------
@@ -1302,8 +1508,9 @@ OZ_C_proc_begin(BIgenImageName,1) {
 
 static
 BIspec tclTkSpec[] = {
-  {"getTclName",         1, BIgetTclName,         0},
+  {"getTclNames",        3, BIgetTclNames,        0},
   {"setTclFD",           2, BIsetTclFD,           0},
+  {"setTclDict",         1, BIsetTclDict,         0},
   {"Tk.send",            1, BItclWrite,           0},
   {"tclWriteReturn",     3, BItclWriteReturn,     0},
   {"tclWriteReturnMess", 4, BItclWriteReturnMess, 0},
@@ -1312,9 +1519,11 @@ BIspec tclTkSpec[] = {
   {"tclWriteTagTuple",   3, BItclWriteTagTuple,   0},
   {"tclWriteFilter",     5, BItclWriteFilter,     0},
 
+  {"tclClose",           2, BItclClose,           0},
+
+
   {"addFastGroup",        3, BIaddFastGroup,       0},
   {"delFastGroup",        1, BIdelFastGroup,       0},
-  {"delAndTestFastGroup", 2, BIdelAndTestFastGroup,0},
   {"getFastGroup",        2, BIgetFastGroup,       0},
   {"delAllFastGroup",     2, BIdelAllFastGroup,    0},
 
@@ -1331,7 +1540,6 @@ BIspec tclTkSpec[] = {
 void BIinitTclTk() {
   BIaddSpec(tclTkSpec);
 
-  NameTclName      = OZ_newName();
   AtomTclOption    = OZ_atom("o");
   AtomTclList      = OZ_atom("l");
   AtomTclPosition  = OZ_atom("p");
@@ -1346,5 +1554,9 @@ void BIinitTclTk() {
   AtomVarPrefix    = OZ_atom("v");
   AtomImagePrefix  = OZ_atom("i");
 
-  NameGroupVoid    = OZ_newName();
+  NameTclName       = OZ_newName();
+  NameGroupVoid     = OZ_newName();
+  NameTclSlaves     = OZ_newName();
+  NameTclSlaveEntry = OZ_newName();
+  NameTclClosed     = OZ_newName();
 }

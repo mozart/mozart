@@ -1580,6 +1580,7 @@ void AM::gc(int msgLevel)
 
   gcTagged(tcl_lock, tcl_lock);
   gcTagged(tcl_rets, tcl_rets);
+  gcTagged(tcl_dict, tcl_dict);
 
   GCPROCMSG("ioNodes");
   for(int i = 0; i < osOpenMax(); i++) {
