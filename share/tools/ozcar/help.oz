@@ -14,6 +14,21 @@ local
    
    {ForAll
     [
+      nil # ('The Ozcar Help System' #
+	('For most of the widgets in the Ozcar GUI you can ' #
+	'get some help. To display it, you have to click ' #
+	'with the right mouse button on the widget.\n' #
+	'\nFurthermore, there are some interesting help topics available ' #
+	'in the Help menu.'))
+
+      StatusHelp # ('The Status Line' #
+	('Important events like reaching a breakpoint or raising ' #
+	'an exception are reported here.'))
+
+      IgnoreFeeds # ('Ignore Emacs Queries' #
+	('When this checkbutton is activated then you can feed and ' #
+	'execute some code from Emacs without Ozcar taking over control.'))
+
       BreakpointStaticHelp # ('Static Breakpoints' #
 	('You can set a Static Breakpoint by inserting ' #
 	'{Debug.breakpoint} into ' #
@@ -27,7 +42,7 @@ local
 	'on the line where you wish to set / delete a breakpoint, while ' #
 	'holding down the Shift and Meta key.'))
 
-      ThreadTreeHelp # ('The Thread Tree' #
+      TreeTitle # ('The Thread Tree' #
 	('Threads can be added to the tree by feeding code from Emacs. ' #
 	'When added this way, new threads get selected automatically.\n' # 
 	'\nYou can select another thread by clicking on it.\n' #
@@ -37,21 +52,42 @@ local
 	'\nA thread can be removed from the tree by ' #
 	'pressing f or clicking on the forget button.'))
 
-      StackHelp # ('The Stack' #
+      StackTitle # ('The Stack' #
 	('You can navigate through the stack either by clicking on a ' #
 	'specific line or by using the Up and Down (cursor) keys.\n' #
 	'\nYou can browse an argument by clicking ' #
 	'on its type information.'))
 
-      EnvHelp # ('The Environment' #
-	('You can browse a variable by clicking ' #
+      LocalEnvTitle # ('The Local Environment' #
+	('You can browse a local variable by clicking ' #
 	'on its type information.'))
 
-      StepButtonText   # (NoTopic # NoHelp)
-      NextButtonText   # (NoTopic # NoHelp)
-      ContButtonText   # (NoTopic # NoHelp)
-      ForgetButtonText # (NoTopic # NoHelp)
-      TermButtonText   # (NoTopic # NoHelp)
+      GlobalEnvTitle # ('The Global Environment' #
+	('You can browse a global variable by clicking ' #
+	'on its type information.'))
+
+      StepButtonText   # ('Step' #
+	('Let the current thread continue to run until ' #
+	'it reaches the next procedure call.'))
+
+      NextButtonText   # ('Next' #
+	('Let the current thread continue to run until ' #
+	'it reaches the next procedure call in the current stack frame.'))
+
+      ContButtonText   # ('Continue' #
+	('Let the current thread continue to run until ' #
+	'it terminates, blocks, reaches a breakpoint ' #
+	'or raises an unhandled exception.'))
+
+      ForgetButtonText # ('Forget' #
+	('Do not trace current thread anymore, let it ' #
+	'continue to run, and remove it ' #
+	'from the thread tree. It will come back when it reaches ' #
+	'a breakpoint or raises an unhandled exception.'))
+
+      TermButtonText   # ('Terminate' #
+	('Terminate current thread and remove it from the thread tree.'))
+
     ]
     proc {$ S}
        {Dput HelpDict S.1 S.2}

@@ -19,7 +19,7 @@ local
 
          Author = {New Tk.label tkInit(parent: self
                                        text:   NameOfBenni # '\n' #
-				               '(' # EmailOfBenni # ')\n')}
+				               '(' # EmailOfBenni # ')')}
       in
          {Tk.send pack(Title Author side:top expand:1)}
          AboutDialog,tkPack
