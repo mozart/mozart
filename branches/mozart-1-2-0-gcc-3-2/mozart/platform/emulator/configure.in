@@ -218,8 +218,12 @@ if test "${GXX}" = yes; then
 	  oz_om=""
           ;;
       *)
-          oz_opt="-O3 -pipe -fstrict-aliasing"
-	  oz_om=""
+      # Darwin/GCC 3.x
+      # the settings below were provided by Marc-Antoine Parent and
+      # gave the best (well least bad results :-) on his 450MHz G4
+          oz_opt="-O3 -pipe -fstrict-aliasing -fschedule-insns2 "
+	  oz_om=" -fomit-frame-pointer -mtune=7450 "
+	  EMULATE_CXXFLAGS=" -finline-limit=500 "
           ;;
       esac
       ;;
@@ -527,11 +531,23 @@ win32*)
     AC_CHECKING(whether we could allocate Oz heap with malloc ...)
     AC_CACHE_VAL(ac_cv_can_malloc,
     [can_malloc=yes
-     AC_CHECK_FUNCS(malloc,, can_malloc=no)
+     case $platform in
+	 powermac-darwin)
+	 #AC_CHECK_FUNC includes <assert.h> and this seems to
+	 #introduce a conflicting prototype for malloc on MacOS X
+	 #so we need to check differently
+	     AC_TRY_LINK([#include <stdlib.h>],[malloc(100);],
+		 AC_DEFINE_UNQUOTED(HAVE_MALLOC),
+		 can_malloc=no)
+	     ;;
+	 *)
+	     AC_CHECK_FUNCS(malloc,, can_malloc=no)
+	     ;;
+     esac
      if test $can_malloc = yes; then
         AC_MSG_CHECKING(... with a test program)
         AC_TRY_RUN([
-#include <malloc.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <setjmp.h>
 
