@@ -1,8 +1,10 @@
-\insert '/home/ps-home/tmueller/Programming/Oz/RealIntervals/ri.oz'
+declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
 \insert 'mks_prob.oz'
 \insert 'mks_fd.oz'
 
 /*
+{LP.config put config(solver: lp_solve)}
+{LP.config put config(solver: cplex_primopt)}
 
 {ExploreBest {KnapsackFD Problem} proc {$ O N} O.maxprofit <: N.maxprofit end}
 
@@ -16,14 +18,20 @@ sol(
 
 */
 
+
 \insert 'mks_lp_a.oz'
 \insert 'mks_lp_b.oz'
 \insert 'mks_lp_c.oz'
 \insert 'mks_lp_d.oz'
 
 /*
+\insert 'mks_lp.oz'
+*/
+/*
 
 {ExploreBest {KnapsackLP Problem} proc {$ O N} {RI.lessEq O.maxprofit+1.0 N.maxprofit} end}
+
+declare S = {KnapsackLP Problem}
 
 declare S = {SearchBest {KnapsackLP Problem} proc {$ O N} {RI.lessEq O.maxprofit+1.0 N.maxprofit} end}
 {Show S}
