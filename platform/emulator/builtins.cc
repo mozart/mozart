@@ -6960,6 +6960,145 @@ OZ_C_proc_begin(BIgenerateAbstractionTableID,1)
 }
 OZ_C_proc_end
 
+#define BITS_PER_INT (sizeof(int) * 8)
+
+#define oz_declareHeapChunkArg(ARG,VAR1,VAR2)   \
+int VAR1,*VAR2;                                 \
+{                                               \
+  oz_declareNonvarArg(ARG,_VAR);                \
+  if (!OZ_isHeapChunk(_VAR)) {                  \
+    oz_typeError(ARG,"HeapChunk");              \
+  } else {                                      \
+    VAR1 = OZ_getHeapChunkSize(_VAR);           \
+    VAR2 = (int *) OZ_getHeapChunkData(_VAR);   \
+  }                                             \
+}
+
+OZ_C_proc_begin(BIregSet_new,3)
+{
+  oz_declareIntArg(0,lower);
+  oz_declareIntArg(1,upper);
+  oz_declareArg(2,res);
+  int count;
+  if (lower > upper)
+    count = 2;
+  else
+    count = (upper - lower) / BITS_PER_INT + 3;
+  OZ_Term heapChunk = OZ_makeHeapChunk(count * sizeof(int));
+  int *data = (int *) OZ_getHeapChunkData(heapChunk);
+  data[0] = lower;
+  data[1] = upper;
+  for (int i = 2; i < count; i++) data[i] = 0;
+  return oz_unify(res,heapChunk);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_copy,2)
+{
+  oz_declareHeapChunkArg(0,size,data);
+  oz_declareArg(1,res);
+  OZ_Term heapChunk = OZ_makeHeapChunk(size);
+  int *newData = (int *) OZ_getHeapChunkData(heapChunk);
+  int count = size / sizeof(int);
+  for (int i = 0; i < count; i++) newData[i] = data[i];
+  return oz_unify(res,heapChunk);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_adjoin,2)
+{
+  oz_declareHeapChunkArg(0,size,data);
+  oz_declareIntArg(1,element);
+  if (data[0] <= element && element <= data[1]) {
+    int relative = element - data[0];
+    data[relative / BITS_PER_INT + 2] |= 1 << (relative % BITS_PER_INT);
+    return PROCEED;
+  } else
+    return OZ_raiseErrorC("regSet",4,oz_atom("elementOutOfBounds"),
+			  oz_int(element),oz_int(data[0]),oz_int(data[1]));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_member,3)
+{
+  oz_declareIntArg(0,element);
+  oz_declareHeapChunkArg(1,size,data);
+  oz_declareArg(2,res);
+  if (data[0] <= element && element <= data[1]) {
+    int relative = element - data[0];
+    if (data[relative / BITS_PER_INT + 2] & 1 << (relative % BITS_PER_INT))
+      return oz_unify(res,NameTrue);
+    else
+      return oz_unify(res,NameFalse);
+  } else
+    return oz_unify(res,NameFalse);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_union,2)
+{
+  oz_declareHeapChunkArg(0,size1,data1);
+  oz_declareHeapChunkArg(1,size2,data2);
+  if (data1[0] == data2[0] && data1[1] == data2[1]) {
+    int count = size1 / sizeof(int);
+    for (int i = 2; i < count; i++) data1[i] |= data2[i];
+    return PROCEED;
+  } else
+    return OZ_raiseErrorC("regSet",5,oz_atom("boundsDoNotMatch"),
+			  oz_int(data1[0]),oz_int(data1[1]),
+			  oz_int(data2[0]),oz_int(data2[1]));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_intersect,2)
+{
+  oz_declareHeapChunkArg(0,size1,data1);
+  oz_declareHeapChunkArg(1,size2,data2);
+  if (data1[0] == data2[0] && data1[1] == data2[1]) {
+    int count = size1 / sizeof(int);
+    for (int i = 2; i < count; i++) data1[i] &= data2[i];
+    return PROCEED;
+  } else
+    return OZ_raiseErrorC("regSet",5,oz_atom("boundsDoNotMatch"),
+			  oz_int(data1[0]),oz_int(data1[1]),
+			  oz_int(data2[0]),oz_int(data2[1]));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_subtract,2)
+{
+  oz_declareHeapChunkArg(0,size1,data1);
+  oz_declareHeapChunkArg(1,size2,data2);
+  if (data1[0] == data2[0] && data1[1] == data2[1]) {
+    int count = size1 / sizeof(int);
+    for (int i = 2; i < count; i++) data1[i] &= ~data2[i];
+    return PROCEED;
+  } else
+    return OZ_raiseErrorC("regSet",5,oz_atom("boundsDoNotMatch"),
+			  oz_int(data1[0]),oz_int(data1[1]),
+			  oz_int(data2[0]),oz_int(data2[1]));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIregSet_toList,2)
+{
+  oz_declareHeapChunkArg(0,size,data);
+  oz_declareArg(1,res);
+
+  OZ_Term list = AtomNil;
+  int i, j, word;
+  int offset = ((data[1] - data[0]) / BITS_PER_INT) * BITS_PER_INT + data[0];
+  for (i = size / sizeof(int) - 1; i >= 2; i--) {
+    word = data[i];
+    for (j = BITS_PER_INT - 1; j >= 0; j--)
+      if (word & (1 << j))
+	list = OZ_cons(OZ_int(offset + j),list);
+    offset -= BITS_PER_INT;
+  }
+  return oz_unify(res,list);
+}
+OZ_C_proc_end
+
 
 /********************************************************************
  * Table of builtins
@@ -7346,6 +7485,14 @@ BIspec allSpec[] = {
   {"getAbstractionTableID",      2, BIgetAbstractionTableID,      0},
   {"nameVariable",               2, BInameVariable,               0},
   {"generateAbstractionTableID", 1, BIgenerateAbstractionTableID, 0},
+  {"RegSet.new",                 3, BIregSet_new,                 0},
+  {"RegSet.copy",                2, BIregSet_copy,                0},
+  {"RegSet.adjoin",              2, BIregSet_adjoin,              0},
+  {"RegSet.member",              3, BIregSet_member,              0},
+  {"RegSet.union",               2, BIregSet_union,               0},
+  {"RegSet.intersect",           2, BIregSet_intersect,           0},
+  {"RegSet.subtract",            2, BIregSet_subtract,            0},
+  {"RegSet.toList",              2, BIregSet_toList,              0},
 
   {0,0,0,0}
 };
