@@ -36,7 +36,7 @@ APPLETNAMES = \
 	JobShop Cutting AnimatedQueens \
 	Bounce Trucks Transport Lift \
 	Board College DictClient \
-	Flowers Flowers3d
+	Flowers Flowers3d ChatServer ChatClient
 
 APPLETS = \
 	$(APPLETNAMES:%=%.oza)
@@ -45,7 +45,7 @@ DEMOAPPLETS = \
 	$(APPLETS:%=$(OZDEMO)/%)
 
 DIRS = \
-	JobShop Cutting Transport DictClient LMF
+	JobShop Cutting Transport DictClient LMF Chat
 
 all: dirs $(APPLETS)
 
@@ -65,6 +65,14 @@ $(OZDEMO)/%.oza: %.oza
 #
 # Applet compilation
 #
+
+# Chat Application
+Chat/%.ozf: Chat/%.oz
+	$(COMPILE) $< -o $@
+ChatServer.oza: Chat/chat-server.ozf
+	$(LINK) $< -o $@
+ChatClient.oza: Chat/chat-client.ozf Chat/chat-gui.ozf
+	$(LINK) $< -o $@
 
 # JobShop application
 JobShop/%.ozf: JobShop/%.oz
