@@ -3525,7 +3525,7 @@ test -n "$PERL" || PERL="NONE"
       oz_tmp_ok=no;
     else
 
-      oz_tmp_version=`$PERL -e 'print "[$]";' | sed 's|^.||'`
+      oz_tmp_version=`$PERL -e 'print "[$]\n";' | sed 's|^.||'`
 
       
   oz_tmp_got="$oz_tmp_version"
