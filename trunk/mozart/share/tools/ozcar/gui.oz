@@ -190,10 +190,17 @@ in
 		  end}
 	 in
 	    {ForAll
-	     [{Cget emacsThreads} # self.emacsThreadsButton #
-	      IgnoreFeedsBitmap   # toggleEmacsThreads # ConfigEmacsThreads
-	      {Cget subThreads}   # self.subThreadsButton   #
-	      IgnoreThreadsBitmap # toggleSubThreads   # ConfigSubThreads]
+	     [{Cget emacsThreads} #
+	      self.emacsThreadsButton #
+	      IgnoreQueriesBitmap #
+	      toggleEmacsThreads #
+	      ConfigEmacsThreads
+
+	      {Cget subThreads} #
+	      self.subThreadsButton #
+	      IgnoreSubThreadsBitmap #
+	      toggleSubThreads #
+	      ConfigSubThreads]
 	     proc {$ B}
 		V # C # Xbm # Action # Default = B
 	     in
@@ -361,7 +368,7 @@ in
 	    L = false
 	 end
 	 CurThr = @currentThread
-	 case L orelse CurThr == undef then skip
+	 case L orelse CurThr == unit then skip
 	 elsecase
 	    {Dbg.checkStopped CurThr}
 	 then     % allow switching of stack frames only if thread is stopped
@@ -405,7 +412,7 @@ in
       meth neighbourStackFrame(Delta)
 	 Stack = @currentStack
       in
-	 case Stack == undef then skip else
+	 case Stack == unit then skip else
 	    LSF = @LastSelectedFrame
 	    N   = case LSF == 0 then ~1 else LSF + Delta end
 	    F   = {Stack getFrame(N $)}
@@ -458,7 +465,7 @@ in
 	 {New Tk.action
 	  tkInit(parent: W
 		 action: Ozcar # frameClick(frame:Frame))}
-	 LineEnd     = FrameNr # DotEnd
+	 LineEnd     = FrameNr # '.end'
 	 UpToDate    = 1 > 0 % {Emacs isUpToDate(Frame.time $)}
       in
 
@@ -676,7 +683,7 @@ in
 	    elsecase A == StepButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == undef then
+	       case T == unit then
 		  Gui,doStatus(FirstSelectThread)
 	       else
 		  I = {Thread.id T}
@@ -698,7 +705,7 @@ in
 	    elsecase A == NextButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == undef then
+	       case T == unit then
 		  Gui,doStatus(FirstSelectThread)
 	       else
 		  I = {Thread.id T}
@@ -710,7 +717,7 @@ in
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
 		     ThreadDic = ThreadManager,getThreadDic($)
-		     Stack     = {DcondGet ThreadDic I nil}
+		     Stack     = {Dictionary.condGet ThreadDic I nil}
 		     TopFrame Dir
 		  in
 		     case Stack == nil then skip else
@@ -735,7 +742,7 @@ in
 	    elsecase A == ContButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == undef then
+	       case T == unit then
 		  Gui,doStatus(FirstSelectThread)
 	       else
 		  I = {Thread.id T}
@@ -747,7 +754,7 @@ in
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
 		     ThreadDic = ThreadManager,getThreadDic($)
-		     Stack     = {DcondGet ThreadDic I nil}
+		     Stack     = {Dictionary.condGet ThreadDic I nil}
 		  in
 		     case Stack == nil then skip else
 
@@ -770,13 +777,13 @@ in
 	    elsecase A == StopButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == undef then skip else
+	       case T == unit then skip else
 		  S = {Thread.state T}
 	       in
 		  case S == terminated then Gui,TerminatedStatus(T A) else
 		     I         = {Thread.id T}
 		     ThreadDic = ThreadManager,getThreadDic($)
-		     Stack     = {DcondGet ThreadDic I nil}
+		     Stack     = {Dictionary.condGet ThreadDic I nil}
 		  in
 		     case
 			Stack == nil then skip
@@ -802,7 +809,7 @@ in
 	    elsecase A == ForgetButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == undef then skip else
+	       case T == unit then skip else
 		  I = {Thread.id T}
 	       in
 		  ThreadManager,forget(T I)
@@ -811,7 +818,7 @@ in
 	    elsecase A == TermButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == undef then skip else
+	       case T == unit then skip else
 		  I = {Thread.id T}
 		  S = {CheckState T}
 	       in
@@ -825,7 +832,7 @@ in
 	    elsecase A == StackAction then
 	       T = @currentThread
 	    in
-	       case T == undef then
+	       case T == unit then
 		  Gui,doStatus(FirstSelectThread)
 	       else
 		  P = {System.get errors}
@@ -884,7 +891,7 @@ in
       end
 
       meth DeleteLine(Widget Nr)
-	 {Widget tk(delete Nr#'.0' Nr#DotEnd)}
+	 {Widget tk(delete Nr#'.0' Nr#'.end')}
       end
 
       meth DeleteToEnd(Widget Nr)

@@ -10,13 +10,13 @@ local
    NoHelp       = ('Feel free to ask the author.\n' #
 		   'Send a mail to ' # EmailOfBenni)
 
-   HelpDict     = {Dnew}
+   HelpDict     = {Dictionary.new}
 
    {ForAll
     [
      nil #
      ('The Ozcar Help System' #
-      ('For most of the widgets in the Ozcar GUI you can ' #
+      ('For most of the widgets you can ' #
        'get some help.\nJust click ' #
        'with the right mouse button on the widget.'))
 
@@ -25,12 +25,12 @@ local
       ('Important events like reaching a breakpoint or raising ' #
        'an exception are reported here.'))
 
-     IgnoreFeeds #
+     IgnoreQueriesBitmap #
      ('Ignore Emacs Queries' #
       ('Activate this checkbutton if you want to feed some code ' #
        'from Emacs without Ozcar taking over control.'))
 
-     IgnoreThreads #
+     IgnoreSubThreadsBitmap #
      ('Ignore Subthreads' #
       ('Activate this checkbutton if you don\'t want Ozcar ' #
        'to debug any subthreads of your initial query thread.'))
@@ -52,20 +52,23 @@ local
 
      TreeTitle #
      ('The Thread Tree' #
-      ('Threads can be added to the tree by feeding code from Emacs. ' #
-       'When added this way, new threads get selected automatically.\n' #
-       '\nYou can select another thread by clicking on it.\n' #
+      ('Threads are added to the tree when they run into a breakpoint ' #
+       'or when they are created by Emacs queries and the ' #
+       '\'Ignore Emacs Queries\'' # ' checkbutton is not activated. ' #
+       '\n\nYou can select a thread by clicking on it or by walking ' #
+       'to it with the `Left\' and `Right\' (cursor) keys.\n' #
        '\nThe different colors correspond to the ' #
        'following thread states:\n' #
-       'green -> runnable, red -> blocked, black -> terminated\n' #
-       '\nA thread can be removed from the tree by ' #
-       'pressing f or clicking on the forget button.'))
+       'green: runnable, red: blocked, grey: terminated\n' #
+       '\nA thread can be removed from the tree either by ' #
+       'killing it (action `terminate\') or by forgetting it ' #
+       '(action `forget\').'))
 
      StackTitle #
      ('The Stack' #
       ('You can navigate through the stack either by clicking on a ' #
-       'specific line or by using the Up and Down (cursor) keys.\n' #
-       '\nYou can browse an argument by clicking ' #
+       'specific line or by using the `Up\' and `Down\' (cursor) keys.\n' #
+       '\nYou can browse a variable by clicking ' #
        'on its type information.'))
 
      LocalEnvTitle #
@@ -79,14 +82,14 @@ local
        'on its type information.'))
 
      StepButtonBitmap #
-     ('Step' #
+     ('Step into' #
       ('Let the current thread continue to run until ' #
-       'it reaches the next procedure call.'))
+       'it reaches the next steppoint.'))
 
      NextButtonBitmap #
-     ('Next' #
+     ('Step Over' #
       ('Let the current thread continue to run until ' #
-       'it reaches the next procedure call in the current stack frame.'))
+       'it reaches the next steppoint in the current stack frame.'))
 
      ContButtonBitmap #
      ('Continue' #
@@ -94,9 +97,15 @@ local
        'it terminates, blocks, reaches a breakpoint ' #
        'or raises an unhandled exception.'))
 
+     StopButtonBitmap #
+     ('Stop' #
+      ('Stop the current thread as soon as it reaches the next ' #
+       'steppoint. Note that blocked threads need to be stopped ' #
+       'in order to get updated stack and environment windows.'))
+
      ForgetButtonBitmap #
      ('Forget' #
-      ('Do not trace current thread anymore, let it ' #
+      ('Do not trace the current thread anymore, let it ' #
        'continue to run, and remove it ' #
        'from the thread tree. It will come back when it reaches ' #
        'a breakpoint or raises an unhandled exception.'))
@@ -107,7 +116,7 @@ local
 
     ]
     proc {$ S}
-       {Dput HelpDict S.1 S.2}
+       {Dictionary.put HelpDict S.1 S.2}
     end}
 
    class HelpDialog from TkTools.dialog
@@ -140,7 +149,8 @@ local
 
    class OzcarHelp from HelpDialog
       meth init(master:Master topic:Topic)
-	 self.topic # self.help = {DcondGet HelpDict Topic NoTopic#NoHelp}
+	 self.topic # self.help =
+	 {Dictionary.condGet HelpDict Topic NoTopic # NoHelp}
 	 HelpDialog,init(master:Master)
       end
    end

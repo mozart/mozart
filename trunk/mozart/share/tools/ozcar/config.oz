@@ -29,10 +29,8 @@ WindowsPlatform        = 'win32-i486'
 NameOfBenni            = 'Benjamin Lorenz'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 
-InitStatus             = TitleName # ' initialized'
-
-IgnoreFeeds            = 'Ignore Queries'
-IgnoreThreads          = 'Ignore Subthreads'
+IgnoreQueries          = 'Ignore Queries'
+IgnoreSubThreads       = 'Ignore Subthreads'
 
 TreeTitle              = 'Thread Tree'
 StackTitle             = 'Stack'
@@ -41,8 +39,16 @@ AltStackTitle          = 'Stack of Thread  #'
 LocalEnvTitle          = 'Local Variables'
 GlobalEnvTitle         = 'Global Variables'
 
-ApplPrefixText         = 'Application:'
-ApplFilePrefixText     = 'File:'
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% error, warning & debug messages
+%%
+
+ID                     = fun {$ I} ' (id ' # I # ')' end
+OzcarMessagePrefix     = fun {$}
+			    'Ozcar[' # {Thread.id {Thread.this}} # ']: '
+			 end
+OzcarErrorPrefix       = 'Ozcar ERROR: '
 
 InvalidThreadID        = 'Invalid Thread ID in step message'
 NoFileInfo             = ('step message without line number information, ' #
@@ -54,38 +60,10 @@ KnownThread            = 'Got known thread'
 NewThread              = 'Got new thread'
 NextOnLeave            = ('\'next\' while leaving procedure - ' #
 			  'substituting by \'step\'')
-
-UnknownSuspThread      = 'Unknown suspending thread'
-UnknownWokenThread     = 'Unknown woken thread'
-UnknownMessage         = 'Unknown message on stream'
-
 WaitForThread          = ('waiting for thread to be added ' #
 			  'to dictionary of debugged threads...')
 
-ErrorExcText           = 'Exception: '
-UserExcText            = 'Exception: '
-NoStackText            = ' / no stack available'
-
 FirstSelectThread      = 'You must select a thread first!'
-IgnoreNoFileStep       = ('Ignoring new thread as there\'s' #
-			  ' no file information available.')
-
-DoneMessage            = ' done'
-
-SwitchMessage          = 'You have selected thread #'
-RebuildMessage         = 'Re-calculating stack of thread #'
-ForgetMessage          = 'Thread #'
-ForgetMessage2         = ' is not traced anymore'
-TerminateMessage       = 'Thread #'
-TerminateMessage2      = ' has been terminated'
-
-ID                     = fun {$ I} ' (id ' # I # ')' end
-OzcarMessagePrefix     = fun {$}
-			    'Ozcar[' # {Thread.id {Thread.this}} # ']: '
-			 end
-OzcarErrorPrefix       = 'Ozcar ERROR: '
-
-DotEnd                 = '.end'
 
 StackAction            = {NewName}
 ResetAction            = {NewName}
@@ -178,29 +156,9 @@ HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 %% Files
 %%
 
-HomeDir                = {VS2A {OS.getEnv 'HOME'} # '/'}
-
-OzRawPath              = {OS.getEnv 'OZPATH'}
-FieldSeparator         = case Platform == WindowsPlatform then &; else &: end
-OzPath
-
-local
-   fun {PathList RawPath} % RawPath must be of type string
-      H T P in
-      {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
-      P = {VS2A H#'/'}
-      case T == nil then P|nil
-      else P|{PathList T.2}
-      end
-   end
-in
-   OzPath = {PathList OzRawPath}
-end
-
 GlobalBitMapDir        = '@' # {System.get home} # '/lib/bitmaps/'
 LocalBitMapDir         = GlobalBitMapDir # 'ozcar/'
 BitmapExtension        = '.xbm'
-
 IconBitMap             = GlobalBitMapDir # debugger # BitmapExtension
 
 StepButtonBitmap       = step
@@ -210,8 +168,8 @@ StopButtonBitmap       = stop
 ForgetButtonBitmap     = forget
 TermButtonBitmap       = term
 
-IgnoreFeedsBitmap      = {VS2A queries  # BitmapExtension}
-IgnoreThreadsBitmap    = {VS2A children # BitmapExtension}
+IgnoreQueriesBitmap    = {VS2A queries  # BitmapExtension}
+IgnoreSubThreadsBitmap = {VS2A children # BitmapExtension}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -83,7 +83,7 @@ local
    proc {StackToDict Frames D}
       {List.forAllInd Frames
        proc {$ Key Frame}
-	  {Dput D Key {S2F Key Frame}}
+	  {Dictionary.put D Key {S2F Key Frame}}
        end}
    end
 
@@ -129,7 +129,7 @@ in
 	     else                    Nr end
       in
 	 try
-	    {Dget self.D N}
+	    {Dictionary.get self.D N}
 	 catch
 	    system(kernel(dict ...) ...) then nil
 	 end
@@ -172,7 +172,7 @@ in
 	 else              % no stack available
 	    E = {V2VS X}
 	 in
-	    Status = UserExcText # E # NoStackText
+	    Status = 'Exception: ' # E # ' / no stack available'
 	    {Ozcar status(Status clear BlockedThreadColor)}
 	    {Emacs removeBar}
 	    StackManager,ReCalculate(nil)
@@ -185,9 +185,9 @@ in
 	 case @Rebuild then
 	    StackManager,ReCalculate
 	 else
-	    Frames = {Ditems self.D}
+	    Frames = {Dictionary.items self.D}
 	    Depth  = @Size
-	    Last   = case Depth > 0 then {Dget self.D Depth} else nil end
+	    Last   = case Depth > 0 then {Dictionary.get self.D Depth} else nil end
 	 in
 	    {Ozcar printStack(id:self.I frames:Frames depth:Depth last:Last)}
 	    case {CheckState self.T} == running then
@@ -201,7 +201,7 @@ in
       meth getTop($)
 	 S = @Size
       in
-	 case S == 0 then nil else {Dget self.D S} end
+	 case S == 0 then nil else {Dictionary.get self.D S} end
       end
 
       meth printTop
@@ -211,7 +211,7 @@ in
 	    S = @Size
 	 in
 	    case S == 0 then skip else
-	       TopFrame = {Dget self.D S}
+	       TopFrame = {Dictionary.get self.D S}
 	    in
 	       {Ozcar printStackFrame(frame:TopFrame delete:true)}
 	    end
@@ -220,12 +220,12 @@ in
 
       meth entry(Frame)
 	 S = @Size
-	 Key = case S == 0 orelse {Dget self.D S}.dir == entry then S + 1
+	 Key = case S == 0 orelse {Dictionary.get self.D S}.dir == entry then S + 1
 	       else S
 	       end
       in
 	 Size <- Key
-	 {Dput self.D Key {S2F Key Frame}}
+	 {Dictionary.put self.D Key {S2F Key Frame}}
       end
 
       meth exit(Frame)
@@ -235,15 +235,15 @@ in
 	    {OzcarError 'internal stack inconsistency; recalculating stack'}
 	    StackManager, ReCalculate
 	 else
-	    Key = case {Dget self.D S}.dir == entry then S
+	    Key = case {Dictionary.get self.D S}.dir == entry then S
 		  else
-		     {Dremove self.D S}
+		     {Dictionary.remove self.D S}
 		     S - 1
 		  end
 	 in
 	    Size <- Key
 	    case Key > 0 then
-	       {Dput self.D Key {S2F Key Frame}}
+	       {Dictionary.put self.D Key {S2F Key Frame}}
 	    else
 	       {Thread.resume self.T}
 	    end
@@ -259,7 +259,7 @@ in
       end
 
       meth RemoveAllFrames
-	 {DremoveAll self.D}
+	 {Dictionary.removeAll self.D}
       end
 
       meth ReCalculate(S<=noStack)
@@ -271,7 +271,7 @@ in
 	 StackManager,rebuild(false)
 	 StackManager,RemoveAllFrames
 	 {StackToDict CurrentStack self.D}
-	 Size <- {Length {Dkeys self.D}}
+	 Size <- {Length {Dictionary.keys self.D}}
 	 StackManager,print
       end
 
@@ -297,7 +297,7 @@ in
 	    L = unit
 	    C = unit
 	 else
-	    TopFrame = {Dget self.D S}
+	    TopFrame = {Dictionary.get self.D S}
 	 in
 	    F = TopFrame.file
 	    L = TopFrame.line
