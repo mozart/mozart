@@ -229,9 +229,8 @@ define
 
       ColMan      = {New class $ from BaseObject
 			    prop final
-			    attr ColS: local Cs Ds in
-%					  Cs={Append Colors.truck Cs} Cs
-					  Cs={Append Colors.truck Ds} Cs=Ds
+			    attr ColS: local Cs in
+					  Cs={Append Colors.truck Cs} Cs
 				       end
 			    meth get(?Col) ColR in Col|ColR=(ColS<-ColR) end
 			 end noop}
