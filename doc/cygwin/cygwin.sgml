@@ -307,8 +307,8 @@ make prefix=?{packages} install>>>
 <<<cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart
 cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart-stdlib>>>
 	(specify <<-r mozart-1-2-0-fixes>> to get the fixes branch).
-	See <Ref.Extern to="http://www.mozart-oz.org/download/cvs.html"
-	>http://www.mozart-oz.org/download/cvs.html</Ref.Extern> for details
+	See <Ref.Extern to="http://www.mozart-oz.org/download/view.cgi?action=cvs"
+	>http://www.mozart-oz.org/download/view.cgi?action=cvs</Ref.Extern> for details
 	about anonymous CVS.  Let ?{mozart} be the directory created by the
 	first <<cvs get>> command and ?{stdlib} the one created by the second.
       <Para class=apropos><Title/Environment Variables/
