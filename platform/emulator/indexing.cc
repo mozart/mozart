@@ -1,12 +1,15 @@
 /*
  *  Authors:
- *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Michael Mehl <mehl@ps.uni-sb.de>
+ *    Ralf Scheidhauer <scheidhr@ps.uni-sb.de>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl, 1999
+ *    Ralf Scheidhauer, 1999
+ *    Christian Schulte, 2000
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -34,137 +37,111 @@
 #include "var_base.hh"
 #include "var_of.hh"
 
-EntryTable newEntryTable(int sz)
-{
-  EntryTable help = new HTEntry*[sz];
-  for (int i = 0; i <sz; i++)
-    help[i] = (HTEntry*)NULL;
-
-  return help;
+IHashTable * IHashTable::allocate(int n, int el) {
+  int sz = nextPowerOf2(n+max(1,n>>1));
+  Assert(sz > n);
+  IHashTable * ht = (IHashTable *)
+    malloc(sizeof(IHashTable) + (sz-1) * sizeof(IHashTableEntry));
+  ht->elseLbl = el;
+  ht->listLbl = el;
+  ht->hashMsk = sz-1;
+  for (int i = sz; i--; ) {
+    ht->entries[i].val = makeTaggedNULL();
+    ht->entries[i].lbl = el;
+  }
+  return ht;
 }
 
+IHashTable * IHashTable::clone(void) {
+  size_t sz = sizeof(IHashTable) + (getSize()-1) * sizeof(IHashTableEntry);
+  IHashTable * t = (IHashTable *) malloc(sz);
+  memcpy(t,this,sz);
+  return t;
+}
 
-int *IHashTable::addToTable(EntryTable &table, HTEntry *entry, int pos)
-{
-  numentries++;
+int IHashTable::getEntries(void) {
+  int e = 0;
+  for (int i = getSize(); i--; )
+    if (entries[i].val) e++;
+  return e;
+}
 
-  if (table == NULL)
-    table = newEntryTable(size);
-
-  /* append new entries to the end, so (un)marshalling will preserve order */
-  HTEntry *aux = table[pos];
-  if (aux==NULL) {
-    table[pos] = entry;
-  } else {
-    while(aux->getNext()) {
-      aux = aux->getNext();
+void IHashTable::addRecord(TaggedRef l, SRecordArity a, int lbl) {
+  int i = tagged2Literal(l)->hash();
+  while (OK) {
+    i &= hashMsk;
+    if (!entries[i].val) {
+      entries[i].val = l;
+      entries[i].sra = a;
+      entries[i].lbl = lbl;
+      break;
     }
-    aux->setNext(entry);
+    i++;
   }
-
-  return entry->getLabelRef();
 }
 
-
-int *IHashTable::add(Literal *constant, int label)
-{
-  unsigned int hsh = hash(constant->hash());
-  return addToTable(literalTable,new HTEntry(constant,label),hsh);
-}
-
-
-int *IHashTable::add(Literal *name, SRecordArity arity,
-                                int label)
-{
-  unsigned int hsh = hash(name->hash());
-  return addToTable(functorTable,new HTEntry(name, arity, label),hsh);
-}
-
-
-int *IHashTable::add(TaggedRef number, int label)
-{
-  unsigned int hsh;
-  switch (tagTypeOf(number)) {
-
-  case TAG_FLOAT:    hsh = tagged2Float(number)->hash();  break;
-  case TAG_CONST:    hsh = tagged2BigInt(number)->hash(); break;
-  case TAG_SMALLINT: hsh = smallIntHash(number);          break;
-  default:       Assert(0); return 0;
+void IHashTable::addScalar(TaggedRef t, int lbl) {
+  int i;
+  if (oz_isSmallInt(t)) {
+    i = smallIntHash(t);
+  } else if (oz_isLiteral(t)) {
+    i = tagged2Literal(t)->hash();
+  } else if (oz_isFloat(t)) {
+    i = tagged2Float(t)->hash();
+  } else {
+    Assert(oz_isBigInt(t));
+    i = tagged2BigInt(t)->hash();
   }
-
-  hsh = hash(hsh);
-
-  return addToTable(numberTable,new HTEntry(number,label),hsh);
+  while (OK) {
+    i &= hashMsk;
+    if (!entries[i].val) {
+      entries[i].val = t;
+      entries[i].sra = mkTupleWidth(0);
+      entries[i].lbl = lbl;
+      break;
+    }
+    i++;
+  }
 }
 
-
-// - 'table' holds the code to branch to when indexing
-// How it works:
-// If none of the numbers is member of the domain, no guard can ever be
-// entailed therefore goto to the else-branch. Otherwise goto varLabel, which
-// wait for determination of the variable. Usually if unconstrained variables
-// get bound to each other, det-nodes are not reentered, but since
-// unifying two fd variables may result in a singleton (ie. determined term),
-// det-nodes are reentered and we achieve completeness.
 
 Bool IHashTable::disentailed(OzVariable *cvar) {
   switch (cvar->getType()) {
   case OZ_VAR_FD:
   case OZ_VAR_BOOL:
     {
-      /* if there are no integer guards goto else-branch */
-      if (!numberTable) {
-        return OK;
-      }
-
-      // if there is at least one integer member of the domain then goto varLabel
-      for (int i = 0; i < size; i++) {
-        for (HTEntry* aux = numberTable[i]; aux!=NULL; aux=aux->getNext()) {
-          if (oz_var_valid(cvar,aux->getNumber()))
-            return NO;
-        }
-      }
-
-      return OK;
+      for (int i = getSize(); i--; )
+        if (entries[i].val && oz_isSmallInt(entries[i].val) &&
+            oz_var_valid(cvar,entries[i].val))
+          return NO;
+      break;
     }
   case OZ_VAR_OF:
     {
-      OzOFVariable *ofsvar = (OzOFVariable*) cvar;
-      if (listLabel && !ofsvar->disentailed(tagged2Literal(AtomCons),2))
+      OzOFVariable * ofsvar = (OzOFVariable*) cvar;
+      if ((listLbl != elseLbl) &&
+          !ofsvar->disentailed(tagged2Literal(AtomCons),2))
         return NO;
-
-      if (literalTable) {
-        for (int i = 0; i < size; i++) {
-          for (HTEntry* aux = literalTable[i]; aux!=NULL; aux=aux->getNext()) {
-            if (!ofsvar->disentailed(aux->getLiteral(),(int)0))
+      for (int i = getSize(); i--; )
+        if (entries[i].val && oz_isLiteral(entries[i].val)) {
+          Literal * l      = tagged2Literal(entries[i].val);
+          SRecordArity sra = entries[i].sra;
+          if (sraIsTuple(sra)) {
+            if (!ofsvar->disentailed(l,getTupleWidth(sra)))
+              return NO;
+          } else {
+            if (!ofsvar->disentailed(l,getRecordArity(sra)))
               return NO;
           }
         }
-      }
-
-      if (functorTable) {
-        for (int i = 0; i < size; i++) {
-          for (HTEntry* aux = functorTable[i]; aux!=NULL; aux=aux->getNext()) {
-            SRecordArity arity;
-            Literal *label = aux->getFunctor(arity);
-            if (sraIsTuple(arity)) {
-              if (!ofsvar->disentailed(label,getTupleWidth(arity)))
-                return NO;
-            } else {
-              if (!ofsvar->disentailed(label,getRecordArity(arity)))
-                return NO;
-            }
-          }
-        }
-      }
-      return OK;
+      break;
     }
 
-  // mm2: hack: an arbitrary number is check for validity
   case OZ_VAR_EXT:
-    return !oz_var_valid(cvar,oz_int(4711));
-
+    // hack: an arbitrary number is check for validity
+    return !oz_var_valid(cvar,makeTaggedSmallInt(4711));
   default:
     return NO;
   }
+  return OK;
 }

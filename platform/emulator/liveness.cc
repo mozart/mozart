@@ -514,28 +514,13 @@ outerLoop2:
       case MATCHG:
         {
 
-#define DOTABLE(TAB)                                            \
-          {                                                     \
-            for (int i=0;i<table->size;i++) {                   \
-              if (TAB[i]) {                                     \
-                for (HTEntry* aux = TAB[i]; aux!=NULL;          \
-                     aux=aux->getNext()) {                      \
-                  PUSH(aux->getLabel());                        \
-                }                                               \
-              }                                                 \
-            }                                                   \
-          }
-
           IHashTable *table = (IHashTable *) getAdressArg(PC+2);
-          PUSH(table->elseLabel);
-          if (table->listLabel!=table->elseLabel)
-            PUSH(table->listLabel);
-          if (table->literalTable)
-            DOTABLE(table->literalTable);
-          if (table->functorTable)
-            DOTABLE(table->functorTable);
-          if (table->numberTable)
-            DOTABLE(table->numberTable);
+          PUSH(table->lookupElse());
+          if (table->lookupLTuple()!=table->lookupElse())
+            PUSH(table->lookupLTuple());
+          for (int i = table->getSize(); i--; )
+            if (table->entries[i].val)
+              PUSH(table->entries[i].lbl);
           BREAK;
         }
 

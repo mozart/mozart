@@ -1715,7 +1715,11 @@ Case(GETVOID)
       case TAG_FLOAT:
         JUMPRELATIVE(table->lookupFloat(term));
       case TAG_CONST:
-        JUMPRELATIVE(table->lookupConst(term));
+        if (tagged2Const(term)->getType() == Co_BigInt) {
+          JUMPRELATIVE(table->lookupBigInt(term));
+        } else {
+          JUMPRELATIVE(table->lookupElse());
+        }
       case TAG_REF:
       case TAG_REF2:
       case TAG_REF3:
@@ -1725,14 +1729,14 @@ Case(GETVOID)
         goto retry;
       case TAG_CVAR:
         if (oz_isKinded(term) && table->disentailed(tagged2CVar(term))) {
-          JUMPRELATIVE(table->getElse());
+          JUMPRELATIVE(table->lookupElse());
         };
         /* fall through */
       case TAG_UVAR:
         Assert(termPtr);
         SUSP_PC(termPtr,PC);
       default:
-        JUMPRELATIVE(table->getElse());
+        JUMPRELATIVE(table->lookupElse());
       }
 
     }
