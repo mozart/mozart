@@ -139,7 +139,7 @@ public:
   Frame *getTop()            { return tos; }
   void setTop(Frame *newTos) { tos = newTos; }
 
-  void gc(TaskStack *newstack);
+  TaskStack * gc(void);
 
   TaggedRef frameToRecord(Frame *&frame, Thread *thread, Bool verbose);
   TaggedRef findAbstrRecord(void);

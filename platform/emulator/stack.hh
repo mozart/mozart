@@ -85,6 +85,7 @@ public:
   Stack(int sz, StackAllocation alloc) : stkalloc(alloc) { allocate(sz,alloc); }
   ~Stack() { deallocate(array,stackEnd-array); }
 
+  void dispose(void) { deallocate(array,stackEnd-array); }
   void mkEmpty(void) { tos = array; }
   Bool isEmpty(void) { return (tos <= array); }
   StackEntry *ensureFree(int n)

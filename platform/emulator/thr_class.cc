@@ -49,13 +49,12 @@
 #include "thr_class.hh"
 
 int Thread::getRunnableNumber() {
-  TaskStack * taskstack = getTaskStackRef();
-  return (taskstack->isEmpty()) ? 0 : 1;
+  return (taskStack->isEmpty()) ? 0 : 1;
 }
 
 void Thread::printTaskStack(int depth) {
   if (!isDeadThread()) {
-    threadBody->taskStack.printTaskStack(depth);
+    taskStack->printTaskStack(depth);
   } else {
     message("\tEMPTY\n");
     message("\n");
