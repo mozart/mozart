@@ -110,7 +110,7 @@
     <Meta name=latex.package value="pstricks">
     <Meta name=latex.package value="pifont">
 
-    <Meta name=latex.input value="system.tex">
+    <Meta name=latex.input value="system-utils.tex">
 
     <!-- Splitting the document into different HTML nodes -->
 
