@@ -1171,7 +1171,12 @@ if that value is non-nil."
       (while (search-forward-regexp 
 	      (concat oz-status-string ".*\n") nil t)
 	(replace-match "" nil t))
-      )
+
+      ;; remove escape characters
+      (goto-char old-point)
+      (while (search-forward-regexp oz-escape-chars nil t)
+	(replace-match "" nil t))
+      (goto-char (point-max)))
 
     (oz-show-buffer buf)))
 
