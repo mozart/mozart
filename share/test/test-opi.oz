@@ -21,16 +21,10 @@
 %%%
 
 
-{OS.chDir {OS.getEnv 'HOME'}#'/mozart/share/test'}
 
 declare
-T={{Load './te.ozc'}
-   c('SP': \insert SP.env
-     'CP': \insert CP.env
-     'OP': \insert OP.env
-     'AP': \insert AP.env
-    )}
-
+T={Module.load '' {OS.getEnv 'HOME'}#'/mozart/share/test/te.ozf' nil}.run
+ 
 {T argv(verbose:  true
 	usage:    false
 	help:     false
