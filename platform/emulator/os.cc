@@ -1276,7 +1276,7 @@ void osStackDump()
   if (tmpout==NULL)
     tmpout = stdout;
 
-  fprintf(tmpout,"backtrace\n");
+  fprintf(tmpout,"set confirm off\nbacktrace\nkill\nquit\n");
   if (tmpout != stdout) {
     fclose(tmpout);
     char buf[1000];
