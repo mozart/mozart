@@ -106,6 +106,8 @@ void GcIndexNamer(Propagator * &p);
 void GcDataNamer(OZ_Term &);
 Propagator * derefIndexNamer(Propagator *);
 const char * toStringNamer(OZ_Term);
+OZ_Term getGcForward(OZ_Term t);
+Propagator * getGcForward(Propagator * p);
 
 template <class T_INDEX, class T_NAME>
 class Namer : public GCMe {
