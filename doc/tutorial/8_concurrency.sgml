@@ -156,7 +156,9 @@ end
 <P><FIGURE ID="Threads" CLASS="Figure">
 <CAPTION>The Mozart Panel showing thread creation <<{Fib 26 X}>></CAPTION>
 <!-- <PICTURE.EXTERN TO="Thread.ps" TYPE="ps" info="-width 400"> -->
+<PICTURE.CHOICE DISPLAY>
 <PICTURE.EXTERN TO="thread.gif" TYPE=gif>
+</PICTURE.CHOICE>
 </FIGURE>
 
 <P>The whole idea of explicit thread creation in Oz is to enable the
