@@ -4092,7 +4092,7 @@ OZ_BI_define(BIgetPrintName,1,1)
       break;
     }
   case UVAR: case CVAR: // FUT
-    OZ_RETURN_ATOM(VariableNamer::getName(OZ_in(0)));
+    OZ_RETURN_ATOM(oz_varGetName(OZ_in(0)));
   case LITERAL:
     {
       const char *s = tagged2Literal(t)->getPrintName();

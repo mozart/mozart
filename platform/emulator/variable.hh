@@ -180,22 +180,11 @@ void addSuspAnyVar(TaggedRef * v, Suspension susp,int unstable = TRUE)
 
 
 /* ------------------------------------------------------------------------
- * Class VariableNamer: assign names to variables
+ * maintain the mapping of variables to print names
  * ------------------------------------------------------------------------ */
 
-class VariableNamer {
-private:
-  static VariableNamer *allnames;
-  TaggedRef var;
-  const char *name;
-  VariableNamer *next;
-  int length();
-public:
-  static void cleanup();
-  static const char *getName(TaggedRef var);
-  static void addName(TaggedRef var, const char *name);
-};
-
-const char *getVarName(TaggedRef v);
+const char *oz_varGetName(TaggedRef v);
+void oz_varAddName(TaggedRef v, const char *nm);
+void oz_varCleanup();
 
 #endif

@@ -60,7 +60,7 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
         ) {
 
       if (tagged2SimpleVar(*tPtr)->isExported())
-        markExported();
+        markExported();  // mm2: already done above?
 
       t    = makeTaggedRef(vPtr);
       vPtr = tPtr;
