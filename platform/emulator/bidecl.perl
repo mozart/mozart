@@ -2436,11 +2436,6 @@ $builtins = {
 
     #* Finite Domains
 
-    'foreignFDProps'    => { in  => [],
-                             out => ['+bool'],
-                             BI  => BIforeignFDProps,
-                             native => true},
-
     # Internal stuff (always included)
 
     'fdReset'           => { in     => [],
@@ -2607,12 +2602,6 @@ $builtins = {
                              native => true},
 
     # External stuff (might be loaded dynamically)
-    'fdp_init'          => { in  => ['atom'],
-                             out => [],
-                             bi  => fdp_init,
-                             module => libfd,
-                             native => true},
-
     'fdp_sum'           => { in  => ['+value','+atom','int'],
                              out => [],
                              bi  => fdp_sum,

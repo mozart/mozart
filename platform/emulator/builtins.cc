@@ -5844,23 +5844,6 @@ OZ_BI_define(BIshowBuiltins,0,0)
   return(PROCEED);
 } OZ_BI_end
 
-// ---------------------------------------------------------------------------
-
-OZ_BI_define(BIforeignFDProps, 0,1)
-{
-#ifdef FOREIGNFDPROPS
-  OZ_RETURN(NameTrue);
-#else
-  OZ_RETURN(NameFalse);
-#endif
-} OZ_BI_end
-
-// ---------------------------------------------------------------------------
-
-OZ_C_proc_proto(ozparser_parseFile);
-OZ_C_proc_proto(ozparser_parseVirtualString);
-OZ_C_proc_proto(ozparser_fileExists);
-
 
 // ---------------------------------------------------------------------
 // OO Stuff
