@@ -102,7 +102,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
     OZ_Ct * unified_constr = left_constr->unify(right_constr);
 
     // undo binding
-    *left_varptr = right_var;
+    *left_varptr = trail;
 
     if (! unified_constr->isValid()) {
       goto failed;
