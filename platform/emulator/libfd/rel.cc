@@ -26,6 +26,8 @@
 
 #include "rel.hh"
 #include "auxcomp.hh"
+#include "../libfset/filter.hh"
+#include "rel_filter.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -56,27 +58,36 @@ failure:
 
 OZ_BI_define(fdp_lessEqOff, 3, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_INT);
-
-  PropagatorExpect pe;
-
-  OZ_EXPECT(pe, 0, expectIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectIntVarMinMax);
-  OZ_EXPECT(pe, 2, expectInt);
-
-  return pe.impose(new LessEqOffPropagator(OZ_in(0), OZ_in(1), 
-					   OZ_intToC(OZ_in(2))));
+  OZ_Expect pe;
+  OZ_Return r;
+  return make_lessEqOffset(r, pe, OZ_in(0), OZ_in(1), OZ_in(2));
 }
 OZ_BI_end
 
+#define TMUELLER
+
+#ifdef TMUELLER
+OZ_Return LessEqOffPropagator::propagate(void) 
+{
+  OZ_DEBUGPRINTTHIS("in ");
+  //
+  int &c = reg_c;
+  OZ_FDIntVar x(reg_x), y(reg_y);
+  PropagatorController_V_V P(x, y);
+  OZ_Service s(this, &P);
+  //
+  return filter_lessEqOffset(s, x, y, c)();
+}
+#else
 OZ_Return LessEqOffPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
   
   int &c = reg_c;
 
-  if (mayBeEqualVars() && OZ_isEqualVars(reg_x, reg_y)) 
+  if (mayBeEqualVars() && OZ_isEqualVars(reg_x, reg_y)) {
     return (0 <= c) ? PROCEED : FAILED;
+  }
 
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
@@ -96,6 +107,7 @@ failure:
   
   return P.fail();
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
