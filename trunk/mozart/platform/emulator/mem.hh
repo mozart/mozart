@@ -46,20 +46,6 @@
 extern Bool across_chunks;
 #endif
 
-#if __GNUC__ >= 2 && defined(sparc) && defined(REGOPT)
-#define HEAPTOPINTOREGISTER 1
-#endif
-
-#ifdef HEAPTOPINTOREGISTER
-register char *heapTop asm("g6");
-#else
-extern char *heapTop;
-#endif
-
-extern char *heapEnd;
-
-char *getMemFromOS(size_t size);
-
 class MemChunks {
 public:
   static MemChunks *list;
@@ -92,40 +78,60 @@ public:
 
 
 /*
- * Basic aligned allocation routine
+ * Basic aligned allocation routine:
+ *  - Supports alignment of 4 and 8
+ *  - 
  *
  */
 
+#ifdef HEAPCURINTOREGISTER
+register char * _oz_heap_cur asm("g6");
+#else
+extern   char * _oz_heap_cur;
+#endif
+
+extern   char * _oz_heap_end;
+
+
+void _oz_getNewHeapChunk(const size_t);
+
+
 inline 
-void * alignedMalloc(const size_t chunk_size, const int align) {
-  Assert(ToInt32(heapTop)%sizeof(int32) == 0);
+void * _oz_amalloc(const size_t sz, const int align) {
+  /*
+   * The following invariants are enforced:
+   *  - _oz_heap_cur is always aligned to sizeof(int32)
+   *  - alignment can be only 4 or 8
+   *
+   */
 
-  heapTop -= chunk_size;
+  Assert(ToInt32(_oz_heap_cur) % sizeof(int32) == 0);
 
-retry:
-  if (sizeof(int32) != align) {
-    heapTop = (char *)((long)heapTop & (-align));
-  }
+  Assert(align == 4 || align == 8);
 
-  /* heapTop might now be negative!! */
-  if ((long)heapEnd > (long)heapTop) {
-    Assert((long)heapEnd>0); // otherwise the above test is wrong
-    (void) getMemFromOS(chunk_size);
+  _oz_heap_cur -= sz;
+
+ retry:
+
+  if (align == 8)
+    _oz_heap_cur = (char *) ((long) _oz_heap_cur & ~4);
+  
+  Assert(((long) _oz_heap_cur) % align == 0);
+
+  /* _oz_heap_cur might be negative!! */
+  if (((long) _oz_heap_end) > ((long) _oz_heap_cur)) {
+    Assert(((long) _oz_heap_end) > 0);
+    _oz_getNewHeapChunk(sz);
     goto retry;
   }
 
-#ifdef DEBUG_MEM
-  if (heapTop)
-    memset((char *)heapTop,0x5A,chunk_size);
-#endif
-
-  return heapTop;
+  return _oz_heap_cur;
 }
 
 
-#define int32Malloc(sz)  (alignedMalloc((sz),sizeof(int32)))
-#define doubleMalloc(sz) (alignedMalloc((sz),sizeof(double)))
-#define heapMalloc(sz)   (alignedMalloc((sz),sizeof(void *)))
+#define int32Malloc(sz)  (_oz_amalloc((sz),sizeof(int32)))
+#define doubleMalloc(sz) (_oz_amalloc((sz),sizeof(double)))
+#define heapMalloc(sz)   (_oz_amalloc((sz),sizeof(void *)))
 
 
 void initMemoryManagement(void);
@@ -163,12 +169,12 @@ extern unsigned int heapTotalSizeBytes;   // # bytes allocated
 
 inline 
 unsigned int getUsedMemory(void) {
-  return heapTotalSize - (heapTop - heapEnd)/KB;
+  return heapTotalSize - (_oz_heap_cur - _oz_heap_end)/KB;
 }
 
 inline 
 unsigned int getUsedMemoryBytes(void) {
-  return heapTotalSizeBytes - (heapTop - heapEnd);
+  return heapTotalSizeBytes - (_oz_heap_cur - _oz_heap_end);
 }
 
 
