@@ -361,10 +361,12 @@ boot-manager.o: $(MODINTERS)
 %-if.cc: %.spec
 	$(PERL) $(SRCDIR)/bidecl.perl -file $< -interface > $@
 
-# this special rule ensures that warnings issued in bison.simple
+# these special rules ensure that warnings issued in bison.simple
 # are not treated as errors:
 parser.o: parser.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c -o $@ $<
+parser.lo: parser.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) $(CDYNOPT) -c -o $@ $<
 
 config.h: config.m4h $(OZVERSION)
 	$(M4) $(M4_D) -DOZVERSION=\"`$(OZVERSION)`\" $(SRCDIR)/config.m4h > $@
