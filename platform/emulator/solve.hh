@@ -55,7 +55,6 @@ public:
 	      TaggedRef resTR, TaggedRef guiTR=0);
   void setSolveBoard(Board *bb);
   Board *getSolveBoard() { return solveBoard; }
-  ~SolveActor ();
 
   void gcRecurse();
 
@@ -68,26 +67,31 @@ public:
   void setUnStable() { threads=-1; }
   void addSuspension (Suspension *susp); 
   void addSuspension (SuspList *l);
-  Bool areNoExtSuspensions ();
-  TaggedRef* getSolveVarRef () { return (&solveVar); }
-  TaggedRef getSolveVar () { return (solveVar); }
-  TaggedRef getResult () { return result; }
+  Bool areNoExtSuspensions();
+
+  TaggedRef* getSolveVarRef() { return (&solveVar); }
+  TaggedRef getSolveVar() { return (solveVar); }
+
+  TaggedRef getResult() { return result; }
   void setResult(TaggedRef v) { result = v; }
+
   TaggedRef getGuidance() { return (guidance); }
   void setGuidance(TaggedRef guiTR) { guidance = guiTR; }
+
   void pushWaitActor (WaitActor *a);
   void pushWaitActorsStackOf (SolveActor *sa);
   WaitActor *getDisWaitActor ();
+
   Bool stable_wake(void);
   void add_stable_susp(Suspension *);
-  void setBoard (Board *bb) { board = bb; }
+
+  void setBoard(Board *bb) { board = bb; }
 
   TaggedRef genSolved();
   TaggedRef genStuck();
   TaggedRef genChoice(int noOfClauses);
   TaggedRef genFailed();
   TaggedRef genUnstable(TaggedRef arg);
-  void printDebugKP();
 
 private:
   WaitActor* getTopWaitActor ();

@@ -235,7 +235,6 @@ public:
   Bool entailment();
   Bool isEmptyTrailChunk();
   int checkEntailment(Continuation *&contAfter,Actor *&aa);
-  int checkStable(Continuation *&contAfter,int &prio);  // mm2 todo
   int handleFailure(Continuation *&cont, AWActor *&aa);
 
   // Unification
@@ -290,7 +289,6 @@ public:
   }
   void incSolveThreads (Board *bb,int n=1);
   void decSolveThreads (Board *bb);
-  Board *findStableSolve(Board *bb);
 
 // debugging --> see file ../builtins/debug.C
   State getValue(TaggedRef feature, TaggedRef out);

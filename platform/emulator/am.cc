@@ -1098,26 +1098,6 @@ void AM::decSolveThreads(Board *bb)
   incSolveThreads(bb,-1);
 }
 
-/*
-  find "stable" board
-  */
-Board *AM::findStableSolve(Board *bb)
-{
-  while (!bb->isRoot()) {
-    Assert(!bb->isCommitted() && !bb->isFailed());
-    if (bb->isSolve()) {
-      Assert(!bb->isReflected());
-      SolveActor *sa = SolveActor::Cast(bb->getActor());
-      Assert(!sa->isCommitted());
-      if (isStableSolve(sa)) {
-	return bb;
-      }
-    }
-    bb = bb->getParentFast();
-  }
-  return 0;
-}
-
 void AM::setExtSuspension(Board *varHome, Suspension *susp)
 {
   Board *bb = currentBoard;
