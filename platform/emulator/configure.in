@@ -824,8 +824,8 @@ int main(void) {
 
   if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
       ((((char *) && la2) - ((char *) && la1)) == 16) &&
-      (*((char *) && la1)==1) &&
-      (*((char *) && lb1)==2)) {
+      (*((int *) && la1)==1) &&
+      (*((int *) && lb1)==2)) {
     return 0;
   }
   return -1;
@@ -883,8 +883,8 @@ int main(void) {
 
   if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
       ((((char *) && la2) - ((char *) && la1)) == 16) &&
-      (*((char *) && la1)==1) &&
-      (*((char *) && lb1)==2)) {
+      (*((int *) && la1)==1) &&
+      (*((int *) && lb1)==2)) {
     return 0;
   }
   return -1;
