@@ -397,8 +397,6 @@ Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
 }
 
 
-#define Swap(A,B,Type) { Type help=A; A=B; B=help; }
-
 Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
 {
   int argSize;
