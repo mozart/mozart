@@ -108,7 +108,6 @@ local
 	 end
       end
       meth close
-	 {Show close}
 	 @Token = unit
       end
    end
