@@ -19,44 +19,27 @@
 %%% WARRANTIES.
 %%%
 
-functor $
-
+functor prop once
 import
-   System.{valueToVirtualString
-	   show}
-
-   Error.{formatLine
-	  msg}
-
-   Foreign.{pointer
-	   }
-
-   FS.{value}
-
-   Open.{file}
-
-   Pickle.{load
-	   save}
-
+   Application.save
+   System.{valueToVirtualString show}
+   Error.{formatLine msg}
+   Foreign.pointer
+   FS.value
+   Open.file
+   Pickle.{load save}
    Tk
-
    TkTools
-
-   Compiler.{genericInterface}
-
-   Browser.{browse}
-
-   Emacs.{condSend}
-
+   Compiler.genericInterface
+   Browser.browse
+   Emacs.condSend
 export
    panel:           CompilerPanel
-   
    'CompilerPanel': CompilerPanel
-
 body
-
-   UrlDefaults = \insert '../url-defaults.oz'
-
-   \insert compilerPanel/CompilerPanelClass
-
+   local
+      UrlDefaults = \insert '../url-defaults.oz'
+   in
+      \insert compilerPanel/CompilerPanelClass
+   end
 end
