@@ -16,6 +16,8 @@ enum OzDebugDoit {DBG_NOOP, DBG_STEP, DBG_NEXT};
 
 class OzDebug {
 public:
+  USEFREELISTMEMORY;
+
   OzDebugDoit dothis;
   TaggedRef info;
   OzDebug(OzDebugDoit x, TaggedRef i) {
@@ -29,6 +31,11 @@ public:
   }
 
   void printCall();
+
+  void dispose() 
+  {
+    freeListDispose(this,sizeof(OzDebug));
+  }
 };
 
 void execBreakpoint(Thread*);
