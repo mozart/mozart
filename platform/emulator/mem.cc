@@ -81,7 +81,7 @@ void initMemoryManagement(void) {
 // ----------------------------------------------------------------
 // free list memory
 
-void *FreeList[freeListMaxSize];
+FreeListMem* FreeList[freeListMaxSize];
 size_t nextChopSize;
 
 void heapFree(void * /* addr */)
@@ -92,13 +92,13 @@ void heapFree(void * /* addr */)
 // count bytes free in FreeList memory
 unsigned int getMemoryInFreeList() {
   unsigned int sum = 0;
-  void *ptr;
+  FreeListMem *ptr;
 
   for (int i=0; i<freeListMaxSize; i++) {
     ptr = FreeList[i];
     while(ptr != NULL) {
       sum += i;
-      ptr = *(void **)ptr;
+      ptr = (FreeListMem*) ToPointer(ptr->next);
     }
   }
 
@@ -110,7 +110,10 @@ unsigned int getMemoryInFreeList() {
 // memory
 void scanFreeList(void) {
   for (int i = freeListMaxSize; i--; ) 
-    for (void * ptr = FreeList[i]; ptr; ptr = * (void **) ptr);
+    for (FreeListMem *ptr = FreeList[i];
+	 ptr;
+	 ptr = (FreeListMem *) ToPointer(ptr->next))
+	;
 }
 #endif
 
@@ -126,19 +129,17 @@ void freeListChop(void * addr, size_t size) {
     nextChopSize += sizeof(void*);
 
   register size_t s     = size;
-  register void ** fl   = &(FreeList[cs]);
-  register void * prev  = *fl;
-  register void * small = addr;
+  register FreeListMem * prev  = FreeList[cs];
+  register FreeListMem * small = (FreeListMem*) addr;
 
   do {
-    *((void **) small) = prev;
+    small->next = ToInt32(prev);
     prev = small;
-    small = (void *) ((char *) small + cs);
+    small = (FreeListMem*) ((char *) small + cs);
     s     -= cs; 
   } while (s > cs);
   
-  *fl = prev;
-
+  FreeList[cs] = prev;
 }
 
 
