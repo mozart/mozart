@@ -1503,20 +1503,13 @@ capLoop:
       if (right_pt == double_nb)  break;
       int right_val = IntervalBounds[right_pt];
       int cum = 0;
-      /*
-      cout << "left_val: " << left_val << " right_val: " << right_val << endl;
-      */
+
       for (i=low_counter; i<interval_nb; i++) {
-        /*
-        cout << "considering " << i << endl;
-        */
+
         int leftInt = Intervals[i].left;
         int rightInt = Intervals[i].right;
         if (leftInt > right_val) break;
         if ( (left_val >= leftInt) && (right_val <= rightInt) ) {
-          /*
-          cout << "got it for " << i << " use: " << Intervals[i].use << endl;
-          */
           cum = cum + Intervals[i].use;
         }
       }
@@ -1530,10 +1523,6 @@ capLoop:
       left_pt = right_pt;
     }
 
-    /*
-    for (i=0; i<exclusion_nb; i++)
-      cout << "ecl " << i << " left: " << ExclusionIntervals[i].left << " right: " << ExclusionIntervals[i].right << " use: " << ExclusionIntervals[i].use << endl;
-      */
 
     int last = 0;
     //////////
@@ -1714,22 +1703,10 @@ capLoop:
     interval_nb++;
 
 
-     /*
-    cout << "alt\n";
-    for(i=0;i<interval_nb;i++){
-      cout << Intervals[i].left << " " << Intervals[i].right << endl;
-    }
-     */
 
     Interval * intervals = Intervals;
     qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals);
 
-     /*
-    cout << "neu\n";
-    for(i=0;i<interval_nb;i++){
-      cout << Intervals[i].left << " " << Intervals[i].right << " " << Intervals[i].use << endl;
-    }
-     */
 
     // compute the set of all bounds of intervals
     int double_nb = interval_nb*2;
@@ -1759,28 +1736,16 @@ capLoop:
       int right_val = IntervalBounds[right_pt];
       // cum is the amount of possible usage
       int cum = 0;
-       /*
-      cout << "left_val: " << left_val << " right_val: " << right_val << endl;
-       */
       for (i=low_counter; i<interval_nb; i++) {
-         /*
-        cout << "considering " << i << endl;
-         */
         int leftInt = Intervals[i].left;
         int rightInt = Intervals[i].right;
         // really for this???
         if (leftInt > right_val) break;
         if ( (leftInt <= left_val) && (right_val <= rightInt) ) {
-           /*
-          cout << "got it for " << i << " use: " << Intervals[i].use << endl;
-           */
           cum = cum + Intervals[i].use;
         }
       }
       if (cum < capacity) {
-         /*
-        cout << "cum < capacity\n";
-         */
         return FAILED;
       }
       InclusionIntervals[inclusion_nb].left = left_val;
@@ -1790,10 +1755,6 @@ capLoop:
       left_pt = right_pt;
     }
 
-     /*
-    for (i=0; i<inclusion_nb; i++)
-      cout << "ecl " << i << " left: " << InclusionIntervals[i].left << " right: " << InclusionIntervals[i].right << " use: " << InclusionIntervals[i].use << endl;
-       */
 
     // include places, where tasks must be scheduled.
     for (i=0; i<ts; i++) {
@@ -1808,10 +1769,6 @@ capLoop:
           int right = Inclusion.right;
           if ( (mini <= left) && (right <= maxi) ) {
             if (Inclusion.use - use_i < capacity) {
-               /*
-              cout << "constraining "<<i<<" with "<<left-dur_i+1<<"#"<<right-1<<endl;
-              cout << " before " <<x[i]->getMinElem()<<"#"<<x[i]->getMaxElem()<<endl;
-               */
               OZ_FiniteDomain la;
               la.initRange(left-dur_i+1,right-1);
               FailOnEmpty(*x[i] &= la);
@@ -1857,6 +1814,228 @@ failure:
   return P.fail();
 }
 
+//--------------------------------------------------------------
+
+//////////
+// CONSTRUCTOR
+//////////
+DisjunctivePropagatorStream::DisjunctivePropagatorStream(OZ_Term fds, OZ_Term durs, OZ_Term st)
+{
+  stream = st;
+  reg_durs = vectorToInts(durs, reg_size);
+  reg_fds = vectorToOzTerms(fds, reg_size);
+}
+
+
+//////////
+// DESTRUCTOR
+//////////
+DisjunctivePropagatorStream::~DisjunctivePropagatorStream()
+{
+  OZ_hfreeCInts(reg_durs, reg_size);
+  OZ_hfreeOzTerms(reg_fds, reg_size);
+
+}
+
+
+//////////
+// BUILTIN
+//////////
+OZ_C_proc_begin(sched_disjunctiveStream, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_STREAM);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectVectorIntVarAny);
+  OZ_EXPECT(pe, 1, expectVectorInt);
+  OZ_EXPECT(pe, 2, expectStream);
+
+  return pe.spawn(new DisjunctivePropagatorStream(OZ_args[0], OZ_args[1], OZ_args[2]));
+}
+OZ_C_proc_end
+
+
+//////////
+// COPYING
+//////////
+void DisjunctivePropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
+{
+  int * new_reg_durs    = OZ_hallocCInts(reg_size);
+  OZ_Term * new_reg_fds = OZ_hallocOzTerms(reg_size);
+
+  for (int i = reg_size; i--; ) {
+    new_reg_durs[i] = reg_durs[i];
+    new_reg_fds[i] = reg_fds[i];
+    OZ_updateHeapTerm(new_reg_fds[i]);
+  }
+  reg_durs = new_reg_durs;
+  reg_fds  = new_reg_fds;
+
+}
+
+
+//////////
+// RUN METHOD
+//////////
+
+OZ_Return DisjunctivePropagatorStream::run(void)
+{
+  OZ_Stream st(stream);
+
+  int i, j;
+  int &ts  = reg_size;
+
+
+  int disjFlag = 0;
+  int new_items = 0;
+  struct MyList
+  {
+    OZ_Term fd;
+    int         dur;
+    struct MyList * next;
+  };
+  struct MyList * my_list;
+  int only_stream = 1;
+
+
+  while (!st.isEostr()) {
+    OZ_Term e = st.get();
+    if (OZ_isTuple(e)) {
+      char * label = OZ_atomToC(OZ_label(e));
+      if (! strcmp("#", label)) {
+        OZ_Term new_fd  = OZ_getArg(e, 0);
+        int new_dur = OZ_intToC(OZ_getArg(e, 1));
+        MyList * newItem = new MyList;
+        newItem->fd = new_fd;
+        newItem->dur = new_dur;
+        if (new_items == 0)
+          {
+          newItem->next = NULL;
+          my_list = newItem;
+          }
+        else {
+          newItem->next = my_list;
+          my_list = newItem;
+        }
+        new_items++;
+      }
+      else {
+        st.fail();
+
+        return FAILED;
+      }
+    }
+  }
+
+
+  int new_ts = ts + new_items;
+  DECL_DYN_ARRAY(OZ_FDIntVar, x, new_ts);
+
+  if (new_items > 0) {
+    int * new_reg_durs    = OZ_hallocCInts(new_ts);
+    OZ_Term * new_reg_fds = OZ_hallocOzTerms(new_ts);
+
+    for (i = ts; i--; ) {
+      new_reg_durs[i] = reg_durs[i];
+      new_reg_fds[i] = reg_fds[i];
+    }
+
+    OZ_hfreeOzTerms(reg_fds,ts);
+    OZ_hfreeCInts(reg_durs,ts);
+
+    for (i = 0; i<new_items; i++ ) {
+      new_reg_durs[ts+i] = my_list->dur;
+      new_reg_fds[ts+i] = my_list->fd;
+      postOn(my_list->fd);
+      :: delete my_list;
+      my_list = my_list->next;
+    }
+    reg_durs = new_reg_durs;
+    reg_fds  = new_reg_fds;
+  }
+
+  ts = new_ts;
+
+  for (i = ts; i--; )
+    x[i].read(reg_fds[i]);
+
+  int * dur = reg_durs;
+
+  DECL_DYN_ARRAY(Min_max, MinMax, ts);
+  for (i=ts; i--;){
+    MinMax[i].min = x[i]->getMinElem();
+    MinMax[i].max = x[i]->getMaxElem();
+  }
+
+
+reifiedloop:
+
+   for (i=0; i<ts; i++)
+     for (j=i+1; j<ts; j++) {
+       int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
+       if (xui + di <= xlj) continue;
+       int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
+       if (xuj + dj <= xli) continue;
+       if (xli + di > xuj) {
+         if (xuj > xui - dj) {
+           disjFlag = 1;
+           FailOnEmpty(*x[j] <= xui - dj);
+           MinMax[j].max = x[j]->getMaxElem();
+         }
+         if (xli < xlj + dj) {
+           disjFlag = 1;
+           FailOnEmpty(*x[i] >= xlj + dj);
+           MinMax[i].min = x[i]->getMinElem();
+         }
+       }
+       if (xlj + dj > xui) {
+         if (xui > xuj - di) {
+           disjFlag = 1;
+           FailOnEmpty(*x[i] <= xuj - di);
+           MinMax[i].max = x[i]->getMaxElem();
+         }
+         if (xlj < xli + di) {
+           disjFlag = 1;
+           FailOnEmpty(*x[j] >= xli + di);
+           MinMax[j].min = x[j]->getMinElem();
+         }
+       }
+     }
+
+  if (disjFlag == 1) {
+    disjFlag = 0;
+    goto reifiedloop;
+  }
+
+  if (!st.isValid())
+    goto failure;
+
+
+  stream = st.getTail();
+
+  for (i = ts; i--; ) {
+    if (*x[i] != fd_singl)
+      only_stream = 0;
+    x[i].leave();
+  }
+
+  if (only_stream)
+    return st.leave() ? SLEEP : PROCEED;
+  else {
+    st.leave();
+    return SLEEP;
+  }
+
+failure:
+  st.fail();
+
+  for (i = ts; i--; )
+    x[i].fail();
+
+  return FAILED;
+
+}
 
 //-----------------------------------------------------------------------------
 // static member
@@ -1866,3 +2045,4 @@ OZ_CFun CPIteratePropagator::spawner = sched_cpIterate;
 OZ_CFun CPIteratePropagatorCap::spawner = sched_cpIterateCap;
 OZ_CFun CPIteratePropagatorCapUp::spawner = sched_cpIterateCapUp;
 OZ_CFun DisjunctivePropagator::spawner = sched_disjunctive;
+OZ_CFun DisjunctivePropagatorStream::spawner = sched_disjunctiveStream;
