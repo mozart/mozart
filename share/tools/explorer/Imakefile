@@ -37,4 +37,4 @@ $(OZEXPLORER):
         $(INSTALL) -m 775 -d $@
 
 $(OZEXPLORER)/%.oz: %.oz
-        $(INSTALL) -m 444 '$<' '$@'
+        $(INSTALLSRC) '$<' '$@'
