@@ -51,8 +51,6 @@ Propagator * oz_newPropagator(OZ_Propagator * p) {
   if (!p->isMonotonic())
     prop->setNMO();
 
-  bb->incSuspCount();
-
   /* checkDebug(th,bb); tmueller ask BENNI */
 
   return prop;
@@ -66,8 +64,6 @@ void oz_closeDonePropagator(Propagator * prop) {
 
   prop->dispose();
   prop->setDead();
-
-  oz_currentBoard()->decSuspCount();
 }
 
 #ifdef DEBUG_PROPAGATORS
