@@ -83,7 +83,7 @@ int AM::raise(OZ_Term cat, OZ_Term key, char *label,int arity,...)
   return RAISE;
 }
 
-#define RAISE_APPLY(fun,args) \
+#define RAISE_APPLY(fun,args)                                           \
   (void) e->raise(E_ERROR,E_KERNEL,"apply",2,fun,args); goto LBLraise;
 
 
@@ -2306,7 +2306,7 @@ LBLdispatcher:
            Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
            SUSP_PC(predPtr,predArity+1,PC);
          }
-         RAISE_APPLY(taggedPredicate, OZ_toList(predArity,X));
+         RAISE_APPLY(taggedPredicate,OZ_toList(predArity,X));
        }
 
        if (!isTailCall) PC = PC+3;
@@ -2360,7 +2360,13 @@ LBLdispatcher:
          JUMP(def->getPC());
        }
 
-
+       if (typ == Co_Port) {
+         X[1] = X[0];
+         X[0] = makeTaggedConst(predicate);
+         predicate = tagged2Const(BI_send);
+         predArity = 2;
+         typ=Co_Builtin;
+       }
 // -----------------------------------------------------------------------
 // --- Call: Builtin
 // -----------------------------------------------------------------------
