@@ -10,4 +10,3 @@ RDEPEND="$RDEPEND
   =dev-mozart/mozart-doc-1.3.1
   gtk? ( =dev-mozart/mozart-gtk-1.1-r1 )
 "
-KEYWORDS="-*"
