@@ -207,8 +207,9 @@ public:
   OZ_Boolean operator >= (const FSetConstraint &);
   OZ_Boolean operator != (const FSetConstraint &);
   OZ_Boolean operator == (const FSetConstraint &) const;
-  OZ_Boolean operator <= (const int);
-  OZ_Boolean operator >= (const int);
+
+  OZ_Boolean le (const int);
+  OZ_Boolean ge (const int);
 
   // conversion functions
   void toNormal(void);

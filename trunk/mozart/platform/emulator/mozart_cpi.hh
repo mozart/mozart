@@ -493,8 +493,10 @@ public:
   OZ_Boolean operator >= (const OZ_FSetConstraint &);
   OZ_Boolean operator != (const OZ_FSetConstraint &);
   OZ_Boolean operator == (const OZ_FSetConstraint &) const;
-  OZ_Boolean operator <= (const int);
-  OZ_Boolean operator >= (const int);
+
+  OZ_Boolean le (const int);
+  OZ_Boolean ge (const int);
+
   char * toString(void) const;
 };
 
