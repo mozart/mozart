@@ -2042,7 +2042,7 @@ LBLdispatcher:
   Case(POPEX)
     {
       TaskStack *taskstack = CTS;
-      taskstack->discardFrame(C_CATCH_Ptr);
+      taskstack->discardCatch();
       /* remove unused continuation for handler */
       taskstack->discardFrame(NOCODE);
       DISPATCH(1);
@@ -2585,18 +2585,15 @@ LBLdispatcher:
     {
       CBB->decSuspCount();
 
-      if ( e->entailment() ) {
-
+      if ( e->entailment() ) { // OPT commit()
         e->trail.popMark();
-
         Board *tmpBB = CBB;
-
         e->setCurrent(CBB->getParent());
         DebugCheckT(currentDebugBoard=CBB);
         tmpBB->unsetInstalled();
         tmpBB->setCommitted(CBB);
         CBB->decSuspCount();
-
+        CTS->discardActor();
         DISPATCH(1);
       }
       CBB->setWaiting();
@@ -2610,7 +2607,7 @@ LBLdispatcher:
       CBB->decSuspCount();
 
       // entailment ?
-      if (e->entailment()) {
+      if (e->entailment()) { // OPT commit()
         e->trail.popMark();
         Board *tmpBB = CBB;
         e->setCurrent(CBB->getParent());
@@ -2618,12 +2615,13 @@ LBLdispatcher:
         tmpBB->unsetInstalled();
         tmpBB->setCommitted(CBB);
         CBB->decSuspCount();
+        CTS->discardActor();
         DISPATCH(1);
       }
 
     LBLsuspendBoard:
       CBB->setBody(PC+1, Y, G,NULL,0);
-      Assert(CAA == AWActor::Cast (CBB->getActor()));
+      Assert(CAA == AWActor::Cast(CBB->getActor()));
 
       e->deinstallCurrent();
       DebugCode(currentDebugBoard=CBB);
@@ -2638,7 +2636,6 @@ LBLdispatcher:
       }
 
       if (CAA->isWait()) {
-
         WaitActor *wa = WaitActor::Cast(CAA);
         /* test bottom commit */
         if (wa->hasNoChildren()) {
@@ -2648,13 +2645,10 @@ LBLdispatcher:
         /* test unit commit */
         if (wa->hasOneChildNoChoice()) {
           Board *waitBoard = wa->getLastChild();
-
           if (!e->commit(waitBoard,CTT)) {
             HF_DIS;
           }
-
           wa->dispose();
-
           goto LBLpopTask;
         }
 
@@ -2667,7 +2661,8 @@ LBLdispatcher:
         AskActor *aa = AskActor::Cast(CAA);
 
         //  should we activate the 'else' clause?
-        if (aa->isLeaf()) {
+        if (aa->isLeaf()) { // OPT commit()
+          CTS->discardActor();
           aa->setCommitted();
           CBB->decSuspCount();
 
@@ -2694,6 +2689,7 @@ LBLdispatcher:
       CAA = new AskActor(CBB,CTT,
                          elsePC ? elsePC : NOCODE,
                          NOCODE, Y, G, X, argsToSave);
+      CTS->pushActor(CAA);
       CBB->incSuspCount();
       DISPATCH(3);
     }
@@ -2701,6 +2697,7 @@ LBLdispatcher:
   Case(CREATEOR)
     {
       CAA = new WaitActor(CBB, CTT, NOCODE, Y, G, X, 0, NO);
+      CTS->pushActor(CAA);
       CBB->incSuspCount();
 
       DISPATCH(1);
@@ -2711,6 +2708,7 @@ LBLdispatcher:
       Board *bb = CBB;
 
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, NO);
+      CTS->pushActor(CAA);
       CBB->incSuspCount();
 
       if (bb->isWait()) {
@@ -2727,6 +2725,7 @@ LBLdispatcher:
       Board *bb = CBB;
 
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, OK);
+      CTS->pushActor(CAA);
       CBB->incSuspCount();
 
       Assert(CAA->isChoice());
@@ -2825,6 +2824,12 @@ LBLdispatcher:
       Assert(Y==0 && G==0);
       CTS->pushEmpty();   // mm2?
       goto LBLterminateThread;
+    }
+
+  Case(TASKACTOR)
+    {
+      Assert(0);
+      error("TASKACTOR: never");
     }
 
   Case(TASKPROFILECALL)
@@ -3305,16 +3310,17 @@ LBLfailure:
       AskActor *aa = AskActor::Cast(aw);
 
       //  should we activate the 'else' clause?
-      if (aa->isLeaf()) {
+      if (aa->isLeaf()) {  // OPT commit()
         aa->setCommitted();
         CBB->decSuspCount();
+        TaskStack *ts = tt->getTaskStackRef();
+        ts->discardActor();
 
         /* rule: if fi --> false */
         if (aa->getElsePC() == NOCODE) {
           if (canOptimizeFailure(e,tt)) goto LBLfailure;
         } else {
           Continuation *tmpCont = aa->getNext();
-          TaskStack *ts = tt->getTaskStackRef();
           ts->pushCont(aa->getElsePC(),
                        tmpCont->getY(), tmpCont->getG());
           if (tmpCont->getX()) ts->pushX(tmpCont->getX());

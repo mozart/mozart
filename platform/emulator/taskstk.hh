@@ -28,6 +28,7 @@ extern ProgramCounter
   C_SET_ABSTR_Ptr      ,
   C_LTQ_Ptr            , // local thread queue
   C_CATCH_Ptr          , // exception handler
+  C_ACTOR_Ptr          , // actor
   C_EMPTY_STACK        ;
 
 
@@ -164,9 +165,12 @@ public:
   void pushLTQ(SolveActor *sa)   { pushFrame(C_LTQ_Ptr,sa,0); }
   void pushLock(OzLock *lck)     { pushFrame(C_LOCK_Ptr,lck,0); }
   void pushCatch()               { pushFrame(C_CATCH_Ptr,0,0); }
+  void discardCatch()            { discardFrame(C_CATCH_Ptr); }
   void pushDebug(OzDebug *deb)   { pushFrame(C_DEBUG_CONT_Ptr,deb,0); }
   void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
   void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,NULL); }
+  void pushActor(Actor *ac)       { pushFrame(C_ACTOR_Ptr,ac,NULL); }
+  void discardActor()             { discardFrame(C_ACTOR_Ptr); }
 
   int tasks();
 };

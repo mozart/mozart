@@ -176,7 +176,7 @@ int SolveActor::choose(int left, int right) {
     Assert(bb->isWait());
 
     Assert(am.currentBoard==solveBoard);
-    return am.commit(bb);
+    return am.commit(bb) ? 1 : 0;
   } else {
     return 1;
   }

@@ -2007,6 +2007,8 @@ void TaskStack::gc(TaskStack *newstack)
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
     } else if (PC == C_LTQ_Ptr) {
       Y = (RefsArray) ((Actor *) Y)->gcActor();
+    } else if (PC == C_ACTOR_Ptr) {
+      Y = (RefsArray) ((Actor *) Y)->gcActor();
     } else if (PC == C_SET_SELF_Ptr) {
       Y = (RefsArray) ((Object*)Y)->gcConstTerm();
     } else if (PC == C_SET_ABSTR_Ptr) {

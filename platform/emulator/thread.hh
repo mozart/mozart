@@ -153,6 +153,7 @@ private:
 
   int stopCount;
 
+private:
   //  special allocator for thread's bodies;
   void freeThreadBody ();
 

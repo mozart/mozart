@@ -81,6 +81,10 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
     if (PC==C_CATCH_Ptr) {
       if (out) *out = reverseC(*out);
       return TRUE;
+    } else if (PC==C_ACTOR_Ptr) {
+      Actor *ac = (Actor *) Y;
+      ac->discardActor();
+      am.currentBoard->decSuspCount();
     } else if (PC==C_LOCK_Ptr) {
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){
