@@ -102,62 +102,11 @@ public:
     buffer = start;
   }
 
-  int size() { return buffer-start; }
-
-  char *string() { *buffer=0; return start; }
-
-  char *allocate(int n) {
-    ensure(n);
-    char *ret = buffer;
-    buffer += n;
-    return ret;
-  }
-
   void start_write(void) {
     write_start = start;
   }
   
-  OZ_Return write() {
-  redo:
-    int ret = osTestSelect(tcl_fd, SEL_WRITE);
-
-    if (ret < 0)  { 
-      reset();
-      LEAVE_TCL_LOCK;
-      return FAILED;
-      // RAISE EXCEPTION
-    } else if (ret==0) {
-      goto wait_select;
-    }  
-
-    while ((ret = oswrite(tcl_fd, write_start, buffer-write_start)) < 0) {
-      if (errno != EINTR) { 
-	reset();
-	LEAVE_TCL_LOCK;
-	return FAILED;
-	// RAISE EXCEPTION
-      }
-    }
-
-    if (buffer - write_start == ret) {
-      reset();
-      LEAVE_TCL_LOCK;
-      return PROCEED;
-    }
-
-  wait_select:
-    write_start += ret;
-    TaggedRef var = makeTaggedRef(newTaggedUVar(am.currentBoard));
-
-    (void) am.select(tcl_fd, SEL_WRITE, NameUnit, var);
-    DEREF(var, var_ptr, var_tag);
-    if (isAnyVar(var_tag)) {
-      am.addSuspendVarList(var_ptr);
-      return SUSPEND;
-    } else {
-      goto redo;
-    }
-  }
+  OZ_Return write(void);
 
   void resize(void);
 
@@ -174,9 +123,6 @@ public:
     ensure(2);
     *buffer++ = c1;
     *buffer++ = c2;
-  }
-  void back() {
-    buffer--;
   }
 
   void start_protect(void) {
@@ -211,12 +157,6 @@ public:
     }
   }
   
-  void print(void) {
-    put('\0');
-    printf("%s", start);
-    back();
-  }
-
   /* Tcl Methods */
 
   void put_int(TaggedRef i) {
@@ -247,12 +187,14 @@ public:
   void put_atom(TaggedRef atom) {
     if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
       return;
-    
-    char *s = tagged2Literal(atom)->getPrintName();
-    char c;
+    Literal * l = tagged2Literal(atom);
+    int       n = l->getSize();
+    char *    s = l->getPrintName();
 
-    while ((c = *s++))
-      put(c);
+    ensure(n);
+    for (int i = 0; i < n; i++) {
+      *buffer++ = *s++;
+    }
   }
 
   void put_atom_quote(TaggedRef atom) {
@@ -345,7 +287,7 @@ public:
       return put_tcl(sr->getFeature(a));
     } if (isLiteral(a) && tagged2Literal(a)->isAtom()) {
       put('-');
-      put_atom_quote(a);
+      put_atom(a);
       put(' ');
       return put_tcl(sr->getFeature(a));
     } else {
@@ -364,6 +306,49 @@ public:
   OZ_Return put_record_or_tuple(TaggedRef tcl, int start); 
 
 };
+
+OZ_Return StringBuffer::write() {
+redo:
+  int ret = osTestSelect(tcl_fd, SEL_WRITE);
+  
+  if (ret < 0)  { 
+    reset();
+    LEAVE_TCL_LOCK;
+    return FAILED;
+    // RAISE EXCEPTION
+  } else if (ret==0) {
+    goto wait_select;
+  }  
+  
+  while ((ret = oswrite(tcl_fd, write_start, buffer-write_start)) < 0) {
+    if (errno != EINTR) { 
+      reset();
+      LEAVE_TCL_LOCK;
+      return FAILED;
+      // RAISE EXCEPTION
+    }
+  }
+  
+  if (buffer - write_start == ret) {
+    reset();
+    LEAVE_TCL_LOCK;
+    return PROCEED;
+  }
+  
+  write_start += ret;
+wait_select:
+  TaggedRef var = makeTaggedRef(newTaggedUVar(am.currentBoard));
+  
+  (void) am.select(tcl_fd, SEL_WRITE, NameUnit, var);
+  DEREF(var, var_ptr, var_tag);
+  if (isAnyVar(var_tag)) {
+    am.addSuspendVarList(var_ptr);
+    return SUSPEND;
+  } else {
+    goto redo;
+  }
+}
+
 
 void StringBuffer::resize(void) {
   int new_size = (3 * (end - start)) / 2; 
@@ -690,9 +675,7 @@ OZ_Return StringBuffer::put_tcl(TaggedRef tcl) {
 	put('}');
 	return PROCEED;
       } else {
-	start_protect();
-	put_atom_quote(st->getLabel());
-	stop_protect();
+	put_atom(st->getLabel());
 	put(' ');
 	return put_tuple(st);
       }
@@ -848,11 +831,8 @@ OZ_Return StringBuffer::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
 	}
 
       } else if (isLiteral(a1) && tagged2Literal(a1)->isAtom()) {
-
 	put2(' ','-');
-	start_protect();
-	put_atom_quote(a1);
-	stop_protect();
+	put_atom(a1);
 	put(' ');
 	StateReturn(put_tcl(sr->getFeature(a1)));
       } else {
