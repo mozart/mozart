@@ -40,6 +40,11 @@ int getSize(TaggedRef var) {
 }
 
 inline
+int getFdWidth(TaggedRef var) {
+  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getWidth() : 1;
+}
+
+inline
 int getMin(TaggedRef var) {
   return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMinElem() : 0;
 }
@@ -114,6 +119,7 @@ public:
 
   void selectVarNaive(void);
   void selectVarSize(void);
+  void selectVarWidth(void);
   void selectVarMin(void);
   void selectVarMax(void);
   void selectVarNbSusps(void);
@@ -236,6 +242,15 @@ void FdDistributor::selectVarSize(void) {
 }
 
 inline
+void FdDistributor::selectVarWidth(void) {
+  ITERATOR(int minwidth = getFdWidth(vd),
+           int curwidth = getFdWidth(vd);
+           if (curwidth < minwidth) {
+             minwidth = curwidth; sel_var = j;
+           });
+}
+
+inline
 void FdDistributor::selectVarMin(void) {
   ITERATOR(int minmin = getMin(vd),
            int curmin = getMin(oz_deref(vars[i]));
@@ -342,6 +357,12 @@ DefFdDistClass(FdDist_Size_Max,selectVarSize,selectValMax);
 DefFdDistClass(FdDist_Size_SplitMin,selectVarSize,selectValSplitMin);
 DefFdDistClass(FdDist_Size_SplitMax,selectVarSize,selectValSplitMax);
 
+DefFdDistClass(FdDist_Width_Min,selectVarWidth,selectValMin);
+DefFdDistClass(FdDist_Width_Mid,selectVarWidth,selectValMid);
+DefFdDistClass(FdDist_Width_Max,selectVarWidth,selectValMax);
+DefFdDistClass(FdDist_Width_SplitMin,selectVarWidth,selectValSplitMin);
+DefFdDistClass(FdDist_Width_SplitMax,selectVarWidth,selectValSplitMax);
+
 DefFdDistClass(FdDist_Min_Min,selectVarMin,selectValMin);
 DefFdDistClass(FdDist_Min_Mid,selectVarMin,selectValMid);
 DefFdDistClass(FdDist_Min_Max,selectVarMin,selectValMax);
@@ -400,6 +421,7 @@ DefFdAssignClass(FdAssign_Max,selectValMax);
 #define iVarMin     2
 #define iVarMax     3
 #define iVarNbSusps 4
+#define iVarWidth   5
 
 #define iValMin      0
 #define iValMid      1
@@ -407,7 +429,7 @@ DefFdAssignClass(FdAssign_Max,selectValMax);
 #define iValSplitMin 3
 #define iValSplitMax 4
 
-#define PP(I,J) I*5+J
+#define PP(I,J) I*(iVarWidth+1)+J
 
 #define PPCL(I,J)                                  \
   case PP(iVar ## I,iVal ## J):                    \
@@ -515,6 +537,13 @@ OZ_BI_define(fdd_distribute, 3, 1) {
       PPCL(NbSusps,Max);
       PPCL(NbSusps,SplitMin);
       PPCL(NbSusps,SplitMax);
+
+      PPCL(Width,Min);
+      PPCL(Width,Mid);
+      PPCL(Width,Max);
+      PPCL(Width,SplitMin);
+      PPCL(Width,SplitMax);
+
     default:
       Assert(0);
     }
