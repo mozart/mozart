@@ -112,10 +112,6 @@ applications that performed:
       <item>Windows: setting environment variable <code proglang=sh/OZ_TRACE_LOAD/
 caused the system to misbehave.  This was actually due to forgetting to copy the
 value returned by the environment variable lookup out of a static buffer.</item>
-      <item>The Ozcar manual has been largely reworked to be more precise
-and readable.  Ozcar itself has been extended by an (experimental)
-feature to debug threads remotely, which can also be used for
-debugging of distributed applications.</item>
       <item>Many holes have been filled in the compiler documentation.
 In particular, the main chapters are all complete; only
 the appendices lack explanation.</item>
