@@ -802,6 +802,7 @@ void engine() {
 	  if (!tmpBB) {
 	    goto LBLpopTask;
 	  }
+	  INSTALLPATH(tmpBB);
 	  tmpBB->removeSuspension();
 	  isExecute = OK;
 	  goto LBLcall;
