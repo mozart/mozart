@@ -301,6 +301,42 @@ in
 		   ]}
       end
 
+      meth getEnv(Frame $)
+	 NullEnv = v('Y': nil 'G': nil)
+      in
+	 case @currentStack == unit then
+	    NullEnv
+	 else
+	    F = case Frame == unit then
+		   case @LastSelectedFrame > 0 then
+		      {@currentStack getFrame(@LastSelectedFrame $)}
+		   else
+		      {@currentStack getTop($)}
+		   end
+		else
+		   Frame
+		end
+	 in
+	    case F == unit then
+	       NullEnv
+	    else
+	       FrameId   = F.frameID
+	       SavedVars = F.vars
+	    in
+	       case SavedVars \= unit then
+		  {OzcarMessage 'using saved variables'}
+		  SavedVars
+	       elsecase FrameId \= unit then
+		  {OzcarMessage
+		   'requesting variables for frame id ' # FrameId}
+		  {Thread.frameVariables @currentThread FrameId}
+	       else
+		  NullEnv
+	       end
+	    end
+	 end
+      end
+
       meth DoPrintEnv(Widget Vars CV CP)
 	 {ForAll Vars
 	  proc{$ V}
@@ -370,31 +406,19 @@ in
 	 case L orelse CurThr == unit then skip
 	 elsecase
 	    {Dbg.checkStopped CurThr}
-	 then     % allow switching of stack frames only if thread is stopped
-	    FrameId       = F.frameID
-	    FrameNr       = F.nr
-	    SavedVars     = F.vars
-	    Vars          = case SavedVars \= unit then
-			       {OzcarMessage 'using saved variables'}
-			       SavedVars
-			    elsecase FrameId \= unit then
-			       {OzcarMessage
-				'requesting variables for frame id ' # FrameId}
-			       {Thread.frameVariables CurThr FrameId}
-			    else
-			       v('Y': nil 'G': nil)
-			    end
+	 then    % allow switching of stack frames only if thread is stopped
+	    Vars = Gui,getEnv(F $)
 	 in
-	    {OzcarMessage 'selecting frame #' # FrameNr}
+	    {OzcarMessage 'selecting frame #' # F.nr}
 	    case Highlight then
 	       L = case F.line == unit then unit else {Abs F.line} end
 	    in
 	       {Emacs delayedBar(file:F.file line:L column:F.column)}
-	       Gui,SelectStackFrame(FrameNr)
+	       Gui,SelectStackFrame(F.nr)
 	    else
 	       Gui,SelectStackFrame(0)
 	    end
-	    Gui,printEnv(frame:FrameNr vars:Vars)
+	    Gui,printEnv(frame:F.nr vars:Vars)
 	 else %% thread is running -- do nothing
 	    skip
 	 end
@@ -416,7 +440,7 @@ in
 	    N   = case LSF == 0 then ~1 else LSF + Delta end
 	    F   = {Stack getFrame(N $)}
 	 in
-	    case F == nil then skip else
+	    case F == unit then skip else
 	       Gui,frameClick(frame:F highlight:true delay:false)
 	    end
 	 end
@@ -770,7 +794,11 @@ in
 		     Stk = @currentStack
 		  in
 		     {Stk getFrame(LSF Frame)}
-		     case Frame == unit then skip else
+		     case Frame == unit then skip
+		     elsecase Frame.dir == exit then
+			Gui,doStatus('Already at end of procedure ' #
+				     'application -- unleash has no effect')
+		     else
 			{Dbg.step T false}
 			{Stk rebuild(true)}
 			case Frame.frameID of unit then

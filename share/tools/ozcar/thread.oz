@@ -556,7 +556,7 @@ in
 	 Value = case {TkV tkReturnInt($)} == 0 then false else true end
       in
 	 {OzcarMessage 'toggleEmacsThreads ' # {V2VS Value}}
-	 case {NewCompiler} then
+	 case {UsingNewCompiler} then
 	    case Value then
 	       {Compile '\\switch +runwithdebugger'}
 	    else
