@@ -105,6 +105,8 @@ public:
 // ------------------------------------------------------------------------
 
 class AskActor : public AWActor {
+private:
+  Thread *thread;
 public:
   static AskActor *Cast(Actor *a)
   { DebugCheck(!a->isAsk(),error("AskActor::Cast")); return (AskActor *) a; }
@@ -118,6 +120,8 @@ public:
   void gcRecurse();
 
   ProgramCounter getElsePC() { return elsePC; }
+  void setThread(Thread *th) { Assert(thread==0); thread = th; }
+  Thread *getThread() { return thread; }
 };
 
 // ------------------------------------------------------------------------

@@ -2154,6 +2154,7 @@ void AskActor::gcRecurse ()
 	      error ("freed 'y' regs in AskActor::gcRecurse ()"));
   next.gcRecurse ();
   board = board->gcBoard ();
+  thread = thread->gcThread();
   Assert(board);
 }
 
