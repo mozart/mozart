@@ -442,16 +442,22 @@ public:
   static void profileReset(void);
 };
 
-inline OZ_PropagatorProfile::OZ_PropagatorProfile(void) {}
-inline char * OZ_PropagatorProfile::getPropagatorName() {
+inline
+char * OZ_PropagatorProfile::getPropagatorName() {
   return _propagator_name;
 }
-inline void OZ_PropagatorProfile::incSamples(void)         { _samples++; }
-inline void OZ_PropagatorProfile::incCalls(void)           { _calls++; }
-inline unsigned OZ_PropagatorProfile::getSamples(void)     { return _samples; }
-inline unsigned OZ_PropagatorProfile::getCalls(void)       { return _calls; }
-inline void OZ_PropagatorProfile::incHeap(unsigned inc)    { _heap += inc; }
-inline unsigned OZ_PropagatorProfile::getHeap(void)        { return _heap; }
+inline
+void OZ_PropagatorProfile::incSamples(void)         { _samples++; }
+inline
+void OZ_PropagatorProfile::incCalls(void)           { _calls++; }
+inline
+unsigned OZ_PropagatorProfile::getSamples(void)     { return _samples; }
+inline
+unsigned OZ_PropagatorProfile::getCalls(void)       { return _calls; }
+inline
+void OZ_PropagatorProfile::incHeap(unsigned inc)    { _heap += inc; }
+inline
+unsigned OZ_PropagatorProfile::getHeap(void)        { return _heap; }
 
 inline OZ_PropagatorProfile * OZ_PropagatorProfile::getFirst(void) {
   return OZ_PropagatorProfile::_all_headers;

@@ -32,29 +32,37 @@
 #include "mozart_cpi.hh"
 
 
-OZ_PropagatorProfile * OZ_PropagatorProfile::_all_headers = NULL;
 
+OZ_PropagatorProfile * OZ_PropagatorProfile::_all_headers = NULL;
+static int OZ_PropagatorProfile_firstCall = 1;
+
+
+OZ_PropagatorProfile::OZ_PropagatorProfile(void)
+  : _calls(0), _samples(0), _heap(0),
+    _propagator_name("<anonymous propagator>")
+{
+  if (OZ_PropagatorProfile_firstCall) {
+    OZ_PropagatorProfile_firstCall = 0;
+    _all_headers = 0;
+  }
+  _next = _all_headers;
+  _all_headers = this;
+}
 
 OZ_PropagatorProfile::OZ_PropagatorProfile(char * propagator_name)
   : _calls(0), _samples(0), _heap(0),
-    _propagator_name(strdup(propagator_name))
+    _propagator_name(propagator_name)
 {
-  *this = propagator_name;
+  if (OZ_PropagatorProfile_firstCall) {
+    OZ_PropagatorProfile_firstCall = 0;
+    _all_headers = 0;
+  }
+  _next = _all_headers;
+  _all_headers = this;
 }
 
 
 void OZ_PropagatorProfile::operator = (char * propagator_name)
 {
-  _calls = 0;
-  _samples = 0;
-  _heap = 0;
-  _propagator_name = strdup(propagator_name);
-
-  static int firstCall = 1;
-  if (firstCall) {
-    firstCall = 0;
-    _all_headers = 0;
-  }
-  _next = _all_headers;
-  _all_headers = this;
+  _propagator_name = propagator_name;
 }
