@@ -180,7 +180,7 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
 }
 
 //
-// ... retry to send it with (it takes un unsent message, compared to
+// ... retry to send it with (it takes an unsent message, compared to
 // 'sendTo()'). It says 'TRUE' if we got it;
 Bool VirtualSite::tryToSendToAgain(VSMessage *vsm, 
 				  FreeListDataManager<VSMsgBufferOwned> *freeMBs)
@@ -208,6 +208,7 @@ Bool VirtualSite::tryToSendToAgain(VSMessage *vsm,
       //
       if (mbox->enqueue(mb->getFirstChunkSHMKey(),
 			mb->getFirstChunkNum())) {
+	vsm->retractVSMsgQueueNode();
 	fmp->dispose(vsm);
 	mb->passChunks();
 	mb->cleanup();
