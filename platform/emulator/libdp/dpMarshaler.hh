@@ -338,7 +338,7 @@ public:
     Assert(gcExpVars == (OZ_Term) 0);
     if (expVars) {
       gcExpVars = gcStartOVP(expVars);
-      DebugCode(expVars = (OzValuePatch *) -1;);
+      DebugCode(expVars = (OzValuePatch *) 0;);
       Assert(gcExpVars != (OZ_Term) 0);
     }
   }
