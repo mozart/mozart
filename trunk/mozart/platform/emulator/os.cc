@@ -379,11 +379,18 @@ void pushSignalHandlers()
   SigHandler *aux = handlers;
   while(aux->signo != SIGLAST) {
     if (aux->pending) {
+      if (OZ_eq(aux->ozhandler,OZ_atom("default"))) {
+	(*aux->chandler)(aux->signo);
+      } else {
+	// existing Oz handler dominates handler that just does the default exit
+	if (aux->chandler != handlerDefault)
+	  (*aux->chandler)(aux->signo);
+	OZ_Thread thread = OZ_newRunnableThread();
+	OZ_Term args[1];
+	args[0] = OZ_atom(aux->name);
+	OZ_pushCall(thread,aux->ozhandler,args,1);
+      }
       aux->pending = NO;
-      OZ_Thread thread = OZ_newRunnableThread();
-      OZ_Term args[1];
-      args[0] = OZ_atom(aux->name);
-      OZ_pushCall(thread,aux->ozhandler,args,1);
     }
     aux++;
   }
@@ -403,18 +410,9 @@ void genericHandler(int sig)
   if (OZ_eq(aux->ozhandler,OZ_atom("ignore"))) // also ignore C handler
     goto exit;
 
-  if (OZ_eq(aux->ozhandler,OZ_atom("default"))) {
-    (*aux->chandler)(sig);
-    goto exit;
-  }
-
   aux->pending = OK;
   am.setSFlag(SigPending);
 
-  // existing Oz handler dominates handler that just does the default exit
-  if (aux->chandler != handlerDefault)
-    (*aux->chandler)(sig);
-  
 exit:
   osUnblockSignals();
 }
@@ -472,6 +470,11 @@ Bool osSignal(int sig, OsSigFun *fun)
   return OK;
 }
 
+int atomToSignal(const char *signo)
+{
+  SigHandler *aux = findHandler(signo);
+  return (aux == NULL) ? -1 : aux->signo;
+}
 
 
 Bool osSignal(const char *signo, OZ_Term proc)
@@ -484,6 +487,26 @@ Bool osSignal(const char *signo, OZ_Term proc)
   return OK;
 }
 
+
+int oskill(int pid, int sig)
+{
+#ifdef WINDOWS
+  if (pid==0) 
+    return raise(sig);
+
+  switch (sig) {
+  case SIGTERM:
+  case SIGHUP:
+  case SIGINT:
+    TerminateProcess((HANDLE)pid,0);
+    break;
+  default: // dont know how to sent other signals (RS)
+    break;
+  }
+#else
+  return kill(pid,sig);
+#endif
+}
 
 /* Oz version of system(3)
  * Posix 2 requires this call not to be interuptible by a signal
@@ -1214,11 +1237,7 @@ void osExit(int status)
   /* terminate all our children */
   ChildProc *aux = ChildProc::allchildren;
   while(aux) {
-#ifdef WINDOWS
-    TerminateProcess((HANDLE)aux->pid,0);
-#else
     (void) oskill(aux->pid,SIGTERM);
-#endif
     aux = aux->next;
   }
 
