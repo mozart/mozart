@@ -17,7 +17,7 @@ prepare
 
 define
 
-   proc {Loop Get Stack Siblings CurrentTag PrefixMap Collection}
+   proc {Loop Get Stack Siblings CurrentTag PrefixMap}
       case {Get}
 
       of unit then
@@ -38,17 +38,17 @@ define
 	  {StringToAtom Name}
 	  {Map Alist AttrToAtom}
 	  PrefixMap
-	  Tag2 Alist2 PrefixMap2 Collection}
+	  Tag2 Alist2 PrefixMap2}
 	 if Empty then Contents=nil
-	    {Loop Get Stack Siblings2 CurrentTag PrefixMap Collection}
+	    {Loop Get Stack Siblings2 CurrentTag PrefixMap}
 	 else
 	    {Loop Get (CurrentTag#Siblings2#PrefixMap)|Stack
-	     Contents Tag2 PrefixMap2 Collection}
+	     Contents Tag2 PrefixMap2}
 	 end
 
       [] etag(Name) then
 	 Tag={NameSpaces.processName
-	      {StringToAtom Name} PrefixMap Collection}
+	      {StringToAtom Name} PrefixMap}
       in
 	 Siblings=nil
 	 if CurrentTag\=Tag then
@@ -57,7 +57,7 @@ define
 	 end
 	 case Stack
 	 of (Tag#Siblings#PrefixMap)|Stack then
-	    {Loop Get Stack Siblings Tag PrefixMap Collection}
+	    {Loop Get Stack Siblings Tag PrefixMap}
 	 else {Exception.raiseError
 	       xml(parse(unexpectedErrorAtEtag Tag))}
 	 end
@@ -65,23 +65,21 @@ define
       [] pi(Target Args) then Siblings2 in
 	 Siblings=pi({StringToAtom Target}
 		     {StringToAtom Args})|Siblings2
-	 {Loop Get Stack Siblings2 CurrentTag PrefixMap Collection}
+	 {Loop Get Stack Siblings2 CurrentTag PrefixMap}
 
       [] text(Chars) then Siblings2 in
 	 Siblings=text({MakeBS Chars})|Siblings2
-	 {Loop Get Stack Siblings2 CurrentTag PrefixMap Collection}
+	 {Loop Get Stack Siblings2 CurrentTag PrefixMap}
 
       [] comment(Chars) then Siblings2 in
 	 Siblings=comment({MakeBS Chars})|Siblings2
-	 {Loop Get Stack Siblings2 CurrentTag PrefixMap Collection}
+	 {Loop Get Stack Siblings2 CurrentTag PrefixMap}
       end
    end
 
    fun {MakeFromTokenizer Tok}
       root(
-	 {Loop Tok.get nil $ unit
-	  {NameSpaces.newNameSpacePrefixMap}
-	  {NameSpaces.newNameSpaceCollection}})
+	 {Loop Tok.get nil $ unit {NameSpaces.newPrefixMap}})
    end
 
    fun {MakeFromString String}

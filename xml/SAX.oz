@@ -14,14 +14,13 @@ prepare
 define
    class Processor
       attr
-	 GET MAP COLLECTION STACK TAG
+	 GET MAP STACK TAG
 	 %%
       meth INIT(Get)
-	 GET        <- Get
-	 MAP        <- {NameSpaces.newNameSpacePrefixMap}
-	 COLLECTION <- {NameSpaces.newNameSpaceCollection}
-	 STACK      <- nil
-	 TAG        <- unit
+	 GET   <- Get
+	 MAP   <- {NameSpaces.newNameSpacePrefixMap}
+	 STACK <- nil
+	 TAG   <- unit
       end
       meth initFromTokenizer(T)
 	 Processor,INIT(T.get)
@@ -59,7 +58,7 @@ define
 	     {StringToAtom Name}
 	     {Map Alist AttrToAtom}
 	     @MAP
-	     Tag2 Alist2 Map2 @COLLECTION}
+	     Tag2 Alist2 Map2}
 	    {self startElement(Tag2 Alist2)}
 	    if Empty then {self endElement(Tag2)}
 	    else
@@ -69,8 +68,7 @@ define
 	    end
 	    Parser,PARSE()
 	 [] etag(Name) then
-	    Tag={NameSpaces.processName
-		 {StringToAtom Name} @MAP @COLLECTION}
+	    Tag={NameSpaces.processName {StringToAtom Name} @MAP}
 	 in
 	    if @TAG\=Tag then
 	       {Exception.raiseError
