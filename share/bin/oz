@@ -136,7 +136,7 @@ case "$cmd" in
 	tempfile=/tmp/ozsac$$
 	trap "rm -f $tempfile" 0
         infile=$1; outfile=$2
-        $OZCOMPILER +c $infile +dn $tempfile
+        $OZCOMPILER +p /dev/null +c $infile +dn $tempfile
         if [ $? -ne 0 ]; then exit 1; fi
         (echo "#!/bin/sh"; 
          echo "exec $OZHOME/bin/ozsa -f \$0";
