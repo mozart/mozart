@@ -2,20 +2,20 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 local
-   
+
    TkEmacs = {New Tk.variable tkInit(ConfigEmacs)}
-   
+
    C  = command
    MB = menubutton
    CB = checkbutton
    CC = cascade
-   
+
 in
-   
+
    class Menu
       meth init
-	 self.menuBar = 
-	 {MyMenuBar self.toplevel self.toplevel
+	 self.menuBar =
+	 {TkTools.menubar self.toplevel self.toplevel
 	  [MB(text: IconName
 	      menu:
 		 [C(label:   'About...'
