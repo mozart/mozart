@@ -2823,7 +2823,7 @@ LBLsuspendThread:
            goto LBLerror;
          } // end builtin
        default:
-         error("unknown procedure type");
+         error("unknown procedure type: %d",typ);
        } // end switch on type of predicate
      }
 
