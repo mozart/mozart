@@ -646,8 +646,8 @@ public:
 
   void setIndex(int i) { tagged.setIndex(i); }
   int getIndex() { return tagged.getIndex(); }
-  void setPointer (void *p) { Assert(isLocal()); tagged.setPtr(p); }
-  void *getPointer() { Assert(isLocal()); return tagged.getPtr(); }
+  void setPointer (void *p) { tagged.setPtr(p); }
+  void *getPointer() { return tagged.getPtr(); }
 
   Board *getBoard();
   void setBoard(Board *b);
