@@ -22,6 +22,20 @@
 %%% WARRANTIES.
 %%%
 
+/*
+Data types: 
+ Site: site(ip:<ATOM>
+            lastRTT:<INT>
+            pid:<INT>
+            port:<INT>
+            received:<INT>
+            sent:<INT>
+            siteid:<ATOM>
+            state:<ATOM>
+            table:<ATOM>
+            timestamp:<INT>)
+*/
+
 functor
 import
    GUI
@@ -100,6 +114,7 @@ define
       end
       meth init(SD)  self.sd = SD end
       meth connecting(P S Id)
+	 {System.show ccccc#P#S#Id}
 	 if {Not {self memberClient(S $)}} then
 	    {Send P connected}
 	    clients<-{New ClientClass init(S P)}|@clients 
@@ -129,8 +144,11 @@ define
 	    end
 	 end
       end
+
+
       
       meth open(Site)
+	 {System.show open(Site)}
 	 if {self memberClient(Site $)} then
 	    Client = {self getClient(Site $)}
 	 in
@@ -190,6 +208,7 @@ define
 	 N=O
       else ST OT BT NI SD MI
 	 ClientControler
+	 SelectedSite = {NewCell proc{$ _} skip end}
       in
 	 {GUI.open RunSync}
 	 
@@ -204,10 +223,20 @@ define
 	 {ST setGui(GUI)}
 	 {OT setGui(GUI.osites GUI.oactive GUI.onumber)}
 	 {BT setGui(GUI.bsites GUI.bactive GUI.bnumber)}
-	 {GUI.ssites setAction(proc{$ M} S =  {SD getSite(M $)}in
-				  {ClientControler open(site(ip:S.info.ip port:S.info.port))}
+	 {GUI.ssites setAction(proc{$ M} O S =  {SD getSite(M $)}in
+				  {ClientControler open(site(ip:S.info.ip port:S.info.port pid:S.info.pid))}
 				  {Browser.browse S.info#trafic(sent:{S getTotSent($)}
-							received:{S getTotReceived($)})}
+								received:{S getTotReceived($)})}
+
+				  %% Deselect the selected and select S
+				  %% If S was selected deselct S
+				  {Exchange SelectedSite O S}
+				  if O \= S then 
+				     {S select}
+				  else
+				     {Assign SelectedSite proc{$ _} skip end}
+				  end
+				  {O deselect}
 			       end)}
 	 {GCLineDraw}
 	 ClientControler = {New ClientCntrler init(SD)}

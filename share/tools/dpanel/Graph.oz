@@ -157,8 +157,10 @@ in
       end
 
       meth addGraph(key:K col:C stp:S val:V<=0.0)
-	 VC = {NewCell V} in
-	 {Dictionary.put self.GraphDict K r(col:C stp:S val:VC)}
+	 VC = {NewCell V}
+	 Tag = {New Tk.canvasTag tkInit(parent:self)}
+      in
+	 {Dictionary.put self.GraphDict K r(col:C stp:S val:VC tag:Tag)}
       end
 
       meth rmGraph(key:K)
@@ -191,7 +193,7 @@ in
 	    (Y2#Key)|Y2r = Y2s
 	    Y1rec  = Load,GetOldVal(key:Key $)
 	    C      = Y1rec.col
-%	    S      = Y1rec.stp
+	    LineTag= Y1rec.tag
 	    CS     = ~@CurScale
 	    Y1     = {Access Y1rec.val}
 	    Y3     = case Y2r of nil then 0.0 [] Y|_ then {Access {self GetOldVal(key:Y.2 $)}.val $} end
@@ -211,7 +213,7 @@ in
 			    X1 CS*Y1 X2 CS*Y2
 			    width:3
 			    fill: C
-			    tags: q(T self.BothTag))
+			    tags: q(T self.BothTag LineTag))
 	    end
 	    Load,tk(lower self.BothTag self.CoverTag)
 	    Load,DisplayLoads(Y2r X1 X2 T)
@@ -245,7 +247,12 @@ in
       end
       meth otherwise(X)
 	 raise calling_unknown(X graph) end
-      end      
+      end
+      meth raise_line(Id)
+	 {self tk('raise' self.GraphDict.Id.tag)}
+      end
+      
+      
       meth display(Ys)
 	 S          = @Slice
 	 Y          = {FoldL Ys proc{$ X Y Ans} {Max Y.1 X Ans} end 0.0}
