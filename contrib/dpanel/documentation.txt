@@ -1,0 +1,61 @@
+//** Introduction
+
+The Distribution Panel
+
+The Distribution panel is a tool for monitoring the behavior of the distribution part of a Mozart engine. With its help it is possible to obtain a understanding of what is happening under the surface of your Mozart engine. Tuning of applications and unexpected behaviors can be detected. To fully understand the information that the Distribution panel displays the Mozart distribution must be understod, see seif and Peters documents.
+
+
+
+
+//** Chapter 1
+
+Usage
+
+The Distribution panel is started by feeding the line
+
+ {DistPanel.open}
+
+The Distribution panel monitors and displays important distribution data. The data is retreived through native interfaces that are not exposed to the user. Transforming the data into a viewable format can be a memory consuming task. In such a case it is advised to not use the Distribution panel to avoid unexpected behaviors.
+
+How to understand what you see.
+
+The Distribution panel uses sampeling to get its information. The graphs that show information per sample displays what has happened since the last sample.
+When the distribution behavior is affected by the garbage collector a red vertical bar is inserted in all graphs when garbage colelction ocours. With this garbage collection bar as "hållpunkt" some behaviors that are gc related can be observed.
+
+//** picture displaying the gc bar.
+
+
+//** Chapter 1.1
+
+Remote Communication
+
+The Remote communication frame displays the status and history of the other Mozart sites that our site is connected to. Each site is given a separate color. The color is used in the graph windows to separate a sites graph from the other graphs.
+
+///*** picture and describing arrows....
+
+/** Chapter 1.2
+
+Exported Entities
+
+The Exported Entities frame shows all entities that the current site has currntly exported to the other sites. Notice that entities exported by the Connection module does not show up as exported until they are taken by an other site.
+
+
+///*** picture and describing arrows....
+
+/** Chapter 1.3
+
+Imported Entities
+
+The Imported Entities frame dipslays all entities currently imported to this site. The entities are coloured with their orgin sites colour(see 1.1).
+
+///*** picture and describing arrows....
+
+//** Chapter 1.4
+
+Message Statistics
+
+The Message Statistics frame shows the total number of sent and received messages per message type. The Message type is the internal type used by the Message Passing Layer and the entity protocolls.
+
+///*** picture and describing arrows....
+
+Description of the Message Types
