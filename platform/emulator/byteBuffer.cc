@@ -51,14 +51,17 @@ inline int ByteBuffer::net2int(){
 inline void ByteBuffer::putSize() {
   BYTE *tmp = posMB;
   int size;
-  
+
+  Assert(posMB<=endMB);
+  Assert(putptr<=endMB);
   if(posMB>putptr) 
     size=posMB-putptr;
   else
     size=endMB-putptr+posMB-buf + 1;
-
   // Find position for size 5 bytes from the beginning of this frame
   posMB = putptr+5;
+  if(posMB>endMB)
+    posMB = buf+(posMB-endMB-1);
 
   int2net(size);
   posMB=tmp;
@@ -153,6 +156,9 @@ void ByteBuffer::putInt(int i) {
 
 void ByteBuffer::putEnd() {
   Assert(mode == BYTE_MODE_MARSHALING);
+  // Are we just about to wrap around?
+  if(posMB>endMB)
+    posMB=buf;
   putSize();
   if(posMB>putptr) 
     used+=posMB-putptr;
@@ -190,13 +196,15 @@ int ByteBuffer::getInt() {
   return tmp;
 }
 
+// getCommit may never be called when no data has been read, that
+// case looks equivalent to the case of all data being read.
 void ByteBuffer::getCommit() {
   Assert(mode == BYTE_MODE_UNMARSHALING);
 #ifdef DEBUG_CHECK
-  if (posMB>=getptr)
+  if (posMB>getptr)
     for (BYTE *p=getptr;p<posMB;p++)    
       *p=0xde;
-  else {
+  else { // Fills all of the buffer if getptr==posMB
     for (BYTE *p=getptr;p<endMB+1;p++)    
       *p=0xde;
     for (BYTE *p=buf;p<posMB;p++)    
@@ -204,7 +212,9 @@ void ByteBuffer::getCommit() {
   }
 #endif
 
-  if (posMB>=getptr)
+  if (posMB==getptr) // Assume all read
+    used=0;
+  else if (posMB>=getptr)
     used-= (posMB-getptr);
   else
     used -= (endMB-getptr)+(posMB-buf) +1;
