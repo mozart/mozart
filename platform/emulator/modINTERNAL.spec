@@ -48,9 +48,13 @@
 			      out => [],
 			      BI  => BIload},
 
-     'native'		 => { in  => ['value', 'value'],
+     'getInternal'       => { in  => ['value'],
 			      out => ['value'],
-			      BI  => BIObtainNative},
+			      BI  => BIObtainGetInternal},
+
+     'getNative'         => { in  => ['value'],
+			      out => ['value'],
+			      BI  => BIObtainGetNative},
 
      'propagate'	 => { in  => [],
 			      out => [],

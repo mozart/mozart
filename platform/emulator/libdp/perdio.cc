@@ -1207,6 +1207,11 @@ extern "C"
 
     return i_table;
   } /* mod_int_DPB(void) */
+#ifndef STATICALLY_INCLUDED
+  OZ_C_proc_interface * oz_init_module(void) {
+    return mod_int_DPB(); }
+  char oz_module_name[] = "DPB";
+#endif
 } /* extern "C" */
 
 #endif  
