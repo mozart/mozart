@@ -56,3 +56,6 @@ realclean::
 	$(RM) *.a *.so
 
 include ../Makefile.rules
+
+distclean::
+	$(RM) Makefile
