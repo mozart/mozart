@@ -36,7 +36,7 @@
 	we will examine this example line by line.
 	<Figure float id="program.scanner.example" class=program>
 	  <Caption>The <<LambdaScanner>> scanner specification.</Caption>
-	  <P> <!--**-->
+	  <P><!--**-->
 	    <Code.Extern display to="LambdaScanner.ozg" class=linenumbers>
 	</Figure>
       <Para class=apropos><Title/Class Descriptors/
