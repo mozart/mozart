@@ -571,7 +571,7 @@
           ?={expression} <Q class=terminal/<<.>>/ ?={expression} <Q class=terminal/<<:=>>/
           ?={expression}. In fact <Q class=terminal/<<. :=>>/ is a ternary operator and has
           precedence.  Parenthesis must be used for
-          the alternate parse, that is, (?={expression}<Q class=terminal/<<.>>/ ?={expression}) <Q class=terminal/<<:=>>/
+          the alternate parse, that is, (?={expression}<Q class=terminal/<<.>>/?={expression}) <Q class=terminal/<<:=>>/
           ?={expression}.
          <P>
           The assignment operators <Q class=terminal/<<. :=>>/ and <Q class=terminal/<<:=>>/,
@@ -810,15 +810,21 @@
           definitions.
           <Grammar.Rule/?={statement}
             <Grammar.Alt type=add/<<lock>> ?={in statement} <<end>>/
+            <Grammar.Alt/?={expression} <Q class=terminal/<<:=>>/
+              ?={expression}/
             <Grammar.Alt/?={expression} <Q class=terminal/<<&lt;->>/
               ?={expression}/
             <Grammar.Alt/?={expression} <Q class=terminal/<<,>>/
               ?={expression}//
-          The assignment operator <Q class=terminal/<<&lt;->>/, when used in expression position,
-          performs an atomic exchange, the result of the operation
+          The assignment operators <Q class=terminal/<<:=>>/,
+          <Q class=terminal/<<&lt;->>/, when used in an expression position,
+          perform an atomic exchange, the result of the operation
           being the previous value of the attribute assigned to.
           <Grammar.Rule/?={expression}
             <Grammar.Alt type=add/<<lock>> ?={in expression} <<end>>/
+            <Grammar.Alt/<Q class=terminal/<<@>>/?={expression}/
+            <Grammar.Alt/?={expression} <Q class=terminal/<<:=>>/
+              ?={expression}/
             <Grammar.Alt/?={expression} <Q class=terminal/<<&lt;->>/
               ?={expression}/
             <Grammar.Alt/?={expression} <Q class=terminal/<<,>>/
