@@ -398,7 +398,10 @@ define
                OzDocToHTML, Batch(M 1)
             [] 'bib.extern' then BibKey in
                {@MyBibliographyDB get(M.to M.key ?BibKey)}
-               OzDocToHTML, ID(M.id @BibNode BibKey)
+               case {CondSelect M id unit} of unit then skip
+               elseof L then
+                  OzDocToHTML, ID(L @BibNode BibKey)
+               end
             %-----------------------------------------------------------
             % Body and Sectioning Elements
             %-----------------------------------------------------------
