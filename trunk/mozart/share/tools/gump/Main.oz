@@ -30,15 +30,14 @@ local
       %% {OZTOOL} returns a vs naming the oztool executable
       fun {OZTOOL}
 	 case {Property.condGet 'oz.exe.oztool' unit} of unit
-	 then case {OS.getEnv 'OZTOOL'} of false then oztool
+	 then case {OS.getEnv 'OZTOOL'} of false then 'oztool'
 	      elseof X then X end
 	 elseof X then X end
       end
       %% {OZTOOLINC} returns a vs consisting of -Idir elements
       fun {OZTOOLINC}
 	 case {Property.condGet 'oz.inc.oztool' unit} of unit
-	 then case {OS.getEnv 'OZTOOL_INCLUDES'} of false
-	      then '-I'#OZHOME#'/include'
+	 then case {OS.getEnv 'OZTOOL_INCLUDES'} of false then ''
 	      elseof X then X end
 	 elseof X then X end
       end
