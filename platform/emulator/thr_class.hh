@@ -135,6 +135,10 @@ public:
     taskStack->pushSelf(s);
   }
 
+  void pushDelSusps(TaggedRef list) {
+    taskStack->pushDelSusps(list);
+  }
+
   Bool isEmpty() {
     return taskStack->isEmpty();
   }
@@ -152,6 +156,8 @@ public:
   void disposeStack(void) {
     taskStack->dispose();
   }
+
+  void removeSuspensions(TaggedRef);
 
 };
 
