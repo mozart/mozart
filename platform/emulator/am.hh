@@ -4,10 +4,12 @@
  *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Kostja Popow, 1997-1999
+ *    Michael Mehl, 1997-1999
+ *    Christian Schulte, 1997-1999
  * 
  *  Last change:
  *    $Date$ by $Author$
