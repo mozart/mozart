@@ -175,7 +175,7 @@ win32-i486 oz-win oz3:
           $(TAR) cf - \
                    $(FILES) \
                    include share \
-                   contrib doc\
+                   contrib doc examples \
                    winbin platform/win32-i486 \
          ) | (cd oz3; $(TAR) xf -)
         $(INSTALL_DIR) $(WINCACHEDIR)/share
