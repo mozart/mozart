@@ -87,12 +87,12 @@ case "$cmd" in
 	exec sh $OZHOME/platform/$OZPLATFORM/oztool.sh "$@"
 	;;
    text2pickle)
-	exec $OZHOME/platform/$OZPLATFORM/$cmd "$@"
+	exec $OZHOME/platform/$OZPLATFORM/text2pickle.exe "$@"
 	;;
 
    pickle2text|oldpickle2text)
 	exec $OZEMULATOR --pickle2text "$@" | 
-             $OZHOME/platform/$OZPLATFORM/text2pickle --textmode
+             $OZHOME/platform/$OZPLATFORM/text2pickle.exe --textmode
 	;;
 
    *)

@@ -54,7 +54,7 @@ LIBS=		$(CORE_LIBS) $(STATIC_MODULELIBS) @LIBS@
 
 INCS=		-I. -I$(SRCDIR)
 M4_D=		-DEMUDIR=$(SRCDIR)
-TARGETS=	emulator.exe text2pickle $(DYNAMIC_MODULETARGETS)
+TARGETS=	emulator.exe text2pickle.exe $(DYNAMIC_MODULETARGETS)
 SUBDIRS=	libdp libfd libfset
 OZVERSION=	$(SRCTOP)/OZVERSION
 
@@ -293,7 +293,7 @@ first: $(CREATEDFILES)
 emulator.exe: $(PRGDEP)
 	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
-text2pickle: $(TEXT2PICKLEOBJS)
+text2pickle.exe: $(TEXT2PICKLEOBJS)
 	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
 install:: install-bin install-inc
