@@ -31,7 +31,10 @@ case $system in
    ;;
    *alpha*OSF1*)        OZARCH=osf1-alpha
    ;;
-   *i386*FreeBSD*)      OZARCH=freebsd-i486
+   *i386*FreeBSD*)
+       if [ -f /etc/objformat ]; then . /etc/objformat
+       fi
+       OZARCH=freebsd${OBJFORMAT}-i486
    ;;
    *atari*NetBSD*)      OZARCH=netbsd-m68k
    ;;
@@ -39,7 +42,8 @@ case $system in
    ;;
    *i386*NetBSD*)       OZARCH=netbsd-i486
    ;;
-   *)  echo "Cannot determine machine type and OS version" 1>&2 ; exit 1
+   *)  echo "Cannot determine machine type and OS version for '$system'" 1>&2 ; exit 1
+   ;;
 esac
 
 echo $OZARCH
