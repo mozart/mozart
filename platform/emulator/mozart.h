@@ -193,6 +193,7 @@ extern int     _FUNDECL(OZ_getLowPrio,(void));
 extern int     _FUNDECL(OZ_getMediumPrio,(void));
 extern int     _FUNDECL(OZ_getHighPrio,(void));
 extern int     _FUNDECL(OZ_intToC,(OZ_Term));
+extern int     _FUNDECL(OZ_boolToC,(OZ_Term));
 extern OZ_Term _FUNDECL(OZ_CStringToInt,(char *str));
 extern char *  _FUNDECL(OZ_parseInt,(char *s));
 
