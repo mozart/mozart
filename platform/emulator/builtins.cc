@@ -375,7 +375,6 @@ OZ_Return isValueInline(TaggedRef val)
   return PROCEED;
 }
 DECLAREBI_USEINLINEREL1(BIisValue,isValueInline)
-DECLAREBOOLFUN1(BIisValueB,isValueBInline,isValueInline)
 
 
 OZ_C_proc_begin(BIdet,2)
@@ -7127,7 +7126,6 @@ BIspec allSpec1[] = {
 #ifdef BUILTINS2
 
 BIspec allSpec2[] = {
-  {"IsValue",2,BIisValueB,        (IFOR) isValueBInline},
   {"IsNumber",2,BIisNumberB,      (IFOR) BIisNumberBInline},
   {"IsInt"   ,2,BIisIntB,         (IFOR) BIisIntBInline},
   {"IsFloat" ,2,BIisFloatB,       (IFOR) BIisFloatBInline},
