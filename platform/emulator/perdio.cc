@@ -3676,10 +3676,6 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
 /*   SECTION 24:: Port protocol                                       */
 /**********************************************************************/
 
-#define DefaultThread ((Thread*)0x3)
-Thread *getDefaultThread(){
-  return DefaultThread;}
-
 OZ_Return portWait(int queueSize, int restTime, Tertiary *t)
 {
   PD((ERROR_DET,"PortWait q: %d r: %d", queueSize, restTime));
@@ -3810,10 +3806,19 @@ int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar)
 }
 
 void sendRegister(BorrowEntry *be) {
+  // EK Hack to avoid credit crashes 
+  // In case of secondary credits in the
+  // Message that contained the Var we must
+  // nullify the globalvar creditSite
+  Site * tmpS = creditSite;
+  creditSite = NULL;
+
+
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();  
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   marshal_M_REGISTER(bs,na->index,mySite);
+  creditSite = tmpS;
   SendTo(na->site,bs,M_REGISTER,na->site,na->index);}
 
 OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
