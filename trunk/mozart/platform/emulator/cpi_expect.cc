@@ -844,7 +844,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 	addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);  
 	all_local &= oz_isLocalVar(tagged2CVar(v));
       } else {
-	addSuspAnyVar(vptr, prop);
+	oz_var_addSusp(vptr, prop);
 	all_local &= oz_isLocalVar(tagged2CVar(*vptr));
       }
     }
@@ -858,7 +858,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     if (isVariableTag(vtag)) {
       Assert(isCVar(vtag));
       
-      oz_var_addSuspINLINE(tagged2CVar(v), vptr, prop);
+      oz_var_addSuspINLINE(vptr, prop);
       all_local &= oz_isLocalVar(tagged2CVar(v));
     }
   }

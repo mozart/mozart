@@ -11,6 +11,7 @@
 	  ( AtomCons,      "|"),
 	  ( AtomPair,      "#"),
 	  ( AtomVoid,      "_"),
+	  ( AtomDot,       "."),
  
 	  ( AtomSup,	   "sup"),
 	  ( AtomCompl,	   "compl"),

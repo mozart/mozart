@@ -30,7 +30,7 @@
     (
      'is'	=> { in  => ['+value'],
 		     out => ['+bool'],
-		     bi  => BIisAtomB},
+		     bi  => BIisAtom},
 
      'toString'	=> { in  => ['+atom'],
 		     out => ['+string'],

@@ -50,8 +50,9 @@ public:
   virtual OZ_Term       isDetV() = 0;
   virtual void          disposeV() = 0;
 
-  virtual void addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) {
+  virtual Bool addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) {
     addSuspSVar(susp, unstable);
+    return FALSE;
   }
   virtual int getSuspListLengthV() { return getSuspListLengthS(); }
 

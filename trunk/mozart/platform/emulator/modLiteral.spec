@@ -28,6 +28,6 @@
     (
      'is' => { in  => ['+value'],
 	       out => ['+bool'],
-	       bi  => BIisLiteralB},
+	       bi  => BIisLiteral},
      );
 1;;

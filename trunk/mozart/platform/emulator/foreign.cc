@@ -1944,7 +1944,10 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
   case SUSPEND:
     {
       Thread *thr = oz_newThreadSuspended();
-      am.suspendOnVarList(thr);
+      thr->pushCall(BI_Unify,val1,val2);
+      if (am.suspendOnVarList(thr)) {
+	oz_wakeupThread(thr);
+      }
       break;
     }
   case BI_REPLACEBICALL:
@@ -1963,6 +1966,7 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
 }
 
 /* Suspensions */
+// mm2: bug
 void OZ_addThread(OZ_Term var, OZ_Thread thr)
 {
   DEREF(var, varPtr, varTag);
@@ -1972,7 +1976,7 @@ void OZ_addThread(OZ_Term var, OZ_Thread thr)
     return;
   }
 
-  addSuspAnyVar(varPtr, (Thread *) thr);
+  oz_var_addSusp(varPtr, (Thread *) thr); //mm2 handle return
 }
 
 OZ_Return OZ_suspendOnInternal(OZ_Term var)

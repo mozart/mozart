@@ -154,13 +154,14 @@ OZ_Return oz_var_bind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
 }
 
 OZ_Return oz_var_forceBind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
-		      ByteCode *scp) {
+			   ByteCode *scp)
+{
   return oz_var_forceBindINLINE(cv,ptr,val,scp);
 }
 
-void oz_var_addSusp(OzVariable *cv, TaggedRef *v, Suspension susp,
-		   int unstable = TRUE) {
-  oz_var_addSuspINLINE(cv, v, susp, unstable);
+Bool oz_var_addSusp(TaggedRef *v, Suspension susp, int unstable = TRUE)
+{
+  return oz_var_addSuspINLINE(v, susp, unstable);
 }
 
 void oz_var_dispose(OzVariable *cv) {
