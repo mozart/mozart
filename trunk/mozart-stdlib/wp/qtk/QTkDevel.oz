@@ -459,7 +459,7 @@ define
    Toplevel={NewName}
    NQTk={ByNeed fun{$} QTk end}
    Win32=({Property.get 'platform'}.os==win32)
-
+   Mac=({Property.get 'platform'}.os==powermac)
    fun{NewLook}
       L={NewDictionary}
    in
@@ -2101,7 +2101,7 @@ define
 								    {Record.adjoin
 								     if {HasFeature R scrollwidth} then
 									r(width:R.scrollwidth)
-								     elseif Win32 then
+								     elseif Win32 orelse Mac then
 									r
 								     else
 									r(width:10)
