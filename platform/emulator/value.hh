@@ -1239,12 +1239,27 @@ typedef enum {
 
 #define ObjFlagMask ~3
 
+
+typedef int32 RecOrCell;
+
+inline
+Bool stateIsCell(RecOrCell rc)     { return rc&1; }
+inline
+Tertiary *getCell(RecOrCell rc)   { Assert(stateIsCell(rc)); return (Tertiary*) ToPointer(rc-1); }
+inline
+SRecord *getRecord(RecOrCell rc) { Assert(!stateIsCell(rc)); return (SRecord*) ToPointer(rc);}
+inline
+RecOrCell makeRecCell(Tertiary *c)    { return ToInt32(c)|1; }
+inline
+RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
+
+
 class Object: public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
   // features are in getPtr()
-  int32 state;  // was: SRecord *state, but saves memory on the Alpha
-  int32 aclass; // was: ObjectClass *aclass
+  RecOrCell state;  // was: SRecord *state, but saves memory on the Alpha
+  int32 aclass;     // was: ObjectClass *aclass
   int32 flagsAndLock;
   GName *gname;
 public:
@@ -1264,8 +1279,8 @@ public:
   {
     setFreeRecord(feat);
     setClass(ac);
-    setState(s);
     if (iscl) setClass();
+    setState(s);
     flagsAndLock = ToInt32(lck);
     gname = NULL;
   }
@@ -1274,7 +1289,7 @@ public:
   {
     setFreeRecord(NULL);
     setClass(NULL);
-    setState(NULL);
+    setState((Tertiary*)NULL);
     flagsAndLock = 0;
     gname = gn;
   }
@@ -1291,8 +1306,9 @@ public:
 
   char *getPrintName()          { return getClass()->getPrintName(); }
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
-  SRecord *getState()           { return (SRecord*) ToPointer(state); }
-  void setState(SRecord *s)     { state = ToInt32(s); }
+  RecOrCell getState()          { return state; }
+  void setState(SRecord *s)     { Assert(s!=0 || isClass()); state=makeRecCell(s); }
+  void setState(Tertiary *c)    { state = makeRecCell(c); }
   OzDictionary *getDefMethods() { return getClass()->getDefMethods(); }
   Object *getOzClass()          { return getClass()->getOzClass(); }
 
@@ -1354,12 +1370,18 @@ public:
   OZPRINTLONG;
 };
 
+SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);
 
+inline
+Bool isObject(ConstTerm *t)
+{
+  return (t->getType()==Co_Object);
+}
 
 inline
 Bool isObject(TaggedRef term)
 {
-  return isConst(term) && tagged2Const(term)->getType()==Co_Object;
+  return isConst(term) && isObject(tagged2Const(term));
 }
 
 inline
