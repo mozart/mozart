@@ -461,9 +461,7 @@ define
 				    {FdReflect.size X} > 1
 				 end)
 	    
-	 GenSelPro = map(noProc: proc {$}
-				    skip
-				 end)
+	 GenSelPro = map(noProc: unit)
 	    
 	 GenSelSel = map(id:     fun {$ X}
 				    X
@@ -528,16 +526,18 @@ define
 		procedure: Proc) then
 	    if {Width Vec}>0 then
 	       proc {Do Xs}
+		  {Space.waitStable}
 		  case {Filter Xs Fil} of nil then skip elseof Xs=X|Xr then
 		     V={Select {Choose Xr X Order}}
 		     D={SelVal V}
 		  in
-		     {Proc}
-		     {Space.waitStable}
+		     if Proc\=unit then
+			{Proc}
+			{Space.waitStable}
+		     end
 		     choice {FdInt D        V}
 		     []     {FdInt compl(D) V}
 		     end
-		     {Space.waitStable}
 		     {Do Xs}
 		  end
 	       end
