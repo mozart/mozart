@@ -512,6 +512,8 @@ repeat:
       //
       SRecord *feat = tagged2SRecord(value);
       TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
+      // RALF IS WORKING HERE
+#if 0
       Bool locking = oz_isTrue(oz_deref(feat->getFeature(NameOoLocking)));
       cl->import(feat,
                  tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
@@ -520,6 +522,9 @@ repeat:
                  locking);
 
       //
+#else
+      OZ_warning("New Marshaler does not work for classes!");
+#endif
       value = classTerm;
       if (doMemo) {
         GetBTTaskArg2(frame, int, memoIndex);
