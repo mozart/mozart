@@ -691,7 +691,7 @@ void printArg(OZ_Term arg)
     } else if (lab==OZ_atom("vs")) {
       for (int i=0; i<len; i++) {
 	message("");
-	OZ_printVS(st->getArg(i));
+	OZ_printVirtualString(st->getArg(i));
 	printf("\n");
       }
     } else if (lab==OZ_atom("pos")) {
