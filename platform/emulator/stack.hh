@@ -52,7 +52,7 @@ public:
   void ensureFree(int n)
   {
     if (stackEnd <= tos+n) {
-      resize((int)(size*1.5));
+      resize((size*3)/2);  // faster than size*1.5
       ensureFree(n);
     }
   }
