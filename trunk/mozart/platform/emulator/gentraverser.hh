@@ -377,13 +377,16 @@ enum BuilderTaskType {
   // called "intermediate" since it's applied when a first subtree
   // arrives; thus, it does the construction job and immediately
   // proceeds to the actual topmost task (which is 'recordArg'). Note
-  // that we cannot handle structures that do not have proper subtree
-  // while have special ones necessary for its construction. Better to
-  // say, in this case a dummy subtree task ('DIF_EOT') is necessary.
+  // that "intermediate" tasks could work also for other data
+  // structures, provided they (a) preserve "value" argument of
+  // 'buildValue', (b) don't go iterate on their own, and (c) simulate
+  // another 'buildValue' with 'value' saved (thus, go to the beginning 
+  // of 'buildValueOutline');
   BT_takeRecordLabel,
   BT_takeRecordLabelMemo,
   BT_takeRecordArity,
   BT_takeRecordArityMemo,
+
   BT_makeRecord_intermediate,
   BT_makeRecordMemo_intermediate,
   //
