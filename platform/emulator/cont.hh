@@ -39,12 +39,6 @@ protected:
   RefsArray yRegs, gRegs, xRegs;
 public:
   USEFREELISTMEMORY
-  void gcRecurse(void);
-  Continuation * gc();
-  Bool gcIsMarked(void);
-  void gcMark(Continuation *);
-  void ** gcGetMarkField(void);
-  Continuation * gcGetFwd(void);
 
   Continuation(void)
   : pc(NOCODE), yRegs(NULL), gRegs(NULL) , xRegs(NULL) {}
@@ -63,6 +57,8 @@ public:
     gRegs = g;
     setX (x, i);
   }
+
+  void gc();
 
   ProgramCounter getPC(void)   { return pc; }
   void setPC(ProgramCounter p) { pc = p; }
