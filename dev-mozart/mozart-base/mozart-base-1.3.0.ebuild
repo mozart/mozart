@@ -52,3 +52,11 @@ src_install() {
     newins ${FILESDIR}/99mozart-1.3.0 99mozart
 
 }
+
+pkg_postinst() {
+    einfo "******************************************************"
+    einfo " When finished please run the following so your"
+    einfo " environment gets updated."
+    eerror "    /usr/sbin/env-update && source /etc/profile"
+    einfo "******************************************************"
+}
