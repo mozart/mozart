@@ -313,7 +313,7 @@ OZ_Return TimesPropagator::run(void)
 
   int tzl = truncToIntMax(double(x->getMinElem()) * double(y->getMinElem()));
   int tzu = truncToIntMax(double(x->getMaxElem()) * double(y->getMaxElem()));
-  int xint, yint;
+  int xint=0, yint=0;
 
 loop:
   if (*x == fd_singl && *y == fd_singl) {

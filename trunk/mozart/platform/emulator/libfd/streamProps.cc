@@ -102,7 +102,7 @@ OZ_Return DisjunctivePropagatorStream::run(void)
     int         dur;
     struct MyList * next;
   };
-  struct MyList * my_list;
+  struct MyList * my_list = NULL;
   int only_stream = 1;
 
 
@@ -314,7 +314,7 @@ OZ_Return DistinctPropagatorStream::run(void)
     OZ_Term fd;
     struct MyList * next;
   };
-  struct MyList * my_list;
+  struct MyList * my_list = NULL;
   int only_stream = 1;
 
 
