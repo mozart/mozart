@@ -22,16 +22,6 @@ X();  \
 ~X(); \
 (X&);
 
-enum MessageType {
-  SITESEND,          // send to site
-  PORTSEND,           // send to port
-  ASK_FOR_CREDIT,
-  OWNER_CREDIT,
-  BORROW_CREDIT,
-  GET_CODE,
-  SEND_CODE
-};
-
 int remoteSend(PortProxy *p, TaggedRef msg);
 void networkSiteDec(int sd);
 

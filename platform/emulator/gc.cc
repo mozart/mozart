@@ -597,7 +597,6 @@ Bool gcUnprotect(TaggedRef *ref)
 {
   ExtRefNode *aux = (ExtRefNode*) extRefs->find(ref);
 
-  Assert(aux != NULL);
   if (aux == NULL)
     return NO;
 
@@ -1354,7 +1353,9 @@ void AVar::gcAVar(void)
 void PerdioVar::gcPerdioVar(void)
 {
   GCMETHMSG("PerdioVar::gc");
-  // nothing todo
+  if (isProxy()) {
+    gcTagged(u.binding,u.binding);
+  }
 }
 
 DynamicTable* DynamicTable::gc(void)

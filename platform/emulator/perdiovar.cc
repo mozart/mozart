@@ -18,21 +18,24 @@
 
 
 // bind and inform sites
-Bool PerdioVar::bindManager(TaggedRef *lPtr,TaggedRef v, PerdioVar *rVar)
-{
-  warning("bindPerdioVar: only does local unification: no protocol yet");
 
-  if (rVar) relinkSuspListTo(rVar);
+extern
+int bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
+
+void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
+{
+  setSuspList(am.checkSuspensionList(this, getSuspList(), pc_std_unif));
+
+  TaggedRef vv=deref(v);
+  if (isAnyVar(vv)) {
+    Assert(isPerdioVar(vv));
+    PerdioVar *pv=tagged2PerdioVar(vv);
+    pv->setSuspList(am.checkSuspensionList(pv, pv->getSuspList(),
+                                           pc_std_unif));
+    relinkSuspListTo(pv);
+  }
   doBind(lPtr, v);
-  return TRUE;
 }
-
-Bool PerdioVar::bindProxy(TaggedRef *lPtr,TaggedRef v, PerdioVar *rVar)
-{
-  warning("surrender: only does local unification: no protocol yet");
-  return TRUE;
-}
-
 
 Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
 {
@@ -42,39 +45,23 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
   Assert(!isNotCVar(rVal));
 
   PerdioVar *lVar = this;
-  Assert(!lVar->isBound());
 
   if (isCVar(rVal)) {
     if (tagged2CVar(rVal)->getType() != getType()) {
       warning("PerdioVAR = other CVAR: not implemented");
       return FALSE;
     }
-    if (prop) {
-      am.checkSuspensionList(lVal,pc_std_unif);
-      am.checkSuspensionList(rVal,pc_std_unif);
-    }
 
     PerdioVar *rVar = tagged2PerdioVar(rVal);
-    Assert(!rVar->isBound());
 
     if (prop) {
       if (am.isLocalSVar(lVar)) {
         if (am.isLocalSVar(rVar)) {
           int cmp = lVar->compare(rVar);
           Assert(cmp!=0);
-          if (cmp<0) {
-            if (lVar->isManager()) {
-              return lVar->bindManager(lPtr,makeTaggedRef(rPtr));
-            } else {
-              return lVar->bindProxy(lPtr,makeTaggedRef(rPtr));
-            }
-          }
-          Assert(cmp>0);
-          if (rVar->isManager()) {
-            return rVar->bindManager(rPtr,makeTaggedRef(lPtr));
-          } else {
-            return rVar->bindProxy(rPtr,makeTaggedRef(lPtr));
-          }
+          return cmp<0
+            ? bindPerdioVar(lVar,lPtr,makeTaggedRef(rPtr))
+            : bindPerdioVar(rVar,rPtr,makeTaggedRef(lPtr));
         }
         am.doBindAndTrail(rVal, rPtr,makeTaggedRef(lPtr));
         return TRUE;
@@ -86,11 +73,7 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
 
   Assert(!isAnyVar(rVal));
   if (prop && am.isLocalSVar(lVar)) {
-    if (lVar->isManager()) {
-      return lVar->bindManager(lPtr,rVal);
-    } else {
-      return lVar->bindProxy(lPtr,rVal);
-    }
+    return bindPerdioVar(lVar,lPtr,rVal);
   } else {
     if (prop) am.checkSuspensionList(lVal,pc_std_unif);
     am.doBindAndTrail(lVal, lPtr,rVal);

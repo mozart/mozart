@@ -22,18 +22,31 @@
 
 enum PV_TYPES {
   PV_MANAGER,
-  PV_MANAGER_BOUND,
   PV_PROXY,
+};
+
+class ProxyList {
+public:
+  int sd;
+  ProxyList *next;
+public:
+  ProxyList(int sd,ProxyList *next) :sd(sd),next(next) {}
 };
 
 class PerdioVar: public GenCVariable {
   TaggedPtr tagged;
+  union {
+    TaggedRef binding;
+    ProxyList *proxies;
+  } u;
 public:
   PerdioVar() : GenCVariable(PerdioVariable) {
+    u.proxies=0;
     tagged.setType(PV_MANAGER);
   }
 
   PerdioVar(int i) : GenCVariable(PerdioVariable) {
+    u.binding=0;
     tagged.setType(PV_PROXY);
     tagged.setIndex(i);
   }
@@ -41,7 +54,6 @@ public:
   void globalize(int i) { tagged.setType(PV_MANAGER); tagged.setIndex(i); }
 
   Bool isManager() { return tagged.getType()==PV_MANAGER; }
-  Bool isBound() { return tagged.getType()==PV_MANAGER_BOUND; }
   Bool isProxy() { return tagged.getType()==PV_PROXY; }
 
   int getIndex() { return tagged.getIndex(); }
@@ -51,11 +63,18 @@ public:
 
   size_t getSize(void) { return sizeof(PerdioVar); }
 
+  void registerSite(int sd) {
+    Assert(isManager());
+    u.proxies = new ProxyList(sd,u.proxies);
+  }
 
-  Bool bindProxy(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar=0);
-  Bool bindManager(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar=0);
-  Bool surrender(TaggedRef *vptr,TaggedRef v,PerdioVar *rVar);
+  void primBind(TaggedRef *lPtr,TaggedRef v);
   Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop);
+
+  OZ_Term getVal() { Assert(isProxy()); return u.binding; }
+  int hasVal() { Assert(isProxy()); return u.binding!=0; }
+  void setVal(OZ_Term t) { Assert(isProxy()); u.binding=t; }
+  ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
   int compare(PerdioVar *r) { return -1; } // mm2: TODO
   void gcPerdioVar(void);
