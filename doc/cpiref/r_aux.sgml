@@ -4,14 +4,51 @@
 
 <List proglang=cc>
 
-<Entry class="function"><<OZ_updateHeapTerm>>
-<Index class=proglang><<OZ_updateHeapTerm>></Index>
-<Synopsis> <<void OZ_updateHeapTerm(OZ_Term &amp;t);>>
+<Entry class="function"><<OZ_gCollectTerm>>
+<Index class=proglang><<OZ_gCollectTerm>></Index>
+<Synopsis> <<void OZ_gCollectTerm(OZ_Term &amp;t);>>
 
-<Item> This function updates the reference <<t>> to a term on the
-heap. This is typically required when the member function
-<<updateHeapRefs()>> of a propagator is invoked.
+<Item> During garbage collection this function updates the reference
+<<t>> to a term on the heap. This is typically required when the
+member function <<gCollect()>> of a propagator is invoked.
 
+<Entry class="function"><<OZ_gCollectBlock>>
+<Index class=proglang><<OZ_gCollectBlock>></Index>
+<Synopsis> <<void OZ_gCollectBlock(OZ_Term * frm, OZ_Term * to, const int n);>>
+
+<Item> During garbage collection this function updates the <<n>>
+elememts in <<frm>> and stores them in <<to>>.
+
+<Entry class="function"><<OZ_gCollectAllocBlock>>
+<Index class=proglang><<OZ_gCollectAllocBlock>></Index>
+<Synopsis> <<OZ_Term * OZ_gCollectAllocBlock(int n, OZ_Term * frm);>>
+
+<Item> During garbage collection this function updates the <<n>>
+elements in <<frm>> and returns a pointer to the updates. The updates
+are stored in freshly allocated heap memory.
+
+<Entry class="function"><<OZ_sCloneTerm>>
+<Index class=proglang><<OZ_sCloneTerm>></Index>
+<Synopsis> <<void OZ_sCloneTerm(OZ_Term &amp;t);>>
+
+<Item> During cloning this function updates the reference
+<<t>> to a term on the heap. This is typically required when the
+member function <<sClone()>> of a propagator is invoked.
+
+<Entry class="function"><<OZ_sCloneBlock>>
+<Index class=proglang><<OZ_sCloneBlock>></Index>
+<Synopsis> <<void OZ_sCloneBlock(OZ_Term * frm, OZ_Term * to, const int n);>>
+
+<Item> During cloning this function updates the <<n>>
+elememts in <<frm>> and stores them in <<to>>.
+
+<Entry class="function"><<OZ_sCloneAllocBlock>>
+<Index class=proglang><<OZ_sCloneAllocBlock>></Index>
+<Synopsis> <<OZ_Term * OZ_sCloneAllocBlock(int n, OZ_Term * frm);>>
+
+<Item> During cloning this function updates the <<n>>
+elements in <<frm>> and returns a pointer to the updates. The updates
+are stored in freshly allocated heap memory.
 
 <Entry class="function"><<OZ_isPosSmallInt>>
 <Index class=proglang><<OZ_isPosSmallInt>></Index>
@@ -34,9 +71,16 @@ of type <<OZ_Term>> and returns a pointer to the block.
 <Synopsis> <<char * OZ_hallocChars(int n);>>
 
 <Item>
-This function allocates a Block Of Heap Memory For <<n>> items of type
+This function allocates a block of heap memory for <<n>> items of type
 <<char>> and returns a pointer to the block.
 
+<Entry class="function"><<OZ_hallocCInts>>
+<Index class=proglang><<OZ_hallocCInts>></Index>
+<Synopsis> <<int * OZ_hallocCInts(int n);>>
+
+<Item>
+This function allocates a block of heap memory for <<n>> items of type
+<<int>> and returns a pointer to the block.
 
 <Entry class="function"><<OZ_hfreeOzTerms>>
 <Index class=proglang><<OZ_hfreeOzTerms>></Index>
@@ -46,7 +90,6 @@ This function allocates a Block Of Heap Memory For <<n>> items of type
 <<OZ_hallocOzTerms()>>. The first argument <<ts>> points to a memory
 block and the value of <<n>> must denote the correct size of the
 block.
-
 
 <Entry class="function"><<OZ_hfreeCInts>>
 <Index class=proglang><<OZ_hfreeCInts>></Index>
@@ -65,14 +108,6 @@ and the value of <<n>> must denote the correct size of the block.
 <<OZ_hallocChars()>>. The first argument <<is>> points to a memory
 block and the value of <<n>> must denote the correct size of the
 block.
-
-
-<Entry class="function"><<OZ_copyOzTerms>>
-<Index class=proglang><<OZ_copyOzTerms>></Index>
-<Synopsis> <<OZ_Term * OZ_copyOzTerms(int n, OZ_Term * ts);>>
-
-<Item> Copies <<n>> <<OZ_Term>>s from <<ts>> and returns the location of the
-copy. If <<n>> is equal to <math/0/ it returns <<(OZ_Term *) NULL>>.
 
 
 <Entry class="function"><<OZ_copyCInts>>
