@@ -36,21 +36,21 @@
 
 static
 inline
-TaggedRef checkTagged(TaggedRef t, HashTable *ht) {
+TaggedRef checkTagged(TaggedRef t, AddressHashTable *ht) {
   CheckHT(TaggedRef,t);
   return t;
 }
 
 static
 inline
-void handleTagged(ProgramCounter PC, HashTable *ht, CodeArea *code) {
+void handleTagged(ProgramCounter PC, AddressHashTable *ht, CodeArea *code) {
   code->writeTagged(checkTagged(getTaggedArg(PC),ht),PC);
 }
 
 
 static
 inline
-CallMethodInfo *checkGCI(CallMethodInfo *cmi, HashTable *ht)
+CallMethodInfo *checkGCI(CallMethodInfo *cmi, AddressHashTable *ht)
 {
   TaggedRef newname = checkTagged(cmi->mn,ht);
 
@@ -68,7 +68,7 @@ CallMethodInfo *checkGCI(CallMethodInfo *cmi, HashTable *ht)
 
 static
 inline
-void handleCallMethodInfo(ProgramCounter PC, HashTable *ht)
+void handleCallMethodInfo(ProgramCounter PC, AddressHashTable *ht)
 {
   CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC);
   CodeArea::writeAddress(checkGCI(cmi,ht),PC);
@@ -77,7 +77,7 @@ void handleCallMethodInfo(ProgramCounter PC, HashTable *ht)
 
 
 static 
-SRecordArity doCheckSRA(SRecordArity sra, HashTable *ht) {
+SRecordArity doCheckSRA(SRecordArity sra, AddressHashTable *ht) {
   Assert(!sraIsTuple(sra))
   CheckHT(SRecordArity,sra);
 
@@ -99,7 +99,7 @@ SRecordArity doCheckSRA(SRecordArity sra, HashTable *ht) {
 
 static
 inline
-SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
+SRecordArity checkSRA(SRecordArity sra, AddressHashTable *ht)
 {
   if (sraIsTuple(sra))
     return sra;
@@ -108,7 +108,7 @@ SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
 
 static
 inline
-PrTabEntry *checkPTE(PrTabEntry *pte, HashTable *ht)
+PrTabEntry *checkPTE(PrTabEntry *pte, AddressHashTable *ht)
 {
   CheckHT(PrTabEntry *,pte);
   
@@ -123,7 +123,7 @@ PrTabEntry *checkPTE(PrTabEntry *pte, HashTable *ht)
 
 static
 inline
-void handlePredId(ProgramCounter PC, HashTable *ht)
+void handlePredId(ProgramCounter PC, AddressHashTable *ht)
 {
   CodeArea::writeAddress(checkPTE(getPredArg(PC),ht),PC);
 }
@@ -141,7 +141,7 @@ void handleCache(ProgramCounter PC, CodeArea *code)
 
 static
 inline
-AbstractionEntry *checkAE(AbstractionEntry *ae, HashTable *ht)
+AbstractionEntry *checkAE(AbstractionEntry *ae, AddressHashTable *ht)
 {
   CheckHT(AbstractionEntry *,ae);
   return ae;
@@ -150,7 +150,8 @@ AbstractionEntry *checkAE(AbstractionEntry *ae, HashTable *ht)
 
 static
 inline
-void handleProcedureRef(ProgramCounter PC, HashTable *ht, CodeArea *code)
+void handleProcedureRef(ProgramCounter PC, AddressHashTable *ht,
+			CodeArea *code)
 {
   AbstractionEntry *ae = checkAE((AbstractionEntry*) getAdressArg(PC),ht);
   code->writeAbstractionEntry(ae,PC);
@@ -162,7 +163,7 @@ void handleProcedureRef(ProgramCounter PC, HashTable *ht, CodeArea *code)
 
 static
 inline
-void handleRecordArity(ProgramCounter PC, HashTable *ht) {
+void handleRecordArity(ProgramCounter PC, AddressHashTable *ht) {
   SRecordArity ff = checkSRA((SRecordArity) getAdressArg(PC), ht);
   CodeArea::writeSRecordArity(ff, PC);
 }
@@ -170,7 +171,7 @@ void handleRecordArity(ProgramCounter PC, HashTable *ht) {
 
 static
 inline
-void handleHashTable(ProgramCounter PC, HashTable * ht) {
+void handleHashTable(ProgramCounter PC, AddressHashTable * ht) {
   IHashTable * ot = (IHashTable *) getAdressArg(PC);
   IHashTable * nt = ot->clone();
   for (int i = nt->getSize(); i--; ) 
@@ -195,7 +196,7 @@ void handleHashTable(ProgramCounter PC, HashTable * ht) {
 
 ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
 {
-  HashTable *ht = new HashTable(HT_INTKEY,100);
+  AddressHashTable *ht = new AddressHashTable(100);
   
   list = oz_deref(list);
 

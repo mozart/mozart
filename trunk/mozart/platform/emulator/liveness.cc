@@ -100,9 +100,9 @@ typedef unsigned long bitVec;
 
 const int maxXSize = sizeof(bitVec)*8;
 
-class LivenessCache : public HashTable{
+class LivenessCache : public AddressHashTable{
 public:
-  LivenessCache(): HashTable(HT_INTKEY,100) {}
+  LivenessCache(): AddressHashTable(100) {}
 
   int findPC(ProgramCounter from, TaggedRef *X, int maxX)
   {

@@ -45,14 +45,14 @@ void CodeArea::recordInstr(ProgramCounter PC){
 
 #endif
 
-HashTable CodeArea::atomTab(HT_CHARKEY,10000);
-HashTable CodeArea::nameTab(HT_CHARKEY,1000);
+StringHashTable CodeArea::atomTab(10000);
+StringHashTable CodeArea::nameTab(1000);
 CodeArea *CodeArea::allBlocks = NULL;
 
 #ifdef THREADED
 void **CodeArea::globalInstrTable = 0;
 #ifndef INLINEOPCODEMAP
-HashTable *CodeArea::opcodeTable = 0;
+AddressHashTable *CodeArea::opcodeTable = 0;
 #endif
 #endif
 
@@ -60,7 +60,7 @@ HashTable *CodeArea::opcodeTable = 0;
 
 
 inline 
-Literal *addToLiteralTab(const char *str, HashTable *table, 
+Literal *addToLiteralTab(const char *str, StringHashTable *table, 
 			 Bool isName, Bool needsDup) {
   Literal *found = (Literal *) table->htFind(str);
 
@@ -1190,7 +1190,7 @@ void CodeArea::init(void **instrTable)
 #ifdef THREADED
   globalInstrTable = instrTable;
 #ifndef INLINEOPCODEMAP
-  opcodeTable = new HashTable(HT_INTKEY,(int) (OZERROR*1.5));
+  opcodeTable = new AddressHashTable((int) (OZERROR*1.5));
   for (int i=0; i<=OZERROR; i++) {
     opcodeTable->htAdd(ToInt32(globalInstrTable[i]),ToPointer(i));
   }

@@ -564,7 +564,7 @@ DPMarshaler* dpMarshalTerm(ByteBuffer *bs, DPMarshaler *dpm,
   //
   dpMarshalerStartBatch(bs, dpm, mts);
   //
-  dpm->resume();
+  dpm->resume((Opaque *) bs);
   //
   return (dpMarshalerFinishBatch(bs, dpm, mts));
 }
