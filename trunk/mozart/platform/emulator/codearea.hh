@@ -14,6 +14,10 @@
 #ifndef __CODE_AREAH
 #define __CODE_AREAH
 
+#ifdef INTERFACE
+#pragma interface
+#endif
+
 /**********************************************************************
  *							              *
  *    class AbstractionTable: represented as hash table               *
