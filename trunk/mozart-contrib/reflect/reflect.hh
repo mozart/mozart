@@ -122,13 +122,21 @@ OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
 //-----------------------------------------------------------------------------
 
 #ifdef DEBUG
+
+#define DEBUG_ASSERT(Cond)						\
+  if (! (Cond)) {							\
+    OZ_error("%s:%d assertion '%s' failed",__FILE__,__LINE__,#Cond);	\
+  }
+
 #define DEBUGPRINT(A)				\
+printf("(%s:%d) ", __FILE__, __LINE__); 	\
 printf A;					\
 printf("\n");					\
 fflush(stdout)
 
 #else
 #define DEBUGPRINT(A)
+#define DEBUG_ASSERT(EXPR)
 #endif
 
 #endif /* __REFLECT__HH__ */
