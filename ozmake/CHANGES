@@ -12,6 +12,8 @@
 ** ozmake --extract -p MOG will now properly download the package denoted
    by mogul id MOG from the MOGUL archive (if it was published using
    ozmake --publish, i.e. follows the right naming convention).
+** ozmake --fast will invoke the compiler module directly without spawning
+   a new process each time.  This is easily 2 to 3 times faster.
 
 * version 0.74
 ** `requires' field now properly saved in mogul.db and is properly exported

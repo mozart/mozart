@@ -102,6 +102,7 @@ prepare
       exe(single type:atom(default no yes both multi))
       makepkgfile(single type:string)
 
+      fast(single type:bool)
       )
 
    OPTLIST =
@@ -159,6 +160,7 @@ prepare
     moguldir       # set_moguldir         # true
     mogulurl       # set_mogulurl         # true
     config         # set_config_action    # false
+    fast           # set_fast             # true
    ]
       
 define
