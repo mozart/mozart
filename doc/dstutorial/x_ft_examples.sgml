@@ -118,7 +118,7 @@ just afterwards.
 proc {SafeSend Prt X}
    try
       {Send Prt X}
-   catch system(dp(conditions:FS) ...) then
+   catch system(dp(conditions:FS ...) ...) then
       if {FOneOf permFail FS} then
          raise serverError end
       elseif {FOneOf tempFail FS} then
@@ -155,8 +155,8 @@ in
       if TimeOut\=infinity then
          thread {Delay TimeOut} Time=done end
       end
-      {Fault.enable X thread(this)
-         [permFail remoteProblem(permSome),tempFail,remoteProblem(tempSome)] _}
+      {Fault.enable X 'thread'(this)
+         [permFail remoteProblem(permSome) tempFail remoteProblem(tempSome)] _}
       {InnerSafeWait X Time}
    end
 end
@@ -307,7 +307,7 @@ If there is a temporary failure, then
 wait 100 ms and try again.
 <chunk><title/Client synchronizes with the server/
    proc {EndLoop R}
-      {Fault.enable R thread(this) 
+      {Fault.enable R 'thread'(this) 
          [permFail remoteProblem(permSome) tempFail remoteProblem(tempSome)] _}
       try
          if R==N then skip else raise R end end
