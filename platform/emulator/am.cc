@@ -278,7 +278,8 @@ void AM::init(int argc,char **argv)
   initAtoms();
   SolveActor::Init();
 
-  toplevelVars = allocateRefsArray(GLOBAL_STORE_SIZE);
+  int numToplevelVars = getenvDefault("OZTOPLEVELVARS",NUM_TOPLEVEL_VARS);
+  toplevelVars = allocateRefsArray(numToplevelVars);
 
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   toplevelVars[0] = makeTaggedSRecord(bi);
