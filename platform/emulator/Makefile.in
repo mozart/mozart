@@ -78,7 +78,7 @@ CREATEDFILES=                                   \
         newmarshalcode.cc                       \
         atoms.hh atoms.cc                       \
         config.h                                \
-        version.cc copycode.cc opcodes.cc       \
+        version.cc opcodes.cc   \
         $(MODINTERS)
 
 OTHERSRCS= \
@@ -455,7 +455,7 @@ config.h: config.m4h $(OZVERSION)
 
 value.o: atoms.hh
 
-copycode.cc newmarshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
+newmarshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
 
 newmarshaler.o: newmarshalcode.cc pickle.cc
 text2Pickle.o: pickle.cc

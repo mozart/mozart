@@ -962,6 +962,18 @@ public:
   ForeignPointer * cac(void);
 };
 
+inline
+Bool oz_isForeignPointer(TaggedRef term) {
+  return oz_isConst(term)
+    && tagged2Const(term)->getType() == Co_Foreign_Pointer;
+}
+
+inline
+void * oz_getForeignPointer(TaggedRef t) {
+  return ((ForeignPointer*) tagged2Const(t))->getPointer();
+}
+
+
 /*===================================================================
  * SRecord: incl. Arity, ArityTable
  *=================================================================== */
