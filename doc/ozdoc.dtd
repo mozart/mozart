@@ -1,6 +1,11 @@
-<!--==================== PROCESSING ENTITIES ======================-->
+<!--==================== PROCESSING INSTRUCTIONS ==================-->
 
 <!ENTITY nbsp PI "PI:NBSP"      -- non breakable space -- >
+
+<!--==================== GENERAL ENTITIES =========================-->
+
+<!ENTITY lt "<">
+<!ENTITY gt ">">
 
 <!--==================== NOTATIONS ================================-->
 
@@ -14,75 +19,118 @@
 <!ENTITY % picture.notation     "tex|latex|ps|html|gif">
 
 <!--==================== GENERIC ATTRIBUTES =======================-->
-
+<!-- Natural Language Attribute
+        this is useful e.g. for getting appropriate hyphenation.
+        we also make it a common attribute so that it may serve as
+        a declaration valid for the full scope of the element and
+        applies recursively unless overridden
+  -->
+<!ENTITY % lang.values.local "">
+<!ENTITY % lang.default "#IMPLIED">
+<!ENTITY % lang.values "en|de|fr">
+<!ENTITY % lang.attr "
+        lang (%lang.values;) %lang.default;
+">
+<!-- Programming Language Attribute
+        this is useful for getting appropriate highlighting of code.
+        we make it a common attribute for similar reasons (see above).
+  -->
+<!ENTITY % proglang.values.local "">
+<!ENTITY % proglang.default "#IMPLIED">
+<!ENTITY % proglang.values "oz|gump|c|cc|elisp %proglang.values.local;">
+<!ENTITY % proglang.attr "
+        proglang (%proglang.values;) %proglang.default;
+">
+<!-- Common Attributes
+        available for all elements
+  -->
 <!ENTITY % common.attr "
         id      ID      #IMPLIED        -- document-wide unique id --
-        info    CDATA   #IMPLIED        -- arbitrary stuff --
         class   CDATA   #IMPLIED        -- space separated list of classes --
+        info    CDATA   #IMPLIED        -- arbitrary stuff --
+        %lang.attr;
+        %proglang.attr;
 ">
+<!-- Inline/Display Attribute
+        indicates whether the element should be inline or displayed.
+        this applies only to phrasal elements (see %p.mix).
+  -->
 <!ENTITY % display.attr "
         display (inline|display) display
 ">
 <!ENTITY % inline.attr "
         display (inline|display) inline
 ">
+<!-- To Attribute
+     serves to refer to another element within the same document
+  -->
+<!ENTITY % to.attr "
+        to IDREF #REQUIRED
+">
+<!-- Extern Attributes
+        when an element points to an external resource, you need to
+        indicate what it points TO and you may further specify it
+        by means of a KEY (whose interpretation in here left undefined)
+  -->
+<!ENTITY % extern.attr "
+        to  CDATA #REQUIRED
+        key CDATA #IMPLIED
+">
 
 <!--==================== PARAMETER ENTITIES =======================-->
 
 <!ENTITY % index.class  "index|index.begin|index.end">
 
-<!ENTITY % texinfo.class "file|kbd|key|samp">
-<!ENTITY % ref.class "ref|ptr|ref.extern|ptr.extern">
-<!ENTITY % var.class "var">
-<!ENTITY % code.class "code|code.annotated|code.extern">
-<!ENTITY % picture.class "picture|picture.extern|picture.choice">
-<!ENTITY % math.class "math|math.extern|math.choice">
-<!ENTITY % list.class "list">
-<!ENTITY % float.class "float|float.anon|note">
-<!ENTITY % ozdoc.local "">
-%ozdoc.local;
-<!ENTITY % inline.mix.local "">
-<!ENTITY % inline.mix.nofloat   "
-          #PCDATA
-        | %texinfo.class;
-        | q | span | def | grammar.rule | table
-        | %ref.class;
-        | %var.class;
-        | %code.class;
-        | %picture.class;
-        | %math.class;
-        | %list.class;
-        %inline.mix.local;
+<!ENTITY % p.mix "
+          file    | kbd            | key        | samp
+        | q       | span           | def        | name
+        | ref     | ptr            | ref.extern | ptr.extern
+        | var
+        | code    |    code.extern | code.annotated
+        | picture | picture.extern | picture.choice
+        | math    |    math.extern | math.choice
+        | list
+        | figure  | note
+        | table   | grammar.rule
 ">
-<!ENTITY % inline.mix   "
-          %inline.mix.nofloat;
-        | %float.class;
-">
-<!ENTITY % div.class "div">
-<!ENTITY % p.class.nofloat "p|para|%div.class;">
-<!ENTITY % p.class "%p.class.nofloat;|float|float.anon">
+<!ENTITY % p.chars.mix "#PCDATA|%p.mix;">
+
+<!ENTITY % p.class "p|p.silent|p.level|para|div">
+<!ENTITY % p.model "(p|para|div)*">
+<!ENTITY % p.chars.model "p.silent,(%p.model;)">
 
 <!--==================== DOCUMENT STRUCTURE =======================-->
 
 <!ELEMENT book                  - - (front,body,back?)>
+<!ATTLIST book
+        %common.attr;
+>
 
-<!--==================== FRONT MATTER =============================-->
+<!--==================== FRONT AND BACK MATTER ====================-->
 
 <!ELEMENT front  O O (title & author* & meta* & abstract?)>
+<!ELEMENT title  - O (%p.chars.mix;)*   -- should be more restricted -- >
+<!ATTLIST title
+        %common.attr;
+>
 <!ELEMENT author - O (#PCDATA)*         -- one author -->
 <!ATTLIST author
         %common.attr;
 >
 <!ELEMENT meta   - O EMPTY              -- generic meta information -->
 <!ATTLIST meta
+        %common.attr;
         name    NAME    #REQUIRED       -- property --
-        content CDATA   #REQUIRED       -- value --
+        value   CDATA   #REQUIRED       -- value --
 >
-<!ELEMENT abstract - O (%p.class;)*>
+<!ELEMENT abstract - O (%p.chars.model;)*>
 <!ATTLIST abstract
         %common.attr;
 >
 <!ELEMENT back - O (meta|bibentry)*>
+<!ATTLIST back
+        %common.attr;
+>
 <!ELEMENT bibentry - O EMPTY>
 <!ATTLIST bibentry
         %common.attr;
@@ -90,56 +138,68 @@
         key CDATA #REQUIRED
 >
 
-<!--==================== BODY MATTER ==============================-->
+<!--==================== BODY AND SECTIONNING ELEMENTS ============-->
 
-<!ENTITY % chapter.class "chapter|chapter.anon">
-<!ENTITY % part.class "part|part.anon">
-<!ENTITY % appendix.class "appendix|appendix.anon">
-<!ELEMENT body O O ((%chapter.class;)*,(%part.class;)*,(%appendix.class;)*)
+<!ENTITY % sect0.class "sect0 | chapter"      >
+<!ENTITY % sect1.class "sect1 | section"      >
+<!ENTITY % sect2.class "sect2 | subsection"   >
+<!ENTITY % sect3.class "sect3 | subsubsection">
+
+<!ELEMENT body O O ((%sect0.class;)*,part*,appendix*)
         +(%index.class;)        -- indexing elements may appear anywhere --
 >
 
-<!--==================== SECTIONNING ELEMENTS =====================-->
+<!ELEMENT part            - O (title?,(%p.model;),(%sect0.class;)*)>
+<!ELEMENT (%sect0.class;) - O (title?,(%p.model;),(%sect1.class;)*)>
+<!ELEMENT (%sect1.class;) - O (title?,(%p.model;),(%sect2.class;)*)>
+<!ELEMENT (%sect2.class;) - O (title?,(%p.model;),(%sect3.class;)*)>
+<!ELEMENT (%sect3.class;) - O (title?,(%p.model;))>
+<!ELEMENT appendix        - O (title?,(%p.model;),(%sect1.class;)*)>
+
+<!ATTLIST (body|part|%sect0.class;|%sect1.class;|%sect2.class;|%sect3.class;)
+        %common.attr;
+>
+
+<!--==================== PARAGRAPHS ===============================-->
 <!--
-     Each element comes in 2 flavors: with and without title, e.g.
-     SECTION and SECTION.ANON.  This design allows the white space
-     following the <SECTION> open tag to be ignored so that that the
-     <TITLE> may be placed on a different line.
 
-     also the following are intended to be equivalent:
-     <SEC1>     <SECTION>
-     <SEC2>     <SUBSECTION>
-     <SEC3>     <SUBSUBSECTION>
+     Ordinary paragraphs are marked using P.  When a paragraph
+     requires a TITLE, use PARA instead.  A common application of PARA
+     is to mark a paragraph that is about a subject: the topic can be
+     supplied as the title.  For example:
+
+        <PARA CLASS=APROPOS><TITLE>Kinded variables</TITLE>...</PARA>
+
+     In a formatted document, this might be rendered with the `title'
+     in the margin rather than bold face in the text.
+
+     DIV is a way of grouping paragraphs together.  For example, an
+     extended warning might be coded as follows:
+
+        <DIV CLASS=WARNING>
+        <P>...
+        <P>...
+        <P>...
+        </DIV>
+
+     In a formatted document, this might be rendered with a colored
+     background and a heading saying `Warning!'.
+
   -->
-<!ENTITY % sec1a.class  "sec1|section">
-<!ENTITY % sec1b.class  "sec1.anon|section.anon">
-<!ENTITY % sec1.class   "%sec1a.class;|%sec1b.class;">
-<!ENTITY % sec2a.class  "sec2|subsection">
-<!ENTITY % sec2b.class  "sec2.anon|subsection.anon">
-<!ENTITY % sec2.class   "%sec2a.class;|%sec2b.class;">
-<!ENTITY % sec3a.class  "sec3|subsubsection">
-<!ENTITY % sec3b.class  "sec3.anon|subsubsection.anon">
-<!ENTITY % sec3.class   "%sec3a.class;|%sec3b.class;">
 
-<!ELEMENT part                  - O (title,chapter+)>
-<!ELEMENT part.anon             - O (chapter+)>
-<!ELEMENT chapter               - O (title,(%p.class;)*,(%sec1.class;)*)>
-<!ELEMENT chapter.anon          - O ((%p.class;)*,(%sec1.class;)*)>
-<!ELEMENT appendix              - O (title,(%p.class;)*,(%sec1.class;)*)>
-<!ELEMENT appendix.anon         - O ((%p.class;)*,(%sec1.class;)*)>
-<!ELEMENT (%sec1a.class)        - O (title,(%p.class;)*,(%sec2.class;)*)>
-<!ELEMENT (%sec1b.class)        - O ((%p.class;)*,(%sec2.class;)*)>
-<!ELEMENT (%sec2a.class)        - O (title,(%p.class;)*,(%sec3.class;)*)>
-<!ELEMENT (%sec2b.class)        - O ((%p.class;)*,(%sec3.class;)*)>
-<!ELEMENT (%sec3a.class)        - O (title,(%p.class;)*)>
-<!ELEMENT (%sec3b.class)        - O ((%p.class;)*)>
+<!ELEMENT p        - O (%p.chars.mix;)*>
+<!ELEMENT p.silent O O (%p.chars.mix;)*>
+<!ELEMENT p.level  O O (%p.mix;)*>
+<!ELEMENT para     - O (title ,(%p.chars.mix;)*)>
+<!ELEMENT div      - O (title?,(%p.model;))>
 
-<!ATTLIST (part|chapter|appendix|%sec1.class;|%sec2.class|%sec3.class)
+<!ATTLIST (p|p.silent|p.level|para|div)
         %common.attr;
 >
 
 <!--==================== LISTS ====================================-->
 <!--
+
      The most common kind of list consist of a sequence of items.
      Some lists are intended to be enumerations, where the items are
      labelled with numbers: these can be indicated using attribute
@@ -150,10 +210,41 @@
      continue with the same counter.
 
      Attribute N may also be used on an item.
+
+     A LIST can also be used to describe objects.  For this use one or
+     more ENTRY elements before an ITEM:
+
+        <LIST>
+        <ENTRY>FoldL
+        <ENTRY>FoldR
+        <ITEM>...
+        <ENTRY>Take
+        <ITEM>...
+        ...
+        </LIST>
+
+     In the case of e.g. procedures, it may be desirable to also to
+     also indicate how it is to be called.  For this use the SYNOPSIS
+     element:
+
+        <LIST CLASS=EXPORTS>
+        <ENTRY><<FoldL>>
+        <SYSNOPSIS><<{FoldL ?+{L1} ?+{F} ?_{V} ??{L2}}>>
+        <ENTRY><<FoldR>>
+        <SYSNOPSIS><<{FoldR ?+{L1} ?+{F} ?_{V} ??{L2}}>>
+        <ITEM>...
+        <ENTRY><<Take>>
+        <SYNOPSIS><<{Take ?+{L1} ?+{N} ??{L2}}>>
+        <ITEM>...
+        ...
+        </LIST>
+
+     Note the use of CLASS=EXPORTS to suggest that the list is
+     describing the exports of a module.
+
   -->
 
-<!ENTITY % list.entry.class     "entry,synopsis?">
-<!ELEMENT list  - - (((%list.entry.class;)+,item)+|item+)>
+<!ELEMENT list  - - (((entry,synopsis?)+,item)+|item+)>
 <!ATTLIST list
         %common.attr;
         %display.attr;
@@ -162,12 +253,12 @@
         continues       IDREF   #IMPLIED
 >
 
-<!ELEMENT (entry|synopsis) - O (%inline.mix;)*>
+<!ELEMENT (entry|synopsis) - O (p.silent)>
 <!ATTLIST (entry|synopsis)
         %common.attr;
 >
 
-<!ELEMENT item - O ((%inline.mix.nofloat;)*,(%p.class;)*)>
+<!ELEMENT item - O (%p.chars.model;)>
 <!ATTLIST item
         %common.attr;
         n               NUMBER  #IMPLIED
@@ -175,6 +266,7 @@
 
 <!--==================== MATH =====================================-->
 <!--
+
      Math elements may be inline or displayed.  Attribute DISPLAY
      indicates that displayed math is desired.
 
@@ -222,7 +314,7 @@
 <!ATTLIST math.extern
         %common.attr;
         %display.attr;
-        to   CDATA             #REQUIRED
+        %extern.attr;
         type (%math.notation;) #IMPLIED
 >
 <!ELEMENT math.choice - - (math|math.extern)+>
@@ -243,7 +335,7 @@
 <!ATTLIST picture.extern
         %common.attr;
         %display.attr;
-        to   CDATA                      #REQUIRED
+        %extern.attr;
         type (%picture.notation;)       #IMPLIED
 >
 <!ELEMENT picture.choice - - (picture|picture.extern)>
@@ -253,40 +345,72 @@
 >
 
 <!--==================== CODE =====================================-->
+<!-- Code Elements
 
+     CODE contains code text in a programming language which is either
+     specified by the PROGLANG attribute, or inherited from a PROGLANG
+     attribute on an surrounding (ancestor) element. This code text is
+     just data and cannot e.g. contain embeded elements.
+
+     Sometimes we need code to contains annotations.  Since this is
+     not supported by CODE, we introduce CODE.ANNOTATED for that
+     purpose.  In addition to code text, it allows occurrences of the
+     VAR element.
+
+     CODE.EXTERN refers to code to be obtained from an external
+     resource, e.g. a file.
+
+  -->
 <!ELEMENT code           - -    CDATA     >
 <!ELEMENT code.annotated - - (#PCDATA|var)*>
 <!ELEMENT code.extern    - O EMPTY>
-<!ELEMENT var            - - (#PCDATA)    >
-<!ENTITY % var.mode.values      "in|out|cin|cnin">
-<!ENTITY % var.mode.attr        "mode (%var.mode.values;) #IMPLIED">
-<!ENTITY % prog.lang.values     "oz|c|cc|elisp|gump">
-<!ENTITY % prog.lang.attr       "proglang (%prog.lang.values;) #IMPLIED">
-<!ENTITY % var.type.values      "meta|env|grammar">
-<!ENTITY % var.type.attr        "type (%var.type.values;) #IMPLIED">
-<!ATTLIST var
-        %common.attr;
-        %var.mode.attr;
-        %prog.lang.attr;
-        %var.type.attr;
->
+
 <!ATTLIST (code|code.annotated)
         %common.attr;
         %inline.attr;
-        %prog.lang.attr;
 >
 <!ATTLIST code.extern
         %common.attr;
         %inline.attr;
-        %prog.lang.attr;
-        TO CDATA #REQUIRED
+        %extern.attr;
+>
+
+<!-- Var Element
+
+     VAR is both a phrasal element and permitted inside a
+     CODE.ANNOTATED element.  It serves to identify 4 types of
+     objects:
+
+        1. programming language variables       TYPE=prog
+        2. meta variables                       TYPE=meta
+        3. environment variables                TYPE=env
+        4. non-terminals symbols in a grammar   TYPE=grammar
+
+     It can be further equipped with a MODE.  This is useful to
+     describes the expected modes of parameters to builtins and
+     library procedures.
+
+  -->
+
+<!ELEMENT var            - - (#PCDATA)>
+
+<!ENTITY % var.mode.values      "in|out|cin|cnin">
+<!ENTITY % var.mode.attr        "mode (%var.mode.values;) #IMPLIED">
+<!ENTITY % var.type.values      "prog|meta|env|grammar">
+<!ENTITY % var.type.attr        "type (%var.type.values;) prog">
+<!ATTLIST var
+        %common.attr;
+        %var.mode.attr;
+        %var.type.attr;
 >
 
 <!--==================== CODE SHORTREFS ===========================-->
 <!--
-     here we provide various notational abbreviations to facilitate
-     writing Oz documentation.  In particular, we frequently need to
-     annotate a variable with a mode.
+
+     Since mode annotations etc arise frequently in Oz documentation,
+     we provide the abbreviations below; they ar legal as phrasal
+     elements and inside CODE.ANNOTATED, but, for example, not within
+     CODE which does not interpret its contents.
 
      ?+{X}      <var mode=in  >X</var>
      ??{X}      <var mode=out >X</var>
@@ -296,14 +420,11 @@
      ?_{X}      <var          >X</var>
      ?={X}      <var type=grammar>X</var>
 
-     These annotations are available in normal text, but nor in plain
-     CODE, which contains data that remains uninterpreted.  However
-     they are available in CODE.ANNOTATED.  The difference between
-     CODE and CODE.ANNOTATED is that the former does not interpret
-     its contents, whereas the latter performs expansions and allows
-     occurrences of VAR.  To facilitate the input of CODE.ANNOTATED
-     elements, they may be marked using <<...>> when inline and with
-     <<< ... >>> when displayed.
+     Furthermore CODE.ANNOTATED is such a common element that it also
+     deserves an abbreviation.
+
+     <<...>>    <CODE.ANNOTATED>...</CODE.ANNOTATED>
+     <<<...>>>  <CODE.ANNOTATED DISPLAY>...</CODE.ANNOTATED>
 
   -->
 
@@ -381,228 +502,219 @@
 
   -->
 
-<!ELEMENT (ref|ref.extern) - - (%inline.mix;)*>
+<!ELEMENT (ref|ref.extern) - - (%p.chars.mix;)*>
 <!ELEMENT (ptr|ptr.extern) - O EMPTY>
 
 <!ATTLIST (ref|ptr)
         %common.attr;
-        to IDREF #REQUIRED
+        %to.attr;
 >
 <!ATTLIST (ref.extern|ptr.extern)
         %common.attr;
-        to CDATA #REQUIRED
+        %extern.attr;
 >
 
-<!--==================== PARAGRAPH MATTER =========================-->
+<!--==================== PHRASAL ELEMENTS =========================-->
 <!--
-     <P> is for ordinary paragraphs
-
-     <PARA><TITLE>...</TITLE> is for paragraphs with a title. It may
-     be a good idea to further specify the kind of paragraph intended
-     using the CLASS attribute.  For example, the Oz documentation
-     often has paragraphs that describe a particular topic: it is often
-     desired to display the topic in the margin facing the paragraph.
-     One way to encode this is to use the TITLE element to mark the
-     topic and to annotate the PARA element with attribute class=apropos
-     to suggest that this is a paragraph `apropos' the title:
-
-     <PARA class=apropos><TITLE/Kinded variables/
-
-  -->
-
-<!ELEMENT p O O (%inline.mix;)*>
-<!ATTLIST p
-        %common.attr;
->
-<!ELEMENT para - O (title,(%inline.mix;)*)>
-<!ATTLIST para
-        %common.attr;
->
-
-<!--==================== MISCELLANEOUS ============================-->
-<!--
-     These are stolen from Texinfo:
+     Borrowed from Texinfo:
         <FILE>/usr/local/oz/README</FILE>       file name
         <KBD>M-a</KBD>          keyboard input
         <KEY>RET</KEY>          conventional name for a key on a keyboard
         <SAMP>foo</SAMP>        literal example of a sequence of chars
+
+     NAME marks text that names an object.  which kind of object
+     should be indicated using the TYPE attribute:
+
+        <NAME type=TOOL>Gump</>
+        <NAME type=CHAR>NUL</>
+        <NAME type=PERSON>Denys Duchier</>
+        <NAME type=KEY>RET</>
+        <NAME type=OS>Linux</>
+
+     SPAN has no particular semantics but is useful to mark an
+     otherwise undistinguished piece of text so that it can be
+     assigned an ID, and thus cross-reference through e.g. a TO
+     attribute, or to assign it a CLASS for whatever purpose was not
+     anticipated by the DTD.
+
+        <SPAN ID=foo>...</>     ...     <PTR TO=foo>    ...
+
+     DEF marks the defining occurrence of a term or phrase.  It would
+     probably be used to contribute an entry in a glossary section
+     that would cross-reference the location where it occurred.  It
+     may be further specified using the CLASS attribute to indicate
+     what kind of term is being defined.
+
   -->
 
-<!ELEMENT file - - (#PCDATA|var)*>
-<!ELEMENT (kbd|key|samp) - - RCDATA>
-<!ATTLIST (%texinfo.class;)
+<!ENTITY % data.chars.mix "#PCDATA|var">
+<!ELEMENT file - - (%data.chars.mix;)*>
+<!ELEMENT (kbd|key|samp|name) - - RCDATA>
+<!ELEMENT (q|span|def) - - (%p.chars.mix;)* -- should be more restricted -- >
+<!ATTLIST (file|kbd|key|samp|q|span|def)
         %common.attr;
 >
+<!ATTLIST name
+        %common.attr;
+        type CDATA #IMPLIED
+>
+
+<!--==================== FIGURES ==================================-->
 <!--
-     <Q>...</Q>         quoted text
-     <TITLE>...</TITLE>
+
+     A FIGURE contains displayed material.  It may have a TITLE, and a
+     CAPTION that contains a longer description.  Here is an example
+     adapted from the TEI DTD documentation:
+
+        <FIGURE>
+        <TITLE>Mr Fezziwig's Ball</TITLE>
+        <CAPTION>A Cruikshank engraving showing Mr Fezziwig leading
+                 a group of revellers</CAPTION>
+        <PICTURE.EXTERN TO="fezziwig.jpg">
+        </FIGURE>
+
+     A FIGURE may also float outside of the main flow of the document.
+     This can be indicated by attribute FLOAT:
+
+        <FIGURE FLOAT>...</FIGURE>
+
+     The CLASS attribute should be used to indicate what kind of a
+     figure it is:
+
+        <FIGURE FLOAT CLASS=PICTURE>...</FIGURE>
+
+     Such an indication makes it possible to automatically generate a
+     caption label that indicates this type and to cross-reference the
+     figure in the appropriate list (e.g. here a list of pictures).
+
   -->
-<!ELEMENT q - - (%inline.mix;)*>
-<!ATTLIST q
+
+<!ELEMENT figure - O (title?,caption?,p.level?,(%p.model;))>
+<!ATTLIST figure
+        %common.attr;
+        float (float) #IMPLIED
+>
+<!ELEMENT caption - O (%p.chars.model;)>
+<!ATTLIST caption
         %common.attr;
 >
-<!ELEMENT title - O (%inline.mix;)*>
-<!ATTLIST title
-        %common.attr;
->
+
+<!--==================== NOTES ====================================-->
 <!--
-     <SPAN>...</SPAN> has no particular semantics but serves to
-     mark a sequence of inline stuff either to identify it with an
-     id so that it can e.g. be pointed to, or to assign it a class
-     for whatever purpose was not anticipated by the dtd.
-  -->
-<!ELEMENT span - - (%inline.mix;)*>
-<!ATTLIST span
-        %common.attr;
->
-<!--
-     Defining occurrence
-  -->
-<!ELEMENT def - - (#PCDATA)>
-<!ATTLIST def
-        %common.attr;
->
 
-<!--==================== FLOATS ===================================-->
-<!--
-     A float is a sequence of paragraph level elements, and is to be
-     presented outside of the main flow of the document.  It is a good
-     idea to further specify the type of floating material using the
-     CLASS attribute.
+     A NOTE is another kind of (normally) floating material.  The
+     difference is that it will usually leave a trace in the main flow
+     of the document.  For example, footnotes typically leave a
+     superscripted integer behind.  The attribute CLASS should be used
+     to indicate what kind of NOTE is intended.  Since footnotes are a
+     major application of NOTEs, the attribute FOOT can be used
+     instead of CLASS=FOOT:
 
-                <FLOAT class=figure id=fig.a>
-                   <TITLE>...</TITLE>
-                   ...
-                </FLOAT>
-
-     or         <FLOAT.ANON class=figure id=fig.a>...</FLOAT.ANON>
-
-     Note that FLOAT requires a TITLE (this corresponds to a caption
-     in LaTeX) and FLOAT.ANON has none.
-
-     A NOTE is a special kind of floating material. It is considered
-     distinct from a FLOAT because it normally leaves a trace in the
-     main document flow (e.g. a supscripted number that serves as a
-     reference).  Since footnotes are the major application of NOTE,
-     the special FOOT attribute may be used to indicate that a footnote
-     is intended, instead of the more verbose use of the CLASS attribute.
-     The intention is that:
-
-                <NOTE FOOT>...</NOTE>
-
-     should normally be considered equivalent to:
-
-                <NOTE class=foot>...</NOTE>
-
-     You can invent your own classes of notes (provided you eventually
-     tell the processor what to do with them) just so you can refer to
-     them.  For example, suppose we agree that notes of class
-     silent.endnote leave no trace in the text but are to be gathered
-     into a (computed) appendix.  We could use one as follows:
-
-        invoke <REF to=explain.foo>the Foo system call</REF>
-        <NOTE class=silent.endnote id=explain.foo>
-          Foo(...) returns ... and may raise exception ...
-        </NOTE>
-        ...
-
-     The idea would be that the online version of the document would
-     provide a hyperlink to the note, or perhaps it would display the
-     note in a popup.  The printed version of the document might leave
-     a mark in the text (e.g. an underlined supscripted integer) refering
-     to the note in the `end note' appendix.
+        <NOTE FOOT>...</NOTE>
 
   -->
 
-<!ELEMENT float         - - (title,(%p.class;)*)        -(%float.class;)>
-<!ELEMENT float.anon    - - (%p.class;)*                -(%float.class;)>
-<!ATTLIST (float|float.anon)
-        %common.attr;
->
-<!ELEMENT note          - - (%p.class;)*>
-<!ATTLIST note
-        %common.attr;
-        foot (foot) #IMPLIED
->
-
-<!--==================== DIV ======================================-->
-<!--
-     A division is a sequence of paragraphs organized into a unit.
-     For example this arrangement could be used to indicate an
-     extended warning:
-
-                <DIV.ANON class=warning>...</DIV>
-
-     As usual DIV requires a TITLE and DIV.ANON takes none
-  -->
-
-<!ENTITY % div.class "div|div.anon">
-<!ELEMENT div - - (title,(%p.class;)*)>
-<!ELEMENT div.anon - - (%p.class;)*>
-<!ATTLIST (%div.class)
-        %common.attr;
->
+<!ELEMENT note - - (%p.chars.model;)>
 
 <!--==================== INDEX ====================================-->
 <!--
+
      one may wish to index (1) an element from the document, (2) a
      span of the document which does not correspond to a single
-     element.  INDEX is intended for the first case, while
-     INDEX.BEGIN and INDEX.END are intended for the second case.
+     element.  INDEX is intended for the first case, while INDEX.BEGIN
+     and INDEX.END are intended for the second case.
 
-     Furthermore, an entry may require several levels of indexing.
-     For each level, it may be necessary to distinguish between
-     the text used to label the indexing level, and the text used
-     to perform sorting of the labels.
+     Furthermore, an entry may require several levels of indexing:
 
-                <index>foo</>
-                <index>foo<and>sub 1<and>sub 2</index>
+        <INDEX>foo</>
+        <INDEX>foo<AND>bar<AND>baz</INDEX>
 
-     the SORT attribute is intended to supply text to use for sorting
-     instead of the contents.  Note that if the first AND element
-     does not have an explicit SORT attribute, it should inherit
-     it from its parent INDEX element.
+     For a `see' reference:
+
+        <INDEX>un<AND>deux<SEE>one<AND>two<AND>french</INDEX>
+
+     For each level, it may be necessary to distinguish between the
+     text used to label the indexing level, and the text used to
+     perform sorting on the labels.  The SORT.AS attribute is intended
+     to supply text to use for sorting instead of the contents.  Note
+     that if the first (implicit) AND element does not have an
+     explicit SORT.AS attribute, it should inherit it from its parent
+     INDEX element.
 
   -->
 
-<!ELEMENT index.begin - - (%inline.mix;)*>
+<!ELEMENT index.begin - - ((and)+,see?)>
 <!ATTLIST index.begin
-        id ID #REQUIRED
-        sort CDATA #IMPLIED
+        %common.attr;
+        sort.as CDATA #IMPLIED
 >
 <!ELEMENT index.end   - O   EMPTY  >
 <!ATTLIST index.end
-        to IDREF #REQUIRED
+        %common.attr;
+        %to.attr;
 >
 <!ELEMENT index - - ((and)+,see?)>
-<!ELEMENT and O O (%inline.mix;)*>
+<!ELEMENT and O O (%p.chars.mix;)*>
 <!ELEMENT see - O (and)+>
+<!ATTLIST see
+        %common.attr;
+>
 <!ATTLIST (index|and)
-        sort CDATA #IMPLIED
+        %common.attr;
+        sort.as CDATA #IMPLIED
 >
 
 <!--==================== BNF MARKUP ===============================-->
+<!--
+
+     Syntax specifications can be marked up using GRAMMAR.RULE
+     elements.  A GRAMMAR.RULE consists of a VAR, which should be of
+     TYPE=GRAMMAR, followed by a sequence of GRAMMAR.ALT that code the
+     alternative rewritings (more or less, but see TYPE=SPACE).  Each
+     alternative may also be decorated with a comment that occurs last
+     and is marked up with GRAMMAR.NOTE.  For examples of use, see the
+     SGML source of the Gump manual.
+
+  -->
 
 <!ELEMENT grammar.rule - O (var,grammar.alt+)>
 <!ATTLIST grammar.rule
         %common.attr;
         %display.attr;
 >
-<!ELEMENT grammar.alt - O ((%inline.mix;)*,grammar.note?)>
+<!ENTITY % grammar.type.values "def|add|or|space">
+<!ENTITY % grammar.type.default "#IMPLIED">
+<!ENTITY % grammar.type.attr "
+        type (%grammar.type.values;) %grammar.type.default;
+">
+<!ELEMENT grammar.alt - O ((%p.chars.mix;)*,grammar.note?)>
 <!ATTLIST grammar.alt
         %common.attr;
-        type (def|add|or) #IMPLIED
+        %grammar.type.attr;
+>
+<!ELEMENT grammar.note - O (%p.chars.mix;)*>
+<!ATTLIST grammar.note
+        %common.attr;
 >
 
 <!--==================== TABLES ===================================-->
+<!--
 
+     A TABLE consists of rows marked up with TR.  A row consists of a
+     sequence of data TD and header TH cells, each of which may span
+     several columns as specified by attribute COLSPAN.
+
+     As of yet, there is no means to specify alignment or borders.
+     Stay tuned!
+
+  -->
 <!ELEMENT table - - (title?,tr+)>
 <!ATTLIST table
         %common.attr;
         %display.attr;
 >
 <!ELEMENT tr - O (td|th)+>
-<!ELEMENT (td|th) - O ((%inline.mix.nofloat;)*,(%p.class;)*)>
+<!ELEMENT (td|th) - O (%p.chars.model;)>
 <!ATTLIST (td|th)
         %common.attr;
         colspan NUMBER #IMPLIED
