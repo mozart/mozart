@@ -45,7 +45,14 @@ SITE_PROPERTY_FLAGS	=
 SITE_PROPERTY_SRCS	=
 endif
 
-OZCFLAGS	= $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS)
+GTK_ENABLED	= @GTK_ENABLED@
+ifeq ($(GTK_ENABLED),yes)
+GTK_FLAGS	= -DGTK_ENABLED
+else
+GTK_FLAGS	=
+endif
+
+OZCFLAGS	= $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS) $(GTK_FLAGS)
 OZC		= @OZC@
 
 COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base=$(SRCDIR)/Base.ozf -b $(BUILDDIR)/
@@ -78,7 +85,7 @@ CPSRC1  = Search FD FS Combinator RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPMisc DPinit ConnectionFunctor AcceptFunctor ConnectAcceptModule $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools Tix
-GTKSRC  = GTK GDK Glade GnomeCanvas
+GTKSRC  = GTK GDK Glade GnomeCanvas GTKSimpleBuilder
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC	= Macro BackquoteMacro LoopMacro
 
