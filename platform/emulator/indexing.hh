@@ -141,7 +141,7 @@ class IHashTable {
     hashMask = size-1;
     literalTable = functorTable = numberTable = NULL;
     elseLabel = elseLbl;
-    listLabel = elseLabel;
+    listLabel = 0;
   };
 
   int *add(TaggedRef number, int label);

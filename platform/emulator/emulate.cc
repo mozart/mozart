@@ -278,6 +278,7 @@ void deallocateY(RefsArray a)
 									\
       if (isLTuple(term)) {						\
 	int offset = table->listLabel;					\
+	if (!offset) offset = table->elseLabel;				\
 	sPointer = tagged2LTuple(term)->getRef();			\
 	JUMPRELATIVE(offset);						\
       } else {								\
