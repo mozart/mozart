@@ -28,8 +28,7 @@
 #pragma interface
 #endif
 
-#include "base.hh"
-#include "oz.h"
+#include "tagged.hh"
 
 /*===================================================================
  * Extension
