@@ -3146,15 +3146,14 @@ Case(GETVOID)
       }
 
       if (oz_isAbstraction(pred)) {
-        CodeArea *code = CodeArea::findBlock(PC);
-        AbstractionEntry *entry = new AbstractionEntry(NO);
-        entry->setPred(tagged2Abstraction(pred));
-        CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);
-        code->writeAbstractionEntry(entry, PC+1);
-        DISPATCH(0);
+        Abstraction *abstr = tagged2Abstraction(pred);
+        if (abstr->getArity() == (tailcallAndArity >> 1)) {
+          patchToFastCall(abstr,PC,tailcallAndArity&1);
+          DISPATCH(0);
+        }
       }
 
-      if (oz_isBuiltin(pred) || oz_isObject(pred)) {
+      if (oz_isProcedure(pred) || oz_isObject(pred)) {
         isTailCall = tailcallAndArity & 1;
         if (!isTailCall) PC += 3;
         predArity = tailcallAndArity >> 1;
