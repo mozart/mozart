@@ -110,12 +110,13 @@ private:
 public:
   AskActor(Board *s,int prio,int compMode,
 	   ProgramCounter elsepc,
-	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i);
+	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i,
+	   Thread *tt);
 
   void gcRecurse();
 
   ProgramCounter getElsePC() { return elsePC; }
-  void setThread(Thread *th) { Assert(thread==0); thread = th; }
+  void setThread(Thread *th) { thread = th; }
   Thread *getThread() { return thread; }
 };
 
