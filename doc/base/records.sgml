@@ -9,7 +9,7 @@
   <P>
     This chapter describes procedures to be used with records in general and
     special kinds of records, namely tuples and lists.
-  <Section>
+  <Section id=section.records.records>
     <Title/Records in General/
     <P>
       The module <Span class=index/<<Record>>/ contains procedures operating
@@ -423,7 +423,7 @@
 	  blocks.
       </List>
 
-  <Section>
+  <Section id=section.records.tuples>
     <Title/Tuples/
     <P>
       The module <Span class=index/<<Tuple>>/ contains procedures operating
@@ -957,7 +957,7 @@
 	  is applied with the current index as first actual argument.
       </List>
 
-  <Section>
+  <Section id=section.records.features>
     <title/Feature Constraints/
 
     <p>
