@@ -113,7 +113,7 @@ in
            fun {$ L}
               Start = {FD.int 1#(HourLimit-L.dur)}
            in
-              case {HasFeature L constraints}
+              if {HasFeature L constraints}
               then {ApplyConstraint L.constraints Start}
               else skip
               end
@@ -177,7 +177,7 @@ local
          SizeX={FD.reflect.size X.start} in
          case SizeX of 1 then
             {Choose Xr HoleTail HoleHead MinYet SizeYet Min Ys}
-         elsecase SizeX<SizeYet then
+         elseif SizeX<SizeYet then
             NewHole in
             HoleTail=MinYet|HoleHead
             {Choose Xr Ys NewHole X SizeX Min NewHole}
@@ -190,7 +190,7 @@ local
    fun {Cost I Ls C}
       case Ls of nil then /*{Show 'tragic error'}*/ _
       [] A#B|Lr then
-         case A=<I andthen I=<B
+         if A =< I andthen I =< B
          then C
          else {Cost I Lr C+1}
          end
@@ -201,7 +201,7 @@ local
       case Domain of nil then Min
       [] D|Dr
       then TMinVal = {Cost D Ordering 1} in
-         case TMinVal<MinVal then {GetFirst Dr D TMinVal Ordering}
+         if TMinVal<MinVal then {GetFirst Dr D TMinVal Ordering}
          else {GetFirst Dr Min MinVal Ordering}
          end
       end
@@ -274,7 +274,7 @@ proc {DayBreak Break Lectures}
                        {ForAll Break proc{$ B}
                                         Left = (B.1-Lec.dur)
                                      in
-                                        case Left < 0 then
+                                        if Left < 0 then
                                            Lec.start :: compl(0#B.2)
                                         else
                                            Lec.start :: compl(Left#B.2)
@@ -319,12 +319,14 @@ proc {NoOverlap2 L1 L2}
                                %% and after two hours two quarters
                                %% recreation time
                                LDur LPDur in
-                               LDur=case L.dur<4 then L.dur+1
-                                    else L.dur+2
-                                    end
-                               LPDur=case LP.dur<4 then LP.dur+1
-                                     else LP.dur+2
+                               LDur= if L.dur<4
+                                     then L.dur+1
+                                     else L.dur+2
                                      end
+                               LPDur= if LP.dur<4
+                                      then LP.dur+1
+                                      else LP.dur+2
+                                      end
                                {FD.disjoint L.start LDur LP.start LPDur}
                                /*
                                OR L.start+L.dur =<: LP.start
@@ -353,12 +355,13 @@ proc {NoOverlapLecs2 L1 L2}
    %% and after two hours two quarters
    %% recreation time
    L1Dur L2Dur in
-   L1Dur=case L1.dur<4 then L1.dur+1
-         else L1.dur+2
-         end
-   L2Dur=case L2.dur<4 then L2.dur+1
-         else L2.dur+2
-         end
+   L1Dur= if L1.dur<4 then L1.dur+1
+          else L1.dur+2
+          end
+   L2Dur= if L2.dur<4
+          then L2.dur+1
+          else L2.dur+2
+          end
    {FD.disjoint L1.start L1Dur L2.start L2Dur}
 end
 
@@ -372,7 +375,7 @@ local
          %% Rooms are empty for a quarter after each lecture
          Left = Hour-(L.dur+1)+1
       in
-         case Left < 0 then
+         if Left < 0 then
             (L.start :: 0#Hour)|{SumUpLectures Lr Hour}
          else
             (L.start :: Left#Hour)|{SumUpLectures Lr Hour}
@@ -440,14 +443,16 @@ local
    fun {SumUpOverlaps L1 Lectures}
       case Lectures of nil then nil
       [] L2|Lr then B={FD.int 0#1} L1Dur L2Dur in
-         case L1.name==L2.name then 0|{SumUpOverlaps L1 Lr}
+         if L1.name==L2.name then 0|{SumUpOverlaps L1 Lr}
          else L1S L2S in
-            L1Dur=case L1.dur<4 then L1.dur+1
-                  else L1.dur+2
-                  end
-            L2Dur=case L2.dur<4 then L2.dur+1
-                  else L2.dur+2
-                  end
+            L1Dur= if L1.dur<4
+                   then L1.dur+1
+                   else L1.dur+2
+                   end
+            L2Dur= if L2.dur<4
+                   then L2.dur+1
+                   else L2.dur+2
+                   end
             L1S=L1.start L2S=L2.start
 
             condis B=:1 L1S+L1Dur>:L2S L2S+L2Dur>:L1S
@@ -856,7 +861,7 @@ class TimeTableClass from BaseObject
       first: true
       solver
    meth readProblem(InputFileName)
-      case InputFileName==false then skip
+      if InputFileName==false then skip
       else
          InputFile = {New Open.file init(name:InputFileName
                                          flags: [read])}
@@ -884,7 +889,7 @@ class TimeTableClass from BaseObject
       PD = @problemDescription
    in
       first <- true
-      case PD == nil then
+      if PD == nil then
          {ControllerLabel tk(configure text:'No problem loaded')}
       else
          solver <- {New Search.object
@@ -911,10 +916,10 @@ class TimeTableClass from BaseObject
    end
    meth setSolution(Sol)
       thread
-         case Sol==nil then
+         if Sol==nil then
             {ControllerLabel tk(configure text:'No solution')}
             /*{Show failed}*/
-         elsecase Sol==stopped then
+         elseif Sol==stopped then
             {ControllerLabel tk(configure text:'Stopped')}
             /*{Show stopped}*/
          else
@@ -925,7 +930,7 @@ class TimeTableClass from BaseObject
    meth help(Sol)
       Solver = @solver in
       solution <- Sol
-      case @first  then
+      if @first  then
          first <- false
          {self graphic}
       else skip
@@ -954,13 +959,13 @@ class TimeTableClass from BaseObject
       {DrawSchedule @solution.1 TopWindow}
    end
    meth edit(FileName)
-      case FileName==false then skip
+      if FileName==false then skip
       else
          {OS.system Editor#' '#FileName#'\&' _}
       end
    end
    meth save(OutputFileName)
-      case OutputFileName==false then skip
+      if OutputFileName==false then skip
       else
          F = {New Open.file init(name:OutputFileName
                                  flags: [read write 'create'])}
@@ -970,7 +975,7 @@ class TimeTableClass from BaseObject
    end
 \ifndef ALONEDEMO
    meth read(FileName)
-      case FileName==false then skip
+      if FileName==false then skip
       else
          File = {New Open.file init(name:FileName
                                     flags: [read write 'create'])

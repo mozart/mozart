@@ -194,7 +194,7 @@ define
       Start = IState.start Grammar = IState.grammar
       Colors = IState.colors RecDepth = IState.recDepth
       proc {Interpret Color Turtle N ComList}
-         case N > 0 then
+         if N > 0 then
             case ComList
             of H|T then
                case H
@@ -224,7 +224,7 @@ define
       {Interpret Colors.Start Turtle RecDepth Grammar.Start}
    end % proc Flower3D
 
-   fun {TkColor C} case  Tk.isColor then C else white end end
+   fun {TkColor C} if Tk.isColor then C else white end end
 
    Plant = plant(start  : plant
                  grammar: grammar(

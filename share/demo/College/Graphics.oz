@@ -4,7 +4,7 @@ local
    Wednesday = 73#108
    Thursday  = 109#144
    Friday    = 145#180
-   Colors    = case Tk.isColor then
+   Colors    = if Tk.isColor then
                   colors('2': lightyellow1
                            '4': lightsalmon2
                            '6': cyan3
@@ -34,9 +34,9 @@ local
    Font          ='lucidasanstypewriter-12'
 
    proc {GetEarliest Until Ind Lecture Canvas Day NewUntil}
-      case Ind>RoomLimit then
+      if Ind>RoomLimit then
          fail
-      else case Until.Ind =< Lecture.start then
+      else if Until.Ind =< Lecture.start then
               {Canvas
                tk(crea rectangle
                        ((Lecture.start-1) mod 36)*Quarter+Roff
@@ -57,7 +57,7 @@ local
                                    TimeLineY)}
               else skip
               end
-              case  Lecture.size==big orelse Lecture.size==small then
+              if  Lecture.size==big orelse Lecture.size==small then
                  {Canvas tk(crea line
                                  (((Lecture.start-1) mod 36)+
                                   (Lecture.dur))*Quarter+RoomMarkOffset+Roff
@@ -91,7 +91,7 @@ local
 in
    proc {DrawSchedule FlatSols Parent}
       W
-      CanvasColor = case Tk.isColor then mediumturquoise else white end
+      CanvasColor = if Tk.isColor then mediumturquoise else white end
       Canvas WeekDays
    in
       {TimeTable save("CurrentOut.ozt")}
@@ -136,7 +136,7 @@ in
        in
           {Record.forAll TupleUntil fun{$} 0 end}
           {DoDisplay SortedLectures Ind Canvas TupleUntil}
-          case Ind < 5 then
+          if Ind < 5 then
              {Canvas tk(crea line 0 Ind*DayHeight+3*HeightLecture div 2
                         CanvasWidth Ind*DayHeight+3*HeightLecture div 2)}
           else skip
