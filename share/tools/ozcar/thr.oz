@@ -7,14 +7,18 @@ class ThreadDebugger from Emacs
 
    meth init(thr:T)
       self.Thr = T
-      {Dbg.stepmode T on}
    end
    
    meth step
       {Thread.resume self.Thr}
    end
 
+   meth cont
+      {Dbg.stepmode self.Thr off}
+      {Thread.resume self.Thr}
+   end
+   
    meth stack
-      {Browse {Dbg.taskstack self.Thr}}
+      {Ozcar stack(self.Thr)}
    end
 end
