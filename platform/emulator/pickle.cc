@@ -92,98 +92,70 @@ void Pickler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
   Builtin *bi= (Builtin *) biConst;
   const char *pn = bi->getPrintName();
-  Assert(!isResource(biTerm));
+  Assert(!bi->isSited());
 
   //
-  if (bi->isSited()) {
-    processNoGood(biTerm, OK);
-    rememberNode(this, bs, biTerm);
-  } else {
-    marshalDIF(bs, DIF_BUILTIN);
-    rememberNode(this, bs, biTerm);
-    marshalString(bs, pn);
-  }
+  marshalDIF(bs, DIF_BUILTIN);
+  rememberNode(this, bs, biTerm);
+  marshalString(bs, pn);
 }
 
 //
 void Pickler::processExtension(OZ_Term t)
 {
-  Assert(!isResource(t));
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
 
   //
   marshalDIF(bs,DIF_EXTENSION);
   marshalNumber(bs, tagged2Extension(t)->getIdV());
-  if (!tagged2Extension(t)->marshalV(bs))
-    processNoGood(t, NO);       // not remembered!
+  // Pickling must be defined for this entity:
+  Bool p = tagged2Extension(t)->pickleV(bs);
+  Assert(p);
 }
 
 //
 Bool Pickler::processObject(OZ_Term term, ConstTerm *objConst)
 {
-  Assert(!isResource(term));
-  PickleBuffer *bs = (PickleBuffer *) getOpaque();
-  Object *o = (Object*) objConst;
-
-  //
-  processNoGood(term, OK);
-  rememberNode(this, bs, term);
+  OZ_error("Pickler::processObject is called!");
   return (TRUE);
 }
 
 //
-#define HandleTert(string,tert,term,tag,check)          \
-    Assert(!isResource(term));                          \
-    PickleBuffer *bs = (PickleBuffer *) getOpaque();            \
-    processNoGood(term, OK);                            \
-    rememberNode(this, bs, term);
-
 void Pickler::processLock(OZ_Term term, Tertiary *tert)
 {
-  HandleTert("lock",tert,term,DIF_LOCK,OK);
+  OZ_error("Pickler::processLock is called!");
 }
 
 Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
 {
   //  MsgBuffer *bs = (MsgBuffer *) getOpaque();
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
-  if (bs->cloneCells() && tert->isLocal()) {
-    marshalDIF(bs, DIF_CLONEDCELL);
-    rememberNode(this, bs, term);
-    return (NO);
-  } else {
-    HandleTert("cell",tert,term,DIF_CELL,OK);
-    return (OK);
-  }
+  Assert(cloneCells() && tert->isLocal());
+  marshalDIF(bs, DIF_CLONEDCELL);
+  rememberNode(this, bs, term);
+  return (NO);
 }
 
 void Pickler::processPort(OZ_Term term, Tertiary *tert)
 {
-  HandleTert("port",tert,term,DIF_PORT,NO);
+  OZ_error("Pickler::processPort is called!");
 }
 
 void Pickler::processResource(OZ_Term term, Tertiary *tert)
 {
-  HandleTert("resource",tert,term,DIF_RESOURCE_T,OK);
+  OZ_error("Pickler::processResource is called!");
 }
-
-#undef HandleTert
 
 //
 void Pickler::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
 {
-#ifdef DEBUG_CHECK
-  OZ_Term term = processCVar(uv, uvarTerm);
-  Assert(term == (OZ_Term) 0);
-#else
-  (void) processCVar(uv, uvarTerm);
-#endif
+  OZ_error("Pickler::processUVar is called!");
 }
 
 //
 OZ_Term Pickler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
 {
-  Assert(isResource(cv));
+  OZ_error("Pickler::processCVar is called!");
   return ((OZ_Term) 0);
 }
 
@@ -249,16 +221,7 @@ Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 //
 Bool Pickler::processFSETValue(OZ_Term fsetvalueTerm)
 {
-  if (ozconf.perdioMinimal) {
-    processNoGood(fsetvalueTerm, NO);
-    return (OK);
-  }
-
-  //
-  Assert(!isResource(fsetvalueTerm));
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
-
-  //
   marshalDIF(bs, DIF_FSETVALUE);
   return (NO);
 }
@@ -268,35 +231,27 @@ Bool Pickler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 {
   OzDictionary *d = (OzDictionary *) dictConst;
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  Assert(d->isSafeDict());
 
   //
-  if (!d->isSafeDict()) {
-    processNoGood(dictTerm, OK);
-    rememberNode(this, bs, dictTerm);
-    return (OK);
-  } else {
-    marshalDIF(bs,DIF_DICT);
-    rememberNode(this, bs, dictTerm);
-    marshalNumber(bs, d->getSize());
-    return (NO);
-  }
+  marshalDIF(bs,DIF_DICT);
+  rememberNode(this, bs, dictTerm);
+  marshalNumber(bs, d->getSize());
+  return (NO);
 }
 
 Bool Pickler::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
 {
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
-  if (bs->cloneCells()) {
-    OzArray *array = (OzArray *) arrayConst;
-    marshalDIF(bs, DIF_ARRAY);
-    rememberNode(this, bs, arrayTerm);
-    marshalNumber(bs, array->getLow());
-    marshalNumber(bs, array->getHigh());
-    return (NO);
-  } else {
-    processNoGood(arrayTerm, OK);
-    rememberNode(this, bs, arrayTerm);
-    return (OK);
-  }
+  OzArray *array = (OzArray *) arrayConst;
+  Assert(cloneCells());
+
+  //
+  marshalDIF(bs, DIF_ARRAY);
+  rememberNode(this, bs, arrayTerm);
+  marshalNumber(bs, array->getLow());
+  marshalNumber(bs, array->getHigh());
+  return (NO);
 }
 
 //
@@ -304,20 +259,15 @@ Bool Pickler::processClass(OZ_Term classTerm, ConstTerm *classConst)
 {
   ObjectClass *cl = (ObjectClass *) classConst;
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
+  Assert(!cl->isSited());
 
   //
-  if (cl->isSited()) {
-    processNoGood(classTerm, OK);
-    rememberNode(this, bs, classTerm);
-    return (OK);                // done - a leaf;
-  } else {
-    marshalDIF(bs, DIF_CLASS);
-    GName *gn = globalizeConst(cl, bs);
-    rememberNode(this, bs, classTerm);
-    if (gn) marshalGName(bs, gn);
-    marshalNumber(bs, cl->getFlags());
-    return (NO);
-  }
+  marshalDIF(bs, DIF_CLASS);
+  GName *gn = globalizeConst(cl, bs);
+  rememberNode(this, bs, classTerm);
+  if (gn) marshalGName(bs, gn);
+  marshalNumber(bs, cl->getFlags());
+  return (NO);
 }
 
 //
@@ -325,52 +275,46 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 {
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
   Abstraction *pp = (Abstraction *) absConst;
+
+  //
+  GName* gname = globalizeConst(pp, bs);
   PrTabEntry *pred = pp->getPred();
+  Assert(!pred->isSited());
   ProgramCounter start;
 
   //
-  if (pred->isSited()) {
-    processNoGood(absTerm, OK);
-    rememberNode(this, bs, absTerm);
-    return (OK);                // done - a leaf;
-  } else {
-    //
-    GName* gname = globalizeConst(pp, bs);
+  marshalDIF(bs, DIF_PROC);
+  rememberNode(this, bs, absTerm);
 
-    //
-    marshalDIF(bs, DIF_PROC);
-    rememberNode(this, bs, absTerm);
+  //
+  if (gname) marshalGName(bs, gname);
+  marshalNumber(bs, pp->getArity());
+  ProgramCounter pc = pp->getPC();
+  int gs = pred->getGSize();
+  marshalNumber(bs, gs);
+  marshalNumber(bs, pred->getMaxX());
+  marshalNumber(bs, pred->getLine());
+  marshalNumber(bs, pred->getColumn());
 
-    //
-    if (gname) marshalGName(bs, gname);
-    marshalNumber(bs, pp->getArity());
-    ProgramCounter pc = pp->getPC();
-    int gs = pred->getGSize();
-    marshalNumber(bs, gs);
-    marshalNumber(bs, pred->getMaxX());
-    marshalNumber(bs, pred->getLine());
-    marshalNumber(bs, pred->getColumn());
+  //
+  start = pp->getPC() - sizeOf(DEFINITION);
 
-    //
-    start = pp->getPC() - sizeOf(DEFINITION);
+  //
+  XReg reg;
+  int nxt, line, colum;
+  TaggedRef file, predName;
+  CodeArea::getDefinitionArgs(start, reg, nxt, file,
+                              line, colum, predName);
+  //
+  marshalNumber(bs, nxt);       // codesize in ByteCode"s;
 
-    //
-    XReg reg;
-    int nxt, line, colum;
-    TaggedRef file, predName;
-    CodeArea::getDefinitionArgs(start, reg, nxt, file,
-                                line, colum, predName);
-    //
-    marshalNumber(bs, nxt);     // codesize in ByteCode"s;
+  //
+  MarshalerCodeAreaDescriptor *desc =
+    new MarshalerCodeAreaDescriptor(start, start + nxt);
+  marshalBinary(pickleCode, desc);
 
-    //
-    MarshalerCodeAreaDescriptor *desc =
-      new MarshalerCodeAreaDescriptor(start, start + nxt);
-    marshalBinary(pickleCode, desc);
-
-    //
-    return (NO);
-  }
+  //
+  return (NO);
 }
 
 //
@@ -390,49 +334,49 @@ void ResourceExcavator::processBigInt(OZ_Term biTerm, ConstTerm *biConst) {}
 //
 void ResourceExcavator::processNoGood(OZ_Term resTerm, Bool trail)
 {
-  Assert(!isResource(resTerm));
   addNogood(resTerm);
 }
 void ResourceExcavator::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
-  Assert(!isResource(biTerm));
+  rememberTerm(biTerm);
+  if (((Builtin *) biConst)->isSited())
+    processNoGood(biTerm, OK);
 }
 void ResourceExcavator::processExtension(OZ_Term t)
 {
-  if (isResource(t))
-    addResource(t);
+  if (!tagged2Extension(t)->toBePickledV())
+    processNoGood(t, NO);
 }
 Bool ResourceExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
 {
   rememberTerm(objTerm);
-  if (isResource(objTerm))
-    addResource(objTerm);
+  addResource(objTerm);
   return (TRUE);
 }
 void ResourceExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
 {
   rememberTerm(lockTerm);
-  if (isResource(lockTerm))
-    addResource(lockTerm);
+  addResource(lockTerm);
 }
 Bool ResourceExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
 {
   rememberTerm(cellTerm);
-  if (isResource(cellTerm) && !cloneCells())
+  if (cloneCells() && tert->isLocal()) {
+    return (NO);
+  } else {
     addResource(cellTerm);
-  return (TRUE);
+    return (OK);
+  }
 }
 void ResourceExcavator::processPort(OZ_Term portTerm, Tertiary *tert)
 {
   rememberTerm(portTerm);
-  if (isResource(portTerm))
-    addResource(portTerm);
+  addResource(portTerm);
 }
 void ResourceExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 {
   rememberTerm(rTerm);
-  if (isResource(rTerm))
-    addResource(rTerm);
+  addResource(rTerm);
 }
 
 //
@@ -449,7 +393,6 @@ void ResourceExcavator::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
 //
 OZ_Term ResourceExcavator::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
 {
-  Assert(isResource(cv));
   addResource(makeTaggedRef(cvarTerm));
   return ((OZ_Term) 0);
 }
@@ -477,16 +420,7 @@ Bool ResourceExcavator::processChunk(OZ_Term chunkTerm,
 Bool ResourceExcavator::processFSETValue(OZ_Term fsetvalueTerm)
 {
   rememberTerm(fsetvalueTerm);
-  if (ozconf.perdioMinimal) {
-    processNoGood(fsetvalueTerm, NO);
-    return (OK);
-  }
-  if (isResource(fsetvalueTerm)) {
-    addResource(fsetvalueTerm);
-    return (OK);
-  } else {
-    return (NO);
-  }
+  return (NO);
 }
 
 //
@@ -495,11 +429,11 @@ Bool ResourceExcavator::processDictionary(OZ_Term dictTerm,
 {
   OzDictionary *d = (OzDictionary *) dictConst;
   rememberTerm(dictTerm);
-  if (!d->isSafeDict()) {
+  if (d->isSafeDict()) {
+    return (NO);
+  } else {
     processNoGood(dictTerm, OK);
     return (OK);
-  } else {
-    return (NO);
   }
 }
 

@@ -450,7 +450,6 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_PERDIO_TEMPRETRYFACTOR,ozconf.perdioTempRetryFactor);
   CASE_INT(PROP_PERDIO_MAXTCPCACHE,ozconf.perdioMaxTCPCache);
   CASE_INT(PROP_PERDIO_CHECKALIVEINTERVAL,ozconf.perdioCheckAliveInterval);
-  CASE_BOOL(PROP_PERDIO_MINIMAL,ozconf.perdioMinimal);
 
   case PROP_PERDIO_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
                                             oz_int(PERDIOMINOR));
@@ -465,7 +464,6 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
             oz_atomNoDup("maxTCPCache"),oz_atomNoDup("checkAliveInterval")),
            SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
                     ozconf.perdioUseAltVarProtocol);
-           SET_BOOL(oz_atomNoDup("minimal"), ozconf.perdioMinimal);
            SET_BOOL(oz_atomNoDup("seifHandler"), ozconf.perdioSeifHandler);
            SET_INT(oz_atomNoDup("debug"), ozconf.debugPerdio);
            SET_INT(oz_atomNoDup("flowbuffersize"),ozconf.perdioFlowBufferSize);
@@ -733,11 +731,6 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
 
     CASE_BOOL(PROP_PERDIO_USEALTVARPROTOCOL,ozconf.perdioUseAltVarProtocol);
-    CASE_BOOL_DO(PROP_PERDIO_MINIMAL,
-                 if ((*isPerdioInitialized)())
-                   return OZ_raiseDebug(OZ_makeException(E_ERROR,oz_atomNoDup("dp"),
-                                                         "modelChoose",0));
-                 ozconf.perdioMinimal=INT__);
     CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
@@ -763,12 +756,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
              SET_NAT(oz_atomNoDup("checkAliveInterval"),
                       ozconf.perdioCheckAliveInterval);
              SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
-                      ozconf.perdioUseAltVarProtocol);
-             DO_BOOL(oz_atomNoDup("minimal"),
-                 if ((*isPerdioInitialized)())
-                   return OZ_raiseDebug(OZ_makeException(E_ERROR,oz_atomNoDup("dp"),
-                                                         "modelChoose",0));
-                 ozconf.perdioMinimal=INT__));
+                      ozconf.perdioUseAltVarProtocol););
     // DPTABLE
     CASE_NAT_DO(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,{
       ozconf.dpTableDefaultOwnerTableSize=INT__;

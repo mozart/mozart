@@ -194,8 +194,7 @@ void DPMarshaler::processNoGood(OZ_Term resTerm, Bool trail)
 
   //
   if (bs->availableSpace() >= DIFMaxSize + MDistSPPMaxSize) {
-    if (!ozconf.perdioMinimal)
-      marshalSPP(bs, resTerm, trail);
+    marshalSPP(bs, resTerm, trail);
   } else {
     marshalDIF(bs, DIF_SUSPEND);
     suspend(resTerm);
@@ -268,7 +267,7 @@ Bool DPMarshaler::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
   Assert(isObject(o));
 
   //
-  if (ozconf.perdioMinimal || o->getClass()->isSited()) {
+  if (o->getClass()->isSited()) {
     if (bs->availableSpace() >=
         DIFMaxSize + MNumberMaxSize + MDistSPPMaxSize) {
       processNoGood(term, OK);
@@ -336,12 +335,7 @@ Bool DPMarshaler::marshalFullObject(OZ_Term term, ConstTerm *objConst)
 //
 #define HandleTert(string,tert,term,tag,check)          \
     ByteBuffer *bs = (ByteBuffer *) getOpaque();        \
-    if (check && ozconf.perdioMinimal &&                \
-        bs->availableSpace() >= DIFMaxSize +            \
-      MDistSPPMaxSize + MNumberMaxSize) {               \
-      processNoGood(term, OK);                          \
-      rememberNode(this, bs, term);                     \
-    } else if (bs->availableSpace() >= DIFMaxSize +     \
+    if (bs->availableSpace() >= DIFMaxSize +            \
                MTertiaryMaxSize + MNumberMaxSize) {     \
       marshalTertiary(bs, tert, tag);                   \
       rememberNode(this, bs, term);                     \
@@ -499,13 +493,8 @@ Bool DPMarshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 }
 
 //
-#define CheckD0Compatibility(Term) \
-   if (ozconf.perdioMinimal) { processNoGood(Term,NO); return OK; }
-
-//
 Bool DPMarshaler::processFSETValue(OZ_Term fsetvalueTerm)
 {
-  CheckD0Compatibility(fsetvalueTerm);
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
   //

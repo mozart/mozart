@@ -100,10 +100,11 @@ public:
 
   void sCloneRecurseV(void) {}
 
-  OZ_Boolean marshalV(MarshalerBuffer *bs) {
+  OZ_Boolean toBePickledV() { return (OZ_TRUE); }
+  OZ_Boolean pickleV(MarshalerBuffer *bs) {
     marshalNumber(bs, size);
     marshalNumber(bs, value);
-    return OZ_TRUE;
+    return (OZ_TRUE);
   }
 };
 

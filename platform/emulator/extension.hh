@@ -86,12 +86,11 @@ public:
   virtual OZ_Return     getFeatureV(OZ_Term,OZ_Term&) { return OZ_FAILED; }
   virtual OZ_Return     putFeatureV(OZ_Term,OZ_Term ) { return OZ_FAILED; }
   virtual OZ_Return     eqV(OZ_Term)               { return OZ_FAILED; }
-  virtual OZ_Boolean    marshalV(MarshalerBuffer *mb) { return (OZ_FALSE); }
+  // 'toBePickledV' and 'pickleV' return 'TRUE' if pickling is defined
+  // for them;
+  virtual OZ_Boolean    toBePickledV() { return (OZ_FALSE); }
+  virtual OZ_Boolean    pickleV(MarshalerBuffer *mb) { return (OZ_FALSE); }
   virtual int           minNeededSpace() { return (0); }
-  // The actual 'marshalV(ByteBuffer *, ...)' is implemented by the
-  // distribution layer;
-  virtual OZ_Boolean    marshalV(ByteBuffer *mb, GenTraverser *gt)
-  { return (OZ_FALSE); }
 
   OZ_Boolean isLocal(void) {
     return _OZ_isLocal_OZ_Extension(__getSpaceInternal());

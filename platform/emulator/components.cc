@@ -205,11 +205,12 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
   return OZ_raiseDebug(makeGenericExc(id,msg,arg));
 }
 
-void saveTerm(ByteStream* buf,TaggedRef t) {
+static void saveTerm(ByteStream* buf, TaggedRef t, Bool cloneCells)
+{
   buf->marshalBegin();
   char *version  =  PERDIOVERSION;
   marshalString(buf, version);
-  pickleTerm(buf, t);
+  pickleTerm(buf, t, cloneCells);
   buf->marshalEnd();
   return;
 }
@@ -229,7 +230,8 @@ OZ_Return onlyFutures(OZ_Term l) {
 }
 
 OZ_Return
-ByteSink::putTerm(OZ_Term in, char *filename, char *header, unsigned int hlen,
+ByteSink::putTerm(OZ_Term in, char *filename, char *header,
+                  unsigned int hlen,
                   Bool textmode, Bool cloneCells)
 {
   OZ_Term resources, nogoods;
@@ -260,9 +262,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, unsigned int hlen,
   ByteStream* bs = bufferManager->getByteStream();
   if (textmode)
     bs->setTextmode();
-  if (cloneCells)
-    bs->setCloneCells();
-  saveTerm(bs, in);
+  saveTerm(bs, in, cloneCells);
 
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
@@ -474,40 +474,6 @@ Bool pickle2text()
 }
 
 #endif
-
-//
-OZ_Return oz_export(OZ_Term t)
-{
-  if (ozconf.perdioMinimal) {
-    // kost@
-    OZ_warning("exportation of resources does not work currently!");
-    // if at all, then '::extractVars()' from libdp is to be used,
-    // and this stuff should be moved to libdp as well:
-    /*
-    OZ_Term vars, nogoods;
-    extractVars(t, vars, nogoods);
-    if (!oz_isNil(nogoods)) {
-      return raiseGeneric("export:nogoods",
-                          "Non-exportables found during export",
-                          oz_mklist(OZ_pairA("Resources", nogoods),
-                                    OZ_pairA("Contained in", t)));
-    }
-    while (!oz_isNil(vars)) {
-      OZ_Term t = oz_head(vars);
-      DEREF(t,tPtr,_2);
-      oz_getVar(tPtr)->markExported();
-      vars = oz_tail(vars);
-    }
-    */
-  }
-  return (PROCEED);
-}
-
-OZ_BI_define(BIexport,1,0)
-{
-  OZ_declareTerm(0,in);
-  return oz_export(in);
-} OZ_BI_end
 
 // ===================================================================
 // class ByteSource

@@ -107,7 +107,8 @@ public:
   virtual OZ_Term typeV();
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
-  virtual int marshalV(MarshalerBuffer *);
+  virtual int toBePickledV();
+  virtual int pickleV(MarshalerBuffer *);
   virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gCollectV() { return clone(); }
   virtual OZ_Extension* sCloneV() { return clone(); }
@@ -193,7 +194,8 @@ public:
   virtual OZ_Term typeV();
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
-  virtual int marshalV(MarshalerBuffer *);
+  virtual int toBePickledV();
+  virtual int pickleV(MarshalerBuffer *);
   virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gCollectV() { return clone(); }
   virtual OZ_Extension* sCloneV() { return clone(); }

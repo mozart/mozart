@@ -66,7 +66,6 @@ public:
 
   int debugIP;
   int debugPerdio;
-  int perdioMinimal;
 
   // Info needed for flowcontrol in ports
   int perdioFlowBufferSize;

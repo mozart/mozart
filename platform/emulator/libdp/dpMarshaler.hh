@@ -491,10 +491,6 @@ void marshalSPP(MarshalerBuffer *bs, TaggedRef entity, Bool trail);
 #define MDistSPPMaxSize MOwnHeadMaxSize
 
 //
-// '!' SB-model - to remove;
-OZ_Return oz_export(OZ_Term t);
-
-//
 // Top-level management of marshalers (to be used by transport
 // objects).
 

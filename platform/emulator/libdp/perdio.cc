@@ -143,14 +143,6 @@ void SendTo(DSite* toS,MsgContainer *msgC,int priority) {
 
   if(ret==ACCEPTED) return;
 
-  // What should be done about this?? AN
-  //    if(ozconf.perdioMinimal){
-  //      OZ_Term nogoods = bs->getNoGoods();
-  //      if (!oz_eq(oz_nil(),nogoods)) {
-  //        OZ_warning("send message '%s' contains nogoods: %s",
-  //             mess_names[mt],toC(nogoods));
-  //      }}
-
   if(ret==PERM_NOT_SENT){
     toS->communicationProblem(msgC,COMM_FAULT_PERM_NOT_SENT);
     msgContainerManager->deleteMsgContainer(msgC);

@@ -49,7 +49,6 @@ static TaggedRef dictionary_of_modules;
 #include "modPickle-if.cc"
 #include "modURL-if.cc"
 #include "modApplication-if.cc"
-#include "modDistribution-if.cc"
 #include "modWeakDictionary-if.cc"
 #ifdef DENYS_EVENTS
 #include "modEvent-if.cc"
@@ -186,7 +185,6 @@ static ModuleEntry ext_module_table[] = {
   {"URL",             mod_int_URL},
   {"Pickle",          mod_int_Pickle},
   {"Application",     mod_int_Application},
-  {"Distribution",    mod_int_Distribution},
   {"INTERNAL",        mod_int_INTERNAL},
 #ifdef DENYS_EVENTS
   {"Event",           mod_int_Event},
