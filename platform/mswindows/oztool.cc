@@ -75,7 +75,7 @@ void usage()
      "\toztool [-verbose] [-gnu|-msvc|-watcom] c++ -c <cfile> [ -o <ofile> ]\n"
      "\toztool [-verbose] [-gnu|-msvc|-watcom] cc  -c <cfile> [ -o <ofile> ]\n"
      "\toztool [-verbose] [-gnu|-msvc|-watcom] ld  -o <target> <files>\n"
-     "\toztool platform\n");
+     "\toztool platform [-o <ofile>]\n");
   exit(2);
 }
 
@@ -193,10 +193,20 @@ int main(int argc, char** argv)
     usage();
 
   if (!strcmp(argv[1],"platform")) {
-    if (argc != 2)
+    if (argc==2) {
+      printf("%s\n",ozplatform);
+    } else if (argc==4 && !strcmp(argv[2],"-o")) {
+      FILE* output = fopen(argv[3],"w");
+      if (output==NULL) {
+        panic(true,"Cannot open file '%s' for writing.\n",argv[3]);
+        exit(1);
+      }
+      fprintf(output,"%s\n",ozplatform);
+      fclose(output);
+      exit(0);
+    } else {
       usage();
-    printf("%s\n",ozplatform);
-    exit(0);
+    }
   }
 
   if (!strcmp(argv[1],"-verbose")) {
