@@ -44,6 +44,7 @@ make install
 /usr/lib/mozart/cache/x-oz/system/gtk/GtkFieldNative.so-linux-i486
 /usr/lib/mozart/cache/x-oz/system/gtk/GtkCanvasNative.so-linux-i486
 /usr/lib/mozart/cache/x-oz/system/gtk/GtkCanvasFieldNative.so-linux-i486
+/usr/lib/mozart/cache/x-oz/system/gtk/parser.so-linux-i486
 /usr/lib/mozart/cache/x-oz/system/gtk/Generator.ozf
 /usr/lib/mozart/cache/x-oz/system/gtk/GBuilderTypes.ozf
 /usr/lib/mozart/cache/x-oz/system/gtk/GBuilderWidgets.ozf

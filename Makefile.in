@@ -77,6 +77,7 @@ PARSERSRCS = lex.yy.cc \
              c.bison.tab.cc
 PARSEROBJS = $(PARSERSRCS:%.cc=%.o)
 PARSERCMPS = parser.so-$(PLATFORM)
+PRSINSTALL = $(LIB_DIR)/parser.so-$(PLATFORM)
 
 #---------------------------------------------------------------------
 # Oz Binding Generator
@@ -166,7 +167,7 @@ BUILDERINSTALL = $(BUILDEROBJS:%=$(LIB_DIR)/%)
 TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) Generator.ozf $(BUILDEROBJS)
 GEN_TARGETS = $(NATCMPS) $(WRPOBJS)
 LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL) \
-              $(GENINSTALL) $(BUILDERINSTALL)
+              $(PRSINSTALL) $(GENINSTALL) $(BUILDERINSTALL)
 EXAMPLES_FILES = \
 	CList.oz CTree.oz CanvasEvents.oz CanvasMove.oz CanvasScramble.oz \
 	FileSelection.oz HelloArgs.oz HelloCanvas.oz HelloGTK.oz \
