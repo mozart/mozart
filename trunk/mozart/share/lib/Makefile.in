@@ -50,7 +50,7 @@ export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/share/=$(OZ_LIB)/
 export OZMAKE_COPYALWAYS	= no
 export OZMAKE_VERBOSE		= no
 
-SPSRC   = Foreign Error ErrorRegistry Finalize
+SPSRC   = Error ErrorRegistry Finalize
 OPSRC   = Open
 APSRC   = GetArgs Syslet Servlet Applet Application
 CPSRC   = Search FD Schedule FS
@@ -175,7 +175,7 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 
 # NOTE: update this list also in platform/emulator/Makefile.in 
 BIMODSPECS = \
-	Boot Array Atom BitArray Bool Cell Char Chunk Class \
+	Array Atom BitArray Bool Cell Char Chunk Class \
 	Dictionary Exception Float ForeignPointer Int Literal \
 	Lock Name Number Object Port Procedure Record Space \
 	String Thread Time Tuple Unit Value VirtualString \
