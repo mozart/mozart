@@ -225,7 +225,8 @@ ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
 	AP.ozc AP.env
 	$(EXECWITHSTD) MakeBatch.oz
 
-ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) AP.ozc
+ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) AP.ozc \
+	SP.ozc OP.ozc \
 	$(EXECWITHSTD) MakeOzServer.oz
 
 Base.ozc: Standard.ozc
@@ -234,7 +235,8 @@ Base.ozc: Standard.ozc
 Standard.ozc: $(STANDARDSRC) Base.env Standard.env
 	OZMAINIT="" $(EXEC) DumpInitial.oz
 
-OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc AP.ozc Compiler.env $(TYCS)
+OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc AP.ozc Compiler.env $(TYCS) \
+	SP.ozc OP.ozc
 	$(COMPILE) -l AP OPI.oz -o OPI.ozc
 
 StandardModules.ozc: AP/StandardModules.oz
