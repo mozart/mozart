@@ -287,14 +287,14 @@ return primCred;
 
 
 EnumDenumPair *CreditHandler::findPair(int k){
-    EnumDenumPair *tmp = frac;
-    while(tmp!=NULL && tmp->denominator != k){
-      tmp = tmp->next;
-    }
-    return tmp;
-  };
+  EnumDenumPair *tmp = frac;
+  while(tmp!=NULL && tmp->denominator != k){
+    tmp = tmp->next;
+  }
+  return tmp;
+}
 
-  Bool CreditHandler::insertPair(int e, int k){
+Bool CreditHandler::insertPair(int e, int k){
     if (k == 0) return TRUE;
     //    printf("InsertingPair %d/%d\n",e,k);
     EnumDenumPair **tmp = &frac;
@@ -323,22 +323,21 @@ EnumDenumPair *CreditHandler::findPair(int k){
     (*tmp)->enumerator = e + (*tmp)->enumerator;
     //printf("Adding %d/%d\n",(*tmp)->enumerator,(*tmp)->denominator);
     return FALSE;
-  }
+}
 
-  EnumDenumPair *CreditHandler::findLargest(){
+EnumDenumPair *CreditHandler::findLargest(){
     EnumDenumPair **tmp = &frac;
     while((*tmp)->enumerator <= 1 && (*tmp)->next != NULL){
       tmp = &((*tmp)->next);
     }
 
     if ((*tmp)->enumerator  > 1) return *tmp;
-    if ((*tmp)->next == NULL){
-      EnumDenumPair *ttmp = *tmp;
-      *tmp = new EnumDenumPair(MAXENUMERATOR,(*tmp)->denominator + 1,NULL);
-      delete ttmp;
-      return *tmp;
-    }
-  }
+    Assert((*tmp)->next == NULL);
+    EnumDenumPair *ttmp = *tmp;
+    *tmp = new EnumDenumPair(MAXENUMERATOR,(*tmp)->denominator + 1,NULL);
+    delete ttmp;
+    return *tmp;
+}
 
 
 #else //SEC_CREDIT_HANDLER
