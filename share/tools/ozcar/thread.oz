@@ -162,8 +162,7 @@ in
 	       {Stack rebuild(true)}
 	    else
 	       {OzcarMessage NewThread   # {ID I}}
-	       case (Q == 0 orelse Q == 1) andthen
-		  {self.tkRunChildren tkReturnInt($)} == 0 then
+	       case Q == 0 orelse Q == 1 then
 		  thread
 		     case Q == 1 then
 			SkippedThread <- T
@@ -225,6 +224,9 @@ in
 		     {Thread.resume T}
 		  end
 	       end
+	       lock
+		  {Delay 20}
+	       end
 	    else
 	       {OzcarError UnknownSuspThread}
 	    end
@@ -233,13 +235,6 @@ in
 	    E = ThreadManager,Exists(I $)
 	 in
 	    case E then
-	       /*
-	       case T == @currentThread andthen
-		  {self.tkRunChildren tkReturnInt($)} == 0 then
-		  skip
-		  %Gui,status(I runnable)
-	       else skip end
-	       */ 
 	       StackObj = {Dget self.ThreadDic I}
 	       Ack
 	    in
@@ -427,8 +422,7 @@ in
 	    Stack = {Dget self.ThreadDic I}
 	    {Stack rebuild(true)}
 	    Gui,markNode(I blocked)
-	    case T == @currentThread andthen
-	       {self.tkRunChildren tkReturnInt($)} == 0 then
+	    case T == @currentThread then
 	       case {UnknownFile F} then
 		  {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
 		  SourceManager,scrollbar(file:'' line:0 color:undef what:both)
