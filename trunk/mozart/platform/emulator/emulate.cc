@@ -2457,7 +2457,6 @@ LBLdispatcher:
        }
        
        if (foundHdl) {
-	 // At least, the stack display is inconsistent!
 	 debugStreamUpdate(CTT);
 	 X[0] = e->exception.value;
 	 goto LBLpopTaskNoPreempt;
@@ -2993,6 +2992,11 @@ LBLdispatcher:
   Case(DEBUGENTRY)
     {
       if (e->debugmode() && e->isToplevel()) {
+	int line = smallIntValue(getNumberArg(PC+2));
+	if (line < 0) {
+	  execBreakpoint(e->currentThread);
+	}
+
 	OzDebug *dbg = new OzDebug(PC,Y,G);
 
 	TaggedRef kind = getTaggedArg(PC+4);
@@ -3079,11 +3083,6 @@ LBLdispatcher:
 	} else {
 	  CTT->pushDebug(dbg,DBG_NEXT);
 	}
-      }
-
-      int line = smallIntValue(getNumberArg(PC+2));
-      if (line < 0) {
-	execBreakpoint(e->currentThread);
       }
 
       DISPATCH(6);
