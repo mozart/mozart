@@ -49,7 +49,3 @@ Bool inToSpace(void *p);
 Bool needsNoCollection(TaggedRef t);
 
 #endif //__GC_H__
-
-
-
-

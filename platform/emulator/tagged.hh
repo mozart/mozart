@@ -721,6 +721,12 @@ TaggedRef oz_safeDeref(TaggedRef t) {
   return t;
 }
 
+inline
+TaggedRef oz_derefPtr(TaggedRef t) {
+  DEREF(t,tptr,_2);
+  return (TaggedRef) tptr;
+}
+
 // ---------------------------------------------------------------------------
 // Binding
 // ---------------------------------------------------------------------------
