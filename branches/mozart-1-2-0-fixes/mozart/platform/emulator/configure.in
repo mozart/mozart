@@ -960,8 +960,8 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --enable-opt)
 AC_ARG_ENABLE(opt,
-    [--enable-opt=<k>   add specialied compile options (default=no)
-                   (o|yes=optimize, d=debug, p=profile, rsp=ralfs profile)])
+    [--enable-opt=<k>   add specialied compile options (default=yes)
+                   (o|yes=optimize, d=debug, no|none, p=profile, rsp=ralfs profile)])
 case $enable_opt in
     d*)
         AC_MSG_RESULT(debug (-DDEBUG_EMULATOR))
@@ -984,13 +984,13 @@ case $enable_opt in
 	oz_enable_miscbuiltins="yes"
 	oz_enable_threaded="no"
 	;;
-    yes|o*)
-	AC_MSG_RESULT(optimize)
-	OZ_CXX_OPTIONS($oz_copt_optimize, COPT)
-	;;
-    *)
+    no*)
         AC_MSG_RESULT(default)
 	COPT=$oz_copt_default
+	;;
+    *)
+	AC_MSG_RESULT(optimize)
+	OZ_CXX_OPTIONS($oz_copt_optimize, COPT)
 	;;
 esac
 AC_SUBST(COPT)

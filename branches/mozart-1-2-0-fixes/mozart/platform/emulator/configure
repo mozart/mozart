@@ -43,8 +43,8 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-ccmalloc    use debugging malloc library ccmalloc "
 ac_help="$ac_help
---enable-opt=<k>   add specialied compile options (default=no)
-                   (o|yes=optimize, d=debug, p=profile, rsp=ralfs profile)"
+--enable-opt=<k>   add specialied compile options (default=yes)
+                   (o|yes=optimize, d=debug, no|none, p=profile, rsp=ralfs profile)"
 ac_help="$ac_help
 --enable-threaded  threaded code emulator (default=yes)"
 ac_help="$ac_help
@@ -7742,7 +7742,11 @@ fi
 	oz_enable_miscbuiltins="yes"
 	oz_enable_threaded="no"
 	;;
-    yes|o*)
+    no*)
+        echo "$ac_t""default" 1>&6
+	COPT=$oz_copt_default
+	;;
+    *)
 	echo "$ac_t""optimize" 1>&6
 	
 	ozm_out=
@@ -7753,7 +7757,7 @@ fi
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:7757: checking c++ compiler option $ozm_opt" >&5
+echo "configure:7761: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -7776,10 +7780,6 @@ fi
 	fi
 	COPT="$ozm_out"
 	
-	;;
-    *)
-        echo "$ac_t""default" 1>&6
-	COPT=$oz_copt_default
 	;;
 esac
 
