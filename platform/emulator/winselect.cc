@@ -21,7 +21,7 @@ public:
   HANDLE char_consumed;   /* used to restart reader thread*/
   char chr;               /* this is the char, that was read */
   Bool status;            /* true iff input is available */
-  unsigned long thrd;     /* reader thread */
+  HANDLE thrd;             /* reader thread */
   IOChannel *next;
 
   IOChannel(int f) {
@@ -107,11 +107,7 @@ unsigned __stdcall acceptThread(void *arg)
   FD_ZERO(&readfds);
   FD_SET(sr->fd,&readfds);
 
-#ifdef GNUWIN32
-  int ret = -1;
-#else
   int ret = select(1,&readfds,NULL,NULL,NULL);
-#endif
   if (ret<=0) {
     warning ("acceptThread(%d) failed, error=%d\n",
             sr->fd,WSAGetLastError());
@@ -131,6 +127,8 @@ void deleteReader(int fd)
   findChannel(fd)->thrd = 0;
 }
 
+static int maxfd = 0; /* highest fd for which we ever created a reader */
+
 Bool createReader(int fd, Bool doAcceptSelect)
 {
   IOChannel *sr = findChannel(fd);
@@ -146,6 +144,7 @@ Bool createReader(int fd, Bool doAcceptSelect)
                             doAcceptSelect ? &acceptThread : &readerThread,
                             sr,0,&thrid);
   if (sr->thrd != 0) {
+    maxfd = max(fd+1,maxfd);
     return OK;
   }
 
@@ -176,8 +175,15 @@ int getAvailFDs(int nfds, fd_set *readfds)
 }
 
 
+int getTime()
+{
+  SYSTEMTIME t;
+  GetSystemTime (&t);
+  return (t.wSecond*1000 + t.wMilliseconds);
+}
+
 static
-int win32Select(int maxfd, fd_set *fds, int *timeout)
+int win32Select(fd_set *fds, int *timeout)
 {
   if (timeout == WAIT_NULL)
     return getAvailFDs(maxfd,fds);
@@ -188,7 +194,7 @@ int win32Select(int maxfd, fd_set *fds, int *timeout)
 
   int nh = 0;
   int i;
-  for (i=0; i< maxfd; i++) {
+  for (i=0; i < maxfd; i++) {
     if (FD_ISSET(i,fds) && findChannel(i)->thrd!=0) {
       wait_hnd[nh++] = findChannel(i)->char_avail;
     }
@@ -200,7 +206,7 @@ int win32Select(int maxfd, fd_set *fds, int *timeout)
     return -1;
   }
 
-  DWORD startTime = timeGetTime();
+  DWORD startTime = getTime();
   DWORD active = WaitForMultipleObjects(nh, wait_hnd, FALSE, wait);
 
   if (active == WAIT_FAILED) {
@@ -214,7 +220,7 @@ int win32Select(int maxfd, fd_set *fds, int *timeout)
   }
 
   if (*timeout != 0) {
-    DWORD endTime = timeGetTime();
+    DWORD endTime = getTime();
     int resttime = wait - (endTime-startTime);
     *timeout = max(0, resttime);
   }

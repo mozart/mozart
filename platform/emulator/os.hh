@@ -72,7 +72,6 @@ void osInitSignals();        // initialize signal handler
 void osSetAlarmTimer(int t, Bool interval=OK);
 void osBlockSignals(Bool check=NO); // check: check if no other signals are blocked
 void osUnblockSignals();
-typedef void OsSigFun(void);
 
 int osSystem(char *cmd);     /* Oz version of system(3) */
 
