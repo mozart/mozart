@@ -19,7 +19,7 @@
 
 OZ_C_proc_begin(BIisFdVar, 1)
 { 
-  return isGenFDVar(deref(OZ_getCArg(0))) ? PROCEED : FAILED;
+  return isGenFDVar(deref(OZ_getCArg(0))) || isGenBoolVar(deref(OZ_getCArg(0))) ? PROCEED : FAILED;
 }
 OZ_C_proc_end
 
@@ -36,7 +36,7 @@ State BIfdIsInline(TaggedRef fd) {
 
   if (isNotCVar(fdtag)) return SUSPEND;
   
-  return (isPosSmallInt(fd) || isGenFDVar(fd, fdtag)) ? PROCEED : FAILED;
+  return (isPosSmallInt(fd) || isGenFDVar(fd, fdtag) || isGenBoolVar(fd, fdtag)) ? PROCEED : FAILED;
 }
 
 DECLAREBI_USEINLINEREL1(BIfdIs, BIfdIsInline)
@@ -52,6 +52,8 @@ OZ_C_proc_begin(BIfdMin, 2)
   } else if (isGenFDVar(var,vartag)) {
     int minVal = tagged2GenFDVar(var)->getDom().minElem();
     return OZ_unify(newSmallInt(minVal), OZ_getCArg(1));   
+  } else if (isGenBoolVar(var,vartag)) {
+    return OZ_unify(newSmallInt(0), OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
@@ -73,6 +75,8 @@ OZ_C_proc_begin(BIfdMax,2)
   } else if (isGenFDVar(var,vartag)) {
     int maxVal = tagged2GenFDVar(var)->getDom().maxElem();
     return OZ_unify(newSmallInt(maxVal), OZ_getCArg(1));   
+  } else if (isGenBoolVar(var,vartag)) {
+    return OZ_unify(newSmallInt(1), OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
@@ -95,6 +99,9 @@ OZ_C_proc_begin(BIfdGetAsList, 2)
   } else if (isGenFDVar(var,vartag)) {
     FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
     return OZ_unify(fdomain.getAsList(), OZ_getCArg(1));
+  } else if (isGenBoolVar(var,vartag)) {
+    return OZ_unify(makeTaggedLTuple(new LTuple(mkTuple(0, 1), AtomNil)), 
+		    OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
@@ -116,6 +123,8 @@ OZ_C_proc_begin(BIfdGetCardinality,2)
   } else if (isGenFDVar(var,vartag)) {
     FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
     return OZ_unify(newSmallInt(fdomain.getSize()), OZ_getCArg(1));
+  } else if (isGenBoolVar(var,vartag)) {
+    return OZ_unify(newSmallInt(2), OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
@@ -149,6 +158,9 @@ OZ_C_proc_begin(BIfdNextTo, 3)
     return (tagged2GenFDVar(var)->getDom().next(n_val, next_val))
       ? OZ_unify(OZ_getCArg(2), mkTuple(next_val, 2 * n_val - next_val))
       : OZ_unify(OZ_getCArg(2), newSmallInt(next_val));
+  } else if (isGenBoolVar(var,vartag)) {
+    int val = smallIntValue(n);
+    return OZ_unify(OZ_getCArg(2), newSmallInt(val >= 1 ? 1 : 0));
   } else if (isNotCVar(vartag)) {
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
@@ -176,7 +188,8 @@ OZ_C_proc_begin(BIfdPutLe, 2)
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
-  if (! (isGenFDVar(var,vartag) || isSmallInt(vartag))) {
+  if (! (isGenFDVar(var,vartag) || isGenBoolVar(var,vartag) || 
+	 isSmallInt(vartag))) {
     if (isNotCVar(vartag)) {
       return addNonResSuspForCon(var, varptr, vartag,
 				 createNonResSusp(OZ_self, OZ_args, OZ_arity));
@@ -216,7 +229,8 @@ OZ_C_proc_begin(BIfdPutGe, 2)
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
-  if (! (isGenFDVar(var,vartag) || isSmallInt(vartag))) {
+  if (! (isGenFDVar(var,vartag) || isGenBoolVar(var,vartag) || 
+	 isSmallInt(vartag))) {
     if (isNotCVar(vartag)) {
       return addNonResSuspForCon(var, varptr, vartag,
 				 createNonResSusp(OZ_self, OZ_args, OZ_arity));
@@ -302,7 +316,8 @@ OZ_C_proc_begin(BIfdPutInterval, 3)
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
-  if (! (isGenFDVar(var, vartag) || isNotCVar(vartag) || isSmallInt(vartag))) {
+  if (! (isGenFDVar(var, vartag) || isGenBoolVar(var, vartag) || 
+	 isNotCVar(vartag) || isSmallInt(vartag))) {
     TypeError(0, "");
   }
 
@@ -337,7 +352,8 @@ OZ_C_proc_begin(BIfdPutNot, 2)
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
-  if (! (isGenFDVar(var, vartag) || isSmallInt(vartag))) {
+  if (! (isGenFDVar(var, vartag) || isGenBoolVar(var, vartag) || 
+	 isSmallInt(vartag))) {
     if (isNotCVar(vartag)) {
       return addNonResSuspForCon(var, varptr, vartag,
 				 createNonResSusp(OZ_self, OZ_args, OZ_arity));

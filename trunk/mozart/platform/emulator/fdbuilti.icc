@@ -23,7 +23,7 @@
 inline
 Bool BIfdHeadManager::addForXorYdet(OZ_CFun func, RefsArray xregs, int arity)
 {
-  if (bifdhm_vartag[0] == SMALLINT || bifdhm_vartag[1] == SMALLINT)
+  if (bifdhm_vartag[0] == pm_singl || bifdhm_vartag[1] == pm_singl)
     return TRUE;
 
   Suspension * s = createNonResSusp(func, xregs, arity);
@@ -40,13 +40,13 @@ Bool BIfdHeadManager::expectFDish(int i, TaggedRef v, int &s)
   DebugCheck(i < 0 || i >= curr_num_of_items, error("index violation"));
 
   bifdhm_var[i] = deref(v, bifdhm_varptr[i], bifdhm_vartag[i]);
-  TypeOfTerm vtag = bifdhm_vartag[i];
+  pm_term_type vtag = bifdhm_vartag[i];
   
-  if (isGenFDVar(v,vtag)) {
+  if (vtag == pm_fd || vtag == pm_bool) {
     return TRUE;
-  } else if (vtag == SMALLINT) {
+  } else if (vtag == pm_singl) {
     return smallIntValue(v) >= 0;
-  } else if (isNotCVar(vtag)) {
+  } else if (vtag == pm_svar || vtag == pm_uvar) {
     s += 1;
     return TRUE;
   } 
@@ -60,15 +60,15 @@ Bool BIfdHeadManager::expectInt(int i, TaggedRef v, int &s)
   DebugCheck(i < 0 || i >= curr_num_of_items, error("index violation"));
 
   bifdhm_var[i] = deref(v, bifdhm_varptr[i], bifdhm_vartag[i]);
-  TypeOfTerm vtag = bifdhm_vartag[i];
+  pm_term_type vtag = bifdhm_vartag[i];
   
-  if (vtag == SMALLINT) {
+  if (vtag == pm_singl) {
     bifdhm_coeff[i] = smallIntValue(bifdhm_var[i]);
     return TRUE;
-  } else if (isGenFDVar(v,vtag)) {
+  } else if (vtag == pm_fd || vtag == pm_bool) {
     s += 1;
     return TRUE;
-  } else if (isNotCVar(vtag)) {
+  } else if (vtag == pm_svar || vtag == pm_uvar) {
     s += 1;
     return TRUE;
   }
@@ -89,13 +89,27 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
   for (int i = from, j = from_p; i < to+1; i += 1, j += 1) {
 
     *bifdbm_dom[i] &= *bifdbm_dom[j];
-    if(bifdbm_vartag[j] == CVAR) {
-      if (bifdbm_vartag[i] == CVAR) {
-	tagged2GenFDVar(bifdbm_var[j])->
-	  relinkSuspListTo(tagged2GenFDVar(bifdbm_var[i]));
+    if(bifdbm_vartag[j] == pm_fd || bifdbm_vartag[j] == pm_bool) {
+      if (bifdbm_vartag[i] == pm_fd) {
+	if (bifdbm_vartag[j] == pm_fd) {
+	  tagged2GenFDVar(bifdbm_var[j])->
+	    relinkSuspListTo(tagged2GenFDVar(bifdbm_var[i]));
+	} else {
+	  tagged2GenBoolVar(bifdbm_var[j])->
+	    relinkSuspListTo(tagged2GenFDVar(bifdbm_var[i]));
+	}
+	doBind(bifdbm_varptr[j], TaggedRef(bifdbm_varptr[i]));
+      } else if (bifdbm_vartag[i] == pm_bool) {
+	if (bifdbm_vartag[j] == pm_fd) {
+	  tagged2GenFDVar(bifdbm_var[j])->
+	    relinkSuspListTo(tagged2GenBoolVar(bifdbm_var[i]));
+	} else {
+	  tagged2GenBoolVar(bifdbm_var[j])->
+	    relinkSuspListTo(tagged2GenBoolVar(bifdbm_var[i]));
+	}
 	doBind(bifdbm_varptr[j], TaggedRef(bifdbm_varptr[i]));
       } else {
-	propagateIfTouched(j);
+	process(j);
       }
     }
   }
@@ -113,27 +127,10 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
 }
 
 inline
-void BIfdBodyManager::propagateIfTouched(int i)
-{
-  Assert(0 <= i && i <= curr_num_of_vars);
-  
-  if (isTouched(i)) {
-    if (*bifdbm_dom[i] == fd_singleton) {
-      tagged2GenFDVar(bifdbm_var[i])->
-	becomesSmallIntAndPropagate(bifdbm_varptr[i]);
-    } else { 
-      Assert(isCVar(bifdbm_vartag[i]));
-      tagged2GenFDVar(bifdbm_var[i])->
-	propagate(bifdbm_var[i], fd_bounds, makeTaggedRef(bifdbm_varptr[i]));
-    }
-  }
-}
-
-inline
 void BIfdBodyManager::setSpeculative(int i) {
   Assert(0 <= i && i <= curr_num_of_vars);
 
-  if (bifdbm_var_state[i] == fdbm_local) {
+  if (bifdbm_var_state[i] == fdbm_local && bifdbm_vartag[i] == pm_fd) {
     bifdbm_domain[i] = *bifdbm_dom[i];
     bifdbm_dom[i] = &bifdbm_domain[i];
   }
@@ -169,31 +166,6 @@ int BIfdBodyManager::initCache(void) {
   
 }
 
-
-// might be a bit of an overkill
-inline
-OZ_Bool BIfdBodyManager::unify_cd(int var, int prime) {
-  Bool ret = isCVar(bifdbm_var[var])
-    ? tagged2GenFDVar(bifdbm_var[var])->unifyFD(bifdbm_varptr[var],
-						bifdbm_var[var],
-						bifdbm_varptr[prime],
-						bifdbm_var[prime],
-						TRUE, FALSE)
-    : (isCVar(bifdbm_var[prime])
-       ? tagged2GenFDVar(bifdbm_var[prime])->unifyFD(bifdbm_varptr[prime],
-						     bifdbm_var[prime],
-						     bifdbm_varptr[var],
-						     bifdbm_var[var],
-						     TRUE, FALSE)
-       : TRUE);
-  if (ret == FALSE) return FAILED;
-  
-  introduce(var, makeTaggedRef(bifdbm_varptr[var]));
-  introduce(prime, makeTaggedRef(bifdbm_varptr[prime]));
-
-  return (bifdbm_var[var] == bifdbm_var[prime]) ? PROCEED : FAILED;
-}
-  
 
 inline
 Bool BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
@@ -290,33 +262,31 @@ inline
 OZ_Bool addNonResSuspForDet(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
 			    Suspension * s)
 {
-  if (isGenFDVar(v,vt)) {
-    addSuspFDVar(v, new SuspList(s, NULL), fd_det);
+  if (isGenFDVar(v, vt)) {
+    addSuspFDVar(v, new SuspList(s), fd_det);
+  } else if (isGenBoolVar(v, vt)) {
+    addSuspBoolVar(v, new SuspList(s));
   } else if (isSVar(vt)) {
-    addSuspSVar(v, new SuspList(s, NULL));
-  } else if (isUVar(vt)) {
-    addSuspOnlyToUVar(vp, new SuspList(s, NULL));
+    addSuspSVar(v, new SuspList(s));
   } else {
-    error("unexpected term found");
-    return FAILED;
-  }
+    Assert(isUVar(vt));
+    
+    addSuspOnlyToUVar(vp, new SuspList(s));
+  } 
+
   return PROCEED;
 }
   
 inline
 OZ_Bool addNonResSuspForCon(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
-				Suspension * s)
+			    Suspension * s)
 {
   if (isSVar(vt)) {
-    addSuspSVar(v, new SuspList(s, NULL));
-  } else if (isUVar(vt)) {
-    addSuspOnlyToUVar(vp, new SuspList(s, NULL));
-  } else if (isGenFDVar(v,vt)) {
-    addSuspFDVar(v, new SuspList(s, NULL));
+    addSuspSVar(v, new SuspList(s));
   } else {
-    error("unexpected term found");
-    return FAILED;
-  }
+    Assert(isUVar(vt));
+    addSuspOnlyToUVar(vp, new SuspList(s));
+  } 
   return PROCEED;
 }
 
