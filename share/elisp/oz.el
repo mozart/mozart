@@ -208,7 +208,7 @@ All strings matching this regular expression are removed.")
   "Set the title of the Emacs window."
   (if oz-change-title
       (if oz-gnu19
-	  (mapcar '(lambda(scr)
+	  (mapcar '(lambda (scr)
 		     (modify-frame-parameters
 		      scr
 		      (list (cons 'name oz-title-format))))
@@ -222,7 +222,7 @@ All strings matching this regular expression are removed.")
       (if oz-lucid
 	  (setq frame-title-format oz-old-frame-title))
     (if oz-gnu19
-	(mapcar '(lambda(scr)
+	(mapcar '(lambda (scr)
 		   (modify-frame-parameters
 		    scr
 		    (list (cons 'name oz-old-frame-title))))
@@ -258,7 +258,7 @@ The point is moved to the end of the line."
 ;; Menus
 ;;------------------------------------------------------------
 ;; lucid: a menubar is a new datastructure (see function set-buffer-menubar)
-;; GNU19: a menubar is a usual key sequence with prefix "menu-bar"
+;; gnu19: a menubar is a usual key sequence with prefix "menu-bar"
 
 (defvar oz-menubar nil
   "Oz Menubar for Lucid Emacs.")
@@ -586,8 +586,7 @@ If FORCE is non-nil, kill the processes immediately."
       (oz-create-buffer oz-compiler-buffer 'compiler)
       (save-excursion
 	(set-buffer oz-compiler-buffer)
-	(set (make-local-variable
-	      'compilation-error-regexp-alist)
+	(set (make-local-variable 'compilation-error-regexp-alist)
 	     '(("at line \\([0-9]+\\) in file \"\\([^ \n]+[^. \n]\\)\\.?\""
 		2 1)
 	       ("at line \\([0-9]+\\)" 1 1)))
@@ -624,7 +623,7 @@ If FORCE is non-nil, kill the processes immediately."
 (defun oz-set-other (set-compiler)
   "Set the value of environment variables OZEMULATOR or OZBOOT.
 If SET-COMPILER is non-nil, set the compiler boot file (can also
-be done via \\[oz-set-compiler]); if is is nil, set the emulator
+be done via \\[oz-set-compiler]); if it is nil, set the emulator
 binary (can also be done via \\[oz-set-emulator]."
   (interactive "P")
   (if set-compiler
@@ -655,8 +654,9 @@ Can be selected by \\[oz-other-compiler]."
 
 (defun oz-other (set-compiler)
   "Switch between global and local Oz Emulator or Oz Compiler boot file.
-If SET-COMPILER is non-nil, switch the compiler boot file;
-if is is nil, switch the emulator binary."
+If SET-COMPILER is non-nil, switch the compiler boot file (via
+\\[oz-other-emulator]); if it is nil, switch the emulator binary
+(via \\[oz-other-compiler])."
   (interactive "P")
   (if set-compiler
       (oz-other-compiler)
@@ -873,7 +873,7 @@ paragraph."
 
 (defun oz-electric-terminate-line ()
   "Terminate current line.
-If variable `oz-auto-indent' if non-nil, indent the terminated line
+If variable `oz-auto-indent' is non-nil, indent the terminated line
 and the following line."
   (interactive)
   (cond (oz-auto-indent (oz-indent-line)))
@@ -923,11 +923,10 @@ the end of this whitespace after indentation."
 
 (defun oz-calc-indent (dont-change-empty-lines)
   "Calculate the required indentation for the current line.
-Return a negate value if the indentation is not to be changed,
+The point must be at the beginning of the current line.
+Return a negative value if the indentation is not to be changed,
 else return the column up to where the line should be indented.
 If DONT-CHANGE-EMPTY-LINES is non-nil, empty lines are not indented."
-  (beginning-of-line)
-  (skip-chars-forward " \t")
   (cond ((and dont-change-empty-lines (oz-is-empty))
 	 -1)
 	((looking-at oz-declare-pattern)
@@ -1028,13 +1027,11 @@ syntax we find does not correspond to what we expect."
 	    ((looking-at oz-end-pattern)
 	     ;; we are the first token after an 'end'
 	     (oz-search-matching-begin nil)
-	     (oz-calc-indent1)
-	     )
+	     (oz-calc-indent1))
 	    ((looking-at oz-right-pattern)
 	     ;; we are the first token after ')' '}' ...
 	     (oz-search-matching-paren)
-	     (oz-calc-indent1)
-	     ))
+	     (oz-calc-indent1)))
     ;; if we couldn't find a keyword, then the current line stands at
     ;; the top level and is not to be indented:
     0))
@@ -1180,7 +1177,7 @@ While searching backwards, matched pairs of parentheses are skipped."
 		     (setq do-loop nil)
 		   (setq nesting (- nesting 1))))
 		((looking-at oz-right-pattern)
-		 (setq nesting (+ nesting 1))))
+		 (setq nesting (1+ nesting))))
 	(error "No matching open parenthesis"))))
   (current-column))
 
@@ -1322,12 +1319,11 @@ if that value is non-nil."
   (if (and oz-lucid (not (assoc "Oz" current-menubar)))
       (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
 
-  (run-hooks 'oz-mode-hook)
-
   ;; font lock stuff
-  (oz-set-font-lock-keywords)
+  (oz-set-font-lock-defaults)
   (if (and oz-want-font-lock (oz-window-system))
-      (font-lock-mode 1)))
+      (font-lock-mode 1))
+  (run-hooks 'oz-mode-hook))
 
 (defun oz-insert-menu (menu list)
   "Add the Oz menu to the menu bar.
@@ -1337,6 +1333,7 @@ Take care not to move it too much to the right."
 	((null (car list))
 	 (cons (car menu) list))
 	(t (cons (car list) (oz-insert-menu menu (cdr list))))))
+
 
 ;;------------------------------------------------------------
 ;; Lisp Paragraph Filling Commands
@@ -1435,7 +1432,9 @@ and initial percent signs."
 Used only for fontification.")
 
 (defconst oz-directive-matcher
-  "\\(^\\|[^&]\\)\\(\\\\\\([^\'%\n]\\|'[\"-~]'\\)*\\)")
+  "\\(^\\|[^&]\\)\\(\\\\\\([^\'%\n]\\|'[\"-~]'\\)*\\)"
+  "Regular expression matching a compiler or macro directive.
+Used only for fontification.")
 
 (defconst oz-keywords-matcher-1
   (concat "^\\(" (mapconcat 'identity oz-keywords "\\|") "\\)\\>")
@@ -1500,7 +1499,7 @@ and is used for fontification.")
 	  oz-font-lock-keywords-2)
   "Gaudy level highlighting for Oz mode.")
 
-(defun oz-set-font-lock-keywords ()
+(defun oz-set-font-lock-defaults ()
   (make-variable-buffer-local 'font-lock-defaults)
   (setq font-lock-defaults
 	'((oz-font-lock-keywords oz-font-lock-keywords-1
@@ -1601,16 +1600,16 @@ The rest of the output is then passed through the oz-filter."
 
 	    (goto-char old-point)
 
-            ;; remove escape characters
-            (while (search-forward-regexp oz-remove-pattern nil t)
-              (replace-match "" nil t))
+	    ;; remove escape characters
+	    (while (search-forward-regexp oz-remove-pattern nil t)
+	      (replace-match "" nil t))
 
-            ;; oz-bar information?
-            (while (search-forward-regexp oz-bar-pattern nil t)
-              (let ((file  (match-string 1))
+	    ;; oz-bar information?
+	    (while (search-forward-regexp oz-bar-pattern nil t)
+	      (let ((file  (match-string 1))
 		    (line  (string-to-number (match-string 2)))
 		    (state (match-string 3)))
-                (replace-match "" nil t)
+		(replace-match "" nil t)
 		(if (string-equal file "undef")
 		    (if oz-bar-overlay
 			(overlay-put oz-bar-overlay 'face 'default))
@@ -1803,8 +1802,8 @@ of the procedure Browse."
 Assuming it to contain an expression, it is enclosed by an application
 of the procedure Browse."
   (interactive)
-   (let ((line (oz-line-pos)))
-     (oz-feed-region-browse (car line) (cdr line))))
+  (let ((line (oz-line-pos)))
+    (oz-feed-region-browse (car line) (cdr line))))
 
 (defun oz-view-panel ()
   "Feed `{Panel open}' to the Oz Compiler."
@@ -1853,26 +1852,26 @@ of the procedure Browse."
   (find-file (read-file-name prompt (concat (oz-home) "/" file) nil t nil)))
 
 
-;;;-----------------------------------------------------------
-;;; Oz expressions hopping
-;;;-----------------------------------------------------------
-;;; Simulation of the -sexp functions for Oz expressions (i.e., support
-;;; for moving over complete proc (fun, meth etc.) ... end blocks)
-;;;
-;;; Method: We use scan-sexp and count keywords delimiting Oz
-;;; expressions appropriately. When an infix keyword (like in, then,
-;;; but also attr) is encountered, this is treated like white space.
-;;;
-;;; Limitations:
-;;; 1) The method used means that we might happily hop over balanced
-;;; s-expressions (i.e. delimited with parens, braces ...) in which Oz
-;;; keywords are not properly balanced.
-;;; 2) When encountering an infix expression, it is ambiguous which
-;;; expression to move over, the sub-expression or the whole. We
-;;; choose to always move over the smallest balanced expression
-;;; (i.e. the first subexpression).
-;;; 3) transpose-oz-expr is not very useful, since it does not know,
-;;; when space must be inserted.
+;;------------------------------------------------------------
+;; Oz Expression Hopping
+;;------------------------------------------------------------
+;; Simulation of the -sexp functions for Oz expressions (i.e., support
+;; for moving over complete proc (fun, meth etc.) ... end blocks)
+;;
+;; Method: We use scan-sexp and count keywords delimiting Oz
+;; expressions appropriately. When an infix keyword (like in, then,
+;; but also attr) is encountered, this is treated like white space.
+;;
+;; Limitations:
+;; 1) The method used means that we might happily hop over balanced
+;; s-expressions (i.e. delimited with parens, braces ...) in which Oz
+;; keywords are not properly balanced.
+;; 2) When encountering an infix expression, it is ambiguous which
+;; expression to move over, the sub-expression or the whole. We
+;; choose to always move over the smallest balanced expression
+;; (i.e. the first subexpression).
+;; 3) transpose-oz-expr is not very useful, since it does not know,
+;; when space must be inserted.
 
 ;; Unfortunately, one more pattern, since those used for indenting
 ;; are not exactly what is required; but they are used to define the
