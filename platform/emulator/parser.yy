@@ -46,11 +46,11 @@
 // Interface to Scanner
 //----------------------
 
-extern char xyFileName[];   // name of the current file, "nofile" means stdin
+extern char xyFileName[];   // name of the current file, "" means stdin
 extern char xyhelpFileName[];
 extern OZ_Term xyFileNameAtom;
 
-extern int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
+extern int xy_gumpSyntax, xy_systemVariables;
 extern OZ_Term xy_errorMessages;
 
 extern int xylino;
@@ -82,7 +82,6 @@ static inline int xycharno() {
 #define YYERROR_VERBOSE
 
 static OZ_Term nilAtom;
-static int nerrors;
 static OZ_Term yyoutput;
 
 static void xyerror(char *);
@@ -360,18 +359,9 @@ void xy_setParserExpect() {
 %%
 
 file		: queries ENDOFFILE
-		  { if (nerrors) {
-		      yyoutput = newCTerm("parseErrors",OZ_int(nerrors));
-		      YYABORT;
-		    } else {
-		      yyoutput = $1;
-		      YYACCEPT;
-		    }
-		  }
+		  { yyoutput = $1; YYACCEPT; }
 		| error
-		  { yyoutput = newCTerm("parseErrors",OZ_int(nerrors));
-		    YYABORT;
-		  }
+		  { yyoutput = OZ_atom("parseError"); YYABORT; }
 		;
 
 queries		: sequence queries1
@@ -416,14 +406,12 @@ switchList	: /* empty */
 		;
 
 switch		: '+' SWITCHNAME
-		  { if (!strcmp(xytext,"showinsert")) xy_showInsert = 1;
-		    if (!strcmp(xytext,"gump")) xy_gumpSyntax = 1;
+		  { if (!strcmp(xytext,"gump")) xy_gumpSyntax = 1;
 		    if (!strcmp(xytext,"system")) xy_systemVariables = 1;
 		    $$ = newCTerm("on",newCTerm(xytext),pos());
 		  }
 		| '-' SWITCHNAME
-		  { if (!strcmp(xytext,"showinsert")) xy_showInsert = 0;
-		    if (!strcmp(xytext,"gump")) xy_gumpSyntax = 0;
+		  { if (!strcmp(xytext,"gump")) xy_gumpSyntax = 0;
 		    if (!strcmp(xytext,"system")) xy_systemVariables = 0;
 		    $$ = newCTerm("off",newCTerm(xytext),pos());
 		  }
@@ -1404,103 +1392,14 @@ synProdCallParams
 
 %%
 
-static void append(const char *s) {
-  xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_string(s));
-}
-
-static void append(int i) {
-  xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_int(i));
-}
-
-static int isReadableFile(const char *file) {
-  struct stat buf;
-
-  if (access(file, F_OK) < 0 || stat(file, &buf) < 0)
-    return 0;
-
-  return !S_ISDIR(buf.st_mode);
-}
-
 void xyreportError(char *kind, char *msg, const char *file,
-		   int line, int offset) {
-  if (strcmp(kind,"warning"))
-    nerrors++;
-
-  append("\n%************ ");
-  append(kind);
-  append(" **********\n%**\n%**     ");
-  append(msg);
-  append("\n");
-
-  if (line < 0)
-    return;
-
-  if (file[0] == '\0') {
-    append("\n%**\n");
-    return;
-  }
-
-  append("%**     in ");
-  if (strcmp(file,"nofile")) {
-    append("file \"");
-    append(file);
-    append("\", ");
-  }
-  append("line ");
-  append(line);
-  append(", column ");
-  append(offset);
-
-  if (!isReadableFile(file)) {
-    append("\n%**\n");
-    return;
-  }
-  FILE *pFile = fopen(file,"r");
-  if (pFile == NULL) {
-    append("\n%**\n");
-    return;
-  }
-
-  /* position file pointer at the beginning of the <line>-nth line */
-  int c;
-  while(line > 1) {
-    c = fgetc(pFile);
-    if (c == EOF) {
-      append("\n%**\n");
-      return;
-    }
-    if (c == '\n')
-      line--;
-  }
-
-  append(":\n%**\n%**     ");
-  char s[256];
-  int col = 0, curoff = 0, n = -1;
-  do {                          /* print the line (including '\n') */
-    if (curoff == offset)
-      n = col;
-    curoff++;
-    c = fgetc(pFile);
-    if (c == EOF)
-      s[col++] = '\n';
-    else if (c == '\t') {       /* print tabs explicitly */
-      while (col % 8)
-	s[col++] = ' ';
-    } else
-      s[col++] = c;
-  } while (c != '\n' && c != EOF && col < 255);
-  s[col] = '\0';
-  append(s);
-  fclose(pFile);
-  if (n > -1) {
-    append("%**     ");
-    s[n] = '\0';
-    while(n)
-      s[--n] = ' ';
-    append(s);
-    append("^-- *** here\n");
-  }
-  append("%**\n");
+		   int line, int column) {
+  OZ_Term pos = OZ_mkTupleC("pos",3,OZ_atom(file),OZ_int(line),OZ_int(column));
+  OZ_Term args = OZ_cons(OZ_pairA("coord",pos),
+			 OZ_cons(OZ_pairAA("kind",kind),
+				 OZ_cons(OZ_pairAA("msg",msg),OZ_nil())));
+  xy_errorMessages = OZ_cons(OZ_recordInit(OZ_atom("error"),args),
+			     xy_errorMessages);
 }
 
 static void xyerror(char *s) {
@@ -1516,9 +1415,6 @@ static void xyerror(char *s) {
 static OZ_Term init_options(OZ_Term optRec) {
   OZ_Term x;
 
-  x = OZ_subtree(optRec, OZ_atom("showInsert"));
-  xy_showInsert = x == 0? 0: OZ_eq(x, OZ_true());
-
   x = OZ_subtree(optRec, OZ_atom("gumpSyntax"));
   xy_gumpSyntax = x == 0? 0: OZ_eq(x, OZ_true());
 
@@ -1532,76 +1428,54 @@ static OZ_Term init_options(OZ_Term optRec) {
 static OZ_Term parse() {
   nilAtom = OZ_nil();
 
-  yyoutput = 0;
-  for (int i = 0; i < DEPTH; i++) {
+  int i;
+  for (i = 0; i < DEPTH; i++) {
     prodKey[i] = prodKeyBuffer[i];
     prodName[i] = OZ_atom("none");
     terms[i] = 0;
     decls[i] = nilAtom;
   }
   depth = 0;
-  for (int i1 = 0; i1 < DEPTH; i1++)
-    terms[i1] = 0;
-  nerrors = 0;
+  for (i = 0; i < DEPTH; i++)
+    terms[i] = 0;
 
   xy_errorMessages = OZ_nil();
-
   xyparse();
 
   // in case there was a syntax error during the parse, delete garbage:
   xy_exit();
-  for (int i2 = 0; i2 < DEPTH; i2++)
-    while (terms[i2]) {
-      TermNode *tmp = terms[i2]; terms[i2] = terms[i2]->next; delete tmp;
+  for (i = 0; i < DEPTH; i++)
+    while (terms[i]) {
+      TermNode *tmp = terms[i]; terms[i] = terms[i]->next; delete tmp;
     }
 
-  return yyoutput? yyoutput: OZ_atom("parseError");
+  return OZ_pair2(yyoutput, xy_errorMessages);
 }
 
 OZ_BI_define(parser_parseFile, 2, 1)
 {
-  // {ParseFile FileName OptRec ?AST}
+  // {ParseFile FileName OptRec ?(AST#ReporterMessages)}
   OZ_declareVirtualStringIN(0, file);
   OZ_declareNonvarIN(1, optRec);
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "Record");
   OZ_Term defines = init_options(optRec);
-  OZ_Return res;
   if (!xy_init_from_file(file, defines))
     OZ_RETURN_ATOM("fileNotFound");
-  else {
-    OZ_result(parse());
-    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
-    if (x == 0) {
-      if (!OZ_isNil(xy_errorMessages)) {
-	prefixError();
-	fprintf(stderr, "%s", OZ_virtualStringToC(xy_errorMessages));
-      }
-      return PROCEED;
-    } else
-      return OZ_unify(x, xy_errorMessages);
-  }
+  else
+    OZ_RETURN(parse());
 }
 OZ_BI_end
 
 OZ_BI_define(parser_parseVirtualString, 2, 1)
 {
-  // {ParseVirtualString VS OptRec ?AST}
+  // {ParseVirtualString VS OptRec ?(AST#ReporterMessages)}
   OZ_declareVirtualStringIN(0, str);
   OZ_declareNonvarIN(1, optRec);
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "Record");
   OZ_Term defines = init_options(optRec);
   xy_init_from_string(str, defines);
-  OZ_result(parse());
-  OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
-  if (x == 0) {
-    if (!OZ_isNil(xy_errorMessages)) {
-      prefixError();
-      printf("%s", OZ_virtualStringToC(xy_errorMessages));
-    }
-    return PROCEED;
-  } else
-    return OZ_unify(x, xy_errorMessages);
+  OZ_RETURN(parse());
 }
 OZ_BI_end
