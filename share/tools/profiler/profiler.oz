@@ -29,10 +29,13 @@ Profiler =
 	end
 
 	meth off
-	   Time.repeat,stop
-	   {Tk.send wm(withdraw self.toplevel)}
-	   {EnqueueCompilerQuery setSwitch(profile false)}
-	   {Profile.mode false}
+	   case {Cget closeAction} of unit then
+	      Time.repeat,stop
+	      {Tk.send wm(withdraw self.toplevel)}
+	      {EnqueueCompilerQuery setSwitch(profile false)}
+	      {Profile.mode false}
+	   elseof P then {P}
+	   end
 	end
 
 	meth on
@@ -44,6 +47,17 @@ Profiler =
 	   if {Cget update} > 0 then
 	      Time.repeat,go
 	   end
+	end
+
+	meth conf(...)=M
+	   {Record.forAllInd M
+	    proc {$ F V}
+	       if {Config confAllowed(F $)} then
+		  {Config set(F V)}
+	       else
+		  raise ozcar(badConfigFeature(F)) end
+	       end
+	    end}
 	end
 
      end init}
