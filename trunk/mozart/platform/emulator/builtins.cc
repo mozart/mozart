@@ -3194,6 +3194,7 @@ OZ_BI_define(BIisPort, 1, 1)
 } OZ_BI_end
 
 // use VARS or FUTURES for ports
+#define VAR_PORT
 #ifdef VAR_PORT
 
 OZ_BI_define(BInewPort,1,1)
