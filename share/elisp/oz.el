@@ -7,33 +7,6 @@
 ;; OZ-Mode
 ;; credits to mm and rs
 ;; ----------------------------------------------------------------------
-;; list of changes:
-
-;; 11.1.93 mm 
-;;  "exists"-keyword
-;; 12.1.93 mm
-;;  "OZC/OZM"-removed
-;; 20.1.93 mm
-;;  (random t) included
-;; 16.2.93 r2
-;;  "seq", "wait", "on"-keywords
-;; 17.3.93 cs
-;;  "case", "of" keywords
-;; 7.4.93 mm
-;;  "seq" "wait" removed
-;;  "proc" added
-;; 15.4.93 mm
-;;  add xdvi - Browser
-;; 23.4.93 mm
-;;  reimpl. oz-indent-line
-;; 4.3.93 cs
-;;  deleted some keywords for fontifying, fixed error
-;; 15.3.93 rs
-;; added "oz-print-region" and "oz-print-buffer"
-;; 8.9.93 rs
-;; random removed
-;; call compiler directly, since it can now reliably bind the socket
-;; -------------------------------------------------------------------
 
 
 (if (string-match "^18" emacs-version)
@@ -122,6 +95,12 @@
 
 (defvar oz-machine "oz.machine"
   "Oz machine used by run-oz")
+
+(defvar oz-machine-hook nil
+  "Hook used if non nil for starting machine.
+for example
+  (setq oz-machine-hook 'gdb-machine)
+")
 
 (defvar oz-home (concat (or (getenv "OZHOME") "/usr/share/gs/soft/oz") "/")
   "The directory where oz is installed")
@@ -435,25 +414,54 @@ if that value is non-nil."
 
 	(oz-set-state 'oz-compiler-state "booting")
         (make-comint "Oz Compiler" oz-compiler nil "-S" file)
+	(oz-create-buffer "*Oz Compiler*")
+	(set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
+	(bury-buffer "*Oz Compiler*")
 
-	(oz-set-state 'oz-machine-state "booting")
-	(make-comint "Oz Machine" oz-machine nil "-S" file)
+	(if oz-machine-hook
+	    (funcall oz-machine-hook file)
+	  (oz-set-state 'oz-machine-state "booting")
+	  (make-comint "Oz Machine" oz-machine nil "-S" file)
+	  (oz-create-buffer "*Oz Machine*")
+	  (set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
+	  (bury-buffer "*Oz Machine*")
+	  )
 
 	;; make sure buffers exist
-	(oz-create-buffer "*Oz Compiler*")
-	(oz-create-buffer "*Oz Machine*")
 	(oz-create-buffer "*Oz Errors*")
-	
-	(set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
-	(set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
-
-	(bury-buffer "*Oz Machine*")
-	(bury-buffer "*Oz Compiler*")
 
 	(if lucid-emacs
 	    (setq screen-title-format
 		  '((" C:  "   (-30 . oz-compiler-state))
 		    ("   M:  " (-30 . oz-machine-state))))))))
+
+
+
+(defvar gdb-oz-machine "oz.machine.bin")
+
+(defun gdb-machine (tmpfile)
+  "Run gdb on oz-machine in buffer *Oz Machine*.
+The directory containing FILE becomes the initial working directory
+and source-file directory for GDB.  If you wish to change this, use
+the GDB commands `cd DIR' and `directory'."
+  (oz-set-state 'oz-machine-state "running under gdb")
+  (let* ((path (expand-file-name gdb-oz-machine))
+	(file (file-name-nondirectory path)))
+    (setq default-directory (file-name-directory path))
+    (make-comint "Oz Machine" gdb-command-name nil "-fullname"
+		 "-cd" default-directory file)
+    (save-excursion
+      (set-buffer (get-buffer "*Oz Machine*"))
+      (delete-region (point-min) (point-max))
+      (gdb-mode)
+      )
+    (set-process-filter (get-process "Oz Machine") 'gdb-filter)
+    (set-process-sentinel (get-process "Oz Machine") 'gdb-sentinel)
+    (process-send-string (get-process "Oz Machine")
+			 (concat "run -S " tmpfile "\n"))
+    (setq current-gdb-buffer (get-buffer "*Oz Machine*"))
+    )
+  )
 
 
 (defun oz-create-buffer (buf)
@@ -1044,8 +1052,8 @@ if that value is non-nil."
        "pred" "proc" "true" "false" "local" "begin" "end"
        "in" "not" "process" "det" "if" "then" "else" "elseif" 
        "fi" "or" "ro" "meth" "create" "class" "from" "with" 
-       "exists" "on" "case" "of"
-       "wait" "as" "div" "mod" "self"
+       "exists" "case" "of"
+       "wait" "div" "mod" "self"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
     ))
@@ -1172,39 +1180,47 @@ if that value is non-nil."
 
 
 (defun oz-filter (proc string state-string)
-  (let ((newbuf (process-buffer proc))
-	(old-win (selected-window))
-	 help-string old-point
-	 match-start match-end)
-    (save-excursion
-      (set-buffer newbuf)
-      ;; Insert the text, moving the process-marker.
-      (goto-char (point-max))
-      (setq old-point (point))
-      (insert string)
+  (let ((old-buffer (current-buffer))
+;	(old-win (selected-window))
+	)
+    (unwind-protect
+	(let ((newbuf (process-buffer proc))
+	      help-string old-point
+	      match-start match-end
+	      moving)
+	  (set-buffer newbuf)
+	  (setq moving (= (point) (process-mark proc)))
 
-      (oz-scroll-to-end newbuf)
+	  (save-excursion
 
-      ;; show status messages of compiler in mini buffer
-      (setq help-string string)
+	    ;; Insert the text, moving the process-marker.
+	    (goto-char (process-mark proc))
+	    (setq old-point (point))
+	    (insert string)
+	    (set-marker (process-mark proc) (point))
+
+	    ;; show status messages of compiler in mini buffer
+	    (setq help-string string)
 
       ;; only display the last status message
-      (while (setq match-start (string-match oz-status-string help-string))
-	(setq help-string (substring help-string (+ 1 match-start))))
+	    (while (setq match-start
+			 (string-match oz-status-string help-string))
+	      (setq help-string (substring help-string (+ 1 match-start))))
 
-      (if (string= string help-string)
-	  t
-	(setq match-end (string-match "\n" help-string))
-	(oz-set-state state-string (substring help-string 0 match-end)))
+	    (if (string= string help-string)
+		t
+	      (setq match-end (string-match "\n" help-string))
+	      (oz-set-state state-string (substring help-string 0 match-end)))
             
-      ;; remove escape characters
-      (goto-char old-point)
-      (while (search-forward-regexp oz-escape-chars nil t)
-	(replace-match "" nil t))
-      (goto-char (point-max)))
-    
-    (select-window old-win)
-
+	    ;; remove escape characters
+	    (goto-char old-point)
+	    (while (search-forward-regexp oz-escape-chars nil t)
+	      (replace-match "" nil t))
+	    (goto-char (point-max)))
+	  (if moving (goto-char (process-mark proc))))
+      (set-buffer old-buffer)
+;;      (select-window old-win)
+      )
     ;; error output
     (if (or oz-errors-found (string-match oz-error-chars string))   ; contains errors ?
 	(progn
