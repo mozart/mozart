@@ -679,7 +679,10 @@
       <P>
 	<Ptr to="table.parser.params"> summarizes the options that the &Gump;
 	Parser Generator understands.  They may be given as compiler switches
-	before a parser specification.
+	before a parser specification.  Additionally, the following macro
+	directive tells the &bison; parse table generator to expect a certain
+	number of shift&slash;reduce conflicts:
+	<<<\gumpparserexpect ?={int}>>>
 	<Figure float id="table.parser.params" class=table>
 	  <Caption>Compiler switches for the &Gump; Parser Generator.</Caption>
 	  <P>
