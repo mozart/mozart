@@ -97,7 +97,7 @@ define
                Title = OzDocToCode,Content(M $)
                Key   = {VirtualString.toAtom Title}
             in
-               OzDocToCode,Get(Key $)
+               chunk(OzDocToCode,Get(Key $))
             elsecase M of _|_ then M
             elsecase M of nil then nil end
             # OzDocToCode,BatchCode(Node I+1 $)
@@ -118,13 +118,74 @@ define
       end
    end
    %%
-   proc {GetChunk File Title Code}
+   proc {GetChunk File Title IndentedCode}
       O = {New OzDocToCode init}
       Sync
       L = {New MyListener init(O Sync)}
+      Code
    in
       {O getChunk(File Title Code)}
       {Wait Sync}
       if {L hasErrors($)} then raise error end end
+      {New Indentor init(Code IndentedCode) _}
+   end
+   %%
+   class Indentor
+      attr head tail column margin flushed
+      meth init(Code Result)
+         head<-Result tail<-Result
+         column<-0
+         margin<-0
+         flushed<-false
+         Indentor,entercode(Code)
+         @tail=nil
+      end
+      meth PUTC(C) L in
+         @tail=C|L
+         tail<-L
+      end
+      meth PUTMARGIN(N)
+         if N==0 then skip else
+            Indentor,PUTC(& )
+            Indentor,PUTMARGIN(N-1)
+         end
+      end
+      meth putc(C)
+         if C==&\n then column<-0 flushed<-false
+         else
+            column<-@column+1
+            if @flushed then skip
+            else
+               Indentor,PUTMARGIN(@margin)
+               flushed<-true
+            end
+         end
+         Indentor,PUTC(C)
+      end
+      meth entercode(Code)
+         case Code of X#Y then
+            Indentor,enterelem(X)
+            Indentor,entercode(Y)
+         else
+            Indentor,enterelem(Code)
+         end
+      end
+      meth enterelem(Elem)
+         case Elem of chunk(Code) then
+            Margin = @margin
+         in
+            margin<-@column
+            Indentor,entercode(Code)
+            margin<-Margin
+         else
+            Indentor,enterstring(Elem)
+         end
+      end
+      meth enterstring(Str)
+         case Str of H|T then
+            Indentor,putc(H)
+            Indentor,enterstring(T)
+         else skip end
+      end
    end
 end
