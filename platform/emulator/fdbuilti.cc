@@ -181,7 +181,7 @@ OZ_Return BIfdHeadManager::addSuspFDish(OZ_CFun, OZ_Term *, int) {
       am.addSuspendVarList(bifdhm_varptr[i]);
     }
 
-  AssertFD(am.suspendVarList != makeTaggedNULL());
+  AssertFD(!am.isEmptySuspendVarList());
 
   return SUSPEND;
 }
@@ -195,7 +195,7 @@ OZ_Return BIfdHeadManager::addSuspSingl(OZ_CFun, OZ_Term *, int) {
       am.addSuspendVarList(bifdhm_varptr[i]);
     }
 
-  AssertFD(am.suspendVarList != makeTaggedNULL());
+  AssertFD(!am.isEmptySuspendVarList());
 
   return SUSPEND;
 }

@@ -6,7 +6,7 @@ define(CONST,
 `#define' $1 $2
 )
 
-include(EMUDIR/config.m4)
+CONST(`OZVERSION',OZVERSION)
 
 define(instruction,)
 include(EMUDIR/instrDefs.m4)

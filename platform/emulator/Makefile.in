@@ -216,7 +216,7 @@ distclean::
 
 # dependencies
 marshaler.hh marshalMsg.cc: msgFormat.m4
-scancode.cc copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: instrDefs.m4
+scancode.cc copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
 marshaler.o: marshalcode.cc
 
 # automatic configure

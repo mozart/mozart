@@ -294,18 +294,18 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
 }
 
 // for debugging:
-void printStack()
+void ozd_printStack()
 {
-  am.currentThread()->getTaskStackRef()
-    ->printTaskStack(ozconf.errorThreadDepth);
+  am.currentThread()->printLong();
 }
 
 void TaskStack::printTaskStack(int depth)
 {
   Assert(this);
   if (isEmpty()) {
-    message("\tEMPTY\n");
-    message("\n");
+    fprintf(stderr,"*** EMPTY\n");
+    fprintf(stderr,"***\n");
+    fflush(stderr);
     return;
   }
 
@@ -313,16 +313,19 @@ void TaskStack::printTaskStack(int depth)
   while (auxtos != NULL && (depth == -1 || depth > 0)) {
     GetFrame(auxtos,PC,Y,G);
     if (PC==C_EMPTY_STACK) {
-      message("\n");
+      fprintf(stderr,"***\n");
+      fflush(stderr);
       return;
     }
-    CodeArea::printDef(PC);
+    fprintf(stderr,"*** PC: %p Y: %p, G: %p\n",PC,Y,G);
+    CodeArea::printDef(PC,stderr);
     if (depth != -1)
       depth--;
   }
   if (depth == 0)
-    message("\t...\n");
-  message("\n");
+    fprintf(stderr,"*** ...\n");
+  fprintf(stderr,"***\n");
+  fflush(stderr);
 }
 
 TaggedRef TaskStack::getTaskStack(Thread *tt, Bool verbose, int depth) {

@@ -556,6 +556,24 @@ void BIaddSpec(BIspec *spec); // add specification to builtin table
 
 
 /* -----------------------------------------------------------------------
+ * Threads
+ * -----------------------------------------------------------------------*/
+
+inline
+Thread *oz_newSuspendedThread()
+{
+  return am.mkSuspendedThread(am.currentBoard(), DEFAULT_PRIORITY);
+}
+
+inline
+Thread *oz_newRunnableThread(int prio=DEFAULT_PRIORITY)
+{
+  Thread *tt = am.mkRunnableThreadOPT(prio, am.currentBoard());
+  am.scheduleThread(tt);
+  return tt;
+}
+
+/* -----------------------------------------------------------------------
  * TODO
  * -----------------------------------------------------------------------*/
 

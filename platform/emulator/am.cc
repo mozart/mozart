@@ -187,6 +187,8 @@ extern void initffuns();  /* from initffuns.cc */
 void AM::init(int argc,char **argv)
 {
   Assert(makeTaggedNULL() == 0);
+  Assert(PROCEED && !FAILED);
+
   ozconf.init();
   ProfileCode(ozstat.initCount());
   osInit();
@@ -195,7 +197,6 @@ void AM::init(int argc,char **argv)
 
   installingScript = FALSE;
 
-  suspendVarList          = makeTaggedNULL();
   defaultExceptionHdl     = makeTaggedNULL();
   opiCompiler             = makeTaggedNULL();
 
@@ -402,6 +403,8 @@ void AM::init(int argc,char **argv)
   toplevelVarsCount = 0;
 
   toplevelVars[0] = makeTaggedConst(entry);
+
+  emptySuspendVarList(); // must be after initLiterals
 
 #ifdef OLD_COMPILER
   if (!isStandalone()) {
@@ -1272,7 +1275,7 @@ void AM::reduceTrailOnFail()
 
 void AM::reduceTrailOnShallow()
 {
-  suspendVarList = makeTaggedNULL();
+  emptySuspendVarList();
 
   while(!trail.isEmptyChunk()) {
     TaggedRef *refPtr;
@@ -1303,7 +1306,7 @@ void AM::reduceTrailOnShallow()
 
 void AM::reduceTrailOnEqEq()
 {
-  suspendVarList = makeTaggedNULL();
+  emptySuspendVarList();
 
   while(!trail.isEmptyChunk()) {
     TaggedRef *refPtr;
@@ -2309,13 +2312,28 @@ void AM::prepareCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1,
 }
 
 
-void AM::pushPreparedCalls()
+void AM::pushPreparedCalls(Thread *thr)
 {
   Assert(preparedCalls != NULL);
   while(preparedCalls) {
     CallList *aux = preparedCalls;
-    cachedStack->pushCallNoCopy(aux->proc,aux->args);
+    if (thr) {
+      thr->pushCallNoCopy(aux->proc,aux->args);
+    } else {
+      cachedStack->pushCallNoCopy(aux->proc,aux->args);
+    }
     preparedCalls = aux->next;
     aux->dispose();
+  }
+}
+
+void AM::suspendOnVarList(Thread *thr)
+{
+  while (isCons(_suspendVarList)) {
+    OZ_Term v=head(_suspendVarList);
+    Assert(isAnyVar(*tagged2Ref(v)));
+
+    addSuspAnyVar(tagged2Ref(v),thr);
+    _suspendVarList=tail(_suspendVarList);
   }
 }

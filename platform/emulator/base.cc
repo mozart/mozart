@@ -119,7 +119,7 @@ void ozpwarning(const char *msg)
 }
 
 
-void message (const char *format, ...)
+void message(const char *format, ...)
 {
   va_list ap;
 

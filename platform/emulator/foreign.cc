@@ -2038,7 +2038,7 @@ OZ_Thread OZ_newSuspendedThread()
 #endif
 
   Thread *thr = am.mkSuspendedThread(am.currentBoard(), DEFAULT_PRIORITY);
-  return (OZ_Thread) thr;
+  return (OZ_Thread) oz_newSuspendedThread();
 }
 
 OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
@@ -2050,9 +2050,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
 
 OZ_Thread OZ_newRunnableThread()
 {
-  Thread *tt = am.mkRunnableThreadOPT(DEFAULT_PRIORITY, am.currentBoard());
-  am.scheduleThread(tt);
-  return (OZ_Thread) tt;
+  return (OZ_Thread) oz_newRunnableThread();
 }
 
 void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
@@ -2063,11 +2061,31 @@ void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 
 void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
 {
-  RefsArray args = allocateRefsArray(2,NO);
-  args[0]=val1;
-  args[1]=val2;
-  OZ_Thread thr = OZ_newRunnableThread();
-  OZ_pushCall(thr,BI_Unify,args,2);
+  int ret = oz_unify(val1,val2);
+  if (ret == PROCEED) return;
+  DebugCheckT(printf("oz_unifyInThread: ret=%d\n",ret));
+  switch (ret) {
+  case SUSPEND:
+    {
+      OZ_Thread thr = OZ_newSuspendedThread();
+      am.suspendOnVarList((Thread *)thr);
+      break;
+    }
+  case BI_REPLACEBICALL:
+    {
+      OZ_Thread thr = OZ_newRunnableThread();
+      am.pushPreparedCalls((Thread *) thr);
+      break;
+    }
+  case FAILED:
+    {
+      OZ_Thread thr = OZ_newRunnableThread();
+      OZ_pushCall(thr,BI_fail,0,0);
+      break;
+    }
+  default:
+    Assert(0);
+  }
 }
 
 /* Suspensions */

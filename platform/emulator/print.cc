@@ -1208,7 +1208,7 @@ void Thread::printLongStream(ostream &stream, int depth, int offset)
   this->printStream(stream,depth);
   stream << endl;
   if (hasStack())
-    item.threadBody->taskStack.printTaskStack(depth);
+    item.threadBody->taskStack.printTaskStack(depth); //mm2: prints to stderr!
 }
 
 void Literal::printLongStream(ostream &stream, int depth, int offset)
