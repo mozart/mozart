@@ -114,7 +114,8 @@ in
    class Tree from BaseTree ScrolledTitleCanvas
 
       attr
-         Selected : undef
+         Selected   : undef
+         SyncStream : _
 
       meth tkInit(...)=M
          BaseTree,init
@@ -168,6 +169,18 @@ in
       end
 
       meth display
+         Old New in
+         Old = SyncStream <- New
+         Old = _ | New
+         thread
+            {WaitOr New {Alarm TimeoutToRedraw}}
+            case {IsDet New} then skip else
+               Tree,DoDisplay
+            end
+         end
+      end
+
+      meth DoDisplay
          SFX = ThreadTreeStretchX
          SFY = ThreadTreeStretchY
          OS  = ThreadTreeOffset
