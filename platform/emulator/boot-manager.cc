@@ -33,30 +33,17 @@
 #include "os.hh"
 #include "am.hh"
 
-#ifdef MODULES_LINK_STATIC
-#define DYNAMIC_MODULE(m) m
-#else
-#define DYNAMIC_MODULE(m) 0
-#endif
 
-
+/*
+ * Record of unsited builtins (needed for pickling and compiler)
+ */
 
 TaggedRef builtinRecord;
 
 
-#ifdef MODULES_LINK_STATIC
-
-#include "modWif-if.cc"
-#include "modFDP-if.cc"
-#include "modSchedule-if.cc"
-#include "modParser-if.cc"
-#include "modFSP-if.cc"
-#include "modCompilerSupport-if.cc"
-#include "modBrowser-if.cc"
-#include "modDebug-if.cc"
-
-#endif
-
+/*
+ * Builtins that are always in the emulator
+ */
 
 #include "modProperty-if.cc"
 #include "modOS-if.cc"
@@ -74,14 +61,36 @@ TaggedRef builtinRecord;
 #include "modDistribution-if.cc"
 
 
+/*
+ * Builtins that are possibly dynamically loaded
+ */
+
+#ifdef MODULES_LINK_STATIC
+
+#include "modWif-if.cc"
+#include "modFDP-if.cc"
+#include "modSchedule-if.cc"
+#include "modParser-if.cc"
+#include "modFSP-if.cc"
+#include "modCompilerSupport-if.cc"
+#include "modBrowser-if.cc"
+#include "modDebug-if.cc"
+
+#endif
+
+
+/*
+ * Builtins that depend on particular configuration
+ */
+
 #ifdef MISC_BUILTINS
 #include "modMisc-if.cc"
 #endif
 
-
 #ifdef VIRTUALSITES
 #include "modVirtualSite-if.cc"
 #endif
+
 
 
 struct ModuleEntry {
@@ -92,34 +101,31 @@ struct ModuleEntry {
 
 static ModuleEntry module_table[] = {
   // Most important stuff
-  {"Property", mod_int_Property},
-  {"OS",       mod_int_OS},
-  {"URL",      mod_int_URL},
-  {"Pickle",   mod_int_Pickle},
-  {"System",   mod_int_System},
+  {"Property",        mod_int_Property},
+  {"OS",              mod_int_OS},
+  {"URL",             mod_int_URL},
+  {"Pickle",          mod_int_Pickle},
+  {"System",          mod_int_System},
+  {"Finalize",        mod_int_Finalize},
+  {"Profile",         mod_int_Profile},
+  {"Foreign",         mod_int_Foreign},
+  {"Fault",           mod_int_Fault},
+  {"Distribution",    mod_int_Distribution},
+  {"CTB",             mod_int_CTB},
+  {"PID",             mod_int_PID},
+  {"FDB",             mod_int_FDB},
+  {"FSB",             mod_int_FSB},
 
-  {"FDB",      mod_int_FDB},
-  {"FSB",      mod_int_FSB},
-
-  {"FSP",              DYNAMIC_MODULE(mod_int_FSP) },
-  {"FDP",              DYNAMIC_MODULE(mod_int_FDP) },
-  {"CompilerSupport",  DYNAMIC_MODULE(mod_int_CompilerSupport)},
-  {"Parser",           DYNAMIC_MODULE(mod_int_Parser) },
-
-  {"Finalize", mod_int_Finalize},
-  {"Profile",  mod_int_Profile},
-
-  {"Foreign",      mod_int_Foreign},
-  {"Fault",        mod_int_Fault},
-  {"Distribution", mod_int_Distribution},
-
-  {"CTB",      mod_int_CTB},
-  {"PID",      mod_int_PID},
-
-  {"Browser",          DYNAMIC_MODULE(mod_int_Browser)},
-  {"Wif",              DYNAMIC_MODULE(mod_int_Wif) },
-  {"Schedule",         DYNAMIC_MODULE(mod_int_Schedule) },
-  {"Debug",            DYNAMIC_MODULE(mod_int_Debug)},
+#ifdef MODULES_LINK_STATIC
+  {"FSP",             mod_int_FSP},
+  {"FDP",             mod_int_FDP},
+  {"CompilerSupport", mod_int_CompilerSupport},
+  {"Parser",          mod_int_Parser},
+  {"Browser",         mod_int_Browser},
+  {"Wif",             mod_int_Wif},
+  {"Schedule",        mod_int_Schedule},
+  {"Debug",           mod_int_Debug},
+#endif
 
 #ifdef MISC_BUILTINS
   {"Misc",         mod_int_Misc},
@@ -134,6 +140,7 @@ static ModuleEntry module_table[] = {
 
 
 static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I, 
+				     const char * mod_name,
 				     Bool isSited) {
   OZ_Term l = oz_nil();
 
@@ -155,29 +162,25 @@ OZ_BI_define(BIBootManager, 1, 1) {
 
 
   // Check for builtins
-
   if (!strcmp("Builtins", mod_name)) 
     OZ_RETURN(builtinRecord);
 
-  // First: find module entry in table
-  
+
+  // First: find module entry in table  
   ModuleEntry * me = module_table;
 
   while (me && me->name && strcmp(me->name, mod_name)) {
     me++;
   }
 
-  if (!me || !me->name) {
-    fprintf(stderr, "Unknown boot module: %s.\n",mod_name);
-    osExit(1);
-  }
-  
   OZ_C_proc_interface * I = 0;
   
-  if (me->interface) {
+  if (me && me->interface) {
     // Thats easy, is linked statically
     I = me->interface;
   } else {
+
+#ifndef MODULES_LINK_STATIC
     // Not there, try to load dynamically!
 
     TaggedRef hdl;
@@ -188,18 +191,14 @@ OZ_BI_define(BIBootManager, 1, 1) {
     char * libfile = new char[n + m + 64];
     
     strcpy(libfile,             ozconf.emuhome);
-    strcpy(libfile + n,         "/lib");
-    strcpy(libfile + n + 4,     mod_name);
-    strcpy(libfile + n + m + 4, ".so");
+    strcpy(libfile + n,         "/");
+    strcpy(libfile + n + 1,     mod_name);
+    strcpy(libfile + n + m + 1, ".so");
     
     TaggedRef res = osDlopen(libfile,hdl);
     
-    if (res) {
-      fprintf(stderr, "Could not open boot library: %s: %s.\n",
-	      libfile, toC(res));
-      osExit(1);
-    }
-
+    if (res)
+      goto bomb;
     
     void * handle = OZ_getForeignPointer(hdl);
 
@@ -210,19 +209,20 @@ OZ_BI_define(BIBootManager, 1, 1) {
 
     I = (OZ_C_proc_interface *) osDlsym(handle, if_name);
 
-    if (!I) {
-      fprintf(stderr, "Interface %s:\n missing in boot library: %s.\n",
-	      if_name, libfile);
-      osExit(1);
-    }
-
     delete[] libfile;
     delete[] if_name;
-    
+   
+#endif 
   }
+
+  if (!I)
+    goto bomb;
   
-  
-  OZ_RETURN(ozInterfaceToRecord(I,OK));
+  OZ_RETURN(ozInterfaceToRecord(I,mod_name,OK));
+
+ bomb:
+  return oz_raise(E_ERROR,E_SYSTEM,"unknownBootModule",1,
+		  oz_atom(mod_name));
 
 } OZ_BI_end
 
@@ -243,7 +243,7 @@ OZ_BI_define(BIdlLoad,1,1)
     return oz_raise(E_ERROR,AtomForeign, "cannotFindInterface", 1,
 		    OZ_in(0));
 
-  OZ_RETURN(oz_pair2(hdl,ozInterfaceToRecord(I,OK)));
+  OZ_RETURN(oz_pair2(hdl,ozInterfaceToRecord(I,0,OK)));
 } OZ_BI_end
 
 extern void BIinitPerdio();
@@ -261,7 +261,7 @@ OZ_C_proc_proto(BIportWait);
 #include "modBuiltins-if.cc"
 
 void initBuiltins() {
-  builtinRecord = ozInterfaceToRecord(mod_int_Builtins, NO);
+  builtinRecord = ozInterfaceToRecord(mod_int_Builtins, 0, NO);
 
   OZ_protect(&builtinRecord);
 

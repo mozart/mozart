@@ -32,9 +32,9 @@ SRCDIR=	@srcdir@
 
 include Makefile.vars
 
-MODULE_NAMES = libWif libFDP libSchedule libFSP libParser \
-	libozma libCompilerSupport libBrowser libDebug
-STATIC_MODULETARGETS  = $(MODULE_NAMES:%=%.a)
+MODULE_NAMES = Wif FDP Schedule FSP Parser \
+	ozma CompilerSupport Browser Debug
+STATIC_MODULETARGETS  = $(MODULE_NAMES:%=lib%.a)
 DYNAMIC_MODULETARGETS = $(MODULE_NAMES:%=%.so)
 
 INCS		= -I. -I$(SRCDIR)
@@ -129,22 +129,22 @@ bootstrap:: all
 
 $(MODINTERS): bidecl.perl
 
-libFDP.a libFDP.so libSchedule.a libSchedule.so: \
+libFDP.a FDP.so libSchedule.a Schedule.so: \
 	libfd modFDP-if.cc modSchedule-if.cc
 	cd libfd; $(MAKE) $@
 
-libFSP.a libFSP.so: \
+libFSP.a FSP.so: \
 	libfset modFSP-if.cc
 	cd libfset; $(MAKE) $@
 
 
-libWif.so: wif.o
+Wif.so: wif.o
 	$(DYNLD) -o $@ wif.o
 
 libWif.a: wif.o
 	$(AR) -rc $@ wif.o && $(RANLIB) $@
 
-libCompilerSupport.so: compiler.o
+CompilerSupport.so: compiler.o
 	$(DYNLD) -o $@ compiler.o
 
 libCompilerSupport.a: compiler.o
@@ -152,13 +152,13 @@ libCompilerSupport.a: compiler.o
 
 browser.o: modBrowser-if.cc
 
-libBrowser.so: browser.o
+Browser.so: browser.o
 	$(DYNLD) -o $@ browser.o
 
 libBrowser.a: browser.o
 	$(AR) -rc $@ browser.o && $(RANLIB) $@
 
-libDebug.so: debug.o
+Debug.so: debug.o
 	$(DYNLD) -o $@ debug.o
 
 libDebug.a: debug.o
@@ -238,7 +238,7 @@ parser.hh: parser.yy
 	@mv y.tab.c parser.cc
 	@mv y.tab.h parser.hh
 
-libParser.so: parser.o scanner.o parsertable.o
+Parser.so: parser.o scanner.o parsertable.o
 	$(DYNLD) -o $@ parser.o scanner.o parsertable.o
 
 libParser.a: parser.o scanner.o parsertable.o
@@ -325,7 +325,7 @@ ozma-s.ll: ozma-s.m4ll
 ozma-p.yy: ozma-p.m4yy
 	$(M4) $(M4_D) $< > $@
 
-libozma.so: ozma-p.o ozma-s.o
+ozma.so: ozma-p.o ozma-s.o
 	$(DYNLD) -o $@ ozma-p.o ozma-s.o -lc
 
 libozma.a: ozma-p.o ozma-s.o

@@ -38,12 +38,12 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 all: $(FSETTARGETS)
 
-.PHONY: libFSP.a libFSP.so
+.PHONY: libFSP.a FSP.so
 
 libFSP.a: ../libFSP.a
-libFSP.so: ../libFSP.so
+FSP.so: ../FSP.so
 
-../libFSP.so: $(FSETLIBOBJS)
+../FSP.so: $(FSETLIBOBJS)
 	$(DYNLD) -o $@ $(FSETLIBOBJS)
 
 ../libFSP.a: $(FSETLIBOBJS)
