@@ -236,26 +236,20 @@ public:
   Bool isStandalone() { return isStandaloneF; }
 
   void emptySuspendVarList(void) { suspendVarList = 0; }
-  void addSuspendVarList(TaggedRef * t)
-  {
-    Assert(isAnyVar(*t));
-
-    if (!suspendVarList) {
-      suspendVarList=makeTaggedRef(t);
-    } else {
-      suspendVarList=cons(makeTaggedRef(t),suspendVarList);
-    }
-  }
   void addSuspendVarList(TaggedRef t)
   {
     Assert(isAnyVar(deref(t)));
 
-    if (!suspendVarList) {
-      suspendVarList=t;
-    } else {
-      suspendVarList=cons(t,suspendVarList);
-    }
+    if (suspendVarList==0)
+      suspendVarList = nil();
+
+    suspendVarList=cons(t,suspendVarList);
   }
+  void addSuspendVarList(TaggedRef * t)
+  {
+    addSuspendVarList(makeTaggedRef(t));
+  }
+
 
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();
