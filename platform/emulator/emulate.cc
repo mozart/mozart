@@ -381,11 +381,14 @@ Bool AM::hookCheckNeeded()
 
 #define CallPushCont(ContAdr) e->pushTask(ContAdr,Y,G)
 
-#define SaveCurObject(e,obj)						\
-     if (e->getCurrentObject()!=obj) {					\
-       e->currentThread->pushSetCurObject(e->getCurrentObject());	\
-       e->setCurrentObject(obj);					\
-     }
+#define SaveCurObject(e,obj,pushObject)						 \
+  if (e->getCurrentObject()!=obj) {						 \
+    if (pushObject)								 \
+      e->currentThread->pushSetCurObject(e->getCurrentObject());		 \
+    else									 \
+      e->currentThread->setObject(e->getCurrentObject());			 \
+    e->setCurrentObject(obj);							 \
+  }
 
 
 /* NOTE:
@@ -397,7 +400,7 @@ Bool AM::hookCheckNeeded()
      G = gRegs;								\
      emulateHookCall(e,Pred,Arity,X,					\
 		     e->pushTaskOutline(Pred->getPC(),NULL,G,X,Arity);	\
-		     goto LBLschedule;);
+		     goto LBLpreemption;);
 
 
 // load a continuation into the machine registers PC,Y,G,X
@@ -550,13 +553,12 @@ Bool AM::hookCheckNeeded()
 // outlined auxiliary functions
 // ------------------------------------------------------------------------
 
-#define CHECK_CURRENT_THREAD                       \
-  {                                                \
-    if (e->currentThread->isSuspended()) {         \
-      goto LBLsuspendThread;                       \
-    }                                              \
-    goto LBLpopTask;                               \
-  }  
+#define CHECK_CURRENT_THREAD			\
+    if (e->currentThread->isSuspended()) {	\
+      goto LBLsuspendThread;			\
+    }						\
+    goto LBLpopTask;
+
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)		\
    e->pushTaskOutline(PC,Y,G,X,RegsToSave);	\
@@ -606,13 +608,14 @@ void AM::suspendOnVarList(Thread *thr)
 Thread *AM::mkSuspThread ()
 {
   /* save special registers */
-  SaveCurObject(this,NULL);
+  SaveCurObject(this,NULL,OK);
   return currentThread->getJob();
 }
 
 void AM::suspendCond(AskActor *aa)
 {
-  Thread *th = mkSuspThread();
+  // Thread *th = mkSuspThread(); /* currentObject is saved directly in thread! */
+  Thread *th = currentThread->getJob();
 
   Assert (th->isSuspended ());
   //  we put in either the same thread, or a part of it;
@@ -1106,9 +1109,9 @@ void engine()
 // ------------------------------------------------------------------------
 // *** RUN: Main Loop
 // ------------------------------------------------------------------------
- LBLschedule:
+ LBLpreemption:
 
-  SaveCurObject(e,NULL);
+  SaveCurObject(e,NULL,NO);
   e->currentThread->setBoard (CBB);
   e->scheduleThread(e->currentThread);
   e->currentThread=(Thread *) NULL;
@@ -1408,7 +1411,7 @@ LBLpopTask:
     asmLbl(popTask);
 
     emulateHookPopTask(e,
-		       goto LBLschedule);
+		       goto LBLpreemption);
 
     DebugCheckT(CAA = NULL);
 
@@ -1601,7 +1604,7 @@ LBLkillToplevelThread:
 	goto LBLstart;
       } else {
 	//  ... no, we have fetched something - go ahead;
-	goto LBLschedule;
+	goto LBLpreemption;
       }
     } else {
       e->currentThread->disposeRunnableThread ();
@@ -1896,9 +1899,10 @@ LBLsuspendThread:
     asmLbl(suspendThread);
 
     //
-    //  First, set the board, and perform special action for 
+    //  First, set the board and curObject, and perform special action for 
     // the case of blocking the root thread;
     e->currentThread->setBoard (CBB);
+    SaveCurObject(e,NULL,NO);
     if (e->currentThread == e->rootThread) {
       e->rootThread = 
 	new Thread (e->currentThread->getPriority (), e->rootBoard);
@@ -2319,6 +2323,7 @@ LBLsuspendThread:
     {
       TaggedRef fea = getLiteralArg(PC+1);
 
+      Assert(e->getCurrentObject()!=NULL);
       SRecord *rec = e->getCurrentObject()->getState();
       if (rec) {
 	int index = ((RecordCache*)(PC+4))->lookup(rec,fea);
@@ -2732,7 +2737,7 @@ LBLsuspendThread:
       if (!isTailCall) { 
 	CallPushCont(PC+6);
       }
-      SaveCurObject(e,obj);
+      SaveCurObject(e,obj,OK);
       Assert(obj->getDeepness()==0);
       obj->incDeepness();
       CallDoChecks(def,def->getGRegs(),arity);
@@ -2870,7 +2875,7 @@ LBLsuspendThread:
 	     if (!isTailCall) { 
 	       CallPushCont(PC);
 	     }
-	     SaveCurObject(e,o); 
+	     SaveCurObject(e,o,OK); 
 	     // o->deepness handelt by 'objectIsFree'
 	   } else {
 	     def = (Abstraction *) predicate;
