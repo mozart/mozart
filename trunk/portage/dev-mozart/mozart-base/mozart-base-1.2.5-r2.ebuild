@@ -20,7 +20,7 @@ DEPEND="virtual/glibc
 "
 RDEPEND="virtual/glibc
         virtual/emacs
-        sys-apps/bash
+        app-shells/bash
         sys-apps/sh-utils
         sys-devel/gcc
         sys-devel/binutils
