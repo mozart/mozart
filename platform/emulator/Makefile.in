@@ -32,19 +32,22 @@ SUBDIRS		= FDLib FSetLib
 #	-Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
 #	-Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror
 
+xx: config.h
+
 WARNINGS = -Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
 	-Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
 	-Wnested-externs -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized
 
-CREATEDINCS = \
+CREATEDOTHERS = \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
-	marshalcode.cc marshalMsg.cc register.hh
+	marshalcode.cc marshalMsg.cc register.hh oz.c \
+	ozma-p.yy ozma-s.ll config.h
 
 CREATEDSRCS = \
 	scancode.cc opcodes.cc ozma-p.cc ozma-s.cc\
 	scanner.cc parser.cc version.cc initffuns.cc
 
-CREATEDFILES = $(CREATEDINCS) $(CREATEDSRCS)
+CREATEDFILES = $(CREATEDOTHERS) $(CREATEDSRCS)
 
 PEANUTSFILE = peanuts.cc
 PEANUTS = \
@@ -129,7 +132,7 @@ install-dir:
 version.cc: version 
 
 initffuns.cc oz.c: oz.h
-	$(SRCDIR)/makeffuns $(SRCDIR)
+	$(SRCDIR)/makeffuns $(SRCDIR) "$(OZVERSION)"
 
 version:
 	$(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
@@ -148,13 +151,6 @@ clean+:	clean
 
 clean::
 	$(RM) gmon.out  fetchedInstr.dump verb_out.txt
-
-realclean::
-	$(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
-		ozma-s.cc ozma-p.cc ozma.hh \
-		ozlib.lnk *.exe *.map *.imp *.sym *.so \
-		$(CREATEDFILES) TAGS \
-		conf.h config.cache config.log config.status
 
 ozlib.lnk: oz.h
 	grep FUNDECL oz.h | grep -v typedef | grep -v define | \
@@ -190,6 +186,9 @@ ozma-s.ll: ozma-s.m4ll
 ozma-p.yy: ozma-p.m4yy
 	$(M4) $< > $@
 
+config.h: $(TOPDIR)/include/config.m4h
+	$(M4) -DOZVERSION="$(OZVERSION)" -DOZINCDIR=$(TOPDIR)/include $< > $@
+
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
 #os.cc:208: warning: assignment of negative value `-1' to `long unsigned int'
@@ -198,8 +197,16 @@ ozma-p.yy: ozma-p.m4yy
 
 include Makefile.rules
 
-# should be after make all in subdirs (see Makefiles.rules)
+# all/realclean should be after make in subdirs (see Makefiles.rules)
 all:: $(TARGETS)
+
+realclean::
+	$(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
+		ozlib.lnk *.exe *.map *.imp *.sym \
+		ozma.hh \
+		$(CREATEDFILES) TAGS \
+		conf.h config.cache config.log config.status \
+		Makefile.rules Makefile.vars
 
 # dependencies
 marshaler.hh marshalMsg.cc: $(SRCDIR)/msgFormat.m4
