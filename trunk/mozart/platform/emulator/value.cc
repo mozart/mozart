@@ -1221,24 +1221,4 @@ TaggedRef *OzLock::lock(Thread *t)
  * Misc
  *=================================================================== */
 
-ProgramCounter DbgInfoList::find(char *file, int line)
-{
-  DbgInfoList    *aux = this;
-  ProgramCounter PC   = NOCODE;
-
-  while(aux) {
-    for(int i=0; i<dbgcount; i++) {
-      DbgInfo *info = aux->elems[i];
-      if (info && !strcmp(file,OZ_atomToC(info->file))) {
-	if (line == info->line)
-	  PC = info->PC;
-      }
-    }
-    if (PC != NOCODE)
-      break;
-    aux = aux->next;
-  }
-  return PC;
-}
-
-DbgInfoList *allDbgInfos = NULL;
+DbgInfo *allDbgInfos = NULL;
