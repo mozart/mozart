@@ -104,7 +104,7 @@ TaggedRef SolveActor::merge(Board *bb) {
     
       // empty taskstack of ltq thread and dispose ltq
       localThreadQueue->getLTQThread()->getTaskStackRef()->makeEmpty();
-      delete localThreadQueue;
+      // delete localThreadQueue;	// never destroy LTQ;
       localThreadQueue = NULL;
     }
   }
