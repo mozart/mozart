@@ -34,6 +34,7 @@ M4_D		= -DEMUDIR=$(SRCDIR)
 FDTARGETS	= @FDTARGETS@
 FSETTARGETS	= @FSETTARGETS@
 TARGETS		= @TARGETS@
+OZMALIB		= @OZMALIB@
 SUBDIRS		= FDLib FSetLib
 OZVERSION	= $(TOPDIR)/OZVERSION
 
@@ -110,10 +111,10 @@ win: ozlib.lnk $(CREATEDFILES)
 
 first: $(CREATEDFILES) $(SRCS)
 
-@PROGRAMNAME@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
+@PROGRAMNAME@: first $(OBJS) $(OZMALIB) $(FDTARGETS) $(FSETTARGETS)
 	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
-@oz_tmphack_programname@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
+@oz_tmphack_programname@: first $(OBJS) $(OZMALIB) $(FDTARGETS) $(FSETTARGETS)
 	tmp=/tmp/ozemu$$$$; \
 	trap "$(RM) $$tmp; exit 1" 1 2 15; \
 	 $(LD) $(LDFLAGS) $(LDOPT) -o $$tmp $(OBJS) $(LIBS) && \
