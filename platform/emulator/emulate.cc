@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.346  1996/07/18 15:27:17  scheidhr
+  no warnings
+
   Revision 1.345  1996/07/15 10:23:26  tmueller
   added streams to cpi
 
@@ -80,7 +83,7 @@ Abstraction *getApplyMethodForGenCall(Object *obj, TaggedRef label, SRecordArity
   Assert(isFeature(label));
   Bool defaultsUsed;
   Abstraction *ret = obj->getMethod(label,arity,am.xRegs,defaultsUsed);
-  return defaultsUsed ? NULL : ret;
+  return defaultsUsed ? (Abstraction*)NULL : ret;
 }
 
 // -----------------------------------------------------------------------
