@@ -309,6 +309,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (interactive)
 
   (message "halting Oz...")
+  (if (get-buffer "*Oz Temp*") (kill-buffer "*Oz Temp*"))
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (get-buffer-process oz-emulator-buffer))
       (let ((i (* 2 oz-halt-timeout))
