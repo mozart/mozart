@@ -5514,30 +5514,96 @@ else
     if test -n "$oz_dlopen_underscore"; then
       oz_cv_dlopen_underscore=$oz_dlopen_underscore
     else
-      cat > conftest.$ac_ext <<EOF
+      case $platform in
+         hpux* | win32*) oz_tmp=no;;
+         *) oz_tmp="$ac_cv_func_dlopen";;
+      esac
+      oz_uscore=error
+      if test "$oz_tmp" = yes; then
+          cat > conftestLIB.c <<EOF
+int foo() { return 0; }
+EOF
+          cat > conftestUSE.c <<EOF
+#ifdef HAVE_DLFCN_H
+#include <dlfcn.h>
+#else
+extern void * dlopen(char *, int);
+extern void * dlsym(void *, char *);
+#endif
+
+#if !defined(RTLD_NOW)
+#define RTLD_NOW 1
+#endif
+
+#if !defined(RTLD_GLOBAL)
+#define RTLD_GLOBAL 0
+#endif
+
+int main()
+{
+  void * pointer;
+  void *handle = dlopen("./conftestLIB.so",RTLD_NOW|RTLD_GLOBAL);
+  if (!handle) {
+    printf("error\n");
+    return 1;
+  }
+  pointer = dlsym(handle,"foo");
+  if (pointer) {
+    printf("no\n");
+    return 0;
+  }
+  pointer = dlsym(handle,"_foo");
+  if (pointer) {
+    printf("yes\n");
+    return 0;
+  }
+  printf("error\n");
+  return 1;
+}
+EOF
+        if test "$ac_cv_header_dlfcn_h" = yes; then
+            oz_HAVE_DLFCN_H=-DHAVE_DLFCN_H
+        fi
+        ${CC-cc} -c $CFLAGS $CPPFLAGS $oz_HAVE_DLFCN_H $OZTOOLDYNOPTCC conftestLIB.c -o conftestLIB.o 2>/dev/null && \
+        ${TOOLLDCMD} $LDFLAGS conftestLIB.o -o conftestLIB.so 2>/dev/null && \
+        ${CC-cc} $CFLAGS $CPPFLAGS -ldl conftestUSE.c -o conftestUSE.exe 2>/dev/null && \
+        oz_uscore=`./conftestUSE.exe 2>/dev/null`
+        rm -f conftestLIB.c conftestLIB.o conftestLIB.so conftestUSE.c conftestUSE.exe 2>/dev/null
+      fi
+      case "$oz_uscore" in
+        yes) oz_cv_dlopen_underscore=yes
+echo "DETERMINED BY TRYING"
+;;
+         no) oz_cv_dlopen_underscore=no
+echo "DETERMINED BY TRYING"
+;;
+          *) cat > conftest.$ac_ext <<EOF
 extern "C"
 int foo() { return 1; }
 EOF
-      if { (eval echo configure:5522: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
-        oz_tmp=`(strings -a conftest.o | grep foo) 2>/dev/null`
-        ## on some platforms strings -a does not do the job
-        ## but nm works fine (e.g. Darwin). So, in case we did
-        ## not get a result with strings -a, we try it again
-        ## here with nm and remove the stuff preceding the
-        ## identifier that we are interested in
-        if test -z "$oz_tmp"; then
-          oz_tmp=`(nm conftest.o | grep foo) 2>/dev/null`
-          oz_tmp=`expr "$oz_tmp" : '.* . \(.*\)' 2>/dev/null`
-        fi
-        if expr "$oz_tmp" : '_' 1>/dev/null 2>&1; then
-          oz_cv_dlopen_underscore=yes;
-        else
-          oz_cv_dlopen_underscore=no;
-        fi
-      else
-        { echo "configure: error: test bombed" 1>&2; exit 1; }
-      fi
-      rm -rf conftest.$ac_ext conftest.o
+             if { (eval echo configure:5585: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+               oz_tmp=`(strings -a conftest.o | grep foo) 2>/dev/null`
+               ## on some platforms strings -a does not do the job
+               ## but nm works fine (e.g. Darwin). So, in case we did
+               ## not get a result with strings -a, we try it again
+               ## here with nm and remove the stuff preceding the
+               ## identifier that we are interested in
+               if test -z "$oz_tmp"; then
+                 oz_tmp=`(nm conftest.o | grep foo) 2>/dev/null`
+                 oz_tmp=`expr "$oz_tmp" : '.* . \(.*\)' 2>/dev/null`
+               fi
+               if expr "$oz_tmp" : '_' 1>/dev/null 2>&1; then
+                 oz_cv_dlopen_underscore=yes;
+               else
+                 oz_cv_dlopen_underscore=no;
+               fi
+echo "DETERMINED BY INSPECTION"
+             else
+               { echo "configure: error: test bombed" 1>&2; exit 1; }
+             fi
+             rm -rf conftest.$ac_ext conftest.o
+             ;;
+      esac
     fi
 fi
 
@@ -5554,7 +5620,7 @@ fi
 # AC_C_BIGENDIAN
 
 echo $ac_n "checking for little-endianness""... $ac_c" 1>&6
-echo "configure:5558: checking for little-endianness" >&5
+echo "configure:5624: checking for little-endianness" >&5
 if eval "test \"`echo '$''{'oz_cv_little_endian'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -5562,7 +5628,7 @@ else
   { echo "configure: error: cannot determine endianness when cross-compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 5566 "configure"
+#line 5632 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -5583,7 +5649,7 @@ int main() {
 }
 
 EOF
-if { (eval echo configure:5587: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:5653: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   oz_cv_little_endian=yes
 else
@@ -5608,7 +5674,7 @@ fi
 
 if test "$oz_cv_little_endian" = yes; then
 echo $ac_n "checking for big-wordianness""... $ac_c" 1>&6
-echo "configure:5612: checking for big-wordianness" >&5
+echo "configure:5678: checking for big-wordianness" >&5
 if eval "test \"`echo '$''{'oz_cv_big_wordian'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -5616,7 +5682,7 @@ else
   { echo "configure: error: cannot determine wordianness when cross-compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 5620 "configure"
+#line 5686 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -5637,7 +5703,7 @@ int main() {
 }
 
 EOF
-if { (eval echo configure:5641: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:5707: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   oz_cv_big_wordian=yes
 else
@@ -5676,7 +5742,7 @@ case $platform in
 win32*);;
 *)
 echo $ac_n "checking whether the times/sysconf(_SC_CLK_TCK) bug is present""... $ac_c" 1>&6
-echo "configure:5680: checking whether the times/sysconf(_SC_CLK_TCK) bug is present" >&5
+echo "configure:5746: checking whether the times/sysconf(_SC_CLK_TCK) bug is present" >&5
 if eval "test \"`echo '$''{'oz_cv_times_sysconf_bug'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -5759,7 +5825,7 @@ echo "$ac_t""$oz_cv_times_sysconf_bug" 1>&6
 
 if test "$oz_cv_times_sysconf_bug" = yes; then
    echo $ac_n "checking for times/sysconf(_SC_CLK_TCK) fix ratio""... $ac_c" 1>&6
-echo "configure:5763: checking for times/sysconf(_SC_CLK_TCK) fix ratio" >&5
+echo "configure:5829: checking for times/sysconf(_SC_CLK_TCK) fix ratio" >&5
    echo "$ac_t""$oz_cv_CLKFIX" 1>&6
    cat >> confdefs.h <<EOF
 #define CLK_TCK_BUG_RATIO $oz_cv_CLKFIX
@@ -5775,7 +5841,7 @@ esac
 
 
 echo $ac_n "checking for --with-gmp""... $ac_c" 1>&6
-echo "configure:5779: checking for --with-gmp" >&5
+echo "configure:5845: checking for --with-gmp" >&5
 # Check whether --with-gmp or --without-gmp was given.
 if test "${with_gmp+set}" = set; then
   withval="$with_gmp"
@@ -5804,7 +5870,7 @@ fi
 
 
   echo $ac_n "checking for gmp.h""... $ac_c" 1>&6
-echo "configure:5808: checking for gmp.h" >&5
+echo "configure:5874: checking for gmp.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_gmp_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -5815,12 +5881,12 @@ else
       for oz_tmp in $oz_inc_path; do
 	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
 	cat > conftest.$ac_ext <<EOF
-#line 5819 "configure"
+#line 5885 "configure"
 #include "confdefs.h"
 #include "gmp.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5824: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5890: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5837,12 +5903,12 @@ rm -f conftest*
       CPPFLAGS="$oz_tmp_cppflags"
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 5841 "configure"
+#line 5907 "configure"
 #include "confdefs.h"
 #include "gmp.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5846: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5912: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5885,7 +5951,7 @@ echo "$ac_t""$oz_cv_header_gmp_h" 1>&6
   oz_inc_path="$oz_inc_path /usr/include/gmp2"
   
   echo $ac_n "checking for gmp.h""... $ac_c" 1>&6
-echo "configure:5889: checking for gmp.h" >&5
+echo "configure:5955: checking for gmp.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_gmp_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -5896,12 +5962,12 @@ else
       for oz_tmp in $oz_inc_path; do
 	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
 	cat > conftest.$ac_ext <<EOF
-#line 5900 "configure"
+#line 5966 "configure"
 #include "confdefs.h"
 #include "gmp.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5905: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5971: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5918,12 +5984,12 @@ rm -f conftest*
       CPPFLAGS="$oz_tmp_cppflags"
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 5922 "configure"
+#line 5988 "configure"
 #include "confdefs.h"
 #include "gmp.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5927: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5993: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5971,7 +6037,7 @@ if test "$oz_gmp_inc_found" = yes; then
   
   if test -n "$oz_cv_lib_path_ldflags_gmp___gmpz_init"; then
     echo $ac_n "checking for library gmp""... $ac_c" 1>&6
-echo "configure:5975: checking for library gmp" >&5
+echo "configure:6041: checking for library gmp" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_gmp___gmpz_init
     oz_add_libs=$oz_cv_lib_path_libs_gmp___gmpz_init
     if test "$oz_add_ldflags" = no; then
@@ -5995,12 +6061,12 @@ echo "configure:5975: checking for library gmp" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for __gmpz_init in -lgmp (default)""... $ac_c" 1>&6
-echo "configure:5999: checking for __gmpz_init in -lgmp (default)" >&5
+echo "configure:6065: checking for __gmpz_init in -lgmp (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 6004 "configure"
+#line 6070 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6011,7 +6077,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6015: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6081: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6025,7 +6091,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6029 "configure"
+#line 6095 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6036,7 +6102,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6040: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6106: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6049,7 +6115,7 @@ else
          oz_add_libs="-lgmp"
          
 	cat > conftest.$ac_ext <<EOF
-#line 6053 "configure"
+#line 6119 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6060,7 +6126,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6064: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6130: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6075,12 +6141,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for __gmpz_init in -L$p -lgmp""... $ac_c" 1>&6
-echo "configure:6079: checking for __gmpz_init in -L$p -lgmp" >&5
+echo "configure:6145: checking for __gmpz_init in -L$p -lgmp" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 6084 "configure"
+#line 6150 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6091,7 +6157,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6095: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6161: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6105,7 +6171,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6109 "configure"
+#line 6175 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6116,7 +6182,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6120: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6186: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6129,7 +6195,7 @@ else
          oz_add_libs="-lgmp"
          
 	cat > conftest.$ac_ext <<EOF
-#line 6133 "configure"
+#line 6199 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6140,7 +6206,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6144: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6210: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6161,7 +6227,7 @@ rm -f conftest*
       oz_add_libs="-lgmp"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6165 "configure"
+#line 6231 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6172,7 +6238,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6176: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6242: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6199,7 +6265,7 @@ rm -f conftest*
       oz_add_libs="-lgmp"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6203 "configure"
+#line 6269 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6210,7 +6276,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6214: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6280: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6225,12 +6291,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for __gmpz_init in -L$p -lgmp""... $ac_c" 1>&6
-echo "configure:6229: checking for __gmpz_init in -L$p -lgmp" >&5
+echo "configure:6295: checking for __gmpz_init in -L$p -lgmp" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 6234 "configure"
+#line 6300 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6241,7 +6307,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6245: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6311: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6255,7 +6321,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6259 "configure"
+#line 6325 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6266,7 +6332,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6270: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6336: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6279,7 +6345,7 @@ else
          oz_add_libs="-lgmp"
          
 	cat > conftest.$ac_ext <<EOF
-#line 6283 "configure"
+#line 6349 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6290,7 +6356,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6294: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6360: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6311,7 +6377,7 @@ rm -f conftest*
       oz_add_libs="-lgmp"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6315 "configure"
+#line 6381 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6322,7 +6388,7 @@ int main() {
 __gmpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6326: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6392: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6354,7 +6420,7 @@ rm -f conftest*
         
   if test -n "$oz_cv_lib_path_ldflags_gmp_mpz_init"; then
     echo $ac_n "checking for library gmp""... $ac_c" 1>&6
-echo "configure:6358: checking for library gmp" >&5
+echo "configure:6424: checking for library gmp" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_gmp_mpz_init
     oz_add_libs=$oz_cv_lib_path_libs_gmp_mpz_init
     if test "$oz_add_ldflags" = no; then
@@ -6378,12 +6444,12 @@ echo "configure:6358: checking for library gmp" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for mpz_init in -lgmp (default)""... $ac_c" 1>&6
-echo "configure:6382: checking for mpz_init in -lgmp (default)" >&5
+echo "configure:6448: checking for mpz_init in -lgmp (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 6387 "configure"
+#line 6453 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6394,7 +6460,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6398: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6464: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6408,7 +6474,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6412 "configure"
+#line 6478 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6419,7 +6485,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6423: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6489: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6432,7 +6498,7 @@ else
          oz_add_libs="-lgmp"
          
 	cat > conftest.$ac_ext <<EOF
-#line 6436 "configure"
+#line 6502 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6443,7 +6509,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6447: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6513: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6458,12 +6524,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for mpz_init in -L$p -lgmp""... $ac_c" 1>&6
-echo "configure:6462: checking for mpz_init in -L$p -lgmp" >&5
+echo "configure:6528: checking for mpz_init in -L$p -lgmp" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 6467 "configure"
+#line 6533 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6474,7 +6540,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6478: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6544: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6488,7 +6554,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6492 "configure"
+#line 6558 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6499,7 +6565,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6503: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6569: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6512,7 +6578,7 @@ else
          oz_add_libs="-lgmp"
          
 	cat > conftest.$ac_ext <<EOF
-#line 6516 "configure"
+#line 6582 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6523,7 +6589,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6527: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6593: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6544,7 +6610,7 @@ rm -f conftest*
       oz_add_libs="-lgmp"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6548 "configure"
+#line 6614 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6555,7 +6621,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6559: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6625: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6582,7 +6648,7 @@ rm -f conftest*
       oz_add_libs="-lgmp"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6586 "configure"
+#line 6652 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6593,7 +6659,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6597: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6663: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6608,12 +6674,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for mpz_init in -L$p -lgmp""... $ac_c" 1>&6
-echo "configure:6612: checking for mpz_init in -L$p -lgmp" >&5
+echo "configure:6678: checking for mpz_init in -L$p -lgmp" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 6617 "configure"
+#line 6683 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6624,7 +6690,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6628: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6694: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6638,7 +6704,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6642 "configure"
+#line 6708 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6649,7 +6715,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6653: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6719: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6662,7 +6728,7 @@ else
          oz_add_libs="-lgmp"
          
 	cat > conftest.$ac_ext <<EOF
-#line 6666 "configure"
+#line 6732 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6673,7 +6739,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6677: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6743: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6694,7 +6760,7 @@ rm -f conftest*
       oz_add_libs="-lgmp"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6698 "configure"
+#line 6764 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6705,7 +6771,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6709: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6775: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6737,7 +6803,7 @@ rm -f conftest*
     
   if test -n "$oz_cv_lib_path_ldflags_gmp2_mpz_init"; then
     echo $ac_n "checking for library gmp2""... $ac_c" 1>&6
-echo "configure:6741: checking for library gmp2" >&5
+echo "configure:6807: checking for library gmp2" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_gmp2_mpz_init
     oz_add_libs=$oz_cv_lib_path_libs_gmp2_mpz_init
     if test "$oz_add_ldflags" = no; then
@@ -6761,12 +6827,12 @@ echo "configure:6741: checking for library gmp2" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for mpz_init in -lgmp2 (default)""... $ac_c" 1>&6
-echo "configure:6765: checking for mpz_init in -lgmp2 (default)" >&5
+echo "configure:6831: checking for mpz_init in -lgmp2 (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 6770 "configure"
+#line 6836 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6777,7 +6843,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6781: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6847: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6791,7 +6857,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6795 "configure"
+#line 6861 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6802,7 +6868,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6806: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6872: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6815,7 +6881,7 @@ else
          oz_add_libs="-lgmp2"
          
 	cat > conftest.$ac_ext <<EOF
-#line 6819 "configure"
+#line 6885 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6826,7 +6892,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6830: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6896: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6841,12 +6907,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for mpz_init in -L$p -lgmp2""... $ac_c" 1>&6
-echo "configure:6845: checking for mpz_init in -L$p -lgmp2" >&5
+echo "configure:6911: checking for mpz_init in -L$p -lgmp2" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 6850 "configure"
+#line 6916 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6857,7 +6923,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6861: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6927: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6871,7 +6937,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6875 "configure"
+#line 6941 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6882,7 +6948,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6886: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6952: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6895,7 +6961,7 @@ else
          oz_add_libs="-lgmp2"
          
 	cat > conftest.$ac_ext <<EOF
-#line 6899 "configure"
+#line 6965 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6906,7 +6972,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6910: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:6976: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6927,7 +6993,7 @@ rm -f conftest*
       oz_add_libs="-lgmp2"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6931 "configure"
+#line 6997 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6938,7 +7004,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6942: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7008: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -6965,7 +7031,7 @@ rm -f conftest*
       oz_add_libs="-lgmp2"
       
 	cat > conftest.$ac_ext <<EOF
-#line 6969 "configure"
+#line 7035 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -6976,7 +7042,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:6980: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7046: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -6991,12 +7057,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for mpz_init in -L$p -lgmp2""... $ac_c" 1>&6
-echo "configure:6995: checking for mpz_init in -L$p -lgmp2" >&5
+echo "configure:7061: checking for mpz_init in -L$p -lgmp2" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 7000 "configure"
+#line 7066 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7007,7 +7073,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:7011: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7077: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7021,7 +7087,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7025 "configure"
+#line 7091 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7032,7 +7098,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:7036: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7102: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7045,7 +7111,7 @@ else
          oz_add_libs="-lgmp2"
          
 	cat > conftest.$ac_ext <<EOF
-#line 7049 "configure"
+#line 7115 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7056,7 +7122,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:7060: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7126: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7077,7 +7143,7 @@ rm -f conftest*
       oz_add_libs="-lgmp2"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7081 "configure"
+#line 7147 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7088,7 +7154,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:7092: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7158: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7179,7 +7245,7 @@ fi
 
 if test "$oz_gmp_lib_found" != no; then
   echo $ac_n "checking gmp version is at least 2""... $ac_c" 1>&6
-echo "configure:7183: checking gmp version is at least 2" >&5
+echo "configure:7249: checking gmp version is at least 2" >&5
   if test -z "$oz_cv_gmp_version_ok"; then
     cat > conftest.$ac_ext <<EOF
 #include <gmp.h>
@@ -7270,7 +7336,7 @@ fi
 
 
   echo $ac_n "checking for --with-zlib""... $ac_c" 1>&6
-echo "configure:7274: checking for --with-zlib" >&5
+echo "configure:7340: checking for --with-zlib" >&5
   # Check whether --with-zlib or --without-zlib was given.
 if test "${with_zlib+set}" = set; then
   withval="$with_zlib"
@@ -7298,7 +7364,7 @@ fi
 
 
   echo $ac_n "checking for zlib.h""... $ac_c" 1>&6
-echo "configure:7302: checking for zlib.h" >&5
+echo "configure:7368: checking for zlib.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_zlib_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -7309,12 +7375,12 @@ else
       for oz_tmp in $oz_inc_path; do
 	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
 	cat > conftest.$ac_ext <<EOF
-#line 7313 "configure"
+#line 7379 "configure"
 #include "confdefs.h"
 #include "zlib.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:7318: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:7384: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -7331,12 +7397,12 @@ rm -f conftest*
       CPPFLAGS="$oz_tmp_cppflags"
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 7335 "configure"
+#line 7401 "configure"
 #include "confdefs.h"
 #include "zlib.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:7340: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:7406: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -7382,7 +7448,7 @@ if test "$oz_zlib_inc_found" = yes; then
   
   if test -n "$oz_cv_lib_path_ldflags_z_zlibVersion"; then
     echo $ac_n "checking for library z""... $ac_c" 1>&6
-echo "configure:7386: checking for library z" >&5
+echo "configure:7452: checking for library z" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_z_zlibVersion
     oz_add_libs=$oz_cv_lib_path_libs_z_zlibVersion
     if test "$oz_add_ldflags" = no; then
@@ -7406,12 +7472,12 @@ echo "configure:7386: checking for library z" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for zlibVersion in -lz (default)""... $ac_c" 1>&6
-echo "configure:7410: checking for zlibVersion in -lz (default)" >&5
+echo "configure:7476: checking for zlibVersion in -lz (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 7415 "configure"
+#line 7481 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7422,7 +7488,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7426: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7492: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -7436,7 +7502,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7440 "configure"
+#line 7506 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7447,7 +7513,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7451: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7517: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -7460,7 +7526,7 @@ else
          oz_add_libs="-lz"
          
 	cat > conftest.$ac_ext <<EOF
-#line 7464 "configure"
+#line 7530 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7471,7 +7537,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7475: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7541: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -7486,12 +7552,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for zlibVersion in -L$p -lz""... $ac_c" 1>&6
-echo "configure:7490: checking for zlibVersion in -L$p -lz" >&5
+echo "configure:7556: checking for zlibVersion in -L$p -lz" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 7495 "configure"
+#line 7561 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7502,7 +7568,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7506: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7572: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7516,7 +7582,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7520 "configure"
+#line 7586 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7527,7 +7593,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7531: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7597: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7540,7 +7606,7 @@ else
          oz_add_libs="-lz"
          
 	cat > conftest.$ac_ext <<EOF
-#line 7544 "configure"
+#line 7610 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7551,7 +7617,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7555: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7621: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7572,7 +7638,7 @@ rm -f conftest*
       oz_add_libs="-lz"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7576 "configure"
+#line 7642 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7583,7 +7649,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7587: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7653: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7610,7 +7676,7 @@ rm -f conftest*
       oz_add_libs="-lz"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7614 "configure"
+#line 7680 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7621,7 +7687,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7625: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7691: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -7636,12 +7702,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for zlibVersion in -L$p -lz""... $ac_c" 1>&6
-echo "configure:7640: checking for zlibVersion in -L$p -lz" >&5
+echo "configure:7706: checking for zlibVersion in -L$p -lz" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 7645 "configure"
+#line 7711 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7652,7 +7718,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7656: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7722: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7666,7 +7732,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7670 "configure"
+#line 7736 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7677,7 +7743,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7681: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7747: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7690,7 +7756,7 @@ else
          oz_add_libs="-lz"
          
 	cat > conftest.$ac_ext <<EOF
-#line 7694 "configure"
+#line 7760 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7701,7 +7767,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7705: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7771: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7722,7 +7788,7 @@ rm -f conftest*
       oz_add_libs="-lz"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7726 "configure"
+#line 7792 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7733,7 +7799,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7737: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7803: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7765,7 +7831,7 @@ rm -f conftest*
     
   if test -n "$oz_cv_lib_path_ldflags_gz_zlibVersion"; then
     echo $ac_n "checking for library gz""... $ac_c" 1>&6
-echo "configure:7769: checking for library gz" >&5
+echo "configure:7835: checking for library gz" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_gz_zlibVersion
     oz_add_libs=$oz_cv_lib_path_libs_gz_zlibVersion
     if test "$oz_add_ldflags" = no; then
@@ -7789,12 +7855,12 @@ echo "configure:7769: checking for library gz" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for zlibVersion in -lgz (default)""... $ac_c" 1>&6
-echo "configure:7793: checking for zlibVersion in -lgz (default)" >&5
+echo "configure:7859: checking for zlibVersion in -lgz (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 7798 "configure"
+#line 7864 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7805,7 +7871,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7809: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7875: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -7819,7 +7885,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7823 "configure"
+#line 7889 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7830,7 +7896,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7834: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7900: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -7843,7 +7909,7 @@ else
          oz_add_libs="-lgz"
          
 	cat > conftest.$ac_ext <<EOF
-#line 7847 "configure"
+#line 7913 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7854,7 +7920,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7858: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7924: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -7869,12 +7935,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for zlibVersion in -L$p -lgz""... $ac_c" 1>&6
-echo "configure:7873: checking for zlibVersion in -L$p -lgz" >&5
+echo "configure:7939: checking for zlibVersion in -L$p -lgz" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 7878 "configure"
+#line 7944 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7885,7 +7951,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7889: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7955: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7899,7 +7965,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7903 "configure"
+#line 7969 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7910,7 +7976,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7914: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7980: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7923,7 +7989,7 @@ else
          oz_add_libs="-lgz"
          
 	cat > conftest.$ac_ext <<EOF
-#line 7927 "configure"
+#line 7993 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7934,7 +8000,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7938: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:8004: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7955,7 +8021,7 @@ rm -f conftest*
       oz_add_libs="-lgz"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7959 "configure"
+#line 8025 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -7966,7 +8032,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:7970: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:8036: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -7993,7 +8059,7 @@ rm -f conftest*
       oz_add_libs="-lgz"
       
 	cat > conftest.$ac_ext <<EOF
-#line 7997 "configure"
+#line 8063 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -8004,7 +8070,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:8008: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:8074: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -8019,12 +8085,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for zlibVersion in -L$p -lgz""... $ac_c" 1>&6
-echo "configure:8023: checking for zlibVersion in -L$p -lgz" >&5
+echo "configure:8089: checking for zlibVersion in -L$p -lgz" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 8028 "configure"
+#line 8094 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -8035,7 +8101,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:8039: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:8105: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -8049,7 +8115,7 @@ else
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
-#line 8053 "configure"
+#line 8119 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -8060,7 +8126,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:8064: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:8130: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -8073,7 +8139,7 @@ else
          oz_add_libs="-lgz"
          
 	cat > conftest.$ac_ext <<EOF
-#line 8077 "configure"
+#line 8143 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -8084,7 +8150,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:8088: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:8154: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -8105,7 +8171,7 @@ rm -f conftest*
       oz_add_libs="-lgz"
       
 	cat > conftest.$ac_ext <<EOF
-#line 8109 "configure"
+#line 8175 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -8116,7 +8182,7 @@ int main() {
 zlibVersion()
 ; return 0; }
 EOF
-if { (eval echo configure:8120: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:8186: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -8206,7 +8272,7 @@ fi
 
 
 echo $ac_n "checking for --with-ccmalloc""... $ac_c" 1>&6
-echo "configure:8210: checking for --with-ccmalloc" >&5
+echo "configure:8276: checking for --with-ccmalloc" >&5
 # Check whether --with-ccmalloc or --without-ccmalloc was given.
 if test "${with_ccmalloc+set}" = set; then
   withval="$with_ccmalloc"
@@ -8218,7 +8284,7 @@ if test "$with_ccmalloc" = "yes"
 then
     echo "$ac_t""yes" 1>&6
     echo $ac_n "checking for main in -lccmalloc""... $ac_c" 1>&6
-echo "configure:8222: checking for main in -lccmalloc" >&5
+echo "configure:8288: checking for main in -lccmalloc" >&5
 ac_lib_var=`echo ccmalloc'_'main | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8226,14 +8292,14 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lccmalloc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 8230 "configure"
+#line 8296 "configure"
 #include "confdefs.h"
 
 int main() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:8237: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:8303: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -8271,7 +8337,7 @@ fi
 
 
 echo $ac_n "checking for --enable-opt""... $ac_c" 1>&6
-echo "configure:8275: checking for --enable-opt" >&5
+echo "configure:8341: checking for --enable-opt" >&5
 # Check whether --enable-opt or --disable-opt was given.
 if test "${enable_opt+set}" = set; then
   enableval="$enable_opt"
@@ -8294,7 +8360,7 @@ EOF
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:8298: checking c++ compiler option $ozm_opt" >&5
+echo "configure:8364: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8336,7 +8402,7 @@ EOF
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:8340: checking c++ compiler option $ozm_opt" >&5
+echo "configure:8406: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8376,7 +8442,7 @@ EOF
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:8380: checking c++ compiler option $ozm_opt" >&5
+echo "configure:8446: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8417,7 +8483,7 @@ fi
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:8421: checking c++ compiler option $ozm_opt" >&5
+echo "configure:8487: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8448,7 +8514,7 @@ esac
 
 
     echo $ac_n "checking for --enable-threaded""... $ac_c" 1>&6
-echo "configure:8452: checking for --enable-threaded" >&5
+echo "configure:8518: checking for --enable-threaded" >&5
     # Check whether --enable-threaded or --disable-threaded was given.
 if test "${enable_threaded+set}" = set; then
   enableval="$enable_threaded"
@@ -8473,7 +8539,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-fastreg""... $ac_c" 1>&6
-echo "configure:8477: checking for --enable-fastreg" >&5
+echo "configure:8543: checking for --enable-fastreg" >&5
     # Check whether --enable-fastreg or --disable-fastreg was given.
 if test "${enable_fastreg+set}" = set; then
   enableval="$enable_fastreg"
@@ -8498,7 +8564,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-fasterreg""... $ac_c" 1>&6
-echo "configure:8502: checking for --enable-fasterreg" >&5
+echo "configure:8568: checking for --enable-fasterreg" >&5
     # Check whether --enable-fasterreg or --disable-fasterreg was given.
 if test "${enable_fasterreg+set}" = set; then
   enableval="$enable_fasterreg"
@@ -8523,7 +8589,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-fastarith""... $ac_c" 1>&6
-echo "configure:8527: checking for --enable-fastarith" >&5
+echo "configure:8593: checking for --enable-fastarith" >&5
     # Check whether --enable-fastarith or --disable-fastarith was given.
 if test "${enable_fastarith+set}" = set; then
   enableval="$enable_fastarith"
@@ -8548,7 +8614,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-modules-static""... $ac_c" 1>&6
-echo "configure:8552: checking for --enable-modules-static" >&5
+echo "configure:8618: checking for --enable-modules-static" >&5
     # Check whether --enable-modules-static or --disable-modules-static was given.
 if test "${enable_modules_static+set}" = set; then
   enableval="$enable_modules_static"
@@ -8603,7 +8669,7 @@ esac
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:8607: checking c++ compiler option $ozm_opt" >&5
+echo "configure:8673: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8638,7 +8704,7 @@ fi
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:8642: checking c++ compiler option $ozm_opt" >&5
+echo "configure:8708: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -8671,10 +8737,100 @@ fi
 
 
 
+OZTOOL_CXX="$CXX${CXXAVOID:+ }$CXXAVOID"
+
+
+ac_ext=c
+# CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+cross_compiling=$ac_cv_prog_cc_cross
+
+
+	ozm_out=
+	if test -n "$PICOPTIONSCC"
+	then
+	    echo 'void f(){}' > oz_conftest.c
+	    oz_for="$PICOPTIONSCC"
+	    for ozm_opt in $oz_for
+	    do
+		echo $ac_n "checking cc compiler option $ozm_opt""... $ac_c" 1>&6
+echo "configure:8760: checking cc compiler option $ozm_opt" >&5
+		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
+		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+			eval "oz_cv_gccopt_$ozm_ropt=yes"
+		    else
+			eval "oz_cv_gccopt_$ozm_ropt=no"
+		    fi
+fi
+
+		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
+		    ozm_out="$ozm_out $ozm_opt"
+		    echo "$ac_t""yes" 1>&6
+		else
+		    echo "$ac_t""no" 1>&6
+		fi
+                if test -n "$ozm_out"; then
+                  break;
+                fi
+	    done
+	    rm -f oz_conftest*
+	fi
+	OZTOOLDYNOPTCC="$ozm_out"
+	
+
+	ozm_out=
+	if test -n "$PICOPTIONSEXTRA"
+	then
+	    echo 'void f(){}' > oz_conftest.c
+	    oz_for="$PICOPTIONSEXTRA"
+	    for ozm_opt in $oz_for
+	    do
+		echo $ac_n "checking cc compiler option $ozm_opt""... $ac_c" 1>&6
+echo "configure:8795: checking cc compiler option $ozm_opt" >&5
+		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
+		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+			eval "oz_cv_gccopt_$ozm_ropt=yes"
+		    else
+			eval "oz_cv_gccopt_$ozm_ropt=no"
+		    fi
+fi
+
+		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
+		    ozm_out="$ozm_out $ozm_opt"
+		    echo "$ac_t""yes" 1>&6
+		else
+		    echo "$ac_t""no" 1>&6
+		fi
+	    done
+	    rm -f oz_conftest*
+	fi
+	ozm_tmp="$ozm_out"
+	
+if test -n "$ozm_tmp"; then
+  OZTOOLDYNOPTCC="$OZTOOLDYNOPTCC $ozm_tmp"
+fi
+ac_ext=C
+# CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+cross_compiling=$ac_cv_prog_cxx_cross
+
+
+
+
 if test -z "$with_ccmalloc" 
 then
     echo $ac_n "checking for --with-malloc""... $ac_c" 1>&6
-echo "configure:8678: checking for --with-malloc" >&5
+echo "configure:8834: checking for --with-malloc" >&5
     # Check whether --with-malloc or --without-malloc was given.
 if test "${with_malloc+set}" = set; then
   withval="$with_malloc"
@@ -8698,14 +8854,14 @@ fi
 
 
 echo $ac_n "checking whether socklen_t is declared...""... $ac_c" 1>&6
-echo "configure:8702: checking whether socklen_t is declared..." >&5
+echo "configure:8858: checking whether socklen_t is declared..." >&5
 
 if eval "test \"`echo '$''{'oz_cv_have_socklen_t'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
 cat > conftest.$ac_ext <<EOF
-#line 8709 "configure"
+#line 8865 "configure"
 #include "confdefs.h"
 #include <sys/socket.h>
 EOF
@@ -8716,7 +8872,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   rm -rf conftest*
   cat > conftest.$ac_ext <<EOF
-#line 8720 "configure"
+#line 8876 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
 EOF
@@ -8746,24 +8902,24 @@ else
 fi
 
 echo "checking whether we can do virtual sites..." 1>&6
-echo "configure:8750: checking whether we can do virtual sites..." >&5
+echo "configure:8906: checking whether we can do virtual sites..." >&5
 if eval "test \"`echo '$''{'ac_cv_can_vs'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   can_vs=yes
  ac_safe=`echo "sys/types.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sys/types.h""... $ac_c" 1>&6
-echo "configure:8757: checking for sys/types.h" >&5
+echo "configure:8913: checking for sys/types.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 8762 "configure"
+#line 8918 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:8767: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:8923: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -8787,17 +8943,17 @@ fi
 
  ac_safe=`echo "unistd.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for unistd.h""... $ac_c" 1>&6
-echo "configure:8791: checking for unistd.h" >&5
+echo "configure:8947: checking for unistd.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 8796 "configure"
+#line 8952 "configure"
 #include "confdefs.h"
 #include <unistd.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:8801: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:8957: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -8821,17 +8977,17 @@ fi
 
  ac_safe=`echo "sys/ipc.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sys/ipc.h""... $ac_c" 1>&6
-echo "configure:8825: checking for sys/ipc.h" >&5
+echo "configure:8981: checking for sys/ipc.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 8830 "configure"
+#line 8986 "configure"
 #include "confdefs.h"
 #include <sys/ipc.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:8835: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:8991: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -8855,17 +9011,17 @@ fi
 
  ac_safe=`echo "sys/shm.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sys/shm.h""... $ac_c" 1>&6
-echo "configure:8859: checking for sys/shm.h" >&5
+echo "configure:9015: checking for sys/shm.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 8864 "configure"
+#line 9020 "configure"
 #include "confdefs.h"
 #include <sys/shm.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:8869: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:9025: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -8890,12 +9046,12 @@ fi
  for ac_func in shmget
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:8894: checking for $ac_func" >&5
+echo "configure:9050: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 8899 "configure"
+#line 9055 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -8921,7 +9077,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:8925: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:9081: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -8949,12 +9105,12 @@ done
  for ac_func in shmat
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:8953: checking for $ac_func" >&5
+echo "configure:9109: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 8958 "configure"
+#line 9114 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -8980,7 +9136,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:8984: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:9140: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -9008,12 +9164,12 @@ done
  for ac_func in shmdt
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:9012: checking for $ac_func" >&5
+echo "configure:9168: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9017 "configure"
+#line 9173 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -9039,7 +9195,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:9043: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:9199: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -9067,12 +9223,12 @@ done
  for ac_func in shmctl
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:9071: checking for $ac_func" >&5
+echo "configure:9227: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9076 "configure"
+#line 9232 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -9098,7 +9254,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:9102: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:9258: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -9125,13 +9281,13 @@ done
 
  if test $can_vs = yes; then
     echo $ac_n "checking shared memory with a test program""... $ac_c" 1>&6
-echo "configure:9129: checking shared memory with a test program" >&5
+echo "configure:9285: checking shared memory with a test program" >&5
     if test "$cross_compiling" = yes; then
   echo "$ac_t""dunno (no)" 1>&6
     can_vs=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 9135 "configure"
+#line 9291 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -9252,7 +9408,7 @@ main()
 }
 
 EOF
-if { (eval echo configure:9256: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9412: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""succeeded" 1>&6
 else
@@ -9278,7 +9434,7 @@ fi
 
 
     echo $ac_n "checking for --enable-virtualsites""... $ac_c" 1>&6
-echo "configure:9282: checking for --enable-virtualsites" >&5
+echo "configure:9438: checking for --enable-virtualsites" >&5
     # Check whether --enable-virtualsites or --disable-virtualsites was given.
 if test "${enable_virtualsites+set}" = set; then
   enableval="$enable_virtualsites"
@@ -9304,7 +9460,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-miscbuiltins""... $ac_c" 1>&6
-echo "configure:9308: checking for --enable-miscbuiltins" >&5
+echo "configure:9464: checking for --enable-miscbuiltins" >&5
     # Check whether --enable-miscbuiltins or --disable-miscbuiltins was given.
 if test "${enable_miscbuiltins+set}" = set; then
   enableval="$enable_miscbuiltins"
@@ -9329,12 +9485,12 @@ EOF
 
 
 echo $ac_n "checking whether .align is multiple""... $ac_c" 1>&6
-echo "configure:9333: checking whether .align is multiple" >&5
+echo "configure:9489: checking whether .align is multiple" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""no" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9338 "configure"
+#line 9494 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -9392,7 +9548,7 @@ BOOOOOOOM
 #endif
 
 EOF
-if { (eval echo configure:9396: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9552: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
   cat >> confdefs.h <<\EOF
@@ -9411,12 +9567,12 @@ fi
 
 
 echo $ac_n "checking whether .align is power of 2""... $ac_c" 1>&6
-echo "configure:9415: checking whether .align is power of 2" >&5
+echo "configure:9571: checking whether .align is power of 2" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""no" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9420 "configure"
+#line 9576 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -9474,7 +9630,7 @@ BOOOOOOOM
 #endif
 
 EOF
-if { (eval echo configure:9478: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9634: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
   cat >> confdefs.h <<\EOF
@@ -9493,12 +9649,12 @@ fi
 
 
 echo $ac_n "checking alignment of secondary tag for const terms""... $ac_c" 1>&6
-echo "configure:9497: checking alignment of secondary tag for const terms" >&5
+echo "configure:9653: checking alignment of secondary tag for const terms" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic ok for cross compilation" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9502 "configure"
+#line 9658 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -9518,7 +9674,7 @@ int main()
   return (((void*)&c)==((void*)(Tag*)&c))?0:-1;
 }
 EOF
-if { (eval echo configure:9522: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9678: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""ok" 1>&6
 else
@@ -9533,13 +9689,13 @@ fi
 
 
 echo $ac_n "checking if alignment of secondary tags for extensions needs padding""... $ac_c" 1>&6
-echo "configure:9537: checking if alignment of secondary tags for extensions needs padding" >&5
+echo "configure:9693: checking if alignment of secondary tags for extensions needs padding" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic no for cross compilation" 1>&6
   needs_padding=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 9543 "configure"
+#line 9699 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -9566,7 +9722,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:9570: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9726: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""no" 1>&6
   needs_padding=no
@@ -9585,12 +9741,12 @@ NEEDS_PADDING=0
 
 if test "$needs_padding" = "yes"; then
 echo $ac_n "checking if padding works""... $ac_c" 1>&6
-echo "configure:9589: checking if padding works" >&5
+echo "configure:9745: checking if padding works" >&5
 if test "$cross_compiling" = yes; then
   { echo "configure: error: we should not get here when cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 9594 "configure"
+#line 9750 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -9621,7 +9777,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:9625: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9781: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
   NEEDS_PADDING=1
@@ -9635,96 +9791,6 @@ rm -fr conftest*
 fi
 
 fi
-
-
-OZTOOL_CXX="$CXX${CXXAVOID:+ }$CXXAVOID"
-
-
-ac_ext=c
-# CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
-ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
-cross_compiling=$ac_cv_prog_cc_cross
-
-
-	ozm_out=
-	if test -n "$PICOPTIONSCC"
-	then
-	    echo 'void f(){}' > oz_conftest.c
-	    oz_for="$PICOPTIONSCC"
-	    for ozm_opt in $oz_for
-	    do
-		echo $ac_n "checking cc compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:9660: checking cc compiler option $ozm_opt" >&5
-		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
-		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
-			eval "oz_cv_gccopt_$ozm_ropt=yes"
-		    else
-			eval "oz_cv_gccopt_$ozm_ropt=no"
-		    fi
-fi
-
-		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
-		    ozm_out="$ozm_out $ozm_opt"
-		    echo "$ac_t""yes" 1>&6
-		else
-		    echo "$ac_t""no" 1>&6
-		fi
-                if test -n "$ozm_out"; then
-                  break;
-                fi
-	    done
-	    rm -f oz_conftest*
-	fi
-	OZTOOLDYNOPTCC="$ozm_out"
-	
-
-	ozm_out=
-	if test -n "$PICOPTIONSEXTRA"
-	then
-	    echo 'void f(){}' > oz_conftest.c
-	    oz_for="$PICOPTIONSEXTRA"
-	    for ozm_opt in $oz_for
-	    do
-		echo $ac_n "checking cc compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:9695: checking cc compiler option $ozm_opt" >&5
-		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
-		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
-			eval "oz_cv_gccopt_$ozm_ropt=yes"
-		    else
-			eval "oz_cv_gccopt_$ozm_ropt=no"
-		    fi
-fi
-
-		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
-		    ozm_out="$ozm_out $ozm_opt"
-		    echo "$ac_t""yes" 1>&6
-		else
-		    echo "$ac_t""no" 1>&6
-		fi
-	    done
-	    rm -f oz_conftest*
-	fi
-	ozm_tmp="$ozm_out"
-	
-if test -n "$ozm_tmp"; then
-  OZTOOLDYNOPTCC="$OZTOOLDYNOPTCC $ozm_tmp"
-fi
-ac_ext=C
-# CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
-ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
-cross_compiling=$ac_cv_prog_cxx_cross
-
-
 
 
 
@@ -9927,9 +9993,9 @@ s%@STATIC_MODULES@%$STATIC_MODULES%g
 s%@DYNAMIC_MODULES@%$DYNAMIC_MODULES%g
 s%@CDYNOPT@%$CDYNOPT%g
 s%@OZTOOLDYNOPT@%$OZTOOLDYNOPT%g
-s%@NEEDS_PADDING@%$NEEDS_PADDING%g
 s%@OZTOOL_CXX@%$OZTOOL_CXX%g
 s%@OZTOOLDYNOPTCC@%$OZTOOLDYNOPTCC%g
+s%@NEEDS_PADDING@%$NEEDS_PADDING%g
 
 CEOF
 EOF
