@@ -101,6 +101,7 @@ OZ_Return constraintsSuspendOnVar(OZ_CFun f, int a, OZ_Term * x,
 #include <sunmath.h>
 #endif
 
+#include <float.h>
 #include "oz_cpi.hh"
 
 #ifdef DEBUG_CHECK
