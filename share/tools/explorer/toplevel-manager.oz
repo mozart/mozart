@@ -65,7 +65,7 @@ local
 
 
       meth close
-	 job
+	 thread
 	    {self.manager close}
 	 end
 	 <<Tk.toplevel close>>
