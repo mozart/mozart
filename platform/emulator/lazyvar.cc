@@ -170,14 +170,14 @@ OZ_BI_define(BILazyIs,1,1)
   OZ_RETURN(isLazyVar(deref(var))?OZ_true():OZ_false());
 } OZ_BI_end
 
-static BIspec lazySpecs[] = {
-  {"Lazy.new", 2, BILazyNew, 0},
-  {"Lazy.is" , 2, BILazyIs , 0},
-  {0,0,0,0},
-};
-
-void BIinitLazy()
-{
-  BIaddSpec(lazySpecs);
-}
+// static BIspec lazySpecs[] = {
+//   {"Lazy.new", 2, BILazyNew, 0},
+//   {"Lazy.is" , 2, BILazyIs , 0},
+//   {0,0,0,0},
+// };
+// 
+// void BIinitLazy()
+// {
+//   BIaddSpec(lazySpecs);
+// }
 

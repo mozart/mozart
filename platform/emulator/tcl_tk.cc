@@ -1661,40 +1661,40 @@ OZ_BI_define(BIgenImageName,1,1) {
 // Add to Builtin-Table
 // ---------------------------------------------------------------------
 
-static
-BIspec tclTkSpec[] = {
-  {"getTclNames",        3, BIgetTclNames,        0},
-  {"initTclSession",     4, BIinitTclSession,     0},
-  {"closeTclSession",    1, BIcloseTclSession,    0},
-  {"Tk.send",            2, BItclWrite,           0},
-  {"tclWriteReturn",     4, BItclWriteReturn,     0},
-  {"tclWriteReturnMess", 5, BItclWriteReturnMess, 0},
-  {"Tk.batch",           2, BItclWriteBatch,      0},
-  {"tclWriteTuple",      3, BItclWriteTuple,      0},
-  {"tclWriteTagTuple",   4, BItclWriteTagTuple,   0},
-  {"tclWriteFilter",     6, BItclWriteFilter,     0},
-
-  {"tclClose",           3, BItclClose,           0},
-  {"tclCloseWeb",        2, BItclCloseWeb,        0},
-
-
-  {"addFastGroup",        3, BIaddFastGroup,	   0},
-  {"delFastGroup",        1, BIdelFastGroup,	   0},
-  {"getFastGroup",        2, BIgetFastGroup,	   0},
-  {"delAllFastGroup",     2, BIdelAllFastGroup,    0},
-
-  {"genTopName",    2, BIgenTopName,	 0},
-  {"genWidgetName", 3, BIgenWidgetName,	 0},
-  {"genTagName",    2, BIgenTagName,	 0},
-  {"genVarName",    2, BIgenVarName,	 0},
-  {"genImageName",  2, BIgenImageName,	 0},
-
-  {0,0,0,0}
-};
+// static
+// BIspec tclTkSpec[] = {
+//   {"getTclNames",        3, BIgetTclNames,        0},
+//   {"initTclSession",     4, BIinitTclSession,     0},
+//   {"closeTclSession",    1, BIcloseTclSession,    0},
+//   {"Tk.send",            2, BItclWrite,           0},
+//   {"tclWriteReturn",     4, BItclWriteReturn,     0},
+//   {"tclWriteReturnMess", 5, BItclWriteReturnMess, 0},
+//   {"Tk.batch",           2, BItclWriteBatch,      0},
+//   {"tclWriteTuple",      3, BItclWriteTuple,      0},
+//   {"tclWriteTagTuple",   4, BItclWriteTagTuple,   0},
+//   {"tclWriteFilter",     6, BItclWriteFilter,     0},
+// 
+//   {"tclClose",           3, BItclClose,           0},
+//   {"tclCloseWeb",        2, BItclCloseWeb,        0},
+// 
+// 
+//   {"addFastGroup",        3, BIaddFastGroup,	   0},
+//   {"delFastGroup",        1, BIdelFastGroup,	   0},
+//   {"getFastGroup",        2, BIgetFastGroup,	   0},
+//   {"delAllFastGroup",     2, BIdelAllFastGroup,    0},
+// 
+//   {"genTopName",    2, BIgenTopName,	 0},
+//   {"genWidgetName", 3, BIgenWidgetName,	 0},
+//   {"genTagName",    2, BIgenTagName,	 0},
+//   {"genVarName",    2, BIgenVarName,	 0},
+//   {"genImageName",  2, BIgenImageName,	 0},
+// 
+//   {0,0,0,0}
+// };
 
 
 void BIinitTclTk() {
-  BIaddSpec(tclTkSpec);
+  // BIaddSpec(tclTkSpec);
 
   AtomTclOption    = OZ_atom("o");
   AtomTclList      = OZ_atom("l");
