@@ -105,10 +105,7 @@ $(FSETTARGETS):
 
 win: ozlib.lnk $(CREATEDFILES)
 
-win-install:
-        $(INSTALL_BIN) ozemulator.exe $(BINDIR)
-
-first: $(CREATEDFILES) $(SRCS)
+first: $(CREATEDFILES) $(SRCS) version
 
 @PROGRAMNAME@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
         $(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
@@ -175,7 +172,7 @@ parser.hh: parser.yy
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
 parser.o: parser.cc
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DWARN) -c $< -o $@
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
 
 ozma-s.cc: ozma-s.ll
         $(LEX) $(LFLAGS) -Pozma $<
@@ -189,7 +186,7 @@ ozma-p.cc ozma.hh: ozma-p.yy
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
 ozma-p.o: ozma-p.cc
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DWARN) -c $< -o $@
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
 
 ozma-s.ll: ozma-s.m4ll
         $(M4) $(M4_D) $< > $@
@@ -204,7 +201,7 @@ config.h: config.m4h $(OZVERSION)
 #os.cc: In function `void osBlockSignals(int = 0)':
 #os.cc:208: warning: assignment of negative value `-1' to `long unsigned int'
 os.o: os.cc
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DWARN) -c $< -o $@
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
 
 include Makefile.rules
 

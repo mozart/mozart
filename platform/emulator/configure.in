@@ -30,6 +30,7 @@ dnl mm2: Known Problems and Bugs
 dnl  Windows support
 dnl  pmake support
 dnl  ensure that all needed programs are really found
+dnl  cache M4 -E
 
 dnl *****************************************************************
 dnl INITIALIZE
@@ -42,11 +43,61 @@ AC_CANONICAL_HOST
 
 AC_LANG_CPLUSPLUS
 
-#AC_PREFIX_DEFAULT(${oz_default_prefix=/usr/local})
-if test -n "${oz_default_prefix}" && test -d $oz_default_prefix
-then
-  ac_default_prefix=$oz_default_prefix
-fi
+AC_PREFIX_DEFAULT(/usr/local/oz)
+
+dnl *****************************************************************
+dnl additional tests
+dnl *****************************************************************
+
+AC_DEFUN(OZ_ENABLE_YES, [
+    AC_MSG_CHECKING(for --enable-$1)
+    AC_ARG_ENABLE($1, [--enable-$1 $2 (default=yes)])
+    if test -n "${[enable_]translit($1,-,_)}"; then
+        [oz_enable_]translit($1,-,_)=$[enable_]translit($1,-,_)
+    fi
+    if test "${[oz_enable_]translit($1,-,_)}" != no; then
+        ifelse($3,[],AC_MSG_RESULT(yes),$3)
+    else
+        ifelse($4,[],AC_MSG_RESULT(no),$4)
+    fi
+    ])
+
+AC_DEFUN(OZ_ENABLE_NO, [
+    AC_MSG_CHECKING(for --enable-$1)
+    AC_ARG_ENABLE(threaded, [--enable-$1 $2 (default=no)])
+    if test -n "${enable_$1}"; then
+        oz_enable_$1=$enable_$1
+    fi
+    if test "${oz_enable_$1}" != yes; then
+        ifelse($4,[],AC_MSG_RESULT(no),$4)
+    else
+        ifelse($3,[],AC_MSG_RESULT(yes),$3)
+    fi
+    ])
+
+AC_DEFUN(OZ_CXX_OPTIONS, [
+        ozm_out=
+        echo 'void f(){}' > oz_conftest.c
+        for ozm_opt in "$1"
+        do
+            AC_MSG_CHECKING(compiler option $ozm_opt)
+            ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
+            AC_CACHE_VAL(oz_cv_gxxopt_$ozm_ropt,
+                if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+                    eval "oz_cv_gxxopt_$ozm_ropt=yes"
+                else
+                    eval "oz_cv_gxxopt_$ozm_ropt=no"
+                fi)
+            if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
+                ozm_out="$ozm_out $ozm_opt"
+                AC_MSG_RESULT(yes)
+            else
+                AC_MSG_RESULT(no)
+            fi
+        done
+        rm -f oz_conftest*
+        $2="$ozm_out"
+        ])
 
 dnl *****************************************************************
 dnl topdir/oz version
@@ -67,13 +118,18 @@ AC_ARG_ENABLE(wincross,
   [--enable-wincross  Windows cross compilation (default=no)])
 if test "${enable_wincross}" = yes; then
         AC_MSG_RESULT(yes (-DGNUWIN32 -DWINDOWS))
-        CXX=$oz_wincross_CXX
-        CC=$oz_wincross_CC
-        LD=$oz_wincross_LD
-        RANLIB=$oz_wincross_RANLIB
-        LDFLAGS="$LDFLAGS $oz_wincross_LDFLAGS"
+        CXX=$oz_wincross_dir/$oz_wincross_prefix-gcc
+        LD=$oz_wincross_dir/$oz_wincross_prefix-ld
+        RANLIB=$oz_wincross_dir/$oz_wincross_prefix-ranlib
+        #LDFLAGS="$LDFLAGS $oz_wincross_LDFLAGS"
         platform="win32-i486"
         PROGRAMNAME="ozemulator.exe"
+        with_pgcc=no
+        with_sunpro=no
+        oz_gmp_lib_dir=$oz_wincross_gmp_lib_dir
+        oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
+        oz_malloc_obj=
+        oz_warn_error=
         AC_DEFINE(GNUWIN32)
         AC_DEFINE(WINDOWS)
 else
@@ -99,7 +155,6 @@ AC_ARG_WITH(pgcc,
                     AC_CHECK_PROGS(PGXX, pg++)
                     if test -n "${PGXX}"
                     then
-                        CC=pgcc
                         CXX=$PGXX
                     fi
                     ;;
@@ -110,10 +165,9 @@ AC_ARG_WITH(pgcc,
             AC_CHECK_PROGS(PGXX, pg++)
             if test -n "${PGXX}"
             then
-                CC=pgcc
                 CXX=$PGXX
             else
-                AC_MSG_WARN(Ingnoring --with-pgcc)
+                AC_MSG_WARN(Ignoring --with-pgcc)
             fi
         else
             AC_MSG_RESULT(no)
@@ -128,10 +182,9 @@ AC_ARG_WITH(sunpro,
             AC_CHECK_PROGS(SUNPRO, CC)
             if test -n "${SUNPRO}"
             then
-                CC=cc
                 CXX=$SUNPRO
                 AC_DEFINE(SUNPRO)
-                : ${enable_threaded=no}
+                oz_enable_threaded=no
             else
                 AC_MSG_WARN(Ingnoring --with-sunpro!)
             fi
@@ -139,7 +192,6 @@ AC_ARG_WITH(sunpro,
             AC_MSG_RESULT(no)
         fi
 
-AC_PROG_CC
 AC_PROG_CXX
 
 AC_PROG_INSTALL
@@ -149,47 +201,32 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-AC_CHECK_PROGS(M4, gm4 m4, true)
+AC_CHECK_PROGS(M4, gm4 m4, m4)
 
-if test -n "$M4"
-then
-    AC_MSG_CHECKING(whether $M4 understands -E option)
-    ac_res=`$M4 -E < /dev/null 2>&1`
-    if test -n "$ac_res"
-    then
-        AC_MSG_RESULT(no)
-    else
-        AC_MSG_RESULT(yes)
-        M4="$M4 -E"
-    fi
-fi
-
-AC_CHECK_PROGS(RM, rm, true)
-AC_CHECK_PROGS(SH, sh bash ksh, true)
-AC_CHECK_PROGS(MV, mv, true)
-AC_CHECK_PROGS(ECHO, echo, true)
-AC_CHECK_PROGS(SED, gnused sed, true)
-AC_CHECK_PROGS(AR, gar ar, true)
+AC_CHECK_PROGS(RM, rm, rm)
+AC_CHECK_PROGS(SH, sh bash ksh, sh)
+AC_CHECK_PROGS(MV, mv, mv)
+AC_CHECK_PROGS(ECHO, echo, echo)
+AC_CHECK_PROGS(SED, gnused sed, sed)
+AC_CHECK_PROGS(AR, gar ar, ar)
 
 topdira=`(cd $TOPDIR; pwd)`
 oz_path=$PATH:$topdira/bin:$topdira:$prefix/bin
-AC_PATH_PROG(PLATFORMSCRIPT, ozplatform,       , $oz_path)
-AC_PATH_PROG(DYNLD,          ozdynld,      true, $oz_path)
-AC_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs,true, $oz_path)
-
-if test -z "${PLATFORMSCRIPT}"
-then
-  AC_MSG_ERROR("required ozplatform script not found")
-fi
-
-M4_S=""
-AC_SUBST(M4_S)
+AC_PATH_PROG(PLATFORMSCRIPT, ozplatform, , $oz_path)
+AC_PATH_PROG(DYNLD, ozdynld, ozdynld, $oz_path)
+AC_PATH_PROG(MKINSTALLDIRS, mkinstalldirs, mkinstalldirs, $oz_path)
 
 AC_PATH_PROG(DEPEND, makedepend, true)
 
 dnl *****************************************************************
 dnl platform
 dnl *****************************************************************
+
+
+if test -z "${PLATFORMSCRIPT}"
+then
+  AC_MSG_ERROR(required program \"ozplatform\" not found)
+fi
 
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
@@ -210,55 +247,44 @@ ARCH=`echo $PLATFORM|sed -e 's/_.*//'`
 AC_DEFINE_UNQUOTED($ARCH)
 
 dnl *****************************************************************
-dnl Compiler and Linker options
+dnl Compiler, Linker, and m4 options
 dnl *****************************************************************
 
-if test "$ac_test_CFLAGS" != set
-then
-    CFLAGS=""
-fi
-
-AC_SUBST(CWARN)
-AC_SUBST(DWARN)
-
-dnl MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
-dnl     -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
-dnl     -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
-dnl     -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
-dnl     -Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror
-
 if test "${GXX}" = yes; then
-    O_OPT="$O_OPT -O6"
-    G_OPT="$G_OPT -g3 -DINTERFACE"
     M4_S="-s"
     DEPEND="$CXX -MM"
-    CWARN="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual"
-    CWARN="$CWARN -Wstrict-prototypes -Wmissing-prototypes"
-    CWARN="$CWARN -Wmissing-declarations -Wnested-externs"
-    CWARN="$CWARN -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized"
-    CWARN="$CWARN -Werror"
-    DWARN="-Wno-error"
+
+    # no (yet) used
+    oz_warn_more="-Wall -pedantic-errors -W -Wtraditional -Wshadow \
+        -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
+        -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
+        -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
+        -Wnested-externs -Winline -Woverloaded-virtual -Wsynth"
+    : ${oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
+        -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
+        -Wnested-externs -Wsynth \
+        -Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"}
+    : ${oz_warn_error="-Werror"}
+
+    oz_opt="-O6 -frisc"
+    oz_om=
     if test "${platform}" = linux-i486
     then
-      if test -n "${PGXX}"
-      then
-        CFLAGS="$CFLAGS -fno-exceptions -fno-rtti -Wno-sign-compare"
-        O_OPT="$O_OPT -mpentium -frisc"
-      else
-        O_OPT="$O_OPT -m486"
-        O_OPT="$O_OPT -malign-loops=4 -malign-jumps=4 -malign-functions=4"
-      fi
+        oz_opt="$oz_opt -m486 -mpentium\
+            -malign-loops=4 -malign-jumps=4 -malign-functions=4"
+        oz_om="-fomit-frame-pointer"
     fi
+    oz_no="-fno-exceptions -fno-rtti"
+    : ${oz_copt_optimize="$oz_opt $oz_em $oz_no"}
+    : ${oz_copt_profile="$oz_opt -pg -fno-inline -fno-default-inline $oz_no"}
+    : ${oz_copt_debug="-g3 -DINTERFACE $oz_no"}
 fi
 
 if test -n "${SUNPRO}"
 then
-    O_OPT="-fast"
+    : ${oz_copt_optimize=-fast}
     DEPEND="$CXX -xM"
 fi
-
-: ${O_OPT="-O"}
-: ${G_OPT="-g"}
 
 case $platform in
     sunos*)
@@ -278,47 +304,56 @@ case $platform in
         ;;
 esac
 
+# compiler options
+: ${oz_copt_optimize="-O"}
+: ${oz_copt_profile=-pg}
+: ${oz_copt_debug="-g"}
+
+# compiler options for warnings
+AC_SUBST(oz_warn)
+
+# compiler option which turns warnings into errors
+AC_SUBST(oz_warn_error)
+
+# linker options
+: ${oz_lopt_profile=-pg}
+
+# m4 options
+if test -n "$M4"
+then
+    AC_MSG_CHECKING(whether $M4 understands -E option)
+    oz_tmp=`$M4 -E < /dev/null 2>&1`
+    if test -n "$oz_tmp"
+    then
+        AC_MSG_RESULT(no)
+    else
+        AC_MSG_RESULT(yes)
+        M4="$M4 -E"
+    fi
+fi
+AC_SUBST(M4_S)
+
+OZ_CXX_OPTIONS("$oz_warn",oz_a)
+oz_warn=$oz_a
+
+OZ_CXX_OPTIONS("$oz_warn_error",oz_a)
+oz_warn_error=$oz_a
+
 dnl *****************************************************************
 dnl Checks for libraries.
 dnl *****************************************************************
 
-dnl Note: use $(CC) for linking, not $(CXX):
-dnl g++ creates references to libg++
-LD=$CXX
-if test "${GCC}" = yes
-then
-  LD="$CC"
-fi
-AC_SUBST(LD)
-
-
-dnl mm2: don\'t know what libintl is needed for
-dnl AC_CHECK_LIB(intl, main)
+# Note: use $(CC) for linking, not $(CXX):
+# g++ creates references to libg++
+#LD=$CXX
+#AC_SUBST(LD)
 
 AC_CHECK_LIB(nsl, gethostbyaddr)
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(m, fabs)
 AC_CHECK_LIB(kernel32,main)
 AC_CHECK_LIB(wsock32,main)
-
-# special hack for static linking under linux
-case $platform in
-    linux*)
-        AC_MSG_CHECKING(for --enable-lstatic)
-        AC_ARG_ENABLE(lstatic,
-            [--enable-lstatic   linux static linking (default=yes)])
-        if test "${enable_lstatic}" != no; then
-                AC_MSG_RESULT(yes)
-                LIBS="-ldl -Xlinker -Bstatic $LIBS"
-        else
-                AC_MSG_RESULT(no)
-                AC_CHECK_LIB(dl, dlopen)
-        fi
-    ;;
-    *)
-        AC_CHECK_LIB(dl, dlopen)
-    ;;
-esac
+AC_CHECK_LIB(dl, dlopen)
 
 dnl *****************************************************************
 dnl Checks for header files.
@@ -359,6 +394,8 @@ dnl *****************************************************************
 
 # AC_CHECK_SIZEOF(int)
 # AC_C_BIGENDIAN
+
+# check malloc base
 
 dnl *****************************************************************
 dnl *** GMP
@@ -410,118 +447,85 @@ dnl *****************************************************************
 dnl *** Features
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --enable-ozma)
-AC_ARG_ENABLE(ozma,
-    [--enable-ozma      add assembler (default=no)])
-        if test "${enable_ozma}" = yes; then
-                AC_MSG_RESULT(yes (-DOZMA))
-                AC_DEFINE(OZMA)
-        else
-                AC_MSG_RESULT(no)
-        fi
 
 AC_MSG_CHECKING(for --enable-opt)
 AC_ARG_ENABLE(opt,
     [--enable-opt       optimize [y|n|d[ebug]|p[rofile]|rsp[rofile]] (default=yes)])
 case $enable_opt in
     n*)
-        AC_MSG_RESULT(no)
+        AC_MSG_RESULT(no options)
         ;;
     d*)
         AC_MSG_RESULT(debug (-DDEBUG_EMULATOR))
         AC_DEFINE(DEBUG_EMULATOR)
-        CFLAGS="$CFLAGS $G_OPT"
-    ;;
+        OZ_CXX_OPTIONS("$oz_copt_debug", COPT)
+        oz_enable_threaded=no
+        oz_enable_fastreg=no
+        oz_enable_regopt=no
+        oz_enable_lstatic=no
+        ;;
+    p*)
+        AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
+        AC_DEFINE(PROFILE_EMULATOR)
+        OZ_CXX_OPTIONS("$oz_copt_profile", COPT)
+        LDFLAGS="$LDFLAGS $oz_lopt_profile"
+        ;;
     rsp*)
-        AC_MSG_RESULT(-DRS_PROFILE)
+        AC_MSG_RESULT(rsprofile (-DRS_PROFILE))
         AC_DEFINE(RS_PROFILE)
-        CFLAGS="$CFLAGS -O"
-    ;;
+        OZ_CXX_OPTIONS("-O", COPT)
+        ;;
     *)
-        CFLAGS="$CFLAGS $O_OPT"
-dnl ********************************
-dnl OPTIMIZED EMULATOR
-dnl ********************************
-        case $enable_opt in
-            p*)
-                AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
-                AC_DEFINE(PROFILE_EMULATOR)
-                CFLAGS="$CFLAGS -pg"
-                if test "${GXX}" = yes; then
-                    CFLAGS="$CFLAGS -fno-inline -fno-default-inline"
-                fi
-                LDFLAGS="$LDFLAGS -pg"
-                ;;
-            *)
-                AC_MSG_RESULT(yes)
-                case $platform in
-                    linux*)
-                        CFLAGS="$CFLAGS -fomit-frame-pointer"
-                    ;;
-                esac
-                ;;
-        esac
-        AC_MSG_CHECKING(for   --enable-threaded)
-        AC_ARG_ENABLE(threaded,
-          [  --enable-threaded  threaded code emulator (default=yes)])
-        if test "${enable_threaded}" != no; then
-                AC_MSG_RESULT(yes (-DTHREADED))
-                AC_DEFINE(THREADED)
-        else
-                AC_MSG_RESULT(no)
-        fi
-
-        AC_MSG_CHECKING(for   --enable-fastreg)
-        AC_ARG_ENABLE(fastreg,
-          [  --enable-fastreg   fast register access (default=yes)])
-        if test "${enable_fastreg}" != no; then
-                AC_MSG_RESULT(yes (-DFASTREGACCESS))
-                AC_DEFINE(FASTREGACCESS)
-        else
-                AC_MSG_RESULT(no)
-        fi
-        AC_MSG_CHECKING(for   --enable-regopt)
-        AC_ARG_ENABLE(regopt,
-          [  --enable-regopt    register optimization (default=yes)])
-        if test "${enable_regopt}" != no; then
-                AC_MSG_RESULT(yes (-DREGOPT))
-                AC_DEFINE(REGOPT)
-        else
-                AC_MSG_RESULT(no)
-        fi
-
-    ;;
+        AC_MSG_RESULT(optimize)
+        OZ_CXX_OPTIONS("$oz_copt_optimize", COPT)
+        ;;
 esac
+AC_SUBST(COPT)
 
-AC_MSG_CHECKING(for --enable-linkprop)
-AC_ARG_ENABLE(linkprop,
-  [--enable-linkprop  link propagators statically (default=yes)])
-if test "${enable_linkprop}" != no; then
+
+OZ_ENABLE_NO(ozma,[     add assembler],
+        AC_MSG_RESULT(yes (-DOZMA))
+        AC_DEFINE(OZMA)
+        )
+
+OZ_ENABLE_YES(threaded,[ threaded code emulator],
+        AC_MSG_RESULT(yes (-DTHREADED))
+        AC_DEFINE(THREADED)
+        )
+
+OZ_ENABLE_YES(fastreg,[  fast register access],
+        AC_MSG_RESULT(yes (-DFASTREGACCESS))
+        AC_DEFINE(FASTREGACCESS)
+        )
+
+OZ_ENABLE_YES(regopt,[   register optimization],
+        AC_MSG_RESULT(yes (-DREGOPT))
+        AC_DEFINE(REGOPT)
+        )
+
+OZ_ENABLE_YES(linkprop,[ link propagators statically],
         AC_MSG_RESULT(yes (-UFOREIGNFDPROPS))
         FDTARGETS="libfd.a libsched.a"
         FSETTARGETS="libfset.a"
         LIBS="-L./FDLib -lfd -lsched -L./FSetLib -lfset $LIBS"
-else
+        ,
+        AC_MSG_RESULT(no (-DFOREIGNFDPROPS))
+        AC_DEFINE(FOREIGNFDPROPS)
         FDTARGETS="fdlib.so schedlib.so"
         FSETTARGETS="fsetlib.so"
         INSTALL_PROP="install-prop"
-        AC_MSG_RESULT(no (-DFOREIGNFDPROPS))
-        AC_DEFINE(FOREIGNFDPROPS)
-fi
+        )
 AC_SUBST(FDTARGETS)
 AC_SUBST(FSETTARGETS)
 AC_SUBST(INSTALL_PROP)
 
-AC_MSG_CHECKING(for --enable-peanuts)
-AC_ARG_ENABLE(peanuts,
-  [--enable-peanuts   use peanuts file (default=yes)])
-if test "${enable_peanuts}" != no; then
+OZ_ENABLE_YES(peanuts,[  use peanuts file],
         AC_MSG_RESULT(yes)
         PEANUTS="\$(PEANUTSFILE)"
-else
+        ,
         AC_MSG_RESULT(no)
         PEANUTS="\$(PEANUTS)"
-fi
+        )
 AC_SUBST(PEANUTS)
 
 
@@ -553,7 +557,7 @@ dnl *****************************************************************
 AC_MSG_CHECKING(for --enable-tmphack)
 AC_ARG_ENABLE(tmphack,
   [--enable-tmphack=<host>   link and compile in /tmp (default=no)])
-if test -n "${enable_tmphack}"
+if test -n "${enable_tmphack}" && test $enable_tmphack != no
 then
     oz_tmphack_host=$enable_tmphack
 fi
@@ -574,34 +578,40 @@ AC_SUBST(oz_tmphack_host)
 AC_SUBST(oz_tmphack_programname)
 
 dnl *****************************************************************
+dnl special hack for static linking under linux
+dnl *****************************************************************
+
+case $platform in
+    linux*)
+        OZ_ENABLE_YES(lstatic,[  statically link on linux],
+                AC_MSG_RESULT(yes)
+                LIBS=`echo $LIBS | sed -e 's/[ ]-ldl//g'`
+                LIBS="-ldl -Xlinker -Bstatic $LIBS"
+                )
+        ;;
+esac
+
+dnl *****************************************************************
 dnl FINALIZATION SUPPORT
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --enable-finalization)
-AC_ARG_ENABLE(finalization,
-  [--enable-finalization
-                   provide support for finalization (default=yes)])
-if test "${enable_finalization}" = no; then
+OZ_ENABLE_YES(finalization,[
+                   provide support for finalization],
+        ,
         AC_MSG_RESULT(no)
         AC_DEFINE(NOFINALIZATION)
-else
-        AC_MSG_RESULT(yes)
-fi
+        )
 
 dnl *****************************************************************
 dnl FOREIGN POINTER SUPPORT
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --enable-foreign-pointer)
-AC_ARG_ENABLE(foreign-pointer,
-  [--enable-foreign-pointer,
-                   provide support for foreign pointers (default=yes)])
-if test "${enable_foreign_pointer}" = no; then
+OZ_ENABLE_YES(foreign-pointer,[
+                   provide support for foreign pointers],
+        ,
         AC_MSG_RESULT(no)
         AC_DEFINE(NOFOREIGN_POINTER)
-else
-        AC_MSG_RESULT(yes)
-fi
+        )
 
 dnl *****************************************************************
 dnl FINALIZE

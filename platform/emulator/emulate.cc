@@ -183,6 +183,39 @@ TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
   return makeTaggedSRecord(srecord);
 }
 
+// optimized RefsArray allocation
+inline
+RefsArray allocateY(int n)
+{
+  COUNT(numEnvAllocs);
+
+  int sz = (n+1) * sizeof(TaggedRef);
+  COUNT1(sizeEnvs,sz);
+  CountMax(maxEnvSize,sz);
+  RefsArray a = (RefsArray) freeListMalloc(sz);
+  a += 1;
+  initRefsArray(a,n,OK);
+  return a;
+}
+
+inline
+void deallocateY(RefsArray a, int sz)
+{
+  Assert(getRefsArraySize(a)==sz);
+  Assert(!isFreedRefsArray(a));
+#ifdef DEBUG_CHECK
+  markFreedRefsArray(a);
+#else
+  freeListDispose(a-1,(sz+1) * sizeof(TaggedRef));
+#endif
+}
+
+inline
+void deallocateY(RefsArray a)
+{
+  deallocateY(a,getRefsArraySize(a));
+}
+
 // -----------------------------------------------------------------------
 // *** ???
 // -----------------------------------------------------------------------

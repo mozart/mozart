@@ -1074,6 +1074,11 @@ BIspec componentsSpec[] = {
   {"CloseGate",    0, BICloseGate},
   {"SendGate",     2, BISendGate},
 
+  {"Gate.id",       1, BIGateId},
+  {"Gate.open",     1, BIOpenGate},
+  {"Gate.close",    0, BICloseGate},
+  {"Gate.send",     2, BISendGate},
+
   {"URL.localize", 2, BIurl_localize},
   {"URL.open",     2, BIurl_open},
   {"URL.load",     2, BIurl_load},

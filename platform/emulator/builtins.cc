@@ -6285,6 +6285,7 @@ OZ_C_proc_begin(BIonToplevel,1)
 }
 OZ_C_proc_end
 
+// for browser
 OZ_C_proc_begin(BIaddr,2)
 {
   oz_declareArg(0,val);
