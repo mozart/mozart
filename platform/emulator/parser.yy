@@ -39,11 +39,14 @@ typedef OZ_Term CTerm;
 
 static CTerm nilAtom;
 
-extern int xy_showInsert, xy_gumpSyntax;
+extern int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
+extern CTerm xy_errorMessages;
 
 OZ_C_proc_begin(ozparser_init, 0)
 {
   nilAtom = OZ_nil();
+  xy_showInsert = xy_gumpSyntax = 0;
+  xy_systemVariables = 1;
   parserInit();
   return PROCEED;
 }
@@ -68,14 +71,60 @@ OZ_C_proc_end
 OZ_C_proc_begin(ozparser_parseFile, 2)
 {
   OZ_declareVirtualStringArg(0, str);
-  return OZ_unify(OZ_getCArg(1), parseFile(str));
+  xy_errorMessages = OZ_nil();
+  CTerm res = parseFile(str);
+  printf("%s",OZ_virtualStringToC(xy_errorMessages));
+  return OZ_unify(OZ_getCArg(1), res);
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(ozparser_parseVirtualString, 2)
 {
   OZ_declareVirtualStringArg(0, str);
-  return OZ_unify(OZ_getCArg(1), parseVirtualString(str));
+  xy_errorMessages = OZ_nil();
+  CTerm res = parseVirtualString(str);
+  printf("%s",OZ_virtualStringToC(xy_errorMessages));
+  return OZ_unify(OZ_getCArg(1), res);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(ozparser_parseFileAtomic, 6)
+{
+  // {ParseFile FileName ShowInsert GumpSyntax SystemVariables ?AST ?VS}
+  OZ_declareVirtualStringArg(0, str);
+  OZ_declareNonvarArg(1, showInsert);
+  OZ_declareNonvarArg(2, gumpSyntax);
+  OZ_declareNonvarArg(3, systemVariables);
+  xy_showInsert = OZ_isTrue(showInsert);
+  xy_gumpSyntax = OZ_isTrue(gumpSyntax);
+  xy_systemVariables = OZ_isTrue(systemVariables);
+
+  xy_errorMessages = OZ_nil();
+  OZ_Return res = OZ_unify(OZ_getCArg(4), parseFile(str));
+  if (res == PROCEED)
+    return OZ_unify(OZ_getCArg(5), xy_errorMessages);
+  else
+    return res;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(ozparser_parseVirtualStringAtomic, 6)
+{
+  // {ParseVirtualString VS1 ShowInsert GumpSyntax SystemVariables ?AST ?VS2}
+  OZ_declareVirtualStringArg(0, str);
+  OZ_declareNonvarArg(1, showInsert);
+  OZ_declareNonvarArg(2, gumpSyntax);
+  OZ_declareNonvarArg(3, systemVariables);
+  xy_showInsert = OZ_isTrue(showInsert);
+  xy_gumpSyntax = OZ_isTrue(gumpSyntax);
+  xy_systemVariables = OZ_isTrue(systemVariables);
+
+  xy_errorMessages = OZ_nil();
+  OZ_Return res = OZ_unify(OZ_getCArg(4), parseVirtualString(str));
+  if (res == PROCEED)
+    return OZ_unify(OZ_getCArg(5), xy_errorMessages);
+  else
+    return res;
 }
 OZ_C_proc_end
 
@@ -166,7 +215,7 @@ extern CTerm xyFileNameAtom;
 extern char xyhelpFileName[];
 
 static void xyerror(char *);
-extern "C" int xyreportError(char *, char *, char *, int ,int);
+extern "C" void xyreportError(char *, char *, char *, int ,int);
 
 static inline int xycharno() {
   int n = xytext - xylastline;
@@ -1323,59 +1372,79 @@ synProdCallParams
 
 %%
 
-/* position file pointer at the beginning of the <line>-nth line */
-static void seekLine(FILE *stream, int line) {
-  int ch;
-  while(line > 1) {
-    ch = getc(stream);
-    if (ch == EOF)
-      return;
-    if (ch == '\n')
-      line--;
-  }
+static void append(char *s) {
+  xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_string(s));
 }
 
-int xyreportError(char *kind, char *msg, char *file, int line, int offset) {
-  int TabSpaces = 8;        /* definition of the width of a tabspace */
-  int TabCount = 0;
-  FILE *pFile;
-  int c;
+static void append(int i) {
+  xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_int(i));
+}
 
+void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   if (strcmp(kind,"warning"))
     yynerrs++;
 
-  fprintf(stderr, "\n%%************ %s **********\n", kind);
-  fprintf(stderr, "%%**\n%%**\t%s\n%c", msg, MSG_ERROR);
+  char s[256];
+  sprintf(s,"\n%c",MSG_ERROR);
+
+  append("\n%************ ");
+  append(kind);
+  append(" **********\n%**\n%**     ");
+  append(msg);
+  append(s);
+
   if (line < 0)
-    return 1;
+    return;
 
-  fprintf(stderr, "%%**\tin file \"%s\", line %d, column %d",
-	  file, line, offset);
+  append("%**     in file \"");
+  append(file);
+  append("\", line ");
+  append(line);
+  append(", column ");
+  append(offset);
 
-  if (!(pFile = fopen(file,"r"))) {  /* open file */
-    fprintf(stderr, "\n%%**\n");
-    return 1;
+  FILE *pFile = fopen(file,"r");
+  if (pFile == NULL) {
+    append("\n%**\n");
+    return;
   }
 
-  seekLine(pFile, line);        /* go to the position */
-
-  fprintf(stderr, ":\n%%**\n%%**\t");
-  do {				/* print the line (including '\n') */
-    c = getc(pFile);
+  /* position file pointer at the beginning of the <line>-nth line */
+  int c;
+  while(line > 1) {
+    c = fgetc(pFile);
     if (c == EOF)
-      putc('\n', stderr);
+      return;
+    if (c == '\n')
+      line--;
+  }
+
+  append(":\n%**\n%**     ");
+  int col = 0, curoff = 0, n = -1;
+  do {				/* print the line (including '\n') */
+    if (curoff == offset)
+      n = col;
+    curoff++;
+    c = fgetc(pFile);
+    if (c == EOF)
+      s[col++] = '\n';
     else if (c == '\t') {	/* print tabs explicitly */
-      TabCount++;		
-      putc(c, stderr);
+      while (col % 8)
+	s[col++] = ' ';
     } else
-      putc(c, stderr);
-  } while (c != '\n' &&  c != EOF);
+      s[col++] = c;
+  } while (c != '\n' && c != EOF && col < 255);
+  s[col] = '\0';
+  append(s);
   fclose(pFile);
-  fprintf(stderr, "%%**\t");
-  for (int i = 0; i < offset + (TabSpaces - 1) * TabCount; i++)
-    putc(' ',stderr);
-  fprintf(stderr, "^-- *** here\n%%**\n");
-  return 1;
+  if (n > -1) {
+    append("%**     ");
+    s[n] = '\0';
+    while(n)
+      s[--n] = ' ';
+    append(s);
+    append("^-- *** here\n%**\n");
+  }
 }
 
 static void xyerror(char *s) {
