@@ -226,7 +226,7 @@ Bool ozd_trace(const char *info, ProgramCounter PC,RefsArray Y,
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("X[%d] = ", numb);
 	    fflush(stdout);
-	    oz_print(am.getX(numb));
+	    oz_print(XREGS[numb]);
 	    printf ("\n");
 	  }
 	  break;
@@ -235,7 +235,7 @@ Bool ozd_trace(const char *info, ProgramCounter PC,RefsArray Y,
 	    int numb=0;
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("X[%d]:\n", numb);
-	    ozd_printLong(am.getX(numb));
+	    ozd_printLong(XREGS[numb]);
 	  }
 	  break;
 	case 'y':

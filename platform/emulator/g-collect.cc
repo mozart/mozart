@@ -391,7 +391,7 @@ void AM::gCollect(int msgLevel) {
   initMemoryManagement();
 
   for (int j=NumberOfXRegisters; j--; )
-    xRegs[j] = taggedVoidValue;
+    XREGS[j] = taggedVoidValue;
   
   Assert(trail.getUsed() == 1);
   Assert(cachedSelf==0);

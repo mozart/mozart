@@ -52,16 +52,25 @@
 #define inline
 #endif
 
+/*
+ * X registers. They are defined for proximity to the emulator!
+ *
+ */
+
+TaggedRef XREGS[NumberOfXRegisters];
+TaggedRef XREGS_SAVE[NumberOfXRegisters];
+
+
 // -----------------------------------------------------------------------
 // Object stuff
 // -----------------------------------------------------------------------
 
 inline
 Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity, 
-			   InlineCache *cache, RefsArray X)
+			   InlineCache *cache)
 {
   Assert(oz_isFeature(label));
-  return cache->lookup(obj->getClass(),label,arity,X);
+  return cache->lookup(obj->getClass(),label,arity);
 }
 
 // -----------------------------------------------------------------------
@@ -131,9 +140,10 @@ Bool AM::hf_raise_failure()
 #define HF_APPLY(N,A)  HF_RAISE_FAILURE(OZ_mkTupleC("apply",2,N,A))
 #define HF_BI(bi,loc)  HF_APPLY(bi->getName(),loc->getArgs());
 
-#define CheckArity(arityExp,proc)					   \
-if (predArity != arityExp) {						   \
-  (void) oz_raise(E_ERROR,E_KERNEL,"arity",2,proc,OZ_toList(predArity,X)); \
+#define CheckArity(arityExp,proc)				   \
+if (predArity != arityExp) {					   \
+  (void) oz_raise(E_ERROR,E_KERNEL,"arity",2,proc,                 \
+                  OZ_toList(predArity,XREGS));                     \
   RAISE_THREAD;							   \
 }
 
@@ -256,27 +266,27 @@ OZ_Return fastUnify(OZ_Term A, OZ_Term B) {
 }
 
 /*
- * new builtins support
+ * Executre builtins if now location is available:
+ *  Normal procedure call
+ *
  */
 
-static OZ_Term *savedX = NULL;
-
-OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
-{
+inline
+OZ_Return oz_bi_wrapper(Builtin *bi) {
   Assert(am.isEmptySuspendVarList());
   Assert(am.isEmptyPreparedCalls());
 
-  const int inAr  = bi->getInArity();
-  const int outAr = bi->getOutArity();
-  
-  if (savedX)
-    delete [] savedX;
-  savedX = new OZ_Term[outAr];
+  register const int outAr = bi->getOutArity();
 
-  int i;
-  for (i=outAr; i--; ) savedX[i]=X[inAr+i];
+  register TaggedRef * const XREGS_IN = XREGS + bi->getInArity();
+  
+  {
+    for (int i=outAr; i--; ) 
+      XREGS_SAVE[i]=XREGS_IN[i];
+  }
 
   OZ_Return ret1 = bi->getFun()(OZ_ID_LOC->getMapping());
+  
   if (ret1!=PROCEED) {
     switch (ret1) {
     case FAILED:
@@ -285,9 +295,8 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
     case SUSPEND:
       {
 	// restore X
-	for (int j=outAr; j--; ) {
-	  X[inAr+j]=savedX[j];
-	}
+	for (int j=outAr; j--; )
+	  XREGS_IN[j]=XREGS_SAVE[j];
 	return ret1;
       }
     case PROCEED:
@@ -299,33 +308,37 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
       return FAILED;
     }
   }
-  for (i=outAr;i--;) {
-    OZ_Return ret2 = fastUnify(X[inAr+i],savedX[i]);
-    if (ret2!=PROCEED) {
-      switch (ret2) {
-      case FAILED:
-      case RAISE:
-      case BI_TYPE_ERROR:
-	{
-	  // restore X in case of error
-	  for (int j=outAr; j--; ) {
-	    X[inAr+j]=savedX[j];
-	  }
-	  return ret2;
+
+  {
+    for (int i=outAr;i--;) {
+      OZ_Return ret2 = fastUnify(XREGS_IN[i],XREGS_SAVE[i]);
+      if (ret2!=PROCEED) {
+	switch (ret2) {
+	case FAILED:
+	case RAISE:
+	case BI_TYPE_ERROR:
+	  {
+	    // restore X in case of error
+	    for (int j=outAr; j--; ) {
+	      XREGS_IN[j]=XREGS_SAVE[j];
+	    }
+	    return ret2;
 	}
-      case SUSPEND:
-	am.emptySuspendVarList();
-	am.prepareCall(BI_Unify,X[inAr+i],savedX[i]);
-	ret1=BI_REPLACEBICALL;
-	break;
-      case BI_REPLACEBICALL:
-	ret1=BI_REPLACEBICALL;
-	break;
-      default:
-	Assert(0);
+	case SUSPEND:
+	  am.emptySuspendVarList();
+	  am.prepareCall(BI_Unify,XREGS_IN[i],XREGS_SAVE[i]);
+	  ret1=BI_REPLACEBICALL;
+	  break;
+	case BI_REPLACEBICALL:
+	  ret1=BI_REPLACEBICALL;
+	  break;
+	default:
+	  Assert(0);
+	}
       }
     }
   }
+
   return ret1;
 }
 
@@ -565,7 +578,7 @@ void pushContX(TaskStack *stk,
 
 #ifdef DEBUG_LIVENESS
 extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);
-#define CheckLiveness(PC) checkLiveness(PC,X,CAP->getPred()->getMaxX())
+#define CheckLiveness(PC) checkLiveness(PC,XREGS,CAP->getPred()->getMaxX())
 #else
 #define CheckLiveness(PC)
 #endif
@@ -628,15 +641,14 @@ OZ_Return suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
 // -----------------------------------------------------------------------
 
 static
-TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
-{
+TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label) {
   int width = getWidth(srecArity);
   if (width == 0) {
     return label;
   }
 
   if (width == 2 && oz_eq(label,AtomCons))
-    return makeTaggedLTuple(new LTuple(X[0],X[1]));
+    return makeTaggedLTuple(new LTuple(XREGS[0],XREGS[1]));
 
   SRecord *tt;
   if(sraIsTuple(srecArity)) {
@@ -645,7 +657,7 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
     tt = SRecord::newSRecord(label,getRecordArity(srecArity));
   }
   for (int i = width-1;i >= 0; i--) {
-    tt->setArg(i,X[i]);
+    tt->setArg(i,XREGS[i]);
   }
   TaggedRef ret = makeTaggedSRecord(tt);
 
@@ -685,15 +697,10 @@ int engine(Bool init)
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
-  register RefsArray Y         Reg3 = NULL;
-#ifdef MANY_REGISTERS
-  register TaggedRef *X        Reg2 = am.xRegs;
-#else
-  register TaggedRef * const X Reg2 = am.xRegs;
-#endif
-  register TaggedRef *sPointer Reg4 = NULL;
-  register AM * const e	       Reg5 = &am;
-  register Abstraction * CAP   Reg6 = NULL;
+  register RefsArray Y         Reg2 = NULL;
+  register TaggedRef *sPointer Reg3 = NULL;
+  register AM * const e	       Reg4 = &am;
+  register Abstraction * CAP   Reg5 = NULL;
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
 
@@ -1792,7 +1799,7 @@ Case(GETVOID)
       IHashTable *table = entry->indexTable;
       if (table) {
 	PC = entry->getPC();
-	DoSwitchOnTerm(X[0],table);
+	DoSwitchOnTerm(XREGS[0],table);
       } else {
 	JUMPABSOLUTE(entry->getPC());
       }
@@ -2681,7 +2688,7 @@ Case(GETVOID)
 
       for (int i = 0; i < size; i++) {
 	switch ((*list)[i].kind) {
-	case K_XReg: p->initG(i, X[(*list)[i].number]); break;
+	case K_XReg: p->initG(i, XREGS[(*list)[i].number]); break;
 	case K_YReg: p->initG(i, Y[(*list)[i].number]); break;
 	case K_GReg: p->initG(i, CAP->getG((*list)[i].number)); break;
 	}
@@ -2722,7 +2729,7 @@ Case(GETVOID)
     DEREF(object,objectPtr,_2);
     if (oz_isObject(object)) {
       Object *obj      = tagged2Object(object);
-      Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4),X);
+      Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4));
       if (def == NULL) {
 	goto bombSend;
       }
@@ -2740,11 +2747,11 @@ Case(GETVOID)
     if (oz_isProcedure(object)) 
       goto bombSend;
 
-    RAISE_APPLY(object, oz_mklist(makeMessage(arity,label,X)));
+    RAISE_APPLY(object, oz_mklist(makeMessage(arity,label)));
 
   bombSend:
     if (!isTailCall) PC = PC+6;
-    X[0] = makeMessage(arity,label,X);
+    XREGS[0] = makeMessage(arity,label);
     predArity = 1;
     predicate = tagged2Const(object);
     goto LBLcall;
@@ -2788,7 +2795,7 @@ Case(GETVOID)
 	 if (oz_isVariable(taggedPredicate)) {
 	   SUSP_PC(predPtr,PC);
 	 }
-	 RAISE_APPLY(taggedPredicate,OZ_toList(predArity,X));
+	 RAISE_APPLY(taggedPredicate,OZ_toList(predArity,XREGS));
        }
 
        if (!isTailCall) PC = PC+3;
@@ -2827,8 +2834,8 @@ Case(GETVOID)
 	 Abstraction *def =
 	   tagged2Abstraction(o->getClass()->getFallbackApply());
 	 /* {Obj Msg} --> {SetSelf Obj} {FallbackApply Class Msg} */
-	 X[1] = X[0];
-	 X[0] = makeTaggedConst(o->getClass());
+	 XREGS[1] = XREGS[0];
+	 XREGS[0] = makeTaggedConst(o->getClass());
 	 predArity = 2;
 	 if (!isTailCall) { PushCont(PC); }
 	 ChangeSelf(o);
@@ -2848,7 +2855,7 @@ Case(GETVOID)
 #ifdef PROFILE_BI
        bi->incCounter();
 #endif
-       OZ_Return res = oz_bi_wrapper(bi,X);
+       OZ_Return res = oz_bi_wrapper(bi);
 	     
        switch (res) {
 	    
@@ -2856,7 +2863,7 @@ Case(GETVOID)
 	 {
 	   if (!isTailCall) PushCont(PC);
 
-	   CTT->pushCall(makeTaggedConst(bi),X,predArity);
+	   CTT->pushCall(makeTaggedConst(bi),XREGS,predArity);
 	   SUSPENDONVARLIST;
 	 }
 
@@ -2979,7 +2986,7 @@ Case(GETVOID)
 
       int i = predArity;
       while (--i >= 0) {
-	X[i] = args[i];
+	XREGS[i] = args[i];
       }
       disposeRefsArray(args);
       isTailCall = OK;
@@ -3014,7 +3021,7 @@ Case(GETVOID)
       Y = NULL;
       int i = getRefsArraySize(tmpX);
       while (--i >= 0) {
-	X[i] = tmpX[i];
+	XREGS[i] = tmpX[i];
       }
       disposeRefsArray(tmpX);
       goto LBLpopTaskNoPreempt;
@@ -3043,7 +3050,7 @@ Case(GETVOID)
 	 predArity = getRefsArraySize(tmpX);
 	 int i = predArity;
 	 while (--i >= 0) {
-	   X[i] = tmpX[i];
+	   XREGS[i] = tmpX[i];
 	 }
        } else {
 	 predArity = 0;
@@ -3068,7 +3075,7 @@ Case(GETVOID)
 	 goto LBLreplaceBICall;
 
        case SUSPEND:
-	 CTT->pushCFun(biFun,X,predArity);
+	 CTT->pushCFun(biFun,XREGS,predArity);
 	 SUSPENDONVARLIST;
 
       case BI_PREEMPT:
@@ -3160,7 +3167,7 @@ Case(GETVOID)
 	    dbg->arguments =
 	      (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * dbg->arity);
 	    for (int i = dbg->arity; i--; )
-	      dbg->arguments[i] = e->getX(i);
+	      dbg->arguments[i] = XREGS[i];
 	  }
 	} else if (oz_eq(kind,AtomDebugLockC) ||
 		   oz_eq(kind,AtomDebugLockF)) {
@@ -3359,7 +3366,7 @@ Case(GETVOID)
 
       Bool defaultsUsed;
       Abstraction *abstr = tagged2ObjectClass(pred)->getMethod(cmi->mn,cmi->arity,
-							       0,defaultsUsed);
+							       NO,defaultsUsed);
       /* fill cache and try again later */
       if (abstr==NULL || defaultsUsed) {
 	isTailCall = cmi->isTailCall;
@@ -3367,8 +3374,8 @@ Case(GETVOID)
 	
 	Assert(tagged2ObjectClass(pred)->getFallbackApply());
 	
-	X[1] = makeMessage(cmi->arity,cmi->mn,X);
-	X[0] = pred;
+	XREGS[1] = makeMessage(cmi->arity,cmi->mn);
+	XREGS[0] = pred;
 	
 	predArity = 2;
 	predicate = tagged2Const(tagged2ObjectClass(pred)->getFallbackApply());
@@ -3492,7 +3499,7 @@ Case(GETVOID)
     if (foundHdl) {
       if (e->debugmode() && ct->isTrace())
 	debugStreamUpdate(ct);
-      e->xRegs[0] = e->exception.value;
+      XREGS[0] = e->exception.value;
       goto LBLpopTaskNoPreempt;
     }
       
@@ -3543,15 +3550,13 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
 
   int argsToHandle = 0;
   
-  TaggedRef * X = am.getXRef();
-
   int maxX = (CAP->getPred()->getMaxX()) * sizeof(TaggedRef);
   int maxY = (Y ? getRefsArraySize(Y) : 0) * sizeof(TaggedRef);
 
-  void * savedX, * savedY;
+  void * savedY;
 
   if (maxX > 0)
-    savedX = memcpy(freeListMalloc(maxX), X, maxX);
+    memcpy(XREGS_SAVE, XREGS, maxX);
   if (maxY > 0)
     savedY = memcpy(freeListMalloc(maxY), Y, maxY);
   
@@ -3690,7 +3695,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
 
  exit:
   if (maxX > 0) {
-    memcpy(X, savedX, maxX); freeListDispose(savedX, maxX);
+    memcpy(XREGS, XREGS_SAVE, maxX);
   }
   if (maxY > 0) {
     memcpy(Y, savedY, maxY); freeListDispose(savedY, maxY);
@@ -3702,7 +3707,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
 void pushContX(TaskStack *stk, 
 	       ProgramCounter pc,RefsArray y,Abstraction *cap) {
   stk->pushCont(pc,y,cap); 
-  stk->pushX(am.getXRef(),cap->getPred()->getMaxX());
+  stk->pushX(cap->getPred()->getMaxX());
 }
 
 
