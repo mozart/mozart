@@ -1306,17 +1306,31 @@ AC_DEFUN(OZ_COMPILE_ELISP,
    AC_SUBST(COMPILE_ELISP)])
 
 dnl ------------------------------------------------------------------
+dnl OZ_EMACS
+dnl	tries to locate emacs or xemacs
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_EMACS,[
+  AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
+  AC_SUBST(THEEMACS)])
+
+dnl ------------------------------------------------------------------
 dnl OZ_EMACS_OPTIONS
 dnl	check with what options to start an emacs subprocess, e.g.
 dnl	to perform highlighting when processing the documentation
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_EMACS_OPTIONS,[
+  AC_REQUIRE([OZ_EMACS])
   AC_MSG_CHECKING([for --with-emacs-options])
   AC_ARG_WITH(emacs-options,
     [--with-emacs-options=OPTIONS command-[line] options for emacs subprocess (default: -q --no-site-[file])],
     [oz_cv_emacs_options="$with_emacs_options"],
-    [oz_cv_emacs_options="-q --no-site-[file]"])
+    [ if $THEEMACS --version 2>&1 | egrep XEmacs >/dev/null; then
+        oz_cv_emacs_options="-q -no-site-[file]"
+      else
+        oz_cv_emacs_options="-q --no-site-[file]"
+      fi ])
   EMACS_OPTIONS="$oz_cv_emacs_options"
   AC_SUBST(EMACS_OPTIONS)
   AC_MSG_RESULT($EMACS_OPTIONS)])
