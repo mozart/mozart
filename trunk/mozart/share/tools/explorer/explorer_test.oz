@@ -104,7 +104,7 @@ declare
 fun {P1 U V}
    proc {$ X}
       choice
-	 if U=1 then true
+	 if U=1 then skip
 	 [] U=2 then choice X=3 [] X=4 end
 	 [] U=3 then V=1
 	 else false
@@ -116,7 +116,7 @@ end
 
 fun {P2 U V}
    proc {$ X}
-      if U=1 then true
+      if U=1 then skip
       [] U=2 then choice X=3 [] X=4 end
       [] U=3 then V=1
       else false
@@ -269,8 +269,8 @@ U=1
 	      label:test_procedure type:procedure)}
 
 declare
-proc {P1 _ _} true end
-proc {P2 _ _} true end
+proc {P1 _ _} skip end
+proc {P2 _ _} skip end
 {Explorer add(information separator)}
 {Explorer add(information P1)}
 {Explorer add(information separator)}
