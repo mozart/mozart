@@ -11,12 +11,11 @@ OZHOME   = /usr/share/gs/soft/oz
 SUBDIRS =
 
 all::
-        @ true
 
 BINDIR  = $(OZHOME)/bin
 SHELL   = /bin/sh
 
-SCRIPTS = oz oz2lpr oz+ oz2declare ozarch
+SCRIPTS = oz oz2lpr oz+ oz2declare ozplatform
 LINKS   = oz- ozc oz.compiler oz.machine ozwindowmanager
 
 help:
@@ -39,8 +38,7 @@ CURRENTDIR=.
 Makefile:: Imakefile
 
 Makefile::
-        @ if [ -f $@ ]; then /bin/mv -f $@ $@.bak; fi
-        @ imake -DXX`ozarch` -I. -I.. -I../.. -I../../.. -I../../../..
+        @ imake -DXX`$(OZHOME)/bin/ozarch` -I. -I.. -I../.. -I../../.. -I../../../..
 
 all::   Makefile
 
