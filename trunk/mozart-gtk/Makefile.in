@@ -39,7 +39,7 @@ CANVASDIR       = @CANVASDIR@
 # Extra Variables
 #---------------------------------------------------------------------
 
-BUILDDIR        = $(shell pwd) 
+BUILDDIR        = $(shell pwd)
 
 GTKFLAGS        = $(shell $(GTKCONFIG) --cflags)
 GTKLIBS         = $(shell $(GTKCONFIG) --libs)
@@ -173,7 +173,7 @@ EXAMPLES_TARGETS = $(EXAMPLES_FILES:%=$(EXAMPLES_DIR)/%)
 # Rules
 #---------------------------------------------------------------------
 
-all: $(TARGETS) binding
+all: $(TARGETS) binding doc
 
 %.o: %.cc
 	OZTOOL_CXX="@CXX@" \
@@ -213,7 +213,8 @@ $(NATCMPS):%.so-$(PLATFORM): %.o
 .PHONY: all doc install clean veryclean distclean bootstrap depend
 
 install: $(LIB_DIR) $(LIB_TARGETS) $(EXAMPLES_DIR) $(EXAMPLES_TARGETS) \
-	install_names doc
+	install_names $(DOC_DIR)
+	for i in doc-install/*; do $(INSTALL_FILE) $$i $(DOC_DIR); done
 install_names:
 	cp ClassNames.ozp $(LIB_DIR)/ClassNames.ozp
 
@@ -258,7 +259,8 @@ endif
 wrapper_files: $(GEN_TARGETS) $(CCMPS)
 
 doc:
-	$(OZDOC) --type=html-color --in $(SRCDIR)/doc/gtk.sgml --out=$(DOC_DIR)
+	$(OZDOC) --type=html-color --in $(SRCDIR)/doc/gtk.sgml \
+	--out=doc-install
 
 #---------------------------------------------------------------------
 # Installing
@@ -277,6 +279,9 @@ $(EXAMPLES_DIR)/%: examples/%
 	$(INSTALL_FILE) $< $@
 
 $(EXAMPLES_DIR)/%: builder/%
+	$(INSTALL_FILE) $< $@
+
+$(DOC_DIR)/%: doc-install/%
 	$(INSTALL_FILE) $< $@
 
 #---------------------------------------------------------------------
