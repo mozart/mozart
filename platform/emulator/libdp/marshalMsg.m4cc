@@ -96,7 +96,6 @@ define(message,`
 	argEnc($4)
 	argEnc($5)
 	argEnc($6)
-	buf->unmarshalEnd();
 	PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->siteStringrep()));
 	return;}')
 
@@ -143,7 +142,6 @@ define(message,`
 	argEnc($4)
 	argEnc($5)
 	argEnc($6)
-	buf->unmarshalEnd();
 	refTrail->unwind();
 	PD((MARSHAL_BE,"unmarshal unsent msg end %s  site:%s","$1",buf->siteStringrep()));
 	return;}')

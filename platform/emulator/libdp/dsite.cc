@@ -216,10 +216,15 @@ DSite* unmarshalDSiteInternal(MsgBuffer *buf, DSite *tryS, MarshalTag mt)
 	  VirtualInfo *vi = unmarshalVirtualInfo(buf);
 
 	  //
-	  if (myDSite->isInMyVSGroup(vi))
-	    s->makeActiveVirtual(vi);
-	  else 
-	    s->makeActiveRemoteVirtual(vi);      
+	  if (!s->ActiveSite()) {
+	    if (myDSite->isInMyVSGroup(vi)) {
+	      s->makeActiveVirtual(vi);
+	    } else {
+	      s->makeActiveRemoteVirtual(vi);
+	    }
+	  } else {
+	    s->addVirtualInfoToActive(vi);
+	  }
 	}
       } else {
 	// my site is my site... already initialized;

@@ -172,7 +172,6 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
 /**********************************************************************/
 
 MessageType unmarshalHeader(MsgBuffer *bs){
-  bs->unmarshalBegin();
   refTable->reset();
   MessageType mt= (MessageType) bs->get();
   mess_counter[mt].recv();
