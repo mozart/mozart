@@ -529,6 +529,7 @@ void initBuiltins() {
   BI_PROP_LPQ          = string2Builtin("INTERNAL", "propagate");  
   BI_ByNeedAssign      = string2Builtin("INTERNAL", "byNeedAssign");
   BI_waitStatus        = string2Builtin("INTERNAL", "waitStatus");
+  BI_varToFuture       = string2Builtin("INTERNAL", "varToFuture");
 
   // to execute boot functor in am.cc
   BI_dot           = string2Builtin("Value", ".");
@@ -539,6 +540,7 @@ void initBuiltins() {
   // Exception stuff
   bi_raise      = string2CBuiltin("Exception.raise");
   bi_raiseError = string2CBuiltin("Exception.raiseError");
+  BI_raise      = string2Builtin("Exception.raise");
 }
 
 
