@@ -35,7 +35,8 @@ Bool FDIntervals::isConsistent(void) {
 #else
 
 #define DEBUG_FD_IR(COND, CODE)
-
+#undef Assert
+#define Assert(X)
 #endif
 
 // Miscellaneous --------------------------------------------------------------
