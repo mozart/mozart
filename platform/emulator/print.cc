@@ -622,6 +622,7 @@ PRINT(Board)
   if (isWaiting()) {
     stream << "W";
   }
+  stream << " #" << suspCount;
   stream << "]";
 }
 
