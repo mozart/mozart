@@ -35,7 +35,6 @@
 #include "prop_int.hh"
 #include "builtins.hh"
 #include "debug.hh"
-#include "space.hh"
 
 
 inline
@@ -121,7 +120,7 @@ void scheduler(void) {
 
     }
 
-    if (!oz_installPath(cb)) {
+    if (!cb->install()) {
       oz_currentBoard()->fail(ct);
       continue;
     }
