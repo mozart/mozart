@@ -23,47 +23,44 @@
 #include "builtins.hh"
 
 
-inline
-int percent(int i, int sum)
-{
-  return sum>0 ? i*100/sum : 0;
-}
-
 #ifndef OSF1_ALPHA
 extern "C" void *sbrk(int incr);
 #endif
 
 static
-void printTime(FILE *fd,char *s,unsigned int t) {
+void printTime(FILE *fd,char *s,unsigned int t)
+{
   fprintf(fd,s);
   if (t < 1000) {
     fprintf(fd,"%u ms",t);
   } else {
-    fprintf(fd,"%u.%u sec",t/1000,(t/100)%100);
+    fprintf(fd,"%u.%u sec",t/1000,t%1000);
   }
 }
 
 static
-void printMem(FILE *fd,char *s,double m) {
+void printMem(FILE *fd,char *s,double m)
+{
   fprintf(fd,s);
   if (m < KB) {
     fprintf(fd,"%.0lf B",m);
-  } else if (m < MB) {
-    fprintf(fd,"%.1lf kB",m/KB);
-  } else {
-    fprintf(fd,"%.1lf MB",m/MB);
+    return;
   }
+  if (m < MB) {
+    fprintf(fd,"%.1lf kB",m/KB);
+    return;
+  }
+
+  fprintf(fd,"%.1lf MB",m/MB);
 }
 
-void Statistics::print(FILE *fd) {
-  int sum;
-
-
+void Statistics::print(FILE *fd)
+{
   fprintf(fd,"\n******************************\n");
   fprintf(fd,"***  Oz System Statistics  ***\n");
   fprintf(fd,"******************************\n\n");
 
-  unsigned total = getUsedMemory()*KB;
+  unsigned total    = getUsedMemory()*KB;
   unsigned freeList = getMemoryInFreeList();
   unsigned occupied = total-freeList;
 
@@ -76,20 +73,15 @@ void Statistics::print(FILE *fd) {
            CodeArea::atomTab.memRequired(sizeof(Literal)));
   printMem(fd, ".\n    Hashtable for names is ",
            CodeArea::nameTab.memRequired(sizeof(Literal)));
-  printMem(fd, ".\n    Hashtable for built-ins is ",
-           builtinTab.memRequired());
-
-  unsigned int utime    = usertime();
-  unsigned int systime  = systemtime();
+  printMem(fd, ".\n    Hashtable for built-ins is ", builtinTab.memRequired());
 
   fprintf(fd, ".\n\n  Process resources consumed:");
-  printTime(fd,"\n    User time is ", utime);
-  printTime(fd,".\n    System time is ", systime);
+  printTime(fd,"\n    User time is ", usertime());
+  printTime(fd,".\n    System time is ", systemtime());
   printMem(fd,".\n    Size is ", ToInt32(sbrk(0))-mallocBase);
   fprintf(fd, ".\n\n");
 
 #ifdef PROFILE
-
   fprintf(fd,"  Memory statistics:\n");
   fprintf(fd,"    Allocate uses \t\t %d bytes (%d%% of used heap)\n",
           allocateCounter,
@@ -105,30 +97,15 @@ void Statistics::print(FILE *fd) {
   fprintf(fd,"    There were %d protected entries into the heap\n",
           protectedCounter);
 
-  sum = allocateCounter+ procCounter+waitCounter+askCounter;
+  int sum = allocateCounter+ procCounter+waitCounter+askCounter;
   fprintf(fd,"    Sum\t\t\t %d bytes ( = %d %%)\n",
           sum,    (sum*100)/occupied );
-
 #endif
 
-#ifdef MM2
-  sum = wakeUpNode+wakeUpCont+wakeUpBI;
-  fprintf(fd,"  Number of WakeUps: %d\n",sum);
-  fprintf(fd,"    Normal: %d=%d%%\n",
-          wakeUpNode,percent(wakeUpNode,sum));
-  fprintf(fd,"    Continuations: %d=%d%%\n",
-          wakeUpCont,percent(wakeUpCont,sum));
-  fprintf(fd,"      Opt: %d=%d%%\n",
-          wakeUpContOpt,percent(wakeUpContOpt,sum));
-  fprintf(fd,"    Builtins: %d=%d%%\n\n",
-          wakeUpBI,percent(wakeUpBI,sum));
-#endif
-
-  // solve stuff
   fprintf(fd,"  Solve:\n");
-  fprintf(fd,"    distributions: %d\n", solveDistributed);
-  fprintf(fd,"    solutions:     %d\n", solveSolved);
-  fprintf(fd,"    failures:      %d\n\n", solveFailed);
+  fprintf(fd,"    distributions: %d\n",   solveDistributed.total);
+  fprintf(fd,"    solutions:     %d\n",   solveSolved.total);
+  fprintf(fd,"    failures:      %d\n\n", solveFailed.total);
 
   fprintf(fd,"******************************\n");
   fprintf(fd,"***   End of Statistics    ***\n");
@@ -138,67 +115,90 @@ void Statistics::print(FILE *fd) {
 Statistics::Statistics()
 {
   reset();
-
-  heapAllocated = 0.0;
-  sumHeap = 0.0;
-  timeForGC = 0;
-  timeForCopy = 0;
-  timeForLoading = 0;
-
-  sumTimeForGC = 0;
-  sumTimeForCopy = 0;
-  sumTimeForLoading = 0;
-
-  timeSinceLastIdle = usertime();
+  timeUtime.total = usertime();
+  timeUtime.idle();
 }
 
-void Statistics::reset() {
+void Statistics::reset()
+{
 #ifdef PROFILE
-  allocateCounter = 0;
-  deallocateCounter = 0;
-  procCounter = 0;
-  waitCounter = 0;
-  askCounter = 0;
-  protectedCounter = 0;
+  allocateCounter = deallocateCounter = procCounter = waitCounter =
+    askCounter = protectedCounter = 0;
 #endif
-  wakeUpNode = 0;
-  wakeUpCont = 0;
-  wakeUpContOpt = 0;
-  wakeUpBI = 0;
 
-  solveDistributed = 0;
-  solveSolved = 0;
-  solveFailed = 0;
+  gcCollected.reset();
+  heapUsed.reset();
+  timeForGC.reset();
+  timeForCopy.reset();
+  timeForLoading.reset();
+
+  solveDistributed.reset();
+  solveSolved.reset();
+  solveFailed.reset();
+}
+
+
+//----------------------------------------------------------------------
+
+
+static void recSetArg(OZ_Term record, char *feat, unsigned int val)
+{
+  OZ_Term t = OZ_getRecordArg(record, OZ_CToAtom(feat));
+  if (t == 0 || !OZ_unifyInt(t,val)) {
+    OZ_warning("recSetArg(%s,%s,%d) failed",OZ_toC(record),feat,val);
+  }
+}
+
+
+/*
+ * fill two records of the form
+ *
+ *        statistics(r:_  g:_  l:_  c:_  h:_  s:_  u:_  e:_)
+ *        enum(d:_  s:_  f:_)
+ */
+
+void Statistics::getStatistics(TaggedRef rec, TaggedRef enu)
+{
+  unsigned int timeNow = usertime();
+
+  recSetArg(rec,"r",timeNow-(timeForGC.total+timeForLoading.total+timeForCopy.total));
+  recSetArg(rec,"g",timeForGC.total);
+  recSetArg(rec,"l",timeForLoading.total);
+  recSetArg(rec,"c",timeForCopy.total);
+  recSetArg(rec,"h",heapUsed.total+getUsedMemory());
+  recSetArg(rec,"s",systemtime());
+  recSetArg(rec,"u",timeNow);
+
+  recSetArg(enu,"d",solveDistributed.total);
+  recSetArg(enu,"s",solveSolved.total);
+  recSetArg(enu,"f",solveFailed.total);
 }
 
 
 void Statistics::printIdle(FILE *fd)
 {
   unsigned int timeNow = usertime();
-  unsigned int mem = getUsedMemory()*KB;
-  heapAllocated += mem;
+  timeUtime.incf(timeNow-timeUtime.sinceIdle);
+  int totalHeap = getUsedMemory()+heapUsed.total;
 
   if (am.conf.showIdleMessage) {
-    printf("idle (", timeNow-timeSinceLastIdle);
+    fprintf(fd,"idle (");
     printTime(fd,"r: ",
-              (timeNow-timeSinceLastIdle)-timeForGC
-              -timeForCopy-timeForLoading);
-    printTime(fd,", c: ",timeForCopy);
-    printTime(fd,", g: ",timeForGC);
-    printTime(fd,", l: ",timeForLoading);
-    printMem(fd,", h: ",heapAllocated);
+              timeUtime.sinceidle()-
+              (timeForGC.sinceidle()+timeForLoading.sinceidle()+timeForCopy.sinceidle()));
+    printTime(fd,", c: ",timeForCopy.sinceidle());
+    printTime(fd,", g: ",timeForGC.sinceidle());
+    printTime(fd,", l: ",timeForLoading.sinceidle());
+    printMem(fd,", h: ", (totalHeap-heapUsed.sinceIdle)*KB);
     fprintf(fd,")\n");
     fflush(fd);
   }
-  sumTimeForGC += timeForGC;
-  sumTimeForCopy += timeForCopy;
-  sumTimeForLoading += timeForLoading;
-  timeForGC = timeForCopy = timeForLoading = 0;
-  heapAllocated = - (int) mem;
-  timeSinceLastIdle = usertime();
+  heapUsed.sinceIdle = totalHeap;
+  timeForGC.idle();
+  timeForCopy.idle();
+  timeForLoading.idle();
+  timeUtime.idle();
 }
-
-int Statistics::Statistics_gcSoFar = 0;
 
 void Statistics::initGcMsg(int level)
 {
@@ -207,32 +207,31 @@ void Statistics::initGcMsg(int level)
     fflush(stdout);
   }
 
-  gc_level = level;
-  gc_utime = usertime();
-  gc_usedMem = getUsedMemory()*KB;
-  gc_allocMem = getAllocatedMemory()*KB;
+  gcStarttime = usertime();
+  gcStartmem  = getUsedMemory();
+  heapUsed.incf(gcStartmem);
 }
 
-void Statistics::printGcMsg(void)
+void Statistics::printGcMsg(int level)
 {
-// print final message
-  Statistics_gcSoFar += (gc_usedMem/KB - getUsedMemory());
-  gc_utime = usertime() - gc_utime;
-  timeForGC += gc_utime;
-  heapAllocated += (gc_usedMem - getUsedMemory()*KB);
-  sumHeap += (gc_usedMem - getUsedMemory()*KB);
-  if (gc_level > 0) {
-    printMem(stdout, " disposed ", gc_usedMem - getUsedMemory()*KB);
+  int gc_utime = usertime()-gcStarttime;
+  int gc_mem   = gcStartmem-getUsedMemory();
+
+  timeForGC.incf(gc_utime);
+  gcCollected.incf(gc_mem);
+
+  /* do not count amount of meory copied */
+  heapUsed.incf(-getUsedMemory());
+
+  if (level > 0) {
+    printMem(stdout, " disposed ", gc_mem*KB);
     printf(" in %d msec.\n", gc_utime);
 
-    if (gc_level > 1) {
+    if (level > 1) {
       printf("Statistics:");
-      printMem(stdout, "\n\tMemory used was ", gc_usedMem);
+      printMem(stdout, "\n\tMemory used was ", gcStartmem*KB);
       printMem(stdout, " and is now ", getUsedMemory()*KB);
-      printMem(stdout, ".\n\tMemory allocated was ", gc_allocMem );
-      printMem(stdout, " and is now ", getAllocatedMemory()*KB);
-      printMem(stdout, ".\nTotal garbage collected: ",
-               ((double) Statistics_gcSoFar)*KB);
+      printMem(stdout, ".\nTotal garbage collected: ", gcCollected.total*KB);
       printf(".\n\n");
     }
     fflush(stdout);
