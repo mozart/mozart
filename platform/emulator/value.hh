@@ -1125,10 +1125,16 @@ public:
   TaggedRef getFeature(TaggedRef lit) 
   {
     TaggedRef ret = getFreeRecord()->getFeature(lit);
-    return (!ret) ?  getUnfreeRecord()->getFeature(lit) : ret;
+    if (ret!=makeTaggedNULL())
+      return ret;
+    SRecord *fr = getUnfreeRecord();
+    return fr ?  fr->getFeature(lit) : makeTaggedNULL();
   }
 
   TaggedRef getArityList();
+
+  Object *gcObject();
+
   OZPRINT;
   OZPRINTLONG;
 };
