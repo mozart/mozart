@@ -1517,9 +1517,8 @@ void AM::gc(int msgLevel)
   INITCOUNT();
 
   { /* initialize X regs; this IS necessary ! */
-    int sz = getRefsArraySize(xRegs);
-    for (int j=sz; j--; ) {
-      xRegs[j] = makeTaggedNULL();
+    for (int j=0; j < NumberOfXRegisters; j++) {
+      xRegs[j] = 0;
     }
   }
   

@@ -137,7 +137,6 @@ extern void initffuns();  /* from initffuns.cc */
 
 void AM::init(int argc,char **argv)
 {  
-  xRegs = new TaggedRef[NumberOfXRegisters];
   Assert(makeTaggedNULL() == 0);
   ozconf.init();
   osInit();
