@@ -52,6 +52,7 @@
 #include "fail.hh"
 #include "protocolCredit.hh"
 #include "port.hh"
+#include "dpResource.hh"
 #include "protocolState.hh"
 #include "protocolFail.hh"
 #include "dpMarshaler.hh"
@@ -242,7 +243,8 @@ void gcPerdioFinal()
 {
   if (isPerdioInitialized()) {
     BT->gcBorrowTableFinal();
-    OT->gcOwnerTableFinal();
+    OT->gcOwnerTableFinal(); 
+    RHT->gcResourceTable();
     gcDSiteTable();
   }
 }
@@ -1073,6 +1075,7 @@ void initPerdio()
   creditSiteOut = NULL;
   ownerTable = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);
   borrowTable = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
+  resourceTable = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
   msgBufferManager = new MsgBufferManager();
 
   BI_probe = makeTaggedConst(new Builtin("probe", 1, 0, BIprobe, OK));
