@@ -186,7 +186,7 @@
   {\end{list}}
 
 \newenvironment{FULLWIDTHLEFT}
-  {\begin{FULLWIDTH}\begin{flushleft}}
+  {\begin{FULLWIDTH}\nopagebreak\begin{flushleft}\nopagebreak}
   {\end{flushleft}\end{FULLWIDTH}}
 
 % page style

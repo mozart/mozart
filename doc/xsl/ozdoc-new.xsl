@@ -793,6 +793,19 @@
   </if>
 </template>
 
+<!-- TD that just contains a picture:
+     suppress the color background
+  -->
+<template match="TD[node()[last()=1 and
+                           local-part()='P.SILENT' and
+                           node()[last()=1 and
+                                  local-part()='PICTURE.EXTERN']]
+                    and not(@ID and meta:latexTableSpecExists(string(@ID)))]">
+  <txt:usemap>\multicolumn{1}{l}{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
 <template match="TD | TH">
   <if test="not(position()=1)">
     <txt:usemap>&amp;</txt:usemap>
