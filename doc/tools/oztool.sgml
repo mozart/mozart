@@ -31,7 +31,7 @@ If the system needs a native functor called (abstractly)
 <code/foo.so/, then it will look for a DLL called
 <code/foo.so-linux-i486/ on a Linux machine,
 <code/foo.so-solaris-sparc/ on a Solaris machine, or
-<code/foo.so-win32-i486/ on a Windows machine, etc&ellipsis;  Thus,
+<code/foo.so-win32/ on a Windows machine, etc&ellipsis;  Thus,
 when you create a DLL, you should install it with a name where the
 machine's architecture is appended.  Invoking <code/oztool platform/
 simply prints out the appropriate architecture name for your machine.
