@@ -143,7 +143,7 @@ export
 define
    EMACS = {NewCell 'emacs'}
    EPATH = {NewCell [{Property.get 'oz.home'}#'/share/elisp']}
-   ELOAD = {NewCell ['oz.elc' 'Fontifier.elc']}
+   ELOAD = {NewCell ['oz' 'Fontifier']}
 
    ApiEmacs = o(get :proc {$ X} {Access EMACS X} end
                 set :proc {$ X} {Assign EMACS X} end)
