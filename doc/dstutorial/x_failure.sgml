@@ -29,29 +29,32 @@ The system provides mechanisms to be informed of failures
 and to program with language entities that are subject
 to failures.
 
+<SUBSECTION><TITLE>Fault states</TITLE>
+
 <P>All failure modes are defined with respect to
-a given language entity on a given site.
+both a language entity and a particular site.
 For example, one would like to send a message
 to a port from a given site.
-In general,
-there are four situations that can occur
-relative to a language entity on a given site:
+The site may or may not be able to send the message.
+In general, a language entity can be in four states
+on a given site:
 <LIST>
-<ITEM> The entity works normally (fault state <<ok>>).
+<ITEM> The entity works normally (local fault state <<ok>>).
 <ITEM> The entity is temporarily not working
-(fault state <<tempFail>>).
+(local fault state <<tempFail>>).
 This is because a site crucial to the entity
-is unreachable due to a network problem.
+is currently unreachable due to a network problem.
 This fault state can go away.
 The network layer actively tries
 to reestablish another connection.
 <ITEM> The entity is permanently not working
-(fault state <<permFail>>).
+(local fault state <<permFail>>).
 This is because a site crucial to the entity
 has crashed.
 This fault state is permanent.
 <ITEM> The entity works normally on the given site
-(fault state <<remoteProblem>>),
+(local fault state <<remoteProblem(I)>>, where <<I>>
+identifies the remote problem),
 but there are some remote problems that might
 have a bearing on the application's use of the entity.
 For example, a given site waits for a variable binding,
@@ -59,43 +62,32 @@ but the site that will do the binding has crashed.
 This fault state can go away if the
 remote problems are temporary.
 </LIST>
-<P>An entity on a site therefore has four
-basic fault states.
-In the next sections
-we explain how these fault states occur
-in terms of the possible system failures
-for each language entity.
-Each language entity has a different
-distributed protocol, and therefore the
-fault states occur in different ways.
-In the case of <<tempFail>> and <<permFail>>,
-operations on the entity will not complete.
-In the case of <<remoteProblem>>, operations
-will complete and it is usually
-possible to find out something about what the
-problem is, depending on the type of the entity.
+<P>The system cannot always determine
+whether a fault is temporary or permanent.
+In particular, a <<tempFail>> may hide
+a crash on the other side.
+Later on we explain how each fault state is
+a consequence of the entity's
+distributed behavior and the
+system's possible failure modes.
 
-<P>A fault state <<F>> different from <<ok>> will
-cause the distribution exception <<system(dp(F) ...)>>
-to be raised when an operation is attempted on the entity.
-In most cases the fault state contains more
-information than just <<permFail>>, <<tempFail>>,
-or <<remoteProblem>>.
-This is denoted by making these fault states
-the labels of <EM>records</EM> that give
-the full information, e.g.,
-<<permFail(type:cell info:owner)>>
-and
-<<remoteProblem(type:variable permFail:[S1,S2])>>.
-The exception handler can do
-pattern matching on just a part of this
-information using the <<...>> notation, e.g.,
-<<permFail(...)>>
-and
-<<remoteProblem(permFail:_ ...)>>.
+<P>The fault state <<remoteProblem(I)>>
+identifies four different remote problems:
+<LIST>
+<ITEM> <<I=permSome>>: At least one of the other sites
+referencing the entity is either failed or
+in the fault state <<permFail>>.
+<ITEM> <<I=permAll>: All of the other sites referencing
+the entity are either failed or
+in the fault state <<permFail>>.
+<ITEM> <<I=tempSome>>: At least one of the other sites
+referencing the entity is currently unreachable.
+<ITEM> <<I=tempAll>>: All of the other sites
+referencing the entity are currently unreachable.
+</LIST>
 
 
-<SUBSECTION><TITLE>Temporary fault states</TITLE>
+<SUBSUBSECTION><TITLE>Temporary faults</TITLE>
 
 <P>The fault state <<tempFail>> exists to allow the
 application to react quickly to temporary network problems.
@@ -121,9 +113,9 @@ The <<tempFail>> exceptions will therefore be relatively frequent,
 much more frequent than time-outs.
 
 <P>It is possible for
-a temporary network failure to be effectively permanent.
-In general, the distinction between the two cannot be made from inside
-the application.
+a <<tempFail>> state to last forever.
+In general, the distinction between <<tempFail>>
+and <<permFail>> cannot be made from inside the application.
 For example, if a user disconnects the network connection of a laptop
 machine, then only he or she knows whether the problem is permanent.
 The decision whether to continue waiting on a temporary failure
@@ -132,7 +124,43 @@ abstraction to appear at the top level.
 The application then pops up a window to ask the user whether
 to continue waiting or not.
 
-<SUBSECTION><TITLE>Eager stateless data</TITLE>
+<SUBSECTION><TITLE>Detecting fault states</TITLE>
+
+<P>The distributed protocol of each language
+entity will determine the fault state on each site.
+There are two ways to make this state
+known to an application:
+eagerly, i.e., the application
+is informed as soon as possible, or lazily,
+i.e., the application is informed when it needs the language entity.
+
+
+<P>A fault state <<F>> different from <<ok>> will
+cause the distribution exception <<system(dp(F) ...)>>
+to be raised when an operation is attempted on the entity.
+In most cases the fault state contains more
+information than just <<permFail>>, <<tempFail>>,
+or <<remoteProblem>>.
+This is denoted by making these fault states
+the labels of <EM>records</EM> that give
+the full information, e.g.,
+<<permFail(type:cell info:owner)>>
+and
+<<remoteProblem(type:variable permFail:[S1,S2])>>.
+The exception handler can do
+pattern matching on just a part of this
+information using the <<...>> notation, e.g.,
+<<permFail(...)>>
+and
+<<remoteProblem(permFail:_ ...)>>.
+
+<SUBSECTION><TITLE>Fault states for language entities</TITLE>
+
+<P>This section explains the possible fault states
+of each language entity
+in terms of their distributed behavior.
+
+<SUBSUBSECTION><TITLE>Eager stateless data</TITLE>
 
 <P>Eager stateless data, namely records, procedures,
 functions, and functors, are
@@ -153,7 +181,7 @@ if the site containing the code
 becomes unreachable or crashes.
 
 
-<SUBSECTION><TITLE>Sited entities</TITLE>
+<SUBSUBSECTION><TITLE>Sited entities</TITLE>
 
 <P>Sited entities can be referenced remotely
 but can only be used on their home site.
@@ -162,7 +190,7 @@ site immediately raises an exception.
 Detecting this does not need any network operations.
 So their only possible fault state is <<ok>>.
 
-<SUBSECTION><TITLE>Ports</TITLE>
+<SUBSUBSECTION><TITLE>Ports</TITLE>
 
 <P>A port has one owner site
 and a set of proxy sites.
@@ -186,7 +214,7 @@ This is because the owner site may fail.
 that only completes on the sender site if it completes
 on the owner site.
 
-<SUBSECTION><TITLE>Logic variables</TITLE>
+<SUBSUBSECTION><TITLE>Logic variables</TITLE>
 
 <P>A logic variable has one owner site
 and a set of proxy sites.
@@ -228,7 +256,7 @@ The variable exists only on the client and server sites.
 In this case, if the client detects a <<remoteProblem>>
 then it knows that the variable binding will be delayed.
 
-<SUBSECTION><TITLE>Cells and locks</TITLE>
+<SUBSUBSECTION><TITLE>Cells and locks</TITLE>
 
 <P>Cells and locks have almost the same failure behavior.
 A cell or lock has one owner site and a set of proxy sites.
@@ -256,7 +284,7 @@ For a cell this operation is called <<Exchange>>.
 The exchange operation can complete if the
 fault state is <<ok>>.
 
-<SUBSECTION><TITLE>Objects</TITLE>
+<SUBSUBSECTION><TITLE>Objects</TITLE>
 
 <P>An object consists of
 an object-record that is a lazy chunk
