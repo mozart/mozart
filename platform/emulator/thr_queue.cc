@@ -76,12 +76,65 @@ void LinkedQueueImpl::remove(void* x)
   if (y) { *y=0; size--; }
 }
 
-// -- IMPLEMENTATION OF ThreadQueue
+// -- DEBUGGING
+// when debugging, member functions are not inlined and we need to
+// instantiate them here in a bogus function that is never called by
+// anyone.
 
-// template class LinkedQueue<Thread,THREAD_QUEUE_SIZE>;
-// template class LinkedQueueIterator<Thread,THREAD_QUEUE_SIZE>;
-// template class LinkedQueue<Propagator,PROPAGATOR_QUEUE_SIZE>;
-// template class LinkedQueueIterator<Propagator,PROPAGATOR_QUEUE_SIZE>;
+#ifdef DEBUG_EMULATOR
+static void debug_just_instantiate_but_never_call() {
+  // ThreadQueue
+  ThreadQueue *q = new ThreadQueue();
+  Thread *t;
+  (void) q->isEmpty();
+  (void) q->getSize();
+  q->zeroAll();
+  q->dispose();
+  q->enqueue(t,5);
+  (void) q->dequeue();
+  (void) q->find(t);
+  q->remove(t);
+  q->merge(q);
+  (void) q->isScheduledSlow(t);
+  q->gc();
+  q->printThreads();
+  q->deleteThread();
+  (void) q->getRunnableNumber();
+  // ThreadQueueIterator
+  ThreadQueueIterator i1;
+  ThreadQueueIterator i2(&q);
+  ThreadQueueIterator i3(q);
+  i1.reset(&q);
+  i1.reset(q);
+  (void) i1.getNext();
+  (void) i1.getPointerToNext();
+  // LocalPropagatorQueue
+  Propagator * p;
+  LocalPropagatorQueue *lq = new LocalPropagatorQueue();
+  lq = new LocalPropagatorQueue(t,p);
+  (void) lq->isEmpty();
+  (void) lq->getSize();
+  lq->zeroAll();
+  lq->dispose();
+  lq->enqueue(t,5);
+  (void) lq->dequeue();
+  (void) lq->find(p);
+  lq->remove(p);
+  lq->merge(lq);
+  (void) lq->isScheduledSlow(t);
+  lq->gc();
+  (void) lq->getLPQThread();
+  // LocalPropagatorQueueIterator
+  LocalPropagatorQueueIterator j1(&lq);
+  LocalPropagatorQueueIterator j2(lq);
+  j1.reset(lq);
+  j1.reset(&lq);
+  (void) j1.getNext();
+  (void) j1.getPointerToNext();
+}
+#endif
+
+// -- IMPLEMENTATION OF ThreadQueue
 
 int ThreadQueue::getRunnableNumber()
 {
