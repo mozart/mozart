@@ -16,43 +16,43 @@
 
 class IncludePropagator : public Propagator_S_D {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   IncludePropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
   
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
 };
 
 class ExcludePropagator : public Propagator_S_D {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   ExcludePropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
 };
 
 class FSetCardPropagator : public Propagator_S_D {
 private:
-  static OZ_CFun header;
+  static OZ_CFunHeader header;
 public:
   FSetCardPropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getHeaderFunc(void) const {
-    return header;
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
   }
 };
 

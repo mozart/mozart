@@ -71,7 +71,7 @@ OZ_C_proc_proto(BIassignWithState)
 
 class WidthPropagator : public OZ_Propagator {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 protected:
   OZ_Term rawrec, rawwid;
 public:
@@ -84,13 +84,13 @@ public:
   }
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const {return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const {return &spawner; }
   virtual OZ_Term getParameters(void) const { return OZ_nil(); }
 };
 
 class MonitorArityPropagator : public OZ_Propagator {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFunHeader spawner;
 protected:
   OZ_Term X, K, L, FH, FT;
 public:
@@ -107,7 +107,7 @@ public:
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFun getHeaderFunc(void) const {return spawner; }
+  virtual OZ_CFunHeader * getHeader(void) const {return &spawner; }
   virtual OZ_Term getParameters(void) const { return OZ_nil(); }
   
   TaggedRef getX(void) { return X; }

@@ -192,7 +192,7 @@ void FirstsLasts::updateHeapRefs(OZ_Boolean duplicate)
 // SPAWNER
 //////////
 
-OZ_CFun FirstsLasts::spawner = sched_firstsLasts;
+OZ_CFunHeader FirstsLasts::spawner = sched_firstsLasts;
 
 
 //////////
