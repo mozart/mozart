@@ -36,7 +36,8 @@ problems. Scheduling in this tutorial means to compute a timetable for
 tasks competing for a given set of resources. We assume that the
 execution of a task can not be interrupted (that is, no preemption is allowed).
 
-<section><title/Building a House/
+<section id="section.scheduling.house">
+  <title/Building a House/
 
 <p>
 We first consider the problem to build a house (in a simplified way). We
@@ -425,7 +426,8 @@ the previous section by formulating a new distribution strategy.
 
 <p>
 Note that we have to refine the notion of distribution here. In
-<ptr to=sec.dast> we have distributed a finite domain problem <math/P/
+<ptr to="section.constraints.dast"> we have distributed a finite
+domain problem <math/P/ 
 only with constraints <math/C/ and <math>\neg C</math>. 
 But we can refine the concept of distribution by distributing 
 with constraints <math/C_1/ and <math/C_2/
@@ -525,7 +527,8 @@ solution of this more difficult problem.
 
 
 
-<section><title/Constructing a Bridge/
+<section id="section.scheduling.bridge">
+  <title/Constructing a Bridge/
 
 <p>
 The following problem is taken from <ptr to=bartusch.83> and is used as a
@@ -842,7 +845,7 @@ trees. This is not feasible for larger problems. Both problems will be
 solved in forthcoming sections. 
 </section>
 
-<section id=sec.edgeFinding>
+<section id="section.scheduling.edgefinding">
   <title/Strong Propagators for Capacity Constraints
 
 <p>
@@ -1017,7 +1020,7 @@ optimality.
 
 </section>
 
-<section id=sec.strongSer>
+<section id="section.scheduling.strongser">
   <title/Strong Serializers/
 
 <p>
@@ -1032,7 +1035,7 @@ single task must precede all other tasks on a resource.
 
 <p>
 A further disadvantage of the bottleneck serializer considered in
-<ptr to=sec.edgeFinding> is its static bottleneck
+<ptr to="section.scheduling.edgefinding"> is its static bottleneck
 criterion. Instead we take the changing size of domains during run
 time into account to select a resource which should be serialized. This
 is also the approach chosen for the first-fail distribution strategy.
@@ -1145,7 +1148,7 @@ only 90 choice nodes. Now the proof of optimality (problem
 <p>
 But we can do better. In addition to the set <math/F/ of tasks we can compute
 the set <math/L/ of tasks which may be scheduled after all other tasks (see
-also <ptr to=sec.edgeFinding>). In this case the task <math/T/ which is
+also <ptr to="section.scheduling.edgefinding">). In this case the task <math/T/ which is
 tried first to be scheduled after all the others is the one which is
 maximal according to the lexicographic order <math/(\Lct{T},\Ect{T})/. A
 further serializer computes both <math/F/ and <math/L/. Then it selects the set
@@ -1183,7 +1186,8 @@ we call it <def/resource-oriented serializer/.
 
 
 
-<section><title/Solving Hard Scheduling Problems/
+<section id="section.scheduling.hard">
+  <title/Solving Hard Scheduling Problems/
 
 <p>
 In this section we tackle more difficult scheduling problems. To this
@@ -1256,7 +1260,7 @@ and the local slack of each resource. For the task ordering the sets
 section. From these sets two tasks are selected according to a subtle
 criterion (see <ptr to=caseau.94a>). After an ordering decision is
 made by distribution the process is repeated until all resources are
-serialized. In contrast to the strategy in <ptr to=sec.strongSer>, a
+serialized. In contrast to the strategy in <ptr to="section.scheduling.strongser">, a
 task pair on a resource may be ordered without that the resource which
 was previously considered needs to be serialized.
 
@@ -1277,7 +1281,7 @@ distribution. While it is computing the local slacks of the resources it
 additionally employs edge-finding for the task intervals considered
 during this computation. In this way, the serializer may detect several
 orderings which must hold by the edge-finding rules presented in
-<ptr to=sec.edgeFinding>. This information is exploited at each
+<ptr to="section.scheduling.edgefinding">. This information is exploited at each
 choice node by additionally creating the corresponding
 propagators. Thus, the serializer orders two tasks by distribution and
 simultaneously adds orderings which are detected deterministically. By

@@ -45,7 +45,7 @@ of the script.  They may also reduce the number
 of propagation steps needed to reach stability.
 
 
-<section id="SecFDFractions"><title/Example: Fractions/
+<section id="section.propagators.fractions"><title/Example: Fractions/
 
 <subsection class=unnumbered>
   <title/Problem Specification/
@@ -139,7 +139,8 @@ maximal finite domain using the procedure <<FD.decl>>.
 </section>
 
 
-<section id="SecFDPythagoras"><title/Example: Pythagoras/
+<section id="section.propagators.pythagoras">
+  <title/Example: Pythagoras/
 
 <p>
 Not all propagators exploit coreferences in
@@ -292,7 +293,8 @@ the two occurrences of <<A>>, say, as if they
 were independent variables.
 </section>
 
-<section id="SecFDMagicSquares"><title/Example: Magic Squares/
+<section id="section.propagators.squares">
+  <title/Example: Magic Squares/
 
 <p>
 This example shows a smart representation of a
@@ -462,7 +464,7 @@ redundant constraint will increase the search
 tree by an order of magnitude.
 <p>
 
-<section>
+<section id="section.propagators.exercises">
   <title/Exercises/
  
 <exercise id=propagators.ex.a>
