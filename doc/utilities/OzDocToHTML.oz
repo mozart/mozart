@@ -1159,7 +1159,7 @@ define
       end
       meth MakeNode(Title BodyContents) Node in
          %--** convert Title to simple text (it might contain tags!)
-         Node = html(head(title({HTML.clean Title})
+         Node = html(head(title(thread {HTML.clean Title} end)
                           link(rel: stylesheet
                                type: 'text/css'
                                href: @StyleSheet))
