@@ -109,8 +109,17 @@ void Marshaler::processNoGood(OZ_Term resTerm, Bool trail)
   }
 }
 
-void Marshaler::processExtension(OZ_Term extensionTerm)
-{ OZ_error("not implemented!"); }
+void Marshaler::processExtension(OZ_Term t)
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  if (bs->visit(t)) {
+    marshalDIF(bs,DIF_EXTENSION);
+    marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
+    if (!oz_tagged2Extension(t)->marshalV(bs)) {
+      processNoGood(t,NO);
+    }
+  }
+}
 
 
 
@@ -523,6 +532,17 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
         break;
       }
 
+    case DIF_EXTENSION:
+    {
+      int type = unmarshalNumber(bs);
+      OZ_Term value = oz_extension_unmarshal(type,bs);
+      if(value == 0) {
+        break;  // next value is nogood
+      }
+      b->buildValue(value);
+      break;
+    }
+
     case DIF_FSETVALUE:
       {
         b->buildFSETValue();
@@ -533,9 +553,6 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       { OZ_error("not implemented!"); }
 
     case DIF_PROC:
-      { OZ_error("not implemented!"); }
-
-    case DIF_EXTENSION:
       { OZ_error("not implemented!"); }
 
     case DIF_ARRAY:
