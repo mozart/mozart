@@ -44,7 +44,8 @@ typedef enum {
   IOReady	= 1 << 3, // IO handler has signaled IO ready
   UserAlarm	= 1 << 4, // Alarm handler has signaled User Alarm
   StartGC	= 1 << 5, // need a GC
-  DebugMode	= 1 << 6
+  DebugMode	= 1 << 6,
+  StopThread	= 1 << 7,
 } StatusBit;
 
 
@@ -139,11 +140,8 @@ public:
   void addSuspendVarList(TaggedRef * t);
   void suspendOnVarList(Thread *thr);
 
-  struct {
-    TaggedRef proc;
-    RefsArray args;
-    int argsNo;
-  } suspendBI;
+  void stopThread(Thread *th);
+  void resumeThread(Thread *th);
 
   void formatError(OZ_Term traceBack,OZ_Term loc);
   void formatFailure(OZ_Term traceBack,OZ_Term loc);

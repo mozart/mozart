@@ -253,10 +253,9 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
       return TRUE;
     }
   }
-  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady))) {
+  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady|StopThread))) {
     return TRUE;
   }
-  
   if (breakflag) {
     currentThread->startStepMode();
     currentThread->traced();
@@ -404,10 +403,11 @@ void Thread::makeRunning ()
     if (e->hookCheckNeeded()) {				\
       if (e->emulateHookOutline(PC, def, arguments)) {	\
 	Code;						\
+        goto LBLpreemption;				\
       }							\
     }
 
-#define emulateHookPopTask(e,Code) emulateHookCall(e,0,0,Code)
+#define emulateHookPopTask(e) emulateHookCall(e,0,0,)
 
 
 #define CallPushCont(ContAdr) e->pushTaskInline(ContAdr,Y,G)
@@ -423,13 +423,11 @@ void Thread::makeRunning ()
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs)						\
-     Y = NULL;									\
-     G = gRegs;									\
-     emulateHookCall(e,Pred,X,							\
-		     e->pushTask(Pred->getPC(),NULL,G,X,Pred->getArity());	\
-		     goto LBLpreemption;);
-
+#define CallDoChecks(Pred,gRegs)					    \
+     Y = NULL;								    \
+     G = gRegs;								    \
+     emulateHookCall(e,Pred,X,						    \
+		     e->pushTask(Pred->getPC(),NULL,G,X,Pred->getArity())); \
 
 // load a continuation into the machine registers PC,Y,G,X
 #define LOADCONT(cont)				\
@@ -891,6 +889,9 @@ void engine(Bool init)
       e->doGC();
     }
 
+    if (e->isSetSFlag(StopThread)) {
+      e->unsetSFlag(StopThread);
+    }
 
     if (e->isSetSFlag(UserAlarm)) {
       osBlockSignals();
@@ -1453,12 +1454,6 @@ LBLdispatcher:
 	e->pushTask(PC,Y,G,X,predArity);
 	e->suspendOnVarList(CTT);
 	goto LBLsuspendThread;
-
-      case BI_NEWCALL:
-	e->pushTask(PC+3,Y,G,X,predArity);
-	CTT->pushCall(e->suspendBI.proc,
-		      e->suspendBI.args,e->suspendBI.argsNo);
-	goto LBLpopTask;
 
       case BI_PREEMPT:
 	e->pushTask(PC+3,Y,G);
@@ -2055,7 +2050,7 @@ LBLdispatcher:
 	Assert(!CTT->isSuspended());
 	Assert(CBB==currentDebugBoard);
 
-	emulateHookPopTask(e, goto LBLpreemption);
+	emulateHookPopTask(e);
 
 	DebugCheckT(CAA = NULL);
 
@@ -2153,7 +2148,7 @@ LBLdispatcher:
     int argsToSave = getPosIntArg(PC+2);
     e->pushTask(PC,Y,G,X,argsToSave);
     if (isCVar (tag)) {
-      (tagged2CVar (term))->addDetSusp(CTT);
+      tagged2CVar(term)->addDetSusp(CTT);
     } else {
       addSusp (termPtr, CTT);
     }
@@ -2399,14 +2394,6 @@ LBLdispatcher:
 	 }
 	 goto LBLpreemption;
 	 
-       case BI_NEWCALL:
-	 if (!isTailCall) {
-	   e->pushTask(PC,Y,G);
-	 }
-	 CTT->pushCall(e->suspendBI.proc,
-		       e->suspendBI.args,e->suspendBI.argsNo);
-	 goto LBLpopTask;
-
        default: Assert(0);
        }
      }

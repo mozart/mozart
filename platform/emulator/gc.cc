@@ -1358,14 +1358,6 @@ void AVar::gcAVar(void)
   gcTagged(value, value);
 }
 
-void PerdioVar::gcPerdioVar(void)
-{ 
-  GCMETHMSG("PerdioVar::gc");
-  if (isProxy()) {
-    gcTagged(u.binding,u.binding);
-  }
-}
-
 DynamicTable* DynamicTable::gc(void)
 {
     GCMETHMSG("DynamicTable::gc");
@@ -2622,3 +2614,12 @@ OzDebug *OzDebug::gcOzDebug()
   args = gcRefsArray(args);
   return this;
 }
+
+// special purpose to gc borrowtable entry which is a variable
+TaggedRef gcTagged1(TaggedRef in) {
+  TaggedRef x=deref(in);
+  Assert(GCISMARKED(x));
+  return makeTaggedRef((TaggedRef*)GCUNMARK(x));
+}
+
+
