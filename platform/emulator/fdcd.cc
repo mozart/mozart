@@ -716,17 +716,17 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
 
   if (a[control] == fd_singleton) {
     if (a[control].singl() == 0) {
-      BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
-                                         OZ_getCArg(x),
-                                         OZ_getCArg(y),
-                                         newSmallInt(-xd));
+      return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
+                                                OZ_getCArg(x),
+                                                OZ_getCArg(y),
+                                                newSmallInt(-xd));
     }
 
     else {
-      BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
-                                         OZ_getCArg(y),
-                                         OZ_getCArg(x),
-                                         newSmallInt(-yd));
+      return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
+                                                OZ_getCArg(y),
+                                                OZ_getCArg(x),
+                                                newSmallInt(-yd));
     }
   }
 
