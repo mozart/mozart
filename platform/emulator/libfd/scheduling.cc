@@ -176,7 +176,7 @@ CPIteratePropagator::CPIteratePropagator(OZ_Term tasks,
 
 OZ_C_proc_begin(sched_cpIterate, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," \
 		   OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
   
   {
@@ -825,7 +825,7 @@ failure:
 
 OZ_C_proc_begin(sched_disjunctive, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," \
 		   OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
     
   {
