@@ -11,7 +11,7 @@ export
    ReadTextDB
    WriteTextDB
    HaveGNUC
-   MogulToFilename
+   MogulToFilename MogulToPackagename
 import
    Open Compiler OS URL
    Path at 'Path.ozf'
@@ -259,8 +259,12 @@ define
 	 U1={Path.toURL MOG}
 	 U2={Adjoin U1 url(scheme:unit device:unit absolute:false)}
       in
-	 {Append {SlashToDash {Path.toCache U2}} ".pkg"}
+	 {SlashToDash {Path.toCache U2}}
       end
+   end
+
+   fun {MogulToPackagename MOG}
+      {Append {MogulToFilename MOG} ".pkg"}
    end
 
 end

@@ -3,7 +3,8 @@ export
    'class' : Attribs
 import
    Property
-   Path at 'Path.ozf'
+   Path  at 'Path.ozf'
+   Utils at 'Utils.ozf'
 define
    class Attribs
       attr
@@ -129,7 +130,7 @@ define
       meth get_docdir($)
 	 if @DocDir==unit then
 	    DocDir<-{Path.resolve Attribs,get_docroot($)
-		     {Path.toCache Attribs,get_mogul($)}}
+		     {Utils.mogulToFilename Attribs,get_mogul($)}}
 	 end
 	 @DocDir
       end

@@ -72,7 +72,7 @@ define
 	       %% download the appropriate file from the mogul
 	       %% archive
 	       Archive = {self get_archive($)}
-	       Filename = {Utils.mogulToFilename PKG}
+	       Filename = {Utils.mogulToPackagename PKG}
 	       Url = {URL.resolve {URL.toBase Archive} Filename}
 	       UrlStr = {URL.toString Url}
 	    in
