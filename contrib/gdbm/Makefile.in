@@ -16,7 +16,7 @@ OZDYNLD         = @OZDYNLD@
 MKINSTALLDIRS   = @MKINSTALLDIRS@
 
 CXX             = @CXX@
-CPPFLAGS        = -I../../platform/emulator @CPPFLAGS@
+CPPFLAGS        = -I$(SRCDIR)/../../platform/emulator @CPPFLAGS@
 CXXFLAGS        = $(CFLAGS)
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@
