@@ -175,6 +175,12 @@ static CTerm newCTerm(char *l, CTerm t1, CTerm t2, CTerm t3, CTerm t4, CTerm t5,
   return t;
 }
 
+static CTerm makeLongPos(CTerm pos1, CTerm pos2) {
+  return newCTerm("pos",OZ_subtree(pos1,OZ_int(1)),OZ_subtree(pos1,OZ_int(2)),
+                  OZ_subtree(pos1,OZ_int(3)),OZ_subtree(pos2,OZ_int(1)),
+                  OZ_subtree(pos2,OZ_int(2)),OZ_subtree(pos2,OZ_int(3)));
+}
+
 #define pair(left, right)       OZ_pair2(left, right)
 #define consList(head, tail)    OZ_cons(head, tail)
 
@@ -606,14 +612,14 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = newCTerm("fLocal",$3,$5,$2); }
                 | _case_ caseMain
                   { $$ = $2; }
-                | _lock_ coord inSequence end
-                  { $$ = newCTerm("fLock",$3,$2); }
-                | _lock_ coord phrase then inSequence end
-                  { $$ = newCTerm("fLockThen",$3,$5,$2); }
+                | _lock_ coord inSequence end coord
+                  { $$ = newCTerm("fLock",$3,makeLongPos($2,$5)); }
+                | _lock_ coord phrase then inSequence end coord
+                  { $$ = newCTerm("fLockThen",$3,$5,makeLongPos($2,$7)); }
                 | thread coord inSequence end
                   { $$ = newCTerm("fThread",$3,$2); }
-                | try coord inSequence optCatch optFinally end
-                  { $$ = newCTerm("fTry",$3,$4,$5,$2); }
+                | try coord inSequence optCatch optFinally end coord
+                  { $$ = newCTerm("fTry",$3,$4,$5,makeLongPos($2,$7)); }
                 | ozraise coord inSequence end
                   { $$ = newCTerm("fRaise",$3,$2); }
                 | ozraise coord inSequence with inSequence end
@@ -741,10 +747,10 @@ feature         : atom
                   { $$ = makeVar("`false`"); }
                 ;
 
-caseMain        : coord sequence then inSequence caseRest
-                  { $$ = newCTerm("fBoolCase",$2,$4,$5,$1); }
-                | coord sequence of elseOfList caseRest
-                  { $$ = newCTerm("fCase",$2,$4,$5,$1); }
+caseMain        : coord sequence then inSequence caseRest coord
+                  { $$ = newCTerm("fBoolCase",$2,$4,$5,makeLongPos($1,$6)); }
+                | coord sequence of elseOfList caseRest coord
+                  { $$ = newCTerm("fCase",$2,$4,$5,makeLongPos($1,$6)); }
                 ;
 
 caseRest        : elsecase caseMain
@@ -913,8 +919,8 @@ methHeadDefaultEquation
                   { $$ = newCTerm("fMethArg",$1,newCTerm("fDefault",$4,$3)); }
                 ;
 
-ifMain          : coord ifClauseList ifRest
-                  { $$ = newCTerm("fIf",$2,$3,$1); }
+ifMain          : coord ifClauseList ifRest coord
+                  { $$ = newCTerm("fIf",$2,$3,makeLongPos($1,$4)); }
                 ;
 
 ifRest          : elseif ifMain
