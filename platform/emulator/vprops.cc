@@ -466,9 +466,14 @@ return oz_raise(E_ERROR,E_KERNEL,"putProperty",2,F,oz_atom(T));
 INT__ = REC__->getFeature(F);                   \
 if (INT__) {                                    \
   DEREF(INT__,PTR__,TAG__);                     \
-  if (oz_isVariable(TAG__)) oz_suspendOnPtr(PTR__);     \
-  if (!isSmallIntTag(TAG__)) BAD_FEAT(F,"Int"); \
-  INT__=smallIntValue(INT__);                   \
+  if (oz_isVariable(TAG__)) oz_suspendOnPtr(PTR__); \
+  if (oz_isSmallInt(TAG__)) {                   \
+    INT__=smallIntValue(INT__);                 \
+  } else if (oz_isBigInt(INT__)) {              \
+    INT__=tagged2BigInt(INT__)->getInt();       \
+  } else {                                      \
+    BAD_FEAT(F,"Int");                          \
+  }                                             \
   DO;                                           \
 }
 
@@ -559,14 +564,10 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_PERCENT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
     CASE_REC(PROP_GC,
-             DO_NAT(AtomMin,ozconf.heapMaxSize=INT__/KB);
+             DO_NAT(AtomMin,ozconf.heapMinSize=INT__/KB);
+             DO_NAT(AtomMax,ozconf.heapMaxSize=INT__/KB);
              if (ozconf.heapMinSize > ozconf.heapMaxSize)
-             ozconf.heapMaxSize = ozconf.heapMinSize;
-             DO_NAT(AtomMax,ozconf.heapMinSize=INT__/KB);
-             if (ozconf.heapMinSize > ozconf.heapMaxSize)
-             ozconf.heapMinSize = ozconf.heapMaxSize;
-             if (ozconf.heapMinSize > ozconf.heapThreshold)
-             ozconf.heapThreshold = ozconf.heapMinSize;
+               ozconf.heapMaxSize = ozconf.heapMinSize;
              SET_PERCENT(AtomFree,ozconf.heapFree);
              SET_PERCENT(AtomTolerance,ozconf.heapTolerance);
              SET_BOOL(AtomOn,ozconf.gcFlag);
