@@ -393,7 +393,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname)
   if (versiongot) {
     OZ_Term vergot = oz_atom(versiongot);
     delete versiongot;
-    return raiseGeneric("Version mismatch when loading of pickle",
+    return raiseGeneric("Version mismatch during loading of pickle",
 			oz_mklist(OZ_pairA("File",oz_atom(compname)),
 				  OZ_pairA("Expected",oz_atom(PERDIOVERSION)),
 				  OZ_pairA("Got",vergot)));
