@@ -49,13 +49,37 @@ define
       functor
 	 SecureOS
       import
-	 OS(getEnv:GetEnv time:Time rand:Rand)
+	 OS(getEnv:GetEnv time:Time rand:Rand file:File)
+	 TkTools Tk
       export
 	 getEnv:GetEnv
 	 time:Time
 	 rand:Rand
-      define skip end
-
+	 file:SecureFile
+      define
+	 class SecureFile from File
+	    meth init(name:File flags:Flags ...)=M
+	       IsOk
+	       T={New TkTools.dialog
+		  tkInit(title:"Start Application"
+			 buttons: ['Okay'#proc {$} IsOk=true end 
+				   'Cancel' # proc{$} IsOk=false end]
+			 default: 1)}
+	       L=if {Member Flags create} then
+		    {New Tk.label tkInit(parent:T text:"Application requires to save file: "#File)}
+		 else
+		    {New Tk.label tkInit(parent:T text:"Application requires to load file: "#File)}
+		 end
+	    in
+	       if IsOk==true then
+		  File, M
+	       else
+		  raise operationCanceled() end
+	       end
+	    end
+	 end
+      end
+      
       functor
 	 SecureProperty
       import

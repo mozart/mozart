@@ -2,10 +2,12 @@
 %%% Authors:
 %%%   Lars Rasmusson (lra@sics.se)
 %%%   Simon Lindblom (simon@sics.se)
+%%%   Nils Franzen   (nilsf@sics.se)
 %%%
 %%% Copyright:
 %%%   Lars Rasmusson, 1998
 %%%   Simon Lindblom, 1998
+%%%   Nils Franzen,   1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -29,28 +31,23 @@ export
 import
    Tk
    Connection(take gate)
-
+   Open(file)
 define
-
-   Gate
-   Port
+   Gate  Port
    proc {Start User Ticket}
-      if {Not {IsDet Ticket}} then
-	 {StartServer Ticket Gate}
-      end
+      if {Not {IsDet Ticket}} then {StartServer Ticket Gate} end
       {StartClient User Ticket}
    end
 
    proc {Stop}
       if {IsDet Gate} then
 	 {Send Port logout(now)}
-	 {Wait 4000}
+	 {Wait 5000}
 	 {Gate close}
       end
    end
 	
-   proc {StartServer Ticket Gate}
-      S C in
+   proc {StartServer Ticket Gate} S C in
       {NewPort S Port}
       C = {NewCell S}
       Gate = {New Connection.gate init(Port#fun {$} {Access C} end Ticket)}
@@ -75,6 +72,19 @@ define
       Text = {New Tk.text tkInit(parent:Top bg:white)}
       Edit = {New Tk.entry tkInit(parent:Top bg:white)}
       ScrollBar={New Tk.scrollbar tkInit(parent:Top width:8 orient:vertical)}
+      proc{SaveDialog}
+	 case {Tk.return tk_getSaveFile(title:'Save Dialog'
+					filetypes:q(q('Text file' q('.txt'))
+						    q('All Files' '*')))}
+	 of nil then
+	    skip
+	 elseof S then
+	    File={StringToAtom S}
+	    Str={Text tkReturn(get p(1 0) 'end' $)}
+	 in
+	    skip
+	 end
+      end
       proc {SendStr}
 	 S = "["#User.id#"]  "#{Edit tkReturn(get $)}#"\n"
       in
@@ -90,12 +100,22 @@ define
 	    {PrintStr S}
 	 else {Top tkClose} end
       end
+      Top1={New Tk.frame tkInit(parent:Top)}
+      B1={New Tk.button tkInit(parent:Top1 text:"Leave Chat" action:LogOff)}
+      B2={New Tk.button tkInit(parent:Top1 text:"Save Dialog" action:SaveDialog)}
    in
       {Text tk(configure state:disabled)}
       {Tk.addYScrollbar Text ScrollBar}
       {Tk.batch [grid(Text row:0 column:0)
 		 grid(Edit row:1 column:0 columnspan:2 sticky:ew)
-		 grid(ScrollBar row:0 column:1 sticky:ns)]}
+		 grid(ScrollBar row:0 column:1 sticky:ns)
+		 grid(Top1 row:5 colum:0 columnspan:2 sticky:we)
+		 grid(B1 row:0 colum:0 sticky:we)
+		 grid(B2 row:0 colum:1 sticky:we)
+		 grid(columnconfigure Top1 0 weight:1)
+		 grid(columnconfigure Top1 1 weight:1)
+		 grid(columnconfigure Top 0 weight:1)
+		]}
       {Send P msg(User.name#" ["#User.id#"] enters...\n")}
       {Edit tkBind(event:'<Return>' args:nil action:SendStr)}
       
