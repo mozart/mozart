@@ -29,6 +29,7 @@ OZ_PATH_PROG(OZENGINE,ozengine)
 OZ_PATH_PROG(OZDOC,ozdoc,OZDOC=$BUILDTOP/doc/utilities/ozdoc)
 AC_SUBST(OZENGINE)
 AC_SUBST(OZDOC)
+
 AC_MSG_CHECKING(for --with-psgml-dir)
 AC_ARG_WITH(psgml-dir,
     [--with-psgml-dir=DIR
@@ -46,7 +47,20 @@ else
 fi
 AC_SUBST(PSGML)
 AC_SUBST(CED)
+
+AC_MSG_CHECKING(for --with-documents)
+AC_ARG_WITH(documents,
+  [--with-documents="DIR1 ... DIRN" (or all)      
+       document subdirectories (default=none)],
+  oz_doc_dirs=${with_documents})
+: ${oz_doc_dirs=}
+AC_MSG_RESULT($oz_doc_dirs)
+
+test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base compiler constraints contrib demo functors gump opi ozcar ozdoc system tools wp"
+
+SUBDIRS="utilities ${oz_doc_dirs}"
 AC_SUBST(SUBDIRS)
+
 AC_CONFIG_SUBDIRS(utilities)
 AC_OUTPUT(Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile functors/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile gump/Makefile ozdoc/Makefile constraints/Makefile contrib/Makefile vm/Makefile demo/Makefile)
 
