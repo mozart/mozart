@@ -302,7 +302,11 @@ for example
               "-----"
 	     ["Include file"           oz-include-file t]
 	     ["Compile file"           oz-precompile-file t]
-	     ["Find demo file"         oz-find-demo-file t]
+	     ("Find "
+	     ["Demo file"              oz-find-demo-file t]
+	     ["Library file"           oz-find-lib-file t]
+	     ["Documentation"          oz-find-docu-file t]
+	     )
               "-----"
 	     ["New Oz buffer"          oz-new-buffer t]
 	     ["Refresh buffer"         oz-prettyprint t]
@@ -353,6 +357,8 @@ for example
 		(Include\ file        . oz-include-file)
 		(Compile\ file        . oz-precompile-file)
 		(Find\ demo\ file     . oz-find-demo-file)
+		(Find\ doc\ file      . oz-find-docu-file)
+		(Find\ library\ file  . oz-find-lib-file)
 		(Show/hide\ compiler  . oz-toggle-compiler-window)
 		(Show/hide\ machine   . oz-toggle-machine-window)
 		(Show/hide\ errors    . oz-toggle-errors)
@@ -590,10 +596,23 @@ the GDB commands `cd DIR' and `directory'."
 
 (defun oz-find-demo-file()
   (interactive)
-  (find-file (read-file-name "Find demo file: "
-			     (concat oz-home "demo/")
+  (oz-find-file "Find demo file: " "demo/"))
+
+(defun oz-find-lib-file()
+  (interactive)
+  (oz-find-file "Find library file: " "lib/"))
+
+(defun oz-find-docu-file()
+  (interactive)
+  (oz-find-file "Find documentation [handbook.asc]: " "doc/"))
+
+
+(defun oz-find-file(prompt file)
+  (find-file (read-file-name prompt
+			     (concat oz-home file)
 			     nil
-			     t)))
+			     t
+			     nil)))
 
 
 
