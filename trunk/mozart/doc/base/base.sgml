@@ -73,63 +73,63 @@
 
     <Meta name="html.split" value="chapter.typestruct">
 
-    <Meta name="html.split" value="chapter.values">
+    <Meta name="html.split" arg1="chapter.values" arg2="value.html">
     <Meta name="html.split" value="section.values.general">
     <Meta name="html.split" value="section.values.status">
     <Meta name="html.split" value="section.values.comparison">
 
     <Meta name="html.split" value="chapter.numbers">
-    <Meta name="html.split" value="section.numbers.general">
-    <Meta name="html.split" value="section.numbers.integers">
-    <Meta name="html.split" value="section.numbers.floats">
+    <Meta name="html.split" arg1="section.numbers.general" arg2="number.html">
+    <Meta name="html.split" arg1="section.numbers.integers" arg2="int.html">
+    <Meta name="html.split" arg1="section.numbers.floats" arg2="float.html">
 
     <Meta name="html.split" value="chapter.literals">
-    <Meta name="html.split" value="section.literals.general">
-    <Meta name="html.split" value="section.literals.atoms">
-    <Meta name="html.split" value="section.literals.names">
-    <Meta name="html.split" value="section.literals.bool">
-    <Meta name="html.split" value="section.literals.unit">
+    <Meta name="html.split" arg1="section.literals.general" arg2="literal.html">
+    <Meta name="html.split" arg1="section.literals.atoms" arg2="atom.html">
+    <Meta name="html.split" arg1="section.literals.names" arg2="name.html">
+    <Meta name="html.split" arg1="section.literals.bool" arg2="bool.html">
+    <Meta name="html.split" arg1="section.literals.unit" arg2="unit.html">
 
     <Meta name="html.split" value="chapter.records">
-    <Meta name="html.split" value="section.records.records">
-    <Meta name="html.split" value="section.records.tuples">
-    <Meta name="html.split" value="section.records.lists">
+    <Meta name="html.split" arg1="section.records.records" arg2="record.html">
+    <Meta name="html.split" arg1="section.records.tuples" arg2="tuple.html">
+    <Meta name="html.split" arg1="section.records.lists" arg2="list.html">
     <Meta name="html.split" value="section.records.features">
 
     <Meta name="html.split" value="chapter.text">
-    <Meta name="html.split" value="section.text.characters">
-    <Meta name="html.split" value="section.text.strings">
-    <Meta name="html.split" value="section.text.bytestrings">
-    <Meta name="html.split" value="section.text.virtualstrings">
+    <Meta name="html.split" arg1="section.text.characters" arg2="char.html">
+    <Meta name="html.split" arg1="section.text.strings" arg2="string.html">
+    <Meta name="html.split" arg1="section.text.bytestrings" arg2="bytestring.html">
+    <Meta name="html.split" arg1="section.text.virtualstrings" arg2="virtualstring.html">
 
     <Meta name="html.split" value="chapter.proccells">
-    <Meta name="html.split" value="section.proccells.procedures">
-    <Meta name="html.split" value="section.proccells.cells">
-    <Meta name="html.split" value="section.proccells.spaces">
+    <Meta name="html.split" arg1="section.proccells.procedures" arg2="procedure.html">
+    <Meta name="html.split" arg1="section.proccells.cells" arg2="cell.html">
+    <Meta name="html.split" arg1="section.proccells.spaces" arg2="space.html">
 
     <Meta name="html.split" value="chapter.chunks">
-    <Meta name="html.split" value="section.chunks.general">
-    <Meta name="html.split" value="section.chunks.arrays">
-    <Meta name="html.split" value="section.chunks.dictionaries">
-    <Meta name="html.split" value="section.chunks.bitarrays">
-    <Meta name="html.split" value="section.chunks.ports">
-    <Meta name="html.split" value="section.chunks.locks">
-    <Meta name="html.split" value="section.chunks.classes">
-    <Meta name="html.split" value="section.chunks.objects">
-    <Meta name="html.split" value="section.chunks.functors">
+    <Meta name="html.split" arg1="section.chunks.general" arg2="chunk.html">
+    <Meta name="html.split" arg1="section.chunks.arrays" arg2="array.html">
+    <Meta name="html.split" arg1="section.chunks.dictionaries" arg2="dictionary.html">
+    <Meta name="html.split" arg1="section.chunks.bitarrays" arg2="bitarray.html">
+    <Meta name="html.split" arg1="section.chunks.ports" arg2="port.html">
+    <Meta name="html.split" arg1="section.chunks.locks" arg2="lock.html">
+    <Meta name="html.split" arg1="section.chunks.classes" arg2="class.html">
+    <Meta name="html.split" arg1="section.chunks.objects" arg2="object.html">
+    <Meta name="html.split" arg1="section.chunks.functors" arg2="functor.html">
 
     <Meta name="html.split" value="chapter.control">
     <Meta name="html.split" value="section.control.general">
-    <Meta name="html.split" value="section.control.loops">
-    <Meta name="html.split" value="section.control.time">
-    <Meta name="html.split" value="section.control.exceptions">
-    <Meta name="html.split" value="section.control.threads">
+    <Meta name="html.split" arg1="section.control.loops" arg2="loop.html">
+    <Meta name="html.split" arg1="section.control.time" arg2="time.html">
+    <Meta name="html.split" arg1="section.control.exceptions" arg2="exception.html">
+    <Meta name="html.split" arg1="section.control.threads" arg2="thread.html">
 
     <Meta name="html.split" value="chapter.infix">
 
     <Meta name="html.split" value="chapter.misc">
-    <Meta name="html.split" value="section.misc.bitstrings">
-    <Meta name="html.split" value="section.misc.foreign.pointers">
+    <Meta name="html.split" arg1="section.misc.bitstrings" arg2="bitstring.html">
+    <Meta name="html.split" arg1="section.misc.foreignpointers" arg2="foreignpointer.html">
 
     <Meta name="html.split.toc"   value="">
     <Meta name="html.split.bib"   value="">
