@@ -2787,6 +2787,8 @@ OZ_C_proc_proto(BIraise);
 OZ_C_proc_proto(BIraiseDebug);
 
 void threadRaise(Thread *th,OZ_Term E,int debug=0) {
+  Assert(am.currentThread() != th);
+
   if (th->isDeadThread()) return;
 
   RefsArray args=allocateRefsArray(1, NO);
@@ -4908,6 +4910,8 @@ DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
 OZ_C_proc_begin(BIcrash,0)   /* only for debugging */
 {
   exit(1);  
+
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -8212,4 +8216,3 @@ BuiltinTabEntry *BIinit()
 
   return bi;
 }
-

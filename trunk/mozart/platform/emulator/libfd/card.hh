@@ -43,7 +43,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
-  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParameters(SUM_OP_EQ); }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParametersC(SUM_OP_EQ); }
 };
 
 class LinNotEqBPropagator : public Propagator_VI_VD_I_D {
@@ -58,7 +58,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
-  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParameters(SUM_OP_NEQ); }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParametersC(SUM_OP_NEQ); }
 };
 
 class LinLessEqBPropagator : public Propagator_VI_VD_I_D {
@@ -73,7 +73,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
-  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParameters(SUM_OP_LEQ); }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I_D::getParametersC(SUM_OP_LEQ); }
 };
 
 //=============================================================================

@@ -1123,7 +1123,7 @@ static void xy_init(OZ_Term defines) {
   bufferStack = NULL;
 
   hashTable = new XyScannerHashTable;
-  char version[strlen(OZVERSION)+3];
+  char *version = new char[strlen(OZVERSION)+3];
   strcpy(version,"Oz_");
   strcat(version+3,OZVERSION);
   int count = 0;
@@ -1138,6 +1138,7 @@ static void xy_init(OZ_Term defines) {
     hashTable->insert(version);
     count--;
   }
+  delete [] version;
   hashTable->insert("NEWCOMPILER");
   while (OZ_isCons(defines)) {
     char *x = OZ_virtualStringToC(OZ_head(defines));
