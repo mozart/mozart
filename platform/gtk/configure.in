@@ -139,7 +139,7 @@ if test "$canvas_ok" = yes; then
 fi
 oz_inc_path=$oz_inc_path_sav
 if test -n "$canvas_header"; then
-  AC_CHECKING([for Gnome/canvas library])
+  AC_CHECKING([for Gnome/canvas libraries])
   oz_lib_path_sav=$oz_lib_path
   oz_lib_path="$oz_lib_path $gnome_lib_paths"
   canvas_ok=no

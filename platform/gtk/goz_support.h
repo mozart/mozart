@@ -34,8 +34,9 @@
  * Conversions from C to Oz
  *****************************************************************************/
 
-OZ_Term      GOZ_GLIST_TO_OZTERM           (GList * glist);
-OZ_Term      GOZ_GSLIST_TO_OZTERM          (GSList * gslist);
+/*  OZ_Term      goz_glist_to_ozterm           (GList * glist); */
+/*  OZ_Term      goz_gslist_to_ozterm          (GSList * gslist); */
+
 OZ_Term      OZ_gdkEvent                   (GdkEvent *event);
 OZ_Term      GOZ_GLIST_TO_OZTERM           (GList * glist);
 OZ_Term      GOZ_GSLIST_TO_OZTERM          (GSList * gslist);
