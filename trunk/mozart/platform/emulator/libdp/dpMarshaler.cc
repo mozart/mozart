@@ -39,7 +39,6 @@
 #include "msgType.hh"
 #include "table.hh"
 #include "dpMarshaler.hh"
-#include "dpMarshalExt.hh"
 #include "dpInterface.hh"
 #include "var.hh"
 #include "var_obj.hh"
@@ -56,12 +55,6 @@
 
 #define RETURN_ON_ERROR(ERROR)             \
         if(ERROR) { (void) b->finish(); return 0; }
-
-//
-void dpmInit()
-{
-  dpmExtInit();
-}
 
 
 // The count of marshaled diffs should be done for the distributed
@@ -256,12 +249,12 @@ void DPMarshaler::processExtension(OZ_Term t)
 
   //
   if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + dpMinNeededSpaceExt(oe)) {
+      2*DIFMaxSize + MNumberMaxSize + oe->minNeededSpace()) {
     marshalDIFcounted(bs, DIF_EXTENSION);
     rememberNode(this, bs, t);
     marshalNumber(bs, oe->getIdV());
     //
-    if (!dpMarshalExt(bs, this, t, oe)) {
+    if (!oe->marshalSuspV(t, bs, this)) {
       processNoGood(t, NO);	// not remembered!
     }
   } else {
@@ -860,8 +853,7 @@ void VariableExcavator::copyStack(DPMarshaler *dpm)
 	  *(--top) = *(--copyTop);
 	  TraverserContProcessor proc = 
 	    (TraverserContProcessor) *(--copyTop);
-	  Assert(proc == dpMarshalLitCont ||
-		 proc == dpMarshalByteArrayCont);
+	  // marshaling continuations are dropped:
 	  *(--top) = (StackEntry) contProcNOOP;
 	}
 	break;

@@ -106,6 +106,9 @@ public:
     marshalNumber(bs, value);
     return (OZ_TRUE);
   }
+
+  virtual marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt)
+  { return (NO); }
 };
 
 inline static bool OZ_isWord(OZ_Term t) {
@@ -124,6 +127,7 @@ inline static Word *OZ_WordToC(OZ_Term t) {
 #define OZ_word(size, value) OZ_extension(new Word(size, value))
 #define OZ_RETURN_WORD(size, value) OZ_RETURN(OZ_word(size, value))
 
+static
 OZ_Term unmarshalWord(void *p) {
   MarshalerBuffer *bs = (MarshalerBuffer *) p;
 #ifdef USE_FAST_UNMARSHALER   
@@ -137,11 +141,28 @@ OZ_Term unmarshalWord(void *p) {
   return OZ_word(size, value);
 }
 
-void Word_init() {
+static
+OZ_Term suspUnmarshalWord(ByteBuffer *mb, GTAbstractEntity* &bae)
+{
+  Assert(0);
+  return ((OZ_Term) 0);
+}
+
+static
+OZ_Term unmarshalWordCont(ByteBuffer *mb, GTAbstractEntity* bae)
+{
+  Assert(0);
+  return ((OZ_Term) 0);
+}
+
+
+void Word_init()
+{
   static Bool done = NO;
   if (done == NO) {
     done = OK;
-    oz_registerExtension(OZ_E_WORD, unmarshalWord);
+    oz_registerExtension(OZ_E_WORD, unmarshalWord,
+			 suspUnmarshalWord, unmarshalWordCont);
   }
 }
 

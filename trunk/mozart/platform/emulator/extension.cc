@@ -107,29 +107,61 @@ Bool oz_isChunkExtension(TaggedRef term)
 }
 
 static oz_unmarshalProcType *unmarshalRoutine = 0;
+static oz_suspUnmarshalProcType *suspUnmarshalRoutine = 0;
+static oz_unmarshalContProcType *unmarshalContRoutine = 0;
 static int unmarshalRoutineArraySize = 0;
 
-OZ_Term oz_extension_unmarshal(int type,void*bs) {
+OZ_Term oz_extension_unmarshal(int type, MarshalerBuffer* bs)
+{
   oz_unmarshalProcType f = unmarshalRoutine[type];
-  // kost@ : what is that??! I've commented it away!
-  // if (f==0) return 0;
   Assert(f);
-  return f(bs);
+  return (f(bs));
 }
 
-void oz_registerExtension(int type, oz_unmarshalProcType f)
+//
+OZ_Term oz_extension_unmarshal(int type, ByteBuffer *bs,
+			       GTAbstractEntity* &arg)
+{
+  oz_suspUnmarshalProcType f = suspUnmarshalRoutine[type];
+  Assert(f);
+  return (f(bs, arg));
+}
+
+//
+OZ_Term oz_extension_unmarshalCont(int type, ByteBuffer *bs,
+				   GTAbstractEntity *arg)
+{
+  oz_unmarshalContProcType f = unmarshalContRoutine[type];
+  Assert(f);
+  return (f(bs, arg));
+}
+
+void oz_registerExtension(int type,
+			  oz_unmarshalProcType u,
+			  oz_suspUnmarshalProcType su,
+			  oz_unmarshalContProcType suc)
 {
   if (unmarshalRoutineArraySize <= type) {
     int newsize = type + 1;
-    oz_unmarshalProcType *n=new oz_unmarshalProcType[newsize];
-    for (int i=unmarshalRoutineArraySize; i--;) {
-      n[i]=unmarshalRoutine[i];
+    oz_unmarshalProcType *us = new oz_unmarshalProcType[newsize];
+    oz_suspUnmarshalProcType *sus = new oz_suspUnmarshalProcType[newsize];
+    oz_unmarshalContProcType *sucs = new oz_unmarshalContProcType[newsize];
+    for (int i = unmarshalRoutineArraySize; i--;) {
+      us[i] = unmarshalRoutine[i];
+      sus[i] = suspUnmarshalRoutine[i];
+      sucs[i] = unmarshalContRoutine[i];
     }
     if (unmarshalRoutine) delete [] unmarshalRoutine;
-    unmarshalRoutine = n;
+    if (suspUnmarshalRoutine) delete [] suspUnmarshalRoutine;
+    if (unmarshalContRoutine) delete [] unmarshalContRoutine;
+    unmarshalRoutine = us;
+    suspUnmarshalRoutine = sus;
+    unmarshalContRoutine = sucs;
     unmarshalRoutineArraySize = newsize;
   }
-  unmarshalRoutine[type] = f;
+  unmarshalRoutine[type] = u;
+  suspUnmarshalRoutine[type] = su;
+  unmarshalContRoutine[type] = suc;
 }
 
 void initExtensions() {
