@@ -33,11 +33,10 @@
 
 
 void TaskStack::resize(int newsize)
-{ 
- if (newsize < 100) {
-    newsize = 200;
+{
+  if (newsize < 20) {
+    newsize = 50;
   }
-  
   Stack::resize(newsize);
 }
 
