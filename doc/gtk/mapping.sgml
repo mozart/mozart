@@ -24,11 +24,16 @@
 
 <Chapter id="chapter.mapping">
   <Title/How the C API is mapped to Oz/
-  <P>
+  <P proglang=c>
     This chapter describes the details on how the C API is mapped to Oz.
     This knowledge is required when you want to make use of the original
     reference documentation at <Ref.Extern to="http://www.gtk.org/api/"
     ><File>http://www.gtk.org/api/</File></Ref.Extern> with the binding.
+    (For the canvas, the documentation is at <Ref.Extern
+    to="http://developer.gnome.org/doc/API/libgnomeui/"><File
+    >http://developer.gnome.org/doc/API/libgnomeui/</File></Ref.Extern>;
+    only look at the <<GnomeCanvas>>, <<GnomeCanvasItem>> and
+    <<GnomeCanvasGroup>> widgets.)
   <Section>
     <Title/Modules/
     <P>
@@ -36,7 +41,7 @@
       <List>
        <Item><<GDK at 'x-oz://system/gtk/GDK'>>
        <Item><<GTK at 'x-oz://system/gtk/GTK'>>
-       <Item><<GtkCanvas at 'x-oz://system/gtk/GTKCANVAS'>>
+       <Item><<GTKCANVAS at 'x-oz://system/gtk/GTKCANVAS'>>
       </List>
       Each module represents a namespace.  The corresponding API constants
       and functions are mapped to constants and classes and class methods
