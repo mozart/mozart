@@ -1531,7 +1531,12 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	  
 	  bb = bb->gcBoard();
 
-	  Assert(bb);
+	  // mm: fix pb. with variables from guard optimizations
+	  // should be replaced by Assert(bb);
+	  if (bb) {
+	    to = 0;
+	    return;
+	  }
 	  
 	  varFix.defer(aux_ptr, &to);
 	  return;
