@@ -10,6 +10,8 @@ AC_INIT(oz.h)
 
 AC_CANONICAL_HOST
 
+AC_LANG_CPLUSPLUS
+
 dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
@@ -86,8 +88,12 @@ dnl platform
 dnl *****************************************************************
 
 platform=`../bin/ozplatform`
+
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
+
+OS="`echo $host_os|sed -e s/-/_/|tr a-z A-Z`"
+AC_DEFINE_UNQUOTED($OS)
 
 case "$host_cpu" in
         i?86)
@@ -96,8 +102,14 @@ case "$host_cpu" in
         sparc)
                 AC_DEFINE(SPARC)
         ;;
-        *)
-                AC_MSG_ERROR(cpu $host_cpu not supported)
+esac
+
+case "$host_os" in
+        linux*)
+                AC_DEFINE(LINUX)
+        ;;
+        solaris*|sunos*)
+                AC_DEFINE(SUN)
         ;;
 esac
 
