@@ -46,7 +46,7 @@ public:
 
   int showIdleMessage;	// show message on idle
   int showSuspension;   // show message when a suspension is created
-  int onlyFutures;      // only futures can suspend
+  int useFutures;       // use futures for synchronization
 
   int stopOnToplevelFailure;  // enter machine level debugger on TOPLEVEL FAIL
 

@@ -160,7 +160,7 @@ enum EmulatorPropertyIndex {
 
   PROP_CLOSE_TIME,
 
-  PROP_OZ_SUSPEND_ONLY_FUTURES,
+  PROP_OZ_STYLE_USE_FUTURES,
   // this must remain last
   PROP__LAST
 };
@@ -440,7 +440,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   SET_INT(oz_atom("flowbuffertime"), ozconf.perdioFlowBufferTime);
 	   );
   CASE_INT(PROP_CLOSE_TIME,ozconf.closetime);
-  CASE_BOOL(PROP_OZ_SUSPEND_ONLY_FUTURES,ozconf.onlyFutures);
+  CASE_BOOL(PROP_OZ_STYLE_USE_FUTURES,ozconf.useFutures);
   default:
     return 0; // not readable. 0 ok because no OZ_Term==0
   }
@@ -718,7 +718,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 		 ozconf.perdioMinimal=INT__));
     CASE_NAT(PROP_CLOSE_TIME,ozconf.closetime);
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
-    CASE_BOOL(PROP_OZ_SUSPEND_ONLY_FUTURES,ozconf.onlyFutures);
+    CASE_BOOL(PROP_OZ_STYLE_USE_FUTURES,ozconf.useFutures);
 default:
     return PROP__NOT__WRITABLE;
   }
@@ -946,7 +946,7 @@ void initVirtualProperties()
   VirtualProperty::add("oz.version",PROP_OZ_VERSION);
   VirtualProperty::add("oz.date",PROP_OZ_DATE);
   // Suspending on SimpleVars raises an exception
-  VirtualProperty::add("oz.suspendOnlyFutures",PROP_OZ_SUSPEND_ONLY_FUTURES);
+  VirtualProperty::add("oz.style.useFutures",PROP_OZ_STYLE_USE_FUTURES);
   // Distribution
   VirtualProperty::add("distribution.virtualsites",
 		       PROP_DISTRIBUTION_VIRTUALSITES);
