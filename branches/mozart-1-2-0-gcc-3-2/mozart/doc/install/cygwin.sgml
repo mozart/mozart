@@ -144,8 +144,8 @@
       There's some good news:  If you are lazy enough that you would
       trust the packages I built, you can just obtain a copy of my
       ?{packages} directory from <Ref.Extern
-      to="ftp://ftp.mozart-oz.org/pub/mozart/extras/packages.tgz"><File
-      >ftp://ftp.mozart-oz.org/pub/mozart/extras/packages.tgz</File
+      to="http://www.mozart-oz.org/download/mozart-ftp/extras/packages.tgz"><File
+      >http://www.mozart-oz.org/download/mozart-ftp/extras/packages.tgz</File
       ></Ref.Extern> and skip most of the following sections (in fact,
       all but those about the msvcrt and Emacs).  Be sure to adapt
       the included <File/tclConfig.sh/ and <File/tkConfig.sh/ files
@@ -286,8 +286,8 @@ make prefix=?{packages} install>>>
 <<<cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart
 cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart-stdlib>>>
       (specify <<-r mozart-1-2-0-fixes>> to get the fixes branch).
-      See <Ref.Extern to="http://www.mozart-oz.org/download/cvs.html"
-      >http://www.mozart-oz.org/download/cvs.html</Ref.Extern> for details
+      See <Ref.Extern to="http://www.mozart-oz.org/download/view.cgi?action=cvs"
+      >http://www.mozart-oz.org/download/view.cgi?action=cvs</Ref.Extern> for details
       about anonymous CVS.  Let ?{mozart} be the directory created by the
       first <<cvs get>> command and ?{stdlib} the one created by the second.
     <Para class=apropos><Title/Environment Variables/

@@ -51,7 +51,7 @@
     <item>Download the binary tarballs for your particular platform
     from:
 <Ref.Extern
-to="http://www.mozart-oz.org/download/bintar.shtml"><file>http://www.mozart-oz.org/download/bintar.shtml</file></Ref.Extern>
+to="http://www.mozart-oz.org/download/view.cgi?action=tar"><file>http://www.mozart-oz.org/download/view.cgi?action=tar</file></Ref.Extern>
 
     <item>
       Unpack the tarballs by executing
