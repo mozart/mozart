@@ -232,10 +232,6 @@ void AM::init(int argc,char **argv)
     usage(argc,argv);
   }
 
-#ifdef DEBUG_CHECK
-  ozconf.showIdleMessage=1;
-#endif
-
   if (!p2t && !initFile) {
     char* ini = "/share/Init.ozf";
     int m = strlen(ozconf.ozHome);
