@@ -314,8 +314,11 @@ void AM::init(int argc,char **argv)
     }
 
     OZ_Term v=oz_newVariable();
-    if (loadURL(url,v)!=PROCEED) {
-      fprintf(stderr,"Loading from URL %s failed\n",url);
+    OZ_Return ret = loadURL(url,v);
+    if (ret!=PROCEED) {
+      char *aux = (ret==RAISE) ? toC(exception.value) : "unknown error";
+      fprintf(stderr,"Loading from URL '%s' failed: %s\n",url,aux);
+      fprintf(stderr,"Maybe recompilation needed?\n");
       exit(1);
     }
     Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.rootBoard);
