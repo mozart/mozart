@@ -550,7 +550,7 @@ void pushContX(TaskStack *stk,
 
 #endif
 
-#define JUMPRELATIVE(offset) Assert(offset!=0); INCFPC(offset); DISPATCH(0)
+#define JUMPRELATIVE(offset) Assert(offset!=0); DISPATCH(offset)
 #define JUMPABSOLUTE(absaddr) PC=absaddr; DISPATCH(0)
 
 #define ONREG(Label,R)      HelpReg = (R); goto Label
@@ -958,7 +958,14 @@ LBLdispatcher:
   // displayCode(PC,1);
 
 #ifdef PROFILE_INSTR
-  if (op < PROFILE_INSTR_MAX) ozstat.instr[op]++;
+  {
+    static Opcode lastop = OZERROR;
+    if (op < PROFILE_INSTR_MAX) {
+      ozstat.instr[op]++;
+      ozstat.instrCollapsable[lastop][op]++;
+      lastop = op;
+    }
+  }
 #endif
  
   Assert(am.isEmptySuspendVarList());
@@ -1082,16 +1089,21 @@ LBLdispatcher:
       COUNT(inlinecalls);
 
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
-      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
       
-      if ( isSmallIntTag(tagA) && isSmallIntTag(tagB) ) {
-	XPC(3) = makeInt(smallIntValue(A) - smallIntValue(B));
-	DISPATCH(4);
-      } 
+      if (isSmallIntTag(tagA)) {
+	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	if (isSmallIntTag(tagB) ) {
+	  XPC(3) = makeInt(smallIntValue(A) - smallIntValue(B));
+	  DISPATCH(4);
+	}
+      }
       
-      if (isFloatTag(tagA) && isFloatTag(tagB)) {
-	XPC(3) = oz_float(floatValue(A) - floatValue(B));
-	DISPATCH(4);
+      if (isFloatTag(tagA)) {
+	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	if (isFloatTag(tagB)) {
+	  XPC(3) = oz_float(floatValue(A) - floatValue(B));
+	  DISPATCH(4);
+	}
       }
             
       auxTaggedA = XPC(1);
@@ -1099,7 +1111,7 @@ LBLdispatcher:
       auxInt     = 4;
       auxString = "-";
 
-      tmpRet = BIminusOrPlus(NO,A,B,XPC(3));
+      tmpRet = BIminusOrPlus(NO,auxTaggedA,auxTaggedB,XPC(3));
       goto LBLhandlePlusMinus;
     }
 
@@ -1108,16 +1120,21 @@ LBLdispatcher:
       COUNT(inlinecalls);
 
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
-      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
       
-      if ( isSmallIntTag(tagA) && isSmallIntTag(tagB) ) {
-	XPC(3) = makeInt(smallIntValue(A) + smallIntValue(B));
-	DISPATCH(4);
-      } 
+      if ( isSmallIntTag(tagA)) {
+	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	if (isSmallIntTag(tagB) ) {
+	  XPC(3) = makeInt(smallIntValue(A) + smallIntValue(B));
+	  DISPATCH(4);
+	}
+      }
       
-      if (isFloatTag(tagA) && isFloatTag(tagB)) {
-	XPC(3) = oz_float(floatValue(A) + floatValue(B));
-	DISPATCH(4);
+      if (isFloatTag(tagA)) {
+	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	if (isFloatTag(tagB)) {
+	  XPC(3) = oz_float(floatValue(A) + floatValue(B));
+	  DISPATCH(4);
+	}
       }
             
       auxTaggedA = XPC(1);
@@ -1125,7 +1142,7 @@ LBLdispatcher:
       auxInt     = 4;
       auxString = "+";
 
-      tmpRet = BIminusOrPlus(OK,A,B,XPC(3));
+      tmpRet = BIminusOrPlus(OK,auxTaggedA,auxTaggedB,XPC(3));
       goto LBLhandlePlusMinus;
     }
 
@@ -1149,7 +1166,7 @@ LBLdispatcher:
       auxInt     = 3;
       auxString = "-1";
 
-      tmpRet = BIminusOrPlus(NO,A,makeTaggedSmallInt(1),XPC(2));
+      tmpRet = BIminusOrPlus(NO,auxTaggedA,auxTaggedB,XPC(2));
       goto LBLhandlePlusMinus;
     }
 
@@ -1173,7 +1190,7 @@ LBLdispatcher:
       auxInt     = 3;
       auxString = "+1";
 
-      tmpRet = BIminusOrPlus(OK,A,auxTaggedB,XPC(2));
+      tmpRet = BIminusOrPlus(OK,auxTaggedA,auxTaggedB,XPC(2));
       goto LBLhandlePlusMinus;
     }
 
@@ -1363,23 +1380,27 @@ LBLdispatcher:
       COUNT(inlinecalls);
       
       TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
-      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
       
-      if (tagA == tagB) {
-	if (tagA == SMALLINT) {
+      if (isSmallIntTag(tagA)) {
+	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	if (isSmallIntTag(tagB)) {
 	  LT_IF(smallIntLess(A,B));
 	}
+      }
 	
-	if (isFloatTag(tagA)) {
+      if (isFloatTag(tagA)) {
+	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	if (isFloatTag(tagB)) {
 	  LT_IF(floatValue(A) < floatValue(B));
 	}
+      }
 	
-	if (tagA == LITERAL) {
-	  if (oz_isAtom(A) && oz_isAtom(B)) {
-	    LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
-			 tagged2Literal(B)->getPrintName()) < 0);
+      {
+	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	if (oz_isAtom(A) && oz_isAtom(B)) {
+	  LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
+		       tagged2Literal(B)->getPrintName()) < 0);
 	  }
-	}
       }
       tmpRet = BILessOrLessEq(OK,XPC(1),XPC(2));
       auxString = "<";
@@ -1653,7 +1674,8 @@ LBLdispatcher:
 	ProgramCounter preddPC = predd->PC;
 	Bool copyOnce = predd->isCopyOnce();
 	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
-			       predd->getPos(), nil(), // mm2: inherit native?
+			       predd->getFile(), predd->getLine(), predd->getColumn(),
+			       nil(), // mm2: inherit native?
 			       predd->getMaxX());
 	predd->PC = copyCode(preddPC,list,copyOnce==NO);
 	predd->setGSize(size);
@@ -2729,6 +2751,8 @@ LBLdispatcher:
   Case(TEST2)
   Case(TEST3)
   Case(TEST4)
+  Case(CREATEVARIABLEG)
+  Case(CREATEVARIABLEMOVEG)
 
 #ifndef THREADED
   default:
