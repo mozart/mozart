@@ -38,6 +38,7 @@
 #include "susplist.hh"
 // mm2
 #include "board.hh"
+#include "value.hh"
 
 #ifdef DEBUG_CHECK
 #include "am.hh"
