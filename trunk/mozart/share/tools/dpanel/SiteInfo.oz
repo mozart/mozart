@@ -24,7 +24,7 @@
 
 functor
 import
-   DPStatistics(siteStatistics) at 'x-oz://boot/DPStatistics'
+   DPStatistics(siteStatistics)
    DPB at 'x-oz://boot/DPB'
 export
    sitesDict:SitesDict
