@@ -51,3 +51,4 @@ void initTagged()
   tts[SRECORD]  = "SRECORD";   // 14
   tts[LITERAL]  = "ATOM";      // 15
 }
+
