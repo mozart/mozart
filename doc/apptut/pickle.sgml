@@ -134,7 +134,9 @@ end
 <chunk><title/Body for PDB.oz/
 <chunk.ref/Body for DB.oz/ 
    proc {Save File}
-      {Pickle.save {Ctr get($)}#{Dictionary.toRecord db Data} File}
+      {Pickle.save {Ctr get($)}#
+                   {Dictionary.toRecord db Data} 
+       File}
    end
    proc {Load File}
       I#D={Pickle.load File}
