@@ -10,8 +10,8 @@
 #   Leif Kornstaedt, 1998
 #
 # Last change:
-#   $Date: 1998/09/04 15:43:01 $ by $Author: kornstae $
-#   $Revision: 1.6 $
+#   $Date: 1998/09/07 12:36:51 $ by $Author: kornstae $
+#   $Revision: 1.7 $
 #
 # This file is part of Mozart, an implementation of Oz 3:
 #   $MOZARTURL$
@@ -23,15 +23,14 @@
 # WARRANTIES.
 #
 
-if [ $# -ne 3 ]
+if [ $# -lt 3 ]
 then
-    echo usage: `basename $0` \<input file\> \<count\> \<output dir\> 1>&2
+    echo usage: `basename $0` \<input file\> \<output dir\> \<int\> ... 1>&2
     exit 2
 fi
 
-infile=$1
-count=$2
-outdir=$3
+infile=$1; shift
+outdir=$1; shift
 
 tmpdir=/tmp/ps2gif.$$
 trap 'rm -rf $tmpdir' 0 1 2 15
@@ -50,7 +49,7 @@ cp $infile $tmpdir/x.tex
     -sDEVICE=pnmraw -sOutputFile=latex%d.ppm x.ps < moo |
     (
 	i=0
-	while [ $i -lt $count ]; do
+	while [ $# -gt 0 ]; do
 	    exit=no
 	    while [ $exit ]; do
 		read line
@@ -65,10 +64,11 @@ cp $infile $tmpdir/x.tex
 	    done
 	    i=`expr $i + 1`
 	    pnmcrop < latex$i.ppm |
-	    ppmtogif -interlace -transparent rgbi:1/1/1 > latex$i.gif || exit 1
+	    ppmtogif -interlace -transparent rgbi:1/1/1 > latex$1.gif || exit 1
 	    rm latex$i.ppm
-	    echo Wrote latex$i.gif 1>&2
+	    echo Wrote latex$1.gif 1>&2
 	    echo
+	    shift
 	done
 	echo quit
     ) > moo
