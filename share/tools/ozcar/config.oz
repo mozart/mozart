@@ -158,7 +158,7 @@ StepButtonBitmap       = step
 NextButtonBitmap       = next
 UnleashButtonBitmap    = unleash
 StopButtonBitmap       = stop
-ForgetButtonBitmap     = forget
+DetachButtonBitmap     = detach
 TermButtonBitmap       = term
 
 AddQueriesBitmap       = {VS2A queries  # BitmapExtension}
@@ -201,7 +201,7 @@ StepButtonColor
 NextButtonColor
 UnleashButtonColor
 StopButtonColor
-ForgetButtonColor
+DetachButtonColor
 TermButtonColor
 
 RunnableThreadColor
@@ -237,7 +237,7 @@ case UseColors then
    NextButtonColor         = SelectedBackground
    UnleashButtonColor      = RunnableThreadColor
    StopButtonColor         = BlockedThreadColor
-   ForgetButtonColor       = DefaultForeground
+   DetachButtonColor       = DefaultForeground
    TermButtonColor         = DefaultForeground
 
    %% thread forest window
@@ -272,7 +272,7 @@ else
    NextButtonColor         = black
    UnleashButtonColor      = black
    StopButtonColor         = black
-   ForgetButtonColor       = black
+   DetachButtonColor       = black
    TermButtonColor         = black
 
    %% thread forest window

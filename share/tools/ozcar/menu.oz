@@ -70,8 +70,8 @@ in
 		    action: self # action(StopButtonBitmap)
 		    key:    z)
 		  separator
-		  C(label:  'Forget'
-		    action: self # action(ForgetButtonBitmap)
+		  C(label:  'Detach'
+		    action: self # action(DetachButtonBitmap)
 		    key:    f)
 		  C(label:  'Terminate'
 		    action: self # action(TermButtonBitmap)

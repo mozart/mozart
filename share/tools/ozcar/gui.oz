@@ -159,7 +159,7 @@ in
 		       NextButtonBitmap   # NextButtonColor
 		       UnleashButtonBitmap# UnleashButtonColor
 		       StopButtonBitmap   # StopButtonColor
-		       ForgetButtonBitmap # ForgetButtonColor
+		       DetachButtonBitmap # DetachButtonColor
 		       TermButtonBitmap   # TermButtonColor]
 		  fun {$ S}
 		     Bitmap # ForegroundColor = S
@@ -864,13 +864,13 @@ in
 		  end
 	       end
 
-	    elsecase A == ForgetButtonBitmap then
+	    elsecase A == DetachButtonBitmap then
 	       T = @currentThread
 	    in
 	       case T == unit then skip else
 		  I = {Thread.id T}
 	       in
-		  ThreadManager,forget(T I)
+		  ThreadManager,detach(T I)
 	       end
 
 	    elsecase A == TermButtonBitmap then
