@@ -5,18 +5,17 @@ USAGE
 
    ozmake  is  a tool for building Mozart-based projects and for creating
    and installing Mozart packages. It was inspired by the Unix tools make
-   and  rpm,  but  is much, much simpler and specialized for Mozart-based
-   software development and deployment.
-
-   ozmake  must currently be invoked from a shell, but it will eventually
-   acquire additionally an optional, user-friendly graphical interface.
+   and  rpm,  but  is much, much simpler, is specialized for Mozart-based
+   software  development  and  deployment, and transparently supports all
+   platforms  on  which  Mozart has been ported. ozmake must currently be
+   invoked  from  a shell, but it will eventually acquire additionally an
+   optional, user-friendly graphical interface.
 
 SYNOPSIS
 
    ozmake --help
-   ozmake [--build]
-   ozmake [--build] FILES...
-   ozmake --install FILES...
+   ozmake [--build] [TARGETS...]
+   ozmake --install [TARGETS...]
    ozmake --install --package=PKG
    ozmake --uninstall [--package=PKG]
    ozmake --clean
@@ -24,9 +23,9 @@ SYNOPSIS
    ozmake --create --package=FILE
    ozmake --publish
    ozmake --extract --package=PKG
-   ozmake --list
-   ozmake --list --package=MOGUL
-   ozmake --config=(set|unset|list) ...
+   ozmake --list [--package=MOGUL]
+   ozmake --config=(put|delete|list) ...
+   ozmake --mogul=(put|delete|list|export) ...
 
 OPTIONS
 
@@ -36,7 +35,9 @@ OPTIONS
   General Options
 
    -v, --verbose
-          print out more tracing information that the default
+          print  out  more  tracing  information  that  the  default.  By
+          supplying  this  option twice, you will sometimes get even more
+          information.
 
    -q, --quiet
           suppress all tracing and feedback information
@@ -48,7 +49,11 @@ OPTIONS
    --local
           do not recurse into subdirectories
 
-  Directories
+   What  you should remember here, is that -vn is your friend. Add -vn at
+   the end of any ozmake invocation, and it will tell you in great detail
+   what the command would do, without actually doing it.
+
+  Directories and URLs
 
    --prefix=<PREFIX>
           default: ~/.oz
@@ -90,14 +95,17 @@ OPTIONS
           default: <DIR>
           directory into which to extract a package
 
-   --publishdir=<PUBLISHDIR>
-          default: <PREFIX>/pkg
-          directory  where to place packages for publication in the mogul
-          archive
-
    --archive=<ARCHIVE>
           default: http://ww.mozart-oz.org/mogul/pkg
           URL of mogul archive from which packages can be downloaded
+
+   --moguldir=<MOGULDIR>
+          directory  in  which  are placed sub-directories for the user's
+          contributions: a directory for packages, one for documentation,
+          one for mogul database entries.
+
+   --mogulurl=<MOGULURL>
+          url corresponding to the <MOGULDIR> directory
 
   Files
 
@@ -299,7 +307,8 @@ OPTIONS
   Clean
 
    ozmake --clean
-   ozmake --veryclean *~ *.ozf *.o *.so-* *.exe
+   ozmake --veryclean
+          default glob patterns: *~ *.ozf *.o *.so-* *.exe
           remove files as specified by the makefile's clean and veryclean
           features. --veryclean implies --clean.
 
@@ -315,8 +324,10 @@ OPTIONS
   Publish
 
    ozmake --publish
-          create   a  package  and  place  it  in  the  user's  area  for
-          publication in the mogul archive
+          automatically   take  care  of  all  the  steps  necessary  for
+          creating/updating  a package contributed by the user and making
+          all  necessary  data  available  to  the  MOGUL  librarian. See
+          documentation for --mogul below.
 
   Extract
 
@@ -340,20 +351,111 @@ OPTIONS
 
   Config
 
-   ozmake --config=set <OPTIONS>
+   ozmake --config=put <OPTIONS>
           record  the given <OPTIONS> in ozmake's configuration database,
           and  use  them  as defaults in subsequent invocations of ozmake
           unless  explicitly  overriden on the command line. For example:
-          ozmake  --config=set --prefix=/usr/local/oz saves /usr/local/oz
+          ozmake  --config=put --prefix=/usr/local/oz saves /usr/local/oz
           as the default value for option --prefix
 
-   ozmake --config=unset <OPT1> ... <OPTn>
+   ozmake --config=delete <OPT1> ... <OPTn>
           deletes  some  entries  from  the  configuration  database. For
-          example:  ozmake  --config=unset prefix removes the default for
+          example:  ozmake --config=delete prefix removes the default for
           --prefix from the configuration database
 
    ozmake --config=list
           lists the contents of ozmake's configuration database
+
+   the  argument  to  --config  can  be  abbreviated to any non-ambiguous
+   prefix
+
+  Mogul
+
+   If  you  choose  to  contribute  packages to the MOGUL archive, ozmake
+   --mogul=<ACTION>  simplifies  your  task.  It makes it easy for you to
+   maintain  a  database of your contributions and to export them so that
+   the MOGUL librarian may automatically find them. In fact, the simplest
+   way  is to use ozmake --mogul=publish which will take take care of all
+   defails for you.
+
+   ozmake --mogul=put
+          update  the user's database of own mogul contributions with the
+          data for this contribution (in local directory)
+
+   ozmake --mogul=put --package=<PKG>
+          same as above, but using the package <PKG> explicitly given
+
+   ozmake --mogul=delete <MOG1> ... <MOGn>
+          remove  the  entries  with mogul ids <MOG1> through <MOGn> from
+          the user's database of own contribution
+
+   ozmake --mogul=delete
+          remove entry for current contribution
+
+   ozmake --list
+          show  the  recorded data for all entries in the user's database
+          of own mogul contributions
+
+   ozmake --list <MOG1> ... <MOGn>
+          show the recorded data for entries <MOG1> through <MOGn> in the
+          user's database of own mogul contributions
+
+   ozmake --export
+          write  all  necessary  mogul  entries  for the user's own mogul
+          contributions.  These are the entries which will be read by the
+          MOGUL  librarian  to  automatically  assemble  the  full  MOGUL
+          database.
+
+   The data for your contributions need to be made available to the MOGUL
+   librarian  on  the WEB. You want to just update a local directory with
+   your  contributions,  but,  in  order  for the MOGUL librarian to find
+   them,  these  directories  must  also be available through URLs on the
+   WEB.   Here   are   some  options  that  allow  you  to  control  this
+   correspondance,  and  for  which  you  should set default using ozmake
+   --config=put
+
+   --moguldir=<MOGULDIR>
+   --mogulurl=<MOGULURL>
+          <MOGULDIR>  is  a  directory which is also available on the WEB
+          through  url  <MOGULURL>.  <MOGULDIR>  is  intended  as  a root
+          directory in which sub-directories for packages, documentation,
+          and mogul entries will be found.
+
+   For  those who really enjoy pain, ozmake has of course many options to
+   shoot  yourself  in the foot. In the options below <ID> stands for the
+   filename  version of the package's mogul id (basically replace slashes
+   by  dashes).  You  can control where packages, their documentation and
+   mogul database entries and stored and made available using the options
+   below:
+
+   --mogulpkgdir=<MOGULPKGDIR>
+          default: <MOGULDIR>/pkg/<ID>/
+
+   --mogulpkgurl=<MOGULPKGURL>
+          default: <MOGULURL>/pkg/<ID>/
+
+   --moguldocdir=<MOGULDOCDIR>
+          default: <MOGULDIR>/doc/<ID>/
+
+   --moguldocurl=<MOGULDOCURL>
+          default: <MOGULURL>/doc/<ID>/
+
+   --moguldbdir=<MOGULDBDIR>
+          default: <MOGULDIR>/db/<ID>/
+
+   --moguldburl=<MOGULDBURL>
+          default: <MOGULURL>/db/<ID>/
+
+   Your contributions should all have mogul ids which are below the mogul
+   id which you where granted for your section of the mogul database. For
+   convenience,  ozmake  will  attempt to guess the root mogul id of your
+   section  as  soon  as  there  are entries in your database of your own
+   contributions.  However, it is much preferable to tell ozmake about it
+   using:
+
+   --mogulrootid=<ROOTID>
+
+   and to set it using ozmake --config=put --mogulrootid=<ROOTID>
 
 MAKEFILE
 
@@ -623,3 +725,25 @@ MAKEFILE
    feature  version is used to provide a version string. This is a string
    that  consist  of  integers  separated  by  single  dots,  e.g. "2" or
    "3.1.7".
+
+CONTACTS
+
+   Authors  should  really  be  referred  to  by mogul ids denoting mogul
+   entries   that  describe  them.  In  order  to  make  this  easier,  a
+   makefile.oz  may  also  contain  a  contact  feature which is either a
+   record describing a person, or a list of such records.
+
+   You  should  not have a contact feature in every makefile. Rather, the
+   contact  feature  is  intended  for makefiles that only have a contact
+   feature,  i.e.  whose  only purpose is to create mogul entries for the
+   corresponding persons. Here is an example of such a makefile:
+        makefile(
+           contact :
+              o(
+                 mogul : 'mogul:/duchier/denys'
+                 name  : 'Denys Duchier'
+                 email : 'duchier@ps.uni-sb.de'
+                 www   : 'http://www.ps.uni-sb.de/~duchier/'))
+
+   You  can  invoke ozmake --publish on such a makefile to contribute the
+   cotrresponding mogule database entries

@@ -26,12 +26,6 @@ makefile(
    blurb : "a tool for project building and package management"
    categories : [tool]
    version: "0.72"
-   contact :
-      o(
-	 mogul : 'mogul:/duchier/denys'
-	 name  : 'Denys Duchier'
-	 email : 'duchier@ps.uni-sb.de'
-	 www   : 'http://www.ps.uni-sb.de/~duchier/')
    info_html:
       "<P>
 <SPAN CLASS='TOOL'>ozmake</SPAN> is a tool for building Mozart-based projects
