@@ -297,11 +297,10 @@ void xy_setParserExpect() {
 %type <t>  methHead
 %type <t>  methHead1
 %type <t>  methHeadLabel
-%type <t>  methHeadArgumentList
-%type <t>  methHeadArgumentList1
-%type <t>  methHeadTerm
-%type <t>  methHeadColonPair
-%type <t>  methHeadDefaultEquation
+%type <t>  methFormals
+%type <t>  methFormal
+%type <t>  methFormalTerm
+%type <t>  methFormalOptDefault
 %type <t>  condMain
 %type <t>  condElse
 %type <t>  condClauseList
@@ -916,9 +915,9 @@ methHead1       : atom
                   { $$ = newCTerm("fAtom",OZ_true(),pos()); }
                 | false
                   { $$ = newCTerm("fAtom",OZ_false(),pos()); }
-                | methHeadLabel '(' methHeadArgumentList ')'
+                | methHeadLabel '(' methFormals ')'
                   { $$ = newCTerm("fRecord",$1,$3); }
-                | methHeadLabel '(' methHeadArgumentList LDOTS ')'
+                | methHeadLabel '(' methFormals LDOTS ')'
                   { $$ = newCTerm("fOpenRecord",$1,$3); }
                 ;
 
@@ -936,28 +935,19 @@ methHeadLabel   : ATOM_LABEL
                   { $$ = newCTerm("fAtom",OZ_false(),pos()); }
                 ;
 
-methHeadArgumentList
-                : methHeadTerm methHeadArgumentList
-                  { $$ = consList(newCTerm("fMethArg",$1,
-                                           newCTerm("fNoDefault")),$2); }
-                | methHeadColonPair methHeadArgumentList
-                  { $$ = consList($1,$2); }
-                | methHeadDefaultEquation methHeadArgumentList1
+methFormals     : methFormal methFormals
                   { $$ = consList($1,$2); }
                 | /* empty */
                   { $$ = nilAtom; }
                 ;
 
-methHeadArgumentList1
-                : methHeadDefaultEquation methHeadArgumentList1
-                  { $$ = consList($1,$2); }
-                | methHeadColonPair methHeadArgumentList1
-                  { $$ = consList($1,$2); }
-                | /* empty */
-                  { $$ = nilAtom; }
+methFormal      : methFormalTerm methFormalOptDefault
+                  { $$ = newCTerm("fMethArg",$1,$2); }
+                | feature ':' methFormalTerm methFormalOptDefault
+                  { $$ = newCTerm("fMethColonArg",$1,$3,$4); }
                 ;
 
-methHeadTerm    : nakedVariable
+methFormalTerm  : nakedVariable
                   { $$ = $1; }
                 | '$'
                   { $$ = newCTerm("fDollar",pos()); }
@@ -965,18 +955,11 @@ methHeadTerm    : nakedVariable
                   { $$ = newCTerm("fWildcard",pos()); }
                 ;
 
-methHeadColonPair
-                : feature ':' methHeadTerm
-                  { $$ = newCTerm("fMethColonArg",$1,$3,
-                                  newCTerm("fNoDefault")); }
-                | feature ':' methHeadTerm DEFAULT coord phrase
-                  { $$ = newCTerm("fMethColonArg",$1,$3,
-                                  newCTerm("fDefault",$6,$5)); }
-                ;
-
-methHeadDefaultEquation
-                : methHeadTerm DEFAULT coord phrase
-                  { $$ = newCTerm("fMethArg",$1,newCTerm("fDefault",$4,$3)); }
+methFormalOptDefault
+                : DEFAULT coord phrase
+                  { $$ = newCTerm("fDefault",$3,$2); }
+                | /* empty */
+                  { $$ = newCTerm("fNoDefault"); }
                 ;
 
 condMain        : coord condClauseList condElse end coord
