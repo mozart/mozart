@@ -62,7 +62,7 @@ SUBDIRS="utilities ${oz_doc_dirs}"
 AC_SUBST(SUBDIRS)
 
 AC_CONFIG_SUBDIRS(utilities)
-AC_OUTPUT(Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile constraints/Makefile contrib/Makefile vm/Makefile demo/Makefile op/Makefile fdt/Makefile cpi/Makefile install/Makefile tutorial/Makefile overview/Makefile)
+AC_OUTPUT(Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile constraints/Makefile contrib/Makefile vm/Makefile demo/Makefile op/Makefile fdt/Makefile cpi/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
