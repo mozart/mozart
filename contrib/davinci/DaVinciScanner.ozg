@@ -1,16 +1,36 @@
+%%%
+%%% Author:
+%%%   Tobias Mueller <tmueller@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Tobias Mueller, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation of Oz 3:
+%%%   http://mozart.ps.uni-sb.de
+%%%
+%%% See the file "LICENSE" or
+%%%   http://mozart.ps.uni-sb.de/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 functor
 
-export 
+export
    DaVinciAnswerToValue
    InPipeScannerClass
-   
+
 import
-   System
    GumpScanner
    GumpParser
-   
+
 define
-   
+
    \gumpscannerprefix inPipeScannerClass
 
    scanner InPipeScannerClass from GumpScanner.'class'
@@ -18,9 +38,14 @@ define
 	 GumpScanner.'class', init()
       end
 
-      lex <^"program error".*>
-	 {System.showInfo 'davinci error.'}
-	 GumpScanner.'class', putToken('error' 'error')
+      lex <^"program error".*> S in
+	 GumpScanner.'class', getString(?S)
+	 {Exception.raiseError daVinci(programError S)}
+      end
+
+      lex <^"parse error".*> S in
+	 GumpScanner.'class', getString(?S)
+	 {Exception.raiseError daVinci(parseError S)}
       end
 
       lex <.*> A in
