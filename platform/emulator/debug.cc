@@ -53,8 +53,9 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
 
   TaggedRef file, comment;
   int line, abspos;
-
   time_t feedtime;
+
+  am.currentThread->deleteContFlag();
 
   if (debugPC == NOCODE) {
     file    = OZ_atom("noDebugInfo");
@@ -166,7 +167,6 @@ void debugStreamCall(ProgramCounter PC, char *name, int arity,
 
     TaggedRef file, comment;
     int line, abspos;
-
     time_t feedtime;
 
     am.currentThread->stop();
@@ -242,6 +242,23 @@ OZ_C_proc_begin(BIlocation,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIsetContFlag,2)
+{
+  OZ_Term chunk = deref(OZ_getCArg(0));
+  OZ_declareNonvarArg(1, yesno);
+
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = (Thread*) rec;
+
+  if (OZ_isTrue(yesno))
+    thread->setContFlag();
+  else if (OZ_isFalse(yesno))
+    thread->deleteContFlag();
+  else warning("BIsetContFlag: invalid argument");
+  return PROCEED;
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIsetStepMode,2)
 {
   OZ_Term chunk = deref(OZ_getCArg(0));
@@ -254,7 +271,7 @@ OZ_C_proc_begin(BIsetStepMode,2)
     thread->startStepMode();
   else if (OZ_isFalse(yesno))
     thread->stopStepMode();
-  else warning("setStepMode: invalid argument");
+  else warning("BIsetStepMode: invalid argument");
   return PROCEED;
 }
 OZ_C_proc_end

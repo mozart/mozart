@@ -12,7 +12,7 @@
 #ifndef __DEBUGH
 #define __DEBUGH
 
-enum OzDebugDoit {DBG_NOOP, DBG_NEXT};
+enum OzDebugDoit {DBG_NOOP, DBG_STEP, DBG_NEXT};
 
 class OzDebug {
 public:
@@ -34,6 +34,7 @@ void debugStreamCall(ProgramCounter, char*, int, TaggedRef*, bool);
 
 OZ_C_proc_proto(BItaskStack)
 OZ_C_proc_proto(BIbreakpoint)
+OZ_C_proc_proto(BIsetContFlag)
 OZ_C_proc_proto(BIsetStepMode)
 OZ_C_proc_proto(BItraceThread)
 OZ_C_proc_proto(BIqueryDebugState)
