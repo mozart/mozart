@@ -26,15 +26,16 @@
   -->
 
   <Chapter id="Chapter.URLURL">
-    <Title/Referring To Distributed Entities: <<URL>>/
-    <p>In the age of the <em/World Wide Web/, resources needed by a
-running system don't just reside in files, they reside at URLs.  The
-<code/URL/ module provides an interface for creating and manipulating
-URLs as data-structures.  It fully conforms to URI syntax as defined
-in IETF draft <ref.extern to="ftp://ftp.isi.edu/in-notes/rfc2396.txt"
->Uniform Resource Identifiers (URI): Generic Syntax</ref.extern> by
-T.&nbsp;Berners-Lee, R.&nbsp;Fielding, and L.&nbsp;Masinter (June 4,
-1998), and passes all 5 test suites published by Roy Fielding.</p>
+    <Title/Referring To Distributed Entities: <<URL>>/ <p>In the age
+of the <em/World Wide Web/, resources needed by a running system don't
+just reside in files, they reside at URLs.  The <code/URL/ module
+provides an interface for creating and manipulating URLs as
+data-structures.  It fully conforms to URI syntax as defined in
+RFC&nbsp;2396 <ref.extern
+to="ftp://ftp.isi.edu/in-notes/rfc2396.txt">Uniform Resource
+Identifiers (URI): Generic Syntax</ref.extern> by T.&nbsp;Berners-Lee,
+R.&nbsp;Fielding, and L.&nbsp;Masinter (August 1998), and passes all
+5 test suites published by Roy Fielding.</p>
     <p>The only derogations to said specification were made to
 accommodate Windows-style filenames: (1) a prefix of the form
 ?{C}<samp/:/ where ?{C} is a single character is
@@ -60,36 +61,53 @@ records. Return values are displayed following the function call.
         <entry><code>{URL.make "http://www.mozart-oz.org/home-1.1.0/share/FD.ozf"}</code></entry>
 <item><code display>
 url(
-   authority:"www.mozart-oz.org"
-   path:abs(
-           ["home-1.1.0"#true
-            "share"#true
-            "FD.ozf"#false])
-   scheme:"http")
+   absolute  : true
+   authority : "www.mozart-oz.org"
+   device    : unit
+   fragment  : unit
+   info      : unit
+   path      : ["home-1.1.0" "share" "FD.ozf"]
+   query     : unit
+   scheme    : "http")
 </code>
-The <code/path/ feature contains a record: the <code/abs/ label
-indicates that the path began with a slash.  The argument of the
-record is a list of pairs; one per component of the path.  The first
-element of the pair is the text of the component, and the second
-element is a boolean indicating whether it was followed by a slash.
-This should be true for all elements except possibly the last one.
-The representation may change in the future.</item>
+The <code/absolute/ feature has value <code/true/ to indicate that the
+path is absolute &ie; began with a slash.  The <code/path/ feature is
+simply the list of path components, as strings.</item>
         <entry><code>{URL.make "foo/bar/"}</code>
         <item><code display>url(
-   path:rel(["foo"#true "bar"#true nil#false]))</code>
-The above illustrates a relative url: the label of the <code/path/
-record is <code/rel/.  Note that the trailing slash
-results in the empty component <code/nil#false/.
+   absolute  : false
+   authority : unit
+   device    : unit
+   fragment  : unit
+   info      : unit
+   path      : ["foo" "bar" nil]
+   query     : unit
+   scheme    : unit)</code>
+The above illustrates a relative url: the <code/absolute/ feature has
+value <code/false/.  Note that the trailing slash
+results in the empty component <code/nil/.
         <entry><code>{URL.make "c:\\foo\\bar"}</code>
         <item><code display>url(
-   device:"c"
-   path:abs(["foo"#true "bar"#false]))</code>
+   absolute  : true
+   authority : unit
+   device    : &amp;c
+   fragment  : unit
+   info      : unit
+   path      : ["foo" "bar"]
+   query     : unit
+   scheme    : unit)</code>
 Here the leading <samp/c:/ was parsed as a Windows-style device
 notation and the backslashes as component separators.
         <entry><code>{URL.make "foo.so{native}"}</code>
 <item><code display>url(
-   info:info(native:'')
-   path:rel(["foo.so"#false]))</code>
+   absolute  : false
+   authority : unit
+   device    : unit
+   fragment  : unit
+   info      : info(native:nil)
+   path      : ["foo.so"]
+   query     : unit
+   scheme    : unit)</code>
 The <code/{native}/ annotation is entered into the <code/info/
 feature.
       </list>
@@ -129,12 +147,15 @@ client-side usage.</item>
 <index/<code/URL/<and><code/toVirtualStringExtended///
       <synopsis/<code/{URL.toVirtualStringExtended ?+{VR} ?+{HowR} ??{V}}//
       <item>Similar to the above, but ?_{HowR} is a record with
-optional boolean features code/full/ and <code/cache/.
+optional boolean features <code/full/, <code/cache/, and <code/raw/.
 <code/full:true/ indicates that #?{FRAGMENT} and {?{INFO}} sections
 should be included if present.  <code/cache:true/ requests that
 cache-style syntax be used (see <ptr to="Chapter.Resolve">): the
 <samp/:/ following the scheme and the <samp>//</samp> preceding the
-authority are both replaced by single <samp>/</samp>.</item>
+authority are both replaced by single <samp>/</samp>.  <code/raw:true/
+indicates that no escape encoding should take place; this is useful
+e.g. for Windows filenames that may contain spaces or other characters
+illegal in URIs.</item>
 
       <entry/<code/URL.toString/
 <index/<code/URL/<and><code/toString///
@@ -157,8 +178,8 @@ the appropriate fields filled in.
           <entry/<code/URL.normalizePath/
 <index/<code/URL/<and><code/normalizePath///
           <synopsis/<code/{URL.normalizePath ?+{Xs} ??{Ys}}//
-          <item>Given a list ?_{Xs} of pairs of the form
-<code/?{STRING}#?{BOOLEAN}/ (see <code/path/ feature of a url record),
+          <item>Given a list ?_{Xs} of string components (see
+<code/path/ feature of a url record),
 returns a list ?_{Ys} that results from normalizing ?_{Xs}.
 Normalization is the process of eliminating occurrences of path
 components <file/./ and <file/../ by interpreting them relative to the
