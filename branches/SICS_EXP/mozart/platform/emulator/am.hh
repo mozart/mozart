@@ -90,7 +90,7 @@ public:
 
   // debugger
   TaggedRef threadStreamTail;     
-  Bool suspendDebug, runChildren;
+  Bool addEmacsThreads, addSubThreads;
 
 private:
   int statusReg;
@@ -248,7 +248,7 @@ public:
   void formatError(OZ_Term traceBack,OZ_Term loc);
   void formatFailure(OZ_Term traceBack,OZ_Term loc);
   int raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
-  void enrichTypeException(char *fun, OZ_Term args);
+  void enrichTypeException(const char *fun, OZ_Term args);
 
   void suspendInline(int n,
 		     OZ_Term A,OZ_Term B=makeTaggedNULL(),

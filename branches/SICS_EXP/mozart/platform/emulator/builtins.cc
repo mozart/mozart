@@ -8,6 +8,8 @@
 #pragma implementation "builtins.hh"
 #endif
 
+#include "types.hh"
+
 #include "wsock.hh"
 
 #include "iso-ctype.hh"
@@ -215,15 +217,12 @@ DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 BuiltinTab builtinTab(750);
 
 
-BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, IFOR infun)
+BuiltinTabEntry *BIadd(const char *name,int arity, OZ_CFun funn, IFOR infun)
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,funn,infun);
 
-  if (builtinTab.htAdd(name,builtin) == NO) {
-    warning("BIadd: failed to add %s/%d\n",name,arity);
-    delete builtin;
-    return NULL;
-  }
+  builtinTab.htAdd(name,builtin);
+
   return builtin;
 }
 
@@ -1521,17 +1520,18 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   Board *SBB = space->getSolveBoard()->derefBoard();
   Board *SBP = SBB->getParent()->derefBoard();
 
-  // There can be two different situations during merging:
-  //  1) SBB is subordinated to CBB:          CBB  <-+
-  //                                           |     |
-  //                                          SBB   -+
-  //
-  //
-  //  2) SBB is a sibling of CBB:            parent
-  //                                          /   \
-  //                                        CBB   SBB
-  //                                         ^     |
-  //                                         +-----+
+  /* There can be two different situations during merging:
+   *  1) SBB is subordinated to CBB:          CBB  <-+
+   *                                           |     |
+   *                                          SBB   -+
+   *   
+   *   
+   *  2) SBB is a sibling of CBB:            parent
+   *                                          /   \
+   *                                        CBB   SBB
+   *                                         ^     |
+   *                                         +-----+
+   */
 
   Assert(CBB == CBB->derefBoard());
 
@@ -2743,7 +2743,7 @@ void threadRaise(Thread *th,OZ_Term E) {
   
   th->pushCFun(BIraise, args, 1, OK);
   
-  th->cont();
+  th->setStop(NO);
 
   if (th->isSuspended())
     am.suspThreadToRunnable(th);
@@ -2783,7 +2783,7 @@ OZ_C_proc_begin(BIthreadSuspend,1)
   }
 
 
-  th->stop();
+  th->setStop(OK);
   if (th == am.currentThread) {
     return BI_PREEMPT;
   }
@@ -2792,7 +2792,7 @@ OZ_C_proc_begin(BIthreadSuspend,1)
 OZ_C_proc_end
 
 void threadResume(Thread *th) {
-  th->cont();
+  th->setStop(NO);
 
   if (th->isDeadThread()) return;
 
@@ -2826,7 +2826,7 @@ OZ_C_proc_begin(BIthreadIsSuspended,2)
   }
 
 
-  return oz_unify(out,th->stopped()?NameTrue:NameFalse);
+  return oz_unify(out, th->getStop() ? NameTrue : NameFalse);
 }
 OZ_C_proc_end 
 
@@ -4598,7 +4598,7 @@ OZ_C_proc_end
 inline
 OZ_Return checkSuspend()
 {
-  return oz_currentThread->stopped() ? BI_PREEMPT : PROCEED;
+  return oz_currentThread->getStop() ? BI_PREEMPT : PROCEED;
 }
 
 
@@ -5034,7 +5034,7 @@ OZ_C_proc_end
 #define F_OK 00
 #endif
 
-char *expandFileName(char *fileName,char *path) {
+char *expandFileName(const char *fileName,char *path) {
 
   char *ret;
 
@@ -5117,7 +5117,7 @@ char **arrayFromList(OZ_Term list, char **array, int size)
     if (!OZ_isAtom(hh)) {
       goto bomb;
     }
-    char *fileName = OZ_atomToC(hh);
+    const char *fileName = OZ_atomToC(hh);
     
     char *f = expandFileName(fileName,ozconf.linkPath);
 
@@ -5256,7 +5256,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       goto raise;
     }
 
-    FARPROC winLink(HMODULE handle, char *name);
+    FARPROC winLink(HMODULE handle, const char *name);
     FARPROC linkit = winLink(handle, "OZ_linkFF");
     if (linkit==0) {
       OZ_warning("OZ_linkFF not found, maybe not exported from DLL?");
@@ -5316,7 +5316,7 @@ OZ_C_proc_begin(BIdlOpen,2)
     void *handle=dlopen(filename, RTLD_NOW);
 
     if (!handle) {
-      err=oz_atom((char *) dlerror());
+      err=oz_atom(dlerror());
       goto raise;
     }
     ret = oz_int(ToInt32(handle));
@@ -5396,7 +5396,7 @@ void *ozdlsym(void *handle,char *name)
 
 #elif defined(WINDOWS)
 
-FARPROC winLink(HMODULE handle, char *name)
+FARPROC winLink(HMODULE handle, const char *name)
 {
   FARPROC ret = GetProcAddress(handle,name);
   if (ret == NULL) {
@@ -5833,7 +5833,10 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIgetLingRefFd,1)
 {
   oz_declareArg(0,out);
-  return oz_unifyInt(out,am.getCompStream()->getLingRefFd());
+  if (am.getCompStream())
+    return oz_unifyInt(out,am.getCompStream()->getLingRefFd());
+  else
+    return oz_unifyInt(out,-1);
 }
 OZ_C_proc_end
 
@@ -5979,7 +5982,7 @@ OZ_C_proc_begin(BIgetPrintName,2)
   case CVAR:    return oz_unifyAtom(out, VariableNamer::getName(OZ_getCArg(0)));
   case LITERAL: {
     Literal *l = tagged2Literal(t);
-    char *s = l->getPrintName();
+    const char *s = l->getPrintName();
     if (s && *s) {
       return oz_unifyAtom(out, s);
     } else {
@@ -6173,7 +6176,7 @@ OZ_C_proc_begin(BISystemGetArgv,1) {
 OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetStandalone,1) {
-  return oz_unify(OZ_getCArg(0),am.isStandalone() ? NameTrue : NameFalse);
+  return oz_unify(OZ_getCArg(0),ozconf.runningUnderEmacs? NameFalse: NameTrue);
 }
 OZ_C_proc_end
 
@@ -6457,7 +6460,7 @@ OZ_C_proc_begin(BIstopThread,1)
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = (Thread*) rec;
   
-  thread->stop();
+  thread->setStop(OK);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6468,7 +6471,7 @@ OZ_C_proc_begin(BIcontThread,1)
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = (Thread*) rec;
   
-  thread->cont();
+  thread->setStop(NO);
   am.scheduleThread(thread);
   return PROCEED;
 }
@@ -6481,27 +6484,6 @@ OZ_Return waitForArbiterInline(TaggedRef val)
 }
 DECLAREBI_USEINLINEREL1(BIwaitForArbiter,waitForArbiterInline)
 
-/* ------- Builtins to handle toplevel variables in the debugger ---------- */
-
-OZ_C_proc_begin(BItopVarInfo,2) // needs work --BL
-{
-  OZ_Term in  = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  
-  char *name = OZ_atomToC(in);
-  return oz_unify(out, nil());
-}
-OZ_C_proc_end   
-
-OZ_C_proc_begin(BItopVars,2) // needs work --BL
-{
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  OZ_Term VarList = nil();
-
-  return oz_unify(out, VarList);
-}
-OZ_C_proc_end   
 
 #ifdef UNUSED
 OZ_C_proc_begin(BIindex2Tagged,2)
@@ -7151,13 +7133,6 @@ OZ_C_proc_begin(BIgetOPICompiler,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIrunningUnderEmacs,1)
-{
-  oz_declareArg(0,res);
-  return oz_unify(res,ozconf.runningUnderEmacs? NameTrue: NameFalse);
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BIisBuiltin,2)
 {
   oz_declareNonvarArg(0,val);
@@ -7705,9 +7680,6 @@ BIspec allSpec[] = {
   {"Debug.displayCode", 2, BIdisplayCode},
   {"waitForArbiter", 1, BIwaitForArbiter, (IFOR) waitForArbiterInline},
 
-  {"topVarInfo",2,BItopVarInfo},
-  {"topVars",2,BItopVars},
-
 #ifdef UNUSED
   {"index2Tagged",2,BIindex2Tagged},
   {"time2localTime",2,BItime2localTime},
@@ -7746,11 +7718,11 @@ BIspec allSpec[] = {
 
   {"traceBack",0,BItraceBack},
 
-  {"taskstack",      3, BItaskStack},
-  {"suspendDebug",   1, BIsuspendDebug},
-  {"runChildren",    1, BIrunChildren},
-  {"frameVariables", 3, BIframeVariables},
-  {"location",       2, BIlocation},
+  {"taskstack",         3, BItaskStack},
+  {"debugEmacsThreads", 1, BIdebugEmacsThreads},
+  {"debugSubThreads",   1, BIdebugSubThreads},
+  {"frameVariables",    3, BIframeVariables},
+  {"location",          2, BIlocation},
 
 #ifdef DEBUG_TRACE
   {"halt",0,BIhalt},
@@ -7810,7 +7782,6 @@ BIspec allSpec[] = {
   // (OPI and environment handling):
   {"setOPICompiler",             1, BIsetOPICompiler,             0},
   {"getOPICompiler",             1, BIgetOPICompiler,             0},
-  {"runningUnderEmacs",          1, BIrunningUnderEmacs,          0},
   {"isBuiltin",                  2, BIisBuiltin,                  0},
   {"getBuiltinName",             2, BIgetBuiltinName,             0},
   {"nameVariable",               2, BInameVariable,               0},

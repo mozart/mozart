@@ -33,7 +33,6 @@
 #include "fdomn.hh"
 
 #include "dictionary.hh"
-#include "perdio.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -270,9 +269,15 @@ public:
   static void print()
   {
     for (ThreadList *aux = allthreads; aux; aux=aux->next) {
-      printf("\n\n");
-      message("Thread: id=%d\n",aux->elem->getID());
-      message("----------------\n",aux->elem->getID());
+      char *s;
+      if (aux->elem->isDeadThread())
+	s = "terminated";
+      else if (aux->elem->isRunnable())
+	s = "ready";
+      else
+	s = "blocked";
+      message("Thread: id = %d, state: %s\n",aux->elem->getID(),s);
+      message("----------------------------------------\n");
       aux->elem->printTaskStack(NOCODE,NO);
     }
   }

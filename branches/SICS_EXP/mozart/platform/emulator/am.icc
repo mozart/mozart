@@ -264,7 +264,8 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio)
 inline 
 void AM::suspThreadToRunnable(Thread *tt)
 {
-  Assert(tt->isSuspended());
+  // Assert(tt->isSuspended());
+  if(!tt->isSuspended()){warning("old assertion would crash am.icc");}
 
   tt->markRunnable();
 
@@ -272,7 +273,7 @@ void AM::suspThreadToRunnable(Thread *tt)
 	 (currentBoard==GETBOARD(tt)->getParent()
 	  && !GETBOARD(tt)->isSolve()));
 
-  if (debugmode() && tt->isTraced()) {
+  if (debugmode() && tt->getTrace()) {
     //Thread *t; if ((t = am.currentThread) && t->isTraced())
     //  execBreakpoint(t);
     debugStreamCont(tt);
@@ -434,7 +435,7 @@ void AM::disposeThread(Thread *tt)
 {
   tt->markDeadThread();
 
-  if (debugmode() && tt->isTraced())
+  if (debugmode() && tt->getTrace())
     debugStreamTerm(tt);
   
   switch (tt->getThrType()) {

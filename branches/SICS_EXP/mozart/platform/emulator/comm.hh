@@ -509,6 +509,7 @@ public:
   // for use by the protocol-layer
 
   int sendTo(MsgBuffer *buf,MessageType mt,Site* storeSite,int storeIndex){
+    PD((MSG_SENT,"to_site:%s type:%s",this->stringrep(),mess_names[(int) mt]));
     if(connect()){
       if(getType() & REMOTE_SITE){
 	return sendTo_RemoteSite(getRemoteSite(),buf,mt,storeSite,storeIndex);}

@@ -58,7 +58,7 @@ BI_send;
  *=================================================================== */
 
 
-/* any combination iof the following must be different from GCTAG,
+/* any combination of the following must be different from GCTAG,
  * otherwise getRef() will not work
  */
 #define Lit_isName        2
@@ -84,7 +84,7 @@ public:
 
   Literal() { Assert(0); }
 
-  char *getPrintName();
+  const char *getPrintName();
 
   Literal *gc();
 
@@ -97,10 +97,10 @@ public:
 
 class Atom: public Literal {
 private:
-  char *printName;
+  const char *printName;
 public:
-  static Atom *newAtom(char *str);
-  char* getPrintName() { return printName; }
+  static Atom *newAtom(const char *str);
+  const char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
   unsigned int hash() { return ToInt32(getPrintName()); } // == this!
 };
@@ -141,8 +141,8 @@ public:
 
 class NamedName: public Name {
 public:
-  char *printName;
-  static NamedName *newNamedName(char *str);
+  const char *printName;
+  static NamedName *newNamedName(const char *str);
 };
 
 
@@ -636,7 +636,7 @@ public:
   ConstTerm(TypeOfConst t)  { setTagged(t,NULL); }
   TypeOfConst getType()     { return (TypeOfConst) tagTypeOf(ctu.tagged); }
 
-  char *getPrintName();
+  const char *getPrintName();
   int getArity();
   void *getPtr() {
     return isNullPtr(ctu.tagged) ? NULL : tagValueOf(ctu.tagged);
@@ -737,16 +737,16 @@ public:
 class HeapChunk: public ConstTerm {
 private:
   size_t chunk_size;
-  char * chunk_data;
-  char * copyChunkData(void) {
-    char * data = allocate(chunk_size);
+  void * chunk_data;
+  void * copyChunkData(void) {
+    char * data = (char *) allocate(chunk_size);
     for (int i = chunk_size; i--; )
-      data[i] = chunk_data[i];
-    return data;
+      data[i] = ((char *) chunk_data)[i];
+    return (void *) data;
   }
-  char * allocate(int size) {
+  void * allocate(int size) {
     COUNT1(sizeHeapChunks,size);
-    return (char *) alignedMalloc(size, sizeof(double));
+    return (void *) alignedMalloc(size, sizeof(double));
   }
 public:
   HeapChunk(HeapChunk&);
@@ -758,7 +758,7 @@ public:
 
   size_t getChunkSize(void) { return chunk_size; }
 
-  char * getChunkData(void) { return chunk_data; }
+  void * getChunkData(void) { return chunk_data; }
 
   OZPRINT;
   OZPRINTLONG;
@@ -1210,7 +1210,7 @@ public:
   SRecord *getUnfreeRecord() { return unfreeFeatures; }
   SRecord *getFeatures()     { return features; }
 
-  char *getPrintName();
+  const char *getPrintName();
 
   ObjectClass *gcClass();
 
@@ -1301,7 +1301,7 @@ public:
 
   ObjectClass *getClass()       { return (ObjectClass*) getPtr(); }
   OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
-  char *getPrintName()          { return getClass()->getPrintName(); }
+  const char *getPrintName()    { return getClass()->getPrintName(); }
   RecOrCell getState()          { return state; }
   void setState(SRecord *s)     { Assert(s!=0); state=makeRecCell(s); }
   void setState(Tertiary *c)    { state = makeRecCell(c); }
@@ -1653,7 +1653,7 @@ public:
   TaggedRef getFileName() { return fileName; }
   int getLine() { return lineno; }
   SRecordArity getMethodArity() { return methodArity; }
-  char *getPrintName () { return tagged2Literal(printname)->getPrintName(); }
+  const char *getPrintName () { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName () { return printname; }
   ProgramCounter getPC() { return PC; }
   void setPC(ProgramCounter pc) { PC = pc; }
@@ -1694,7 +1694,7 @@ public:
   int getArity()         { return getPred()->getArity(); }
   SRecordArity getMethodArity()   { return getPred()->getMethodArity(); }
   int getGSize()         { return getRefsArraySize(gRegs); }
-  char *getPrintName()   { return getPred()->getPrintName(); }
+  const char *getPrintName()   { return getPred()->getPrintName(); }
   TaggedRef getName()    { return getPred()->getName(); }
 
   TaggedRef DBGgetGlobals();
@@ -1770,7 +1770,7 @@ public:
   static void *operator new(size_t chunk_size)
   { return ::new char[chunk_size]; }
   
-  BuiltinTabEntry(char *s,int arty,OZ_CFun fn,IFOR infun)
+  BuiltinTabEntry(const char *s,int arty,OZ_CFun fn,IFOR infun)
   : arity(arty),fun(fn), inlineFun(infun), ConstTerm(Co_Builtin)
   {
     printname = makeTaggedAtom(s);
@@ -1786,7 +1786,7 @@ public:
 
   OZ_CFun getFun() { return fun; }
   int getArity() { return arity; }
-  char *getPrintName() { return tagged2Literal(printname)->getPrintName(); }
+  const char *getPrintName() { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
   IFOR getInlineFun() { return inlineFun; } 
 
@@ -2354,6 +2354,6 @@ char *toC(OZ_Term);
 TaggedRef reverseC(TaggedRef l);
 TaggedRef appendI(TaggedRef x,TaggedRef y);
 Bool member(TaggedRef elem,TaggedRef list);
-TaggedRef getUniqueName(char *s);
+TaggedRef getUniqueName(const char *s);
 
 #endif

@@ -60,7 +60,7 @@ int canOptimizeFailure(AM *e, Thread *tt)
 #ifdef DEBUG_CHECK
       PopFrame(tt->getTaskStackRef(),PC,Y,G);
       Assert(PC==C_CFUNC_CONT_Ptr);
-      Assert(((OZ_CFun)Y)==BIfail);
+      Assert(((OZ_CFun)(void*)Y)==BIfail);
       tt->pushCFun(BIfail,0,0,NO);
 #endif
     }
@@ -114,7 +114,7 @@ int AM::raise(OZ_Term cat, OZ_Term key, char *label,int arity,...)
   (void) e->raise(E_ERROR,E_KERNEL,"apply",2,fun,args); goto LBLraise;
 
 
-void AM::enrichTypeException(char *fun, OZ_Term args)
+void AM::enrichTypeException(const char *fun, OZ_Term args)
 {
   OZ_Term e = OZ_subtree(exception.value,OZ_int(1));
   OZ_putArg(e,1,OZ_atom(fun));
@@ -301,8 +301,11 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
     return TRUE;
   }
 
-  if (def && debugmode() && !currentSolveBoard && currentThread != rootThread 
-                         && CodeArea::existVarNames(PC)) {
+  if (def && debugmode() && !currentSolveBoard && currentThread != rootThread
+                         &&
+      (CodeArea::getOpcode(PC+sizeOf(CodeArea::getOpcode(PC)))==DEBUGINFO ||
+       CodeArea::getOpcode(PC)==DEBUGINFO)) {
+
     OzDebug *dbg;
     int frameId   = ++lastFrameID % MAX_ID;
     
@@ -313,7 +316,7 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
     time_t feedtime = CodeArea::findTimeStamp(PC);
     dinfo = cons(OZ_int(frameId),cons(OZ_int(feedtime),dinfo));
 
-    if (currentThread->stepMode() /* || def->getPred()->getSpyFlag() */) {
+    if (currentThread->getStep() /* || def->getPred()->getSpyFlag() */) {
       ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
       if (debugPC != NOCODE) {
 	debugStreamCall(debugPC, def->getPrintName(), def->getArity(),
@@ -477,7 +480,7 @@ void pushContX(TaskStack *stk,
 
 void pushDummyDebug(TaskStack *stk, ProgramCounter PC)
 {
-  if (am.debugmode() && am.currentThread->stepMode()) {
+  if (am.debugmode() && am.currentThread->getStep()) {
     time_t feedtime = CodeArea::findTimeStamp(PC);
     OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
     OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
@@ -555,7 +558,8 @@ void pushDummyDebug(TaskStack *stk, ProgramCounter PC)
 
 #ifdef FASTREGACCESS
 #define RegAccess(Reg,Index) (*(RefsArray)((intlong) Reg + Index))
-#define LessIndex(Index,CodedIndex) (Index <= CodedIndex/sizeof(TaggedRef))
+#define LessIndex(Index,CodedIndex) \
+                       (Index <= (int)(CodedIndex/sizeof(TaggedRef)))
 #else
 #define RegAccess(Reg,Index) (Reg[Index])
 #define LessIndex(I1,I2) (I1<=I2)
@@ -648,9 +652,9 @@ void pushDummyDebug(TaskStack *stk, ProgramCounter PC)
    goto LBLsuspendThread;
 
 
-void addSusp(TaggedRef *varPtr, Thread *thr)
+inline void addSusp(TaggedRef *varPtr, Thread *thr)
 {
-  addSuspAnyVar(varPtr,thr);
+  if(!thr->isStopped()) {addSuspAnyVar(varPtr,thr);}
 }
 
 
@@ -938,9 +942,8 @@ LBLpreemption:
   asmLbl(PREEMPT_THREAD);
   SaveSelf;
   Assert(GETBOARD(CTT)==CBB);
-  if(!CTT->isRunnable())
-    {warning("old assertion crashes on CTT->isRunnable()");}
-  // Assert(CTT->isRunnable());
+
+  Assert((CTT->isRunnable() || (CTT->isStopped())));
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
 
@@ -968,8 +971,8 @@ LBLstart:
 
   DebugTrace(trace("runnable thread->running"));
 
-  // Debugger & oz_stop
-  if (CTT->stopped()) {
+  // debugger & oz_stop
+  if (CTT->getStop()) {
     CTT = 0;  // byebye...
     goto LBLstart;
   }
@@ -1313,7 +1316,7 @@ LBLsuspendThread:
 #endif
 
     // Debugger
-    if (e->debugmode() && CTT->isTraced()) {
+    if (e->debugmode() && CTT->getTrace()) {
       Frame *auxtos = CTT->getTaskStackRef()->getTop();
       GetFrame(auxtos,debugPC,Y,G);
 
@@ -2467,12 +2470,12 @@ LBLdispatcher:
 	
        CheckArity(bi->getArity(),makeTaggedConst(bi));
 	   
-       if (e->debugmode() && e->currentThread->stepMode()) {
-	 char *name = builtinTab.getName((void *) bi->getFun());
+       if (e->debugmode() && e->currentThread->getStep()) {
+	 const char *name = builtinTab.getName((void *) bi->getFun());
 	 ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
 	 if (debugPC != NOCODE) {
-	   debugStreamCall(debugPC, name, predArity, X, 1, 0);
+//	   debugStreamCall(debugPC, name, predArity, X, 1, 0);
 	   
 	   if (!isTailCall) PushCont(PC,Y,G);
 	   
@@ -3030,14 +3033,14 @@ LBLdispatcher:
 	break;
       }
       case DBG_NEXT : {
-	if (CTT->isTraced() && CTT->stepMode()) {
+	if (CTT->getTrace() && CTT->getStep()) {
 	  debugStreamExit(info);
 	  goto LBLpreemption;
 	}
 	break;
       }
       case DBG_STEP : {
-	if (CTT->isTraced() && !CTT->contFlag()) {
+	if (CTT->getTrace() && !CTT->getCont()) {
 	  debugStreamExit(info);
 	  goto LBLpreemption;  
 	}
@@ -3053,7 +3056,7 @@ LBLdispatcher:
      {
        // 
        // by kost@ : 'solve actors' are represented via a c-function; 
-       OZ_CFun biFun = (OZ_CFun) Y;
+       OZ_CFun biFun = (OZ_CFun) (void*) Y;
        RefsArray tmpX = G;
        G = Y = NULL;
        if (tmpX != NULL) {

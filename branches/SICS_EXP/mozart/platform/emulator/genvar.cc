@@ -40,7 +40,7 @@ Bool GenCVariable::unifyOutline(TaggedRef *tptr1, TaggedRef term1,
   return unify(tptr1,term1,tptr2,term2,scp);
 }
 
-void addSuspCVarOutline(TaggedRef v, Thread *el, int unstable)
+void addSuspCVarOutline(TaggedRef *v, Thread *el, int unstable)
 {
   addSuspCVar(v, el, unstable);
 }
