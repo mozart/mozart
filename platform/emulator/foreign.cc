@@ -120,6 +120,12 @@ int OZ_isObject(OZ_Term term)
   return isObject(term);
 }
 
+int OZ_isThread(OZ_Term t)
+{
+  t = deref(t);
+  return isThread(t);
+}
+
 
 /*
  * list checking

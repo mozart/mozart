@@ -2570,19 +2570,13 @@ OZ_C_proc_end
  * Threads
  * --------------------------------------------------------------------- */
 
-int OZ_isThread(OZ_Term t)
-{
-  t = deref(t);
-  return isThread(t);
-}
-
-#define OZ_declareThreadArg(ARG,VAR)			\
- Thread *VAR;						\
- OZ_nonvarArg(ARG);					\
- if (! OZ_isThread(OZ_getCArg(ARG))) {			\
-   return OZ_typeError(ARG,"Thread");			\
- } else {						\
-   VAR = tagged2Thread(OZ_deref(OZ_getCArg(ARG)));	\
+#define OZ_declareThreadArg(ARG,VAR)		\
+ Thread *VAR;					\
+ OZ_nonvarArg(ARG);				\
+ if (! OZ_isThread(OZ_getCArg(ARG))) {		\
+   return OZ_typeError(ARG,"Thread");		\
+ } else {					\
+   VAR = tagged2Thread(deref(OZ_getCArg(ARG)));	\
  }
 
 OZ_C_proc_begin(BIthreadThis,1)
@@ -5007,7 +5001,7 @@ char **arrayFromList(OZ_Term list, char **array, int size)
       goto bomb;
     }
 
-    OZ_Term hh = OZ_head(list);
+    OZ_Term hh = head(deref(list));
     if (!OZ_isAtom(hh)) {
       OZ_warning("linkObjectFiles: List with atoms expected");
       goto bomb;
@@ -6312,7 +6306,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIsetStepMode,2)
 {
-  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
+  OZ_Term chunk = deref(OZ_getCArg(0));
   char   *onoff = toC(OZ_getCArg(1));
   
   ConstTerm *rec = tagged2Const(chunk);
@@ -6329,7 +6323,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstopThread,1)
 {
-  OZ_Term chunk  = OZ_deref(OZ_getCArg(0));
+  OZ_Term chunk  = deref(OZ_getCArg(0));
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = (Thread*) rec;
   
@@ -6340,7 +6334,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIcontThread,1)
 {
-  OZ_Term chunk  = OZ_deref(OZ_getCArg(0));
+  OZ_Term chunk  = deref(OZ_getCArg(0));
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = (Thread*) rec;
   
@@ -6352,7 +6346,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIqueryDebugState,2)
 {
-  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
+  OZ_Term chunk = deref(OZ_getCArg(0));
   OZ_Term out   = OZ_getCArg(1);
   
   ConstTerm *rec = tagged2Const(chunk);
@@ -6380,7 +6374,7 @@ OZ_C_proc_begin(BItopVarInfo,2) // needs work --BL
   OZ_Term out = OZ_getCArg(1);
   
   char *name = OZ_atomToC(in);
-  return OZ_unify(out, OZ_nil());
+  return OZ_unify(out, nil());
 }
 OZ_C_proc_end   
 
@@ -6388,7 +6382,7 @@ OZ_C_proc_begin(BItopVars,2) // needs work --BL
 {
   OZ_Term in = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
-  OZ_Term VarList = OZ_nil();
+  OZ_Term VarList = nil();
 
   return OZ_unify(out, VarList);
 }
@@ -6401,11 +6395,11 @@ OZ_C_proc_begin(BIindex2Tagged,2)
 
   if (!OZ_isSmallInt(in)) {
     OZ_warning("Invalid index for builtin `index2Tagged'");
-    return OZ_unify(out, OZ_nil());
+    return OZ_unify(out, nil());
   }
   if (OZ_intToC(in) > am.toplevelVarsCount) {
     OZ_warning("Index too big for builtin `index2Tagged'");
-    return OZ_unify(out, OZ_nil());
+    return OZ_unify(out, nil());
   }
   return OZ_unify(out, am.toplevelVars[OZ_intToC(in)]);
 }
@@ -6421,7 +6415,7 @@ OZ_C_proc_begin(BItime2localTime,2)
   
   if (!OZ_isInt(in)) {
     OZ_warning("Invalid first argument for builtin `time2localTime'");
-    return OZ_unify(out, OZ_nil());
+    return OZ_unify(out, nil());
   }
   else {
     time_t time = time_t(OZ_intToC(in));
@@ -6901,7 +6895,7 @@ OZ_C_proc_begin(BIraiseError,1)
 
   OZ_Term ret = OZ_record(OZ_atom("error"),
 			  cons(OZ_int(1),
-			       cons(OZ_atom("debug"),OZ_nil())));
+			       cons(OZ_atom("debug"),nil())));
   OZ_putSubtree(ret,OZ_int(1),exc);
   OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
 
