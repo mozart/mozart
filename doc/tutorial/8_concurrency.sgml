@@ -23,7 +23,7 @@ the processor cake a thread can get.
 thread the procedure <<Thread.this/1>> is called. Having a reference
 to a thread, by using its name, enables operations on threads such as
 terminating a thread, or raising an exception in a thread. Thread
-operations are defined the standard module <<Thread>>.
+operations are defined the base module <<Thread>>.
 
 <P>Let us see what we can do with threads. First, remember that each
 thread is a data-flow thread that blocks on data dependency. Consider
@@ -102,7 +102,9 @@ Z = nil
 
 <P>will complete the computation of the main thread and the newly
 created thread <<thread {F 3} end>>, resulting in the final list
-<<[1 4 9]>>. The program shown in <PTR TO="concurrentFib"> is a concurrent
+<<[1 4 9]>>.
+
+<P>The program shown in <PTR TO="concurrentFib"> is a concurrent
 divide-and-conquer program, which is very inefficient way to compute
 the <EM>Fibonacci</EM> function. This program creates an
 exponential number of threads! See how easy it is to create concurrent
