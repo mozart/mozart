@@ -25,7 +25,11 @@
 #define inline
 #endif
 
-struct _spawnVars_t {OZ_Term * var; OZ_FDPropState state;};
+struct _spawnVars_t {
+  OZ_Term * var;
+  TypeOfGenCVariable expected_type;
+  union {OZ_FDPropState fd; OZ_FSetPropState fs;} state;
+};
 
 extern _spawnVars_t * staticSpawnVars;
 extern _spawnVars_t * staticSpawnVarsProp;

@@ -318,7 +318,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
   /*
   cout << "tellBasicConstraint - in - : ";
   taggedPrint(v);
-  cout << " , " << *fd << endl <<flush;
+  if (fd) cout << " , " << *fd;
+  cout << endl <<flush;
   */
   DEREF(v, vptr, vtag);
 
@@ -424,6 +425,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       boolvar->propagate(v);
       am.doBindAndTrail(v, vptr, OZ_int(dom));
     }
+    goto proceed;
 // tell finite domain constraint to integer, i.e. check for compatibility
   } else if (isSmallInt(v)) {
     if (! fd) goto proceed;
@@ -440,7 +442,8 @@ proceed:
   /*
   cout << "tellBasicConstraint - out - : ";
   if (vptr) taggedPrint(*vptr); else taggedPrint(v);
-  cout << " , " << *fd << endl <<flush;
+  if (fd) cout << " , " << *fd;
+  cout << endl <<flush;
   */
   return PROCEED;
 }
