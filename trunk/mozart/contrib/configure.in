@@ -60,7 +60,7 @@ CONTRIBDIRS=`echo $oz_enable_contrib | sed 's/,/ /g'`
 AC_SUBST(CONTRIBDIRS)
 AC_CONFIG_SUBDIRS($CONTRIBDIRS)
 
-AC_OUTPUT(Makefile conf.all:conf.in)
+AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded.
