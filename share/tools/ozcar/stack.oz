@@ -177,18 +177,19 @@ in
       in
 	 case {HasFeature X debug} andthen {HasFeature X.debug stack} then
 	    Stack = X.debug.stack
-	    F#L#C#Time = case Stack of Frame|_ then
-			    {CondSelect Frame file ''}#
-			    case X of error(kernel(noElse Line ...) ...) then
-			       %% correct the line number
-			       Line
-			    else
-			       {CondSelect Frame line unit}
-			    end#
-			    {CondSelect Frame column unit}#
-			    Frame.time
-			 else ''#unit#unit#999999999
-			 end
+	    (F#L)#C#Time = case Stack of Frame|_ then
+			      case X of error(kernel(noElse F L ...) ...) then
+				 %% use the file name and line number
+				 %% of the missing else itself (not the case)
+				 F#L
+			      else
+				 {CondSelect Frame file ''}#
+				 {CondSelect Frame line unit}
+			      end#
+			      {CondSelect Frame column unit}#
+			      Frame.time
+			   else (''#unit)#unit#999999999
+			   end
 	    S = entry(kind: exception thr: self.T
 		      file: F line: L column: C time: Time
 		      args: [X]) | Stack
