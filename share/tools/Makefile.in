@@ -224,7 +224,7 @@ veryclean: clean
 	rm -f -r $(STAGE1) TAGS
 
 distclean: veryclean
-	rm -f Makefile
+	@echo To really make distclean, please use \"cd ..\; make distclean\".
 
 #---------------------------------------------------------------------
 # Testing Components Locally
