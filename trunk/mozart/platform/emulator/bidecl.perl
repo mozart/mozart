@@ -2641,43 +2641,37 @@ $builtins = {
 			     module => fd,
 			     native => true},
 
-    'fddistribute'	=> { in  => ['value','value','value','value','value',],
-			     out => [],
-			     bi  => BIfdDistribute,
-			     module => fd,
-			     native => true},
-
-    'fdd_select_naive'	=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_select_naive,
-			     module => fd,
-			     native => true},
-
-    'fdd_select_size'	=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_select_size,
-			     module => fd,
-			     native => true},
-
-    'fdd_select_min'	=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_select_min,
-			     module => fd,
-			     native => true},
-
-    'fdd_select_max'	=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_select_max,
-			     module => fd,
-			     native => true},
-
-    'fdd_select_nbSusps'=> { in     => ['+tuple'],
-			     out    => ['*int'],
-			     bi     => BIfdd_select_nbSusps,
-			     module => fd,
-			     native => true},
-
     # External stuff (might be loaded dynamically)
+    'fdd_selVarNaive'	=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_selVarNaive,
+			     module => libfd,
+			     native => true},
+
+    'fdd_selVarSize'	=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_selVarSize,
+			     module => libfd,
+			     native => true},
+
+    'fdd_selVarMin'	=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_selVarMin,
+			     module => libfd,
+			     native => true},
+
+    'fdd_selVarMax'	=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_selVarMax,
+			     module => libfd,
+			     native => true},
+
+    'fdd_selVarNbSusps' => { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_selVarNbSusps,
+			     module => libfd,
+			     native => true},
+
     'fdp_sum'		=> { in  => ['+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_sum,
@@ -2732,12 +2726,6 @@ $builtins = {
 			     module => libfd,
 			     native => true},
 
-    'fdp_plus_rel'	=> { in  => ['int','int','int'],
-			     out => [],
-			     bi  => fdp_plus_rel,
-			     module => libfd,
-			     native => true},
-
     'fdp_plus'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_plus,
@@ -2755,12 +2743,6 @@ $builtins = {
 			     bi  => fdp_times,
 			     module => libfd,
                              native => true},
-
-    'fdp_times_rel'	=> { in  => ['int','int','int'],
-			     out => [],
-			     bi  => fdp_times_rel,
-			     module => libfd,
-			     native => true},
 
     'fdp_power'		=> { in  => ['int','+int','int'],
 			     out => [],
@@ -2861,12 +2843,6 @@ $builtins = {
     'fdp_element'	=> { in  => ['int','+value','int'],
 			     out => [],
 			     bi  => fdp_element,
-			     module => libfd,
-			     native => true},
-
-    'fdp_notEqOff'	=> { in  => ['int','int','+int'],
-			     out => [],
-			     bi  => fdp_notEqOff,
 			     module => libfd,
 			     native => true},
 
@@ -2998,18 +2974,6 @@ $builtins = {
 			     bi  => sched_disjunctiveStream,
 			     module => libschedule,
 				  native => true},
-
-    'fdp_twice'		=> { in  => ['int','int'],
-			     out => [],
-			     bi  => fdp_twice,
-			     module => libfd,
-			     native => true},
-
-    'fdp_square'	=> { in  => ['int','int'],
-			     out => [],
-			     bi  => fdp_square,
-			     module => libfd,
-			     native => true},
 
     'fdp_subset'	=> { in  => ['int','int'],
 			     out => [],
