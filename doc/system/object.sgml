@@ -114,8 +114,8 @@
           returns a chunk that contains information on current
           attribute values and features.
 
-        <entry><<frmChunk>>
-          <Index/<<ObjectSupport>><And><<reflect>><And><<frmChunk>>/
+        <entry><<fromChunk>>
+          <Index/<<ObjectSupport>><And><<reflect>><And><<fromChunk>>/
         <synopsis>
           <<frmChunk(?+{Ch})>>
         <item>
