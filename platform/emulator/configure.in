@@ -58,6 +58,7 @@ case "$target" in
    ;;
    i386-mingw32) 
         AC_MSG_RESULT(cross compiling for windows)
+	cross_compiling=yes
 
 	CXX=${target}-gcc
 	RANLIB=${target}-ranlib
@@ -606,7 +607,7 @@ dnl *****************************************************************
 dnl virtual sites
 dnl *****************************************************************
 
-dnl let's start with simple tests...
+dnl let us start with simple tests...
 AC_CHECKING(whether we can virtual sites...)
 AC_CACHE_VAL(ac_cv_can_vs,
 [can_vs=yes
