@@ -288,7 +288,7 @@ static CTerm decls[DEPTH];
   int i;
 }
 
-%token HELP SWITCH SHOWSWITCHES FEED THREADEDFEED
+%token HALT HELP SWITCH SHOWSWITCHES FEED THREADEDFEED
 %token CORE OZMACHINE
 %token SWITCHNAME FILENAME
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
@@ -470,7 +470,9 @@ queries1	: directive queries
 		  { $$ = nilAtom; }
 		;
 
-directive	: HELP
+directive	: HALT
+		  { $$ = newCTerm("dirHalt"); }
+		| HELP
 		  { $$ = newCTerm("dirHelp"); }
 		| SWITCH switchList
 		  { $$ = newCTerm("dirSwitch",$2); }
