@@ -118,6 +118,8 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
 
+enum OZ_FDPropState {fd_det = 0, fd_bounds, fd_any};
+
 // virtual base class; never create an object from this class
 class OZ_Propagator {
 friend class Thread;
@@ -137,6 +139,8 @@ public:
   OZ_Return replaceByInt(OZ_Term, int);
   OZ_Return postpone(void);
   OZ_Boolean postOn(OZ_Term);
+  void addSpawn(OZ_FDPropState s, OZ_Term v);
+  void spawn(OZ_Propagator * p, int prio = OZ_getPropagatorPrio());
 
   virtual size_t sizeOf(void) = 0;
   virtual void gcRecurse(void) = 0;
@@ -150,8 +154,6 @@ ostream& operator << (ostream& o, const OZ_Propagator &p);
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.
 
-enum OZ_FDPropState {fd_det = 0, fd_bounds, fd_any};
-
 struct OZ_expect_t {
   int size, accepted; 
   OZ_expect_t(int s, int a) : size(s), accepted(a) {}
@@ -164,11 +166,7 @@ class OZ_Expect;
 typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
 
 class OZ_Expect {
-public:
-  struct spawnVars_t {OZ_Term * var; OZ_FDPropState state;} * spawnVars;
 private:
-  OZ_Term ** suspendVars;
-  int spawnVarsNumber,  suspendVarsNumber;
   OZ_Boolean collect;
 protected:
   void addSpawn(OZ_FDPropState, OZ_Term *);
@@ -177,8 +175,8 @@ public:
   OZ_Expect(void); 
   ~OZ_Expect(void); 
 
-  void collectVarsOn(void); /* undocumented, unimplemented */
-  void collectVarsOff(void); /* undocumented, unimplemented */
+  void collectVarsOn(void);
+  void collectVarsOff(void);
 
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectVar(OZ_Term t);

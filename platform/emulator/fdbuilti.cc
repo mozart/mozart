@@ -1215,6 +1215,7 @@ BIspec fdSpec[] = {
   {"fdp_subset", 2, fdp_subset},
 
   {"counter", 2, fdtest_counter},
+  {"spawnLess", 2, fdtest_spawnLess},
 #endif
 #ifdef DEBUG_STABLE
   {"debugStable", 0, debugStable},
