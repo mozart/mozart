@@ -35,9 +35,16 @@
  */
 
 #include <stdio.h>
+#ifdef HAVE_TCL8_0_H
+#include <tcl8.0.h>
+#else
 #include <tcl.h>
+#endif
+#ifdef HAVE_TK8_0_H
+#include <tk8.0.h>
+#else
 #include <tk.h>
-
+#endif
 /*
  * Declarations for various library procedures and variables (don't want
  * to include tkInt.h or tkConfig.h here, because people might copy this
