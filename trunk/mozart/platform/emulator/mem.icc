@@ -1,0 +1,60 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __mem_icc__
+#define __mem_icc__
+
+#if defined(__GNUC__) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+inline
+void * freeListMalloc(size_t chunk_size)
+{
+  Assert(((chunk_size & 3) == 0) && (chunk_size > 0));
+
+  void **freeListCache = FreeList;
+  void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : (void *)NULL;
+
+  if (aux == (void *) NULL)
+    aux = heapMallocOutline(chunk_size); 
+  else {
+    freeListCache[chunk_size] = *(void **)aux;
+  }
+#ifdef DEBUG_MEM
+  memset((char *)aux,0x5A,chunk_size);
+#endif
+  return aux;
+}
+
+inline
+void freeListDispose(void * addr, size_t chunk_size)
+{
+  Assert((chunk_size & 3) == 0);
+
+#ifdef DEBUG_MEM
+
+// clear mem, so every reference leads to strange errors
+// and turn off free list memory, do not reuse the memory
+  memset((char *)addr,0x5A,chunk_size);
+  return;
+
+#else
+
+  if (chunk_size < freeListMaxSize && chunk_size > 0) {
+    *(void **)addr =  FreeList[chunk_size];
+    FreeList[chunk_size] = addr;
+  }
+#endif
+}
+
+#endif //__mem_icc__
+
