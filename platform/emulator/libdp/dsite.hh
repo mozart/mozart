@@ -39,6 +39,7 @@
 #include "fail.hh"
 #include "network.hh"
 #include "vs_interface.hh"
+#include "os.hh"
 
 /**********************************************************************/
 /*   SECTION :: Site                                                  */
