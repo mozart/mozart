@@ -125,7 +125,6 @@ dnl *****************************************************************
 
 # intl is required when linking statically
 AC_CHECK_LIB(intl, dgettext)
-AC_CHECK_LIB(wsock32,main)
 
 case "$platform" in
    irix6*)
