@@ -149,6 +149,8 @@ int osaccept(int s, struct sockaddr *addr, int *addrlen);
 int osconnect(int s, struct sockaddr *addr, int namelen);
 int osdup(int fd);
 
+char *ostmpnam(char *s);
+
 void registerSocket(int fd);
 
 char *osfgets(char *s, int n, FILE *stream);
