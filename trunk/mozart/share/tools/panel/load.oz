@@ -20,7 +20,7 @@ local
 
    FontFamily      = '-*-helvetica-medium-r-normal--*-'
    FontMatch       = '-*-*-*-*-*-*'
-   TickFont        = !FontFamily # 100 # !FontMatch
+   TickFont        = FontFamily # 100 # FontMatch
 
    local
       Log10 = {Log 10.0}
@@ -124,9 +124,9 @@ in
       meth DisplayLoads(Y1s Y2s X1 X2 Cs Ss T)
 	 case Y1s of nil then skip
 	 [] Y1|Y1r then
-	    Y2|Y2r = !Y2s
-	    C|Cr   = !Cs 
-	    S|Sr   = !Ss
+	    Y2|Y2r = Y2s
+	    C|Cr   = Cs 
+	    S|Sr   = Ss
 	    CS     = ~@CurScale
 	    Y3     = case Y1r of nil then 0.0 [] Y|_ then Y end
 	    Y4     = case Y2r of nil then 0.0 [] Y|_ then Y end

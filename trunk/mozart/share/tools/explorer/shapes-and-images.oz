@@ -39,12 +39,12 @@ local
       ScaledFullWidth = Scale * RectangleWidthF
       X0          = ScaledMyX - ScaledFullWidth
       X1          = ScaledMyX - ScaledHalfWidth
-      X2          = !ScaledMyX
+      X2          = ScaledMyX
       X3          = ScaledMyX + ScaledHalfWidth
       X4          = ScaledMyX + ScaledFullWidth
       Y0          = ScaledMyY - ScaledFullWidth
       Y1          = ScaledMyY - ScaledHalfWidth
-      Y2          = !ScaledMyY
+      Y2          = ScaledMyY
       Y3          = ScaledMyY + ScaledHalfWidth
       Y4          = ScaledMyY + ScaledFullWidth
    in
@@ -54,10 +54,10 @@ local
    fun {SucceededShape ScaledMyX ScaledMyY Scale}
       ScaledWidth = Scale * RhombeWidthF
       X0          = ScaledMyX - ScaledWidth
-      X1          = !ScaledMyX
+      X1          = ScaledMyX
       X2          = ScaledMyX + ScaledWidth
       Y0          = ScaledMyY - ScaledWidth
-      Y1          = !ScaledMyY 
+      Y1          = ScaledMyY 
       Y2          = ScaledMyY + ScaledWidth
    in
       polygon(X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1)
@@ -137,16 +137,16 @@ local
    
 in
 
-   Images = images(succeeded: !SucceededImage
-		   blocked:   !BlockedImage
-		   choose:    !ChooseImage
-		   failed:    !FailedImage)
+   Images = images(succeeded: SucceededImage
+		   blocked:   BlockedImage
+		   choose:    ChooseImage
+		   failed:    FailedImage)
 
-   Shapes = shapes(succeeded: !SucceededShape
-		   blocked:   !BlockedShape
-		   choose:    !ChooseShape
-		   failed:    !FailedShape
-		   hidden:    !HiddenShape)
+   Shapes = shapes(succeeded: SucceededShape
+		   blocked:   BlockedShape
+		   choose:    ChooseShape
+		   failed:    FailedShape
+		   hidden:    HiddenShape)
 
 end
 
