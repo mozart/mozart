@@ -15,7 +15,7 @@ local
 	 TkTools.dialog,tkInit(master:  Master
 			       title:   TitleName#': About'
 			       buttons: ['Okay'#close(proc {$}
-							 Done = Unit
+							 Done = unit
 						      end)]
 			       focus:   1
 			       default: 1)

@@ -81,7 +81,7 @@ in
 
       meth clear
 	 Clear <- @Saved
-	 Saved <- Unit
+	 Saved <- unit
       end
       
       meth display(T)
