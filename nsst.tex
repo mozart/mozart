@@ -1,1 +1,80 @@
 \section{Non-Structural Subtyping Constraints}
+
+A \emph{signature} $\Sigma$ is a set of symbols where every symbol
+$f\in \Sigma$ has an \emph{arity} $\alpha_\Sigma(f) \in \N$. A
+\emph{partially ordered signature} is a signature $\Sigma$ equiped
+with a partial order $\lleq_\Sigma$. An \emph{partially ordered
+  signature} is \emph{convex} if $f \lleq_\Sigma g \lleq_\Sigma h$
+implies that $\alpha_\Sigma(g) \geq
+\min(\alpha_\Sigma(f),\alpha_\Sigma(h))$. Otherwise said, in a convex
+signature no symbol is situated between to symbols with strictly
+larger arities. A \emph{(C)POS} is a (convex) partially ordered signature.
+We usually ommit the index $\Sigma$ to $\alpha$ and $\leq$ when the
+context is unabigeous.
+
+A \emph{tree domain} is a (possibly infinite) non-empty subset $D$ of
+$\N^*$ which is
+\begin{itemize}
+\item \emph{prefix-closed}, that is if $\pi\pi'\in D$ then $\pi \in D$
+\item \emph{left-closed}, that is if $\pi (i+1)\in D$ then $\pi i\in D$.
+\end{itemize}
+
+Let $\Sigma$ be a POS. A \emph{$\Sigma$-tree} is a pair of a tree
+domain $D$ and a labelling function $L\colon D \rightarrow \Sigma$
+such that for all $\pi in D$ we have that $\alpha(\L(\pi)) = \max\{i
+\mid \pi i\in D\}$. For a given tree $\tau$ we write $D_\tau$ for its
+domain, and $L_\tau$ for its labelling function.
+
+For a given POS $\Sigma$, the \emph{non-structural subtyping relation}
+$leq$ on the set of $\Sigma$-trees is defined by:
+\[
+s \leq t \qquad \Leftrightarrow \qquad
+\forall \pi \in D_s \cap D_t :  L_s(\pi) \lleq L_t(\pi)
+\] 
+Obviously, the relation $\leq$ is reflexive and anti-symmetric.
+
+\begin{lemma}
+  Given a POS $\Sigma$, the relation $\leq$ is transitive (hence, a
+  partial order) iff $\Sigma$ is convex.
+\end{lemma}
+\begin{proof}
+  Let $s \leq t \leq u$. We first show that $D_s \cap D_u \subseteq
+  D_t$. From this the transitivity of $\leq$ follows immediately,
+  since for any $\pi\in D_s \cap D_u$ we have that $L_s(\pi) \lleq
+  L_t(\pi) \lleq L_u(\pi)$, hence $L_s(\pi) \lleq L_u(\pi)$ by
+  transitivity of $\lleq_\Sigma$.
+
+  Assume that $\pi \in D_s \cap D_u$ and $\pi \not\in D_t$. Let $\pi'$
+  be the longest prefix of $\pi$ with $\pi'\in D_s \cap D_u \cap D_t$
+  (this is well-defined since every tree domain contains
+  $\epsilon$). Let $i$ be the natural number such that $p'i$ is a
+  prefix of $\pi$. It follows that $\alpha(L_s(\pi')) \geq i$ and
+  $\alpha(L_u(\pi')) \geq i$, but $\alpha(L_t(\pi')) < i$. Since
+  $L_s(\pi') \lleq L_t(\pi') \lleq L_u(\pi')$ this contradicts the
+  convexity of $\Sigma$.
+
+  Let $\Sigma$ be non-convex, that is $f \lleq g \lleq h$ with
+  $\alpha(g) < \min(\alpha(g),\alpha(h))$. Let $r$ be some arbitrary
+  $\Sigma$-tree. Define
+  \begin{eqnarray*}
+    s & := & f(\underbrace{r,\ldots,r}_{i \mbox
+      { times}},h(r,\ldots,r),\ldots h(r,\ldots,r))\\
+    t & := & g(\underbrace{r,\ldots,r}_{i \mbox
+      { times}})\\
+    u & := & h(\underbrace{r,\ldots,r}_{i \mbox
+      { times}},f(r,\ldots,r),\ldots f(r,\ldots,r))\\
+  \end{eqnarray*}
+  It is easy to see that $s \leq t$ and $t \leq u$, but $s \not\leq u$.
+\end{proof}
+
+\emph{Non-structural subtyping constraints} over a signature $\Sigma$
+are defined by the following grammar
+\[
+\phi ::= x \leq f(x_1,\ldots,x_n) \mid x \geq f(x_1,\ldots,x_n) \mid
+\phi \und \phi
+\]
+where $x$ ranges over an infinite set of variables and $f$ over
+$\Sigma$, and where it is understood that $n \geq 0$ is the arity of
+$f$.  We write $f$ instead of $f()$, and use $s \geq t$ as synonyme for
+$t \leq s$.
+
