@@ -185,13 +185,19 @@ ByteSink::allocateBytes(int n)
   return FAILED;
 }
 
+OZ_Return raiseGeneric(char *msg, OZ_Term arg)
+{
+  return oz_raise(E_ERROR,OZ_atom("dp"),"generic",2,oz_atom(msg),arg);
+}
+
+
 OZ_Return
 ByteSink::putTerm(OZ_Term in, char *filename)
 {
   ByteStream* bs=bufferManager->getByteStream();
   marshal_M_FILE(bs,PERDIOVERSION,in);
 
-  CheckNogoods(in,bs,"save",bufferManager->freeByteStream(bs));
+  CheckNogoods(in,bs,"Resources found during save",bufferManager->freeByteStream(bs));
 
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
@@ -216,10 +222,9 @@ ByteSink::putTerm(OZ_Term in, char *filename)
 
   //  return oz_unify(resources,bs->resources);
   if (!oz_isNil(res)) {
-    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
-                    oz_atom("resources"),
-                    oz_atom(filename),
-                    res);
+    return raiseGeneric("Resources found during save",
+                        mklist(OZ_pairA("Resources",res),
+                               OZ_pairA("Filename",oz_atom(filename))));
   }
 
   return PROCEED;
@@ -236,10 +241,9 @@ OZ_Return
 ByteSinkFD::putBytes(BYTE*pos,int len)
 {
   if (oswrite(fd,pos,len)<0)
-    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
-                    oz_atom("write"),
-                    oz_atom(OZ_unixError(errno)),
-                    oz_int(fd));
+    return raiseGeneric("Write failed during save",
+                        cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
+                             nil()));
   return PROCEED;
 }
 
@@ -252,10 +256,9 @@ ByteSinkFile::allocateBytes(int n)
 {
   fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0)
-    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
-                    oz_atom("open"),
-                    oz_atom(OZ_unixError(errno)),
-                    oz_atom(filename));
+    return raiseGeneric("Open failed during save",
+                        mklist(OZ_pairA("File",oz_atom(filename)),
+                               OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   return PROCEED;
 }
 
@@ -263,10 +266,9 @@ OZ_Return
 ByteSinkFile::putBytes(BYTE*pos,int len)
 {
   if (oswrite(fd,pos,len)<0)
-    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
-                    oz_atom("write"),
-                    oz_atom(OZ_unixError(errno)),
-                    oz_atom(filename));
+    return raiseGeneric("Write failed during save",
+                        mklist(OZ_pairA("File",oz_atom(filename)),
+                               OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   return PROCEED;
 }
 
@@ -280,10 +282,9 @@ ByteSinkDatum::allocateBytes(int n)
   dat.size = n;
   dat.data = (char*) malloc(n);
   if (dat.data==0)
-    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
-                    oz_atom("malloc"),
-                    oz_atom(OZ_unixError(errno)),
-                    oz_atom("datum"));
+    return raiseGeneric("Malloc failed during save",
+                        cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
+                             nil()));
   return PROCEED;
 }
 
@@ -334,7 +335,7 @@ OZ_BI_define(BIexport,1,0)
   ByteStream* bs=bufferManager->getByteStream();
   marshal_M_EXPORT(bs,in);
 
-  CheckNogoods(in,bs,"export",bufferManager->dumpByteStream(bs));
+  CheckNogoods(in,bs,"Resources found during export",bufferManager->dumpByteStream(bs));
 
   bufferManager->dumpByteStream(bs);
 
@@ -394,15 +395,13 @@ ByteSource::getTerm(OZ_Term out, const char *compname)
   if (versiongot) {
     OZ_Term vergot = oz_atom(versiongot);
     delete versiongot;
-    return oz_raise(E_ERROR,OZ_atom("dp"),"load",4,
-                    oz_atom("versionMismatch"),
-                    oz_atom(compname),
-                    oz_atom(PERDIOVERSION),
-                    vergot);
+    return raiseGeneric("Version mismatch when loading of pickle",
+                        mklist(OZ_pairA("File",oz_atom(compname)),
+                               OZ_pairA("Expected",oz_atom(PERDIOVERSION)),
+                               OZ_pairA("Got",vergot)));
   } else {
-    return oz_raise(E_ERROR,OZ_atom("dp"),"load",2,
-                    oz_atom("notComponent"),
-                    oz_atom(compname));
+    return raiseGeneric("Trying to load non-pickle",
+                        cons(OZ_pairA("File",oz_atom(compname)),nil()));
   }
 }
 
@@ -424,8 +423,8 @@ ByteSource::makeByteStream(ByteStream*& stream)
     pos = stream->beginRead(max);
   }
   if (total==0)
-    return oz_raise(E_ERROR,OZ_atom("dp"),"load",1,
-                    oz_atom(emptyMsg()));
+    return raiseGeneric("Empty byte source",nil());
+
   return PROCEED;
 }
 
@@ -449,9 +448,8 @@ loop:
   got = osread(fd,pos,max);
   if (got < 0) {
     if (errno==EINTR) goto loop;
-    return oz_raise(E_ERROR,OZ_atom("dp"),"load",2,
-                    oz_atom("read"),
-                    oz_atom(OZ_unixError(errno)));
+    return raiseGeneric("Read error during load",
+                        cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),nil()));
   }
   return PROCEED;
 }
@@ -498,10 +496,9 @@ OZ_Return loadFile(char *filename,OZ_Term out)
 {
   int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
   if (fd < 0) {
-    return oz_raise(E_ERROR,OZ_atom("dp"),"load",3,
-                    oz_atom("open"),
-                    oz_atom(OZ_unixError(errno)),
-                    oz_atom(filename));
+    return raiseGeneric("Open failed during load",
+                        mklist(OZ_pairA("File",oz_atom(filename)),
+                               OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   }
   return loadFD(fd,out,filename);
 }
