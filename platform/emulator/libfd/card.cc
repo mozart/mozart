@@ -147,6 +147,9 @@ OZ_BI_define(fdp_sumCNR, 5, 0)
   OZ_EXPECT(pe, 2, expectLiteral);
   const char * op = OZ_atomToC(OZ_in(2));
 
+  // wait for linearity
+  OZ_EXPECT(pe, 1, expectVectorLinearVector);
+
   if (!strcmp(SUM_OP_EQ, op) || !strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorVectorIntVarAny);
     OZ_EXPECT(pe, 3, expectIntVarAny);
@@ -316,9 +319,6 @@ failure:
 }
 
 //-----------------------------------------------------------------------------
-
-#define FailOnEmptySpeculativelyNeg(X)                                        \
-if ((X) == 0) {FailOnEmpty(x[ts] &= 1); return x.entailment();}
 
 OZ_Return LinNotEqBPropagator::propagate(void)
 {
