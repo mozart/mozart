@@ -53,10 +53,9 @@ OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
 
   Bool isLocalVar = oz_isLocalVar(this);
 
-  if (!am.inEqEq() && isLocalVar) {
-    propagate();
-  }
-  if (oz_isLocalVar(this)) {
+  propagate();
+
+  if (isLocalVar) {
     bindLocalVarToValue(vPtr, term);
     dispose();
   } else {
@@ -166,10 +165,9 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
       //
       Assert(!left_var_is_local && !right_var_is_local);
       //
-      if (!am.inEqEq()) {
-        propagateUnify();
-        right_boolvar->propagateUnify();
-      }
+      propagateUnify();
+      right_boolvar->propagateUnify();
+      //
       bindGlobalVar(left_varptr, right_varptr);
     }
   } else if (right_cvar_type == OZ_VAR_FD) {
@@ -182,8 +180,6 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
     if (intersection == -2) {
       goto failed;
     }
-
-    Bool right_var_is_constrained = 1;
 
     Bool left_var_is_local  = oz_isLocalVar(this);
     Bool right_var_is_local = oz_isLocalVar(right_fdvar);
@@ -270,18 +266,16 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
       if (intersection != -1) {
         // intersection is singleton
         OZ_Term int_val = newSmallInt(intersection);
-        if (!am.inEqEq()) {
-          propagateUnify();
-          right_fdvar->propagate(fd_prop_singl, pc_cv_unif);
-        }
+        //
+        propagateUnify();
+        right_fdvar->propagate(fd_prop_singl, pc_cv_unif);
+        //
         bindGlobalVarToValue(left_varptr, int_val);
         bindGlobalVarToValue(right_varptr, int_val);
       } else {
         // intersection is boolean domain
-        if (!am.inEqEq()) {
-          propagateUnify();
-          right_fdvar->propagate(fd_prop_bounds, pc_cv_unif);
-        }
+        propagateUnify();
+        right_fdvar->propagate(fd_prop_bounds, pc_cv_unif);
         // tmueller: left variable is more local
         Board * rightvarhome = right_fdvar->getBoardInternal();
         OzBoolVariable * right_boolvar = new OzBoolVariable(rightvarhome);

@@ -53,8 +53,7 @@ OZ_Return OzFDVariable::bind(OZ_Term * vPtr, OZ_Term term)
 
   Bool isLocalVar = oz_isLocalVar(this);
 
-  if (!am.inEqEq() && isLocalVar)
-    propagate(fd_prop_singl);
+  propagate(fd_prop_singl);
 
   if (isLocalVar) {
     bindLocalVarToValue(vPtr, term);
@@ -114,6 +113,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
   OZ_Term right_var       = *right_varptr;
   OzVariable * right_cvar = tagged2CVar(right_var);
 
+  // this assertion is not valid anymore
   Assert(right_cvar->getType() != OZ_VAR_BOOL);
 
   if (right_cvar->getType() != OZ_VAR_FD) {
@@ -132,12 +132,8 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       Bool left_var_is_local  = oz_isLocalVar(this);
       Bool right_var_is_local = oz_isLocalVar(right_fdvar);
       //
-      Bool left_var_is_constrained  =
-        (intersection.getSize() < finiteDomain.getSize());
-      Bool right_var_is_constrained =
-        (intersection.getSize() < right_dom.getSize());
-      //
       if (left_var_is_local && right_var_is_local) {
+        DEBUG_CONSTRAIN_CVAR(("local-local"));
         //
         // left and right variable are local
         //
@@ -193,66 +189,51 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
           right_fdvar->dispose();
         }
       } else if (left_var_is_local && !right_var_is_local) {
+        DEBUG_CONSTRAIN_CVAR(("local-global"));
         //
         // left variable is local and right variable is global
         //
-        if (intersection.getSize() < right_dom.getSize()) {
-          //
-          // intersection constrains domain of global variable
-          //
-          if (intersection == fd_singl) {
-            // intersection is singleton
-            OZ_Term int_var = newSmallInt(intersection.getSingleElem());
-            right_fdvar->propagateUnify();
-            propagateUnify();
-            bindLocalVarToValue(left_varptr, int_var);
-            bindGlobalVarToValue(right_varptr, int_var);
-            // dispose left_var
-            dispose();
-          } else if (intersection== fd_bool) {
-            // intersection has boolean domain
-            Board * right_fdvar_home = right_fdvar->getBoardInternal();
-            OzBoolVariable * right_boolvar = new OzBoolVariable(right_fdvar_home);
-            OZ_Term * right_varptr_bool =
-              newTaggedCVar(new OzBoolVariable(right_fdvar_home));
-            // wake up
-            right_fdvar->propagateUnify();
-            propagateUnify();
-            // cast and bind
-            castGlobalVar(right_varptr, right_varptr_bool);
-            bindLocalVar(left_varptr, right_varptr_bool);
-          } else {
-            // intersection has proper domain
-            if (right_var_is_constrained) {
-              right_fdvar->propagateUnify();
-              constrainGlobalVar(right_varptr, intersection);
-            }
-            if (left_var_is_constrained) {
-              propagateUnify();
-            }
-            bindLocalVar(left_varptr, right_varptr);
-            // dispose local variable
-            dispose();
-          }
-        } else {
-          //
-          // intersection does NOT constrain domain of global variable
-          //
+        if (intersection == fd_singl) {
+          // intersection is singleton
+          OZ_Term int_var = newSmallInt(intersection.getSingleElem());
           right_fdvar->propagateUnify();
-          if (left_var_is_constrained) {
-            propagateUnify();
+          propagateUnify();
+          bindLocalVarToValue(left_varptr, int_var);
+          bindGlobalVarToValue(right_varptr, int_var);
+          // dispose left_var
+          dispose();
+        } else if (intersection== fd_bool) {
+          // intersection has boolean domain
+          Board * right_fdvar_home = right_fdvar->getBoardInternal();
+          OzBoolVariable * right_boolvar = new OzBoolVariable(right_fdvar_home);
+          OZ_Term * right_varptr_bool =
+            newTaggedCVar(new OzBoolVariable(right_fdvar_home));
+          // wake up
+          right_fdvar->propagateUnify();
+          propagateUnify();
+          // cast and bind
+          castGlobalVar(right_varptr, right_varptr_bool);
+          bindLocalVar(left_varptr, right_varptr_bool);
+        } else {
+          // intersection has proper domain
+          right_fdvar->propagateUnify();
+          if (intersection.getSize() < right_dom.getSize()) {
+            // intersection constrains domain of global variable
+            constrainGlobalVar(right_varptr, intersection);
           }
-          relinkSuspListTo(right_fdvar, TRUE);
+          propagateUnify();
           bindLocalVar(left_varptr, right_varptr);
           // dispose local variable
           dispose();
         }
       } else if (!left_var_is_local && right_var_is_local) {
+        DEBUG_CONSTRAIN_CVAR(("global-local"));
         //
         // left variable is global and right variable is local
         //
         return unify(right_varptr, left_varptr);
       } else {
+        DEBUG_CONSTRAIN_CVAR(("global-global"));
         //
         // left and right variable are global
         //
@@ -264,14 +245,8 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
         if (intersection == fd_singl){
           // intersection is singleton
           OZ_Term int_val = newSmallInt(intersection.getSingleElem());
-          if (!am.inEqEq()) {
-            if (left_var_is_constrained) {
-              propagateUnify();
-            }
-            if (right_var_is_constrained) {
-              right_fdvar->propagateUnify();
-          }
-          }
+          propagateUnify();
+          right_fdvar->propagateUnify();
           bindGlobalVarToValue(left_varptr, int_val);
           bindGlobalVarToValue(right_varptr, int_val);
         } else if (intersection == fd_bool) {
@@ -282,26 +257,16 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
           OZ_Term * right_varptr_bool =
             newTaggedCVar(new OzBoolVariable(right_fdvar_home));
           //
-          if (!am.inEqEq()) {
-            Assert(left_var_is_constrained);
-            propagateUnify();
-            Assert(right_var_is_constrained);
-            right_fdvar->propagateUnify();
-          }
+          propagateUnify();
+          right_fdvar->propagateUnify();
           // bind left variable to right variable ..
           bindGlobalVar(left_varptr, right_varptr);
           // .. and cast right variable to boolean variable
           castGlobalVar(right_varptr, right_varptr_bool);
         } else {
           // intersection has proper domain
-          if (!am.inEqEq()) {
-            if (left_var_is_constrained) {
-              propagateUnify();
-            }
-            if (right_var_is_constrained) {
-              right_fdvar->propagateUnify();
-            }
-          }
+          propagateUnify();
+          right_fdvar->propagateUnify();
           // bind left variable to right variable ..
           bindGlobalVar(left_varptr, right_varptr);
           //
@@ -309,7 +274,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
         }
       }
     }
-    DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+    DEBUG_CONSTRAIN_CVAR(("SUCCEEDED\n"));
     return TRUE;
   }
  failed:
@@ -565,15 +530,16 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
   DEREF(v, vptr, vtag);
 
-  if (fd && (*fd == fd_empty))
+  if (fd && (*fd == fd_empty)) {
     goto failed;
-
+  }
   if (oz_isFree(v)) {
     //
     // tell finite domain constraint to an unconstrained variable
     //
-    if (! fd) goto fdvariable;
-
+    if (! fd) {
+      goto fdvariable;
+    }
     // fd is singleton domain and hence v becomes integer. otherwise ..
     if (fd->getSize() == 1) {
       if (oz_isLocalVariable(vptr)) {
@@ -586,7 +552,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       goto proceed;
     }
 
-    // .. create an constrained variable
+    // .. create a finite domain variable
   fdvariable:
     OzVariable * cv =
       (fd
@@ -612,18 +578,19 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     //
     // tell finite domain constraint to a finite domain variable
     //
-    if (! fd) goto proceed;
-
-    OzFDVariable * fdvar = tagged2GenFDVar(v);
-    OZ_FiniteDomain dom = (fdvar->getDom() & *fd);
-    Board * fdvarhome = fdvar->getBoardInternal();
-
-    if (dom == fd_empty)
-      goto failed;
-
-    if (dom.getSize() == fdvar->getDom().getSize())
+    if (! fd) {
       goto proceed;
+    }
+    OzFDVariable * fdvar = tagged2GenFDVar(v);
+    OZ_FiniteDomain dom  = (fdvar->getDom() & *fd);
+    Board * fdvarhome    = fdvar->getBoardInternal();
 
+    if (dom == fd_empty) {
+      goto failed;
+    }
+    if (dom.getSize() == fdvar->getDom().getSize()) {
+      goto proceed;
+    }
     if (dom == fd_singl) {
       //
       // singleton domain
@@ -695,15 +662,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
   }
 
 failed:
-
   DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
-
   return FAILED;
 
 proceed:
-
   DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
-
   return PROCEED;
 
 #else
