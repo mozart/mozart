@@ -11,6 +11,7 @@
 
 #include "runtime.hh"
 #include "dictionary.hh"
+#include "fdomn.hh"
 #include "vprops.hh"
 
 enum EmulatorPropertyIndex {
@@ -118,15 +119,15 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_PRIORITIES_HIGH,ozconf.hiMidRatio);
     CASE_INT(PROP_PRIORITIES_MEDIUM,ozconf.midLowRatio);
     // TIME
-    CASE_INT(PROP_TIME_COPY,ozconf.timeDetailed && ozstat.timeForCopy.total);
-    CASE_INT(PROP_TIME_GC,ozconf.timeDetailed && ozstat.timeForGC.total);
-    CASE_INT(PROP_TIME_LOAD,ozconf.timeDetailed && ozstat.timeForLoading.total);
-    CASE_INT(PROP_TIME_PROPAGATE,ozconf.timeDetailed && ozstat.timeForPropagation.total);
-    CASE_INT(PROP_TIME_RUN,ozconf.timeDetailed &&
+    CASE_INT(PROP_TIME_COPY,ozconf.timeDetailed?ozstat.timeForCopy.total:0);
+    CASE_INT(PROP_TIME_GC,ozconf.timeDetailed?ozstat.timeForGC.total:0);
+    CASE_INT(PROP_TIME_LOAD,ozconf.timeDetailed?ozstat.timeForLoading.total:0);
+    CASE_INT(PROP_TIME_PROPAGATE,ozconf.timeDetailed?ozstat.timeForPropagation.total:0);
+    CASE_INT(PROP_TIME_RUN,ozconf.timeDetailed ?
 	     (osUserTime() - (ozstat.timeForCopy.total +
 			      ozstat.timeForGC.total +
 			      ozstat.timeForLoading.total +
-			      ozstat.timeForPropagation.total)));
+			      ozstat.timeForPropagation.total)):0);
     CASE_INT(PROP_TIME_SYSTEM,osSystemTime());
     CASE_INT(PROP_TIME_TOTAL,osTotalTime());
     CASE_INT(PROP_TIME_USER,osUserTime());
@@ -188,7 +189,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	out = cons(oz_atom(ozconf.argV[i]),out);
       return out;
     }
-  CASE_BOOL(PROP_STANDALONE,ozconf.runningUnderEmacs);
+  CASE_BOOL(PROP_STANDALONE,!ozconf.runningUnderEmacs);
   CASE_ATOM(PROP_HOME,ozconf.ozHome);
   CASE_ATOM(PROP_OS_NAME,ozconf.osname);
   CASE_ATOM(PROP_OS_CPU,ozconf.cpu);
@@ -322,10 +323,10 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 OZ_Term   VirtualProperty::get()        { Assert(0); return NameUnit; }
 OZ_Return VirtualProperty::set(OZ_Term) { Assert(0); return FAILED  ; }
 
-static OZ_Term  vprop_registry;
-static OZ_Term system_registry;
+static OZ_Term vprop_registry;
+OZ_Term system_registry;	// eventually make it static [TODO]
 
-void VirtualProperty::add(char*s,EmulatorPropertyIndex p) {
+void VirtualProperty::add(char*s,int p) {
   tagged2Dictionary(vprop_registry)->setArg(oz_atom(s),OZ_int(p));
 }
 
@@ -342,7 +343,8 @@ OZ_Return GetProperty(TaggedRef k,TaggedRef val)
   dict = tagged2Dictionary(vprop_registry);
   if (dict->getArg(key,entry)==PROCEED)
     if (OZ_isInt(entry)) {
-      entry = GetEmulatorProperty(OZ_intToC(entry));
+      entry = GetEmulatorProperty((EmulatorPropertyIndex)
+				  OZ_intToC(entry));
       return entry?oz_unify(val,entry):PROP__NOT__READABLE;
     } else
       return oz_unify(val,((VirtualProperty*)
@@ -370,7 +372,8 @@ OZ_Return PutProperty(TaggedRef k,TaggedRef v)
     if (OZ_isInt(entry)) {
       // Emulator properties must be determined
       if (OZ_isVariable(val)) OZ_suspendOn(val);
-      return SetEmulatorProperty(OZ_intToC(entry),val);
+      return SetEmulatorProperty((EmulatorPropertyIndex)
+				 OZ_intToC(entry),val);
     } else
       return ((VirtualProperty*)
 	      OZ_getForeignPointer(entry))->set(val);
@@ -401,7 +404,7 @@ OZ_C_proc_begin(BIcondGetProperty,3)
   if (status == PROP__NOT__READABLE)
     return oz_raise(E_ERROR,E_KERNEL,"condGetProperty",1,key);
   else if (status == PROP__NOT__FOUND)
-    return oz_unif(def,val);
+    return oz_unify(def,val);
   else return status;
 }
 OZ_C_proc_end
@@ -412,7 +415,7 @@ OZ_C_proc_begin(BIputProperty,2)
   OZ_declareArg(1,val);
   OZ_Return status = PutProperty(key,val);
   if (status == PROP__NOT__WRITABLE)
-    return oz_raise(E_ERROR,E_KERNEL,"putProperty",1,key)
+    return oz_raise(E_ERROR,E_KERNEL,"putProperty",1,key);
   else if (status == PROP__NOT__GLOBAL)
     return oz_raise(E_ERROR,E_KERNEL,"globalState",
 		    1,oz_atom("putProperty"));
@@ -431,8 +434,8 @@ void initVirtualProperties()
 {
   vprop_registry  = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
   system_registry = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
-  OZ_protect(vprop_registry);
-  OZ_protect(system_registry);
+  OZ_protect(&vprop_registry);
+  OZ_protect(&system_registry);
   BIaddSpec(vpropSpecs);
   // THREADS
   VirtualProperty::add("threads.created",PROP_THREADS_CREATED);
