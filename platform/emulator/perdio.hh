@@ -42,6 +42,8 @@ void gcGName(GName*);
 GName *newGName(TaggedRef t);
 GName *newGName(PrTabEntry *);
 GName *addGName(GName *, PrTabEntry *);
+GName *copyGName(GName*);
+
 PrTabEntry *findCodeGName(GName *);
 
 #endif /* __PERDIOHH */
