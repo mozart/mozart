@@ -43,6 +43,9 @@ char *getEmulator(char *ozhome)
 }
 
 
+CRITICAL_SECTION lock;
+
+
 #ifdef OZENGINEW
 
 #define bufsz 1000
@@ -57,9 +60,10 @@ unsigned __stdcall readerThread(void *arg)
       return 0;
     buf[ret]=0;
     //MessageBeep(MB_ICONINFORMATION);
+    EnterCriticalSection(&lock);
     MessageBox(NULL, buf, "Mozart Emulator says:",
 	       MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-    Sleep(2000);
+    LeaveCriticalSection(&lock);
   }
   return 1;
 }
@@ -85,6 +89,8 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
     SetEnvironmentVariable("OZPPID",strdup(auxbuf));
   }
 
+
+  InitializeCriticalSection(&lock);
 
   char buffer[5000];
 
@@ -164,7 +170,6 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
 	      "Did you run setup?",buffer,errno);
   }
 
-
 #ifdef OZENGINEW
   unsigned thrid;
   CreateThread(0,10000,&readerThread,rh,0,&thrid);
@@ -172,6 +177,16 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
 
   WaitForSingleObject(pinf.hProcess,INFINITE);
 
+#ifdef OZENGINEW
+  DWORD code;
+  if (GetExitCodeProcess(pinf.hProcess,&code) == TRUE && code !=0) {
+    sprintf(buffer,"Emulator exited abnormally with status: %d",code);
+    EnterCriticalSection(&lock);
+    MessageBox(NULL, buffer, "Emulator died:",
+	       MB_ICONERROR | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+    LeaveCriticalSection(&lock);
+  }
+#endif
+
   return 0;
 }
-
