@@ -21,7 +21,7 @@ INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
   netpbm
   gs 4
 
-  Emacs >= 19 or XEmacs >= 19
+  GNU Emacs >= 19.24 or XEmacs >= 19.14
 
 * Fast installation
 
