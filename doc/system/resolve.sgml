@@ -164,7 +164,7 @@ message.  Furthermore, all messages are prefixed by the virtual string
 identifying the resolver in which these methods are being invoked.
         <entry/<code/Resolve.expand/
 <index/<code/Resolve/<and><code/expand///
-        <synopsis/<code/{Resolve.expand ?+{Url}}//
+        <synopsis/<code/{Resolve.expand ?+{Url1} ??{Url2}}//
         <item>Takes a Url or virtual string as input and returns a Url
 with <code/"~"/ expanded to the full user's home directory path,
 <code/"~john"/ expanded to <code/john/'s home directory, <code/"."/ and
