@@ -81,6 +81,13 @@ public:
 	    : (SuspList *) NULL);
   }
 
+  int getSuspListLength(void) {
+    int len = suspList->length();
+    for (int i = getNoOfSuspLists(); i--; )
+      len += _susp_lists[i]->length();
+    return len;
+  }
+
   OzCtVariable(OZ_Ct * c, OZ_CtDefinition * d,Board *bb)
     : _definition(d), OzVariable(OZ_VAR_CT,bb)
   {
@@ -153,7 +160,10 @@ public:
   void printLongStream(ostream &out,
 		       int depth = 10,
 		       int offset = 0) {
-    printStream(out,depth); out << endl;
+    out << this << ' ';
+    printStream(out, depth);
+    // getSuspListLength() is intended as consistency check
+    out << getSuspListLength() << endl;
   }
 };
 
