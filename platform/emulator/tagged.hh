@@ -93,7 +93,8 @@ const int maxPointer = ((unsigned int)~0 >> (tagSize+1))|mallocBase;
 
 extern int gcing;
 
-inline void GCDEBUG(TaggedRef X)
+inline
+void GCDEBUG(TaggedRef X)
 {
 #ifdef DEBUG_GC
   if ( gcing && ((int)X & GCTAG) )   // ugly, but I've found no other way
@@ -102,18 +103,21 @@ inline void GCDEBUG(TaggedRef X)
 }
 
 
-inline TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
+inline
+TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
 {
   return ((int)ptr << tagSize) | tag;
 }
 
-inline TypeOfTerm tagTypeOf(TaggedRef ref)
+inline
+TypeOfTerm tagTypeOf(TaggedRef ref)
 {
   GCDEBUG(ref);
   return (TypeOfTerm)(ref&tagMask);
 }
 
-inline void *tagValueOf(TaggedRef ref)
+inline
+void *tagValueOf(TaggedRef ref)
 {
   GCDEBUG(ref);
   return (void*)((ref >> tagSize) | mallocBase);
@@ -154,7 +158,8 @@ void taggedPrintLong(TaggedRef ref, int depth = 10, int offset = 0);
 
 
 #define IsRef(term) (((term & 3) == 0) ? OK : NO)
-inline Bool isRef(TaggedRef term) {
+inline
+Bool isRef(TaggedRef term) {
   GCDEBUG(term);
   return IsRef(term);
 }
@@ -169,11 +174,13 @@ inline Bool isRef(TaggedRef term) {
 // ---------------------------------------------------------------------------
 
 
-inline Bool isUVar(TypeOfTerm tag) {
+inline
+Bool isUVar(TypeOfTerm tag) {
   return (tag == UVAR) ? OK : NO ;
 }
 
-inline Bool isUVar(TaggedRef term) {
+inline
+Bool isUVar(TaggedRef term) {
   GCDEBUG(term);
   DebugCheck(isRef(term),
              error("isUVar: illegal Arg: REF");
@@ -181,11 +188,13 @@ inline Bool isUVar(TaggedRef term) {
   return ((term & 14) == 0) ? OK : NO;   // mask 1110
 }
 
-inline Bool isSVar(TypeOfTerm tag) {
+inline
+Bool isSVar(TypeOfTerm tag) {
   return (tag == SVAR) ? OK : NO ;
 }
 
-inline Bool isSVar(TaggedRef term) {
+inline
+Bool isSVar(TaggedRef term) {
   GCDEBUG(term);
   DebugCheck(isRef(term),
              error("isSVar: illegal Arg: REF");
@@ -194,11 +203,13 @@ inline Bool isSVar(TaggedRef term) {
 }
 
 
-inline Bool isCVar(TypeOfTerm tag) {
+inline
+Bool isCVar(TypeOfTerm tag) {
   return (tag == CVAR) ? OK : NO;
 }
 
-inline Bool isCVar(TaggedRef term) {
+inline
+Bool isCVar(TaggedRef term) {
   GCDEBUG(term);
   DebugCheck(isRef(term),
              error("isCVar: illegal Arg: REF");
@@ -207,11 +218,13 @@ inline Bool isCVar(TaggedRef term) {
 }
 
 
-inline Bool isNotCVar(TypeOfTerm tag) {
+inline
+Bool isNotCVar(TypeOfTerm tag) {
   return ((tag & 6) == 0) ? OK : NO;
 }
 
-inline Bool isNotCVar(TaggedRef term) {
+inline
+Bool isNotCVar(TaggedRef term) {
   GCDEBUG(term);
   DebugCheck(isRef(term),
              error("isNotCVar: illegal Arg: REF");
@@ -220,11 +233,13 @@ inline Bool isNotCVar(TaggedRef term) {
 }
 
 
-inline Bool isAnyVar(TypeOfTerm tag) {
+inline
+Bool isAnyVar(TypeOfTerm tag) {
   return ((tag & 2) == 0) ? OK : NO;   // mask = 0010
 }
 
-inline Bool isAnyVar(TaggedRef term) {
+inline
+Bool isAnyVar(TaggedRef term) {
   GCDEBUG(term);
   DebugCheck(isRef(term),
              error("isAnyVar: illegal Arg: REF");
@@ -234,38 +249,46 @@ inline Bool isAnyVar(TaggedRef term) {
 
 
 
-inline Bool isLiteral(TypeOfTerm tag) {
+inline
+Bool isLiteral(TypeOfTerm tag) {
   return tag == ATOM ? OK : NO ;
 }
 
-inline Bool isLiteral(TaggedRef term) {
+inline
+Bool isLiteral(TaggedRef term) {
   GCDEBUG(term);
   return isLiteral(tagTypeOf(term));
 }
 
-inline Bool isSRecord(TypeOfTerm tag) {
+inline
+Bool isSRecord(TypeOfTerm tag) {
   return tag == SRECORD ? OK : NO ;
 }
 
-inline Bool isSRecord(TaggedRef term) {
+inline
+Bool isSRecord(TaggedRef term) {
   GCDEBUG(term);
   return isSRecord(tagTypeOf(term));
 }
 
-inline Bool isRecord(TypeOfTerm tag) {
+inline
+Bool isRecord(TypeOfTerm tag) {
   return isSRecord(tag) || isLiteral(tag) ? OK : NO ;
 }
 
-inline Bool isRecord(TaggedRef term) {
+inline
+Bool isRecord(TaggedRef term) {
   GCDEBUG(term);
   return isRecord(tagTypeOf(term));
 }
 
-inline Bool isLTuple(TypeOfTerm tag) {
+inline
+Bool isLTuple(TypeOfTerm tag) {
   return (tag == LTUPLE) ? OK : NO ;
 }
 
-inline Bool isLTuple(TaggedRef term) {
+inline
+Bool isLTuple(TaggedRef term) {
   GCDEBUG(term);
   DebugCheck(isRef(term),
              error("isLTuple: illegal Arg: REF");
@@ -273,82 +296,100 @@ inline Bool isLTuple(TaggedRef term) {
   return ((term & 13) == 0) ? OK : NO; // mask = 1101
 }
 
-inline Bool isSTuple(TypeOfTerm tag) {
+inline
+Bool isSTuple(TypeOfTerm tag) {
   return (tag == STUPLE) ? OK : NO ;
 }
 
-inline Bool isSTuple(TaggedRef term) {
+inline
+Bool isSTuple(TaggedRef term) {
   GCDEBUG(term);
   return isSTuple(tagTypeOf(term));
 }
 
-inline Bool isTuple(TypeOfTerm tag) {
+inline
+Bool isTuple(TypeOfTerm tag) {
   return isSTuple(tag) || isLTuple(tag) || isLiteral(tag) ? OK : NO ;
 }
 
-inline Bool isTuple(TaggedRef term) {
+inline
+Bool isTuple(TaggedRef term) {
   GCDEBUG(term);
   return isTuple(tagTypeOf(term));
 }
 
-inline Bool isNoNumber(TypeOfTerm tag) {
+inline
+Bool isNoNumber(TypeOfTerm tag) {
   return isRecord(tag) || isTuple(tag) ? OK : NO ;
 }
 
-inline Bool isNoNumber(TaggedRef term) {
+inline
+Bool isNoNumber(TaggedRef term) {
   GCDEBUG(term);
   return isNoNumber(tagTypeOf(term));
 }
 
-inline Bool isFloat(TypeOfTerm tag) {
+inline
+Bool isFloat(TypeOfTerm tag) {
   return (tag == FLOAT) ? OK : NO ;
 }
 
-inline Bool isFloat(TaggedRef term) {
+inline
+Bool isFloat(TaggedRef term) {
   GCDEBUG(term);
   return isFloat(tagTypeOf(term));
 }
 
-inline Bool isSmallInt(TypeOfTerm tag) {
+inline
+Bool isSmallInt(TypeOfTerm tag) {
   return (tag == SMALLINT) ? OK : NO ;
 }
 
-inline Bool isSmallInt(TaggedRef term) {
+inline
+Bool isSmallInt(TaggedRef term) {
   return isSmallInt(tagTypeOf(term));
 }
 
-inline Bool isBigInt(TypeOfTerm tag) {
+inline
+Bool isBigInt(TypeOfTerm tag) {
   return (tag == BIGINT) ? OK : NO ;
 }
 
-inline Bool isBigInt(TaggedRef term) {
+inline
+Bool isBigInt(TaggedRef term) {
   GCDEBUG(term);
   return isBigInt(tagTypeOf(term));
 }
 
-inline Bool isInt(TypeOfTerm tag) {
+inline
+Bool isInt(TypeOfTerm tag) {
   return (isSmallInt(tag) || isBigInt(tag)) ? OK : NO ;
 }
 
-inline Bool isInt(TaggedRef term) {
+inline
+Bool isInt(TaggedRef term) {
   GCDEBUG(term);
   return isInt(tagTypeOf(term));
 }
 
-inline Bool isNumber(TypeOfTerm tag) {
+inline
+Bool isNumber(TypeOfTerm tag) {
   return (isFloat(tag) || isInt(tag)) ? OK : NO ;
 }
 
-inline Bool isNumber(TaggedRef term) {
+inline
+Bool isNumber(TaggedRef term) {
   GCDEBUG(term);
   return isNumber(tagTypeOf(term));
 }
 
-inline Bool isConst(TypeOfTerm tag) {
+inline
+Bool isConst(TypeOfTerm tag) {
   return (tag == CONST) ? OK : NO ;
 }
 
-inline Bool isConst(TaggedRef term) {
+inline
+Bool isConst(TaggedRef term) {
   GCDEBUG(term);
   return isConst(tagTypeOf(term));
 }
@@ -358,7 +399,8 @@ inline Bool isConst(TaggedRef term) {
 
 // this function should be used, if tagged references are to be initialized
 #ifdef DEBUG_CHECK
-inline TaggedRef makeTaggedNULL()
+inline
+TaggedRef makeTaggedNULL()
 {
   return makeTaggedRef((TypeOfTerm)0,NULL);
 }
@@ -366,17 +408,20 @@ inline TaggedRef makeTaggedNULL()
 #define makeTaggedNULL() ((TaggedRef) 0)
 #endif
 
-inline TaggedRef makeTaggedMisc(void *s)
+inline
+TaggedRef makeTaggedMisc(void *s)
 {
   return makeTaggedRef((TypeOfTerm)0,s);
 }
 
-inline TaggedRef makeTaggedMisc(int s)
+inline
+TaggedRef makeTaggedMisc(int s)
 {
   return makeTaggedMisc((void *) s);
 }
 
-inline TaggedRef makeTaggedRef(TaggedRef *s)
+inline
+TaggedRef makeTaggedRef(TaggedRef *s)
 {
   CHECK_POINTER(s);
   DebugGC(gcing == 0 && !inChunkChain (heapGetStart (), (void *)s),
@@ -384,80 +429,93 @@ inline TaggedRef makeTaggedRef(TaggedRef *s)
   return (TaggedRef)s;
 }
 
-inline TaggedRef makeTaggedUVar(Board *s)
+inline
+TaggedRef makeTaggedUVar(Board *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(UVAR,s);
 }
 
-inline TaggedRef makeTaggedSVar(SVariable *s)
+inline
+TaggedRef makeTaggedSVar(SVariable *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(SVAR,s);
 }
 
-inline TaggedRef makeTaggedCVar(GenCVariable *s) {
+inline
+TaggedRef makeTaggedCVar(GenCVariable *s) {
   CHECK_POINTER(s);
   return makeTaggedRef(CVAR, s);
 }
 
-inline TaggedRef makeTaggedSTuple(STuple *s)
+inline
+TaggedRef makeTaggedSTuple(STuple *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(STUPLE,s);
 }
 
-inline TaggedRef makeTaggedLTuple(LTuple *s)
+inline
+TaggedRef makeTaggedLTuple(LTuple *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(LTUPLE,s);
 }
 
-inline TaggedRef makeTaggedSRecord(SRecord *s)
+inline
+TaggedRef makeTaggedSRecord(SRecord *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(SRECORD,s);
 }
 
 
-inline TaggedRef makeTaggedAtom(char *s)
+inline
+TaggedRef makeTaggedAtom(char *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(ATOM,addToAtomTab(s));
 }
 
-inline TaggedRef makeTaggedAtom(Atom *s)
+inline
+TaggedRef makeTaggedAtom(Atom *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(ATOM,s);
 }
 
-inline TaggedRef makeTaggedSmallInt(unsigned int s)
+inline
+TaggedRef makeTaggedSmallInt(unsigned int s)
 {
   return makeTaggedRef(SMALLINT,(void*)s);
 }
 
-inline TaggedRef makeTaggedBigInt(BigInt *s)
+inline
+TaggedRef makeTaggedBigInt(BigInt *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(BIGINT,s);
 }
 
-inline TaggedRef makeTaggedFloat(Float *s)
+inline
+TaggedRef makeTaggedFloat(Float *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(FLOAT,s);
 }
 
 
-inline TaggedRef makeTaggedConst(ConstTerm *s)
+inline
+TaggedRef makeTaggedConst(ConstTerm *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(CONST,s);
 }
 
 // getArg() and the like may never return variables
-inline TaggedRef tagged2NonVariable(TaggedRef *term)
+inline
+TaggedRef tagged2NonVariable(TaggedRef *term)
 {
   GCDEBUG(*term);
   TaggedRef ret = *term;
@@ -471,21 +529,24 @@ inline TaggedRef tagged2NonVariable(TaggedRef *term)
 // ---------------------------------------------------------------------------
 // --- TaggedRef: allocate on heap, an return a ref to it
 
-inline TaggedRef *newTaggedSVar(SVariable *c)
+inline
+TaggedRef *newTaggedSVar(SVariable *c)
 {
   TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
   *ref = makeTaggedSVar(c);
   return ref;
 }
 
-inline TaggedRef *newTaggedUVar(Board *c)
+inline
+TaggedRef *newTaggedUVar(Board *c)
 {
   TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
   *ref = makeTaggedUVar(c);
   return ref;
 }
 
-inline TaggedRef *newTaggedCVar(GenCVariable *c) {
+inline
+TaggedRef *newTaggedCVar(GenCVariable *c) {
   TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
   *ref = makeTaggedCVar(c);
   return ref;
@@ -495,7 +556,8 @@ inline TaggedRef *newTaggedCVar(GenCVariable *c) {
 // ---------------------------------------------------------------------------
 // --- TaggedRef: conversion: tagged2<Type>
 
-inline void doBind(TaggedRef *p, TaggedRef t)
+inline
+void doBind(TaggedRef *p, TaggedRef t)
 {
   CHECK_NONVAR(t);
   *p = t;
@@ -508,13 +570,15 @@ inline void doBind(TaggedRef *p, TaggedRef t)
 
 // this function is now obsolete, the call of tagValueOf cannot be optimized
 //   if the tag is known
-inline void *tagValueOf(TypeOfTerm /* tag */, TaggedRef ref)
+inline
+void *tagValueOf(TypeOfTerm /* tag */, TaggedRef ref)
 {
   GCDEBUG(ref);
   return tagValueOf(ref);
 }
 
-inline TaggedRef *tagged2Ref(TaggedRef ref)
+inline
+TaggedRef *tagged2Ref(TaggedRef ref)
 {
   GCDEBUG(ref);
 // cannot use CHECKTAG(REF); because only last two bits must be zero
@@ -526,56 +590,64 @@ inline TaggedRef *tagged2Ref(TaggedRef ref)
 }
 
 /* does not deref home pointer! */
-inline Board *tagged2VarHome(TaggedRef ref)
+inline
+Board *tagged2VarHome(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(UVAR);
   return (Board *) tagValueOf(UVAR,ref);
 }
 
-inline STuple *tagged2STuple(TaggedRef ref)
+inline
+STuple *tagged2STuple(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(STUPLE);
   return (STuple *) tagValueOf(STUPLE,ref);
 }
 
-inline SRecord *tagged2SRecord(TaggedRef ref)
+inline
+SRecord *tagged2SRecord(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(SRECORD);
   return (SRecord *) tagValueOf(SRECORD,ref);
 }
 
-inline LTuple *tagged2LTuple(TaggedRef ref)
+inline
+LTuple *tagged2LTuple(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(LTUPLE);
   return (LTuple *) tagValueOf(LTUPLE,ref);
 }
 
-inline Atom *tagged2Atom(TaggedRef ref)
+inline
+Atom *tagged2Atom(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(ATOM);
   return (Atom *) tagValueOf(ATOM,ref);
 }
 
-inline Float *tagged2Float(TaggedRef ref)
+inline
+Float *tagged2Float(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(FLOAT);
   return (Float *) tagValueOf(FLOAT,ref);
 }
 
-inline unsigned int tagged2SmallInt(TaggedRef ref)
+inline
+unsigned int tagged2SmallInt(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(SMALLINT);
   return (unsigned int) tagValueOf(SMALLINT,ref);
 }
 
-inline BigInt *tagged2BigInt(TaggedRef ref)
+inline
+BigInt *tagged2BigInt(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(BIGINT);
@@ -583,21 +655,24 @@ inline BigInt *tagged2BigInt(TaggedRef ref)
 }
 
 
-inline ConstTerm *tagged2Const(TaggedRef ref)
+inline
+ConstTerm *tagged2Const(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(CONST);
   return (ConstTerm *) tagValueOf(CONST,ref);
 }
 
-inline SVariable *tagged2SVar(TaggedRef ref)
+inline
+SVariable *tagged2SVar(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(SVAR);
   return (SVariable *) tagValueOf(SVAR,ref);
 }
 
-inline GenCVariable *tagged2CVar(TaggedRef ref) {
+inline
+GenCVariable *tagged2CVar(TaggedRef ref) {
   GCDEBUG(ref);
   CHECKTAG(CVAR);
   return (GenCVariable *) tagValueOf(CVAR,ref);
@@ -681,39 +756,46 @@ const int RADirty = 1; // means something has suspendeed on it
 const int RAFreed = 2; // means has been already deallocated
 #endif
 
-inline Bool isDirtyRefsArray(RefsArray a)
+inline
+Bool isDirtyRefsArray(RefsArray a)
 {
   return (a[-1]&RADirty) ? OK : NO;
 }
 
-inline void markDirtyRefsArray(RefsArray a)
+inline
+void markDirtyRefsArray(RefsArray a)
 {
   if (a) a[-1] |= RADirty;
 }
 
 #ifdef DEBUG_CHECK
-inline Bool isFreedRefsArray(RefsArray a)
+inline
+Bool isFreedRefsArray(RefsArray a)
 {
   return (a && a[-1]&RAFreed) ? OK : NO;
 }
 
-inline void markFreedRefsArray(RefsArray a)
+inline
+void markFreedRefsArray(RefsArray a)
 {
   if (a) a[-1] |= RAFreed;
 }
 
 #endif
 
-inline void setRefsArraySize(RefsArray a, int n)
+inline
+void setRefsArraySize(RefsArray a, int n)
 {
   a[-1] = (TaggedRef)n<<2;
 }
 
-inline int getRefsArraySize(RefsArray a) {
+inline
+int getRefsArraySize(RefsArray a) {
   return (int) a[-1] >> 2;
 }
 
-inline Bool initRefsArray(RefsArray a, int size, Bool init)
+inline
+Bool initRefsArray(RefsArray a, int size, Bool init)
 {
   setRefsArraySize(a,size);
   TaggedRef help = makeTaggedNULL();    /* due to stupid gcc */
@@ -725,7 +807,8 @@ inline Bool initRefsArray(RefsArray a, int size, Bool init)
   return OK;  /* due to stupid CC */
 }
 
-inline RefsArray allocateRefsArray(int n, Bool init=OK)
+inline
+RefsArray allocateRefsArray(int n, Bool init=OK)
 {
   Assert(n > 0);
   RefsArray a = ((RefsArray) heapMalloc((n+1) * sizeof(TaggedRef)));
@@ -734,7 +817,8 @@ inline RefsArray allocateRefsArray(int n, Bool init=OK)
   return a;
 }
 
-inline RefsArray allocateY(int n)
+inline
+RefsArray allocateY(int n)
 {
   RefsArray a = ((RefsArray) freeListMalloc((n+1) * sizeof(TaggedRef)));
   a += 1;
@@ -742,7 +826,8 @@ inline RefsArray allocateY(int n)
   return a;
 }
 
-inline void deallocateY(RefsArray a)
+inline
+void deallocateY(RefsArray a)
 {
 #ifdef DEBUG_CHECK
   markFreedRefsArray(a);
@@ -751,15 +836,18 @@ inline void deallocateY(RefsArray a)
 #endif
 }
 
-inline RefsArray allocateStaticRefsArray(int n) {
-  RefsArray a = (RefsArray) new char[(n+1) * sizeof(TaggedRef)];
+inline
+RefsArray allocateStaticRefsArray(int n) {
+// RefsArray a = (RefsArray) new char[(n+1) * sizeof(TaggedRef)];
+  RefsArray a = new TaggedRef[n + 1];
   a += 1;
   initRefsArray(a,n,OK);
   return a;
 }
 
 
-inline RefsArray copyRefsArray(RefsArray a) {
+inline
+RefsArray copyRefsArray(RefsArray a) {
   int n = getRefsArraySize(a);
   RefsArray r = allocateRefsArray(n,NO);
   for (int i = n-1; i >= 0; i--) {
@@ -768,7 +856,8 @@ inline RefsArray copyRefsArray(RefsArray a) {
   return r;
 }
 
-inline RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) {
+inline
+RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) {
   RefsArray r = allocateRefsArray(n,init);
   for (int i = n-1; i >= 0; i--) {
     CHECK_NONVAR(a[i]);
@@ -778,7 +867,8 @@ inline RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) {
 }
 
 
-inline RefsArray resize(RefsArray r, int s){
+inline
+RefsArray resize(RefsArray r, int s){
   int size = getRefsArraySize(r);
   if (s < size){
     setRefsArraySize(r,s);
