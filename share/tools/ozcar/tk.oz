@@ -116,6 +116,9 @@ class ScrolledTitleCanvas from Tk.canvas Smoother
    meth title(S)=M
       {self.frame M}
    end
+   meth tk(...)=M
+      Smoother,M
+   end
 end
 
 class ScrolledTitleText from Tk.text Smoother
@@ -157,6 +160,9 @@ class ScrolledTitleText from Tk.text Smoother
    in
       {DoIt NextTag<-self.TagBase}
    end
+   meth tk(...)=M
+      Smoother,M
+   end
 end
 
 class StatusDisplay from Tk.text Smoother
@@ -176,5 +182,8 @@ class StatusDisplay from Tk.text Smoother
 	 {self tk(conf fg:Color)}
       end
       {self tk(conf state:disabled)}
+   end
+   meth tk(...)=M
+      Smoother,M
    end
 end
