@@ -23,7 +23,7 @@
 %%% WARRANTIES.
 %%%
 
-functor prop once
+functor
 import
    Open(file)
    OS(system)

@@ -24,22 +24,21 @@
 %%% WARRANTIES.
 %%%
 
-functor $
+functor
 
 import
-   Profile.{mode reset getInfo}
-      from 'x-oz://boot/Profile'
+   Profile(mode reset getInfo) at 'x-oz://boot/Profile'
 
-   Property.{get}
+   Property(get)
 
-   OS.{time}
+   OS(time)
 
    Tk
 
    TkTools
 
-   Emacs.{getOPI
-          condSend}
+   Emacs(getOPI
+         condSend)
 
 export
    'object':   Profiler
@@ -47,7 +46,7 @@ export
    'open':     OpenProfiler
    'close':    CloseProfiler
 
-body
+define
    \insert 'profiler/prof-config'
    \insert 'profiler/prof-prelude'
 
