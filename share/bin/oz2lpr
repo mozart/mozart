@@ -82,7 +82,7 @@ if [ $? != 0 ]; then
   continue
 fi
 
-echo "DVIPS $tmpfile ..."
+echo "${DVIPS} $tmpfile ..."
 ${DVIPS} /tmp/$tmpfile > /dev/null 2>&1
 cleanup
 
