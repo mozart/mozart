@@ -243,64 +243,103 @@ int OZ_isVariable(OZ_Term term)
   return oz_isVariable(term);
 }
 
+TaggedRef oz_valueType(OZ_Term term)
+{
+  char *ret = 0;
+
+  Assert(!oz_isRef(term));
+
+  switch (tagTypeOf(term)) {
+  case UVAR:
+    // FUT
+  case CVAR:
+    ret = "variable";
+    break;
+  case SMALLINT:
+    ret = "int";
+    break;
+  case OZFLOAT:
+    ret = "float";
+    break;
+  case LITERAL:
+    ret = tagged2Literal(term)->isAtom() ? "atom" : "name";
+    break;
+  case LTUPLE:
+    ret = "tuple"; // "cons";
+    break;
+  case SRECORD:
+    if (tagged2SRecord(term)->isTuple()) {
+      // SRecord *sr=tagged2SRecord(term);
+      // if (oz_eq(sr->getLabel(),AtomPair) && sr->getWidth()>1)
+      //    ret = "pair";
+      // else
+      ret = "tuple";
+    } else {
+      ret = "record";
+    }
+    break;
+  case FSETVALUE:
+    ret = "fset";
+    break;
+  case OZCONST:
+    switch (tagged2Const(term)->getType()) {
+    case Co_BigInt:
+      ret = "int";
+      break;
+    case Co_Foreign_Pointer:
+      ret = "foreignPointer";
+      break;
+    case Co_Thread:
+      ret = "thread";
+      break;
+    case Co_Abstraction:
+    case Co_Builtin:
+      ret = "procedure";
+      break;
+    case Co_Cell:
+      ret = "cell";
+      break;
+    case Co_Space:
+      ret = "space";
+      break;
+    case Co_Object:
+      ret = "object";
+      break;
+    case Co_Port:
+      ret = "port";
+      break;
+    case Co_Chunk:
+      ret = "chunk";
+      break;
+    case Co_HeapChunk:
+      ret = "heapChunk";
+      break;
+    case Co_Array:
+      ret = "array";
+      break;
+    case Co_Dictionary:
+      ret = "dictionary";
+      break;
+    case Co_Lock:
+      ret = "lock";
+      break;
+    case Co_Class:
+      ret = "class";
+      break;
+    case Co_Extension:
+      return tagged2Extension(term)->typeV();
+    default:
+      break;
+    }
+  default:
+    break;
+  }
+  return ret ? oz_atom(ret) : 0;
+}
+
 OZ_Term OZ_termType(OZ_Term term)
 {
-  term = oz_deref(term);
-
-  if (oz_isThread(term)) {
-    return oz_atom("thread");
-  }
-
-  if (oz_isVariable(term)) {
-    return oz_atom("variable");
-  }
-
-  if (oz_isInt(term)) {
-    return oz_atom("int");
-  }
-
-  if (oz_isFloat(term)) {
-    return oz_atom("float");
-  }
-
-  if (oz_isLiteral(term)) {
-    return oz_atom(tagged2Literal(term)->isAtom() ? "atom" : "name");
-  }
-
-  if (oz_isTuple(term)) {
-    return oz_atom("tuple");
-  }
-
-  if (oz_isProcedure(term)) {
-    return oz_atom("procedure");
-  }
-
-  if (oz_isCell(term)) {
-    return oz_atom("cell");
-  }
-
-  if (oz_isChunk(term)) {
-    return oz_atom("chunk");
-  }
-
-  if (oz_isSRecord(term)) {
-    return oz_atom("record");
-  }
-
-  if (oz_isSpace(term)) {
-    return oz_atom("space");
-  }
-
-  if (oz_isFSetValue(term)) {
-    return oz_atom("fset");
-  }
-
-  if (OZ_isForeignPointer(term)) {
-    return oz_atom("foreign_pointer");
-  }
-
-  OZ_warning("OZ_termType: unknown type in 0x%x\n",term);
-  return 0;
+  return oz_valueType(oz_deref(term));
 }
 
 /* -----------------------------------------------------------------
@@ -792,7 +831,6 @@ void const2buffer(ostream &out, ConstTerm *c)
   case Co_Lock:       out << "<Lock>"; break;
   case Co_Array:      out << "<Array>"; break;
   case Co_Dictionary: out << "<Dictionary>"; break;
-  case Co_BitArray:   out << "<BitArray>"; break;
 
   case Co_Class:
   case Co_Object:
@@ -807,12 +845,8 @@ void const2buffer(ostream &out, ConstTerm *c)
     out << "<ForeignPointer " << ((ForeignPointer *) c)->getPointer() << ">";
     break;
 
-  case Co_SituatedExtension:
-    ((SituatedExtension *) c)->printStreamV(out,0);
-    break;
-
-  case Co_ConstExtension:
-    ((ConstExtension *) c)->printStreamV(out,0);
+  case Co_Extension:
+    ((Extension *) c)->printStreamV(out,0);
     break;
 
   default:

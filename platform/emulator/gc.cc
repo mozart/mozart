@@ -2248,15 +2248,14 @@ void ConstTerm::gcConstRecurse()
   case Co_Thread:
     break;
 
-  case Co_SituatedExtension:
-    ((ConstTermWithHome *) this)->gcConstTermWithHome();
-    ((SituatedExtension *) this)->gcRecurseV();
-    break;
-
-  case Co_ConstExtension:
-    Assert(isInGc);
-    ((ConstExtension *) this)->gcRecurseV();
-    break;
+  case Co_Extension:
+    {
+      Extension *ex=(Extension *) this;
+      Assert(isInGc || ex->getBoardInternal());
+      ex->setBoardInternal(ex->getBoardInternal()->gcBoard());
+      ex->gcRecurseV();
+      break;
+     }
 
   default:
     Assert(0);
@@ -2319,8 +2318,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
     }
   case Co_HeapChunk:
     return ((HeapChunk *) this)->gc();
-  case Co_BitArray:
-    return this;
   case Co_Abstraction:
     {
       Abstraction *a = (Abstraction *) this;
@@ -2463,15 +2460,19 @@ ConstTerm *ConstTerm::gcConstTerm() {
   case Co_Foreign_Pointer:
     return ((ForeignPointer*)this)->gc();
 
-  case Co_SituatedExtension:
-    CheckLocal((SituatedExtension *) this);
-    ret = ((SituatedExtension *) this)->gc();
-    break;
-
-  case Co_ConstExtension:
-    if (!isInGc) return this;
-    ret = ((ConstExtension *) this)->gcV();
-    break;
+  case Co_Extension:
+    {
+      Extension *ex= (Extension *) this;
+      Board *bb=ex->getBoardInternal();
+      if (bb) {
+        bb=bb->derefBoard();
+        if (!bb->gcIsAlive()) return NULL;
+        if (!isInGc && bb->isMarkedGlobal()) return this;
+      }
+      ret = ex->gcV();
+      ((Extension *)ret)->setBoardInternal(bb);
+      break;
+    }
 
   default:
     Assert(0);

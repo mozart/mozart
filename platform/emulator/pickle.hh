@@ -79,6 +79,7 @@ typedef enum {
   DIF_SITE_PERM,
   DIF_PASSIVE,
   DIF_COPYABLENAME,
+  DIF_EXTENSION,
   DIF_LAST
 } MarshalTag;
 

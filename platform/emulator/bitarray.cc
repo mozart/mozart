@@ -34,9 +34,9 @@
 
 #define BITS_PER_INT (sizeof(int) * 8)
 
-int myID=oz_newUniqueId();
+class BitArray: public Extension {
+public:
 
-class BitArray: public ConstExtension {
 private:
   int lowerBound, upperBound;
   int *array;
@@ -50,12 +50,15 @@ private:
   }
 public:
   virtual
-  int getTypeV() { return myID; }
+  int getIdV() { return OZ_E_BITARRAY; }
 
   virtual
   void printStreamV(ostream &out,int depth = 10) {
     out << "<BitArray>";
   }
+
+  virtual
+  OZ_Term typeV() { return oz_atom("bitArray"); }
 
   virtual
   void printLongStreamV(ostream &out,int depth = 10,
@@ -65,10 +68,9 @@ public:
   }
 
   virtual
-  ConstExtension *gcV(void);
-
+  Extension *gcV(void);
   BitArray operator=(const BitArray &);  // fake for compiler
-  BitArray(int lower, int upper): ConstExtension() {
+  BitArray(int lower, int upper): Extension() {
     Assert(lower <= upper);
     lowerBound = lower;
     upperBound = upper;
@@ -78,7 +80,7 @@ public:
       array[i] = 0;
     COUNT1(sizeBitArrays, sizeof(BitArray));
   }
-  BitArray(const BitArray &b): ConstExtension() {
+  BitArray(const BitArray &b): Extension() {
     lowerBound = b.lowerBound;
     upperBound = b.upperBound;
     int size = getSize();
@@ -110,22 +112,22 @@ public:
 inline
 Bool oz_isBitArray(TaggedRef term)
 {
-  return oz_isConstExtension(term) &&
-    tagged2ConstExtension(term)->getTypeV() == myID;
+  return oz_isExtension(term) &&
+    tagged2Extension(term)->getIdV() == OZ_E_BITARRAY;
 }
 
 inline
 BitArray *tagged2BitArray(TaggedRef term)
 {
   Assert(oz_isBitArray(term));
-  return (BitArray *) tagged2ConstExtension(term);
+  return (BitArray *) tagged2Extension(term);
 }
 
 /*===================================================================
  * Bit Arrays
  *=================================================================== */
 
-ConstExtension *BitArray::gcV(void) {
+Extension *BitArray::gcV(void) {
   BitArray *ret = new BitArray(*this);
   return ret;
 }

@@ -26,7 +26,7 @@
 #include "am.hh"
 
 int oz_newUniqueId() {
-  static int counter=0;
+  static int counter=OZ_E_LAST;
   return counter++;
 }
 
@@ -35,39 +35,58 @@ int OZ_getUniqueId(void)
   return oz_newUniqueId();
 }
 
+
+void Extension::printStreamV(ostream &out,int depth)
+{
+  out << "extension";
+}
+
+void Extension::printLongStreamV(ostream &out,int depth,
+                                 int offset)
+{
+  printStreamV(out,depth);
+  out << endl;
+}
+
+OZ_Term Extension::typeV()
+{
+  return oz_atom("extension");
+}
+
 SituatedExtension::SituatedExtension(void)
-  : ConstTermWithHome(oz_currentBoard(), Co_SituatedExtension) {}
+  : Extension()
+{
+  board = oz_currentBoard();
+}
 
 void SituatedExtension::printStreamV(ostream &out,int depth)
 {
   out << "situatedExtension";
 }
 
-void SituatedExtension::printLongStreamV(ostream &out,int depth,
-                                         int offset)
-{
-  printStreamV(out,depth);
-  out << endl;
-}
-
-OZ_Term SituatedExtension::inspectV()
+OZ_Term SituatedExtension::typeV()
 {
   return oz_atom("situatedExtension");
 }
 
-void ConstExtension::printStreamV(ostream &out,int depth)
-{
-  out << "constExtension";
+static oz_unmarshalProcType *unmarshalRoutine = 0;
+static int unmarshalRoutineArraySize = 0;
+
+OZ_Term oz_extension_unmarshal(int type,MsgBuffer*bs) {
+  oz_unmarshalProcType f = unmarshalRoutine[type];
+  if (f==0) return 0;
+  else return f(bs);
 }
 
-void ConstExtension::printLongStreamV(ostream &out,int depth,
-                                         int offset)
+void oz_registerConstExtension(int type, oz_unmarshalProcType f)
 {
-  printStreamV(out,depth);
-  out << endl;
-}
-
-OZ_Term ConstExtension::inspectV()
-{
-  return oz_atom("constExtension");
+  if (unmarshalRoutineArraySize<type) {
+    oz_unmarshalProcType *n=new oz_unmarshalProcType[type+100];
+    for (int i=unmarshalRoutineArraySize; i--;) {
+      n[i]=unmarshalRoutine[i];
+    }
+    if (unmarshalRoutine) delete [] unmarshalRoutine;
+    unmarshalRoutine = n;
+  }
+  unmarshalRoutine[type] = f;
 }

@@ -1003,11 +1003,8 @@ LBLagain:
       case Co_Class:
         t = tagged2ObjectClass(term)->classGetFeature(fea);
         break;
-      case Co_SituatedExtension:
-        t = tagged2SituatedExtension(term)->getFeatureV(fea);
-        break;
-      case Co_ConstExtension:
-        t = tagged2ConstExtension(term)->getFeatureV(fea);
+      case Co_Extension:
+        t = tagged2Extension(term)->getFeatureV(fea);
         break;
       case Co_Array:
       case Co_Dictionary:
@@ -1915,8 +1912,14 @@ OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
   if (A == B && !oz_isVariable(A)) return PROCEED;
 
   if (isConstTag(tagA)) {
-    if (oz_isBigInt(A)) return bigIntEq(A,B) ? PROCEED : FAILED;
-    return FAILED;
+    switch (tagged2Const(A)->getType()) {
+    case Co_BigInt:
+      return bigIntEq(A,B) ? PROCEED : FAILED;
+    case Co_Extension:
+      return tagged2Extension(A)->unifyV(B);
+    default:
+      return FAILED;
+    }
   }
 
  dontknow:
@@ -4848,8 +4851,6 @@ static int finalizable(OZ_Term& x)
         b = ((SChunk*)xp)->getBoardInternal(); break;
       case Co_HeapChunk:
         return 1;
-      case Co_BitArray:
-        return 1;
       case Co_Array:
         b = ((OzArray*)xp)->getBoardInternal(); break;
       case Co_Dictionary:
@@ -4858,13 +4859,10 @@ static int finalizable(OZ_Term& x)
         b = ((Tertiary*)xp)->getBoardInternal(); break;
       case Co_Class:
         b = ((ObjectClass*)xp)->getBoardInternal(); break;
-      case Co_SituatedExtension:
-        b = ((ConstTermWithHome*)xp)->getBoardInternal(); break;
-      case Co_ConstExtension:
-        return 1;
-      case Co_Unused2:
-        Assert(0);
-        return 1;
+      case Co_Extension:
+        b = ((Extension*)xp)->getBoardInternal();
+        if (!b) return 1;
+        break;
       }
       return oz_isRootBoard(b)?1:2;
     }

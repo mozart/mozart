@@ -765,8 +765,6 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_HeapChunk:
     ((HeapChunk *) this)->printLongStream(stream, depth, offset);
     break;
-  case Co_BitArray:
-    break;
   case Co_Abstraction:
     ((Abstraction *) this)->printLongStream(stream,depth,offset);
     break;

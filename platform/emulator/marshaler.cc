@@ -61,6 +61,7 @@
 #include "marshaler.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
+#include "extension.hh"
 
 /* *****************************************************************************
                        ORGANIZATION
@@ -619,6 +620,15 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Port: HandleTert("port",DIF_PORT);
 
 #undef HandleTert
+
+  case Co_Extension:
+    {
+      PD((MARSHAL,"extension"));
+      marshalDIF(bs,DIF_EXTENSION);
+      marshalNumber(((Extension*)t)->getIdV(),bs);
+      if (!((Extension*)t)->marshalV(bs)) goto bomb;
+      return;
+    }
 
   default:
     goto bomb;
@@ -1195,6 +1205,14 @@ loop:
       OZ_Term glb=unmarshalTerm(bs);
       extern void makeFSetValue(OZ_Term,OZ_Term*);
       makeFSetValue(glb,ret);
+      return;
+    }
+
+  case DIF_EXTENSION:
+    {
+      int type = unmarshalNumber(bs);
+      PD((UNMARSHAL,"extension %d",type));
+      *ret = oz_extension_unmarshal(type,bs);
       return;
     }
 
