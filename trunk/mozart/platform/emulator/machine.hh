@@ -66,12 +66,15 @@ const intlong mallocBase = 0x0;
 const intlong textBase = 0x0;
 
 /* convert an int32 to a pointer and vice versa */
-inline void* ToPointer(int32 i) { 
-  return (void*) i;
-}
-
-inline int32 ToInt32(void *p) { return (int32)(p); }
-
+#define _ToPointer(i) ((void*) (i)) 
+#define _ToInt32(p) ((int32)(p))
+#ifdef DEBUG_CHECK
+inline void* ToPointer(int32 i) { return _ToPointer(i); }
+inline int32 ToInt32(void *p) { return _ToInt32(p); }
+#else
+#define ToPointer(i) _ToPointer(i)
+#define ToInt32(p)   _ToInt32(p)
+#endif
 
 /* (un)set bits in a pointer */
 inline void *orPointer(void *p, int i)  { return (void*) ((intlong)p|(intlong)i); }
