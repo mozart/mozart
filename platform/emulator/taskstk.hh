@@ -97,6 +97,18 @@ public:
   Bool isEmpty(TaskStackEntry t) { return (t == emptyTaskStackEntry); }
   Bool isEmpty()                 { return isEmpty(*(tos-1)); }
 
+  void checkMax();
+  StackEntry *ensureFree(int n)
+  {
+    StackEntry *ret = tos;
+    if (stackEnd <= tos+n) {
+      checkMax();
+      resize(n);
+      ret = tos;
+    }
+    return ret;
+  }
+
   void shift(int len)
   {
     ensureFree(len);

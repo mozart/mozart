@@ -171,10 +171,9 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
    }
 
 #define HF_BI                                                           \
-   HF_FAIL(OZ_mkTupleC("fail",3,                                        \
+   HF_FAIL(OZ_mkTupleC("fail",2,                                        \
                        OZ_atom(builtinTab.getName((void *) biFun)),     \
-                       makeListOfX(predArity,X),                        \
-                       nil()));
+                       makeListOfX(predArity,X)));
 
 #define NOFLATGUARD   (shallowCP==NULL)
 
@@ -717,6 +716,7 @@ enum CE_RET {
   CE_CONT,
   CE_NOTHING,
   CE_FAIL,
+  CE_RAISE,
   CE_SUSPEND
 };
 
@@ -799,8 +799,8 @@ loop:
         ozstat.incSolveSolved();
         if (!fastUnifyOutline(solveAA->getResult(),
                               solveAA->genSolved(), OK)) {
-          error("unify result should never fail");
-          return CE_FAIL;
+          error("solve: unify result should never fail");
+          return CE_NOTHING;
         }
         return CE_NOTHING;
       } else {
@@ -818,8 +818,8 @@ loop:
 
           if ( !fastUnifyOutline(solveAA->getResult(),
                                  solveAA->genStuck(), OK) ) {
-            error("unify result should never fail");
-            return CE_FAIL;
+            error("solve: unify result should never fail");
+            return CE_NOTHING;
           }
           return CE_NOTHING;
 
@@ -835,7 +835,8 @@ loop:
             solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
             if (!installScript(waitBoard->getScriptRef())) {
-              return CE_FAIL;
+              error("solve: install script failed");
+              return CE_NOTHING;
             }
 
             if (waitBoard->isWaitTop()) {
@@ -861,8 +862,8 @@ loop:
           if (!fastUnifyOutline(solveAA->getResult(),
                                 solveAA->genChoice(wa->getChildCount()),
                                 OK)) {
-            error("unify result should never fail");
-            return CE_FAIL;
+            error("solve: unify result should never fail");
+            return CE_NOTHING;
           }
           return CE_NOTHING;
         }
@@ -880,8 +881,8 @@ loop:
       if ( !fastUnifyOutline(result,
                              solveAA->genUnstable(newVar),
                              OK)) {
-        error("unify result should never fail");
-        return CE_FAIL;
+        error("solve: unify result should never fail");
+        return CE_NOTHING;
       }
       return CE_NOTHING;
     }
@@ -1010,6 +1011,7 @@ void engine()
   }
 
   e->currentThread = e->getFirstThread ();
+  PC = NOCODE; // this is necessary for printing stacks (mm)
 
   // Debugger
   if (e->currentThread->stopped()) {
@@ -1112,7 +1114,12 @@ void engine()
       //  Note that *propagators* never yield 'SUSPEND';
     case FAILED:
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-      HF_FAIL(OZ_mkTupleC("fail",3,nil(),nil(),OZ_atom("propagator")));
+      HF_FAIL(OZ_mkTupleC("fail",2,
+                          builtinTab.getName((void *)
+                                             e->currentThread->getPropagator()
+                                             ->getSpawner()),
+                          e->currentThread->getPropagator()->getArguments()));
+
 
     default:
       error ("Unexpected value returned from a propagator.");
@@ -1272,6 +1279,7 @@ LBLpopTask:
       }
     }
 
+    PC = NOCODE; // this is necessary for printing stacks (mm)
     topCache--;
     switch (cFlag){
     case C_JOB:
@@ -1601,12 +1609,6 @@ LBLkillThread:
       if (nb) e->decSolveThreads (nb->getBoardFast ());
       goto LBLstart;
 
-    case CE_FAIL:
-      DebugCode (e->currentThread = (Thread *) NULL);
-      if (nb) e->decSolveThreads (nb->getBoardFast ());
-      //
-      //  Note: there is no thread!
-      HF_FAIL(OZ_mkTupleC("fail",3,nil(),nil(),OZ_atom("killThread")));
     }
 
     error("never here");
@@ -1767,19 +1769,6 @@ LBLsuspendThread:
       if (nb) e->decSolveThreads (nb->getBoardFast ());
       goto LBLstart;
 
-    case CE_FAIL:
-      DebugCode (e->currentThread = (Thread *) NULL);
-      if (nb) e->decSolveThreads (nb->getBoardFast ());
-      //
-      //  The thread does not exist any longer, because threads
-      // can contain the local tasks *only*!
-      tmpThread->disposeSuspendedThread ();
-      // ... and not 'disposeRunnableThread', because it is
-      // marked already as non-propagated;
-      //
-      //  Note: there is no thread!
-      HF_FAIL(OZ_mkTupleC("fail",3,nil(),nil(),OZ_atom("suspendThread")));
-
     case CE_CONT:
       error ("Entailment of some guard during suspending a thread???");
       goto LBLerror;
@@ -1920,10 +1909,9 @@ LBLsuspendThread:
         CHECK_CURRENT_THREAD;
       case FAILED:
         SHALLOWFAIL;
-        HF_FAIL(OZ_mkTupleC("fail",3,
+        HF_FAIL(OZ_mkTupleC("fail",2,
                             OZ_atom(entry->getPrintName()),
-                            cons(XPC(2),nil()),
-                            nil()));
+                            cons(XPC(2),nil())))
 
       case RAISE:
         RAISE_BI1(entry->getPrintName(),
@@ -1959,10 +1947,9 @@ LBLsuspendThread:
         }
       case FAILED:
         SHALLOWFAIL;
-        HF_FAIL(OZ_mkTupleC("fail",3,
+        HF_FAIL(OZ_mkTupleC("fail",2,
                             OZ_atom(entry->getPrintName()),
-                            cons(XPC(2),cons(XPC(3),nil())),
-                            nil()));
+                            cons(XPC(2),cons(XPC(3),nil()))));
 
       case RAISE:
         RAISE_BI1(entry->getPrintName(),
@@ -1999,10 +1986,9 @@ LBLsuspendThread:
         }
       case FAILED:
         SHALLOWFAIL;
-        HF_FAIL(OZ_mkTupleC("fail",3,
+        HF_FAIL(OZ_mkTupleC("fail",2,
                             OZ_atom(entry->getPrintName()),
-                            cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))),
-                            nil()));
+                            cons(XPC(2),cons(XPC(3),cons(XPC(4),nil())))));
 
       case RAISE:
         RAISE_BI1(entry->getPrintName(),
@@ -2102,13 +2088,7 @@ LBLsuspendThread:
         SRecord *srec = tagged2SRecord(rec);
         int index = ((InlineCache*)(PC+5))->lookup(srec,feature);
         if (index<0) {
-          DORAISE(OZ_mkTupleC("type",5,
-                              OZ_atom("."),
-                              cons(XPC(1), cons(feature,
-                                                cons(OZ_newVariable(),nil()))),
-                              nil(),
-                              nil(),
-                              OZ_string("no valid feature")));
+          DORAISE(OZ_mkTupleC(".", 2, XPC(1), feature));
         }
         XPC(3) = srec->getArg(index);
         DISPATCH(7);
@@ -2134,8 +2114,7 @@ LBLsuspendThread:
           }
 
         case RAISE:
-          RAISE_FBI(".",
-                    cons(XPC(1), cons(feature, nil())));
+          RAISE_FBI(".", cons(XPC(1), cons(feature, nil())));
 
         case SLEEP:
         default:
@@ -2195,7 +2174,9 @@ LBLsuspendThread:
           CHECK_CURRENT_THREAD;
 
       case FAILED:
-        HF_FAIL(OZ_mkTupleC("fail",3,OZ_atom("^"),cons(XPC(1),XPC(2))));
+        HF_FAIL(OZ_mkTupleC("fail",2,
+                            OZ_atom("^"),
+                            cons(XPC(1),cons(XPC(2),nil()))));
 
       case RAISE:
         RAISE_FBI("^",cons(XPC(1),cons(XPC(2),nil())));
@@ -2400,7 +2381,7 @@ LBLsuspendThread:
 
   Case(FAILURE)
     {
-      HF_FAIL(OZ_mkTupleC("fail",3,nil(),nil(),OZ_atom("false")));
+      HF_FAIL(OZ_atom("failure"));
     }
 
 
@@ -2847,7 +2828,7 @@ LBLsuspendThread:
 
         Bool ret = e->installScript(waitBoard->getScriptRef());
         if (!ret) {
-          HF_FAIL(OZ_mkTupleC("fail",3,nil(),nil(),OZ_atom("commit")));
+          HF_FAIL(OZ_atom("failDis"));
         }
         Assert(ret!=NO);
         DISPATCH(1);
@@ -2906,7 +2887,7 @@ LBLsuspendThread:
 
         Bool ret = e->installScript(bb->getScriptRef());
         if (!ret) {
-          HF_FAIL(OZ_mkTupleC("fail",3,nil(),nil(),OZ_atom("commit")));
+          HF_FAIL(OZ_atom("failDis"));
         }
 
         Assert(ret != NO);
@@ -3268,7 +3249,13 @@ LBLsuspendThread:
       }
 
     case CE_FAIL:
-      HF_FAIL(OZ_mkTupleC("fail",3,nil(),nil(),OZ_atom("fail")));
+      Assert(!e->isToplevel());
+      goto LBLfailure;
+
+    case CE_RAISE:
+      PC=NOCODE;
+      X[0] = e->exception;
+      goto LBLraise;
 
     case CE_SUSPEND:
       Assert (e->currentThread);
@@ -3390,7 +3377,9 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
 
       /* rule: if fi --> false */
       if (cont->getPC() == NOCODE) {
-        return CE_FAIL;
+        if (!isToplevel()) return CE_FAIL;
+        exception=OZ_atom("failCond");
+        return CE_RAISE;
       }
 
       //
@@ -3477,7 +3466,9 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
     /* rule: or ro (bottom commit) */
     if (waa->hasNoChilds()) {
       waa->setCommitted();
-      return CE_FAIL;
+      if (!isToplevel()) return CE_FAIL;
+      exception=OZ_atom("failDis");
+      return CE_RAISE;
     }
 
     /* rule: or <sigma> ro (unit commit rule) */
@@ -3508,7 +3499,9 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
         if (!installScript(waitBoard->getScriptRef())) {
           DebugCode (if (currentThread == (Thread *) KOSTJA_MAGIC)
                      currentThread = (Thread *) NULL;);
-          return CE_FAIL;
+          if (!isToplevel()) return CE_FAIL;
+          exception=OZ_atom("failDis");
+          return CE_RAISE;
         }
         DebugCode (if (currentThread == (Thread *) KOSTJA_MAGIC)
                    currentThread = (Thread *) NULL;);
@@ -3546,7 +3539,9 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
   // for statistic purposes
   ozstat.incSolveFailed();
   if (!fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
-    return CE_FAIL;
+    // this should never happen?
+    error("solve: unify result should never fail");
+    return CE_NOTHING;
   }
   if (!currentThread && currentBoard != rootBoard) {
     Thread *thr = new Thread (currentBoard);

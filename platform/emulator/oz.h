@@ -170,6 +170,7 @@ extern char *  _FUNDECL(OZ_stringToC,(OZ_Term t));
 
 extern void    _FUNDECL(OZ_printVirtualString,(OZ_Term t));
 #define OZ_printVS(t) OZ_printVirtualString(t)
+extern char *  _FUNDECL(OZ_virtualStringToC,(OZ_Term t));
 
 
 /* tuples */
@@ -261,6 +262,7 @@ extern int _FUNDECL(OZ_unprotect,(OZ_Term *));
 /* raise exception */
 extern OZ_Return _FUNDECL(OZ_typeError,(int pos,char *type));
 extern OZ_Return _FUNDECL(OZ_raise,(OZ_Term));
+extern OZ_Return _FUNDECL(OZ_raiseC,(char *label,int arity,...));
 
 /* Suspending builtins */
 
@@ -408,6 +410,20 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
      }                                                  \
    }                                                    \
    VAR = OZ_stringToC(OZ_getCArg(ARG));                 \
+ }
+
+#define OZ_declareVirtualStringArg(ARG,VAR)             \
+ char *VAR;                                             \
+ {                                                      \
+   OZ_Term OZ_avar;                                     \
+   if (!OZ_isVirtualString(OZ_getCArg(ARG),&OZ_avar)) { \
+     if (OZ_avar == 0) {                                \
+       return OZ_typeError(ARG,"VirtualString");        \
+     } else {                                           \
+       OZ_suspendOn(OZ_avar);                           \
+     }                                                  \
+   }                                                    \
+   VAR = OZ_virtualStringToC(OZ_getCArg(ARG));          \
  }
 
 /* ------------------------------------------------------------------------ *

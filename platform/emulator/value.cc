@@ -29,7 +29,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomNaive, AtomSize, AtomConstraints,
   AtomDistributed, AtomMobile, AtomFetched,
   NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
-  NameOoDefaultVar,NameOoRequiredArg;
+  NameOoDefaultVar,NameOoRequiredArg,
+  NameUnit;
 
 
 // Some often used constants
@@ -59,6 +60,8 @@ void initLiterals()
   AtomBlocked      = makeTaggedAtom("blocked");
   AtomMerged       = makeTaggedAtom("merged");
   AtomFailed       = makeTaggedAtom("failed");
+
+  NameUnit         = makeTaggedName("unit");
 
   NameTrue         = makeTaggedName(NAMETRUE);
   NameFalse        = makeTaggedName(NAMEFALSE);

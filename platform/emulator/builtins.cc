@@ -314,7 +314,8 @@ OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
 {
   if (!OZ_isProcedure(handler)) {
     if (!OZ_isAtom(handler) || !OZ_eq(handler,OZ_atom("noHandler"))) {
-      warning("builtin: '%s' illegal handler", name,toC(handler));
+      warning("Builtin '%s' illegal handler.", name,toC(handler));
+      message("Using noHandler as default.\n");
     }
     handler = 0;
   }
@@ -322,16 +323,19 @@ OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
   BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.htFind(name);
 
   if (found == htEmpty) {
-    warning("builtin: '%s' not in table", name);
-    return 0;
+    warning("Builtin '%s' not in table.", name);
+    goto fallback;
   }
 
   if (!handler && !found->getFun()) {
-    warning("builtin '%s' is special: needs suspension handler",name);
-    return 0;
-  }
-  if (handler && found->getInlineFun()) {
-    warning("builtin '%s' is compiled inline: suspension handler ignored",name);
+    warning("Builtin '%s' is special and needs suspension handler.",
+            name);
+  fallback:
+    message("Using nop as fallback.\n");
+    found = (BuiltinTabEntry *) builtinTab.htFind("nop");
+  } else if (handler && found->getInlineFun()) {
+    warning("Builtin '%s' is compiled inline: suspension handler ignored.",
+            name);
     handler = 0;
   }
 
@@ -365,9 +369,20 @@ OZ_Return isValueInline(TaggedRef val)
   NONVAR( val, _1, tag );
   return PROCEED;
 }
-
 DECLAREBI_USEINLINEREL1(BIisValue,isValueInline)
 DECLAREBOOLFUN1(BIisValueB,isValueBInline,isValueInline)
+
+
+OZ_C_proc_begin(BIdet,2)
+{
+  OZ_Term val = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+  if (OZ_isVariable(val))       {
+    OZ_suspendOn(val);
+  }
+  return OZ_unify(out,NameUnit);
+}
+OZ_C_proc_end
 
 OZ_Return isLiteralInline(TaggedRef t)
 {
@@ -1688,7 +1703,8 @@ LBLagain:
     {
       if (!isSmallInt(fea)) {
         if (!dot && isBigInt(fea)) return FAILED;
-        goto typeError1t;
+        if (dot) goto raise;
+        goto typeError1;
       }
       int i2 = smallIntValue(fea);
 
@@ -1700,17 +1716,17 @@ LBLagain:
         if (out) *out = tagged2LTuple(term)->getTail();
         return PROCEED;
       }
-      if (dot) goto typeError1t;
+      if (dot) goto raise;
       return FAILED;
     }
 
   case SRECORD:
     {
-      if ( ! isFeature(feaTag) ) goto typeError1r;
+      if ( ! isFeature(feaTag) ) goto typeError1;
 
       TaggedRef t = tagged2SRecord(term)->getFeature(fea);
       if (t == makeTaggedNULL()) {
-        if (dot) { goto typeError1r; }
+        if (dot) goto raise;
         return FAILED;
       }
       if (out) *out = t;
@@ -1727,7 +1743,7 @@ LBLagain:
   case CVAR:
     {
       if (tagged2CVar(term)->getType() != OFSVariable) goto typeError0;
-      if (!isFeature(feaTag)) goto typeError1r;
+      if (!isFeature(feaTag)) goto typeError1;
       GenOFSVariable *ofs=(GenOFSVariable *)tagged2CVar(term);
       TaggedRef t = ofs->getFeatureValue(fea);
       if (t == makeTaggedNULL()) return SUSPEND;
@@ -1736,12 +1752,12 @@ LBLagain:
     }
 
   case LITERAL:
-    if (dot) goto typeError0;
+    if (dot) goto raise;
     return FAILED;
 
   default:
     if (isChunk(term)) {
-      if (! isFeature(feaTag)) { goto typeError1r; }
+      if (! isFeature(feaTag)) { goto typeError1; }
       TaggedRef t;
       switch (tagged2Const(term)->getType()) {
       case Co_Chunk:
@@ -1758,7 +1774,7 @@ LBLagain:
         break;
       }
       if (t == makeTaggedNULL()) {
-        if (dot) { goto typeError1r; }
+        if (dot) goto raise;
         return FAILED;
       }
       if (out) *out = t;
@@ -1774,14 +1790,11 @@ LBLagain:
     goto typeError0;
   }
 typeError0:
-  if (dot)   TypeErrorT(0,"Record or Chunk and no Literal");
   TypeErrorT(0,"Record or Chunk");
-typeError1t:
-  if (dot) TypeErrorT(1,"(valid) Int)");
-  TypeErrorT(1,"Int");
-typeError1r:
-  if (dot) TypeErrorT(1,"(valid) Feature");
+typeError1:
   TypeErrorT(1,"Feature");
+raise:
+  return OZ_raiseC(".",2,term,fea);
 }
 
 
@@ -2219,6 +2232,12 @@ DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 // ---------------------------------------------------------------------
 // Bool things
 // ---------------------------------------------------------------------
+
+OZ_C_proc_begin(BIgetUnit,1)
+{
+  return OZ_unify(NameUnit,OZ_getCArg(0));
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BIgetTrue,1)
 {
@@ -3492,11 +3511,8 @@ OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
-  if ((tagB == SMALLINT && smallIntValue(B) == 0)) {
-    OZ_warning("div(%s,%s): division by zero",
-               toC(A),toC(B));
-    return FAILED;
-
+  if (tagB == SMALLINT && smallIntValue(B) == 0) {
+    return OZ_raiseC("div",2,A,B);
   }
 
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -3764,7 +3780,7 @@ OZ_Return bigtest(TaggedRef A, TaggedRef B,
   if (isAnyVar(A) || isAnyVar(B))
     return SUSPEND;
 
-  TypeErrorT(-1,"Comparable");
+  TypeErrorT(-1,"Float x Float or Int x Int or Atom x Atom");
 }
 
 
@@ -5215,6 +5231,13 @@ OZ_C_proc_begin(BIfail,VarArity)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BInop,VarArity)
+{
+  warning("nop");
+  return PROCEED;
+}
+OZ_C_proc_end
+
 // ------------------------------------------------------------------------
 // --- Call: Builtin: Load File
 // ------------------------------------------------------------------------
@@ -5927,6 +5950,7 @@ int AM::getValue(TaggedRef feat, TaggedRef out)
   STRCASE("cellHack",          ozconf.cellHack,                 OZ_unifyInt);
   STRCASE("gcFlag",            ozconf.gcFlag,                   OZ_unifyInt);
   STRCASE("gcVerbosity",       ozconf.gcVerbosity,              OZ_unifyInt);
+  STRCASE("stackMaxSize",      ozconf.stackMaxSize,             OZ_unifyInt);
   STRCASE("heapMaxSize",       ozconf.heapMaxSize,              OZ_unifyInt);
   STRCASE("heapThreshold",     ozconf.heapThreshold,            OZ_unifyInt);
   STRCASE("heapMargin",        ozconf.heapMargin,               OZ_unifyInt);
@@ -6019,6 +6043,9 @@ int AM::setValue(TaggedRef feature, TaggedRef value)
        );
   DOIF("gcVerbosity",
        ozconf.gcVerbosity = val;
+       );
+  DOIF("stackMaxSize",
+       ozconf.stackMaxSize = val;
        );
   DOIF("heapThreshold",
        ozconf.heapThreshold = val;
@@ -6757,7 +6784,9 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
             // fall through
           case 1:
             message("Line: %s\n",toC(OZ_getArg(val,0)));
+            break;
           default:
+            message("Ups: %s\n",toC(val));
             break;
           }
         }
@@ -6765,70 +6794,108 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
         message("The toplevel is blocked\n");
       } else if (literalEq(lab,OZ_atom("apply"))) {
         message("ERROR: Illtyped application\n");
-        if (OZ_width(val) < 2) {
+        if (OZ_width(val) != 2) {
           message("Ups: %s\n",toC(val));
         } else {
           printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
+        }
+        if (ozconf.errorVerbosity > 1) {
+          message("Hint:           ^^^ must be procedure or object\n");
         }
       } else if (literalEq(lab,OZ_atom("arity"))) {
         message("ERROR: Illtyped application\n");
-        if (OZ_width(val) < 2) {
+        if (OZ_width(val) != 2) {
           message("Ups: %s\n",toC(val));
         } else {
           printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
         }
-        message("Hint: number of arguments mismatch\n");
+        if (ozconf.errorVerbosity > 1) {
+          message("Hint: number of arguments mismatch\n");
+        }
       } else if (literalEq(lab,OZ_atom("tell"))) {
         message("ERROR: Failure\n");
-        if (OZ_width(val) < 2) {
+        if (OZ_width(val) != 2) {
           message("Ups: %s\n",toC(val));
         } else {
-          message("Tell:  %s\n",toC(OZ_getArg(val,1)));
-          message("Store: %s\n",toC(OZ_getArg(val,0)));
+          message("In Expression: %s",toC(OZ_getArg(val,0)));
+          printf(" = %s\n",toC(OZ_getArg(val,1)));
+          if (ozconf.errorVerbosity > 1) {
+            message("Tell:  %s\n",toC(OZ_getArg(val,1)));
+            message("Store: %s\n",toC(OZ_getArg(val,0)));
+          }
         }
       } else if (literalEq(lab,OZ_atom("eq"))) {
         message("ERROR: Failure\n");
-        if (OZ_width(val) < 2) {
+        if (OZ_width(val) != 2) {
           message("Ups: %s\n",toC(val));
         } else {
-          message("Constraint:  %s",toC(OZ_getArg(val,0)));
+          message("In Expression: %s",toC(OZ_getArg(val,0)));
           printf(" = %s\n",toC(OZ_getArg(val,1)));
         }
       } else if (literalEq(lab,OZ_atom("fail"))) {
         message("ERROR: Failure\n");
-        if (OZ_width(val) < 3) {
+        if (OZ_width(val) != 2) {
           message("Ups: %s\n",toC(val));
         } else {
           printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
-
-          if (ozconf.errorVerbosity > 1) {
-            printX("Hint: ",OZ_getArg(val,2));
-          }
+        }
+      } else if (literalEq(lab,OZ_atom("failDis"))) {
+        message("ERROR: Failure\n");
+        message("Disjunction failed\n");
+        if (OZ_width(val) != 0) {
+          message("Ups: %s\n",toC(val));
+        }
+      } else if (literalEq(lab,OZ_atom("failCond"))) {
+        message("ERROR: Failure\n");
+        message("Conditional failed\n");
+        if (OZ_width(val) != 0) {
+          message("Ups: %s\n",toC(val));
+        }
+      } else if (literalEq(lab,OZ_atom("failure"))) {
+        message("ERROR: Failure\n");
+        message("Excecuting 'false'\n");
+        if (OZ_width(val) != 0) {
+          message("Ups: %s\n",toC(val));
+        }
+      } else if (literalEq(lab,OZ_atom("."))) {
+        message("ERROR: Illtype application\n");
+        if (OZ_width(val) != 2) {
+          message("Ups: %s\n",toC(val));
+        } else {
+          message("In Expression: %s.",toC(OZ_getArg(val,0)));
+          printf("%s\n",toC(OZ_getArg(val,1)));
+        }
+        if (ozconf.errorVerbosity > 1) {
+          message("Hint: feature %s is not in %s ",toC(OZ_getArg(val,1)),
+                  OZ_isChunk(OZ_getArg(val,0))?"chunk":"record");
+          printf("%s\n",toC(OZ_getArg(val,0)));
         }
       } else if (literalEq(lab,OZ_atom("type"))) {
         message("ERROR: Illtyped application\n");
-        if (OZ_width(val) < 5) {
+        if (OZ_width(val) != 5) {
           message("Ups: %s\n",toC(val));
         } else {
           printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
           if (ozconf.errorVerbosity > 1) {
             printX("Expected type: ",OZ_getArg(val,2));
-            printX("Argument number: ",OZ_getArg(val,3));
+            OZ_Term pos = OZ_getArg(val,3);
+            if (!OZ_eq(pos,OZ_int(0))) {
+              printX("Argument number: ",pos);
+            }
             printX("Hint: ",OZ_getArg(val,4));
           }
         }
-      } else if (literalEq(lab,OZ_atom("raise"))) {
-        message("EXCEPTION");
-        if (OZ_width(val) < 3) {
+      } else if (literalEq(lab,OZ_atom("user"))) {
+        message("USER EXCEPTION\n");
+        if (OZ_width(val) != 1) {
           message("Ups: %s\n",toC(val));
         } else {
-          printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
           if (ozconf.errorVerbosity > 1) {
-            printX("Value: ",OZ_getArg(val,2));
+            message("Value: %s\n",toC(OZ_getArg(val,0)));
           }
         }
       } else {
-        message("EXCEPTION: %s\n",toC(OZ_label(val)));
+        message("UNKNOWN EXCEPTION: %s\n",toC(OZ_label(val)));
         if (ozconf.errorVerbosity > 1) {
           message("Value: %s\n",toC(val));
         }
@@ -7009,6 +7076,7 @@ BIspec allSpec2[] = {
   {"IsClass", 2,BIisClassB,       (IFOR) BIisClassBInline},
   {"IsString", 2,BIisString,      0},
 
+  {"Det",2,BIdet,                 (IFOR) 0},
   {"Wait",1,BIisValue,            (IFOR) isValueInline},
 
   {"isNumberRel",1,BIisNumber,       (IFOR) BIisNumberInline},
@@ -7036,6 +7104,7 @@ BIspec allSpec2[] = {
   {"IsVirtualString",      2, BIvsIs,    0},
   {"VirtualString.length", 3, BIvsLength, 0},
 
+  {"getUnit", 1,BIgetUnit,         0},
   {"getTrue", 1,BIgetTrue,         0},
   {"getFalse",1,BIgetFalse,        0},
   {"Not",     2,BInot,             (IFOR) notInline},
@@ -7109,6 +7178,7 @@ BIspec allSpec2[] = {
 
   {"=",              2, BIunify,                0},
   {"fail",           VarArity,BIfail,           0},
+  {"nop",            VarArity,BInop,            0},
 
   {"deepReadCell",   2, BIdeepReadCell,         0},
   {"deepFeed",       2, BIdeepFeed,             0},
