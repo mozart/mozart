@@ -151,12 +151,13 @@ component is an oz-name that is visible only (by lexical scoping) to
 user-defined operations on the chunk.
 
 <P>A chunk is created by the procedure <<{NewChunk Record}>>. This
-creates a chunk with the same arguments as the record, but having a
+creates a chunk with the same components as the record, but having a
 unique label. The following program creates a chunk.
 
 <<<
 local X in
-   {Browse X={NewChunk f(c:3 a:1 b:2)}}
+   X={NewChunk f(c:3 a:1 b:2)}
+   {Browse X}
    {Browse X.c}
 end
 >>>
@@ -166,6 +167,16 @@ end
 <<<
 &lt;Ch&gt;(a:1 b:2 c:3)
 3
+>>>
+<P CLASS=WARNING> As a syntactic convenience, one can
+equate an expression <<E>> at an expression position with a variable
+<<X = E>>, and use <<X>> to refer to the value of the expression.
+Using this notation the above program could be written as
+<<<
+local X in
+   {Browse X={NewChunk f(c:3 a:1 b:2)}}
+   {Browse X.c}
+end
 >>>
 
 <P>In <PTR TO="portCellChunk">, we show an example of using the
