@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.360  1996/09/03 13:56:08  mehl
+  also failure info in spaces
+
   Revision 1.359  1996/09/03 12:58:31  mehl
   catch failure in spaces
 
@@ -190,7 +193,14 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
  */
 #define HF_FAIL(R)				\
    {						\
-     if (!e->isToplevel()) { goto LBLfailure; }	\
+     if (!e->isToplevel()) {			\
+       if (!CTT->hasCatchFlag()) {		\
+	 goto LBLfailure;			\
+       } else {					\
+	 X[0]=(R);				\
+	 goto LBLfailureCatch;			\
+       }					\
+     }						\
      DORAISE(R);				\
    }
 
@@ -3042,12 +3052,36 @@ LBLdispatcher:
     JUMP(nxt);
   }
 
+LBLfailureCatch:
+  {
+    // check for exception handler
+    Assert(CTT->hasCatchFlag);
+    if (CTT->isPropagator()) goto LBLfailure;
+
+    TaggedRef traceBack = nil();
+    TaggedRef pred = 0;
+    pred = CTT->findCatch(traceBack);
+    if (!pred) goto LBLfailure;
+    traceBack = reverseC(traceBack);
+    if (PC != NOCODE) {
+      traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+    }
+
+    if (!OZ_isProcedure(pred) || tagged2Const(pred)->getArity() != 1) {
+      goto LBLfailure;
+    }
+
+    RefsArray argsArray = allocateRefsArray(1,NO);
+    argsArray[0] = OZ_mkTuple(OZ_atom("error"),3,
+			      X[0],e->dbgGetSpaces(),traceBack);
+    CTT->pushCall(pred,argsArray,1);
+    goto LBLpopTask;
+  }
+
   /*
    *  kost@ : There are now the following invariants:
    *  - Can be entered only in a deep guard;
-   *  - A thread must be runnable, or there is no one at all (when came 
-   *    from 'LBLkillThread' or from the 'LBLfailure' itself);
-   *
+   *  - current thread must be runnable.
    */
  LBLfailure:
   DebugTrace(trace("fail",CBB));
@@ -3057,26 +3091,6 @@ LBLdispatcher:
   Assert(CTT->isRunnable());
   Assert(CBB->isInstalled());
 
-  // check for exception handler
-  if (!CTT->isPropagator() && CTT->hasCatchFlag()) {
-    TaggedRef traceBack = nil();
-    TaggedRef pred = 0;
-    pred = CTT->findCatch(traceBack);
-    if (pred) {
-      traceBack = reverseC(traceBack);
-      if (PC != NOCODE) {
-	traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
-      }
-
-      if (tagged2Const(pred)->getArity() == 1) {
-	RefsArray argsArray = allocateRefsArray(1,NO);
-	argsArray[0] = OZ_mkTuple(OZ_atom("failure"),3,
-				  OZ_atom("fail"),e->dbgGetSpaces(),traceBack);
-	CTT->pushCall(pred,argsArray,1);
-	goto LBLpopTask;
-      }
-    }
-  }
   Actor *aa=CBB->getActor();
   Assert(!aa->isCommitted());
 
