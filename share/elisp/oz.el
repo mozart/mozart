@@ -700,7 +700,7 @@ the GDB commands `cd DIR' and `directory'."
 		   "if" "or" "dis" "choice" "case"
 		   "class" "create" "meth"
 		   "not" "thread" "lock"
-		   "condis" "thread"
+		   "condis" "thread" "raise"
 		   )))
 
 (defconst oz-left-pattern "[[({]")
