@@ -346,7 +346,7 @@ FDIntervals * FDIntervals::operator += (const int put_in)
 FDIntervals * FDIntervals::complement(FDIntervals * x_iv)
 {
   int c_i = 0, i = 0;
-  if (i_arr[i].left != 0) {
+  if (0 < i_arr[i].left) {
     i_arr[c_i].left = 0;
     i_arr[c_i].right = x_iv->i_arr[i].left - 1;
     c_i += 1;
@@ -355,7 +355,7 @@ FDIntervals * FDIntervals::complement(FDIntervals * x_iv)
     i_arr[c_i].left = x_iv->i_arr[i].right + 1;
     i_arr[c_i].right = x_iv->i_arr[i + 1].left - 1;
   }
-  if (i_arr[i].right != fd_iv_max_elem) {
+  if (i_arr[i].right < fd_iv_max_elem) {
     i_arr[c_i].left = x_iv->i_arr[i].right + 1;
     i_arr[c_i].right = fd_iv_max_elem;
   }
@@ -365,19 +365,19 @@ FDIntervals * FDIntervals::complement(FDIntervals * x_iv)
   return this;
 }
 
-FDIntervals * FDIntervals::complement(int * x_left, int * x_right)
+FDIntervals * FDIntervals::complement(int a_high, int * x_left, int * x_right)
 {
   int c_i = 0, i = 0;
-  if (i_arr[i].left != 0) {
+  if (0 < x_left[i]) {
     i_arr[c_i].left = 0;
     i_arr[c_i].right = x_left[i] - 1;
     c_i += 1;
   }
-  for ( ; i < high - 1; i += 1, c_i += 1) {
+  for ( ; i < a_high - 1; i += 1, c_i += 1) {
     i_arr[c_i].left = x_right[i] + 1;
     i_arr[c_i].right = x_left[i + 1] - 1;
   }
-  if (i_arr[i].right != fd_iv_max_elem) {
+  if (x_right[i] < fd_iv_max_elem) {
     i_arr[c_i].left = x_right[i] + 1;
     i_arr[c_i].right = fd_iv_max_elem;
   }
@@ -1355,12 +1355,11 @@ FiniteDomain &FiniteDomain::operator ~ (void) const
       FDIntervals * iv;
       if (type == bv_descr) {
         int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
-        s = s - 1 + (0 < min_elem) + (max_elem < fd_bv_max_elem);
-        iv = newIntervals(s)->complement(fd_bv_left_conv, fd_bv_right_conv);
+        int t = s + (0 < min_elem);
+        iv = newIntervals(t)->complement(s, fd_bv_left_conv, fd_bv_right_conv);
       } else {
         FDIntervals * x_iv = get_iv();
-        int s = x_iv->high;
-        s = s - 1 + (0 < min_elem) + (max_elem < fd_bv_max_elem);
+        int s = x_iv->high - 1 + (0 < min_elem) + (max_elem < fd_iv_max_elem);
         iv = newIntervals(s)->complement(x_iv);
       }
       y.size = iv->findSize();
@@ -1461,7 +1460,7 @@ int FiniteDomain::operator &= (const FiniteDomain &y)
   } else if (min(max_elem, y.max_elem) > fd_bv_max_elem) {
     FDIntervals * x_i = asIntervals();
     FDIntervals * y_i = y.asIntervals();
-    FDIntervals * z_i = newIntervals(max(x_i->high, y_i->high));
+    FDIntervals * z_i = newIntervals(x_i->high + y_i->high - 1);
 
     size = x_i->intersect_iv(*z_i, *y_i);
     min_elem = z_i->findMinElem();
@@ -1501,7 +1500,7 @@ FiniteDomain &FiniteDomain::operator & (const FiniteDomain &y) const
   } else if (min(max_elem, y.max_elem) > fd_bv_max_elem) {
     FDIntervals * x_i = asIntervals();
     FDIntervals * y_i = y.asIntervals();
-    FDIntervals * z_i = newIntervals(max(x_i->high, y_i->high));
+    FDIntervals * z_i = newIntervals(x_i->high + y_i->high - 1);
 
     z.size = x_i->intersect_iv(*z_i, *y_i);
     z.min_elem = z_i->findMinElem();
