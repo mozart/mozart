@@ -22,31 +22,29 @@
 #  WARRANTIES.
 
 
-srcdir          = @srcdir@
 VPATH           = @srcdir@
 FDDIR           = @srcdir@
-FDINCS          = -I.. -I$(srcdir)/..
+FDINCS          = -I.. -I$(FDDIR)/..
 CFLAGS          = $(COPT) $(DEFS) $(INCS) $(FDINCS) $(CWARN) $(CUSR)
 CXXFLAGS        = $(CFLAGS)
 DEPEND          = @DEPEND@ $(DEFS) $(INCS) $(FDINCS)
+FDTARGETS       = @FDTARGETS@
 
-TARGETS = libfd.a libsched.a
-
-FDLIBSRCS = $(FDDIR)/arith.cc $(FDDIR)/fdaux.cc $(FDDIR)/bool.cc \
-            $(FDDIR)/card.cc $(FDDIR)/cd.cc $(FDDIR)/count.cc \
-            $(FDDIR)/rel.cc $(FDDIR)/disjoint.cc $(FDDIR)/std.cc \
-            $(FDDIR)/sum.cc $(FDDIR)/sumequal.cc \
-            $(FDDIR)/distance.cc $(FDDIR)/misc.cc $(FDDIR)/streamProps.cc \
-            $(FDDIR)/sumd.cc $(FDDIR)/sumabs.cc $(FDDIR)/complalldist.cc
+FDLIBSRCS = arith.cc fdaux.cc bool.cc \
+            card.cc cd.cc count.cc \
+            rel.cc disjoint.cc std.cc \
+            sum.cc sumequal.cc \
+            distance.cc misc.cc streamProps.cc \
+            sumd.cc sumabs.cc complalldist.cc
 
 FDLIBOBJS = $(FDLIBSRCS:.cc=.o)
 
-SCHEDLIBSRCS = $(FDDIR)/scheduling.cc $(FDDIR)/schedulingDist.cc \
-               $(FDDIR)/schedulingDistAux.cc $(FDDIR)/taskintervals.cc
+SCHEDLIBSRCS = scheduling.cc schedulingDist.cc \
+               schedulingDistAux.cc taskintervals.cc
 
 SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
-all: $(TARGETS)
+all: $(FDTARGETS)
 
 fdlib.so: $(FDLIBOBJS)
         $(DYNLD) -o $@ $(FDLIBOBJS)
@@ -62,11 +60,13 @@ libsched.a: $(SCHEDLIBOBJS)
         $(AR) -rc $@ $(SCHEDLIBOBJS)
         $(RANLIB) $@
 
-install-bin:
-        $(INSTALL_BIN) $(TARGETS) $(bindir)
+install: @INSTALL_PROP@
+
+install-prop:
+        $(INSTALL_BIN) $(FDTARGETS) $(bindir)
 
 depend: $(FDLIBSRCS) $(SCHEDLIBSRCS)
-        $(DEPEND) $(FDLIBSRCS) $(SCHEDLIBSRCS) >> Makefile
+        $(DEPEND) `for f in $(FDLIBSRCS) $(SCHEDLIBSRCS) ; do echo $(FDDIR)/$$f; done` >> Makefile
 
 tags:
         etags --regex='/OZ_C[^(]+([     ]*\([^  ,)]+\)/\1/' -l c++ \
@@ -87,3 +87,8 @@ veryclean: realclean
 
 .cc.E:
         $(CXX) $(CXXFLAGS) -E -o $@ $<
+
+@tmphack_target@:
+        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && \
+                rcp /tmp/$$$$.o @tmphack_host@:`pwd`/$@; \
+                rm -f /tmp/$$$$.o
