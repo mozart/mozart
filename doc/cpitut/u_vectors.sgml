@@ -88,28 +88,18 @@ extended element-wise.
 <Code.Extern display proglang=cc to="programs/ex_c.3.cc" class=linenumbers>
 
 <p>
-The member function <<updateHeapRefs()>> updates the propagator's
-references to the heap after the propagator has been copied to a new
-heap location by the runtime system.  The extra argument passed to this
-function can be safely ignored. Updating the data members <<_n>> and
-<<_v>> is done by applying the function <<OZ_updateHeapTerm()>> to
-them.
-
-<p>
-Updating the array <<_d>> requires to duplicate the array and then to
-update all elements by successively applying the function
-<<OZ_updateHeapTerm()>> to them. Here comes the code of that member
-function.
+The member functions <<gCollect()>> and <<sClone()>> update the
+propagator's references to the heap after the propagator has been
+copied by garbage collection or space cloning.  Updating the data
+members <<_n>> and <<_v>> is done by applying the functions
+<<OZ_gCollectTerm()>> resp. <<OZ_sCloneTerm>> to them.  Updating the
+array <<_d>> requires to duplicate the array and then to update all
+elements. This funtionality is provided by <<OZ_gCollectAllocBlock()>>
+(<<OZ_sCloneAllocBlock()>>) for garbage collection (space
+cloning). Here comes the code of that member function.
 
 <p>
 <Code.Extern display proglang=cc to="programs/ex_c.4.cc" class=linenumbers>
-
-<p>
-First a dynamic array of size <<_d_size>> is allocated by the 
-&cpi function <<OZ_hallocOzTerms()>> and assigned to <<new_d>>. The
-<<for>>-loop copies and updates the elements of the vector from
-<<_d>> to <<new_d>>. Finally, <<_d>> is made pointing to the
-newly generated copy of the vector.
 
 <p>
 <Subsection id="u_vector.header">
