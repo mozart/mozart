@@ -259,7 +259,7 @@ case $platform in
 	;;
     linux*)
         TOOLLDFLAGS="-Wl,-shared"
-	LDFLAGS="$LDFLAGS -Wl,-export-dynamic"
+	EMULDFLAGS="-Wl,-export-dynamic"
 	;;
     solaris*)
         TOOLLDFLAGS="-Wl,-G"
@@ -270,7 +270,7 @@ case $platform in
     osf1*)
         TOOLLDFLAGS="-Wl,-shared -Wl,-expect_unresolved -Wl,'*'"
 	dnl dont change LDFLAGS, see machine.hh !!!
-	LDFLAGS="$LDFLAGS -Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
+	EMULDFLAGS="-Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
 	;;
     hpux*)
         TOOLLDFLAGS="-Wl,-b"
@@ -503,7 +503,7 @@ case $enable_opt in
 	AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
 	AC_DEFINE(PROFILE_EMULATOR)
         OZ_CXX_OPTIONS($oz_copt_profile, COPT)
-	LDFLAGS="$LDFLAGS $oz_lopt_profile"
+	EMUFLAGS="$EMULDFLAGS $oz_lopt_profile"
 	;;
     rsp*)
         AC_MSG_RESULT(rsprofile (-DRS_PROFILE))
