@@ -73,7 +73,9 @@ export
    LoadImageLibrary
    SaveImageLibrary
    BuildImageLibrary
+   NewMenu
    buildmenu:NewMenu
+   buildMenu:NewMenu
    registerWidget:QTkRegisterWidget
    newLook:NewLook
    LoadTk

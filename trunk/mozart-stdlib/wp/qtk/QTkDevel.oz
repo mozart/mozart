@@ -397,6 +397,7 @@ prepare
 	 [] boolean then Str=="1"
 	 [] natural then {TkStringToInt Str}
 	 [] int then {TkStringToInt Str}
+	 [] integer then {TkStringToInt Str}
 	 [] float then {TkStringToFloat Str}
 	 [] list then {TkStringToListString Str}
 	 [] listInt then {TkStringToListInt Str}
@@ -675,6 +676,10 @@ define
 	       "An integer value >= 0"
 	    end
 	 [] int then
+	    if {Int.is V} then unit else
+	       "An integer value"
+	    end
+	 [] integer then
 	    if {Int.is V} then unit else
 	       "An integer value"
 	    end
