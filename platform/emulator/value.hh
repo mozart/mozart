@@ -2571,6 +2571,10 @@ public:
   void setContents(TaggedRef t){
     Assert(state & (Cell_Lock_Valid|Cell_Lock_Requested));
     contents = t;}
+
+  void dumpPending() {
+    pending = (PendThread *) 0;
+  }
 };
 
 //
@@ -2852,6 +2856,12 @@ public:
 
   PendThread** getPendBase() { return &pending; }
   void unlockPending(Thread* th);
+
+  // closing the site;
+  void dumpPending() {
+    locker = (Thread *) 0;
+    pending = (PendThread *) 0;
+  }
 };
 
 class LockManagerEmul : public OzLock {

@@ -5,6 +5,7 @@
 #include "dictionary.hh"
 #include "extension.hh"
 
+extern void gDropWeakDictionaries(void);
 extern void gCollectWeakDictionariesInit(void);
 extern void gCollectWeakDictionariesPreserve(void);
 extern void gCollectWeakDictionariesContent(void);

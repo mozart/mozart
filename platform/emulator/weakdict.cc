@@ -48,6 +48,15 @@ static OZ_Term weakList = 0;
 
 static OZ_Term previousWeakList;
 
+// kost@ : close down in the presence of distribution: we want to dump
+// all the locally accessible entities (so that all the proxies could
+// be removed). The simplest strategy is to discard weak dictionaries
+// (their streams cannot be processed anyway).
+void gDropWeakDictionaries()
+{
+  weakList = 0;
+}
+
 void gCollectWeakDictionariesInit()
 {
   previousWeakList = weakList;

@@ -120,15 +120,27 @@ void cellLockSendDump(BorrowEntry *be){
 /*   Cell protocol - receive                            */
 /**********************************************************************/
 
-Bool CellSec::secForward(DSite* toS,TaggedRef &val){
-  if(state==Cell_Lock_Valid){
-    state=Cell_Lock_Invalid;
-    val=contents;
-    return OK;}
-  Assert(state==Cell_Lock_Requested);
-  state=Cell_Lock_Requested|Cell_Lock_Next;
-  next=toS;
-  return NO;
+//
+Bool CellSec::secForward(DSite* toS,TaggedRef &val)
+{
+  // kost@ : actually, manager site can be only 'Cell_Lock_Valid';
+  if (state & Cell_Lock_Valid) {
+    Assert(state == Cell_Lock_Valid || 
+	   state == Cell_Lock_Valid|Cell_Lock_Dump_Asked);
+    // 'Cell_Lock_Dump_Asked' is dropped, if any: the
+    // 'BorrowTable::closeFrameToProxy' can proceed;
+    state = Cell_Lock_Invalid;
+    val = contents;
+    return (OK);
+  } else {
+    Assert(state == Cell_Lock_Requested || 
+	   state == Cell_Lock_Requested|Cell_Lock_Dump_Asked);
+    // kost@ : 'Cell_Lock_Dump_Asked' is kept just to make sure we
+    // don't send the 'take away the state from me' request again;
+    state |= Cell_Lock_Next;
+    next = toS;
+    return (NO);
+  }
 }
 
 Bool CellSec::secReceiveContents(TaggedRef val,DSite* &toS,TaggedRef &outval){
@@ -142,10 +154,12 @@ Bool CellSec::secReceiveContents(TaggedRef val,DSite* &toS,TaggedRef &outval){
     pt=pending;}
   outval = tmp;
   Assert(pending==NULL);
-  if(state & Cell_Lock_Next){
+  if (state & Cell_Lock_Next) {
+    // 'Cell_Lock_Dump_Asked' is dropped, if any;
     state = Cell_Lock_Invalid;
-    toS=next;
-    return OK;}
+    toS = next;
+    return (OK);
+  }
   contents=tmp;
   state = Cell_Lock_Valid;
   return NO;
@@ -177,9 +191,10 @@ Bool CellSec::secReceiveRemoteRead(DSite* toS,DSite* mS, int mI){
   case Cell_Lock_Valid:{
     cellSendReadAns(toS,mS,mI,contents);
     return TRUE;}
-  case Cell_Lock_Requested:{
+  case Cell_Lock_Requested:
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
     pendThreadAddRAToEnd(&pending,toS,mS,mI);
-    return TRUE;}
+    return (TRUE);
   default: Assert(0);}
   return NO;
 }
@@ -204,12 +219,17 @@ void cellReceiveDump(CellManager *cm,DSite *fromS){
   if(tokenLostCheckManager(cm)) return; // FAIL-HOOK
   Assert(cm->getType()==Co_Cell);
   Assert(cm->isManager());
-  if((cm->getChain()->getCurrent()!=fromS) ||
-     (cm->getState()!=Cell_Lock_Invalid)){
-    PD((WEIRD,"CELL dump not needed"));
-    return;}
-  getCellSecFromTert(cm)->dummyExchange(cm);
-  return;
+  
+  if ((cm->getChain()->getCurrent() != fromS) ||
+      (cm->getState() != Cell_Lock_Invalid)) {
+    // kost@ : there is nothing weird here: the guy who's asked to
+    // dump the state has got also a forward request, which it will
+    // process in an ordinary fashion.
+    //   PD((WEIRD,"CELL dump not needed"));
+    ;
+  } else {
+    getCellSecFromTert(cm)->dummyExchange(cm);
+  }
 }
 // MERGECON  (void) cellDoExchangeInternal((Tertiary *)cm,tr,tr,DummyThread,EXCHANGE);
 
@@ -346,40 +366,54 @@ void chainReceiveAck(OwnerEntry* oe,DSite* rsite){
 /*   Lock protocol - receive                             */
 /**********************************************************************/
 
-Bool LockSec::secReceiveToken(Tertiary* t,DSite* &toS){
-  if(state & Cell_Lock_Next) state = Cell_Lock_Next|Cell_Lock_Valid;
-  else state=Cell_Lock_Valid;
-  while(pending!=NULL){
-    if(pending->thread!=NULL){
+//
+Bool LockSec::secReceiveToken(Tertiary* t,DSite* &toS)
+{
+  state = Cell_Lock_Valid | (state & (Cell_Lock_Next|Cell_Lock_Dump_Asked));
+
+  // kost@ : three types of pending: valid thread(s), a "move" request
+  // or a dead thread. Keep the lock if there are no "move" requests.
+  while (pending != NULL) {
+    if (pending->thread != NULL) {
       locker=pendThreadResumeFirst(&pending);
-      return OK;}
-    if(pending->exKind==MOVEEX){
-      PD((WEIRD,"lock requested but not used"));
-      Assert(state==Cell_Lock_Next|Cell_Lock_Valid);
-      state=Cell_Lock_Invalid;
-      toS=next;
-      return NO;}
-    pendThreadRemoveFirst(getPendBase());}
-  if(state == Cell_Lock_Valid) return OK;
-  toS=next;
-  state=Cell_Lock_Invalid;
-  return NO;
+      break;
+    } else if (pending->exKind == MOVEEX) {
+      // kost@ : nothing weird here: e.g. the thread has been killed.
+      //   PD((WEIRD,"lock requested but not used"));
+      Assert(state == Cell_Lock_Next|Cell_Lock_Valid);
+      // kost@ : drop 'Cell_Lock_Dump_Asked', if any;
+      state = Cell_Lock_Invalid;
+      toS = next;
+      return (NO);
+    } else {
+      pendThreadRemoveFirst(getPendBase());
+    }
+  }
+
+  Assert(state & Cell_Lock_Valid);
+  return (OK);
 }
 
-Bool LockSec::secForward(DSite* toS){
-  if(state==Cell_Lock_Valid){
-    if(locker==NULL){
-      state=Cell_Lock_Invalid;
-      return OK;}
-    state=Cell_Lock_Valid|Cell_Lock_Next;
+Bool LockSec::secForward(DSite* toS)
+{
+  if (state & Cell_Lock_Valid) {
+    if (locker == NULL) {
+      state = Cell_Lock_Invalid;
+      return (OK);
+    } else {
+      state |= Cell_Lock_Next;
+      pendThreadAddMoveToEnd(getPendBase());
+      next = toS;
+      return (NO);
+    }
+  } else {
+    Assert(state == Cell_Lock_Requested ||
+	   state == Cell_Lock_Requested|Cell_Lock_Dump_Asked);
+    state |= Cell_Lock_Next;	// keep 'Cell_Lock_Dump_Asked';
     pendThreadAddMoveToEnd(getPendBase());
-    next=toS;
-    return NO;}
-  Assert(state==Cell_Lock_Requested);
-  state= Cell_Lock_Requested|Cell_Lock_Next;
-  pendThreadAddMoveToEnd(getPendBase());
-  next=toS;
-  return NO;
+    next = toS;
+    return (NO);
+  }
 }
 
 void lockReceiveGet(OwnerEntry* oe,LockManager* lm,DSite* toS){  
@@ -402,14 +436,19 @@ void lockReceiveDump(LockManager* lm,DSite *fromS){
   Assert(lm->getType()==Co_Lock);
   Assert(lm->isManager());
   LockSec* sec=lm->getLockSec();
-  if((lm->getChain()->getCurrent()!=fromS) || 
-     (sec->getState()!=Cell_Lock_Invalid)){
-    PD((WEIRD,"WEIRD- LOCK dump not needed"));
-    return;}
-  Assert(sec->getState()==Cell_Lock_Invalid);
-  pendThreadAddDummyToEnd(sec->getPendBase());
-  secLockGet(sec,lm,NULL);
-  return;
+
+  if ((lm->getChain()->getCurrent() != fromS) || 
+      (sec->getState() != Cell_Lock_Invalid)) {
+    // kost@ : ditto, nothing weird here: the proxy"s "dump" request
+    // has been effectively invalidated by a "forward" request sent to
+    // that proxy;
+    //   PD((WEIRD,"WEIRD- LOCK dump not needed"));
+    ;
+  } else {
+    Assert(sec->getState() == Cell_Lock_Invalid);
+    pendThreadAddDummyToEnd(sec->getPendBase());
+    secLockGet(sec,lm,NULL);
+  }
 }
 
 void lockReceiveTokenManager(OwnerEntry* oe,int mI){
@@ -467,7 +506,9 @@ ChainAnswer answerChainQuestion(Tertiary *t){
   switch(getStateFromLockOrCell(t)){
   case Cell_Lock_Invalid:
     return PAST_ME;
+  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested|Cell_Lock_Next:
+  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
   case Cell_Lock_Requested:
     return BEFORE_ME;
   case Cell_Lock_Valid|Cell_Lock_Next: 
@@ -510,7 +551,8 @@ Bool CellSec::cellRecovery(TaggedRef tr){
     state=Cell_Lock_Valid;
     contents=tr;
     return NO;}
-  Assert(state==Cell_Lock_Requested);
+  Assert(state == Cell_Lock_Requested ||
+	 state == Cell_Lock_Requested|Cell_Lock_Dump_Asked);
   return OK;
 }
 
@@ -520,11 +562,12 @@ Bool LockSec::lockRecovery(){
     locker=NULL;
     return NO;}
   state &= ~Cell_Lock_Next;
-  Assert(state==Cell_Lock_Requested);
+  Assert(state == Cell_Lock_Requested ||
+	 state == Cell_Lock_Requested|Cell_Lock_Dump_Asked);
   return OK;
 }
 
-void cellManagerIsDown(TaggedRef tr,DSite* mS,int mI){
+static void cellManagerIsDown(TaggedRef tr,DSite* mS,int mI){
   NetAddress na=NetAddress(mS,mI);
   BorrowEntry *be=BT->find(&na);
   if(be==NULL) return; // has been gced 
