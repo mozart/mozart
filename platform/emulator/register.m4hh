@@ -151,24 +151,19 @@ Case(GETSELF)
      }
 
 
-
-#define MakeVar makeTaggedRef(newTaggedUVar(e->currentUVarPrototype()))
-
 CaseOneRegGImpossible(CREATEVARIABLE,
    ``{
        ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});
-       Reg1(getRegArg(PC+1)) = MakeVar;
+       Reg1(getRegArg(PC+1)) = fastnewTaggedUVar(e);
        DISPATCH(2);
      }'')
 
 CaseOneRegGImpossible(CREATEVARIABLEMOVE,
    ``{
        ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});
-       Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
+       Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = fastnewTaggedUVar(e);
        DISPATCH(3);
      }'')
-
-#undef MakeVar
 
 
   Case(UNIFYXX) ONREG2(Unify,X,X);
