@@ -67,6 +67,7 @@
 <meta name="html.split" value="chapter.client.server.intro">
 <meta name="html.split" value="chapter.client.server.db">
 <meta name="html.split" value="chapter.client.server.ozc">
+<meta name="html.split" value="part.distributed.applications">
 <Title/Application Programming/
 <Author.Extern to="author.db" key="Denys.Duchier">
 <Author.Extern to="author.db" key="Leif.Kornstaedt">
