@@ -120,6 +120,16 @@
 ### specification (e.g. `$module_init_fun_name = "fdp_init";' in modFDP.spec),
 ### the appropriate call to this function will be included in the module
 ### initialization function. That allows to initialize modules explicitely.
+###
+### In case the variable `init_fun_name' is defined in the module
+### specification (e.g. `$init_fun_name = "oz_init_module";' in a
+### contributed native functor), the given name for the initialization
+### function is used instead of the generic name.
+###
+### In case the variable `module_name' is defined in the module
+### specification (e.g. `$module_name = "RI";' in a
+### contributed native functor), the given name determines the name
+### of the native functor module.
 
 
 
@@ -135,9 +145,15 @@ sub INTERFACE {
     }
 
     $init_fun_name = $_[1];
+    $init_fun      = $_[2];
+    $module_name   = $_[3];
 
     if ($init_fun_name) {
         print ("\nvoid $init_fun_name(void);\n\n");
+    }
+
+    if ($module_name) {
+        printf ("\nchar oz_module_name[] = \"%s\";\n\n", $module_name);
     }
 
     $mod_name = $_[0];
@@ -147,7 +163,12 @@ sub INTERFACE {
     $mod_name =~ s/\.spec//o;
 
     print ("extern \"C\"\n\{\n");
-    print ("  OZ_C_proc_interface * mod_int_$mod_name(void)\n");
+
+    if ($init_fun) {
+        printf ("  OZ_C_proc_interface * %s(void)\n", $init_fun);
+    } else {
+        print ("  OZ_C_proc_interface * mod_int_$mod_name(void)\n");
+    }
     print ("  {\n");
     print ("    static OZ_C_proc_interface i_table\[\] = \{\n");
 
@@ -312,8 +333,14 @@ foreach $file (@files) {
     require $file;
     $builtins = { %builtins_all };
     $init_fun_name = $module_init_fun_name;
+    $init_fun      = $module_init_fun;
+    $module_name   = $module_name;
 
-    if ($choice eq 'interface' )    { &INTERFACE($file, $init_fun_name); }
-    elsif ($choice eq 'oztable')    { &OZTABLE; }
-    else { die "must specify one of: -interface -oztable -builtins"; }
+    if ($choice eq 'interface' ) {
+        &INTERFACE($file, $init_fun_name, $init_fun, $module_name);
+    } elsif ($choice eq 'oztable') {
+        &OZTABLE;
+    } else {
+        die "must specify one of: -interface -oztable -builtins";
+    }
 }
