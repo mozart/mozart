@@ -53,7 +53,8 @@ public:
   // methods relevant for term copying (gc and solve)
   void gc(void); 
   size_t getSize(void){return sizeof(GenFDVariable);}
-
+  void dispose(void);
+  
   Bool unifyFD(TaggedRef *, TaggedRef, TypeOfTerm, 
 	       TaggedRef *, TaggedRef, TypeOfTerm);
 
