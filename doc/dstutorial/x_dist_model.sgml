@@ -12,24 +12,37 @@ In a multitasking system, a site is
 an operating system process.
 Such a system can host several sites.
 An Oz language entity has the same language
-behavior whether it is used on one site only
+semantics whether it is used on one site only
 or on several sites.
+We say that Mozart is <EM>network-transparent</EM>.
 If used on several sites, the language entity
 is implemented using a distributed protocol.
 This gives the language entity a particular
-distributed behavior in terms of network messages.
+distributed semantics in terms of network messages.
 
-<P>The distribution model gives well-defined distribution
-behaviors to the Oz language entities.
-The distribution behaviors are designed to do the
+<P>The <EM>distributed semantics</EM> defines
+the network communications done by the system
+when operations are performed on an entity.
+The distributed semantics of the entities
+depends on their type.
+The distribution model gives well-defined distributed
+semantics to all Oz language entities.
+
+<P>The distributed semantics has been carefully
+designed to give the programmer full control
+over network communication patterns where it matters.
+The distributed semantics does the
 right thing by default in almost all cases.
 For example, procedure code is transferred to sites
 immediately, so that sites never need ask for
 procedure code.
 For objects, the developer can
-specify the desired distribution behavior, e.g.,
+specify the desired distributed semantics, e.g.,
 mobile (cached) objects, stationary objects,
 and stationary single-threaded objects.
+We define the distributed semantics for each
+type of language entity and then we explain
+how to build distributed applications.
 
 <SECTION><TITLE>Objects</TITLE>
 
@@ -38,8 +51,8 @@ in terms of network efficiency are the objects.
 Objects have a state that has to be updated in a
 globally-consistent way.
 The efficiency of this operation depends
-on the object's distributed behavior.
-Many distribution behaviors are possible,
+on the object's distributed semantics.
+Many distributed semantics are possible,
 providing a range of trade-offs for the developer.
 Here are some of the more useful ones:
 <LIST>
@@ -106,14 +119,14 @@ A stationary object is a good abstraction to
 build servers--this is explained later in
 the tutorial.
 It is easy to program other distribution
-behaviors in Oz.
+semantics in Oz.
 We give examples of some of them
 later in the tutorial.
 
 <SECTION><TITLE>Other stateful entities</TITLE>
 
 <P>The other stateful language entities have the following
-distribution behaviors:
+distributed semantics:
 <LIST>
 <ITEM> <EM>Thread</EM>:
 A thread actively executes a sequence of instructions.
@@ -147,7 +160,7 @@ that have a Unix port interface.
 A cell is an updatable pointer to any other entity,
 i.e., it is analogous to a standard updatable variable
 in imperative languages such as C and Java.
-Cells have the same distribution behavior
+Cells have the same distributed semantics
 as cached objects.
 Updating the pointer
 may need up to three network messages,
@@ -159,7 +172,7 @@ A thread-reentrant lock allows only a single
 thread to enter a given program region.
 Locks can be created dynamically
 and nested recursively.
-Locks have the same distribution behavior
+Locks have the same distributed semantics
 as cached objects and cells.
 This implements a standard distributed mutual
 exclusion algorithm.
@@ -246,7 +259,7 @@ messages from different threads.
 
 <P>Stateless entities never
 change, i.e., they do not have any internal state whatsoever.
-Their distribution behavior is very efficient:
+Their distributed semantics is very efficient:
 they are copied across the net in a single message.
 The different kinds of stateless entities differ
 in when the copy is done (eager or lazy)
@@ -269,7 +282,7 @@ to manage remote references to them
 and to ensure that they exist only once on a site.
 Of course, records and lists may refer
 to any other kind of entity,
-and the distribution behavior of that
+and the distributed semantics of that
 entity depends on its type, not on
 the fact of its being inside a record
 or a list.
@@ -289,7 +302,7 @@ An object is a composite entity consisting
 of an object-record that references
 the object's features, a cell, and a class.
 It's important to distinguish the distribution
-behaviors of an object and a class.
+semantics of an object and a class.
 An object-record is a chunk that is copied lazily.
 I.e., if an object is passed to a site,
 then when the object is called,
@@ -317,11 +330,14 @@ where a module is a record.
 
 <P>Entities that can be used only on one site
 are called <EM>sited</EM>.
+We call this site their <EM>owner site</EM>
+or <EM>home site</EM>.
 References to these entities can be passed to other
 sites, but they do not work there.
-They work only on their home site.
+They work only on their owner site.
 Entities that can be used on any site
 are called <EM>unsited</EM>.
+Since Oz is a network-transparent
 
 <P>In Mozart, all sited entities are modules,
 except for a few exceptional cases listed below.
@@ -389,16 +405,22 @@ with many application prototypes and numerous
 Gedankenexperimenten.
 We are confident that it is basically correct.
 
-<P>Here's how to use the distribution model
-to build applications.
-The large-scale structure
-of an application consists of a graph
-of threads and objects, which access resources.
-The objects are given distribution behaviors
+<P>Developing an application is separated into
+two independent parts.
+First, the application is written without
+explicitly partitioning the computation among sites.
+One can in fact check the the correctness
+and termination properties of the
+application by running it on one site.
+
+<P>Second, the objects are given distributed semantics
 to satisfy the geographic constraints
 (placement of resources, dependencies between sites)
 and the performance constraints
 (network bandwidth, machine memory and speed).
+The large-scale structure
+of an application consists of a graph
+of threads and objects, which access resources.
 Threads are created initially and during
 execution to ensure that each site does
 the desired part of the execution.
