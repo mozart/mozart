@@ -160,7 +160,16 @@ PRINT(GenCVariable){
   
   switch(type){
   case FDVariable:
-    ((GenFDVariable*)this)->print(stream, depth, offset);
+    if (isEffectiveList(((GenFDVariable*)this)->fdSuspList[det]) == OK)
+      stream << " d" << ((GenFDVariable*)this)->fdSuspList[det]->length();
+    if (isEffectiveList(((GenFDVariable*)this)->fdSuspList[bounds]) == OK)
+      stream << " b" << ((GenFDVariable*)this)->fdSuspList[bounds]->length();
+    if (isEffectiveList(((GenFDVariable*)this)->fdSuspList[size]) == OK)
+      stream << " s" << ((GenFDVariable*)this)->fdSuspList[size]->length();
+    if (isEffectiveList(((GenFDVariable*)this)->fdSuspList[eqvar]) == OK)
+      stream << " e" << ((GenFDVariable*)this)->fdSuspList[eqvar]->length();
+    stream << ' ';
+    ((GenFDVariable*)this)->getDom().print(stream, 0);
     break;
   default:
     error("Unexpected type generic variable at %s:%d.",
@@ -171,18 +180,6 @@ PRINT(GenCVariable){
   stream << ">";
 } // PRINT(GenCVariable)
 
-PRINT(GenFDVariable){
-  if (isEffectiveList(fdSuspList[det]) == OK)
-    stream << " d" << fdSuspList[det]->length();
-  if (isEffectiveList(fdSuspList[bounds]) == OK)
-    stream << " b" << fdSuspList[bounds]->length();
-  if (isEffectiveList(fdSuspList[size]) == OK)
-    stream << " s" << fdSuspList[size]->length();
-  if (isEffectiveList(fdSuspList[eqvar]) == OK)
-    stream << " e" << fdSuspList[eqvar]->length();
-  stream << ' ';
-  finiteDomain.print(stream, 0);
-} // PRINT(GenFDVariable)
 
 PRINT(STuple)
 {
@@ -591,42 +588,46 @@ PRINT(Board)
   }
 
   if (isRoot()) {
-    stream << "Root ";
+    stream << "Root";
   } else if (isWait()) {
-    stream << "Wait ";
+    stream << "Wait";
   } else if (isAsk()) {
-    stream << "Ask ";
+    stream << "Ask";
   } else if (isSolve ()) {
     stream << "Solve";
   }
 
-  stream << indent(offset)
-    << "Board @"
-    << this
-    << " [";
+  stream << "Board @" << this << " [";
+
+  if (isCommitted()) {
+    stream << 'C';
+  }
+  if (isReflected()) {
+    stream << 'R';
+  }
   if (isInstalled()) {
-    stream << "I";
+    stream << 'I';
   }
   if (isNervous()) {
-    stream << "N";
+    stream << 'N';
   }
   if (isWaitTop()) {
-    stream << "T";
+    stream << 'T';
   }
   if (isPathMark()) {
-    stream << "P";
+    stream << 'P';
   }
   if (isFailed()) {
-    stream << "F";
+    stream << 'F';
   }
   if (isDiscarded()) {
-    stream << "D";
+    stream << 'D';
   }
   if (isWaiting()) {
-    stream << "W";
+    stream << 'W';
   }
   stream << " #" << suspCount;
-  stream << "]";
+  stream << ']';
 }
 
 PRINTLONG(Board)
@@ -792,7 +793,7 @@ PRINTLONG(GenCVariable){
 
   switch(type){
   case FDVariable:
-    ((GenFDVariable*)this)->printLong(stream, depth, offset);
+    ((GenFDVariable*)this)->getDom().printLong(stream, offset);
     break;
   default:
     error("Unexpected type generic variable at %s:%d.",
@@ -801,11 +802,6 @@ PRINTLONG(GenCVariable){
   }
 
 } // PRINTLONG(GenCVariable)
-
-
-PRINTLONG(GenFDVariable){
-  finiteDomain.printLong(stream, offset);
-} // PRINTLONG(GenFDVariable)
 
 
 PRINTLONG(STuple)
