@@ -31,8 +31,9 @@ proc {OzcarError M}
    {System.showInfo OzcarErrorPrefix # M}
 end
 
-fun {VS2A X} %% virtual string to atom
-   {String.toAtom {VirtualString.toString X}}
+S2A = String.toAtom  %% string to atom
+fun {VS2A X}         %% virtual string to atom
+   {S2A {VirtualString.toString X}}
 end
 
 %% Dictionary.xxx is too long, really...
@@ -61,14 +62,41 @@ in
    end
 end
 
-fun {LookupPath F}
-   %% heuristic: if F begins with '.?.' then it's a prelude file
-   FS = {Atom.toString F}
+local
+   LS = 'lookup: '
+   fun {DoLookupFile F SearchList}
+      case SearchList == nil then
+	 {OzcarError LS # F # ' NOT FOUND!'} % should not happen!
+	 nil
+      else Try = SearchList.1 # F in
+	 try
+	    {OS.stat Try _}
+	    {OzcarMessage LS # F # ' actually is ' # Try}
+	    {VS2A Try}
+	 catch system(...) then
+	    {OzcarMessage LS # F # ' is not ' # Try}
+	    {DoLookupFile F SearchList.2}
+	 end
+      end
+   end
 in
-   case FS.1 == &. andthen FS.2.2.1 == &. then
-      {VS2A {System.get home} # '/lib/' # FS.2.2.2.2}
-   else
-      F
+   fun {LookupFile F}
+      S = {Atom.toString F}
+   in
+      case S.1 == &/ then
+	 try                   % absolute path
+	    {OS.stat F _}
+	    {OzcarMessage LS # F # ' really is ' # F}
+	    F
+	 catch system(...) then
+	    {OzcarError LS # F # ' NOT FOUND!'} % should not happen!
+	    nil
+	 end
+      else                     % relative path
+	 Suffix = {Str.rchr S &/}
+      in
+	 {DoLookupFile case Suffix == nil then S else Suffix.2 end OzPath} 
+      end
    end
 end
 
