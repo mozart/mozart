@@ -406,27 +406,30 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case INLINEREL1:
       fprintf (ofile,
-               "(%s,X[%d])\n",
+               "(%s,X[%d],%d)\n",
                getBIName(PC+1),
-               regToInt(getRegArg(PC+2)));
+               regToInt(getRegArg(PC+2)),
+               getPosIntArg(PC+3));
       DISPATCH();
 
     case INLINEFUN1:
     case INLINEREL2:
       fprintf (ofile,
-               "(%s,X[%d],X[%d])\n",
+               "(%s,X[%d],X[%d],%d)\n",
                getBIName(PC+1),
                regToInt(getRegArg(PC+2)),
-               regToInt(getRegArg(PC+3)));
+               regToInt(getRegArg(PC+3)),
+               getPosIntArg(PC+4));
       DISPATCH();
 
     case INLINEFUN2:
       fprintf (ofile,
-               "(%s,X[%d],X[%d],X[%d])\n",
+               "(%s,X[%d],X[%d],X[%d],%d)\n",
                getBIName(PC+1),
                regToInt(getRegArg(PC+2)),
                regToInt(getRegArg(PC+3)),
-               regToInt(getRegArg(PC+4)));
+               regToInt(getRegArg(PC+4)),
+               getPosIntArg(PC+5));
       DISPATCH();
 
     case INLINEDOT:
@@ -452,12 +455,13 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case INLINEFUN3:
       fprintf (ofile,
-               "(%s,X[%d],X[%d],X[%d],X[%d])\n",
+               "(%s,X[%d],X[%d],X[%d],X[%d],%d)\n",
                getBIName(PC+1),
                regToInt(getRegArg(PC+2)),
                regToInt(getRegArg(PC+3)),
                regToInt(getRegArg(PC+4)),
-               regToInt(getRegArg(PC+5)));
+               regToInt(getRegArg(PC+5)),
+               getPosIntArg(PC+6));
       DISPATCH();
 
     case CALLBUILTIN:
