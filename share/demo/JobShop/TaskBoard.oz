@@ -22,7 +22,9 @@
 
 functor
 
-require
+import
+   Tk
+
    Configure(maxJobs: MaxJobs
              maxSpan: MaxSpan
 
@@ -30,10 +32,8 @@ require
              durFrame:    DurFrame
              jobDistance: JobDistance
 
-             courier:   Courier
+             type:      Courier
              resColors: ResColors)
-import
-   Tk
 
 export
    'class': TaskBoard
@@ -55,10 +55,10 @@ prepare
       T = {String.toInt {List.dropWhile S Char.isDigit}.2}
    end
 
+define
+
    OffX = 20
    OffY = JobDistance
-
-define
 
    class Task
       from Tk.canvasTag

@@ -22,17 +22,16 @@
 
 functor
 
-require
-   Configure(helv:             Helv
-             smallCourierBold: SmallCourierBold
-             resColors:        ResColors
-             maxDur:           MaxDur
-             maxRes:           MaxRes)
-
 import
    TkTools
    Tk
    Explorer
+
+   Configure(text:             Helv
+             typeSmall:        SmallCourierBold
+             resColors:        ResColors
+             maxDur:           MaxDur
+             maxRes:           MaxRes)
 
 export
    'class': Tools

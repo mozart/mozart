@@ -32,10 +32,10 @@ import
    TaskBoard('class')
    Scheduler('class')
    Tools('class')
+   Configure(text)
 
 require
    Examples
-   Configure(helv: Helv)
 
 prepare
    ArgSpec = record(example(single type:atom default:no))
@@ -51,7 +51,7 @@ define
 
       meth tkInit(parent:P spec:Spec)
          Tk.frame, tkInit(parent:P)
-         NB = {New TkTools.notebook  tkInit(parent:self font:Helv)}
+         NB = {New TkTools.notebook  tkInit(parent:self font:Configure.text)}
          T  = {New Tools.'class'     tkInit(parent:NB board:B)}
          S  = {New Scheduler.'class' tkInit(parent:NB board:B)}
          F  = {New Tk.frame          tkInit(parent:self)}

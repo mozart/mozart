@@ -23,25 +23,6 @@
 functor
 
 prepare
-
-   local
-      HelvFamily        = '-*-helvetica-medium-r-normal--*-'
-      HelvBoldFamily    = '-*-helvetica-bold-r-normal--*-'
-      CourierFamily     = '-*-courier-medium-r-normal--*-'
-      CourierBoldFamily = '-*-courier-bold-r-normal--*-'
-      FontMatch         = '-*-*-*-*-*-*'
-
-      FontSize          = 120
-      SmallSize         = 100
-   in
-      [HelvBold Helv Courier SmallCourierBold] =
-      {Map [HelvBoldFamily    # FontSize  # FontMatch
-            HelvFamily        # FontSize  # FontMatch
-            CourierFamily     # FontSize  # FontMatch
-            CourierBoldFamily # SmallSize # FontMatch]
-       VirtualString.toAtom}
-   end
-
    MaxRes    = 10
    MaxJobs   = 10
    MaxDur    = 10
@@ -54,10 +35,20 @@ prepare
    DurFrame    = 4
    JobDistance = DurUnit + 4
 
+import
+   Tk(font)
+
+define
+
+   Text      = {New Tk.font tkInit(family:helvetica size:~12)}
+   TextBold  = {New Tk.font tkInit(family:helvetica size:~12 weight:bold)}
+   Type      = {New Tk.font tkInit(family:courier   size:~12)}
+   TypeSmall = {New Tk.font tkInit(family:courier   size:~10 weight:bold)}
+
 export
    MaxRes MaxJobs MaxDur MaxSpan
    ResColors
    DurUnit DurFrame JobDistance
-   HelvBold Helv Courier SmallCourierBold
+   Text TextBold Type TypeSmall
 
 end
