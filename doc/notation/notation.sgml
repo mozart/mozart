@@ -1710,7 +1710,7 @@ end>>/
             <Rewrite>?={statement}
               <Rewrite.From/<<or ?{L1} [] &ellipsis; [] ?{Ln}
 end>>/
-              <Rewrite.To/<<{`Combinator.'or` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)>>/
+              <Rewrite.To/<<{`Combinator.'or'` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)>>/
             </Rewrite>
             <Rewrite>?={statement}
               <Rewrite.From/<<dis ?{L1} [] &ellipsis; [] ?{Ln}
