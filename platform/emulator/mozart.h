@@ -114,9 +114,12 @@ extern OZ_Term OZ_head      _PROTOTYPE((OZ_Term));
 extern OZ_Term OZ_tail      _PROTOTYPE((OZ_Term));
 extern int     OZ_length    _PROTOTYPE((OZ_Term list));
 
+extern OZ_Term OZ_pair      _PROTOTYPE((OZ_Term t1,OZ_Term t2));
+extern int OZ_isPair        _PROTOTYPE((OZ_Term t));
+
 /* records */
 extern OZ_Term OZ_record       _PROTOTYPE((OZ_Term, OZ_Term));
-extern OZ_Term OZ_recordProp   _PROTOTYPE((OZ_Term, OZ_Term));
+extern OZ_Term OZ_recordList   _PROTOTYPE((OZ_Term, OZ_Term));
 extern void OZ_putRecordArg    _PROTOTYPE((OZ_Term, OZ_Term, OZ_Term));
 extern OZ_Term OZ_getRecordArg _PROTOTYPE((OZ_Term, OZ_Term));
 #define OZ_getRecordArgC(t,s) OZ_getRecordArg(t,OZ_CToAtom(s))

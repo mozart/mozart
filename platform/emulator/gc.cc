@@ -1535,7 +1535,7 @@ void AM::gc(int msgLevel)
   GCPROCMSG("Predicate table");
   CodeArea::gc();
 
-  SRecord::aritytable.gc ();
+  aritytable.gc ();
 
   GCREF(currentThread);
   GCREF(rootThread);
