@@ -503,7 +503,7 @@ do not have the correct type.
 
 <P>A handler <<HandlerProc>> is a three-argument
 procedure that is called as <<{HandlerProc E FS OP}>>.
-The arguments <<E>>, <<FS>>, <<OP>>,
+The arguments <<E>>, <<FS>>, and <<OP>>,
 are exactly the same as in a distribution exception.
 
 <P>A modification of the current release with respect
@@ -539,8 +539,8 @@ the function returns <<false>>.  Otherwise, it returns <<true>>.
 <P>A watcher <<WatcherProc>> is a two-argument
 procedure that is called as <<{WatcherProc E FS}>>.
 The arguments <<E>> and <<FS>>
-are exactly the same arguments are
-in a distribution exception or in a handler call.
+are exactly the same as in a distribution exception
+or in a handler call.
 
 <SECTION><TITLE>Fault states for language entities</TITLE>
 
@@ -630,7 +630,10 @@ and <<permAll>>).
 <ITEM> Some or all proxy sites down
 (<<remoteProblem(I)>> where <<I>> is both <<permSome>> and <<permAll>>).
 <ITEM> Some or all proxy sites unreachable
-(<<remoteProblem(I))>> where <<I>> is both <<tempSome>> and <<tempAll>>).
+(<<remoteProblem(tempSome))>>).
+It is impossible
+to have <<remoteProblem(tempAll)>>
+in the current implementation.
 </LIST>
 <P> A logic variable has two operations,
 binding and waiting until bound.
