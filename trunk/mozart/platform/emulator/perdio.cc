@@ -121,6 +121,29 @@ OwnerTable *ownerTable;
 OZ_Term loadHook;
 static FatInt *idCounter;
 
+class MarshallInfo {
+public:
+  OZ_Term resources,saveTheseURLsToo, urlsFound;
+  MarshallInfo(OZ_Term ds, OZ_Term urls) { 
+    resources = nil(); 
+    saveTheseURLsToo = deref(ds);
+    urlsFound = literalEq(urls,NameUnit) ? NameUnit : nil();
+  }
+  void addRes(OZ_Term res) { resources = cons(res,resources); }
+  void addURL(OZ_Term url) { 
+    if (!literalEq(urlsFound,NameUnit) && !member(url,urlsFound)) {
+      urlsFound = cons(url,urlsFound);
+    }
+  }
+};
+
+inline
+void addRes(MarshallInfo *mi, OZ_Term t) { if (mi) mi->addRes(t); }
+
+inline
+void addURL(MarshallInfo *mi, OZ_Term t) { if (mi) mi->addURL(t); }
+
+
 class SendRecvCounter {
 private:
   long c[2];
@@ -160,11 +183,11 @@ SendRecvCounter misc_counter[MISC_LAST];
 #define BT borrowTable
 
 
-void marshallTerm(Site* sd,OZ_Term t, ByteStream *bs);
+void marshallTerm(Site* sd,OZ_Term t, ByteStream *bs,MarshallInfo *mi);
 int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t);
-void domarshallTerm(Site* sd,OZ_Term t, ByteStream *bs);
+void domarshallTerm(Site* sd,OZ_Term t, ByteStream *bs, MarshallInfo *mi);
 void unmarshallTerm(ByteStream*,OZ_Term*);
-void marshallCode(Site*,ProgramCounter, ByteStream *);
+void marshallCode(Site*,ProgramCounter, ByteStream *, MarshallInfo *mi);
 OZ_Term unmarshallTerm(ByteStream *bs);
 inline void marshallNumber(unsigned int,ByteStream *);
 inline void marshallMySite(ByteStream* );
@@ -2909,12 +2932,12 @@ void trailCycle(OZ_Term *t, ByteStream *bs,int n)
 #endif
 }
 
-void marshallClosure(Site *sd,Abstraction *a,ByteStream *bs) {
+void marshallClosure(Site *sd,Abstraction *a,ByteStream *bs,MarshallInfo *mi) {
   RefsArray globals = a->getGRegs();
   int gs = globals ? a->getGSize() : 0;
   marshallNumber(gs,bs);
   for (int i=0; i<gs; i++) {
-    marshallTerm(sd,globals[i],bs);
+    marshallTerm(sd,globals[i],bs,mi);
   }
 }
 
@@ -2954,43 +2977,50 @@ Bool marshallTert(Site *sd, Tertiary *t, MarshallTag tag, ByteStream *bs)
   return NO;
 }
 
-void marshallURL(GName *gname, TaggedRef t, ByteStream *bs) {
+void marshallURL(GName *gname, TaggedRef t, ByteStream *bs,MarshallInfo *mi) 
+{
   PD((MARSHALL,"URL %s",toC(t)));
   marshallDIF(bs,DIF_URL);
   marshallGName(gname,bs);
   Assert(isAtom(t));
-  marshallTerm(0,t,bs);
+  marshallTerm(0,t,bs,mi);
 }
 
-Bool checkURL(GName *gname, ByteStream *bs) {
+Bool checkURL(GName *gname, ByteStream *bs, MarshallInfo *mi) 
+{
   TaggedRef t = gname->getURL();
   if (t) {
-    marshallURL(gname,t,bs);
+    addURL(mi,t);
+    if(mi && (literalEq(NameUnit,mi->saveTheseURLsToo) ||
+	      member(t,mi->saveTheseURLsToo))) {
+      return NO;
+    }
+    marshallURL(gname,t,bs,mi);
     return OK;
   }
   if (currentURL) { gname->markURL(currentURL); }
   return NO;
 }
 
-void marshallSRecord(Site *sd, SRecord *sr, ByteStream *bs)
+void marshallSRecord(Site *sd, SRecord *sr, ByteStream *bs, MarshallInfo *mi)
 {
   TaggedRef t = nil();
   if (sr) {
     t = makeTaggedSRecord(sr);
   }
-  marshallTerm(sd,t,bs);
+  marshallTerm(sd,t,bs,mi);
 }
 
 
-void marshallClass(Site *sd, ObjectClass *cl, ByteStream *bs)
+void marshallClass(Site *sd, ObjectClass *cl, ByteStream *bs, MarshallInfo *mi)
 {
   marshallDIF(bs,DIF_CLASS);
   marshallGName(cl->getGName(),bs);
   trailCycle(cl->getRef(),bs,2);
-  marshallSRecord(sd,cl->getFeatures(),bs);
+  marshallSRecord(sd,cl->getFeatures(),bs,mi);
 }
 
-void marshallDict(Site *sd, OzDictionary *d, ByteStream *bs)
+void marshallDict(Site *sd, OzDictionary *d, ByteStream *bs, MarshallInfo *mi)
 {
   int size = d->getSize();
   marshallNumber(size,bs);
@@ -2999,8 +3029,8 @@ void marshallDict(Site *sd, OzDictionary *d, ByteStream *bs)
   int i = d->getFirst();
   i = d->getNext(i);
   while(i>=0) {
-    marshallTerm(sd,d->getKey(i),bs);
-    marshallTerm(sd,d->getValue(i),bs);
+    marshallTerm(sd,d->getKey(i),bs,mi);
+    marshallTerm(sd,d->getValue(i),bs,mi);
     i = d->getNext(i);
     size--;
   }
@@ -3014,20 +3044,22 @@ void marshallObject(Site *sd, ByteStream *bs, Object *o, GName *gnclass)
   marshallGName(gnclass,bs);
 }
 
-void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
+void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs, MarshallInfo *mi)
 {
   switch (t->getType()) {
   case Co_Dictionary:
     {
       PD((MARSHALL,"dictionary"));
       marshallDIF(bs,DIF_DICT);
-      marshallDict(sd,(OzDictionary *) t,bs);
+      //      addRes(mi,makeTaggedConst(t));
+      marshallDict(sd,(OzDictionary *) t,bs,mi);
       return;
     }
   case Co_Array:
     {
       PD((MARSHALL,"array"));
       marshallDIF(bs,DIF_ARRAY);
+      addRes(mi,makeTaggedConst(t));
       warning("mm2: array not impl");
       return;
     }
@@ -3043,14 +3075,14 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
     {
       SChunk *ch=(SChunk *) t;
       GName *gname=ch->getGName();
-      if (checkURL(gname,bs)) return;
+      if (checkURL(gname,bs,mi)) return;
 
       marshallDIF(bs,DIF_CHUNK);
       marshallGName(gname,bs);
 
       trailCycle(t->getRef(),bs,4);
 
-      marshallTerm(sd,ch->getValue(),bs);
+      marshallTerm(sd,ch->getValue(),bs,mi);
       return;
     }
 
@@ -3058,8 +3090,8 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
     {
       ObjectClass *cl = (ObjectClass*) t;
       cl->globalize();
-      if (checkURL(cl->getGName(),bs)) return;
-      marshallClass(sd,cl,bs);
+      if (checkURL(cl->getGName(),bs,mi)) return;
+      marshallClass(sd,cl,bs,mi);
       return;
     }
 
@@ -3067,16 +3099,16 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
     {
       Abstraction *pp=(Abstraction *) t;
       GName *gname=pp->getGName();
-      if (checkURL(gname,bs)) return;
+      if (checkURL(gname,bs,mi)) return;
 
       marshallDIF(bs,DIF_PROC);
       marshallGName(gname,bs);
-      marshallTerm(sd,pp->getName(),bs);
+      marshallTerm(sd,pp->getName(),bs,mi);
       marshallNumber(pp->getArity(),bs);
       ProgramCounter pc = pp->getPC();
       trailCycle(t->getRef(),bs,5);
-      marshallClosure(sd,pp,bs);
-      marshallCode(sd,pc,bs);
+      marshallClosure(sd,pp,bs,mi);
+      marshallCode(sd,pc,bs,mi);
       return;
     }
 
@@ -3085,22 +3117,28 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       Object *o = (Object*) t;
       ObjectClass *oc = o->getClass();
       oc->globalize();
+      addRes(mi,makeTaggedConst(t));
       marshallObject(sd,bs,o,oc->getGName());
       return;
     }
   case Co_Lock:
+    addRes(mi,makeTaggedConst(t));
     if (marshallTert(sd,(Tertiary *) t,DIF_LOCK,bs)) return;
     break;
   case Co_Thread:
+    addRes(mi,makeTaggedConst(t));
     if (marshallTert(sd,(Tertiary *) t,DIF_THREAD,bs)) return;
     break;
   case Co_Space:
+    addRes(mi,makeTaggedConst(t));
     if (marshallTert(sd,(Tertiary *) t,DIF_SPACE,bs)) return;
     break;
   case Co_Cell:
+    addRes(mi,makeTaggedConst(t));
     if (marshallTert(sd,(Tertiary *) t,DIF_CELL,bs)) return;
     break;
   case Co_Port:
+    addRes(mi,makeTaggedConst(t));
     if (marshallTert(sd,(Tertiary *) t,DIF_PORT,bs)) return;
     break;
   default:
@@ -3126,7 +3164,7 @@ GName *getGName(TaggedRef t)
   return tagged2PerdioVar(t)->getGName();
 }
 
-void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs)
+void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs, MarshallInfo *mi)
 {
   if (pvar->isProxy()) {
     int i=pvar->getIndex();
@@ -3159,7 +3197,7 @@ void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs)
 
   if (pvar->isURL()) {
     PD((MARSHALL,"var url"));
-    marshallURL(pvar->getGName(),pvar->getURL(),bs);
+    marshallURL(pvar->getGName(),pvar->getURL(),bs,mi);
     return;
   } 
 
@@ -3208,7 +3246,7 @@ PerdioVar *var2PerdioVar(TaggedRef *tPtr)
 
 
 
-void marshallTerm(Site *sd, OZ_Term t, ByteStream *bs)
+void marshallTerm(Site *sd, OZ_Term t, ByteStream *bs, MarshallInfo *mi)
 {
 loop:
   DEREF(t,tPtr,tTag);
@@ -3274,11 +3312,11 @@ loop:
       if (!isRef(*args) && isAnyVar(*args)) {
 	PerdioVar *pvar = var2PerdioVar(args);
 	trailCycle(args,bs,8);
-	marshallVariable(sd,pvar,bs);
+	marshallVariable(sd,pvar,bs,mi);
       } else {
 	OZ_Term head = l->getHead();
 	trailCycle(args,bs,9);
-	marshallTerm(sd,head,bs);
+	marshallTerm(sd,head,bs,mi);
       }
       // tail recursion optimization
       t = l->getTail();
@@ -3298,15 +3336,15 @@ loop:
       } else {
 	marshallDIF(bs,DIF_RECORD);
 	PD((MARSHALL_CT,"tag DIF_RECORD BYTES:1"));
-	marshallTerm(sd,rec->getArityList(),bs);
+	marshallTerm(sd,rec->getArityList(),bs,mi);
       }
-      marshallTerm(sd,label,bs);
+      marshallTerm(sd,label,bs,mi);
       trailCycle(rec->getCycleAddr(),bs,10);
       int argno = rec->getWidth();
       PD((MARSHALL,"record-tuple no:%d",argno));
 
       for(int i=0; i<argno-1; i++) {
-	marshallTerm(sd,rec->getArg(i),bs);
+	marshallTerm(sd,rec->getArg(i),bs,mi);
       }
       // tail recursion optimization
       t = rec->getArg(argno-1);
@@ -3318,7 +3356,7 @@ loop:
       PD((MARSHALL,"constterm"));
       if (checkCycle(*(tagged2Const(t)->getRef()),bs))
 	break;
-      marshallConst(sd,tagged2Const(t),bs);
+      marshallConst(sd,tagged2Const(t),bs,mi);
       break;
     }
 
@@ -3331,14 +3369,15 @@ loop:
 	t = makeTaggedRef(tPtr);
 	goto bomb;
       }
-      marshallVariable(sd,pvar,bs);
+      addRes(mi,makeTaggedRef(tPtr));
+      marshallVariable(sd,pvar,bs,mi);
       break;
     }
 
   default:
   bomb:
     warning("Cannot marshall %s",toC(t));
-    marshallTerm(sd,nil(),bs);
+    marshallTerm(sd,nil(),bs,mi);
     break;
   }
 
@@ -4302,19 +4341,19 @@ void siteReceive(ByteStream* bs)
 /* ********************************************************************** */
 /* ********************************************************************** */
 
-void domarshallTerm(Site * sd,OZ_Term t, ByteStream *bs)
+void domarshallTerm(Site * sd,OZ_Term t, ByteStream *bs, MarshallInfo *mi)
 {
   currentURL=0;
   Assert(refTrail->isEmpty());
-  marshallTerm(sd,t,bs);
+  marshallTerm(sd,t,bs,mi);
   refTrail->unwind();
 }
 
-void domarshallTerm(TaggedRef url,OZ_Term t, ByteStream *bs)
+void domarshallTerm(TaggedRef url,OZ_Term t, ByteStream *bs, MarshallInfo *mi)
 {
   currentURL=url;
   Assert(refTrail->isEmpty());
-  marshallTerm((Site*)0,t,bs);
+  marshallTerm((Site*)0,t,bs,mi);
   refTrail->unwind();
 }
 
@@ -4337,7 +4376,7 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   marshallMess(bs,M_REMOTE_SEND);
   marshallNumber(index,bs);
   marshallString(biName,bs);
-  domarshallTerm(site,msg,bs);
+  domarshallTerm(site,msg,bs,0);
   bs->marshalEnd();
   PD((MSG_SENT,"PORTSEND s:%s o:%d v:%s",pSite(site),index,toC(msg)));
 
@@ -4377,7 +4416,7 @@ void portSend(Tertiary *p, TaggedRef msg) {
   bs->marshalBegin();
   marshallMess(bs,M_PORT_SEND);                    
   marshallNumber(index,bs);
-  domarshallTerm(site,msg,bs);
+  domarshallTerm(site,msg,bs,0);
   bs->marshalEnd();
 
   PD((MSG_SENT,"PORT_SEND s:%s o:%d v:%s",
@@ -4437,7 +4476,7 @@ void sendSurrender(BorrowEntry *be,OZ_Term val)
   int index = na->index;
   marshallNumber(index,bs);
   marshallMySite(bs);
-  domarshallTerm(site,val,bs);
+  domarshallTerm(site,val,bs,0);
   bs->marshalEnd();
   PD((MSG_SENT,"SURRENDER s:%s o:%d v:%s", pSite(site),index,toC(val)));
 
@@ -4464,7 +4503,7 @@ void sendRedirect(Site* sd,int OTI,TaggedRef val)
   ByteStream *bs= bufferManager->getByteStreamMarshal();
   marshallMess(bs,M_REDIRECT);
   marshallNetAddress2(mySite,OTI,bs);
-  domarshallTerm(sd,val,bs);
+  domarshallTerm(sd,val,bs,0);
   bs->marshalEnd();
   PD((MSG_SENT,"REDIRECT s:%s o:%d v:%s",pSite(sd),OTI,toC(val)));
   OT->getOwner(OTI)->getOneCredit();
@@ -4490,16 +4529,16 @@ void sendObject(Site* sd, Object *o, Bool sendClass)
   marshallMess(bs,sendClass?M_SEND_OBJECTANDCLASS:M_SEND_OBJECT);
   marshallNetAddress2(mySite,OTI,bs);
 
-  marshallSRecord(sd,o->getFreeRecord(),bs);
-  marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs);
+  marshallSRecord(sd,o->getFreeRecord(),bs,0);
+  marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs,0);
   if (o->getLock()) {
-    marshallTerm(sd,makeTaggedConst(o->getLock()),bs);
+    marshallTerm(sd,makeTaggedConst(o->getLock()),bs,0);
   } else {
-    marshallTerm(sd,nil(),bs);
+    marshallTerm(sd,nil(),bs,0);
   }
 
   if (sendClass) {
-    marshallClass(sd,oc,bs);
+    marshallClass(sd,oc,bs,0);
   }
   bs->marshalEnd();
   refTrail->unwind();
@@ -4677,7 +4716,7 @@ void cellSendRemoteRead(int mI,Site *toS,TaggedRef val){  // holding one credit
   marshallMess(bs,M_CELL_REMOTEREAD);
   marshallMySite(bs);
   marshallNumber(mI,bs);
-  domarshallTerm(toS,val,bs);
+  domarshallTerm(toS,val,bs,0);
   bs->marshalEnd();
   PD((MSG_PREP,"CELL_REMOTEREAD id:%d to s:%s",mI,pSite(toS)));  
   debtSendSimple(bs,toS,16);
@@ -4688,7 +4727,7 @@ void cellSendContents(TaggedRef tr,Site* toS,Site *mS,int mI){ // holding one cr
   marshallMess(bs,M_CELL_CONTENTS);
   marshallSite(mS,bs);
   marshallNumber(mI,bs);
-  domarshallTerm(toS,tr,bs);
+  domarshallTerm(toS,tr,bs,0);
   bs->marshalEnd();
   PD((MSG_PREP,"CELL_CONTENTS id:%s-%d to s:%s",pSite(mS),mI,pSite2(toS)));
   debtSendSimple(bs,toS,17);
@@ -4713,7 +4752,7 @@ void cellSendRead(BorrowEntry *be,TaggedRef val){  // not holding any credit
   ByteStream* bs=bufferManager->getByteStreamMarshal();
   marshallMess(bs,M_CELL_READ);
   marshallNumber(na->index,bs);
-  domarshallTerm(na->site,val,bs);
+  domarshallTerm(na->site,val,bs,0);
   bs->marshalEnd();
   PD((MSG_PREP,"CELL_READ to site:%s-%d",pSite(toS),na->index));  
   borrowSendSimple(be,bs,na->site,28);
@@ -5486,7 +5525,9 @@ OZ_C_proc_begin(BInewGate,2)
 OZ_C_proc_end
 
 
-int saveFile(OZ_Term in,char *filename,OZ_Term url)
+int saveFile(OZ_Term in,char *filename,OZ_Term url, 
+	     OZ_Term dosave, OZ_Term urls,
+	     OZ_Term resources)
 {
   INIT_IP(0);
 
@@ -5500,9 +5541,9 @@ int saveFile(OZ_Term in,char *filename,OZ_Term url)
 
   ByteStream *bs = bufferManager->getByteStreamMarshal();
 
+  MarshallInfo mi(dosave,urls);
   marshallString(PERDIOVERSION,bs);
-  domarshallTerm(url,in,bs);
-
+  domarshallTerm(url,in,bs,&mi);
   bs->marshalEnd();
 
   bs->beginWrite();
@@ -5531,37 +5572,24 @@ int saveFile(OZ_Term in,char *filename,OZ_Term url)
 
   close(fd);
 
-  return PROCEED;
+  
+  return (OZ_unify(urls,mi.urlsFound) && OZ_unify(resources,mi.resources)) 
+    ? PROCEED : FAILED;
 }
 
 
 
-OZ_C_proc_begin(BIsaveOld,2)
-{
-  OZ_declareArg(0,in);
-  OZ_declareVirtualStringArg(1,url);
-
-  if (strncmp(url,"file:",5)!=0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",2,
-		    oz_atom("onlyFileURL"),
-		    OZ_args[1]);
-  }
-
-  char *filename = url+5;
-
-  return saveFile(in,filename,OZ_atom(url));
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIsave,3)
+OZ_C_proc_begin(BIsmartSave,6)
 {
   OZ_declareArg(0,in);
   OZ_declareVirtualStringArg(2,urlS);
   OZ_Term url=OZ_atom(urlS);
   OZ_declareVirtualStringArg(1,filename);
+  OZ_declareNonvarArg(3,dosave);
+  OZ_declareArg(4,urls);
+  OZ_declareArg(5,resources);
 
-  return saveFile(in,filename,url);
+  return saveFile(in,filename,url,dosave,urls,resources);
 }
 OZ_C_proc_end
 
@@ -5844,7 +5872,7 @@ BIspec perdioSpec[] = {
   {"startServer",    2, BIstartServer, 0},
   {"startClient",    3, BIstartClient, 0},
 
-  {"save",        3, BIsave, 0},
+  {"smartSave",   6, BIsmartSave, 0},
   {"load",        2, BIload, 0},
   {"loadFile",    3, BIloadFile, 0},
   {"setLoadHook", 1, BIsetLoadHook, 0},
