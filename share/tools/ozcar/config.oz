@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.1.1 (Feb 97)'
+Version                = '1.1.2 (Feb 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -33,7 +33,7 @@ InvalidThreadID        = 'Invalid Thread ID in step message' /* end */
 NoFileInfo             = 'step message without line number information, ' #
                          'continuing thread #' /* end */
 NoFileBlockInfo        = ' blocks without line number information'
-EarlyThreadDeath       = '...hm, but it has died already?!'
+EarlyThreadDeath       = 'won\'t add thread as it died already.'
 KnownThread            = 'Got known thread' /* end */
 NewThread              = 'Got new thread' /* end */
 NextOnLeave            = '\'next\' while leaving procedure - ' #
@@ -98,8 +98,8 @@ MagicAtom              = 'noActionPlease'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '580x400+7+50'
-SourceWindowGeometry   = '511x564+600+50'   %% I really hate hardcoding this
+ToplevelGeometry       = '540x380+7+50'
+SourceWindowGeometry   = '511x564+560+50'   %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
 SourceWindowTextSize   = 82 # 40
@@ -111,8 +111,8 @@ ThreadTreeOffset       = 4
 
 StackTextWidth         = 0
 EnvTextWidth           = 24
-EnvVarWidth            = 16
-	
+EnvVarWidth            = 15
+
 SmallBorderSize        = 1
 BorderSize             = 2
 
@@ -265,6 +265,8 @@ ConfigStepSetSelfBuiltin   = false  %% step on builtin 'setSelf' ?
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
 
+ConfigScrollbar            = emacsScrollbar  %% use arrow in emacs window
+
 Config =
 {New
  class
@@ -281,6 +283,8 @@ Config =
     
        envSystemVariables :    ConfigEnvSystemVariables
        envProcedures :         ConfigEnvProcedures
+
+       scrollbar :             ConfigScrollbar
     
     meth init
        skip
@@ -288,6 +292,13 @@ Config =
     
     meth toggle(What)
        What <- {Not @What}
+    end
+
+    meth toggleScrollbar
+       M = @scrollbar
+    in
+       scrollbar <- case M == emacsScrollbar
+		    then ozScrollbar else emacsScrollbar end
     end
     
     meth get(What $)

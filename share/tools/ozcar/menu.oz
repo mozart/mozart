@@ -14,6 +14,10 @@ local
    
    TkEnvSystemVariables  = {New Tk.variable tkInit(ConfigEnvSystemVariables)}
    TkEnvProcedures       = {New Tk.variable tkInit(ConfigEnvProcedures)}
+
+   TkScrollbar           = {New Tk.variable
+			    tkInit(case ConfigScrollbar == emacsScrollbar
+				   then false else true end)}
    
    C  = command
    MB = menubutton
@@ -41,7 +45,10 @@ in
 	   */
 	   MB(text: 'Options'
 	      menu:
-		 [CB(label:    'Step on All System Procedures'
+		 [CB(label:    'Use Oz Source Window'
+		     variable: TkScrollbar
+		     action:   Config # toggleScrollbar)
+		  CB(label:    'Step on All System Procedures'
 		     variable: TkStepSystemProcedures
 		     action:   Config # toggle(stepSystemProcedures)
 		     feature:  stepSystemProcedures)
