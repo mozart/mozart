@@ -150,17 +150,20 @@ void Statistics::printIdle(FILE *fd)
   if (ozconf.showIdleMessage) {
     fprintf(fd,"idle  ");
     printTime(fd,"r: ", timeUtime.sinceidle());
-    printPercent(fd," (",
-		 timeForPropagation.sinceidle(),
-		 timeUtime.sinceidle());
-    printPercent(fd,"%%p, ",
-		 timeForCopy.sinceidle(),
-		 timeUtime.sinceidle());
-    printPercent(fd,"%%c, ",
-		 timeForGC.sinceidle(),
-		 timeUtime.sinceidle());
-    printMem(fd,"%%g), h: ", (totalHeap-heapUsed.sinceIdle)*KB);
-    fprintf(fd,"\n");
+
+    if (ozconf.timeDetailed) {
+      printPercent(fd," (",
+		   timeForPropagation.sinceidle(),
+		   timeUtime.sinceidle());
+      printPercent(fd,"%%p, ",
+		   timeForCopy.sinceidle(),
+		   timeUtime.sinceidle());
+      printPercent(fd,"%%c, ",
+		   timeForGC.sinceidle(),
+		   timeUtime.sinceidle());
+      fprintf(fd,"%%g)");
+    }
+    printMem(fd,", h: ", (totalHeap-heapUsed.sinceIdle)*KB);
     fflush(fd);
   }
   heapUsed.sinceIdle = totalHeap;

@@ -69,6 +69,8 @@
 
 #define QUEUEMINSIZE	        32
 
+#define TIMEDETAILED            0
+
 #define NUM_TOPLEVEL_VARS	10000
 
 #define NumberOfXRegisters	10000
