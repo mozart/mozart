@@ -59,7 +59,7 @@
 #endif
 #endif
 
-#if TK_MAJOR_VERSION >= 8 && TK_MINOR_VERSION >= 4
+#if defined(TK_MAJOR_VERSION) && defined (TK_MINOR_VERSION) && TK_MAJOR_VERSION >= 8 && TK_MINOR_VERSION >= 4 && !defined(NO_CONST)
 #define CONST_CAST(X,Y) const_cast<X>(Y)
 #else
 #define CONST_CAST(X,Y) (Y)
@@ -291,7 +291,7 @@ main(int argc, char **argv)
     exit(1);
 
 error:
-    msg = Tcl_GetVar(interp, const_cast<char*>("errorInfo"), TCL_GLOBAL_ONLY);
+    msg = CONST_CAST(char*,Tcl_GetVar(interp, CONST_CAST(const char*,"errorInfo"), TCL_GLOBAL_ONLY));
     if (msg == NULL) {
 	msg = interp->result;
     }
@@ -412,8 +412,8 @@ StdinProc(ClientData clientData, int mask)
 static void
 Prompt(Tcl_Interp *interp, int partial)
 {
-    char *promptCmd = Tcl_GetVar(interp,
-	const_cast<char*>(partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY);
+    char *promptCmd = CONST_CAST(char*,Tcl_GetVar(interp,
+	CONST_CAST(const char*,partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY));
     if (promptCmd == NULL) {
 	defaultPrompt:
 	if (!partial) {
