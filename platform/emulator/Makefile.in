@@ -68,7 +68,7 @@ MODSPECS= \
 	PID URL FDB FSB System Finalize CTB \
 	CompilerSupport Profile \
 	Debug Fault Foreign Browser Misc Distribution \
-	Builtins VirtualSite \
+	VirtualSite \
 	$(BIMODSPECS)
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
