@@ -9,12 +9,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.2.0 (Mar 97)'
+Version                = '1.2.1 (Mar 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
 SourceWindowTitle      = 'Ozcar Source Window'
 SourceWindowIcon       = 'Ozcar Source'
+
+InitStatus             = TitleName # ' initialized'
+ResetStatus            = 'Resetting Ozcar...'
 
 TreeTitle              = 'Thread Tree'
 StackTitle             = 'Stack'
@@ -22,9 +25,6 @@ AltStackTitle          = 'Stack of Thread  #'
 
 LocalEnvTitle          = 'Local Variables'
 GlobalEnvTitle         = 'Global Variables'
-
-StatusInitText         = 'No current thread' /* end */
-StatusEndText          = 'See you again...'
 
 ApplPrefixText         = 'Application:'
 ApplFilePrefixText     = 'File:'
