@@ -26,7 +26,7 @@ local
    Options = {Sort [search information drawing postscript] Value.'<'}
 
    proc {MethodError O M}
-      {`ooMethodError` _ M O _}
+      {Show M}
    end
 
    fun {GetAction M W}
