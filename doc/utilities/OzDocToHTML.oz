@@ -49,14 +49,7 @@ import
    Property(get)
 export
    Translate
-define
-   DOCTYPE_PUBLIC = '"-//W3C//DTD HTML 4.0 Transitional//EN"'
-
-   ParseError = 'sgml parse error'
-   CrossRefError = 'sgml cross-reference error'
-   OzDocError = 'ozdoc to html error'
-   OzDocWarning = 'ozdoc to html warning'
-
+prepare
    %%
    %% Note: order is important in the following list!
    %%
@@ -68,6 +61,13 @@ define
 		   macro#'macro'
 		   variable#'variable' useroption#'user option'
 		   command#'command' face#'face']
+define
+   DOCTYPE_PUBLIC = '"-//W3C//DTD HTML 4.0 Transitional//EN"'
+
+   ParseError = 'sgml parse error'
+   CrossRefError = 'sgml cross-reference error'
+   OzDocError = 'ozdoc to html error'
+   OzDocWarning = 'ozdoc to html warning'
 
    proc {OutputParseErrors S Reporter} Line Lines in
       {List.takeDropWhile S fun {$ C} C \= &\n end ?Line ?Lines}
