@@ -1188,8 +1188,56 @@ test -n "$SED" && break
 done
 
 
+case "$host" in
+i?86-*-linux)
+	cat >> confdefs.h <<\EOF
+#define LINUX_I486 1
+EOF
+
+	platform=linux-i486
+	;;
+sparc-sun-sunos4*)
+	cat >> confdefs.h <<\EOF
+#define SUNOS_SPARC 1
+EOF
+
+	platform=sunos-sparc
+	;;
+sparc-sun-solaris*)
+	cat >> confdefs.h <<\EOF
+#define SOLARIS_SPARC 1
+EOF
+
+	platform=solaris-sparc
+	;;
+aix-*)
+	;;
+esac
+
+OzPlatform=$platform
+psdir=/project/ps
+echo $ac_n "checking for dir $psdir/lib/$platform""... $ac_c" 1>&6
+echo "configure:1221: checking for dir $psdir/lib/$platform" >&5
+if test -d $psdir/lib/$platform
+then
+  LIBS="$LIBS -L$psdir/lib/$platform"
+  echo "$ac_t""yes" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+echo $ac_n "checking for dir $HOME/lib/$platform""... $ac_c" 1>&6
+echo "configure:1231: checking for dir $HOME/lib/$platform" >&5
+if test -d $HOME/lib/$platform
+then
+  LIBS="$LIBS -L$HOME/lib/$platform"
+  echo "$ac_t""yes" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
 echo $ac_n "checking for --with-threaded""... $ac_c" 1>&6
-echo "configure:1193: checking for --with-threaded" >&5
+echo "configure:1241: checking for --with-threaded" >&5
 # Check whether --with-threaded or --without-threaded was given.
 if test "${with_threaded+set}" = set; then
   withval="$with_threaded"
@@ -1206,7 +1254,7 @@ else
         echo "$ac_t""no" 1>&6
 fi
 echo $ac_n "checking for --with-fastreg""... $ac_c" 1>&6
-echo "configure:1210: checking for --with-fastreg" >&5
+echo "configure:1258: checking for --with-fastreg" >&5
 # Check whether --with-fastreg or --without-fastreg was given.
 if test "${with_fastreg+set}" = set; then
   withval="$with_fastreg"
@@ -1223,7 +1271,7 @@ else
         echo "$ac_t""no" 1>&6
 fi
 echo $ac_n "checking for --with-regopt""... $ac_c" 1>&6
-echo "configure:1227: checking for --with-regopt" >&5
+echo "configure:1275: checking for --with-regopt" >&5
 # Check whether --with-regopt or --without-regopt was given.
 if test "${with_regopt+set}" = set; then
   withval="$with_regopt"
@@ -1242,7 +1290,7 @@ fi
 
 
 echo $ac_n "checking for --with-linkprop""... $ac_c" 1>&6
-echo "configure:1246: checking for --with-linkprop" >&5
+echo "configure:1294: checking for --with-linkprop" >&5
 # Check whether --with-linkprop or --without-linkprop was given.
 if test "${with_linkprop+set}" = set; then
   withval="$with_linkprop"
@@ -1262,7 +1310,7 @@ else
 fi
 
 echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:1266: checking for dlopen in -ldl" >&5
+echo "configure:1314: checking for dlopen in -ldl" >&5
 ac_lib_var=`echo dl'_'dlopen | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1270,7 +1318,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1274 "configure"
+#line 1322 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -1281,7 +1329,7 @@ int main() {
 dlopen()
 ; return 0; }
 EOF
-if { (eval echo configure:1285: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1333: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1310,7 +1358,7 @@ fi
 
 #AC_CHECK_LIB(dld, dld_init)
 echo $ac_n "checking for mpz_init in -lgmp""... $ac_c" 1>&6
-echo "configure:1314: checking for mpz_init in -lgmp" >&5
+echo "configure:1362: checking for mpz_init in -lgmp" >&5
 ac_lib_var=`echo gmp'_'mpz_init | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1318,7 +1366,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lgmp  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1322 "configure"
+#line 1370 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -1329,7 +1377,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:1333: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1381: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1444,26 +1492,6 @@ EOF
 		{ echo "configure: error: cpu $host_cpu not supported" 1>&2; exit 1; }
 	;;
 esac
-
-case "$host" in
-i?86-*-linux)
-	cat >> confdefs.h <<\EOF
-#define DLINUX_I486 1
-EOF
-
-	;;
-sparc-sun-sunos4*)
-	cat >> confdefs.h <<\EOF
-#define SUNOS_SPARC 1
-EOF
-
-	;;
-aix-*)
-	COPT=-O
-	;;
-esac
-
-OzPlatform="$host"
 
 # Check whether --enable-sun-pro or --disable-sun-pro was given.
 if test "${enable_sun_pro+set}" = set; then

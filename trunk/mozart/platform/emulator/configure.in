@@ -2,8 +2,6 @@ dnl Process this file with autoconf to produce a configure script.
 
 dnl This will check that we are in the Oz directory and initiate
 
-PSDIR= /project/ps
-
 AC_INIT(oz.h)
 
 AC_CANONICAL_HOST
@@ -23,6 +21,43 @@ AC_CHECK_PROGS(SH, sh bash)
 AC_CHECK_PROGS(MV, mv)
 AC_CHECK_PROGS(ECHO, echo true)
 AC_CHECK_PROGS(SED, gnused sed)
+
+case "$host" in
+i?86-*-linux)
+	AC_DEFINE(LINUX_I486)
+	platform=linux-i486
+	;;
+sparc-sun-sunos4*)
+	AC_DEFINE(SUNOS_SPARC)
+	platform=sunos-sparc
+	;;
+sparc-sun-solaris*)
+	AC_DEFINE(SOLARIS_SPARC)
+	platform=solaris-sparc
+	;;
+aix-*)
+	;;
+esac
+
+OzPlatform=$platform
+psdir=/project/ps
+AC_MSG_CHECKING(for dir $psdir/lib/$platform)
+if test -d $psdir/lib/$platform
+then
+  LIBS="$LIBS -L$psdir/lib/$platform"
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(for dir $HOME/lib/$platform)
+if test -d $HOME/lib/$platform
+then
+  LIBS="$LIBS -L$HOME/lib/$platform"
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
 
 AC_MSG_CHECKING(for --with-threaded)
 AC_ARG_WITH(threaded,
@@ -152,20 +187,6 @@ case "$host_cpu" in
 		AC_MSG_ERROR(cpu $host_cpu not supported)
 	;;
 esac
-
-case "$host" in
-i?86-*-linux)
-	AC_DEFINE(DLINUX_I486)
-	;;
-sparc-sun-sunos4*)
-	AC_DEFINE(SUNOS_SPARC)
-	;;
-aix-*)
-	COPT=-O
-	;;
-esac
-
-OzPlatform="$host"
 
 AC_ARG_ENABLE(sun-pro,
 	--enable-sun-pro  use the Sun Pro Compiler,
