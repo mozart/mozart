@@ -14,6 +14,8 @@
 #pragma interface
 #endif
 
+#undef DEBUG_MONITORARITY
+
 // specification for builtins
 struct BIspec {
   char *name;
@@ -108,7 +110,9 @@ public:
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return run(void);
   virtual OZ_CFun getSpawner(void) const {return spawner; }
-  virtual OZ_Term getArguments(void) const { return OZ_nil(); }
+  virtual OZ_Term getArguments(void) const { 
+    return OZ_cons(L, OZ_cons(FH, OZ_cons(FT, OZ_nil())));
+  }
   
   TaggedRef getX(void) { return X; }
   TaggedRef getK(void) { return K; }

@@ -943,6 +943,9 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
 				  TaggedRef flist,
 				  Bool determ)
 {
+#ifdef DEBUG_MONITORARITY
+	  cout << "AM::addFeatOFSSuspensionList" << endl << flush;
+#endif
     while (suspList) {
         Thread *thr = suspList->getElem ();
 
@@ -952,8 +955,15 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
             suspList=suspList->getNext();
             continue;
         }
+#ifdef DEBUG_MONITORARITY
+	  cout << "\tFound thread" << endl << flush;
+#endif
 
         if (thr->isPropagator() && thr->isOFSThread ()) {
+#ifdef DEBUG_MONITORARITY
+	  cout << "\tFound OFS thread" << endl << flush;
+#endif
+
             MonitorArityPropagator *prop =
                 (MonitorArityPropagator *) thr->getPropagator();
 
@@ -975,6 +985,10 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
             }
 
             // Add the feature or list to the diff. list in FH and FT:
+#ifdef DEBUG_MONITORARITY
+	  cout << "\tAdding feature to monitorArity" << endl << flush;
+#endif
+
             if (flist) {
                 if (isFeature(flist))
                     prop->setFH(cons(flist,prop->getFH()));
