@@ -152,7 +152,7 @@ local
 	    in
 	       {Rep startSubPhase('compiling scanner')}
 	       if {OS.system
-		   {OZTOOL}#' c++ -O3 '#{OZTOOLINC}#
+		   {OZTOOL}#' c++ '#{OZTOOLINC}#
 		   ' -c '#{MakeFileName T ".C"}#
 		   ' -o '#{MakeFileName T ".o"}} \= 0
 	       then
