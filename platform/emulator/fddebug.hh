@@ -35,7 +35,7 @@
 //#define DEBUG_FD_CONSTRREP
 #define DEBUG_FD
 #define DEBUG_FSET
-#define DEBUG_FSET_CONSTRREP
+//#define DEBUG_FSET_CONSTRREP
 #endif
 
 extern FILE * _fdomn_file, * _fset_file;
