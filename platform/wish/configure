@@ -2005,8 +2005,8 @@ esac
 
 
 : ${oz_tcltk_search="$prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
-: ${oz_tcl_search=$oz_tcltk_search}
-: ${oz_tk_search=$oz_tcltk_search}
+: ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/local/lib/tcl8.0"}
+: ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.3 /usr/local/lib/tk8.2 /usr/local/lib/tk8.0"}
 
 
 echo $ac_n "checking for tclConfig.sh""... $ac_c" 1>&6
