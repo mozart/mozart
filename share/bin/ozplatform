@@ -11,6 +11,8 @@ case $system in
    ;;
    i486\ Linux\ *)     OZARCH=linux-i486
    ;;
+   9000/7*HP-UX*)      OZARCH=hpux-700
+   ;;
    *)  echo "Cannot determine machine type and OS version" 1>&2 ; exit 1
 esac
 
