@@ -26,6 +26,7 @@ private:
   Abstraction *abstr;
   ProgramCounter pc;
   RefsArray g;
+  int arity;
 
   /* all entries are linked for GC */
   AbstractionEntry *next;
@@ -46,6 +47,7 @@ public:
   Abstraction *getAbstr() { return abstr; };
   RefsArray getGRegs()    { return g; };
   ProgramCounter getPC()  { return pc; };
+  int getArity()          { return arity; };
   void setPred(Abstraction *abs);
 
   static void gcAbstractionEntries();

@@ -176,6 +176,7 @@ void AbstractionEntry::setPred(Abstraction *ab)
   abstr = ab;
   pc    = abstr->getPC();
   g     = abstr->getGRegs();
+  arity = abstr->getArity();
 
   // indexing on X[0] optimized !!!
   if (CodeArea::getOpcode(pc) == SWITCHONTERMX &&

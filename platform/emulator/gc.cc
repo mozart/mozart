@@ -1980,6 +1980,15 @@ void TaskStack::gc(TaskStack *newstack)
 //*********************************************************************
 
 
+void ConstTermWithHome::gcConstTermWithHome()
+{
+  if (hasGName()) {
+    dogcGName(getGName1());
+  } else {
+    setBoard(getBoardInternal()->gcBoard());
+  }
+}
+
 void ConstTerm::gcConstRecurse()
 {
   setVarCopied;
@@ -1987,7 +1996,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
-      o->setBoard(o->getBoardInternal()->gcBoard());
+      o->gcConstTermWithHome();
       o->setClass(o->getClass()->gcClass());
       o->setFreeRecord(o->getFreeRecord()->gcSRecord());
       RecOrCell state = o->getState();
@@ -2005,7 +2014,7 @@ void ConstTerm::gcConstRecurse()
     {
       Abstraction *a = (Abstraction *) this;
       a->gRegs = gcRefsArray(a->gRegs);
-      a->setBoard(a->getBoardInternal()->gcBoard());
+      a->gcConstTermWithHome();
       break;
     }
 
@@ -2077,7 +2086,7 @@ void ConstTerm::gcConstRecurse()
     {
       SChunk *c = (SChunk *) this;
       gcTagged(c->value,c->value);
-      c->setBoard(c->getBoardInternal()->gcBoard());
+      c->gcConstTermWithHome();
       break;
     }
 
@@ -2085,7 +2094,7 @@ void ConstTerm::gcConstRecurse()
     {
       OzArray *a = (OzArray*) this;
 
-      a->setBoard(a->getBoardInternal()->gcBoard());
+      a->gcConstTermWithHome();
 
       if (a->getWidth() > 0) {
         TaggedRef *oldargs = a->getArgs();
@@ -2103,7 +2112,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Dictionary:
     {
       OzDictionary *dict = (OzDictionary *) this;
-      dict->setBoard(dict->getBoardInternal()->gcBoard());
+      dict->gcConstTermWithHome();
       dict->table = dict->table->gc();
       break;
     }
@@ -2224,18 +2233,23 @@ ConstTerm *ConstTerm::gcConstTerm()
       break;
     }
   case Co_Space:
-    CheckLocal((Space *) this);
-    sz = sizeof(Space);
-    COUNT(space);
-    gn = getGName1();
-    break;
+    {
+      Space *sp = (Space *) this;
+      CheckLocal(sp);
+      sz = sizeof(Space);
+      COUNT(space);
+      break;
+    }
 
   case Co_Chunk:
-    CheckLocal((SChunk *) this);
-    sz = sizeof(SChunk);
-    COUNT(chunk);
-    gn = getGName1();
-    break;
+    {
+      SChunk *sc = (SChunk *) this;
+      CheckLocal(sc);
+      sz = sizeof(SChunk);
+      COUNT(chunk);
+      gn = sc->getGName1();
+      break;
+    }
 
   case Co_Array:
     CheckLocal((OzArray *) this);
@@ -2429,6 +2443,7 @@ Board * Board::gcBoard()
 
   COUNT(board);
   size_t sz = sizeof(Board);
+  Assert(opMode==IN_TC || !inToSpace(bb));
   Board *ret = (Board *) gcRealloc(bb,sz);
 
   FDPROFILE_GC(cp_size_board, sz);
