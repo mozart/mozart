@@ -60,7 +60,7 @@ in
       end
 
       meth checkMe %% to be improved... :-)
-	 Gui,status('I am doing well, thanks!')
+	 Gui,doStatus('I am doing well, thanks!')
       end
       
       meth getThreadDic($)

@@ -597,7 +597,7 @@ in
 	       T = @currentThread
 	    in
 	       case T == undef then
-		  Gui,status(FirstSelectThread)
+		  Gui,doStatus(FirstSelectThread)
 	       else
 		  {Thread.resume @currentThread}
 	       end
@@ -606,7 +606,7 @@ in
 	       T = @currentThread
 	    in
 	       case T == undef then
-		  Gui,status(FirstSelectThread)
+		  Gui,doStatus(FirstSelectThread)
 	       else
 		  I         = {Thread.id T}
 		  ThreadDic = ThreadManager,getThreadDic($)
@@ -638,7 +638,7 @@ in
 	       T = @currentThread
 	    in
 	       case T == undef then
-		  Gui,status(FirstSelectThread)
+		  Gui,doStatus(FirstSelectThread)
 	       else
 		  {Dbg.stepmode T false}
 		  {Dbg.contflag T true}
@@ -667,7 +667,7 @@ in
 	       T = @currentThread
 	    in
 	       case T == undef then
-		  Gui,status(FirstSelectThread)
+		  Gui,doStatus(FirstSelectThread)
 	       else
 		  {Browse {Dbg.taskstack T MaxStackBrowseSize}}
 	       end
