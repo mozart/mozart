@@ -55,6 +55,9 @@ extern "C" int dlclose(void *);
 extern
 int raiseKernel(char *label,int arity,...);
 
+extern
+int raiseObject(char *label,int arity,...);
+
 /********************************************************************
  * Macros
  ******************************************************************** */
@@ -3657,7 +3660,7 @@ DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
 
 #ifdef BUILTINS1
 
-static OZ_Return bombBuiltin(char *type)
+static OZ_Return bombArith(char *type)
 {
   TypeErrorT(-1,type);
 }
@@ -3665,12 +3668,12 @@ static OZ_Return bombBuiltin(char *type)
 #define suspendTest(A,B,test,type)                      \
   if (isAnyVar(A)) {                                    \
     if (isAnyVar(B) || test(B)) { return SUSPEND; }     \
-    return bombBuiltin(type);                           \
+    return bombArith(type);                             \
   }                                                     \
   if (isAnyVar(B)) {                                    \
     if (isNumber(A)) { return SUSPEND; }                \
   }                                                     \
-  return bombBuiltin(type);
+  return bombArith(type);
 
 
 static OZ_Return suspendOnNumbers(TaggedRef A, TaggedRef B)
@@ -3696,7 +3699,7 @@ static OZ_Return suspendOnFloats(TaggedRef A, TaggedRef B)
 
 static OZ_Return suspendOnInts(TaggedRef A, TaggedRef B)
 {
-  suspendTest(A,B,isInt,"integer");
+  suspendTest(A,B,isInt,"Int");
 }
 
 #undef suspendTest
@@ -3752,7 +3755,11 @@ OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if (tagB == SMALLINT && smallIntValue(B) == 0) {
-    return raiseKernel("div0",1,A);
+    if (tagA == SMALLINT || tagA == BIGINT) {
+      return raiseKernel("div0",1,A);
+    } else {
+      return bombArith("Int");
+    }
   }
 
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -3770,7 +3777,11 @@ OZ_Return BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if ((tagB == SMALLINT && smallIntValue(B) == 0)) {
-    return raiseKernel("mod0",1,A);
+    if (tagA == SMALLINT || tagA == BIGINT) {
+      return raiseKernel("mod0",1,A);
+    } else {
+      return bombArith("Int");
+    }
   }
 
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -6716,8 +6727,6 @@ OZ_C_proc_begin(BItraceBack, 0)
 }
 OZ_C_proc_end
 
-
-
 // ---------------------------------------------------------------------------
 
 OZ_C_proc_begin(BIforeignFDProps, 1)
@@ -6781,16 +6790,6 @@ OZ_C_proc_begin(BIcopyRecord,2)
 }
 OZ_C_proc_end
 
-void assignError(TaggedRef rec, TaggedRef fea, char *name)
-{
-  prefixError();
-  message("Object Error\n");
-  message("Assignment (%s) failed: bad attribute or state\n",name);
-  message("attribute found  : %s\n", toC(fea));
-  message("state found      : %s\n", toC(rec));
-}
-
-
 #define CheckSelf Assert(am.getSelf()!=NULL);
 
 
@@ -6824,23 +6823,21 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
   DEREF(fea, _2, feaTag);
 
   SRecord *r = am.getSelf()->getState();
-  if (r) {
-    CheckSelf;
-    if (!isFeature(fea)) {
-      if (isAnyVar(fea)) {
-        return SUSPEND;
-      }
-      goto bomb;
+
+  CheckSelf;
+  if (!isFeature(fea)) {
+    if (isAnyVar(fea)) {
+      return SUSPEND;
     }
-    if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
-      goto bomb;
-    }
-    return PROCEED;
+    TypeErrorT(0,"Feature");
   }
 
- bomb:
-  assignError(r?makeTaggedSRecord(r):OZ_atom("noattributes"),
-              fea,"<-");
+  if (!r) return raiseObject("<-",3,nil(),fea,value);
+
+  if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
+    return raiseObject("<-",3,makeTaggedSRecord(r),fea,value);
+  }
+
   return PROCEED;
 }
 
@@ -7514,6 +7511,7 @@ BIspec allSpec2[] = {
   {"traceBack",0,BItraceBack},
 
   {"taskstack",   2, BItaskStack},
+  {"location",    2, BIlocation},
   {"getThreadByID",2,BIgetThreadByID},
   {"spy",         1, BIspy},
   {"nospy",       1, BInospy},
