@@ -141,6 +141,7 @@
           ( AtomStack,          "stack"),
           ( AtomD,              "d"),
           ( AtomFailure,        "failure"),
+	  ( AtomError,          "error"),
 
 	  # Failure
 	  ( AtomBlocked,	"blocked"),
