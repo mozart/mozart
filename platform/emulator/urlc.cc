@@ -972,7 +972,7 @@ urlc::get_ftp(char *file)
     // "ip3,ip2,ip1,ip0,p1,p0"
 
     char *nodename = oslocalhostname();
-    struct hostent* hp = gethostbyname(nodename);
+    struct hostent* hp = nodename ? gethostbyname(nodename) : NULL;
     free(nodename);
     if(NULL == hp)
         return (URLC_EINVAL);
