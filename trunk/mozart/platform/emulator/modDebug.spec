@@ -24,6 +24,10 @@
 
 %builtins_all =
 (
+    'getGlobals'	=> { in  => ['+procedure'],
+			     out => ['+tuple'],
+			     BI  => BIgetGlobals },
+
     'threadUnleash'	=> { in  => ['+thread','+int'],
 			     out => [],
 			     BI  => BIthreadUnleash},
