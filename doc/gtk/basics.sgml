@@ -25,120 +25,117 @@
 <Chapter id="chapter.basics">
   <Title/GTK+ Basics/
   <P>
-    GTK+ is organized into visual units called widgets. Some Widgets are
-    the result of refining a parent widget using inheritance. Therefore,
-    widgets are naturally represented as Oz classes.
-  <P>
-    The general steps to creating a widget in GTK+ are
+    GTK+ is organized into visual units called <Def/widgets/.  Some widget
+    classes are defined by refinement of some parent widget class using
+    inheritance.  Therefore, GTK+ has an object-oriented organization and
+    maps nicely to the Oz object system.
+  <Para class=apropos><Title/Overview/
+    The general steps to create a GTK+ widget are:
     <List>
-      <Item>Create a widget object using the appropriate class constructor
-      <Item>Connect all Signals and Events
-        we wish to use to the appropriate handlers
-      <Item>Set the attributes of the widget
-      <Item>Pack the widget into a container
-      <Item>Make the widget visible
+      <Item>Instantiate a widget object using the appropriate constructor.
+      <Item>Connect appropriate handlers to all signals and events we wish
+        to react to.
+      <Item>Set attributes of the widget.
+      <Item>Pack the widget into a container.
+      <Item>Make the widget visible.
     </List>
-  <Section><Title/Widget Creation/
-  <P>
-    A widget object is created by calling a constructor of the widget.
-    For example,
-<<<Button = {New GTK.button newWithLabel("Hello, World!")}>>>
-    creates a new button object which will show <<"Hello, World!">>.
-  <P>
-    Object creation yields a freshly created widget object
-    whose attributes are set to reasonable default values. I will not appear
-    on the screen until it has been packed into a container which then is
-    made visible.
-  <P>
-    A widget might provide more than one constructor.
-  <Section><Title/Signals and Callbacks/
-  <P>
-    GTK+ is an event driven toolkit, which means that the dispatcher
-    will sleep until an event occurs and control is passed
-    to the appropriate function.
-  <Para class=apropos><Title/Signals/
-    This passing of control is done using the idea of "signals".
-    (Note that these signals are not the same as the Unix system signals,
-    and are not implemented using them, although the terminology
-    is almost identical.)
-    When an event occurs, such as the press of a mouse button,
-    the appropriate signal will be "emitted" by the widget that was pressed.
-    This is how GTK+ does most of its useful work.
-    There are signals that all widgets inherit, such as "delete-event",
-    and there are signals that are widget specific,
-    such as "toggled" on a toggle button.
-  <Para class=apropos><Title/Connecting Handlers/
-    To make our widget object <<Button>>
-    perform an action, we set up a signal handler
-    to catch these signals and call the appropriate function.
-    This is done by calling the method <<signalConnect>>
-<<<SignalId = {Button signalConnect(Signal SignalCallback $)}>>>
-  <P>
-    where <<Signal>> denotes the name of the signal you wish to catch
-    and <<SignalCallback>> denotes the function or method name
-    you wish to be called when it is caught. <<SignalId>> denotes an
-    unique identifier which can be used to manually emit the signal.
-  <Para class=apropos><Title/Callback Structure/
-    The the second argument is called a "callback function",
-    and should generally be either of the form
-<<<proc {SignalCallback Args}
+  <Section>
+    <Title/Widget Creation/
+    <P>
+      A widget object is created by instantiating a widget class.
+      The constructors are the methods starting with <<new>>; some
+      widget classes have multiple constructors.  For example,
+<<<Button = {New GTK.button
+          newWithLabel("Hello, World!")}>>>
+      creates a new object for a button labelled <<"Hello, World!">>.
+    <P>
+      Object creation yields a freshly created widget object whose attributes
+      are set to reasonable default values.  (It will not appear on the screen
+      until it has been packed into a container which then is made visible.)
+      The operations on the widget and its parent classes are available
+      through the object's methods.
+  <Section>
+    <Title/Signals and Callbacks/
+    <P>
+      GTK+ is event-driven, which means that when an event occurs, control
+      is passed to the appropriate procedure or method.
+    <Para class=apropos><Title/Signals/
+      Events in GTK+ are implemented through <Def/signals/.  (Note that
+      these signals are unrelated to Unix system signals.)  When an event
+      occurs, such as the press of a mouse button, the appropriate signal
+      will be <Def/emitted/ by the corresponding widget.  Some signals
+      are common to all widget classes, such as <<'delete-event'>>, while
+      others are widget-specific, such as <<'toggled'>> for a toggle button.
+    <Para class=apropos><Title/Connecting Handlers/
+      The <<signalConnect>> method allows to catch signals and cause invocation
+      of actions.  For instance,
+      <<<{?_{Widget} signalConnect(?_{Signal} ?_{Callback} ??{Id})}>>>
+      causes ?_{Callback} to be invoked each time that the signal named
+      ?_{Signal} is emitted on ?_{Widget}.  ?_{Id} is a unique identifier
+      which can be used to manually emit the signal or to remove the handler.
+    <Para class=apropos><Title/Callbacks/
+      ?_{Callback} can be either a unary procedure or the label of a unary
+      method.  Thus, callbacks are either defined as a procedure:
+<<<proc {MyCallback Args}
    &ellipsis; /* Computations */ &ellipsis;
 end>>>
-   <P>
-    or
-<<<meth signalCallBack(Args)
+      or as a method:
+<<<meth myCallback(Args)
    &ellipsis; /* Computations */ &ellipsis;
-end
->>>
-    where <<Args>> will be the list of arguments
-    provided for the chosen signal.
-  <Subsection><Title/Events/
-  <P>
-    In addition to the signal mechanism described above,
-    there is a set of events that reflect the X event mechanism
-    (which are simulated on Windows and other non X platforms).
-    Callbacks may also be attached to these events.
-  <P>
-    In order to connect a callback function to one of these events
-    you use the method <<signalConnect>> as described above,
-    using <<'event'>> as the <<Signal>> parameter.
-    The callback functions for those events look the same as for signals.
-  <P>
-    For details on those events, see the reference api.
-  <Section><Title/Widget Attributes/
-  <P>
-    GTK+ Widgets organize their data using attributes. Depending on
-    the widget, attributes are made available either read-only or mutable.
-    The latter case allows for object reconfiguration after the widget object
-    has been created.
-  <P>
-    Attributes are essentially a mapping from a attribute name to value.
-    The can be read and written using the widgets set and get Methods.
-    Trying to access a non-existing attribute yields an error.
-  <P>
-    Deping on your style of programming widgets, attribute access might
-    occur very seldomly.
-  <Section><Title/Container/
-  <P>
-    Widgets are arranged on the screen using so-called containers.
-    A container widget itself usually does not provide
-    any visible information but displays its child widgets
-    according to a built-in strategy. For example, a <<hBox>>
-    container will align all packed children horizontally on the screen.
-  <P>
-    GTK+ provides a variety of different container types covering the "daily"
-    needs, which are all descendants of the <<GTK.container>> class.
-    In addition, a container is allowed to contain container widgets.
-  <P>
-    In the case of our hello world example, the <<GTK.window>> class is
-    the container the button is assigned to.
-  <Section><Title/Visibility/
-  <P>
-    The last step to start working with widgets on the sreen is making them
-    visible. This can be done manually by bottom-up traversing the spanned
-    container tree and calling each containers <<show>> Method or automaticly
-    using the topmost containers <<showAll>> method.
-  <P>
-    With few exceptions, events are only caught while the widget remains
-    visible on the screen.
+end>>>
+      where <<Args>> is a list of the arguments associated with the signal.
+    <Para class=apropos><Title/Low-level Events/
+      In addition to the high-level signals described above, there is a set
+      of events that reflect the X Window System event mechanism (simulated
+      non-X platforms such as Windows).  These can be caught using the special
+      signal <<'event'>>.  For more details, see <Ptr to="chapter.reference">.
+  <Section>
+    <Title/Widget Attributes/
+    <P>
+      GTK+ widgets organize their data using <Def/attributes/.  Some attributes
+      are read-only, others are mutable.  The latter allow for the widget to
+      be reconfigured after creation.
+    <P>
+      Attributes are named by strings and have an associated (typed) value.
+      Many widgets define accessors for commonly used attributes, but in
+      general they can be read using the <<get>> method and written to using
+      the <<set>> method.  Trying to access a non-existing attribute yields
+      an error.
+  <Section>
+    <Title/Containers/
+    <P>
+      Widgets are laid out on the screen using so-called containers.
+      Container widgets themselves usually do not provide any visible
+      information, but display their child widgets according to a built-in
+      strategy.  For example, an <<hBox>> container will align its children
+      horizontally on the screen.  A container can contain other container
+      widgets.
+    <P>
+      GTK+ provides a variety of different container types covering the
+      <Q/daily/ needs, which all are descendants of the <<GTK.container>>
+      class.  In the case of our <Q/hello world/ example, the <<GTK.window>>
+      class is the container the button is assigned to.
+    <Para class=apropos><Title/Bins/
+      <<GTK.window>> is a subclass of <<GTK.bin>>, which is the superclass
+      of all containers accepting at most one child.  Bins do not do any
+      layouting.  If our window had contained more than one child, we would
+      have needed to create another container to lay out the children, which
+      would then have been the window's single child.
+  <Section>
+    <Title/Visibility/
+    <P>
+      The last step to start working with widgets on the screen is to make
+      them visible.  This can be done manually by a bottom-up traversal of the
+      container tree and calling each container's <<show>> Method.  This is
+      what the topmost container's <<showAll>> method does automatically.
+    <P>
+      With few exceptions, signals emitted by a widget are only caught while
+      it remains visible.
+  <Section>
+    <Title/Error Handling/
+    <P>
+      GTK+ widgets do a lot of error-checking internally, but errors are
+      just reported to the screen instead of being raised as an Oz exception.
+      Errors discovered in the language binding's code are reported as
+      exceptions.
 </Chapter>
