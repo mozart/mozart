@@ -94,7 +94,7 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
     if (vartag == SMALLINT) {
       prod *= smallIntValue(var);
       if (prod < OzMinInt || OzMaxInt < prod) return FALSE;
-    } else if (isGenFDVar(var,vartag)) {
+    } else if (isGenFDVar(var, vartag)) {
       fds_found += 1;
       if (last_fdvarptr != NULL)
         prev_fdvar = last_fdvar;
@@ -288,6 +288,58 @@ int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
   return to;
 } // simplifyHead
 
+//-----------------------------------------------------------------------------
+// An OZ term describing a finite domain is either:
+// (1) a positive small integer <= fd_iv_max_elem
+// (2) a 2 tuple of (1)
+// (3) a list of (1) and/or (2)
+
+OZ_Bool checkDomDescr(TaggedRef descr,
+                      OZ_CFun cfun, OZ_Term * args, int arity,
+                      int expect)
+{
+  DEREF(descr, descr_ptr, descr_tag);
+
+  if (isNotCVar(descr_tag)) {
+    addNonResSuspForDet(descr, descr_ptr, descr_tag,
+                        createNonResSusp(cfun, args, arity));
+    return SUSPEND;
+  } else if (isSmallInt(descr_tag) && (expect >= 1)) { // (1)
+    return PROCEED;
+  } else if (isGenFDVar(descr, descr_tag) && (expect >= 1)) {
+    addSuspFDVar(descr, new SuspList(createNonResSusp(cfun, args, arity),
+                                     NULL), fd_det);
+    return SUSPEND;
+  } else if (isSTuple(descr_tag) && (expect >= 2)) {
+    STuple &tuple = *tagged2STuple(descr);
+    if (tuple.getSize() != 2) {
+      return FAILED;
+    }
+    for (int i = 0; i < 2; i++) {
+      OZ_Bool r = checkDomDescr(tuple[i], cfun, args, arity, 1);
+      if (r != PROCEED)
+        return r;
+    }
+    return PROCEED;
+  } else if (isNil(descr) && (expect == 3)) {
+    return PROCEED;
+  } else if (isLTuple(descr_tag) && (expect == 3)) {
+
+    do {
+      LTuple &list = *tagged2LTuple(descr);
+      OZ_Bool r = checkDomDescr(list.getHead(), cfun, args, arity, 2);
+      if (r != PROCEED)
+        return r;
+      descr = list.getTail();
+
+      deref(descr, descr_ptr, descr_tag);
+    } while (isLTuple(descr_tag));
+
+    if (isNil(descr)) return PROCEED;
+    return checkDomDescr(TaggedRef(descr_ptr), cfun, args, arity, 0);
+  }
+  return FAILED;
+}
 
 //-----------------------------------------------------------------------------
 //                              class BIfdBodyManager
@@ -986,4 +1038,5 @@ void BIinitFD(void)
   BIadd("fdInKillB_body", 3, BIfdInKillB_body);
   BIadd("fdNotInKillB", 3, BIfdNotInKillB);
   BIadd("fdNotInKillB_body", 3, BIfdNotInKillB_body);
+  BIadd("fdCopyDomain", 2, BIfdCopyDomain);
 }

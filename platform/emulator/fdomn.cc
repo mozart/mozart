@@ -859,8 +859,8 @@ void FiniteDomain::printDebugLong(void) const
 
 // expects valid intervals, ie 0 <= left <= right <= fd_iv_max_elem
 int FiniteDomain::initList(int list_len,
-                                int * list_left, int * list_right,
-                                int list_min, int list_max)
+                           int * list_left, int * list_right,
+                           int list_min, int list_max)
 {
   if (list_len == 0) {
     return initEmpty();
@@ -936,6 +936,66 @@ int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
   return len;
 }
 
+extern int static_int_a[MAXFDBIARGS], static_int_b[MAXFDBIARGS];
+
+int FiniteDomain::init(TaggedRef d)
+{
+  DEREF(d, d_ptr, d_tag);
+
+  if (isSmallInt(d_tag)) {
+    return initSingleton(smallIntValue(d));
+  } else if (isSTuple(d_tag)) {
+    STuple &t = *tagged2STuple(d);
+    return init(smallIntValue(deref(t[0])), smallIntValue(deref(t[1])));
+  } else if (isNil(d)) {
+    return initEmpty();
+  } else if (isLTuple(d_tag)) {
+    int * left_arr = static_int_a, * right_arr = static_int_b;
+    int min_arr = fd_iv_max_elem, max_arr = 0;
+
+    int len_arr;
+    for (len_arr = 0; isLTuple(d) && len_arr < MAXFDBIARGS; ) {
+      LTuple &list = *tagged2LTuple(d);
+      TaggedRef val = list.getHead();
+
+      DEREF(val, valptr, valtag);
+
+      if (isSmallInt(valtag)) {
+        int v = smallIntValue(val);
+        if (v < 0 || fd_iv_max_elem < v) goto for_loop;
+
+        left_arr[len_arr] = right_arr[len_arr] = v;
+        min_arr = min(min_arr, left_arr[len_arr]);
+        max_arr = max(max_arr, right_arr[len_arr]);
+        len_arr ++;
+      } else if (isSTuple(valtag)) {
+        STuple &t = *tagged2STuple(val);
+        int l = max(0, smallIntValue(deref(t[0])));
+        int r = min(fd_iv_max_elem, smallIntValue(deref(t[1])));
+
+        if (l > r) goto for_loop;
+
+        left_arr[len_arr] = l;
+        right_arr[len_arr] = r;
+
+        min_arr = min(min_arr, left_arr[len_arr]);
+        max_arr = max(max_arr, right_arr[len_arr]);
+
+        len_arr ++;
+      }
+    for_loop:
+      d = deref(list.getTail());
+    } // for
+    if (len_arr >= MAXFDBIARGS) {
+      warning("FiniteDomain::init: "
+              "Probably elements of description are ignored");
+    }
+    return initList(len_arr, left_arr, right_arr, min_arr, max_arr);
+  }
+ error:
+  error("Unexpected term in finite description list.");
+  return -1;
+}
 
 int FiniteDomain::nextBiggerElem(int v) const
 {
@@ -1243,13 +1303,11 @@ int FiniteDomain::operator += (const int put_in)
   return size;
 }
 
-FiniteDomain return_var;
-
-FiniteDomain &FiniteDomain::operator ~ (void) const
+FiniteDomain FiniteDomain::operator ~ (void) const
 {
   DEBUG_FD_IR(FALSE, cout << *this << " = ~ ");
 
-  FiniteDomain &y = return_var; y.setEmpty();
+  FiniteDomain y; y.setEmpty();
 
   if (*this == fd_empty) {
     y.initFull();
@@ -1299,11 +1357,11 @@ FiniteDomain &FiniteDomain::operator ~ (void) const
   return y;
 }
 
-FiniteDomain &FiniteDomain::operator | (const FiniteDomain &y) const
+FiniteDomain FiniteDomain::operator | (const FiniteDomain &y) const
 {
   DEBUG_FD_IR(FALSE, cout << *this << " | " << y << " =  ");
 
-  FiniteDomain &z = return_var; z.setEmpty();
+  FiniteDomain z; z.setEmpty();
 
   if (*this == fd_empty) {
     z = y;
@@ -1423,11 +1481,11 @@ int FiniteDomain::operator &= (const FiniteDomain &y)
   return size;
 }
 
-FiniteDomain &FiniteDomain::operator & (const FiniteDomain &y) const
+FiniteDomain FiniteDomain::operator & (const FiniteDomain &y) const
 {
   DEBUG_FD_IR(FALSE, cout << *this << " & " << y << " = ");
 
-  FiniteDomain &z = return_var; z.setEmpty();
+  FiniteDomain z; z.setEmpty();
 
   if (*this == fd_empty || y == fd_empty) {
     AssertFD(z.isConsistent());

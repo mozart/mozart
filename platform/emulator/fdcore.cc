@@ -254,94 +254,18 @@ OZ_C_proc_begin(BIfdPutList, 3)
     TypeError(2, "");
   }
 
-  OZ_getCArgDeref(1, list, listptr, listtag);
-
-  if (isNotCVar(listtag)) {
-    return addNonResSuspForDet(list, listptr, listtag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
-  } else if (isNil(list)) { // empty list represents empty domain, ie failure
-    return FAILED;
-  } else if (! isLTuple(listtag)) {
-    TypeError(1, "");
-  }
-
-  int * left_arr = static_int_a, * right_arr = static_int_b;
-  int min_arr = fd_iv_max_elem, max_arr = 0;
-
-  int len_arr;
-  for (len_arr = 0; isLTuple(list) && len_arr < MAXFDBIARGS;) {
-    TaggedRef val = tagged2LTuple(list)->getHead();
-
-    DEREF(val, valptr, valtag);
-
-    if (isSmallInt(valtag)) {
-      int v = smallIntValue(val);
-      if (0 <= v && v <= fd_iv_max_elem) {
-        left_arr[len_arr] = right_arr[len_arr] = v;
-        min_arr = min(min_arr, left_arr[len_arr]);
-        max_arr = max(max_arr, right_arr[len_arr]);
-        len_arr += 1;
-      }
-    } else if (isSTuple(valtag)) {
-      STuple * t = tagged2STuple(val);
-
-      if (t->getSize() != 2) {
-        TypeError(1, "Expected 2-tuple as tuple.");
-      }
-      TaggedRef t_l = (*t)[0];
-      DEREF(t_l, t_lptr, t_ltag);
-      if (isSmallInt(t_ltag)) {
-        left_arr[len_arr] = smallIntValue(t_l);
-      } else if (isAnyVar(t_ltag)) {
-        return addNonResSuspForDet(t_l, t_lptr, t_ltag,
-                                   createNonResSusp(OZ_self,OZ_args,OZ_arity));
-      } else {
-        TypeError(1, "Expected SmallInt in 2-tuple.");
-      }
-
-      TaggedRef t_r = (*t)[1];
-      DEREF(t_r, t_rptr, t_rtag);
-      if (isSmallInt(t_rtag)) {
-        right_arr[len_arr] = smallIntValue(t_r);
-      } else if (isAnyVar(t_rtag)) {
-        return addNonResSuspForDet(t_r, t_rptr, t_rtag,
-                                   createNonResSusp(OZ_self,OZ_args,OZ_arity));
-      } else {
-        TypeError(1, "Expected SmallInt in 2-tuple.");
-      }
-
-      if (left_arr[len_arr] <= right_arr[len_arr] &&
-          right_arr[len_arr] <= fd_iv_max_elem) {
-        if (left_arr[len_arr] < 0) left_arr[len_arr] = 0;
-        min_arr = min(min_arr, left_arr[len_arr]);
-        max_arr = max(max_arr, right_arr[len_arr]);
-        len_arr += 1;
-      }
-    } else if (isNotCVar(valtag)) {
-      return addNonResSuspForDet(val, valptr, valtag,
-                                 createNonResSusp(OZ_self, OZ_args, OZ_arity));
-    } else {
-      TypeError(1, "Expected list of SmallInts or SmallInt 2-tuple.");
-    }
-
-    list = tagged2LTuple(list)->getTail();
-    while(isRef(list)) list = *tagged2Ref(list);
-  }
-
-  if (len_arr >= MAXFDBIARGS)
-    warning("BIfdPutList: Probably elements of description are ignored");
-
-  OZ_getCArgDeref(0, var, varptr, vartag);
-
-  if (! (isGenFDVar(var,vartag) || isNotCVar(vartag) || isSmallInt(vartag))) {
-    TypeError(0, "");
+  switch (checkDomDescr(OZ_getCArg(1), OZ_self, OZ_args, OZ_arity)) {
+  case SUSPEND: return PROCEED;
+  case FAILED:  return FAILED;
+  case PROCEED: break;
+  default:      error("Unexpected value"); break;
   }
 
   BIfdBodyManager x;
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;
 
-  LocalFD aux; aux.initList(len_arr, left_arr, right_arr, min_arr, max_arr);
+  LocalFD aux; aux.init(OZ_getCArg(1));
 
   if (smallIntValue(s) != 0) aux = ~aux;
 

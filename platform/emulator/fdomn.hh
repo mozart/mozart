@@ -248,6 +248,7 @@ public:
   int initList(int list_len, int * list_left, int * list_right,
                int list_min, int list_max);
   int init(int, int);
+  int init(TaggedRef);
 
   int setFull(void);
   int setSingleton(int);
@@ -268,9 +269,9 @@ public:
   }
 
   // non-destructive operators
-  FiniteDomain &operator & (const FiniteDomain &) const; // intersection
-  FiniteDomain &operator | (const FiniteDomain &) const; // union
-  FiniteDomain &operator ~ (void) const;                 // inversion
+  FiniteDomain operator & (const FiniteDomain &) const; // intersection
+  FiniteDomain operator | (const FiniteDomain &) const; // union
+  FiniteDomain operator ~ (void) const;                 // inversion
 
   // destructive operators
   int operator &= (const FiniteDomain &);
