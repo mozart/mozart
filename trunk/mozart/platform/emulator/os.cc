@@ -1036,6 +1036,15 @@ int osaccept(int s, struct sockaddr *addr, int *addrlen)
 }
 
 
+int osconnect(int s, struct sockaddr *addr, int namelen)
+{
+  osBlockSignals();
+  int ret = connect(s,addr,namelen);
+  osUnblockSignals();
+  return ret;
+}
+
+
 int ossockerrno()
 {
 #ifdef WINDOWS
