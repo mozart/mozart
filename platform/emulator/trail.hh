@@ -54,8 +54,7 @@ public:
   ~RebindTrail ();
   void pushCouple(TaggedRef *reference, TaggedRef oldValue);
   void popCouple(TaggedRef * &reference, TaggedRef &value);
-  inline Bool isEmpty ()
-    { return ( (cursor == lowBound) ? OK : NO ); };
+  Bool isEmpty () { return (cursor == lowBound) ? OK : NO; };
 private:
   TrailEntry* lowBound;
   TrailEntry* upperBound;
@@ -98,22 +97,22 @@ private:
 
 public:
   void gc();
-  inline Trail (int sizeInit = 10000);
-  inline ~Trail () { delete [] (char *)lowBound; }
-  inline void pushRef(TaggedRef* reference,TaggedRef val)
+  Trail (int sizeInit = 10000);
+  ~Trail () { delete [] (char *)lowBound; }
+  void pushRef(TaggedRef* reference,TaggedRef val)
   {
     push(reference,val);
   }
-  inline void pushIfVar(TaggedRef A)
+  void pushIfVar(TaggedRef A)
   {
     DEREF(A,Aptr,_1);
     if (isAnyVar(A)) { pushRef(Aptr,A); }
   }
-  inline TrailEntry *popRef () { return pop(); }
-  inline void pushMark();
-  inline void popMark();
-  inline int chunkSize() { return cursor - lastMark; }
-  inline Bool isEmptyChunk() { return lastMark == cursor ? OK : NO; }
+  TrailEntry *popRef () { return pop(); }
+  void pushMark();
+  void popMark();
+  int chunkSize() { return cursor - lastMark; }
+  Bool isEmptyChunk() { return lastMark == cursor ? OK : NO; }
 };
 
 inline Trail::Trail (int sizeInit)

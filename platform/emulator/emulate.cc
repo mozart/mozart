@@ -232,7 +232,7 @@ inline TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
        goto LBLschedule;                                              \
      case HOOK_FIND:                                                  \
        e->pushTask(CBB,Pred->getPC(),NULL,G,X,Arity);                 \
-       goto LBLfindWorkDir;                                           \
+       goto LBLpopTask;                                       \
      }
 
 // -----------------------------------------------------------------------
@@ -417,7 +417,6 @@ void engine() {
 
  LBLerror:
  LBLstart:
-  DebugTrace(trace("start"));
 
 // ------------------------------------------------------------------------
 // *** gc
@@ -441,6 +440,8 @@ void engine() {
     e->currentTaskStack = (TaskStack *) NULL;
   }
 
+  DebugTrace(trace("thread switched"));
+
   Alarm::RestartProcess();
 
 
@@ -454,10 +455,10 @@ void engine() {
     case HOOK_SCHEDULE:
       goto LBLschedule;
     case HOOK_FIND:
-      goto LBLfindWorkDir;
+      goto LBLpopTask;
     }
 
- LBLfindWorkDir:
+ LBLpopTask:
 
     DebugCheckT(CAA = NULL);
 
@@ -472,32 +473,30 @@ void engine() {
           }
           goto LBLTaskNervous;
         }
-        if (c->isWarm()) {
-          Suspension *susp = c->popSuspension();
-          tmpBB = susp->getNode()->getBoardDeref();
+        if (c->isSuspCont()) {
+          SuspContinuation *cont = c->popSuspCont();
+          tmpBB = cont->getNode()->getBoardDeref();
           if (!tmpBB) {
             goto LBLfindWork;
           }
-          SuspContinuation *cont = susp->getCont();
-          if (cont) {
-            PC = cont->getPC();
-            Y = cont->getY();
-            G = cont->getG();
-            XSize = cont->getXSize();
-            cont->getX(X);
-            goto LBLTaskCont;
-          } else {
-            CFuncContinuation *ccont = susp->getCCont();
-            if (ccont) {
-              biFun = ccont->getCFunc();
-              currentTaskSusp = susp;
-              XSize = ccont->getXSize();
-              ccont->getX(X);
-              goto LBLTaskCFuncCont;
-            } else {
-              goto LBLTaskNervous;
-            }
+          PC = cont->getPC();
+          Y = cont->getY();
+          G = cont->getG();
+          XSize = cont->getXSize();
+          cont->getX(X);
+          goto LBLTaskCont;
+        }
+        if (c->isSuspCCont()) {
+          CFuncContinuation *ccont = c->popSuspCCont();
+          tmpBB = ccont->getNode()->getBoardDeref();
+          if (!tmpBB) {
+            goto LBLfindWork;
           }
+          biFun = ccont->getCFunc();
+          // mm2: tm ??? currentTaskSusp = susp;
+          XSize = ccont->getXSize();
+          ccont->getX(X);
+          goto LBLTaskCFuncCont;
         }
         DebugCheck(!c->isNormal()||(c->u.taskStack
                                     && !c->u.taskStack->isEmpty()),
@@ -566,7 +565,6 @@ void engine() {
         }
 
       case C_NERVOUS:
-        // error("mm2: never here");
         // by kost@ : 'solveActorWaker' can produce such task
         // (if the search problem is stable by its execution);
         taskStack->setTop(topCache);
@@ -575,7 +573,6 @@ void engine() {
         }
         goto LBLTaskNervous;
       case C_CFUNC_CONT:
-        // error("mm2: never here");
         // by kost@ : 'solve actors' are represented via the c-function;
         if (taskStack->isEmpty(e)) goto LBLTaskEmpty;
         biFun = (BIFun) TaskStackPop(--topCache);
@@ -1329,7 +1326,7 @@ void engine() {
                                             PC, Y, G, X, argsToSave));
       cvar->addSuspension (susp);
       CBB->addSuspension();
-      goto LBLreduce;
+      goto LBLreduce; // mm2 ???
     } else {
       DISPATCH(3);
     }
@@ -1646,7 +1643,7 @@ void engine() {
                 goto LBLschedule;
               case HOOK_FIND:
                 e->pushTask(CBB, contAdr,Y,G);
-                goto LBLfindWorkDir;
+                goto LBLpopTask;
               }
               JUMP(contAdr);
             default:
@@ -2367,29 +2364,28 @@ void engine() {
 // *** FAILURE
 // ------------------------------------------------------------------------
  LBLfailure:
-  DebugTrace(trace("fail",CBB));
-
   {
-    Actor *AA = Board::FailCurrent();
+    DebugTrace(trace("fail",CBB));
+    Actor *aa = Board::FailCurrent();
 
 // ------------------------------------------------------------------------
 // *** REDUCE Actor
 // ------------------------------------------------------------------------
 
-    DebugTrace(trace("reduce actor",CBB,AA));
+    DebugTrace(trace("reduce actor",CBB,aa));
 
-    if (AA->isAsk()) {
-      if ((CastAskActor (AA))->hasNext () == OK) {
+    if (aa->isAsk()) {
+      if ((CastAskActor (aa))->hasNext () == OK) {
         goto LBLexecuteNext;
       }
 /* check if else clause must be activated */
-      if ( (CastAskActor (AA))->isLeaf() ) {
+      if ( (CastAskActor (aa))->isLeaf() ) {
 
 /* rule: if else ... fi
    push the else cont on parent && remove actor */
-        AA->setCommitted();
-        LOADCONT((CastAskActor (AA))->getNext());
-        PC = CastAskActor(AA)->getElsePC();
+        aa->setCommitted();
+        LOADCONT((CastAskActor (aa))->getNext());
+        PC = CastAskActor(aa)->getElsePC();
         if (PC != NOCODE) {
           CBB->removeSuspension();
           goto LBLemulateCheckSwitch;
@@ -2398,13 +2394,14 @@ void engine() {
 /* rule: if fi --> false */
         HANDLE_FAILURE(0,message("reducing 'if fi' to 'false'"));
       }
-    } else if (AA->isWait ()) {
-      if ((CastWaitActor (AA))->hasNext () == OK) {
+    } else if (aa->isWait ()) {
+      if ((CastWaitActor (aa))->hasNext () == OK) {
         goto LBLexecuteNext;
       }
 /* rule: or <sigma> ro (unit commit rule) */
-      if ((CastWaitActor (AA))->hasOneChild()) {
-        Board *waitBoard = (CastWaitActor (AA))->getChild();
+      if ((CastWaitActor (aa))->hasOneChild()) {
+        Board *waitBoard = (CastWaitActor (aa))->getChild();
+        DebugTrace(trace("reduce actor unit commit",waitBoard,aa));
         if (waitBoard->isWaiting()) {
           waitBoard->setCommitted(CBB); // do this first !!!
           if (!e->installScript(waitBoard->getScriptRef())) {
@@ -2415,11 +2412,12 @@ void engine() {
                            );
           }
 
-          CBB->addSuspension(waitBoard->getSuspCount());
+          /* add the suspension from the committed board
+             remove the suspension for the board itself */
+          CBB->addSuspension(waitBoard->getSuspCount()-1);
 
           /* unit commit & WAITTOP */
           if (waitBoard->isWaitTop()) {
-            CBB->removeSuspension();
             if (!waitBoard->hasSuspension()) {
               goto LBLreduce;
             }
@@ -2439,10 +2437,10 @@ void engine() {
       //  Reduce (i.e. with failure in this case) the solve actor;
       //  The solve actor goes simply away, and the 'failed' atom is bound to
       // the result variable;
-      AA->setCommitted();
+      aa->setCommitted();
       CBB->removeSuspension();
-      if ( !e->fastUnify (CastSolveActor (AA)->getResult (),
-                          CastSolveActor (AA)->genFailed ()) ) {
+      if ( !e->fastUnify (CastSolveActor (aa)->getResult (),
+                          CastSolveActor (aa)->genFailed ()) ) {
         warning ("unification of atom 'failed' with variable has failed");
         HANDLE_FAILURE (NULL, ;);
       }

@@ -428,7 +428,7 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
 Bool AM::isBetween(Board *to, Board *varHome)
 {
   for (Board *tmp = to->getBoardDeref();
-       tmp != AM::currentBoard;
+       tmp != currentBoard;
        tmp = tmp->getParentBoard()->getBoardDeref()) {
     if (tmp == varHome) {
       return NO;
@@ -551,7 +551,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 
 // check if term is also a variable
     // bug fixed by mm 25.08.92
-    // we must add AM::currentBoard to suspension list of second variable if
+    // we must add currentBoard to suspension list of second variable if
     // both variables are global
     // term must be deref\'ed because isAnyVar() should really check
     // is unbound variable
@@ -576,11 +576,11 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 
 
 /*
-  install every board from the AM::currentBoard to 'n'
+  install every board from the currentBoard to 'n'
   and move cursor to 'n'
 
   algm
-    find common parent board of 'to' and 'AM::currentBoard'
+    find common parent board of 'to' and 'currentBoard'
     deinstall until common parent (go upward)
     install (go downward)
   pre:
@@ -603,7 +603,7 @@ InstType AM::installPath(Board *to)
     return INST_OK;
   }
 
-  DebugCheck(to == AM::rootBoard,
+  DebugCheck(to == rootBoard,
              error("AM::installPath: root node reached");
              );
 
@@ -626,7 +626,7 @@ void AM::reduceTrailOnUnitCommit()
 {
   int numbOfCons = trail.chunkSize();
 
-  Board *bb = AM::currentBoard;
+  Board *bb = currentBoard;
 
   bb->newScript(numbOfCons);
 
@@ -651,7 +651,7 @@ void AM::reduceTrailOnSuspend()
   int numbOfCons = trail.chunkSize();
 
   Suspension *susp;
-  Board *bb = AM::currentBoard;
+  Board *bb = currentBoard;
 
   bb->newScript(numbOfCons);
   if (numbOfCons > 0) {

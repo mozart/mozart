@@ -48,7 +48,7 @@ public:
   static void NewCurrentSolve (Actor *a);
   static Board *NewRoot();
   static Actor *FailCurrent();
-
+  static void Print();
 private:
   int flags;
   int suspCount;

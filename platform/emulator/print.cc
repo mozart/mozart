@@ -634,6 +634,17 @@ PRINTLONG(Board)
   stream << endl;
 }
 
+void Board::Print()
+{
+  cout << "class Board" << endl
+       << "  currentBoard: ";
+  am.currentBoard->print(cout,0,0);
+  cout << endl
+       << "  rootBoard:    ";
+  am.rootBoard->print(cout,0,0);
+  cout << endl;
+}
+
 PRINT(Actor)
 {
   if (!this) {
@@ -655,6 +666,12 @@ PRINTLONG(Actor)
 void Thread::Print()
 {
   cout << "class Thread" << endl
+       << "  currentThread: ";
+  am.currentThread->print(cout,0,0);
+  cout << endl
+       << "  rootThread:    ";
+  am.rootThread->print(cout,0,0);
+  cout << endl
        << "  Queue:" << endl;
   for (Thread *th=Head; th; th = th->next) {
     th->print(cout,0,4);
@@ -686,16 +703,19 @@ PRINT(Thread)
     << " [ prio: " << priority
     << ", ";
   if (isNormal()) {
-    stream << " Normal (#";
     if (u.taskStack) {
-      stream << u.taskStack->getUsed()-1;
+      stream << " Normal (#"
+             << u.taskStack->getUsed()-1
+             << ")";
     } else {
-      stream << "NULL";
+      stream << " Normal (uninit)";
     }
-    stream << ")";
   }
-  if (isWarm()) {
-    stream << " Warm";
+  if (isSuspCont()) {
+    stream << " SuspCont";
+  }
+  if (isSuspCCont()) {
+    stream << " SuspCCont";
   }
   if (isNervous()) {
     stream << " Nervous";

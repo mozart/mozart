@@ -53,7 +53,10 @@
 
 /* enum ThreadFlags:
    Normal: thread has a taskStack and is scheduled
-   Warm: thread has no taskStack, but 'suspension' contains a suspension
+   SuspCont: thread has no taskStack,
+             but 'suspCont' contains a SuspContinuation
+   SuspCCont: thread has no taskStack,
+             but 'suspCCont' contains a CFuncContinuation
    Nervous: thread has no taskStack, but 'board' contains the board to visit
    Solve: thread was created inside a search problem;
    */
@@ -61,12 +64,13 @@
 enum ThreadFlags
 {
   T_Normal =    1<<0,
-  T_Warm =      1<<1,
-  T_Nervous =   1<<2,
-  T_Solve =     1<<3
+  T_SuspCont =  1<<1,
+  T_SuspCCont = 1<<2,
+  T_Nervous =   1<<3,
+  T_Solve =     1<<4
 };
 
-static int T_No_State = ~(T_Normal | T_Warm | T_Nervous);
+static int T_No_State = ~(T_Normal | T_SuspCont | T_SuspCCont | T_Nervous);
 
 /* class Thread
    static variables
@@ -99,6 +103,9 @@ void Thread::Init()
 {
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
+   am.currentThread = (Thread *) NULL;
+   am.rootThread = new Thread(conf.systemPriority);
+   am.currentTaskStack = NULL;
 }
 
 /* for gdb debugging: cannot access static member data */
@@ -114,13 +121,21 @@ Thread *Thread::GetTail()
 }
 
 
-void Thread::ScheduleSuspension(Suspension *s)
+void Thread::ScheduleSuspCont(SuspContinuation *c)
 {
   Thread *t=new Thread;
-  t->flags = T_Warm;
-  t->priority = s->getPriority();
-  t->u.suspension = s;
-  s->getNode()->addSuspension();
+  t->flags = T_SuspCont;
+  t->priority = c->getPriority();
+  t->u.suspCont = c;
+  t->schedule();
+}
+
+void Thread::ScheduleSuspCCont(CFuncContinuation *c)
+{
+  Thread *t=new Thread;
+  t->flags = T_SuspCCont;
+  t->priority = c->getPriority();
+  t->u.suspCCont = c;
   t->schedule();
 }
 
@@ -180,9 +195,14 @@ Bool Thread::isNormal()
   return ((flags & T_Normal) ? OK : NO);
 }
 
-Bool Thread::isWarm()
+Bool Thread::isSuspCont()
 {
-  return ((flags & T_Warm) ? OK : NO);
+  return flags & T_SuspCont ? OK : NO;
+}
+
+Bool Thread::isSuspCCont()
+{
+  return flags & T_SuspCCont ? OK : NO;
 }
 
 Bool Thread::isNervous()
@@ -389,19 +409,29 @@ Board *Thread::popBoard()
 {
   DebugCheck(!isNervous(),error("Thread::popBoard"));
   Board *ret = u.board;
-  u.board = (Board *) NULL;
   flags = (T_Normal | (flags & T_No_State));
+  u.taskStack = (TaskStack *) NULL;
   return ret;
 }
 
-Suspension *Thread::popSuspension()
+SuspContinuation *Thread::popSuspCont()
 {
-  DebugCheck(!isWarm(),error("Thread::popSuspension"));
-  Suspension *ret = u.suspension;
-  u.suspension = (Suspension *) NULL;
-  flags = (T_Normal | (flags & T_No_State));
+  DebugCheck(!isSuspCont(),error("Thread::popSuspension"));
+  SuspContinuation *ret = u.suspCont;
+  flags = T_Normal | (flags & T_No_State);
+  u.taskStack = (TaskStack *) NULL;
   return ret;
 }
+
+CFuncContinuation *Thread::popSuspCCont()
+{
+  DebugCheck(!isSuspCCont(),error("Thread::popSuspension"));
+  CFuncContinuation *ret = u.suspCCont;
+  flags = (T_Normal | (flags & T_No_State));
+  u.taskStack = (TaskStack *) NULL;
+  return ret;
+}
+
 
 #ifdef OUTLINE
 #define inline

@@ -498,6 +498,8 @@ inline void ConsList::gc()
   }
 }
 
+
+/* mm2: have to check for discarded node */
 inline SuspContinuation *SuspContinuation::gcCont()
 {
   if (this == NULL) return NULL;
@@ -559,6 +561,7 @@ void CFuncContinuation::gcRecurse(void)
   node = node->gcBoard();
 }
 
+/* mm2: have to check for discarded node */
 CFuncContinuation *CFuncContinuation::gcCont(void)
 {
   CHECKCOLLECTED(cFunc, CFuncContinuation *);
@@ -620,6 +623,8 @@ inline LTuple *LTuple::gc()
 
 inline SRecord *SRecord::gc()
 {
+  if (this == NULL) return NULL; /* objects may contain an empty record */
+
   CHECKCOLLECTED(u.type, SRecord *);
 
   size_t size;
@@ -679,12 +684,9 @@ inline Bool isInTree (Board *b)
 }
 
 
-/* return NULL if contains pointer to dead node.
-   the check for a dead suspension is done in SuspList::gc
-   because Threads contain Suspensions which are marked dead
- */
+/* return NULL if contains pointer to discarded node */
 inline Suspension *Suspension::gcSuspension(Bool tcFlag){
-  if (this == NULL) return NULL;
+  if (!this || isDead()) return NULL;
 
   CHECKCOLLECTED(flag, Suspension*);
 
@@ -701,14 +703,14 @@ inline Suspension *Suspension::gcSuspension(Bool tcFlag){
 
   Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
 
-  switch (flag & (cont|cfun)){
-  case null:
+  switch (flag & (S_cont|S_cfun)){
+  case S_null:
     newSusp->item.node = item.node->gcBoard();
     break;
-  case cont:
+  case S_cont:
     newSusp->item.cont = item.cont->gcCont();
     break;
-  case cont|cfun:
+  case S_cont|S_cfun:
     newSusp->item.ccont = item.ccont->gcCont();
     break;
   default:
@@ -733,11 +735,7 @@ SuspList *SuspList::gc(Bool tcFlag)
   SuspList *ret = NULL;
 
   for(SuspList* help = this; help != NULL; help = help->next) {
-    Suspension *aux1 = help->getSusp();
-    if (aux1->isDead()) {
-      continue;
-    }
-    Suspension *aux = aux1->gcSuspension(tcFlag);
+    Suspension *aux = help->getSusp()->gcSuspension(tcFlag);
     if (!aux) {
       continue;
     }
@@ -1491,10 +1489,17 @@ void Thread::gcRecurse()
 
   if (isNormal()) {
     GCREF(u.taskStack);
-  } else if (isWarm()) {
-    u.suspension=u.suspension->gcSuspension();
+  } else if (isSuspCont()) {
+    u.suspCont=u.suspCont->gcCont();
     // suspension may be dead
-    if (!u.suspension) {
+    if (!u.suspCont) {
+      error("mm2: never be here");
+      flags=0; // == T_Normal
+    }
+  } else if (isSuspCCont()) {
+    u.suspCCont=u.suspCCont->gcCont();
+    // suspension may be dead
+    if (!u.suspCCont) {
       error("mm2: never be here");
       flags=0; // == T_Normal
     }
@@ -1788,7 +1793,7 @@ void checkGC() {
 void AM::doGC()
 {
   //  --> empty trail
-  deinstallPath(AM::rootBoard);
+  deinstallPath(rootBoard);
 
   // do gc
   gc(conf.gcVerbosity);

@@ -43,7 +43,8 @@ public:
   static Bool QueueIsEmpty();
   static Thread *GetFirst();
   static void NewCurrent(int prio);
-  static void ScheduleSuspension(Suspension *s);
+  static void ScheduleSuspCont(SuspContinuation *c);
+  static void ScheduleSuspCCont(CFuncContinuation *c);
   static void ScheduleWakeup(Board *n);
 
 private:
@@ -52,7 +53,8 @@ private:
   int flags;
   union {
     TaskStack *taskStack;
-    Suspension *suspension;
+    SuspContinuation *suspCont;
+    CFuncContinuation *suspCCont;
     Board *board;
   } u;
   int priority;
@@ -69,12 +71,14 @@ public:
   int getPriority();
   TaskStack *getTaskStack();
   Bool isNormal();
-  Bool isWarm();
   Bool isNervous();
+  Bool isSuspCont();
+  Bool isSuspCCont();
   Bool isSolve ();
   TaskStack *makeTaskStack();
   Board *popBoard();
-  Suspension *popSuspension();
+  SuspContinuation *popSuspCont();
+  CFuncContinuation *popSuspCCont();
   void pushTask(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void pushTask (Board *n, BIFun f, RefsArray x=NULL, int i=0);
