@@ -1,25 +1,23 @@
 /*
  *  Authors:
- *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
- * 
- *  Contributors:
- *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
- * 
+ *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+ *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+ *
  *  Copyright:
  *    Ralf Scheidhauer, 1997
- * 
+ *    Leif Kornstaedt, 1997-1998
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
- *  of Oz 3:
- *     http://mozart.ps.uni-sb.de
- * 
+ *
+ *  This file is part of Mozart, an implementation of Oz 3:
+ *    http://mozart.ps.uni-sb.de
+ *
  *  See the file "LICENSE" or
- *     http://mozart.ps.uni-sb.de/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *    http://mozart.ps.uni-sb.de/LICENSE.html
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -55,7 +53,7 @@ SRecordArity getArity(TaggedRef arity)
     oz_declareNonvarIN(num,__aux);			\
     name = getArity(__aux);				\
     if (name == (SRecordArity) -1) {			\
-      return OZ_typeError(num,"RecordArity");		\
+      oz_typeError(num,"RecordArity");			\
     }							\
   }
 
@@ -97,7 +95,7 @@ OZ_BI_define(BIallocateCodeBlock,2,2)
   }
   int numGlobals = OZ_length(globals);
   if (numGlobals == -1) {
-    return OZ_typeError(1,"List");
+    oz_typeError(1,"List");
   }
 
   CodeArea *code = new CodeArea(size);
@@ -136,7 +134,7 @@ OZ_BI_define(BIaddDebugInfo,3,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,file);
   if (!oz_isAtom(file)) {
-    return OZ_typeError(1,"Atom");
+    oz_typeError(1,"Atom");
   }
   oz_declareIntIN(2,line);
   code->writeDebugInfo(file,line);
@@ -167,7 +165,7 @@ OZ_BI_define(BIstoreNumber,2,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
   if (!oz_isNumber(arg)) {
-    return OZ_typeError(1,"Int");
+    oz_typeError(1,"Int");
   }
   code->writeTagged(arg);
   return PROCEED;
@@ -179,7 +177,7 @@ OZ_BI_define(BIstoreLiteral,2,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
   if (!oz_isLiteral(arg)) {
-    return OZ_typeError(1,"Literal");
+    oz_typeError(1,"Literal");
   }
   code->writeTagged(arg);
   return PROCEED;
@@ -191,7 +189,7 @@ OZ_BI_define(BIstoreFeature,2,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,arg);
   if (!oz_isFeature(arg)) {
-    return OZ_typeError(1,"Feature");
+    oz_typeError(1,"Feature");
   }
   code->writeTagged(arg);
   return PROCEED;
@@ -334,7 +332,7 @@ OZ_BI_define(BIstoreHTScalar,4,0)
   } else if (oz_isNumber(value)) {
     ht->add(value,code->computeLabel(label));
   } else {
-    return OZ_typeError(2,"NumberOrLiteral");
+    oz_typeError(2,"NumberOrLiteral");
   }
 
   return PROCEED;
@@ -347,11 +345,11 @@ OZ_BI_define(BIstoreHTRecord,5,0)
   OZ_declareHashTableIN(1,ht);
   oz_declareNonvarIN(2,reclabel);
   if (!oz_isLiteral(reclabel)) {
-    return OZ_typeError(2,"Literal");
+    oz_typeError(2,"Literal");
   }
   OZ_declareRecordArityIN(3,arity);
   if (sraIsTuple(arity) && getTupleWidth(arity) == 0) {
-    return OZ_typeError(3,"NonemptyRecordArity");
+    oz_typeError(3,"NonemptyRecordArity");
   }
   oz_declareIntIN(4,label);
 
@@ -382,7 +380,7 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
   oz_declareBoolIN(2,isMethod);
   oz_declareNonvarIN(3,name);
   if (!oz_isLiteral(name)) {
-    return OZ_typeError(3,"Literal");
+    oz_typeError(3,"Literal");
   }
   oz_declareBoolIN(4,isTail);
   OZ_declareRecordArityIN(5,arity);
@@ -399,7 +397,7 @@ OZ_BI_define(BIstoreApplMethInfo,3,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,name);
   if (!oz_isLiteral(name)) {
-    return OZ_typeError(1,"Literal");
+    oz_typeError(1,"Literal");
   }
   OZ_declareRecordArityIN(2,arity);
 
@@ -415,7 +413,7 @@ OZ_BI_define(BIstoreGRegRef,2,0)
   oz_declareNonvarIN(1,globals);
   int numGlobals = OZ_length(globals);
   if (numGlobals == -1) {
-    return OZ_typeError(1,"RegisterList");
+    oz_typeError(1,"RegisterList");
   }
 
   AssRegArray *gregs = new AssRegArray(numGlobals);
@@ -424,7 +422,7 @@ OZ_BI_define(BIstoreGRegRef,2,0)
     OZ_Term reg = oz_deref(oz_head(globals));
     globals = oz_deref(oz_tail(globals));
     if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
-      return OZ_typeError(1,"RegisterList");
+      oz_typeError(1,"RegisterList");
     }
 
     SRecord *rec = tagged2SRecord(reg);
@@ -437,12 +435,12 @@ OZ_BI_define(BIstoreGRegRef,2,0)
     } else if (!strcmp(label,"g")) {
       regType = GReg;
     } else {
-      return OZ_typeError(1,"RegisterList");
+      oz_typeError(1,"RegisterList");
     }
     (*gregs)[i].kind = regType;
     OZ_Term index = oz_deref(rec->getArg(0));
     if (!oz_isSmallInt(index)) {
-      return OZ_typeError(1,"RegisterList");
+      oz_typeError(1,"RegisterList");
     }
     (*gregs)[i].number = smallIntValue(index);
   }
@@ -457,25 +455,25 @@ OZ_BI_define(BIstoreLocation,2,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,locs);
   if (!oz_isPair2(locs)) {
-    return OZ_typeError(1,"Location");
+    oz_typeError(1,"Location");
   }
   OZ_Term inLocs = oz_deref(oz_left(locs));
   OZ_Term outLocs = oz_deref(oz_right(locs));
   const int inArity = OZ_length(inLocs);
   const int outArity = OZ_length(outLocs);
   if (inArity == -1 || outArity == -1) {
-    return OZ_typeError(1,"Location");
+    oz_typeError(1,"Location");
   }
 
   OZ_Location *loc = OZ_Location::newLocation(inArity,outArity);
   for (int i = 0; i < inArity; i++) {
     OZ_Term reg = oz_deref(oz_head(inLocs));
     if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
-      return OZ_typeError(1,"Location");
+      oz_typeError(1,"Location");
     }
     TaggedRef index = oz_deref(oz_arg(reg,0));
     if (!oz_isSmallInt(index)) {
-      return OZ_typeError(1,"Location");
+      oz_typeError(1,"Location");
     }
     int j = smallIntValue(index);
     if (j < 0 || j >= NumberOfXRegisters) {
@@ -488,11 +486,11 @@ OZ_BI_define(BIstoreLocation,2,0)
   for (int i = 0; i < outArity; i++) {
     OZ_Term reg = oz_deref(oz_head(outLocs));
     if (!oz_isTuple(reg) || OZ_width(reg) != 1) {
-      return OZ_typeError(1,"Location");
+      oz_typeError(1,"Location");
     }
     TaggedRef index = oz_deref(oz_arg(reg,0));
     if (!oz_isSmallInt(index)) {
-      return OZ_typeError(1,"Location");
+      oz_typeError(1,"Location");
     }
     int j = smallIntValue(index);
     if (j < 0 || j >= NumberOfXRegisters) {
@@ -519,6 +517,19 @@ OZ_BI_define(BIstoreCache,2,0)
 /********************************************************************
  * builtins for the compiler
  ******************************************************************** */
+
+OZ_BI_define(BIfeatureLess,2,1)
+{
+  oz_declareNonvarIN(0,f1);
+  if (!oz_isFeature(f1)) {
+    oz_typeError(0,"Feature");
+  }
+  oz_declareNonvarIN(1,f2);
+  if (!oz_isFeature(f2)) {
+    oz_typeError(1,"Feature");
+  }
+  OZ_RETURN(oz_bool(featureCmp(f1,f2) == -1));
+} OZ_BI_end
 
 OZ_BI_define(BIconcatenateAtomAndInt,2,1)
 {
@@ -607,11 +618,7 @@ OZ_BI_define(BIisLocalDet,1,1)
   if (!isCVar(var))
     OZ_RETURN(oz_true());
 
-  if (oz_check_var_status(tagged2CVar(var))==EVAR_STATUS_DET) {
-    OZ_RETURN(oz_true());
-  } else {
-    OZ_RETURN(oz_false());
-  }
+  OZ_RETURN(oz_bool(oz_check_var_status(tagged2CVar(var))==EVAR_STATUS_DET));
 } OZ_BI_end
 
 
