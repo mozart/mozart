@@ -28,9 +28,9 @@
 
 //-----------------------------------------------------------------------------
 
-void * OZ_GenConstraint::operator new(size_t s) 
+void * OZ_GenConstraint::operator new(size_t s, int align) 
 {
-  return freeListMalloc(s);
+  return alignedMalloc(s, align);
 }
 
 void OZ_GenConstraint::operator delete(void * p, size_t s) 
