@@ -382,8 +382,9 @@ queries		: sequence queries1
 					   $1),$2); }
 		| queries1
 		  { $$ = $1; }
-		| thisCoord functorDescriptorList
-		  { $$ = newCTerm("fFunctor",newCTerm("fDollar",$1),$2,$1); }
+		| thisCoord functorDescriptorList queries1
+		  { $$ = consList(newCTerm("fFunctor",newCTerm("fDollar",$1),
+					   $2,$1),$3); }
 		;
 
 queries1	: directive queries
