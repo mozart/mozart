@@ -277,6 +277,7 @@ Bool AM::isToplevel() {
 }
 
 // unset the ThreadSwitch flag and reset the processCounter
+inline
 void AM::RestartProcess()
 {
   unsetSFlag(ThreadSwitch);
