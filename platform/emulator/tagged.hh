@@ -68,6 +68,7 @@ enum TypeOfTerm {
 
 
 typedef unsigned int TaggedRef;
+typedef TaggedRef * TaggedRefPtr;
 
 const int tagSize = 4;
 const int tagMask   = 0xF;
