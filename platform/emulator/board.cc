@@ -19,6 +19,7 @@
 #include "am.hh"
 #include "board.hh"
 #include "actor.hh"
+#include "codeArea.hh"
 
 /* some random comments:
    flags:
@@ -100,6 +101,21 @@ Board::Board(Actor *a,int typ)
 
 Board::~Board() {
   error("mm2: not yet impl");
+}
+
+Bool Board::isFailureInBody ()
+{
+  Assert(isWaiting () == OK);
+  if (isWaitTop () == OK) {
+    return (NO);
+  } else {
+#if defined THREADED && THREADED > 0
+    Opcode op = CodeArea::adressToOpcode (CodeArea::getOP (body.getPC ()));
+#else
+    Opcode op = CodeArea::getOP (body.getPC ());
+#endif
+    return ((op == FAILURE) ? OK : NO);
+  }
 }
 
 // -------------------------------------------------------------------------

@@ -126,6 +126,17 @@ Board *WaitActor::getChild()
   return NULL;
 }
 
+Board *WaitActor::getChildRef ()
+{
+  int maxx=(int) childs[-1];
+  for (int i = 0; i < maxx; i++) {
+    if (childs[i]) {
+      return (childs[i]);
+    }
+  }
+  error("WaitActor::getChild");
+  return NULL;
+}
 
 /* ------------------------------------------------------------------------
    class SolveActor
@@ -266,6 +277,37 @@ TaggedRef SolveActor::genEnumed (Board *newSolveBB)
   stuple->setArg (1, makeTaggedSRecord
                   (new OneCallBuiltin (solveContBITabEntry, contGRegs,
                                        SolveContArity, status)));
+
+  return (makeTaggedSTuple (stuple));
+}
+
+TaggedRef SolveActor::genEnumedFail ()
+{
+  STuple *stuple = STuple::newSTuple (enumedAtom, 2);
+  RefsArray status;
+  RefsArray contGRegs;
+
+  // statistics
+  am.stat.solveDistributed++;
+
+  // left side:
+  status = allocateRefsArray (1);
+  contGRegs = allocateRefsArray (1);
+  status[0] = lastAtom;
+  contGRegs[0] = makeTaggedConst (solveBoard);
+  stuple->setArg (0, makeTaggedSRecord
+                  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
+                                       SolveContArity, status)));
+
+  // right side - the rest:
+  status = allocateRefsArray (1);
+  contGRegs = allocateRefsArray (1);
+  status[0] = lastAtom;
+  contGRegs[0] = makeTaggedConst (solveBoard);  // but it has no impact;
+  OneCallBuiltin *bi = new OneCallBuiltin (solveContBITabEntry, contGRegs,
+                                           SolveContArity, status);
+  bi->hasSeen ();
+  stuple->setArg (1, makeTaggedSRecord (bi));
 
   return (makeTaggedSTuple (stuple));
 }

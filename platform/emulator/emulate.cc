@@ -1696,7 +1696,7 @@ void engine() {
    LBLBIsolveCont:
      {
        if (((OneCallBuiltin *)bi)->isSeen () == OK) {
-         HANDLE_FAILURE1(PC, ("not first call of solve continuation"));
+         HANDLE_FAILURE(PC, message("not first call of solve continuation"));
        }
 
        ((OneCallBuiltin *) bi)->hasSeen ();
@@ -2212,62 +2212,80 @@ void engine() {
                       error ("solve board by the enumertaion without suspensions?"));
           Board *waitBoard = wa->getChild ();
           wa->decChilds ();
-          WaitActor *nwa = new WaitActor (wa);
-          solveBB->removeSuspension ();   // since WaitActor::WaitActor adds one;
-          waitBoard->setActor (nwa);
-          ((AWActor *) nwa)->addChild (waitBoard);
-          wa->unsetBoard ();  // may not copy the actor and rest of boards too;
-          solveAA->setBoardToInstall (waitBoard);
+          if (wa->hasOneChild () == OK &&
+              (wa->getChildRef ())->isFailureInBody () == OK) {
+            // special optimized case: or E_1 then E_2 [] E_3 then false ro;
+            (void) wa->getChild ();  // remove the last child;
+            wa->decChilds ();
+            DebugCheck((wa->hasNoChilds () == NO),
+                       error ("error in the '... [] true then false ro' case"));
+            waitBoard->setActor (wa);
+            ((AWActor *) wa)->addChild (waitBoard);
+            solveAA->setBoardToInstall (waitBoard);
+            DebugCheckT (solveBB->setReflected ());
+            if ( !e->fastUnify (solveAA->getResult (), solveAA->genEnumedFail () )) {
+              warning ("unification of distributed tuple with variable has failed");
+              HANDLE_FAILURE (NULL, ;);
+            }
+          } else {
+            // 'proper' enumeration;
+            WaitActor *nwa = new WaitActor (wa);
+            solveBB->removeSuspension ();   // since WaitActor::WaitActor adds one;
+            waitBoard->setActor (nwa);
+            ((AWActor *) nwa)->addChild (waitBoard);
+            wa->unsetBoard ();  // may not copy the actor and rest of boards too;
+            solveAA->setBoardToInstall (waitBoard);
 
-          //  Now, the following state has been reached:
-          // The waitActor with the 'rest' of actors is unlinked from the
-          // computation space; instead, a new waitActor (*nwa) is linked to it,
-          // and all the tree from solve blackboard (*solveBB) will be now copied.
-          // Moreover, the copy has already the 'boardToInstall' setted properly;
-          Board *newSolveBB = e->copyTree (solveBB, (Bool *) NULL);
+            //  Now, the following state has been reached:
+            // The waitActor with the 'rest' of actors is unlinked from the
+            // computation space; instead, a new waitActor (*nwa) is linked to it,
+            // and all the tree from solve blackboard (*solveBB) will be now copied.
+            // Moreover, the copy has already the 'boardToInstall' setted properly;
+            Board *newSolveBB = e->copyTree (solveBB, (Bool *) NULL);
 /*
- *  Fuck!
+ *  F*ck!
  *  We are trying here to detect the unit-commit failure by the application of
  * the copy. So, just make new one and try to perform unit commit without
  * propagation ...
 #ifdef DEBUG_CHECK
-          Board *tmpSolveBB = e->copyTree (solveBB, (Bool *) NULL);
-          Board *bbti =
-            SolveActor::Cast (tmpSolveBB->getActor ())->getBoardToInstall ();
-          e->dontPropagate = OK;
-          Board *cb = e->currentBoard;
-          tmpSolveBB->setInstalled ();
-          e->setCurrent (tmpSolveBB);
-          if ( !e->installScript (bbti->getScriptRef ()) ) {
-            error ("BANG!!!");
-          }
-          tmpSolveBB->unsetInstalled ();
-          e->setCurrent (cb);
-          e->dontPropagate = NO;
+            Board *tmpSolveBB = e->copyTree (solveBB, (Bool *) NULL);
+            Board *bbti =
+              SolveActor::Cast (tmpSolveBB->getActor ())->getBoardToInstall ();
+            e->dontPropagate = OK;
+            Board *cb = e->currentBoard;
+            tmpSolveBB->setInstalled ();
+            e->setCurrent (tmpSolveBB);
+            if ( !e->installScript (bbti->getScriptRef ()) ) {
+              error ("BANG!!!");
+            }
+            tmpSolveBB->unsetInstalled ();
+            e->setCurrent (cb);
+            e->dontPropagate = NO;
 #endif
  */
-          // ... and now set the original waitActor backward;
-          waitBoard->flags |= Bo_Failed;   // this subtree is discarded;
-          wa->setBoard (solveBB);          // original waitActor;
-          // the subtrees (new and old ones) are still linked to the
-          // computation tree;
-          if (wa->hasOneChild () == OK) {
-            solveAA->setBoardToInstall (wa->getChild ());
-          } else {
-            solveAA->setBoardToInstall ((Board *) NULL);
-            // ... since we have set previously board-to-install for copy;
-            solveAA->pushWaitActor (wa);
-            //  If this waitActor has yet more than one clause, it can be
-            // distributed again ... Moreover, it must be considered first.
-          }
-          DebugCheckT (solveBB->setReflected ());
-          DebugCheckT (newSolveBB->setReflected ());
-          // ... and now there are two proper branches of search problem;
+            // ... and now set the original waitActor backward;
+            waitBoard->flags |= Bo_Failed;   // this subtree is discarded;
+            wa->setBoard (solveBB);          // original waitActor;
+            // the subtrees (new and old ones) are still linked to the
+            // computation tree;
+            if (wa->hasOneChild () == OK) {
+              solveAA->setBoardToInstall (wa->getChild ());
+            } else {
+              solveAA->setBoardToInstall ((Board *) NULL);
+              // ... since we have set previously board-to-install for copy;
+              solveAA->pushWaitActor (wa);
+              //  If this waitActor has yet more than one clause, it can be
+              // distributed again ... Moreover, it must be considered first.
+            }
+            DebugCheckT (solveBB->setReflected ());
+            DebugCheckT (newSolveBB->setReflected ());
+            // ... and now there are two proper branches of search problem;
 
-          if ( !e->fastUnify (solveAA->getResult (),
-                              solveAA->genEnumed (newSolveBB) )) {
-            warning ("unification of distributed tuple with variable has failed");
-            HANDLE_FAILURE (NULL, ;);
+            if ( !e->fastUnify (solveAA->getResult (),
+                                solveAA->genEnumed (newSolveBB) )) {
+              warning ("unification of distributed tuple with variable has failed");
+              HANDLE_FAILURE (NULL, ;);
+            }
           }
         }
       }

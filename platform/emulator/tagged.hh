@@ -143,6 +143,7 @@ void taggedPrintLong(TaggedRef ref, int depth = 10, int offset = 0);
 #define CHECK_ISVAR(term)  Assert(isAnyVar(term))
 #define CHECK_DEREF(term)  Assert(!isRef(term) && !isAnyVar(term))
 #define CHECK_POINTER(s)   Assert(s != NULL && !((int) s & 3) )
+#define CHECK_STRPTR(s)    Assert(s != NULL)
 #define CHECKTAG(Tag)      Assert(tagTypeOf(ref) == Tag)
 
 
@@ -474,7 +475,7 @@ TaggedRef makeTaggedSRecord(SRecord *s)
 inline
 TaggedRef makeTaggedAtom(char *s)
 {
-  CHECK_POINTER(s);
+  CHECK_STRPTR(s);
   return makeTaggedRef(ATOM,addToAtomTab(s));
 }
 

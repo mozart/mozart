@@ -108,6 +108,8 @@ public:
   void unsetInstalled() { flags &= ~Bo_Installed; }
   void unsetNervous() { flags &= ~Bo_Nervous; }
   void unsetPathMark() { flags &= ~Bo_PathMark; }
+  // special for solve combinator: checks whether 'false' stays in body;
+  Bool isFailureInBody ();
 };
 
 #ifndef OUTLINE
