@@ -197,10 +197,10 @@ void deallocateY(RefsArray a)
 // #define DIST_UNIFY_FIX 0
 
 // X=f(Y,b) Y=g(a): stop after X=f(Y,b) (create new var for Y)
-#define DIST_UNIFY_FIX 1
+//#define DIST_UNIFY_FIX 1
 
 // X=f(Y,b) Y=g(a): ask manager of X for binding to f(g(a),b)
-//#define DIST_UNIFY_FIX 2
+#define DIST_UNIFY_FIX 2
 
 void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y, Abstraction *CAP);
 
