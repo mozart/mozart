@@ -450,7 +450,6 @@ void TCPTransController::deleteTransObj(TransObj* transObj) {
   byteBlockManager.deleteByteBlock(
   byteBufferManager->deleteByteBuffer(((TCPTransObj *) transObj)
 				      ->writeBuffer));
-
   FreeListEntry *f;
   --wc;
   f = (FreeListEntry*) transObj;
