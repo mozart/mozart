@@ -798,6 +798,12 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
   register TaggedRef term = *termPtr;           \
   _DEREF(term,termPtr,tag);
 
+#define SAFE_DEREF(term)                        \
+if (IsRef(term)) {                              \
+  DEREF(term,SAFE__PTR__,SAFE__TAG__);          \
+  if (_isAnyVar(term)) term=makeTaggedRef(SAFE__PTR__); \
+}
+
 
 inline
 TaggedRef deref(TaggedRef t) {
