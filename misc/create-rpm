@@ -1,0 +1,127 @@
+#!/bin/sh -x
+
+RPMROOT=/usr/src/redhat
+RPMSRC=$RPMROOT/SOURCES
+RPMSPEC=$RPMROOT/SPECS
+TMPDIR=/tmp
+CVSROOT=munchkin:/CVS
+OZDOCHOME=/usr/local/oz/doc
+
+
+#
+# First step: Generate sources
+#
+
+# Get mozart sources and clean away cvs stuff
+cd $TMPDIR
+cvs -d $CVSROOT get mozart 2>/dev/null 1>/dev/null
+rm -rf ./*/CVS ./*/*/CVS ./*/*/*/CVS ./*/*/*/*/CVS
+rm -rf ./*/.cvsignore ./*/*/.cvsignore ./*/*/*/.cvsignore ./*/*/*/*/.cvsignore
+
+# Find version
+VERSION=`mozart/OZVERSION`-`date +"%m%d%y"`
+BUILD=1
+
+# Source
+tar cf - mozart | gzip -9 -c > ${RPMSRC}/mozart-${VERSION}.tar.gz
+rm -rf $TMPDIR/mozart
+
+# Get precompiled documentation
+cd $TMPDIR
+cp -a ${OZDOCHOME} .
+rm -rf ${TMPDIR}/doc/demo/applets
+rm -rf ${TMPDIR}/doc/tcl8.0-tk8.0-man-html
+rm -f ${TMPDIR}/doc/tcltk
+tar cf - doc | gzip -9 -c > ${RPMSRC}/mozart-doc-${VERSION}.tar.gz
+rm -rf $TMPDIR/doc
+
+# Pack config files and put into SOURCES
+cd $TMPDIR
+
+cat > oz.sh <<EOF
+export OZHOME=/usr/local/mozart
+export PATH=\${OZHOME}/bin:\${PATH}
+EOF
+
+cat > oz.csh <<EOF
+setenv OZHOME /usr/local/mozart
+setenv PATH \${OZHOME}/bin:\${PATH}
+EOF
+
+chmod a+x oz.sh oz.csh
+tar cf - oz.csh oz.sh | gzip -9 -c > ${RPMSRC}/mozart-profiles.tar.gz
+rm -f oz.sh oz.csh
+
+# Generate redhat spec file
+cd $TMPDIR
+cat > ${RPMSPEC}/mozart-$VERSION-$BUILD.spec <<EOF
+# Spec file for Mozart, an efficient and distributed implementation of Oz
+# Author: Christian Schulte, 1998
+# Copyright: Christian Schulte, 1998
+Name: mozart
+Version: ${VERSION}
+Release: ${BUILD}
+Summary: Mozart, an efficient and distributed implementation of Oz
+Copyright: More liberal than GPL (see LICENSE)
+Vendor: DFKI GmbH
+Url: http://mozart.ps.uni-sb.de/
+Group: Development/Languages
+Packager: Christian Schulte <schulte@dfki.de>
+
+Source0: mozart-${VERSION}.tar.gz
+Source1: mozart-doc-${VERSION}.tar.gz
+Source2: mozart-profiles.tar.gz
+
+BuildRoot: /var/tmp/mozart-${VERSION}
+
+%description
+Mozart is an efficient and distributed implementation of Oz.
+
+Mozart is jointly developed by DFKI and SICS.
+
+%prep
+%setup -c -a 1
+%setup -c -D -T -a 2
+
+%build
+cd mozart
+CFLAGS="\$RPM_OPT_FLAGS" CXXFLAGS="\$RPM_OPT_FLAGS" ./configure --prefix=\$RPM_BUILD_ROOT/usr/local/mozart
+
+make
+
+%install
+PREFIX=\$RPM_BUILD_ROOT/usr/local/mozart
+DOC=mozart-doc-${VERSION}.tar.gz
+rm -rf \$PREFIX
+mkdir -p \$PREFIX
+# install docs
+cp -a doc \$PREFIX
+# Generic install
+(cd mozart && make install)
+
+# With this installation stripping works fine
+
+%ifarch i386
+
+(cd \$PREFIX/platform/linux-i486 && \
+        strip *.exe && \
+        strip *.so )
+
+%endif
+
+# config files
+mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
+cp -a oz.sh oz.csh \$RPM_BUILD_ROOT/etc/profile.d
+
+%clean
+rm -rf \$RPM_BUILD_ROOT
+%files
+%doc mozart/README mozart/LICENSE mozart/LICENSE.html
+%config /etc/profile.d/oz.sh
+%config /etc/profile.d/oz.csh
+/usr/local/mozart
+EOF
+
+
+# No we have all what we need, go and build
+# rpm -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
