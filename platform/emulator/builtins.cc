@@ -4317,7 +4317,7 @@ OZ_BI_define(BIfindFunction,3,0)
                     OZ_in(2));
   }
 
-  OZ_addBuiltin(ozstrdup(functionName),functionArity,0,*func); // mm2
+  BIadd(ozstrdup(functionName),functionArity,0,*func,OK); // mm2
   return PROCEED;
 } OZ_BI_end
 
