@@ -1123,11 +1123,13 @@ static void xy_init(OZ_Term defines) {
   bufferStack = NULL;
 
   hashTable = new XyScannerHashTable;
-  char *version = new char[strlen(OZVERSION)+3];
-  strcpy(version,"Oz_");
-  strcat(version+3,OZVERSION);
+  const char *prefix = "Oz_";
+  const int prefixLen = strlen(prefix);
+  char *version = new char[strlen(OZVERSION)+prefixLen+1];
+  strcpy(version,prefix);
+  strcat(version+prefixLen,OZVERSION);
   int count = 0;
-  for (char *s = version+3; *s; s++)
+  for (char *s = version+prefixLen; *s; s++)
     if (*s == '.') {
       count++;
       *s = '_';
