@@ -954,7 +954,8 @@ Thread *Thread::gcThreadInline() {
     return ((Thread *) NULL);
   }
 
-  Thread *newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
+
+  Thread * newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
 
   if (isRunnable() || hasStack()) {
     ThreadList::add(newThread);
@@ -1431,6 +1432,12 @@ void Thread::gcRecurse () {
   switch (getThrType ()) {
   case S_RTHREAD:
     item.threadBody = item.threadBody->gcRTBody ();
+
+    setSelf(getSelf()->gcObject());
+    getAbstr()->gcPrTabEntry();
+
+    gcTertiary();
+
     break;
 
   case S_WAKEUP:
@@ -1452,12 +1459,6 @@ void Thread::gcRecurse () {
   default:
     Assert(0);
   }
-
-  setSelf(getSelf()->gcObject());
-  getAbstr()->gcPrTabEntry();
-
-  gcTertiary();
-
 }
 
 
