@@ -96,33 +96,27 @@ DiffnPropagator::~DiffnPropagator()
 // COPYING
 //////////
 
-void DiffnPropagator::updateHeapRefs(OZ_Boolean duplicate)
-{
+void DiffnPropagator::updateHeapRefs(OZ_Boolean duplicate) {
   OZ_Term * new_reg_x      = OZ_hallocOzTerms(reg_size);
-  int * new_reg_xdurs      = OZ_hallocCInts(reg_size);
   OZ_Term * new_reg_y      = OZ_hallocOzTerms(reg_size);
+  int * new_reg_xdurs      = OZ_hallocCInts(reg_size);
   int * new_reg_ydurs      = OZ_hallocCInts(reg_size);
-  int * new_reg_ordered    = OZ_hallocCInts(reg_size*reg_size);
 
-  int i;
-  for (i = reg_size; i--; ) {
+  for (int i = reg_size; i--; ) {
     new_reg_x[i]       = reg_x[i];
     new_reg_y[i]       = reg_y[i];
     new_reg_xdurs[i]   = reg_xdurs[i];
     new_reg_ydurs[i]   = reg_ydurs[i];
-    new_reg_ordered[i] = reg_ordered[i];
     OZ_updateHeapTerm(new_reg_x[i]);
     OZ_updateHeapTerm(new_reg_y[i]);
   }
-  for (i = reg_size; i<reg_size*reg_size; i++) 
-    new_reg_ordered[i] = reg_ordered[i];
 
+  reg_ordered = OZ_copyCInts(reg_size*reg_size,reg_ordered);
 
   reg_x               = new_reg_x;
   reg_y               = new_reg_y;
   reg_xdurs           = new_reg_xdurs;
   reg_ydurs           = new_reg_ydurs;
-  reg_ordered         = new_reg_ordered;
 }
 
 OZ_Term DiffnPropagator::getParameters(void) const
