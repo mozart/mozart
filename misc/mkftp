@@ -300,7 +300,7 @@ sub action_windows {
     }
 }
 
-&action_win if $ACTION_WIN;
+&action_windows if $ACTION_WIN;
 
 sub action_tar {
     my $tardir = "$RELDIR/tar";
