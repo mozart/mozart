@@ -2,6 +2,11 @@ dnl replace install-sh by the name of a real source file
 AC_INIT(ozinstall)
 AC_PREFIX_DEFAULT(${OZSKEL_PREFIX:-${HOME}/.oz})
 OZSKEL_INIT
+AC_PATH_PROG([XSLTPROC],[xsltproc],[NONE])
+AC_SUBST(XSLTPROC)
+if test "$XSLTPROC" = "NONE"; then
+    AC_MSG_ERROR(["xsltproc not found (see http://xmlsoft.org/XSLT/xsltproc2.html)"])
+fi
 AC_OUTPUT(Makefile)
 errprint(ifdef([OZSKEL_INIT],
  [autoconf succeeded

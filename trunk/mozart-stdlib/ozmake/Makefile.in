@@ -144,6 +144,7 @@ OZHFLAGS	= $(PKG_OZHFLAGS)
 PLATFORM	= $(shell $(OZTOOL) platform)
 ZIP		= @VAR_ZIP@
 COMPRESS	= @VAR_COMPRESS@
+XSLTPROC	= @XSLTPROC@
 
 #=====================================================================
 # RECURSIVE PROCESSING AND CLEANING UP

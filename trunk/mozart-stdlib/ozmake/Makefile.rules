@@ -26,29 +26,43 @@ Help.ozf: Utils.ozf HELP.txt
 clean::
 	-rm -f ozmake ozmake.exe
 
-html: HELP.xml HELP.xsl Makefile.vars
-	case `java -version 2>&1` in \
-	Kaffe*) JAVACP=-addclasspath;; \
-	*) JAVACP=-classpath;; \
-	esac; \
-	java $$JAVACP XT.jar com.jclark.xsl.sax.Driver HELP.xml HELP.xsl index.html OZMAKEOUTPUT=html OZMAKEVERSION=$(VERSION)
+have.xsltproc:
+	if xsltproc -V 1>/dev/null 2>&1; then \
+	    : ; \
+	else \
+	    echo >&2 "xsltproc not found, but necessary to build the (html) documentation";
+	    echo >&2 "(see http://xmlsoft.org/XSLT/xsltproc2.html)"; \
+	    exit -1; \
+	fi
 
-HELP.html: HELP.xml HELP.xsl Makefile.vars
-	case `java -version 2>&1` in \
-	Kaffe*) JAVACP=-addclasspath;; \
-	*) JAVACP=-classpath;; \
-	esac; \
-	java $$JAVACP XT.jar com.jclark.xsl.sax.Driver HELP.xml HELP.xsl HELP.html OZMAKEOUTPUT=text OZMAKEVERSION=$(VERSION)
-HELP.txt: HELP.html Makefile.vars
+have.lynx:
+	if lynx -version 1>/dev/null 2>&1; then \
+	    : ; \
+	else \
+	    echo >&2 "lynx not found, but necessary to build the (text) documentation"; \
+	    echo >&2 "(see http://lynx.browser.org/)"; \
+	fi
+
+html: have.xsltproc HELP.xml HELP.xsl Makefile.vars
+	xsltproc -o index.html \
+		--stringparam OZMAKEOUTPUT html \
+		--stringparam OZMAKEVERSION $(VERSION) \
+		HELP.xsl HELP.xml
+
+HELP.html: have.xsltproc HELP.xml HELP.xsl Makefile.vars
+	xsltproc -o index.html \
+		--stringparam OZMAKEOUTPUT text \
+		--stringparam OZMAKEVERSION $(VERSION) \
+		HELP.xsl HELP.xml
+
+HELP.txt: have.lynx HELP.html Makefile.vars
 	lynx -dump $< > $@
+
 txt: HELP.txt
 
-doc: ozmake.xml ozmake.xsl
-	case `java -version 2>&1` in \
-	Kaffe*) JAVACP=-addclasspath;; \
-	*) JAVACP=-classpath;; \
-	esac; \
-	java $$JAVACP XT.jar com.jclark.xsl.sax.Driver ozmake.xml ozmake.xsl ozmake.html
+doc: have.xsltproc ozmake.xml ozmake.xsl
+	xsltproc -o ozmake.html \
+		ozmake.xsl ozmake.xml
 
 #publish: duchier-ozmake-$(VERSION).pkg
 #duchier-ozmake-$(VERSION).pkg: $(OZMAKE_SOURCES) ./ozmake
