@@ -1903,12 +1903,6 @@ OZ_Return OZ_raise(OZ_Term exc) {
   return RAISE;
 }
 
-OZ_Return OZ_raiseA(char *name, int was, int shouldBe)
-{
-  return oz_raise(E_ERROR,E_SYSTEM,"inconsistentArity",3,
-                  OZ_atom(name),OZ_int(was),OZ_int(shouldBe));
-}
-
 OZ_Return OZ_raiseC(char *label,int arity,...)
 {
   if (arity == 0) {

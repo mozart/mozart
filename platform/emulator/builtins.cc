@@ -252,7 +252,7 @@ OZ_C_proc_begin(BIbuiltin,3)
     return oz_raise(E_ERROR,E_SYSTEM,"builtinUndefined",1,OZ_getCArg(0));
   }
 
-  if (arity!=-1 && (arity != found->getArity())) {
+  if (arity!=-1 && arity != found->getArity()) {
     return oz_raise(E_ERROR,E_SYSTEM,"builtinArity",3,
                     OZ_getCArg(0),OZ_getCArg(1),
                     makeTaggedSmallInt(found->getArity()));
@@ -5728,22 +5728,17 @@ OZ_C_proc_begin(BIunify,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIfail,VarArity)
+OZ_C_proc_begin(BIfail,0)
 {
   return FAILED;
 }
 OZ_C_proc_end
 
-/*
- * nop: used as fallback when loading builtins
- */
-OZ_C_proc_begin(BInop,VarArity)
+OZ_C_proc_begin(BInop,0)
 {
-  warning("nop");
   return PROCEED;
 }
 OZ_C_proc_end
-
 
 // ------------------------------------------------------------------------
 // --- Apply
@@ -7763,8 +7758,8 @@ BIspec allSpec[] = {
   {"System.eq",      3, BIsystemEq,             0},
 
   {"=",              2, BIunify,                0},
-  {"fail",           VarArity,BIfail,           0},
-  {"nop",            VarArity,BInop,            0},
+  {"fail",           0, BIfail,                 0},
+  {"nop",            0, BInop,                  0},
 
   {"deepFeed",       2, BIdeepFeed,             0},
 

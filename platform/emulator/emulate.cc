@@ -140,10 +140,10 @@ Bool AM::hf_raise_failure(TaggedRef t)
 #define HF_BI         HF_APPLY(OZ_atom(builtinTab.getName((void *) biFun)), \
                                OZ_toList(predArity,X));
 
-#define CheckArity(arityExp,proc)                                        \
-if (predArity != arityExp && VarArity != arityExp) {                     \
+#define CheckArity(arityExp,proc)                                          \
+if (predArity != arityExp) {                                               \
   (void) oz_raise(E_ERROR,E_KERNEL,"arity",2,proc,OZ_toList(predArity,X)); \
-  goto LBLraise;                                                         \
+  goto LBLraise;                                                           \
 }
 
 /*
@@ -1281,14 +1281,13 @@ LBLdispatcher:
       COUNT(bicalls);
       BuiltinTabEntry* entry = GetBI(PC+1);
       OZ_CFun biFun = entry->getFun();
-      predArity = getPosIntArg(PC+2);
 
-      CheckArity(entry->getArity(),makeTaggedConst(entry));
+      // CheckArity(entry->getArity(),makeTaggedConst(entry));
 
 #ifdef PROFILE_BI
       entry->incCounter();
 #endif
-      switch (biFun(predArity, X)){
+      switch (biFun(-2, X)) { // -2 == don't check arity
 
       case PROCEED:       DISPATCH(3);
       case FAILED:        HF_BI;
@@ -1296,14 +1295,17 @@ LBLdispatcher:
       case BI_TYPE_ERROR: RAISE_TYPE;
 
       case SUSPEND:
+        predArity = getPosIntArg(PC+2);
         PushContX(PC,Y,G,X,predArity);
         SUSPENDONVARLIST;
 
       case BI_PREEMPT:
+        predArity = getPosIntArg(PC+2);
         PushContX(PC+3,Y,G,X,predArity);
         goto LBLpreemption;
 
       case BI_REPLACEBICALL:
+        predArity = getPosIntArg(PC+2);
         PC += 3;
         goto LBLreplaceBICall;
 
