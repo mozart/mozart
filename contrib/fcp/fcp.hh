@@ -37,7 +37,7 @@ extern Propagator * imposed_propagator;
 #define FIRST_CLASS_PROPAGATOR_OF(PROP, FC_PROP, ARITY_IN, ARITY_OUT)   \
 OZ_BI_define (FC_PROP, ARITY_IN, ARITY_OUT)                             \
 {                                                                       \
-  OZ_Return ret = PROP(_OZ_ARGS, _OZ_LOC);                              \
+  OZ_Return ret = PROP(_OZ_LOC);                                        \
   if (ret == OZ_FALSE) {                                                \
     return OZ_FALSE;                                                    \
   } else {                                                              \
