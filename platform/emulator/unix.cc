@@ -631,11 +631,13 @@ OZ_BI_iodefine(unix_getCWD,0,1)
   char *bigBuf;
   while (OK) {
     bigBuf=(char *) malloc(size);
+  retry:
     if (getcwd(bigBuf,size)) {
       OZ_Term res = oz_atom(bigBuf); // bug fix, was still using buf
       free(bigBuf);
       OZ_RETURN(res);
     }
+    if (errno == EINTR) goto retry;
     if (errno != ERANGE) RETURN_UNIX_ERROR("getcwd");
     free(bigBuf);
     size+=SIZE;
@@ -1744,8 +1746,10 @@ NotAvail("OS.fileDesc",        2, unix_fileDesc);
 OZ_BI_define(unix_getpwnam,1,1)
 {
   OZ_declareVirtualStringIN(0,user);
+retry:
   struct passwd *p = getpwnam(user);
   if (p==0) {
+    if (errno==EINTR) goto retry;
     return raiseUnixError("getpwnam",errno,OZ_unixError(errno),"os");
   } else {
     // return only POSIX fields
