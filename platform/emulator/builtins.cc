@@ -539,6 +539,34 @@ OZ_C_proc_begin(BIprocedureEnvironment,2)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIgetProcInfo,2)
+{
+  oz_declareNonvarArg(0,p); p = deref(p);
+  oz_declareArg(1,out);
+
+  if (!isAbstraction(p)) {
+    oz_typeError(0,"Abstraction");
+  }
+
+  return oz_unify(out,tagged2Abstraction(p)->getPred()->getInfo());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIsetProcInfo,2)
+{
+  oz_declareNonvarArg(0,p); p = deref(p);
+  oz_declareArg(1,t);
+
+  if (!isAbstraction(p)) {
+    oz_typeError(0,"Abstraction");
+  }
+
+  tagged2Abstraction(p)->getPred()->setInfo(t);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 OZ_Return isCellInline(TaggedRef cell)
 {
   NONVAR( cell, term);
@@ -7281,11 +7309,13 @@ BIspec allSpec[] = {
   {"Type.ofValue", 2, BItermType,        (IFOR) BItermTypeInline},
   {"Value.status", 2, BIstatus,       	 (IFOR) BIstatusInline},
 
-  {"ProcedureArity",2,BIprocedureArity,	 (IFOR)procedureArityInline},
   {"procedureEnvironment",2,BIprocedureEnvironment,0},
-  {"MakeTuple",3,BItuple,              (IFOR) tupleInline},
-  {"Label",2,BIlabel,                  (IFOR) labelInline},
-  {"hasLabel",2,BIhasLabel,            (IFOR) hasLabelInline},
+  {"getProcInfo",         2,BIgetProcInfo,         0},
+  {"setProcInfo",         2,BIsetProcInfo,         0},
+  {"MakeTuple",           3,BItuple,               (IFOR) tupleInline},
+  {"Label",               2,BIlabel,               (IFOR) labelInline},
+  {"hasLabel",            2,BIhasLabel,            (IFOR) hasLabelInline},
+  {"ProcedureArity",      2,BIprocedureArity,	   (IFOR)procedureArityInline},
 
   {"TellRecord",  2, BIrecordTell,	0},
   {"WidthC",      2, BIwidthC,		0},
