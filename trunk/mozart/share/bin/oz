@@ -54,7 +54,7 @@ if [ ${OZCOMPILER-xx} = xx ]; then
 fi
 
 # set OZPATH & PATH
-if [ ${OZ_PI-xx} = xx ]; then
+if [ X$cmd = Xoze -o ${OZ_PI-xx} = xx ]; then
   # where Oz searches for files:
   : ${OZPATH=.}
   OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
@@ -157,10 +157,12 @@ case "$cmd" in
    ;;
 
    oz.compiler)
-        if [ X$1 = X"-emacs" ]; then
+	if [ X$OZCOMPNW = "Xnone" ]; then
+	  exec $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
+        elif [ X$1 = X"-emacs" ]; then
 	  shift
           exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
-        else
+	else
           exec xterm -name "OzCompiler" \
                -T "Oz Compiler Input Window" \
 	       -e $OZILE $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
@@ -173,7 +175,9 @@ case "$cmd" in
 	else
 	   echo "Using $OZEMULATOR"
 	fi
-	if [ X$1 = X"-emacs" ]; then
+	if [ X$OZEMULNW = "Xnone" ]; then
+	        exec $OZEMULATOR "$@" -a $OZARGV
+	elif [ X$1 = X"-emacs" ]; then
 		shift
 		exec $OZEMULATOR -E "$@" -a $OZARGV
 	else
@@ -236,6 +240,21 @@ case "$cmd" in
    ozdo)
 	exec "$@"
    ;;
+
+   oze)
+        if [ ${OZEMULATOR-xx} = xx ]; then
+	   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
+	else
+	   echo "Using $OZEMULATOR"
+	fi
+	OZEMULNW=none
+	OZCOMPNW=none
+	export OZEMULNW
+	export OZCOMPNW
+	exec $OZEMULATOR "$@" -a $OZARGV
+	exit 0
+   ;;
+
 
    *)
        echo "Unknown invocation of Oz via '$cmd'" 1>&2
