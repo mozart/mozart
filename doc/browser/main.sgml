@@ -4,8 +4,7 @@
 <!ENTITY % proglang.values.local "|sh|fundamental">
 
 <!ENTITY % input.local.2 SYSTEM "browser.extra">
-<!ENTITY % p.mix.local "|Em|menu">
-<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % p.mix.local "|menu">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>

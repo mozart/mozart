@@ -4,7 +4,7 @@
   -   Gert Smolka <smolka@dfki.de>
   -
   - Contributors:
-  -   Daniel Simon <dansim@ps.uni-sb.de> (porting to sgml))
+  -   Daniel Simon <dansim@ps.uni-sb.de> (porting to sgml)
   -   Andy Walter <anwalt@ps.uni-sb.de> (porting to sgml)
   -   Andrea Panati <panati@di.unito.it> (typo fixes)
   -   
@@ -31,8 +31,6 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
-<!ENTITY % p.mix.local "|Em">
-<!ELEMENT Em - - (#PCDATA)>
 <!ENTITY % proglang.values.local "|lambda">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
