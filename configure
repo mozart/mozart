@@ -716,54 +716,10 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+    INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`
     if test ! -n "$INSTALL_DIR"
     then
         INSTALL_DIR=undefined
-
-    fi
-
-
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    # Extract the first word of "ozinstallsrc", so it can be a program name with args.
-set dummy ozinstallsrc; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:737: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_INSTALL_SRC'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$INSTALL_SRC" in
-  /*)
-  ac_cv_path_INSTALL_SRC="$INSTALL_SRC" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_INSTALL_SRC="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-INSTALL_SRC="$ac_cv_path_INSTALL_SRC"
-if test -n "$INSTALL_SRC"; then
-  echo "$ac_t""$INSTALL_SRC" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    if test ! -n "$INSTALL_SRC"
-    then
-        INSTALL_SRC=undefined
 
     fi
 
@@ -930,7 +886,6 @@ s%@SET_MAKE@%$SET_MAKE%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
-s%@INSTALL_SRC@%$INSTALL_SRC%g
 s%@BUILDTOP@%$BUILDTOP%g
 s%@subdirs@%$subdirs%g
 

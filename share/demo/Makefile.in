@@ -11,7 +11,6 @@ LN_S            = @LN_S@
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
-INSTALL_SRC     = @INSTALL_SRC@
 INSTALL_DIR     = @INSTALL_DIR@
 
 OZC             = @OZC@
@@ -215,13 +214,13 @@ install:: $(OZIMGDIRS) $(OZIMAGES)
 $(OZIMGDIRS):
         $(INSTALL_DIR) $@
 $(OZIMG)/animated-queens/%.xbm: images/animated-queens/%.xbm
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZIMG)/diagnosis/%.xbm: images/diagnosis/%.xbm
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZIMG)/lift/%.xbm: images/lift/%.xbm
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZIMG)/transport/%.xbm: images/transport/%.xbm
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZIMG)/trucks/%.gif: images/trucks/%.gif
         $(INSTALL_FILE) $< $@
 

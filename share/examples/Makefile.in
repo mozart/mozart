@@ -10,7 +10,6 @@ SHELL           = /bin/sh
 @SET_MAKE@
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
-INSTALL_SRC     = @INSTALL_SRC@
 INSTALL_DIR     = @INSTALL_DIR@
 
 EXDIRS = \
@@ -48,16 +47,16 @@ SAMPLER0 = \
 SAMPLER = $(SAMPLER0:%=$(OZEX)/sampler/%.oz)
 
 $(OZEX)/fd/%.oz: fd/%.oz
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 
 $(OZEX)/grammar/%.oz: grammar/%.oz
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZEX)/grammar/shieber/%.oz: grammar/shieber/%.oz
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZEX)/sampler/%.oz: sampler/%.oz
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 $(OZEX)/sampler/constraints/%.oz: sampler/constraints/%.oz
-        $(INSTALL_SRC) $< $@
+        $(INSTALL_FILE) $< $@
 
 
 .PHONY: all install

@@ -52,7 +52,6 @@ URL=            http\\://www.ps.uni-sb.de/ozhome
 INSTALL=        @INSTALL@
 INSTALL_BIN=    $(INSTALL) -m 555
 INSTALL_FILE=   $(INSTALL) -m 444
-INSTALL_SRC=    @INSTALL_SRC@
 INSTALL_DIR=    @INSTALL_DIR@
 
 TAR=            tar
