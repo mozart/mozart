@@ -936,7 +936,7 @@ void AM::wakeupAny(Thread *tt,Board *bb)
     break;
   case S_PR_THR:
     {
-      //mm2
+      //mm2: can this happen?
       int ret = wakeUpPropagator(tt,bb,pc_std_unif);
       Assert(ret);
     }
