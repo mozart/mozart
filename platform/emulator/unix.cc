@@ -1764,7 +1764,7 @@ OZ_BI_iodefine(unix_getEnv,1,1)
 
   char *envValue;
 
-  envValue = getenv(envVar);
+  envValue = osgetenv(envVar);
   if (envValue == 0) OZ_RETURN(OZ_false());
 
   OZ_RETURN_STRING(envValue);
@@ -1783,6 +1783,11 @@ OZ_BI_iodefine(unix_putEnv,2,0)
   OZ_declareVsIN(0, envVar);
   OZ_declareVsIN(1, envValue);
 
+#ifdef WINDOWS
+  if (SetEnvironmentVariable(envVar,envValue) == FALSE) {
+    return raiseUnixError("putenv", 0, "OS.putEnv failed.", "os");
+  }
+#else
   char *buf = new char[strlen(envVar)+strlen(envValue)+2];
   sprintf(buf,"%s=%s",envVar,envValue);
   int ret = putenv(buf);
@@ -1790,10 +1795,6 @@ OZ_BI_iodefine(unix_putEnv,2,0)
     delete buf;
     return raiseUnixError("putenv", 0, "OS.putEnv failed.", "os");
   }
-
-#ifdef WINDOWS
-  /* some subprocesses (windows applications??) don't see putenv: */
-  SetEnvironmentVariable(envVar,envValue);
 #endif
 
   return PROCEED;
