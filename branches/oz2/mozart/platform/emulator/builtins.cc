@@ -946,9 +946,9 @@ OZ_C_proc_begin(BIwidthC, 2)
 
     OZ_Expect pe;
     OZ_EXPECT(pe, 0, expectRecordVar);
-    OZ_EXPECT(pe, 1, expectIntVarAny);
+    OZ_EXPECT(pe, 1, expectIntVar);
 
-    return pe.spawn(new WidthPropagator(rawrec, rawwid)); // OZ_args[0], OZ_args[1]));
+    return pe.impose(new WidthPropagator(rawrec, rawwid)); // OZ_args[0], OZ_args[1]));
 }
 OZ_C_proc_end
 
@@ -960,7 +960,7 @@ OZ_CFun WidthPropagator::spawner = BIwidthC;
 // Assume: wid is FD or SMALLINT or BIGINT.
 // This is the simplest most straightforward possible
 // implementation and it can be optimized in many ways.
-OZ_Return WidthPropagator::run(void)
+OZ_Return WidthPropagator::propagate(void)
 {
     int recwidth;
     OZ_Return result = SLEEP;
@@ -1162,8 +1162,9 @@ OZ_C_proc_begin(BImonitorArity, 3)
         OZ_EXPECT(pe, 1, expectVar);
 
         TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
-        return pe.spawn(new MonitorArityPropagator(rec,kill,feattail,uvar,uvar)
-			,OZ_getMediumPrio(),OFS_flag);
+        return pe.impose(new MonitorArityPropagator(rec,kill,feattail,
+						    uvar,uvar),
+			 OZ_getMediumPrio(),OFS_flag);
     }
 
     return PROCEED;
@@ -1178,10 +1179,10 @@ OZ_CFun MonitorArityPropagator::spawner = BImonitorArity;
 // check in addFeatOFSSuspList that the suspension is waiting for the right
 // variable.  FH and FT are a difference list that holds the features that
 // have been added.
-OZ_Return MonitorArityPropagator::run(void)
+OZ_Return MonitorArityPropagator::propagate(void)
 {
 #ifdef DEBUG_MONITORARITY
-      cout << "MonitorArityPropagator::run" << endl << flush;
+      cout << "MonitorArityPropagator::propagate" << endl << flush;
       cout << *this << endl << flush;
 #endif
 

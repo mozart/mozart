@@ -325,13 +325,13 @@ OZ_Return OZ_Expect::fail(void)
   return FAILED;
 }
 
-OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
-			   OZ_PropagatorFlags flags)
+OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
+			    OZ_PropagatorFlags flags)
 {
 // do initial run with dummy thread
 
   // Constrain all SVARs and UVARs in staticSuspendVars to FDVARs before
-  // OZ_Propagator::run is run.
+  // OZ_Propagator::propagate is run.
   int i;
   for (i = staticSuspendVarsNumber; i--; ) {
     OZ_Term v = makeTaggedRef(staticSuspendVars[i]);

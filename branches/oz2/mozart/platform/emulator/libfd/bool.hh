@@ -23,8 +23,8 @@ public:
   ConjunctionPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -36,8 +36,8 @@ public:
   DisjunctionPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
   
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -49,8 +49,8 @@ public:
   XDisjunctionPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -62,8 +62,8 @@ public:
   ImplicationPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -75,8 +75,8 @@ public:
   EquivalencePropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -88,8 +88,8 @@ public:
   NegationPropagator(OZ_Term x, OZ_Term y) 
     : Propagator_D_D(x, y) { };
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 

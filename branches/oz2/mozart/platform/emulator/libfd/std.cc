@@ -59,7 +59,7 @@ void Propagator_D_D::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_y);
 }
 
-OZ_Term Propagator_D_D::getArguments(void) const 
+OZ_Term Propagator_D_D::getParameters(void) const 
 {
   RETURN_LIST2(reg_x, reg_y);
 }
@@ -73,7 +73,7 @@ void Propagator_D_D_D::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_z);
 }
 
-OZ_Term Propagator_D_D_D::getArguments(void) const
+OZ_Term Propagator_D_D_D::getParameters(void) const
 {
   RETURN_LIST3(reg_x, reg_y, reg_z);
 }
@@ -88,12 +88,12 @@ void Propagator_D_D_D_I::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_z);
 }
 
-OZ_Term Propagator_D_D_D_I::getArguments(void) const
+OZ_Term Propagator_D_D_D_I::getParameters(void) const
 {
   RETURN_LIST4(reg_x, reg_y, reg_z, OZ_int(reg_c));
 }
 
-OZ_Term Propagator_D_D_D_I::getArguments(char * lit) const
+OZ_Term Propagator_D_D_D_I::getParameters(char * lit) const
 {
   RETURN_LIST5(reg_x, reg_y, OZ_atom(lit), reg_z, OZ_int(reg_c));
 }
@@ -106,7 +106,7 @@ void Propagator_D_I_D::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_z);
 }
 
-OZ_Term Propagator_D_I_D::getArguments(void) const
+OZ_Term Propagator_D_I_D::getParameters(void) const
 {
   RETURN_LIST3(reg_x, OZ_int(reg_y), reg_z);
 }
@@ -119,12 +119,12 @@ void Propagator_D_D_I::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_y);
 }
 
-OZ_Term Propagator_D_D_I::getArguments(void) const
+OZ_Term Propagator_D_D_I::getParameters(void) const
 {
   RETURN_LIST3(reg_x, reg_y, OZ_int(reg_c));
 }
 
-OZ_Term Propagator_D_D_I::getArguments(char * lit) const
+OZ_Term Propagator_D_D_I::getParameters(char * lit) const
 {
   RETURN_LIST4(reg_x, reg_y, OZ_atom(lit), OZ_int(reg_c));
 }
@@ -156,7 +156,7 @@ void Propagator_D_VD_I::updateHeapRefs(OZ_Boolean)
   reg_l = new_reg_l;
 }
 
-OZ_Term Propagator_D_VD_I::getArguments(void) const
+OZ_Term Propagator_D_VD_I::getParameters(void) const
 {
   TERMVECTOR2LIST(reg_l, reg_l_sz, l);
   RETURN_LIST3(reg_n, l, OZ_int(reg_v));
@@ -186,7 +186,7 @@ void Propagator_D_VI_D::updateHeapRefs(OZ_Boolean)
   reg_l = new_reg_l;
 }
 
-OZ_Term Propagator_D_VI_D::getArguments(void) const
+OZ_Term Propagator_D_VI_D::getParameters(void) const
 {
   INTVECTOR2LIST(reg_l, reg_l_sz, l);
   RETURN_LIST3(reg_n, l, reg_v);
@@ -355,7 +355,7 @@ void Propagator_VI_VD_I::updateHeapRefs(OZ_Boolean)
   reg_x = new_reg_x;
 }
 
-OZ_Term Propagator_VI_VD_I::getArguments(char * lit) const
+OZ_Term Propagator_VI_VD_I::getParameters(char * lit) const
 {
   INTVECTOR2LIST(reg_a, reg_sz, a);
   TERMVECTOR2LIST(reg_x, reg_sz, x);
@@ -371,7 +371,7 @@ void Propagator_VI_VD_I_D::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_b);
 }
 
-OZ_Term Propagator_VI_VD_I_D::getArguments(char * lit) const
+OZ_Term Propagator_VI_VD_I_D::getParameters(char * lit) const
 {
   INTVECTOR2LIST(reg_a, reg_sz, a);
   TERMVECTOR2LIST(reg_x, reg_sz, x);
@@ -402,7 +402,7 @@ void Propagator_VD::updateHeapRefs(OZ_Boolean)
   reg_l = new_reg_l;
 }
 
-OZ_Term Propagator_VD::getArguments(void) const
+OZ_Term Propagator_VD::getParameters(void) const
 {
   TERMVECTOR2LIST(reg_l, reg_l_sz, l);
   RETURN_LIST1(l);
@@ -436,7 +436,7 @@ void Propagator_VD_VI::updateHeapRefs(OZ_Boolean)
   reg_l = new_reg_l;
 }
 
-OZ_Term Propagator_VD_VI::getArguments(void) const
+OZ_Term Propagator_VD_VI::getParameters(void) const
 {
   TERMVECTOR2LIST(reg_l, reg_sz, l);
   INTVECTOR2LIST(reg_offset, reg_sz, offset);
@@ -480,7 +480,7 @@ void Propagator_VD_VI_VI_I::updateHeapRefs(OZ_Boolean)
 
 }
 
-OZ_Term Propagator_VD_VI_VI_I::getArguments(void) const
+OZ_Term Propagator_VD_VI_VI_I::getParameters(void) const
 {
   TERMVECTOR2LIST(reg_l, reg_sz, l);
   INTVECTOR2LIST(reg_offset, reg_sz, offset);
@@ -606,7 +606,7 @@ void Propagator_VI_VVD_I::updateHeapRefs(OZ_Boolean)
   reg_x = new_reg_x;
 }
 
-OZ_Term Propagator_VI_VVD_I::getArguments(char * lit) const
+OZ_Term Propagator_VI_VVD_I::getParameters(char * lit) const
 {
   INTVECTOR2LIST(reg_a, reg_sz, a);
 
@@ -637,7 +637,7 @@ void Propagator_D_FD_D::updateHeapRefs(OZ_Boolean)
   reg_domain.copyExtension();
 }
 
-OZ_Term Propagator_D_FD_D::getArguments(void) const
+OZ_Term Propagator_D_FD_D::getParameters(void) const
 {
   ostrstream tmp;
   tmp << reg_domain << ends;
@@ -677,7 +677,7 @@ Propagator_VD_D_D_D::~Propagator_VD_D_D_D(void)
   OZ_hfreeOzTerms(reg_v, reg_v_sz);
 }
 
-OZ_Term Propagator_VD_D_D_D::getArguments(void) const
+OZ_Term Propagator_VD_D_D_D::getParameters(void) const
 {
   TERMVECTOR2LIST(reg_v, reg_v_sz, v);
   RETURN_LIST4(v, reg_low, reg_up, reg_b);
@@ -691,7 +691,7 @@ void Propagator_D_I_D_I::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_y);
 }
 
-OZ_Term Propagator_D_I_D_I::getArguments(void) const
+OZ_Term Propagator_D_I_D_I::getParameters(void) const
 {
   RETURN_LIST4(reg_x, OZ_int(reg_xd), reg_y, OZ_int(reg_yd));
 }
@@ -704,7 +704,7 @@ void Propagator_D_I_D_I_D::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_b);
 }
 
-OZ_Term Propagator_D_I_D_I_D::getArguments(void) const
+OZ_Term Propagator_D_I_D_I_D::getParameters(void) const
 {
   RETURN_LIST5(reg_x, OZ_int(reg_xd), reg_y, OZ_int(reg_yd), reg_b);
 }

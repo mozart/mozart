@@ -32,10 +32,12 @@ public:
     : Propagator_VI_VD_I(sz, sizes, single_var, a, x, c) {}
   LinEqPropagator(OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_I(x, d) {}
+  LinEqPropagator(int sz, int * a, OZ_Term * x, int c)
+  : Propagator_VI_VD_I(sz, a, x, c) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_VI_VD_I::getArguments(SUM_OP_EQ); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParameters(SUM_OP_EQ); }
 };
 
 class NonLinEqPropagator : public LinEqPropagator {
@@ -59,10 +61,12 @@ public:
     : Propagator_VI_VD_I(o) {}
   LinNotEqPropagator(OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_I(x, d) {}
+  LinNotEqPropagator(int sz, int * a, OZ_Term * x, int c)
+  : Propagator_VI_VD_I(sz, a, x, c) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_VI_VD_I::getArguments(SUM_OP_NEQ); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParameters(SUM_OP_NEQ); }
 };
 
 class NonLinNotEqPropagator : public LinNotEqPropagator {
@@ -92,10 +96,12 @@ public:
     : Propagator_VI_VD_I(ax, x, ay, y, az, z, c) {}
   LinLessEqPropagator(OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_I(x, d) {}
+  LinLessEqPropagator(int sz, int * a, OZ_Term * x, int c)
+  : Propagator_VI_VD_I(sz, a, x, c) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_VI_VD_I::getArguments(SUM_OP_LEQ); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VD_I::getParameters(SUM_OP_LEQ); }
 };
 
 class NonLinLessEqPropagator : public LinLessEqPropagator {
@@ -115,9 +121,9 @@ public:
   NonLinEqPropagatorP(OZ_Term a, OZ_Term x, OZ_Term d) 
     : Propagator_VI_VVD_I(a, x, d) {}
 
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_VI_VVD_I::getArguments(SUM_OP_EQ); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VVD_I::getParameters(SUM_OP_EQ); }
 };
 
 //-----------------------------------------------------------------------------
@@ -129,9 +135,9 @@ public:
   NonLinLessEqPropagatorP(OZ_Term a, OZ_Term x, OZ_Term d) 
     : Propagator_VI_VVD_I(a, x, d) {}
   
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
-  virtual OZ_Term getArguments(void) const { return Propagator_VI_VVD_I::getArguments(SUM_OP_LEQ); }};
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const { return Propagator_VI_VVD_I::getParameters(SUM_OP_LEQ); }};
 
 //=============================================================================
 

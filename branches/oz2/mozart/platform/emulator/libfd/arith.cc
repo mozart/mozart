@@ -25,7 +25,7 @@ OZ_C_proc_begin(fdp_twice, 2)
 }
 OZ_C_proc_end
 
-OZ_Return TwicePropagator::run(void)
+OZ_Return TwicePropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
@@ -55,7 +55,7 @@ OZ_C_proc_begin(fdp_square, 2)
 }
 OZ_C_proc_end
 
-OZ_Return SquarePropagator::run(void)
+OZ_Return SquarePropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
@@ -87,7 +87,7 @@ OZ_C_proc_begin(fdp_plus_rel, 3)
   OZ_EXPECT(pe, 1, expectIntVarMinMax);
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
 
-  return pe.spawn(new PlusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new PlusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -104,11 +104,11 @@ OZ_C_proc_begin(fdp_plus, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new PlusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new PlusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return PlusPropagator::run(void)
+OZ_Return PlusPropagator::propagate(void)
 {
   SimplifyOnUnify(replaceBy(new TwicePropagator(reg_x, reg_z)),
 		  replaceByInt(reg_y, 0),
@@ -200,11 +200,11 @@ OZ_C_proc_begin(fdp_minus, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new MinusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new MinusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return MinusPropagator::run(void)
+OZ_Return MinusPropagator::propagate(void)
 {
   SimplifyOnUnify(replaceByInt(reg_z, 0),
 		  replaceByInt(reg_y, 0),
@@ -284,7 +284,7 @@ OZ_C_proc_begin(fdp_times, 3)
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.spawn(new TimesPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new TimesPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -298,11 +298,11 @@ OZ_C_proc_begin(fdp_times_rel, 3)
   OZ_EXPECT(pe, 1, expectIntVarMinMax);
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
 
-  return pe.spawn(new TimesPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new TimesPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return TimesPropagator::run(void)
+OZ_Return TimesPropagator::propagate(void)
 {
   SimplifyOnUnify(replaceBy(new SquarePropagator(reg_x,reg_z)),
 		  replaceByInt(reg_y, 1),
@@ -411,11 +411,11 @@ OZ_C_proc_begin(fdp_divD, 3)
 
   if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
 
-  return pe.spawn(new DivPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new DivPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return DivPropagator::run(void)
+OZ_Return DivPropagator::propagate(void)
 {
   if (mayBeEqualVars() && OZ_isEqualVars(reg_x, reg_z))
     return replaceByInt(reg_x, 1);
@@ -461,11 +461,11 @@ OZ_C_proc_begin(fdp_divI, 3)
 
   if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
 
-  return pe.spawn(new DivIPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new DivIPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return DivIPropagator::run(void)
+OZ_Return DivIPropagator::propagate(void)
 {
   if (mayBeEqualVars() && OZ_isEqualVars(reg_x, reg_z))
     return replaceByInt(reg_x, 1);
@@ -524,11 +524,11 @@ OZ_C_proc_begin(fdp_modD, 3)
 
   if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
 
-  return pe.spawn(new ModPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ModPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return ModPropagator::run(void)
+OZ_Return ModPropagator::propagate(void)
 {
   if (mayBeEqualVars() && OZ_isEqualVars(reg_x, reg_z))
     return replaceBy(new LessEqOffPropagator(reg_x, OZ_int(reg_y), -1));
@@ -591,11 +591,11 @@ OZ_C_proc_begin(fdp_modI, 3)
 
   if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
 
-  return pe.spawn(new ModIPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ModIPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return ModIPropagator::run(void)
+OZ_Return ModIPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
 
