@@ -41,9 +41,9 @@
  * Locality test for variables
  * -----------------------------------------------------------------------*/
 
-#define ShallowCheckLocal(ptr)					\
-   if (am.inShallowGuard())					\
-      return reallyHeapNever(ptr,am.getShallowHeapTop());
+#define ShallowCheckLocal()			\
+   if (am.inEqEq())				\
+      return FALSE;
 
 Bool _isLocalUVar(TaggedRef *varPtr);
 
@@ -52,7 +52,7 @@ Bool oz_isLocalUVar(TaggedRef *varPtr)
 {
   // variables are usually bound 
   // in the node where they are created
-  ShallowCheckLocal(varPtr);
+  ShallowCheckLocal();
   if (am.currentUVarPrototypeEq(*varPtr)) return OK;
   return _isLocalUVar(varPtr);
 }
@@ -62,7 +62,7 @@ Bool _isLocalVar(OzVariable *var);
 
 inline
 Bool oz_isLocalVar(OzVariable *var) {
-  ShallowCheckLocal(var);
+  ShallowCheckLocal();
   return (oz_isCurrentBoard(var->getHome1())) || _isLocalVar(var);
 }
 

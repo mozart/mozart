@@ -39,8 +39,8 @@ private:
 public:
   SimpleVar(Board *bb) : OzVariable(OZ_VAR_SIMPLE,bb) {}
 
-  OZ_Return bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp);
-  OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr, ByteCode* scp);
+  OZ_Return bind(TaggedRef* vPtr, TaggedRef t);
+  OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr);
 
   OZ_Return valid(TaggedRef /* val */) { return OK; }
   OzVariable* gc() { return new SimpleVar(*this); }

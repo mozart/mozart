@@ -37,20 +37,17 @@ Bool oz_var_valid(OzVariable *cv,TaggedRef *ptr,TaggedRef val) {
   return oz_var_validINLINE(cv,ptr,val);
 }
 
-OZ_Return oz_var_unify(OzVariable *cv,TaggedRef *ptr,TaggedRef *val,
-		      ByteCode *scp) {
-  return oz_var_unifyINLINE(cv,ptr,val,scp);
+OZ_Return oz_var_unify(OzVariable *cv,TaggedRef *ptr,TaggedRef *val) {
+  return oz_var_unifyINLINE(cv,ptr,val);
 }
 
-OZ_Return oz_var_bind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
-		      ByteCode *scp) {
-  return oz_var_bindINLINE(cv,ptr,val,scp);
+OZ_Return oz_var_bind(OzVariable *cv,TaggedRef *ptr,TaggedRef val) {
+  return oz_var_bindINLINE(cv,ptr,val);
 }
 
-OZ_Return oz_var_forceBind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
-			   ByteCode *scp)
+OZ_Return oz_var_forceBind(OzVariable *cv,TaggedRef *ptr,TaggedRef val)
 {
-  return oz_var_forceBindINLINE(cv,ptr,val,scp);
+  return oz_var_forceBindINLINE(cv,ptr,val);
 }
 
 OZ_Return oz_var_addSusp(TaggedRef *v, Suspension susp, int unstable)
