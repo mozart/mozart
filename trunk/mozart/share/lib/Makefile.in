@@ -167,8 +167,8 @@ COMPILERSRC1 = \
 	CheckTupleSyntax.oz Builtins.oz Core.oz Annotate.oz \
 	StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
-	UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz \
-	Abstractions.oz Errors.oz RunTime.oz
+	UnnestFD.oz Assembler.oz Interface.oz Abstractions.oz \
+	Errors.oz RunTime.oz
 
 COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz
 
@@ -221,16 +221,15 @@ Assembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
 
 Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
 	compiler/CheckTupleSyntax.oz compiler/ParseOz.oz \
-	compiler/CompilerClass.oz compiler/GenericInterface.oz \
-	compiler/QuietInterface.oz compiler/Abstractions.oz \
-	compiler/Errors.oz compiler-Version.oz \
-	Base.ozf
+	compiler/CompilerClass.oz compiler/Interface.oz \
+	compiler/Abstractions.oz compiler/Errors.oz \
+	compiler-Version.oz Base.ozf
 
 RunTime.ozf: compiler/RunTime.oz Base.ozf BaseBuiltins.ozf
 	$(COMPILE) -l BaseBuiltins $< -o $@
 
 Compiler.ozf: $(FUNFUNCTORS) ozar
-	$(OZENGINE) ozar --in=Main.ozf --out=Compiler.ozf
+	$(OZENGINE) ozar $(COMPRESSFLAGS) --in=Main.ozf --out=Compiler.ozf
 
 #---------------------------------------------------------------------
 # Syslets
