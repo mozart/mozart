@@ -2129,14 +2129,20 @@ public:
     return loc;
   }
   int *mapping() { return map; }
-  int get(int n) { return map[n]; }
-  void set(int n,int i) { map[n]=i; }
+  int get(int n) {
+    Assert(n>=0 && n<inAr+outAr);
+    return map[n];
+  }
+  void set(int n,int i) {
+    Assert(n>=0 && n<inAr+outAr);
+    map[n]=i;
+  }
   int &out(int n) {
-    Assert(n<outAr);
+    Assert(n>=0 && n<outAr);
     return map[inAr+n];
   }
   int &in(int n) {
-    Assert(n<inAr);
+    Assert(n>=0 && n<inAr);
     return map[n];
   }
   int getArity() { return inAr+outAr; }
@@ -2144,8 +2150,8 @@ public:
   int getOutArity() { return outAr; }
   int max(int n) {
     for (int i = inAr+outAr-1; i >= inAr; i--) {
-      if (out(i)>=n) {
-	n=out(i)+1;
+      if (get(i)>=n) {
+	n=get(i)+1;
       }
     }
     return n;
