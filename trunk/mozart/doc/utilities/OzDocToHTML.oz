@@ -28,10 +28,8 @@ import
    %% System Modules
    Property(get)
    OS(system)
-   Narrator('class')
-   ErrorListener('class')
    %% Application Modules
-   SGML(parse namePI getSubtree isOfClass)
+   SGML(namePI getSubtree isOfClass)
    AuthorDB('class')
    BibliographyDB('class')
    Indexer('class')
@@ -261,7 +259,7 @@ define
       end
    end
 
-   class OzDocToHTML from Narrator.'class'
+   class OzDocToHTML
       attr
 	 Reporter: unit
 	 % fontification:
@@ -332,66 +330,59 @@ define
 	 IndexSortAs: unit
 	 WhereNow: unit
 	 AutoIndex: unit
-      meth init()
-	 Reporter <- Narrator.'class', init($)
-	 {@Reporter setLogPhases(true)}
+      meth init(TheReporter)
+	 Reporter <- TheReporter
 	 Meta <- {NewDictionary}
       end
-      meth translate(Mode Args) SGMLNode in
-	 {@Reporter startBatch()}
-	 {@Reporter startPhase('parsing SGML input')}
-	 try
-	    SGMLNode = {SGML.parse Args.'in' @Reporter}
-	    if {@Reporter hasSeenError($)} then skip
-	    else N in
-	       FontifyMode <- Mode
-	       TopLinks <- {Map Args.'link'
-			    fun {$ S} Text Rest in
-			       {List.takeDropWhile S
-				fun {$ C} C \= &, end ?Text ?Rest}
-			       case Rest of &,|URL then URL#Text
-			       else
-				  {Exception.raiseError
-				   ap(usage
-				      'comma expected in argument to `link\'')}
-				  unit
-			       end
-			    end}
-	       StyleSheet <- {Property.get 'ozdoc.stylesheet'}
-	       MyFontifier <- {New Fontifier.'class' init(@Meta)}
-	       OutputDirectory <- Args.'out'
-	       {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
-	       MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
-	       MyLaTeXToGIF <- if Args.'latextogif' then
-				  {New LaTeXToGIF.'class'
-				   init(@OutputDirectory Args.'latexdb')}
-			       else unit
-			       end
-	       MyPostScriptToGIF <- {New PostScriptToGIF.'class'
-				     init(@OutputDirectory
-					  Args.'keeppictures')}
-	       MyCrossReferencer <- {New CrossReferencer.'class'
-				     init(Args.'xrefdir' Args.'xreftree'
-					  Args.'xrefdb' @Reporter)}
-	       XRefDir <- Args.'xrefdir'
-	       IndexDBName <- Args.'indexdb'
-	       MakeHHC <- Args.'make-hhc'
-	       CurrentNode <- 'index.html'
-	       NavigationPanel <- N
-	       NodeCounter <- 0
-	       ToWrite <- nil
-	       Split <- Args.'split'
-	       MakeAbstract <- Args.'abstract'
-	       SomeSplit <- false
-	       Threading <- [nav(N)]
-	       ProgLang <- Fontifier.noProgLang
-	       DefaultNodes <- {NewDictionary}
-	       Labels <- {NewDictionary}
-	       ToGenerate <- nil
-	       AutoIndex <- Args.'autoindex'
-	       {@Reporter startPhase('translating to HTML')}
-	       OzDocToHTML, Process(SGMLNode unit)
-	    end
+      meth translate(Mode SGMLNode Args)
+	 try N in
+	    FontifyMode <- Mode
+	    TopLinks <- {Map Args.'link'
+			 fun {$ S} Text Rest in
+			    {List.takeDropWhile S
+			     fun {$ C} C \= &, end ?Text ?Rest}
+			    case Rest of &,|URL then URL#Text
+			    else
+			       {Exception.raiseError
+				ap(usage
+				   'comma expected in argument to `link\'')}
+			       unit
+			    end
+			 end}
+	    StyleSheet <- {Property.get 'ozdoc.stylesheet'}
+	    MyFontifier <- {New Fontifier.'class' init(@Meta)}
+	    OutputDirectory <- Args.'out'
+	    {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
+	    MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
+	    MyLaTeXToGIF <- if Args.'latextogif' then
+			       {New LaTeXToGIF.'class'
+				init(@OutputDirectory Args.'latexdb')}
+			    else unit
+			    end
+	    MyPostScriptToGIF <- {New PostScriptToGIF.'class'
+				  init(@OutputDirectory
+				       Args.'keeppictures')}
+	    MyCrossReferencer <- {New CrossReferencer.'class'
+				  init(Args.'xrefdir' Args.'xreftree'
+				       Args.'xrefdb' @Reporter)}
+	    XRefDir <- Args.'xrefdir'
+	    IndexDBName <- Args.'indexdb'
+	    MakeHHC <- Args.'make-hhc'
+	    CurrentNode <- 'index.html'
+	    NavigationPanel <- N
+	    NodeCounter <- 0
+	    ToWrite <- nil
+	    Split <- Args.'split'
+	    MakeAbstract <- Args.'abstract'
+	    SomeSplit <- false
+	    Threading <- [nav(N)]
+	    ProgLang <- Fontifier.noProgLang
+	    DefaultNodes <- {NewDictionary}
+	    Labels <- {NewDictionary}
+	    ToGenerate <- nil
+	    AutoIndex <- Args.'autoindex'
+	    {@Reporter startPhase('translating to HTML')}
+	    OzDocToHTML, Process(SGMLNode unit)
 	    if {@Reporter hasSeenError($)} then skip
 	    else
 	       {@Reporter startSubPhase('adding navigation panels')}
@@ -431,7 +422,6 @@ define
 	 else
 	    {@Reporter endBatch(accepted)}
 	 end
-	 {@Reporter tell(done())}
       end
       meth PushCommon(M OldCommon) ID Class in
 	 OldCommon = @ProgLang#@Common
@@ -2072,26 +2062,8 @@ define
       end
    end
 
-   class MyListener from ErrorListener.'class'
-      attr Sync: unit
-      meth init(O X)
-	 Sync <- X
-	 ErrorListener.'class', init(O ServeOne true)
-      end
-      meth ServeOne(M)
-	 case M of done() then @Sync = unit
-	 else skip
-	 end
-      end
-   end
-
-   proc {Translate Mode Args} O L Sync in
-      O = {New OzDocToHTML init()}
-      L = {New MyListener init(O Sync)}
-      {O translate(Mode Args)}
-      {Wait Sync}
-      if {L hasErrors($)} then
-	 raise error end
-      end
+   proc {Translate Reporter Mode SGMLNode Args} O in
+      O = {New OzDocToHTML init(Reporter)}
+      {O translate(Mode SGMLNode Args)}
    end
 end
