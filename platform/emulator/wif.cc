@@ -21,19 +21,15 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-
 #include "builtins.hh"
 #include "os.hh"
 #include "am.hh"
 #include "gc.hh"
 #include "dictionary.hh"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
 
 TaggedRef
   WifAtomTclOption, WifAtomTclList, WifAtomTclPosition,

@@ -32,20 +32,30 @@ SRCDIR= @srcdir@
 
 include Makefile.vars
 
-MODULE_NAMES = Wif FDP Schedule FSP Parser \
+MODULE_NAMES =\
+        Wif FDP Schedule FSP Parser \
         ozma CompilerSupport Browser Debug
-STATIC_MODULETARGETS  = $(MODULE_NAMES:%=lib%.a)
-DYNAMIC_MODULETARGETS = $(MODULE_NAMES:%=%.so)
 
-INCS            = -I. -I$(SRCDIR)
-M4_D            = -DEMUDIR=$(SRCDIR)
-TARGETS         = @TARGETS@ text2pickle
-MODULETARGETS   = @MODULETARGETS@
-MODULEINSTALL   = @MODULEINSTALL@
-SUBDIRS         = libfd libfset
-OZVERSION       = $(SRCTOP)/OZVERSION
+STATIC_MODULELIBS=      -L. ${MODULE_NAME:%=-l%}
+STATIC_MODULETARGETS=   $(MODULE_NAMES:%=lib%.a)
+DYNAMIC_MODULETARGETS=  $(MODULE_NAMES:%=%.so)
 
-MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
+CORE_MODULES=   Perdio Run OF FS FD CPI OS Space Store Mem Support
+#CORE_LIBS=     -L. ${CORE_MODULES:%=-l%}
+CORE_TARGETS=   ${CORE_MODULES:%=lib%.a}
+
+LIBS=           $(CORE_LIBS) @LIBS@
+
+INCS=           -I. -I$(SRCDIR)
+M4_D=           -DEMUDIR=$(SRCDIR)
+TARGETS=        @TARGETS@ text2pickle
+MODULETARGETS=  @MODULETARGETS@
+MODULEINSTALL=  @MODULEINSTALL@
+SUBDIRS=        libfd libfset
+OZVERSION=      $(SRCTOP)/OZVERSION
+
+MODSPECS= \
+        FDP FSP Schedule Wif Parser OS Property Pickle \
         PID URL FDB FSB System Finalize CTB \
         CompilerSupport Profile \
         Debug Fault Foreign Browser Misc Distribution \
@@ -53,48 +63,57 @@ MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
-CREATEDOTHERS= \
+CREATEDSRCS=scanner.cc parser.cc
+
+CREATEDFILES= \
         instrtab.hh opcodes.hh marshaler.hh\
         marshalcode.cc marshalMsg.cc register.hh oz.c \
-        atoms.hh \
+        atoms.hh atoms.cc\
         config.h scanner.cc parser.cc \
+        version.cc initffuns.cc \
         $(MODINTERS)
 
-
-CREATEDSRCS= \
-        copycode.cc opcodes.cc \
-        version.cc initffuns.cc atoms.cc
-
-CREATEDFILES= $(CREATEDOTHERS) $(CREATEDSRCS)
-
-PEANUTSFILE= peanuts.cc
-PEANUTS= \
-        am.cc genvar.cc indexing.cc fdhook.cc \
-        taskstk.cc mem.cc \
-        statisti.cc fdgenvar.cc \
-        codearea.cc trace.cc lps.cc solve.cc \
-        variable.cc thrqueue.cc thrspool.cc \
-        perdiovar.cc \
-        print.cc
-
-CXXSRCS= \
-        actor.cc base.cc board.cc thread.cc \
-        dictionary.cc stack.cc susplist.cc \
-        cpbag.cc tagged.cc value.cc \
-        cont.cc ozconfig.cc trail.cc \
+SRCS= \
+        main.cc \
+        version.cc initffuns.cc \
+        fdhook.cc statisti.cc trace.cc \
+        print.cc base.cc ozconfig.cc \
         foreign.cc boot-manager.cc \
-        ofgenvar.cc genhashtbl.cc \
-        ozostream.cc controlvar.cc unix.cc \
-        perdio.cc debug.cc \
-        urlc.cc iso-ctype.cc hashtbl.cc \
-        os.cc emulate.cc scheduler.cc builtins.cc \
-        components.cc network.cc virtual.cc \
-        comm.cc marshaler.cc liveness.cc gc.cc \
-        vprops.cc \
-        vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
-        ctgenvar.cc simplevar.cc \
-        ofbi.cc ioHandler.cc future.cc \
-        threadInterface.cc space.cc
+        builtins.cc vprops.cc \
+        debug.cc
+
+SUPPORTSRCS=\
+        stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
+        iso-ctype.cc
+
+OSSRCS=\
+        os.cc unix.cc urlc.cc ioHandler.cc
+
+STORESRCS=\
+        tagged.cc value.cc atoms.cc \
+        dictionary.cc \
+        variable.cc susplist.cc genvar.cc \
+        simplevar.cc future.cc \
+        fdgenvar.cc
+
+RUNSRCS=\
+        am.cc indexing.cc taskstk.cc codearea.cc lps.cc thread.cc\
+        thrqueue.cc thrspool.cc trail.cc emulate.cc scheduler.cc \
+        threadInterface.cc copycode.cc opcodes.cc controlvar.cc \
+        cont.cc
+
+SPACESRCS=\
+        actor.cc board.cc solve.cc cpbag.cc space.cc
+
+MEMSRCS=\
+        gc.cc mem.cc liveness.cc
+
+PERDIOSRCS=\
+        perdio.cc components.cc network.cc comm.cc perdio_debug.cc \
+        virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
+        marshaler.cc perdiovar.cc
+
+OFSRCS= ofgenvar.cc ofbi.cc
 
 FDSRCS=\
         fdbuilti.cc fdomn.cc fdcore.cc \
@@ -103,7 +122,8 @@ FDSRCS=\
 CPISRCS=\
         cpi.cc cpi_fd.cc cpi_prop.cc \
         cpi_fs.cc cpi_expect.cc cpi_misc.cc \
-        cpi_stream.cc cpi_profile.cc cpi_ct.cc
+        cpi_stream.cc cpi_profile.cc cpi_ct.cc \
+        ctgenvar.cc
 
 FSETSRCS=\
         fset.cc fsetcore.cc fsgenvar.cc
@@ -111,11 +131,12 @@ FSETSRCS=\
 TEXT2PICKLESRCS= text2pickle.cc opcodes.cc
 TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
 
-SRCS1=  $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) @PEANUTS@ main.cc
+ALLSRCS= \
+        $(SUPPORTSRCS) $(OSSRCS) $(STORESRCS) $(RUNSRCS) \
+        $(SPACESRCS) $(MEMSRCS) $(PERDIOSRCS) $(OFSRCS) $(FDSRCS) \
+        $(FSETSRCS) $(CPISRCS)
 
-SRCS=   $(SRCS1) $(CREATEDSRCS)
-
-OBJS = $(SRCS:.cc=.o)
+OBJS=   $(SRCS:%.cc=%.o) $(ALLSRCS:%.cc=%.o)
 
 ############################################################################
 ### TARGETS
@@ -166,13 +187,48 @@ Debug.so: debug.o
 libDebug.a: debug.o
         $(AR) -rc $@ debug.o && $(RANLIB) $@
 
+libPerdio.a: $(PERDIOSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(PERDIOSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libOF.a: $(OFSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(OFSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libFD.a: $(FDSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(FDSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libFS.a: $(FSETSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(FSETSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libCPI.a: $(CPISRCS:%.cc=%.o)
+        $(AR) -rc $@ $(CPISRCS:%.cc=%.o) && $(RANLIB) $@
+
+libStore.a: $(STORESRCS:%.cc=%.o)
+        $(AR) -rc $@ $(STORESRCS:%.cc=%.o) && $(RANLIB) $@
+
+libSupport.a: $(SUPPORTSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(SUPPORTSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libSpace.a: $(SPACESRCS:%.cc=%.o)
+        $(AR) -rc $@ $(SPACESRCS:%.cc=%.o) && $(RANLIB) $@
+
+libRun.a: $(RUNSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(RUNSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libOS.a: $(OSSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(OSSRCS:%.cc=%.o) && $(RANLIB) $@
+
+libMem.a: $(MEMSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(MEMSRCS:%.cc=%.o) && $(RANLIB) $@
 
 win: ozlib.lnk $(CREATEDFILES)
 
+PRGDEP=$(CREATEDFILES) $(OBJS) $(OZMALIB) $(MODULETARGETS)
 
-PRGDEP=$(CREATEDFILES) $(SRCS) $(OBJS) $(OZMALIB) $(MODULETARGETS)
+# PRGDEP+=$(CORE_TARGETS)
 
-first: $(CREATEDFILES) $(SRCS)
+core: $(CORE_TARGETS)
+
+first: $(CREATEDFILES)
 
 @PROGRAMNAME@: $(PRGDEP)
         $(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
@@ -206,16 +262,16 @@ $(BINDIR) $(INCDIR):
 initffuns.cc oz.c: oz.h $(OZVERSION)
         $(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
-version.cc: version.sed $(filter-out version.cc,$(SRCS))
+version.cc: version.sed $(filter-out version.cc,$(SRCS) $(ALLSRCS))
         sed -e "s/HEREGOESDATE/`date '+%h %d %Y \(%T\)'`/" \
              -e "s/OZPLATFORM/$(PLATFORM)/" \
              $(SRCDIR)/version.sed > version.cc
 
-depend:: Makefile $(CREATEDFILES) $(SRCS)
-        $(DEPEND) $(SRCDIR)/wif.cc $(SRCS1:%=$(SRCDIR)/%) $(CREATEDSRCS) > Makefile.deps
-
-## prefered gmake depend!
-## include $(SRCS:.cc=.d)
+depend:: Makefile $(CREATEDFILES) $(ALLSRCS) $(TEXT2PICKLESRCS)
+        $(DEPEND) $(SRCDIR)/main.cc version.cc initffuns.cc \
+                $(ALLSRCS:%=$(SRCDIR)/%) $(CREATEDSRCS) \
+                $(TEXT2PICKLESRCS:%=$(SRCDIR)/%) \
+                > Makefile.deps
 
 tags:   $(CREATEDFILES) version.cc
         etags \
@@ -282,8 +338,8 @@ value.cc: atoms.hh
 marshaler.hh marshalMsg.cc: msgFormat.m4
 copycode.cc marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
 
-marshaler.o: marshalcode.cc
-
+marshaler.o: marshalcode.cc pickle.cc
+text2Pickle.o: pickle.cc
 components.o: componentBuffer.cc
 
 # automatic configure
