@@ -12,6 +12,7 @@ local
 
    \insert 'ozcar/tree'
    \insert 'ozcar/thread'
+   \insert 'ozcar/stack'
 
    \insert 'ozcar/source'
 
