@@ -24,6 +24,13 @@
 #include <gtk/gtk.h>
 #include <mozart.h>
 /*#include <goz_support.h>*/
+
+OZ_BI_define(ozgtk_get_null,0,1)
+{
+  OZ_RETURN(OZ_makeForeignPointer(NULL));
+}
+OZ_BI_end
+
 #define GOZ_DECLARE_GTKOBJECT(i, val)            OZ_declareForeignType (i, val, GtkObject*)
 
 OZ_Term signal_port;
