@@ -20,7 +20,10 @@ Version                = 'Jun 25 1997'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
+NameOfRalf             = 'Ralf Scheidhauer'
 NameOfBenni            = 'Benjamin Lorenz'
+
+EmailOfAuthors         = '{scheidhr,lorenz}@ps.uni-sb.de'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 
 BarCanvasTitle         = 'Procedures'
