@@ -941,13 +941,6 @@ void engine() {
 // ------------------------------------------------------------------------
  LBLemulate:
 
-#ifdef DEBUGXREGS
-// for Debugging only
-  for (int i = 0; i < getRefsArraySize(xRegs); i++) {
-    xRegs[i] = 0;
-  }
-#endif
-
   JUMP( PC );
 
  LBLdispatcher:
