@@ -53,22 +53,18 @@
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE
 
-#define HANDLE_FAILURE(pc,MSG) { \
-  if (e->isToplevel()) { \
-    prefixError(); message("*** TOPLEVEL FAILED: "); \
-    { MSG; } message("\n"); \
-    DebugTrace(tracerOn(); trace("toplevel failed")); \
-    if (pc) { JUMP(pc); } else { goto LBLfindWork; } \
-  } else { goto LBLfailure; } \
+#define HANDLE_FAILURE(pc,MSG) { 					      \
+  if (e->isToplevel()) { 						      \
+    prefixError(); message("*** TOPLEVEL FAILED: "); 			      \
+    { MSG; } message("\n"); 						      \
+    DebugTrace(tracerOn(); trace("toplevel failed")); 			      \
+    if (pc) { JUMP(pc); } else { goto LBLfindWork; } 			      \
+  } else { goto LBLfailure; } 						      \
 }
-#define HANDLE_FAILURE1(pc,MSG) { \
-  if (e->isToplevel()) { \
-    prefixError(); message("*** TOPLEVEL FAILED: "); \
-    { MSG; } message("\n"); \
-    DebugTrace(tracerOn(); trace("toplevel failed")); \
-    if (pc) { JUMP(pc); } else { goto LBLfindWork; } \
-  } else { MSG; goto LBLfailure; } \
-}
+
+#define HANDLE_FAILURE1(pc,MSG)						      \
+   warning MSG;								      \
+   HANDLE_FAILURE(pc,message MSG);
 
 
 #define SHALLOWFAIL							      \
@@ -78,6 +74,14 @@
     shallowCP = NULL;							      \
     JUMP(next);								      \
   }
+
+
+#define CheckArity(arity,arityExp,pred,cont) 				      \
+     if (arity != arityExp && VarArity != arity) {			      \
+	warning("call: %s/%d with %d args", pred->getPrintName(),	      \
+		arity, arityExp);					      \
+	HANDLE_FAILURE(cont, ;);					      \
+      }
 
 
 // TOPLEVEL END
@@ -312,8 +316,10 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 
 #ifdef FASTREGACCESS
 #define RegAccess(Reg,Index) (*(RefsArray)((char*)Reg + Index))
+#define LessIndex(Index,CodedIndex) (Index <= CodedIndex*sizeof(TaggedRef))
 #else
 #define RegAccess(Reg,Index) (Reg[Index])
+#define LessIndex(I1,I2) (I1<=I2)
 #endif
 
 #define Xreg(N) RegAccess(X,N)
@@ -510,9 +516,7 @@ void engine() {
 	  ccont->getX(X);
 	  goto LBLTaskCFuncCont;
 	}
-	DebugCheck(!c->isNormal()||(c->u.taskStack
-				    && !c->u.taskStack->isEmpty()),
-		   error("engine::POPTASK"));
+	Assert(c->isNormal() && (!c->u.taskStack || c->u.taskStack->isEmpty()));
 	goto LBLTaskEmpty;
       }
     } else {
@@ -578,6 +582,23 @@ void engine() {
 	  goto LBLreduce;
 	}
 
+      case C_CALL_CONT:
+	{
+	  predicate = (SRecord *) TaskStackPop(--topCache);
+	  RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
+	  predArity = tmpX ? getRefsArraySize(tmpX) : 0;
+	  int i = predArity;
+	  while (--i >= 0) {
+	    X[i] = tmpX[i];
+	  }
+	  taskStack->setTop(topCache);
+	  if (!tmpBB) {
+	    goto LBLfindWork;
+	  }
+	  tmpBB->removeSuspension();
+	  isExecute = OK;
+	  goto LBLcall;
+	}
       case C_NERVOUS:
 	// by kost@ : 'solveActorWaker' can produce such task
 	// (if the search problem is stable by its execution); 
@@ -694,8 +715,7 @@ void engine() {
 
   op = CodeArea::getOP(PC);
 
-  DebugCheck(isFreedRefsArray(Y),
-	     error("Referencing freed environment"););
+  Assert(!isFreedRefsArray(Y));
 
 #ifdef RECINSTRFETCH
   CodeArea::recordInstr(PC);
@@ -729,8 +749,7 @@ void engine() {
       Abstraction *abstr = entry->getPred();
       INCFPC(2);
 
-      DebugCheck(abstr == NULL,
-		 error("FastCall: abstraction expected"));
+      Assert(abstr != NULL);
 
       CallDoChecks(abstr,NO,PC,abstr->getArity());
 
@@ -749,8 +768,7 @@ void engine() {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
       Abstraction *abstr = entry->getPred();
 
-      DebugCheck(abstr == NULL,
-		 error("FastCall: abstraction expected"));
+      Assert(abstr != NULL);
 
       CallDoChecks(abstr,OK,PC,abstr->getArity());
 
@@ -770,11 +788,7 @@ void engine() {
       int arityExp = getPosIntArg(PC+2);
       int arity = entry->getArity();
 
-      if (arity != arityExp && VarArity != arity) {
-	warning("call: %s/%d with %d args", entry->getPrintName(),
-		arity, arityExp);
-	HANDLE_FAILURE(PC+3, ;);
-      }
+      CheckArity(arity,arityExp,entry,PC+3);
 
       switch (fun(arity, X)){
       case SUSPEND:
@@ -1148,8 +1162,7 @@ void engine() {
 	  SVariable *bcvar;
 	  CBB->addSuspension();
 
-	  DebugCheck(!isAnyVar(ATag) && !isAnyVar(BTag),
-		     error ("in shallow test two values"););
+	  Assert(isAnyVar(ATag) || isAnyVar(BTag));
 
 	  if (isAnyVar(ATag)) {
 	    acvar = taggedBecomesSuspVar(APtr);
@@ -1200,8 +1213,8 @@ void engine() {
   INSTRUCTION(ALLOCATEL)
     {
       int posInt = getPosIntArg(PC+1);
+      Assert(posInt > 0);
 
-      DebugCheck(posInt==0, error("allocate: should be > 0"););
       IncfProfCounter(allocateCounter,(posInt+1)*sizeof(TaggedRef));
 
       Y = allocateY(posInt);
@@ -1210,8 +1223,7 @@ void engine() {
 
   INSTRUCTION(DEALLOCATEL)
     {
-      DebugCheck(isFreedRefsArray(Y),
-		 error("Freeing freed environment"););
+      Assert(!isFreedRefsArray(Y));
 
       if (!isDirtyRefsArray(Y)) {
 	IncfProfCounter(deallocateCounter,(getRefsArraySize(Y)+1)*sizeof(TaggedRef));
@@ -1382,20 +1394,25 @@ void engine() {
 
  SendMethod:
   {
-    Atom *label      = getAtomArg(PC+1);
-    TaggedRef object = RegAccess(HelpReg1,getRegArg(PC+2));
-    int arity        = getPosIntArg(PC+3);
+    Atom *label       = getAtomArg(PC+1);
+    TaggedRef origObj = RegAccess(HelpReg1,getRegArg(PC+2));
+    TaggedRef object  = origObj;
+    int arity         = getPosIntArg(PC+3);
     ProgramCounter contadr = isExecute ? 0 : getLabelArg(PC+4);
 
     DEREF(object,_1,objectTag);
     if (!isSRecord(objectTag)) {
       if (isAnyVar(objectTag)) {
-	if (isExecute) { DISPATCH(4); } else { DISPATCH(5); }
+	contAdr = contadr;
+	X[0] = makeMethod(arity,label,X);
+	X[1] = origObj;
+	predArity = 2;
+	predicate = tagged2SRecord(suspCallHandler);
+	goto LBLcall;
       }
 
       warning("send method: no abstraction or builtin: %s",tagged2String(object));
-      HANDLE_FAILURE1(contadr,message("send method: no abstraction or builtin: %s",
-				      tagged2String(object)));
+      HANDLE_FAILURE(contadr,;)
     }
 
     Abstraction *def = getSendMethod(object,label,arity,X);
@@ -1416,6 +1433,7 @@ void engine() {
     predicate = tagged2SRecord(object);
     goto LBLcall;
   }
+
 
 
   INSTRUCTION(METHEXECUTEX)
@@ -1445,23 +1463,32 @@ void engine() {
     TaggedRef object       = origObject;
     int arity              = getPosIntArg(PC+3);
     ProgramCounter contadr = isExecute ? 0 : getLabelArg(PC+4);
+    Abstraction *def;
 
+#ifndef RS
+    DEREF(object,objectPtr,objectTag);
+    if (!isSRecord(objectTag) ||
+	NULL == (def = getApplyMethod(object,label,arity-3+3,X[0]))) {
+      goto bombApply;
+    }
+#else
     DEREF(object,_1,objectTag);
     if (!isSRecord(objectTag)) {
       if (isAnyVar(objectTag)) {
-	if (isExecute) { DISPATCH(4); } else { DISPATCH(5); }
+        if (isExecute) { DISPATCH(4); } else { DISPATCH(5); }
       }
 
-      warning("apply method: no abstraction or builtin: %s",tagged2String(object));
-      HANDLE_FAILURE1(contadr,message("apply method: no abstraction or builtin: %s",
-				      tagged2String(object)));
+      warning("apply method: no abstraction or builtin: %s",tagged2String(object
+));
+      HANDLE_FAILURE(contadr,;);
     }
 
-    Abstraction *def = getApplyMethod(object,label,arity-3+3,X[0]);
+    def = getApplyMethod(object,label,arity-3+3,X[0]);
     if (def == NULL) {
       goto bombApply;
     }
-
+#endif
+    
     CallDoChecks(def,isExecute,contadr,arity);
     Y = NULL; // allocateL(0);
 
@@ -1470,8 +1497,7 @@ void engine() {
 
   bombApply:
     if (methApplHdl == makeTaggedNULL()) {
-      HANDLE_FAILURE1(contadr,
-		      message("apply method: method Application Handler not set"));
+      HANDLE_FAILURE1(contadr,("apply method: method Application Handler not set"));
     }
 
     TaggedRef method = makeMethod(arity-3,label,X);
@@ -1501,9 +1527,6 @@ void engine() {
     ONREG1(Call,G);
 
   INSTRUCTION(EXECUTEX)
-
-    /* TODO: deallocateL */
-
     isExecute = OK;
     ONREG1(Call,X);
 
@@ -1518,48 +1541,40 @@ void engine() {
  Call:
 
    {
-     TaggedRef functorTerm;
-     Builtin *bi;
-     predArity = getPosIntArg(PC+2);
-
-     // argument 3 is continuation adress
-     // code after call is suspension handler
-     contAdr = isExecute ? 0 : getLabelArg(PC+3);
-
-     functorTerm = RegAccess(HelpReg1,getRegArg(PC+1));
-
      {
-       DEREF(functorTerm,functorTermPtr,functorTag);
+       TaggedRef functor = RegAccess(HelpReg1,getRegArg(PC+1));
+       predArity = getPosIntArg(PC+2);
 
+       // argument 3 is continuation adress
+       // code after call is suspension handler
+       contAdr = isExecute ? 0 : getLabelArg(PC+3);
+
+       DEREF(functor,functorPtr,functorTag);
        if (!isSRecord(functorTag)) {
 	 if (isAnyVar(functorTag)) {
-	   if (isExecute) {
-	     DISPATCH(3);
-	   } else {
-	     DISPATCH(4);
-	   }
+	   X[predArity++] = (TaggedRef) functorPtr;
+	   predicate = tagged2SRecord(suspCallHandler);
+	   goto LBLcall;
 	 }
-
-	 warning("call: no abstraction or builtin: %s",
-		 tagged2String(functorTerm));
-	 HANDLE_FAILURE1(contAdr,message("call: no abstraction or builtin: %s",
-					 tagged2String(functorTerm)));
+	 HANDLE_FAILURE1(contAdr,("call: no abstraction or builtin: %s",
+				  tagged2String(functor)));
        }
+
+       predicate = tagged2SRecord(functor);
      }
-     predicate = tagged2SRecord(functorTerm);
-     TypeOfRecord type;
 
 // -----------------------------------------------------------------------
-// --- Call: Loop
+// --- Call: entry point
 // -----------------------------------------------------------------------
 
   LBLcall:
+     Builtin *bi;
 
 // -----------------------------------------------------------------------
 // --- Call: Abstraction
 // -----------------------------------------------------------------------
 
-    type = predicate->getType();
+    TypeOfRecord type = predicate->getType();
 
     switch (type) {
     case R_ABSTRACTION:
@@ -1567,20 +1582,10 @@ void engine() {
       {
 	Abstraction *def = (Abstraction *) predicate;
 
-        // arity check
-	if (def->getArity() != predArity && VarArity != def->getArity()) {
-	  warning("call: %s/%d with %d args",
-		  def->getPrintName(),
-		  def->getArity(),predArity);
-	  HANDLE_FAILURE1(contAdr, message("call: %s/%d with %d args",
-					   def->getPrintName(),
-					   def->getArity(),predArity));
-	}
-
+        CheckArity(def->getArity(), predArity, def, contAdr);
 	CallDoChecks(def,isExecute,contAdr,def->getArity());
 	Y = NULL; // allocateL(0);
 
-        // set pc
 	JUMP(def->getPC());
       }
 
@@ -1592,23 +1597,9 @@ void engine() {
       {
 	bi = (Builtin *) predicate;
 
-        // arity check
-	if (bi->getArity() != predArity && VarArity != bi->getArity()) {
-	  warning("call: builtin %s/%d with %d args",
-		  bi->getPrintName(),
-		  bi->getArity(),predArity);
-	  HANDLE_FAILURE1(contAdr,message("call: builtin %s/%d with %d args",
-					  bi->getPrintName(),
-					  bi->getArity(),predArity));
-
-	}
-
-	State retVal;
+	CheckArity(bi->getArity(),predArity,bi,contAdr);
 
 	switch (bi->getType()) {
-
-	case BIApply:
-	  goto LBLBIapply;
 
 	case BIsolve:
 	  goto LBLBIsolve;
@@ -1634,14 +1625,10 @@ void engine() {
 	    case SUSPEND:
 	      predicate = bi->getSuspHandler();
 	      if (!predicate) {
-		warning("call: builtin %s/%d: no suspension handler",
-			bi->getPrintName(),
-			bi->getArity());
 		HANDLE_FAILURE1(contAdr,
-				message("call: builtin %s/%d: "
-					"no suspension handler",
-					bi->getPrintName(),
-					bi->getArity()));
+				("call: builtin %s/%d: no suspension handler",
+				 bi->getPrintName(),
+				 bi->getArity()));
 		
 	      }
 	      goto LBLcall;
@@ -1679,71 +1666,9 @@ void engine() {
 	goto LBLerror;
       } // end builtin
     default:
-      warning("call: no abstraction or builtin: %s",
-	      tagged2String(makeTaggedSRecord(predicate)));
-      HANDLE_FAILURE(contAdr,message("call: no abstraction or builtin: %s",
-				     tagged2String(makeTaggedSRecord(predicate))));
+      HANDLE_FAILURE1(contAdr,("call: no abstraction or builtin: %s",
+			       tagged2String(makeTaggedSRecord(predicate))));
     } // end switch on type of predicate
-
-// ------------------------------------------------------------------------
-// --- Call Builtin Apply
-// ------------------------------------------------------------------------
-
-  LBLBIapply:
-    {
-      TaggedRef term0 = X[0]; DEREF(term0,_0,tag0);
-      TaggedRef term1 = X[1]; DEREF(term1,_1,tag1);
-
-      if (isAnyVar(tag0) || isAnyVar(tag1)) {
-	warning("call: apply: arguments not determined");
-	HANDLE_FAILURE1(contAdr,
-			message("call: apply: arguments not determined"));
-      }
-
-      if (!isSRecord(term0)) {
-	warning("call: apply: no predicate: %s",
-		tagged2String(term0));
-	HANDLE_FAILURE1(contAdr,message("call: apply: no predicate: %s",
-					tagged2String(term0)));
-      }
-
-      predicate = tagged2SRecord(term0);
-
-      switch (tag1) {
-
-      case ATOM:
-	predArity = 0;
-	break;
-
-      case STUPLE:
-	{
-	  STuple *s = tagged2STuple(term1);
-	  // XRegs initialization
-	  for (int i = 0; i < s->getSize(); i++) {
-	    X[i] = s->getArg(i);
-	  }
-	  predArity = s->getSize();
-	  break;
-	}
-
-      case LTUPLE:
-	{
-	  LTuple *l = tagged2LTuple(term1);
-	  // XRegs initialization
-	  X[0] = l->getHead();
-	  X[1] = l->getTail();
-	  predArity = 2;
-	  break;
-	}
-
-      default:
-	warning("call: apply: tuple argument expected");
-	HANDLE_FAILURE1(contAdr,
-			message("call: apply: tuple argument expected"));
-      }
-
-      goto LBLcall;
-    }
 
 // ------------------------------------------------------------------------
 // --- Call: Builtin: solve
@@ -1764,7 +1689,7 @@ void engine() {
 	   warning("call: builtin %s/%d: no suspension handler",
 		   bi->getPrintName(),
 		   bi->getArity());
-	   HANDLE_FAILURE1(contAdr, message(""));
+	   HANDLE_FAILURE(contAdr, message(""));
 	 }
 	 goto LBLcall;
        }
@@ -1773,7 +1698,7 @@ void engine() {
 	   !(tagged2SRecord (x0)->getType () == R_ABSTRACTION ||
 	     tagged2SRecord (x0)->getType () == R_BUILTIN)) {
 	 warning("call: no abstraction or builtin in solve");
-	 HANDLE_FAILURE1 (contAdr, message(""));
+	 HANDLE_FAILURE (contAdr, message(""));
        }
 
        // put continuation if any;
@@ -1804,7 +1729,7 @@ void engine() {
    LBLBIsolveCont:
      {
        if (((OneCallBuiltin *)bi)->isSeen () == OK) {
-	 HANDLE_FAILURE1(contAdr, message("not first call of solve continuation"));
+	 HANDLE_FAILURE1(contAdr, ("not first call of solve continuation"));
        }
 
        ((OneCallBuiltin *) bi)->hasSeen ();
@@ -1938,8 +1863,7 @@ void engine() {
   
   INSTRUCTION(WAIT)
     {
-      DebugCheck(!CBB->isWait(),error("WAIT"));
-      DebugCheck(CBB->isCommitted(),error("WAIT"));
+      Assert(CBB->isWait() && !CBB->isCommitted());
 
       /* unit commit */
       WaitActor *aa = CastWaitActor(CBB->getActor());
@@ -1950,7 +1874,7 @@ void engine() {
 	Board::SetCurrent(aa->getBoard()->getBoardDeref());
 
 	Bool ret = e->installScript(waitBoard->getScriptRef());
-	DebugCheck(!ret,error("WAIT"));
+	Assert(ret!=NULL);
 	waitBoard->setCommitted(CBB);
 	CBB->addSuspension(waitBoard->getSuspCount()-1);
 	DISPATCH(1);
@@ -1990,7 +1914,7 @@ void engine() {
 	Board::SetCurrent(aa->getBoard()->getBoardDeref());
 
 	Bool ret = e->installScript(bb->getScriptRef());
-	DebugCheck(!ret,error("WAITTOP"));
+	Assert(ret != NULL);
 	bb->setCommitted(CBB);
 	CBB->addSuspension(bb->getSuspCount());
 	CBB->removeSuspension();
@@ -2328,7 +2252,7 @@ void engine() {
       }
     }
   } else {
-    DebugCheck(!CBB->isRoot(),error("reduce"));
+    Assert(CBB->isRoot());
   }
   goto LBLfindWork;
 
@@ -2404,7 +2328,7 @@ void engine() {
 
 	  /* unit commit & WAIT, e.g. or X = 1 ... then ... [] false ro */
 	  LOADCONT(waitBoard->getBodyPtr());
-	  DebugCheck(PC == NOCODE,error("reduce actor"));
+	  Assert(PC != NOCODE);
 
 	  goto LBLemulateCheckSwitch;
 	}

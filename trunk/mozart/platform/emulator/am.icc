@@ -117,23 +117,28 @@ Bool AM::installScript(ConsList &script)
 }
 
 inline
+void AM::ensureTaskStack()
+{
+  if (!currentTaskStack) {
+    currentTaskStack = am.currentThread->makeTaskStack();
+  }
+}
+
+
+inline
 void AM::pushTask(Board *n,ProgramCounter pc,
 			 RefsArray y,RefsArray g,
 			 RefsArray x,int i)
 {
   n->addSuspension();
-  if (!currentTaskStack) {
-    currentTaskStack = am.currentThread->makeTaskStack();
-  }
+  ensureTaskStack();
   currentTaskStack->pushCont(n,pc,y,g,x,i);
 }
 
 inline
 void AM::pushNervous(Board *n)
 {
-  if (!currentTaskStack) {
-    am.currentThread->makeTaskStack();
-  }
+  ensureTaskStack();
   currentTaskStack->pushNervous (n);
 }
 
@@ -141,9 +146,7 @@ inline
 void AM::pushTask(Board *n, BIFun f, RefsArray x, int i)
 {
   n->addSuspension();
-  if (!currentTaskStack) {
-    am.currentThread->makeTaskStack();
-  }
+  ensureTaskStack();
   currentTaskStack->pushCont (n, f, (Suspension *) NULL, x, i);
 }
 

@@ -110,7 +110,7 @@ static Board *oldSolveBoard = (Board *) NULL;
 
 void Board::SetCurrent(Board *c, Bool checkNotGC)
 {
-  DebugCheck(!c,error("Board::SetCurrent"));
+  Assert(c!=NULL);
   DebugCheck(checkNotGC && oldBoard != am.currentBoard,
 	     error("someone has changed 'currentBoard'"));
   am.currentBoard = c;
@@ -147,9 +147,8 @@ Board* Board::getSolveBoard ()
 Board::Board(Actor *a,int typ)
 : ConstTerm(Co_Board)
 {
-  DebugCheck(!a && typ!=Bo_Root,error("Board::Board"));
-  DebugCheck(typ!=Bo_Root && typ!=Bo_Ask && typ!=Bo_Wait && typ!=Bo_Solve,
-	     error("Board::Board"));
+  Assert(a!=NULL || typ==Bo_Root);
+  Assert (typ==Bo_Root || typ==Bo_Ask || typ==Bo_Wait || typ==Bo_Solve);
   flags=typ;
   if (a != (Actor *) NULL && a->isAskWait () == OK) {
     (CastAWActor (a))->addChild(this);
@@ -165,7 +164,7 @@ Board::~Board() {
 Actor *Board::FailCurrent()
 {
   Board *bb = am.currentBoard;
-  DebugCheck(!bb->isInstalled(),error("Board::FailCurrent"));
+  Assert(bb->isInstalled() != NULL);
   Actor *ret=bb->getActor();
   if (ret->isAskWait () == OK) 
     (CastAWActor (ret))->failChild(bb);
