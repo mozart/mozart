@@ -162,7 +162,7 @@ private:
 public:
   PEL_Engine(PEL_PersistentEngine &pe, const char * f, ...);
   ~PEL_Engine(void) {
-    CASSERT(isEmpty());
+    CASSERT(isEmpty() || isFailed());
   }
   // makes adding of new constraints possible while running propagate
   _PEL_PropagatorTable &getPropTable(void) {return _pe->_prop_table; }

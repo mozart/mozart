@@ -29,7 +29,7 @@
 #include "rel_filter.hh"
 #include "pel_fncts.hh"
 
-//#define NEW
+#define NEW
 
 typedef  _PropagatorController_V_V<int,
   PEL_FDIntVar,pf_entailed,pf_failed,pf_sleep> PEL_ParamIterator_V_V;

@@ -1,3 +1,1 @@
 break OZ_error
-break TasksOverlapPropagator::TasksOverlapPropagator(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)
-break TasksOverlapPropagator::propagate

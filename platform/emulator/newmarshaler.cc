@@ -156,7 +156,7 @@ void initNewMarshaler()
 {
   NMMemoryManager::init();
   isInitialized = OK;
-  Assert(DIF_LAST == 46);  /* new dif(s) added? */
+  //  Assert(DIF_LAST == 46);  /* new dif(s) added? */
 }
 
 //
