@@ -196,7 +196,6 @@ starts the emulator under gdb")
 ;; Fonts
 ;;------------------------------------------------------------
 
-
 (defun oz-set-fontlock-keywords()
   (setq font-lock-keywords (list oz-keywords)))
 
@@ -292,6 +291,10 @@ starts the emulator under gdb")
      ("Line"   . oz-indent-line)
      ("Region" . oz-indent-region)
      ("Buffer" . oz-indent-buffer)
+     )
+    ("Comment"
+     ("Comment Region"   . oz-comment-region)
+     ("Uncomment Region" . oz-un-commment-region)
      )
     ("Browse" 
      ("Region" . oz-feed-region-browse)
@@ -582,11 +585,10 @@ the GDB commands `cd DIR' and `directory'."
        "true" "false"
        "div" "mod" "andthen" "orelse"
        "thread" "job" "conc" "in"
-       "condis"
+       "condis" "not"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
     ))
-
 
 (defconst oz-declare-pattern (oz-make-keywords-for-match '("declare")))
 
@@ -1270,6 +1272,13 @@ OZ compiler, emulator and error window")
 ;; Misc Goodies
 ;;------------------------------------------------------------
 
+(defun oz-comment-region (beg end arg)
+  (interactive "r\np")
+  (comment-region beg end arg))
+
+(defun oz-un-comment-region (beg end arg)
+  (interactive "r\np")
+  (comment-region beg end (if (= arg 0) -1 (- 0 arg))))
 
 (defvar oz-lpr "oz2lpr -"
   "pretty printer for oz code")
