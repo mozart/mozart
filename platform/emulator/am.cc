@@ -689,27 +689,75 @@ InstType AM::installPath(Board *to)
     return ret;
   }
 
+
   Board::SetCurrent(to);
-  if (!installOne()) {
+  to->setInstalled();
+
+  trail.pushMark();
+  if (!installScript(to->getScriptRef())) {
     return INST_FAILED;
   }
   return INST_OK;
 }
 
 
-// a script is written when deinstalling a local board
-// no script need be written, when failure occurs
-void AM::reduceTrailFrame(Bool writeScript, int numbOfCons)
+inline void AM::deinstallPath(Board *top)
 {
-  Suspension *susp;
+  DebugCheck(top->isCommitted(),
+	     error("AM::deinstallPath: top already commited");
+	     return;);
+  
+  while (Board::GetCurrent() != top) {
+    deinstallCurrent();
+    DebugCheck(Board::GetCurrent() == Board::GetRoot()
+	       && top != Board::GetRoot(),
+	       error("AM::deinstallPath: root node reached"));
+  }
+}
 
-  if (writeScript) {
-    Board::GetCurrent()->newScript(numbOfCons);
-    if (numbOfCons > 0)
-      susp = new Suspension (Board::GetCurrent());
+inline void AM::deinstallCurrent()
+{
+  reduceTrailOnSuspend();
+  Board::GetCurrent()->unsetInstalled();
+  Board::SetCurrent(Board::GetCurrent()->getParentBoard()->getBoardDeref());
+}
+
+void AM::reduceTrailOnUnitCommit()
+{
+  int numbOfCons = trail.chunkSize();
+
+  Board *bb = Board::GetCurrent();
+
+  bb->newScript(numbOfCons);
+
+  for (int index = 0; index < numbOfCons; index++) {
+    TaggedRef *refPtr;
+    TaggedRef value;
+    {
+      TrailEntry *eq = trail.popRef();
+      refPtr = eq->getRefPtr();
+      value = eq->getValue ();
+    }
+
+    bb->setScript(index,refPtr,*refPtr);
+    *refPtr = value;
+  }
+  trail.popMark();
+}
+
+
+void AM::reduceTrailOnSuspend()
+{
+  int numbOfCons = trail.chunkSize();
+
+  Suspension *susp;
+  Board *bb = Board::GetCurrent();
+
+  bb->newScript(numbOfCons);
+  if (numbOfCons > 0) {
+    susp = new Suspension(bb);
   }
   
-  Bool isOuterSuspMaint = NO;
   for (int index = 0; index < numbOfCons; index++) {
     TaggedRef *refPtr;
     TaggedRef value;
@@ -722,37 +770,45 @@ void AM::reduceTrailFrame(Bool writeScript, int numbOfCons)
     TaggedRef oldVal = makeTaggedRef(refPtr);
     DEREF(oldVal,ptrOldVal,tagOldVal);
     
-    if (writeScript) {
-      Board::GetCurrent()->setScript(index,refPtr,*refPtr);
+    bb->setScript(index,refPtr,*refPtr);
 
-      if (isAnyVar(oldVal)) {
-        // local generic variables are allowed to occure here
-        DebugCheck (isLocalVariable (oldVal) && isNotCVar(oldVal),
-                    error ("the right var is local  and unconstrained");
-                    return;);
-        if(isLocalVariable (oldVal) == NO) // add susps to global vars
-	  taggedBecomesSuspVar(ptrOldVal)->addSuspension(susp);
-      }
-      tagged2SuspVar(value)->addSuspension(susp);
+    if (isAnyVar(oldVal)) {
+      // local generic variables are allowed to occure here
+      DebugCheck (isLocalVariable (oldVal) && isNotCVar(oldVal),
+		  error ("the right var is local  and unconstrained");
+		  return;);
+      if(!isLocalVariable(oldVal)) // add susps to global vars
+	taggedBecomesSuspVar(ptrOldVal)->addSuspension(susp);
     }
-    // unbind
-    *refPtr = value;
-    
-  } // for
+    tagged2SuspVar(value)->addSuspension(susp);
 
+    *refPtr = value;
+  }
+  trail.popMark();
 }
 
-void AM::shallowMakeSuspension (Board *node, ProgramCounter PC,
-				RefsArray Y, RefsArray G,
-				RefsArray X, int argsToSave, int numbOfCons)
+
+void AM::reduceTrailOnFail()
+{
+  int numbOfCons = trail.chunkSize();
+  for (int index = 0; index < numbOfCons; index++) {
+    TaggedRef *refPtr;
+    TaggedRef value;
+    {
+      TrailEntry *eq = trail.popRef();
+      refPtr = eq->getRefPtr();
+      value = eq->getValue ();
+    }
+    *refPtr = value;
+  }
+  trail.popMark();
+}
+
+void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 {
   Bool isOuterSuspMaint = NO;
 
   // one single suspension for all
-  Suspension *susp = 
-    new Suspension(new SuspContinuation(node,PC,Y,G,X,argsToSave));
-
-  node->addSuspension();
   
   for (int i = 0; i < numbOfCons; i++) {
     TrailEntry *eq = trail.popRef();
@@ -770,37 +826,6 @@ void AM::shallowMakeSuspension (Board *node, ProgramCounter PC,
   trail.popMark();
 }
 
-
-inline void AM::reduceTrailFrame(Bool writeScript)
-{
-  int numbOfCons = trail.chunkSize();
-  if (writeScript || numbOfCons != 0) {
-    reduceTrailFrame(writeScript,numbOfCons);
-  }
-  
-  trail.popMark();
-}
-
-inline void AM::deinstallOne(Bool writeScript)
-{
-  reduceTrailFrame(writeScript);
-  Board::GetCurrent()->unsetInstalled();
-  Board::SetCurrent(Board::GetCurrent()->getParentBoard()->getBoardDeref());
-}
-
-inline void AM::deinstallPath(Board *top)
-{
-  DebugCheck(top->isCommitted(),
-	     error("AM::deinstallPath: top already commited");
-	     return;);
-  
-  while (Board::GetCurrent() != top) {
-    deinstallOne(OK);
-    DebugCheck(Board::GetCurrent() == Board::GetRoot() && top != Board::GetRoot(),
-	       error("AM::deinstallPath: root node reached");
-	       return;);
-  }
-}
 
 
 /* specially optimized unify: test two most probable cases first:
@@ -870,19 +895,6 @@ inline Bool AM::installScript(ConsList &script)
   return ret;
 }
 
-inline Bool AM::installOne()
-{
-  Bool ret;
-  trail.pushMark();
-  if (!installScript(Board::GetCurrent()->getScriptRef ())) {
-    ret = NO;
-  } else {
-    Board::GetCurrent()->setInstalled();
-    ret = OK;
-  }
-  return ret;
-}
-
 inline void AM::pushTask(Board *n,ProgramCounter pc,
 			 RefsArray y,RefsArray g,
 			 RefsArray x,int i)
@@ -894,21 +906,6 @@ inline void AM::pushTask(Board *n,ProgramCounter pc,
   currentTaskStack->pushCont(n,pc,y,g,x,i);
 }
 
-
-inline Bool AM::shallowEntailed(Board *node, ProgramCounter PC,
-				RefsArray Y, RefsArray G, RefsArray X,
-				int argsToSave)
-{
-  int numbOfCons = trail.chunkSize();
-
-  if (numbOfCons == 0) {
-    trail.popMark();
-    return OK;
-  }
-
-  shallowMakeSuspension(node,PC,Y,G,X,argsToSave,numbOfCons);
-  return NO;
-}
 
 /*
  *   Procedure what checks whether one node is in subtree of another;

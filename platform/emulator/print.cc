@@ -586,22 +586,30 @@ PRINT(Board)
 
   stream << indent(offset)
     << "Board @"
-    << this;
+    << this
+    << " [";
   if (isInstalled()) {
-    stream << " Installed";
+    stream << "I";
   }
   if (isNervous()) {
-    stream << " Nervous";
+    stream << "N";
   }
   if (isWaitTop()) {
-    stream << " WaitTop";
+    stream << "T";
   }
   if (isPathMark()) {
-    stream << " PathMark";
+    stream << "P";
   }
   if (isFailed()) {
-    stream << " Failed";
+    stream << "F";
   }
+  if (isDiscarded()) {
+    stream << "D";
+  }
+  if (isWaiting()) {
+    stream << "W";
+  }
+  stream << "]";
 }
 
 PRINTLONG(Board)
@@ -988,4 +996,25 @@ void taggedPrintLong(TaggedRef ref, int depth, int offset)
 {
   tagged2StreamLong(ref,cout,depth,offset);
   cout << flush;
+}
+
+void Board::printTree()
+{
+  Board *bb = this;
+  Actor *aa;
+  int off=0;
+  while (bb!=GetRoot()) {
+    bb->print(cout,0,off);
+    cout << endl;
+    if (bb->isCommitted()) {
+      bb=bb->board;
+    } else {
+      off++;
+      aa = bb->actor;
+      aa->print(cout,0,off);
+      cout << endl;
+      off++;
+      bb = aa->getBoard();
+    }
+  }
 }
