@@ -13,27 +13,12 @@
 #include "types.hh"
 #include "tagged.hh"
 
-//*****************************************************************************
-//    headers of functions to make external references into heap known to gc
-//*****************************************************************************
-
-// function 'gcIntroExtTerm':
-//    introduce new external term reference into heap
-//    returns NO if already present else OK
+/*****************************************************************************
+ * make external references into heap known to gc
+ *****************************************************************************/
 
 Bool gcProtect(TaggedRef *);
-
-
-// function 'gcDismissExtTerm':
-//    dismiss external term reference into heap
-//    return NO if not present else OK
-
 Bool gcUnprotect(TaggedRef *);
-
-
-// for really external terms
-TaggedRef gcProtectCopy(TaggedRef r);
-void gcUnprotectCopy(TaggedRef *r);
 
 
 #ifdef DEBUG_CHECK

@@ -162,7 +162,7 @@ Bool Thread::isScheduled() {
      */
 void Thread::queueCont(Board *bb,ProgramCounter PC,RefsArray y) {
   Assert(isNormal() && u.taskStack);
-  bb->addSuspension();
+  bb->incSuspCount();
   u.taskStack->queueCont(bb,PC,y);
   if (this!=am.currentThread && !this->isScheduled()) {
     schedule();
@@ -420,14 +420,14 @@ void Thread::pushTask(Board *bb,ProgramCounter pc,
 		      RefsArray x,int i)
 {
   Assert(isNormal());
-  bb->addSuspension();
+  bb->incSuspCount();
   u.taskStack->pushCont(bb,pc,y,g,x,i);
 }
 
 void Thread::pushTask (Board *bb, OZ_CFun f, RefsArray x, int i)
 {
   Assert(isNormal());
-  bb->addSuspension ();
+  bb->incSuspCount ();
   u.taskStack->pushCont (bb, f, (Suspension *) NULL, x, i);
 }
 
