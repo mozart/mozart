@@ -4,6 +4,8 @@ import
    Widgets(popup)
    Graph(graph:GraphClass)
 export
+   open:Open
+
    ssites:SSites
    sactivity:SActive
    snumber:SNumber
@@ -20,12 +22,25 @@ export
    ninumber:NINumber
    nibyte:NIByte
 define
-   SiteVis={NewCell true}
+           SSites
+           SActive
+           SNumber
+OSites
+OActive
+ONumber
+BSites
+           BActive
+BNumber
+NIList
+           NINumber
+NIByte
+
+           SiteVis={NewCell true}
    OwnerVis={NewCell true}
    BorrowVis={NewCell true}
    NetInfoVis={NewCell true}
 
-   class TitleGraph from Tk.frame
+           class TitleGraph from Tk.frame
       feat graph
 
       meth tkInit(parent:P title:T ...)=M
@@ -167,19 +182,23 @@ define
                             end}
       end
    end
-
-   T={New Tk.toplevel tkInit(title:"Distribution Panel")}
-
-   %% Site frame
-   SiteF={New Tk.frame tkInit(parent:T)}
-   SSites={New SiteList tkInit(parent:SiteF)}
-   SActive={New TitleGraph tkInit(parent:SiteF
-                                 title:"#Activity/s"
+   proc{Open}
+      T={New Tk.toplevel tkInit(title:"Distribution Panel")}
+      SiteF
+      OwnerF
+      BorrowF
+      NetInfoF
+   in
+      %% Site frame
+      SiteF={New Tk.frame tkInit(parent:T)}
+      SSites={New SiteList tkInit(parent:SiteF)}
+      SActive={New TitleGraph tkInit(parent:SiteF
+                                     title:"#Activity/s"
                                  miny:1.0
-                                 maxy:11.0
-                                 dim:''
+                                     maxy:11.0
+                                     dim:''
                                  fill:false)}
-   SNumber={New TitleGraph tkInit(parent:SiteF
+      SNumber={New TitleGraph tkInit(parent:SiteF
                                  title:"#Sites in store/s"
                                  miny:1.0
                                  maxy:11.0
@@ -235,7 +254,7 @@ define
                                  dim:''
                                  fill:true)}
 
-in
+
    {Tk.send pack(SSites SActive SNumber side:left)}
    {Tk.send pack(OSites OActive ONumber side:left)}
    {Tk.send pack(BSites BActive BNumber side:left)}
@@ -307,4 +326,5 @@ in
                          end]
                         T}
                     end)}
+   end
 end

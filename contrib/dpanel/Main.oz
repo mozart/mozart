@@ -13,6 +13,7 @@ define
    MainLock = {NewLock}
 
    proc {Start} ST OT BT NI in
+      {GUI.open}
       SD = {New SiteInfo.sitesDict init(Colour.list GUI)}
       ST = {New SiteInfo.sites init(SD)}
       OT = {New TableInfo.ownerTable init}
