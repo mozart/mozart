@@ -2420,29 +2420,27 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
 
-  switch(tagA) {
-
-  case OZFLOAT:
-    out = oz_float(-floatValue(A));
-    return PROCEED;
-
-  case SMALLINT:
+  if (isSmallIntTag(tagA)) {
     out = newSmallInt(-smallIntValue(A));
     return PROCEED;
-
-  case UVAR:
-    // FUT
-    return SUSPEND;
-
-  case OZCONST:
-    if (oz_isBigInt(A)) {
-      out = tagged2BigInt(A)->neg();
-      return PROCEED;
-    }
-    // fall through
-  default:
-    oz_typeError(0,"Int");
   }
+
+  if (isFloatTag(tagA)) {
+    out = oz_float(-floatValue(A));
+    return PROCEED;
+  }
+
+  if (oz_isBigInt(A)) {
+    out = tagged2BigInt(A)->neg();
+    return PROCEED;
+  }
+
+  if (isVariableTag(tagA)){
+    return SUSPEND;
+  }
+
+  oz_typeError(0,"Number");
+
 }
 
 OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
