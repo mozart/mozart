@@ -387,11 +387,11 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
     }
     
     for (Bool cont = TRUE; cont; )
-      if (x_c < x.high && x.i_arr[x_c].left <= r && r < x.i_arr[x_c].right) {
+      if (x_c < x.high && x.i_arr[x_c].left <= r+1 && r < x.i_arr[x_c].right) {
 	r = x.i_arr[x_c].right;
 	x_c += 1;
-      } else if (y_c < y.high &&
-		 y.i_arr[y_c].left <= r && r < y.i_arr[y_c].right) {
+      } else if (y_c < y.high && y.i_arr[y_c].left <= r+1 &&
+		 r < y.i_arr[y_c].right) {
 	r = y.i_arr[y_c].right;
 	y_c += 1;
       } else
@@ -1279,7 +1279,6 @@ FiniteDomain &FiniteDomain::operator | (const FiniteDomain &y) const
     z.min_elem = z_v->findMinElem();
     z.max_elem = z_v->findMaxElem();
   } else {
-  label1:
     FDBitVector * x_v = asBitVector();
     FDBitVector * y_v = y.asBitVector();
     FDBitVector * z_v;
