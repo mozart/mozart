@@ -42,14 +42,6 @@ void GenFDVariable::propagate(TaggedRef var, FDPropState state,
     GenCVariable::propagate(var, fdSuspList[fd_eqvar], term);
 }
 
-
-inline
-void GenFDVariable::propagate(TaggedRef var, FDPropState state,
-			      TaggedRef * tPtr, Bool prop_eq) {
-  propagate(var, state, makeTaggedRef(tPtr), prop_eq);
-}
-
-
 inline
 SuspList * concSuspList(SuspList * list_a, SuspList * list_b)
 {

@@ -775,7 +775,7 @@ void engine() {
 
     tmpBB->removeSuspension();
 
-    if (currentTaskSusp != NULL && currentTaskSusp->isDead() == OK) {
+    if (currentTaskSusp != NULL && currentTaskSusp->isDead()) {
       currentTaskSusp = NULL;
       goto LBLpopTask;
     }
