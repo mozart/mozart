@@ -117,7 +117,7 @@
 	<entry><<fromChunk>>
 	  <Index/<<ObjectSupport>><And><<reflect>><And><<fromChunk>>/
 	<synopsis>
-	  <<frmChunk(?+{Ch})>>
+	  <<fromChunk(?+{Ch})>>
 	<item>
           Sets features and attributes according to chunk
           ?_{Ch}. ?_{Ch} must have been created with <<toChunk>>. The
