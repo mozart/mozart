@@ -46,12 +46,20 @@ void MsgContainer::takeSnapshot() {
   for(int i = 0 ; i < MAX_NOF_FIELDS; i++) {
     switch(msgFields[i].ft) {
     case FT_FULLTOPTERM:
+      {
+        OZ_Term t = (OZ_Term) msgFields[i].arg;
+        // currently at most one term per message:
+        Assert(msgTS == (MsgTermSnapshot *) 0);
+        msgTS = takeTermSnapshot(t, destination, TRUE);
+      }
+      break;
+
     case FT_TERM:
       {
         OZ_Term t = (OZ_Term) msgFields[i].arg;
         // currently at most one term per message:
         Assert(msgTS == (MsgTermSnapshot *) 0);
-        msgTS = takeTermSnapshot(t, destination);
+        msgTS = takeTermSnapshot(t, destination, FALSE);
       }
       break;
 

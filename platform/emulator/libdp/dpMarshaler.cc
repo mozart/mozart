@@ -1368,7 +1368,12 @@ void VariableExcavator::processExtension(OZ_Term t) {}
 Bool VariableExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
 {
   rememberTerm(objTerm);
-  return (TRUE);
+  if (doToplevel) {
+    doToplevel = FALSE;
+    return (FALSE);
+  } else {
+    return (TRUE);
+  }
 }
 Bool VariableExcavator::processNoGood(OZ_Term resTerm, Bool trail)
 {
@@ -3363,30 +3368,24 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
     OZ_Term v = *vp;
 
     //
-  repeat:
     if (oz_isExtVar(v)) {
       ExtVarType evt = oz_getExtVar(v)->getIdV();
       switch (evt) {
       case OZ_EVAR_MANAGER:
         {
-          // if it's a future, let's kick it now:
-          if (triggerVariable(vp)) {
-            v = makeTaggedRef(vp);
-            DEREF(v, vp);
-            Assert(!oz_isRef(v));
-            if (oz_isVarOrRef(v)) {
-              goto repeat;      // 'v' can be a var again;
-            } else {
-              break;            // var is gone;
-            }
-          }
-
           // make&save an "exported" manager;
           ManagerVar *mvp = oz_getManagerVar(v);
           ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
           OZ_Term emv = makeTaggedVar(emvp);
           //
           svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
+
+          // There are no distributed futures: once exported, it is
+          // kicked (just now). Note also that futures are first
+          // exported, then kicked (since kicking can immediately
+          // yield a new subtree we cannot handle).
+          Assert(oz_isVar(*vp));
+          (void) triggerVariable(vp);
         }
         break;
 
@@ -3420,29 +3419,18 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
         break;
       }
     } else if (oz_isFree(v) || oz_isFuture(v)) {
-      Bool stillAVar = OK;
       Assert(perdioInitialized);
 
-      // if it's a future, let's kick it now:
-      if (triggerVariable(vp)) {
-        v = makeTaggedRef(vp);
-        DEREF(v, vp);
-        Assert(!oz_isRef(v));
-        if (oz_isVarOrRef(v)) {
-          goto repeat;          // 'v' can be a var again;
-        } else {
-          stillAVar = NO;               // var is gone;
-        }
-      }
+      //
+      ManagerVar *mvp = globalizeFreeVariable(vp);
+      ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
+      OZ_Term emv = makeTaggedVar(emvp);
+      //
+      svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
 
       //
-      if (stillAVar) {
-        ManagerVar *mvp = globalizeFreeVariable(vp);
-        ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
-        OZ_Term emv = makeTaggedVar(emvp);
-        //
-        svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
-      }
+      Assert(oz_isVar(*vp));
+      (void) triggerVariable(vp);
     } else {
       //
 
