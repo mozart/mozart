@@ -109,7 +109,11 @@ define
 			       end ?S1 ?Rest}
 	 case Rest of C|Rest1 then
 	    case C of &\n then
-	       PCDATA(S1)|br()|{HtmlEscapeSub Rest1}
+	       %% hack to overcome netscape's bug that
+	       %% <BR><BR> only causes one line break
+	       %% but <BR>&nbsp;<BR> works as expected
+	       if S1==nil then SPACE else PCDATA(S1) end
+	       |br()|{HtmlEscapeSub Rest1}
 	    [] &  then PCDATA(S1)|SPACE|{HtmlEscapeSub Rest1}
 	    [] &\t then PCDATA(S1)|TAB|{HtmlEscapeSub Rest1}
 	    end
