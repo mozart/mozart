@@ -10,8 +10,8 @@ INSTALL_DIR	= @INSTALL_DIR@
 
 AWK		= @AWK@
 
-DOCFILES0: Mozart.hhp Mozart.hhc
-DOCFILES: $(DOCFILES0:%=$(DOCDIR)/%)
+DOCFILES0=Mozart.hhp Mozart.hhc
+DOCFILES=$(DOCFILES0:%=$(DOCDIR)/%)
 
 .PHONY: bootstrap bootquick all clean veryclean distclean quick boot-quick install installps
 
