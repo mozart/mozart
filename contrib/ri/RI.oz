@@ -71,9 +71,13 @@ define
                          else
                             L = {GetLowerBound V}
                             U = {GetUpperBound V}
-                            Mid in
+                            Mid
+                         in
                             Mid = L + (U - L) / 2.0
+                            % not yet tested
                             dis
+%                              V = Mid
+%                           []
                                {LessEq V Mid} then {Distribute V}
                             []
                                {Greater V Mid} then {Distribute V}

@@ -28,7 +28,7 @@
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(ri_lessEq, 2)
+OZ_BI_define(ri_lessEq, 2, 0)
 {
   OZ_EXPECTED_TYPE(EM_RI "," EM_RI);
 
@@ -38,11 +38,11 @@ OZ_C_proc_begin(ri_lessEq, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectRIVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectRIVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) return pe.suspend();
 
-  return pe.impose(new RILessEq(OZ_args[0], OZ_args[1]));
+  return pe.impose(new RILessEq(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_PropagatorProfile RILessEq::profile;
 
@@ -74,7 +74,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(ri_greater, 2)
+OZ_BI_define(ri_greater, 2, 0)
 {
   OZ_EXPECTED_TYPE(EM_RI "," EM_RI);
 
@@ -84,11 +84,11 @@ OZ_C_proc_begin(ri_greater, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectRIVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectRIVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) return pe.suspend();
 
-  return pe.impose(new RIGreater(OZ_args[0], OZ_args[1]));
+  return pe.impose(new RIGreater(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_PropagatorProfile RIGreater::profile;
 
@@ -120,7 +120,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(ri_plus, 3)
+OZ_BI_define(ri_plus, 3, 0)
 {
   OZ_EXPECTED_TYPE(EM_RI "," EM_RI "," EM_RI);
 
@@ -132,11 +132,11 @@ OZ_C_proc_begin(ri_plus, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectRIVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectRIVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) return pe.suspend();
 
-  return pe.impose(new RIPlus(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new RIPlus(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_PropagatorProfile RIPlus::profile;
 
@@ -181,7 +181,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(ri_times, 3)
+OZ_BI_define(ri_times, 3, 0)
 {
   OZ_EXPECTED_TYPE(EM_RI "," EM_RI "," EM_RI);
 
@@ -193,11 +193,11 @@ OZ_C_proc_begin(ri_times, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectRIVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectRIVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) return pe.suspend();
 
-  return pe.impose(new RITimes(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new RITimes(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_PropagatorProfile RITimes::profile;
 
@@ -324,7 +324,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(ri_intBounds, 2)
+OZ_BI_define(ri_intBounds, 2, 0)
 {
   OZ_EXPECTED_TYPE(EM_RI "," OZ_EM_FD);
 
@@ -334,11 +334,11 @@ OZ_C_proc_begin(ri_intBounds, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectRIVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) return pe.suspend();
 
-  return pe.impose(new RIIntBounds(OZ_args[0], OZ_args[1]));
+  return pe.impose(new RIIntBounds(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_PropagatorProfile RIIntBounds::profile;
 
@@ -387,7 +387,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(ri_intBoundsSPP, 2)
+OZ_BI_define(ri_intBoundsSPP, 2, 0)
 {
   OZ_EXPECTED_TYPE(EM_RI "," OZ_EM_FD);
 
@@ -396,9 +396,9 @@ OZ_C_proc_begin(ri_intBoundsSPP, 2)
   OZ_EXPECT(pe, 0, expectRIVarMinMax);
   OZ_EXPECT(pe, 1, expectIntVarMinMax);
 
-  return pe.impose(new RIIntBoundsSPP(OZ_args[0], OZ_args[1]));
+  return pe.impose(new RIIntBoundsSPP(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_PropagatorProfile RIIntBoundsSPP::profile;
 

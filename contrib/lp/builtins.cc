@@ -33,12 +33,12 @@ OZ_Term Arity = OZ_nil();                               \
 for (int i = 0; ArityDef[i] != (OZ_Term) 0; i += 1)     \
   Arity = OZ_cons(ArityDef[i], Arity);
 
-OZ_C_proc_begin(ri_lpsolve_conf, 2)
+OZ_BI_define(ri_lpsolve_conf, 2, 0)
 {
   // check if 1st arg is either `put' or `get'
   int is_put = 0;
   {
-    OZ_Term arg1 = OZ_args[0];
+    OZ_Term arg1 = OZ_in(0);
     if (OZ_isVariable(arg1)) {
       OZ_suspendOn(arg1);
     } else if (! OZ_isAtom(arg1)) {
@@ -55,11 +55,11 @@ OZ_C_proc_begin(ri_lpsolve_conf, 2)
   }
 
   if (is_put) {
-    if (OZ_isVariable(OZ_args[1])) {
-      OZ_suspendOn(OZ_args[1]);
+    if (OZ_isVariable(OZ_in(1))) {
+      OZ_suspendOn(OZ_in(1));
     }
 
-    OZ_Term mode_term = OZ_subtree(OZ_args[1], atom_mode);
+    OZ_Term mode_term = OZ_subtree(OZ_in(1), atom_mode);
     if (mode_term) {
       if (OZ_isVariable(mode_term)) {
         OZ_suspendOn(mode_term);
@@ -67,7 +67,7 @@ OZ_C_proc_begin(ri_lpsolve_conf, 2)
       RILPSolve::putModeAtom(mode_term);
     }
 
-    OZ_Term solver_term = OZ_subtree(OZ_args[1], atom_solver);
+    OZ_Term solver_term = OZ_subtree(OZ_in(1), atom_solver);
     if (solver_term) {
       if (OZ_isVariable(solver_term)) {
         OZ_suspendOn(solver_term);
@@ -96,9 +96,9 @@ OZ_C_proc_begin(ri_lpsolve_conf, 2)
 
     OZ_Term r = OZ_recordInit(atom_config, arity);
 
-    return OZ_unify(OZ_args[1], r);
+    return OZ_unify(OZ_in(1), r);
   }
 
   return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end

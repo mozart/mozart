@@ -36,7 +36,10 @@
 % You are welcome to find new test cases and to add them to this file.
 % -- Tobias (tmueller@ps.uni-sb.de)
 
-{Browse
+
+                              \insert   opi.oz
+
+                              {Browse
 [
 
  {fun {$} X = {RI.var.bounds 1.4 1.5} Y = {RI.var.bounds 1.5 1.7} R
@@ -156,7 +159,7 @@
   end}
 
  {fun {$} A B R in
-     {RI.lessEq A B}
+     thread {RI.lessEq A B} end
      R = thread cond {RI.var.decl B} then 1 else 0 end end
      {RI.var.decl A}
      R
@@ -164,22 +167,21 @@
 
  {fun {$} A B C R in
      {RI.var.decl B}
-     {RI.plus A B C}
+     thread {RI.plus A B C} end
      R = thread cond {RI.var.decl C} then 1 else 0 end end
      {RI.var.decl A}
      R
   end}
 
  {fun {$} A B R in
-     {RI.intBounds A B}
+     thread {RI.intBounds A B} end
      R = thread cond {FD.decl B} then 1 else 0 end end
      {RI.var.decl A}
      R
   end}
 
-
  {fun {$} A B R in
-     {RI.intBounds A B}
+     thread {RI.intBounds A B} end
      R = thread cond {RI.var.decl A} then 1 else 0 end end
      {FD.decl B}
      R
