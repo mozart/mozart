@@ -25,6 +25,7 @@ functor
 import
    Property(get)
    Fontifier @ 'x-oz://contrib/doc/code/Fontifier'
+   HTML(seq:SEQ pcdata:PCDATA)
 export
    'class': FontifierClass
    NoProgLang
@@ -107,10 +108,10 @@ define
 
    fun {Face2Font Face}
       case Face
-      of comment  then 'I'
-      [] keyword  then 'B'
-      [] function then 'U'
-      [] type     then 'U'
+      of comment  then 'i'
+      [] keyword  then 'b'
+      [] function then 'u'
+      [] type     then 'u'
       else unit end
    end
 
@@ -126,30 +127,34 @@ define
       else unit end
    end
 
-   fun {ToHtmlCSS1 Face#Text L}
+   fun {ToHtmlCSS1 Face#Text}
       C = {Face2Class Face}
    in
-      if C==unit then {HtmlEscape Text}
-      else '<SPAN CLASS="'#C#'">'#{HtmlEscape Text}#'</SPAN>' end
-      #L
+      if C==unit then PCDATA({HtmlEscape Text})
+      else span('class':[C] 1:PCDATA({HtmlEscape Text})) end
    end
 
-   fun {ToHtmlCSS L} {FoldR L ToHtmlCSS1 nil} end
+   fun {ToHtmlCSS L}
+      SEQ({Map L ToHtmlCSS1})
+   end
 
    fun {ToHtmlColor1 Face#Text L}
-      '<FONT color="'#{Face2Color Face}#'">'#{HtmlEscape Text}#'</FONT>'
-      #L
+      font(color:{Face2Color Face} 1:PCDATA({HtmlEscape Text}))
    end
 
-   fun {ToHtmlColor L} {FoldR L ToHtmlColor1 nil} end
+   fun {ToHtmlColor L}
+      SEQ({Map L ToHtmlColor1})
+   end
 
    fun {ToHtmlMono1 Face#Text L}
       F = {Face2Font Face}
-   in if F==unit then {HtmlEscape Text}
-      else '<'#F#'>'#{HtmlEscape Text}#'</'#F#'>' end
+   in if F==unit then PCDATA({HtmlEscape Text})
+      else F(PCDATA({HtmlEscape Text})) end
       #L
    end
 
-   fun {ToHtmlMono L} {FoldR L ToHtmlMono1 nil} end
+   fun {ToHtmlMono L}
+      SEQ({Map L ToHtmlMono1})
+   end
    
 end

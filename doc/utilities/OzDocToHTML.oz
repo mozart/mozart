@@ -310,7 +310,7 @@ define
 	 if {HasFeature M I} then
 	    case M.I of S=_|_ then VS in
 	       {@MyFontifier enqueueVirtualString(@ProgLang S ?VS)}
-	       code(VERBATIM(VS))|   %--** VERBATIM?
+	       code(VS)|   %--** VERBATIM?
 	       OzDocToHTML, BatchCodeSub(M I + 1 $)
 	    [] nil then
 	       OzDocToHTML, BatchCodeSub(M I + 1 $)
