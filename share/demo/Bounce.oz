@@ -76,13 +76,13 @@ define
 
          thread
             try {self go}
-            catch system(...) then skip
+            catch _ then skip
             end
          end
       end
 
       meth bounce
-            %increment @x and @d
+         %% increment @x and @d
          x <- @x + @xd
          if @x =< 0.0 then
             x  <- 0.0
@@ -91,7 +91,7 @@ define
             x  <- CanvasWidth-BallRadius
             xd <- ~@xd
          end
-            %increment @y and @yd
+         %% increment @y and @yd
          y  <- @y - @yd
          yd <- @yd - Gravity
          if @y>=CanvasHeight-BallRadius then
@@ -104,7 +104,7 @@ define
          if @mouth>=Mouth          then mouth <- Mouth      d <- ~@d
          elseif @mouth=<MouthDelta then mouth <- MouthDelta d <- ~@d
          end
-         Tk.canvasTag,tk(itemconf start:@mouth extent:360-2*@mouth)
+         Tk.canvasTag,tk(itemconfigure start:@mouth extent:360-2*@mouth)
       end
 
       meth close
@@ -121,13 +121,13 @@ define
          Colors: BallColors
 
       meth init(parent:P)
-         Tk.canvas,tkInit(parent:P bg:BackColor bd:3 relief:sunken
-                          width:CanvasWidth height:CanvasHeight)
-         Tk.canvas,tkBind(action: self # NewBall
-                          event:  '<1>'
-                          args:   [float(x) float(y)])
-         Tk.canvas,tkBind(action: self # KillBall
-                          event:  '<3>')
+         {self tkInit(parent:P bg:BackColor bd:3 relief:sunken
+                      width:CanvasWidth height:CanvasHeight)}
+         {self tkBind(action: self # NewBall
+                      event:  '<1>'
+                      args:   [float(x) float(y)])}
+         {self tkBind(action: self # KillBall
+                      event:  '<3>')}
       end
 
       meth NewBall(X Y)
