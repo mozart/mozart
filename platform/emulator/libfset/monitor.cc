@@ -62,19 +62,35 @@ OZ_Return MonitorInPropagator::propagate(void)
     }
   }
 
+  // now the other way around: 
+  // check if stream is closed, i.e., _fsetvar_ becomes determined
   if (stream.isClosed()) {
     // fsetvar has to become a value
     int known_in = fsetvar->getKnownIn();
     FailOnInvalid(fsetvar->putCard(known_in, known_in));
     vanish = OZ_TRUE;
-  } else {
+  } else { // if the stream is _not_ closed ...
     OZ_Term tail = stream.getTail();
-    for (int i = 32 * fset_high; i --; ) {
+
+#ifdef FSET_HIGH
+    for (int i = fsethigh32; i --; ) {
       if (! _in_sofar.isIn(i) && fsetvar->isIn(i)) {
 	_in_sofar += i;
 	tail = stream.put(tail, OZ_int(i));
       }
     }
+#else
+
+    // find out what is new
+    OZ_FSetValue new_in = fsetvar->getGlbSet() - _in_sofar;
+    // append new elements to tail of the stream
+    FSetIterator fsi(& new_in);
+    for (int e = fsi.resetToMin(); e > -1; e = fsi.getNextLarger())
+      tail = stream.put(tail, OZ_int(e));
+    // keep track of what is known so far
+    _in_sofar = _in_sofar | new_in; 
+#endif
+
     if (fsetvar->isValue()) {
       if (OZ_unify(tail, OZ_nil()) == FAILED)
 	goto failure;
