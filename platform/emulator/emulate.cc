@@ -162,11 +162,7 @@ if (predArity != arityExp && VarArity != arityExp) {			   \
 
 
 
-#ifdef DEBUG_CHECK
 #define IMPOSSIBLE(INSTR) error("%s: impossible instruction",INSTR)
-#else
-#define IMPOSSIBLE(INSTR) 
-#endif
 
 
 
@@ -2763,7 +2759,7 @@ LBLsuspendThread:
 				    makeMessage(arity,label,X))));
 
   bombSend:
-    PC = isTailCall ? PC : PC+6;
+    PC = isTailCall ? NOCODE : PC+6;
     X[0] = makeMessage(arity,label,X);
     predArity = 1;
     predicate = tagged2Const(object);
@@ -2788,7 +2784,7 @@ LBLsuspendThread:
     TaggedRef object       = origObject;
     Abstraction *def       = NULL;
 
-    PC = isTailCall ? PC : PC+3;
+    PC = isTailCall ? NOCODE : PC+3;
 
     DEREF(object,objectPtr,objectTag);
     if (!isObject(object)) {
@@ -2844,7 +2840,7 @@ LBLsuspendThread:
 			 mkSTupleX("proc",taggedPredicate, X,predArity)));
        }
 
-       PC = isTailCall ? PC : PC+3;
+       PC = isTailCall ? NOCODE : PC+3;
        predicate = tagged2Const(taggedPredicate);
      }
 
