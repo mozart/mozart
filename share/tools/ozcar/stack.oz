@@ -18,10 +18,14 @@ local
    local
       fun {LastDebug F}
 	 case F == nil then nil else
-	    case {Label F.1} == debug andthen {Label F.2.1} == debug then
-	       {LastDebug F.2}
+	    case {Label F.1} == debug then
+	       case {Label F.2.1} == debug then
+		  {LastDebug F.2}
+	       else
+		  F
+	       end
 	    else
-	       F
+	       nodebug | F
 	    end
 	 end
       end
@@ -31,13 +35,18 @@ local
 	 [] X|D|A|B then
 	    Y|Z|T = {LastDebug D|A|B}
 	 in
-	    case {Label Z} == builtin then
-	       {P I {S2F I 0 enter X.file X.line Y.1.2.1 Z.name Z.args true}}
+	    case Y == nodebug then
+	       {DoStackForAllInd Z|T I P}
 	    else
-	       {P I {S2F I Y.1.1 enter X.file X.line
-		     Y.1.2.1 Z.name Y.1.2.2 false}}
+	       case {Label Z} == builtin then
+		  {P I {S2F I 0 enter X.file X.line
+			Y.1.2.1 Z.name Z.args true}}
+	       else
+		  {P I {S2F I Y.1.1 enter X.file X.line
+			Y.1.2.1 Z.name Y.1.2.2 false}}
+	       end
+	       {DoStackForAllInd Z|T I+1 P}
 	    end
-	    {DoStackForAllInd Z|T I+1 P}
 	 else {OzcarError 'strange stack?!'}
 	 end
       end

@@ -93,9 +93,14 @@ in
 	    nil
 	 end
       else                     % relative path
-	 Suffix = {Str.rchr S &/}
+	 %% strip "./" or "././"
+	 Suffix = case S.1 == &. andthen S.2.1 == &/ then T = S.2.2 in
+		     case T.1 == &. andthen T.2.1 == &/ then
+			T.2.2
+		     else T end
+		  else S end
       in
-	 {DoLookupFile case Suffix == nil then S else Suffix.2 end OzPath} 
+	 {DoLookupFile Suffix OzPath} 
       end
    end
 end
