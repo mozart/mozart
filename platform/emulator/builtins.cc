@@ -1747,9 +1747,6 @@ LBLagain:
       case Co_Chunk:
         t = tagged2SChunk(term)->getFeature(fea);
         break;
-      case Co_Thread:
-        t = tagged2Thread(term)->getFeature(fea);
-        break;
       case Co_Object:
         t = tagged2Object(term)->getFeature(fea);
         break;
@@ -2606,8 +2603,6 @@ OZ_C_proc_begin(BIchunkArity,2)
     return OZ_unify(out,tagged2Object(ch)->getArityList());
   case Co_Chunk:
     return OZ_unify(out,tagged2SChunk(ch)->getArityList());
-  case Co_Thread:
-    return OZ_unify(out,tagged2Thread(ch)->getArityList());
   case Co_Dictionary:
   case Co_Array:
   default:
@@ -6096,12 +6091,17 @@ OZ_C_proc_end
 // Debugging: special builtins for Benni
 // ---------------------------------------------------------------------------
 
+OZ_C_proc_begin(BIglobalThreadStream,1)
+{
+  return OZ_unify(OZ_getCArg(0), am.threadStreamTail);
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIcurrentThread,1)
 {
   return OZ_unify(OZ_getCArg(0),
                   makeTaggedConst(new OzThread(am.currentBoard,
-                                  am.currentThread,
-                                  am.currentThread->dbgGetTaskStack(NOCODE))));
+                                               am.currentThread)));
 }
 OZ_C_proc_end
 
@@ -7122,6 +7122,7 @@ BIspec allSpec2[] = {
   {"halt",0,BIhalt},
 
   // Debugging
+  {"globalThreadStream",1,BIglobalThreadStream},
   {"currentThread",1,BIcurrentThread},
   {"startTraceMode",2,BIstartTraceMode},
   {"stopTraceMode",1,BIstopTraceMode},

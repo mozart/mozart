@@ -125,6 +125,8 @@ public:
   TaggedRef biExceptionHandler;
   TaggedRef defaultExceptionHandler;
 
+  TaggedRef threadStreamTail;
+
   Toplevel *toplevelQueue;
 
   void printBoards();

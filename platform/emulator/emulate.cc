@@ -1473,12 +1473,7 @@ LBLkillToplevelThread:
 
         TaggedRef tail = e->currentThread->getStreamTail();
 
-        OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
-                                        3,
-                                        OZ_atom("nofile"),
-                                        OZ_int(0),
-                                        OZ_atom("finished")
-                                        );
+        OZ_Term debugInfo = OZ_atom("terminated");
 
         OZ_unify(tail, debugInfo);  // that's it, stream ends here!
       }
@@ -3128,26 +3123,23 @@ LBLsuspendThread:
       tt->pushCont(newPC,Y,G,NULL,0);
       e->scheduleThread (tt);
 
-      if (e->currentThread->traceMode()) {
+      if (0) {
 
-        TaggedRef tail   = e->currentThread->getStreamTail();
+        TaggedRef tail = e->threadStreamTail;
 
         OZ_Term streamForNewThread = OZ_newVariable();
         tt->setStreamTail(streamForNewThread);
         tt->startTraceMode(); // parent is being traced, so we are, too!
 
         OZ_Term debugInfo =
-          OZ_mkTupleC("newThread", 2,
-                      makeTaggedConst(new
-                                      OzThread(e->currentBoard,
-                                               tt,
-                                               tt->dbgGetTaskStack(NOCODE))),
+          OZ_mkTupleC("#", 2,
+                      makeTaggedConst(new OzThread(e->currentBoard, tt)),
                       streamForNewThread);
 
         OZ_Term newTail = OZ_newVariable();
         OZ_unify(tail, OZ_cons(debugInfo,newTail));
 
-        e->currentThread->setStreamTail(newTail);;
+        e->threadStreamTail = newTail;
       }
 
       JUMP(contPC);
