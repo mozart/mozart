@@ -75,7 +75,7 @@ starts the emulator under gdb")
       (message "OZHOME not set using fallback: %s" OZ-HOME)
       OZ-HOME)))
 
-(defvar oz-doc-dir (concat (oz-home) "/doc/chapters/")
+(defvar oz-doc-dir (concat (oz-home) "/doc/")
   "The default doc directory")
 
 (defvar oz-preview "xdvi"
@@ -261,7 +261,7 @@ starts the emulator under gdb")
      ("Other Demos"              . oz-find-demo-file)
      ("Library file"           . oz-find-lib-file)
 ;     ("Documentation (Text)"          . oz-find-docu-file)
-     ("Documentation (DVI)"           . oz-find-dvi-file)
+;     ("Documentation (DVI)"           . oz-find-dvi-file)
      )
     ("Print"
      ("region"      . oz-print-region)
@@ -408,7 +408,8 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (if (getenv "OZ_PI")
       t
     (setenv "OZ_PI" "1")
-    (setenv "OZPLATFORM" "sunos-sparc")
+    (if (null (getenv "OZPLATFORM"))
+      (setenv "OZPLATFORM" "sunos-sparc"))
     (if (getenv "OZHOME")
 	t
       (message "no OZHOME using fallback: %s" OZ-HOME)
@@ -416,7 +417,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
     (setenv "OZPATH" 
 	    (concat (or (getenv "OZPATH") ".") ":"
 		    (getenv "OZHOME") "/lib:"
-		    (getenv "OZHOME") "/platform/sunos-sparc:"
+		    (getenv "OZHOME") "/platform/" (getenv "OZPLATFORM") ":"
 		    (getenv "OZHOME") "/demo"))
     (setenv "PATH"
 	    (concat (getenv "PATH") ":" (getenv "OZHOME") "/bin")))
