@@ -1,12 +1,9 @@
 AC_INIT(FlexLexer.h)
-AC_CONFIG_AUX_DIR($srcdir/../../..)
 OZ_INIT
 OZ_CC_CHOOSE
 OZ_CXX_CHOOSE
 AC_LANG_CPLUSPLUS
 AC_PROG_LN_S
-AC_PROG_INSTALL
-AC_PROG_MAKE_SET
 AC_CHECK_PROGS(RM, rm)
 OZ_PATH_PROG(DYNLD, ozdynld)
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
@@ -28,6 +25,7 @@ AC_CONFIG_SUBDIRS(ozflex)
 AC_OUTPUT(Makefile ozbison/Makefile)
 
 errprint(ifdef([OZ_INIT],
- [],
+ [autoconf succeeded
+],
  [autoconf failed: use 'autoconf -l ../../..' to include ../../../aclocal.m4.
 ]))

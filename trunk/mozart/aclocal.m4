@@ -54,7 +54,6 @@ dnl sure bets.
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_PATH_UPWARD,[
-  AC_REQUIRE([OZ_WORKING_TEST])
   oz_tmp_dir=[$2]
   oz_tmp_ok=
   for oz_tmp1 in [$3]; do
@@ -64,7 +63,7 @@ AC_DEFUN(OZ_PATH_UPWARD,[
 		   $oz_tmp_dir/../../.. \
 		   $oz_tmp_dir/../../../.. \
 		   $oz_tmp_dir/../../../../..; do
-      if $TEST -e "$oz_tmp2/$oz_tmp1"; then
+      if test -r "$oz_tmp2/$oz_tmp1"; then
         [$1]=`cd $oz_tmp2 && pwd`
         oz_tmp_ok=yes
         break
@@ -93,7 +92,9 @@ dnl ------------------------------------------------------------------
 dnl OZ_PATH_BUILDTOP
 dnl
 dnl sets BUILDTOP by looking upward from the current directory
-dnl for a directory called mozart
+dnl for a directory containing either contrib or config.cache. We
+dnl look for config.cache last because some people may want to run
+dnl configure only in a subdirectory of the source tree.
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_PATH_BUILDTOP,[
@@ -105,45 +106,34 @@ AC_DEFUN(OZ_PATH_BUILDTOP,[
   BUILDTOP=$oz_cv_path_BUILDTOP
   AC_SUBST(BUILDTOP)])
 
+AC_DEFUN(OZ_PROG_INSTALL,[
+  if test "${INSTALL+set}" = set; then
+    AC_CACHE_CHECK([whether to unset broken INSTALL],
+      oz_cv_unset_INSTALL,[
+        echo >conftest.$$
+        if $INSTALL -c -m 644 conftest.$$ /tmp >/dev/null 2>&1; then
+          rm -f /tmp/conftest.$$ 2>/dev/null
+          oz_cv_unset_INSTALL=no
+        else
+          oz_cv_unset_INSTALL=yes
+        fi
+        rm -f conftest.$$ 2>/dev/null])
+    test "$oz_cv_unset_INSTALL" = yes && unset INSTALL
+  fi
+  AC_PROG_INSTALL
+  OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)])
+
 AC_DEFUN(OZ_INIT, [
   AC_PREFIX_DEFAULT(/usr/local/oz)
   OZ_PATH_SRCDIR
   OZ_PATH_SRCTOP
   OZ_PATH_BUILDTOP
+  AC_CONFIG_AUX_DIR($SRCTOP)
   AC_PROG_MAKE_SET
-  AC_PROG_INSTALL
-  OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)
+  OZ_PROG_INSTALL
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 ])
-
-dnl ------------------------------------------------------------------
-dnl OZ_PROG_TEST
-dnl
-dnl finds working version of test, sets TEST
-dnl ------------------------------------------------------------------
-
-AC_DEFUN(OZ_WORKING_TEST,[
-  AC_CACHE_CHECK([for test],oz_cv_TEST,[
-    if test -e . 2>/dev/null; then
-      oz_cv_TEST=test
-    else
-      oz_tmp_IFS="$IFS"
-      IFS="$IFS:"
-      for oz_tmp in $PATH; do
-        if $oz_tmp/test -e . 2>/dev/null; then
-          oz_tmp=`cd $oz_tmp && pwd`
-          oz_cv_TEST="$oz_tmp/test"
-          break
-        fi
-      done
-      IFS=$oz_tmp_IFS
-      if test -n "$oz_cv_TEST"; then
-        AC_MSG_ERROR([cannot locate a working test])
-      fi
-    fi])
-  TEST=$oz_cv_TEST
-  AC_SUBST(TEST)])
 
 dnl ==================================================================
 dnl VERSION CHECKING
@@ -276,11 +266,15 @@ You may find a mirror archive closer to you by consulting:
     oz_cv_CXX=$CXX
     oz_cv_CXXCPP=$CXXCPP
     oz_cv_GXX=$GXX
+    oz_cv_CXXFLAGS=$CXXFLAGS
     oz_cv_cxx__chosen=yes
   else
     OZ_FROM_CACHE(CXX,[for C++ compiler])
     OZ_FROM_CACHE(GXX,[whether we are using GNU C++])
     OZ_FROM_CACHE(CXXCPP,[for C++ preprocessor])
+    if test "${CXXFLAGS+set}" != set; then
+      OZ_FROM_CACHE(CFLAGS,[for default CXXFLAGS])
+    fi
   fi
   AC_SUBST(CXX)
   AC_SUBST(CXXCPP)])
@@ -305,9 +299,9 @@ dnl effect of doing something else.
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_FROM_CACHE,[
-  OZ_MSG_FRONT([Looking up in cache $2])
+  OZ_MSG_FRONT([checking $2])
   [$1]=$oz_cv_$1
-  AC_MSG_RESULT([$$1])])
+  AC_MSG_RESULT([(cached) $$1])])
 
 define(OZ_MSG_FRONT,
 [echo $ac_n "$1""... $ac_c" 1>&AC_FD_MSG
@@ -343,7 +337,7 @@ dnl ==================================================================
 AC_DEFUN(OZ_VERSION_GCC,[2.7])
 AC_DEFUN(OZ_CC_CHOOSE,[
   if test -z "$oz_cv_cc__chosen"; then
-    CFLAGS=
+dnl    CFLAGS=
     AC_PROG_CC
     if test "$GCC" = yes; then
       if oz_tmp=`$CC --version 2>/dev/null`; then
@@ -385,11 +379,15 @@ You may find a mirror archive closer to you by consulting:
     oz_cv_CC=$CC
     oz_cv_CPP=$CPP
     oz_cv_GCC=$GCC
+    oz_cv_CFLAGS=$CFLAGS
     oz_cv_cc__chosen=yes
   else
     OZ_FROM_CACHE(CC,[for C compiler])
     OZ_FROM_CACHE(GCC,[whether we are using GNU C])
     OZ_FROM_CACHE(CPP,[for C preprocessor])
+    if test "${CFLAGS+set}" != set ; then
+      OZ_FROM_CACHE(CFLAGS,[for default CFLAGS])
+    fi
   fi
   AC_SUBST(CC)
   AC_SUBST(CPP)])
@@ -679,24 +677,26 @@ char $1();
 $1(),$2,$3)])
 
 AC_DEFUN(OZ_CHECK_LIB, [
-	oz_saved_LIBS=$LIBS
-	OZ_TRY_LINK($2,$3,
-		if test "${enable_link_static}" = yes
-		then
-			LIBS="-Xlinker -Bstatic -l$1 -Xlinker -Bdynamic $LIBS"
-			OZ_TRY_LINK($2, $3,
-				LIBS="-l$1 $oz_saved_LIBS"
-				OZ_TRY_LINK($2,$3,
-					LIBS=$oz_saved_LIBS
-					$4)
-				)
-		else
-			LIBS="-l$1 $oz_saved_LIBS"
-			OZ_TRY_LINK($2,$3,
-				LIBS=$oz_saved_LIBS
-				$4)
-		fi)
-	])
+  oz_saved_LIBS=$LIBS
+  OZ_TRY_LINK($2,$3,
+   [if test "${enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -l$1 -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+      OZ_TRY_LINK($2, $3,
+        [LIBS="-l$1 $oz_saved_LIBS"
+         oz_add_libs="-l$1"
+         OZ_TRY_LINK($2,$3,
+           [LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            $4])])
+    else
+      LIBS="-l$1 $oz_saved_LIBS"
+      oz_add_libs="-l$1"
+      OZ_TRY_LINK($2,$3,
+        [LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         $4])
+    fi])])
 
 AC_DEFUN(OZ_CXX_OPTIONS, [
 	ozm_out=
@@ -725,46 +725,89 @@ AC_DEFUN(OZ_CXX_OPTIONS, [
 	$2="$ozm_out"
 	])
 
-AC_DEFUN(OZ_CHECK_LIB_PATH, [
-	oz_check_lib_path=no
-	oz_saved_LDFLAGS=$LDFLAGS
-    	oz_v=`echo $1_$2 | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
-	AC_MSG_CHECKING(for $2 in -l$1 (default))
-	OZ_CHECK_LIB($1,$2,
-		AC_MSG_RESULT(yes)
-		oz_check_lib_path=yes,
-		AC_MSG_RESULT(no)
-		for p in $oz_lib_path
-		do
-			LDFLAGS="-L$p $oz_saved_LDFLAGS"
-			AC_MSG_CHECKING(for $2 in -L$p -l$1)
-			OZ_CHECK_LIB($1,$2,
-				AC_MSG_RESULT(yes)
-				oz_check_lib_path=yes
-				break
-				,
-				AC_MSG_RESULT(no)
-				)
-		done)
-	if test $oz_check_lib_path = yes
-	then
-		:
-		$3
-	else
-		LDFLAGS=$oz_saved_LDFLAGS
-		$4
-	fi
-	])
+AC_DEFUN(OZ_ADDTO_LDFLAGS,[
+  if test "[$1]" != yes && test "[$1]" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "[$1]"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="[$1]${LDFLAGS:+ }$LDFLAGS"
+  fi
+])
+
+AC_DEFUN(OZ_ADDTO_LIBS,[
+  if test -n "[$1]" && test "[$1]" != yes && test "[$1]" != no; then
+    LIBS="[$1]${LIBS:+ }$LIBS"
+  fi])
+
+AC_DEFUN(OZ_CHECK_LIB_PATH,[
+  if test -n "$[oz_cv_lib_path_ldflags_]patsubst($1_$2,[[^a-zA-Z0-9_]],_)"; then
+    AC_MSG_CHECKING([for library $1])
+    oz_add_ldflags=$[oz_cv_lib_path_ldflags_]patsubst($1_$2,[[^a-zA-Z0-9_]],_)
+    oz_add_libs=$[oz_cv_lib_path_libs_]patsubst($1_$2,[[^a-zA-Z0-9_]],_)
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    AC_MSG_RESULT([(cached) $oz_tmp])
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    AC_MSG_CHECKING([for $2 in -l$1 (default)])
+    OZ_CHECK_LIB($1,$2,
+      [AC_MSG_RESULT(yes)
+       oz_add_ldflags=yes
+      ],
+      [AC_MSG_RESULT(no)
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         AC_MSG_CHECKING([for $2 in -L$p -l$1])
+         OZ_CHECK_LIB($1,$2,
+           [AC_MSG_RESULT(yes)
+            oz_add_ldflags="-L$p"
+            break],
+           [AC_MSG_RESULT(no)])
+       done])
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    [oz_cv_lib_path_ldflags_]patsubst($1_$2,[[^a-zA-Z0-9_]],_)=$oz_add_ldflags
+    [oz_cv_lib_path_libs_]patsubst($1_$2,[[^a-zA-Z0-9_]],_)=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
+    ifelse([$4],[],:,[$4])
+  else
+    OZ_ADDTO_LDFLAGS($oz_add_ldflags)
+    OZ_ADDTO_LIBS($oz_add_libs)
+    $3
+  fi])
+
 
 AC_DEFUN(OZ_ADDTO_CPPFLAGS,[
-  oz_tmp_ok=yes
-  for oz_tmp in $CPPFLAGS NONE; do
-    if test "$oz_tmp" = "[$1]"; then
-      oz_tmp_ok=no
-      break
-    fi
-  done
-  test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }[$1]"
+  if test "[$1]" != yes && test "[$1]" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $CPPFLAGS NONE; do
+      if test "$oz_tmp" = "[$1]"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }[$1]"
+  fi
 ])
 
 
@@ -816,7 +859,6 @@ AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
       CXXAVOID=
     fi
     AC_SUBST(CXXAVOID)
-    AC_PROG_CXXCPP
     AC_LANG_CPLUSPLUS
     OZ_PATH_PROG(OZDYNLD,ozdynld)
 ])
