@@ -9,6 +9,10 @@
 
 /* The Oz source and machine level debugger */
 
+#ifndef __DEBUGH
+#define __DEBUGH
+
+
 #include "term.hh"
 
 class OzDebug {
@@ -45,3 +49,6 @@ Bool trace(char *s,Board *board=NULL,Actor *actor=NULL,
            ProgramCounter PC=NOCODE,RefsArray Y=NULL,RefsArray G=NULL);
 void tracerOn();
 void tracerOff();
+
+
+#endif
