@@ -100,7 +100,7 @@ void Thread::Init()
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
   am.currentThread = (Thread *) NULL;
-  am.rootThread = new Thread(am.conf.systemPriority);
+  am.rootThread = new Thread(am.conf.defaultPriority);
   am.currentTaskStack = NULL;
 }
 
