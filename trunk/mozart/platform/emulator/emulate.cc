@@ -362,7 +362,7 @@ void engine() {
 #endif
   extern Suspension* FDcurrentTaskSusp; // see fdAddOn
   Suspension* &currentTaskSusp = FDcurrentTaskSusp;
-  Actor *CAA = NULL;
+  AWActor *CAA = NULL;
   Board *tmpBB = NULL;
   Board *&CBB = am.currentBoard;
 
@@ -566,14 +566,17 @@ void engine() {
 	}
 
       case C_NERVOUS:
-	error("mm2: never here");
+	// error("mm2: never here");
+	// by kost@ : 'solveActorWaker' can produce such task
+	// (if the search problem is stable by its execution); 
 	taskStack->setTop(topCache);
 	if (!tmpBB) {
 	  goto LBLfindWork;
 	}
 	goto LBLTaskNervous;
       case C_CFUNC_CONT:
-	error("mm2: never here");
+	// error("mm2: never here");
+	// by kost@ : 'solve actors' are represented via the c-function; 
 	if (taskStack->isEmpty(e)) goto LBLTaskEmpty;
 	biFun = (BIFun) TaskStackPop(--topCache);
 	currentTaskSusp = (Suspension*) TaskStackPop(--topCache);
@@ -615,7 +618,6 @@ void engine() {
     INSTALLPATH(tmpBB);
 
     goto LBLreduce;
-
 
   LBLTaskCFuncCont:
 
@@ -1592,6 +1594,15 @@ void engine() {
 	case BILoadFile:
 	  goto LBLBIloadFile;
 
+	case BIsolve:
+	  goto LBLBIsolve;
+
+	case BIsolveCont:
+	  goto LBLBIsolveCont;
+
+	case BIsolved:
+	  goto LBLBIsolved;
+
 	case BIDefault:
 	  {
 	    if (am.isSetSFlag(DebugMode)) {
@@ -1770,13 +1781,193 @@ void engine() {
        JUMP(contAdr);
      }
 
-  }
+// ------------------------------------------------------------------------
+// --- Call: Builtin: solve
+// ------------------------------------------------------------------------
 
+   LBLBIsolve:
+     {
+       TaggedRef x0 = X[0];
+       TaggedRef x1 = X[1];
+       DEREF (x0, solvePredPtr, x0Tag);
+       DEREF (x1, resVarPtr, x1Tag);
+
+       if (isAnyVar (x0Tag) == OK) {
+	 X[0] = makeTaggedRef (solvePredPtr);
+	 X[1] = makeTaggedRef (resVarPtr);
+	 predicate = bi->getSuspHandler();
+	 if (!predicate) {
+	   warning("call: builtin %s/%d: no suspension handler",
+		   bi->getPrintName(),
+		   bi->getArity());
+	   HANDLE_FAILURE1(contAdr, message(""));
+	 }
+	 goto LBLcall;
+       }
+
+       if (isSRecord (x0Tag) == NO ||
+	   !(tagged2SRecord (x0)->getType () == R_ABSTRACTION ||
+	     tagged2SRecord (x0)->getType () == R_BUILTIN)) {
+	 warning("call: no abstraction or builtin in solve");
+	 HANDLE_FAILURE1 (contAdr, message(""));
+       }
+
+       // put continuation if any;
+       if (isExecute == NO)
+	 e->pushTask (CBB, contAdr, Y, G);
+
+       // create solve actor(resVarPtr);
+       SolveActor *sa = new SolveActor (CBB, GET_CURRENT_PRIORITY(), 
+					makeTaggedRef (resVarPtr));
+
+       // put ~'solve actor';
+       // Note that CBB is already the 'solve' board; 
+       e->pushTask(CBB, (BIFun) solveActorWaker);    // no args; 
+       
+       // apply the predicate;
+       predArity = 1;
+       predicate = (Abstraction *) tagValueOf (x0);
+       X[0] = makeTaggedRef (sa->getSolveVarRef ());
+       isExecute = OK;
+       goto LBLcall;   // spare a task - call the predicate directly; 
+     }
+
+// ------------------------------------------------------------------------
+// --- Call: Builtin: solveCont
+// ------------------------------------------------------------------------
+
+   LBLBIsolveCont:
+     {
+       if (((OneCallBuiltin *)bi)->isSeen () == OK) {
+	 HANDLE_FAILURE1(contAdr, message("not first call of solve continuation"));
+       }
+
+       ((OneCallBuiltin *) bi)->hasSeen ();
+       Board *solveBB =
+	 (Board *) tagValueOf ((((OneCallBuiltin *) bi)->getGRegs ())[0]);
+       DebugCheck ((solveBB->isSolve () == NO),
+		   error ("no 'solve' blackboard  in solve continuation builtin"));
+       DebugCheck((solveBB->isCommitted () == OK ||
+		   solveBB->isDiscarded () == OK ||
+		   solveBB->isFailed () == OK), 
+		  error ("Solve board in solve continuation builtin is gone"));
+       SolveActor *solveAA = CastSolveActor (solveBB->getActor ()); 
+       DebugCheck((solveAA->getBoard () != NULL),
+		  error ("SolveCont: actors's board is linked to computation tree?"));
+
+       // link and commit the board (actor will be committed too); 
+       solveBB->setCommitted (CBB);
+       CBB->addSuspension (solveBB->getSuspCount ()); // similar to the 'unit commit'
+       DebugCheck (((solveBB->getScriptRef ()).getSize () != 0),
+		   error ("non-empty script in solve blackboard"));
+
+       // adjoin the list of or-actors to the list in actual solve actor!!!
+       Board *currentSolveBB = am.currentSolveBoard;
+       if (currentSolveBB == (Board *) NULL) {
+	 DebugCheckT (message ("solveCont is applied not inside search problem?"));
+       } else {
+	 CastSolveActor (currentSolveBB->getActor ())->pushWaitActorsStackOf (solveAA);
+       }
+
+       // install (i.e. perform 'unit commmit') 'board-to-install' if any;
+       Board *boardToInstall = solveAA->getBoardToInstall ();
+       if (boardToInstall != (Board *) NULL) {
+	 boardToInstall->setCommitted (CBB);
+#ifdef DEBUG_CHECK
+	 if ( !e->installScript (boardToInstall->getScriptRef ()) ) {
+	   error ("installScript has failed in solveCont");
+	 }
+#else
+	 (void) e->installScript (boardToInstall->getScriptRef ());
+#endif
+	 // get continuation of 'board-to-install' if any;
+	 if (boardToInstall->isWaitTop () == NO) {
+	   Continuation *bodyOf = boardToInstall->getBodyPtr ();
+	   e->pushTask (CBB, bodyOf->getPC (), bodyOf->getY (),
+			bodyOf->getG (), bodyOf->getX (), bodyOf->getXSize ());
+	 } else if (boardToInstall->hasSuspension () == NO) {
+	   CBB->removeSuspension ();   // former suspension of solve blackboard; 
+	 }
+       }
+       // NB: 
+       //    Every 'copyTree' call should compress a path in a computation space, 
+       //    and not only for copy of, but for an original subtree too. 
+       //    Otherwise we would get a long chain of already-commited blackboards 
+       //    of former solve-actors; 
+
+       if ( !e->fastUnify (solveAA->getSolveVar (), X[0]) ) {
+	 warning ("unification of variable in solveCont failed");
+	 HANDLE_FAILURE (NULL, ;);
+       }
+
+       if (isExecute) {
+	 goto LBLreduce;
+       }
+       JUMP(contAdr);
+     }
+
+// ------------------------------------------------------------------------
+// --- Call: Builtin: solved
+// ------------------------------------------------------------------------
+
+   LBLBIsolved:
+     {
+       TaggedRef valueIn = (((SolvedBuiltin *) bi)->getGRegs ())[0]; 
+       DebugCheck ((isRef (valueIn) == OK), 
+		   error ("reference is found in 'solved' builtin"));
+
+       if (tagTypeOf (valueIn) == CONST) {
+	 Board *solveBB =
+	   (Board *) tagValueOf ((((SolvedBuiltin *) bi)->getGRegs ())[0]);
+	 DebugCheck ((solveBB->isSolve () == NO),
+		     error ("no 'solve' blackboard  in solve continuation builtin"));
+	 DebugCheck((solveBB->isCommitted () == OK ||
+		     solveBB->isDiscarded () == OK ||
+		     solveBB->isFailed () == OK), 
+		    error ("Solve board in solve continuation builtin is gone"));
+	 DebugCheck((solveBB->getBoard () != NULL),
+		    error ("SolveCont: taken board is linked to computation tree?"));
+	 SolveActor *solveAA = CastSolveActor (solveBB->getActor ());
+
+	 Bool isGround;
+	 solveBB = (Board *) e->copyTree (solveBB, &isGround);
+
+	 if (isGround == OK) {
+	   TaggedRef solveTRef = solveAA->getSolveVar ();  // copy of; 
+	   DEREF(solveTRef, _0, _1);
+	   (((SolvedBuiltin *) bi)->getGRegs ())[0] = solveTRef; 
+	   goto LBLBIsolved;
+	 }
+
+	 // link and commit the board;
+	 solveBB->setCommitted (CBB);
+	 DebugCheck (((solveBB->getScriptRef ()).getSize () != 0),
+		     error ("non-empty script in solve blackboard"));
+
+	 if ( !e->fastUnify (solveAA->getSolveVar (), X[0]) ) {
+	   warning ("unification of variable in solved failed");
+	   HANDLE_FAILURE (NULL, ;);
+	 }
+       } else {
+	 if ( !e->fastUnify (valueIn, X[0]) ) {
+	   warning ("unification of variable in solved failed");
+	   HANDLE_FAILURE (NULL, ;);
+	 }
+       }
+
+       if (isExecute) {
+	 goto LBLreduce;
+       }
+       JUMP(contAdr);
+     }
+
+   }
 
 // --------------------------------------------------------------------------
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
 
+  
   INSTRUCTION(WAIT)
     {
       DebugCheck(!CBB->isWait(),error("WAIT"));
@@ -1865,7 +2056,7 @@ void engine() {
       markDirtyRefsArray(Y);
       DebugTrace(trace("suspend clause",CBB,CAA));
 
-      CAA = CBB->getActor();
+      CAA = CastAWActor (CBB->getActor());
 
       if (CAA->hasNext()) {
 
@@ -2032,8 +2223,6 @@ void engine() {
 // ----------------- end emulate ------------------------------------------
 
 
-
-
 // ------------------------------------------------------------------------
 // *** Emulate if process node is ok
 // ------------------------------------------------------------------------
@@ -2101,6 +2290,72 @@ void engine() {
     goto LBLfindWork;
 
 // WAIT: no rule
+  }  else if (CBB->isSolve ()) {
+    // try to reduce a solve board;
+    if (CastSolveActor (CBB->getActor ())->isStable () == OK) {
+      // all possible reduction steps require this; 
+      e->trail.popMark ();
+      CBB->unsetInstalled ();
+      // CBB->setCommitted ();  // may not be committed! (check in solveCont);
+      SolveActor *solveAA = CastSolveActor (CBB->getActor ());
+      Board *solveBB = CBB; 
+      solveAA->unsetBoard ();   // unlink from the computation tree; 
+      Board::SetCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+      CBB->removeSuspension ();
+
+      if (solveBB->hasSuspension () == NO) {
+	// 'solved';
+	if ( !e->fastUnify (solveAA->getResult (), solveAA->genSolved ()) ) {
+	  warning ("unification of solved tuple with variable failed");
+	  HANDLE_FAILURE (NULL, ;);
+	}
+      } else {
+	// 'stabe' (stuck) or enumeration;
+	WaitActor *wa = solveAA->getDisWaitActor ();
+	if (wa == (WaitActor *) NULL) {
+	  // "stuck" (stable without distributing waitActors);
+	  if ( !e->fastUnify (solveAA->getResult (), solveAA->genStuck ()) ) {
+	    warning ("unification of solved tuple with variable has failed");
+	    HANDLE_FAILURE (NULL, ;);
+	  }
+	} else {
+	  // to enumerate;
+	  Board *waitBoard = wa->getChild ();
+	  wa->decChilds ();
+	  WaitActor *nwa = new WaitActor (wa);
+	  waitBoard->setActor (nwa);
+	  nwa->addChildInternal (waitBoard);
+	  wa->unsetBoard ();  // may not copy the actor and rest of boards too;
+	  solveAA->setBoardToInstall (waitBoard);
+
+	  //  Now, the following state has been reached:
+	  // The waitActor with the 'rest' of actors is unlinked from the 
+	  // computation space; instead, a new waitActor (*nwa) is linked to it, 
+	  // and all the tree from solve blackboard (*solveBB) will be now copied.
+	  // Moreover, the copy has already 'boardToInstall' setted properly;
+	  Board *newSolveBB = e->copyTree (solveBB, (Bool *) NULL);
+	  // ... and now set the original waitActor backward;
+	  nwa->setCommitted ();     // this subtree is discarded;
+	  wa->setBoard (solveBB);   // original waitActor;
+	  if (wa->hasOneChild () == OK) {
+	    solveAA->setBoardToInstall (wa->getChild ());
+	  } else {
+	    solveAA->setBoardToInstall ((Board *) NULL);
+	    // ... since we have set previously board-to-install for copy;
+	    solveAA->pushWaitActor (wa);
+	    //  If this waitActor has yet more than one clause, it can be
+	    // distributed again ... Moreover, it must be considered first. 
+	  }
+	  // ... and now there are two proper branches of search problem;
+
+	  if ( !e->fastUnify (solveAA->getResult (),
+			      solveAA->genEnumed (newSolveBB) )) {
+	    warning ("unification of distributed tuple with variable has failed");
+	    HANDLE_FAILURE (NULL, ;);
+	  }
+	}
+      }
+    }
   } else {
     DebugCheck(!CBB->isRoot(),error("reduce"));
   }
@@ -2114,28 +2369,27 @@ void engine() {
  LBLfailure:
   DebugTrace(trace("fail",CBB));
 
-  CAA=Board::FailCurrent();
+  {
+    Actor *AA = Board::FailCurrent();
 
 // ------------------------------------------------------------------------
 // *** REDUCE Actor
 // ------------------------------------------------------------------------
 
-  {
-    DebugTrace(trace("reduce actor",CBB,CAA));
+    DebugTrace(trace("reduce actor",CBB,AA));
 
-    if ( CAA->hasNext() ) {
-      goto LBLexecuteNext;
-    }
-
-    if (CAA->isAsk()) {
+    if (AA->isAsk()) {
+      if ((CastAskActor (AA))->hasNext () == OK) {
+	goto LBLexecuteNext;
+      }
 /* check if else clause must be activated */
-      if ( CAA->isLeaf() ) {
+      if ( (CastAskActor (AA))->isLeaf() ) {
 
 /* rule: if else ... fi
    push the else cont on parent && remove actor */
-	CAA->setCommitted();
-	LOADCONT(CAA->getNext());
-	PC = CastAskActor(CAA)->getElsePC();
+	AA->setCommitted();
+	LOADCONT((CastAskActor (AA))->getNext());
+	PC = CastAskActor(AA)->getElsePC();
 	if (PC != NOCODE) {
 	  CBB->removeSuspension();
 	  goto LBLemulateCheckSwitch;
@@ -2144,12 +2398,13 @@ void engine() {
 /* rule: if fi --> false */
 	HANDLE_FAILURE(0,message("reducing 'if fi' to 'false'"));
       }
-    } else {
-      WaitActor *aa = CastWaitActor(CAA);
-      
+    } else if (AA->isWait ()) {
+      if ((CastWaitActor (AA))->hasNext () == OK) {
+	goto LBLexecuteNext;
+      }
 /* rule: or <sigma> ro (unit commit rule) */
-      if (aa->hasOneChild()) {
-	Board *waitBoard = aa->getChild();
+      if ((CastWaitActor (AA))->hasOneChild()) {
+	Board *waitBoard = (CastWaitActor (AA))->getChild();
 	if (waitBoard->isWaiting()) {
 	  waitBoard->setCommitted(CBB); // do this first !!!
 	  if (!e->installScript(waitBoard->getScriptRef())) {
@@ -2179,6 +2434,17 @@ void engine() {
 
 	  goto LBLemulateCheckSwitch;
 	}
+      }
+    } else {
+      //  Reduce (i.e. with failure in this case) the solve actor;
+      //  The solve actor goes simply away, and the 'failed' atom is bound to
+      // the result variable; 
+      AA->setCommitted();
+      CBB->removeSuspension();
+      if ( !e->fastUnify (CastSolveActor (AA)->getResult (),
+			  CastSolveActor (AA)->genFailed ()) ) {
+	warning ("unification of atom 'failed' with variable has failed");
+	HANDLE_FAILURE (NULL, ;);
       }
     }
 

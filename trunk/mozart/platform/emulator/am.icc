@@ -18,6 +18,16 @@
 
 #include "thread.hh"
 
+// optimize: inline ....
+inline void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
+/* (re)bind Ref *ref to Term *ptr;                     */
+/* We need this procedure for the rational unification */
+/* algorithm;                                          */
+{
+  rebindTrail.pushCouple(refPtr, *refPtr);   /* always;   */
+  doBind(refPtr,newRef);
+}
+
 /* specially optimized unify: test two most probable cases first:
  *
  *     1. bind a variable
@@ -66,64 +76,28 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a)
   }
 }
 
-inline
-void AM::pushTask(Board *n,ProgramCounter pc,
-			 RefsArray y,RefsArray g,
-			 RefsArray x,int i)
+inline void AM::deinstallPath(Board *top)
 {
-  n->addSuspension();
-  if (!currentTaskStack) {
-    currentTaskStack = am.currentThread->makeTaskStack();
+  DebugCheck(top->isCommitted(),
+	     error("AM::deinstallPath: top already commited");
+	     return;);
+  
+  while (AM::currentBoard != top) {
+    deinstallCurrent();
+    DebugCheck(AM::currentBoard == AM::rootBoard
+	       && top != AM::rootBoard,
+	       error("AM::deinstallPath: root node reached"));
   }
-  currentTaskStack->pushCont(n,pc,y,g,x,i);
 }
 
-inline
-Bool AM::entailment ()
+inline void AM::deinstallCurrent()
 {
-  return (!AM::currentBoard->hasSuspension()
-	  // First test: no subtrees;
-	  && trail.isEmptyChunk()
-	  // second test: is this node stable?
-	  ? OK : NO);
+  reduceTrailOnSuspend();
+  AM::currentBoard->unsetInstalled();
+  Board::SetCurrent(AM::currentBoard->getParentBoard()->getBoardDeref());
 }
 
-// unify two non derefed tagged refs
-inline
-Bool AM::unify(TaggedRef ref1, TaggedRef ref2)
-{
-  CHECK_NONVAR(ref1);
-  CHECK_NONVAR(ref2);
-
-  return unify(&ref1, &ref2);
-}
-
-inline
-Bool AM::unify(TaggedRef *ref1, TaggedRef ref2)
-{
-  CHECK_NONVAR(ref2);
-
-  return unify(ref1, &ref2);
-}
-
-inline
-void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
-{
-  genericBind(varPtr,var,termPtr, *termPtr);
-}
-
-inline
-void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
-/* (re)bind Ref *ref to Term *ptr;                     */
-/* We need this procedure for the rational unification */
-/* algorithm;                                          */
-{
-  rebindTrail.pushCouple(refPtr, *refPtr);   /* always;   */
-  doBind(refPtr,newRef);
-}
-
-inline
-Bool AM::installScript(ConsList &script)
+inline Bool AM::installScript(ConsList &script)
 {
   Bool ret = OK;
   for (int index = 0; index < script.getSize(); index++) {
@@ -138,13 +112,70 @@ Bool AM::installScript(ConsList &script)
   return ret;
 }
 
+inline void AM::pushTask(Board *n,ProgramCounter pc,
+			 RefsArray y,RefsArray g,
+			 RefsArray x,int i)
+{
+  n->addSuspension();
+  if (!currentTaskStack) {
+    currentTaskStack = am.currentThread->makeTaskStack();
+  }
+  currentTaskStack->pushCont(n,pc,y,g,x,i);
+}
+
+inline void AM::pushNervous(Board *n)
+{
+  if (!currentTaskStack) {
+    am.currentThread->makeTaskStack();
+  }
+  currentTaskStack->pushNervous (n);
+}
+
+inline void AM::pushTask(Board *n, BIFun f, RefsArray x, int i)
+{
+  n->addSuspension();
+  if (!currentTaskStack) {
+    am.currentThread->makeTaskStack();
+  }
+  currentTaskStack->pushCont (n, f, (Suspension *) NULL, x, i);
+}
+
+inline Bool AM::entailment ()
+{
+  return (!AM::currentBoard->hasSuspension()
+	  // First test: no subtrees;
+	  && trail.isEmptyChunk()
+	  // second test: is this node stable?
+	  ? OK : NO);
+}
+
+// unify two non derefed tagged refs
+inline Bool AM::unify(TaggedRef ref1, TaggedRef ref2)
+{
+  CHECK_NONVAR(ref1);
+  CHECK_NONVAR(ref2);
+
+  return unify(&ref1, &ref2);
+}
+
+inline Bool AM::unify(TaggedRef *ref1, TaggedRef ref2)
+{
+  CHECK_NONVAR(ref2);
+
+  return unify(ref1, &ref2);
+}
+
+inline
+void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
+{
+  genericBind(varPtr,var,termPtr, *termPtr);
+}
 
 /*
  *   Procedure what checks whether one node is in subtree of another;
  *
  */
-inline
-Bool AM::isInScope (Board *above, Board* node) {
+inline Bool AM::isInScope (Board *above, Board* node) {
   while (node != AM::rootBoard) {
     if (node == above)
       return (OK);
@@ -153,8 +184,8 @@ Bool AM::isInScope (Board *above, Board* node) {
   return (NO);
 }
 
-inline
-Bool AM::isLocalUVar(TaggedRef var)
+
+inline Bool AM::isLocalUVar(TaggedRef var)
 {
   return (var == currentUVarPrototype ||
 	  // variables are usually bound 
@@ -163,8 +194,7 @@ Bool AM::isLocalUVar(TaggedRef var)
     ? OK : NO;
 }
 
-inline
-Bool AM::isLocalSVar(TaggedRef var) {
+inline Bool AM::isLocalSVar(TaggedRef var) {
   Board *home = tagged2SVar(var)->getHome1();
 
   return (home == AM::currentBoard ||
@@ -172,8 +202,7 @@ Bool AM::isLocalSVar(TaggedRef var) {
     ? OK : NO;
 }
 
-inline
-Bool AM::isLocalCVar(TaggedRef var) {
+inline Bool AM::isLocalCVar(TaggedRef var) {
   Board *home = tagged2CVar(var)->getHome1();
 
   return (home == AM::currentBoard ||
@@ -181,8 +210,7 @@ Bool AM::isLocalCVar(TaggedRef var) {
     ? OK : NO;
 }
 
-inline
-Bool AM::isLocalVariable(TaggedRef var)
+inline Bool AM::isLocalVariable(TaggedRef var)
 {
   CHECK_ISVAR(var);
 
@@ -194,8 +222,7 @@ Bool AM::isLocalVariable(TaggedRef var)
   return isLocalCVar(var);
 }
 
-inline
-void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
+inline void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
 				    SVariable *rightVar)
 {
   SVariable* var = tagged2SuspVar(taggedvar);
@@ -204,15 +231,13 @@ void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
 					term, rightVar));
 }
 
-inline
-Bool AM::isEmptyTrailChunk ()
+inline Bool AM::isEmptyTrailChunk ()
 {
-  return trail.isEmptyChunk();
+  return (trail.isEmptyChunk ());
 }
 
-inline
-Bool AM::isToplevel() {
+inline Bool AM::isToplevel() {
   return AM::currentBoard == AM::rootBoard ? OK : NO;
 }
 
-#endif
+#endif  // __AM_ICC
