@@ -246,7 +246,7 @@ end>>>
             Returns a list of modules computed by functor application.
           <P>
             <<Module.apply>> is defined as follows:
-<<<fun {Module.apply UrlVs}
+<<<fun {Module.apply UFs}
    ModMan = {New Module.manager init}
 in
    {Map UFs fun {$ UF}
