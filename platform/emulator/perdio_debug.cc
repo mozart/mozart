@@ -1,7 +1,7 @@
 
 #ifdef DEBUG_PERDIO
 
-DebugVector *DV = new DebugVector();
+DebugVector *DV = NULL;
 
 char *debugTypeStr[LAST] = {
   "SEND_EMIT",	// 0

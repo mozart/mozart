@@ -86,17 +86,18 @@ public:
   }
 };
 
-Bool isGenFSetVar(OZ_Term term);
-Bool isGenFSetVar(OZ_Term term, TypeOfTerm tag);
-GenFSetVariable * tagged2GenFSetVar(OZ_Term term);
 void addSuspFSetVar(OZ_Term, SuspList *, OZ_FSetPropState = fs_prop_any);
 void addSuspFSetVar(OZ_Term, Thread *, OZ_FSetPropState = fs_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FSet *);
-OZ_FSetConstraint * unpatchReified(OZ_Term t);
 
 #if !defined(OUTLINE)
 #include "fsgenvar.icc"
 #else
+Bool isGenFSetVar(OZ_Term term);
+Bool isGenFSetVar(OZ_Term term, TypeOfTerm tag);
+GenFSetVariable * tagged2GenFSetVar(OZ_Term term);
+OZ_FSetConstraint * unpatchReified(OZ_Term t);
+
 #undef inline
 #endif
 
