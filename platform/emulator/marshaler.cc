@@ -174,17 +174,37 @@ double unmarshalFloat(MsgBuffer *bs)
 
 class ByteStream;
 
-char *unmarshalString(MsgBuffer *bs)
+static
+char *getString(MsgBuffer *bs, unsigned int i)
 {
-  misc_counter[MISC_STRING].recv();
-  int i = unmarshalNumber(bs);
-
-  char *ret = new char[i+1];  
-  for (int k=0; k<i && !bs->atEnd(); k++) {
+  char *ret = new char[i+1];
+  if (ret==NULL)
+    return NULL;
+  for (int k=0; k<i; k++) {
+    if (bs->atEnd()) {
+      delete ret;
+      return NULL;
+    }
     ret[k] = bs->get();
   }
   ret[i] = '\0';
   return ret;
+}
+
+char *unmarshalString(MsgBuffer *bs)
+{
+  misc_counter[MISC_STRING].recv();
+  unsigned int i = unmarshalNumber(bs);
+
+  return getString(bs,i);
+}
+
+/* a version of unmarshalString that is more stable against garbage input */
+char *unmarshalVersionString(MsgBuffer *bs)
+{
+  unsigned int i = unmarshalNumber(bs);
+  if (i>=1000) return NULL; // i is likely to be garbage
+  return getString(bs,i);
 }
 
 #define Comment(Args) if (bs->textmode()) {comment Args;}
@@ -952,12 +972,13 @@ loop:
   case DIF_BUILTIN:
     {
       int refTag = unmarshalRefTag(bs);
-      char *name = unmarshalString(bs); // ATTENTION deletion
+      char *name = unmarshalString(bs);
       Builtin * found = string2Builtin(name);
 
       if (!found) {
 	OZ_warning("Builtin '%s' not in table.", name);
 	*ret = oz_nil();
+	delete name;
 	return;
       }
 
@@ -965,6 +986,7 @@ loop:
 	OZ_warning("Unpickling sited builtin: '%s'", name);
       }
 
+      delete name;
       *ret = makeTaggedConst(found);
       gotRef(bs,*ret,refTag);
       return;
