@@ -58,15 +58,6 @@ TaggedRef dictionary_of_modules;
 #include "modFinalize-if.cc"
 #include "modProfile-if.cc"
 #include "modDistribution-if.cc"
-// kost@ : linked so far statically;
-#include "modPID-if.cc"
-#include "modFault-if.cc"
-// kost@ : linked so far statically;
-#include "modDPMisc-if.cc"
-// kost@ : linked so far statically;
-#ifdef VIRTUALSITES
-#include "modVirtualSite-if.cc"
-#endif
 
 /*
  * Modules that are always in the emulator: Base
@@ -119,15 +110,10 @@ TaggedRef dictionary_of_modules;
 #include "modCompilerSupport-if.cc"
 #include "modBrowser-if.cc"
 #include "modDebug-if.cc"
-// kost@ : linked so far statically;
-// #include "modPID-if.cc"
-// #include "modFault-if.cc"
-// kost@ : linked so far statically;
-// #include "modDPMisc-if.cc"
-// kost@ : linked so far statically;
-// #ifdef VIRTUALSITES
-// #include "modVirtualSite-if.cc"
-// #endif
+#include "modPID-if.cc"
+#include "modFault-if.cc"
+#include "modDPMisc-if.cc"
+#include "modVirtualSite-if.cc"
 
 #endif
 
@@ -182,15 +168,6 @@ static ModuleEntry ext_module_table[] = {
   {"CTB",             mod_int_CTB},
   {"FDB",             mod_int_FDB},
   {"FSB",             mod_int_FSB},
-// kost@ : linked so far statically;
-  {"PID",             mod_int_PID},
-  {"Fault",           mod_int_Fault},
-// kost@ : linked so far statically;
-  {"DPMisc",          mod_int_DPMisc},
-// kost@ : linked so far statically;
-#ifdef VIRTUALSITES
-  {"VirtualSite",  mod_int_VirtualSite},
-#endif
 
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},
@@ -201,17 +178,10 @@ static ModuleEntry ext_module_table[] = {
   {"Wif",             mod_int_Wif},
   {"Schedule",        mod_int_Schedule},
   {"Debug",           mod_int_Debug},
-// kost@ : linked so far statically;
-//   {"PID",             mod_int_PID},
-//   {"Fault",           mod_int_Fault},
-// kost@ : linked so far statically;
-// #ifdef MISC_BUILTINS
-//   {"DPMisc",          mod_int_DPMisc},
-// #endif
-// kost@ : linked so far statically;
-// #ifdef VIRTUALSITES
-//   {"VirtualSite",  mod_int_VirtualSite},
-// #endif
+  {"PID",             mod_int_PID},
+  {"Fault",           mod_int_Fault},
+  {"DPMisc",          mod_int_DPMisc},
+  {"VirtualSite",     mod_int_VirtualSite},
 #endif
 
 #ifdef MISC_BUILTINS

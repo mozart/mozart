@@ -668,7 +668,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
 
     CASE_BOOL_DO(PROP_PERDIO_MINIMAL,
-                 if (isPerdioInitialized())
+                 if ((*isPerdioInitialized)())
                    return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
                                                     "modelChoose",0));
                  ozconf.perdioMinimal=INT__);
@@ -676,7 +676,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_REC(PROP_PERDIO,
              SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
              DO_BOOL(oz_atom("minimal"),
-                 if (isPerdioInitialized())
+                 if ((*isPerdioInitialized)())
                    return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
                                                     "modelChoose",0));
                  ozconf.perdioMinimal=INT__));

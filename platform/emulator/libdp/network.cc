@@ -3981,19 +3981,3 @@ Bool checkIncTimeSlice(unsigned long time, void* v){
   return TSC->hasTask(time);}
 
 #endif
-
-
-OZ_BI_define(BIslowNet,2,0)
-{
-  oz_declareIntIN(0,arg0);
-  oz_declareIntIN(1,arg1);
-#ifdef SLOWNET
-  TSC_LATENCY = arg0;
-  TSC_TOTAL_A = arg1;
-  printf("New slownetvals ms:%d buff:%d \n", TSC_LATENCY, TSC_TOTAL_A);
-#else
-  printf("Slownet not installed\n");
-#endif
-  return PROCEED;
-
-} OZ_BI_end

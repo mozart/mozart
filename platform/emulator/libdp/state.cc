@@ -264,8 +264,8 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
   }
   PD((CELL,"ShortCircuit mgr sending to tokenholder"));
   if(((CellManager*)c)->getChain()->getCurrent() == myDSite){
-    return fea ? cellAtExchange(c,val,fea):
-      cellDoExchange(c,val,val);
+    return fea ? cellAtExchangeImpl(c,val,fea):
+      cellDoExchangeImpl(c,val,val);
   }
 
   sendPrepOwner(index);
@@ -282,8 +282,8 @@ exit:
   SuspendOnControlVar;
 }
 
-OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread *th,
-                         ExKind e)
+OZ_Return cellDoExchangeInternal(Tertiary *c, TaggedRef old, TaggedRef nw,
+                                 Thread *th, ExKind e)
 {
   PD((SPECIAL,"exchange old:%d new:%s type:%d",toC(old),toC(nw),e));
   maybeConvertCellProxyToFrame(c);
@@ -294,7 +294,7 @@ OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread *th,
 }
 
 static
-OZ_Return cellDoAccess(Tertiary *c,TaggedRef val,TaggedRef fea){
+OZ_Return cellDoAccessImpl(Tertiary *c,TaggedRef val,TaggedRef fea){
   if(c->isProxy()){
     convertCellProxyToFrame(c);}
   return getCellSecFromTert(c)->access(c,val,fea);}
@@ -304,31 +304,37 @@ OZ_Return cellDoAccess(Tertiary *c,TaggedRef val,TaggedRef fea){
 /*   interface */
 /**********************************************************************/
 
-OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw){
-   return cellDoExchange(c,old,nw,oz_currentThread(),EXCHANGE);}
+OZ_Return cellDoExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw)
+{
+   return cellDoExchangeInternal(c,old,nw,oz_currentThread(),EXCHANGE);
+}
 
-OZ_Return cellAssignExchange(Tertiary *c,TaggedRef fea,TaggedRef val){
-   return cellDoExchange(c,fea,val,oz_currentThread(), ASSIGN);}
+OZ_Return cellAssignExchangeImpl(Tertiary *c,TaggedRef fea,TaggedRef val)
+{
+   return cellDoExchangeInternal(c,fea,val,oz_currentThread(), ASSIGN);
+}
 
-OZ_Return cellAtExchange(Tertiary *c,TaggedRef old,TaggedRef nw){
-  return cellDoExchange(c,old,nw,oz_currentThread(), AT);}
+OZ_Return cellAtExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw)
+{
+  return cellDoExchangeInternal(c,old,nw,oz_currentThread(), AT);
+}
 
-OZ_Return cellAtAccess(Tertiary *c, TaggedRef fea, TaggedRef val){
-  return cellDoAccess(c,val,fea);}
+OZ_Return cellAtAccessImpl(Tertiary *c, TaggedRef fea, TaggedRef val){
+  return cellDoAccessImpl(c,val,fea);}
 
 /* PER-HANDLE
-OZ_Return cellDoAccess(Tertiary *c, TaggedRef val){
+OZ_Return cellDoAccessImpl(Tertiary *c, TaggedRef val){
   if(oz_onToplevel() && c->handlerExists(oz_currentThread()))
-    return cellDoExchange(c,val,val);
+    return cellDoExchangeImpl(c,val,val);
   else
-    return cellDoAccess(c,val,0);}
+    return cellDoAccessImpl(c,val,0);}
 */
 
-OZ_Return cellDoAccess(Tertiary *c, TaggedRef val){
+OZ_Return cellDoAccessImpl(Tertiary *c, TaggedRef val){
   if(oz_onToplevel())
-    return cellDoExchange(c,val,val);
+    return cellDoExchangeImpl(c,val,val);
   else
-    return cellDoAccess(c,val,0);}
+    return cellDoAccessImpl(c,val,0);}
 
 /**********************************************************************/
 /*   Lock - basic routines                             */
@@ -345,29 +351,29 @@ void LockProxy::lock(Thread *t){
 /*   Lock - interface                             */
 /**********************************************************************/
 
-void lockLockProxy(Tertiary *t, Thread *thr)
+void lockLockProxyImpl(Tertiary *t, Thread *thr)
 {
   Assert(t->isProxy());
   ((LockProxy *)t)->lock(thr);
 }
 
-void lockLockManagerOutline(LockManagerEmul *lmu, Thread *thr)
+void lockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr)
 {
   LockSec *ls = (LockSec *) (lmu->getSec());
   ls->lockComplex(thr, lmu);
 }
-void unlockLockManagerOutline(LockManagerEmul *lmu, Thread *thr)
+void unlockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr)
 {
   LockSec *ls = (LockSec *) (lmu->getSec());
   ls->unlockComplex(lmu);
 }
 
-void lockLockFrameOutline(LockFrameEmul *lfu, Thread *thr)
+void lockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr)
 {
   LockSec *ls = (LockSec *) (lfu->getSec());
   ls->lockComplex(thr, lfu);
 }
-void unlockLockFrameOutline(LockFrameEmul *lfu, Thread *thr)
+void unlockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr)
 {
   LockSec *ls = (LockSec *) (lfu->getSec());
   ls->unlockComplex(lfu);
@@ -473,9 +479,9 @@ void LockSec::unlockComplex(Tertiary* tert){
 /*   gc                             */
 /**********************************************************************/
 
-void gcDistCellRecurse(Tertiary *t)
+void gcDistCellRecurseImpl(Tertiary *t)
 {
-  gcEntityInfo(t);
+  gcEntityInfoImpl(t);
   switch (t->getTertType()) {
   case Te_Proxy:
     gcProxy(t);
@@ -498,9 +504,9 @@ void gcDistCellRecurse(Tertiary *t)
   }
 }
 
-void gcDistLockRecurse(Tertiary *t)
+void gcDistLockRecurseImpl(Tertiary *t)
 {
-  gcEntityInfo(t);
+  gcEntityInfoImpl(t);
   switch(t->getTertType()){
   case Te_Manager:{
     LockManager* lm=(LockManager*)t;
@@ -526,7 +532,7 @@ void gcDistLockRecurse(Tertiary *t)
   }
 }
 
-ConstTerm* auxGcDistCell(Tertiary *t)
+ConstTerm* auxGcDistCellImpl(Tertiary *t)
 {
   CellFrame *cf=(CellFrame *)t;
   if (cf->isAccessBit()) {
@@ -540,7 +546,7 @@ ConstTerm* auxGcDistCell(Tertiary *t)
   }
 }
 
-ConstTerm* auxGcDistLock(Tertiary *t)
+ConstTerm* auxGcDistLockImpl(Tertiary *t)
 {
   LockFrame *lf=(LockFrame *)t;
   if(lf->isAccessBit()){

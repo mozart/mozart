@@ -477,8 +477,6 @@ OZ_BI_define(BIexport,1,0)
 {
   OZ_declareIN(0,in);
 
-  perdioInitLocal();
-
   return export(in);
 } OZ_BI_end
 

@@ -32,22 +32,16 @@
 #endif
 
 #include "base.hh"
-#include "value.hh"
+#include "dpBase.hh"
+#include "dpInterface.hh"
 
-#include "gname.hh"
-#include "urlc.hh"
-#include "marshaler.hh"
-#include "comm.hh"
-#include "msgbuffer.hh"
-#include "builtins.hh"
+#include "perdio.hh"
+
 #include "thr_int.hh"
-
-#include "table.hh"
-#include "msgType.hh"
-#include "dpDebug.hh"
 #include "var.hh"
+#include "controlvar.hh"
+
 #include "var_obj.hh"
-#include "vs_comm.hh"
 #include "chain.hh"
 #include "state.hh"
 #include "fail.hh"
@@ -57,26 +51,72 @@
 #include "protocolState.hh"
 #include "protocolFail.hh"
 #include "dpMarshaler.hh"
-#include "perdio.hh"
-#include "controlvar.hh"
-#ifdef DEBUG_CHECK
-#include "os.hh"
-#endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <time.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <errno.h>
 
 
 /* *********************************************************************/
-/*   global variables                                       */
+/*   global variables                                                  */
 /* *********************************************************************/
 
 MsgBufferManager* msgBufferManager = new MsgBufferManager();
+
+/* *********************************************************************/
+/*   init;                                                             */
+/* *********************************************************************/
+//
+// Trigger holder;
+static Bool perdioInitialized = NO;
+
+//
+// Interface method, BTW
+Bool isPerdioInitializedImpl()
+{
+  return (perdioInitialized);
+}
+
+//
+OZ_Term GateStream;
+
+//
+static void initGateStream()
+{
+  //
+  // The gate is implemented as a Port reciding at location 0 in
+  // the ownertable. The gateStream is keept alive, the Connection
+  // library will fetch it later.
+  // The port is made persistent so it should not disapear.
+  //
+  GateStream = oz_newVariable();
+  OZ_protect(&GateStream);
+  {
+    Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
+    globalizeTert(t);
+    int ind = t->getIndex();
+    Assert(ind == 0);
+    OwnerEntry* oe=OT->getOwner(ind);
+    oe->makePersistent();
+  }
+}
+
+//
+static void initDPCore();
+
+void initDP()
+{
+  //
+#ifdef DEBUG_CHECK
+  // fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
+  // fflush(stderr);
+  // sleep(10);
+#endif
+
+  if (perdioInitialized)
+    return;
+  perdioInitialized = OK;
+
+  //
+  initDPCore();
+  initGateStream();
+}
 
 /* *********************************************************************/
 /*   Utility routines                                      */
@@ -163,12 +203,12 @@ OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o,
 
 /* OBS: ---------- interface to gc.cc ----------*/
 
-void gcBorrowTableUnusedFrames() {
-  if (isPerdioInitialized())
+void gcBorrowTableUnusedFramesImpl() {
+  if (isPerdioInitializedImpl())
     borrowTable->gcBorrowTableUnusedFrames();
 }
-void gcFrameToProxy() {
-  if (isPerdioInitialized())
+void gcFrameToProxyImpl() {
+  if (isPerdioInitializedImpl())
     borrowTable->gcFrameToProxy();
 }
 
@@ -185,7 +225,7 @@ void gcProxy(Tertiary *t) {
   return;}
 
 // PER-LOOK: unnecessary inderection;
-void gcProxyRecurse(Tertiary *t) { gcProxy(t); }
+void gcProxyRecurseImpl(Tertiary *t) { gcProxy(t); }
 
 void gcManager(Tertiary *t) {
   Assert(!t->isFrame());
@@ -199,7 +239,7 @@ void gcManager(Tertiary *t) {
   oe->gcPO(t);}
 
 // PER-LOOK: unnecessary inderection;
-void gcManagerRecurse(Tertiary *t) { gcManager(t); }
+void gcManagerRecurseImpl(Tertiary *t) { gcManager(t); }
 
 
 void gcPendThread(PendThread **pt){
@@ -229,17 +269,17 @@ void gcPendThread(PendThread **pt){
 
 /*--------------------*/
 
-void gcPerdioRoots()
+void gcPerdioRootsImpl()
 {
-  if (isPerdioInitialized()) {
+  if (isPerdioInitializedImpl()) {
     OT->gcOwnerTableRoots();
     BT->gcBorrowTableRoots();
   }
 }
 
-void gcPerdioFinal()
+void gcPerdioFinalImpl()
 {
-  if (isPerdioInitialized()) {
+  if (isPerdioInitializedImpl()) {
     BT->gcBorrowTableFinal();
     OT->gcOwnerTableFinal();
     RHT->gcResourceTable();
@@ -1058,8 +1098,49 @@ OZ_BI_proto(BIprobe);
 OZ_BI_proto(BIstartTmp);
 OZ_BI_proto(BIportWait);
 
-void initPerdio()
+void initDPCore()
 {
+  // link interface...
+  isPerdioInitialized = isPerdioInitializedImpl;
+  portSend = portSendImpl;
+  cellDoExchange = cellDoExchangeImpl;
+  cellDoAccess = cellDoAccessImpl;
+  cellAtAccess = cellAtAccessImpl;
+  cellAtExchange = cellAtExchangeImpl;
+  cellAssignExchange = cellAssignExchangeImpl;
+  lockLockProxy = lockLockProxyImpl;
+  lockLockManagerOutline = lockLockManagerOutlineImpl;
+  unlockLockManagerOutline = unlockLockManagerOutlineImpl;
+  lockLockFrameOutline = lockLockFrameOutlineImpl;
+  unlockLockFrameOutline = unlockLockFrameOutlineImpl;
+  marshalTertiary = marshalTertiaryImpl;
+  unmarshalTertiary = unmarshalTertiaryImpl;
+  unmarshalOwner = unmarshalOwnerImpl;
+  unmarshalVar = unmarshalVarImpl;
+  marshalVariable = marshalVariableImpl;
+  marshalObject = marshalObjectImpl;
+  marshalSPP = marshalSPPImpl;
+  gcProxyRecurse = gcProxyRecurseImpl;
+  gcManagerRecurse = gcManagerRecurseImpl;
+  gcDistResource = gcDistResourceImpl;
+  gcDistCellRecurse = gcDistCellRecurseImpl;
+  gcDistLockRecurse = gcDistLockRecurseImpl;
+  gcDistPortRecurse = gcDistPortRecurseImpl;
+  auxGcDistCell = auxGcDistCellImpl;
+  auxGcDistLock = auxGcDistLockImpl;
+  gcStatefulSpec = gcStatefulSpecImpl;
+  gcBorrowTableUnusedFrames = gcBorrowTableUnusedFramesImpl;
+  gcFrameToProxy = gcFrameToProxyImpl;
+  gcPerdioFinal = gcPerdioFinalImpl;
+  gcPerdioRoots = gcPerdioRootsImpl;
+  gcEntityInfo = gcEntityInfoImpl;
+  dpExit = dpExitImpl;
+#ifdef DEBUG_CHECK
+  maybeDebugBufferGet = maybeDebugBufferGetImpl;
+  maybeDebugBufferPut = maybeDebugBufferPutImpl;
+#endif
+
+  //
   DV = new DebugVector();
 
   initNetwork();
@@ -1137,7 +1218,7 @@ OZ_Term getGatePort(DSite* sd){
   return b->getValue();}
 
 //
-ConstTerm *gcStatefulSpec(Tertiary *t)
+ConstTerm *gcStatefulSpecImpl(Tertiary *t)
 {
   ConstTerm *ret;
   if(t->getType()==Co_Cell){
@@ -1154,7 +1235,7 @@ ConstTerm *gcStatefulSpec(Tertiary *t)
   return (ret);
 }
 
-void dpExit()
+void dpExitImpl()
 {
   (*virtualSitesExit)();
 }

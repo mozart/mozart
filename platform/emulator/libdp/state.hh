@@ -317,7 +317,27 @@ Chain* getChainFromTertiary(Tertiary*);
 CellSec *getCellSecFromTert(Tertiary *c);
 int getStateFromLockOrCell(Tertiary*);
 
-OZ_Return cellDoExchange(Tertiary *,TaggedRef,TaggedRef,Thread *,ExKind);
+//
+OZ_Return cellDoExchangeInternal(Tertiary *, TaggedRef, TaggedRef,
+                                 Thread *, ExKind);
+
+//
+OZ_Return cellDoExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw);
+OZ_Return cellDoAccessImpl(Tertiary *c, TaggedRef val);
+OZ_Return cellAtAccessImpl(Tertiary *c, TaggedRef fea, TaggedRef val);
+OZ_Return cellAtExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw);
+OZ_Return cellAssignExchangeImpl(Tertiary *c,TaggedRef fea,TaggedRef val);
+//
+void lockLockProxyImpl(Tertiary *t, Thread *thr);
+void lockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr);
+void unlockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr);
+void lockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr);
+void unlockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr);
+//
+void gcDistCellRecurseImpl(Tertiary *t);
+void gcDistLockRecurseImpl(Tertiary *t);
+ConstTerm* auxGcDistCellImpl(Tertiary *t);
+ConstTerm* auxGcDistLockImpl(Tertiary *t);
 
 void globalizeCell(CellLocal*, int);
 void globalizeLock(LockLocal*, int);

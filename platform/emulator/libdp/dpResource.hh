@@ -85,6 +85,6 @@ extern ResourceHashTable *resourceTable;
 
 #define RHT resourceTable
 
-ConstTerm* gcDistResource(ConstTerm*);
+ConstTerm* gcDistResourceImpl(ConstTerm*);
 
 #endif

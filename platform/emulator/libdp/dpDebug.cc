@@ -136,39 +136,19 @@ void wakeUpTmp(int i, int time) {
 
 #ifdef DEBUG_PERDIO
 
-OZ_BI_define(BIdvset,2,0)
-{
-  perdioInitLocal();
-
-  OZ_declareIntIN(0,what);
-  OZ_declareIntIN(1,val);
-
-  if (val) {
-    DV->set(what);
-  } else {
-    DV->unset(what);
-  }
-  return PROCEED;
-} OZ_BI_end
-
-
-void maybeDebugBufferGet(BYTE b){
+#ifdef DEBUG_CHECK
+void maybeDebugBufferGetImpl(BYTE b){
   PD((MARSHAL_CT,"one char got c:%d",b));}
 
-void maybeDebugBufferPut(BYTE b){
+void maybeDebugBufferPutImpl(BYTE b){
   PD((MARSHAL_CT,"one char pub c:%d",b));}
+#endif
 
 #else
 
-OZ_BI_define(BIdvset,2,0)
-{
-  OZ_declareIntIN(0,what);
-  OZ_declareIntIN(1,val);
-  OZ_warning("has no effect - you must compile with DEBUG_PERDIO");
-  return PROCEED;
-} OZ_BI_end
-
-void maybeDebugBufferGet(BYTE b) {}
-void maybeDebugBufferPut(BYTE b) {}
+#ifdef DEBUG_CHECK
+void maybeDebugBufferGetImpl(BYTE b) {}
+void maybeDebugBufferPutImpl(BYTE b) {}
+#endif
 
 #endif

@@ -1,5 +1,5 @@
 #  Authors:
-#    Michael Mehl (mehl@dfki.de)
+#    Konstantin Popov <kost@sics.se>
 #
 #  Contributors:
 #    optional, Contributor's name (Contributor's email address)
@@ -28,35 +28,87 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 INCS            = -I. -I$(SRCDIR)/.. -I..
 M4_D=           -DEMUDIR=$(SRCDIR)
+LIBS=           @LIBS@
 
-REALDPSRCS = dpBuiltins.cc dpMarshaler.cc port.cc virtual.cc    \
-            dpDebug.cc network.cc protocolState.cc vs_comm.cc dsite.cc  \
-            perdio.cc state.cc vs_interface.cc fail.cc                  \
-            protocolCredit.cc table.cc vs_mailbox.cc protocolFail.cc    \
-            var.cc var_obj.cc \
-            vs_msgbuffer.cc msgType.cc chain.cc dpResource.cc
+REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc             \
+               protocolState.cc dsite.cc perdio.cc state.cc             \
+               vs_interface.cc fail.cc protocolCredit.cc table.cc       \
+               protocolFail.cc var.cc var_obj.cc msgType.cc chain.cc    \
+               dpResource.cc
+CREATEDCOREFILES = marshalMsg.cc dpMarshaler.hh
+CREATEDCORESRCS  = marshalMsg.cc
+CORESRCS = $(REALCORESRCS) $(CREATEDCORESRCS)
 
+REALVSSRCS = virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc
+VSSRCS = $(REALVSSRCS)
 
-CREATEDDPFILES = marshalMsg.cc dpMarshaler.hh
-CREATEDDPSRCS = marshalMsg.cc
+MODULESRCS = pidModule.cc faultModule.cc dpMiscModule.cc
 
-DPSRCS = $(REALDPSRCS) $(CREATEDDPSRCS)
+REALSRCS = $(REALCORESRCS) $(REALVSSRCS) $(MODULESRCS)
 
-DPLIBOBJS = $(DPSRCS:.cc=.o)
+CREATEDFILES = $(CREATEDCOREFILES)
 
+COREOBJS = $(CORESRCS:.cc=.o)
+VSOBJS = $(VSSRCS:.cc=.o)
+
+# nothing for just "all";
 all:
 
-../DP.so: $(DPLIBOBJS)
-        $(DYNLD) -o $@ $(DPLIBOBJS)
+#
+../dp.so: $(COREOBJS)
+        $(DYNLD) -o $@ $(COREOBJS)
 
-../libDP.a: $(DPLIBOBJS)
-        $(AR) -rc $@ $(DPLIBOBJS) && $(RANLIB) $@
+../libdp.a: $(COREOBJS)
+        $(AR) -rc $@ $(COREOBJS) && $(RANLIB) $@
 
-first:  $(CREATEDDPFILES)
+#
+pidModule.o: ../modPID-if.cc
 
-depend:: Makefile $(REALDPSRCS)
+../PID.so: ../dp.so pidModule.o
+        rm -f dp.so
+        ln ../dp.so dp.so
+        $(DYNLD) -o $@ pidModule.o dp.so $(LIBS) -Xlinker -rpath $(BINDIR)
+
+../libPID.a: $(COREOBJS) pidModule.o
+        $(AR) -rc $@ pidModule.o && $(RANLIB) $@
+
+#
+faultModule.o: ../modFault-if.cc
+
+../Fault.so: ../dp.so faultModule.o
+        rm -f dp.so
+        ln ../dp.so dp.so
+        $(DYNLD) -o $@ faultModule.o dp.so $(LIBS) -Xlinker -rpath $(BINDIR)
+
+../libFault.a: $(COREOBJS) faultModule.o
+        $(AR) -rc $@ faultModule.o && $(RANLIB) $@
+
+#
+dpMiscModule.o: ../modPID-if.cc
+
+../DPMisc.so: ../dp.so dpMiscModule.o
+        rm -f dp.so
+        ln ../dp.so dp.so
+        $(DYNLD) -o $@ dpMiscModule.o dp.so $(LIBS) -Xlinker -rpath $(BINDIR)
+
+../libDPMisc.a: $(COREOBJS) dpMiscModule.o
+        $(AR) -rc $@ dpMiscModule.o && $(RANLIB) $@
+
+#
+../VirtualSite.so: ../dp.so $(VSOBJS)
+        rm -f dp.so
+        ln ../dp.so dp.so
+        $(DYNLD) -o $@ $(VSOBJS) dp.so $(LIBS) -Xlinker -rpath $(BINDIR)
+
+../libVirtualSite.a: $(COREOBJS)  $(VSOBJS)
+        $(AR) -rc $@ $(VSOBJS) && $(RANLIB) $@
+
+#
+first:  $(CREATEDFILES)
+
+depend:: Makefile $(REALSRCS)
         $(MAKE) first
-        $(DEPEND) $(REALDPSRCS:%=$(SRCDIR)/%) > Makefile.deps
+        $(DEPEND) $(REALSRCS:%=$(SRCDIR)/%) > Makefile.deps
 
 Makefile: Makefile.in
         (cd ..;./config.status)
@@ -70,6 +122,7 @@ distclean::
 veryclean::
         -rm -f *.a *.so Makefile.deps $(CREATEDDPFILES)
 
+#
+# special dependencies...
 dpMarshaler.hh marshalMsg.cc: msgFormat.m4
-
-$(DPLIBOBJS): dpMarshaler.hh
+$(CORELIBOBJS): dpMarshaler.hh

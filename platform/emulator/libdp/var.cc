@@ -252,7 +252,7 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
 {
   int OTI=getIndex();
   PD((PD_VAR,"ManagerVar::doBind by thread: %x",oz_currentThread()));
-  PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(v)));
+  PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(*lPtr)));
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
     if (origVar->getType()==OZ_VAR_FUTURE) {
@@ -335,7 +335,7 @@ void ProxyVar::marshal(MsgBuffer *bs)
 }
 
 // Returning 'NO' means we are going to proceed with 'marshal bomb';
-Bool marshalVariable(TaggedRef *tPtr, MsgBuffer *bs) {
+Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs) {
   const TaggedRef var = *tPtr;
 
   if (oz_isManagerVar(var)) {
@@ -382,7 +382,8 @@ void sendRegister(BorrowEntry *be) {
 }
 
 // extern
-OZ_Term unmarshalVar(MsgBuffer* bs){
+OZ_Term unmarshalVarImpl(MsgBuffer* bs)
+{
   OB_Entry *ob;
   int bi;
   OZ_Term val1 = unmarshalBorrow(bs,ob,bi);

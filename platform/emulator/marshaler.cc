@@ -305,7 +305,7 @@ void marshalNoGood(TaggedRef term, MsgBuffer *bs, Bool trail)
     bs->addNogood(term);
     marshalTerm(NameNonExportable,bs);} // to make bs consistent
   else{
-    marshalSPP(term,bs, trail); }
+    (*marshalSPP)(term,bs, trail); }
 }
 
 
@@ -411,14 +411,14 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       if(o->getClass()->isNative())
         goto bomb;
       if (!bs->globalize()) return;
-      marshalObject(t, bs);
+      (*marshalObject)(t, bs);
       return;
     }
 
 #define HandleTert(string,tag,check)                    \
     if (check) { CheckD0Compatibility; }                \
     if (!bs->globalize()) return;                       \
-    if (marshalTertiary((Tertiary *) t,tag,bs)) return; \
+    if ((*marshalTertiary)((Tertiary *) t,tag,bs)) return;      \
     trailCycle(t,bs);                                   \
     return;
 
@@ -577,7 +577,7 @@ loop:
   case UVAR:
     // FUT
   case CVAR:
-    if (!bs->visit(makeTaggedRef(tPtr)) || marshalVariable(tPtr, bs))
+    if (!bs->visit(makeTaggedRef(tPtr)) || (*marshalVariable)(tPtr, bs))
       break;
     t=makeTaggedRef(tPtr);
     goto bomb;
@@ -813,7 +813,7 @@ loop:
   case DIF_OWNER:
   case DIF_OWNER_SEC:
     {
-      *ret=unmarshalOwner(bs,tag);
+      *ret = (*unmarshalOwner)(bs, tag);
       return;
     }
   case DIF_RESOURCE_T:
@@ -824,14 +824,14 @@ loop:
   case DIF_LOCK:
   case DIF_OBJECT:
     {
-      *ret=unmarshalTertiary(bs,tag);
+      *ret = (*unmarshalTertiary)(bs, tag);
       int refTag = unmarshalRefTag(bs);
       gotRef(bs,*ret,refTag);
       return;
     }
   case DIF_RESOURCE_N:
     {
-      *ret=unmarshalTertiary(bs,tag);
+      *ret = (*unmarshalTertiary)(bs, tag);
       return;
     }
 
@@ -882,7 +882,7 @@ loop:
 
   case DIF_VAR:
     {
-      *ret=unmarshalVar(bs);
+      *ret = (*unmarshalVar)(bs);
       return;
     }
 

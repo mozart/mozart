@@ -192,9 +192,9 @@ void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs){
   marshalFullObjectAndClass(o, bs);
   refTrail->unwind();}
 
-void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
+void marshalObjectImpl(Object *o, MsgBuffer *bs, GName *gnclass)
 {
-  if (marshalTertiary(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
+  if (marshalTertiaryImpl(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
   Assert(o->getGName1());
   marshalGName(globalizeConst(o,bs),bs);
   marshalGName(gnclass,bs);
@@ -255,7 +255,7 @@ void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
 /*   interface to Oz-core                                  */
 /* *********************************************************************/
 
-void marshalObject(ConstTerm* t, MsgBuffer *bs)
+void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs)
 {
   PD((MARSHAL,"object"));
   Object *o = (Object*) t;
@@ -263,9 +263,9 @@ void marshalObject(ConstTerm* t, MsgBuffer *bs)
 
   ObjectClass *oc = o->getClass();
   globalizeConst(o,bs);
-  marshalObject(o,bs,globalizeConst(oc,bs));}
+  marshalObjectImpl(o,bs,globalizeConst(oc,bs));}
 
-Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
+Bool marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
 {
   PD((MARSHAL,"Tert"));
   switch(t->getTertType()){
@@ -297,7 +297,8 @@ Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
   return NO;
 }
 
-void marshalSPP(TaggedRef entity, MsgBuffer *bs, Bool trail){
+void marshalSPPImpl(TaggedRef entity, MsgBuffer *bs, Bool trail)
+{
   int index = RHT->find(entity);
   if(index == RESOURCE_NOT_IN_TABLE){
     OwnerEntry *oe_manager;
@@ -334,7 +335,7 @@ static char *tagToComment(MarshalTag tag)
     return "";
 }}
 
-OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
+OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
 {
   OB_Entry* ob;
   int bi;
@@ -419,7 +420,7 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
   return val;
 }
 
-OZ_Term unmarshalOwner(MsgBuffer *bs,MarshalTag mt){
+OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt){
   if(mt==DIF_OWNER){
     int OTI=unmarshalNumber(bs);
     PD((UNMARSHAL,"OWNER o:%d",OTI));
@@ -450,67 +451,3 @@ void unmarshalUnsentString(MsgBuffer *bs)
   char *aux = unmarshalString(bs);
   delete [] aux;
 }
-
-/* *********************************************************************/
-/*   SECTION 15: statistics                                            */
-/* *********************************************************************/
-
-// note that the marshaler always give you these statistics - should be changed
-
-OZ_BI_define(BIperdioStatistics,0,1)
-{
-  perdioInitLocal();
-
-  OZ_Term dif_send_ar=oz_nil();
-  OZ_Term dif_recv_ar=oz_nil();
-  int i;
-  for (i=0; i<DIF_LAST; i++) {
-    dif_send_ar=oz_cons(oz_pairAI(dif_names[i].name,dif_counter[i].getSend()),
-                        dif_send_ar);
-    dif_recv_ar=oz_cons(oz_pairAI(dif_names[i].name,dif_counter[i].getRecv()),
-                        dif_recv_ar);
-  }
-  OZ_Term dif_send=OZ_recordInit(oz_atom("dif"),dif_send_ar);
-  OZ_Term dif_recv=OZ_recordInit(oz_atom("dif"),dif_recv_ar);
-
-  OZ_Term misc_send_ar=oz_nil();
-  OZ_Term misc_recv_ar=oz_nil();
-  for (i=0; i<MISC_LAST; i++) {
-    misc_send_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getSend()),
-                         misc_send_ar);
-    misc_recv_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getRecv()),
-                         misc_recv_ar);
-  }
-  OZ_Term misc_send=OZ_recordInit(oz_atom("misc"),misc_send_ar);
-  OZ_Term misc_recv=OZ_recordInit(oz_atom("misc"),misc_recv_ar);
-
-  OZ_Term mess_send_ar=oz_nil();
-  OZ_Term mess_recv_ar=oz_nil();
-  for (i=0; i<M_LAST; i++) {
-    mess_send_ar=oz_cons(oz_pairAI(mess_names[i],mess_counter[i].getSend()),
-                         mess_send_ar);
-    mess_recv_ar=oz_cons(oz_pairAI(mess_names[i],mess_counter[i].getRecv()),
-                         mess_recv_ar);
-  }
-  OZ_Term mess_send=OZ_recordInit(oz_atom("messages"),mess_send_ar);
-  OZ_Term mess_recv=OZ_recordInit(oz_atom("messages"),mess_recv_ar);
-
-
-  OZ_Term send_ar=oz_nil();
-  send_ar = oz_cons(oz_pairA("dif",dif_send),send_ar);
-  send_ar = oz_cons(oz_pairA("misc",misc_send),send_ar);
-  send_ar = oz_cons(oz_pairA("messages",mess_send),send_ar);
-  OZ_Term send=OZ_recordInit(oz_atom("send"),send_ar);
-
-  OZ_Term recv_ar=oz_nil();
-  recv_ar = oz_cons(oz_pairA("dif",dif_recv),recv_ar);
-  recv_ar = oz_cons(oz_pairA("misc",misc_recv),recv_ar);
-  recv_ar = oz_cons(oz_pairA("messages",mess_recv),recv_ar);
-  OZ_Term recv=OZ_recordInit(oz_atom("recv"),recv_ar);
-
-
-  OZ_Term ar=oz_nil();
-  ar=oz_cons(oz_pairA("send",send),ar);
-  ar=oz_cons(oz_pairA("recv",recv),ar);
-  OZ_RETURN(OZ_recordInit(oz_atom("perdioStatistics"),ar));
-} OZ_BI_end

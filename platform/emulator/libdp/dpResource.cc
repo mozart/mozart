@@ -72,8 +72,8 @@ void ResourceHashTable::gcResourceTable(){
   }
 }
 
-ConstTerm* gcDistResource(ConstTerm* term){
+ConstTerm* gcDistResourceImpl(ConstTerm* term){
   term = (ConstTerm *) gcRealloc((void*)term,sizeof(DistResource));
-  gcProxyRecurse((Tertiary *)term);
+  gcProxyRecurseImpl((Tertiary *)term);
   return term;
 }

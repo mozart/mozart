@@ -1739,7 +1739,7 @@ void AM::gc(int msgLevel)
 #ifdef VERBOSE
   verbReopen ();
 #endif
-  gcFrameToProxy();
+  (*gcFrameToProxy)();
 
   isCollecting = OK;
   isInGc       = OK;
@@ -1787,10 +1787,10 @@ void AM::gc(int msgLevel)
   gcStack.recurse();
   gc_finalize();
 
-  gcPerdioRoots();
+  (*gcPerdioRoots)();
   gcStack.recurse();
 
-  gcBorrowTableUnusedFrames();
+  (*gcBorrowTableUnusedFrames)();
   gcStack.recurse();
 
 // -----------------------------------------------------------------------
@@ -1800,7 +1800,7 @@ void AM::gc(int msgLevel)
 
   GT.gcGNameTable();
   gcSiteTable();
-  gcPerdioFinal();
+  (*gcPerdioFinal)();
   Assert(gcStack.isEmpty());
 
   exitCheckSpace();
@@ -2120,12 +2120,12 @@ void ConstTerm::gcConstRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
-      gcEntityInfo(o);
+      (*gcEntityInfo)(o);
 
       switch(o->getTertType()) {
       case Te_Local:   o->setBoard(GETBOARD(o)->gcBoard()); break;
-      case Te_Proxy:   gcProxyRecurse(o); break;
-      case Te_Manager: gcManagerRecurse(o); break;
+      case Te_Proxy:   (*gcProxyRecurse)(o); break;
+      case Te_Manager: (*gcManagerRecurse)(o); break;
       default:         Assert(0);
       }
 
@@ -2176,7 +2176,7 @@ void ConstTerm::gcConstRecurse()
         OZ_collectHeapTerm(cl->val,cl->val);
         break;
       } else {
-        gcDistCellRecurse(t);
+        (*gcDistCellRecurse)(t);
       }
       break;
     }
@@ -2190,7 +2190,7 @@ void ConstTerm::gcConstRecurse()
         OZ_collectHeapTerm(pws->strm,pws->strm);
         break;
       } else {
-        gcDistPortRecurse(p);
+        (*gcDistPortRecurse)(p);
       }
       break;
     }
@@ -2248,7 +2248,7 @@ void ConstTerm::gcConstRecurse()
         ll->setLocker(ll->getLocker()->gcThread());
         break;
       } else {
-        gcDistLockRecurse(t);
+        (*gcDistLockRecurse)(t);
       }
       break;
     }
@@ -2334,7 +2334,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
         ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellManagerEmul));
         break;
       case Te_Frame:{
-        ConstTerm *aux = auxGcDistCell((Tertiary *) this);
+        ConstTerm *aux = (*auxGcDistCell)((Tertiary *) this);
         if (aux)
           return (aux);
         else
@@ -2405,7 +2405,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
         ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockLocal));
         break;
       case Te_Frame:{
-        ConstTerm *aux = auxGcDistLock((Tertiary *) this);
+        ConstTerm *aux = (*auxGcDistLock)((Tertiary *) this);
         if (aux)
           return (aux);
         else
@@ -2426,7 +2426,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
     return ((ForeignPointer*)this)->gc();
 
   case Co_Resource:{
-    ret = gcDistResource(this);
+    ret = (*gcDistResource)(this);
     storeFwdField(this, ret);
     return ret;}
 
@@ -2458,7 +2458,7 @@ ConstTerm* ConstTerm::gcConstTermSpec() {
   Tertiary *t=(Tertiary*)this;
   Assert((t->getType()==Co_Cell) || (t->getType()==Co_Lock));
   Assert(t->isFrame());
-  ConstTerm *ret = gcStatefulSpec(t);
+  ConstTerm *ret = (*gcStatefulSpec)(t);
 
   gcStack.push(ret,PTR_CONSTTERM);
   return ret;

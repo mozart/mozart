@@ -34,13 +34,14 @@
 #endif
 
 #include "base.hh"
+#include "dpBase.hh"
+#include "dpInterface.hh"
 #include "msgbuffer.hh"
 #include "msgType.hh"
-#include "dpBase.hh"
 #include "dsite.hh"
 
 //
-void perdioInitLocal();
+void initDP();
 
 //
 // Per said it must be here;
@@ -54,13 +55,10 @@ void SendTo(DSite *toS,MsgBuffer *bs,MessageType mt,DSite *sS,int sI);
 void msgReceived(MsgBuffer *);
 
 //
-void initPerdio();
-
 OZ_Term getGatePort(DSite*);
 
 //
 //
-
 void pendThreadRemoveFirst(PendThread **pt);
 OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o,
                              TaggedRef n, ExKind e, Board* home);
@@ -101,9 +99,21 @@ DSite* getSiteFromTertiaryProxy(Tertiary*);
 OZ_Return raiseGeneric(char *id,char *msg, OZ_Term arg);
 void gcProxy(Tertiary*);
 void gcManager(Tertiary*);
+void gcPendThread(PendThread **pt);
 
 BorrowEntry *receiveAtBorrow(DSite*,int);
 OwnerEntry *maybeReceiveAtOwner(DSite*,int);
+
+//
+Bool isPerdioInitializedImpl();
+void gcProxyRecurseImpl(Tertiary *t);
+void gcManagerRecurseImpl(Tertiary *t);
+ConstTerm *gcStatefulSpecImpl(Tertiary *t);
+void gcBorrowTableUnusedFramesImpl();
+void gcFrameToProxyImpl();
+void gcPerdioFinalImpl();
+void gcPerdioRootsImpl();
+void dpExitImpl();
 
 #define NOT_IMPLEMENTED                                                 \
   {                                                                     \

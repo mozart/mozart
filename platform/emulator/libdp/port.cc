@@ -99,10 +99,7 @@ OZ_Return portWait(int queueSize, int restTime, Tertiary *t)
   return BI_REPLACEBICALL;
 }
 
-
-
-
-OZ_Return portSend(Tertiary *p, TaggedRef msg)
+OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
 {
   Assert(p->getTertType()==Te_Proxy);
   BorrowEntry* b = BT->getBorrow(p->getIndex());
@@ -161,11 +158,11 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
 }
 
 //
-void gcDistPortRecurse(Tertiary *p)
+void gcDistPortRecurseImpl(Tertiary *p)
 {
   Assert(!p->isLocal());
   //
-  gcEntityInfo(p);
+  gcEntityInfoImpl(p);
   if (p->isProxy()) {
     gcProxy(p);
   } else {
