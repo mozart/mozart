@@ -104,24 +104,23 @@ Used as fallback if the environment variable OZHOME is not set."
      "sDefault host name to use for socket connections: ")
 
 (eval-and-compile
+  (eval '(defcustom oz-build-dir
+	   (concat (getenv "HOME") "/mozart")
+	   "*Path to the Mozart build directory for testing locally."
+	   :type 'string
+	   :group 'mozart)))
+(put 'oz-build-dir 'variable-interactive
+     "sPath to the Mozart build directory: ")
+
+(eval-and-compile
   (eval '(defcustom oz-emulator
 	   (or (getenv "OZEMULATOR")
-	       (concat (getenv "HOME")
-		       "/mozart/platform/emulator/emulator.exe"))
+	       (concat oz-build-dir "/platform/emulator/emulator.exe"))
 	   "*Path to the Mozart Emulator for gdb mode and for \\[oz-other]."
 	   :type 'string
 	   :group 'mozart)))
 (put 'oz-emulator 'variable-interactive
      "fMozart Emulator binary: ")
-
-(eval-and-compile
-  (eval '(defcustom oz-build-dir
-	   "~/mozart"
-	   "*Path to the Mozart build directory for \\[oz-functor-path]."
-	   :type 'string
-	   :group 'mozart)))
-(put 'oz-build-dir 'variable-interactive
-     "sPath to the Mozart build directory: ")
 
 (eval-and-compile
   (eval '(defcustom oz-functor-path
