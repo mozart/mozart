@@ -138,7 +138,7 @@ Used as fallback if the environment variable OZHOME is not set."
 
 (eval-and-compile
   (eval '(defcustom oz-want-font-lock t
-	   "*If non-nil, automatically enter font-lock-mode for oz-mode."
+	   "*If non-nil, automatically enter font-lock-mode for the Oz modes."
 	   :type 'boolean
 	   :group 'oz)))
 (put 'oz-want-font-lock 'variable-interactive
@@ -154,7 +154,7 @@ Used as fallback if the environment variable OZHOME is not set."
 
 (eval-and-compile
   (eval '(defcustom oz-indent-chars 3
-	   "*Number of spaces statements are indented wrt. containing block."
+	   "*Number of columns statements are indented wrt. containing block."
 	   :type 'integer
 	   :group 'oz)))
 (put 'oz-indent-chars 'variable-interactive
@@ -171,9 +171,9 @@ Note that this variable is only checked once when oz.el is loaded."
 
 (eval-and-compile
   (eval '(defcustom oz-pc-keys nil
-	   "*If non-nil, use only politically-correct keybindings.
+	   "*If non-nil, use only `politically correct' key bindings.
 This means that M-l and M-r are not locally rebound in Oz buffers,
-and that C-c C-d and C-c C-f are not used as command prefixes."
+and that no command will be bound to C-c followed by a letter."
 	   :type 'boolean
 	   :group 'oz)))
 (put 'oz-pc-keys 'variable-interactive
@@ -286,7 +286,7 @@ run the emulator when you issue the command `run' to gdb."
   (and (eq window-system 'x) (x-display-color-p)))
 
 (defvar oz-mode-map (make-sparse-keymap)
-  "Keymap used in oz-mode buffers.")
+  "Keymap used in the Oz modes.")
 (defvar oz-compiler-buffer-map nil
   "Keymap used in the *Oz Compiler* buffer.")
 (defvar oz-emulator-buffer-map nil
@@ -1480,7 +1480,7 @@ and the following line."
 
 (defun oz-indent-line (&optional arg)
   "Indent the current line.
-If ARG is given, reindent that many lines above and before point as well."
+If ARG is given, reindent that many lines above and below point as well."
   (interactive "P")
   (save-excursion
     (let* ((current-line (1+ (count-lines 1 (point))))
@@ -1736,7 +1736,7 @@ With argument, do it that many times.  Argument must be positive."
 
 (defun mark-oz-expr (arg)
   "Set mark ARG balanced Oz expressions from point.
-The place mark goes is the same place \\[forward-oz-expr] would
+The place mark goes to is the same place \\[forward-oz-expr] would
 move to with the same argument."
   (interactive "p")
   (push-mark
@@ -1752,18 +1752,18 @@ Does not work in all cases."
   (transpose-subr 'forward-oz-expr arg))
 
 (defun kill-oz-expr (arg)
-  "Kill the balanced Oz expression following the cursor.
-With argument, kill that many Oz expressions after the cursor.
-Negative arg -N means kill N Oz expressions before the cursor."
+  "Kill the balanced Oz expression following point.
+With argument, kill that many Oz expressions after point.
+Negative arg -N means kill N Oz expressions before point."
   (interactive "p")
   (let ((pos (point)))
     (forward-oz-expr arg)
     (kill-region pos (point))))
 
 (defun backward-kill-oz-expr (arg)
-  "Kill the balanced Oz expression preceding the cursor.
-With argument, kill that many Oz expressions before the cursor.
-Negative arg -N means kill N Oz expressions after the cursor."
+  "Kill the balanced Oz expression preceding point.
+With argument, kill that many Oz expressions before point.
+Negative arg -N means kill N Oz expressions after point."
   (interactive "p")
   (let ((pos (point)))
     (forward-oz-expr (- arg))
@@ -1797,8 +1797,9 @@ Returns t unless search stops due to beginning or end of buffer."
     ret))
 
 (defun oz-end-of-defun ()
-  "Move to the end of the proc/fun/class definition point is in.
-If point is not inside a proc/fun/class definition, move to end of buffer."
+  "Move to the end of the proc/fun/class/meth definition point is in.
+If point is not inside a proc/fun/class/meth definition, move to end of
+buffer."
   (interactive)
   (cond ((oz-beginning-of-defun)
 	 (oz-forward-end)
@@ -1811,7 +1812,7 @@ If point is not inside a proc/fun/class definition, move to end of buffer."
 
 (defvar oz-mode-syntax-table
   (make-syntax-table)
-  "Syntax table used in oz-mode buffers.")
+  "Syntax table used in the Oz modes.")
 
 (modify-syntax-entry ?_ "w" oz-mode-syntax-table)
 (modify-syntax-entry ?\\ "/" oz-mode-syntax-table)
@@ -1866,19 +1867,22 @@ If point is not inside a proc/fun/class definition, move to end of buffer."
   (set (make-local-variable 'compilation-last-buffer)
        nil))
 
+(defmacro oz-kbd (keys)
+  (read-kbd-macro keys))
+
 (defun oz-mode-commands (map)
-  (define-key map "\t"           'oz-indent-line)
-  (define-key map "\177"         'backward-delete-char-untabify)
+  (define-key map (oz-kbd "TAB")         'oz-indent-line)
+  (define-key map (oz-kbd "DEL")         'backward-delete-char-untabify)
 
-  (define-key map "\M-\C-m"      'oz-feed-buffer)
-  (define-key map "\C-c\C-p"     'oz-feed-paragraph)
-  (define-key map "\M-\C-x"      'oz-feed-paragraph)
-  (define-key map "\C-c\C-b"     'oz-browse-region)
+  (define-key map (oz-kbd "M-RET")       'oz-feed-buffer)
+  (define-key map (oz-kbd "C-c C-p")     'oz-feed-paragraph)
+  (define-key map (oz-kbd "M-C-x")       'oz-feed-paragraph)
+  (define-key map (oz-kbd "C-c C-b")     'oz-browse-region)
 
-  (define-key map "\M-n"         'oz-next-buffer)
-  (define-key map "\M-p"         'oz-previous-buffer)
+  (define-key map (oz-kbd "M-n")         'oz-next-buffer)
+  (define-key map (oz-kbd "M-p")         'oz-previous-buffer)
 
-  (define-key map "\C-x "        'oz-breakpoint-key-set)
+  (define-key map (oz-kbd "C-x SPC")     'oz-breakpoint-key-set)
   (cond (oz-gnu-emacs
 	 (define-key map [(meta shift mouse-1)] 'oz-breakpoint-mouse-set)
 	 (define-key map [(meta shift mouse-3)] 'oz-breakpoint-mouse-delete))
@@ -1886,44 +1890,43 @@ If point is not inside a proc/fun/class definition, move to end of buffer."
 	 (define-key map [(meta shift button1)] 'oz-breakpoint-mouse-set)
 	 (define-key map [(meta shift button3)] 'oz-breakpoint-mouse-delete)))
 
-  (define-key map "\C-c\C-c"     'oz-toggle-compiler)
-  (define-key map "\C-c\C-e"     'oz-toggle-emulator)
-  (define-key map "\C-c\C-t"     'oz-toggle-temp)
-  (define-key map "\C-c\C-n"     'oz-new-buffer)
-  (define-key map "\C-c\C-l"     'oz-fontify-buffer)
-  (define-key map "\C-c\C-r"     'run-oz)
-  (define-key map "\C-c\C-h"     'oz-halt)
-  (define-key map "\r"           'oz-electric-terminate-line)
+  (define-key map (oz-kbd "C-c C-c")     'oz-toggle-compiler)
+  (define-key map (oz-kbd "C-c C-e")     'oz-toggle-emulator)
+  (define-key map (oz-kbd "C-c C-t")     'oz-toggle-temp)
+  (define-key map (oz-kbd "C-c C-n")     'oz-new-buffer)
+  (define-key map (oz-kbd "C-c C-l")     'oz-fontify-buffer)
+  (define-key map (oz-kbd "C-c C-r")     'run-oz)
+  (define-key map (oz-kbd "C-c C-h")     'oz-halt)
+  (define-key map (oz-kbd "RET")         'oz-electric-terminate-line)
 
-  (define-key map "\M-\C-f"      'forward-oz-expr)
-  (define-key map "\M-\C-b"      'backward-oz-expr)
-  (define-key map "\M-\C-k"      'kill-oz-expr)
-  (define-key map "\M-\C-@"      'mark-oz-expr)
-  (define-key map "\M-\C-q"      'indent-oz-expr)
-  (define-key map "\M-\C-a"      'oz-beginning-of-defun)
-  (define-key map "\M-\C-e"      'oz-end-of-defun)
-  (define-key map [(meta control space)] 'mark-oz-expr)
-  (define-key map [(meta control backspace)] 'backward-kill-oz-expr)
-  (define-key map [(meta control delete)] 'backward-kill-oz-expr)
-  (define-key map "\M-\C-t"      'transpose-oz-exprs)
+  (define-key map (oz-kbd "M-C-f")       'forward-oz-expr)
+  (define-key map (oz-kbd "M-C-b")       'backward-oz-expr)
+  (define-key map (oz-kbd "M-C-k")       'kill-oz-expr)
+  (define-key map (oz-kbd "M-C-@")       'mark-oz-expr)
+  (define-key map (oz-kbd "M-C-SPC")     'mark-oz-expr)
+  (define-key map (oz-kbd "M-C-DEL")     'backward-kill-oz-expr)
+  (define-key map (oz-kbd "M-C-q")       'indent-oz-expr)
+  (define-key map (oz-kbd "M-C-a")       'oz-beginning-of-defun)
+  (define-key map (oz-kbd "M-C-e")       'oz-end-of-defun)
+  (define-key map (oz-kbd "M-C-t")       'transpose-oz-exprs)
 
-  (define-key map "\C-x`"        'oz-goto-next-error)
+  (define-key map (oz-kbd "C-x `")       'oz-goto-next-error)
 
-  (define-key map "\C-c\C-d"     'oz-debugger)
-  (define-key map "\C-c\C-f"     'oz-profiler)
+  (define-key map (oz-kbd "C-c C-d")     'oz-debugger)
+  (define-key map (oz-kbd "C-c C-f")     'oz-profiler)
 
   (if (not oz-pc-keys)
       (progn
-	(define-key map "\M-r"         'oz-feed-region)
-	(define-key map "\M-l"         'oz-feed-line)
+	(define-key map (oz-kbd "M-r")   'oz-feed-region)
+	(define-key map (oz-kbd "M-l")   'oz-feed-line)
 
-	(define-key map "\C-cp"        'oz-view-panel)
-	(define-key map "\C-cb"        'oz-browse-line)
-	(define-key map "\C-cc"        'oz-compiler-panel)
+	(define-key map (oz-kbd "C-c p") 'oz-view-panel)
+	(define-key map (oz-kbd "C-c b") 'oz-browse-line)
+	(define-key map (oz-kbd "C-c c") 'oz-compiler-panel)
 
-	(define-key map "\C-cm"        'oz-set-other)
-	(define-key map "\C-co"        'oz-other)
-	(define-key map "\C-cd"        'oz-gdb))))
+	(define-key map (oz-kbd "C-c m") 'oz-set-other)
+	(define-key map (oz-kbd "C-c o") 'oz-other)
+	(define-key map (oz-kbd "C-c d") 'oz-gdb))))
 
 (oz-mode-commands oz-mode-map)
 
@@ -1996,7 +1999,7 @@ if that value is non-nil."
 ;;{{{ Lisp Paragraph Filling Commands
 
 (defun oz-fill-paragraph (&optional justify)
-  "Like \\[fill-paragraph], but handle Oz comments.
+  "Like \\[fill-paragraph], but handles Oz comments.
 If any of the current line is a comment, fill the comment or the
 paragraph of it that point is in, preserving the comment's indentation
 and initial percent signs."
@@ -2147,9 +2150,11 @@ The second subexpression matches the definition's identifier
 and is used for fontification.")
 
 (make-face 'oz-space-face)
+(put 'oz-space-face 'face-documentation
+     "Face in which ill-placed whitespace is highlighted.")
 (set-face-background 'oz-space-face (if oz-is-color "hotpink" "black"))
 (defvar oz-space-face 'oz-space-face
-  "Face to use for highlighting ill-places spaces.")
+  "Face in which ill-placed whitespace is highlighted.")
 
 (defconst oz-space-matcher-1
   "[ \t]+$"
@@ -2577,19 +2582,19 @@ If it is, then remove it."
 
 
 (defun oz-new-buffer ()
-  "Create a new buffer and edit it in oz-mode."
+  "Create a new buffer and edit it in Oz mode."
   (interactive)
   (switch-to-buffer (generate-new-buffer "Oz"))
   (oz-mode))
 
 (defun oz-previous-buffer ()
-  "Switch to the next buffer in the buffer list which runs in oz-mode."
+  "Switch to the next buffer in the buffer list that runs in an Oz mode."
   (interactive)
   (bury-buffer)
   (oz-walk-through-buffers (buffer-list)))
 
 (defun oz-next-buffer ()
-  "Switch to the last buffer in the buffer list which runs in oz-mode."
+  "Switch to the last buffer in the buffer list that runs in an Oz mode."
   (interactive)
   (oz-walk-through-buffers (reverse (buffer-list))))
 
@@ -2607,7 +2612,7 @@ If it is, then remove it."
     (if none-found
 	(progn
 	  (set-buffer cur)
-	  (error "This is the only Oz buffer")))))
+	  (error "There is no buffer in an Oz mode")))))
 
 ;;}}}
 ;;{{{ Misc Goodies
@@ -2617,8 +2622,7 @@ If it is, then remove it."
 With just C-u prefix arg, uncomment each line in region.
 Numeric prefix arg ARG means use ARG comment characters.
 If ARG is negative, delete that many comment characters instead.
-Comments are terminated on each line, even for syntax in which newline does
-not end the comment.  Blank lines do not get comments."
+Blank lines do not get comments."
   (interactive "r\np")
   (comment-region start end arg))
 
