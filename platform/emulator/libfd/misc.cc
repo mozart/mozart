@@ -119,13 +119,13 @@ OZ_Return SumACProp::propagate(void)
  int summax,summin,axmax,axmin,dmax,dmin,dpos,i,j,k,dummy;
  double bound1,bound2;
  OZ_FiniteDomain d_aux_neg,d_aux_pos;
- OZ_Boolean klausel,unified=false,changed,vars_left;
+ OZ_Boolean klausel,unified=OZ_FALSE,changed,vars_left;
 
  DECL_DYN_ARRAY(int,a,size);
  for(j=size; j--;) a[j]=OZ_intToC(_a[j]);
 
  dpos=simplify(&size,a,_x,_d,&c);
- if(dpos>-1 && dpos<size) unified=true;
+ if(dpos>-1 && dpos<size) unified=OZ_TRUE;
 
  OZ_FDIntVar d(_d);
  DECL_DYN_ARRAY(OZ_FDIntVar,x,size);
@@ -155,10 +155,10 @@ OZ_Return SumACProp::propagate(void)
  else d_aux_neg=d_aux_pos=*d;
 
 
- klausel=false;
+ klausel=OZ_FALSE;
  do
   {
-   changed=false;
+   changed=OZ_FALSE;
    summin=summax=(klausel ? -c : c);
 
    for(j=size; j--;)
@@ -246,7 +246,7 @@ OZ_Return SumACProp::propagate(void)
     }
    if(!changed && !klausel)
     {
-     klausel=changed=true;
+     klausel=changed=OZ_TRUE;
      if(unified) a[dpos]+=2;        // a[dpos]++, Vorz. umk., a[dpos]--
      for(j=size; j--;) a[j]=-a[j];
     }
