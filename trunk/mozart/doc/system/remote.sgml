@@ -1,0 +1,158 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+  <Chapter id="Chapter.Remote">
+    <Title/Spawning Computations Remotely: <<Remote>>/
+
+    <P>
+      The module <<Remote>> provides the class <<Remote.manager>> by
+      which new Oz processes can be created. Creating an instance of
+      that class does the following two things:
+      <List>
+        <Item> A new Oz process with a module manager ?_{M} is
+               created. 
+        <Item> The newly created object ?_{O} serves as a proxy to
+               ?_{M}, where ?_{O} can be seen as a remote module
+               manager. This allows to start applications remotely
+               that access remote resources by local system modules.
+      </List>
+    </P>
+ 
+    <P>
+      The methods of the class <<Remote.manager>> are as follows.
+    </P>
+
+    <P>
+     The methods of Remote.manager are as follows:
+    </P>
+
+    <P>
+      <List>
+        <Entry><Span class=index/<<init>>/
+	  <Index/<<Remote>><And><<manager>><And><<init>>/
+        <Synopsis>
+<code display/init(host:   ?+{HostV}   <= localhost
+     fork:   ?+{ForkA}   <= automatic
+     detach: ?+{DetachB} <= false)/
+        <Item>
+          Creates a new Oz process at ?_{HostV} (specified by a virtual
+          string), where <<localhost>> is the computer running the
+          current Oz process.
+        <P>
+          ?_{ForkA} (an atom) determines the operating system method
+          to fork the remote Oz process. Currently, <<'automatic'>> and
+          <<'rsh'>> are supported.  <<'rsh'>> creates
+          a shell remotely by using the Unix <<rsh>> command, which in
+          turn creates the new Oz engine. 
+        <P>
+          If ?_{HostV} is <<'localhost'>> and ?_{ForkA}? is
+          <<'automatic'>> a possibly more efficient way of creating
+          new Oz processes is used. As a fallback, the <<'rsh'>>
+          method is used.
+        <P>
+          If ?_{DetachB} is <<false>>, a non-detached process is
+          created. A non-detached process terminates as soon as 
+          the creating process does (think of crashes, there will be
+          no orphaned processes). A lifetime of a detached process
+          (that is, ?_{DetchB} is <<true>>) is independent of the
+          creating process. (I've taken the notion detach from
+          standard operating system terminology).
+
+        <Entry><Span class=index/<<link>>/
+	  <Index/<<Remote>><And><<manager>><And><<link>>/
+        <Synopsis>
+	    <code display/link(url:?+{UrlV} ?_{ModuleR} <= _)/
+	    <code display/link(name:?+{NameV} ?_{ModuleR} <= _)/
+        <Item>
+            Links the module identified either by a url ?_{UrlV} (a
+            virtual string) or a module name ?_{NameV} (a virtual
+            string). Returns the module ?_{ModuleR}, if it has been
+            already linked or a future to it.
+          <P>
+            The argument for the module is optional, if it is omitted
+            the module is requested immediately.
+
+          <Entry><Span class=index/<<apply>>/
+	    <Index/<<Remote>><And><<manager>><And><<apply>>/
+          <Synopsis>
+	    <code display/apply(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)/
+	    <code display/apply(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)/
+          <Item>
+            Applies the functor ?_{Functor}, where the url ?_{UrlV} (a
+            virtual string) or the module name ?_{NameV} (a virtual
+            string) serve as base URL for linking the functor's
+            import.
+          <P>
+            The argument for the module is optional.
+          <P>
+            Please note that the resulting module is <Em/not/ added to
+            the module table, the URL argument only serves as base URL
+            for the functor's import.
+
+          <Entry><Span class=index/<<enter>>/
+	    <Index/<<Remote>><And><<manager>><And><<enter>>/
+          <Synopsis>
+	    <code display/enter(url:?+{UrlV} ?_{ModuleR})/
+	    <code display/enter(name:?+{NameV} ?_{ModuleR})/
+          <Item>
+            Installs the module ?_{ModuleR} under the url ?_{UrlV} (a
+            virtual string) or the module name ?_{NameV} (a virtual
+            string).
+          <P>
+            Raises an exception if the module manager already has a
+            module under that particular URL installed.
+
+          <Entry><Span class=index/<<ping>>/
+	    <Index/<<Remote>><And><<manager>><And><<ping>>/
+          <Synopsis>
+	    <code display/ping()/
+          <Item>
+           Raises exception if remote process is dead. Blocks until
+           executed by remote process.
+
+          <Entry><Span class=index/<<close>>/
+	    <Index/<<Remote>><And><<manager>><And><<close>>/
+          <Synopsis>
+	    <code display/close()/
+          <Item>
+            Kills the remote process.
+
+        </List>
+       </P>         
+
+     
+  </Chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
