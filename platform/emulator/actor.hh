@@ -21,7 +21,7 @@
 #define inline
 #endif
 
-// #include "cpstack.hh"
+#include "cpbag.hh"
 
 // ------------------------------------------------------------------------
 //  all 'proper' actors; 
@@ -136,7 +136,7 @@ public:
   }
 private:
   Board   **children;
-  CpStack *cps;
+  CpBag   *cpb;
 public:
   WaitActor();
   ~WaitActor();
@@ -166,11 +166,15 @@ public:
 
   Bool isAliveUpToSolve(void);
  
-  void pushChoice(WaitActor *wa);
-  void pushChoices(CpStack *pcps);
-  Bool hasChoices();
-
-  CpStack *getCps() { return cps; } 
+  void addChoice(WaitActor *wa) {
+    cpb = cpb->add(wa);
+  }
+  void mergeChoices(CpBag *mcpb) {
+    cpb = cpb->merge(mcpb);
+  }
+  CpBag * getCpb() {
+    return cpb;
+  }
 };
 
 // ------------------------------------------------------------------------

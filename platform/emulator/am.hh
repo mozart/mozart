@@ -374,7 +374,7 @@ public:
 
 extern AM am;
 
-#include "cpstack.hh"
+#include "cpbag.hh"
 
 #include "actor.hh"
 #include "board.hh"
