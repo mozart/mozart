@@ -707,7 +707,7 @@ void registerSocket(int fd)
 // 't' is in miliseconds;
 void osSetAlarmTimer(int t)
 {
-#if defined(DEBUG_DET) || defined(SCHED_COUNTER)
+#ifdef DEBUG_DET
     return;
 #endif
 
@@ -747,7 +747,7 @@ static long openMax;
 
 int osGetAlarmTimer()
 {
-#if defined(DEBUG_DET) || defined(SCHED_COUNTER)
+#ifdef DEBUG_DET
   return 0;
 #else
   struct itimerval timer;
