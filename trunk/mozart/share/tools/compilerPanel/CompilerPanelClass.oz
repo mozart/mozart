@@ -775,7 +775,7 @@ in
 	    Line = Coord.2
 	    Column = Coord.3
 	 in
-	    case File of 'nofile' then
+	    case File of '' then
 	       o(self.Text insert 'end' VS)|Middle
 	    else Tag Action in
 	       Tag = @ErrorTagCounter
