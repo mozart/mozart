@@ -196,7 +196,9 @@ by making a functor of the program as shown in <PTR TO="pingpong1">,
 and storing it in your file <<PingPong.oz>>. Thereafter use the
 command:
 <<< ozc -x PingPong.oz >>>
-<P> Now type PingPong in your shell to start the program.
+<P> Now type PingPong in your shell to start the program
+<NOTE>To terminate this program is the OS shell you have to
+type CONTROL-C. We will see later how to terminate it properly</NOTE>.
 <P><FIGURE ID="pingpong1" CLASS="Figure">
 <CAPTION>A 'Ping Pong' program stand-alone</CAPTION>
 <<<
@@ -600,8 +602,8 @@ thread ?{TN} ?{XN}=?{XN-1} end
 >>>
 
 <P>When All threads terminate the variables <<?{X1} ... ?{XN}>> will
-be merged together labeling a single box that contains the value
-<<unit>>. <<{Wait ?{XN}}>> suspends the main thread until <<?{XN}>> is
+be merged together and bound to <<unit>>.
+<<{Wait ?{XN}}>> suspends the main thread until <<?{XN}>> is
 bound.
 
 <P>In <PTR TO="concurrentComp"> we define a higher-order construct
