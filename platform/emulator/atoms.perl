@@ -218,6 +218,10 @@
 	  ( E_OS,    		"os"),
 	  ( E_SYSTEM,		"system"),
 	  ( E_DISTRIBUTION,	"distribution"),
+	  # debugger related
+          ( AtomDebugExit,     "DEBUG_EXIT"),
+          ( AtomDebugStep,     "DEBUG_STEP"),
+          ( AtomDebugNoStep,   "DEBUG_NOSTEP"),
 	  );
 
 
