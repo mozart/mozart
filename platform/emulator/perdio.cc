@@ -293,12 +293,11 @@ void ByteStream::marshalBegin(){
 
 void ByteStream::dumpByteBuffers(){
   ByteBuffer *bb=first;
-  ByteBuffer *bb1;
   while(bb!=NULL){
-    bb1=bb;
+    ByteBuffer *bb1=bb;
     bb=bb->next;
-    bufferManager->freeByteBuffer(bb);
-    bb=bb1;}}
+    bufferManager->freeByteBuffer(bb1);
+  }}
   
 /* BufferManager */
 
