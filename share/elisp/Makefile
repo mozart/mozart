@@ -3,7 +3,7 @@ OZHOME=/usr/share/gs/soft/oz
 
 .SUFFIXES: .el .elc
 
-ELS  = comint.el oz.el ozstartup.el blink-paren.el oz1.el
+ELS  = comint.el oz.el ozstartup.el blink-paren.el
 ELCS = $(ELS:.el=.elc)
 
 help:
