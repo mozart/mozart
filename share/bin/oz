@@ -110,6 +110,7 @@ if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
     export EMACSLOADPATH EMACSDATA EMACSDOC
     export INFOPATH EMACSLOCKDIR EMACSPATH
 
+  else
      IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
      for name in emacs lemacs; do
        for dir in $PATH; do
