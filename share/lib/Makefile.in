@@ -439,7 +439,7 @@ boot-init: $(BOOTINITTXTFROM)
 # currently linked in the system: else the bytecode of these functors
 # may have been side-effected and may contains stateful stuff
 
-boot-ozc.ar: ozc ozar Compiler.ozf Type.ozf
+boot-ozc.ar: ozc ozar Compiler.ozf $(SUPPSRC:%=%.ozf)
 	OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozar --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates --in=$< --out=$@
 
 boot-init.ar: Init.ozf
