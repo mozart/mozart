@@ -116,6 +116,9 @@ define
       in
 	 {Q.put 'type:           package\n'}
 	 {Q.put 'id:             '#R.mogul#'\n'}
+	 if {HasFeature R format} then
+	    {Q.put 'format:         '#R.format#'\n'}
+	 end
 	 if {HasFeature R version} then
 	    {Q.put 'version:        '#R.version#'\n'}
 	 end
@@ -280,7 +283,10 @@ define
 	 {self mogul_read}
 	 {self mogul_validate_id(R.mogul)}
 	 P = {Adjoin {self mogul_sanitize_record(R $)}
-	      package(type:package mogul:R.mogul)}
+	      package(type   : package
+		      mogul  : R.mogul
+		      format : {self get_format($)}
+		     )}
       in
 	 @DB.(R.mogul) := P
 	 {self trace('updated entry for '#R.mogul)}

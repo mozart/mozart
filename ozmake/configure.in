@@ -3,10 +3,25 @@ AC_INIT(ozinstall)
 AC_PREFIX_DEFAULT(/usr/local/oz)
 AC_CANONICAL_HOST
 AC_PROG_MAKE_SET
+dnl
+dnl
+dnl
+AC_DEFUN(OZSKEL_MAKE_ABSOLUTE,[
+  if expr "$[$1]" : "/" >/dev/null; then
+      : ;
+  else
+      ozcur=`pwd`
+      [$1]="$ozcur/$[$1]"
+  fi
+])
+dnl
+dnl
+dnl
 srcdir=`cd $srcdir 2> /dev/null && pwd`
 if test "$prefix" = NONE; then
   prefix="$ac_default_prefix"
 fi
+OZSKEL_MAKE_ABSOLUTE(prefix)
 dnl
 dnl
 dnl

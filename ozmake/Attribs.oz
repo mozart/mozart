@@ -16,6 +16,10 @@ prepare
 define
    class Attribs
       attr
+	 %% the format is pickle-version dependent only
+	 %% for earlier versions (i.e. ones without an
+	 %% an explicit pickle format)
+	 Format     : '1.3.0'
 	 Prefix     : unit
 	 Dir        : unit
 	 BuildDir   : unit
@@ -114,6 +118,8 @@ define
 	 Fast        : true
 	 WantVersion : unit
 	 AutoDepend  : true
+
+      meth get_format($) @Format end
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
