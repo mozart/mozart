@@ -36,7 +36,7 @@ MODULE_NAMES =\
 	Wif FDP Schedule FSP Parser \
 	ozma CompilerSupport Browser Debug
 
-STATIC_MODULELIBS=	-L. ${MODULE_NAME:%=-l%}
+STATIC_MODULELIBS=	-L. ${MODULE_NAMES:%=-l%}
 STATIC_MODULETARGETS=	$(MODULE_NAMES:%=lib%.a)
 DYNAMIC_MODULETARGETS=	$(MODULE_NAMES:%=%.so)
 
