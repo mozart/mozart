@@ -1,0 +1,6 @@
+<doc xmlns="my/name/space">
+  <title>Hello World</title>
+  <p>
+        <em>text</em>
+  </p>
+</doc>
