@@ -544,7 +544,6 @@ public:
   virtual int getNoOfWakeUpLists(void) = 0;
   virtual char ** getNamesOfWakeUpLists(void) = 0;
   virtual char * getName(void) = 0;
-  virtual OZ_Ct * toConstraint(OZ_Term) = 0;
   virtual OZ_Ct * leastConstraint(void) = 0;
   virtual OZ_Boolean isValidValue(OZ_Term) = 0;
 
