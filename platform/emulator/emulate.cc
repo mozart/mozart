@@ -351,8 +351,6 @@ void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
   int iarity = bi->getInArity();
   int oarity = bi->getOutArity();
 
-  OZ_Term tt=OZ_tupleC("apply",iarity+oarity+1);
-
   OZ_Term args=oz_nil();
   for (int j = iarity; j--;) {
     args=oz_cons(X[map == OZ_ID_MAP? j : map[j]],args);
