@@ -156,10 +156,13 @@ if (Cond) {					\
 }
 #define DebugCheckT(Then) Then
 #define DebugCode(C) C
+#define ExhaustiveSwitch() \
+   default: { OZ_error("NON EXHAUSTIVE SWITCH %s: %d\n", __FILE__,__LINE__); }
 #else
 #define DebugCheck(Cond,Then) 
 #define DebugCheckT(Then)
 #define DebugCode(C)
+#define ExhaustiveSwitch()
 #endif
 
 

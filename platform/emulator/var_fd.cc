@@ -263,9 +263,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
       }
       break;
     }
-  default:
-    Assert(0);
-    break;
+    ExhaustiveSwitch();
   } // switch (varIsLocal + 2 * termIsLocal) {
   return TRUE;
 } // OzFDVariable::unify
