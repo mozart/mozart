@@ -31,7 +31,7 @@ ErrorAspect     = 250
 StatusUpdateCnt = 50
 
 TitleName    = 'Oz Explorer'
-BitMapDir    = System.ozHome # '/lib/bitmaps/'
+BitMapDir    = {System.get home} # '/lib/bitmaps/'
 BitMap       = '@' # BitMapDir # 'explorer.xbm'
 
 MinSizeX     = 500   CanvasWidth  = 440.0
