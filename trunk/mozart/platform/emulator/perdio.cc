@@ -5280,27 +5280,6 @@ OZ_C_proc_end
 #endif
 
 
-enum URL_Protocol {
-  URL_UNKNOWN,
-  URL_HTTP,
-  URL_FTP,
-  URL_FILE
-};
-
-class URL {
-public:
-  int protocol;
-  char *host;
-  int port;
-  char *path;
-
-  URL(char *url);
-  URL(URL *base, char *url);
-  URL(int protocol, char *host, int port, char *path)
-    : protocol(protocol), host(host), port(port), path(path)
-  {}
-};
-
 OZ_C_proc_begin(BInewGate,2)
 {
   OZ_declareArg(0,in);
