@@ -142,9 +142,8 @@ local
 	    {WriteVSFile Flex FlexFile}
 	    {Rep startSubPhase('generating scanner tables')}
 	    case {InvokeFlex FlexFile Rep} of 0 then
-	       LIBC = if {Property.get 'platform.os'} == win32 
-		      then ' -lc' 
-		      else '' 
+	       LIBC = if {Property.get 'platform.os'} == win32 then ''
+		      else ' -lc' 
 		      end
 	    in
 	       {Rep startSubPhase('compiling scanner')}
