@@ -787,6 +787,7 @@ OzVariable * OzVariable::gcVarInline(void) {
     case OZ_VAR_FS:
       ((OzFSVariable *) to)->gc();
       return to;
+    case OZ_VAR_SIMPLE:
     case OZ_VAR_BOOL:
       return to;
     case OZ_VAR_CT:
@@ -848,11 +849,16 @@ void OzOFVariable::gcRecurse(void) {
   dynamictable=dynamictable->gc();
 }
 
+inline
+void Future::gcRecurse(void) {
+  if (function)
+    OZ_collectHeapTerm(function,function);
+}
 
 void OzVariable::gcVarRecurse(void) {
 
   switch (getType()) {
-  case OZ_VAR_SIMPLE:  ((SimpleVar *)this)->gcRecurse(); break;
+  case OZ_VAR_SIMPLE:  Assert(0); break;
   case OZ_VAR_FUTURE:  ((Future *)this)->gcRecurse(); break;
   case OZ_VAR_BOOL:    Assert(0); break;
   case OZ_VAR_FD:      Assert(0); break;
