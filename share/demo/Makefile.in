@@ -246,8 +246,6 @@ $(OZIMGDIRS):
 	$(INSTALL_DIR) $@
 $(OZIMG)/animated-queens/%.xbm: images/animated-queens/%.xbm
 	$(INSTALL_FILE) $< $@
-$(OZIMG)/diagnosis/%.xbm: images/diagnosis/%.xbm
-	$(INSTALL_FILE) $< $@
 $(OZIMG)/lift/%.xbm: images/lift/%.xbm
 	$(INSTALL_FILE) $< $@
 $(OZIMG)/transport/%.xbm: images/transport/%.xbm
