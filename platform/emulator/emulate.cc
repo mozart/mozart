@@ -642,7 +642,7 @@ void engine() {
 
   int XSize = 0; NoReg(XSize);
 
-  Bool isExecute = NO; NoReg(isExecute);
+  Bool isTailCall = NO; NoReg(isTailCall);
   Suspension* &currentTaskSusp = FDcurrentTaskSusp; NoReg(currentTaskSusp);
   AWActor *CAA = NULL;
   Board *tmpBB = NULL; NoReg(tmpBB);
@@ -846,7 +846,7 @@ void engine() {
 	}
 	INSTALLPATH(tmpBB);
 	tmpBB->decSuspCount();
-	isExecute = OK;
+	isTailCall = OK;
 	goto LBLcall;
       }
     case C_NERVOUS:
@@ -1038,7 +1038,7 @@ void engine() {
     }
 
 
-  INSTRUCTION(FASTEXECUTE)
+  INSTRUCTION(FASTTAILCALL)
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
@@ -1349,8 +1349,6 @@ void engine() {
       ProgramCounter nxt          = getLabelArg(PC+2);
       PrTabEntry *predd           = getPredArg(PC+5);
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+6);
-      int mode                    = getPosIntArg(PC+7);
-      /* mode is either SEQMODE or PARMODE */
       
       AssRegArray &list = predd->gRegs;
       int size = list.getSize();
@@ -1408,13 +1406,13 @@ void engine() {
   };
 
 
-  INSTRUCTION(EXECUTEMETHODX) isExecute = OK; ONREG(SendMethod,X);
-  INSTRUCTION(EXECUTEMETHODY) isExecute = OK; ONREG(SendMethod,Y);
-  INSTRUCTION(EXECUTEMETHODG) isExecute = OK; ONREG(SendMethod,G);
+  INSTRUCTION(TAILSENDMSGX) isTailCall = OK; ONREG(SendMethod,X);
+  INSTRUCTION(TAILSENDMSGY) isTailCall = OK; ONREG(SendMethod,Y);
+  INSTRUCTION(TAILSENDMSGG) isTailCall = OK; ONREG(SendMethod,G);
 
-  INSTRUCTION(SENDMETHODX) isExecute = NO; ONREG(SendMethod,X);
-  INSTRUCTION(SENDMETHODY) isExecute = NO; ONREG(SendMethod,Y);
-  INSTRUCTION(SENDMETHODG) isExecute = NO; ONREG(SendMethod,G);
+  INSTRUCTION(SENDMSGX) isTailCall = NO; ONREG(SendMethod,X);
+  INSTRUCTION(SENDMSGY) isTailCall = NO; ONREG(SendMethod,Y);
+  INSTRUCTION(SENDMSGG) isTailCall = NO; ONREG(SendMethod,G);
 
  SendMethod:
   {
@@ -1423,7 +1421,7 @@ void engine() {
     TaggedRef object  = origObj;
     int arity         = getPosIntArg(PC+3);
 
-    PC = isExecute ? 0 : PC+4;
+    PC = isTailCall ? 0 : PC+4;
 
     DEREF(object,_1,objectTag);
     if (!isSRecord(objectTag)) {
@@ -1446,7 +1444,7 @@ void engine() {
       goto bombSend;
     }
 
-    CallDoChecks(def,def->getGRegs(),isExecute,PC,arity+3);
+    CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity+3);
     Y = NULL; // allocateL(0);
 
     JUMP(def->getPC());
@@ -1460,13 +1458,13 @@ void engine() {
   }
 
 
-  INSTRUCTION(METHEXECUTEX) isExecute = OK; ONREG(ApplyMethod,X);
-  INSTRUCTION(METHEXECUTEY) isExecute = OK; ONREG(ApplyMethod,Y);
-  INSTRUCTION(METHEXECUTEG) isExecute = OK; ONREG(ApplyMethod,G);
+  INSTRUCTION(TAILAPPLMETHX) isTailCall = OK; ONREG(ApplyMethod,X);
+  INSTRUCTION(TAILAPPLMETHY) isTailCall = OK; ONREG(ApplyMethod,Y);
+  INSTRUCTION(TAILAPPLMETHG) isTailCall = OK; ONREG(ApplyMethod,G);
 
-  INSTRUCTION(METHAPPLX) isExecute = NO; ONREG(ApplyMethod,X);
-  INSTRUCTION(METHAPPLY) isExecute = NO; ONREG(ApplyMethod,Y);
-  INSTRUCTION(METHAPPLG) isExecute = NO; ONREG(ApplyMethod,G);
+  INSTRUCTION(APPLMETHX) isTailCall = NO; ONREG(ApplyMethod,X);
+  INSTRUCTION(APPLMETHY) isTailCall = NO; ONREG(ApplyMethod,Y);
+  INSTRUCTION(APPLMETHG) isTailCall = NO; ONREG(ApplyMethod,G);
 
  ApplyMethod:
   {
@@ -1476,7 +1474,7 @@ void engine() {
     int arity              = getPosIntArg(PC+3);
     Abstraction *def;
 
-    PC = isExecute ? 0 : PC+4;
+    PC = isTailCall ? 0 : PC+4;
 
     DEREF(object,objectPtr,objectTag);
     if (!isSRecord(objectTag) ||
@@ -1484,7 +1482,7 @@ void engine() {
       goto bombApply;
     }
     
-    CallDoChecks(def,def->getGRegs(),isExecute,PC,arity);
+    CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity);
     Y = NULL; // allocateL(0);
 
     JUMP(def->getPC());
@@ -1509,13 +1507,13 @@ void engine() {
   }
 
 
-  INSTRUCTION(CALLX) isExecute = NO; ONREG(Call,X);
-  INSTRUCTION(CALLY) isExecute = NO; ONREG(Call,Y);
-  INSTRUCTION(CALLG) isExecute = NO; ONREG(Call,G);
+  INSTRUCTION(CALLX) isTailCall = NO; ONREG(Call,X);
+  INSTRUCTION(CALLY) isTailCall = NO; ONREG(Call,Y);
+  INSTRUCTION(CALLG) isTailCall = NO; ONREG(Call,G);
 
-  INSTRUCTION(EXECUTEX) isExecute = OK; ONREG(Call,X);
-  INSTRUCTION(EXECUTEY) isExecute = OK; ONREG(Call,Y);
-  INSTRUCTION(EXECUTEG) isExecute = OK; ONREG(Call,G);
+  INSTRUCTION(TAILCALLX) isTailCall = OK; ONREG(Call,X);
+  INSTRUCTION(TAILCALLY) isTailCall = OK; ONREG(Call,Y);
+  INSTRUCTION(TAILCALLG) isTailCall = OK; ONREG(Call,G);
 
  Call:
    {
@@ -1523,7 +1521,7 @@ void engine() {
        TaggedRef taggedPredicate = RegAccess(HelpReg,getRegArg(PC+1));
        predArity = getPosIntArg(PC+2);
 
-       PC = isExecute ? 0 : PC+3;
+       PC = isTailCall ? 0 : PC+3;
 
        DEREF(taggedPredicate,predPtr,predTag);
        if (!isSRecord(predTag)) {
@@ -1560,7 +1558,7 @@ void engine() {
 	Abstraction *def = (Abstraction *) predicate;
 
         CheckArity(predArity, def->getArity(), def, PC);
-	CallDoChecks(def,def->getGRegs(),isExecute,PC,def->getArity());
+	CallDoChecks(def,def->getGRegs(),isTailCall,PC,def->getArity());
 	Y = NULL; // allocateL(0);
 
 	JUMP(def->getPC());
@@ -1627,12 +1625,12 @@ void engine() {
 	      LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 				   goto localHack0;);
 	      if (emulateHook0(e)) {
-		if (!isExecute) {
+		if (!isTailCall) {
 		  e->pushTaskOutline(CBB,PC,Y,G);
 		}
 		goto LBLschedule;
 	      }
-	      if (isExecute) {
+	      if (isTailCall) {
 		goto LBLcheckEntailment;
 	      }
 	      JUMP(PC);
@@ -1680,7 +1678,7 @@ void engine() {
        }
 
        // put continuation if any;
-       if (isExecute == NO)
+       if (isTailCall == NO)
 	 e->pushTaskOutline(CBB, PC, Y, G);
 
        // create solve actor(x1);
@@ -1703,7 +1701,7 @@ void engine() {
        predArity = 1;
        predicate = (Abstraction *) tagValueOf (x0);
        X[0] = makeTaggedRef (sa->getSolveVarRef ());
-       isExecute = OK;
+       isTailCall = OK;
        goto LBLcall;   // spare a task - call the predicate directly; 
      }
 
@@ -1777,10 +1775,10 @@ void engine() {
 	 CBB->incSuspCount (boardToInstall->getSuspCount () - 1); 
 	 // get continuation of 'board-to-install' if any;
 	 if (boardToInstall->isWaitTop () == NO) {
-	   if (isExecute == NO)
+	   if (isTailCall == NO)
 	     e->pushTask(CBB,PC,Y,G);
 	   else
-	     isExecute = NO;
+	     isTailCall = NO;
 	   LOADCONT(boardToInstall->getBodyPtr ());
 	 }
        }
@@ -1796,7 +1794,7 @@ void engine() {
 	 HF_NOMSG;
        }
 
-       if (isExecute) {
+       if (isTailCall) {
 	 goto LBLcheckEntailment;
        }
        goto LBLemulate;
@@ -1860,7 +1858,7 @@ void engine() {
 	 }
        }
 
-       if (isExecute) {
+       if (isTailCall) {
 	 goto LBLcheckEntailment;
        }
        JUMP(PC);
