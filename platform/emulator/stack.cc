@@ -41,11 +41,13 @@ void Stack::reallocate(int newsize)
 void Stack::resize(int incSize)
 {
   Assert(incSize > 0);
-  int allocsize = max((getMaxSize()*3)/2,100);  // faster than size*1.5
+  int allocsize = max((getMaxSize()*3)/2,RESIZESTACKMINSIZE);  
+  // faster than size*1.5
 
 #ifdef DEBUG_STACK
   message("Resizing stack from %d to %d\n",getMaxSize(),allocsize);
 #endif
+
   int used = tos-array;
   reallocate(allocsize);
   tos      = array+used;

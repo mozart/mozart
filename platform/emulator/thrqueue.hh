@@ -44,6 +44,13 @@ public:
   Bool isEmpty () { return (size == 0); }
   int getSize () { return (size); }
   Bool isAllocated () { return (maxsize); }
+  int suggestNewSize() {
+    // find smallest power of 2 greater than size
+    int new_size = 1;
+    for (int aux_size = size; aux_size; aux_size >>= 1, new_size <<= 1); 
+    Assert(new_size >= size);
+    return new_size;
+  }
 
   void allocate (int initsize) {
     maxsize = initsize;
@@ -105,7 +112,7 @@ public:
     enqueue(thr);
   }
   LocalThreadQueue(int sz) : ThreadQueueImpl(){
-    allocate(0x20);
+    allocate(sz);
   }
   ~LocalThreadQueue() { error("never destroy LTQ"); }
 

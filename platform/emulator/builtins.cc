@@ -5821,6 +5821,8 @@ OZ_C_proc_begin(BISystemGetThreads,1) {
   GetRecord;
   SetIntArg(AtomCreated,  ozstat.createdThreads.total);
   SetIntArg(AtomRunnable, am.getRunnableNumber());
+  SetIntArg(AtomMin,      ozconf.stackMinSize / TASKFRAMESIZE);
+  SetIntArg(AtomMax,      ozconf.stackMaxSize / TASKFRAMESIZE);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6042,6 +6044,21 @@ OZ_C_proc_end
           
 #define SetIfPos(left,right,scale) if (right >= 0) left = right / scale;
 
+OZ_C_proc_begin(BISystemSetThreads,1) {
+  LookRecord(t);
+  DoNatFeature(minsize, t, AtomMin);
+  DoNatFeature(maxsize, t, AtomMax);
+
+  SetIfPos(ozconf.stackMinSize, minsize, TASKFRAMESIZE);
+  SetIfPos(ozconf.stackMaxSize, maxsize, TASKFRAMESIZE);
+
+  if (ozconf.stackMinSize > ozconf.stackMaxSize) 
+    ozconf.stackMinSize = ozconf.stackMaxSize;
+  
+  return PROCEED;
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BISystemSetPriorities,1) {
   LookRecord(t);
 
@@ -6155,7 +6172,6 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   DoBoolFeature(debugmode,  t, AtomDebug);
   DoBoolFeature(suspension, t, AtomShowSuspension);
   DoBoolFeature(stop,       t, AtomStopOnToplevelFailure);
-  DoNatFeature(stack,       t, AtomStackMaxSize);
 
   if (debugmode == 0) {
     am.unsetSFlag(DebugMode);
@@ -6165,7 +6181,6 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
     
   SetIfPos(ozconf.showSuspension,        suspension, 1);
   SetIfPos(ozconf.stopOnToplevelFailure, stop,       1);
-  SetIfPos(ozconf.stackMaxSize,          stack,      KB);
 
   return PROCEED;
 }
@@ -6986,6 +7001,7 @@ BIspec allSpec2[] = {
   {"SystemGetHome",       1, BISystemGetHome},
   {"SystemGetPlatform",   1, BISystemGetPlatform},
 
+  {"SystemSetThreads",    1, BISystemSetThreads},
   {"SystemSetPriorities", 1, BISystemSetPriorities},
   {"SystemSetPrint",      1, BISystemSetPrint},
   {"SystemSetFD",         1, BISystemSetFD},

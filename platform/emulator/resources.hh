@@ -38,8 +38,6 @@
 #define GC_FLAG		1
 #define GC_VERBOSITY	1
 
-#define STACKMAXSIZE	10000
-
 #define HEAPMAXSIZE	     1048576 /* kByte   */
 #define HEAPMINSIZE	        1024 /* kByte   */
 #define HEAPFREE	          75 /* percent */
@@ -47,8 +45,14 @@
 #define INITIALHEAPTHRESHOLD	2048 /* kByte   */
 #define HEAPBLOCKSIZE	     1048576 /* byte    */
 
+#define TASKFRAMESIZE   3
+
+#define RESIZESTACKMINSIZE 64 /* used for resizing a stack */
+
+#define STACKMAXSIZE	8192 /* tasks */
+#define STACKMINSIZE    3    /* tasks */
+
 #define CLOCK_TICK	        10000  /* usec */
-#define TASK_STACK_SIZE		10
 #define THREAD_QUEUE_SIZE	256
 #define NUM_TOPLEVEL_VARS	10000
 

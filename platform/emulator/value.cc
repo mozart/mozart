@@ -38,7 +38,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomHints, AtomIdle, AtomInt, AtomInvoked, AtomLimits, AtomLoad, 
   AtomLocation, AtomMedium, AtomNames, AtomOn, AtomPropagate, 
   AtomPropagators, AtomRun, AtomRunnable, AtomShowSuspension, 
-  AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
+  AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
   AtomTotal,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
   RecordFailure,
@@ -129,7 +129,6 @@ void initLiterals()
   AtomRunnable              = makeTaggedAtom("runnable");
   AtomShowSuspension        = makeTaggedAtom("showSuspension");
   // AtomSize
-  AtomStackMaxSize          = makeTaggedAtom("stackMaxSize");
   AtomStopOnToplevelFailure = makeTaggedAtom("stopOnToplevelFailure");
   // AtomSucceeded
   AtomSystem                = makeTaggedAtom("system");

@@ -1824,12 +1824,12 @@ LocalThreadQueue * LocalThreadQueue::gc()
   Assert(!isEmpty());
 
   // find smallest power of 2 greater than size
-  int new_size = 1;
-  for (int aux_size = size; aux_size; aux_size >>= 1, new_size <<= 1); 
-  Assert(new_size >= size);
+  int new_size = suggestNewSize();
+
+  printf("ltq::gc %d of %d\n", size, new_size);
 
   // create neq queue queue
-  LocalThreadQueue * new_ltq = new LocalThreadQueue (new_size);
+  LocalThreadQueue * new_ltq = new LocalThreadQueue(new_size);
 
   // gc local thread queue thread
   new_ltq->ltq_thr = ltq_thr->gcThread();
@@ -1845,7 +1845,8 @@ void TaskStack::gc(TaskStack *newstack)
   COUNT(taskStack);
   COUNT1(taskStackLen,getMaxSize());
 
-  newstack->allocate(getMaxSize());
+  printf("TaskStack::gc(new: %d, old: %d)\n", suggestNewSize(), getMaxSize());
+  newstack->allocate(suggestNewSize());
   TaskStack *oldstack = this;
 
   TaskStackEntry *oldtop = oldstack->getTop();
