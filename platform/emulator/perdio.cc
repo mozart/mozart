@@ -1332,7 +1332,9 @@ public:
   void print();
   void makeGCMark(){addFlags(PO_BORROW_GC_MARK);}
   Bool isGCMarked(){ return (getFlags() & PO_BORROW_GC_MARK); }
-  void removeGCMark(){removeFlags(PO_BORROW_GC_MARK);}
+  void removeGCMark(){
+    removeFlags(PO_BORROW_GC_MARK);
+    getSite()->makeGCMarkSite();}
 
   void gcBorrowRoot(int);
   void gcBorrowUnusedFrame(int);
