@@ -1,9 +1,9 @@
 %%%
 %%% Author:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
-%%%   Christian Schulte <schulte@ps.uni-sb.de>
 %%%
 %%% Contributors:
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
 %%%   Denys Duchier <duchier@ps.uni-sb.de>
 %%%
 %%% Copyright:
@@ -28,7 +28,6 @@
 functor
 import
    Application(getCmdArgs)
-   Module(manager)
    System(printError)
    Property(get put)
    OS(getEnv)
@@ -39,7 +38,6 @@ import
 export
    compiler: OPICompiler
    interface: CompilerUI
-   'import': Import
 prepare
    Spec = record(host(single type: string default: unit))
 define
@@ -56,40 +54,6 @@ define
    {Property.put 'oz.standalone' false}
 
    OPICompiler = {New Compiler.engine init()}
-
-   %% Importing functors
-   local
-      fun {GuessModuleName Url}
-	 %% Takes functor URL and computes module name from it:
-	 %% the module name is the basename without filename extension
-	 Base = {Reverse {String.token
-			  {Reverse {VirtualString.toString Url}} &/ $ _}}
-	 H|R = {String.token Base &. $ _}
-      in
-	 {String.toAtom {Char.toUpper H}|R}#Url
-      end
-   in
-      proc {Import Us}
-	 %% Takes list of urls
-	 ModMan = {New Module.manager init}
-	 %% Compute pairlist of module name and url
-	 MNUs   = {Map Us GuessModuleName}
-	 %% Compute pairlist of module name and module
-	 Ms     = {Map MNUs fun {$ MN#U}
-			       MN#{ModMan link(url:U $)}
-			    end}
-      in
-	 %% Make available in compiler environment
-	 {OPICompiler enqueue(mergeEnv({List.toRecord env Ms}))}
-	 %%--** Print message, is wrong: LEIF, CHECK THAT
-	 {System.printError ('% --- Opening functors:\n'#
-			     {FoldL MNUs fun {$ V MN#U}
-					    V#'%   '#MN#' at '#U#'\n'
-					 end ''})}
-      end
-   end
-
-   {OPICompiler enqueue(mergeEnv({AdjoinAt OPIEnv.full 'Import' Import}))}
 
    CompilerUI = {New Emacs.interface init(OPICompiler Args.host)}
    {Property.put 'opi.compiler' CompilerUI}
