@@ -39,14 +39,7 @@
 ### an argument for which the builtin will suspend until it is determined
 ### and which may be overwriten by its execution.
 ###
-### For most builtins it is OK if the output registers are not all distinct
-### from the input registers: the compiler takes advantage of the possibility
-### to eliminate certain moves.  However there are builtins that will not
-### function properly unless certain output registers are guaranteed to
-### be distinct from the input registers.  An output argument may be
-### annotated with ^ to indicate that it needs its own register.
-###
-### The annotations +,*,! and ^ may be given in arbitrary order.
+### The annotations +,* and ! may be given in arbitrary order.
 ###
 ### A type may be simple or complex:
 ###
@@ -180,7 +173,7 @@ sub INTERFACE {
 
 sub argspec {
     my $spec = shift;
-    my ($mod,$det,$typ,$own) = (0,'any','value',0);
+    my ($mod,$det,$typ) = (0,'any','value');
     my $again = 1;
 
     # first we handle the various annotations
@@ -191,8 +184,6 @@ sub argspec {
 	# what is the determinacy condition on the argument?
 	elsif ($spec =~ /^\+/) { $spec=$'; $det='det'; }
 	elsif ($spec =~ /^\*/) { $spec=$'; $det='detOrKinded'; }
-	# does it need its own register
-	elsif ($spec =~ /^\^/) { $spec=$'; $own=1; }
 	else { $again=0; }
     }
 
@@ -203,30 +194,27 @@ sub argspec {
     elsif ($spec =~ /^(.+)\#(.+)$/    ) { $typ="pair('$1' '$2')"; }
     else                                { $typ="'$spec'"; }
 
-    return ($mod,$det,$typ,$own);
+    return ($mod,$det,$typ);
 }
 
 sub OZTABLE {
     my ($key,$info);
     while (($key,$info) = each %$builtins) {
 	next unless &included($info);
-	my (@imods,@idets,@ityps,$spec,$destroys,@oowns);
+	my (@imods,@idets,@ityps,$spec,$destroys);
 	foreach $spec (@{$info->{in}}) {
-	    my ($mod,$det,$typ,$own) = &argspec($spec);
+	    my ($mod,$det,$typ) = &argspec($spec);
 	    $destroys=1 if $mod;
 	    push @imods,($mod?'true':'false');
 	    push @idets,$det;
 	    push @ityps,$typ;
-	    die "found ^ annotation on input arg spec for builtin $key"
-		if $own;
 	}
 	my (@odets,@otyps);
 	foreach $spec (@{$info->{out}}) {
-	    my ($mod,$det,$typ,$own) = &argspec($spec);
+	    my ($mod,$det,$typ) = &argspec($spec);
 	    $det="any(det)" if $det eq 'det';
 	    push @odets,$det;
 	    push @otyps,$typ;
-	    push @oowns,($own?'true':'false');
 	}
 	print "'$key':\n\tbuiltin(\n";
 	if ((@ityps+@otyps)>0) {
@@ -241,11 +229,6 @@ sub OZTABLE {
 	    print "\t\timods: [",join(' ',@imods),"]\n";
 	} else {
 	    print "\t\timods: nil\n";
-	}
-	if (@oowns) {
-	    print "\t\toowns: [",join(' ',@oowns),"]\n";
-	} else {
-	    print "\t\toowns: nil\n";
 	}
 	if ($#otyps == 0 && $otyps[0] eq '\'bool\''
 	    && $odets[0] eq 'any(det)') {
