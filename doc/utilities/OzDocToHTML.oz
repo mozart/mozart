@@ -4,6 +4,7 @@
 %%%
 %%% Contributors:
 %%%   Tobias Mueller <tmueller@ps.uni-sb.de>
+%%%   Christian Schulte <schulte@dfki.de>
 %%%
 %%% Copyright:
 %%%   Leif Kornstaedt, 1998
@@ -1159,24 +1160,42 @@ define
             %-----------------------------------------------------------
             [] 'note.gui' then
                if {HasFeature M mouse} then
-                  BLOCK('div'(COMMON: @Common
-                              p('class': [margin]
-                                OzDocToHTML,Batch(M 1 $)
-                                img(src: 'note-gui-'#M.mouse#'.gif'
-                                    align: middle
-                                    vspace: ''
-                                    hspace: ''
-                                    alt: case M.mouse
-                                         of l1 then 'Left mouse click'
-                                         [] l2 then 'Left mouse double-click'
-                                         [] r1 then 'Right mouse click'
-                                         [] r2 then 'Right mouse double-click'
-                                         [] m1 then 'Middle mouse click'
-                                         [] m2 then 'Middle mouse double-click'
-                                         end))))
+                  BLOCK(p('class': [margin]
+                          COMMON: @Common
+                          OzDocToHTML,Batch(M 1 $)
+                          img(src: 'note-gui-'#M.mouse#'.gif'
+                              align: middle
+                              alt: case M.mouse
+                                   of l1 then 'Left mouse click'
+                                   [] l2 then 'Left mouse double-click'
+                                   [] r1 then 'Right mouse click'
+                                   [] r2 then 'Right mouse double-click'
+                                   [] m1 then 'Middle mouse click'
+                                   [] m2 then 'Middle mouse double-click'
+                                   end)))
                else
                   EMPTY
                end
+            [] 'menu' then
+               BLOCK(table(COMMON:      @Common
+                           bgcolor:     '#aaaaaa'
+                           width:       130
+                           border:      1
+                           cellpadding: 3
+                           cellspacing: 0
+                           local
+                              L=td(align: left
+                                   OzDocToHTML,Batch(M 1 $))
+                           in
+                              if {HasFeature M key} then
+                                 tr({AdjoinAt L width '85%'}
+                                    td(align:right
+                                       PCDATA(M.key)))
+                              else
+                                 tr(L)
+                              end
+                           end))
+
             %-----------------------------------------------------------
             %--** ozdoc.sgml Specials
             %-----------------------------------------------------------
