@@ -362,8 +362,7 @@ public:
 	return &dynamictable;
     }
 
-    Bool unifyOFS(TaggedRef *, TaggedRef, TypeOfTerm,
-                  TaggedRef *, TaggedRef, TypeOfTerm);
+    Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
 
     // Return the feature value if feature exists, return NULL if it doesn't exist
     TaggedRef getFeatureValue(TaggedRef feature) {
