@@ -91,10 +91,6 @@
 	<!--**-->
 	widgets, signals, properties
 
-    <Chapter id="chapter.builder">
-      <Title/The GBuilder/
-	<!--**-->
-
     <Chapter id="chapter.mapping">
       <Title/How the C API is mapped to Oz/
 <!--**
@@ -110,9 +106,14 @@
    - flags
 - classes
    - methods
+- toplevel functions
 - limitations
    - varargs
 -->
+
+    <Chapter id="chapter.builder">
+      <Title/The GBuilder/
+	<!--**-->
 
     <Chapter id="chapter.reference">
       <Title/API Reference/
