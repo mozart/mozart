@@ -2378,9 +2378,12 @@ LBLdispatcher:
 	     if (!isTailCall) { CallPushCont(PC); }
 	   }
 	   if (def->isProxy()) {
+	     CTS->pushCall(makeTaggedConst(def),X,def->getArity());
 	     TaggedRef var = ((ProcProxy*)def)->getSuspvar();
-	     SUSP_PC(var,def->getArity()+1,PC);
+	     addSusp(var,CTT);
+	     goto LBLsuspendThread;
 	   }
+       
 	   CallDoChecks(def,def->getGRegs(),def->getArity());
 	   JUMP(def->getPC());
 	 }
@@ -3070,6 +3073,24 @@ LBLdispatcher:
 #endif
     }
   
+  Case(MARSHALLEDFASTCALL)
+    {
+      TaggedRef pred = getTaggedArg(PC+1);
+      Bool tailcall  = getPosIntArg(PC+2);
+
+      Abstraction *abstr = tagged2Abstraction(pred);
+      if (abstr->isProxy()) {
+	TaggedRef var = ((ProcProxy*)abstr)->getSuspvar();
+	SUSP_PC(var,abstr->getArity(),PC);
+      }
+
+      OZ_unprotect((TaggedRef*)(PC+1));
+      AbstractionEntry *entry = AbstractionTable::add(abstr);
+      CodeArea::writeOpcode(tailcall ? FASTTAILCALL : FASTCALL, PC);
+      CodeArea::writeAddress(entry, PC+1);
+      DISPATCH(0);
+    } 
+      
   Case(GENCALL) 
     {
       GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
