@@ -246,6 +246,7 @@ public:
   int getLowerIntervalBd(int v) const;
   int getUpperIntervalBd(int v) const;
   int getSize(void) const;
+  int getWidth(void) const;
   int getMinElem(void) const;
   int getMaxElem(void) const;
   int getSingleElem(void) const;
@@ -288,6 +289,7 @@ public:
 
 inline OZ_FiniteDomain::OZ_FiniteDomain(void) : descr((void *) 0) {}
 inline int OZ_FiniteDomain::getSize(void) const { return size; }
+inline int OZ_FiniteDomain::getWidth(void) const { return max_elem-min_elem; }
 inline int OZ_FiniteDomain::getMinElem(void) const { return min_elem; }
 inline int OZ_FiniteDomain::getMaxElem(void) const { return max_elem; }
 

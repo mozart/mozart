@@ -64,6 +64,10 @@
 			      out => ['+int'],
 			      bi  => BIfdGetCardinality},
 
+    'reflect.width'	 => { in  => ['*int'],
+			      out => ['+int'],
+			      bi  => BIfdWidth},
+
     'reflect.nextSmaller'=> { in  => ['+int','*int'],
 			      out => ['+int'],
 			      bi  => BIfdNextSmaller},

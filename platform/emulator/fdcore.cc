@@ -104,6 +104,26 @@ OZ_BI_define(BIfdMax, 1, 1)
 }
 OZ_BI_end    
 
+OZ_BI_define(BIfdWidth, 1, 1)
+{
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
+  
+  OZ_getINDeref(0, var, varptr);
+
+  if(oz_isSmallInt(var)) {
+    OZ_RETURN(makeTaggedSmallInt(0));   
+  } else if (isGenFDVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(tagged2GenFDVar(var)->getDom().getWidth()));
+  } else if (isGenBoolVar(var)) {
+    OZ_RETURN(makeTaggedSmallInt(1));
+  } else if (oz_isNonKinded(var)) {
+    oz_suspendOnPtr(varptr);
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_BI_end    
+
 OZ_BI_define(BIfdMid, 1, 1)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
