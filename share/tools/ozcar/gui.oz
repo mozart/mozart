@@ -93,7 +93,7 @@ local
    
 in
 
-   class Gui from Menu Dialog
+   class Gui from Menu Dialog Help
 
       prop
 	 locking
@@ -129,6 +129,7 @@ in
 	 
 	 Menu,init
 	 Dialog,init
+	 Help,init
 
 	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}

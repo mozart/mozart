@@ -18,6 +18,7 @@ local
 
    \insert 'ozcar/menu'
    \insert 'ozcar/dialog'
+   \insert 'ozcar/help'	     
    \insert 'ozcar/gui'
 
 in
