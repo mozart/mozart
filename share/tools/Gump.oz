@@ -29,7 +29,7 @@ import
    OS(system)
    Property(get)
    Debug at 'x-oz://boot/Debug'
-   BisonModule(generate) at 'ozbison.so{native}'
+   BisonModule(generate) at 'Bison.so{native}'
 export
    makeProductionTemplates: MakeProductionTemplates
    transformScanner:        TransformScanner
