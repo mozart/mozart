@@ -439,19 +439,29 @@ inline TaggedRef tagged2NonVariable(TaggedRef *term) {
 #ifdef DEBUG_CHECK
 
 inline TaggedRef makeTaggedVar(OzVariable *s) {
-  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_VAR, s);
+  CHECK_POINTER_N(s); 
+  CHECK_ALIGNMENT(s);
+  return makeTaggedRef2p(TAG_VAR, s);
 }
 inline TaggedRef makeTaggedLTuple(LTuple *s) {
-  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_LTUPLE,s);
+  CHECK_POINTER_N(s); 
+  CHECK_ALIGNMENT(s);
+  return makeTaggedRef2p(TAG_LTUPLE,s);
 }
 inline TaggedRef makeTaggedSRecord(SRecord *s) {
-  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_SRECORD,s);
+  CHECK_POINTER_N(s); 
+  CHECK_ALIGNMENT(s);
+  return makeTaggedRef2p(TAG_SRECORD,s);
 }
 inline TaggedRef makeTaggedLiteral(Literal *s) {
-  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_LITERAL,s);
+  CHECK_POINTER_N(s); 
+  CHECK_DOUBLEALIGNMENT(s);
+  return makeTaggedRef2p(TAG_LITERAL,s);
 }
 inline TaggedRef makeTaggedConst(ConstTerm *s) {
-  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_CONST,s);
+  CHECK_POINTER_N(s); 
+  CHECK_ALIGNMENT(s);
+  return makeTaggedRef2p(TAG_CONST,s);
 }
 inline TaggedRef makeTaggedGcMark(void * s) {
   return makeTaggedRef2p(TAG_GCMARK,s);

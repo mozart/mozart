@@ -103,8 +103,10 @@ void _oz_getNewHeapChunk(const size_t);
 
 #ifdef DEBUG_CHECK
 #define CHECK_ALIGNMENT(p) Assert(!(ToInt32(p) & (OZ_HEAPALIGNMENT - 1)));
+#define CHECK_DOUBLEALIGNMENT(p) Assert(!(ToInt32(p) & (2*OZ_HEAPALIGNMENT - 1)));
 #else
 #define CHECK_ALIGNMENT(p)
+#define CHECK_DOUBLEALIGNMENT(p)
 #endif
 
 /*
@@ -119,7 +121,6 @@ void * oz_heapMalloc(const size_t sz) {
   /*
    * The following invariants are enforced:
    *  - _oz_heap_cur is always aligned to OZ_HEAPALIGMENT
-   *  - if alignment == 4, then sz is multiple of 4
    *
    */
 
@@ -152,6 +153,7 @@ void * oz_heapMalloc(const size_t sz) {
   }
 
 }
+
 
 void initMemoryManagement(void);
 void deleteChunkChain(char *);
@@ -316,6 +318,24 @@ public:
 #else
 #define oz_freeListDispose(p,s) FL_Manager::free((p),oz_alignSize(s))
 #endif
+
+inline 
+void * oz_heapDoubleMalloc(const size_t sz) {
+  /*
+   * Returns block that is aligned to twice OZ_HEAPALIGNMENT
+   *
+   */
+  size_t a_sz = oz_alignSize(sz);
+  char * c = (char *) oz_heapMalloc(a_sz + OZ_HEAPALIGNMENT);
+  if (ToInt32(c) & OZ_HEAPALIGNMENT) {
+    oz_freeListDispose(c,OZ_HEAPALIGNMENT);
+    return c+OZ_HEAPALIGNMENT;
+  } else {
+    oz_freeListDispose(c+a_sz,OZ_HEAPALIGNMENT);
+    return c;
+  }
+}    
+
 
 /*
  * Use this for dynamically allocated memory blocks that haven't been
