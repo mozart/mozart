@@ -28,6 +28,8 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 INCS            = -I. -I$(SRCDIR)/.. -I..
 M4_D=           -DEMUDIR=$(SRCDIR)
+LIBS=           @LIBS@
+LDFLAGS=        @LDFLAGS@
 
 REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc             \
                protocolState.cc dsite.cc perdio.cc state.cc             \
@@ -65,7 +67,7 @@ all:
 pidModule.lo: ../modPID-if.cc
 
 ../PID.so: pidModule.lo
-        $(DYNLD) -o $@ $<
+        $(DYNLD) $(LDFLAGS) -o $@ $< $(LIBS)
 
 ../libPID.a: pidModule.lo
         $(AR) -rc $@ $< && $(RANLIB) $@
