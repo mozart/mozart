@@ -381,13 +381,6 @@ inline
 void tcl_put_quote(char c) {
   unsigned char uc = (unsigned char) c;
   switch (uc) {
-  case '\a': tcl_put2('\\', 'a'); break;
-  case '\b': tcl_put2('\\', 'b'); break;
-  case '\f': tcl_put2('\\', 'f'); break;
-  case '\n': tcl_put2('\\', 'n'); break;
-  case '\r': tcl_put2('\\', 'r'); break;
-  case '\t': tcl_put2('\\', 't'); break;
-  case '\v': tcl_put2('\\', 'v'); break;
   case '{':   case '}':   case '\\':  case '$':
   case '[':   case ']':   case '"':   case ';':
   case ' ':
@@ -630,11 +623,9 @@ void tcl2buffer(TaggedRef tcl) {
     } else if (literalEq(l,AtomTclString)) {
       tcl_put('"'); tuple2buffer(st); tcl_put('"');
     } else if (literalEq(l,AtomTclPosition)) {
-      if (st->getWidth() > 1) {
-	tcl_put('{'); tcl2buffer(st->getArg(0));
-	tcl_put('.'); tuple2buffer(st, 1);
-	tcl_put('}');
-      }
+      tcl_put('{'); tcl2buffer(st->getArg(0));
+      tcl_put('.'); tuple2buffer(st, 1);
+      tcl_put('}');
     } else if (literalEq(l,AtomTclVS)) {
       vs2buffer(st->getArg(0));
     } else if (literalEq(l,AtomTclBatch)) {
@@ -672,14 +663,10 @@ void tcl2buffer(TaggedRef tcl) {
     } else if (literalEq(l,AtomTclString)) {
       tcl_put('"'); record2buffer(sr, sr->getArityList()); tcl_put('"');
     } else if (literalEq(l,AtomTclPosition)) {
-
-      if (sr->getWidth() > 1) {
-	TaggedRef as = sr->getArityList();
-	
-	tcl_put('{'); feature2buffer(sr, head(as));
-	tcl_put('.'); record2buffer(sr, tail(as));
-	tcl_put('}');
-      }
+      TaggedRef as = sr->getArityList();
+      tcl_put('{'); feature2buffer(sr, head(as));
+      tcl_put('.'); record2buffer(sr, tail(as));
+      tcl_put('}');
     } else {
       start_protect();
       protect_atom2buffer(l);
