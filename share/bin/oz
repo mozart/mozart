@@ -20,7 +20,7 @@ if [ ${OZARCH-0} = 0 ]; then
   fi
 fi
 export OZARCH
-: ${ARCHBIN=$OZHOME/bin/$OZARCH}
+: ${OZARCHBIN=$OZHOME/bin/$OZARCH}
 
 
 # Where ispgm sits:
@@ -80,25 +80,25 @@ case "$cmd" in
 
    oz.compiler)
        if [ $TERM = "emacs" ]; then
-          exec $ARCHBIN/oz.compiler.bin +E `echo $* |  sed -e 's/-/+/g'`
+          exec $OZARCHBIN/oz.compiler.bin +E `echo $* |  sed -e 's/-/+/g'`
        else
           exec xterm -name "OzCompiler" \
                -T "Oz Compiler Input Window" \
-               -e $ILE $ARCHBIN/oz.compiler.bin `echo $* |  sed -e 's/-/+/g'`
+               -e $ILE $OZARCHBIN/oz.compiler.bin `echo $* |  sed -e 's/-/+/g'`
        fi
    ;;
 
    oz.machine)
       if [ $TERM = "emacs" ]; then
-        exec $ARCHBIN/oz.machine.bin -E $*
+        exec $OZARCHBIN/oz.machine.bin -E $*
       else
-        xterm -title 'Oz Machine' -e $ARCHBIN/oz.machine.bin $* > /dev/null 2>&1 &
+        xterm -title 'Oz Machine' -e $OZARCHBIN/oz.machine.bin $* > /dev/null 2>&1 &
       fi
       exit 0
    ;;
 
    oz-)
-       exec $ILE $ARCHBIN/oz.compiler.bin $*
+       exec $ILE $OZARCHBIN/oz.compiler.bin $*
    ;;
 
    *)
