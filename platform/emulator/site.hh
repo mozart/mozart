@@ -60,7 +60,7 @@ public:
 //
 // 'BaseSite' (now) constitutes a base for both 'NSite's ("naming
 // site") and 'DSite's ("distribution site");
-class BaseSite{
+class BaseSite:public CppObjMemory{
 friend class Site;
 friend class DSite;
   //
@@ -70,16 +70,6 @@ protected:
   port_t port;
 
 public:
-#ifdef DEBUG_CHECK
-  // never create these...
-  void* operator new(size_t) {
-    OZD_error("BaseSite is created???"); return (void *) 1;
-  }
-  void* operator new(size_t, void *) {
-    OZD_error("BaseSite is created???"); return (void *) 1;
-  }
-#endif
-  //
   BaseSite() {}			// ... just allocating space for it;
   BaseSite(ip_address a, port_t p, TimeStamp &t)
     : address(a), port(p), timestamp(t) {}
@@ -141,12 +131,6 @@ private:
   //
 public:
   //
-  void* operator new(size_t size){ 
-    Assert(sizeof(Site) <= sizeof(Construct_5));
-    return ((Site *) genFreeListManager->getOne_5());}
-  void freeSite(){
-    genFreeListManager->putOne_5((FreeListEntry*) this);}
-
   unsigned short getType() { return (flags); }
 
   //
