@@ -844,10 +844,8 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_Builtin:
     ((BuiltinTabEntry *) this)->printLongStream(stream,depth,offset);
     break;
-#ifdef FOREIGN_POINTER
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printLongStream(stream,depth,offset); break;
-#endif
   default: 	      Assert(NO);
   }
 }
@@ -881,10 +879,8 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Builtin:     ((BuiltinTabEntry *) this)->printStream(stream,depth);
     break;
-#ifdef FOREIGN_POINTER
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printStream(stream,depth); break;
-#endif
   default:             Assert(NO);
   }
 }
@@ -900,12 +896,11 @@ void HeapChunk::printStream(ostream &stream, int depth)
 	   */
 }
 
-#ifdef FOREIGN_POINTER
+
 void ForeignPointer::printStream(ostream &stream, int depth)
 {
   stream << "foreign pointer: " << getPointer() << " at " << this << '.';
 }
-#endif
 
 
 void ObjectClass::printLongStream(ostream &stream, int depth, int offset)
