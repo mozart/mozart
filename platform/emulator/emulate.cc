@@ -3090,8 +3090,8 @@ LBLdispatcher:
       Bool tailcall           =  getPosIntArg(PC+2);
 
       if (entry->getAbstr() == 0) {
-	RAISE_APPLY(OZ_atom("unknown"),
-		    OZ_atom("Inconsistency in optimized application.\nMaybe due to previous toplevel failure."));
+	(void) e->raise(E_ERROR,E_SYSTEM,"inconsistentFastcall",0);
+	goto LBLraise;
       }
       CodeArea::writeOpcode(tailcall ? FASTTAILCALL : FASTCALL, PC);
       DISPATCH(0);
@@ -3110,7 +3110,7 @@ LBLdispatcher:
       OZ_unprotect((TaggedRef*)(PC+1));
 
       if (!changeMarshalledFastCall(PC,pred,tailcallAndArity)) {
-	RAISE_APPLY(pred,OZ_atom("proc or builtin expected."));
+	RAISE_APPLY(pred,cons(OZ_atom("proc or builtin expected."),nil()));
       }
 
       DISPATCH(0);
