@@ -1408,17 +1408,20 @@ define
 	       TableCols <- Old.1
 	       TableRow <- Old.2
 	       CurTableCols <- Old.3
-	       BLOCK(table(COMMON: @Common
-			   align: center
-			   border: if {SGML.isOfClass M dyptic} then 0
-				   else 1
-				   end
-			   case Title of unit then EMPTY
-			   else
-			      tr(td(p(align: center
-				      b(OzDocToHTML, Batch(Title 1 $)))))
-			   end
-			   HTML))
+	       BLOCK(local
+			T=table(COMMON: @Common
+				align: center
+				case Title of unit then EMPTY
+				else
+				   tr(td(p(align: center
+					   b(OzDocToHTML, Batch(Title 1 $)))))
+				end
+				HTML)
+		     in
+			if {SGML.isOfClass M dyptic} then T else
+			   {AdjoinAt T bgcolor '#f0f0e0'}
+			end
+		     end)
 	    [] tr then HTML in
 	       CurTableCols <- 0
 	       OzDocToHTML, Batch(M 1 ?HTML)
