@@ -450,7 +450,7 @@ Bool AM::hookCheckNeeded()
 #define emulateHookPopTask(e,Code) emulateHookCall(e,0,0,0,Code)
 
 
-#define CallPushCont(ContAdr) e->pushTaskInline(ContAdr,Y,G,NULL,0)
+#define CallPushCont(ContAdr) e->pushTaskInline(ContAdr,Y,G)
 
 #define ChangeSelf(obj)				\
       e->changeSelf(obj);
@@ -665,7 +665,7 @@ void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
   case 1: { DEREF (A, ptr, _1); if (isAnyVar(A)) addSusp(ptr, currentThread); }
     break;
   default:
-    error("suspendInline");
+    Assert(0);
   }
 }
 
@@ -754,7 +754,7 @@ void AM::checkEntailment()
 
       if (!fastUnifyOutline(solveAA->getResult(), 
 			    solveAA->genSolved(), OK)) {
-	error("solve: unify result should never fail");
+	Assert(0);
       }
       return;
     }
@@ -772,7 +772,7 @@ void AM::checkEntailment()
 
       if ( !fastUnifyOutline(solveAA->getResult(), 
 			     solveAA->genStuck(), OK) ) {
-	error("solve: unify result should never fail");
+	Assert(0);
       }
       return;
     }
@@ -805,7 +805,7 @@ void AM::checkEntailment()
     if (!fastUnifyOutline(solveAA->getResult(),
 			  solveAA->genChoice(wa->getChildCount()),
 			  OK)) {
-      error("solve: unify result should never fail");
+      Assert(0);
     }
     return;
   }
@@ -823,7 +823,7 @@ void AM::checkEntailment()
     if ( !fastUnifyOutline(result,
 			   solveAA->genUnstable(newVar),
 			   OK)) {
-      error("solve: unify result should never fail");
+      Assert(0);
     }
     return;
   } 
@@ -840,7 +840,7 @@ void AM::checkEntailment()
 
 #define NoReg(Var) { void *p = &Var; }
 
-void engine() 
+void engine(Bool init) 
 {  
 // ------------------------------------------------------------------------
 // *** Global Variables
@@ -899,9 +899,15 @@ void engine()
 
 #ifdef THREADED
 # include "instrtab.hh"
-  CodeArea::globalInstrTable = instrTable;
+  if (init) {
+    CodeArea::init(instrTable);
+    return;
+  }
 # define op (Opcode) -1
 #else
+  if (init) {
+    return;
+  }
   Opcode op = (Opcode) -1;
 #endif
 
@@ -1050,6 +1056,7 @@ LBLinstallThread:
       if (e->isToplevel ()) {
 	goto LBLkillToplevelThread;
       } else {
+	Assert (CTT->isPropagator () || CTT->isEmpty ());
 	goto LBLkillThread;
       }
 
@@ -1069,7 +1076,7 @@ LBLinstallThread:
       }
 
     default:
-      error ("Unexpected value returned from a propagator.");
+      Assert(0);
       goto LBLerror;
     }
   } else { 
@@ -1114,271 +1121,18 @@ LBLpopTask:
   {
     Assert(!CTT->isSuspended());
     Assert(CBB==currentDebugBoard);
-    asmLbl(popTask);
 
     emulateHookPopTask(e, goto LBLpreemption);
 
     DebugCheckT(CAA = NULL);
 
-    TaskStack * taskstack = CTT->getTaskStackRef();
-    TaskStackEntry * topCache = taskstack->getTop();
-    TaskStackEntry topElem;
-    ContFlag cFlag;
-
-  next_task:
-    topElem = TaskStackPop (topCache-1);
-    cFlag   = getContFlag (ToInt32 (topElem));
-
-    /* RS: Optimize most probable case:
-     *  - do not handle C_CONT in switch --> faster
-     *  - assume cFlag == C_CONT implies stack does not contain empty mark
-     *  - topCache maintained more efficiently
-     */
-    if (cFlag == C_CONT) {  
-      Assert(!taskstack->isEmpty(topElem));
-      PC = getPC(C_CONT,ToInt32(topElem));
-      Y  = (RefsArray) TaskStackPop(topCache-2);
-      G  = (RefsArray) TaskStackPop(topCache-3);
-      taskstack->setTop(topCache-3);
-      goto LBLemulate;
-    }
-
-    
-    if (cFlag == C_LTQ) {
-      {
-	asmLbl(ltq);
-	Assert(e->currentBoard->isSolve());
-	Assert(!e->isToplevel());
-	Assert(taskstack->getUsed()-1 == 2); // approximates one LTQ task
-	
-	// postpone poping task from taskstack until 
-	// local thread queue is empty
-	SolveActor * sa = SolveActor::Cast(e->currentBoard->getActor());
-	LocalThreadQueue * ltq = sa->getLocalThreadQueue();
-	
-	Assert(!ltq->isEmpty());
-	
-	unsigned int starttime = osUserTime();
-	Thread * backup_currentThread = CTT;
-
-	while (!ltq->isEmpty() && e->isNotPreemtiveScheduling()) {
-	  Thread * thr = CTT = ltq->dequeue();
-	  
-	  Assert(!thr->isDeadThread());
-	  
-	  OZ_Return r = thr->runPropagator();
-
-	  if (r == SLEEP) {
-	    thr->suspendPropagator();
-	  } else if (r == PROCEED) {
-	    thr->closeDonePropagator();
-	  } else if (r == FAILED) {
-	    thr->closeDonePropagator();
-	    CTT = backup_currentThread;
-	    ozstat.timeForPropagation.incf(osUserTime()-starttime);
-	    // failure of propagator is never catched !
-	    goto LBLfailure; // top-level failure not possible
-	  } else {
-	    Assert(r == SCHEDULED);
-	    thr->scheduledPropagator();
-	  }
-	} 
-	
-	CTT = backup_currentThread;
-	ozstat.timeForPropagation.incf(osUserTime()-starttime);
-	
-	if (ltq->isEmpty()) {
-	  sa->resetLocalThreadQueue();
-	  
-	  // pop task from taskstack now
-	  taskstack->setTop(topCache-2);
-	  Assert(taskstack->isEmpty());
-	  goto LBLpopTask;
-	} else {
-	  // need not push task onto taskstack since it hasn't been poped
-	  goto LBLpreemption;
-	}
-      }
-    }
-    
-    if (taskstack->isEmpty(topElem)) {
-      taskstack->setTop(topCache);
-      if (e->isToplevel ()) {
-	goto LBLkillToplevelThread;
-      } else {
-	goto LBLkillThread;
-      }
-    }
-
-    PC = NOCODE; // this is necessary for printing stacks (mm)
-    topCache--;
-    switch (cFlag){
-    case C_XCONT:
-      PC = getPC(C_CONT,ToInt32(topElem));
-      Y  = (RefsArray) TaskStackPop(--topCache);
-      G  = (RefsArray) TaskStackPop(--topCache);
-      {
-	RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
-	predArity = getRefsArraySize(tmpX);
-	int i = predArity;
-	while (--i >= 0) {
-	  X[i] = tmpX[i];
-	}
-	disposeRefsArray(tmpX);
-      }
-      taskstack->setTop(topCache);
-      goto LBLemulate;
-
-    case C_LOCK:
-      {
-	OzLock *lck = (OzLock *) TaskStackPop(--topCache);
-	lck->unlock();
-	goto next_task;
-      }
-
-    case C_DEBUG_CONT:
-      {
-	OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
-	exitCall(PROCEED,ozdeb);
-	goto next_task;
-      }
-
-    case C_CALL_CONT:
-      {
-	predicate = tagged2Const((TaggedRef)ToInt32(TaskStackPop(--topCache)));
-	RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
-	predArity = tmpX ? getRefsArraySize(tmpX) : 0;
-	int i = predArity;
-	while (--i >= 0) {
-	  X[i] = tmpX[i];
-	}
-	disposeRefsArray(tmpX);
-	taskstack->setTop(topCache);
-	DebugTrace(trace("call cont task",CBB));
-	isTailCall = OK;
-	goto LBLcall;
-      }
-
-    case C_CFUNC_CONT:
-      {
-	// 
-	// by kost@ : 'solve actors' are represented via a c-function; 
-        biFun = (OZ_CFun) TaskStackPop(--topCache);
-	RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
-	if (tmpX != NULL) {
-	  predArity = getRefsArraySize(tmpX);
-	  int i = predArity;
-	  while (--i >= 0) {
-	    X[i] = tmpX[i];
-	  }
-	} else {
-	  predArity = 0;
-	}
-	disposeRefsArray(tmpX);
-
-	taskstack->setTop(topCache);
-
-	DebugTrace(trace("cfunc cont task",CBB));
-
-	switch (biFun(predArity, X)) {
-	case FAILED:
-	  HF_BI;
-
-	case PROCEED:
-	  goto LBLpopTask;
-
-	case SUSPEND:
-	  {
-	    e->pushCFun(biFun,X,predArity);
-	    e->suspendOnVarList(CTT);
-	    goto LBLsuspendThread;
-	  }
-
-	case RAISE:
-	  RAISE_BI;
-
-	case BI_TYPE_ERROR:
-	  RAISE_TYPE;
-
-	case SLEEP:
-	default:
-	  error("unhandler BI return");
-	} // switch
-      }
-
-    case C_ACTOR:
-      {
-	AWActor *aw = (AWActor *) TaskStackPop (--topCache);
-	taskstack->setTop(topCache);
-
-	Assert(!aw->isCommitted());
-
-	if (aw->hasNext()) {
-	  LOADCONT(aw->getNext());
-	  CAA=aw;
-	  taskstack->setTop(topCache+2);
-	  goto LBLemulate; // no thread switch allowed here (CAA)
-	}
-
-	if (aw->isWait()) {
-
-	  WaitActor *wa = WaitActor::Cast(aw);
-	  /* test bottom commit */
-	  if (wa->hasNoChildren()) {
-	    HF_DIS;
-	  }
-
-	  /* test unit commit */
-	  if (wa->hasOneChildNoChoice()) {
-	    Board *waitBoard = wa->getLastChild();
-
-	    if (!e->commit(waitBoard,CTT)) {
-	      HF_DIS;
-	    }
-
-	    wa->dispose();
-
-	    goto LBLpopTask;
-	  }
-
-	  // suspend wait actor
-	  taskstack->setTop(topCache+2);
-	  goto LBLsuspendThread;
-	}
-
-	Assert(aw->isAsk());
-
-	AskActor *aa = AskActor::Cast(aw);
-
-	//  should we activate the 'else' clause?
-	if (aa->isLeaf()) {
-	  aa->setCommitted();
-	  CBB->decSuspCount();
-
-	  /* rule: if fi --> false */
-	  if (aa->getElsePC() == NOCODE) {
-	    HF_COND;
-	  }
-
-	  LOADCONT(aa->getNext());
-	  PC=aa->getElsePC();
-	  goto LBLemulate;
-	}
-
-	taskstack->setTop(topCache+2);
-	goto LBLsuspendThread;
-      }
-    case C_SET_SELF:
-      e->setSelf((Object*)TaskStackPop(--topCache));
-      goto next_task;
-      
-    default:
-      error("invalid task type");
-      goto LBLerror;
-    }  // switch
+LBLpopTaskNoPreempt:
+    TaskStack *taskstack     = CTS;
+    TaskStackEntry *topCache = taskstack->getTop();
+    PopFrameNoDecl(topCache,PC,Y,G);
+    taskstack->setTop(topCache);
+    goto LBLemulate;
   }
-//
-// ----------------- end popTask -----------------------------------------
 
   /*
    *  Kill a thread at the toplevel - i.e. just dispose it;
@@ -1433,7 +1187,7 @@ LBLkillToplevelThread:
     }
   }
 
-  error ("never here");
+  Assert(0);
   goto LBLerror;
 
 
@@ -1706,15 +1460,8 @@ LBLsuspendThread:
   /* These tests make the emulator really sloooooww */
   osBlockSignals(OK);
   DebugCheckT(osUnblockSignals());
-  DebugCheck ((e->currentSolveBoard != CBB->getSolveBoard ()),
-	      error ("am.currentSolveBoard and real solve board mismatch"));
-
+  Assert(e->currentSolveBoard == CBB->getSolveBoard ());
   Assert(!isFreedRefsArray(Y));
-#endif
-
-#ifndef THREADED
-LBLdispatcher:
-  op = CodeArea::getOP(PC);
 #endif
 
 #ifdef RECINSTRFETCH
@@ -1726,6 +1473,8 @@ LBLdispatcher:
 	      });
 
 #ifndef THREADED
+LBLdispatcher:
+  op = CodeArea::getOP(PC);
   // displayCode(PC,1);
   switch (op) {
 #endif
@@ -1775,33 +1524,25 @@ LBLdispatcher:
 		 OZ_findBuiltin(entry->getPrintName(), OZ_atom("noHandler")));
 
       switch (biFun(predArity, X)){
+
+      case PROCEED:	  DISPATCH(3);
+      case FAILED:	  HF_BI;
+      case RAISE:	  RAISE_BI;
+      case BI_TYPE_ERROR: RAISE_TYPE;
+      case BI_TERMINATE:  goto LBLpopTask;
+
       case SUSPEND:
 	e->pushTask(PC,Y,G,X,predArity);
 	e->suspendOnVarList(CTT);
 	goto LBLsuspendThread;
 
-      case FAILED:
-	HF_BI;
-
-      case PROCEED:
-	DISPATCH(3);
-
-      case RAISE:
-	RAISE_BI;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE;
-
       case BI_PREEMPT:
 	e->pushTask(PC+3,Y,G);
 	goto LBLpreemption;
 
-      case BI_TERMINATE:
-	goto LBLpopTask;
-
       case SLEEP:
       default:
-	error("unhandler BI return");
+	Assert(0);
       }
     }
 
@@ -1838,7 +1579,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("inlinerel1");
+	Assert(0);
       }
     }
 
@@ -1877,7 +1618,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("inlinerel2");
+	Assert(0);
       }
     }
 
@@ -1918,7 +1659,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("inlinerel3");
+	Assert(0);
       }
     }
 
@@ -1946,7 +1687,7 @@ LBLdispatcher:
 
       case FAILED:
 	SHALLOWFAIL;
-	error("inlinefun1 fail");
+	Assert(0);
 
       case RAISE:
 	RAISE_BI;
@@ -1957,7 +1698,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("inlinefun1");
+	Assert(0);
       }
     }
 
@@ -2001,7 +1742,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("inlinefun2");
+	Assert(0);
       }
      }
 
@@ -2023,7 +1764,7 @@ LBLdispatcher:
 	switch(dotInline(XPC(1),feature,XPC(3))) {
 	case PROCEED: DISPATCH(7);
 	case FAILED:
-	  error("dot fail");
+	  Assert(0);
 
 	case SUSPEND:
 	  {
@@ -2045,7 +1786,7 @@ LBLdispatcher:
 
 	case SLEEP:
 	default:
-	  error("inlinedot");
+	  Assert(0);
 	}
       }
     }
@@ -2114,7 +1855,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("inlineuparrow");
+	Assert(0);
       }
     }
 
@@ -2147,7 +1888,7 @@ LBLdispatcher:
 
       case FAILED:
 	SHALLOWFAIL;
-	error("inlinefun3 fail");
+	Assert(0);
 
       case RAISE:
 	RAISE_BI;
@@ -2158,7 +1899,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("inlinefun3");
+	Assert(0);
       }
     }
 
@@ -2182,7 +1923,7 @@ LBLdispatcher:
       case FAILED:
       case SLEEP:
       default:
-	error("inlineeqeq");
+	Assert(0);
       }
     }
 
@@ -2222,7 +1963,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("shallowtest1");
+	Assert(0);
       }
     }
 
@@ -2257,7 +1998,7 @@ LBLdispatcher:
 
       case SLEEP:
       default:
-	error("shallowtest2");
+	Assert(0);
       }
     }
 
@@ -2337,11 +2078,10 @@ LBLdispatcher:
 
   Case(POPEX)
     {
-      TaskStack *taskstack = CTT->getTaskStackRef();
-      TaskStackEntry topElem = taskstack->pop();
-      Assert(getContFlag(ToInt32(topElem))==C_CATCH);
+      TaskStack *taskstack = CTS;
+      taskstack->discardFrame(C_CATCH_Ptr);
       /* remove unused continuation for handler */
-      taskstack->pop(TaskStack::frameSize(C_CONT));
+      taskstack->discardFrame(NOCODE);
       DISPATCH(1);
     }
 
@@ -2737,7 +2477,7 @@ LBLdispatcher:
 		 HF_BI;
 
 	       case SLEEP: // no break
-		 error ("'xxxCALLxxx' has got 'SLEEP' back!\n");
+		 Assert(0);
 	       case PROCEED:
 		 if (isTailCall) {
 		   goto LBLpopTask;
@@ -2760,7 +2500,7 @@ LBLdispatcher:
 		 goto LBLpopTask;
 
 	       default:
-		 error("builtin: bad return value");
+		 Assert(0);
 		 goto LBLerror;
 	       }
 	     }
@@ -2819,7 +2559,7 @@ LBLdispatcher:
 	   }
 	   break;
 	 default:
-	   error("never here");
+	   Assert(0);
 	   break;
 	 }
        }
@@ -2864,11 +2604,7 @@ LBLdispatcher:
 
       if ( e->entailment() ) {
 
-	{
-	  TaskStackEntry topElem = CTT->pop ();
-	  Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_ACTOR);
-	  CTT->pop();
-	}
+	CTS->discardFrame(C_ACTOR_Ptr);
 
 	e->trail.popMark();
 
@@ -2894,11 +2630,7 @@ LBLdispatcher:
 
       // entailment ?
       if (e->entailment()) {
-	{
-	  TaskStackEntry topElem = CTT->pop ();
-	  Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_ACTOR);
-	  CTT->pop();
-	}
+	CTS->discardFrame(C_ACTOR_Ptr);
 	e->trail.popMark();
 	Board *tmpBB = CBB;
 	e->setCurrent(CBB->getParent());
@@ -2937,14 +2669,14 @@ LBLdispatcher:
       CAA = new AskActor(CBB,CPP,CTT,
 			 elsePC ? elsePC : NOCODE,
 			 NOCODE, Y, G, X, argsToSave);
-      CTT->pushActor(CAA);
+      CTS->pushActor(CAA);
       DISPATCH(3);
     }
 
   Case(CREATEOR)
     {
       CAA = new WaitActor(CBB, CPP, CTT, NOCODE, Y, G, X, 0, NO);
-      CTT->pushActor(CAA);
+      CTS->pushActor(CAA);
 
       DISPATCH(1);
     }
@@ -2954,7 +2686,7 @@ LBLdispatcher:
       Board *bb = CBB;
 
       CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, 0, NO);
-      CTT->pushActor(CAA);
+      CTS->pushActor(CAA);
 
       if (bb->isWait()) {
 	WaitActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
@@ -2970,7 +2702,7 @@ LBLdispatcher:
       Board *bb = CBB;
 
       CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, 0, OK);
-      CTT->pushActor(CAA);
+      CTS->pushActor(CAA);
 
       if (bb->isWait()) {
 	WaitActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
@@ -3022,7 +2754,7 @@ LBLdispatcher:
 
       ozstat.createdThreads.incf();
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
-      tt->pushCont(newPC,newY,G,NULL,0);
+      tt->pushCont(newPC,newY,G,NULL);
       e->scheduleThread (tt);
 
 #ifdef LINKEDTHREADS
@@ -3066,6 +2798,226 @@ LBLdispatcher:
 // -------------------------------------------------------------------------
 // CLASS: MISC: ERROR/NOOP/default
 // -------------------------------------------------------------------------
+
+  Case(TASKEMPTYSTACK)  
+    {
+      Assert(Y==0 && G==0);
+      CTS->restoreFrame();
+      if (e->isToplevel ()) {
+	goto LBLkillToplevelThread;
+      } else {
+	goto LBLkillThread;
+      }
+    }
+
+
+  Case(TASKCALLCONT)
+    {
+      predicate = tagged2Const((TaggedRef)ToInt32(Y));
+      RefsArray tmpX = G;
+      Y = G = NULL;
+      predArity = tmpX ? getRefsArraySize(tmpX) : 0;
+      int i = predArity;
+      while (--i >= 0) {
+	X[i] = tmpX[i];
+      }
+      disposeRefsArray(tmpX);
+      DebugTrace(trace("call cont task",CBB));
+      isTailCall = OK;
+      goto LBLcall;
+    }
+
+  Case(TASKLOCK)
+    {
+      OzLock *lck = (OzLock *) Y;
+      Y = NULL;
+      lck->unlock();
+      goto LBLpopTaskNoPreempt;
+    }
+
+  Case(TASKXCONT)
+    {
+      RefsArray tmpX = Y;
+      Y = NULL;
+      predArity = getRefsArraySize(tmpX);
+      int i = predArity;
+      while (--i >= 0) {
+	X[i] = tmpX[i];
+      }
+      disposeRefsArray(tmpX);
+      goto LBLpopTaskNoPreempt;
+    }
+
+
+  Case(TASKSETSELF)
+      e->setSelf((Object*)Y);
+      Y = NULL;
+      goto LBLpopTaskNoPreempt;
+
+
+  Case(TASKDEBUGCONT)
+    {
+      OzDebug *ozdeb = (OzDebug *) Y;
+      Y = NULL;
+      exitCall(PROCEED,ozdeb);
+      goto LBLpopTaskNoPreempt;
+    }
+
+
+   Case(TASKCFUNCONT)
+     {
+       // 
+       // by kost@ : 'solve actors' are represented via a c-function; 
+       biFun = (OZ_CFun) Y;
+       RefsArray tmpX = G;
+       G = Y = NULL;
+       if (tmpX != NULL) {
+	 predArity = getRefsArraySize(tmpX);
+	 int i = predArity;
+	 while (--i >= 0) {
+	   X[i] = tmpX[i];
+	 }
+       } else {
+	 predArity = 0;
+       }
+       disposeRefsArray(tmpX);
+
+       DebugTrace(trace("cfunc cont task",CBB));
+
+       switch (biFun(predArity, X)) {
+       case FAILED:        HF_BI;
+       case PROCEED:       goto LBLpopTask;
+       case RAISE:         RAISE_BI;
+       case BI_TYPE_ERROR: RAISE_TYPE;
+
+       case SUSPEND:
+	 e->pushCFun(biFun,X,predArity);
+	 e->suspendOnVarList(CTT);
+	 goto LBLsuspendThread;
+
+       case SLEEP:
+       default:
+	 Assert(0);
+       }
+     }
+
+  Case(TASKLTQ)
+     {
+       Y = NULL;  // sa here unused
+       asmLbl(ltq);
+       Assert(e->currentBoard->isSolve());
+       Assert(!e->isToplevel());
+       Assert(CTS->isEmpty()); // approximates one LTQ task
+       
+       // postpone poping task from taskstack until 
+       // local thread queue is empty
+       SolveActor * sa = SolveActor::Cast(e->currentBoard->getActor());
+       LocalThreadQueue * ltq = sa->getLocalThreadQueue();
+	
+       Assert(!ltq->isEmpty());
+	
+       unsigned int starttime = osUserTime();
+       Thread * backup_currentThread = CTT;
+
+       while (!ltq->isEmpty() && e->isNotPreemtiveScheduling()) {
+	 Thread * thr = CTT = ltq->dequeue();
+	  
+	 Assert(!thr->isDeadThread());
+	  
+	 OZ_Return r = thr->runPropagator();
+
+	 if (r == SLEEP) {
+	   thr->suspendPropagator();
+	 } else if (r == PROCEED) {
+	   thr->closeDonePropagator();
+	 } else if (r == FAILED) {
+	   thr->closeDonePropagator();
+	   CTT = backup_currentThread;
+	   ozstat.timeForPropagation.incf(osUserTime()-starttime);
+	   CTS->restoreFrame(); // RS: is this needed ???
+	   // failure of propagator is never catched !
+	   goto LBLfailure; // top-level failure not possible
+	 } else {
+	   Assert(r == SCHEDULED);
+	   thr->scheduledPropagator();
+	 }
+       } 
+	
+       CTT = backup_currentThread;
+       ozstat.timeForPropagation.incf(osUserTime()-starttime);
+	
+       if (ltq->isEmpty()) {
+	 sa->resetLocalThreadQueue();
+	 goto LBLpopTask;
+       } else {
+	 CTS->restoreFrame();
+	 goto LBLpreemption;
+       }
+     }
+    
+
+  Case(TASKACTOR)
+    {
+      AWActor *aw = (AWActor *) Y;
+      Y = NULL;
+
+      Assert(!aw->isCommitted());
+
+      if (aw->hasNext()) {
+	LOADCONT(aw->getNext());
+	CAA=aw;
+	CTS->restoreFrame();
+	goto LBLemulate; // no thread switch allowed here (CAA)
+      }
+
+      if (aw->isWait()) {
+
+	WaitActor *wa = WaitActor::Cast(aw);
+	/* test bottom commit */
+	if (wa->hasNoChildren()) {
+	  HF_DIS;
+	}
+
+	/* test unit commit */
+	if (wa->hasOneChildNoChoice()) {
+	  Board *waitBoard = wa->getLastChild();
+
+	  if (!e->commit(waitBoard,CTT)) {
+	    HF_DIS;
+	  }
+
+	  wa->dispose();
+
+	  goto LBLpopTask;
+	}
+
+	// suspend wait actor
+	CTS->restoreFrame();
+	goto LBLsuspendThread;
+      }
+
+      Assert(aw->isAsk());
+
+      AskActor *aa = AskActor::Cast(aw);
+
+      //  should we activate the 'else' clause?
+      if (aa->isLeaf()) {
+	aa->setCommitted();
+	CBB->decSuspCount();
+
+	/* rule: if fi --> false */
+	if (aa->getElsePC() == NOCODE) {
+	  HF_COND;
+	}
+
+	LOADCONT(aa->getNext());
+	PC=aa->getElsePC();
+	goto LBLemulate;
+      }
+
+      CTS->restoreFrame();
+      goto LBLsuspendThread;
+    }
 
   Case(OZERROR)
       error("Emulate: OZERROR command executed");
@@ -3143,6 +3095,8 @@ LBLdispatcher:
   Case(TEST3)
   Case(TEST4)
 
+  Case(TASKCATCH)
+
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
   Case(GLOBALVARNAME)
@@ -3215,7 +3169,7 @@ LBLdispatcher:
 
     if (!e->fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
       // this should never happen?
-      error("solve: unify result should never fail");
+      Assert(0);
     }
 
   } else {
