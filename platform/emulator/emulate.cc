@@ -3063,7 +3063,6 @@ LBLsuspendThread:
       DISPATCH(3);
     }
 
-  /*
   Case(CREATECHOICE)
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
@@ -3076,7 +3075,6 @@ LBLsuspendThread:
       }
       DISPATCH(3);
     }
-    */
 
   Case(WAITCLAUSE)
     {
@@ -3233,6 +3231,8 @@ LBLsuspendThread:
 
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
+
+  Case(INLINEREL3)
 
 #ifndef THREADED
   default:
