@@ -199,13 +199,13 @@ end
         <list>
           <entry><<send>> <index class=module/Tk<and>send/ 
           <synopsis>
-            <<{Tk.send ?+{Tcl}}>>
+            <<<{Tk.send ?+{Tcl}}>>>
           <item>
             Sends ?+{Tcl} to the graphics engine.
 
           <entry> <<batch>> <index class=module/Tk<and>batch/
           <synopsis>
-            <<{Tk.batch ?+{TclS}}>>
+            <<<{Tk.batch ?+{TclS}}>>>
           <item>
             Sends a list of list of tickles ?+{TclS} to the graphics
             engine. It is guaranteed that the graphics engine
@@ -229,27 +229,27 @@ end
           <entry> <<returnString>>
             <index class=module/Tk<and>returnString/
           <synopsis>
-            <<{Tk.returnString ?+{Tcl} ??{S}}>>
+            <<<{Tk.returnString ?+{Tcl} ??{S}}>>>
           <item>
             Returns the result of sending and executing ?+{Tcl} as string.
 
           <entry> <<return>> <index class=module/Tk<and>return/
           <synopsis>
-            <<{Tk.return ?+{Tcl} ??{S}}>>
+            <<<{Tk.return ?+{Tcl} ??{S}}>>>
           <item>
             Shortcut for <<Tk.returnString>>.
 
           <entry> <<returnAtom>>
             <index class=module/Tk<and>returnAtom/
           <synopsis>
-            <<{Tk.returnAtom ?+{Tcl} ??{A}}>>
+            <<<{Tk.returnAtom ?+{Tcl} ??{A}}>>>
           <item>
             Returns the result of sending and executing ?+{Tcl} as string.
 
           <entry> <<returnInt>>
             <index class=module/Tk<and>returnInt/
           <synopsis>
-            <<{Tk.returnInt ?+{Tcl} ??{IB}}>>
+            <<<{Tk.returnInt ?+{Tcl} ??{IB}}>>>
           <item>
             Returns the result of sending and executing ?+{Tcl} as
             integer. If the result does not describe a number
@@ -258,7 +258,7 @@ end
           <entry> <<returnFloat>>
             <index class=module/Tk<and>returnFloat/
           <synopsis>
-            <<{Tk.returnFloat ?+{Tcl} ??{FB}}>>
+            <<<{Tk.returnFloat ?+{Tcl} ??{FB}}>>>
           <item>
             Returns the result of sending and executing ?+{Tcl} as
             float. If the result does not describe a number <<false>>
@@ -267,7 +267,7 @@ end
           <entry> <<returnListString>>
             <index class=module/Tk<and>returnListString/
           <synopsis>
-            <<{Tk.returnListString ?+{Tcl} ??{Ss}}>>
+            <<<{Tk.returnListString ?+{Tcl} ??{Ss}}>>>
           <item>
             Returns the result of sending and executing ?+{Tcl} as
             list of strings.
@@ -275,14 +275,14 @@ end
           <entry> <<returnList>>
             <index class=module/Tk<and>returnList/
           <synopsis>
-            <<{Tk.returnList ?+{Tcl} ??{Ss}}>>
+            <<<{Tk.returnList ?+{Tcl} ??{Ss}}>>>
           <item>
             Shortcut for <<Tk.returnListString>>.
 
           <entry> <<returnListAtom>>
             <index class=module/Tk<and>returnListAtom/
           <synopsis>
-            <<{Tk.returnListAtom ?+{Tcl} ??{ABs}}>>
+            <<<{Tk.returnListAtom ?+{Tcl} ??{ABs}}>>>
           <item>
             Returns the result of sending and executing ?+{Tcl} as
             list of atoms. If elements of the list do not form valid
@@ -291,7 +291,7 @@ end
           <entry> <<returnListInt>>
             <index class=module/Tk<and>returnListInt/
           <synopsis>
-            <<{Tk.returnListInt ?+{Tcl} ??{IBs}}>>
+            <<<{Tk.returnListInt ?+{Tcl} ??{IBs}}>>>
           <item>
             Returns the result of sending and executing ?+{Tcl} as
             list of integers. If elements of the list do not form valid
@@ -300,7 +300,7 @@ end
           <entry> <<returnListFloat>>
             <index class=module/Tk<and>returnListFloat/
           <synopsis>
-            <<{Tk.returnListFloat ?+{Tcl} ??{FBs}}>>
+            <<<{Tk.returnListFloat ?+{Tcl} ??{FBs}}>>>
           <item>
             Returns the result of sending and executing ?+{Tcl} as
             list of integers. If elements of the list do not form valid
@@ -486,7 +486,7 @@ end
          <index class=module/Tk<and>message<and>tkInit/
          <index class=module/Tk<and>text<and>tkInit/
        <synopsis>
-         <<tkInit(parent:?+{WidgetO} ...)>>
+         <<<tkInit(parent:?+{WidgetO} ...)>>>
        <item>
          Creates.
 
@@ -501,7 +501,7 @@ end
          <index class=module/Tk<and>message<and>tk/
          <index class=module/Tk<and>text<and>tk/
        <synopsis>
-         <<tk(...)>>
+         <<<tk(...)>>>
        <item>
          Sends.
 
@@ -640,7 +640,7 @@ tkReturnListFloat(... ??{FBs})>>>
          <index class=module/Tk<and>message<and>tkClose/
          <index class=module/Tk<and>text<and>tkClose/
        <synopsis>
-         <<tkClose()>>
+         <<<tkClose()>>>
        <item>
          Closes the widget object and destroys the widgets and all
          slave widgets. Further object application will raise an
@@ -705,7 +705,7 @@ tkReturnListFloat(... ??{FBs})>>>
          <index class=module/Tk<and>scale<and>tkInit/
          <index class=module/Tk<and>scrollbar<and>tkInit/
        <synopsis>
-         <<tk(...)>>
+         <<<tk(...)>>>
        <item>
          Sends.
 
@@ -808,7 +808,7 @@ tkReturnListFloat(... ??{FBs})>>>
          <index class=module/Tk<and>scale<and>tkClose/
          <index class=module/Tk<and>scrollbar<and>tkClose/
        <synopsis>
-         <<tkClose()>>
+         <<<tkClose()>>>
        <item>
          Closes the widget object and destroys the widgets and all
          slave widgets. Further object application will raise an
@@ -841,14 +841,14 @@ tkReturnListFloat(... ??{FBs})>>>
        <entry><<tk>>
          <index class=module/Tk<and>toplevel<and>tk/
        <synopsis>
-         <<tk(...)>>
+         <<<tk(...)>>>
        <item>
          Sends.
 
        <entry><<tkWM>>
          <index class=module/Tk<and>toplevel<and>tkWM/
        <synopsis>
-         <<tkWM(...)>>
+         <<<tkWM(...)>>>
        <item>
          Sends.
 
@@ -891,7 +891,7 @@ tkReturnListFloat(... ??{FBs})>>>
        <entry><<tkClose>>
          <index class=module/Tk<and>toplevel<and>tkClose/
        <synopsis>
-         <<tkClose()>>
+         <<<tkClose()>>>
        <item>
          Closes the widget object and destroys the widgets and all
          slave widgets. Further object application will raise an
@@ -956,7 +956,7 @@ tkInit(parent: ?+{WidgetO}
          <index class=module/Tk<and>menuentry<and>radiobutton<and>tk/
          <index class=module/Tk<and>menuentry<and>separator<and>tk/
        <synopsis>
-         <<tk(...)>>
+         <<<tk(...)>>>
        <item>
          Sends.
 
@@ -967,7 +967,7 @@ tkInit(parent: ?+{WidgetO}
          <index class=module/Tk<and>menuentry<and>radiobutton<and>tkClose/
          <index class=module/Tk<and>menuentry<and>separator<and>tkClose/
        <synopsis>
-         <<tkClose()>>
+         <<<tkClose()>>>
        <item>
          Closes the widget object and destroys the widgets and all
          slave widgets. Further object application will raise an
@@ -993,14 +993,14 @@ tkInit(parent: ?+{WidgetO}
        <entry><<tkInit>>
          <index class=module/Tk<and>variable<and>tkInit/
        <synopsis>
-         <<<tkInit(?+{Tcl} <= unit)>>
+         <<<tkInit(?+{Tcl} <= unit)>>>
        <item>
          Creates a new tickle variable with initial value ?_{Tcl}.
 
        <entry><<tkSet>>
          <index class=module/Tk<and>variable<and>tkSet/
        <synopsis>
-         <<tkSet(?+{Tcl})>>
+         <<<tkSet(?+{Tcl})>>>
        <item>
          Sets the variable's value to ?+{Tcl}.
 
@@ -1047,6 +1047,68 @@ tkReturnListFloat(... ??{FBs})>>>
   <section id="section.tk.image">
     <title/Images/
    
+    <index class=module/Tk<and>image/
+
+    <p>
+      The class <<Tk.image>> provides the following methods. An
+      example can be found in <ptr.extern to="ozdoc:wp"
+      key="section.widgets-1.images">, for reference documentation see
+      <ref.extern to="&tkcmd;/image.htm"/<file/image//.
+
+    <p>
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>image<and>tkInit/
+       <synopsis>
+<<<tkInit(type:    ?+{TypeTcl}
+       url:     ?+{UrlV} <= unit
+       maskurl: ?+{MarkUrlV} <= unit 
+       ...)>>>
+       <item>
+         Creates a new image.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>image<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>image<and>tkReturn/
+         <index class=module/Tk<and>image<and>tkReturnString/
+         <index class=module/Tk<and>image<and>tkReturnAtom/
+         <index class=module/Tk<and>image<and>tkReturnInt/
+         <index class=module/Tk<and>image<and>tkReturnFloat/
+         <index class=module/Tk<and>image<and>tkReturnList/
+         <index class=module/Tk<and>image<and>tkReturnListString/
+         <index class=module/Tk<and>image<and>tkReturnListAtom/
+         <index class=module/Tk<and>image<and>tkReturnListInt/
+         <index class=module/Tk<and>image<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Returns the result of executing the message. See <ptr
+         to="section.tk.objects"> for more details.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>image<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Destroys the image and closes the image object.
+
+     </list>
+
     <p>
 
   </section>
