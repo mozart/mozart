@@ -926,6 +926,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       fprintf(ofile, "(@ 0x%x)\n", getLabelArg (PC+1));
       DISPATCH();
 
+    case THREADX:
+	  /* ***type 8:    OP PosInt Label */
+      fprintf(ofile, "%d (@ 0x%x)\n", getPosIntArg(PC+1), getLabelArg(PC+2));
+      DISPATCH();
+
     case BRANCHONVARX: 
     case BRANCHONVARY: 
     case BRANCHONVARG: 
