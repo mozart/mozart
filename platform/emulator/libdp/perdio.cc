@@ -317,7 +317,8 @@ Bool isTertiaryPending(Tertiary* t){
     if(getCellSecFromTert(t)->getPending()==NULL) return NO;
     return OK;
   case Co_Port: // ERIK-LOOK
-    return NO;
+    Assert(t->getTertType()==Te_Proxy);
+    return ((PortProxy*)t)->pending != NULL;
   default:
     Assert(0);}
   return NO;
@@ -395,15 +396,26 @@ void Object::localize(){
 }
 
 void localizeCell(Tertiary*t){
-  // PER-LOOK
-  return;}
+   CellFrame *cf=(CellFrame *)t;
+   TaggedRef tr=cf->getCellSec()->getContents();
+   t->setTertType(Te_Local);
+   t->setBoard(am.currentBoard());
+   CellLocal *cl=(CellLocal*) t;
+   cl->setValue(tr);
+   return;}
 
 void localizeLock(Tertiary*t){
-  // PER-LOOK
+  LockFrame *lf=(LockFrame *)t;
+  Thread *th=lf->getLockSec()->getLocker();
+  t->setTertType(Te_Local);
+  t->setBoard(am.currentBoard());
+  LockLocal *ll=(LockLocal*) t;
+  ll->convertToLocal(th,lf->getLockSec()->getPending());
   return;}
 
 void localizePort(Tertiary*t){
-  // ERIK-LOOK
+  t->setTertType(Te_Local);
+  t->setBoard(am.currentBoard());
   return;}
 
 void localizeTertiary(Tertiary*t){
@@ -476,6 +488,8 @@ void msgReceived(MsgBuffer* bs)
   Assert(creditSiteOut==NULL);
   MessageType mt = (MessageType) unmarshalHeader(bs);
   PD((MSG_RECEIVED,"msg type %d",mt));
+
+
 
   switch (mt) {
   case M_PORT_SEND:
