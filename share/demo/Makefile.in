@@ -26,13 +26,13 @@ COMPILE         = $(OZC) $(OZCFLAGS)
 #
 
 CONSTRAINTS = \
-        job-shop animated-queens
+        Job-shop Animated-queens
 
 CONCURRENT = \
-        bounce trucks transport lift
+        Bounce Trucks Transport Lift
 
 DISTRIBUTED = \
-        board
+        Board
 
 all::
 
@@ -68,13 +68,13 @@ all:: $(APPLETS)
 JOBSHOP = \
         compiler configure duration-tool examples job \
         main resource-tool scheduler task-board task tools
-constraints/job-shop.oza: $(JOBSHOP:%=constraints/job-shop/%.oz)
+Job-shop.oza: $(JOBSHOP:%=constraints/job-shop/%.oz)
 
 TRANSPORT = \
         agent broker company configure contract \
         country driver environment frontend germany \
         makeplan randomizer truck widgets
-concurrent/transport.oza: $(TRANSPORT:%=concurrent/transport/%.oz)
+Transport.oza: $(TRANSPORT:%=concurrent/transport/%.oz)
 
 
 veryclean::
