@@ -174,6 +174,21 @@ doing the <<apply>>.
 Since the module is a record, the answer is one of
 its fields, namely at <<M.x>>.
 
+<P>Any Oz statement <EM>S</EM> can be executed
+remotely by creating a functor:
+<LIST>
+<ITEM>
+</LIST> <<F=functor import>> <EM>ResourceList</EM>
+<<export>> <EM>Results</EM> <<define>> <EM>S</EM> <<end>>.
+<P>The <EM>ResourceList</EM> must list all the resources used by <EM>S</EM>.
+The remote execution will use the resources of the remote site
+and return a module that contains all the fields mentioned
+in <EM>Results</EM>.
+If <EM>S</EM> does not use any resources, then there is
+a slightly simpler way to do remote computations.
+The next section gives an example when it talks
+about compute servers.
+
 <P>A second solution is to use a functor with
 an external reference:
 <<<
@@ -388,16 +403,17 @@ When the server binds it, its value
 is immediately sent to the server.
 This is how the client gets a result from the server
 
-<P>Any Oz expression <EM>E</EM> can be executed
-remotely by prefixing it by
+<P>Any Oz statement <EM>S</EM> that does not use resources
+can be executed remotely by prefixing it by
 <<{C run(proc {$}>> and suffixing it by <<end)}>>.
 Because Mozart is fully network-transparent,
-<EM>E</EM> can be almost any expression
+<EM>S</EM> can be almost any expression
 in the language: for example,
-<EM>E</EM> can define new classes
+<EM>S</EM> can define new classes
 inheriting from client classes.
-The only expressions not allowed are
-those using client resources.
+If <EM>S</EM> uses resources, then it can be
+executed remotely by means of functors.
+This is shown in the previous section.
 
 <SUBSECTION><TITLE>A compute server with functors</TITLE>
 
