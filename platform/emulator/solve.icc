@@ -71,9 +71,6 @@ void SolveActor::mergeCPB(Board *bb, int sibling) {
   }
 }
 
-
-void oz_solve_scheduleNonMonoSuspList(SolveActor *sa);
-
 inline
 void SolveActor::mergeNonMono(Board *bb) {
   // merge nonmonotonic susp lists

@@ -31,6 +31,7 @@
 
 #include "unify.hh"
 #include "var_all.hh"
+#include "space.hh"
 #include "thr_int.hh"
 
 // imports

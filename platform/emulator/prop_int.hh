@@ -43,7 +43,6 @@
 Thread * oz_mkLPQ(Board *bb, int prio);
 Propagator * oz_mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
 void oz_pushToLPQ(Board *bb, Propagator * prop);
-void oz_solve_scheduleNonMonoSuspList(SolveActor *sa);
 Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy);
 
 
