@@ -214,7 +214,7 @@ OZ_C_proc_begin(BIstoreGenCallInfo,6)
   OZ_declareNonvarArg(2,isMethod);
   OZ_declareNonvarArg(3,name);
   OZ_declareNonvarArg(4,isTail);
-  OZ_declareIntArg(5,arity);
+  OZ_declareNonvarArg(5,arity);
 
   GenCallInfoClass *gci = new GenCallInfoClass(regindex,getBool(isMethod),name,
                                                getBool(isTail),getArity(arity));
@@ -228,7 +228,7 @@ OZ_C_proc_begin(BIstoreApplMethInfo,3)
 {
   declareCodeBlock(0,code);
   OZ_declareNonvarArg(1,name);
-  OZ_declareIntArg(2,arity);
+  OZ_declareNonvarArg(2,arity);
 
   ApplMethInfoClass *ami = new ApplMethInfoClass(name,getArity(arity));
   code->writeAddress(ami);
