@@ -115,7 +115,7 @@ SPACESRCS=\
         board.cc distributor.cc space.cc
 
 MEMSRCS=\
-        g-collect.cc s-clone.cc mem.cc liveness.cc
+        g-collect.cc mem.cc liveness.cc
 
 PICKLESRCS=\
         gname.cc components.cc marshaler.cc site.cc
@@ -157,7 +157,7 @@ BROWSERSRCS= \
 DEBUGSRCS= \
         debugBI.cc
 SPACEOPSRCS = \
-        board-bi.cc
+        s-clone.cc board-bi.cc
 FDBSRCS = \
         fdcore.cc
 FSBSRCS = \

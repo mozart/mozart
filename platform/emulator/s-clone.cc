@@ -79,6 +79,18 @@
 
 #include "cac.cc"
 
-void OZ_sClone(OZ_Term * to) {
-  oz_sCloneTerm(*to, *to);
+
+OZ_Term * OZ_sCloneAllocBlock(int n, OZ_Term * frm) {
+  if (n==0)
+    return (OZ_Term *) NULL;
+
+  OZ_Term * to = (OZ_Term *) freeListMalloc(n * sizeof(OZ_Term));
+
+  OZ_sCloneBlock(frm, to, n);
+
+  return to;
+}
+
+Suspendable * suspendableSCloneSuspendable(Suspendable * s) {
+  return s->sCloneSuspendable();
 }

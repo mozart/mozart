@@ -1118,7 +1118,7 @@ void gCollect_finalize()
 
 #endif
 
-void OZ_cacBlock(TaggedRef * frm, TaggedRef * to, int sz) {
+void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
   for (int i=sz; i--; ) {
     TaggedRef aux = frm[i];
 

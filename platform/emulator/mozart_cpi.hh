@@ -566,6 +566,7 @@ int * OZ_copyCInts(int n, int * frm) {
 char * OZ_copyChars(int, char *);
 
 // Garbage collection
+void OZ_gCollectBlock(OZ_Term *, OZ_Term *, const int);
 inline
 void OZ_gCollectTerm(OZ_Term &t) {
   OZ_gCollectBlock(&t, &t, 1);
@@ -573,6 +574,7 @@ void OZ_gCollectTerm(OZ_Term &t) {
 OZ_Term * OZ_gCollectAllocBlock(int, OZ_Term *);
 
 // Cloning
+void OZ_sCloneBlock(OZ_Term *, OZ_Term *, const int);
 inline
 void OZ_sCloneTerm(OZ_Term &t) {
   OZ_sCloneBlock(&t, &t, 1);

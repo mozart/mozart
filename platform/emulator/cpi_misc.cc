@@ -71,28 +71,6 @@ OZ_Term * OZ_hallocOzTerms(int n)
   return n == 0 ? (OZ_Term *) NULL : OZMALLOC(OZ_Term, n);
 }
 
-OZ_Term * OZ_gCollectAllocBlock(int n, OZ_Term * frm) {
-  if (n==0)
-    return (OZ_Term *) NULL;
-
-  OZ_Term * to = (OZ_Term *) heapMalloc(n * sizeof(OZ_Term));
-
-  OZ_gCollectBlock(frm, to, n);
-
-  return to;
-}
-
-OZ_Term * OZ_sCloneAllocBlock(int n, OZ_Term * frm) {
-  if (n==0)
-    return (OZ_Term *) NULL;
-
-  OZ_Term * to = (OZ_Term *) freeListMalloc(n * sizeof(OZ_Term));
-
-  OZ_sCloneBlock(frm, to, n);
-
-  return to;
-}
-
 void OZ_hfreeOzTerms(OZ_Term * ts, int n)
 {
   if (n) OZDISPOSE(OZ_Term, n, ts);

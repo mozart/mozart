@@ -24,6 +24,8 @@
 
 # -*-perl-*-
 
+$module_init_fun_name = "space_init";
+
 %builtins_all =
     (
      'new'              => { in  => ['+procedure/1'],

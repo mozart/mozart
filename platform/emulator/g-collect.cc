@@ -82,6 +82,13 @@
 
 #include "cac.cc"
 
-void OZ_gCollect(OZ_Term * to) {
-  oz_gCollectTerm(*to, *to);
+OZ_Term * OZ_gCollectAllocBlock(int n, OZ_Term * frm) {
+  if (n==0)
+    return (OZ_Term *) NULL;
+
+  OZ_Term * to = (OZ_Term *) heapMalloc(n * sizeof(OZ_Term));
+
+  OZ_gCollectBlock(frm, to, n);
+
+  return to;
 }
