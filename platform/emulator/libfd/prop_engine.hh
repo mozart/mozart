@@ -112,9 +112,6 @@ template <class T, class M>
 class PushArray : public EnlargeableArray<T,M> {
 protected:
   int _high;
-public:
-  PushArray(int s = _margin)
-    : EnlargeableArray<T,M>(s), _high(0) { }
   //
   int push(T &d) {
     _array[_high] = d;
@@ -122,6 +119,9 @@ public:
     request(_high);
     return _high-1;
   }
+public:
+  PushArray(int s = _margin)
+    : EnlargeableArray<T,M>(s), _high(0) { }
   //
   int getHigh(void) { return _high; }
   //
@@ -149,6 +149,7 @@ public:
 //
 // Here starts the definition of the Propagation Engine Library
 // Note all relevant names are prepended by PEL_
+//
 //*****************************************************************************
 
 //-----------------------------------------------------------------------------
@@ -442,7 +443,7 @@ public:
   // initialization and propagation are separate functions
   PEL_SuspFSetVar * init(OZ_FSetConstraint &fsetl,
                          PEL_FSetEventLists &fsetel, PEL_PropQueue &pq,
-                         PEL_PropFnctTable &pft, int first = 1) {
+                         PEL_PropFnctTable &pft) {
     _init(fsetel, pq);
     //
     _profile.init(fsetl);
@@ -451,10 +452,9 @@ public:
     return this;
   }
   //
-  PEL_SuspFSetVar(OZ_FSetConstraint &fsetl,
-                  PEL_FSetEventLists &fsetel, PEL_PropQueue &pq,
-                  PEL_PropFnctTable &pft, int first = 1) {
-    (void) init(fsetl, fsetel, pq, pft, first);
+  PEL_SuspFSetVar(OZ_FSetConstraint &fsetl, PEL_FSetEventLists &fsetel,
+                  PEL_PropQueue &pq, PEL_PropFnctTable &pft) {
+    (void) init(fsetl, fsetel, pq, pft);
   }
   //
   int propagate_to(OZ_FSetConstraint &fset, int first = 0) {
@@ -523,9 +523,8 @@ public:
   //---------------------------------------------------------------------------
   // store variable and propagation variable are separate,
   // initialization and propagation are separate functions
-  PEL_SuspFDIntVar * init(OZ_FiniteDomain &fdl,
-                          PEL_FDEventLists &fdel, PEL_PropQueue &pq,
-                          PEL_PropFnctTable &pft)
+  PEL_SuspFDIntVar * init(OZ_FiniteDomain &fdl, PEL_FDEventLists &fdel,
+                          PEL_PropQueue &pq, PEL_PropFnctTable &pft)
   {
     _init(fdel, pq);
     //
