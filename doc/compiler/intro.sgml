@@ -73,7 +73,7 @@
       The compiler stores a set of so-called <Def/macro names/, used to
       control conditional compilation via macro directives such as <<\ifdef>>
       (see <Ptr to="section.directives.macro">).
-    <P>
+    <P id="section.macronames">
       Initially, the set of macro names consists of entries describing the
       system's version number, for instance, when running Mozart&nbsp;1.1.0,
       all of <<Mozart_1>>, <<Mozart_1_1>>, and <<Mozart_1_1_0>> are macro
