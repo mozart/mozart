@@ -4,9 +4,59 @@
 
 local
 
-   MessageWidth = 400
-   OkButtonText = 'Aha?!'
+   MessageWidth = 380
+   OkButtonText = 'Aha'
+   NoTopic      = 'No Help Available'
+   NoHelp       = 'Feel free to ask the author.\n' #
+                  'Send a mail to ' # EmailOfBenni
+   
+   HelpDict     = {Dictionary.new}
+   
+   {ForAll
+    [
+      BreakpointStaticHelp # ('Static Breakpoints' #
+	('You can set a Static Breakpoint by inserting ' #
+	'{Debug.breakpoint} into ' #
+	'your code, just before the line where you want ' #
+	'the thread to stop.'))
 
+      BreakpointDynamicHelp # ('Dynamic Breakpoints' #
+	('You can set / delete a Dynamic Breakpoint at the current line of ' #
+	'an Emacs buffer by entering C-c C-d C-b / C-c C-d C-d.\n' #
+	'Alternatively, click with the left / right mouse button ' #
+	'on the line where you wish to set / delete a breakpoint, while ' #
+	'holding down the Shift and Meta key.'))
+
+      ThreadTreeHelp # ('The Thread Tree' #
+	('Threads can be added to the tree by feeding code from Emacs. ' #
+	'When added this way, new threads get selected automatically.\n' # 
+	'\nYou can select another thread by clicking on it.\n' #
+	'\nThe different colors correspond to the ' #
+	'following thread states:\n' #
+	'green -> runnable, red -> blocked, black -> terminated\n' #
+	'\nA thread can be removed from the tree by ' #
+	'pressing f or clicking on the forget button.'))
+
+      StackHelp # ('The Stack' #
+	('You can navigate through the stack either by clicking on a ' #
+	'specific line or by using the Up and Down (cursor) keys.\n' #
+	'\nYou can browse an argument by clicking ' #
+	'on its type information.'))
+
+      EnvHelp # ('The Environment' #
+	('You can browse a variable by clicking ' #
+	'on its type information.'))
+
+      StepButtonText   # (NoTopic # NoHelp)
+      NextButtonText   # (NoTopic # NoHelp)
+      ContButtonText   # (NoTopic # NoHelp)
+      ForgetButtonText # (NoTopic # NoHelp)
+      TermButtonText   # (NoTopic # NoHelp)
+    ]
+    proc {$ S}
+       {Dput HelpDict S.1 S.2}
+    end}
+   
    class HelpDialog from TkTools.dialog
       feat
 	 topic help
@@ -16,6 +66,7 @@ local
 			       title:   self.topic
 			       buttons: [OkButtonText # tkClose]
 			       focus:   1
+			       bg:      DefaultBackground
 			       pack:    false
 			       default: 1)
 	 Title = {New Tk.label tkInit(parent: self
@@ -29,74 +80,18 @@ local
 			width:  MessageWidth
 			text:   self.help)}
       in
-	 {self tk(conf background:DefaultBackground)}
-	 {Tk.send pack(Title Help side:top expand:1 pady:7 fill:x)}
+	 {Tk.send pack(Title Help side:top expand:1 pady:3 fill:x)}
 	 HelpDialog,tkPack
       end
    end
-   
-   class BreakpointStaticHelp from HelpDialog
-      meth init(master:Master)
-	 self.topic = 'Static Breakpoints'
-	 self.help  =
-	 'You can set a Static Breakpoint by inserting ' #
-	 '{Debug.breakpoint} into ' #
-	 'your code, just before the line where you want ' #
-	 'the thread to stop.'
+
+   class OzcarHelp from HelpDialog
+      meth init(master:Master topic:Topic)
+	 self.topic # self.help =
+	 try {Dget HelpDict Topic} catch system(...) then NoTopic # NoHelp end
 	 HelpDialog,init(master:Master)
       end
    end
-   
-   class BreakpointDynamicHelp from HelpDialog
-      meth init(master:Master)
-	 self.topic = 'Dynamic Breakpoints'
-	 self.help  =
-	 'You can set / delete a Dynamic Breakpoint at the current line of ' #
-	 'an Emacs buffer by entering C-c C-d C-b / C-c C-d C-d.\n' #
-	 'Alternatively, click with the left / right mouse button ' #
-	 'on the line where you wish to set / delete a breakpoint, while ' #
-	 'holding down the Shift and Meta key.'
-	 HelpDialog,init(master:Master)
-      end
-   end
-   
-   class ThreadTreeHelp from HelpDialog
-      meth init(master:Master)
-	 self.topic = 'The Thread Tree'
-	 self.help  =
-	 'Threads can be added to the tree by feeding code from Emacs. ' #
-	 'When added this way, new threads get selected automatically.\n' # 
-	 '\nYou can select another thread by clicking on it.\n' #
-	 '\nThe different colors correspond to the ' #
-	 'following thread states:\n' #
-	 'green -> runnable, red -> blocked, black -> terminated\n' #
-	 '\nA thread can be removed from the tree by ' #
-	 'pressing f or clicking on the forget button.' 
-	 HelpDialog,init(master:Master)
-      end
-   end      
-
-   class StackHelp from HelpDialog
-      meth init(master:Master)
-	 self.topic = 'The Stack'
-	 self.help  =
-	 'You can navigate through the stack either by clicking on a ' #
-	 'specific line or by using the Up and Down (cursor) keys.\n' #
-	 '\nYou can browse an argument by clicking ' #
-	 'on its type information.'
-	 HelpDialog,init(master:Master)
-      end
-   end      
-
-   class EnvHelp from HelpDialog
-      meth init(master:Master)
-	 self.topic = 'The Environment'
-	 self.help  =
-	 'You can browse a variable by clicking ' #
-	 'on its type information.'
-	 HelpDialog,init(master:Master)
-      end
-   end      
 
 in
    
@@ -106,25 +101,9 @@ in
 	 skip
       end
 
-      meth helpThreadTree
-	 {Wait {New ThreadTreeHelp init(master:self.toplevel)}.tkClosed}
+      meth help(Topic)
+	 {Wait {New OzcarHelp init(master:self.toplevel topic:Topic)}.tkClosed}
       end
       
-      meth helpStack
-	 {Wait {New StackHelp init(master:self.toplevel)}.tkClosed}
-      end
-
-      meth helpEnv
-	 {Wait {New EnvHelp init(master:self.toplevel)}.tkClosed}
-      end
-
-      meth helpBreakpointStatic
-         {Wait {New BreakpointStaticHelp init(master:self.toplevel)}.tkClosed}
-      end
-
-      meth helpBreakpointDynamic
-	 {Wait {New BreakpointDynamicHelp init(master:self.toplevel)}.tkClosed}
-      end
    end
-   
 end

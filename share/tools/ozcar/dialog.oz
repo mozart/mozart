@@ -18,8 +18,8 @@ local
 				         ' V' # Version)}
 
          Author = {New Tk.label tkInit(parent: self
-                                       text: ('Benjamin Lorenz\n' #
-                                              '(lorenz@ps.uni-sb.de)\n'))}
+                                       text:   NameOfBenni # '\n' #
+				               '(' # EmailOfBenni # ')\n')}
       in
          {Tk.send pack(Title Author side:top expand:1)}
          AboutDialog,tkPack

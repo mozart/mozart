@@ -29,7 +29,7 @@ in
    class Menu
       meth init
 	 self.menuBar = 
-	 {TkTools.menubar self.toplevel self.toplevel
+	 {OzcarMenuBar self.toplevel self.toplevel
 	  [MB(text: 'Ozcar'
 	      menu:
 		 [C(label:   'About...'
@@ -133,29 +133,21 @@ in
 	  [MB(text: 'Help'
 	      menu:
 		 [C(label:   'Thread Tree'
-		    action:  self # helpThreadTree)
+		    action:  self # help(ThreadTreeHelp))
 		  C(label:   'Stack'
-		    action:  self # helpStack)
+		    action:  self # help(StackHelp))
 		  C(label:   'Environment'
-		    action:  self # helpEnv)
+		    action:  self # help(EnvHelp))
 		  CC(label:  'Breakpoints'
 		     menu:
 			[C(label:  'static'
-			   action: self # helpBreakpointStatic)
+			   action: self # help(BreakpointStaticHelp))
 			 C(label:  'dynamic'
-			   action: self # helpBreakpointDynamic)]
+			   action: self # help(BreakpointDynamicHelp))]
 		     feature: breakpoints)]
 	      feature: help)
 	  ]}
 
-	 {ForAll [self.menuBar.ozcar.menu
-		  self.menuBar.thr.menu
-		  self.menuBar.stack.menu
-		  self.menuBar.help.menu
-		  self.menuBar.help.breakpoints.menu]
-	  proc {$ M} {M tk(conf tearoff:false)} end}
-
-	 {self.menuBar tk(conf borderwidth:1)}
       end
    end
 end
