@@ -29,8 +29,8 @@ local
 	 case B == nil then nil else
 	    {FoldL B
 	     fun {$ A L}
-		case {Label L}
-		of hint       then {CheckNil A} # {FormatLR L}
+		case L
+		of hint(...)  then {CheckNil A} # {FormatLR L}
 		[] pos(X Y _) then {CheckNil A} # 'Pos: ' # X # ', line ' # Y
 		[] line(X)    then {CheckNil A} # {Error.formatLine X}
 		[] unit       then A
