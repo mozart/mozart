@@ -510,8 +510,8 @@ M={R apply(url:'./' F $)}  % Do the calculation remotely
 <SUBSECTION><TITLE>Remote computations and functors</TITLE>
 
 <P> A better solution than the one given
-in the previous section is for the functor
-to make a compute server on the remote site.
+in the previous section is for the functor itself
+to install the compute server on the remote site.
 This completely <EM>separates</EM> the distribution aspect
 (setting up the remote site to do the right thing)
 from the computation(s) that we want to do.
@@ -585,6 +585,31 @@ The client and server can then communicate as if
 they were in the same process.
 Later, when the client forgets the server reference,
 the computation spaces become separate again.
+
+<SUBSECTION><TITLE>Making stationary objects</TITLE>
+
+<P> Stationary entities are a very important abstraction.
+Mozart provides two primitive operations to
+make entities stationary.
+The first is creating a stationary object:
+<<<
+declare
+Object={NewStat Class Init}
+>>>
+When executed on a site,
+the procedure <<NewStat>> takes a class and an initial message
+and creates an object that is stationary on that site.
+We define <<NewStat>> as follows:
+<<<
+declare
+proc {NewStat Class Init Object}
+   Object={MakeStat {New Class Init}}
+end
+>>>
+where <<MakeStat>> takes an object or a one-argument
+procedure and returns a one-argument procedure that
+obeys exactly the same language semantics and that is stationary.
+
 
 <SUBSECTION><TITLE>The <<"Hello world">> server with stationary objects</TITLE>
 
@@ -729,7 +754,7 @@ proc {NewUpgradableStat Class Init ?Upgrade ?Srv}
    Obj={New Class Init}
    C={NewCell Obj}
 in
-   Srv={MakeStat proc {$ M} X in {{Exchange C X X} M} end}
+   Srv={MakeStat proc {$ M} S in {Exchange C S S} {S M} end}
    proc {Upgrade Class2 Init2}
       Obj2={New Class2 Init2}
       {Assign C Obj2}
@@ -752,7 +777,7 @@ From then on,
 the object stays on the server site permanently.
 
 <P> A client creates an upgradable compute server almost
-exactly as it creates a fixed compute server,
+exactly in the same way as a fixed compute server,
 by executing the following on the server site:
 <<<
 declare Srv Upgrade in
@@ -774,29 +799,27 @@ class CComputeServer from ComputeServer
    end
 end
 
-declare
 Srv2={Upgrade CComputeServer init}
 >>>
 
-
 <P> That's all there is to it.
-Furthermore, this can be
-repeated indefinitely
-since garbage collection will remove
-the old compute server code.
 The upgraded compute server runs
 each compute job in its own thread and
 has two method calls, <<run(P)>>
 and <<run(P Prio)>>, where <<Prio>>
 sets the priority of the thread doing computation <<P>>.
 
-<P> It would be nice if the client could
+<P> The compute server can be
+upgraded indefinitely
+since garbage collection will remove
+any unused old compute server code.
+For example, it would be nice if the client could
 find out how many active computations there
 are on the compute server
 before deciding whether or not to do
 a computation there.
 We leave it to the reader to upgrade
-the class to add a new
+the server to add a new
 method that returns the number of
 active computations at each priority level.
 
