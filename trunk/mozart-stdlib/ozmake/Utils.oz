@@ -5,7 +5,7 @@ export
    Union Diff
    DateParse DateLess DateToString DateCurrentToString
    DateCurrentToAtom DateCurrent DateToAtom DateToUserVS
-   IsMogulID IsMogulRootID
+   IsMogulID IsMogulRootID CleanMogulID
    NewStack NewStackFromList
    ListToVS
    ReadTextDB
@@ -356,6 +356,11 @@ define
       else
 	 raise ozmake(toRecord:D) end
       end
+   end
+
+   fun {CleanMogulID MOG}
+      %% normalize MOGUL ID, i.e. no trailing slash
+      {Path.toNonBaseAtom MOG}
    end
       
 end
