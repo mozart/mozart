@@ -345,7 +345,7 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 	maxsize = max(maxsize, x[idx_vp(c, v)].getSize());
 
     if (maxsize < v_v_size) {
-      LocalFD u;
+      OZ_FiniteDomain u;
       u.initEmpty();
       for (c = clauses; c--; ) {
 	if (x[idx_b(c)] == 0) continue;
@@ -647,7 +647,7 @@ OZ_C_proc_begin(BIfdCDSched_body, 4)
 					      OZ_CToInt(-xd));    
   }
 
-  LocalFD la, lb, lc, ld, l1, l2;
+  OZ_FiniteDomain la, lb, lc, ld, l1, l2;
 
   la.init(0, yu - xd);
   lb.init(yl + yd, fd_sup);
@@ -734,7 +734,7 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
   }
 
   
-  LocalFD la, lb, lc, ld, l1, l2;
+  OZ_FiniteDomain la, lb, lc, ld, l1, l2;
 
   la.init(0, yu - xd);
   lb.init(yl + yd, fd_sup);

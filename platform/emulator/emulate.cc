@@ -1263,6 +1263,8 @@ void engine()
 	  LOCAL_PROPAGATION(localPropStore.reset());
 	localhack0:
 	  HF_FAIL(applFailure(biFun), printArgs(X,XSize));
+	case SLEEP: // no break
+	  reviveCurrentTaskSusp();
 	case PROCEED:
 	  killPropagatedCurrentTaskSusp();
 	  LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
@@ -1474,6 +1476,8 @@ LBLkillThread:
 	LOCAL_PROPAGATION(localPropStore.reset());
       localhack1:
 	HF_FAIL(applFailure(fun), printArgs(X,arity));
+      case SLEEP: // no break
+	reviveCurrentTaskSusp();
       case PROCEED:
 	killPropagatedCurrentTaskSusp();
 	LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
@@ -1507,6 +1511,8 @@ LBLkillThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
+      case SLEEP:
+	error("Unexpected SLEEP returned.");
       }
     }
 
@@ -1535,6 +1541,8 @@ LBLkillThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
+      case SLEEP:
+	error("Unexpected SLEEP returned.");
       }
     }
 
@@ -1565,6 +1573,8 @@ LBLkillThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
+      case SLEEP:
+	error("Unexpected SLEEP returned.");
       }
     }
 
@@ -1598,6 +1608,8 @@ LBLkillThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
+      case SLEEP:
+	error("Unexpected SLEEP returned.");
       }
     }
 
@@ -1633,6 +1645,8 @@ LBLkillThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(applFailure(entry), printArgs(3,XPC(2),XPC(3),XPC(4)));
+      case SLEEP:
+	error("Unexpected SLEEP returned.");
       }
     }
 
@@ -1644,6 +1658,8 @@ LBLkillThread:
       // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       switch (fun(XPC(2),XPC(3),XPC(4))) {
       case FAILED:  Assert(0);
+      case SLEEP:
+	error("Unexpected SLEEP returned.");
       case PROCEED:
 	DISPATCH(6);
       case SUSPEND:
@@ -1682,6 +1698,9 @@ LBLkillThread:
 
       case FAILED:  JUMP( getLabelArg(PC+3) );
 
+      case SLEEP:
+	error("Unexpected SLEEP returned.");
+
       case SUSPEND:
 	{
 	  Suspension *susp = e->mkSuspension(CPP,
@@ -1702,6 +1721,9 @@ LBLkillThread:
       case PROCEED: DISPATCH(6);
 
       case FAILED:  JUMP( getLabelArg(PC+4) );
+
+      case SLEEP:
+	error("Unexpected SLEEP returned.");
 
       case SUSPEND:
 	{
@@ -2107,11 +2129,10 @@ LBLkillThread:
 	      exitBuiltin(res,bi,predArity,X);
 	    }
 
-	    killPropagatedCurrentTaskSusp();
-
 	    switch (res) {
 	    
 	    case SUSPEND:
+	      //killPropagatedCurrentTaskSusp();
 	      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
 	      predicate = bi->getSuspHandler();
@@ -2124,11 +2145,15 @@ LBLkillThread:
 	      }
 	      goto LBLcall; 
 	    case FAILED:
+	      //killPropagatedCurrentTaskSusp();
 	      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 	      LOCAL_PROPAGATION(localPropStore.reset());
 	    localHack0:
 	      HF_FAIL(applFailure(bi), printArgs(X,predArity));
+	    case SLEEP: // no break
+	      reviveCurrentTaskSusp();
 	    case PROCEED:
+	      killPropagatedCurrentTaskSusp();
 	      LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 				   goto localHack0;);
 	      if (emulateHook0(e)) {

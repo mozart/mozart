@@ -35,13 +35,23 @@ friend class GenBoolVariable;
 friend inline void addSuspFDVar(TaggedRef, SuspList *, FDPropState);
   
 private:
-  FiniteDomain finiteDomain;
+  OZ_FiniteDomain finiteDomain;
   SuspList * fdSuspList[fd_any];
   
   void relinkSuspListToItself(Bool reset_local = FALSE);
 
+  GenBoolVariable * becomesBool(void) { 
+    relinkSuspListToItself();
+    setType(BoolVariable); 
+    
+    finiteDomain.dispose();
+    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
+    freeListDispose(((char *)this) + sizeof(GenCVariable), 
+		    sizeof(GenFDVariable) - sizeof(GenCVariable));
+    return (GenBoolVariable *) this;
+  }
 public:  
-  GenFDVariable(FiniteDomain &fd) : GenCVariable(FDVariable) {
+  GenFDVariable(OZ_FiniteDomain &fd) : GenCVariable(FDVariable) {
     finiteDomain = fd;
     fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
   }
@@ -61,16 +71,6 @@ public:
 
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
   void becomesBoolVarAndPropagate(TaggedRef * trPtr);
-  void becomesBool(void) { 
-    relinkSuspListToItself();
-    setType(BoolVariable); 
-
-    finiteDomain.dispose();
-    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
-    freeListDispose(((char *)this) + sizeof(GenCVariable), 
-		    sizeof(GenFDVariable) - sizeof(GenCVariable));
-
-  }
 
   int intersectWithBool(void) {return finiteDomain.intersectWithBool();}
 
@@ -78,11 +78,11 @@ public:
   Bool valid(TaggedRef val);
 
 
-  void setDom(FiniteDomain &fd) {
+  void setDom(OZ_FiniteDomain &fd) {
     Assert(fd != fd_bool);
     finiteDomain = fd;
   }
-  FiniteDomain &getDom(void) {return finiteDomain;}
+  OZ_FiniteDomain &getDom(void) {return finiteDomain;}
 
   void relinkSuspListTo(GenFDVariable * lv, Bool reset_local = FALSE);
   void relinkSuspListTo(GenBoolVariable * lv, Bool reset_local = FALSE);
