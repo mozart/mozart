@@ -143,7 +143,7 @@ TkTools.ozf: ../url-defaults.oz
 
 # compiler dependencies
 COMPILERSRC1 = \
-	InsertAll.oz CompilerClass.oz Misc.oz Reporter.oz ParseOz.oz \
+	CompilerClass.oz Misc.oz Reporter.oz ParseOz.oz \
 	FormatStrings.oz Builtins.oz CoreLanguage.oz Annotate.oz \
 	StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
@@ -152,9 +152,7 @@ COMPILERSRC1 = \
 COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz compiler-Env.oz
 
 COMPILERSRCNOVER = \
-	$(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA) Compiler.oz
-
-COMPILERSRC = $(COMPILERSRCNOVER) compiler-Version.oz
+	$(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA)
 
 compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 	echo 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@ \
@@ -181,34 +179,26 @@ FunMisc.ozf: compiler/Misc.oz $(STANDARD)
 
 FunBuiltins.ozf: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
 
-FunSA.ozf: compiler/Misc-new.env compiler/POTypes.oz \
-	compiler/StaticAnalysis.oz $(STANDARD)
+FunSA.ozf: compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
 
-FunCode.ozf: compiler/Misc-new.env compiler/CodeStore.oz \
-	compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
+FunCode.ozf: compiler/CodeStore.oz compiler/CodeEmitter.oz \
+	compiler/CodeGen.oz $(STANDARD)
 
-FunCore.ozf: compiler/Misc-new.env compiler/Annotate.oz \
-	compiler/CoreLanguage.oz $(STANDARD)
+FunCore.ozf: compiler/Annotate.oz compiler/CoreLanguage.oz $(STANDARD)
 
-FunUnnest.ozf: compiler/Misc-new.env compiler/TupleSyntax.oz \
-	compiler/BindingAnalysis.oz compiler/UnnestFD.oz \
-	compiler/Unnester.oz $(STANDARD)
+FunUnnest.ozf: compiler/TupleSyntax.oz compiler/BindingAnalysis.oz \
+	compiler/UnnestFD.oz compiler/Unnester.oz $(STANDARD)
 
 FunAssembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz $(STANDARD)
 
-FunCompiler.ozf: compiler/Misc-new.env compiler-Env.oz \
-	compiler/FormatStrings.oz compiler/Reporter.oz compiler/ParseOz.oz \
-	compiler/CompilerClass.oz compiler/GenericInterface.oz \
-	compiler/QuietInterface.oz compiler-Version.oz $(STANDARD)
+FunCompiler.ozf: compiler-Env.oz compiler/FormatStrings.oz \
+	compiler/Reporter.oz compiler/ParseOz.oz compiler/CompilerClass.oz \
+	compiler/GenericInterface.oz compiler/QuietInterface.oz \
+	compiler-Version.oz $(STANDARD)
 
-COMPILER_BIG = @COMPILER_BIG@
-COMPILER_FUN = @COMPILER_FUN@
-
-$(COMPILER_BIG): $(COMPILERSRC)
-
-$(COMPILER_FUN): FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
+Compiler.ozf: FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
 	FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
-	compiler/FunMake.oz Standard.ozf
+	compiler/FunMake.oz compiler/FunMain.oz Standard.ozf
 	$(COMPILE) -l Pickle compiler/FunMake.oz -o Compiler.ozf
 
 #---------------------------------------------------------------------
