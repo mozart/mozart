@@ -188,20 +188,20 @@ public:
   //
 public:
   DSite() {}                    // 'unmarshalDSite()';
-  DSite(ip_address a, port_t p, TimeStamp *t)
+  DSite(ip_address a, oz_port_t p, TimeStamp *t)
     : BaseSite(a, p, t) {
     DebugCode(flags = (unsigned short) -1);
   }
-  DSite(ip_address a, port_t p, TimeStamp* t, unsigned short ty)
+  DSite(ip_address a, oz_port_t p, TimeStamp* t, unsigned short ty)
     : BaseSite(a, p, t) {
     flags=ty;
   }
 
-  DSite(ip_address a, port_t p, TimeStamp &t)
+  DSite(ip_address a, oz_port_t p, TimeStamp &t)
     : BaseSite(a, p, t) {
     DebugCode(flags = (unsigned short) -1);
   }
-  DSite(ip_address a, port_t p, TimeStamp& t, unsigned short ty)
+  DSite(ip_address a, oz_port_t p, TimeStamp& t, unsigned short ty)
     : BaseSite(a, p, t) {
     flags=ty;
   }
@@ -387,7 +387,7 @@ DSite *findDSite(ip_address a, int port, TimeStamp &stamp);
 // kost@ : that's a part of the boot-up procedure ('perdioInit()');
 // Actually, it is used by 'initNetwork()' because ip, port, timestamp
 // are not known prior its initialization;
-DSite* makeMyDSite(ip_address a, port_t p, TimeStamp &t);
+DSite* makeMyDSite(ip_address a, oz_port_t p, TimeStamp &t);
 
 //
 void gcDSiteTable();

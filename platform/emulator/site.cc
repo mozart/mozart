@@ -124,7 +124,7 @@ void initSite()
   ip_address myIP = getMySiteIP();
   TimeStamp timestamp(time(0), osgetEpid());
   // RS: should also use the port for making it more unique
-  mySite = new Site(myIP, (port_t) 0, timestamp);
+  mySite = new Site(myIP, (oz_port_t) 0, timestamp);
   //
   siteTable = new SiteHashTable(SITE_TABLE_SIZE);
   siteTable->insert(mySite);
