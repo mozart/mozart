@@ -994,7 +994,7 @@ urlc::get_ftp(char *file)
 #if __GLIBC__ == 2
     unsigned int local_addr_len = sizeof(local_addr);
 #else
-    int local_addr_len = sizeof(local_addr);
+    int local_addr_len = sizeof(local_addr);    
 #endif
     int rem_addr_len = sizeof(rem_addr);
 
