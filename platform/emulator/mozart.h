@@ -714,6 +714,7 @@ struct OZ_C_proc_interface {
   const char* name;
   int         inArity;
   int         outArity;
+  OZ_CFun     func;
 };
 
 /* Perdio related things */
