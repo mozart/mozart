@@ -262,6 +262,10 @@ case $platform in
 	EMULDFLAGS="-Wl,-E"
 	oz_enable_modules_static=yes
 	;;
+    freebsdelf*)
+        TOOLLDCMD="ld -shared"
+	oz_enable_modules_static=yes
+        ;;
     freebsd*)
         TOOLLDCMD="ld -Bshareable"
 	oz_enable_modules_static=yes
