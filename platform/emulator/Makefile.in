@@ -175,8 +175,7 @@ ALLSRCS= $(SRCS) \
 
 .NOEXPORT: emulate.o emulator.exe
 .PHONY: all win win-install first install install-bin install-inc \
-        install-dir depend tags clean distclean veryclean \
-        install-module
+        install-dir depend tags clean distclean veryclean
 
 all: $(TARGETS)
 
@@ -291,7 +290,7 @@ emulator.exe: $(PRGDEP)
 text2pickle: $(TEXT2PICKLEOBJS)
         $(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
-install:: install-bin install-inc install-module
+install:: install-bin install-inc
 
 install-bin: $(TARGETS) $(BINDIR)
         $(INSTALL_BIN) oztool.sh $(TARGETS) $(BINDIR)
@@ -301,12 +300,6 @@ install-inc: $(INCDIR)
         $(INSTALL_FILE) $(SRCDIR)/extension.hh $(INCDIR)
         $(INSTALL_FILE) $(BUILDDIR)/mozart.c $(INCDIR)
         $(INSTALL_FILE) $(SRCDIR)/mozart_cpi.hh $(INCDIR)
-
-install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
-        mods="$(DYNAMIC_MODULETARGETS)"; \
-        for i in $$mods; do \
-          $(INSTALL_BIN) $$i $(BINDIR) \
-        done
 
 $(BINDIR) $(INCDIR):
         $(INSTALL_DIR) $@
