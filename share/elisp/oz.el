@@ -129,7 +129,7 @@ run the emulator when you issue the command `run' to gdb.")
   "If non-nil, hook used for starting the Oz Emulator.
 This is set when gdb is active.")
 
-(defvar OZ-HOME "/project/ps/oz"
+(defvar OZ-HOME "/project/ps/soft/oz-devel/oz"
   "Directory where Oz is installed.
 Only used as fallback if the environment variable OZHOME is not set.")
 
@@ -246,16 +246,46 @@ All strings matching this regular expression are removed.")
   (setq oz-temp-counter (1+ oz-temp-counter))
   (format "%s%d" (make-temp-name name) oz-temp-counter))
 
-(defun oz-line-pos ()
-  "Return positions of line start and end as ( START . END ).
-The point is moved to the end of the line."
+(defun oz-line-region (arg)
+  "Return starting and ending positions of ARG lines surrounding point.
+Positions are returned as a pair ( START . END )."
   (save-excursion
-    (let (beg end)
-      (beginning-of-line)
-      (setq beg (point))
-      (end-of-line)
-      (setq end (point))
-      (cons beg end))))
+    (let (start end)
+      (cond ((> arg 0)
+	     (beginning-of-line)
+	     (setq start (point))
+	     (forward-line (1- arg))
+	     (end-of-line)
+	     (setq end (point)))
+	    ((= arg 0)
+	     (setq start (point))
+	     (setq end (point)))
+	    ((< arg 0)
+	     (end-of-line)
+	     (setq end (point))
+	     (forward-line arg)
+	     (setq start (point))))
+      (cons start end))))
+
+(defun oz-paragraph-region (arg)
+  "Return starting and ending positions of ARG paragraphs surrounding point.
+Positions are returned as a pair ( START . END )."
+  (save-excursion
+    (let (start end)
+      (cond ((> arg 0)
+	     (backward-paragraph 1)
+	     (setq start (point))
+	     (forward-paragraph arg)
+	     (setq end (point)))
+	    ((= arg 0)
+	     (setq start (point))
+	     (setq end (point)))
+	    ((< arg 0)
+	     (forward-paragraph (1- arg))
+	     (setq start (point))
+	     (backward-paragraph (1- arg))
+	     (setq end (point))))
+      (cons start end))))
 
 
 ;;------------------------------------------------------------
@@ -412,7 +442,7 @@ The point is moved to the end of the line."
 (defun oz-breakpoint-key (flag)
   (if (buffer-file-name)
       (oz-send-string (concat "{Ozcar bpAt('" (buffer-file-name) "' "
-			      (count-lines (point-min) (1+ (point)))
+			      (count-lines 1 (1+ (point)))
 			      flag ")}"))
     (error oz-breakpoint-error)))
 
@@ -432,7 +462,7 @@ The point is moved to the end of the line."
     (select-window (posn-window (event-start event)))
     (if (buffer-file-name)
 	(oz-send-string (concat "{Ozcar bpAt('" (buffer-file-name) "' "
-				(count-lines (point-min)
+				(count-lines 1
 					     (posn-point (event-start event)))
 				flag ")}"))
       (error oz-breakpoint-error))))
@@ -463,49 +493,46 @@ The point is moved to the end of the line."
 
 (defun oz-bar (file line state)
   "Display bar at given line, load file if necessary."
-  (interactive)
   (if (string-equal file "unchanged")
       (oz-bar-configure state)
     (let* ((last-nonmenu-event t)
 	   (buffer (find-file-noselect file))
 	   (window (display-buffer buffer))
-	   (beg) (end)
-	   (oldpos))
+	   start end oldpos)
       (save-excursion
 	(set-buffer buffer)
 	(save-restriction
 	  (widen)
 	  (setq oldpos (point))
-	  (goto-line line) (setq beg (point))
+	  (goto-line line) (setq start (point))
 	  (forward-line 1) (setq end (point))
 
 	  (or oz-bar-overlay
 	      (setq oz-bar-overlay
 		    (cond (oz-gnu19
-			   (make-overlay beg end))
+			   (make-overlay start end))
 			  (oz-lucid
-			   (make-extent beg end)))))
+			   (make-extent start end)))))
 	  (cond (oz-gnu19
 		 (move-overlay
-		  oz-bar-overlay beg end (current-buffer)))
+		  oz-bar-overlay start end (current-buffer)))
 		(oz-lucid
 		 (set-extent-endpoints
-		  oz-bar-overlay beg end (current-buffer))))
+		  oz-bar-overlay start end (current-buffer))))
 
 	  (if (string-equal state "unchanged")
 	      ()
 	    (oz-bar-configure state)))
 
-	(if (or (< beg (window-start)) (> beg (window-end)))
+	(if (or (< start (window-start)) (> start (window-end)))
 	    (progn
 	      (widen)
-	      (goto-char beg))
+	      (goto-char start))
 	  (goto-char oldpos)))
-      (set-window-point window beg))))
+      (set-window-point window start))))
 
 (defun oz-bar-configure (state)
   "Change color of bar while not moving it."
-  (interactive)
   (let ((face (cond ((string-equal state "running")
 		     'bar-running)
 		    ((string-equal state "runnable")
@@ -811,28 +838,28 @@ the gdb commands `cd DIR' and `directory'."
   "Feed the current region to the Oz Compiler."
   (interactive "r")
   (oz-send-string
-   (concat "\\line " (1+ (count-lines (point-min) start))
+   (concat "\\line " (1+ (count-lines 1 start))
 	   " '" (or (buffer-file-name) "nofile") "' % fromemacs\n"
 	   (buffer-substring start end)))
   (setq oz-last-fed-region-start (copy-marker start))
   (oz-zmacs-stuff))
 
-(defun oz-feed-line ()
-  "Feed the current line to the Oz Compiler."
-  (interactive)
-  (let ((line (oz-line-pos)))
-    (oz-feed-region (car line) (cdr line))))
+(defun oz-feed-line (arg)
+  "Feed the current line to the Oz Compiler.
+With ARG, feed that many lines."
+  (interactive "p")
+  (let ((region (oz-line-region arg)))
+    (oz-feed-region (car region) (cdr region))))
 
-(defun oz-feed-paragraph ()
+(defun oz-feed-paragraph (arg)
   "Feed the current paragraph to the Oz Compiler.
 If the point is exactly between two paragraphs, feed the preceding
-paragraph."
-  (interactive)
+paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
+feed that many preceding paragraphs as well as the current paragraph."
+  (interactive "p")
   (save-excursion
-    (backward-paragraph 1)
-    (let ((start (point)))
-      (forward-paragraph 1)
-      (oz-feed-region start (point)))))
+    (let ((region (oz-paragraph-region arg)))
+      (oz-feed-region (car region) (cdr region)))))
 
 (defun oz-send-string (string)
   "Feed STRING to the Oz Compiler, restarting it if it died."
@@ -1180,7 +1207,7 @@ and the following line."
   "Indent each line in the current buffer."
   (interactive)
   (goto-char (point-min))
-  (let ((current-line 1))
+  (let ((current-line (count-lines 1 (point-min))))
     (while (< (point) (point-max))
       (message "Indenting line %s ..." current-line)
       (oz-indent-line t)
@@ -1188,14 +1215,17 @@ and the following line."
       (forward-line 1)))
   (message nil))
 
-(defun oz-indent-region (b e)
+(defun oz-indent-region (start end)
   "Indent each line in the current region."
   (interactive "r")
-  (let ((end (copy-marker e)))
-    (goto-char b)
+  (let ((current-line (count-lines 1 start)))
+    (goto-char start)
     (while (< (point) end)
+      (message "Indenting line %s ..." current-line)
       (oz-indent-line t)
-      (forward-line 1))))
+      (setq current-line (1+ current-line))
+      (forward-line 1)))
+  (message nil))
 
 (defun oz-indent-line (&optional dont-change-empty-lines)
   "Indent the current line.
@@ -1337,7 +1367,7 @@ If there is none until the end of line, return the column of point."
 
 (defun forward-oz-expr (&optional arg)
   "Move forward one balanced Oz expression.
-With argument, do it that many times. Negative ARG means backwards."
+With argument, do it that many times.  Negative ARG means backwards."
   (interactive "p")
   (let ((case-fold-search nil) pos)
     (or arg (setq arg 1))
@@ -1382,7 +1412,7 @@ With argument, do it that many times. Negative ARG means backwards."
 
 (defun backward-oz-expr (&optional arg)
   "Move backward one balanced Oz expression.
-With argument, do it that many times. Argument must be positive."
+With argument, do it that many times.  Argument must be positive."
   (interactive "p")
   (let ((case-fold-search nil))
     (or arg (setq arg 1))
@@ -1534,6 +1564,8 @@ Negative arg -N means kill N Oz expressions after the cursor."
     (define-key map "\C-c\C-f\C-h" 'oz-profiler-stop))
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
+  (define-key map "\M-\C-a"	'oz-beginning-of-defun)
+  (define-key map "\M-\C-e"	'oz-end-of-defun)
 
   (define-key map [(control c) (control h)] 'oz-halt)
   (define-key map "\C-c\C-h"    'oz-halt)
@@ -2230,8 +2262,9 @@ If it is, then remove it."
       (if (or (equal mode-name "Oz")
 	      (equal mode-name "Oz-Gump")
 	      (equal mode-name "Oz-Machine"))
-	  (progn (switch-to-buffer (car buffers))
-		 (setq none-found nil))
+	  (progn
+	    (switch-to-buffer (car buffers))
+	    (setq none-found nil))
 	(setq buffers (cdr buffers))))
     (if none-found
 	(progn
@@ -2243,13 +2276,13 @@ If it is, then remove it."
 ;; Misc Goodies
 ;;------------------------------------------------------------
 
-(defun oz-comment-region (beg end arg)
+(defun oz-comment-region (start end arg)
   (interactive "r\np")
-  (comment-region beg end arg))
+  (comment-region start end arg))
 
-(defun oz-uncomment-region (beg end arg)
+(defun oz-uncomment-region (start end arg)
   (interactive "r\np")
-  (comment-region beg end (if (= arg 0) -1 (- 0 arg))))
+  (comment-region start end (if (= arg 0) -1 (- arg))))
 
 (defvar oz-temp-file (oz-make-temp-name "/tmp/ozemacs"))
 
@@ -2257,18 +2290,15 @@ If it is, then remove it."
   (interactive)
   (oz-to-coresyntax-region (point-min) (point-max)))
 
-(defun oz-to-coresyntax-line ()
-  (interactive)
-  (let ((line (oz-line-pos)))
-    (oz-to-coresyntax-region (car line) (cdr line))))
+(defun oz-to-coresyntax-line (arg)
+  (interactive "p")
+  (let ((region (oz-line-region arg)))
+    (oz-to-coresyntax-region (car region) (cdr region))))
 
-(defun oz-to-coresyntax-paragraph ()
-  (interactive)
-  (save-excursion
-    (backward-paragraph 1)
-    (let ((start (point)))
-      (forward-paragraph 1)
-      (oz-to-coresyntax-region start (point)))))
+(defun oz-to-coresyntax-paragraph (arg)
+  (interactive "p")
+  (let ((region (oz-paragraph-region arg)))
+    (oz-to-coresyntax-region (car region) (cdr region))))
 
 (defun oz-to-coresyntax-region (start end)
    (interactive "r")
@@ -2278,18 +2308,15 @@ If it is, then remove it."
   (interactive)
   (oz-to-emulatorcode-region (point-min) (point-max)))
 
-(defun oz-to-emulatorcode-line ()
-  (interactive)
-  (let ((line (oz-line-pos)))
-    (oz-to-emulatorcode-region (car line) (cdr line))))
+(defun oz-to-emulatorcode-line (arg)
+  (interactive "p")
+  (let ((region (oz-line-region arg)))
+    (oz-to-emulatorcode-region (car region) (cdr region))))
 
-(defun oz-to-emulatorcode-paragraph ()
-  (interactive)
-  (save-excursion
-    (backward-paragraph 1)
-    (let ((start (point)))
-      (forward-paragraph 1)
-      (oz-to-emulatorcode-region start (point)))))
+(defun oz-to-emulatorcode-paragraph (arg)
+  (interactive "p")
+  (let ((region (oz-paragraph-region arg)))
+    (oz-to-emulatorcode-region (car region) (cdr region))))
 
 (defun oz-to-emulatorcode-region (start end)
    (interactive "r")
@@ -2302,7 +2329,7 @@ If it is, then remove it."
     (if (file-exists-p file-2)
 	(delete-file file-2))
     (write-region start end file-1)
-    (message "")
+    (message nil)
     (if oz-using-new-compiler
 	(oz-send-string (concat directive " '" file-1 "'"))
       (let ((buf (get-buffer oz-temp-buffer)))
@@ -2312,7 +2339,7 @@ If it is, then remove it."
 	      (erase-buffer))))
       (shell-command (concat "touch " file-2))
       (start-process "Oz Temp" oz-temp-buffer "tail" "+1f" file-2)
-      (message "")
+      (message nil)
       (oz-send-string (concat directive " '" file-1 "'"))
       (let ((buf (get-buffer oz-temp-buffer)))
 	(oz-show-buffer buf)
@@ -2334,13 +2361,13 @@ of the procedure Browse."
     (oz-send-string (concat "{Browse " contents "}"))
     (setq oz-last-fed-region-start (copy-marker start))))
 
-(defun oz-feed-line-browse ()
+(defun oz-feed-line-browse (arg)
   "Feed the current line to the Oz Compiler.
 Assuming it to contain an expression, it is enclosed by an application
 of the procedure Browse."
-  (interactive)
-  (let ((line (oz-line-pos)))
-    (oz-feed-region-browse (car line) (cdr line))))
+  (interactive "p")
+  (let ((region (oz-line-region arg)))
+    (oz-feed-region-browse (car region) (cdr region))))
 
 (defun oz-view-panel ()
   "Feed `{Panel open}' to the Oz Compiler."
