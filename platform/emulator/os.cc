@@ -279,10 +279,13 @@ TimerThread::TimerThread(int w)
 void osSetAlarmTimer(int t, Bool interval)
 {
 #ifdef DEBUG_DET
-  return;
-#elif defined(WINDOWS)
+  if (interval==OK)
+    return;
+#endif
 
-  Assert(t>0);
+#ifdef WINDOWS
+
+  Assert(t>0 && interval==OK);
   if (timerthread==NULL) {
     unsigned tid;
     timerthread = new TimerThread(t);
@@ -364,6 +367,9 @@ int osSelect(int nfds, fd_set *readfds, fd_set *writefds, int *timeout)
 
 void osInitSignals()
 {
+#ifndef WINDOWS
+  osSignal(SIGALRM,handlerALRM);
+#endif
 #ifndef DEBUG_DET
   osSignal(SIGINT,handlerINT);
   osSignal(SIGTERM,handlerTERM);
@@ -374,7 +380,6 @@ void osInitSignals()
   osSignal(SIGBUS,handlerBUS);
   osSignal(SIGPIPE,handlerPIPE);
   osSignal(SIGCHLD,handlerCHLD);
-  osSignal(SIGALRM,handlerALRM);
 #endif
 #endif
 }

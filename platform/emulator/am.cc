@@ -325,14 +325,6 @@ void AM::suspendEngine()
     }
     Assert(compStream->bufEmpty());
 
-#ifdef DEBUG_DET
-  /* directly execute pending sleeps */
-    if (userCounter>0) {
-      handleUser();
-      continue;
-    }
-#endif
-
     int ticksleft = osBlockSelect(userCounter);
     setSFlag(IOReady);
 
@@ -340,7 +332,7 @@ void AM::suspendEngine()
       handleUser();
       continue;
     }
-    userCounter = ticksleft;
+    setUserAlarmTimer(ticksleft);
   }
 
   ozstat.printRunning(stdout);
@@ -1074,6 +1066,13 @@ Bool AM::loadQuery(CompStream *fd)
   return ret;
 }
 
+
+void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
+{
+  pushTaskInline(pc,y,g,x,i);
+}
+
+
 int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
 {
   if (!isToplevel()) {
@@ -1385,16 +1384,36 @@ void AM::handleAlarm()
     }
   }
 
-  if (userCounter > 0) {
-    if (--userCounter <= 0) {
+  /* load userCounter into a local variable: under win32 this
+   * code is executed concurrently with other code manipulating
+   * the userCounter
+   */
+  int uc = userCounter;
+  Assert(uc>=0);
+  if (uc > 0) {
+    if (--uc == 0) {
       setSFlag(UserAlarm);
     }
+    setUserAlarmTimer(uc);
   }
 
   checkGC();
 
   checkIO();
 }
+
+inline
+int AM::setUserAlarmTimer(int ticks)
+{
+  if (ticks<0) {
+    error("gotcha");
+  }
+  int ret=userCounter;
+  userCounter=ticks;
+
+  return ret;
+}
+
 
 /* handleUserAlarm:
     if UserAlarm-SFLAG is set this method is called
@@ -1404,38 +1423,32 @@ void AM::handleUser()
 {
   unsetSFlag(UserAlarm);
   int nextMS = wakeUser();
-  userCounter = osMsToClockTick(nextMS);
-}
-
-int AM::setUserAlarmTimer(int ms)
-{
-  osBlockSignals();
-
-  int ret=osClockTickToMs(userCounter);
-  userCounter=osMsToClockTick(ms);
-
-  osUnblockSignals();
-
-  return ret;
+  setUserAlarmTimer(nextMS);
 }
 
 class OzSleep {
 public:
   OzSleep *next;
-  int time;
+  int time;    // in clock ticks
   TaggedRef node;
 public:
   OzSleep(int t, TaggedRef n,OzSleep *a)
-  : time(t), node(n), next(a) {
+  : time(t), node(n), next(a)
+  {
     OZ_protect(&node);
+    Assert(t>=0);
   }
   ~OzSleep() {
     OZ_unprotect(&node);
   }
 };
 
-void AM::insertUser(int t,TaggedRef node)
+void AM::insertUser(int ms, TaggedRef node)
 {
+  int t = osMsToClockTick(ms);
+
+  osBlockSignals();
+
   if (sleepQueue) {
     int rest = setUserAlarmTimer(0);
     Assert(isSetSFlag(UserAlarm) || rest > 0);
@@ -1452,6 +1465,8 @@ void AM::insertUser(int t,TaggedRef node)
     setUserAlarmTimer(t);
     t = 0;
   }
+
+  osUnblockSignals();
 
   OzSleep **prev = &sleepQueue;
   for (OzSleep *a = *prev; a; prev = &a->next, a=a->next) {
@@ -1482,12 +1497,6 @@ int AM::wakeUser()
     return ret;
   }
   return 0;
-}
-
-
-void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
-{
-  pushTaskInline(pc,y,g,x,i);
 }
 
 
