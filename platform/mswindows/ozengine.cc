@@ -56,7 +56,7 @@ static void watchParent()
   int pid = atoi(buf);
   HANDLE handle = OpenProcess(SYNCHRONIZE, 0, pid);
   if (handle == NULL) {
-    panic(true,"Opening the parent process failed");
+    panic(true,"Opening the parent process failed.");
   } else {
     DWORD thrid;
     HANDLE th = CreateThread(0,0,watchParentThread,handle,0,&thrid);
