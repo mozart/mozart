@@ -123,7 +123,14 @@ local
 					width:  ScrollerWidth + 2*Border
 					height: ScrollerWidth + 2*Border
 					highlightthickness:0)}
-	 TagsVar = {Tk.server tkGet($)}
+	 TagsVar      = {Tk.server tkGet($)}
+	 AddTagPrefix = v({String.toAtom
+			   {VirtualString.toString
+			    TagsVar#' [linsert $'#TagsVar#' 0'}})
+	 AddTagSuffix = v(']')
+	 SkipTag      = v({String.toAtom
+			   {VirtualString.toString
+			    'set '#TagsVar#' [lreplace $'#TagsVar#' 0 0]'}})
       in
 	 {Tk.addYScrollbar self ScrY}
 	 {Tk.addXScrollbar self ScrX}
@@ -153,11 +160,10 @@ local
 			     {Tk.send set(v(TagsVar) q(b(Tags)))}
 			  end
 	 self.addTag    = proc {$ Tag}
-			     {Tk.send set(v(TagsVar#' [linsert $'#TagsVar#' 0')
-					    Tag v(']'))}
+			     {Tk.send set(AddTagPrefix Tag AddTagSuffix)}
 			  end
 	 self.skipTag   = proc {$}
-			     {Tk.send set(v(TagsVar#' [lreplace $'#TagsVar#' 0 0]'))}
+			     {Tk.send SkipTag}
 			  end
 	 self.actionTag = {New Tk.canvasTag
 			   [tkInit(parent:self)
@@ -174,6 +180,22 @@ local
 					      {Manager
 					       selInfo({Tk.string.toFloat X}
 						       {Tk.string.toFloat Y})}
+					   end)
+			    tkBind(event: '<2>'
+				   args:  [x y]
+				   action: proc {$ X Y}
+					      {Manager
+					       nodesByXY(hide
+							 {Tk.string.toFloat X}
+							 {Tk.string.toFloat Y})}
+					   end)
+			    tkBind(event:  '<3>'
+				   args:   [x y]
+				   action: proc {$ X Y}
+					      {Manager
+					       nodesByXY(hideFailed
+							 {Tk.string.toFloat X}
+							 {Tk.string.toFloat Y})}
 					   end)]}
       end
 
