@@ -759,7 +759,7 @@ OZ_Return installWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
 
   EntityInfo *ei=varMakeOrGetEntityInfo(tPtr);
   if(checkForExistentInjector(ei,th,wc,kind))
-    return IncorrectFaultSpecification;
+    return InjectorAllredyExists;
   Watcher* w=new Watcher(proc,th,wc,kind);
   EntityCond oldC,newC;
   insertWatcher(ei,w,oldC,newC);
@@ -899,9 +899,9 @@ OZ_Return installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
   PD((NET_HANDLER,"Watcher installed on tertiary %x",t));
   EntityInfo *ei=tertiaryMakeOrGetEntityInfo(t);
   if(checkForExistentInjector(ei,th,wc,kind)){
-    return IncorrectFaultSpecification;}
+    return InjectorAllredyExists;}
 
-  EntityCond oldC,newC;
+    EntityCond oldC,newC;
   if(t->isLocal()){
     insertWatcherLocal(t,w);
     return PROCEED;}
@@ -913,8 +913,8 @@ OZ_Return installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
   return PROCEED;
 }
 
-OZ_Return deinstallWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
-                      Thread* th, unsigned int kind){
+  OZ_Return deinstallWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
+                           Thread* th, unsigned int kind){
   if(!isWatcherEligible(t)) {return IncorrectFaultSpecification;}
 
   if((t->getType()==Co_Object) & (t->getTertType()!=Te_Local)){
