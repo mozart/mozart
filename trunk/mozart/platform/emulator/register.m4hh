@@ -679,7 +679,47 @@ case INSTRUCTION(GETVOID):
      }
   
 
-case INSTRUCTION(UNIFYCONSTANT): 
+case INSTRUCTION(UNIFYCONSTANT):
+     {
+       if (InWriteMode) {
+	 TaggedRef *sp = GetSPointerWrite(sPointer);
+	 *sp = getTaggedArg(PC+1);
+	 sPointer++;
+	 DISPATCH(2);
+       }
+
+       TaggedRef atm = getLiteralArg(PC+1);
+	 
+       /* code adapted from GETCONSTANT */
+       TaggedRef *termPtr = sPointer;
+       sPointer++;
+       DEREFPTR(term,termPtr,tag);
+
+       if (isNotCVar(tag)) {
+         e->bindToNonvar(termPtr, term, atm, NOFLATGUARD());
+         DISPATCH(2);
+       }
+		 
+       if ( isLiteral(tag) && sameLiteral(term,atm) ) {
+         DISPATCH(2);
+       }
+
+       if (isCVar(term)) {
+         if (tagged2CVar(term)->unifyOutline(termPtr,term,NULL,
+      				             atm,NOFLATGUARD())) {
+	   DISPATCH(2);
+	 }
+         term = *termPtr;  // Note: 'term' may be disposed
+       }
+
+       SHALLOWFAIL;
+       HF_UNIFY("%s = %s failed\n",
+		 getTaggedArg(PC+1),
+		 *(sPointer-1),
+		 "In instruction UNIFYCONSTANT\n"
+		 );
+     }
+
   case INSTRUCTION(UNIFYINT):
     {
       if (InWriteMode) {
@@ -687,19 +727,37 @@ case INSTRUCTION(UNIFYCONSTANT):
 	*sp = getTaggedArg(PC+1);
 	sPointer++;
 	DISPATCH(2);
-      } else {
-	if ( e->fastUnify(makeTaggedRef(sPointer++),getTaggedArg(PC+1),
-			   NOFLATGUARD()) ) {
+      } 
+
+      TaggedRef i = getNumberArg(PC+1);
+      /* code adapted from GETCONSTANT */
+      TaggedRef *termPtr = sPointer;
+      sPointer++;
+      DEREFPTR(term,termPtr,tag);
+
+      if (isNotCVar(tag)) {
+        e->bindToNonvar(termPtr, term, i, NOFLATGUARD());
+        DISPATCH(2);
+      }
+		 
+      if ( (tag == tagTypeOf(i)) && numberEq(term,i)) {
+	DISPATCH(2);
+      }
+
+      if (isCVar(term)) {
+	if (tagged2CVar(term)->unifyOutline(termPtr,term,NULL,
+					    i,NOFLATGUARD())) {
 	  DISPATCH(2);
 	}
-
-	SHALLOWFAIL;
-	HF_UNIFY("%s = %s failed\n",
-		 getTaggedArg(PC+1),
-		 *(sPointer-1),
-		 "In instruction UNIFYINT\n"
-		 );
+	term = *termPtr;  // Note: 'term' may be disposed
       }
+
+      SHALLOWFAIL;
+      HF_UNIFY("%s = %s failed\n",
+	       getTaggedArg(PC+1),
+	       *(sPointer-1),
+	       "In instruction UNIFYINT\n"
+	       );
     }
 
 
