@@ -220,7 +220,7 @@ define
       OwnerF={New Tk.frame tkInit(parent:CardF)}
       OSites={New SiteList tkInit(parent:OwnerF)}
       OActive={New TitleGraph tkInit(parent:OwnerF
-				     title:"Activity"
+				     title:"Number of imported/exported Entities"
 				     miny:1.0
 				     maxy:11.0
 				     dim:''
@@ -237,7 +237,7 @@ define
       BorrowF={New Tk.frame tkInit(parent:CardF)}
       BSites={New SiteList tkInit(parent:BorrowF)}
       BActive={New TitleGraph tkInit(parent:BorrowF
-				     title:"Activity"
+				     title:"Number of imported/exported Entities"
 				     miny:1.0
 				     maxy:11.0
 				     dim:''
