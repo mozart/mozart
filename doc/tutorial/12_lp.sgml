@@ -265,7 +265,7 @@ proc {Ints N Xs}
    or N = 0 Xs = nil
    [] Xr in 
       N > 0 = true Xs = N|Xr
-      {Inst N-1 Xr}
+      {Ints N-1 Xr}
    end 
 end
 local 
