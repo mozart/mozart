@@ -187,7 +187,7 @@ OZ_BI_define(weakdict_put,3,0)
  OZ_declareDetTerm(1,k);
  OZ_declareTerm(2,v);
  TaggedRef w = v;
- DEREF(w,w_ptr,w_tag);
+ DEREF(w,w_ptr);
  if (oz_isOptVar(w)) {
    // we must bind the UVAR to a VAR (simple)
    // kost@ : didn't get exactly "why", but now that means that
@@ -234,7 +234,7 @@ OZ_BI_end
 void WeakDictionary::close()
 {
   if (stream) {
-    DEREF(stream,ptr,_);
+    DEREF(stream,ptr);
     oz_bindFuture(ptr,oz_nil());
     stream=0;
   }

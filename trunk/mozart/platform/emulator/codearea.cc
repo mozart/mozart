@@ -84,20 +84,20 @@ Literal *addToLiteralTab(const char *str, HashTable *table,
 
 OZ_Term OZ_atom(OZ_CONST char *str)
 {
-  CHECK_STRPTR(str);
+  Assert(str != NULL);
   Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO,OK);
   return makeTaggedLiteral(lit);
 }
 
 OZ_Term oz_atomNoDup(OZ_CONST char *str) {
-  CHECK_STRPTR(str);
+  Assert(str != NULL);
   Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO,NO);
   return makeTaggedLiteral(lit);
 }
 
 TaggedRef oz_uniqueName(const char *str)
 {
-  CHECK_STRPTR(str);
+  Assert(str != NULL);
   Literal *lit = addToLiteralTab(str,&CodeArea::nameTab,OK,OK);
   lit->setFlag(Lit_isUniqueName);
   return makeTaggedLiteral(lit);

@@ -598,7 +598,6 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
     tmplit=table[di].ident;
     tmpval=table[di].value;
     if (tmpval) { 
-      CHECK_DEREF(tmplit);
       if (oz_isAtom(tmplit)||oz_isInt(tmplit)) nAtomOrInt++; else nName++;
     }
   }
@@ -796,8 +795,8 @@ OZ_BI_define(BIdictionaryWaitOr,1,1)
     TaggedRef v;
     dict->getArg(OZ_head(arity),v);
 
-    DEREF(v,vPtr,_);
-    if (!oz_isVariable(v)) {
+    DEREF(v,vPtr);
+    if (!oz_isVar(v)) {
       am.emptySuspendVarList();
       OZ_RETURN(OZ_head(arity));
     }

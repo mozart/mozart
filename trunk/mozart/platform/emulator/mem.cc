@@ -76,7 +76,7 @@ void initMemoryManagement(void) {
 
 inline
 Bool checkAddress(void *ptr) {
-  void *aux = tagValueOf(makeTaggedMiscp(ptr));
+  void *aux = tagValueOf(makeTaggedVerbatim(ptr));
   return (aux == ptr);
 }
 

@@ -56,8 +56,8 @@ void Thread::removeSuspensions(TaggedRef list)
   while (list!=AtomNil) {
     Assert(oz_isCons(list));
     TaggedRef car = oz_head(list);
-    DEREF(car,ptr,tag);
-    if (isVariableTag(tag))
+    DEREF(car,ptr);
+    if (oz_isVar(car))
       tagged2Var(car)->removeFromSuspList(this);
     list = oz_tail(list);
   }

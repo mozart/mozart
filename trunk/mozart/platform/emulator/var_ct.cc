@@ -217,7 +217,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
 {
   DEBUG_CONSTRAIN_VAR(("tellBasicConstraintCT "));
   //
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
   //
   if (constr && constr->isEmpty()) {
     goto failed;
@@ -304,7 +304,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       }
     }
     goto proceed;
-  } else if (! oz_isVariable(vtag)) {
+  } else if (! oz_isVar(v)) {
     //
     // tell a ct constraint to a ct variable
     //
@@ -315,7 +315,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       goto proceed;
     }
     goto failed;
-  } else if (oz_isVariable(v)) {
+  } else if (oz_isVar(v)) {
     //
     // future stuff, no idea what is going on here
     TaggedRef newVar = oz_newVariable();

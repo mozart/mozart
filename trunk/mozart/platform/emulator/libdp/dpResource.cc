@@ -102,14 +102,14 @@ void ResourceHashTable::gcResourceTable()
       //
       if (oe && oe->isRef()) {
 	OZ_Term oer = oe->getRef();
-	DEREF(oer, oerp, _tagoe);
+	DEREF(oer, oerp);
 	Assert(!isGCMarkedTerm(oer));
 	// just extract the collected term:
 	oz_gCollectTerm(te, te);
-	DEREF(te, tep, _tagte);
+	DEREF(te, tep);
 
 	//
-	if (oz_isVariable(oer)) {
+	if (oz_isVar(oer)) {
 	  Assert(oerp);
 	  // 'tep' can be anything, however;
 	  if (oerp == tep) {

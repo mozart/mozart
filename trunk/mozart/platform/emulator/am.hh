@@ -396,7 +396,7 @@ public:
 
   void addSuspendVarList(TaggedRef t)
   {
-    Assert(oz_isVariable(oz_deref(t)));
+    Assert(oz_isVar(oz_deref(t)));
 
     _suspendVarList=oz_cons(t,_suspendVarList);
   }

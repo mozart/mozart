@@ -80,12 +80,12 @@ OZ_BI_define(BIsystemTellSize,3,0)
   TaggedRef t = OZ_in(2); 
 
   // Wait for label
-  DEREF(label,labelPtr,labelTag);
-  DEREF(t, tPtr, tag);
+  DEREF(label,labelPtr);
+  DEREF(t, tPtr);
 
   /* most probable case first */
-  if (isLiteralTag(labelTag) && oz_isFree(t)) {
-    DEREF(tNumFeats, nPtr, ntag);
+  if (oz_isLiteral(label) && oz_isFree(t)) {
+    DEREF(tNumFeats, nPtr);
     if (!oz_isSmallInt(tNumFeats)) oz_typeError(1,"Int");
     dt_index numFeats=tagged2SmallInt(tNumFeats);
     dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
@@ -97,7 +97,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
     return PROCEED;
   }
 
-  switch (labelTag) {
+  switch (tagTypeOf(label)) {
   case TAG_LTUPLE:
   case TAG_SRECORD:
     oz_typeError(0,"Literal");
@@ -121,10 +121,10 @@ OZ_BI_define(BIsystemTellSize,3,0)
     oz_typeError(0,"Literal");
   }
 
-  Assert(isLiteralTag(labelTag));
+  Assert(oz_isLiteral(label));
 
   // Create record:
-  switch (tag) {
+  switch (tagTypeOf(t)) {
   case TAG_LTUPLE:
     return oz_eq(label, AtomCons) ? PROCEED : FAILED;
   case TAG_LITERAL:
@@ -141,7 +141,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
       oz_typeError(3,"Record");
     } else {
       // Calculate initial size of hash table:
-      DEREF(tNumFeats, nPtr, ntag);
+      DEREF(tNumFeats, nPtr);
       if (!oz_isSmallInt(tNumFeats)) oz_typeError(1,"Int");
       dt_index numFeats=tagged2SmallInt(tNumFeats);
       dt_index size =
@@ -170,11 +170,11 @@ OZ_BI_define(BIrecordTell,2,0)
   TaggedRef t = OZ_in(1);
 
   // Wait for label
-  DEREF(t, tPtr, tag);
-  DEREF(label,labelPtr,labelTag);
+  DEREF(t, tPtr);
+  DEREF(label,labelPtr);
 
   /* most probable case first */
-  if (isLiteralTag(labelTag) && oz_isFree(t)) {
+  if (oz_isLiteral(label) && oz_isFree(t)) {
     OzOFVariable *newofsvar=new OzOFVariable(label,oz_currentBoard());
     Bool ok=oz_unify(makeTaggedRef(newTaggedVar(newofsvar)),
 		     makeTaggedRef(tPtr));
@@ -182,7 +182,7 @@ OZ_BI_define(BIrecordTell,2,0)
     return PROCEED;
   }
 
-  switch (labelTag) {
+  switch (tagTypeOf(label)) {
   case TAG_LTUPLE:
   case TAG_SRECORD:
     oz_typeError(0,"Literal");
@@ -206,9 +206,9 @@ OZ_BI_define(BIrecordTell,2,0)
     oz_typeError(0,"Literal");
   }
 
-  Assert(labelTag == TAG_LITERAL);
+  Assert(oz_isLiteral(label));
   // Create record:
-  switch (tag) {
+  switch (tagTypeOf(t)) {
   case TAG_LTUPLE:
     return oz_eq(label, AtomCons) ? PROCEED : FAILED;
   case TAG_LITERAL:
@@ -244,8 +244,8 @@ OZ_BI_define(BIrecordTell,2,0)
 OZ_BI_define(BIisRecordCB,1,1)
 {
   OZ_Term t=OZ_in(0);
-  DEREF(t, tPtr, tag);
-  switch (tag) {
+  DEREF(t, tPtr);
+  switch (tagTypeOf(t)) {
   case TAG_LTUPLE:
   case TAG_LITERAL:
   case TAG_SRECORD:
@@ -282,11 +282,11 @@ OZ_BI_define(BIwidthC, 2, 0)
     TaggedRef rawwid=OZ_in(1);
     TaggedRef rec=rawrec;
     TaggedRef wid=rawwid;
-    DEREF(rec, recPtr, recTag);
-    DEREF(wid, widPtr, widTag);
+    DEREF(rec, recPtr);
+    DEREF(wid, widPtr);
 
     // Wait until first argument is a constrained record (OFS, SRECORD, LTUPLE, LITERAL):
-    switch (recTag) {
+    switch (tagTypeOf(rec)) {
     case TAG_VAR:
       switch (tagged2Var(rec)->getType()) {
       case OZ_VAR_OF:
@@ -307,7 +307,7 @@ OZ_BI_define(BIwidthC, 2, 0)
     }
 
     // Ensure that second argument wid is a FD or integer:
-    switch (widTag) {
+    switch (tagTypeOf(wid)) {
     case TAG_VAR:
       {
 	OzVariable *widv = tagged2Var(wid);
@@ -383,23 +383,23 @@ OZ_Return WidthPropagator::propagate(void)
 
     TaggedRef rec=rawrec;
     TaggedRef wid=rawwid;
-    DEREF(rec, recptr, recTag);
-    DEREF(wid, widptr, widTag);
+    DEREF(rec, recptr);
+    DEREF(wid, widptr);
 
-    switch (recTag) {
+    switch (tagTypeOf(rec)) {
     case TAG_SRECORD:
     case TAG_LITERAL:
     case TAG_LTUPLE:
     {
         // Impose width constraint
-        recwidth=(recTag==TAG_SRECORD) ? tagged2SRecord(rec)->getWidth() :
-                 ((recTag==TAG_LTUPLE) ? 2 : 0);
+        recwidth = (oz_isSRecord(rec) ? tagged2SRecord(rec)->getWidth() :
+		    (oz_isLTuple(rec) ? 2 : 0));
         if (isGenFDVar(wid)) {
             // OzFDVariable *fdwid=tagged2GenFDVar(wid);
             // res=fdwid->setSingleton(recwidth);
 	  Bool res=oz_unify(makeTaggedSmallInt(recwidth),rawwid); // mm2
 	  if (!res) { result = FAILED; break; }
-        } else if (isSmallIntTag(widTag)) {
+        } else if (oz_isSmallInt(wid)) {
             int intwid=tagged2SmallInt(wid);
             if (recwidth!=intwid) { result = FAILED; break; }
         } else if (oz_isBigInt(wid)) {
@@ -428,7 +428,7 @@ OZ_Return WidthPropagator::propagate(void)
                 // No loc/glob handling: res=(fdwid>=recwidth);
                 if (!res) { result = FAILED; break; }
             }
-        } else if (isSmallIntTag(widTag)) {
+        } else if (oz_isSmallInt(wid)) {
             int intwid=tagged2SmallInt(wid);
             if (recwidth>intwid) { result = FAILED; break; }
         } else if (oz_isBigInt(wid)) {
@@ -440,12 +440,12 @@ OZ_Return WidthPropagator::propagate(void)
         // 2. Convert representation if necessary
         // 2a. Find size and value (latter is valid only if goodsize==TRUE):
         int goodsize,value;
-        DEREF(wid,_3,newwidTag);
+        DEREF(wid,_3);
         if (isGenFDVar(wid)) {
             OzFDVariable *newfdwid=tagged2GenFDVar(wid);
             goodsize=(newfdwid->getDom().getSize())==1;
             value=newfdwid->getDom().getMinElem();
-        } else if (isSmallIntTag(newwidTag)) {
+        } else if (oz_isSmallInt(wid)) {
             goodsize=TRUE;
             value=tagged2SmallInt(wid);
         } else {
@@ -456,8 +456,8 @@ OZ_Return WidthPropagator::propagate(void)
         //     then convert to SRECORD or LITERAL:
         if (goodsize && value==recwidth) {
             TaggedRef lbl=tagged2GenOFSVar(rec)->getLabel();
-            DEREF(lbl,_4,lblTag);
-            if (isLiteralTag(lblTag)) {
+            DEREF(lbl,_4);
+            if (oz_isLiteral(lbl)) {
                 result = PROCEED;
                 if (recwidth==0) {
                     // Convert to LITERAL:
@@ -504,12 +504,12 @@ OZ_BI_define(BImonitorArity, 3, 0)
     OZ_Term arity = OZ_in(2);
 
     OZ_Term tmpkill=OZ_in(1);
-    DEREF(tmpkill,_1,killTag);
-    Bool isKilled = !isVariableTag(killTag);
+    DEREF(tmpkill,_1);
+    Bool isKilled = !oz_isVar(tmpkill);
 
     OZ_Term tmprec=OZ_in(0);
-    DEREF(tmprec,_2,recTag);
-    switch (recTag) {
+    DEREF(tmprec,_2);
+    switch (tagTypeOf(tmprec)) {
     case TAG_LTUPLE:
         return oz_unify(arity,makeTupleArityList(2));
     case TAG_LITERAL:
@@ -534,7 +534,7 @@ OZ_BI_define(BImonitorArity, 3, 0)
         oz_typeError(0,"Record");
     }
     tmprec=OZ_in(0);
-    DEREF(tmprec,_3,_4);
+    DEREF(tmprec,_3);
 
     // At this point, rec is OFS and tmprec is dereferenced and undetermined
 
@@ -578,11 +578,11 @@ OZ_Return MonitorArityPropagator::propagate(void)
     // Check if killed:
     TaggedRef kill=K;
     TaggedRef tmpkill=kill;
-    DEREF(tmpkill,_2,killTag);
-    Bool isKilled = !isVariableTag(killTag);
+    DEREF(tmpkill,_2);
+    Bool isKilled = !oz_isVar(tmpkill);
 
     TaggedRef tmptail=FT;
-    DEREF(tmptail,_3,_4);
+    DEREF(tmptail,_3);
 
     // Get featlist (a difference list stored in the arguments):
     TaggedRef fhead = FH;
@@ -595,7 +595,7 @@ OZ_Return MonitorArityPropagator::propagate(void)
         //
         // kost@ : don't ask me what happens if the 'tmptail' is not a
         //         variable! ;-V
-        Assert(oz_isVariable(tmptail));
+        Assert(oz_isVar(tmptail));
         OzVariable *ov = tagged2Var(tmptail);
 	Board *home = ov->getBoardInternal();
         TaggedRef v = oz_newVariable(home);
@@ -629,11 +629,11 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   TaggedRef term = OZ_in(0);
   TaggedRef fea  = OZ_in(1);
 
-  DEREF(term, termPtr, termTag);
-  DEREF(fea,  feaPtr,  feaTag);
+  DEREF(term, termPtr);
+  DEREF(fea,  feaPtr);
 
   // optimize the most common case: adding or reading a feature
-  if (isVarTag(termTag) &&
+  if (oz_isVar(term) &&
       tagged2Var(term)->getType()==OZ_VAR_OF &&
       oz_isFeature(fea)) {
     OzOFVariable *ofsvar=tagged2GenOFSVar(term);
@@ -654,15 +654,15 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   }
   
   // Wait until Y is a feature:
-  if (isVariableTag(feaTag)) {
+  if (oz_isVar(fea)) {
 
-    if (isVarTag(feaTag) && tagged2Var(fea)->getType()==OZ_VAR_OF) {
+    if (oz_isVar(fea) && tagged2Var(fea)->getType()==OZ_VAR_OF) {
       OzOFVariable *ofsvar=tagged2GenOFSVar(fea);
       if (ofsvar->getWidth()>0) 
 	goto typeError2;
     }
 
-    if (!oz_isVariable(term) && !oz_isRecord(term)) 
+    if (!oz_isVar(term) && !oz_isRecord(term)) 
       goto typeError2;
     
     oz_suspendOnPtr(feaPtr);
@@ -674,7 +674,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   // Add feature and return:
   Assert(term!=makeTaggedNULL());
 
-  switch (termTag) {
+  switch (tagTypeOf(term)) {
   case TAG_VAR:
 
     if (tagged2Var(term)->getType() == OZ_VAR_OF) {
@@ -769,11 +769,11 @@ OZ_BI_define(BIhasLabel, 1, 1)
   oz_declareDerefIN(0,rec);
   // Wait for term to be a record with determined label:
   // Get the term's label, if it exists
-  if (oz_isVariable(rec)) {
+  if (oz_isVar(rec)) {
     if (isGenOFSVar(rec)) {
       TaggedRef thelabel=tagged2GenOFSVar(rec)->getLabel(); 
-      DEREF(thelabel,lPtr,_2);
-      OZ_RETURN(oz_bool(!oz_isVariable(thelabel)));
+      DEREF(thelabel,lPtr);
+      OZ_RETURN(oz_bool(!oz_isVar(thelabel)));
     }
     OZ_RETURN(NameFalse);
   }

@@ -393,8 +393,8 @@ Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity,
   if (getfastMethods()->getArg(label,method)!=PROCEED)
     return NULL;
   
-  DEREF(method,_1,_2);
-  if (oz_isVariable(method)) return NULL;
+  DEREF(method,_1);
+  if (oz_isVar(method)) return NULL;
   Assert(oz_isAbstraction(method));
   
   Abstraction *abstr = (Abstraction*) tagged2Const(method);
@@ -549,7 +549,7 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
 
   while (oz_isCons(list)) {
     TaggedRef oldhead = oz_head(list);
-    CHECK_DEREF(oldhead);
+    Assert(!oz_isRef(oldhead) && !oz_isVar(oldhead));
 
     switch (featureCmp(a,oldhead)) {
     case 0:
@@ -585,17 +585,15 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
  */
 
 static
-TaggedRef insertlist(TaggedRef ins, TaggedRef old)
-{	
-  CHECK_DEREF(old);
-  DEREF(ins,_1,_2);
-  CHECK_NONVAR(ins);
+TaggedRef insertlist(TaggedRef ins, TaggedRef old) {
+  ins = oz_deref(ins);
+  Assert(!oz_isVar(ins) && !oz_isRef(old));
 
   while (oz_isCons(ins)) {
     old = insert(oz_deref(oz_head(ins)),old);
-    CHECK_DEREF(old);
+    Assert(!oz_isRef(old));
     ins = oz_deref(oz_tail(ins));
-    CHECK_NONVAR(ins);
+    Assert(!oz_isVar(ins));
   }
 
   Assert(oz_isNil(ins));
@@ -973,23 +971,23 @@ TaggedRef oz_adjoin(SRecord *lrec, SRecord* hrecord)
 
   // copy left record to new record
   TaggedRef ar = list1;
-  CHECK_DEREF(ar);
+  Assert(!oz_isRef(ar) && !oz_isVar(ar));
   while (oz_isCons(ar)) {
     TaggedRef a = oz_head(ar);
-    CHECK_DEREF(a);
+    Assert(!oz_isRef(a) && !oz_isVar(a));
     newrec->setFeature(a,lrec->getFeature(a));
     ar = oz_tail(ar);
-    CHECK_DEREF(ar);
+    Assert(!oz_isRef(ar) && !oz_isVar(ar));
   }
 
   TaggedRef har = list2;
-  CHECK_DEREF(har);
+  Assert(!oz_isRef(har) && !oz_isVar(har));
   while (oz_isCons(har)) {
     TaggedRef a = oz_head(har);
-    CHECK_DEREF(a);
+    Assert(!oz_isRef(a) && !oz_isVar(a));
     newrec->setFeature(a,hrecord->getFeature(a));
     har = oz_tail(har);
-    CHECK_DEREF(har);
+    Assert(!oz_isRef(har) && !oz_isVar(har));
   }
   return newrec->normalize();
 }
@@ -1013,13 +1011,13 @@ TaggedRef oz_adjoinAt(SRecord *rec, TaggedRef feature, TaggedRef value)
     Arity *arity = aritytable.find(newArityList);
     SRecord *newrec = SRecord::newSRecord(rec->getLabel(),arity);
 
-    CHECK_DEREF(oldArityList);
+    Assert(!oz_isRef(oldArityList) && !oz_isVar(oldArityList));
     while (oz_isCons(oldArityList)) {
       TaggedRef a = oz_head(oldArityList);
-      CHECK_DEREF(a);
+      Assert(!oz_isRef(a) && !oz_isVar(a));
       newrec->setFeature(a,rec->getFeature(a));
       oldArityList = oz_tail(oldArityList);
-      CHECK_DEREF(oldArityList);
+      Assert(!oz_isRef(oldArityList) && !oz_isVar(oldArityList));
     }
     Assert(oz_isNil(oldArityList));
     newrec->setFeature(feature,value);
@@ -1041,13 +1039,13 @@ TaggedRef oz_adjoinList(SRecord *lrec,TaggedRef arityList,TaggedRef proplist)
   Assert(oz_fastlength(newArityList) == newrec->getWidth());
 
   TaggedRef ar = lrec->getArityList();
-  CHECK_DEREF(ar);
+  Assert(!oz_isRef(ar) && !oz_isVar(ar));
   while (oz_isCons(ar)) {
     TaggedRef a = oz_head(ar);
-    CHECK_DEREF(a);
+    Assert(!oz_isRef(a) && !oz_isVar(a));
     newrec->setFeature(a,lrec->getFeature(a));
     ar = oz_tail(ar);
-    CHECK_DEREF(ar);
+    Assert(!oz_isRef(ar) && !oz_isVar(ar));
   }
 
   newrec->setFeatures(proplist);
@@ -1057,18 +1055,16 @@ TaggedRef oz_adjoinList(SRecord *lrec,TaggedRef arityList,TaggedRef proplist)
 
 void SRecord::setFeatures(TaggedRef proplist)
 {
-  DEREF(proplist,_1,_2);
-  CHECK_NONVAR(proplist);
-  while (oz_isCons(proplist)) {
-    TaggedRef pair = oz_head(proplist);
-    DEREF(pair,_3,_4);
-    CHECK_NONVAR(pair);
-    proplist = oz_deref(oz_tail(proplist));
-    CHECK_NONVAR(proplist);
+  proplist = oz_deref(proplist);
+  Assert(!oz_isVar(proplist));
 
-    TaggedRef fea = oz_left(pair);
-    DEREF(fea,_5,_6);
-    CHECK_NONVAR(fea);
+  while (oz_isCons(proplist)) {
+    TaggedRef pair = oz_deref(oz_head(proplist));
+    Assert(!oz_isVar(pair));
+    proplist = oz_deref(oz_tail(proplist));
+    Assert(!oz_isVar(proplist));
+    TaggedRef fea = oz_deref(oz_left(pair));
+    Assert(!oz_isVar(fea));
 
 #ifdef DEBUG_CHECK
     if (!setFeature(fea, oz_right(pair))) {
@@ -1091,7 +1087,7 @@ void SRecord::setFeatures(TaggedRef proplist)
 
 Bool SRecord::setFeature(TaggedRef feature,TaggedRef value)
 {
-  CHECK_FEATURE(feature);
+  Assert(oz_isFeature(feature));
 
   int i = getIndex(feature);
   if ( i == -1 ) {
@@ -1103,7 +1099,7 @@ Bool SRecord::setFeature(TaggedRef feature,TaggedRef value)
 
 TaggedRef SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
 {
-  CHECK_FEATURE(feature);
+  Assert(oz_isFeature(feature));
 
   int i = getIndex(feature);
   if ( i == -1 ) {
@@ -1111,7 +1107,7 @@ TaggedRef SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
   }
 
   TaggedRef oldVal = args[i];
-  if (!oz_isRef(oldVal) && oz_isVariable(oldVal)) {
+  if (!oz_isRef(oldVal) && oz_isVar(oldVal)) {
     return oz_adjoinAt(this,feature,value);
   }
   setArg(i,value);
@@ -1415,8 +1411,8 @@ OZ_Term __OMR_dynamic(const int width, OZ_Term label, Arity * arity,
 
 TaggedRef oz_getPrintName(TaggedRef t) {
   TaggedRef ot = t;
-  DEREF(t, tPtr, tTag);
-  switch (tTag) {
+  DEREF(t, tPtr);
+  switch (tagTypeOf(t)) {
   case TAG_CONST:
     {
       ConstTerm *rec = tagged2Const(t);

@@ -281,13 +281,13 @@ int OZ_isTuple(OZ_Term term)
 int OZ_isValue(OZ_Term term)
 {
   term = oz_deref(term);
-  return !oz_isVariable(term);
+  return !oz_isVar(term);
 }
 
 int OZ_isVariable(OZ_Term term)
 {
   term = oz_deref(term);
-  return oz_isVariable(term);
+  return oz_isVar(term);
 }
 
 inline
@@ -1087,8 +1087,8 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     return;
   }
 
-  DEREF(term,termPtr,tag);
-  switch(tag) {
+  DEREF(term,termPtr);
+  switch(tagTypeOf(term)) {
   case TAG_VAR:
     {
       if (!termPtr) {
@@ -1126,7 +1126,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     smallInt2buffer(out,term,'~');
     break;
   default:
-    out << "<Unknown Tag: " << (int) tag << ">";
+    out << "<Unknown Tag: UNKNOWN >";
     break;
   }
 }
@@ -1363,9 +1363,9 @@ char* OZ_vsToC(OZ_Term t,int*n)
 
 OZ_Term OZ_label(OZ_Term term)
 {
-  DEREF(term,termPtr,termTag);
+  DEREF(term,termPtr);
 
-  switch (termTag) {
+  switch (tagTypeOf(term)) {
   case TAG_LTUPLE:
     return AtomCons;
   case TAG_LITERAL:
@@ -1380,9 +1380,9 @@ OZ_Term OZ_label(OZ_Term term)
 
 int OZ_width(OZ_Term term)
 {
-  DEREF(term,termPtr,termTag);
+  DEREF(term,termPtr);
 
-  switch (termTag) {
+  switch (tagTypeOf(term)) {
   case TAG_LTUPLE:
     return 2;
   case TAG_SRECORD:
@@ -1631,10 +1631,10 @@ OZ_Term OZ_adjoinAt(OZ_Term rec, OZ_Term fea, OZ_Term val)
 
 OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
 {
-  DEREF(term,termPtr,termTag);
+  DEREF(term,termPtr);
   fea=oz_deref(fea);
 
-  switch (termTag) {
+  switch (tagTypeOf(term)) {
   case TAG_LTUPLE:
     {
       if (!oz_isSmallInt(fea)) return 0;
@@ -1783,8 +1783,8 @@ void OZ_sClone(OZ_Term * to) {
 static
 int oz_isVirtualStringNoZero(OZ_Term vs, OZ_Term * var) {
   if (oz_isRef(vs)) {
-    DEREF(vs,vsPtr,vsTag);
-    if (isVariableTag(vsTag))  {
+    DEREF(vs,vsPtr);
+    if (oz_isVar(vs))  {
       if (var) 
 	*var = makeTaggedRef(vsPtr);
       return 0;
@@ -1832,8 +1832,8 @@ int OZ_isVirtualStringNoZero(OZ_Term vs, OZ_Term * var)
 static
 int oz_isVirtualString(OZ_Term vs, OZ_Term * var) {
   if (oz_isRef(vs)) {
-    DEREF(vs,vsPtr,vsTag);
-    if (isVariableTag(vsTag))  {
+    DEREF(vs,vsPtr);
+    if (oz_isVar(vs))  {
       if (var) 
 	*var = makeTaggedRef(vsPtr);
       return 0;
@@ -2053,8 +2053,8 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
 // mm2: bug
 void OZ_addThread(OZ_Term var, OZ_Thread thr)
 {
-  DEREF(var, varPtr, varTag);
-  if (!isVariableTag(varTag)) {
+  DEREF(var, varPtr);
+  if (!oz_isVar(var)) {
     OZ_error("OZ_addThread(%s): var arg expected", toC(var));
     return;
   }

@@ -97,7 +97,7 @@ TaggedRef Board::genBlocked(TaggedRef arg) {
 
 void Board::bindStatus(TaggedRef t) {
   TaggedRef s = getStatus();
-  DEREF(s, sPtr, _);
+  DEREF(s, sPtr);
   if (oz_isFuture(s))
     oz_bindFuture(sPtr, t);
 }
@@ -260,9 +260,9 @@ Bool extParameters(TaggedRef list, Board * solve_board) {
     
     Bool found = FALSE;
 
-    DEREF(h, hptr, htag);
+    DEREF(h, hptr);
 
-    if (oz_isVariable(h)) {
+    if (oz_isVar(h)) {
 
       Assert(!oz_isOptVar(h));
 
@@ -474,7 +474,7 @@ OZ_Return Board::installScript(Bool isMerging)
        * script will be simplified!
        *
        */
-      if (!oz_isVariable(oz_deref(x)) && !oz_isVariable(oz_deref(y)))
+      if (!oz_isVar(oz_deref(x)) && !oz_isVar(oz_deref(y)))
 	Board::ignoreWakeUp(NO);
       else
 	Board::ignoreWakeUp(OK);
