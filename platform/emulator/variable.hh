@@ -74,6 +74,7 @@ protected:
 public:
 
   USEFREELISTMEMORY;
+  NO_DEFAULT_CONSTRUCTORS(SVariable);
 
   SVariable(Board * h) : suspList(NULL), home(h) {}
 

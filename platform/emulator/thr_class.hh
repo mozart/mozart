@@ -91,6 +91,7 @@ public:
   //  gc methods;
   RunnableThreadBody *gcRTBody();
   USEHEAPMEMORY;
+  NO_DEFAULT_CONSTRUCTORS(RunnableThreadBody);
 
   void reInit() {		// for the root thread only;
     taskStack.init();
@@ -142,9 +143,7 @@ private:
   int stopCount;		// Thread.stop counter
 
 public:
-  Thread(); // fake compile
-  Thread(const Thread &tt); // fake compiler
-  Thread &operator = (const Thread& tt); // fake compiler
+  NO_DEFAULT_CONSTRUCTORS(Thread);
 
   Thread(int flags, int prio, Board *bb, int id1)
     : Tertiary(bb,Co_Thread,Te_Local), id(id1)
