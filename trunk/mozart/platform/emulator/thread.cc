@@ -400,7 +400,6 @@ Thread *Thread::GetFirst() {
   }
   tt->prev=tt->next=(Thread *) NULL;
 
-  return tt;
 #ifdef DEBUG_CHECK
   Thread *tmp = Head;
   while (tmp != (Thread *) NULL) {
@@ -409,6 +408,7 @@ Thread *Thread::GetFirst() {
     tmp = tmp->next;
   }
 #endif
+  return tt;
 }
 
 TaskStack *Thread::makeTaskStack()
