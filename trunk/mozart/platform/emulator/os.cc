@@ -1175,7 +1175,7 @@ int osDlopen(char *filename, OZ_Term out)
     if (handle == NULL) {
       goto raise;
     }
-    ret = oz_int(ToInt32(handle));
+    ret = OZ_makeForeignPointer((void*)handle);
   }
 #else
   {
@@ -1185,7 +1185,7 @@ int osDlopen(char *filename, OZ_Term out)
       err=oz_atom(dlerror());
       goto raise;
     }
-    ret = oz_int(ToInt32(handle));
+    ret = OZ_makeForeignPointer(handle);
   }
 #endif
 
@@ -1196,7 +1196,7 @@ int osDlopen(char *filename, OZ_Term out)
       err=oz_int(GetLastError());
       goto raise;
     }
-    ret = oz_int(ToInt32(handle));
+    ret = OZ_makeForeignPointer(handle);
   }
 #endif
 
@@ -1204,26 +1204,26 @@ int osDlopen(char *filename, OZ_Term out)
 
 raise:
 
-  return oz_raise(E_ERROR,oz_atom("foreign"),"dlOpen",2,
+  return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,
 		  oz_atom(filename),err);
 }
 
-int osDlclose(int handle)
+int osDlclose(void* handle)
 {
 #ifdef DLOPEN
-  if (dlclose((void *)handle)) {
+  if (dlclose(handle)) {
     goto raise;
   }
 #endif
 
 #ifdef WINDOWS
-  FreeLibrary((void *) handle);
+  FreeLibrary(handle);
 #endif
 
   return PROCEED;
 
 raise:
-  return oz_raise(E_ERROR,oz_atom("foreign"),"dlClose",1,OZ_int(handle));
+  return oz_raise(E_ERROR,AtomForeign,"dlClose",0);
 }
 
 #if defined(DLOPEN)
