@@ -18,7 +18,7 @@
 #include "am.hh"
 #include "genvar.hh"
 #include "fdprofil.hh"
-
+#include "fdomn.hh"
 
 // unify expects either two GenFDVariables or at least one
 // GenFDVariable and one non-variable

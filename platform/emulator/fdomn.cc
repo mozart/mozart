@@ -14,7 +14,6 @@
 #endif
 
 #include "fdomn.hh"
-#include "fdomn1.hh"
 
 //-----------------------------------------------------------------------------
 // Miscellaneous --------------------------------------------------------------
@@ -29,20 +28,9 @@ int fd_bv_right_conv[fd_bv_conv_max_high];
 intptr fd_iv_left_sort[MAXFDBIARGS];
 intptr fd_iv_right_sort[MAXFDBIARGS];
 
-inline 
-int div32(int n) {
-  return n >> 5;
-}
-
-inline 
-int mod32(int n) {
-  return n & 0x1f;
-}
-
-inline 
-int word32(int n) {
-  return mod32(n) ? div32(n) + 1 : div32(n);
-}
+inline int div32(int n) { return n >> 5; }
+inline int mod32(int n) { return n & 0x1f; }
+inline int word32(int n) { return mod32(n) ? div32(n) + 1 : div32(n); }
 
 //-----------------------------------------------------------------------------
 // FDInterval -----------------------------------------------------------------
@@ -778,7 +766,6 @@ int FDBitVector::mkRawOutline(int * list_left, int * list_right) const
   return mkRaw(list_left, list_right);
 }
 
-
 inline
 OZ_Term FDBitVector::getAsList(void) const
 {
@@ -858,90 +845,64 @@ size_t FDBitVector::memory_required(void) { // used for profiling
 
 
 //-----------------------------------------------------------------------------
-// class OZ_FiniteDomain ------------------------------------------------------
+// class OZ_FiniteDomainImpl --------------------------------------------------
 
 // private methods ------------------------------------------------------------
 
-inline 
-OZ_FiniteDomain::descr_type OZ_FiniteDomain::getTypeI(void) const {
-  return (descr_type)ToInt32(andPointer(descr,3));
-}
-
-OZ_FiniteDomain::descr_type OZ_FiniteDomain::getType(void) const {
-  return getTypeI();
-}
-
 inline
-void OZ_FiniteDomain::setType(descr_type t) {
+void OZ_FiniteDomainImpl::setType(descr_type t) {
   descr = orPointer(andPointer(descr,~3),t);
 }
 
 inline  
-void OZ_FiniteDomain::setType(descr_type t, void * p) {
-  descr = orPointer(p,t);
+void OZ_FiniteDomainImpl::setType(descr_type t, void * p) {
+  descr = orPointer(p, t);
 }
 
 inline
-void OZ_FiniteDomain::setType(FDBitVector * p) {
-  descr = orPointer(p,bv_descr);
+void OZ_FiniteDomainImpl::setType(FDBitVector * p) {
+  descr = orPointer(p, bv_descr);
 }
 
 inline
-void OZ_FiniteDomain::setType(FDIntervals * p) {
-  descr = orPointer(p,iv_descr);
+void OZ_FiniteDomainImpl::setType(FDIntervals * p) {
+  descr = orPointer(p, iv_descr);
 }
 
 inline
-void OZ_FiniteDomain::set_iv(void * p) {
-  descr = orPointer(p,iv_descr);
+void OZ_FiniteDomainImpl::set_iv(void * p) {
+  descr = orPointer(p, iv_descr);
 }
 
 inline
-FDIntervals * OZ_FiniteDomain::get_ivI(void) const {
-  return (FDIntervals *)andPointer(descr,~3);
-}
-
-FDIntervals * OZ_FiniteDomain::get_iv(void) const {
-  return get_ivI();
-}
-
-inline
-void OZ_FiniteDomain::set_bv(void * p) {
+void OZ_FiniteDomainImpl::set_bv(void * p) {
   descr = p;
 }
 
-inline 
-FDBitVector * OZ_FiniteDomain::get_bvI(void) const {
-  return (FDBitVector *)andPointer(descr,~3);
-}
-
-FDBitVector * OZ_FiniteDomain::get_bv(void) const {
-  return get_bvI();
-}
 inline
-int OZ_FiniteDomain::findSize(void) const {
+int OZ_FiniteDomainImpl::findSize(void) const {
   return max_elem - min_elem + 1;
 }
 
 inline
-OZ_Boolean OZ_FiniteDomain::isSingleInterval(void) const {
+OZ_Boolean OZ_FiniteDomainImpl::isSingleInterval(void) const {
   return size == (max_elem - min_elem + 1);
 }
 
 inline
-FDBitVector * OZ_FiniteDomain::provideBitVector(void) const
+FDBitVector * OZ_FiniteDomainImpl::provideBitVector(void) const
 {
-  FDBitVector * bv = get_bvI();
+  FDBitVector * bv = get_bv();
 
   return bv == NULL ? new FDBitVector : bv;
 }
 
 inline
-FDBitVector * OZ_FiniteDomain::asBitVector(void) const
+FDBitVector * OZ_FiniteDomainImpl::asBitVector(void) const
 {
-  descr_type type = getTypeI();
+  descr_type type = getType();
   if (type == bv_descr) {
-    return get_bvI();
+    return get_bv();
   } else if (type == fd_descr) {
     FDBitVector * bv = provideBitVector();
     if (min_elem > fd_bv_max_elem)
@@ -951,7 +912,7 @@ FDBitVector * OZ_FiniteDomain::asBitVector(void) const
     return bv;
   } else {
     FDBitVector * bv = new FDBitVector;
-    FDIntervals &iv = *get_ivI();
+    FDIntervals &iv = *get_iv();
     bv->setEmpty();
     for (int i = 0; i < iv.high && iv.i_arr[i].left <= fd_bv_max_elem; i++) 
       bv->addFromTo(iv.i_arr[i].left, min(iv.i_arr[i].right, fd_bv_max_elem));
@@ -960,9 +921,9 @@ FDBitVector * OZ_FiniteDomain::asBitVector(void) const
 }
 
 inline
-FDIntervals * OZ_FiniteDomain::provideIntervals(int max_index) const
+FDIntervals * OZ_FiniteDomainImpl::provideIntervals(int max_index) const
 {
-  FDIntervals * iv = get_ivI();
+  FDIntervals * iv = get_iv();
   if (max_index > fd_iv_max_high) 
     return new (max_index) FDIntervals(max_index);
   else if (iv == NULL)
@@ -974,18 +935,18 @@ FDIntervals * OZ_FiniteDomain::provideIntervals(int max_index) const
 }
 
 inline
-FDIntervals * OZ_FiniteDomain::asIntervals(void) const
+FDIntervals * OZ_FiniteDomainImpl::asIntervals(void) const
 {
-  descr_type type = getTypeI();
+  descr_type type = getType();
   if (type == iv_descr) {
-    return get_ivI();
+    return get_iv();
   } else if (type == bv_descr) {
     if (isSingleInterval()) {
       FDIntervals * iv = provideIntervals(1);
       iv->init(min_elem, max_elem);
       return iv;
     } else {
-      int s = get_bvI()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+      int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
       FDIntervals * iv = newIntervals(s);
       iv->initList(s, fd_bv_left_conv, fd_bv_right_conv);
       return iv;
@@ -997,121 +958,137 @@ FDIntervals * OZ_FiniteDomain::asIntervals(void) const
   }
 }
 
-OZ_Boolean OZ_FiniteDomain::isConsistent(void) const {
+inline
+OZ_Boolean OZ_FiniteDomainImpl::isConsistent(void) const {
   if (size == 0) return OZ_TRUE;
-  descr_type type = getTypeI();
+  descr_type type = getType();
   if (type == fd_descr)
     return findSize() == size;
   else if (type == bv_descr)
-    return get_bvI()->findSize() == size;
+    return get_bv()->findSize() == size;
   else
-    return get_ivI()->findSize() == size;
+    return get_iv()->findSize() == size;
 }
  
 inline
-OZ_Boolean OZ_FiniteDomain::contains(int i) const
+OZ_Boolean OZ_FiniteDomainImpl::contains(int i) const
 {
   if (size == 0) {
     return OZ_FALSE;
   } else {
-    descr_type type = getTypeI();
+    descr_type type = getType();
     if (type == fd_descr)
       return (min_elem <= i && i <= max_elem);
     else if (type == bv_descr)
-      return get_bvI()->contains(i);
+      return get_bv()->contains(i);
     else
-      return get_ivI()->contains(i);
+      return get_iv()->contains(i);
   }
 }
 
 // public methods -------------------------------------------------------------
 
 inline
-int OZ_FiniteDomain::setEmptyI(void) {
-  setType(fd_descr, NULL);
-  return size = 0;
-}
-
-int OZ_FiniteDomain::setEmpty(void) {
-  return setEmptyI();
+void OZ_FiniteDomainImpl::FiniteDomainInit(void * d) { 
+  setType(fd_descr, d); 
 }
 
 inline
-int OZ_FiniteDomain::setFullI(void) {
-  setType(fd_descr, NULL);
-  min_elem = fd_inf;
-  max_elem = fd_sup;
-  return size = fd_full_size;
+OZ_FiniteDomainImpl::OZ_FiniteDomainImpl(void) { 
+  FiniteDomainInit((void *) 0); 
 }
 
-int OZ_FiniteDomain::setFull(void) {
-  return setFullI();
+
+inline
+OZ_Boolean OZ_FiniteDomainImpl::operator == (const int v) const
+{
+  return (size == 1) && (min_elem == v);
 }
 
-OZ_FiniteDomain::OZ_FiniteDomain(FDState state) {
-  switch (state) {
-  case fd_empty:
-    setEmptyI();
-    break;
-  case fd_full:
-    setFullI();
-    break;
-  default:
-      error("Unexpected FDState.");
-      break;
+inline
+OZ_Boolean OZ_FiniteDomainImpl::operator != (const int v) const
+{
+  return (size != 1) || (min_elem != v);
+}
+
+inline
+OZ_Boolean OZ_FiniteDomainImpl::operator == (const OZ_FDState state) const
+{
+  if (state == fd_singleton) {
+    return size == 1;
+  } else if (state == fd_bool) {
+    return size == 2 && min_elem == 0 && max_elem == 1;
+  } else {
+    Assert(state == fd_empty);
+    return size == 0;
   }
 }
 
-OZ_FiniteDomain::OZ_FiniteDomain(const OZ_FiniteDomain &fd) {
+inline
+OZ_Boolean OZ_FiniteDomainImpl::operator != (const OZ_FDState state) const
+{
+  if (state == fd_singleton) {
+    return size != 1;
+  } else if (state == fd_bool) {
+    return size != 2 || min_elem != 0 || max_elem != 1;
+  } else {
+    Assert(state == fd_empty); 
+    return size > 0;
+  }
+}
+
+inline
+const OZ_FiniteDomainImpl &OZ_FiniteDomainImpl::operator = (const OZ_FiniteDomainImpl &fd)
+{
+  if (this != &fd) {
+    min_elem = fd.min_elem;
+    max_elem = fd.max_elem;
+    size = fd.size;
+    
+    descr_type type = fd.getType();
+    if (type == fd_descr) {
+      setType(fd_descr);
+    } else if (type == bv_descr) {
+      FDBitVector * item = new FDBitVector;
+      *item = *fd.get_bv();
+      setType(item);
+    } else {
+      int max_index = fd.get_iv()->high;
+      FDIntervals * item = (max_index > fd_iv_max_high)
+	? new (max_index) FDIntervals(max_index)
+	: new FDIntervals(max_index);
+      *item = *fd.get_iv();
+      setType(item);
+    }
+  }
+  return *this;
+}
+
+inline
+OZ_FiniteDomainImpl::OZ_FiniteDomainImpl(const OZ_FiniteDomainImpl &fd) {
   *this = fd;
 }
 
-void OZ_FiniteDomain::FiniteDomainInit(void * d) {
-  setType(fd_descr, d);
-}
-
-
-OZ_FiniteDomain::OZ_FiniteDomain(void * d) {
-  FiniteDomainInit(d);
-}
-
-OZ_FiniteDomain::OZ_FiniteDomain(OZ_Term t) {
-  FiniteDomainInit(NULL);
-  init(t);
-}
-
-void OZ_FiniteDomain::dispose(void) {
-  switch (getTypeI()) {
-  case iv_descr: get_ivI()->dispose(); return;
-  case bv_descr: get_bvI()->dispose(); return;
+inline
+void OZ_FiniteDomainImpl::dispose(void) {
+  switch (getType()) {
+  case iv_descr: get_iv()->dispose(); return;
+  case bv_descr: get_bv()->dispose(); return;
   default: return;
   }
 }
 
-unsigned OZ_FiniteDomain::getDescrSize() {
-  switch (getTypeI()) {
+unsigned OZ_FiniteDomainImpl::getDescrSize() {
+  switch (getType()) {
   case iv_descr: 
-    return sizeof(FDIntervals) + 2 * (get_ivI()->getHigh() - fd_iv_max_high) * sizeof(int);
+    return sizeof(FDIntervals) + 2 * (get_iv()->getHigh() - fd_iv_max_high) * sizeof(int);
     case bv_descr: return sizeof(FDBitVector);
   default: return 0;
   }
 }
 
-OZ_Boolean OZ_FiniteDomain::isIn(int i) const
-{
-  return contains(i);
-}
-
-int OZ_FiniteDomain::setSingleton(int n)
-{
-  if (n < fd_inf || fd_sup < n)
-    return setEmptyI();
-  setType(fd_descr, NULL);
-  min_elem = max_elem = n;
-  return size = 1;
-}
-
-int OZ_FiniteDomain::setBool(void)
+inline
+int OZ_FiniteDomainImpl::initBool(void)
 {
   setType(fd_descr, NULL);
   min_elem = 0;
@@ -1120,12 +1097,12 @@ int OZ_FiniteDomain::setBool(void)
 }
 
 inline
-int OZ_FiniteDomain::initI(int l, int r)
+int OZ_FiniteDomainImpl::init(int l, int r)
 {
   l = max(l, fd_inf);
   r = min(r, fd_sup);
 
-  setType(fd_descr);
+  setType(fd_descr, NULL);
 
   if (l > r) return size = 0;
   
@@ -1134,99 +1111,33 @@ int OZ_FiniteDomain::initI(int l, int r)
   return size = findSize();
 }  
 
-int OZ_FiniteDomain::init(int l, int r)
-{
-  return initI(l, r);
-}
-
-
 inline
-int OZ_FiniteDomain::initFullI(void)
+int OZ_FiniteDomainImpl::initFull(void)
 {
-  setType(fd_descr);
+  setType(fd_descr, NULL);
   min_elem = fd_inf;
   max_elem = fd_sup;
   return size = fd_full_size;
 }  
 
-int OZ_FiniteDomain::initFull(void)
-{
-  return initFullI();
-}
-
 inline
-int OZ_FiniteDomain::initEmptyI(void)
+int OZ_FiniteDomainImpl::initEmpty(void)
 {
-  setType(fd_descr);
+  setType(fd_descr, NULL);
   return size = 0;
 }
 
-int OZ_FiniteDomain::initEmpty(void)
-{
-  return initEmptyI();
-}
-
 inline
-int OZ_FiniteDomain::initSingleton(int n)
+int OZ_FiniteDomainImpl::initSingleton(int n)
 {
   if (n < fd_inf || fd_sup < n)
-    return initEmptyI();
-  setType(fd_descr);
+    return initEmpty();
+  setType(fd_descr, NULL);
   min_elem = max_elem = n;
   return size = 1;
-}     
-
-int OZ_FiniteDomain::singl(void) const 
-{
-  AssertFD(size == 1);
-  return min_elem;
 }
 
-int OZ_FiniteDomain::constrainBool(void)
-{
-  return *this <= 1;
-}
-
-int OZ_FiniteDomain::intersectWithBool(void)
-{
-  if (contains(0))
-    if (contains(1)) 
-      return -1; // boolean
-    else
-      return 0; // 0
-  else
-    if (contains(1)) 
-      return 1; // 1
-    else
-      return -2; // empty
-}
-
-const OZ_FiniteDomain &OZ_FiniteDomain::operator = (const OZ_FiniteDomain &fd)
-{
-  if (this != &fd) {
-    min_elem = fd.min_elem;
-    max_elem = fd.max_elem;
-    size = fd.size;
-    
-    descr_type type = fd.getTypeI();
-    if (type == fd_descr) {
-      setType(fd_descr);
-    } else if (type == bv_descr) {
-      FDBitVector * item = new FDBitVector /*provideBitVector()*/;
-      *item = *fd.get_bvI();
-      setType(item);
-    } else {
-      int max_index = fd.get_ivI()->high;
-      FDIntervals * item = (max_index > fd_iv_max_high)
-	? new (max_index) FDIntervals(max_index)
-	: new FDIntervals(max_index);
-      /*provideIntervals(fd.get_ivI()->high);*/
-      *item = *fd.get_ivI();
-      setType(item);
-    }
-  }
-  return *this;
-}
+extern int static_int_a[MAXFDBIARGS], static_int_b[MAXFDBIARGS];
 
 /* gcc-2.6.3 on solaris has problems ...*/
 int intcompare(const void * ii, const void  * jj) {
@@ -1236,7 +1147,7 @@ int intcompare(const void * ii, const void  * jj) {
 }
 
 inline
-int OZ_FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
+int OZ_FiniteDomainImpl::simplify(int list_len, int * list_left, int * list_right)
 {
   // producing list of sorted pointers in terms of this list 
   int i;
@@ -1273,12 +1184,13 @@ int OZ_FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
 }
 
 // expects valid intervals, ie fd_inf <= left <= right <= fd_sup
-int OZ_FiniteDomain::initList(int list_len,
-			   int * list_left, int * list_right,
-			   int list_min, int list_max)
+inline
+int OZ_FiniteDomainImpl::initList(int list_len,
+				  int * list_left, int * list_right,
+				  int list_min, int list_max)
 {
   if (list_len == 0) {
-    return initEmptyI();
+    return initEmpty();
   } else if (list_len == 1) {
     min_elem = list_min;
     max_elem = list_max;
@@ -1305,9 +1217,7 @@ int OZ_FiniteDomain::initList(int list_len,
   return size;
 }
 
-extern int static_int_a[MAXFDBIARGS], static_int_b[MAXFDBIARGS];
-
-int OZ_FiniteDomain::init(OZ_Term d)
+int OZ_FiniteDomainImpl::init(OZ_Term d)
 {
   DEREF(d, d_ptr, d_tag);
   
@@ -1320,12 +1230,12 @@ int OZ_FiniteDomain::init(OZ_Term d)
   } else if (isSTuple(d)) {
     SRecord &t = *tagged2SRecord(d);
     OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
-    return initI(AtomSup == t0 ? fd_sup : OZ_intToC(t0),
+    return init(AtomSup == t0 ? fd_sup : OZ_intToC(t0),
 		AtomSup == t1 ? fd_sup : OZ_intToC(t1));
   } else if (AtomBool == d) {
-    return initI(0, 1);
+    return init(0, 1);
   } else if (isNil(d)) {
-    return initEmptyI();
+    return initEmpty();
   } else if (isLTuple(d_tag)) {
     int * left_arr = static_int_a, * right_arr = static_int_b;
     int min_arr = fd_sup, max_arr = 0;
@@ -1381,7 +1291,7 @@ int OZ_FiniteDomain::init(OZ_Term d)
       d = deref(list.getTail());
     } // for
     if (len_arr >= MAXFDBIARGS) {
-      warning("OZ_FiniteDomain::init: "
+      warning("OZ_FiniteDomainImpl::init: "
 	      "Probably elements of description are ignored");
     }
     return initList(len_arr, left_arr, right_arr, min_arr, max_arr);
@@ -1391,9 +1301,32 @@ int OZ_FiniteDomain::init(OZ_Term d)
   return -1;
 }
 
-int OZ_FiniteDomain::nextBiggerElem(int v) const
+inline
+int OZ_FiniteDomainImpl::singl(void) const 
 {
-  descr_type type = getTypeI();
+  AssertFD(size == 1);
+  return min_elem;
+}
+
+// used for unification of fdvar with boolvar
+int OZ_FiniteDomainImpl::intersectWithBool(void)
+{
+  if (contains(0))
+    if (contains(1)) 
+      return -1; // boolean
+    else
+      return 0; // 0
+  else
+    if (contains(1)) 
+      return 1; // 1
+    else
+      return -2; // empty
+}
+
+inline
+int OZ_FiniteDomainImpl::nextBiggerElem(int v) const
+{
+  descr_type type = getType();
   if (type == fd_descr) {
     if (v == max_elem) {
       error("no bigger element in domain");
@@ -1401,13 +1334,14 @@ int OZ_FiniteDomain::nextBiggerElem(int v) const
     }
     return v + 1;
   } else if (type == bv_descr) {
-    return get_bvI()->nextBiggerElem(v, max_elem);
+    return get_bv()->nextBiggerElem(v, max_elem);
   } else {
-    return get_ivI()->nextBiggerElem(v, max_elem);
+    return get_iv()->nextBiggerElem(v, max_elem);
   }
 } 
 
-OZ_Boolean OZ_FiniteDomain::next(int i, int &n) const
+inline
+OZ_Boolean OZ_FiniteDomainImpl::next(int i, int &n) const
 {
   if (i <= min_elem) {
     n = min_elem;
@@ -1417,32 +1351,34 @@ OZ_Boolean OZ_FiniteDomain::next(int i, int &n) const
     return OZ_FALSE;
   }
   
-  descr_type type = getTypeI();
+  descr_type type = getType();
   if (type == fd_descr) {
     n = i;
     return OZ_FALSE;
   } else if (type == bv_descr) {
-    return get_bvI()->next(i, n);
+    return get_bv()->next(i, n);
   } else {
-    return get_ivI()->next(i, n);
+    return get_iv()->next(i, n);
   }
 }
 
-OZ_Term OZ_FiniteDomain::getAsList(void) const
+inline
+OZ_Term OZ_FiniteDomainImpl::getAsList(void) const
 {
   if (size == 0) return AtomNil;
   
-  descr_type type = getTypeI();
+  descr_type type = getType();
   if (type == fd_descr) {
     return makeTaggedLTuple(new LTuple(mkTuple(min_elem, max_elem), AtomNil));
   } else if (type == bv_descr) {
-    return get_bvI()->getAsList();
+    return get_bv()->getAsList();
   } else {
-    return get_ivI()->getAsList();
+    return get_iv()->getAsList();
   }
 }
   
-int OZ_FiniteDomain::operator &= (const int i)
+inline
+int OZ_FiniteDomainImpl::operator &= (const int i)
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this << " &= " << i << " = ");
   if (contains(i)) {
@@ -1451,34 +1387,35 @@ int OZ_FiniteDomain::operator &= (const int i)
     DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
     return 1;
   } else {
-    initEmptyI();
+    initEmpty();
     AssertFD(isConsistent());
     DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
     return 0;
   }
 }
 
-int OZ_FiniteDomain::operator <= (const int leq)
+inline
+int OZ_FiniteDomainImpl::operator <= (const int leq)
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this  << " <= " << leq << " = ");
 
   if (leq < min_elem) {
     AssertFD(isConsistent());
     DEBUG_FD_IR(OZ_FALSE, cout << "{ - empty -}" << endl);
-    return initEmptyI();
+    return initEmpty();
   } else if (leq < max_elem) {
-    descr_type type = getTypeI();
+    descr_type type = getType();
     if (type == fd_descr) {
       max_elem = min(max_elem, leq);
       size = findSize();
     } else if (type == bv_descr) {
       if (leq <= fd_bv_max_elem) {
-	FDBitVector * bv = get_bvI();
+	FDBitVector * bv = get_bv();
 	size = (*bv <= leq);
 	if (size > 0) max_elem = bv->findMaxElem();
       }
     } else if (leq <= fd_sup) {
-      FDIntervals * iv = get_ivI();
+      FDIntervals * iv = get_iv();
       size = (*iv <= leq);
       if (size > 0) max_elem = iv->findMaxElem();
     }
@@ -1489,26 +1426,27 @@ int OZ_FiniteDomain::operator <= (const int leq)
   return size;
 }
 
-int OZ_FiniteDomain::operator >= (const int geq)
+inline
+int OZ_FiniteDomainImpl::operator >= (const int geq)
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this  << " >= " << geq << " = ");
   
   if (geq > max_elem) {
     AssertFD(isConsistent());
     DEBUG_FD_IR(OZ_FALSE, cout << "{ - empty -}" << endl);
-    return initEmptyI();
+    return initEmpty();
   } else if (geq > min_elem) {
-    descr_type type = getTypeI();
+    descr_type type = getType();
     if (type == fd_descr) {
       min_elem = max(min_elem, geq);
       size = findSize();
     } else if (type == bv_descr) {
-      FDBitVector * bv = get_bvI();
-      size = (geq > fd_bv_max_elem) ? initEmptyI() : (*bv >= geq);
+      FDBitVector * bv = get_bv();
+      size = (geq > fd_bv_max_elem) ? initEmpty() : (*bv >= geq);
       if (size > 0) min_elem = bv->findMinElem();
     } else {
-      FDIntervals * iv = get_ivI();
-      size = (geq > fd_sup) ? initEmptyI() : (*iv >= geq);
+      FDIntervals * iv = get_iv();
+      size = (geq > fd_sup) ? initEmpty() : (*iv >= geq);
       if (size > 0) min_elem = iv->findMinElem();
     }
   }
@@ -1518,11 +1456,12 @@ int OZ_FiniteDomain::operator >= (const int geq)
   return size;
 }
 
-int OZ_FiniteDomain::operator -= (const int take_out)
+inline
+int OZ_FiniteDomainImpl::operator -= (const int take_out)
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this << " -= " << take_out << " = ");
   if (contains(take_out)) {
-    descr_type type = getTypeI();
+    descr_type type = getType();
     if (type == fd_descr) {
       if (take_out == min_elem) {
 	min_elem += 1;
@@ -1543,12 +1482,12 @@ int OZ_FiniteDomain::operator -= (const int take_out)
 	}
       }
     } else if (type == bv_descr) {
-      FDBitVector * bv = get_bvI();
+      FDBitVector * bv = get_bv();
       bv->resetBit(take_out);
       min_elem = bv->findMinElem();
       max_elem = bv->findMaxElem();
     } else {
-      FDIntervals * iv = (*get_ivI() -= take_out);
+      FDIntervals * iv = (*get_iv() -= take_out);
       min_elem = iv->findMinElem();
       max_elem = iv->findMaxElem();
       setType(iv);
@@ -1561,11 +1500,12 @@ int OZ_FiniteDomain::operator -= (const int take_out)
   return size;
 }
 
-int OZ_FiniteDomain::operator -= (const OZ_FiniteDomain &y)
+inline
+int OZ_FiniteDomainImpl::operator -= (const OZ_FiniteDomainImpl &y)
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this << " -= " << y << " = ");
   if (y != fd_empty) {
-    descr_type x_type = getTypeI(), y_type = y.getTypeI();
+    descr_type x_type = getType(), y_type = y.getType();
     if (x_type == fd_descr) {
       if (y_type == fd_descr) {
 	if (y.max_elem < min_elem || max_elem < y.min_elem) {
@@ -1596,26 +1536,26 @@ int OZ_FiniteDomain::operator -= (const OZ_FiniteDomain &y)
 	}
       } else if (y_type == bv_descr) {
 	FDBitVector * bv = asBitVector();
-	size = (*bv -= *y.get_bvI());
+	size = (*bv -= *y.get_bv());
 	min_elem = bv->findMinElem();
 	max_elem = bv->findMaxElem();
 	setType(bv);
       } else { // y_type == iv_descr
-	FDIntervals * iv = newIntervals(1 + y.get_ivI()->high);
-	size = asIntervals()->subtract_iv(*iv, *y.get_ivI());
+	FDIntervals * iv = newIntervals(1 + y.get_iv()->high);
+	size = asIntervals()->subtract_iv(*iv, *y.get_iv());
 	min_elem = iv->findMinElem();
 	max_elem = iv->findMaxElem();
 	setType(iv);
       }
     } else if (x_type == bv_descr) {
-      FDBitVector * bv = get_bvI();
+      FDBitVector * bv = get_bv();
       size = (*bv -= *y.asBitVector());
       min_elem = bv->findMinElem();
       max_elem = bv->findMaxElem();
     } else { // x_type == iv_descr
       FDIntervals * y_iv = y.asIntervals();
-      FDIntervals * iv = newIntervals(get_ivI()->high + y_iv->high);
-      size = get_ivI()->subtract_iv(*iv, *y_iv);
+      FDIntervals * iv = newIntervals(get_iv()->high + y_iv->high);
+      size = get_iv()->subtract_iv(*iv, *y_iv);
       min_elem = iv->findMinElem();
       max_elem = iv->findMaxElem();
       setType(iv);
@@ -1628,7 +1568,8 @@ int OZ_FiniteDomain::operator -= (const OZ_FiniteDomain &y)
   return size;
 }
 
-int OZ_FiniteDomain::operator += (const int put_in)
+inline
+int OZ_FiniteDomainImpl::operator += (const int put_in)
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this << " += " << put_in << " = ");
   
@@ -1638,7 +1579,7 @@ int OZ_FiniteDomain::operator += (const int put_in)
     min_elem = max_elem = put_in;
     size = 1;
   } else if (!contains(put_in)) {
-    descr_type type = getTypeI();
+    descr_type type = getType();
     if (type == fd_descr) {
       if (put_in == min_elem - 1) {
 	min_elem -= 1;
@@ -1663,12 +1604,12 @@ int OZ_FiniteDomain::operator += (const int put_in)
       }
     } else if (type == bv_descr) {
       if (put_in <= fd_bv_max_elem) {
-	FDBitVector * bv = get_bvI();
+	FDBitVector * bv = get_bv();
 	bv->setBit(put_in);
 	min_elem = bv->findMinElem();
 	max_elem = bv->findMaxElem();
       } else {
-	int c_len = get_bvI()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+	int c_len = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
 	FDIntervals * iv;
 	if (put_in == max_elem + 1) {
 	  iv = provideIntervals(c_len);
@@ -1683,7 +1624,7 @@ int OZ_FiniteDomain::operator += (const int put_in)
 	setType(iv);
       }
     } else {
-      FDIntervals * iv = (*get_ivI() += put_in);
+      FDIntervals * iv = (*get_iv() += put_in);
       min_elem = iv->findMinElem();
       max_elem = iv->findMaxElem();
       setType(iv);
@@ -1697,18 +1638,19 @@ int OZ_FiniteDomain::operator += (const int put_in)
   return size;
 }
 
-OZ_FiniteDomain OZ_FiniteDomain::operator ~ (void) const
+inline
+OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this << " = ~ ");
   
-  OZ_FiniteDomain y; y.setEmptyI();
+  OZ_FiniteDomainImpl y; y.initEmpty();
 
   if (*this == fd_empty) {
-    y.initFullI();
+    y.initFull();
   } else if (size == fd_full_size) {
-    y.initEmptyI();
+    y.initEmpty();
   } else {
-    descr_type type = getTypeI();
+    descr_type type = getType();
     if (type == fd_descr) {
       if (min_elem == 0) {
 	y.min_elem = max_elem + 1;
@@ -1729,11 +1671,11 @@ OZ_FiniteDomain OZ_FiniteDomain::operator ~ (void) const
     } else {      // reserve one interval too many !!!
       FDIntervals * iv;
       if (type == bv_descr) {
-	int s = get_bvI()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+	int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
 	int t = s + (0 < min_elem);
 	iv = newIntervals(t)->complement(s, fd_bv_left_conv, fd_bv_right_conv);
       } else {
-	FDIntervals * x_iv = get_ivI();
+	FDIntervals * x_iv = get_iv();
 	int s = x_iv->high - 1 + (fd_inf < min_elem) + (max_elem < fd_sup);
 	iv = newIntervals(s)->complement(x_iv);
       }
@@ -1751,11 +1693,12 @@ OZ_FiniteDomain OZ_FiniteDomain::operator ~ (void) const
   return y;
 }
 
-OZ_FiniteDomain OZ_FiniteDomain::operator | (const OZ_FiniteDomain &y) const
+inline
+OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator | (const OZ_FiniteDomainImpl &y) const
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this << " | " << y << " =  ");
   
-  OZ_FiniteDomain z; z.setEmptyI();
+  OZ_FiniteDomainImpl z; z.initEmpty();
 
   if (*this == fd_empty) {
     z = y;
@@ -1786,16 +1729,17 @@ OZ_FiniteDomain OZ_FiniteDomain::operator | (const OZ_FiniteDomain &y) const
   return z;
 }
 
-int OZ_FiniteDomain::operator &= (const OZ_FiniteDomain &y)
+inline
+int OZ_FiniteDomainImpl::operator &= (const OZ_FiniteDomainImpl &y)
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this << " &= " << y << " = ");
 
   if (*this == fd_empty || y == fd_empty) {
-    initEmptyI();
+    initEmpty();
     AssertFD(isConsistent());
     DEBUG_FD_IR(OZ_FALSE, cout << "{ - empty -}" << endl);
     return 0;
-  } else if (getTypeI() == fd_descr && y.getTypeI() == fd_descr) {
+  } else if (getType() == fd_descr && y.getType() == fd_descr) {
     if (max_elem < y.min_elem || y.max_elem < min_elem) {
       size = 0;
     } else {
@@ -1830,17 +1774,18 @@ int OZ_FiniteDomain::operator &= (const OZ_FiniteDomain &y)
   return size;
 }
 
-OZ_FiniteDomain OZ_FiniteDomain::operator & (const OZ_FiniteDomain &y) const
+inline
+OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator & (const OZ_FiniteDomainImpl &y) const
 {
   DEBUG_FD_IR(OZ_FALSE, cout << *this << " & " << y << " = ");
   
-  OZ_FiniteDomain z; z.setEmptyI();
+  OZ_FiniteDomainImpl z; z.initEmpty();
 
   if (*this == fd_empty || y == fd_empty) {
     AssertFD(z.isConsistent());
     DEBUG_FD_IR(OZ_FALSE, cout << "{ - empty -}" << endl);
     return z;
-  } else if (getTypeI() == fd_descr && y.getTypeI() == fd_descr) {
+  } else if (getType() == fd_descr && y.getType() == fd_descr) {
     if (max_elem < y.min_elem || y.max_elem < min_elem) {
       z.size = 0;
     } else {
@@ -1876,16 +1821,222 @@ OZ_FiniteDomain OZ_FiniteDomain::operator & (const OZ_FiniteDomain &y) const
   return z;
 }
 
-void OZ_FiniteDomain::copyExtension(void) 
+inline
+int OZ_FiniteDomainImpl::constrainBool(void)
 {
-  descr_type type = getTypeI();
+  return *this <= 1;
+}
+
+inline
+void OZ_FiniteDomainImpl::copyExtensionInline(void) 
+{
+  descr_type type = getType();
   if (type == fd_descr) {
     setType(fd_descr, NULL);
   } else if (type == bv_descr) {
-    setType(get_bvI()->copy());
+    setType(get_bv()->copy());
   } else {
-    setType(get_ivI()->copy());
+    setType(get_iv()->copy());
   }  
 }
 
+void OZ_FiniteDomainImpl::copyExtension(void) 
+{
+  copyExtensionInline();
+}
+
+//-----------------------------------------------------------------------------
+// 
+//
+
+#define CASTPTR (OZ_FiniteDomainImpl *)
+#define CASTREF * (OZ_FiniteDomainImpl *) &
+#define CASTTHIS (CASTPTR this)
+
+void OZ_FiniteDomain::FiniteDomainInit(void * d)
+{
+  CASTTHIS->FiniteDomainInit(d);
+}
+
+OZ_FiniteDomain::OZ_FiniteDomain(void * d) 
+{
+  CASTTHIS->FiniteDomainInit(d);
+}
+
+OZ_FiniteDomain::OZ_FiniteDomain(OZ_Term t)
+{
+  CASTTHIS->FiniteDomainInit(NULL);
+  CASTTHIS->init(t);
+}
+
+OZ_FiniteDomain::OZ_FiniteDomain(OZ_FDState state)
+{
+  switch (state) {
+  case fd_empty:
+    CASTTHIS->initEmpty();
+    break;
+  case fd_full:
+    CASTTHIS->initFull();
+    break;
+  default:
+    error("Unexpected OZ_FDState.");
+    break;
+  }
+}
+
+OZ_FiniteDomain::OZ_FiniteDomain(const OZ_FiniteDomain &fd)
+{
+  CASTTHIS->operator =(CASTREF fd);
+}
+
+void OZ_FiniteDomain::dispose(void)
+{
+  CASTTHIS->dispose();
+}
+
+const OZ_FiniteDomain &OZ_FiniteDomain::operator = (const OZ_FiniteDomain &fd)
+{
+  return CASTREF CASTTHIS->operator = (CASTREF fd);
+}
+
+int OZ_FiniteDomain::initFull(void)
+{
+  return CASTTHIS->initFull();
+}
+
+int OZ_FiniteDomain::initEmpty(void)
+{
+  return CASTTHIS->initEmpty();
+}
+
+int OZ_FiniteDomain::init(OZ_Term t)
+{
+  return CASTTHIS->init(t);
+}
+
+int OZ_FiniteDomain::initSingleton(int s)
+{
+  return CASTTHIS->initSingleton(s);
+}
+
+int OZ_FiniteDomain::init(int l, int u)
+{
+  return CASTTHIS->init(l, u);
+}
+
+int OZ_FiniteDomain::initBool(void)
+{
+  return CASTTHIS->initBool();
+}
+
+int OZ_FiniteDomain::singl(void) const
+{
+  return CASTTHIS->singl();
+}
+   
+OZ_Boolean OZ_FiniteDomain::isIn(int i) const
+{
+  return CASTTHIS->contains(i);
+}
+
+OZ_Term OZ_FiniteDomain::getAsList(void) const
+{
+  return CASTTHIS->getAsList();
+}
+
+OZ_Boolean OZ_FiniteDomain::next(int i, int &n) const
+{
+  return CASTTHIS->next(i, n);
+}
+
+int OZ_FiniteDomain::nextBiggerElem(int v) const
+{
+  return CASTTHIS->nextBiggerElem(v);
+}
+
+int OZ_FiniteDomain::constrainBool(void)
+{
+  return CASTTHIS->constrainBool();
+}
+
+OZ_FiniteDomain OZ_FiniteDomain::operator & (const OZ_FiniteDomain & y) const
+{
+  return CASTTHIS->operator & (CASTREF y);
+}
+
+OZ_FiniteDomain OZ_FiniteDomain::operator | (const OZ_FiniteDomain & y) const
+{
+  return CASTTHIS->operator | (CASTREF y);
+}
+
+OZ_FiniteDomain OZ_FiniteDomain::operator ~ (void) const
+{
+  return CASTTHIS->operator ~ ();
+}
+
+int OZ_FiniteDomain::operator &= (const OZ_FiniteDomain &y)
+{
+  return CASTTHIS->operator &= (CASTREF y);
+}
+
+int OZ_FiniteDomain::operator &= (const int y)
+{
+  return CASTTHIS->operator &= (y);
+}
+
+int OZ_FiniteDomain::operator -= (const OZ_FiniteDomain &y)
+{
+  return CASTTHIS->operator -= (CASTREF y);
+}
+
+int OZ_FiniteDomain::operator -= (const int y)
+{
+  return CASTTHIS->operator -= (y);
+}
+
+int OZ_FiniteDomain::operator += (const int y)
+{
+  return CASTTHIS->operator += (y);
+}
+
+int OZ_FiniteDomain::operator <= (const int y)
+{
+  return CASTTHIS->operator <= (y);
+}
+
+int OZ_FiniteDomain::operator >= (const int y)
+{
+  return CASTTHIS->operator >= (y);
+}
+
+OZ_Boolean OZ_FiniteDomain::operator == (const OZ_FDState s) const
+{
+  return CASTTHIS->operator == (s);
+}
+
+OZ_Boolean OZ_FiniteDomain::operator != (const OZ_FDState s) const
+{
+  return CASTTHIS->operator != (s);
+}
+
+OZ_Boolean OZ_FiniteDomain::operator == (const int i) const
+{
+  return CASTTHIS->operator == (i);
+}
+
+OZ_Boolean OZ_FiniteDomain::operator != (const int i) const
+{
+  return CASTTHIS->operator != (i);
+}
+
+ostream &OZ_FiniteDomain::print(ostream &s) const
+{
+  CASTTHIS->print(s, 0);
+  return s;
+}
+
+void OZ_FiniteDomain::copyExtension(void)
+{
+  CASTTHIS->copyExtensionInline();
+}
 
