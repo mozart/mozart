@@ -148,7 +148,7 @@ void BitArray::print(ostream &ofile, int offset) const
   
   int i, r, l = 0;
   for (i = fdMinBA, r = 1; i < fdMaxBA + 2; i++)
-    if (contains(i) == OK){
+    if (contains(i)){
       if (r) ofile << ' '<< i;
       l = r ? i : l;
       r = 0;
@@ -192,7 +192,7 @@ FDState FiniteDomain::rightDom;
 
 void FiniteDomain::print(ostream &ofile, int offset) const
 {
-  if (isRange() == OK) {
+  if (isRange()) {
     if (*this == empty)
       ofile << indent(offset) <<"{ - empty - }";
     else
@@ -216,7 +216,7 @@ void  FiniteDomain::printLong(ostream &ofile, int offset) const
   ofile << "lower: " << lower << "  upper: " << upper
 	<< "  size: " << getSize() << "  bitArray: " << bitArray;
   
-  if (isRange() == OK) {
+  if (isRange()) {
     ofile << endl;
     print(ofile,  offset);
     ofile << endl;

@@ -26,10 +26,11 @@
 //-----------------------------------------------------------------------------
 
 class GenFDVariable: public GenCVariable {
-friend OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef * &varPtr,
-				 FiniteDomain &domain);
-friend class GenCVariable;
 
+friend class GenCVariable;
+friend void addSuspFDVar(TaggedRef, SuspList *, FDState);
+friend void addSuspFDVar(TaggedRef, SuspList *);
+  
 private:
   FiniteDomain finiteDomain;
   SuspList * fdSuspList[any];
@@ -60,31 +61,10 @@ public:
    
   ProgramCounter index(ProgramCounter elseLabel, IHashTable * table);
 
-  void setDom(FiniteDomain &fd){finiteDomain = fd;}
-  FiniteDomain &getDom(void){return finiteDomain;}
+  void setDom(FiniteDomain &fd) {finiteDomain = fd;}
+  FiniteDomain &getDom(void) {return finiteDomain;}
 
   void relinkSuspList(GenFDVariable * leftVar);
-
-  void addVirtualConstr(SuspList * elem) {
-    ::addVirtualConstr(this, elem);
-  }
-      
-  void addVirtualConstr(SuspList * elem, FDState state) {
-    DebugCheck(state > any, error("Unexpected state.")); 
-    if (state == any)
-      addVirtualConstr(elem);
-    else
-      fdSuspList[state] = ::addVirtualConstr(fdSuspList[state], elem, home);
-  }
-
-  void addVirtualConstrLocal(SuspList * elem, FDState state) {
-    DebugCheck(state > any, error("Unexpected state.")); 
-    if (isLocalVariable() == OK || state == any || state == eqvar)
-      addVirtualConstr(elem, state);
-    else
-      fdSuspList[size] = ::addVirtualConstr(fdSuspList[size], elem, home);
-      
-  }
 
   void propagate(TaggedRef var, FDState state, TaggedRef term);  
   void propagate(TaggedRef var, FDState state, TaggedRef * tPtr);
@@ -92,20 +72,23 @@ public:
 };
 
 
-//-----------------------------------------------------------------------------
-//            Some additional stuff for tagged references
-//-----------------------------------------------------------------------------
-
 Bool isGenFDVar(TaggedRef term);
 GenFDVariable * tagged2GenFDVar(TaggedRef term);
 
-//-----------------------------------------------------------------------------
-//                   Functions to constrain variables
-//-----------------------------------------------------------------------------
 
-OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef * &varPtr,
-			  FiniteDomain &domain);
-     
+void addSuspFDVar(TaggedRef v, SuspList * el, FDState l)
+{
+  DebugCheck(l > eqvar, error("list index out of range."));
+  
+  GenFDVariable * fv = tagged2GenFDVar(v);
+  fv->fdSuspList[l] = addSuspToList(fv->fdSuspList[l], el, fv->home);
+}
+
+void addSuspFDVar(TaggedRef v, SuspList * el)
+{
+  GenFDVariable * fv = tagged2GenFDVar(v);
+  fv->suspList = addSuspToList(fv->suspList, el, fv->home);
+}
 
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
