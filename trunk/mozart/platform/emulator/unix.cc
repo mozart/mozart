@@ -98,10 +98,10 @@ extern "C" char *inet_ntoa(struct in_addr in);
 // Argument handling
 //
 
-#define OZ_BI_iodefine(Name,InArity,OutArity)				\
-OZ_BI_define(Name,InArity,OutArity)					\
-  if (!OZ_onToplevel()) {						\
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));	\
+#define OZ_BI_iodefine(Name,InArity,OutArity)			\
+OZ_BI_define(Name,InArity,OutArity)				\
+  if (!oz_onToplevel()) {					\
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomIO);	\
   }
 #define OZ_BI_ioend OZ_BI_end
 
@@ -121,19 +121,6 @@ OZ_BI_define(Name,InArity,OutArity)					\
    }									\
    *(VAR+len) = '\0';							\
  }
-
-#define DeclareAtomListArg(ARG,VAR)					\
-OZ_Term VAR = OZ_getCArg(ARG);						\
-{ OZ_Term arg = VAR;							\
-  while (OZ_isCons(arg)) {						\
-    TaggedRef a = OZ_head(arg);						\
-    if (OZ_isVariable(a)) OZ_suspendOn(a);				\
-    if (!OZ_isAtom(a))    return OZ_typeError(ARG,"list(Atom)");	\
-    arg = OZ_tail(arg);							\
-  }									\
-  if (OZ_isVariable(arg)) OZ_suspendOn(arg);				\
-  if (!OZ_isNil(arg))     return OZ_typeError(ARG,"list(Atom)");	\
-}
 
 #define DeclareAtomListIN(ARG,VAR)					\
 OZ_Term VAR = OZ_in(ARG);						\

@@ -38,7 +38,8 @@ OZ_C_proc_begin(fsp_intersection, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectFSetVarBounds, susp_count);
   
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new FSetIntersectionPropagator(OZ_args[0],
 						  OZ_args[1],
@@ -58,7 +59,8 @@ OZ_C_proc_begin(fsp_union, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectFSetVarBounds, susp_count);
   
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new FSetUnionPropagator(OZ_args[0],
 					   OZ_args[1],
@@ -78,7 +80,8 @@ OZ_C_proc_begin(fsp_subsume, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarBounds, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
   
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new FSetSubsumePropagator(OZ_args[0],
 					     OZ_args[1]));
@@ -97,7 +100,8 @@ OZ_C_proc_begin(fsp_disjoint, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarGlb, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarGlb, susp_count);
   
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new FSetDisjointPropagator(OZ_args[0],
 					      OZ_args[1]));
@@ -116,7 +120,8 @@ OZ_C_proc_begin(fsp_distinct, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarBounds, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
   
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new FSetDistinctPropagator(OZ_args[0],
 					      OZ_args[1]));
@@ -135,7 +140,7 @@ OZ_C_proc_begin(fsp_diff, 3)
   OZ_EXPECT_SUSPEND(pe, 2, expectFSetVarBounds, susp_count);
 
   if (susp_count > 1) 
-    return pe.suspend(OZ_makeSelfSuspendedThread());
+    return pe.suspend();
 
   return pe.impose(new FSetDiffPropagator(OZ_args[0],
 					  OZ_args[1],

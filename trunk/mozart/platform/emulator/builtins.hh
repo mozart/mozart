@@ -155,18 +155,8 @@ OZ_BI_define(Name,2,1)					\
  * argument declaration for builtins
  * -----------------------------------------------------------------------*/
 
-#define oz_declareArg(ARG,VAR)			\
-register OZ_Term VAR = OZ_args[ARG];		\
-
-
 #define oz_declareIN(ARG,VAR)			\
 register OZ_Term VAR = OZ_in(ARG);		\
-
-
-#define oz_declareDerefArg(ARG,VAR)		\
-oz_declareArg(ARG,VAR);				\
-DEREF(VAR,VAR ## Ptr,VAR ## Tag);		\
-
 
 #define oz_declareDerefIN(ARG,VAR)		\
 oz_declareIN(ARG,VAR);				\
@@ -175,15 +165,6 @@ DEREF(VAR,VAR ## Ptr,VAR ## Tag);
 #define oz_declareSafeDerefIN(ARG,VAR)		\
 oz_declareIN(ARG,VAR);				\
 VAR=oz_safeDeref(VAR);
-
-
-#define oz_declareNonvarArg(ARG,VAR)		\
-oz_declareDerefArg(ARG,VAR);			\
-{						\
-  if (oz_isVariable(VAR)) {			\
-    oz_suspendOnPtr(VAR ## Ptr);		\
-  }						\
-}
 
 #define oz_declareNonvarIN(ARG,VAR)		\
 oz_declareDerefIN(ARG,VAR);			\
@@ -201,17 +182,6 @@ oz_declareDerefIN(ARG,VAR);			\
   }						\
 }
 
-#define oz_declareTypeArg(ARG,VAR,TT,TYPE)	\
-TT VAR;						\
-{						\
-  oz_declareNonvarArg(ARG,_VAR);		\
-  if (!oz_is ## TYPE(_VAR)) {			\
-    oz_typeError(ARG, #TYPE);			\
-  } else {					\
-    VAR = oz_ ## TYPE ## ToC(_VAR);		\
-  }						\
-}
-
 #define oz_declareTypeIN(ARG,VAR,TT,TYPE)	\
 TT VAR;						\
 {						\
@@ -222,12 +192,6 @@ TT VAR;						\
     VAR = oz_ ## TYPE ## ToC(_VAR);		\
   }						\
 }
-
-#define oz_declareIntArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,int,Int)
-#define oz_declareFloatArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,double,Float)
-#define oz_declareAtomArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,const char*,Atom)
-#define oz_declareDictionaryArg(ARG,VAR) \
- oz_declareTypeArg(ARG,VAR,OzDictionary*,Dictionary)
 
 #define oz_declareIntIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,int,Int)
 #define oz_declareFloatIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,double,Float)
@@ -250,21 +214,6 @@ TT VAR;						\
  oz_declareTypeIN(ARG,VAR,SRecord*,STuple)
 
 
-#define oz_declareProperStringArg(ARG,VAR)			\
-char *VAR;							\
-{								\
-  oz_declareArg(ARG,_VAR1);					\
-  OZ_Term _VAR2;						\
-  if (!OZ_isProperString(_VAR1,&_VAR2)) {			\
-    if (!_VAR2) {						\
-      oz_typeError(ARG,"ProperString");				\
-    } else {							\
-      oz_suspendOn(_VAR2);					\
-    }								\
-  }								\
-  VAR = OZ_stringToC(_VAR1,0);					\
-}
-
 #define oz_declareProperStringIN(ARG,VAR)			\
 char *VAR;							\
 {								\
@@ -278,21 +227,6 @@ char *VAR;							\
     }								\
   }								\
   VAR = OZ_stringToC(_VAR1,0);					\
-}
-
-#define oz_declareVirtualStringArg(ARG,VAR)	\
-char *VAR;					\
-{						\
-  oz_declareArg(ARG,_VAR1);			\
-  OZ_Term _VAR2;				\
-  if (!OZ_isVirtualString(_VAR1,&_VAR2)) {	\
-    if (!_VAR2) {				\
-      oz_typeError(ARG,"VirtualString");	\
-    } else {					\
-      oz_suspendOn(_VAR2);			\
-    }						\
-  }						\
-  VAR = OZ_virtualStringToC(_VAR1,0);		\
 }
 
 #define oz_declareVirtualStringIN(ARG,VAR)	\
@@ -316,10 +250,6 @@ char *VAR;					\
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom(Where));	\
   }
 
-
-#define OZ_getCArgDeref(N, V, VPTR, VTAG) \
-  OZ_Term V = OZ_getCArg(N); \
-  DEREF(V, VPTR, VTAG);
 
 #define OZ_getINDeref(N, V, VPTR, VTAG)		\
   OZ_Term V = OZ_in(N);				\
