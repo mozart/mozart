@@ -106,7 +106,7 @@ void * _oz_amalloc(const size_t sz, const size_t align) {
    *
    */
 
-  Assert((sz & 3 == 0) || (align == 8));
+  Assert(((sz & 3) == 0) || (align == 8));
 
   Assert(ToInt32(_oz_heap_cur) % sizeof(int32) == 0);
 
