@@ -174,7 +174,6 @@ enum EmulatorPropertyIndex {
   PROP_DPTABLE_WORTHWHILEREALLOC,
   PROP_DPTABLE,
   // DPLOG
-  PROP_DPLOG_ON,
   PROP_DPLOG_CONNECTLOG,
   PROP_DPLOG_MESSAGELOG,
   PROP_DPLOG,
@@ -513,15 +512,12 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
            SET_INT(oz_atomNoDup("worthwhileRealloc"),
                    ozconf.dpTableWorthwhileRealloc);
            );
-  CASE_BOOL(PROP_DPLOG_ON,ozconf.dpLog);
-  CASE_BOOL(PROP_DPLOG_CONNECTLOG,ozconf.dpConnectLog);
-  CASE_BOOL(PROP_DPLOG_MESSAGELOG,ozconf.dpMessageLog);
+  CASE_BOOL(PROP_DPLOG_CONNECTLOG,ozconf.dpLogConnectLog);
+  CASE_BOOL(PROP_DPLOG_MESSAGELOG,ozconf.dpLogMessageLog);
   CASE_REC(PROP_DPLOG,"dpLog",
-           (3,oz_atomNoDup("on"),oz_atomNoDup("connectLog"),
-            oz_atomNoDup("messageLog")),
-           SET_BOOL(oz_atomNoDup("on"),ozconf.dpLog);
-           SET_BOOL(oz_atomNoDup("connectLog"),ozconf.dpConnectLog);
-           SET_BOOL(oz_atomNoDup("messageLog"),ozconf.dpMessageLog);
+           (2,oz_atomNoDup("connectLog"),oz_atomNoDup("messageLog")),
+           SET_BOOL(oz_atomNoDup("connectLog"),ozconf.dpLogConnectLog);
+           SET_BOOL(oz_atomNoDup("messageLog"),ozconf.dpLogMessageLog);
            );
 
   CASE_INT(PROP_CLOSE_TIME,ozconf.closetime);
@@ -827,13 +823,11 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
                      ozconf.dpTableWorthwhileRealloc);
              );
 
-    CASE_BOOL(PROP_DPLOG_ON,ozconf.dpLog);
-    CASE_BOOL(PROP_DPLOG_CONNECTLOG,ozconf.dpConnectLog);
-    CASE_BOOL(PROP_DPLOG_MESSAGELOG,ozconf.dpMessageLog);
+    CASE_BOOL(PROP_DPLOG_CONNECTLOG,ozconf.dpLogConnectLog);
+    CASE_BOOL(PROP_DPLOG_MESSAGELOG,ozconf.dpLogMessageLog);
     CASE_REC(PROP_DPLOG,
-             SET_BOOL(oz_atomNoDup("on"),ozconf.dpLog);
-             SET_BOOL(oz_atomNoDup("connectLog"),ozconf.dpConnectLog);
-             SET_BOOL(oz_atomNoDup("messageLog"),ozconf.dpMessageLog);
+             SET_BOOL(oz_atomNoDup("connectLog"),ozconf.dpLogConnectLog);
+             SET_BOOL(oz_atomNoDup("messageLog"),ozconf.dpLogMessageLog);
              );
 
     CASE_NAT(PROP_CLOSE_TIME,ozconf.closetime);
@@ -1099,7 +1093,6 @@ static const struct prop_entry prop_entries[] = {
                        PROP_DPTABLE_WORTHWHILEREALLOC},
   {"dpTable", PROP_DPTABLE},
   // DPLOG
-  {"dpLog.on",PROP_DPLOG_ON},
   {"dpLog.connectLog",PROP_DPLOG_CONNECTLOG},
   {"dpLog.messageLog",PROP_DPLOG_MESSAGELOG},
   {"dpLog",PROP_DPLOG},
