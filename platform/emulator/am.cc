@@ -269,8 +269,7 @@ void AM::init(int argc,char **argv)
   lastThreadID     = 0;
   lastFrameID      = 0;
   suspendDebug     = runChildren = NO;
-  threadStream     = OZ_newVariable();
-  threadStreamTail = threadStream;
+  threadStreamTail = OZ_newVariable();
 
   initThreads();
   toplevelQueue = (Toplevel *) NULL;

@@ -175,7 +175,6 @@ public:
 
   // Debugging stuff
   bool suspendDebug, runChildren;
-  TaggedRef threadStream;
   TaggedRef threadStreamTail;
   Toplevel *toplevelQueue;
 
