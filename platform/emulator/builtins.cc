@@ -5254,7 +5254,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       goto raise;
     }
 
-    FARPROC winLink(HMODULE handle, char *name);
+    FARPROC winLink(HMODULE handle, const char *name);
     FARPROC linkit = winLink(handle, "OZ_linkFF");
     if (linkit==0) {
       OZ_warning("OZ_linkFF not found, maybe not exported from DLL?");
@@ -5394,7 +5394,7 @@ void *ozdlsym(void *handle,char *name)
 
 #elif defined(WINDOWS)
 
-FARPROC winLink(HMODULE handle, char *name)
+FARPROC winLink(HMODULE handle, const char *name)
 {
   FARPROC ret = GetProcAddress(handle,name);
   if (ret == NULL) {
