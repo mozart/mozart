@@ -715,7 +715,9 @@ end
       Now the list of solutions <<Zs>> in strictly increasing order
       can be computed by
       <<<Zs={E best('http://mozart.ps.uni-sb.de/home/doc/system/MT10.ozf' $)}>>>
-      The best solution is the last element of the list <<Zs>>.
+      The best solution is the last element of the list <<Zs>>. The
+      speed up you can expect is almost a factor of six with six
+      processes started!
 
     <p>
       Parallel search engines only work properly, if your computing
