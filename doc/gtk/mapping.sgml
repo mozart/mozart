@@ -193,7 +193,7 @@ end>>>
 	    <Td>foreign pointer
 	    <Td><<GTK.makeStrArr>>
 	    <Td><<GTK.getStrArr>>
-	    <Td><P.silent><!--** missing -->
+	    <Td><<GTK.freeStrArr>>
 	</Table>
       </Figure>
       For details on how to use these, refer to <Ptr to="chapter.reference">.
