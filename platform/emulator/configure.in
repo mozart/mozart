@@ -64,20 +64,20 @@ dnl *****************************************************************
 dnl windows cross compilation
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --enable-wincross)
-AC_ARG_ENABLE(wincross,
-  [--enable-wincross  Windows cross compilation (default=no)])
-if test "${enable_wincross}" = yes; then
-    if test -n "$oz_wincross_dir" && test -n "$oz_wincross_prefix"
-    then
-        AC_MSG_RESULT(yes (-DWINDOWS))
-	CXX=$oz_wincross_dir/$oz_wincross_prefix-gcc
-	LD=$CXX
-	RANLIB=$oz_wincross_dir/$oz_wincross_prefix-ranlib
-	AR=$oz_wincross_dir/$oz_wincross_prefix-ar
-	#LDFLAGS="$LDFLAGS $oz_wincross_LDFLAGS"
+echo "target=$target"
+
+case "$target" in
+   NONE) 
+   ;;
+   i386-mingw32) 
+        AC_MSG_RESULT(cross compiling for windows)
+
+	CXX=${target}-gcc
+	LD=${target}-ld
+	RANLIB=${target}-ranlib
+	AR=${target}-ar
+
 	platform="win32-i486"
-	PROGRAMNAME="emulator.exe"
 	with_sunpro=no
 	oz_gmp_lib_dir=$oz_wincross_gmp_lib_dir
 	oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
@@ -94,13 +94,13 @@ if test "${enable_wincross}" = yes; then
 
 	AC_DEFINE(WINDOWS)
 	AC_DEFINE(ARCH_I486)
-    else
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR("oz_wincross_dir and oz_wincross_prefix must be set")
-    fi
-else
-        AC_MSG_RESULT(no)
-fi
+   ;;
+
+   *)
+	AC_MSG_ERROR("cannot cross-compile for target $target")
+    ;;
+esac
+
 
 dnl *****************************************************************
 dnl OS2
