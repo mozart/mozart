@@ -2711,11 +2711,29 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
   currentBoard->setFailed();
   reduceTrailOnFail();
   currentBoard->unsetInstalled();
-  setCurrent(aa->getBoardFast());
   if (currentThread && !currentThread->discardLocalTasks()) {
     currentThread->setBoard(currentBoard);
-    currentBoard->incSuspCount();
+    scheduleThread (currentThread);
+    currentThread = (Thread *) NULL;
+    /*
+     *  kost@ 22.12.95 bug fix:
+     *  In the case of a deep (and parallel) guard, it might happen
+     * that the thread in the actor is overwritten (by a wrong
+     * thread, which doesn't contain a continuation after the conditional
+     * itself!). So, if a thread seems to be pretty local, just
+     * schedule it again - it will be discarded later;
+     *
+     *  to mm2: Michael, i told you aboout this before!!!
+     */
   }
+  //  kost@ moved from ahead - we need a pointer to the board being killed;
+  setCurrent(aa->getBoardFast());
+  /*
+   *  ... and at all, where and how the 'board' pointer of a thread
+   * has to be modified ??!!! I don't see any system in that is
+   * going on there!!!
+   *
+   */
 
   DebugTrace(trace("reduce actor",currentBoard,aa));
 
