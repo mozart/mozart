@@ -133,7 +133,8 @@ OZ_Term reflect_space_prop(ReflectStack &rec_stack,
 
   MKARITY(arity, arity_def);
 
-  ADD_TO_LIST(prop_list, OZ_recordInit(atom_prop, arity));
+  ADD_TO_LIST(prop_list, OZ_pair2(term_id,
+                                  OZ_recordInit(atom_prop, arity)));
 
   DEBUGPRINT(("reflect_space_prop (out)"));
 
@@ -360,7 +361,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
   if (term_type != OZ_nil()) { // it is a variable
     OZ_Term arity_def[] = {
-      {OZ_pair2(atom_var,       var_itself)},
+      {OZ_pair2(atom_ref,       var_itself)},
       {OZ_pair2(atom_type,      term_type)},
       {OZ_pair2(atom_id,        term_id)},
       {OZ_pair2(atom_susplists, term_susplist)},
@@ -370,7 +371,8 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
     MKARITY(arity, arity_def);
 
-    ADD_TO_LIST(var_list, OZ_recordInit(atom_var, arity));
+    ADD_TO_LIST(var_list, OZ_pair2(term_id,
+                                   OZ_recordInit(atom_var, arity)));
 
     DEBUGPRINT(("reflect_variable (out -- adding reflected var)\n"));
 
@@ -393,7 +395,9 @@ OZ_Term reflect_space(OZ_Term v)
   PropTable    ptable;
   ReflectStack rec_stack;
 
-  (void) reflect_space_variable(rec_stack, var_list, vtable, ptable, v);
+  //  (void) reflect_space_variable(rec_stack, var_list, vtable, ptable, v);
+
+  (void) reflect_space_params(rec_stack, vtable, v);
 
   while (!rec_stack.isEmpty()) {
     OZ_Term se = (OZ_Term) rec_stack.pop();
@@ -432,8 +436,8 @@ OZ_Term reflect_space(OZ_Term v)
   } // while
 
   OZ_Term arity_def[] = {
-    {OZ_pair2(atom_vars,  var_list)},
-    {OZ_pair2(atom_props, prop_list)},
+    {OZ_pair2(atom_vars, OZ_recordInit(atom_reflect_vartable, var_list))},
+    {OZ_pair2(atom_props, OZ_recordInit(atom_reflect_proptable, prop_list))},
     {(OZ_Term) 0}
   };
 
