@@ -10,6 +10,7 @@ import
    Category(updateCatPages updatePkgListPage)
    MogulID(normalizeID:NormalizeID)
    HTML_ByAuthor(updatePage)
+   Pickle(save)
 export
    Manager Trace Indent Dedent RelativeTo Admin
 define
