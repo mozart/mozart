@@ -42,7 +42,7 @@ class AbstractionEntry {
 private:
   TaggedRef      abstr;
   ProgramCounter pc;
-  IHashTable *   indexTable;
+  ProgramCounter listpc;
   Tagged2        next_flags;
 
   static AbstractionEntry * allEntries;
@@ -55,7 +55,6 @@ public:
   void setNext(AbstractionEntry * n) {
     next_flags.setPtr(n);
   }
-
   int isCopyable(void) {
     return next_flags.getTag() & AE_COPYABLE;
   }
@@ -68,13 +67,10 @@ public:
   void unsetCollected(void) {
     next_flags.bandTag(~AE_COLLECTED);
   }
-  IHashTable * getIndexTable(void) {
-    return indexTable;
-  }
   AbstractionEntry(Bool fc) {
     abstr      = makeTaggedNULL();
     pc         = NOCODE;
-    indexTable = NULL;
+    listpc     = NOCODE;
     next_flags.set(allEntries,fc);
     allEntries = this;
   }
@@ -86,9 +82,12 @@ public:
   ProgramCounter getPC(void)  {
     return pc;
   };
+  ProgramCounter getListPC(void)  {
+    return listpc;
+  };
 
+  void setPred(Abstraction * ab);
 
-  void setPred(Abstraction * abs);
   void gCollectAbstractionEntry(void);
 
   static void freeUnusedEntries();

@@ -106,26 +106,6 @@ TaggedRef oz_uniqueName(const char *str)
 
 AbstractionEntry *AbstractionEntry::allEntries = NULL;
 
-//
-// kost@ : 'Abstraction' can be set only once!
-void AbstractionEntry::setPred(Abstraction *ab)
-{
-  Assert(!isCopyable() && !abstr);
-
-  Assert(ab);
-  abstr = makeTaggedConst(ab);
-  pc    = ab->getPC();
-
-  // indexing on X[0] optimized !!!
-  if (pc != NOCODE &&
-      CodeArea::getOpcode(pc) == MATCHX &&
-      getXRegArg(pc+1) == 0) {
-    indexTable = (IHashTable *) getAdressArg(pc+2);
-  } else {
-    indexTable = NULL;
-  }
-}
-
 int CodeArea::getTotalSize(void) {
   int ts = 0;
   for (CodeArea * ca = allBlocks; ca ; ca = ca->nextBlock)
@@ -346,6 +326,26 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
     file     = AtomEmpty;
     line     = colum = 0;
     predName = AtomEmpty;
+  }
+}
+
+void AbstractionEntry::setPred(Abstraction * ab) {
+  Assert(!isCopyable() && !abstr);
+  Assert(ab);
+  abstr = makeTaggedConst(ab);
+  pc    = ab->getPC();
+
+  // indexing on X[0] optimized !!!
+  if (pc != NOCODE &&
+      CodeArea::getOpcode(pc) == MATCHX &&
+      getXRegArg(pc+1) == 0) {
+    listpc = pc + ((IHashTable *) getAdressArg(pc+2))->lookupLTuple();
+  } else if (pc != NOCODE &&
+             CodeArea::getOpcode(pc) == TESTLISTX &&
+             getXRegArg(pc+1) == 0) {
+    listpc = pc+3;
+  } else {
+    listpc = pc;
   }
 }
 

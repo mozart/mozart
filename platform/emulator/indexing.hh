@@ -84,12 +84,14 @@ public:
     register int i  = tagged2Literal(t)->hash();
     while (OK) {
       i &= hm;
-      if (!entries[i].val ||
-          (oz_eq(entries[i].val,t) &&
-           sameSRecordArity(entries[i].sra,mkTupleWidth(0))))
-        return entries[i].lbl;
+      if (!entries[i].val)
+        break;
+      if (oz_eq(entries[i].val,t) &&
+          sameSRecordArity(entries[i].sra,mkTupleWidth(0)))
+        break;
       i++;
     }
+    return entries[i].lbl;
   }
 
   int lookupSmallInt(TaggedRef t) {
@@ -97,10 +99,13 @@ public:
     register int i  = smallIntHash(t);
     while (OK) {
       i &= hm;
-      if (!entries[i].val || oz_eq(entries[i].val,t))
-        return entries[i].lbl;
+      if (!entries[i].val)
+        break;
+      if (oz_eq(entries[i].val,t))
+        break;
       i++;
     }
+    return entries[i].lbl;
   }
 
   int lookupBigInt(TaggedRef t) {
@@ -108,12 +113,14 @@ public:
     int i      = b->hash();
     while (OK) {
       i &= hashMsk;
-      if (!entries[i].val ||
-          (oz_isConst(entries[i].val) &&
-           tagged2BigInt(entries[i].val)->equal(b)))
-        return entries[i].lbl;
+      if (!entries[i].val)
+        break;
+      if (oz_isConst(entries[i].val) &&
+          tagged2BigInt(entries[i].val)->equal(b))
+        break;
       i++;
     }
+    return entries[i].lbl;
   }
 
   int lookupFloat(TaggedRef t) {
@@ -122,12 +129,14 @@ public:
     int i     = f->hash();
     while (OK) {
       i &= hashMsk;
-      if (!entries[i].val ||
-          (oz_isFloat(entries[i].val) &&
-           tagged2Float(entries[i].val)->getValue()==d))
-        return entries[i].lbl;
+      if (!entries[i].val)
+        break;
+      if (oz_isFloat(entries[i].val) &&
+          tagged2Float(entries[i].val)->getValue()==d)
+        break;
       i++;
     }
+    return entries[i].lbl;
   }
 
   int lookupSRecord(TaggedRef t) {
@@ -138,11 +147,13 @@ public:
     int i            = tagged2Literal(l)->hash();
     while (OK) {
       i &= hm;
-      if (!entries[i].val ||
-          (oz_eq(entries[i].val,l) && sameSRecordArity(entries[i].sra,sra)))
-        return entries[i].lbl;
+      if (!entries[i].val)
+        break;
+      if (oz_eq(entries[i].val,l) && sameSRecordArity(entries[i].sra,sra))
+        break;
       i++;
     }
+    return entries[i].lbl;
   }
 
   Bool disentailed(OzVariable * var);
