@@ -6,9 +6,13 @@
 %%%  Version: $Revision$
 
 
-PanelWidth   = 540
-FrameWidth   = PanelWidth - 30
-PanelHeight  = 370
+PanelWidth       = 530
+FrameWidth       = PanelWidth - 20
+FullPanelHeight  = 335
+PartPanelHeight  = 240
+
+SmallPad     = 2
+Pad          = 4
 
 KiloByteF      = 1024.0
 MegaByteF      = KiloByteF * KiloByteF
@@ -43,6 +47,16 @@ AboutFont       = '-Adobe-times-bold-r-normal--*-240*'
 TitleName = 'Oz Panel'
 
 
-BigPad = 4
-
 BitMap = '@' # {System.get home} # '/lib/bitmaps/panel.xbm'
+
+SampleTimes = [500   # '500ms'
+	       1000  # '1s'
+	       2000  # '2s'
+	       5000  # '5s'
+	       10000 # '10s'
+	       60000 # '1m']
+
+BoldFontFamily  = '-*-helvetica-bold-r-normal--*-'
+FontMatch       = '-*-*-*-*-*-*'
+ScaleFont   = BoldFontFamily#100#FontMatch
+
