@@ -151,7 +151,8 @@ FirstsLasts::~FirstsLasts()
 //////////
 OZ_C_proc_begin(sched_firstsLasts, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD
+                   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
 
   PropagatorExpect pe;
 
@@ -316,9 +317,10 @@ OZ_Return FirstsLasts::propagate(void)
           goto afterFind;
         }
 
-
+        // test all resources and find the best one
         for (i=0; i<reg_nb_tasks_size; i++) {
           if (reg_ordered_resources[i] == 0) {
+            // not ordered yet
             int current_slack = fd_sup;
             int ct = reg_nb_tasks[i];
             int rStart = resource_starts[i];
@@ -329,6 +331,7 @@ OZ_Return FirstsLasts::propagate(void)
             int globmin = fd_sup;
             int globmax = 0;
             int globdur = 0;
+            // compute local slacks
             for (j=0; j<ct; j++) {
               int jMin = all_fds[i][j]->getMinElem();
               int jDue = all_fds[i][j]->getMaxElem() + reg_durs[i][j];

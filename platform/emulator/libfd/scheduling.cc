@@ -193,7 +193,7 @@ CPIteratePropagator::CPIteratePropagator(OZ_Term tasks,
 OZ_C_proc_begin(sched_cpIterate, 3)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT ","
-                   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+                   OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
 
   {
     PropagatorExpect pe;
@@ -387,6 +387,7 @@ cploop:
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
+        // l inside interval
         dur0 = dur0 + dl;
         maxEct = max(maxEct,xlMin+dl);
         mSi = min( mSi, xlMin+dl );
@@ -407,6 +408,7 @@ cploop:
       }
     }
     for (l=0; l<ts; l++) {
+      // compute tasks which are candidates to be in a Si
       int realL = forCompSet0Up[l];
       if ( (MinMax[realL].min < kDown) &&
            (MinMax[realL].max + dur[realL] <= kUp) )
@@ -760,7 +762,7 @@ failure:
 OZ_C_proc_begin(sched_disjunctive, 3)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT ","
-                   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+                   OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
 
   {
     PropagatorExpect pe;
@@ -936,8 +938,8 @@ CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks,
 //////////
 OZ_C_proc_begin(sched_cpIterateCap, 6)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD
-                   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD
+                   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_RECORD OZ_EM_INT
                    "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_INT);
 
   {
@@ -1071,6 +1073,7 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
     //////////
     for (i=0; i<ts; i++)
       for (j=i+1; j<ts; j++) {
+        // test whether two tasks may overlap
         if (use[i] + use[j] > capacity) {
           int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
           if (xui + di <= xlj) continue;
@@ -1732,8 +1735,8 @@ CPIteratePropagatorCapUp::CPIteratePropagatorCapUp(OZ_Term tasks,
 
 OZ_C_proc_begin(sched_cpIterateCapUp, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD
-                   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD
+                   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_RECORD OZ_EM_INT
                    "," OZ_EM_VECT OZ_EM_INT);
 
   {

@@ -181,7 +181,8 @@ TaskIntervalsProof::~TaskIntervalsProof(void)
 //////////
 OZ_C_proc_begin(sched_taskIntervalsProof, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD
+                   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
 
   PropagatorExpect pe;
 
@@ -442,6 +443,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 
 
               struct Set *cset = &taskints[left][right];
+              // test whether task interval is trivially empty
               if (cset->extSize > 1) {
                 int count_firsts = 0;
                 int count_lasts = 0;
@@ -456,12 +458,10 @@ OZ_Return TaskIntervalsProof::propagate(void)
                   int task = cset->ext[l];
                   if ( (left != task)
                        && (all_vars[i][task].min <= up-cdur)
-                       //&& (ordered[i][left][task] == 0) )
                        && (bm3.is(i, left, task) == 0) )
                     firsts[count_firsts++] = task;
                   if ( (right != task)
                        && (all_vars[i][task].max+all_durs[i][task] >= low + cdur)
-                       //&& (ordered[i][task][right] == 0) )
                        && (bm3.is(i, task, right) == 0) )
                     lasts[count_lasts++] = task;
                 }
@@ -471,7 +471,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
                   for (l=0; l < cset->extSize; l++) {
                     int task = cset->ext[l];
                     if ( (task != left)
-                         //&& (ordered[i][left][task] == 0) ) {
                       && (bm3.is(i, left, task) == 0) ) {
                       // task >= left + d(left)
                       constraints[constraintsSize] = 1;
@@ -505,7 +504,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
                     for (l=0; l<cset->extSize; l++) {
                       int task = cset->ext[l];
                       if ( (task != right)
-                           //&& (ordered[i][task][right] == 0) ) {
                            && (bm3.is(i, task, right) == 0) ) {
                         // task + d(task) =< right
                         constraints[constraintsSize] = 0;
@@ -622,7 +620,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 
 
           // Compute the most promising pair of tasks
-          //    Assert( (count_firsts > 0) && (count_lasts > 0) );
+          // the used names are conform to Caseau's paper  and code
           int test;
           if (reg_flag == 0) test = (count_firsts < count_lasts);
           else test = (count_firsts <= count_lasts);
