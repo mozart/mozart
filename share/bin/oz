@@ -103,13 +103,16 @@ case "$cmd" in
 
    oz.machine)
 
-
       if [ $TERM = "emacs" ]; then
         exec $OZMACHINE -E "$@"
       else
         xterm -title 'Oz Machine' -e $OZMACHINE "$@" > /dev/null 2>&1 &
       fi
       exit 0
+   ;;
+
+   ozsa)  # satndalone system
+        exec $OZMACHINE -E "$@"
    ;;
 
    oz-)
@@ -123,6 +126,22 @@ case "$cmd" in
 	    $OZCOMPILER +p /dev/null +c $file
         done
         exit $?
+   ;;
+
+   ozsac)
+        if [ $# -ne 2 ]; then
+	   echo "Usage: $0 infile outfile"
+	   exit 1
+        fi
+	tempfile=/tmp/ozsac$$
+	trap "rm -f $tempfile" 0
+        infile=$1; outfile=$2
+        $OZCOMPILER +c $infile +dn $tempfile
+        if [ $? -ne 0 ]; then exit 1; fi
+        (echo "#!/bin/sh"; 
+         echo "exec $OZHOME/bin/ozsa -f \$0";
+         cat $tempfile) > $outfile
+        chmod +x $outfile
    ;;
 
    ozwindowmanager)
