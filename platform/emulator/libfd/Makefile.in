@@ -36,7 +36,8 @@ FDLIBSRCS = fdaux.cc pel_fncts.cc pel_engine.cc \
 	    sum.cc sumequal.cc \
 	    distance.cc streamProps.cc \
 	    sumd.cc sumabs.cc complalldist.cc diffn.cc \
-	    distribute.cc taskoverlap.cc
+	    distribute.cc taskoverlap.cc \
+	    boundsalldist.cc
 
 FDLIBOBJS = $(FDLIBSRCS:.cc=.lo)
 
