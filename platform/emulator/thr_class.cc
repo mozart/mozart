@@ -103,8 +103,10 @@ Bool Thread::isBelowFailed(Board *top)
 Bool Thread::discardLocalTasks()
 {
   TaskStackEntry *tos = TaskStack::getTop();
-  while (!TaskStack::isEmpty()) {
+  while (TRUE) {
     TaskStackEntry entry=*(--tos);
+    if (TaskStack::isEmpty(entry)) break;
+
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
     switch (cFlag){
