@@ -80,12 +80,18 @@ static OZ_C_proc_interface mod_int_Parser[] = {
  {0,0,0,0}
 };
 
-
 #include "modCompilerSupport.dcl"
 static OZ_C_proc_interface mod_int_CompilerSupport[] = {
 #include "modCompilerSupport.tbl"
  {0,0,0,0}
 };
+
+#include "modBrowser.dcl"
+static OZ_C_proc_interface mod_int_Browser[] = {
+#include "modBrowser.tbl"
+ {0,0,0,0}
+};
+
 #endif
 
 
@@ -106,7 +112,6 @@ struct ModuleEntry {
 #include "modCTB.dcl"
 #include "modFinalize.dcl"
 #include "modProfile.dcl"
-#include "modBrowser.dcl"
 #include "modDebug.dcl"
 #include "modForeign.dcl"
 #include "modFault.dcl"
@@ -156,10 +161,6 @@ static OZ_C_proc_interface mod_int_Profile[] = {
 #include "modProfile.tbl"
  {0,0,0,0}
 };
-static OZ_C_proc_interface mod_int_Browser[] = {
-#include "modBrowser.tbl"
- {0,0,0,0}
-};
 static OZ_C_proc_interface mod_int_Debug[] = {
 #include "modDebug.tbl"
  {0,0,0,0}
@@ -195,15 +196,16 @@ static OZ_C_proc_interface mod_int_VirtualSite[] = {
 
 
 static ModuleEntry module_table[] = {
+  // Most important stuff
   {"Property", mod_int_Property},
   {"OS",       mod_int_OS},
   {"URL",      mod_int_URL},
   {"Pickle",   mod_int_Pickle},
   {"System",   mod_int_System},
+
   {"Finalize", mod_int_Finalize},
   {"Profile",  mod_int_Profile},
 
-  {"Browser",      mod_int_Browser},
   {"Foreign",      mod_int_Foreign},
   {"Fault",        mod_int_Fault},
   {"Distribution", mod_int_Distribution},
@@ -214,6 +216,7 @@ static ModuleEntry module_table[] = {
   {"CTB",      mod_int_CTB},
   {"PID",      mod_int_PID},
 
+  {"Browser",          DYNAMIC_MODULE(mod_int_Browser)},
   {"CompilerSupport",  DYNAMIC_MODULE(mod_int_CompilerSupport)},
   {"Wif",              DYNAMIC_MODULE(mod_int_Wif) },
   {"Parser",           DYNAMIC_MODULE(mod_int_Parser) },
