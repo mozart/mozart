@@ -124,7 +124,7 @@ private:
     Assert(t & REMOTE_SITE);
     comObj=createComObj(this);
     // AN! this instantiation makes latter changes of perdioCh... unused
-    // rs->installProbe(0,PROBE_WAIT_TIME,ozconf.perdioCheckAliveInterval);
+    comObj->installProbe(0,PROBE_WAIT_TIME,ozconf.perdioCheckAliveInterval);
     Assert(comObj!=NULL);
     PD((SITE,"connect; not connected yet, connecting to remote %d",comObj));
     flags |= CONNECTED;    
@@ -142,7 +142,7 @@ public:
       return this->comObj;
     else {
       setType(CONNECTED|REMOTE_SITE);
-//        comObj->installProbe(0,PROBE_WAIT_TIME,PERDIO_CHECK_ALIVE_INTERVAL);
+      comObj->installProbe(0,PROBE_WAIT_TIME,PERDIO_CHECK_ALIVE_INTERVAL);
       this->comObj=comObj;
       return NULL;
     }
