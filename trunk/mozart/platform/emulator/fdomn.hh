@@ -162,7 +162,9 @@ protected:
 public:
   USEHEAPMEMORY;
 
-  FiniteDomain(BitArray* ba = NULL) : bitArray(setRange(ba)) {};
+  FiniteDomain(BitArray* ba = NULL) : bitArray(setRange(ba)) {
+    CHECK_POINTERLSB(ba);
+  };
   FiniteDomain(const FiniteDomain &fd);
 
   const FiniteDomain &operator =(const FiniteDomain &fd) {
@@ -347,7 +349,10 @@ public:
 class LocalFD : public FiniteDomain {
 public:
   BitArray localBitArray;
-  LocalFD() {bitArray = setRange(&localBitArray);}
+  LocalFD() {
+    CHECK_POINTERLSB(&localBitArray);
+    bitArray = setRange(&localBitArray);
+  }
   const LocalFD& operator =(const FiniteDomain &fd){
     FiniteDomain::operator=(fd);
     return *this;
