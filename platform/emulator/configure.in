@@ -445,6 +445,46 @@ then
 fi
 
 dnl *****************************************************************
+dnl *** zlib
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --with-zlib)
+AC_ARG_WITH(zlib,
+        [--with-zlib=<dir>
+            search zlib library and header in <dir> (default: NONE)])
+
+
+if test "$with_zlib" != no
+then
+    AC_ARG_WITH(zlib_lib,
+        [--with-zlib-lib=<dir>
+            search zlib library in <dir> (default: /usr/local/lib)])
+
+    AC_ARG_WITH(zlib_include,
+        [--with-zlib-include=<dir>
+            search zlib header in <dir> (default: /usr/local/include)])
+
+    : ${with_zlib_lib:=/usr/local/lib}
+    : ${with_zlib_include:=/usr/local/include}
+
+    usezlib=yes
+
+    OLDCPPFLAGS=$CPPFLAGS
+    CPPFLAGS="-I$with_zlib_include $CPPFLAGS"
+    AC_CHECK_HEADER(zlib.h,,AC_MSG_WARN(zlib include file not found);usezlib=no)
+
+    OLDLDFLAGS=$LDFLAGS
+    LDFLAGS="-L$with_zlib_lib $LDFLAGS"
+    AC_CHECK_LIB(z,zlibVersion,,AC_MSG_WARN(zlib not found);usezlib=no)
+
+    if test $usezlib = yes
+    then AC_DEFINE(USE_ZLIB)
+    else CPPFLAGS=$OLDCPPFLAGS
+         LDFLAGS=$OLDLDFLAGS
+    fi
+fi
+
+dnl *****************************************************************
 dnl ccmalloc
 dnl *****************************************************************
 
