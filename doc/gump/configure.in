@@ -3,8 +3,12 @@ dnl
 dnl  Author:
 dnl    Leif Kornstaedt <kornstae@ps.uni-sb.de>
 dnl
+dnl  Contributors:
+dnl    Denys Duchier <duchier@ps.uni-sb.de>
+dnl
 dnl  Copyright:
 dnl    Leif Kornstaedt, 1998
+dnl    Denys Duchier,   1998
 dnl
 dnl  Last change:
 dnl    $Date$ by $Author$
