@@ -163,8 +163,8 @@ in
       end
       
       meth NewFile(file:F line:L color:C what:What)
-	 N = {New TkTools.note tkInit(parent:self.NoteBook
-				      text: {Str.rchr {Atom.toString F} &/}.2)}
+	 N = {New TkTools.note tkInit(parent: self.NoteBook
+				      text:   {StripPath F})}
 	 W = {New SourceWindow init(parent:N file:F)}
       in
 	 WindowList <- W#N | @WindowList

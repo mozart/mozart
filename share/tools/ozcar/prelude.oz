@@ -42,11 +42,15 @@ in
       SpaceCount = N - {VirtualString.length S}
    in
       case SpaceCount < 1 then
-	 S # NL # {MakeSpace N+1}
+	 S # NL # {MakeSpace N}
       else
 	 S # {MakeSpace SpaceCount}
       end
    end
+end
+
+fun {StripPath File}
+   {Str.rchr {Atom.toString File} &/}.2
 end
 
 % transform an argument list
@@ -59,10 +63,14 @@ end
 
 fun {ArgType X}
    case {IsDet X} then
-      case     {IsUnit X}       then 'unit'
-      elsecase {IsArray X}      then '<array>'
-      elsecase {IsAtom X}       then '\'' # case X of nil then "nil" else X
-					    end	# '\''
+      case     {IsArray X}      then '<array>'
+      elsecase {IsAtom X}       then case X
+				     of 'nil'         then "'nil'"
+				     [] '|'           then "'|'"
+				     [] '#'           then "'#'"
+				     [] 'unallocated' then 'unallocated'
+				     else                  '\'' # X # '\''
+				     end
       elsecase {IsBool X}       then case X of true then 'true' else 'false'
 				     end
       elsecase {IsCell X}       then '<cell>'
@@ -71,6 +79,7 @@ fun {ArgType X}
       elsecase {IsFloat X}      then '<float>'
       elsecase {IsInt X}        then X
       elsecase {IsList X}       then '<list>'
+      elsecase {IsUnit  X}      then 'unit'
       elsecase {IsLiteral X}    then '<literal>'
       elsecase {IsLock X}       then '<lock>'
       elsecase {IsName X}       then '<name>'
