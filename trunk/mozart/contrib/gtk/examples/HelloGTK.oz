@@ -29,14 +29,15 @@ define
    class MyToplevel from GTK.window
       meth new
 	 GTK.window, new(GTK.wINDOW_TOPLEVEL)
-	 GTK.window, signalConnect('destroy' destroyEvent _)
+	 GTK.window, signalConnect('delete_event' deleteEvent _)
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("Hello GTK")
       end
-      meth destroyEvent(Event)
-	 {System.show 'destroy Event occured'}
-	 %% This is necessary to alloc GC
-	 %% Toplevel is a container which recursively frees all its child widgets
+      meth deleteEvent(Event)
+	 %% Caution: At this time, the underlying GTK object has been destroyed already
+	 %% Caution: Destruction also includes all attached child objects.
+	 %% Caution: This event is solely intended to do OZ side cleanup via calling close
+	 {System.show 'delete Event occured'}
 	 {self close}
 	 {Application.exit 0}
       end

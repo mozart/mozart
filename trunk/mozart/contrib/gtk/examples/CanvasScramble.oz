@@ -291,11 +291,12 @@ define
 	 GTK.window, add(Notebook)
 	 {Notebook setShowTabs(1)}
 	 {Notebook appendPage(Scramble {New GTK.label new("Fifteen")})}
-	 {self signalConnect('destroy' destroyEvent _)}
+	 {self signalConnect('delete_event' deleteEvent _)}
       end
-      meth destroyEvent(Event)
-	 %% This is necessary to alloc GC
-	 %% Toplevel is a container which recursively frees all its child widgets
+      meth deleteEvent(Event)
+	 %% Caution: At this time, the underlying GTK object has been destroyed already
+	 %% Caution: Destruction also includes all attached child objects.
+	 %% Caution: This event is solely intended to do OZ side cleanup via calling close
 	 {self close}
 	 {Application.exit 0}
       end

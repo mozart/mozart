@@ -32,11 +32,12 @@ define
 	 GTK.window, new(GTK.wINDOW_TOPLEVEL)
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("Canvas Move")
-	 {self signalConnect('destroy' destroyEvent _)}
+	 {self signalConnect('delete_event' deleteEvent _)}
       end
-      meth destroyEvent(Event)
-	 %% This is necessary to allow GC
-	 %% Toplevel is a container which recursively frees all its child widgets
+      meth deleteEvent(Event)
+	 %% Caution: At this time, the underlying GTK object has been destroyed already
+	 %% Caution: Destruction also includes all attached child objects.
+	 %% Caution: This event is solely intended to do OZ side cleanup via calling close
 	 {self close}
 	 {Application.exit 0}
       end
@@ -54,7 +55,7 @@ define
    White    = {New GDK.color new(65535 65535 65535)}
    {Colormap allocColor(Black 0 1 _)}
    {Colormap allocColor(White 0 1 _)}
-   
+
    %% Setup canvas
    MyCanvas = {New Canvas.canvas new}
    {MyCanvas setUsize(400 400)}
