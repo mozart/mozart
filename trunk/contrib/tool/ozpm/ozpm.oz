@@ -385,13 +385,13 @@ define
    fun{RAlign VS I}
       {List.map
        {List.make {Max I-{Length {VirtualString.toString VS}} 0}}
-       fun{$ C} C=32 end}#VS
+       fun{$ C} C=&  end}#VS
    end
  
    fun{LAlign VS I}
       VS#{List.map
 	  {List.make {Max I-{Length {VirtualString.toString VS}} 0}}
-	  fun{$ C} C=32 end}
+	  fun{$ C} C=&  end}
    end
 
    proc{PrintInfo I L}
@@ -416,16 +416,16 @@ define
    of list then % list all installed packages
       {ForAll {ArchiveManager list($)} Print}
       {Application.exit 0}
-   [] view then % view the contents of a package
+   [] info then % view the contents of a package
       I L
    in
       {ArchiveManager view(Args.'view' I L)}
       {PrintInfo I L}
       {Application.exit 0}
    [] create then % create a new package
-      {ArchiveManager create({CondFeat Args 'in' ""}
+      {ArchiveManager create({CondFeat Args 'prefix' ""}
 			     Args.'out'
-			     {CondFeat Args 'info' {WithSlash {CondFeat Args 'in' "."}}#"OZPMINFO"}
+			     {CondFeat Args 'in' {WithSlash {CondFeat Args 'prefix' "."}}#"OZPMINFO"}
 			    )}
       {Application.exit 0}
    [] install then % install/update a specified package
@@ -449,25 +449,25 @@ define
 	 {Print "This package is already installed in version "#R.loc.version}
 	 {Application.exit 1}
       end
-   [] indfo then % displays information about an installed package
-      Info
-   in
-      {ArchiveManager info(Args.'info' Info)}
-      if Info==notFound then
-	 Info
-      in
-	 {ArchiveManager infoN(Args.'info' Info)}
-	 if Info==notFound then
-	    {Print "Package '"#Args.'info'#"' is not installed."}
-	    {Application.exit 1}
-	 else
-	    {PrintInfo Info Info.lsla}
-	    {Application.exit 0}
-	 end	    
-      else
-	 {PrintInfo Info Info.lsla}
-	 {Application.exit 0}
-      end
+%   [] indfo then % displays information about an installed package
+%      Info
+%   in
+%      {ArchiveManager info(Args.'info' Info)}
+%      if Info==notFound then
+%	 Info
+%      in
+%	 {ArchiveManager infoN(Args.'info' Info)}
+%	 if Info==notFound then
+%	    {Print "Package '"#Args.'info'#"' is not installed."}
+%	    {Application.exit 1}
+%	 else
+%	    {PrintInfo Info Info.lsla}
+%	    {Application.exit 0}
+%	 end	    
+%      else
+%	 {PrintInfo Info Info.lsla}
+%	 {Application.exit 0}
+%      end
    [] check then % check installed packages integrity and rebuilds if necessary
       skip
    [] remove then % removes a package
