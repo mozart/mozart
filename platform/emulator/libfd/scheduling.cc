@@ -32,7 +32,7 @@
 
 //-----------------------------------------------------------------------------
 #if !defined(MODULES_LINK_STATIC)
-template PropagatorController_V_V;
+template class _PropagatorController_V_V<OZ_Return,OZ_FDIntVar,PROCEED,FAILED,SLEEP>;
 #endif
 
 static inline int intMin(int a, int b) { return a < b ? a : b; }
