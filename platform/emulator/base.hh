@@ -445,8 +445,8 @@ Bool oz_staticProtect(TaggedRef *);
 Bool oz_protect(TaggedRef *);
 Bool oz_unprotect(TaggedRef *);
 
-void OZ_gCollectBlock(OZ_Term *, OZ_Term *, const int);
-void OZ_sCloneBlock(OZ_Term *, OZ_Term *, const int);
+void OZ_gCollectBlock(OZ_Term *, OZ_Term *, int);
+void OZ_sCloneBlock(OZ_Term *, OZ_Term *, int);
 
 inline 
 void oz_gCollectTerm(TaggedRef & f, TaggedRef & t) {
