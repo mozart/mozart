@@ -128,6 +128,9 @@
     <Meta name="html.split"	  value="chapter.mim">
 
     <Meta name="html.split"       value="chapter.dict-client">
+    <Meta name="html.split"       value="code.dict-client.main">
+    <Meta name="html.split"       value="code.dict-client.netdictionary">
+    <Meta name="html.split"       value="code.dict-client.tkdictionary">
 
     <Meta name="html.split.toc"   value="">
     <Meta name="html.split.bib"     value="">
