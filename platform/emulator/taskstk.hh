@@ -86,7 +86,7 @@ public:
   void dispose () { deallocate(array,getMaxSize()); }
   virtual void resize(int newSize);
 
-  void printDebug(ProgramCounter pc, Bool verbose, int depth = 10000);
+  void printTaskStack(ProgramCounter pc, Bool verbose = NO, int depth = 10000);
 
   Bool isEmpty(TaskStackEntry t) { return (t == emptyTaskStackEntry); }
   Bool isEmpty()                 { return isEmpty(*(tos-1)); }
@@ -176,6 +176,10 @@ public:
 
     tos = newTop + 3;
   }
+  void pushCont(Continuation *cont) {
+    pushCont(cont->getPC(),cont->getY(),cont->getG(),
+             cont->getX(),cont->getXSize(),NO);
+  }
 
   void pushDebug(OzDebug *deb)
   {
@@ -196,8 +200,8 @@ public:
 
   int getSeqSize();
   void copySeq(TaskStack *newStack,int size);
-  Bool discardLocalTasks();
   Chunk *findExceptionHandler();
+  static int frameSize(ContFlag);
 
 private:
 
@@ -216,7 +220,6 @@ private:
   }
 };
 
-int frameSize(ContFlag);
 
 
 #endif

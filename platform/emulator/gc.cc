@@ -199,7 +199,7 @@ public:
   {
     ThreadList *aux = allthreads;
     while(aux) {
-      aux->elem->printDebug(NULL,NO);
+      aux->elem->printTaskStack(NULL,NO);
       aux = aux->next;
     }
   }
@@ -1922,7 +1922,7 @@ Thread *Thread::gcThread()
   size_t sz = sizeof(Thread);
   Thread *ret = (Thread *) gcRealloc(this,sz);
   ThreadList::add(ret);
-  taskStack.gc(&ret->taskStack);
+  TaskStack::gc((TaskStack *)ret);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_THREAD);
   storeForward(getGCField(), ret);
@@ -1933,13 +1933,13 @@ void Thread::gcThreadRecurse()
 {
   GCMETHMSG("Thread::gcRecurse");
 
-  taskStack.gcRecurse();
+  TaskStack::gcRecurse();
   Board *newBoard = board->gcBoard();
   if (!newBoard) {
     newBoard=board->gcGetNotificationBoard();
     Bool newHome=NO;
     while (board != newBoard) {
-      if (!taskStack.discardLocalTasks()) {
+      if (!discardLocalTasks()) {
         newHome=OK;
         board = newBoard;
         break;

@@ -95,33 +95,6 @@ void TaskStack::copySeq(TaskStack *newStack,int len)
   }
 }
 
-/*
- * remove local tasks
- * return OK, if done
- * return NO, if no C_LOCAL/C_SOLVE found
- */
-Bool TaskStack::discardLocalTasks()
-{
-  while (!isEmpty()) {
-    TaskStackEntry entry=*(--tos);
-    ContFlag cFlag = getContFlag(ToInt32(entry));
-
-    switch (cFlag){
-    case C_COMP_MODE:
-      warning("not impl: discard compMode task!");
-      // xxcurrentThread->compMode=getCompMode(entry);
-      break;
-    case C_LOCAL:
-    case C_SOLVE:
-      return OK;
-    default:
-      tos = tos - frameSize(cFlag) + 1;
-      break;
-    }
-  }
-  return NO;
-}
-
 Chunk *TaskStack::findExceptionHandler()
 {
   while (!isEmpty()) {
@@ -138,7 +111,7 @@ Chunk *TaskStack::findExceptionHandler()
 }
 
 
-int frameSize(ContFlag cFlag)
+int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
   case C_COMP_MODE:
