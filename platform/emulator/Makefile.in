@@ -86,7 +86,7 @@ CREATEDFILES=                                   \
 OTHERSRCS= \
         main.cc \
         version.cc \
-        statisti.cc trace.cc \
+        statisti.cc \
         print.cc base.cc ozconfig.cc \
         foreign.cc dpInterface.cc boot-manager.cc \
         builtins.cc vprops.cc debug.cc interFault.cc \

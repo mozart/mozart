@@ -38,7 +38,6 @@
 #include "var_base.hh"
 #include "codearea.hh"
 #include "fdomn.hh"
-#include "trace.hh"
 #include "pickle.hh"
 #include "cpi.hh"
 
@@ -53,10 +52,8 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr,
           "usage: %s <options>\n",
           argv[0]);
-  fprintf(stderr, " -d           : debugging on\n");
   fprintf(stderr, " -init <file> : init functor\n");
   fprintf(stderr, " -u <url>     : application functor\n");
-  fprintf(stderr, " -x <hex>     : virtual site identifier\n");
   fprintf(stderr, " -- <args> ...: application arguments\n");
   osExit(1);
 }
@@ -206,13 +203,6 @@ void AM::init(int argc,char **argv)
     if (strcmp(argv[i],"--gui")==0 ||
         strcmp(argv[i], "-gui")==0) {
       ozconf.gui=1;
-      continue;
-    }
-
-    if (strcmp(argv[i],"-d")==0) {
-#ifdef DEBUG_TRACE
-      ozd_tracerOn();
-#endif
       continue;
     }
 
@@ -741,9 +731,6 @@ void handlerUSR1(int)
 
   CodeArea::writeInstr();
 
-#ifdef DEBUG_TRACE
-  ozd_tracerOn(); ozd_trace("halt");
-#endif
   message("Error handler exit ****\n");
 }
 

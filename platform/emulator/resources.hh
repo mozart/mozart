@@ -209,8 +209,6 @@ error include resources.hh before mozart.h
 /* always define debug print for debugging */
 #define DEBUG_PRINT
 
-// #define DEBUG_TRACE
-
 //#define SLOW_DEBUG_CHECK
 //#define DEBUG_GC
 //#define DEBUG_MEM
