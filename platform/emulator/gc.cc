@@ -729,11 +729,15 @@ inline
 void OzCtVariable::gc(void) {
   // gc suspension lists
   int noOfSuspLists = getNoOfSuspLists();
+
   // copy
-  _susp_lists = (SuspList **)
+  SuspList ** new_susp_lists = (SuspList **)
     heapMalloc(sizeof(SuspList *) * noOfSuspLists);
+  for (int i = noOfSuspLists; i--; )
+    new_susp_lists[i] = _susp_lists[0];
+  _susp_lists = new_susp_lists;
   // collect
-  gcLocalSuspList(getBoardInternal(), &(_susp_lists[0]), noOfSuspLists);
+  gcLocalSuspList(getBoardInternal(), _susp_lists, noOfSuspLists);
 
 }
 
