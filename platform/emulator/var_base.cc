@@ -231,7 +231,7 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
  *  -------------------------------------------------------------------------
  *  FD      | R->FD | R->FD | R->FD | NOOP  | NOOP  | CLASH | CLASH | CLASH |
  *  -------------------------------------------------------------------------
- *  BO      | R->BO | R->BO | R->BO | R->BO | NOOP  | CLASH | CLASH | CLASH |
+ *  BO      | R->BO | R->BO | R->BO | NOOP  | NOOP  | CLASH | CLASH | CLASH |
  *  -------------------------------------------------------------------------
  *  FS      | R->FS | R->FS | R->FS | CLASH | CLASH | NOOP  | CLASH | CLASH |
  *  -------------------------------------------------------------------------
@@ -284,14 +284,7 @@ OZ_Return oz_var_cast(TaggedRef * &fp, Board * fb, TypeOfVariable tt) {
     tv = new OzFDVariable(fb);
     break;
 
-  case VTP(BOOL,FD):   
-    tv = new OzBoolVariable(fb);
-    // Care for the susp lists
-    ((OzFDVariable *) fv)->relinkSuspListTo((OzBoolVariable *) tv);
-    break;
-    
-  case VTP(BOOL,SIMPLE): case VTP(BOOL,FUTURE): 
-  case VTP(BOOL,EXT):
+  case VTP(BOOL,SIMPLE): case VTP(BOOL,FUTURE): case VTP(BOOL,EXT):
     tv = new OzBoolVariable(fb);
     break;
 
