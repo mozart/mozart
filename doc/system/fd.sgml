@@ -231,7 +231,7 @@ Abbreviates <<{FD.int 0#FD.sup ?_{D}}>>.
 <p>
 <list>
 <entry>
-<index class=module/FD<and>reflect!min/
+<index class=module/FD<and>reflect<and>min/
 <<reflect.min>>
 <synopsis>
 <<<
@@ -241,7 +241,7 @@ Abbreviates <<{FD.int 0#FD.sup ?_{D}}>>.
 returns the current lower bound of ?_{D1}.
 
 <entry>
-<index class=module/FD<and>reflect!max/
+<index class=module/FD<and>reflect<and>max/
 <<reflect.max>>
 <synopsis>
 <<<
@@ -251,7 +251,7 @@ returns the current lower bound of ?_{D1}.
 returns the current upper bound of ?_{D1}.
 
 <entry>
-<index class=module/FD<and>reflect!mid/
+<index class=module/FD<and>reflect<and>mid/
 <<reflect.mid>>
 <synopsis>
 <<<
@@ -264,7 +264,7 @@ bound of ?_{D1}). In case of ties, the smaller
 element is selected.
 
 <entry>
-<index class=module/FD<and>reflect!nextLarger/
+<index class=module/FD<and>reflect<and>nextLarger/
 <<reflect.nextLarger>>
 <synopsis>
 <<<
@@ -275,7 +275,7 @@ returns the smallest integer in the domain of ?_{D1} which is larger than
 ?_{D2}.
 
 <entry>
-<index class=module/FD<and>reflect!nextSmaller/
+<index class=module/FD<and>reflect<and>nextSmaller/
 <<reflect.nextSmaller>>
 <synopsis>
 <<<
@@ -286,7 +286,7 @@ returns the largest integer in the domain of ?_{D1} which is smaller than
 ?_{D2}.
 
 <entry>
-<index class=module/FD<and>reflect!size/
+<index class=module/FD<and>reflect<and>size/
 <<reflect.size>>
 <synopsis>
 <<<
@@ -296,7 +296,7 @@ returns the largest integer in the domain of ?_{D1} which is smaller than
 returns the size of the current domain of ?_{D1}.
 
 <entry>
-<index class=module/FD<and>reflect!domList/
+<index class=module/FD<and>reflect<and>domList/
 <<reflect.domList>>
 <synopsis>
 <<<
@@ -306,7 +306,7 @@ returns the size of the current domain of ?_{D1}.
 returns the current domain of ?_{D} as an ordered list of integers.
 
 <entry>
-<index class=module/FD<and>reflect!dom/
+<index class=module/FD<and>reflect<and>dom/
 <<reflect.dom>>
 <synopsis>
 <<<
@@ -316,7 +316,7 @@ returns the current domain of ?_{D} as an ordered list of integers.
 returns the current domain of  ?_{D} as a domain specification.
 
 <entry>
-<index class=module/FD<and>reflect!nbSusps/
+<index class=module/FD<and>reflect<and>nbSusps/
 <<reflect.nbSusps>>
 <synopsis>
 <<<
@@ -331,7 +331,7 @@ returns the current number of suspensions  on ?_{D}.
 <p>
 <list>
 <entry>
-<index class=module/FD<and>watch!min/
+<index class=module/FD<and>watch<and>min/
 <<watch.min>>
 <synopsis>
 <<<
@@ -343,7 +343,7 @@ Returns <<true>> when <math/{\tt D1} \in \{{\tt D2}+1,\ldots,\codeinline{oz}{FD.
 store.
 
 <entry>
-<index class=module/FD<and>watch!max/
+<index class=module/FD<and>watch<and>max/
 <<watch.max>>
 <synopsis>
 <<<
@@ -943,7 +943,7 @@ relation symbol ?{A}, the symbol of the negated relation occurs in
 
 <list>
 <entry>
-<index class=module/FD<and>reified!int/
+<index class=module/FD<and>reified<and>int/
 <<reified.int>>
 <synopsis>
 <<<
@@ -953,7 +953,7 @@ relation symbol ?{A}, the symbol of the negated relation occurs in
 reifies <<{FD.int Spec D1}>> into ?_{D2}.
 
 <entry>
-<index class=module/FD<and>reified!dom/
+<index class=module/FD<and>reified<and>dom/
 <<reified.dom>>
 <synopsis>
 <<<
@@ -963,7 +963,7 @@ reifies <<{FD.int Spec D1}>> into ?_{D2}.
 reifies <<{FD.dom Spec Dv}>> into ?_{D}.
 
 <entry>
-<index class=module/FD<and>reified!sum/
+<index class=module/FD<and>reified<and>sum/
 <<reified.sum>>
 <synopsis>
 <<<
@@ -973,7 +973,7 @@ reifies <<{FD.dom Spec Dv}>> into ?_{D}.
 reifies <<{FD.sum Dv A D1}>> into ?_{D2}.
 
 <entry>
-<index class=module/FD<and>reified!sumC/
+<index class=module/FD<and>reified<and>sumC/
 <<reified.sumC>>
 <synopsis>
 <<<
@@ -983,7 +983,7 @@ reifies <<{FD.sum Dv A D1}>> into ?_{D2}.
 reifies <<{FD.sumC Iv Dv A D1}>> into ?_{D2}.
 
 <entry>
-<index class=module/FD<and>reified!sumCN/
+<index class=module/FD<and>reified<and>sumCN/
 <<reified.sumCN>>
 <synopsis>
 <<<
@@ -993,7 +993,7 @@ reifies <<{FD.sumC Iv Dv A D1}>> into ?_{D2}.
 reifies <<{FD.sumCN Iv Dvv A D1}>> into ?_{D2}.
 
 <entry>
-<index class=module/FD<and>reified!sumAC/
+<index class=module/FD<and>reified<and>sumAC/
 <<reified.sumAC>>
 <synopsis>
 <<<
@@ -1003,7 +1003,7 @@ reifies <<{FD.sumCN Iv Dvv A D1}>> into ?_{D2}.
 reifies <<{FD.sumAC Iv Dv A D1}>> into ?_{D2}.
 
 <entry>
-<index class=module/FD<and>reified!sumACN/
+<index class=module/FD<and>reified<and>sumACN/
 <<reified.sumACN>>
 <synopsis>
 <<<
@@ -1023,7 +1023,7 @@ reifies <<{FD.sumACN Iv Dvv A D1}>> into ?_{D2}.
 reifies <<{FD.distance D1 D2 A D3}>> into ?_{D4}.
 
 <entry>
-<index class=module/FD<and>reified!card/
+<index class=module/FD<and>reified<and>card/
 <<reified.card>>
 <synopsis>
 <<<
