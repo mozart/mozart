@@ -332,7 +332,7 @@ if (! OZ_isHeapChunk(T)) {                                                    \
 
 int OZ_getHeapChunkSize(TaggedRef t)
 {
-  NotHeapChunkWarning(t, OZ_getHeapChunkSize, NULL);
+  NotHeapChunkWarning(t, OZ_getHeapChunkSize, 0);
 
   return ((HeapChunk *) tagged2Const(t))->getChunkSize();
 }
