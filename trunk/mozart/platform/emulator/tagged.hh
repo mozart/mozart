@@ -803,26 +803,28 @@ static
 #else
 inline
 #endif
-Bool initRefsArray(RefsArray a, int size, Bool init)
-{
+Bool initRefsArray(RefsArray a, int size, Bool init) {
+  extern TaggedRef NameVoidRegister;
+
   setRefsArraySize(a,size);
+  register nvr = NameVoidRegister;
   if (init) {
     switch (size) {
-    case 10: a[9] = taggedVoidValue;
-    case  9: a[8] = taggedVoidValue;
-    case  8: a[7] = taggedVoidValue;
-    case  7: a[6] = taggedVoidValue;
-    case  6: a[5] = taggedVoidValue;
-    case  5: a[4] = taggedVoidValue;
-    case  4: a[3] = taggedVoidValue;
-    case  3: a[2] = taggedVoidValue;
-    case  2: a[1] = taggedVoidValue;
-    case  1: a[0] = taggedVoidValue;
+    case 10: a[9] = nvr;
+    case  9: a[8] = nvr;
+    case  8: a[7] = nvr;
+    case  7: a[6] = nvr;
+    case  6: a[5] = nvr;
+    case  5: a[4] = nvr;
+    case  4: a[3] = nvr;
+    case  3: a[2] = nvr;
+    case  2: a[1] = nvr;
+    case  1: a[0] = nvr;
       break;
     default:
       {
 	for(int i = size-1; i >= 0; i--) 
-	  a[i] = taggedVoidValue;
+	  a[i] = nvr;
       }
       break;
     }
