@@ -21,6 +21,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -138,8 +142,9 @@ char hex_digit(unsigned int i) {
 #define SAFETY_MARGIN      256
 #define STRING_BUFFER_SIZE 2048
 
+static char static_buffer[STRING_BUFFER_SIZE+SAFETY_MARGIN];
+
 class WIF {
-  char * static_buffer;
   char * buffer;
   char * start;
   char * write_start;
@@ -222,7 +227,6 @@ public:
     var_ctr    = 0;
     image_ctr  = 0;
 
-    static_buffer = new char[STRING_BUFFER_SIZE+SAFETY_MARGIN];
     start         = static_buffer;
     end           = start + STRING_BUFFER_SIZE;
     buffer        = start;
@@ -243,7 +247,6 @@ public:
   }
 
   ~WIF() {
-    delete static_buffer;
     dispose();
   }
 
@@ -1483,5 +1486,19 @@ OZ_BI_define(BIwif_getNames,0,3) {
   return PROCEED;
 } OZ_BI_end
 
+
+
+/*
+ * The builtin table
+ */
+
+#ifndef STATIC_LIBWIF
+
+OZ_C_proc_interface oz_interface[] = {
+#include "libwif.tbl"
+ {0,0,0,0}
+};
+
+#endif
 
 

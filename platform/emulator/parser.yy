@@ -1552,7 +1552,7 @@ static OZ_Term parse() {
   return yyoutput? yyoutput: OZ_atom("parseError");
 }
 
-OZ_BI_define(ozparser_parseFile, 2, 1)
+OZ_BI_define(parser_parseFile, 2, 1)
 {
   // {ParseFile FileName OptRec ?AST}
   OZ_declareVirtualStringIN(0, file);
@@ -1578,7 +1578,7 @@ OZ_BI_define(ozparser_parseFile, 2, 1)
 }
 OZ_BI_end
 
-OZ_BI_define(ozparser_parseVirtualString, 2, 1)
+OZ_BI_define(parser_parseVirtualString, 2, 1)
 {
   // {ParseVirtualString VS OptRec ?AST}
   OZ_declareVirtualStringIN(0, str);
@@ -1597,17 +1597,5 @@ OZ_BI_define(ozparser_parseVirtualString, 2, 1)
     return PROCEED;
   } else
     return OZ_unify(x, xy_errorMessages);
-}
-OZ_BI_end
-
-OZ_BI_define(ozparser_fileExists, 1, 1)
-{
-  OZ_declareVirtualStringIN(0, str);
-  char *fullname = xy_expand_file_name(str);
-  if (fullname != NULL) {
-    delete[] fullname;
-    OZ_RETURN(OZ_true());
-  } else
-    OZ_RETURN(OZ_false());
 }
 OZ_BI_end
