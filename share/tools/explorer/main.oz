@@ -95,23 +95,23 @@ in
 	 end
       end
       
-      meth solver(Solver Order <=false)
+      meth script(Script Order <=false)
 	 lock
 	    ExplorerClass,Init
-	    {@MyManager query(proc {$ X} {Solver X} end Order)}
+	    {@MyManager query(proc {$ X} {Script X} end Order)}
 	 end
       end
 
-      meth one(Solver Order <=false)
+      meth one(Script Order <=false)
 	 lock
-	    ExplorerClass,solver(Solver Order)
+	    ExplorerClass,script(Script Order)
 	    {@MyManager.menu.search.next tk(invoke)}
 	 end
       end
 
-      meth all(Solver Order <=false)
+      meth all(Script Order <=false)
 	 lock
-	    ExplorerClass,solver(Solver Order)
+	    ExplorerClass,script(Script Order)
 	    {@MyManager.menu.search.all tk(invoke)}
 	 end
       end
