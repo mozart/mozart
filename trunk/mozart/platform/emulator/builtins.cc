@@ -230,7 +230,7 @@ OZ_BI_define(BIprocedureArity, 1,1)
   oz_declareNonvarIN(0, pterm);
 
   if (oz_isProcedure(pterm)) {
-    OZ_RETURN(oz_int(oz_procedureArity(pterm)));
+    OZ_RETURN(makeTaggedSmallInt(oz_procedureArity(pterm)));
   } else {
     oz_typeError(0,"Procedure");
   }
@@ -251,9 +251,10 @@ OZ_BI_define(BItuple, 2, 1)
   if (i == 0) OZ_RETURN(label);
 
   SRecord *sr = SRecord::newSRecord(label, i);
-
-  for (int j = 0; j < i; j++)
-    sr->setArg(j, am.getCurrentOptVar());
+  
+  TaggedRef ov = am.getCurrentOptVar();
+  while (i--)
+    sr->setArg(i, ov);
 
   OZ_RETURN(sr->normalize());
 } OZ_BI_end
@@ -1717,18 +1718,20 @@ OZ_BI_define(BIcloneRecord,1,1) {
     OZ_RETURN(rec);
   }
 
+  TaggedRef ov = am.getCurrentOptVar();
+  
   if (oz_isSRecord(rec)) {
     SRecord *in  = tagged2SRecord(rec);
     SRecord *out = SRecord::newSRecord(in->getLabel(),in->getArity());
-
-    for (int i=in->getWidth(); i--; ) {
-      out->setArg(i,oz_newVariable());
-    }
+    
+    for (int i=in->getWidth(); i--; )
+      out->setArg(i,ov);
+    
     OZ_RETURN(makeTaggedSRecord(out));
   }
   
   if (oz_isLTuple(rec)) {
-    OZ_RETURN(oz_cons(oz_newVariable(),oz_newVariable()));
+    OZ_RETURN(oz_cons(ov,ov));
   }
 
   oz_typeError(0,"Record");
@@ -1746,8 +1749,8 @@ OZ_BI_define(BIrecordToDictionary,1,1) {
     dict = new OzDictionary(bh);
   } else if (oz_isLTuple(rec)) {
     dict = new OzDictionary(bh);
-    dict->setArg(oz_int(1), oz_head(rec));
-    dict->setArg(oz_int(2), oz_tail(rec));
+    dict->setArg(makeTaggedSmallInt(1), oz_head(rec));
+    dict->setArg(makeTaggedSmallInt(2), oz_tail(rec));
   } else if (oz_isSRecord(rec)) {
     SRecord * r = tagged2SRecord(rec);
     int size = r->getWidth();
@@ -1755,7 +1758,7 @@ OZ_BI_define(BIrecordToDictionary,1,1) {
 
     if (r->isTuple()) {
       for (int i=size; i--; )
-	dict->setArg(oz_int(i+1),r->getArg(i));
+	dict->setArg(makeTaggedSmallInt(i+1),r->getArg(i));
     } else {
       TaggedRef as = r->getArityList();
 
@@ -3052,7 +3055,7 @@ OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
   if (!oz_isArray(term)) {
     oz_typeError(0,"Array");
   }
-  out = oz_int(tagged2Array(term)->getLow());
+  out = makeTaggedSmallInt(tagged2Array(term)->getLow());
   return PROCEED;
 }
 OZ_DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
@@ -3064,7 +3067,7 @@ OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
   if (!oz_isArray(term)) {
     oz_typeError(0,"Array");
   }
-  out = oz_int(tagged2Array(term)->getHigh());
+  out = makeTaggedSmallInt(tagged2Array(term)->getHigh());
   return PROCEED;
 }
 
@@ -3955,9 +3958,9 @@ int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...)
 
 
   OZ_Term ret = OZ_record(cat,
-			  oz_cons(oz_int(1),
+			  oz_cons(makeTaggedSmallInt(1),
 				  oz_cons(AtomDebug,oz_nil())));
-  OZ_putSubtree(ret,oz_int(1),exc);
+  OZ_putSubtree(ret,makeTaggedSmallInt(1),exc);
   OZ_putSubtree(ret,AtomDebug,NameUnit);
 
   am.setException(ret, oz_eq(cat,E_ERROR) ? TRUE : ozconf.errorDebug);
