@@ -49,6 +49,14 @@ case $PLAT in
         LDFLAGS=-s
 	moreargs="--enable-opt=yes"
     ;;
+    freebsd-i486)
+        LDFLAGS=-s
+	moreargs="--enable-opt=yes"
+    ;;
+    openbsd-sparc)
+        LDFLAGS=-s
+	moreargs="--enable-opt=yes"
+    ;;
     win32-i486)
         LDFLAGS=-s
         windlldir="$packageroot/dlls"
