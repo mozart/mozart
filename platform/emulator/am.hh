@@ -141,8 +141,29 @@ public:
 
   Bool isCritical() { return criticalFlag; }
 
+// #define DEBUG_STATUS
+#ifdef DEBUG_STATUS
+  /*
+   * Print capital letter, when flag is set and
+   * lower case letter when unset.
+   */
+  char flagChar(StatusBit flag)
+  {
+    switch (flag) {
+    case ThreadSwitch: return 'T';
+    case IOReady:      return 'I';
+    case UserAlarm:    return 'U';
+    case StartGC:      return 'G';
+    case DebugMode:    return 'D';
+    default:           return 'X';
+    }
+  }
+#endif
   void setSFlag(StatusBit flag)
   {
+#ifdef DEBUG_STATUS
+    printf("%c",flagChar(flag)); fflush(stdout);
+#endif
     criticalFlag = OK;
     statusReg = (flag | statusReg);
     criticalFlag = NO;
@@ -150,6 +171,9 @@ public:
 
   void unsetSFlag(StatusBit flag)
   {
+#ifdef DEBUG_STATUS
+    printf("%c",tolower(flagChar(flag))); fflush(stdout);
+#endif
     criticalFlag = OK;
     statusReg = (~flag & statusReg);
     criticalFlag = NO;
