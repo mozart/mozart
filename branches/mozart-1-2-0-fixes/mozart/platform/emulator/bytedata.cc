@@ -577,6 +577,7 @@ void ByteData::bytePrintStream(ostream& out) {
   for (int i=0; i<w; i++) {
     BYTE b = get(i);
     if (isalnum(b) || ispunct(b)) out << get(i);
+    else if (b==' ')  out << " ";
     else if (b=='\n') out << "\\n";
     else if (b=='\t') out << "\\t";
     else if (b=='\r') out << "\\r";
