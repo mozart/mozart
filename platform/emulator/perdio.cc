@@ -5951,9 +5951,7 @@ ByteSource::getTerm(OZ_Term out, OZ_Term triggerVar)
                     oz_atom("novaluefound"),triggerVar);
   }
 
-  SiteUnify(val,out);
-
-  return PROCEED;
+  return oz_unify(val,out);
 }
 
 OZ_Return
