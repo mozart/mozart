@@ -37,25 +37,14 @@ OZ_BI_define(fdp_dsum, 3, 0)
   OZ_EXPECT(pe, 1, expectLiteral);
 
   const char *op = OZ_atomToC(OZ_in(1));
-  if (!strcmp(SUM_OP_NEQ, op)) {
-    OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-    OZ_EXPECT(pe, 2, expectIntVarMinMax);
-    return pe.impose(new isumNEqProp(OZ_in(0), OZ_in(2)));
-  } else {
-    OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-    OZ_EXPECT(pe, 2, expectIntVarMinMax);
 
-    if (!strcmp(SUM_OP_EQ, op)) {
-      return pe.impose(new isumEqProp(OZ_in(0), OZ_in(2)));
-    } else if (!strcmp(SUM_OP_LEQ, op)) {
-      return pe.impose(new isumLeqProp(OZ_in(0), OZ_in(2)));
-    } else if (!strcmp(SUM_OP_LT, op)) {
-      return pe.impose(new isumLtProp(OZ_in(0), OZ_in(2)));
-    } else if (!strcmp(SUM_OP_GEQ, op)) {
-      return pe.impose(new isumGeqProp(OZ_in(0), OZ_in(2)));
-    } else if (!strcmp(SUM_OP_GT, op)) {
-      return pe.impose(new isumGtProp(OZ_in(0), OZ_in(2)));
-    }
+  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
+  OZ_EXPECT(pe, 2, expectIntVarMinMax);
+
+  if (!strcmp(SUM_OP_NEQ, op)) {
+    return pe.impose(new isumNEqProp(OZ_in(0), OZ_in(2)));
+  } else if (!strcmp(SUM_OP_EQ, op)) {
+    return pe.impose(new isumEqProp(OZ_in(0), OZ_in(2)));
   }
 
   ERROR_UNEXPECTED_OPERATOR(1);
@@ -77,26 +66,13 @@ OZ_BI_define(fdp_dsumC, 4, 0)
 
   const char *op = OZ_atomToC(OZ_in(2));
 
-  if (!strcmp(SUM_OP_NEQ, op)) {
-    OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
-    OZ_EXPECT(pe, 3, expectIntVarMinMax);
-    return pe.impose(new isumcNEqProp(OZ_in(0), OZ_in(1), OZ_in(3)));
-  }
-  else {
-    OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
-    OZ_EXPECT(pe, 3, expectIntVarMinMax);
+  OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
+  OZ_EXPECT(pe, 3, expectIntVarMinMax);
 
-    if (!strcmp(SUM_OP_EQ, op)) {
-      return pe.impose(new isumcEqProp(OZ_in(0),OZ_in(1),OZ_in(3)));
-    } else if (!strcmp(SUM_OP_LEQ, op)) {
-      return pe.impose(new isumcLeqProp(OZ_in(0),OZ_in(1),OZ_in(3)));
-    } else if (!strcmp(SUM_OP_LT, op)) {
-      return pe.impose(new isumcLtProp(OZ_in(0),OZ_in(1),OZ_in(3)));
-    } else if (!strcmp(SUM_OP_GEQ, op)) {
-      return pe.impose(new isumcGeqProp(OZ_in(0),OZ_in(1),OZ_in(3)));
-    } else if (!strcmp(SUM_OP_GT, op)) {
-      return pe.impose(new isumcGtProp(OZ_in(0),OZ_in(1),OZ_in(3)));
-    }
+  if (!strcmp(SUM_OP_NEQ, op)) {
+    return pe.impose(new isumcNEqProp(OZ_in(0), OZ_in(1), OZ_in(3)));
+  } else if (!strcmp(SUM_OP_EQ, op)) {
+    return pe.impose(new isumcEqProp(OZ_in(0),OZ_in(1),OZ_in(3)));
   }
 
   ERROR_UNEXPECTED_OPERATOR(2);
@@ -352,150 +328,6 @@ do_leave:
 
 //-----------------------------------------------------------------------------
 
-OZ_Return iLinLessEqProp::propagate(void) {
-  _OZ_DEBUGPRINT(("isumcLeqProp: invoked"));
-  // if vector nullified, return failed if c!=0, else done:
-  long old_domains_size;    // these record the overall domain size sum to
-  long new_domains_size =0; // check if something has changed.
-
-  simplify_on_equality();
-
-  int all_ones =1;          // if abs of all factors is 1, simpler calculation.
-
-  int i;
-  for (i=0; i<reg_sz; i++)
-    if (reg_a[i]*reg_a[i] != 1)
-      all_ones=0;
-
-  _OZ_DEBUGPRINT(("reg_sz=%d",reg_sz));
-  if (reg_sz == 0) return reg_c ? FAILED : OZ_ENTAILED;
-
-  DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
-  DECL_DYN_ARRAY(OZ_FiniteDomain, buffer, reg_sz);
-
-  for (i =0; i < reg_sz; i++) {
-    var[i].read(reg_x[i]);
-    buffer[i].initEmpty();
-  }
-  PropagatorController_VV P(reg_sz, var);
-
-  // loop until nothing is changed anymore
-  do {
-    // reduce: Variable that is currently being reduced
-    old_domains_size = new_domains_size;
-    new_domains_size = 0;
-
-    int reduce;
-    for (reduce =0; reduce < reg_sz; reduce++) {
-      // AuxDom is used for building up a new domain of possible values
-      OZ_FiniteDomain AuxDom;
-      AuxDom.initEmpty();
-
-      // summation for variable 'reduce', beginning at vector position 0 with
-      // initial lower and upper bound 0. Reg_c gets added at recursion end.
-
-      sum(AuxDom, var, reduce, 0, reg_c, reg_c, 1);
-
-      // now intersect 'AuxDom' with old domain of 'reduce' to get new bounds
-      if ((*var[reduce] &= AuxDom) == 0) goto do_fail;
-    }
-
-    // all factors have absolute value 1 : done.
-    if (all_ones == 1) goto do_leave;
-
-    // remove impossible values: The ugly part.
-    // for all values v of all domains d[i]:
-    // - if v in buffer[i] (initially empty) then done.
-    // - otherwise: if a summing combination giving v exits, write v into
-    //   buffer[i].
-    // at the end of the day, the elements in the buffer are exactly the
-    // possible ones.
-    DECL_DYN_ARRAY(int, curr_val, reg_sz);
-    for (reduce =0; reduce < reg_sz; reduce++) {
-      for (int k=0; k<reg_sz; k++)
-        curr_val[k]=var[k]->getMinElem(); // init curr_val array
-      int elem = -1;
-
-      // do successively for the elements of var[reduce]
-      while ((elem = var[reduce]->getNextLargerElem(elem)) != -1) {
-        if (!buffer[reduce].isIn(elem)) {
-          // get reverse-lexicographically next value
-          int to_increase =0;
-
-          do {
-            if (to_increase < reg_sz) {
-              // make sum and test it
-              int csum =reg_c;
-              curr_val[reduce] = elem;
-              for (int s =0; s < reg_sz; s++) csum += reg_a[s]*curr_val[s];
-              if (csum <= 0) // sum still negative -> constraint fulfilled
-                for (int s =0; s < reg_sz; s++) buffer[s] += curr_val[s];
-            }
-
-            // while 'overflow' and still in bounds: get next vector
-            to_increase = 0;
-            if (reduce == 0) to_increase++;
-
-            while((to_increase < reg_sz) &&
-                   ((curr_val[to_increase] =
-                   var[to_increase]->getNextLargerElem(curr_val[to_increase]))
-                   == -1)) {
-
-              curr_val[to_increase] = var[to_increase]->getMinElem();
-              to_increase++;
-              if (to_increase == reduce) to_increase++;
-            }
-          } while (to_increase < reg_sz);
-
-          if (!buffer[reduce].isIn(elem)) {
-            *var[reduce] -= elem;
-            _OZ_DEBUGPRINT(("*var[%d-=%d",reduce,elem));
-          }
-          _OZ_DEBUGPRINT(("Exited."));
-        }
-      }
-    }
-    for (int x =0; x < reg_sz; x++) {
-      int size =var[x]->getSize();
-      if (size == 0) goto do_fail;
-      new_domains_size += size;
-    }
-  } while (new_domains_size != old_domains_size); // something changed, repeat
-
-  goto do_leave;
-
-do_fail:
-   _OZ_DEBUGPRINT(("failAll: FAILED"));
-  return P.fail();
-
-do_leave:
-  // bugfix : not recognizing 'entailed'
-  // check if sum over all max/mins is smaller than upper bound
-  _OZ_DEBUGPRINT(("do_leave"));
-
-  int upsum = reg_c;
-  for (i=0; i < reg_sz; i++) {
-    if (reg_a[i] > 0) upsum += reg_a[i]*var[i]->getMaxElem();
-    else              upsum += reg_a[i]*var[i]->getMinElem();
-  }
-  _OZ_DEBUGPRINT(("upsum=%d reg_c=%d",upsum,reg_c));
-
-  int already_entailed =(upsum <= 0);
-
-  OZ_Return value =P.leave();
-
-  if (value == OZ_ENTAILED) _OZ_DEBUGPRINT(("ENTAILED"));
-  else                      _OZ_DEBUGPRINT(("SLEEP"));
-  if (already_entailed) {
-    _OZ_DEBUGPRINT(("ALREADY_ENTAILED"));
-    return OZ_ENTAILED;
-  }
-  else return value;
-}
-
-
-//-----------------------------------------------------------------------------
-
 OZ_Return iLinNEqProp::propagate(void) {
   _OZ_DEBUGPRINT(("isumcNEqProp: invoked"));
   // if vector nullified, return failed if c!=0, else done:
@@ -644,17 +476,9 @@ do_leave:
 //-----------------------------------------------------------------------------
 OZ_PropagatorProfile isumEqProp::profile;
 OZ_PropagatorProfile isumNEqProp::profile;
-OZ_PropagatorProfile isumLeqProp::profile;
-OZ_PropagatorProfile isumLtProp::profile;
-OZ_PropagatorProfile isumGeqProp::profile;
-OZ_PropagatorProfile isumGtProp::profile;
 
 OZ_PropagatorProfile isumcEqProp::profile;
 OZ_PropagatorProfile isumcNEqProp::profile;
-OZ_PropagatorProfile isumcLeqProp::profile;
-OZ_PropagatorProfile isumcLtProp::profile;
-OZ_PropagatorProfile isumcGeqProp::profile;
-OZ_PropagatorProfile isumcGtProp::profile;
 
 //-----------------------------------------------------------------------------
 // eof
