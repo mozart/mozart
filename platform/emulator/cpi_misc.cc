@@ -11,6 +11,34 @@
 
 #include "cpi.hh"
 
+
+//-----------------------------------------------------------------------------
+
+#ifdef CPI_FILE_PRINT
+
+ofstream * init_cpi_cout(char * n) {
+  static ofstream _cpi_cout(n, ios::out);
+
+  cerr << endl << "CPI debug output goes to '" << n << "'." 
+       << endl << flush;
+
+  if (! _cpi_cout )
+    cerr << endl << "Cannot open '" << n << "' for output." 
+	 << endl << flush;
+
+  return &_cpi_cout;
+}
+
+ofstream * cpi_cout = init_cpi_cout("/tmp/cpi_debug.out");
+
+#else
+
+ostream * cpi_cout = &cout;
+
+#endif
+
+//-----------------------------------------------------------------------------
+
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val)
 {
   return isPosSmallInt(val);

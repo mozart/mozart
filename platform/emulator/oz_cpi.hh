@@ -18,10 +18,19 @@
 #include "oz.h"
 
 //#define DEBUG_FSET
+//#define DEBUG_FD
 
-#ifdef DEBUG_FSET
-#define FSET_FILE_PRINT
+#if defined(DEBUG_FSET) || defined(DEBUG_FD)
+//#define CPI_FILE_PRINT
 #endif
+
+#ifdef CPI_FILE_PRINT
+#include <fstream.h>
+extern ofstream * cpi_cout;
+#else
+extern ostream * cpi_cout;
+#endif
+
 
 //-----------------------------------------------------------------------------
 // misc macros
