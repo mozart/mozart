@@ -59,7 +59,12 @@ inline REGEX* tagged2Regex(OZ_Term t)
 
 OZ_Term REGEX::printV(int depth = 10)
 {
-  return OZ_pair2(typeV(), OZ_atom(src));
+  return OZ_mkTupleC("#",5,
+                     OZ_atom("<"),
+                     typeV(),
+                     OZ_atom(" "),
+                     OZ_atom(src),
+                     OZ_atom(">"));
 }
 
 OZ_Extension* REGEX::gcV()

@@ -21,6 +21,7 @@ public:
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("gdbm"); }
   virtual OZ_Extension* gcV();
+  virtual OZ_Term printV(int depth = 10);
   //
   void release();
   void close();
@@ -61,6 +62,17 @@ void GDBM::close() {
 void GDBM::release() {
   close();
   if (filename!=0) { free(filename); filename=0; }
+}
+
+OZ_Term GDBM::printV(int depth = 10)
+{
+  return OZ_mkTupleC("#",6,
+                     OZ_atom("<"),
+                     typeV(),
+                     OZ_atom(" "),
+                     OZ_atom((db==0)?"[closed] ":""),
+                     OZ_atom(filename),
+                     OZ_atom(">"));
 }
 
 //
