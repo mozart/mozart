@@ -40,10 +40,10 @@ import
 prepare
    Spec = record('in'(single char: &i type: string optional: false)
                  'type'(single char: &t type: string optional: false
-                        validate:alt(when(chunk false) true))
+                        validate:alt(when(chunk false) when(true true)))
                  'html'(alias: 'type'#"html-stylesheets")
                  'out'(single char: &o type: string optional: false
-                       validate:alt(when(chunk false) true))
+                       validate:alt(when(chunk false) when(true true)))
                  'autoindex'(rightmost type: bool default: false)
                  'chunk'(multiple type:string)
                  'chunk-sep'(single type:string default:"\t")
