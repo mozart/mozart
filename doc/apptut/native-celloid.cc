@@ -10,6 +10,10 @@ public:
   virtual OZ_Extension* gcV();
   virtual void gcRecurseV();
   virtual OZ_Term printV(int depth = 10);
+  virtual OZ_Extension * gCollectV();
+  virtual void gCollectRecurseV();
+  virtual OZ_Extension * sCloneV();
+  virtual void sCloneRecurseV();
 };
 
 OZ_BI_define(celloid_new,1,1)
@@ -54,7 +58,7 @@ OZ_BI_define(celloid_assign,2,0)
 {
   OZ_declareCelloid(0,c);
   OZ_declareTerm(1,t);
-  if (c->isLocalV()) { c->content = t; return PROCEED; }
+  if (c->isLocal()) { c->content = t; return PROCEED; }
   else return OZ_raiseErrorC("celloid",3,OZ_atom("nonLocal"),
                              OZ_in(0),OZ_in(1));
 }
@@ -65,8 +69,10 @@ OZ_Term Celloid::printV(int depth = 10)
   return OZ_atom("<celloid>");
 }
 
-OZ_Extension* Celloid::gcV() { return new Celloid(content); }
-void Celloid::gcRecurseV() { OZ_collect(content); }
+OZ_Extension * Celloid::gCollectV() { return new Celloid(content); }
+void Celloid::gCollectRecurseV() { OZ_gCollect(&content); }
+OZ_Extension * Celloid::sCloneV() { return new Celloid(content); }
+void Celloid::sCloneRecurseV() { OZ_sClone(&content); }
 
 OZ_C_proc_interface * oz_init_module(void)
 {
