@@ -373,7 +373,6 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
   feature_var:
     switch (tagged2Var(f)->getType()) {
     case OZ_VAR_FS:
-    case OZ_VAR_OF:
       goto type_error_f;
     default:
       return SUSPEND;
