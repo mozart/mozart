@@ -1,1 +1,0 @@
-<ITEM> <<font:F>> : Specifies the font to use when drawing text inside the widget. This parameter can't be get at runtime, however it can be set. <<F>> must be a valid font (see  <ptr to="misc.font">)

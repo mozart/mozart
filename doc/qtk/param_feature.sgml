@@ -1,1 +1,0 @@
-<ITEM> <<feature:A>> : Specifies a feature name for the container object to reference the object controlling this widget. For more details, see <ptr to="basics.interaction">. <<A>> must be an atom.

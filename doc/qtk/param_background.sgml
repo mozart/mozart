@@ -1,2 +1,0 @@
-<ITEM> <<background:C>> or <<bg:C>> : Specifies the normal background color to use when displaying the widget. <<C>> must be a valid color (see <ptr to="misc.color">).
-

@@ -1,1 +1,0 @@
-<ITEM> <<cursor:A>> : Specifies the mouse cursor to be used for the widget. <<A>> must be a valid cursor (see  <ptr to="misc.cursor">)

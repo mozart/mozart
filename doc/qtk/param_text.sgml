@@ -1,1 +1,0 @@
-<ITEM> <<text:VS>> : Specifies a string to be displayed inside the widget. The way in which the string is displayed depends on the particular widget and may be determined by other options, such as <<anchor>> or <<justify>>. <<VS>> must be a virtual string.

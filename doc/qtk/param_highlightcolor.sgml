@@ -1,2 +1,0 @@
-<ITEM> <<highlightcolor:C>> : Specifies the color to use for the traversal highlight rectangle that is drawn around the widget when it has the input focus. <<C>> must be a valid color (see <ptr to="misc.color">)
-
