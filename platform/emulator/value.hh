@@ -1438,6 +1438,9 @@ public:
   int supportsLocking() { return flags&CLASS_LOCKING; }
   int isSited()         { return flags&CLASS_SITED; }
 
+  int getFlags() { return flags; }
+  void setFlags(int f) { flags = f; }
+
   OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
 
@@ -1462,13 +1465,13 @@ public:
   ObjectClass *gcClass() { return (ObjectClass *) gcConstTerm(); }
 
   void import(SRecord *feat,OzDictionary *fm, SRecord *uf,
-              OzDictionary *dm, Bool l)
+              OzDictionary *dm, int f)
   {
     features       = feat;
     fastMethods    = fm;
     unfreeFeatures = uf;
     defaultMethods = dm;
-    if (l) flags |= CLASS_LOCKING;
+    flags          = f;
   }
 
   TaggedRef getArityList();

@@ -317,6 +317,7 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
   GName *gn = globalizeConst(cl,bs);
   trailCycle(cl,bs);
   marshalGName(gn,bs);
+  marshalNumber(cl->getFlags(),bs);
   marshalSRecord(cl->getFeatures(),bs);
 }
 
@@ -653,18 +654,19 @@ void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
 
 void unmarshalClass(ObjectClass *cl, MsgBuffer *bs)
 {
+  int flags = unmarshalNumber(bs);
+
   SRecord *feat = unmarshalSRecord(bs);
 
   if (cl==NULL)  return;
 
   TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
-  Bool locking = oz_isTrue(oz_deref(feat->getFeature(NameOoLocking)));
 
   cl->import(feat,
              tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
              oz_isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
              tagged2Dictionary(feat->getFeature(NameOoDefaults)),
-             locking);
+             flags);
 }
 
 OZ_Term unmarshalTerm(MsgBuffer *bs)
