@@ -74,7 +74,6 @@ char * ProfileData::print_msg2[no_high2] = {
   "FDVARs             ",
   "OFSVARs            ",
   "BOOLVARs           ",
-  "METAVARs           ",
   "BOARDs             ",
   "ASKACTORs          ",
   "WAITACTORs         ",  

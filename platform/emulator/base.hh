@@ -214,7 +214,6 @@ struct Equation;
 class SVariable;
 class GenCVariable;
 class GenFDVariable;
-class GenMetaVariable;
 class GenBoolVariable;
 class GenFSetVariable;
 class GenCtVariable;

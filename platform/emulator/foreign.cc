@@ -1061,12 +1061,6 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
       break;
    }
 
-  case MetaVariable:
-    {
-      out << s;
-      // TmpBuffer.print_string(((GenMetaVariable *)cv)->toString(0));
-      break;
-    }
   case PerdioVariable:
     {
       PerdioVar *pv = (PerdioVar *) cv;
