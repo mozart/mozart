@@ -548,7 +548,8 @@ void managerProbeFault(Tertiary *t, DSite* s,int pr) {
 void DSite::probeFault(ProbeReturn pr) {
   PD((PROBES,"PROBEfAULT  site:%s",stringrep()));
   int limit=OT->getSize();
-  for(int ctr = 0; ctr<limit;ctr++){
+  int ctr = 0;
+  for(ctr = 0; ctr<limit;ctr++){
     BucketHashNode* o = OT->getBucket(ctr);
     while(o){
       OwnerEntry *oe = (OwnerEntry *)(o);
@@ -566,7 +567,7 @@ void DSite::probeFault(ProbeReturn pr) {
     }
   }
   limit=BT->getSize();
-  for(int ctr = 0; ctr<limit;ctr++){
+  for(ctr = 0; ctr<limit;ctr++){
     BucketHashNode* o = BT->getBucket(ctr);
     while(o){
       BorrowEntry *be = (BorrowEntry *)(o);

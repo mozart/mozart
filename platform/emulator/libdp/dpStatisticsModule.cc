@@ -71,7 +71,8 @@ OZ_BI_define(BIsiteStatistics,0,1)
   initDP();
   OZ_Term sitelist = oz_nil();
   int limit = primarySiteTable->getSize();
-  for(int ctr = 0; ctr<limit;ctr++)
+  int ctr = 0;
+  for(ctr = 0; ctr<limit;ctr++)
     {
       DSite *found = (DSite *) primarySiteTable->getBucket(ctr);
       while (found){
@@ -81,7 +82,7 @@ OZ_BI_define(BIsiteStatistics,0,1)
     }
 
   limit = secondarySiteTable->getSize();
-  for(int ctr = 0; ctr<limit;ctr++)
+  for(ctr = 0; ctr<limit;ctr++)
     {
       DSite *found = (DSite *) secondarySiteTable->getBucket(ctr);
       while (found){
