@@ -283,11 +283,11 @@ Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
     return OK;
   }
 
-  TaggedRef arityList = getRecordArity(arity)->getList();
-
   TaggedRef auxX[100];
   if (::getWidth(arity)>=100)
     return NO;
+
+  TaggedRef arityList = sraGetArityList(arity);
 
   def = rec->getArityList();
 
@@ -983,7 +983,7 @@ TaggedRef SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
 
 TaggedRef makeTupleArityList(int i)
 {
-  Assert(i>0);
+  Assert(i>=0);
   TaggedRef out = nil();
   while (i>0) {
     out=cons(newSmallInt(i),out);
