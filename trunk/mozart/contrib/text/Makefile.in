@@ -13,16 +13,17 @@ EMACS		= emacs
 HOMEURL         = @HOMEURL@
 PLATFORM	= @PLATFORM@
 OZTOOL		= @OZTOOL@
-OZTOOL_INCLUDES	= $(PREFIX)/include
+OZTOOL_INCLUDES	= -I$(PREFIX)/include
 OZFLEX		= @OZFLEX@
 
-TARGETS		= xsl-attribute.ozf \
-		  XSL_Attribute_Scanner.so-$(PLATFORM) \
-		  xsl-stylesheet.ozf xsl-compiler.ozf \
-		  xml.ozf XML_Scanner.so-$(PLATFORM)
+TARGETS		= XML.ozf XML_Scanner.so-$(PLATFORM) \
+		  XSL-ATTRIBUTE.ozf XSL_Scanner.so-$(PLATFORM) \
+		  XSL-ELEMENT.ozf XSL-MATCHING.ozf XSL-POSITION.ozf \
+		  XSL-SEARCH.ozf XSL-SELECTING.ozf
 LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
+APPLICS		= ozxsl
 
-all:		$(TARGETS)
+all:		$(TARGETS) $(APPLICS)
 install:	$(LIB_DIR) $(LIB_TARGETS)
 
 $(LIB_DIR) $(ELIB_DIR):
@@ -34,11 +35,14 @@ $(LIB_TARGETS): $(LIB_DIR)/% : %
 %.ozf: %.oz
 	$(OZC) -c $< -o $@
 
-XSL_Attribute_Scanner.so-$(PLATFORM): xsl-attribute.ozf
-XML_Scanner.so-$(PLATFORM): xml.ozf
+ozxsl: ozxsl.oz
+	$(OZC) -x $< -o $@
+
+XSL_Scanner.so-$(PLATFORM): XSL-ATTRIBUTE.ozf
+XML_Scanner.so-$(PLATFORM): XML.ozf
 
 clean veryclean:
-	-rm *~ *.ozf *.C *.l *.o
+	-rm *~ *.ozf *.C *.l *.o *.so-* $(APPLICS)
 
 distclean: veryclean
 	-rm Makefile config.*
