@@ -26,7 +26,7 @@ local
 	ScaledMyX + ScaledSpace   BottomY)
    end
 
-   fun {ChoiceShape ScaledMyX ScaledMyY Scale}
+   fun {ChooseShape ScaledMyX ScaledMyY Scale}
       ScaledCircleWidth = Scale * CircleWidthF
    in
       o(oval
@@ -83,24 +83,24 @@ local
 
    in
 
-      class ChoiceImage from Image
+      class ChooseImage from Image
 	 feat Tag
 	 meth init(parent:Parent)
 	    self.Tag = {Tk.server tkGet($)}
 	    <<Image init(parent: Parent
-			 tcl:    o({ChoiceShape ImageCenter ImageCenter
+			 tcl:    o({ChooseShape ImageCenter ImageCenter
 				    ImageScale}
-				   o(fill:    ChoiceColor
+				   o(fill:    ChooseColor
 				     outline: LineColor
 				     width:   NodeBorderWidth
 				     tags:    self.Tag)))>>
 	 end
 	 meth finish
-	    <<ChoiceImage tk(itemconf self.Tag o(fill:ChoiceTermColor
+	    <<ChooseImage tk(itemconf self.Tag o(fill:ChooseTermColor
 						 width: TermNodeBorderWidth))>>
 	 end
 	 meth clear
-	    <<ChoiceImage tk(itemconf self.Tag o(fill:ChoiceColor
+	    <<ChooseImage tk(itemconf self.Tag o(fill:ChooseColor
 						 width: NodeBorderWidth))>>
 	 end
       end
@@ -144,12 +144,12 @@ in
 
    Images = images(succeeded: SucceededImage
 		   blocked:   BlockedImage
-		   choice:    ChoiceImage
+		   choose:    ChooseImage
 		   failed:    FailedImage)
 
    Shapes = shapes(succeeded: SucceededShape
 		   blocked:   BlockedShape
-		   choice:    ChoiceShape
+		   choose:    ChooseShape
 		   failed:    FailedShape
 		   hidden:    HiddenShape)
 

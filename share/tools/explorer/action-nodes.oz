@@ -36,29 +36,29 @@ local
 	 end
       end
    in
-      class Choice
+      class Choose
 
 	 meth FindKids(Ks Depth CurX FindX $)
 	    !Ks=K|Kr
 	 in
 	    case Kr==nil then
-	       case K.kind of choice then
+	       case K.kind of choose then
 		  {K findByX(Depth-1 CurX FindX $)}
 	       else K
 	       end
 	    elsecase {K isInSubtree(CurX Depth-1 FindX $)} then
-	       case K.kind of choice then
+	       case K.kind of choose then
 		  {K findByX(Depth-1 CurX FindX $)}
 	       else K
 	       end
-	    else <<Choice FindKids(Kr Depth CurX FindX $)>>
+	    else <<Choose FindKids(Kr Depth CurX FindX $)>>
 	    end
 	 end
    
 	 meth findByX(Depth MomX FindX $)
 	    case Depth>0 then
 	       case @isHidden then self
-	       else <<Choice FindKids(@kids Depth MomX+@offset FindX $)>>
+	       else <<Choose FindKids(@kids Depth MomX+@offset FindX $)>>
 	       end
 	    else self
 	    end
@@ -78,6 +78,6 @@ in
    ActionNodes=c(succeeded: Succeeded
 		 failed:    FailedOrBlocked
 		 blocked:   FailedOrBlocked
-		 choice:    Choice)
+		 choose:    Choose)
 
 end
