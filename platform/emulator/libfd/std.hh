@@ -309,14 +309,7 @@ public:
 inline
 OZ_Boolean Propagator_VD::hasEqualVars(void)
 {
-  if (mayBeEqualVars()) {
-    int * is = OZ_findEqualVars(reg_l_sz, reg_l);
-
-    for (int i = reg_l_sz; i--; )
-      if (is[i] != -1 && is[i] != i)
-        return OZ_TRUE;
-  }
-  return OZ_FALSE;
+  return (mayBeEqualVars() && OZ_hasEqualVars(reg_l_sz, reg_l));
 }
 
 //-----------------------------------------------------------------------------

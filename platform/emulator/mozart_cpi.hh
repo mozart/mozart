@@ -962,6 +962,7 @@ _FUNDECL(void,OZ_hfreeOzTerms,(OZ_Term *, int));
 _FUNDECL(void,OZ_hfreeCInts,(int *, int));
 _FUNDECL(void,OZ_hfreeChars,(char *, int));
 
+_FUNDECL(OZ_Boolean,OZ_hasEqualVars,(int, OZ_Term *));
 _FUNDECL(int *,OZ_findEqualVars,(int, OZ_Term *)); // static return value
 _FUNDECL(int *,OZ_findSingletons,(int, OZ_Term *)); // static return value
 
