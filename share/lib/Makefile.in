@@ -77,7 +77,7 @@ APSRC = $(APSRC1:%.oz=AP/%.oz) AP.oz
 CPSRC1 = Search.oz FD.oz FS.oz
 CPSRC = $(CPSRC1:%=CP/%) CP.oz
 
-DPSRC1 = Site.oz agenda.oz remote.oz server.oz
+DPSRC1 = Site.oz Connection.oz agenda.oz remote.oz server.oz
 DPSRC = $(DPSRC1:%=DP/%) DP.oz
 
 WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
