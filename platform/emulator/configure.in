@@ -373,6 +373,8 @@ dnl AC_HEADER_STDC
 dnl AC_HEADER_SYS_WAIT
 dnl AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
 
+AC_CHECK_HEADERS(dlfcn.h)
+
 dnl *****************************************************************
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl *****************************************************************
@@ -397,7 +399,7 @@ dnl AC_TYPE_SIGNAL
 dnl AC_FUNC_VPRINTF
 dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname setpgid)
 
-AC_CHECK_FUNCS(sbrk)
+AC_CHECK_FUNCS(sbrk dlopen)
 
 dnl *****************************************************************
 dnl MISC
