@@ -67,6 +67,7 @@ define(opAction,
         $1,HashTableRef, handleHashTable(PC++,ht);,
         $1,GenCallInfo,handleGenCallInfo(PC++,ht);,
         $1,ApplMethInfo,handleApplMethInfo(PC++,ht);,
+        $1,Cache,handleCache(PC,ht); PC += CacheSize;,
         $1,,,
         PC++;)')
 
@@ -195,6 +196,11 @@ void handleApplMethInfo(ProgramCounter PC, HashTable *ht)
 }
 
 
+static
+void handleCache(ProgramCounter PC, HashTable *ht)
+{
+  CodeArea::writeCache(PC);
+}
 
 
 /* the compiler stores AbstractionEntries as ints */
