@@ -301,7 +301,7 @@ make prefix=?{packages} install>>>
     <Chapter>
       <Title/Building Mozart/
       <P>
-	No we can get to the real thing.  Retrieve the sources from the CVS:
+	Now we can get to the real thing.  Retrieve the sources from the CVS:
 <<<cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart
 cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart-stdlib>>>
 	(specify <<-r mozart-1-2-0-fixes>> to get the fixes branch).
