@@ -686,7 +686,7 @@ Board * Board::gcBoard() {
 
   Assert(isInGc || bb->isInTree()); 
 
-  Board *ret = (Board *) OZ_hrealloc(bb, sizeof(Board));
+  Board *ret = (Board *) oz_hrealloc(bb, sizeof(Board));
 
   gcStack.push(ret,PTR_BOARD);
 
@@ -1157,11 +1157,11 @@ FSetValue * FSetValue::gc(void) {
   Assert(isInGc);
 
 #ifdef BIGFSET
-  FSetValue *retval = (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
+  FSetValue *retval = (FSetValue *) oz_hrealloc(this, sizeof(FSetValue));
   retval->_IN.copyExtension();
   return retval;
 #else
-  return (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
+  return (FSetValue *) oz_hrealloc(this, sizeof(FSetValue));
 #endif
 }
 
@@ -1295,7 +1295,7 @@ Thread *Thread::gcDeadThread() {
 
 
 OZ_Propagator * OZ_Propagator::gc(void) {
-  OZ_Propagator * to = (OZ_Propagator *) OZ_hrealloc(this, sizeOf());
+  OZ_Propagator * to = (OZ_Propagator *) oz_hrealloc(this, sizeOf());
 
   return to;
 }
@@ -2479,7 +2479,7 @@ Actor * Actor::gcActor() {
     sz = sizeof(SolveActor);
   }
       
-  Actor * ret = (Actor *) OZ_hrealloc(this, sz);
+  Actor * ret = (Actor *) oz_hrealloc(this, sz);
 
   gcStack.push(ret, PTR_ACTOR);
 
@@ -3006,49 +3006,3 @@ void CodeArea::gcCollectCodeBlocks()
 
 
 
-/*
- * DO NOT MOVE, otherwise gcc will inline this thingie, which is
- * plain wrong: inlining this function will lead to a large spill
- * code sequence in the function in which it gets inlined
- *
- */
-void * OZ_hrealloc(void * p, size_t sz) {
-  // Use for blocks where size is not known at compile time
-  DebugCheck(sz%sizeof(int) != 0,
-	     OZ_error("OZ_hrealloc: can only handle word sized blocks"););
-
-  int32 * frm = (int32 *) p;
-  int32 * to  = (int32 *) heapMalloc(sz);
-  int32 * ret = to;
-
-  register int32 f0, f1, f2, f3;
-
-  if (sz > 16) {
-    f0 = frm[0]; f1 = frm[1]; f2 = frm[2]; f3 = frm[3]; 
-      
-    sz -= 16;
-
-    frm += 4; 
-
-    while (sz > 16) {
-      to[0] = f0; f0 = frm[0]; to[1] = f1; f1 = frm[1]; 
-      sz -= 16; 
-      to[2] = f2; f2 = frm[2]; to[3] = f3; f3 = frm[3]; 
-      frm += 4; to  += 4; 
-    }
-
-    to[0] = f0;  to[1] = f1; to[2] = f2;  to[3] = f3;
-
-    to += 4;
-    
-  }
-    
-  switch(sz) {
-  case 16: to[3] = frm[3];
-  case 12: to[2] = frm[2];
-  case  8: to[1] = frm[1];
-  case  4: to[0] = frm[0];
-  }
-
-  return ret;
-}
