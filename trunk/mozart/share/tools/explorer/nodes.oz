@@ -64,7 +64,7 @@ in
 		 choose:    {Class.new [ChooseNode] a Features [final]})
       S = {Space.new Query}
    in   
-      case thread {Space.askVerbose S} end
+      case {Space.askVerbose S}
       of failed then
 	 {New Classes.failed init(Sentinel 1)}
       [] succeeded(SA) then

@@ -21,25 +21,8 @@
 
 local
 
-   local
-      fun {IsPerhapsList Xs}
-	 case Xs of _|_ then true else false end
-      end
-   in
-      fun {IsDefList X}
-	 S = {Space.new fun {$} {IsPerhapsList X} end}
-	 V = thread {Space.askVerbose S} end
-      in
-	 case V
-	 of succeeded(entailed)
-	 then
-	    {Space.merge S}
-	 [] blocked(_)
-	 then
-	    {Space.inject S proc {$ _} fail end}
-	    false
-	 end
-      end
+   fun {IsDefList Xs}
+      {IsDet Xs} andthen case Xs of _|_ then true else false end
    end
 
    fun {FormatArgs A}
