@@ -25,10 +25,6 @@
  */
 
 
-/* magic marker for start of saved components */
-/* HACK ALERT: */
-#define PERDIOMAGICSTART       M_FILE
-
 
 #define BYTEBUFFER_CUTOFF 100
 #define BYTEBUFFER_SIZE   2048
