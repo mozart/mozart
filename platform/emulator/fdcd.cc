@@ -198,7 +198,7 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   
 // check if vars got unified and if so propagate equality to local vars
   x.propagate_unify_cd(clauses, variables, _vp);
-  
+
 // constrain local variables with corresponding global ones
   for (c = clauses; c--; ) {
     if (x[idx_b(c)] == 0) {
@@ -255,8 +255,9 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   for (c = clauses; c--; ) {
     if (x[idx_b(c)] == 0)
       continue;
-    for (v = variables; v--; )
+    for (v = variables; v--; ) {
       x.propagateIfTouched(idx_vp(c, v));
+    }
     x.backup();
     if (!localPropStore.do_propagation())
       x[idx_b(c)] &= 0;
@@ -265,8 +266,22 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   
   localPropStore.restore();
 
-// Note: since Bs and Vps are local reintroduction is superfluous
+// Note: since Bs and Vps are local, reintroduction is actual superfluous,
+// since domains can get singletons and the according variable get disposed,
+// we need to reintroduce Bs and Vps
+  // introduce Bs
+  for (c = clauses; c--; ) {
+    x.reintroduce(idx_b(c), TaggedRef(&_b[c]));
+  }
   
+  // introduce Vps
+  for (c = 0; c < clauses; c += 1) {  // acendingly counting ('cause of x.add)
+    STuple &vp_c = *tagged2STuple(deref(_vp[c]));
+    for (v = variables; v--; ) { 
+      x.reintroduce(idx_vp(c, v), TaggedRef(&vp_c[v]));
+    }
+  }
+
 // check if unit commit, top commit, failure occurs
   failed_clauses = 0;
   not_failed_clause = -1;
