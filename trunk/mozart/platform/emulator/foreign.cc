@@ -1922,7 +1922,7 @@ OZ_Return OZ_raiseError(OZ_Term exc)
 OZ_Return OZ_raiseErrorC(char *label,int arity,...)
 {
   if (arity == 0) {
-    return OZ_raise(OZ_atom(label));
+    return OZ_raiseError(OZ_atom(label));
   }
 
   va_list ap;
