@@ -40,20 +40,6 @@
 #include "network.hh"
 #include "vs_interface.hh"
 
-#ifdef VIRTUALSITES
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#else
-// kost@ : distributed Oz sites should be capable to accept, store
-// and (re-)transmit virtual info, thus, 'key_t' data.
-// The following definition is safe in the current implementation
-// since marshaler/unmarshaler already assumes that;
-// CS CS CS: LOOK KOSTJA
-#include <sys/ipc.h>
-#include <sys/shm.h>
-// typedef unsigned int key_t;
-#endif
-
 /**********************************************************************/
 /*   SECTION :: Site                                                  */
 /**********************************************************************/
