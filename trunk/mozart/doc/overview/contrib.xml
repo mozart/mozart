@@ -41,8 +41,9 @@
   <author id="Denys.Duchier"/>
   <topic id="scripts"/>
   <title>ozskel</title>
-  <import href="/usr/local/oz/bin/ozskel"/>
-  <src href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/duchier-ozskel.tgz"/>
+  <import href="~/.oz/bin/ozskel"/>
+  <doc href="http://www.ps.uni.sb.de/~duchier/.ozdoc/bin/ozskel/index.html"/>
+  <src href="http://www.ps.uni-sb.de/~duchier/.oztar/duchier-ozskel.tgz"/>
   <abstract>
 A shell script that creates the files you need for
 managing/distributing a mozart contribution (e.g.
@@ -54,8 +55,8 @@ managing/distributing a mozart contribution (e.g.
   <topic id="cp"/>
   <title>Select</title>
   <import href="x-ozlib://duchier/cp/Select.ozf"/>
-  <doc href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/cp/Select.html"/>
-  <src href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/cp/duchier-select.tgz"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/.ozdoc/x-ozlib/duchier/cp/Select.html"/>
+  <src href="http://www.ps.uni-sb.de/~duchier/.oztar/duchier-select.tgz"/>
   <abstract>
 an implementation of the selection constraint for finite domains and
 finite sets.
@@ -66,8 +67,8 @@ finite sets.
   <topic id="op"/>
   <title>InputSource</title>
   <import href="x-ozlib://duchier/op/InputSource.ozf"/>
-  <doc href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/op/InputSource.html"/>
-  <src href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/op/duchier-inputsource.tgz"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/.ozdoc/x-ozlib/duchier/op/InputSource.html"/>
+  <src href="http://www.ps.uni-sb.de/~duchier/.oztar/duchier-inputsource.tgz"/>
   <abstract>
 a class for reading data from an arbitrary sequence of heterogenous
 sources such as files, urls, strings and virtual strings.
@@ -79,8 +80,8 @@ sources such as files, urls, strings and virtual strings.
   <title>Expat</title>
   <import href="x-ozlib://duchier/xml/expat/Processor.ozf"/>
   <import href="x-ozlib://duchier/xml/expat/Parser.ozf"/>
-  <doc href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/xml/expat/index.html"/>
-  <src href="http://www.ps.uni-sb.de/~duchier/x-ozlib/duchier/xml/expat/duchier-expat.tgz"/>
+  <doc href="http://www.ps.uni-sb.de/~duchier/.ozdoc/x-ozlib/duchier/xml/expat/index.html"/>
+  <src href="http://www.ps.uni-sb.de/~duchier/.oztar/duchier-expat.tgz"/>
   <abstract>
 A SAX-like XML processor using Jame Clark's expat library, and a
 parser derived from it.
