@@ -4,8 +4,6 @@
 ;; $Id$
 
 ;; BUGS
-;; - only enable menu items when a region is active:
-;;   (put 'comment-region 'menu-enable 'mark-active)
 ;; - oz-directive-on-region should write a \line directive at the start
 ;;   of the file.
 ;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
