@@ -422,7 +422,7 @@ AC_ARG_ENABLE(ozma,
 
 AC_MSG_CHECKING(for --enable-opt)
 AC_ARG_ENABLE(opt,
-    [--enable-opt       optimize [y|n|d[ebug]|p[rofile]] (default=yes)])
+    [--enable-opt       optimize [y|n|d[ebug]|p[rofile]|rsp[rofile]] (default=yes)])
 case $enable_opt in
     n*)
         AC_MSG_RESULT(no)
@@ -431,6 +431,11 @@ case $enable_opt in
         AC_MSG_RESULT(debug (-DDEBUG_EMULATOR))
 	AC_DEFINE(DEBUG_EMULATOR)
 	CFLAGS="$CFLAGS $G_OPT"
+    ;;
+    rsp*)
+        AC_MSG_RESULT(-DRS_PROFILE)
+	AC_DEFINE(RS_PROFILE)
+	CFLAGS="$CFLAGS -O"
     ;;
     *)
 	CFLAGS="$CFLAGS $O_OPT"
