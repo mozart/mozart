@@ -481,9 +481,7 @@ define
             {ForAll FilePrepend proc {$ L} TextFile, putS(L) end}
          end
          meth emit(Class)
-            @names = {Pickle.load
-                      "c:/cygwin/home/bruni/devel/build/contrib/gtk/"#
-                      Class}
+            @names = {Pickle.load {Util.toString {OS.getCWD}#Class}}
             {ForAll @names proc {$ Name}
                               case FieldEmitter, resolve(Name $)
                               of struct(Items) then
