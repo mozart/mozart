@@ -226,6 +226,22 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
       graphics engine but does not block the thread until the return
       string is available.  Eventually the graphics engine writes the
       return string to the store.
+   
+    <p>
+      The <<tkReturn>> message is sent
+      asynchronously for efficiency reasons. One
+      can start another calculation without having to
+      wait for <<tkReturn>>'s result.  One can
+      send several <<tkReturn>> messages consecutively, and
+      they will be sent immediately. The messages
+      will be handled by the graphics agent in the
+      same order as they are sent. 
+
+    <p>
+      If you want to be sure that you have
+      received the return value, say <<X>>, 
+      of <<tkReturn>> before continuing, then you must use a <<{Wait X}>>
+      statement.
 
     <para class=apropos><title/illegal return values/
       Similar to the method <<tkReturn>> tickle objects provide methods that
