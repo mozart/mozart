@@ -589,6 +589,17 @@ void addSusp(TaggedRef var, Thread *thr)
  *
  * PRE: no reference chains !!
  */
+
+
+static
+void suspendOnVarList(TaggedRef varList,Thread *thr)
+{
+  while (isCons(varList)) {
+    addSusp(head(varList),thr);
+    varList=tail(varList);
+  }
+}
+
 #define SUSPENDONVARLIST			\
 {						\
   suspendOnVarList(e->suspendVarList,CTT);	\
@@ -596,17 +607,34 @@ void addSusp(TaggedRef var, Thread *thr)
   return T_SUSPEND;			\
 }
 
+
 static
-void suspendOnVarList(TaggedRef varList,Thread *thr)
+ThreadReturn suspendOnControlVar(TaggedRef controlvars, AM *e)
 {
-  while (!isRef(varList)) {
-    Assert(isCons(varList));
-    
-    addSusp(head(varList),thr);
+  e->currentThread()->pushCall(BI_controlVarHandler,controlvars);
+  TaggedRef varList = controlvars;
+  while (isCons(varList)) {
+    if (!isAnyVar(deref(head(varList))))
+      return T_PREEMPT;
     varList=tail(varList);
   }
-  addSusp(varList,thr);
+
+  varList = controlvars;
+  while (isCons(varList)) {
+    addSusp(head(varList),e->currentThread());
+    varList=tail(varList);
+  }
+
+  e->emptySuspendVarList();
+  return T_SUSPEND;
 }
+
+
+#define SUSPENDONCONTROLVAR					\
+  return suspendOnControlVar(e->suspendVarList,e)
+
+
+
 
 static
 void suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
@@ -938,7 +966,8 @@ LBLdispatcher:
 #ifdef PROFILE_BI
       bi->incCounter();
 #endif
-      switch (oz_bi_wrapper(bi,X)) {
+      OZ_Return res = oz_bi_wrapper(bi,X);
+      switch (res) {
 
       case PROCEED:	  DISPATCH(3);
       case FAILED:	  HF_BI(bi);
@@ -948,6 +977,10 @@ LBLdispatcher:
       case SUSPEND:
 	PushContX(PC,Y,G,X,getPosIntArg(PC+2));
 	SUSPENDONVARLIST;
+
+      case BI_CONTROL_VAR:
+	PushContX(PC+3,Y,G,X,getPosIntArg(PC+2));
+	SUSPENDONCONTROLVAR;
 
       case BI_PREEMPT:
 	PushContX(PC+3,Y,G,X,getPosIntArg(PC+2));
@@ -1120,10 +1153,14 @@ LBLdispatcher:
 	suspendInline(CTT,XPC(2),XPC(3));
 	return T_SUSPEND;
 
+      case BI_CONTROL_VAR:
       case BI_PREEMPT:
 	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC+5,Y,G,X,getPosIntArg(PC+4));
-	return T_SUSPEND;
+	if (res!=BI_PREEMPT) {
+	  SUSPENDONCONTROLVAR;
+	}
+	return T_PREEMPT;
 
       case RAISE:
 	RAISE_THREAD;
@@ -1177,10 +1214,14 @@ LBLdispatcher:
       case RAISE:
 	RAISE_THREAD;
 
+      case BI_CONTROL_VAR:
       case BI_PREEMPT:
 	CheckLiveness(PC,getPosIntArg(PC+5));
 	PushContX(PC+6,Y,G,X,getPosIntArg(PC+5));
-	return T_SUSPEND;
+	if (res!=BI_PREEMPT) {
+	  SUSPENDONCONTROLVAR;
+	}
+	return T_PREEMPT;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
@@ -2379,9 +2420,13 @@ LBLdispatcher:
        case BI_TYPE_ERROR: RAISE_TYPE(bi);
        case FAILED:        HF_BI(bi);
 
+       case BI_CONTROL_VAR:
        case BI_PREEMPT:
 	 if (!isTailCall) {
 	   PushCont(PC,Y,G);
+	 }
+	 if (res!=BI_PREEMPT) {
+	   SUSPENDONCONTROLVAR;
 	 }
 	 return T_PREEMPT;
 	 
@@ -2833,6 +2878,9 @@ LBLdispatcher:
 
       case BI_PREEMPT:
 	return T_PREEMPT;
+
+      case BI_CONTROL_VAR:
+	SUSPENDONCONTROLVAR;
 
        case SLEEP:
        default:

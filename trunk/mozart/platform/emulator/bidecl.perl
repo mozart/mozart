@@ -532,6 +532,13 @@ $builtins = {
 			     out => [],
 			     BI  => BIwatcherInstall},
 
+    'controlVarHandler'	=> { in  => ['+value'],
+			     out => [],
+			     BI  => BIcontrolVarHandler},
+    'checkCVH'	        => { in  => ['+value'],
+			     out => [],
+			     BI  => BIcheckCVH},
+
     # characters
 
     'IsChar'		=> { in  => ['+value'],
