@@ -31,25 +31,21 @@
 
 //*****************************************************************************
 
-OZ_C_proc_begin(BIfsValueToString, 2)
+OZ_BI_define(BIfsValueToString, 1,1)
 {
-  oz_declareNonvarArg(0,in);
-  oz_declareArg(1,out);
+  OZ_declareNonvarIN(0,in);
 
   if (isFSetValue(in)) {
     char *s = OZ_toC(in,100,100); // mm2
-    return oz_unify(out,OZ_string(s));
+    OZ_RETURN_STRING(s);
   }
   oz_typeError(0,"FSetValue");
-}
-OZ_C_proc_end
+} OZ_BI_end
 
-OZ_C_proc_begin(BIfsIsVarB, 2)
-{ 
-  return OZ_unify(OZ_getCArg (1),
-		  (isGenFSetVar(deref(OZ_getCArg(0))) ? NameTrue : NameFalse));
-}
-OZ_C_proc_end
+OZ_BI_define(BIfsIsVarB, 1,1)
+{
+  OZ_RETURN(isGenFSetVar(deref(OZ_in(0))) ? NameTrue : NameFalse);
+} OZ_BI_end
 
 OZ_C_proc_begin(BIfsIsValueB, 2)
 {
@@ -102,11 +98,10 @@ OZ_C_proc_begin(BIfsSet, 3)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIfsSup, 1) 
+OZ_BI_define(BIfsSup, 0,1)
 {
-  return OZ_unify(OZ_getCArg(0), OZ_int(fset_sup));
-}
-OZ_C_proc_end
+  OZ_RETURN_INT(fset_sup);
+} OZ_BI_end
 
 OZ_C_proc_begin(BIfsClone, 2) 
 {
@@ -350,71 +345,18 @@ OZ_C_proc_begin(BIfsCardRange, 3)
 OZ_C_proc_end
 
 // TMUELLER: already redundant
-OZ_C_proc_begin(BImkFSetVar, 5) 
+OZ_BI_define(BImkFSetVar, 4,1) 
 {
-  FSetConstraint fset(OZ_intToC(OZ_getCArg(0)), OZ_intToC(OZ_getCArg(1)), 
-		      OZ_getCArg(2), OZ_getCArg(3));
+  FSetConstraint fset(OZ_intToC(OZ_in(0)), OZ_intToC(OZ_in(1)), 
+		      OZ_in(2), OZ_in(3));
 
-  return OZ_unify(OZ_getCArg(4), makeTaggedRef(newTaggedCVar(new GenFSetVariable(fset))));
-}
-OZ_C_proc_end
+  OZ_RETURN(makeTaggedRef(newTaggedCVar(new GenFSetVariable(fset))));
+} OZ_BI_end
 
+#include "fsbuilti.dcl"
 static
 BIspec fdSpec[] = {
-
-// fsetcore.cc
-  {"fsValueToString", 2, 0, BIfsValueToString},
-  {"fsIsVarB", 2, 0, BIfsIsVarB},
-  {"fsIsValueB", 2, 0, BIfsIsValueB},
-  {"fsSetValue", 2, 0, BIfsSetValue},
-  {"fsSet", 3, 0, BIfsSet},
-  {"fsSup", 1, 0, BIfsSup},
-  {"fsGetKnownIn", 2, 0, BIfsGetKnownIn},
-  {"fsGetKnownNotIn", 2, 0, BIfsGetKnownNotIn},
-  {"fsGetUnknown", 2, 0, BIfsGetUnknown},
-  {"fsGetGlb", 2, 0, BIfsGetKnownIn},
-  {"fsGetLub", 2, 0, BIfsGetLub},
-  {"fsGetCard", 2, 0, BIfsGetCard},
-  {"fsCardRange", 3, 0, BIfsCardRange},
-  {"fsGetNumOfKnownIn", 2, 0, BIfsGetNumOfKnownIn},
-  {"fsGetNumOfKnownNotIn", 2, 0, BIfsGetNumOfKnownNotIn},
-  {"fsGetNumOfUnknown", 2, 0, BIfsGetNumOfUnknown},
-  
-  {"mkFSetVar", 5, 0, BImkFSetVar},
-  {"fsClone", 2, 0, BIfsClone},
-
-#ifndef FOREIGNFDPROPS
-  {"fsp_init",         1, 0, fsp_init},
-  {"fsp_isIn",         3, 0, fsp_isIn},
-  {"fsp_isInR",        3, 0, fsp_isInR},
-  {"fsp_include",      2, 0, fsp_include},
-  {"fsp_exclude",      2, 0, fsp_exclude},
-  {"fsp_match",        2, 0, fsp_match},
-  {"fsp_seq",          1, 0, fsp_seq},
-  {"fsp_minN",         2, 0, fsp_minN},
-  {"fsp_maxN",         2, 0, fsp_maxN},
-  {"fsp_card",         2, 0, fsp_card},
-  {"fsp_union",        3, 0, fsp_union},
-  {"fsp_intersection", 3, 0, fsp_intersection},
-  {"fsp_subsume",      2, 0, fsp_subsume},
-  {"fsp_disjoint",     2, 0, fsp_disjoint},
-  {"fsp_distinct",     2, 0, fsp_distinct},
-  {"fsp_monitorIn",    2, 0, fsp_monitorIn},
-  {"fsp_min",          2, 0, fsp_min},
-  {"fsp_max",          2, 0, fsp_max},
-  {"fsp_convex",       1, 0, fsp_convex},
-  {"fsp_diff",         3, 0, fsp_diff},
-  {"fsp_includeR",     3, 0, fsp_includeR},
-  {"fsp_bounds",       5, 0, fsp_bounds},
-  {"fsp_boundsN",      5, 0, fsp_boundsN},
-  {"fsp_disjointN",    1, 0, fsp_disjointN},
-  {"fsp_unionN",       2, 0, fsp_unionN},
-  {"fsp_partition",    2, 0, fsp_partition},
-  {"fsp_partitionReified",  3, 0, fsp_partitionReified},
-  {"fsp_partitionProbing",  3, 0, fsp_partitionProbing},
-  {"fsp_partitionReified1", 4, 0, fsp_partitionReified1},
-#endif /* FOREIGNFDPROPS */
-
+#include "fsbuilti.tbl"
   {0,0,0,0}
 };
 
