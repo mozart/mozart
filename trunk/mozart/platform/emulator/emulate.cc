@@ -1007,7 +1007,6 @@ LBLdispatcher:
       Assert(loc->getOutArity()==bi->getOutArity());
       Assert(loc->getInArity()==bi->getInArity());
 
-      printf("callbi: %s\n",bi->getPrintName());
 #ifdef PROFILE_BI
       bi->incCounter();
 #endif
@@ -1042,8 +1041,6 @@ LBLdispatcher:
       COUNT(bicalls);
       Builtin* bi = GetBI(PC+1);
       OZ_Location* loc = GetLoc(PC+2);
-
-      printf("testbi: %s\n",bi->getPrintName());
 
       Assert(loc->getInArity()==bi->getInArity());
       Assert(bi->getOutArity()==1);
