@@ -1,4 +1,4 @@
-#include "misc.cpp"
+#include "misc.cc"
 
 #ifdef __MINGW32__
 
@@ -42,7 +42,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   char *ehome = getEmacsHome();
 
   GetModuleFileName(NULL, buffer, sizeof(buffer));
-  char *ozhome = getOzHome(buffer);
+  char *ozhome = getOzHome(buffer,1);
 
   sprintf(buffer,"%s/platform/%s/emulator.exe",ozhome,ozplatform);
   if (access(buffer,X_OK)) {

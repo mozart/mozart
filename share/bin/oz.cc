@@ -1,4 +1,4 @@
-#include "misc.cpp"
+#include "misc.cc"
 
 char *splitFirstArg(char *s)
 {
