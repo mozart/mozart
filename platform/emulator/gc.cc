@@ -491,10 +491,14 @@ Bool Board::isInTree(void) {
     if (b->isMarkedGlobal()) 
       return NO;
 
-    b = b->getParentAndTest();
-  
-    if (!b) 
+    if (b->isFailed())
       return NO;
+    
+    if (b->isRoot())
+      return NO;
+    
+    b = b->getParent();
+    
   }
 
 }
