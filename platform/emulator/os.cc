@@ -845,8 +845,8 @@ void osInitSignals()
   SigHandler *aux = handlers;
   while(aux->signo != SIGLAST) {
     aux->ozhandler = def;
-    osSignal(aux->signo,aux->chandler);
     OZ_protect(&aux->ozhandler);
+    osSignal(aux->signo,aux->chandler);
     osSignalInternal(aux->signo,genericHandler);
     aux++;
   }
