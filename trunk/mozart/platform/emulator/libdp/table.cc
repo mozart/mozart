@@ -152,12 +152,14 @@ void OwnerTable::compactify()
     PD((TABLE,"TABLE:owner compactify no realloc"));
     return;}
   int newsize= after_last-no_used < TABLE_BUFFER ? 
-    after_last+TABLE_BUFFER : used_slot+1;
+    after_last+TABLE_BUFFER : after_last+1;
   if(newsize > DEFAULT_OWNER_TABLE_SIZE &&
      size - newsize > TABLE_WORTHWHILE_REALLOC){
     PD((TABLE,"TABLE:owner compactify free slots: new%d",newsize));
     array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
     size=newsize;
+    Assert(array[newsize-1].isFree());
+    array[newsize-1].uOB.nextfree = END_FREE;
     Assert(size>=no_used);
     Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
     return;}
