@@ -69,12 +69,14 @@
 <Author.Extern to="author.db" key="Denys.Duchier">
 <Author.Extern to="author.db" key="Leif.Kornstaedt">
 <Author.Extern to="author.db" key="Christian.Schulte">
+
 <PART id=part.getting.started>
   <Title/Getting Started/
   &chapter.hello;
   &chapter.development;
   &chapter.deployment;
 </PART>
+
 &part.native;
     <part id=part.client.server proglang=oz>
       <title>Client/Server Applications</title>

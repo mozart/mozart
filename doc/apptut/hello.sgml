@@ -26,38 +26,40 @@
   -->
 
 <Chapter id="Chapter.Hello">
-  <Title/Saying Hello!/
+  <Title/Getting Started/
 
-  <Section id="Section.Hello.One">
-    <Title/Development/
-
-    <p>
-    Functors.
+  <section id="section.">
+    <title/Our first Application: <kbd/websuck//
 
     <p>
-    Imports.
+      <kbd/websuck/: downloading files from the www.
+  </section>
+
+  <section id="section.hello.functor">
+    <title/The Functor/
 
     <p>
-ozc.
+      The code for the functor.
 
-  </Section>
+  <section id="section.hello.system">
+    <title/Importing Modules/
 
-  <Section id="Section.Hello.More">
-    <Title/Getting Multilingual/
+  <section id="section.hello.compile">
+    <title/Compiling/
 
-    <p> 
-    How are arguments processed.
+  <section id="section.hello.exec">
+    <title/Execution/
 
-  </Section>
+    <subsection class=unnumbered id="section.hello.args">
+      <title/Command Line Parsing/
 
+    <subsection class=unnumbered id="section.hello.link">
+      <title/Functor Linking and Application/
 
-  <Section id="Section.Hello.Executing">
-    <Title/Executing/
+    <subsection class=unnumbered id="section.hello.status">
+      <title/Status/
 
-    <p> 
-    How to run applications.
-
-  </Section>
-
+  <section id="section.hello.summary">
+    <title/Summary/
 
 </Chapter>
