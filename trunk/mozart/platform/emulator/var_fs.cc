@@ -277,7 +277,6 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
     if (oz_isLocalVariable(vptr)) {
       if (!oz_isUVar(v)) {
 	oz_checkSuspensionListProp(tagged2CVar(v));
-	fsv->setSuspList(tagged2CVar(v)->unlinkSuspList());
       }
       bindLocalVar(vptr, tfsv);
     } else {
