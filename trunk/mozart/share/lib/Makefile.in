@@ -57,7 +57,7 @@ CPSRC   = Search FD Schedule FS
 DPSRC   = Connection Remote RemoteServer Fault URL
 WPSRC   = Tk TkTools
 MISCSRC = Misc
-SUPPSRC = Type Narrator Listener ErrorListener
+SUPPSRC = Type Narrator Listener ErrorListener DefaultURL
 
 RUNFUNCTORS = \
 	$(SPSRC:%=%.ozf) \
@@ -94,26 +94,26 @@ Makefile: Makefile.in ../config.status
 # Init
 #---------------------------------------------------------------------
 
-INITSRC1 = Resolve.oz Prop.oz Module.oz
-INITSRC = $(INITSRC1:%=init/%) Init.oz \
-	../url-defaults.oz ../functor-defaults.oz
+INITSRC0 = Init Resolve Prop Module
 
-Init.ozf: URL.ozf $(INITSRC)
-	$(COMPILE) Init.oz -o Init.ozf
+INITSRC = $(INITSRC0:%=init/%.oz)
+
+Init.ozf: URL.ozf DefaultURL.ozf $(INITSRC)
+	$(COMPILE) init/Init.oz -o Init.ozf
 
 #---------------------------------------------------------------------
 # Base
 #---------------------------------------------------------------------
 
 BASESRC1 = \
-	Record.oz Unit.oz Tuple.oz Atom.oz Name.oz Procedure.oz \
-	Int.oz Float.oz Number.oz Bool.oz List.oz Chunk.oz \
-	Literal.oz Value.oz Cell.oz Lock.oz Char.oz String.oz \
-	VirtualString.oz Object.oz Class.oz Loop.oz Port.oz \
-	Time.oz Thread.oz Space.oz Array.oz Dictionary.oz \
-	Exception.oz Functor.oz BitArray.oz BitString.oz \
-	ByteString.oz ForeignPointer.oz Base.oz
-BASESRC = $(BASESRC1:%=base/%)
+	Record Unit Tuple Atom Name Procedure \
+	Int Float Number Bool List Chunk \
+	Literal Value Cell Lock Char String \
+	VirtualString Object Class Loop Port \
+	Time Thread Space Array Dictionary \
+	Exception Functor BitArray BitString \
+	ByteString ForeignPointer Base
+BASESRC = $(BASESRC1:%=base/%.oz)
 
 Base.ozf: $(BASESRC)
 	$(OZC) $(OZFLAGS) -c base/Base.oz -o $@
@@ -158,12 +158,15 @@ CpSupport.ozf: cp/CpSupport.oz Base.ozf
 %.ozf: support/%.oz Base.ozf
 	$(COMPILE) $< -o $@
 
+# support dependencies
+DefaultURL.ozf: URL.ozf
+
 # op dependencies
 Open.ozf: op/HtmlTable.oz
 
 # wp dependencies
 Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
-TkTools.ozf: ../url-defaults.oz wp/EvalDialog.oz
+TkTools.ozf: DefaultURL.ozf wp/EvalDialog.oz
 
 # compiler dependencies
 COMPILERSRC1 = \
@@ -243,8 +246,7 @@ $(SYSLETS): $(RUNFUNCTORS)
 ozc: Base.ozf ozbatch/Compile.oz
 	$(COMPILEEXEC) ozbatch/Compile.oz -o $@
 
-ozl: Base.ozf linker/Print.oz linker/Main.oz linker/Link.oz \
-	../functor-defaults.oz ../url-defaults.oz
+ozl: Base.ozf DefaultURL.ozf linker/Print.oz linker/Main.oz linker/Link.oz
 	$(COMPILEEXEC) linker/Main.oz -o $@
 
 #---------------------------------------------------------------------
