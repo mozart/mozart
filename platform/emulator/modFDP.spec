@@ -105,6 +105,18 @@ $module_init_fun_name = "fdp_init";
 			     out => [],
 			     bi  => fdp_times},
  
+ 'plusD'		=> { in  => ['int','int','int'],
+			     out => [],
+			     bi  => fdp_plusD},
+ 
+ 'minusD'		=> { in  => ['int','int','int'],
+			     out => [],
+			     bi  => fdp_minusD},
+ 
+ 'timesD'		=> { in  => ['int','int','int'],
+			     out => [],
+			     bi  => fdp_timesD},
+ 
  'power'		=> { in  => ['int','+int','int'],
 			     out => [],
 			     bi  => fdp_power},
