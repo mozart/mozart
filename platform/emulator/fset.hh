@@ -48,20 +48,23 @@ ostream &operator << (ostream &ofile, const FSetValue &fs) {
 class OZ_FSetImpl {
 friend class FSetValue;
 private:
-  int _card; /* is -1 if the set is not valid */
+  int _card_min, _card_max; /* _card_min is -1 if the set is not valid */
   int _known_not_in, _known_in;
   int _in[fset_high], _not_in[fset_high];
 public:
   OZ_FSetImpl(void) {};
-  OZ_FSetImpl(int c, OZ_Term, OZ_Term);
+  OZ_FSetImpl(int, int, OZ_Term, OZ_Term);
 
   OZ_FSetImpl unify (const OZ_FSetImpl &) const;
   OZ_Boolean unify (const FSetValue &) const;
 
-  int getCard(void) const { return _card; }
-  OZ_Boolean isValidSet(void) { return _card != -1; }
+  int getCardMin(void) const { return _card_min; }
+  int getCardMax(void) const { return _card_max; }
+  OZ_Boolean isValidSet(void) { return _card_min != -1; }
   OZ_Boolean isWeakerThan(const OZ_FSetImpl &) const;
-  OZ_Boolean isFSetValue(void) { return _card == _known_in; }
+  OZ_Boolean isFSetValue(void) {
+    return _card_min == _card_max && _card_min == _known_in;
+  }
   ostream &print(ostream &) const;
 };
 

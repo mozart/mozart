@@ -123,10 +123,10 @@ public:
   CDPropagator(OZ_Term b, OZ_Term v, OZ_Term vp)
     : b_tuple(b), v_tuple(v), vp_tuple(vp) {}
 
-  virtual void gcRecurse(void) {
-    OZ_gcTerm(b_tuple);
-    OZ_gcTerm(v_tuple);
-    OZ_gcTerm(vp_tuple);
+  virtual void updateHeapRefs(OZ_Boolean) {
+    OZ_updateHeapTerm(b_tuple);
+    OZ_updateHeapTerm(v_tuple);
+    OZ_updateHeapTerm(vp_tuple);
   }
   virtual size_t sizeOf(void) { return sizeof(CDPropagator); }
   virtual OZ_Return run(void);
@@ -486,9 +486,9 @@ CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b)
                                     p);
 }
 
-void CDSuppl::gcRecurse(void) {
+void CDSuppl::updateHeapRefs(OZ_Boolean) {
   thr = (OZ_Thread) ((Thread *)thr)->gcThread();
-  OZ_gcTerm(reg_b);
+  OZ_updateHeapTerm(reg_b);
 }
 
 OZ_Return CDSuppl::run(void)

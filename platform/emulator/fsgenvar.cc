@@ -65,7 +65,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
           GenFSetVariable * term_var = tagged2GenFSetVar(term);
           OZ_FSetImpl &t_fset = term_var->getSet(), new_fset;
 
-          if ((new_fset = t_fset.unify(_fset)).getCard() == -1)
+          if ((new_fset = t_fset.unify(_fset)).getCardMin() == -1)
             return FALSE;
 
           Bool var_is_local =  (prop && am.isLocalSVar(this));

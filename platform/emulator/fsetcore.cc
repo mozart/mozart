@@ -23,11 +23,12 @@ OZ_C_proc_begin(BImkFSetValue, 2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BImkFSetVar, 4)
+OZ_C_proc_begin(BImkFSetVar, 5)
 {
-  OZ_FSetImpl fset(OZ_intToC(OZ_getCArg(0)), OZ_getCArg(1), OZ_getCArg(2));
+  OZ_FSetImpl fset(OZ_intToC(OZ_getCArg(0)), OZ_intToC(OZ_getCArg(1)),
+                   OZ_getCArg(2), OZ_getCArg(3));
 
-  return OZ_unify(OZ_getCArg(3), makeTaggedRef(newTaggedCVar(new GenFSetVariable(fset))));
+  return OZ_unify(OZ_getCArg(4), makeTaggedRef(newTaggedCVar(new GenFSetVariable(fset))));
 }
 OZ_C_proc_end
 
@@ -36,7 +37,7 @@ BIspec fdSpec[] = {
 
 // fsetcore.cc
   {"mkFSetValue", 2, BImkFSetValue},
-  {"mkFSetVar", 4, BImkFSetVar},
+  {"mkFSetVar", 5, BImkFSetVar},
 
   {0,0,0,0}
 };

@@ -75,9 +75,9 @@ public:
   WidthPropagator(OZ_Term r, OZ_Term w)
     : rawrec(r), rawwid(w) {}
 
-  virtual void gcRecurse(void) {
-    OZ_gcTerm(rawrec);
-    OZ_gcTerm(rawwid);
+  virtual void updateHeapRefs(OZ_Boolean) {
+    OZ_updateHeapTerm(rawrec);
+    OZ_updateHeapTerm(rawwid);
   }
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
   virtual OZ_Return run(void);
@@ -95,12 +95,12 @@ public:
                          OZ_Term FH1, OZ_Term FT1)
     : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
 
-  virtual void gcRecurse(void) {
-    OZ_gcTerm(X);
-    OZ_gcTerm(K);
-    OZ_gcTerm(L);
-    OZ_gcTerm(FH);
-    OZ_gcTerm(FT);
+  virtual void updateHeapRefs(OZ_Boolean) {
+    OZ_updateHeapTerm(X);
+    OZ_updateHeapTerm(K);
+    OZ_updateHeapTerm(L);
+    OZ_updateHeapTerm(FH);
+    OZ_updateHeapTerm(FT);
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return run(void);
