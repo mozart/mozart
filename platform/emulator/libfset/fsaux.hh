@@ -19,6 +19,7 @@
 //-----------------------------------------------------------------------------
 // debug macros
 
+//#define OZ_DEBUG
 #ifdef DEBUG_FSET
 #define OZ_DEBUG
 #endif
@@ -70,6 +71,15 @@ OZ_Return __debugReturnPrint(OZ_Return r)
 #define FailOnEmpty(X) if((X) == 0) goto failure;
 #define FailOnInvalid(X) if(!(X)) goto failure;
 
+#define SAMELENGTH_VECTORS(I, J)                                        \
+  {                                                                     \
+    int i_size = OZ_vectorSize(OZ_args[I]);                             \
+    int j_size = OZ_vectorSize(OZ_args[J]);                             \
+    if ((i_size >= 0) && (j_size >= 0) && (i_size != j_size))           \
+      return OZ_typeError(expectedType, J,                              \
+                          "Vectors must have same size.");              \
+  }
+
 class PropagatorExpect;
 
 typedef OZ_expect_t (PropagatorExpect::*PropagatorExpectMeth) (OZ_Term);
@@ -105,6 +115,12 @@ public:
   }
   OZ_expect_t expectVectorFSetVarGlb(OZ_Term t) {
     return expectVector(t, &PropagatorExpect::expectFSetVarGlb);
+  }
+  OZ_expect_t expectVectorFSetValue(OZ_Term t) {
+    return expectVector(t, &PropagatorExpect::expectFSetValue);
+  }
+  OZ_expect_t expectVectorInt(OZ_Term t) {
+    return expectVector(t, &PropagatorExpect::expectInt);
   }
 };
 
@@ -207,12 +223,6 @@ public:
   OZ_Return leave(void) {
     return (v1.leave() | v2.leave() | v3.leave()) ? OZ_SLEEP : OZ_ENTAILED;
   }
-  OZ_Return leave1(void) {
-    int r1 = v1.leave() ? 1 : 0;
-    int r2 = v2.leave() ? 1 : 0;
-    int r3 = v3.leave() ? 1 : 0;
-    return (r1 + r2 + r3 <= 1) ? OZ_ENTAILED : OZ_SLEEP;
-  }
   OZ_Return vanish(void) {
     v1.leave();
     v2.leave();
@@ -223,6 +233,39 @@ public:
     v1.fail();
     v2.fail();
     v3.fail();
+    return OZ_FAILED;
+  }
+};
+
+class PropagatorController_VS_VD_VD {
+protected:
+  OZ_FSetVar  * _v1;
+  OZ_FDIntVar * _v2;
+  OZ_FDIntVar * _v3;
+  int _vs_size;
+public:
+  PropagatorController_VS_VD_VD(int vs_size, OZ_FSetVar i1[],
+                                OZ_FDIntVar i2[], OZ_FDIntVar i3[])
+    : _vs_size(vs_size), _v1(i1), _v2(i2), _v3(i3) {}
+
+  OZ_Return leave(void) {
+    OZ_Boolean vars_left = OZ_FALSE;
+    for (int i = _vs_size; i--; vars_left |= _v1[i].leave());
+    for (int i = _vs_size; i--; vars_left |= _v2[i].leave());
+    for (int i = _vs_size; i--; vars_left |= _v3[i].leave());
+
+    return vars_left ? OZ_SLEEP : OZ_ENTAILED;
+  }
+  OZ_Return vanish(void) {
+    for (int i = _vs_size; i--; _v1[i].leave());
+    for (int i = _vs_size; i--; _v2[i].leave());
+    for (int i = _vs_size; i--; _v3[i].leave());
+    return OZ_ENTAILED;
+  }
+  OZ_Return fail(void) {
+    for (int i = _vs_size; i--; _v1[i].fail());
+    for (int i = _vs_size; i--; _v2[i].fail());
+    for (int i = _vs_size; i--; _v3[i].fail());
     return OZ_FAILED;
   }
 };

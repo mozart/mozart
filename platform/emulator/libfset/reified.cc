@@ -157,7 +157,8 @@ failure:
 
 OZ_C_proc_begin(fsp_bounds, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FSETVAL "," OZ_EM_FSET "," OZ_EM_INT "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FSETVAL "," OZ_EM_FSET "," OZ_EM_INT ","
+                   OZ_EM_FD "," OZ_EM_FD);
 
   PropagatorExpect pe;
 
@@ -226,6 +227,115 @@ OZ_Return BoundsPropagator::propagate(void)
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");
   P.fail();
+  return FAILED;
+}
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fsp_boundsN, 5)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSETVAL ","
+                   OZ_EM_VECT OZ_EM_FSET ","
+                   OZ_EM_VECT OZ_EM_INT ","
+                   OZ_EM_VECT OZ_EM_FD ","
+                   OZ_EM_VECT OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  int dummy;
+  OZ_EXPECT(pe, 0, expectVectorFSetValue);
+  OZ_EXPECT_SUSPEND(pe, 1, expectVectorFSetVarBounds, dummy);
+  OZ_EXPECT(pe, 2, expectVectorInt);
+  OZ_EXPECT_SUSPEND(pe, 3, expectVectorIntVarMinMax, dummy);
+  OZ_EXPECT_SUSPEND(pe, 4, expectVectorIntVarMinMax, dummy);
+
+  SAMELENGTH_VECTORS(0, 1);
+  SAMELENGTH_VECTORS(0, 2);
+  SAMELENGTH_VECTORS(0, 3);
+  SAMELENGTH_VECTORS(0, 4);
+
+  return pe.impose(new BoundsNPropagator(OZ_args[0],
+                                         OZ_args[1],
+                                         OZ_args[2],
+                                         OZ_args[3],
+                                         OZ_args[4]));
+}
+OZ_C_proc_end
+
+OZ_CFunHeader BoundsNPropagator::header = fsp_boundsN;
+
+OZ_Return BoundsNPropagator::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in: ");
+
+  DECL_DYN_ARRAY(OZ_FSetVar, s, _size);
+  DECL_DYN_ARRAY(OZ_FDIntVar, d, _size);
+  DECL_DYN_ARRAY(OZ_FDIntVar, r, _size);
+  PropagatorController_VS_VD_VD P(_size, s, d, r);
+  int i, left = _size;
+
+  for (i = _size; i--; ) {
+    s[i].read(_s[i]);
+    d[i].read(_d[i]);
+    r[i].read(_r[i]);
+  }
+
+  // the following code is executed once ..
+  if (first) {
+    for (i = _size; i--; ) {
+      OZ_FSetVar s_ub_aux;
+      s_ub_aux.ask(_s_ub.s_ub[i]);
+      _s_ub.s_ub_card[i] = s_ub_aux->getCardMin();
+
+      FailOnInvalid(*s[i] <= *s_ub_aux);
+      FailOnEmpty(*d[i] <= _d_ub[i]);
+      FailOnEmpty(r[i]->constrainBool());
+    }
+
+    first = 0;  // .. because of that
+  }
+
+  for (i = _size; i--; ) {
+    if (d[i]->getMinElem() > 0 ||
+        s[i]->getGlbSet().getCard() > 0 ||
+        *r[i] == 1) {
+      OZ_DEBUGPRINT(("a\n"));
+      FailOnEmpty(*d[i] &= _d_ub[i]);
+      FailOnEmpty(*r[i] &= 1);
+      FailOnInvalid(s[i]->putCard(_s_ub.s_ub_card[i], _s_ub.s_ub_card[i]));
+      left -= 1;
+    } else if (d[i]->getMaxElem() < _d_ub[i] ||
+               s[i]->getLubSet().getCard() < _s_ub.s_ub_card[i] ||
+               *r[i] == 0) {
+      OZ_DEBUGPRINT(("b\n"));
+      FailOnEmpty(*d[i] &= 0);
+      FailOnEmpty(*r[i] &= 0);
+      FailOnInvalid(s[i]->putCard(0,0));
+      left -= 1;
+    }
+  }
+
+  P.leave();
+  OZ_DEBUGPRINTTHIS("out");
+
+  if (left > 0 && left < _size) {
+    int j;
+    for (j = i = 0; i < _size; i += 1) {
+      if (*r[i] == fd_singl)
+        continue;
+      _d[j]              = _d[i];
+      _s[j]              = _s[i];
+      _r[j]              = _r[i];
+      _d_ub[j]           = _d_ub[i];
+      _s_ub.s_ub_card[j] = _s_ub.s_ub_card[i];
+      j += 1;
+    }
+  }
+  return left ? OZ_SLEEP : OZ_ENTAILED;
+
+failure:
+  P.fail();
+  OZ_DEBUGPRINTTHIS("fail: ");
   return FAILED;
 }
 

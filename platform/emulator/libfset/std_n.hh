@@ -35,8 +35,12 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+#define EXPERIMENT
 
 class FSetUnionNPropagator : public Propagator_VS_S {
+#ifdef EXPERIMENT
+friend void sortVars(FSetUnionNPropagator  &p);
+#endif
 protected:
   static OZ_CFunHeader header;
 
@@ -54,6 +58,9 @@ public:
     _aux = (OZ_FSetConstraint *)
       OZ_hallocChars(_vs_size * sizeof(OZ_FSetConstraint));
     _init_aux();
+#ifdef EXPERIMENT
+    sortVars(*this);
+#endif
   }
 
   virtual OZ_Return propagate(void);
@@ -75,8 +82,23 @@ public:
 
     _aux = new_aux;
   }
-};
+  };
 
+
+#ifdef EXPERIMENT
+#include <stdlib.h>
+int sortVarsOrder(const void * _a, const void  * _b) {
+  OZ_FSetVar a, b;
+  a.ask(* (OZ_Term *) _a);
+  b.ask(* (OZ_Term *) _b);
+  return a->getKnownNotIn() -  b->getKnownNotIn();
+}
+
+void sortVars(FSetUnionNPropagator  &p)
+{
+  qsort(p._vs, p._vs_size, sizeof(OZ_Term), sortVarsOrder);
+}
+#endif
 //-----------------------------------------------------------------------------
 
 class FSetPartitionPropagator : public FSetUnionNPropagator {
@@ -93,6 +115,13 @@ public:
 
   virtual OZ_CFunHeader * getHeader(void) const {
     return &header;
+  }
+private:
+  OZ_NonMonotonic _nm;
+public:
+  virtual OZ_Boolean isMonotonic(void) const { return OZ_FALSE; }
+  virtual OZ_NonMonotonic::order_t getOrder(void) const {
+    return _nm.getOrder();
   }
 };
 
