@@ -14,7 +14,7 @@ all::
 	@echo ""
 
 install:: $(BINDIR)
-	install -m 555 $(SCRIPTS) $(BINDIR)
+	install -c -m 555 $(SCRIPTS) $(BINDIR)
 	@set -x; cd $(BINDIR);\
 	for file in $(LINKS); \
         do\
