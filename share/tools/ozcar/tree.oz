@@ -307,18 +307,17 @@ in
 	    LastSelected <- unit
 	    Selected     <- unit
 	 else
-	    CT OldCT OldI
 	    N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
 	 in
 	    if N \= nil then
 	       LastSelected <- @Selected
 	       Selected <- N.1
 	       if @LastSelected \= unit then
-		  node(ct:OldCT i:OldI ...) = {@LastSelected get($)}
-		  {self tk(itemconfigure OldCT text:OldI)}
+		  case {@LastSelected get($)} of node(ct:OldCT i:OldI ...) then
+		     {self tk(itemconfigure OldCT text:OldI)}
+                  end
 	       end
-	       node(ct:CT ...) = {@Selected get($)}
-	       {self tk(itemconfigure CT text:I#' *')}
+	       {self tk(itemconfigure {@Selected get($)}.ct text:I#' *')}
 	       Tree,condScroll(I)
 	    else
 	       {OzcarError 'attempt to select unknown node ' # I}
@@ -331,7 +330,7 @@ in
       in
 	 if N == nil then
 	    {OzcarError 'attempt to mark unknown node ' # I}
-	 else node(ct:CT s:S ...) = {N.1 get($)} in
+	 elsecase {N.1 get($)} of node(ct:CT s:S ...) then
 	    case How
 	    of running then
 	       {self tk(itemconfigure CT font:ThreadTreeBoldFont)}
@@ -364,10 +363,9 @@ in
 	 {self tk(delete all)}
 	 {ForAll @nodes
 	  proc{$ N}
-	     X Y R S DY I
 	     CT = {New Tk.canvasTag tkInit(parent:self)}
 	  in
-	     node(x:X y:Y r:R s:S dy:DY i:I ...) = {N get($)}
+	     case {N get($)} of node(x:X y:Y r:R s:S dy:DY i:I ...) then
 
 	     %% the horizontal line
 	     {self tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
@@ -400,6 +398,7 @@ in
 	     {CT tkBind(event:  '<1>'
 			action: self # SwitchToThread(I))}
 	     {N setTag(CT)}
+             end
 	  end}
 	 local
 	    Height = ThreadTreeStretchY * (@width + 3)
