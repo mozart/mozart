@@ -675,12 +675,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case FASTTAILCALL:
       {
         AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-        Abstraction *abstr = entry->getAbstr();
-        if (abstr) {  /* may be NULL during loading */
-          fprintf(ofile, "(%s %d)\n", abstr->getPrintName(),abstr->getArity());
-        } else {
-          fprintf(ofile, "(?? ??)\n");
-        }
+        int dummy = getPosIntArg(PC+5);
+        fprintf(ofile,"(%p %d)\n",entry,dummy);
         DISPATCH();
       }
 
@@ -822,22 +818,28 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         ProgramCounter next;
         TaggedRef file, line, column, predName;
         getDefinitionArgs(PC,reg,next,file,line,column,predName);
+        AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
         AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
         fprintf(ofile,"(x(%d) %p pid(%s ",reg,next,toC(predName));
         fprintf(ofile,"_ %s ",toC(file));
-        fprintf(ofile,"%s) _ [",toC(line));
+        fprintf(ofile,"%s) %p ",toC(line),predEntry);
 
-        for (int k = 0; k < list->getSize(); k++) {
-          switch ((*list)[k].kind) {
-          case XReg: fprintf(ofile,"x(%d)",(*list)[k].number); break;
-          case YReg: fprintf(ofile,"y(%d)",(*list)[k].number); break;
-          case GReg: fprintf(ofile,"g(%d)",(*list)[k].number); break;
+        int size = list->getSize();
+        if (size == 0)
+          fprintf(ofile,"nil)\n");
+        else {
+          fprintf(ofile,"[");
+          for (int k = 0; k < size; k++) {
+            switch ((*list)[k].kind) {
+            case XReg: fprintf(ofile,"x(%d)",(*list)[k].number); break;
+            case YReg: fprintf(ofile,"y(%d)",(*list)[k].number); break;
+            case GReg: fprintf(ofile,"g(%d)",(*list)[k].number); break;
+            }
+            if (k != size - 1)
+              fprintf(ofile, " ");
           }
-          if (k != list->getSize() - 1)
-            fprintf(ofile, " ");
+          fprintf(ofile, "])\n");
         }
-
-        fprintf(ofile, "])\n");
       }
       DISPATCH();
 
@@ -855,7 +857,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
           fprintf(ofile, "%d", getTupleWidth(sra));
         else
           fprintf(ofile, "%s", toC(sraGetArityList(sra)));
-        fprintf(ofile, " %d)", regToInt(getRegArg(PC+3)));
+        fprintf(ofile, " %d)\n", regToInt(getRegArg(PC+3)));
       }
       DISPATCH();
 
