@@ -16,37 +16,37 @@ ac_help="$ac_help
 --enable-link-static  link libraries statically (default=no)"
 ac_help="$ac_help
 --with-x11=<dir>
-        search x11 library and header in <dir> (default: NONE)"
+    search x11 library and header in <dir> (default: NONE)"
 ac_help="$ac_help
 --with-x11-lib=<dir>
-        search x11 library in <dir> (default: /usr/local/lib)"
+    search x11 library in <dir> (default: /usr/local/lib)"
 ac_help="$ac_help
 --with-x11-include=<dir>
-        search x11 header in <dir> (default: /usr/local/include)"
+    search x11 header in <dir> (default: /usr/local/include)"
 ac_help="$ac_help
 --with-tcl=<dir>
-        search tcl library, header, tcl-library in <dir> (default: NONE)"
+    search tcl library, header, tcl-library in <dir> (default: NONE)"
 ac_help="$ac_help
 --with-tcl-lib=<dir>
-        search tcl library in <dir> (default: /usr/lib)"
+    search tcl library in <dir> (default: /usr/lib)"
 ac_help="$ac_help
 --with-tcl-include=<dir>
-        search tcl header in <dir> (default: /usr/include)"
+    search tcl header in <dir> (default: /usr/include)"
 ac_help="$ac_help
 --with-tcl-lib-tcl=<dir>
-        search tcl libraries (tcl) in <dir> (default: /usr/lib/tcl8.0)"
+    search tcl libraries (tcl) in <dir> (default: /usr/lib/tcl8.0)"
 ac_help="$ac_help
 --with-tk=<dir>
-        search tk library, header, tk tcl-library in <dir> (default: NONE)"
+    search tk library, header, tk tcl-library in <dir> (default: NONE)"
 ac_help="$ac_help
 --with-tk-lib=<dir>
-        search tk library in <dir> (default: oz_tcl_lib_dir)"
+    search tk library in <dir> (default: oz_tcl_lib_dir)"
 ac_help="$ac_help
 --with-tk-include=<dir>
-        search tk header in <dir> (default: oz_tcl_inc_dir)"
+    search tk header in <dir> (default: oz_tcl_inc_dir)"
 ac_help="$ac_help
 --with-tk-lib-tcl=<dir>
-        search tk libraries (tcl) in <dir> (default: /usr/lib/tk8.0)"
+    search tk libraries (tcl) in <dir> (default: /usr/lib/tk8.0)"
 ac_help="$ac_help
 --enable-copy-tcl-libs  Copy tcl libraries (rather than drawing a link) (default=no)"
 
@@ -1341,7 +1341,7 @@ fi
 
 
 
-: ${oz_inc_path="/usr/local/include"}
+: ${oz_inc_path="/usr/local/include /usr/local/include/tcl8.0 /usr/local/include/tk8.0"}
 : ${oz_lib_path="/usr/local/lib"}
 
 # Check whether --with-x11 or --without-x11 was given.
