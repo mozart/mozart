@@ -1006,8 +1006,8 @@ LBLdispatcher:
       OZ_Location* loc = GetLoc(PC+2);
 
       Assert(loc->getInArity()==bi->getInArity());
-      Assert(bi->getOutArity()==1);
-      Assert(loc->getOutArity()==1);
+      Assert(bi->getOutArity()>=1);
+      Assert(loc->getOutArity()==bi->getOutArity());
 
 #ifdef PROFILE_BI
       bi->incCounter();
