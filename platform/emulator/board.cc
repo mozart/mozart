@@ -29,6 +29,7 @@
 #pragma implementation "board.hh"
 #endif
 
+#include "am.hh"
 #include "board.hh"
 
 Equation *ScriptAllocate(int size)
@@ -142,6 +143,7 @@ Board* Board::getSolveBoard ()
 }
 
 Board::Board(Actor *a,int typ)
+: localThreadQueue(NULL)
 {
   Assert(a!=NULL || typ==Bo_Root);
   Assert(a==NULL || !a->isCommitted());
@@ -205,5 +207,15 @@ loop:
   goto loop;
 }
 #endif
+
+void Board::pushToLTQ(Thread * thr) {
+  if (localThreadQueue) {
+    localThreadQueue->enqueue(thr);
+  } else {
+    Thread * ltq_thr = am.mkLTQ(this, PROPAGATOR_PRIORITY);
+    localThreadQueue = new LocalThreadQueue(ltq_thr, thr);
+    am.scheduleThreadInline(ltq_thr, PROPAGATOR_PRIORITY);
+  }
+}
 
 // -------------------------------------------------------------------------

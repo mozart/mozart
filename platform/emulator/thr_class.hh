@@ -424,8 +424,8 @@ public:
     return item.propagator;
   }
 
-  void pushLTQ(SolveActor * sa) {
-    item.threadBody->taskStack.pushLTQ(sa);
+  void pushLTQ(Board * sb) {
+    item.threadBody->taskStack.pushLTQ(sb);
   }
   void pushDebug(OzDebug *dbg, OzDebugDoit dothis) {
     item.threadBody->taskStack.pushDebug(dbg,dothis);

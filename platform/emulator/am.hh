@@ -311,7 +311,7 @@ public:
   INLINE Thread *newThreadInternal(int prio, Board *bb);
   INLINE Thread *mkRunnableThread(int prio, Board *bb);
   INLINE Thread *mkRunnableThreadOPT(int prio, Board *bb);
-  Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
+  Thread *mkLTQ(Board *bb, int prio);
   inline Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
   INLINE Thread *mkSuspendedThread(Board *bb, int prio);

@@ -2628,7 +2628,7 @@ void TaskStack::gc(TaskStack *newstack) {
     } else if (PC == C_LOCK_Ptr) {
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
     } else if (PC == C_LTQ_Ptr) {
-      Y = (RefsArray) ((Actor *) Y)->gcActor();
+      Y = (RefsArray) ((Board *) Y)->gcBoard();
     } else if (PC == C_ACTOR_Ptr) {
       Y = (RefsArray) ((Actor *) Y)->gcActor();
     } else if (PC == C_SET_SELF_Ptr) {
@@ -2735,6 +2735,8 @@ void Board::gcRecurse() {
   body.gc();
   u.actor = u.actor ? u.actor->gcActor() : 0;
 
+  localThreadQueue = localThreadQueue->gc();
+
   script.Script::gc();
 }
 
@@ -2779,7 +2781,6 @@ void SolveActor::gcRecurse () {
   OZ_collectHeapTerm(result,result);
   suspList         = suspList->gc();
   cpb              = cpb->gc();
-  localThreadQueue = localThreadQueue->gc();
   nonMonoSuspList  = nonMonoSuspList->gc();
 #ifdef CS_PROFILE
   if((copy_size>0) && copy_start && isInGc) {

@@ -353,7 +353,7 @@ Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
       tt->getPriority() == PROPAGATOR_PRIORITY) {
     tt->markRunnable();
 
-    SolveActor::Cast(cb_cache->getActor())->pushToLTQ(tt, cb_cache);
+    cb_cache->pushToLTQ(tt);
     if (calledBy)
       tt->markUnifyThread();
 
