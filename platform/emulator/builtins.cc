@@ -316,13 +316,19 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t)
  * `builtin`
  ******************************************************************** */
 
-OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
-{
+OZ_Term OZ_findBuiltin(char *name, OZ_Term handler) {
+
+  int arity = -1;
+
   if (!OZ_isProcedure(handler)) {
-    if (!OZ_isAtom(handler) || !OZ_eq(handler,OZ_atom("noHandler"))) {
+    if (!(OZ_isAtom(handler) && OZ_eq(handler,OZ_atom("noHandler")))
+        && !isSmallInt(handler)) {
       warning("Builtin '%s' illegal handler.", name,toC(handler));
       message("Using noHandler as default.\n");
     }
+    if (isSmallInt(handler))
+      arity = smallIntValue(handler);
+
     handler = 0;
   }
 
@@ -330,6 +336,12 @@ OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
 
   if (found == htEmpty) {
     warning("Builtin '%s' not in table.", name);
+    goto fallback;
+  }
+
+  if (arity!=-1 && (arity != found->getArity())) {
+    warning("Builtin '%s' has arity %d (not as suggested %d).",
+            name, found->getArity(), arity);
     goto fallback;
   }
 
@@ -345,7 +357,7 @@ OZ_Term OZ_findBuiltin(char *name, OZ_Term handler)
     handler = 0;
   }
 
-  Builtin *bi = new Builtin(found,handler);
+  Builtin *bi = new Builtin(found, handler);
   return makeTaggedConst(bi);
 }
 
