@@ -401,7 +401,7 @@ in
 		       o(T conf state:disabled)]}
 	    case {Cget emacs} then
 	       {Emacs.condSend.interface
-		bar(file:S.file line:S.line column:unit state:runnable)}
+		bar(file:S.file line:S.line column:S.column state:runnable)}
 	    else skip end
 	 end
       end
