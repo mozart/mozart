@@ -10,8 +10,8 @@ can produce log files and exposes interfaces to it's inner state.
 
 <p>
 <list>
-<entry/<code/DPSitestatistics.siteStatistics //
-<synopsis/<code/{DPSitestatistics.siteStatistics ??{SiteList}}  //
+<entry/<code/DPStatistics.siteStatistics //
+<synopsis/<code/{DPStatistics.siteStatistics ??{SiteList}}  //
 <item> Returns a list of all currently know remote sites. <<SiteList>> contains records that has the following fields:
 
 <list>
@@ -27,9 +27,9 @@ can produce log files and exposes interfaces to it's inner state.
 <entry/<code/port//
 <item>The tcp port of the remote site. It is used for accepting connection atempts.
 <entry/<code/received//
-<item>Number of received messages from the remote site. This number will be cleared at each invokation to <code/DPSitestatistics.siteStatistics /
+<item>Number of received messages from the remote site. This number will be cleared at each invokation to <code/DPStatistics.siteStatistics /
 <entry/<code/sent//
-<item>Number of  messages sent to the remote site from this site. This number will be cleared at each invokation to <code/DPSitestatistics.siteStatistics /
+<item>Number of  messages sent to the remote site from this site. This number will be cleared at each invokation to <code/DPStatistics.siteStatistics /
 <entry/<code/state//
 <item>The state of the remote site from the current sites point of view.
 <entry/<code/table//
@@ -43,8 +43,8 @@ can produce log files and exposes interfaces to it's inner state.
 </list>
 
 
-<entry/<code/DPSitestatistics.getTablesInfo //
-<synopsis/<code/{DPSitestatistics.getTablesInfo ??{TableInfo} } //
+<entry/<code/DPStatistics.getTablesInfo //
+<synopsis/<code/{DPStatistics.getTablesInfo ??{TableInfo} } //
 <item> Returns information about the tables holding imported and exported entities.
 <<TableInfo>> is a list containing of the following format:
 <p><code/[bt(list:BTlist size:BTsize) ot(list:OTlist size:OTsize)] /
@@ -67,8 +67,8 @@ can produce log files and exposes interfaces to it's inner state.
 </list>
 
 
-<entry/<code/DPSitestatistics.getNetInfo //
-<synopsis/<code/{DPSitestatistics.getNetInfo  ??{NetInfo} } //
+<entry/<code/DPStatistics.getNetInfo //
+<synopsis/<code/{DPStatistics.getNetInfo  ??{NetInfo} } //
 
 <item> Returns information about internaly allocated object in the distribution layer. <<NetInfo>> is a list containing records with the following fields
 <list>
@@ -79,8 +79,8 @@ can produce log files and exposes interfaces to it's inner state.
 <entry/<<size>>/
 <item> The size of this object in bytes.
 </list>
-<entry/<code/DPSitestatistics.perdioStatistics //
-<synopsis/<code/{DPSitestatistics.perdioStatistics   ??{Ans} }//
+<entry/<code/DPStatistics.perdioStatistics //
+<synopsis/<code/{DPStatistics.perdioStatistics   ??{Ans} }//
 <item>The distribution layer keeps information of the number of received and sent messages per message type basis as the number of marshaled and unmarshaled marshaling types. This information is returned in record with the following fields:
 
 <list>
@@ -93,8 +93,8 @@ can produce log files and exposes interfaces to it's inner state.
 </list>
 
 
-<entry/<code/DPSitestatistics.createLogFile//
-<synopsis/<code/{DPSitestatistics.createLogFile ?+{File}}//
+<entry/<code/DPStatistics.createLogFile//
+<synopsis/<code/{DPStatistics.createLogFile ?+{File}}//
 <item> Directs the loging output from the distribution layer to the file <<File>>.
 </list>
 
