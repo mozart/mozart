@@ -28,12 +28,12 @@
 
 <list ENUM>
 <item> You have to install GNU Emacs first.
-<p>Download <Ref.Extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/emacs-20.3.1.exe">emacs-20.3.1.exe</Ref.Extern>,
+<p>Download <Ref.Extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/emacs-20.4.1.exe">emacs-20.4.1.exe</Ref.Extern>,
 execute it, and follow the instructions.
 <p>
 More information about  GNU Emacs for Windows can be found under
-<Ref.Extern to="http://www.cs.washington.edu/homes/voelker/ntemacs.html">
-http://www.cs.washington.edu/homes/voelker/ntemacs.html</Ref.Extern>.
+<Ref.Extern to="http://www.gnu.org/software/emacs/windows/ntemacs.html">
+http://www.gnu.org/software/emacs/windows/ntemacs.html</Ref.Extern>.
 <P>
 <item> Afterwards you install Mozart. (If you upgrade to
 a newer version of Mozart you only have to perform the second step.)
