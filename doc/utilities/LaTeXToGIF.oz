@@ -54,7 +54,7 @@ define
             File <- {New Open.file init(name: @FileName
                                         flags: [write create truncate])}
             {@File write(vs: ('\\documentclass{report}\n'#
-                              '\\usepackage{wasysym}\n'#
+                              '\\usepackage{wasysym,pstricks,pst-node}\n'#
                               '\\pagestyle{empty}\n'#
                               '\\begin{document}\n'))}
          else skip
