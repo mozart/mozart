@@ -100,6 +100,8 @@ public:
     vars = vs;
     size = n;
     sync = oz_newVariable(bb);
+    DebugCode(sel_var = -1);
+    sel_val = (TaggedRef) 0;
   }
 
   void dispose(void) {
@@ -135,6 +137,7 @@ public:
         st->setArg(0, sel_val);
         dom = makeTaggedSRecord(st);
       }
+      Assert(sel_var != -1);
       tell_dom(bb,vars[sel_var],dom);
       return 1;
     } else {
@@ -172,6 +175,7 @@ public:
 
   virtual int commit(Board * bb, int n) {
     if (size > 0) {
+      Assert(sel_var != -1);
       tell_eq(bb,vars[sel_var],sel_val);
       return 1;
     } else {
@@ -273,16 +277,19 @@ void FdDistributor::selectVarNbSusps(void) {
 
 inline
 void FdDistributor::selectValMin(void) {
+  Assert(sel_var != -1);
   sel_val = makeTaggedSmallInt(getMin(oz_deref(vars[sel_var])));
 }
 
 inline
 void FdDistributor::selectValMid(void) {
+  Assert(sel_var != -1);
   sel_val = makeTaggedSmallInt(getMid(oz_deref(vars[sel_var])));
 }
 
 inline
 void FdDistributor::selectValMax(void) {
+  Assert(sel_var != -1);
   sel_val = makeTaggedSmallInt(getMax(oz_deref(vars[sel_var])));
 }
 
@@ -290,6 +297,7 @@ inline
 void FdDistributor::selectValSplitMin(void) {
   SRecord * st = SRecord::newSRecord(AtomPair, 2);
   st->setArg(0, makeTaggedSmallInt(0));
+  Assert(sel_var != -1);
   st->setArg(1, makeTaggedSmallInt(getMid(oz_deref(vars[sel_var]))));
   sel_val = makeTaggedSRecord(st);
 }
@@ -297,6 +305,7 @@ void FdDistributor::selectValSplitMin(void) {
 inline
 void FdDistributor::selectValSplitMax(void) {
   SRecord * st = SRecord::newSRecord(AtomPair, 2);
+  Assert(sel_var != -1);
   st->setArg(0, makeTaggedSmallInt(getMid(oz_deref(vars[sel_var])) + 1));
   st->setArg(1, makeTaggedSmallInt(fd_sup));
   sel_val = makeTaggedSRecord(st);
