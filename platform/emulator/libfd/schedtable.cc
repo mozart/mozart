@@ -35,7 +35,7 @@
 
 #include "../modSchedule.dcl"
 
-const OZ_C_proc_interface mod_int_Schedule[] = {
+OZ_C_proc_interface mod_int_Schedule[] = {
 #include "../modSchedule.tbl"
  {0,0,0,0}
 };
