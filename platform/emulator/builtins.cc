@@ -5316,7 +5316,7 @@ OZ_BI_define(BIbitArray_set,2,0)
     b->set(i);
     return PROCEED;
   } else
-    return oz_raise(E_ERROR,E_KERNEL,"BitArray.set",2,OZ_in(0),OZ_in(1));
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_clear,2,0)
@@ -5327,7 +5327,7 @@ OZ_BI_define(BIbitArray_clear,2,0)
     b->clear(i);
     return PROCEED;
   } else
-    return oz_raise(E_ERROR,E_KERNEL,"BitArray.clear",2,OZ_in(0),OZ_in(1));
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_test,2,1)
@@ -5337,7 +5337,7 @@ OZ_BI_define(BIbitArray_test,2,1)
   if (b->checkBounds(i))
     OZ_RETURN(b->test(i)? OZ_true(): OZ_false());
   else
-    return oz_raise(E_ERROR,E_KERNEL,"BitArray.test",2,OZ_in(0),OZ_in(1));
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_low,1,1)
@@ -5366,7 +5366,7 @@ OZ_BI_define(BIbitArray_or,2,0)
     b1->or(b2);
     return PROCEED;
   } else
-    return oz_raise(E_ERROR,E_KERNEL,"BitArray.or",2,OZ_in(0),OZ_in(1));
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_and,2,0)
@@ -5377,7 +5377,7 @@ OZ_BI_define(BIbitArray_and,2,0)
     b1->and(b2);
     return PROCEED;
   } else
-    return oz_raise(E_ERROR,E_KERNEL,"BitArray.and",2,OZ_in(0),OZ_in(1));
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_nimpl,2,0)
@@ -5388,7 +5388,7 @@ OZ_BI_define(BIbitArray_nimpl,2,0)
     b1->nimpl(b2);
     return PROCEED;
   } else
-    return oz_raise(E_ERROR,E_KERNEL,"BitArray.nimpl",2,OZ_in(0),OZ_in(1));
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_toList,1,1)
