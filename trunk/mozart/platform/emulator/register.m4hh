@@ -116,8 +116,9 @@ define(M4INSTRTWOREGS,``''
       TaggedRef name   = getAtomArg(PC+2);
       DebugCheck(&Reg1(0)!= &(e->toplevelVars[0]),
 		 error("createNamedVar: e->toplevelVars expected"););
-      Reg1(regIndex) = createNamedVariable(regIndex,name,e);
+      TaggedRef newVar = createNamedVariable(regIndex,name,e);
       Y = e->toplevelVars;
+      Reg1(regIndex) = newVar;
     }
     ''
     DISPATCH(3);
