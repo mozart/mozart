@@ -100,7 +100,8 @@ define
                                   action:proc{$}
                                             {Assign UICell ui(fontsize:{Access FoS}
                                                               foreground:{Access FgC}
-                                                              background:{Access BgC})}
+                                                              background:{Access BgC}
+                                                              browser:{BrowserV tkReturnInt($)}==1)}
                                             {T tkClose}
                                             Change=true
                                          end)}
@@ -109,6 +110,11 @@ define
                                               {T tkClose}
                                               Change=false
                                            end)}
+      BrowserF={New Tk.frame tkInit(parent:T)}
+      BrowserV={New Tk.variable tkInit({CondSelect {Access UICell} browser false})}
+      BrowserL={New Tk.label tkInit(parent:BrowserF text:"Using Netscape")}
+      BrowserB={New Tk.checkbutton tkInit(parent:BrowserF variable:BrowserV)}
+
    in
       {Tk.batch [grid(FontL row:0 column:0 sticky:e)
                  grid(FontB1 row:0 column:1 sticky:we pady:3 padx:1)
@@ -123,6 +129,9 @@ define
                  grid(SY1 row:3 column:1 sticky:ns)
                  grid(SY2 row:3 column:3 sticky:ns)
                  grid(CF row:7 column:0 columnspan:2 sticky:news pady:3 ipadx:2)
+                 grid(BrowserL row:0 column:1 sticky:w)
+                 grid(BrowserB row:0 column:0 sticky:e)
+                 grid(BrowserF row:8 column:0 columnspan:2 sticky:news pady:3 ipadx:2)
                  grid(DoneB row:10 column:0 sticky:we)
                  grid(CancelB row:10 column:1 sticky:we)
                 ]}
