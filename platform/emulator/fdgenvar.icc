@@ -65,6 +65,7 @@ void GenFDVariable::relinkSuspListTo(GenFDVariable * lv)
 inline
 void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 {
+  if (isSmallInt(*trPtr)) return;
   TaggedRef si_val = newSmallInt(finiteDomain.singl());
   propagate(*trPtr, fd_det, si_val);
   doBind(trPtr, si_val);
