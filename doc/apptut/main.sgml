@@ -51,7 +51,7 @@
   &chapter.development;
   &chapter.deployment;
 </PART>
-<!-- &part.native; -->
+&part.native;
 <PART>
   <Title/Managing Modules/
   &chapter.linking;
