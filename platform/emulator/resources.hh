@@ -8,6 +8,7 @@
 #define ERROR_PRINT_WIDTH       PRINT_WIDTH
 #define ERROR_THREAD_DEPTH      10
 #define ERROR_LOCATION          1
+#define ERROR_DEBUG             0
 #define ERROR_HINTS             1
 
 #define TIME_SLICE              50  /* ms */

@@ -6205,6 +6205,7 @@ OZ_C_proc_begin(BISystemGetErrors,1) {
   GetRecord;
 
   SetBoolArg(AtomLocation, ozconf.errorLocation);
+  SetBoolArg(AtomDebug,    ozconf.errorDebug);
   SetBoolArg(AtomHints,    ozconf.errorHints);
   SetIntArg(AtomThread,    ozconf.errorThreadDepth);
   SetIntArg(AtomDepth,     ozconf.errorPrintDepth);
@@ -6411,12 +6412,14 @@ OZ_C_proc_begin(BISystemSetErrors,1) {
 
   DoBoolFeature(location, t, AtomLocation);
   DoBoolFeature(hints,    t, AtomHints);
+  DoBoolFeature(debug,    t, AtomDebug);
   DoNatFeature(thread,    t, AtomThread);
   DoNatFeature(width,     t, AtomWidth);
   DoNatFeature(depth,     t, AtomDepth);
 
   SetIfPos(ozconf.errorThreadDepth, thread,   1);
   SetIfPos(ozconf.errorLocation,    location, 1);
+  SetIfPos(ozconf.errorDebug,       debug,    1);
   SetIfPos(ozconf.errorHints,       hints,    1);
   SetIfPos(ozconf.errorPrintWidth,  width,    1);
   SetIfPos(ozconf.errorPrintDepth,  depth,    1);
