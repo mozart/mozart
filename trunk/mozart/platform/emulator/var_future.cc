@@ -64,16 +64,15 @@ void Future::kick(TaggedRef *ptr)
 {
   Assert(function!=0);
   Board* bb      = GETBOARD(this);
-  Thread* thr    = oz_mkRunnableThread(DEFAULT_PRIORITY,bb);
+  Thread* thr    = oz_newThreadInject(DEFAULT_PRIORITY,bb);
   OZ_Term newvar = oz_newVar(bb);
 
   static RefsArray args = allocateStaticRefsArray(2);
   args[0]=makeTaggedRef(ptr);
   args[1]=newvar;
 
-  thr->pushCFun(BIbyNeedAssign, args, 2, OK);
+  thr->pushCFun(BIbyNeedAssign, args, 2);
   thr->pushCall(function,newvar);
-  am.threadsPool.scheduleThread(thr);
   function=0;
 }
 
@@ -133,7 +132,8 @@ OZ_BI_define(BIfuture,1,1)
     RefsArray args = allocateRefsArray(2, NO);
     args[0]=v;
     args[1]=f;
-    Thread *thr = (Thread *) OZ_makeSuspendedThread(VarToFuture,args,2);
+    Thread *thr = oz_newThreadSuspended();
+    thr->pushCFun(VarToFuture,args,2);
     addSuspAnyVar(tagged2Ref(v),thr);
     OZ_RETURN(f);
   }

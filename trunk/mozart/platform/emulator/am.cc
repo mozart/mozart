@@ -308,7 +308,7 @@ void AM::init(int argc,char **argv)
     warning("Perdio initialization failed");
   }
 
-  Thread *tt = oz_newRunnableThread();
+  Thread *tt = oz_newThread();
 
   if (assemblyCodeFile) {
 
@@ -767,7 +767,7 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
 
   /* first step: do suspension */
   if (isSVar(var) || isCVar(var)) {
-    tagged2SVarPlus(var)->wakeupAll();
+    oz_wakeupAll(tagged2SVarPlus(var));
   }
 
   /* free memory */

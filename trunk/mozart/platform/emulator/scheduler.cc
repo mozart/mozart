@@ -60,8 +60,7 @@ int canOptimizeFailure(AM *e, Thread *tt)
   if (tt->hasCatchFlag() || oz_onToplevel()) { // catch failure
     if (tt->isSuspended()) {
       tt->pushCall(BI_fail,0,0);
-      oz_suspThreadToRunnableOPT(tt);
-      am.threadsPool.scheduleThread(tt);
+      oz_wakeupThreadOPT(tt);
     } else {
       printf("WEIRD: failure detected twice");
 #ifdef DEBUG_CHECK
@@ -230,7 +229,7 @@ LBLterminate:
 
     CBB->decSuspCount();
 
-    oz_disposeRunnableThread(CTT);
+    oz_disposeThread(CTT);
     //am.threadsPool.unsetCurrentThread(); // TMUELLER
 
     // fall through to checkEntailmentAndStability
@@ -368,7 +367,7 @@ LBLdiscardThread:
 	DECSOLVETHREADS (tmpBB, "d");
       }
     }
-    oz_disposeRunnableThread(CTT);
+    oz_disposeThread(CTT);
     am.threadsPool.unsetCurrentThread();
 
     goto LBLstart;
@@ -526,15 +525,14 @@ LBLfailure:
 			  tmpCont->getY(), tmpCont->getCAP());
 	     if (tmpCont->getX()) ts->pushX(tmpCont->getX());
 	     aa->disposeAsk();
-	     oz_suspThreadToRunnableOPT(tt);
-	     am.threadsPool.scheduleThread(tt);
+	     oz_wakeupThreadOPT(tt);
 	   }
 	 }
        }
      }
      
      DECSOLVETHREADS(CBB, "e");
-     oz_disposeRunnableThread(CTT);
+     oz_disposeThread(CTT);
      am.threadsPool.unsetCurrentThread();
 
      goto LBLstart;

@@ -2226,7 +2226,7 @@ LBLdispatcher:
 	prio = DEFAULT_PRIORITY;
       }
 
-      Thread *tt = oz_mkRunnableThreadOPT(prio, CBB);
+      Thread *tt = oz_newThread(prio);
 
       COUNT(numThreads);
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
@@ -2234,8 +2234,6 @@ LBLdispatcher:
       tt->getTaskStackRef()->pushCont(newPC,newY,CAP);
       tt->setSelf(e->getSelf());
       tt->setAbstr(ozstat.currAbstr);
-
-      e->threadsPool.scheduleThread (tt);
 
       JUMPRELATIVE(contPC);
     }
@@ -2391,7 +2389,7 @@ LBLdispatcher:
 	 goto LBLreplaceBICall;
 
        case SUSPEND:
-	 CTT->pushCFun(biFun,X,predArity,OK);
+	 CTT->pushCFun(biFun,X,predArity);
 	 SUSPENDONVARLIST;
 
       case BI_PREEMPT:
