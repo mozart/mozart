@@ -101,20 +101,20 @@ OZ_Boolean pm_is_noncvar(pm_term_type t) {
 //-----------------------------------------------------------------------------
 // Global Variables relenvant for FD Built-ins
 
-extern double static_coeff_double[MAXFDBIARGS];
-extern int static_coeff_int[MAXFDBIARGS];
-extern OZ_Boolean static_sign_bit[MAXFDBIARGS];
-extern OZ_Term static_var[MAXFDBIARGS];
-extern OZ_Term * static_varptr[MAXFDBIARGS];
-extern pm_term_type static_vartag[MAXFDBIARGS];
-extern OZ_Boolean static_bool_a[MAXFDBIARGS];
-extern OZ_Boolean static_bool_b[MAXFDBIARGS];
-extern int static_int_a[MAXFDBIARGS];
-extern int static_int_b[MAXFDBIARGS];
-extern double static_double_a[MAXFDBIARGS];
-extern double static_double_b[MAXFDBIARGS];
-extern int static_index_offset[MAXFDBIARGS];
-extern int static_index_size[MAXFDBIARGS];
+extern double * static_coeff_double;
+extern int * static_coeff_int;
+extern OZ_Boolean * static_sign_bit;
+extern OZ_Term * static_var;
+extern OZ_Term ** static_varptr;
+extern pm_term_type * static_vartag;
+extern OZ_Boolean * static_bool_a;
+extern OZ_Boolean * static_bool_b;
+extern int * static_int_a;
+extern int * static_int_b;
+extern double * static_double_a;
+extern double * static_double_b;
+extern int * static_index_offset;
+extern int * static_index_size;
 
 
 //-----------------------------------------------------------------------------
