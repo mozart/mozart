@@ -1,6 +1,6 @@
 proc {Compiler.evalExpression VS Env ?Kill ?Result} E I S in
    E = {New Compiler.engine init()}
-   I = {New Compiler.quietInterface init(E)}
+   I = {New Compiler.interface init(E)}
    {E enqueue(mergeEnv(Env))}
    {E enqueue(setSwitch(expression true))}
    {E enqueue(setSwitch(threadedqueries false))}
@@ -10,16 +10,23 @@ proc {Compiler.evalExpression VS Env ?Kill ?Result} E I S in
       proc {Kill}
          {E clearQueue()}
          {E interrupt()}
-         {Thread.terminate T}
-         S = unit
+         try
+            {Thread.terminate T}
+            S = killed
+         catch _ then skip   % already dead
+         end
       end
-      {Wait {E enqueue(ping($))}}
-      case {I hasErrors($)} then Ms in
+      {I sync()}
+      if {I hasErrors($)} then Ms in
          {I getMessages(?Ms)}
-         {Exception.raiseError compiler(evalExpression VS Ms)}
-      else skip
+         S = error(compiler(evalExpression VS Ms))
+      else
+         S = success
       end
-      S = unit
    end
-   {Wait S}
+   case S of error(M) then
+      {Exception.raiseError M}
+   [] success then skip
+   [] killed then skip
+   end
 end
