@@ -5,18 +5,19 @@ export
 
 import
 
-   Tables(getVarId getPropId)
-   Aux(propReflect variableToVirtualString propLocation
-       varReflect counterClass vectorToList memberEqProp)
+   Aux(variableToVirtualString counterClass)
    Config(paramColour edgeColour eventColour)
-	  
+   FS
+   
 define
    
    IdCounter = {New Aux.counterClass init}
    
-   fun {MakeParameterEdge Hist VarTable Event P EventPs}
-      VarStr = {Aux.variableToVirtualString P}
-      VarId = {Tables.getVarId VarTable P}
+   fun {MakeParameterEdge Hist VarTable Event VarId EventPs AllParams}
+      VarStr = {Aux.variableToVirtualString VarTable.VarId.reference}
+\ifdef SHOW_ID
+      #" ["#VarId#"]"
+\endif      
    in
       "l(\"e<"#{IdCounter next($)}#">\",e(\"\", ["
       #"a(\"_DIR\",\"none\"),"
@@ -29,33 +30,41 @@ define
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_param(VarId VarStr $)}
       #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
-      #",menu_entry(\"vg<sub>\",\"Variable graph of all variables reachable by that constraint\")"
+      #",menu_entry(\"vg<"
+      #AllParams.1
+      #{FoldL AllParams.2
+	fun {$ L R} if R == nil then L
+		    else L#'|'#R
+		    end
+	end ""}
+      #">\",\"Variable graph of all variables reachable by that constraint\")"
       
       #",menu_entry(\"vg<"
       
-      #{Tables.getVarId VarTable EventPs.1}
+      #EventPs.1
       #{FoldL EventPs.2 fun {$ L R} if R == nil then L
-				    else L#'|'#{Tables.getVarId VarTable R}
+				    else L#'|'#R
 				    end
 			end ""}
       
       #">\",\"Variable graph of all variables reachable by that constraint at event ["#Event#"]\")"
       
-      #",menu_entry(\"svg<"#{Tables.getVarId VarTable P}#">\",\"Single variable graph of "#VarStr#"\")])"
+      #",menu_entry(\"svg<"#VarId#">\",\"Single variable graph of "
+      #VarStr#"\")])"
       
       #"],[]))))"
    end
    
-   fun {MakeParameterEdges Hist VarTable Event Ps AllPs}
+   fun {MakeParameterEdges Hist VarTable Event Ps AllPs AllParams}
       case Ps
       of A|B|T then
-	 {MakeParameterEdge Hist VarTable Event A AllPs}#","
-	 #{MakeParameterEdges Hist VarTable Event B|T AllPs}
-      [] A|nil then {MakeParameterEdge Hist VarTable Event A AllPs}
+	 {MakeParameterEdge Hist VarTable Event A AllPs AllParams}#","
+	 #{MakeParameterEdges Hist VarTable Event B|T AllPs AllParams}
+      [] A|nil then {MakeParameterEdge Hist VarTable Event A AllPs AllParams}
       else "" end
    end
 
-   fun {MakeEventEdge Hist VarTable C Event}
+   fun {MakeEventEdge Hist VarTable Event AllParams}
       "l(\"e<"#{IdCounter next($)}
       #">\",e(\"\", [a(\"_DIR\",\"none\"),a(\"EDGECOLOR\",\""#Config.edgeColour
       #"\")],l(\""#Event.1
@@ -65,71 +74,85 @@ define
       #"m(["
       #{Hist insert_menu($)}
       #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
-      #",menu_entry(\"vg<sub>\",\"Variable graph of all variables reachable by that constraint\")"
       #",menu_entry(\"vg<"
-      #{Tables.getVarId VarTable Event.2.1}
+      #AllParams.1
+      #{FoldL AllParams.2
+	fun {$ L R} if R == nil then L
+		    else L#'|'#R
+		    end
+	end ""}
+      #">\",\"Variable graph of all variables reachable by that constraint\")"
+      #",menu_entry(\"vg<"
+      #Event.2.1
       #{FoldL Event.2.2 fun {$ L R} if R == nil then L
-				    else L#'|'#{Tables.getVarId VarTable R}
+				    else L#'|'#R
 				    end
 			end ""}
       
       #">\",\"Variable graph of all variables reachable by that constraint at event ["#Event.1#"]\")])"
       
       #"],["
-      #{MakeParameterEdges Hist VarTable Event.1 Event.2 Event.2}#"]))))"
+      #{MakeParameterEdges Hist VarTable Event.1 Event.2 Event.2 AllParams}
+      #"]))))"
    end
    
-   fun {MakeEventEdges Hist VarTable C Events}
+   fun {MakeEventEdges Hist VarTable Events AllParams}
       case Events
       of A|B|T then
-	 {MakeEventEdge Hist VarTable C A}#","
-	 #{MakeEventEdges Hist VarTable C B|T}
-      [] A|nil then {MakeEventEdge Hist VarTable C A}
+	 {MakeEventEdge Hist VarTable A AllParams}#","
+	 #{MakeEventEdges Hist VarTable B|T AllParams}
+      [] A|nil then {MakeEventEdge Hist VarTable A AllParams}
       else "" end
    end
 
-   proc {ConstraintEvents Dict ReflC Params}
-      case Params
-      of H|T then Events = {Arity H.susplists} in
-	 {ForAll Events
-	  proc {$ E}
-	     if  {Aux.memberEqProp ReflC.reference
-		   {Map H.susplists.E
-		    fun {$ C}
-		       if C.type == propagator
-		       then C.reference else unit end
-		    end}}
-	     then
-		Entry = {Dictionary.condGet Dict E nil}
-	     in
-		{Dictionary.put Dict E H.var|Entry}
-	     else skip end
-	  end}
-	 {ConstraintEvents Dict ReflC T}
-      else skip end
+   fun {ConstraintEvents VarTable ReflC ReflParams}
+      Params = {FoldR {FS.reflect.lowerBoundList ReflParams}
+		fun {$ L R} (VarTable.L)|R end nil}
+
+      Dict = {NewDictionary}
+
+      proc {ConstraintEvents1 Params}  
+	 case Params
+	 of H|T then Events = {Arity H.susplists} in
+	    {ForAll Events
+	     proc {$ Event}
+		if  {FS.isIn ReflC.id H.susplists.Event}
+		then
+		   Entry = {Dictionary.condGet Dict Event nil}
+		in
+		   {Dictionary.put Dict Event H.id|Entry}
+		else skip end
+	     end}
+	    {ConstraintEvents1 T}
+	 else skip end
+      end
+   in
+      {ConstraintEvents1 Params}
+      {Dictionary.entries Dict}
    end
 
-   fun {Make VarTable PropTable Hist [C]}
-      ReflC = {Aux.propReflect C}
-      LocC  = {Aux.propLocation C}
-      ReflParams = {Map {Filter {Aux.vectorToList ReflC.params}
-			 fun {$ V} {Not {IsDet V}} end} Aux.varReflect}
-      Dict = {NewDictionary}
-      ParamEvents
+   fun {Make VarTable PropTable Hist C}
+      [PropId] = {FS.reflect.lowerBoundList C}
+      ReflC = PropTable.PropId
+      LocC  = ReflC.location
       
-      PropId = {Tables.getPropId PropTable C}
       Location = if LocC == unit then "" else LocC.file#":"#LocC.line end 
 
+      ParamEvents = {ConstraintEvents VarTable ReflC ReflC.parameters}
+      ParamsList = {FS.reflect.lowerBoundList ReflC.parameters}
+      Name = ReflC.name
+\ifdef SHOW_ID
+      #" ["#PropId#"]"
+\endif      
    in
-      {ConstraintEvents Dict ReflC ReflParams}
-      ParamEvents = {Dictionary.entries Dict}
       {Hist reset_mark}
-
+      
       scg(graph:
 	     ("[l(\"cn<"#PropId
 	      #">\",n(\"\",["
-	      #"a(\"OBJECT\",\""#ReflC.name#"\\n"#Location#"\"),"
-	      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(C $)}#"\"),"
+	      #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
+	      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(ReflC.reference $)}
+	      #"\"),"
 	      #{Hist get_prop_node_attr(PropId $)}
 
 	      #"m(["
@@ -138,10 +161,19 @@ define
 					   ReflC.name#" ("#Location#")" $)}
 	      #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
 	      #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
-	      #",menu_entry(\"vg<sub>\",\"Variable graph of all variables reachable by that constraint\")])"
+	      #",menu_entry(\"vg<solvar>\",\"Variable graph of solution variables\")"
+	      #",menu_entry(\"vg<"
+	      #ParamsList.1
+	      #{FoldL ParamsList.2
+		fun {$ L R} if R == nil then L
+			    else L#'|'#R
+			    end
+		end ""}
+	      #">\",\"Variable graph of all variables reachable by that constraint\")])"
 	      
 	      #"],["
-	      #{MakeEventEdges Hist VarTable ReflC ParamEvents}#"]))]")
+	      #{MakeEventEdges Hist VarTable ParamEvents ParamsList}
+	      #"]))]")
 	 )
    end
 end

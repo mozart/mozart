@@ -3,8 +3,6 @@
 
 {Property.put 'internal.propLocation' true}
 
-{Show {Property.get 'internal.propLocation'}}
-
 
 declare
 local
@@ -57,13 +55,13 @@ in
    N11 + N22 + N33 =: Sum
    N31 + N22 + N13 =: Sum
    {FD.distinct Square}
+{InvestigateConstraints [N11 N12] }
 
 {Explorer.object script(Problem)}
 
-{InvestigateConstraints N11}
 {Browse N11}
 
-{Browse {R.spaceReflect N11}}
+{Browse {R.spaceReflect N11}.varsTable}
 
 declare
 ReflectTables = {R.spaceReflect S}
@@ -77,6 +75,8 @@ X <: Y
 Y <: Z
 Z <: X
 
+{Browse {R.spaceReflect X}}
+
 {InvestigateConstraints X}
 
 % propagators failed during propagation
@@ -88,7 +88,9 @@ A <: B
 C <: D
 B <: C
 
-{InvestigateConstraints A}
+{Browse {R.spaceReflect X}}
+
+{InvestigateConstraints S}
 
 
 \insert ~/Programming/Oz/coins.oz
@@ -97,12 +99,20 @@ declare S in {Coins S}
 declare
 Tables = {R.spaceReflect S}
 
+
+declare
+Tables = {R.spaceReflect S}
+
+{Browse Tables}
+
 % propagators failed during propagation
 declare A B C D in
 [A B C  D] ::: 1#10
 A <: B
 C <: D
 B <: C
+
+{Browse {R.spaceReflect A}}
 
 {InvestigateConstraints A}
 

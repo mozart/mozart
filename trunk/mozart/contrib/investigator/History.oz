@@ -11,6 +11,8 @@ import
 	 )
 
    Aux(propIsFailed: PropIsFailed)
+   FS
+   
 export
 
    HistoryClass
@@ -32,8 +34,22 @@ define
 	 updateMarkedProp:  false
 	 updateMarkedParam: false
 
+	 sol_vars: {FS.value.make nil}
+	 
       meth init
 	 skip
+      end
+
+      meth set_sol_vars(SolVars)
+	 sol_vars <- SolVars
+      end
+
+      meth get_sol_var(Id VS)
+	 VS = if {FS.isIn Id @sol_vars} then '* ' else '' end
+      end
+
+      meth get_sol_var_set(S)
+	 S = @sol_vars
       end
 
 %%%
@@ -41,7 +57,7 @@ define
 %%%
 
       meth reset_mark
-	 updateMarkedProp  <-  false
+	 updateMarkedProp  <- false
 	 updateMarkedParam <- false
       end
       
@@ -88,7 +104,8 @@ define
       meth markup_param(DaVin I)
 	 markedParam <- I
 	 updateMarkedParam <- true
-	 {DaVin sendVS("graph(change_attr([node(\"vn<"#I#">\",[a(\"BORDER\",\""#MarkedParamNodeAttr#"\")])]))")}
+	 {DaVin sendVS("graph(change_attr([node(\"vn<"#I
+		       #">\",[a(\"BORDER\",\""#MarkedParamNodeAttr#"\")])]))")}
       end
 
       meth get_mark_param(I)
@@ -130,6 +147,10 @@ define
 	 Action#Args = {Dictionary.get @hist @curr}	 
       end
 
+      meth get_curr_action(Action Args)
+	 Action#Args = {Dictionary.get @hist @curr}
+      end
+      
       meth get_next_action(Action Args)
 	 curr <- @curr + 1
 	 Action#Args = {Dictionary.get @hist @curr}
