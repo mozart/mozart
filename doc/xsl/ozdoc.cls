@@ -1005,7 +1005,7 @@
 \definecolor{category}{rgb}{0.415686,0.352941,0.80392}
 \newcommand{\mozartCATEGORY}[1]{{\normalfont\footnotesize\color{category}\textsf{#1}\quad}}
 
-\newcommand{\ENTRYHASCODE}{%
+\newcommand{\mozartENTRYHASCODE}{%
   \let\mozartITEM\ITEM@MBOX}
 \newcommand{\ITEM@MBOX}{%
   \let\ENTRY@MBOX\relax\mbox{}\par\noindent}
