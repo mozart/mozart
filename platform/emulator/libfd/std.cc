@@ -757,35 +757,38 @@ OZ_Term Propagator_VI_VD_D::getParameters(char *lit) const
   RETURN_LIST4(a,x,OZ_atom(lit),reg_d);
 }
 
-void Propagator_VI_VD_D::simplify(void)
+OZ_Boolean Propagator_VI_VD_D::simplify(void)
 { 
   if (reg_sz) {
     DECL_DYN_ARRAY(OZ_Term,xd,reg_sz+1);
-    for(int j=reg_sz;j--;) xd[j]=reg_x[j];
-    xd[reg_sz]=reg_d;
-    int *is=OZ_findEqualVars(reg_sz+1,xd);
-    dpos=is[reg_sz];
-    for (int j=reg_sz;j--;) {
-      if (is[j]==-1) {      // singleton in x
-	reg_c+=int(OZ_intToC(reg_x[j])*NUMBERCAST(reg_a[j]));
-	reg_x[j]=0; 
-      } else if (j!=is[j]) {   // multiple appearing var in x 
-	reg_a[is[j]]+=reg_a[j];
-	reg_x[j]=0;
+    for(int j = reg_sz; j--; ) 
+      xd[j] = reg_x[j];
+    xd[reg_sz] = reg_d;
+    int *is = OZ_findEqualVars(reg_sz+1,xd);
+    dpos = is[reg_sz];
+    for (int j = reg_sz; j--; ) {
+      if (is[j] == -1) {      // singleton in x
+	reg_c += int(OZ_intToC(reg_x[j]) * NUMBERCAST(reg_a[j]));
+	reg_x[j] = 0; 
+      } else if (j != is[j]) {   // multiple appearing var in x 
+	reg_a[is[j]] += reg_a[j];
+	reg_x[j] = 0;
       } 
     }
     int from = 0, to = 0;
     for (; from < reg_sz; from++) {
      if (reg_x[from] != 0 && reg_a[from] != 0) {
        if (from != to) {
-         reg_a[to]=reg_a[from];
-         reg_x[to]=reg_x[from];
+         reg_a[to] = reg_a[from];
+         reg_x[to] = reg_x[from];
        }
        to++;
-     } else if (dpos!=reg_sz && from<dpos) dpos--;
+     } else if (dpos != reg_sz && from < dpos) 
+       dpos--;
     }
-    reg_sz=to;
+    reg_sz = to;
   }
+  return (dpos > -1 && dpos < reg_sz);
 }
 
 //-----------------------------------------------------------------------------

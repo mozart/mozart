@@ -383,7 +383,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_D); }
   virtual OZ_Term getParameters(char *) const;
-  void simplify(void);
+  OZ_Boolean simplify(void);
 };
 
 

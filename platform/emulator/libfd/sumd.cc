@@ -26,8 +26,7 @@ OZ_C_proc_begin(fdp_dsum, 3)
     OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 2, expectIntVarMinMax);
     return pe.impose(new isumNEqProp(OZ_args[0], OZ_args[2]));
-  } 
-  else {
+  } else {
     OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 2, expectIntVarMinMax);
 
