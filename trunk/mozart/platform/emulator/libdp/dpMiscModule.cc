@@ -314,9 +314,6 @@ OZ_BI_define(BIsockoptBroadcast,1,0)
 
 OZ_BI_define(BIgetMsgCntr,0,1)
 {
-  // Remove this when the information is retrivable from 
-  // perdio.cc
-  int globalWriteCounter = 0 ,globalReadCounter = 0 ;
   initDP();
   OZ_RETURN(oz_pairII(globalWriteCounter,globalReadCounter));
 }OZ_BI_end   
