@@ -165,6 +165,10 @@
 			     out => ['+string','+int','+int'],
 			     BI  => unix_receiveFromInet},
 
+     'receiveFromAnon'	=> { in  => ['+int','+int','+[atom]','value','value'],
+			     out => ['+int'],
+			     BI  => unix_receiveFromInetAnon},
+
      'getSockName'	=> { in  => ['+int'],
 			     out => ['+int'],
 			     BI  => unix_getSockName},
