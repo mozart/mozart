@@ -29,6 +29,10 @@
 #ifndef __THREADQUEUEH
 #define __THREADQUEUEH
 
+#ifdef LINKED_QUEUES
+#include "thr_lqueue.hh"
+#else
+
 #ifdef INTERFACE
 #pragma interface
 #endif
@@ -162,4 +166,5 @@ public:
   }
 };
 
+#endif /* !LINKED_QUEUE */
 #endif /* __THREADQUEUEH */
