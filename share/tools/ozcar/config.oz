@@ -20,10 +20,10 @@ TreeTitle              = 'Thread Tree'
 StackTitle             = 'Stack'
 AltStackTitle          = 'Stack of Thread  #'
 
-LocalEnvTitle          = 'Local Environment'
-GlobalEnvTitle         = 'Global Environment'
-AltLocalEnvTitle       = 'Local Environment of Frame  #'
-AltGlobalEnvTitle      = 'Global Environment of Frame  #'
+LocalEnvTitle          = 'Local Variables'
+GlobalEnvTitle         = 'Global Variables'
+AltLocalEnvTitle       = 'Local Variables of Frame  #'
+AltGlobalEnvTitle      = 'Global Variables of Frame  #'
 
 StatusInitText         = 'No current thread' /* end */
 StatusEndText          = 'See you again...'
@@ -49,11 +49,20 @@ ID                     = fun {$ I} ' (id ' # I # ')' end
 OzcarMessagePrefix     = 'Ozcar: '
 FileLineSeparator      = ' '
 
+BraceLeft              = '{'  /* } */
+BraceRight             = '}'
+
+BracketLeft            = '['  /* ] */
+BracketRight           = ']'
+
+DotEnd                 = '.end'
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Types, Names and Atoms
 %%
 ArrayType              = '<array>'
-ThreadType             = '<thread>'
+ThreadType             = '<thread>' /* end */
 CellType               = '<cell>'
 ClassType              = '<class>' /* end */
 DictionaryType         = '<dict>'
@@ -78,6 +87,8 @@ HashAtom               = "'#'"
 
 TrueName               = 'true'
 FalseName              = 'false'
+
+MagicAtom              = 'noActionPlease'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
@@ -122,6 +133,11 @@ BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 %% Miscellaneous
 %%
 TextCursor             = left_ptr
+
+MaxStackSize           = 10000
+MaxStackBrowseSize     = 10
+
+TimeoutToMessage       = 1000  % ms
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff
