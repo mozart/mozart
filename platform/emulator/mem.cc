@@ -141,7 +141,7 @@ void freeListChop(void * addr, size_t size) {
 // mm2: I've disabled mmap because many people reported spurious problems.
 // Please check with Denys and afranke@ags.uni-sb.de before reenabling it.
 
-#undef HAVE_MMAP
+/* #undef HAVE_MMAP */
 
 //
 // kost@: i have not tested that on anything else than 2.0.*
@@ -157,13 +157,6 @@ void freeListChop(void * addr, size_t size) {
 #if defined(LINUX_I486)
 #define USE_AUTO_PLACEMENT
 #endif
-
-//
-// There is an apparent bug somewhere in the system:
-// heap addresses in the range 0x30000000-0x3fffffff cannot be handled;
-// they cause some strange SIGSEGVs;
-// kost@: TODO
-#define HIGH_ADDRESSES_BUG_WORKAROUND
 
 //
 #if !defined(CCMALLOC) && defined(HAVE_MMAP)
@@ -250,9 +243,6 @@ public:
     pagesize = sysconf(_SC_PAGESIZE);
     top = (caddr_t)
       (((((unsigned int32) -1) >> lostPtrBits) / pagesize) * pagesize);
-#if defined(HIGH_ADDRESSES_BUG_WORKAROUND)
-    top -= (size_t) 0x20000000;
-#endif
   }
   ~MappedMemChunks() {
     MappedMemChunkEntry *entry = MappedMemChunkEntry::getNext();
