@@ -63,8 +63,6 @@
 <!ENTITY chapter.chat		SYSTEM "chat.sgml">
 
 <!ENTITY chapter.dict-client    SYSTEM "dict-client.sgml">
-
-<!ENTITY appendix.enable        SYSTEM "enable.sgml">
 ]>
 
 
@@ -75,7 +73,15 @@
     <Meta name=latex.package value="pifont">
 
     <Meta name="html.split"       value="chapter.queens">
+    <meta name="html.split"	  value="code.queens">
     <Meta name="html.split"       value="chapter.jobshop">
+    <meta name="html.split"	  value="code.jobshop.main">
+    <meta name="html.split"	  value="code.jobshop.compiler">
+    <meta name="html.split"	  value="code.jobshop.examples">
+    <meta name="html.split"	  value="code.jobshop.scheduler">
+    <meta name="html.split"	  value="code.jobshop.taskboard">
+    <meta name="html.split"	  value="code.jobshop.tools">
+    <meta name="html.split"	  value="code.jobshop.configure">
     <Meta name="html.split"       value="chapter.college">
     <Meta name="html.split"       value="chapter.cutting">
     <meta name="html.split"	  value="code.cutting.compute">
@@ -85,32 +91,32 @@
     <meta name="html.split"	  value="code.cutting.script">
 
     <Meta name="html.split"       value="chapter.trucks">
+    <meta name="html.split"	  value="code.trucks">
     <Meta name="html.split"       value="chapter.bounce">
+    <meta name="html.split"	  value="code.bounce">
     <Meta name="html.split"       value="chapter.lift">
+    <meta name="html.split"	  value="code.lift">
     <Meta name="html.split"       value="chapter.transportation">
+    <meta name="html.split"	  value="code.transportation.main">
+    <meta name="html.split"	  value="code.transportation.agents">
+    <meta name="html.split"	  value="code.transportation.agentabstractions">
+    <meta name="html.split"	  value="code.transportation.configure">
+    <meta name="html.split"	  value="code.transportation.country">
+    <meta name="html.split"	  value="code.transportation.dialogs">
+    <meta name="html.split"	  value="code.transportation.germany">
+    <meta name="html.split"	  value="code.transportation.plan">
+    <meta name="html.split"	  value="code.transportation.randomizer">
+    <meta name="html.split"	  value="code.transportation.widgets">
 
     <Meta name="html.split"       value="chapter.flowers">
     <Meta name="html.split"       value="chapter.board">
-    <Meta name="html.split"       value="chapter.flights">
-    <Meta name="html.split"       value="chapter.corpus">
+    <meta name="html.split"	  value="code.board">
     <Meta name="html.split"	  value="chapter.chat">
 
     <Meta name="html.split"       value="chapter.dict-client">
 
-    <Meta name="html.split"       value="appendix.enable">
-
     <Meta name="html.split.toc"   value="">
     <Meta name="html.split.bib"     value="">
-
-    <Author.Extern to="author.db" key="Denys.Duchier">
-    <Author.Extern to="author.db" key="Leif.Kornstaedt">
-    <Author.Extern to="author.db" key="Michael.Mehl">
-    <Author.Extern to="author.db" key="Martin.Mueller">
-    <Author.Extern to="author.db" key="Christian.Schulte">
-    <Author.Extern to="author.db" key="Gert.Smolka">
-    <Author.Extern to="author.db" key="Joerg.Wuertz">
-    <Author.Extern to="author.db" key="Tobias.Mueller">
-
     <Comic>
       <Picture.Choice>
 	<Picture.Extern to="demo.gif" type=gif>
@@ -119,7 +125,9 @@
       This document offers a number of demo applets that can be run
       directly from within their documentation. In order to execute
       Mozart Applets, your Web Browser must be Mozart Applet
-      enabled. This is done easily, see <Ptr to="appendix.enable">.
+      enabled. 
+    <p>
+      This is done easily, see <ptr.extern to="ozdoc:apptut" key="applets">.
     </Abstract>
   
     <Part id="part.constraints">
@@ -142,7 +150,7 @@
     <Part id="part.distributed">
       <Title/Distributed Applications/
       &chapter.board;
-	&chapter.chat;
+      &chapter.chat;
     </Part>
 
     <Part id="part.miscellaneous">
@@ -150,10 +158,6 @@
       &chapter.dict-client;
     </Part>
 
-    <Part id="part.appendix">
-       <Title/Appendices/
-       &appendix.enable;
-    </Part>
   <Back>
     <Bib.Extern id="FischerKuhn.93" to="demo.bib" key="FischerKuhn.93"> 
 </BOOK>

@@ -23,11 +23,13 @@
 
 <Chapter id="chapter.lift">
   <Title/Lift/
+    <Author.Extern to="author.db" key="Martin.Mueller">
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/Lift.oza"/Start Applet/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+	<Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   </P>
 
@@ -93,5 +95,16 @@
     </P>
 
   </Section>
+
+  <section class=unnumbered id="section.lift.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.lift>
+      <title>Root functor: <file/Lift.oz/</title>
+      <para><title><ref.extern to="Lift.oz">Source
+File</ref.extern></title>
+<code.extern display to="Lift.oz" proglang=oz></para>
+    </subsection>
+
 
 </Chapter>

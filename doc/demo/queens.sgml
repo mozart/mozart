@@ -22,12 +22,14 @@
   -->
 
 <Chapter id="chapter.queens">
-    <Title/Animated Queens/
+  <Title/Animated Queens/
+  <Author.Extern to="author.db" key="Christian.Schulte">
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/AnimatedQueens.oza"/Start Applet/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+	<Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
 
   <p>
@@ -62,6 +64,17 @@
       where rows where it is possible to place the queen left most are
       chosen first. Place the queen left most.  
     </list>
+
+  <section class=unnumbered id="section.queens.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.queens>
+      <title>Root functor: <file/AnimateQueens.oz/</title>
+      <para><title><ref.extern to="AnimatedQueens.oz">Source
+File</ref.extern></title>
+<code.extern display to="AnimatedQueens.oz" proglang=oz></para>
+    </subsection>
+
 
 
 </Chapter>
