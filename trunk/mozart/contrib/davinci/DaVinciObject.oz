@@ -2,19 +2,20 @@ functor
 
 export
    DaVinciClass
-   
+
 import
+   Error
    Open
-   System
    DaVinciScanner
-   
+
 define
-   
+
    fun {CommandListToVS L}
       case L
       of H|nil then {CommandValueToVS H}
       [] H1|H2|T then  {CommandValueToVS H1}#","#{CommandListToVS H2|T}
-      else {System.showInfo 'Unexpected command in CommandListToVS.'} error
+      else
+	 {Exception.raiseError daVinci(unexpectedCommand L)} unit
       end
    end
 
@@ -26,17 +27,18 @@ define
       elseif {IsList C} then '['#{CommandListToVS C}#']'
       elseif {IsAtom C} then "\""#C#"\""
       elseif {IsTuple C} then {Label C}#'('#{CommandListToVS {Record.toList C}}#')'
-      else {System.showInfo 'Unexpected command in CommandValueToVS.'} error
+      else
+	 {Exception.raiseError daVinci(unexpectedCommand C)} unit
       end
    end
 
-   class DaVinciClass 
+   class DaVinciClass
       attr
 	 pipe
 	 in_stream
 	 in_stream_tail
 	 in_pipe_scanner: {New DaVinciScanner.inPipeScannerClass init()}
-      
+
       meth init(S)
 	 pipe <- {New Open.pipe
 		  init(cmd:  'daVinci' args: ['-pipe'])}
@@ -48,7 +50,7 @@ define
 	 end
       end
 
-      meth read_pipe(Mesg)      
+      meth read_pipe(Mesg)
 	 local T V M in
 	    {@in_pipe_scanner getToken(T V)}
 	    M = case T of 'EOF'
@@ -62,7 +64,7 @@ define
 	    Mesg = {DaVinciScanner.daVinciAnswerToValue M}
 	 end
       end
-   
+
       meth listen_in_pipe
 	 local Tail Msg = DaVinciClass,read_pipe($)
 	 in
@@ -72,9 +74,9 @@ define
 	    if Msg == 'quit' then Tail = nil
 	    else DaVinciClass,listen_in_pipe
 	    end
-	 end      
+	 end
       end
-   
+
       meth close
 	 {@pipe write(vs: "menu(file(exit))\n")}
       end
@@ -89,7 +91,22 @@ define
 	 {@pipe write(vs: "graph(new("#VS#"))\n")}
       end
    end
-   
+
+   {Error.registerFormatter daVinci
+    fun {$ E}
+       T = 'DaVinci error'
+    in
+       case E of daVinci(unexpectedCommand C) then
+	  error(kind: T
+		msg: 'unexpected command'
+		items: [hint(l: 'Found' m: oz(C))])
+       [] daVinci(unexpectedResponse) then
+	  error(kind: T
+		msg: 'unexpected response')
+       else
+	  error(kind: T
+		items: [line(oz(E))])
+       end
+    end}
+
 end
-
-
