@@ -1,0 +1,61 @@
+AC_INIT(Psql.oz)
+OZ_CONTRIB_INIT_CXX
+AC_CHECK_LIB(nsl,gethostbyname)
+AC_CHECK_LIB(socket,socket)
+
+AC_MSG_CHECKING([for --with-psql-inc])
+AC_ARG_WITH(psql-inc,
+  [--with-psql-inc=DIR	where to find libpq-fe.h],
+  [oz_cv_with_psql_inc=$withval],
+  [: ${oz_cv_with_psql_inc=$oz_with_psql_inc}
+   : ${oz_cv_with_psql_inc=NONE}])
+AC_MSG_RESULT($oz_cv_with_psql_inc)
+
+AC_MSG_CHECKING([for --with-psql-lib])
+AC_ARG_WITH(psql-lib,
+  [--with-psql-lib=DIR	where to find libpq],
+  [oz_cv_with_psql_lib=$withval],
+  [: ${oz_cv_with_psql_lib=$oz_with_psql_lib}
+   : ${oz_cv_with_psql_lib=NONE}])
+AC_MSG_RESULT($oz_cv_with_psql_lib)
+
+AC_MSG_CHECKING([for --with-psql-ldflags])
+AC_ARG_WITH(psql-ldflags,
+  [--with-psql-ldflags=LDFLAGS	use these flags for linking]
+  [oz_cv_with_psql_ldflags=$withval],
+  [: ${oz_cv_with_psql_ldflags=$oz_with_psql_ldflags}
+   : ${oz_cv_with_psql_ldflags=NONE}])
+AC_MSG_RESULT($oz_cv_with_psql_ldflags)
+OZ_ADDTO_LDFLAGS($oz_cv_with_psql_ldflags)
+
+dnl ------------------------------------------------------------------
+dnl locate libpq-fe.h
+dnl ------------------------------------------------------------------
+
+oz_saved_inc_path=$oz_inc_path
+if test "$oz_cv_with_psql_inc" != NONE; then
+  oz_inc_path="$oz_cv_with_psql_inc${oz_inc_path:+ }$oz_inc_path"
+fi
+OZ_CHECK_HEADER_PATH(libpq-fe.h,,
+  AC_MSG_ERROR(required libpq-fe.h include file not found))
+oz_inc_path=$oz_saved_inc_path
+
+dnl ------------------------------------------------------------------
+dnl locate libpq library
+dnl ------------------------------------------------------------------
+
+oz_saved_lib_path=$oz_lib_path
+if test -n "$oz_cv_with_psql_lib"; then
+  oz_lib_path="$oz_cv_with_psql_lib${oz_lib_path:+ }$oz_lib_path"
+fi
+OZ_CHECK_LIB_PATH(pq,PQerrorMessage,,
+  AC_MSG_ERROR(required libpq library not found))
+oz_lib_path=$oz_saved_lib_path
+
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

@@ -1,0 +1,107 @@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+BUILDTOP	= @BUILDTOP@
+
+PLATFORM	= @PLATFORM@
+PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
+INSTALL		= @INSTALL@
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+CC		= @CC@
+CXX		= @CXX@
+
+TCL_VERSION     = @TCL_VERSION@
+TCL_PREFIX      = @TCL_PREFIX@
+TCL_LIBS        = @TCL_LIBS@
+TCL_LIB_SPEC    = @TCL_LIB_SPEC@
+
+TK_VERSION      = @TK_VERSION@
+TK_PREFIX       = @TK_PREFIX@
+TK_LIBS         = @TK_LIBS@
+TK_LIB_SPEC     = @TK_LIB_SPEC@
+TK_XINCLUDES    = @TK_XINCLUDES@
+
+CFLAGS		= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+LN_S		= @LN_S@
+
+PROVIDETCLLIBS  = @PROVIDETCLLIBS@
+
+WINDLLDIR	= @WINDLLDIR@
+
+LIBS    	= $(TCL_LIB_SPEC) $(TK_LIBS) $(TK_LIB_SPEC)
+ifeq ($(PLATFORM),freebsdelf-i486)
+FREEBSDFLAGS	=  -I$(TCL_PREFIX)/include/tcl$(TCL_VERSION) \
+	-I$(TK_PREFIX)/include/tk$(TK_VERSION)
+else
+FREEBSDFLAGS	=
+endif
+CPPFLAGS	= -I. $(TK_XINCLUDES) $(FREEBSDFLAGS) \
+	-I$(TCL_PREFIX)/include -I$(TK_PREFIX)/include
+TCLLIBTCLDIR    = $(TCL_PREFIX)/lib/tcl$(TCL_VERSION)
+TKLIBTCLDIR     = $(TK_PREFIX)/lib/tk$(TK_VERSION)
+
+EXTRALDFLAGS   	= @EXTRALDFLAGS@
+
+OZWISH		= tk.exe
+SRCS		= @SRCS@
+OBJS		= ${SRCS:.cc=.o}
+
+.PHONY: $(PROVIDETCLLIBS)
+
+.SUFFIXES: .cc .o .c $(SUFFIXES)
+
+
+all: $(OZWISH)
+
+bootstrap: all
+
+$(OZWISH): $(OBJS)
+	$(CXX) $(LDFLAGS) $(EXTRALDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+clean:
+	-rm -f $(OBJS) *~
+
+veryclean: clean
+	-rm -f $(OZWISH)
+
+distclean: veryclean
+	-rm -f conf.h config.* Makefile
+	-rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
+
+install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS) @INSTALLWINDLLS@
+	$(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
+
+installwindlls: $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/tcl83.dll $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/tk83.dll $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/tclpip83.dll $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/msvcrt.dll $(PLATFORMDIR)
+
+nothing:
+
+$(PLATFORMDIR):
+	$(INSTALL_DIR) $@
+
+provide-link: $(PLATFORMDIR)
+	rm -rf $(PLATFORMDIR)/wish
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish
+	(cd $(PLATFORMDIR)/wish; \
+		$(LN_S) $(TCLLIBTCLDIR) tcl; \
+		$(LN_S) $(TKLIBTCLDIR) tk)
+
+provide-copy: $(PLATFORMDIR)
+	rm -rf $(PLATFORMDIR)/wish
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tcl
+	for i in $(TCLLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tcl; fi;\
+	done
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tk
+	for i in $(TKLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tk; fi;\
+	done
+
+
+check:
+
+depend:
