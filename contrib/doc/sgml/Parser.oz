@@ -1,6 +1,6 @@
 functor
 import
-   Open Exception
+   Open
 export
    Program Catalog object:SgmlParserObject
 define
@@ -106,6 +106,7 @@ define
 	 else
 	    {Exception.raiseError
 	     ExceptionLabel(unknownEventChar C|L)}
+	    unit
 	 end
       end
    end
@@ -130,6 +131,7 @@ define
 	       else
 		  {Exception.raiseError
 		   ExceptionLabel(unsupportedEscape L)}
+		  unit
 	       end
 	    end
 	 else H|{Unescape T} end
@@ -236,6 +238,7 @@ define
 	 {Loop}
 	 {Exception.raiseError
 	  ExceptionLabel(cEventNotFound)}
+	 unit
       catch done then
 	 {ForAll {Dictionary.items EAttMap} proc {$ L} L=nil end}
 	 document(docElem:DocElem emap:{Dictionary.toRecord emap EMap})
@@ -249,8 +252,7 @@ define
 	 Cat = case C of unit then {Access ParamCatalog} else C end
       in
 	 {Parse
-	  {MakeEventGenerator Pgm '-c'#Cat#' '#
-	   {FoldR Files fun {$ F VS} ' '#F#VS end nil}}
+	  {MakeEventGenerator Pgm '-c'#Cat|Files}
 	  Document}
       end
    end
