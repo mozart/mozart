@@ -31,21 +31,6 @@
 #pragma implementation "thr_class.hh"
 #endif
 
-/* some random comments on threads:
-
-   threads are 'switch'ed, if
-     - 'timed out' by alarm clock
-     - 'finish'ed
-     - 'displace'd by higher priority
-     - 'freeze'd
-
-   need for thread switching is signaled by 'ThreadSwitch' S-Flag
-
-   "current thread"
-     - the currently running thread
-
-   */
-
 #include "thr_class.hh"
 
 int Thread::getRunnableNumber() {

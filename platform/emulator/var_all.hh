@@ -161,7 +161,7 @@ OZ_Return oz_var_addSuspINLINE(TaggedRef *v, Suspension susp,
     return ((ExtVar *) ov)->addSuspV(v, susp, unstable);
   case OZ_VAR_SIMPLE:
     if (ozconf.useFutures ||
-        (susp.isThread() && susp.getThread()->getNoBlock())) {
+        (susp.isThread() && susp.getThread()->isNoBlock())) {
       return oz_raise(E_ERROR, E_KERNEL, "block", 1, makeTaggedRef(v));
     }
     // fall through

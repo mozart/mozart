@@ -39,6 +39,7 @@
 // mm2
 #include "board.hh"
 #include "value.hh"
+#include "pointer-marks.hh"
 
 #ifdef DEBUG_CHECK
 #include "am.hh"
@@ -160,11 +161,15 @@ public:
     suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
   }
 
-  Bool           gcIsMarked(void);
-  Bool           gcIsMarkedOutlined(void);
+  Bool gcIsMarked(void) {
+    return IsMarkedPointer(suspList,1);
+  }
+  TaggedRef * gcGetFwd(void) {
+    Assert(gcIsMarked());
+    return (TaggedRef *) UnMarkPointer(suspList,1);
+  }
+
   void           gcMark(Bool, TaggedRef *);
-  TaggedRef *    gcGetFwd(void);
-  TaggedRef *    gcGetFwdOutlined(void);
   OzVariable *   gcVar();
   void           gcVarRecurse(void);
 
