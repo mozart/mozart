@@ -129,44 +129,6 @@ oz_BFlag oz_isBetween(Board *to, Board *varHome)
  *
  */
 
-inline
-void oz_deinstallPath(Board *top)
-{
-  Assert(!top->isCommitted() && !top->isFailed());
-  
-  while (!oz_isCurrentBoard(top)) {
-    oz_deinstallCurrent();
-  }
-}
-
-InstType oz_installPath(Board *to)
-{
-  if (to->isInstalled()) {
-    oz_deinstallPath(to);
-    return INST_OK;
-  }
-
-  Assert(!oz_isRootBoard(to));
-
-  if (to->isFailed())
-    return INST_REJECTED;
-  
-  InstType ret = oz_installPath(to->getParent());
-  
-  if (ret != INST_OK)
-    return ret;
-  
-  am.setCurrent(to);
-  to->setInstalled();
-
-  am.trail.pushMark();
-
-  if (!oz_installScript(to->getScriptRef()))
-    return INST_FAILED;
-
-  return INST_OK;
-}
-
 // only used in deinstall
 // Three cases may occur:
 // any global var G -> ground ==> add susp to G
@@ -213,6 +175,7 @@ void oz_reduceTrailOnSuspend()
   am.trail.popMark();
 }
 
+
 void oz_reduceTrailOnFail()
 {
   while(!am.trail.isEmptyChunk()) {
@@ -248,5 +211,98 @@ void oz_reduceTrailOnEqEq()
   }
   am.trail.popMark();
 }
+
+
+static
+Board * installOnly(Board * frm, Board * to) {
+
+  if (frm == to)
+    return frm;
+
+  Board * r = installOnly(frm, to->getParent());
+  
+  if (r != frm)
+    return r;
+
+  am.setCurrent(to);
+  am.trail.pushMark();
+  
+  if (!oz_installScript(to->getScriptRef()))
+    return to;
+    
+  return r;
+  
+}
+  
+
+InstType oz_installPath(Board * to) {
+  // Tries to install "to". If "to" is on a path
+  // containing a failed space INST_REJECTED is returned.
+  // If installation of a script fails, INST_FAILED is returned and
+  // the highest space for which installation is possible gets installed.
+  // Otherwise, INST_OK is returned.
+
+  Board * frm = oz_currentBoard();
+  
+  Assert(!frm->isCommitted() && !to->isCommitted());
+  
+  if (frm == to)
+    return INST_OK;
+  
+  // Step 0: Check whether "to" is still alive
+  for (Board * s = to; !s->isRoot() ; s=s->getParent())
+    if (s->isFailed())
+      return INST_REJECTED;
+
+
+  // Step 1: Mark all spaces including root as installed
+  {
+    Board * s;
+ 
+    for (s = frm; !s->isRoot(); s=s->getParent()) {
+      Assert(!s->isMarkedAsInstalled());
+      s->markAsInstalled(); 
+    }
+    Assert(!s->isMarkedAsInstalled());
+    s->markAsInstalled(); 
+  }
+
+  // Step 2: Find ancestor
+  Board * ancestor = to;
+
+  while (!ancestor->isMarkedAsInstalled()) 
+    ancestor = ancestor->getParent();
+
+  // Step 3: Deinstall from "frm" to "ancestor", also purge marks
+  {
+    Board * s = frm;
+
+    while (s != ancestor) {
+      Assert(s->isMarkedAsInstalled());
+      s->unMarkAsInstalled();
+      oz_reduceTrailOnSuspend();
+      s=s->getParent();
+      am.setCurrent(s);
+    }
+    
+    am.setCurrent(ancestor);
+
+    // Purge remaining marks
+    for ( ; !s->isRoot() ; s=s->getParent()) {
+      Assert(s->isMarkedAsInstalled());
+      s->unMarkAsInstalled();
+    }
+    Assert(s->isMarkedAsInstalled());
+    s->unMarkAsInstalled();
+    
+  }
+
+  // Step 4: Install from "ancestor" to "to"
+
+  return (installOnly(ancestor, to) == ancestor) ? INST_OK : INST_FAILED;
+
+}
+  
+
 
 

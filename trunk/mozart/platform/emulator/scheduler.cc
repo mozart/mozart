@@ -112,18 +112,13 @@ LBLstart:
   Assert(!CTT->isDeadThread() && CTT->isRunnable());
 
   // Install board
-  {
-    Board *bb=GETBOARD(CTT);
-    if (CBB != bb) {
-      switch (oz_installPath(bb)) {
-      case INST_OK:
-	break;
-      case INST_REJECTED:
-	goto LBLdiscardThread;
-      case INST_FAILED:
-	goto LBLfailure;
-      }
-    }
+  switch (oz_installPath(GETBOARD(CTT))) {
+  case INST_OK:
+    break;
+  case INST_REJECTED:
+    goto LBLdiscardThread;
+  case INST_FAILED:
+    goto LBLfailure;
   }
 
   Assert(CTT->isRunnable());
@@ -402,8 +397,6 @@ LBLfailure:
      b->setFailed();
      
      oz_reduceTrailOnFail();
-
-     b->unsetInstalled();
      
      am.setCurrent(p);
 

@@ -48,7 +48,6 @@ inline
 void oz_deinstallCurrent()
 {
   oz_reduceTrailOnSuspend();
-  oz_currentBoard()->unsetInstalled();
   am.setCurrent(oz_currentBoard()->getParent());
 }
 
