@@ -26,7 +26,7 @@ BUILDTOP=	@BUILDTOP@
 PREFIX=		@prefix@
 SRCDIR= 	@srcdir@
 VPATH=	 	@srcdir@
-BINDIR=		$(PREFIX)/platform/winbin
+BINDIR=		$(PREFIX)/winbin
 
 CXX=		@CXX@
 INCS=		-I. -I$(SRCDIR)
