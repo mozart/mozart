@@ -138,7 +138,10 @@ void OZ_FSetVar::readEncap(OZ_Term v)
     setPtr = &set;
     setSort(val_e);
     known_in = set.getCardMin();
-    known_not_in =  32*fset_high - known_in;
+    // loeckelt:
+    known_not_in = fs_sup - known_in + 1;
+    // was:
+    // known_not_in =  32*fset_high - known_in;
     card_size = 1;
     setState(loc_e); // TMUELLER: why, ought to be redundant
     setSort(val_e);
