@@ -568,9 +568,14 @@ if that value is non-nil."
     (mapcar '(lambda(scr) (oz-set-screen-name scr oz-old-screen-title))
 	    (visible-screen-list)))
     
+  
   (if (and (get-process "Oz Compiler")
 	   (get-process "Oz Machine"))
       (oz-send-string "!halt \n"))
+
+  (if (and (not (get-process "Oz Compiler"))
+	   (not (get-process "Oz Machine")))
+      (error "Oz not running"))
 
   (message "halting Oz...")
   (sleep-for 5)
