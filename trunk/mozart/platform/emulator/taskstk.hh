@@ -113,6 +113,7 @@ public:
   void printTaskStack(int depth);
   TaggedRef getTaskStack(Thread *tt, Bool verbose, int depth);
   TaggedRef getFrameVariables(int frameId);
+  void unleash(int frameId);
 
   Bool isEmpty() { return ::isEmpty(tos); }
 
@@ -197,6 +198,13 @@ public:
   top -= frameSz;				\
 }
 
+#define ReplaceFrame(frame,pc,y,g)              \
+{                                               \
+  *(frame+2) = (void *) pc;                     \
+  *(frame+1) = (void *) y;                      \
+  *frame     = (void *) g;                      \
+}
+
 #define PopFrameNoDecl(ts,pc,y,g)		\
 {						\
   TaskStack *__ts = ts;				\
@@ -216,4 +224,3 @@ public:
     ProgramCounter pc;				\
     RefsArray y,g;				\
     GetFrameNoDecl(top,pc,y,g)
-
