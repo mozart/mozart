@@ -4111,7 +4111,15 @@ OZ_Return typeError(int Pos, char *Comment, char *TypeString)
   (void) oz_raise(E_ERROR,E_KERNEL,
                   "type",5,NameUnit,NameUnit,
                   OZ_atom(getTypeOfPos(TypeString, Pos)),
-                  OZ_int(Pos+1),
+                  makeTaggedSmallInt(Pos+1),
                   OZ_string(Comment));
   return BI_TYPE_ERROR;
+}
+
+void oz_typeErrorInternal(const int pos, const char * type) {
+  (void) oz_raise(E_ERROR,E_KERNEL,
+                  "type",5,NameUnit,NameUnit,
+                  OZ_atom(type),
+                  makeTaggedSmallInt(pos+1),
+                  OZ_string(""));
 }
