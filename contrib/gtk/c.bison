@@ -1093,7 +1093,7 @@ OZ_BI_define (parse_tree, 1, 1) {
   }
   else {
     /* gcc 2.96 introduces __builtin_va_list internally */
-    type_list = OZ_cons(OZ_atom("__builtin_va_list"), OZ_atom("nil"));
+    type_list = OZ_cons(OZ_atom("__builtin_va_list"), OZ_nil());
     setjmp(error_buf);
     if (enter == 0) {
       enter = 1;
