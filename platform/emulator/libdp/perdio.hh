@@ -41,6 +41,7 @@
 
 //
 Bool isPerdioInitialized();
+void perdioInitLocal();
 
 //
 // Per said it must be here;

@@ -69,12 +69,6 @@ static VSProbingObject vsProbingObject(VS_REGISTER_HT_SIZE, &vsRegister);
 static VSMailboxKeysRegister slavesRegister;
 
 //
-// Free bodies of "virtual info" objects.
-// We need a memory management for that since there can be "virtual
-// info" objects for "remote" virtual site groups;
-static FreeListDataManager<VirtualInfo> freeVirtualInfoPool(malloc);
-
-//
 // A queue of sites that have pending messages (still to be sent):
 static VSSiteQueue vsSiteQueue;
 
@@ -135,22 +129,6 @@ VirtualSite* createVirtualSiteImpl(DSite* s)
   vsRegister.registerVS(vs);
   return (vs);
 }
-
-//
-void marshalVirtualInfoImpl(VirtualInfo *vi, MsgBuffer *mb)
-{
-  vi->marshal(mb);
-}
-//
-VirtualInfo* unmarshalVirtualInfoImpl(MsgBuffer *mb)
-{
-  VirtualInfo *voidVI = freeVirtualInfoPool.allocate();
-  VirtualInfo *vi = new (voidVI) VirtualInfo(mb);
-  return (vi);
-}
-//
-// Defined in vs_comm.cc;
-void unmarshalUselessVirtualInfoImpl(MsgBuffer *);
 
 //
 void zeroRefsToVirtualImpl(VirtualSite *vs)
@@ -246,13 +224,6 @@ void discoveryPerm_VirtualSiteImpl(VirtualSite *vs)
   myVSChunksPoolManager->retractRegisteredSite(vs);
   vs->drop();
   delete vs;
-}
-
-//
-void dumpVirtualInfoImpl(VirtualInfo* vi)
-{
-  vi->destroy();
-  freeVirtualInfoPool.dispose(vi);
 }
 
 //
@@ -647,11 +618,13 @@ void virtualSitesExitImpl()
 OZ_BI_define(BIVSnewMailbox,0,1)
 {
   //
+  // Zeroth, init perdio if it isn't;
+  if (!isPerdioInitialized())
+    perdioInitLocal();
+
+  //
   // First, link the interface:
   createVirtualSite = createVirtualSiteImpl;
-  marshalVirtualInfo = marshalVirtualInfoImpl;
-  unmarshalVirtualInfo = unmarshalVirtualInfoImpl;
-  unmarshalUselessVirtualInfo = unmarshalUselessVirtualInfoImpl;
   zeroRefsToVirtual = zeroRefsToVirtualImpl;
   sendTo_VirtualSite = sendTo_VirtualSiteImpl;
   discardUnsentMessage_VirtualSite = discardUnsentMessage_VirtualSiteImpl;
@@ -664,7 +637,6 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   probeStatus_VirtualSite = probeStatus_VirtualSiteImpl;
   giveUp_VirtualSite = giveUp_VirtualSiteImpl;
   discoveryPerm_VirtualSite = discoveryPerm_VirtualSiteImpl;
-  dumpVirtualInfo = dumpVirtualInfoImpl;
   getVirtualMsgBuffer = getVirtualMsgBufferImpl;
   dumpVirtualMsgBuffer = dumpVirtualMsgBufferImpl;
   siteAlive_VirtualSite = siteAlive_VirtualSiteImpl;
@@ -759,11 +731,35 @@ OZ_BI_define(BIVSinitServer,1,0)
   DSite *ms;
 
   //
+  if (!isPerdioInitialized())
+    perdioInitLocal();
+
+  //
+  // First, link the interface:
+  createVirtualSite = createVirtualSiteImpl;
+  zeroRefsToVirtual = zeroRefsToVirtualImpl;
+  sendTo_VirtualSite = sendTo_VirtualSiteImpl;
+  discardUnsentMessage_VirtualSite = discardUnsentMessage_VirtualSiteImpl;
+  getQueueStatus_VirtualSite = getQueueStatus_VirtualSiteImpl;
+  siteStatus_VirtualSite = siteStatus_VirtualSiteImpl;
+  monitorQueue_VirtualSite = monitorQueue_VirtualSiteImpl;
+  demonitorQueue_VirtualSite = demonitorQueue_VirtualSiteImpl;
+  installProbe_VirtualSite = installProbe_VirtualSiteImpl;
+  deinstallProbe_VirtualSite = deinstallProbe_VirtualSiteImpl;
+  probeStatus_VirtualSite = probeStatus_VirtualSiteImpl;
+  giveUp_VirtualSite = giveUp_VirtualSiteImpl;
+  discoveryPerm_VirtualSite = discoveryPerm_VirtualSiteImpl;
+  getVirtualMsgBuffer = getVirtualMsgBufferImpl;
+  dumpVirtualMsgBuffer = dumpVirtualMsgBufferImpl;
+  siteAlive_VirtualSite = siteAlive_VirtualSiteImpl;
+  virtualSitesExit = virtualSitesExitImpl;
+
+  //
 #ifdef DEBUG_CHECK
-//   fprintf(stdout, "*** Sleeping for 10 secs - hook it up (pid %d)!\n",
-//        getpid());
-//   fflush(stdout);
-//   sleep(10);                 // IMHO more than enough;
+  fprintf(stdout, "*** Sleeping for 10 secs - hook it up (pid %d)!\n",
+          getpid());
+  fflush(stdout);
+  sleep(10);                    // IMHO more than enough;
 #endif
 
   //
@@ -839,8 +835,9 @@ OZ_BI_define(BIVSinitServer,1,0)
   // The 'myDSite' and 'ms' share the same master (which
   // might be 'ms' itself), so virtual infos differ in the
   // mailbox key only, which is to be set later:
-  vi = new VirtualInfo(ms->getVirtualInfo());
+  vi = new VirtualInfo(ms->getVirtualInfo(), mbKey);
   myDSite->makeMySiteVirtual(vi);
+  Assert(myDSite->getVirtualInfo());
 
   //
   // Change the type of 'ms': this is a virtual site (per
@@ -850,12 +847,6 @@ OZ_BI_define(BIVSinitServer,1,0)
   //
   myVSMsgBufferImported->releaseChunks();
   myVSMsgBufferImported->cleanup();
-
-  //
-  // Now, myDSite's virtual info is updated to have a shared memory key
-  // (which is not available in the context of 'msgReceived()');
-  Assert(myDSite->getVirtualInfo());
-  myDSite->getVirtualInfo()->setMailboxKey(myVSMailboxManager->getSHMKey());
 
   //
   // Install the 'read-from-virtual-sites' & 'delayed-write' handlers;

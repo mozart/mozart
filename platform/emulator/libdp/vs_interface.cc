@@ -39,22 +39,6 @@ VirtualSite* createVirtualSiteStub(DSite *)
   return ((VirtualSite *) 0);
 }
 //
-void marshalVirtualInfoStub(VirtualInfo *, MsgBuffer *)
-{
-  error("'marshalVirtualInfo' called without 'VIRTUALSITES'?");
-}
-//
-VirtualInfo* unmarshalVirtualInfoStub(MsgBuffer *)
-{
-  error("'unmarshalVirtualInfo' called without 'VIRTUALSITES'?");
-  return ((VirtualInfo *) 0);
-}
-//
-void unmarshalUselessVirtualInfoStub(MsgBuffer *)
-{
-  error("'unmarshalUselessVirtualInfo' called without 'VIRTUALSITES'?");
-}
-//
 void zeroRefsToVirtualStub(VirtualSite *)
 {
   error("'zeroRefsToVirtual' called without 'VIRTUALSITES'?");
@@ -125,11 +109,6 @@ void discoveryPerm_VirtualSiteStub(VirtualSite *)
   error("'discoveryPerm_VirtualSite' called without 'VIRTUALSITES'?");
 }
 //
-void dumpVirtualInfoStub(VirtualInfo *)
-{
-  error("'dumpVirtualInfo' called without 'VIRTUALSITES'?");
-}
-//
 MsgBuffer* getVirtualMsgBufferStub(DSite *)
 {
   error("'getVirtualMsgBuffer' called without 'VIRTUALSITES'?");
@@ -153,12 +132,6 @@ void virtualSitesExitStub() {}
 //
 VirtualSite* (*createVirtualSite)(DSite* s)
   = createVirtualSiteStub;
-void (*marshalVirtualInfo)(VirtualInfo *vi, MsgBuffer *mb)
-  = marshalVirtualInfoStub;
-VirtualInfo* (*unmarshalVirtualInfo)(MsgBuffer *mb)
-  = unmarshalVirtualInfoStub;
-void (*unmarshalUselessVirtualInfo)(MsgBuffer *)
-  = unmarshalUselessVirtualInfoStub;
 void (*zeroRefsToVirtual)(VirtualSite *vs)
   = zeroRefsToVirtualStub;
 int (*sendTo_VirtualSite)(VirtualSite *vs, MsgBuffer *mb,
@@ -189,8 +162,6 @@ GiveUpReturn (*giveUp_VirtualSite)(VirtualSite* vs)
   = giveUp_VirtualSiteStub;
 void (*discoveryPerm_VirtualSite)(VirtualSite *vs)
   = discoveryPerm_VirtualSiteStub;
-void (*dumpVirtualInfo)(VirtualInfo* vi)
-  = dumpVirtualInfoStub;
 MsgBuffer* (*getVirtualMsgBuffer)(DSite* site)
   = getVirtualMsgBufferStub;
 void (*dumpVirtualMsgBuffer)(MsgBuffer* m)

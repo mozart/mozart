@@ -69,13 +69,12 @@ Bool isPerdioInitialized() {
 
 void perdioInitLocal()
 {
-  // '!'
+  //
+#ifdef DEBUG_CHECK
   // fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
   // fflush(stderr);
   // sleep(10);
-
-  if(perdioTrigger==0)
-    return;
+#endif
 
   //
   perdioTrigger = 0;

@@ -71,7 +71,7 @@ BIMODSPECS = \
         BitString ByteString
 
 MODSPECS= \
-        DP FDP FSP Schedule Wif Parser OS Property Pickle \
+        FDP FSP Schedule Wif Parser OS Property Pickle \
         PID URL FDB FSB System Finalize CTB \
         CompilerSupport Profile \
         Debug Fault Browser Misc DPMisc Distribution \
