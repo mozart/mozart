@@ -1767,11 +1767,10 @@ Case(GETVOID)
       {
         register TaggedRef A, B;
 
-        asm volatile("movl   4(%2),%0
-                      movl   8(%2),%1
-                      movl   (%0),%0
-                      movl   (%1),%1
-
+        asm volatile("movl   4(%2),%0\n\
+                      movl   8(%2),%1\n\
+                      movl   (%0),%0\n\
+                      movl   (%1),%1\n\
                      "
                      : "=r" (A), "=r" (B) : "r" (PC));
 
@@ -1782,14 +1781,14 @@ Case(GETVOID)
           B ^= LTAG_SMALLINT;
           if (!(B & LTAG_MASK)) {
 
-            asm volatile("   subl %3,%2
-                             jo   0f
-                             movl 12(%0),%3
-                             addl $16,%0
-                             orl  %1,%2
-                             movl %2,(%3)
-                             jmp *(%0)
-                          0:
+            asm volatile("   subl %3,%2\n\
+                             jo   0f\n\
+                             movl 12(%0),%3\n\
+                             addl $16,%0\n\
+                             orl  %1,%2\n\
+                             movl %2,(%3)\n\
+                             jmp *(%0)\n\
+                          0:\n\
                        "
                          : /* OUTPUT */
                            "+&r" (PC) // read-write and early-clobber
@@ -1878,11 +1877,10 @@ Case(GETVOID)
       {
         register TaggedRef A, B;
 
-        asm volatile("movl   4(%2),%0
-                      movl   8(%2),%1
-                      movl   (%0),%0
-                      movl   (%1),%1
-
+        asm volatile("movl   4(%2),%0\n\
+                      movl   8(%2),%1\n\
+                      movl   (%0),%0\n\
+                      movl   (%1),%1\n\
                      "
                      : "=r" (A),
                        "=r" (B)
@@ -1895,15 +1893,15 @@ Case(GETVOID)
           B ^= LTAG_SMALLINT;
           if (!(B & LTAG_MASK)) {
 
-            asm volatile("
-                             addl %3,%2
-                             jo   0f
-                             movl 12(%0),%3
-                             addl $16,%0
-                             orl  %1,%2
-                             movl %2,(%3)
-                             jmp *(%0)
-                          0:
+            asm volatile("   \n\
+                             addl %3,%2\n\
+                             jo   0f\n\
+                             movl 12(%0),%3\n\
+                             addl $16,%0\n\
+                             orl  %1,%2\n\
+                             movl %2,(%3)\n\
+                             jmp *(%0)\n\
+                          0:\n\
                        "
                        :  /* OUTPUT */
                          "+&r" (PC) // read-write and early-clobber
@@ -1990,23 +1988,23 @@ Case(GETVOID)
       {
         register TaggedRef A, T;
 
-        asm volatile("    movl   4(%1),%0
-                          movl   (%0),%0
+        asm volatile("    movl   4(%1),%0\n\
+                          movl   (%0),%0\n\
                      "
                      : "=r" (A) : "r" (PC));
 
       retryINLINEMINUS1:
         A ^= LTAG_SMALLINT;
         if (!(A & LTAG_MASK)) {
-          asm volatile("   addl $12,%0
-                           movl -4(%0),%3
-                           addl %1,%2
-                           jo   0f
-                           movl %2,(%3)
-                           jmp *(%0)
-                        0: movl %4,%2
-                           movl %2,(%3)
-                           jmp *(%0)
+          asm volatile("   addl $12,%0\n\
+                           movl -4(%0),%3\n\
+                           addl %1,%2\n\
+                           jo   0f\n\
+                           movl %2,(%3)\n\
+                           jmp *(%0)\n\
+                        0: movl %4,%2\n\
+                           movl %2,(%3)\n\
+                           jmp *(%0)\n\
                        "
                        :  "+r" (PC) // read-write
                        : "i" (LTAG_SMALLINT - (1 << LTAG_BITS)),
@@ -2065,23 +2063,23 @@ Case(GETVOID)
       {
         register TaggedRef A, T;
 
-        asm volatile("    movl   4(%1),%0
-                          movl   (%0),%0
+        asm volatile("    movl   4(%1),%0\n\
+                          movl   (%0),%0\n\
                      "
                      : "=r" (A) : "r" (PC));
 
       retryINLINEPLUS1:
         A ^= LTAG_SMALLINT;
         if (!(A & LTAG_MASK)) {
-          asm volatile("   addl $12,%0
-                           movl -4(%0),%3
-                           addl %1,%2
-                           jo   0f
-                           movl %2,(%3)
-                           jmp *(%0)
-                        0: movl %4,%2
-                           movl %2,(%3)
-                           jmp *(%0)
+          asm volatile("   addl $12,%0\n\
+                           movl -4(%0),%3\n\
+                           addl %1,%2\n\
+                           jo   0f\n\
+                           movl %2,(%3)\n\
+                           jmp *(%0)\n\
+                        0: movl %4,%2\n\
+                           movl %2,(%3)\n\
+                           jmp *(%0)\n\
                        "
                        :  "+r" (PC) // read-write
                        : "i" (LTAG_SMALLINT + (1 << LTAG_BITS)),
