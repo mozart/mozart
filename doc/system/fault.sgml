@@ -33,8 +33,8 @@ Please refer to the Distribution Tutorial for a full specification
 of the operations and examples of how to use them.
 This section carefully indicates where the current release
 is incomplete with respect to the specification
-(a <EM>limitation</EM>)
-or has different behavior (a <EM>modification</EM>).
+(called a <EM>limitation</EM>)
+or has a different behavior (called a <EM>modification</EM>).
 
 <section><title/Argument types/
 
@@ -230,14 +230,14 @@ i.e., the call <<{Fault.install _ global _ _}>> is undefined.
 If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
 </list>
-The modifications are:
+<P>The modifications are:
 <list>
 <item>A handler installed on a <EM>variable</EM> will retry
 the operation (i.e., bind or wait) after it returns.
 That is, the handler is inserted before the operation
 instead of replacing the operation.
 </list>
-These limitations and modifications
+<P>These limitations and modifications
 will be removed in future releases.
 
 

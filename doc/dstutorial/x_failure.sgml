@@ -155,8 +155,9 @@ For example, an application might be connected to a given server.
 If there are problems with this server, the application
 would like to be informed quickly so that it can try connecting
 to another server.
-The <<tempFail>> exceptions will therefore be relatively frequent,
-much more frequent than time-outs.
+A <<tempFail>> fault state will therefore be relatively frequent,
+much more frequent than a time-out.
+In most cases, a <<tempFail>> fault state will eventually go away.
 
 <P>It is possible for a <<tempFail>> state to last forever.
 For example, if a user disconnects the network connection of a laptop
@@ -167,6 +168,8 @@ or whether to interrupt the wait can cut through all levels of
 abstraction to appear at the top level.
 The application might then pop up a window to ask the user whether
 to continue waiting or not.
+The important thing is that the network layer does not make this decision;
+the application is completely free to decide or to let the user decide.
 
 
 <SECTION><TITLE>Basic model</TITLE>
