@@ -428,7 +428,7 @@ const OZ_Term taggedContTask = MAKETRAVERSERTASK(2);
 //
 // A user can declare a binary area which will be processed with
 // 'TraverserBinaryAreaProcessor' supplied (see also the comments for
-// GenTraverser::marshalBinary()');
+// GenTraverser::traverseBinary()');
 typedef Bool (*TraverserBinaryAreaProcessor)(GenTraverser *m, void *arg);
 
 //
@@ -639,7 +639,7 @@ protected:
   virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst) = 0;
   //  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert) = 0;
   //
-  // 'processAbstraction' also issues 'marshalBinary';
+  // 'processAbstraction' also issues 'traverseBinary';
   virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst) = 0;
 
   //
@@ -650,23 +650,23 @@ protected:
   //
 public:
   //
-  // The 'marshalBinary' method is the only artifact due to the
+  // The 'traverseBinary' method is the only artifact due to the
   // iterative nature of marshaling. Consider marshaling of a code
   // area: it contains Oz values in it. Recursive marshaler just
   // marshals those values "in place", where they occur. Iterative
   // marshaler can either (a) have the traverser knowing where Oz
   // values are, so the job is done similar to Oz records, (b) declare
-  // them using 'GenTraverser::marshalOzValue()' (see below). The first
+  // them using 'GenTraverser::traverseOzValue()' (see below). The first
   // approach requires more knowledge from the traverser and in
   // general two scanning phases, yet the traverser's stack can be as
   // large as there are Oz values in the code area. The second
   // approach fixes first two problems but still suffers from the last
   // one. That problem is solved by making binary areas split into
-  // pieces; the first one is declared using 'marshalBinary'.
+  // pieces; the first one is declared using 'traverseBinary'.
   // Marshaling a binary area is finished when 'proc' returns
   // TRUE. 'proc' must take care of descriptor (e.g. deallocate it);
-  void marshalBinary(TraverserBinaryAreaProcessor proc,
-                     void *binaryDescriptor) {
+  void traverseBinary(TraverserBinaryAreaProcessor proc,
+                      void *binaryDescriptor) {
     Assert(binaryDescriptor);   // '0' is used by the traverser itself;
     ensureFree(3);
     putPtr((void *) proc);
@@ -679,10 +679,10 @@ public:
 
   //
   // 'TraverserBinaryAreaProcessor' declare Oz values to be marshaled
-  // via 'marshalOzValue()'. Unmarshaler must declare them to be
+  // via 'traverseOzValue()'. Unmarshaler must declare them to be
   // unmarshaled in the same order (but in the stream they appear in
   // reverse order);
-  void marshalOzValue(OZ_Term term) {
+  void traverseOzValue(OZ_Term term) {
     ensureFree(2);
     putSync();          // will appear after the list;
     put(term);
@@ -692,7 +692,7 @@ public:
   // When a binary area is small (exactly speaking, when we can first
   // marshal the area completely, and after that Oz values contained
   // in it), it's legal to use 'GenTraverser' as 'NodeProcessor', thus
-  // to call 'marshalOzValue()' on its own;
+  // to call 'traverseOzValue()' on its own;
 
 protected:
   //

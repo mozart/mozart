@@ -44,10 +44,10 @@ define(instruction,
           break;)
 
 define(opAction,
-[[ifelse($1,Number,gt->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-         $1,Literal,gt->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-         $1,Feature,gt->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-         $1,Constant,gt->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+[[ifelse($1,Number,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+         $1,Literal,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+         $1,Feature,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+         $1,Constant,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
          $1,Builtinname,_m_bi = (Builtin*)getAdressArg(PC++); marshalBuiltin(gt,_m_bi);ozValuesCnt--;,
          $1,XRegisterIndex,marshalNumber(bs,XRegToInt(getXRegArg(PC++)));,
          $1,YRegisterIndex,marshalNumber(bs,YRegToInt(getYRegArg(PC++)));,
@@ -108,7 +108,7 @@ Bool pickleCode(GenTraverser *gt, void *arg)
         Abstraction *abstr = entry->getAbstr();
 
         //
-        gt->marshalOzValue(makeTaggedConst(abstr));
+        gt->traverseOzValue(makeTaggedConst(abstr));
         ozValuesCnt--;
 
         //
@@ -150,10 +150,10 @@ Bool pickleCode(GenTraverser *gt, void *arg)
 undefine([[opAction]])
 
 define(opAction,
-[[ifelse($1,Number,gt->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-         $1,Literal,gt->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-         $1,Feature,gt->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
-         $1,Constant,gt->marshalOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+[[ifelse($1,Number,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+         $1,Literal,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+         $1,Feature,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
+         $1,Constant,gt->traverseOzValue(getTaggedArg(PC++));ozValuesCnt--;,
          $1,Builtinname,traverseBuiltin(gt,(Builtin*)getAdressArg(PC++));ozValuesCnt--;,
          $1,XRegisterIndex,PC++;,
          $1,YRegisterIndex,PC++;,
@@ -195,7 +195,7 @@ Bool traverseCode(GenTraverser *gt, void *arg)
     if (op == FASTCALL || op == FASTTAILCALL) {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
       if (!entry->isCopyable()) {
-        gt->marshalOzValue(makeTaggedConst(entry->getAbstr()));
+        gt->traverseOzValue(makeTaggedConst(entry->getAbstr()));
         ozValuesCnt--;
         PC++; // skip (AbstractionEntry *)
         PC++; // skip unused second arg
