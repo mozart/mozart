@@ -109,6 +109,7 @@ public:
   int operator >= (const int);
 
   int constrainBool(void);
+  int intersectWithBool(void);
   OZ_Boolean isIn(int i) const;
   void copyExtension(void);
   void disposeExtension(void);
