@@ -1,0 +1,79 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.mof">
+  <title/More On Functors/
+
+  <section id="section.mof.computed">
+    <title/Computed Functors/
+
+    <p>
+      The body of the main functor definition in <ptr
+      to="section.development.root"> contains a statement that creates
+      a large data structure containing the initial flights. In
+      general a data structure takes less space on the disk
+      as the statement to create the data structure. And in general,
+      the construction of a data structure can be computationally
+      arbitrarily involved (think of classes, or the
+      computation. This stinks.
+
+    <p>
+      Functors directly support precomputation of data by
+      <def/computed functors/. For example,
+
+<chunk class=anonymous><title/Computed Functor/
+functor
+import
+   DB Form            % User defined
+   System Application % System
+prepare
+   Flights = <chunk.ref/Sample flights/ 
+define
+   %% Enter some flights
+   {ForAll Flights DB.add}
+   ...
+end
+</chunk>
+
+    <p>
+      During the excution of the outer functor (?), also modules can
+      be imported with a <<require>> list. The require is identical to
+      import.
+
+
+
+  <section id="section.mof.import">
+    <title/Imports/
+
+    <p>
+      <<import>> and <<require>> specifications support...
+
+  
+  <section id="section.mof.module">
+    <title/Module Managers/
+
+    <p>
+      Gaga
+
+  
+</chapter>
