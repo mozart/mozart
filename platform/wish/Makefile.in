@@ -1,3 +1,4 @@
+BUILDTOP=       @BUILDTOP@
 PREFIX=         @prefix@
 
 PLATFORM        = @platform@
