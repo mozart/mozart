@@ -110,7 +110,6 @@ Bool LocalPropagationStore::propagate_locally () {
    * (global) 'am.currentThread' to an actual propagator (thread);
    *
    */
-  // mm2 ???
   // kost@ : --> let's try ...
   Assert (currentBoard->getSuspCount () >= getSize ());
 
@@ -127,12 +126,6 @@ Bool LocalPropagationStore::propagate_locally () {
     Assert (!(am.currentThread->isDeadThread ()));
     Assert (am.currentThread->isPropagator ());
 
-#ifdef NEWCOUNTER // mm2
-    DebugTrace (trace ("decSuspCount: local prop"));
-#else
-    currentBoard->decSuspCount ();
-#endif
-
     RefsArray args = c->getX ();
 
     Assert (args != (RefsArray) NULL);
@@ -140,11 +133,14 @@ Bool LocalPropagationStore::propagate_locally () {
     case FAILED:
       if (am.currentBoard->isRoot ()) {
         if (ozconf.errorVerbosity > 0) {
-          toplevelErrorHeader ();
-          applFailure (c->getCFunc ());
+          errorHeader();
+          message("Propagator %s failed\n",
+                  builtinTab.getName((void *)(c->getCFunc())));
           if (ozconf.errorVerbosity > 1) {
             message ("\n");
-            printArgs (args, getRefsArraySize(args));
+            for (int i=0; i < getRefsArraySize(args); i++) {
+              message("Argument %d = %s\n",i,args[i]);
+            }
           }
           errorTrailer ();
           allowTopLevelFailureMsg = FALSE;
@@ -153,6 +149,9 @@ Bool LocalPropagationStore::propagate_locally () {
       am.currentThread->closeDonePropagator ();
       am.currentThread = savedCurrentThread;
       return reset();
+
+    case RAISE:
+      error("propagators can't raise exceptions");
 
     case SUSPEND:
       error ("propagate_locally: 'SUSPEND' is returned?\n");
