@@ -3173,8 +3173,6 @@ void Site::msgReceived(MsgBuffer* bs)
       OZ_Term t;
       unmarshal_M_SEND_GATE(bs,t);
       PD((MSG_RECEIVED,"SEND_GATE: v:%s",toC(t)));
-
-      extern void sendGate(OZ_Term t);
       sendGate(t);
       break;
     }

@@ -346,11 +346,12 @@ void gcPendThread(PendThread**);
 void gcGName(GName *);
 
 /* ************************************************************************ */
-/*  SECTION ::  provided by components                                      */
+/*  SECTION ::  provided by components/gate                                 */
 /* ************************************************************************ */
 
 int loadURL(TaggedRef url, OZ_Term out, Thread *th);
 int loadURL(const char *,OZ_Term,Thread *th);
+void sendGate(OZ_Term t);
 void initComponents();
 
 /* ************************************************************************ */
