@@ -109,22 +109,22 @@
   OZ_declareForeignType(i, val, type)
 
 /* Generic Gtk Object Type */
-/*  #define GOZ_declareObject(i, val) \ */
-/*    OZ_declareForeignType(i, val, GtkObject *); */
-
 #define GOZ_declareObject(i, val) \
-  OZ_declareForeignType(i, val, GtkObject *); \
-  if (!GTK_IS_OBJECT(val)) { \
-    fprintf(stderr, \
-    "%s: %d: CRITICAL: pointer is not an object; aborting process\n", \
-            __FILE__, __LINE__); \
-    exit(EXIT_FAILURE); \
-  } else if (GTK_OBJECT_DESTROYED(val)) { \
-    fprintf(stderr, \
-     "%s: %d: CRITICAL: deleted object to be used; aborting process\n", \
-     __FILE__, __LINE__); \
-    exit(EXIT_FAILURE); \
-  }
+  OZ_declareForeignType(i, val, GtkObject *);
+
+/*  #define GOZ_declareObject(i, val) \ */
+/*    OZ_declareForeignType(i, val, GtkObject *); \ */
+/*    if (!GTK_IS_OBJECT(val)) { \ */
+/*      fprintf(stderr, \ */
+/*      "%s: %d: CRITICAL: pointer is not an object; aborting process\n", \ */
+/*              __FILE__, __LINE__); \ */
+/*      exit(EXIT_FAILURE); \ */
+/*    } else if (GTK_OBJECT_DESTROYED(val)) { \ */
+/*      fprintf(stderr, \ */
+/*       "%s: %d: CRITICAL: deleted object to be used; aborting process\n", \ */
+/*       __FILE__, __LINE__); \ */
+/*      exit(EXIT_FAILURE); \ */
+/*    } */
 
 /*
  * Platform specific String Handling
