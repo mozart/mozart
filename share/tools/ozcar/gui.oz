@@ -235,7 +235,7 @@ in
 	     case CV orelse {Atom.toString V.1}.1 \= 96 then
 		case CP orelse AT \= ProcedureType then
 		   case AT == MagicAtom then
-		      {Widget tk(insert 'end' {PrintF ' ' # V.1 18} # V.2)}
+		      {Widget tk(insert 'end' {PrintF ' '#V.1 18} # V.2 # NL)}
 		   else
 		      T = {TagCounter get($)}
 		      Ac = {New Tk.action
