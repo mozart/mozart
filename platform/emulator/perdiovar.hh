@@ -147,7 +147,7 @@ public:
   }
 
   void primBind(TaggedRef *lPtr,TaggedRef v);
-  Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop);
+  Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, ByteCode *);
 
   int hasVal() { Assert(isProxy()); return u.bindings!=0; }
   void setVal(OZ_Term t) {

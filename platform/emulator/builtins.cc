@@ -14,6 +14,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <ctype.h>
 
 #if defined(LINUX) || defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(IRIX5_MIPS) || defined(OSF1_ALPHA)
 #   define DLOPEN 1
@@ -2930,11 +2931,11 @@ inline OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
 
   if (A == B && !isAnyVar(A)) return PROCEED;
 
-  if (isConst(tagA))    return tagged2Const(A)->unify(B,NO) ? PROCEED : FAILED;
+  if (isConst(tagA))    return tagged2Const(A)->unify(B,0) ? PROCEED : FAILED;
   
  dontknow:
   am.trail.pushMark();
-  Bool ret = am.unify(Ain,Bin,NO);
+  Bool ret = am.unify(Ain,Bin,(ByteCode*)1);
   if (ret == NO) {
     am.reduceTrailOnFail();
     return FAILED;
@@ -4954,7 +4955,11 @@ char *expandFileName(char *fileName,char *path) {
 
   char *ret;
 
+#ifdef WINDOWS
+  if (isalpha(*fileName) && fileName[1]==':') {
+#else
   if (*fileName == '/') {
+#endif
     if (access(fileName,F_OK) == 0) {
       ret = new char[strlen(fileName)+1];
       strcpy(ret,fileName);
@@ -5164,6 +5169,18 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       OZ_warning("failed in linkObjectFiles: %d",GetLastError());
       goto raise;
     }
+
+    FARPROC winLink(HMODULE handle, char *name);
+    FARPROC linkit = winLink(handle, "OZ_linkFF");
+    if (linkit==0) {
+      OZ_warning("OZ_linkFF not found, maybe not exported from DLL?");
+      goto raise;
+    }
+    extern void **ffuns;
+    if (linkit(OZVERSION,ffuns)==0) {
+      OZ_warning("call of 'OZ_linkFF' failed, maybe recompilation needed?");
+      goto raise;
+    }
     return oz_unifyInt(out,ToInt32(handle));
   }
 #endif
@@ -5256,7 +5273,6 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIdlClose,1)
 {
   oz_declareIntArg(0,handle);
-
 
 #ifdef DLOPEN
   if (dlclose((void *)handle)) {
@@ -6821,7 +6837,7 @@ OZ_Return ooGetLockInline(TaggedRef val)
     return oz_raise(E_ERROR,E_OBJECT,"locking",1,
 		    makeTaggedConst(am.getSelf()));
 
-  return am.fastUnify(val,makeTaggedConst(lock),OK) ? PROCEED : FAILED;
+  return am.fastUnify(val,makeTaggedConst(lock),0) ? PROCEED : FAILED;
 }
 DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 

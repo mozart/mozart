@@ -49,7 +49,7 @@ public:
   void dispose(void);
   
   Bool unifyFSet(OZ_Term *, OZ_Term, OZ_Term *, OZ_Term,
-		 Bool, Bool = TRUE);
+		 ByteCode *, Bool = TRUE);
   OZ_FSetConstraint &getSet(void) { return _fset; }
   void setSet(OZ_FSet fs) { _fset = fs; }
 

@@ -462,7 +462,7 @@ TaggedRef DynamicTable::toRecord(TaggedRef lbl)
 // (Arguments are dereferenced)
 Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 			      TaggedRef *tPtr, TaggedRef term,
-			      Bool prop)
+			      ByteCode *scp)
 {
     TypeOfTerm tTag = tagTypeOf(term);
     TaggedRef bindInRecordCaseHack = term;
@@ -474,21 +474,21 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         if (getWidth()>0) return FALSE;
 
         // Get local/global flag:
-        Bool vLoc=(prop && am.isLocalSVar(this));
+        Bool vLoc=(scp==0 && am.isLocalSVar(this));
 
         // Bind OFSVar to the Literal:
         if (vLoc) doBind(vPtr, term);
         else am.doBindAndTrail(var, vPtr, term);
 
         // Unify the labels:
-        if (!am.unify(term,label,prop)) return FALSE;
+        if (!am.unify(term,label,scp)) return FALSE;
 
         // Update the OFS suspensions:
         if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        if (prop) propagate(var, suspList, pc_cv_unif);
+        if (scp==0) propagate(var, suspList, pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
@@ -506,7 +506,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         LTuple* termLTup=tagged2LTuple(term);
 
         // Get local/global flag:
-        Bool vLoc=(prop && am.isLocalSVar(this));
+        Bool vLoc=(scp==0 && am.isLocalSVar(this));
 
         // Check that var features are subset of {1,2}
         TaggedRef arg1=getFeatureValue(makeTaggedSmallInt(1));
@@ -534,15 +534,15 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
 
         // Unify the labels:
-        if (!am.unify(AtomCons,label,prop)) return FALSE;
+        if (!am.unify(AtomCons,label,scp)) return FALSE;
 
         // Unify corresponding feature values:
-        if (arg1 && !am.unify(termLTup->getHead(),arg1,prop)) return FALSE;
-        if (arg2 && !am.unify(termLTup->getTail(),arg2,prop)) return FALSE;
+        if (arg1 && !am.unify(termLTup->getHead(),arg1,scp)) return FALSE;
+        if (arg2 && !am.unify(termLTup->getTail(),arg2,scp)) return FALSE;
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        if (prop) propagate(var, suspList, pc_cv_unif);
+        if (scp==0) propagate(var, suspList, pc_cv_unif);
         return TRUE;
       }
 
@@ -558,7 +558,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Assert(termSRec!=NULL);
 
         // Get local/global flag:
-        Bool vLoc=(prop && am.isLocalSVar(this));
+        Bool vLoc=(scp==0 && am.isLocalSVar(this));
   
         // Check that all features of the OFSVar exist in the SRecord:
         // (During the check, calculate the list of feature pairs that correspond.)
@@ -584,7 +584,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
   
         // Unify the labels:
-        if (!am.unify(termSRec->getLabel(),label,prop)) 
+        if (!am.unify(termSRec->getLabel(),label,scp)) 
             { pairs->free(); return FALSE; }
 
         // Unify corresponding feature values:
@@ -592,7 +592,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         TaggedRef t1, t2;
         while (p->getpair(t1, t2)) {
             Assert(!p->isempty());
-            if (am.unify(t1, t2,prop)) {
+            if (am.unify(t1, t2,scp)) {
                 // Unification successful
             } else {
                 // Unification failed
@@ -608,7 +608,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        if (prop) propagate(var, suspList, pc_cv_unif);
+        if (scp==0) propagate(var, suspList, pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
@@ -630,8 +630,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Assert(termVar!=NULL);
 
         // Get local/global flags:
-        Bool vLoc=(prop && am.isLocalSVar(this));
-        Bool tLoc=(prop && am.isLocalSVar(termVar));
+        Bool vLoc=(scp==0 && am.isLocalSVar(this));
+        Bool tLoc=(scp==0 && am.isLocalSVar(termVar));
   
         GenOFSVariable* newVar=NULL;
         GenOFSVariable* otherVar=NULL;
@@ -724,26 +724,26 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
             // Global term is constrained if result has more features than term:
             if (mergeWidth>termWidth)
                 am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-				    newVar, otherVar,prop);
+				    newVar, otherVar,scp);
             else
                 doBind(vPtr, makeTaggedRef(tPtr));
         } else if (!vLoc && tLoc) {
             // Global var is constrained if result has more features than var:
 	    if (mergeWidth>varWidth)
                 am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
-				    newVar, otherVar,prop);
+				    newVar, otherVar,scp);
 	    else
 		doBind(tPtr, makeTaggedRef(vPtr));
         } else if (!vLoc && !tLoc) {
             // bind to new term with trailing:
             am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(nvRefPtr),
-				newVar, this, prop);
+				newVar, this, scp);
             am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(nvRefPtr),
-				newVar, termVar, prop);
+				newVar, termVar, scp);
         } else Assert(FALSE);
 
         // Unify the labels:
-        if (!am.unify(termVar->label,label,prop)) 
+        if (!am.unify(termVar->label,label,scp)) 
             { pairs->free(); return FALSE; }
         // Must be literal or variable:
         TaggedRef tmp=label;
@@ -759,7 +759,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         TaggedRef t1, t2;
         while (p->getpair(t1, t2)) {
             Assert(!p->isempty());
-            if (am.unify(t1, t2, prop)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?
+            if (am.unify(t1, t2, scp)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?
                 // Unification successful
             } else {
                 // Unification failed
@@ -775,7 +775,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
   
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-	if (prop) {
+	if (scp==0) {
 	  propagate(var, suspList, pc_cv_unif);
 	  termVar->propagate(term, termVar->suspList, pc_cv_unif);
 	}
@@ -800,7 +800,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 		termVar->relinkSuspListTo(this);
 	    }
         } else if (!vLoc && !tLoc) {
-  	    if (prop) {
+  	    if (scp==0) {
 	      // Suspension* susp=new Suspension(am.currentBoard);
 	      // Assert(susp!=NULL);
 	      // termVar->addSuspension(susp);

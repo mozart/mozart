@@ -28,7 +28,7 @@
 // implicitely relinked.)
 Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 				TaggedRef * tPtr, TaggedRef term,
-				Bool prop, Bool disp)
+				ByteCode *scp, Bool disp)
 {
 #ifdef SCRIPTDEBUG
   printf(am.isInstallingScript() ? "bool installing script\n" : "bool NOT installing script\n"); fflush(stdout);
@@ -51,9 +51,9 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
       printf("bool-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
 #endif
 
-      if (prop && (isNotInstallingScript || isLocalVar)) propagate(var);
+      if (scp==0 && (isNotInstallingScript || isLocalVar)) propagate(var);
 
-      if (prop && am.isLocalSVar(this)) {
+      if (scp==0 && am.isLocalSVar(this)) {
 	doBind(vPtr, term);
 	if (disp) dispose();
       } else {
@@ -72,8 +72,8 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	  Bool isConstrained = ! am.isInstallingScript();
 	  GenBoolVariable * termvar = tagged2GenBoolVar(term);
 
-	  Bool varIsLocal =  (prop && am.isLocalSVar(this));
-	  Bool termIsLocal = (prop && am.isLocalSVar(termvar));
+	  Bool varIsLocal =  (scp==0 && am.isLocalSVar(this));
+	  Bool termIsLocal = (scp==0 && am.isLocalSVar(termvar));
 	  
 	  switch (varIsLocal + 2 * termIsLocal) {
 	  case TRUE + 2 * TRUE: // var and term are local
@@ -139,14 +139,14 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	      GenBoolVariable * bool_var = new GenBoolVariable();
 	      TaggedRef * var_val = newTaggedCVar(bool_var);
 
-	      if (prop) {
+	      if (scp==0) {
 		propagate(var, pc_cv_unif);
 		termvar->propagate(term, pc_cv_unif);
 	      }
 	      am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
-				     bool_var, this, prop);
+				     bool_var, this, scp);
 	      am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
-				     bool_var, termvar, prop);
+				     bool_var, termvar, scp);
 	      
 	      break;
 	    }
@@ -169,8 +169,8 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	  Bool isConstrainedVar = isNotInstallingScript || (intsct != -1);
 	  Bool isConstrainedTerm = isNotInstallingScript; 
 
-	  Bool varIsLocal =  (prop && am.isLocalSVar(this));
-	  Bool termIsLocal = (prop && am.isLocalSVar(termvar));
+	  Bool varIsLocal =  (scp==0 && am.isLocalSVar(this));
+	  Bool termIsLocal = (scp==0 && am.isLocalSVar(termvar));
        
 	  switch (varIsLocal + 2 * termIsLocal) {
 	  case TRUE + 2 * TRUE: // var and term are local
@@ -222,7 +222,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		    termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		  if (isConstrainedVar) propagate(var, pc_cv_unif);
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-					 this, termvar, prop);
+					 this, termvar, scp);
 		}
 		break;
 	      }
@@ -260,7 +260,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 
 		if (intsct != -1){
 		  TaggedRef int_val = OZ_int(intsct);
-		  if (prop) {
+		  if (scp==0) {
 		    propagate(var, pc_cv_unif);
 		    termvar->propagate(term, fd_prop_singl, pc_cv_unif);
 		  }
@@ -269,14 +269,14 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		} else {
 		  GenBoolVariable * bool_var = new GenBoolVariable();
 		  TaggedRef * var_val = newTaggedCVar(bool_var);
-		  if (prop) {
+		  if (scp==0) {
 		    propagate(var, pc_cv_unif);
 		    termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		  }
 		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
-					 bool_var, this, prop);
+					 bool_var, this, scp);
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
-					 bool_var, termvar, prop);
+					 bool_var, termvar, scp);
 		}
 		break; 
 	      } 
