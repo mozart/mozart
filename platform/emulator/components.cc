@@ -73,6 +73,23 @@
 // kost@: PER-LOOK what it has to do here?!!
 #define tcpHeaderSize   7
 
+static int checkzlibversion()
+{
+  if (strcmp(ZLIB_VERSION,zlibVersion()) != 0) {
+    error("version mismatch in zlib version: header (%s) != library(%s)\n",
+          ZLIB_VERSION,zlibVersion());
+  }
+
+  if (strncmp(ZLIB_VERSION,"1.1",3) != 0) {
+    error("zlib version 1.1.x needed: got %s\n",ZLIB_VERSION);
+  }
+
+  return 1;
+}
+
+static int zlibDummy = checkzlibversion();
+
+
 
 #include "componentBuffer.cc"
 
@@ -438,10 +455,9 @@ Bool pickle2text()
 
 OZ_Return export(OZ_Term t)
 {
-  if (ozconf.perdiod0Compatiblity) {
+  if (ozconf.perdioMinimal) {
     Exporter bs;
-    marshalTerm(t,&bs);
-    refTrail->unwind();
+    marshalTermRT(t,&bs);
     CheckNogoods(t,(&bs),"Resources found during export",);
 
     OZ_Term vars = bs.getVars();
@@ -464,6 +480,9 @@ OZ_Return export(OZ_Term t)
 OZ_BI_define(BIexport,1,0)
 {
   OZ_declareIN(0,in);
+
+  perdioInitLocal();
+
   return export(in);
 } OZ_BI_end
 
