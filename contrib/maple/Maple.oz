@@ -1,38 +1,30 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Maple.oz ; This file is part of the OMEGA system
-%
-%   major updates: 27.7.1999,
-%
-%   Authors: Juergen Zimmer
-%
-%   email: jzimmer@ags.uni-sb.de
-%
-% For information about this program, write to:
-%   OMEGA Project
-%   AG Siekmann/FB Informatik
-%   Universitaet des Saarlandes
-%   Bau 36, 4. Stock
-%   D-66041 Saarbruecken
-%   Germany
-%
-% For information about the newest version of Omega, see
-%   http://www.ags.uni-sb.de/~omega/
-%
-% This program is free software; it can be used under the terms of the GNU General
-% Public License as published by the Free Software Foundation; either version 2 of
-% the License, or any later version.
-%
-% This program is distributed in the hope that it will be useful, but
-% WITHOUT ANY WARRANTY; without even the implied warranty of
-% merchantibility or fitness for a particular purpose.
-% See the GNU General Public License
-% (http://www.fsf.org/copyleft/gpl.html)
-% for more details.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/*
+ *  Authors:
+ *    Jürgen Zimmer (jzimmer@ps.uni-sb.de)
+ *
+ *  Contributors:
+ *    Tobias Müller (tmueller@ps.uni-sb.de)
+ *
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ *
+ *  This file is part of Mozart, an implementation
+ *  of Oz 3:
+ *     $MOZARTURL$
+ *
+ *  See the file "LICENSE" or
+ *     $LICENSEURL$
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
 
-functor
-   %% The Maple call and simplification functions
-   %%      jzimmer 15.7.99
+                              functor
 
 import
 
@@ -58,10 +50,6 @@ prepare
 define
 
    fun{Oz2Maple Obj}
-      %%Edited  = "27-Jun-1999 16:22"
-      %%Authors = [jzimmer]
-      %%Value   = "The Object in Maple syntax."
-
       {VirtualString.toString {OzToMaple Obj}}
    end
 
@@ -103,9 +91,6 @@ define
    end
 
    fun{Simplify Term}
-      %%Edited  = "27-Jun-1999 16:22"
-      %%Authors = [jzimmer]
-      %%Value   = "The Result of the execution of the Maple(tm) simplification on the given Term."
       MapleTerm = {OzToMaple Term}
       Result = {Call simplify MapleTerm}
    in
@@ -113,9 +98,6 @@ define
    end
 
    fun{Solve Term}
-      %%Edited  = "27-Jun-1999 16:22"
-      %%Authors = [jzimmer]
-      %%Value   = "The Result of the execution of the Maple(tm) simplification on the given Term."
       MapleTerm = {OzToMaple Term}
       Result = {Call solve MapleTerm}
    in
@@ -124,10 +106,6 @@ define
 
 
    fun {Call Command Args}
-      %%Edited  = "27-Jun-1999 16:22"
-      %%Authors = [jzimmer]
-      %%Value   = "The Result of the execution of the Maple(tm) Command with the "
-      %%          "given Arguments."
 
       if {IsAtom Command} then
          CmdString = 'convert('#Command
@@ -147,10 +125,6 @@ define
    end
 
    fun {MapleProgram}
-      %%Edited  = "20-APR-1999 16:22"
-      %%Authors = [jzimmer]
-      %%Value   = "The location of the maple executable in the file system."
-
       EnvMaple = {OS.getEnv MapleEnvVar}
    in
       if EnvMaple == false then
