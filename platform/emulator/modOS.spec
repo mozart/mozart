@@ -201,6 +201,10 @@
 			     out => ['+int'],
 			     BI  => unix_kill},
 
+    'setpgid'           => { in  => ['+int','+int'],
+                             out => ['+int'],
+	                     BI  => unix_setpgid },
+
     'getPID'            => { in  => [],
                              out => ['+int'],
 	                     BI  => unix_getpid },
