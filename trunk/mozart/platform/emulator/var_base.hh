@@ -173,6 +173,7 @@ public:
   }
 
   Bool           gcIsMarked(void);
+  Bool           gcIsMarkedOutlined(void);
   void           gcMark(Bool, TaggedRef *);
   TaggedRef *    gcGetFwd(void);
   OzVariable *   gcVar();
@@ -422,12 +423,7 @@ OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
 }
 
 
-/* ------------------------------------------------------------------------
- * maintain the mapping of variables to print names
- * ------------------------------------------------------------------------ */
+#include "namer.hh"
 
-const char *oz_varGetName(TaggedRef v);
-void oz_varAddName(TaggedRef v, const char *nm);
-void oz_varCleanup();
 
 #endif
