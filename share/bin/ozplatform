@@ -37,6 +37,8 @@ case $system in
    ;;
    *sparc*NetBSD*)      OZARCH=netbsd-sparc
    ;;
+   *i386*NetBSD*)       OZARCH=netbsd-i486
+   ;;
    *)  echo "Cannot determine machine type and OS version" 1>&2 ; exit 1
 esac
 
