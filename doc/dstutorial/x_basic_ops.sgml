@@ -504,7 +504,7 @@ We will show progressively how to build different kinds of servers.
 <P> Let's build a basic server that returns the string <<"Hello world">>
 to clients.
 The first step is to create the server.
-Let's do this and make the server available through a URL:
+Let's do this and also make the server available through a URL:
 <<<
 % Create server
 declare Str Prt Srv in
@@ -533,6 +533,15 @@ local X in
 end
 >>>
 <P> This will show <<"Hello world">> in the browser window.
+
+<P> What happens is that by taking the connection, the client
+gets in its computation space a reference to the server.
+This makes the client and server computation spaces
+conceptually merge into a single computation space.
+The client and server can then communicate as if
+they were in the same process.
+Later, when the client forgets the server reference,
+the computation spaces become separate again.
 
 <SUBSECTION><TITLE>The <<"Hello world">> server with stationary objects</TITLE>
 
@@ -622,8 +631,50 @@ while it is running.
 on top of stationary objects:
 <<<
 declare
-proc {NewUpgradableStat Class Init ?Cell ?SObj}
-  Obj={NewStat Class Init}
+proc {NewUpgradableStat Class Init ?Cell ?USObj}
+  Obj={NewStat Class Init} % Create stationary object
+  Cell={NewCell Obj}       % Create a cell containing the object
+  proc {USObj M}           % Object call indirectly through the cell
+     {{Access Cell} M}
+  end
+end
+
+declare Srv Cell in
+Srv={NewUpgradableState ComputeServer init Cell Srv}
 >>>
+
+<P> Clients can use this compute server as before.
+Let's now upgrade the compute server while
+it is running:
+<<<
+declare
+class CComputeServer from ComputeServer
+   meth run(P Prio<=medium)
+      thread
+         {Thread.setThisPriority Prio}
+         ComputeServer,run(P)
+      end
+   end
+end
+
+declare
+Srv2={New CComputeServer init}
+{Assign Cell Srv2}
+>>>
+
+<P> That's all there is to it.
+The extended compute server runs
+each compute job in its own thread and
+has two method calls, <<run(P)>>
+and <<run(P Prio)>>, where <<Prio>>
+sets the priority of the thread doing computation <<P>>.
+
+<P> It would be nice if the client could
+find out how many active computations there
+are on the compute server.
+We leave it to the reader to add a new
+method to the class that returns
+the number of
+active computations at each priority level.
 
 </CHAPTER>
