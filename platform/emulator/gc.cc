@@ -2902,7 +2902,7 @@ TaggedRef gcTagged1(TaggedRef in) {
 //       GC Code Area
 //*****************************************************************************
 
-static int codeGCgeneration = 0;
+static int codeGCgeneration = CODE_GC_CYLES;
 
 void CodeArea::gcCodeBlock()
 {
