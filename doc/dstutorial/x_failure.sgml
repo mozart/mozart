@@ -19,8 +19,10 @@ the fault-tolerant abstractions.
 <SECTION><TITLE>Failure model</TITLE>
 
 <P> The failure model is designed to cover the
-vast majority of failures occurring in distributed systems,
-namely permanent site failures that are instantaneous (fail-stop)
+vast majority of failures occurring in the system
+that are due to distribution.
+This consists of
+permanent site failures that are instantaneous (fail-stop)
 and both temporary and permanent communication failures.
 This failure model is reflected in each language entity.
 The system provides mechanisms to be informed of failures
@@ -194,7 +196,166 @@ For a cell this operation is called <<Exchange>>.
 The exchange operation can complete if the
 fault state is <<ok>>.
 
-<SECTION><TITLE>Basic fault-tolerant operations</TITLE>
+<SECTION><TITLE>Fault-tolerant examples</TITLE>
 
+<SUBSECTION><TITLE>A fault-tolerant hello server</TITLE>
+
+<P> Let's take a fresh look at the hello server.
+How can we make it resistant to distribution faults?
+First we specify the client and server behavior.
+The server should
+continue working even though there is a
+problem with a particular client.
+The client should
+be informed in finite time of a server problem
+by means of a new exception, <<server_error>>.
+
+<P> We assume that the system raises
+exceptions when we try to do operations
+on entities that have problems.
+All distributed exceptions are of the
+form <<system(dp(C))>> where <<C>> is any fault state
+as defined before except <<ok>>.
+
+<P> Assume that we have two new abstractions.
+<<{SafeSend Prt X}>> sends to a port
+and raises the exception <<server_error>>
+if this is permanently impossible.
+<<{SafeWait X}>> waits until <<X>> is
+instantiated and raises the exception
+<<server_error>> if this is permanently impossible.
+We first show how to use these abstractions
+before defining them in our failure model.
+
+<P> With <<SafeSend>> and <<SafeWait>>, we can
+write the client and the server almost exactly
+as before.
+Let's first write the server:
+<<<
+declare Str Prt Srv in
+{NewPort Str Prt}
+thread
+   {ForAll Str
+    proc {$ S}
+       try
+          S="Hello world"
+       catch system(dp(C)) then skip end
+    end}
+end
+
+proc {Srv X}
+   {SafeSend Prt X}
+end
+
+{Pickle.save
+ {Connection_many Srv}
+ "http://www.sics.se/~pvr/hw"}
+>>>
+
+<P> This server does one distributed operation,
+namely the binding <<S="Hello world">>.
+We wrap this binding
+to catch any distributed exception that occurs.
+This allows the server to ignore clients
+with problems and to continue working.
+
+<P> Here's the client:
+<<<
+declare Srv
+
+try X in
+   try
+      Srv={Connection.take {Pickle.load "http://www.sics.se/~pvr/hw"}}
+   catch _ then raise server_error end
+   end
+
+   {Srv X}
+   {SafeWait X infinity}
+   {Browse X}
+catch server_error then
+   {Browse 'Server down'}
+end
+>>>
+
+<P> This client does two distributed operations,
+namely a send (inside <<Srv>>) which is replaced with <<SafeSend>>
+and a wait which is replaced with <<{SafeWait}>>.
+If there is a problem sending the
+message or receiving the reply,
+then the exception <<server_error>> is raised.
+Note that we also catch exceptions during the
+<<Connection.take>> and the <<Pickle.load>>.
+
+<P> <<SafeSend>> is defined as follows:
+
+<<<
+proc {SafeSend Prt X}
+   try
+      {Send Prt X}
+   catch system(dp(C)) then
+      case C
+      of permFail then
+         raise server_error end
+      [] tempFail then
+         {Delay 100}
+         {SafeSend Prt X}
+      else
+         skip
+      end
+   end
+end
+>>>
+
+<P> This raises a <<server_error>> if there is
+a permanent server failure
+and retries indefinitely each 100 ms if there
+is a temporary failure.
+
+<P> <<SafeWait>> is defined as follows:
+
+<<<
+declare
+local
+   proc {InnerSafeWait X Time}
+      try
+         {WaitOr X Time}
+         if {IsDet Time} then raise server_error end end
+      catch system(dp(C)) then
+         case C
+         of permFail(...) then
+            raise server_error end
+         [] remoteProblem(permFail:_ ...) then
+            raise server_error end
+         [] tempFail(...) then
+            {Delay 100} {InnerSafeWait X Time}
+         [] remoteProblem(tempFail:_ ...) then
+            {Delay 100} {InnerSafeWait X Time}
+         else
+            skip
+         end
+      end
+   end
+in
+   proc {SafeWait X TimeOut}
+   Time in
+      if TimeOut\=infinity then
+         thread {Delay TimeOut} Time=done end
+      end
+      {InnerSafeWait X Time}
+   end
+end
+>>>
+
+<P> This raises a <<server_error> if there is
+a permanent server failure
+and retries each 100 ms if there is a
+temporary failure.
+The client and the server
+are the only two sites on which <<X>> exists.
+Therefore <<remoteProblem(permFail:_)>> means
+that the server has crashed.
+
+<P> To keep the client from blocking
+indefinitely, it must time out.
 
 </CHAPTER>
