@@ -75,7 +75,7 @@ resumed. The values <<OZ_FSetPropState>> have the following meaning.
 
 <table>
 <tr><th/value/ <th/rerun propagator in case .../
-<tr><td/<<fd_prop_val>>/
+<tr><td/<<fs_prop_val>>/
     <td/... a finite set constraint becomes a finite set value./
 <tr><td/<<fs_prop_glb>>/ <td/... a value is added to a set./
 <tr><td/<<fs_prop_lub>>/ <td/... a value is removed from a set./
