@@ -173,11 +173,13 @@ Bool ComObj::reopen() {
     Assert(!site->isPerm()); 
     Assert(hasNeed() || remoteRef);
     Assert(transObj==NULL);
+
+    // Increase time to wait before next try
     retryTimeout=(int) (((double) retryTimeout) * 
 			((100.0+ozconf.dpRetryTimeFactor)/100.0));
-    if(/*hasBeenConnected && To be added...AN*/
-       retryTimeout>ozconf.dpRetryTimeCeiling)
+    if(retryTimeout>ozconf.dpRetryTimeCeiling)
       retryTimeout=ozconf.dpRetryTimeCeiling;
+
     open();
   }
   reopentimer=NULL;
@@ -187,6 +189,8 @@ Bool ComObj::reopen() {
 // Called by builtin when this comObj can have its communication
 // The returnvalue indicates whether it is wanted or not
 Bool ComObj::handover(TransObj *transObj) {
+  retryTimeout=ozconf.dpRetryTimeFloor;
+
   PD((TCP_INTERFACE,"Connection handover (from %d to %d (%x))",
       myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid,this));
   if(DO_CONNECT_LOG) {
@@ -214,7 +218,7 @@ Bool ComObj::handover(TransObj *transObj) {
 
 Bool ComObj::openTimerExpired() {
   PD((TCP_INTERFACE,"openTimerExpired at %d %x",am.getEmulatorClock(),this));
-  if(state==CLOSED_WF_HANDOVER ||
+  if((state==CLOSED_WF_HANDOVER && !connectgrantrequested) ||
      state==OPENING_WF_PRESENT || state==OPENING_WF_NEGOTIATE_ANS) {
     if(hasNeed() || remoteRef) { 
       close(CLOSED_PROBLEM); 
@@ -231,6 +235,8 @@ Bool ComObj::openTimerExpired() {
     comController->deleteComObj(this); 
     return FALSE;
   }
+  if(connectgrantrequested)
+    return TRUE;
   timer=NULL;
   return FALSE;
 }
