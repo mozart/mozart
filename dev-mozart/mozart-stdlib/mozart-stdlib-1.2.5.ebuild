@@ -1,13 +1,12 @@
 DESCRIPTION="Mozart/Oz's standard library"
-MOZART_TAG="1.2.5.20030125"
-SRC_URI="ftp://ftp.mozart-oz.org/pub/mozart/store/1.2.5-2003-01-25/mozart-${MOZART_TAG}-std.tar.gz"
+SRC_URI="ftp://ftp.mozart-oz.org/pub/mozart/store/1.2.5-2003-02-01/mozart-1.2.5.20030131-std.tar.gz"
 HOMEPAGE="http://www.mozart-oz.org/"
 KEYWORDS="x86 ppc sparc hppa"
 DEPEND="
   dev-lang/mozart-base
 "
 
-S="${WORKDIR}/mozart-${MOZART_TAG}-std"
+S="${WORKDIR}/mozart-1.2.5.20030131-std"
 
 src_compile() { true; }
 
