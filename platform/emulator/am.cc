@@ -137,9 +137,6 @@ void AM::init(int argc,char **argv)
   suspendVarList          = makeTaggedNULL();
   aVarUnifyHandler        = makeTaggedNULL();
   aVarBindHandler         = makeTaggedNULL();
-  methApplHdl             = makeTaggedNULL();
-  sendHdl                 = makeTaggedNULL();
-  newHdl                  = makeTaggedNULL();
   defaultExceptionHdl     = makeTaggedNULL();
   opiCompiler             = makeTaggedNULL();
 

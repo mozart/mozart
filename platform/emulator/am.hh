@@ -125,9 +125,6 @@ private:
 
   TaggedRef aVarUnifyHandler;
   TaggedRef aVarBindHandler;
-  TaggedRef methApplHdl;
-  TaggedRef sendHdl;
-  TaggedRef newHdl;
   TaggedRef defaultExceptionHdl;
 
   TaggedRef opiCompiler;
@@ -163,33 +160,9 @@ public:
     aVarBindHandler = b;
   }
   TaggedRef getX(int i) { return xRegs[i]; }
-  TaggedRef getSendHdl() { return sendHdl; }
-  Bool setSendHdl(TaggedRef pred) {
-    if (sendHdl && sendHdl!=pred) {
-      return NO;
-    }
-    sendHdl = pred;
-    return OK;
-  }
-  TaggedRef getNewHdl() { return newHdl; }
-  Bool setNewHdl(TaggedRef pred) {
-    if (newHdl && newHdl!=pred) {
-      return NO;
-    }
-    newHdl = pred;
-    return OK;
-  }
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }
   void setDefaultExceptionHdl(TaggedRef pred) {
     defaultExceptionHdl = pred;
-  }
-  TaggedRef getMethApplHdl() { return methApplHdl; }
-  Bool setMethApplHdl(TaggedRef pred) {
-    if (methApplHdl && methApplHdl!=pred) {
-      return NO;
-    }
-    methApplHdl = pred;
-    return OK;
   }
 
   TaggedRef getDebugStreamTail() { return debugStreamTail; }
