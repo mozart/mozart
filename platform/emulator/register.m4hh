@@ -145,7 +145,7 @@ Case(GETSELF)
 
 
 
-#define MakeVar makeTaggedRef(newTaggedUVar(e->currentUVarPrototype))
+#define MakeVar makeTaggedRef(newTaggedUVar(e->currentUVarPrototype()))
 
 CaseOneRegGImpossible(CREATEVARIABLE,
    ``{
@@ -225,7 +225,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
   CaseOneReg( SETVARIABLE,
 	       ``{
 		 Reg reg = getRegArg(PC+1);
-		 *sPointer = e->currentUVarPrototype;
+		 *sPointer = e->currentUVarPrototype();
 		 Reg1(reg) = makeTaggedRef(sPointer++);
 		 DISPATCH(2);
 	       }''
@@ -250,7 +250,7 @@ Case(SETCONSTANT)
 Case(SETVOID)
     {
       int n = getPosIntArg(PC+1);
-      TaggedRef newVar = e->currentUVarPrototype;
+      TaggedRef newVar = e->currentUVarPrototype();
       for (int i = 0; i < n; i++ ) {
 	*sPointer++ = newVar;
       }
@@ -273,7 +273,7 @@ Case(SETVOID)
 	     SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
 	     if(isCVar(term) == OK){
 	       // fill w/unb. var.
-               srecord->initArgs(e->currentUVarPrototype); 
+               srecord->initArgs(e->currentUVarPrototype());
 	       TaggedRef srecordRef=makeTaggedSRecord(srecord);
 	       if(tagged2CVar(term)->unifyOutline(termPtr, term, 
 						  &srecordRef, srecordRef,
@@ -463,7 +463,7 @@ Case(SETVOID)
 
 		 if(isAnyVar(term)) {
 		   LTuple *ltuple = new LTuple(Reg1(reg2),
-					       e->currentUVarPrototype);
+					       e->currentUVarPrototype());
 
 		   if (isCVar(term) == OK) {
 		     if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
@@ -498,7 +498,7 @@ Case(SETVOID)
 		 }
 
 		 SHALLOWFAIL;
-		 HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(Reg1(reg2),e->currentUVarPrototype)));
+		 HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(Reg1(reg2),e->currentUVarPrototype())));
 
 	       }''
 	       )
@@ -515,7 +515,7 @@ Case(SETVOID)
 		   LTuple *ltuple = new LTuple();
 		   sPointer = ltuple->getRef();
 		   if (isCVar(term)) {
-		     ltuple->initArgs(e->currentUVarPrototype);
+		     ltuple->initArgs(e->currentUVarPrototype());
 		     SetReadMode;
 
 		     if(tagged2CVar(term)
@@ -541,7 +541,7 @@ Case(SETVOID)
 		 
 
 		 SHALLOWFAIL;
-		 HF_TELL(Reg1(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(e->currentUVarPrototype,e->currentUVarPrototype)));
+		 HF_TELL(Reg1(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(e->currentUVarPrototype(),e->currentUVarPrototype())));
 	       }''
 	       )
 
@@ -579,7 +579,7 @@ Case(GETVOID)
 		 if(InWriteMode) {
 		   Reg reg = getRegArg(PC+1);
 		   TaggedRef *sp = GetSPointerWrite(sPointer);
-		   *sp = e->currentUVarPrototype;
+		   *sp = e->currentUVarPrototype();
 		   Reg1(reg) = makeTaggedRef(sp);
 		 } else {
 		   Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
@@ -628,7 +628,7 @@ Case(GETVOID)
 	 TaggedRef *sp = GetSPointerWrite(sPointer);
 	 *sp = RegAccess(HelpReg1,reg);
 
-	 *(sp+1) = e->currentUVarPrototype;
+	 *(sp+1) = e->currentUVarPrototype();
 	 RegAccess(HelpReg2,getRegArg(PC+2)) = makeTaggedRef(sp+1);
 
 	 sPointer += 2;
@@ -725,7 +725,7 @@ Case(UNIFYCONSTANT)
     {
       int n = getPosIntArg(PC+1);
       if (InWriteMode) {
-	TaggedRef newVar = e->currentUVarPrototype;
+	TaggedRef newVar = e->currentUVarPrototype();
 	TaggedRef *sp = GetSPointerWrite(sPointer);
 	for (int i = n-1; i >=0; i-- ) {
 	  *sp++ = newVar;
