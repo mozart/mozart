@@ -88,7 +88,7 @@ exchange on an object attribute.
 class SimpleLock
    attr lck:unit
    meth init skip end
-   meth lock(Code)
+   meth 'lock'(Code)
      Old New in
      try
         Old = lck &lt;- New
@@ -115,7 +115,7 @@ be modeled in Oz as follows:
 <<<
 class ReentrantLock from SimpleLock
    attr Current:unit
-   meth lck(Code)
+   meth 'lock'(Code)
       ThisThread = {Thread.this} in
       if ThisThread == @Current then
          {Code}
@@ -129,7 +129,7 @@ class ReentrantLock from SimpleLock
             end
          end
       in
-         SimpleLock, lck(Code1)
+         SimpleLock, 'lock'(Code1)
       end
    end
 end
