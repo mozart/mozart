@@ -597,6 +597,13 @@ dnl *****************************************************************
 dnl virtual sites
 dnl *****************************************************************
 
+AC_MSG_CHECKING(whether socklen_t is declared...)
+AC_TRY_COMPILE([
+#include <sys/socket.h>],
+    [socklen_t gaga;],
+    [AC_MSG_RESULT(yes (-DHAVE_SOCKLEN_T))
+     AC_DEFINE(HAVE_SOCKLEN_T)])
+
 dnl let us start with simple tests...
 AC_CHECKING(whether we can virtual sites...)
 AC_CACHE_VAL(ac_cv_can_vs,
