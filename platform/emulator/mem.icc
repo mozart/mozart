@@ -22,16 +22,14 @@ void * freeListMalloc(size_t chunk_size)
   Assert(((chunk_size & 3) == 0) && (chunk_size > 0));
 
   void **freeListCache = FreeList;
-  void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : (void *)NULL;
+  void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : NULL;
 
-  if (aux == (void *) NULL)
+  if (aux == NULL) {
     aux = heapMallocOutline(chunk_size);
-  else {
+  } else {
     freeListCache[chunk_size] = *(void **)aux;
   }
-#ifdef DEBUG_MEM
-  memset((char *)aux,0x5A,chunk_size);
-#endif
+  DebugMem(memset((char *)aux,0x5A,chunk_size));
   return aux;
 }
 
