@@ -557,6 +557,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
   (if (getenv "OZ_PI")
       t
     (setenv "OZ_PI" "1")
+    (setenv "OZPLATFORM" "sunos-sparc")
     (setenv "OZHOME" (or (getenv "OZHOME") "/usr/share/gs/soft/oz"))
     (setenv "OZPATH" 
 	    (concat (or (getenv "OZPATH") ".") ":"
@@ -1238,6 +1239,7 @@ OZ compiler, machine and error window")
 
 (defun oz-toggle-compiler()
   (interactive)
+  (setq oz-errors-found nil)
   (if (get-buffer-window "*Oz Compiler*")
       (progn
 	(delete-windows-on "*Oz Compiler*")
@@ -1248,12 +1250,14 @@ OZ compiler, machine and error window")
 
 (defun oz-toggle-machine()
   (interactive)
+  (setq oz-errors-found nil)
   (oz-toggle-window oz-machine-buffer)
   (setq oz-machine-visible (get-buffer-window oz-machine-buffer)))
 
 
 (defun oz-toggle-errors()
   (interactive)
+  (setq oz-errors-found nil)
   (if (get-buffer-window "*Oz Errors*")
       (oz-hide-errors)
     (oz-toggle-window "*Oz Errors*")))
