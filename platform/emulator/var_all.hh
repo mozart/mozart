@@ -128,7 +128,8 @@ void oz_var_disposeINLINE(OzVariable *ov)
 }
 
 inline
-Bool oz_var_addSuspINLINE(TaggedRef *v, Suspension susp, int unstable = TRUE)
+OZ_Return oz_var_addSuspINLINE(TaggedRef *v, Suspension susp,
+                               int unstable = TRUE)
 {
   OzVariable *ov=oz_getVar(v);
   switch(ov->getType()) {
@@ -137,14 +138,14 @@ Bool oz_var_addSuspINLINE(TaggedRef *v, Suspension susp, int unstable = TRUE)
   case OZ_VAR_EXT:
     return ((ExtVar *) ov)->addSuspV(v, susp, unstable);
   case OZ_VAR_SIMPLE:
-    if (ozconf.useFutures) {
-      return oz_raise(E_ERROR,E_KERNEL,"suspendNoFuture",
-                      1,makeTaggedRef(v));
+    if (ozconf.useFutures ||
+        (susp.isThread() && susp.getThread()->getNoBlock())) {
+      return oz_raise(E_ERROR, E_KERNEL, "block", 1, makeTaggedRef(v));
     }
     // fall through
   default:
     ov->addSuspSVar(susp,unstable);
-    return FALSE;
+    return SUSPEND;
   }
 }
 

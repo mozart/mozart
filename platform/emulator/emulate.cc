@@ -710,12 +710,14 @@ extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);
 // ???
 // ------------------------------------------------------------------------
 
-#define SUSP_PC(TermPtr,PC)                     \
+#define SUSP_PC(TermPtr,PC) {                   \
    CheckLiveness(PC);                           \
    PushContX(PC);                               \
-   if (oz_var_addSusp(TermPtr,CTT))             \
-      goto LBLpopTask;                          \
-   return T_SUSPEND;
+   OZ_Return ret = oz_var_addSusp(TermPtr,CTT); \
+   if (ret == SUSPEND) return T_SUSPEND;        \
+   if (ret == PROCEED) goto LBLpopTask;         \
+   goto LBLhandleRet;                           \
+}
 
 /*
  * create the suspension for builtins returning SUSPEND
@@ -726,30 +728,37 @@ extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);
 
 #define SUSPENDONVARLIST                        \
 {                                               \
-  if (e->suspendOnVarList(CTT))                 \
-    goto LBLpopTask;                            \
-  return T_SUSPEND;                             \
+  tmpRet = e->suspendOnVarList(CTT);            \
+  if (tmpRet == SUSPEND) return T_SUSPEND;      \
+  if (tmpRet == PROCEED) goto LBLpopTask;       \
+  goto LBLhandleRet;                            \
 }
 
 static
-Bool suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
+OZ_Return suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
 {
   if (C) {
     DEREF (C, ptr, _1);
-    if (oz_isVariable(C))
-      if (oz_var_addSusp(ptr, th)) return TRUE;
+    if (oz_isVariable(C)) {
+      OZ_Return ret = oz_var_addSusp(ptr, th);
+      if (ret != SUSPEND) return ret;
+    }
   }
   if (B) {
     DEREF (B, ptr, _1);
-    if (oz_isVariable(B))
-      if (oz_var_addSusp(ptr, th)) return TRUE;
+    if (oz_isVariable(B)) {
+      OZ_Return ret = oz_var_addSusp(ptr, th);
+      if (ret != SUSPEND) return ret;
+    }
   }
   {
     DEREF (A, ptr, _1);
-    if (oz_isVariable(A))
-      if (oz_var_addSusp(ptr, th)) return TRUE;
+    if (oz_isVariable(A)) {
+      OZ_Return ret = oz_var_addSusp(ptr, th);
+      if (ret != SUSPEND) return ret;
+    }
   }
-  return FALSE;
+  return SUSPEND;
 }
 
 // -----------------------------------------------------------------------
@@ -1168,9 +1177,10 @@ LBLdispatcher:
           }
           CheckLiveness(PC);
           PushContX(PC);
-          if (suspendInline(CTT,auxTaggedA,auxTaggedB))
-            goto LBLpopTask;
-          return T_SUSPEND;
+          tmpRet = suspendInline(CTT,auxTaggedA,auxTaggedB);
+          if (tmpRet == SUSPEND) return T_SUSPEND;
+          if (tmpRet == PROCEED) goto LBLpopTask;
+          goto LBLhandleRet;
         }
       default:    Assert(0);
       }
@@ -1207,9 +1217,10 @@ LBLdispatcher:
             }
             CheckLiveness(PC);
             PushContX(PC);
-            if (suspendInline(CTT,A))
-              goto LBLpopTask;
-            return T_SUSPEND;
+            tmpRet = suspendInline(CTT,A);
+            if (tmpRet == PROCEED) goto LBLpopTask;
+            if (tmpRet == SUSPEND) return T_SUSPEND;
+            goto LBLhandleRet;
           }
 
         case RAISE:
@@ -1377,9 +1388,11 @@ LBLdispatcher:
         {
           CheckLiveness(PC);
           PushContX(PC);
-          if (suspendInline(CTT,XPC(1),XPC(2)))
-            goto LBLpopTask;
-          return T_SUSPEND;
+          tmpRet = suspendInline(CTT,XPC(1),XPC(2));
+          if (tmpRet == SUSPEND) return T_SUSPEND;
+          if (tmpRet == PROCEED) goto LBLpopTask;
+Assert(0);
+          goto LBLhandleRet;
         }
 
       case BI_TYPE_ERROR:
@@ -1894,6 +1907,16 @@ LBLdispatcher:
        default: Assert(0);
        }
      }
+     Assert(0);
+
+   LBLhandleRet:
+     switch (tmpRet) {
+     case RAISE: RAISE_THREAD;
+     case BI_REPLACEBICALL: PC=NOCODE; goto LBLreplaceBICall;
+     default: break;
+     }
+     Assert(0);
+
 // ------------------------------------------------------------------------
 // --- Call: Builtin: replaceBICall
 // ------------------------------------------------------------------------
@@ -2193,9 +2216,10 @@ LBLdispatcher:
       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
         if (isVariableTag(predTag)) {
           CTS->pushCallNoCopy(makeTaggedRef(predPtr),args);
-          if (oz_var_addSusp(predPtr,CTT))
-            goto LBLpopTask;
-          return T_SUSPEND;
+          tmpRet = oz_var_addSusp(predPtr,CTT);
+          if (tmpRet == PROCEED) goto LBLpopTask;
+          if (tmpRet == SUSPEND) return T_SUSPEND;
+          goto LBLhandleRet;
         }
         RAISE_APPLY(taggedPredicate,OZ_toList(predArity,args));
       }

@@ -52,7 +52,7 @@ public:
   virtual void printStreamV(ostream &out,int depth = 10) = 0;
   virtual OZ_Return bindV(TaggedRef *vptr, TaggedRef t) = 0;
   OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);
-  Bool addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) = 0;
+  OZ_Return addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) = 0;
 
   int getIndex() { return index; }
   void gcSetIndex(int i);
@@ -76,7 +76,7 @@ public:
 
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:pxy>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
-  Bool addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE);
+  OZ_Return addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE);
 
   void redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
   void acknowledge(TaggedRef *vPtr, BorrowEntry *be);
@@ -129,7 +129,7 @@ public:
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
   OZ_Return forceBindV(TaggedRef*p, TaggedRef v);
-  Bool addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE);
+  OZ_Return addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE);
   void disposeV(void) {
     disposeS();
     ProxyList *pl = proxies;

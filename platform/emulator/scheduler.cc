@@ -496,10 +496,6 @@ LBLsuspend:
   DebugTrace(ozd_trace("thread suspended"));
   if (e->debugmode() && CTT->getTrace()) {
     debugStreamBlocked(CTT);
-  } else if (CTT->getNoBlock()) {
-    (void) oz_raise(E_ERROR,E_KERNEL,"block",1,oz_thread(CTT));
-    e->exception.pc = NOCODE;
-    goto LBLraise;
   }
   // fall through
 

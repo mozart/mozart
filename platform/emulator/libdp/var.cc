@@ -121,14 +121,14 @@ void sendRequested(BorrowEntry *be){
   SendTo(na->site,bs,M_REQUESTED,na->site,na->index);
 }
 
-Bool ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
+OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
 {
   // mm2: always send requested, maybe this should be done only once!
   BorrowEntry *be=BT->getBorrow(getIndex());
   sendRequested(be);
 
   addSuspSVar(susp, unstable);
-  return FALSE;
+  return SUSPEND;
 }
 
 void ProxyVar::gcRecurseV(void)
@@ -197,14 +197,14 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
 
 /* --- ManagerVar --- */
 
-Bool ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
+OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
 {
   if (origVar->getType()==OZ_VAR_FUTURE) {
     if (((Future *)origVar)->kick(vPtr))
-      return TRUE;
+      return PROCEED;
   }
   addSuspSVar(susp, unstable);
-  return FALSE;
+  return SUSPEND;
 }
 
 void ManagerVar::gcRecurseV(void)

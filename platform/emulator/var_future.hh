@@ -53,7 +53,7 @@ public:
       OZ_collectHeapTerm(function,function);
     }
   }
-  Bool addSusp(TaggedRef*, Suspension, int);
+  OZ_Return addSusp(TaggedRef*, Suspension, int);
   void dispose(void) {
     disposeS();
     DebugCode(function=0);
