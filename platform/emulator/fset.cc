@@ -794,10 +794,16 @@ OZ_Boolean FSetValue::operator <= (const FSetValue &s) const
       if (_IN.isIn(i) && !testBit(s._in, i))
         return FALSE;
 
-    if (s._other)
-      if ((!_IN.isIn(32 * fset_high)) ||
-          (_IN.getUpperIntervalBd(32 * fset_high) != fs_sup))
-        return FALSE;
+    if (s._other) {
+        if ((!_IN.isIn(32 * fset_high)) ||
+            (_IN.getUpperIntervalBd(32 * fset_high) != fs_sup))
+          return FALSE;
+    } else {
+      // are there elements in _IN which are >= 32*fset_high?
+      // i.e. not in s?
+        if (_IN.getNextLargerElem(32*fset_high - 1) >= 0)
+          return FALSE;
+    }
   }
 
 #else
