@@ -312,6 +312,7 @@ define
 	 % for Note:
 	 FootNotes: unit
 	 % for Grammar:
+	 GrammarIsCompact: unit
 	 GrammarHead: unit
 	 GrammarAltType: unit
 	 GrammarNote: unit
@@ -1105,38 +1106,52 @@ define
 	    %-----------------------------------------------------------
 	    [] 'grammar.rule' then X HTML in
 	       %--** respect the display attribute?
-	       X = @GrammarAltType#@GrammarHead
-	       GrammarAltType <- def
+	       X = @GrammarIsCompact#@GrammarHead#@GrammarAltType
+	       GrammarIsCompact <- {SGML.isOfClass M compact}
 	       GrammarHead <- OzDocToHTML, Process(M.1 $)
+	       GrammarAltType <- def
 	       OzDocToHTML, Batch(M 2 ?HTML)
-	       GrammarAltType <- X.1
+	       GrammarIsCompact <- X.1
 	       GrammarHead <- X.2
+	       GrammarAltType <- X.3
 	       BLOCK(blockquote(table(COMMON: @Common
 				      border: 0 cellpadding: 0 cellspacing: 0
 				      HTML)))
 	    [] 'grammar.head' then
 	       span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
-	    [] 'grammar.alt' then HTML1 HTML2 in
+	    [] 'grammar.alt' then HTML0 HTML1 HTML2 in
+	       HTML0 = @GrammarHead
 	       HTML1 = case {CondSelect M type @GrammarAltType} of def then
-			  SEQ([td(@GrammarHead)
-			       td(align: center VERBATIM('&nbsp;::=&nbsp;'))])
+			  VERBATIM('&nbsp;::=&nbsp;')
 		       [] add then
-			  SEQ([td(@GrammarHead)
-			       td(align: center VERBATIM('&nbsp;+=&nbsp;'))])
+			  VERBATIM('&nbsp;+=&nbsp;')
 		       [] 'or' then
-			  SEQ([td()
-			       td(align: center VERBATIM('&nbsp;|&nbsp;'))])
+			  VERBATIM('&nbsp;|&nbsp;')
 		       [] space then
-			  SEQ([td() td()])
+			  EMPTY
 		       end
+	       GrammarHead <- EMPTY
 	       GrammarAltType <- 'or'
 	       OzDocToHTML, Batch(M 1 ?HTML2)
-	       tr(COMMON: @Common valign: top
-		  HTML1
-		  td(HTML2)
-		  case @GrammarNote of unit then EMPTY
-		  elseof N then GrammarNote <- unit N
-		  end)
+	       if @GrammarIsCompact then
+		  GrammarIsCompact <- false
+		  SEQ([tr(valign: top td(colspan: 3 HTML0 HTML1))
+		       tr(COMMON: @Common valign: top
+			  td(VERBATIM('&nbsp;&nbsp;&nbsp;&nbsp;'))
+			  td()
+			  td(HTML2)
+			  case @GrammarNote of unit then EMPTY
+			  elseof N then GrammarNote <- unit N
+			  end)])
+	       else
+		  tr(COMMON: @Common valign: top
+		     td(HTML0)
+		     td(align: center HTML1)
+		     td(HTML2)
+		     case @GrammarNote of unit then EMPTY
+		     elseof N then GrammarNote <- unit N
+		     end)
+	       end
 	    [] 'grammar.note' then
 	       GrammarNote <- td(COMMON: @Common align: left
 				 i(VERBATIM('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;% ')
