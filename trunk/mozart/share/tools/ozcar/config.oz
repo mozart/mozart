@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '0.9.10 (Feb 97)'
+Version                = '1.0.0 (Feb 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -36,7 +36,8 @@ NoFileBlockInfo        = ' blocks without line number information'
 EarlyThreadDeath       = '...hm, but it has died already?!'
 KnownThread            = 'Got known thread' /* end */
 NewThread              = 'Got new thread' /* end */
-NextOnBuiltin          = '\'next\' on builtin - substituting by \'step\''
+NextOnLeave            = '\'next\' while leaving procedure - ' #
+                         'substituting by \'step\''
 
 UnknownSuspThread      = 'Unknown suspending thread' /* end */
 UnknownWokenThread     = 'Unknown woken thread' /* end */
