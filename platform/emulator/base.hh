@@ -490,6 +490,7 @@ extern "C" {
   void error( const char *format ...);
   void warning( const char *format ...);
   void message( const char *format ...);
+  Bool isDeadSTDOUT();
   void statusMessage( const char *format ...);
   void prefixError();
   void prefixWarning();
