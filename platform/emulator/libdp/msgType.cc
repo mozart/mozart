@@ -36,14 +36,10 @@ char *mess_names[M_LAST] = {
   "none",
 
   "port_send",
-  "ask_for_credit",
-  "owner_credit",
-  "owner_sec_credit",
+  "update_reference",
+  "ref_to_owner",
+  "ref_to_borrow",
 
-  "fw_to_owner",
-  "fw_to_borrow",
-
-  "borrow_credit",
   "register",
   "redirect",
   "acknowledge",
