@@ -153,19 +153,19 @@ void marshalRecordArity(GenTraverser *gt,
     marshalNumber(bs, getTupleWidth(sra));
   } else {
     marshalRecordArityType(RECORDARITY, bs);
-    gt->marshalOzValue(getRecordArity(sra)->getList());
+    gt->traverseOzValue(getRecordArity(sra)->getList());
   }
 }
 
 //
 void marshalPredId(GenTraverser *gt, PrTabEntry *p, MARSHALERBUFFER *bs)
 {
-  gt->marshalOzValue(p->getName());
+  gt->traverseOzValue(p->getName());
   marshalRecordArity(gt, p->getMethodArity(), bs);
-  gt->marshalOzValue(p->getFile());
+  gt->traverseOzValue(p->getFile());
   marshalNumber(bs, p->getLine());
   marshalNumber(bs, p->getColumn());
-  gt->marshalOzValue(p->getFlagsList());
+  gt->traverseOzValue(p->getFlagsList());
   marshalNumber(bs, p->getMaxX());
 }
 
@@ -175,7 +175,7 @@ void marshalCallMethodInfo(GenTraverser *gt,
 {
   int compact = (cmi->regIndex<<1) | (cmi->isTailCall);
   marshalNumber(bs, compact);
-  gt->marshalOzValue(cmi->mn);
+  gt->traverseOzValue(cmi->mn);
   marshalRecordArity(gt, cmi->arity, bs);
 }
 
@@ -227,12 +227,12 @@ void marshalHashTableRef(GenTraverser *gt,
 	  // That's a literal entry
 	  marshalNumber(bs, ATOMTAG);
 	  marshalLabel(bs, start, table->entries[i].lbl);
-	  gt->marshalOzValue(table->entries[i].val);
+	  gt->traverseOzValue(table->entries[i].val);
 	} else {
 	  // That's a record entry
 	  marshalNumber(bs, RECORDTAG);
 	  marshalLabel(bs,start, table->entries[i].lbl);
-	  gt->marshalOzValue(table->entries[i].val);
+	  gt->traverseOzValue(table->entries[i].val);
 	  marshalRecordArity(gt, table->entries[i].sra, bs);
 	}
       } else {
@@ -240,7 +240,7 @@ void marshalHashTableRef(GenTraverser *gt,
 	// That's a number entry
 	marshalNumber(bs,NUMBERTAG);
 	marshalLabel(bs, start, table->entries[i].lbl);
-	gt->marshalOzValue(table->entries[i].val);
+	gt->traverseOzValue(table->entries[i].val);
       }
     }
   }

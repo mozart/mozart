@@ -317,7 +317,7 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   //
   MarshalerCodeAreaDescriptor *desc = 
     new MarshalerCodeAreaDescriptor(start, start + nxt);
-  marshalBinary(pickleCode, desc);
+  traverseBinary(pickleCode, desc);
 
   //
   return (NO);
@@ -489,7 +489,7 @@ Bool ResourceExcavator::processAbstraction(OZ_Term absTerm,
     //
     MarshalerCodeAreaDescriptor *desc = 
       new MarshalerCodeAreaDescriptor(start, start + nxt);
-    marshalBinary(traverseCode, desc);
+    traverseBinary(traverseCode, desc);
     return (NO);
   }
 }

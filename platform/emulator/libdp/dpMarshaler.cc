@@ -636,7 +636,7 @@ Bool DPMarshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
       //
       MarshalerCodeAreaDescriptor *desc = 
 	new MarshalerCodeAreaDescriptor(start, start + nxt);
-      marshalBinary(dpMarshalCode, desc);
+      traverseBinary(dpMarshalCode, desc);
 
       //
       return (NO);
@@ -801,7 +801,7 @@ Bool VariableExcavator::processAbstraction(OZ_Term absTerm,
     //
     MarshalerCodeAreaDescriptor *desc = 
       new MarshalerCodeAreaDescriptor(start, start + nxt);
-    marshalBinary(traverseCode, desc);
+    traverseBinary(traverseCode, desc);
     return (NO);
   }
 }
