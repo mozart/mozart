@@ -27,7 +27,7 @@
 
 functor
 require
-   DefaultURL(functorNames: AllModules)
+   DefaultURL(functorNames: Modules)
    
 import
    Application(getCmdArgs)
@@ -42,11 +42,6 @@ import
 prepare
    Spec = record(host(single type: string default: unit))
 
-   Modules   = {Filter AllModules
-		fun {$ M}
-		   M\='OPI'
-		end}
-   
    ShortCuts = [%% Library
 		'Pickle'('Load': [load]
 			 'Save': [save])
@@ -68,7 +63,9 @@ prepare
 			   'ExploreAll':  [all]
 			   'ExploreBest': [best])
 
-		'Inspector'('Inspect': [inspect])]
+		'Inspector'('Inspect': [inspect])
+
+		'OPI'('Import': ['import'])]
 
    fun {Dots M Fs}
       case Fs of nil then M
@@ -130,13 +127,6 @@ define
       end
    end
 
-   %% Enter OPI module itself
-   {OPICompiler enqueue(mergeEnv(env('OPI':
-					'export'(compiler: OPICompiler
-						 interface: CompilerUI
-						 'import':  Import)
-				     'Import': Import)))}
-   
    local
       ModMan = {New Module.manager init}
    in
