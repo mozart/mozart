@@ -51,6 +51,7 @@ OZ_C_proc_proto(BIfdPutNotCD)
 
 // fddist.cc
 OZ_C_proc_proto(BIfdDistribute)
+OZ_C_proc_proto(BIfdGetCandidates)
 OZ_C_proc_proto(BIfdDistributeTaskIntervals)
 OZ_C_proc_proto(BIfdDistributeTaskIntervalsOpt)
 OZ_C_proc_proto(BIfdDistributeMinPairs)
@@ -100,6 +101,7 @@ OZ_C_proc_proto(sched_disjoint_card)
 OZ_C_proc_proto(fdp_disjointC)
 OZ_C_proc_proto(fdp_distance)
 OZ_C_proc_proto(sched_cpIterate)
+OZ_C_proc_proto(sched_cpIterateCap)
 OZ_C_proc_proto(sched_disjunctive)
 
 #endif
