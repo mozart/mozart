@@ -261,11 +261,14 @@ in
 	       {{Dget self.ThreadDic I} printException(X)}
 	    else
 	       thread
+		  {OzcarMessage 'exception of unknown thread -- waiting...'}
 		  {Delay 320}
 		  case ThreadManager,Exists(I $) then
+		     {OzcarMessage 'ok, got it -- printException'}
 		     {Delay 140}
 		     {{Dget self.ThreadDic I} printException(X)}
 		  else
+		     {OzcarMessage 'still not known -- adding...'}
 		     ThreadManager,add(T I X#_ false)
 		  end
 	       end
@@ -302,7 +305,7 @@ in
 	 
 	 case {IsTuple Q} then %% exception
 	    Gui,addNode(I 0)
-	    ThreadManager,switch(I)
+	    ThreadManager,switch(I false)
 	    {Stack printException(Q.1)}
 	 else
 	    Gui,addNode(I Q)
@@ -448,7 +451,7 @@ in
 	 end
       end
       
-      meth switch(I)
+      meth switch(I PrintStack<=true)
 	 New in
 	 SwitchSync <- New = unit
 
@@ -458,13 +461,13 @@ in
 	    lock
 	       {WaitOr New {Alarm TimeoutToSwitch}}
 	       case {IsDet New} then skip else
-		  ThreadManager,DoSwitch(I)
+		  ThreadManager,DoSwitch(I PrintStack)
 	       end
 	    end
 	 end
       end
 
-      meth DoSwitch(I)
+      meth DoSwitch(I PrintStack)
 	 F L N A B Time
       in
 	 case I == 1 then skip else
@@ -474,22 +477,24 @@ in
 	 in
 	    currentThread <- T
 	    currentStack  <- Stack
-	    
-	    case S == terminated then
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
-	       Gui,printStack(id:I frames:nil depth:0)
-	    else
-	       {ForAll [print getPos(file:F line:L)] Stack}
-	       SourceManager,
-	       scrollbar(file:F line:L
-			 color:
-			    case S
-			    of runnable then ScrollbarApplColor
-			    [] blocked  then ScrollbarBlockedColor
-			    end
-			 what:appl)
-	    end
-	    SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
+
+	    case PrintStack then
+	       case S == terminated then
+		  SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
+		  Gui,printStack(id:I frames:nil depth:0)
+	       else
+		  {ForAll [print getPos(file:F line:L)] Stack}
+		  SourceManager,
+		  scrollbar(file:F line:L
+			    color:
+			       case S
+			       of runnable then ScrollbarApplColor
+			       [] blocked  then ScrollbarBlockedColor
+			       end
+			    what:appl)
+	       end
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
+	    else skip end
 	 end
       end
 
