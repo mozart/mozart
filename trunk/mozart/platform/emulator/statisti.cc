@@ -116,9 +116,9 @@ void Statistics::print(FILE *fd)
 #endif
   
   fprintf(fd,"  Finite Domain Constraints:\n");
-  fprintf(fd,"    FD variables created : %d\n", fdvarsCreated.total);
-  fprintf(fd,"    Propagators created  : %d\n", propagatorsCreated.total); 
-  fprintf(fd,"    Propagators invoked  : %d\n\n", propagatorsInvoked.total); 
+  fprintf(fd,"    Variables created      : %d\n", fdvarsCreated.total);
+  fprintf(fd,"    Propagators created    : %d\n", propagatorsCreated.total); 
+  fprintf(fd,"    Propagator invocations : %d\n\n", propagatorsInvoked.total); 
   
   fprintf(fd,"******************************\n");
   fprintf(fd,"***   End of Statistics    ***\n");
