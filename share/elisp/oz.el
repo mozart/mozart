@@ -574,7 +574,7 @@ the GDB commands `cd DIR' and `directory'."
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false"
        "div" "mod" "andthen" "orelse"
-       "not" "thread" "task" "in"
+       "not" "thread" "job" "conc" "in"
        "condis"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
@@ -590,7 +590,7 @@ the GDB commands `cd DIR' and `directory'."
 		   "local"
 		   "if" "or" "OR" "case"
 		   "class" "create" "meth" "extern"
-		   "not" "thread" "task"
+		   "not" "thread" "jobs" "conc"
 		   "condis"
 		   )))
 
@@ -1365,7 +1365,7 @@ OZ compiler, emulator and error window")
 (defun oz-view-panel ()
   "Feed {System.panel popup} into the Oz Compiler"
   (interactive)
-  (oz-send-string "task {System.panel popup} end"))
+  (oz-send-string "job {System.panel popup} end"))
 
 (defun oz-feed-file(file)
   "Feed an file into the Oz Compiler"
