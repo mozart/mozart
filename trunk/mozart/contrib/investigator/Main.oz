@@ -60,6 +60,8 @@ define
 	 {MakeAction VarTable PropTable Hist DaVin Stream C Result}
       [] node_selections_labels([cn(C)]) then
 	 {MakeAction VarTable PropTable Hist DaVin Stream cn(C) Result}
+      [] node_selections_labels([cn(C _)]) then
+	 {MakeAction VarTable PropTable Hist DaVin Stream cn(C) Result}
       [] error(...) then
 	 {Error.printException Stream.1}
 	 {Loop VarTable PropTable Hist DaVin Stream.2 Result}
