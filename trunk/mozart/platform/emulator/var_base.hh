@@ -205,7 +205,6 @@ public:
 
   void           sCloneMark(TaggedRef *);
   OzVariable *   sCloneVarInline();
-  OzVariable *   sCloneVar();
   void           sCloneVarRecurse(void);
 
   void setStoreFlag(void) {
