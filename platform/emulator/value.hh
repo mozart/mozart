@@ -592,8 +592,11 @@ public:
     }
   }
 
-  void      setExceptionHandler(TaggedRef hdl) { exceptionHandler = hdl; }
-  TaggedRef getExceptionHandler()              { return exceptionHandler; }
+  void setExceptionHandler(TaggedRef hdl);
+
+  TaggedRef getExceptionHandler() {
+    return exceptionHandler;
+  }
 
   Group *getParent()  { return parent; }
 };
