@@ -835,13 +835,6 @@ loop:
 
 		solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
-		// Make the actor unstable by incremneting the thread counter
-		solveAA->incThreads();
-#ifdef NEWCOUNTER
-		warning("mm2: inc sup why here?");
-		solveBB->incSuspCount();
-#endif
-		
 		if (waitBoard->isWaitTop()) {
 		  goto loop;
 		}
