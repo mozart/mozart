@@ -934,23 +934,33 @@ char *oslocalhostname()
 
 char *ostmpnam(char *s)
 {
-  /* make sure that temporary files are allways located under C: */
-  if (s) {
-    s[0] = 'C';
-    s[1] = ':';
-    char *aux = tmpnam(s+2);
-    return aux==0 ? 0 : s;
+  char *prefix = getenv("TMPDIR");
+  if (prefix==NULL)
+    prefix = "C:";
+
+  static char *tn = NULL;
+  static int tnlen = 100;
+  if (tn==0) tn = (char *) malloc(tnlen*sizeof(char));
+
+  int newlen = strlen(prefix)+1 + 30;
+  if (newlen>tnlen) {
+    tnlen = newlen;
+    tn = (char*)realloc(tn,tnlen);
   }
 
-  static char tn[L_tmpnam+2];
-  tn[0] = 'C';
-  tn[1] = ':';
-  tn[2] = 0;
-  char *aux = tmpnam(NULL);
-  if (aux==0)
-    return 0;
-  Assert(aux[1] != ':');
-  strcat(tn,aux);
+  static int counter = 0;
+  while(1) {
+    sprintf(tn,"%s\\oztmp%d",prefix,counter);
+    counter = (counter++) % 10000;
+    if (access(tn,F_OK)!=0)
+      break;
+  }
+
+  if (s) {
+    strcpy(s,tn);
+    return s;
+  }
+
   return tn;
 }
 
