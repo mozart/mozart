@@ -579,8 +579,40 @@ void AM::checkStatus()
   }
 }
 
-
+//
 // mm2: VIRTUAL_SITES?
+// kost@ : not only (e.g. managing tcp/ip connections' cache).
+//
+void AM::setMinimalTaskInterval(void *arg, unsigned int ms)
+{
+  unsigned int accMinTime = 0;
+  Assert(!ms || ms >= (CLOCK_TICK/1000));
+
+  //
+  for (int i = 0; i < MAXTASKS; i++) {
+    TaskNode *tn = &taskNodes[i];
+
+    //
+    if (!tn->isFree()) {
+      if (tn->getArg() == arg)
+        // for all tasks with 'arg', if there are multiple;
+        tn->setMinimalTaskInterval(ms);
+
+      //
+      unsigned int tnMinTime = tn->getMinimalTaskInterval();
+      if (tnMinTime) {
+        if (accMinTime)
+          accMinTime = min(accMinTime, tnMinTime);
+        else
+          accMinTime = tnMinTime;
+      }
+    }
+  }
+
+  //
+  taskMinInterval = accMinTime;
+}
+
 //
 // Returns 'TRUE' if the task has been successfully registered;
 Bool AM::registerTask(void *arg, TaskCheckProc cIn, TaskProcessProc pIn)
@@ -832,6 +864,7 @@ int AM::nextUser()
 unsigned int AM::waitTime()
 {
   unsigned int sleepTime;
+  unsigned int nu = nextUser();
 
   //
   // kost@ : --> EK: this should be replaced by 'setMinimalTaskInterval()';
@@ -839,14 +872,15 @@ unsigned int AM::waitTime()
   sleepTime = CLOCK_TICK/1000;
 #else
   if (taskMinInterval)
-    sleepTime = min(nextUser(), taskMinInterval);
+    sleepTime = nu ? min(nu, taskMinInterval) : taskMinInterval;
   else
-    sleepTime = nextUser();
+    sleepTime = nu;
 
   // don't sleep less than 'CLOCK_TICK/1000' ms;
-  sleepTime =sleepTime==0 ? 0 : max(sleepTime, CLOCK_TICK/1000);
+  sleepTime = sleepTime ? max(sleepTime, CLOCK_TICK/1000) : 0;
 #endif
 
+  //
   return (sleepTime);
 }
 

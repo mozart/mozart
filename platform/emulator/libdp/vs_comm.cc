@@ -369,12 +369,7 @@ VSProbingObject::VSProbingObject(int size, VSRegister *vsRegisterIn)
       vsRegister(vsRegisterIn),
       probesNum(0), lastCheck(0), lastPing(0),
     minInterval(PROBE_INTERVAL)
-{
-  // kost@ : task manager does not keep track who and which minimal
-  // service interval has requested, virtual sites just say from
-  // scratch "we want to have PROBE_INTERVAL";
-    am.setMinimalTaskInterval(PROBE_INTERVAL);
-}
+{}
 
 //
 // Note we cannot ignore probe types even though there is only type
@@ -385,6 +380,10 @@ ProbeReturn VSProbingObject::installProbe(VirtualSite *vs,
 {
   DSite *s = vs->getSite();
   Assert(s->virtualComm());
+
+  //
+  if (!probesNum)
+    am.setMinimalTaskInterval((void *) this, PROBE_INTERVAL);
 
   //
   if (check(s)) {
@@ -453,6 +452,10 @@ ProbeReturn VSProbingObject::deinstallProbe(VirtualSite *vs, ProbeType pt)
     remove(s);
     probesNum--;
   }
+
+  //
+  if (!probesNum)
+    am.setMinimalTaskInterval((void *) this, 0);
 
   //
   return (ret);
