@@ -6,6 +6,7 @@ SRCDIR          = @srcdir@
 VPATH           = @srcdir@
 PLATFORM        = @PLATFORM@
 LIB_DIR         = $(PREFIX)/cache/x-oz/system/gtk
+EXAMPLES_DIR    = $(PREFIX)/examples/gtk
 HOMEURL         = @HOMEURL@
 
 OZC             = @OZC@
@@ -24,6 +25,7 @@ CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
+INSTALL_FILE    = $(INSTALL) -m 444
 INSTALL_DLL     = $(INSTALL) -m 555
 
 FLEX            = @FLEX@
@@ -98,12 +100,6 @@ GENOBJS    = Collect.ozf \
              Main.ozf
 GENINSTALL = $(LIB_DIR)/Generator.ozf
 
-BUILDERSRCS = GBuilderTypes.oz \
-              GBuilderWidgets.oz \
-              GBuilder.oz
-BUILDEROBJS = $(BUILDERSRCS:%.oz=%.ozf)
-BUILDERINSTALL = $(BUILDEROBJS:%=$(LIB_DIR)/%)
-
 CSIGSRCS = GOZSignal.c
 CSRCS    = $(CSIGSRCS) GOZArguments.c
 COBJS    = $(CSRCS:%.c=%.o)
@@ -149,6 +145,16 @@ WRPOBJS    = $(WRPSRCS:%.oz=%.ozf)
 WRPINSTALL = $(WRPSRCS:%.oz=$(LIB_DIR)/%.ozf)
 
 #---------------------------------------------------------------------
+# GBuilder
+#---------------------------------------------------------------------
+
+BUILDERSRCS = GBuilderTypes.oz \
+              GBuilderWidgets.oz \
+              GBuilder.oz
+BUILDEROBJS = $(BUILDERSRCS:%.oz=%.ozf)
+BUILDERINSTALL = $(BUILDEROBJS:%=$(LIB_DIR)/%)
+
+#---------------------------------------------------------------------
 # Target Variables
 #---------------------------------------------------------------------
 
@@ -156,6 +162,11 @@ TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) Generator.ozf $(BUILDEROBJS)
 GEN_TARGETS = $(NATCMPS) $(WRPOBJS)
 LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL) \
               $(GENINSTALL) $(BUILDERINSTALL)
+EXAMPLES_FILES = \
+        CList.oz CTree.oz CanvasEvents.oz CanvasMove.oz CanvasScramble.oz \
+        FileSelection.oz HelloArgs.oz HelloCanvas.oz HelloGTK.oz \
+        HelloText.oz List.oz GBuilderExamples.oz
+EXAMPLES_TARGETS = $(EXAMPLES_FILES:%=$(EXAMPLES_DIR)/%)
 
 #---------------------------------------------------------------------
 # Rules
@@ -193,8 +204,9 @@ $(NATCMPS):%.so-$(PLATFORM): %.o
 
 .PHONY: all install clean veryclean distclean bootstrap depend
 
-all:            $(TARGETS) binding
-install:        $(LIB_DIR) $(LIB_TARGETS) install_names
+all: $(TARGETS) binding
+install: $(LIB_DIR) $(LIB_TARGETS) $(EXAMPLES_DIR) $(EXAMPLES_TARGETS) \
+        install_names
 install_names:
         cp ClassNames.ozp $(LIB_DIR)/ClassNames.ozp
 
@@ -242,7 +254,7 @@ wrapper_files: $(GEN_TARGETS) $(CCMPS)
 # Installing
 #---------------------------------------------------------------------
 
-$(LIB_DIR):
+$(LIB_DIR) $(EXAMPLES_DIR):
         $(INSTALL_DIR) $@
 
 $(LIB_DIR)/%.ozf: %.ozf
@@ -250,6 +262,12 @@ $(LIB_DIR)/%.ozf: %.ozf
 
 $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
         $(INSTALL_DLL) $< $@
+
+$(EXAMPLES_DIR)/%: examples/%
+        $(INSTALL_FILE) $< $@
+
+$(EXAMPLES_DIR)/%: builder/%
+        $(INSTALL_FILE) $< $@
 
 #---------------------------------------------------------------------
 # Cleaning up
