@@ -287,7 +287,7 @@ and that no command will be bound to C-c followed by a letter."
 	  "condis\\|declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
 	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
 	  "if\\|in\\|import\\|local\\|lock\\|meth\\|not\\|of\\|or\\|prepare\\|"
-	  "proc\\|prop\\|raise\\|require\\|then\\|thread\\|try\\|with\\)\\>\\|"
+	  "proc\\|prop\\|raise\\|require\\|then\\|thread\\|try\\)\\>\\|"
 	  "\\[\\]\\|"
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
@@ -296,7 +296,7 @@ and that no command will be bound to C-c followed by a letter."
 	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
 	  "if\\|in\\|import\\|lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|"
 	  "or\\|parser\\|prepare\\|proc\\|prod\\|prop\\|raise\\|require\\|"
-	  "scanner\\|syn\\|then\\|thread\\|token\\|try\\|with\\)\\>\\|=>\\|"
+	  "scanner\\|syn\\|then\\|thread\\|token\\|try\\)\\>\\|=>\\|"
 	  "\\[\\]\\|"
 	  "//\\|" oz-left-or-right-pattern))
 
@@ -1387,7 +1387,7 @@ and initial percent signs."
     "true" "false" "unit"
     "div" "mod" "andthen" "orelse"
     "cond" "or" "dis" "choice" "condis" "not"
-    "thread" "try" "catch" "finally" "raise" "with" "lock"
+    "thread" "try" "catch" "finally" "raise" "lock"
     "skip" "fail")
   "List of all Oz keywords with identifier syntax.")
 

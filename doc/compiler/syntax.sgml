@@ -64,7 +64,6 @@
 	<Grammar.Alt/<<fThread(?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fTry(?={phrase} ?={catch} ?={finally} ?={coord})>>/
 	<Grammar.Alt/<<fRaise(?={phrase} ?={coord})>>/
-	<Grammar.Alt/<<fRaiseWith(?={phrase} ?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fSkip(?={coord})>>/
       <Grammar.Rule>?={label}
 	<Grammar.Alt/?={atom literal}/
