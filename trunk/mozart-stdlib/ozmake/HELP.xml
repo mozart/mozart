@@ -250,6 +250,21 @@ one for mogul database entries.</item>
 </optentry>
 <optentry>
   <option>
+    <opt>-V <meta>VERSION</meta></opt>
+    <opt>--packageversion=<meta>VERSION</meta></opt>
+  </option>
+  <item>
+	this option is respected by <opt>--extract</opt> and
+	<opt>--install</opt>.  When <opt>--extract</opt> is given a
+	MOGUL id and downloads the corresponding package from the
+	MOGUL archive, it will look precisely for the given
+	<meta>VERSION</meta> of the package.  <opt>--install</opt>
+	will simply check that the package to be installed really has
+	this <meta>VERSION</meta>.
+  </item>
+</optentry>
+<optentry>
+  <option>
     <opt>--database=<meta>DB</meta></opt>
   </option>
   <default><file><meta>PREFIX</meta>/DATABASE</file></default>
@@ -406,6 +421,8 @@ one for mogul database entries.</item>
   </option>
   <default><opt>none</opt></default>
   <item>what to do if this package is already installed?
+  <tool>ozmake</tool> will compare version and dates, where the
+  version is more significant.
   <optlist>
     <optentry>
       <option><opt>--grade=none</opt></option>
@@ -413,16 +430,17 @@ one for mogul database entries.</item>
     </optentry>
     <optentry>
       <option><opt>--grade=same</opt></option>
-      <item>requires versions to be the same</item>
+      <item>requires versions and dates to be the same</item>
     </optentry>
     <optentry>
       <option><opt>--grade=up</opt></option>
-      <item>requires a package with newer version than the one installed</item>
+      <item>requires a package with newer version or same version and
+      newer release date than the one installed</item>
     </optentry>
     <optentry>
       <option><opt>--grade=down</opt></option>
-      <item>requires a package with older version than the one
-      installed</item>
+      <item>requires a package with older version or same version and
+      older release date than the one installed</item>
     </optentry>
     <optentry>
       <option><opt>--grade=any</opt></option>
@@ -650,7 +668,7 @@ one for mogul database entries.</item>
 <usagelist>
   <usage>ozmake --publish</usage>
   <item>
-        automatically take care of all the steps necessary for
+        automatically takes care of all the steps necessary for
         creating/updating a package contributed by the user and
 	making all necessary data available to the MOGUL librarian.
 	See documentation for <opt>--mogul</opt> below.

@@ -119,6 +119,13 @@ OPTIONS
           URL  or  a  mogul  id;  it  the  latter  case,  the  package is
           automatically downloaded from the mogul archive
 
+   -V <VERSION>, --packageversion=<VERSION>
+          this  option  is  respected  by  --extract  and --install. When
+          --extract  is  given a MOGUL id and downloads the corresponding
+          package  from the MOGUL archive, it will look precisely for the
+          given  <VERSION>  of  the  package. --install will simply check
+          that the package to be installed really has this <VERSION>.
+
    --database=<DB>
           default: <PREFIX>/DATABASE
           base path of installed packages database. The database is saved
@@ -199,21 +206,23 @@ OPTIONS
 
    --grade=( none | same | up | down | any | freshen )
           default: none
-          what to do if this package is already installed?
+          what  to  do  if this package is already installed? ozmake will
+          compare   version   and   dates,  where  the  version  is  more
+          significant.
 
         --grade=none
                 signals an error
 
         --grade=same
-                requires versions to be the same
+                requires versions and dates to be the same
 
         --grade=up
-                requires  a  package  with  newer  version  than  the one
-                installed
+                requires a package with newer version or same version and
+                newer release date than the one installed
 
         --grade=down
-                requires  a  package  with  older  version  than  the one
-                installed
+                requires a package with older version or same version and
+                older release date than the one installed
 
         --grade=any
                 no conditions
@@ -327,7 +336,7 @@ OPTIONS
   Publish
 
    ozmake --publish
-          automatically   take  care  of  all  the  steps  necessary  for
+          automatically  takes  care  of  all  the  steps  necessary  for
           creating/updating  a package contributed by the user and making
           all  necessary  data  available  to  the  MOGUL  librarian. See
           documentation for --mogul below.

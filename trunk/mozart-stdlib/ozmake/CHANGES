@@ -11,6 +11,9 @@
    when --extract downloads from the MOGUL archive, it will look for
    the given version of the package.  --install will signal an error
    if the package to be installed doesn't have the given version.
+** --fast is now the default.  --slow gets back the old behaviour, just in
+   case someone discovers a problem.
+** version and requires now are actually put in the database
 
 * version 0.75
 ** ozmake --create will now automatically pick a package filename if none
