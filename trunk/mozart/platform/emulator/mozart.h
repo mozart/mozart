@@ -108,6 +108,9 @@ extern OZ_Term OZ_tail      _PROTOTYPE((OZ_Term));
 extern int     OZ_length    _PROTOTYPE((OZ_Term list));
 
 /* records */
+extern OZ_Term OZ_record       _PROTOTYPE((OZ_Term, OZ_Term));
+extern OZ_Term OZ_recordProp   _PROTOTYPE((OZ_Term, OZ_Term));
+extern void OZ_setRecordArg    _PROTOTYPE((OZ_Term, OZ_Term, OZ_Term));
 extern OZ_Term OZ_getRecordArg _PROTOTYPE((OZ_Term, OZ_Term));
 #define OZ_getRecordArgC(t,s) OZ_getRecordArg(t,OZ_CToAtom(s))
 
