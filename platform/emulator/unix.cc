@@ -28,6 +28,7 @@
 #include "builtins.hh"
 #include "am.hh"
 #include "os.hh"
+#include "var_base.hh"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -852,6 +853,11 @@ OZ_BI_iodefine(unix_read,5,0)
   OZ_declareTerm(3, outTail);
   OZ_declareTerm(4, outN);
 
+  if (!(!OZ_isVariable(outHead) || oz_isFree(oz_deref(outHead))))
+    return (OZ_typeError(2, "value or a free variable"));
+  if (!(!OZ_isVariable(outN) || oz_isFree(oz_deref(outN))))
+    return (OZ_typeError(4, "value or a free variable"));
+
   CHECK_READ(fd);
 
   char *buf = (char *) malloc(maxx+1);
@@ -862,8 +868,15 @@ OZ_BI_iodefine(unix_read,5,0)
 
   free(buf);
 
-  return ((oz_unify(outHead, hd) == PROCEED)&& // mm_u
-          (oz_unify(outN,oz_int(ret)) == PROCEED)) ? PROCEED : FAILED;
+  //
+  OZ_Return ures;
+  ures = oz_unify(outHead, hd);
+  // kost@  : since 'outHead' is a free variable;
+  Assert(ures == PROCEED || ures == FAILED);
+  if (ures == FAILED) return (FAILED);
+  ures = oz_unify(outN, oz_int(ret));
+  Assert(ures == PROCEED || ures == FAILED);
+  return (ures);
 } OZ_BI_ioend
 
 
@@ -1448,6 +1461,9 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
   // OZ_out(1) == port
   // OZ_out(2) == n
 
+  if (!(!OZ_isVariable(hd) || oz_isFree(oz_deref(hd))))
+    return (OZ_typeError(3, "value or a free variable"));
+
   int flags;
   OZ_Return flagBool;
 
@@ -1476,13 +1492,16 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
 
   free(buf);
 
-  if (oz_unify(localhead, hd) != PROCEED) return FAILED; // mm_u
+  OZ_Return ures = oz_unify(localhead, hd);
+  Assert(ures == PROCEED || ures == FAILED);
+  if (ures == FAILED) return (FAILED);
+
   OZ_out(0) = OZ_string(gethost ?
                         (OZ_CONST char*) gethost->h_name :
                         (OZ_CONST char*) inet_ntoa(from.sin_addr));
   OZ_out(1) = OZ_int(ntohs(from.sin_port));
   OZ_out(2) = OZ_int(ret);
-  return PROCEED;
+  return (PROCEED);
 } OZ_BI_ioend
 
 
