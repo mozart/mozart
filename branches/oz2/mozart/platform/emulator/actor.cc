@@ -103,9 +103,11 @@ int WaitActor::selectOrFailChildren(int l, int r) {
       children[i]->setFailed();
     for (i = l; i <= r; i++)
       children[i-l] = children[i];
-    for (int j = r+1; j < childCount; j++) {
-      children[j]->setFailed();
-      children[j] = NULL;
+    for (i = r-l+1; i <= r; i++)
+      children[i] = NULL;
+    for (i = r+1; i < childCount; i++) {
+      children[i]->setFailed();
+      children[i] = NULL;
     }
     childCount = r-l+1;
     return childCount;

@@ -354,7 +354,7 @@ int AM::commit(Board *bb, Thread *tt)
     tt=aw->getThread();
     DebugCheckT(aw->setThread(0));
     if (tt->isSuspended()) {
-      tt->suspThreadToRunnable();
+      tt->suspThreadToRunnableOPT();
       scheduleThread(tt);
     }
 

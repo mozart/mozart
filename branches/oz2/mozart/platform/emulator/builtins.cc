@@ -1640,23 +1640,6 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
 } OZ_C_proc_end
 
 
-OZ_C_proc_begin(contChooseInternal, 2) {
-  int left  = smallIntValue(OZ_getCArg(0)) - 1;
-  int right = smallIntValue(OZ_getCArg(1)) - 1;
-
-  int status = 
-    SolveActor::Cast(am.currentBoard->getActor())->choose(left,right);
-
-  if (status==-1) {
-    return am.raise(E_ERROR,E_KERNEL,"spaceNoChoices",0);
-  } else if (status==0) {
-    return FAILED;
-  } 
-
-  return PROCEED;
-} OZ_C_proc_end
-
-
 
 OZ_C_proc_begin(BIchooseSpace, 2) {
   declareSpace();
@@ -1707,19 +1690,22 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
 
   if (am.currentBoard != space->getSolveBoard()->getParent()) 
     return am.raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
-    
-  space->getSolveActor()->unsetGround();
-  space->getSolveActor()->clearResult(space->getBoard());
 
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = left;
-  args[1] = right;
+  
+  SolveActor *sa = space->getSolveActor();
+  sa->unsetGround();
+  sa->clearResult(space->getBoard());
 
-  Thread *it = am.mkRunnableThread(am.currentThread->getPriority(), 
-				   space->getSolveBoard(),
-				   OK);
-  it->pushCFunCont(contChooseInternal, args, 2, NO);
-  am.scheduleThread(it);
+  int l = smallIntValue(left) - 1;
+  int r = smallIntValue(right) - 1;
+
+  Thread *tt = sa->select(l,r);
+
+  if (!tt) {
+    return am.raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
+  }
+  tt->suspThreadToRunnable();
+  am.scheduleThread(tt);
 
   return PROCEED;
 } OZ_C_proc_end
