@@ -199,17 +199,18 @@ void TaskIntervalsProof::updateHeapRefs(OZ_Boolean duplicate)
   int * new_reg_nb_tasks     = OZ_hallocCInts(reg_nb_tasks_size);
   int * new_reg_order_vector = OZ_hallocCInts(reg_order_vector_size);
   OZ_Term * new_reg_pe       = OZ_hallocOzTerms(1);
-  
-  for (int i = reg_fds_size; i--; ) {
+
+  int i;
+  for (i = reg_fds_size; i--; ) {
     new_reg_fds[i]  = reg_fds[i];
     OZ_updateHeapTerm(new_reg_fds[i]);
   }
 
-  for (int i = reg_order_vector_size; i--; ) {
+  for (i = reg_order_vector_size; i--; ) {
     new_reg_order_vector[i] = reg_order_vector[i];
   }
 
-  for (int i = reg_nb_tasks_size; i--; ) {
+  for (i = reg_nb_tasks_size; i--; ) {
     new_reg_nb_tasks[i] = reg_nb_tasks[i];
   }
   new_reg_pe[0] = reg_pe[0];
