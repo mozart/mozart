@@ -604,7 +604,7 @@ ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $L
 cross_compiling=$ac_cv_prog_cxx_cross
 
 
-if test "x$oz_default_prefix" !=x && test -d $oz_default_prefix
+if test "x$oz_default_prefix" != x && test -d $oz_default_prefix
 then
   ac_default_prefix=$oz_default_prefix
 fi
