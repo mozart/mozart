@@ -188,7 +188,7 @@ enum ByteStreamType {
   BS_Unmarshal};
 
 
-#define MAXTCPCACHE 4
+#define MAXTCPCACHE 26
 
 enum ipReturn{
   IP_OK              =   0,
