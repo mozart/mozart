@@ -33,9 +33,7 @@ void printBCDebug(Board * = NULL);
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
 
-Thread * createPropagator (OZ_Propagator * p, 
-			      
-int prio = PROPAGATOR_PRIORITY);
+Thread * createPropagator (OZ_Propagator * p, int prio);
 
 inline 
 Bool isUnifyCurrentPropagator () {
