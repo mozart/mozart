@@ -77,8 +77,8 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#endif
 #include <sys/utsname.h>
+#endif
 #include <errno.h>
 #include <netdb.h>
 #include <stdlib.h>
@@ -2249,11 +2249,11 @@ static ipReturn createTcpPort(int port,ip_address &ip,port_t &oport,int &fd)
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   
-  struct utsname auname;
-
-  if(uname(&auname)<0) {NETWORK_ERROR(("createTcpPort"));}
+  char *nodename = oslocalhostname();
+  if(nodename==0) {NETWORK_ERROR(("createTcpPort"));}
   struct hostent *hostaddr;
-  hostaddr=gethostbyname(auname.nodename);
+  hostaddr=gethostbyname(nodename);
+  free(nodename);
   struct in_addr tmp;
   memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
   ip=ntohl(tmp.s_addr);
@@ -2696,7 +2696,9 @@ static int acceptHandler(int fd,void *unused)
   Assert(auxbuf-accHbuf == accHbufSize);
   // EK!!
   // fcntl(newFD,F_SETFL,O_NONBLOCK);
+#ifndef MINGW32
   fcntl(newFD,F_SETFL,O_NDELAY);
+#endif
   int written = 0;
   while(TRUE){
     int ret=oswrite(newFD,accHbuf+written,accHbufSize-written);
@@ -2993,7 +2995,9 @@ retry:
     return IP_TEMP_BLOCK;}
   
   // EK!!
+#ifndef MINGW32
   fcntl(fd,F_SETFL,O_NDELAY);
+#endif
   if(osconnect(fd,(struct sockaddr *) &addr,sizeof(addr))==0 
      || ossockerrno()==EINPROGRESS) {
     PD((TCP,"open success p:%d fd:%d",aport,fd));
