@@ -9,8 +9,8 @@ ability to serialize concurrent operations on objects so that the
 object state is kept coherent after each such an operation. In Oz, we
 separate the issue of acquiring exclusive access of an object from the
 object system. This gives us the ability to perform coarse-grain
-atomic operation of a set of objects, a very important requirement in
-distributed database system. The basic mechanism in Oz to get
+atomic operation on a set of objects, a very important requirement, e.g. in
+distributed database systems. The basic mechanism in Oz to get
 exclusive access is through locks.
 
 
