@@ -173,19 +173,16 @@ in
       meth display(Ys)
 	 S          = @Slice
 	 Y          = {FoldL Ys Max 0.0}
-	 X          = @CurX
-	 NextX      = S + X
 	 L          = @CurLimit
-	 IsLeft     = (X < HalfWidth)
 	 NeedsScale = (Y > L)
       in
 	 %% Check whether display needs to be scrolled
-	 case NextX >= LoadWidth then
+	 case @CurX+S >= LoadWidth then
 	    TmpTag = @LeftTag
 	 in
 	    {TmpTag    tk(delete)}
 	    {@RightTag tk(move ~HalfWidth 0)}
-	    CurX     <- X - HalfWidth
+	    CurX     <- @CurX - HalfWidth
 	    LeftTag  <- @RightTag
 	    RightTag <- TmpTag
 	    case NeedsScale then true
@@ -204,13 +201,15 @@ in
 	    <<Load ReScale(NewLimit)>>
 	    CurLimit <- NewLimit
 	 else true end
-	 case IsLeft then LeftMaxY <- {Max @LeftMaxY Y}
+	 case @CurX+S < HalfWidth then LeftMaxY <- {Max @LeftMaxY Y}
 	 else RightMaxY <- {Max @RightMaxY Y}
 	 end 
-	 <<Load DisplayLoads(@PrevYs Ys X NextX self.Colors self.Stipple
-			     case IsLeft then @LeftTag else @RightTag end)>>
+	 <<Load DisplayLoads(@PrevYs Ys @CurX @CurX+S self.Colors self.Stipple
+			     case @CurX+S < HalfWidth then @LeftTag
+			     else @RightTag
+			     end)>>
 	 PrevYs <- Ys
-	 CurX   <- NextX
+	 CurX   <- @CurX+S
       end
 
    end
