@@ -47,7 +47,7 @@ validate: gump-html
 	nsgmls -cHTML4.soc -sB gump-html/*.html
 
 install: gump-html $(DOCDIR)
-	cp -p gump-html/* $(DOCDIR)
+	for i in gump-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
 
 $(DOCDIR):
 	$(INSTALL_DIR) $@
