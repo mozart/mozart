@@ -58,14 +58,40 @@
           current Oz process.
 
         <P>
-          ?_{ForkA} (an atom) determines the operating system method
-          to fork the remote Oz process. Currently, <<'automatic'>>,
-          <<'sh'>>, and <<'rsh'>> are supported. <<'automatic'>> is
-          the default method.
+          ?_{ForkA} (an atom) determines an operating system command
+          to fork the remote Oz process. The atoms <<'automatic'>> and
+          <<'sh'>> have special meaning. <<'automatic'>> is the
+          default method. Other useful values for ?_{ForkA} are
+          <<'rsh'>> (remote shell command) and <<'ssh'>> (secure shell
+          command).
+
+        <para class=apropos proglang=sh><title/<<sh>> configuration/
+          <<'sh'>> can only be used, if ?_{HostV} is <<localhost>>. It
+          creates a new Oz engine by using the Unix <code
+          proglang=sh>sh</code> command. You can test whether this
+          method works on your computer by:
+          <<<sh -c 'ozengine x-oz://system/RemoteServer.ozf --test'>>>
+          This should be always the case, if Mozart
+          has been installed properly on your computer. This in
+          particular requires that <<$OZHOME/bin>> is in your path of
+          executables (<<$OZHOME>> refers to the directory where
+          Mozart has been installed).
+
+        <P>
+          If ?_{HostV} is <<'localhost'>> and ?_{ForkA} is
+          <<'automatic'>> (which is the default), then on some
+          platforms the forked and forking processes communicate through
+          shared memory rather than sockets, which is more
+          efficient. The system property
+          <<'distribution.virtualsites'>> carries a boolean telling
+          whether this facility, called <def/virtual sites/, is
+          supported in the running Mozart process; the <<'sh'>> fork
+          method is used as a fall-back.
 
         <p>
-          <<'rsh'>> creates
-          a shell remotely by using the Unix <code
+          If ?_{HostV} is different from <<'localhost'>> and the
+          method is <<'automatic'>> the command <<'rsh'>> is used.
+          <<'rsh'>> creates a shell remotely by using the Unix <code
           proglang=sh>rsh</code> command, which in turn creates the
           new Oz engine.
 
@@ -112,28 +138,28 @@ bamse.sics.se
                Mozart has been installed).
           </list>
 
-        <para class=apropos proglang=sh><title/<<sh>> configuration/
-          <<'sh'>> can only be used, if ?_{HostV} is <<localhost>>. It
-          creates a new Oz engine by using the Unix <code
-          proglang=sh>sh</code> command. You can test whether this
-          method works on your computer by:
-          <<<sh -c 'ozengine x-oz://system/RemoteServer.ozf --test'>>>
-          This should be always the case, if Mozart
-          has been installed properly on your computer. This in
-          particular requires that <<$OZHOME/bin>> is in your path of
-          executables (<<$OZHOME>> refers to the directory where
-          Mozart has been installed).
+        <para class=apropos proglang=sh><title/Other commands/
+          Rather than using <<rsh>>, any value for ?_{ForkA} is
+          possible. In that case the following operating system
+command:
+          <<<?{ForkA} ?{Host} ozengine x-oz://system/RemoteServer.ozf --test>>>
+          should print the message
+          <code display proglang=fundamental>Remote: Test succeeded...</code>
+        <p>
+          A prominent example of a different command and a very recommended
+          substitute for <<rsh>> is <<ssh>> (secure shell) which is a
+          more powerful and secure replacement for <<rsh>>. For more
+          information on <<ssh>>, see <ref.extern
+          to="http://www.ssh.fi"><file>www.ssh.fi</file></ref.extern>.
 
         <P>
-          If ?_{HostV} is <<'localhost'>> and ?_{ForkA} is
-          <<'automatic'>> (which is the default), then on some
-          platforms the forked and forking processes communicate through
-          shared memory rather than sockets, which is more
-          efficient. The system property
-          <<'distribution.virtualsites'>> carries a boolean telling
-          whether this facility, called <def/virtual sites/, is
-          supported in the running Mozart process; the <<'sh'>> fork
-          method is used as a fall-back.
+          If ?_{DetachB} is <<false>>, a non-detached process is
+          created. A non-detached process terminates as soon as
+          the creating process does (think of crashes, there will be
+          no orphaned processes). The lifetime of a detached process
+          (that is, ?_{DetachB} is <<true>>) is independent of the
+          creating process.
+
 
 <p class=danger>
           On some platforms (in particular on <<solaris-sparc>>) the
@@ -153,14 +179,6 @@ bamse.sics.se
           unaccounted and thus stay forever in the OS. In these cases
           please use Unix utilities (on Solaris and Linux these are
           <<ipcs>> and <<ipcrm>>) to get rid of them.
-
-        <P>
-          If ?_{DetachB} is <<false>>, a non-detached process is
-          created. A non-detached process terminates as soon as
-          the creating process does (think of crashes, there will be
-          no orphaned processes). The lifetime of a detached process
-          (that is, ?_{DetachB} is <<true>>) is independent of the
-          creating process.
 
         <Entry><Span class=index/<<link>>/
           <Index/<<Remote>><And><<manager>><And><<link>>/
