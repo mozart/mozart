@@ -55,4 +55,4 @@ clean:
 veryclean: clean
 
 distclean: veryclean
-	-rm -f Makefile config.status config.cache config.log
+	-rm -f Makefile
