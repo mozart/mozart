@@ -78,6 +78,8 @@ void ComObj::init(DSite *site) {
   queues.init();
 
   DebugCode(next_cache=(ComObj *)0x44);
+  DebugCode(connectVar=(OZ_Term) 0x45);
+  DebugCode(transtype=(OZ_Term) 0x46);
 }
 
 // Specifying priority -1 means accepting the default as in msgFormat.m4 and
@@ -299,7 +301,7 @@ void ComObj::close(CState statetobe,Bool merging) {
           (statetobe==CLOSED || statetobe==CLOSED_PROBLEM))
     // No transObj but yet expecting one => cancel
     comObjDone(this);
-  Assert(!connectgrantrequested);
+  Assert(!connectgrantrequested && connectVar==(OZ_Term) 0x45);
   queues.clear5();
 
   switch(statetobe) {
