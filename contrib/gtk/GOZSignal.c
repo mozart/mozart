@@ -481,6 +481,73 @@ OZ_BI_define(native_points_put, 3, 0) {
   return OZ_ENTAILED;
 } OZ_BI_end
 
+/* 
+ * Lowlevel GtkArg Handling
+ */ 
+
+OZ_BI_define(native_make_arg, 2, 1) {
+  GOZ_declareString(0, name);
+  GOZ_declareTerm(1, val);
+  GtkArg *ret = (GtkArg *) malloc(sizeof(GtkArg));
+  ret->name = name;
+  if (OZ_isInt(val)) {
+    ret->type = GTK_TYPE_INT;
+    ret->d.int_data = OZ_intToC(val);
+  }
+  else if (OZ_isFloat(val)) {
+    ret->type = GTK_TYPE_DOUBLE;
+    ret->d.double_data = OZ_floatToC(val);
+  }
+  else if (OZ_isBool(val)) {
+    ret->type = GTK_TYPE_BOOL;
+    ret->d.bool_data = OZ_boolToC(val);
+  }
+  else if (OZ_isVirtualString(val, NULL)) {
+    ret->type = GTK_TYPE_STRING;
+    ret->d.string_data = GOZ_stringToC(val);
+  }
+  else if (OZ_isForeignPointer(val)) {
+    ret->type = GTK_TYPE_OBJECT;
+    ret->d.object_data = (GtkObject *) OZ_getForeignPointer(val);
+  }
+  else {
+    ret->type = GTK_TYPE_INVALID;
+  }
+  OZ_out(0) = OZ_makeForeignPointer(ret);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+OZ_BI_define (native_get_arg, 1, 1) {
+  GOZ_declareForeignType(GtkArg *, 0, val);
+
+  switch (val->type) {
+  case GTK_TYPE_INT:
+    OZ_out(0) = OZ_int(val->d.int_data);
+    break;
+  case GTK_TYPE_DOUBLE:
+    OZ_out(0) = OZ_float(val->d.double_data);
+    break;
+  case GTK_TYPE_BOOL:
+    if (val->d.bool_data) {
+      OZ_out(0) = OZ_true();
+    }
+    else {
+      OZ_out(0) = OZ_false();
+    }
+    break;
+  case GTK_TYPE_STRING:
+    OZ_out(0) = OZ_string(val->d.string_data);
+    break;
+  case GTK_TYPE_OBJECT:
+    OZ_out(0) = OZ_makeForeignPointer(val->d.object_data);
+    break;
+  default:
+    OZ_out(0) = OZ_atom("unit");
+    break;
+  }
+  return OZ_ENTAILED;
+} OZ_BI_end
+
 /*
  * Define Interface
  */
@@ -501,6 +568,8 @@ static OZ_C_proc_interface oz_interface[] = {
   {"null", 0, 1, native_null},
   {"freeData", 1, 0, native_free_data},
   {"pointsPut", 3, 0, native_points_put},
+  {"makeArg", 2, 1, native_make_arg},
+  {"getArg", 1, 1, native_get_arg},
   {0, 0, 0, 0}
 };
 

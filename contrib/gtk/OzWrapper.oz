@@ -46,7 +46,10 @@ define
     "   GtkFieldNative                        at 'GtkFieldNative.so{native}'"
     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
     "   GDK                                   at 'GDK.ozf'"
-    "export"]
+    "export"
+    "   MakeArg"
+    "   GetArg"
+    "   FreeArg"]
    
    GdkFilePrepend =
    ["%%"
@@ -103,6 +106,20 @@ define
     "   GdkColor   = GDK.color"
     "   GdkFont    = GDK.font"
     "   GdkImage   = GDK.image"
+    "   fun {MakeArg S Val}"
+    "      {GOZCore.makeArg S {O2P Val}}"
+    "   end"
+    "   fun {GetArg Class Val}"
+    "      RetVal = {GOZCore.getArg Val}"
+    "   in"
+    "      case Class"
+    "      of unit then RetVal"
+    "      else {P2O Class RetVal}"
+    "      end"
+    "   end"
+    "   proc {FreeArg Val}"
+    "      {GOZCore.freeData Val _}"
+    "   end"
     "   \\insert 'GTKFIELDS.oz'"
    ]
    
