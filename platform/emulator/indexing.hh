@@ -48,22 +48,20 @@ class HTEntry {
 
  public:
 
-  HTEntry(Literal *name, int lbl, HTEntry *nxt)
-    : label(lbl), next(nxt) { u.literal = name; };
+  HTEntry(Literal *name, int lbl) : label(lbl), next(0) { u.literal = name; };
 
-  HTEntry(TaggedRef num, int lbl, HTEntry *nxt)
-    : label(lbl), next(nxt)
+  HTEntry(TaggedRef num, int lbl) : label(lbl), next(0)
   {
     u.number = num;
     oz_staticProtect(&u.number);
   };
 
-  HTEntry(Literal *name, SRecordArity arity, int lbl, HTEntry *nxt)
-    : label(lbl), next(nxt) {
+  HTEntry(Literal *name, SRecordArity arity, int lbl) : label(lbl), next(0) {
     u.functor.fname = name;
     u.functor.arity = arity;
   };
 
+  void setNext(HTEntry *nxt) { next = nxt; }
   HTEntry* getNext(void) {return next;}
 
   int getLabel()              { return label; }
@@ -148,6 +146,7 @@ class IHashTable {
     listLabel = 0;
   };
 
+  int *addToTable(EntryTable &table, HTEntry *entry, int pos);
   int *add(TaggedRef number, int label);
   int *add(Literal *constant, int label);
   int *add(Literal *functor, SRecordArity arity,
