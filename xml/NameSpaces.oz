@@ -3,6 +3,7 @@ export
    NewPrefixMap
    ProcessElement
    ProcessName
+   Fast
 prepare
    
    %% ================================================================
@@ -230,5 +231,31 @@ prepare
       fun {!ProcessName Name PrefixMap}
 	 {PostProcessName {PreProcessName Name} PrefixMap}
       end
+   end
+
+   %% Here we define a `fast' version that simply does not
+   %% handle namespaces at all.  This is intended for very
+   %% simple applications that don't want to pay the price
+
+   local
+      proc {FastProcessElement Name Alist Map1 Tag2 Alist2 Map2}
+	 Map2 = unit
+	 {StringToAtom Name Tag2}
+	 {FastProcessAlist Alist Alist2}
+      end
+      fun {FastProcessAlist L}
+	 case L
+	 of nil then nil
+	 [] (Name|Value)|L then
+	    ({StringToAtom Name}|Value)|{FastProcessAlist L}
+	 end
+      end
+      fun {FastProcessName S _} {StringToAtom S} end
+      fun {FastNewPrefixMap} unit end
+   in
+      Fast = fast(
+		newPrefixMap   : FastNewPrefixMap
+		processElement : FastProcessElement
+		processName    : FastProcessName)
    end
 end

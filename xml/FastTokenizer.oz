@@ -4,6 +4,8 @@ functor
 export
    NewFromString
    NewFromURL
+import
+   Open(file:File)
 prepare
 
    %% ================================================================
@@ -71,6 +73,7 @@ prepare
 	 [] &9 then {ScanCharRefDec T I*10+9 H}
 	 [] &; then H=I T
 	 else {ERROR scanCharRefDec(L)} end
+      else {ERROR scanCharRefDec(L)} end
    end
 
    fun {ScanCharRefHex L I H}
@@ -100,6 +103,7 @@ prepare
 	 [] &F then {ScanCharRefHex T I*16+15 H}
 	 [] &; then H=I T
 	 else {ERROR scanCharRefHex(L)} end
+      else {ERROR scanCharRefHex(L)} end
    end
 
 
@@ -335,9 +339,7 @@ prepare
 	 get : Get)
    end
 
-import
-   Open(file:File)
-define
+   define
 
    %% ================================================================
    %% {NewFromURL     +URL ?Tokenizer}

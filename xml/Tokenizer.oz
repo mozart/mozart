@@ -365,7 +365,7 @@ prepare
 
       %% we have just read <?
       meth ScanPI(PI Coord) Text in
-	 PI=pi({ScanName} Text Coord)
+	 PI=pi(Tokenizer,ScanName($) Text Coord)
 	 Tokenizer,ScanPIX(Text)
       end
 
