@@ -219,12 +219,10 @@ enum closeInitiator{
 };
 
 #define WKUPMYC 0
-#define WKUPTMP 1
 #define WKUPPRB 3
 
-#define WKUPMYC_TIME 500
-#define WKUPTMP_TIME 60000
-#define WKUPPRB_TIME 3000
+
+#define MINWKUP_TIME 1000
 #define CLOSE_EXPIRETIME 540000
 #define ADAPTION_RATE   1.5
 #define ADAPTION_TIMOUT_LIMIT  10
@@ -1093,7 +1091,8 @@ public:
   unsigned long expireTime;   
   int           tmpCounter;     // Used for adaptation of connect atempt
   float         tmpCounterLimit; // timeouts.  
-
+  Bool          hasSent;
+  
   void fastfixerik3(){
     Connection();}
   
@@ -1462,9 +1461,7 @@ class TcpCache {
   int current_size;
   int close_size;
   int open_size;
-  int max_size;
 #ifndef DENYS_EVENTS
-  unsigned long tmpTime;
   unsigned long probeTime;
   unsigned long myTime;
   unsigned long curTime;
@@ -1473,10 +1470,9 @@ class TcpCache {
 #ifndef DENYS_EVENTS
   void setMinTime(int time){
     int testTime = time + 1; 
-    if(time < min(min(tmpTime?WKUPTMP_TIME:testTime, 
-		      probeTime?WKUPPRB_TIME:testTime) , 
-		  myTime?WKUPMYC_TIME:testTime)){
-      //printf("SettingMinTime %d\n",time);
+    if(time < min(probeTime?ozconf.perdioCheckAliveInterval:testTime, 
+		  myTime?ozconf.perdioTempRetryFloor:testTime)){
+      //printf("Setting minTime:%d\n",time);
       am.setMinimalTaskInterval((void*)this, time);}
   }
 #endif
@@ -1495,23 +1491,14 @@ public:
 private:
 #endif
 
-  void newTmpDwn(){
-#ifdef DENYS_EVENTS
-    OZ_eventPush(dp_event_tmpDown);
-#else
-    if(!tmpTime){ 
-      setMinTime(WKUPTMP_TIME);
-      tmpTime=curTime+WKUPTMP_TIME;}
-#endif
-  }
-  
   void newProbe(){
 #ifdef DENYS_EVENTS
     OZ_eventPush(dp_event_probe);
 #else
+    //printf("newProbe probeTime:%d minwkup:%d\n",probeTime, MINWKUP_TIME);
     if(!probeTime){
-      setMinTime(WKUPPRB_TIME);
-    probeTime=curTime+WKUPPRB_TIME;}
+      setMinTime(MINWKUP_TIME);}
+    probeTime=curTime+1;
 #endif
   }
   void newMyDwn(){
@@ -1519,8 +1506,8 @@ private:
     OZ_eventPush(dp_event_myDown);
 #else
     if(!myTime)   {
-      setMinTime(WKUPMYC_TIME);  
-      myTime=curTime+WKUPMYC_TIME;}
+      setMinTime(ozconf.perdioTempRetryFloor);  
+      myTime=curTime+1;}
 #endif
   }
 
@@ -1619,7 +1606,7 @@ private:
 	  r->closeConnection();
 	  return;}}
     c = c->next;}
-    if(open_size>max_size * 2 && cncls != NULL){
+    if(open_size>ozconf.perdioMaxTCPCache * 2 && cncls != NULL){
       //printf("Forced to close %d\n",(int)cncls);
       cncls->closeConnection();
       return;}
@@ -1675,10 +1662,13 @@ public:
   
   
   void openConnections(){
+    /*
     if(shutDwn) return;
     PD((TCPCACHE,"OpeningConnections %x",tmpHead));
     openCon = TRUE;
-    while(openTmpBlockedConnection());}
+    while(openTmpBlockedConnection());
+    */
+    Assert(0);}
   
   TcpCache():accept(FALSE){ 
     currentHead		= NULL; 
@@ -1694,38 +1684,39 @@ public:
     current_size	= 0;
     close_size		= 0;
     open_size		= 0;
-    max_size		=MAXTCPCACHE;
     openCon		= TRUE;
     probes		= FALSE;
     shutDwn		= FALSE;
 #ifndef DENYS_EVENTS
-    tmpTime		= 0;
     myTime		= 0;
     probeTime		= 0;
+    curTime             = 1;
 #endif
-    PD((TCPCACHE,"max_size:%d",max_size));}
-  
+  }
   void nowAccept(){
     Assert(accept==FALSE);
-    accept=TRUE;}
+    accept=TRUE;
+    // Start the probes. Must allways be initialized. 
+    newProbe();
+  }
   
   Bool Accept(){return accept;}
   Bool CanOpen(){return openCon;}
     
   void adjust(){
-    if(myHead!=NULL && open_size<max_size){
+    if(myHead!=NULL && open_size<ozconf.perdioMaxTCPCache){
       openMyClosedConnection(0);
       return;}
-    if(open_size>max_size){ 
+    if(open_size>ozconf.perdioMaxTCPCache){ 
       //printf("Size too big %d\n",open_size); 
       decreaseConnections();}
-    if ((open_size + close_size) > (2 * max_size)){
+    if ((open_size + close_size) > (2 * ozconf.perdioMaxTCPCache)){
       //printf("Size way too large, not accepting %d %d\n",open_size, close_size);
       accept = FALSE;}
     else
       accept = TRUE;} 
   
-  Bool canAddWrite(){return open_size < max_size;}
+  Bool canAddWrite(){return open_size < ozconf.perdioMaxTCPCache;}
   
   void add(Connection *w) {
     WriteConnection *ww;
@@ -1741,13 +1732,9 @@ public:
       return;}
     Assert(w->isWriteCon());
     ww = ((WriteConnection*)w);
-    if(ww->isMyInitiative() ||ww->isHisInitiative()){
+    if(ww->isMyInitiative() ||ww->isHisInitiative()||ww->isTmpDwn()){
       newMyDwn();
       addToFront(w, myHead, myTail);
-      return;}
-    if(ww->isTmpDwn()){
-      if(openCon) newTmpDwn();
-      addToFront(w, tmpHead, tmpTail);
       return;}
     if(ww->isProbing()){
       newProbe();
@@ -1770,16 +1757,12 @@ public:
       adjust();
       return;}
     if(w->isWriteCon()){
-      if(((WriteConnection*)w)->isMyInitiative()
-	 ||((WriteConnection*)w)->isHisInitiative()){
+    WriteConnection *ww= (WriteConnection*)w;
+      if(ww->isMyInitiative()||ww->isHisInitiative()||ww->isTmpDwn()){
 	//fprintf(stderr,"rmM\n");
 	unlink(w, myHead, myTail);
 	return;}
-      if(((WriteConnection*)w)->isTmpDwn()){
-	//fprintf(stderr,"rmT\n");
-	unlink(w, tmpHead, tmpTail);
-	return;}
-      if(((WriteConnection*)w)->isProbing()){
+      if(ww->isProbing()){
 	//fprintf(stderr,"rmP\n");
 	unlink(w, probeHead, probeTail);
 	//printf("Removing %d from probe %d %d \n",(int)w,(int)probeHead,(int)probeTail);
@@ -1796,7 +1779,10 @@ public:
   if(currentHead!=r){
       unlink(r, currentHead, currentTail);
       addToFront(r,currentHead, currentTail);}
-    adjust();}
+    adjust();
+  if(r->testFlag(WRITE_CON))
+    ((WriteConnection*)r)->hasSent = TRUE;
+  }
   
   Bool openTmpBlockedConnection();
   Bool openMyClosedConnection(unsigned long time);
@@ -1820,32 +1806,28 @@ OZ_Term TcpCache::dp_event_myDown;
 
 #ifndef DENYS_EVENTS
 void  TcpCache::wakeUp(unsigned long time){
-  if (myTime && myTime<time)
+  if (myTime && (myTime+ozconf.perdioTempRetryFloor)<time)
     if( openMyClosedConnection(time)) 
-      myTime += WKUPMYC_TIME;
+      myTime = time;
     else {
       //printf("Nothingmore to check my\n");
       myTime = 0;}
-  if (tmpTime && tmpTime<time)
-    if(openTmpBlockedConnection())
-      tmpTime += WKUPTMP_TIME;
-    else
-      tmpTime = 0;
-  if (probeTime && probeTime<time){
+  if (probeTime && (probeTime+ozconf.perdioCheckAliveInterval)<time){
     //printf("StartingProbes\n");
     if(startProbe())
-      probeTime += WKUPPRB_TIME; 
+      probeTime =time;
     else
       probeTime = 0;}
-  if(!(probeTime|tmpTime|myTime)){
+  if(!(probeTime|myTime)){
     //printf("Settingmin time to 0\n");
-    am.setMinimalTaskInterval((void*)this,0);}
+    am.setMinimalTaskInterval((void*)this,MINWKUP_TIME);}
 }
 
 Bool TcpCache::checkWakeUp(unsigned long time){
   curTime = time;
-  return ((myTime||probeTime||tmpTime)&&
-	  (myTime<time || tmpTime < time || probeTime< time));} 
+  //printf("a");
+  return ((myTime||probeTime)&&
+	  (myTime+ozconf.perdioTempRetryFloor<time || probeTime+ozconf.perdioCheckAliveInterval< time));} 
 
 Bool wakeUpTcpCache(unsigned long time, void *v){
   tcpCache->wakeUp(time);
@@ -1854,18 +1836,6 @@ Bool wakeUpTcpCache(unsigned long time, void *v){
 Bool checkTcpCache(unsigned long time, void *v){
   return tcpCache->checkWakeUp(time);}
 #endif
-
-Bool TcpCache::openTmpBlockedConnection(){
-  PD((TCPCACHE,"OpeningTmps %x %x",tmpHead, tmpTail));
-  if(tmpHead!=NULL){
-    WriteConnection *w = ((WriteConnection *) getLast(tmpHead, tmpTail));
-    /*
-      printf("Opening con closed by him %s\n",
-    	   w->remoteSite->site->stringrep());
-    */
-    w->clearTmpDwn();
-    w->open();}
-  return tmpHead!=NULL;}
 
 #ifdef DENYS_EVENTS
 OZ_BI_define(BIdp_task_tmpDown,0,1)
@@ -1883,30 +1853,37 @@ Bool TcpCache::openMyClosedConnection(unsigned long time){
   while(time && w!= NULL){
     if(w->expireTime == 0)
       w->expireTime = time + CLOSE_EXPIRETIME;
-    if(w->expireTime < time && ! w->testFlag(HIS_MY_TMP) ){
+    if(w->expireTime < time && ! w->testFlag(HIS_MY_TMP) && !w->isTmpDwn()){
       w->setFlag(HIS_MY_TMP);
       w->remoteSite->site->probeFault(PROBE_TEMP);
       w->setProbingOK();}
+    // Increasing the counters for eventual hisclosed 
+    // connections. This should not be done in the case 
+    // of an atempt to open a myClosed connection.
+    if(w->isHisInitiative()){
+      w->tmpCounter = w->tmpCounter -1;}
     w = (WriteConnection*) w->next;}
   w = (WriteConnection *)myTail;
-  while(w!=NULL && time==0 && w->isHisInitiative())
+  //
+  //Finding the proper writeCon to open. If time=0, take a myclosed.
+  while(w!=NULL && time==0 && (w->isHisInitiative() || w->isTmpDwn()))
     w = (WriteConnection*) w->prev;
-
-  // Increasing the counters for eventual hisclosed 
-  // connections. This should not be done in the case 
-  // of an atempt to open a myClosed connection.
-  while(time!=0 && w!= NULL && w->isHisInitiative() && w->tmpCounter > 1){
-    w->tmpCounter = w->tmpCounter -1; 
+  // Dont take a timed out hisclosed.
+  while(time!=0 && w!= NULL && (w->isHisInitiative()|| w->isTmpDwn()) && w->tmpCounter > 1){
     w = (WriteConnection*) w->prev;}
 
   if(w!=NULL){
     remove(w);
-    if(w->isHisInitiative()){
-      w->clearHisInitiative();
-      w->tmpCounterLimit = w->tmpCounterLimit * ADAPTION_RATE;
+    if(w->isHisInitiative() || w->isTmpDwn()){
+      float gf = ((100.0 + ozconf.perdioTempRetryFactor) / 100.0);
+      if(w->isTmpDwn()){w->clearTmpDwn();}
+      else {w->clearHisInitiative();}
+      w->tmpCounterLimit = w->tmpCounterLimit * gf;
       w->tmpCounter = (int) w->tmpCounterLimit;
-      if (w->remoteSite->hasBeenConnected)
-	w->tmpCounter = min(w->tmpCounter,ADAPTION_TIMOUT_LIMIT);}
+      if (w->remoteSite->hasBeenConnected){
+	int ad = ozconf.perdioTempRetryCeiling / ozconf.perdioTempRetryFloor;
+	w->tmpCounter = min(w->tmpCounter,ad);}
+    }
     else
       w->clearMyInitiative();
     w->open();}
@@ -1921,19 +1898,34 @@ OZ_BI_end
 #endif
   
 Bool TcpCache::startProbe(){
-  if(probeHead!=NULL){
-    WriteConnection *w = ((WriteConnection *) getLast(probeHead, probeTail));
-    /*printf("Starting from probe r:%d %d %d\n",(int)w,(int)probeHead,
-	   (int)probeTail);
-    */
-    w->clearProbing();
-    if(canAddWrite())
-      w->open();
-    else{
-      w->setMyInitiative();
-      add(w); }
-  }
-  return probeHead!=NULL;
+   WriteConnection *w;
+   while(probeHead!=NULL){
+     w = ((WriteConnection *) getLast(probeHead, probeTail));
+     w->clearProbing();
+     // Open connections as long as there is place. Open
+    // atleast one.
+     if(canAddWrite()){
+       w->open();}
+     else{
+       w->setMyInitiative();
+       add(w);
+       break;}
+   }
+   Connection *c=currentHead;
+   while(c!=NULL){
+     if(c->testFlag(WRITE_CON)){
+       w = (WriteConnection*)c;
+       c = c->next;
+       if(w->hasSent || w->isClosing() || w->isOpening() || 
+	  w->isIncomplete() || w->isInWriteQueue()){
+	 w->hasSent = FALSE;}
+       else{
+	 sendPing(w->remoteSite->site);}
+     }
+     else
+       c = c->next;
+   }
+  return TRUE;
 }
 
 #ifdef DENYS_EVENTS
@@ -1992,7 +1984,7 @@ ipReturn WriteConnection::open(){
   // When behind a firewall we tell the connection
   // to open two connections.
   if(ipIsbehindFW || remoteSite->outsideFireWall){ 
-    printf("Do a handover open\n");
+    //printf("Do a handover open\n");
     setFlag(HANDOVER_OPENING);}
   tcpCache->add(this);
   ret = tcpOpen(remoteSite, this);
@@ -2812,6 +2804,7 @@ int tcpPreReadHandler(int fd,void *r0){
       if(w->isMyInitiative())w->clearMyInitiative();
       if(w->isHisInitiative())w->clearHisInitiative();
       if(w->isTmpDwn())w->clearTmpDwn();
+      if(w->testFlag(HIS_MY_TMP))w->clearFlag(HIS_MY_TMP);
       w->setFD(fd);
       w->setOpening();
       w->setFlag(HANDED_OVER);
@@ -4078,13 +4071,13 @@ void initNetwork()
   Assert(myDSite!=NULL);  
   OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
   PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
-  tcpCache->nowAccept();  // can be removed ?? 
+
   networkNotInitiated = FALSE;
 #ifndef DENYS_EVENTS
   if(!am.registerTask((void*) tcpCache, checkTcpCache, wakeUpTcpCache))
     OZ_error("Unable to register TCPCACHE task");
 #endif
- 
+  tcpCache->nowAccept();  // can be removed ??  
 #ifdef PERDIOLOGLOW
   printf("!!!im%s!%d\n",myDSite->stringrep(),myDSite->getTimeStamp()->pid);
 #endif
