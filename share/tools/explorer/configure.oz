@@ -85,6 +85,8 @@ HalfVerSpaceF    = {IntToFloat HalfVerSpaceI}
 %% Initial coordinates of the root of the tree
 RootX            = 0
 RootY            = HalfVerSpaceI
+SentinelX        = RootX
+SentinelY        = RootY - VerSpaceI
 
 %% Sizes for the nodes and links
 CircleWidthI         = 10 * IntScaleBase

@@ -7,6 +7,9 @@
 
 local
 
+   class EmptyClass
+   end
+   
    \insert layout-nodes.oz
 
    \insert tk-nodes.oz
@@ -21,6 +24,18 @@ local
 
    \insert action-nodes.oz
 
+   create Sentinel
+      from
+	 UrObject
+	 LayoutNodes.sentinel
+	 HideNodes.sentinel
+	 MoveNodes.sentinel
+	 SearchNodes.sentinel
+	 StatNodes.sentinel
+	 ActionNodes.sentinel
+	 TkNodes.sentinel
+   end
+      
    class FailedNode
       from
 	 UrObject
@@ -185,13 +200,13 @@ in
    in   
       case job {Space.ask S} end
       of failed then
-	 {New Classes.failed init(False 1)}
+	 {New Classes.failed init(Sentinel 1)}
       [] succeeded(SA) then
-	 {New Classes.SA init(False 1 S persistent)}
+	 {New Classes.SA init(Sentinel 1 S persistent)}
       [] alternatives(MaxAlt) then
-	 {New Classes.choose  init(False 1 False persistent S MaxAlt)}
+	 {New Classes.choose  init(Sentinel 1 False persistent S MaxAlt)}
       [] blocked(Ctrl) then
-	 {New Classes.blocked init(False 1 Ctrl)}
+	 {New Classes.blocked init(Sentinel 1 Ctrl)}
       end
    end
 			

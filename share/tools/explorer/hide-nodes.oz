@@ -53,9 +53,7 @@ local
       meth dirtyUp
 	 case @isDirty then true else
 	    isDirty <- True
-	    case self.mom of !False then true
-	    elseof Mom then {Mom dirtyUp}
-	    end
+	    {self.mom dirtyUp}
 	 end
       end
 
@@ -106,10 +104,8 @@ local
       end
       
       meth unhideTree
-	 case <<Inner UnhideTree($)>> then
-	    case self.mom of !False then true
-	    elseof Mom then {Mom dirtyUp}
-	    end
+	 case <<Inner UnhideTree($)>> then {self.mom dirtyUp}
+	 else true
 	 end
       end
 
@@ -140,10 +136,7 @@ local
       end
 
       meth hideFailed
-	 case <<Inner HideFailed($)>> then
-	    case self.mom of !False then true
-	    elseof Mom then {Mom dirtyUp}
-	    end
+	 case <<Inner HideFailed($)>> then {self.mom dirtyUp}
 	 else true
 	 end
       end
@@ -185,10 +178,7 @@ local
       end
 
       meth unhideButFailed
-	 case <<Inner UnhideButFailed($)>> then
-	    case self.mom of !False then true
-	    elseof Mom then {Mom dirtyUp}
-	    end
+	 case <<Inner UnhideButFailed($)>> then {self.mom dirtyUp}
 	 else true
 	 end
       end
@@ -247,12 +237,19 @@ local
       end
    end
 
+   class Sentinel
+      meth dirtyUp
+	 true
+      end
+   end
+   
 in
 
    HideNodes=c(choose:    Inner
 	       failed:    Leaf
 	       succeeded: Leaf
-	       blocked:   Leaf)
+	       blocked:   Leaf
+	       sentinel:  Sentinel)
    
 end
 
