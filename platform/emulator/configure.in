@@ -583,10 +583,107 @@ then
 fi
 
 dnl *****************************************************************
-dnl virtual site SUPPORT
+dnl virtual sites
 dnl *****************************************************************
 
-OZ_ENABLE(virtualsites,[   provide support for virtual sites],no,
+dnl let's start with simple tests...
+AC_CHECKING(whether we can virtual sites...)
+AC_CACHE_VAL(ac_cv_can_vs,
+[can_vs=yes
+ AC_CHECK_HEADER(sys/types.h,, can_vs=no)
+ AC_CHECK_HEADER(unistd.h,, can_vs=no)
+ AC_CHECK_HEADER(sys/ipc.h,, can_vs=no)
+ AC_CHECK_HEADER(sys/shm.h,, can_vs=no)
+ AC_CHECK_FUNCS(shmget,, can_vs=no)
+ AC_CHECK_FUNCS(shmat,, can_vs=no)
+ AC_CHECK_FUNCS(shmdt,, can_vs=no)
+ AC_CHECK_FUNCS(shmctl,, can_vs=no)
+ if test $can_vs = yes; then
+    AC_MSG_CHECKING(shared memory with a test program)
+    AC_TRY_RUN([#include <sys/types.h>
+ #include <unistd.h>
+ #include <sys/ipc.h>
+ #include <sys/shm.h>
+
+ #define VS_KEYTYPE_SIZE                4
+ #define VS_SEQ_SIZE            12
+ #define VS_PID_MASK            0xffff
+ #define SEQ_NUM                        0x5
+ #define VS_MSGBUFFER_KEY       0x1
+ #define SHMSIZE                        (1024*1024)
+ #define        PERMS                   0666
+ #define SHM_OPT                        0
+
+ key_t vsTypeToKey(int type)
+ {
+   int idOffset = sizeof(key_t)*8 - VS_KEYTYPE_SIZE;
+   int seqOffset = idOffset - VS_SEQ_SIZE;
+   return ((key_t) ((type << idOffset) |
+                    (SEQ_NUM << seqOffset) |
+                    (getpid() & VS_PID_MASK)));
+ }
+
+ main()
+ {
+   int shmkey;
+   int shmid;
+   void *shm;
+   struct shmid_ds ds;
+
+   shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
+   if ((shmid = shmget(shmkey, SHMSIZE, (PERMS|IPC_CREAT))) < 0)
+     exit(-1);
+   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+     exit(-2);
+   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+     *addr = (char) 0;
+   if (shmdt((char *) shm) < 0)
+     exit(-3);
+
+   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+     exit(-4);
+   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+     if (*addr != (char) 0)
+       exit(-5);
+   if (shmdt((char *) shm) < 0)
+     exit(-6);
+
+   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+     exit(-7);
+   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+     *addr = (char) 0x4f;
+   if (shmdt((char *) shm) < 0)
+     exit(-8);
+
+   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+     exit(-9);
+   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+     if (*addr != (char) 0x4f)
+       exit(-10);
+   if (shmdt((char *) shm) < 0)
+     exit(-11);
+
+   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0)
+     exit(-12);
+
+   exit(0);
+     }],
+    AC_MSG_RESULT(succeeded),
+    AC_MSG_RESULT(failed)
+    can_vs=no,
+    AC_MSG_RESULT(dunno (no))
+    can_vs=no)
+ fi
+ ac_cv_can_vs=$can_vs])
+
+if test $ac_cv_can_vs = yes; then
+    AC_MSG_RESULT([... yes, we can do virtual sites!])
+else
+    AC_MSG_RESULT([... sorry, we cannot do virtual sites.])
+fi
+
+OZ_ENABLE(virtualsites,[   provide support for virtual sites],
+        $ac_cv_can_vs,
         AC_DEFINE(VIRTUALSITES)
         AC_MSG_RESULT(yes)
         ,
