@@ -29,16 +29,16 @@
  * Compile it with
  *
  *   make michael.o
- *   ozdynld -o libMichael.so michael.o
+ *   ozdynld -o michael.so-linux-i486 michael.o
  *
- * declare M=
- * local
- *    P={Property.get 'platform'}
- * in
- *    {Foreign.load 'http://www.ps.uni-sb.de/~mehl/mozart/addon/platform/'
- *                  #P.1#'-'#P.2#'/libMichael.so'}
- * end
- *
+declare
+fun {Declare URL} MM in
+   MM = {New Module.manager init()}
+   {MM link(url: URL $)}
+end
+
+declare M={Declare
+  'http://www.ps.uni-sb.de/~mehl/mozart/addon/michael.so{native}'}
  */
 
 #include "builtins.hh"
@@ -232,6 +232,8 @@ OZ_BI_proto(BIHeapChunk_is);
 OZ_BI_proto(BIHeapChunk_peek);
 OZ_BI_proto(BIHeapChunk_poke);
 
+OZ_BI_proto(BIwaitOrF);
+
 static
 OZ_C_proc_interface oz_interface[] = {
   {"stop",0,0,BIstop},
@@ -251,6 +253,7 @@ OZ_C_proc_interface oz_interface[] = {
   {"HeapChunk.peek",2,1,BIHeapChunk_peek},
   {"HeapChunk.poke",3,0,BIHeapChunk_poke},
 
+  {"WaitOrF",1,1,BIwaitOrF},
   {0,0,0,0}
 };
 

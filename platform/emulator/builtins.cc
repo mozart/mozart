@@ -96,6 +96,28 @@ OZ_BI_define(BIwaitOr,2,0)
   return SUSPEND;
 } OZ_BI_end
 
+OZ_BI_define(BIwaitOrF,1,1)
+{
+  oz_declareNonvarIN(0,a);
+
+  if (!oz_isRecord(a)) oz_typeError(0,"Record");
+  if (oz_isLiteral(a)) OZ_RETURN(oz_int(0));
+
+  TaggedRef arity=OZ_arityList(a);
+  while (!OZ_isNil(arity)) {
+      TaggedRef v=OZ_subtree(a,OZ_head(arity));
+      DEREF(v,vPtr,_);
+      if (!oz_isVariable(v)) {
+          am.emptySuspendVarList();
+          OZ_RETURN(OZ_head(arity));
+      }
+      am.addSuspendVarList(vPtr);
+      arity=OZ_tail(arity);
+  }
+
+  return SUSPEND;
+} OZ_BI_end
+
 
 OZ_Return isLiteralInline(TaggedRef t)
 {
