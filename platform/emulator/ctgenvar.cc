@@ -260,7 +260,7 @@ OZ_Return tellBasicConstraint(OZ_Term v,
     goto failed;
 
   // tell constraint to unconstrained variable
-  if (isNotCVar(vtag)) {
+  if (oz_isFree(v)) {
     if (! constr) goto ctvariable;
 
     // constr denotes a value --> v becomes value
@@ -414,7 +414,7 @@ OZ_C_proc_begin(BIGetCtVarConstraintAsAtom, 2)
   } else if (isGenCtVar(var, vartag)) {
     return OZ_unify(makeTaggedAtom(((GenCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)),
 		    OZ_getCArg(1));
-  } else if (isNotCVar(vartag)) {
+  } else if (oz_isFree(var)) {
     OZ_addThread(makeTaggedRef(varptr),
 		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
@@ -436,7 +436,7 @@ OZ_C_proc_begin(BIGetCtVarNameAsAtom, 2)
     return
       OZ_unify(makeTaggedAtom(((GenCtVariable*)tagged2CVar(var))->getDefinition()->getName()),
 	       OZ_getCArg(1));   
-  } else if (isNotCVar(vartag)) {
+  } else if (oz_isFree(var)) {
     OZ_addThread(makeTaggedRef(varptr),
 		 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;

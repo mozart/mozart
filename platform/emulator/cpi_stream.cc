@@ -38,7 +38,7 @@ void OZ_Stream::setFlags(void)
   if (oz_isNil(t)) {
     eostr = closed = TRUE;
     return;
-  } else if (isNotCVar(ttag)) {
+  } else if (oz_isFree(t)) {
     eostr = TRUE;
     return;
   } else if (oz_isCons(t)) {
