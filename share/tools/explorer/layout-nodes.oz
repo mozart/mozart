@@ -266,7 +266,6 @@ in
    LayoutNodes = c(choose:    LayoutNode
 		   blocked:   LayoutLeaf
 		   failed:    LayoutLeaf
-		   succeeded: LayoutLeaf
-		   sentinel:  EmptyClass)
+		   succeeded: LayoutLeaf)
    
 end
