@@ -873,6 +873,7 @@ TaggedRef gcVariable(TaggedRef var)
 	new_gv->suspList = new_gv->suspList->gc(OK);
       else
 	new_gv->suspList = new_gv->suspList->gc(NO);
+      new_gv->gc();
 
 #ifdef DEBUG_GC
       {
@@ -885,7 +886,6 @@ TaggedRef gcVariable(TaggedRef var)
       new_gv->clusterNode = gcBoardChain(new_gv->clusterNode);
 #endif //DEBUG_GC
       
-      new_gv->gc();
       return makeTaggedCVar(new_gv);
     }
   default:
