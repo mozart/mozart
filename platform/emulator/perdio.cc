@@ -4031,7 +4031,13 @@ void siteReceive(ByteStream* bs)
 	TaggedRef clas = unmarshallTerm(bs);
 	o->setClass(tagged2ObjectClass(clas));
       } else {
-	o->setClass(tagged2ObjectClass(deref(findGName(pv->getGNameClass()))));
+	TaggedRef cl;
+	if (pv->isObjectURL()) {
+	  cl=pv->getClass();
+	} else {
+	  cl=findGName(pv->getGNameClass());
+	}
+	o->setClass(tagged2ObjectClass(deref(cl)));
       }
       bs->unmarshalEnd();
 
