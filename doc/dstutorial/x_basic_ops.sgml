@@ -44,6 +44,8 @@ among the sites, giving everyone a fair share of the object use.
 
 <P> The site where the object is created
 is called its <EM>owner site</EM>.
+All other sites referencing the object are
+<EM>proxy sites</EM>.
 A site requesting the object
 first sends a message to the owner site.
 The owner site then
@@ -171,7 +173,7 @@ the value is sent to its <EM>owner site</EM>,
 namely the site on which it was created.
 The owner site
 then multicasts the value to all the
-sites that have the variable.
+proxy sites, namely the sites that have the variable.
 The current release implements
 the multicast as a sequence of message sends.
 That is, if the variable is on <EM>n</EM> sites,
@@ -256,11 +258,11 @@ entity depends on its type, not on
 the fact of its being inside a record
 or a list.
 
-<ITEM> <EM>Procedures, functions, classes, functors,
+<ITEM> <EM>Procedures, functions, classes, functors, chunks,
 atoms, and names</EM>:
 These entities are copied eagerly across the
 network, but can only exist once on a given site.
-For example, an object class contains the code
+For example, an object's class contains the code
 of all the object's methods.
 If many objects of a given class
 exist on a site, then the class only exists once.
@@ -270,24 +272,12 @@ behaviors of objects and classes.
 Classes are copied eagerly,
 whereas objects are lazy.
 I.e., if an object is passed to a site,
-then the object's class is not copied to
-the site until the object is called.
-However, if a class is passed to a site,
-then it is copied eagerly.
-
-% <P> Computed functors, i.e., functors with
-% external references, can be stateful.
-
-<ITEM> <EM>Chunks</EM>:
-A chunk is a lazy record.
-If a chunk is passed to a site,
-then the site initially only
-has a reference to the chunk.
-The chunk is copied only when a thread
-on the site tries to access one of
-the chunk's fields.
-Chunks exist to make it easy to introduce
-laziness into large data structures when needed.
+then the object's class is not requested
+until the object is called.
+If the object's class already exists
+on the site, then it is not requested at all.
+However, a class that is explicitly passed
+to a site is copied eagerly.
 
 </LIST>
 <P> In terms of the language semantics,
