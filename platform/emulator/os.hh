@@ -188,6 +188,8 @@ TaggedRef osDlopen(char *filename, OZ_Term& out);
 int osDlclose(void* handle);
 void *osDlsym(void *handle,const char *name);
 
+Bool osSignal(const char *signame, OZ_Term proc);
+void pushSignalHandlers();
 
 void osStackDump();
 

@@ -33,6 +33,7 @@
 
 #include "wsock.hh"
 
+#include "am.hh"
 #include "os.hh"
 #include "value.hh"
 #include "ozconfig.hh"
@@ -288,16 +289,125 @@ void osUnblockSignals()
 }
 
 
+/********************************************************************
+ * Signal handling: we allow to install both C and Oz functions as
+ * signal handlers. so in fact we install "genericHandler" as the
+ * general handler which then dispatches to the right routines.
+ ********************************************************************/
+
+typedef void OsSigFun(int sig);
+
+typedef struct {
+  int signo;
+  char *name;
+  Bool pending;
+  OsSigFun *chandler;
+  OZ_Term  ozhandler;
+} SigHandler ;
+
+#define SIGLAST -1
+
+static SigHandler handlers[] = {
+  {SIGINT, "SIGINT",NO,0,0},
+  {SIGTERM,"SIGTERM",NO,0,0},
+  {SIGUSR1,"SIGUSR1",NO,0,0},
+  {SIGSEGV,"SIGSEGV",NO,0,0},
+  {SIGFPE, "SIGFPE", NO,0,0},
+
+#ifdef SIGHUP
+  {SIGHUP, "SIGHUP",NO,0,0},
+#endif
+#ifdef SIGUSR2
+  {SIGUSR2,"SIGUSR2",NO,0,0},
+#endif
+#ifdef SIGCONT
+  {SIGCONT,"SIGCONT",NO,0,0},
+#endif
+#ifdef SIGALRM
+  {SIGALRM,"SIGALRM",NO,0,0},
+#endif
+#ifdef SIGBUS
+  {SIGBUS,"SIGBUS",NO,0,0},
+#endif
+#ifdef SIGPIPE
+  {SIGPIPE,"SIGPIPE",NO,0,0},
+#endif
+#ifdef SIGCHLD
+  {SIGCHLD,"SIGCHLD",NO,0,0},
+#endif
+
+  {SIGLAST,0,NO,0,0}
+};
+
+static
+SigHandler *findHandler(int sig)
+{
+  SigHandler *aux = handlers;
+  while(aux->signo != SIGLAST) {
+    if (aux->signo == sig) 
+      return aux;
+    aux++;
+  }
+  return NULL;
+}
+
+static
+SigHandler *findHandler(const char *sig)
+{
+  SigHandler *aux = handlers;
+  while(aux->signo != SIGLAST) {
+    if (strcmp(aux->name,sig)==0)
+      return aux;
+    aux++;
+  }
+  return NULL;
+}
+
+
+void pushSignalHandlers()
+{
+  SigHandler *aux = handlers;
+  while(aux->signo != SIGLAST) {
+    if (aux->pending) {
+      aux->pending = NO;
+      OZ_Thread thread = OZ_newRunnableThread();
+      OZ_Term args[1];
+      args[0] = OZ_atom(aux->name);
+      OZ_pushCall(thread,aux->ozhandler,args,1);
+    }
+    aux++;
+  }
+}
+
+
+static 
+void genericHandler(int sig)
+{
+  osBlockSignals();
+  SigHandler *aux = findHandler(sig);
+  if (aux == NULL)
+    goto exit;
+
+  if (aux->ozhandler) {
+    aux->pending = OK;
+    am.setSFlag(SigPending);
+  }
+
+  if (aux->chandler)
+    (*aux->chandler)(sig);
+  
+exit:
+  osUnblockSignals();
+}
+
 /* Oz version of signal(2)
    NOTE: (mm 13.10.94)
     Linux & Solaris are not POSIX compatible:
      therefor we need casts to (OsSigFun *). look at HERE.
     */
 
-typedef void OsSigFun(void);
-
 static
-OsSigFun *osSignal(int signo, OsSigFun *fun)
+OsSigFun *osSignalInternal(int signo, OsSigFun *fun)
 {
 #ifdef WINDOWS
   signal(signo,(void(*)(int))fun);
@@ -331,6 +441,59 @@ OsSigFun *osSignal(int signo, OsSigFun *fun)
 #endif
 }
 
+
+static
+void checkHandler(SigHandler *sh)
+{
+  if (sh->chandler==0 && sh->ozhandler==0) {
+    osSignalInternal(sh->signo,SIG_DFL);
+    return;
+  }
+  if (sh->chandler!=0 || sh->ozhandler !=0) {
+    osSignalInternal(sh->signo,genericHandler);
+    return;
+  }
+}
+
+
+static
+Bool osSignal(int sig, OsSigFun *fun)
+{
+  SigHandler *aux = findHandler(sig);
+  if (aux == NULL) 
+    return NO;
+  
+  if (fun == SIG_DFL || fun == SIG_IGN) {
+    aux->chandler = 0;
+  } else {
+    aux->chandler = fun;
+  }
+
+  checkHandler(aux);
+  return OK;
+}
+
+
+
+Bool osSignal(const char *signo, OZ_Term proc)
+{
+  SigHandler *aux = findHandler(signo);
+  if (aux == NULL) 
+    return NO;
+
+  if (OZ_isUnit(proc)) {
+    if (aux->ozhandler != 0)
+      OZ_unprotect(&aux->ozhandler);
+    aux->ozhandler = 0;
+  } else {
+    if (aux->ozhandler == 0)
+      OZ_protect(&aux->ozhandler);
+    aux->ozhandler = proc;
+  }
+
+  checkHandler(aux);
+  return OK;
+}
 
 
 /* Oz version of system(3)
@@ -553,7 +716,7 @@ unsigned __stdcall timerFun(void *p)
   TimerThread *ti = (TimerThread*) p;
   while(1) {
     Sleep(ti->wait);
-    handlerALRM();
+    handlerALRM(0);
   }
   delete ti;
   ExitThread(1);
@@ -703,7 +866,6 @@ void osInitSignals()
   osSignal(SIGINT,handlerINT);
   osSignal(SIGTERM,handlerTERM);
   osSignal(SIGSEGV,handlerSEGV);
-  osSignal(SIGFPE,handlerFPE);
 #ifndef WINDOWS
   osSignal(SIGBUS,handlerBUS);
   osSignal(SIGPIPE,handlerPIPE);
