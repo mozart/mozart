@@ -630,6 +630,13 @@ extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
    OZ_result(v) assigns v to output register 0 (the usual case)
    */
 
+/*
+ * special return values for builtins moved from base.hh
+ */
+#define BI_PREEMPT       1024
+#define BI_REPLACEBICALL 1025
+#define BI_TYPE_ERROR    1026
+
 #define OZ_STATUS_OK(s) ((s)==PROCEED || (s)==BI_PREEMPT)
 #define OZ_BI_proto(Name) \
   OZ_Return Name(OZ_Term OZ__IN[],OZ_Term OZ__OUT[])
@@ -646,7 +653,7 @@ OZ_C_proc_begin(Name,Arity_IN+Arity_OUT)		\
   if (OZ_STATUS_OK(OZ__STATUS))				\
     for (int i=0;i<Arity_OUT;i++) {			\
       OZ_Return OZ__TMP =				\
-	oz_unify(OZ_args[Arity_IN+i],OZ__OUT[i]);	\
+	OZ_unify(OZ_args[Arity_IN+i],OZ__OUT[i]);	\
       if (OZ__TMP!=PROCEED) return OZ__TMP;		\
     }							\
   return OZ__STATUS;					\
@@ -742,7 +749,7 @@ void *VAR;					\
 
 #define OZ_RETURN(V) return ((OZ_result(V)),PROCEED)
 #define OZ_RETURN_INT(I) OZ_RETURN(OZ_int(I))
-#define OZ_RETURN_ATOM(S) OZ_RETURN(oz_atom(S))
+#define OZ_RETURN_ATOM(S) OZ_RETURN(OZ_atom(S))
 #define OZ_RETURN_STRING(S) OZ_RETURN(OZ_string(S))
 
 #endif /* __OZ_H__ */
