@@ -5,7 +5,7 @@ import
    OS(unlink tmpnam)
    Archive('class')
    Global(fileMftPkl    : FILEMFTPKL
-	  localDB       : LOCALDB
+	  localDB       : LocalDB
 	  args          : Args
 	  dirPrefix     : DirPrefix)
    Application(exit)
@@ -34,7 +34,7 @@ define
 	 %%
 	 if {Not Force} then
 	    if {LocalDB member(PInfo.id $)} then
-	       raise ok(alreadyinstalled(loc:Entry pkg:PInfo)) end
+	       raise ok(alreadyinstalled(loc:{LocalDB get(PInfo.id $)} pkg:PInfo)) end
 	    end
 	    for Entry in {LocalDB items($)} do
 	       for F in Entry.filelist do
