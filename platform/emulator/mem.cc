@@ -367,12 +367,12 @@ void *ozMalloc(size_t size)
     *addr = (char) 0;
   for (char *addr = (char *) ret; addr < ((char *) ret) + size; addr++)
     if (*addr != (char) 0) 
-      error ("mmap check: failed to read zeros");
+      OZ_error ("mmap check: failed to read zeros");
   for (char *addr = (char *) ret; addr < ((char *) ret) + size; addr++)
     *addr = (char) 0x4f;
   for (char *addr = (char *) ret; addr < ((char *) ret) + size; addr++)
     if (*addr != (char) 0x4f)
-      error ("mmap check: failed to read values");
+      OZ_error ("mmap check: failed to read values");
 #endif
 
   //  
