@@ -24,9 +24,8 @@
 #ifndef __BYTEDATAH
 #define __BYTEDATAH
 
+#include "base.hh"
 #include "builtins.hh"
-#include "string.h"
-#include "pickle.hh"
 
 // -------------------------------------------------------------------
 // BytePointer simply encapsulates a pointer to an array of bytes
@@ -107,8 +106,10 @@ public:
   virtual OZ_Term typeV();
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
-  virtual int toBePickledV();
-  virtual int pickleV(MarshalerBuffer *);
+  virtual OZ_Boolean toBePickledV();
+  virtual OZ_Boolean pickleV(MarshalerBuffer *);
+  virtual OZ_Boolean marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt);
+  virtual int minNeededSpace();
   virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gCollectV() { return clone(); }
   virtual OZ_Extension* sCloneV() { return clone(); }
@@ -194,8 +195,10 @@ public:
   virtual OZ_Term typeV();
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
-  virtual int toBePickledV();
-  virtual int pickleV(MarshalerBuffer *);
+  virtual OZ_Boolean toBePickledV();
+  virtual OZ_Boolean pickleV(MarshalerBuffer *);
+  virtual OZ_Boolean marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt);
+  virtual int minNeededSpace();
   virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gCollectV() { return clone(); }
   virtual OZ_Extension* sCloneV() { return clone(); }

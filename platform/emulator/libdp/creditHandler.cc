@@ -87,33 +87,35 @@ void marshalCreditToOwner(MarshalerBuffer *buf,Credit c,int oti) {
 }
 
 #ifndef USE_FAST_UNMARSHALER
-Credit error(Credit c) {
+static Credit mkECredit(Credit c)
+{
   Assert(0);
-  c.credit=0;
-  c.owner=NULL;
-  return c;
+  c.credit = (int) 0;
+  c.owner = (DSite *) 0;
+  return (c);
 }
-Credit unmarshalCreditRobust(MarshalerBuffer *buf,int *error) {
+
+Credit unmarshalCreditRobust(MarshalerBuffer *buf,int *error)
+{
   Credit c;
   MarshalTag mt=(MarshalTag) buf->get();
-  switch(mt) {
+  switch (mt) {
   case DIF_PRIMARY: {
-    c.credit=unmarshalNumberRobust(buf, error);
-    if(*error) return error(c);
-    c.owner=NULL;
+    c.credit = unmarshalNumberRobust(buf, error);
+    if (*error) return (mkECredit(c));
+    c.owner = NULL;
     break;
   }
   case DIF_SECONDARY: {
-    c.credit=unmarshalNumberRobust(buf, error);
-    if(*error) return error(c);
-    c.owner=unmarshalDSiteRobust(buf,error);
-    if(*error) return error(c);
+    c.credit = unmarshalNumberRobust(buf, error);
+    if (*error) return (mkECredit(c));
+    c.owner=unmarshalDSiteRobust(buf, error);
+    if (*error) return (mkECredit(c));
     break;
   }
   default: {
-    // Error!
-    *error= TRUE;
-    return error(c);
+    *error = TRUE;
+    return (mkECredit(c));
   }}
 
   Assert(c.credit>0);
@@ -128,25 +130,24 @@ Credit unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,MarshalTag mt,
   Credit c;
   if(mt==DIF_OWNER){
     c.credit=1;
-    oti=unmarshalNumberRobust(buf,error);
-    if(*error) return error();
-    c.owner=NULL;
-    return c;
-  }
-  else {
+    oti = unmarshalNumberRobust(buf, error);
+    if (*error) return (mkECredit(c));
+    c.owner = NULL;
+    return (c);
+  } else {
     Credit tmp;
-    tmp.credit=1;
-    Assert(mt==DIF_OWNER_SEC);
-    oti=unmarshalNumberRobust(buf,error);
-    if(*error) return error(c);
-    tmp.owner=unmarshalDSiteRobust(buf,error);
-    if(*error) return error(c);
-    sendCreditBack(myDSite,oti,tmp);
-    c.owner=NULL;
-    c.credit=0;
+    tmp.credit = 1;
+    Assert(mt == DIF_OWNER_SEC);
+    oti = unmarshalNumberRobust(buf, error);
+    if (*error) return (mkECredit(c));
+    tmp.owner = unmarshalDSiteRobust(buf, error);
+    if (*error) return (mkECredit(c));
+    sendCreditBack(myDSite, oti, tmp);
+    c.owner = ((DSite *) 0);
+    c.credit = 0;
   }
   PD((CREDIT_NEW,"unmarshalCreditToOwnerRobust %d %x",c.credit,c.owner));
-  return c;
+  return (c);
 }
 
 #else

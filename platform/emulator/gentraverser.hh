@@ -36,7 +36,7 @@
 #include "base.hh"
 
 // '!'
-#define USE_FAST_UNMARSHALER
+// #define USE_FAST_UNMARSHALER
 
 #include "stack.hh"
 #include "hashtbl.hh"
@@ -429,6 +429,11 @@ const OZ_Term taggedContTask = MAKETRAVERSERTASK(2);
 // 'TraverserBinaryAreaProcessor' supplied (see also the comments for
 // GenTraverser::traverseBinary()');
 typedef Bool (*TraverserBinaryAreaProcessor)(GenTraverser *m, void *arg);
+
+//
+// GT_ExtensionSusp is fixed for extensions (see bytedata.cc).
+#define GT_ExtensionSusp        0
+// Other already used types are defined in libdp/dpMarshaer.hh
 
 //
 // For both the traverser and the builder, 'GTAbstractEntity'

@@ -54,7 +54,7 @@ public:
   OZ_Term printV(int depth = 10) { return oz_atom("<BitArray>"); }
 
   virtual
-  OZ_Term typeV() { return oz_atom("bitArray"); }
+  OZ_Term typeV() { return (AtomBitArray); }
 
   virtual
   OZ_Term printLongV(int depth = 10, int offset = 0) {

@@ -372,7 +372,7 @@ char *unmarshalStringRobust(MarshalerBuffer *bs, int *error)
 static
 void unmarshalGName1Robust(GName *gname, MarshalerBuffer *bs, int *error)
 {
-  gname->site=unmarshalSiteRobust(bs, *error);
+  gname->site = unmarshalSiteRobust(bs, error);
   if(*error) return;
   for (int i=0; i<fatIntDigits; i++) {
     int e;
@@ -390,8 +390,8 @@ GName *unmarshalGNameRobust(TaggedRef *ret, MarshalerBuffer *bs, int *error)
 {
   misc_counter[MISC_GNAME].recv();
   GName gname;
-  unmarshalGName1Robust(&gname,bs,error);
-  if(*error) return &gname;
+  unmarshalGName1Robust(&gname, bs, error);
+  if (*error) return ((GName *) -1);
 
   TaggedRef aux = oz_findGName(&gname);
   if (aux) {
@@ -917,7 +917,7 @@ ProgramCounter unmarshalHashTableRef(Builder *b, ProgramCounter pc,
 {
   //
   if (pc) {
-    (void) unmarshalNumber(bs); // Backward compat
+    (void) unmarshalNumber(bs); // Backward compatibility;
     int elseLabel = unmarshalNumber(bs); /* the else label */
     int listLabel = unmarshalNumber(bs);
     int nEntries = unmarshalNumber(bs);
@@ -1225,20 +1225,20 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
 {
   //
   if (pc) {
-    int sz = unmarshalNumberRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
+    (void) unmarshalNumberRobust(bs, error); // Backward compatibility;
+    if (*error) return ((ProgramCounter) 0);
     int elseLabel = unmarshalNumberRobust(bs, error); /* the else label */
-    if(*error) return ((ProgramCounter) 0);
+    if (*error) return ((ProgramCounter) 0);
     int listLabel = unmarshalNumberRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
+    if (*error) return ((ProgramCounter) 0);
     int nEntries = unmarshalNumberRobust(bs, error);
-    if(*error) return ((ProgramCounter) 0);
+    if (*error) return ((ProgramCounter) 0);
     IHashTable *table;
 
     //
-    table = new IHashTable(sz, elseLabel);
+    table = IHashTable::allocate(nEntries, elseLabel);
     if (listLabel)
-      table->addList(listLabel);
+      table->addLTuple(listLabel);
 
     //
     for (int i = 0; i < nEntries; i++) {

@@ -23,6 +23,7 @@
  */
 
 #include "byteBuffer.hh"
+#include "dsite.hh"
 
 #define BYTE_MODE_MARSHALING 0
 #define BYTE_MODE_UNMARSHALING 1

@@ -114,7 +114,7 @@ void BaseSite::unmarshalBaseSiteGName(MarshalerBuffer* buf)
 void BaseSite::unmarshalBaseSiteRobust(MarshalerBuffer* buf, int *error)
 {
   address = unmarshalNumberRobust(buf, error);
-  if(o || (address <= NON_BROADCAST_MIN)) { // address should be of int32
+  if(*error || (address <= NON_BROADCAST_MIN)) { // address should be of int32
     return;
   }
   port = unmarshalShort(buf);

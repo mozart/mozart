@@ -43,20 +43,17 @@
 #endif
 
 //
-void dpmInit();
-
+// GenTraverser's abstract entities. They are used right now for
+// handling suspensions of the (dp)marshaler.
 //
-enum DPMAbstractEntities {
-  // literals;
-  GT_LiteralSusp,               // generic (marshaler);
-  //
-  GT_AtomSusp,                  // (unmarshaler);
-  GT_UniqueNameSusp,
-  GT_CopyableNameSusp,
-  GT_NameSusp,
-  // extensions;
-  GT_ExtensionSusp              // generic;
-};
+// GT_ExtensionSusp is fixed for extensions (see gentraverser.hh).
+// generic (marshaler):
+#define GT_LiteralSusp          1
+// unmarshaler:
+#define GT_AtomSusp             2
+#define GT_UniqueNameSusp       3
+#define GT_CopyableNameSusp     4
+#define GT_NameSusp             5
 
 //
 // Abstract continuation for literals' 'suspendAC':

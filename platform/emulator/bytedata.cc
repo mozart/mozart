@@ -22,6 +22,14 @@
  */
 
 #include "bytedata.hh"
+#include "pickle.hh"
+// kost@ : distribution's byte buffer. It is needed for "suspendable"
+//         marshaling only. The byteBuffer.hh does not contain/should
+//         not contain nothing distribution-specific. Just the byte
+//         buffer abstraction..
+#include "libdp/byteBuffer.hh"
+
+#include "string.h"
 
 // -------------------------------------------------------------------
 // BitData
@@ -112,11 +120,13 @@ int BitData::card() {
 // BitString
 // -------------------------------------------------------------------
 
-OZ_Term BitString::typeV() {
-  return oz_atom("bitString");
+OZ_Term BitString::typeV()
+{
+  return (AtomBitString);
 }
 
-OZ_Return BitString::eqV(OZ_Term t) {
+OZ_Return BitString::eqV(OZ_Term t)
+{
   return (oz_isBitString(t) && equal(tagged2BitString(t)))
     ? PROCEED : FAILED;
 }
@@ -134,9 +144,9 @@ int BitString::pickleV(MarshalerBuffer *mb)
   return (OK);
 }
 
-OZ_Term unmarshalBitString(void * p)
+static
+OZ_Term unmarshalBitString(MarshalerBuffer *mb)
 {
-  MarshalerBuffer * mb = (MarshalerBuffer *) p;
 #ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
 #else
@@ -159,19 +169,272 @@ OZ_Term BitString::printV(int depth) {
                   oz_pair2(tup,oz_atom("\">")));
 }
 
-void BitString_init() {
-  static int done = 0;
-  if (!done) {
-    done = 1;
-    oz_registerExtension(OZ_E_BITSTRING,unmarshalBitString);
-  }
-}
-
-BitString* BitString::clone() {
+BitString* BitString::clone()
+{
   BitString* s = new BitString();
   s->width = width;
   s->data  = cloneData();
   return s;
+}
+
+// -------------------------------------------------------------------
+// BitString - suspendable marshaling
+// -------------------------------------------------------------------
+
+//
+//
+class DPMExtDesc : public GTAbstractEntity, public NMMemoryManager {
+protected:
+  OZ_Term term;
+  // these appear to be common:
+  int totalSize;
+  int currentSize;
+
+  //
+public:
+  DPMExtDesc(OZ_Term tIn)
+    : term(tIn), totalSize(0), currentSize(0) {}
+  virtual ~DPMExtDesc() {
+    DebugCode(totalSize = currentSize = -1);
+    DebugCode(term = (OZ_Term) -1);
+  }
+
+  //
+  virtual int getType() { return (GT_ExtensionSusp); }
+  virtual void gc() {
+    // Observe: garbage in the byte arrays is GCed!
+    Assert(term);
+    oz_gCollectTerm(term, term);
+  }
+
+  //
+  OZ_Term getTerm() { return (term); }
+
+  //
+  int getTotalSize() { return (totalSize); }
+  void setTotalSize(int tsIn) {
+    Assert(totalSize == 0);
+    totalSize = tsIn;
+  }
+
+  int getCurrentSize() { return (currentSize); }
+  void setCurrentSize(int csIn) {
+    Assert(currentSize == 0);
+    currentSize = csIn;
+  }
+  // 'inc' for unmarshaler, 'dec' for marshaler:
+  void incCurrentSize(int csIn) {
+    Assert(currentSize >= 0);
+    currentSize += csIn;
+    Assert(currentSize <= totalSize);
+  }
+  void decCurrentSize(int csIn) {
+    Assert(currentSize <= totalSize);
+    currentSize -= csIn;
+    Assert(currentSize >= 0);
+  }
+
+  //
+  // 'getExtID()' is needed for the marshaler; unmarshaler just checks
+  // consistency with it;
+  virtual int getExtID() = 0;
+  virtual BYTE *getData() = 0;
+  virtual void setData(BYTE *dataIn) = 0;
+};
+
+//
+static
+void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *cont);
+
+//
+static inline
+void marshalByteArray(ByteBuffer *mb, GenTraverser *gt,
+                      DPMExtDesc *desc)
+{
+  int availSpace = mb->availableSpace();
+  int size = desc->getCurrentSize();
+  BYTE *data = desc->getData();
+
+  //
+  // the current fragment's size must fit anyway:
+  availSpace -= MNumberMaxSize;
+  int ms = min(availSpace, size);
+
+  //
+  desc->decCurrentSize(ms);
+  marshalNumber(mb, ms);        // current fragment;
+  while (ms--)
+    marshalByte(mb, *data++);
+  desc->setData(data);
+
+  //
+  if (size > availSpace) {
+    gt->suspendAC(dpMarshalByteArrayCont, desc);
+  } else {
+    delete desc;
+  }
+}
+
+//
+static
+void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *arg)
+{
+  ByteBuffer *bs = (ByteBuffer *) gt->getOpaque();
+  Assert(arg->getType() == GT_ExtensionSusp);
+  DPMExtDesc *desc = (DPMExtDesc *) arg;
+
+  // we should advance with marshaling:
+  Assert(bs->availableSpace() > 2*DIFMaxSize + 2*MNumberMaxSize);
+  marshalDIF(bs, DIF_EXT_CONT);
+  marshalNumber(bs, desc->getExtID());
+
+  //
+  marshalByteArray(bs, gt, desc);
+}
+
+//
+static
+OZ_Term unmarshalByteArray(ByteBuffer *mb, DPMExtDesc *desc)
+{
+#ifdef USE_FAST_UNMARSHALER
+  int cWidth = unmarshalNumber(mb);
+#else
+  // kost@ : TODO: use the 'error' code! (in 'unmarshalBitString'
+  //         too);
+  int error;
+  int cWidth = unmarshalNumberRobust(mb, &error);
+  if (error)
+    return ((OZ_Term) 0);
+#endif
+
+  //
+  Assert(cWidth >= 0);
+  Assert(cWidth + desc->getCurrentSize() <= desc->getTotalSize());
+  desc->incCurrentSize(cWidth);
+  //
+  BYTE *data = desc->getData();
+  while (cWidth--)
+    *data++ = mb->get();
+  desc->setData(data);
+
+  //
+  if (desc->getCurrentSize() == desc->getTotalSize()) {
+    OZ_Term bst = desc->getTerm();
+    delete desc;
+    return (bst);
+  } else {
+    return ((OZ_Term) -1);
+  }
+}
+
+//
+class DPMBitStringDesc : public DPMExtDesc {
+protected:
+  int index;                    // into data;
+
+  //
+public:
+  DPMBitStringDesc(OZ_Term tIn) : DPMExtDesc(tIn), index(0) {}
+  virtual ~DPMBitStringDesc() { DebugCode(index = -1); }
+
+  //
+  virtual int getExtID() { return (OZ_E_BITSTRING); }
+
+  //
+  // Nothing is cached since we have also GC!!
+  virtual BYTE *getData() {
+    OZ_Extension *bs = tagged2Extension(term);
+    Assert(bs->typeV() == AtomBitString);
+    BYTE *data = ((BitString *) bs)->getData();
+    return (data+index);
+  }
+  virtual void setData(BYTE *dataIn) {
+    OZ_Extension *bs = tagged2Extension(term);
+    Assert(bs->typeV() == AtomBitString);
+    BYTE *data = ((BitString *) bs)->getData();
+    Assert(dataIn >= data && dataIn < data + ((BitString *) bs)->getSize());
+    index = dataIn - data;
+  }
+};
+
+//
+//
+int BitString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
+{
+  Assert(bs->availableSpace() >= MNumberMaxSize);
+
+  //
+  marshalNumber(bs, getWidth());
+
+  //
+  DPMBitStringDesc *desc = new DPMBitStringDesc(oet);
+  int bss = getSize();
+  desc->setTotalSize(bss);
+  desc->setCurrentSize(bss);    // to be marshaled;
+  //
+  marshalByteArray(bs, gt, desc);
+  return (OK);
+}
+
+//
+int BitString::minNeededSpace()
+{
+  return (MNumberMaxSize);
+}
+
+//
+static
+OZ_Term suspUnmarshalBitString(ByteBuffer *mb, GTAbstractEntity* &bae)
+{
+#ifdef USE_FAST_UNMARSHALER
+  int width = unmarshalNumber(mb);
+#else
+  int error;
+  int width = unmarshalNumberRobust(mb, &error);
+  if (error)
+    return ((OZ_Term) 0);
+#endif
+
+  //
+  BitString *s = new BitString(width);
+  OZ_Term bst = makeTaggedExtension(s);
+  DPMBitStringDesc *desc = new DPMBitStringDesc(bst);
+  desc->setTotalSize(s->getSize());
+  bae = desc;                   // may be not necessary;
+
+  //
+  return (unmarshalByteArray(mb, desc));
+}
+
+//
+static
+OZ_Term unmarshalBitStringCont(ByteBuffer *mb, GTAbstractEntity* bae)
+{
+  Assert(bae->getType() == GT_ExtensionSusp);
+#ifdef USE_FAST_UNMARSHALER
+  Assert(((DPMExtDesc *) bae)->getExtID() == OZ_E_BITSTRING);
+#else
+  if (((DPMExtDesc *) bae)->getExtID() != OZ_E_BITSTRING)
+    return ((OZ_Term) 0);
+#endif
+  DPMBitStringDesc *desc = (DPMBitStringDesc *) bae;
+  return (unmarshalByteArray(mb, desc));
+}
+
+
+// -------------------------------------------------------------------
+// BitString INIT
+// -------------------------------------------------------------------
+
+//
+void BitString_init()
+{
+  static int done = 0;
+  if (!done) {
+    done = 1;
+    oz_registerExtension(OZ_E_BITSTRING, unmarshalBitString,
+                         suspUnmarshalBitString, unmarshalBitStringCont);
+  }
 }
 
 // -------------------------------------------------------------------
@@ -334,7 +597,7 @@ Bool ByteData::equal(ByteData *s) {
 // -------------------------------------------------------------------
 
 OZ_Term ByteString::typeV() {
-  return oz_atom("byteString");
+  return (AtomByteString);
 }
 
 OZ_Return ByteString::eqV(OZ_Term t) {
@@ -356,9 +619,9 @@ int ByteString::pickleV(MarshalerBuffer *mb)
   return (OK);
 }
 
-OZ_Term unmarshalByteString(void * p)
+static
+OZ_Term unmarshalByteString(MarshalerBuffer *mb)
 {
-  MarshalerBuffer * mb = (MarshalerBuffer *) p;
 #ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
 #else
@@ -369,14 +632,6 @@ OZ_Term unmarshalByteString(void * p)
   for (int i = 0; i < width; i++)
     s->getByte(i) = mb->get();
   return makeTaggedExtension(s);
-}
-
-void ByteString_init() {
-  static int done = 0;
-  if (! done) {
-    done = 1;
-    oz_registerExtension(OZ_E_BYTESTRING,unmarshalByteString);
-  }
 }
 
 OZ_Term ByteString::printV(int depth) {
@@ -395,6 +650,123 @@ ByteString* ByteString::clone() {
   s->data  = cloneData();
   return s;
 }
+
+// -------------------------------------------------------------------
+// BitString - suspendable marshaling
+// -------------------------------------------------------------------
+
+//
+class DPMByteStringDesc : public DPMExtDesc {
+protected:
+  int index;                    // into data;
+
+  //
+public:
+  DPMByteStringDesc(OZ_Term tIn) : DPMExtDesc(tIn), index(0) {}
+  virtual ~DPMByteStringDesc() { DebugCode(index = -1); }
+
+  //
+  virtual int getExtID() { return (OZ_E_BYTESTRING); }
+
+  //
+  // Nothing is cached since we have also GC!!
+  BYTE *getData() {
+    OZ_Extension *bs = tagged2Extension(term);
+    Assert(bs->typeV() == AtomByteString);
+    BYTE *data = ((ByteString *) bs)->getData();
+    return (data+index);
+  }
+  void setData(BYTE *dataIn) {
+    OZ_Extension *bs = tagged2Extension(term);
+    Assert(bs->typeV() == AtomByteString);
+    BYTE *data = ((ByteString *) bs)->getData();
+    Assert(dataIn >= data);
+    // since dataIn points to the first free cell, it points just
+    // behind the array when we're done:
+    Assert(dataIn <= data + ((ByteString *) bs)->getSize());
+    index = dataIn - data;
+  }
+};
+
+//
+int ByteString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
+{
+  Assert(bs->availableSpace() >= MNumberMaxSize);
+
+  //
+  marshalNumber(bs, getWidth());
+
+  //
+  DPMByteStringDesc *desc = new DPMByteStringDesc(oet);
+  int bss = getSize();
+  desc->setTotalSize(bss);
+  desc->setCurrentSize(bss);    // to be marshaled;
+  //
+  marshalByteArray(bs, gt, desc);
+  return (OK);
+}
+
+//
+int ByteString::minNeededSpace()
+{
+  return (MNumberMaxSize);
+}
+
+//
+static
+OZ_Term suspUnmarshalByteString(ByteBuffer *mb, GTAbstractEntity* &bae)
+{
+#ifdef USE_FAST_UNMARSHALER
+  int width = unmarshalNumber(mb);
+#else
+  int error;
+  int width = unmarshalNumberRobust(mb, &error);
+  if (error)
+    return ((OZ_Term) 0);
+#endif
+
+  //
+  ByteString *s = new ByteString(width);
+  OZ_Term bst = makeTaggedExtension(s);
+  DPMByteStringDesc *desc = new DPMByteStringDesc(bst);
+  desc->setTotalSize(s->getSize());
+  bae = desc;
+
+  //
+  return (unmarshalByteArray(mb, desc));
+}
+
+//
+static
+OZ_Term unmarshalByteStringCont(ByteBuffer *mb, GTAbstractEntity* bae)
+{
+  Assert(bae->getType() == GT_ExtensionSusp);
+#ifdef USE_FAST_UNMARSHALER
+  Assert(((DPMExtDesc *) bae)->getExtID() == OZ_E_BYTESTRING);
+#else
+  if (((DPMExtDesc *) bae)->getExtID() != OZ_E_BYTESTRING)
+    return ((OZ_Term) 0);
+#endif
+  DPMByteStringDesc *desc = (DPMByteStringDesc *) bae;
+  return (unmarshalByteArray(mb, desc));
+}
+
+
+// -------------------------------------------------------------------
+// ByteString INIT
+// -------------------------------------------------------------------
+
+//
+void ByteString_init()
+{
+  static int done = 0;
+  if (! done) {
+    done = 1;
+    oz_registerExtension(OZ_E_BYTESTRING, unmarshalByteString,
+                         suspUnmarshalByteString, unmarshalByteStringCont);
+  }
+}
+
 
 // -------------------------------------------------------------------
 // ByteString Builtins

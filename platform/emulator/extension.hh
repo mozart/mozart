@@ -49,6 +49,26 @@ enum OZ_Registered_Extension_Id {
 
 //
 class MarshalerBuffer;
+// kost@ : (Un)marshaling with continuations is tricky: a partially
+//         unmarshaled result must be GC"able, so it is wrapped up in
+//         a 'GTAbstractEntity' object which can be GC"ed by the
+//         Builder's GC routine;
+class ByteBuffer;
+class GenTraverser;
+class GTAbstractEntity;
+//
+typedef
+_FUNTYPEDECL(OZ_Term,
+             oz_unmarshalProcType, (MarshalerBuffer *));
+typedef
+_FUNTYPEDECL(OZ_Term,
+             oz_suspUnmarshalProcType, (ByteBuffer*, GTAbstractEntity* &));
+typedef
+_FUNTYPEDECL(OZ_Term,
+             oz_unmarshalContProcType, (ByteBuffer*, GTAbstractEntity*));
+
+//
+class MarshalerBuffer;
 
 // kost@: Extensions bodies are allocated using the
 //        'oz_heapMalloc(..)' (through '_OZ_new_OZ_Extension(..)').
@@ -91,10 +111,13 @@ public:
   virtual OZ_Return     getFeatureV(OZ_Term,OZ_Term&) { return OZ_FAILED; }
   virtual OZ_Return     putFeatureV(OZ_Term,OZ_Term ) { return OZ_FAILED; }
   virtual OZ_Return     eqV(OZ_Term)               { return OZ_FAILED; }
-  // 'toBePickledV' and 'pickleV' return 'TRUE' if pickling is defined
-  // for them;
+  // Both 'toBePickledV' and 'pickleV' must return 'TRUE' if pickling
+  // is defined for them;
   virtual OZ_Boolean    toBePickledV() { return (OZ_FALSE); }
   virtual OZ_Boolean    pickleV(MarshalerBuffer *mb) { return (OZ_FALSE); }
+  virtual OZ_Boolean    marshalSuspV(OZ_Term te,
+                                     ByteBuffer *bs, GenTraverser *gt)
+  { return (OZ_FALSE); }
   virtual int           minNeededSpace() { return (0); }
 
   OZ_Boolean isLocal(void) {
@@ -109,7 +132,15 @@ _FUNDECL(OZ_Boolean,OZ_isExtension,(OZ_Term));
 _FUNDECL(OZ_Extension*,OZ_getExtension,(OZ_Term));
 _FUNDECL(OZ_Term,OZ_extension,(OZ_Extension *));
 
-_FUNDECL(OZ_Term,oz_extension_unmarshal,(int, void*));
-_FUNDECL(void,oz_registerExtension,(int, oz_unmarshalProcType));
+_FUNDECL(OZ_Term,oz_extension_unmarshal,(int, MarshalerBuffer*));
+_FUNDECL(OZ_Term,oz_extension_unmarshal,(int, ByteBuffer*,
+                                         GTAbstractEntity* &));
+_FUNDECL(OZ_Term,oz_extension_unmarshalCont,(int, ByteBuffer*,
+                                             GTAbstractEntity*));
+
+_FUNDECL(void, oz_registerExtension, (int,
+                                      oz_unmarshalProcType,
+                                      oz_suspUnmarshalProcType,
+                                      oz_unmarshalContProcType));
 
 #endif

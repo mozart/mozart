@@ -27,8 +27,8 @@
 
 #include "genhashtbl.hh"
 
+#include "dpBase.hh"
 #include "mbuffer.hh"
-#include "dsite.hh"
 
 #define BYTE_MODE_MARSHALING 0
 #define BYTE_MODE_UNMARSHALING 1
