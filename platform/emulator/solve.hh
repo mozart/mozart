@@ -37,8 +37,6 @@
 
 #include "actor.hh"
 #include "cpbag.hh"
-#include "gc.hh"
-#include "susplist.hh"
 #include "value.hh"
 
 // ------------------------------------------------------------------------

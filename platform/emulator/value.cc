@@ -25,7 +25,7 @@
  *
  */
 
-#if defined(INTERFACE)
+#if defined(INTERFACE) && !defined(VAL_ALL)
 #pragma implementation "value.hh"
 #endif
 

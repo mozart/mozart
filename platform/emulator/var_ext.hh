@@ -24,46 +24,79 @@
 #ifndef __EXTVAR__H__
 #define __EXTVAR__H__
 
-// mm2: this file is not yet used anywhere and not tested at all
+#ifdef INTERFACE
+#pragma interface
+#endif
 
 #include "var_base.hh"
 
-class ExtentedVar : public OzVariable {
+enum {
+  OZ_EVAR_DIST,
+  OZ_EVAR_LAST
+};
+
+class ExtVar : public OzVariable {
 public:
-  // gc: copying
-  virtual OzVariable* gcV() = 0;
-  // gc: collect entry points
+  ExtVar(Board *bb) : OzVariable(OZ_VAR_EXT,bb) {}
+
+  virtual int           getIdV() = 0;
+
+  virtual OzVariable*   gcV() = 0;
   virtual void          gcRecurseV() = 0;
+
   // tell
   virtual OZ_Return     unifyV(TaggedRef *, TaggedRef, ByteCode *) = 0;
-  virtual OZ_Return     bindV(TaggedRef *, TaggedRef, ByteCode *) = 0;
+
+  virtual OZ_Return     bindV(TaggedRef *ptr, TaggedRef val, ByteCode *bc) {
+    return unifyV(ptr,val,bc);
+  }
   // ask
-  virtual OZ_Return     validV(TaggedRef) = 0;
-  // suspend
+  virtual Bool          validV(TaggedRef) = 0;
+
   virtual void addSuspV(TaggedRef *vPtr, Suspension susp, int unstable = TRUE)
-  {
-    addSuspSVar(susp, unstable);
-  }
+    {
+      addSuspSVar(susp, unstable);
+    }
   // printing/debugging
-  virtual void          printStreamV(ostream &out,int depth = 10)
-  {
-    out << "<cvar: " << (int) getType() << ">";
+  virtual void printStreamV(ostream &out,int depth = 10) {
+    out << "<extvar: #" << getIdV() << ">";
   }
-  virtual void          printLongStreamV(ostream &out,int depth = 10,
-					 int offset = 0)
-  {
+  virtual void printLongStreamV(ostream &out,int depth = 10,
+				int offset = 0) {
     printStreamV(out,depth); out << endl;
   }
-  void                  print(void)
-    { printStreamV(cerr); cerr << endl; cerr.flush(); }
-  void                  printLong(void)
-    { printLongStreamV(cerr); cerr.flush(); }
-  virtual OZ_Term       inspectV();
 
-  virtual OZ_Term       statusV();
+  void print(void) {
+    printStreamV(cerr); cerr << endl; cerr.flush();
+  }
+  void printLong(void) {
+    printLongStreamV(cerr); cerr.flush();
+  }
 
-  virtual int           getSuspListLengthV()
-    { return getSuspListLengthS(); }
+  virtual OZ_Term              inspectV() { return 0; } // mm2: not yet
+  virtual VariableStatus       statusV() = 0;
+  virtual OZ_Term              isDetV() = 0;
+
+  virtual int getSuspListLengthV() { return getSuspListLengthS(); }
 };
+
+inline
+int oz_isExtVar(TaggedRef r)
+{
+  return isCVar(r) && tagged2CVar(r)->getType()==OZ_VAR_EXT;
+}
+
+inline
+ExtVar *oz_getExtVar(TaggedRef r) {
+  Assert(oz_isExtVar(r));
+  return (ExtVar *) tagged2CVar(r);
+}
+
+inline
+OZ_Term oz_makeExtVar(ExtVar *ev) {
+  return makeTaggedCVar(ev);
+}
+
+unsigned int oz_newVarId();
 
 #endif

@@ -25,26 +25,13 @@
  *
  */
 
-#if defined(INTERFACE)
+#if defined(INTERFACE) && !defined(VAR_ALL)
 #pragma implementation "var_future.hh"
 #endif
 
 #include "var_future.hh"
 #include "builtins.hh"
 #include "thr_int.hh"
-
-inline
-Bool isFuture(TaggedRef term)
-{
-  GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FUTURE);
-}
-
-inline
-Future *tagged2Future(TaggedRef t) {
-  Assert(isFuture(t));
-  return (Future *) tagged2CVar(t);
-}
 
 // bind a future, don't care about the variable, e.g. for byNeed
 void oz_bindFuture(OZ_Term fut,OZ_Term val)

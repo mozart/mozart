@@ -219,6 +219,9 @@ class OzFDVariable;
 class OzBoolVariable;
 class OzFSVariable;
 class OzCtVariable;
+class Future;
+class SimpleVar;
+class ExtVar;
 class DynamicTable;
 class SRecord;
 class Arity;
@@ -263,7 +266,7 @@ class OZ_FSetValue;
 class Continuation;
 
 class SuspList;
-class CondSuspList;
+class OrderedSuspList;
 class Suspension;
 class Propagator;
 class OZ_Propagator;

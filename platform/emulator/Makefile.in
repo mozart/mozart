@@ -54,7 +54,7 @@ LIBS=		$(CORE_LIBS) @LIBS@
 
 INCS=		-I. -I$(SRCDIR)
 M4_D=		-DEMUDIR=$(SRCDIR)
-TARGETS=	@TARGETS@ text2pickle oztool.sh
+TARGETS=	@TARGETS@ text2pickle
 MODULETARGETS=	@MODULETARGETS@
 # kost@, Per: temporary: include libDP.a:
 MODULETARGETS += libDP.a
@@ -109,9 +109,9 @@ OSSRCS=\
 STORESRCS=\
 	tagged.cc value.cc atoms.cc \
 	dictionary.cc extension.cc bitarray.cc \
-	ozthread.cc heapchunk.cc susplist.cc \
-	var_base.cc var_simple.cc var_future.cc \
-	bytedata.cc
+	ozthread.cc heapchunk.cc bytedata.cc\
+	susplist.cc \
+	var_base.cc var_ext.cc var_simple.cc var_future.cc
 
 RUNSRCS=\
 	am.cc indexing.cc codearea.cc lps.cc \
@@ -282,7 +282,7 @@ text2pickle: $(TEXT2PICKLEOBJS)
 install:: install-bin install-inc $(MODULEINSTALL)
 
 install-bin: $(TARGETS) $(BINDIR)
-	$(INSTALL_BIN) $(TARGETS) $(BINDIR)
+	$(INSTALL_BIN) oztool.sh $(TARGETS) $(BINDIR)
 
 install-inc: $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/mozart.h $(INCDIR)
@@ -443,4 +443,4 @@ veryclean::
 
 distclean::
 	-rm -f OZCONF.h conf.h config.cache config.log config.status \
-		Makefile.rules Makefile.vars Makefile
+		Makefile.rules Makefile.vars Makefile oztool.sh

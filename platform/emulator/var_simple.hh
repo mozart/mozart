@@ -58,19 +58,6 @@ public:
 };
 
 
-inline
-Bool isSimpleVar(TaggedRef term)
-{
-  GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_SIMPLE);
-}
-
 OzVariable *uvar2SimpleVar(TaggedRef *v);
-
-inline
-SimpleVar *tagged2SimpleVar(TaggedRef t) {
-  Assert(isSimpleVar(t));
-  return (SimpleVar *) tagged2CVar(t);
-}
 
 #endif /* __SIMPLEVAR__H__ */

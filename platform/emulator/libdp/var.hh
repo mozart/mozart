@@ -33,7 +33,7 @@
 
 #include "base.hh"
 #include "debug.hh"
-#include "var_base.hh"
+#include "var_ext.hh"
 #include "table.hh"
 #include "controlvar.hh"
 
@@ -78,10 +78,11 @@ public:
   PendBinding *gcPendBinding();
 };
 
-class PerdioVar: public OzVariable {
+class PerdioVar: public ExtVar {
 public:
-  PerdioVar(Board *bb) : OzVariable(OZ_VAR_DIST,bb) {}
+  PerdioVar(Board *bb) : ExtVar(bb) {}
 
+  int getIdV() { return OZ_EVAR_DIST; }
   virtual VariableStatus statusV() = 0;
   virtual OZ_Term isDetV() = 0;
   
@@ -102,6 +103,12 @@ public:
   virtual void marshalV(MsgBuffer *bs) = 0;
 };
 
+inline
+int oz_isPerdioVar(TaggedRef r)
+{
+  return oz_isExtVar(r) && oz_getExtVar(r)->getIdV()==OZ_EVAR_DIST;
+}
+
 class DistributedVar : public PerdioVar {
 public:
   DistributedVar() : PerdioVar(0) {}
@@ -113,7 +120,7 @@ public:
 };
 
 class OldPerdioVar : public PerdioVar {
-private:
+protected:
   short pvtype;
   void *ptr;
   union {
@@ -256,20 +263,13 @@ public:
   void marshalV(MsgBuffer *bs);
 };
 
-inline
-Bool isPerdioVar(TaggedRef term)
-{
-  GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_DIST);
-}
-
 Bool checkExportable(TaggedRef var);
 OldPerdioVar* var2PerdioVar(TaggedRef*);
 
 inline
 OldPerdioVar *tagged2PerdioVar(TaggedRef t) {
-  Assert(isPerdioVar(t));
-  return ((OldPerdioVar *) tagged2CVar(t));
+  Assert(oz_isPerdioVar(t));
+  return (OldPerdioVar *) oz_getExtVar(t);
 }
 
 TaggedRef newObjectProxy(Object *o, GName *gnobj,

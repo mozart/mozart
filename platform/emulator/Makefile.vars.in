@@ -42,7 +42,7 @@ CXX=		@CXX@
 CXXCPP=		@CXXCPP@
 
 LD=		@LD@
-DYNLD=		@DYNLD@
+DYNLD=		@OZTOOL@ ld
 RANLIB=		@RANLIB@
 AR=		@AR@
 PERL=		perl
