@@ -36,43 +36,42 @@ TaggedRef NameTclName,
 
 TaggedRef tcl_dict;
 
-OZ_Return raise_os_error() {
-  SRecord * exc       = SRecord::newSRecord(AtomSystem, 
-		      (Arity *) OZ_makeArity(OZ_cons(OZ_atom("tk"),nil())));
-  SRecord * err_tuple = SRecord::newSRecord(OZ_atom("os"), 2);
-  
-  err_tuple->setArg(0, OZ_int(errno));
-  err_tuple->setArg(1, OZ_atom(OZ_unixError(errno)));
-  exc->setArg(0, makeTaggedSRecord(err_tuple));
-  am.exception = makeTaggedSRecord(exc);
-  return RAISE;
+int raiseTk(char *label,int arity,...) 
+{
+  OZ_Term tt=OZ_tuple(OZ_atom("tk"),arity+1);
+  OZ_putArg(tt,0,OZ_atom(label));
+
+  va_list ap;
+  va_start(ap,arity);
+
+  for (int i = 0; i < arity; i++) {
+    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
+  }
+
+  va_end(ap);
+
+  return OZ_raise(tt);
 }
 
-OZ_Return raise_type_error(TaggedRef tcl) {
-  SRecord * exc       = SRecord::newSRecord(AtomSystem, 
-		      (Arity *) OZ_makeArity(OZ_cons(OZ_atom("tk"),nil())));
-  SRecord * err_tuple = SRecord::newSRecord(OZ_atom("type"),2);
-  
-  err_tuple->setArg(0, tcl);
-  err_tuple->setArg(1, OZ_atom("tickle"));
-  exc->setArg(0, makeTaggedSRecord(err_tuple));
-  am.exception = makeTaggedSRecord(exc);
-  return RAISE;
+OZ_Return raise_os_error()
+{
+  return raiseTk("os",2,OZ_int(errno),OZ_atom(OZ_unixError(errno)));
+}
+
+OZ_Return raise_type_error(TaggedRef tcl)
+{
+  TypeErrorT(-1,"Tickle");
 }
 
 OZ_Return raise_closed(TaggedRef tcl) {
-  SRecord * exc       = SRecord::newSRecord(AtomSystem, 
-		      (Arity *) OZ_makeArity(OZ_cons(OZ_atom("tk"),nil())));
-  SRecord * err_tuple = SRecord::newSRecord(OZ_atom("tkAlreadyClosed"),1);
-  
-  err_tuple->setArg(0, tcl);
-  exc->setArg(0, makeTaggedSRecord(err_tuple));
-  am.exception = makeTaggedSRecord(exc);
-  return RAISE;
+  return raiseTk("alreadyClosed",1,tcl);
 }
 
+extern
+int raiseKernel(char *label,int arity,...);
+
 OZ_Return raise_toplevel(void) {
-  return OZ_raiseC("globalState",1,OZ_atom("io"));
+  return raiseKernel("globalState",1,OZ_atom("io"));
 }
 
 #define CHECK_TOPLEVEL     \
