@@ -5886,7 +5886,7 @@ ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
 
 OZ_Return loadFD(int fd, OZ_Term out)
 {
-  ByteSourceFD src(fd,true);
+  ByteSourceFD src(fd,TRUE);
   return src.getTerm(out);
 }
 
