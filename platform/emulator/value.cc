@@ -1316,8 +1316,8 @@ OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home)
 
 Thread * pendThreadResumeFirst(PendThread **pt){
   Thread * t;
-  do {
-    PendThread * tmp = *pt;
+  PendThread * tmp = *pt;
+  while(tmp) {
     Assert(tmp!=NULL);
     ControlVarResume(tmp->controlvar);
     t = tmp->thread;
@@ -1327,7 +1327,8 @@ Thread * pendThreadResumeFirst(PendThread **pt){
     tmp->dispose();
     if (!t->isDead())
       return t;
-  } while (pt);
+    tmp = *pt;
+  }
   return t;
 }
 
