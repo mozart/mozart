@@ -78,7 +78,6 @@ public:
 
   Statistics();
 
-  void print(FILE *fd);
   void printIdle(FILE *fd);
   void printRunning(FILE *fd);
 

@@ -6597,18 +6597,6 @@ OZ_C_proc_begin(BIqueryDebugState,2)
 OZ_C_proc_end
 
 /* -------------------------------------------------------------------------
- * Debugging: special builtins for Benni
- * ------------------------------------------------------------------------- */
-
-OZ_C_proc_begin(BIshowStatistics,0)
-{
-  ozstat.print(stderr);
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-/* -------------------------------------------------------------------------
  *
  * ------------------------------------------------------------------------- */
 
@@ -7435,7 +7423,6 @@ BIspec allSpec2[] = {
   {"traceOff",    0, BItraceOff},
   {"displayCode", 2, BIdisplayCode},
 
-  {"showStatistics",0,BIshowStatistics},
   {"System_getPrintName",2,BIgetPrintName},
   {"traceBack",0,BItraceBack},
 
