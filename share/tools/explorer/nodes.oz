@@ -102,7 +102,7 @@ local
 
 in
 
-   fun {MakeClasses IsBAB KeepSolutions ChoiceDistance Manager Order}
+   fun {MakeClasses IsBAB Manager Order}
       Canvas         = Manager.canvas
       Status         = Manager.status
       StrategyNodes  = case IsBAB then BABNodes else DfNodes end
@@ -112,14 +112,12 @@ in
 				     classes:  Classes
 				     canvas:   Canvas
 				     order:    Order
-				     infoDist: ChoiceDistance
 			       end
 			    else
 			       class $
 				  feat
 				     classes:  Classes
 				     canvas:   Canvas
-				     infoDist: ChoiceDistance
 			       end
 			    end
       Classes =
@@ -163,7 +161,7 @@ in
 	   else
 	      class $ from UnstableNode
 		 feat canvas:Canvas
-		 meth init(Mom CurDepth CurDist Control)
+		 meth init(Mom CurDepth CurDist CurInfo Control)
 		    KillFlag KillId UnwrapControl
 		 in
 		    self.mom = Mom
@@ -174,7 +172,7 @@ in
 		    thread
 		       if {Wait UnwrapControl} then
 			  {Manager wake(Mom KillId UnwrapControl
-					wake(self CurDepth CurDist
+					wake(self CurDepth CurDist CurInfo
 					     UnwrapControl))}
 		       [] {Wait KillFlag} then true
 		       end
@@ -189,7 +187,7 @@ in
 	      end
 	   end
 	entailed:
-	   case IsBAB orelse KeepSolutions then
+	   case IsBAB then
 	      class $
 		 from
 		    SolvedNode
@@ -231,7 +229,7 @@ in
 	      end
 	   end	   
 	stable:
-	   case IsBAB orelse KeepSolutions then
+	   case IsBAB then
 	      class $
 		 from
 		    SolvedNode
@@ -365,7 +363,7 @@ in
 	 {New Classes.unstable [case IsBAB then
 				   init(False False 1 Info False)
 				else
-				   init(False 1 0 Info)
+				   init(False 1 0 1 Info)
 				end sync($)] _}
       end
    end

@@ -71,18 +71,11 @@ in
 	 <<MenuManager     clear>>
 	 <<StatusManager   clear>>
 	 <<ToplevelManager clear>>
-	 <<Manager         clearNumbers>>
 	 Classes    <- False
 	 case @root of !False then true elseof Root then
 	    root <- False
 	 end
 	 PrevBABSol <- False
-      end
-
-      meth clearNumbers
-	 <<MenuManager disable(nodes(clear))>>
-	 <<ToplevelManager clearNumbers>>
-	 <<Manager         clearDialogs>>
       end
 
       meth clearDialogs
@@ -131,18 +124,17 @@ in
 	 else true end
 	 case CurNode.kind==failed orelse CurNode.kind==unstable then
 	    %% Can only happen if there is a single failed or unstable node
-	    <<MenuManager disable([move([top cur]) nodes(stat)])>>
+	    <<MenuManager disable([move([top cur])
+				   nodes(stat)])>>
 	 else
-	    %% Move: Top and Current are always possible
+	    %% Move: Top, Current, and stat are always possible
 	    <<MenuManager normal([move([top cur]) nodes(stat)])>>
-	    local
-	       IsBack = {CurNode back($)}\=False
-	    in
-	       <<MenuManager state(IsBack move(back))>>
-	    end
+	    <<MenuManager state({CurNode back($)}\=False move(back))>>
 	    %% Move: Previous Solution, Next Solution
-	    <<MenuManager state({CurNode leftMost($)}\=CurNode move(leftMost))>>
-	    <<MenuManager state({CurNode rightMost($)}\=CurNode move(rightMost))>>
+	    <<MenuManager state({CurNode leftMost($)}\=CurNode
+				move(leftMost))>>
+	    <<MenuManager state({CurNode rightMost($)}\=CurNode
+				move(rightMost))>>
 	    case {@root hasSolutions($)} then
 	       <<MenuManager state({CurNode nextSol($)}\=False move(nextSol))>>
 	       <<MenuManager state({CurNode prevSol($)}\=False move(prevSol))>>
@@ -151,31 +143,25 @@ in
 	    end
 	    %% Search
 	    case <<StatusManager hasUnstable($)>> then
-	       <<MenuManager  disable(search([next all step]))>>
+	       <<MenuManager disable(search([next all step]))>>
 	    else
-	       IsNextPossible = {CurNode isNextPossible($)}
-	       IsStepPossible = {CurNode isStepPossible($)}
-	    in
-	       <<MenuManager  state(IsNextPossible  search([next all]))>>
-	       <<MenuManager  state(IsStepPossible  search(step))>>
+	       <<MenuManager state({CurNode isNextPossible($)}
+				   search([next all]))>>
+	       <<MenuManager state({CurNode isStepPossible($)} search(step))>>
 	    end
 	    %% Nodes
 	    case {CurNode isHidden($)} then
-	       <<MenuManager  normal(nodes([hide unhide]))>>
-	       <<MenuManager  disable(nodes([info cmp selCmp deselCmp
-					     hideFailed]))>>
+	       <<MenuManager  normal(hide([toggle all]))>>
+	       <<MenuManager  disable([nodes([info cmp selCmp deselCmp])
+				       hide(failed)])>>
 	    else
 	       <<MenuManager normal(nodes(info))>>
 	       <<MenuManager state(@cmpNode==False nodes(selCmp))>>
 	       <<MenuManager state(@cmpNode\=False nodes([deselCmp cmp]))>>
-	       <<MenuManager state(CurNode.kind==choice nodes(hide))>>
-	       local
-		  IsUnhidable     = {CurNode isUnhidable($)}
-		  IsFailedHidable = {CurNode isFailedHidable($)}
-	       in
-		  <<MenuManager  state(IsUnhidable nodes(unhide))>>
-		  <<MenuManager  state(IsFailedHidable nodes(hideFailed))>>
-	       end
+	       <<MenuManager state(CurNode.kind==choice hide(toggle))>>
+	       <<MenuManager state({CurNode isUnhidable($)} hide(all))>>
+	       <<MenuManager state({CurNode isFailedHidable($)}
+				   hide(failed))>>
 	       <<MenuManager state(CurNode.kind==choice orelse
 				   CurNode.kind==solved
 				   nodes(stat))>>
@@ -185,43 +171,36 @@ in
 	 end
       end
 
-      meth LayoutAfterBreak(Root Scale Font)
-	 <<ToplevelManager makeDirty(<<StatusManager getBrokenNodes($)>>)>>
-	 {Root layout(_ Scale Font)}
-	 <<ToplevelManager refreshNumbers>>
-      end
-      
       meth Layout
-	 BreakFlag = {self.status getBreakFlag($)}
-	 Scale     = @scale
-	 Font      = case @curFont of !False then False
-		     elseof CF then CF.name
-		     end
-	 Root      = @root
+	 Scale = @scale
+	 Font  = case @curFont of !False then False
+		 elseof CF then CF.name
+		 end
+	 Root  = @root
       in
 	 <<ToplevelManager configurePointer(drawing)>>
-	 case {System.isVar BreakFlag} then
-	    {Root layout(BreakFlag Scale Font)}
-	    case {System.isVar BreakFlag} then
-	       <<ToplevelManager refreshNumbers>>
-	    elsecase <<StatusManager isKilled($)>> then true
-	    else
+	 case <<StatusManager getBreakStatus($)>>
+	 of kill then true
+	 [] break then
+	    {Root hideUndrawn}
+	    {Root layout(_ Scale Font)}
+	    <<ToplevelManager refreshNumbers>>
+	 else
+	    <<StatusManager unbreak>>
+	    {Root layout(<<StatusManager getBreakFlag($)>> Scale Font)}
+	    case <<StatusManager getBreakStatus($)>>
+	    of break then
 	       <<ToplevelManager makeDirty(<<StatusManager
 					   getBrokenNodes($)>>)>>
 	       {Root layout(_ Scale Font)}
 	       <<ToplevelManager refreshNumbers>>
+	    else true
 	    end
-	 elsecase <<StatusManager isKilled($)>> then true
-	 else
-	    {Root hideUndrawn}
-	    {Root layout(_ Scale Font)}
-	    <<ToplevelManager refreshNumbers>>
 	 end
       end
 
       meth LayoutAfterSearch
-	 case <<DialogManager getAutoHide($)>> then
-	    {@curNode hideFailed}
+	 case <<DialogManager getAutoHide($)>> then {@curNode hideFailed}
 	 else true
 	 end
 	 <<Manager Layout>>
@@ -229,31 +208,20 @@ in
 
       meth query(Query Order)
 	 <<Manager clear>>
-	 IsBAB <- (Order\=False)
+	 IsBAB      <- (Order\=False)
 	 query      <- Query
 	 order      <- Order
 	 curNode    <- False
 	 PrevBABSol <- False
+	 Classes    <- {MakeClasses @IsBAB self Order}
 	 {self.status setBAB(@IsBAB)}
-	 Classes    <- {MakeClasses 
-			@IsBAB
-			<<DialogManager getKeepSolutions($)>>
-			<<DialogManager getInfoDistance($)>>
-			self
-			Order}
-	 <<StatusManager start>>
-	 local Root={MakeRoot Query @IsBAB @Classes}
-	 in case {Det Root}
-	    then
-	       root  <- Root
-	    end
-	 end
+	 <<StatusManager start(_)>>
+	 root <- {MakeRoot Query @IsBAB @Classes}
 	 <<Manager prepare>>
       end
 
       meth prepare
 	 <<StatusManager stop>>
-	 <<StatusManager update>>
 	 <<Manager Layout>>
 	 <<Manager setCursor(@root)>>
 	 <<ToplevelManager configurePointer(idle)>>
@@ -285,118 +253,98 @@ in
       end
 
       meth idle
-	 <<MenuManager idle>>
+	 <<MenuManager     idle>>
 	 <<ToplevelManager configurePointer(idle)>>
       end
       
       %%
       %% Implementation of ``Search'' functionality
       %%
-      meth next
-	 <<MenuManager busy>>
-	 CurNode  = @curNode
-	 MaxDepth = <<DialogManager getSearchDepth($)>>
-	 <<ToplevelManager configurePointer(searching)>>
-	 <<StatusManager   allow(<<DialogManager getSearchNodes($)>>)>>
-	 <<MenuManager     normal(search(halt))>>
-	 <<StatusManager start>>
 
-	 Sol = case @IsBAB then
-		  {CurNode next(@PrevBABSol MaxDepth
-				<<getSearchDistance($)>> $)}
-	       else
-		  {CurNode next(MaxDepth <<getSearchDistance($)>> $)}
-	       end
+      meth startSearch($)
+	 <<Manager         busy>>
+	 <<MenuManager     normal(explorer(halt))>>
+	 <<ToplevelManager configurePointer(searching)>>
+	 <<StatusManager   start($)>>
+      end
+
+      meth stopSearch(Sol Cursor <= False)
+	 PutCursor = case Cursor==False then
+			case Sol==False then @curNode
+			else
+			   case @IsBAB then PrevBABSol <- {Sol getInfo($)}
+			   else true
+			   end
+			   Sol
+			end
+		     else Cursor
+		     end
       in
 	 <<StatusManager   stop>>
-	 <<StatusManager   update>>
 	 <<ToplevelManager hideCursor>>
-	 <<Manager LayoutAfterSearch>>
-	 case Sol==False then
-	    <<Manager setCursor(@curNode)>>
-	 else
-	    case @IsBAB then
-	       PrevBABSol <- {Sol getInfo($)}
-	    else true
-	    end
-	    <<Manager setCursor(Sol)>>
-	 end
-	 <<MenuManager  disable(search(halt))>>
-	 <<Manager idle>>
+	 <<Manager         LayoutAfterSearch>>
+	 <<Manager         setCursor(PutCursor)>>
+	 <<MenuManager     disable(explorer(halt))>>
+	 <<Manager         idle>>
+      end
+      
+      meth next
+	 CurNode = @curNode
+	 Break   = <<Manager startSearch($)>>
+      in
+	 <<Manager stopSearch(case @IsBAB then
+				 {CurNode next(Break @PrevBABSol
+					       <<getSearchDist($)>>
+					       <<getInfoDist($)>> $)}
+			      else
+				 {CurNode next(Break <<getSearchDist($)>>
+					       <<getInfoDist($)>> $)}
+			      end)>>
       end
       
       meth all
-	 case @curNode==False then true else
-	    <<Manager busy>>
-	    <<MenuManager  normal(search(halt))>>
-	    <<StatusManager allow(<<DialogManager getSearchNodes($)>>)>>
-	    <<StatusManager start>>
-	    <<Manager DoAll(<<DialogManager getUpdateSol($)>>)>>
-	 end
+	 <<Manager DoAll(<<Manager startSearch($)>>
+			 <<DialogManager getUpdateSol($)>>)>>
       end
 
-      meth DoAll(NoSol)
-	 <<ToplevelManager configurePointer(searching)>>
-	 MaxDepth = <<DialogManager getSearchDepth($)>>
-	 Sol      = case @IsBAB then
-		       {@curNode next(@PrevBABSol
-				      MaxDepth
-				      <<getSearchDistance($)>> $)}
-		    else
-		       {@curNode next(MaxDepth
-				      <<getSearchDistance($)>> $)}
-		    end
+      meth DoAll(Break NoSol)
+	 CurNode = @curNode
+	 Sol     = case @IsBAB then
+		      {CurNode next(Break @PrevBABSol
+				    <<getSearchDist($)>>
+				    <<getInfoDist($)>> $)}
+		   else
+		      {CurNode next(Break <<getSearchDist($)>>
+				 <<getInfoDist($)>> $)}
+		   end
       in
-	 case Sol==False then
-	    <<Manager hideCursor>>
-	    <<Manager LayoutAfterSearch>>
-	    <<StatusManager stop>>
-	    <<StatusManager update>>
-	    <<Manager setCursor(@curNode)>>
-	    <<MenuManager   disable(search(halt))>>
-	    <<Manager idle>>
-	 else
-	    case @IsBAB then
-	       PrevBABSol <- {Sol getInfo($)}
+	 case Sol\=False andthen {System.isVar Break} then
+	    case @IsBAB then PrevBABSol <- {Sol getInfo($)}
 	    else true
 	    end
 	    case NoSol==1 then
 	       <<StatusManager stop>>
-	       <<StatusManager update>>
-	       <<Manager hideCursor>>
-	       <<Manager LayoutAfterSearch>>
-	       <<Manager DoAll(<<DialogManager getUpdateSol($)>>)>>
+	       <<Manager       hideCursor>>
+	       <<Manager       LayoutAfterSearch>>
+	       <<StatusManager unbreak>>
+	       <<Manager       DoAll(Break <<DialogManager getUpdateSol($)>>)>>
 	    else
-	       <<Manager DoAll(NoSol-1)>>
+	       <<Manager DoAll(Break NoSol-1)>>
 	    end
+	 else <<Manager stopSearch(Sol)>>
 	 end
       end
 
       meth step
-	 case @curNode==False then true else
-	    <<Manager busy>>
-	    <<ToplevelManager configurePointer(searching)>>
-	    <<StatusManager allow(1)>>
-	    <<StatusManager start>>
-	    Sol = case @IsBAB then
-		     {@curNode next(@PrevBABSol
-				     False <<getSearchDistance($)>> $)}
-		  else
-		     {@curNode next(False
-				     <<getSearchDistance($)>> $)}
-		  end
-	 in
-	    <<StatusManager stop>>
-	    <<StatusManager update>>
-	    <<Manager hideCursor>>
-	    <<Manager LayoutAfterSearch>>
-	    case @IsBAB andthen Sol\=False then
-	       PrevBABSol <- {Sol getInfo($)}
-	    else true
-	    end
-	    <<Manager setCursor({@curNode rightMost($)})>>
-	    <<Manager idle>>
-	 end
+	 CurNode = @curNode
+      in
+	 <<Manager startSearch(_)>>
+	 <<Manager stopSearch(case @IsBAB then
+				 {CurNode step(@PrevBABSol
+					       <<getInfoDist($)>> $)}
+			      else {CurNode step(<<getInfoDist($)>> $)}
+			      end
+	                      {CurNode rightMost($)})>>
       end
 
       meth nodes(ToDo)
@@ -409,11 +357,6 @@ in
 	 <<Manager idle>>
       end
       
-      meth getNumber(Node ?N)
-	 <<ToplevelManager getNumber(Node ?N)>>
-	 <<MenuManager normal(nodes(clear))>>
-      end
-      
       meth stat
 	 StatNode = case @curNode
 		    of !False then @root
@@ -422,7 +365,7 @@ in
       in
 	 case StatNode==False then true else
 	    Number  = <<Manager getNumber(StatNode $)>>
-	    Handler = {self.menu.nodes.chooseStat.group.'self' getValue($)}
+	    Handler = {self.statAction get($)}
 	    Stat    = {StatNode stat($)}
 	 in
 	    case {Procedure.arity Handler}
@@ -456,7 +399,7 @@ in
       in
 	 case RealNode of !False then true elseof CurNode then
 	    <<Manager busy>>
-	    case {self.menu.nodes.chooseInfo.group.'self' getValue($)}
+	    case {self.infoAction get($)}
 	    of !False then true
 	    elseof Handler then
 	       Number = <<Manager getNumber(RealNode $)>>
@@ -472,6 +415,7 @@ in
 		  thread {Handler Number Info ?CloseAction} end
 	       end
 	    end
+	    <<Manager setCursor(CurNode)>>
 	    <<Manager idle>>
 	 end
       end
@@ -483,7 +427,7 @@ in
 	 <<Manager     getNumber(CurNode _)>>
 	 <<MenuManager disable(nodes(selCmp))>>
 	 <<MenuManager normal(nodes(deselCmp))>>
-	 <<Manager setCursor(@curNode)>>
+	 <<Manager setCursor(CurNode)>>
       end
 
       meth nodesDeselCmp
@@ -502,7 +446,7 @@ in
 	    CmpNumber = <<ToplevelManager getNumber(CmpNode $)>>
 	    CurInfo   = {CurNode getInfo($)}
 	    CmpInfo   = {CmpNode getInfo($)}
-	    Handler   = {self.menu.nodes.chooseCmp.group.'self' getValue($)}
+	    Handler   = {self.cmpAction get($)}
 	 in
 	    case CmpInfo==False orelse CurInfo==False then
 	       <<DialogManager
@@ -516,33 +460,21 @@ in
 		  {Handler CmpNumber CmpInfo CurNumber CurInfo ?CloseAction}
 	       end
 	    end
+	    <<Manager setCursor(CurNode)>>
 	    <<Manager idle>>
 	 end
       end	    
 
       meth wake(Mom Id Control Message)
 	 case {self.killer get(_ $)}==Id then
-	    case Mom of !False then
-	       <<StatusManager   clear>>
-	       <<ToplevelManager clear>>
-	       <<Manager busy>>
-	       {self.killer clear}
-	       local Root={MakeRoot @query @IsBAB @Classes}
-	       in
-		  case {Det Root}
-		  then
-		     {@root close}
-		     root  <- Root
-		  end
-	       end
-	       <<Manager setCursor(@root)>>
+	    case Mom of !False then <<Manager reset>>
 	    else
 	       <<Manager busy>>
 	       case @IsBAB andthen {Label Control}==solved then
 		  PrevBABSol <- Control.1
 	       else true
 	       end
-	       <<StatusManager start>>
+	       <<StatusManager start(_)>>
 	       {self.status removeUnstable}
 	       {Mom Message}
 	       <<Manager setCursor(@curNode)>>
