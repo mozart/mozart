@@ -922,7 +922,7 @@ enum CommCase{
   MessageType mt1=unmarshalHeader(buf);\
   Assert(mt1==mt);}
 
-// not working code
+// LOOK-PER: not working code
 void DSite::communicationProblem(MessageType mt, DSite* storeSite,
                                  int storeIndex, FaultCode fc,
                                  FaultInfo fi) {
@@ -1325,6 +1325,8 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
     return;
 
   int proxiesLeft = 1;
+  int connectionsLeft = 1;
+
   unsigned int timeToSleep;
 
   oz_deinstallPath(oz_rootBoard());
@@ -1347,7 +1349,8 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
 
   (*virtualSitesExit)();
 
-  int connectionsLeft =  startNiceClose();
+  if((int) timeUntilClose > 0)
+    connectionsLeft =  startNiceClose();
   while ((int) timeUntilClose > 0 && connectionsLeft) {
     //    printf("times left %d\n", timeUntilClose);
     //    printf("connections left %d\n", connectionsLeft);
