@@ -12,6 +12,7 @@ import
    HTML_ByAuthor(updatePage)
    Pickle(saveCompressed)
    Regex(make compile search) at 'x-oz://contrib/regex'
+   Directory(mkDir)
 export
    Manager Trace Indent Dedent RelativeTo Admin
 define
@@ -391,9 +392,12 @@ define
 	       if @db==unit then
 		  {Raise mogul('update-ozmake'(no_db_is_opened))}
 	       end
+	       DIR = {RelativeTo @mogulDIR 'ozmake'}
+	    in
+	       {Directory.mkDir DIR}
 	       {Pickle.saveCompressed
 		{@db get_ozmake_info($)}
-		{RelativeTo @mogulDIR 'pkg/database.ozf'}
+		{RelativeTo DIR 'database.ozf'}
 		9}
 	    catch mogul(...)=E then
 	       Admin,addReport(M E)
