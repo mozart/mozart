@@ -10,7 +10,7 @@ DOCDIR		= $(PREFIX)/doc
 
 HTMLFILES = \
 	index overview \
-        getstarted tutorials reference contrib
+        getstarted tutorials reference
 
 FILES = $(HTMLFILES:%=%.html) \
 	ozdoc.css page.gif
@@ -40,16 +40,3 @@ $(DOCDIR)/%.gif: $(SRCDIR)/../utilities/%.gif
 
 Makefile: $(SRCDIR)/Makefile.in ../config.status
 	cd .. && ./config.status
-
-JAVA_BIN	= @JAVA_BIN@
-JAVA_THREADS	= @JAVA_THREADS@
-JAVA		= $(JAVA_BIN)java  $(JAVA_THREADS)
-JAVAC		= $(JAVA_BIN)javac $(JAVA_THREADS)
-JAR		= $(JAVA_BIN)jar   $(JAVA_THREADS)
-
-CLASSPATH	= $(SRCTOP)/doc/xsl/xt-new.jar
-
-contrib.html: contrib.xml contrib.xsl
-	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver \
-	$(SRCDIR)/contrib.xml $(SRCDIR)/contrib.xsl $@ \
-	|| { rm -f $@; exit -1 }
