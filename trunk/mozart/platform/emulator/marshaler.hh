@@ -139,7 +139,7 @@ inline int unmarshalRefTag(MsgBuffer *bs)
   return unmarshalNumber(bs);
 }
 
-inline void gotRef(MsgBuffer *bs, TaggedRef val, int index)
+inline void gotRef(TaggedRef val, int index)
 {
   refTable->set(val,index);
 }

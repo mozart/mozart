@@ -526,10 +526,7 @@ OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t, OZ_Term * ar)
   if (isLiteralTag(ttag) && *ar == (OZ_Term) 0) { // subsumes nil
     return expectProceed(1, 1);
   } else if (oz_isSRecord(t) && !tagged2SRecord(t)->isTuple()) {
-    SRecord & tuple = *tagged2SRecord(t);
-    
     int i;
-    
     for (i = 0; ar[i] != (OZ_Term) 0; i += 1)
       if (OZ_subtree(t, ar[i]) == (OZ_Term) 0)
 	return expectFail();

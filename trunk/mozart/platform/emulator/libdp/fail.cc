@@ -237,7 +237,7 @@ void insertWatcher(Tertiary *t,Watcher *w, EntityCond &oldEC, EntityCond &newEC)
 /**********************************************************************/
 
 PendThread* threadTrigger(Tertiary* t,Watcher* w){
-  PendThread* aux, *old = NULL, *pd;
+  PendThread *pd;
   switch(t->getType()){
   case Co_Port:
     pd = getPendThreadStartFromPort(t);
@@ -316,7 +316,6 @@ Bool entityCondMeToBlocked(Tertiary* t){
   
 void entityProblem(Tertiary *t) { 
   PD((ERROR_DET,"entityProblem invoked"));
-  Watcher* w;
   Watcher** aux;
   EntityCond oldC=getSummaryWatchCond(t);
   Bool hit=FALSE;
@@ -1001,7 +1000,6 @@ Bool distHandlerInstallImpl(unsigned short kind,unsigned short ec,
 Bool distHandlerDeInstallImpl(unsigned short kind,unsigned short ec,
 				 Thread* th,TaggedRef entity,
 				 TaggedRef proc){
-  Bool ret;
   if(entity==0){
     return deInstallGlobalWatcher(ec,proc,kind);}
   DEREF(entity,vs_ptr,vs_tag);

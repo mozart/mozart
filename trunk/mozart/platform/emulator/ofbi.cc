@@ -491,7 +491,6 @@ OZ_Return WidthPropagator::propagate(void)
 
     switch (recTag) {
     case SRECORD:
-    record:
     case LITERAL:
     case LTUPLE:
     {
@@ -620,7 +619,6 @@ OZ_C_proc_begin(BImonitorArity, 3)
         // *** arity is nil
         return oz_unify(arity,AtomNil);
     case SRECORD:
-    record:
         // *** arity is known set of features of the SRecord
         return oz_unify(arity,tagged2SRecord(tmprec)->getArityList());
     case UVAR:
@@ -754,7 +752,6 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
     TaggedRef feaOrig=fea;
     DEREF(term, termPtr, termTag);
     DEREF(fea,  feaPtr,  feaTag);
-    int suspFlag=FALSE;
 
     // mm2
     // optimize the most common case: adding or reading a feature
@@ -874,7 +871,6 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
       }
   
     case SRECORD:
-    record:
       {
         // Get the SRecord corresponding to term:
         SRecord* termSRec=makeRecord(term);
