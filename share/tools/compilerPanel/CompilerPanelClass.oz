@@ -1618,7 +1618,7 @@ in
 				      q(q('Oz Component Files' q('.ozc'))
 					q('All Files' '*')))}
 	 case FileName == "" then skip
-	 else {Component.smartSave Value FileName _}
+	 else {Component.save Value FileName}
 	 end
       end
 
