@@ -21,10 +21,13 @@ DOCFILES=$(DOCFILES0:%=$(DOCDIR)/%)
 all: Mozart.hhp Mozart.hhc
 
 Mozart.hhp: Mozart.hhp.in
-        (cat $<; for i in $(DOC_DIRS); do echo $$i/page.gif; done) > $@
+        (cat $<; \
+         for i in $(DOC_DIRS); do \
+             if test -r ../$$i/$$i-html/page.gif; then echo $$i/page.gif; fi; \
+         done) > $@
 
-Mozart.hhc: Mozart.hhc.in
-        $(AWK) -f $(SRCDIR)/preprocess.awk < $< > $@ || \
+Mozart.hhc: Mozart.hhc.in preprocess.awk
+        $(AWK) -f preprocess.awk < $< > $@ || \
         rm -f $@
 
 quick:
