@@ -198,9 +198,11 @@ void marshalObjectImpl(Object *o, MsgBuffer *bs, GName *gnclass, GenTraverser *g
   Assert(o->getGName1());
   marshalGName(globalizeConst(o,bs),bs);
   marshalGName(gnclass,bs);
+#ifdef NEWMARSHALER
   if (gt)
     gt->rememberNode(makeTaggedConst(o),bs);
   else
+#endif
     trailCycleOutLine(o,bs);
 }
 
