@@ -1,32 +1,13 @@
 <Section id="section.api.interfaces">
   <Title/Compiler Interfaces/
   <P>
-    A Compiler Engine is sufficient to instruct a compiler to do something,
-    but the possibilities to react to its output are still very limited.
-    This is the purpose of a <Def>Compiler Interface</Def>.
+    A compiler engine by itself may suffice to instruct a compiler to do
+    something, but the possibilities to react to its output are very limited.
+    This is the purpose of <Def/compiler interfaces/.
   <P>
-    With each Compiler Engine <<E>> an arbitrary number of interfaces can
-    be registered.  All of <<E>>'s registered interfaces are notified of
+    With each compiler engine&nbsp;?_{E} an arbitrary number of interfaces
+    can be registered.  All of ?_{E}'s registered interfaces are notified of
     its output or changes of its state.
-  <SubSection>
-    <Title/Registering an Interface/
-    <P>
-      What is actually registered with a Compiler Engine is an Oz port.
-      The Compiler Engine sends so-called <Def>notifications</Def> to
-      this port.  A port can simply be registered with the method
-      <<register(P)>> and unregistered with <<unregister(P)>>.  Note
-      that a single port can be registered several times with a single
-      Compiler Engine (it is then sent each notification as often as it
-      is registered); <<unregister(P)>> removes all occurrences of <<P>>
-      from the registration and does nothing if the port is not registered.
-    <P>
-      The method <<notify(M)>> allows one to send a notification to all
-      registered interfaces.  Because of this, interfaces should always
-      ignore unknown notification messages (also to allow for extensions
-      of the Compiler Engine).
-    <P>
-      A list of all the possible notifications is given in <Ptr
-      to="appendix.notifications">.
   <SubSection>
     <Title/The Generic Interface/
     <P>
@@ -34,51 +15,99 @@
       simplifying the creation of new interfaces.  The generic
       interface takes over the registering and the unregistering,
       automatically handling the creation and termination of the
-      interface's server thread.  New interfaces should be written by
-      subclassing the generic interface.
-    <P>
-      The <<init(E Serve)>> method takes as arguments a Compiler Engine
-      and the label of a unary method.  The interface creates a port,
-      registers this with <<E>> and creates a thread in which the
-      <<Serve>> method is applied to the port's stream.
-    <P>
-      The <<exit()>> method undoes all these effects:  The server thread
-      is terminated and the interface's port is unregistered.  After this
-      the no-op <<reset()>> method is invoked; subclasses may override
-      this method to perform individual cleanups.
-    <P>
-      Some methods provide access to the interface's state:
-      <<getCompiler(?E)>> returns the associated Compiler Engine,
-      <<getPort(?P)>> the port which the interface registered with it.
-      <<enqueue(M)>> simply forwards an enqueue request to the Compiler
-      Engine.
+      interface's server thread.  New interfaces should be written
+      by subclassing the generic interface.
+      <List>
+	<Entry><<enqueue(?+{T})>>
+	<Item>
+	  forwards the enqueue request to the compiler engine with
+	  which the interface is currently registered.
+      </List>
+  <SubSection>
+    <Title/Sent Notifications/
+    <Para class=apropos><Title/Query Queue/
+      <List>
+	<Entry><<newQuery(?_{I} ?_{T})>>
+	<Item>
+	  A new query ?_{T} with identification ?_{I} has been enqueued.
+	<Entry><<runQuery(?_{I} ?_{T})>>
+	<Item>
+	  The query ?_{T} with identification ?_{I} is now being executed.
+	<Entry><<removeQuery(?_{I})>>
+	<Item>
+	  The query with identification ?_{I} has been removed from the query
+	  queue, either because it finished executing or because it was
+	  dequeued by a user program.
+      </List>
+    <Para class=apropos><Title/Compiler Activity/
+      <List>
+	<Entry><<busy()>>
+	<Item>
+	  The compiler is currently busy (&ie;, executing a query).
+	<Entry><<idle()>>
+	<Item>
+	  The compiler is currently idle (&ie;, waiting for a query to
+	  be enqueued).
+      </List>
+    <Para class=apropos><Title/State Change/
+      <List>
+	<Entry><<switch(?_{SwitchName} ?_{B})>>
+	<Item>
+	  The given switch has been set to&nbsp;?_{B}.
+	<Entry><<switches(?_{R})>>
+	<Item>
+	  The settings of all switches is transmitted as a record mapping
+	  each switch name to its setting.
+	<Entry><<maxNumberOfErrors(?_{I})>>
+	<Item>
+	  The maximum number of errors after which to abort compilation
+	  has been set to ?_{I}.
+	<Entry><<env(?_{Env})>>
+	<Item>
+	  The environment has been set to ?_{Env}.
+      </List>
+    <Para class=apropos><Title/Output/
+      <List>
+	<Entry><<info(?_{V})>>
+	<Item>
+	  An information message&nbsp;?_{V} is to be output.
+	<Entry><<info(?_{V} ?_{Coord})>>
+	<Item>
+	  An information message&nbsp;?_{V}, related to the source coordinates
+	  ?_{Coord}, is to be output.
+	<Entry><<message(?_{R} ?_{Coord})>>
+	<Item>
+	  An error or warning message&nbsp;?_{R}, related to the source
+	  coordinates ?_{Coord}, is to be output.  ?_{R}&nbsp;has the
+	  standard error message format, described in
+	  <File>mozart/share/lib/sp/Error.oz</File>.
+	<Entry><<insert(?_{V} ?_{Coord})>>
+	<Item>
+	  During parsing, the file named&nbsp;?_{V} has been read.
+	  The corresponding <<\insert>> directive (if any) was at source
+	  coordinates ?_{Coord}.
+	<Entry><<displaySource(?_{TitleV} ?_{ExtV} ?_{V})>>
+	<Item>
+	  A source text&nbsp;?_{V} with title&nbsp;?_{TitleV} is to be
+	  displayed; its format is the one for which the file extension
+	  ?_{ExtV} is typically used (such as <File/oz/ or <File/ozm/).
+	<Entry><<attention()>>
+	<Item>
+	  <!--** neu -->
+	  The error output buffer should be raised with the cursor at
+	  the current output coordinates (an error message should follow).
+      </List>
+    <Para class=apropos><Title/Synchronization/
+      <List>
+	<Entry><<pong()>>
+	<Item>
+	  This is sent in response to a <<ping(_)>> query
+	  (see <Ptr to="section.api.engines">).
+      </List>
   <SubSection>
     <Title/Interfaces defined in the Mozart Library and Tools/
-    <P>
-      <List>
-	<Entry>The <Q/Quiet/ Interface
-	<Item>
-	  See <Ptr to="program.quietInterface">.
-	<Entry>The Emacs Interface
-	<Item>
-	  See <Ptr to="program.emacsInterface">.
-	<Entry>The Compiler Panel
-	<Item>
-	  See <Ptr to="program.compilerPanel">.
-      </List>
-      <Figure float id="program.quietInterface" class=program>
-	<Caption>The <Q/Quiet/ Interface.</Caption>
-	<P>
-	  <Code.Extern display to="QuietInterface.oz">
-      </Figure>
-      <Figure float id="program.emacsInterface" class=program>
-	<Caption>The Emacs Interface.</Caption>
-	<P>
-	  <Code.Extern display to="EmacsInterface.oz">
-      </Figure>
-      <Figure float id="program.compilerPanel" class=program>
-	<Caption>The Compiler Panel.</Caption>
-	<P>
-	  <Code.Extern display to="CompilerPanel.oz">
-      </Figure>
+    <Para class=apropos><Title/The <Q/Quiet/ Interface/
+      <Code.Extern display to="QuietInterface.oz">
+    <Para class=apropos><Title/The Compiler Panel/
+      <Code.Extern display to="CompilerPanel.oz">
 </Section>
