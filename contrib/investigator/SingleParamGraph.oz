@@ -6,7 +6,12 @@ export
 import
 
    Aux(counterClass)
-   Config(paramColour edgeColour eventColour)
+   Config(paramColour
+	  edgeColour
+	  eventColour
+	  paramNodeShape
+	  propNodeShape
+	  eventNodeShape)
    FS
 
 define   
@@ -33,6 +38,7 @@ define
       #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
       #"a(\"COLOR\",\""#{Hist get_prop_node_failed(P.reference $)}#"\"),"
       #{Hist get_prop_node_attr(PropId $)}
+      #"a(\"_GO\",\""#Config.propNodeShape#"\"),"
       #"m(["
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_prop(PropId P.name#" ("#Location#")" $)}
@@ -82,6 +88,7 @@ define
       #"a(\"EDGECOLOR\",\""#Config.edgeColour#"\")],l(\""#Event#"\","
       #"n(\"\",[a(\"OBJECT\",\""#Event#"\"),"
       #"a(\"COLOR\",\""#Config.eventColour#"\"),"
+      #"a(\"_GO\",\""#Config.eventNodeShape#"\"),"
 
       #"m(["
       #{Hist insert_menu($)}
@@ -139,6 +146,7 @@ define
 	     ("[l(\"vn<"#VarId#">\",n(\"\",[a(\"OBJECT\",\""#VarStr#"\"),"
 	      #"a(\"COLOR\",\""#Config.paramColour#"\"),"
 	      #{Hist get_param_node_attr(VarId $)}
+	      #"a(\"_GO\",\""#Config.paramNodeShape#"\"),"
 	      #"m(["
 	      #{Hist insert_menu($)}
 	      #{Hist insert_menu_mark_param(VarId VarStr $)}

@@ -3,11 +3,15 @@ functor
 export
 
    ParamColour
-
+   ParamNodeShape
+   
    PropColour
    FailedPropColour
-
+   PropNodeShape
+   
    EventColour
+   EventNodeShape
+   
    EdgeColour
 
    MarkedPropNodeAttr
@@ -18,12 +22,15 @@ export
 define
 
    ParamColour       = darkolivegreen2
-
+   ParamNodeShape    = elipsis
+   
    PropColour        = steelblue2
    FailedPropColour  = red
-
+   PropNodeShape     = box
+   
    EventColour       = lightyellow1
    EdgeColour        = black
+   EventNodeShape    = rhombus
 
    MarkedPropNodeAttr    = double
    MarkedParamNodeAttr   = double
