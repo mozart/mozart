@@ -860,51 +860,56 @@ unsigned int intlog(unsigned int i)
  *	different successive indices.
  */
 
-Arity::Arity ( TaggedRef entrylist , Bool itf)
+Arity::Arity(TaggedRef entrylist , Bool itf)
   : isTupleFlag(itf)
 {
   next = NULL;
   list = entrylist;
   DebugCheckT(numberofentries = 0);
   DebugCheckT(numberofcollisions = 0);
+
+  int w = length(entrylist);
   if (isTupleFlag) {
-    width=length(entrylist);
+    width = w;
     DebugCheckT(indextable=0);
     DebugCheckT(keytable=0);
-    return;
-  }
-  size = nextPowerOf2((unsigned int)(length(entrylist)*1.5));
-  width = 0;
-  hashmask = size-1;
-  indextable = ::new int[size];
-  keytable = ::new TaggedRef[size];
-  for (int i=0 ; i<size ; keytable[i++] = makeTaggedNULL());
-  while (isCons(entrylist)) {	
-    add(head(entrylist));
-    entrylist = tail(entrylist);
+  } else {
+    size = nextPowerOf2((unsigned int)(w*1.5));
+    width = 0;
+    hashmask = size-1;
+    indextable = ::new int[size];
+    keytable = ::new TaggedRef[size];
+    for (int i=0 ; i<size ; keytable[i++] = makeTaggedNULL());
+    while (isCons(entrylist)) {	
+      TaggedRef entry = head(entrylist);
+
+      int i = hashfold(featureHash(entry));
+      int step = scndhash(entry);
+      while ( keytable[i] != makeTaggedNULL() ) {
+	DebugCheckT(numberofcollisions++);
+	i = hashfold(i+step);
+      }
+      keytable[i] = entry;
+      indextable[i] = width++;
+      DebugCheckT(numberofentries++);
+
+      entrylist = tail(entrylist);
+    }
   }
 }
 
 
-/*
- *	Precondition: entry is not contained in the Arity
- *	Insert entry, assigning a new index.
- */
-
-void Arity::add( TaggedRef entry )
-{	
+int Arity::lookupInternal(TaggedRef entry)
+{
   Assert(!isTuple());
   int i=hashfold(featureHash(entry));
   int step=scndhash(entry);
-  while ( keytable[i] != makeTaggedNULL() ) {
-    DebugCheckT(numberofcollisions++);
+  while (OK) {
+    if ( keytable[i] == makeTaggedNULL()) return -1;
+    if ( featureEq(keytable[i],entry) ) return indextable[i];
     i = hashfold(i+step);
   }
-  keytable[i] = entry;
-  indextable[i] = width++;
-  DebugCheckT(numberofentries++);
 }
-
 
 /************************************************************************/
 /*                          Class ArityTable                            */
