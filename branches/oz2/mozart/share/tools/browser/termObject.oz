@@ -220,7 +220,7 @@ in
 
 	       %%
 	       case SSPNS of nil then '<N>'
-	       else '<N: `' # SSPNS # '`>'
+	       else '<N: ' # SSPNS # '>'
 	       end
 	    end 
 	 else
@@ -364,7 +364,7 @@ in
 
 	       %%
 	       case SN of nil then '<C>'
-	       else '<C: `' # SN # '`>'
+	       else '<C: ' # SN # '>'
 	       end 
 	    end 
 	 else
@@ -402,7 +402,7 @@ in
 	       case SN of nil then
 		  '<P/' # {Procedure.arity Term} # '>'
 	       else
-		  '<P/' # {Procedure.arity Term} # ' `' # SN # '`>'
+		  '<P/' # {Procedure.arity Term} # ' ' # SN # '>'
 	       end 
 	    end 
 	 else
@@ -437,7 +437,7 @@ in
 
 	       %%
 	       case SN of nil then '<C>'
-	       else '<Cell: `' # SN # '`>'
+	       else '<Cell: ' # SN # '>'
 	       end
 	    end 
 	 else '<Cell @ ' # {AddrOf Term} # '>'
