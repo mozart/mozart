@@ -71,7 +71,8 @@ local
 	    self.mom = Mom
 	    {Status getKill(?KillFlag ?KillId)}
 	    thread
-	       case {WaitSelect UnwrapControl KillFlag} then
+	       {WaitOr UnwrapControl KillFlag}
+	       case {IsDet UnwrapControl} then
 		  {self.manager wake(self KillId)}
 	       else skip
 	       end

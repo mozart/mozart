@@ -390,18 +390,18 @@ OZ_Return isValueInline(TaggedRef val)
 DECLAREBI_USEINLINEREL1(BIisValue,isValueInline)
 
 
-OZ_C_proc_begin(BIselect,3) {
+OZ_C_proc_begin(BIwaitOr,2) {
   TaggedRef a = OZ_getCArg(0);
   DEREF(a, a_ptr, a_tag);
 
   if (!isAnyVar(a_tag)) 
-    return OZ_unify(OZ_getCArg(2), NameTrue);
+    return PROCEED;
   
   TaggedRef b = OZ_getCArg(1);
   DEREF(b, b_ptr, b_tag);
 
   if (!isAnyVar(b_tag)) 
-    return OZ_unify(OZ_getCArg(2), NameFalse);
+    return PROCEED;
   
   Assert(isAnyVar(a_tag) && isAnyVar(b_tag));
   
@@ -7275,7 +7275,7 @@ BIspec allSpec2[] = {
 
   {"Det",    2, BIdet,        	      (IFOR) 0},
   {"Wait",   1, BIisValue,            (IFOR) isValueInline},
-  {"Select", 3, BIselect,             (IFOR) 0},
+  {"WaitOr", 2, BIwaitOr,             (IFOR) 0},
 
   {"isNumberRel",1,BIisNumber,       (IFOR) BIisNumberInline},
   {"isIntRel"   ,1,BIisInt,          (IFOR) BIisIntInline},
