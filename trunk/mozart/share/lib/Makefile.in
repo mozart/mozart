@@ -394,6 +394,7 @@ STAGE2=./stage2
 STAGE3=./stage3
 
 stage1:
+	make all
 	make install-main PREFIX=$(STAGE1)
 
 stage1-bootstrap:
@@ -417,4 +418,5 @@ check:
 	make stage1-bootstrap clean stage2
 
 realclean:
-	$(RM) -r $(STAGE1) $(STAGE2)
+	$(RM) -r $(STAGE1) $(STAGE2) $(STAGE3)
+
