@@ -2660,7 +2660,7 @@ $builtins = {
 
     'storeXRegisterIndexList' => { in => ['+int','+[tuple]'],
 				   out => [],
-				   BI  => BIstoreLocation,
+				   BI  => BIstoreXRegisterIndexList,
 				   native => true},
 
     'storeCache'	=> { in  => ['+int','+value'],
