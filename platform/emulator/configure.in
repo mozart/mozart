@@ -153,6 +153,7 @@ case $enable_opt in
     d*)
         AC_MSG_RESULT(debug)
         AC_DEFINE(DEBUG_EMULATOR)
+        AC_DEFINE(INTERFACE)
         COPT="-g3"
     ;;
     p*)

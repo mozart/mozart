@@ -9,12 +9,6 @@
 #ifndef __AMH
 #define __AMH
 
-#if defined(OUTLINE)
-#define INLINE
-#else
-#define INLINE inline
-#endif
-
 #include "oz.h"
 #include "oz_cpi.hh"
 

@@ -102,7 +102,6 @@
 
 #define DEBUG_CHECK     // enable assertions
 #define DEBUG_TRACE     // MM: enable low level debugging: step instructions
-#define INTERFACE       // enable interface, implemenation pragmas
 
 //#define SLOW_DEBUG_CHECK
 //#define DEBUG_GC
@@ -144,6 +143,12 @@
 
 #endif
 
+// avoid inlining some functions
+#if defined(OUTLINE)
+#define INLINE
+#else
+#define INLINE inline
+#endif
 
 /*
  *
