@@ -419,12 +419,6 @@ OZ_Return isTupleInline(TaggedRef t)
   NONSUVAR( t, term, tag );
   if (isCVar(tag)) {
       switch (tagged2CVar(term)->getType()) {
-      case OFSVariable:
-        {
-          GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-          if (ofsvar->getWidth()>0) return FAILED;
-          return SUSPEND;
-        }
       case FDVariable:
       case BoolVariable:
           return FAILED;

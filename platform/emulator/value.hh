@@ -1152,7 +1152,7 @@ int isSTuple(TaggedRef term) {
 
 inline
 int isTuple(TaggedRef term) {
-  return isLTuple(term) || isSTuple(term);
+  return isLTuple(term) || isSTuple(term) || isLiteral(term);
 }
 
 inline
