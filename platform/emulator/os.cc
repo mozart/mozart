@@ -40,10 +40,6 @@
 
 #include <errno.h>
 #include <limits.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 #ifdef HAVE_DLOPEN
 
@@ -1217,9 +1213,16 @@ void osBlockSelect(unsigned int &ms)
  */
 void osClearSocketErrors()
 {
+  fd_set auxFDs[2];
+
+  /* osClrWatchedFD will change globalFDs, such that the next
+   * call to FD_ISSET on globalFDs might fail */
+  auxFDs[SEL_READ]  = globalFDs[SEL_READ];
+  auxFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
+
   for (int i = 0; i < openMax; i++) {
     for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
-      if (FD_ISSET(i,&globalFDs[mode]) && osTestSelect(i,mode) < 0) {
+      if (FD_ISSET(i,&auxFDs[mode]) && osTestSelect(i,mode) < 0) {
 	osClrWatchedFD(i,mode);
       }
     }
@@ -1283,16 +1286,14 @@ int osFirstSelect()
 			   (unsigned int *) WAIT_NULL);
 
   if (numbOfFDs < 0) {
-    if (ossockerrno() == EINTR) {
-      goto loop;
-    }
-
-    if (ossockerrno() != EBADF) {  /* some pipes may have been closed */
+    if (ossockerrno() == EINTR) goto loop;
+    if (ossockerrno() != EBADF) { /* some pipes may have been closed */
+      printfds(&tmpFDs[SEL_READ]);
+      printfds(&tmpFDs[SEL_WRITE]);
       ozpwarning("select failed");
     }
     osClearSocketErrors();
   }
-
   return numbOfFDs;
 }
 
@@ -1325,6 +1326,8 @@ int osCheckIO()
   if (numbOfFDs < 0) {
     if (ossockerrno() == EINTR) goto loop;
     if (ossockerrno() != EBADF) { /* some pipes may have been closed */
+      printfds(&globalFDs[SEL_READ]);
+      printfds(&globalFDs[SEL_WRITE]);
       ozpwarning("checkIO: select failed");
     }
     osClearSocketErrors();
