@@ -1566,6 +1566,7 @@ void AM::handleTasks()
       (tn->getProcessProc())(tn->getArg());
     }
   }
+  unsetSFlag(TasksReady);
 }
 
 //
