@@ -246,6 +246,11 @@ if test "${GXX}" = yes; then
             oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
             oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
             ;;
+        3.3.*)
+            oz_opt="-O3 -pipe -fstrict-aliasing"
+            oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
+            EMULATE_CXXFLAGS="-finline-limit=500 -fno-tracer"
+            ;;
         *)
             oz_opt="-O3 -pipe -fstrict-aliasing"
             oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
