@@ -238,8 +238,8 @@ Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){
       case Te_Local: ((LockLocal*)lck)->unlock();break;
-      case Te_Frame: ((LockFrame*)lck)->unlock();break;
-      case Te_Manager: ((LockManager*)lck)->unlock();break;
+      case Te_Frame: ((LockFrame*)lck)->unlock(am.currentThread());break;
+      case Te_Manager: ((LockManager*)lck)->unlock(am.currentThread());break;
       case Te_Proxy: error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) { 
       Object *newSelf = (Object*)Y;
