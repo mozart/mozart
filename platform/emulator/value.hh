@@ -520,7 +520,6 @@ TaggedRef newTaggedFloat(double i)
 }
 
 
-
 #define CHECK_LITERAL(lab) \
 Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isLiteral(lab));
 
@@ -645,7 +644,7 @@ enum TypeOfConst {
    * otherwise you'll have to change the "isChunk" test
    * NOTE: update the builtins: subtree and chunkArity, when adding new chunks
    */
-  Co_Object,   
+  Co_Object,
   Co_Port,
   Co_Chunk,
   Co_HeapChunk,

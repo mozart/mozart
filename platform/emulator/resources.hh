@@ -136,6 +136,9 @@
 #define MAX_UDP_PACKET    100*1024  /* 100k */
 #define TCP_PACKET_SIZE   1*1024    /* 1k */
 
+//
+// Distributed Oz - virtual sites
+#define PERDIO_ID	0xa3
 
 /*
  * Switches

@@ -56,7 +56,8 @@ typedef enum {
   ThreadSwitch	= 1 << 2, // choose a new process
   IOReady	= 1 << 3, // IO handler has signaled IO ready
   UserAlarm	= 1 << 4, // Alarm handler has signaled User Alarm
-  StartGC	= 1 << 5 // need a GC
+  StartGC	= 1 << 5, // need a GC
+  TasksReady    = 1 << 6
 } StatusBit;
 
 /* -----------------------------------------------------------------------
@@ -80,6 +81,85 @@ enum oz_BFlag {
 };
 
 oz_BFlag oz_isBetween(Board *to, Board *varHome);
+
+/*
+ * -----------------------------------------------------------------------
+ * Tasks
+ * -----------------------------------------------------------------------
+ */
+
+//
+// "check" says 'TRUE' if there is some pending processing;
+typedef Bool (*TaskCheckProc)(void *arg);
+typedef void (*TaskProcessProc)(void *arg);
+
+Bool NeverDo_CheckProc(void *va);
+
+//
+class TaskNode {
+private:
+  void *arg;			// an opaque argument;
+  TaskCheckProc check;		// both procedures take the same argument;
+  Bool ready;			// cached up;
+  TaskProcessProc process;
+
+  //
+public:
+  // There is no task if check==NULL;
+  TaskNode() : check((TaskCheckProc) NULL) {
+    check = NeverDo_CheckProc;	// 
+    DebugCode(arg = (void *) 0; ready = NO; process = (TaskProcessProc) 0);
+  }
+  ~TaskNode() {
+    check = NeverDo_CheckProc;
+    DebugCode(arg = (void *) 0; ready = NO; process = (TaskProcessProc) 0);
+  }
+
+  //
+  Bool isFree() { return (check == (TaskCheckProc) NULL); }
+  void setTask(void *aIn, TaskCheckProc cIn, TaskProcessProc pIn) {
+    Assert(check == (TaskCheckProc) NULL);
+    arg = aIn;
+    check = cIn;
+    ready = FALSE;
+    process = pIn;
+  }
+  void dropTask() { check = (TaskCheckProc) NULL; }
+
+  //
+  void *getArg() {
+    return (arg);
+  }
+  TaskCheckProc getCheckProc() {
+    Assert(check != (TaskCheckProc) NULL);
+    return (check);
+  }
+  TaskProcessProc getProcessProc() {
+    Assert(check != (TaskCheckProc) NULL);
+    return (process);
+  }
+
+  //
+  void setReady() {
+    Assert(check != (TaskCheckProc) NULL);
+    ready = TRUE;
+  }
+  Bool isReady() { 
+    Assert(check != (TaskCheckProc) NULL);
+    return (ready);
+  }
+  void dropReady() {
+    Assert(check != (TaskCheckProc) NULL);
+    ready = FALSE;
+  }
+};
+
+//
+// By now we need only two - one for input between virtual sites, and
+// another - for pending (because of locks at the receiver site)
+// sends;
+#define	MAXTASKS	2
+
 
 /* -----------------------------------------------------------------------
  * OO
@@ -135,6 +215,8 @@ private:
   int userCounter;
 
   Bool wasSolveSet; 
+
+  TaskNode *taskNodes;
 
   struct {
     int debug;
@@ -450,6 +532,7 @@ public:
   void restartThread();
 
   void handleIO();
+  void handleTasks();
   void select(int fd, int mode, OZ_IOHandler fun, void *val);
   void acceptSelect(int fd, OZ_IOHandler fun, void *val);
   int select(int fd,int mode, TaggedRef l, TaggedRef r);
@@ -457,6 +540,10 @@ public:
   void deSelect(int fd);
   void deSelect(int fd,int mode);
   void checkIO();
+
+  Bool registerTask(void *arg, TaskCheckProc cIn, TaskProcessProc pIn);
+  Bool removeTask(void *arg, TaskCheckProc cIn);
+  void checkTasks();
 
   void handleAlarm();
   void handleUser();

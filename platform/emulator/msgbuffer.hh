@@ -23,9 +23,16 @@
  *  WARRANTIES.
  *
  */
+
+#ifndef __MSGBUFFER_HH
+#define __MSGBUFFER_HH
+
 #ifdef INTERFACE  
 #pragma interface
 #endif
+
+#include "perdio.hh"
+#include "comm.hh"
 
 class MsgBuffer {
 public: 
@@ -95,5 +102,4 @@ public:
 
 extern MsgBufferManager *msgBufferManager;
 
-
-
+#endif // __MSGBUFFER_HH
