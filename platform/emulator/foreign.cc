@@ -1965,14 +1965,12 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
       am.pushPreparedCalls((Thread *) thr);
       break;
     }
-  case FAILED:
+  default:
     {
       Thread *thr = oz_newThread();
-      thr->pushCall(BI_fail,0,0);
+      thr->pushCall(BI_Unify,val1,val2);
       break;
     }
-  default:
-    Assert(0);
   }
 }
 
