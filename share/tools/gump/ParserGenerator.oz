@@ -511,19 +511,19 @@ local
 	 case {IsFree P0} then P0 = P else skip end
 	 case {IsFree AttrType} orelse {IsFree X} then
 	    AttrType = X
-	 elsecase AttrType \= X then Body in
-	    Body = case AttrType of inherited then
-		      ['this is an inherited use' P0
-		       'this is a synthesized use' P]
-		   [] synthesized then
-		      ['this is a synthesized use' P0
-		       'this is an inherited use' P]
-		   end
+	 elsecase AttrType \= X then Items in
+	    Items = case AttrType of inherited then
+		       ['this is an inherited use' P0
+			'this is a synthesized use' P]
+		    [] synthesized then
+		       ['this is a synthesized use' P0
+			'this is an inherited use' P]
+		    end
 	    {Rep error(coord: {CoordinatesOf Parameter}
 		       kind: 'parser generator error'
 		       msg: ('conflicting attribute types of formal '#
 			     'parameter '#{OutputOz Parameter})
-		       body: Body)}
+		       items: Items)}
 	 else skip
 	 end
       end

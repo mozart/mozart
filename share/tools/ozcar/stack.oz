@@ -43,7 +43,7 @@ local
 	 case A == nil then nil else A # FDelimiter end
       end
 
-      fun {FormatBody B}
+      fun {FormatItems B}
 	 case B == nil then nil else
 	    {FoldL B
 	     fun {$ A L}
@@ -61,7 +61,7 @@ local
       fun {FormatExceptionLine E}
 	 {FormatFeature E kind FDelimiter} #
 	 {FormatFeature E msg  FDelimiter} #
-	 {FormatBody {CondSelect E body nil}}
+	 {FormatItems {CondSelect E items nil}}
       end
    end
 
