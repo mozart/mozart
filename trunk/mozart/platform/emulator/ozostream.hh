@@ -1,6 +1,7 @@
 #ifndef OSTREAMH
 #define OSTREAMH
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <malloc.h>
 
