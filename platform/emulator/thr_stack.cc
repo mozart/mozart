@@ -127,6 +127,9 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
       if (!verbose) break;
       message("\tC_NERVOUS: board=0x%x\n", n);
       break;
+    case C_MODE:
+      message("\t%sMODE\n",((int) tb)>>4==SEQMODE?"SEQ":"PAR");
+      break;
     case C_CFUNC_CONT:
       {
         OZ_CFun biFun    = (OZ_CFun) pop();
