@@ -63,9 +63,6 @@
  * See also man page of ld(1)
  */
 
-
-
-
 #if defined(MIPS) && !defined(LARGEADRESSES)
 #define mallocBase 0x10000000
 #else
@@ -88,6 +85,10 @@
 #endif
 #endif
 
+
+#if defined(MIPS) || defined(sparc)
+#define DELAY_SLOT
+#endif
 
 /* where does the text segment start
  * needed for threaded code
