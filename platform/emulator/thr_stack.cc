@@ -225,7 +225,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 	TaggedRef def = CodeArea::dbgGetDef(DebugPC);
 	if (!OZ_isNil(def)) {
 	  TaggedRef pairlist =
-	    cons(OZ_pairA("name", OZ_atom("cond")),
+	    cons(OZ_pairA("name", OZ_atom("actor")),
 		 cons(OZ_pairA("args", nil()),
 		      nil()));
 	  TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
@@ -243,7 +243,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 
     if (PC==C_XCONT_Ptr) {
       TaggedRef pairlist =
-	cons(OZ_pairA("name", OZ_atom("cond")),
+	cons(OZ_pairA("name", OZ_atom("xcont")),
 	     cons(OZ_pairA("args", nil()),
 		  nil()));
       TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
