@@ -29,7 +29,7 @@ enum FDState {fd_empty, fd_full, fd_discrete, fd_singleton};
 #define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
 
 const int fd_iv_max_high = FD_NOI;
-const int fd_iv_max_elem = OzMaxInt;
+const int fd_iv_max_elem = OzMaxInt - 1;
 const int fd_full_size = fd_iv_max_elem + 1;
 
 // Invariants: high == 1 reduce to FiniteDomain
