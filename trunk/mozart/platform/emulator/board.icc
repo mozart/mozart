@@ -27,72 +27,73 @@
 
 // Solver
 
-#ifndef __SOLVE_ICC_
-#define __SOLVE_ICC_
+#ifndef __BOARD_ICC_
+#define __BOARD_ICC_
 
 #if !defined(OUTLINE) && defined(INTERFACE)
 #pragma interface
 #endif
 
-#include "board.hh"
 #include "susplist.hh"
+#include "value.hh"
 
 #ifdef OUTLINE
 #define inline
 #endif
 
-/* ------------------------------------------------------------------------
- * class SolveActor
- * ------------------------------------------------------------------------ */
-
 inline
-void SolveActor::addSuspension (Suspension susp)
-{
-  suspList = new SuspList (susp, suspList);
+void Board::addSuspension(Suspension susp) {
+  suspList = new SuspList(susp, suspList);
 }
 
 inline
-void SolveActor::mergeNonMono(Board *bb) {
+void Board::mergeNonMono(Board *bb) {
   // merge nonmonotonic susp lists
   if (nonMonoSuspList) {
     // Merge in current solve board but not elsewhere
     if (!bb->isRoot()) {
       // merge nonmonotonic susp list to another solve space
-      SolveActor * sa = SolveActor::Cast(bb->getActor());
-      if (sa->nonMonoSuspList) {
-	sa->mergeNonMonoSuspListWith(nonMonoSuspList);
+
+      if (bb->nonMonoSuspList) {
+	bb->mergeNonMonoSuspListWith(nonMonoSuspList);
 	setNonMonoSuspList(NULL);
       } else {
-	sa->setNonMonoSuspList(nonMonoSuspList);
+	bb->setNonMonoSuspList(nonMonoSuspList);
       }
     } else {
       // merge nonmonotinic susp list to a non-solve space
-      DebugCode(OZ_warning("Merging solve space with non-solve space."));
       oz_solve_scheduleNonMonoSuspList(this);
     }
   }
 }
 
 inline
-int SolveActor::commit(int left, int right) {
+int Board::commit(int left, int right) {
   ozstat.incSolveAlt();
 
   Assert(bag && bag->getDist()->isAlive());
 
-  return bag->getDist()->commit(solveBoard,left,right);
+  return bag->getDist()->commit(this,left,right);
   
 }
 
 inline
-void SolveActor::clearResult(Board* bb) {
-  if (OZ_isVariable(result))
-    return;
-
-  result = oz_newVar(bb);
+void Board::patchChoiceResult(int i) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+  stuple->setArg(0, makeTaggedSmallInt(i));
+  result = makeTaggedSRecord(stuple);
 }
 
 inline
-Distributor * SolveActor::getDistributor(void) {
+void Board::clearResult() {
+  if (OZ_isVariable(result))
+    return;
+
+  result = oz_newVar(getParent());
+}
+
+inline
+Distributor * Board::getDistributor(void) {
   bag = bag->clean();
 
   if (!bag)
@@ -116,4 +117,4 @@ extern int existingLTQs;
 #undef inline
 #endif
 
-#endif  // __SOLVE_ICC_
+#endif

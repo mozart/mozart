@@ -37,6 +37,7 @@
 #define DEEP_GARBAGE
 
 #include "gc.hh"
+#include "board.hh"
 #include "var_base.hh"
 #include "fdomn.hh"
 #include "dictionary.hh"
@@ -52,7 +53,6 @@
 #include "var_simple.hh"
 #include "var_ext.hh"
 #include "thr_int.hh"
-#include "solve.hh"
 #include "debug.hh"
 #include "pointer-marks.hh"
 #include "dpInterface.hh"
@@ -192,7 +192,6 @@ enum TypeOfPtr {
   PTR_LTUPLE,
   PTR_SRECORD,
   PTR_BOARD,
-  PTR_ACTOR,
   PTR_THREAD,
   PTR_PROPAGATOR,
   PTR_CVAR,
@@ -473,13 +472,6 @@ static VarFix varFix;
 
 
 /*
- * Copying: the board to be copied
- */
-static Board * fromCopyBoard;
-
-
-
-/*
  * Copying: Check if suspension entry is local to copyBoard.
  */
 
@@ -492,7 +484,7 @@ Bool Board::isInTree(void) {
   while (1) {
     Assert (!b->isCommitted());
 
-    if (b == fromCopyBoard) 
+    if (b->isCloneBoard())
       return OK;
   
     if (b->isMarkedGlobal()) 
@@ -696,7 +688,7 @@ Thread *Thread::gcThreadInline() {
 #endif
 
   // Note that runnable threads can be also counted 
-  // in solve actors (for stability check), and, therefore, 
+  // somewhere, and, therefore, 
   // might not just dissappear!
   if (isSuspended() && !GETBOARD(this)->gcIsAlive())
     return (Thread *) NULL;
@@ -1763,12 +1755,12 @@ redo:
 #endif
 
   Assert(!bb->isCommitted());
-  fromCopyBoard = bb;
 
+  bb->setCloneBoard();
   bb->setGlobalMarks();
-
+  
   Board * toCopyBoard = bb->gcBoard();
-
+  
   Assert(toCopyBoard);
 
   gcStack.recurse();
@@ -1784,8 +1776,9 @@ redo:
   cpTrail.unwind();
   
   bb->unsetGlobalMarks();
-
-  fromCopyBoard = NULL;
+  bb->unsetCloneBoard();
+  toCopyBoard->unsetCloneBoard();
+  
   
 #ifdef CS_PROFILE
   if (across_chunks) {
@@ -2345,42 +2338,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
 */
 
 
-inline
-Bool Actor::gcIsMarked(void) {
-  return (Bool) gcField;
-}
- 
-inline
-void Actor::gcMark(Actor * fwd) {
-  if (!isInGc)
-    cpTrail.save((int32 *) &gcField);
-  gcField = fwd;
-}
-
-inline
-Actor * Actor::gcGetFwd(void) {
-  Assert(gcIsMarked());
-  return gcField;
-}
-
-inline
-Actor * Actor::gcActor() {
-  if (!this)
-    return (Actor *) 0;
-
-  Assert(board->derefBoard()->gcIsAlive());
-
-  if (gcIsMarked())
-    return gcGetFwd();
-  
-  Actor * ret = (Actor *) oz_hrealloc(this, sizeof(SolveActor));
-
-  gcStack.push(ret, PTR_ACTOR);
-  
-  gcMark(ret);
-
-  return ret;
-}
 
 void TaskStack::gc(TaskStack *newstack) {
 
@@ -2459,70 +2416,26 @@ Board* Board::gcGetNotificationBoard() {
   
     if (bb->gcIsMarked() || bb->isRoot())  
       return nb;
-
+    
     Assert(!bb->isCommitted());
 
-    Actor * aa = bb->getActor();
-  
-    if (bb->isFailed() || aa->isCommitted()) {
+    if (bb->isFailed()) {
       /*
        * notification board must be changed
        */
-      bb = GETBOARD(aa);
+      bb = bb->getParent();
       nb = bb;   // probably not dead;
       continue;
     }
 
-    if (aa->gcIsMarked())
-      return nb;
-
-    bb = GETBOARD(aa);
+    bb = bb->getParent();
+    
   }
 }
 
 /****************************************************************************
  * Board collection 
  ****************************************************************************/
-
-/*
- * gcIsAlive(bb):
- *   bb is marked collected, not failed and all parents are alive
- *
- */
-
-Bool Board::gcIsAlive() {
-  Board *bb = this;
-
-  while (1) {
-    bb = bb->derefBoard();
-
-    if (bb->isFailed()) 
-      return NO;
-
-    if (bb->isRoot() || bb->gcIsMarked())
-      return OK;
-    
-    Actor *aa = bb->getActor();
-
-    if (aa->isCommitted()) 
-      return (NO);
-
-    if (aa->gcIsMarked())
-      return OK;
-
-    bb = aa->getBoardInternal();
-  }
-}
-
-inline
-void Board::gcRecurse() {
-  Assert(!isCommitted() && !isFailed());
-  u.actor = u.actor ? u.actor->gcActor() : 0;
-
-  localPropagatorQueue = localPropagatorQueue->gc();
-
-  script.Script::gc();
-}
 
 Distributor * BaseDistributor::gc(void) {
   BaseDistributor * t = 
@@ -2551,21 +2464,47 @@ DistBag * DistBag::gc(void) {
   return copy;
 }
 
-inline
-void SolveActor::gcRecurse () {
-  if (isInGc || solveBoard != fromCopyBoard) {
-    board = board->gcBoard();
-    Assert(board);
+
+/*
+ * gcIsAlive(bb):
+ *   bb is marked collected, not failed and all parents are alive
+ *
+ */
+
+Bool Board::gcIsAlive() {
+  Board *bb = this->derefBoard();
+
+  while (1) {
+    if (bb->isFailed()) 
+      return NO;
+
+    if (bb->isRoot() || bb->gcIsMarked())
+      return OK;
+    
+    bb = bb->getParent();
   }
-  solveBoard = solveBoard->gcBoard();
-  Assert(solveBoard);
+}
+
+inline
+void Board::gcRecurse() {
+  Assert(!isCommitted() && !isFailed());
+
+  if (isInGc || !isCloneBoard()) {
+    parent = parent->gcBoard();
+  }
+  
+  localPropagatorQueue = localPropagatorQueue->gc();
+
+  script.Script::gc();
 
   OZ_collectHeapTerm(solveVar,solveVar);
   
   OZ_collectHeapTerm(result,result);
+
   suspList         = suspList->gc();
   bag              = bag->gc();
   nonMonoSuspList  = nonMonoSuspList->gc();
+
 #ifdef CS_PROFILE
   if((copy_size>0) && copy_start && isInGc) {
     free(copy_start);
@@ -2574,12 +2513,9 @@ void SolveActor::gcRecurse () {
   copy_start = (int32 *) NULL;
   copy_size  = 0;
 #endif
+
 }
 
-inline
-void Actor::gcRecurse() {
-  ((SolveActor *) this)->gcRecurse();
-}
 
 //*****************************************************************************
 //                           collectGarbage
@@ -2664,10 +2600,6 @@ void GcStack::recurse(void) {
 
     case PTR_BOARD:     
       ((Board *) ptr)->gcRecurse();            
-      break;
-      
-    case PTR_ACTOR:     
-      ((Actor *) ptr)->gcRecurse();            
       break;
       
     case PTR_THREAD:    

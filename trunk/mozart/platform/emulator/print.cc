@@ -94,7 +94,6 @@
 #include "var_ct.hh"
 #include "var_of.hh"
 #include "var_ext.hh"
-#include "solve.hh"
 #include "lps.hh"
 
 class Indent {
@@ -918,14 +917,12 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
   stream << indent(offset) << "Flags: " << (void *) flags << endl;
   stream << indent(offset) << "Script: " << endl;
   script.printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-  if (isRoot()) return;
-  if (isCommitted()) {
-    stream << indent(offset) << "Board:" << endl;
-    u.ref->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-  } else {
-    stream << indent(offset) << "Actor:" << endl;
-    u.actor->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-  }
+  
+  if (isRoot()) 
+    return;
+
+  stream << indent(offset) << "Board:" << endl;
+  parent->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   stream << "Local propagator queue: " << localPropagatorQueue << endl;
 }
 
@@ -946,53 +943,6 @@ void Equation::printStream(ostream &stream, int depth)
   ozd_printStream(getLeft(),stream,depth);
   stream << " = ";
   ozd_printStream(getRight(),stream,depth);
-}
-
-void Actor::printStream(ostream &stream, int depth)
-{
-  if (!this) {
-    stream << "(NULL Actor)";
-    return;
-  }
-  if (depth == 0) {
-    stream << ",,,";
-    return;
-  }
-
-  stream << "Actor @"
-	 << this;
-  if (isCommitted()) {
-    stream << " (committed)";
-  }
-}
-
-void Actor::printLongStream(ostream &stream, int depth, int offset)
-{
-  if (depth == 0) {
-    stream << indent(offset) << ",,," << endl;
-    return;
-  }
-  printStream(stream,depth);
-  stream << endl;
-
-  ((SolveActor *)this)->printLongStreamSolve(stream,depth,offset);
-
-  stream << indent(offset) << "Board: " << endl;
-  board->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-}
-
-void SolveActor::printLongStreamSolve(ostream &stream, int depth, int offset)
-{
-  stream  << indent(offset) << "solveVar=";
-  ozd_printStream(solveVar,stream,PRINT_DEPTH_DEC(depth));
-  stream << endl;
-  stream << indent(offset) << "result=";
-  ozd_printStream(result,stream,PRINT_DEPTH_DEC(depth));
-  stream << endl;
-  stream << indent(offset) << "threads=" << threads << endl;
-  stream << indent(offset) << "SuspList:" << endl;
-  suspList->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-  stream << endl;
 }
 
 void ThreadsPool::printThreads()
@@ -1260,8 +1210,8 @@ void Space::printLongStream(ostream &stream, int depth, int offset)
   stream << indent(offset)
 	 << "Space@id" << this << endl
 	 << indent(offset)
-	 << " actor:"<<endl;
-  ((SolveActor *) solve->getActor())->printLongStream(stream,depth,offset+2);
+	 << " Board:"<<endl;
+  solve->printLongStream(stream,depth,offset+2);
 }
 
 void SChunk::printLongStream(ostream &stream, int depth, int offset)
@@ -1425,20 +1375,18 @@ void OZ_FiniteDomainImpl::printLong(ostream &stream, int idnt) const
 void Board::printTree()
 {
   Board *bb = this;
-  Actor *aa;
+
   int off=0;
+
   while (!oz_isRootBoard(bb)) {
     cout << indent(off);
     bb->printStream(cout,1);
     cout << endl;
     Assert(!bb->isCommitted());
     off++;
-    aa = bb->u.actor;
-    cout << indent(off);
-    aa->printStream(cout,1);
     cout << endl;
     off++;
-    bb = GETBOARD(aa);
+    bb = bb->getParent();
   }
   cout << indent(off);
   bb->printStream(cout,1);

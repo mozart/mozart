@@ -1135,10 +1135,6 @@ SRecord *makeRecord(TaggedRef t)
  * Space
  *=================================================================== */
 
-SolveActor * Space::getSolveActor() { 
-  return ((SolveActor *) solve->getActor()); 
-}
-
 Bool Space::isFailed() { 
   if (!solve) return OK;
   if (solve == (Board *) 1) return NO;
