@@ -52,7 +52,10 @@
 // --- TaggedRef: Type Declaration
 
 enum TypeOfTerm {
-//  REF              =  0, // XX00
+  REFTAG1          =  0,   // 0000
+  REFTAG2          =  4,   // 0100
+  REFTAG3          =  8,   // 1000
+  REFTAG4          = 12,   // 1100
 
   UVAR             =  1,   // 0001
   SVAR             =  9,   // 1001
@@ -71,9 +74,6 @@ enum TypeOfTerm {
   SMALLINT         =  6,   // 0110
   BIGINT           =  7,   // 0111
   OZFLOAT          = 11    // 1011
-// 12 = 1100 unusable |
-//  8 = 1000 unusable |-  recognized as reference
-//  4 = 0100 unusable |
 };
 
 // ---------------------------------------------------------------------------

@@ -4,10 +4,10 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Contributors:
  *    Denys Duchier (duchier@ps.uni-sb.de)
- *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -138,7 +138,6 @@ void verbReopen ()
  * NOTE: this works only for chunk
  */
 
-
 static MemChunks *fromSpace;
 
 Bool inToSpace(void *p)
@@ -168,7 +167,6 @@ void exitCheckSpace()
   DebugGCT(printf("TO-SPACE:\n");
            MemChunks::list->print();)
 }
-
 
 #ifdef CHECKSPACE
 
@@ -340,6 +338,7 @@ OZ_C_proc_begin(BIdumpThreads, 0)
 }
 OZ_C_proc_end
 
+
 /*
  * TC: groundness check needs to count the number of
  *    variables, names, cells & abstractions
@@ -391,41 +390,73 @@ Board *gcGetVarHome(TaggedRef var)
  * copy from from-space to to-space
  ****************************************************************************/
 inline
-void fastmemcpy(int32 *to, int32 *frm, size_t sz)
+void fastmemcpy_static(int32 *to, int32 *frm, size_t sz)
 {
 #ifdef VERBOSE
   fprintf(verbOut,"(gc) \tcopy %d bytes from 0x%p to 0x%p\n",sz,frm,to);
 #endif
   switch(sz) {
-  case 36: *(to+8) = *(frm+8);
-  case 32: *(to+7) = *(frm+7);
-  case 28: *(to+6) = *(frm+6);
-  case 24: *(to+5) = *(frm+5);
-  case 20: *(to+4) = *(frm+4);
-  case 16: *(to+3) = *(frm+3);
-  case 12: *(to+2) = *(frm+2);
-  case  8: *(to+1) = *(frm+1);
-  case  4: *(to+0) = *(frm+0);
-    break;
+  case 44: to[10] = frm[10];
+  case 40: to[9]  = frm[9];
+  case 36: to[8]  = frm[8];
+  case 32: to[7]  = frm[7];
+  case 28: to[6]  = frm[6];
+  case 24: to[5]  = frm[5];
+  case 20: to[4]  = frm[4];
+  case 16: to[3]  = frm[3];
+  case 12: to[2]  = frm[2];
+  case  8: to[1]  = frm[1];
+  case  4: to[0]  = frm[0];
+#ifdef DEBUG_CHECK
   default:
-    while(sz>0) {
-      *to++ = *frm++;
-      sz -= sizeof(sz);
-    }
-  }
-#ifdef WIPEOUTFROM
-  error("WIPEOUTFROM is crap, it never really worked");
-  if (opMode == IN_GC) memset(frm,0xff,sz);
+    if (sz > 44)
+      { Assert(0); };
 #endif
+  }
 }
 
 inline
-void *gcRealloc(void *ptr, size_t sz)
+void fastmemcpy_dynamic(int32 *to, int32 *frm, size_t sz)
+{
+#ifdef VERBOSE
+  fprintf(verbOut,"(gc) \tcopy %d bytes from 0x%p to 0x%p\n",sz,frm,to);
+#endif
+  sz = sz >> 2;
+  while (sz > 8) {
+    to[7] = frm[7]; to[6] = frm[6]; to[5] = frm[5]; to[4] = frm[4];
+    to[3] = frm[3]; to[2] = frm[2]; to[1] = frm[1]; to[0] = frm[0];
+    to += 8; frm += 8; sz -= 8;
+  }
+  switch(sz) {
+  case 8: to[7] = frm[7];
+  case 7: to[6] = frm[6];
+  case 6: to[5] = frm[5];
+  case 5: to[4] = frm[4];
+  case 4: to[3] = frm[3];
+  case 3: to[2] = frm[2];
+  case 2: to[1] = frm[1];
+  case 1: to[0] = frm[0];
+  }
+}
+
+inline
+void *gcReallocStatic(void *ptr, size_t sz)
 {
   void *ret = heapMalloc(sz);
   DebugCheck(sz%sizeof(int) != 0,
-             error("gcRealloc: can only handle word sized blocks"););
-  fastmemcpy((int32*)ret,(int32*)ptr,sz);
+             error("gcReallocStatic: can only handle word sized blocks"););
+  fastmemcpy_static((int32*)ret,(int32*)ptr,sz);
+  return ret;
+}
+
+
+inline
+void *gcReallocDynamic(void *ptr, size_t sz)
+{
+  void *ret = heapMalloc(sz);
+  DebugCheck(sz%sizeof(int) != 0,
+             error("gcReallocDynamic: can only handle word sized blocks"););
+  fastmemcpy_dynamic((int32*)ret,(int32*)ptr,sz);
   return ret;
 }
 
@@ -500,8 +531,17 @@ public:
     Assert(!locked);
     Stack::push((StackEntry)makeTypedPtr(ptr,type));
   }
+  void pushInt(int n) {
+    Assert(!locked);
+    Stack::push((StackEntry) n);
+  }
 
-  TypedPtr pop()  { return (TypedPtr) ToInt32(Stack::pop()); }
+  TypedPtr pop()  {
+    return (TypedPtr) ToInt32(Stack::pop());
+  }
+  TypedPtr popInt()  {
+    return (int) ToInt32(Stack::pop());
+  }
 };
 
 static TypedPtrStack ptrStack;
@@ -820,7 +860,7 @@ Name *Name::gcName()
     GCMETHMSG("Name::gc");
     COUNT(literal);
     setVarCopied;
-    Name *aux = (Name*) gcRealloc(this,sizeof(Name));
+    Name *aux = (Name*) gcReallocStatic(this,sizeof(Name));
     GCNEWADDRMSG(aux);
     ptrStack.push(aux, PTR_NAME);
     storeForward(&homeOrGName, aux);
@@ -837,8 +877,7 @@ Name *Name::gcName()
 inline
 Literal *Literal::gc()
 {
-  if (!needsCollection(this))
-    return this;
+  Assert(needsCollection(this));
 
   Assert(isName());
   return ((Name*) this)->gcName();
@@ -854,8 +893,7 @@ void Name::gcRecurse()
   homeOrGName = ToInt32(((Board*)ToPointer(homeOrGName))->gcBoard());
 }
 
-Object *Object::gcObject()
-{
+Object *Object::gcObject() {
   return (Object *) gcConstTerm();
 }
 
@@ -866,22 +904,18 @@ Object *Object::gcObject()
  *   --> copy every float !! so that X=Y=1.0 --> X=1.0, Y=1.0
  */
 inline
-Float *Float::gc()
-{
-  COUNT(ozfloat);
+Float *Float::gc() {
+  Assert(opMode == IN_GC);
 
-  if (opMode == IN_TC)
-    return this;
+  COUNT(ozfloat);
 
   Float *ret =  newFloat(value);
   return ret;
 }
 
 inline
-BigInt *BigInt::gc()
-{
-  if (opMode == IN_TC)
-    return this;
+BigInt * BigInt::gc() {
+  Assert(opMode == IN_GC);
 
   CHECKCOLLECTED(*(int *)&value.d, BigInt *);
   COUNT(bigInt);
@@ -896,10 +930,10 @@ inline
 void Script::gc()
 {
   GCMETHMSG("Script::gc");
-  if(first){
+  if (first){
     int sz = numbOfCons*sizeof(Equation);
     COUNT1(scriptLen,sz);
-    Equation *aux = (Equation*)gcRealloc(first,sz);
+    Equation *aux = (Equation*) heapMalloc(sz);
     GCNEWADDRMSG(aux);
 
     FDPROFILE_GC(cp_size_script, sz);
@@ -929,6 +963,7 @@ void Script::gc()
         } while (1);
       }
 #endif
+      aux[i] = first[i];
       Assert(!isDirectVar(first[i].left));
       Assert(!isDirectVar(first[i].right));
       OZ_updateHeapTerm(aux[i].left);
@@ -1015,7 +1050,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   GCMETHMSG ("RunnableThreadBody::gcRTBody");
 
   RunnableThreadBody *ret =
-    (RunnableThreadBody *) gcRealloc (this, sizeof (*this));
+    (RunnableThreadBody *) gcReallocStatic(this, sizeof(RunnableThreadBody));
   GCNEWADDRMSG (ret);
   taskStack.gc(&ret->taskStack);
 
@@ -1027,7 +1062,7 @@ OZ_Propagator * OZ_Propagator::gc(void)
   GCMETHMSG("OZ_Propagator::gc");
   GCOLDADDRMSG(this);
 
-  OZ_Propagator * p = (OZ_Propagator *) gcRealloc(this, sizeOf());
+  OZ_Propagator * p = (OZ_Propagator *) gcReallocDynamic(this, sizeOf());
 
   GCNEWADDRMSG (p);
 
@@ -1055,7 +1090,7 @@ Continuation *Continuation::gc()
 
   COUNT(continuation);
   Continuation *ret =
-    (Continuation *) gcRealloc (this, sizeof (*this));
+    (Continuation *) gcReallocStatic(this, sizeof(Continuation));
   GCNEWADDRMSG (ret);
   ptrStack.push (ret, PTR_CONT);
   storeForward (&pc, ret);
@@ -1068,46 +1103,132 @@ Continuation *Continuation::gc()
 /* collect LTuple, SRecord */
 
 inline
-void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz) {
+LTuple * LTuple::gc() {
+  GCMETHMSG("LTuple::gc");
 
   Bool isInGc = (opMode != IN_TC);
 
-  for (int i = sz; i--; ) {
-    TaggedRef from = oldBlock[i];
+  LTuple * l = this;
+  TaggedRef start;
+  TaggedRef * p = &start;
 
-    if (isDirectVar(from) && (isInGc || isLocalBoard(gcGetVarHome(from)))) {
+  int n = 0;
 
-      Assert(!GCISMARKED(from));
-      Assert(newBlock[i] == from);
+  while (1) {
+    TaggedRef h = l->args[0];
+    TaggedRef t = l->args[1];
 
-      setVarCopied;
-
-      storeForward((int *) oldBlock + i, newBlock + i);
-
-      newBlock[i] = gcVariable(from);
+    // Check wether already collected
+    if (GCISMARKED(h)) {
+      *p = makeTaggedLTuple((LTuple *) GCUNMARK(h));
+      // Make n negative, since this element is not allowed
+      // to be garbage collected!
+      n = -n;
+      goto finish;
     }
+
+    Assert(!GCISMARKED(t));
+
+    n++;
+
+    LTuple * c = (LTuple *) heapMalloc(sizeof(LTuple));
+
+    *p = makeTaggedLTuple(c);
+    p  = &(c->args[1]);
+
+    // Process list element
+    if (isDirectVar(h) && (isInGc || isLocalBoard(gcGetVarHome(h)))) {
+      setVarCopied;
+      // Not storeForward, its done anyway!
+      c->args[0] = gcVariable(h);
+    } else {
+      c->args[0] = h;
+    }
+
+    // Store forward
+    storeForward(&(l->args[0]), &(c->args[0]));
+
+    // Process list tail
+    if (isDirectVar(t)) {
+      Assert(!GCISMARKED(t));
+      if (isInGc || isLocalBoard(gcGetVarHome(t))) {
+        setVarCopied;
+        storeForward(&(l->args[1]), &(c->args[1]));
+        // Make n negative, since this tail does not need collection
+        n = -n;
+        c->args[1] = gcVariable(t);
+      } else {
+        c->args[1] = t;
+      }
+      goto finish;
+    }
+
+    TaggedRef not_deref = t;
+
+    DEREF(t, t_ptr, t_tag);
+
+    if (!isLTuple(t_tag)) {
+      c->args[1] = not_deref;
+      goto finish;
+    }
+
+    l = tagged2LTuple(t);
+
   }
-}
 
-inline
-LTuple *LTuple::gc()
-{
-  GCMETHMSG("LTuple::gc");
-  CHECKCOLLECTED(args[0], LTuple *);
+finish:
 
-  COUNT(lTuple);
-  LTuple *ret = (LTuple*) gcRealloc(this,sizeof(*this));
-  GCNEWADDRMSG(ret);
-  ptrStack.push(ret,PTR_LTUPLE);
+  LTuple * ret = tagged2LTuple(start);
 
-  FDPROFILE_GC(cp_size_ltuple, sizeof(*this));
+  if (n != 0) {
+    ptrStack.pushInt(n);
+    ptrStack.push(ret, PTR_LTUPLE);
+  }
 
-  gcTaggedBlock(args,ret->args,2);
-
-  storeForward((int *) &args[0], ret);
   return ret;
 }
 
+/*
+  CHECKCOLLECTED(args[0], LTuple *);
+
+  COUNT(lTuple);
+  LTuple *ret = (LTuple*) heapMalloc(sizeof(LTuple));
+  GCNEWADDRMSG(ret);
+
+  FDPROFILE_GC(cp_size_ltuple, sizeof(*this));
+
+  Bool isInGc = (opMode != IN_TC);
+
+  TaggedRef a = args[0];
+
+  if (isDirectVar(a) && (isInGc || isLocalBoard(gcGetVarHome(a)))) {
+    setVarCopied;
+
+    // Not storeForward, its done anyway!
+    ret->args[0] = gcVariable(a);
+  } else {
+    ret->args[0] = a;
+  }
+
+  a = args[1];
+
+  if (isDirectVar(a) && (isInGc || isLocalBoard(gcGetVarHome(a)))) {
+    setVarCopied;
+
+    storeForward((int *) &(args[1]), &(ret->args[1]));
+
+    ret->args[1] = gcVariable(a);
+  } else {
+    ret->args[1] = a;
+  }
+
+  ptrStack.push(ret,PTR_LTUPLE);
+  storeForward((int *) &args[0], ret);
+
+  return ret;
+}
+
+*/
 
 inline
 SRecord *SRecord::gcSRecord()
@@ -1119,11 +1240,38 @@ SRecord *SRecord::gcSRecord()
   COUNT1(sRecordLen,getWidth());
   int len = (getWidth()-1)*sizeof(TaggedRef)+sizeof(SRecord);
 
-  SRecord *ret = (SRecord*) gcRealloc(this,len);
+  SRecord *ret = (SRecord*) heapMalloc(len);
   GCNEWADDRMSG(ret);
+
+  ret->label       = label;
+  ret->recordArity = recordArity;
+
+  Bool isInGc = (opMode != IN_TC);
+
+  register TaggedRef * a = getRef();
+  register TaggedRef * c = ret->getRef();
+
+  for (int i = getWidth(); i--; ) {
+    TaggedRef from = a[i];
+
+    if (isDirectVar(from) && (isInGc || isLocalBoard(gcGetVarHome(from)))) {
+
+      Assert(!GCISMARKED(from));
+
+      setVarCopied;
+
+      storeForward((int *) a + i, c + i);
+
+      c[i] = gcVariable(from);
+    } else {
+      c[i] = from;
+    }
+
+  }
+
   ptrStack.push(ret,PTR_SRECORD);
+
   storeForward((int32*)&label, ret);
-  gcTaggedBlock(getRef(),ret->getRef(),getWidth());
 
   FDPROFILE_GC(cp_size_record, len);
 
@@ -1175,7 +1323,7 @@ Thread *Thread::gcThread ()
   }
 
   COUNT(thread);
-  Thread *newThread = (Thread *) gcRealloc(this, sizeof (*this));
+  Thread *newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
   GCNEWADDRMSG(newThread);
 
   if (isRunnable() || hasStack()) {
@@ -1203,7 +1351,7 @@ Thread *Thread::gcDeadThread()
   Assert(isDeadThread());
 
   COUNT(thread);
-  Thread *newThread = (Thread *) gcRealloc(this,sizeof(*this));
+  Thread *newThread = (Thread *) gcReallocStatic(this,sizeof(Thread));
   GCNEWADDRMSG(newThread);
 
   Assert(inToSpace(am.rootBoardGC()));
@@ -1218,6 +1366,7 @@ Thread *Thread::gcDeadThread()
   return (newThread);
 }
 
+inline
 void Thread::gcRecurse ()
 {
   GCMETHMSG("Thread::gcRecurse");
@@ -1305,6 +1454,117 @@ SuspList * SuspList::gc()
 }
 
 inline
+void OZ_FiniteDomainImpl::gc(void)
+{
+  FDPROFILE_GC(cp_size_fdvar, getDescrSize());
+
+  copyExtension();
+}
+
+inline
+void GenFDVariable::gc(void)
+{
+  GCMETHMSG("GenFDVariable::gc");
+  ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
+
+  int i;
+  for (i = fd_prop_any; i--; )
+    fdSuspList[i] = fdSuspList[i]->gc();
+}
+
+inline
+void GenFSetVariable::gc(void)
+{
+  GCMETHMSG("GenFSetVariable::gc");
+
+  int i;
+  for (i = fs_prop_any; i--; )
+    fsSuspList[i] = fsSuspList[i]->gc();
+}
+
+inline
+FSetValue * FSetValue::gc(void)
+{
+  return (FSetValue *) gcReallocStatic(this, sizeof(FSetValue));
+}
+
+inline
+void GenLazyVariable::gc(void)
+{
+  GCMETHMSG("GenLazyVariable::gc");
+  if (function!=0) {
+    OZ_updateHeapTerm(function);
+    OZ_updateHeapTerm(result);
+  }
+}
+
+inline
+void GenMetaVariable::gc(void)
+{
+  GCMETHMSG("GenMetaVariable::gc");
+  OZ_updateHeapTerm(data);
+}
+
+inline
+void AVar::gcAVar(void)
+{
+  GCMETHMSG("AVar::gc");
+  OZ_updateHeapTerm(value);
+}
+
+inline
+DynamicTable* DynamicTable::gc(void)
+{
+  GCMETHMSG("DynamicTable::gc");
+
+  Assert(isPwrTwo(size));
+  // Copy the table:
+  COUNT(dynamicTable);
+  COUNT1(dynamicTableLen,size);
+  size_t len = (size-1)*sizeof(HashElement)+sizeof(DynamicTable);
+  DynamicTable* ret = (DynamicTable*) gcReallocDynamic(this,len);
+
+  FDPROFILE_GC(cp_size_ofsvar, len);
+
+  GCNEWADDRMSG(ret);
+  // Take care of all TaggedRefs in the table:
+  ptrStack.push(ret,PTR_DYNTAB);
+  // (no storeForward needed since only one place points to the dynamictable)
+
+#ifdef DEBUG_CHECK
+  for (dt_index i=size; i--; ) {
+    if (table[i].ident != makeTaggedNULL()) {
+      Assert(!isDirectVar(table[i].ident));
+      Assert(!isDirectVar(table[i].value));
+    }
+  }
+#endif
+
+  return ret;
+}
+
+inline
+void DynamicTable::gcRecurse() {
+  for (dt_index i=size; i--; ) {
+    if (table[i].ident != makeTaggedNULL()) {
+      OZ_updateHeapTerm(table[i].ident);
+      OZ_updateHeapTerm(table[i].value);
+    }
+  }
+}
+
+
+inline
+void GenOFSVariable::gc(void)
+{
+    GCMETHMSG("GenOFSVariable::gc");
+    OZ_updateHeapTerm(label);
+    // Update the pointer in the copied block:
+    dynamictable=dynamictable->gc();
+}
+
+
+inline
 void GenCVariable::gc(void)
 {
   switch (getType()){
@@ -1352,13 +1612,48 @@ TaggedRef gcVariable(TaggedRef var)
   GCPROCMSG("gcVariable");
   GCOLDADDRMSG(var);
 
-  if (var==nil())
-    return nil();
+  if (isCVar(var)) {
+
+    GenCVariable *gv = tagged2CVar(var);
+
+    INFROMSPACE(gv);
+
+    if (GCISMARKED(ToInt32(gv->suspList))) {
+      GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList))));
+      return makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList)));
+    }
+
+    Board *bb = gv->home->gcBoard();
+
+    if (!bb)
+      return makeTaggedNULL();
+
+    int gv_size = gv->getSize();
+
+    COUNT(cvar);
+
+    GenCVariable *new_gv = (GenCVariable*) gcReallocDynamic(gv, gv_size);
+
+    storeForward(&gv->suspList, new_gv);
+
+    new_gv->suspList = new_gv->suspList->gc();
+
+    new_gv->gc();
+
+    Assert(opMode != IN_GC || new_gv->home != bb);
+
+    new_gv->home = bb;
+    GCNEWADDRMSG(makeTaggedCVar(new_gv));
+    return makeTaggedCVar(new_gv);
+  }
 
   if (isUVar(var)) {
     Board *bb = tagged2VarHome(var);
     bb = bb->gcBoard();
-    if (!bb) return nil();
+
+    if (!bb)
+      return makeTaggedNULL();
+
     INTOSPACE(bb);
     TaggedRef ret= makeTaggedUVar(bb);
     COUNT(uvar);
@@ -1366,178 +1661,39 @@ TaggedRef gcVariable(TaggedRef var)
     return ret;
   }
 
-  if (isSVar(var)) {
-    SVariable *cv = tagged2SVar(var);
-    INFROMSPACE(cv);
+  Assert(isSVar(var));
 
-    if (GCISMARKED(ToInt32(cv->suspList))) {
-      GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList))));
-      return makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList)));
-    }
+  SVariable *cv = tagged2SVar(var);
+  INFROMSPACE(cv);
 
-    Board *bb = cv->home;
-    bb=bb->gcBoard();
-
-    if (!bb)
-      return nil();
-
-    int cv_size;
-    cv_size = sizeof(SVariable);
-
-    SVariable *new_cv = (SVariable*)gcRealloc(cv,cv_size);
-    COUNT(svar);
-
-    FDPROFILE_GC(cp_size_svar, cv_size);
-
-    storeForward(&cv->suspList, new_cv);
-
-    new_cv->suspList = new_cv->suspList->gc();
-
-    Assert(opMode != IN_GC || new_cv->home != bb);
-
-    new_cv->home = bb;
-    GCNEWADDRMSG(makeTaggedSVar(new_cv));
-    return makeTaggedSVar(new_cv);
+  if (GCISMARKED(ToInt32(cv->suspList))) {
+    GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList))));
+    return makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList)));
   }
 
-  Assert(isCVar(var));
-
-  GenCVariable *gv = tagged2CVar(var);
-
-  INFROMSPACE(gv);
-
-  if (GCISMARKED(ToInt32(gv->suspList))) {
-    GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList))));
-    return makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList)));
-  }
-
-  Board *bb = gv->home->gcBoard();
+  Board *bb = cv->home;
+  bb=bb->gcBoard();
 
   if (!bb)
-    return nil();
+    return makeTaggedNULL();
 
-  int gv_size = gv->getSize();
+  SVariable *new_cv = (SVariable*)gcReallocStatic(cv,sizeof(SVariable));
+  COUNT(svar);
 
-  COUNT(cvar);
+  FDPROFILE_GC(cp_size_svar, sizeof(SVariable));
 
-  GenCVariable *new_gv = (GenCVariable*) gcRealloc(gv, gv_size);
+  storeForward(&cv->suspList, new_cv);
 
-  storeForward(&gv->suspList, new_gv);
+  new_cv->suspList = new_cv->suspList->gc();
 
-  new_gv->suspList = new_gv->suspList->gc();
+  Assert(opMode != IN_GC || new_cv->home != bb);
 
-  new_gv->gc();
+  new_cv->home = bb;
+  GCNEWADDRMSG(makeTaggedSVar(new_cv));
+  return makeTaggedSVar(new_cv);
 
-  Assert(opMode != IN_GC || new_gv->home != bb);
-
-  new_gv->home = bb;
-  GCNEWADDRMSG(makeTaggedCVar(new_gv));
-  return makeTaggedCVar(new_gv);
 }
 
-
-inline
-void OZ_FiniteDomainImpl::gc(void)
-{
-  FDPROFILE_GC(cp_size_fdvar, getDescrSize());
-
-  copyExtension();
-}
-
-void GenFDVariable::gc(void)
-{
-  GCMETHMSG("GenFDVariable::gc");
-  ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
-
-  int i;
-  for (i = fd_prop_any; i--; )
-    fdSuspList[i] = fdSuspList[i]->gc();
-}
-
-void GenFSetVariable::gc(void)
-{
-  GCMETHMSG("GenFSetVariable::gc");
-
-  int i;
-  for (i = fs_prop_any; i--; )
-    fsSuspList[i] = fsSuspList[i]->gc();
-}
-
-FSetValue * FSetValue::gc(void)
-{
-  return (FSetValue *) gcRealloc(this, sizeof(*this));
-}
-
-void GenLazyVariable::gc(void)
-{
-  GCMETHMSG("GenLazyVariable::gc");
-  if (function!=0) {
-    OZ_updateHeapTerm(function);
-    OZ_updateHeapTerm(result);
-  }
-}
-
-void GenMetaVariable::gc(void)
-{
-  GCMETHMSG("GenMetaVariable::gc");
-  OZ_updateHeapTerm(data);
-}
-
-void AVar::gcAVar(void)
-{
-  GCMETHMSG("AVar::gc");
-  OZ_updateHeapTerm(value);
-}
-
-DynamicTable* DynamicTable::gc(void)
-{
-  GCMETHMSG("DynamicTable::gc");
-
-  Assert(isPwrTwo(size));
-  // Copy the table:
-  COUNT(dynamicTable);
-  COUNT1(dynamicTableLen,size);
-  size_t len = (size-1)*sizeof(HashElement)+sizeof(DynamicTable);
-  DynamicTable* ret = (DynamicTable*) gcRealloc(this,len);
-
-  FDPROFILE_GC(cp_size_ofsvar, len);
-
-  GCNEWADDRMSG(ret);
-  // Take care of all TaggedRefs in the table:
-  ptrStack.push(ret,PTR_DYNTAB);
-  // (no storeForward needed since only one place points to the dynamictable)
-
-#ifdef DEBUG_CHECK
-  for (dt_index i=size; i--; ) {
-    if (table[i].ident != makeTaggedNULL()) {
-      Assert(!isDirectVar(table[i].ident));
-      Assert(!isDirectVar(table[i].value));
-    }
-  }
-#endif
-
-  return ret;
-}
-
-
-void DynamicTable::gcRecurse() {
-  for (dt_index i=size; i--; ) {
-    if (table[i].ident != makeTaggedNULL()) {
-      OZ_updateHeapTerm(table[i].ident);
-      OZ_updateHeapTerm(table[i].value);
-    }
-  }
-}
-
-
-
-void GenOFSVariable::gc(void)
-{
-    GCMETHMSG("GenOFSVariable::gc");
-    OZ_updateHeapTerm(label);
-    // Update the pointer in the copied block:
-    dynamictable=dynamictable->gc();
-}
 
 // ===================================================================
 // Finalization
@@ -1605,27 +1761,39 @@ void gc_finalize()
  */
 void OZ_updateHeapTerm(TaggedRef &to) {
   GCPROCMSG("OZ_updateHeapTerm");
-  TaggedRef aux = to;
+  register TaggedRef aux = to;
 
   Assert(opMode==IN_TC || !fromSpace->inChunkChain(&to));
 
-  /* initalized but unused cell in register array */
-  if (aux == makeTaggedNULL())
-    return;
+  register TaggedRef * aux_ptr = NULL;
 
-  DEREF(aux, aux_ptr, aux_tag);
+update:
 
-  if (GCISMARKED(aux)) {
+  switch (tagTypeOf(aux)) {
+
+  case REFTAG1:
+  case REFTAG2:
+  case REFTAG3:
+  case REFTAG4:
+    /* initalized but unused cell in register array */
+    if (aux == makeTaggedNULL())
+      return;
+
+    do {
+      aux_ptr = tagged2Ref(aux);
+      aux     = *aux_ptr;
+    } while (IsRef(aux));
+
+    if (!isAnyVar(aux))
+      to = aux;
+
+    goto update;
+
+  case GCTAG:
     to = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
-    return;
-  }
-
-  DebugGCT(NOTINTOSPACE(aux_ptr));
-
-  switch (aux_tag) {
+    break;
 
   case SMALLINT:
-    to = aux;
     break;
 
   case FSETVALUE:
@@ -1633,8 +1801,13 @@ void OZ_updateHeapTerm(TaggedRef &to) {
     break;
 
   case LITERAL:
-    to = makeTaggedLiteral(tagged2Literal(aux)->gc());
-    break;
+    {
+      Literal * l = tagged2Literal(aux);
+
+      if (needsCollection(l))
+        to = makeTaggedLiteral(l->gc());
+      break;
+    }
 
   case LTUPLE:
     to = makeTaggedLTuple(tagged2LTuple(aux)->gc());
@@ -1645,37 +1818,33 @@ void OZ_updateHeapTerm(TaggedRef &to) {
     break;
 
   case BIGINT:
-    to = makeTaggedBigInt(tagged2BigInt(aux)->gc());
+    if (opMode == IN_GC)
+      to = makeTaggedBigInt(tagged2BigInt(aux)->gc());
     break;
 
   case OZFLOAT:
-    to = makeTaggedFloat(tagged2Float(aux)->gc());
+    if (opMode == IN_GC)
+      to = makeTaggedFloat(tagged2Float(aux)->gc());
     break;
 
   case OZCONST:
-    {
-      ConstTerm *con=tagged2Const(aux)->gcConstTerm();
-      to = con ? makeTaggedConst(con) : nil();
-    }
+    to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
     break;
 
   case SVAR:
   case UVAR:
   case CVAR:
-    Assert(aux != to);
-
     // put address of ref cell to be updated onto update stack
-    if (opMode!=IN_TC || isLocalBoard(gcGetVarHome(aux))) {
-      setVarCopied;
+    Assert(aux_ptr);
 
+    if (opMode!=IN_TC || isLocalBoard(gcGetVarHome(aux))) {
+
+      setVarCopied;
       updateStack.push(&to);
       gcVariable(aux);
       to = makeTaggedRefToFromSpace(aux_ptr);
-      Assert(aux_ptr != 0);
     }
     break;
-  default:
-    Assert(0);
   }
 }
 
@@ -1836,9 +2005,9 @@ void processUpdateStack(void)
 
       TaggedRef newVar = gcVariable(auxTerm);
 
-      if (newVar == nil()) {
-        *tt = nil();
-        *auxTermPtr = nil();
+      if (newVar == makeTaggedNULL()) {
+        *tt         = newVar;
+        *auxTermPtr = newVar;
       } else {
         Assert(tagTypeOf(newVar) == tagTypeOf(auxTerm));
         switch(tagTypeOf(newVar)){
@@ -2156,7 +2325,8 @@ void TaskStack::gc(TaskStack *newstack)
     } else if (PC == C_CATCH_Ptr) {
     } else if (PC == C_XCONT_Ptr) {
       ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
-      (void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
+      if (opMode == IN_TC)
+        (void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
@@ -2270,14 +2440,14 @@ void ConstTerm::gcConstRecurse()
       case Te_Frame:{
         CellFrame *cf=(CellFrame*)t;
         CellSec *cs=cf->sec;
-        cf->sec=(CellSec*)gcRealloc(cs,sizeof(CellSec));
+        cf->sec=(CellSec*)gcReallocStatic(cs,sizeof(CellSec));
         cf->gcCellFrame();
         break;}
       case Te_Manager:{
         CellManager *cm=(CellManager*)t;
         CellFrame *cf=(CellFrame*)t;
         CellSec *cs=cf->sec;
-        cf->sec=(CellSec*)gcRealloc(cs,sizeof(CellSec));
+        cf->sec=(CellSec*)gcReallocStatic(cs,sizeof(CellSec));
         cm->gcCellManager();
         break;}
       default:{
@@ -2335,17 +2505,21 @@ void ConstTerm::gcConstRecurse()
 
       a->gcConstTermWithHome();
 
-      if (a->getWidth() > 0) {
+      int aw = a->getWidth();
+
+      if (aw > 0) {
         TaggedRef *oldargs = a->getArgs();
-        TaggedRef *newargs = (TaggedRef*) gcRealloc(oldargs,
-                                                    sizeof(TaggedRef)*a->getWidth());
-        for (int i=a->getWidth(); i--; ) {
+        TaggedRef *newargs =
+          (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
+        for (int i=aw; i--; ) {
+          newargs[i] = oldargs[i];
           Assert(!isDirectVar(oldargs[i]));
           OZ_updateHeapTerm(newargs[i]);
         }
 
         a->setPtr(newargs);
       }
+
       break;
     }
 
@@ -2374,14 +2548,14 @@ void ConstTerm::gcConstRecurse()
         LockManager* lm=(LockManager*)t;
         LockFrame* lf=(LockFrame*)t;
         LockSec* ls= lf->sec;
-        lf->sec=(LockSec*)gcRealloc(ls,sizeof(LockSec));
+        lf->sec=(LockSec*)gcReallocStatic(ls,sizeof(LockSec));
         lm->gcLockManager();
         break;}
 
       case Te_Frame:{
         LockFrame *lf=(LockFrame*)t;
         LockSec *ls=lf->sec;
-        lf->sec=(LockSec*)gcRealloc(ls,sizeof(LockSec));
+        lf->sec=(LockSec*)gcReallocStatic(ls,sizeof(LockSec));
         lf->gcLockFrame();
         break;}
 
@@ -2413,7 +2587,7 @@ inline void EntityInfo::gcWatchers(){
   Watcher **base=&watchers;
   Watcher *w=*base;
   while(w!=NULL){
-    Watcher* newW=(Watcher*) gcRealloc(w,sizeof(Watcher));
+    Watcher* newW=(Watcher*) gcReallocStatic(w,sizeof(Watcher));
     *base=newW;
     newW->thread=newW->thread->gcThread();
     OZ_updateHeapTerm(newW->proc);
@@ -2422,29 +2596,33 @@ inline void EntityInfo::gcWatchers(){
 
 void Tertiary::gcEntityInfo(){
   if(info==NULL) return;
-  EntityInfo *newInfo = (EntityInfo *) gcRealloc(info,sizeof(EntityInfo));
+  EntityInfo *newInfo = (EntityInfo *) gcReallocStatic(info,sizeof(EntityInfo));
   info=newInfo;
   info->gcWatchers();}
 
 ConstTerm *ConstTerm::gcConstTerm()
 {
   GCMETHMSG("ConstTerm::gcConstTerm");
-  if (this == NULL) return NULL;
+
+  if (this == NULL)
+    return NULL;
+
   CHECKCOLLECTED(*getGCField(), ConstTerm *);
 
   GName *gn = NULL;
 
-  size_t sz = 0;
+  ConstTerm * ret;
 
   switch (getType()) {
-  case Co_HeapChunk: return ((HeapChunk *) this)->gc();
+  case Co_HeapChunk:
+    return ((HeapChunk *) this)->gc();
   case Co_Abstraction:
     {
       Abstraction *a = (Abstraction *) this;
       CheckLocal(a);
-      sz = sizeof(Abstraction);
       gn = a->getGName1();
       COUNT(abstraction);
+      ret = (ConstTerm *) gcReallocStatic(this,sizeof(Abstraction));
       break;
     }
 
@@ -2452,15 +2630,15 @@ ConstTerm *ConstTerm::gcConstTerm()
     {
       Object *o = (Object *) this;
       CheckLocal(o);
-      sz = sizeof(Object);
+      ret = (ConstTerm *) gcReallocStatic(this,sizeof(Object));
       break;
     }
   case Co_Class:
     {
       ObjectClass *cl = (ObjectClass *) this;
       CheckLocal(cl);
-      sz = sizeof(ObjectClass);
       gn = cl->getGName1();
+      ret = (ConstTerm *) gcReallocStatic(this,sizeof(ObjectClass));
       break;
     }
   case Co_Cell:
@@ -2471,18 +2649,21 @@ ConstTerm *ConstTerm::gcConstTerm()
         CheckLocal((CellLocal*)this);
       case Te_Proxy:
       case Te_Manager:
-        sz = sizeof(CellManager);
+        ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellManager));
         break;
       case Te_Frame:{
         CellFrame *cf=(CellFrame *)this;
-        if(cf->isAccessBit()){           // has only been reached via gcBorrowRoot so far
+        if (cf->isAccessBit()) {
+          // has only been reached via gcBorrowRoot so far
           DebugCode(cf->resetAccessBit());
           void* forward=cf->getForward();
           ((CellFrame*)forward)->resetAccessBit();
           *getGCField()=GCMARK(forward);
-          return (ConstTerm*) forward;}
-        sz = sizeof(CellFrame);
-        break;}
+          return (ConstTerm*) forward;
+        }
+        ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrame));
+        break;
+      }
       default:{
         Assert(0);
         break;}}
@@ -2493,14 +2674,14 @@ ConstTerm *ConstTerm::gcConstTerm()
     {
       if(((Tertiary *)this)->getTertType()==Te_Local) {
         CheckLocal((PortLocal *) this);}
-      sz = sizeof(PortLocal);
+      ret = (ConstTerm *) gcReallocStatic(this,sizeof(PortLocal));
       break;
     }
   case Co_Space:
     {
       Space *sp = (Space *) this;
       CheckLocal(sp);
-      sz = sizeof(Space);
+      ret = (ConstTerm *) gcReallocStatic(this,sizeof(Space));
       COUNT(space);
       break;
     }
@@ -2509,20 +2690,20 @@ ConstTerm *ConstTerm::gcConstTerm()
     {
       SChunk *sc = (SChunk *) this;
       CheckLocal(sc);
-      sz = sizeof(SChunk);
       COUNT(chunk);
       gn = sc->getGName1();
+      ret = (ConstTerm *) gcReallocStatic(this,sizeof(SChunk));
       break;
     }
 
   case Co_Array:
     CheckLocal((OzArray *) this);
-    sz = sizeof(OzArray);
+    ret = (ConstTerm *) gcReallocStatic(this,sizeof(OzArray));
     break;
 
   case Co_Dictionary:
     CheckLocal((OzDictionary *) this);
-    sz = sizeof(OzDictionary);
+    ret = (ConstTerm *) gcReallocStatic(this,sizeof(OzDictionary));
     break;
 
   case Co_Lock:
@@ -2532,7 +2713,7 @@ ConstTerm *ConstTerm::gcConstTerm()
         CheckLocal((LockLocal*)this);
       case Te_Proxy:
       case Te_Manager:
-        sz = sizeof(LockManager);
+        ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockManager));
         break;
       case Te_Frame:{
         LockFrame *lf=(LockFrame *)this;
@@ -2542,7 +2723,7 @@ ConstTerm *ConstTerm::gcConstTerm()
           ((LockFrame*)forward)->resetAccessBit();
           *getGCField()=GCMARK(forward);
           return (ConstTerm*) forward;}
-        sz = sizeof(LockFrame);
+        ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockFrame));
         break;}
       default:{
         Assert(0);
@@ -2565,7 +2746,7 @@ ConstTerm *ConstTerm::gcConstTerm()
     Assert(0);
     return 0;
   }
-  ConstTerm *ret = (ConstTerm *) gcRealloc(this,sz);
+
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_CONSTTERM);
   storeForward(getGCField(), ret);
@@ -2595,15 +2776,13 @@ ConstTerm* ConstTerm::gcConstTermSpec()
     CellFrame *cf=(CellFrame*)t;
     cf->setAccessBit();
     COUNT(cell);
-    size_t sz = sizeof(CellFrame);
-    ret = (ConstTerm *) gcRealloc(this,sz);
+    ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrame));
     cf->myStoreForward(ret);}
   else{
     Assert(getType()==Co_Lock);
     LockFrame *lf=(LockFrame*)t;
     lf->setAccessBit();
-    size_t sz = sizeof(LockFrame);
-    ret = (ConstTerm *) gcRealloc(this,sz);
+    ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockFrame));
     lf->myStoreForward(ret);}
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_CONSTTERM);
@@ -2615,7 +2794,7 @@ HeapChunk * HeapChunk::gc(void)
   GCMETHMSG("HeapChunk::gc");
 
   COUNT(heapChunk);
-  HeapChunk * ret = (HeapChunk *) gcRealloc(this, sizeof(HeapChunk));
+  HeapChunk * ret = (HeapChunk *) gcReallocStatic(this, sizeof(HeapChunk));
 
   ret->chunk_data = copyChunkData();
 
@@ -2707,11 +2886,12 @@ Board * Board::gcBoard()
   Assert(opMode != IN_TC || isInTree(bb));
 
   COUNT(board);
-  size_t sz = sizeof(Board);
-  Assert(opMode==IN_TC || !inToSpace(bb));
-  Board *ret = (Board *) gcRealloc(bb,sz);
 
-  FDPROFILE_GC(cp_size_board, sz);
+  Assert(opMode==IN_TC || !inToSpace(bb));
+
+  Board *ret = (Board *) gcReallocStatic(bb, sizeof(Board));
+
+  FDPROFILE_GC(cp_size_board, sizeof(Board));
 
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
@@ -2719,6 +2899,7 @@ Board * Board::gcBoard()
   return ret;
 }
 
+inline
 void Board::gcRecurse()
 {
   GCMETHMSG("Board::gcRecurse");
@@ -2746,22 +2927,23 @@ Actor *Actor::gcActor()
   GCMETHMSG("Actor::gc");
   CHECKCOLLECTED(*getGCField(), Actor *);
   // by kost@; flags are needed for getBoard
-  size_t sz;
+
+  Actor *ret;
+
   if (isWait()) {
     COUNT(waitActor);
-    sz = sizeof(WaitActor);
+    ret = (Actor *) gcReallocStatic(this,sizeof(WaitActor));
   } else if (isAsk () == OK) {
     COUNT(askActor);
-    sz = sizeof(AskActor);
+    ret = (Actor *) gcReallocStatic(this,sizeof(AskActor));
   } else {
     COUNT(solveActor);
-    sz = sizeof (SolveActor);
+    ret = (Actor *) gcReallocStatic(this,sizeof(SolveActor));
   }
-  Actor *ret = (Actor *) gcRealloc(this,sz);
 
   FDPROFILE_GC(isWait() ? cp_size_waitactor
-                : (isAsk() ? cp_size_askactor
-                   : cp_size_solveactor), sz);
+               : (isAsk() ? cp_size_askactor
+                  : cp_size_solveactor), sz);
 
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_ACTOR);
@@ -2839,6 +3021,7 @@ void SolveActor::gcRecurse () {
 #endif
 }
 
+inline
 void Actor::gcRecurse()
 {
   GCMETHMSG("Actor::gcRecurse");
@@ -2885,33 +3068,48 @@ CpBag * CpBag::gc(void) {
 #define ERROR(Fun, Msg)                                                       \
         error("%s in %s at %s:%d", Msg, Fun, __FILE__, __LINE__);
 
-/* collect LTuple */
-
 inline
-void gcTaggedBlockRecurse(TaggedRef *block,int sz)
-{
-  for (int i = sz; i--; ) {
-    if (!isDirectVar(block[i])) {
-      OZ_updateHeapTerm(block[i]);
-    }
+void SRecord::gcRecurse() {
+  GCMETHMSG("SRecord::gcRecurse");
+  OZ_updateHeapTerm(label);
+
+  TaggedRef * a = getRef();
+
+  for (int i = getWidth(); i--; ) {
+    if (!isDirectVar(a[i]))
+      OZ_updateHeapTerm(a[i]);
   }
 }
 
 
 inline
-void SRecord::gcRecurse()
-{
-  GCMETHMSG("SRecord::gcRecurse");
-  OZ_updateHeapTerm(label);
-  gcTaggedBlockRecurse(getRef(),getWidth());
-}
+void LTuple::gcRecurse(int n) {
 
+  // If n is less than zero, the last tail does not need
+  // garbage collection: either a direct variable
+  // or an already updated list cell
 
-inline
-void LTuple::gcRecurse()
-{
   GCMETHMSG("LTuple::gcRecurse");
-  gcTaggedBlockRecurse(args,2);
+
+  LTuple * l = this;
+
+  int i = (n > 0) ? n : -n;
+
+  while (i > 1) {
+    if (!isDirectVar(l->args[0]))
+      OZ_updateHeapTerm(l->args[0]);
+    l = tagged2LTuple(l->args[1]);
+    i--;
+  }
+
+  if (!isDirectVar(l->args[0]))
+    OZ_updateHeapTerm(l->args[0]);
+
+  if (n > 0) {
+    Assert(!isDirectVar(l->args[1]));
+    OZ_updateHeapTerm(l->args[1]);
+  }
+
 }
 
 
@@ -2925,7 +3123,9 @@ void performCopying(void)
 
     switch(ptrType) {
 
-    case PTR_LTUPLE:    ((LTuple *) ptr)->gcRecurse();           break;
+    case PTR_LTUPLE:
+      ((LTuple *) ptr)->gcRecurse(ptrStack.popInt());
+      break;
     case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse();          break;
     case PTR_NAME:      ((Name *) ptr)->gcRecurse ();            break;
     case PTR_BOARD:     ((Board *) ptr)->gcRecurse();            break;
@@ -2993,7 +3193,7 @@ void AM::doGC()
 
 OzDebug *OzDebug::gcOzDebug()
 {
-  OzDebug *ret = (OzDebug*) gcRealloc(this,sizeof(OzDebug));
+  OzDebug *ret = (OzDebug*) gcReallocStatic(this,sizeof(OzDebug));
 
   ret->Y = gcRefsArray(ret->Y);
   ret->G = gcRefsArray(ret->G);
