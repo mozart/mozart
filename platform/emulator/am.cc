@@ -300,7 +300,6 @@ void AM::suspendEngine()
 {
   deinstallPath(rootBoard);
 
-  idleGC();
   ozstat.printIdle(stdout);
 
   osBlockSignals(OK);

@@ -243,7 +243,6 @@ public:
 
   void gc(int msgLevel);  // ###
   void doGC();
-  Bool idleGC();
   // coping of trees (and terms);
   Board* copyTree (Board* node, Bool *isGround);
 
