@@ -1,5 +1,5 @@
 dnl -*- m4 -*-
-dnl
+dnl TESTING
 dnl  Authors:
 dnl    Denys Duchier (duchier@ps.uni-sb.de)
 dnl    Michael Mehl (mehl@dfki.de)
