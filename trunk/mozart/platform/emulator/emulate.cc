@@ -1683,11 +1683,11 @@ void engine() {
 	      goto LBLcall;
 	    case FAILED:
 	      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
-
+	    localHack0:
 	      HF_FAIL(applFailure(bi), printArgs(X,predArity));
 	    case PROCEED:
 	      LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-				   goto LBLfailure);
+				   goto localHack0;);
 	      if (emulateHook0(e)) {
 		if (!isExecute) {
 		  e->pushTaskOutline(CBB,PC,Y,G);
