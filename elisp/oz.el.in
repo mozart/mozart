@@ -1373,7 +1373,7 @@ to handle lines like 'attr a:'."
 	    (setq end1 (point)))
 	  (if (> column 0)
 	      (forward-char column))
-	  (if (and (> column 0) (looking-at oz-token-pattern))
+	  (if (and (>= column 0) (looking-at oz-token-pattern))
 	      (setq start2 (match-beginning 0) end2 (match-end 0))
 	    (setq start2 start1 end2 start1))
 	  (or oz-bar-overlay
