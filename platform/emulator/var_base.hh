@@ -437,7 +437,7 @@ OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
   return v->getReifiedPatch();
 }
 
-//#define TMUELLER
+#define TMUELLER
 #ifdef TMUELLER
 // dealing with global variables
 void bindGlobalVar(OZ_Term *, OZ_Term);
