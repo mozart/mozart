@@ -1310,6 +1310,35 @@ and initial semicolons."
       oz-emulator-buffer
     oz-compiler-buffer))
 
+
+;; debugger support
+(defun oz-display-arrow (file line)
+  "Display arrow at given position, load file if necessary."
+  (interactive)
+  (let* ((last-nonmenu-event t)
+	 (buffer (find-file-noselect file))
+	 (window (display-buffer buffer))
+	 (oldpos)
+	 (pos))
+    (save-excursion
+      (set-buffer buffer)
+      (save-restriction
+	(widen)
+	(setq oldpos (point))
+	(goto-line line)
+	(setq pos (point))
+	(setq overlay-arrow-string "=>")
+	(or overlay-arrow-position
+	    (setq overlay-arrow-position (make-marker)))
+	(set-marker overlay-arrow-position (point) (current-buffer)))
+      (if (or (< pos (window-start)) (> pos (window-end)))
+	  (progn
+	    (widen)
+	    (goto-char pos))
+	(goto-char oldpos)))
+    (set-window-point window overlay-arrow-position)))
+
+
 (defun oz-compiler-filter (proc string)
   (if (not oz-win32)
       (oz-filter proc string (process-buffer proc))
@@ -1348,10 +1377,20 @@ and initial semicolons."
 	    (insert-before-markers string)
 	    (set-marker (process-mark proc) (point))
 
-	    ;; remove escape characters
-	    (goto-char old-point)
-	    (while (search-forward-regexp oz-remove-pattern nil t)
-	      (replace-match "" nil t)))
+            (goto-char old-point)
+
+            ;; remove escape characters
+            (while (search-forward-regexp oz-remove-pattern nil t)
+              (replace-match "" nil t))
+
+            ;; oz-arrow information?
+            (while (search-forward-regexp
+                    "^\'oz-arrow \\([^ ]*\\) \\([^ ]*\\)\'\n" nil t)
+              (let ((file (match-string 1))
+                    (line (string-to-number (match-string 2))))
+                (replace-match "" nil t)
+                (oz-display-arrow file line))))
+	  
 	  (if (or moving errs-found) (goto-char (process-mark proc))))
       (set-buffer old-buffer))
 
