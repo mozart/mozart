@@ -133,6 +133,15 @@ NOTDIRSRCTOP	= $(notdir $(SRCTOP))
 
 .PHONY: src doc $(PLATFORMS)
 
+ifeq ($(USER),root)
+# make sure that what goes into the tar files for preparing the RPMs
+# is actually owned by root, otherwise the owner and group of the file
+# itself will be used, which aren't likely to exist on a user's machine.
+TARTAR	=	$(TAR) --owner=root --group=root
+else
+TARTAR	=	$(TAR)
+endif
+
 src: $(PACKDIR)
 	echo "[" $(NOTDIRSRCTOP) "]"
 	test -n "$(NOTDIRSRCTOP)" || { echo "bad"; exit 1; }
@@ -143,7 +152,7 @@ src: $(PACKDIR)
 	 rm -rf $$tbr ; \
 	 find $(NOTDIRSRCTOP) -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
 	 mv $(NOTDIRSRCTOP) mozart-`$(OZVERSION)`.$(OZBUILD); \
-	 $(TAR) -cf - mozart-`$(OZVERSION)`.$(OZBUILD) ) | \
+	 $(TARTAR) -cf - mozart-`$(OZVERSION)`.$(OZBUILD) ) | \
 	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-src.tar.gz
 	rm -rf $(PACKDIR)/mozart-`$(OZVERSION)`.$(OZBUILD)
 
@@ -155,7 +164,7 @@ doc: $(PACKDIR) $(PACKDIR)/mozart
 	( (cd $(PREFIX); \
 	   $(TAR) -cf - -T $(BUILDTOP)/files.doc ) | \
            (cd $(PACKDIR)/mozart; $(TAR) -xf - ) )
-	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
+	(cd $(PACKDIR); $(TARTAR) -cf - mozart ) | \
 	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-doc.tar.gz
 	rm -rf $(PACKDIR)/mozart
 	rm -f files.doc
@@ -172,7 +181,7 @@ $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
 	( (cd $(PREFIX); \
 	   $(TAR) -cf - -T $(BUILDTOP)/files.all ) | \
            (cd $(PACKDIR)/mozart; $(TAR) -xf - ) )
-	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
+	(cd $(PACKDIR); $(TARTAR) -cf - mozart ) | \
 	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@.tar.gz
 	rm -rf $(PACKDIR)/mozart
 	ldd $(PREFIX)/platform/$(PLATFORM)/emulator.exe \
@@ -182,7 +191,7 @@ $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
 	rm -f files.base files.base-$@ files.contrib files.contrib-$@ files.all
 
 $(PACKDIR) $(PACKDIR)/mozart:
-	$(INSTALL_DIR) $@
+	export INSTALL_DIR_CHMOD=777 && $(INSTALL_DIR) $@
 
 win32-i486-cygwin: $(PACKDIR) $(PACKDIR)/mozart
 	( cd $(PREFIX) && \
@@ -317,7 +326,7 @@ std: $(PACKDIR)
 	cd $(PACKDIR)/mozart-stdlib && \
 	  $(PREFIX)/bin/ozengine ./ozmake.ozf --create --package=mozart-stdlib.pkg && \
 	  cp README ozmake.ozf mozart-stdlib.pkg $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
-	(cd $(PACKDIR) && $(TAR) -cf - mozart-$(shell $(OZVERSION)).$(OZBUILD)-std) | \
+	(cd $(PACKDIR) && $(TARTAR) -cf - mozart-$(shell $(OZVERSION)).$(OZBUILD)-std) | \
 	$(COMPRESS) > mozart-$(shell $(OZVERSION)).$(OZBUILD)-std.tar.gz
 	rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std $(PACKDIR)/mozart-stdlib
 
