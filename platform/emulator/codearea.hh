@@ -126,9 +126,6 @@ public:
   static ProgramCounter definitionEnd(ProgramCounter from);
   static ProgramCounter nextDebugInfo(ProgramCounter from);
 
-  void showAtomNames();
-
-
   /* load statements from "codeFile" until "ENDOFFILE", acknowledge if ok*/
   static Bool load(CompStream *fd, ProgramCounter &newPC);
 

@@ -60,12 +60,6 @@ Opcode CodeArea::stringToOp(char *s)
   return OZERROR;
 }
 
-void CodeArea::showAtomNames()
-{
-  printf("\nAtom Tab:\n");
-  atomTab.print();
-}
-
 inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
 {
   Literal *found = (Literal *) table->htFind(str);
