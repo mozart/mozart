@@ -47,7 +47,7 @@ int CodeArea::totalSize = 0; /* in bytes */
 char **CodeArea::opToString = initOpToString();
 CodeAreaList *CodeArea::allBlocks = NULL;
 
-#if defined THREADED && THREADED == 2
+#ifdef THREADED
 void **CodeArea::globalInstrTable = NULL;
 #endif
 
@@ -128,30 +128,22 @@ AbstractionEntry *addAbstractionTab(int id)
   instruction tables
   */
 
-#if defined THREADED && THREADED > 0
+#ifdef THREADED
 AdressOpcode CodeArea::opcodeToAdress(Opcode oc)
 {
-#if THREADED == 2
   return globalInstrTable[oc];
-#else
-  return (AdressOpcode) (oc * sizeof(sTyp));
-#endif
 }
 
 
 Opcode CodeArea::adressToOpcode(AdressOpcode adr) 
 {
-#if THREADED == 2
   for(int i = 0; i < (int) ERROR; i++)
     if (globalInstrTable[i] == adr)
       return (Opcode)i;
   return ERROR;
-#else
-  return (Opcode) ((Opcode) adr / sizeof(sTyp));
-#endif
 }
 
-#else // THREADED
+#else /* THREADED */
 AdressOpcode CodeArea::opcodeToAdress(Opcode oc)
 {
   return  oc;
@@ -163,8 +155,8 @@ Opcode CodeArea::adressToOpcode(AdressOpcode adr)
   return adr;
 }
 
+#endif /* THREADED */
 
-#endif // THREADED
 
 void AbstractionEntry::setPred(Abstraction *ab) 
 { 
@@ -175,7 +167,7 @@ void AbstractionEntry::setPred(Abstraction *ab)
   // indexing on X[0] optimized !!!
   if (CodeArea::adressToOpcode((AdressOpcode) *pc) == SWITCHONTERMX &&
       getRegArg(pc+1) == 0) {
-    indexTable = (IHashTable *) (pc+2);
+    indexTable = (IHashTable *) getAdressArg(pc+2);
   } else {
     indexTable = NULL;
   }
