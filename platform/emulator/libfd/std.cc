@@ -25,12 +25,8 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
 #include "conf.h"
-#endif
-
 #include "std.hh"
-
 #include <stdlib.h>
 #include <math.h>
 

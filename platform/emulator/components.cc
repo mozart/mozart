@@ -25,15 +25,10 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
 #include "conf.h"
-#endif
-
 #include "wsock.hh"
-
 #include "codearea.hh"
 #include "indexing.hh"
-
 #include "var_base.hh"
 #include "controlvar.hh"
 #include "gc.hh"

@@ -28,9 +28,7 @@
 #pragma implementation "cpi.hh"
 #endif
 
-#ifdef HAVE_CONFIG_H
 #include "conf.h"
-#endif
 
 
 #include <math.h>
