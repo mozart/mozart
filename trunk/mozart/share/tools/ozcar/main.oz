@@ -8,6 +8,7 @@ declare
 local
    
    \insert pre
+   \insert string
    \insert config
    %\insert emacs
    \insert source

@@ -56,9 +56,12 @@ in
 	     T    = M.thr.1
 	     File = M.file
 	     Line = M.line
+	     Name = case {Value.hasFeature M name} then M.name else nil end
+	     Args = case {Value.hasFeature M args} then M.args else nil end
 	  in
 	     case {Thread.is T} then
-		{Ozcar stepThread(file:File line:Line thr:T)}
+		{Ozcar stepThread(file:File line:Line thr:T
+				  name:Name args:Args)}
 	     else
 		{Message "Invalid Thread ID in step message of stream"}
 	     end

@@ -112,14 +112,17 @@ class Tree from BaseTree Tk.canvas
    end
 
    meth select(T)
-      % todo: handle error when parent ID == 1 (nothing to debug anymore)
-      Selected <- {List.filter @nodes fun {$ N} {N get($)}.t == T end}.1
+      L = {List.filter @nodes fun {$ N} {N get($)}.t == T end}
+   in
+      case L \= nil then
+	 Selected <- L.1
+      else skip end
       Tree,display
    end
 
    meth display
-      SF = 70
-      OS = 20
+      SF = 50
+      OS = 15
       Sel = @Selected
    in
       {self tk(delete all)}
@@ -132,14 +135,16 @@ class Tree from BaseTree Tk.canvas
 	  {ForAll [tk(crea oval X*SF-OS Y*SF-OS X*SF+OS Y*SF+OS
 		      outline:black width:3 tags:CT
 		      fill:white)
-		   tk(crea text X*SF+1 Y*SF text:I tags:CT)
 		   tk(crea line X*SF-OS Y*SF (X-1)*SF+OS Y*SF
 		      width:3)
 		   tk(crea line (X-1)*SF+OS Y*SF (X-1)*SF+OS (Y-DY)*SF
 		      width:3)] self}
 	  case N == Sel then
-	     {self tk(crea rect X*SF-OS Y*SF-OS X*SF+OS Y*SF+OS width:2)}
+	     {self tk(crea text X*SF+1 Y*SF text:I tags:CT
+		      font:ThreadTreeBoldFont)}
 	  else
+	     {self tk(crea text X*SF+1 Y*SF text:I tags:CT
+		      font:ThreadTreeFont)}
 	     {CT tkBind(event:  '<1>'
 			action: Ozcar # switch(T {Thread.id T}))}
 	  end
