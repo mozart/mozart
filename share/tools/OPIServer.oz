@@ -1,5 +1,6 @@
 functor
-import System(showError:SHOW)
+import
+   System(showError:SHOW)
    Open(socket)
    Module(manager)
    Error(messageToVirtualString)
