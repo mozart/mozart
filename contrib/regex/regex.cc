@@ -91,10 +91,8 @@ OZ_Return re_error(int code,regex_t* re,int must_free)
 // Builtins
 //
 
-#define RegexARGS OZ_toList(_OZ_arity,_OZ_ARGS)
-
 #define RegexError(PROC,CODE,RE,FREE) \
-OZ_raiseErrorC("regex",3,OZ_atom(PROC),RegexARGS, \
+OZ_raiseErrorC("regex",3,OZ_atom(PROC),OZ_inAsList(), \
                re_error(CODE,RE,FREE))
 
 OZ_BI_define(regex_compile,2,1)
