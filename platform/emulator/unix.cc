@@ -463,7 +463,7 @@ static OZ_Return vs2buff(OZ_Term vs, char **write_buff, int *len,
 inline OZ_Return buffer_vs(OZ_Term vs, char *write_buff, int *len,
                          OZ_Term *rest, OZ_Term *susp)
 {
-  *len        = 0;
+  *len = 0;
   return vs2buff(vs, &write_buff, len, rest, susp);
 }
 
@@ -781,8 +781,7 @@ OZ_C_ioproc_begin(unix_write, 3)
 OZ_C_proc_end
 
 
-OZ_C_ioproc_begin(unix_lSeek,4)
-{
+OZ_C_ioproc_begin(unix_lSeek,4) {
   OZ_declareIntArg(0, fd);
   OZ_declareIntArg(1, offset);
   OZ_declareAtomArg(2, OzWhence);
@@ -1538,7 +1537,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
       !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
                      NULL,NULL,&si,&pinf)) {
-    return OZ_raiseC("os",1,OZ_string("Create Process"));
+    return OZ_raise(makeErrorTuple(0, "Cannot create pipe process.",
+                                   "windows"));
   }
 
   int pid = (int) pinf.hProcess;
@@ -1550,8 +1550,9 @@ OZ_C_ioproc_begin(unix_pipe,4)
   int rsock = _hdopen((int)rh1,O_RDONLY|O_BINARY);
   int wsock = _hdopen((int)wh2,O_WRONLY|O_BINARY);
   if (rsock<0 || wsock<0) {
-    perror("_hdopen");
-    return OZ_raiseC("os",1,OZ_string("_hdopen"));
+    return OZ_raise(makeErrorTuple(0,
+                                   "Cannot connect to created pipe process.",
+                                   "windows"));
   }
 
 #else  /* !WINDOWS */
@@ -1728,7 +1729,9 @@ OZ_C_ioproc_begin(unix_tempName, 3)
                      OZ_string("Maximal 5 characters for Unix.tempName prefix allowed."));
 
   if (!(filename = tempnam(directory, prefix))) {
-    return OZ_raiseC("os",1,OZ_string("tempNam failed"));
+    return OZ_raise(makeErrorTuple(0,
+                                   "Unix.tempName failed.",
+                                   "unix"));
   }
   filename = ozstrdup(filename);
 
@@ -1763,7 +1766,9 @@ OZ_C_ioproc_begin(unix_putEnv,2)
   int ret = putenv(buf);
   if (ret != 0) {
     delete buf;
-    return OZ_raiseC("os",1,OZ_string("putenv failed"));
+    return OZ_raise(makeErrorTuple(0,
+                                   "Unix.putEnv failed.",
+                                   "unix"));
   }
 
   return PROCEED;

@@ -377,6 +377,21 @@ TaggedRef DynamicTable::getKeys()
 }
 
 
+TaggedRef DynamicTable::getPairs() {
+  TaggedRef arity=AtomNil;
+  for (int di=0; di<size; di++) {
+    if (table[di].value!=makeTaggedNULL()) {
+      Assert(isFeature(table[di].ident));
+      SRecord *sr = SRecord::newSRecord(AtomPair,2);
+      sr->setArg(0, table[di].ident);
+      sr->setArg(1, table[di].value);
+      arity=cons(makeTaggedSRecord(sr),arity);
+    }
+  }
+  return arity;
+}
+
+
 // Return TRUE if current table has features that are not in arity argument
 Bool DynamicTable::hasExtraFeatures(int tupleArity) {
     TaggedRef feat;
