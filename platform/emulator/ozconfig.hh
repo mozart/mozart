@@ -91,6 +91,8 @@ public:
 
   char *emuhome;
 
+  int copyallways;
+
   /* command line arguments visible from Oz */
   char **argV;
   int argC;
