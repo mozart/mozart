@@ -74,14 +74,14 @@ in
 
       % impose resource constraints
 
-      {FD.schedule.serialized ExclusiveTasks Start Dur}
+      {Schedule.serialized ExclusiveTasks Start Dur}
 
       % enumerate exclusion choices
 
 \ifdef DUMB_SCHEDULE
-      {FD.schedule.lastsDist ExclusiveTasks Start Dur}
+      {Schedule.lastsDist ExclusiveTasks Start Dur}
 \else
-      {FD.schedule.firstsLastsDist ExclusiveTasks Start Dur}
+      {Schedule.firstsLastsDist ExclusiveTasks Start Dur}
 \endif
 
       % fix all start points to minimum after enumeration

@@ -27,6 +27,8 @@ local
    import
       FD
 
+      Schedule
+
       Explorer
 
       Tk
