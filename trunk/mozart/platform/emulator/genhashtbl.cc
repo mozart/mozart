@@ -177,7 +177,7 @@ void GenHashTable::htAdd(int bigIndex,GenHashBaseKey* key,GenHashEntry *entry){
   counter++;
   basic_htAdd(bigIndex,key,entry);}
 
-void GenHashTable::htSub(int bigIndex,GenHashNode *cur){
+Bool GenHashTable::htSub(int bigIndex,GenHashNode *cur){
   int index=bigIndex % tableSize; 
   counter--;
   GenHashNode *try0=&table[index];
@@ -189,13 +189,15 @@ void GenHashTable::htSub(int bigIndex,GenHashNode *cur){
       try0=cur->next;
       cur->copyFrom(try0);
       PD(HASH,"sub-direct at %d - with coll",index);
-      manager->deleteGenHashNode(try0);}}
+      manager->deleteGenHashNode(try0);
+      return FALSE;
+    }}
   else{
     while(try0->next!=cur) {Assert(try0!=NULL);try0=try0->next;}
     PD(HASH,"sub-cll chain at %d",index);
     try0->next=cur->next;
     manager->deleteGenHashNode(cur);}
-  return;}
+  return TRUE;}
 
 GenHashNode *GenHashTable::htFindFirst(int bigIndex){
   int index=bigIndex % tableSize; 
