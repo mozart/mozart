@@ -2494,11 +2494,7 @@ void AM::doGC()
   /* calc upper limits for next gc */
   int used = getUsedMemory();
   if (used > (ozconf.heapThreshold*ozconf.heapMargin)/100) {
-    // old scheme: 
-    // ozconf.heapThreshold = ozconf.heapThreshold*(100+ozconf.heapIncrement)/100;
-    ozconf.heapThreshold += (ozconf.heapMaxSize-ozconf.heapThreshold)*ozconf.heapIncrement/100;
-
-    Assert(ozconf.heapThreshold < ozconf.heapMaxSize);
+    ozconf.setHeapThreshold(ozconf.heapThreshold*(100+ozconf.heapIncrement)/100);
   }
 
   unsetSFlag(StartGC);
