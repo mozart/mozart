@@ -24,6 +24,7 @@
 
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+FDDIR		= @srcdir@
 FDINCS		= -I.. -I$(srcdir)/..
 CFLAGS		= $(COPT) $(DEFS) $(INCS) $(FDINCS) $(CWARN) $(CUSR)
 CXXFLAGS	= $(CFLAGS)
@@ -31,17 +32,17 @@ DEPEND		= @DEPEND@ $(DEFS) $(INCS) $(FDINCS)
 
 TARGETS	= libfd.a libsched.a
 
-FDLIBSRCS = arith.cc fdaux.cc bool.cc \
-	    card.cc cd.cc count.cc \
-	    rel.cc disjoint.cc std.cc \
-	    sum.cc sumequal.cc \
-	    distance.cc misc.cc streamProps.cc \
-	    sumd.cc sumabs.cc complalldist.cc
+FDLIBSRCS = $(FDDIR)/arith.cc $(FDDIR)/fdaux.cc $(FDDIR)/bool.cc \
+	    $(FDDIR)/card.cc $(FDDIR)/cd.cc $(FDDIR)/count.cc \
+	    $(FDDIR)/rel.cc $(FDDIR)/disjoint.cc $(FDDIR)/std.cc \
+	    $(FDDIR)/sum.cc $(FDDIR)/sumequal.cc \
+	    $(FDDIR)/distance.cc $(FDDIR)/misc.cc $(FDDIR)/streamProps.cc \
+	    $(FDDIR)/sumd.cc $(FDDIR)/sumabs.cc $(FDDIR)/complalldist.cc
 
 FDLIBOBJS = $(FDLIBSRCS:.cc=.o)
 
-SCHEDLIBSRCS = scheduling.cc schedulingDist.cc \
-	       schedulingDistAux.cc taskintervals.cc 
+SCHEDLIBSRCS = $(FDDIR)/scheduling.cc $(FDDIR)/schedulingDist.cc \
+	       $(FDDIR)/schedulingDistAux.cc $(FDDIR)/taskintervals.cc 
 
 SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
@@ -86,5 +87,3 @@ veryclean: realclean
 
 .cc.E:
 	$(CXX) $(CXXFLAGS) -E -o $@ $<
-
-
