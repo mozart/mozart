@@ -497,28 +497,50 @@
     <Chapter id="chapter.running">
       <Title/Running Mozart from the &OPI;/
       <P>
-<!--** oz-change-title, oz-frame-title, variable oz-home, oz-prepend-line,
-oz-other-buffer-size, oz-popup-on-error-t, oz-halt-timeout, oz-emulator,
-oz-components-path, oz-root-functor, run-oz, oz-halt, oz-set-other,
-oz-set-emulator, oz-set-components, oz-other, oz-other-emulator,
-oz-other-components, oz-feed-*, oz-send-string, oz-toggle-*,
-oz-feed-*-browse, oz-mouse-goto-error, oz-goto-next-error,
-{Property.get argv} always returns nil, oz-to-{coresyntax,emulatorcode}-*
+<!--**
+ - {Property.get argv} always returns nil
+ - OZ-HOME
+ Running and Halting
+ - run-oz, oz-change-title, oz-frame-title, oz-halt, oz-halt-timeout
+ Mozart's Output Buffers
+ - oz-toggle-{compiler,emulator,temp}, oz-other-buffer-size
+ Feeding Code to the Compiler
+ - oz-feed-*, oz-send-string, oz-prepend-line
+ - oz-to-{coresyntax,emulatorcode}-*
+ Dealing With Errors
+ - oz-popup-on-error, oz-mouse-goto-error, oz-goto-next-error
 -->
     <Chapter id="chapter.tools">
       <Title/Interacting with Mozart's Development Tools/
       <P>
-<!--** oz-debug-{start,stop}, oz-breakpoint-key-set etc,
-oz-profiler-{start,stop}, oz-bar-remove, oz-view-panel, oz-compiler-panel -->
+<!--**
+ - oz-browse-{buffer,region,line,paragraph}
+ - oz-open-panel
+ - oz-open-compiler-panel
+ - oz-debugger, oz-breakpoint-at-point, oz-breakpoint-mouse-{set,delete},
+   oz-bar-remove
+ - oz-profiler
+-->
     <Chapter id="chapter.gdb">
       <Title/Running Mozart under gdb/
       <P>
-<!--** oz-gdb-autostart, oz-emulator, oz-gdb -->
+<!--**
+ Testing Locally
+ - oz-emulator, oz-components-path, oz-root-functor,
+   oz-set-other, oz-set-emulator, oz-set-components,
+   oz-other, oz-other-emulator, oz-other-components
+ Running Under gdb
+ - oz-gdb, oz-gdb-autostart
+-->
     <Chapter id="chapter.internals">
       <Title/Internal Functions/
       <P>
-<!--** oz-forward-keyword, oz-backward-keyword, oz-is-quoted,
-oz-backward-begin, oz-backward-paren, oz-forward-end, oz-forward-paren -->
+<!--**
+ - oz-is-quoted
+ - oz-backward-keyword, oz-forward-keyword
+ - oz-backward-begin, oz-forward-end,
+   oz-backward-paren, oz-forward-paren
+-->
   <Back>
     <Bib.Extern id="kornstaedt96" to="../gump/gump.bib" key="kornstaedt96">
 </Book>
