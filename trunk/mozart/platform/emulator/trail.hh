@@ -47,8 +47,6 @@ public:
     Stack::push((StackEntry) Te_Mark);
   }
   
-  void init(void);
-
 
   /*
    * Tests

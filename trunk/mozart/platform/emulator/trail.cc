@@ -51,10 +51,14 @@ void Trail::pushVariable(TaggedRef * varPtr) {
   if (v->isTrailed())
     return;
 
+  OzVariable * c = oz_var_copyForTrail(v);
+
+  Assert(c);
+
   ensureFree(3);
-  Stack::push((StackEntry) varPtr,                 NO);
-  Stack::push((StackEntry) oz_var_copyForTrail(v), NO);
-  Stack::push((StackEntry) Te_Variable,            NO);
+  Stack::push((StackEntry) varPtr,      NO);
+  Stack::push((StackEntry) c,           NO);
+  Stack::push((StackEntry) Te_Variable, NO);
 
   v->setTrailed();
 
@@ -70,7 +74,7 @@ void Trail::pushMark(void) {
     case Te_Mark:
       goto exit;
     case Te_Variable: {
-      TaggedRef * varPtr = (TaggedRef *) *(top-1);
+      TaggedRef * varPtr = (TaggedRef *) *(top-2);
       Assert(isCVar(*varPtr));
       OzVariable * v = tagged2CVar(*varPtr);
       Assert(v->isTrailed());
@@ -123,7 +127,7 @@ void Trail::popMark(void) {
     case Te_Mark:
       return;
     case Te_Variable: {
-      TaggedRef * varPtr = (TaggedRef *) *(top-1);
+      TaggedRef * varPtr = (TaggedRef *) *(top-2);
       Assert(isCVar(*varPtr));
       OzVariable * v = tagged2CVar(*varPtr);
       Assert(!v->isTrailed());
