@@ -788,7 +788,7 @@ void initBuiltins() {
     makeTaggedConst(new Builtin("UNKNOWN", 0, 0, BIfail,     OK));
 
   // to execute boot functor in am.cc
-  BI_dot      = getBuiltin_oz("Record.'.'");
+  BI_dot      = getBuiltin_oz("Value.'.'");
   // not in builtin table...
   BI_load     =
     makeTaggedConst(new Builtin("load",     2, 0, BIload,     OK));

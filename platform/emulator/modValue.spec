@@ -26,6 +26,10 @@
 
 %builtins_all =
     (
+     '.'                => { in  => ['*recordCOrChunk','+feature'],
+                             out => ['value'],
+                             bi  => BIdot},
+
      'wait'             => { in  => ['+value'],
                              out => [],
                              bi  => BIisValue},
@@ -70,6 +74,10 @@
                              out => ['value'],
                              BI  => BIfuture},
 
+     '!!'               => { in  => ['value'],
+                             out => ['value'],
+                             BI  => BIfuture},
+
      '=='               => { in  => ['*value','*value'],
                              out => ['+bool'],
                              bi  => BIeqB,
@@ -111,5 +119,10 @@
      'type'             => { in  => ['+value'],
                              out => ['+atom'],
                              bi  => BItermType},
+
+     'toVirtualString'  => { in  => ['value','+int','+int'],
+                             out => ['+string'],
+                             BI  => BItermToVS},
+
      );
 1;;
