@@ -182,23 +182,37 @@ RunnableThreadBody* AM::allocateBody()
   return body;
 }
 
+
 //
 //  Make a runnable thread with a task stack;
 inline
-Thread *AM::mkRunnableThread(int prio, Board *bb, Bool inSolve)
+Thread *AM::mkRunnableThread(int prio, Board *bb)
 {
   Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb);
   th->setBody(allocateBody());
 
-  Assert(bb==currentBoard ||
-         bb->getParent() == currentBoard ||
-         inSolve);
-  if (currentSolveBoard != (Board *) NULL || inSolve) {
-    Assert (isInSolveDebug (bb));
-    incSolveThreads (bb);
-    th->setInSolve ();
+  int inSolve = incSolveThreads(bb);
+  if (inSolve) {
+    th->setInSolve();
+  }
+  return th;
+}
+
+//
+//  Make a runnable thread with a task stack;
+inline
+Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
+{
+  Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb);
+  th->setBody(allocateBody());
+
+  Assert(bb==currentBoard || bb->getParent() == currentBoard);
+  if (currentSolveBoard) {
+    int inSolve=incSolveThreads(bb);
+    Assert(inSolve);
+    th->setInSolve();
   } else {
-    Assert (!(isInSolveDebug (bb)));
+    Assert(!isInSolveDebug(bb));
   }
   return th;
 }

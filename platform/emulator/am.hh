@@ -276,13 +276,9 @@ public:
   Bool hookCheckNeeded();
   Bool isNotPreemtiveScheduling(void);
 
-#ifdef OUTLINE
-  RunnableThreadBody* allocateBody();
-  Thread *mkRunnableThread(int prio, Board *bb, Bool inSolve=NO);
-#else
-  inline RunnableThreadBody* allocateBody();
-  inline Thread *mkRunnableThread(int prio, Board *bb, Bool inSolve=NO);
-#endif
+  INLINE RunnableThreadBody* allocateBody();
+  INLINE Thread *mkRunnableThread(int prio, Board *bb);
+  INLINE Thread *mkRunnableThreadOPT(int prio, Board *bb);
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
   Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
@@ -339,7 +335,7 @@ public:
                                  SuspList * suspList, PropCaller calledBy);
   BFlag isBetween(Board * to, Board * varHome);
   Bool  isBelow(Board *below, Board *above);
-  void incSolveThreads (Board *bb);
+  int incSolveThreads (Board *bb);
   void decSolveThreads (Board *bb);
   DebugCode (Bool isInSolveDebug (Board *bb);)
 

@@ -1991,7 +1991,7 @@ void OZ_pushCall(OZ_Thread thr,OZ_Term fun,OZ_Term *args,int arity)
 
 void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
-  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.currentBoard);
+  Thread *tt = am.mkRunnableThreadOPT(DEFAULT_PRIORITY, am.currentBoard);
   tt->pushCFun(fun, args, arity, OK);
   am.scheduleThread (tt);
 }
