@@ -657,13 +657,34 @@ test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
+echo $ac_n "checking whether ln -s works""... $ac_c" 1>&6
+echo "configure:662: checking whether ln -s works" >&5
+if eval "test \"`echo '$''{'ac_cv_prog_LN_S'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  rm -f conftestdata
+if ln -s X conftestdata 2>/dev/null
+then
+  rm -f conftestdata
+  ac_cv_prog_LN_S="ln -s"
+else
+  ac_cv_prog_LN_S=ln
+fi
+fi
+LN_S="$ac_cv_prog_LN_S"
+if test "$ac_cv_prog_LN_S" = "ln -s"; then
+  echo "$ac_t""yes" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
 
 for ac_prog in sh bash ksh
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:667: checking for $ac_word" >&5
+echo "configure:688: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_SH'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -696,7 +717,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:700: checking for $ac_word" >&5
+echo "configure:721: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -729,7 +750,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:733: checking for $ac_word" >&5
+echo "configure:754: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MV'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -757,45 +778,12 @@ fi
 test -n "$MV" && break
 done
 
-for ac_prog in ln
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:766: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_LN'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$LN"; then
-  ac_cv_prog_LN="$LN" # Let the user override the test.
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_LN="$ac_prog"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-fi
-fi
-LN="$ac_cv_prog_LN"
-if test -n "$LN"; then
-  echo "$ac_t""$LN" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-test -n "$LN" && break
-done
-
 for ac_prog in mkdir
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:799: checking for $ac_word" >&5
+echo "configure:787: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MKDIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -828,7 +816,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:832: checking for $ac_word" >&5
+echo "configure:820: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RMDIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -861,7 +849,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:865: checking for $ac_word" >&5
+echo "configure:853: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_ECHO'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -894,7 +882,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:898: checking for $ac_word" >&5
+echo "configure:886: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_M4'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -927,7 +915,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:931: checking for $ac_word" >&5
+echo "configure:919: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_TRUE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -960,7 +948,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:964: checking for $ac_word" >&5
+echo "configure:952: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_PERL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -988,12 +976,45 @@ fi
 test -n "$PERL" && break
 done
 
+for ac_prog in emacs xemacs
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:985: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_prog_THEEMACS'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test -n "$THEEMACS"; then
+  ac_cv_prog_THEEMACS="$THEEMACS" # Let the user override the test.
+else
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $PATH; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_prog_THEEMACS="$ac_prog"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+fi
+fi
+THEEMACS="$ac_cv_prog_THEEMACS"
+if test -n "$THEEMACS"; then
+  echo "$ac_t""$THEEMACS" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+test -n "$THEEMACS" && break
+done
+
 
 
     # Extract the first word of "ozinstallsrc", so it can be a program name with args.
 set dummy ozinstallsrc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:997: checking for $ac_word" >&5
+echo "configure:1018: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALLSRC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1031,7 +1052,7 @@ fi
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1035: checking for $ac_word" >&5
+echo "configure:1056: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_MKINSTALLDIRS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1069,7 +1090,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1073: checking for $ac_word" >&5
+echo "configure:1094: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1107,7 +1128,7 @@ fi
     # Extract the first word of "ozbatch", so it can be a program name with args.
 set dummy ozbatch; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1111: checking for $ac_word" >&5
+echo "configure:1132: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZBATCH'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1143,7 +1164,7 @@ fi
     
 
 echo $ac_n "checking for --enable-fun""... $ac_c" 1>&6
-echo "configure:1147: checking for --enable-fun" >&5
+echo "configure:1168: checking for --enable-fun" >&5
 # Check whether --enable-fun or --disable-fun was given.
 if test "${enable_fun+set}" = set; then
   enableval="$enable_fun"
@@ -1276,7 +1297,9 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "lib/Makefile demo/Makefile test/Makefile examples/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "lib/Makefile demo/Makefile test/Makefile examples/Makefile \
+    elisp/Makefile elisp/oz.el bin/Makefile
+    Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1315,16 +1338,17 @@ s%@TOPDIR@%$TOPDIR%g
 s%@srcdira@%$srcdira%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
+s%@LN_S@%$LN_S%g
 s%@SH@%$SH%g
 s%@RM@%$RM%g
 s%@MV@%$MV%g
-s%@LN@%$LN%g
 s%@MKDIR@%$MKDIR%g
 s%@RMDIR@%$RMDIR%g
 s%@ECHO@%$ECHO%g
 s%@M4@%$M4%g
 s%@TRUE@%$TRUE%g
 s%@PERL@%$PERL%g
+s%@THEEMACS@%$THEEMACS%g
 s%@INSTALLSRC@%$INSTALLSRC%g
 s%@MKINSTALLDIRS@%$MKINSTALLDIRS%g
 s%@OZPLATFORM@%$OZPLATFORM%g
@@ -1372,7 +1396,9 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"lib/Makefile demo/Makefile test/Makefile examples/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"lib/Makefile demo/Makefile test/Makefile examples/Makefile \
+    elisp/Makefile elisp/oz.el bin/Makefile
+    Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

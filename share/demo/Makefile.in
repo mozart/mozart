@@ -10,7 +10,7 @@ RM		= @RM@ -f
 MKDIR		= @MKDIR@
 ECHO		= @ECHO@
 M4		= @M4@
-LN              = @LN@ -s
+LN              = @LN_S@
 
 INSTALL		= @INSTALL@
 INSTALLFILE	= $(INSTALL) -m 444
