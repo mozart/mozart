@@ -15,6 +15,7 @@ local
 	 {New Tk.label tkInit(parent:P font:BoldFont
 			      text:"No file loaded")}
 	 Tk.text,tkInit(parent:P width:W height:H
+                        bg: DefaultBackground
 			font:SmallFont bd:BorderSize)
 	 {ForAll [pack(self.StatusLine fill:x expand:no)
 		  pack(self fill:both expand:yes)] Tk.send}
@@ -54,7 +55,8 @@ local
 		     foreground:black
 		     background:white)}
 	 else skip end
-	 {self tk(tag conf q(L) foreground:white background:C)}
+         {ForAll [tk(tag conf q(L) foreground:white background:C)
+                  tk(see L#'.0')] self}
 	 CurrentLine <- L
       end
    end

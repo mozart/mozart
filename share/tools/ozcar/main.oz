@@ -7,26 +7,24 @@ declare
 
 local
    
-   \insert pre
-   \insert string
-   \insert config
-   %\insert emacs
-   \insert source
+   \insert 'prelude'
+   \insert 'config'
+
+   \insert 'tree'
    \insert 'thread'
-   \insert stack
-   \insert menu
-   \insert dialog
-   \insert tkext
-   \insert tree
-   \insert frontend
+
+   \insert 'source'
+
+   \insert 'menu'
+   \insert 'dialog'
+   \insert 'gui'
 
 in
 
-   \insert ozcar
+   \insert 'ozcar'
 
    %% turn the emulator into debug mode
-   %% (compiler switches are set in oz.el)
-
+   %% compiler switches are set in oz.el
    {Debug.on}
 
 end

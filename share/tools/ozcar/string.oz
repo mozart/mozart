@@ -1,9 +1,9 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
-
-%% The "Str" module offers some of the well known
-%% string functions of the C library.
-
+%%%
+%%% The "Str" module offers some of the well known
+%%% string functions of the C library.
+%%%
 
 local
 
