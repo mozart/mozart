@@ -140,10 +140,10 @@ src: $(PACKDIR)
          $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-src.tar.gz
         rm -rf $(PACKDIR)/mozart
 
-doc: $(PACKDIR) $(PACKDIR)/mozart
+doc: $(PACKDIR) $(PACKDIR)/mozart/doc
         (cd $(PACKDIR); \
-        (cd $(PREFIX); \
-         $(TAR) -cf - doc) | (cd mozart; $(TAR) -xf -); \
+        (cd $(PREFIX)/doc; \
+         $(TAR) -cf - .) | (cd mozart/doc; $(TAR) -xf -); \
          $(TAR) -cf - mozart ) | \
          $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-doc.tar.gz
         rm -rf $(PACKDIR)/mozart
@@ -163,7 +163,7 @@ $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
         rm -rf $(PACKDIR)/mozart
 
 
-$(PACKDIR) $(PACKDIR)/mozart:
+$(PACKDIR) $(PACKDIR)/mozart $(PACKDIR)/mozart/doc:
         $(INSTALL_DIR) $@
 
 oz-win::
