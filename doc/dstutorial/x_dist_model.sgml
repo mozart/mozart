@@ -1,6 +1,24 @@
 <CHAPTER ID="chapter.distmodel">
   <TITLE>Distribution Model</TITLE>
 
+<P>The basic difference between a distributed and
+a centralized program is that the former
+is partitioned among several sites.
+We define a <EM>site</EM>
+as the basic unit of geographic distribution.
+In the current implementation,
+a site is always one running program on one machine.
+In a multitasking system, a site is
+an operating system process.
+Such a system can host several sites.
+An Oz language entity has the same language
+behavior whether it is used on one site only
+or on several sites.
+If used on several sites, the language entity
+is implemented using a distributed protocol.
+This gives the language entity a particular
+distributed behavior in terms of network messages.
+
 <P>The distribution model gives well-defined distribution
 behaviors to the Oz language entities.
 The distribution behaviors are designed to do the
@@ -8,7 +26,7 @@ right thing by default in almost all cases.
 For example, procedure code is transferred to sites
 immediately, so that sites never need ask for
 procedure code.
-In the case of objects, the developer can
+For objects, the developer can
 specify the desired distribution behavior, e.g.,
 mobile (cached) objects, stationary objects,
 and stationary single-threaded objects.
