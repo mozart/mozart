@@ -58,7 +58,7 @@ public:
   Bool areNoExtSuspensions();
 
   void inject(int prio, TaggedRef proc);
-  int choose(int left, int right);
+  Thread *select(int left, int right);
   TaggedRef merge(Board* bb, int isSibling);
   Board *clone(Board *bb);
   void clearResult(Board *bb);
