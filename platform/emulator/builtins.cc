@@ -6121,8 +6121,9 @@ OZ_C_proc_begin(BIprintError,1)
 {
   oz_declareArg(0,t);
   prefixError(); // print popup code for opi
-  OZ_printVirtualString(t);
-  fflush(stdout);
+  char * s = OZ_virtualStringToC(t);
+  fprintf(stderr, "%s", s);
+  fflush(stderr);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6498,7 +6499,7 @@ OZ_C_proc_begin(BISystemSetTime,1) {
 
   DoBoolFeature(detailed, t, AtomDetailed);
 
-  ozconf.timeDetailed = detailed;
+  SetIfPos(ozconf.timeDetailed, detailed, 1);
 
   return PROCEED;
 }
