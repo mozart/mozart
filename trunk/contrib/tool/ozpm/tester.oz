@@ -1,35 +1,47 @@
 functor
 import
-   FileUtils(fileTree)
+   FileUtils(fileTree rmtree)
    Application(getArgs exit)
    System(showInfo)
 define
-   Args = {Application.getArgs record}
-   DirN = {NewCell 0}
-   FileN = {NewCell 0}
-   proc {IncrFileN}
-      O N
+   Args = {Application.getArgs
+	   record('action'(single type:atom(list delete) default:list)
+		  'list'(char:&l alias:'action'#list)
+		  'delete'(char:&d alias:'action'#delete))}
+   case Args.action
+   of 'list' then
+      DirN = {NewCell 0}
+      FileN = {NewCell 0}
+      proc {IncrFileN}
+	 O N
+      in
+	 {Exchange FileN O N}
+	 N=O+1
+      end
+      proc {IncrDirN}
+	 O N
+      in
+	 {Exchange DirN O N}
+	 N=O+1
+      end
+      fun {Size R N}
+	 if R.type==dir then
+	    {IncrDirN}
+	    {SizeN R.entries N+R.size}
+	 else {IncrFileN} N+R.size end
+      end
+      fun {SizeN L N}
+	 case L of nil then N
+	 [] H|T then {SizeN T {Size H N}} end
+      end
+      Total = {SizeN {Map Args.1 FileUtils.fileTree} 0}
    in
-      {Exchange FileN O N}
-      N=O+1
+      {System.showInfo 'dirs='#{Access DirN}#' files='#{Access FileN}#' total='#Total}
+   [] 'delete' then
+      for F in Args.1 do
+	 {System.showInfo 'deleting '#F}
+	 {FileUtils.rmtree F}
+      end
    end
-   proc {IncrDirN}
-      O N
-   in
-      {Exchange DirN O N}
-      N=O+1
-   end
-   fun {Size R N}
-      if R.type==dir then
-	 {IncrDirN}
-	 {SizeN R.entries N+R.size}
-      else {IncrFileN} N+R.size end
-   end
-   fun {SizeN L N}
-      case L of nil then N
-      [] H|T then {SizeN T {Size H N}} end
-   end
-   Total = {SizeN {Map Args.1 FileUtils.fileTree} 0}
-   {System.showInfo 'dirs='#{Access DirN}#' files='#{Access FileN}#' total='#Total}
    {Application.exit 0}
 end

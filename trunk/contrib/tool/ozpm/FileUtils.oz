@@ -1,9 +1,10 @@
 functor
 export
-   Expand FileTree Mkdir Rmdir Exists
+   Expand FileTree Mkdir Rmtree Exists
 import
    URL(toVirtualStringExtended) Resolve(expand)
-   OS(getDir stat system)
+   OS(getDir stat system unlink)
+   Shell(shellCommand isWindows:IsWindows rmdir)
 define
    %%
    %% {Expand F}
@@ -68,17 +69,32 @@ define
    in
       if {Exists F2} then
 	 raise ozpm(mkdir F2 existsAlready) end
-      elseif {OS.system 'mkdir '#F2}\=0 then
+      elseif {Shell.shellCommand 'mkdir '#F2}\=0 then
 	 raise ozpm(mkdir F2 commandFailed) end
       end
    end
-   proc {Rmdir F}
-      F2 = {Expand F}
+   Rmtree
+   if IsWindows then
+      proc {RmLoop R}
+	 case R.type
+	 of dir then
+	    for Ri in R.contents do {RmLoop Ri} end
+	    if {Shell.rmdir R.path}\=0 then
+	       raise ozpm(rmdir R.path commandFailed) end
+	    end
+	 else {OS.unlink R.path} end
+      end
    in
-      if {OS.stat F2}.type\=dir then
-	 raise ozpm(rmdir F2 notFound) end
-      elseif {OS.system 'rmdir -rf '#F2}\=0 then
-	 raise ozpm(rmdir F2 commandFailed) end
+      proc {Rmtree F}
+	 {RmLoop {FileTree F}}
+      end
+   else
+      proc {Rmtree F}
+	 F2 = {Expand F}
+      in
+	 if {Shell.shellCommand 'rm -rf '#F2}\=0 then
+	    raise ozpm(rmdir F2 commandFailed) end
+	 end
       end
    end
 end
