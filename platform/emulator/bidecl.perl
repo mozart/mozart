@@ -885,19 +885,16 @@ $builtins = {
     'Exchange'          => { in  => ['+cell','value','value'],
                              out => [],
                              bi  => BIexchangeCell,
-                             ibi => BIexchangeCellInline,
                              native => false},
 
     'Access'            => { in  => ['+cell'],
                              out => ['value'],
                              bi  => BIaccessCell,
-                             ibi => BIaccessCellInline,
                              native => false},
 
     'Assign'            => { in  => ['+cell','value'],
                              out => [],
                              bi  => BIassignCell,
-                             ibi => BIassignCellInline,
                              native => false},
 
     ###* Characters
@@ -1106,16 +1103,19 @@ $builtins = {
 
     ###* Object-Oriented Primitives
 
-    '@'                 => { in  => ['+feature'],
+    '@'                 => { in  => ['value'],
                              out => ['value'],
                              bi  => BIat,
-                             ibi => atInline,
                              native => false},
 
-    '<-'                => { in  => ['+feature','value'],
+    '<-'                => { in  => ['value','value'],
                              out => [],
                              bi  => BIassign,
-                             ibi => assignInline,
+                             native => false},
+
+    'ooExch'            => { in  => ['value','value'],
+                             out => ['value'],
+                             bi  => BIexchange,
                              native => false},
 
     'copyRecord'        => { in  => ['+record'],
@@ -1165,12 +1165,6 @@ $builtins = {
     'setSelf'           => { in  => ['+object'],
                              out => [],
                              BI  => BIsetSelf,
-                             native => false},
-
-    'ooExch'            => { in  => ['+feature','value'],
-                             out => ['value'],
-                             bi  => BIooExch,
-                             ibi => ooExchInline,
                              native => false},
 
     ###* Spaces
@@ -1472,9 +1466,9 @@ $builtins = {
                              BI  => BIPromiseIs,
                              module=>'promise',
                              native => false},
-    'Promise.bind'      => { in  => ['value','value'],
+    'promiseAssign'     => { in  => ['value','value'],
                              out => [],
-                             BI  => BIPromiseBind,
+                             BI  => BIPromiseAssign,
                              module=>'promise',
                              native => false},
     'Promise.waitRequest'=> { in  => ['value'],

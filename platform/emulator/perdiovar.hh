@@ -160,7 +160,7 @@ public:
   OZ_Return setVal(OZ_Term t) {
     Assert(isProxy());
     Assert(u.bindings==0);
-    ControlVarNew(controlvar,oz_rootBoard());
+    ControlVarNew(controlvar,GETBOARD(this));
     PD((THREAD_D,"stop thread setVal %x",am.currentThread()));
     u.bindings=new PendBinding(t,controlvar,0);
     SuspendOnControlVar;
@@ -168,7 +168,7 @@ public:
   OZ_Return pushVal(OZ_Term t) {
     Assert(isProxy());
     Assert(u.bindings!=0);
-    ControlVarNew(controlvar,oz_rootBoard());
+    ControlVarNew(controlvar,GETBOARD(this));
     PD((THREAD_D,"stop thread pushVal %x",am.currentThread()));
     u.bindings->next=new PendBinding(t,controlvar,u.bindings->next);
     SuspendOnControlVar;

@@ -43,7 +43,7 @@ void Promise::request()
 OZ_Return Promise::waitRequest(TaggedRef *v)
 {
   if (oz_eq(requested,oz_false())) {
-    requested=oz_newToplevelVariable();
+    requested=oz_newVar(GETBOARD(this));
     // fall through
   }
 
@@ -74,28 +74,34 @@ OZ_BI_define(BIPromiseNew,0,1)
 {
   Promise *pr = new Promise();
   OZ_Term var=makeTaggedRef(newTaggedCVar(pr));
-  OZ_RETURN(var);
+  OZ_RETURN(oz_newPromise());
 } OZ_BI_end
 
-OZ_BI_define(BIPromiseBind,2,0)
+OZ_Return promiseAssign(OZ_Term var, OZ_Term val)
 {
-  OZ_Term var = OZ_in(0);
-  OZ_Term val = OZ_in(1);
   DEREF(var,varPtr,varTag);
   if (isCVar(var)) {
     GenCVariable *cvar=tagged2CVar(var);
     if (cvar->getType()==PROMISE) {
-      if (!am.isCurrentBoard(GETBOARD(cvar))) {
-        return oz_raise(E_ERROR,E_KERNEL,"promiseWrongSpace",
+      Promise *l=(Promise *)cvar;
+      CheckLocalBoard(l,"promise");
+      if (deref(val)==var) {
+        return oz_raise(E_ERROR,E_KERNEL,"promiseAssignToItself",
                         1,makeTaggedRef(varPtr));
       }
-      Promise *l=(Promise *)cvar;
       oz_bind_global(makeTaggedRef(varPtr),val);
       l->dispose();
       return PROCEED;
     }
   }
   oz_typeError(1,"Promise");
+}
+
+OZ_BI_define(BIPromiseAssign,2,0)
+{
+  OZ_Term var = OZ_in(0);
+  OZ_Term val = OZ_in(1);
+  return promiseAssign(var,val);
 } OZ_BI_end
 
 OZ_BI_define(BIPromiseWaitRequest,1,0)
@@ -106,6 +112,8 @@ OZ_BI_define(BIPromiseWaitRequest,1,0)
   GenCVariable *cvar=tagged2CVar(var);
   if (cvar->getType() != PROMISE) return PROCEED;
   Promise *l=(Promise *)cvar;
+
+  CheckLocalBoard(l,"promise");
 
   return l->waitRequest(varPtr);
 } OZ_BI_end

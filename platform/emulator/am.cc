@@ -1048,9 +1048,11 @@ void oz_bind(TaggedRef *varPtr, TaggedRef var, TaggedRef term)
   if ( !am.isLocalVariable(var,varPtr)) {
     Assert(am.inShallowGuard() || checkHome(varPtr));
     am.doTrail(varPtr,var);
-  } else  { // isLocalVariable(var)
-    if (isSVar(var)) { // dispose CVAR??
+  } else  {
+    if (isSVar(var)) {
       tagged2SVar(var)->dispose();
+    } else if (isCVar(var)) {
+      tagged2CVar(var)->dispose();
     }
   }
 
@@ -1069,8 +1071,11 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
     tagged2SVarPlus(var)->wakeupAll();
   }
 
-  if (isSVar(var)) { // dispose CVAR TOO??
+  /* free memory */
+  if (isSVar(var)) {
     tagged2SVar(var)->dispose();
+  } else if (isCVar(var)) {
+    tagged2CVar(var)->dispose();
   }
 
   /* second step: bind */

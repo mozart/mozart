@@ -70,4 +70,9 @@ Promise *tagged2Promise(TaggedRef t) {
   return (Promise *) tagged2CVar(t);
 }
 
+inline
+OZ_Term oz_newPromise() {
+  return  makeTaggedRef(newTaggedCVar(new Promise()));
+}
+
 #endif

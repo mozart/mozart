@@ -110,6 +110,7 @@ class AM : public ThreadsPool {
 friend int engine(Bool init);
 friend void scheduler();
 friend inline Board *oz_rootBoard();
+friend inline Board *oz_currentBoard();
 
 private:
   Board *_currentBoard;
