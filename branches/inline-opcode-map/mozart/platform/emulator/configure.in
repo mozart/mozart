@@ -1605,8 +1605,14 @@ dnl ******************************************************************
 AC_CACHE_CHECK([whether the opcode map can be inlined],
   oz_cv_can_inline_opcode_map,
   [
-  oz_saved="$CPPFLAGS"
+  oz_saved_cppflags="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS -D$ARCH"
+  oz_saved_cflags="$CFLAGS"
+  oz_saved_cxxflags="$CXXFLAGS"
+  if test "$GXX" = yes; then
+    CFLAGS="$CFLAGS -O3"
+    CXXFLAGS="$CXXFLAGS -O3"
+  fi
 AC_TRY_RUN([
 int engine(void**);
 bool equal(int,int);
@@ -1666,16 +1672,43 @@ asm("movl \$LABEL"OP##N##_STRING",%0" : "=m" (*ptr))
 #endif
 
 #define LOAD(N) \
-*ptr = && FAKE_##N; LOAD_LABEL(N); ++ptr;
+LOAD_LABEL(N); ++ptr;
 
 #define DO(N) \
 if (N!=n-- || !equal(OP##N##_VALUE,((char*)*(bytecode-1))[-1])) return 1
 
+#if defined(ARCH_SPARC)
+/* otherwise gcc delays incrementation of bytecode until too late
+   in the branch we jump too.  The asm instruction makes gcc believe
+   that the new value of bytecode is needed at this point */
+#define DISPATCH { void * where = *bytecode; ++bytecode; asm("" : : "=g" (bytecode)); goto *where; }
+#else
 #define DISPATCH goto **bytecode++
+#endif
+
+#define HERE(N) case N: goto FAKE_##N
+
+int MaybeJumpHere = -1;
 
 int engine(void**bytecode)
 {
+  static int init = 0;
   int n;
+
+  if (! init) 
+    {
+      init = 1;
+      switch (MaybeJumpHere) {
+      HERE(0);
+      HERE(1);
+      HERE(2);
+      HERE(3);
+      HERE(4);
+      HERE(5);
+      default: break;
+      }
+    }
+
   if (! bytecode)
     {
       void** ptr = program;
@@ -1706,7 +1739,9 @@ bool equal(int want,int have)
   oz_cv_can_inline_opcode_map=yes,
   oz_cv_can_inline_opcode_map=no,
   oz_cv_can_inline_opcode_map=no)
-  CPPFLAGS="$oz_saved"
+  CPPFLAGS="$oz_saved_cppflags"
+  CFLAGS="$oz_saved_cflags"
+  CXXFLAGS="$oz_saved_cxxflags"
 ])
 
 if test "$oz_cv_can_inline_opcode_map" = yes; then
