@@ -23,9 +23,7 @@ functor $
 import
    Application(exit)
    System(show)
-   GDK    at 'x-oz://system/gtk/GDK.ozf'
-   GTK    at 'x-oz://system/gtk/GTK.ozf'
-   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   GDK GTK GTKCANVAS
 define
    %% Create Toplevel window class
    class CanvasToplevel from GTK.window
@@ -43,23 +41,25 @@ define
 
    Toplevel = {New CanvasToplevel new}
  
-   %% Setup the Colors
-   Black = {GDK.makeColor '#000000'}
-   White = {GDK.makeColor '#FFFFFF'}
-
    %% Setup canvas without image support
-   MyCanvas = {New Canvas.canvas new(false)}
-   {MyCanvas setUsize(400 400)}
-   {MyCanvas setScrollRegion(0.0 0.0 400.0 400.0)}
+   Canvas = {New GTKCANVAS.canvas new(false)}
+   %% Setup canvas dimension
+   {Canvas setUsize(400 400)}
+   {Canvas setScrollRegion(0.0 0.0 400.0 400.0)}
    %% Make Canvas child of toplevel
-   {Toplevel add(MyCanvas)}
+   {Toplevel add(Canvas)}
    
    %% Setup Canvas Items
    %% Create a Rectangle item (member of root group)
-   RectItemPars = ["x1"#10.0 "y1"#20.0 "x2"#380.0 "y2"#380.0
-		   "fill_color_gdk"#White "outline_color_gdk"#Black]
-   RectItem = {MyCanvas newItem({MyCanvas root($)} {MyCanvas rectGetType($)}
-				RectItemPars $)}
+   RectDesc = rectangle(parent               : {Canvas rootItem($)}
+			x1                   : 10
+			y1                   : 20
+			x2                   : 380
+			y2                   : 380
+			fill_color_gdk       : {Canvas itemColor('#FFFFFF' $)}
+			outline_color_gdk    : {Canvas itemColor('#000000' $)}
+			width_pixels         : 1)
+   _#RectObj = {Canvas newWrappedItem(RectDesc $)}
 
    %% Assign Events to Rectangle Item
    proc {ItemEvent [Event]}
@@ -100,16 +100,17 @@ define
       [] _                       then {System.show 'Got Strange Event'}
       end
    end
-   {RectItem signalConnect('event' ItemEvent _)}
+   {RectObj signalConnect('event' ItemEvent _)}
    %% Allow RectItem to receive key events
-   {RectItem grabFocus}
+   {RectObj grabFocus}
    
-   %% Create a Polygon item(member of root group); ignore Item Object
-   PolyItemPars =['points'#[20 20 380 200 20 380]
-		  'fill_color_gdk'#Black
-		  'width_pixels'#2]
-   _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas lineGetType($)}
-			 PolyItemPars $)}
+   %% Create a Line item(member of root group); ignore Item Object
+   PolyDesc = line(parent          : {Canvas rootItem($)}
+		   points          : [20 20 380 200 20 380]
+		   fill_color_gdk  : {Canvas itemColor('#000000' $)}
+		   line_style      : GDK.'LINE_SOLID'
+		   width_pixels    : 2)
+   _ = {Canvas newItem(PolyDesc $)}
    
    %% Make it all visible
    {Toplevel showAll}

@@ -36,6 +36,7 @@ import
 \ifdef DEBUG
    System(show)
 \endif
+   System(show)
 export
    'GOZCore' : GOZCore
 define
@@ -51,7 +52,7 @@ define
    {Wait GtkFieldNative}
    {Wait GtkCanvasFieldNative}
    {Wait GOZSignal}
-   
+
    %%
    %% Native Pointer Import/Export
    %%
@@ -242,6 +243,30 @@ define
 	 end
       end
    end
+
+   %% Direct Item Import/Export
+   fun {WrapItem Pointer}
+      {New GTKCANVAS.canvasItem WrapPointer(Pointer)}
+   end
+   fun {UnwrapItem Item}
+      {Item UnwrapPointer($)}
+   end
+
+   %% GDK Color Handling
+   local
+      ColorDict = {Dictionary.new}
+   in
+      fun {MakeColor Str}
+	 case {Dictionary.condGet ColorDict Str nil}
+	 of nil   then
+	    NewColor = {GtkCanvasNative.colorNew Str}
+	    ColorObj = {New GDK.color WrapPointer(NewColor)}
+	 in
+	    {Dictionary.put ColorDict Str ColorObj} ColorObj
+	 [] Color then Color
+	 end
+      end
+   end
    
    %%
    %% Alice Canvas Helper
@@ -285,9 +310,8 @@ define
    GtkSignals = {NewName}
 
    class OzBase from BaseObject
-      attr
-	 !GtkObject  : unit %% Native Object Ptr
-	 !GtkSignals : nil  %% Connected Signals List
+      feat !GtkObject         %% Native Object Ptr (must not change)
+      attr !GtkSignals : nil  %% Connected Signals List
       meth signalConnect(Signal ProcOrMeth $)
 	 SigHandler = if {IsProcedure ProcOrMeth}
 		      then ProcOrMeth
@@ -296,32 +320,33 @@ define
 			    {self ProcOrMeth(Event)}
 			 end
 		      end
-	 SignalId   = {Dispatcher signalConnect(SigHandler @GtkObject Signal $)}
+	 SignalId   = {Dispatcher
+		       signalConnect(SigHandler self.GtkObject Signal $)}
 	 CurSignals = @GtkSignals
       in
 	 GtkSignals <- SignalId|CurSignals
       end
       meth signalDisconnect(SignalId)
-	 {Dispatcher signalDisconnect(@GtkObject SignalId)}
+	 {Dispatcher signalDisconnect(self.GtkObject SignalId)}
 	 GtkSignals <- {Filter @GtkSignals fun {$ Id} SignalId \= Id end}
       end
       meth signalBlock(SignalId)
-	 {GOZSignal.signalBlock @GtkObject SignalId}
+	 {GOZSignal.signalBlock self.GtkObject SignalId}
       end
       meth signalUnblock(SignalId)
-	 {GOZSignal.signalUnblock @GtkObject SignalId}
+	 {GOZSignal.signalUnblock self.GtkObject SignalId}
       end
       meth signalEmit(Signal)
-	 {GOZSignal.signalEmit @GtkObject Signal}
+	 {GOZSignal.signalEmit self.GtkObject Signal}
       end
       meth !WrapPointer(Ptr)
-	 GtkObject <- Ptr
+	 self.GtkObject = Ptr
       end
       meth !UnwrapPointer($)
-	 @GtkObject
+	 self.GtkObject
       end
       meth addToObjectTable
-	 {RegisterObject @GtkObject self}
+	 {RegisterObject self.GtkObject self}
       end
       meth ref
 	 %% Presume unmanaged Object
@@ -409,33 +434,6 @@ define
       end
    end
 
-   %%
-   %% GDK Color Handling
-   %%
-
-   local
-      ColorDict = {Dictionary.new}
-   in
-      MakeColor = {Value.byNeed
-		   fun {$}
-		      ParseObj  = {New GDK.color noop}
-		      Map       = {New GDK.colormap getSystem}
-		   in
-		      fun {$ Str}
-			 case {Dictionary.condGet ColorDict Str nil}
-			 of nil then
-			    Color = {New GDK.color new(0 0 0)}
-			 in
-			    {ParseObj parse(Str Color _)}
-			    {Map allocColor(Color 0 1 _)}
-			    {Dictionary.put ColorDict Str Color}
-			    Color
-			 [] Color then Color
-			 end
-		      end
-		   end}
-   end
-   
    %%
    %% Argument Conversion
    %%
@@ -547,7 +545,7 @@ define
 	    skip
 	 end
 	 %% Maxium Polling Delay
-	 PollDelay = 50 
+	 PollDelay = 50
       in
 	 class DispatcherObject
 	    attr
@@ -658,6 +656,9 @@ define
       GOZCore = 'GOZCore'(%% Native Pointer Import/Export
 			  pointerToObject      : PointerToObject
 			  objectToPointer      : ObjectToPointer
+			  %% Native Pointer Direct Import
+			  wrapItem             : WrapItem
+			  unwrapItem           : UnwrapItem
 			  %% GList Import/Export
 			  importList           : ImportList
 			  exportList           : ExportList
@@ -682,11 +683,11 @@ define
 			  allocStrArr          : GOZSignal.allocStrArr
 			  makeStrArr           : GOZSignal.makeStrArr
 			  getStrArr            : GOZSignal.getStrArr
-			  %% GDK Color Handling
-			  makeColor            : MakeColor
 			  %% Color Array Handling
 			  makeColorArr         : GOZSignal.makeColorArr
 			  getColorList         : GOZSignal.getColorList
+			  %% GDK Color Handling
+			  makeColor            : MakeColor
 			  %% Alice Canvas Helper
 			  canvasItemNew        : CanvasItemNew
 			  canvasItemSet        : CanvasItemSet

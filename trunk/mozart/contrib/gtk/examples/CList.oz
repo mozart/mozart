@@ -22,7 +22,7 @@
 functor $
 import
    System(show)
-   GTK at 'x-oz://system/gtk/GTK.ozf'
+   GTK
 define
    Titles = ["Column 1" "Column 2"]
    Row1  = ["Apple" "Orange"]
