@@ -671,6 +671,11 @@ FSetValue * FSetValue::gCollect(void) {
 }
 
 inline
+ConstFSetValue * ConstFSetValue::gCollect(void) {
+  return new ConstFSetValue(((FSetValue *) _fsv)->gCollect());
+}
+
+inline
 BigInt * BigInt::gCollect(void) {
   BigInt *ret = new BigInt();
   mpz_set(&ret->value,&value);
@@ -873,7 +878,6 @@ Bool isGCMarkedTerm(OZ_Term t)
 
   case TAG_SRECORD: 
   case TAG_LTUPLE: 
-  case TAG_FSETVALUE: 
   case TAG_FLOAT: 
   case TAG_SMALLINT : 
     return NO;
@@ -1189,6 +1193,12 @@ ConstTerm *ConstTerm::gCollectConstTermInline(void) {
       return ret;
     }
 
+  case Co_FSetValue: {
+      ConstTerm * ret = ((ConstFSetValue *) this)->gCollect();
+      STOREFWDFIELD(this, ret);
+      return ret;
+    }
+
   case Co_Foreign_Pointer: {
       ConstTerm * ret;
       cacReallocStatic(ConstTerm,this,ret,sizeof(ForeignPointer));
@@ -1308,6 +1318,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
      */
 
   case Co_BigInt:
+  case Co_FSetValue:
   case Co_Foreign_Pointer:
   case Co_Resource:
   case Co_Builtin:
@@ -1819,16 +1830,16 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
     case TAG_REF4:       goto DO_DEREF;
     case TAG_GCMARK:     goto DO_GCMARK;
     case TAG_SMALLINT:   goto DO_SMALLINT;
-    case TAG_FSETVALUE:  goto DO_FSETVALUE;
     case TAG_LITERAL:    goto DO_LITERAL;
     case TAG_EXT:        goto DO_EXT;
     case TAG_LTUPLE:     goto DO_LTUPLE;
     case TAG_SRECORD:    goto DO_SRECORD;
     case TAG_FLOAT:      goto DO_FLOAT;
     case TAG_CONST:      goto DO_CONST;
-    case TAG_UNUSED_UVAR:     goto DO_UNUSED;
-    case TAG_UNUSED_SVAR:     goto DO_UNUSED;
-    case TAG_VAR:       goto DO_D_VAR;
+    case TAG_VAR:        goto DO_D_VAR;
+    case TAG_UNUSED_FSETVALUE: goto DO_UNUSED;
+    case TAG_UNUSED_UVAR:      goto DO_UNUSED;
+    case TAG_UNUSED_SVAR:      goto DO_UNUSED;
     }
 
   DO_DEREF: 
@@ -1842,28 +1853,22 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
     case TAG_REF4:       goto DO_DEREF;
     case TAG_GCMARK:     goto DO_GCMARK;
     case TAG_SMALLINT:   goto DO_SMALLINT;
-    case TAG_FSETVALUE:  goto DO_FSETVALUE;
     case TAG_LITERAL:    goto DO_LITERAL;
     case TAG_EXT:        goto DO_EXT;
     case TAG_LTUPLE:     goto DO_LTUPLE;
     case TAG_SRECORD:    goto DO_SRECORD;
     case TAG_FLOAT:      goto DO_FLOAT;
     case TAG_CONST:      goto DO_CONST;
-    case TAG_UNUSED_UVAR:     goto DO_UNUSED;
-    case TAG_UNUSED_SVAR:     goto DO_UNUSED;
-    case TAG_VAR:       goto DO_I_VAR;
+    case TAG_VAR:        goto DO_I_VAR;
+    case TAG_UNUSED_FSETVALUE: goto DO_UNUSED;
+    case TAG_UNUSED_UVAR:      goto DO_UNUSED;
+    case TAG_UNUSED_SVAR:      goto DO_UNUSED;
     }
 
   DO_GCMARK:
     *t = makeTaggedRef((TaggedRef*) tagged2GcUnmarked(aux));
     continue;
 
-  DO_FSETVALUE:
-#ifdef G_COLLECT
-    *t = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gCollect()); 
-    continue;
-#endif
-      
   DO_FLOAT:
 #ifdef G_COLLECT
     *t = makeTaggedFloat(tagged2Float(aux)->gCollect());   
