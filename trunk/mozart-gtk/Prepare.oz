@@ -29,28 +29,27 @@ define
       class TextFile from Open.file Open.text end
 
       local
-	 fun {DoTokens AllTs CurTs Ls Ts}
-	    case Ls
-	    of nil  then
-	       if CurTs == nil
-	       then {Reverse AllTs}
-	       else {Reverse {Reverse CurTs}|AllTs}
-	       end
-	    [] L|Lr then
-	       if {Member L Ts}
-	       then
-		  if CurTs == nil
-		  then {DoTokens AllTs CurTs Lr Ts}
-		  else {DoTokens {Reverse CurTs}|AllTs nil Lr Ts}
-		  end
-	       else {DoTokens AllTs L|CurTs Lr Ts}
+	 fun {SkipSpaces S}
+	    case S
+	    of nil then nil
+	    [] H|T then
+	       if {Char.isSpace H} then {SkipSpaces T}
+	       else {GetToken T [H]} end
+	    end
+	 end
+	 fun {GetToken S Prefix}
+	    case S
+	    of nil then [{Reverse Prefix}]
+	    [] H|T then
+	       if {Char.isSpace H} then
+		  {Reverse Prefix}|{SkipSpaces T}
+	       else
+		  {GetToken T H|Prefix}
 	       end
 	    end
 	 end
       in
-	 fun {Tokens Ls Ts}
-	    {DoTokens nil nil Ls Ts}
-	 end
+	 fun {Tokens S} {SkipSpaces S} end
       end
 
       local
@@ -109,7 +108,7 @@ define
 	 of ""   then ""
 	 [] &#|_ then ""
 	 [] Line then {VirtualString.toString
-		       {RebuildLine {KeyFilter {Tokens Line [& &\t]}}}}
+		       {RebuildLine {KeyFilter {Tokens Line}}}}
 	 end
       end
       
