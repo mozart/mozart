@@ -649,7 +649,6 @@ OZ_C_ioproc_begin(unix_write, 3)
   } else {
     RETURN_SUSPEND(out,OZ_CToInt(ret),susp,rest);
   }
-
 }
 OZ_C_proc_end
 
@@ -1408,27 +1407,23 @@ OZ_C_proc_end
 
 static OZ_Term mkAliasList(char **alias)
 {
-  if (*alias == 0) {
-    return OZ_nil();
-  } else {
-    return OZ_cons(OZ_CToString(*alias), mkAliasList(++alias));
+  OZ_Term ret = OZ_nil();
+  while (*alias != 0) {
+    ret = OZ_cons(OZ_CToString(*alias), ret);
+    alias++;
   }
+  return ret;
 }
 
 static OZ_Term mkAddressList(char **lstptr)
 {
-  if (*lstptr == 0) {
-    return OZ_nil();
-  } else {
-    
-#ifdef SUNOS_SPARC
-    return OZ_cons(OZ_CToString(inet_ntoa(*(struct in_addr *)lstptr)),
-		   mkAddressList(++lstptr));
-#else  
-    return OZ_cons(OZ_CToString(inet_ntoa(*((struct in_addr *) *lstptr))),
-		   mkAddressList(++lstptr));
-#endif
+  OZ_Term ret = OZ_nil();
+  while (*lstptr != NULL) {
+    ret = OZ_cons(OZ_CToString(inet_ntoa(**((struct in_addr **) lstptr))),
+		  ret);
+    lstptr++;
   }
+  return ret;
 }
 
 OZ_C_ioproc_begin(unix_getHostByName, 4)
@@ -1446,8 +1441,7 @@ OZ_C_ioproc_begin(unix_getHostByName, 4)
 
   return (OZ_unify(offName,OZ_CToString(hostaddr->h_name)) == PROCEED &&
 	  OZ_unify(aliases,mkAliasList(hostaddr->h_aliases)) == PROCEED &&
-	  OZ_unify(addresses,mkAddressList(hostaddr->h_addr_list)) ==
-	  PROCEED)
+	  OZ_unify(addresses,mkAddressList(hostaddr->h_addr_list)) == PROCEED)
     ? PROCEED : FAILED;
 }
 OZ_C_proc_end
