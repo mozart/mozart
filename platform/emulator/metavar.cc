@@ -59,7 +59,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     DebugCode(printf("0x%x\n", ret_value));
 #endif
 
-    if (ret_value & meta_failed) return FALSE;
+    if (ret_value & meta_fail) return FALSE;
 
     // start unification for meta-var and meta-var
 
@@ -68,7 +68,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     switch (v_is_local + 2 * t_is_local) {
     case TRUE + 2 * TRUE: // v and t are local
       if (heapNewer(vptr, tptr)) { // bind v to t
-        if (ret_value & meta_determined) {
+        if (ret_value & meta_det) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
           doBind(tptr, result);
@@ -81,7 +81,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
           doBind(vptr, makeTaggedRef(tptr));
         }
       } else { // bind t to v
-        if (ret_value & meta_determined) {
+        if (ret_value & meta_det) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
           doBind(vptr, result);
@@ -97,8 +97,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
       break;
 
     case TRUE + 2 * FALSE: // v is local and t is global
-      if (ret_value & meta_right_constrained) {
-        if (ret_value & meta_determined) {
+      if (ret_value & meta_right_constr) {
+        if (ret_value & meta_det) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
           term->addSuspension(new Suspension(am.currentBoard));
@@ -121,8 +121,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
       break;
 
     case FALSE + 2 * TRUE: // v is global and t is local
-      if (ret_value & meta_left_constrained) {
-        if(ret_value & meta_determined) {
+      if (ret_value & meta_left_constr) {
+        if(ret_value & meta_det) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
           addSuspension(new Suspension(am.currentBoard));
@@ -145,7 +145,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
       break;
 
     case FALSE + 2 * FALSE: // v and t is global
-      if (ret_value & meta_determined){
+      if (ret_value & meta_det){
         if (prop) {
           propagate(v, suspList, pc_cv_unif);
           term->propagate(t, term->suspList, pc_cv_unif);
@@ -187,7 +187,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     DebugCode(printf("meta-det 0x%x\n", ret_value));
 #endif
 
-    if (ret_value == meta_failed) return FALSE;
+    if (ret_value == meta_fail) return FALSE;
 
     if (prop) propagate(v, suspList, pc_propagator);
 
@@ -205,7 +205,7 @@ Bool GenMetaVariable::valid(TaggedRef v)
 {
   Assert(!isRef(v));
 
-  return meta_failed != tag->unify_meta_det(0, getData(),
+  return meta_fail != tag->unify_meta_det(0, getData(),
                                             v, OZ_typeOf(v), NULL);
 }
 
@@ -215,12 +215,12 @@ Bool GenMetaVariable::isStrongerThan(TaggedRef var, TaggedRef vdata)
   mur_t ret_value = tag->unify_meta_meta(makeTaggedCVar(this), getData(),
                                          var, vdata, getTag(), NULL);
 
-  if (ret_value == meta_failed) {
+  if (ret_value == meta_fail) {
     warning("GenMetaVariable::isStrongerThan found inconsistency.");
     return FALSE;
   }
 
-  return  (ret_value & meta_right_constrained) ? TRUE : FALSE;
+  return  (ret_value & meta_right_constr) ? TRUE : FALSE;
 }
 
 //-----------------------------------------------------------------------------
@@ -248,7 +248,7 @@ OZ_Bool OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
   if (!isAnyVar(v_deref) ||
       (OZ_isMetaTerm(v_deref) &&
        ((GenMetaVariable *) tagged2CVar(v_deref))->check(metaterm, t, d)
-       == meta_unconstrained)) {
+       == meta_unconstr)) {
     return PROCEED;
   }
 
@@ -287,7 +287,7 @@ void OZ_putMetaTermType(OZ_Term v, OZ_MetaType t)
     ((GenMetaVariable *) tagged2CVar(v))->putTag((MetaTag *)t);
 }
 
-OZ_Term OZ_getMetaTermValue(OZ_Term v)
+OZ_Term OZ_getMetaTermAttr(OZ_Term v)
 {
   v = deref(v);
   if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)

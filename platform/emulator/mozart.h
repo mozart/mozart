@@ -322,11 +322,11 @@ extern "C" {
 
 
 typedef enum {
-  meta_unconstrained     = 0,
-  meta_determined        = 1,
-  meta_left_constrained  = 2,
-  meta_right_constrained = 4,
-  meta_failed            = 8
+  meta_unconstr     = 0,
+  meta_det          = 1,
+  meta_left_constr  = 2,
+  meta_right_constr = 4,
+  meta_fail         = 8
 } mur_t;
 
 typedef enum {
@@ -368,7 +368,7 @@ extern OZ_Term OZ_makeMetaTerm       _PROTOTYPE((OZ_MetaType t,
 extern OZ_MetaType OZ_getMetaTermType _PROTOTYPE((OZ_Term v));
 extern void OZ_putMetaTermType        _PROTOTYPE((OZ_Term v, OZ_MetaType t));
 
-extern OZ_Term OZ_getMetaTermValue     _PROTOTYPE((OZ_Term v));
+extern OZ_Term OZ_getMetaTermAttr     _PROTOTYPE((OZ_Term v));
 
 extern OZ_Term OZ_makeHeapChunk      _PROTOTYPE((int s));
 extern char * OZ_getHeapChunkData    _PROTOTYPE((OZ_Term t));
