@@ -333,7 +333,13 @@ in
 	       elsecase FrameId \= unit then
 		  {OzcarMessage
 		   'requesting variables for frame id ' # FrameId}
-		  {Thread.frameVariables @currentThread FrameId}
+		  V = {Thread.frameVariables @currentThread FrameId}
+	       in
+		  case V == unit then %% `FrameId' was an invalid frame id...
+		     NullEnv
+		  else
+		     V
+		  end
 	       else
 		  NullEnv
 	       end
@@ -812,9 +818,9 @@ in
 		  in
 		     {Stk getFrame(LSF Frame)}
 		     case Frame == unit then skip
-		     elsecase Frame.dir == exit then
-			Gui,doStatus('Already at end of procedure ' #
-				     'application -- unleash has no effect')
+%		     elsecase Frame.dir == exit then
+%			Gui,doStatus('Already at end of procedure ' #
+%				     'application -- unleash has no effect')
 		     else
 			{Dbg.step T false}
 			{Stk rebuild(true)}
