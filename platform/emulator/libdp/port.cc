@@ -161,7 +161,6 @@ void port_Ok(PortProxy* pp){
   pp->wakeUp();
 }
 void port_Perm(PortProxy* pp){
-  //printf("SettingPerm to port %s\n",BT->getBorrow(pp->getIndex())->getNetAddress()->site->stringrep());
   EntityCond ec = PERM_FAIL;
   if(!addEntityCond(pp,ec)) return;
   entityProblem(pp);     
