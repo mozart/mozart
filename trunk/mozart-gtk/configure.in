@@ -69,21 +69,25 @@ AC_SUBST(HAVE_CANVAS)
 
 if test "$HAVE_CANVAS" = no; then
    CANVASDIR="/NONE"
-   oz_inc_path_sav=$oz_inc_path
-   oz_inc_path="$oz_inc_path /usr/local/include"
    OZ_CHECK_HEADER_PATH(gtk-canvas.h,
      HAVE_CANVAS=yes,
-     HAVE_CANVAS=no
-     oz_inc_path=$oz_inc_path_sav)
+     oz_inc_path_sav=$oz_inc_path
+     oz_inc_path="$oz_inc_path /usr/local/include"
+     OZ_CHECK_HEADER_PATH(gtk-canvas.h,
+       HAVE_CANVAS=yes,
+       HAVE_CANVAS=no
+       oz_inc_path=$oz_inc_path_sav))
 fi
 
 if test "$HAVE_CANVAS" = yes; then
-   oz_lib_path_sav=$oz_lib_path
-   oz_lib_path="$oz_lib_path /usr/local/lib"
    OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
      HAVE_CANVAS=yes,
-     HAVE_CANVAS=no
-     oz_lib_path=$oz_lib_path_sav)
+     oz_lib_path_sav=$oz_lib_path
+     oz_lib_path="$oz_lib_path /usr/local/lib"
+     OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
+       HAVE_CANVAS=yes,
+       HAVE_CANVAS=no
+       oz_lib_path=$oz_lib_path_sav))
 fi
 
 if test "$HAVE_CANVAS" = no; then
