@@ -456,4 +456,4 @@ veryclean::
 
 distclean::
 	-rm -f OZCONF.h conf.h config.cache config.log config.status \
-		Makefile.rules Makefile.vars Makefile oztool.sh .gdbinit
+		Makefile.rules Makefile.vars Makefile makefile oztool.sh .gdbinit

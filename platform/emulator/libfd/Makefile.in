@@ -75,7 +75,7 @@ include ../Makefile.rules
 first:
 
 distclean::
-	-rm -f Makefile
+	-rm -f Makefile makefile
 
 veryclean::
 	-rm -f *.a *.so Makefile.deps
