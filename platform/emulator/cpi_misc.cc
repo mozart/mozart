@@ -41,7 +41,7 @@ void OZ_hfreeCInts(int * is, int n)
 
 char * OZ_hallocChars(int n)
 {
-  return n == 0 ? (int *) NULL : OZMALLOC(char, n);
+  return n == 0 ? (char *) NULL : OZMALLOC(char, n);
 }
 
 void OZ_hfreeChars(char * is, int n)
