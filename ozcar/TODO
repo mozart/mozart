@@ -58,3 +58,7 @@ Verteiltes Debuggen + lokales Debuggen der liboz:
   Beim Einladen von Code in den Emulator muss der Filename
   aus der Debuginfo kanonisiert werden, damit BIbreakpointAt
   funktionieren kann.
+
+Tue Jan 13 18:43:25 MET 1998
+Pro Stackframe merken, wie die Scrollbars in den Env Windows liegen,
+bei Thread/Frame-Switches entsprechend anpassen.
