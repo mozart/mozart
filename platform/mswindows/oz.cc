@@ -114,8 +114,10 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
   char *ozhome = ozGetenv("OZHOME");
   sprintf(buffer,
           "\"%s\" -l \"%s/share/elisp/oz.elc\" "
+          "-l \"%s/share/elisp/oz-server.elc\" "
+          "-l \"%s/share/elisp/oz-extra.elc\" "
           "-l \"%s/share/elisp/mozart.elc\" -f run-oz %s",
-          emacs,ozhome,ozhome,getCmdLine());
+          emacs,ozhome,ozhome,ozhome,ozhome,getCmdLine());
 
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
