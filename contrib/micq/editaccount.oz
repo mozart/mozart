@@ -36,7 +36,7 @@ define
    proc{Start Info Server Client}
 
       T={New Tk.toplevel tkInit(title:"Edit Account")}
-      V2 V3 V4 V5 V6
+      V2 V3 V4 V5 V6 V7
       Index={NewCell 0}
       GO
       proc{Start2}
@@ -46,7 +46,8 @@ define
 			lastname:{V4 tkReturnString($)}
 			organization:{V5 tkReturnString($)}
 			email:{V6 tkReturnString($)}
-			userlevel:Info.userlevel)
+			userlevel:Info.userlevel
+			extra:{V7 tkReturnString($)})
       in
 	 {Wait A.passwd} {Wait A.firstname} {Wait A.firstname} {Wait A.organization} {Wait A.email}
 	 {T tkClose}
@@ -70,6 +71,8 @@ define
       V4={NewEntry "Lastname:" {CondSelect Info lastname ""}}
       V5={NewEntry "Organization:" {CondSelect Info organization Organization}}
       V6={NewEntry "Email:" {CondSelect Info email ""}}
+%      V7={NewEntry "Civic registration number:" {CondSelect Args extra "<personnummer>"}}
+      V7={NewEntry "Phone:" {CondSelect Args extra ""}}
       
       {Wait GO}
       {Start2}

@@ -35,7 +35,7 @@ define
 		    
    proc{Start Args}
       T={New Tk.toplevel tkInit(title:"New Account...")}
-      V1 V2 V3 V4 V5 V6
+      V1 V2 V3 V4 V5 V6 V7
       Index={NewCell 0}
       GO
       proc{Start2}
@@ -45,7 +45,8 @@ define
 		     lastname:{V4 tkReturnString($)}
 		     organization:{V5 tkReturnString($)}
 		     email:{V6 tkReturnString($)}
-		     userlevel: user)
+		     userlevel:user
+		     extra:{V7 tkReturnString($)})
       in
 	 {Wait A.id} {Wait A.passwd} {Wait A.firstname} {Wait A.firstname} {Wait A.organization} {Wait A.email}
 	 {T tkClose}
@@ -89,6 +90,8 @@ define
       V4={NewEntry "Lastname:" {CondSelect Args lastname ""}}
       V5={NewEntry "Organization:" {CondSelect Args organization Organization}}
       V6={NewEntry "Email:" {CondSelect Args email ""}}
+%      V7={NewEntry "Civic registration number:" {CondSelect Args extra "<personnummer>"}}
+      V7={NewEntry "Phone:" {CondSelect Args extra ""}}
 		       
       {Wait GO}
       {Start2}
@@ -168,6 +171,7 @@ define
 end
 
 */
+
 
 
 
