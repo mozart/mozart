@@ -766,17 +766,6 @@
 			     out => ['+float'],
 			     BI  => BIstringToFloat},
 
- 'String.isInt'	        => { in  => ['+string'],
-			     out => ['+bool'],
-			     BI  => BIstringIsInt},
-
- 'String.isFloat'       => { in  => ['+string'],
-			     out => ['+bool'],
-			     BI  => BIstringIsFloat},
-
- 'String.isAtom'	=> { in  => ['+string'],
-			     out => ['+bool'],
-			     BI  => BIstringIsAtom},
 
 
  ##
