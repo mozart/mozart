@@ -1095,6 +1095,16 @@ public:
 
   void wakeThreads();
   TaggedRef attachThread();
+  void release()
+  {
+    deepness--;
+    if (deepness<=1) {
+      // !!! should be:
+      //  if (deepness==1) {
+    wakeThreads();
+    }
+  }
+
   Bool isClosed() { return closed; }
   void close() { closed=OK; }
 

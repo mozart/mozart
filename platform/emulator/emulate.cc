@@ -3397,11 +3397,21 @@ LBLsuspendThread:
   Case(TEST3)
   Case(TEST4)
 
-  Case(GETSELFX)
-  Case(GETSELFY)
-  Case(GETSELFG)
   Case(RELEASEOBJECT)
+    {
+      e->getCurrentObject()->release();
+      DISPATCH(1);
+    }
+
   Case(SETMODETODEEP)
+    {
+      Object *o = e->getCurrentObject();
+      o->deepness++;
+      // am.currentThread->pushSetModeTop();
+      // am.currentThread->pushSetCurObject(am.getCurrentObject());
+      DISPATCH(2);
+    }
+
   Case(INLINEAT)
   Case(INLINEASSIGN)
 
