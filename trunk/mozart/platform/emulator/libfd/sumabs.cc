@@ -112,7 +112,7 @@ OZ_Return LinEqAbsPropagator::propagate(void)
   clause = CLAUSE1;
   fail = 0; // 0 no fail, 1 positive clause failed, 2 negative clause failed 
   do {
-    changed = false;
+    changed = OZ_FALSE;
     summin = summax = CLAUSE(-reg_c, reg_c);
     
     for(j=reg_sz; j--;) {
@@ -176,7 +176,7 @@ OZ_Return LinEqAbsPropagator::propagate(void)
 	
 	if (!(CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize()))) {
 	  fail |= clause;
-	  changed = false;
+	  changed = OZ_FALSE;
 	} else {
 	  changed |= !
 	    (d_size == CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize()));
@@ -186,7 +186,7 @@ OZ_Return LinEqAbsPropagator::propagate(void)
     
     if (!changed && (clause & CLAUSE1)) {
      clause = CLAUSE2;
-     changed = true;
+     changed = OZ_TRUE;
      if (unified) 
        reg_a[dpos] += 2;   // reg_a[dpos]++, Vorz. umk., reg_a[dpos]--
      for(j = reg_sz; j--;) 
@@ -261,7 +261,7 @@ OZ_Return LinLessEqAbsPropagator::propagate(void)
 
   clause = CLAUSE1;
   do {
-    changed = false;
+    changed = OZ_FALSE;
     summin = CLAUSE(-reg_c,reg_c);
     
     for(j = reg_sz; j--;) {
@@ -299,7 +299,7 @@ OZ_Return LinLessEqAbsPropagator::propagate(void)
    
    if (!changed && (clause & CLAUSE1)) {
      clause = CLAUSE2;
-     changed = true;
+     changed = OZ_TRUE;
      if (unified) 
        reg_a[dpos] += 2;   // reg_a[dpos]++, Vorz. umk., reg_a[dpos]--
      for(j = reg_sz; j--;) 
@@ -466,7 +466,7 @@ OZ_Return LinGreaterEqAbsPropagator::propagate(void)
   clause = CLAUSE1;
   fail = 0; // 0 no fail, 1 positive clause failed, 2 negative clause failed 
   do {
-    changed = false;
+    changed = OZ_FALSE;
     summax = CLAUSE(-reg_c, reg_c);
     
     for(j=reg_sz; j--;) {
@@ -525,7 +525,7 @@ OZ_Return LinGreaterEqAbsPropagator::propagate(void)
 	
 	if (!(CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize()))) {
 	  fail |= clause;
-	  changed = false;
+	  changed = OZ_FALSE;
 	} else {
 	  changed |= !
 	    (d_size == CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize()));
@@ -535,7 +535,7 @@ OZ_Return LinGreaterEqAbsPropagator::propagate(void)
     
     if (!changed && (clause & CLAUSE1)) {
      clause = CLAUSE2;
-     changed = true;
+     changed = OZ_TRUE;
      if (unified) 
        reg_a[dpos] += 2;   // reg_a[dpos]++, Vorz. umk., reg_a[dpos]--
      for(j = reg_sz; j--;) 
