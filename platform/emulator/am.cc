@@ -247,7 +247,8 @@ void AM::init(int argc,char **argv)
   extern void initTagged();
   initTagged();
 
-  toplevelVars = allocateRefsArray(ozconf.numToplevelVars);
+  toplevelVars      = allocateRefsArray(ozconf.numToplevelVars);
+  toplevelVarsCount = 0;
 
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   toplevelVars[0] = makeTaggedConst(bi);

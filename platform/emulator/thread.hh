@@ -153,6 +153,7 @@ private:
   int id;
 #endif
 
+  TaggedRef name;
   TaggedRef cell;
   ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
 
@@ -203,6 +204,9 @@ public:
 
   TaggedRef getValue() { return cell; }
   void setValue(TaggedRef v) { cell = v; }
+
+  TaggedRef getName() { return name; }
+  void setName(TaggedRef n) { name = n; }
 
   //  priority;
   int getPriority() {

@@ -246,6 +246,19 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
                      file,OZ_int(line),OZ_int((int) PC));
 }
 
+TaggedRef CodeArea::globalVarNames(ProgramCounter PC)
+{
+  ProgramCounter aux = definitionEnd(PC);
+  aux += sizeof(getOP(aux));
+  TaggedRef ret = nil();
+  while (getOP(aux) == GLOBALVARNAME) {
+    TaggedRef aux1 = getLiteralArg(aux+1);
+    ret = cons(aux1, ret);
+    aux += sizeof(getOP(aux));
+  }
+  return ret;
+}
+
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)
 {
   ProgramCounter ret = definitionEnd(from);
