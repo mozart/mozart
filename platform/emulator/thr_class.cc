@@ -127,14 +127,7 @@ void Thread::terminate()
   Assert(hasStack());
 
   TaskStack *ts = getTaskStackRef();
-  TaskStackEntry *tos = ts->getTop();
-  while (TRUE) {
-    PopFrame(tos,PC,Y,G);
-    if (PC==C_EMPTY_STACK) {
-      ts->makeEmpty();
-      return;
-    }
-  }
+  ts->makeEmpty();
 }
 
 void Thread::propagatorToNormal()
@@ -154,8 +147,8 @@ int Thread::getRunnableNumber()
     {
       TaskStack * taskstack = getTaskStackRef();
       if (taskstack->isEmpty()) return 0;
-      TaskStackEntry *tos = taskstack->getTop();
-      PopFrame(tos,PC,Y,G);
+      Frame *tos = taskstack->getTop();
+      GetFrame(tos,PC,Y,G);
       if (PC!=C_LTQ_Ptr)
 	return 1;
 
