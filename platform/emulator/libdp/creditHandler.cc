@@ -87,6 +87,7 @@ void marshalCreditToOwner(MarshalerBuffer *buf,Credit c,int oti) {
 }
 
 #ifndef USE_FAST_UNMARSHALER
+
 static Credit mkECredit(Credit c)
 {
   Assert(0);
@@ -95,10 +96,10 @@ static Credit mkECredit(Credit c)
   return (c);
 }
 
-Credit unmarshalCreditRobust(MarshalerBuffer *buf,int *error)
+Credit unmarshalCreditRobust(MarshalerBuffer *buf, int *error)
 {
   Credit c;
-  MarshalTag mt=(MarshalTag) buf->get();
+  MarshalTag mt = (MarshalTag) buf->get();
   switch (mt) {
   case DIF_PRIMARY: {
     c.credit = unmarshalNumberRobust(buf, error);
@@ -109,7 +110,7 @@ Credit unmarshalCreditRobust(MarshalerBuffer *buf,int *error)
   case DIF_SECONDARY: {
     c.credit = unmarshalNumberRobust(buf, error);
     if (*error) return (mkECredit(c));
-    c.owner=unmarshalDSiteRobust(buf, error);
+    c.owner = unmarshalDSiteRobust(buf, error);
     if (*error) return (mkECredit(c));
     break;
   }
@@ -125,8 +126,10 @@ Credit unmarshalCreditRobust(MarshalerBuffer *buf,int *error)
   return c;
 }
 
-Credit unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,MarshalTag mt,
-				    int &oti,int *error) {
+Credit unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,
+				    MarshalTag mt, int &oti,
+				    int *error)
+{
   Credit c;
   if(mt==DIF_OWNER){
     c.credit=1;

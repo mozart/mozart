@@ -54,7 +54,7 @@
 #include "boot-manager.hh"
 
 #define RETURN_ON_ERROR(ERROR)             \
-        if(ERROR) { (void) b->finish(); return 0; }
+        if(ERROR) { (void) b->finish(); return ((OZ_Term) 0); }
 
 
 // The count of marshaled diffs should be done for the distributed
@@ -997,22 +997,25 @@ void discardBorrowHeadSaved(DSite *ms, int oti,
   }
 }
 
-
+OZ_Term
 #ifndef USE_FAST_UNMARSHALER
-OZ_Term unmarshalBorrowRobust(MarshalerBuffer *bs,OB_Entry *&ob,int &bi,int *error)
+unmarshalBorrowRobust(MarshalerBuffer *bs,
+		      OB_Entry *&ob, int &bi, int *error)
 #else
-OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi)
+unmarshalBorrow(MarshalerBuffer *bs, OB_Entry* &ob, int &bi)
 #endif
 {
   PD((UNMARSHAL,"Borrow"));
 #ifndef USE_FAST_UNMARSHALER
-  DSite*  sd=unmarshalDSiteRobust(bs,error);
-  if(*error)  {Assert(0); return 0;}
-  int si=unmarshalNumberRobust(bs,error);
-  if(*error) {Assert(0); return 0;}
+  DSite *sd = unmarshalDSiteRobust(bs, error);
+  if (*error)
+    return ((OZ_Term) 0);	// carry on the error;
+  int si = unmarshalNumberRobust(bs, error);
+  if (*error)
+    return ((OZ_Term) 0);
 #else
-  DSite*  sd=unmarshalDSite(bs);
-  int si=unmarshalNumber(bs);
+  DSite* sd = unmarshalDSite(bs);
+  int si = unmarshalNumber(bs);
 #endif
   PD((UNMARSHAL,"borrow o:%d",si));
   if(sd==myDSite){
@@ -1038,7 +1041,8 @@ OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi)
   BorrowEntry *b = borrowTable->find(&na);
 #ifndef USE_FAST_UNMARSHALER
   Credit cred = unmarshalCreditRobust(bs, error);    
-  if(*error) { Assert(0); return 0; }
+  if (*error)
+    return ((OZ_Term) 0);
 #else
   Credit cred = unmarshalCredit(bs);
 #endif 
@@ -1159,19 +1163,21 @@ char *tagToComment(MarshalTag tag)
     return "";
 }}
 
+OZ_Term
 #ifndef USE_FAST_UNMARSHALER
-OZ_Term unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag, int *error)
+unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag, int *error)
 #else
-OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
+unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
 #endif
 {
   OB_Entry* ob;
   int bi;
 #ifndef USE_FAST_UNMARSHALER
-  OZ_Term val = unmarshalBorrowRobust(bs,ob,bi,error);
-  if(*error) return oz_nil();
+  OZ_Term val = unmarshalBorrowRobust(bs, ob, bi, error);
+  if (*error)
+    return ((OZ_Term) 0);
 #else
-  OZ_Term val = unmarshalBorrow(bs,ob,bi);
+  OZ_Term val = unmarshalBorrow(bs, ob, bi);
 #endif
   if(val){
     PD((UNMARSHAL,"%s hit b:%d",tagToComment(tag),bi));
@@ -1195,13 +1201,15 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
       TaggedRef obj;
       TaggedRef clas;
 #ifndef USE_FAST_UNMARSHALER
-      (void) unmarshalGNameRobust(&obj,bs,error);
-      if(*error) return oz_nil();
-      (void) unmarshalGNameRobust(&clas,bs,error);
-      if(*error) return oz_nil();
+      (void) unmarshalGNameRobust(&obj, bs, error);
+      if (*error)
+	return ((OZ_Term) 0);
+      (void) unmarshalGNameRobust(&clas, bs, error);
+      if (*error)
+	return ((OZ_Term) 0);
 #else
-      (void) unmarshalGName(&obj,bs);
-      (void) unmarshalGName(&clas,bs);
+      (void) unmarshalGName(&obj, bs);
+      (void) unmarshalGName(&clas, bs);
 #endif
       break;
     default:         
@@ -1241,9 +1249,11 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
       OZ_Term val;
 #ifndef USE_FAST_UNMARSHALER
       GName *gnobj = unmarshalGNameRobust(&obj, bs, error);
-      if(*error) return oz_nil();
+      if (*error)
+	return ((OZ_Term) 0);
       GName *gnclass = unmarshalGNameRobust(&clas, bs, error);
-      if(*error) return oz_nil();
+      if (*error)
+	return ((OZ_Term) 0);
 #else
       GName *gnobj = unmarshalGName(&obj, bs);
       GName *gnclass = unmarshalGName(&clas, bs);
@@ -1301,18 +1311,20 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
 }
 
 
+OZ_Term 
 #ifndef USE_FAST_UNMARSHALER
-OZ_Term unmarshalOwnerRobust(MarshalerBuffer *bs,MarshalTag mt,int *error)
+unmarshalOwnerRobust(MarshalerBuffer *bs, MarshalTag mt, int *error)
 #else
-OZ_Term unmarshalOwner(MarshalerBuffer *bs,MarshalTag mt)
+unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt)
 #endif
 {
   int OTI;
 #ifndef USE_FAST_UNMARSHALER
-  Credit c=unmarshalCreditToOwnerRobust(bs,mt,OTI,error);
-  if(*error) return oz_nil();
+  Credit c = unmarshalCreditToOwnerRobust(bs, mt, OTI, error);
+  if (*error)
+    return ((OZ_Term) 0);
 #else
-  Credit c=unmarshalCreditToOwner(bs,mt,OTI);
+  Credit c = unmarshalCreditToOwner(bs, mt, OTI);
 #endif
   PD((UNMARSHAL,"OWNER o:%d",OTI));
   OwnerEntry* oe=ownerTable->getOwner(OTI);
@@ -1341,12 +1353,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_SMALLINT: 
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  OZ_Term ozInt = OZ_int(unmarshalNumberRobust(bs, &e));
-	  if(e || !OZ_isSmallInt(ozInt)) {
-	    (void) b->finish();
-	    return 0;
-	  }
+	  int error;
+	  OZ_Term ozInt = OZ_int(unmarshalNumberRobust(bs, &error));
+	  RETURN_ON_ERROR(error || !OZ_isSmallInt(ozInt));
 #else
 	  OZ_Term ozInt = OZ_int(unmarshalNumber(bs));
 #endif
@@ -1357,9 +1366,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_FLOAT:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  double f = unmarshalFloatRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  double f = unmarshalFloatRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  double f = unmarshalFloat(bs);
 #endif
@@ -1370,16 +1379,16 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_NAME:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  int nameSize  = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  int nameSize  = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 	  OZ_Term value;
-	  GName *gname    = unmarshalGNameRobust(&value, bs, &e);
-	  RETURN_ON_ERROR(e);
-	  char *printname = unmarshalStringRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  GName *gname    = unmarshalGNameRobust(&value, bs, &error);
+	  RETURN_ON_ERROR(error);
+	  char *printname = unmarshalStringRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 	  int nameSize  = unmarshalNumber(bs);
@@ -1431,13 +1440,13 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_COPYABLENAME:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag      = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  int nameSize  = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
-	  char *printname = unmarshalStringRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag      = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  int nameSize  = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
+	  char *printname = unmarshalStringRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag      = unmarshalRefTag(bs);
 	  int nameSize  = unmarshalNumber(bs);
@@ -1474,16 +1483,13 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_UNIQUENAME:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag      = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  int nameSize  = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
-	  char *printname = unmarshalStringRobust(bs, &e);
-	  if(e || (printname == NULL)) {
-	    (void) b->finish();
-	    return 0;
-	  }
+	  int error;
+	  int refTag      = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  int nameSize  = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
+	  char *printname = unmarshalStringRobust(bs, &error);
+	  RETURN_ON_ERROR(error || (printname == NULL));
 #else
 	  int refTag      = unmarshalRefTag(bs);
  	  int nameSize  = unmarshalNumber(bs);
@@ -1518,13 +1524,13 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_ATOM:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  int nameSize  = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
-	  char *aux  = unmarshalStringRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  int nameSize  = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
+	  char *aux  = unmarshalStringRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
  	  int nameSize  = unmarshalNumber(bs);
@@ -1558,9 +1564,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_LIT_CONT:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  char *aux  = unmarshalStringRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  char *aux  = unmarshalStringRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  char *aux  = unmarshalString(bs);
 #endif
@@ -1683,9 +1689,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  default:
 #ifndef USE_FAST_UNMARSHALER
 	    (void) b->finish();
-	    return 0;
+	    return ((OZ_Term) 0);
 #else
 	    OZ_error("Illegal GTAbstractEntity (builder) for a LitCont!");
+	    b->buildValue(oz_nil());
 #endif
 	  }
 	  break;
@@ -1694,12 +1701,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_BIGINT:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  char *aux  = unmarshalStringRobust(bs, &e);
-	  if(e || (aux == NULL)) {
-	    (void) b->finish();
-	    return 0;
-	  }
+	  int error;
+	  char *aux  = unmarshalStringRobust(bs, &error);
+	  RETURN_ON_ERROR(error || (aux == NULL));
 #else
 	  char *aux  = unmarshalString(bs);
 #endif
@@ -1711,9 +1715,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_LIST:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 #endif
@@ -1724,11 +1728,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_TUPLE:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  int argno  = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  int argno  = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 	  int argno  = unmarshalNumber(bs);
@@ -1740,9 +1744,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_RECORD:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 #endif
@@ -1753,12 +1757,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_REF:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int i = unmarshalNumberRobust(bs, &e);
-	  if(e || !b->checkIndexFound(i)) { 
-	    (void) b->finish();
-	    return 0;
-	  }
+	  int error;
+	  int i = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error || !b->checkIndexFound(i));
 #else
 	  int i = unmarshalNumber(bs);
 #endif
@@ -1776,11 +1777,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_OWNER_SEC:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  OZ_Term tert = unmarshalOwnerRobust(bs, tag, &e);
-	  RETURN_ON_ERROR(e);
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  OZ_Term tert = unmarshalOwnerRobust(bs, tag, &error);
+	  RETURN_ON_ERROR(error);
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  OZ_Term tert = unmarshalOwner(bs, tag);
 	  int refTag = unmarshalRefTag(bs);
@@ -1799,11 +1800,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_VAR_OBJECT:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  OZ_Term tert = unmarshalTertiaryRobust(bs, tag, &e);
-	  RETURN_ON_ERROR(e);
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  OZ_Term tert = unmarshalTertiaryRobust(bs, tag, &error);
+	  RETURN_ON_ERROR(error);
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  OZ_Term tert = unmarshalTertiary(bs, tag);
 	  int refTag = unmarshalRefTag(bs);
@@ -1815,9 +1816,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_RESOURCE_N:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  OZ_Term tert = unmarshalTertiaryRobust(bs, tag, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  OZ_Term tert = unmarshalTertiaryRobust(bs, tag, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  OZ_Term tert = unmarshalTertiary(bs, tag);
 #endif
@@ -1828,12 +1829,12 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_CHUNK:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 	  OZ_Term value;
-	  GName *gname = unmarshalGNameRobust(&value, bs, &e);
-	  RETURN_ON_ERROR(e);
+	  GName *gname = unmarshalGNameRobust(&value, bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 	  OZ_Term value;
@@ -1852,16 +1853,13 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	{
 	  OZ_Term value;
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  GName *gname = unmarshalGNameRobust(&value, bs, &e);
-	  RETURN_ON_ERROR(e);
-	  int flags = unmarshalNumberRobust(bs, &e);
-	  if(e || (flags > CLASS_FLAGS_MAX)) {
-	    (void) b->finish();
-	    return 0;
-	  }
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  GName *gname = unmarshalGNameRobust(&value, bs, &error);
+	  RETURN_ON_ERROR(error);
+	  int flags = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error || (flags > CLASS_FLAGS_MAX));
 #else
 	  int refTag = unmarshalRefTag(bs);
 	  GName *gname = unmarshalGName(&value, bs);
@@ -1894,9 +1892,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    } else {
 #ifndef USE_FAST_UNMARSHALER
 	      (void) b->finish();
-	      return 0;
+	      return ((OZ_Term) 0);
 #else
 	      OZ_error("Unexpected value is bound to an object's gname");
+	      b->buildValue(oz_nil());
 #endif
 	    }
 	  }
@@ -1906,11 +1905,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_VAR:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  OZ_Term v = unmarshalVarRobust(bs, FALSE, FALSE, &e);
-	  RETURN_ON_ERROR(e);
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  OZ_Term v = unmarshalVarRobust(bs, FALSE, FALSE, &error);
+	  RETURN_ON_ERROR(error);
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  OZ_Term v = unmarshalVar(bs, FALSE, FALSE);
 	  int refTag = unmarshalRefTag(bs);
@@ -1922,11 +1921,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_FUTURE: 
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  OZ_Term f = unmarshalVarRobust(bs, TRUE, FALSE, &e);
-	  RETURN_ON_ERROR(e);
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  OZ_Term f = unmarshalVarRobust(bs, TRUE, FALSE, &error);
+	  RETURN_ON_ERROR(error);
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  OZ_Term f = unmarshalVar(bs, TRUE, FALSE);
 	  int refTag = unmarshalRefTag(bs);
@@ -1938,11 +1937,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_VAR_AUTO: 
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  OZ_Term va = unmarshalVarRobust(bs, FALSE, TRUE, &e);
-	  RETURN_ON_ERROR(e);
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  OZ_Term va = unmarshalVarRobust(bs, FALSE, TRUE, &error);
+	  RETURN_ON_ERROR(error);
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  OZ_Term va = unmarshalVar(bs, FALSE, TRUE);
 	  int refTag = unmarshalRefTag(bs);
@@ -1954,11 +1953,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_FUTURE_AUTO: 
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  OZ_Term fa = unmarshalVarRobust(bs, TRUE, TRUE, &e);
-	  RETURN_ON_ERROR(e);
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  OZ_Term fa = unmarshalVarRobust(bs, TRUE, TRUE, &error);
+	  RETURN_ON_ERROR(error);
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  OZ_Term fa = unmarshalVar(bs, TRUE, TRUE);
 	  int refTag = unmarshalRefTag(bs);
@@ -1971,11 +1970,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	{
 	  OZ_Term value;
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  GName *gname = unmarshalGNameRobust(&value, bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  GName *gname = unmarshalGNameRobust(&value, bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 	  GName *gname = unmarshalGName(&value, bs);
@@ -2009,9 +2008,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    } else {
 #ifndef USE_FAST_UNMARSHALER
 	      (void) b->finish();
-	      return 0;
+	      return ((OZ_Term) 0);
 #else
 	      OZ_error("Unexpected value is bound to an object's gname.");
+	      b->buildValue(oz_nil());
 #endif
 	    }
 	  }
@@ -2022,27 +2022,23 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	{ 
 	  OZ_Term value;
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag    = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  GName *gname  = unmarshalGNameRobust(&value, bs, &e);
-	  RETURN_ON_ERROR(e);
-	  int arity     = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
-	  int gsize     = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
-	  int maxX      = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
-	  int line      = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
-	  int column    = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
-	  int codesize  = unmarshalNumberRobust(bs, &e); // in ByteCode"s;
-	  RETURN_ON_ERROR(e);
-	  if (maxX < 0 || maxX >= NumberOfXRegisters) {
-	    (void) b->finish();
-	    return 0;
-	  }
+	  int error;
+	  int refTag    = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  GName *gname  = unmarshalGNameRobust(&value, bs, &error);
+	  RETURN_ON_ERROR(error);
+	  int arity     = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
+	  int gsize     = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
+	  int maxX      = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
+	  int line      = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
+	  int column    = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
+	  int codesize  = unmarshalNumberRobust(bs, &error); // in ByteCode"s;
+	  RETURN_ON_ERROR(error || maxX < 0 || maxX >= NumberOfXRegisters);
 #else
 	  int refTag    = unmarshalRefTag(bs);
 	  GName *gname  = unmarshalGName(&value, bs);
@@ -2095,13 +2091,13 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  //
 #ifndef USE_FAST_UNMARSHALER
 	  switch (dpUnmarshalCodeRobust(bs, b, desc)) {
-	  case ERR:
+	  case UCR_ERROR:
 	    (void) b->finish();
 	    return 0;
-	  case OK:
+	  case UCR_DONE:
 	    b->finishFillBinary(opaque);
 	    break;
-	  case NO:
+	  case UCR_SUSPEND:
 	    b->suspendFillBinary(opaque);
 	    break;
 	  }
@@ -2117,11 +2113,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_DICT:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  int size   = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  int size   = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 	  int size   = unmarshalNumber(bs);
@@ -2134,11 +2130,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_BUILTIN:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  char *name = unmarshalStringRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  char *name = unmarshalStringRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 	  char *name = unmarshalString(bs);
@@ -2166,11 +2162,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_EXTENSION:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int refTag = unmarshalRefTagRobust(bs, b, &e);
-	  RETURN_ON_ERROR(e);
-	  int type = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int refTag = unmarshalRefTagRobust(bs, b, &error);
+	  RETURN_ON_ERROR(error);
+	  int type = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int refTag = unmarshalRefTag(bs);
 	  int type = unmarshalNumber(bs);
@@ -2189,9 +2185,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  case (OZ_Term) 0:	// error;
 #ifndef USE_FAST_UNMARSHALER
 	    (void) b->finish();
-	    return 0;
+	    return ((OZ_Term) 0);
 #else
 	    OZ_error("Trouble with unmarshaling an extension!");
+	    b->buildValue(oz_nil());
+	    break;
 #endif
 
 	  default:		// got it!
@@ -2206,9 +2204,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_EXT_CONT:
 	{
 #ifndef USE_FAST_UNMARSHALER
-	  int e;
-	  int type = unmarshalNumberRobust(bs, &e);
-	  RETURN_ON_ERROR(e);
+	  int error;
+	  int type = unmarshalNumberRobust(bs, &error);
+	  RETURN_ON_ERROR(error);
 #else
 	  int type = unmarshalNumber(bs);
 #endif
@@ -2224,11 +2222,14 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    return ((OZ_Term) -1);
 
 	  case (OZ_Term) 0:
-#ifdef USE_FAST_UNMARSHALER
-	    OZ_error("Problem(s) with unmarshaling an ExtCont!");
-#endif
+#ifndef USE_FAST_UNMARSHALER
 	    (void) b->finish();
-	    return 0;
+	    return ((OZ_Term) 0);
+#else
+	    OZ_error("Trouble with unmarshaling an extension!");
+	    b->buildValue(oz_nil());
+	    break;
+#endif
 
 	  default:
 	    b->buildValue(value);
@@ -2244,17 +2245,20 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       case DIF_REF_DEBUG:
 #ifndef USE_FAST_UNMARSHALER   
 	(void) b->finish();
-	return 0;
+	return ((OZ_Term) 0);
 #else
-	OZD_error("not implemented!"); 
+	OZ_error("not implemented!"); 
+	b->buildValue(oz_nil());
+	break;
 #endif
 
       case DIF_ARRAY:
 #ifndef USE_FAST_UNMARSHALER   
 	(void) b->finish();
-	return 0;
+	return ((OZ_Term) 0);
 #else
-	OZD_error("not implemented!"); 
+	OZ_error("not implemented!"); 
+	b->buildValue(oz_nil());
 	break;
 #endif
 
@@ -2278,19 +2282,19 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       default:
 #ifndef USE_FAST_UNMARSHALER   
 	(void) b->finish();
-	return 0;
+	return ((OZ_Term) 0);
 #else
-	DebugCode(OZ_error("unmarshal: unexpected tag: %d\n",tag);) 
-	Assert(0);
+	OZ_error("unmarshal: unexpected tag: %d\n",tag);
 	b->buildValue(oz_nil());
+	break;
 #endif
       }
     }
-#ifndef USE_FAST_UNMARSHALER   
+#ifndef USE_FAST_UNMARSHALER
   }
   CATCH_UNMARSHAL_ERROR { 
     (void) b->finish();
-    return 0;
+    return ((OZ_Term) 0);
   }
 #endif
 }

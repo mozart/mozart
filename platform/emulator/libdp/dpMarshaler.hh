@@ -713,10 +713,12 @@ void marshalVarObject(ByteBuffer *bs, int BTI, GName *gnobj, GName *gnclass);
 // '-1' means the action is suspended;
 
 // var.cc
+OZ_Term
 #ifdef USE_FAST_UNMARSHALER   
-OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi);
+unmarshalBorrow(MarshalerBuffer *bs, OB_Entry *&ob, int &bi);
 #else
-OZ_Term unmarshalBorrowRobust(MarshalerBuffer *bs,OB_Entry *&ob,int &bi,int *error);
+unmarshalBorrowRobust(MarshalerBuffer *bs,
+		      OB_Entry *&ob, int &bi, int *error);
 #endif
 
 void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi);
@@ -744,10 +746,12 @@ void discardOwnHeadSaved(int oti, Credit c);
 void marshalTertiary(ByteBuffer *bs, Tertiary *t, MarshalTag tag);
 #ifdef USE_FAST_UNMARSHALER   
 OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag);
-OZ_Term unmarshalOwner(MarshalerBuffer *bs,MarshalTag mt);
+OZ_Term unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt);
 #else
-OZ_Term unmarshalTertiaryRobust(MarshalerBuffer *bs, MarshalTag tag,int *error);
-OZ_Term unmarshalOwnerRobust(MarshalerBuffer *bs,MarshalTag mt,int *error);
+OZ_Term unmarshalTertiaryRobust(MarshalerBuffer *bs,
+				MarshalTag tag, int *error);
+OZ_Term unmarshalOwnerRobust(MarshalerBuffer *bs,
+			     MarshalTag mt, int *error);
 #endif
 void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
 void marshalSPP(MarshalerBuffer *bs, TaggedRef entity, Bool trail);

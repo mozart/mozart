@@ -150,9 +150,10 @@ OZ_Term unmarshalBitString(MarshalerBuffer *mb)
 #ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
 #else
-  // kost@ : TODO: exploit the return code!
-  int trash;
-  int width = unmarshalNumberRobust(mb, &trash);
+  int error;
+  int width = unmarshalNumberRobust(mb, &error);
+  if (error)
+    return ((OZ_Term) 0);
 #endif
   BitString *s = new BitString(width);
   int size = s->getSize();
@@ -299,8 +300,6 @@ OZ_Term unmarshalByteArray(ByteBuffer *mb, DPMExtDesc *desc)
 #ifdef USE_FAST_UNMARSHALER
   int cWidth = unmarshalNumber(mb);
 #else
-  // kost@ : TODO: use the 'error' code! (in 'unmarshalBitString'
-  //         too);
   int error;
   int cWidth = unmarshalNumberRobust(mb, &error);
   if (error)
@@ -625,8 +624,10 @@ OZ_Term unmarshalByteString(MarshalerBuffer *mb)
 #ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
 #else
-  int e;
-  int width = unmarshalNumberRobust(mb, &e);
+  int error;
+  int width = unmarshalNumberRobust(mb, &error);
+  if (error)
+    return ((OZ_Term) 0);
 #endif
   ByteString *s = new ByteString(width);
   for (int i = 0; i < width; i++)

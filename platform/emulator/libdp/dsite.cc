@@ -268,7 +268,7 @@ DSite* unmarshalDSiteRobust(MarshalerBuffer *buf, int *error)
   DSite tryS;
 
   tryS.unmarshalBaseSiteRobust(buf, error);
-  if(*error) return NULL;
+  if (*error) return ((DSite *) 0);
   return unmarshalDSiteInternal(buf, &tryS, mt);
 }
 #endif
