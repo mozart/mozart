@@ -43,8 +43,8 @@
 int SuspList::length(void) {
   int i=0;
   for (SuspList * aux = this; aux != NULL; aux = aux->getNext()) {
-    //    if (!aux->getSuspendable()->isDead() &&
-    //  !aux->getSuspendable()->isRunnable())
+    if (!aux->getSuspendable()->isDead() &&
+        !aux->getSuspendable()->isRunnable())
       i++;
   }
   return i;
