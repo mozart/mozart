@@ -1688,58 +1688,85 @@ OZ_BI_define(unix_pipe,2,2) {
   
 
 #ifdef WINDOWS
-  int k;
-  char buf[10000];
-  buf[0] = '\0';
-  for (k=0 ; k<argno; k++) {
-    strcat(buf,"\"");
-    strcat(buf,argv[k]);
-    strcat(buf,"\" ");
+  //--** missing overflow check!
+  char cmdline[10000];
+  cmdline[0] = '\0';
+  for (int i = 0; i < argno; i++) {
+    strcat(cmdline,"\"");
+    strcat(cmdline,argv[i]);
+    strcat(cmdline,"\" ");
   }
 
   int sv[2];
   int aux = ossocketpair(PF_UNIX,SOCK_STREAM,0,sv);
 
-  SECURITY_ATTRIBUTES sa;
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = TRUE;
+  HANDLE rh0,wh0,rh1,wh1,wh2;
+  {
+    HANDLE wh0Tmp,rh1Tmp;
+
+    SECURITY_ATTRIBUTES sa1;
+    sa1.nLength = sizeof(sa1);
+    sa1.lpSecurityDescriptor = NULL;
+    sa1.bInheritHandle = TRUE;
+    SECURITY_ATTRIBUTES sa2;
+    sa2.nLength = sizeof(sa2);
+    sa2.lpSecurityDescriptor = NULL;
+    sa2.bInheritHandle = TRUE;
+
+    if (!CreatePipe(&rh0,&wh0Tmp,&sa1,0)  ||
+	!CreatePipe(&rh1Tmp,&wh1,&sa2,0)) {
+      return raiseUnixError("CreatePipe",0,"Cannot create pipe.","os");
+    }
+
+    // The child must only inherit one side of each pipe.
+    // Else the inherited handle will cause the pipe to remain open
+    // even though we may have closed it, resulting in the child
+    // never getting an EOF on it.
+    if (!DuplicateHandle(GetCurrentProcess(),wh0Tmp,
+			 GetCurrentProcess(),&wh0,0,
+			 FALSE,DUPLICATE_SAME_ACCESS) ||
+	!DuplicateHandle(GetCurrentProcess(),rh1Tmp,
+			 GetCurrentProcess(),&rh1,0,
+			 FALSE,DUPLICATE_SAME_ACCESS)) {
+      return raiseUnixError("DuplicateHandle",0,
+			    "Cannot duplicate handle.","os");
+    }
+    CloseHandle(wh0Tmp);
+    CloseHandle(rh1Tmp);
+  }
+
+  // We need to duplicate the handle in case the child closes
+  // either its output or its error handle.
+  if (!DuplicateHandle(GetCurrentProcess(),wh1,
+		       GetCurrentProcess(),&wh2,0,
+		       TRUE,DUPLICATE_SAME_ACCESS)) {
+    return raiseUnixError("DuplicateHandle",0,"Cannot duplicate handle.","os");
+  }
 
   STARTUPINFO si;
   memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
-  si.dwFlags = STARTF_FORCEOFFFEEDBACK;
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  si.hStdInput  = rh0;
+  si.hStdOutput = wh1;
+  si.hStdError  = wh2;
 
   PROCESS_INFORMATION pinf;
-  
-  HANDLE saveout = GetStdHandle(STD_OUTPUT_HANDLE);
-  HANDLE saveerr = GetStdHandle(STD_ERROR_HANDLE);
-  HANDLE savein  = GetStdHandle(STD_INPUT_HANDLE);
-  HANDLE rh1,wh1,rh2,wh2;
-
-  if (!CreatePipe(&rh1,&wh1,&sa,64*1024)  ||
-      !CreatePipe(&rh2,&wh2,&sa,64*1024)  ||
-      !SetStdHandle((DWORD)STD_OUTPUT_HANDLE,wh1) ||
-      !SetStdHandle((DWORD)STD_ERROR_HANDLE,wh1) ||
-      !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
-      !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
-		     NULL,NULL,&si,&pinf)) {
-    fprintf(stderr,"dup error %ld\n",GetLastError());
-    return raiseUnixError("CreatePipe",0, "Cannot create pipe process.",
-			  "os");
+  if (!CreateProcess(NULL,cmdline,NULL,NULL,TRUE,0,NULL,NULL,&si,&pinf)) {
+    return raiseUnixError("CreateProcess",0,"Cannot create process.","os");
   }
 
   int pid = pinf.dwProcessId;
-  CloseHandle(pinf.hProcess);
-  CloseHandle(pinf.hThread);
-  CloseHandle(wh1);
-  CloseHandle(wh1);
-  SetStdHandle((DWORD)STD_OUTPUT_HANDLE,saveout);
-  SetStdHandle((DWORD)STD_ERROR_HANDLE,saveerr);
-  SetStdHandle((DWORD)STD_INPUT_HANDLE,savein);
 
-  createReader(sv[1],rh1);
-  createWriter(sv[1],wh2);
+  CloseHandle(rh0);
+  CloseHandle(wh1);
+  CloseHandle(wh2);
+  CloseHandle(pinf.hProcess); //--** this is unsafe! keep open while pid used
+  CloseHandle(pinf.hThread);
+
+  // forward the handles to sockets so that we can do select() on them:
+  createWriter(sv[1],wh0);
+  createReader(sv[1],rh1); //--** sv[1] will be closed twice
 
 #else  /* !WINDOWS */
 
@@ -1827,52 +1854,58 @@ OZ_BI_define(unix_exec,3,1){
     return status;
 
 #ifdef WINDOWS
-  int k;
-  char buf[10000];
-  buf[0] = '\0';
-  for (k=0 ; k<argno; k++) {
-    strcat(buf, "\"");
-    strcat(buf,argv[k]);
-    strcat(buf, "\" ");
+  //--** missing overflow check!
+  char cmdline[10000];
+  cmdline[0] = '\0';
+  for (int i = 0; i < argno; i++) {
+    strcat(cmdline, "\"");
+    strcat(cmdline,argv[i]);
+    strcat(cmdline, "\" ");
   }
 
   STARTUPINFO si;
   memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
-  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
-  si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
-  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-  si.hStdError  = GetStdHandle(STD_ERROR_HANDLE);
+  if (do_kill) {
+    si.dwFlags = STARTF_USESTDHANDLES;
+    SetHandleInformation(GetStdHandle(STD_INPUT_HANDLE),
+			 HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+    SetHandleInformation(GetStdHandle(STD_OUTPUT_HANDLE),
+			 HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+    SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE),
+			 HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+    si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+  }
 
+  // If we don't want the child to be killed and we had OZPPID set,
+  // then we save its value and unset it.  Otherwise, the buffer
+  // contains an empty string.
   char ozppidbuf[100];
   if (!do_kill) {
-    if (GetEnvironmentVariable("OZPPID", ozppidbuf, sizeof(ozppidbuf)) == 0) {
-      ozppidbuf[0] = 0;
+    if (!GetEnvironmentVariable("OZPPID", ozppidbuf, sizeof(ozppidbuf))) {
+      ozppidbuf[0] = '\0';
     } else {
       SetEnvironmentVariable("OZPPID", NULL);
-      Assert(ozppidbuf[0] != 0);
+      Assert(ozppidbuf[0] != '\0');
     }
   } else {
-    ozppidbuf[0] = 0;
+    ozppidbuf[0] = '\0';
   }
-  // If don't want the child to be killed and we did have the OZPPID,
-  // then OZPPID is unset and saved in the buffer.  Otherwise, the
-  // buffer contains an empty string.
 
   PROCESS_INFORMATION pinf;
-  
-  if (!CreateProcess(NULL,buf,NULL,NULL,FALSE,
+  if (!CreateProcess(NULL,cmdline,NULL,NULL,FALSE,
 		     (do_kill ? 0 : DETACHED_PROCESS),
 		     NULL,NULL,&si,&pinf)) {
-    if (ozppidbuf[0] != 0)
+    if (ozppidbuf[0] != '\0')
       SetEnvironmentVariable("OZPPID", ozppidbuf);
-    return raiseUnixError("exec",0, "Cannot exec process.",
-			  "os");
+    return raiseUnixError("exec",0,"Cannot exec process.","os");
   }
   CloseHandle(pinf.hThread);
-  CloseHandle(pinf.hProcess);
+  CloseHandle(pinf.hProcess); //--** unsafe! keep open while pid used
 
-  if (ozppidbuf[0] != 0)
+  if (ozppidbuf[0] != '\0')
     SetEnvironmentVariable("OZPPID", ozppidbuf);
 
   int pid = pinf.dwProcessId;
