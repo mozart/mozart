@@ -232,6 +232,7 @@ void AM::init(int argc,char **argv)
   rootBoard = new Board(NULL,Bo_Root);
   rootBoard->setInstalled();
   currentBoard = NULL;
+  cachedStack = NULL;
   setSelf(NULL);
   setCurrent(rootBoard,OK);
   currentSolveBoard = (Board *) NULL; 
@@ -1225,7 +1226,7 @@ void AM::pushToplevel(ProgramCounter pc)
   Assert(rootThread->isEmpty());
   // kost@ : MOD!!! TODO?
   // rootBoard->incSuspCount();
-  rootThread->pushCont(pc,toplevelVars,NULL,NULL,0,OK);
+  rootThread->pushCont(pc,toplevelVars,NULL,NULL,0);
   if (rootThread!=currentThread && !isScheduled(rootThread)) {
     scheduleThread(rootThread);
   }
@@ -1441,10 +1442,9 @@ int AM::wakeUser()
 }
 
 
-void AM::pushTaskOutline(ProgramCounter pc,
-			 RefsArray y,RefsArray g,RefsArray x,int i)
+void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
 {
-  pushTask(pc,y,g,x,i);
+  pushTaskInline(pc,y,g,x,i);
 }
 
 
