@@ -1601,8 +1601,11 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth,
     }
 
     TaggedRef def = CodeArea::dbgGetDef(PC,G,Y);
-    if (def != nil())
+    if (def != nil()) {
+      if (top)
+	def = OZ_adjoinAt(def,OZ_atom("vars"),CodeArea::varNames(PC,G,Y));
       out = cons(def,out);
+    }
     else
       // definitionStart(PC) == NOCODE_GLOBALVARNAME
       ;
