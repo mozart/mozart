@@ -4552,11 +4552,11 @@ OZ_C_proc_begin(BIlockLock,1)
     }
   }
 
-  TaggedRef *aux = lck->lock(am.currentThread);
-  if (aux==NULL)
+  TaggedRef aux = lck->lock(am.currentThread);
+  if (aux==0)
     return PROCEED;
 
-  OZ_suspendOn(*aux);
+  OZ_suspendOn(aux);
 }
 OZ_C_proc_end
 

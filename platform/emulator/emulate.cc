@@ -1981,13 +1981,16 @@ LBLdispatcher:
 	e->pushTask(lbl,Y,G);
 	DISPATCH(4);
       }
-      TaggedRef *var = lck->lock(cs);
-      if (var==NULL) {
+      TaggedRef var = lck->lock(cs);
+      if (var==0) {
 	e->pushTask(lbl,Y,G);
 	CTS->pushLock(lck);
 	DISPATCH(4);
       }
-	
+
+      e->pushTask(lbl,Y,G);
+      CTS->pushLock(lck);
+      PC += 4; // suspend on _next_ instruction
       SUSP_PC(var,toSave,PC);
     }
 

@@ -1791,36 +1791,50 @@ Space *tagged2Space(TaggedRef term)
  * Locks
  *=================================================================== */
 
+class LockedThreads {
+public:
+  USEHEAPMEMORY;
+
+  Thread *t;
+  TaggedRef var;
+  LockedThreads *next;
+  LockedThreads(Thread *th): t(th), next(NULL) { var = OZ_newVariable(); }
+  LockedThreads(Thread *th, TaggedRef v, LockedThreads *nxt): t(th), next(nxt), var(v) {}
+  LockedThreads *gcLockedThreads();
+};
+
+
+
+
 class OzLock: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
   Thread *locker;
-  TaggedRef threads;
+  LockedThreads *threads;
 public:
   OzLock(Board *b) : ConstTermWithHome(b,Co_Lock) 
   {
-    locker = NULL;
-    threads = nil();
+    locker  = NULL;
+    threads = NULL;
   }
 
   void unlock()
   {
-    Assert(!isRef(threads));
     Assert(locker);
     locker = NULL;
 
-    if (!isNil(threads)) {
+    if (threads!=NULL) {
       /* wake first thread */
-      TaggedRef var = head(threads);
-      if (OZ_unify(var, NameUnit)==FAILED) {
+      if (OZ_unify(threads->var, NameUnit)==FAILED) {
 	warning("OzLock::wakeThreads: unify failed");
       }
-      threads = tail(threads);
+      locker = threads->t;
+      threads = threads->next;
     }
   }
 
   Bool isLocked(Thread *t) { return (locker==t); }
-  TaggedRef *lock(Thread *t);
+  TaggedRef lock(Thread *t);
 
   OZPRINT;
   OZPRINTLONG;

@@ -2023,7 +2023,7 @@ void ConstTerm::gcConstRecurse()
     {
       OzLock *lock = (OzLock *) this;
       lock->home  = lock->home->gcBoard();
-      gcTagged(lock->threads,lock->threads);
+      lock->threads = lock->threads->gcLockedThreads();
       lock->locker = lock->locker->gcThread();
       break;
     }
@@ -2156,6 +2156,18 @@ HeapChunk * HeapChunk::gc(void)
   storeForward(getGCField(), ret);
   return ret;
 }
+
+LockedThreads *LockedThreads::gcLockedThreads()
+{
+  if (this==NULL) return this;
+
+  LockedThreads *ret = new LockedThreads(t,var,next->gcLockedThreads());
+  gcTagged(ret->var,ret->var);
+  ret->t = ret->t->gcThread();
+  return ret;
+}
+
+
 
 /*
  * notification board == home board of thread
