@@ -5,25 +5,38 @@ SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 PREFIX		= @prefix@
 LIB_DIR		= $(PREFIX)/contrib/doc/code
+ELIB_DIR	= $(PREFIX)/share/elisp
 OZC		= @OZC@
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
+EMACS		= emacs
 
 TARGETS		= Fontifier.ozf
+ETARGETS	= Fontifier.elc
 LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
+ELIB_TARGETS	= $(addprefix $(ELIB_DIR)/,$(ETARGETS))
 
-all:		$(TARGETS)
-install:	$(LIB_DIR) $(LIB_TARGETS)
+all:		$(TARGETS) $(ETARGETS)
+install:	$(LIB_DIR) $(LIB_TARGETS) $(ELIB_DIR) $(ELIB_TARGETS)
 
-$(LIB_DIR):
+$(LIB_DIR) $(ELIB_DIR):
 	$(INSTALL_DIR) $@
 
 $(LIB_TARGETS): $(LIB_DIR)/% : %
 	$(INSTALL_LIB) $< $@
 
+$(ELIB_TARGETS): $(ELIB_DIR)/% : %
+	$(INSTALL_LIB) $< $@
+
 %.ozf: %.oz
 	$(OZC) -c $< -o $@
+
+%.elc: %.el
+	@echo "(setq byte-compile-compatibility t) \
+	(byte-compile-file \"$<\")" > compile.el
+	$(EMACS) -q -batch -l compile.el
+	@rm -f compile.el
 
 clean veryclean:
 	-rm *~ *.ozf
@@ -39,8 +52,8 @@ bootstrap: boot-all
 # Automatic Makefile update
 #---------------------------------------------------------------------
 
-Makefile: Makefile.in ../../config.status
-	../../config.status
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
 
-config.status: ../../configure
-	../../config.status --recheck
+config.status: ../configure
+	cd .. && ./config.status --recheck
