@@ -34,10 +34,15 @@ OZ_Return TwicePropagator::propagate(void)
     FailOnEmpty(*x &= 0);
     return P.vanish();
   } else {
+  loop:
     FailOnEmpty(*x >= int(ceil(y->getMinElem() / 2.0)));
     FailOnEmpty(*x <= int(floor(y->getMaxElem() / 2.0)));
+    int ymin = y->getMinElem();
+    int ymax = y->getMaxElem();
     FailOnEmpty(*y >= (2 * x->getMinElem()));
     FailOnEmpty(*y <= (2 * x->getMaxElem()));
+    if (ymin < y->getMinElem()) goto loop;
+    if (ymax > y->getMaxElem()) goto loop;
   }
   return P.leave();
 
@@ -64,10 +69,15 @@ OZ_Return SquarePropagator::propagate(void)
     FailOnEmpty(*x <= 1);
     return P.vanish();
   } else {
+  loop:
     FailOnEmpty(*x >= int(ceil(sqrt(y->getMinElem()))));
     FailOnEmpty(*x <= int(floor(sqrt(y->getMaxElem()))));
+    int ymin = y->getMinElem();
+    int ymax = y->getMaxElem();
     FailOnEmpty(*y >= square(x->getMinElem()));
     FailOnEmpty(*y <= square(x->getMaxElem()));
+    if (ymin < y->getMinElem()) goto loop;
+    if (ymax > y->getMaxElem()) goto loop;
   }
   return P.leave();
 
