@@ -234,7 +234,7 @@ in
 	    self.emacsThreadsMenu =
 	    {New TkTools.popupmenu tkInit(parent:   self.ButtonFrame
 					  entries:  EmacsThreadsList
-					  selected: 1
+					  selected: 2
 					  relief:   raised
 					  padx:     5
 					  pady:     2
@@ -380,11 +380,11 @@ in
 	    in
 	       case SavedVars \= unit then
 		  {OzcarMessage
-		   'getEnv: using saved variables of frame #' # F.nr}
+		   'getEnv: using saved variables of frame ' # F.nr}
 		  SavedVars
 	       elsecase FrameId \= unit then
 		  {OzcarMessage
-		   'getEnv: requesting variables for frame #' # F.nr}
+		   'getEnv: requesting variables for frame ' # F.nr}
 		  V = {Debug.getFrameVariables @currentThread FrameId}
 	       in
 		  case V == unit then %% `FrameId' was an invalid frame id...
@@ -712,22 +712,22 @@ in
       end
 
       meth BlockedStatus(T A)
-	 Gui,status('Thread #' # {Debug.getId T} # ' is blocked, ' #
+	 Gui,status('Thread ' # {Debug.getId T} # ' is blocked, ' #
 		    A # ' has no effect')
       end
 
       meth TerminatedStatus(T A)
-	 Gui,status('Thread #' # {Debug.getId T} # ' is dead, ' #
+	 Gui,status('Thread ' # {Debug.getId T} # ' is dead, ' #
 		    A # ' has no effect')
       end
 
       meth StoppedStatus(I A)
-	 Gui,status('Thread #' # I # ' is not running, ' #
+	 Gui,status('Thread ' # I # ' is not running, ' #
 		    A # ' has no effect')
       end
 
       meth RunningStatus(I A)
-	 Gui,status('Thread #' # I # ' is already running, ' #
+	 Gui,status('Thread ' # I # ' is already running, ' #
 		    A # ' has no effect')
       end
 
@@ -901,7 +901,7 @@ in
 
 		  Gui,resetLastSelectedFrame
 		  Gui,MarkRunning(T)
-		  Gui,status('Unleashing thread #' # I #
+		  Gui,status('Unleashing thread ' # I #
 			     ' to frame ' #
 			     case LSF == 0 then 1 else LSF end)
 		  {Thread.resume T}
@@ -921,7 +921,7 @@ in
 	       elsecase
 		  {Dbg.checkStopped T} then Gui,StoppedStatus(I A)
 	       else
-		  Gui,status('You have stopped thread #' # I)
+		  Gui,status('You have stopped thread ' # I)
 		  case S == blocked then
 		     F L C in
 		     {Thread.suspend T}

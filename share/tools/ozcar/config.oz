@@ -40,7 +40,7 @@ EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 
 TreeTitle              = 'Thread Forest'
 StackTitle             = 'Stack'
-AltStackTitle          = 'Stack of Thread  #'
+AltStackTitle          = 'Stack of Thread '
 LocalEnvTitle          = 'Local Variables'
 GlobalEnvTitle         = 'Global Variables'
 

@@ -303,7 +303,7 @@ in
 	       node(ct:CT ...) = {@Selected get($)}
 	       {self tk(itemconfigure CT font:ThreadTreeBoldFont)}
 	    else
-	       {OzcarError 'attempt to select unknown node #' # I}
+	       {OzcarError 'attempt to select unknown node ' # I}
 	    end
 	 end
       end
@@ -312,7 +312,7 @@ in
 	 CT N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
       in
 	 case N == nil then
-	    {OzcarError 'attempt to mark unknown node #' # I}
+	    {OzcarError 'attempt to mark unknown node ' # I}
 	 else
 	    CL = {GetColor How}
 	 in
@@ -372,7 +372,7 @@ in
       end
 
       meth SwitchToThread(I)
-	 {Ozcar PrivateSend(status('New selected thread is #' # I))}
+	 {Ozcar PrivateSend(status('New selected thread is ' # I))}
 	 {Ozcar PrivateSend(switch(I))}
       end
    end
