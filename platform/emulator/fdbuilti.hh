@@ -448,12 +448,11 @@ Suspension * createNonResSusp(OZ_CFun func, RefsArray xregs, int arity)
 
 
 inline
-Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs,
-                           Bool eqlist = FALSE)
+Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs)
 {
-  Suspension * s = makeHeadSuspension(func,xregs,arity);
+  Suspension * s = makeHeadSuspension(func, xregs, arity);
 
-  s->headInit(eqlist);
+  s->headInit();
 
   FDcurrentTaskSusp = s;
   return s;

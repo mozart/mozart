@@ -222,7 +222,8 @@ void BIfdHeadManager::addForFDishSusp(int i, Suspension * susp)
 //   and no coefficient nor variables are zero. Returns 1 if all
 //   coefficients are either  1 or -1 otherwise 0.
 
-// functions used by BIfdHeadManager::simplifyHead and
+// functions used by BIfdHeadManager::simp
+lifyHead and
 // BIfdBodyManager::simplifyBody
 const int taggedIndex = 0x80000000;
 inline TaggedRef makeTaggedIndex(TaggedRef t) {return (t | taggedIndex);}
@@ -231,6 +232,8 @@ inline Bool isTaggedIndex(TaggedRef t) {return (t & taggedIndex);}
 
 int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
 {
+  FDcurrentTaskSusp->unmarkUnifySusp();
+
   // 1st pass: mark first occ of a var and sum up coeffs of further occs
   for (int i = 0; i < ts; i++)
     if (isAnyVar(bifdhm_var[i]))
@@ -336,7 +339,7 @@ void BIfdBodyManager::introduce(int i, TaggedRef v)
     bifdbm_dom[i] = &bifdbm_domain[i];
     bifdbm_is_local[i] = am.isLocalSVar(v);
   } else {
-    error("Found unexpected term tag.");;
+    error("Found unexpected term tag.");
   }
   bifdbm_var[i] = v;
   bifdbm_varptr[i] = vptr;
