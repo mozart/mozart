@@ -776,17 +776,30 @@ define
             % Paragraphs
             %-----------------------------------------------------------
             [] p then
-               p(COMMON: @Common
-                 if {SGML.isOfClass M warning} then strong(PCDATA('Warning:'))
-                 else EMPTY
-                 end
-                 OzDocToHTML, Batch(M 1 $))
+               if {SGML.isOfClass M danger} then
+                  'div'(COMMON: @Common
+                        p('class': [margin]
+                          img(src: 'danger.gif' align: top alt: 'Danger')))
+               else
+                  p(COMMON: @Common
+                    if {SGML.isOfClass M warning} then
+                       strong(PCDATA('Warning:'))
+                    else EMPTY
+                    end
+                    OzDocToHTML, Batch(M 1 $))
+               end
             [] para then Title in
                Title = M.1=title(...)
                'div'(COMMON: @Common
                      p(COMMON: COMMON(id: {CondSelect Title id unit}
                                       'class': {CondSelect Title 'class' nil})
-                       'class': [margin] OzDocToHTML, Batch(Title 1 $))
+                       'class': [margin]
+                       if {SGML.isOfClass M danger} then
+                          SEQ([img(src: 'danger.gif' align: top alt: 'Danger')
+                               VERBATIM(' ')])
+                       else EMPTY
+                       end
+                       OzDocToHTML, Batch(Title 1 $))
                      p(OzDocToHTML, Batch(M 2 $)))
             [] 'div' then
                'div'(COMMON: @Common
