@@ -494,10 +494,13 @@ in distributed component-based programming.
 A functor is essentially a software component.
 A functor is stateless, so it can be transparently copied
 anywhere across the net and made persistent by pickling on a file
-(see the module <<Pickle>>).
+(see the module <ref.extern to="ozdoc:system" key="chapter.pickle"
+/<<Pickle>>/).
 A functor is linked on a site by evaluating it there
 with the site resources that it needs
-(see the modules <<Module>> and <<Remote>>).
+(see the modules <ref.extern to="ozdoc:system" key="chapter.module"
+/<<Module>>/ and <ref.extern to="ozdoc:system" key="chapter.remote"
+/<<Remote>>/).
 The result is a new resource, which can be
 used as is or to link more functors.
 Our goal is for functors to be the core
