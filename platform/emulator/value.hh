@@ -2823,6 +2823,7 @@ Bool oz_isLock(TaggedRef term)
  *=================================================================== */
 
 char *toC(OZ_Term);
+TaggedRef oz_getPrintName(TaggedRef);
 TaggedRef reverseC(TaggedRef l);
 TaggedRef appendI(TaggedRef x,TaggedRef y);
 Bool member(TaggedRef elem,TaggedRef list);
