@@ -13,6 +13,12 @@ ac_default_prefix=/usr/local
 # Any additions from configure.in:
 ac_default_prefix=/usr/local/oz
 ac_help="$ac_help
+--with-global-oz allows to use an existing oz installation to build the system (default: no)"
+ac_help="$ac_help
+--with-global-oz allows to use an existing oz installation to build the system (default: no)"
+ac_help="$ac_help
+--with-global-oz allows to use an existing oz installation to build the system (default: no)"
+ac_help="$ac_help
 --with-inc-dir=d1,...,dn        add these dirs to CPPFLAGS"
 ac_help="$ac_help
 --with-lib-dir=d1,...,dn        add these dirs to LDFLAGS"
@@ -548,7 +554,7 @@ fi
 
 
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:552: checking for SRCTOP" >&5
+echo "configure:558: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -582,7 +588,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
 
 
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:586: checking for BUILDTOP" >&5
+echo "configure:592: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -641,7 +647,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:645: checking host system type" >&5
+echo "configure:651: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -669,7 +675,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:673: checking for $ac_word" >&5
+echo "configure:679: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -738,13 +744,13 @@ You may find a mirror archive closer to you by consulting:
   else
 
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:742: checking for GNU make" >&5
+echo "configure:748: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
 
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:748: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:754: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -773,7 +779,7 @@ fi
 
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:777: checking whether to unset broken INSTALL" >&5
+echo "configure:783: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -804,7 +810,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:808: checking for a BSD compatible install" >&5
+echo "configure:814: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -860,8 +866,34 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     ac_given_INSTALL="$oz_cv_given_INSTALL"
   fi
 
+    if test -z "$WITH_GLOBAL_OZ"; then
+
+  echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
+echo "configure:873: checking for --with-global-oz" >&5
+  # Check whether --with-global-oz or --without-global-oz was given.
+if test "${with_global_oz+set}" = set; then
+  withval="$with_global_oz"
+  oz_cv_global_oz="$with_global_oz"
+else
+  oz_cv_global_oz=no
+fi
+
+  WITH_GLOBAL_OZ="$oz_cv_global_oz"
+  echo "$ac_t""$WITH_GLOBAL_OZ" 1>&6
+
+    fi
+    dummy_PATH="$PATH"
+    if test "$WITH_GLOBAL_OZ" = no; then
+      for oz_prog_tmp in mkinstalldirs; do
+        case $oz_prog_tmp in
+          oz|ozc|ozl|oztool|ozengine|ozplatform|ozdoc)
+            dummy_PATH="$SRCTOP/share/bin:$SRCTOP"
+          ;;
+        esac
+      done
+    fi
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
@@ -871,7 +903,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:875: checking for $ac_word" >&5
+echo "configure:907: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -915,7 +947,7 @@ fi
 
 
   echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:919: checking for oz version" >&5
+echo "configure:951: checking for oz version" >&5
 if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -956,8 +988,34 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
 
     *)
 
+    if test -z "$WITH_GLOBAL_OZ"; then
+
+  echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
+echo "configure:995: checking for --with-global-oz" >&5
+  # Check whether --with-global-oz or --without-global-oz was given.
+if test "${with_global_oz+set}" = set; then
+  withval="$with_global_oz"
+  oz_cv_global_oz="$with_global_oz"
+else
+  oz_cv_global_oz=no
+fi
+
+  WITH_GLOBAL_OZ="$oz_cv_global_oz"
+  echo "$ac_t""$WITH_GLOBAL_OZ" 1>&6
+
+    fi
+    dummy_PATH="$PATH"
+    if test "$WITH_GLOBAL_OZ" = no; then
+      for oz_prog_tmp in ozplatform; do
+        case $oz_prog_tmp in
+          oz|ozc|ozl|oztool|ozengine|ozplatform|ozdoc)
+            dummy_PATH="$SRCTOP/share/bin:$SRCTOP"
+          ;;
+        esac
+      done
+    fi
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
@@ -967,7 +1025,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:971: checking for $ac_word" >&5
+echo "configure:1029: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1011,8 +1069,34 @@ fi
 
         PLATFORM=`$OZPLATFORM || exit 1`
 
+    if test -z "$WITH_GLOBAL_OZ"; then
+
+  echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
+echo "configure:1076: checking for --with-global-oz" >&5
+  # Check whether --with-global-oz or --without-global-oz was given.
+if test "${with_global_oz+set}" = set; then
+  withval="$with_global_oz"
+  oz_cv_global_oz="$with_global_oz"
+else
+  oz_cv_global_oz=no
+fi
+
+  WITH_GLOBAL_OZ="$oz_cv_global_oz"
+  echo "$ac_t""$WITH_GLOBAL_OZ" 1>&6
+
+    fi
+    dummy_PATH="$PATH"
+    if test "$WITH_GLOBAL_OZ" = no; then
+      for oz_prog_tmp in oztool; do
+        case $oz_prog_tmp in
+          oz|ozc|ozl|oztool|ozengine|ozplatform|ozdoc)
+            dummy_PATH="$SRCTOP/share/bin:$SRCTOP"
+          ;;
+        esac
+      done
+    fi
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
@@ -1022,7 +1106,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1026: checking for $ac_word" >&5
+echo "configure:1110: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1068,7 +1152,7 @@ fi
   esac
 
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1072: checking for --with-inc-dir" >&5
+echo "configure:1156: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -1110,7 +1194,7 @@ fi
 
 
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1114: checking for --with-lib-dir" >&5
+echo "configure:1198: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1154,7 +1238,7 @@ fi
 
 
   echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1158: checking for build date" >&5
+echo "configure:1242: checking for build date" >&5
 if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1168,7 +1252,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
 
 
   echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
-echo "configure:1172: checking for OZLOADSEP" >&5
+echo "configure:1256: checking for OZLOADSEP" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1188,7 +1272,7 @@ echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
 
 
   echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
-echo "configure:1192: checking for OZLOADWIN" >&5
+echo "configure:1276: checking for OZLOADWIN" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1226,7 +1310,7 @@ echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
 
 
 echo $ac_n "checking for --enable-contrib""... $ac_c" 1>&6
-echo "configure:1230: checking for --enable-contrib" >&5
+echo "configure:1314: checking for --enable-contrib" >&5
 # Check whether --enable-contrib or --disable-contrib was given.
 if test "${enable_contrib+set}" = set; then
   enableval="$enable_contrib"
@@ -1243,7 +1327,7 @@ else
 fi
 
 echo $ac_n "checking for --enable-doc""... $ac_c" 1>&6
-echo "configure:1247: checking for --enable-doc" >&5
+echo "configure:1331: checking for --enable-doc" >&5
 # Check whether --enable-doc or --disable-doc was given.
 if test "${enable_doc+set}" = set; then
   enableval="$enable_doc"
@@ -1267,7 +1351,7 @@ else
 fi
 
 echo $ac_n "checking for --enable-subdirs""... $ac_c" 1>&6
-echo "configure:1271: checking for --enable-subdirs" >&5
+echo "configure:1355: checking for --enable-subdirs" >&5
 # Check whether --enable-subdirs or --disable-subdirs was given.
 if test "${enable_subdirs+set}" = set; then
   enableval="$enable_subdirs"
@@ -1294,7 +1378,7 @@ echo "$ac_t""$oz_subdirs" 1>&6
 
 
 echo $ac_n "checking for --with-stdlib""... $ac_c" 1>&6
-echo "configure:1298: checking for --with-stdlib" >&5
+echo "configure:1382: checking for --with-stdlib" >&5
 # Check whether --with-stdlib or --without-stdlib was given.
 if test "${with_stdlib+set}" = set; then
   withval="$with_stdlib"

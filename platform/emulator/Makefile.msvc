@@ -16,8 +16,8 @@ CXX  = cl
 
 
 DEFS = -DWINDOWS -DWINDOWS_EMULATOR -DHAVE_CONFIG_H
-INCS =  -Ic:\programme\micros~2\vc98\include -I$(WINDIR)/include -I.
-LHOME = $(WINDIR)/lib
+INCS =  -Ic:\programme\micros~2\vc98\include -I$(WINDIR)/msvc/include -I$(WINDIR)/include -I.
+LHOME = $(WINDIR)/msvc/lib
 LIBS = $(LHOME)/zlib.lib $(LHOME)/gmp.lib
 
 

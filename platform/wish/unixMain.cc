@@ -38,9 +38,15 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef MAC_OSX_TK
 #include "conf.h"
+#endif
 
 #include <stdio.h>
+#ifdef MAC_OSX_TK
+#include <Tcl/tcl.h>
+#include <Tk/tk.h>
+#else
 #ifdef HAVE_TCL8_0_H
 #include <tcl8.0.h>
 #else
@@ -50,6 +56,17 @@
 #include <tk8.0.h>
 #else
 #include <tk.h>
+#endif
+#endif
+
+#define CONST_CAST(X,Y) const_cast<X>(Y)
+
+#if defined(TK_MAJOR_VERSION) && defined (TK_MINOR_VERSION) && TK_MAJOR_VERSION >= 8 && TK_MINOR_VERSION >= 4
+#define CONST_FOR_ARGV CONST84
+#define CONST_FOR_GETVAR_ARG CONST
+#else
+#define CONST_FOR_ARGV
+#define CONST_FOR_GETVAR_ARG
 #endif
 
 /*
@@ -134,7 +151,7 @@ main(int argc, char **argv)
      * Parse command-line arguments.
      */
 
-    if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv, argTable, 0)
+    if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, CONST_CAST(CONST_FOR_ARGV char**,argv), argTable, 0)
             != TCL_OK) {
         fprintf(stdout, "w %s\n.\n", interp->result);
         fflush(stdout); /* added mm */
@@ -278,7 +295,7 @@ main(int argc, char **argv)
     exit(1);
 
 error:
-    msg = Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY);
+    msg = CONST_CAST(char*,Tcl_GetVar(interp, CONST_CAST(CONST char*,"errorInfo"), TCL_GLOBAL_ONLY));
     if (msg == NULL) {
         msg = interp->result;
     }
@@ -399,8 +416,8 @@ StdinProc(ClientData clientData, int mask)
 static void
 Prompt(Tcl_Interp *interp, int partial)
 {
-    char *promptCmd = Tcl_GetVar(interp,
-        (char *) (partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY);
+    char *promptCmd = CONST_CAST(char*,Tcl_GetVar(interp,
+        CONST_CAST(CONST_FOR_GETVAR_ARG char*,partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY));
     if (promptCmd == NULL) {
         defaultPrompt:
         if (!partial) {

@@ -29,7 +29,7 @@ RPMROOT=/usr/src/redhat
 RPMSRC=$RPMROOT/SOURCES
 RPMSPEC=$RPMROOT/SPECS
 TMPDIR=/tmp
-: ${PACKAGER:="Christian Schulte <schulte@ps.uni-sb.de>"}
+: ${PACKAGER:="Denys Duchier (mozart-oz.org)"}
 
 #
 # Read dir
@@ -208,21 +208,6 @@ requires: mozart
 This package contains the extensive Mozart online documentation as a
 set of HTML pages, postscript and pdf documents. It also contains demo
 applications that can directly be started from the pages.
-%package contrib
-Summary: Mozart contributions
-Group: Development/Languages
-requires: mozart
-%description contrib
-This package contains a collection of contributed software packages
-for Mozart that might come in handy for applications like a regular
-expression package, data base interfaces, and so on.
-%package stdlib
-Summary: Mozart standard library
-Group: Development/Languages
-requires: mozart
-%description stdlib
-This package contains a continually growing collection of libraries
-that complement the core Mozart distribution.
 %prep
 %setup -q
 %setup -q -D -T -b 3
@@ -231,7 +216,7 @@ that complement the core Mozart distribution.
 : \${CFLAGS="\$RPM_OPT_FLAGS"}
 : \${CXXFLAGS="\$RPM_OPT_FLAGS"}
 export CFLAGS CXXFLAGS
-./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --enable-opt=yes --disable-doc --with-stdlib=\$RPM_BUILD_ROOT$OZHOME-std
+./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --with-ozhome=$OZHOME --enable-opt=yes --with-stdlib=\$RPM_BUILD_ROOT$OZHOME-std
 make
 
 %install
@@ -265,10 +250,8 @@ PLTFRM=\`\$PREFIX/bin/ozplatform\`
 make files.base files.base-\${PLTFRM}
 make files.contrib files.contrib-\${PLTFRM}
 make files.doc
-cat files.base files.base-\${PLTFRM} | \
+cat files.base files.base-\${PLTFRM} files.contrib files.contrib-\${PLTFRM} | \
     sed 's|^./|$OZHOME/|g' > mfiles.base
-cat files.contrib files.contrib-\${PLTFRM} | \
-    sed 's|^./|$OZHOME/|g' > mfiles.contrib
 cat files.doc | \
     sed 's|^./|$OZHOME/|g' > mfiles.doc
 
@@ -280,7 +263,6 @@ rm -rf \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std
 %config /etc/profile.d/oz.sh
 %config /etc/profile.d/oz.csh
 %files doc -f mfiles.doc
-%files contrib -f mfiles.contrib
 EOF
 
 #
@@ -288,7 +270,7 @@ EOF
 #
 
 rpmpgm=`rpmbuild --usage >/dev/null 2>&1 && echo rpmbuild || echo rpm`
-$rpmpgm --clean -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+$rpmpgm --clean -bs ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
 rm -f ${RPMSPEC}/${SPEC}
 rm -f ${RPMSRC}/${SRCTAR}
 rm -f ${RPMSRC}/${DOCTAR}
@@ -300,5 +282,5 @@ rm -f ${RPMSRC}/mozart.xpm
 # Move the created rpms to destination
 #
 
-mv ${RPMROOT}/RPMS/i386/mozart-{,doc-,contrib-}$VERSION-$BUILD.i386.rpm ${DSTDIR}
+#mv ${RPMROOT}/RPMS/i386/mozart-{,doc-}$VERSION-$BUILD.i386.rpm ${DSTDIR}
 mv ${RPMROOT}/SRPMS/mozart-$VERSION-$BUILD.src.rpm ${DSTDIR}
