@@ -929,7 +929,7 @@ public:
   void print();
 #endif
 
-  OwnerEntry *getOwner(int i)  { Assert(i<size); return &array[i];}
+  OwnerEntry *getOwner(int i)  { Assert(i>=0 && i<size); return &array[i];}
 
   int getSize() {return size;}
 
@@ -1435,7 +1435,7 @@ private:
 public:
   NetHashTable *hshtbl;
 
-  BorrowEntry *getBorrow(int i)  {return &array[i];}
+  BorrowEntry *getBorrow(int i)  { Assert(i>=0 && i<size); return &array[i];}
 
   int ptr2Index(BorrowEntry *a) { return(a-array);}
 
@@ -2147,22 +2147,26 @@ void CellProxy::convertToFrame(int myIndex){
 class RefTable {
   OZ_Term *array;
   int size;
+  int pos;
 public:
   RefTable()
   {
+    pos = 0;
     size = 100;
     array = new OZ_Term[size];
   }
+  void reset() { pos=0; }
   OZ_Term get(int i)
   {
     Assert(i<size);
     return array[i];
   }
-  void set(int pos, OZ_Term val)
+  int set(OZ_Term val)
   {
     if (pos>=size)
       resize(pos);
     array[pos] = val;
+    return pos++;
   }
   void resize(int newsize)
   {
@@ -2184,21 +2188,27 @@ RefTable *refTable;
 inline
 void gotRef(ByteStream *bs, TaggedRef val)
 {
-  PD((REF_COUNTER,"got: %d",bs->refCounter));
+#ifdef DEBUG_CHECK
+  int n1 = unmarshallNumber(bs);
+  int n2 = unmarshallNumber(bs);
   int n = unmarshallNumber(bs);
-  Assert(n==bs->refCounter);
-  refTable->set(bs->refCounter++,val);
+#endif
+  int counter = refTable->set(val);
+  PD((REF_COUNTER,"got: %d",counter));
+#ifdef DEBUG_CHECK
+  Assert(n==counter);
+#endif
 }
 
 class RefTrail: public Stack {
+  int counter;
 public:
-  Bool init;
-  RefTrail() : Stack(200,Stack_WithMalloc) { init = NO; }
-  void trail(OZ_Term *t)
+  RefTrail() : Stack(200,Stack_WithMalloc) { counter==0; }
+  int trail(OZ_Term *t)
   {
-    Assert(init);
     push(t);
     push(ToPointer(*t));
+    return counter++;
   }
   void unwind()
   {
@@ -2206,7 +2216,9 @@ public:
       OZ_Term oldval = ToInt32(pop());
       OZ_Term *loc = (OZ_Term*) pop();
       *loc = oldval;
+      counter--;
     }
+    Assert(counter==0);
   }
 };
 
@@ -2498,6 +2510,8 @@ OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   if (b!=NULL) {
     PD((UNMARSHALL,"borrow found"));
     b->addCredit(cred);
+    DebugCode(bi=-4712);
+    ob = b;
     return b->getValue();
   }
   bi=borrowTable->newBorrow(cred,sd,si);
@@ -2507,16 +2521,6 @@ OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   return 0;}
 
 
-BorrowEntry *unmarshallBorrowEntry(ByteStream *bs)
-{
-  Site *sd      = unmarshallSiteId(bs);
-  int si        = unmarshallNumber(bs);
-  NetAddress na = NetAddress(sd,si);
-
-  BorrowEntry *ret = borrowTable->find(&na);
-  Assert(ret!=NULL);
-  return ret;
-}
 
 
 /**********************************************************************/
@@ -2537,13 +2541,16 @@ Bool checkCycle(OZ_Term t, ByteStream *bs)
 }
 
 inline
-void trailCycle(OZ_Term *t, ByteStream *bs)
+void trailCycle(OZ_Term *t, ByteStream *bs,int n)
 {
-  PD((REF_COUNTER,"trail: %d",bs->refCounter));
-  refTrail->trail(t);
-  *t = ((bs->refCounter)<<tagSize)|GCTAG;
-  marshallNumber(bs->refCounter,bs);
-  bs->refCounter++;
+  int counter = refTrail->trail(t);
+  PD((REF_COUNTER,"trail: %d",counter));
+  *t = ((counter)<<tagSize)|GCTAG;
+#ifdef DEBUG_CHECK
+  marshallNumber(27,bs);
+  marshallNumber(n,bs);
+  marshallNumber(counter,bs);
+#endif
 }
 
 void marshallClosure(Site *sd,Abstraction *a,ByteStream *bs) {
@@ -2635,7 +2642,7 @@ void marshallObject(Site *sd, Object *o, ByteStream *bs)
   bs->put(DIF_OBJECT);
   marshallGName(o->getGName(),bs);
   marshallTerm(sd,makeTaggedConst(oc),bs);
-  trailCycle(o->getRef(),bs);
+  trailCycle(o->getRef(),bs,1);
   marshallSRecord(sd,o->getFreeRecord(),bs);
   marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs);
   if (o->getLock()) {
@@ -2651,7 +2658,7 @@ void marshallClass(Site *sd, Object *o, ByteStream *bs)
 {
   bs->put(DIF_CLASS);
   marshallGName(o->getGName(),bs);
-  trailCycle(o->getRef(),bs);
+  trailCycle(o->getRef(),bs,2);
   marshallSRecord(sd,o->getFreeRecord(),bs);
 }
 
@@ -2659,7 +2666,7 @@ void marshallDict(Site *sd, OzDictionary *d, ByteStream *bs)
 {
   int size = d->getSize();
   marshallNumber(size,bs);
-  trailCycle(d->getRef(),bs);
+  trailCycle(d->getRef(),bs,3);
 
   int i = d->getFirst();
   i = d->getNext(i);
@@ -2700,7 +2707,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       bs->put(DIF_CHUNK);
       marshallGName(gname,bs);
 
-      trailCycle(t->getRef(),bs);
+      trailCycle(t->getRef(),bs,4);
 
       marshallTerm(sd,ch->getValue(),bs);
       return;
@@ -2730,7 +2737,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       marshallTerm(sd,pp->getName(),bs);
       marshallNumber(pp->getArity(),bs);
 
-      trailCycle(t->getRef(),bs);
+      trailCycle(t->getRef(),bs,5);
 
       marshallClosure(sd,pp,bs);
       marshallCode(sd,pp->getPC(),bs);
@@ -2760,7 +2767,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
     error("marshallConst(%d) not impl",t->getType());
   }
 
-  trailCycle(t->getRef(),bs);
+  trailCycle(t->getRef(),bs,6);
 }
 
 void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs)
@@ -2887,7 +2894,7 @@ loop:
         marshallString(lit->getPrintName(),bs);
         PD((MARSHALL,"name: %s",lit->getPrintName()));
       }
-      trailCycle(lit->getRef(),bs);
+      trailCycle(lit->getRef(),bs,7);
       break;
     }
 
@@ -2902,11 +2909,11 @@ loop:
       TaggedRef *args = l->getRef();
       if (!isRef(*args) && isAnyVar(*args)) {
         PerdioVar *pvar = var2PerdioVar(args);
-        trailCycle(args,bs);
+        trailCycle(args,bs,8);
         marshallVariable(sd,pvar,bs);
       } else {
         OZ_Term head = l->getHead();
-        trailCycle(args,bs);
+        trailCycle(args,bs,9);
         marshallTerm(sd,head,bs);
       }
       // tail recursion optimization
@@ -2930,7 +2937,7 @@ loop:
         marshallTerm(sd,rec->getArityList(),bs);
       }
       marshallTerm(sd,label,bs);
-      trailCycle(rec->getCycleAddr(),bs);
+      trailCycle(rec->getCycleAddr(),bs,10);
       int argno = rec->getWidth();
       PD((MARSHALL,"record-tuple no:%d",argno));
 
@@ -3222,13 +3229,13 @@ loop:
 
   case DIF_CELL:
     {
-      OB_Entry *ob;
+      OB_Entry *ob = NULL;
       int bi;
       OZ_Term val = unmarshallBorrow(bs,ob,bi);
       if (val) {
         PD((UNMARSHALL,"cell hit b:%d",bi));
         gotRef(bs,val);
-        Tertiary *t=BT->getBorrow(bi)->getTertiary();
+        Tertiary *t=ob->getTertiary();
         if((t->getType()==Co_Cell) && (t->getTertType()==Te_Frame)){
           CellFrame *cf=(CellFrame *)t;
           if(cf->getState() & Cell_Dump_Asked){
@@ -3413,9 +3420,6 @@ loop:
       gotRef(bs,*ret);
 
       RefsArray globals = unmarshallClosure(bs);
-      static int xx=0;
-      xx++;
-      message("xx=%d\n",xx);
       ProgramCounter PC = unmarshallCode(bs);
       if (pp) {
         pp->import(globals,PC);
@@ -3449,6 +3453,7 @@ loop:
       }
 
       *ret = makeTaggedConst(found);
+      gotRef(bs,*ret);
       return;
     }
 
@@ -3478,6 +3483,7 @@ void siteReceive(ByteStream* bs)
   Assert(am.currentBoard==am.rootBoard);
 
   bs->unmarshalBegin();
+  refTable->reset();
 
   MessageType mt= (MessageType) bs->get();
   switch (mt) {
@@ -3615,7 +3621,7 @@ void siteReceive(ByteStream* bs)
       if (!be) { // if not found, then forget the redirect message
         PD((WEIRD,"REDIRECT: no borrow entry found"));
         sendCreditBack(na.site,na.index,1);
-        return;
+        break;
       }
       be->addCredit(1);
 
@@ -3769,10 +3775,9 @@ void siteReceive(ByteStream* bs)
 
 void domarshallTerm(Site * sd,OZ_Term t, ByteStream *bs)
 {
-  refTrail->init = OK;
+  Assert(refTrail->isEmpty());
   marshallTerm(sd,t,bs);
   refTrail->unwind();
-  refTrail->init = NO;
 }
 
 void domarshallTerm(TaggedRef url,OZ_Term t, ByteStream *bs)
@@ -4795,10 +4800,10 @@ int loadFile(char *filename,OZ_Term out)
     return oz_raise(E_ERROR,OZ_atom("perdio"),"fileEmpty",1,
                       oz_atom(filename));
   }
-
   bs->beforeInterpret(0);
   bs->unmarshalBegin();
 
+  refTable->reset();
   OZ_Term val = unmarshallTerm(bs);
 
   bs->unmarshalEnd();
