@@ -651,7 +651,7 @@ void FSetValue::init(const OZ_FiniteDomain &fd)
     maybeToNormal();
   }
 #else
-  if (fd.getMaxElem() >= fsethigh32) // TMUELLER
+  if (fd.getMaxElem() >= fsethigh32) // tmueller!
     OZ_warning("Max elem of `fd' is to big (%s:%s)", __FILE__, __LINE__);
 
   for (int i = fset_high; i--; )

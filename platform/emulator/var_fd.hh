@@ -122,8 +122,6 @@ public:
   void printLongStream(ostream &out, int depth = 10, int offset = 0) {
     printStream(out,depth); out << endl;
   }
-
-#ifdef TMUELLER
   //
   void dropPropagator(Propagator * prop) {
     for (int i = fd_prop_any; i--; ) {
@@ -140,7 +138,6 @@ public:
   //
   // end of tagging ...
   //
-#endif
 };
 
 void addSuspFDVar(TaggedRef, Suspendable *, OZ_FDPropState = fd_prop_any);

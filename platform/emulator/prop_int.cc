@@ -53,7 +53,7 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
   while (aux) {
     Suspendable * susp = aux->getSuspendable();
     
-    /* NOTE: a possible optimization isTaggedAndUntag (TMUELLER) */
+    /* NOTE: a possible optimization isTaggedAndUntag (tmueller!) */
 	
     if (!susp->isDead() && 
 	susp->isPropagator() &&
