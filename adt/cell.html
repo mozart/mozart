@@ -2,7 +2,7 @@
 <HTML>
 <HEAD>
 <!-- EDIT -->
-<TITLE>Mozart Standard Library</TITLE>
+<TITLE>Mozart Standard Library: Functional Cells</TITLE>
 <STYLE>
 BODY {
 	background-color: white;
@@ -49,18 +49,41 @@ SPAN.BUILTIN      { color: #DA70D6; }
 </HEAD>
 <BODY>
 <!-- EDIT -->
-<H1>Mozart Standard Library</H1>
+<H1>Functional Cells</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/adt/Cell.ozf</SPAN>
+</DL>
 <HR>
 
-<P>The standard library currently contains the following sections:
-<UL>
-<LI><A href="../mozart-ozmake/index.html">ozmake tool</A>
-<LI><A href="adt/index.html">Abstract datatypes</A>
-<LI><A href="net/index.html">Network support</A>
-<LI><A href="os/index.html">Operating system support</A>
-<LI><A href="wp/index.html">GUI programming</A>
-<LI><A href="xml/index.html">XML Support</A>
-</UL>
+<P>This is a functional wrapper around the standard cell datatype.
+
+<H2>Exports</H2>
+
+<P>The module exports only one function: a <CODE>New</CODE> constructor
+
+<DL>
+<DT><CODE>{Cell.new V}</CODE>
+<DD>creates a new instance of a functional cell, initialized with
+value <CODE>V</CODE>.
+</DL>
+
+<H2>Instance API</H2>
+
+<P>Each functional cell instance <CODE>C</CODE> has the following features:
+<DL>
+<DT><CODE>{C.get ?V}</CODE>
+<DD>return the current value <CODE>V</CODE> of <CODE>C</CODE>
+<DT><CODE>{C.put  V}</CODE>
+<DD>set the current value of <CODE>C</CODE> to <CODE>V</CODE>
+<DT><CODE>{C.getPut Old New}</CODE>
+<DD>atomically, gets the current value <CODE>Old</CODE> of <CODE>C</CODE>
+and replaces it with <CODE>New</CODE>
+<DT><CODE>{C.clone ?C2}</CODE>
+<DD>returns a new functional cell instance, initialized with <CODE>C</CODE>'s
+current value
+</DL>
 
 <HR>
 </BODY>

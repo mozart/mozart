@@ -58,6 +58,8 @@ prepare
 
    fun {SplitWindows S} {Split S IsSlashOrBackslash} end
    fun {SplitPosix   S} {Split S IsSlash} end
+
+   fun {PathToString P} {P toString($)} end
 import
    OS Property
    Shell at 'Shell.ozf'
@@ -341,7 +343,7 @@ define
    proc {Mkdir     P} {{Make P} mkdir} end
    proc {Mkdirs    P} {{Make P} mkdirs} end
    fun {IsRoot     P} {{Make P} isRoot($)} end
-   fun {Readdir    P} {{Make P} readdir($)} end
+   fun {Readdir    P} {Map {{Make P} readdir($)} PathToString} end
    fun {Extension  P} {{Make P} extension($)} end
    fun {DropExtension P} {{{Make P} dropExtension($)} toString($)} end
    fun {AddExtension P E} {{{Make P} addExtension(E $)} toString($)} end

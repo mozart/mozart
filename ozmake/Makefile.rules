@@ -38,7 +38,7 @@ doc.html:
 else
 doc.html:
 	$(XSLTPROC) -o $(SRCDIR)/HELP.html \
-		--stringparam OZMAKEOUTPUT text \
+		--stringparam OZMAKEOUTPUT html \
 		--stringparam OZMAKEVERSION $(VERSION) \
 		$(SRCDIR)/HELP.xsl $(SRCDIR)/HELP.xml
 	cp $(SRCDIR)/HELP.html $(SRCDIR)/index.html

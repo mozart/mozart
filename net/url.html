@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: URL</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>URL Support</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/net/URL.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This module provides an object-oriented API for URLs
+
+<H2>Exports</H2>
+<P>The module exports a constructor and a test:
+<DL>
+<DT><CODE>{URL.make +VS ?U}</CODE>
+<DD>returns a new instance <CODE>U</CODE> of a URL object, given a virtual
+string <CODE>VS</CODE>.  If <CODE>VS</CODE> is actually already a URL object
+then it is simply returned
+<DT><CODE>{URL.is +X ?B}</CODE>
+<DD>returns true iff <CODE>X</CODE> is an instance of a URL object
+</DL>
+
+<H2>Instance API</H2>
+<P>Each URL object <CODE>U</CODE> has the following methods:
+<DL>
+<DT><CODE>{U init(S)}</CODE>
+<DD>initializes <CODE>U</CODE> given a string <CODE>S</CODE>
+<DT><CODE>{U toVS(    $ full:FULL&lt;=false cache:CACHE&lt;=false raw:RAW&lt;=false normalized:NORM&lt;=false)}</CODE>
+<DT><CODE>{U toString($ full:FULL&lt;=false cache:CACHE&lt;=false raw:RAW&lt;=false normalized:NORM&lt;=false)}</CODE>
+<DT><CODE>{U toAtom(  $ full:FULL&lt;=false cache:CACHE&lt;=false raw:RAW&lt;=false normalized:NORM&lt;=false)}</CODE>
+<DD>returns respectively a virtual string, a string, or an atom for the
+textual representation of the URL.
+<DL>
+<DT><CODE>full:true</CODE>
+<DD>indicates that full information is desired, including the possible
+<CODE>#FRAGMENT</CODE> and <CODE>{INFO}</CODE> sections of the URL.
+Normally, these are omitted.
+<DT><CODE>cache:true</CODE>
+<DD>indicates that a syntax appropriate for cache lookup is desired.
+The <CODE>:</CODE> after the schme and the <CODE>//</CODE> before the
+authority are both replaced by a single <CODE>/</CODE>
+<DT><CODE>raw:true</CODE>
+<DD>indicates that no encoding should take place, i.e. special url
+characters are not <CODE>%</CODE> encoded
+<DT><CODE>normalized:true</CODE>
+<DD>indicates that the scheme, device and authority should all be
+lowercased to produce a normalized representation
+</DL>
+<DT><CODE>{U isAbsolute($)}</CODE>
+<DD>returns true iff the URL is absolute
+<DT><CODE>{U isRelative($)}</CODE>
+<DD>returns true iff the URL is relative, i.e. not absolute
+<DT><CODE>{U resolve(+U2 $)}</CODE>
+<DD>given another URL object <CODE>U2</CODE> as an argument, returns
+a new URL object which results from resolving <CODE>U2</CODE> relative to
+<CODE>U</CODE>.  Note that <CODE>U</CODE> is considered as a whole, not
+just its base
+<DT><CODE>{U isRoot($)}</CODE>
+<DD>returns true iff <CODE>U</CODE>'s path is empty
+<DT><CODE>{U dirname($)}</CODE>
+<DD>returns a new URL object representing the parent URL of <CODE>U</CODE>
+<DT><CODE>{U basename($)}</CODE>
+<DD>returns a new URL object representing just the last component of
+<CODE>U</CODE>'s path
+<DT><CODE>{U getScheme($)}</CODE>
+<DT><CODE>{U getAuthority($)}</CODE>
+<DT><CODE>{U getDevice($)}</CODE>
+<DT><CODE>{U getAbsolute($)}</CODE>
+<DT><CODE>{U getPath($)}</CODE>
+<DT><CODE>{U getQuery($)}</CODE>
+<DT><CODE>{U getFragment($)}</CODE>
+<DT><CODE>{U getInfo($)}</CODE>
+<DD>return the corresponding (typically string) element of the URL
+or <CODE>unit</CODE> when not available
+<DT><CODE>{U normalized($)}</CODE>
+<DD>return a new URL object which is the normalized representation of
+<CODE>U</CODE> (i.e. scheme, device and authority lowercased)
+<DT><CODE>{U toPath($ windows:WIN&lt;=false)}</CODE>
+<DD>return a <A href="../os/path.html">path object</A> corresponding to
+<CODE>U</CODE>.  <CODE>WIN</CODE> indicates whether it should be considered
+a Windows-style path
+</DL>
+
+<HR>
+</BODY>
+</HTML>

@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: Path</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>Path Support</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/os/Path.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This module provides an object-oriented interface for path and
+OS operations on them
+
+<H2>Exports</H2>
+<P>The module exports not only the object-oriented API for path, but
+also a convenient functional API built on top of the later.  It should
+be noted however that the functional API always needs to build path objects
+and thus is less efficient than the OO API, though possibly occasionally
+more convenient.
+
+<DL>
+<DT><CODE>{Path.make +VS ?P}</CODE>
+<DD>given a virtual string <CODE>VS</CODE>, returns a new path object
+<CODE>P</CODE>.  If <CODE>VS</CODE> is already a path object, then it
+is simply returned.
+<DT><CODE>{Path.is +X ?B}</CODE>
+<DD>return true iff <CODE>X</CODE> is a path object
+<DT><CODE>Path.'class'</CODE>
+<DD>The class which implements path objects
+<DT><CODE>{Path.toString +X ?S}</CODE>
+<DT><CODE>{Path.toAtom +X ?A}</CODE>
+<DT><CODE>{Path.length +X ?N}</CODE>
+<DT><CODE>{Path.isAbsolute +X ?B}</CODE>
+<DT><CODE>{Path.isRelative +X ?B}</CODE>
+<DT><CODE>{Path.dirname +X ?S}</CODE>
+<DT><CODE>{Path.basename +X ?S}</CODE>
+<DT><CODE>{Path.exists +X ?B}</CODE>
+<DT><CODE>{Path.stat +X ?R}</CODE>
+<DT><CODE>{Path.isDir +X ?B}</CODE>
+<DT><CODE>{Path.isFile +X ?B}</CODE>
+<DT><CODE>{Path.size +X ?N}</CODE>
+<DT><CODE>{Path.mtime +X ?N}</CODE>
+<DT><CODE>{Path.resolve +X1 +X2 ?S}</CODE>
+<DT><CODE>{Path.getcwd ?S}</CODE>
+<DT><CODE>{Path.mkdir +X}</CODE>
+<DT><CODE>{Path.mkdirs +X}</CODE>
+<DT><CODE>{Path.isRoot +X ?B}</CODE>
+<DT><CODE>{Path.readdir +X ?L}</CODE>
+<DT><CODE>{Path.extension +X ?S}</CODE>
+<DT><CODE>{Path.dropExtension +X ?S}</CODE>
+<DT><CODE>{Path.addExtension +X +VS ?S}</CODE>
+<DT><CODE>{Path.maybeAddPlatform +X ?S}</CODE>
+<DT><CODE>{Path.rmdir +X}</CODE>
+<DD>for proper descriptions, see path methods below.  Returned path
+objects are converted to strings where applicable
+</DL>
+
+<H2>Instance API</H2>
+<P>Each path object <CODE>P</CODE> has the following methods:
+<DL>
+<DT><CODE>{P init(+S windows:WIN&lt;=ISWIN exact:EXACT&lt;=false)}</CODE>
+<DD>initializes a path object from the string <CODE>S</CODE>.  <CODE>WIN</CODE>
+indicates that it should be considered a Windows-style path: this usually
+defaults to false, except on Windows where it defaults to true.
+<CODE>EXACT</CODE> indicates whether we should keep a terminal slash;
+the default is false.
+<DT><CODE>{P initFromRecord(+R)}</CODE>
+<DD>initializes the path object from its record-based representation
+<DT><CODE>{P newFromRecord(R $)}</CODE>
+<DD>This method is meant to be overriden when you subclass the <CODE>Path</CODE>
+class.  It's default definition is
+<CODE CLASS="DISPLAY">
+meth newFromRecord(R $)
+   {New Path initFromRecord(R)}
+end
+</CODE>
+<DT><CODE>{P new(+S windows:WIN&lt;=ISWIN exact:EXACT&lt;=false)}</CODE>
+<DD>this method is also meant to be overriden to create derived
+instances from a string <CODE>S</CODE>
+<DT><CODE>{P toString($)}</CODE>
+<DT><CODE>{P toAtom($)}</CODE>
+<DD>return a string (resp. an atom) textual representation of the path
+<DT><CODE>{P length($)}</CODE>
+<DD>returns the length of the string that is the textual representation
+of the path
+<DT><CODE>{P isAbsolute($)}</CODE>
+<DT><CODE>{P isRelative($)}</CODE>
+<DD>returns true (resp. false) iff the path is absolute
+<DT><CODE>{P dirname($)}</CODE>
+<DD>returns a new path object representing the parent directory of <CODE>P</CODE>
+<DT><CODE>{P basenameString($)}</CODE>
+<DD>returns the string representation for the last component of <CODE>P</CODE>
+<DT><CODE>{P basename($)}</CODE>
+<DD>returns a new path object representing just the last component
+of path <CODE>P</CODE>
+<DT><CODE>{P exists($)}</CODE>
+<DD>returns true iff path <CODE>P</CODE> exists
+<DT><CODE>{P stat($)}</CODE>
+<DD>returns a record representation of the stat information for path
+<CODE>P</CODE>
+<DT><CODE>{P isDir($)}</CODE>
+<DT><CODE>{P isFile($)}</CODE>
+<DD>returns true iff <CODE>P</CODE> is a directory (resp. a regular file)
+<DT><CODE>{P size($)}</CODE>
+<DD>returns the size of file <CODE>P</CODE> in bytes
+<DT><CODE>{P mtime($)}</CODE>
+<DD>returns the time of last modification as an integer
+<DT><CODE>{P resolve(+P2 $)}</CODE>
+<DD>returns a new path object that results from resolving <CODE>P2</CODE>
+relative to <CODE>P</CODE> (if <CODE>P2</CODE> is not a path, it is made
+into one)
+<DT><CODE>{P getcwd($)}</CODE>
+<DD>returns a path object representing the current working directory
+<DT><CODE>{P mkdir}</CODE>
+<DD>creates directory <CODE>P</CODE>
+<DT><CODE>{P mkdirs}</CODE>
+<DD>creates directory <CODE>P</CODE> and its ancestor directories too
+if necessary
+<DT><CODE>{P rmdir}</CODE>
+<DD>removes directory <CODE>P</CODE>
+<DT><CODE>{P isRoot($)}</CODE>
+<DD>returns true iff <CODE>P</CODE> is a root path
+<DT><CODE>{P readdir($)}</CODE>
+<DD>returns a list of path objects representing the contents of directory
+<CODE>P</CODE>.  Entries for <CODE>.</CODE> and <CODE>..</CODE> are
+omitted.  All other entries are resolved relative to <CODE>P</CODE>
+<DT><CODE>{P extension($)}</CODE>
+<DD>returns the file extension for <CODE>P</CODE>, <CODE>unit</CODE> if none
+<DT><CODE>{P dropExtension($)}</CODE>
+<DD>returns a new path object with the extension of <CODE>P</CODE>, if any,
+omitted
+<DT><CODE>{P addExtension(+VS $)}</CODE>
+<DD>returns a new path object which is like <CODE>P</CODE> but with the
+extension <CODE>VS</CODE> added
+<DT><CODE>{P maybeAddPlatform($)}</CODE>
+<DD>is <CODE>P</CODE> has extension <CODE>so</CODE> then a new path
+object is returned with the appropriate (for native functors) platform-specific
+suffix added, else <CODE>P</CODE> itself is returned
+<DT><CODE>{P makeExecutable}</CODE>
+<DD>makes file <CODE>P</CODE> executable if this is meaningful on the current
+platform
+</DL>
+
+<HR>
+</BODY>
+</HTML>

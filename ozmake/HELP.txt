@@ -1,3 +1,14 @@
+                                    ozmake
+
+   [1]Denys Duchier
+
+   provides
+          ozmake
+     _________________________________________________________________
+
+   see [2]CHANGES for a list of changes between successive versions of
+   ozmake.
+
 USAGE
 
    ozmake OPTIONS TARGETS
@@ -790,3 +801,13 @@ CONTACTS
 
    You can invoke ozmake --publish on such a makefile to contribute the
    corresponding mogul database entries
+     _________________________________________________________________
+
+
+    [3]Denys Duchier
+
+References
+
+   1. http://www.ps.uni-sb.de/~duchier/
+   2. file://localhost/home/denys/src/Mozart/devel/stdlib/ozmake/CHANGES
+   3. http://www.ps.uni-sb.de/~duchier/

@@ -1,6 +1,7 @@
 makefile(
    uri   : 'x-oz://system/tool'
-   mogul : 'mogul:/duchier/ozmake'
+%   mogul : 'mogul:/duchier/ozmake'
+   mogul  : 'mogul:/mozart/ozmake'
    author: 'mogul:/duchier/denys'
    lib   : ['ozmake.ozf']
    bin   : ['ozmake.exe']

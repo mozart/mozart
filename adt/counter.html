@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: Functional Counters</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>Functional Counters</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/adt/Counter.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This module provides a functional interface for counters
+
+<H2>Exports</H2>
+<P>The modules exports 2 constructors:
+<DL>
+<DT><CODE>{Counter.newFromInt +I ?C}</CODE>
+<DD>returns a new functional counter instance, initialized to
+integer value <CODE>I</CODE>
+<DT><CODE>{Counter.new ?C}</CODE>
+<DD>return a new functional counter instance, initialized to 1
+</DL>
+
+<H2>Instance API</H2>
+
+<P>Each functional counter instance <CODE>C</CODE> has the following
+features:
+<DL>
+<DT><CODE>{C.get ?I}</CODE>
+<DD>returns the current value <CODE>I</CODE> of <CODE>C</CODE>
+<DT><CODE>{C.put +I}</CODE>
+<DD>sets the current value of <CODE>C</CODE> to <CODE>I</CODE>
+<DT><CODE>{C.getPut Old New}</CODE>
+<DD>atomically gets the current value <CODE>Old</CODE> of <CODE>C</CODE>
+and sets it to the new value <CODE>New</CODE>
+<DT><CODE>{C.next ?I}</CODE>
+<DD>returns the current value <CODE>I</CODE> of <CODE>C</CODE> and
+increments the counter
+<DT><CODE>{C.plus +N}</CODE>
+<DD>increments <CODE>C</CODE> by <CODE>N</CODE>
+<DT><CODE>{C.times +N}</CODE>
+<DD>multiplies the content of <CODE>C</CODE> by <CODE>N</CODE>
+<DT><CODE>{C.clone ?C2}</CODE>
+<DD>returns a new counter <CODE>C2</CODE> currently holding the same
+integer value as <CODE>C</CODE>
+</DL>
+
+<HR>
+</BODY>
+</HTML>
