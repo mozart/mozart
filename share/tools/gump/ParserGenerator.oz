@@ -294,7 +294,7 @@ local
 	 % should be added to the grammar
 	 I = @lastStartToken + 1
 	 lastStartToken <- I
-	 X = {ConcatenateAtomAndInt 'startToken' I}
+	 X = {VirtualString.toAtom 'startToken'#I}
 	 Symbol = fAtom(X Coord)
 	 case {Some @grammarSymbols fun {$ S#_} {SymbolEq S Symbol} end} then
 	    ParserSpecification, generateStartToken(Coord $)
