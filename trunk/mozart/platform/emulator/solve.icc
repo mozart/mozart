@@ -87,9 +87,18 @@ void SolveActor::mergeNonMono(Board *bb) {
 }
 
 inline
+int SolveActor::commit(int left, int right) {
+  ozstat.incSolveAlt();
+
+  Assert(bag && bag->getDist()->isAlive());
+
+  return bag->getDist()->commit(solveBoard,left,right);
+  
+}
+
+inline
 WaitActor *SolveActor::select(int left, int right) 
 {
-  ozstat.incSolveAlt();
 
   if (cpb==0)
     return 0;
@@ -111,6 +120,22 @@ void SolveActor::clearResult(Board* bb) {
     return;
 
   result = oz_newVar(bb);
+}
+
+inline
+Distributor * SolveActor::getDistributor(void) {
+  bag = bag->clean();
+
+  if (!bag)
+    return (Distributor *) 0;
+  
+  // Find unary distributor, if any
+  for (DistBag * db = bag; db; db=db->getNext()) {
+    if (db->getDist()->getAlternatives() == 1)
+      return db->getDist();
+  }
+
+  return bag->getDist();
 }
 
 #ifdef DEBUG_THREADCOUNT

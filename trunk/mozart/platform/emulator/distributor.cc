@@ -27,44 +27,18 @@
 
 #include "distributor.hh"
 
+// PERFORMANCE PROBLEMS
+DistBag * DistBag::clean(void) {
 
-DistBag * DistBag::get(WaitActor ** wa) {
-  *wa = (WaitActor *) 0;
-
-  CpBag * cur   = this;
-  CpBag * first = this;
-  CpBag ** prev = &first;
+  if (!this)
+    return this;
   
-  while (cur) {
-    if (cur->choice && !cur->choice->isAliveUpToSolve()) {
-      // Remove choice
-      (*prev) = cur->next;
-      CpBag * junk = cur;
-      cur     = cur->next;
-      junk->dispose();
-    } else if (cur->choice->getChildCount() == 1) {
-      Assert(cur->choice->isChoice());
-      // Remove choice
-      (*prev) = cur->next;
-      // return choice
-      *wa = cur->choice;
-      cur->dispose();
-      return first;
-    } else if (!(*wa)) {
-      *wa  = cur->choice;
-      prev = &(cur->next);
-      cur  = cur->next;
-    } else {
-      prev = &(cur->next);
-      cur  = cur->next;
-    }
-
+  if (getDist()->isAlive()) {
+    setNext(getNext()->clean());
+    return this;
+  } else {
+    return getNext()->clean();
   }
   
-  
-  Assert((first ? 
-	  ((*wa) && ((*wa)->getChildCount()>1) ) 
-	  : !(*wa)));
-
-  return first;
 }
+
