@@ -144,5 +144,8 @@ int getIPPort();
 void setFirewallStatus(Bool);
 Bool getFireWallStatus();
 
+// Message Statistics:
+extern int  globalWriteCounter;
+extern int  globalReadCounter;
 /* __PERDIOHH */
 #endif
