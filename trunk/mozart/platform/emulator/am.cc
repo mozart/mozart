@@ -117,6 +117,7 @@ void printBanner()
 void AM::init(int argc,char **argv)
 {  
   ozconf.init();
+  osInit();
 
   suspCallHandler=makeTaggedNULL(); 
   suspendVarList=makeTaggedNULL();
@@ -254,7 +255,6 @@ void AM::init(int argc,char **argv)
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   toplevelVars[0] = makeTaggedConst(bi);
   
-  osInit();
   ioNodes = new IONode[osOpenMax()];
 
   if (!isStandalone()) {
