@@ -94,53 +94,38 @@ in
    %%
    %%
    local
-      SetTab       = {Tuple.make tab 256}
-      SubstTab     = {Tuple.make tab 256}
-      ScanTab      = {Tuple.make tab 256}
-
-      fun {OctString I}
-	 [(I div 64) mod 8 + &0 (I div 8)  mod 8 + &0 I mod 8 + &0]
+      fun {OctString I Ir}
+	 ((I div 64) mod 8 + &0) |
+	 ((I div 8)  mod 8 + &0) |
+	 (I mod 8 + &0         ) | Ir
       end
 
-      %%
-      {Record.forAllInd SetTab
-       fun {$ J} I=J-1 in
-	  case {Char.isCntrl I} then
-	     subst(case I
-		   of &\a then "\\a"
-		   [] &\b then "\\b"
-		   [] &\f then "\\f"
-		   [] &\n then "\\n"
-		   [] &\r then "\\r"
-		   [] &\t then "\\t"
-		   [] &\v then "\\v"
-		   else {Append "\\" {OctString I}}
-		   end)
-	  elsecase I =< 255 andthen 127 =< I then
-	     subst({Append "\\" {OctString I}})
-	  else 
-	     case I
-	     of &\" then subst("\\\"")
-	     [] &\\ then subst("\\\\")
-	     else legal
-	     end
-	  end
-       end}
-
-      %%
-      ScanTab  = {Record.map SetTab fun {$ T} {Label T} end}
-      SubstTab = {Record.map SetTab
-		  fun {$ T}
-		     case {IsAtom T} then "" else T.1 end
-		  end}
-
-      %%
       fun {QuoteString Is}
 	 case Is of nil then nil 
-	 [] I|Ir then J=I+1 in
-	    case ScanTab.J
-	    of legal   then I|{QuoteString Ir}
-	    [] subst   then {Append SubstTab.J {QuoteString Ir}}
+	 [] I|Ir then
+	    case {Char.type I}
+	    of space then
+	       case I
+	       of &\n then &\\|&n|{QuoteString Ir}
+	       [] &\f then &\\|&f|{QuoteString Ir}
+	       [] &\r then &\\|&r|{QuoteString Ir}
+	       [] &\t then &\\|&t|{QuoteString Ir}
+	       [] &\v then &\\|&v|{QuoteString Ir}
+	       else I|{QuoteString Ir}
+	       end	       
+	    [] other then
+	       case I
+	       of &\a then &\\|&a|{QuoteString Ir}
+	       [] &\b then &\\|&b|{QuoteString Ir}
+	       else &\\|{OctString I {QuoteString Ir}}
+	       end
+	    [] punct then
+	       case I
+	       of &\" then &\\|&\"|{QuoteString Ir}
+	       [] &\\ then &\\|&\\|{QuoteString Ir}
+	       else I|{QuoteString Ir}
+	       end
+	    else I|{QuoteString Ir}
 	    end
 	 end
       end
