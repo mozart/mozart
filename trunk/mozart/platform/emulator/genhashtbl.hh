@@ -110,8 +110,6 @@ public:
   GenHashNode *getNext(){return next;}
   GenHashBaseKey *getBaseKey(){return basekey;}
   GenHashEntry *getEntry(){return entry;}
-  // for collecting the gname table
-  unsigned int &getEntryAdr(){return (unsigned int&) entry;}
   void setEntry(GenHashEntry *e){ entry=e;}
   int getKey(){return key;}
 };
