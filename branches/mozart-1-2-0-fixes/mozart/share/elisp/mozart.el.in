@@ -989,7 +989,7 @@ With ARG, delete it instead."
       (oz-send-string
        (concat "{Ozcar.object bpAt('"
 	       (or (buffer-file-name) (buffer-name))
-	       "' " line (if flag " false" " true") ")}") t))))
+	       "' " (int-to-string line) (if flag " false" " true") ")}") t))))
 
 ;;}}}
 ;;{{{ Other Tools
