@@ -35,7 +35,7 @@ export BUILDTOP
 export SRCDIR
 export OZPREFIX
 export OZLIB
-export OZMAINIT = Init.ozp
+export OZMAINIT = Init.ozf
 export OZMAFILE = -init ozc.ozp
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
@@ -87,8 +87,8 @@ INITSRC1 = URL.oz Prop.oz Module.oz RURL.oz
 INITSRC = $(INITSRC1:%=init/%) Init.oz \
         ../url-defaults.oz ../functor-defaults.oz
 
-Init.ozp: $(INITSRC)
-        OZMAINIT="" $(SCOMPILE) Init.oz -o Init.ozp
+Init.ozf: $(INITSRC)
+        OZMAINIT="" $(SCOMPILE) Init.oz -o Init.ozf
 
 #---------------------------------------------------------------------
 # Standard
@@ -111,9 +111,9 @@ Standard.ozf: $(STANDARDSRC)
 # Remaining functors
 #---------------------------------------------------------------------
 
-$(FUNCTORS): Standard.ozf Init.ozp
+$(FUNCTORS): Standard.ozf Init.ozf
 
-Standard.ozf: Init.ozp
+Standard.ozf: Init.ozf
 
 %.ozf: sp/%.oz Standard.ozf
         $(COMPILE) $< -o $@
@@ -223,7 +223,7 @@ ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
 .PHONY: install install-stage install-main install-images install-cache
 
 LIBFUNCTORS = \
-        $(FUNCTORS:%=$(OZLIB)/%) $(OZLIB)/Init.ozp
+        $(FUNCTORS:%=$(OZLIB)/%) $(OZLIB)/Init.ozf
 BINFILES = \
         $(SYSLETS:%=$(OZBIN)/%)
 STAGEEXTRAFILES = \
@@ -284,7 +284,7 @@ clean:
         -rm -f compiler-Version.oz compiler-Builtins.oz
         -rm -f compiler-Opcodes.oz
         -rm -f envgen compiler-Env.oz
-        -rm -f Init.ozp ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS)
+        -rm -f Init.ozf ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS)
         -rm -f $(SYSLETS)
 
 veryclean: clean
@@ -312,7 +312,7 @@ URL=http\\://www.ps.uni-sb.de/ozhome
 bootstrap:
         $(MAKE) ozc.ozp all \
         OZC=$(SRCDIR)/ozc.sh \
-        OZINIT=Init.ozp \
+        OZINIT=Init.ozf \
         OZ_LIB=. \
         OZ_LOAD=root=.:prefix=$(URL)/lib/=./:=
 
@@ -335,14 +335,14 @@ stage2:
         $(MAKE) install-stage PREFIX=$(STAGE2) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:= \
         OZC=$(STAGE1)/bin/ozc \
-        OZINIT=$(STAGE1)/lib/Init.ozp
+        OZINIT=$(STAGE1)/lib/Init.ozf
 
 # stage2a: recreate only the functors using the stage1 functors
 stage2a:
         $(MAKE) install-main PREFIX=$(STAGE2A) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:= \
         OZC=$(STAGE1)/bin/ozc \
-        OZINIT=$(STAGE1)/lib/Init.ozp
+        OZINIT=$(STAGE1)/lib/Init.ozf
 
 # stage2b: recreate the functors and Ozma file using the stage2a functors
 stage2b:
@@ -351,15 +351,15 @@ stage2b:
         $(MAKE) install-stage PREFIX=$(STAGE2B) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE2A)/lib/:.:= \
         OZC=$(STAGE2A)/bin/ozc \
-        OZINIT=$(STAGE2A)/lib/Init.ozp
+        OZINIT=$(STAGE2A)/lib/Init.ozf
 
 # stage3: recreate the functors and Ozma file using the stage2 Ozma file
 stage3:
         $(MAKE) ozc.ozp install-stage PREFIX=$(STAGE3) \
         OZ_LOAD=prefix=$(URL)/lib/=./:.:= \
         OZC=$(SRCDIR)/ozc.sh \
-        OZINIT=$(STAGE2)/lib/Init.ozp \
-        OZMAINIT=$(STAGE2)/lib/Init.ozp \
+        OZINIT=$(STAGE2)/lib/Init.ozf \
+        OZMAINIT=$(STAGE2)/lib/Init.ozf \
         OZMAFILE="-init $(STAGE2)/lib/ozc.ozp"
 
 # stage3a: recreate only the functors using the stage2b Ozma file
@@ -367,8 +367,8 @@ stage3a:
         $(MAKE) install-main PREFIX=$(STAGE3A) \
         OZ_LOAD=prefix=$(URL)/lib/=./:.:= \
         OZC=$(SRCDIR)/ozc.sh \
-        OZINIT=$(STAGE2B)/lib/Init.ozp \
-        OZMAINIT=$(STAGE2B)/lib/Init.ozp \
+        OZINIT=$(STAGE2B)/lib/Init.ozf \
+        OZMAINIT=$(STAGE2B)/lib/Init.ozf \
         OZMAFILE="-init $(STAGE2B)/lib/ozc.ozp"
 
 # stage3b: recreate the functors and Ozma file using the stage3a functors
@@ -376,7 +376,7 @@ stage3b:
         $(MAKE) install-stage PREFIX=$(STAGE3B) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE3A)/lib/:.:= \
         OZC=$(STAGE3A)/bin/ozc \
-        OZINIT=$(STAGE3A)/lib/Init.ozp
+        OZINIT=$(STAGE3A)/lib/Init.ozf
 
 check:
         $(MAKE) clean bootstrap stage1 || exit 1
@@ -416,7 +416,7 @@ incompatible-ozma:
         $(MAKE) new-ozma \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:=\
         OZC=$(STAGE1)/bin/ozc \
-        OZINIT=$(STAGE1)/lib/Init.ozp
+        OZINIT=$(STAGE1)/lib/Init.ozf
 
 # no suffixes needed
 .SUFFIXES:
