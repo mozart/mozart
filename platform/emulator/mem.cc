@@ -148,7 +148,7 @@ void* ozMalloc(size_t size)
 
   //
 #if defined(MAP_ANONYMOUS)
-  void *ret = mmap(0, size, (PROT_READ|PROT_WRITE),
+  void *ret = mmap((caddr_t) 0, size, (PROT_READ|PROT_WRITE),
                    (MAP_PRIVATE|MAP_ANONYMOUS),
                    -1, (off_t) 0);
 #if defined(BSS_ALLOC_WA)
@@ -160,14 +160,14 @@ void* ozMalloc(size_t size)
     if (munmap((char *) ret, size))
       ozperror("munmap");
     char *baseAddress = (char *) highNoMap;
-    ret = mmap(baseAddress, size, (PROT_READ|PROT_WRITE),
+    ret = mmap((caddr_t) baseAddress, size, (PROT_READ|PROT_WRITE),
                (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0);
     if (ret >= lowNoMap && ret < highNoMap)
       OZ_warning("Using C heap with mmap\"s!\n");
   }
 #endif // defined(BSS_ALLOC_WA)
 #else  // defined(MAP_ANONYMOUS)
-  void *ret = mmap(0, size, (PROT_READ|PROT_WRITE),
+  void *ret = mmap((caddr_t) 0, size, (PROT_READ|PROT_WRITE),
                    (MAP_PRIVATE), devZeroFD, (off_t) 0);
 #endif // defined(MAP_ANONYMOUS)
 
@@ -323,7 +323,8 @@ static void fakeMalloc(int sz)
     array[i++]= malloc(chunksz);
     sz -= chunksz;
   }
-  sbrk(sizeof(long)); /* ensures that following free does not hand back mem to OS */
+  // ensures that following free does not hand back mem to OS;
+  sbrk(sizeof(long));
 
   while(--i>=0) {
     free(array[i]);
