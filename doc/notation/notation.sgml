@@ -1010,6 +1010,14 @@
               ?={variable} [ <Q class=terminal/<<:>>/ ?={variable} ] }+ ]/
             <Grammar.Alt type=space/{ ?={method} }/
             <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<lock>> ?={statement} <<end>>/
+            <Grammar.Alt/?={variable} <Q class=terminal/<<&lt;->>/
+              ?={variable}/
+            <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
+              ?={variable} <Q class=terminal/<<&lt;->>/ ?={variable}/
+            <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
+              <Q class=terminal/<<@>>/ ?={variable}/
+            <Grammar.Alt/?={variable} <Q class=terminal/<<,>>/ ?={variable}/
             <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/ <<self>>//
         <Para class=apropos><Title/Methods/
           <Grammar.Rule/?={method}
@@ -1722,6 +1730,13 @@ end>>/
       <Section id="section.translation.classes">
         <Title/Class Extensions/
         <SubSection class=unnumbered>
+          <Title/Classes/
+          <P>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = class >>[<< $ >>]<< &ellipsis; end>>/
+              <Rewrite.To/<<class ?{x} &ellipsis; end>>/
+            </Rewrite>
+        <SubSection class=unnumbered>
           <Title/Method Names/
           <P>
             <Rewrite>?={method head} ?={method head label}
@@ -1739,37 +1754,59 @@ end>>/
         <SubSection class=unnumbered>
           <Title/Locks/
           <P>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<lock ?{E} end>>/
-              <Rewrite.To
-/<<local ?_{X} in
-   lock ?_{X} = ?{E} end
-   ?_{X}
-end>>/
-            </Rewrite>
-        <SubSection class=unnumbered>
-          <Title/Equations/
-          <P>
             <Rewrite>?={statement}
-              <Rewrite.From/<<?{x} = class >>[<< $ >>]<< &ellipsis; end>>/
-              <Rewrite.To/<<class ?{x} &ellipsis; end>>/
+              <Rewrite.From/<<?{x} = lock ?{E} end>>/
+              <Rewrite.To/<<lock ?{x} = ?{E} end>>/
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Operators/
           <P>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<@?{E}>>/
-              <Rewrite.To/<<{`Object.'@'` ?{E}}>>/
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = @?{E}>>/
+              <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?{x} = @?_{X}
+end>>/
+              <Rewrite.Condition/if ?{E} is no variable./
             </Rewrite>
             <Rewrite>?={statement}
               <Rewrite.From/<<?{E1} <- ?{E2}>>/
-              <Rewrite.To/<<{`Object.'<-'` ?{E1} ?{E2}}>>/
+              <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   ?_{X} <- ?{E2}
+end>>/
+              <Rewrite.Condition/if ?{E1} is no variable./
             </Rewrite>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<?{E1} <- ?{E2}>>/
-              <Rewrite.To/<<{`Object.exchange` ?{E1} ?{E2}}>>/
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} <- ?{E}>>/
+              <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?_{x} <- ?_{X}
+end>>/
+              <Rewrite.Condition/if ?{E} is no variable./
             </Rewrite>
-            <Rewrite>?={expression}
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = ?{E1} <- ?{E2}>>/
+              <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   ?{x} = ?_{X} <- ?{E2}
+end>>/
+              <Rewrite.Condition/if ?{E1} is no variable./
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = ?{y} <- ?{E}>>/
+              <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?{x} = ?{y} <- ?_{X}
+end>>/
+              <Rewrite.Condition/if ?{E} is no variable./
+            </Rewrite>
+            <Rewrite>?={statement}
               <Rewrite.From/<<?{x} = ?{E1}, ?{E2}>>/
               <Rewrite.To/<<?{E1}, ?{E2'}>>/
               <Rewrite.Condition/if exactly one <<$>> occurs in&nbsp;?{E2}
@@ -1778,7 +1815,21 @@ end>>/
             </Rewrite>
             <Rewrite>?={statement}
               <Rewrite.From/<<?{E1}, ?{E2}>>/
-              <Rewrite.To/<<{`Object.','` ?{E1} ?{E2}}>>/
+              <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   ?_{X}, ?{E2}
+end>>/
+              <Rewrite.Condition/if ?{E1} is no variable./
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x}, ?{E}>>/
+              <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?_{x}, ?_{X}
+end>>/
+              <Rewrite.Condition/if ?{E} is no variable./
             </Rewrite>
       <Section id="section.translation.functors">
         <Title/Functor Extensions/
