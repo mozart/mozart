@@ -18,6 +18,7 @@ listed here will be removed in future releases.
 
 <P>These limitations reduce performance but do not affect
 language semantics.
+They can safely be ignored if performance is not an issue.
 
 <list>
 <item>The distributed garbage collection
@@ -56,6 +57,8 @@ based on adaptive observation of actual network behavior.
 
 <P>These limitations affect what operations are available
 to the programmer.
+They document where
+the full language specification is not implemented.
 
 <list>
 <item>The following problems
