@@ -438,10 +438,6 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
   TaggedRef rel3  = makeTaggedAtom("c>=:");
   TaggedRef sharp = makeTaggedAtom("#");
 
-  /*
-  for (int i=0; i<4; i++)
-    taggedPrint(deref(OZ_getCArg(i)));
-    */
 
   struct Set {
     int low, up, dur, extSize;
@@ -553,13 +549,13 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
       }
   }
 
-
   int best_resource   = 0;
   struct Set best_set;
   int best_cost       = OZ_getFDSup();
   int best_left       = 0;
   int best_right      = 0;
   int constraintsSize = 0;
+
 
   for (i=0; i < number_of_resources; i++) {
     struct Set *loc_best_set = NULL;
@@ -685,7 +681,6 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
   // all done?
   if (best_cost == OZ_getFDSup())
     return (OZ_unify(out_pair, makeTaggedSmallInt(0))) ? PROCEED : FAILED;
-
 
   TaggedRef tagged_out_tuple;
   // compute tuple with constraint description
@@ -904,6 +899,7 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
         ? PROCEED :FAILED;
     }
   }
+
 
 
 } OZ_C_proc_end
