@@ -9,9 +9,7 @@ solutions, if the programming language abstracts away the details of
 search by providing don't know nondeterminism. In this tutorial, we
 are not going to talk about constraint solving.
 form. The reader may
-look to the companion tutorial on constraint programming in Oz
-<a href="../fdt/" class=section name=fdt>The Finite Domain Constraint
-Programming Tutorial</a>. 
+look to the companion tutorial on constraint programming in Oz.
 We will talk about logic programming and concurrent
 constraint programming where each procedure can be 
 interpreted as a relation expressed by a logical statement.
