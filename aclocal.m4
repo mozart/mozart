@@ -307,6 +307,64 @@ AC_DEFUN(OZ_ARG_WITH_CXX,[
 ])
 
 dnl ==================================================================
+dnl CHOOSE C COMPILER
+dnl ==================================================================
+
+AC_DEFUN(OZ_VERSION_GCC,[2.7])
+AC_DEFUN(OZ_CC_CHOOSE,[
+  if test -z "$oz_cv_cc__chosen"; then
+    CFLAGS=
+    AC_PROG_CC
+    if test "$GCC" = yes; then
+      if oz_tmp=`$CC --version 2>/dev/null`; then
+        if expr "$oz_tmp" : egcs >/dev/null; then
+dnl I don't know what the appropriate version number is for egcs
+          :
+changequote(<,>)
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+changequote([,])
+          AC_MSG_CHECKING($CC version is at least OZ_VERSION_GCC)
+          OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GCC)
+          AC_MSG_RESULT($oz_tmp_ok)
+          if test "$oz_tmp_ok" = no; then
+            AC_MSG_ERROR([
+configure found the GNU C compiler $CC version $oz_tmp
+but version] OZ_VERSION_GCC [or higher is required to build the
+system.  It can be retrieved from:
+
+	ftp://ftp.gnu.org/pub/gnu/
+
+The latest version at this time is ??? and is available
+packaged as the following archive:
+
+	???
+
+You may find a mirror archive closer to you by consulting:
+
+	http://www.gnu.org/order/ftp.html
+])
+          fi
+        else
+          AC_MSG_WARN([Could not check $CC version, assuming ok])
+        fi
+      else
+        AC_MSG_WARN([Could not check $CC version, assuming ok])
+      fi
+    fi
+    AC_PROG_CPP
+    oz_cv_CC=$CC
+    oz_cv_CPP=$CPP
+    oz_cv_GCC=$GCC
+    oz_cv_cc__chosen=yes
+  else
+    OZ_FROM_CACHE(CC,[for C compiler])
+    OZ_FROM_CACHE(GCC,[whether we are using GNU C])
+    OZ_FROM_CACHE(CPP,[for C preprocessor])
+  fi
+  AC_SUBST(CC)
+  AC_SUBST(CPP)])
+
+dnl ==================================================================
 dnl OLD STUFF
 dnl ==================================================================
 
