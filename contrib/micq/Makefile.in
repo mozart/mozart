@@ -110,7 +110,9 @@ clientgui.ozf : clientgui.oz $(BMETH) messagedisplay.ozf manager.ozf \
 	draganddrop.ozf addapplicationgui.ozf configureclient.ozf \
 	editapplicationgui.ozf
 	$(COMPILE) -c $< -o $@
-messagegui.ozf : messagegui.oz popup.ozf
+messagegui.ozf : messagegui.oz BrowserControl.ozf popup.ozf
+	$(COMPILE) -c $< -o $@
+BrowserControl.ozf : BrowserControl.oz
 	$(COMPILE) -c $< -o $@
 
 $(BMETH): methods.ozf.orig
