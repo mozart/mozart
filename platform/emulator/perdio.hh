@@ -316,6 +316,14 @@ int loadURL(const char *,OZ_Term,OZ_Term);
 int loadURL(TaggedRef,OZ_Term,OZ_Term);
 void initComponents();
 
+/* ************************************************************************ */
+/*  SECTION ::  provided to components                                      */
+/* ************************************************************************ */
+
+Site* stringToSite(char*, char* &);
+int makeOwnerRef(OZ_Term);
+OZ_Term makeBorrowRef(Site*,int);
+
 /* __PERDIOHH */
 #endif 
 

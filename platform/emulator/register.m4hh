@@ -203,17 +203,20 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
     DISPATCH(4);
   }
 
+  Case(PUTNUMBERX)
+  Case(PUTLITERALX)
   Case(PUTCONSTANTX)
-  Case(PUTINTX)
      Xreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
+  Case(PUTNUMBERY)
+  Case(PUTLITERALY)
   Case(PUTCONSTANTY)
-  Case(PUTINTY)
      Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
+  Case(PUTNUMBERG)
+  Case(PUTLITERALG)
   Case(PUTCONSTANTG)
-  Case(PUTINTG)
-     IMPOSSIBLE("PUTCONSTANTG/PUTINTG");
+     IMPOSSIBLE("PUTNUMBERG/PUTLITERALG/PUTCONSTANTG");
 
   CaseOneRegGImpossible( PUTLIST,
 	       ``{
@@ -243,15 +246,16 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	       )
 
 
-Case(SETCONSTANT)
-  Case(SETINT)
+  Case(SETNUMBER)
+  Case(SETLITERAL)
+  Case(SETCONSTANT)
     {
       *sPointer++ = getTaggedArg(PC+1);
       DISPATCH(2);
     }
 
 
-Case(SETVOID)
+  Case(SETVOID)
     {
       int n = getPosIntArg(PC+1);
       for (int i = 0; i < n; i++ ) {
@@ -307,7 +311,7 @@ Case(SETVOID)
   }
 
 
-  CaseOneReg(TESTCONST,
+  CaseOneReg(TESTLITERAL,
     ``{
         TaggedRef term = Reg1(getRegArg(PC+1));
         TaggedRef atm  = getLiteralArg(PC+2);
@@ -395,7 +399,7 @@ Case(SETVOID)
     }''
     )
 
-  CaseOneReg( GETCONSTANT,
+  CaseOneReg( GETLITERAL,
 	       ``{
 		 TaggedRef atm = getLiteralArg(PC+1);
 		 
@@ -425,7 +429,7 @@ Case(SETVOID)
 	       )
 
 
-  CaseOneReg( GETINT,
+  CaseOneReg( GETNUMBER,
 	       ``{
 		 TaggedRef i = getNumberArg(PC+1);
 		 TaggedRef term = Reg1(getRegArg(PC+2));
@@ -651,7 +655,7 @@ Case(GETVOID)
   }
   
 
-Case(UNIFYCONSTANT)
+Case(UNIFYLITERAL)
      {
        if (InWriteMode) {
 	 TaggedRef *sp = GetSPointerWrite(sPointer);
@@ -662,7 +666,7 @@ Case(UNIFYCONSTANT)
 
        TaggedRef atm = getLiteralArg(PC+1);
 	 
-       /* code adapted from GETCONSTANT */
+       /* code adapted from GETLITERAL */
        TaggedRef *termPtr = sPointer;
        sPointer++;
        DEREFPTR(term,termPtr,tag);
@@ -688,7 +692,7 @@ Case(UNIFYCONSTANT)
        HF_TELL(*(sPointer-1), getTaggedArg(PC+1));
      }
 
-  Case(UNIFYINT)
+  Case(UNIFYNUMBER)
     {
       if (InWriteMode) {
 	TaggedRef *sp = GetSPointerWrite(sPointer);
@@ -698,7 +702,7 @@ Case(UNIFYCONSTANT)
       } 
 
       TaggedRef i = getNumberArg(PC+1);
-      /* code adapted from GETCONSTANT */
+      /* code adapted from GETLITERAL */
       TaggedRef *termPtr = sPointer;
       sPointer++;
       DEREFPTR(term,termPtr,tag);
@@ -745,17 +749,6 @@ Case(UNIFYCONSTANT)
 
       DoSwitchOnTerm(val,table);
     })
-
-  CaseOneReg( BRANCHONVAR,
-	       ``
-	       TaggedRef term = Reg1(getRegArg(PC+1));
-	       DEREF(term,_1,_2);
-	       if (isAnyVar(term)) {
-		 JUMP( getLabelArg(PC+2) );
-	       }
-	       DISPATCH(3);
-	       ''
-	       )
 
   CaseOneReg( BRANCHONNONVAR,
 	       ``

@@ -138,6 +138,7 @@ public:
 enum OZ_FSetState {fs_empty, fs_full};
 
 const int fset_high = 2;
+//const int fset_high = 220;
 
 class OZ_FSetConstraint;
 
@@ -174,6 +175,9 @@ public:
   OZ_FSetValue operator += (const int);
   OZ_FSetValue operator -= (const int);
   OZ_FSetValue operator - (void) const;
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
 };
 
 
@@ -209,13 +213,23 @@ public:
   OZ_FSetValue getUnknownSet(void) const;
   OZ_FSetValue getNotInSet(void) const;
 
+  int getGlbCard(void) const;
+  int getLubCard(void) const;
+  int getNotInCard(void) const;
+  int getUnknownCard(void) const;
+
+
   int getCardSize(void) const { return _card_max - _card_min + 1; }
   int getCardMin(void) const { return _card_min; } 
   int getCardMax(void) const { return _card_max; } 
+
   OZ_Boolean putCard(int, int);
   OZ_Boolean isValue(void) const;
+
   void init(void);
+  void init(const OZ_FSetValue &);
   void init(OZ_FSetState);
+
   OZ_Boolean isIn(int) const;
   OZ_Boolean isNotIn(int) const;
   OZ_Boolean isEmpty(void) const;
@@ -230,6 +244,7 @@ public:
   OZ_Boolean operator += (int);
   OZ_Boolean operator -= (int);
   OZ_Boolean operator <<= (const OZ_FSetConstraint &);
+  OZ_Boolean operator %= (const OZ_FSetConstraint &);
   OZ_FSetConstraint operator & (const OZ_FSetConstraint &) const;
   OZ_FSetConstraint operator | (const OZ_FSetConstraint &) const;
   OZ_FSetConstraint operator - (const OZ_FSetConstraint &) const;
