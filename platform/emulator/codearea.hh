@@ -273,14 +273,19 @@ inline int getPosIntArg(ProgramCounter PC)
   return (int) CodeArea::getWord(PC); 
 }
 
-inline TaggedRef getNumberArg(ProgramCounter PC)
+inline TaggedRef getTaggedArg(ProgramCounter PC)
 { 
   return (TaggedRef) CodeArea::getWord(PC);
 }
 
+inline TaggedRef getNumberArg(ProgramCounter PC)
+{ 
+  return getTaggedArg(PC);
+}
+
 inline  TaggedRef getLiteralArg(ProgramCounter PC)        
 {
-  return (TaggedRef) CodeArea::getWord(PC); 
+  return getTaggedArg(PC); 
 }
 
 inline void *getAdressArg(ProgramCounter PC)       
