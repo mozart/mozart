@@ -293,7 +293,7 @@ inline OZ_Term buff2list(int len, const char *s)
 
 
 OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
-                   OZ_Term *rest, OZ_Term *susp)
+                    OZ_Term *rest, OZ_Term *susp)
 {
   char c;
 
@@ -307,7 +307,7 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
     return PROCEED;
 
   while ((c = *string) &&
-          *len < max_vs_length) {
+         *len < max_vs_length) {
     **write_buff = c;
     (*write_buff)++;
     (*len)++;
@@ -325,7 +325,7 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
 
 
 OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
-                  OZ_Term *rest, OZ_Term *susp)
+                   OZ_Term *rest, OZ_Term *susp)
 {
   char *string = OZ_toC(ozint,0,0);
   if (*string == '~') *string='-';
@@ -333,7 +333,7 @@ OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
 
   char *help = string;
   while ((c = *help) &&
-          *len < max_vs_length) {
+         *len < max_vs_length) {
     **write_buff = c;
     (*write_buff)++;
     (*len)++;
@@ -346,7 +346,7 @@ OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
     return SUSPEND;
   }
 
-    return PROCEED;
+  return PROCEED;
 }
 
 OZ_Return float2buff(OZ_Term ozfloat, char **write_buff, int *len,
