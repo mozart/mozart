@@ -59,7 +59,10 @@
       <Figure id="figure.widgets-2.buttons">
         <Caption/Buttons with attached actions./
         <P>
+               <picture.choice>
           <Picture.Extern to="button.gif" type=gif>
+          <Picture.extern to="pictures/widgets-2/button.eps" type=ps>
+               </picture.choice>
 <index class=tails/<<Tk>><and><<button>>/
 <chunk class=anonymous><title/button/
 B1={New Tk.button tkInit(parent: W 
@@ -129,7 +132,10 @@ B2={New Tk.button tkInit(parent: W
       <Figure id="figure.widgets-2.check-and-radio">
         <Caption/A checkbutton and three radiobuttons./
         <P>
+               <picture.choice>
           <Picture.Extern to="check-and-radio.gif" type=gif>
+          <Picture.extern to="pictures/widgets-2/check-and-radio.eps" type=ps>
+               </picture.choice>
 <index class=tails/<<Tk>><and><<variable>>/
 <index class=tails/<<Tk>><and><<checkbutton>>/
 <index class=tails/<<Tk>><and><<radiobutton>>/
@@ -175,8 +181,12 @@ Rs={Map ['Times' 'Helvetica' 'Courier']
       <Figure id="figure.widgets-2.check-and-radio-action">
         <Caption/Actions for radiobuttons and checkbuttons./
         <P>
+               <picture.choice>
           <Picture.Extern
 to="check-and-radio-action.gif" type=gif>
+          <Picture.Extern
+to="pictures/widgets-2/check-and-radio-action.eps" type=ps>
+               </picture.choice>
 <index/<<tkAction>>/
 <chunk class=anonymous><title/LC/
 fun {GetWeight}
@@ -381,7 +391,10 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
       <Figure id="figure.widgets-2.menu">
         <Caption/A menu with entries, including a cascaded sub menu./
         <P>
+               <picture.choice>
           <Picture.Extern to="menu.gif" type=gif>
+          <Picture.extern to="pictures/widgets-2/menu.eps" type=ps>
+               </picture.choice>
 <index class=tails/<<Tk>><and><<menu>>/
 <index class=tails/<<Tk>><and><<menuentry>><and><<cascade>>/
 <index class=tails/<<Tk>><and><<menuentry>><and><<separator>>/
@@ -741,7 +754,10 @@ B2={New Tk.button tkInit(parent:W text:'Two' action: L#b2)}
       <Figure id="figure.widgets-2.entry">
         <Caption/An entry widget to enter text./
         <P>
+               <picture.choice>
           <Picture.Extern to="entry.gif" type=gif>
+          <Picture.extern to="pictures/widgets-2/entry.eps" type=ps>
+               </picture.choice>
 <index class=tails/<<Tk>><and><<entry>>/
 <chunk class=anonymous><title/entry/
 L={New Tk.label tkInit(parent:W text:'File name:')}
@@ -798,7 +814,10 @@ E={New Tk.entry tkInit(parent:W width:20)}
       <Figure id="figure.widgets-2.scales">
         <Caption/Scales to configure a frame's background color./
         <P>
+               <picture.choice>
           <Picture.Extern to="scale.gif" type=gif>
+          <Picture.extern to="pictures/widgets-2/scale.eps" type=ps>
+               </picture.choice>
 <index class=tails/<<Tk>><and><<listener>>/
 <index class=tails/<<Tk>><and><<scale>>/
 <chunk class=anonymous><title/scale/
@@ -868,7 +887,10 @@ Ss={Map [red green blue]
       <Figure id="figure.widgets-2.listbox">
         <Caption/A listbox together with a vertical scrollbar./
         <P>
+               <picture.choice>
           <Picture.Extern to="listbox.gif" type=gif>
+          <Picture.extern to="pictures/widgets-2/listbox.eps" type=ps>
+               </picture.choice>
 <index class=tails/<<Tk>><and><<listbox>>/
 <index class=tails/<<Tk>><and><<scrollbar>>/
 <index class=tails/<<Tk>><and><<addXScrollbar>>/
@@ -975,7 +997,10 @@ W={New Tk.toplevel tkInit(withdraw:true)}
       <Figure id="figure.widgets-2.file">
         <Caption/Selecting files./
         <P>
+               <picture.choice>
           <Picture.Extern to="file.gif" type=gif>
+          <Picture.extern to="pictures/widgets-2/file.eps" type=ps>
+               </picture.choice>
 <index/<<tk_getOpenFile>>/
 <chunk class=anonymous><title/file/
 case {Tk.return tk_getOpenFile}
@@ -1168,7 +1193,10 @@ end
         <Figure id="figure.widgets-2.help-use">
           <Caption/Demo of the <<HelpPopup>> class./
           <P>
+            <picture.choice>
             <Picture.Extern to="help.gif" type=gif>
+            <Picture.extern to="pictures/widgets-2/help.eps" type=ps>
+            </picture.choice>
 <chunk class=anonymous><title/help/
 Bs={Map ['Okay'   # 'Do nothing meaningful.'
          'Cancel' # 'Do nothing at all.'
