@@ -1,0 +1,28 @@
+This tutorial introduces the programming language Oz and the Mozart
+programming system. Oz is a multi-paradigm programming language. It is
+a high level programming language that is designed for advanced,
+concurrent, networked, soft real-time, and reactive applications. Oz
+combines the salient features of object-oriented programming by
+providing state, abstract data types, classes, objects and
+inheritance. It provides features of functional programming by
+providing compositional syntax, first-class procedures/functions, and
+lexical scoping. It provides the salient features of logic and
+constraint programming such as logic variables, constraints,
+disjunction constructs, and programmable search mechanisms. Oz is a
+concurrent language where users can create dynamically any number of
+sequential threads. Oz threads are data-flow whose execution proceeds
+only when data dependencies on variables involved are resolved.
+
+<P>The tutorial covers most of the concepts of Oz in an informal
+way. It is suitable as first reading for programmers who want to be
+able to start quickly writing programs without any particular
+theoretical background. The document is deliberately informal and,
+thus complements other Oz documentation.
+
+<P>The programming system of Oz is called Mozart and has been
+developed by several researchers from DFKI (the German Research Center
+Artificial Intelligent), SICS (the Swedish Institute of Computer
+Science), and others.
+
+<P CLASS=WARNING>The material in this document is still incomplete and
+subject to change for day to day.

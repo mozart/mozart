@@ -1,0 +1,71 @@
+<CHAPTER ID="chapter.modules">
+<TITLE>Modules and Interfaces</TITLE>
+
+<P>Modules, also known as packages, are collection of procedures and
+other values<NOTE FOOT>Classes, objects, etc.</NOTE> that are
+constructed together to provide certain related functionality. A
+module typically has a number of private procedures that are not
+visible outside the module and a number of interface procedures that
+provides the external services of the module. The interface procedures
+provide the services of the module. In Oz, there is no syntactic
+support for modules or interfaces. Instead, the lexical scoping of the
+language and the record data-type suffices to construct modules. The
+general module construction looks as follows. Assume that we would
+like to construct a module called <<List>> that provides a number of
+interface procedures for appending, sorting and testing membership of
+lists. This would look as follows.
+
+<<<
+declare List in
+local
+   proc {Append ... }  ... end
+   proc {MergeSort ...} ... end
+   proc {Sort ... } ... {MergeSort ...} ... end
+   proc {Member ...} ... end
+ in
+   List = list(append: Append
+               sort: Sort
+               member: Member
+               ... )
+end
+>>>
+
+<P>Access to <<Append>> procedure outside of the module <<List >>is
+done by using the field <<append>> from the <EM>record</EM> <<List>>:
+<<List.append>>. Notice that in the above example the procedure
+<<MergeSort>> is private to the module. Most of the library modules of
+DFKI Oz follow the above structure.
+
+<P>Often some of the procedures in a module are made global without
+the module prefix. There are several ways to do this. Here is one way
+to make <<Append>> externally visible:
+
+<<<
+declare List Append in
+local
+   proc {!Append ... }  ... end
+   ...
+in
+   List = list(append: Append
+               sort: Sort
+               member: Member
+               ... )
+end
+>>>
+
+<P>Modules are often stored on files, for example the <<List>> module
+could be stored on the file <FILE>List.oz</FILE>. This file may be
+inserted into another file by using the compiler directive
+<<\insert 'List.oz'>>.
+
+<P CLASS=WARNING>You can investigate the libraries accompanying the
+system in the EMACS OZ menu. Click on the entry Find, and select
+Modules File.
+
+<P CLASS=WARNING>The List module is defined in the <EM/Oz Standard
+Modules/ documentation.
+
+<P CLASS=WARNING>Compiler directives are defined in <EM/The DFKI Oz
+User's Manual/.
+
+</CHAPTER>
