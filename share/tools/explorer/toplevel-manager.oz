@@ -62,12 +62,15 @@ local
 	 end
       end
 
+      meth doClose
+	 <<Tk.toplevel close>>
+      end
 
       meth close
 	 thread
+	    {self.manager.status kill}
 	    {self.manager close}
 	 end
-	 <<Tk.toplevel close>>
       end
 
    end
@@ -443,7 +446,9 @@ in
       end
       
       meth close
-	 {self.toplevel close}
+	 thread
+	    {self.toplevel doClose}
+	 end
       end
       
    end
