@@ -24,6 +24,7 @@
 #include "value.hh"
 #include "board.hh"
 #include "var_base.hh"
+#include "builtins.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -112,6 +113,7 @@ TaggedRef bads;
 void checkSituatedBlock(OZ_Term *, int);
 
 
+inline
 void Board::checkSituatedness(TaggedRef * x, TaggedRef *f,TaggedRef *b) {
 
   futs = AtomNil;
@@ -138,6 +140,35 @@ void Board::checkSituatedness(TaggedRef * x, TaggedRef *f,TaggedRef *b) {
   *f = futs;
   *b = bads;
 }
+
+
+OZ_Return OZ_checkSituatednessDynamic(Board * s,TaggedRef * x) {
+  TaggedRef f,b;
+
+  s->checkSituatedness(x,&f,&b);
+
+  if (!oz_eq(b,AtomNil)) {
+    // There is at least a bad guy!
+    return oz_raise(E_ERROR,E_KERNEL,"spaceSituatedness",1,b);
+  }
+    
+  if (!oz_eq(f,AtomNil)) {
+    // There is at least a future, suspend!
+    do {
+      Assert(oz_isCons(f));
+      TaggedRef h = oz_head(f);
+      Assert(oz_isRef(h));
+      TaggedRef * f_ptr = tagged2Ref(h);
+      Assert(isCVar(*f_ptr));
+      Assert(tagged2CVar(*f_ptr)->getType() == OZ_VAR_FUTURE);
+      am.addSuspendVarList(f_ptr);
+      f = oz_tail(f);
+    } while (!oz_eq(f,AtomNil));
+    return SUSPEND;
+  }
+  return PROCEED;
+}
+  
 
 /*
  * Recursion

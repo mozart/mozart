@@ -58,7 +58,7 @@
 #include "os.hh"
 
 // from builtins.cc
-void doPortSend(PortWithStream *port,TaggedRef val);
+void doPortSend(PortWithStream *port,TaggedRef val,Board*);
 
 /* *********************************************************************/
 /*   global variables                                                  */
@@ -526,7 +526,7 @@ void msgReceived(MsgBuffer* bs)
       PortManager *pm=(PortManager*)(oe->getTertiary());
       Assert(pm->checkTertiary(Co_Port,Te_Manager));
       
-      doPortSend(pm,t);
+      doPortSend(pm,t,NULL);
 
       break;
       }

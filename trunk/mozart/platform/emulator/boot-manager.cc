@@ -527,7 +527,7 @@ void initBuiltins() {
   BI_skip              = string2Builtin("INTERNAL", "skip");
   BI_unknown           = string2Builtin("INTERNAL", "UNKNOWN");
   BI_PROP_LPQ          = string2Builtin("INTERNAL", "propagate");  
-  BI_ByNeedAssign      = string2Builtin("INTERNAL", "byNeedAssign");
+  BI_bindFuture        = string2Builtin("INTERNAL", "bindFuture");
   BI_waitStatus        = string2Builtin("INTERNAL", "waitStatus");
   BI_varToFuture       = string2Builtin("INTERNAL", "varToFuture");
 
