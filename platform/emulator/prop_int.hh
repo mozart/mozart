@@ -83,8 +83,16 @@ void oz_closeDonePropagator(Propagator * prop) {
 
 #endif
 
+#ifdef COUNT_PROP_INVOCS
+extern int count_prop_invocs_run;
+#endif 
+
 inline
 OZ_Return oz_runPropagator(Propagator * p) {
+
+#ifdef COUNT_PROP_INVOCS
+  count_prop_invocs_run += 1;
+#endif 
 
   if (!p->isActive())
     return OZ_SLEEP;

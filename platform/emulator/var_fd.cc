@@ -303,6 +303,12 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
   }
   Assert(!oz_isRef(v));
   if (oz_isFree(v)) {
+
+#ifdef COUNT_PROP_INVOCS
+    extern int count_prop_invocs_fdvars_created;
+    count_prop_invocs_fdvars_created += 1;
+#endif
+
     //
     // tell finite domain constraint to an unconstrained variable
     //
