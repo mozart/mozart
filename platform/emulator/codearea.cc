@@ -197,30 +197,66 @@ char *getBIName(ProgramCounter PC)
 
 void CodeArea::printDef(ProgramCounter PC)
 {
-  Reg reg;
-  ProgramCounter next;
-  TaggedRef file, line;
-  PrTabEntry *pred;
+  TaggedRef file, comment;
+  int line, abspos;
+  ProgramCounter pc = nextDebugInfo(PC);
+  if (pc != NOCODE) {
+    getDebugInfoArgs(pc,file,line,abspos,comment);
+    message("\tnext application: file '%s', line %d, offset: %d, comment: %s, PC=%ld)\n",
+            OZ_toC(file),line,abspos,OZ_toC(comment),PC);
+    return;
+  }
 
-  ProgramCounter pc = definitionStart(PC);
+  pc = definitionStart(PC);
   if (pc == NOCODE) {
     message("\tOn toplevel\n");
     return;
   }
 
+  Reg reg;
+  ProgramCounter next;
+  PrTabEntry *pred;
+
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
-  message("\tIn procedure %s (File %s, line %s, PC=%ld)\n",
+  message("\tIn procedure %s (File %s, line %d, PC=%ld)\n",
           pred ? pred->getPrintName() : "???",
-          tagged2String(file,10),tagged2String(line,10),PC);
+          tagged2String(file,10),line,PC);
 }
 
-/* find the start of the definition where from points into */
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)
+{
+  ProgramCounter ret = definitionEnd(from);
+  return (ret == NOCODE) ? ret : getLabelArg(ret+1);
+}
+
+
+ProgramCounter CodeArea::nextDebugInfo(ProgramCounter from)
+{
+  ProgramCounter end = definitionEnd(from);
+  if (end==NOCODE)
+    return NOCODE;
+
+  ProgramCounter PC = from;
+
+  while (1) {
+    if (PC>=end)
+      return NOCODE;
+    Opcode op = adressToOpcode(getOP(PC));
+    switch (op) {
+    case DEBUGINFO: return PC;
+    default: DISPATCH();
+    }
+  }
+  return NOCODE;
+}
+
+
+/* find the end of the definition where from points into */
+ProgramCounter CodeArea::definitionEnd(ProgramCounter from)
 {
   ProgramCounter PC = from;
 
-  int counter = 1;
   while (1) {
     Opcode op = adressToOpcode(getOP(PC));
     switch (op) {
@@ -230,16 +266,19 @@ ProgramCounter CodeArea::definitionStart(ProgramCounter from)
       return NOCODE;
 
     case DEFINITION:
-      counter++;
-      DISPATCH();
-
-    case ENDDEFINITION:
-      counter--;
-      if (counter == 0) {
-        return getLabelArg(PC+1);
+      {
+        Reg reg;
+        ProgramCounter next;
+        TaggedRef file;
+        int line;
+        PrTabEntry *pred;
+        getDefinitionArgs(PC,reg,next,file,line,pred);
+        PC=next;
+        continue;
       }
 
-      DISPATCH();
+    case ENDDEFINITION:
+      return PC;
 
     default:
       DISPATCH();
@@ -256,14 +295,25 @@ void displayCode(ProgramCounter from, int ssize)
 
 void CodeArea::getDefinitionArgs(ProgramCounter PC,
                                  Reg &reg, ProgramCounter &next, TaggedRef &file,
-                                 TaggedRef &line, PrTabEntry *& pred)
+                                 int &line, PrTabEntry *& pred)
 {
   Assert(adressToOpcode(getOP(PC)) == DEFINITION);
   reg  = regToInt(getRegArg(PC+1));
   next = getLabelArg(PC+2);
   file = getLiteralArg(PC+3);
-  line = getNumberArg(PC+4);
+  line = smallIntValue(getNumberArg(PC+4));
   pred = getPredArg(PC+5);
+}
+
+void CodeArea::getDebugInfoArgs(ProgramCounter PC,
+                                TaggedRef &file, int &line, int &abspos,
+                                TaggedRef &comment)
+{
+  Assert(adressToOpcode(getOP(PC)) == DEBUGINFO);
+  file    = getLiteralArg(PC+1);
+  line    = smallIntValue(getNumberArg(PC+2));
+  abspos  = smallIntValue(getNumberArg(PC+3));
+  comment = getLiteralArg(PC+4);
 }
 
 
@@ -314,12 +364,13 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
     case DEBUGINFO:
       {
-        TaggedRef name       = getLiteralArg(PC+1);
-        TaggedRef lineTerm   = getNumberArg(PC+2);
-        TaggedRef absposTerm = getNumberArg(PC+3);
-        int line,abspos;
+        TaggedRef filename,comment;
+        int line, abspos;
 
-        fprintf(ofile, "(%s,..,..)\n",OZ_toC(name));
+        getDebugInfoArgs(PC,filename,line,abspos,comment);
+
+        fprintf(ofile,"(%s, line: %d, file: %s)\n",
+                OZ_toC(comment),line,OZ_toC(filename));
         DISPATCH();
       }
     case PUTLISTX:
@@ -629,27 +680,22 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
         Reg reg;
         ProgramCounter next;
-        TaggedRef file, line;
+        TaggedRef file;
+        int line;
         PrTabEntry *pred;
         getDefinitionArgs(PC,reg,next,file,line,pred);
 
         fprintf(ofile, "(X%d,0x%x,%s,%s,%s,[",reg,next,
                 pred ? pred->getPrintName() : "(NULL)",
-                OZ_toC(file), OZ_toC(line));
+                OZ_toC(file), line);
 
         AssRegArray &list = pred->gRegs;
 
         for (int k = 0; k < list.getSize(); k++) {
           switch (list[k].kind) {
-          case XReg:
-            fprintf(ofile,"X%d ",list[k].number);
-            break;
-          case YReg:
-            fprintf(ofile,"Y%d ",list[k].number);
-            break;
-          case GReg:
-            fprintf(ofile,"G%d ",list[k].number);
-            break;
+          case XReg: fprintf(ofile,"X%d ",list[k].number); break;
+          case YReg: fprintf(ofile,"Y%d ",list[k].number); break;
+          case GReg: fprintf(ofile,"G%d ",list[k].number); break;
           }
         }
 

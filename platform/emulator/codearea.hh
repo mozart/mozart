@@ -99,12 +99,16 @@ public:
   static void printDef(ProgramCounter PC);
   static void getDefinitionArgs(ProgramCounter PC,
                                 Reg &reg, ProgramCounter &next, TaggedRef &file,
-                                TaggedRef &line, PrTabEntry *& pred);
+                                int &line, PrTabEntry *&pred);
 
+  static void getDebugInfoArgs(ProgramCounter PC, TaggedRef &file, int &line,
+                               int &abspos, TaggedRef &comment);
   /* with one argument it means that we need the code till the "query"  */
   static void display (ProgramCounter from, int size = 1, FILE* = stderr);
 
   static ProgramCounter definitionStart(ProgramCounter from);
+  static ProgramCounter definitionEnd(ProgramCounter from);
+  static ProgramCounter nextDebugInfo(ProgramCounter from);
 
   void showAtomNames();
 
