@@ -287,7 +287,7 @@ Bool newMarshalCode(GenTraverser *gt, void *arg)
     if (op==FASTCALL || op==FASTTAILCALL) {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
       if (!entry->copyable) {
-        marshalOpCode(instrstart-start,MARSHALLEDFASTCALL,bs);
+        marshalOpCode(instrstart-start,CALLCONSTANT,bs);
         Abstraction *abstr = entry->getAbstr();
 
         //
