@@ -244,7 +244,7 @@ lex.yy.o: c.bison.tab.hh
 #---------------------------------------------------------------------
 
 gtkraw.c: gtkdefs.c
-	$(CPP) $(CPPFLAGS) $(CPPEXTRAFLAGS) $< $@
+	$(CPP) $(CPPFLAGS) $(CPPEXTRAFLAGS) $< > $@
 
 #---------------------------------------------------------------------
 # Create Binding Files
