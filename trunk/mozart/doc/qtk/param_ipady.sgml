@@ -1,7 +1,0 @@
-<ITEM> <<ipadx:P>> : Specifies a non-negative value indicating how much extra space to request for the widget in the
-    Y-direction. When computing how
-    large a window it needs, the widget will add this amount to the height it would normally need (as
-    determined by the height of the things displayed in the widget); if the geometry manager can satisfy this
-    request, the widget will end up with extra internal space above and/or below what it displays inside. Most
-    widgets only use this option for padding text: if they are displaying a bitmap or image, then they usually
-    ignore padding options.  <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)

@@ -1,1 +1,0 @@
-<ITEM> <<set(parameter1:value1 ... parameterX:valueX)>> : Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.

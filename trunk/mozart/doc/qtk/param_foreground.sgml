@@ -1,2 +1,0 @@
-<ITEM> <<foreground:C>> or <<fg:C>> : Specifies the normal foreground color to use when displaying the widget. <<C>> must be a valid color (see <ptr to="misc.color">)
-

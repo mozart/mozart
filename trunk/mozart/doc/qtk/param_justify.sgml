@@ -1,3 +1,0 @@
-<ITEM> <<justify:A>> : When there are multiple lines of text displayed in a widget, this option determines how the lines line up with each other. Must be one of these atoms :
-    one of <<left>>, <<center>>, or <<right>>. <<left>> means that the lines' left edges all line up, <<center>> means that the lines' centers are aligned, and
-    <<right>> means that the lines' right edges line up.

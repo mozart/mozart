@@ -1,1 +1,0 @@
-<ITEM> <<getGrabStatus(1:V)>> : Binds <<V>> to the atom <<none>> if there is no grab on the widget, to the atom <<local>> if there is a local grab and to <<global>> if there is a global grab. <<V>> must be a free variable.

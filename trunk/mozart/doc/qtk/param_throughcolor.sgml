@@ -1,2 +1,0 @@
-<ITEM> <<throughcolor:C>> : Specifies the color to use for the rectangular trough areas in widgets such as scrollbars and scales. <<C>> must be a valid color (see <ptr to="misc.color">).
-

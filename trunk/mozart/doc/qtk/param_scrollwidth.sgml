@@ -1,1 +1,0 @@
-<ITEM> <<scrollwidth:P>> : Specifies the width of the vertical and horizontal scrollbars. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)

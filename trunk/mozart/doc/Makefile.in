@@ -120,7 +120,7 @@ PSDOCDIRS	= apptut base browser bugs changes compiler \
 	contrib cpiref cpitut demo dstutorial explorer fdt \
 	foreign fst gump install limitations macro notation op \
 	opi ozcar ozdoc panel profiler system tools \
-	tutorial wp loop qtk dpanel ds_white_paper inspector gtk
+	tutorial wp loop dpanel ds_white_paper inspector gtk
 
 idx/index.html:
 	mkdir idx 2> /dev/null; \
