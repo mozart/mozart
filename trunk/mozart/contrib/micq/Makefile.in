@@ -108,7 +108,7 @@ client.ozf : client.oz $(BMETH) clientgui.ozf newfriendsgui.ozf \
 clientgui.ozf : clientgui.oz $(BMETH) messagedisplay.ozf manager.ozf \
 	defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf \
 	draganddrop.ozf addapplicationgui.ozf configureclient.ozf \
-	editapplicationgui.ozf
+	editapplicationgui.ozf ScrollFrame.ozf
 	$(COMPILE) -c $< -o $@
 messagegui.ozf : messagegui.oz BrowserControl.ozf popup.ozf
 	$(COMPILE) -c $< -o $@
