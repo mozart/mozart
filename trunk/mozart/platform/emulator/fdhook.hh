@@ -20,10 +20,6 @@
 
 #include "am.hh"
 
-#ifdef DEBUG_CHECK
-#define DEBUG_STABLE
-#endif
-
 #ifdef DEBUG_STABLE
 extern SuspList * board_constraints;
 void printBC(ostream &, Board *);
