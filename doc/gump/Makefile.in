@@ -20,7 +20,7 @@ SGMLSRCS = \
 OZGSRCS = \
         LambdaParser.ozg LambdaScanner.ozg TestParser.ozg TestScanner.ozg
 MISCSRCS = \
-        Lambda.in
+        Lambda.in gump.bib
 GIFSRCS = \
         gump.gif
 
