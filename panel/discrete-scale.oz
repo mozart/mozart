@@ -9,8 +9,8 @@ local
    DarkColor       = '#828282'
    BrightColor     = '#ffffff'
 
-   ValueHeight = 10
-   ValueBorder = 10
+   ValueHeight = 14
+   ValueBorder = 14
    ScaleHeight = 8
    ScaleBorder = 2
    SliderWidth = 16
