@@ -55,6 +55,16 @@ unsigned int OZ_getUniqueId(void)
   return oz_newUniqueId();
 }
 
+Extension::~Extension()
+{
+  error("invoking destructor ~Extension()");
+}
+
+void Extension::operator delete(void*,size_t)
+{
+  error("invoking Extension::operator delete(void*,size_t)");
+}
+
 void Extension::printStreamV(ostream &out,int depth)
 {
   out << "extension";
