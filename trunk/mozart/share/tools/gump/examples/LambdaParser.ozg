@@ -1,7 +1,7 @@
 declare
-parser LambdaParser from GumpParser
+parser LambdaParser from GumpParser.'class'
    meth error(VS) Scanner in
-      GumpParser, getScanner(?Scanner)
+      GumpParser.'class', getScanner(?Scanner)
       {System.showInfo 'line '#{Scanner getLineNumber($)}#': '#VS}
    end
 
@@ -29,6 +29,6 @@ parser LambdaParser from GumpParser
    [] 'int'(I)                         => int(I)
    end
    syn Line($)
-      skip => {GumpParser, getScanner($) getLineNumber($)}
+      skip => {GumpParser.'class', getScanner($) getLineNumber($)}
    end
 end

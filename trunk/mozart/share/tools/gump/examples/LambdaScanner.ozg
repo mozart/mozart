@@ -1,8 +1,8 @@
 declare
-scanner LambdaScanner from GumpScanner BaseObject
+scanner LambdaScanner from GumpScanner.'class' BaseObject
    attr LineNumber
    meth init()
-      GumpScanner, init()
+      GumpScanner.'class', init()
       LineNumber <- 1
    end
    meth getLineNumber($)
@@ -15,22 +15,22 @@ scanner LambdaScanner from GumpScanner BaseObject
    lex int = <{digit}+> end
 
    lex <define>
-      GumpScanner, putToken1('define')
+      GumpScanner.'class', putToken1('define')
    end
    lex <lambda>
-      GumpScanner, putToken1('lambda')
+      GumpScanner.'class', putToken1('lambda')
    end
    lex <{id}> A in
-      GumpScanner, getAtom(?A)
-      GumpScanner, putToken('id' A)
+      GumpScanner.'class', getAtom(?A)
+      GumpScanner.'class', putToken('id' A)
    end
    lex <{int}> S in
-      GumpScanner, getString(?S)
-      GumpScanner, putToken('int' {String.toInt S})
+      GumpScanner.'class', getString(?S)
+      GumpScanner.'class', putToken('int' {String.toInt S})
    end
    lex <"."|"("|")"|"="|";"> A in
-      GumpScanner, getAtom(?A)
-      GumpScanner, putToken1(A)
+      GumpScanner.'class', getAtom(?A)
+      GumpScanner.'class', putToken1(A)
    end
 
    lex <[ \t]> skip end
@@ -40,10 +40,10 @@ scanner LambdaScanner from GumpScanner BaseObject
    end
    lex <.>
       {System.showInfo 'line '#@LineNumber#': unrecognized character'}
-      GumpScanner, putToken1('error')
+      GumpScanner.'class', putToken1('error')
    end
 
    lex <<EOF>>
-      GumpScanner, putToken1('EOF')
+      GumpScanner.'class', putToken1('EOF')
    end
 end
