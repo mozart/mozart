@@ -25,7 +25,7 @@
 
 \switch +gump
 
-\insert ~/Oz/lib/gump/ProductionTemplates.oz
+\insert gump/ProductionTemplates
 
 \gumpscannerprefix lambda
 \insert gump/examples/LambdaScanner.ozg
