@@ -6168,7 +6168,6 @@ OZ_C_proc_begin(BIcontThread,1)
   Thread *thread = ((OzThread*) rec)->th();
 
   thread->cont();
-  thread->markPropagated(); // why is this needed?
   am.scheduleThread(thread);
   return PROCEED;
 }
