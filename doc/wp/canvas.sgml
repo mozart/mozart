@@ -31,79 +31,115 @@
 <Chapter id="chapter.canvas">
   <Title/Canvas Widgets/
 
-<p> A canvas widget allows to create and manipulate graphical
-items. In particular, arbitrary widgets can be embedded within canvas
-widgets.
+  <p>
+    A canvas widget allows to create and manipulate graphical
+    items. In particular, arbitrary widgets can be embedded within canvas
+    widgets.
 
   <section id="section.canvas.widgets">
-    <title/Canvas Widgets/
+    <title/Getting Started/
 
-<p>
-A canvas widget displays so-called <def/items/. An item is created
-with the <<create>> command, followed by coordinates and options. The
-number of coordinates and the options depend on
-the particular type of item to be created. An item is of one the following
-types:
-<list>
-<entry><<arc>>
-<item> An arc item displays a piece of a circle.
-<entry><<bitmap>>
-<item> A bitmap item displays a bitmap with a given name.
-<entry><<image>>
-<item> Displays an image.
-<entry><<line>>
-<item> A line item consists of several connected segments. It is
-possible to configure line items such that B\'{e}zier splines are used.
-<entry><<oval>>
-<item> An oval can either be a circle or am ellipsis.
-<entry><<ploygon>>
-<item> A polygon is described by three or more line segments. As
-with line items, it is possible to use B\'{e}zier splines.
-<entry><<rectangle>>
-<item> Displays a rectangle.
-<entry><<text>>
-<item> Displays text consisting of a single or several lines.
-<entry><<window>>
-<item> Displays a widget in the canvas where the canvas widget
-serves as geometry manager for the widget.
-</list>
+    <p>
+      A canvas widget displays <def/items/. An item is created
+      with the <<create>> command, followed by coordinates and options. The
+      number of coordinates and the options depend on
+      the particular type of item to be created. An item is of one the
+      following types:
+      <list>
+      <entry><<arc>>
+      <item> An arc item displays a piece of a circle.
+      <entry><<bitmap>>
+      <item> A bitmap item displays a bitmap with a given name.
+      <entry><<image>>
+      <item> Displays an image.
+      <entry><<line>>
+      <item> A line item consists of several connected segments. It is
+      possible to configure line items such that B\'{e}zier splines are used.
+      <entry><<oval>>
+      <item> An oval can either be a circle or am ellipsis.
+      <entry><<polygon>>
+      <item> A polygon is described by three or more line segments. As
+      with line items, it is possible to use B\'{e}zier splines.
+      <entry><<rectangle>>
+      <item> Displays a rectangle.
+      <entry><<text>>
+      <item> Displays text consisting of a single or several lines.
+      <entry><<window>>
+      <item> Displays a widget in the canvas where the canvas widget
+      serves as geometry manager for the widget.
+      </list>
 
-<p>
-For example,
-<<<
+    <p>
+      For example,
+<chunk class=anonymous><title/canvas/
 C = {New Tk.canvas tkInit(parent:T)}
 {Tk.send pack(C)}
 {C tk(create rectangle 10 10 1#c 1#c fill:red outline:blue)}
->>>
-creates a red rectangle with a blue outline near to the upper left corner of
-the canvas widget <<C>>.
+</chunk>
+      creates a red rectangle with a blue outline near to the upper
+      left corner of the canvas widget <<C>>.
 
+  <section id="section.canvas.barchart">
+    <title/Example: Drawing Barcharts/
 
-<figure id="fig.canvas.barchart">
-\begin{maxifigure}
-\DumpCode{\CDumpFile{bars.eps}}{%
-<<<
-O = if Tk.isColor then o(fill:aquamarine4)
-    else               o(stipple:gray50 fill:black)
-    end
-D = 10  W = 2*D
-create C from Tk.canvas
-   with tkInit(parent:T bg:white width:300 height:120)
-   meth DrawBars(Ys H X)
-      case Ys of nil then skip
-      [] Y|Yr then
-         {self tk(create rectangle X H X+D H-Y*W O)}
-         {self tk(create text      X H+D text:Y anchor:w)}
-         {self DrawBars(Yr H X+W)}
+    <p>
+As a more interesting example let us consider a program to draw bar
+charts. The definition of a class to display barcharts is shown in
+<ptr to="figure.canvas.barchart">. Before any item is created in the
+canvas by the method <<bars>>, the canvas widget is configured such that
+the scrollable region is just large enough for the barchart to be drawn.
+
+      <figure id="figure.canvas.barchart">
+        <caption/A canvas for displaying bar charts./
+<chunk><title/Definition of BarCanvas/
+local
+   O=if Tk.isColor then o(fill:wheat)
+     else               o(stipple:gray50 fill:black)
+     end
+   D=10  W=2*D
+in
+   class BarCanvas from Tk.canvas
+      meth DrawBars(Ys H X)
+         case Ys of nil then skip
+         [] Y|Yr then
+            {self tk(create rectangle X H X+D H-Y*W O)}
+            {self tk(create text      X H+D text:Y anchor:w)}
+            {self DrawBars(Yr H X+W)}
+         end
+      end
+      meth bars(Ys)
+         WY=W*{Length Ys} HY=W*{FoldL Ys Max 0}
+      in
+         {self tk(configure scrollregion:q(0 ~10 W+WY D+HY+10))}
+         {self DrawBars(Ys HY D)}
       end
    end
-   meth bars(Ys)
-      WY=W*{Length Ys} HY=W*{FoldL Ys Max 0}
-   in
-      {self tk(configure scrollregion:q(0 0 W+WY D+HY))}
-      {self DrawBars(Ys HY D)}
-   end
 end
+</chunk>
+      </figure>
+
+
+<p>
+The method <<DrawBars>> creates for each element of the list <<Ys>> a
+rectangle item as well as a text item, which both correspond to the
+value of the particular item. The value of <<O>> is used as option
+for the rectangle items. This value depends on <<Tk.isColor>> which is
+<<true>> if the screen is a color screen, and <<false>> otherwise. For a
+color screen the rectangle items are filled with the color
+<<wheat>>. For a black and white screen, the rectangle items are
+drawn in a stippled fashion: only those pixels are drawn with the fill
+color (that is <<black>>) where the stipple bitmap contains a pixel.
+
+<p>
+  <ptr to="figure.canvas.usebar">.
+
+    <p>
+      <Figure id="figure.canvas.usebar">
+        <Caption/Using a canvas for drawing barcharts./
+        <P>
+          <Picture.Extern to="barchart.gif" type=gif>
+<chunk class=anonymous><title/barchart/
+C={New BarCanvas    tkInit(parent:T bg:white width:300 height:120)}
 H={New Tk.scrollbar tkInit(parent:T orient:horizontal)}
 V={New Tk.scrollbar tkInit(parent:T orient:vertical)}
 {Tk.addXScrollbar C H} {Tk.addYScrollbar C V}
@@ -112,222 +148,61 @@ V={New Tk.scrollbar tkInit(parent:T orient:vertical)}
            grid(V row:0 column:1 sticky:ns)]}
 {C bars([1 3 4 5 3 4 2 1 7 2 3 4 2 4
          5 6 7 7 8 4 3 5 6 7 7 8 4 3])}
->>>
-\caption{A canvas for displaying bar charts.}
-\label{fig:canvas-text:barchart}
-\end{maxifigure}
+</chunk>
+      </p>
+
+<section id="section.canvas.tags">
+ <title/Canvas Tags/
 
 <p>
-As a more interesting example let us consider a program to draw bar
-charts. The program is shown in
-Figure~\ref{fig:canvas-text:barchart}. As can be seen there, canvas
-widgets allow the use of scrollbars. Before any item is created in the
-canvas by the method \?bars?, the canvas widget is configured such that
-the scrollable region is just large enough for the barchart to be drawn.
-
-The method \?DrawBars? creates for each element of the list \?Ys? a
-rectangle item as well as a text item, which both correspond to the
-value of the particular item. The value of \?O? is used as option
-for the rectangle items. This value depends on \?Tk.isColor? which is
-\?true? if the screen is a color screen, and \?false? otherwise. For a
-color screen the rectangle items are filled with the color
-\?aquamarine4?. For a black and white screen, the rectangle items are
-drawn in a stippled fashion: only those pixels are drawn with the fill
-color (i.e., \?black?) where the stipple bitmap contains a pixel.
-
-
-\section{Canvas Tags}
-
 Each item in a canvas is identified by an unique integer. This integer
-can be returned by using the \?tkReturnInt? method for creating items
-rather than the \?tk? method. The returned integer can then be used to
-manipulate the corresponding item. However, as has been argued before,
-returning values from the GUI agent involves latency. But there are
+can be returned by using the <<tkReturnInt>> method for creating items
+rather than the <<tk>> method. The returned integer can then be used to
+manipulate the corresponding item. However,
+returning values from the graphics engine involves latency. But there are
 some good news here, since it is not necessary to refer to items
 by numbers.
 
+<p>
 Canvas widgets offer a more powerful and easier method to manipulate
 single items or even goups of items. Items can be refered to by
-so-called {\em tags\/}. A single item can be refered to by as many
-tags as you like to. Tags are provided as objects in Oz. Before an
-item can be added to a tag, the tag object must be from the class
-\?Tk.canvasTag? and initialized with respect to some canvas.
-
-To add an item to a tag, the option \?tags? is used
-when creating the item. For instance,
-\begin{ozdisplay}
-@D@declare
-@D@T = {New Tk.toplevel tkInit}
-@D@C = {New Tk.canvas tkInit(parent:T)}
-@D@{Tk.send pack(C)}
-R = {New Tk.canvasTag tkInit(parent:C)}
-{C tk(crea rectangle 10 10 40 40 fill:red tags:R)}
-\end{ozdisplay}
-creates a new rectangle item and adds it to the tag \?R?.
-
-A second oval item can be added to the tag \?R? by
-\begin{ozdisplay}
-{C tk(crea oval 20 20 40 40 tags:R)}
-\end{ozdisplay}
-All items refered to by a tag can be
-manipulated simultanously. The following example moves all items 40 pixels
-to the right:
-\begin{ozdisplay}
-{R tk(move 40 0)}
-\end{ozdisplay}
-
-
-
-\begin{maxifigure}
-\DumpCode{\CDumpFile{tags.eps}}{%
-\begin{ozdisplay}
-@D@declare
-@D@T = {New Tk.toplevel tkInit}
-C = {New Tk.canvas tkInit(parent:T width:300 height:100)}
-R = {New Tk.canvasTag tkInit(parent:C)}
-O = {New Tk.canvasTag tkInit(parent:C)}
-{C tkBind(event:'<1>' args:[int(x) int(y)]
-          action: proc {$ X Y}
-                     {C tk(crea rectangle X-10 Y-10 X+10 Y+10
-                           tags:R fill:red)}
-                  end)}
-{C tkBind(event:'<2>' args:[int(x) int(y)]
-          action: proc {$ X Y}
-                     {C tk(crea oval X-20 Y-20 X+20 Y+20
-                           tags:O fill:yellow)}
-                  end)}
-{Tk.send pack(C)}
-\end{ozdisplay}
-}
-\caption{A canvas for creating rectangles and ovals.}
-\label{fig:widgets-1:tags}
-\end{maxifigure}
-
-Figure~\ref{fig:widgets-1:tags} shows a small program that creates items
-interactively. Pressing the mouse button over the canvas widget creates
-either a rectangle item or an oval item at the position of the mouse
-pointer. All rectangle items created are added to the tag \?R?, and all
-oval items are added to the tag \?O?
-
-Items can be configured by using the command \?itemconfigure?, which is
-similar to the command \?configure? for widgets. The color of all
-rectangle and oval items can be changed by:
-\begin{ozdisplay}
-{R tk(itemconfigure fill:wheat)}
-{O tk(itemconfigure fill:blue)}
-\end{ozdisplay}
-
-Besides of the \?move? command there are other
-commands for manipulating items. For instance, executing the following
-statement
-\begin{ozdisplay}
-{O tk(delete)}
-\end{ozdisplay}
-deletes all oval items attached to the tag \?O?. Other commands allow to
-scale items, to change the coordinates of items and so on. More
-information on possible commands are available from the manpage
-\manpage{n}{canvas}.
-
-\subsection{Event Bindings}
-
-Similar to widgets, event bindings can be created for tags. To create an
-event binding for a tag means to create the event binding for all items
-refered to by the tag. The following example creates an event binding
-for all oval items.
-\begin{ozdisplay}
-@D@declare
-create Colors from UrObject
-   attr cs:(Cs=red|green|blue|yellow|orange|Cs in Cs)
-   meth get($)  cs<-@cs.2 @cs.1  end
-end
-{O tkBind(event:  '<3>'
-          action: O # tk(itemconfigure
-                         fill:{Colors get($)}))}
-\end{ozdisplay}
-Clicking with the right mouse button on an oval item, configures all
-items refered to by \?O? to employ a different color. The \?Colors?
-object serves as color generator. Each time the method \?get? is
-invoked, it returns a color from the circular list of colors stored in
-the attribute \?cs?.
-
-
-\section{Animated Graphics}
-
-\begin{maxifigure}
-\DumpCode{\CDumpFile{animated.eps}}{%
-\begin{ozdisplay}
-@D@declare
-fun {RandCoord}
-   {Unix.rand} mod 20 + 15
-end
-class RandMag from Tk.canvasTag Time.repeat
-   meth init(parent:P)
-      RandMag,tkInit(parent:P)
-      {P tk(crea bitmap 0 0 bitmap:'@'#{System.get home}#
-            '/demo/documentation/images/magnifier.xbm'
-           tags:self foreground:blue)}
-      RandMag,setRepAll(delay:100 action:move)
-             ,go
-   end
-   meth move
-      RandMag,tk(coords {RandCoord} {RandCoord})
-   end
-end
-proc {WaitSearch Kill Solution}
-   T={New Tk.toplevel tkInit(title:'Searching...')}
-   L={New Tk.label  tkInit(parent:T text:'Searching...')}
-   C={New Tk.canvas tkInit(parent:T width:50 height:50)}
-   B={New Tk.button tkInit(parent:T text:'Kill' action:Kill)}
-in
-   {Tk.send pack(L C B side:left pady:2#m padx:2#m)}
-   _ = {New RandMag init(parent:C)}
-   thread {Wait Solution} {T close} end
-end
-\end{ozdisplay}
-}
-\caption{An animated time waster.}
-\label{fig:canvas-text:animated}
-\end{maxifigure}
-
-
-\section{Text Widgets}
-
-\section{Text Tags and Text Marks}
-
-\secmtion{Events and Actions}
-
+<def/tags/. A single item can be refered to by as many
+tags as you like to. Tags are provided as objects in &Oz;. Before an
+item can be added to a tag, the tag object must be created from the class
+<<Tk.canvasTag>> and initialized with respect to a particular canvas.
 
 <![ %EXTRA; [
 <section><title/Examples/
 <p>
 <chunk><title/EXAMPLES/
 %%%
-%%% Chapter: Geometry Managers
-%%%
-
-
-
-%%%
-%%% Chapter: More Widgets
-%%%
-
-
-
-%%%
 %%% Chapter: Canvas Widgets
 %%%
 
+%%
+%% Getting started
+%%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/canvas/
 
 
-%%%
-%%% Chapter: Text Widgets
-%%%
+
+%%
+%% Example: Drawing Barcharts
+%%
+
+declare
+<chunk.ref/Definition of BarCanvas/
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/barchart/
 
 
 
-%%%
-%%% Chapter: Tools for Tk
-%%%
+
 </chunk>
 ]]>
 

@@ -89,6 +89,14 @@
     <Meta name="html.split"       value="section.widgets-2.otherbuttons">
     <Meta name="html.split"       value="section.widgets-2.return">
     <Meta name="html.split"       value="section.widgets-2.menu">
+    <Meta name="html.split"       value="section.widgets-2.events">
+    <Meta name="html.split"       value="section.widgets-2.action">
+    <Meta name="html.split"       value="section.widgets-2.entry">
+    <Meta name="html.split"       value="section.widgets-2.scale">
+    <Meta name="html.split"       value="section.widgets-2.listbox">
+    <Meta name="html.split"       value="section.widgets-2.wm">
+    <Meta name="html.split"       value="section.widgets-2.file">
+    <Meta name="html.split"       value="section.widgets-2.help">
 
     <Meta name="html.split"       value="chapter.tools">
     <Meta name="html.split"       value="chapter.canvas">
@@ -124,7 +132,7 @@
     &widgets-1;
     &geometry;
     &widgets-2;
-<!--    &canvas; -->
+    &canvas;
     &text;
     &tools;
     &data;
