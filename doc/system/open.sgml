@@ -659,7 +659,8 @@ at the end.
 <p>
 Note that if an object is created that inherits from both
 <<Open.text>> and <<Open.file>>, the methods <<read>> and <<seek>> from the
-class <<Open.file>> do not work together with this method.
+classes <<Open.file>>, <<Open.socket>>, and
+<<Open.pipe>> and do not work together with this method.
 
 <entry> <<putC>> <synopsis>
 <code display>
@@ -689,7 +690,8 @@ Returns the next line of the input as string, or
 <p>
 Note that if an object is created that inherits from both
 <<Open.text>> and <<Open.file>>, the methods <<read>> and <<seek>> from the
-class <<Open.file>> do not work together with this method.
+class <<Open.file>>, <<Open.socket>>, and
+<<Open.pipe>>  do not work together with this method.
 
 <entry> <<putS>> <synopsis>
 <code display>
