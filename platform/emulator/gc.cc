@@ -1638,9 +1638,8 @@ Bool AM::smallGC()
 {
   // if machine is idle
   if (getUsedMemory() > smallGCLimit && am.conf.gcFlag) {
-    if (am.conf.showIdleMessage)
-      {
-        message("doing gc during idle ");
+    if (am.conf.showIdleMessage) {
+        message("gc ... ");
       }
     int save = am.conf.gcVerbosity;
     am.conf.gcVerbosity = 0;
