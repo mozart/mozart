@@ -11,10 +11,10 @@ public:
   OZ_Term printV(int depth = 10) { return typeV(); }
 
   virtual
-  OZ_Term typeV() { return oz_atom("bitArray"); }
+  OZ_Term typeV() { return OZ_atom("bitArray"); }
 
   virtual
-  Extension *gcV(void) { return new BitArray(*this); }
+  OZ_Extension *gCollectV(void) { return new BitArray(*this); }
   BitArray(int lower, int upper): OZ_Extension() {
     ...
   }
@@ -29,7 +29,7 @@ public:
 };
 
 inline
-Bool oz_isBitArray(TaggedRef term)
+Bool OZ_isBitArray(TaggedRef term)
 {
   return OZ_isExtension(term) &amp;&amp;
     OZ_getExtension(term)->getIdV() == OZ_E_BITARRAY;
@@ -38,36 +38,36 @@ Bool oz_isBitArray(TaggedRef term)
 inline
 BitArray *tagged2BitArray(TaggedRef term)
 {
-  Assert(oz_isBitArray(term));
-  return (BitArray *) oz_getExtension(term);
+  Assert(OZ_isBitArray(term));
+  return (BitArray *) OZ_getExtension(term);
 }
 
 
-#define oz_declareBitArrayIN(ARG,VAR)           \
+#define OZ_declareBitArray(ARG,VAR)           \
 BitArray *VAR;                                  \
 {                                               \
-  oz_declareNonvarIN(ARG,_VAR);                 \
-  if (!oz_isBitArray(oz_deref(_VAR))) {         \
-    oz_typeError(ARG,"BitArray");               \
+  OZ_declareNonvar(ARG,_VAR);                 \
+  if (!OZ_isBitArray(OZ_deref(_VAR))) {         \
+    OZ_typeError(ARG,"BitArray");               \
   } else {                                      \
-    VAR = tagged2BitArray(oz_deref(_VAR));      \
+    VAR = tagged2BitArray(OZ_deref(_VAR));      \
   }                                             \
 }
 
 OZ_BI_define(BIbitArray_new,2,1)
 {
-  oz_declareIntIN(0,l);
-  oz_declareIntIN(1,h);
+  OZ_declareInt(0,l);
+  OZ_declareInt(1,h);
   if (l <= h)
     OZ_RETURN(OZ_extension(new BitArray(l, h)));
   else
-    return oz_raise(E_ERROR,E_KERNEL,"BitArray.new",2,OZ_in(0),OZ_in(1));
+    return OZ_raise(E_ERROR,E_KERNEL,"BitArray.new",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
 
 OZ_BI_define(BIbitArray_set,2,0)
 {
-  oz_declareBitArrayIN(0,b);
-  oz_declareIntIN(1,i);
+  OZ_declareBitArray(0,b);
+  OZ_declareInt(1,i);
   if (b->checkBounds(i)) {
     b->set(i);
     return PROCEED;
