@@ -61,15 +61,15 @@ void printMem(FILE *fd,char *s,double m)
 {
   fprintf(fd,s);
   if (m < KB) {
-    fprintf(fd,"%.0lf B",m);
+    fprintf(fd,"%.0f B",m);
     return;
   }
   if (m < MB) {
-    fprintf(fd,"%.1lf kB",m/workaroundForBugInGCC1);
+    fprintf(fd,"%.1f kB",m/workaroundForBugInGCC1);
     return;
   }
   
-  fprintf(fd,"%.1lf MB",m/workaroundForBugInGCC2);
+  fprintf(fd,"%.1f MB",m/workaroundForBugInGCC2);
 }
 
 ProfileCode(
@@ -251,6 +251,11 @@ void Statistics::initCount() {
 
 #endif
 
+#ifdef PROFILE_INSTR
+  for (int i = 0; i < PROFILE_INSTR_MAX; i++) instr[i] = 0;
+  for (int i = 0; i < PROFILE_BI_MAX; i++) bi[i] = 0;
+#endif
+
   currAbstr = NULL;
   PrTabEntry::profileReset();
   OZ_CFunHeader::profileReset();
@@ -422,4 +427,17 @@ void Statistics::derefChain(int n)
   lengthDerefs[n]++;    
 }
 
+#endif
+
+
+#ifdef PROFILE_INSTR
+#include "codearea.hh"
+void Statistics::printInstr()
+{
+  printf("Instruction profile:\n");
+  for (int i=0; i<PROFILE_INSTR_MAX; i++) {
+    if (instr[i]!=0)
+      printf("%010d x %s\n",instr[i],CodeArea::opToString[i]);
+  }
+}
 #endif

@@ -444,7 +444,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
   ProgramCounter PC = from;
 
   for (int i = 1; i<=sz; i++) {
-    fprintf(ofile, "0x%08x:  ", PC);
+    fprintf(ofile, "0x%p:  ", PC);
     Opcode op = getOpcode(PC);
     if (op == OZERROR) {
       message("End of code block reached\n");
@@ -577,7 +577,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case SHALLOWTEST1:
       fprintf (ofile,
-	       "(%s,X[%d],0x%x,%d)\n",
+	       "(%s,X[%d],0x%p,%d)\n",
 	       getBIName(PC+1),
 	       regToInt(getRegArg(PC+2)),
 	       getLabelArg(PC+3),
@@ -593,7 +593,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
 	TaggedRef literal = getLiteralArg(PC+2);
 	fprintf (ofile,
-		 "(%d,%s,0x%x,0x%x,%d)\n",
+		 "(%d,%s,0x%p,0x%p,%d)\n",
 		 regToInt(getRegArg(PC+1)),
 		 toC(literal),
 		 getLabelArg(PC+3),
@@ -607,7 +607,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case TESTBOOLG:
       {
 	fprintf (ofile,
-		 "(%d,0x%x,0x%x,0x%x,%d)\n",
+		 "(%d,0x%p,0x%p,0x%p,%d)\n",
 		 regToInt(getRegArg(PC+1)),
 		 getLabelArg(PC+2),
 		 getLabelArg(PC+3),
@@ -618,7 +618,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case SHALLOWTEST2:
       fprintf (ofile,
-	       "(%s,X[%d],X[%d],0x%x,%d)\n",
+	       "(%s,X[%d],X[%d],0x%p,%d)\n",
 	       getBIName(PC+1),
 	       regToInt(getRegArg(PC+2)),
 	       regToInt(getRegArg(PC+3)),
@@ -870,7 +870,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	getDefinitionArgs(PC,reg,next,file,line,pred);
 	AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
 
-	fprintf(ofile, "(X%d,0x%x,%s,%s,%d,[",reg,next,
+	fprintf(ofile, "(X%d,0x%p,%s,%s,%d,[",reg,next,
 		pred ? pred->getPrintName() : "(NULL)",
 		toC(file), line);
 	
@@ -934,12 +934,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case SAVECONT:
     case EXHANDLER:
 	  /* ***type 8:    OP Label */
-      fprintf(ofile, "(@ 0x%x)\n", getLabelArg (PC+1));
+      fprintf(ofile, "(@ 0x%p)\n", getLabelArg (PC+1));
       DISPATCH();
 
     case THREADX:
 	  /* ***type 8:    OP PosInt Label */
-      fprintf(ofile, "%d (@ 0x%x)\n", getPosIntArg(PC+1), getLabelArg(PC+2));
+      fprintf(ofile, "%d (@ 0x%p)\n", getPosIntArg(PC+1), getLabelArg(PC+2));
       DISPATCH();
 
     case BRANCHONVARX: 
@@ -953,7 +953,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
 	Reg reg = regToInt(getRegArg(PC+1));
 	
-	fprintf(ofile, "(%d,@ 0x%x)\n", reg, getLabelArg (PC+2));
+	fprintf(ofile, "(%d,@ 0x%p)\n", reg, getLabelArg (PC+2));
       }
       DISPATCH();
 
@@ -975,7 +975,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
 	ProgramCounter lbl = getLabelArg(PC+1);
 	int n = getPosIntArg(PC+2);
-	fprintf(ofile, "(@ 0x%x, %d)\n", lbl, n);
+	fprintf(ofile, "(@ 0x%p, %d)\n", lbl, n);
       }
       DISPATCH();
 
@@ -984,13 +984,13 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	ProgramCounter lbl = getLabelArg(PC+1);
 	int n      = regToInt(getRegArg(PC+2));
 	int toSave = getPosIntArg(PC+3);
-	fprintf(ofile, "(@ 0x%x, %d, %d)\n", lbl, n, toSave);
+	fprintf(ofile, "(@ 0x%p, %d, %d)\n", lbl, n, toSave);
       }
       DISPATCH();
 
     case GENCALL:
       {
-	fprintf(ofile, "(0x%x,%d)\n", getAdressArg(PC+1),getPosIntArg(PC+2));
+	fprintf(ofile, "(0x%p,%d)\n", getAdressArg(PC+1),getPosIntArg(PC+2));
 	DISPATCH();
       }
 

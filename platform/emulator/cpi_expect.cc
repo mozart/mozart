@@ -413,10 +413,10 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
   if (isCons(ttag)) {
     
     int len = 0, acc = 0;
-    
+
     do {
       len += 1;
-      OZ_expect_t r = (this->*expectf)(makeTaggedRef(headRef(t)));
+      OZ_expect_t r = (this->*expectf)(makeTaggedRef(tagged2LTuple(t)->getRefHead()));
       
       if (r.accepted == -1) {
 	return r;
@@ -471,7 +471,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     
     do {
       len += 1;
-      OZ_expect_t r = (this->*expectf)(makeTaggedRef(headRef(t)));
+      OZ_expect_t r = (this->*expectf)(makeTaggedRef(tagged2LTuple(t)->getRefHead()));
       
       if (r.accepted == -1) {
 	return r;

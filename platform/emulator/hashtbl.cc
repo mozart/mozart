@@ -239,13 +239,13 @@ void HashTable::print()
   if (type == HT_CHARKEY) {
     for(int i = 0; i < tableSize; i++) {
       if (! table[i].isEmpty()) {
-	printf("table[%d] = <%s,0x%x>\n", i, table[i].key.fstr, table[i].value);
+	printf("table[%d] = <%s,0x%p>\n", i, table[i].key.fstr, table[i].value);
       }
     }
   } else {
     for(int i = 0; i < tableSize; i++) {
       if (!table[i].isEmpty()) {
-	printf("table[%d] = <%ld,0x%x>\n", i, table[i].key.fint, table[i].value);
+	printf("table[%d] = <%ld,0x%p>\n", i, table[i].key.fint, table[i].value);
       }
     }
   }
