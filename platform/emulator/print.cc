@@ -1055,7 +1055,7 @@ void Thread::printStream(ostream &stream, int depth)
 
   if ((getFlags ()) & T_ext)       stream << " ext";
   if ((getFlags ()) & T_tag)       stream << " tag";
-  if ((getFlags ()) & T_lpq)       stream << " lpq";
+
   stream << " <";
   GETBOARD(this)->printStream(stream, PRINT_DEPTH_DEC(depth));
   stream << ">";

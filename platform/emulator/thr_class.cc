@@ -50,14 +50,7 @@
 
 int Thread::getRunnableNumber() {
   TaskStack * taskstack = getTaskStackRef();
-  if (taskstack->isEmpty()) return 0;
-  Frame *tos = taskstack->getTop();
-  GetFrame(tos,PC,Y,G);
-
-  if (PC!=C_LPQ_Ptr)
-    return 1;
-
-  return 0;
+  return (taskstack->isEmpty()) ? 0 : 1;
 }
 
 void Thread::printTaskStack(int depth) {

@@ -325,7 +325,6 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
     case TASKCALLCONT:
     case TASKLOCK:
     case TASKSETSELF:
-    case TASKLPQ:
     case TASKCATCH:
     case TASKEMPTYSTACK:
     case TASKPROFILECALL:
@@ -467,7 +466,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case TASKCALLCONT:
     case TASKLOCK:
     case TASKSETSELF:
-    case TASKLPQ:
     case TASKCATCH:
     case TASKEMPTYSTACK:
     case TASKPROFILECALL:
@@ -940,7 +938,6 @@ ProgramCounter
   C_COMMIT_Ptr,
   C_SET_SELF_Ptr,
   C_SET_ABSTR_Ptr,
-  C_LPQ_Ptr,
   C_CATCH_Ptr,
   C_EMPTY_STACK;
 
@@ -981,8 +978,7 @@ void CodeArea::init(void **instrTable)
   C_LOCK_Ptr         = writeOpcode(TASKCALLCONT,C_CALL_CONT_Ptr);
   C_SET_SELF_Ptr     = writeOpcode(TASKLOCK,C_LOCK_Ptr);
   C_SET_ABSTR_Ptr    = writeOpcode(TASKSETSELF,C_SET_SELF_Ptr);
-  C_LPQ_Ptr          = writeOpcode(TASKPROFILECALL,C_SET_ABSTR_Ptr);
-  C_CATCH_Ptr        = writeOpcode(TASKLPQ,C_LPQ_Ptr);
+  C_CATCH_Ptr        = writeOpcode(TASKPROFILECALL,C_SET_ABSTR_Ptr);
   C_EMPTY_STACK      = writeOpcode(TASKCATCH,C_CATCH_Ptr);
   ProgramCounter aux = writeOpcode(TASKEMPTYSTACK,C_EMPTY_STACK);
   /* mark end with GLOBALVARNAME, so definitionEnd works properly */

@@ -27,6 +27,8 @@
  */
 
 #include "prop_int.hh"
+#include "os.hh"
+#include "value.hh"
 
 #define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)      \
 {                                               \
@@ -87,21 +89,6 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
                     oz_pushToLPQ(GETBOARD(prop),prop));
 }
 
-//  Make a runnable thread with a single task stack entry <local thread queue>
-Thread * oz_mkLPQ(Board *bb, int prio)
-{
-  Thread * th = new Thread(T_runnable|T_lpq, prio, bb, oz_newId());
-  th->setBody(am.threadsPool.allocateBody());
-  bb->incSuspCount();
-
-  if (!bb->isRoot())
-    bb->incSolveThreads();
-
-  th->pushLPQ(bb);
-
-  return th;
-}
-
 
 SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
                                  Board * glob_home)
@@ -145,14 +132,107 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
   return ret_list;
 }
 
-void oz_pushToLPQ(Board *bb, Propagator * prop)
-{
+
+
+
+// Builtin that runs the propagators
+
+OZ_BI_define(BI_prop_lpq, 0, 0) {
+
+  Board * bb = oz_currentBoard();
+
+  LocalPropagatorQueue * lpq = bb->getLocalPropagatorQueue();
+
+  if (lpq == NULL)
+    return PROCEED;
+
+  unsigned int starttime = 0;
+
+  if (ozconf.timeDetailed)
+    starttime = osUserTime();
+
+  while (!lpq->isEmpty() && !am.isSetSFlag()) {
+    Propagator * prop = lpq->dequeue();
+    Propagator::setRunningPropagator(prop);
+    Assert(!prop->isDeadPropagator());
+
+    OZ_Return r = oz_runPropagator(prop);
+
+    if (r == SLEEP) {
+      oz_sleepPropagator(prop);
+    } else if (r == PROCEED) {
+      oz_closeDonePropagator(prop);
+    } else if (r == FAILED) {
+
+#ifdef NAME_PROPAGATORS
+      // this is experimental: a top-level failure with set
+      // property 'internal.propLocation',
+      if (am.isPropagatorLocation()) {
+        if (!am.hf_raise_failure()) {
+          if (ozconf.errorDebug)
+            am.setExceptionInfo(OZ_mkTupleC("apply",2,
+                                            OZ_atom((prop->getPropagator()->getProfile()->getPropagatorName())),
+                                            prop->getPropagator()->getParameters()));
+          oz_sleepPropagator(prop);
+          prop->markFailed();
+          oz_resetLocalPropagatorQueue(bb);
+          return RAISE;
+        }
+      }
+#endif
+
+      if (ozconf.timeDetailed)
+        ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+      // check for top-level and if not, prepare raising of an
+      // exception (`hf_raise_failure()')
+      if (am.hf_raise_failure()) {
+        oz_closeDonePropagator(prop);
+        return FAILED;
+      }
+
+      if (ozconf.errorDebug)
+        am.setExceptionInfo(OZ_mkTupleC("apply",2,
+                                        OZ_atom((prop->getPropagator()->getProfile()->getPropagatorName())),
+                                        prop->getPropagator()->getParameters()));
+
+      oz_closeDonePropagator(prop);
+
+      oz_resetLocalPropagatorQueue(bb);
+
+      return RAISE;
+
+    } else {
+      Assert(r == SCHEDULED);
+      oz_preemptedPropagator(prop);
+    }
+    Assert(prop->isDeadPropagator() || !prop->isRunnable());
+  }
+
+  if (ozconf.timeDetailed)
+    ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+  if (lpq->isEmpty()) {
+    oz_resetLocalPropagatorQueue(bb);
+    return PROCEED;
+  } else {
+    return BI_PREEMPT;
+  }
+
+} OZ_BI_end
+
+void oz_pushToLPQ(Board *bb, Propagator * prop) {
   LocalPropagatorQueue *lpq = bb->getLocalPropagatorQueue();
+
   if (lpq) {
     lpq->enqueue(prop);
   } else {
-    Thread * lpq_thr = oz_mkLPQ(bb, DEFAULT_PRIORITY);
-    bb->setLocalPropagatorQueue(new LocalPropagatorQueue(lpq_thr, prop));
-    am.threadsPool.scheduleThreadInline(lpq_thr, DEFAULT_PRIORITY);
+    // Create new thread
+    Thread * thr = oz_newThreadInject(bb);
+    // Push run lpq builtin
+    thr->pushCall(BI_PROP_LPQ, 0, 0);
+
+    bb->setLocalPropagatorQueue(new LocalPropagatorQueue(thr, prop));
+
   }
 }

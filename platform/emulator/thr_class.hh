@@ -48,7 +48,6 @@ enum ThreadFlag {
   T_catch    = 0x004,  // has or has had an exception handler
   T_ext      = 0x008,  // an external suspension wrt current search problem
   T_tag      = 0x010,  // used to avoid duplication of threads
-  T_lpq      = 0x020,  // designates local thread queue
   T_noblock  = 0x040,  // if this thread blocks, raise an exception
   // debugger
   T_G_trace  = 0x080,   // thread is being traced
@@ -151,13 +150,6 @@ public:
   }
 
   int getFlags() { return state.flags; }
-
-  void markLPQThread(void) {
-    state.flags = state.flags | T_lpq;
-  }
-  Bool isLPQThread(void) {
-    return state.flags & T_lpq;
-  }
 
   void markTagged() {
     if (isDeadThread ()) return;
@@ -266,9 +258,6 @@ public:
   TaggedRef getStreamTail();
   void setStreamTail(TaggedRef v);
 
-  void pushLPQ(Board * sb) {
-    threadBody->taskStack.pushLPQ(sb);
-  }
   void pushDebug(OzDebug *dbg, OzDebugDoit dothis) {
     threadBody->taskStack.pushDebug(dbg,dothis);
   }
