@@ -821,3 +821,4 @@ extern BorrowTable *borrowTable;
 Bool withinBorrowTable(int i); // for assertion
 
 #endif
+
