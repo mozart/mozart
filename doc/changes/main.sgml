@@ -71,6 +71,7 @@
 
     <Meta name="html.split"       value="section.m130.changes">
     <Meta name="html.split"       value="section.m130.fixes">
+    <Meta name="html.split"       value="section.m130.internal">
 
     <Meta name="html.split"       value="section.m121.important">
     <Meta name="html.split"       value="section.m121.changes">
@@ -104,7 +105,15 @@
 
     <p>
         Mozart 1.3.0 is both the development and maintenance
-        release. The changes in the language, Mozart libraries and the
+        release. The work on 1.3.0 began immediately after 1.2.0,
+        while the subsequent 1.2.* releases were intended primarily as
+        maintenance releases. The Mozart system that became 1.3.0 has
+        been extensively (and successfully) used for our own research
+        projects.
+    </p>
+
+    <p>
+        The changes in the language, Mozart libraries and the
         implementation are summarized in the following sections.
     </p>
 
@@ -175,18 +184,23 @@
           of distributed applications.
         </p>
 
+      <subsection> <title/Ozmake/
+        <p>
+          'ozmake' became a part of the Mozart's standard library, and
+          so it it included in the release.
+        </p>
+
       <subsection id="sec.m130.windows">
-        <title/Windows/
-        <p>changes and fixes that concern the Windows platform:
-        <list>
-        <item>Mozart is now buildable with <code proglang=sh/gcc/ version
-                3 and upwards. <code proglang=sh/oztool/ now reverts to
-               <code proglang=sh/gcc/ and <code proglang=sh/g++/ as default
-             when invoked with the
+        <title/Oztool on Windows/
+        <p>
+          Mozart is now buildable with <code proglang=sh/gcc/ version
+          3 and upwards. <code proglang=sh/oztool/ now reverts to
+          <code proglang=sh/gcc/ and <code proglang=sh/g++/ as default
+          when invoked with the
           <code proglang=sh/-gnu/ option.  This can be configured as
-          described in <ptr.extern to="ozdoc:tools" key="section.oztool-env">.
-          <item>The Windows distribution is now built with <code proglang=sh/gcc 3.x/.
-        </list>
+          described in <ptr.extern to="ozdoc:tools"
+          key="section.oztool-env">.
+        </p>
 
     <section id="section.m130.fixes">
       <title/Changes in the implementation that affect usability and performance/
@@ -214,7 +228,7 @@
           throughput between Mozart processes.
         </p>
 
-      <subsection><title/Pickling Format/
+      <subsection><title/Pickling format/
         <p>
           The pickling format has been incompatibly changed for the
           sake of space and run-time efficiency.
@@ -225,6 +239,36 @@
           In general, we tried to keep up with the bug reports. There
           were too many of them to list them all here..
         </p>
+
+    <section id="section.m130.internal">
+      <title/Changes in the implementation that affect maintainability and portability/
+
+      <subsection><title/GCC caveats for building from sources/
+        <p>
+          The Mozart 1.3.0 release supports both the GCC 3.2+ with its
+          new multi-vendor C++ ABI, and the old 2.95.*. GCC 3.2+ is
+          the default on most contemporary GNU/Linux platforms, as
+          well as available for most types of unix and the CYGWIN
+          environment for Windows. We use GCC 3.3.2 on Linux and
+          Solaris, and 3.3.1 with CYGWIN.
+        </p>
+
+        <p>
+          We would like to emphasize that Mozart binaries are not
+          compatible if compiled with these two versions of GCC! In
+          particular, all custom native libraries have to be
+          (re)compiled with the compiler used for building the Mozart
+          system itself.
+        </p>
+
+        <p>
+          Moreover, building a GCC 3.2+ compiler (to be used for
+          compiling Mozart) on an old Linux installation is more
+          complicated than it might appear, and we strongly advise
+          against that. Upgrading Linux is much simpler and more
+          reliable way to obtain the right GCC compiler.
+        </p>
+
 
   </chapter>
 
