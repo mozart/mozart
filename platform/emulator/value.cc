@@ -10,9 +10,7 @@
 #pragma implementation "value.hh"
 #endif
 
-#include "types.hh"
-#include "tagged.hh"
-#include "value.hh"
+#include "am.hh"
 
 /*===================================================================
  * global names and atoms
@@ -165,6 +163,33 @@ TaggedRef Object::getArityList()
     if (rec) ret=append(ret,rec->getArityList());
   }
   return ret;
+}
+
+
+void Object::wakeThreads()
+{
+  if (isNil(threads)) {
+    deepness = 0;
+    return;
+  }
+
+  deepness = 1;
+
+  TaggedRef var = head(threads);
+  if (OZ_unify(var,makeInt(4712))==FAILED) {
+    warning("Object::wakeThreads: unify failed");
+  }
+  threads = tail(threads);
+}
+
+TaggedRef Object::attachThread()
+{
+  TaggedRef *aux = &threads;
+  while(!isNil(*aux)) {
+    aux = tagged2LTuple(*aux)->getRefTail();
+  }
+  *aux = cons(makeTaggedUVar(am.currentBoard),nil());
+  return head(*aux);
 }
 
 /*===================================================================
