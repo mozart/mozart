@@ -404,8 +404,83 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
     )
 
 
-    CaseOneReg(TESTRECORD, ``error("impossible");'')
-    CaseOneReg(TESTLIST, ``error("impossible");'')
+  CaseOneReg(TESTRECORD,
+    ``{
+	TaggedRef term = Reg1(getRegArg(PC+1));
+	TaggedRef label = getLiteralArg(PC+2);
+	SRecordArity sra = (SRecordArity) getAdressArg(PC+3);
+
+	DEREF(term,termPtr,tag);
+	if (isSRecord(tag)) {
+	  if (tagged2SRecord(term)->compareSortAndArity(label,sra)) {
+	    sPointer = tagged2SRecord(term)->getRef();
+	    JUMPRELATIVE(getLabelArg(PC+4));
+	  }
+	} else if (isCVar(term)) {
+	  GenCVariable *cvar = tagged2CVar(term);
+	  switch (cvar->getType()) {
+	  case OFSVariable:
+	    {
+	      GenOFSVariable *ofsvar = (GenOFSVariable *) cvar;
+	      Literal *lit = tagged2Literal(label);
+	      if (sraIsTuple(sra)) {
+		if (ofsvar->disentailed(lit,getTupleWidth(sra))) {
+		  JUMPRELATIVE(getLabelArg(PC+5));
+		}
+	      } else {
+		if (ofsvar->disentailed(lit,getRecordArity(sra))) {
+		  JUMPRELATIVE(getLabelArg(PC+5));
+		}
+	      }
+	    }
+	    // fall through
+	  case PerdioVariable:
+	  case LazyVariable:
+	  case PROMISE:
+	    PushContX(PC,Y,G,X,getPosIntArg(PC+6));
+	    addSuspPtr(termPtr, CTT);
+	    return T_SUSPEND;
+	  default:
+	    break;
+	  }
+	}
+	JUMPRELATIVE(getLabelArg(PC+5));
+    }''
+    )
+
+
+  CaseOneReg(TESTLIST,
+    ``{
+	TaggedRef term = Reg1(getRegArg(PC+1));
+
+	DEREF(term,termPtr,tag);
+	if (isLTuple(tag)) {
+	  sPointer = tagged2LTuple(term)->getRef();
+	  JUMPRELATIVE(getLabelArg(PC+2));
+	} else if (isCVar(term)) {
+	  GenCVariable *cvar = tagged2CVar(term);
+	  switch (cvar->getType()) {
+	  case OFSVariable:
+	    {
+	      GenOFSVariable *ofsvar = (GenOFSVariable *) cvar;
+	      if (ofsvar->disentailed(tagged2Literal(AtomCons),2)) {
+		JUMPRELATIVE(getLabelArg(PC+3));
+	      }
+	    }
+	    // fall through
+	  case PerdioVariable:
+	  case LazyVariable:
+	  case PROMISE:
+	    PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+	    addSuspPtr(termPtr, CTT);
+	    return T_SUSPEND;
+	  default:
+	    break;
+	  }
+	}
+	JUMPRELATIVE(getLabelArg(PC+3));
+    }''
+    )
 
 
   CaseOneReg( GETLITERAL,
@@ -546,9 +621,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 		     oz_bindToNonvar(termPtr,term,makeTaggedLTuple(ltuple),NOFLATGUARD);
 		     DISPATCH(2);
 		   }
-		 }
-
-		 if (isLTuple(term)) {
+		 } else if (isLTuple(term)) {
 		   sPointer = tagged2LTuple(term)->getRef();
 		   SetReadMode;
 		   DISPATCH(2);
