@@ -67,4 +67,7 @@ depend:: $(FDLIBSRCS) $(SCHEDLIBSRCS)
 realclean::
         $(RM) *.a *.so
 
+distclean::
+        $(RM) Makefile
+
 include ../Makefile.rules
