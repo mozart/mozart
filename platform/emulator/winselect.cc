@@ -112,18 +112,23 @@ unsigned __stdcall acceptThread(void *arg)
 {
   IOChannel *sr = (IOChannel *)arg;
 
-  sr->status=NO;
-  fd_set readfds;
-  FD_ZERO(&readfds);
-  FD_SET(sr->fd,&readfds);
+  while(1) {
+    sr->status=NO;
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(sr->fd,&readfds);
 
-  int ret = select(1,&readfds,NULL,NULL,NULL);
-  if (ret<=0) {
-    warning ("acceptThread(%d) failed, error=%d\n",
-            sr->fd,WSAGetLastError());
-  } else {
+    int ret = select(1,&readfds,NULL,NULL,NULL);
+    if (ret<=0) {
+      warning ("acceptThread(%d) failed, error=%d\n",
+               sr->fd,WSAGetLastError());
+      return 0;
+    }
     sr->status = OK;
     SetEvent(sr->char_avail);
+    if (WaitForSingleObject(sr->char_consumed, INFINITE) != WAIT_OBJECT_0)
+      break;
+    ResetEvent(sr->char_consumed);
   }
   sr->thrd = 0;
   _endthreadex(0);
