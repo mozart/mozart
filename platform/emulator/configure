@@ -1562,7 +1562,7 @@ fi
 
 if test "x$GXX" = xyes; then
     COPT="-O6"
-    G_OPT="-g3"
+    G_OPT="-g3 -DINTERFACE"
     M4_S="$M4 -s"
     DEPEND="$CXX -MM"
 fi
@@ -3272,7 +3272,7 @@ echo "configure:3272: checking for gmalloc" >&5
         if test -r $PSDIR/lib/linux-i486/gmalloc.o
         then
             echo "$ac_t""yes" 1>&6
-            LIBS="$LIBS $psdir/lib/linux-i486/gmalloc.o"
+            LIBS="$LIBS $PSDIR/lib/linux-i486/gmalloc.o"
         else
             echo "$ac_t""no" 1>&6
         fi
