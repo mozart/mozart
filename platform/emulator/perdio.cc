@@ -6117,7 +6117,10 @@ bomb:
     return loadFD(fd,out);
   }
 
-  return PROCEED;
+  return oz_raise(E_ERROR,oz_atom("perdio"),"load",3,
+                  oz_atom("openURL"),
+                  oz_atom(urlcStrerror(fd)),
+                  oz_atom(url));
 }
 
 OZ_C_proc_begin(BIload,2)
@@ -6130,6 +6133,29 @@ OZ_C_proc_begin(BIload,2)
   return loadURL(url,out);
 }
 OZ_C_proc_end
+
+OZ_C_proc_begin(BIWget,2)
+{
+  OZ_declareVirtualStringArg(0,url);
+  OZ_declareArg(1,out);
+
+  char *tmpfile;
+  int ret = localizeUrl(url,&tmpfile);
+
+  if (ret==URLC_OK) {
+    OZ_Return ret = oz_unify(out,oz_atom(tmpfile));
+    free(tmpfile);
+    return ret;
+  }
+
+  return oz_raise(E_ERROR,oz_atom("perdio"),"wget",3,
+                  oz_atom("localizeURL"),
+                  oz_atom(urlcStrerror(ret)),
+                  oz_atom(url));
+}
+OZ_C_proc_end
+
+
 
 OZ_C_proc_begin(BIperdioStatistics,1)
 {
@@ -6211,8 +6237,9 @@ BIspec perdioSpec[] = {
   {"startServer",    2, BIstartServer, 0},
   {"startClient",    3, BIstartClient, 0},
 
-  {"smartSave",   6, BIsmartSave, 0},
-  {"load",        2, BIload, 0},
+  {"smartSave",    6, BIsmartSave, 0},
+  {"load",         2, BIload, 0},
+  {"Wget",         2, BIWget, 0},
   {"newGate",      2, BInewGate, 0},
 
   {"perdioStatistics",  1, BIperdioStatistics, 0},
