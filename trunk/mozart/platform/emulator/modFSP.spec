@@ -137,6 +137,10 @@ $boot_module_name     = "FSP";
 			     out => [],
 			     bi  => fsp_partition},
 
+    'intersectN'	=> { in  => ['+value','fset'],
+			     out => [],
+			     bi  => fsp_intersectionN},
+
     'reified.partition'=> { in  => ['+value','fset','+value'],
 			     out => [],
 			     bi  => fsp_partitionReified},
