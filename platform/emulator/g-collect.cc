@@ -1099,7 +1099,7 @@ void AM::gCollect(int msgLevel)
 
   if (defaultExceptionHdl)
     oz_gCollectTerm(defaultExceptionHdl,defaultExceptionHdl);
-  oz_gCollectTerm(debugStreamTail,debugStreamTail);
+  oz_gCollectTerm(debugPort, debugPort);
 
   PrTabEntry::gCollectPrTabEntries();
   extRefs = extRefs->gCollect();
