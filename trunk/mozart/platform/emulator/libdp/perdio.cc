@@ -430,7 +430,8 @@ Bool localizeTertiary(Tertiary*t){
     localizePort(t);
     return OK;
   case Co_Object:
-    return NO;
+    ((Object*)t)->localize();
+    return OK;
   default:
     Assert(0);
     return NO;
