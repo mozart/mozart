@@ -691,30 +691,30 @@ loop:
 
   if (currentBoard->isSolve ()) {
     // try to reduce a solve board;
-    DebugCheck ((currentBoard->isReflected () == OK),
+    DebugCheck ((currentBoard->isReflected() == OK),
 		error ("trying to reduce an already reflected solve actor"));
 
-    SolveActor *solveAA = SolveActor::Cast (currentBoard->getActor ());
+    SolveActor *solveAA = SolveActor::Cast(currentBoard->getActor());
     Board      *solveBB = currentBoard; 
  
     if (isStableSolve(solveAA)) {
-      DebugCheck ((trail.isEmptyChunk () == NO),
+      DebugCheck ((trail.isEmptyChunk() == NO),
 		  error ("non-empty trail chunk for solve board"));
       // all possible reduction steps require this; 
 
-      if (solveBB->hasSuspension () == NO) {
+      if (solveBB->hasSuspension() == NO) {
 	// 'solved';
 	// don't unlink the subtree from the computation tree;
 	trail.popMark ();
-	currentBoard->unsetInstalled ();
+	currentBoard->unsetInstalled();
 	setCurrent (currentBoard->getParentFast());
-	currentBoard->decSuspCount ();
+	currentBoard->decSuspCount();
 
-	DebugCheckT (solveBB->setReflected ());
+	DebugCheckT (solveBB->setReflected());
 	// statistic
 	ozstat.incSolveSolved();
 	if (!fastUnifyOutline(solveAA->getResult(), 
-			      solveAA->genSolved(), OK) ) {
+			      solveAA->genSolved(), OK)) {
 	  return CE_FAIL;
 	}
 	return CE_NOTHING;
@@ -724,35 +724,37 @@ loop:
 	if (solveAA->stable_wake()) {
 	  LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 			    return CE_FAIL;);
-	  if (!isStableSolve(solveAA))
+	  if (!isStableSolve(solveAA)) {
 	    deinstallCurrent();
 	    return CE_NOTHING;
+	  }
 	  goto loop;
 	}
  
-	WaitActor *wa = solveAA->getDisWaitActor ();
+	WaitActor *wa = solveAA->getDisWaitActor();
 	
-	if (wa == (WaitActor *) NULL) {
+	if (wa == NULL) {
 	  // "stuck" (stable without distributing waitActors);
 	  // don't unlink the subtree from the computation tree; 
-	  trail.popMark ();
-	  currentBoard->unsetInstalled ();
+	  trail.popMark();
+	  currentBoard->unsetInstalled();
 	  setCurrent (currentBoard->getParentFast());
-	  currentBoard->decSuspCount ();
+	  currentBoard->decSuspCount();
 
-	  DebugCheckT (solveBB->setReflected ());
+	  DebugCheckT (solveBB->setReflected());
 	  if ( !fastUnifyOutline(solveAA->getResult(), 
 				 solveAA->genStuck(), OK) ) {
 	    return CE_FAIL;
 	  }
 	  return CE_NOTHING;
+
 	} else {
 	  // to enumerate;
-	  DebugCheck ((wa->hasOneChild () == OK),
+	  DebugCheck ((wa->hasOneChild() == OK),
 		      error ("wait actor for enumeration with single clause?"));
-	  DebugCheck (((WaitActor::Cast (wa))->hasNext () == OK),
+	  DebugCheck (((WaitActor::Cast (wa))->hasNext() == OK),
 		      error ("wait actor for distribution has a continuation"));
-	  DebugCheck ((solveBB->hasSuspension () == NO),
+	  DebugCheck ((solveBB->hasSuspension() == NO),
 		      error ("solve board by the enumertaion without suspensions?"));
 
 	  if (wa->getChildCount()==2 && 
@@ -774,8 +776,8 @@ loop:
 	      goto loop;
 	    }
 
-	    aa=wa;
-	    contAfter=waitBoard->getBodyPtr();
+	    aa        = wa;
+	    contAfter = waitBoard->getBodyPtr();
 	    return CE_SOLVE_CONT;
 	  }
 
@@ -810,10 +812,11 @@ loop:
 	    }
 
 	    if (noOfClauses == 0) {
-	      trail.popMark ();
-	      currentBoard->unsetInstalled ();
-	      setCurrent (currentBoard->getParentFast());
-	      currentBoard->decSuspCount ();
+	      wa->dispose();
+	      trail.popMark();
+	      currentBoard->unsetInstalled();
+	      setCurrent(currentBoard->getParentFast());
+	      currentBoard->decSuspCount();
 	      
 	      if (!fastUnifyOutline(solveAA->getResult(),
 				    solveAA->genFailed(),
@@ -837,8 +840,8 @@ loop:
 		goto loop;
 	      }
 
-	      aa=wa;
-	      contAfter=waitBoard->getBodyPtr();
+	      aa        = wa;
+	      contAfter = waitBoard->getBodyPtr();
 	      return CE_SOLVE_CONT;
 		
 	    } else {
@@ -850,10 +853,10 @@ loop:
 	    // put back wait actor
 	    solveAA->pushWaitActor(wa);
 	    // give back number of clauses
-	    trail.popMark ();
-	    currentBoard->unsetInstalled ();
-	    setCurrent (currentBoard->getParentFast());
-	    currentBoard->decSuspCount ();
+	    trail.popMark();
+	    currentBoard->unsetInstalled();
+	    setCurrent(currentBoard->getParentFast());
+	    currentBoard->decSuspCount();
 
 	    DebugCheckT (solveBB->setReflected ());
 	    if (!fastUnifyOutline(solveAA->getResult(),
@@ -1165,6 +1168,10 @@ void engine()
 	  Assert(currentDebugBoard==CBB->getParentFast());
 	  DebugCheckT(currentDebugBoard=CBB);
 	  Assert(CBB->isSolve());
+	  // do disposal of aa (which must be a wait actor!)
+	  Assert(aa->isWait());
+	  ((WaitActor*) aa)->dispose();
+
 	  e->pushSolve();
 	  sa->incThreads();
 	  CBB->incSuspCount();
@@ -1315,7 +1322,16 @@ LBLkillThread:
       case CE_FAIL:
 	if (nb) e->decSolveThreads(nb);
 	HF_NOMSG;
-      case CE_SOLVE_CONT: /* no special case */
+      case CE_SOLVE_CONT:
+	{
+	  Assert(aa->isWait());
+	  Thread *tt = e->createThread(aa->getPriority(),
+				       aa->getCompMode());
+	  ((WaitActor*) aa)->dispose();
+	  tt->pushCont(cont);
+	  if (nb) e->decSolveThreads(nb->getBoardFast());
+	  goto LBLstart;
+	}
       case CE_CONT:
 	{
 	  Thread *tt=0;
