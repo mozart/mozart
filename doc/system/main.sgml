@@ -75,12 +75,14 @@
 
 <!-- Distributed programming -->
 
-<!ENTITY chapter.connection  SYSTEM "connection.sgml">
-<!ENTITY chapter.fault       SYSTEM "fault.sgml">
-<!ENTITY chapter.remote      SYSTEM "remote.sgml">
-<!ENTITY chapter.resolve     SYSTEM "resolve.sgml">
-<!ENTITY chapter.urlurl      SYSTEM "url.sgml">
-<!ENTITY chapter.discovery   SYSTEM "discovery.sgml">
+<!ENTITY chapter.connection   SYSTEM "connection.sgml">
+<!ENTITY chapter.fault        SYSTEM "fault.sgml">
+<!ENTITY chapter.remote       SYSTEM "remote.sgml">
+<!ENTITY chapter.resolve      SYSTEM "resolve.sgml">
+<!ENTITY chapter.urlurl       SYSTEM "url.sgml">
+<!ENTITY chapter.discovery    SYSTEM "discovery.sgml">
+<!ENTITY chapter.dpinit       SYSTEM "dpinit.sgml">
+<!ENTITY chapter.dpstatistics SYSTEM "dpstatistics.sgml">
 
 
 <!-- Open programming -->
@@ -119,6 +121,8 @@
     <Meta name=latex.table.spec arg1="table.prop.application"
           arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.dp"
+          arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.dpLog"
           arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.errors"
           arg2="lllp{0.6\linewidth}">
@@ -215,6 +219,8 @@
     <Meta name="html.split"       value="chapter.urlurl">
     <Meta name="html.split"       value="chapter.resolve">
     <Meta name="html.split"       value="chapter.discovery">
+    <Meta name="html.split"       value="chapter.dpinit">
+    <Meta name="html.split"       value="chapter.dpstatistics">
 
     <!-- Open programming -->
 
@@ -229,6 +235,7 @@
     <Meta name="html.split"       value="chapter.property">
     <Meta name="html.split"       value="section.property.application">
     <Meta name="html.split"       value="section.property.dp">
+    <Meta name="html.split"       value="section.property.dpLog">
     <Meta name="html.split"       value="section.property.errors">
     <Meta name="html.split"       value="section.property.fd">
     <Meta name="html.split"       value="section.property.gc">
@@ -326,6 +333,8 @@
     &chapter.resolve;
     &chapter.fault;
     &chapter.discovery;
+    &chapter.dpinit;
+    &chapter.dpstatistics;
   </Part>
 
   <Part id="Part.Open">
