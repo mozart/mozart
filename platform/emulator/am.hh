@@ -364,6 +364,7 @@ public:
   void prepareCall(TaggedRef pred, RefsArray args);
 
   void pushPreparedCalls(Thread *thr=0);
+  void emptyPreparedCalls();
 
   void init(int argc,char **argv);
   void checkVersion();
