@@ -144,25 +144,17 @@ int SolveActor::choose(int left, int right) {
   } else if (n==1) {
     this->popChoice();
 
-    if (wa->hasChoices())
-      this->pushChoices(wa->getCps());
 
-    Board *waitBoard = wa->getChildRef();
 
-    waitBoard->setCommitted(solveBoard);
-    Assert(!solveBoard->isCommitted());
-    solveBoard->incSuspCount(waitBoard->getSuspCount()-1);
 
-    if (!am.installScriptOutline(waitBoard->getScriptRef()))
-      return 0;
+    Board *bb = wa->getChildRef();
+    Assert(bb->isWait());
 
-    if (waitBoard->isWaitTop())
-      return 1;
-
-    am.currentThread->pushCont(waitBoard->getBodyPtr());
+    Assert(am.currentBoard==solveBoard);
+    return am.commit(bb);
+  } else {
+    return 1;
   }
-
-  return 1;
 }
 
 inline

@@ -39,6 +39,9 @@ private:
   LocalThreadQueue * localThreadQueue;
   int threads;
 public:
+  SolveActor();
+  ~SolveActor();
+  SolveActor(SolveActor&);
   SolveActor(Board *bb, int prio);
 
   Board *getSolveBoard() { return solveBoard; }
