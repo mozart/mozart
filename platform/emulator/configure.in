@@ -240,28 +240,28 @@ case $platform in
         TOOLLDFLAGS=""
         ;;
     linux*)
-        TOOLLDFLAGS="-shared"
+        TOOLLDFLAGS="-Wl,-shared"
         EMULDFLAGS="-Wl,-export-dynamic"
         ;;
     solaris*)
-        TOOLLDFLAGS="-G"
+        TOOLLDFLAGS="-Wl,-G"
         ;;
     irix*)
-        TOOLLDFLAGS="-shared -check_registry /dev/null"
+        TOOLLDFLAGS="-Wl,-shared -Wl,-check_registry -Wl,/dev/null"
         ;;
     osf1*)
-        TOOLLDFLAGS="-shared -expect_unresolved '*'"
+        TOOLLDFLAGS="-Wl,-shared -Wl,-expect_unresolved -Wl,'*'"
         dnl dont change LDFLAGS, see machine.hh !!!
         EMULDFLAGS="-Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
         ;;
     hpux*)
-        TOOLLDFLAGS="-b"
+        TOOLLDFLAGS="-Wl,-b"
         ;;
     freebsd*)
-        TOOLLDFLAGS="-Bshareable"
+        TOOLLDFLAGS="-Wl,-Bshareable"
         ;;
     netbsd*)
-        TOOLLDFLAGS="-Bshareable"
+        TOOLLDFLAGS="-Wl,-Bshareable"
         ;;
 esac
 
