@@ -104,7 +104,8 @@ except for the atom table and the table of record arities.
 In particular, the area used to store
 program instructions is garbage collected.
 <p>
-We recommend to avoid dynamically creating atoms
+We recommend to avoid as much as possible
+dynamically creating atoms
 (with <<String.toAtom>> or <<VirtualString.toAtom>>)
 or records with new arities (for example, with <<Record.filter>>).
 Tuples do not have entries in the arity table,
