@@ -26,12 +26,6 @@
   -->
 
 
-<!--
-  Translated to SGML by:
-     Daniel Simon, dansim@ps.uni-sb.de
-     Andy Walter, anwalt@ps.uni-sb.de
--->
-
 <chapter id=chapter.pipe>
 <title/Running Processes/
 <p>
@@ -103,4 +97,20 @@ Closing the object and the shell is done simply by
 {Shell close}
 >>>
 </section>
+
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Running Processes
+%%%
+
+
+
+</chunk>
+]]>
+
+
 </chapter>

@@ -58,6 +58,7 @@
 <!ENTITY eg PI "eg">
 <!ENTITY slash PI "slash">
 <!ENTITY cdots PI "cdots">
+<!ENTITY % EXTRA "IGNORE">
 
 ]>
 
