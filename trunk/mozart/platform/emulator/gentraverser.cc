@@ -102,11 +102,13 @@ void GenTraverser::doit()
 	  // 
 	  // The order is: label, [arity], subtrees...
 	  // Both tuple and record args appear in a reverse order;
-	  ensureFree(argno+1);	// pessimistic approximation;
+	  ensureFree(argno+2);	// pessimistic approximation;
 	  for(int i = 0; i < argno; i++)
 	    put(rec->getArg(i));
-	  if (!rec->isTuple())
+	  if (!rec->isTuple()) {
+	    putSync();		// will appear after the arity list;
 	    put(rec->getArityList());
+	  }
 	  t = rec->getLabel();
 	  goto bypass;
 	}
@@ -216,6 +218,8 @@ void GenTraverser::doit()
 
     case FSETVALUE:
       if (!processFSETValue(t)) {
+	ensureFree(1);
+	putSync();		// will appear after the list;
 	t = tagged2FSetValue(t)->getKnownInList();
 	goto bypass;
       }
@@ -243,32 +247,42 @@ void GenTraverser::doit()
       }
 
     case GCTAG:
-      {
-	// If the argument is zero then the task is empty:
-	void *arg = getPtr();
-
-	//
-	if (arg) {
-	  MarshalerBinaryAreaProcessor proc =
-	    (MarshalerBinaryAreaProcessor) lookupPtr();
-	  // 'proc' is preserved in stack;
-	  StackEntry *se = putPtrSERef(0);
-	  putInt(taggedBATask);	// pre-cooked;
+      //
+      switch(t) {
+      case taggedBATask:
+	{
+	  // If the argument is zero then the task is empty:
+	  void *arg = getPtr();
 
 	  //
-	  if (!(*proc)(this, arg)) {
-	    // not yet done - restore the argument back;
-	    updateSEPtr(se, arg);
+	  if (arg) {
+	    MarshalerBinaryAreaProcessor proc =
+	      (MarshalerBinaryAreaProcessor) lookupPtr();
+	    Assert(proc > (MarshalerBinaryAreaProcessor) 0xf);
+	    // 'proc' is preserved in stack;
+	    StackEntry *se = putPtrSERef(0);
+	    putInt(taggedBATask);	// pre-cooked;
+
+	    //
+	    if (!(*proc)(this, arg)) {
+	      // not yet done - restore the argument back;
+	      updateSEPtr(se, arg);
+	    }
+	    // ... otherwise do nothing: the empty task will be
+	    // discarded later - 
+	  } else {
+	    CrazyDebug(decDebugNODES(););
+	    // - here, to be exact:
+	    dropEntry();		// 'proc';
 	  }
-	  // ... otherwise do nothing: the empty task will be
-	  // discarded later - 
-	} else {
-	  CrazyDebug(decDebugNODES(););
-	  // - here, to be exact:
-	  dropEntry();		// 'proc';
+	  break;
 	}
+
+      case taggedSyncTask:
+	processSync();
 	break;
       }
+      break;
 
     default:
       processNoGood(t,NO);

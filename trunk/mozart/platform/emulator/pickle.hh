@@ -35,8 +35,8 @@
 const char SYSLETHEADER = 2;
 
 
-#define PERDIOVERSION     "2#0" /* PERDIOMAJOR "#" PERDIOMINOR */
-#define PERDIOMAJOR          2
+#define PERDIOVERSION     "3#0" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOMAJOR          3
 #define PERDIOMINOR          0
 
 // the DIFs
@@ -88,6 +88,7 @@ typedef enum {
   DIF_EOF,
   DIF_CODEAREA,
   DIF_VAR_OBJECT,
+  DIF_SYNC,
   DIF_LAST
 } MarshalTag;
 
@@ -138,6 +139,7 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_EOF,          "EOF"},
   { DIF_CODEAREA,     "CODE_AREA_SEGMENT"},
   { DIF_VAR_OBJECT,   "VAR_OBJECT"},
+  { DIF_SYNC,         "SYNC"},
   { DIF_LAST,         "LAST"}
 };
 
