@@ -172,7 +172,7 @@ void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
 /* variable arity is marked as follows: */
 #define VarArity -1
 
-#ifdef __GNUC__
+#if __GNUC__ || __cplusplus
 #define OZStringify(Name) #Name
 #else
 #define OZStringify(Name) "Name"
@@ -181,13 +181,25 @@ void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
 
 #ifdef __cplusplus
 
-
 #define OZ_C_proc_proto(Name)						      \
-   extern "C" OZ_Bool Name(int OZ_arity, OZ_Term OZ_args[]);
+    extern "C" OZ_Bool Name(int OZ_arity, OZ_Term OZ_args[]);
+
+#define OZ_C_proc_header(Name)						      \
+    OZ_Bool Name(int OZ_arity, OZ_Term OZ_args[]) {
+
+#else
+
+#define OZ_C_proc_proto(Name) 						      \
+  OZ_Bool Name(OZ_arity, OZ_args)
+
+#define OZ_C_proc_header(Name)						      \
+  int OZ_arity; OZ_Term OZ_args[]; {
+
+#endif
 
 #define OZ_C_proc_begin(Name,Arity) 					      \
     OZ_C_proc_proto(Name) 						      \
-    OZ_Bool Name(int OZ_arity, OZ_Term OZ_args[]) { 			      \
+    OZ_C_proc_header(Name) 						      \
        OZ_CFun OZ_self = Name; 						      \
        if (OZ_arity != Arity && Arity != VarArity) {			      \
 	 OZ_warning("Wrong arity in C proc. '%s' Expected: %d, got %d",       \
@@ -195,23 +207,6 @@ void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
            return FAILED;						      \
          }
 
-#else
-
-#define OZ_C_proc_proto(Name) 						      \
-  OZ_Bool Name(OZ_arity, OZ_args) 					      \
-  int OZ_arity; OZ_Term OZ_args[];
-  
-
-#define OZ_C_proc_begin(Name,Arity) 					      \
-OZ_C_proc_proto(Name) 							      \
-  { 									      \
-    if (OZ_arity != Arity) {						      \
-        OZ_warning("Wrong arity in C proc. '%s' Expected: %d, got %d",        \
-		   OZStringify(Name),Arity, OZ_arity);			      \
-      return FAILED;							      \
-    }
-
-#endif // __cplusplus
 
 #define OZ_C_ioproc_begin(Name,Arity) 					          \
         OZ_C_proc_begin(Name,Arity) 					          \
