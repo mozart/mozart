@@ -211,6 +211,8 @@ public:
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop);
   void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
 			   PropCaller calledBy = pc_propagator);
+  Bool hasOFSSuspension(SuspList *suspList);
+  void addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool determined);
   SuspList * checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 				 SuspList * suspList, TaggedRef term,
 				 PropCaller calledBy);

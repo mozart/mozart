@@ -114,9 +114,9 @@ Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
     Assert(isPwrTwo(size));
     for (dt_index i=0; i<dt->size; i++) {
         if (dt->table[i].ident!=makeTaggedNULL()) {
-    	Assert(isLiteral(dt->table[i].ident));
-    	Bool exists=lookup(dt->table[i].ident);
-    	if (!exists) return TRUE;
+            Assert(isLiteral(dt->table[i].ident));
+            Bool exists=lookup(dt->table[i].ident);
+            if (!exists) return TRUE;
         }
     }
     return FALSE;
@@ -125,20 +125,22 @@ Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
 // Merge the current dynamictable into an external dynamictable
 // Return a pairlist containing all term pairs with the same feature
 // The external dynamictable is resized if necessary
-void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
+void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs, long &pairlen) {
     Assert(isPwrTwo(size));
     pairs=new PairList();
+    pairlen=0;
     Assert(pairs->isempty());
     for (dt_index i=0; i<size; i++) {
         if (table[i].ident!=makeTaggedNULL()) {
-    	    Assert(isLiteral(table[i].ident));
-    	    if (dt->fullTest()) dt = dt->doubleDynamicTable();
+            Assert(isLiteral(table[i].ident));
+            if (dt->fullTest()) dt = dt->doubleDynamicTable();
             TaggedRef val=dt->insert(table[i].ident, table[i].value);
             if  (val!=makeTaggedNULL()) {
                 // Two terms have this feature; don't insert
                 // Add the terms to the list of pairs:
                 pairs->addpair(val, table[i].value);
-    	        Assert(!pairs->isempty());
+                pairlen++;
+                Assert(!pairs->isempty());
             } else {
                 // Element successfully inserted
             }
@@ -173,6 +175,48 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
     return TRUE;
 }
 
+// Return a difference list of all the features currently in the dynamic table.
+// The head is the return value and the tail is returned through an argument.
+TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail)
+{
+    TaggedRef thehead=makeTaggedRef(newTaggedUVar(am.currentBoard));
+    TaggedRef thetail=thehead;
+
+    for (dt_index i=0; i<size; i++) {
+        if (table[i].ident!=makeTaggedNULL()) {
+            thehead=makeTaggedLTuple(new LTuple(table[i].ident,thehead));
+        }
+    }
+    *ftail = thetail;
+    return thehead;
+}
+
+// Return list of features in current table that are not in dt:
+TaggedRef DynamicTable::extraFeatures(DynamicTable* &dt) {
+    TaggedRef flist=AtomNil;
+    for (dt_index i=0; i<size; i++) {
+        TaggedRef feat=table[i].ident;
+        if (feat!=makeTaggedNULL() && !dt->lookup(feat)) {
+            flist=makeTaggedLTuple(new LTuple(feat,flist));
+        }
+    }
+    return flist;
+}
+
+// Return list of features in srecord that are not in current table:
+TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
+    TaggedRef flist=AtomNil;
+    TaggedRef arity=sr.getArityList();
+    while (isCons(arity)) {
+        TaggedRef feat=head(arity);
+        if (!lookup(feat)) {
+            flist=cons(feat,flist);
+        }
+        arity=tail(arity);
+    }
+    return flist;
+}
+
 
 //-------------------------------------------------------------------------
 //                               for class GenOFSVariable
@@ -203,6 +247,9 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Bind OFSVar to the Literal:
         if (vLoc) doBind(vPtr, TaggedRef(term));
         else doBindAndTrail(var, vPtr, TaggedRef(term));
+
+        // Update the OFS suspensions:
+        if (vLoc) am.addFeatOFSSuspensionList(suspList,NULL,TRUE);
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
@@ -243,6 +290,18 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         PairList* pairs;
         Bool success=dynamictable->srecordcheck(*termSRec, pairs);
         if (!success) { pairs->free(); return FALSE; }
+
+        // Take care of OFS suspensions:
+	Bool vExtra;
+        if (vLoc && (vExtra=(termSRec->getWidth()>getWidth())) && am.hasOFSSuspension(suspList)) {
+            // Calculate feature or list of features 'flist' that are in SRECORD
+            // and not in OFS.
+            TaggedRef flist = dynamictable->extraSRecFeatures(*termSRec);
+            // Add the extra features to S_ofs suspensions:
+            am.addFeatOFSSuspensionList(suspList,flist,TRUE);
+        } else if (vLoc && !vExtra) {
+            am.addFeatOFSSuspensionList(suspList,NULL,TRUE);
+        }
 
         // Bind OFSVar to the SRecord:
         if (vLoc) doBind(vPtr, TaggedRef(term));
@@ -354,10 +413,37 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Assert(newVar!=NULL);
         Assert(otherVar!=NULL);
 
+        // Take care of OFS suspensions, part 1/2 (before merging tables):
+        Bool vOk=vLoc && am.hasOFSSuspension(suspList);
+        Bool vWidth=getWidth();
+        TaggedRef vList;
+        if (vOk) {
+            // Calculate the extra features in var:
+            vList=termVar->dynamictable->extraFeatures(dynamictable);
+        }
+        Bool tOk=tLoc && am.hasOFSSuspension(termVar->suspList);
+        Bool tWidth=termVar->getWidth();
+        TaggedRef tList;
+        if (tOk) {
+            // Calculate the extra features in term:
+            tList=dynamictable->extraFeatures(termVar->dynamictable);
+        }
+
         // Merge otherVar's DynamicTable into newVar's DynamicTable.
         // (During the merge, calculate the list of feature pairs that correspond.)
         PairList* pairs;
-        otherVar->dynamictable->merge(newVar->dynamictable, pairs);
+        long pairlen;
+        otherVar->dynamictable->merge(newVar->dynamictable, pairs, pairlen);
+
+        // Take care of OFS suspensions, part 2/2 (after merging tables):
+        if (vOk && (vWidth>pairlen)) {
+            // Add the extra features to S_ofs suspensions:
+            am.addFeatOFSSuspensionList(suspList,vList,FALSE);
+        }
+        if (tOk && (tWidth>pairlen)) {
+            // Add the extra features to S_ofs suspensions:
+            am.addFeatOFSSuspensionList(termVar->suspList,tList,FALSE);
+        }
         
         // Bind both var and term to the (possibly reused) newVar:
         // Because of cycles, these bindings must be done _before_ the unification
@@ -451,13 +537,20 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 }
 
 
-Bool GenOFSVariable::valid(TaggedRef val) {
+Bool GenOFSVariable::valid(TaggedRef val)
+{
     if (!isLiteral(val)) return FALSE;
     if (getWidth()>0) return FALSE;
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
     if (isLiteral(tmp) && !sameLiteral(tmp,val)) return FALSE;
     return TRUE;
+}
+
+
+TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail)
+{
+    return dynamictable->getOpenArityList(ftail);
 }
 
 
