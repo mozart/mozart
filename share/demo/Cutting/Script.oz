@@ -27,6 +27,7 @@ functor
 
 import
    FD
+   FS
    Schedule
 
 export
