@@ -38,9 +38,15 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef MAC_OSX_TK
 #include "conf.h"
+#endif
 
 #include <stdio.h>
+#ifdef MAC_OSX_TK
+#include <Tcl/tcl.h>
+#include <Tk/tk.h>
+#else
 #ifdef HAVE_TCL8_0_H
 #include <tcl8.0.h>
 #else
@@ -50,6 +56,7 @@
 #include <tk8.0.h>
 #else
 #include <tk.h>
+#endif
 #endif
 
 /*
