@@ -1044,8 +1044,13 @@ LBLdispatcher:
         PushContX(PC);
         SUSPENDONVARLIST;
 
-      case BI_PREEMPT:
+        // kost@, PER - added handling 18.01.99
       case BI_REPLACEBICALL:
+        PC += 4;
+        Assert(!e->isEmptyPreparedCalls());
+        goto LBLreplaceBICall;
+
+      case BI_PREEMPT:
       case SLEEP:
       case FAILED:
       default:
