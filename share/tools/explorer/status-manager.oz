@@ -58,7 +58,6 @@ local
       meth init(Parent)
 	 Tk.frame,tkInit(parent:             Parent
 			 highlightthickness: 0
-			 border:             Border
 			 relief:             sunken)
 	 BabField   = {New Tk.label tkInit(parent: self
 					   text:   ''
