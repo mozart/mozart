@@ -863,7 +863,7 @@ private:
   Arity *next;
 
   int size;             // size is always a power of 2
-  int hashmask;         // size-1, used as mask for hashing
+  int hashmask;         // size-1, used as mask for hashing and opt marker
   int width;            // next unused index in RefsArray (for add())
   DebugCheckT(int numberofentries;)
   DebugCheckT(int numberofcollisions;)
@@ -873,24 +873,14 @@ private:
   int *indextable;
   int scndhash(TaggedRef a) { return ((featureHash(a)&7)<<1)|1; }
   int hashfold(int i) { return(i&hashmask); }
-  void add (TaggedRef);
 
 public:
   Bool isTuple() {
     return isTupleFlag;
   }
-  int find(TaggedRef entry)   // return -1, if argument not found.
-  {
-    if (isTuple()) return isSmallInt(entry) ? smallIntValue(entry)-1 : -1;
 
-    int i=hashfold(featureHash(entry));
-    int step=scndhash(entry);
-    while (OK) {
-      if ( keytable[i] == makeTaggedNULL()) return -1;
-      if ( featureEq(keytable[i],entry) ) return indextable[i];
-      i = hashfold(i+step);
-    }
-  }
+  // use SRecord::getIndex instead of this!
+  int lookupInternal(TaggedRef entry);   // return -1, if argument not found.
 
   TaggedRef getList() { return list; }
   int getWidth() { return width; }
@@ -1105,7 +1095,7 @@ public:
       int f=smallIntValue(feature);
       return (1 <= f && f <= getWidth()) ? f-1 : -1;
     }
-    return getArity()->find(feature);
+    return getRecordArity()->lookupInternal(feature);
   }
 
   Bool hasFeature(TaggedRef feature) { return getIndex(feature) >= 0; }

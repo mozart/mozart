@@ -426,7 +426,7 @@ Bool DynamicTable::hasExtraFeatures(Arity *recordArity) {
     for (dt_index i=0; i<size; i++) {
         if (table[i].value!=makeTaggedNULL()) {
             feat=table[i].ident;
-            if (recordArity->find(feat)==(-1)) return TRUE;
+            if (recordArity->lookupInternal(feat)==(-1)) return TRUE;
         }
     }
     return FALSE;
