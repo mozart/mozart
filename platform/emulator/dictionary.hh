@@ -462,6 +462,19 @@ public:
     Assert(valid);
   }
 
+  // For Dictionary.[cond]Exchange we don't want to add a new element
+  // if the key isn't preexisting, instead return FAILED.
+  OZ_Return exchangeExisting(TaggedRef key, TaggedRef new_val, TaggedRef& old_val) {
+    TaggedRef ret;
+    /* First get old value */
+    ret = getArg(key, old_val);
+    if (ret == FAILED)
+      return FAILED;
+    /* Second update with new value */
+    setArg(key, new_val);
+    return PROCEED;
+  }
+
   void setCondArg(TaggedRef key, TaggedRef value) {
     if (table->fullTest())
       resizeDynamicTable(table);

@@ -682,6 +682,30 @@ OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
 
 OZ_DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
 
+OZ_Return dictionaryExchangeInline(TaggedRef d, TaggedRef k, TaggedRef value, TaggedRef& old)
+{
+  GetDictAndKey(d,k,dict,key,OK);
+  if (dict->exchangeExisting(key,value,old) != PROCEED) {
+    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
+  }
+  return PROCEED;
+}
+
+OZ_DECLAREBI_USEINLINEFUN3(BIdictionaryExchange,dictionaryExchangeInline)
+
+OZ_Return dictionaryCondExchangeInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef value, TaggedRef& old)
+{
+  GetDictAndKey(d,k,dict,key,OK);
+  if (dict->exchangeExisting(key,value,old) != PROCEED) {
+    // Feature k non-existent, set entry and return default
+    dict->setArg(key,value);
+    old = deflt;
+  }
+  return PROCEED;
+}
+
+OZ_DECLAREBI_USEINLINEFUN4(BIdictionaryCondExchange,dictionaryCondExchangeInline)
+
 OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
 {
   GetDictAndKey(d,k,dict,key,OK);

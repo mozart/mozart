@@ -1091,6 +1091,26 @@ OZ_Return oz_addSuspendVarList3(TaggedRef t1, TaggedRef t2, TaggedRef t3) {
   return SUSPEND;
 }
 
+OZ_Return oz_addSuspendVarList4(TaggedRef t1, TaggedRef t2, TaggedRef t3, TaggedRef t4) {
+  DEREF(t1,t1ptr);
+  Assert(!oz_isRef(t1));
+  if (oz_isVarOrRef(t1))
+    (void) am.addSuspendVarListInline(t1ptr);
+  DEREF(t2,t2ptr);
+  Assert(!oz_isRef(t2));
+  if (oz_isVarOrRef(t2))
+    (void) am.addSuspendVarListInline(t2ptr);
+  DEREF(t3,t3ptr);
+  Assert(!oz_isRef(t3));
+  if (oz_isVarOrRef(t3))
+    (void) am.addSuspendVarListInline(t3ptr);
+  DEREF(t4,t4ptr);
+  Assert(!oz_isRef(t4));
+  if (oz_isVarOrRef(t4))
+    (void) am.addSuspendVarListInline(t4ptr);
+  return SUSPEND;
+}
+
 OZ_Return oz_addSuspendInArgs1(OZ_Term * _OZ_LOC[]) {
   TaggedRef t = OZ_in(0);
   DEREF(t,tptr);
@@ -1127,5 +1147,29 @@ OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]) {
   Assert(!oz_isRef(t3));
   if (oz_isVarOrRef(t3))
     (void) am.addSuspendVarListInline(t3ptr);
+  return SUSPEND;
+}
+
+OZ_Return oz_addSuspendInArgs4(OZ_Term * _OZ_LOC[]) {
+  TaggedRef t1 = OZ_in(0);
+  DEREF(t1,t1ptr);
+  Assert(!oz_isRef(t1));
+  if (oz_isVarOrRef(t1))
+    (void) am.addSuspendVarListInline(t1ptr);
+  TaggedRef t2 = OZ_in(1);
+  DEREF(t2,t2ptr);
+  Assert(!oz_isRef(t2));
+  if (oz_isVarOrRef(t2))
+    (void) am.addSuspendVarListInline(t2ptr);
+  TaggedRef t3 = OZ_in(2);
+  DEREF(t3,t3ptr);
+  Assert(!oz_isRef(t3));
+  if (oz_isVarOrRef(t3))
+    (void) am.addSuspendVarListInline(t3ptr);
+  TaggedRef t4 = OZ_in(3);
+  DEREF(t4,t4ptr);
+  Assert(!oz_isRef(t4));
+  if (oz_isVarOrRef(t4))
+    (void) am.addSuspendVarListInline(t4ptr);
   return SUSPEND;
 }

@@ -121,6 +121,24 @@ OZ_BI_define(Name,3,1)                                  \
 } OZ_BI_end
 
 
+#define OZ_DECLAREBI_USEINLINEFUN4(Name,InlineName)     \
+OZ_BI_define(Name,4,1)                                  \
+{                                                       \
+  OZ_Term aux=0;                                        \
+  oz_declareIN(0,arg0);                                 \
+  oz_declareIN(1,arg1);                                 \
+  oz_declareIN(2,arg2);                                 \
+  oz_declareIN(3,arg3);                                 \
+  OZ_Return state=InlineName(arg0,arg1,arg2,arg3,aux);  \
+  OZ_result(aux);                                       \
+  if (state==SUSPEND) {                                 \
+    oz_suspendOnInArgs4;                                \
+  } else {                                              \
+    return state;                                       \
+  }                                                     \
+} OZ_BI_end
+
+
 #define OZ_DECLAREBOOLFUN1(BIfun,irel)          \
 OZ_BI_define(BIfun,1,1)                         \
 {                                               \
@@ -342,12 +360,14 @@ char *VAR;                                      \
 #define oz_suspendOn(v)         return oz_addSuspendVarList(v)
 #define oz_suspendOn2(v1,v2)    return oz_addSuspendVarList2(v1,v2)
 #define oz_suspendOn3(v1,v2,v3) return oz_addSuspendVarList3(v1,v2,v3)
+#define oz_suspendOn4(v1,v2,v3,v4) return oz_addSuspendVarList4(v1,v2,v3,v4)
 
 #define oz_suspendOnPtr(vPtr)   return oz_addSuspendVarList(vPtr)
 
 #define oz_suspendOnInArgs1     return oz_addSuspendInArgs1(_OZ_LOC)
 #define oz_suspendOnInArgs2     return oz_addSuspendInArgs2(_OZ_LOC)
 #define oz_suspendOnInArgs3     return oz_addSuspendInArgs3(_OZ_LOC)
+#define oz_suspendOnInArgs4     return oz_addSuspendInArgs4(_OZ_LOC)
 
 /* -----------------------------------------------------------------------
  * C <-> Oz conversions
