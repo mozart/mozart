@@ -267,7 +267,7 @@ TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
 
 // Allocate & return sorted list containing all features:
 // Takes optional tail as input argument.
-TaggedRef DynamicTable::getArityList(TaggedRef tail=AtomNil) {
+TaggedRef DynamicTable::getArityList(TaggedRef tail) {
     TaggedRef arity=tail;
     if (numelem>0) {
         STuple *stuple=STuple::newSTuple(AtomNil,numelem);
