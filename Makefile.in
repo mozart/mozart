@@ -34,6 +34,7 @@ SRCTOP=         @SRCTOP@
 SRCDIR=         @srcdir@
 VPATH=          @srcdir@
 PREFIX=         @prefix@
+PLATFORM=       @PLATFORM@
 
 HOMEURL=        @HOMEURL@
 HOMECACHE=      @HOMECACHE@
@@ -158,6 +159,8 @@ doc: $(PACKDIR) $(PACKDIR)/mozart
          $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-doc.tar.gz
         rm -rf $(PACKDIR)/mozart
         rm -f files.doc
+
+bin: $(PLATFORM)
 
 $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
         rm -f files.base files.base-$@ files.contrib files.contrib-$@
