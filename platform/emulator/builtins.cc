@@ -744,6 +744,10 @@ OZ_BI_define(BIwidth,1,1) {
   oz_typeError(0,"Record");
 } OZ_BI_end
 
+// ---------------------------------------------------------------------
+// Dict/Array Update
+// ---------------------------------------------------------------------
+
 static inline
 OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
   DEREF(fea,  _1);
@@ -782,7 +786,7 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
   case LTAG_LTUPLE1:
   case LTAG_SRECORD0:
   case LTAG_SRECORD1:
-    goto raise;
+    goto typeError0;
 
   case LTAG_VAR0:
   case LTAG_VAR1:
@@ -797,7 +801,7 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
     }
 
   case LTAG_LITERAL:
-    goto raise;
+    goto typeError0;
 
   default:
     if (oz_isChunk(term)) {
@@ -807,7 +811,7 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
       case Co_Chunk:
       case Co_Object:
       case Co_Class:
-        goto raise;
+        goto typeError0;
       case Co_Array:
         {
           OZ_Return arrayPutInline(TaggedRef,TaggedRef,TaggedRef);
@@ -819,21 +823,108 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
           return dictionaryPutInline(term,fea,val);
         }
       default:
-        goto raise;
+        goto typeError0;
       }
     }
 
     goto typeError0;
   }
 typeError0:
-  oz_typeError(0,"Record or Chunk");
+  oz_typeError(0,"Dictionary or Array");
 typeError1:
   oz_typeError(1,"Feature");
-raise:
-  return oz_raise(E_ERROR,E_KERNEL,":=",3,term,fea,val);
 }
 
 OZ_DECLAREBI_USEINLINEREL3(BIdotAssign,genericSet)
+
+static inline
+OZ_Return genericExchange(TaggedRef term, TaggedRef fea, TaggedRef val, TaggedRef& old) {
+  DEREF(fea,  _1);
+  DEREF(term, _2);
+
+  Assert(!oz_isRef(fea));
+  if (oz_isVarOrRef(fea)) {
+    switch (tagged2ltag(term)) {
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
+      return SUSPEND;
+    case LTAG_VAR0:
+    case LTAG_VAR1:
+      switch (tagged2Var(term)->getType()) {
+      case OZ_VAR_FD:
+      case OZ_VAR_BOOL:
+      case OZ_VAR_FS:
+          goto typeError0;
+      default:
+          return SUSPEND;
+      }
+    case LTAG_LITERAL:
+      goto typeError0;
+    default:
+      if (oz_isChunk(term)) return SUSPEND;
+      goto typeError0;
+    }
+  }
+
+  if (!oz_isFeature(fea)) goto typeError1;
+
+  switch (tagged2ltag(term)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
+    goto typeError0;
+
+  case LTAG_VAR0:
+  case LTAG_VAR1:
+    switch (tagged2Var(term)->getType()) {
+    case OZ_VAR_OF:
+    case OZ_VAR_FD:
+    case OZ_VAR_BOOL:
+    case OZ_VAR_FS:
+      goto typeError0;
+    default:
+      return SUSPEND;
+    }
+
+  case LTAG_LITERAL:
+    goto typeError0;
+
+  default:
+    if (oz_isChunk(term)) {
+      switch (tagged2Const(term)->getType()) {
+      case Co_Extension:
+        return tagged2Extension(term)->putFeatureV(fea,val);
+      case Co_Chunk:
+      case Co_Object:
+      case Co_Class:
+        goto typeError0;
+      case Co_Array:
+        {
+          OZ_Return arrayExchangeInline(TaggedRef,TaggedRef,TaggedRef,TaggedRef&);
+          return arrayExchangeInline(term,fea,val,old);
+        }
+      case Co_Dictionary:
+        {
+          extern OZ_Return dictionaryExchangeInline(TaggedRef,TaggedRef,TaggedRef,TaggedRef&);
+          return dictionaryExchangeInline(term,fea,val,old);
+        }
+      default:
+        goto typeError0;
+      }
+    }
+
+    goto typeError0;
+  }
+typeError0:
+  oz_typeError(0,"Dictionary or Array");
+typeError1:
+  oz_typeError(1,"Feature");
+}
+
+OZ_DECLAREBI_USEINLINEFUN3(BIdotExchange,genericExchange)
 
 
 // ---------------------------------------------------------------------
@@ -3724,6 +3815,163 @@ OZ_BI_define(BIat,1,1)
     return ret;}
 } OZ_BI_end
 
+// ---------------------------------------------------------------------
+// catXxxxxx routines work on mutable references
+// (cell/attribute/dict#key/array#index)
+// ---------------------------------------------------------------------
+
+
+OZ_BI_define(BIcatAccess,1,1)
+{
+  OZ_Return ret;
+  oz_declareNonvarIN(0,cat);
+
+  // cat can be either a cell, feature, D#I tuple, or an error
+  if (oz_isCell(cat)) {
+    // Cell
+    OZ_Term out;
+    ret = accessCell(cat,out);
+    OZ_result(out);
+  }
+  else {
+    // Check feature is valid for current object
+    Object *self = am.getSelf();
+    if (oz_isFeature(cat) && self &&
+        getRecordFromState(self->getState())->getFeature(cat)) {
+      // Object attribute
+      RecOrCell state = self->getState();
+      OZ_Term old;
+      ret = stateAt(state,cat,old);
+      if(ret==PROCEED) {
+        OZ_RETURN(old);}
+      else {
+        OZ_result(old);}
+    }
+    else {
+      if (oz_isPair2(cat)) {
+        OZ_Term left = oz_left(cat);
+        DEREF(left, leftptr);
+        if (oz_isDictionary(left) || oz_isArray(left)) {
+          OZ_Term out;
+          ret = genericDot(left, oz_right(cat), out, TRUE);
+          if (ret == SUSPEND) {
+            // Must explicitly suspend on key
+            oz_suspendOn(oz_right(cat));
+          }
+          OZ_result(out);
+        }
+        else {
+          // Type Error
+          oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");}
+      }
+      else {
+        // Type Error
+        oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");}
+    }
+  }
+  return ret;
+} OZ_BI_end
+
+OZ_BI_define(BIcatAssign,2,0)
+{
+  oz_declareNonvarIN(0,cat);
+  oz_declareIN(1,value);
+
+  // cat can be either a cell, feature, D#I tuple, or an error
+  if (oz_isCell(cat)) {
+    // Cell
+    OZ_Term oldIgnored;
+    return exchangeCell(cat,value,oldIgnored);
+  }
+  // Check feature is valid for current object
+  Object *self = am.getSelf();
+  if (oz_isFeature(cat) && self &&
+        getRecordFromState(self->getState())->getFeature(cat)) {
+    // Object attribute
+    CheckLocalBoard(self,"object");
+
+    RecOrCell state = self->getState();
+    return stateAssign(state,cat,value);
+  }
+  if (oz_isPair2(cat)) {
+    OZ_Term left = oz_left(cat);
+    DEREF(left, leftptr);
+    if (oz_isDictionary(left) || oz_isArray(left)) {
+      // T#K pair
+      OZ_Return ret = genericSet(left, oz_right(cat), value);
+      if (ret == SUSPEND) {
+        // Must explicitly suspend on components of arg
+        oz_suspendOn(oz_right(cat));
+      }
+      return ret;
+    }
+    else {
+      // Type Error
+      oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
+    }
+  }
+  else {
+    // Type Error
+    oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
+  }
+} OZ_BI_end
+
+OZ_BI_define(BIcatExchange,2,1)
+{
+  OZ_Term old;
+  OZ_Return ret;
+
+  oz_declareNonvarIN(0,cat);
+  oz_declareIN(1,newVal);
+
+  // ca can be either a cell or feature or an error
+  if (oz_isCell(cat)) {
+    // Cell
+    ret = exchangeCell(cat,newVal,old);
+    OZ_result(old);
+  }
+  else {
+    // Check feature is valid for current object
+    Object *self = am.getSelf();
+    if (oz_isFeature(cat) && self &&
+        getRecordFromState(self->getState())->getFeature(cat)) {
+      // Object attribute
+      CheckLocalBoard(self,"object");
+      RecOrCell state = self->getState();
+
+      OZ_Return ret=stateExch(state,cat,old,newVal);
+      if(ret==PROCEED) {
+        OZ_RETURN(old);}
+      else{
+        OZ_result(old);
+        return ret;}
+    } else {
+      if (oz_isPair2(cat)) {
+        OZ_Term left = oz_left(cat);
+        DEREF(left, leftptr);
+        // T#K pair
+        if (oz_isDictionary(left) || oz_isArray(left)) {
+          ret = genericExchange(left, oz_right(cat), newVal, old);
+          if (ret == SUSPEND) {
+            // Must explicitly suspend on key
+            oz_suspendOn(oz_right(cat));
+          }
+          OZ_result(old);
+        }
+        else {
+          // Type Error
+          oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
+        }
+      }
+      else {
+        // Type Error
+        oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
+      }
+    }
+  }
+  return ret;
+
+} OZ_BI_end
 
 OZ_BI_define(BIassign,2,0)
 {

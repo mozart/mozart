@@ -34,6 +34,22 @@
                              out => [],
                              BI  => BIdotAssign},
 
+     'dotExchange'      => { in  => ['*recordCOrChunk','+feature','value'],
+                             out => ['value'],
+                             BI  => BIdotExchange},
+
+     'catAccess'        => { in  => ['+value'],
+                             out => ['value'],
+                             BI  => BIcatAccess},
+
+     'catAssign'        => { in  => ['+value', 'value'],
+                             out => [],
+                             BI  => BIcatAssign},
+
+     'catExchange'      => { in  => ['+value', 'value'],
+                             out => ['value'],
+                             BI  => BIcatExchange},
+
      'wait'             => { in  => ['+value'],
                              out => [],
                              bi  => BIwait},
