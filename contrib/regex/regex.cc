@@ -4,62 +4,123 @@
  *
  * =================================================================== */
 
-#ifndef MODULE
-#define MODULE "regex"
-#endif
-
-#ifndef PREFIX
-#define PREFIX(m) regex_ ## m
-#endif
-
-#ifndef SPREFIX
-#define SPREFIX(m) "regex_" # m
-#endif
 
 #ifndef ERRBUFSIZE
 #define ERRBUFSIZE 200
 #endif
 
 #ifndef MAXMATCH
-#define MAXMATCH 20
+#define MAXMATCH 50
 #endif
 
-#include "oz.h"
+#include "oz_api.h"
 #include <sys/types.h>
 #include <regex.h>
+
+#include "extension.hh"
+
+class REGEX: public Extension {
+public:
+  char*    src;
+  regex_t* re;
+  REGEX(char*s,regex_t*r):Extension(),src(s),re(r){}
+  //
+  // Extension
+  //
+  static int id;
+  virtual int getIdV() { return id; }
+  virtual OZ_Term typeV() { return OZ_atom("regex"); }
+  virtual void printStreamV(ostream &out,int depth = 10);
+  virtual Extension* gcV();
+  //
+  void release() {
+    delete src;
+    delete re;
+  }
+};
+
+//
+// Extension
+//
+
+int REGEX::id;
+
+inline Bool oz_isRegex(OZ_Term t)
+{
+  t = OZ_deref(t);
+  return oz_isExtension(t) &&
+    tagged2Extension(t)->getIdV()==REGEX::id;
+}
+
+inline REGEX* tagged2Regex(OZ_Term t)
+{
+  Assert(oz_isRegex(t));
+  return (REGEX*) tagged2Extension(OZ_deref(t));
+}
+
+void REGEX::printStreamV(ostream &out,int depth = 10)
+{
+  out << "<regex " << src << ">";
+}
+
+Extension* REGEX::gcV()
+{
+  return new REGEX(src,re);
+}
 
 OZ_Return re_error(int code,regex_t* re,int must_free)
 {
   char errbuf[ERRBUFSIZE];
   (void) regerror(code,re,errbuf,ERRBUFSIZE);
+  // maybe free the regex_t buffer, if it was newly allocated
   if (must_free) delete re;
-  return OZ_raiseErrorC(MODULE,1,OZ_string(errbuf));
+  return OZ_atom(errbuf);
 }
 
-OZ_BI_define(PREFIX(compile),2,1)
+//
+// Builtins
+//
+
+#define RegexARGS OZ_toList(_OZ_arity,_OZ_ARGS)
+
+#define RegexError(PROC,CODE,RE,FREE) \
+OZ_raiseErrorC("regex",3,OZ_atom(PROC),RegexARGS, \
+               re_error(CODE,RE,FREE))
+
+OZ_BI_define(regex_compile,2,1)
 {
-  OZ_declareVirtualStringIN(0,RE);
-  OZ_declareIntIN(1,CFLAGS);
+  OZ_declareInt(1,CFLAGS);
+  OZ_declareVS( 0,RE,LEN);
   int errcode;
   regex_t *preg = new regex_t;
   errcode = regcomp(preg,RE,CFLAGS);
-  if (errcode) return re_error(errcode,preg,1);
-  OZ_RETURN(OZ_makeForeignPointer((void*)preg));
+  if (errcode) return RegexError("compile",errcode,preg,1);
+  OZ_RETURN(makeTaggedConst(new REGEX(strdup(RE),preg)));
 }
 OZ_BI_end
 
-OZ_BI_define(PREFIX(execute),4,1)
+OZ_BI_define(regex_is,1,1)
 {
-  OZ_declareForeignPointerIN(0,RE);
-  OZ_declareVirtualStringIN(1,TXT);
-  OZ_declareIntIN(2,IDX);
-  OZ_declareIntIN(3,EFLAGS);
-  regex_t *preg = (regex_t*) RE;
+  OZ_declareDetTerm(0,t);
+  OZ_RETURN((oz_isRegex(t))?OZ_true():OZ_false());
+} OZ_BI_end
+
+#define OZ_declareRegex(ARG,VAR) \
+OZ_declareType(ARG,VAR,REGEX*,"regex",oz_isRegex,tagged2Regex)
+
+OZ_BI_define(regex_execute,4,1)
+{
+  OZ_declareRegex(0,RE)
+  OZ_declareInt(  2,IDX);
+  OZ_declareInt(  3,EFLAGS);
+  OZ_declareVS(   1,TXT,LEN);
+
+  regex_t *preg = RE->re;
   int errcode;
   regmatch_t pmatch[MAXMATCH];
   errcode = regexec(preg,&(TXT[IDX]),preg->re_nsub+1,pmatch,EFLAGS);
   if (errcode==REG_NOMATCH) OZ_RETURN(OZ_false());
-  if (errcode) return re_error(errcode,preg,0);
+  if (errcode) return RegexError("execute",errcode,preg,0);
   OZ_Term tuple;
   tuple = OZ_tupleC("match",preg->re_nsub);
   for (int i=preg->re_nsub;i>0;i--)
@@ -71,15 +132,15 @@ OZ_BI_define(PREFIX(execute),4,1)
 }
 OZ_BI_end
 
-OZ_BI_define(PREFIX(free),1,0)
+OZ_BI_define(regex_free,1,0)
 {
-  OZ_declareForeignPointerIN(0,RE);
-  delete (regex_t*) RE;
+  OZ_declareRegex(0,RE);
+  RE->release();
   return PROCEED;
 }
 OZ_BI_end
 
-OZ_BI_define(PREFIX(flags),0,1)
+OZ_BI_define(regex_flags,0,1)
 {
   OZ_Term tuple;
   tuple = OZ_tupleC("flag",6);
@@ -98,12 +159,14 @@ extern "C"
   OZ_C_proc_interface * oz_init_module(void)
   {
     static OZ_C_proc_interface i_table[] = {
-      {"compile",2,1,PREFIX(compile)},
-      {"execute",4,1,PREFIX(execute)},
-      {"free"   ,1,0,PREFIX(free)},
-      {"flags"  ,0,1,PREFIX(flags)},
+      {"is"     ,1,1,regex_is},
+      {"compile",2,1,regex_compile},
+      {"execute",4,1,regex_execute},
+      {"free"   ,1,0,regex_free},
+      {"flags"  ,0,1,regex_flags},
       {0,0,0,0}
     };
+    REGEX::id = oz_newUniqueId();
     return i_table;
   }
 } /* extern "C" */
