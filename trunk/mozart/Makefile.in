@@ -121,7 +121,7 @@ $(ALLFILES): $(PREFIX)/% : % $(PREFIX)
 
 PLATFORMS=	solaris-sparc aix3-rs600 freebsd-i486 hpux-700 \
 		irix6-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc \
-		osf1-alpha solaris-i486 sunos-sparc
+		osf1-alpha solaris-i486 sunos-sparc freebsdelf-i486
 PLATFORMFILES=  README LICENSE LICENSE.html \
 	bin cache contrib examples include share 
 COMPRESS=	gzip -9
