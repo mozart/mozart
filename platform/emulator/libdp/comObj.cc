@@ -124,7 +124,7 @@ void ComObj::send(MsgContainer *msgC,int priority) {
   //     ((double) (end.tv_usec - start.tv_usec))/1000000);
 
 
-  Assert(priority==-1); // Have a good reason before removing this
+  Assert(priority==-1); // Have a good reason before removing this line
   if(priority==-1) priority=msgC->getPriority();
   Assert(msgC->getMessageType()>C_FIRST || msgC->getMessageType()==M_PING
          || (priority<5 && priority>=1));
