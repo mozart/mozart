@@ -54,116 +54,94 @@ ExactlyPropagator::~ExactlyPropagator(void)
 
 OZ_Return ExactlyPropagator::propagate(void)
 {
-  if (reg_l_sz == 0)
-    return replaceByInt(reg_n, 0);
+  if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
 
-  int &v = reg_v, &l_sz = reg_l_sz;
+  int &v = reg_v, &l_sz = reg_l_sz, n_in_l = 0;
   OZ_FDIntVar n_var(reg_n);
   DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
-  PropagatorController_VV_V P(l_sz, l, n_var);
-  /*
-    tn denotes number items in list which are v and tnn number of
-    items which are definitively not v
-  */
-  int tn = 0, tnn = 0, i;
+  CountPropagatorController P(l_sz, l, reg_oldDomSizes, n_var);
 
-  int n_in_l = 0;
-  for (i = l_sz; i--; ) {
+  // tn  is the number of entailed equations
+  // tnn is the number of disentailed equations
+
+  int tn  = reg_tn;
+  int tnn = reg_tnn;
+
+  // only check a var if it has changed
+  // this is achieved by caching the sizes of the
+  // domains of the FD vars in L from one run of
+  // propagate to the next
+  // the cached size is -1 when the var has been dropped
+  // -2 when it it is about to be dropped
+
+ recheck:
+  for (int i = l_sz; i--; ) {
+    int sz = reg_oldDomSizes[i];
+    if (sz<0) continue;
     l[i].read(reg_l[i]);
-    // find out if n_var occurs in l_reg
-    n_in_l |= (&(*n_var) == &(*l[i]));
-    if (l[i]->getSize() < reg_oldDomSizes[i]) {
-      if (*l[i] == fd_singl && l[i]->getSingleElem() == v)
-        tn += 1;
-      else {
-        if (! l[i]->isIn(v))
+    // find out if n_var occurs in l
+    if (n_in_l==0 && (&(*n_var)==&(*l[i]))) n_in_l = 1;
+    int li_sz = l[i]->getSize();
+    if (li_sz < sz) {
+      if (li_sz == 1) {
+        if (l[i]->getSingleElem() == v)
+          tn += 1;
+        else
           tnn += 1;
+        // we never need to check this one again
+        reg_oldDomSizes[i] = -2;
+      }
+      else {
+        if (! l[i]->isIn(v)) {
+          tnn += 1;
+          // we never need to check this one again
+          reg_oldDomSizes[i] = -2;
+          // and we should not suspend on it anymore
+          l[i].dropParameter();
+          reg_l[i] = OZ_nil();
+        }
       }
     }
   }
 
+  // write back the updated results
+  reg_tn  = tn;
+  reg_tnn = tnn;
 
-  reg_tn += tn;
-  reg_tnn += tnn;
-  tn = reg_tn;
-  tnn = reg_tnn;
-
-loop:
+  // frequent special case: N determined
   if (*n_var == fd_singl) {
+  N_det:
     int n = n_var->getSingleElem();
     if ((oldSize - tnn < n) || (tn > n)) {
       goto failure;
     }
     if (tn == n) {
-      for (i = l_sz; i--; )
-        if (*l[i] != fd_singl)
+      for (int i = l_sz; i--; )
+        if (reg_oldDomSizes[i]>=0 && *l[i] != fd_singl)
           FailOnEmpty(*l[i] -= v);
       return P.vanish();
     } else if (oldSize - tnn == n) {
-      for (i = l_sz; i--; )
-        if (l[i]->isIn(v))
+      for (int i = l_sz; i--; )
+        if (reg_oldDomSizes[i]>=0 && l[i]->isIn(v))
           FailOnEmpty(*l[i] &= v);
       return P.vanish();
     }
   } else {
-    if ((oldSize - tnn < n_var->getMinElem()) ||
-         (tn > n_var->getMaxElem())) {
-      goto failure;
-    }
-    if (tn == n_var->getMaxElem()) {
-      for (i = l_sz; i--; )
-        if (*l[i] != fd_singl)
-          FailOnEmpty(*l[i] -= v);
-      FailOnEmpty(*n_var &= tn);
-      return P.vanish();
-    } else if (oldSize - tnn == n_var->getMinElem()) {
-      for (i = l_sz; i--; )
-        if (l[i]->isIn(v))
-          FailOnEmpty(*l[i] &= v);
-      FailOnEmpty(*n_var &= oldSize - tnn);
-      return P.vanish();
-    }
-
-    int oldIn = n_var->isIn(v);
-
-    FailOnEmpty(*n_var <= oldSize - tnn);
+    // propagate into the index
+    int sz_before = n_var->getSize();
     FailOnEmpty(*n_var >= tn);
+    int sz = (*n_var <= (oldSize - tnn));
+    if (sz==0) goto failure;
+    if (n_in_l && sz_before!=sz) goto recheck;
+    if (sz==1) goto N_det;
+  }
 
-    if (n_in_l) {
-      // in case 'n_var' occurs in `reg_l' constraining n_var might
-      // have removed v from `reg_l'
-      if (oldIn && !n_var->isIn(v)) {
-        reg_tnn++;
-        tnn = reg_tnn;
-        goto loop;
-      } else if ((oldIn == 1) && (*n_var == fd_singl)) {
-        reg_tn++;
-        tn = reg_tn;
-        goto loop;
-      }
+  // we fall through to here when we need to suspend again
+  // we need to update the cached sizes of the domains
+  for (int i=l_sz; i--;)
+    if (reg_oldDomSizes[i] >= 0) {
+      reg_oldDomSizes[i] = l[i]->getSize();
     }
-  }
-
-  int from, to;
-  for (from = 0, to = 0; from < l_sz; from += 1) {
-    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
-    else {
-      if (!l[from]->isIn(v)) {}
-      else {
-        reg_oldDomSizes[to] = l[from]->getSize();
-        reg_l[to] = reg_l[from];
-        to++;
-      }
-    }
-  }
-
-  l_sz = to;
-
-  // if n_var occurs in reg_l we must consider the case that
-  // the list becomes empty but n_var is still a FD.
-  if (l_sz == 0) {
-    FailOnEmpty(*n_var &= n_var->getMinElem());
-  }
 
   return P.leave();
 
@@ -193,40 +171,70 @@ AtLeastPropagator::~AtLeastPropagator(void)
   OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
 }
 
+// {FD.atLeast N L V}
 OZ_Return AtLeastPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
 
-  int &v = reg_v, &l_sz = reg_l_sz;
+  int &v = reg_v, &l_sz = reg_l_sz, n_in_l = 0;
   OZ_FDIntVar n_var(reg_n);
   DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
-  PropagatorController_VV_V P(l_sz, l, n_var);
+  CountPropagatorController P(l_sz, l, reg_oldDomSizes, n_var);
 
-  int tn = 0, tnn = 0, i;
+  // tn  is the number of entailed equations
+  // tnn is the number of disentailed equations
 
-  for (i = l_sz; i--; ) {
+  int tn  = reg_tn;
+  int tnn = reg_tnn;
+
+  // only check a var if it has changed
+  // this is achieved by caching the sizes of the
+  // domains of the FD vars in L from one run of
+  // propagate to the next
+  // the cached size is -1 when the var has been dropped
+  // -2 when it it is about to be dropped
+
+ recheck:
+  for (int i = l_sz; i--; ) {
+    int sz = reg_oldDomSizes[i];
+    if (sz<0) continue;
     l[i].read(reg_l[i]);
-    if (l[i]->getSize() < reg_oldDomSizes[i]) {
-      if (*l[i] == fd_singl && l[i]->getSingleElem() == v)
-        tn += 1;
-      else {
-        if (! l[i]->isIn(v))
+    // find out if n_var occurs in l
+    if (n_in_l==0 && (&(*n_var)==&(*l[i]))) n_in_l = 1;
+    int li_sz = l[i]->getSize();
+    if (li_sz < sz) {
+      if (li_sz == 1) {
+        if (l[i]->getSingleElem() == v)
+          tn += 1;
+        else
           tnn += 1;
+        // we never need to check this one again
+        reg_oldDomSizes[i] = -2;
+      }
+      else {
+        if (! l[i]->isIn(v)) {
+          tnn += 1;
+          // we never need to check this one again
+          reg_oldDomSizes[i] = -2;
+          // and we should not suspend on it anymore
+          l[i].dropParameter();
+          reg_l[i] = OZ_nil();
+        }
       }
     }
   }
 
-  reg_tn += tn;
-  reg_tnn += tnn;
-  tn = reg_tn;
-  tnn = reg_tnn;
+  // write back the updated results
+  reg_tn  = tn;
+  reg_tnn = tnn;
 
-loop:
+  // frequent special case: N determined
   if (*n_var == fd_singl) {
+  N_det:
     int n = n_var->getSingleElem();
     if (oldSize - tnn == n) {
-      for (i = l_sz; i--; )
-        if (l[i]->isIn(v))
+      for (int i = l_sz; i--; )
+        if (reg_oldDomSizes[i]>=0 && l[i]->isIn(v))
           FailOnEmpty(*l[i] &= v);
       return P.vanish();
     } else if  (oldSize - tnn < n) {
@@ -235,52 +243,22 @@ loop:
       return P.vanish();
     }
   } else {
-    int oldIn=0, newIn=0;
-    if (n_var->isIn(v)) oldIn = 1;
-    if (oldSize - tnn == n_var->getMinElem()) {
-      for (i = l_sz; i--; )
-        if (l[i]->isIn(v))
-          FailOnEmpty(*l[i] &= v);
-      FailOnEmpty(*n_var <= oldSize - tnn);
-      return P.vanish();
-    } else if  (oldSize - tnn < n_var->getMinElem()) {
-      goto failure;
-    } else if (tn >= n_var->getMaxElem()) {
-      return P.vanish();
-    }
-
-    FailOnEmpty(*n_var <= oldSize - tnn);
-    if (n_var->isIn(v)) newIn = 1;
-    if (newIn != oldIn) {
-      reg_tnn++; tnn=reg_tnn;
-      goto loop;
-    }
-    else {
-      if ((oldIn==1) && (*n_var == fd_singl)) {
-      reg_tn++; tn=reg_tn;
-      goto loop;
-      }
-    }
+    // propagate into the index
+    int sz_before = n_var->getSize();
+    int sz = (*n_var <= (oldSize - tnn));
+    if (sz==0) goto failure;
+    // if n occurs in l, constraining n may have changed the count
+    if (n_in_l && sz_before!=sz) goto recheck;
+    // if n is now determined: branch to special case
+    if (sz==1) goto N_det;
   }
 
-  int from, to;
-  for (from = 0, to = 0; from < l_sz; from += 1) {
-    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
-    else {
-      if (!l[from]->isIn(v)) {}
-      else {
-        reg_oldDomSizes[to] = l[from]->getSize();
-        reg_l[to] = reg_l[from];
-        to++;
-      }
+  // we fall through to here when we need to suspend again
+  // we need to update the cached sizes of the domains
+  for (int i=l_sz; i--;)
+    if (reg_oldDomSizes[i] >= 0) {
+      reg_oldDomSizes[i] = l[i]->getSize();
     }
-  }
-
-  l_sz = to;
-
-  if (l_sz == 0) {
-    FailOnEmpty(*n_var &= n_var->getMinElem());
-  }
 
   return P.leave();
 
@@ -310,40 +288,70 @@ AtMostPropagator::~AtMostPropagator(void)
   OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
 }
 
+// {FS.atMost N L V}
 OZ_Return AtMostPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return PROCEED;
 
-  int &v = reg_v, &l_sz = reg_l_sz;
+  int &v = reg_v, &l_sz = reg_l_sz, n_in_l = 0;
   OZ_FDIntVar n_var(reg_n);
   DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
-  PropagatorController_VV_V P(l_sz, l, n_var);
+  CountPropagatorController P(l_sz, l, reg_oldDomSizes, n_var);
 
-  int tn = 0, tnn = 0, i;
+  // tn  is the number of entailed equations
+  // tnn is the number of disentailed equations
 
-  for (i = l_sz; i--; ) {
+  int tn  = reg_tn;
+  int tnn = reg_tnn;
+
+  // only check a var if it has changed
+  // this is achieved by caching the sizes of the
+  // domains of the FD vars in L from one run of
+  // propagate to the next
+  // the cached size is -1 when the var has been dropped
+  // -2 when it it is about to be dropped
+
+ recheck:
+  for (int i = l_sz; i--; ) {
+    int sz = reg_oldDomSizes[i];
+    if (sz<0) continue;
     l[i].read(reg_l[i]);
-    if (l[i]->getSize() < reg_oldDomSizes[i]) {
-      if (*l[i] == fd_singl && l[i]->getSingleElem() == v)
-        tn += 1;
-      else {
-        if (! l[i]->isIn(v))
+    // find out if n_var occurs in l
+    if (n_in_l==0 && (&(*n_var)==&(*l[i]))) n_in_l = 1;
+    int li_sz = l[i]->getSize();
+    if (li_sz < sz) {
+      if (li_sz == 1) {
+        if (l[i]->getSingleElem() == v)
+          tn += 1;
+        else
           tnn += 1;
+        // we never need to check this one again
+        reg_oldDomSizes[i] = -2;
+      }
+      else {
+        if (! l[i]->isIn(v)) {
+          tnn += 1;
+          // we never need to check this one again
+          reg_oldDomSizes[i] = -2;
+          // and we should not suspend on it anymore
+          l[i].dropParameter();
+          reg_l[i] = OZ_nil();
+        }
       }
     }
   }
 
-  reg_tn += tn;
-  reg_tnn += tnn;
-  tn = reg_tn;
-  tnn = reg_tnn;
+  // write back the updated results
+  reg_tn  = tn;
+  reg_tnn = tnn;
 
-loop:
+  // frequent special case: N determined
   if (*n_var == fd_singl) {
+  N_det:
     int n = n_var->getSingleElem();
     if (tn == n) {
-      for (i = l_sz; i--; )
-        if (*l[i] != fd_singl)
+      for (int i = l_sz; i--; )
+        if (reg_oldDomSizes[i]>=0 && *l[i] != fd_singl)
           FailOnEmpty(*l[i] -= v);
       return P.vanish();
     } else if  (tn > n) {
@@ -352,52 +360,22 @@ loop:
       return P.vanish();
     }
   } else {
-    int oldIn=0, newIn=0;
-    if (n_var->isIn(v)) oldIn = 1;
-    if (n_var->getMaxElem() == tn) {
-      for (i = l_sz; i--; )
-        if (*l[i] != fd_singl)
-          FailOnEmpty(*l[i] -= v);
-      FailOnEmpty(*n_var >= tn);
-      return P.vanish();
-    } else if  (tn > n_var->getMaxElem()) {
-      goto failure;
-    } else if (oldSize - tnn <= n_var->getMinElem()) {
-      return P.vanish();
-    }
-
-    FailOnEmpty(*n_var >= tn);
-    if (n_var->isIn(v)) newIn = 1;
-    if (newIn != oldIn) {
-      reg_tnn++; tnn=reg_tnn;
-      goto loop;
-    }
-    else {
-      if ((oldIn==1) && (*n_var == fd_singl)) {
-      reg_tn++; tn=reg_tn;
-      goto loop;
-      }
-    }
+    // propagate into the index
+    int sz_before = n_var->getSize();
+    int sz = (*n_var >= tn);
+    if (sz == 0) goto failure;
+    // if n occurs in l, constraining n may have changed the count
+    if (n_in_l && sz_before!=sz) goto recheck;
+    // if N is now determined: branch to special case
+    if (sz==1) goto N_det;
   }
 
-  int from, to;
-  for (from = 0, to = 0; from < l_sz; from += 1) {
-    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
-    else {
-      if (!l[from]->isIn(v)) {}
-      else {
-        reg_oldDomSizes[to] = l[from]->getSize();
-        reg_l[to] = reg_l[from];
-        to++;
-      }
+  // we fall through to here when we need to suspend again
+  // we need to update the cached sizes of the domains
+  for (int i=l_sz; i--;)
+    if (reg_oldDomSizes[i] >= 0) {
+      reg_oldDomSizes[i] = l[i]->getSize();
     }
-  }
-
-  l_sz = to;
-
-  if (l_sz == 0) {
-    return P.vanish();
-  }
 
   return P.leave();
 

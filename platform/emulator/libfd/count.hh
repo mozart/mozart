@@ -31,6 +31,46 @@
 
 //-----------------------------------------------------------------------------
 
+class CountPropagatorController {
+protected:
+  OZ_FDIntVar &v;
+  OZ_FDIntVar * vv;
+  int * dd;
+  int size;
+public:
+  CountPropagatorController(int s, OZ_FDIntVar i1[], int d1[], OZ_FDIntVar &i2)
+    : size(s), vv(i1), dd(d1), v(i2) {}
+
+  OZ_Return leave(void) {
+    OZ_Boolean vars_left = v.leave();
+    for (int i = size; i--;) {
+      int d=dd[i];
+      if (d == -1) {}
+      else if (d == -2) {
+        vv[i].leave();
+        dd[i] = -1;
+      } else {
+        vars_left |= vv[i].leave();
+      }
+    }
+    return vars_left ? SLEEP : PROCEED;
+  }
+  OZ_Return vanish(void) {
+    v.leave();
+    for (int i = size; i--;)
+      if (dd[i] != -1) vv[i].leave();
+    return PROCEED;
+  }
+  OZ_Return fail(void) {
+    v.fail();
+    for (int i = size; i--;)
+      if (dd[i] != -1) vv[i].fail();
+    return FAILED;
+  }
+};
+
+//-----------------------------------------------------------------------------
+
 class ExactlyPropagator : public Propagator_D_VD_I {
   friend INIT_FUNC(fdp_init);
 private:
