@@ -230,13 +230,13 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
   case MetaVariable:
     {
       GenMetaVariable* me = (GenMetaVariable *) this;
-      stream << indent(offset) << "<MV(" << me->getName() << "): "
+      stream << indent(offset) << "<MV." << me->getName() << ": "
 	     << getVarName(v) << " @" << this;
 
       if (isEffectiveList(suspList))
 	stream << " a" << suspList->length();
       
-      stream << ' ' << me->PrintMeta() << '>';
+      stream << ' ' << me->toString() << '>';
       break;
     }
   default:
@@ -735,8 +735,7 @@ PRINT(HeapChunk)
 {
   CHECKDEPTH;
   stream << indent(offset)
-	 << "heap chunk: " << chunk_size << " bytes at " << this << '.'
-	 << endl;
+	 << "heap chunk: " << chunk_size << " bytes at " << this << '.';
 /*
   char * data = (char *) chunk_data;
   for (int i = 0; i < chunk_size; i += 1)
@@ -750,8 +749,7 @@ PRINTLONG(HeapChunk)
 {
   CHECKDEPTHLONG;
   stream << indent(offset)
-	 << "heap chunk: " << chunk_size << " bytes at " << this << '.'
-	 << endl;
+	 << "heap chunk: " << chunk_size << " bytes at " << this << '.';
 }
 
 void AM::print()
@@ -1057,10 +1055,10 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
     {
       GenMetaVariable* me = (GenMetaVariable *) this;
       stream << indent(offset)
-	     << "<<MV: '" << me->getName() << "' " << me->PrintMeta()
+	     << "<<MV: '" << me->getName() << "' " << me->toString()
 	     << endl;
       tagged2Stream(me->data, stream, DEC(depth), offset + 2);
-      stream << indent(offset) << ">>" << endl;
+      stream << endl << indent(offset) << ">>" << endl;
       break;
     }
   default:
