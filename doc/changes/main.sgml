@@ -160,6 +160,12 @@ ozmake --config=put --archive=http://www.mozart-oz.org/mogul/pkg/1.2.5/source
       whether we intend to count up or down to ?{E2} is determined by the
       sign of ?{E3}.
 
+      <subsection><title/POSIX support/
+      <p>Added <code proglang=oz/OS.rmDir/ to remove a directory.  Note that the directory
+      must be empty before it is removed.
+      <p>Extended <code proglang=oz/OS.stat/ to also return <code proglang=oz/ino/ and
+      <code proglang=oz/dev/ for inode and device information.
+
     </section>
 
     <section id="section.m131.fixes">
