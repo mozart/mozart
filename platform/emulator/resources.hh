@@ -230,6 +230,7 @@ error include resources.hh before mozart.h
 //#define DEBUG_LTQ
 //#define DEBUG_INDICES
 //#define DEBUG_PROPAGATORS
+//#define DEBUG_CONSTRAINT_UNIFY
 //#define ALLDIFF
 
 //#define MM_DEBUG
