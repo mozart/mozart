@@ -448,9 +448,18 @@ OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
   }
   val=makeTaggedConst(tert);
   ob->changeToTertiary(tert); 
-  ProbeReturn pr = ((BorrowEntry*)ob)->getSite()->installProbe(PROBE_TYPE_ALL, TIME_SLICE);
-  if(((BorrowEntry*)ob)->getSite()->siteStatus()!=SITE_OK){
-    deferProxyProbeFault(tert,pr);}
+  switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
+  case SITE_OK:{
+    break;}
+  case SITE_PERM:{
+    deferProxyTertProbeFault(tert,PROBE_PERM);
+    break;}
+  case SITE_TEMP:{
+    deferProxyTertProbeFault(tert,PROBE_TEMP);
+    break;}
+  default:
+    Assert(0);
+  } 
   return val;
 }
 

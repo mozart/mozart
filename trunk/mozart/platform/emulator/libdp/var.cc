@@ -142,6 +142,8 @@ void ProxyVar::gCollectRecurseV(void)
   BT->getBorrow(getIndex())->gcPO();
   if (binding)
     oz_gCollectTerm(binding,binding);
+  if (status)
+    oz_gCollectTerm(status,status);
   setInfo(gcEntityInfoInternal(getInfo()));
 } 
 
@@ -565,20 +567,19 @@ OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
     sendRegister((BorrowEntry *)ob);}
   else{
     pvar->makeAuto();}
-  /*
-    switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
-    case SITE_OK:{
+  
+  switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
+  case SITE_OK:{
     break;}
-    case SITE_PERM:{
-    deferProxyProbeFault(tert,PROBE_PERM);
+  case SITE_PERM:{
+    deferProxyVarProbeFault(val,PROBE_PERM);
     break;}
-    case SITE_TEMP:{
-    deferProxyProbeFault(tert,PROBE_TEMP);
+  case SITE_TEMP:{
+    deferProxyVarProbeFault(val,PROBE_TEMP);
     break;}
-    default:
+  default:
     Assert(0);
-    } 
-  */
+  } 
   return val;
 }
 
