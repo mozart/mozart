@@ -67,18 +67,20 @@ in
 	 locking
       
       feat
-	 T              % the thread...
-	 I              % ...with it's ID
-	 D              % dictionary for stackframes
+	 T                 % the thread...
+	 I                 % ...with it's ID
+	 D                 % dictionary for stackframes
 
       attr
-	 Size           % current size of stack
-	 SP             % StackPointer (SP==Size+1 or SP==Size)
-	 Rebuild        % should we re-calculate the stack
-                        % when the next 'step' message arrives?
+	 Size              % current size of stack
+	 SP                % StackPointer (SP==Size+1 or SP==Size)
+	 Rebuild           % should we re-calculate the stack
+                           % when the next 'step' message arrives?
 
-	 Sync    : _      % sync block/cont actions
+	 Sync    : _       % sync block/cont actions
 	 InDelay : false
+
+	 Exception : nil   % saved exception
       
       meth init(thr:Thr id:ID)
 	 self.T = Thr
@@ -121,7 +123,13 @@ in
 	 Rebuild <- Flag
       end
 
+      meth getException($)
+	 @Exception
+      end
+      
       meth printException(X)
+	 SavedStatus
+      in
 	 case {HasFeature X debug} andthen {HasFeature X.debug stack} then
 	    Stack = X.debug.stack
 	    H|T   = case Stack.1 == nil then Stack.2.2 else Stack end
@@ -136,21 +144,22 @@ in
 	 in
 	    {Error.debug.doOzError X}
 	    {Error.debug.last Status}
-	    
-	    {Ozcar status(ErrorExcText # Status.1 # {Lines Status.2}
-			  clear BlockedThreadColor)}
-	    
+
+	    SavedStatus = ErrorExcText # Status.1 # {Lines Status.2}
+	    {ForAll [status(SavedStatus clear BlockedThreadColor)
+		     bar(file:C.file line:C.line state:blocked)] Ozcar}
 	    StackManager,ReCalculate({Reverse S})
-	    {Ozcar bar(file:C.file line:C.line state:blocked)}
 
 	 else              % no stack available
 	    E = {T2VS X}
 	 in
-	    {ForAll
-	     [status(UserExcText # E # NoStackText clear BlockedThreadColor)
-	      removeBar] Ozcar}
+	    SavedStatus = UserExcText # E # NoStackText
+	    {ForAll [status(SavedStatus clear BlockedThreadColor)
+		     removeBar] Ozcar}
 	    StackManager,ReCalculate(nil)
 	 end
+
+	 Exception <- SavedStatus
       end
       
       meth print

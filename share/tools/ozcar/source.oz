@@ -55,7 +55,7 @@ in
 	 end
       end
 
-      meth delayedBar(file:F line:L state:S)
+      meth delayedBar(file:F line:L state:S<=unchanged)
 	 New in BarSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToUpdateBar}}

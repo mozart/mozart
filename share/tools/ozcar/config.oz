@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = 'May 21 1997'
+Version                = 'May 22 1997'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -200,8 +200,8 @@ TimeoutToBlock         = 620
 TimeoutToUpdateEnv     = 430
 TimeoutToUpdateBar     = TimeoutToUpdateEnv
 TimeoutToConfigBar     = 70
-TimeoutToSwitch        = 260
-TimeoutToStatus        = 240
+TimeoutToSwitch        = 340
+TimeoutToStatus        = 210
 
 HelpEvent              = '<3>'
 

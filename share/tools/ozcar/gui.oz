@@ -350,9 +350,7 @@ in
 	 in
 	    {OzcarMessage 'Selecting frame #' # FrameNr}
 	    case Highlight then
-	       SourceManager,delayedBar(file:  F.file
-					line:  {Abs F.line}
-					state: runnable)
+	       SourceManager,delayedBar(file:F.file line:{Abs F.line})
 	       Gui,SelectStackFrame(FrameNr)
 	    else
 	       Gui,SelectStackFrame(0)
