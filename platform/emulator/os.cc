@@ -2051,14 +2051,17 @@ static DWORD __stdcall readerThread(void *p)
       //message("ReadFile(%d) failed: %d\n",in,GetLastError());
       break;
     }
-
+    if (count==0)
+      break;
+    int totalSent = 0;
   loop:
-    int sent= send(out,buf,count,0);
+    int sent= send(out,&buf[totalSent],count,0);
     if (sent<0) {
       // message("send failed: %d\n",WSAGetLastError());
       break;
     }
     count -= sent;
+    totalSent += sent;
     if (count > 0)
       goto loop;
   }
@@ -2083,14 +2086,17 @@ static DWORD __stdcall writerThread(void *p)
       //message("recv(%d) failed: %d\n",in,WSAGetLastError());
       break;
     }
-
+    if (got==0)
+      break;
+    int totalWritten = 0;
   loop:
     DWORD count;
-    if (WriteFile(out,buf,got,&count,0)==FALSE) {
+    if (WriteFile(out,&buf[totalWritten],got,&count,0)==FALSE) {
       //message("WriteFile(%d) failed: %d\n",out,GetLastError());
       break;
     }
     got -= count;
+    totalWritten += count;
     if (got>0)
       goto loop;
   }
