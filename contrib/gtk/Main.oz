@@ -64,6 +64,10 @@ define
       try
 	 TypeDict = {Collect.collect FlatTree}
       in
+	 %% Hack Alert: Global filtering
+	 if {Dictionary.member TypeDict '_GtkTypeClassDummyAlign'}
+	 then {Dictionary.remove TypeDict '_GtkTypeClassDummyAlign'}
+	 end
 	 if DoNative then {ToolKit.createFuncs TypeDict} end
 	 {Wrapper.createFuncs TypeDict}
 	 if DoNative then {ToolKit.createFields TypeDict} end
