@@ -307,7 +307,7 @@ Bool hookCheckNeeded(AM *e)
 // -----------------------------------------------------------------------
 // THREADED CODE
 
-#define WANT_INSTRPROFILE
+// #define WANT_INSTRPROFILE
 
 #if defined(RECINSTRFETCH) && defined(THREADED)
  Error: RECINSTRFETCH requires THREADED == 0;
@@ -721,7 +721,7 @@ void engine() {
 
     TaskStack *taskStack = &e->currentThread->taskStack;
     TaskStackEntry *topCache = taskStack->getTop();
-    TaggedBoard tb = (TaggedBoard) TaskStackPop(topCache-1);
+    TaggedBoard tb = (TaggedBoard) ToInt32(TaskStackPop(topCache-1));
 
     ContFlag cFlag = getContFlag(tb);
 
@@ -1513,7 +1513,7 @@ void engine() {
        DEREF(taggedPredicate,predPtr,predTag);
        if (!isSRecord(predTag)) {
 	 if (isAnyVar(predTag)) {
-	   X[predArity++] = (TaggedRef) predPtr;
+	   X[predArity++] = makeTaggedRef(predPtr);
 	   extern TaggedRef suspCallHandler; // mm2
 	   predicate = tagged2SRecord(suspCallHandler);
 	   goto LBLcall;
