@@ -36,24 +36,18 @@
 #define _cacFix                  gCollectFix
 
 #define _cacConstTerm            gCollectConstTerm
-#define _cacConstTermWithHome    gCollectConstTermWithHome
-#define _cacTertiary             gCollectTertiary
+#define _cacConstTermInline      gCollectConstTermInline
 #define _cacConstRecurse         gCollectConstRecurse
 
 #define _cacBoard                gCollectBoard
 
 #define _cacName                 gCollectName
 
-#define _cacClass                gCollectClass
-#define _cacObject               gCollectObject
-#define _cacObjectInline         gCollectObjectInline
-
-#define _cacAbstraction          gCollectAbstraction
-
 #define _cacVar                  gCollectVar
 #define _cacVarRecurse           gCollectVarRecurse
 #define _cacVarInline            gCollectVarInline
 
+#define _cacSRecordInline        gCollectSRecordInline
 #define _cacSRecord              gCollectSRecord
 
 #define _cacSuspendableInline    gCollectSuspendableInline
