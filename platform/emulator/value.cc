@@ -1167,16 +1167,8 @@ int featureEqOutline(TaggedRef a, TaggedRef b)
 //
 //
 // Virtual sites;
-inline
-Bool oz_isForeignPointer(TaggedRef term)
-{
-  term = oz_deref(term);
-  return oz_isConst(term)
-    && tagged2Const(term)->getType() == Co_Foreign_Pointer;
-}
-
-void* OZ_getForeignPointer(TaggedRef t)
-{
+void * OZ_getForeignPointer(TaggedRef t) {
+  t=oz_deref(t);
   if (! oz_isForeignPointer(t)) {
     OZ_warning("Foreign pointer expected in OZ_getForeignPointer.\n Got 0x%x. Result unspecified.\n",t);
     return NULL;
@@ -1184,8 +1176,7 @@ void* OZ_getForeignPointer(TaggedRef t)
   return ((ForeignPointer*)tagged2Const(oz_deref(t)))->getPointer();
 }
 
-int OZ_isForeignPointer(TaggedRef t)
-{
+int OZ_isForeignPointer(TaggedRef t) {
   return oz_isForeignPointer(oz_deref(t));
 }
 

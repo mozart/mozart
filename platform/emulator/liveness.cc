@@ -31,7 +31,7 @@
 
 #define ISREAD(i) { int _i=(i); if (_i<maxX && xUsage[_i]==0) xUsage[_i]=1; }
 
-#define ISREAD_TO(args) { for (int _j=0;_j<args; _j++) { ISREAD(_j); } }
+#define ISREAD_TO(args) { for (int _j=args; _j--;) { ISREAD(_j); } }
 
 #define ISWRITE(i)					\
 {							\
@@ -42,12 +42,12 @@
   }							\
 }
 
-#define ISLOC(bi,loc)							\
-{									\
-  {for (int _j=0;_j<bi->getInArity(); _j++) {                           \
-     ISREAD(loc->getInIndex(_j)); }}	                                \
-  {for (int _j=0;_j<bi->getOutArity(); _j++) {                          \
-     ISWRITE(loc->getOutIndex(bi,_j));}}	                                \
+#define ISLOC(bi,loc) \
+{						\
+  {for (int _j=bi->getInArity(); _j--; ) {      \
+     ISREAD(loc->getInIndex(_j)); }}	        \
+  {for (int _j=bi->getOutArity(); _j--; ) {     \
+     ISWRITE(loc->getOutIndex(bi,_j));}}	\
 }
 
 #define BREAK           goto outerLoop;
@@ -147,7 +147,7 @@ int CodeArea::livenessX(ProgramCounter from, TaggedRef *X,int maxX)
     return ret;
 
   int *xUsage = new int[maxX];
-  for (int i=0;i<maxX; i++) xUsage[i]=0;
+  for (int i=maxX; i--;) xUsage[i]=0;
 
   ret = livenessXInternal(from,X,maxX,xUsage);
   livenesscache.addPC(from,xUsage,ret);
