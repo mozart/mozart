@@ -6905,7 +6905,6 @@ extern void BIinitMeta(void);
 extern void BIinitPerdioVar(void);
 extern void BIinitUnix();
 extern void BIinitAssembler();
-extern void BIinitTclTk();
 extern void BIinitPerdio();
 extern void initVirtualProperties();
 
@@ -6930,7 +6929,6 @@ Builtin *BIinit()
 
   // BIinitPerdioVar();
   BIinitUnix();
-  BIinitTclTk();
 
   BIinitPerdio();
   
