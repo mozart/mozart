@@ -1019,6 +1019,23 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
   return loadDatum(d,t);
 }
 
+OZ_BI_define(BIpicklePack, 1, 1) {
+  OZ_declareDetTerm(0,term);
+  OZ_Datum d;
+  OZ_valueToDatum(term, &d);
+  OZ_RETURN(OZ_mkByteString(d.data,d.size));
+} OZ_BI_end
+
+
+OZ_BI_define(BIpickleUnpack, 2, 0) {
+  OZ_declareVS(0,string,sz);
+  OZ_declareTerm(1,out);
+  OZ_Datum d;
+  d.data = string;
+  d.size = sz;
+  return OZ_datumToValue(d,out);
+} OZ_BI_end
+
 #ifdef DENYS_XML
 typedef void (*marshalFun)(OZ_Term,MsgBuffer*);
 OZ_Term toXML(OZ_Term t,marshalFun f)
