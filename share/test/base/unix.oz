@@ -42,7 +42,7 @@ define
 	 !RemoteReady=unit
 	 {Sock accept}
 	 !Got = {Length {Sock read(list:$ size:all)}}
-	 Done=unit
+	 !Done=unit
       end
       T = {ByteString.make
 	   local L={List.make 5000} in
