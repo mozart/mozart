@@ -401,7 +401,7 @@ define
       end
    in
       proc {AtMostLectures Lectures Limit}
-         {Loop.for 1 HourLimit 1
+         {For 1 HourLimit 1
           proc{$ Hour}
              {FD.sum {SumUpLectures Lectures Hour} '=<:' Limit}
           end}

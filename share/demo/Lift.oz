@@ -225,7 +225,7 @@ define
          end
       end
    in
-      {Loop.for 1 NumFloors 1 Button}
+      {For 1 NumFloors 1 Button}
    end
 
    %%
