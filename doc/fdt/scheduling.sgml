@@ -539,7 +539,7 @@ schedule the construction of the bridge shown  in
 <figure id=fig.bridgeProblem>
 <caption/The Bridge Problem./
 <picture.choice>
-<picture.extern to="pictures/bridge.ps" type=ps info="-width 400">
+<picture.extern id="pic.bridgeProblem" to="pictures/bridge.ps" type=ps info="-width 400">
 </picture.choice>
 </figure>
 
@@ -552,8 +552,7 @@ The problem is specified as shown in
 <ptr to=fig.bridgeTable>. From this table we derive precedence and
 capacity constraints as in the sections before. We also
 assume that a resource cannot handle more than one activity at a
-time. Such a kind of resource is also known as a {\em unary
-resource}. 
+time. Such a kind of resource is also known as a <em/unary resource/. 
 
 <figure id=fig.bridgeTable>
 <caption/The Data for the bridge construction./
@@ -827,7 +826,7 @@ same resource have the same texture.
 <figure  id=fig.gantt>
 <caption/The Gantt-chart for the bridge problem./
 <picture.choice>
-<picture.extern to="pictures/gantt.ps" type=ps  info="-width 400">
+<picture.extern id="pic.gantt" to="pictures/gantt.ps" type=ps  info="-width 400">
 </picture.choice>
 </figure>
 
