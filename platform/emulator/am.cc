@@ -702,11 +702,21 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   if (prop && isSVar(var)) {
 
     DEREF(term,zzz,tag);
-   // special case if second arg is a variable !!!!
-    SVariable *svar = (termPtr && isNotCVar(tag)) ?
+    // special case if second arg is a variable !!!!
+    SVariable * tvar = (termPtr && isNotCVar(tag)) ?
       (taggedBecomesSuspVar(termPtr)) : NULL;
     // variables are passed as references
-    checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term, pc_std_unif);
+    checkSuspensionList(var, tvar ? makeTaggedRef(termPtr) : term,
+                        pc_std_unif);
+
+    SVariable * svar = tagged2SVar(var);
+
+    // suspension entries with conditions may remain unpropagated, so that
+    // they have to be saved to the suspension list of the remaining variable
+    if (tvar) {
+      tvar->setSuspList(tvar->getSuspList()->appendTo(svar->getSuspList()));
+      svar->setSuspList(NULL);
+    }
 
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
                              localPropStore.isInLocalPropagation()));
