@@ -1507,6 +1507,46 @@ void AM::pushTaskOutline(ProgramCounter pc,
   pushTask(pc,y,g,x,i);
 }
 
+
+
+/*
+ * list processing
+ *
+ * return length
+ *   -1 [suspend, save variable in am.suspendVarList]
+ *   -2 [fail]
+ */
+
+int isList(OZ_Term l, Bool suspend=NO, Bool checkChar=NO)
+{
+  int len = 0;
+  while (1) {
+    DEREF(l,lPtr,_2);
+    if (isAnyVar(l)) {
+      if (suspend) am.addSuspendVarList(lPtr);
+      return -1;   // suspend
+    }
+    if (isLTuple(l)) {
+      if (checkChar) {
+        OZ_Term h = head(l);
+        DEREF(h,hPtr,_4);
+        if (isAnyVar(h)) {
+          if (suspend) am.addSuspendVarList(hPtr);
+          return -1; // suspend
+        }
+        if (!isSmallInt(h)) return -2; // failed
+        int i=smallIntValue(h);
+        if (i<0 || i>255) return -2; // failed
+      }
+      len += 1;
+      l = tail(l);
+      continue;
+    }
+    if (isNil(l)) return len;
+    return -2; // failed
+  }
+}
+
 #ifdef OUTLINE
 #define inline
 #include "am.icc"
