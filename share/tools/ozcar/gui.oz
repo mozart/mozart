@@ -45,7 +45,7 @@ class Gui from Menu Dialog
       self.StatusLabel = {New Tk.label tkInit(parent:self.ButtonFrame
 					      text:StatusInitText)}
       local
-	 Bs = {Map [step next finish cont forget stack]
+	 Bs = {Map [step next finish cont forget /* stack */]
 	       fun {$ B}
 		  {New Tk.button tkInit(parent: self.ButtonFrame
 					text:   B
@@ -280,14 +280,20 @@ class Gui from Menu Dialog
 	    {Thread.resume T}
 	    
 	 elseof finish then
+	    {Browse 'not yet implemented'}
 	    skip
 	    
 	 elseof cont then
+	    /*
 	    {Dbg.trace T false}
 	    {Dbg.stepmode T false}
 	    {Thread.resume T}
+	    */
+	    {Browse 'not yet implemented'}
+	    skip
 	    
 	 elseof forget then
+	    {Browse 'not yet implemented'}
 	    skip
 	    
 	 elseof stack then
