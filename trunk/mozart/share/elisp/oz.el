@@ -545,7 +545,7 @@ If FORCE is non-nil, kill the processes immediately."
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (or oz-win32 (get-buffer-process oz-emulator-buffer))
 	   (null force))
-      (let ((i (* 2 oz-halt-timeout))
+      (let* ((i (* 2 oz-halt-timeout))
 	     (cproc (get-buffer-process oz-compiler-buffer))
 	     (eproc (if oz-win32
 			cproc
