@@ -39,18 +39,6 @@
 			     out => [],
 			     BI  => BIdvset},
 
-     'siteStatistics'	=> { in  => [],
-			     out => ['+[value]'],
-			     BI  => BIsiteStatistics},
-
-     'getTablesInfo'	=> { in  => [],
-			     out => ['+[value]'],
-			     BI  => BItablesExtract},
-
-     'perdioStatistics'	=> { in  => [],
-			     out => ['+record'],
-			     BI  => BIperdioStatistics},
-
      'slowNet'           => { in  => ['+int', '+int'],
 			      out => [],
 			      bi  => BIslowNet},
@@ -60,3 +48,4 @@
 			     bi  => BImarshalerPerf},
 
      );
+
