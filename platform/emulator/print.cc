@@ -489,10 +489,6 @@ PRINT(Object)
   stream << "<O:" << getPrintName()
          << ", ";
   getRecord()->print(stream,depth,offset);
-  if (unfreeFeatures) {
-    stream << ", ";
-    unfreeFeatures->print(stream,depth,offset);
-  }
   stream << ", State: ";
   tagged2Stream(getCell(),stream,depth,offset);
   stream << ">";
@@ -771,6 +767,11 @@ PRINT(ObjectClass)
   printName->print(stream,depth,offset);
   stream << ", slowMethods: " << OZ_toC(slowMethods) << ", send: ";
   send->print(stream,depth,offset);
+  stream << ",";
+  if (unfreeFeatures) {
+    stream << ", ";
+    unfreeFeatures->print(stream,depth,offset);
+  }
   stream << ")";
 }
 
