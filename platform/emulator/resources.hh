@@ -1,4 +1,4 @@
-/*
+/* $id$
  *
  * ### #     # ######   #####  ######  #######    #    #     # #######
  *  #  ##   ## #     # #     # #     #    #      # #   ##    #    #
@@ -12,7 +12,7 @@
  * appropriate handbook chapter: system/system.raw!!!!!!!!
  */
 
-#define COMPILER_TIMEOUT	100 /* ms */
+#define COMPILER_TIMEOUT	180 /* seconds */
 
 #define IO_BUF_SIZE		10000
 
