@@ -115,14 +115,39 @@ WARN_LTX= 'Rerun to get cross-references right|There were undefined references'
 $(WHAT).dvi: $(WHAT).tex $(WHAT).pics
         latex $< || { rm $@; exit -1; }
         if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
-        if egrep -s '\\bibdata{' $*.aux && egrep -s '\\citation{' $*.aux ; then make $*.bbl; fi
-        if egrep -s $(WARN_LTX) $*.log; then latex $< || { rm $@; exit -1; } fi
+        if egrep -s '\\bibdata{' $*.aux && \
+           egrep -s '\\citation{' $*.aux ; \
+        then make $*.bbl; fi
+        if test -r $*.idx; then $(MAKE) $*.ind; fi
+        if egrep -s $(WARN_LTX) $*.log || \
+           egrep -s "AGAIN" $*.ind-log; \
+        then latex $< || { rm $@; exit -1; } fi
         if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
-        if egrep -s '\\bibdata{' $*.aux && egrep -s '\\citation{' $*.aux ; then make $*.bbl; fi
-        if egrep -s $(WARN_LTX) $*.log; then latex $< || { rm $@; exit -1; } fi
+        if egrep -s '\\bibdata{' $*.aux && \
+           egrep -s '\\citation{' $*.aux ; \
+        then make $*.bbl; fi
+        if test -r $*.idx; then $(MAKE) $*.ind; fi
+        if egrep -s $(WARN_LTX) $*.log || \
+           egrep -s "AGAIN" $*.ind-log; \
+        then latex $< || { rm $@; exit -1; } fi
         if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
-        if egrep -s '\\bibdata{' $*.aux && egrep -s '\\citation{' $*.aux ; then make $*.bbl; fi
-        if egrep -s $(WARN_LTX) $*.log; then latex $< || { rm $@; exit -1; } fi
+        if egrep -s '\\bibdata{' $*.aux && \
+           egrep -s '\\citation{' $*.aux ; \
+        then make $*.bbl; fi
+        if test -r $*.idx; then $(MAKE) $*.ind; fi
+        if egrep -s $(WARN_LTX) $*.log || \
+           egrep -s "AGAIN" $*.ind-log; \
+        then latex $< || { rm $@; exit -1; } fi
+
+%.ind: %.idx
+        makeindex $*
+        if test -r $*.ind-old && diff -q $*.ind $*.ind-old >/dev/null; then \
+          echo "STOP" > $*.ind-log; \
+        else \
+          echo "AGAIN" > $*.ind-log; \
+          cp $*.ind $*.ind-old; \
+        fi
+
 %.bbl:  %.aux
         bibtex $*
 $(WHAT).ps: $(WHAT).dvi

@@ -108,3 +108,8 @@ ps:
         $(MAKE) global-xref-db.xml; \
         dirs="$(PSDOCDIRS)"; \
         for i in $$dirs; do (cd $$i && $(MAKE) $$i.ps) || exit 1; done
+
+ps.veryclean:
+        -rm -f global-xref-db.xml;
+        dirs="$(PSDOCDIRS)"; \
+        for i in $$dirs; do (cd $$i && $(MAKE) veryclean) || exit 1; done
