@@ -2,9 +2,10 @@ functor
 export
    'class' : Extractor
 import
-   URL Resolve
-   Utils at 'Utils.ozf'
-   Path  at 'Path.ozf'
+   URL Resolve OS Pickle
+   Utils   at 'Utils.ozf'
+   Path    at 'Path.ozf'
+   Pickler at 'Pickler.ozf'
 prepare
    fun {UnByteStringify V}
       if {ByteString.is V} then {ByteString.toString V}
@@ -146,9 +147,21 @@ define
 	       UrlStr = {URL.toString Url}
 	    in
 	       {self xtrace('downloading '#UrlStr)}
-	       {{Resolve.make 'ozmake'
-		 init([Resolve.handler.default])}.load
-		Url}
+	       local
+		  LOC =
+		  {{Resolve.make 'ozmake'
+		    init([Resolve.handler.default])}.localize
+		   Url}
+	       in
+		  try
+		     try {Pickle.load LOC.1}
+		     catch _ then {Pickler.fromFile LOC.1} end
+		  finally
+		     case LOC of new(F) then
+			try {OS.unlink F} catch _ then skip end
+		     else skip end
+		  end
+	       end
 	    else
 	       %% otherwise, we read it in the usual way, except that
 	       %% in order to minimize surprizes, we try the default
@@ -159,9 +172,21 @@ define
 	       else
 		  {self trace('reading package '#PKG)}
 	       end
-	       {{Resolve.make 'ozmake'
-		 init(Resolve.handler.default|
-		      {Resolve.pickle.getHandlers})}.load PKG}
+	       local
+		  LOC =
+		  {{Resolve.make 'ozmake'
+		    init(Resolve.handler.default|
+			 {Resolve.pickle.getHandlers})}.localize PKG}
+	       in
+		  try
+		     try {Pickle.load LOC.1}
+		     catch _ then {Pickler.fromFile LOC.1} end
+		  finally
+		     case LOC of new(F) then
+			try {OS.unlink F} catch _ then skip end
+		     else skip end
+		  end
+	       end
 	    end
 	 catch _ then raise ozmake(extract:load(PKG)) end end
       end

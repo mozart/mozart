@@ -2,7 +2,8 @@ functor
 export
    'class' : Executor
 import
-   OS Property System(showError:Print) Open(file:OpenFile) URL Pickle
+   OS Property System(showError:Print) URL Pickle
+   Open
    Path    at 'Path.ozf'
    Utils   at 'Utils.ozf'
    Shell   at 'Shell.ozf'
@@ -492,7 +493,7 @@ define
 	 else
 	    Data={Utils.slurpFile F}
 	    if {Path.exists T} then {Path.remove T} end
-	    File={New OpenFile init(name:T flags:[write create truncate])}
+	    File={New Open.file init(name:T flags:[write create truncate])}
 	 in
 	    {File write(vs:Data)}
 	    {File close}
@@ -549,7 +550,7 @@ define
 	    Executor,SimulatedTouch(File)
 	 else
 	    if {Path.exists File} then {Path.remove File} end
-	    Out={New OpenFile init(name:File flags:[write create truncate])}
+	    Out={New Open.file init(name:File flags:[write create truncate])}
 	 in
 	    {Out write(vs:Data)}
 	    {Out close}
@@ -561,6 +562,8 @@ define
 	 {self xtrace('saving '#File)}
 	 if {self get_justprint($)} then
 	    Executor,SimulatedTouch(File)
+	 elseif {HasFeature Open compressedFile} then
+	    {Pickler.toFile Data File}
 	 else
 	    {Pickle.saveCompressed Data File 9}
 	 end 
