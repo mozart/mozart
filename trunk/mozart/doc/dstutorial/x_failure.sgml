@@ -364,7 +364,8 @@ one of two things when an operation is attempted:
 either raise an exception or block (do nothing).
 The advanced model calls a user-defined
 procedure instead of raising an exception.
-This procedure is called a <EM>fault handler</EM>.
+This procedure is called a <EM>fault handler</EM>,
+or just <EM>handler</EM>.
 When an operation is attempted
 on an entity with a problem,
 then a handler call replaces the operation.
@@ -381,8 +382,7 @@ on a given entity at a given level
 for a given set of fault states.
 The possible entities, levels, and fault states
 are the same.
-
-<P>Handlers are installed and deinstalled with the
+Handlers are installed and deinstalled with the
 following two built-in operations:
 <LIST>
 <ENTRY> <<fun {Fault.install Entity Level FStates HandlerProc}>>
@@ -391,22 +391,24 @@ installation was successful, i.e., the entity did not already
 have an installation or an enable for that level.
 <ENTRY> <<fun {Fault.deInstall Entity Level}>>
 <ITEM>The function <<Fault.deInstall>> returns <<true>> if and only if the
-disable was successful, i.e., the entity was already
-enabled for that level.
+deinstall was successful, i.e., the entity had a handler installed
+for that level.
 </LIST>
 <P>
 Both functions raise a type error exception if their arguments
 do not have the correct type.
-A limitation of the current release is that
-handlers cannot be installed at the <<global>> level.
-Another limitation of the current release is that
-handlers installed on variables always retry
-the operation after they return.
-
-<P>A handler <<HandlerProc>> is a three-argument
+A handler <<HandlerProc>> is a three-argument
 procedure that is called as <<{HandlerProc E FS OP}>>.
 The arguments <<E>>, <<FS>>, <<OP>>,
 are exactly the same as in a distribution exception.
+
+<P>A limitation of the current release is that
+handlers cannot be installed at the <<global>> level.
+A modification of the current release with respect
+to handler semantics is that
+handlers installed on <EM>variables</EM> always retry
+the operation after they return.
+
 
 <SUBSECTION><TITLE>Eager failure detection</TITLE>
 
