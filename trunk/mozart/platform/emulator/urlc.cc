@@ -113,7 +113,9 @@
 #include <sys/uio.h>
 #endif
 #endif
+#ifndef __MINGW32__
 #include <netdb.h>
+#endif
 
 
 #if 1 <= URLC_RESOLVER
