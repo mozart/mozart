@@ -190,6 +190,7 @@ define
          MyAuthorDB: unit
          Authors: unit
          Meta: unit
+         Comic: unit
          Abstract: unit
          % main matter:
          TOC: unit TOCMode: unit
@@ -363,6 +364,12 @@ define
                   Out <- @Out#('\n<H2 align=center>\n'#
                                OzDocToHTML, FormatAuthors($)#
                                '</H2>')
+               end
+               case @Comic of unit then skip
+               elseof M then
+                  Out <- @Out#'<P'#@Align#'>'
+                  OzDocToHTML, Process(M)
+                  Out <- @Out#'</P>'
                end
                case @Abstract of unit then skip
                elseof A then
@@ -885,6 +892,8 @@ define
             %-----------------------------------------------------------
             %--** gump.sgml Specials
             %-----------------------------------------------------------
+            [] comic then
+               Comic <- M.1
             [] em then
                Out <- @Out#'<EM>'
                OzDocToHTML, Batch(M 1)
