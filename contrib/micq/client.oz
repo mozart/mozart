@@ -146,6 +146,7 @@ define
             {ConnectLoop}
             {D close()}
             {self setStatus}
+            {@server Msg}
          end
       end
 
