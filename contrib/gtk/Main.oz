@@ -41,8 +41,8 @@ define
    %% Parse Tree and create Binding
    %%   
    case {Parser.parse PrepTree}
-   of 'parse error'(...) then
-      {System.show 'parse error'}
+   of 'parse error'(Line TypeList) then
+      {System.show 'parse error'(Line TypeList)}
    [] ParseTree then
       FlatTree  = {Record.toList {Flatten.flatten ParseTree}}
       Args      = {Application.getArgs plain}
@@ -64,6 +64,11 @@ define
       try
 	 TypeDict = {Collect.collect FlatTree}
       in
+	 %% Adjust type alias for compiler internal __builtin_va_list/va_list
+	 if {Dictionary.member TypeDict 'va_list'}
+	 then {Dictionary.remove TypeDict 'va_list'}
+	 end
+	 {Dictionary.put TypeDict '__builtin_va_list' type("va_list" "")}
 	 %% Hack Alert: Global filtering
 	 if {Dictionary.member TypeDict '_GtkTypeClassDummyAlign'}
 	 then {Dictionary.remove TypeDict '_GtkTypeClassDummyAlign'}
