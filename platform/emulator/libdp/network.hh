@@ -65,8 +65,17 @@ void initNetwork();
 
 //
 // Usaed by distpane
+
 int getNORM_RemoteSite(RemoteSite*);
 int getNOSM_RemoteSite(RemoteSite*);
+
+int getNetMsgBufferManagerInfo(int &size);
+int getNetByteBufferManagerInfo(int &size);
+int getWriteConnectionManagerInfo(int &size);
+int getReadConnectionManagerInfo(int &size);
+int getMessageManagerInfo(int &size);
+int getRemoteSiteManagerInfo(int &size);
+
 
 //
 // Used when "disconnecting" a site

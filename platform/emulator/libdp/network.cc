@@ -517,6 +517,8 @@ public:
     if(putOne(f)) return;
     delete bb;
     return;}
+  int getCTR(){ return wc;}
+
 };
 
 
@@ -848,13 +850,13 @@ public:
     else{GenCast(f,FreeListEntry*,bb,NetMsgBuffer*);}
     bb->startfixerik1();
     bb->init(s);
-    PD((BUFFER,"New netMsgBuffer b:%r nr:%d",bb,++wc));
+    wc++;
     return bb;}
 
   void deleteNetMsgBuffer(NetMsgBuffer* b){
     Assert(b->start == b->stop);
     Assert(b->start == NULL);
-    PD((BUFFER,"Deallocating netMsgBuffer b:%d nr:%d",b,--wc));
+    wc--;
     FreeListEntry *f;
     GenCast(b,NetMsgBuffer*,f,FreeListEntry*);
     if(putOne(f)) return;
@@ -876,6 +878,8 @@ public:
       Assert(bs->last==bs->first);
       bs->removeSingle();}
     deleteNetMsgBuffer(bs);}
+
+  int getCTR(){ return wc;}
 };
 
 NetByteBuffer *NetMsgBuffer::getAnother(){
@@ -1363,6 +1367,7 @@ class RemoteSiteManager: public FreeListManager{
     FreeListEntry *f=getOne();
     if(f==NULL) {s=new RemoteSite();}
     else{GenCast(f,FreeListEntry*,s,RemoteSite*);}
+    wc ++;
     return s;}
 
   void deleteRemoteSite(RemoteSite *s){
@@ -1370,10 +1375,12 @@ class RemoteSiteManager: public FreeListManager{
     GenCast(s,RemoteSite*,f,FreeListEntry*);
     if(putOne(f)) {return;}
     delete s;
+    wc--;
     return;}
 
 public:
-  RemoteSiteManager():FreeListManager(SITE_CUTOFF){}
+  int wc;
+  RemoteSiteManager():FreeListManager(SITE_CUTOFF){wc = 0;}
 
   void freeRemoteSite(RemoteSite *s){
     deleteRemoteSite(s);}
@@ -1383,6 +1390,8 @@ public:
     PD((SITE,"allocated a:%x ctr:%d rs:%x",s,r,rs));
     rs->init(s, r);
     return rs;}
+
+  int getCTR(){return wc;}
 };
 
 class ReadConnectionManager: public FreeListManager{
@@ -1391,6 +1400,7 @@ class ReadConnectionManager: public FreeListManager{
     FreeListEntry *f;
     GenCast(r,ReadConnection*,f,FreeListEntry*);
     if(!putOne(f)) {delete r;}
+    wc--;
     return;}
   ReadConnection* newConnection(RemoteSite *s,int fd0){
     FreeListEntry *f=getOne();
@@ -1400,20 +1410,22 @@ class ReadConnectionManager: public FreeListManager{
     r->fastfixerik2();
     r->init(s);
     r->fd=fd0;
+    wc++;
     return r;}
 public:
-  ReadConnectionManager():FreeListManager(READ_CONNECTION_CUTOFF){}
+  ReadConnectionManager():FreeListManager(READ_CONNECTION_CUTOFF){wc=0;}
 
   void freeConnection(ReadConnection *r){
-    PD((TCP_INTERFACE,"freed r:%x nr:%d",r,--wc));
     //Assert(r->isRemovable());
     deleteConnection(r);
     return;}
 
   ReadConnection *allocConnection(RemoteSite *s,int f){
     ReadConnection *r=newConnection(s,f);
-    PD((TCP_INTERFACE,"allocated r:%x s:%x fd:%d nr:%d",r,s,f,++wc));
     return r;}
+
+  int getCTR(){return wc;}
+
 };
 
 
@@ -1424,6 +1436,7 @@ class WriteConnectionManager: public FreeListManager{
     FreeListEntry *f;
     GenCast(r,WriteConnection*,f,FreeListEntry*);
     if(!putOne(f)) {delete r;}
+    wc--;
     return;}
   WriteConnection* newConnection(RemoteSite *s,int fd0){
     FreeListEntry *f=getOne();
@@ -1433,22 +1446,23 @@ class WriteConnectionManager: public FreeListManager{
     r->fastfixerik3();
     r->init(s);
     r->fd=fd0;
+    wc++;
     return r;}
 public:
   WriteConnectionManager():
     FreeListManager(WRITE_CONNECTION_CUTOFF){wc = 0;}
 
   void freeConnection(WriteConnection *r){
-    //    printf("freed r:%d\n",(int)r);
     r->clearFlag(WRITE_CON);
-    //Assert(r->isRemovable());
     deleteConnection(r);
     return;}
 
   WriteConnection *allocConnection(RemoteSite *s,int f){
     WriteConnection *r=newConnection(s,f);
-    //    printf("allocated r:%d s:%d fd:%d\n",(int)r,(int)s,f);
     return r;}
+
+  int getCTR(){return wc;}
+
  };
 
 /************************************************************/
@@ -2005,22 +2019,26 @@ ipReturn WriteConnection::open(){
 
 class MessageManager: public FreeListManager {
 private:
+  int wc;
   int Msgs;
+
   Message * newMessage(){
     FreeListEntry *f=getOne();
     Message *m;
     if(f==NULL) {m=new Message();}
     else {GenCast(f,FreeListEntry*,m,Message*);}
+    wc++;
     return m;}
 
   void deleteMessage(Message *m){
     FreeListEntry *f;
     GenCast(m,Message*,f,FreeListEntry*);
     if(!putOne(f)) {delete m;}
+    wc--;
     return;}
 
 public:
-  MessageManager():FreeListManager(MESSAGE_CUTOFF){Msgs = 0;};
+  MessageManager():FreeListManager(MESSAGE_CUTOFF){Msgs = 0; wc = 0;};
 
   Message * allocMessage(NetMsgBuffer *bs, int msgNum,
                          DSite *s, MessageType b, int i){
@@ -2045,6 +2063,8 @@ public:
     netMsgBufferManager->dumpNetMsgBuffer(m->bs);
     PD((MESSAGE,"BM freed nr:%d", --Msgs));
     deleteMessage(m);}
+
+  int getCTR(){return wc;}
 };
 
 
@@ -3927,11 +3947,6 @@ void discoveryPerm_RemoteSite(RemoteSite* site){
 
 void siteAlive_RemoteSite(RemoteSite*) {}
 
-int getNOSM_RemoteSite(RemoteSite* site){
-  return site->getNOSM();}
-int getNORM_RemoteSite(RemoteSite* site){
-  return site->getNORM();}
-
 int startNiceClose(){
   return tcpCache->shutDwnTcpCache();}
 int niceCloseProgress(){
@@ -4076,3 +4091,37 @@ Bool checkIncTimeSlice(unsigned long time, void* v){
   return TSC->hasTask(time);}
 
 #endif
+
+/* ************************************************************************ */
+/*  SECTION 43: DistPane-Info                                                    */
+/* ************************************************************************ */
+
+int getNetMsgBufferManagerInfo(int &size){
+  size = sizeof(NetMsgBuffer);
+  return netMsgBufferManager->getCTR();}
+
+int getNetByteBufferManagerInfo(int &size){
+  size = sizeof(NetByteBuffer);
+  return netByteBufferManager->getCTR();}
+
+int getWriteConnectionManagerInfo(int &size){
+  size = sizeof(WriteConnection);
+  return writeConnectionManager->getCTR();}
+
+int getReadConnectionManagerInfo(int &size){
+  size = sizeof(ReadConnection);
+  return readConnectionManager->getCTR();}
+
+int getMessageManagerInfo(int &size){
+  size = sizeof(Message);
+  return messageManager->getCTR();}
+
+int getRemoteSiteManagerInfo(int &size){
+  size = sizeof(RemoteSite);
+  return remoteSiteManager->getCTR();}
+
+int getNOSM_RemoteSite(RemoteSite* site){
+  return site->getNOSM();}
+
+int getNORM_RemoteSite(RemoteSite* site){
+  return site->getNORM();}
