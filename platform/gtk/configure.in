@@ -131,7 +131,6 @@ oz_inc_path_sav=$oz_inc_path
 for dir in $gnome_header_paths; do
   oz_inc_path="$oz_inc_path $dir/libgnomeui $dir"
 done
-AC_MSG_WARN(XXXXXXXXXXX: $oz_inc_path)
 oz_inc_path="$oz_inc_path /usr/lib/glib/include /usr/local/lib/glib/include /opt/lib/glib/include"
 canvas_ok=no
 OZ_CHECK_HEADER_PATH(glibconfig.h,[canvas_ok=yes])
@@ -144,6 +143,11 @@ if test -n "$canvas_header"; then
   oz_lib_path_sav=$oz_lib_path
   oz_lib_path="$oz_lib_path $gnome_lib_paths"
   canvas_ok=no
+  if test "$have_gnome_config" = yes; then
+    OZ_ADDTO_LIBS(`$gnome_config --libs gnomeui`)
+  else
+    OZ_ADDTO_LIBS(-lgnomeui -lart_lgpl -lgnome -lpopt)
+  fi
   OZ_CHECK_LIB_PATH(gnomeui,gnome_canvas_new,[canvas_ok=yes])
   oz_lib_path=$oz_lib_path_sav
 fi
