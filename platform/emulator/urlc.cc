@@ -1,26 +1,63 @@
-/* -----------------------------------------------------------------------
- *  (c) Perdio Project, DFKI & SICS & UCL
- *  Author: tf
- *
- * -----------------------------------------------------------------------*/
-
 /* urlc.cc
    declaration and definitions for the URL client class.
    definition for the openUrl function.
    */
-
-/*
- * mm: modifications
- *  - passwd always user@ (don't use resolv)
- *  - don't use exception handling
- *  - bug fixed: ftp://scheidr@ftp/pub
- */
 
 
 /* int openUrl(const char*);
    int localizeUrl(const char* Url, char** fnp);
    defined at the end
    */
+
+
+/* defines */
+
+#ifndef URL_CLIENT
+  #include  "urlc.h"
+#endif
+
+/* ## define to 2 if debugging messages and perror wanted;
+             to 1 if perror wanted;
+             to 0 otherwise
+             */
+#define URLC_DEBUG 2
+
+/* ## define to 1 if you can use the resolver library for local
+                     domain name in ftp client
+              to 0 otherwise
+              */
+#define URLC_RESOLVER 0
+
+#ifndef URLC_DEBUG
+#define URLC_PERROR(s)
+#else
+#if 1 <= URLC_DEBUG
+#define URLC_PERROR(s) perror(s)
+#else
+#define URLC_PERROR(s)
+#endif
+#endif
+
+#ifndef URLC_DEBUG
+#define URLC_MSG(s)
+#else
+#if 2 <= URLC_DEBUG
+/* messages to stderr */
+#define URLC_MSG(s) fprintf(stderr, "%s:%d: %s\n", \
+                          __FILE__, __LINE__, ((char*)s))
+#else
+#define URLC_MSG(s)
+#endif
+#endif
+
+#define URLC_BUFLEN     1024 /* BUFSIZ may be too much */
+#define URLC_REDTIMES    5 /* maximum number of redirection (RFC) */
+
+/* ## define to 1 if you want to keep the temporary file */
+#define URLC_KEEP_TEMP 0
+
+/* ## HTTP user agent reported to the server */
+#define HTTP_USER_AGENT "tf_client/2.0"
 
 #include <stdio.h>
 #include <string.h>
@@ -38,61 +75,16 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <sys/uio.h>
 #include <sys/utsname.h>
+#include <sys/uio.h>
 
-
-/* defines */
-
-#ifndef URL_CLIENT
-  #include  "urlc.hh"
+#if 1 <= URLC_RESOLVER
+#include <arpa/nameser.h>
+#include <resolv.h>
 #endif
-
-// #define TF_DEBUG 2
-
-#ifndef TF_DEBUG
-#define TF_PERROR(s)
-#else
-#if 1 <= TF_DEBUG
-#define TF_PERROR(s) perror(s)
-#else
-#define TF_PERROR(s)
-#endif
-#endif
-
-#ifndef TF_DEBUG
-#define TF_MSG(s)
-#else
-#if 2 <= TF_DEBUG
-/* messages to stderr */
-#define TF_MSG(s) fprintf(stderr, "%s:%d: %s\n", \
-                          __FILE__, __LINE__, (s))
-#else
-#define TF_MSG(s)
-#endif
-#endif
-
-  /*
-   * mm: don't use try/catch/throw
-   */
-#define throw2 {ret = 2; goto bomb; }
-#define throw3 {ret = 3; goto bomb; }
-#define throw4 {ret = 4; goto bomb; }
-#define throw5 {ret = 5; goto bomb; }
-#define throw6 {ret = 6; goto bomb; }
-#define throw9 {ret = 9; goto bomb; }
-
-#define TF_BUFLEN     1024 /* BUFSIZ may be too much */
-#define URLC_REDTIMES    5 /* maximum number of redirection (RFC) */
-
-/* ## define to 1 if you want to keep the temporary file */
-#define TF_KEEP_TEMP 0
-
-/* ## HTTP user agent reported to the server */
-#define HTTP_USER_AGENT "tf_client/2.0"
 
 /* ## distant socket read. keeps changes in a single place */
-int tf_read_from_socket(int sockfd, char* buf, int len)
+int urlc_read_from_socket(int sockfd, char* buf, int len)
 {
     int n = 0;
     n = read(sockfd, buf, len);
@@ -124,7 +116,7 @@ private:
     char* path;              // path to retrieve
     int ofd;                 // file id to return
     int sockfd;
-    char* temp_file_name;      // keeps a temporary file name
+    char* temp_file_name;    // keeps a temporary file name
     int unlink_mode;         // != 0 to unlink the filename
     struct sockaddr_in lin;  // local in address
     int ftp_header_stat;     // last ftp reply status
@@ -147,7 +139,7 @@ private:
     int ftp_header_interp(char* line);
     int ftp_get_reply(char* buf, int* blen);
 
-    /* ## internal interface for extension */
+    /* ## internal interface for ##extension */
     int parse_file(const char* line);
     int get_file(void);
 
@@ -155,7 +147,6 @@ private:
     int get_http(void);
 
     int parse_ftp(const char* line);
-    int anon_pass();
     int get_ftp(void);
 
     int parse(const char* line);
@@ -179,7 +170,9 @@ static char* URLC_kp[] = {"http://", "file:", "ftp://", NULL};
    */
 static char URLC_hs[] = "%:@&=+$-_.!*'(),;/?";
 
-
+/* throw simulators */
+#define th1(reason) { clean(); return (reason); }
+#define th2(reason) { thr = reason; goto bomb; }
 
 /* -------------------- class definition ---------------------------*/
 
@@ -250,26 +243,26 @@ urlc::~urlc(void)
 int
 urlc::tmp_file_open(int mode)
 {
-    int ofd = -1;
+    int lofd = -1;
     char tn[L_tmpnam] = ""; // I like POSIX!
     if(NULL == tmpnam(tn)) {
-        TF_PERROR("tmpnam");
+        URLC_PERROR("tmpnam");
         return (URLC_EFILE);
     }
     do {
         errno = 0;
-        ofd = open(tn, O_RDWR | O_CREAT | O_EXCL,
+        lofd = open(tn, O_RDWR | O_CREAT | O_EXCL,
                    S_IRUSR | S_IWUSR); // data destination
-        if((-1 == ofd) && (EINTR == errno))
+        if((-1 == lofd) && (EINTR == errno))
             continue;
-        if(0 < ofd)
+        if(0 < lofd)
             break;
-        TF_PERROR("open");
+        URLC_PERROR("open");
         return (URLC_EFILE);
     } while(1);
     if(URLC_UNLINK == mode) {
         if(-1 == unlink(tn)) {
-            TF_PERROR("unlink");
+            URLC_PERROR("unlink");
             return (URLC_EFILE);
         }
     }
@@ -282,7 +275,7 @@ urlc::tmp_file_open(int mode)
         strcpy(temp_file_name, tn);
     }
 
-    return (ofd);
+    return (lofd);
 }
 
 
@@ -299,7 +292,7 @@ urlc::tcpip_open(const char* h, int p)
     int fd;
 
     if(NULL == (serv_hostent = gethostbyname(h))) {
-        TF_PERROR("gethostbyname");
+        URLC_PERROR("gethostbyname");
         return (URLC_ESOCK);
     }
     memset((char*)&serv_addr, 0, sizeof(serv_addr));
@@ -312,18 +305,18 @@ urlc::tcpip_open(const char* h, int p)
            serv_hostent->h_length);
     fd = socket(PF_INET, SOCK_STREAM, 0);
     if(0 > fd) {
-        TF_PERROR("socket");
+        URLC_PERROR("socket");
         return (URLC_ESOCK);
     }
     while(-1 == connect(fd, (struct sockaddr*) &serv_addr,
                         sizeof(serv_addr))) {
         if(EINTR != errno) {
-            TF_PERROR("connect");
+            URLC_PERROR("connect");
             return (URLC_ESOCK);
         }
     }
     if(-1 == fcntl(fd, F_SETFL, O_NONBLOCK))
-        TF_PERROR("fcntl");
+        URLC_PERROR("fcntl");
 
     // save local address for later use (esp. ftp PORT)
     int lin_len = sizeof(lin);
@@ -340,13 +333,13 @@ urlc::tcpip_open(const char* h, int p)
    returns URLC_OK or reason
    */
 int
-urlc::writen(int sockfd, char* buf, int n)
+urlc::writen(int lsockfd, char* buf, int n)
 {
     int nwritten = 0;
     int nleft = n;
     while(0 < nleft) {
         errno = 0;
-        nwritten = write(sockfd, buf, nleft);
+        nwritten = write(lsockfd, buf, nleft);
         if(0 >= nwritten) {
             switch(errno) {
             case EINTR:
@@ -354,7 +347,7 @@ urlc::writen(int sockfd, char* buf, int n)
             case EINPROGRESS: // by non-blocking connect, if done
                 continue;
             default:
-                TF_PERROR("write");
+                URLC_PERROR("write");
                 return (URLC_ESOCK);
             }
         }
@@ -369,7 +362,7 @@ urlc::writen(int sockfd, char* buf, int n)
    very useful for ftp.
    */
 int
-urlc::write3(int sockfd, const char* p1, int lp1,
+urlc::write3(int lsockfd, const char* p1, int lp1,
              const char* p2, int lp2, const char* p3, int lp3)
 {
     int len = 0;
@@ -390,9 +383,9 @@ urlc::write3(int sockfd, const char* p1, int lp1,
     memcpy(p + lp1, p2, lp2);
     memcpy(p + lp1 + lp2, p3, lp3);
     p[len] = 0;
-    TF_MSG(p);
+    URLC_MSG(p);
 
-    t = writen(sockfd, p, len);
+    t = writen(lsockfd, p, len);
     free(p);
     return (t);
 }
@@ -452,6 +445,7 @@ urlc::parse(const char* line0)
 {
     int i = 0;
     int j = 0;
+    int th = URLC_OK;
     char* pline = NULL; // no limit on URL size, so no automatic alloc possible
     char* line = NULL;
 
@@ -468,65 +462,77 @@ urlc::parse(const char* line0)
     for(i = strlen(line)-1; (0 <= i) && (isspace(line[i])); i--)
         line[i] = 0; /* kill trailing spaces */
 
+    // for each known protocol
+    for(i = 0; (NULL != URLC_kp[i]) && (0 != URLC_kp[i][0]); i++) {
+        // case-insensitive protocol scheme comparison
+        for(j = 0; (0 != URLC_kp[i][j]) && (0 != line[j]) &&
+                (tolower(URLC_kp[i][j]) == tolower(line[j])); j++);
+        if(0 != URLC_kp[i][j])
+            continue; /* next protocol */
 
-    int ret=0;
-    {
-        // for each known protocol
-        for(i = 0; (NULL != URLC_kp[i]) && (0 != URLC_kp[i][0]); i++) {
-            // case-insensitive protocol scheme comparison
-            for(j = 0; (0 != URLC_kp[i][j]) && (0 != line[j]) &&
-                    (tolower(URLC_kp[i][j]) == tolower(line[j])); j++);
-            if(0 != URLC_kp[i][j])
-                continue; /* next protocol */
-
-            proto = (char*)malloc(1+strlen(URLC_kp[i]));
-            if(NULL == proto)
-                throw4;
-            strcpy(proto, URLC_kp[i]);
-            line += strlen(proto);
-            if(0 == strcmp("http://", URLC_kp[i])) {
-                if(URLC_OK != parse_http(line))
-                    throw5
-                else // success
-                    break;
-            }
-            if(0 == strcmp("file:", URLC_kp[i])) {
-                if(URLC_OK != parse_file(line))
-                    throw5
-                else
-                    break;
-            }
-            if(0 == strcmp("ftp://", URLC_kp[i])) {
-                if(URLC_OK != parse_ftp(line))
-                    throw5
-                else
-                    break;
-            }
-            /* other protocols tested here */
-            /* ##extension */
-            throw5; // we slould not arrive here!
+        proto = (char*)malloc(1+strlen(URLC_kp[i]));
+        if(NULL == proto) {
+            th = URLC_EALLOC;
+            goto bomb;
         }
-        if((NULL == URLC_kp[i]) || (0 == URLC_kp[i][0]))
-            throw5; // protocol not found
+        strcpy(proto, URLC_kp[i]);
+        line += strlen(proto);
+        if(0 == strcmp("http://", URLC_kp[i])) {
+            if(URLC_OK != parse_http(line)) {
+                th = URLC_EPARSE;
+                goto bomb;
+            }
+            else // success
+                break;
+        }
+        if(0 == strcmp("file:", URLC_kp[i])) {
+            if(URLC_OK != parse_file(line)) {
+                th = URLC_EPARSE;
+                goto bomb;
+            }
+            else
+                break;
+        }
+        if(0 == strcmp("ftp://", URLC_kp[i])) {
+            if(URLC_OK != parse_ftp(line)) {
+                th = URLC_EPARSE;
+                goto bomb;
+            }
+            else
+                break;
+        }
+        /* other protocols tested here */
+        /* ##extension */
+        th = URLC_EPARSE; // we slould not arrive here!
+        goto bomb;
+    }
+    if((NULL == URLC_kp[i]) || (0 == URLC_kp[i][0])) {
+        th = URLC_EPARSE; // protocol not found
+        goto bomb;
     }
 
-bomb:
     if(NULL != pline)
         free(pline);
-    switch (ret) {
-    case 0:
-      return (URLC_OK);
-    case 4:
-      return (URLC_EALLOC);
-    case 5:
-      if(NULL != proto) {
-        free(proto);
-        proto = NULL;
-      }
-      return (URLC_EPARSE);
-    default:
-      return (URLC_EUNKNOWN);
+    return (URLC_OK);
+
+bomb:
+    if(NULL != pline) {
+        free(pline);
+        pline = NULL;
     }
+    switch (th) {
+    case URLC_EALLOC:
+        return (URLC_EALLOC);
+    case URLC_EPARSE:
+        if(NULL != proto) {
+            free(proto);
+            proto = NULL;
+        }
+        return (URLC_EPARSE);
+    default: // we should not arrive here!
+        return (URLC_EUNKNOWN);
+    }
+
 }
 
 
@@ -561,27 +567,12 @@ urlc::get_file(void)
         return (URLC_EEMPTY);
     ofd = open(path, O_RDONLY);
     if(-1 == ofd) {
-        TF_PERROR("open");
+        URLC_PERROR("open");
         return (URLC_EFILE);
     }
 
     return (URLC_OK);
 }
-
-int
-urlc::anon_pass()
-{
-  // passwd: user@
-  struct passwd* pp = NULL;
-  pp = getpwuid(getuid());
-  pass = (char*)malloc(1 + strlen(pp->pw_name) + 1);
-  if(NULL == pass)
-    return (URLC_EALLOC);
-  strcpy(pass, pp->pw_name);
-  strcat(pass, "@");
-  return (URLC_OK);
-}
-
 
 
 /* it assumes a partial RFC1738-compliant URL in the format:
@@ -622,154 +613,144 @@ urlc::parse_ftp(const char* line)
     ftp_type='I';
     port = 21;
 
-    int ret=0;
-    {
-        p_collon = strchr(line, ':');
-        p_at = strchr(line, '@');
-        if(NULL != p_at) // we have a pass
-            p_slash = strchr(p_at + 1, '/');
-        else
-            p_slash = strchr(line, '/');
-        p_semi = strchr(line, ';'); // to avoid masking by pass
+    p_collon = strchr(line, ':');
+    p_at = strchr(line, '@');
+    if(NULL != p_at) // we have a pass
+        p_slash = strchr(p_at + 1, '/');
+    else
+        p_slash = strchr(line, '/');
+    p_semi = strchr(line, ';'); // to avoid masking by pass
 
-        // sanity checks
-        if((NULL != p_collon) && (0 == p_collon[1]))
-            throw2;
-        if((NULL != p_at) && (0 == p_at[1]))
-            throw2;
-        if((NULL != p_semi) && (0 == p_semi[1]))
-            throw2;
+    // sanity checks
+    if((NULL != p_collon) && (0 == p_collon[1]))
+        th1(URLC_EPARSE);
+    if((NULL != p_at) && (0 == p_at[1]))
+        th1(URLC_EPARSE);
+    if((NULL != p_semi) && (0 == p_semi[1]))
+        th1(URLC_EPARSE);
 
-        if((NULL != p_slash) && (NULL != p_semi) && (p_slash > p_semi))
-            throw2; // / after ;
-        if((NULL != p_collon) && (NULL != p_semi) && (p_collon > p_semi))
-            throw2; // : after ;
-        if((NULL != p_at) && (NULL != p_semi) && (p_at > p_semi))
-            throw2; // @ after ;
-        if((NULL != p_slash) && (NULL != p_at) && (p_at > p_slash))
-            throw2; // @ after /
-        if((NULL != p_collon) && (NULL != p_slash) && (p_collon > p_slash))
-            throw2; // : after /
-        if((NULL != p_collon) && (NULL != p_at) && (p_collon > p_at))
-            throw2; // : after @
-        if((NULL != p_collon) && (NULL == p_at))
-            throw2; // : but no @
+    if((NULL != p_slash) && (NULL != p_semi) && (p_slash > p_semi))
+        th1(URLC_EPARSE); // / after ;
+    if((NULL != p_collon) && (NULL != p_semi) && (p_collon > p_semi))
+        th1(URLC_EPARSE); // : after ;
+    if((NULL != p_at) && (NULL != p_semi) && (p_at > p_semi))
+        th1(URLC_EPARSE); // @ after ;
+    if((NULL != p_slash) && (NULL != p_at) && (p_at > p_slash))
+        th1(URLC_EPARSE); // @ after /
+    if((NULL != p_collon) && (NULL != p_slash) && (p_collon > p_slash))
+        th1(URLC_EPARSE); // : after /
+    if((NULL != p_collon) && (NULL != p_at) && (p_collon > p_at))
+        th1(URLC_EPARSE); // : after @
+    if((NULL != p_collon) && (NULL == p_at))
+        th1(URLC_EPARSE); // : but no @
 
-        // space allocation
-        if(NULL != p_semi) {
-            *p_semi = 0;
-            p_semi++;
-            if(p_semi != strstr(p_semi, "type="))
-                return (2); // invalid type specifier
-            p_semi += strlen("type=");
-            if((0 == p_semi[0]) || (NULL == strchr("aid", p_semi[0])))
-                return (2); // no valid(?) type specifier
-            ftp_type = 'I'; // ## stupid, isn't it?
-        }
-        if(NULL == p_slash) { // no path specified
-            path = NULL;
-            throw2;
-        }
-        else {
-            *p_slash = 0;
-            p_slash++;
-            path = (char*)malloc(1 + strlen(p_slash));
-            if(NULL == path)
-                throw3;
-            strcpy(path, p_slash);
-        }
-        for(i = 0; 0 != path[i]; i++) {
-            if('%' != path[i])
-                continue;
-            i++;
-            if((0 == path[i]) || (NULL == strchr(he, tolower(path[i]))))
-                throw2;
-            i++;
-            if((0 == path[i]) || (NULL == strchr(he, tolower(path[i]))))
-                throw2;
-        }
-        if((NULL != p_collon) && (NULL != p_at)) { // user & pass
-            *p_collon = 0;
-            p_collon++;
-            *p_at = 0;
-            p_at++;
-            user = (char*)malloc(1 + strlen(line));
-            if(NULL == user)
-                throw3;
-            strcpy(user, line);
-            if(URLC_OK != descape(user))
-                throw2;
-            pass = (char*)malloc(1 + strlen(p_collon));
-            if(NULL == pass)
-                throw3;
-            strcpy(pass, p_collon);
-            if(URLC_OK != descape(pass))
-                throw2;
-            if(0 == *p_at) // null host?
-                throw2;
-            host = (char*)malloc(1 + strlen(p_at));
-            if(NULL == host)
-                throw3;
-            strcpy(host, p_at);
-        }
-        if((NULL == p_collon) && (NULL != p_at)) { // just user
-            *p_at = 0;
-            p_at++;
-            user = (char*)malloc(1 + strlen(line));
-            if(NULL == user)
-                throw3;
-            strcpy(user, line);
-            if(URLC_OK != descape(user))
-                throw2;
-
-            int err = anon_pass();
-            if (ret != 0) {
-              clean();
-              return err;
-            }
-
-            if(0 == *p_at) // null host?
-                throw2;
-            host = (char*)malloc(1 + strlen(p_at));
-            if(NULL == host)
-                throw3;
-            strcpy(host, p_at);
-        }
-        if((NULL == p_at) && (NULL == p_collon)) { // no user/pass
-
-            user = (char*)malloc(1 + strlen("anonymous"));
-            if(NULL == user)
-                throw3;
-            strcpy(user, "anonymous"); // hardwired by RFC1738
-
-            int err = anon_pass();
-            if (ret != 0) {
-              clean();
-              return err;
-            }
-
-            host = (char*)malloc(1 + strlen(line));
-            if(NULL == host)
-                throw3;
-            strcpy(host, line);
-        }
-
+    // space allocation
+    if(NULL != p_semi) {
+        *p_semi = 0;
+        p_semi++;
+        if(p_semi != strstr(p_semi, "type="))
+            return (URLC_EPARSE); // invalid type specifier
+        p_semi += strlen("type=");
+        if((0 == p_semi[0]) || (NULL == strchr("aid", p_semi[0])))
+            return (URLC_EPARSE); // no valid(?) type specifier
+        ftp_type = 'I'; // ## stupid, isn't it?
     }
+    if(NULL == p_slash) { // no path specified
+        path = NULL;
+        th1(URLC_EPARSE);
+    }
+    else {
+        *p_slash = 0;
+        p_slash++;
+        path = (char*)malloc(1 + strlen(p_slash));
+        if(NULL == path)
+            th1(URLC_EALLOC);
+        strcpy(path, p_slash);
+    }
+    for(i = 0; 0 != path[i]; i++) {
+        if('%' != path[i])
+            continue;
+        i++;
+        if((0 == path[i]) || (NULL == strchr(he, tolower(path[i]))))
+            th1(URLC_EPARSE);
+        i++;
+        if((0 == path[i]) || (NULL == strchr(he, tolower(path[i]))))
+            th1(URLC_EPARSE);
+    }
+    if((NULL != p_collon) && (NULL != p_at)) { // user & pass
+        *p_collon = 0;
+        p_collon++;
+        *p_at = 0;
+        p_at++;
+        user = (char*)malloc(1 + strlen(line));
+        if(NULL == user)
+            th1(URLC_EALLOC);
+        strcpy(user, line);
+        if(URLC_OK != descape(user))
+            th1(URLC_EPARSE);
+        pass = (char*)malloc(1 + strlen(p_collon));
+        if(NULL == pass)
+            th1(URLC_EALLOC);
+        strcpy(pass, p_collon);
+        if(URLC_OK != descape(pass))
+            th1(URLC_EPARSE);
+        if(0 == *p_at) // null host?
+            th1(URLC_EPARSE);
+        host = (char*)malloc(1 + strlen(p_at));
+        if(NULL == host)
+            th1(URLC_EALLOC);
+        strcpy(host, p_at);
+    }
+    if((NULL == p_collon) && (NULL != p_at)) { // just user
+        *p_at = 0;
+        p_at++;
+        user = (char*)malloc(1 + strlen(line));
+        if(NULL == user)
+            th1(URLC_EALLOC);
+        strcpy(user, line);
+        if(URLC_OK != descape(user))
+            th1(URLC_EPARSE);
+        pass = NULL; // leaves NULL in pass
+        if(0 == *p_at) // null host?
+            th1(URLC_EPARSE);
+        host = (char*)malloc(1 + strlen(p_at));
+        if(NULL == host)
+            th1(URLC_EALLOC);
+        strcpy(host, p_at);
+    }
+    if((NULL == p_at) && (NULL == p_collon)) { // no user/pass
+        struct passwd* pp = NULL;
+        user = (char*)malloc(1 + strlen("anonymous"));
+        if(NULL == user)
+            th1(URLC_EALLOC);
+        strcpy(user, "anonymous"); // hardwired by RFC1738
+        pp = getpwuid(getuid());
 
-    // fprintf(stderr, "user: %s; pass: %s; host: %s; path: %s; type: %c\n",
-    //         user, pass, host, path, ftp_type);
+#if 1 <= URLC_RESOLVER
+        extern struct __res_state _res;
+        res_init();
+        pass = (char*)malloc(1 + strlen(pp->pw_name) + 1
+                             + strlen(_res.defdname));
+        if(NULL == pass)
+            th1(URLC_EALLOC);
+        strcpy(pass, pp->pw_name);
+        strcat(pass, "@");
+        strcat(pass, _res.defdname);
+#else
+        pass = (char*)malloc(1 + strlen(pp->pw_name) + 1);
+        if(NULL == pass)
+            th1(URLC_EALLOC);
+        strcpy(pass, pp->pw_name);
+        strcat(pass, "@");
+#endif
+
+        host = (char*)malloc(1 + strlen(line));
+        if(NULL == host)
+            th1(URLC_EALLOC);
+        strcpy(host, line);
+    }
     return (URLC_OK);
 
-bomb:
-    clean();
-    switch (ret) {
-    case 2:
-      return (URLC_EPARSE);
-    case 3:
-      return (URLC_EALLOC);
-    default:
-      return (URLC_EUNKNOWN);
-    }
 }
 
 
@@ -782,7 +763,7 @@ urlc::ftp_header_interp(char* line)
     int ftp_new_reply;
     if((NULL == line) || (0 >= strlen(line)))
         return (URLC_ERESP);
-    TF_MSG(line);
+    URLC_MSG(line);
 
     if( (isdigit(line[0]))
         && ((0 != line[1]) && (isdigit(line[1])))
@@ -839,7 +820,7 @@ urlc::ftp_header_interp(char* line)
 
 /* gets reply from the socket. manipulates the reception buffer.
    knows to get multi-line replies.
-   assumes buffer is has TF_BUFLEN size.
+   assumes buffer is has URLC_BUFLEN size.
    */
 int
 urlc::ftp_get_reply(char* buf, int* blen)
@@ -851,14 +832,14 @@ urlc::ftp_get_reply(char* buf, int* blen)
     int i = 0;
 
     while(1) {
-        for(i = start; (TF_BUFLEN > i) && (i < *blen)
+        for(i = start; (URLC_BUFLEN > i) && (i < *blen)
                        && ('\n' != buf[i]); i++);
-        if(TF_BUFLEN == i) // line too long
+        if(URLC_BUFLEN == i) // line too long
             return (URLC_ERESP);
         if(i == *blen) { // no \n by now
             start += i;
-            n = tf_read_from_socket(sockfd, buf + *blen,
-                                    TF_BUFLEN - *blen);
+            n = urlc_read_from_socket(sockfd, buf + *blen,
+                                    URLC_BUFLEN - *blen);
             if(0 == n) // EOF??
                 return (URLC_ERESP);
             if(-1 == n) {
@@ -867,7 +848,7 @@ urlc::ftp_get_reply(char* buf, int* blen)
                 case EAGAIN:
                     continue;
                 default:
-                    TF_PERROR("read");
+                    URLC_PERROR("read");
                     return (URLC_ESOCK);
                 }
             }
@@ -906,7 +887,7 @@ urlc::get_ftp(void)
     if(0 > sockfd)
         return (URLC_ESOCK);
 
-    char buf[TF_BUFLEN];
+    char buf[URLC_BUFLEN];
     int blen = 0;
     int n = 0;
 
@@ -925,7 +906,10 @@ urlc::get_ftp(void)
 
     // PASS
     if(URLC_INTERM == n) {
-        n = write3(sockfd, "PASS ", 5, pass, strlen(pass), "\r\n", 2);
+        if((NULL != pass) && (0 != pass[0]))
+            n = write3(sockfd, "PASS ", 5, pass, strlen(pass), "\r\n", 2);
+        else
+            n = writen(sockfd, "PASS \r\n", 7); // not normal!
         if(URLC_OK != n)
             return (n);
         n = ftp_get_reply(buf, &blen);
@@ -1006,7 +990,7 @@ urlc::get_ftp(void)
     local_addr.sin_port = 0;
     n = bind(sockfd2, (struct sockaddr*)&local_addr, sizeof(local_addr));
     if(0 > n) {
-        TF_PERROR("bind");
+        URLC_PERROR("bind");
         return (URLC_ESOCK);
     }
     getsockname(sockfd2, (struct sockaddr*)&local_addr, &local_addr_len);
@@ -1019,7 +1003,7 @@ urlc::get_ftp(void)
     sprintf(port_val, "%s,%d,%d", port_val,
             (unsigned short)((htons(local_addr.sin_port) >> 8) & 0xff),
             (unsigned short)(htons(local_addr.sin_port) & 0xff));
-    TF_MSG(port_val);
+    URLC_MSG(port_val);
     n = write3(sockfd, "PORT ", 5, port_val, strlen(port_val), "\r\n", 2);
     if(URLC_OK != n)
         return (URLC_ESOCK);
@@ -1039,7 +1023,7 @@ urlc::get_ftp(void)
     newsockfd = accept(sockfd2, (struct sockaddr*) &rem_addr,
                        &rem_addr_len);
     if(-1 == newsockfd) {
-        TF_PERROR("accept");
+        URLC_PERROR("accept");
         return (URLC_ESOCK);
     }
 
@@ -1052,12 +1036,12 @@ urlc::get_ftp(void)
         return (URLC_ESOCK);
     if( (pcin.sin_addr.s_addr != rem_addr.sin_addr.s_addr)
         || (20 != htons(rem_addr.sin_port))) {
-        TF_MSG("ftp data connection attack.");
+        URLC_MSG("ftp data connection attack.");
         return (URLC_EAUTH);
     }
 
     if(-1 == fcntl(newsockfd, F_SETFL, O_NONBLOCK))
-        TF_PERROR("fcntl");
+        URLC_PERROR("fcntl");
 
     ofd = tmp_file_open(unlink_mode);
     if(0 > ofd)
@@ -1080,7 +1064,7 @@ urlc::get_ftp(void)
         blen -= n;
         if(0 < n)
             continue; // try again to write
-        n = tf_read_from_socket(newsockfd, buf, TF_BUFLEN);
+        n = urlc_read_from_socket(newsockfd, buf, URLC_BUFLEN);
         if(0 == n)
             break;
         if(-1 == n) {
@@ -1108,6 +1092,7 @@ urlc::get_ftp(void)
 
     return (URLC_OK);
 }
+
 
 /* it assumes a standard HTTP/1.0 query in the format:
    http://host[:port][/[path]] as in RFC1738.
@@ -1157,67 +1142,53 @@ urlc::parse_http(const char* line)
             p_collon = NULL;
     }
 
-        host = (char*)malloc(1+strlen(line));
-        if(NULL == host)
-            return (URLC_EALLOC);
-        strcpy(host, line);
+    host = (char*)malloc(1+strlen(line));
+    if(NULL == host)
+        return (URLC_EALLOC);
+    strcpy(host, line);
 
-     int ret = 0;
-     {
-        if(NULL == p_collon)
-            port = 80;
-        else {
-            long i = 0;
-            i = strtol(p_collon, NULL, 10); // ANSI
-            if((0 >= i) || (USHRT_MAX < i))
-                throw2;
-            port = (unsigned short)i;
-        }
-
-        if(NULL == p_slash) {
-            path = (char*)malloc(2);
-            if(NULL == path)
-                throw5;
-            path[0] = '/';
-            path[1] = 0;
-            return (URLC_OK);
-        }
-        path = (char*)malloc(1+1+(3*strlen(p_slash)));
-        // /, string with escapes , \0
-        if(NULL == path)
-            throw5;
-        path[0] = '/';
-        char* pp = path+1;
-        int j;
-        char he[] = "0123456789abcdef";
-        for(j = 0; 0 != p_slash[j]; j++, pp++) {
-            if((isalnum(p_slash[j])) ||
-               (NULL != strchr(URLC_hs, p_slash[j])))  {
-                *pp = p_slash[j];
-            }
-            else {
-                *pp = '%';
-                pp++;
-                *pp = he[(int)((p_slash[j]>>4) & 0x0f)];
-                pp++;
-                *pp = he[(int)(p_slash[j] & 0x0f)];
-            }
-        }
-        *pp = 0;
+    if(NULL == p_collon)
+        port = 80;
+    else {
+        long i = 0;
+        i = strtol(p_collon, NULL, 10); // ANSI
+        if((0 >= i) || (USHRT_MAX < i))
+            th1(URLC_EINVAL);
+        port = (unsigned short)i;
     }
 
-     return (URLC_OK);
+    if(NULL == p_slash) {
+        path = (char*)malloc(2);
+        if(NULL == path)
+            th1(URLC_EALLOC);
+        path[0] = '/';
+        path[1] = 0;
+        return (URLC_OK);
+    }
+    path = (char*)malloc(1+1+(3*strlen(p_slash)));
+    // /, string with escapes , \0
+    if(NULL == path)
+        th1(URLC_EALLOC);
+    path[0] = '/';
+    char* pp = path+1;
+    int j;
+    char he[] = "0123456789abcdef";
+    for(j = 0; 0 != p_slash[j]; j++, pp++) {
+        if((isalnum(p_slash[j])) ||
+           (NULL != strchr(URLC_hs, p_slash[j])))  {
+            *pp = p_slash[j];
+        }
+        else {
+            *pp = '%';
+            pp++;
+            *pp = he[(int)((p_slash[j]>>4) & 0x0f)];
+            pp++;
+            *pp = he[(int)(p_slash[j] & 0x0f)];
+        }
+    }
+    *pp = 0;
 
-bomb:
-     clean();
-     switch (ret) {
-     case 2:
-       return (URLC_EINVAL);
-     case 5:
-       return (URLC_EALLOC);
-    default:
-      return (URLC_EUNKNOWN);
-     }
+    return (URLC_OK);
 }
 
 
@@ -1249,7 +1220,7 @@ urlc::http_req(void)
     p[0] = 0; // ""
     for(n = 0; NULL != req_form[n]; n++) {
         strcat(p, req_form[n]);
-        TF_MSG(req_form[n]);
+        URLC_MSG(req_form[n]);
     }
     if(URLC_OK != writen(sockfd, p, tot_len)) {
             free(p);
@@ -1266,7 +1237,7 @@ urlc::http_req(void)
 int
 urlc::http_header_interp(char* line, int linenr)
 {
-    TF_MSG(line);
+    URLC_MSG(line);
     if(0 == linenr) { // first line
         char* l = line;
         char http_ver[] = "HTTP/";
@@ -1327,7 +1298,7 @@ urlc::http_header_interp(char* line, int linenr)
 
 
 /* gets HTTP reply.
-   assumes buffer has TF_BUFLEN size
+   assumes buffer has URLC_BUFLEN size
    */
 int
 urlc::http_get_header(char* buf, int* brem, int& n)
@@ -1339,7 +1310,7 @@ urlc::http_get_header(char* buf, int* brem, int& n)
 
     while(1) { // start read headers
         errno = 0;
-        n1 = tf_read_from_socket(sockfd, p, *brem);
+        n1 = urlc_read_from_socket(sockfd, p, *brem);
         if(0 == n1) // EOF??
             return (URLC_ERESP);
         if(-1 == n1) {
@@ -1348,7 +1319,7 @@ urlc::http_get_header(char* buf, int* brem, int& n)
             case EAGAIN:
                 continue;
             default:
-                TF_PERROR("read");
+                URLC_PERROR("read");
                 return (URLC_ESOCK);
             }
         }
@@ -1364,12 +1335,12 @@ urlc::http_get_header(char* buf, int* brem, int& n)
                 memmove(buf, buf+2, n);
                 return (URLC_OK);
             }
-            for(i = 0; (TF_BUFLEN > i) && (i < n) &&
+            for(i = 0; (URLC_BUFLEN > i) && (i < n) &&
                     ('\n' != buf[i]); i++);
-            if(TF_BUFLEN == i) // we reached buffer's end
-              return (URLC_EALLOC);
+            if(URLC_BUFLEN == i) // we reached buffer's end
+                return (URLC_ETOOLONG);
             if(i == n) { // no \n until now
-                *brem = TF_BUFLEN-n;
+                *brem = URLC_BUFLEN-n;
                 p = buf+n;
                 break; // try to append to existing chars
             }
@@ -1383,7 +1354,7 @@ urlc::http_get_header(char* buf, int* brem, int& n)
                 return (URLC_REDIRECT);
             memmove(buf, p, n);
             p = buf+n;
-            *brem = TF_BUFLEN-n;
+            *brem = URLC_BUFLEN-n;
             linenr++;
         } while(0 < n);
     }
@@ -1401,8 +1372,9 @@ urlc::get_http(void)
 {
     int n = 0;
     int n2 = 0;
-    int brem  = TF_BUFLEN;
-    char buf[TF_BUFLEN] = "";
+    int thr = URLC_OK;
+    int brem  = URLC_BUFLEN;
+    char buf[URLC_BUFLEN] = "";
 
     sockfd = tcpip_open(host, port);
     if(0 > sockfd)
@@ -1422,28 +1394,25 @@ urlc::get_http(void)
         return (ofd);
     }
 
-    int ret=0;
-    {
-        while(1) { // start read contents
-            errno = 0;
-            if((0 < n2) &&
-               (n2 != write(ofd, buf, n2))) {
-                TF_PERROR("write");
-                throw9;
-            }
-            errno = 0;
-            n2 = tf_read_from_socket(sockfd, buf, TF_BUFLEN);
-            if(0 == n2) // EOF
-                break;
-            if(-1 == n2) {
-                switch(errno) {
-                case EINTR:
-                case EAGAIN: // == EWOULDBLOCK(?)
-                    continue;
+    while(1) { // start read contents
+        errno = 0;
+        if((0 < n2) &&
+           (n2 != write(ofd, buf, n2))) {
+            URLC_PERROR("write");
+            th2(URLC_EFILE);
+        }
+        errno = 0;
+        n2 = urlc_read_from_socket(sockfd, buf, URLC_BUFLEN);
+        if(0 == n2) // EOF
+            break;
+        if(-1 == n2) {
+            switch(errno) {
+            case EINTR:
+            case EAGAIN: // == EWOULDBLOCK(?)
+                continue;
                 default:
-                    TF_PERROR("read");
-                    throw6;
-                }
+                    URLC_PERROR("read");
+                    th2(URLC_ESOCK);
             }
         }
     }
@@ -1453,20 +1422,20 @@ urlc::get_http(void)
 
 bomb:
     while(1) {
-      errno = 0;
-      if(-1 == close(sockfd))
-        if(EINTR == errno)
-          continue;
-        else break;
+        errno = 0;
+        if(-1 == close(sockfd))
+            if(EINTR == errno)
+                continue;
+            else
+                break;
     }
     ofd = -1;
-    switch (ret) {
-    case 6:
-      return (URLC_ESOCK);
-    case 9:
-      return (URLC_EFILE);
+    switch(thr) {
+    case URLC_ESOCK:
+    case URLC_EFILE:
+        return (thr);
     default:
-      return (URLC_EUNKNOWN);
+        return (URLC_EUNKNOWN);
     }
 }
 
@@ -1518,6 +1487,7 @@ urlc::getURL(const char* line, int unlink_m)
             return (n);
         }
     }
+    return (URLC_EUNKNOWN); // why here?
 }
 
 
