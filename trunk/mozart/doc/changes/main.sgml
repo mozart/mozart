@@ -114,7 +114,7 @@ backward compatible with Mozart 1.2.0.
     trees).
             <item>
    Many improvements in the Windows port, in particular for subprocesses,
-   as well as enhanced oztool and ozmake support.
+   finally correctly enabling oztool and ozmake.
             <item>
    Both domain- and bounds-consistent variants of the alldifferent
    constraint for finite domains are available.
@@ -153,27 +153,28 @@ backward compatible with Mozart 1.2.0.
         result propagation was weaker.  This could be observed with
         the SEND+MORE=MONEY example which produced a larger search
         tree
-<entry><code>oztool</code> (Windows)
+<entry proglang=sh><<oztool>> (Windows)
 <item>
-	`oztool ld' now also works under Cygwin (not only Mingw32).
+	<<oztool ld>> now also works under Cygwin (not only Mingw32).
 	Furthermore, options are now accepted in any order, and options
-	-I, -l, -L and -s are supported for gcc and Microsoft Visual C++
-<entry><code>OS.system</code> and <code>Open.pipe</code> (Windows)
+	<<-I>>, <<-l>>, <<-L>> and <<-s>> are supported for gcc and
+	Microsoft Visual C++
+<entry><<OS.system>> and <<Open.pipe>> (Windows)
 <item>
-	OS.system was broken in 1.2.0 and has now been repaired;
+	<<OS.system>> was broken in 1.2.0 and has now been repaired;
 	bug fixes in inheritance and closing of handles
 <entry>failed futures
 <item>
         (dis)equality testing now correctly passes up exceptions.
-        <code>Value.byNeedFail</code> is now careful to be non-requesting.
+        <<Value.byNeedFail>> is now careful to be non-requesting.
 <entry>IO problems (Windows 2000 Service Pack 2)
-<item>system would freeze if ws2_32.dll was not loaded
+<item>system would freeze if <File/ws2_32.dll/ was not loaded
 <entry>Entailment of propagators
 <item>propagators are now again included in the suspension count
-<entry><code>Combinator.reify</code>
+<entry><<Combinator.reify>>
 <item>fixed bug related to merging
-<entry><code>Schedule.cumulative</code>
-<item>	fixed bug relatesd to sorting task intervals
+<entry><<Schedule.cumulative>>
+<item>	fixed bug related to sorting task intervals
 </list>
 </p>
 
