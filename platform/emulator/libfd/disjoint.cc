@@ -34,7 +34,7 @@ OZ_C_proc_end
 
 OZ_Return SchedCDPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   int &xd = reg_xd, &yd = reg_yd;
 
@@ -71,12 +71,12 @@ OZ_Return SchedCDPropagator::propagate(void)
   }
 
 
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail" << *this);
+  OZ_DEBUGPRINTTHIS("fail");
   return P.fail();
 }
 
@@ -101,7 +101,7 @@ OZ_C_proc_end
 
 OZ_Return SchedCDBPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   int &xd = reg_xd, &yd = reg_yd;
 
@@ -155,10 +155,10 @@ OZ_Return SchedCDBPropagator::propagate(void)
     FailOnEmpty(*y -= la);
   }
 
-  OZ_DEBUGPRINT("out: " << *this);
+  OZ_DEBUGPRINTTHIS("out: ");
   return P.leave();
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
 
   return P.fail();
 }

@@ -8,12 +8,7 @@ extern "C" {
 void error( char *format ...);
 }
 
-#ifdef CPI_FILE_PRINT
-#include <fstream.h>
-extern ofstream * cpi_cout;
-#else
 extern ostream * cpi_cout;
-#endif
 
 #  define DEBUG_FD_IR(COND, CODE) if (COND) { *cpi_cout << CODE << flush;}
 

@@ -15,8 +15,8 @@
 
 #ifdef PROFILE_FD
 
-#include <iostream.h>
 #include <limits.h>
+#include "ozostream.hh"
 
 #include "fdprofil.hh"
 

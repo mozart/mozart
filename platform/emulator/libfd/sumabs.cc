@@ -80,7 +80,7 @@ OZ_CFun LinNotEqAbsPropagator::header = fdp_sumAC;
 
 OZ_Return LinEqAbsPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINT("in " << *this);
+  _OZ_DEBUGPRINTTHIS("in ");
 
   int summax, summin, axmax, axmin, dmax, dmin, j, k, d_size, fail, clause;
   double bound1, bound2;
@@ -223,11 +223,11 @@ OZ_Return LinEqAbsPropagator::propagate(void)
 
   FailOnEmpty(d->getSize());
 
-  _OZ_DEBUGPRINT("leave: " << *this);
+  _OZ_DEBUGPRINTTHIS("leave: ");
   return P.leave();
 
 failure:
-  _OZ_DEBUGPRINT("failed: " << *this);
+  _OZ_DEBUGPRINTTHIS("failed: ");
 
   return P.fail();
 }
@@ -236,7 +236,7 @@ failure:
 
 OZ_Return LinLessEqAbsPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINT("in " << *this);
+  _OZ_DEBUGPRINTTHIS("in ");
 
   int summin, dmax, j, k, d_size, clause;
   double bound1, bound2;
@@ -316,12 +316,12 @@ OZ_Return LinLessEqAbsPropagator::propagate(void)
   if (!unified)
     FailOnEmpty(*d &= d_aux);
 
-  _OZ_DEBUGPRINT("leave: " << *this);
+  _OZ_DEBUGPRINTTHIS("leave: ");
 
   return P.leave();
 
 failure:
- _OZ_DEBUGPRINT("failed: " << *this);
+ _OZ_DEBUGPRINTTHIS("failed: ");
 
  return P.fail();
 }
@@ -330,7 +330,7 @@ failure:
 
 OZ_Return LinNotEqAbsPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINT("in " << *this);
+  _OZ_DEBUGPRINTTHIS("in ");
 
   int dmax, j, k, d_size, clause;
   double bound1, bound2;
@@ -420,12 +420,12 @@ OZ_Return LinNotEqAbsPropagator::propagate(void)
   if (!unified)
     FailOnEmpty(*d &= d_aux);
 
-  _OZ_DEBUGPRINT("leave: " << *this);
+  _OZ_DEBUGPRINTTHIS("leave: ");
 
   return P.leave();
 
 failure:
-  _OZ_DEBUGPRINT("failed: " << *this);
+  _OZ_DEBUGPRINTTHIS("failed: ");
 
  return P.fail();
 }
@@ -434,7 +434,7 @@ failure:
 
 OZ_Return LinGreaterEqAbsPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINT("in " << *this);
+  _OZ_DEBUGPRINTTHIS("in ");
 
   int summax, axmax, axmin, dmax, dmin, j, k, d_size, fail, clause;
   double bound1, bound2;
@@ -572,12 +572,12 @@ OZ_Return LinGreaterEqAbsPropagator::propagate(void)
 
   FailOnEmpty(d->getSize());
 
-  _OZ_DEBUGPRINT("leave: " << *this);
+  _OZ_DEBUGPRINTTHIS("leave: ");
 
   return P.leave();
 
 failure:
-  _OZ_DEBUGPRINT("failed: " << *this);
+  _OZ_DEBUGPRINTTHIS("failed: ");
 
   return P.fail();
 }

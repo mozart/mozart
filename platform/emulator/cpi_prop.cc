@@ -62,7 +62,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
       break;
 
     case FSETVALUE:
-      o << *tagged2FSetValue(h);
+      o << tagged2FSetValue(h)->toString();
       break;
 
     case CVAR:
@@ -79,13 +79,13 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
           /*Assert(cv->isFDPatched()); goto ri_lbl;*/
         } else if (cv->getType() == FDVariable) {
         fd_lbl:
-          o << ((GenFDVariable *) cv)->getDom();
+          o << ((GenFDVariable *) cv)->getDom().toString();
         } else if (cv->getType() == BoolVariable) {
         bool_lbl:
           o << "{0#1}";
         } else if (cv->getType() == FSetVariable) {
         fs_lbl:
-          o << ((GenFSetVariable *) cv)->getSet();
+          o << ((GenFSetVariable *) cv)->getSet().toString();
         } else {
           goto problem;
         }
@@ -129,6 +129,14 @@ ostream& operator << (ostream& o, const OZ_Propagator &p)
 
   return o;
 }
+
+char *OZ_Propagator::toString() const
+{
+  ozstrstream str;
+  str << (*this);
+  return ozstrdup(str.str());
+}
+
 
 OZ_Boolean OZ_Propagator::mayBeEqualVars(void)
 {

@@ -13,8 +13,7 @@
 #define __OZ_CPI_HH__
 
 #include <stddef.h>
-#include <iostream.h>
-
+#include <stdio.h>
 #include "oz.h"
 
 //#define DEBUG_FSET
@@ -25,12 +24,7 @@
 //#define CPI_FILE_PRINT
 #endif
 
-#ifdef CPI_FILE_PRINT
-#include <fstream.h>
-extern ofstream * cpi_cout;
-#else
-extern ostream * cpi_cout;
-#endif
+
 
 
 //-----------------------------------------------------------------------------
@@ -81,12 +75,12 @@ extern ostream * cpi_cout;
 enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singl};
 
 class OZ_FiniteDomain {
-friend ostream &operator << (ostream &, const OZ_FiniteDomain &);
+  //friend ostream &operator << (ostream &, const OZ_FiniteDomain &);
 protected:
   int min_elem, max_elem, size;
   void * descr;
 
-  ostream &print(ostream &) const;
+  //  ostream &print(ostream &) const;
 public:
 
   OZ_FiniteDomain(void) : descr((void *) 0) {}
@@ -135,13 +129,15 @@ public:
   OZ_Boolean isIn(int i) const;
   void copyExtension(void);
   void disposeExtension(void);
+
+  char *toString() const;
 };
 
 
-inline
-ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
-  return fd.print(ofile);
-}
+//inline
+//ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
+//  return fd.print(ofile);
+//}
 
 //-----------------------------------------------------------------------------
 // OZ_FSetValue
@@ -153,13 +149,13 @@ const int fset_high = 2;
 class OZ_FSetConstraint;
 
 class OZ_FSetValue {
-friend ostream &operator << (ostream &, const OZ_FSetValue &);
+//friend ostream &operator << (ostream &, const OZ_FSetValue &);
 
 protected:
   int _card;
   int _in[fset_high];
 
-  ostream &print(ostream &) const;
+//  ostream &print(ostream &) const;
 public:
   OZ_FSetValue(void) {}
   OZ_FSetValue(const OZ_FSetConstraint&);
@@ -173,12 +169,13 @@ public:
   int getNextSmallerElem(int) const;
   OZ_Term getKnownInList(void) const;
   OZ_Term getKnownNotInList(void) const;
+  char *toString() const;
 };
 
-inline
-ostream &operator << (ostream &ofile, const OZ_FSetValue &fs) {
-  return fs.print(ofile);
-}
+//inline
+//ostream &operator << (ostream &ofile, const OZ_FSetValue &fs) {
+//  return fs.print(ofile);
+//}
 
 
 //-----------------------------------------------------------------------------
@@ -189,14 +186,14 @@ enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val,
                        fs_prop_any, fs_prop_bounds};
 
 class OZ_FSetConstraint {
-friend ostream &operator << (ostream &, const OZ_FSetConstraint &);
+//friend ostream &operator << (ostream &, const OZ_FSetConstraint &);
 
 protected:
   int _card_min, _card_max;
   int _known_not_in, _known_in;
   int _in[fset_high], _not_in[fset_high];
 
-  ostream &print(ostream &) const;
+//  ostream &print(ostream &) const;
 public:
   OZ_FSetConstraint(void) {}
   OZ_FSetConstraint(const OZ_FSetValue &);
@@ -239,13 +236,14 @@ public:
   OZ_Boolean operator >= (const OZ_FSetConstraint &);
   OZ_Boolean operator != (const OZ_FSetConstraint &);
   OZ_Boolean operator == (const OZ_FSetConstraint &);
+  char *toString() const;
 };
 
 
-inline
-ostream &operator << (ostream &ofile, const OZ_FSetConstraint &fs) {
-  return fs.print(ofile);
-}
+//inline
+//ostream &operator << (ostream &ofile, const OZ_FSetConstraint &fs) {
+//  return fs.print(ofile);
+//}
 
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
@@ -295,9 +293,11 @@ public:
   virtual OZ_NonMonotonic::order_t getOrder(void) const {
     return 0;
   }
+
+  char *toString() const;
 };
 
-ostream& operator << (ostream& o, const OZ_Propagator &p);
+//ostream& operator << (ostream& o, const OZ_Propagator &p);
 
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.

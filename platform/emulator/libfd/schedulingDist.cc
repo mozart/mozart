@@ -237,7 +237,7 @@ OZ_CFun TaskIntervalsProof::spawner = sched_taskIntervalsProof;
 
 OZ_Return TaskIntervalsProof::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   OZ_Stream st(stream);
 

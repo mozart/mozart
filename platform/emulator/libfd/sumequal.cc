@@ -27,13 +27,13 @@
 
 OZ_Return LinEqPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   int &c = reg_c, &sz = reg_sz, * a = reg_a;
 
   simplify_on_equality();
 
-  OZ_DEBUGPRINT("in (after simplify)" << *this);
+  OZ_DEBUGPRINTTHIS("in (after simplify)");
 
   if (sz == 0) return c ? FAILED : PROCEED;
   if (sz == 2 && c == 0 && (a[0] == -a[1]))
@@ -250,7 +250,7 @@ OZ_Return LinEqPropagator::propagate(void)
 
     } while (repeat_outer);
   }
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
 
 #ifdef FLAGS
       VERBOSE(cout << endl << flush);
@@ -264,7 +264,7 @@ OZ_Return LinEqPropagator::propagate(void)
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
 
 #ifdef FLAGS
   VERBOSE(cout << "fail: " << *this << endl <<flush);

@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <iostream.h>
 
 #ifdef AIX3_RS6000
 #include <sys/select.h>

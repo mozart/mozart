@@ -1066,7 +1066,7 @@ void BIfdBodyManager::printDebug(int i) {
     cout << '[' << i << "]: v=" << (void *) bifdbm_var[i]
          << ", vptr=" << (void *) bifdbm_varptr[i]
          << ", vtag=" << pm_term_type2string(bifdbm_vartag[i])
-         << ", dom=" << *bifdbm_dom[i]
+         << ", dom=" << bifdbm_dom[i]->toString()
          << ", ids=" << bifdbm_init_dom_size[i]
          << ", var_state=" << fdbm_var_stat2char(bifdbm_var_state[i])
          << endl << flush;

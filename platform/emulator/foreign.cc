@@ -7,7 +7,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
-#include "ozstrstream.h"
 
 #include "iso-ctype.hh"
 
@@ -537,7 +536,6 @@ char *strAndDelete(ostrstream *out)
 {
   (*out) << ends;
   char *ret = ozstrdup(out->str());
-  out->freeze(0);
   delete out;
   return ret;
 }
@@ -1006,7 +1004,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
 static
 void fset2buffer(ostream &out, OZ_FSetValue * fs)
 {
-  out << *fs;
+  out << fs->toString();
 }
 
 static
@@ -1016,14 +1014,14 @@ void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
   case FDVariable:
     {
       out << s;
-      out << ((GenFDVariable *) cv)->getDom();
+      out << ((GenFDVariable *) cv)->getDom().toString();
       break;
     }
 
   case FSetVariable:
     {
       out << s;
-      out << ((GenFSetVariable *) cv)->getSet();
+      out << ((GenFSetVariable *) cv)->getSet().toString();
       break;
     }
 
