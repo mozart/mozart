@@ -1406,8 +1406,6 @@ OzDebug *OzDebug::gCollectOzDebug(void) {
 
 #endif
 
-
-inline
 TaskStack * TaskStack::_cac(void) {
 
   TaskStack *newstack = new TaskStack(this);

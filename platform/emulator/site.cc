@@ -86,7 +86,7 @@ static ip_address getMySiteIP()
   // this will open an IP connection, so don't do it
   struct hostent *hostaddr=gethostbyname(nodename);
   if(hostaddr==0) {
-    OZ_error("getMySiteIP: can't resolve local hostname (%s)", nodename);
+    OZD_error("getMySiteIP: can't resolve local hostname (%s)", nodename);
   }
   free(nodename);
   struct in_addr tmp;
