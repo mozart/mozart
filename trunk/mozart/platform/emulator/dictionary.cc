@@ -574,7 +574,13 @@ void inplace_quicksort(TaggedRef* first, TaggedRef* last) {
   inplace_quicksort(i+1, last);
 }
 
+OZ_Term service_get(OZ_Term k)
+{
+  OZ_Term v;
+  return (tagged2Dictionary(service_registry)->getArg(k,v)==PROCEED)?v:0;
+}
 
-
-
-
+void service_put(OZ_Term k,OZ_Term v)
+{
+  tagged2Dictionary(service_registry)->setArg(k,v);
+}

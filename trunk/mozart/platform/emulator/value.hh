@@ -2619,8 +2619,21 @@ TaggedRef appendI(TaggedRef x,TaggedRef y);
 Bool member(TaggedRef elem,TaggedRef list);
 TaggedRef getUniqueName(const char *s);
 
+/*===================================================================
+ * Service Registry
+ *=================================================================== */
+
+extern OZ_Term service_registry;
+
+extern OZ_Term service_get(OZ_Term);
+inline OZ_Term service_get(char*s)
+{
+  return service_get(makeTaggedAtom(s));
+}
+extern void service_put(OZ_Term,OZ_Term);
+inline void service_put(char*s,OZ_Term v)
+{
+  service_put(makeTaggedAtom(s),v);
+}
+
 #endif
-
-
-
-

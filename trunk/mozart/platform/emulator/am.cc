@@ -96,17 +96,19 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr,
 	  "usage: %s <options>\n",
 	  argv[0]);
-  fprintf(stderr, " -E: running under emacs\n");
-  fprintf(stderr, " -d: debugging on\n");
-  fprintf(stderr, " -quiet: no banner\n");
+  fprintf(stderr, " -E           : running under emacs\n");
+  fprintf(stderr, " -d           : debugging on\n");
+  fprintf(stderr, " -quiet       : no banner\n");
   fprintf(stderr, " -c <compiler>: start the compiler\n");
-  fprintf(stderr, " -S <fifo>: connect to compiler via FIFO\n");
-  fprintf(stderr, " -u <url>: start a compute server\n");
+  fprintf(stderr, " -S <fifo>    : connect to compiler via FIFO\n");
+  fprintf(stderr, " -init <file> : load and execute init procedure\n");
+  fprintf(stderr, " -u <url>     : start a compute server\n");
 #ifdef OZMA
-  fprintf(stderr, " -b <file>: boot from assembly code\n");
+  fprintf(stderr, " -b <file>    : boot from assembly code\n");
 #endif
-  fprintf(stderr, " -f <file>: execute precompiled file\n");
+  fprintf(stderr, " -f <file>    : execute precompiled file\n");
   fprintf(stderr, " -a <args> ...: application arguments\n");
+  fprintf(stderr, " -- <args> ...: same as above\n");
   osExit(1);
 }
 
@@ -190,6 +192,8 @@ void printBanner()
 extern void bigIntInit(); /* from value.cc */
 extern void initffuns();  /* from initffuns.cc */
 
+OZ_C_proc_proto(BIload);
+
 void AM::init(int argc,char **argv)
 {  
   Assert(makeTaggedNULL() == 0);
@@ -222,6 +226,7 @@ void AM::init(int argc,char **argv)
   char *compilerFIFO = NULL;  // path name where to connect to
   char *precompiledFile = NULL;
   char *url = NULL;
+  char *initFile = getenv("OZINIT");
 #ifdef OZMA
   char *assemblyCodeFile = NULL;
 #endif
@@ -275,8 +280,13 @@ void AM::init(int argc,char **argv)
       continue;
     }
 #endif
+    if (strcmp(argv[i],"-init")==0) {
+      initFile = getOptArg(i,argc,argv);
+      continue;
+    }
 
-    if (strcmp(argv[i],"-a")==0) {
+    if (strcmp(argv[i],"-a")==0 ||
+	strcmp(argv[i],"--")==0) {
       ozconf.argC = argc-i-1;
       ozconf.argV = argv+i+1;
       break;
@@ -392,22 +402,40 @@ void AM::init(int argc,char **argv)
     fprintf(stderr,"Perdio initialization failed\n");
   }
 
-  if (!url) {
-    // --> make sure that we check for input from compiler
-    setSFlag(IOReady);
-  } else {
-    OZ_Term v=oz_newVariable(); 
-    Thread *tt = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
-    OZ_Return ret = loadURL(url,v,tt);
-    if (ret!=PROCEED && ret!=BI_PREEMPT) {
-      char *aux = (ret==RAISE) ? toC(exception.value) : "unknown error";
-      prefixError();
-      fprintf(stderr,"Loading from URL '%s' failed: %s\n",url,aux);
-      fprintf(stderr,"Maybe recompilation needed?\n");
-      exit(1);
+  if (!initFile) {
+    char* ini = "/lib/Init.ozc";
+    int m = strlen(ozconf.ozHome);
+    int n = m+strlen(ini)+1;
+    char*s = new char[n];
+    strcpy(s,ozconf.ozHome);
+    strcpy(s+m,ini);
+    if (access(s,F_OK)==0) initFile = s;
+    else delete[] s;
+  }
+
+  {
+    Thread *tt = (initFile||url)?
+      mkRunnableThread(DEFAULT_PRIORITY, _rootBoard):0;
+    RefsArray args = allocateStaticRefsArray(2);
+
+    if (!url) {
+      // --> make sure that we check for input from compiler
+      setSFlag(IOReady);
+    } else {
+      args[0] = oz_atom(url);
+      args[1] = oz_newVariable();
+      tt->pushCall(args[1],0,0);
+      tt->pushCFun(BIload,args,2,OK);
     }
-    tt->pushCall(v, 0, 0);
-    scheduleThread(tt);
+
+    if (initFile) {
+      args[0] = oz_atom(initFile);
+      args[1] = oz_newVariable();
+      tt->pushCall(args[1],0,0);
+      tt->pushCFun(BIload,args,2,OK);
+    }
+
+    if (tt) scheduleThread(tt);
   }
 
 #ifdef OZMA
