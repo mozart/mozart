@@ -1,6 +1,7 @@
 <!-- -*-xml-*- -->
 
-<stylesheet xmlns="http://www.w3.org/XSL/Transform/1.0">
+<stylesheet xmlns="http://www.w3.org/XSL/Transform/1.0"
+	    xmlns:meta="http://www.jclark.com/xt/java/Meta">
 
 <strip-space elements="
 	BOOK FRONT BACK BODY
@@ -14,6 +15,29 @@
 <template match="@*|*|text()|processing-instruction()">
   <copy>
     <apply-templates select="@*|*|text()|processing-instruction()"/>
+  </copy>
+</template>
+
+<!-- need to thread same-titled chunks.  all chunks with same title -->
+<!-- are given the same CHUNK.ID and a different CHUNK.NUM which is an -->
+<!-- integer starting at 1 and incremented each time -->
+
+<template match="CHUNK">
+  <copy>
+    <apply-templates select="@*"/>
+    <variable name="title">
+      <value-of select="TITLE"/>
+    </variable>
+    <if test="not(meta:chunkExists(string($title)))">
+      <if test="meta:chunkRegister(generate-id(),string($title))"/>
+    </if>
+    <attribute name="CHUNK.ID">
+      <value-of select="meta:chunkGetID(string($title))"/>
+    </attribute>
+    <attribute name="CHUNK.NUM">
+      <value-of select="meta:chunkGetNUMInc(string($title))"/>
+    </attribute>
+    <apply-templates select="*|text()|processing-instruction()"/>
   </copy>
 </template>
 
