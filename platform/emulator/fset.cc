@@ -521,7 +521,6 @@ void FSetValue::init(const FSetConstraint &fs)
   else {
     _normal = false;
     _IN = fs._IN;
-    // maybeToNormal(); // unnecessary if FSConstraints are consistent
   }
 
 #else
@@ -614,8 +613,7 @@ void FSetValue::init(int min_elem, int max_elem)
       ((max_elem == fs_sup) && (min_elem <= 32 * fset_high))) {
     _card = setFromTo(_in, min_elem, max_elem);
     _normal = true;
-    _other = (max_elem == fs_sup * 32);
-
+    _other = (max_elem == fs_sup);
   }
   else {
     _card = _IN.initRange(min_elem, max_elem);

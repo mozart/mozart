@@ -146,17 +146,9 @@ OZ_Return ExcludePropagator::propagate(void)
     if (*d == fd_singl)
       FailOnInvalid(*s -= d->getSingleElem());
   }
-
   {
-    OZ_Boolean ent;
-
-    if (d->getMaxElem() >= fsethigh32) // TMUELLER: remove when new impl
-      ent = OZ_FALSE;
-    else {
-      OZ_FSetValue d_set(*d);
-      ent = (d_set <= s->getNotInSet());
-    }
-    //    printf("ent=%d\n", ent); fflush(stdout);
+    OZ_FSetValue d_set(*d);
+    OZ_Boolean ent = (d_set <= s->getNotInSet());
 
     OZ_DEBUGPRINTTHIS("out: ");
 
