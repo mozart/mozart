@@ -3,3 +3,4 @@ make-test
 Makefile
 *.ozc
 *~
+dirs
