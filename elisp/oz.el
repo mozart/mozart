@@ -434,7 +434,7 @@ if that value is non-nil."
 
 	(if lucid-emacs
 	    (setq screen-title-format
-		  '((" C:  "   (-30 . oz-compiler-state))
+		  '(("Oz Console           C:  "   (-30 . oz-compiler-state))
 		    ("   M:  " (-30 . oz-machine-state))))))))
 
 
@@ -1194,7 +1194,7 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-filter (proc string state-string)
   (let ((old-buffer (current-buffer))
 ;	(old-win (selected-window))
-	)
+)
     (unwind-protect
 	(let ((newbuf (process-buffer proc))
 	      help-string old-point
@@ -1202,9 +1202,9 @@ the GDB commands `cd DIR' and `directory'."
 	      moving)
 	  (set-buffer newbuf)
 	  (setq moving (= (point) (process-mark proc)))
+	  (process-mark proc)
 
 	  (save-excursion
-
 	    ;; Insert the text, moving the process-marker.
 	    (goto-char (process-mark proc))
 	    (setq old-point (point))
