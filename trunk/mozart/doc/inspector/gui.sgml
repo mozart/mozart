@@ -1,0 +1,109 @@
+<!--
+  - Authors:
+  -   Thorsten Brunklaus <brunklaus@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Thorsten Brunklaus, 2001
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER id="chapter.gui"><TITLE>GUI Configuration</TITLE>
+  <SECTION><TITLE>Overview</TITLE>
+  <P>
+    The Inspector is widely user configurable. The options are basically organized in two groups
+    as follows.
+  </P>
+  <P>
+    <LIST>
+      <ITEM>
+        Structure related options. These options control how the Inspector creates the
+        node representation from a given value. They include the traversal limits,
+        mode switching (tree or graph) and the mapping details.
+      <ITEM>
+        Visual related options. These options control the visual aspects of drawing such as
+        fonts, colors and subtree alignment. The latter specifies how subtrees are arranged.
+    </LIST>
+  </P>
+  <P>
+    Since the Inspector handles more than one widget, the user can specify whether the
+    settings affect all widgets or the active widget only.
+  </P>
+  <P>
+    This chapter explains how to navigate through the graphical configuration dialog.
+  </P>
+  <SECTION><TITLE>Structure Settings</TITLE>
+  <P>
+    <FIGURE id="figure.dialog">
+      <CAPTION>The selection dialog: Structure Tab</CAPTION>
+        <PICTURE.EXTERN to="dialog1.gif" type=gif>
+    </FIGURE>
+  </P>
+  <P>
+    Figure <PTR to="figure.dialog"> shows the structure related options.
+  </P>
+  <PARA><TITLE>Traversal</TITLE>
+    The Traversal box allows to change the exploration limits and should be self-explanatory.
+  </PARA>
+  <PARA><TITLE>Representation</TITLE>
+    This box allows to configure the traversal mode. The tree mode shows all structures as a
+    tree with respect to the traversal limits and does not reflect cycles. Activating the relation
+    mode also requires to select the relation being used to detect equality. The corresponding
+    combo box is active only if relation mode has been selected.
+  </PARA>
+  <P>
+    The GUI does not
+    allow to add new equalities
+    but only to select from existing ones via the combo box. It defaults
+    to token equality and structural equality (unification based). See X for details on how
+    to add a new equality.
+  </P>
+  <PARA><TITLE>Mapping</TITLE>
+    This box allows to change the assignment of auto-mappings for the selected type. A type
+    is selected via the corresponding combo box to the right (see figure <PTR to="figure.dialog">).
+  </PARA>
+  <P>
+    If the type has been selected, you can deactivate or activate mapping
+    by either clicking the radio button labeled <Code>"No default mapping"</CODE> or
+    <CODE>"Apply"</CODE>, respectively. The latter then requires to select the function to be
+    applied from the collection of known mapping functions of that type. This is done via the
+    corresponding combo box. Again, this box is activated only if <CODE>"Apply"</CODE> has been
+    selected.
+  </P>
+  <P>
+    The GUI does not allow to add new mappings. See X for details on how to achieve this.
+  </P>
+  <SECTION><TITLE>Appearance Settings</TITLE>
+  <P>
+    <FIGURE id="figure.appearance">
+      <CAPTION>The selection dialog: Appearance Tab</CAPTION>
+        <PICTURE.EXTERN to="dialog2.gif" type=gif>
+    </FIGURE>
+  </P>
+  <P>
+    Figure <PTR to="figure.appearance"> shows the appearance tab. It should be self-explanatory.
+  </P>
+  <SECTION><TITLE>Configuration Range</TITLE>
+  <P>
+    <FIGURE id="figure.range">
+      <CAPTION>The selection dialog: Range Tab</CAPTION>
+        <PICTURE.EXTERN to="dialog3.gif" type=gif>
+    </FIGURE>
+  </P>
+  <P>
+    Figure <PTR to="figure.range"> shows the range tab. It should be self-explanatory.
+  </P>
+</CHAPTER>

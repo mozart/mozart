@@ -1,0 +1,230 @@
+<!--
+  - Authors:
+  -   Thorsten Brunklaus <brunklaus@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Thorsten Brunklaus, 2001
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER id="chapter.interactive"><TITLE>Interactive Examination</TITLE>
+  <P>
+    Once a value is displayed, it can be examined more
+    closely by using the nodes context menu.
+    The context menu offers a configurable set of type specific operations
+    for that node and can be opened by clicking the right mouse button
+    on a so-called node access point.
+  </P>
+  <SECTION><TITLE>Node Access Points</TITLE>
+  <P>
+    Node access points are as follows.
+  </P>
+  <P>
+    <LIST>
+      <ITEM>
+        Any atomic node is a node access point to itself.
+      <ITEM>
+        For any tuple excluding lists,
+        the label and the braces are access points to the entire tuple node.
+      <ITEM>
+        For any record, the label and and the braces are access points to the entire record node.
+        Note that record features itself are not used as node access points.
+      <ITEM>
+         Lists are handled special in the sense that their node access points depend on
+         the display mode. In tree mode, the braces and pipes always refer to the entire list
+         whereas in graph mode the pipes refer to the sublist starting at that point.
+    </LIST>
+  </P>
+  <SECTION><TITLE>Node Operations</TITLE>
+  <P>
+    <FIGURE id="figure.context">
+      <CAPTION>A context menu opened over the closing brace</CAPTION>
+      <PICTURE.CHOICE>
+        <PICTURE.EXTERN to="context.gif" type=gif>
+      </PICTURE.CHOICE>
+    </FIGURE>
+  </P>
+  <P>
+    The Inspector offers three types of node operations: exploration, mapping and actions
+    (see figure <PTR to="figure.context">).
+  </P>
+  <P>
+    <LIST>
+      <ITEM>
+        Exploration allows to locally modify the depth and the width exploration limits,
+        thereby exanding or shrinking the value to the region of interest.
+      <ITEM>
+        Mapping allows to transform the displayed value
+        with respect to a given mapping function.
+        This makes it possible to either arbitrarly prune regions of the value or to extract
+        information from abstract datatypes.
+      <ITEM>
+        Actions allow to connect displayed values to external tools such as the Investigator,
+        thereby gathering information beyond the scope of the Inspector.
+    </LIST>
+  </P>
+  <SUBSECTION><TITLE>Tree Inspection</TITLE>
+  <P>
+    <FIGURE id="figure.exploration">
+      <CAPTION>Sample inspection and various results</CAPTION>
+      <TABLE>
+         <TR><TD><PICTURE.EXTERN to="explore1.gif" type=gif></TD></TR>
+         <TR><TD><PICTURE.EXTERN to="explore2.gif" type=gif></TD></TR>
+      </TABLE>
+    </FIGURE>
+  </P>
+  <P>
+    The Inspector displays graphs in a tree-like fashion. Therefore, every node
+    can be uniquely identified by its position, that is, its depth and width in the tree
+    representation.
+  </P>
+  <P>
+    In order to make inspection work locally, it works relative to the position of the
+    accessed node in the tree representation and only affects either the depth or the width limit.
+  </P>
+  <P>
+    Assume that the selected node resides at depth <CODE>D</CODE> and width <CODE>W</CODE>.
+    The idea now is to temporarily change the exploration limit (depth or width) to the value
+    <CODE>DMax = {Max (D + N) 0}</CODE> and <CODE>WMax = {Max (W + N) 0}</CODE>, respectively.
+    Figure <PTR to="figure.exploration"> shows some examples:
+  </P>
+  <P>
+    <LIST>
+      <ITEM>
+        The sample tuple has been shrinked by applying Width -5.
+      <ITEM>
+        The sample tuple has been created by applying once Width -5 and twice With +1.
+      <ITEM>
+        The sample tuple has been collapsed by applying Depth -1.
+      <ITEM>
+        The sample tuple has been partially unfolded by applying Depth +1. Note that this
+        behavior is the result from adding 1 to the depth 0 which yields 1. But a limit of
+        two would be required to display the entire structure again.
+      <ITEM>
+        The sample tuple has been partially unfolded by applying Depth +1 and shrinked again
+        by applying Width -1 twice. This is to illustrate that the exploration functions are
+        fully compositional.
+    </LIST>
+  </P>
+  <SUBSECTION><TITLE>Mapping</TITLE>
+  <P>
+    <FIGURE id="figure.mapping">
+      <CAPTION>Example mapping invocation and its result</CAPTION>
+      <TABLE>
+        <TR><TD><PICTURE.EXTERN to="mapping1.gif" type=gif></TD></TR>
+        <TR><TD><PICTURE.EXTERN to="mapping2.gif" type=gif></TD></TR>
+      </TABLE>
+    </FIGURE>
+  </P>
+  <P>
+    Figure <PTR to="figure.mapping"> demonstrates an application of tree mapping. The contents
+    of the dictionary are shown instead of the uninteresting tag <CODE>dictionary</CODE>.
+    To indicate that a mapped representation is shown, it is drawn with an different background
+    color. Any mapping can be undone via the context menu and is fully compositional.
+  </P>
+  <P>
+    Mapping works on a per-node basis. This means, that the Inspector tries to map every child node
+    of the already mapped node again.
+  </P>
+  <P>
+    Mapping functions are type specific. That means, every type has its own collection of
+    mapping functions which can be applied to any instance of that type.
+    Writing mapping functions is easy because every function follows the pattern below.
+  </P>
+  <P>
+    <CODE>
+      fun {MyMapFunction Value MaxWidth MaxDepth}
+         if {WantToMap Value} then ... computations ... else Value end
+      end</CODE>
+  </P>
+  <P>
+    <CODE>MaxWidth</CODE> and <CODE>MaxDepth</CODE> are integers denoting the current
+     width and depth limits. This allows to handle cycles whith respect to the fact
+     that they would have been recognized or not. See X dor details on how to register a new
+     mapping function. Keep in mind that mapping functions must not have side-effects
+     on the value.
+  </P>
+  <P>
+    Mapping functions can be applied automaticly before inspection of the value. See X for
+   details on how to do this. Keep in mind that this can produce confusing results due to the
+   per node mapping strategy.
+  </P>
+  <P>
+    The Inspector is configured to provide a collection of useful default mapping functions for
+    each type making their use easy.
+  </P>
+  <SUBSECTION><TITLE>Triggering Actions</TITLE>
+  <P>
+    <FIGURE id="figure.action">
+      <CAPTION>Example action invocation and its result</CAPTION>
+      <TABLE>
+        <TR><TD><PICTURE.EXTERN to="action1.gif" type=gif></TD></TR>
+        <TR><TD><PICTURE.EXTERN to="action2.gif" type=gif></TD></TR>
+      </TABLE>
+    </FIGURE>
+  </P>
+  <P>
+    Figure <PTR to="figure.action"> demonstrates the invocation of an action. The by-need future
+    has been forced and its value can be seen. This feature is useful for searching module exports.
+  </P>
+  <P>
+    Actions are type specific and follow the pattern below.
+  </P>
+  <P>
+    <CODE>
+      proc {MyAction Value}
+         ... computations ...
+      end</CODE>
+  </P>
+  <P>
+    See X for details on how to register a new action.
+  </P>
+  <SECTION><TITLE>The selection interface</TITLE>
+  <P>
+    <FIGURE id="figure.selection">
+      <CAPTION>The selection interface</CAPTION>
+        <PICTURE.EXTERN to="selection.gif" type=gif>
+    </FIGURE>
+  </P>
+  <P>
+    Some of the operations presented above can also be triggered by selecting a node. This is
+    achieved by pressing the left button on a node access point and
+    causes a selection frame being drawn covering the entire selection.
+    This gives visual feedback on which nodes the system
+    is operating on. Now any operation from the selection menu can be invoked as shown in
+    figure <PTR to="figure.selection">.
+  </P>
+  <SUBSECTION><TITLE>Substructure lifting</TITLE>
+  <P>
+    <FIGURE id="figure.lifting">
+      <CAPTION>Substructure lifting</CAPTION>
+      <TABLE>
+        <TR><TD><PICTURE.EXTERN to="lift1.gif" type=gif></TD></TR>
+        <TR><TD><PICTURE.EXTERN to="lift2.gif" type=gif></TD></TR>
+      </TABLE>
+    </FIGURE>
+  </P>
+  <P>
+    Figure <PTR to="figure.lifting"> demonstrates another application of the selection interface:
+    Any selected substructure can be lifted to toplevel
+    by applying the <CODE>"Clear all but Selection"</CODE> command from the inspector menu.
+  </P>
+  <P>
+    Substructure lifting is intended to rapidly prune large trees and currently works only with
+    one structure selection and cannot be undone.
+  </P>
+</CHAPTER>
