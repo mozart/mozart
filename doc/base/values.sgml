@@ -92,13 +92,24 @@
 	<Item>
 	  tests whether ?_{X} is a future.
 
+	<Entry><Span class=index/<<IsFailed>>/
+	  <Index/<<Value>><And><<isFailed>>/
+	<Synopsis>
+	  <<{Value.isFailed ?_{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a failed future.
+
 	<Entry><Span class=index/<<IsKinded>>/
 	  <Index/<<Value>><And><<isKinded>>/
 	<Synopsis>
 	  <<{Value.isKinded ?_{X} ??{B}}>>
 	<Item>
-	  tests whether ?_{X} is currently kinded, &ie;, neither determined
-	  nor free.
+	  tests whether ?_{X} is currently kinded, &ie;, is constrained but
+	  not yet determined.  For example, <code/foo(a:12 ...)/ is kinded
+	  because it is constrained to be a record, yet its arity is not yet
+	  known.  Also, a non-determined finite domain variable is kinded:
+	  its type is known to be integer, but its value is not yet
+	  determined.  Similarly for finite set variables.
 
 	<Entry><<status>>
 	  <Index class=tails/<<Value>><And><<status>>/
