@@ -81,6 +81,7 @@
 #define _cacConstRecurse         gCollectConstRecurse
 
 #define _cacBoard                gCollectBoard
+#define _cacBoardDo              gCollectBoardDo
 
 #define _cacName                 gCollectName
 
@@ -126,6 +127,7 @@
 #define _cacConstRecurse         sCloneConstRecurse
 
 #define _cacBoard                sCloneBoard
+#define _cacBoardDo              sCloneBoardDo
 
 #define _cacName                 sCloneName
 
@@ -398,14 +400,16 @@ Board * Board::_cacBoard(void) {
   // Do not clone a space above or collect a space above root ;-(
   Assert(this && !hasMarkOne());
 
-  Board * bb = derefBoard();
+  return cacIsMarked() ? cacGetFwd() : _cacBoardDo();
+}
 
-  Assert(bb);
+Board * Board::_cacBoardDo(void) {
+  Assert(bb->cacIsAlive());
+
+  Board * bb = derefBoard();
 
   if (bb->cacIsMarked())
     return bb->cacGetFwd();
-
-  Assert(bb->cacIsAlive());
 
   Board * ret;
   cacReallocStatic(Board,bb,ret,sizeof(Board));
@@ -611,8 +615,7 @@ void OzOFVariable::_cacRecurse(void) {
 
 inline
 void Future::_cacRecurse(void) {
-  if (function)
-    oz_cacTerm(function,function);
+  oz_cacTerm(function,function);
 }
 
 inline
