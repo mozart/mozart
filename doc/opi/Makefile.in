@@ -34,7 +34,8 @@ Makefile: Makefile.in ../config.status
 	cd .. && ./config.status
 
 opi-html: $(SGMLSRCS) $(ELSRCS) $(GIFSRCS)
-	$(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=$@ --type=html-stylesheets && \
+	$(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=$@ --type=html-stylesheets \
+	--autoindex && \
 	cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
 
 opi-tex: $(SGMLSRCS)
