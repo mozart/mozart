@@ -254,6 +254,8 @@ would have to consider.
 <figure id="figConMoneyTree">
 <caption/The search tree explored by <<Money>>./
 <picture latex>
+\begin{center}
+\psset{unit=10pt}
 \begin{pspicture}(33,23)\footnotesize
 
 \myNode{12.6}{21}{top}{\texttt{sol(d:[2\#8]\ e:[4\#7]\ m:1\ n:[5\#8]\ o:0\ r:[2\#8]\ s:9\ y:[2\#8])}}
@@ -283,6 +285,7 @@ e:[6\#7]\ m:1\ n:[7\#8]\ o:0\ r:[2\#8]\ s:9\ y:[2\#8])}}
 \myLine{middle}{botright}
 \Aput{\texttt{E$\neq$6}}
 \end{pspicture}
+\end{center}
 </picture>
 </figure>
 </section>
@@ -685,8 +688,8 @@ posts the constraint <math/c.i\neq i/ for every
 
 <p>
 The full search tree of <<Safe>> has 23 nodes and
-contains the unique solution
-<<code(4 3 1 8 9 2 6 7 5)>>.
+contains the unique solution:
+<<<code(4 3 1 8 9 2 6 7 5)>>>
 </section>
 
 <![ %EXTRA; [

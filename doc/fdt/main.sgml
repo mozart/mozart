@@ -173,8 +173,10 @@
     <Meta name=latex.input   value="fdt-utils.tex">
 
     <Meta name="latex.table.spec" arg1="fig.conozsolver.table" arg2="@{}ll@{}">
-    <Meta name="latex.picture.width" arg1="pic.explorer-a" arg2="0.58\linewidth">
-    <Meta name="latex.picture.width" arg1="pic.explorer-b" arg2="0.58\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.explorer-a" arg2="0.44\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.explorer-b" arg2="0.44\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.bridge-tree-1" arg2="0.8\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.bridge-tree-2" arg2="0.5\linewidth">
 
     <Meta name="latex.picture.width" arg1="pic.q1" arg2="1cm">
     <Meta name="latex.picture.width" arg1="pic.q2" arg2="1cm">

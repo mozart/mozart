@@ -556,9 +556,9 @@ assume that a resource cannot handle more than one activity at a
 time. Such a kind of resource is also known as a <em/unary resource/.
 
 <figure id=fig.bridgeTable>
-<caption/The Data for the bridge construction./
+<caption/Data for bridge construction./
 <table>
-<tr/<th/N /<th/ Name /<th/ Description /<th/ Duration /<th/ Predecessors /<th/ Resource//
+<tr/<th/No /<th/ Na. /<th/ Description /<th/ Dur /<th/ Preds /<th/ Res//
 <tr/<td/ 1 /<td/ pa /<td/ beginning of project/<td/ 0  /<td/ -  /<td/ noResource //
 <tr/<td/ 2 /<td/ a1 /<td/ excavation (abutment 1) /<td/ 4  /<td/ pa /<td/ excavator//
 <tr/<td/ 3/<td/ a2 /<td/ excavation (pillar 1) /<td/ 2  /<td/ pa /<td/ excavator//
@@ -811,7 +811,7 @@ nodes (see <Ptr to="fig.scheduling.bridge">).
 <p>
 <figure id="fig.scheduling.bridge">
 <caption/A search tree for the bridge problem./
-<picture.extern to="pictures/bridge-tree-1.ps" type=ps info="-width 300">
+<picture.extern id="pic.bridge-tree-1" to="pictures/bridge-tree-1.ps" type=ps info="-width 300">
 </figure>
 
 
@@ -964,8 +964,8 @@ from the domains of task variables).
 
 <p>
 The propagator
-<<Schedule.taskIntervals>> provides a slightly weaker
-propagation than the propagator described in&nbsp;<ptr to=caseau.94a> but
+<<Schedule.taskIntervals>> provides weaker
+propagation than described in&nbsp;<ptr to=caseau.94a> but
 provides stronger propagation than <<Schedule.serialize>>. While a
 single propagation step has complexity <math/O(n^3)/, the overall complexity
 is <math/O(k \cdot n^4)/.
@@ -1166,7 +1166,7 @@ size of the search tree is reduced by more than an order of magnitude.
 
 <figure id="fig.scheduling.bridgStronge2">
 <caption/A search tree for the bridge problem./
-<picture.extern to="pictures/bridge-tree-2.ps" type=ps info="-height 200">
+<picture.extern id="pic.bridge-tree-2" to="pictures/bridge-tree-2.ps" type=ps info="-height 200">
 </figure>
 
 <p>

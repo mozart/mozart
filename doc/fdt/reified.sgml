@@ -511,11 +511,12 @@ for <Math/i\in1\#10/ such that
 <table>
 <tr/
 <td/<math/Q_i=1\leftrightarrow A_i=1//
-<td/<math/Q_i=2\leftrightarrow B_i=1//
+<td/<math/Q_i=2\leftrightarrow B_i=1///
+<tr/
 <td/<math/Q_i=3\leftrightarrow C_i=1//
-<td/<math/Q_i=4\leftrightarrow D_i=1//
-<td/<math/Q_i=5\leftrightarrow E_i=1//
-/
+<td/<math/Q_i=4\leftrightarrow D_i=1///
+<tr/
+<td/<math/Q_i=5\leftrightarrow E_i=1///
 </table>
 
 <P>
@@ -592,9 +593,12 @@ the constraint
 \sum_{i=1}^{10}{A_i}
 /
 where the function <Math/{\it element}(k,x)/ yields
-the <Math/k/-th component of the tuple <Math/x/.  We choose
+the <Math/k/-th component of the tuple <Math/x/.
+
+<p>
+We choose
 this formulation since Oz provides a propagator
-(<<FD.element>>) for the constraint <Math/{\it
+<<FD.element>> for the constraint <Math/{\it
 element}(k,x)=y/.
 
 <para><title/reified membership constraints/
@@ -654,8 +658,7 @@ proc {SRAT Q}
       {FD.tuple v 10 0#1 V}
    end
    proc {Sum V S}   % S is the sum of the components of vector V
-      {FD.decl S}
-      {FD.sum V '=:' S}
+      {FD.decl S} {FD.sum V '=:' S}
    end
    proc {Assert I U V W X Y}
       A.I=U  B.I=V  C.I=W  D.I=X  E.I=Y
@@ -664,8 +667,7 @@ proc {SRAT Q}
    C      = {Vector}              D    = {Vector}        E    = {Vector}
    SumA   = {Sum A}               SumB = {Sum B}         SumC = {Sum C}
    SumD   = {Sum D}               SumE = {Sum E}
-   SumAE  = {Sum [SumA SumE]}
-   SumBCD = {Sum [SumB SumC SumD]}
+   SumAE  = {Sum [SumA SumE]}     SumBCD = {Sum [SumB SumC SumD]}
 in
    {FD.tuple q 10 1#5 Q}
    {For 1 10 1
@@ -692,13 +694,10 @@ in
    %% 8
    {FD.element Q.8 [2 3 4 5 6] SumAE}
    %% 9
-   {Assert 9 SumBCD::[2 3 5 7]
-             SumBCD::[1 2 6]
-             SumBCD::[0 1 4 9]
-             SumBCD::[0 1 8]
+   {Assert 9 SumBCD::[2 3 5 7]  SumBCD::[1 2 6]
+             SumBCD::[0 1 4 9]  SumBCD::[0 1 8]
              SumBCD::[0 5 10]}
    %% 10
-   skip
    {FD.distribute ff Q}
 end
 </chunk>
