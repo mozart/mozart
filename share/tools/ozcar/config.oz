@@ -237,7 +237,7 @@ case Tk.isColor then
    
    %% thread forest window
    RunnableThreadColor     = '#00a500'
-   RunningThreadColor      = '#e0c000'
+   RunningThreadColor      = '#f0c000'
    
    BlockedThreadColor      = '#e07070'
    DeadThreadColor         = '#b0b0b0'

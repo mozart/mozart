@@ -567,10 +567,16 @@ in
 	 Gui,Disable(W)
       end
 
+      meth BlockedStatus(T A)
+	 Gui,doStatus('Thread #' # {Thread.id T} # ' is blocked,' #
+		      A # ' has no effect')
+      end
+
       meth action(A)
 	 lock
+	    {OzcarMessage 'action:' # A}
+	    
 	    case A
-
 	    of ' reset' then
 	       N in
 	       Gui,doStatus('Resetting...')
@@ -587,6 +593,8 @@ in
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
+	       elsecase {Thread.state T} == blocked then
+		  Gui,BlockedStatus(T A)
 	       else
 		  % step never needs more time, does it?
 		  %Gui,markNode({Thread.id T} running)
@@ -599,6 +607,8 @@ in
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
+	       elsecase {Thread.state T} == blocked then
+		  Gui,BlockedStatus(T A)
 	       else
 		  I         = {Thread.id T}
 		  ThreadDic = ThreadManager,getThreadDic($)
@@ -633,6 +643,8 @@ in
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
+	       elsecase {Thread.state T} == blocked then
+		  Gui,BlockedStatus(T A)
 	       else
 		  {Dbg.stepmode T false}
 		  {Dbg.contflag T true}
