@@ -220,13 +220,30 @@ dnl
 dnl LibART_LGPL
 dnl
 dnl test whether libART is already on the system
+AC_MSG_CHECKING([for --enable-private-libart])
+AC_ARG_ENABLE(private-libart,
+  [--enable-private-libart  enable the use our own copy of libart if none is available on the system (default=off)],
+  enable_our_libart="$enableval",
+  enable_our_libart=no)
+AC_MSG_RESULT($enable_our_libart)
+
 AC_CHECK_PROGS(LIBART_CONFIG,libart-config)
 if test -z "$LIBART_CONFIG"; then
-  AC_MSG_RESULT([we will provide our own libart_lgpl])
-  LIBART_SUBDIR=libart_lgpl
-  HAVE_LIBART=no
-  ART_LIBS="-lart_lgpl"
-  ART_LIBS_TEST=
+  if test "$enable_our_libart" = yes; then
+    AC_MSG_RESULT([we will provide our own libart_lgpl])
+    LIBART_SUBDIR=libart_lgpl
+    HAVE_LIBART=no
+    ART_LIBS="-lart_lgpl"
+    ART_LIBS_TEST=
+  else
+    AC_MSG_ERROR([
+No libart was found on your system.  You can supply the additional option
+--enable-libart to configure, in which case we will use our own copy of libart.
+However, it is highly recommended that you install install instead the
+appropriate development support files from GNOME.  If your system is RPM-based,
+these are probably available in a RPM called gnome-libs-devel.
+])
+  fi
 else
   HAVE_LIBART=yes
   AC_MSG_CHECKING(for libart libs flags)
