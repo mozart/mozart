@@ -37,7 +37,6 @@ extern int gcing;
 
 #ifdef PROFILE_INSTR
 #define PROFILE_INSTR_MAX 256
-#define PROFILE_BI_MAX    256
 #endif
 
 class StatCounter {
@@ -115,8 +114,7 @@ public:
   void printCount();
 
 #ifdef PROFILE_INSTR
-  long instr[PROFILE_INSTR_MAX];
-  long bi[PROFILE_BI_MAX];
+  unsigned long instr[PROFILE_INSTR_MAX];
   void printInstr();
 #endif
 

@@ -1373,12 +1373,15 @@ LBLsuspendThread:
 // ------------------------------------------------------------------------
 
  LBLemulate:
+  asmLbl(emulate);
   Assert(CBB==currentDebugBoard);
 
   JUMP( PC );
 
+  asmLbl(endEmulate);
 #ifndef THREADED
 LBLdispatcher:
+  asmLbl(dispatch);
 
 #ifdef RECINSTRFETCH
   CodeArea::recordInstr(PC);
@@ -1397,6 +1400,7 @@ LBLdispatcher:
  
   switch (op) {
 #endif
+
     
 // -------------------------------------------------------------------------
 // INSTRUCTIONS: TERM: MOVE/UNIFY/CREATEVAR/...
@@ -1440,6 +1444,9 @@ LBLdispatcher:
 
       CheckArity(entry->getArity(),makeTaggedConst(entry));
 
+#ifdef PROFILE_BI
+      entry->incCounter();
+#endif
       switch (biFun(predArity, X)){
 
       case PROCEED:	  DISPATCH(3);
@@ -1471,6 +1478,10 @@ LBLdispatcher:
     {
       COUNT(inlinecalls);
       InlineRel1 rel         = (InlineRel1)GetBI(PC+1)->getInlineFun();
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
+
       Assert(rel != NULL);
 
       OZ_Return res = rel(XPC(2));
@@ -1510,6 +1521,9 @@ LBLdispatcher:
       InlineRel2 rel         = (InlineRel2)GetBI(PC+1)->getInlineFun();
       Assert(rel != NULL);
 
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
       OZ_Return res = rel(XPC(2),XPC(3));
       if (res==PROCEED) { DISPATCH(5); }
 
@@ -1560,6 +1574,9 @@ LBLdispatcher:
       InlineRel3 rel = (InlineRel3)GetBI(PC+1)->getInlineFun();
       Assert(rel != NULL);
 
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
       OZ_Return res = rel(XPC(2),XPC(3),XPC(4));
       if (res==PROCEED) { DISPATCH(6); }
       if (res==FAILED) {
@@ -1601,6 +1618,9 @@ LBLdispatcher:
       InlineFun1 fun = (InlineFun1)GetBI(PC+1)->getInlineFun();
       Assert(fun != NULL);
 
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
       // XPC(3) maybe the same register as XPC(2)
       OZ_Return res = fun(XPC(2),XPC(3));
       if (res==PROCEED) { DISPATCH(5); }
@@ -1644,6 +1664,9 @@ LBLdispatcher:
       InlineFun2 fun = (InlineFun2)GetBI(PC+1)->getInlineFun();
       Assert(fun != NULL);
       
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
       // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
 
@@ -1836,6 +1859,9 @@ LBLdispatcher:
       InlineFun3 fun = (InlineFun3)GetBI(PC+1)->getInlineFun();
       Assert(fun != NULL);
 
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
       // note XPC(5) is maybe the same as XPC(2) or XPC(3) or XPC(4) !!
       OZ_Return res = fun(XPC(2),XPC(3),XPC(4),XPC(5));
       if (res==PROCEED) { DISPATCH(7); }
@@ -1877,6 +1903,9 @@ LBLdispatcher:
       InlineFun2 fun = (InlineFun2)GetBI(PC+1)->getInlineFun();
       Assert(fun != NULL);
 
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
       // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
       if (res==PROCEED) { DISPATCH(6); }
@@ -1906,6 +1935,9 @@ LBLdispatcher:
       InlineRel1 rel = (InlineRel1)GetBI(PC+1)->getInlineFun();
       Assert(rel != NULL);
 
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
       OZ_Return res = rel(XPC(2));
       if (res==PROCEED) { DISPATCH(5); }
       if (res==FAILED)  { JUMP(getLabelArg(PC+3)); }
@@ -1934,6 +1966,9 @@ LBLdispatcher:
       InlineRel2 rel = (InlineRel2)GetBI(PC+1)->getInlineFun();
       Assert(rel != NULL);
       
+#ifdef PROFILE_BI
+      GetBI(PC+1)->incCounter();
+#endif
       OZ_Return res = rel(XPC(2),XPC(3));
       if (res==PROCEED) { DISPATCH(6); }
       if (res==FAILED)  { JUMP(getLabelArg(PC+4)); }
@@ -2441,6 +2476,9 @@ LBLdispatcher:
        }
 
        OZ_CFun biFun = bi->getFun();
+#ifdef PROFILE_BI
+       bi->incCounter();
+#endif
        OZ_Return res = biFun(predArity, X);
 	     
        //if (e->isSetSFlag(DebugMode)) {
