@@ -64,26 +64,49 @@
       <samp/root/:
       <<<su ->>>
       Then install the <file/mozart/ package first (it will have a 
-      filename similar to <file/mozart-1.0.0beta.120698-1.i386.rpm/):
-      <<<rpm -Uvh mozart-1.0.0beta.120698-1.i386.rpm>>>
+      filename similar to <file/mozart-1.0.0.012199-21.i386.rpm/):
+      <<<rpm -Uvh mozart-1.0.0.012199-21.i386.rpm>>>
       Similarly, you can install the <file/mozart-doc/ and
       <file/mozart-contrib/ packages.
 
     <p>
+      These packages depend only on other packages that are
+      shipped with the 5.2 (Apollo) release of
+      RedHat, however it also should work with the 5.0 (Hurricane) and
+      5.1 (Manhattan) releases. In case you come across an error
+      message like the following 
+      <code display proglang=none>
+failed dependencies:
+        libgmp.so.2 is needed by mozart-1.0.0.012199-21
+      </code>
+      you have to install the <file>gmp</file> rpm package. It
+      ships with RedHat 5.2 but not with earlier releases. It is
+      available from:
+<p>
+<ref.extern to="ftp://ftp.redhat.com/pub/redhat/redhat-5.2/i386/RedHat/RPMS/gmp-2.0.2-5.i386.rpm"><file>ftp://ftp.redhat.com/pub/redhat/redhat-5.2/i386/RedHat/RPMS/gmp-2.0.2-5.i386.rpm</file></ref.extern>
+<p>
+      or from one of the RedHat mirrors.
+   
+    <p>
       If you now open a new shell on your computer, all Mozart related
       commands are automatically available. Just try
       <<<oz>>>
-      to start the Oz Programming Environment.
+      to start the Oz Programming Environment. Note that the commands
+      are available only after you started a new shell (or logged in
+      again). 
 
     <p>
       The toplevel html page for the documentation resides at the
       following url:
       <file display>file:///usr/lib/mozart/doc/index.html</file>
+     
     <p> 
       The webpage for downloading also gives additional information on
       which system the rpm packages were build.
+
     <p>
-After installation you should make your web browser Mozart application enabled, which is described in <ptr to="applets">.
+      After installation you should make your web browser Mozart
+      application enabled, which is described in <ptr to="applets">.
        
   <section id="section.rpm.src">
     <title/Source Packages/
