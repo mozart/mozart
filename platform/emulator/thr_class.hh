@@ -56,7 +56,7 @@ private:
   int priority;
   Board *home;
   Board *notificationBoard; // for search capabilities;
-  int mode;
+  int compMode;
   Thread();
 public:
   TaskStack taskStack;
@@ -85,11 +85,11 @@ public:
   void pushToplevel(ProgramCounter pc);
   Board *getHome() { return home->getBoardDeref(); }
   void setHome(Board *b) { home=b; }
-  int getMode() { return mode; }
-  void checkMode(int newMode);
-  void switchMode();
+  int getCompMode() { return compMode; }
+  void checkCompMode(int newMode);
+  void setCompMode(int newMode);
+  void switchCompMode();
 private:
-  void switchMode(int newMode);
   void init(int prio,Board *home);
   Bool isScheduled();
   void insertFromTail();

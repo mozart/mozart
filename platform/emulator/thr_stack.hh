@@ -46,7 +46,7 @@ enum ContFlag {
   C_CFUNC_CONT = 3,  // a continuation  to call a c-function
   C_DEBUG_CONT = 4,  // a continuation for debugging
   C_CALL_CONT  = 5,  // 
-  C_MODE       = 6,  // 
+  C_COMP_MODE  = 6,  // 
 };
 
 
@@ -204,9 +204,15 @@ public:
     push((TaskStackEntry) setContFlag(n,C_DEBUG_CONT));
   }
 
-  void pushMode(int mode)
+  static TaskStackEntry makeCompMode(int mode) {
+    return (TaskStackEntry) ((mode<<4) | C_COMP_MODE);
+  }
+  static int getCompMode(TaskStackEntry e) {
+    return ((int) e)>>4;
+  }
+  void pushCompMode(int mode)
   {
-    push((TaskStackEntry) ((mode<<4) || C_MODE));
+    push(makeCompMode(mode));
   }
 
 private:
