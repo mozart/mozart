@@ -178,11 +178,8 @@ private:
 public:
   static ProgramCounter writeIHashTable(IHashTable *ht, ProgramCounter ptr)
   {
-
     *(IHashTable*) ptr = *ht;
-
     Assert(SizeofIHashTable == sizeof(IHashTable) / sizeof(ptr));
-
     return ptr + SizeofIHashTable;
   }
 
@@ -207,8 +204,6 @@ public:
 
   static ProgramCounter writeBuiltin(BuiltinTabEntry *bi, ProgramCounter ptr)
   {
-    //  label==0 means fail in switchOnTerm and createCond
-    //  in this case do not add start
     return writeWord((ByteCode)bi,ptr);
   }
 
