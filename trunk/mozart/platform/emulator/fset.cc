@@ -1048,13 +1048,13 @@ OZ_Boolean FSetConstraint::operator % (const FSetConstraint& y)
   DEBUG_FSETIR('(' << *this << " % " << y << ") = ");
 
   if (_card_min > y._card_max || _card_max < y._card_min)
-    return OZ_FALSE;
+    return OZ_TRUE;
 
   for (int i = fset_high; i--; ) 
     if ((_in[i] & y._not_in[i]) || (_not_in[i] & y._in[i]))
-      return OZ_FALSE;
+      return OZ_TRUE;
   
-  return OZ_TRUE;
+  return OZ_FALSE;
 }
 
 inline 
