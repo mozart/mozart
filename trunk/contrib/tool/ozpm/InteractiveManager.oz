@@ -3,13 +3,68 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
+   System(show:Show)
+   
 define
+
+   ArchiveManager
+   OzpmInfo
+
+   class ListDataView
+      feat
+	 infoPane
+	 setTitle
+	 archiveManager
+	 mogulDB
+	 handle
+      meth init(INFO ST AM OZPM Desc)
+	 self.infoPane=INFO
+	 self.setTitle=ST
+	 self.archiveManager=AM
+	 self.mogulDB=OZPM
+	 Desc=listbox(glue:nswe
+		      bg:white
+%		      tdscrollbar:true
+		      handle:self.handle)
+      end
+   end
+
+   class InfoView
+      feat
+	 setTitle
+	 handle
+      meth init(ST Desc)
+	 self.setTitle=ST
+	 Desc=listbox(glue:nswe
+		      bg:white
+%		      tdscrollbar:true
+		      handle:self.handle)
+      end
+      meth display(Info)
+	 skip
+      end
+   end
+   
    class InteractiveManager
 
-      meth init(OzpmInfo)
-	 {Wait OzpmInfo}
+      feat dataPlace dataLabel infoPlace infoLabel
+
+      attr data info
+	 
+      meth init(OI AM)
 	 Look={QTk.newLook}
+	 TitleLook={QTk.newLook}
+	 InfoMain
+	 DataMain
+	 {TitleLook.set label(text:"Title" glue:nwes bg:darkblue fg:white relief:sunken borderwidth:2)}
 	 %%
+	 info<-{New InfoView init(proc{$ Title} {self.infoLabel set(text:Title)} end
+				  InfoMain)}
+	 data<-{New ListDataView init(@info
+				      proc{$ Title} {self.dataLabel set(text:Title)} end
+				      AM
+				      OI
+				      DataMain)}
 	 MenuDesc=
 	 lr(glue:nwe
 	    menubutton(
@@ -47,11 +102,28 @@ define
 			tbbutton(text:'Quit' glue:w))
 	 %%
 	 MainWindowDesc=
-	 lrrubberframe(glue:nswe
-		       td(label(text:'Installed package' glue:nw)
-			  listbox(glue:nswe tdscrollbar:true lrscrollbar:true))
-		       td(label(text:'Remaining packages' glue:nw)
-			  listbox(glue:nswe tdscrollbar:true lrscrollbar:true)))
+	 tdrubberframe(glue:nswe
+		       td(glue:nwe
+			  lr(glue:we
+			     label(look:TitleLook
+				   handle:self.dataLabel)
+			     tbbutton(text:"Detach"
+				      action:proc{$} skip end
+				      glue:e))
+			  placeholder(handle:self.dataPlace glue:nswe
+				      DataMain
+				     ))
+		       td(glue:nwe
+			  lr(glue:we
+			     label(look:TitleLook
+				   handle:self.infoLabel)
+			     tbbutton(text:"Detach"
+				      action:proc{$} skip end
+				      glue:e))
+			  placeholder(handle:self.infoPlace glue:nswe
+				      InfoMain
+				     )
+			 ))
 	 %%
 	 StatusBar
 	 StatusBarDesc=
@@ -63,10 +135,13 @@ define
 		 title:'Mozart Package Installer'
 		 action:toplevel#close
 		 MenuDesc
-		 ToolbarDesc
+%		 ToolbarDesc
 		 MainWindowDesc
 		 StatusBarDesc)
       in
+	 OI=OzpmInfo
+	 {Wait OzpmInfo}
+	 AM=ArchiveManager
 	 {{QTk.build Desc} show(wait:true)}
 	 {Application.exit 0}
       end
