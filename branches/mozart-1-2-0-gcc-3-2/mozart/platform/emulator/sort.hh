@@ -46,7 +46,7 @@ void sort_exchange(Type &a, Type &b, LessThan &lt) {
     sort_swap(a,b);
 }
 
-int const QuickSortCutoff = 10;
+static const int QuickSortCutoff = 10;
 
 static const int QuickSortStack_maxsize = 32;
 
