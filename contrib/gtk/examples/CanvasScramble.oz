@@ -85,7 +85,7 @@ define
          XDim = (PieceSize * 4 + 1)
          YDim = (PieceSize * 4 + 1)
       in
-         Canvas.canvas, new
+         Canvas.canvas, new(false)
          Canvas.canvas, setUsize(XDim YDim)
          Canvas.canvas, setScrollRegion(0.0 0.0
                                         {Int.toFloat XDim} {Int.toFloat YDim})

@@ -74,9 +74,11 @@ define
                               " */"
                               ""
                               "#include <mozart.h>"
+                              "#include <gdk_imlib.h>"
                               "#include <gtk/gtk.h>"
                               "#include <gtk-canvas.h>"
-                              "#include \"GOZData.h\""]
+                              "#include \"GOZData.h\""
+                              "#include \"GOZCanvas.h\""]
 
       GtkFilePrepend = ["/*"
                         " * This file is generated. Please do not edit."
@@ -423,6 +425,7 @@ define
          meth emitInterface(Es)
             case Es
             of nil      then
+               TextFile, putS("\t#include \"GOZCanvasInterface.h\"")
                TextFile, putS("\t{0, 0, 0, 0}\n};\n")
             [] Entry|Er then
                Emitter, emitInterfaceEntry(Entry)
@@ -549,7 +552,7 @@ define
                   TextFile, putS({ToS "\nOZ_BI_define ("#AccName#", 1, 1) {"})
                   TextFile, putS({ToS {Util.indent 1}#
                                   "GOZ_declareForeignType("#
-                                  Name#" *, 0, Arg0)"})
+                                  Name#" *, 0, Arg0);"})
                   %%
                   %% First Arg equals anchestor struct ptr
                   %% This is due to GTK's object simulation

@@ -187,6 +187,16 @@ define
     "      end"
    ]
 
+   GtkCanvasNewCode =
+   [
+    "      meth new(WithVisual)"
+    "         if WithVisual then {self pushVisual} end"
+    "         object <- {GtkCanvasNative.gtkCanvasNew }"
+    "         {self wrapperNew}"
+    "         {self addToObjectTable}"
+    "      end"
+    ]
+
    fun {MakeClassName Name}
       NameS = {Util.toString Name}
       Label  = if {Util.checkPrefix "GtkCanvas" NameS}
@@ -682,7 +692,8 @@ define
       meth emitClasses(Keys)
          case Keys
          of Class|Kr then
-            ClassSN = {Util.toString Class}
+            ClassSN     = {Util.toString Class}
+            IsGtkObject = GtkClasses, isGtkObject(Class $)
          in
             case {Dictionary.get @classes Class}
             of 'class'(anchestor: Anchestor methods: Methods) then
@@ -705,12 +716,29 @@ define
                TextFile, putS({Util.indent 2}#"meth toString($)")
                TextFile, putS({Util.indent 3}#"\""#ClassSN#"\"")
                TextFile, putS({Util.indent 2}#"end")
+               TextFile, putS({Util.indent 2}#"meth isGtkObject($)")
+               TextFile, putS({Util.indent 3}#IsGtkObject)
+               TextFile, putS({Util.indent 2}#"end")
                numConstr <- 0
                GtkClasses, emitMethods({Util.firstLower ClassSN} Methods)
                TextFile, putS({Util.indent 1}#"end end}")
             end
             GtkClasses, emitClasses(Kr)
          [] nil then skip
+         end
+      end
+      meth isGtkObject(Class $)
+         case Class
+         of 'GtkObject'             then "true"
+         [] 'GTK.object'            then "true"
+         [] 'GtkOzBase'             then "false"
+         [] 'GdkOzBase'             then "false"
+         [] 'GdkOzColorBase'        then "false"
+         [] 'GtkCanvasCanvasItem'   then "true"
+         [] 'GtkCanvasOzCanvasBase' then "true"
+         elsecase {Dictionary.get @classes Class}
+         of 'class'(anchestor: Anchestor methods: _) then
+            GtkClasses, isGtkObject(Anchestor $)
          end
       end
       meth emitMethods(Prefix Ms)
@@ -776,6 +804,11 @@ define
             %% GDK/GTK 1.2 still has these crappy functions
          [] "gdkWindowRef"   then skip
          [] "gdkWindowUnref" then skip
+         [] "gtkCanvasNew" then
+            {ForAll GtkCanvasNewCode
+             proc {$ Line}
+                TextFile, putS(Line)
+             end}
          elsecase ShortName
          of "ref" then
             Var = if ResStart == nil then "" else " _" end

@@ -23,13 +23,16 @@ functor
 import
    Pickle(load)
    Module(link)
-   GdkNative       at 'GdkNative.so{native}'
-   GtkNative       at 'GtkNative.so{native}'
-   GtkCanvasNative at 'GtkCanvasNative.so{native}'
-   GOZSignal       at 'GOZSignal.so{native}'
-   GDK             at 'GDK.ozf'
-   GTK             at 'GTK.ozf'
-   GTKCANVAS       at 'GTKCANVAS.ozf'
+   GdkNative            at 'GdkNative.so{native}'
+   GtkNative            at 'GtkNative.so{native}'
+   GtkCanvasNative      at 'GtkCanvasNative.so{native}'
+   GdkFieldNative       at 'GdkFieldNative.so{native}'
+   GtkFieldNative       at 'GtkFieldNative.so{native}'
+   GtkCanvasFieldNative at 'GtkCanvasFieldNative.so{native}'
+   GOZSignal            at 'GOZSignal.so{native}'
+   GDK                  at 'GDK.ozf'
+   GTK                  at 'GTK.ozf'
+   GTKCANVAS            at 'GTKCANVAS.ozf'
 \ifdef DEBUG
    System(show)
 \endif
@@ -44,6 +47,9 @@ define
    {Wait GdkNative}
    {Wait GtkNative}
    {Wait GtkCanvasNative}
+   {Wait GdkFieldNative}
+   {Wait GtkFieldNative}
+   {Wait GtkCanvasFieldNative}
    {Wait GOZSignal}
 
    %%
@@ -229,7 +235,6 @@ define
                                 {New GTKCANVAS.canvas new}
                              end}
 
-
       fun {UnwrapArgument Key#Value}
          NewKey   = {ByteString.toString Key}
          NewValue = case Value
@@ -275,10 +280,14 @@ define
          %% The delete event is manually connected.
          %% This special event automatically calls all other
          %% connected delete events in order of connection.
-         {Dispatcher signalConnect(proc {$ Event}
-                                      {Dispatcher killSignals(Event Signals)}
-                                   end
-                                   @object 'delete-event' _)}
+         if {self isGtkObject($)}
+         then
+            {Dispatcher signalConnect(
+                           proc {$ Event}
+                              {Dispatcher killSignals(Event Signals)}
+                           end
+                           @object 'delete-event' _)}
+         end
       end
       meth signalConnect(Signal ProcOrMeth $)
          SigHandler = if {IsProcedure ProcOrMeth}
@@ -349,6 +358,9 @@ define
       end
       meth getType($)
          unit
+      end
+      meth isGtkObject($)
+         false
       end
    end
 
@@ -674,8 +686,7 @@ define
                           %% Color Array Handling
                           makeColorArr         : GOZSignal.makeColorArr
                           getColorList         : GOZSignal.getColorList
-                          %% Oz/Alice Canvas Helper
-                          pointsPut            : GOZSignal.pointsPut
+                          %% Alice Canvas Helper
                           canvasItemNew        : CanvasItemNew
                           canvasItemSet        : CanvasItemSet
                           %% OzBase Class

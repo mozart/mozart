@@ -27,8 +27,8 @@ in
       meth !MakePoints(Points I Ps $)
          case Ps
          of (X#Y)|Pr then
-            {GOZCore.pointsPut Points I X}
-            {GOZCore.pointsPut Points (I + 1) Y}
+            {GtkCanvasNative.pointsPut Points I X}
+            {GtkCanvasNative.pointsPut Points (I + 1) Y}
             OzCanvasBase, MakePoints(Points (I + 2) Pr $)
          [] nil then Points
          end
@@ -60,6 +60,17 @@ in
       end
       meth closeItem(Item)
          {Item close}
+      end
+      meth newImageItem(Group Image X Y Width Height Anchor $)
+         {P2O CanvasItem
+          {GtkCanvasNative.newImageItem {O2P Group} {O2P Image}
+           X Y Width Height Anchor}}
+      end
+      meth pushVisual
+         {GtkCanvasNative.pushVisual}
+      end
+      meth popVisual
+         {GtkCanvasNative.popVisual}
       end
    end
 end

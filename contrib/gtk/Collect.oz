@@ -343,30 +343,45 @@ define
             end|{PrepareItems Ir}
          end
       end
+
+      fun {ExplodeItems Is}
+         case Is
+         of I|Ir then
+            case I
+            of item(A B struct_decl_list(...)) then
+               {Append {Map {Record.toList I.3} fun {$ N} item(A B N) end}
+                {ExplodeItems Ir}}
+            [] _ then I|{ExplodeItems Ir}
+            end
+         [] nil then nil
+         end
+      end
    in
       proc {CollectNamedStruct T}
-         ItemTup = T.3
-         Items   = case {Label ItemTup}
-                   of 'struct_decls' then
-                      {PrepareItems {Record.toList ItemTup}}
-                   [] 'struct_item'  then {PrepareItems [ItemTup]}
-                   end
+         ItemTup  = T.3
+         RawItems = case {Label ItemTup}
+                    of 'struct_decls' then
+                       {PrepareItems {Record.toList ItemTup}}
+                    [] 'struct_item'  then {PrepareItems [ItemTup]}
+                    end
+         Items    = {ExplodeItems RawItems}
       in
          {Dictionary.put Types T.2
           case T.1 of 'union' then union(Items) else 'struct'(Items) end}
       end
       proc {!RegisterStructDef S Id}
          ItemTup = if {Label S}  == 'named struct{decls}' then S.3 else S.2 end
-         Items   = case {Label ItemTup}
+         RawItems = case {Label ItemTup}
                    of 'struct_decls' then
                       {PrepareItems {Record.toList ItemTup}}
                    [] 'struct_item'  then {PrepareItems [ItemTup]}
-                   end
+                    end
+         Items = {ExplodeItems RawItems}
       in
          {Dictionary.put Types Id
           case S.1 of 'union' then union(Items) else struct(Items) end}
       end
-  end
+   end
 
    fun {Collect Ts}
       case Ts

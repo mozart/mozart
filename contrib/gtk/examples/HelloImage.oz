@@ -31,7 +31,7 @@ define
       meth new
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
          GTK.window, setBorderWidth(10)
-         GTK.window, setTitle("Hello Canvas")
+         GTK.window, setTitle("Hello Image")
          {self signalConnect('delete-event' deleteEvent _)}
       end
       meth deleteEvent(Args)
@@ -45,33 +45,35 @@ define
    end
    Toplevel = {New CanvasToplevel new}
 
-   %% Set up the Colors
-   %% 1. Obtain the system colormap
-   %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors,
-   %%    non-writeable and with best-match
-   %% 4. Use color black
-   Colormap = {New GDK.colormap getSystem}
-   Black    = {New GDK.color new(0 0 0)}
-   {Colormap allocColor(Black 0 1 _)}
+   %% Prepare to load image
+   %% Static Methods are also encapulated into objects
+   %% Therefore, a GDK.imlib object is created using noop constructor
+   %% Hack Alert: Image must reside in current directory
+   Image = {{New GDK.imlib noop} loadImage("mozart-259x112.jpg" $)}
 
-   %% This will be our canvasItem
-   TextItem = ["text"#"Hallo, schöne Canvas Welt!"
-               "x"#100.0
-               "y"#100.0
-               "font"#
-               "-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1"
-               "fill_color_gdk"#Black]
+   %% Retrieve Image Dimension
+   ImageX = {Image imlibImageGetFieldRgbWidth($)}
+   ImageY = {Image imlibImageGetFieldRgbHeight($)}
 
-   %% Setup canvas without image support
-   MyCanvas = {New Canvas.canvas new(false)}
-   {MyCanvas setUsize(400 400)}
-   {MyCanvas setScrollRegion(0.0 0.0 400.0 400.0)}
+   %% Setup canvas with Image Support
+   %% This yields implicit pushVisual call
+   MyCanvas = {New Canvas.canvas new(true)}
+   Root     = {MyCanvas root($)}
+
+   %% Setup appropriate Canvas Dimensions
+   {MyCanvas setUsize(ImageX ImageY)}
+   {MyCanvas setScrollRegion(0.0 0.0
+                             {Int.toFloat ImageX}
+                             {Int.toFloat ImageY})}
+
    %% Make Canvas child of toplevel
    {Toplevel add(MyCanvas)}
    %% Create our item (member of root group); ignore item object
-   _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
-                         TextItem $)}
+   %% Note: The canvas is able to scale the image
+   _ = {MyCanvas newImageItem(Root Image
+                              0 0 ImageX ImageY GTK.'ANCHOR_NORTH_WEST' $)}
+   %% Pop the visual stuff after all image items have been created
+   {MyCanvas popVisual}
 
    %% Make it all visible
    {Toplevel showAll}

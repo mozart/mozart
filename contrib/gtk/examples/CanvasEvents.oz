@@ -59,8 +59,8 @@ define
    {Colormap allocColor(Black 0 1 _)}
    {Colormap allocColor(White 0 1 _)}
 
-   %% Setup canvas
-   MyCanvas = {New Canvas.canvas new}
+   %% Setup canvas without image support
+   MyCanvas = {New Canvas.canvas new(false)}
    {MyCanvas setUsize(400 400)}
    {MyCanvas setScrollRegion(0.0 0.0 400.0 400.0)}
    %% Make Canvas child of toplevel
