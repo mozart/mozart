@@ -1395,8 +1395,6 @@ void Thread::gcRecurse () {
   default:
     Assert(0);
   }
-  gcTertiary();
-    
 }
 
 
@@ -2529,7 +2527,7 @@ ConstTerm* ConstTerm::gcConstTermSpec() {
 
   Tertiary *t=(Tertiary*)this;
   Assert((t->getType()==Co_Cell) || (t->getType()==Co_Lock));
-  Assert(t->getTertType()==Te_Frame);
+  Assert(t->isFrame());
   ConstTerm *ret;
   if(t->getType()==Co_Cell){
     CellFrame *cf=(CellFrame*)t;
