@@ -11,16 +11,14 @@ local
 
    \insert configure.oz
 
-   \insert discrete-scale.oz
-   
    \insert runtime-bar.oz
 
    \insert load.oz
 
    \insert dialogs.oz
-   
+
    \insert make-notes.oz
-   
+
    \insert top.oz
 
    fun {PickClosest NT Ts}
@@ -51,7 +49,7 @@ in
 	 {Dictionary.put O mouse   true}
 	 {Dictionary.put O history DefaultHistoryRange}
       end
-      
+
       meth open
 	 lock
 	    case @ThisPanelTop==unit then
@@ -96,7 +94,7 @@ in
 		  else true
 		  end
 	       elsecase
-		  What==history andthen	{List.sub {Arity OM} [1 range]}
+		  What==history andthen {List.sub {Arity OM} [1 range]}
 	       then
 		  case {HasFeature OM range} then R=OM.range in
 		     case {IsNat R} then
@@ -108,7 +106,7 @@ in
 		  end
 	       elsecase
 		  What==configure andthen {List.sub {Arity OM} [1 2]}
-	       then 
+	       then
 		  case {HasFeature OM 2} then C=OM.2 in
 		     case {IsBool C} then {Dictionary.put O config C} true
 		     else false
