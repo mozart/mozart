@@ -427,7 +427,8 @@ dnl ********************************
 	    if test -n "$PGXX"
 	    then
 		CFLAGS="$CFLAGS -mpentium"
-		CFLAGS="$CFLAGS -frisc -fno-rtti -Wno-sign-compare"
+		CFLAGS="$CFLAGS -fno-exceptions -frisc -fno-rtti -Wno-sign-compare"
+		LIBS="$LIBS -lstdc++"
 	    else
 		CFLAGS="$CFLAGS -m486"
 		CFLAGS="$CFLAGS -malign-loops=4 -malign-jumps=4 -malign-functions=4"
