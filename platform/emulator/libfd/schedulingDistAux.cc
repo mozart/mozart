@@ -385,7 +385,7 @@ OZ_Return FirstsLasts::propagate(void)
 
         if (reg_resource == -1) {
           // all resources are serialized
-          if (OZ_unify(new_out, OZ_atom("finished")) == FAILED)
+          if (OZ_unify(new_out, OZ_atom("finished")) == FAILED) // mm_u
             goto failure;
         }
         else {
@@ -544,7 +544,7 @@ OZ_Return FirstsLasts::propagate(void)
           OZ_putArg(tmp_out, 1, ret);
           OZ_putArg(tmp_out, 2, ret2);
           OZ_putArg(tmp_out, 3, OZ_int(reg_resource));
-          if (OZ_unify(new_out, tmp_out) == FAILED) {
+          if (OZ_unify(new_out, tmp_out) == FAILED) { // mm_u
             goto failure;
           }
           goto leave;
@@ -557,7 +557,7 @@ OZ_Return FirstsLasts::propagate(void)
           OZ_putArg(tmp_out, 1, ret);
           OZ_putArg(tmp_out, 2, ret2);
           OZ_putArg(tmp_out, 3, OZ_int(reg_resource));
-          if (OZ_unify(new_out, tmp_out) == FAILED) {
+          if (OZ_unify(new_out, tmp_out) == FAILED) { // mm_u
             goto failure;
           }
           goto leave;
@@ -571,7 +571,7 @@ OZ_Return FirstsLasts::propagate(void)
           OZ_putArg(tmp_out, 1, ret);
           OZ_putArg(tmp_out, 2, ret2);
           OZ_putArg(tmp_out, 3, OZ_int(reg_resource));
-          if (OZ_unify(new_out, tmp_out) == FAILED) {
+          if (OZ_unify(new_out, tmp_out) == FAILED) { // mm_u
             goto failure;
           }
         }

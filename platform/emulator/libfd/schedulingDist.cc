@@ -576,7 +576,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 
         // are all resources serialized?
         if (best_cost == OZ_getFDSup()) {
-          if (OZ_unify(new_out, OZ_int(-1)) == FAILED)
+          if (OZ_unify(new_out, OZ_int(-1)) == FAILED) // mm_u
             goto failure;
         }
         else {
@@ -702,14 +702,14 @@ OZ_Return TaskIntervalsProof::propagate(void)
               // return p1#p2
               OZ_putArg(tmp_out, 1, OZ_int(p1));
               OZ_putArg(tmp_out, 2, OZ_int(p2));
-              if (OZ_unify(new_out, tmp_out) == FAILED)
+              if (OZ_unify(new_out, tmp_out) == FAILED) // mm_u
                 goto failure;
             }
             else {
               // return p2#p1
               OZ_putArg(tmp_out, 1, OZ_int(p2));
               OZ_putArg(tmp_out, 2, OZ_int(p1));
-              if (OZ_unify(new_out, tmp_out) == FAILED)
+              if (OZ_unify(new_out, tmp_out) == FAILED) // mm_u
                 goto failure;
             }
           }
@@ -791,14 +791,14 @@ OZ_Return TaskIntervalsProof::propagate(void)
               // return p1#p2
               OZ_putArg(tmp_out, 1, OZ_int(p1));
               OZ_putArg(tmp_out, 2, OZ_int(p2));
-              if (OZ_unify(new_out, tmp_out) == FAILED)
+              if (OZ_unify(new_out, tmp_out) == FAILED) // mm_u
                 goto failure;
             }
             else {
               // return p2#p1
               OZ_putArg(tmp_out, 1, OZ_int(p2));
               OZ_putArg(tmp_out, 2, OZ_int(p1));
-              if (OZ_unify(new_out, tmp_out) == FAILED)
+              if (OZ_unify(new_out, tmp_out) == FAILED) // mm_u
                 goto failure;
             }
           }

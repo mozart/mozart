@@ -92,7 +92,7 @@ OZ_Return MonitorInPropagator::propagate(void)
 #endif
 
     if (fsetvar->isValue()) {
-      if (OZ_unify(tail, OZ_nil()) == FAILED)
+      if (OZ_unify(tail, OZ_nil()) == FAILED) // mm_u
         goto failure;
       vanish = OZ_TRUE;
     }
