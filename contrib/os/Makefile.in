@@ -8,6 +8,7 @@ PLATFORM        = @PLATFORM@
 LIB_DIR         = $(PREFIX)/contrib/os
 HOMEURL         = @HOMEURL@
 NEWCACHEDIR     = $(PREFIX)/cache/x-oz/contrib/os
+CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
 
 DENYS_EVENTS    = @DENYS_EVENTS@
 ifeq ($(DENYS_EVENTS),yes)
@@ -64,7 +65,7 @@ $(NEW_NATIVES): $(NEWCACHEDIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
         $(INSTALL_DLL) $< $@
 
 %.ozf: %.oz
-        $(OZC) -z 9 -c $< -o $@
+        $(OZC) -z 9 -c $(shell $(CYGPATH) "$<") -o $@
 
 %.so-$(PLATFORM): %.o
         $(OZTOOL) ld $< -o $@ $(LDFLAGS) $(LIBS)
