@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <title>Rereference Documentation: Documentation of the Mozart Programming System</title>
+    <link rel=stylesheet type="text/css" href="ozdoc.css">
+<style>
+p { font-size:10pt; margin-top:0pt; }
+h2 { text-align:center; font-size:14pt; color:steelblue;}
+a.section { font-weight:bold; color:#FF9933; }
+</style>
+  </head>
+  <body>
+    <h1 class=title>Mozart Reference Documentation</h1>
+    <h2><a name=modules>Programming Modules and Libraries</a></h2>
+    <dl>
+      <dt><a href="../base/" class=section name=base>The Base Environment Reference
+Manual</a></dt>
+      <dd><p>documents all built-in modules of the system.  These are part
+of the language definition and implement the basic operations on the
+values of the Oz universe.  The base modules are typically organized
+by type, for example the <code>Record</code> module contains all operations
+on record values.</p>
+
+      <dt><a href="../system/" class=section name=system>The System Modules Reference
+Manual</a></dt>
+      <dd><p>documents all library modules that are delivered with the
+system.  They implement higher-level facilities and can be classified
+into six thematic collections:
+Application Programming,
+Constraint Progamming,
+Distributed Programming,
+Open Programming,
+System Programming,
+Window Programming.</p>
+    </dl>
+
+    <h2><a name=env>Programming Environment and Tools</a></h2>
+
+    <dl>
+      <dt><a href="../opi/" class=section name=opi>The Oz Programming
+Interface</a></dt>
+      <dd><p>aka the OPI, is implemented as an Emacs package which permits
+convenient interactive sessions with a running Mozart system.  It also
+provides <code>oz-mode</code>, with <code>font-lock</code> support, for editing
+files of Oz code.</p>
+
+      <dt><a href="../tools/" class=section name=tools>The Oz Tools Reference
+Manual</a></dt>
+      <dd><p>documents documents the graphical tools (browser, panel,
+explorer) and the command line tools (compiler, linker, debugger, profiler)
+supplied with the system.</p>
+
+      <dt><a href="../compiler/" class=section name=compiler>The Oz Compiler</a></dt>
+      <dd><p>can be
+characterized as an evaluator which takes as input a pair of a program
+string and an environment and returns an Oz value...</p>
+
+      <dt><a href="../ozcar/" class=section name=debugger>The Oz Debugger</a></dt>
+      <dd><p>aka
+<code>ozcar</code>, supports all the traditional features we have come to
+expect from debuggers, such as the ability to single step, to set
+break points, to inspect values, etc...  Additionally it fully
+supports the debugging of concurrent programs with multiple threads;
+their concurrent behaviour can be observed and manipulated. Source
+code debugging is made available through the OPI with highlighting of
+the current source line.</p>
+
+      <dt><a href="../profiler/" class=section name=profiler>The Oz Profiler</a></dt>
+      <dd><p>makes it
+possible to gather data about procedure calls, time spent, and memory
+allocation.  Such information may reveal bottlenecks in your
+application which it may be worthwhile to optimize.</p>
+</dl>
+  </body>
+</html>
