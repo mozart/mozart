@@ -33,6 +33,11 @@ OZ_BI_end
 
 #define GOZ_DECLARE_GTKOBJECT(i, val)            OZ_declareForeignType (i, val, GtkObject*)
 
+/*****************************************************************************
+ * Signal processing
+ *****************************************************************************/
+
+/* Signal ports for event processing */
 OZ_Term signal_port;
 OZ_Term signal_port_sml;
 
@@ -44,9 +49,7 @@ OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
   return OZ_ENTAILED;
 } OZ_BI_end
 
-/*
-  Process all events in the queue
- */
+/* Process all events in the queue */
 OZ_BI_define (ozgtk_handle_pending_events, 0, 0)
 {
   while (gtk_events_pending())
@@ -54,9 +57,8 @@ OZ_BI_define (ozgtk_handle_pending_events, 0, 0)
   return OZ_ENTAILED;
 } OZ_BI_end
 
-/*
-  Put the signal id into the Oz stream
-  This function is not to be exported via the OZ/C-interface
+/* Put the signal id into the Oz stream
+ * This function is not to be exported via the OZ/C-interface
  */
 static void
 signal_marshal (GtkObject * object,
@@ -73,9 +75,8 @@ signal_marshal (GtkObject * object,
 
 OZ_BI_define (ozgtk_signal_connect, 3, 1)
 {
-  /*
-    The callback function will allways be NULL,
-    we only use our marshaller
+  /* The callback function will allways be NULL,
+   * we only use our marshaller, not a standard one
    */
   guint id;
   GOZ_DECLARE_GTKOBJECT (0, object);
@@ -107,10 +108,9 @@ OZ_BI_define (ozgtk_signal_emit_by_name, 2, 0)
  * Until Thorsten has his own backend we need these functions
  *****************************************************************************/
 
-/*
-  Just easy cut&paste
-  These functions will be removed anyway when Thorsten does his backend
-*/
+/* Just easy cut&paste
+ * These functions will be removed anyway when Thorsten does his own backend
+ */
 
 OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
 {
@@ -131,9 +131,8 @@ signal_marshal_sml (GtkObject * object,
 
 OZ_BI_define (ozgtk_signal_connect_sml, 3, 1)
 {
-  /*
-    The callback function will allways be NULL,
-    we only use our marshaller
+  /* The callback function will allways be NULL,
+   * we only use our marshaller
    */
   guint id;
   GOZ_DECLARE_GTKOBJECT (0, object);
@@ -199,33 +198,42 @@ OZ_gdkEvent(GdkEvent *event) {
 
 /* Convert a GList to an Oz list of foreign elements */
 OZ_Term
-GOZ_GLIST_TO_OZTERM (GList * glist) {
-  OZ_Term    ozlist;
-  gpointer   element;
+GOZ_GLIST_TO_OZTERM (GList *list) {
+  OZ_Term ozlist;
+  GList   *list_ptr;
 
   ozlist = OZ_nil ();
 
-  element = g_list_last (glist);
+  list_ptr = g_list_last (list);
   do {
-    ozlist = OZ_cons (OZ_makeForeignPointer (element) , ozlist);
-  } while (element = g_list_previous (glist));
+    ozlist = OZ_cons (OZ_makeForeignPointer (list_ptr->data) , ozlist);
+  } while (list_ptr = g_list_previous (list_ptr));
 
-  g_list_free (glist);
+  g_list_free (list);
 
   return ozlist;
 }
 
 /* Convert a GSList to an Oz list of foreign elements */
 OZ_Term
-GOZ_GSLIST_TO_OZTERM (GSList * gslist) {
+GOZ_GSLIST_TO_OZTERM (GSList *list) {
   OZ_Term ozlist;
+  GSList  *list_ptr;
 
   ozlist = OZ_nil ();
+
+  list_ptr = g_slist_reverse (list);
+  do {
+    ozlist = OZ_cons (OZ_makeForeignPointer (list_ptr->data) , ozlist);
+  } while (list_ptr = g_slist_next (list_ptr));
+
+  g_slist_free (list);
+
   return ozlist;
 }
 
 /*****************************************************************************
- * Gtk macros
+ * Gtk macros (here the GTK+ API is real dirty)
  *****************************************************************************/
 
 OZ_BI_define (ozgtk_widget_visible, 1, 1)
@@ -260,38 +268,38 @@ OZ_BI_define (ozgtk_widget_unset_flags, 2, 0)
  * Dialog (soon obsolete)
  *****************************************************************************/
 
-OZ_BI_define (ozgtk_dialog_window, 1, 1)
-{
-  OZ_declareForeignType (0, dialog, GtkWidget *);
-  OZ_RETURN (OZ_makeForeignPointer(dialog->window));
-} OZ_BI_end
+/*  OZ_BI_define (ozgtk_dialog_window, 1, 1) */
+/*  { */
+/*    OZ_declareForeignType (0, dialog, GtkWidget *); */
+/*    OZ_RETURN (OZ_makeForeignPointer(dialog->window)); */
+/*  } OZ_BI_end */
 
-OZ_BI_define (ozgtk_dialog_vbox, 1, 1)
-{
-  OZ_declareForeignType (0, dialog, GtkDialog *);
-  OZ_RETURN (OZ_makeForeignPointer(dialog->vbox));
-} OZ_BI_end
+/*  OZ_BI_define (ozgtk_dialog_vbox, 1, 1) */
+/*  { */
+/*    OZ_declareForeignType (0, dialog, GtkDialog *); */
+/*    OZ_RETURN (OZ_makeForeignPointer(dialog->vbox)); */
+/*  } OZ_BI_end */
 
-OZ_BI_define (ozgtk_dialog_action_area, 1, 1)
-{
-  OZ_declareForeignType (0, dialog, GtkDialog *);
-  OZ_RETURN (OZ_makeForeignPointer(dialog->action_area));
-} OZ_BI_end
+/*  OZ_BI_define (ozgtk_dialog_action_area, 1, 1) */
+/*  { */
+/*    OZ_declareForeignType (0, dialog, GtkDialog *); */
+/*    OZ_RETURN (OZ_makeForeignPointer(dialog->action_area)); */
+/*  } OZ_BI_end */
 
-OZ_BI_define (ozgtk_color_selection_dialog_colorsel, 1, 1)
-{
-  OZ_declareForeignType (0, color_selection_dialog, GtkColorSelectionDialog *);
-  OZ_RETURN (OZ_makeForeignPointer(color_selection_dialog->colorsel));
-} OZ_BI_end
+/*  OZ_BI_define (ozgtk_color_selection_dialog_colorsel, 1, 1) */
+/*  { */
+/*    OZ_declareForeignType (0, color_selection_dialog, GtkColorSelectionDialog *); */
+/*    OZ_RETURN (OZ_makeForeignPointer(color_selection_dialog->colorsel)); */
+/*  } OZ_BI_end */
 
-OZ_BI_define (ozgtk_color_selection_dialog_cancelButton, 1, 1)
-{
-  OZ_declareForeignType (0, color_selection_dialog, GtkColorSelectionDialog *);
-  OZ_RETURN (OZ_makeForeignPointer(color_selection_dialog->cancel_button));
-} OZ_BI_end
+/*  OZ_BI_define (ozgtk_color_selection_dialog_cancelButton, 1, 1) */
+/*  { */
+/*    OZ_declareForeignType (0, color_selection_dialog, GtkColorSelectionDialog *); */
+/*    OZ_RETURN (OZ_makeForeignPointer(color_selection_dialog->cancel_button)); */
+/*  } OZ_BI_end */
 
-OZ_BI_define (ozgtk_color_selection_dialog_ok_button, 1, 1)
-{
-  OZ_declareForeignType (0, color_selection_dialog, GtkColorSelectionDialog *);
-  OZ_RETURN (OZ_makeForeignPointer(color_selection_dialog->ok_button));
-} OZ_BI_end
+/*  OZ_BI_define (ozgtk_color_selection_dialog_ok_button, 1, 1) */
+/*  { */
+/*    OZ_declareForeignType (0, color_selection_dialog, GtkColorSelectionDialog *); */
+/*    OZ_RETURN (OZ_makeForeignPointer(color_selection_dialog->ok_button)); */
+/*  } OZ_BI_end */

@@ -22,17 +22,18 @@ PERL            = @PERL@
 SHAREDIR	= $(PREFIX)/share
 
 ### files to install
-SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM)               \
-	          $(SHAREDIR)/GDK.so-$(PLATFORM)
-#                  $(SHAREDIR)/GnomeCanvas.so-$(PLATFORM)
-PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM)            \
-	          $(PLATFORMDIR)/GDK.so-$(PLATFORM)
-#                  $(PLATFORMDIR)/GnomeCanvas.so-$(PLATFORM)
+SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM)            \
+	          $(SHAREDIR)/GDK.so-$(PLATFORM)            \
+                  $(SHAREDIR)/GnomeCanvas.so-$(PLATFORM)
+PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM)         \
+	          $(PLATFORMDIR)/GDK.so-$(PLATFORM)         \
+                  $(PLATFORMDIR)/GnomeCanvas.so-$(PLATFORM)
 ### end of files to install
 
 ALL_INCLUDES    = -I$(VPATH)/../emulator
 
-BUILD           = $(PERL) $(VPATH)/goz_build_native.perl
+BUILD_SCRIPT    = $(VPATH)/goz_build_native.perl
+BUILD           = $(PERL) $(BUILD_SCRIPT)
 BUILD_GTK       = $(BUILD) --includes="gtk/gtk.h"
 BUILD_GNOME_CANVAS = $(BUILD) --includes=`gnome-config --includedir libgnomeui`/libgnomeui/gnome-canvas.h
 
@@ -48,12 +49,12 @@ OBJECTS         = goz_support.o $(GDK_OBJECTS) $(GTK_OBJECTS) $(GNOME_CANVAS_OBJ
 
 .SUFFIXES: .cc .o .c .h $(SUFFIXES)
 
-all: GTK.so-$(PLATFORM) GDK.so-$(PLATFORM) #GnomeCanvas.so-$(PLATFORM)
+all: GTK.so-$(PLATFORM) GDK.so-$(PLATFORM) GnomeCanvas.so-$(PLATFORM)
 
 bootstrap: all
 
 
-$(OBJECTS): %.o: %.c
+$(OBJECTS): %.o: %.c $(BUILD_SCRIPT)
 	$(OZTOOL) $(CXX) $(CFLAGS) -c $(ALL_INCLUDES) $< -o $@
 
 ### GTK

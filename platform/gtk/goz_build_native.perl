@@ -160,11 +160,16 @@ sub get_interface_data(@) {
     my $file;
     my @interface_data;
 
-    $/ = "\n";
+    $/ = "\n"; # parse line for line
+#    my $comment = 0;
 
     foreach $file (@c_files) {
 	open(INPUT, $file) || warn "Could not open file '$file'. $!\n";
 	while (<INPUT>) {
+	    if(m/\/\*/ && m/\*\//) { next };
+	    $comment++ if m/\s*\/\*/;        # comment start
+	    $comment-- if m/\*\/\s*/;       # comment end
+	    next unless $comment == 0;       # ignore C comment lines
 	    if(m/OZ_BI_define\s*\((\w+)\,\s*(\d+)\s*\,\s*(\d+)\s*\)/) {
 		my $c_name = $1;
 		my $oz_name = c_name_to_oz_feature($c_name);
@@ -274,6 +279,15 @@ sub is_array {
     return $arg =~ m/\[\w*\]/s;
 }
 
+# get the length of an array
+sub array_length {
+    my ($arg) = @_;
+    error("array_length called for the non array type: $arg\n") unless is_array($arg);
+    $arg =~ m/\[(\d*)\]/s;
+    error("array_length not available in array: $arg\n") unless $1; 
+    return $1;
+}
+
 # converts C values to Oz terms
 sub c_value2oz_term {
   my ($arg, $type) = @_;
@@ -282,9 +296,7 @@ sub c_value2oz_term {
   if ($return_value_translation{$ctype}) {
       return "$return_value_translation{$ctype} ($arg)";
   } elsif (is_array($type)) {
-      return '/* array return value not supported */';
-
-
+      return '/* TODO: array return value not supported */';
   } elsif (is_enumeration($type)) {
       return "OZ_int ($arg)";
   } else {
@@ -351,7 +363,7 @@ sub write_oz_bi_definition {
 	  #
 	  } elsif (is_array($arg)) {
 	      my $type = clean_type($arg);
-	      $type =~ s/\[\]/\*/g;
+	      $type =~ s/\[\d*\]/\*/g;
 	      print "/* Array type not supported yet */\n";
 	      print "\tOZ_declareForeignType ($i, arg$i, $type);\n";
           #
@@ -377,7 +389,7 @@ sub write_oz_bi_definition {
   print 'ret = ' if $out;
   print "$meth (";
   for (my $i = 0; $i < ($arity_in + $arity_special_out); $i++) {
-    print '&' if is_return_value($$in[$i]);
+    print '&' if ( is_return_value($$in[$i]) && !is_array($$in[$i]) );
     print "arg$i";
     print ', ' unless $i >= ($arity_in + $arity_special_out) - 1;
   }
