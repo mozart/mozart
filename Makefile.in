@@ -195,26 +195,12 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
           $(TAR) cf - \
                    $(FILES) \
                    include share \
-                   contrib doc examples \
+                   doc examples \
+                   cache/x-oz/contrib cache/x-oz/system \
                    winbin platform/win32-i486 \
         ) | (cd $(MPD); $(TAR) xf -)
-        $(INSTALL_DIR) $(WIN32CACHEDIR)/share
         find $(MPD) -name '*.so-*' -and -not -name '*.so-win32-i486' \
                 -exec rm -f '{}' ';'
-        mv $(MPD)/share/images $(WIN32CACHEDIR)/share
-        mv $(MPD)/share/?*.ozf $(WIN32CACHEDIR)/share
-        mv $(MPD)/share/*.so-win32-i486 $(WIN32CACHEDIR)/share || true
-        mv $(MPD)/platform/win32-i486/GumpScanner.so \
-                $(WIN32CACHEDIR)/share/GumpScanner.so-win32-i486
-        mv $(MPD)/platform/win32-i486/Bison.so \
-                $(WIN32CACHEDIR)/share/Bison.so-win32-i486
-        (cd $(MPD)/contrib; \
-         rm -rf text os/io.ozf os/process.ozf os/open.ozf; \
-         rm -rf LP.ozf Psql.ozf RI.ozf Reflect.ozf DaVinci.ozf)
-        mv $(MPD)/contrib $(WIN32CACHEDIR)
-        rm -rf $(MPD)/share/doc \
-               $(MPD)/platform/win32-i486/oztool.sh
-        mv $(WIN32CACHEDIR)/share/Init.ozf $(MPD)/share
         for i in ozc ozd ozl; do \
           cat $(MPD)/winbin/ozwrapper.bin \
               $(PREFIX)/bin/$$i > $(MPD)/winbin/$$i.exe; \
@@ -229,19 +215,11 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
         chmod -R a+x $(MPD)/bin
         rm -rf mozart-win32
         $(INSTALL_DIR) mozart-win32
-        $(INSTALL_DIR) mozart-win32/contrib
         (cd $(MPD); \
-         $(TAR) cf - cache/$(HOMECACHE)/contrib) | \
-         (cd mozart-win32/contrib; $(TAR) xf -)
-        $(INSTALL_DIR) mozart-win32/doc
-        (cd $(MPD); \
-         $(TAR) cf - doc examples share/gump) | \
-         (cd mozart-win32/doc; $(TAR) xf -)
-        $(INSTALL_DIR) mozart-win32/base
-        (cd $(MPD); \
-         $(TAR) cf - $(FILES) bin cache/$(HOMECACHE)/share \
+         $(TAR) cf - $(FILES) bin cache/x-oz/system cache/x-oz/contrib \
+                     doc examples \
                      include share/Init.ozf share/elisp platform) | \
-         (cd mozart-win32/base; $(TAR) xf -)
+         (cd mozart-win32; $(TAR) xf -)
         $(INSTALL_DIR) mozart-win32/doc/doc
         $(INSTALL_FILE) $(SRCTOP)/doc/utilities/ozdoc-iexplorer.css \
                         mozart-win32/doc/doc/ozdoc.css
