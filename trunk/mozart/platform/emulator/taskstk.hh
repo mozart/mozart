@@ -81,7 +81,7 @@ const TaskStackEntry emptyTaskStackEntry = (TaskStackEntry)(unsigned int32)-1;
 
 class TaskStack: public Stack {
 public:
-  USEHEAPMEMORY;
+  USEFREELISTMEMORY;
 
   TaskStack(int s): Stack(s,freeListMalloc) { push(emptyTaskStackEntry); }
   ~TaskStack()               { error("~TaskStack called"); }
@@ -130,7 +130,8 @@ public:
   TaskStackEntry *getTop()            { return tos; }
   void setTop(TaskStackEntry *newTos) { tos = newTos; }
 
-  TaskStack *gc();
+  void gc(TaskStack *newstack);
+  void gcRecurse();
 
   // for debugging
   TaggedRef TaskStack::DBGmakeList();
@@ -139,25 +140,33 @@ public:
   {
     DebugCheckT(nodeCheckY(n));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
+    checkNode(n);
 
     ensureFree(3);
-    checkNode (n);
 
     push(i>0 ? copyRefsArray(x, i) : NULL, NO);
     push((TaskStackEntry) pred, NO);
     push((TaskStackEntry) setContFlag(n, C_CALL_CONT), NO);
   }
 
-  void pushCont(Board *n, OZ_CFun f, Suspension* s, RefsArray  x=NULL, int i=0)
+  void pushNervous(Board *n)
+  {
+    checkNode(n);
+    push((TaskStackEntry) setContFlag(n, C_NERVOUS));
+  }
+  
+  
+  void pushCFunCont(Board *n, OZ_CFun f, Suspension* s,
+		    RefsArray  x=NULL, int i=0, Bool copy=OK)
   {
     DebugCheckT(nodeCheckY(n));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
+    checkNode(n);
 
     ensureFree(4);
-    checkNode (n);
 
     Assert(MemChunks::areRegsInHeap(x, i));
-    push(i>0 ? copyRefsArray(x, i) : NULL, NO);
+    push(i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL, NO);
     push((TaskStackEntry) s, NO);
     push((TaskStackEntry) f, NO);
     push((TaskStackEntry) setContFlag(n, C_CFUNC_CONT), NO);
@@ -165,22 +174,20 @@ public:
   
   
   void pushCont(Board *n,ProgramCounter pc,
-		RefsArray y,RefsArray g=NULL,RefsArray x=NULL,int i=0)
+		RefsArray y,RefsArray g=NULL,RefsArray x=NULL,int i=0, Bool copy=OK)
   {
     Assert(!isFreedRefsArray(y));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
+    checkNode(n);
 
-    ensureFree(5);
-    checkNode (n);
+    /* cache top of stack in register since gcc does not do it */
+    TaskStackEntry *newTop = ensureFree(5);
 
     Assert(MemChunks::areRegsInHeap(x,i));
     Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
     Assert(!g || MemChunks::areRegsInHeap(g,getRefsArraySize(g)));
 	       
-    // cache top in register since gcc does not do it
-    TaskStackEntry *newTop = tos;   
-
-    if (i > 0) { *newTop++ = copyRefsArray(x,i); }
+    if (i > 0) { *newTop++ = copy ? copyRefsArray(x,i) : x; }
     *newTop     = g;
     *(newTop+1) = y; 
     *(newTop+2) = pc;
