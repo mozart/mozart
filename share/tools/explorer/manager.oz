@@ -64,12 +64,12 @@ in
       
       meth init(EXPLORER Options)
 	 lock
+	    self.options  = Options
 	    PackAll = ToplevelManager,init($)
 	 in
 	    MenuManager,init
 	    StatusManager,init
 	    self.explorer = EXPLORER
-	    self.options  = Options
 	    {PackAll}
 	    ToplevelManager,configurePointer(idle)
 	 end
