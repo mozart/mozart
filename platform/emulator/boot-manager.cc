@@ -115,6 +115,19 @@ TaggedRef dictionary_of_modules;
 #include "modDPMisc-if.cc"
 #include "modVirtualSite-if.cc"
 
+// Here comes the faked DPB interface
+extern "C"
+{
+  OZ_C_proc_interface * mod_int_DPB(void)
+  {
+    static OZ_C_proc_interface i_table[] = {
+      {0,0,0,0}
+    };
+
+    return i_table;
+  } /* mod_int_DPB(void) */
+} /* extern "C" */
+
 #endif
 
 /*
@@ -178,6 +191,7 @@ static ModuleEntry ext_module_table[] = {
   {"Wif",             mod_int_Wif},
   {"Schedule",        mod_int_Schedule},
   {"Debug",           mod_int_Debug},
+  {"DPB",             mod_int_DPB},
   {"PID",             mod_int_PID},
   {"Fault",           mod_int_Fault},
   {"DPMisc",          mod_int_DPMisc},
