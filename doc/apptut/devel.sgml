@@ -33,6 +33,15 @@
 
   </Section>
 
+  <Section id="section.development.application">
+    <Title/Example: Last Minute Flights/
+
+  <Section id="section.development.db">
+    <Title/The Flight Database/
+
+  <Section id="section.development.form">
+    <Title/The Entry Form/
+
   <Section id="Section.Development.Functors">
     <Title/Functors Revisited/
 
