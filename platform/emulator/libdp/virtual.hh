@@ -72,7 +72,7 @@ public:
 #else
 #define DebugVSMsgs(C)
 #endif
-DebugVSMsgsDebugCode(extern VSSendRecvCounter vsSRCounter;);
+DebugVSMsgs(extern VSSendRecvCounter vsSRCounter;);
 
 //
 class VSMsgBuffer;
