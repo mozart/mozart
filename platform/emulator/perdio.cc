@@ -4280,6 +4280,16 @@ void chainReceiveQuestion(BorrowEntry *be,Site* site,int OTI,int accessNr){
   chainSendAnswer(site,OTI,accessNr,PAST_ME);
   return;}
 
+void chainDump(Chain *ch,Tertiary* t){
+  ChainElem* ce=ch->getFirstChainElem();
+  ChainElem *ce1;
+  while(ce!=NULL){
+    ce1=ce->getNext();
+    freeChainElem(ce);
+    ce=ce1;}
+  ch->hasDumped();
+  Assert(!ch->hasInform());}
+
 void chainReceiveAnswer(OwnerEntry* oe,Site* site,int accessNr,int ans){
   Tertiary* t=oe->getTertiary();
   Chain* chain=tertiaryGetChain(t);
@@ -4303,18 +4313,19 @@ void chainReceiveAnswer(OwnerEntry* oe,Site* site,int accessNr,int ans){
     chain->installProbes();
     return;}
   Assert(ans==BEFORE_ME);
+  Assert(chain->getFirstSite()->siteStatus()==PERM_SITE);
   if(t->getType()==Co_Cell){
+    chainDump(chain,t);
     tokenLost(chain,t);
-    NOT_IMPLEMENTED;
-    t->entityProblem((EntityCond) PERM_BLOCKED|PERM_SOME|PERM_ALL);
-    chain->informHandle(t,(EntityCond) PERM_BLOCKED|PERM_SOME|PERM_ALL);
     return;}
-  Assert(t->getType()==Co_Lock);
-  
-                 // ATTENTION not optimal - lock can be recovered
-  t->entityProblem((EntityCond) PERM_BLOCKED|PERM_SOME|PERM_ALL); 
-  chain->informHandle(t,(EntityCond) PERM_BLOCKED|PERM_SOME|PERM_ALL);
+  chain->removeFirstSite();
   tokenRecovery(chain,t);
+  Assert(t->getType()==Co_Lock);
+  if(chain->getFirstSite()==mySite){
+    lockReceiveLock((LockFrame*)t);
+    return;}
+  oe->getOneCreditOwner();
+  lockSendLock(mySite,t->getIndex(),chain->getFirstSite());
   return;}
 
 void chainSendQuestion(Site* toS,int mI,int accessNr){
@@ -4769,6 +4780,7 @@ Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th){
 
 void Tertiary::installWatcher(EntityCond wc,TaggedRef proc){
   NOT_IMPLEMENTED;}
+
 
 void Watcher::invokeHandler(EntityCond ec,Tertiary* entity){
   Assert(isHandler());
