@@ -218,6 +218,99 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
   }  
 }
 
+/*
+ * This is the definitive casting table
+ *
+ *  L=    R=| SI    | FU    | EX    | FD    | BO    | FS    | OF    | CT    |
+ *  -------------------------------------------------------------------------
+ *  SI      | NOOP  | --    | --    | --    | --    | --    | --    | --    |
+ *  -------------------------------------------------------------------------
+ *  FU      | --    | NOOP  | --    | --    | --    | --    | --    | --    |
+ *  -------------------------------------------------------------------------
+ *  EX      | --    | --    | NOOP  | --    | --    | --    | --    | --    |
+ *  -------------------------------------------------------------------------
+ *  FD      | R->FD | R->FD | R->FD | NOOP  | NOOP  | CLASH | CLASH | CLASH |
+ *  -------------------------------------------------------------------------
+ *  BO      | R->BO | R->BO | R->BO | R->BO | NOOP  | CLASH | CLASH | CLASH |
+ *  -------------------------------------------------------------------------
+ *  FS      | R->FS | R->FS | R->FS | CLASH | CLASH | NOOP  | CLASH | CLASH |
+ *  -------------------------------------------------------------------------
+ *  OF      | R->OF | R->OF | R->OF | CLASH | CLASH | CLASH | NOOP  | CLASH |
+ *  -------------------------------------------------------------------------
+ *  CT      | R->CT | R->CT | R->CT | CLASH | CLASH | CLASH | CLASH | NOOP  |
+ *  -------------------------------------------------------------------------
+ *
+ */
+
+#define VARTP(T1,T2) ((T1<<3)|T2)
+#define VTP(T1,T2)   VARTP(OZ_VAR_ ## T1, OZ_VAR_ ## T2)
+
+OZ_Return oz_var_cast(TaggedRef * fp, Board * fb, TypeOfVariable tt) {
+  OzVariable * fv = tagged2CVar(*fp);
+
+  TypeOfVariable ft = fv->getType();
+
+  OzVariable * tv;
+  
+  switch (VARTP(tt,ft)) {
+
+  case VTP(FD,FS):   case VTP(FD,OF):   case VTP(FD,CT):
+  case VTP(BOOL,FS): case VTP(BOOL,OF): case VTP(BOOL,CT):
+    
+  case VTP(FS,FD): case VTP(FS,BOOL): case VTP(FS,OF): case VTP(FS,CT):
+  case VTP(OF,FD): case VTP(OF,BOOL): case VTP(OF,FS): case VTP(OF,CT):
+  case VTP(CT,FD): case VTP(CT,BOOL): case VTP(CT,FS): case VTP(CT,OF):
+    return FAILED;
+
+  case VTP(FD,SIMPLE): case VTP(FD,FUTURE): case VTP(FD,EXT):
+    tv = new OzFDVariable(fb);
+    break;
+
+  case VTP(BOOL,SIMPLE): case VTP(BOOL,FUTURE): 
+  case VTP(BOOL,EXT):    case VTP(BOOL,FD):   
+    tv = new OzBoolVariable(fb);
+    break;
+
+  case VTP(FS,SIMPLE): case VTP(FS,FUTURE): case VTP(FS,EXT):
+    tv = new OzFSVariable(fb);
+    break;
+
+  case VTP(OF,SIMPLE): case VTP(OF,FUTURE): case VTP(OF,EXT):
+    tv = new OzOFVariable(fb);
+    break;
+
+  case VTP(CT,SIMPLE): case VTP(CT,FUTURE): case VTP(CT,EXT):
+    tv = new OzCtVariable(((OzCtVariable *) fv)->getConstraint(), 
+			  ((OzCtVariable *) fv)->getDefinition(), 
+			  fb);
+    break;
+    
+  default:
+    return PROCEED;
+  }
+  
+  if (oz_currentBoard() != fb)
+    // The variable is not local, so trail the cast operation
+    am.trail.pushCast(fp);
+  
+  /*
+   *  The new variable inherits all suspensions:
+   *   see above to understand that no variable with multiple
+   *   suspensionlist is casted!
+   *
+   */  
+
+  tv->setSuspList(fv->unlinkSuspList());
+
+  // Bind original variable to casted variable
+  *fp = makeTaggedRef(newTaggedCVar(tv));
+
+  return PROCEED;
+}
+
+#undef VTP
+#undef VARTP
+  
 OZ_Term _var_status(OzVariable *cv) {
   Assert(cv->getType()==OZ_VAR_EXT);
   return ((ExtVar*)cv)->statusV();

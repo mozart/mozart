@@ -141,11 +141,11 @@ public:
 
   void popMark(void);
 
-  void popBind(TaggedRef *&val, TaggedRef &old);
+  void popBind(TaggedRef *&, TaggedRef &);
 
-  void popVariable(TaggedRef *&varPtr, OzVariable *&orig);
+  void popVariable(TaggedRef *&, OzVariable *&);
   
-  void popCast(void);
+  void popCast(TaggedRef *&, TaggedRef &);
 
 
   /*
