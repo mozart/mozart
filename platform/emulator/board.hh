@@ -25,24 +25,28 @@
 enum BoardFlags {
   Bo_Ask	= 1<<0,
   Bo_Wait	= 1<<1,
-  Bo_Root	= 1<<2,
-  Bo_Installed	= 1<<3,
-  Bo_Nervous	= 1<<4,
-  Bo_WaitTop	= 1<<5,
-  Bo_PathMark	= 1<<6,
-  Bo_Failed	= 1<<7,
-  Bo_Committed	= 1<<8,
-  Bo_Discarded	= 1<<9,
-  Bo_Waiting    = 1<<10
+  Bo_Solve      = 1<<2,
+  Bo_Root	= 1<<3,
+  Bo_Installed	= 1<<4,
+  Bo_Nervous	= 1<<5,
+  Bo_WaitTop	= 1<<6,
+  Bo_PathMark	= 1<<7,
+  Bo_Failed	= 1<<8,
+  Bo_Committed	= 1<<9,
+  Bo_Discarded	= 1<<10,
+  Bo_Waiting    = 1<<11
 };
 
 class Board : public ConstTerm {
 friend void engine();
 public:
   static void Init();
+  static Board* GetSolveBoard (); 
   static void SetCurrent(Board *c, Bool checkNotGC=OK);
   static void NewCurrentAsk(Actor *a);
   static void NewCurrentWait(Actor *a);
+  static void NewCurrentSolve (Actor *a);
+  static Board *NewRoot();
   static Actor *FailCurrent();
 
 private:
@@ -88,9 +92,9 @@ public:
   Bool isWait() { return flags & Bo_Wait ? OK : NO; }
   Bool isWaiting() { return flags & Bo_Waiting ? OK : NO; }
   Bool isRoot() { return flags & Bo_Root ? OK : NO; }
-
-  void newScript(int size) { script.allocate(size); }
-  void removeSuspension();
+  Bool isSolve () { return ((flags & Bo_Solve) ? OK : NO); }
+  void newScript(int size);
+  inline void removeSuspension();
   void setBody(ProgramCounter p,RefsArray y,
 		       RefsArray g,RefsArray x,int i);
   void setInstalled() { flags |= Bo_Installed; }
@@ -101,6 +105,7 @@ public:
   void setCommitted(Board *s);
   void setWaitTop() { flags |= Bo_WaitTop; }
   void setWaiting() { flags |= Bo_Waiting; }
+  void setActor (Actor *aa) { u.actor = aa; }   // needed for the solve combinator; 
   void unsetInstalled() { flags &= ~Bo_Installed; }
   void unsetNervous() { flags &= ~Bo_Nervous; }
   void unsetPathMark() { flags &= ~Bo_PathMark; }

@@ -1567,8 +1567,10 @@ Actor *Actor::gc()
   size_t size;
   if (isWait()) {
     size = sizeof(WaitActor);
-  } else {
+  } else if (isAsk () == OK) {
     size = sizeof(AskActor);
+  } else {
+    size = sizeof (SolveActor);
   }
   Actor *ret = (Actor *) gcRealloc(this,size);
   ptrStack.push(ret,PTR_ACTOR);
@@ -1579,15 +1581,20 @@ Actor *Actor::gc()
 void Actor::gcRecurse()
 {
   GCMETHMSG("Actor::gc");
-  next.gcRecurse();
   board=board->gcBoard();
   if (isWait()) {
     ((WaitActor *)this)->gcRecurse();
+  } else if (isAsk () == OK) {
+    ((AskActor *)this)->gcRecurse();
+  } else {
+    ((SolveActor *)this)->gcRecurse();
   }
 }
 
 void WaitActor::gcRecurse()
 {
+  next.gcRecurse ();
+
   int no = (int) childs[-1];
   Board **newChilds=(Board **) heapMalloc((no+1)*sizeof(Board *));
   *newChilds++ = (Board *) no;
@@ -1601,6 +1608,37 @@ void WaitActor::gcRecurse()
   childs=newChilds;
 }
 
+void AskActor::gcRecurse ()
+{
+  next.gcRecurse ();
+}
+
+void SolveActor::gcRecurse ()
+{
+  solveBoard = solveBoard->gcBoard ();
+  boardToInstall = boardToInstall->gcBoard ();
+  gcTagged (solveVar, solveVar);
+  gcTagged (result, result);
+  suspList = suspList->gc(NO);
+  orActors.gc (actorStackEntryGC);   // higher order :))
+}
+
+inline DLLStackEntry actorStackEntryGC (DLLStackEntry entry)
+{
+  return ((DLLStackEntry) ((Actor *) entry)->gc ());
+}
+
+void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
+{
+  DLLStackBodyEntry *read = l, *current = c;
+  clear ();
+  while (read != (DLLStackBodyEntry *) NULL) {
+    push ((*f)(read->elem));
+    if (current == read)
+      c = s;
+    read = read->next;
+  }
+}
 
 //*****************************************************************************
 //                           collectGarbage
