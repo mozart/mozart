@@ -6,7 +6,7 @@ local
    proc {ReadLoop S}
       case S
       of H|T then
-	 %{OzcarMessage 'readloop:'} {Show H}
+	 {OzcarMessage 'readloop:'} {OzcarShow H}
 	 {Ozcar readStreamMessage(H)}
 	 {ReadLoop T}
       end
@@ -103,6 +103,12 @@ in
 	       {OzcarMessage KnownThread # {ID I}}
 	    else
 	       {OzcarMessage NewThread   # {ID I}}
+	       case Q == 1 then      %% toplevel query?
+		  {Thread.resume T}  %% yes, so we want T to make
+	                             %% the first step automatically
+		  {Delay 200}        %% short living threads which produce
+	                             %% no step messages are uninteresting...
+	       else skip end
 	       case
 		  {Thread.state T} == terminated then
 		  {OzcarMessage EarlyThreadDeath}
@@ -119,7 +125,8 @@ in
 	    case E then
 	       ThreadManager,remove(T I noKill)
 	    else
-	       {OzcarMessage 'Unknown terminating thread'}
+	       %{OzcarMessage 'Unknown terminating thread'}
+	       skip
 	    end
 	    
 	 elseof susp then
@@ -159,12 +166,8 @@ in
 	 Threads <- T | @Threads
 	 {Dictionary.put self.ThreadDic I {New Thr init(T)}}
 	 Gui,addNode(I Q)
-	 case Q == 1 then           %% toplevel query?
-	    ThreadManager,switch(I) %% does Gui,displayTree
-	    {Thread.resume T}       %% we want T to make
-	                            %% the first step automatically
-	 elsecase Q == 0 then       %% tk action?
-	    ThreadManager,switch(I)
+	 case Q == 0 orelse Q == 1 then 
+	    ThreadManager,switch(I)       %% does Gui,displayTree
 	 else
 	    Gui,displayTree
 	 end
@@ -226,19 +229,17 @@ in
 		builtin:IsBuiltin)
 	 case F == '' then
 	    {OzcarMessage NoFileInfo # I}
-	    {Dbg.stepmode @currentThread false}
-	    {Thread.resume @currentThread}
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
-	    ThreadManager,remove(T I kill)
+	    {Thread.resume @currentThread}
 	 else
 	    SourceManager,scrollbar(file:F line:L
 				    color:ScrollbarApplColor what:appl)
-	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
-	    ThreadManager,setThrPos(id:I file:F line:L
-				    name:N args:A builtin:IsBuiltin)
 	    Gui,printAppl(name:N args:A builtin:IsBuiltin)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	 end
+	 SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
+	 ThreadManager,setThrPos(id:I file:F line:L
+				 name:N args:A builtin:IsBuiltin)
       end
       
       meth switch(I)

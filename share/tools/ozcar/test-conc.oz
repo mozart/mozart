@@ -9,7 +9,6 @@ fun {AllGreen T}
    Green Red
 in
    {Scan T unit Green Red}
-   {Debug.breakpoint}
    {WaitOr Green Red}
    {IsDet Green}
 end

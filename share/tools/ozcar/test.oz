@@ -4,7 +4,7 @@
 local
    A = proc{$ X Y Z}
 	  AA = proc{$}
-		  {Debug.breakpoint}
+		  %{Debug.breakpoint}
 		  X = 42
 		  {Show 'X'#X}
 	       end
@@ -17,15 +17,11 @@ local
 	  {B Z}
        end
    B = proc{$ X}
-	  {Debug.breakpoint}
+	  %{Debug.breakpoint}
 	  Y = X + 1
        in
 	  {Show 'Y'#Y}
        end
 in
-   local
-      D = 4711
-   in
-      {Browse {A _ 11 $}}
-   end
+   {Browse {A _ 11 $}}
 end
