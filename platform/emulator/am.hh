@@ -55,7 +55,32 @@ enum InstType {
   INST_REJECTED
 };
 
-extern AM am;
+// this class contains the configurable parameters
+class ConfigData {
+public:
+  int printDepth;
+
+  int showForeignLoad;	// show message on load
+  int showFastLoad;	// show message on fast load
+  int showIdleMessage;	// show message on idle
+
+
+  int gcFlag;                 // request GC to run
+  int gcVerbosity;            // GC verbosity level
+
+  char *ozPath;
+  char *linkPath;
+
+  int systemPriority;
+  int defaultPriority;
+  int timeSlice;
+
+  int clockTick;
+
+  int taskStackSize;
+public:
+  ConfigData();
+};
 
 // this class contains the central global data
 class AM {
@@ -78,6 +103,8 @@ public:
   Board *currentSolveBoard;       // current 'solve' board or NULL if none;
   Bool wasSolveSet; 
 
+  Statistics stat;
+  ConfigData conf;
 public:
   AM() {};
   void init(int argc,char **argv);
@@ -155,35 +182,8 @@ public:
   State setValue(TaggedRef feature, TaggedRef value);
 };
 
+extern AM am;
 
-// this class contains the configurable parameters
-class ConfigData {
-public:
-  int printDepth;
-
-  int showForeignLoad;	// show message on load
-  int showFastLoad;	// show message on fast load
-  int showIdleMessage;	// show message on idle
-
-
-  int gcFlag;                 // request GC to run
-  int gcVerbosity;            // GC verbosity level
-
-  char *ozPath;
-  char *linkPath;
-
-  int systemPriority;
-  int defaultPriority;
-  int timeSlice;
-
-  int clockTick;
-
-  int taskStackSize;
-public:
-  ConfigData();
-};
-
-extern ConfigData conf;
 
 #ifndef OUTLINE
 #include "am.icc"
