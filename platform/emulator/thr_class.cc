@@ -48,6 +48,12 @@
 #include "taskstack.hh"
 #include "thread.hh"
 
+#ifdef OUTLINE
+#define inline
+#include "thread.icc"
+#undef inline
+#endif
+
 // --------------------------------------------------------------------------
 
 
@@ -175,10 +181,3 @@ void Thread::ScheduleSolve (Board *b)
   b->setNervous();
   t->schedule();
 }
-
-
-#ifdef OUTLINE
-#define inline
-#include "thread.icc"
-#undef inline
-#endif
