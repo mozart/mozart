@@ -22,6 +22,7 @@
 #include <mozart.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include <string.h> /* for memcpy */
 #include "GOZData.h"
 
 /*
@@ -237,7 +238,7 @@ OZ_Term createGdkEvent(GdkEvent *event) {
   case GDK_DESTROY:
     return OZ_atom("GDK_DESTROY");
   case GDK_EXPOSE:
-    return createExposeEvent("GDK_EPOSE", (GdkEventExpose *) event);
+    return createExposeEvent("GDK_EXPOSE", (GdkEventExpose *) event);
   case GDK_MOTION_NOTIFY:
     return createMotionEvent("GDK_MOTION_NOTIFY", (GdkEventMotion *) event);
   case GDK_BUTTON_PRESS:
@@ -308,13 +309,19 @@ OZ_Term createGdkEvent(GdkEvent *event) {
 
 extern OZ_Term makeArgTerm(GtkArg *arg);
 
+
 /*
+ * We need two marshallers; one for "normal" events and one for delete
+ * events which behave differently due to the MAGIC value.
+ * Furthermore, it is necessary to override the default delete event
+ * handler directly on the C side to prevent premature object destruction.
+ *
  * User Data is transmitted using the GtkArg Array.
  * The event pointer will be transformed to a tuple.
  */
 
-static void signal_marshal(GtkObject *object, gpointer oz_id,
-                           guint n_args, GtkArg *args) {
+static void signal_standard_marshal(GtkObject *object, gpointer oz_id,
+                                    guint n_args, GtkArg *args) {
   OZ_Term event = OZ_nil();
 
   for (int i = n_args; i--;) {
@@ -322,7 +329,8 @@ static void signal_marshal(GtkObject *object, gpointer oz_id,
   }
   event = OZ_cons(OZ_int((guint) oz_id), event);
 #if defined(DEBUG)
-  fprintf(stderr, "signal_marshal: sending `%s'\n", OZ_toC(event, 10, 10));
+  fprintf(stderr, "signal_standard_marshal: sending `%s'\n",
+          OZ_toC(event, 10, 10));
 #endif
   OZ_send(signal_port, event);
 
@@ -333,12 +341,44 @@ static void signal_marshal(GtkObject *object, gpointer oz_id,
 
   /* Assign Result Type; this is fake because it ALWAYS indicates non-handling.
    * This should be changed later on but will work fine (but slowly) for now.
-   * CAUTION: Returning FALSE yields the destruction of GTK object hierarchy
-   * CAUTION: before the handler was actually executed in case of delete-event.
+   * Normal events need FALSE to indicate non-handling.
    */
   GtkArg result      = args[n_args + 1];
   result.type        = GTK_TYPE_BOOL;
   result.d.bool_data = FALSE;
+}
+
+static void signal_delete_marshal(GtkObject *object, gpointer oz_id,
+                                  guint n_args, GtkArg *args) {
+  OZ_Term event = OZ_nil();
+
+  for (int i = n_args; i--;) {
+    event = OZ_cons(makeArgTerm(&(args[i])), event);
+  }
+  event = OZ_cons(OZ_int((guint) oz_id), event);
+#if defined(DEBUG)
+  fprintf(stderr, "signal_delete_marshal: sending `%s'\n",
+          OZ_toC(event, 10, 10));
+#endif
+  OZ_send(signal_port, event);
+
+  /* Now tell the oz side that meaningful events ocurred.
+   * This is checked during handle_pending_events.
+   */
+  had_events = 1;
+
+  /* Assign Result Type; this is fake because it ALWAYS indicates non-handling.
+   * This should be changed later on but will work fine (but slowly) for now.
+   * Delete events need TRUE to indicate non-handling.
+   */
+  GtkArg result      = args[n_args + 1];
+  result.type        = GTK_TYPE_BOOL;
+  result.d.bool_data = TRUE;
+}
+
+/* The standard oz delete event handler */
+static gboolean oz_delete_event(GtkWidget *widget, GdkEventAny *event) {
+  return TRUE;
 }
 
 /*
@@ -347,15 +387,29 @@ static void signal_marshal(GtkObject *object, gpointer oz_id,
  * 3. the signal id of gtk_signal_connect_full is ignored.
  */
 
-OZ_BI_define (native_signal_connect, 3, 0) {
+
+OZ_BI_define (native_signal_connect, 4, 0) {
   GOZ_declareObject(0, object);
   OZ_declareTerm(1, name);
   OZ_declareInt(2, oz_id);
+  OZ_declareInt(3, normal_event);
 
-  gtk_signal_connect_full(GTK_OBJECT (object),
-                          (gchar *) OZ_virtualStringToC(name, NULL),
-                          NULL, signal_marshal, (gpointer) oz_id,
-                          NULL, FALSE, FALSE);
+  /* Delete Events need special care */
+  if (normal_event) {
+    gtk_signal_connect_full(GTK_OBJECT (object),
+                            (gchar *) OZ_virtualStringToC(name, NULL),
+                            NULL, signal_standard_marshal, (gpointer) oz_id,
+                            NULL, FALSE, FALSE);
+  }
+  else {
+    GtkWidgetClass *cl = (GtkWidgetClass *) (GTK_OBJECT (object)->klass);
+    cl->delete_event = oz_delete_event;
+
+    gtk_signal_connect_full(GTK_OBJECT (object),
+                            (gchar *) OZ_virtualStringToC(name, NULL),
+                            NULL, signal_delete_marshal, (gpointer) oz_id,
+                            NULL, FALSE, FALSE);
+  }
 
   return OZ_ENTAILED;
 } OZ_BI_end
@@ -555,8 +609,14 @@ OZ_BI_define(native_get_object_type, 1, 1) {
 } OZ_BI_end
 
 /*
- * Lowlevel String Array Handling
+ * Lowlevel String (Array) Handling
  */
+
+OZ_BI_define (native_make_native_string, 1, 1) {
+  GOZ_declareString(0, arg);
+  OZ_out(0) = OZ_makeForeignPointer(arg);
+  return OZ_ENTAILED;
+} OZ_BI_end
 
 OZ_BI_define (native_alloc_str_arr, 1, 1) {
   OZ_declareInt(0, len);
@@ -639,7 +699,7 @@ OZ_BI_define (native_get_color_list, 1, 1) {
 static OZ_C_proc_interface oz_interface[] = {
   {"initializeSignalPort", 1, 0, native_initialize_signal_port},
   {"handlePendingEvents", 0, 1, native_handle_pending_events},
-  {"signalConnect", 3, 0, native_signal_connect},
+  {"signalConnect", 4, 0, native_signal_connect},
   {"signalDisconnect", 2, 0, native_signal_disconnect},
   {"signalBlock", 2, 0, native_signal_block},
   {"signalUnblock", 2, 0, native_signal_unblock},
@@ -658,6 +718,7 @@ static OZ_C_proc_interface oz_interface[] = {
   {"getArg", 1, 1, native_get_arg},
   {"isObject", 1, 1, native_is_object},
   {"getObjectType", 1, 1, native_get_object_type},
+  {"makeNativeString", 1, 1, native_make_native_string},
   {"allocStrArr", 1, 1, native_alloc_str_arr},
   {"getStrArr", 1, 1, native_get_str_arr},
   {"freeStrArr", 1, 0, native_free_str_arr},

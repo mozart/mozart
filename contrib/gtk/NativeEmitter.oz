@@ -97,6 +97,16 @@ define
                         "#include <gdk_imlib.h>"
                         "#include \"GOZData.h\""]
 
+      GtkCanvasInitPrepend = ["/*"
+                              " * This file is generated. Please do not edit."
+                              " */"
+                              ""
+                              "#include <mozart.h>"
+                              "#include <gdk_imlib.h>"
+                              "#include <gtk/gtk.h>"
+                              "#include <gtk-canvas.h>"
+                              "#include \"GOZData.h\""]
+
       GtkCanvasInitStub = ["char oz_module_name[] = \"GtkCanvasNative\";"
                            "#if defined(__CYGWIN32__) || defined(__MINGW32__)"
                            "__declspec(dllexport) int _impure_ptr;"
@@ -473,7 +483,7 @@ define
          meth init(Types Name)
             FilePrepend =
             case {Util.toString Name}
-            of "GtkCanvasFieldNative.c" then @first = true GtkCanvasFilePrepend
+            of "GtkCanvasFieldNative.c" then @first = true GtkCanvasInitPrepend
             [] "GtkFieldNative.c"       then @first = true GtkFilePrepend
             [] "GdkFieldNative.c"       then @first = false GdkFilePrepend
             end
@@ -489,6 +499,7 @@ define
             {ForAll @names proc {$ Name}
                               case FieldEmitter, resolve(Name $)
                               of struct(Items) then
+                                 FieldEmitter, allocStruct(Name)
                                  FieldEmitter, emitAccessors(Name Items @first)
                               [] _             then skip
                               end
@@ -518,6 +529,17 @@ define
                FieldEmitter, emitAccessors(Name Ir)
             [] nil then skip
             end
+         end
+         meth allocStruct(Name)
+            ToS     = Util.toString
+            AccName = {ToS {Util.downTranslate Name}#"native_alloc"}
+         in
+            TextFile, putS({ToS "\nOZ_BI_define("#AccName#", 0, 1) {"})
+            TextFile, putS({ToS {Util.indent 1}#
+                            "OZ_out(0) = OZ_makeForeignPointer("
+                            #"malloc(sizeof("#Name#")));"})
+            TextFile, putS({ToS {Util.indent 1}#"return OZ_ENTAILED;"})
+            TextFile, putS("} OZ_BI_end")
          end
          meth emitAccessors(Name Items First)
             case Items
@@ -557,7 +579,7 @@ define
                   %% First Arg equals anchestor struct ptr
                   %% This is due to GTK's object simulation
                   %%
-                  if First
+                  if First andthen {Util.checkPrefix "Gtk" FieldType}
                   then
                      TextFile, putS({ToS {Util.indent 1}#"OZ_out(0) = "#
                                      "OZ_makeForeignPointer(Arg0);"})
@@ -586,13 +608,21 @@ define
             end
          end
          meth emitInterface(Class)
-            {ForAll @names proc {$ Name}
-                              case FieldEmitter, resolve(Name $)
-                              of struct(Items) then
-                                 FieldEmitter, emitAccInterfaces(Name Items)
-                              [] _             then skip
-                              end
-                           end}
+            ToS = Util.toString
+         in
+            {ForAll @names
+             proc {$ Name}
+                case FieldEmitter, resolve(Name $)
+                of struct(Items) then
+                   Alloc    = {ToS {Util.downTranslate Name}#"native_alloc"}
+                   ExpAlloc = {Util.translateName Alloc}
+                   AI       = {ToS "\t\""#ExpAlloc#"\", 0, 1, "#Alloc#", "}
+                in
+                   TextFile, putS(AI)
+                   FieldEmitter, emitAccInterfaces(Name Items)
+                [] _             then skip
+                end
+             end}
             TextFile, putS("\t{0, 0, 0, 0}\n};\n")
          end
          meth emitAccInterfaces(Name Items)
