@@ -412,12 +412,6 @@ bombGenCall:
 inline
 Bool AM::isNotPreemptiveScheduling(void)
 {
-  if (isSetSFlag(TasksReady)) {
-    deinstallPath(oz_rootBoard());
-    osBlockSignals();
-    handleTasks();
-    osUnblockSignals();
-  }
   if (isSetSFlag()) {
     if (isSetSFlag(ThreadSwitch)) {
       if (threadQueuesAreEmpty())

@@ -1596,6 +1596,10 @@ void AM::suspendEngine()
       handleIO();
     }
 
+    if (isSetSFlag(TasksReady)) {
+      handleTasks();
+    }
+
     if (!threadQueuesAreEmpty()) {
       break;
     }
@@ -1610,7 +1614,11 @@ void AM::suspendEngine()
 
     unsigned long idle_start = osTotalTime();
 
+#ifdef SLOWNET
+    int msleft = osBlockSelect(CLOCK_TICK/1000);
+#else
     int msleft = osBlockSelect(nextUser());
+#endif
     setSFlag(IOReady);
 
     ozstat.timeIdle += (osTotalTime() - idle_start);
@@ -1642,6 +1650,12 @@ void AM::checkStatus()
     deinstallPath(_rootBoard);
     osBlockSignals();
     handleIO();
+    osUnblockSignals();
+  }
+  if (isSetSFlag(TasksReady)) {
+    deinstallPath(oz_rootBoard());
+    osBlockSignals();
+    handleTasks();
     osUnblockSignals();
   }
 }
@@ -2269,7 +2283,7 @@ Bool AM::emulateHookOutline() {
       return TRUE;
     }
   }
-  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady))) {
+  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady|TasksReady))) {
     return TRUE;
   }
 
