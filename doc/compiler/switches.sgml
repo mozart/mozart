@@ -46,7 +46,7 @@
           Output warnings about redeclarations of top-level variables,
           either by <<declare>> or locally.
         <Entry><Code><Span class=ignore/\switch +/warnunused</Code>
-          (default: <<false>>)
+          (default: <<true>>)
         <Item>
           Output warnings about local variables never used or used only
           once (that is, initialized but never used again).
