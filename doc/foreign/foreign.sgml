@@ -315,11 +315,11 @@ replace it with the suffix appropriate for the current platform.
 <p>
 </section>
 </chapter>
-<chapter id=chapter.windll><title>Creating DLLs under Windows 9x/NT</title>
+<chapter id=chapter.windll><title>Creating DLLs under Windows</title>
 <p>
 
-<code/oztool/ works on MS Windows as described in <ptr
-to="chapter.unixdll"/. In addition <code/oztool/ on Windows can be
+<code/oztool/ works under Windows as described in <ptr
+to="chapter.unixdll"/. In addition <code/oztool/ can be
 directed to call different compilers and linkers to create object
 files and DLLs. This is done by specifying one of the following
 options to <code /oztool/ (<code /-gnu/ is the default):
@@ -327,109 +327,37 @@ options to <code /oztool/ (<code /-gnu/ is the default):
 <list>
 <item> <code /-gnu/: use  <Ref.Extern
 to="http://www.xraylith.wisc.edu/~khan/software/gnu-win32/index.html"/mingw32/
-(i.e. egcs)
-<item> <code /-msvc/: use MS Visual C++ 5.0/6.0
+or cygwin (&ie;, egcs)
+<item> <code /-msvc/: use Microsoft Visual C++ 5.0/6.0
 <item> <code /-watcom/: use Watcom 10.x
 </list>
 
 You can use the option <code /-verbose/ to let <code /oztool/ print
-out the commands it executes.
+out the commands it executes.  This will also give you an idea of
+what steps to perform if you want to use another compiler than those
+mentioned in the above list.
 
-<section><title>Some more background </title>
-<p>
-If the above does not work for you or you want to use a compiler that
-is not in the list above: here is some more info that is needed to
-create a DLL on Windows that is loadable into Mozart.
-
-<p>
-Before compiling your programs please make sure that the C preprocessor
-macro <code /OZWIN/ is defined (check the beginning of <code
-/mozart.h/ for more info).
-<p>
-
-When loading a DLL, Mozart will automatically call a C function named
-<code /OZ_linkFF/ to do a certain special linking step needed on the
-Windows platform. This function is defined in the file <code
-/mozart.c/ contained in the <code /include/ subdirectory of the Mozart
-installation directory. So you have to compile <code /mozart.c/ and
-include it into the DLL. You also have to make sure that all the
-functions you want to call from Mozart (including <code /OZ_linkFF/)
-are exported from the DLL.
-
-<!--  Dynamic linking has been testet using Watcom version 10.6 and MS -->
-<!--  Visual C++ version 4.0. In the following we shortly describe how to -->
-<!--  proceed on each of these compilers to create the DLL named -->
-<!--  <code /getenv.dll/ for the example above.  -->
-
-</section>
-
-<section><title>Known bugs and problems</title>
+<section><title>Known Bugs and Problems</title>
 <p>
 
 <list enum>
 <item>
-DLLs created with MS Visual C++ cannot be linked into the <ref.extern
-to="ozdoc:opi"/OPI/: during the linking process the whole systems
-hangs. This is most likely a
-problem related to Emacs.<p>
-Linking DLLs created with MS Visual C++ into plain Mozart (i.e. not
-running under the OPI) works fine.
-<item>
-<code /oztool/ does not detect yet when a call to the compiler or
-linker fails (for example if the program files are not found).
-<item>
-Creating DLLs with <Ref.Extern
-to="http://sourceware.cygnus.com/cygwin/"/cygwin/ has not been tested
-but should be possible in principle. However the cygwin.dll has to be
-initialized first. The document <Ref.Extern
+When creating DLLs with <Ref.Extern to="http://sourceware.cygnus.com/cygwin/"
+/cygwin/, make sure that <file/cygwin.dll/ is correctly initialized.
+The document <Ref.Extern
 to="http://www.xraylith.wisc.edu/~khan/software/gnu-win32/README.jni.txt"/README.jni.txt/
 might give some more help under <code /"Cygwin notes"/.
+<item>
+It is not possible to link to a C run-time library other than
+<file/msvcrt.dll/.
+<item>
+Because of incompatible name-mangling schemes of different C++ compilers,
+a library making use of the foreign function interface's C++ classes must
+be compiled with GNU C++ to link correctly.
 </list>
 
 </section>
 
-
-<!--  <section><title/Watcom/ -->
-<!--  <p> -->
-<!--  First create a file named <code /getenv.lnk/ with the following contents: -->
-<!--  <code display > -->
-<!--  system nt_dll initinstance terminstance -->
-<!--  name getenv.so-win32-i486 -->
-<!--  export _BIgetenv -->
-<!--  export _OZ_linkFF -->
-<!--  export _oz_init_module -->
-<!--  file getenv,mozart -->
-<!--  </code> -->
-<!--  Note that you have to prepend a <code /_/ to each of the functions, -->
-<!--  that you want to export. -->
-<!--  <p> -->
-<!--  Then compile the source files and create the DLL using the following -->
-<!--  commands (replace OZHOME by the directory where Oz has been installed): -->
-<!--  <code display > -->
-<!--  wcc386 -zq -bd -IOZHOME\include mozart.c -->
-<!--  wpp386 -zq -bd -IOZHOME\include getenv.cc -->
-<!--  wlink @getenv -->
-<!--  </code> -->
-<!--  </section> -->
-
-<!--  <section><title/Microsoft Visual C++/ -->
-<!--  <p> -->
-<!--  First create a file named <code /getenv.def/ with the following contents: -->
-<!--  <code display > -->
-<!--  LIBRARY getenv -->
-<!--  EXPORTS -->
-<!--    OZ_linkFF -->
-<!--    BIgetenv -->
-<!--  </code> -->
-<!--  <p> -->
-<!--  Compilation and creation of the DLL is done using the following commands: -->
-<!--  <code display > -->
-<!--  cl -IOZHOME\include -c mozart.c -->
-<!--  cl -IOZHOME\include -c -Tp getenv.cc -->
-<!--  link /def:getenv.def /dll mozart.obj getenv.obj -->
-<!--  </code> -->
-<!--  </section> -->
-<!--  </chapter> -->
 
 <chapter id=chapter.tuning><title/Tuning the Example/
 <p>
