@@ -114,7 +114,7 @@ local
 	    granul:  Granul
 	    data:    Data
 	    args:    case Kind of 'lock' then [Frame.data]
-		     [] 'cond' then
+		     [] 'conditional' then
 			case {IsDet Data} andthen Data == unit then unit
 			else [Data]
 			end
