@@ -374,6 +374,27 @@ finalization stream <code/L/.
           if ?_{LI} is a valid key of ?_{Weak}.  Otherwise,
           returns&nbsp;?_{X}.
 
+        <Entry><<exchange>>
+          <Index class=tails/<<WeakDictionary>><And><<exchange>>/
+        <Synopsis>
+          <<{WeakDictionary.exchange ?+{Weak} ?+{LI} ?_{OldVal} ?_{NewVal}}>>
+        <Item>
+          returns the current value of ?_{Weak} under
+          key&nbsp;?_{LI} as item&nbsp;?_{OldVal} and updates the
+          value of ?_{Weak} under key&nbsp;?_{LI} to be ?_{NewVal}.
+
+        <Entry><<condExchange>>
+          <Index class=tails/<<WeakDictionary>><And><<condExchange>>/
+        <Synopsis>
+          <<{WeakDictionary.condExchange ?+{Weak} ?+{LI} ?_{DefVal}
+          ?_{OldVal} ?_{NewVal}}>>
+        <Item>
+          If ?_{LI} is a valid key of ?_{Weak} then returns the
+          current value of ?_{Weak} under key&nbsp;?_{LI} as
+          item&nbsp;?_{OldVal} otherwise,  returns ?_{DefVal} as
+          item&nbsp;?_{OldVal}. Sets the value of ?_{Weak}
+          under key&nbsp;?_{LI} to be ?_{NewVal}.
+
         <Entry><<keys>>
           <Index class=tails/<<WeakDictionary>><And><<keys>>/
         <Synopsis>
