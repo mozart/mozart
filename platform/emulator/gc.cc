@@ -764,7 +764,8 @@ inline
 OzVariable * OzVariable::gcVarInline(void) {
   GCDBG_INFROMSPACE(this);
 
-  Assert(!gcIsMarked())
+  Assert(!gcIsMarked());
+  Assert(!isTrailed());
 
   TypeOfVariable t = getType();
 
@@ -1463,7 +1464,7 @@ void AM::gc(int msgLevel) {
   for (int j=NumberOfXRegisters; j--; )
     xRegs[j] = taggedVoidValue;
 
-  Assert(trail.isEmpty());
+  Assert(trail.getUsed() == 1);
   Assert(cachedSelf==0);
   Assert(ozstat.currAbstr==NULL);
   Assert(_inEqEq==FALSE);

@@ -101,7 +101,7 @@ error include resources.hh before mozart.h
 #define DP_TABLE_WORTHWHILE_REALLOC 200
 
 
-#define DEFAULT_TRAIL_SIZE      200
+#define DEFAULT_TRAIL_SIZE      1024
 
 #define SHOW_IDLE_MESSAGE       0
 #define SHOW_SUSPENSION         0

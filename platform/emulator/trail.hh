@@ -41,10 +41,15 @@ enum TeType {
   Te_Cast     = 3
 };
 
-class  Trail: public Stack {
+class Trail: public Stack {
+
 public:
-  Trail(): Stack(DEFAULT_TRAIL_SIZE,Stack_WithMalloc) {}
-  Trail(int sizeInit): Stack(sizeInit,Stack_WithMalloc) {}
+  Trail(void): Stack(DEFAULT_TRAIL_SIZE, Stack_WithMalloc) {
+    Stack::push((StackEntry) Te_Mark);
+  }
+
+  void init(void);
+
 
   /*
    * Tests
@@ -67,9 +72,7 @@ public:
    *
    */
 
-  void pushMark(void) {
-    Stack::push((StackEntry) Te_Mark);
-  }
+  void pushMark(void);
 
   void pushBind(TaggedRef *);
 
@@ -83,19 +86,11 @@ public:
    *
    */
 
-  void popMark(void) {
-    Assert(isEmptyChunk());
-    (void) Stack::pop();
-  }
+  void popMark(void);
 
-  void popBind(TaggedRef *&val, TaggedRef &old) {
-    Assert(getTeType() == Te_Bind);
-    (void) Stack::pop();
-    old = (TaggedRef)  ToInt32(Stack::pop());
-    val = (TaggedRef*) Stack::pop();
-  }
+  void popBind(TaggedRef *&val, TaggedRef &old);
 
-  void popVariable(void);
+  void popVariable(TaggedRef *&varPtr, OzVariable *&orig);
 
   void popCast(void);
 
