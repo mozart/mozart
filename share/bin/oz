@@ -92,7 +92,7 @@ case "$cmd" in
 
    oz.compiler)
 
-       if [ $1 = "-emacs" ]; then
+       if [ X$1 = X"-emacs" ]; then
           shift
           exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
        else
@@ -104,7 +104,7 @@ case "$cmd" in
 
    oz.machine)
 
-      if [ $1 = "-emacs" ]; then
+      if [ X$1 = X"-emacs" ]; then
         shift
         exec $OZMACHINE -E "$@"
       else
