@@ -28,42 +28,42 @@ prepare
 	     of false then '.'
 	     [] nil   then '.'
 	     [] S     then S end
-   FileListInc={List.map
-		{List.sort
-		 {List.map
-		  {List.filter {OS.getDir QTK_DIR#"/PrototyperData"}
-		   fun{$ N}
-		      {List.take {Reverse N} 3}=="zo." % file ending by a .oz extension
-		   end}	       
-		  fun{$ N} {List.take N {Length N}-3} end}
-		 fun{$ A B}
-		    {String.toAtom A}<{String.toAtom B}
-		 end}
-		fun{$ Name}
-		   Name#{fun{$}
-			    Ret
-			 in
-			    try
-			       HOZ={New Open.file init(url:QTK_DIR#"/PrototyperData/"#Name#".oz" flags:[read])}
-			       COZ={HOZ read(list:$ size:all)}
-			       {HOZ close}
+   PrototyperData={List.map
+		   {List.sort
+		    {List.map
+		     {List.filter {OS.getDir QTK_DIR#"/PrototyperData"}
+		      fun{$ N}
+			 {List.take {Reverse N} 3}=="zo." % file ending by a .oz extension
+		      end}	       
+		     fun{$ N} {List.take N {Length N}-3} end}
+		    fun{$ A B}
+		       {String.toAtom A}<{String.toAtom B}
+		    end}
+		   fun{$ Name}
+		      Name#{fun{$}
+			       Ret
 			    in
-			       Ret=COZ
-			    catch _ then Ret="" end
-			    {Purge Ret}
-			 end}#{fun{$}
-				  Ret
+			       try
+				  HOZ={New Open.file init(url:QTK_DIR#"/PrototyperData/"#Name#".oz" flags:[read])}
+				  COZ={HOZ read(list:$ size:all)}
+				  {HOZ close}
 			       in
-				  try
-				     HOZ={New Open.file init(url:QTK_DIR#"/PrototyperData/"#Name#".nfo" flags:[read])}
-				     COZ={HOZ read(list:$ size:all)}
-				     {HOZ close}
+				  Ret=COZ
+			       catch _ then Ret="" end
+			       {Purge Ret}
+			    end}#{fun{$}
+				     Ret
 				  in
-				     Ret=COZ
-				  catch _ then Ret="No information available." end
-				  {Purge Ret}
-			       end}
-		end}
+				     try
+					HOZ={New Open.file init(url:QTK_DIR#"/PrototyperData/"#Name#".nfo" flags:[read])}
+					COZ={HOZ read(list:$ size:all)}
+					{HOZ close}
+				     in
+					Ret=COZ
+				     catch _ then Ret="No information available." end
+				     {Purge Ret}
+				  end}
+		   end}
 
 export
    Run
@@ -92,7 +92,7 @@ define
 		      {String.toAtom A}<{String.toAtom B}
 		   end}
       else
-	 FileList={List.map FileListInc fun{$ F} A in F=A#_#_ A end}
+	 FileList={List.map PrototyperData fun{$ F} A in F=A#_#_ A end}
       end
       ListObj
       FileNameVar
@@ -118,6 +118,7 @@ define
 		  {Compiler.evalExpression Code
 		   env('QTk':QTk 'OS':OS 'Compiler':Compiler 'System':System
 		       'Application':Application
+		       'PrototyperData':PrototyperData
 		       'Open':Open 'Show':System.show
 		       'Error':Error)
 		   _ _}
@@ -143,7 +144,7 @@ define
 	    else
 	       R
 	    in
-	       {ForAll FileListInc
+	       {ForAll PrototyperData
 		proc{$ F}
 		   A B
 		in
@@ -174,7 +175,7 @@ define
 		  end
 	       else
 		  {NfoText set({fun{$}
-				   F={List.nth FileListInc Ind}
+				   F={List.nth PrototyperData Ind}
 				   C
 				in
 				   F=_#_#C
