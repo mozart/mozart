@@ -1,0 +1,58 @@
+PREFIX          = @prefix@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+OZENGINE        = @OZENGINE@
+OZDOC           = @OZDOC@
+OZDOCFLAGS      =
+DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
+
+DOCDIR          = /www/mozart/documentation/functors
+
+INSTALL         = @INSTALL@
+INSTALL_FILE    = $(INSTALL) -m 444
+INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_DIR     = @INSTALL_DIR@
+
+SGMLSRCS = \
+        functors.sgml
+OZSRCS = \
+        ApplyFunctor.oz Computed1.oz Computed2.oz FileOperations.oz \
+        Syslet.oz Test.oz
+
+.PHONY: all validate install clean veryclean distclean
+
+all: functors-html
+
+include $(SRCDIR)/../../share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
+
+functors-html: $(OZSRCS) $(SGMLSRCS)
+        $(DOCIFY) --in=$(SRCDIR)/functors.sgml --out=$@ --type=html-stylesheets
+
+functors-tex: $(OZSRCS) $(SGMLSRCS)
+        $(DOCIFY) --in=$(SRCDIR)/functors.sgml --out=$@ --type=latex
+
+validate: functors-html
+        nsgmls -cHTML4.soc -sB functors-html/*.html
+
+install: functors-html $(DOCDIR)
+        for i in functors-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+$(DOCDIR):
+        $(INSTALL_DIR) $@
+
+clean:
+        -rm -rf functors-html
+        -rm -rf functors-tex
+        -rm -f *~
+
+veryclean: clean
+
+distclean: veryclean
+        -rm -f Makefile

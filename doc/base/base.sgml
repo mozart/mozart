@@ -73,19 +73,18 @@
         <Picture.Extern to="base.gif" type=gif>
       </Picture.Choice>
     <Abstract>
-      <P.silent><!--**-->
-        &Oz; is a concurrent language providing for functional,
-        object-oriented, and constraint programming.  The &Oz; Base
-        Environment is part of the &Oz; language specification and contains
-        procedures that are made generally available to the programmer.
-        A thorough knowledge of the &Oz; Base Environment is highly
-        recommended for effective programming in &Oz;.
-      <P>
-        The &Oz; Base Environment provides the basic operations on the values
-        of the &Oz; universe and a set of procedures whose use makes for more
-        elegant and readable programs.  It provides high-level access to
-        programming with threads, to real-time programming and to data
-        structures such as arrays and dictionaries.
+      &Oz; is a concurrent language providing for functional,
+      object-oriented, and constraint programming.  The &Oz; Base
+      Environment is part of the &Oz; language specification and contains
+      procedures that are made generally available to the programmer.
+      A thorough knowledge of the &Oz; Base Environment is highly
+      recommended for effective programming in &Oz;.
+    <P>
+      The &Oz; Base Environment provides the basic operations on the values
+      of the &Oz; universe and a set of procedures whose use makes for more
+      elegant and readable programs.  It provides high-level access to
+      programming with threads, to real-time programming and to data
+      structures such as arrays and dictionaries.
     </Abstract>
   <Body proglang=oz>
     &introduction;
