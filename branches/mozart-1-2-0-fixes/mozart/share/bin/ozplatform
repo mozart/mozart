@@ -47,6 +47,8 @@ case $system in
    ;;
    *sparc*OpenBSD*)      OZARCH=netbsd-sparc
    ;;
+   *i386*OpenBSD*)	OZARCH=openbsd-i486
+   ;;
    *i386*NetBSD*)       OZARCH=netbsd-i486
    ;;
    *i[4567]86*CYGWIN*)       OZARCH=win32-i486
