@@ -2,7 +2,7 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 declare
-\ifdef NEWSAVE
+\ifndef NEWSAVE
 Profiler
 \endif
 \ifdef SAVE
