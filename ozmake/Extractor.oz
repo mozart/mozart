@@ -62,6 +62,7 @@ define
 	    %% record we just read, but we don't actually write out the
 	    %% makefile.
 	    {self makefile_from_record(REC.info)}
+	    {self set_no_makefile(false)}
 	 end
       end
 
@@ -85,7 +86,11 @@ define
 	       %% in order to minimize surprizes, we try the default
 	       %% methods first rather than risk getting something
 	       %% stale from some cache
-	       {self trace('reading package '#PKG)}
+	       if {CondSelect {URL.make PKG} scheme unit}\=unit then
+		  {self xtrace('downloading package '#PKG)}
+	       else
+		  {self trace('reading package '#PKG)}
+	       end
 	       {{Resolve.make 'ozmake'
 		 init(Resolve.handler.default|
 		      {Resolve.pickle.getHandlers})}.load PKG}
