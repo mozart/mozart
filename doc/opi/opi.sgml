@@ -15,6 +15,7 @@
 <!ENTITY ie PI "ie">
 <!ENTITY wrt PI "wrt">
 <!ENTITY resp PI "resp">
+<!ENTITY etc PI "etc">
 
 ]>
 
@@ -535,12 +536,13 @@
         <Index/compiler<And>buffer/<Index/buffer<And>compiler/
         <Index/temporary buffer/<Index/buffer<And>temporary/
         The output of the process is redirected into an Emacs buffer called
-        <Name type=buffer/*Oz Emulator*/.  Additionally, the <File/OPI.ozf/
-        program instantiates an Oz compiler and attaches its input and
-        output to an Emacs buffer called <Name type=buffer/*Oz Compiler*/;
-        communication, in this case, is done via a <Span class=index/socket/.
-        The compiler might also create a new buffer for output of source code,
-        called <Name type=buffer /*Oz Temp*/.
+        <Name type=buffer/*Oz Emulator*/.  For instance, all output done via
+        <Code proglang=oz/System.show/ &etc; will appear in this buffer.
+        Additionally, the <File/OPI.ozf/ program instantiates an Oz compiler
+        and attaches its input and output to an Emacs buffer called <Name
+        type=buffer/*Oz Compiler*/; communication, in this case, is done via
+        a <Span class=index/socket/.  The compiler might also create a new
+        buffer for output of source code, called <Name type=buffer/*Oz Temp*/.
       <P>
         When we speak of the <Q/Oz Emulator/ and <Q/Oz Compiler/ buffers
         in this manual, we mean the buffers called <Name type=buffer
@@ -759,6 +761,13 @@
                   a compilation error message (if the click went into the
                   Compiler buffer).
             </List>
+      <Section>
+        <Title/Seeing the &OPI; from Mozart/
+        <P>
+          <!--** special extended environment -->
+          <!--** {Property.get 'opi.compiler'} -->
+          <!--** {Property.get 'standalone'} -->
+          <!--** describe the Emacs module -->
     <Chapter id="chapter.tools">
       <Title/Interacting With the Development Tools/
       <P>
@@ -790,6 +799,20 @@
             Feed the corresponding text region to the Oz Compiler.
             Assuming it to contain an expression, enclose it by an
             application of the procedure <Code proglang=oz>Browse</Code>.
+        </List>
+      <Para class=apropos><Title/<Span class=index/Inspector//
+        <List>
+          <Entry class=command><Span class=index/<<oz-inspect-buffer>>/
+          <Entry class=command><Span class=index/<<oz-inspect-region>>/
+            <<START END>> (<Key/C-c C-i/)
+          <Entry class=command><Span class=index/<<oz-inspect-line>>/
+            <<COUNT>>
+          <Entry class=command><Span class=index/<<oz-browse-paragraph>>/
+            <<COUNT>>
+          <Item>
+            Feed the corresponding text region to the Oz Compiler.
+            Assuming it to contain an expression, enclose it by an
+            application of the procedure <Code proglang=oz>Inspect</Code>.
         </List>
       <Para class=apropos><Title/<Span class=index/Panel//
         <List>
