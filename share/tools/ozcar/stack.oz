@@ -24,12 +24,21 @@ local
    end
        
    local
+      fun {Correct F}
+	 case F == nil then nil else
+	    case {Label F.1} == debug then
+	       {Correct F.2}
+	    else
+	       F
+	    end
+	 end
+      end
       proc {DoStackForAllInd Xs I P}
 	 case Xs of nil then skip
 	 [] X|Y|Z then
 	    case X == toplevel then skip else
 	       {P I X Y}
-	       {DoStackForAllInd Z I+1 P}
+	       {DoStackForAllInd {Correct Z} I+1 P}
 	    end
 	 end
       end
