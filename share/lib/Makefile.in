@@ -203,8 +203,10 @@ Unnester.ozf: compiler/Unnester.oz compiler/TupleSyntax.oz \
 
 Core.ozf: compiler/Core.oz compiler/Annotate.oz
 
-StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz Search.ozf
-        $(COMPILE) -l Search=Search.ozf compiler/StaticAnalysis.oz -o $@
+StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
+        Search.ozf FD.ozf FS.ozf
+        $(COMPILE) -l Search=Search.ozf,FD=FD.ozf,FS=FS.ozf \
+        compiler/StaticAnalysis.oz -o $@
 
 CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
 
