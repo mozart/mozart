@@ -60,11 +60,28 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
   for (int i=outAr; i--; ) savedX[i]=X[inAr+i];
 
   OZ_Return ret1 = bi->getFun()(X,OZ_ID_MAP);
-  if (OZ_STATUS_OK(ret1)) {
-    for (int i=outAr;i--;) {
-      OZ_Return ret2 = oz_unify(X[inAr+i],savedX[i]);
-      if (ret2!=PROCEED) return ret2;
+  if (ret1!=PROCEED) {
+    switch (ret1) {
+    case FAILED:
+    case RAISE:
+    case BI_TYPE_ERROR:
+    case SUSPEND:
+      return ret1;
+    case PROCEED:
+    case SCHEDULED: // prop ?
+    case SLEEP:     // prop ?
+    case BI_PREEMPT:
+    case BI_REPLACEBICALL:
+    case BI_CONTROL_VAR:
+      break;
+    default:
+      error("oz_bi_wrapper: return not handled: %d",ret1);
+      return FAILED;
     }
+  }
+  for (int i=outAr;i--;) {
+    OZ_Return ret2 = oz_unify(X[inAr+i],savedX[i]);
+    if (ret2!=PROCEED) return ret2;
   }
   return ret1;
 }
@@ -982,9 +999,8 @@ LBLdispatcher:
       bi->incCounter();
 #endif
       OZ_Return res = oz_bi_wrapper(bi,X);
+      if (res == PROCEED) { DISPATCH(3); }
       switch (res) {
-
-      case PROCEED:	  DISPATCH(3);
       case FAILED:	  HF_BI(bi);
       case RAISE:	  RAISE_THREAD;
       case BI_TYPE_ERROR: RAISE_TYPE(bi);
@@ -1025,9 +1041,9 @@ LBLdispatcher:
 #ifdef PROFILE_BI
       bi->incCounter();
 #endif
-      switch (bi->getFun()(X,loc->mapping())) {
-
-      case PROCEED:	  DISPATCH(4);
+      int res = bi->getFun()(X,loc->mapping());
+      if (res == PROCEED) { DISPATCH(4); }
+      switch (res) {
       case FAILED:	  HF_BI(bi);
       case RAISE:	  RAISE_THREAD;
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
@@ -2888,8 +2904,8 @@ LBLdispatcher:
        DebugTrace(ozd_trace("cfunc cont task"));
 
        switch (biFun(X,OZ_ID_MAP)) {
-       case FAILED:        HF_BI(builtinTab.getEntry((void *) biFun));
        case PROCEED:       goto LBLpopTask;
+       case FAILED:        HF_BI(builtinTab.getEntry((void *) biFun));
        case RAISE:         RAISE_THREAD_NO_PC;
        case BI_TYPE_ERROR: RAISE_TYPE(builtinTab.getEntry((void *) biFun));
 
