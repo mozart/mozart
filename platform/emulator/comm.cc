@@ -401,7 +401,7 @@ Site* unmarshalSite(MsgBuffer *buf)
 {
   PD((UNMARSHAL,"site"));
   MarshalTag mt = (MarshalTag) buf->get();
-  Assert(mt == DIF_SITE || mt == DIF_SITE_VI);
+  Assert(mt == DIF_SITE || mt == DIF_SITE_VI || mt == DIF_SITE_PERM);
   Site tryS;
 
   tryS.unmarshalBaseSite(buf);
