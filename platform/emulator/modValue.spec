@@ -50,6 +50,18 @@
                              out => ['value'],
                              BI  => BIcatExchange},
 
+     'catAccessOO'      => { in  => ['+value'],
+                             out => ['value'],
+                             BI  => BIcatAccessOO},
+
+     'catAssignOO'      => { in  => ['+value', 'value'],
+                             out => [],
+                             BI  => BIcatAssignOO},
+
+     'catExchangeOO'    => { in  => ['+value', 'value'],
+                             out => ['value'],
+                             BI  => BIcatExchangeOO},
+
      'wait'             => { in  => ['+value'],
                              out => [],
                              bi  => BIwait},

@@ -3821,7 +3821,7 @@ OZ_BI_define(BIat,1,1)
 // ---------------------------------------------------------------------
 
 
-OZ_BI_define(BIcatAccess,1,1)
+OZ_BI_define(BIcatAccessOO,1,1)
 {
   OZ_Return ret;
   oz_declareNonvarIN(0,cat);
@@ -3872,7 +3872,7 @@ OZ_BI_define(BIcatAccess,1,1)
   return ret;
 } OZ_BI_end
 
-OZ_BI_define(BIcatAssign,2,0)
+OZ_BI_define(BIcatAssignOO,2,0)
 {
   oz_declareNonvarIN(0,cat);
   oz_declareIN(1,value);
@@ -3915,7 +3915,7 @@ OZ_BI_define(BIcatAssign,2,0)
   }
 } OZ_BI_end
 
-OZ_BI_define(BIcatExchange,2,1)
+OZ_BI_define(BIcatExchangeOO,2,1)
 {
   OZ_Term old;
   OZ_Return ret;
@@ -3966,6 +3966,117 @@ OZ_BI_define(BIcatExchange,2,1)
         // Type Error
         oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
       }
+    }
+  }
+  return ret;
+
+} OZ_BI_end
+
+OZ_BI_define(BIcatAccess,1,1)
+{
+  OZ_Return ret;
+  oz_declareNonvarIN(0,cat);
+
+  // cat can be either a cell, D#I tuple, or an error
+  if (oz_isCell(cat)) {
+    // Cell
+    OZ_Term out;
+    ret = accessCell(cat,out);
+    OZ_result(out);
+  }
+  else {
+    if (oz_isPair2(cat)) {
+      OZ_Term left = oz_left(cat);
+      DEREF(left, leftptr);
+      if (oz_isDictionary(left) || oz_isArray(left)) {
+        OZ_Term out;
+        ret = genericDot(left, oz_right(cat), out, TRUE);
+        if (ret == SUSPEND) {
+          // Must explicitly suspend on key
+          oz_suspendOn(oz_right(cat));
+        }
+        OZ_result(out);
+      }
+      else {
+        // Type Error
+        oz_typeError(0,"Dict#Key, Array#Index");
+      }
+    }
+    else {
+      // Type Error
+      oz_typeError(0,"Cell, Dict#Key, Array#Index");
+    }
+  }
+  return ret;
+} OZ_BI_end
+
+OZ_BI_define(BIcatAssign,2,0)
+{
+  oz_declareNonvarIN(0,cat);
+  oz_declareIN(1,value);
+
+  // cat can be either a cell, feature, D#I tuple, or an error
+  if (oz_isCell(cat)) {
+    // Cell
+    OZ_Term oldIgnored;
+    return exchangeCell(cat,value,oldIgnored);
+  }
+  if (oz_isPair2(cat)) {
+    OZ_Term left = oz_left(cat);
+    DEREF(left, leftptr);
+    if (oz_isDictionary(left) || oz_isArray(left)) {
+      // T#K pair
+      OZ_Return ret = genericSet(left, oz_right(cat), value);
+      if (ret == SUSPEND) {
+        // Must explicitly suspend on components of arg
+        oz_suspendOn(oz_right(cat));
+      }
+      return ret;
+    }
+    else {
+      // Type Error
+      oz_typeError(0,"Dict#Key, Array#Index");
+    }
+  }
+  // Type Error
+  oz_typeError(0,"Cell, Dict#Key, Array#Index");
+} OZ_BI_end
+
+OZ_BI_define(BIcatExchange,2,1)
+{
+  OZ_Term old;
+  OZ_Return ret;
+
+  oz_declareNonvarIN(0,cat);
+  oz_declareIN(1,newVal);
+
+  // ca can be either a cell or feature or an error
+  if (oz_isCell(cat)) {
+    // Cell
+    ret = exchangeCell(cat,newVal,old);
+    OZ_result(old);
+  }
+  else {
+    if (oz_isPair2(cat)) {
+      OZ_Term left = oz_left(cat);
+      DEREF(left, leftptr);
+      // T#K pair
+      if (oz_isDictionary(left) || oz_isArray(left)) {
+        ret = genericExchange(left, oz_right(cat), newVal, old);
+        if (ret == SUSPEND) {
+          // Must explicitly suspend on key
+          oz_suspendOn(oz_right(cat));
+        }
+        OZ_result(old);
+      }
+      else {
+        // Type Error
+        oz_typeError(0,"Dict#Key, Array#Index");
+      }
+    }
+    else {
+      // Type Error
+      oz_typeError(0,"Cell, Dict#Key, Array#Index");
     }
   }
   return ret;
