@@ -348,8 +348,11 @@ void MemChunks::print()
 }
 
 
-void *heapMallocOutline(size_t chunk_size)
+void *heapMallocOutline
+(size_t chunk_size)
 {
+  Assert(chunk_size <= heapBlockSize);
+  
   return heapMalloc(chunk_size);
 }
 

@@ -27,7 +27,9 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 			 TaggedRef * tptr2, TaggedRef term2,
 			 Bool prop)
 {
-  Assert(getType()==FDVariable || getType()==OFSVariable);
+  Assert(getType()==FDVariable ||
+	 getType()==OFSVariable ||
+	 getType()==MetaVariable);
   LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
 			   localPropStore.isInLocalPropagation()));
 
@@ -43,6 +45,12 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
       return FALSE;
     }
     break;
+  case MetaVariable:
+    {
+      if (! ((GenMetaVariable *)this)->unifyMeta(tptr1, term1, tptr2, term2, prop))
+	return FALSE;
+    }
+    break;
   default:
     return FALSE;
   }
@@ -55,7 +63,9 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 inline
 int GenCVariable::getSuspListLength(void)
 {
-  Assert(getType()==FDVariable || getType()==OFSVariable);
+  Assert(getType()==FDVariable ||
+	 getType()==OFSVariable ||
+	 getType()==MetaVariable );
   switch (getType()){
   case FDVariable:
     return ((GenFDVariable *)this)->getSuspListLength();
@@ -70,12 +80,16 @@ int GenCVariable::getSuspListLength(void)
 inline
 size_t GenCVariable::getSize(void)
 {
-  Assert(getType()==FDVariable || getType()==OFSVariable);
+  Assert(getType() == FDVariable ||
+	 getType() == OFSVariable ||
+	 getType() == MetaVariable);
   switch (getType()){
   case FDVariable:
     return ((GenFDVariable*)this)->getSize();
   case OFSVariable:
     return ((GenOFSVariable*)this)->getSize();
+  case MetaVariable:
+    return ((GenMetaVariable*)this)->getSize();
   default:
     break;
   }
@@ -85,16 +99,20 @@ size_t GenCVariable::getSize(void)
 inline
 Bool GenCVariable::valid(TaggedRef val)
 {
-  Assert(getType()==FDVariable || getType()==OFSVariable);
+  Assert(getType()==FDVariable ||
+	 getType()==OFSVariable ||
+	 getType()==MetaVariable);
   switch (getType()){
   case FDVariable:
     return ((GenFDVariable*)this)->valid(val);
   case OFSVariable:
     return ((GenOFSVariable*)this)->valid(val);
+  case MetaVariable:
+    return ((GenMetaVariable*)this)->valid(val);
   default:
     break;
   }  
-  return NO;
+  return FALSE;
 }
 
 #endif //__genvar_icc__

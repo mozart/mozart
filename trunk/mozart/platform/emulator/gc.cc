@@ -1096,13 +1096,18 @@ SuspList * SuspList::gc(Bool tcFlag)
 inline
 void GenCVariable::gc(void)
 {
-  Assert(getType()==FDVariable || getType()==OFSVariable);
+  Assert(getType()==FDVariable ||
+	 getType()==OFSVariable ||
+	 getType()==MetaVariable);
   switch (getType()){
   case FDVariable:
     ((GenFDVariable*)this)->gc();
     break;
   case OFSVariable:
     ((GenOFSVariable*)this)->gc();
+    break;
+  case MetaVariable:
+    ((GenMetaVariable*)this)->gc();
     break;
   default:
     break;
@@ -1287,6 +1292,12 @@ void GenFDVariable::gc(void)
       fdSuspList[i] = fdSuspList[i]->gc(NO);
 }
 
+
+void GenMetaVariable::gc(void)
+{
+  GCMETHMSG("GenMetaVariable::gc");
+  gcTagged(data, data);
+}
 
 DynamicTable* DynamicTable::gc(void)
 {
@@ -1862,12 +1873,28 @@ ConstTerm *ConstTerm::gcConstTerm()
   case Co_Thread:
     return ((Thread *) this)->gc();
 
+  case Co_Chunk:
+    return ((HeapChunk *) this)->gc();
+    
   default:
     error("ConstTerm::gcConstTerm: unknown tag 0x%x", typeOf());
     return NULL;
   }
 }
 
+
+HeapChunk * HeapChunk::gc(void)
+{
+  GCMETHMSG("HeapChunk::gc");
+
+  HeapChunk * ret = (HeapChunk *) gcRealloc(this, sizeof(HeapChunk));
+
+  ret->chunk_data = (char *) gcRealloc(chunk_data, chunk_size);
+  
+  GCNEWADDRMSG(ret);
+  storeForward(getGCField(), ret);
+  return ret;
+}
 
 void Thread::GC()
 {

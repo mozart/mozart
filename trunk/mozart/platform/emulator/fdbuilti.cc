@@ -380,7 +380,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
   for (int i = from; i < to; i += 1) {
     TypeOfTerm vartag = bifdbm_vartag[i];
 
-    if (vartag == SMALLINT) {
+    if (vartag == SMALLINT || isSmallInt(*bifdbm_varptr[i])) {
       continue;
     } else if (vartag == CVAR) {
       if (! isTouched(i)) {
