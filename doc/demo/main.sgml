@@ -99,6 +99,8 @@
     <meta name="html.split"	  value="code.college.latex">
     <meta name="html.split"	  value="code.college.">
 
+    <meta name="html.split"	  value="code.flowers">
+    <meta name="html.split"	  value="code.flowers3d">
 
     <Meta name="html.split"       value="chapter.trucks">
     <meta name="html.split"	  value="code.trucks">
@@ -171,6 +173,7 @@
   <Back>
     <Bib.Extern id="FischerKuhn.93" to="demo.bib" key="FischerKuhn.93"> 
     <Bib.Extern id="Peek.95"        to="demo.bib" key="Peek.95"> 
+    <Bib.Extern id="Lindenmayer:90" to="demo.bib" key="Lindenmayer:90">
 </BOOK>
 
 <!--
