@@ -31,6 +31,7 @@ prepare
      apos: string("'")
      quot: string("\""))
    RecToDict = Record.toDictionary
+   VS2A = VirtualString.toAtom
 
    class Tokenizer
       prop final
@@ -52,7 +53,7 @@ prepare
       end
 
       meth initFromURL(FName FOpen)
-	 Filename    <- FName
+	 Filename    <- {VS2A FName}
 	 FileOpen    <- FOpen
 	 File        <- {FOpen FName}
 	 EntityTable <- {RecToDict DefaultEntityRecord}
@@ -110,7 +111,7 @@ prepare
 	 if @File\=unit then
 	    Stack<-o(@Filename @File @Buffer @Line)|@Stack
 	 end
-	 Filename <- FName
+	 Filename <- {VS2A FName}
 	 File     <- {@FileOpen FName}
 	 Buffer   <- nil
 	 Line     <- 1
