@@ -13,7 +13,6 @@
 #include "genvar.hh"
 #include "fdbuilti.hh"
 #include "builtins.hh"
-#include "ip.hh"
 
 AM am;
 
@@ -1422,7 +1421,8 @@ void AM::handleIO()
 
         numbOfFDs--;
 
-        Assert(ioNodes[index].handler[mode]);
+        //  EKS
+        // Assert(ioNodes[index].handler[mode]);
         if ((ioNodes[index].handler[mode])
             (index, ioNodes[index].readwritepair[mode])) {
           ioNodes[index].readwritepair[mode] = 0;

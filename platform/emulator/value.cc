@@ -256,39 +256,12 @@ NamedName *NamedName::newNamedName(const char *pn)
 }
 
 
-GName *Name::globalize()
-{
-  if (!hasGName()) {
-    Assert(am.isRootBoard(GETBOARD(this)));
-    homeOrGName = ToInt32(newGName(makeTaggedLiteral(this),GNT_NAME));
-    setFlag(Lit_hasGName);
-  }
-  return getGName();
-}
-
 void Name::import(GName *name)
 {
   Assert(am.isRootBoard(GETBOARD(this)));
   homeOrGName = ToInt32(name);
   setFlag(Lit_hasGName);
 }
-
-
-GName *Abstraction::globalize()
-{
-  if (!hasGName()) {
-    setGName(newGName(makeTaggedConst(this),GNT_PROC));
-  }
-  return getGName();
-}
-
-GName *SChunk::globalize() {
-  if (!hasGName()) {
-    setGName(newGName(makeTaggedConst(this),GNT_CHUNK));
-  }
-  return getGName();
-}
-
 
 /*===================================================================
  * ConstTerm
@@ -373,8 +346,6 @@ Bool member(TaggedRef elem,TaggedRef list)
   return NO;
 }
 
-
-
 /*
  * destructive reverse of a list
  */
@@ -407,16 +378,6 @@ TaggedRef duplist(TaggedRef list, int &len)
     list = tail(list);
   }
   return ret;
-}
-
-
-
-
-
-void ObjectClass::globalize() {
-  if (!hasGName()) {
-    setGName(newGName(makeTaggedConst(this),GNT_CLASS));
-  }
 }
 
 TaggedRef Object::getArityList()
@@ -782,6 +743,7 @@ Bool isSorted(TaggedRef list)
   return OK;
 
 }
+
 
 // sort list using quicksort and duplicants
 TaggedRef sortlist(TaggedRef list,int len)
@@ -1402,7 +1364,6 @@ void PrTabEntry::profileReset()
   }
 }
 
-
 void PrTabEntry::patchFileAndLine()
 {
   Reg reg;
@@ -1412,7 +1373,6 @@ void PrTabEntry::patchFileAndLine()
   lineno = smallIntValue(line);
   fileName = file;
 }
-
 
 int featureEqOutline(TaggedRef a, TaggedRef b)
 {

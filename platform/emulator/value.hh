@@ -1859,6 +1859,7 @@ private:
   PendThread* pending;
   Site* next;
   TaggedRef contents;
+  int accessNr;
 
 public:
   CellSec(TaggedRef val){ // on globalize
@@ -1866,12 +1867,15 @@ public:
     readCtr=0;
     pending=NULL;
     DebugCode(next=NULL);
-    contents=val;}
+    contents=val;
+    accessNr= -1;
+  }
 
-  CellSec(){ // on Proxy becoming Frame
+  CellSec(int nr){ // on Proxy becoming Frame
     state=Cell_Invalid;
     readCtr=0;
     pending=NULL;
+    accessNr=nr;
 
     DebugCode(head=makeTaggedNULL());
     DebugCode(contents=makeTaggedNULL());
@@ -1886,7 +1890,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  CellManager() : Tertiary(0,Co_Cell,Te_Manager){Assert(0);}
+  CellManager() : Tertiary(0,Co_Cell,Te_Manager){init();}
 
   void incManCtr(){
         Assert(getTertType()==Te_Manager);
@@ -1897,30 +1901,30 @@ public:
         sec->readCtr=0;
         return i;}
 
-  void setOwnCurrent(){
-    setPtr(NULL);}
-  Bool isOwnCurrent(){
-    if(getPtr()==NULL) return TRUE;
-    return FALSE;}
-
-  void setCurrent(Site *s){
-    setPtr(s);}
-  Site* getCurrent(){
-    return (Site*) getPtr();}
-
+  void setOwnCurrent();
+  Bool isOwnCurrent();
+  void init();
+  void setCurrent(Site *, int);
+  Site* getCurrent();
+  void cellReceived(Site*,int);
+  Site* cellSent(Site*,int, int&);
+  void managerSesSiteCrash(Site*, int);
+  Site* proxySesSiteCrash(Site*,Site*,int);
   void localize();
   void gcCellManager();
+  void probeFault(Site*, int, int);
 };
 
 class CellProxy:public Tertiary{
 friend void ConstTerm::gcConstRecurse(void);
 private:
-  int * dummy;
+  int holder;
 public:
   OZPRINT;
   OZPRINTLONG;
 
  CellProxy(int manager):Tertiary(manager,Co_Cell,Te_Proxy){  // on import
+   holder = 0;
    DebugIndexCheck(manager);}
 
   void convertToFrame();
@@ -1973,17 +1977,26 @@ public:
   void setContents(TaggedRef tr){sec->contents=tr;}
 
   void initFromProxy(){
-    sec=new CellSec();}
+    int nr=(int)sec;
+    sec=new CellSec(nr);}
 
   void initFromGlobalize(TaggedRef val){
     sec=new CellSec(val);}
 
   void convertToProxy(){
     setTertType(Te_Proxy);
-    DebugCode(sec=NULL);}
+    int nr = sec->accessNr;
+    DebugCode(sec=NULL);
+    sec = (CellSec*)nr;}
 
   void gcCellFrame();
   void gcCellFrameSec();
+
+  int readAccessNr(){
+    return sec->accessNr;}
+  int incAccessNr(){
+    sec->accessNr = sec->accessNr+1;
+    return sec->accessNr;}
 };
 
 

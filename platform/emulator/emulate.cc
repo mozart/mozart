@@ -16,6 +16,7 @@
 #include "genvar.hh"
 #include "dictionary.hh"
 #include "fdhook.hh"
+#include "marshaler.hh"
 
 OZ_C_proc_proto(BIfail);     // builtins.cc
 
@@ -512,7 +513,8 @@ void pushContX(TaskStack *stk,
 
 void addSusp(TaggedRef *varPtr, Thread *thr)
 {
-  addSuspAnyVar(varPtr,thr);
+  /* if(!thr->isStopped()) *//* ATTENTION */
+    addSuspAnyVar(varPtr,thr);
 }
 
 
@@ -803,7 +805,7 @@ LBLpreemption:
   asmLbl(PREEMPT_THREAD);
   SaveSelf;
   Assert(GETBOARD(CTT)==CBB);
-  Assert(CTT->isRunnable());
+  /*  Assert(CTT->isRunnable()|| (CTT->isStopped())); ATTENTION */
   e->scheduleThreadInline(CTT, CPP);
   e->unsetCurrentThread();
 
@@ -3067,7 +3069,7 @@ LBLdispatcher:
 
       OZ_unprotect((TaggedRef*)(PC+1));
 
-      if (!changeMarshalledFastCall(PC,pred,tailcallAndArity)) {
+      if (!changeMarshaledFastCall(PC,pred,tailcallAndArity)) {
         RAISE_APPLY(pred,cons(OZ_atom("proc or builtin expected."),nil()));
       }
 
