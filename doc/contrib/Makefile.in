@@ -3,7 +3,7 @@ SRCDIR          = @srcdir@
 
 WHAT = contrib
 MAIN = contrib.sgml
-SGMLSRCS =
+SGMLSRCS = regex.sgml gdbm.sgml
 HTMLEXTRAFILES =
 
 include ../Makefile.common
