@@ -109,7 +109,8 @@ public:
 // ident: fea value: val   filled entry
 // ident: fea value: 0     empty entry (emptied by removeC)
 // ident: 0   value: 0     empty entry (empty from the start)
-// Emptiness check: table[i].value==makeTaggedNULL()
+// Full emptiness check: table[i].value==makeTaggedNULL()
+// Hash termination condition: table[i].ident==makeTaggedNULL() || table[i].ident==id || s==0
 
 typedef unsigned long dt_index;
 
@@ -140,7 +141,7 @@ friend class HashElement;
 public:
     dt_index numelem;
     dt_index size;
-    HashElement table[1]; // 1 == size of initial table
+    HashElement table[1]; // 1 == placeholder.  Actual size set when allocated.
 
     USEHEAPMEMORY;
 
@@ -157,7 +158,7 @@ public:
     static DynamicTable* newDynamicTable(dt_index s=4);
 
     // Initialize an elsewhere-allocated dynamictable of size s
-    void init(dt_index s=1);
+    void init(dt_index s);
 
     // Test whether the current table has too little room for one new element:
     // ATTENTION: Calls to insert should be preceded by fullTest.
@@ -173,11 +174,12 @@ public:
     DynamicTable* copyDynamicTable(dt_index newSize);
 
     // Insert val at index id 
+    // Return value is valid iff 'valid'==TRUE.  Otherwise, nothing is done.
     // Return NULL if val is successfully inserted (id did not exist) 
     // Return the value of the pre-existing element if id already exists
     // Test for and increase size of hash table if it becomes too full
     // ATTENTION: insert must only be done if the table has room for a new element.
-    TaggedRef insert(TaggedRef id, TaggedRef val);
+    TaggedRef insert(TaggedRef id, TaggedRef val, Bool *valid);
 
     // Look up val at index id
     // Return val if it is found
@@ -224,24 +226,7 @@ public:
     TaggedRef getArityList(TaggedRef tail=AtomNil);
 
 private:
-
-    // Hash and rehash until the element or an empty slot is found
-    // Return i such that (table[i].ident==id || table[i].ident==makeTaggedNULL())
-    // Returns index of slot; the slot is empty or contains the element
-    dt_index fullhash(TaggedRef id) {
-        Assert(isPwrTwo(size));
-        Assert(isLiteral(id));
-        // Function 'hash' may eventually return the literal's seqNumber (see term.hh):
-        dt_index i=(size-1) & ((dt_index) (tagged2Literal(id)->hash()));
-        dt_index s=1;
-        // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
-        while(table[i].ident!=makeTaggedNULL() && table[i].ident!=id) {
-            i+=s;
-            i&=(size-1);
-            s++;
-        }
-        return i;
-    }
+    dt_index fullhash(TaggedRef id, Bool *valid);
 };
 
 
@@ -329,8 +314,14 @@ public:
     // ATTENTION: only use this for terms that do not have to be trailed
     Bool addFeatureValue(TaggedRef feature, TaggedRef term) {
 	Assert(isLiteral(feature));
+        Bool valid;
         if (dynamictable->fullTest()) dynamictable=dynamictable->doubleDynamicTable();
-        TaggedRef prev=dynamictable->insert(feature,term);
+        TaggedRef prev=dynamictable->insert(feature,term,&valid);
+        if (!valid) {
+            dynamictable=dynamictable->doubleDynamicTable();
+            prev=dynamictable->insert(feature,term,&valid);
+        }
+        Assert(valid);
         // (future optimization: a second suspList only waiting on features)
         if (prev==makeTaggedNULL()) {
             // propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
