@@ -574,8 +574,9 @@ void ProxyVar::nowGarbage(BorrowEntry* be){
   sendDeRegister(be);}
 
 #ifdef USE_FAST_UNMARSHALER
-// extern
-OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto){
+
+OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
+{
   OB_Entry *ob;
   int bi;
   OZ_Term val1 = unmarshalBorrow(bs,ob,bi);
@@ -609,14 +610,16 @@ OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto){
 
   return val;
 }
+
 #else
-// extern
+
 OZ_Term unmarshalVarRobust(MarshalerBuffer* bs, Bool isFuture,
-                             Bool isAuto, int *error){
+                             Bool isAuto, int *error)
+{
   OB_Entry *ob;
   int bi;
-  OZ_Term val1 = unmarshalBorrowRobust(bs,ob,bi,error);
-  if(*error) return oz_nil();
+  OZ_Term val1 = unmarshalBorrowRobust(bs, ob, bi, error);
+  if (*error) return ((OZ_Term) 0);
 
   if (val1) {
     PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
@@ -646,6 +649,7 @@ OZ_Term unmarshalVarRobust(MarshalerBuffer* bs, Bool isFuture,
   }
   return val;
 }
+
 #endif
 
 /* --- IsVar test --- */

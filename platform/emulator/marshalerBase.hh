@@ -654,8 +654,13 @@ ProgramCounter unmarshalProcedureRefRobust(Builder *b, ProgramCounter pc,
                                            MarshalerBuffer *bs, CodeArea *code,
                                            int *error);
 
-// A return value from unmarshalCodeRobust
-#define ERR 123
+// Return values from unmarshalCodeRobust etc.:
+typedef enum {
+  UCR_DONE = 0,
+  UCR_SUSPEND,
+  UCR_ERROR
+} UCRReturn;
+// 'U'nmarshal 'C'ode 'R'obust 'Return';
 
 #endif // defined(USE_FAST_UNMARSHALER)
 

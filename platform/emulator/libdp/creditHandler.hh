@@ -18,12 +18,13 @@ void marshalCredit(MarshalerBuffer *buf,Credit c);
 void marshalCreditToOwner(MarshalerBuffer *buf,Credit c,int oti);
 #ifndef USE_FAST_UNMARSHALER
 Credit unmarshalCreditRobust(MarshalerBuffer *buf,int *error);
-Credit unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,MarshalTag mt,
-                                    int &oti,int *error);
+Credit unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,
+                                    MarshalTag mt, int &oti,
+                                    int *error);
 #else
 Credit unmarshalCredit(MarshalerBuffer *buf);
-Credit unmarshalCreditToOwner(MarshalerBuffer *buf,MarshalTag mt,
-                              int &oti);
+Credit unmarshalCreditToOwner(MarshalerBuffer *buf,
+                              MarshalTag mt, int &oti);
 #endif
 
 class CreditHandler {

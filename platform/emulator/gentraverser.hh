@@ -35,7 +35,7 @@
 #include <setjmp.h>
 #include "base.hh"
 
-// '!'
+// The default is the "robust" unmarshaler.
 // #define USE_FAST_UNMARSHALER
 
 #include "stack.hh"
@@ -63,7 +63,6 @@
 #ifndef USE_FAST_UNMARSHALER
 extern jmp_buf unmarshal_error_jmp;
 #define RAISE_UNMARSHAL_ERROR longjmp(unmarshal_error_jmp,1)
-// #define RAISE_UNMARSHAL_ERROR OZ_error("here")
 #define TRY_UNMARSHAL_ERROR if(setjmp(unmarshal_error_jmp)==0)
 #define CATCH_UNMARSHAL_ERROR else
 #endif

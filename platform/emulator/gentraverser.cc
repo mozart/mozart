@@ -628,7 +628,7 @@ repeat:
       GetBTTaskArg1(frame, OZ_Term, label);
       GetBTTaskArg2(frame, OZ_Term, arity);
 #ifndef USE_FAST_UNMARSHALER
-      if(!OZ_isLiteral(label) || !isArityList(arity))
+      if (!OZ_isLiteral(label) || !isArityList(arity))
         RAISE_UNMARSHAL_ERROR;
 #endif
       //
@@ -709,7 +709,7 @@ repeat:
   case BT_dictKey:
     {
 #ifndef USE_FAST_UNMARSHALER
-      if(!oz_isFeature(value))
+      if (!oz_isFeature(value))
         RAISE_UNMARSHAL_ERROR;
 #endif
       // 'dict' remains in place:
@@ -765,7 +765,7 @@ repeat:
     {
       Assert(oz_onToplevel());
 #ifndef USE_FAST_UNMARSHALER
-      if(!oz_onToplevel() || !OZ_isRecord(value))
+      if (!oz_onToplevel() || !OZ_isRecord(value))
         RAISE_UNMARSHAL_ERROR;
 #endif
       GetBTTaskPtr1(frame, GName*, gname);
@@ -799,7 +799,7 @@ repeat:
     {
       Assert(oz_isSRecord(value));
 #ifndef USE_FAST_UNMARSHALER
-      if(!oz_isSRecord(value))
+      if (!oz_isSRecord(value))
         RAISE_UNMARSHAL_ERROR;
 #endif
       GetBTTaskPtr1(frame, ObjectClass*, cl);
@@ -1040,7 +1040,7 @@ repeat:
 #ifndef USE_FAST_UNMARSHALER
     RAISE_UNMARSHAL_ERROR;
 #else
-    OZD_error("Builder: unknown task!");
+    OZ_error("Builder: unknown task!");
 #endif
   }
 
@@ -1147,7 +1147,7 @@ BTFrame* Builder::liftTask(int sz)
 #ifndef USE_FAST_UNMARSHALER
     RAISE_UNMARSHAL_ERROR;
 #else
-    OZD_error("Builder: unknown task!");
+    OZ_error("Builder: unknown task!");
 #endif
   }
 
@@ -1233,7 +1233,7 @@ BTFrame* Builder::findBinary(BTFrame *frame)
 #ifndef USE_FAST_UNMARSHALER
     RAISE_UNMARSHAL_ERROR;
 #else
-    OZD_error("Builder: unknown task!");
+    OZ_error("Builder: unknown task!");
 #endif
   }
 

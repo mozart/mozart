@@ -333,28 +333,31 @@ Bool dpUnmarshalCode(ByteBuffer *bs, Builder *b,
 // Robust unmarshaling
 undefine([[opAction]])
 
+#define ONERR(e)        \
+  if (e) { delete desc; return (UCR_ERROR); }
+
 define(opAction,
 [[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Literal,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Feature,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Constant,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
-        $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
-        $1,XRegisterIndex,PC=unmarshalXRegRobust(PC,bs,&e);if(e) return ERR;,
-        $1,YRegisterIndex,PC=unmarshalYRegRobust(PC,bs,&e);if(e) return ERR;,
-        $1,GRegisterIndex,PC=unmarshalGRegRobust(PC,bs,&e);if(e) return ERR;,
-        $1,Arity,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
-        $1,Label,PC=unmarshalLabelRobust(PC,bs,&e);if(e) return ERR;,
-        $1,Count,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
-        $1,ArityAndIsTail,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
-        $1,Dummy,PC=unmarshalNumRobust(PC,bs,&e);if(e) return ERR;,
-        $1,ProcedureRef,PC=unmarshalProcedureRefRobust(b,PC,bs,code,&e);if(e) return ERR;,
-        $1,PredId,PC=unmarshalPredIdRobust(b,PC,instPC,bs,&e);ozValuesCnt--;if(e) return ERR;,
-        $1,HashTableRef,PC=unmarshalHashTableRefRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
-        $1,RecordArity,PC=unmarshalRecordArityRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
-        $1,CallMethodInfo,PC=unmarshalCallMethodInfoRobust(b,PC,bs,&e);ozValuesCnt--;if(e) return ERR;,
-        $1,GRegRef,PC=unmarshalGRegRefRobust(PC,bs,&e);if(e) return ERR;,
-        $1,Location,PC=unmarshalLocationRobust(PC,bs,&e);if(e) return ERR;,
-        $1,Cache,PC=unmarshalCache(PC,code);)]])
+         $1,Literal,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+         $1,Feature,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+         $1,Constant,PC=unmarshalOzValue(b,PC,code);ozValuesCnt--;,
+         $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
+         $1,XRegisterIndex,PC=unmarshalXRegRobust(PC,bs,&e);ONERR(e);,
+         $1,YRegisterIndex,PC=unmarshalYRegRobust(PC,bs,&e);ONERR(e);,
+         $1,GRegisterIndex,PC=unmarshalGRegRobust(PC,bs,&e);ONERR(e);,
+         $1,Arity,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
+         $1,Label,PC=unmarshalLabelRobust(PC,bs,&e);ONERR(e);,
+         $1,Count,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
+         $1,ArityAndIsTail,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
+         $1,Dummy,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
+         $1,ProcedureRef,PC=unmarshalProcedureRefRobust(b,PC,bs,code,&e);ONERR(e);,
+         $1,PredId,PC=unmarshalPredIdRobust(b,PC,instPC,bs,&e);ozValuesCnt--;ONERR(e);,
+         $1,HashTableRef,PC=unmarshalHashTableRefRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
+         $1,RecordArity,PC=unmarshalRecordArityRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
+         $1,CallMethodInfo,PC=unmarshalCallMethodInfoRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
+         $1,GRegRef,PC=unmarshalGRegRefRobust(PC,bs,&e);ONERR(e);,
+         $1,Location,PC=unmarshalLocationRobust(PC,bs,&e);ONERR(e);,
+         $1,Cache,PC=unmarshalCache(PC,code);)]])
 
 
 //
@@ -362,8 +365,8 @@ define(opAction,
 // 'pc' can be zero meaning "discard the code". If it is non-zero,
 // then it is supposed to be large enough to hold the whole code;
 // Returning 'ERR' means that the buffer can not be marshalled.
-Bool dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
-                           BuilderCodeAreaDescriptor *desc)
+UCRReturn dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
+                                BuilderCodeAreaDescriptor *desc)
 {
   int ozValuesCnt = ozValuesBADP;
   ProgramCounter PC = desc->getCurrent();
@@ -403,7 +406,9 @@ Bool dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
       include(EMUDIR/../instrDefs.m4)
       changequote([[,]])
 
-    default: return ERR;
+    default:
+      delete desc;
+      return (UCR_ERROR);
     }
   }
 
@@ -412,7 +417,7 @@ Bool dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
     delete desc;
   else
     desc->setCurrent(PC);
-  return (done);
+  return ((done == OK) ? UCR_DONE : UCR_SUSPEND);
 }
 
 #endif

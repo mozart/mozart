@@ -134,9 +134,9 @@ OZ_Term unmarshalWord(MarshalerBuffer *bs)
   int size = unmarshalNumber(bs);
   int value = unmarshalNumber(bs);
 #else
-  int e;
-  int size = unmarshalNumberRobust(bs, &e);
-  int value = unmarshalNumberRobust(bs, &e);
+  int error;
+  int size = unmarshalNumberRobust(bs, &error);
+  int value = unmarshalNumberRobust(bs, &error);
 #endif
   return OZ_word(size, value);
 }

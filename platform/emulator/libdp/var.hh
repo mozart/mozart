@@ -262,9 +262,9 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 
 void sendRedirect(DSite*, int, TaggedRef);
 #ifdef USE_FAST_UNMARSHALER
-OZ_Term unmarshalVar(MarshalerBuffer*,Bool,Bool);
+OZ_Term unmarshalVar(MarshalerBuffer*, Bool, Bool);
 #else
-OZ_Term unmarshalVarRobust(MarshalerBuffer*,Bool,Bool,int*);
+OZ_Term unmarshalVarRobust(MarshalerBuffer*, Bool, Bool, int *error);
 #endif
 // kost@ : 'marshalVariable' gets 'ByteBuffer' since we need 'DSite'
 // for marshaling!
