@@ -75,6 +75,12 @@ public:
     return (TaggedRef *) p.getPtr();
   }
 
+  PerdioVar *getPerdioVar() {
+    TaggedRef *tPtr = getPVariable();
+    TaggedRef val = *tPtr;
+    return tagged2PerdioVar(val);
+  }
+
   // NOTE: the assignment operator is used!!
   // ProtocolObject &operator =(ProtocolObject &n);
 
@@ -82,10 +88,7 @@ public:
     if (isTertiary()) {
       getTertiary()->setIndex(i);
     } else {
-      TaggedRef *tPtr = getPVariable();
-      TaggedRef val = *tPtr;
-      PerdioVar *pvar = tagged2PerdioVar(val);
-      pvar->setIndex(i);
+      getPerdioVar()->setIndex(i);
     }
   }
   TaggedRef getValue() {
