@@ -179,9 +179,14 @@ void Marshaler::processUVar(OZ_Term *uvarTerm)
 void Marshaler::processCVar(OZ_Term *cvarTerm)
 {
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
-  if (!bs->visit(makeTaggedRef(cvarTerm)) ||
-      (*marshalVariable)(cvarTerm, bs, this))
-    return;
+  if (!bs->visit(makeTaggedRef(cvarTerm))) return;
+  if((*triggerVariable)(cvarTerm)){
+    // KOST-look
+    //  processTerm(makeTaggedRef(cvarTerm));
+    Assert(0);
+    return;}
+  if((*marshalVariable)(cvarTerm, bs, this))
+     return;
   processNoGood(makeTaggedRef(cvarTerm),NO);
 }
 

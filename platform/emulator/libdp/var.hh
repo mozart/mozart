@@ -211,7 +211,6 @@ public:
   void deAutoSite(DSite*);
   void surrender(TaggedRef*, TaggedRef);
   void marshal(MsgBuffer*);
-  void getStatus(DSite*, int, TaggedRef);
 
   inline void localize(TaggedRef *vPtr);
   Bool isFuture(){ // mm3
@@ -294,6 +293,7 @@ void varPOAdjustForFailure(int,EntityCond,EntityCond);
 void recDeregister(TaggedRef,DSite*);
 
 Bool varCanSend(DSite*);
+void varGetStatus(DSite*, int,TaggedRef);
 
 #define BAD_BORROW_INDEX (0-1)
 

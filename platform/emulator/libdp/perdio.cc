@@ -684,9 +684,6 @@ void msgReceived(MsgBuffer* bs)
 
       if (oe->isVar()) {
         PD((PD_VAR,"SURRENDER do it"));
-        // mm2: bug: the new var may no be the correct one wrt.
-        //           to variable ordering -> may introduce net cycle.
-        // ??: bug fixed: may be bound to a different perdio var
         GET_VAR(oe,Manager)->surrender(oe->getPtr(),v);
       } else {
         PD((PD_VAR,"SURRENDER discard"));
@@ -705,13 +702,7 @@ void msgReceived(MsgBuffer* bs)
       OwnerEntry *oe = receiveAtOwner(OTI);
 
       if(oe->isVar()){
-        DebugCode(printf("status receive and is variable OTI:%d \n",OTI));
-        (GET_VAR(oe,Manager))->getStatus(site,OTI,oz_status(oe->getValue()));
-        break;
-      }
-      Assert(oe->isRef());
-      DebugCode(printf("status receive and is NONvariable OTI:%d \n",OTI));
-      (GET_TERM(oe,Manager))->getStatus(site,OTI,oz_status(oe->getRef()));
+        varGetStatus(site,OTI,oz_status(oe->getValue()));}
       break;
     }
 
