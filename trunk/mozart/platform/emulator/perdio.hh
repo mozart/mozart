@@ -111,9 +111,9 @@ class ByteStream {
     while(bb->next!=last){bb=bb->next;}
     return bb;}
 
-  Bool within(BYTE *pos,ByteBuffer *bb){
-    if(pos<bb->head()) return FALSE;
-    if(pos>bb->tail()) return FALSE;  
+  Bool within(BYTE *p,ByteBuffer *bb){
+    if(p<bb->head()) return FALSE;
+    if(p>bb->tail()) return FALSE;  
     return TRUE;}
 
 public:    
