@@ -54,21 +54,20 @@ in
 	 Stacked:   nil
          MyManager: unit
 
+      meth init
+	 self.Options = {Record.map DefOptions fun {$ O}
+						  D = {Dictionary.new}
+					       in
+						  {Record.forAllInd O
+						   proc {$ F V}
+						      {Dictionary.put D F V}
+						   end}
+						  D
+					       end}
+      end
+      
       meth Init()
 	 case @MyManager\=unit then skip else
-	    O = self.Options
-	 in
-	    case {IsDet O} then skip else
-	       O = {Record.map DefOptions fun {$ O}
-					     D = {Dictionary.new}
-					  in
-					     {Record.forAllInd O
-					      proc {$ F V}
-						 {Dictionary.put D F V}
-					      end}
-					     D
-					  end}
-	    end
 	    MyManager <- {New Manager init(self self.Options)}
 	    %% Include the standard actions
                \insert default-actions.oz

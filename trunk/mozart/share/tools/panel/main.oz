@@ -43,22 +43,19 @@ in
       feat Options
       attr ThisPanelTop:unit
 
-      meth InitOptions()
+      meth init
 	 O = self.Options
       in
-	 case {IsDet O} then skip else
-	    O = {Dictionary.new}
-	    {Dictionary.put O config  false}
-	    {Dictionary.put O time    DefaultUpdateTime}
-	    {Dictionary.put O mouse   true}
-	    {Dictionary.put O history DefaultHistoryRange}
-	 end
+	 O = {Dictionary.new}
+	 {Dictionary.put O config  false}
+	 {Dictionary.put O time    DefaultUpdateTime}
+	 {Dictionary.put O mouse   true}
+	 {Dictionary.put O history DefaultHistoryRange}
       end
       
       meth open
 	 lock
 	    case @ThisPanelTop==unit then
-	       PanelClass, InitOptions
 	       ThisPanelTop <- thread
 				  {New PanelTop init(manager:self
 						     options:self.Options)}
@@ -76,7 +73,6 @@ in
 
       meth option(What ...) = OM
 	 lock
-	    PanelClass, InitOptions
 	    O = self.Options
 	 in
 	    case
