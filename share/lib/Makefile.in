@@ -171,8 +171,9 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 	|| (rm -f $@; exit 1)
 
 compiler-Builtins.oz: ../../platform/emulator/bidecl.perl
-	$(PERL) $< -oztable \
-	-exclude wif,fd,libfd,libschedule,fset,libfset,libparser > $@
+	(cd ../../platform/emulator; \
+	 $(PERL) bidecl.perl -oztable \
+	 -exclude wif,fd,libfd,libschedule,fset,libfset,libparser) > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
 	$(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@ \
