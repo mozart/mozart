@@ -85,10 +85,10 @@ OZSRCS    = GOZCore.oz \
 OZOBJS    = $(OZSRCS:%.oz=%.ozf)
 OZINSTALL = $(LIB_DIR)/GOZCore.ozf
 
-CSRCS = GOZSignal.c
-COBJS = $(CSRCS:%.c=%.o)
-CCMPS = $(CSRCS:%.c=%.so-$(PLATFORM))
-
+CSRCS    = GOZSignal.c
+COBJS    = $(CSRCS:%.c=%.o)
+CCMPS    = $(CSRCS:%.c=%.so-$(PLATFORM))
+CINSTALL = $(CSRCS:%.c=$(LIB_DIR)/%.so-$(PLATFORM))
 #---------------------------------------------------------------------
 # Native Wrapper
 #---------------------------------------------------------------------
@@ -130,7 +130,7 @@ WRPINSTALL = $(WRPSRCS:%.oz=$(LIB_DIR)/%.ozf)
 
 TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) $(CCMPS)
 GEN_TARGETS = $(NATCMPS) $(WRPOBJS)
-LIB_TARGETS = $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL)
+LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL)
 
 #---------------------------------------------------------------------
 # Rules
