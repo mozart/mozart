@@ -1,0 +1,982 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|fundamental">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Abbreviations -->
+<!ENTITY amp "&">
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+
+<!-- Processing Instructions -->
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY eg PI "eg">
+<!ENTITY ie PI "ie">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <Meta name="html.split" value="chapter.intro">
+    <Meta name="html.split" value="chapter.meta">
+    <Meta name="html.split" value="chapter.lexical">
+    <Meta name="html.split" value="chapter.context-free">
+    <Meta name="html.split" value="chapter.core">
+    <Meta name="html.split" value="chapter.translation">
+    <Meta name="html.split.bib" value="">
+
+    <Meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+    <Title/The Oz Notation/
+    <Author.Extern to="author.db" key="Martin.Henz">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Comic>
+      <Picture.Choice>
+        <Picture.Extern to="notation.gif" type=gif>
+      </Picture.Choice>
+    <Abstract>
+      Oz is a concurrent language providing for functional, object-oriented,
+      and constraint programming.  This document defines how Oz program text
+      is transformed into an Oz Core program.  Oz Core is a sublanguage of Oz
+      designed to minimize syntactic complexity.  Oz Core serves as the base
+      for the definition of the semantics of Oz.
+    <P>
+      Technically, Oz Core allows to use several programming paradigms,
+      including functional, constraint and object-oriented programming.
+      Being a purely relational language, however, Oz Core does not
+      provide easy notational access to programming methods from these
+      paradigms, making it hard to fully exploit the capacities of the
+      language.
+    <P>
+      It is such ergonomic considerations that lead to the development
+      of the Oz Notation, where syntactic extensions provide convenient
+      constructs for functional and object-oriented programming.
+      The semantics of these extensions is defined in this document
+      by their stepwise translation to Oz Core.
+    </Abstract>
+  <Body>
+    <Chapter id="chapter.intro">
+      <Title/Introduction/
+      <P>
+        This report defines how Oz program text, which is a sequence
+        of characters, is transformed into an Oz Core program.  This
+        transformation is performed in three steps.
+      <Para class=apropos><Title/Lexical Syntax/
+        First, a given program text is transformed into a sequence of
+        words.  Each word represents a sequence of tokens.  We call this
+        process <Def/tokenizing/.
+      <Para class=apropos><Title/Context-free Syntax/
+        The resulting sequence of tokens is transformed into a parse tree.
+        We call this process <Def/parsing/, and the resulting parse tree
+        <Def/program/.
+      <Para class=apropos><Title/Core Programs/
+        The program is translated to a Core program, eliminating a number
+        of abbreviations and nesting.
+      <P>
+        At each step, errors may occur.  A text represents an Oz program if
+        it can be tokenized and parsed into a program which can be translated
+        without error into a Core program.
+    <Chapter id="chapter.meta">
+      <Title/Meta Notation/
+      <P>
+        In a document like this one, it is helpful to make use of notational
+        conventions in order to provide for concise and precise descriptions.
+      <Section>
+        <Title/Fonts/
+        <P>
+          We make use of fonts to distinguish the different kinds of symbols
+          occurring in this document:
+          <Table>
+            <TR>
+              <TH/Meaning/
+              <TH/Examples/
+            <TR>
+              <TD/terminal or nonterminal symbol/
+              <TD/?={variable}, ?={statement}/
+            <TR>
+              <TD/keyword/
+              <TD/<<local>>, <<skip>>/
+            <TR>
+              <TD/fresh variable/
+              <TD/<<X>>, <<Y>>/
+          </Table>
+      <Section>
+        <Title/Regular Expressions and Context-Free Grammars/
+        <P>
+          Regular expressions and context free grammars describe
+          sets of words.  We use the following notation to describe
+          one such set in terms of others (in increasing order of
+          precedence):
+          <Table>
+            <TR>
+              <TH/Notation/
+              <TH/Meaning/
+            <TR>
+              <TD/<Math/\epsilon//
+              <TD/singleton containing the empty word/
+            <TR>
+              <TD/(<Math/w/)/
+              <TD/grouping of regular expressions/
+            <TR>
+              <TD/[&nbsp;<Math/w/&nbsp;]/
+              <TD/union of <Math/\epsilon/ with the set of words&nbsp;<Math/w//
+            <TR>
+              <TD/{&nbsp;<Math/w/&nbsp;}/
+              <TD/set of words containing all concatenations of zero or
+                more elements of&nbsp;<Math/w//
+            <TR>
+              <TD/{&nbsp;<Math/w/&nbsp;}+/
+              <TD/set of words containing all concatenations of one or
+                more elements of&nbsp;<Math/w//
+            <TR>
+              <TD/<Math/w_1/&nbsp;<Math/w_2//
+              <TD/set of words containing all concatentations of an element
+                of&nbsp;<Math/w_1/ with an element of&nbsp;<Math/w_2//
+            <TR>
+              <TD/<Math/w_1/&nbsp;-&nbsp;<Math/w_2//
+              <TD/difference of <Math/w_1/ and&nbsp;<Math/w_2//
+            <TR>
+              <TD/<Math/w_1/&nbsp;|&nbsp;<Math/w_2//
+              <TD/union of <Math/w_1/ and&nbsp;<Math/w_2//
+          </Table>
+    <Chapter id="chapter.lexical" proglang=fundamental>
+      <Title/Lexical Syntax/
+      <P>
+        A <Def/program text/ is a sequence of <Def/characters/ represented by
+        integers following ISO&nbsp;8859-1&nbsp;<Ptr to="ISO_8859_1">, also
+        called <Q/Latin&nbsp;1/.  In this section, we describe how such a
+        sequence is split into a sequence of <Def/words/.  Each word
+        represents zero or more <Def/tokens/ such that the result is a
+        sequence of tokens.  We call this process <Def/tokenization/.
+        In this section, we give regular expressions for the different kinds
+        of words, describe the resulting tokens and show how a sequence of
+        tokens is obtained from a program text.
+      <Section>
+        <Title/Characters/
+        <P>
+          This section defines character classes used in the regular
+          expressions given in the remainder of the chapter.
+          <Grammar.Rule/?={upper-case letter}
+            <Grammar.Alt/<<A>> | &ellipsis; | <<Z>> |
+              <<À>> | &ellipsis; | <<Ö>> | <<Ø>> | &ellipsis; | <<Þ>>//
+          <Grammar.Rule/?={lower-case letter}
+            <Grammar.Alt/<<a>> | &ellipsis; | <<z>> |
+              <<ß>> | &ellipsis; | <<ö>> | <<ø>> | &ellipsis; | <<ÿ>>//
+          <Grammar.Rule/?={digit}
+            <Grammar.Alt/<<0>> | &ellipsis; | <<9>>//
+          <Grammar.Rule/?={non-zero digit}
+            <Grammar.Alt/<<1>> | &ellipsis; | <<9>>//
+          <Grammar.Rule/?={alphanumerical}
+            <Grammar.Alt/?={upper-case letter} | ?={lower-case letter} |
+              ?={digit} | <<_>>//
+          <Grammar.Rule/?={atom char}
+            <Grammar.Alt/?={any character} - ( <<'>> | <<\>> | NUL )//
+          <Grammar.Rule/?={string char}
+            <Grammar.Alt/?={any character} - ( <<">> | <<\>> | NUL )//
+          <Grammar.Rule/?={variable char}
+            <Grammar.Alt/?={any character} - ( <<`>> | <<\>> | NUL )//
+          <Grammar.Rule/?={escape character}
+            <Grammar.Alt/<<a>> | <<b>> | <<f>> | <<n>> | <<r>> | <<t>> | <<v>>
+              | <<\>> | <<'>> | <<">> | <<`>> | <<&>>//
+          <Grammar.Rule/?={octal digit}
+            <Grammar.Alt/<<0>> | &ellipsis; | <<7>>//
+          <Grammar.Rule/?={hex digit}
+            <Grammar.Alt/<<0>> | &ellipsis; | <<9>> |
+              <<A>> | &ellipsis; | <<F>> | <<a>> | &ellipsis; | <<f>>//
+          <Grammar.Rule/?={binary digit}
+            <Grammar.Alt/<<0>> | <<1>>//
+        <Para class=apropos><Title/Pseudo-Characters/
+          In the classes of words ?={variable}, ?={atom}, ?={string}, and
+          ?={character} we use pseudo-characters, which represent single
+          characters in different notations.
+          <Grammar.Rule/?={pseudo char}
+            <Grammar.Alt/<<\>> ?={octal digit} ?={octal digit} ?={octal digit}/
+            <Grammar.Alt/<<\>> ( <<x>> | <<X>> ) ?={hex digit} ?={hex digit}/
+            <Grammar.Alt/<<\>> ?={escape character}//
+          Pseudo-characters allow to enter any ISO&nbsp;8859-1 character
+          using octal or hexadecimal notation.  Octal notation is restricted
+          to numbers less than 256.  The NUL character (ISO code&nbsp;0) is
+          forbidden.  The pseudo-characters <<\a>>&nbsp;(=&nbsp;<<\007>>),
+          <<\b>>&nbsp;(=&nbsp;<<\010>>), <<\f>>&nbsp;(=&nbsp;<<\014>>),
+          <<\n>>&nbsp;(=&nbsp;<<\012>>), <<\r>>&nbsp;(=&nbsp;<<\015>>),
+          <<\t>>&nbsp;(=&nbsp;<<\011>>), <<\v>>&nbsp;(=&nbsp;<<\013>>)
+          denote special purpose characters, and
+          <<\\>>&nbsp;(=&nbsp;<<\134>>), <<\'>>&nbsp;(=&nbsp;<<\047>>),
+          <<\">>&nbsp;(=&nbsp;<<\042>>), <<\`>>&nbsp;(=&nbsp;<<\140>>),
+          <<\&>>&nbsp;(=&nbsp;<<\046>>) denote their second component
+          character.
+      <Section>
+        <Title/Keywords/
+        <P>
+          <Grammar.Rule proglang=oz>?={keyword}
+            <Grammar.Alt><<andthen>> | <<at>> | <<attr>> | <<case>> |
+              <<catch>> | <<choice>></Grammar.Alt>
+            <Grammar.Alt><<class>> | <<cond>> | <<condis>> | <<declare>> |
+              <<define>> | <<dis>></Grammar.Alt>
+            <Grammar.Alt><<div>> | <<else>> | <<elsecase>> | <<elseif>> |
+              <<elseof>> | <<end>></Grammar.Alt>
+            <Grammar.Alt><<export>> | <<fail>> | <<false>> | <<feat>> |
+              <<finally>> | <<from>></Grammar.Alt>
+            <Grammar.Alt><<fun>> | <<functor>> | <<if>> | <<import>> |
+              <<in>> | <<local>></Grammar.Alt>
+            <Grammar.Alt><<lock>> | <<meth>> | <<mod>> | <<not>> |
+              <<of>> | <<or>> | <<orelse>></Grammar.Alt>
+            <Grammar.Alt><<prepare>> | <<proc>> | <<prop>> |
+              <<raise>> | <<require>></Grammar.Alt>
+            <Grammar.Alt><<self>> | <<skip>> | <<then>> | <<thread>> |
+              <<true>> | <<try>></Grammar.Alt>
+            <Grammar.Alt><<unit>> | <<with>> | <<(>> | <<)>> | <<[>> |
+              <<]>> | <<{>> | <<}>></Grammar.Alt>
+            <Grammar.Alt><<|>> | <<#>> | <<:>> | <<...>> | <<=>> |
+              <<.>> | <<^>> | <<[]>> | <<$>></Grammar.Alt>
+            <Grammar.Alt><<!>> | <<_>> | <<~>> | <<+>> | <<->> | <<*>> |
+              <</>> | <<@>> | <<&lt;->></Grammar.Alt>
+            <Grammar.Alt><<,>> | <<!!>> | <<&lt;=>> | <<==>> | <<\=>> |
+              <<&lt;>> | <<=&lt;>> | <<&gt;>></Grammar.Alt>
+            <Grammar.Alt><<&gt;=>> | <<=:>> | <<\=:>> | <<&lt;:>> |
+              <<=&lt;:>> | <<&gt;:>> | <<&gt;=:>> | <<::>> |
+              <<:::>></Grammar.Alt>
+          </Grammar.Rule>
+          Each keyword represents itself as token.
+      <Section>
+        <Title/Variables/
+        <P>
+          <Grammar.Rule/?={variable}
+            <Grammar.Alt/?={upper-case letter} { ?={alphanumerical} }/
+            <Grammar.Alt/<<`>> { ?={variable char} | ?={pseudo char} } <<`>>//
+          A word of the form ?={variable} represents a variable token
+          of the form <Math/\lfloor/<<variable>>, ?{n}<Math
+          /^+/<Math/\rfloor/, where ?{n}<Math/^+/ is the sequence
+          of characters that make up the word, including the possibly
+          surrounding <<`>>&nbsp;characters.
+        <P>
+          For example, the word <Code proglang=oz/Xs/ represents the token
+          <Math/\lfloor/<<variable>>, 88 115<Math/\rfloor/
+          and the word <Code proglang=oz/`\n`/ represents the token
+          <Math/\lfloor/<<variable>>, 96 10 96<Math/\rfloor/.
+          Variable tokens are denoted by the terminal symbol ?={variable}
+          in the following context-free grammars.
+      <Section>
+        <Title/Atoms/
+        <P>
+          <Grammar.Rule/?={atom}
+            <Grammar.Alt/?={lower-case letter} { ?={alphanumerical} } -
+              ?={keyword}/
+            <Grammar.Alt/<<'>> { ?={atom char} | ?={pseudo char} } <<'>>//
+          A word of the form ?={atom} represents an atom token of the form
+          <Math/\lfloor/<<atom>>, ?{n}<Math/^*/<Math/\rfloor/,
+          where ?{n}<Math/^*/ is the sequence of characters that make up the
+          word, excluding the possibly surrounding <<'>>&nbsp;characters.
+        <P>
+          For example, the word <Code proglang=oz/atom/ represents the token
+          <Math/\lfloor/<<atom>>, 97 116 111 109<Math/\rfloor/
+          and the word <Code proglang=oz/'\n'/ represents the token
+          <Math/\lfloor/<<atom>>, 10<Math/\rfloor/.
+          Atom tokens are denoted by the terminal symbol ?={atom}
+          in the following context-free grammars.
+      <Section>
+        <Title/Labels/
+        <P>
+          <Grammar.Rule/?={label}
+            <Grammar.Alt/( ?={variable} | ?={atom} | <<true>> | <<false>> |
+              <<unit>> ) <<(>>//
+          A word of the form ?={label} represents a sequence of two tokens.
+          The first one is a label token of the form
+          <Math/\lfloor/<<variablelabel>>, ?{n}<Math/^+/<Math/\rfloor/,
+          <Math/\lfloor/<<atomlabel>>, ?{n}<Math/^*/<Math/\rfloor/
+          (similar to the corresponding tokens for words of the form
+          ?={variable} and ?={atom}), <<truelabel>>, <<falselabel>>, or
+          <<unitlabel>>.  The second one is the keyword token&nbsp;<<(>>.
+          For example, the word <Code proglang=oz/Xs(/ represents the tokens
+          <Math/\lfloor/<<variablelabel>>, 88 115<Math/\rfloor/ and&nbsp;<<(>>,
+          and the word <Code proglang=oz/true(/ represents the tokens
+          <<truelabel>> and&nbsp;<<(>>.  The label tokens are denoted
+          by the terminal symbols ?={variable label}, ?={atom label},
+          ?={unit label}, ?={true label}, and ?={false label} in the
+          following context-free grammars.
+      <Section>
+        <Title/Integers/
+        <P>
+          <Grammar.Rule/?={int}
+            <Grammar.Alt/[ <<~>> ] ( <<0>> | { ?={non-zero digit} } )
+              <Grammar.Note/decimal representation//
+            <Grammar.Alt/[ <<~>> ] <<0>> { ?={octal digit} }+
+              <Grammar.Note/octal representation//
+            <Grammar.Alt/[ <<~>> ] <<0>> ( <<x>> | <<X>> ) { ?={hex digit} }+
+              <Grammar.Note/hexadecimal representation//
+            <Grammar.Alt/[ <<~>> ] <<0>> ( <<b>> | <<B>> )
+              { ?={binary digit} }+
+              <Grammar.Note/binary representation///
+          A word of the form ?={int} represents an integer token of the form
+          <Math/\lfloor/<<int>>, ?{n}<Math/\rfloor/, where ?{n} represents the
+          integer for which ?={int} is the representation.
+        <P>
+          For example, the word <Code proglang=oz/~159/ represents the token
+          <Math/\lfloor/<<int>>, -159<Math/\rfloor/,
+          the word <Code proglang=oz/077/ the token
+          <Math/\lfloor/<<int>>, 63<Math/\rfloor/,
+          the word <Code proglang=oz/0xFF/ the token
+          <Math/\lfloor/<<int>>, 255<Math/\rfloor/,
+          and the word <Code proglang=oz/~0b11111/ the token
+          <Math/\lfloor/<<int>>, -31<Math/\rfloor/.
+          Integer tokens are denoted by the terminal symbol ?={int}
+          in the following context-free grammars.
+      <Section>
+        <Title/Floats/
+        <P>
+          <Grammar.Rule/?={float}
+            <Grammar.Alt/[ <<~>> ] { ?={digit} }+ <<.>> { ?={digit} }
+              [ ( <<e>> | <<E>> ) [ <<~>> ] { ?={digit} }+ ]//
+          A word of the form ?={float} represents a float token of the form
+          <Math/\lfloor/<<float>>, ?{f}<Math/\rfloor/,
+          where ?{f} represents the floating point number for which the word
+          is the decimal representation.  The letters <<e>> and <<E>> both
+          indicate the exponent to&nbsp;10.
+        <P>
+          For example, the word <Code proglang=oz/~1.5e2/ represents the token
+          <Math/\lfloor/<<float>>, -150.0<Math/\rfloor/.
+          Float tokens are denoted by the terminal symbol ?={float}
+          in the following context-free grammars.
+        <P>
+          The syntax of floats is implementation-dependent in that
+          syntactically correct floats may be refused by the compiler
+          if they cannot be represented by the implementation.
+      <Section>
+        <Title/Strings/
+        <P>
+          <Grammar.Rule/?={string}
+            <Grammar.Alt/<<">> { ?={string char} | ?={pseudo char} } <<">>//
+          The word <Code proglang=oz/""/ represents the token
+          <Math/\lfloor/<<atom>>, 110 105 108<Math/\rfloor/, which denotes
+          the empty list <Code proglang=oz/nil/.  A word of the form
+          <<">><Math/c_1/ &ellipsis; <Math/c_m/<<">>, where <Math/m \geq 1/,
+          represents a sequence of <Math/m + 2/ tokens of the form
+          <<[>>&nbsp;<Math/n_1/ &ellipsis; <Math/n_m/&nbsp;<<]>>,
+          where the <Math/n_i/ represent integer tokens according to
+          the ISO&nbsp;8859-1 code of&nbsp;<Math/c_i/.
+        <P>
+          For example, the word <Code proglang=oz/"ab"/ represents the
+          sequence of tokens <<[>>&nbsp;<Math/\lfloor/<<int>>, 97<Math/\rfloor/
+          <Math/\lfloor/<<int>>, 98<Math/\rfloor/&nbsp;<<]>>.
+      <Section>
+        <Title/Characters/
+        <P>
+          <Grammar.Rule/?={character}
+            <Grammar.Alt/<<&amp;>> ( ?={any character} - ( <<\>> | NUL ) |
+              ?={pseudo char} )//
+          A word of the form ?={character} represents the integer token
+          according to the code of the character denoted by the word without
+          the <<&amp;>>&nbsp;prefix.
+        <P>
+          For example, the word <Code proglang=oz/&amp;a/ represents the token
+          <Math/\lfloor/<<int>>, 97<Math/\rfloor/.
+      <Section>
+        <Title/Spaces and Comments/
+        <P>
+          Spaces are tab (code&nbsp;9), newline (code&nbsp;10), vertical
+          tab (code&nbsp;11), form feed (code&nbsp;12), carriage return
+          (code&nbsp;13), and blank (code&nbsp;32).
+        <P>
+          A comment is:
+          <List>
+            <Item>
+              a sequence of characters from&nbsp;<<%>> until the end of
+              the line or file,
+            <Item>
+              a sequence of characters within the comment brackets
+              <</*>> and&nbsp;<<*/>>, in which <</*>> and&nbsp;<<*/>>
+              are properly nested, and
+            <Item>
+              the character&nbsp<<?>>.
+          </List>
+        <P>
+          Spaces and comments produce no tokens.  This means that they are
+          ignored, except that they separate words form each other.
+      <Section>
+        <Title/Lexical Analysis/
+        <P>
+          The splitting of a sequence of characters using these regular
+          expressions is not unique.  We use the usual left to right longest
+          match tokenization obtaining either error or a unique sequence of
+          tokens from a given sequence of characters.  Longest match means
+          that if two prefixes of the remaining character string are
+          recognized by one of the regular expressions above, we take the
+          one that recognizes the longest prefix.  Note that the regular
+          expressions are designed such that left to right longest match
+          tokenization is unique.
+      <Section>
+        <Title/Lexical Errors/
+        <P>
+          Lexical errors result from using illegal characters such as <<\>>
+          or&nbsp;<<;>> outside of variables, atoms, strings, or characters,
+          from not using the variable, atom, or string delimiters (<<`>>,
+          <<'>>, and&nbsp;<<">>, respectively) properly paired, from not using
+          comment brackets <</*>> and&nbsp;<<*/>> properly nested and from
+          using <<\>> within variables, atoms, or strings, but outside of
+          ?={pseudo char}.
+    <Chapter id="chapter.context-free">
+      <Title/Context-Free Syntax/
+      <P>
+        In this section, we give a context-free grammar for a superset of
+        Oz programs.
+      <Section>
+        <Title/The Base Language/
+        <Para class=apropos><Title/Statements/
+          <Grammar.Rule/?={statement}
+            <Grammar.Alt/?={statement} ?={statement}/
+            <Grammar.Alt/<Q class=terminal/<<(>>/ ?={in statement}
+              <Q class=terminal/<<)>>//
+            <Grammar.Alt/<<local>> ?={declaration part}
+              <<in>> ?={statement} <<end>>/
+            <Grammar.Alt/<<proc>> { ?={atom} } <Q class=terminal/<<{>>/
+              ?={expression} { ?={pattern} } <Q class=terminal/<<}>>//
+            <Grammar.Alt type=space/?={in statement}/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<fun>> { ?={atom} } <Q class=terminal/<<{>>/
+              ?={expression} { ?={pattern} } <Q class=terminal/<<}>>//
+            <Grammar.Alt type=space/?={in expression}/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<Q class=terminal/<<{>>/ ?={expression}
+              { ?={expression} } <Q class=terminal/<<}>>//
+            <Grammar.Alt/<<if>> ?={expression} <<then>> ?={in statement}/
+            <Grammar.Alt type=space/[ ?={else statement} ]/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<case>> ?={expression}
+              <<of>> ?={case statement clause}/
+            <Grammar.Alt type=space/{ <<[]>> ?={case statement clause} }/
+            <Grammar.Alt type=space/[ ?={else statement} ]/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<lock>> ?={expression} <<then>> ?={in statement}
+              <<end>>/
+            <Grammar.Alt/<<thread>> ?={in statement} <<end>>/
+            <Grammar.Alt/<<try>> ?={in statement}/
+            <Grammar.Alt type=space/[ <<catch>> ?={case statement clause}
+              { <Q class=terminal/<<[]>>/ ?={case statement clause} } ]/
+            <Grammar.Alt type=space/[ <<finally>> ?={in statement} ]/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<raise>> ?={in expression} <<end>>/
+            <Grammar.Alt/<<raise>> ?={in expression}
+              <<with>> ?={in expression} <<end>>/
+            <Grammar.Alt/?={expression} <Q class=terminal/<<=>>/
+              ?={expression}/
+            <Grammar.Alt/<<skip>>//
+          <Grammar.Rule/?={case statement clause}
+            <Grammar.Alt/?={pattern}
+              [ <<andthen>> [ { ?={variable} }+ <<in>> ] ?={expression} ]/
+            <Grammar.Alt type=space/<<then>> ?={in statement}//
+          <Grammar.Rule/?={else statement}
+            <Grammar.Alt/<<elseif>> ?={expression} <<then>> ?={in statement}/
+            <Grammar.Alt type=space/[ ?={else statement} ]/
+            <Grammar.Alt/<<elsecase>> ?={expression} <<of>>
+              ?={case statement clause}/
+            <Grammar.Alt type=space/{ <Q class=terminal/<<[]>>/
+              ?={case statement clause}/
+            <Grammar.Alt type=space/[ ?={else statement} ]/
+            <Grammar.Alt/<<else>> ?={in statement}//
+        <Para class=apropos><Title/Expressions/
+          <Grammar.Rule/?={expression}
+            <Grammar.Alt/<Q class=terminal/<<(>>/ ?={in expression}
+              <Q class=terminal/<<)>>//
+            <Grammar.Alt/<<local>> ?={declaration part}
+              <<in>> ?={expression} <<end>>/
+            <Grammar.Alt/<<proc>> { ?={atom} } <Q class=terminal/<<{>>/
+              <Q class=terminal/<<$>>/ { ?={pattern} }
+              <Q class=terminal/<<}>>//
+            <Grammar.Alt type=space/?={in statement}/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<fun>> { ?={atom} } <Q class=terminal/<<{>>/
+              <Q class=terminal/<<$>>/ { ?={pattern} }
+              <Q class=terminal/<<}>>//
+            <Grammar.Alt type=space/?={in expression}/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<Q class=terminal/<<{>>/ ?={expression}
+              { ?={expression} } <Q class=terminal/<<}>>//
+            <Grammar.Alt/<<if>> ?={expression} <<then>> ?={in expression}/
+            <Grammar.Alt type=space/?={else expression}/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<case>> ?={expression}
+              <<of>> ?={case expression clause}/
+            <Grammar.Alt type=space/{ <<[]>> ?={case expression clause} }/
+            <Grammar.Alt type=space/[ ?={else expression} ]/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<lock>> ?={expression} <<then>> ?={in expression}
+              <<end>>/
+            <Grammar.Alt/<<thread>> ?={in expression} <<end>>/
+            <Grammar.Alt/<<try>> ?={in expression}/
+            <Grammar.Alt type=space/[ <<catch>> ?={case expression clause}
+              { <Q class=terminal/<<[]>>/ ?={case expression clause} } ]/
+            <Grammar.Alt type=space/[ <<finally>> ?={in statement} ]/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<raise>> ?={in expression} <<end>>/
+            <Grammar.Alt/<<raise>> ?={in expression}
+              <<with>> ?={in expression} <<end>>/
+            <Grammar.Alt/?={expression} <Q class=terminal/<<=>>/
+              ?={expression}/
+            <Grammar.Alt/?={expression} <<orelse>> ?={expression}/
+            <Grammar.Alt/?={expression} <<andthen>> ?={expression}/
+            <Grammar.Alt/?={monop} ?={expression}/
+            <Grammar.Alt/?={expression} ?={binop} ?={expression}/
+            <Grammar.Alt/?={expression}
+              <Q class=terminal/<<|>>/ ?={expression}/
+            <Grammar.Alt/?={expression}
+              { <Q class=terminal/<<#>>/ ?={expression} }+/
+            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} |
+              <Q class=terminal/<<_>>//
+            <Grammar.Alt/?={atom} | ?={int} | ?={float}/
+            <Grammar.Alt/<<unit>> | <<true>> | <<false>>/
+            <Grammar.Alt/?={label} <Q class=terminal/<<(>>/
+              { [ ?={feature} <Q class=terminal/<<:>>/ ] ?={expression} }
+              [ <Q class=terminal/<<...>>/ ]
+              <Q class=terminal/<<)>>//
+            <Grammar.Alt/<Q class=terminal/<<[>>/ { ?={expression} }+
+              <Q class=terminal/<<]>>//
+            <Grammar.Alt/<Q class=terminal/<<$>>///
+          <Grammar.Rule/?={case expression clause}
+            <Grammar.Alt/?={pattern}
+              [ <<andthen>> [ { ?={variable} }+ <<in>> ] ?={expression} ]/
+            <Grammar.Alt type=space/<<then>> ?={in expression}//
+          <Grammar.Rule/?={else expression}
+            <Grammar.Alt/<<elseif>> ?={expression} <<then>> ?={in expression}/
+            <Grammar.Alt type=space/?={else expression}/
+            <Grammar.Alt/<<elsecase>> ?={expression} <<of>>
+              ?={case expression clause}/
+            <Grammar.Alt type=space/{ <Q class=terminal/<<[]>>/
+              ?={case expression clause} }/
+            <Grammar.Alt type=space/[ ?={else expression} ]/
+            <Grammar.Alt/<<else>> ?={in expression}//
+          <Grammar.Rule/?={monop}
+            <Grammar.Alt/<Q class=terminal/<<~>>/ |
+              <Q class=terminal/<<!!>>//
+          <Grammar.Rule>?={binop}
+            <Grammar.Alt/<Q class=terminal/<<.>>/ |
+              <Q class=terminal/<<^>>//
+            <Grammar.Alt/<Q class=terminal/<<==>>/ |
+              <Q class=terminal/<<\=>>/ | <Q class=terminal/<<&lt;>>/ |
+              <Q class=terminal/<<&lt;=>>/ | <Q class=terminal/<<&gt;>>/ |
+              <Q class=terminal/<<&gt;=>>//
+            <Grammar.Alt><Q class=terminal/<<+>>/ |
+              <Q class=terminal/<<->>/ | <Q class=terminal/<<*>>/
+              <Q class=terminal><</>></Q> | <<div>> | <<mod>></Grammar.Alt>
+          </Grammar.Rule>
+          <Grammar.Rule/?={label}
+            <Grammar.Alt/?={variable label} | ?={atom label}/
+            <Grammar.Alt/?={unit label} | ?={true label} | ?={false label}//
+          <Grammar.Rule/?={feature}
+            <Grammar.Alt/?={variable} | ?={atom} | ?={int}/
+            <Grammar.Alt/<<unit>> | <<true>> | <<false>>//
+        <Para class=apropos><Title/Declarations/
+          <Grammar.Rule/?={in statement}
+            <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}//
+          <Grammar.Rule/?={in expression}
+            <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={expression}//
+          <Grammar.Rule/?={declaration part}
+            <Grammar.Alt/?={variable} | <Q class=terminal/<<_>>//
+            <Grammar.Alt/?={statement}/
+            <Grammar.Alt/?={declaration part} ?={declaration part}//
+        <Para class=apropos><Title/Patterns/
+          <Grammar.Rule/?={pattern}
+            <Grammar.Alt/<Q class=terminal/<<(>>/ ?={pattern}
+              <Q class=terminal/<<)>>//
+            <Grammar.Alt/?={pattern} <Q class=terminal/<<=>>/ ?={pattern}/
+            <Grammar.Alt/?={pattern} <Q class=terminal/<<|>>/ ?={pattern}/
+            <Grammar.Alt/?={pattern} { <Q class=terminal/<<#>>/ ?={pattern} }+/
+            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} |
+              <Q class=terminal/<<_>>//
+            <Grammar.Alt/?={atom} | ?={int} | ?={float}/
+            <Grammar.Alt/<<unit>> | <<true>> | <<false>>/
+            <Grammar.Alt/?={label} <Q class=terminal/<<(>>/
+              { [ ?={feature} <Q class=terminal/<<:>>/ ] ?={pattern} }
+              [ <Q class=terminal/<<...>>/ ]
+              <Q class=terminal/<<)>>//
+            <Grammar.Alt/<Q class=terminal/<<[>>/ { ?={pattern} }+
+              <Q class=terminal/<<]>>///
+      <Section>
+        <Title/Class Extensions/
+        <P>
+          <Grammar.Rule/?={statement}
+            <Grammar.Alt type=add/<<class>> ?={expression}/
+            <Grammar.Alt type=space/{ ?={class descriptor} }/
+            <Grammar.Alt type=space/{ ?={method} }/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<lock>> ?={in statement} <<end>>/
+            <Grammar.Alt/?={expression} <Q class=terminal/<<&lt;->>/
+              ?={expression}/
+            <Grammar.Alt/?={expression} <Q class=terminal/<<,>>/
+              ?={expression}//
+          <Grammar.Rule/?={expression}
+            <Grammar.Alt type=add/<<class>> [ <Q class=terminal/<<$>>/ ]/
+            <Grammar.Alt type=space/{ ?={class descriptor} }/
+            <Grammar.Alt type=space/{ ?={method} }/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<lock>> ?={in expression} <<end>>/
+            <Grammar.Alt/<Q class=terminal/<<@>>/ ?={expression}/
+            <Grammar.Alt/?={expression} <Q class=terminal/<<&lt;->>/
+              ?={expression}/
+            <Grammar.Alt/?={expression} <Q class=terminal/<<,>>/
+              ?={expression}/
+            <Grammar.Alt/<<self>>//
+          <Grammar.Rule/?={class descriptor}
+            <Grammar.Alt/<<from>> { ?={expression} }+/
+            <Grammar.Alt/<<prop>> { ?={expression} }+/
+            <Grammar.Alt/<<attr>> { ?={attr or feat} }+/
+            <Grammar.Alt/<<feat>> { ?={attr or feat} }+//
+          <Grammar.Rule/?={attr or feat}
+            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} | ?={atom} |
+              ?={int}/
+            <Grammar.Alt/<<unit>> | <<true>> | <<false>>//
+        <Para class=apropos><Title/Methods/
+          <Grammar.Rule/?={method}
+            <Grammar.Alt/<<meth>> ?={method head}
+              [ <Q class=terminal/<<=>>/ ?={variable} ]/
+            <Grammar.Alt type=space/( ?={in statement} | ?={in expression} )/
+            <Grammar.Alt type=space/<<end>>//
+          <Grammar.Rule/?={method head}
+            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} | ?={atom}/
+            <Grammar.Alt/<<unit>> | <<true>> | <<false>>/
+            <Grammar.Alt/?={method head label} <Q class=terminal/<<(>>/
+              { ?={method formal} } [ <Q class=terminal/<<...>>/ ]
+              <Q class=terminal/<<)>>//
+          <Grammar.Rule/?={method head label}
+            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable label} |
+              ?={atom label}/
+            <Grammar.Alt/?={unit label} | ?={true label} | ?={false label}//
+          <Grammar.Rule/?={method formal}
+            <Grammar.Alt/[ ?={feature} <Q class=terminal/<<:>>/ ]
+              ( ?={variable} | <Q class=terminal/<<_>>/ |
+              <Q class=terminal/<<$>>/ )/
+            <Grammar.Alt type=space/[ <Q class=terminal/<<&lt;=>>/
+              ?={expression} ]//
+      <Section>
+        <Title/Functor Extensions/
+        <P>
+          <Grammar.Rule/?={statement}
+            <Grammar.Alt type=add/<<functor>> ?={expression}
+              { ?={functor descriptor} } <<end>>//
+          <Grammar.Rule/?={expression}
+            <Grammar.Alt type=add/<<functor>> [ <Q class=terminal/<<$>>/ ]
+              { ?={functor descriptor} } <<end>>//
+        <SubSection>
+          <Title/Import Declarations/
+          <P>
+            <Grammar.Rule/?={functor descriptor}
+              <Grammar.Alt/<<import>> { ?={import declaration} }+//
+            <Grammar.Rule/?={import declaration}
+              <Grammar.Alt/?={naked variable} [ ?={import at} ]/
+              <Grammar.Alt/?={variable label} ?={import features}
+                [ ?={import at} ]//
+          <Para class=apropos><Title/Restricting the Import/
+            Access to an imported module may be restricted to a given set of
+            features.  In the presence of such a restriction, the module name
+            may only be used in a record selection (with the dot operator),
+            where the given feature must be a manifest constant and a valid
+            feature (&ie;, the module may no longer be used first-class).
+            This restriction is enforced at compile time.
+            <Grammar.Rule/?={import features}
+              <Grammar.Alt/<Q class=terminal/<<(>>/
+                { ?={module feature} ?={import alias} }+
+                <Q class=terminal/<<)>>///
+            <Grammar.Rule/?={module feature}
+              <Grammar.Alt/?={atom} | ?={int}//
+          <Para class=apropos><Title/Import Aliases/
+            For convenience, aliases may be introduced for the values of the
+            imported module's subtrees.
+            <Grammar.Rule/?={import alias}
+              <Grammar.Alt/[ <Q class=terminal/<<:>>/ ?={naked variable} ]//
+          <Para class=apropos><Title/Specifying URLs/
+            The aditional <<at>> clause allows to specify a relative URL
+            given to the module manager to locate the referenced functor.
+            <Grammar.Rule/?={import at}
+              <Grammar.Alt/<<at>> ?={atom}//
+        <SubSection>
+          <Title/Export Declarations/
+          <P>
+            The export descriptor specifies which features the module
+            created by an application of this functor will have.
+            <Grammar.Rule/?={functor descriptor}
+              <Grammar.Alt type=add/<<export>> { ?={export declaration} }+//
+          <Para class=apropos><Title/Export Features/
+            The value of the given variable is made available under the
+            given feature.  If the feature is omitted, then it is computed
+            from the variable's print name by changing its initial capital
+            letter into a lower-case letter (unless it's a backquote variable,
+            in which case the print name is taken as-is).
+            <Grammar.Rule/?={export declaration}
+              <Grammar.Alt/[ ?={module feature} <Q class=terminal/<<:>>/ ]
+                ?={naked variable}//
+          <P>
+            Note that the variables mentioned in the export are not binding
+            but referring occurrences.
+        <SubSection>
+          <Title/Functor Bodies/
+          <P>
+            The statement in the body (usually a sequence of definitions)
+            is a pattern position.  Note that the syntax of the abbreviated
+            declaration is different from the ?={in statement} rule:  The
+            statement following the <<in>> keyword is optional, not the one
+            preceding it.
+            <Grammar.Rule/?={functor descriptor}
+              <Grammar.Alt type=add/<<define>> ?={statement}
+                [ <<in>> ?={statement} ]//
+          <P>
+            Variables introduced in the body are visible in the body
+            and the export declaration.
+        <SubSection>
+          <Title/Computed Functors/
+          <P>
+            A functor that contains one of the following additional functor
+            descriptors is called a <Def/computed functor/.
+            <Grammar.Rule/?={functor descriptor}
+              <Grammar.Alt type=add/<<require>> { ?={import declaration} }/
+              <Grammar.Alt/<<prepare>> { ?={statement} }//
+      <Section>
+        <Title/Constraint Extensions/
+        <Para class=apropos><Title/Statements/
+          <Grammar.Rule/?={statement}
+            <Grammar.Alt type=add/?={fd compare}/
+            <Grammar.Alt/?={fd in}/
+            <Grammar.Alt/<<fail>>/
+            <Grammar.Alt/<<not>> ?={in statement} <<end>>/
+            <Grammar.Alt/<<cond>> ?={cond statement clause}/
+            <Grammar.Alt type=space/{ <Q class=terminal/<<[]>>/
+              ?={cond statement clause} }/
+            <Grammar.Alt type=space/[ <<else>> ?={in statement} ]/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<or>> ?={dis statement clause}
+              { <Q class=terminal/<<[]>>/
+              ?={dis statement clause} }+ <<end>>/
+            <Grammar.Alt/<<dis>> ?={dis statement clause}
+              { <Q class=terminal/<<[]>>/
+              ?={dis statement clause} }+ <<end>>/
+            <Grammar.Alt/<<choice>> ?={choice statement clause}
+              { <Q class=terminal/<<[]>>/
+              ?={choice statement clause} } <<end>>/
+            <Grammar.Alt/<<condis>> ?={condis clause}
+              { <Q class=terminal/<<[]>>/ ?={condis clause} }+ <<end>>//
+          <Grammar.Rule/?={cond statement clause}
+            <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}
+              <<then>> ?={in statement}//
+          <Grammar.Rule/?={dis statement clause}
+            <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}
+              [ <<then>> ?={in statement} ]//
+          <Grammar.Rule/?={choice statement clause}
+            <Grammar.Alt/[ [ ?={declaration part} <<in>> ] ?={statement}
+              <<then>> ] ?={in statement}//
+          <Grammar.Rule/?={condis clause}
+            <Grammar.Alt/?={fd compare}/
+            <Grammar.Alt/?={fd in}//
+        <Para class=apropos><Title/Expressions/
+          <Grammar.Rule/?={expression}
+            <Grammar.Alt type=add/?={fd compare}/
+            <Grammar.Alt/?={fd in}/
+            <Grammar.Alt/<<fail>>/
+            <Grammar.Alt/<<cond>> ?={cond expression clause}/
+            <Grammar.Alt type=space/{ <Q class=terminal/<<[]>>/
+              ?={cond expression clause} }/
+            <Grammar.Alt type=space/[ <<else>> ?={in expression} ]/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<<or>> ?={cond expression clause}
+              { <Q class=terminal/<<[]>>/
+              ?={cond expression clause} }+ <<end>>/
+            <Grammar.Alt/<<dis>> ?={cond expression clause}
+              { <Q class=terminal/<<[]>>/
+              ?={cond expression clause} }+ <<end>>/
+            <Grammar.Alt/<<choice>> ?={choice expression clause}
+              { <Q class=terminal/<<[]>>/
+              ?={choice expression clause} } <<end>>/
+            <Grammar.Alt/<<condis>> ?={condis clause}
+              { <Q class=terminal/<<[]>>/ ?={condis clause} }+ <<end>>//
+          <Grammar.Rule/?={cond expression clause}
+            <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}
+              <<then>> ?={in expression}//
+          <Grammar.Rule/?={choice expression clause}
+            <Grammar.Alt/[ [ ?={declaration part} <<in>> ] ?={statement}
+              <<then>> ] ?={in expression}//
+          <Grammar.Rule/?={fd compare}
+            <Grammar.Alt/?={expression} (
+              <Q class=terminal/<<=:>>/ |
+              <Q class=terminal/<<\=:>>/ |
+              <Q class=terminal/<<&lt;:>>/ |
+              <Q class=terminal/<<=&lt;:>>/ |
+              <Q class=terminal/<<&gt;:>>/ |
+              <Q class=terminal/<<&gt;=:>>/ ) ?={expression}//
+          <Grammar.Rule/?={fd in}
+            <Grammar.Alt/?={expression} (
+              <Q class=terminal/<<::>>/ |
+              <Q class=terminal/<<:::>>/ ) ?={expression}//
+      <Section>
+        <Title/Operator Associativity and Precedence/
+        <P>
+          The following table states the associativity of infix and
+          mixfix operators in increasing order of precedence:
+          <Table>
+            <TR>
+              <TH/Operators/
+              <TH/Associativity/
+            <TR>
+              <TD/<<=>>/
+              <TD/right/
+            <TR>
+              <TD/<<&lt;->>/
+              <TD/right/
+            <TR>
+              <TD/<<orelse>>/
+              <TD/right/
+            <TR>
+              <TD/<<andthen>>/
+              <TD/right/
+            <TR>
+              <TD/<<==>> <<\=>> <<&lt;>> <<=&lt;>> <<&gt;>> <<&gt;=>>
+                <<=:>> <<\=:>> <<&lt;:>>  <<=&lt;:>>  <<&gt;:>>  <<&gt;=:>>/
+              <TD/none/
+            <TR>
+              <TD/<<::>> <<:::>>/
+              <TD/none/
+            <TR>
+              <TD/<<|>>/
+              <TD/right/
+            <TR>
+              <TD/<<#>>/
+              <TD/mixfix/
+            <TR>
+              <TD/<<+>> <<->>/
+              <TD/left/
+            <TR>
+              <TD><<*>> <</>> <<div>> <<mod>></TD>
+              <TD/left/
+            <TR>
+              <TD/<<,>>/
+              <TD/right/
+            <TR>
+              <TD/<<~>>/
+              <TD/left/
+            <TR>
+              <TD/<<.>> <<^>>/
+              <TD/left/
+            <TR>
+              <TD/<<@>> <<!!>>/
+              <TD/left/
+          </Table>
+          <Q/Having higher precedence/ means <Q/binding tighter/; &eg;,
+          the expression <<c#X.g = Y>> is parsed as <<(c#(X.g)) = Y>>.
+        <P>
+          Attempts to exploit associativity of non-associative operators
+          (without using parentheses to make the intention clear),
+          as in <<X &lt; Y &lt; Z>>, are considered erroneous.
+      <Section>
+        <Title/Grammatical Errors/
+        <P>
+          Any sequence of tokens that is not member of the language described
+          by the above grammar is considered erroneous.
+    <Chapter id="chapter.core">
+      <Title/Core Programs/
+      <P>
+        In this section, we give a context-free grammar for Core Oz programs.
+      <Section>
+        <Title/The Base Language/
+        <Para class=apropos><Title/Statements/
+          <Grammar.Rule/?={statement}
+            <Grammar.Alt/?={statement} ?={statement}/
+            <Grammar.Alt/<<local>> { ?={variable} }+
+              <<in>> ?={statement} <<end>>/
+            <Grammar.Alt/<<proc>> { ?={atom} } <Q class=terminal/<<{>>/
+              ?={variable} { ?={variable} } <Q class=terminal/<<}>>//
+            <Grammar.Alt type=space/?={statement}/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/<Q class=terminal/<<{>>/ ?={variable}
+              { ?={variable} } <Q class=terminal/<<}>>//
+            <Grammar.Alt/<<lock>> ?={variable} <<then>> ?={statement}
+              <<end>>/
+            <Grammar.Alt/<<thread>> ?={statement} <<end>>/
+            <Grammar.Alt/<<try>> ?={statement}/
+            <Grammar.Alt type=space/<<catch>> ?={variable} <<then>>
+              ?={statement}/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
+              ?={expression}/
+            <Grammar.Alt/<<skip>>//
+        <Para class=apropos><Title/Expressions/
+          <Grammar.Rule/?={expression}
+            <Grammar.Alt/?={variable}/
+            <Grammar.Alt/?={atom} | ?={int} | ?={float}/
+            <Grammar.Alt/?={label} <Q class=terminal/<<(>>/
+              { ?={feature} <Q class=terminal/<<:>>/ ?={expression} }
+              [ <Q class=terminal/<<...>>/ ]
+              <Q class=terminal/<<)>>///
+          <Grammar.Rule/?={label}
+            <Grammar.Alt/?={variable label} | ?={atom label}//
+          <Grammar.Rule/?={feature}
+            <Grammar.Alt/?={variable} | ?={atom} | ?={int}//
+      <Section>
+        <Title/Class Extensions/
+        <P>
+          <Grammar.Rule/?={statement}
+            <Grammar.Alt type=add/<<class>> ?={variable}/
+            <Grammar.Alt type=space/[ <<from>> { ?={variable} }+ ]/
+            <Grammar.Alt type=space/[ <<prop>> { ?={variable} }+ ]/
+            <Grammar.Alt type=space/[ <<attr>> { <Q class=terminal/<<!>>/
+              ?={variable} [ <Q class=terminal/<<:>>/ ?={variable} ] }+ ]/
+            <Grammar.Alt type=space/[ <<feat>> { <Q class=terminal/<<!>>/
+              ?={variable} [ <Q class=terminal/<<:>>/ ?={variable} ] }+ ]/
+            <Grammar.Alt type=space/{ ?={method} }/
+            <Grammar.Alt type=space/<<end>>/
+            <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/ <<self>>//
+        <Para class=apropos><Title/Methods/
+          <Grammar.Rule/?={method}
+            <Grammar.Alt/<<meth>> <Q class=terminal/<<!>>/ ?={variable}
+              <Q class=terminal/<<(>>/ <Q class=terminal/<<...>>/
+              <Q class=terminal/<<)>>/ <Q class=terminal/<<=>>/ ?={variable}/
+            <Grammar.Alt type=space/?={statement}/
+            <Grammar.Alt type=space/<<end>>//
+      <Section>
+        <Title/Constraint Extensions/
+        <P>
+          <Grammar.Rule/?={statement}
+            <Grammar.Alt type=add/<<fail>>/
+            <Grammar.Alt/<<cond>> ?={clause}
+              { <Q class=terminal/<<[]>>/ ?={clause} }
+              <<else>> ?={statement} <<end>>/
+            <Grammar.Alt/<<or>> ?={clause}
+              { <Q class=terminal/<<[]>>/ ?={clause} }+ <<end>>/
+            <Grammar.Alt/<<dis>> ?={clause}
+              { <Q class=terminal/<<[]>>/ ?={clause} }+ <<end>>/
+            <Grammar.Alt/<<choice>> ?={clause}
+              { <Q class=terminal/<<[]>>/ ?={clause} } <<end>>//
+          <Grammar.Rule/?={clause}
+            <Grammar.Alt/[ { ?={variable} }+ <<in>> ] ?={statement}
+              <<then>> ?={statement}//
+    <Chapter id="chapter.translation">
+      <Title/Translation of Oz Programs to Oz Core Programs/
+      <P>
+        The translation from full Oz programs to Oz Core programs
+        proceeds in three steps:
+        <List enum>
+          <Item>
+            eliminate abbreviations,
+          <Item>
+            eliminate implicit declarations of variables,
+          <Item>
+            eliminate statements nested in expressions.
+        </List>
+        Some transformation steps require the introduction of fresh variables
+        such that no capturing can occur.  When an introduced variable is
+        supposed to be fresh, we indicate this by using a font like&nbsp;<<X>>.
+      <P>
+        Furthermore, references to so-called <Def/Core variable/ can be made.
+        We indicate this by writing them in backquotes; they are not bound
+        lexically, but are looked up in a run-time environment.  Examples are
+        <<`.`>> and <<`List.toRecord`>>.
+        <!--** The definition of Core variables is beyond the scope of this
+        report. -->
+      <P>
+        Since some syntactic constructs can be generated from different
+        nonterminals of the context-free grammar, we give the nonterminals
+        at the beginning of a rule when we want to limit its applicability.
+  <Back>
+    <Bib.Extern id="ISO_8859_1" to="notation.bib" key="ISO_8859_1">
+</Book>
