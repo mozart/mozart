@@ -92,6 +92,30 @@ void Trail::pushMark(void) {
 
 }
 
+void Trail::test(void) {
+  // All variables marked as trailed must be unmarked!
+
+  StackEntry * top = tos-1;
+
+  do {
+    switch ((TeType) (int) *top) {
+    case Te_Mark:
+      goto exit;
+    case Te_Variable: {
+      TaggedRef * varPtr = (TaggedRef *) *(top-2);
+      Assert(oz_isCVar(*varPtr));
+      break;
+    }
+    default:
+      break;
+    }
+    top -= 3;
+  } while (OK);
+
+ exit:
+  return;
+}
+
 
 
 /*

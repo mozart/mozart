@@ -51,7 +51,340 @@ void OZ_FSetVar::operator delete[](void * p, size_t s)
 }
 #endif
 
+#ifdef TMUELLER
+//////////////////////////////////////////////////////////////////////
 
+void OZ_FSetVar::ask(OZ_Term v)
+{
+  Assert(oz_isRef(v) || !oz_isVariable(v));
+  //
+  DEREF(v, _vptr, vtag);
+  var = v;
+  varPtr = _vptr;
+  //
+  if (isFSetValueTag(vtag)) {
+    // 
+    // found finite set value
+    //
+    _copy = *tagged2FSetValue(v);
+    _set = &_copy;
+    //
+    setSort(val_e);
+  } else {
+    //
+    // found finite set variable
+    //
+    Assert(isGenFSetVar(v));
+    //
+    OzFSVariable * fsvar = tagged2GenFSetVar(v);
+    //
+    _set = &fsvar->getSet();
+    //
+    setSort(var_e);
+  }
+}
+
+void OZ_FSetVar::read(OZ_Term v)
+{
+  Assert(oz_isRef(v) || !oz_isVariable(v));
+  //
+  DEREF(v, _vptr, vtag);
+  var    = v;
+  varPtr = _vptr;
+  //
+  if (isFSetValueTag(vtag)) {
+    //
+    // finite set value
+    //
+    setSort(val_e);
+    _copy = *tagged2FSetValue(v);
+    _set = &_copy;
+    //
+  } else {
+    //
+    // found variable
+    //
+    Assert(oz_isCVar(v));
+    //
+    setSort(var_e);
+    //
+    OzFSVariable * cvar = tagged2GenFSetVar(v);
+    //
+    // check if this variable has already been read as encapsulated
+    // parameter and if so, initilize forward reference appropriately
+    //
+    OZ_FSetVar * forward = (cvar->isParamEncapTagged() 
+			    ? ((OzFSVariable *) cvar)->getTag()
+			    : this);
+    //
+    if (Propagator::getRunningPropagator()->isLocal()
+	|| oz_isLocalVar(cvar)) {
+      //
+      // local variable
+      //
+      setState(loc_e);
+      //
+      if (cvar->isParamNonEncapTagged()) {
+	//
+	// has already been read
+	//
+	// get previous 
+	//
+	OZ_FSetVar * prev = cvar->getTag();
+	_set = prev->_set;
+	prev->_nb_refs += 1;
+	//
+      } else {
+	//
+	// is being read the first time
+	//
+	_set = &((OzFSVariable *) cvar)->getSet();
+	// special treatment of top-level variables
+	if (oz_onToplevel()) {
+	  forward->_copy = *_set;
+	}
+	cvar->tagNonEncapParam(forward);
+	forward->_nb_refs += 1;
+	//
+      }
+    } else {
+      //
+      // global variable
+      //
+      setState(glob_e);
+      //
+      if (cvar->isParamNonEncapTagged()) {
+	//
+	// has already been read
+	//
+	// get previous 
+	//
+	OZ_FSetVar * prev = cvar->getTag();
+	_set = &(prev->_copy);
+	prev->_nb_refs += 1;
+	//
+      } else {
+	//
+	// is being read the first time
+	//
+	forward->_copy = cvar->getSet();
+	_set = &(forward->_copy);
+	cvar->tagNonEncapParam(forward);
+	forward->_nb_refs += 1;
+	//
+      }
+    }
+  }
+  known_in     = _set->getKnownIn();
+  known_not_in = _set->getKnownNotIn();
+  card_size    = _set->getCardSize();
+}
+
+void OZ_FSetVar::readEncap(OZ_Term v)
+{
+  Assert(oz_isRef(v) || !oz_isVariable(v));
+  //
+  DEREF(v, _vptr, vtag);
+  var    = v;
+  varPtr = _vptr;
+  //
+  if (isFSetValueTag(vtag)) {
+    //
+    // found finite set value
+    //
+    setSort(val_e);
+    setState(loc_e);
+    _encap = *tagged2FSetValue(v);
+    _set = &_encap;
+  } else {
+    //
+    // found variable
+    //
+    setSort(var_e);
+    setState(encap_e);
+    //
+    OzFSVariable * cvar = tagged2GenFSetVar(v);
+    //
+    // check if this variable has already been read as non-encapsulated
+    // parameter and if so, initilize forward reference appropriately
+    //
+    OZ_FSetVar * forward = (cvar->isParamNonEncapTagged()
+			    ? ((OzFSVariable *) cvar)->getTag()
+			    : this);
+    //
+    if (cvar->isParamEncapTagged()) {
+      //
+      // has already been read
+      //
+      OZ_FSetVar * prev = cvar->getTag();
+      //
+      _set = &(prev->_encap);
+      //
+      prev->_nb_refs += 1;
+      //
+    } else {
+      //
+      // is being read the first time
+      //
+      forward->_encap = cvar->getSet();
+      _set = &(forward->_encap);
+      cvar->tagEncapParam(forward);
+      forward->_nb_refs += 1;
+      //
+    }
+  }
+  known_in     = _set->getKnownIn();
+  known_not_in = _set->getKnownNotIn();
+  card_size    = _set->getCardSize();
+}
+
+OZ_Boolean OZ_FSetVar::tell(void)
+{
+  //
+  // if the parameter is a variable it returns 1 else 0
+  //
+  DEBUG_CONSTRAIN_CVAR(("OZ_FSetVar::tell "));
+  //
+  // this parameter has become an integer by a previous tell
+  //
+  if (!oz_isVariable(*varPtr)) {
+    //
+    goto oz_false;
+    //
+  } else {
+    //
+    OzFSVariable * cvar = tagged2GenFSetVar(var);
+    //
+    int is_non_encap = cvar->isParamNonEncapTagged();
+    //
+    cvar->untagParam();
+    //
+    if (! is_non_encap) {
+      //
+      // the basic constraint of this parameter has already been told,
+      // i.e., there are at least two parameter refering to the same
+      // variable in the constraint store
+      //
+      goto oz_false;
+      //
+    } else if(!isTouched()) {
+      //
+      // no values have been removed from the constraint connected to
+      // this parameter. note this cases catches integers too.
+      //
+      goto oz_true;
+      //
+    } else {
+      // 
+      // there is a finite set variable in the store
+      //
+      Assert(isSort(var_e));
+      //
+      if (_set->isValue()) {
+	//
+	// propagation produced a set value
+	//
+	if (isState(loc_e)) {
+	  //
+	  // local variable
+	  //
+	  tagged2GenFSetVar(var)->becomesFSetValueAndPropagate(varPtr);
+	  //
+	} else {
+	  //
+	  // global variable
+	  //
+	  OZ_FSetValue * set_value = new OZ_FSetValue(*_set);
+	  //
+	  // wake up
+	  //
+	  tagged2GenFSetVar(var)->propagate(fs_prop_val);
+	  bindGlobalVarToValue(varPtr, makeTaggedFSetValue(set_value));
+	  //
+	}
+	//
+	goto oz_false;
+	//
+      } else {
+	// 
+	// propagation produced a set constraint
+	//
+	// wake up ...
+	// ... lower bounds
+	if (known_in < _set->getKnownIn()) {
+	  tagged2GenFSetVar(var)->propagate(fs_prop_glb);
+	}
+	// ... upper bounds
+	if (known_not_in < _set->getKnownNotIn()) {
+	  tagged2GenFSetVar(var)->propagate(fs_prop_lub);
+	}
+	// ... cardinality
+	if (card_size > _set->getCardSize()) {
+	  tagged2GenFSetVar(var)->propagate(fs_prop_val);
+	}
+	//
+	if (isState(glob_e)) {
+	  //
+	  // tell basic constraint to global variable
+	  //
+	  constrainGlobalVar(varPtr, *_set);
+	  //
+	}
+	goto oz_true;
+      }
+    }
+  }
+  //
+ oz_false:
+  //
+  // variable is determined
+  //
+  DEBUG_CONSTRAIN_CVAR(("FALSE\n"));
+  return OZ_FALSE;
+  //
+ oz_true:
+  //
+  // variable is still undetermined
+  //
+  DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
+  return OZ_TRUE;
+}
+
+void OZ_FSetVar::fail(void)
+{
+  if (isSort(val_e)) {
+    return;
+  } else {
+    //
+    OzFSVariable * cvar = tagged2GenFSetVar(var);
+    //
+    int is_non_encap = cvar->isParamNonEncapTagged();
+    //
+    cvar->untagParam();
+    //
+    if (! is_non_encap) {
+      //
+      // this parameter has already been untagged or is an
+      // encapsulated parameter which needs no special care (in
+      // contrast to global and top-level variables).
+      //
+      return;
+    } else if ((isState(glob_e) && isSort(var_e)) 
+	       || oz_onToplevel()) {
+      *_set = _copy;
+    }
+  }
+}
+
+OZ_Boolean OZ_FSetVar::isTouched(void) const
+{
+  return ((known_in     < _set->getKnownIn()) ||
+	  (known_not_in < _set->getKnownNotIn()) ||
+	  (card_size    > _set->getCardSize()));
+}
+//////////////////////////////////////////////////////////////////////
+#else
+//////////////////////////////////////////////////////////////////////
 void OZ_FSetVar::ask(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
@@ -288,6 +621,8 @@ OZ_Boolean OZ_FSetVar::isTouched(void) const
 	  (known_not_in < setPtr->getKnownNotIn()) ||
 	  (card_size > setPtr->getCardSize()));
 }
+//////////////////////////////////////////////////////////////////////
+#endif
 
 int OZ_getFSetInf(void)
 {
