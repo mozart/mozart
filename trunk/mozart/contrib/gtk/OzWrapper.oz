@@ -26,6 +26,7 @@ import
    NativeEmitter(coreResultType)
    Open
    Util
+   System(show)
 export
    'createFuncs'  : CreateFuncs
    'createFields' : CreateFields
@@ -48,6 +49,7 @@ define
     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
     "   GDK                                   at 'GDK.ozf'"
     "export"
+    "   PointerToObject"
     "   MakeArg"
     "   GetArg"
     "   FreeArg"
@@ -69,7 +71,8 @@ define
     "   GdkNative                             at 'GdkNative.so{native}'"
     "   GdkFieldNative                        at 'GdkFieldNative.so{native}'"
     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
-    "export"]
+    "export"
+    "   MakeColor"]
    
    CanvasFilePrepend =
    ["%%"
@@ -89,13 +92,15 @@ define
    GdkInitStub =
    ["define"
     "   OzBase     = GOZCore.ozBase"
+    "   GtkObject  = GOZCore.ozObject"
     "   P2O        = GOZCore.pointerToObject"
     "   O2P        = GOZCore.objectToPointer"
     "   ExportList = GOZCore.exportList"
     "   ImportList = GOZCore.importList"
+    "   MakeColor  = GOZCore.makeColor"
     "   class OzColorBase from OzBase"
     "      meth new(R G B)"
-    "         object <- {GOZCore.allocColor R G B}"
+    "         GtkObject <- {GOZCore.allocColor R G B}"
     "      end"
     "   end"
     "   \\insert 'GDKFIELDS.oz'"
@@ -103,11 +108,13 @@ define
 
    GtkInitStub =
    ["define"
-    "   OzBase      = GOZCore.ozBase"
-    "   P2O         = GOZCore.pointerToObject"
-    "   O2P         = GOZCore.objectToPointer"
-    "   ExportList  = GOZCore.exportList"
-    "   ImportList  = GOZCore.importList"
+    "   OzBase          = GOZCore.ozBase"
+    "   GtkObject       = GOZCore.ozObject"
+    "   P2O             = GOZCore.pointerToObject"
+    "   O2P             = GOZCore.objectToPointer"
+    "   ExportList      = GOZCore.exportList"
+    "   ImportList      = GOZCore.importList"
+    "   PointerToObject = P2O"
     "   fun {MakeArg S Val}"
     "      {GOZCore.makeArg S {O2P Val}}"
     "   end"
@@ -120,7 +127,7 @@ define
     "      end"
     "   end"
     "   proc {FreeArg Val}"
-    "      {GOZCore.freeData Val _}"
+    "      {GOZCore.freeData Val}"
     "   end"
     "   fun {AllocStr N}"
     "      {GOZCore.allocStr N}"
@@ -138,13 +145,14 @@ define
     "      {GOZCore.getStrArr Val}"
     "   end"
     "   proc {FreeStrArr Val}"
-    "      {GOZCore.freeData Val _}"
+    "      {GOZCore.freeData Val}"
     "   end"
     "   \\insert 'GTKFIELDS.oz'"
    ]
    
    CanvasInitStub =
    ["define"
+    "   GtkObject    = GOZCore.ozObject"
     "   P2O          = GOZCore.pointerToObject"
     "   O2P          = GOZCore.objectToPointer"
     "   ImportList   = GOZCore.importList"
@@ -162,7 +170,7 @@ define
    ["      meth get(String Result)"
     "         Arg = {GOZCore.makeEmptyArg String}"
     "      in"
-    "         {GtkNative.gtkWidgetGet @object Arg}"
+    "         {GtkNative.gtkWidgetGet @GtkObject Arg}"
     "         Result = {GOZCore.getArg Arg}"
     "         {GOZCore.freeData Arg}"
     "      end"
@@ -173,7 +181,7 @@ define
     "      meth getColor($)"
     "         Array = {GOZCore.makeColorArr [0.0 0.0 0.0 0.0]}"
     "      in"
-    "         {GtkNative.gtkColorSelectionGetColor @object Array}"
+    "         {GtkNative.gtkColorSelectionGetColor @GtkObject Array}"
     "         {GOZCore.getColorList Array}"
     "      end"
    ]
@@ -183,7 +191,7 @@ define
     "      meth setColor(Cols)"
     "         Array = {GOZCore.makeColorArr Cols}"
     "      in"
-    "         {GtkNative.gtkColorSelectionSetColor @object Array}"
+    "         {GtkNative.gtkColorSelectionSetColor @GtkObject Array}"
     "      end"
    ]
 
@@ -191,8 +199,7 @@ define
    [
     "      meth new(WithVisual)"
     "         if WithVisual then {self pushVisual} end"
-    "         object <- {GtkCanvasNative.gtkCanvasNew }"
-    "         {self wrapperNew}"
+    "         GtkObject <- {GtkCanvasNative.gtkCanvasNew }"
     "         {self addToObjectTable}"
     "      end"
     ]
@@ -399,7 +406,7 @@ define
 		 "newWithLabel"  %% GtkButton(Box)
 		 "newWithTitles" %% GtkCList
 		 "newWithValues" %% GdkGC
-		 "load"          %% GkdFont
+		 "load"          %% GdkFont
 		 "getSystem"     %% GdkColormap
 		 "newFromPixmap" %% GdkCursor
 		]
@@ -780,10 +787,10 @@ define
 		    then nil
 		    else GtkClasses, checkResStart(RetType $)
 		    end
-	 ResStart = if IsNew then "object <- " elseif OA == 1
+	 ResStart = if IsNew then "GtkObject <- " elseif OA == 1
 		    then "Res = "#CheckRes else "" end
 	 ResEnd   = if IsNew orelse CheckRes == nil then "" else "}" end
-	 Self     = if HasSelf then "@object " else "" end
+	 Self     = if HasSelf then "@GtkObject " else "" end
       in
 	 case Name
 	 of "gtkWidgetGet" then
@@ -815,7 +822,7 @@ define
 	 in
 	    TextFile, putS({Util.indent 2}#"meth ref()")
 	    TextFile, putS({Util.indent 3}#"{"#@module#
-			   "."#Name#" @object"#Var#"}")
+			   "."#Name#" @GtkObject"#Var#"}")
 	    TextFile, putS({Util.indent 2}#"end")
 	 else
 	    TextFile, putS({Util.indent 2}#"meth "#
@@ -830,21 +837,10 @@ define
 	    if IsNew
 	    then
 	       numConstr <- (@numConstr + 1)
-	       TextFile, putS({Util.indent 3}#"{self wrapperNew}")
 	       TextFile, putS({Util.indent 3}#"{self addToObjectTable}")
 	    end
 	    GtkClasses, handleOutArgs(CallArgs)
 	    TextFile, putS({Util.indent 2}#"end")
-	    %% Gdk and GtkcanvasItems do not know the delete event
-	    %% Therefore a different init is required
-	    %% But of course only once for each object
-	    if IsNew andthen (@numConstr == 1) andthen
-	       ((Name == "gtkCanvasItemNew") orelse (@stdPrefix == "Gdk"))
-	    then
-	       TextFile, putS({Util.indent 2}#"meth wrapperNew")
-	       TextFile, putS({Util.indent 3}#"signals <- {Cell.new nil#nil}")
-	       TextFile, putS({Util.indent 2}#"end")
-	    end
 	 end
       end
       meth prepareArgs(InArgs I OutArgs $)
@@ -902,7 +898,7 @@ define
 	    of I#'OUT'(Type)#_ then
 	       TextFile, putS({Util.indent 3}#"AO"#I#
 			      " = {GOZCore.get"#Type#" AP"#I#"}")
-	       TextFile, putS({Util.indent 3}#"{GOZCore.freeData AP"#I#" _}")
+	       TextFile, putS({Util.indent 3}#"{GOZCore.freeData AP"#I#"}")
 	    [] _ then skip
 	    end
 	    GtkClasses, handleOutArgs(Ar)
@@ -1158,6 +1154,7 @@ define
 	       Class     = ClassName#"Fields"
 	    in
 	       TextFile, putS({ToS "\n"#{Util.indent 1}#"class "#Class})
+	       GtkFieldClasses, emitConstructors(Name)
 	       GtkFieldClasses, emitAccessors(Name Items @first)
 	       TextFile, putS({ToS {Util.indent 1}#"end"})
 	    [] _ then skip
@@ -1165,6 +1162,19 @@ define
 	    GtkFieldClasses, emitClasses(Nr)
 	 [] nil then skip
 	 end
+      end
+      meth emitConstructors(Name)
+	 SName   = {Util.firstLower {Util.cutPrefix @stdPrefix {ToS Name}}}
+	 AccName = {Util.firstLower {Util.toString Name#"NativeAlloc"}}
+	 Alloc   = "GtkObject <- {"#@module#"."#AccName#"}"
+      in
+	 TextFile, putS({ToS {Util.indent 2}#"meth "#SName#"NativeNew"})
+	 TextFile, putS({ToS {Util.indent 3}}#Alloc)
+	 TextFile, putS({ToS {Util.indent 2}#"end"})
+	 TextFile, putS({ToS {Util.indent 2}#"meth "#SName#"NativeDestroy"})
+	 TextFile, putS({ToS {Util.indent 3}#"{GOZCore.freeData @GtkObject}"})
+	 TextFile, putS({ToS {Util.indent 3}#"GtkObject <- unit"})
+	 TextFile, putS({ToS {Util.indent 2}#"end"})
       end
       meth emitAccessors(Name Items First)
 	 case Items
@@ -1229,7 +1239,7 @@ define
 	    CStr      = if Convert == nil then nil else "}" end
 	 in
 	    TextFile, putS({ToS {Util.indent 3}#OStr#Convert#"{"#@module#
-			    "."#FunName#" @object}"#CStr})
+			    "."#FunName#" @GtkObject}"#CStr})
 	 end
       end
    end
