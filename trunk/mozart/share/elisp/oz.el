@@ -423,7 +423,8 @@ the variable `oz-pedantic-spaces' is non-nil."
 	(end-of-line)
 	(delete-horizontal-space)
 	(forward-line)
-	(setq current-line (1+ current-line))))))
+	(setq current-line (1+ current-line)))
+      (message nil))))
 
 
 ;;------------------------------------------------------------
@@ -2162,10 +2163,6 @@ The ARG is interpreted just as with \\[recenter]."
 ;; control characters so that the outputs from the emulator and from
 ;; the compiler can be separated into two buffers.
 
-(defun oz-emulator-filter (proc string)
-  "Filter for Oz Emulator output."
-  (if (oz-split-output proc string)))
-
 ;; If you ever change these constants, also adapt the
 ;; file Oz/lib/compiler/EmacsInterface.oz accordingly.
 (defvar oz-emulator-output-start (char-to-string 5)
@@ -2186,7 +2183,7 @@ Return nil if the whole STRING goes into the current buffer."
 		  oz-emulator-buffer
 		oz-compiler-buffer)))
 
-(defun oz-split-output (proc string)
+(defun oz-emulator-filter (proc string)
   "Split the process output STRING into Oz Compiler and Oz Emulator output.
 The output from both Emulator and Compiler comes from the same process.
 Both outputs are separated by oz-emulator-output-{start,end} sequences.
