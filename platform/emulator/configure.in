@@ -238,7 +238,7 @@ if test "${GXX}" = yes; then
     then
         AC_MSG_RESULT(yes)
         LD=gcc
-        OZ_CXX_OPTIONS("-fno-exceptions -fno-rtti",oz_a)
+        OZ_CXX_OPTIONS(-fno-exceptions -fno-rtti,oz_a)
         CXXFLAGS="$CXXFLAGS $oza"
     else
         AC_MSG_RESULT(no)
