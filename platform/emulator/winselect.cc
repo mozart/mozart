@@ -289,9 +289,10 @@ unsigned __stdcall selectThread(void *arg)
     // select annulls rfds and wfds
     fd_set rfds = origrfds;
     fd_set wfds = origwfds;
+
     int ret = select(maxSocket,&rfds,&wfds,NULL,&tv);
 
-    if (ret<0 || ret>0 || ret==0 && si->timeout<=0 || si->timestamp!=timestamp) {
+    if (ret<0 || ret>0 || ret==0 && timeout<=0 || si->timestamp!=timestamp) {
       origrfds = rfds;
       origwfds = wfds;
       break;
