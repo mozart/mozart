@@ -1335,7 +1335,14 @@ void OZ_printVirtualString(OZ_Term term)
     }
     OZ_printAtom(t);
   } else if (isInt(t)) {
-    OZ_printInt(t);
+    if (isSmallInt(t)) {
+      printf("%d",smallIntValue(t));
+    } else {
+      char *s=toC(t);
+      if (s[0] == '~') 
+	s[0] = '-';
+      printf("%s",s);
+    }
   } else if (isFloat(t)) {
     char *s=toC(t);
     char *p=s;
