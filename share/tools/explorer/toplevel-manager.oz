@@ -307,31 +307,35 @@ in
       end
 
       meth scale(Scale)
-	 Font    = {PickFont NumberFonts Scale}
-	 Canvas  = self.canvas
-	 Numbers = Canvas.numbers
-      in
-	 scale <- Scale
-	 {Canvas scale(Scale)}
-	 case @curFont of !Font then skip elseof CF then
-	    case @NumberNodes==nil then skip else
-	       case Font==false then {Numbers tk(delete)}
-	       elsecase CF==false then
-		  {ForAll @NumberNodes
-		   proc {$ Node}
-		      {Node redrawNumber(Scale Font)}
-		   end}
-	       else {Numbers tk(itemconf font:Font)}
+	 lock
+	    Font    = {PickFont NumberFonts Scale}
+	    Canvas  = self.canvas
+	    Numbers = Canvas.numbers
+	 in
+	    scale <- Scale
+	    {Canvas scale(Scale)}
+	    case @curFont of !Font then skip elseof CF then
+	       case @NumberNodes==nil then skip else
+		  case Font==false then {Numbers tk(delete)}
+		  elsecase CF==false then
+		     {ForAll @NumberNodes
+		      proc {$ Node}
+			 {Node redrawNumber(Scale Font)}
+		      end}
+		  else {Numbers tk(itemconf font:Font)}
+		  end
 	       end
+	       curFont <- Font
 	    end
-	    curFont <- Font
 	 end
       end
 
       meth scaleToFit
-	 case {self.canvas scaleToFit($)} of false then skip
-	 elseof NewScale then
-	    ToplevelManager,scale(NewScale)
+	 lock
+	    case {self.canvas scaleToFit($)} of false then skip
+	    elseof NewScale then
+	       ToplevelManager,scale(NewScale)
+	    end
 	 end
       end
 
