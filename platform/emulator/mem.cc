@@ -15,7 +15,8 @@
 
 #include "mem.hh"
 #include "tagged.hh"
-
+#include "am.hh"
+#include "io.hh"
 
 extern "C" void *sbrk(int incr);
 
@@ -279,7 +280,7 @@ void *ozMalloc(int chunk_size)
     void *ret_val = sbrk(chunk_size);
     if (ret_val == (caddr_t) - 1) {
       message("Virtual memory exhausted");
-      exitOz(1);
+      IO::exitOz(1);
     }
 
     SbrkMemory *newMem = (SbrkMemory *) ret_val;
@@ -358,7 +359,7 @@ void getMemFromOS(size_t sz)
   if (sz > heapMaxSize) {
     message("memory exhausted: required chunk bigger thank max size");
     message(" hint: look for an endless recursion");
-    exitOz(1);
+    IO::exitOz(1);
   }
 
 
@@ -383,7 +384,7 @@ void getMemFromOS(size_t sz)
 //  message("heapEnd: 0x%x\n maxPointer: 0x%x\n",heapEnd,maxPointer+1);
   if (heapEnd > (char*)maxPointer) {
     message("Virtual memory exhausted");
-    exitOz(1);
+    IO::exitOz(1);
   }
 
   heapEnd -= sizeof(char *);
