@@ -49,9 +49,9 @@ public:
   OZ_Term typeV() { return oz_atom("thread"); }
 
   virtual
-  OZ_Extension *gCollectV(void) { return new OzThread(*this); }
+  OZ_Extension *gCollectV(void) { return new OzThread(thread); }
   virtual
-  OZ_Extension *sCloneV(void) { return new OzThread(*this); }
+  OZ_Extension *sCloneV(void) { return new OzThread(thread); }
 
   // mm2: possible bug: eqV may fail when dead thread is compared!
   virtual
