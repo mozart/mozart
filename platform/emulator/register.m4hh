@@ -443,6 +443,10 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
           default:
             break;
           }
+        } else if (isAnyVar(term)) {
+          PushContX(PC,Y,G,X,getPosIntArg(PC+6));
+          addSuspPtr(termPtr, CTT);
+          return T_SUSPEND;
         }
         JUMPRELATIVE(getLabelArg(PC+5));
     }''
@@ -477,6 +481,10 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
           default:
             break;
           }
+        } else if (isAnyVar(term)) {
+          PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+          addSuspPtr(termPtr, CTT);
+          return T_SUSPEND;
         }
         JUMPRELATIVE(getLabelArg(PC+3));
     }''
