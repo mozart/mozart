@@ -119,6 +119,9 @@ OZ_BI_proto(BIIsPropagator);
 OZ_BI_proto(BIIsDiscardedPropagator);
 OZ_BI_proto(BIDiscardPropagator);
 OZ_BI_proto(BIIdentifyParameter);
+OZ_BI_proto(BIIsActivePropagator);
+OZ_BI_proto(BIDeactivatePropagator);
+OZ_BI_proto(BIActivatePropagator);
 
 //-----------------------------------------------------------------------------
 
@@ -143,7 +146,7 @@ OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
   atom_bounds, atom_val, atom_glb, atom_lub, atom_oops, atom_prop,
   atom_params, atom_name, atom_susp, atom_thread, atom_ct,
   atom_susplists, atom_ref, atom_id, atom_loc, atom_vars, atom_props,
-  atom_reflect, atom_reflect_vartable, atom_reflect_proptable, atom_novar;
+  atom_reflect, atom_reflect_vartable, atom_reflect_proptable, atom_nonevar;
 
 //-----------------------------------------------------------------------------
 
