@@ -89,6 +89,7 @@ extern OZ_Term  _FUNDECL(OZ_deref,(OZ_Term term));
 extern int _FUNDECL(OZ_isAtom,(OZ_Term));
 extern int _FUNDECL(OZ_isBigInt,(OZ_Term));
 extern int _FUNDECL(OZ_isCell,(OZ_Term));
+extern int _FUNDECL(OZ_isPort,(OZ_Term));
 extern int _FUNDECL(OZ_isChunk,(OZ_Term));
 extern int _FUNDECL(OZ_isCons,(OZ_Term));
 extern int _FUNDECL(OZ_isFalse,(OZ_Term));
@@ -236,6 +237,7 @@ extern OZ_Term _FUNDECL(OZ_newCell,(OZ_Term));
 /* exchangeCell, deepFeed */
 
 /* port */
+extern OZ_Term _FUNDECL(OZ_newPort,(OZ_Term));
 extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
 
 /* name */

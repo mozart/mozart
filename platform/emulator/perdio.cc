@@ -8,18 +8,18 @@
   State: $State$
 
   $Log$
+  Revision 1.8  1996/08/06 13:30:38  mehl
+  bug fixes and ports
+
   Revision 1.7  1996/08/05 08:23:46  mehl
   not using -DPERDIO works now
 
   Revision 1.6  1996/08/02 16:25:50  scheidhr
   more Perdio work: send Ports over the net
 
-// Revision 1.5  1996/08/02  14:20:18  mehl
-// bug fixes
-//
-// Revision 1.4  1996/08/02  11:14:17  mehl
-// perdio uses tcp now
-//
+  Revision 1.4  1996/08/02  11:14:17  mehl
+  perdio uses tcp now
+
   Revision 1.2  1996/07/26 15:17:43  mehl
   perdio communication: see ~mehl/perdio.oz
 
@@ -35,10 +35,175 @@
 
 #include "ip.hh"
 #include "perdio.hh"
-#include "perdiotables.hh"
 
 #include "oz.h"
 #include "am.hh"
+
+
+/**********************************************************************/
+
+#define ProtocolObject ConstTerm
+#define Proxy          ConstTerm
+
+class NetAddress {
+public:
+  int site;
+  int index;
+  NetAddress(int s, int i) : site(s), index(i) {}
+  Bool same(int s, int i) { return s==site && i==index; }
+  Bool isLocal() { return site==localSite; }
+  int getCredit();
+  void giveCredit(int c);
+};
+
+Bool isLocalAddress(NetAddress *na)
+{
+  return na->isLocal();
+}
+
+class BorrowerTableEntry {
+public:
+  long credit;
+  Proxy *proxy;
+  void giveCredit(int c) { credit += c; }
+  int getCredit()
+  {
+    if (credit <= 2) {
+      Assert(0);
+    }
+
+    int ret = credit/3;
+    credit -= ret;
+    Assert(credit>=0);
+    return ret;
+  }
+};
+
+class BorrowerTable {
+  NetAddress *addr;
+  BorrowerTableEntry *entry;
+  BorrowerTable *next;
+public:
+
+  BorrowerTable(NetAddress *na, Proxy *p, BorrowerTable *nxt):
+    next(nxt)
+  {
+    addr = na;
+    entry = new BorrowerTableEntry();
+    entry->proxy  = p;
+    entry->credit = 0;
+
+  }
+
+  BorrowerTableEntry *find(int s, int index)
+  {
+    BorrowerTable *aux = this;
+    while(aux) {
+      if (aux->addr->same(s,index))
+        return aux->entry;
+      aux = aux->next;
+    }
+    return NULL;
+  }
+  BorrowerTable *add(NetAddress *na, Proxy *p)
+  {
+    return new BorrowerTable(na,p,this);
+  }
+
+};
+
+extern BorrowerTable *borrowerTable;
+
+const int amountCredit = 100000;
+
+class OwnerTableEntry {
+  long credit;
+public:
+  ProtocolObject *object;
+  Proxy *proxy;
+
+  void init(ProtocolObject *o, Proxy *p)
+  {
+    object = o;
+    proxy  = p;
+  }
+  void giveCredit(int c)
+  {
+    if ( credit != 1)
+      credit += c;
+  }
+
+  int getCredit()
+  {
+    if (credit == 1 || credit-amountCredit > 0) {
+      /* overflow set credit=1 --> no GC anymore */
+      credit = 1;
+    }
+    credit -= amountCredit;
+    return amountCredit;
+  }
+};
+
+class OwnerTable {
+  OwnerTableEntry *array;
+  int size;
+  int nextfree;
+public:
+  OwnerTable(int sz)
+  {
+    size = sz;
+    array = (OwnerTableEntry*) malloc(size*sizeof(OwnerTableEntry));
+    nextfree = 0;
+  }
+
+  void resize(int newsize)
+  {
+    size = newsize;
+    array = (OwnerTableEntry*) realloc(array,size*sizeof(OwnerTableEntry));
+  }
+
+  OwnerTableEntry *get(int i)
+  {
+    return (i>=nextfree) ? (OwnerTableEntry *) NULL : array+i;
+  }
+
+  int newOTEntry(ProtocolObject *obj, Proxy *pr)
+  {
+    if (nextfree>=size) {
+      resize((size*3)/2);
+    }
+   array[nextfree].init(obj,pr);
+   return nextfree++;
+  }
+};
+
+extern OwnerTable *ownerTable;
+
+inline
+int NetAddress::getCredit()
+{
+  if (isLocal()) {
+    return ownerTable->get(index)->getCredit();
+  }
+  BorrowerTableEntry *b = borrowerTable->find(site,index);
+  Assert(b!=NULL);
+  return b->getCredit();
+}
+
+
+inline
+void NetAddress::giveCredit(int c)
+{
+  if (isLocal()) {
+    ownerTable->get(index)->giveCredit(c);
+  } else {
+    BorrowerTableEntry *b = borrowerTable->find(site,index);
+    Assert(b!=NULL);
+    b->giveCredit(c);
+  }
+}
+
+/**********************************************************************/
 
 typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, ATOMTAG,
               RECORDTAG, TUPLETAG, LISTTAG, REFTAG, PORTTAG} MarshalTag;
@@ -216,9 +381,11 @@ OwnerTable *ownerTable = NULL;
 
 NetAddress *exportPort(Port *p)
 {
-  if (p->getAddress()==NULL) {
+  NetAddress *addr=p->getAddress();
+  if (addr==NULL) {
     int index = ownerTable->newOTEntry(p,NULL);
-    p->setAddress(new NetAddress(localSite,index));
+    addr=new NetAddress(localSite,index);
+    p->setAddress(addr);
   }
   return addr;
 }
@@ -651,7 +818,10 @@ OZ_C_proc_begin(BIstartSite,2)
 
   ozport = makeTaggedConst(new Port(am.rootBoard, stream));
 
-  ipInit(p,siteReceive);
+  if (ipInit(p,siteReceive) < 0) {
+    ozport=0;
+    return OZ_raise(OZ_mkTupleC("startSite",1,OZ_atom("ipInit")));
+  }
 
   return PROCEED;
 }

@@ -15,8 +15,6 @@
 #pragma interface
 #endif
 
-#include "perdiotables.hh"
-
 /*===================================================================
  * global names and atoms
  *=================================================================== */
@@ -1778,8 +1776,6 @@ public:
 
   NetAddress *getAddress() { return addr; }
   void setAddress(NetAddress *na) { addr=na; }
-
-  Bool isLocal() { return (addr==NULL || addr->isLocal()); }
 
   OZPRINT;
   OZPRINTLONG;

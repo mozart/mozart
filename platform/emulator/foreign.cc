@@ -41,6 +41,12 @@ int OZ_isCell(OZ_Term term)
   return isCell(term);
 }
 
+int OZ_isPort(OZ_Term term)
+{
+  term = deref(term);
+  return isPort(term);
+}
+
 int OZ_isChunk(OZ_Term term)
 {
   term = deref(term);
@@ -270,6 +276,10 @@ OZ_Term OZ_termType(OZ_Term term)
 
   if (isCell(term)) {
     return OZ_atom("cell");
+  }
+
+  if (isPort(term)) {
+    return OZ_atom("port");
   }
 
   if (isChunk(term)) {
@@ -740,6 +750,9 @@ void const2buffer(ostream &out, ConstTerm *c)
     break;
   case Co_Cell:
     out << "<Cell>";
+    break;
+  case Co_Port:
+    out << "<Port>";
     break;
   case Co_Space:
     out << "<Space>";
@@ -1874,6 +1887,12 @@ void OZ_fail(char *format, ...)
   va_end(ap);
 
   OZ_makeRunnableThread(BIfail,0,0);
+}
+
+
+OZ_Term OZ_newPort(OZ_Term val)
+{
+  return makeTaggedConst(new Port(am.currentBoard, val));
 }
 
 void OZ_send(OZ_Term port, OZ_Term val)
