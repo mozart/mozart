@@ -28,6 +28,7 @@
 #define __REFLECT__HH__
 
 #include "var_all.hh"
+#include "prop_int.hh"
 
 //#define DEBUG
 
@@ -71,6 +72,23 @@ public:
     sprintf(buf, "<(Propagator *): %p>", _p);
     return OZ_atom(buf);
   }
+
+  // A discarded propagator reference has a NULL reference but the
+  // propagator may have been discarded by constraint solving any
+  // (entailment), so check the corresponding suspendable
+  OZ_Boolean isDiscarded(void) {
+    Suspendable * susp = (Suspendable *) _p;
+    return susp->isDead() ? OZ_TRUE : (_p == (Propagator *) NULL);
+  }
+
+  void discard(void) {
+    if (isDiscarded())
+      return;
+    // do the right stuff here
+    oz_closeDonePropagator(_p);
+
+    _p = (Propagator *) NULL;
+  }
 };
 
 //-----------------------------------------------------------------------------
@@ -92,6 +110,10 @@ OZ_BI_proto(BIReflectPropagatorCoordinates);
 OZ_BI_proto(BIReflectVariable);
 OZ_BI_proto(BIPropagatorEq);
 OZ_BI_proto(BIReflectSpace);
+OZ_BI_proto(BIIsPropagator);
+OZ_BI_proto(BIIsDiscardedPropagator);
+OZ_BI_proto(BIDiscardPropagator);
+
 
 //-----------------------------------------------------------------------------
 

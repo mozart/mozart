@@ -74,6 +74,9 @@ extern "C"
       {"propagatorName",        1, 1, BIReflectPropagatorName},
       {"propagatorIsFailed",    1, 1, BIIsPropagatorFailed},
       {"propagatorCoordinates", 1, 1, BIReflectPropagatorCoordinates},
+      {"isPropagator",          1, 1, BIIsPropagator},
+      {"isDiscardedPropagator", 1, 1, BIIsDiscardedPropagator},
+      {"discardPropagator",     1, 0, BIDiscardPropagator},
       {0,0,0,0}
     };
 

@@ -39,6 +39,9 @@ export
    PropLocation
    PropIsFailed
    SpaceReflect
+   IsPropagator
+   IsDiscardedPropagator
+   DiscardPropagator
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
@@ -52,15 +55,17 @@ import
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
 
-   VarReflect   = ReflectExport.variableReflect
-   VarEq        = System.eq
-   PropReflect  = ReflectExport.propagatorReflect
-   PropEq       = ReflectExport.propagatorEq
-   PropName     = ReflectExport.propagatorName
-   PropLocation = ReflectExport.propagatorCoordinates
-   PropIsFailed = ReflectExport.propagatorIsFailed
-
-   BIspaceReflect = ReflectExport.spaceReflect
+   VarReflect            = ReflectExport.variableReflect
+   VarEq                 = System.eq
+   PropReflect           = ReflectExport.propagatorReflect
+   PropEq                = ReflectExport.propagatorEq
+   PropName              = ReflectExport.propagatorName
+   PropLocation          = ReflectExport.propagatorCoordinates
+   PropIsFailed          = ReflectExport.propagatorIsFailed
+   IsPropagator          = ReflectExport.isPropagator
+   IsDiscardedPropagator = ReflectExport.isDiscardedPropagator
+   DiscardPropagator     = ReflectExport.discardPropagator
+   BIspaceReflect        = ReflectExport.spaceReflect
 
    GetCtVarNameAsAtom       = CTB.getNameAsAtom
    GetCtVarConstraintAsAtom = CTB.getConstraintAsAtom
