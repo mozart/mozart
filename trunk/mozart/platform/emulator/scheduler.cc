@@ -125,15 +125,13 @@ void scheduler() {
   LBLrunThread:
     {
 
-      am.threadsPool.setCurrentThread(ct);
+      e->setCurrentThread(ct);
       ozstat.leaveCall(ct->abstr);
       ct->abstr = 0;
       e->cachedStack = ct->getTaskStackRef();
       e->cachedSelf  = (Object *) 0;
       
       int ret = engine(NO);
-      
-      am.threadsPool.unsetCurrentThread();
       
       ct->setAbstr(ozstat.currAbstr);
       ozstat.leaveCall(NULL);
@@ -328,7 +326,8 @@ void scheduler() {
 					   &traceBack,
 					   e->debugmode());
 	
-	e->exception.value = formatError(e->exception.info,e->exception.value,
+	e->exception.value = formatError(e->exception.info,
+					 e->exception.value,
 					 traceBack);
 	
       } else {
@@ -348,24 +347,12 @@ void scheduler() {
       }
 
       if (e->debugmode()) {
-	OZ_Term exc = e->exception.value;
-	// ignore system(kernel(terminate)) exception:
-	if (OZ_isRecord(exc) &&
-	    OZ_eq(OZ_label(exc),AtomSystem) &&
-	    OZ_subtree(exc,OZ_int(1)) != makeTaggedNULL() &&
-	    OZ_eq(OZ_label(OZ_subtree(exc,OZ_int(1))),E_KERNEL) &&
-	    OZ_eq(OZ_subtree(OZ_subtree(exc,OZ_int(1)),OZ_int(1)),
-		  OZ_atom("terminate")))
-	  ;
-	else {
-	  ct->setTrace(OK);
-	  ct->setStep(OK);
-	  debugStreamException(ct,e->exception.value);
-	  goto LBLpreemption;
-	}
+	ct->setTrace(OK);
+	ct->setStep(OK);
+	debugStreamException(ct,e->exception.value);
+	goto LBLpreemption;
       }
 
-      // else
       if (e->defaultExceptionHdl) {
 	ct->pushCall(e->defaultExceptionHdl,e->exception.value);
       } else {

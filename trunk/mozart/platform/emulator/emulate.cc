@@ -429,23 +429,6 @@ bombGenCall:
      FALSE: can continue
    */
 
-inline
-Bool isNotPreemptiveScheduling(void)
-{
-  //  return TRUE;
-  if (am.isSetSFlag()) {
-    if (am.isSetSFlag(ThreadSwitch)) {
-      if (am.threadsPool.threadQueuesAreEmpty())
-	am.restartThread();
-      else
-	return FALSE;
-    }
-    return !am.isSetSFlag();
-  } else {
-    return TRUE;
-  }
-}
-
 #define DET_COUNTER 10000
 inline
 Bool hookCheckNeeded()

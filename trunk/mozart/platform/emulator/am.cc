@@ -486,7 +486,7 @@ void AM::suspendEngine()
 
     checkStatus(NO);
 
-    if (!threadsPool.threadQueuesAreEmpty())
+    if (!threadsPool.isEmpty())
       break;
 
     // mm2: test if system is idle (not yet working: perdio test is missing)
