@@ -5,7 +5,7 @@ WHAT = tools
 MAIN = main.sgml
 
 SGMLSRCS0 = \
-	linker compiler debugger profiler
+	linker compiler debugger profiler oztool
 
 SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
