@@ -22,6 +22,11 @@ define
 	 %% in memory when we read the package file: that's the
 	 %% reason for the MAK argument.
 	 REC = Extractor,Load({self get_package($)} $)
+	 local ID = {CondSelect {CondSelect REC info unit} mogul unit} in
+	    if ID\=unit then
+	       {self set_xmogul(ID)}
+	    end
+	 end
 	 DIR = {self get_extractdir($)}
       in
 	 %% a few sanity checks.  however, the main sanity checks
