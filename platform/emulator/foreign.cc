@@ -716,10 +716,16 @@ void atom2buffer(ostream &out, Literal *a)
 }
 
 inline
-void name2buffer(ostream &out, Literal *a)
-{
+void name2buffer(ostream &out, Literal *a) {
   char *s = a->getPrintName();
-  if (!*s) {
+
+  if (literalEq(makeTaggedLiteral(a),NameTrue))  {
+    out << "true";
+  } else if (literalEq(makeTaggedLiteral(a),NameFalse)) {
+    out << "false";
+  } else if (literalEq(makeTaggedLiteral(a),NameUnit)) {
+    out << "unit";
+  } else if (!*s) {
     out << "<N>";
   } else {
     out << "<N: " << s << '>';
