@@ -25,7 +25,7 @@ define
       attr db rootID rootURL reports verbose nerrors
 	 indent wget css mogulDIR mogulURL provided
 	 categories categoriesURL packages Authors mogulTOP
-	 ignoreID ignoreURL
+	 ignoreID ignoreURL manifest
       meth init
 	 db      <- unit
 	 rootID  <- {NormalizeID 'mogul' 'mogul:/'}
@@ -46,6 +46,7 @@ define
 	 mogulTOP<- '/~'#{OS.getEnv 'USER'}#'/mogul'
 	 ignoreID<-nil
 	 ignoreURL<-nil
+	 manifest<-{NewDictionary}
       end
       meth indent indent<-'  '#@indent end
       meth dedent
@@ -167,6 +168,25 @@ define
 	 {URL.toString {Adjoin {URL.make ID}
 			url(scheme:unit absolute:false)}}
       end
+      
+      %% given the mogul id of a package return the SECTION-PACKAGE
+      %% string that is used to form the 1st part of a package file
+      %% according to the new naming scheme.  With the old naming
+      %% scheme we only have files SECTION-PACKAGE.pkg.  With the
+      %% new one, we have SECTION-PACKAGE__FORMAT__PLATFORM__VERSION.pkg
+      
+      meth id_to_package_name(ID $)
+	 U = {Adjoin {URL.make ID} url(scheme:unit absolute:false)}
+	 L = case {Reverse U.path}
+	     of nil|L then {Reverse L}
+	     [] L then {Reverse L}
+	     end
+      in
+	 {FoldL L fun {$ Accu X}
+		     if Accu==nil then X else Accu#'-'#X end
+		  end nil}
+      end
+      
       meth id_to_href(ID $)
 	 S = Admin,id_to_relurl(ID $)
       in
@@ -401,6 +421,24 @@ define
 		9}
 	    catch mogul(...)=E then
 	       Admin,addReport(M E)
+	    end
+	 end
+      end
+      %%
+      meth addToManifest(Filename)
+	 @manifest.{VirtualString.toAtom Filename} := unit
+      end
+      meth 'save-manifest'(V)
+	 if V then
+	    File = {New Open.file init(name:@mogulTOP#'/pkg/MANIFEST'
+				       flags:[write create truncate])}
+	 in
+	    try
+	       for F in {Sort {Dictionary.keys @manifest} Value.'<'} do
+		  {File write(vs:F#'\n')}
+	       end
+	    finally
+	       try {File close} catch _ then skip end
 	    end
 	 end
       end

@@ -7,14 +7,14 @@ import
 export
    WgetPkg WgetDoc
 define
-   proc {WgetPkg PkgUrl PkgDir}
+   proc {WgetPkg PkgUrl PkgDir PkgFile}
       if {Manager ignoreURL(PkgUrl $)} then
 	 {Manager trace('Ignoring URL '#PkgUrl)}
       else
 	 {MkDir PkgDir}
 	 Cmd = {Manager get_wget($)}
 	 #if {Manager is_verbose($)} then ' -v' else ' -nv' end
-	 #' -N -nH -nd -P "'#PkgDir#'" "'#PkgUrl#'"'
+	 #' -N -nH -nd -P "'#PkgDir#'" "'#PkgUrl#'" -O "'#(PkgDir#'/'#PkgFile)#'"'
       in
 	 {Manager trace(Cmd)}
 	 try
@@ -31,7 +31,7 @@ define
 	 Cuts = {Length {URL.make DocUrl}.path} - 1
 	 Cmd  = {Manager get_wget($)}
 	 #if {Manager is_verbose($)} then ' -v' else ' -nv' end
-	 #' -N -nH --cut-dirs='#Cuts#' -r -p -k --no-parent -Q 1m "'#DocUrl#'"'
+	 #' -N -nH --cut-dirs='#Cuts#' -r -p -k --no-parent -Q 2m "'#DocUrl#'"'
       in
 	 {Manager trace(Cmd)}
 	 try

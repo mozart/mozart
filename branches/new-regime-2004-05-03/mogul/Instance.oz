@@ -18,7 +18,7 @@ define
       attr
 	 id pid blurb url provides requires content_type
 	 url_pkg body author contact keywords
-	 format:nil categories title version:unit
+	 format:nil categories title version:unit platform:unit
 
       meth init(Msg Id Url Pid Prev)
 	 {Manager incTrace('--> init Instance '#ID)}
@@ -52,6 +52,31 @@ define
 	    %% !!! here we should copy the persistent info from Prev
 	 finally
 	    {Manager decTrace('<-- init Instance')}
+	 end
+      end
+
+      %% newFake(Pkg) is used to create a fake instance for an
+      %% old-style package
+      
+      meth newFake(Pkg)
+	 {Manager incTrace('--> fake Instance')}
+	 try
+	    pid        <- {Pkg getSlot(id $)}
+	    url        <- unit
+	    blurb      <- {Pkg getSlot(blurb      $)}
+	    provides   <- {Pkg getSlot(provides   $)}
+	    requires   <- {Pkg getSlot(requires   $)}
+	    url_pkg    <- {Pkg getSlot(url_pkg    $)}
+	    author     <- {Pkg getSlot(author     $)}
+	    contact    <- {Pkg getSlot(contact    $)}
+	    keywords   <- {Pkg getSlot(keywords   $)}
+	    format     <- {Pkg getSlot(format     $)}
+	    categories <- {Pkg getSlot(categories $)}
+	    title      <- {Pkg getSlot(title      $)}
+	    version    <- {Pkg getSlot(version    $)}
+	    platform   <- 'source' % by default
+	 finally
+	    {Manager decTrace('<-- fake Instance')}
 	 end
       end
    end
