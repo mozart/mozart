@@ -82,6 +82,7 @@ public:
 };
 
 OZ_Boolean isPosSmallInt(OZ_Term v);
+OZ_Boolean isPosSmallBoolInt(OZ_Term v);
 OZ_Boolean isPosSmallFDInt(OZ_Term v);
 OZ_Boolean isPosSmallSetInt(OZ_Term v);
 
@@ -96,6 +97,9 @@ OZ_Boolean isPosSmallSetInt(OZ_Term v);
     return SUSPEND;                                                     \
   }                                                                     \
 }
+
+void staticAddSpawnPropBool(OZ_Term * v);
+void staticAddSpawnBool(OZ_Term * v);
 
 void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v);
 void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v);

@@ -326,6 +326,12 @@ OZ_C_proc_begin(BIfdTellConstraint, 2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIfdboolTellConstraint, 2)
+{
+  return tellBasicBoolConstraint(OZ_getCArg(0));
+}
+OZ_C_proc_end
+
 //-----------------------------------------------------------------------------
 // watches
 

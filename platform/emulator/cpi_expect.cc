@@ -80,6 +80,13 @@ void OZ_Expect::collectVarsOff(void)
 
 // variables are suffiently constrained
 inline
+void OZ_Expect::addSpawnBool(OZ_Term * v)
+{
+  if (collect)
+    staticAddSpawnBool(v);
+}
+
+inline
 void OZ_Expect::addSpawn(OZ_FDPropState ps, OZ_Term * v)
 {
   if (collect)
@@ -108,6 +115,19 @@ void OZ_Expect::addSuspend(OZ_Term * v)
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
     DebugCode(staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_INVALID);
+    staticSuspendVarsNumber++;
+
+    staticSuspendVars.request(staticSuspendVarsNumber);
+  }
+}
+
+// boolean finite domain constraints
+inline
+void OZ_Expect::addSuspendBool(OZ_Term * v)
+{
+  if (collect) {
+    staticSuspendVars[staticSuspendVarsNumber].var = v;
+    staticSuspendVars[staticSuspendVarsNumber].expected_type = BoolVariable;
     staticSuspendVarsNumber++;
 
     staticSuspendVars.request(staticSuspendVarsNumber);
@@ -258,6 +278,31 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
     return expectSuspend(1, 0);
   } else if (oz_isVariable(descr)) {
     addSuspend(descr_ptr);
+    return expectExceptional();
+  }
+  return expectFail();
+}
+
+// tmueller: not ready yet!
+OZ_expect_t OZ_Expect::expectBoolVar(OZ_Term t)
+{
+  DEREF(t, tptr, ttag);
+
+  if (isPosSmallBoolInt(t)) {
+    return expectProceed(1, 1);
+  } else if (isGenBoolVar(t, ttag)) {
+    addSpawnBool(tptr);
+    return expectProceed(1, 1);
+  } else if (isGenFDVar(t, ttag)) {
+    if (tellBasicBoolConstraint(makeTaggedRef(tptr)) == FAILED)
+      return expectFail();
+    addSpawnBool(tptr);
+    return expectProceed(1, 1);
+  } else if (oz_isFree(t) || oz_isKinded(t)) {
+    addSuspendBool(tptr);
+    return expectSuspend(1, 0);
+  } else if (oz_isNonKinded(t)) {
+    addSuspendBool(tptr);
     return expectExceptional();
   }
   return expectFail();
@@ -772,9 +817,10 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     Assert(type == FDVariable || type == FSetVariable || type == CtVariable);
 
     if (oz_isFree(v)) {
-
       if (type == FDVariable) {
         tellBasicConstraint(makeTaggedRef(vptr), (OZ_FiniteDomain *) NULL);
+      } else if (type == BoolVariable) {
+        tellBasicBoolConstraint(makeTaggedRef(vptr));
       } else if (type == FSetVariable) {
         tellBasicConstraint(makeTaggedRef(vptr), (OZ_FSetConstraint *) NULL);
       } else {

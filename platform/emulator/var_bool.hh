@@ -108,7 +108,7 @@ inline Bool isGenBoolVar(TaggedRef term);
 inline Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag);
 inline GenBoolVariable * tagged2GenBoolVar(TaggedRef term);
 inline void addSuspBoolVar(TaggedRef, Suspension);
-
+OZ_Return tellBasicBoolConstraint(OZ_Term);
 
 #ifndef OUTLINE
 #include "fdbvar.icc"

@@ -30,6 +30,25 @@
 //-----------------------------------------------------------------------------
 // Note: the field "expected_type" can be left uninitialized
 
+// boolean finite domain constraints
+inline
+void staticAddSpawnPropBool(OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fd = fd_prop_any;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+
+  staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
+}
+
+inline
+void staticAddSpawnBool(OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state.fd = fd_prop_any;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+
+  staticSpawnVars.request(staticSpawnVarsNumber);
+}
+
 // finite domain constraints
 inline
 void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v)
@@ -99,6 +118,16 @@ inline
 OZ_Boolean isPosSmallInt(OZ_Term v)
 {
   return oz_isSmallInt(v) && (smallIntValue(v) >= 0);
+}
+
+inline
+OZ_Boolean isPosSmallBoolInt(OZ_Term v)
+{
+  if (oz_isSmallInt(v)) {
+    int vv = smallIntValue(v);
+    return (0 <= vv) && (vv <= 1);
+  }
+  return OZ_FALSE;
 }
 
 inline
