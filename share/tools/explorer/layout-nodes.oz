@@ -164,10 +164,14 @@ local
 	 offset: 0
 
       meth layout(Break Scale Font)
+	 Canvas = self.canvas
+	 Suffix = self.suffix
+      in
 	 <<LayoutLeaf Layout(_ 0)>>
-	 <<LayoutLeaf Adjust(Break TreePrefix#self.suffix
-			     RootX 0 RootY Scale Font)>>
-	 {self.canvas bounding(~HalfHorSpaceI HalfHorSpaceI HalfVerSpaceI)}
+	 <<LayoutLeaf Adjust(Break TreePrefix#Suffix RootX 0 RootY Scale Font)>>
+	 %% move away root link
+	 {Canvas tk(move LinkPrefix#Suffix 0 ~VerSpaceF * MaxScale)}
+	 {Canvas bounding(~HalfHorSpaceI HalfHorSpaceI HalfVerSpaceI)}
       end
 
       meth !Layout(?Shape Offset)
@@ -214,11 +218,14 @@ local
 	 offset: 0
       
       meth layout(Break Scale Font)
+	 Canvas = self.canvas
+	 Suffix = self.suffix
 	 Shape = <<LayoutNode Layout($ 0)>>
       in
-	 {self.canvas {GetBoundingBox Shape}}
-	 <<LayoutNode Adjust(Break TreePrefix#self.suffix
+	 {Canvas {GetBoundingBox Shape}}
+	 <<LayoutNode Adjust(Break TreePrefix#Suffix
 			     RootX 0 RootY Scale Font)>>
+	 {Canvas tk(move LinkPrefix#Suffix 0 ~VerSpaceF * MaxScale)}
       end
 
       meth !Layout(?Shape Offset)
@@ -268,6 +275,7 @@ in
    LayoutNodes = c(choose:    LayoutNode
 		   blocked:   LayoutLeaf
 		   failed:    LayoutLeaf
-		   succeeded: LayoutLeaf)
+		   succeeded: LayoutLeaf
+		   sentinel:  EmptyClass)
    
 end

@@ -53,13 +53,6 @@ local
 	    end
 	 end
       end
-      
-      
-      fun {FindDepth Node CurDepth}
-	 case Node of !False then CurDepth
-	 else {FindDepth Node.mom CurDepth+1}
-	 end
-      end
 
       fun {GetIndex Xs Y N}
 	 !Xs=X|Xr in case X==Y then N else {GetIndex Xr Y N+1} end
@@ -90,9 +83,11 @@ local
 	    else
 	       ChoicesReachZero=False
 	    end
-	    case self.mom of !False then true elseof Mom then
-	       {Mom leaveNode(IsSolBelow IsDirty ChoicesReachZero)}
-	    end
+	    {self.mom leaveNode(IsSolBelow IsDirty ChoicesReachZero)}
+	 end
+
+	 meth findDepth(CurDepth $)
+	    {self.mom findDepth(CurDepth+1 $)}
 	 end
 	 
 	 meth GotoCopyAbove(CurDepthIn ?CurDepthOut
@@ -108,7 +103,7 @@ local
 	       RevNr       = nil
 	       CurDistOut  = CurDistIn
 	       CurCopy     = {Space.clone TaggedCopy.1}
-	       CurDepthOut = {FindDepth self CurDepthIn + 1}
+	       CurDepthOut = {self.mom findDepth(CurDepthIn + 1 $)}
 	    end
 	 end
       
@@ -122,7 +117,7 @@ local
 	       CurCopy  = {Space.clone TaggedCopy.1}
 	       CurDist  = 0
 	       RevNs    = nil
-	       CurDepth = {FindDepth self 0}
+	       CurDepth = {self.mom findDepth(0 $)}
 	    end
 	 end
 
@@ -148,7 +143,7 @@ local
 	 end
 
 	 meth isNextPossible(LeftToRight $)
-	    @choices>=0 andthen
+	    @choices>0 andthen
 	    (LeftToRight orelse
 	     (<<isStepPossible(LeftToRight $)>> orelse
 	      {NotHiddenChoices @kids}))
@@ -383,9 +378,7 @@ local
 			      SearchDist-CurSearchDist SearchDist
 			      CurNs CurCopy
 			      ?Sol ?IsDirty ?DecChoices)>>
-	    case self.mom of !False then true elseof Mom then
-	       {Mom leaveNode(Sol\=False IsDirty DecChoices)}
-	    end
+	    {self.mom leaveNode(Sol\=False IsDirty DecChoices)}
 	 end
       end
 
@@ -401,9 +394,7 @@ local
 			 _ _ _
 			 ?Info ?NewNode)>>
 	    Sol = case {Label Info}==succeeded then NewNode else False end
-	    case self.mom of !False then true elseof Mom then
-	       {Mom leaveNode(Sol\=False True @choices==0)}
-	    end
+	    {self.mom leaveNode(Sol\=False True @choices==0)}
 	 end
       end
 
@@ -468,12 +459,22 @@ local
 	 end
       end
    end
+
+   class Sentinel
+      meth leaveNode(_ _ _)
+	 true
+      end
+      meth findDepth(CurDepth $)
+	 CurDepth
+      end
+   end
    
 in
    
    SearchNodes = classes(choose:    Choose
 			 succeeded: Succeeded
 			 failed:    Failed
-			 blocked:   Blocked)
+			 blocked:   Blocked
+			 sentinel:  Sentinel)
 
 end

@@ -8,9 +8,21 @@
 local
 
    GetCenterAbove = {NewName}
+   GetCenter      = {NewName}
    UpperSpaceI    = VerSpaceI - CircleWidthI
    UpperSpaceF    = {IntToFloat UpperSpaceI}
 
+   class Sentinel
+      meth !GetCenterAbove(X1 Y1 A1 ?X2 ?Y2 ?A2)
+	 X2 = X1 + SentinelX
+	 Y2 = Y1 + SentinelY
+	 A2 = A1
+      end
+      meth !GetCenter(X1 Y1 ?X2 ?Y2)
+	 X2=X1+SentinelX Y2=Y1+SentinelY
+      end
+   end
+   
    class NumberNode
       attr number: False
 
@@ -79,10 +91,8 @@ local
 	 <<GetCenterAbove(0 0 nil ?X ?Y ?Above)>>
       end
 
-      meth GetCenter(X1 Y1 ?X2 ?Y2)
-	 case self.mom of !False then X2=X1+RootX Y2=Y1+RootY
-	 elseof Mom then {Mom GetCenter(X1+@offset Y1+VerSpaceI ?X2 ?Y2)}
-	 end
+      meth !GetCenter(X1 Y1 ?X2 ?Y2)
+	 {self.mom GetCenter(X1+@offset Y1+VerSpaceI ?X2 ?Y2)}
       end
 	    
       meth getCenter(?X ?Y)
@@ -92,11 +102,7 @@ local
       meth close
 	 Suffix = self.suffix
       in
-	 {self.canvas case self.mom of !False then
-			 tk(delete NodePrefix#Suffix)
-		      else
-			 tk(delete NodePrefix#Suffix LinkPrefix#Suffix)
-		      end}
+	 {self.canvas tk(delete NodePrefix#Suffix LinkPrefix#Suffix)}
       end
 
    end
@@ -118,13 +124,11 @@ local
 	    Suffix = self.suffix
 	    Node   = !NodePrefix#Suffix
 	 in
-	    case self.mom of !False then true else
-	       {Canvas tk(coords LinkPrefix#Suffix
-			  Scale*{IntToFloat MomX}
-			  Scale*{IntToFloat (MyY - UpperSpaceI)}
-			  Scale*{IntToFloat MyX}
-			  Scale*{IntToFloat (MyY - CircleWidthI)})}
-	    end
+	    {Canvas tk(coords LinkPrefix#Suffix
+		       Scale*{IntToFloat MomX}
+		       Scale*{IntToFloat (MyY - UpperSpaceI)}
+		       Scale*{IntToFloat MyX}
+		       Scale*{IntToFloat (MyY - CircleWidthI)})}
 	    {Canvas tk(move Node Scale*{IntToFloat MyByX} 0)}
 	    case @toDo\=nil orelse @isHidden then true else
 	       {Canvas tk(itemconfigure Node
@@ -137,13 +141,11 @@ local
 	    Canvas = self.canvas
 	    Suffix = self.suffix
 	 in
-	    case self.mom of !False then true else
-	       {Canvas tk(coords LinkPrefix#Suffix
-			  Scale*{IntToFloat MomX}
-			  Scale*{IntToFloat (MyY - UpperSpaceI)}
-			  Scale*{IntToFloat MyX}
-			  Scale*{IntToFloat (MyY - RectangleWidthI)})}
-	    end
+	    {Canvas tk(coords LinkPrefix#Suffix
+		       Scale*{IntToFloat MomX}
+		       Scale*{IntToFloat (MyY - UpperSpaceI)}
+		       Scale*{IntToFloat MyX}
+		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
 	    {Canvas tk(move TreePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
 	 end
 
@@ -177,15 +179,13 @@ local
 	       Actions     = Canvas.actions
 	    in
 	       offset <- NewOffset
-	       case self.mom==False then true else
-		  {Canvas tk(crea line
-			     ScaledMomX
-			     ScaledMyY - Scale * UpperSpaceF
-			     ScaledMyX
-			     ScaledMyY - ScaledWidth
-			     tag:   q(LinkPrefix#Suffix MomTree)
-			     width: LinkWidth)}
-	       end
+	       {Canvas tk(crea line
+			  ScaledMomX
+			  ScaledMyY - Scale * UpperSpaceF
+			  ScaledMyX
+			  ScaledMyY - ScaledWidth
+			  tag:   q(LinkPrefix#Suffix MomTree)
+			  width: LinkWidth)}
 	       case @isHidden then
 		  ScaledVerSpace = Scale * VerSpaceF
 		  BottomY        = ScaledMyY + ScaledVerSpace
@@ -259,26 +259,16 @@ local
 	 end
 	 
 	 meth !GetCenterAbove(X1 Y1 A1 ?X2 ?Y2 ?A2)
-	    case self.mom of !False then
-	       X2 = X1 + RootX
-	       Y2 = Y1 + RootY
-	       A2 = TreePrefix#self.suffix|A1
-	    elseof Mom then
-	       {Mom GetCenterAbove(X1+@offset Y1+VerSpaceI
-				   TreePrefix#self.suffix|A1
-				   ?X2 ?Y2 ?A2)}
-	    end
+	    {self.mom GetCenterAbove(X1+@offset Y1+VerSpaceI
+				     TreePrefix#self.suffix|A1
+				     ?X2 ?Y2 ?A2)}
 	 end
 
 	 meth deleteTree
 	    Suffix = self.suffix
 	 in
-	    {self.canvas case self.mom of !False then
-			    tk(delete TreePrefix#Suffix NodePrefix#Suffix)
-			 else
-			    tk(delete TreePrefix#Suffix NodePrefix#Suffix
-			       LinkPrefix#Suffix)
-			 end}
+	    {self.canvas tk(delete TreePrefix#Suffix NodePrefix#Suffix
+			    LinkPrefix#Suffix)}
 	 end
 	 
       end
@@ -290,13 +280,7 @@ local
 	 from TkNode
 
 	 meth !GetCenterAbove(X1 Y1 A1 ?X2 ?Y2 ?A2)
-	    case self.mom of !False then
-	       X2 = X1 + RootX
-	       Y2 = Y1 + RootY
-	       A2 = A1
-	    elseof Mom then
-	       {Mom GetCenterAbove(X1+@offset Y1+VerSpaceI A1 ?X2 ?Y2 ?A2)}
-	    end
+	    {self.mom GetCenterAbove(X1+@offset Y1+VerSpaceI A1 ?X2 ?Y2 ?A2)}
 	 end
 	 
 	 meth purge
@@ -329,15 +313,13 @@ local
 	    Tree        = !TreePrefix#Suffix
 	 in
 	    offset <- NewOffset
-	    case self.mom of !False then true else
-	       {Canvas tk(crea line
-			  ScaledMomX
-			  ScaledMyY - Scale * UpperSpaceF
-			  ScaledMyX
-			  ScaledMyY - ScaledWidth
-			  tag: q(LinkPrefix#Suffix MomTree)
-			  width: LinkWidth)}
-	    end
+	    {Canvas tk(crea line
+		       ScaledMomX
+		       ScaledMyY - Scale * UpperSpaceF
+		       ScaledMyX
+		       ScaledMyY - ScaledWidth
+		       tag: q(LinkPrefix#Suffix MomTree)
+		       width: LinkWidth)}
 	    {Canvas tk(crea rectangle
 		       ScaledMyX - ScaledWidth
 		       ScaledMyY - ScaledWidth
@@ -354,13 +336,11 @@ local
 	    Canvas = self.canvas
 	    Suffix = self.suffix
 	 in
-	    case self.mom of !False then true else
-	       {Canvas tk(coords LinkPrefix#Suffix
-			  Scale*{IntToFloat MomX}
-			  Scale*{IntToFloat (MyY - UpperSpaceI)}
-			  Scale*{IntToFloat MyX}
-			  Scale*{IntToFloat (MyY - RectangleWidthI)})}
-	    end
+	    {Canvas tk(coords LinkPrefix#Suffix
+		       Scale*{IntToFloat MomX}
+		       Scale*{IntToFloat (MyY - UpperSpaceI)}
+		       Scale*{IntToFloat MyX}
+		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
 	    {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
 	 end
       
@@ -393,15 +373,13 @@ local
 	    Tree            = !TreePrefix#Suffix
 	 in
 	    offset <- NewOffset
-	    case self.mom of !False then true else
-	       {Canvas tk(crea line
-			  ScaledMomX
-			  ScaledMyY - Scale * UpperSpaceF
-			  ScaledMyX
-			  ScaledMyY - ScaledHalfWidth
-			  tag:   q(LinkPrefix#Suffix MomTree)
-			  width: LinkWidth)}
-	    end
+	    {Canvas tk(crea line
+		       ScaledMomX
+		       ScaledMyY - Scale * UpperSpaceF
+		       ScaledMyX
+		       ScaledMyY - ScaledHalfWidth
+		       tag:   q(LinkPrefix#Suffix MomTree)
+		       width: LinkWidth)}
 	    {Canvas tk(crea polygon
 		       X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
 		       fill:    BlockedColor
@@ -415,13 +393,11 @@ local
 	    Canvas = self.canvas
 	    Suffix = self.suffix
 	 in
-	    case self.mom of !False then true else
-	       {Canvas tk(coords LinkPrefix#Suffix
-			  Scale*{IntToFloat MomX}
-			  Scale*{IntToFloat (MyY - UpperSpaceI)}
-			  Scale*{IntToFloat MyX}
-			  Scale*{IntToFloat (MyY - RectangleWidthI)})}
-	    end
+	    {Canvas tk(coords LinkPrefix#Suffix
+		       Scale*{IntToFloat MomX}
+		       Scale*{IntToFloat (MyY - UpperSpaceI)}
+		       Scale*{IntToFloat MyX}
+		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
 	    {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
 	 end
       
@@ -451,15 +427,13 @@ local
 	       Y2          = ScaledMyY + ScaledWidth
 	    in
 	       offset <- NewOffset
-	       case self.mom of !False then true else
-		  {Canvas tk(crea line
-			     ScaledMomX
-			     ScaledMyY - Scale * UpperSpaceF
-			     ScaledMyX
-			     ScaledMyY - ScaledWidth
-			     tag:   q(LinkPrefix#Suffix MomTree)
-			     width: LinkWidth)}
-	       end
+	       {Canvas tk(crea line
+			  ScaledMomX
+			  ScaledMyY - Scale * UpperSpaceF
+			  ScaledMyX
+			  ScaledMyY - ScaledWidth
+			  tag:   q(LinkPrefix#Suffix MomTree)
+			  width: LinkWidth)}
 	       {Canvas tk(crea polygon X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1
 			  fill:    Color
 			  width:   TermNodeBorderWidth
@@ -481,13 +455,11 @@ local
 	       Canvas = self.canvas
 	       Suffix = self.suffix
 	    in
-	       case self.mom of !False then true else
-		  {Canvas tk(coords LinkPrefix#Suffix
-			     Scale*{IntToFloat MomX}
-			     Scale*{IntToFloat (MyY - UpperSpaceI)}
-			     Scale*{IntToFloat MyX}
-			     Scale*{IntToFloat (MyY - RhombeWidthI)})}
-	       end
+	       {Canvas tk(coords LinkPrefix#Suffix
+			  Scale*{IntToFloat MomX}
+			  Scale*{IntToFloat (MyY - UpperSpaceI)}
+			  Scale*{IntToFloat MyX}
+			  Scale*{IntToFloat (MyY - RhombeWidthI)})}
 	       {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
 	    end
 	    
@@ -526,7 +498,8 @@ in
 	     failed:    FailedNode
 	     blocked:   BlockedNode
 	     suspended: SuspendedNode
-	     entailed:  EntailedNode)
+	     entailed:  EntailedNode
+	     sentinel:  Sentinel)
 
 end
 
