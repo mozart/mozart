@@ -20,23 +20,6 @@ local
 
    Nothing     = {NewName}
 
-   local
-      fun {Part Is Js Jr}
-	 case Is of nil then Jr=nil [{Tk.string.toInt Js}]
-	 [] I|Ir then
-	    case I==&  then NewJs in
-	       Jr=nil {Tk.string.toInt Js}|{Part Ir NewJs NewJs}
-	    else NewJr in
-	       Jr=I|NewJr {Part Ir Js NewJr}
-	    end
-	 end
-      end
-   in
-      fun {Partition Is}
-	 Js in {Part Is Js Js}
-      end
-   end
-   
 in
 
    class Labelframe
@@ -68,7 +51,7 @@ in
 			justify: left
 			text:    Text
 			tags:    TextTag)>>
-	 [X1 Y1 X2 Y2] = {Partition <<Tk.canvas tkReturn(bbox(TextTag) $)>>}
+	 [X1 Y1 X2 Y2] = <<Tk.canvas tkReturnListInt(bbox(TextTag) $)>>
 	 self.TextWidth  = X2 - X1
 	 self.TextHeight = Y2 - Y1
 	 Width  <- 2 * Delta + W
