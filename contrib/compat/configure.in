@@ -21,8 +21,8 @@ dnl  WARRANTIES.
 dnl
 
 AC_INIT(TextPickle.ozg)
+OZ_CONTRIB_INIT_CXX
 AC_PROG_MAKE_SET
-OZ_CONTRIB_INIT
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
