@@ -1856,7 +1856,8 @@ OZ_BI_define(unix_pipe,2,2) {
        *   this allows to press Control-C when debugging the emulator
        */
       if (setsid() < 0) {
-        RETURN_UNIX_ERROR("setsid");
+	fprintf(stderr,"setsid failed\n");
+	exit(-1);
       }
 #endif
 
@@ -1867,7 +1868,8 @@ OZ_BI_define(unix_pipe,2,2) {
       rlim.rlim_cur = 0;
       rlim.rlim_max = 0;
       if (setrlimit(RLIMIT_CORE, &rlim) < 0) {
-	RETURN_UNIX_ERROR("setrlimit");
+	fprintf(stderr,"setrlimit failed\n");
+	exit(-1);
       }
 
       for (i = 0; i < FD_SETSIZE; i++) {
@@ -1879,9 +1881,10 @@ OZ_BI_define(unix_pipe,2,2) {
       osdup(sv[1]);
       osdup(sv[1]);
       if (execvp(s,argv)  < 0) {
-        RETURN_UNIX_ERROR("execvp");
+	fprintf(stderr,"execvp failed\n");
+	exit(-1);
       }
-      printf("execvp failed\n");
+      printf("this should never happen\n");
       exit(-1);
     }
   case -1:
