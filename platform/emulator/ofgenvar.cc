@@ -272,7 +272,7 @@ TaggedRef DynamicTable::getArityList(TaggedRef tail) {
     if (numelem>0) {
         STuple *stuple=STuple::newSTuple(AtomNil,numelem);
         TaggedRef *arr=stuple->getRef();
-        for (int ai=0,di=0; di<size; di++) {
+        for (unsigned int ai=0,di=0; di<size; di++) {
             if (table[di].value!=makeTaggedNULL()) {
                Assert(isLiteral(table[di].ident));
                arr[ai] = table[di].ident;
@@ -316,8 +316,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Bool vLoc=(prop && am.isLocalSVar(this));
 
         // Bind OFSVar to the Literal:
-        if (vLoc) doBind(vPtr, makeTaggedRef(term));
-        else am.doBindAndTrail(var, vPtr, makeTaggedRef(term));
+        if (vLoc) doBind(vPtr, term);
+        else am.doBindAndTrail(var, vPtr, term);
 
         // Update the OFS suspensions:
         if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
