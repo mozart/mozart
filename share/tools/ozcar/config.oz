@@ -53,6 +53,9 @@ AltStackTitle          = 'Stack of Thread  #'
 LocalEnvTitle          = 'Local Variables'
 GlobalEnvTitle         = 'Global Variables'
 
+StepInto               = 'step into'
+StepOver               = 'step over'
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% error, warning & debug messages

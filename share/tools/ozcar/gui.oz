@@ -753,9 +753,9 @@ in
 		  S = {CheckState T}
 	       in
 		  case S
-		  of running    then Gui,RunningStatus(I A)
-		  [] blocked    then Gui,BlockedStatus(T A)
-		  [] terminated then Gui,TerminatedStatus(T A)
+		  of running    then Gui,RunningStatus(I StepInto)
+		  [] blocked    then Gui,BlockedStatus(T StepInto)
+		  [] terminated then Gui,TerminatedStatus(T StepInto)
 		  else
 		     TopFrame = {@currentStack getTop($)}
 		  in
@@ -779,9 +779,9 @@ in
 		  S = {CheckState T}
 	       in
 		  case S
-		  of running    then Gui,RunningStatus(I A)
-		  [] blocked    then Gui,BlockedStatus(T A)
-		  [] terminated then Gui,TerminatedStatus(T A)
+		  of running    then Gui,RunningStatus(I StepOver)
+		  [] blocked    then Gui,BlockedStatus(T StepOver)
+		  [] terminated then Gui,TerminatedStatus(T StepOver)
 		  else
 		     TopFrame = {@currentStack getTop($)}
 		  in
