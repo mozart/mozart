@@ -737,17 +737,6 @@ inline RefsArray allocateRefsArray(int n, Bool init=OK)
 inline int getRefsArraySize(RefsArray a) {
   return (int) a[-1] >> 2;
 }
- 
-inline RefsArray allocateRefsArray2(TaggedRef t1, TaggedRef t2)
-{
-  RefsArray a = ((RefsArray) heapMalloc(3 * sizeof(TaggedRef)));
-  a += 1;
-  // mm2: a[-1] = 2<<2 ???
-  a[0] = t1;
-  a[1] = t2;
-  return a;  
-}
-
 
 inline RefsArray allocateY(int n, Bool init=OK)
 {

@@ -195,19 +195,17 @@ void Thread::Schedule(Board *b)
 Thread::Thread(int prio)
 : ConstTerm(Co_Thread)
 {
-  Thread(*this);
+  init();
   flags = T_Normal;
   priority = prio;
   u.taskStack = new TaskStack;
 }
-// create a new thread without any value
-Thread::Thread()
-: ConstTerm(Co_Thread)
+
+void Thread::init()
 {
   prev=next= (Thread *) NULL;
   DebugCheckT(priority = -1; u.taskStack = (TaskStack *) -1; flags = -1);
 }
-
 
 Bool Thread::isNormal()
 {
