@@ -18,7 +18,7 @@
  *
  *  See the file "LICENSE" or
  *     $LICENSEURL$
- *  for information on usage and redistribution
+ *  for information on usage and rfedistribution
  *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
@@ -36,11 +36,10 @@
 % You are welcome to find new test cases and to add them to this file.
 % -- Tobias (tmueller@ps.uni-sb.de)
 
+declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP.ozf']}
 
-                              \insert   opi.oz
-
-                              {Browse
-[
+{Browse
+ [
 
  {fun {$} X = {RI.var.bounds 1.4 1.5} Y = {RI.var.bounds 1.5 1.7} R
   in
