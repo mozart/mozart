@@ -23,11 +23,7 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
-#include "resources.hh"
+#include "base.hh"
 #include "perdio.hh"
 #include "perdio_debug.hh"  
 #include "genvar.hh"
