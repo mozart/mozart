@@ -740,10 +740,13 @@ DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
   if (space->isMerged())                                          \
     TypeError1(BUILTIN, 0, "Space already merged", tagged_space);
   
-#define declareStableSpace(BUILTIN)                           \
-  declareUnmergedSpace(BUILTIN)                               \
-  { TaggedRef result = space->getSolveActor()->getResult();   \
-  if (OZ_isVariable(result)) OZ_suspendOn(result); }
+#define declareStableSpace(BUILTIN)                                    \
+  declareUnmergedSpace(BUILTIN);                                       \
+  {                                                                    \
+    TaggedRef result = space->getSolveActor()->getResult();            \
+    DEREF(result, result_ptr, result_tag);                             \
+    if (isAnyVar(result_tag)) OZ_suspendOn(makeTaggedRef(result_ptr)); \
+  }
 
 
 OZ_C_proc_begin(BInewSpace, 2) {
@@ -808,27 +811,31 @@ OZ_C_proc_begin(BIisSpace, 2) {
 
 OZ_C_proc_begin(BIaskSpace, 2) {
   declareSpace("Space.ask");
-  TaggedRef out = OZ_getCArg(1);
 
   if (space->isFailed())
-    return OZ_unify(out, AtomFailed);
+    return OZ_unify(OZ_args[1], AtomFailed);
   
   if (space->isMerged())
-    return OZ_unify(out, AtomMerged);
-  
-  TaggedRef answer = space->getSolveActor()->getResult();
+    return OZ_unify(OZ_args[1], AtomMerged);
   
   if (space->getSolveActor()->isDebugBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
-    stuple->setArg(0, answer);
+    stuple->setArg(0, am.currentUVarPrototype);
 
-    if (OZ_unify(makeTaggedSRecord(stuple), out) == FAILED)
+    if (OZ_unify(OZ_args[1], makeTaggedSRecord(stuple)) == FAILED)
       return FAILED;
-  } else {
-    if (OZ_unify(answer, out) == FAILED)
-      return FAILED;
-  }
-  return PROCEED;
+
+    OZ_args[1] = stuple->getArg(0);
+  } 
+
+  TaggedRef answer = space->getSolveActor()->getResult();
+  
+  DEREF(answer, answer_ptr, answer_tag);
+
+  if (isAnyVar(answer_tag))
+    OZ_suspendOn(makeTaggedRef(answer_ptr));
+
+  return OZ_unify(OZ_args[1], answer);
 } OZ_C_proc_end
 
 
