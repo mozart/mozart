@@ -72,9 +72,6 @@ nil:     Don't start emulator (use command 'run').
          This is useful when you want to use breakpoints.
 ")
 
-(defvar oz-step-mode nil
-  "*Determines the way how feeding of code is done.")
-
 (defvar oz-auto-indent t
   "*Determines whether automatic indenting is active.")
 
@@ -398,16 +395,6 @@ starts the emulator under gdb")
   (oz-send-string "{Ozcar exit}")
   (oz-send-string "\\sw +optimize -debuginfo"))
   
-(defun oz-debug-step()
-  "Activate step mode."
-  (interactive)
-  (setq oz-step-mode t))
-
-(defun oz-debug-cont()
-  "Deactivate step mode."
-  (interactive)
-  (setq oz-step-mode nil))
-
 
 ;;------------------------------------------------------------
 ;; Start/Stop oz
@@ -1142,9 +1129,6 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
     (define-key map "\C-c\C-d\C-d" 'oz-debug-devel-start)
     (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
-    (define-key map "\C-c\C-d\C-s" 'oz-debug-step)
-    (define-key map "\C-c\C-d\C-c" 'oz-debug-cont)
-
     )
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
