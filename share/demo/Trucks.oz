@@ -25,103 +25,101 @@
 %%%
 
 
-local
+functor
+
+require
+   DemoUrls(image)
+
+prepare
+   ImageNames = [DemoUrls.image#'trucks/truck-right.ppm'
+                 DemoUrls.image#'trucks/truck-left.ppm']
 
    Width       = 600
    Height      = 165
    TruckHeight = 60
    Free        = 25
-   ImageUrl    = 'http://mozart.ps.uni-sb.de/home/doc/demo/images/trucks/'
 
-in
+import
+   Tk
+   TkTools
+   Application
 
-   functor
+define
+   Images = {TkTools.images ImageNames}
 
-   import
-      Tk
-      TkTools
-      Application
+   class Truck
+      prop
+         final
 
-   define
-      Images = {TkTools.images [ImageUrl#'truck-right.gif'
-                                ImageUrl#'truck-left.gif']}
+      from
+         Time.repeat Tk.canvasTag
 
-      class Truck
+      attr
+         state:off
+         step:1
 
-         prop
-            final
+      meth init(c:Canvas x:X<=0 y:Y<=0)
+         Truck, tkInit(parent:Canvas)
 
-         from
-            Time.repeat Tk.canvasTag
+         {Canvas tk(crea image X Y image:Images.'truck-right' tag:self)}
 
-         attr
-            state:off
-            step:1
+         {self setRepAll(delay:  100
+                         number: Width div @step
+                         action: moveTruck
+                         final:  switch)}
 
-         meth init(c:Canvas x:X<=0 y:Y<=0)
-            Truck, tkInit(parent:Canvas)
+         {self tkBind(event:'<1>' action:self#toggle)}
+         {self tkBind(event:'<2>' action:self#change(~1))}
+         {self tkBind(event:'<3>' action:self#change(1))}
+      end
 
-            {Canvas tk(crea image X Y image:Images.'truck-right' tag:self)}
+      meth moveTruck
+         Truck, tk(move @step 0)
+      end
 
-            {self setRepAll(delay:  100
-                            number: Width div @step
-                            action: moveTruck
-                            final:  switch)}
-
-            {self tkBind(event:'<1>' action:self#toggle)}
-            {self tkBind(event:'<2>' action:self#change(~1))}
-            {self tkBind(event:'<3>' action:self#change(1))}
+      meth switch
+         step <- ~1 * @step
+         if @step>0
+         then {self tk(itemconf image:Images.'truck-right')}
+         else {self tk(itemconf image:Images.'truck-left')}
          end
+         {self go}
+      end
 
-         meth moveTruck
-            Truck, tk(move @step 0)
-         end
-
-         meth switch
-            step <- ~1 * @step
-            if @step>0
-            then {self tk(itemconf image:Images.'truck-right')}
-            else {self tk(itemconf image:Images.'truck-left')}
+      meth toggle
+         try
+            case @state
+            of off then state<-on  {self go}
+            [] on  then state<-off {self stop}
             end
-            {self go}
-         end
-
-         meth toggle
-            try
-               case @state
-               of off then state<-on  {self go}
-               [] on  then state<-off {self stop}
-               end
-            catch system(...) then skip
-            end
-         end
-
-         meth change(S)
-            N = {self getRep(delay:$)}
-         in
-            {self setRepDelay({Max 2 N+S*(N div 2)})}
-         end
-
-         meth close
-            Time.repeat,  stop
-            Tk.canvasTag, tkClose
+         catch system(...) then skip
          end
       end
 
-      T = {New Tk.toplevel tkInit(title:  'Truckrace'
-                                  delete: Application.exit # 0)}
+      meth change(S)
+         N = {self getRep(delay:$)}
+      in
+         {self setRepDelay({Max 2 N+S*(N div 2)})}
+      end
 
-      C = {New Tk.canvas tkInit(parent: T
-                                bg:     white
-                                width:  Width
-                                height: Height)}
-
-      {Tk.send pack(C fill:both)}
-
-      thread {New Truck init(c:C y:Free)  _} end
-      thread {New Truck init(c:C y:Free+TruckHeight)  _} end
-      thread {New Truck init(c:C y:Free+TruckHeight*2) _} end
-
+      meth close
+         Time.repeat,  stop
+         Tk.canvasTag, tkClose
+      end
    end
+
+   T = {New Tk.toplevel tkInit(title:  'Truckrace'
+                               delete: Application.exit # 0)}
+
+   C = {New Tk.canvas tkInit(parent: T
+                             bg:     white
+                             width:  Width
+                             height: Height)}
+
+   {Tk.send pack(C fill:both)}
+
+   thread {New Truck init(c:C y:Free)  _} end
+   thread {New Truck init(c:C y:Free+TruckHeight)  _} end
+   thread {New Truck init(c:C y:Free+TruckHeight*2) _} end
 
 end

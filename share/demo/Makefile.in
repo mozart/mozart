@@ -1,4 +1,5 @@
 BUILDTOP        = @BUILDTOP@
+BUILDDIR        = $(BUILDTOP)/share/demo
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 SRCTOP          = @SRCTOP@
@@ -21,8 +22,8 @@ OZC             = @OZC@
 OZLFLAGS        =
 OZL             = @OZL@
 
-COMPILE         = $(OZC) $(OZCFLAGS) -c
-ZCOMPILE        = $(OZC) $(OZCFLAGS) -z $(COMPRESSLEVEL) -c
+COMPILE         = $(OZC) $(OZCFLAGS) -b $(BUILDDIR)/ -c
+ZCOMPILE        = $(COMPILE) -z $(COMPRESSLEVEL)
 
 LINK            = $(OZL) $(OZLFLAGS) -z $(COMPRESSLEVEL)
 
@@ -65,16 +66,11 @@ $(OZDEMO)/%.oza: %.oza
 
 all:: $(APPLETS)
 
-%.oza: %.oz
-        $(ZCOMPILE) $< -o $@
-
-%.oza: %.ozf
-        $(COMPILE) $< -o $@
-
+$(APPLETS): DemoUrls.ozf
 
 # JobShop application
 JobShop/%.ozf: JobShop/%.oz
-        $(COMPILE) -b $(SRCDIR)/JobShop/ $< -o $@
+        $(COMPILE) -b $(BUILDDIR)/JobShop/ $< -o $@
 
 JOBSHOP1 = \
         Configure Examples
@@ -96,6 +92,12 @@ TRANSPORT = \
         makeplan randomizer truck widgets
 Transport.oza: $(TRANSPORT:%=Transport/%.oz)
 
+
+%.oza: %.oz
+        $(ZCOMPILE) $< -o $@
+
+%.ozf: %.oz
+        $(COMPILE) $< -o $@
 
 
 
@@ -137,7 +139,7 @@ OZIMAGES = \
         $(DIAGIMGS0:%=$(OZIMG)/diagnosis/%.xbm) \
         $(LIFTIMGS0:%=$(OZIMG)/lift/%.xbm) \
         $(TRANSPORTIMGS0:%=$(OZIMG)/transport/%.xbm) \
-        $(TRUCKSIMGS0:%=$(OZIMG)/trucks/%.gif)
+        $(TRUCKSIMGS0:%=$(OZIMG)/trucks/%.ppm)
 
 install:: $(OZIMGDIRS) $(OZIMAGES)
 
@@ -151,7 +153,7 @@ $(OZIMG)/lift/%.xbm: images/lift/%.xbm
         $(INSTALL_FILE) $< $@
 $(OZIMG)/transport/%.xbm: images/transport/%.xbm
         $(INSTALL_FILE) $< $@
-$(OZIMG)/trucks/%.gif: images/trucks/%.gif
+$(OZIMG)/trucks/%.ppm: images/trucks/%.ppm
         $(INSTALL_FILE) $< $@
 
 
@@ -161,7 +163,7 @@ $(OZIMG)/trucks/%.gif: images/trucks/%.gif
 .PHONY: check depend bootstrap clean veryclean distclean
 
 clean::
-        -rm -f *~ ./*/*~ ./*/*/*~ *.ozf
+        -rm -f *~ ./*/*~ ./*/*/*~ *.ozf ./*/*.ozf
 
 veryclean:: clean
         -rm -f *.oza

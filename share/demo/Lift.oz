@@ -26,6 +26,15 @@
 
 functor
 
+require
+   DemoUrls(image)
+
+prepare
+   ImageNames = {Map [upF downF upE downE lift liftUp liftDown]
+                 fun {$ A}
+                    DemoUrls.image#'lift/'#A#'.xbm'
+                 end}
+
 import
    Tk
    TkTools
@@ -66,11 +75,7 @@ define
    %% Images
    %%
 
-   Images = {TkTools.images
-             {Map [upF downF upE downE lift liftUp liftDown]
-              fun {$ A}
-                 'http://mozart.ps.uni-sb.de/home/doc/demo/images/lift/'#A#'.xbm'
-              end}}
+   Images = {TkTools.images ImageNames}
 
    Bold = 'lucidasanstypewriter-bold-18'
 
