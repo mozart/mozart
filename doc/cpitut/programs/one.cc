@@ -21,10 +21,15 @@ public:
   virtual size_t sizeOf(void) { 
     return sizeof(AddProp); 
   }
-  virtual void updateHeapRefs(OZ_Boolean) { 
-    OZ_updateHeapTerm(_x); 
-    OZ_updateHeapTerm(_y); 
-    OZ_updateHeapTerm(_z);
+  virtual void gCollect(void) { 
+    OZ_gCollectTerm(_x); 
+    OZ_gCollectTerm(_y); 
+    OZ_gCollectTerm(_z);
+  } 
+  virtual void sClone(void) { 
+    OZ_sCloneTerm(_x); 
+    OZ_sCloneTerm(_y); 
+    OZ_sCloneTerm(_z);
   } 
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x, 
@@ -75,7 +80,7 @@ failure:
 }
 
 
-OZ_C_proc_begin(fd_add, 3)
+OZ_BI_define(fd_add, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD","OZ_EM_FD","OZ_EM_FD);
 
@@ -85,13 +90,13 @@ OZ_C_proc_begin(fd_add, 3)
   OZ_EXPECT(pe, 1, expectIntVar);
   OZ_EXPECT(pe, 2, expectIntVar);
 
-  return pe.impose(new AddProp(OZ_args[0], 
-			       OZ_args[1], 
-			       OZ_args[2]));
+  return pe.impose(new AddProp(OZ_in(0), 
+			       OZ_in(1), 
+			       OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(fd_init, 0)
+OZ_BI_define(fd_init, 0, 0)
 {
 #ifndef NDEBUG
   printf("fd_start=0x%p\n", (void *) fd_start); 
@@ -99,7 +104,7 @@ OZ_C_proc_begin(fd_init, 0)
 #endif
   return PROCEED;
 } 
-OZ_C_proc_end
+OZ_BI_end
 
 extern "C"
 {
