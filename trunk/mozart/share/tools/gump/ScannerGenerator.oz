@@ -398,17 +398,24 @@ in
 			      ?Flex ?Local|?Locals ?LexMeth)}
 	    MakeLexer = {CompileScanner Flex T Rep}
 	    case MakeLexer of stop then fSkip(unit)
-	    else Descrs Meths in
+	    else LexerLoad Locals2 Descrs Meths in
 	       {Rep logSubPhase('building class definition ...')}
 	       case MakeLexer of continue then
-		  LexerO = {MakeFileName T ".dl"}
 % {List.toRecord lexer
 %  {List.zip
 %   [create currentMode delete getAtom getLength getNextMatch getString
 %    input setMode switchToBuffer unput]
-%   {Record.toList {Foreign.load "MyScanner.dl"}}
+%   {Record.toList
+%    {Foreign.load {Class.getFeature T filenameprefix}#"MyScanner.dl"}}
 %   fun {$ F X} F#X end}}
+LexerO = fRecord(fAtom('#' unit)
+		 [fApply(fOpApply('.' [fVar('Class' unit)
+				       fAtom('getFeature' unit)] unit)
+			 [T fAtom('filenameprefix' unit)] unit)
+		  fAtom({MakeFileName T ".dl"} unit)])
+	       in
 LexerLoad =
+fEq(fVar('`lexer`' unit)
 fApply(fOpApply('.' [fVar('List' unit) fAtom('toRecord' unit)] unit)
        [fAtom(lexer unit)
 	fApply(fOpApply('.' [fVar('List' unit) fAtom('zip' unit)] unit)
@@ -426,19 +433,21 @@ fApply(fOpApply('.' [fVar('List' unit) fAtom('toRecord' unit)] unit)
 		fAtom(nil unit)])])])])])])])])])])])
 		fApply(fOpApply('.' [fVar('Record' unit) fAtom('toList' unit)] unit)
 		       [fApply(fOpApply('.' [fVar('Foreign' unit) fAtom('load' unit)] unit)
-			       [fAtom(LexerO unit)] unit)] unit)
+			       [LexerO] unit)] unit)
 		fFun(fDollar(unit) [fVar('F' unit) fVar('X' unit)]
 		     fRecord(fAtom('#' unit) [fVar('F' unit) fVar('X' unit)])
-		     nil unit)] unit)] unit)
-	       in
-		  {Globals enterFeat([fAtom(lexer unit)#LexerLoad])}
-	       [] noLexer then skip
+		     nil unit)] unit)] unit) unit)
+		  {Globals enterFeat([fAtom(lexer unit)#fVar('`lexer`' unit)])}
+		  Locals2 = fVar('`lexer`' unit)|Locals
+	       [] noLexer then
+		  LexerLoad = fSkip(unit)
+		  Locals2 = Locals
 	       end
 	       {Globals enterMeth(LexMeth)}
 	       {Globals getDescrs(?Descrs)}
 	       {Globals getMeth(?Meths)}
-	       fLocal({FoldL Locals fun {$ In L} fAnd(In L) end Local}
-		      fClass(T Descrs Meths P) unit)
+	       fLocal({FoldL Locals2 fun {$ In L} fAnd(In L) end Local}
+		      fAnd(fClass(T Descrs Meths P) LexerLoad) unit)
 	    end
 	 end
       end

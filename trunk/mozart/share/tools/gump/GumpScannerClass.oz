@@ -50,6 +50,7 @@ in
    class GumpScanner
       prop locking
       attr TokenStreamHd TokenStreamTl BufferList: nil LexerAddr: unit
+      feat filenameprefix: ""
 
       meth init()
 	 lock X in
