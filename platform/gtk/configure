@@ -1955,17 +1955,15 @@ echo $ac_n "checking for Glib compile flags""... $ac_c" 1>&6
 echo "configure:1956: checking for Glib compile flags" >&5
 GLIB_CFLAGS=`$glibpath --cflags`
 GLIB_LIBS=`$glibpath --libs`
-GLIB_HDRS=`$glibpath --prefix`/include
 CFLAGS="$CFLAGS $GLIB_CFLAGS"
 LIBS="$LIBS $GLIB_LIBS"
-
 echo "$ac_t""ok" 1>&6
 
 
 # Extract the first word of "gtk-config", so it can be a program name with args.
 set dummy gtk-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1969: checking for $ac_word" >&5
+echo "configure:1967: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_gtkpath'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1998,12 +1996,14 @@ else
 fi
 
 echo $ac_n "checking for Gtk compile flags""... $ac_c" 1>&6
-echo "configure:2002: checking for Gtk compile flags" >&5
+echo "configure:2000: checking for Gtk compile flags" >&5
 GTK_CFLAGS=`$gtkpath --cflags`
 GTK_LIBS=`$gtkpath --libs`
-GTK_HDRS=`$gtkpath --prefix`/include
+GTK_HDRS=`$gtkpath --prefix`/include/gtk
+GDK_HDRS=`$gtkpath --prefix`/include/gdk
 CFLAGS="$CFLAGS $GTK_CFLAGS"
 LIBS="$LIBS $GTK_LIBS"
+
 
 echo "$ac_t""ok" 1>&6
 
@@ -2182,9 +2182,9 @@ s%@CXXCPP@%$CXXCPP%g
 s%@LN_S@%$LN_S%g
 s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
 s%@glibpath@%$glibpath%g
-s%@GLIB_HDRS@%$GLIB_HDRS%g
 s%@gtkpath@%$gtkpath%g
 s%@GTK_HDRS@%$GTK_HDRS%g
+s%@GDK_HDRS@%$GDK_HDRS%g
 
 CEOF
 EOF

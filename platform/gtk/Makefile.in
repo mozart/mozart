@@ -12,68 +12,81 @@ CXX		= @CXX@
 
 LIBS    	= @LIBS@
 EXTRALDFLAGS   	= @EXTRALDFLAGS@
-CPPFLAGS	= -I. @CPPFLAGS@
-CFLAGS		= @CFLAGS@
-LDFLAGS		= @LDFLAGS@
+CPPFLAGS	= -I. -I$(VPATH) @CPPFLAGS@
+CFLAGS		= -I. -I$(VPATH) @CFLAGS@
+LDFLAGS		= @LDFLAGS@ $(LIBS)
 LN_S		= @LN_S@
+PERL            = perl
+GOZWRIGHT       = $(PERL) $(VPATH)/gozwright.pl
+GOZCONST        = $(PERL) $(VPATH)/genconstants.pl
 
-GLIK_HDRS = @GLIB_HDRS@
-GTK_HDRS = @GTK_HDRS@
+GTK_HEADER_PREFIX = @GTK_HDRS@
+GDK_HEADER_PREFIX = @GDK_HDRS@
+
+GDK_HEADERS = $(GDK_HEADER_PREFIX)/gdk.h          \
+	      $(GDK_HEADER_PREFIX)/gdkcursors.h   \
+	      $(GDK_HEADER_PREFIX)/gdki18n.h      \
+	      $(GDK_HEADER_PREFIX)/gdkkeysyms.h   \
+	      $(GDK_HEADER_PREFIX)/gdkrgb.h       \
+	      $(GDK_HEADER_PREFIX)/gdktypes.h
+
+GTK_HEADERS = $(GTK_HEADER_PREFIX)/gtk.h             \
+              $(GTK_HEADER_PREFIX)/gtk[a-h]*.h       \
+              $(GTK_HEADER_PREFIX)/gtkimage.h        \
+              $(GTK_HEADER_PREFIX)/gtkinputdialog.h  \
+              $(GTK_HEADER_PREFIX)/gtkitem.h         \
+              $(GTK_HEADER_PREFIX)/gtkitemfactory.h  \
+	      $(GTK_HEADER_PREFIX)/gtk[j-z]*.h
+
+ALL_HEADERS = $(GDK_HEADERS) $(GTK_HEADERS)
+
+OBJECTS = goz.o	gozinterface.o gozsupport.o
+
+.SUFFIXES: .cc .o .c .h $(SUFFIXES)
 
 
-.PHONY: $(PROVIDETCLLIBS)
-
-.SUFFIXES: .cc .o .c $(SUFFIXES)
-
-
-all: $(OZWISH)
+all: GTK.so-$(PLATFORM)
 
 bootstrap: all
 
-$(OZWISH): $(OBJS)
-	$(CXX) $(LDFLAGS) $(EXTRALDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+$(OBJECTS): %.o: %.c
+	oztool $(CXX) $(CFLAGS) -c $(ALL_INCLUDES) $< -o $@
+
+goz.c: $(ALL_HEADERS)
+	$(GOZWRIGHT) --c-wrappers $(ALL_HEADERS) > goz.c
+
+constantsdeclarations.oz:
+	../tools/genconstants.pl
+
+constantsdefinitions.oz:
+	../tools/genconstants.pl
+
+gozinterface.c: goz.c gozsupport.c
+	$(GOZWRIGHT) --interface goz.c gozsupport.c > gozinterface.c
+
+GTK.so-$(PLATFORM): $(OBJECTS)
+	oztool ld $(LDFLAGS)  $(OBJECTS) -o $@
 
 clean:
-	-rm -f $(OBJS) *~
+	-rm -f gozinterface.c goz.c *.o *~ core
 
 veryclean: clean
-	-rm -f $(OZWISH)
+	-rm -f *.so-* 
 
 distclean: veryclean
 	-rm -f conf.h config.* Makefile
-	-rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
 
 install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS) @INSTALLWINDLLS@
 	$(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
 
-installwindlls: $(PLATFORMDIR)
-	$(INSTALL) $(WINDLLDIR)/tcl80.dll $(PLATFORMDIR)
-	$(INSTALL) $(WINDLLDIR)/tk80.dll $(PLATFORMDIR)
-	$(INSTALL) $(WINDLLDIR)/msvcrt.dll $(PLATFORMDIR)
+Makefile: Makefile.in
+	./config.status
 
 nothing:
 
 $(PLATFORMDIR):
 	$(INSTALL_DIR) $@
-
-provide-link: $(PLATFORMDIR)
-	rm -rf $(PLATFORMDIR)/wish
-	$(INSTALL_DIR) $(PLATFORMDIR)/wish
-	(cd $(PLATFORMDIR)/wish; \
-		$(LN_S) $(TCLLIBTCLDIR) tcl; \
-		$(LN_S) $(TKLIBTCLDIR) tk)
-
-provide-copy: $(PLATFORMDIR)
-	rm -rf $(PLATFORMDIR)/wish
-	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tcl
-	for i in $(TCLLIBTCLDIR)/*; do\
-	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tcl; fi;\
-	done
-	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tk
-	for i in $(TKLIBTCLDIR)/*; do\
-	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tk; fi;\
-	done
-
 
 check:
 
