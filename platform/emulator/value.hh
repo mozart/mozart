@@ -1638,6 +1638,8 @@ public:
     setIndex(i);
   }
   
+  TaggedRef getSuspvar();
+
   void localize(RefsArray g, ProgramCounter pc);
 };
 
