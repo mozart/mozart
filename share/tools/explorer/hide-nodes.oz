@@ -269,7 +269,7 @@ local
    end
 
    class Sentinel
-      meth dirtyUp skip end
+      meth dirtyUp                   skip end
       meth getOverHidden(Cursor $) Cursor end
    end
    
