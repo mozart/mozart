@@ -67,7 +67,7 @@ pf_return_t PEL_Engine::apply(void)
 // converts a integer starting from `p' and moves `p' to the next
 // unprocessed character
 inline
-int getNumber(char * &p) {
+int getNumber(const char * &p) {
   char * n;
   int i = 1;
   p += 1;
@@ -88,7 +88,7 @@ PEL_Engine::PEL_Engine(PEL_PersistentEngine &pe, const char * f, ...)
   // determine number of variables according to type string
   //
   int nb_vars = 0;
-  for (char * p = (char *) f; *p; ) {
+  for (const char * p = f; *p; ) {
     switch (*p) {
     case 'D': case 'd': case 'S': case 's': case 'C': case 'c':
       nb_vars += getNumber(p);
@@ -111,7 +111,7 @@ PEL_Engine::PEL_Engine(PEL_PersistentEngine &pe, const char * f, ...)
   va_list ap;
   va_start(ap, f);
   //
-  for (char * p = (char *) f; *p; ) {
+  for (const char * p = f; *p; ) {
     switch (*p) {
     case 'D': // finite domain
     case 'd': // integer
