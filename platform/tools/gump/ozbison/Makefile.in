@@ -41,7 +41,7 @@ conflicts.o:    conflicts.c system.h machine.h new.h gram.h state.h
 derives.o:      derives.c system.h new.h types.h gram.h
 gram.o:         gram.c
 lalr.o:         lalr.c system.h machine.h types.h state.h new.h gram.h
-main.o:         main.c system.h machine.h
+main.o:         main.c system.h machine.h gram.h new.h
 nullable.o:     nullable.c system.h types.h gram.h new.h
 output.o:       output.c system.h machine.h new.h gram.h state.h
 print.o:        print.c system.h machine.h new.h gram.h state.h

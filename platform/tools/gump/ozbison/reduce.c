@@ -164,6 +164,7 @@ reduce_grammar ()
 
   FREE(N);
   FREE(V);
+  FREE(V1);
   FREE(P);
 }
 

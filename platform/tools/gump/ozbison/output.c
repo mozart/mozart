@@ -263,7 +263,7 @@ static int convertHex(int c) {
 */
 static int convertAtom(char *s) {
   int r = 0, w = 0;
-  if (s[0] == '\'') {
+  if (s[r] == '\'') {
     r++;
     while (s[r] != '\'')
       if (s[r] == '\\') {
@@ -281,7 +281,7 @@ static int convertAtom(char *s) {
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
           s[w++] = (s[r - 1] - '0') * 64 + (s[r] - '0') * 8 + (s[r + 1] - '0');
-          s += 2; break;
+          r += 2; break;
         default:
           s[w++] = s[r - 1]; break;
         }
@@ -292,7 +292,7 @@ static int convertAtom(char *s) {
       return s[0];
     else
       return 0;
-  } else if (s[0] >= 'a' && s[0] <= 'z')
+  } else if (s[r] >= 'a' && s[r] <= 'z')
     return 0;
   else
     return -1;
@@ -316,6 +316,7 @@ output_token_translations()
 
   toftable("synTranslate", OZ_recordInit(OZ_atom("synTranslate"), propList));
   makeStringRecord("synTokenNames", tags, 0, nsyms - 1);
+  FREE(tags);
 }
 
 
@@ -351,6 +352,7 @@ output_rule_data()
   register int i;
 
   makeRecord("synRulePosition", rline + 1, 1, nrules);
+  FREE(rline + 1);
   toftable("synNTOKENS", OZ_int(ntokens));
   toftable("synNNTS", OZ_int(nvars));
   toftable("synNRULES", OZ_int(nrules));
@@ -434,6 +436,15 @@ token_actions()
 
   FREE(defact);
   FREE(actrow);
+  FREE(consistent);
+  for (i = 0; i < nstates; i++)
+    {
+      if (err_table[i])
+        {
+          FREE(err_table[i]);
+        }
+    }
+  FREE(err_table);
 }
 
 
@@ -850,7 +861,10 @@ pack_table()
 
   FREE(froms);
   FREE(tos);
+  FREE(tally);
+  FREE(width);
   FREE(pos);
+  FREE(order);
 }
 
 
