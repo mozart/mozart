@@ -264,6 +264,8 @@ void *getPtr(TaggedPtr tp)
 
 class TypedPtrStack: public Stack {
 public:
+  TypedPtrStack();
+  ~TypedPtrStack();
 
   void push(void *ptr, TypeOfPtr type) {
     Stack::push((StackEntry)makeTaggedPtr(ptr,type));
@@ -271,6 +273,10 @@ public:
 
   TaggedPtr pop()  { return (TaggedPtr) Stack::pop(); }
 };
+
+// gcc on SGI needs this
+TypedPtrStack::TypedPtrStack() : Stack() {}
+TypedPtrStack::~TypedPtrStack() {}
 
 
 
@@ -294,6 +300,8 @@ public:
 
 class SavedPtrStack: public Stack {
 public:
+  SavedPtrStack();
+  ~SavedPtrStack();
   void pushPtr(int* ptr, int value)
   {
     ensureFree(2);
@@ -301,6 +309,10 @@ public:
     push((StackEntry) value,NO);
   }
 };
+
+// gcc on SGI needs this
+SavedPtrStack::SavedPtrStack() : Stack() {}
+SavedPtrStack::~SavedPtrStack() {}
 
 
 //*****************************************************************************
@@ -366,9 +378,15 @@ Bool gcUnprotect(TaggedRef *ref)
 
 class TaggedRefStack: public Stack {
 public:
+  TaggedRefStack();
+  ~TaggedRefStack();
   void       push(TaggedRef *t) { Stack::push((StackEntry)t); }
   TaggedRef *pop()              { return (TaggedRef*) Stack::pop(); }
 };
+
+// gcc on SGI needs this
+TaggedRefStack::TaggedRefStack() : Stack() {}
+TaggedRefStack::~TaggedRefStack() {}
 
 TaggedRefStack updateStack;
 
