@@ -322,11 +322,10 @@ static char *checkAccess(char *file) {
 static char *scExpndFileName(char *fileName, char *curfile) {
   // full pathname given?
   if (fileName[0] == '/' ||
-      !strncmp(fileName, "./", 2) ||
 #ifdef WINDOWS
       fileName[1] == ':' ||   // good old DOS filename like E:...
 #endif
-      !strncmp(fileName, "../", 3))
+      !strncmp(fileName, "./", 2))
     return checkAccess(fileName);
 
   // expand "~"
@@ -358,21 +357,24 @@ static char *scExpndFileName(char *fileName, char *curfile) {
     return ret;
   }
 
-  int i = strlen(curfile);              // search in "current" directory
-  while (i != 0 && curfile[i] != '/')   // i. e., the dir part of curfile
-    i--;
-  if (i != 0) {
-    i++;
-    char *help = new char[i + strlen(fileName) + 1];
-    strncpy(help, curfile, i);
-    strcpy(&help[i], fileName);
-    char *ret = checkAccess(help);
-    delete[] help;
+  // search in "current" directory
+  if (curfile != NULL) {
+    int i = strlen(curfile);
+    while (i != 0 && curfile[i - 1] != '/')   // i. e., the dir part of curfile
+      i--;
+    if (i != 0) {
+      char *help = new char[i + strlen(fileName) + 1];
+      strncpy(help, curfile, i);
+      strcpy(&help[i], fileName);
+      char *ret = checkAccess(help);
+      delete[] help;
 
-    if (ret != NULL)
-      return ret;
+      if (ret != NULL)
+        return ret;
+    }
   }
 
+  // search in OZPATH
   char *path = getenv("OZPATH");
   if (path == NULL)
     path = ".";
@@ -398,6 +400,8 @@ static char *scExpndFileName(char *fileName, char *curfile) {
       return NULL;
     path = &path[i + 1];
   }
+
+  return NULL;
 }
 
 
@@ -568,8 +572,8 @@ FILENAME     ([-0-9a-zA-Z/_~]|\..)+|'["-~]+'
 REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 %x COMMENT
-%x DIRECTIVE
-%x LINE SWITCHDIR INPUTFILE OUTPUTFILE INSERT DEFINE IFDEF IFNDEF UNDEF
+%x IGNOREDIRECTIVE DIRECTIVE
+%x LINE SWITCHDIR INPUTFILE INSERT DEFINE IFDEF IFNDEF UNDEF
 
 %s LEX
 
@@ -604,7 +608,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 
 
-\\h(e(lp?)?)?                  { BEGIN(DIRECTIVE); return HELP; }
+\\ha(lt?)?                     { BEGIN(DIRECTIVE); return HALT; }
+\\he(lp?)?                     { BEGIN(DIRECTIVE); return HELP; }
 \\l(i(ne?)?)?                  { if (cond()) BEGIN(LINE); }
 \\s(w(i(t(ch?)?)?)?)?          { BEGIN(SWITCHDIR); return SWITCH; }
 \\sh(o(w(Switches)?)?)?        { BEGIN(DIRECTIVE); return SHOWSWITCHES; }
@@ -612,7 +617,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 \\threadedfeed                 { BEGIN(INPUTFILE); return THREADEDFEED; }
 \\c(o(re?)?)?                  { BEGIN(INPUTFILE); return CORE; }
 \\m(a(c(h(i(ne?)?)?)?)?)?      { BEGIN(INPUTFILE); return OZMACHINE; }
-\\t(o(p(v(a(rs?)?)?)?)?)?      { BEGIN(OUTPUTFILE); return TOPVARS; }
 
 \\in(s(e(rt?)?)?)?             { BEGIN(INSERT); }
 \\d(e(f(i(ne?)?)?)?)?          { BEGIN(DEFINE); }
@@ -635,6 +639,16 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 \\u(n(d(ef?)?)?)?              { BEGIN(UNDEF);}
 
+<IGNOREDIRECTIVE>{
+  {BLANK}                      ;
+  .                            ;
+  \n                           { BEGIN(INITIAL);
+			       }
+  <<EOF>>                      { BEGIN(DIRECTIVE);
+				 if (pop_insert())
+				   return ENDOFFILE;
+			       }
+}
 <DIRECTIVE>{
   {BLANK}                      ;
   .                            { errorFlag = 1; }
@@ -646,16 +660,13 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
                                  BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
-				 BEGIN(DIRECTIVE);
+  <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
 			       }
 }
 <LINE>{
-  [0-9]+                       { xylino = atol(xytext) - 1; }
+  [0-9]+                       { xylino = atol(xytext); }
   {FILENAME}                   { strip('\'');
 				 char *fullname = scExpndFileName(xytext,xyFileName);
 				 if (fullname != NULL) {
@@ -698,10 +709,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
                                  BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
-				 BEGIN(DIRECTIVE);
+  <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
 			       }
@@ -715,33 +723,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				     delete[] help;
 				   } else
 				     strncpy(xyhelpFileName, xytext, 99);
-				   BEGIN(DIRECTIVE);
-				   return FILENAME;
-				 } else
-				   BEGIN(DIRECTIVE);
-			       }
-  {BLANK}                      ;
-  .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
-				   xyreportError("directive error",
-						 "illegal directive syntax",
-						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
-                                 BEGIN(INITIAL);
-			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
-				 BEGIN(DIRECTIVE);
-				 if (pop_insert())
-				   return ENDOFFILE;
-			       }
-}
-<OUTPUTFILE>{
-  {FILENAME}                   { if (cond()) {
-				   strip('\'');
-				   strncpy(xyhelpFileName, xytext, 99);
 				   BEGIN(DIRECTIVE);
 				   return FILENAME;
 				 } else
@@ -1033,8 +1014,14 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 {SPACE}		               ;
 
+\\[a-zA-Z]+                    { xyreportError("lexical error",
+                                               "unknown directive",
+                                               xyFileName,xylino,xycharno());
+                                 BEGIN(IGNOREDIRECTIVE);
+                               }
+
 .                              { xyreportError("lexical error",
-					       "illegal (pseudo-)character",
+					       "illegal character",
 					       xyFileName,xylino,xycharno());
 			       }
 
@@ -1106,12 +1093,18 @@ static void xy_init() {
 }
 
 int xy_init_from_file(char *file) {
-  xyin = fopen(file, "r");
+  char *fullname = scExpndFileName(file, NULL);
+  if (fullname == NULL)
+    return 0;
+  xyin = fopen(fullname, "r");
   if (xyin == NULL)
     return 0;
   xy_create_buffer(xyin, YY_BUF_SIZE);
   xy_init();
   xylino = 0;   // this is incremented when the first line is read
+  strncpy(xyFileName,fullname,99);
+  xyFileNameAtom = OZ_atom(xyFileName);
+  delete[] fullname;
   return 1;
 }
 
@@ -1120,6 +1113,12 @@ void xy_init_from_string(char *str) {
   xylastline = YY_CURRENT_BUFFER->yy_ch_buf;
   xy_init();
   xylino = 1;
+  strcpy(xyFileName,"");
+  xyFileNameAtom = OZ_atom(xyFileName);
+}
+
+char *xy_expand_file_name(char *file) {
+  return scExpndFileName(file, NULL);
 }
 
 void xy_exit() {
