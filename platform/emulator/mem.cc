@@ -73,6 +73,13 @@ unsigned int getMemoryInFreeList()
   return sum;
 }
 
+// this function is intended to check the consistency of the free list
+// memory
+void scanFreeList(void)
+{
+  for (int i = freeListMaxSize; i--; ) 
+    for (void * ptr = FreeList[i]; ptr; ptr = * (void **) ptr);
+}
 
 
 // ----------------------------------------------------------------
