@@ -38,6 +38,10 @@
 			     out => ['+name'],
 			     BI  => BInewUniqueName},
 
+     'newNamed'		=> { in  => ['+atom'],
+			     out => ['+name'],
+			     BI  => BInewNamedName},
+
      '<'		=> { in  => ['+name','+name'],
 			     out => ['+bool'],
 			     bi  => BInameLess},

@@ -1249,6 +1249,13 @@ OZ_BI_define(BInewUniqueName,1,1)
   OZ_RETURN(oz_uniqueName(name));
 } OZ_BI_end
 
+OZ_BI_define(BInewNamedName,1,1)
+{
+  oz_declareAtomIN(0,printName);
+  Literal *lit = NamedName::newNamedName(printName);
+  OZ_RETURN(makeTaggedLiteral(lit));
+} OZ_BI_end
+
 OZ_BI_define(BInameLess,2,1)
 {
   oz_declareNonvarIN(0,name1);
