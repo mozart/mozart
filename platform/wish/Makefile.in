@@ -42,6 +42,7 @@ realclean: veryclean
 
 distclean: veryclean
         $(RM) config.* Makefile
+        $(RM) ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
 
 install: $(PREFIX)/platform/$(PLATFORM) $(OZWISH) \
         $(PROVIDETCLLIBS) $(PREFIX)/lib/wish
