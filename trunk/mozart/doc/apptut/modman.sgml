@@ -89,9 +89,9 @@
 
     <p>
       Lazy linking has dramatic effect on the startup time of an
-      application: applications can start small in the fraction of a
+      application: applications can start small in a fraction of a
       second and load additional functionality on demand. And all this
-      happens completely transparent.
+      happens completely transparently.
     
     <p>
       System modules are also subject to dynamic linking. Even though
@@ -120,7 +120,7 @@ import
 >>> 
       the first import clause is <<DB>> which just consists of the
       module name <<DB>> and does not provide a module url. The second
-      import clause is <<Form at 'Form.ozf'>> which consists of the
+      import clause is <<MyForm at 'Form.ozf'>> which consists of the
       module name <<MyForm>> and the module url <<'Form.ozf'>>.
 
     <p>
@@ -260,7 +260,7 @@ import
       web-browser.  When it
       installs a module that was loaded from url ?{U}, the latter's
       full import urls are resolved with respect to ?{U}.
-      <ptr to="figure.modman.resolve"> shows a small example, where the root functor has the absolut filename <file>/home/schulte/A.ozf</file>.
+      <ptr to="figure.modman.resolve"> shows a small example, where the root functor has the absolute filename <file>/home/schulte/A.ozf</file>.
 
     <figure id="figure.modman.resolve">
       <caption/Example for resolving urls./

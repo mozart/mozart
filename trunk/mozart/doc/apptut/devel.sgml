@@ -44,7 +44,7 @@
       already, the <<import>> section of a functor specifies its inputs as
       a list of module names. In addition, functors may also have an
       <<export>> section which is basically a
-      list of feature value pairs that describes the module computed by
+      list of feature/value pairs that describes the module computed by
       the functor.
 
     <p>
@@ -59,8 +59,8 @@
     <title/Example: Last Minute Flights/
 
     <p>
-      In the following we will build a mickey mouse flight booking
-      system. The booking system features three components: 
+      In the following we will build a trivial flight booking
+      system featuring three components: 
 
     <p>
       <list enum>
@@ -96,7 +96,8 @@
       Let us start with the data base, which is the most
       straightforward part of our application. The data will be held
       in a dictionary that uses integers as keys, and arbitrary data
-      structures as entries. The toplevel structure of the functor is
+      structures as entries.  The functor definition resides in
+      file <file/DB.oz/ and its toplevel structure is
       as follows:
 
     <p>     
@@ -108,8 +109,8 @@ end
 </chunk>
 
     <p>
-      The functor has no import specification, the export
-      specification of <file/DB.oz/ is as follows:
+      The functor has no import specification, and its export
+      specification is as follows:
 
     <p>
 <chunk><title/Export specification for DB.oz/
@@ -124,7 +125,7 @@ export
       The specification determines that the functor's module provides the
       features <<add>>, <<get>>, <<getAll>>, and <<remove>>, where the
       value of each feature is given by the variable after the
-      following colon. The values of these vaiables are then computed
+      following colon. The values of these variables are then computed
       by the functor's body.
 
     <p>
@@ -173,7 +174,8 @@ a better explanation (intuitive) is needed.
 -->
     <p>
       The functor that implements the graphical form to book flights
-      has the following structure:
+      has the following structure, and its definition resides in file
+      <file/Form.oz/:
 
     <p>
 <chunk><title/Form.oz/
@@ -199,7 +201,8 @@ end
     <p>
       The root functor for our last minute flights application uses
       the previously defined functors that maintain the data base and
-      that provide the user form.
+      that provide the user form.  The root functor's definition
+      resides in file <file/LMF.oz/:
 
     <p>
 <chunk><title/LMF.oz/
