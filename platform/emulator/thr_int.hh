@@ -30,6 +30,7 @@
 #define __TIHH
 
 #include "base.hh"
+#include "suspendable.hh"
 
 Thread * oz_newThread(int prio=DEFAULT_PRIORITY);
 

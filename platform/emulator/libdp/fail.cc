@@ -1168,7 +1168,7 @@ void EntityInfo::gcWatchers(){
 	w=*base;
 	continue;}}
     if(w->isInjector()){
-      nth= w->thread->gcThread();
+      nth= SuspToThread(w->thread->gcSuspendable());
       if(((nth==NULL) && !(w->isSiteBased()))){
 	*base= w->next;
 	w=*base;
