@@ -2050,7 +2050,6 @@ void engine() {
 
       tmpBB = CBB;
 
-      tmpBB->getActor()->setCommitted();
       Board::SetCurrent(CBB->getParentBoard()->getBoardDeref());
       tmpBB->unsetInstalled();
       tmpBB->setCommitted(CBB);
@@ -2114,17 +2113,15 @@ void engine() {
 
 /* rule: if else ... fi
    push the else cont on parent && remove actor */
+	CAA->setCommitted();
 	LOADCONT(CAA->getNext());
 	PC = CastAskActor(CAA)->getElsePC();
 	if (PC != NOCODE) {
-	  CAA->setCommitted();
 	  CBB->removeSuspension();
 	  goto LBLemulateCheckSwitch;
 	}
 
 /* rule: if fi --> false */
-	CAA->setCommitted(); // mm2 necessary ???
-
 	HANDLE_FAILURE(0,message("reducing 'if fi' to 'false'"));
       }
     } else {
@@ -2139,26 +2136,24 @@ void engine() {
 	    HANDLE_FAILURE(0,
 			   message("unit commit failed");
 			   CBB->removeSuspension();
-			   CAA->setCommitted();
 			   goto LBLreduce;
 			   );
 	  }
 
-	  if (waitBoard->isWaitTop() &&
-	      !waitBoard->hasSuspension()) {
-	    CAA->setCommitted();
+	  /* unit commit & WAITTOP */
+	  if (waitBoard->isWaitTop()) {
 	    CBB->removeSuspension();
-	    goto LBLreduce;
+	    if (!waitBoard->hasSuspension()) {
+	      goto LBLreduce;
+	    }
+
+	    /* or guard not completed:  e.g. or task X = 1 end [] false ro */
+	    goto LBLfindWork;
 	  }
 
+	  /* unit commit & WAIT, e.g. or X = 1 ... then ... [] false ro */
 	  LOADCONT(waitBoard->getBodyPtr());
 
-/* unit commit & WAIT
-   e.g. or X = 1 ... then ... [] false ro */
-/* unit commit & WAITTOP
-   or guard not completed they can never happen ???
-   e.g. or X = 1 [] false ro
-    --> surrounding 'ask' may fire or 'process' may be removed */
 
 	  DebugCheck(PC == NOCODE,error("reduce actor"));
 
