@@ -22,4 +22,6 @@
 
 url('pickle':  '.ozp'
     'functor': '.ozf'
-    'home':    'http://www.ps.uni-sb.de/ozhome/share/')
+    'home':    'http://www.ps.uni-sb.de/ozhome/share/'
+    'contrib': 'http://www.ps.uni-sb.de/ozhome/contrib/'
+   )
