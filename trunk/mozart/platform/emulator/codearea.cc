@@ -456,6 +456,16 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CLAUSE:
     case LASTCLAUSE:
     case DEALLOCATEL:
+    case DEALLOCATEL1:
+    case DEALLOCATEL2:
+    case DEALLOCATEL3:
+    case DEALLOCATEL4:
+    case DEALLOCATEL5:
+    case DEALLOCATEL6:
+    case DEALLOCATEL7:
+    case DEALLOCATEL8:
+    case DEALLOCATEL9:
+    case DEALLOCATEL10:
     case ALLOCATEL1:
     case ALLOCATEL2:
     case ALLOCATEL3:
