@@ -15,6 +15,7 @@
 #pragma interface
 #endif
 
+
 /*===================================================================
  * global names and atoms
  *=================================================================== */
@@ -27,7 +28,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomMin, AtomMax, AtomMid,
        AtomNaive, AtomSize, AtomConstraints,
        AtomDistributed, AtomMobile, AtomFetched,
-       NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag;
+       NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
+       NameOoDefaultVar,NameOoRequiredArg;
 
 /*===================================================================
  * Literal
@@ -1375,7 +1377,7 @@ public:
   { 
     n -= offset;
     if (n>=getWidth() || n<0)
-      return FAILED;
+      TypeErrorM("index out of range");
 
     out = getArgs()[n];
     Assert(isRef(out) || !isAnyVar(out));
@@ -1389,7 +1391,7 @@ public:
 
     n -= offset;
     if (n>=getWidth() || n<0)
-      return FAILED;
+      TypeErrorM("index out of range");
 
     getArgs()[n] = val;
     return PROCEED;
