@@ -60,6 +60,7 @@ TaggedRef dictionary_of_modules;
 #include "modWeakDictionary-if.cc"
 #ifdef DENYS_EVENTS
 #include "modEvent-if.cc"
+#include "modTimer-if.cc"
 #endif
 
 /*
@@ -189,6 +190,7 @@ static ModuleEntry ext_module_table[] = {
   {"WeakDictionary",  mod_int_WeakDictionary},
 #ifdef DENYS_EVENTS
   {"Event",	      mod_int_Event},
+  {"Timer",	      mod_int_Timer},
 #endif
 
 #ifdef MODULES_LINK_STATIC
