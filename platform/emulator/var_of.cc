@@ -679,8 +679,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
     // Unify the labels:
     OZ_Return ret;
     if ((ret = oz_unify(term,label)) != PROCEED) {
-      if (ret != FAILED)
-	ofvRestore(vPtr, tv);
+      ofvRestore(vPtr, tv);
       return (ret);
     }
     
@@ -737,20 +736,17 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
     // Unify the labels:
     OZ_Return ret;
     if ((ret = oz_unify(AtomCons,label)) != PROCEED) {
-      if (ret != FAILED)
-	ofvRestore(vPtr, tv);
+      ofvRestore(vPtr, tv);
       return (ret);
     }
     
     // Unify corresponding feature values:
     if (arg1 && (ret = oz_unify(termLTup->getHead(),arg1)) != PROCEED) {
-      if (ret != FAILED)
-	ofvRestore(vPtr, tv);
+      ofvRestore(vPtr, tv);
       return (ret);
     }
     if (arg2 && (ret = oz_unify(termLTup->getTail(),arg2)) != PROCEED) {
-      if (ret != FAILED)
-	ofvRestore(vPtr, tv);
+      ofvRestore(vPtr, tv);
       return (ret);
     }
     
@@ -800,8 +796,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
     OZ_Return ret;
     if ((ret = oz_unify(termSRec->getLabel(),label)) != PROCEED) {
       pairs->free();
-      if (ret != FAILED)
-	ofvRestore(vPtr, tv);
+      ofvRestore(vPtr, tv);
       return (ret);
     }
 
@@ -819,8 +814,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
     Assert(!success || p->isempty());
     pairs->free();
     if (ret != PROCEED) {
-      if (ret != FAILED)
-	ofvRestore(vPtr, tv);
+      ofvRestore(vPtr, tv);
       return (ret);
     }
 
@@ -972,6 +966,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   // kost@ : in addition, the binding is trailed, and restored later
   // in case of suspension. Note this is done even when the variable
   // is global;
+  // raph: The binding is restored in case of failure, too.
   OZ_Term* trailedVarPtr;
   OZ_Term trailedVar;
 
@@ -1031,8 +1026,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   OZ_Return ret;
   if ((ret = oz_unify(termVar->label, label)) != PROCEED) {
     pairs->free();
-    if (ret != FAILED)
-      ofvRestore(trailedVarPtr, trailedVar);
+    ofvRestore(trailedVarPtr, trailedVar);
     return (ret);
   }
   // Must be literal or variable:
@@ -1041,6 +1035,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   Assert(!oz_isRef(tmp));
   if (!oz_isLiteral(tmp) && !oz_isVarOrRef(tmp)) {
     pairs->free();
+    ofvRestore(trailedVarPtr, trailedVar);
     return FALSE;
   }
 
@@ -1058,8 +1053,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   Assert(p->isempty() || ret != PROCEED);
   pairs->free();
   if (ret != PROCEED) {
-    if (ret != FAILED)
-      ofvRestore(trailedVarPtr, trailedVar);
+    ofvRestore(trailedVarPtr, trailedVar);
     return (ret);
   }
 
