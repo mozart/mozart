@@ -58,7 +58,13 @@ key:            Christian.Schulte
 lastname:       Schulte
 firstname:      Christian
 www:            http://www.ps.uni-sb.de/~schulte/
-email:          schulte@ps.uni-sb.de
+email:          schulte@dfki.de
+
+key:            Gert.Smolka
+lastname:       Smolka
+firstname:      Gert
+www:            http://www.ps.uni-sb.de/~smolka/
+email:          smolka@ps.uni-sb.de
 
 key:            Joerg.Wuertz
 lastname:       Würtz

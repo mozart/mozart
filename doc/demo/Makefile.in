@@ -1,0 +1,16 @@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+
+WHAT = demo
+MAIN = main.sgml
+
+SGMLSRCS = \
+        board.sgml bounce.sgml corpus.sgml flights.sgml \
+        jobshop.sgml lift.sgml main.sgml queens.sgml \
+         transportation.sgml trucks.sgml
+
+HTMLEXTRAFILES =
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
