@@ -417,7 +417,6 @@
       <Table>
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
-        <Tr>
           <Td/<<debug>>/
           <Td/yes/
           <Td/<<Bool>>/
