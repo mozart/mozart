@@ -134,12 +134,13 @@ define
    end
    %%
    class Indentor
-      attr head tail column margin flushed
+      attr head tail column margin flushed innercolumn
       meth init(Code Result)
          head<-Result tail<-Result
          column<-0
          margin<-0
          flushed<-false
+         innercolumn<-0
          Indentor,entercode(Code)
          @tail=nil
       end
@@ -154,14 +155,17 @@ define
          end
       end
       meth PUTTAB
-         Indentor,putc(& )
-         if @column mod 8 \= 0 then
+         Indentor,PUTC(& )
+         column<-@column+1
+         innercolumn<-@innercolumn+1
+         if @innercolumn mod 8 \= 0 then
             Indentor,PUTTAB
          end
       end
       meth putc(C)
          if C==&\n then
             column<-@margin flushed<-false
+            innercolumn<-0
             Indentor,PUTC(C)
          else
             if @flushed then skip
@@ -183,10 +187,13 @@ define
             Indentor,entercode(Y)
          elseof chunk(Code) then
             Margin = @margin
+            Inner  = @innercolumn
          in
             margin<-if @flushed then @column else @margin end
+            innercolumn<-0
             Indentor,entercode(Code)
             margin<-Margin
+            innercolumn<-Inner
          elseof nil then skip
          else
             Indentor,enterstring(Code)
