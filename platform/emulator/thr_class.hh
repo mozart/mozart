@@ -97,22 +97,22 @@ public:
     return !isRunnable();
   }
 
-
-  void pushDebug(OzDebug *dbg, OzDebugDoit dothis) {
-    taskStack->pushDebug(dbg,dothis);
+  void pushDebug(OzDebug *dbg, Atom * dothis) {
+    taskStack->pushDebug(dbg, dothis);
   }
 
-  void popDebug(OzDebug *&dbg, OzDebugDoit &dothis) {
+  void popDebug(OzDebug *&dbg, Atom * &dothis) {
     PopFrame(taskStack,pc,y,cap);
     if (pc == C_DEBUG_CONT_Ptr) {
       dbg = (OzDebug *) y;
-      dothis = (OzDebugDoit) (int) cap;
+      dothis = (Atom *) cap;
     } else {
       taskStack->restoreFrame();
       dbg = (OzDebug *) NULL;
-      dothis = DBG_EXIT;
+      dothis = DBG_EXIT_ATOM;
     }
   }
+
   void pushCall(TaggedRef pred, TaggedRef arg0=0, TaggedRef arg1=0,
                 TaggedRef arg2=0, TaggedRef arg3=0, TaggedRef arg4=0)
   {

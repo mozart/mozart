@@ -288,6 +288,10 @@ void AM::init(int argc,char **argv)
   // builtins
   initLiterals();
 
+  DBG_STEP_ATOM   = (Atom *) tagged2Literal(AtomDebugStep);
+  DBG_NOSTEP_ATOM = (Atom *) tagged2Literal(AtomDebugNoStep);
+  DBG_EXIT_ATOM   = (Atom *) tagged2Literal(AtomDebugExit);
+
   initBuiltins();
 
   initVirtualProperties();

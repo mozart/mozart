@@ -3038,7 +3038,7 @@ Case(GETVOID)
           execBreakpoint(oz_currentThread());
         }
 
-        OzDebug *dbg = new OzDebug(PC,Y,CAP);
+        OzDebug * dbg = new OzDebug(PC,Y,CAP);
 
         TaggedRef kind = getTaggedArg(PC+4);
         if (oz_eq(kind,AtomDebugCallC) ||
@@ -3164,17 +3164,17 @@ Case(GETVOID)
         }
 
         if (CTT->isStep()) {
-          CTT->pushDebug(dbg,DBG_STEP);
+          CTT->pushDebug(dbg,DBG_STEP_ATOM);
           debugStreamEntry(dbg,CTT->getTaskStackRef()->getFrameId());
           INCFPC(5);
           PushContX(PC);
           return T_PREEMPT;
         } else {
-          CTT->pushDebug(dbg,DBG_NOSTEP);
+          CTT->pushDebug(dbg,DBG_NOSTEP_ATOM);
         }
       } else if (e->isPropagatorLocation()) {
         OzDebug *dbg = new OzDebug(PC,NULL,CAP);
-        CTT->pushDebug(dbg,DBG_EXIT);
+        CTT->pushDebug(dbg,DBG_EXIT_ATOM);
       }
 
       DISPATCH(5);
@@ -3183,7 +3183,7 @@ Case(GETVOID)
   Case(DEBUGEXIT)
     {
       OzDebug *dbg;
-      OzDebugDoit dothis;
+      Atom * dothis;
       CTT->popDebug(dbg, dothis);
 
       if (dbg != (OzDebug *) NULL) {
@@ -3192,7 +3192,7 @@ Case(GETVOID)
                (dbg->Y == Y &&
                 ((Abstraction *) tagged2Const(dbg->CAP)) == CAP));
 
-        if (dothis != DBG_EXIT
+        if (dothis != DBG_EXIT_ATOM
             && (oz_eq(getLiteralArg(PC+4),AtomDebugCallC) ||
                 oz_eq(getLiteralArg(PC+4),AtomDebugCallF))
             && CodeArea::getOpcode(dbg->PC+5) == CALLBI) {
@@ -3212,9 +3212,9 @@ Case(GETVOID)
                 dbg->arguments[iarity + i] = loc->getInValue(i);
         }
 
-        if (dothis == DBG_STEP && CTT->isTrace()) {
+        if (dothis == DBG_STEP_ATOM && CTT->isTrace()) {
           dbg->PC = PC;
-          CTT->pushDebug(dbg,DBG_EXIT);
+          CTT->pushDebug(dbg,DBG_EXIT_ATOM);
           debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
           PushContX(PC);
           return T_PREEMPT;
