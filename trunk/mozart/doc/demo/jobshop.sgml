@@ -31,15 +31,19 @@
       <Item>
 	<Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
-  </P>
 
   <P>
     The scheduler allows to <Ref to="section.jobshop.edit"/edit/
     job-shop scheduling problems and to compute 
     <Ref to="section.jobshop.schedule"/schedules/
     for the edited problem.
-  </P>
-     
+
+  <p>
+    The applet makes use of scheduling propagators and distributors. More 
+    information 
+    on scheduling in Oz you can find in 
+    <ptr.extern to="ozdoc:fdt" key="chapter.scheduling">.
+
   <Section class=unnumbered id="section.jobshop.edit">
     <Title/Edit Jobs/
 
