@@ -499,6 +499,8 @@ Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs)
   Suspension * s = makeHeadSuspension(func, xregs, arity);
 
   s->headInit();
+
+  Assert(FDcurrentTaskSusp == NULL);
   
   FDcurrentTaskSusp = s;
   return s;
