@@ -1403,6 +1403,10 @@ public:
     putTTI(pos);		// record it in the stack;
     array[pos] = val;
   }
+  void update(OZ_Term val, int pos) {
+    Assert(pos >= 0);
+    array[pos] = val;
+  }
 #if defined(DEBUG_CHECK)
   void occupy(int pos) {
     Assert(pos >= 0);
@@ -1594,6 +1598,8 @@ public:
   void buildChunkRemember(GName *gname, int n) {
     Assert(gname);
     putTask(BT_chunkMemo, gname, n);
+    //
+    set(oz_newVar(oz_rootBoard()), n);
   }
 
   //
@@ -1607,7 +1613,7 @@ public:
 				      makeTaggedNULL(), NO, NO,
 				      am.currentBoard());
     cl->setGName(gname);
-    gname->gcMaybeOff();	// of not in the table right now;;
+    gname->gcMaybeOff();	// if not in the table right now;;
     OZ_Term classTerm = makeTaggedConst(cl);
     // Note: no gname"s are assigned globally until the construction
     // of the class is *completely* finished;
@@ -1652,6 +1658,13 @@ public:
     PutBTFramePtrArg(frame, gname, n);
     PutBTTask(frame, BT_takeObjectLockMemo);
     SetBTFrame(frame);
+    // fill up the ref table: since we don't have the real object yet,
+    // create a dummy object in the heap (that will be later
+    // overwritten with a ref pointing to the object). The dummy
+    // object is a uvar since (a) it should be unique (do the
+    // builder/unmarshaler(s) ever deref??), and (b) it has to be
+    // GC"able;
+    set(oz_newVar(oz_rootBoard()), n);
   }
 
   //
