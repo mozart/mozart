@@ -119,3 +119,15 @@ lastname:	Brand
 firstname:	Per
 www:		http://www.sics.se/~perbrand
 email:		perbrand@sics.se
+
+key:		Erik.Klintskog
+lastname:	Klintskog
+firstname:	Erik
+www:		http://www.sics.se/~erik
+email:		erik@sics.se
+
+key:		Anna.Neiderud
+lastname:	Neiderud
+firstname:	Anna
+www:		http://www.sics.se/~annan
+email:		annan@sics.se
