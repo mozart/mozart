@@ -1591,156 +1591,6 @@ OZ_ENABLE(miscbuiltins,[   include misc builtins],no,
 	)
 
 dnl ******************************************************************
-dnl Find out if the assembler supports .byte V and .p2align N,V
-dnl where N is the alignment spec and V is the value to use to fill
-dnl the intervening bytes.  We punt when cross-compiling.
-dnl ******************************************************************
-
-AC_CACHE_CHECK([whether .byte V and .p2align N,V are supported],
-  oz_cv_has_byte_and_p2align,
-  [AC_TRY_RUN([
-void** check(void**);
-
-int main()
-{
-  check((void**)0);
-  return (check((void**)1) == (void**)1) ? 0 : 1;
-}
-
-static void* table[2];
-
-void** check(void**label)
-{
-  table[0] = && one;
-  table[1] = && two;
-  if (label==(void**)0 || label==(void**)1) return label;
-  goto **label;
- one:
-  asm volatile(".byte 3");
-  asm volatile(".p2align 8,3");
-  return label+1;
- two:
-  return label+2;
-}
-],
-  oz_cv_has_byte_and_p2align=yes,
-  oz_cv_has_byte_and_p2align=no,
-  oz_cv_has_byte_and_p2align=no)])
-
-if test "$oz_cv_has_byte_and_p2align" = "yes"; then
-  AC_DEFINE(AS_HAS_BYTE_AND_P2ALIGN)
-fi
-
-dnl ******************************************************************
-dnl Find out if the assembler supports .byte V and .align N,V
-dnl where N is the alignment spec and V is the value to use to fill
-dnl the intervening bytes.  We punt when cross-compiling.
-dnl ******************************************************************
-
-AC_CACHE_CHECK([whether .byte V and .align N,V are supported],
-  oz_cv_has_byte_and_align,
-  [AC_TRY_RUN([
-void** check(void**);
-
-int main()
-{
-  check((void**)0);
-  return (check((void**)1) == (void**)1) ? 0 : 1;
-}
-
-static void* table[2];
-
-void** check(void**label)
-{
-  table[0] = && one;
-  table[1] = && two;
-  if (label==(void**)0 || label==(void**)1) return label;
-  goto **label;
- one:
-  asm volatile(".byte 3");
-  asm volatile(".align 8,3");
-  return label+1;
- two:
-  return label+2;
-}
-],
-  oz_cv_has_byte_and_align=yes,
-  oz_cv_has_byte_and_align=no,
-  oz_cv_has_byte_and_align=no)])
-
-if test "$oz_cv_has_byte_and_align" = "yes"; then
-  AC_DEFINE(AS_HAS_BYTE_AND_ALIGN)
-fi
-
-dnl ******************************************************************
-dnl unfortunately .align N has varying interpretations: for some
-dnl assemblers it means align to a multiple of N, for others it means
-dnl align to 2^N.  Here we check which interpretation is chosen by
-dnl the available assembler.
-dnl ******************************************************************
-
-if test "$oz_cv_has_byte_and_align" = yes; then
-AC_CACHE_CHECK([whether .align N means multiple or power_of_2],
-  oz_cv_meaning_of_align,
-  [oz_saved="$CPPFLAGS"
-   CPPFLAGS="$CPPFLAGS -D$ARCH"
-   AC_TRY_RUN([
-void* ZIS;
-void* ZAT;
-
-int check(void*);
-
-int main()
-{
-  (void) check(0);
-  return check(ZAT);
-}
-
-int check(void*label)
-{
-  ZIS = && zis;
-  ZAT = && zat;
-  if (!label) return 0;
-  goto *label;
- zis:
-  asm(
-      ".align 8\n"
-      " ONE:\n"
-      ".byte 1\n"
-      ".align 4\n"
-      " TWO:\n"
-      ".byte 1"
-      );
- zat:
-  {
-    void* two;
-#if defined(ARCH_I486)
-    asm("movl $TWO,%0" : "=m" (two));
-#elif defined(ARCH_SPARC)
-    asm("set TWO,%0" : "=m" (two));
-#else
-#error platform not supported
-#endif
-    return ((((long) two) && 017) == 0) ? 0 : 1;
-  }
-}
-],
-  oz_cv_meaning_of_align=power_of_2,
-  oz_cv_meaning_of_align=multiple,
-  oz_cv_meaning_of_align=unknown)
- CPPFLAGS="$oz_saved"
-])
-
-if test "$oz_cv_meaning_of_align" = "power_of_2"; then
-  AC_DEFINE(AS_HAS_POWER_ALIGN)
-fi
-
-if test "$oz_cv_meaning_of_align" = "multiple"; then
-  AC_DEFINE(AS_HAS_MULTIPLE_ALIGN)
-fi
-fi
-
-dnl ******************************************************************
 dnl check that we can use the assembler code trick in order to inline
 dnl the opcode map.
 dnl ******************************************************************
@@ -1748,24 +1598,8 @@ dnl ******************************************************************
 AC_CACHE_CHECK([whether the opcode map can be inlined],
   oz_cv_can_inline_opcode_map,
   [
-  oz_ok=yes;
   oz_saved="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS -D$ARCH"
-  if test "$oz_cv_has_byte_and_p2align" = yes; then
-    CPPFLAGS="$CPPFLAGS -DAS_HAS_BYTE_AND_P2ALIGN -save-temps"
-  elif test "$oz_cv_has_byte_and_align" = yes; then
-    CPPFLAGS="$CPPFLAGS -DAS_HAS_BYTE_AND_ALIGN"
-    if test "oz_cv_meaning_of_align" = "power_of_2"; then
-      CPPFLAGS="$CPPFLAGS -DAS_HAS_POWER_ALIGN"
-    elif test "oz_cv_meaning_of_align" = "multiple"; then
-      CPPFLAGS="$CPPFLAGS -DAS_HAS_MULTIPLE_ALIGN"
-    else
-      oz_ok=no
-    fi
-  else
-    oz_ok=no
-  fi
-if test "$oz_ok" = yes; then
 AC_TRY_RUN([
 int engine(void**);
 bool equal(int,int);
@@ -1792,20 +1626,6 @@ int main()
 #define OP4_STRING "4"
 #define OP5_STRING "5"
 
-#if   defined(AS_HAS_BYTE_AND_P2ALIGN)
-#define ALIGNED_LABEL(N) asm(".p2align 4," OP##N##_STRING)
-#elif defined(AS_HAS_BYTE_AND_ALIGN)
-#  if   defined(AS_HAS_MULTIPLE_ALIGN)
-#define ALIGNED_LABEL(N) asm(".align 4," OP##N##_STRING)
-#  elif defined(AS_HAS_POWER_ALIGN)
-#define ALIGNED_LABEL(N) asm(".align 2," OP##N##_STRING)
-#  else
-#    error unknown alignment for .align
-#  endif
-#else
-#error neither .p2align nor .align available
-#endif
-
 /*
  * define a C++ label
  * then also define an ASM label
@@ -1816,10 +1636,11 @@ int main()
  * the preceding byte
  */
 
+#define REPEAT_FOR_ALIGNMENT(S) S;S;S;S
+
 #define CASE(N) \
-FAKE_ ##N : \
-asm(".byte " OP##N##_STRING); \
-ALIGNED_LABEL(N); \
+FAKE_ ##N :\
+REPEAT_FOR_ALIGNMENT(asm(".byte " OP##N##_STRING)); \
 asm("LABEL" OP##N##_STRING":");
 
 /*
@@ -1878,9 +1699,6 @@ bool equal(int want,int have)
   oz_cv_can_inline_opcode_map=yes,
   oz_cv_can_inline_opcode_map=no,
   oz_cv_can_inline_opcode_map=no)
-else
-  oz_cv_can_inline_opcode_map=no
-fi
   CPPFLAGS="$oz_saved"
 ])
 
