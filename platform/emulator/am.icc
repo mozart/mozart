@@ -16,11 +16,6 @@
 #pragma interface
 #endif
 
-#include "thread.hh"
-#include "unify.hh"
-#include "genvar.hh"
-#include "verbose.hh"
-
 // optimize: inline ....
 
 inline
@@ -184,8 +179,16 @@ Bool AM::isLocalSVar(TaggedRef var) {
 }
 
 inline
+Bool AM::isLocalSVar(SVariable *var) {
+  Board *home = var->getHome1();
+
+  return (home == currentBoard ||
+	  home->getBoardDeref() == currentBoard );
+}
+
+inline
 Bool AM::isLocalCVar(TaggedRef var) {
-  Board *home = tagged2CVar(var)->getHome1();
+  Board *home = taggedCVar2SVar(var)->getHome1();
 
   return (home == currentBoard ||
           home->getBoardDeref() == currentBoard );
@@ -258,12 +261,12 @@ void AM::pushNervous(Board *n)
  * Threads
  * ------------------------------------------------------------------------ */
 
-// unset the ThreadSwitch flag and reset the processCounter
+// unset the ThreadSwitch flag and reset the counter
 inline
 void AM::restartThread()
 {
   unsetSFlag(ThreadSwitch);
-  ProcessCounter=msToClockTick(conf.timeSlice);
+  threadSwitchCounter=osMsToClockTick(conf.timeSlice);
 }
 
 inline

@@ -13,11 +13,10 @@
 #pragma implementation "metavar.hh"
 #endif
 
+#include "am.hh"
 
 #include "genvar.hh"
-#include "cell.hh"
-#include "builtins.hh"
-
+#include "metavar.hh"
 
 /*
 char * OZ_printMetaDefault(OZ_Term d)
@@ -62,8 +61,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 
     // start unification for meta-var and meta-var
     
-    Bool v_is_local = (prop && isLocalVariable());
-    Bool t_is_local = (prop && term->isLocalVariable());
+    Bool v_is_local = (prop && am.isLocalSVar(this));
+    Bool t_is_local = (prop && am.isLocalSVar(term));
     switch (v_is_local + 2 * t_is_local) {
     case TRUE + 2 * TRUE: // v and t are local
       if (heapNewer(vptr, tptr)) { // bind v to t
@@ -102,13 +101,13 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  term->propagate(t, term->suspList, result, pc_cv_unif);
 	  term->addSuspension(new Suspension(am.currentBoard));
 	  doBind(vptr, result);
-	  doBindAndTrail(t, tptr, result);
+	  am.doBindAndTrail(t, tptr, result);
 	} else {
 	  setData(result);
 	  propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
 	  term->propagate(t, term->suspList, makeTaggedRef(vptr), pc_cv_unif);
 	  term->addSuspension(new Suspension(am.currentBoard));
-	  doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term, prop);
+	  am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term, prop);
 	}
       } else {
 	propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
@@ -126,13 +125,13 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  term->propagate(t, term->suspList, result, pc_cv_unif);
 	  addSuspension(new Suspension(am.currentBoard));
 	  doBind(tptr, result);
-	  doBindAndTrail(v, vptr, result);
+	  am.doBindAndTrail(v, vptr, result);
 	} else {
 	  term->setData(result);
 	  propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
 	  term->propagate(t, term->suspList, makeTaggedRef(vptr), pc_cv_unif);
 	  addSuspension(new Suspension(am.currentBoard));
-	  doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this, prop);
+	  am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this, prop);
 	}
       } else {
 	propagate(v, suspList, makeTaggedRef(tptr), pc_cv_unif);
@@ -149,8 +148,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  propagate(v, suspList, result, pc_cv_unif);
 	  term->propagate(t, term->suspList, result, pc_cv_unif);
 	}
-	doBindAndTrail(v, vptr, result);
-	doBindAndTrail(t, tptr, result);
+	am.doBindAndTrail(v, vptr, result);
+	am.doBindAndTrail(t, tptr, result);
       } else {
 	GenMetaVariable * meta_var = new GenMetaVariable(tag, result);
 	TaggedRef * var_val = newTaggedCVar(meta_var);
@@ -159,8 +158,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  term->propagate(t, term->suspList, makeTaggedRef(var_val),
 			  pc_cv_unif);
 	}
-	doBindAndTrailAndIP(v, vptr, makeTaggedRef(var_val), meta_var, this, prop);
-	doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term, prop);
+	am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(var_val), meta_var, this, prop);
+	am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term, prop);
       }
       if (prop) {
 	Suspension * susp = new Suspension(am.currentBoard);
@@ -191,11 +190,11 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     
     if (prop) propagate(v, suspList, result, pc_propagator);
 
-    if (prop && isLocalVariable()) {
+    if (prop && am.isLocalSVar(this)) {
       doBind(vptr, result);
     } else {
       addSuspension(new Suspension(am.currentBoard));
-      doBindAndTrail(v, vptr, result);
+      am.doBindAndTrail(v, vptr, result);
     }
   }
   return TRUE;
@@ -235,7 +234,7 @@ OZ_MetaType OZ_introMetaVar(OZ_UnifyMetaDet unify_md,
 			    char * name_m)
 {
   return OZ_MetaType(::new MetaTag(unify_md, unify_mm,
-				   print_m, unique_m, strdup(name_m)));
+				   print_m, unique_m, ozstrdup(name_m)));
 }
 
 OZ_Term OZ_makeMetaVar(OZ_MetaType t, OZ_Term d)

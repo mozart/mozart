@@ -15,10 +15,11 @@
 
 #include <math.h>
 #include <malloc.h>
+#include <unistd.h>
+#include <stdio.h>
 
+#include "types.hh"
 #include "hashtbl.hh"
-#include "misc.hh"
-
 
 const int STEP=5;         
 const double MAXFULL=0.75; // The max. load of HashTable

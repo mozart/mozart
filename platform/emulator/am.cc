@@ -15,26 +15,29 @@
 #pragma implementation "am.hh"
 #endif
 
-#include <signal.h>
-
-#include "actor.hh"
 #include "am.hh"
-#include "bignum.hh"
-#include "builtins.hh"
-#include "debug.hh"
+
 #include "genvar.hh"
-#include "io.hh"
-#include "misc.hh"
-#include "records.hh"
-#include "thread.hh"
-#include "unify.hh"
 #include "fdbuilti.hh"
-#include "verbose.hh"
 
 AM am;
 
-int AM::ProcessCounter;
+/* -------------------------------------------------------------------------
+ * Init and exit AM
+ * -------------------------------------------------------------------------*/
 
+int main (int argc,char **argv)
+{
+  am.init(argc,argv);
+  engine();
+  am.exitOz(0);
+  return 0;  // to make CC quiet
+}
+
+/*
+ * read an integer environment variable or use a default
+ */
+static
 int getenvDefault(char *envvar, int def)
 {
   char *s = getenv(envvar);
@@ -75,12 +78,10 @@ void ConfigData::init() {
   DebugCheckT(errorVerbosity=2);
   dumpCore		= 0;
   cellHack		= 0;
+  runningUnderEmacs     = 0;
 }
 
-extern "C" int runningUnderEmacs; // mm2
-extern void version(); // mm2
-
-
+static
 void usage(int /* argc */,char **argv) {
   fprintf(stderr,
 	  "usage: %s [-E] [-S file | -f file] [-d] [-c compiler]\n",
@@ -88,7 +89,7 @@ void usage(int /* argc */,char **argv) {
   exit(1);
 }
 
-
+static
 char *getOptArg(int &i, int argc, char **argv)
 {
   i++;
@@ -101,7 +102,8 @@ char *getOptArg(int &i, int argc, char **argv)
 }
 
 
-static void printBanner()
+static
+void printBanner()
 {
   version();
 
@@ -159,19 +161,14 @@ void AM::init(int argc,char **argv)
 {  
   conf.init();
 
-#ifdef MAKEANEWPGRP
-  // create a new process group, so that we can
-  // easily terminate all our children
-  if (setpgrp(getpid(),getpid()) < 0) {
-    ozperror("setpgid");
-  }
-#endif
+  suspCallHandler=makeTaggedNULL(); 
+  suspendVar=0;
 
   int c;
 
-  char *compilerFile;
-  if (!(compilerFile = getenv("OZCOMPILER"))) {
-    compilerFile = OzCompiler;
+  char *compilerName;
+  if (!(compilerName = getenv("OZCOMPILER"))) {
+    compilerName = OzCompiler;
   }
 
   char *tmp;
@@ -184,8 +181,8 @@ void AM::init(int argc,char **argv)
     conf.linkPath = tmp;
   }
 
-  char *comPath = NULL;  // path name where to create AF_UNIX socket
-  char *queryFileName = NULL;
+  char *compilerFIFO = NULL;  // path name where to connect to
+  char *precompiledFile = NULL;
   Bool quiet = FALSE;
   
   /* process command line arguments */
@@ -193,7 +190,7 @@ void AM::init(int argc,char **argv)
   conf.argC = 0;
   for (int i=1; i<argc; i++) {
     if (strcmp(argv[i],"-E")==0) {
-      runningUnderEmacs = 1;
+      conf.runningUnderEmacs = 1;
       continue;
     }
     if (strcmp(argv[i],"-d")==0) {
@@ -205,15 +202,15 @@ void AM::init(int argc,char **argv)
       continue;
     }
     if (strcmp(argv[i],"-c")==0) {
-      compilerFile = getOptArg(i,argc,argv);
+      compilerName = getOptArg(i,argc,argv);
       continue;
     }
     if (strcmp(argv[i],"-S")==0) {
-      comPath = getOptArg(i,argc,argv);
+      compilerFIFO = getOptArg(i,argc,argv);
       continue;
     }
     if (strcmp(argv[i],"-f")==0) {
-      queryFileName = getOptArg(i,argc,argv);
+      precompiledFile = getOptArg(i,argc,argv);
       continue;
     }
 
@@ -227,8 +224,8 @@ void AM::init(int argc,char **argv)
   }
 
   int moreThanOne = 0;
-  moreThanOne += (comPath != NULL);
-  moreThanOne += (queryFileName != NULL);
+  moreThanOne += (compilerFIFO != NULL);
+  moreThanOne += (precompiledFile != NULL);
   if (moreThanOne > 1) {
      fprintf(stderr,"Specify only one of '-s' and '-f' and '-S'.\n");
      usage(argc,argv);
@@ -237,8 +234,22 @@ void AM::init(int argc,char **argv)
   if (quiet == FALSE) {
     printBanner();
   }
-  
-  IO::initQuery(comPath,queryFileName,compilerFile);
+
+  isStandaloneF=NO;
+  if (compilerFIFO != NULL) {
+    compStream = connectCompiler(compilerFIFO);
+  } else if (precompiledFile != NULL) {
+    compStream = useFile(precompiledFile);
+    isStandaloneF=OK;
+  } else {
+    compStream = execCompiler(compilerName);
+  }
+
+  if (compStream == NULL) {
+    fprintf(stderr,"Cannot open code input\n");	
+    exit(1);
+  }
+  checkVersion();
 
   extern void DLinit(char *name);
   DLinit(argv[0]);
@@ -284,13 +295,108 @@ void AM::init(int argc,char **argv)
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   toplevelVars[0] = makeTaggedConst(bi);
   
-  IO::init();
+  osInit();
+  ioNodes = new Board*[osOpenMax()];
+
+  if (!isStandalone()) {
+    osWatchReadFD(compStream->csfileno());
+  }
+
+  osInitSignals();
+  osSetAlarmTimer(CLOCK_TICK);
+
+  // --> make sure that we check for input from compiler
+  setSFlag(IOReady);
+
 #ifdef DEBUG_CHECK
   dontPropagate = NO;
 #endif
 }
 
-// ----------------------- unification
+void AM::checkVersion()
+{
+  /* check version */
+  char s[100];
+  char *ss = compStream->csgets(s,100);
+  if (ss && ss[strlen(ss)-1] == '\n')
+    ss[strlen(ss)-1] = '\0';
+  if (ss != NULL && strcmp(ss,OZVERSION) != 0) {
+    fprintf(stderr,"*** Wrong version from compiler\n");
+    fprintf(stderr,"*** Expected: '%s', got: '%s'\n",OZVERSION,ss);
+    sleep(3);
+    exit(1);
+  }
+}
+
+void AM::exitOz(int status)
+{
+  compStream->csclose();
+  osKillChilds();
+  exit(status);
+}
+
+
+void AM::suspendEngine()
+{
+ // ******** GC **********
+  idleGC();
+
+  stat.printIdle(stdout);
+
+  if (osBlockSignals() == NO) {
+    DebugCheckT(warning("suspendEngine: there are blocked signals"));
+  }
+
+  while (1) {
+
+    if (isSetSFlag(UserAlarm)) {
+      handleUser();
+    }
+
+    if (isSetSFlag(IOReady) || !compStream->bufEmpty()) {
+      handleIO();
+    }
+      
+    if (threadQueueIsEmpty()) {
+      if (isStandalone() && !compStream->cseof()) {
+        loadQuery(compStream);
+	continue;
+      }
+    } else {
+      break;
+    }
+
+    // turn off alarm if no user request
+    if (userCounter == 0) {
+      osSetAlarmTimer(0);
+    }
+
+    Assert(compStream->bufEmpty());
+
+    osBlockSelect();
+    setSFlag(IOReady);
+  }
+
+  if (DebugCheckT(1||) am.conf.showIdleMessage) {
+    printf("running...\n");
+  }
+  
+  // restart alarm
+  osSetAlarmTimer(CLOCK_TICK);
+
+  osUnblockSignals();
+}
+
+
+/* -------------------------------------------------------------------------
+ * Unification
+ * -------------------------------------------------------------------------*/
+
+
+Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop)
+{
+  return fastUnify(ref1, ref2, prop);
+}
 
 // unify and manage rebindTrail
 Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
@@ -489,10 +595,6 @@ start:
   goto start;
 }
 
-
-
-
-
 // mm2: has to be optimzed: ask rs
 Bool AM::isBetween(Board *to, Board *varHome)
 {
@@ -509,120 +611,6 @@ Bool AM::isBetween(Board *to, Board *varHome)
   }
   return OK;
 }
-
-void AM::setExtSuspension (Board *varHome, Suspension *susp)
-{
-  Board *bb = currentBoard;
-  Bool wasFound = NO;
-  DebugCheck ((varHome->isCommitted () == OK),
-	      error ("committed board as the varHome in AM::setExtSuspension"));
-  while (bb != varHome) {
-    DebugCheck ((bb == rootBoard),
-		error ("the root board is reached in AM::setExtSuspensions"));
-    if (bb->isSolve () == OK) {
-      bb->addSuspension (susp);
-      wasFound = OK;
-    }
-    bb = (bb->getParentBoard ())->getBoardDeref ();
-  }
-  if (wasFound == OK)
-    susp->setExtSusp ();
-}
-
-// expects susp to be external
-Bool AM::_checkExtSuspension (Suspension *susp)
-{
-  Assert(susp->isExtSusp());
-  
-  Board *sb = susp->getBoard ();
-  DebugCheck ((sb == (Board *) NULL),
-	      error ("no board is found in AM::checkExtSuspension"));
-  sb = sb->getSolveBoard ();
-  
-  Bool wasFound = (sb != (Board *) NULL); 
-  while (sb != (Board *) NULL) {
-    DebugCheck ((sb->isSolve () == NO),
-		error ("no solve board is found in AM::checkExtSuspension"));
-    
-    SolveActor *sa = SolveActor::Cast (sb->getActor ());
-    if (sa->isStable () == OK) {
-      scheduleSolve (sb);
-      // Note:
-      //  The observation is that some actors which have imposed instability
-      // could be discarded by reduction of other such actors. It means,
-      // that the stability condition can not be COMPLETELY controlled by the 
-      // absence of active threads; 
-      // Note too:
-      //  If the node is not yet stable, it means that there are other
-      // external suspension(s) and/or threads. Therefore it need not be waked.
-    }
-    sb = (sb->getParentBoard ())->getSolveBoard ();
-  }
-  return (wasFound);
-}
-
-/*
-  increment/decrement the thread counter in every solve board above
-  if "stable" generate a new thread "solve waker"
-  */
-void AM::incSolveThreads (Board *bb,int n)
-{
-  /* get the next "cluster";
-     no getBoardDeref() !!!
-       (mm2: because discarded/failed threads count too ?) */
-  while (bb != (Board *) NULL && bb->isCommitted () == OK)
-    bb = bb->getBoard ();
-  while (bb != (Board *) NULL && bb != rootBoard) {
-    if (bb->isSolve () == OK && !bb->isFailed()) {
-      Assert(!bb->isReflected () && !bb->isDiscarded() && !bb->isFailed());
-
-      SolveActor *sa = SolveActor::Cast (bb->getActor ());
-      Assert(sa->getBoard());
-      sa->incThreads (n);
-      if (sa->isStable () == OK) {
-	scheduleSolve (bb);
-      }
-    }
-    bb = bb->getParentBoard ();
-    while (bb != (Board *) NULL && bb->isCommitted () == OK)
-      bb = bb->getBoard ();
-  }
-}
-
-void AM::decSolveThreads (Board *bb)
-{
-  incSolveThreads(bb,-1);
-}
-
-/*
-  find "stable" board
-  */
-Board *AM::findStableSolve(Board *bb)
-{
-  /* get the next "cluster";
-     no getBoardDeref() !!! */
-  while (bb != (Board *) NULL && bb->isCommitted () == OK)
-    bb = bb->getBoard ();
-  while (bb != (Board *) NULL && bb != rootBoard) {
-    if (bb->isSolve () == OK) {
-      Assert(!bb->isReflected ());
-
-      SolveActor *sa = SolveActor::Cast (bb->getActor ());
-      Assert(sa->getBoard());
-      if (sa->isStable () == OK) {
-	return bb;
-      }
-      return NULL;
-    }
-    bb = bb->getParentBoard ();
-    while (bb != (Board *) NULL && bb->isCommitted () == OK)
-      bb = bb->getBoard ();
-  }
-  return NULL;
-}
-
-
-// ------------------------------------------------------------------------
 
 // val is used because it may be a variable which must suspend.
 //  if det X then ... fi
@@ -705,111 +693,6 @@ PROFILE_CODE1
   return retSuspList;
 }
 
-
-// Check if there exists an S_ofs (Open Feature Structure) suspension in the suspList
-Bool AM::hasOFSSuspension(SuspList *suspList)
-{
-    while (suspList) {
-        Suspension *susp=suspList->getElem();
-        if (susp->isOFSSusp()) return TRUE;
-        suspList = suspList->getNext();
-    }
-    return FALSE;
-}
-
-
-// Add list of features to each OFS-marked suspension list
-// 'flist' has three possible values: a single feature (literal), a nonempty list of
-// features, or NULL (no extra features).  'determined'==TRUE iff the unify makes the
-// OFS determined.  'var' (which must be deref'ed) is used to make sure that
-// features are added only to variables that are indeed waiting for features.
-// This routine is inspired by am.checkSuspensionList, and must track all changes to it.
-void AM::addFeatOFSSuspensionList(TaggedRef var,
-                                  SuspList* suspList,
-				  TaggedRef flist,
-				  Bool determ)
-{
-    while (suspList) {
-        Suspension *susp=suspList->getElem();
-
-        if (susp->isDead()) {
-            suspList=suspList->getNext();
-            continue;
-        }
-
-        // suspension points to an already reduced branch of the computation tree
-        if (! susp->getBoard()->getBoardDeref()) {
-            suspList=suspList->getNext();
-            continue;
-        }
-
-        if (susp->isOFSSusp()) {
-            CFuncContinuation *cont=susp->getCCont();
-            RefsArray xregs=cont->getX();
-
-	    // Only add features if var and fvar are the same:
-	    TaggedRef fvar=xregs[0];
-	    DEREF(fvar,_1,_2);
-	    if (var!=fvar) {
-                suspList=suspList->getNext();
-                continue;
-	    }
-	    // Only add features if the 'kill' variable is undetermined:
-	    TaggedRef killl=xregs[1];
-	    DEREF(killl,_,killTag);
-	    if (!isAnyVar(killTag)) {
-                suspList=suspList->getNext();
-                continue;
-	    }
-
-            // Add the feature or list to the diff. list in xregs[3] and xregs[4]:
-            if (flist) {
-                if (isLiteral(flist))
-                    xregs[3]=cons(flist,xregs[3]);
-                else {
-                    // flist must be a list
-                    Assert(isLTuple(flist));
-                    TaggedRef tmplist=flist;
-                    while (tmplist!=AtomNil) {
-                        xregs[3]=cons(head(tmplist),xregs[3]);
-                        tmplist=tail(tmplist);
-                    }
-                }
-            }
-            if (determ) {
-                // FS is det.: tail of list must be bound to nil: (always succeeds)
-		// Do *not* use unification to do this binding!
-                TaggedRef tl=xregs[4];
-		DEREF(tl,tailPtr,tailTag);
-		switch (tailTag) {
-		case LITERAL:
-		    Assert(tl==AtomNil);
-		    break;
-		case UVAR:
-		    doBind(tailPtr, AtomNil);
-		    break;
-		default:
-		    Assert(FALSE);
-		}
-            }
-        }
-        suspList = suspList->getNext();
-    }
-}
-
-
-void AM::awakeNode(Board *node)
-{
-  node = node->getBoardDeref();
-
-  if (!node)
-    return;
-#ifndef NEWCOUNTER
-  node->decSuspCount();
-#endif
-  scheduleWakeup(node, NO);    // diese scheiss-'meta-logik' Dinge!!!!
-}
-
 // exception from general rule that arguments are never variables!
 //  term may be an 
 void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
@@ -848,6 +731,24 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   doBind(varPtr,isAnyVar(term) ? makeTaggedRef(termPtr) : term);
 }
 
+
+void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
+{
+  trail.pushRef(vp, v);
+  
+  CHECK_NONVAR(t);
+  *vp = t;
+}
+
+void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
+			     GenCVariable * lv, GenCVariable * gv,
+			     Bool prop)
+{
+  lv->installPropagators(gv,prop);
+  trail.pushRef(vp, v);
+  
+  *vp = t;
+}
 
 /*
   install every board from the currentBoard to 'n'
@@ -1012,6 +913,118 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
   trail.popMark();
 }
 
+/* -------------------------------------------------------------------------
+ * OFS
+ * -------------------------------------------------------------------------*/
+
+// Check if there exists an S_ofs (Open Feature Structure) suspension in the suspList
+Bool AM::hasOFSSuspension(SuspList *suspList)
+{
+    while (suspList) {
+        Suspension *susp=suspList->getElem();
+        if (susp->isOFSSusp()) return TRUE;
+        suspList = suspList->getNext();
+    }
+    return FALSE;
+}
+
+
+// Add list of features to each OFS-marked suspension list
+// 'flist' has three possible values: a single feature (literal), a nonempty list of
+// features, or NULL (no extra features).  'determined'==TRUE iff the unify makes the
+// OFS determined.  'var' (which must be deref'ed) is used to make sure that
+// features are added only to variables that are indeed waiting for features.
+// This routine is inspired by am.checkSuspensionList, and must track all changes to it.
+void AM::addFeatOFSSuspensionList(TaggedRef var,
+                                  SuspList* suspList,
+				  TaggedRef flist,
+				  Bool determ)
+{
+    while (suspList) {
+        Suspension *susp=suspList->getElem();
+
+        if (susp->isDead()) {
+            suspList=suspList->getNext();
+            continue;
+        }
+
+        // suspension points to an already reduced branch of the computation tree
+        if (! susp->getBoard()->getBoardDeref()) {
+            suspList=suspList->getNext();
+            continue;
+        }
+
+        if (susp->isOFSSusp()) {
+            CFuncContinuation *cont=susp->getCCont();
+            RefsArray xregs=cont->getX();
+
+	    // Only add features if var and fvar are the same:
+	    TaggedRef fvar=xregs[0];
+	    DEREF(fvar,_1,_2);
+	    if (var!=fvar) {
+                suspList=suspList->getNext();
+                continue;
+	    }
+	    // Only add features if the 'kill' variable is undetermined:
+	    TaggedRef killl=xregs[1];
+	    DEREF(killl,_,killTag);
+	    if (!isAnyVar(killTag)) {
+                suspList=suspList->getNext();
+                continue;
+	    }
+
+            // Add the feature or list to the diff. list in xregs[3] and xregs[4]:
+            if (flist) {
+                if (isLiteral(flist))
+                    xregs[3]=cons(flist,xregs[3]);
+                else {
+                    // flist must be a list
+                    Assert(isLTuple(flist));
+                    TaggedRef tmplist=flist;
+                    while (tmplist!=AtomNil) {
+                        xregs[3]=cons(head(tmplist),xregs[3]);
+                        tmplist=tail(tmplist);
+                    }
+                }
+            }
+            if (determ) {
+                // FS is det.: tail of list must be bound to nil: (always succeeds)
+		// Do *not* use unification to do this binding!
+                TaggedRef tl=xregs[4];
+		DEREF(tl,tailPtr,tailTag);
+		switch (tailTag) {
+		case LITERAL:
+		    Assert(tl==AtomNil);
+		    break;
+		case UVAR:
+		    doBind(tailPtr, AtomNil);
+		    break;
+		default:
+		    Assert(FALSE);
+		}
+            }
+        }
+        suspList = suspList->getNext();
+    }
+}
+
+/* -------------------------------------------------------------------------
+ * MISC
+ * -------------------------------------------------------------------------*/
+
+void AM::awakeNode(Board *node)
+{
+  node = node->getBoardDeref();
+
+  if (!node)
+    return;
+#ifndef NEWCOUNTER
+  node->decSuspCount();
+#endif
+  scheduleWakeup(node, NO);    // diese scheiss-'meta-logik' Dinge!!!!
+}
+
+
 #ifdef DEBUG_CHECK
 static Board *oldBoard = (Board *) NULL;
 static Board *oldSolveBoard = (Board *) NULL; 
@@ -1043,15 +1056,218 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
   }
 }
 
-
-Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop)
+Bool AM::loadQuery(CompStream *fd)
 {
-  return fastUnify(ref1, ref2, prop);
+  unsigned int starttime = osUserTime();
+
+  ProgramCounter pc;
+
+  Bool ret = CodeArea::load(fd,pc);
+
+  if (ret == OK && pc != NOCODE) {
+    addToplevel(pc);
+  }
+  
+  stat.timeForLoading.incf(osUserTime()-starttime);
+
+  return ret;
 }
 
-void AM::pushDebug(Board *n, Chunk *def, int arity, RefsArray args)
+void AM::select(int fd)
 {
-  currentThread->pushDebug(n,new OzDebug(def,arity,args));
+  if (currentBoard == rootBoard) {
+    warning("select not allowed on toplevel");
+    return;
+  }
+  if (osTestSelect(fd)) return;
+  currentBoard->incSuspCount();
+  ioNodes[fd]=currentBoard;
+  osWatchReadFD(fd);
+}
+
+// called if IOReady (signals are blocked)
+void AM::handleIO()
+{
+  unsetSFlag(IOReady);
+  int numbOfFDs=osFirstReadSelect();
+  Bool doCompiler=NO;
+
+  // check input from compiler
+  if (osNextReadSelect(compStream->csfileno())) {
+    doCompiler=OK;
+  }
+
+  if (doCompiler || !compStream->bufEmpty()) {
+    do {
+      loadQuery(compStream);
+    } while(!compStream->bufEmpty());
+    numbOfFDs--;
+  }
+
+  // find the node to awake
+  for ( int index = 0; numbOfFDs > 0; index++ ) {
+    if ( osNextReadSelect(index) ) {
+      numbOfFDs--;
+      awakeNode(ioNodes[index]);
+      ioNodes[index] = NULL;
+    }
+  }
+}
+
+// called from signal handler
+void AM::checkIO()
+{
+  int numbOfFDs = osCheckIO();
+  if (!isCritical() && (numbOfFDs > 0 || !compStream->bufEmpty())) {
+    setSFlag(IOReady);
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Search
+ * -------------------------------------------------------------------------*/
+
+/*
+  increment/decrement the thread counter in every solve board above
+  if "stable" generate a new thread "solve waker"
+  */
+void AM::incSolveThreads (Board *bb,int n)
+{
+  /* get the next "cluster";
+     no getBoardDeref() !!!
+       (mm2: because discarded/failed threads count too ?) */
+  while (bb != (Board *) NULL && bb->isCommitted () == OK)
+    bb = bb->getBoard ();
+  while (bb != (Board *) NULL && bb != rootBoard) {
+    if (bb->isSolve () == OK && !bb->isFailed()) {
+      Assert(!bb->isReflected () && !bb->isDiscarded() && !bb->isFailed());
+
+      SolveActor *sa = SolveActor::Cast (bb->getActor ());
+      Assert(sa->getBoard());
+      sa->incThreads (n);
+      if (isStableSolve (sa) == OK) {
+	scheduleSolve (bb);
+      }
+    }
+    bb = bb->getParentBoard ();
+    while (bb != (Board *) NULL && bb->isCommitted () == OK)
+      bb = bb->getBoard ();
+  }
+}
+
+void AM::decSolveThreads (Board *bb)
+{
+  incSolveThreads(bb,-1);
+}
+
+/*
+  find "stable" board
+  */
+Board *AM::findStableSolve(Board *bb)
+{
+  /* get the next "cluster";
+     no getBoardDeref() !!! */
+  while (bb != (Board *) NULL && bb->isCommitted () == OK)
+    bb = bb->getBoard ();
+  while (bb != (Board *) NULL && bb != rootBoard) {
+    if (bb->isSolve () == OK) {
+      Assert(!bb->isReflected ());
+
+      SolveActor *sa = SolveActor::Cast (bb->getActor ());
+      Assert(sa->getBoard());
+      if (isStableSolve (sa) == OK) {
+	return bb;
+      }
+      return NULL;
+    }
+    bb = bb->getParentBoard ();
+    while (bb != (Board *) NULL && bb->isCommitted () == OK)
+      bb = bb->getBoard ();
+  }
+  return NULL;
+}
+
+void AM::setExtSuspension (Board *varHome, Suspension *susp)
+{
+  Board *bb = currentBoard;
+  Bool wasFound = NO;
+  DebugCheck ((varHome->isCommitted () == OK),
+	      error ("committed board as the varHome in AM::setExtSuspension"));
+  while (bb != varHome) {
+    DebugCheck ((bb == rootBoard),
+		error ("the root board is reached in AM::setExtSuspensions"));
+    if (bb->isSolve () == OK) {
+      SolveActor *sa = SolveActor::Cast(bb->getActor());
+      sa->addSuspension (susp);
+      wasFound = OK;
+    }
+    bb = (bb->getParentBoard ())->getBoardDeref ();
+  }
+  if (wasFound == OK)
+    susp->setExtSusp ();
+}
+
+// expects susp to be external
+Bool AM::_checkExtSuspension (Suspension *susp)
+{
+  Assert(susp->isExtSusp());
+  
+  Board *sb = susp->getBoard ();
+  DebugCheck ((sb == (Board *) NULL),
+	      error ("no board is found in AM::checkExtSuspension"));
+  sb = sb->getSolveBoard ();
+  
+  Bool wasFound = (sb == (Board *) NULL) ? NO : OK; 
+  while (sb != (Board *) NULL) {
+    DebugCheck ((sb->isSolve () == NO),
+		error ("no solve board is found in AM::checkExtSuspension"));
+    
+    SolveActor *sa = SolveActor::Cast (sb->getActor ());
+    if (isStableSolve (sa) == OK) {
+      scheduleSolve (sb);
+      // Note:
+      //  The observation is that some actors which have imposed instability
+      // could be discarded by reduction of other such actors. It means,
+      // that the stability condition can not be COMPLETELY controlled by the 
+      // absence of active threads; 
+      // Note too:
+      //  If the node is not yet stable, it means that there are other
+      // external suspension(s) and/or threads. Therefore it need not be waked.
+    }
+    sb = (sb->getParentBoard ())->getSolveBoard ();
+  }
+  return (wasFound);
+}
+
+//  'OZ_CFun' solveActorWaker;
+// No arguments actually, but the type 'OZ_CFun' is fixed; 
+OZ_Bool AM::SolveActorWaker(int n, TaggedRef *args)
+{
+  DebugCheck ((n != 0), error ("arguments in SolveActor::Waker?"));
+  Board *bb = am.currentBoard; 
+  DebugCheck ((bb == NULL || bb->isSolve () == NO
+	       || bb->isCommitted () == OK ||
+	       bb->isDiscarded () == OK || bb->isFailed () == OK), 
+	      error ("the blackboard the solveActor is applied to is gone?"));
+  SolveActor *sa = SolveActor::Cast(bb->getActor ());
+  // DebugCheckT (message ("SolveActor::Waker (@0x%x)\n", (void *) sa));
+  
+  DebugCheck ((bb->isReflected () == OK),
+	      error ("already reflected board in SolveActor::Waker"));
+  sa->decThreads ();      // get rid of threads - '1' in creator;
+  // after return we are going to the "reduce" state,
+  // so reduce the actor if possible;
+  return (PROCEED);    // always; 
+}
+
+Bool AM::isStableSolve(SolveActor *sa)
+{
+  if (sa->getThreads() != 0) 
+    return (NO);
+  if (sa->getSolveBoard() == currentBoard && trail.isEmptyChunk () == NO)
+    return (NO);
+  // simply "don't worry" if in all other cases it is too weak;
+  return (sa->areNoExtSuspensions ()); 
 }
 
 /* ------------------------------------------------------------------------
@@ -1075,6 +1291,10 @@ void AM::initThreads()
   toplevelQueue = (Toplevel *) NULL;
 }
 
+void AM::pushDebug(Board *n, Chunk *def, int arity, RefsArray args)
+{
+  currentThread->pushDebug(n,new OzDebug(def,arity,args));
+}
 
 void AM::scheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
 {
@@ -1190,6 +1410,188 @@ void AM::addToplevel(ProgramCounter pc)
     toplevelQueue = new Toplevel(pc,toplevelQueue);
   }
 }
+
+/* -------------------------------------------------------------------------
+ * Signals
+ * -------------------------------------------------------------------------*/
+
+void handlerUSR1()
+{
+  message("Error handler entered ****\n");
+
+  CodeArea::writeInstr();
+
+  tracerOn(); trace("halt");
+  message("Error handler exit ****\n");
+}
+
+void handlerINT()
+{
+  message("SIG INT ****\n");
+  am.exitOz(1);
+}
+
+void handlerTERM()
+{
+  message("SIG TERM ****\n");
+  am.exitOz(0);
+}
+
+void handlerMessage()
+{
+  message("SIGNAL inside signal handler ***\n");
+}
+
+void handlerSEGV()
+{
+  CodeArea::writeInstr();
+  message("**** segmentation violation ****\n");
+  longjmp(am.engineEnvironment,SEGVIO);
+}
+
+void handlerBUS()
+{
+  CodeArea::writeInstr();
+  message("**** bus error ****\n");
+  longjmp(am.engineEnvironment,BUSERROR);
+}
+
+void handlerPIPE()
+{
+  message("write on a pipe or other socket with no one to read it ****\n");
+}
+
+void handlerCHLD()
+{
+  DebugCheckT(message("a child process' state changed ****\n"));
+}
+
+void handlerFPE()
+{
+  OZ_warning("signal: floating point exception");
+}
+
+// signal handler
+void handlerALRM()
+{
+  am.handleAlarm();
+}
+
+/* -------------------------------------------------------------------------
+ * Alarm handling
+ * -------------------------------------------------------------------------*/
+
+void AM::handleAlarm()
+{
+  if (isCritical()) {  /* wait for next ALRM signal */
+    return;
+  }
+  
+  if (threadSwitchCounter > 0) {
+    if (--threadSwitchCounter == 0) {
+      setSFlag(ThreadSwitch);
+    }
+  }
+
+  if (userCounter > 0) {
+    if (--userCounter <= 0) {
+      setSFlag(UserAlarm);
+    }
+  }
+
+  checkGC();
+
+  checkIO();
+}
+
+/* handleUserAlarm:
+    if UserAlarm-SFLAG is set this method is called
+    interrupts should already be disabled by the parent procedure
+    */
+void AM::handleUser()
+{
+  unsetSFlag(UserAlarm);
+  int nextMS = wakeUser();
+  userCounter = osMsToClockTick(nextMS);
+}
+
+int AM::setUserAlarmTimer(int ms)
+{
+  osBlockSignals();
+
+  int ret=osClockTickToMs(userCounter);
+  userCounter=osMsToClockTick(ms);
+
+  osUnblockSignals();
+
+  return ret;
+}
+
+class Sleep {
+public:
+  Sleep *next;
+  int time;
+  TaggedRef node;
+public:
+  Sleep(int t, TaggedRef n,Sleep *a)
+  : time(t), node(n), next(a) {
+    OZ_protect(&node);
+  }
+  ~Sleep() {
+    OZ_unprotect(&node);
+  }
+};
+
+void AM::insertUser(int t,TaggedRef node)
+{
+  if (sleepQueue) {
+    int rest = setUserAlarmTimer(0);
+    Assert(isSetSFlag(UserAlarm) || rest > 0);
+
+    if (rest <= t) {
+      setUserAlarmTimer(rest);
+      t = t-rest;
+    } else {
+      setUserAlarmTimer(t);
+      sleepQueue->time = rest - t;
+      t = 0;
+    }
+  } else {
+    setUserAlarmTimer(t);
+    t = 0;
+  }
+
+  Sleep **prev = &sleepQueue;
+  for (Sleep *a = *prev; a; prev = &a->next, a=a->next) {
+    if (t <= a->time) {
+      a->time = a->time - t;
+      *prev = new Sleep(t,node,a);
+      return;
+    }
+  }
+  *prev = new Sleep(t,node,NULL);
+}
+
+int AM::wakeUser()
+{
+  if (!sleepQueue) {
+    OZ_warning("wake: nobody to wake up");
+    return 0;
+  }
+  while (sleepQueue && sleepQueue->time==0) {
+    awakeNode((Board *) tagged2Const(sleepQueue->node));
+    Sleep *tmp = sleepQueue->next;
+    delete sleepQueue;
+    sleepQueue = tmp;
+  }
+  if (sleepQueue) {
+    int ret = sleepQueue->time;
+    sleepQueue->time = 0;
+    return ret;
+  }
+  return 0;
+}
+
 
 #ifdef OUTLINE
 #define inline

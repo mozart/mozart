@@ -12,6 +12,9 @@
 #endif
 
 #include <malloc.h>
+
+#include "types.hh"
+#include "error.hh"
 #include "stack.hh"
 
 void Stack::resizeOutline(int n)

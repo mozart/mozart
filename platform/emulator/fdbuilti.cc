@@ -14,7 +14,6 @@
 #endif
 
 #include "fdbuilti.hh"
-#include "unify.hh"
 #include "fdprofil.hh"
 
 #if defined(OUTLINE) || defined(FDOUTLINE)
@@ -516,8 +515,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	  } else {
 	    tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_det,
 						      makeTaggedRef(bifdbm_varptr[i]));
-	    doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
-			   newSmallInt(bifdbm_dom[i]->singl()));
+	    am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+			      newSmallInt(bifdbm_dom[i]->singl()));
 	    glob_vars_touched = TRUE;
 	  }
 	} else {
@@ -526,9 +525,9 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	  if (bifdbm_var_state[i] == fdbm_global) {
 	    GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
 	    TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-	    doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
-				makeTaggedRef(newtaggedfdvar),
-				newfdvar, tagged2GenFDVar(bifdbm_var[i]), NO);
+	    am.doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
+				   makeTaggedRef(newtaggedfdvar),
+				   newfdvar, tagged2GenFDVar(bifdbm_var[i]), NO);
 	    newfdvar->setTag();
 	    glob_vars_touched = TRUE;
 	  } else {
@@ -550,13 +549,13 @@ void BIfdBodyManager::processFromTo(int from, int to)
       if (*bifdbm_dom[i] == fd_singleton) {
 	TaggedRef newsmallint = newSmallInt(bifdbm_dom[i]->singl());
 	am.checkSuspensionList(bifdbm_var[i], newsmallint);
-	doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i], newsmallint);
+	am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i], newsmallint);
       } else {
 	GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
 	TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
 	am.checkSuspensionList(bifdbm_var[i], makeTaggedRef(newtaggedfdvar));
-	doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
-		       makeTaggedRef(newtaggedfdvar));
+	am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+			  makeTaggedRef(newtaggedfdvar));
 	vars_left = TRUE;
       }
       PROFILE_CODE1(
@@ -596,8 +595,8 @@ void BIfdBodyManager::processNonRes(void)
 	if (susp == NULL) susp = new Suspension(am.currentBoard);
 	addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
 	
-	doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
-		       newSmallInt(bifdbm_dom[0]->singl()));
+	am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
+			  newSmallInt(bifdbm_dom[0]->singl()));
 	glob_vars_touched = TRUE;
       }
     } else {
@@ -609,9 +608,9 @@ void BIfdBodyManager::processNonRes(void)
 	
 	GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
 	TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-	doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
-			    makeTaggedRef(newtaggedfdvar),
-			    newfdvar, tagged2GenFDVar(bifdbm_var[0]), NO);
+	am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
+			       makeTaggedRef(newtaggedfdvar),
+			       newfdvar, tagged2GenFDVar(bifdbm_var[0]), NO);
 	newfdvar->setTag();
 	glob_vars_touched = TRUE;
       } else {
@@ -633,13 +632,13 @@ void BIfdBodyManager::processNonRes(void)
       TaggedRef newsmallint = newSmallInt(bifdbm_dom[0]->singl());
       am.checkSuspensionList(bifdbm_var[0], newsmallint);
       addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
-      doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], newsmallint);
+      am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], newsmallint);
     } else {
       GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
       TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
       am.checkSuspensionList(bifdbm_var[0], makeTaggedRef(newtaggedfdvar));
       addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
-      doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], 
+      am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], 
 		     makeTaggedRef(newtaggedfdvar));
       vars_left = TRUE;
     }

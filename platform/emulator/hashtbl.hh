@@ -7,17 +7,6 @@
   State: $State$
 
   ------------------------------------------------------------------------
-
-  exported variables/classes: class HashTable
-
-  exported procedures: no
-  ------------------------------------------------------------------------
-
-  internal static variables: no
-
-  internal procedures: no
-
-  ------------------------------------------------------------------------
 */
 
 #ifndef __HASHTABLEH
@@ -26,13 +15,6 @@
 #ifdef __GNUC__
 #pragma interface
 #endif
-
-#include <unistd.h>
-#include <stdio.h>
-
-#include "error.hh"
-#include "types.hh"
-
 
 #define htEmpty ((void*) -1L)
 

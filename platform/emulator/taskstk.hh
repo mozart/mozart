@@ -17,10 +17,6 @@
 #pragma interface
 #endif
 
-#include <iostream.h>
-
-#include "tagged.hh"
-#include "stack.hh"
 
 /*
  * - if you ever change this check POPTASK, ie. in other words:

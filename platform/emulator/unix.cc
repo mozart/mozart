@@ -7,7 +7,6 @@
   */
 
 #include "oz.h"
-#include "sunproto.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,7 +17,7 @@
 #include <dirent.h>
 #include <netdb.h>
 
-#include "misc.hh"
+#include "os.hh"
 
 #if defined(LINUX) || defined(HPUX_700)
 extern int h_errno;
@@ -197,7 +196,7 @@ static char* h_strerror(const int err) {
   struct timeval timeout;                                        \
   FD_ZERO(&fds); FD_SET(FD,&fds);                                \
   timeout.tv_sec=0; timeout.tv_usec=0;                           \
-  WRAPCALL(ozSelect(FD+1, &fds, NULL, NULL, &timeout),ret,OUT);  \
+  WRAPCALL(osSelect(FD+1, &fds, NULL, NULL, &timeout),ret,OUT);  \
   if (ret == 0) { RETURN_UNABLE(OUT); }                          \
 }
 			     
@@ -206,7 +205,7 @@ static char* h_strerror(const int err) {
   struct timeval timeout;                                        \
   FD_ZERO(&fds); FD_SET(FD,&fds);                                \
   timeout.tv_sec=0; timeout.tv_usec=0;                           \
-  WRAPCALL(ozSelect(FD+1, NULL, &fds, NULL, &timeout),ret,OUT);  \
+  WRAPCALL(osSelect(FD+1, NULL, &fds, NULL, &timeout),ret,OUT);  \
   if (ret == 0) { RETURN_UNABLE_REST(OUT,REST); }                \
 }
 			     
@@ -800,7 +799,7 @@ OZ_C_proc_begin(unix_select,2)
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;  // wait 0 ms
 
-  WRAPCALL(ozSelect(fd+1, &fds, NULL, NULL, &timeout), sel, out);
+  WRAPCALL(osSelect(fd+1, &fds, NULL, NULL, &timeout), sel, out);
 
   if (sel == 0) {
     if (!OZ_select(fd)) {
@@ -1573,7 +1572,7 @@ OZ_C_ioproc_begin(unix_system,2)
   OZ_declareVsArg("system", 0, vs);
   OZ_declareArg(1, out);
 
-  int ret = ozSystem(vs);
+  int ret = osSystem(vs);
 
   return OZ_unifyInt(out,ret);
 }

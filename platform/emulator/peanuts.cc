@@ -1,13 +1,22 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: many
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  For faster compilation: includes must be parsed only once
+  ------------------------------------------------------------------------
+*/
 #define NOPRAGMA
 
 #ifdef __GNUC__
 #pragma interface
 
 #pragma implementation "actor.hh"
-#pragma implementation "alarm.hh"
 #pragma implementation "am.hh"
 #pragma implementation "assemble.hh"
-#pragma implementation "assreg.hh"
 #pragma implementation "board.hh"
 #pragma implementation "builtins.hh"
 #pragma implementation "cell.hh"
@@ -27,8 +36,9 @@
 #pragma implementation "hashtbl.hh"
 #pragma implementation "indexing.hh"
 #pragma implementation "mem.hh"
-#pragma implementation "misc.hh"
+#pragma implementation "os.hh"
 #pragma implementation "objects.hh"
+#pragma implementation "solve.hh"
 #pragma implementation "special.hh"
 #pragma implementation "stack.hh"
 #pragma implementation "statisti.hh"
@@ -40,15 +50,13 @@
 #pragma implementation "thread.hh"
 #pragma implementation "trail.hh"
 #pragma implementation "types.hh"
-#pragma implementation "unify.hh"
+#pragma implementation "variable.hh"
 #pragma implementation "verbose.hh"
 #endif
 
 #include "actor.cc"
-#include "alarm.cc"
 #include "am.cc"
 #include "assemble.cc"
-#include "assreg.cc"
 #include "board.cc"
 #include "builtins.cc"
 #include "cell.cc"
@@ -68,8 +76,9 @@
 #include "hashtbl.cc"
 #include "indexing.cc"
 #include "mem.cc"
-#include "misc.cc"
+#include "os.cc"
 #include "objects.cc"
+#include "solve.cc"
 #include "special.cc"
 #include "stack.cc"
 #include "statisti.cc"
@@ -81,5 +90,5 @@
 #include "thread.cc"
 #include "trail.cc"
 #include "types.cc"
-#include "unify.cc"
+#include "variable.cc"
 #include "verbose.cc"

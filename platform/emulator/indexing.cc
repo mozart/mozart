@@ -13,8 +13,18 @@
 #pragma implementation "indexing.hh"
 #endif
 
+#include "tagged.hh"
+#include "term.hh"
 
-#include "codearea.hh"
+#include "constter.hh"
+#include "board.hh"
+
+#include "suspensi.hh"
+#include "variable.hh"
+
+#include "bignum.hh"
+
+// #include "codearea.hh"
 #include "indexing.hh"
 #include "genvar.hh"
 
