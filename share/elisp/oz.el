@@ -242,9 +242,6 @@ All strings matching this regular expression are removed.")
 ;; Locating Errors
 ;;------------------------------------------------------------
 
-(defvar oz-last-fed-buffer nil
-  "Buffer from which the last region was fed; used to locate errors.")
-
 (defvar oz-compiler-output-start nil
   "Position in the Oz Compiler buffer where the last run's output began.")
 
@@ -343,8 +340,6 @@ Positions are returned as a pair ( START . END )."
     (goto-char end)
     (skip-chars-backward " \t\n")
     (setq end (point)))
-  (if (not (buffer-file-name))
-      (setq oz-last-fed-buffer (current-buffer)))
   (concat "\\line " (1+ (count-lines 1 start))
 	  " '" (or (buffer-file-name) (buffer-name)) "' % fromemacs\n"
 	  (buffer-substring start end)))
@@ -515,13 +510,13 @@ With ARG, set it instead."
     (oz-breakpoint flag)))
 
 (defun oz-breakpoint (flag)
-  (if (buffer-file-name)
-      (save-excursion
-	(beginning-of-line)
-	(let ((line (1+ (count-lines 1 (point)))))
-	  (oz-send-string
-	   (concat "{Ozcar bpAt('" (buffer-file-name) "' " line flag ")}"))))
-    (error "Cannot set breakpoints in unsaved buffers")))
+  (save-excursion
+    (beginning-of-line)
+    (let ((line (1+ (count-lines 1 (point)))))
+      (oz-send-string
+       (concat "{Ozcar bpAt('"
+	       (or (buffer-file-name) (buffer-name))
+	       "' " line flag ")}")))))
 
 
 ;;------------------------------------------------------------
@@ -2529,7 +2524,7 @@ When in emulator buffer, visit place indicated in next callstack line."
 	       (column-string (nth 3 error-data))
 	       (column (and column-string (string-to-number column-string)))
 	       (buf (if (string-equal file "nofile")
-			oz-last-fed-buffer
+			(error "No source buffer found")
 		      (oz-find-buffer-or-file file)))
 	       source-marker)
 	  (if (not buf)
