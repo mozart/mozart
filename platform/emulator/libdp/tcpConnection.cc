@@ -34,11 +34,6 @@
 
 #define OZReadPortNumber  9000
 
-#ifdef WINDOWS
-#define ETIMEDOUT    WSAETIMEDOUT
-#define EHOSTUNREACH WSAEHOSTUNREACH
-#endif
-
 #define NETWORK_ERROR(Args) {OZ_error Args;}
 
 // Network parameters
@@ -53,7 +48,7 @@ void tcpListenPort(int port, char* nodename){
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   if(nodename==0) {
-    NETWORK_ERROR(("createTcpPort"));
+    NETWORK_ERROR(("tcpListenPort"));
   }
   struct hostent *hostaddr;
   hostaddr=gethostbyname(nodename);
@@ -74,16 +69,9 @@ void tcpListenPort(int port, char* nodename){
   Assert(myDSite!=NULL);
 }
 
-void tcpDoDisconnect(void *info) {
-  if(((int) info)!=-1)
-    osclose((int) info);
-}
-
-
 void changeMaxTCPCacheImpl() {
   tcptransController->changeNumOfResources();
 }
-
 
 // Used by dpMiscModule
 void setIPAddress__(int adr) {

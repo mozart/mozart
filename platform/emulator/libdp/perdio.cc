@@ -1304,7 +1304,7 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   }
 
   // Close any remaining connections violently.
-
+  comController->closeAll();
 
   //  printf("times left %d\n", timeUntilClose);
   //  printf("connections left %d\n", connectionsLeft);

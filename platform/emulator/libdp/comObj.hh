@@ -201,6 +201,7 @@ public:
   void gcComObjs();
   void finishGCComObjs();
   int closeDownCount();
+  void closeAll();
   Bool valid(ComObj *testObj);
 };
 
