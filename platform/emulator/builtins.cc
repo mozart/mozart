@@ -422,6 +422,15 @@ OZ_Return isAtomInline(TaggedRef t)
 DECLAREBI_USEINLINEREL1(BIisAtom,isAtomInline)
 DECLAREBOOLFUN1(BIisAtomB,isAtomBInline,isAtomInline)
 
+OZ_Return isLockInline(TaggedRef t)
+{
+  NONSUVAR( t, term, tag );
+  return isLock(term) ? PROCEED : FAILED;
+}
+
+DECLAREBI_USEINLINEREL1(BIisLock,isLockInline)
+DECLAREBOOLFUN1(BIisLockB,isLockBInline,isLockInline)
+
 
 
 
@@ -4848,17 +4857,6 @@ OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, Tagge
 }
 DECLAREBI_USEINLINEFUN3(BIdictionaryGetIf,dictionaryGetIfInline)
 
-OZ_Return dictionaryDeepGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
-{
-  GetDictAndKey(d,k,dict,key,NO);
-  if (dict->getArg(key,out) != PROCEED) {
-    out = deflt;
-  }
-  return PROCEED;
-}
-DECLAREBI_USEINLINEFUN3(BIdictionaryDeepGetIf,dictionaryDeepGetIfInline)
-
-
 OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
 {
   GetDictAndKey(d,k,dict,key,OK);
@@ -4867,6 +4865,16 @@ OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
 }
 
 DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
+
+
+OZ_Return dictionaryDeepPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
+{
+  GetDictAndKey(d,k,dict,key,NO);
+  dict->setArg(key,value);
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEREL3(BIdictionaryDeepPut,dictionaryDeepPutInline)
 
 
 OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
@@ -6779,6 +6787,28 @@ OZ_C_proc_begin(BIsetSelf,1)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIooExch,3)
+{
+  OZ_Term obj  = OZ_getCArg(0); obj  = deref(obj);
+  OZ_Term news = OZ_getCArg(1); news = deref(news);
+  OZ_Term olds = OZ_getCArg(2);
+
+  if (!isObject(obj)) {
+    TypeErrorT(0,"Object");
+  }
+
+  if (!isSRecord(news)) {
+    TypeErrorT(1,"Record");
+  }
+
+  Object *oobj = tagged2Object(obj);
+  SRecord *oldstate = oobj->getState();
+  oobj->setState(tagged2SRecord(news));
+  return OZ_unify(olds,makeTaggedSRecord(oldstate));
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BIoogetCounterSelf,1)
 {
   return OZ_unifyInt(OZ_getCArg(0),0);
@@ -6937,12 +6967,11 @@ BIspec allSpec1[] = {
   {"Dictionary.get",     3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
   {"Dictionary.condGet", 4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
   {"Dictionary.put",     3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
+  {"Dictionary.deepPut", 3, BIdictionaryDeepPut,(IFOR) dictionaryDeepPutInline},
   {"Dictionary.remove",  2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
   {"Dictionary.member",  3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",    2, BIdictionaryKeys,    0},
   {"Dictionary.entries", 2, BIdictionaryEntries, 0},
-  {"Dictionary.deepGetIf",  4, BIdictionaryDeepGetIf,
-   (IFOR) dictionaryDeepGetIfInline},
 
   {"NewLock",	      1,BInewLock,	 0},
   {"Lock",	      1,BIlockLock,	 0},
@@ -7020,6 +7049,7 @@ BIspec allSpec2[] = {
   {"isProcedureRel", 1, BIisProcedure, (IFOR) isProcedureInline},
   {"isNameRel",      1, BIisName,      (IFOR) isNameInline},
   {"isAtomRel",      1, BIisAtom,      (IFOR) isAtomInline},
+  {"isLockRel",      1, BIisLock,      (IFOR) isLockInline},
   {"isBoolRel",      1, BIisBool,      (IFOR) isBoolInline},
   {"isUnitRel",      1, BIisUnit,      (IFOR) isUnitInline},
   {"isChunkRel",     1, BIisChunk,     (IFOR) isChunkInline},
@@ -7225,6 +7255,7 @@ BIspec allSpec2[] = {
   {"getOONames",       5,BIgetOONames, 	       0},
   {"getSelf",          1,BIgetSelf,            0},
   {"setSelf",          1,BIsetSelf,            0},
+  {"ooExch",           3,BIooExch,             0},
 
   {"Space.new",           2, BInewSpace,        0},
   {"IsSpace",             2, BIisSpace,         0},

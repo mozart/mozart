@@ -246,19 +246,6 @@ TaggedRef ProcProxy::getSuspvar()
  * Object
  *=================================================================== */
 
-void Object::close()
-{
-  setFlag(OFlagClosed); 
-
-  while(!isNil(threads)) {
-    TaggedRef var = head(threads);
-    if (OZ_unify(var, NameTrue)==FAILED) {
-      warning("Object::close: unify failed");
-    }
-    threads = tail(threads);
-  }
-}
-
 /*
  * append two *det* lists
  *  NO ERROR CHECK!
@@ -327,7 +314,6 @@ int Object::getWidth ()
 
 TaggedRef Object::attachThread()
 {
-  Assert(!isClosed());
   TaggedRef *aux = &threads;
   while(!isNil(*aux)) {
     aux = tagged2LTuple(*aux)->getRefTail();

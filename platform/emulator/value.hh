@@ -1178,9 +1178,8 @@ public:
  */
 
 typedef enum {
-  OFlagClosed = 1,
-  OFlagDeep   = 1<<2,
-  OFlagClass  = 1<<3
+  OFlagDeep   = 1,
+  OFlagClass  = 1<<2
 } OFlag;
 
 
@@ -1197,22 +1196,14 @@ public:
   ~Object();
   Object(Object&);
 
-
-  Bool isClosedOrClass() 
-  { 
-    return (flags & (int)(OFlagClosed|OFlagClass));
-  }
-
   void setFlag(OFlag f)   { flags |= (int) f; } 
   void unsetFlag(OFlag f) { flags &= ~((int) f); } 
   int  getFlag(OFlag f)   { return (flags & ((int) f)); } 
 
   Bool isClass()        { return getFlag(OFlagClass); }
   Bool isDeep()         { return getFlag(OFlagDeep); }
-  Bool isClosed()       { return getFlag(OFlagClosed); }
   void setClass()       { setFlag(OFlagClass); }
   void setIsDeep()      { setFlag(OFlagDeep); }
-  void close();
 
   Object(SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl, OzLock *lck):
     ConstTerm(Co_Object)
