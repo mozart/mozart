@@ -61,6 +61,7 @@
 <!ENTITY chapter.flowers        SYSTEM "flowers.sgml">
 <!ENTITY chapter.board          SYSTEM "board.sgml">
 <!ENTITY chapter.chat		SYSTEM "chat.sgml">
+<!ENTITY chapter.mim		SYSTEM "mim.sgml">
 
 <!ENTITY chapter.dict-client    SYSTEM "dict-client.sgml">
 ]>
@@ -124,6 +125,7 @@
     <Meta name="html.split"       value="chapter.board">
     <meta name="html.split"	  value="code.board">
     <Meta name="html.split"	  value="chapter.chat">
+    <Meta name="html.split"	  value="chapter.mim">
 
     <Meta name="html.split"       value="chapter.dict-client">
 
@@ -163,6 +165,7 @@
       <Title/Distributed Applications/
       &chapter.board;
       &chapter.chat;
+      <!--      &chapter.mim; -->
     </Part>
 
     <Part id="part.miscellaneous">
