@@ -571,6 +571,34 @@ OZ_C_proc_begin(BIsetProcInfo,2)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIgetProcNames,2)
+{
+  oz_declareNonvarArg(0,p); p = deref(p);
+  oz_declareArg(1,out);
+
+  if (!isAbstraction(p)) {
+    oz_typeError(0,"Abstraction");
+  }
+
+  return oz_unify(out,tagged2Abstraction(p)->getPred()->getNames());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIsetProcNames,2)
+{
+  oz_declareNonvarArg(0,p); p = deref(p);
+  oz_declareArg(1,t);
+
+  if (!isAbstraction(p)) {
+    oz_typeError(0,"Abstraction");
+  }
+
+  tagged2Abstraction(p)->getPred()->setNames(t);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 OZ_Return isCellInline(TaggedRef cell)
 {
   NONVAR( cell, term);
@@ -7170,14 +7198,12 @@ OZ_C_proc_begin(BInewNamedName,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIgenerateAbstractionTableID,1)
+OZ_C_proc_begin(BIgenerateAbstractionTableID,2)
 {
-  oz_declareArg(0,res);
-  static int id = 0;
-  // all generated IDs have to be even, since the odd numbers are
-  // reserved for code compiled by the old compiler:
-  id += 2;
-  return oz_unify(res,oz_int(id));
+  oz_declareNonvarArg(0,forComponent);
+  oz_declareArg(1,res);
+  AbstractionEntry *entry = new AbstractionEntry(OZ_isTrue(forComponent));
+  return oz_unifyInt(res,ToInt32(entry));
 }
 OZ_C_proc_end
 
@@ -7549,6 +7575,8 @@ BIspec allSpec[] = {
   {"procedureEnvironment",2,BIprocedureEnvironment,0},
   {"getProcInfo",         2,BIgetProcInfo,         0},
   {"setProcInfo",         2,BIsetProcInfo,         0},
+  {"getProcNames",        2,BIgetProcNames,        0},
+  {"setProcNames",        2,BIsetProcNames,        0},
   {"MakeTuple",           3,BItuple,               (IFOR) tupleInline},
   {"Label",               2,BIlabel,               (IFOR) labelInline},
   {"hasLabel",            2,BIhasLabel,            (IFOR) hasLabelInline},
@@ -7768,7 +7796,7 @@ BIspec allSpec[] = {
   {"getBuiltinName",             2, BIgetBuiltinName,             0},
   {"nameVariable",               2, BInameVariable,               0},
   {"newNamedName",               2, BInewNamedName,               0},
-  {"generateAbstractionTableID", 1, BIgenerateAbstractionTableID, 0},
+  {"generateAbstractionTableID", 2, BIgenerateAbstractionTableID, 0},
   {"concatenateAtomAndInt",      3, BIconcatenateAtomAndInt,      0},
   {"RegSet.new",                 3, BIregSet_new,                 0},
   {"RegSet.copy",                2, BIregSet_copy,                0},

@@ -34,11 +34,13 @@ private:
 
 public:
   IHashTable *indexTable;
+  Bool dupOnload;  // true iff has to be created newly when loading (for components)
 
-  AbstractionEntry() {
-    abstr = 0;
-    pc    = NOCODE;
-    next  = allEntries;
+  AbstractionEntry(Bool fc) {
+    abstr      = 0;
+    pc         = NOCODE;
+    next       = allEntries;
+    dupOnload    = fc;
     allEntries = this;
   }
   Abstraction *getAbstr() { return abstr; };

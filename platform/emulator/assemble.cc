@@ -190,7 +190,7 @@ OZ_C_proc_begin(BIstorePredicateRef,2)
 {
   declareCodeBlock(0,code);
   OZ_declareIntArg(1,id);
-  AbstractionEntry *predId = AbstractionTable::add(id);
+  AbstractionEntry *predId = (AbstractionEntry *) ToPointer(id);
   code->writeAddress(predId);
   return PROCEED;
 }
