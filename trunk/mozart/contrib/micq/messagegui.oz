@@ -30,6 +30,7 @@ import
    DD(dragAndDrop:DragAndDrop) at 'draganddrop.ozf'
    OS(system uName)
 %   Pop(popup:Popup) at 'popup.ozf'
+   BrowserControl
 export
    new:NewMess
    read:ReadMess
@@ -185,14 +186,7 @@ define
 		   LI={TB tkReturn(index insert $)}
 		   {TB tk(tag add Tag FI LI)}
 		   {TB tk(tag config Tag underline:true foreground:blue)}
-		   {Tag tkBind(event:'<1>'
-			       action:proc{$}
-					 if {OS.uName}.sysname=="WIN32" then
-					    _={OS.system  "netscape http://"#X.1}
-					 else
-					    _={OS.system  "netscape -raise -remote 'openURL(http://"#X.1#", new-window)'"}
-					 end
-				      end)}
+		   {Tag tkBind(event:'<1>' action:proc{$} {BrowserControl.displayUrl "http://"#X.1} end)}
 		elseif {IsInt X} then
 		   {TB tk(insert 'end' {Char.toAtom X})}
 		else
