@@ -669,7 +669,7 @@ void MemChunks::print() {
 
 #endif
 
-#define HEAP_SAFETY_FOR_ALIGN 16
+#define HEAP_SAFETY_FOR_ALIGN 32
 
 void _oz_getNewHeapChunk(const size_t raw_sz) {
   size_t sz          = (raw_sz + HEAP_SAFETY_FOR_ALIGN) & ~7;
@@ -708,8 +708,6 @@ void _oz_getNewHeapChunk(const size_t raw_sz) {
 #ifdef CS_PROFILE
   across_chunks = OK;
 #endif
-
-  _oz_heap_cur -= sz;
   
 }
 

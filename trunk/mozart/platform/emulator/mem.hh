@@ -112,9 +112,9 @@ void * _oz_amalloc(const size_t sz, const size_t align) {
 
   Assert(align == 4 || align == 8);
 
-  _oz_heap_cur -= sz;
-
  retry:
+
+  _oz_heap_cur -= sz;
 
   if (align == 8)
     _oz_heap_cur = (char *) (((long) _oz_heap_cur) & (~((long) 7)));
