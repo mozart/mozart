@@ -39,7 +39,7 @@
 
 BuiltinTabEntry *BIinit();
 
-void threadRaise(Thread *th,OZ_Term E);
+void threadRaise(Thread *th,OZ_Term E,int debug=0);
 
 // -----------------------------------------------------------------------
 // tables

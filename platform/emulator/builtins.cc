@@ -2784,14 +2784,15 @@ OZ_C_proc_end
  * raise exception on thread
  */
 OZ_C_proc_proto(BIraise);
+OZ_C_proc_proto(BIraiseDebug);
 
-void threadRaise(Thread *th,OZ_Term E) {
+void threadRaise(Thread *th,OZ_Term E,int debug=0) {
   if (th->isDeadThread()) return;
 
   RefsArray args=allocateRefsArray(1, NO);
   args[0]=E;
 
-  th->pushCFun(BIraise, args, 1, OK);
+  th->pushCFun(debug?BIraiseDebug:BIraise, args, 1, OK);
 
   th->setStop(NO);
   th->zeroPStop();
@@ -7267,6 +7268,14 @@ OZ_C_proc_begin(BIraiseError,1)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIraiseDebug,1)
+{
+  oz_declareArg(0,exc);
+
+  return OZ_raiseDebug(exc);
+}
+OZ_C_proc_end
+
 
 /********************************************************************
  * builtins for the new compiler
@@ -8118,6 +8127,7 @@ BIspec allSpec[] = {
 
   {"raise",      1, BIraise,      0},
   {"raiseError", 1, BIraiseError, 0},
+  {"raiseDebug", 1, BIraiseDebug, 0},
 
   // builtins for the new compiler
   // (OPI and environment handling):

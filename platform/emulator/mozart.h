@@ -348,9 +348,11 @@ extern int _FUNDECL(OZ_unprotect,(OZ_Term *));
 /* raise exception */
 extern OZ_Return _FUNDECL(OZ_typeError,(int pos,char *type));
 extern OZ_Return _FUNDECL(OZ_raise,(OZ_Term));
+extern OZ_Return _FUNDECL(OZ_raiseDebug,(OZ_Term));
 extern OZ_Return _FUNDECL(OZ_raiseC,(char *label,int arity,...));
 extern OZ_Return _FUNDECL(OZ_raiseError,(OZ_Term));
 extern OZ_Return _FUNDECL(OZ_raiseErrorC,(char *label,int arity,...));
+extern OZ_Term   _FUNDECL(OZ_makeException,(OZ_Term kind,OZ_Term key,char*label,int arity,...));
 
 /* Suspending builtins */
 
