@@ -70,41 +70,13 @@ int TaskStack::getSeqSize()
     TaskStackEntry entry=*(--tos);
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
-    switch (cFlag){
-    case C_COMP_MODE:
+    if (cFlag == C_COMP_MODE) {
       Assert(getCompMode(entry)==PARMODE);
       return oldTos-tos-1;
-
-    case C_NERVOUS: break;
-    case C_SOLVE:   break;
-    case C_LOCAL:   break;
-
-    case C_CONT:
-      tos-=2; // PC Y G
-      break;
-      
-    case C_XCONT:
-      tos-=3; // PC Y G X
-      break;
-
-    case C_DEBUG_CONT: 
-      tos--;
-      break;
-
-    case C_CALL_CONT: 
-      tos-=2;
-      break;
-
-    case C_CFUNC_CONT:
-      tos-=3;
-      break;
-
-    default:
-      Assert(0);
-      break;
     }
-  } // while not task stack is empty
-} // TaskStack::getSeqSize
+    tos = tos - frameSize(cFlag) + 1;
+  }
+}
 
 /*
  * copySeq: copy the sequential part of newStack
@@ -130,42 +102,60 @@ void TaskStack::copySeq(TaskStack *newStack,int len)
  */
 Bool TaskStack::discardLocalTasks()
 {
-  TaskStackEntry *oldTos=tos;
-
   while (!isEmpty()) {
     TaskStackEntry entry=*(--tos);
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
     switch (cFlag){
-    case C_COMP_MODE: break;
-    case C_NERVOUS:   break;
-    case C_LOCAL:     return OK;
-    case C_SOLVE:     return OK;
-
-    case C_CONT:
-      tos-=2; // Y G
-      break;
-      
-    case C_XCONT:
-      tos-=3; // Y G X
-      break;
-
-    case C_DEBUG_CONT: 
-      tos--;
-      break;
-
-    case C_CALL_CONT: 
-      tos-=2;
-      break;
-
-    case C_CFUNC_CONT:
-      tos-=3;
-      break;
-
+    case C_LOCAL:
+    case C_SOLVE:
+      return OK;
     default:
-      Assert(0);
+      tos = tos - frameSize(cFlag) + 1;
       break;
     }
-  } // while not task stack is empty
+  }
   return NO;
+}
+
+Chunk *TaskStack::findExceptionHandler()
+{
+  while (!isEmpty()) {
+    ContFlag cFlag = getContFlag(ToInt32(*(tos-1)));
+
+    if (cFlag == C_EXCEPT_HANDLER) {
+      Chunk *ret = (Chunk*) *(tos-2);
+      tos -=2 ;
+      return ret;
+    }
+    tos = tos - frameSize(cFlag);
+  }
+  return NULL;
+}
+
+
+int frameSize(ContFlag cFlag)
+{
+  switch (cFlag){
+  case C_COMP_MODE:
+  case C_NERVOUS:
+  case C_SOLVE:  
+  case C_LOCAL:  
+    return 1;
+  case C_CONT: 
+    return 3;      
+  case C_XCONT:
+    return 4;
+  case C_DEBUG_CONT:
+  case C_EXCEPT_HANDLER:
+    return 2;
+  case C_CALL_CONT:  
+    return 3;
+  case C_CFUNC_CONT:
+    return 4;
+    
+  default:
+    Assert(0);
+    return -1;
+  }
 }
