@@ -205,11 +205,12 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
   ProgramCounter offset = table->getElse();
   if (isSTuple(term)) {
     if (table->functorTable) {
-      Literal *lname = tagged2SRecord(term)->getLabelLiteral();
-      int hsh = lname ? table->hash(lname->hash()) : 0;
-      offset = table->functorTable[hsh]
-	    ->lookup(lname,tagged2SRecord(term)->getWidth(),offset);
-      sP = tagged2SRecord(term)->getRef();
+      SRecord *rec = tagged2SRecord(term);
+      Literal *lname = rec->getLabelLiteral();
+      Assert(lname!=NULL);
+      int hsh = table->hash(lname->hash());
+      offset = table->functorTable[hsh]->lookup(lname,rec->getSRecordArity(),offset);
+      sP = rec->getRef();
     }
     return offset;
   }
@@ -381,13 +382,16 @@ Bool AM::hookCheckNeeded()
 
 #define CallPushCont(ContAdr) e->pushTask(ContAdr,Y,G)
 
-#define SaveCurObject(e,obj,pushObject)						 \
-  if (e->getCurrentObject()!=obj) {						 \
-    if (pushObject)								 \
-      e->currentThread->pushSetCurObject(e->getCurrentObject());		 \
-    else									 \
-      e->currentThread->setObject(e->getCurrentObject());			 \
-    e->setCurrentObject(obj);							 \
+#define SaveSelf(e,obj,pushOntoStack)		\
+  {						\
+    Object *auxo = e->getSelf();		\
+    if (auxo!=obj) {				\
+      if (pushOntoStack)			\
+	e->currentThread->pushSelf(auxo);	\
+      else					\
+	e->currentThread->setSelf(auxo);	\
+      e->setSelf(obj);				\
+    }						\
   }
 
 
@@ -608,13 +612,13 @@ void AM::suspendOnVarList(Thread *thr)
 Thread *AM::mkSuspThread ()
 {
   /* save special registers */
-  SaveCurObject(this,NULL,OK);
+  SaveSelf(this,NULL,OK);
   return currentThread->getJob();
 }
 
 void AM::suspendCond(AskActor *aa)
 {
-  // Thread *th = mkSuspThread(); /* currentObject is saved directly in thread! */
+  // Thread *th = mkSuspThread(); /* 'self' is saved directly in thread! */
   Thread *th = currentThread->getJob();
 
   Assert (th->isSuspended ());
@@ -1111,7 +1115,7 @@ void engine()
 // ------------------------------------------------------------------------
  LBLpreemption:
 
-  SaveCurObject(e,NULL,NO);
+  SaveSelf(e,NULL,NO);
   e->currentThread->setBoard (CBB);
   e->scheduleThread(e->currentThread);
   e->currentThread=(Thread *) NULL;
@@ -1565,8 +1569,8 @@ LBLpopTask:
       CAA = (AWActor *) TaskStackPop (--topCache);
       goto next_task;
 
-    case C_SET_CUROBJECT:
-      e->setCurrentObject((Object *) TaskStackPop(--topCache));
+    case C_SET_SELF:
+      e->setSelf((Object *) TaskStackPop(--topCache));
       goto next_task;
 
     default:
@@ -1899,10 +1903,10 @@ LBLsuspendThread:
     asmLbl(suspendThread);
 
     //
-    //  First, set the board and curObject, and perform special action for 
+    //  First, set the board and self, and perform special action for 
     // the case of blocking the root thread;
     e->currentThread->setBoard (CBB);
-    SaveCurObject(e,NULL,NO);
+    SaveSelf(e,NULL,NO);
     if (e->currentThread == e->rootThread) {
       e->rootThread = 
 	new Thread (e->currentThread->getPriority (), e->rootBoard);
@@ -2323,8 +2327,8 @@ LBLsuspendThread:
     {
       TaggedRef fea = getLiteralArg(PC+1);
 
-      Assert(e->getCurrentObject()!=NULL);
-      SRecord *rec = e->getCurrentObject()->getState();
+      Assert(e->getSelf()!=NULL);
+      SRecord *rec = e->getSelf()->getState();
       if (rec) {
 	int index = ((RecordCache*)(PC+4))->lookup(rec,fea);
 	if (index>=0) {
@@ -2344,7 +2348,7 @@ LBLsuspendThread:
     {      
       TaggedRef fea = getLiteralArg(PC+1);
 
-      SRecord *rec = e->getCurrentObject()->getState();
+      SRecord *rec = e->getSelf()->getState();
       if (rec) {
 	int index = ((RecordCache*)(PC+4))->lookup(rec,fea);
 	if (index>=0) {
@@ -2606,17 +2610,12 @@ LBLsuspendThread:
     DISPATCH(2);
 
   Case(RELEASEOBJECT)
-    e->getCurrentObject()->release();
+    e->getSelf()->release();
     DISPATCH(1);
 
   Case(SETMODETODEEP)
-    {
-      Object *o = e->getCurrentObject();
-      o->incDeepness();
-      // am.currentThread->pushSetModeTop();
-      // am.currentThread->pushSetCurObject(am.getCurrentObject());
-      DISPATCH(2);
-    }
+    e->getSelf()->incDeepness();
+    DISPATCH(2);
 
   Case(RETURN)
     goto LBLpopTask;
@@ -2737,7 +2736,7 @@ LBLsuspendThread:
       if (!isTailCall) { 
 	CallPushCont(PC+6);
       }
-      SaveCurObject(e,obj,OK);
+      SaveSelf(e,obj,OK);
       Assert(obj->getDeepness()==0);
       obj->incDeepness();
       CallDoChecks(def,def->getGRegs(),arity);
@@ -2875,7 +2874,7 @@ LBLsuspendThread:
 	     if (!isTailCall) { 
 	       CallPushCont(PC);
 	     }
-	     SaveCurObject(e,o,OK); 
+	     SaveSelf(e,o,OK); 
 	     // o->deepness handelt by 'objectIsFree'
 	   } else {
 	     def = (Abstraction *) predicate;

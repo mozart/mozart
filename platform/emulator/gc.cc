@@ -881,7 +881,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   // ptrStack.push (ret, PTR_RTBODY);
   storeForward ((int *) &taskStack, ret);
 
-  ret->obj = ret->obj->gcObject();
+  ret->self = ret->self->gcObject();
 
   return (ret);
 }
@@ -1527,7 +1527,7 @@ void AM::gc(int msgLevel)
   rebindTrail.gc();
 
   rootBoard = rootBoard->gcBoard();   // must go first!
-  setCurrentObject(getCurrentObject()->gcObject());
+  setSelf(getSelf()->gcObject());
   Assert(rootBoard);
   setCurrent(currentBoard->gcBoard(),NO);
 
@@ -1883,7 +1883,7 @@ void TaskStack::gcRecurse()
       gcQueue (((Actor *) oldstack->pop ())->gcActor ());  // CAA
       break;
 
-    case C_SET_CUROBJECT:
+    case C_SET_SELF:
       gcQueue(((Object *)oldstack->pop())->gcObject());
       break;
 
@@ -1914,7 +1914,7 @@ void ConstTerm::gcConstRecurse()
       if (o->isDeep()){
 	((DeepObject*)o)->home = o->getBoardFast()->gcBoard();
       }
-      o->state = o->getState()->gcSRecord();
+      o->setState(o->getState()->gcSRecord());
       gcTagged(o->threads,o->threads);
       break;
     }
