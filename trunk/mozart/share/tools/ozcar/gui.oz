@@ -731,6 +731,11 @@ in
 		    A # ' has no effect')
       end
 
+      meth ExcStatus(I A)
+	 Gui,status('Thread ' # I # ' got an unhandled exception, ' #
+		    A # ' has no effect')
+      end
+
       meth markStack(How)
 	 New in
 	 MarkStackSync <- New = unit
@@ -841,7 +846,9 @@ in
 	 elsecase A == StepButtonBitmap then T I in
 	    T = @currentThread
 	    I = {Debug.getId T}
-	    case {CheckState T}
+	    case {@currentStack getException($)} \= nil then
+	       Gui,ExcStatus(I StepInto)
+	    elsecase {CheckState T}
 	    of running    then Gui,RunningStatus(I StepInto)
 	    [] terminated then Gui,TerminatedStatus(T StepInto)
 	    else
@@ -859,7 +866,9 @@ in
 	 elsecase A == NextButtonBitmap then T I in
 	    T = @currentThread
 	    I = {Debug.getId T}
-	    case {CheckState T}
+	    case {@currentStack getException($)} \= nil then
+	       Gui,ExcStatus(I StepOver)
+	    elsecase {CheckState T}
 	    of running    then Gui,RunningStatus(I StepOver)
 	    [] terminated then Gui,TerminatedStatus(T StepOver)
 	    else
@@ -878,7 +887,9 @@ in
 	 elsecase A == UnleashButtonBitmap then T I in
 	    T = @currentThread
 	    I = {Debug.getId T}
-	    case {CheckState T}
+	    case {@currentStack getException($)} \= nil then
+	       Gui,ExcStatus(I A)
+	    elsecase {CheckState T}
 	    of running    then Gui,RunningStatus(I A)
 	    [] terminated then Gui,TerminatedStatus(T A)
 	    else
