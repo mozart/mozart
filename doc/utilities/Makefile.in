@@ -36,7 +36,7 @@ INSTALL_FILE    = $(INSTALL) -m 444
 
 OZFLAGS         =
 OZC             = @OZC@
-OZAR            = @OZAR@
+OZL             = @OZL@
 EMACS           = emacs
 OZENGINE        = @OZENGINE@
 
@@ -68,7 +68,7 @@ Makefile: Makefile.in config.status
         ./config.status
 
 ozdoc: $(FUNCTORS)
-        $(OZAR) --executable --in=Main.ozf --out=$@
+        $(OZL) -z 9 -x Main.ozf -o $@
 
 %.ozf: %.oz
         $(OZC) $(OZFLAGS) -c $< -o $@
