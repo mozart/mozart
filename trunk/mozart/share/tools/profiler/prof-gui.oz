@@ -457,7 +457,7 @@ in
       end
 
       meth toggleEmacs
-	 case {Cget emacs} then
+	 if {Cget emacs} then
 	    Gui,doStatus('Not using Emacs Bar')
 	    {Emacs.condSend.interface removeBar}
 	 else
