@@ -98,6 +98,17 @@ OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
   return bindV(lPtr,makeTaggedRef(rPtr));
 }
 
+//
+// kost@ : certain versions of gcc (e.g. 2.7.2.3/linux) have problems
+// with an 'inline' version of this function: its usage in
+// 'BorrowEntry::copyBorrow(BorrowEntry* from,int i)' cannot be
+// resolved as in inline one, while a compiled one does not exist
+// either...
+void ProxyManagerVar::gcSetIndex(int i)
+{
+  index =  i;
+}
+
 
 /* --- ProxyVar --- */
 
