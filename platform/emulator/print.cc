@@ -1157,7 +1157,7 @@ PRINTLONG(STuple)
   stream << endl;
   for (i = 0; i < getSize (); i++) {
     stream << indent(offset) <<  "Arg "<< i << ":\n";
-    tagged2StreamLong (getArg(i),stream,DEC(depth),offset);
+    tagged2StreamLong(args[i],stream,DEC(depth),offset);
     stream << " ";
   }
   stream << endl;
@@ -1170,9 +1170,9 @@ PRINTLONG(LTuple)
   stream << indent(offset) << "List @" << this << endl;
 
   stream << indent(offset) << "Head:\n";
-  tagged2StreamLong(getHead(),stream,DEC(depth),offset+2);
+  tagged2StreamLong(args[0],stream,DEC(depth),offset+2);
   stream << indent(offset) << "Tail:\n";
-  tagged2StreamLong(getTail(),stream,DEC(depth),offset+2);
+  tagged2StreamLong(args[1],stream,DEC(depth),offset+2);
 }
 
 PRINTLONG(Object)
