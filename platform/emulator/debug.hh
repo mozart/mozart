@@ -39,7 +39,6 @@ OZ_C_proc_proto(BIbreakpoint)
 OZ_C_proc_proto(BIsetContFlag)
 OZ_C_proc_proto(BIsetStepMode)
 OZ_C_proc_proto(BItraceThread)
-OZ_C_proc_proto(BIqueryDebugState)
 OZ_C_proc_proto(BIdisplayCode)
 OZ_C_proc_proto(BIlocation)
 
