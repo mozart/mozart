@@ -104,7 +104,7 @@ private:
   void errorRec(int);
   Bool hasNeed();
   void adoptCI(OZ_Term channelinfo);
-  void merge(ComObj *old,ComObj *anon,OZ_Term channelinfo);
+  Bool merge(ComObj *old,ComObj *anon,OZ_Term channelinfo);
   void close(CState statetobe,Bool merging);
 protected:
   ComObj *next; // For ComController usage
