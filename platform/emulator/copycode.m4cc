@@ -136,12 +136,24 @@ SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
 
   TaggedRef list = getRecordArity(sra)->getList();
   TaggedRef newlist = nil();
+
+  int len = 0, copies = 0;
+
   while(isCons(list)) {
-    newlist = cons(checkTagged(head(list),ht),newlist);
+    TaggedRef newt = checkTagged(head(list),ht);
+    DebugCode(if (OZ_isName(newt)) {
+                len++;
+                copies += literalEq(newt,deref(head(list)));});
+    newlist = cons(newt,newlist);
     list = tail(list);
   }
 
-  aux = mkRecordArity(aritytable.find(reverseC(newlist)));
+  /* do not mix names to be copied and those not to be copied */
+  Assert(copies==0 || copies==len);
+
+  newlist = reverseC(newlist);
+  Assert(isSorted(newlist));
+  aux = mkRecordArity(aritytable.find(newlist));
   ht->htAdd(sra,ToPointer(aux));
   return aux;
 }
