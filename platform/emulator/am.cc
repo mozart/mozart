@@ -119,6 +119,10 @@ static void printBanner()
 {
   version();
 
+#ifdef DEBUG_DET
+  warning("\nSleep disabled.\n");
+#endif
+
 #ifdef DEBUG_CHECK
   printf("Compile Flags:"
          " DEBUG_CHECK"
