@@ -17,35 +17,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-lib-dir=d1,...,dn	add these dirs to LDFLAGS"
 ac_help="$ac_help
---enable-contrib-gdbm
-	whether to build the gdbm contribution (default: yes)"
-ac_help="$ac_help
---enable-contrib-regex
-	whether to build the regex contribution (default: yes)"
-ac_help="$ac_help
---enable-contrib-doc
-	whether to build the doc contribution (default: yes)"
-ac_help="$ac_help
---enable-contrib-os
-	whether to build the os contribution (default: yes)"
-ac_help="$ac_help
---enable-contrib-text
-	whether to build the text contribution (default: yes)"
-ac_help="$ac_help
---enable-contrib-dpanel,
-	whether to build the distributed panel (default: yes)"
-ac_help="$ac_help
---enable-contrib-micq,
-	whether to build the Mozart instant messenger (default: yes)"
-ac_help="$ac_help
---enable-contrib-ri_lp
-	whether to build the ri_lp contribution (default: yes)"
-ac_help="$ac_help
---enable-contrib-davinci
-	whether to build the davinci contribution (default: yes)"
-ac_help="$ac_help
---enable-contrib-psql
-	whether to build the psql contribution (default: no)"
+--with-gmp=<dir>   search gmp library and header in <dir> (default: yes)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -485,7 +457,7 @@ echo > confdefs.h
 
 # A filename unique to this package, relative to the directory that
 # configure is in, which we can look for to find out if srcdir is correct.
-ac_unique_file=gdbm
+ac_unique_file=DaVinciObject.oz
 
 # Find the source files, if location was not specified.
 if test -z "$srcdir"; then
@@ -554,41 +526,8 @@ fi
 
 
 
-for ac_prog in rm
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:563: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$RM"; then
-  ac_cv_prog_RM="$RM" # Let the user override the test.
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_RM="$ac_prog"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-fi
-fi
-RM="$ac_cv_prog_RM"
-if test -n "$RM"; then
-  echo "$ac_t""$RM" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-test -n "$RM" && break
-done
-
-
-
+    
+    
   
   
   srcdir=`cd $srcdir && pwd`
@@ -597,7 +536,7 @@ done
 
   
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:601: checking for SRCTOP" >&5
+echo "configure:540: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -630,7 +569,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
   
   
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:634: checking for BUILDTOP" >&5
+echo "configure:573: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -687,7 +626,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:691: checking for $ac_word" >&5
+echo "configure:630: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -755,13 +694,13 @@ You may find a mirror archive closer to you by consulting:
   else
     
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:759: checking for GNU make" >&5
+echo "configure:698: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
   
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:765: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:704: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -790,7 +729,7 @@ fi
   
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:794: checking whether to unset broken INSTALL" >&5
+echo "configure:733: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -819,7 +758,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:823: checking for a BSD compatible install" >&5
+echo "configure:762: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -879,7 +818,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:883: checking for $ac_word" >&5
+echo "configure:822: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -920,7 +859,7 @@ fi
   
   
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:924: checking for --with-inc-dir" >&5
+echo "configure:863: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -962,7 +901,7 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:966: checking for --with-lib-dir" >&5
+echo "configure:905: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1015,7 +954,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1019: checking for $ac_word" >&5
+echo "configure:958: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1051,185 +990,836 @@ fi
     fi
     
 
-
-CONTRIBDIRS="tk ap"
-
-
-
-echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
-echo "configure:1061: checking for --enable-contrib-gdbm" >&5
-# Check whether --enable-contrib-gdbm or --disable-contrib-gdbm was given.
-if test "${enable_contrib_gdbm+set}" = set; then
-  enableval="$enable_contrib_gdbm"
-  oz_cv_enable_contrib_gdbm=$enableval
+    
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "ozc", so it can be a program name with args.
+set dummy ozc; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1005: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
 else
-  : ${oz_cv_enable_contrib_gdbm:=$oz_enable_contrib_gdbm}
-   : ${oz_cv_enable_contrib_gdbm:=yes}
+  case "$OZC" in
+  /*)
+  ac_cv_path_OZC="$OZC" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZC="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZC="$ac_cv_path_OZC"
+if test -n "$OZC"; then
+  echo "$ac_t""$OZC" 1>&6
+else
+  echo "$ac_t""no" 1>&6
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_gdbm" 1>&6
-
-  if test "$oz_cv_enable_contrib_gdbm" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }gdbm"
-  fi
-
-echo $ac_n "checking for --enable-contrib-regex""... $ac_c" 1>&6
-echo "configure:1078: checking for --enable-contrib-regex" >&5
-# Check whether --enable-contrib-regex or --disable-contrib-regex was given.
-if test "${enable_contrib_regex+set}" = set; then
-  enableval="$enable_contrib_regex"
-  oz_cv_enable_contrib_regex=$enableval
+    OZC=`echo $OZC | sed -e "s|//|/|g"`
+    if test ! -n "$OZC"
+    then
+	OZC=undefined
+	
+    fi
+    
+    
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "ozl", so it can be a program name with args.
+set dummy ozl; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1051: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZL'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
 else
-  : ${oz_cv_enable_contrib_regex:=$oz_enable_contrib_regex}
-   : ${oz_cv_enable_contrib_regex:=yes}
+  case "$OZL" in
+  /*)
+  ac_cv_path_OZL="$OZL" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZL="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZL="$ac_cv_path_OZL"
+if test -n "$OZL"; then
+  echo "$ac_t""$OZL" 1>&6
+else
+  echo "$ac_t""no" 1>&6
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_regex" 1>&6
-
-  if test "$oz_cv_enable_contrib_regex" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }regex"
-  fi
-
-echo $ac_n "checking for --enable-contrib-doc""... $ac_c" 1>&6
-echo "configure:1095: checking for --enable-contrib-doc" >&5
-# Check whether --enable-contrib-doc or --disable-contrib-doc was given.
-if test "${enable_contrib_doc+set}" = set; then
-  enableval="$enable_contrib_doc"
-  oz_cv_enable_contrib_doc=$enableval
+    OZL=`echo $OZL | sed -e "s|//|/|g"`
+    if test ! -n "$OZL"
+    then
+	OZL=undefined
+	
+    fi
+    
+    
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "ozplatform", so it can be a program name with args.
+set dummy ozplatform; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1097: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
 else
-  : ${oz_cv_enable_contrib_doc:=$oz_enable_contrib_doc}
-   : ${oz_cv_enable_contrib_doc:=yes}
+  case "$OZPLATFORM" in
+  /*)
+  ac_cv_path_OZPLATFORM="$OZPLATFORM" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZPLATFORM="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZPLATFORM="$ac_cv_path_OZPLATFORM"
+if test -n "$OZPLATFORM"; then
+  echo "$ac_t""$OZPLATFORM" 1>&6
+else
+  echo "$ac_t""no" 1>&6
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_doc" 1>&6
+    OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`
+    if test ! -n "$OZPLATFORM"
+    then
+	OZPLATFORM=undefined
+	
+    fi
+    
+    PLATFORM=`$OZPLATFORM`
+    
 
-  if test "$oz_cv_enable_contrib_doc" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }doc"
-  fi
+    : ${CXXFLAGS="-O"}
+    
+    
+    ac_ext=C
+# CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+cross_compiling=$ac_cv_prog_cxx_cross
 
-echo $ac_n "checking for --enable-contrib-os""... $ac_c" 1>&6
-echo "configure:1112: checking for --enable-contrib-os" >&5
-# Check whether --enable-contrib-os or --disable-contrib-os was given.
-if test "${enable_contrib_os+set}" = set; then
-  enableval="$enable_contrib_os"
-  oz_cv_enable_contrib_os=$enableval
+
+echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
+echo "configure:1147: checking how to run the C++ preprocessor" >&5
+if test -z "$CXXCPP"; then
+if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
 else
-  : ${oz_cv_enable_contrib_os:=$oz_enable_contrib_os}
-   : ${oz_cv_enable_contrib_os:=yes}
+  ac_ext=C
+# CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
+ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
+cross_compiling=$ac_cv_prog_cxx_cross
+  CXXCPP="${CXX-g++} -E"
+  cat > conftest.$ac_ext <<EOF
+#line 1160 "configure"
+#include "confdefs.h"
+#include <stdlib.h>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:1165: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  :
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  CXXCPP=/lib/cpp
+fi
+rm -f conftest*
+  ac_cv_prog_CXXCPP="$CXXCPP"
+fi
+fi
+CXXCPP="$ac_cv_prog_CXXCPP"
+echo "$ac_t""$CXXCPP" 1>&6
+
+
+echo $ac_n "checking for --with-gmp""... $ac_c" 1>&6
+echo "configure:1185: checking for --with-gmp" >&5
+# Check whether --with-gmp or --without-gmp was given.
+if test "${with_gmp+set}" = set; then
+  withval="$with_gmp"
+  with_gmp=$withval
+else
+  with_gmp=yes
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_os" 1>&6
+	    
+if test "$with_gmp" != no
+then
+    echo "$ac_t""yes" 1>&6
 
-  if test "$oz_cv_enable_contrib_os" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }os"
-  fi
+    if test "${with_gmp}" != yes
+    then
+	oz_gmp_lib_dir=$with_gmp
+	oz_gmp_inc_dir=$with_gmp
+    fi
+    
+    oz_inc_path="$oz_gmp_inc_dir $oz_inc_path"
+    oz_lib_path="$oz_gmp_lib_dir $oz_lib_path"
 
-echo $ac_n "checking for --enable-contrib-text""... $ac_c" 1>&6
-echo "configure:1129: checking for --enable-contrib-text" >&5
-# Check whether --enable-contrib-text or --disable-contrib-text was given.
-if test "${enable_contrib_text+set}" = set; then
-  enableval="$enable_contrib_text"
-  oz_cv_enable_contrib_text=$enableval
 else
-  : ${oz_cv_enable_contrib_text:=$oz_enable_contrib_text}
-   : ${oz_cv_enable_contrib_text:=yes}
+    echo "$ac_t""no" 1>&6
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_text" 1>&6
 
-  if test "$oz_cv_enable_contrib_text" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }text"
-  fi
-
-echo $ac_n "checking for --enable-contrib-dpanel""... $ac_c" 1>&6
-echo "configure:1146: checking for --enable-contrib-dpanel" >&5
-# Check whether --enable-contrib-dpanel or --disable-contrib-dpanel was given.
-if test "${enable_contrib_dpanel+set}" = set; then
-  enableval="$enable_contrib_dpanel"
-  oz_cv_enable_contrib_dpanel=$enableval
+  echo $ac_n "checking for gmp.h""... $ac_c" 1>&6
+echo "configure:1214: checking for gmp.h" >&5
+if eval "test \"`echo '$''{'oz_cv_header_gmp_h'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
 else
-  : ${oz_cv_enable_contrib_dpanel:=$oz_enable_contrib_dpanel}
-   : ${oz_cv_enable_contrib_dpanel:=yes}
+  
+    
+      oz_tmp_cppflags="$CPPFLAGS"
+      oz_tmp_ok=no
+      for oz_tmp in $oz_inc_path; do
+	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
+	cat > conftest.$ac_ext <<EOF
+#line 1225 "configure"
+#include "confdefs.h"
+#include "gmp.h"
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:1230: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  
+        oz_tmp_ok="-I$oz_tmp"
+        break
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+fi
+rm -f conftest*
+      done
+      if test "$oz_tmp_ok" = no; then
+	cat > conftest.$ac_ext <<EOF
+#line 1246 "configure"
+#include "confdefs.h"
+#include "gmp.h"
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:1251: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  
+          oz_tmp_ok=yes
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+fi
+rm -f conftest*
+      fi
+      CPPFLAGS=$oz_tmp_cppflags
+oz_cv_header_gmp_h="$oz_tmp_ok"
+
+    
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_dpanel" 1>&6
+echo "$ac_t""$oz_cv_header_gmp_h" 1>&6
 
-  if test "$oz_cv_enable_contrib_dpanel" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }dpanel"
+  oz_tmp_val=$oz_cv_header_gmp_h
+
+  if test "$oz_tmp_val" != no; then
+    if test "$oz_tmp_val" != yes; then
+      
+  if test "$oz_tmp_val" != yes && test "$oz_tmp_val" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $CPPFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_tmp_val"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
   fi
 
-echo $ac_n "checking for --enable-contrib-micq""... $ac_c" 1>&6
-echo "configure:1163: checking for --enable-contrib-micq" >&5
-# Check whether --enable-contrib-micq or --disable-contrib-micq was given.
-if test "${enable_contrib_micq+set}" = set; then
-  enableval="$enable_contrib_micq"
-  oz_cv_enable_contrib_micq=$enableval
+    fi
+    oz_gmp_inc_found=yes
+  else
+    oz_gmp_inc_found=no
+  fi
+
+if test "$oz_gmp_inc_found" = yes; then
+  
+  if test -n "$oz_cv_lib_path_ldflags_gmp_mpz_init"; then
+    echo $ac_n "checking for library gmp""... $ac_c" 1>&6
+echo "configure:1298: checking for library gmp" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_gmp_mpz_init
+    oz_add_libs=$oz_cv_lib_path_libs_gmp_mpz_init
+    if test "$oz_add_ldflags" = no; then
+      oz_tmp=no
+    else
+     if test -n "$oz_add_ldflags" && test "$oz_add_ldflags" != yes; then
+       oz_tmp="$oz_add_ldflags (LDFLAGS)"
+     else
+       oz_tmp=
+     fi
+     if test -n "$oz_add_libs" && \
+        test "$oz_add_libs" != yes && \
+        test "$oz_add_libs" != no; then
+       oz_tmp="$oz_tmp${oz_tmp:+ }$oz_add_libs (LIBS)"
+     fi
+    fi
+    echo "$ac_t""(cached) $oz_tmp" 1>&6
+  else
+    oz_tmp_ldflags=$LDFLAGS
+    oz_tmp_libs=$LIBS
+    oz_add_ldflags=no
+    oz_add_libs=no
+    echo $ac_n "checking for mpz_init in -lgmp (default)""... $ac_c" 1>&6
+echo "configure:1322: checking for mpz_init in -lgmp (default)" >&5
+    
+  oz_saved_LIBS=$LIBS
+  
+	cat > conftest.$ac_ext <<EOF
+#line 1327 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1338: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+      
 else
-  : ${oz_cv_enable_contrib_micq:=$oz_enable_contrib_micq}
-   : ${oz_cv_enable_contrib_micq:=yes}
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${oz_enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -lgmp -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+      
+	cat > conftest.$ac_ext <<EOF
+#line 1352 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1363: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+      
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-lgmp $oz_saved_LIBS"
+         oz_add_libs="-lgmp"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 1376 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1387: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+      
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for mpz_init in -L$p -lgmp""... $ac_c" 1>&6
+echo "configure:1402: checking for mpz_init in -L$p -lgmp" >&5
+         
+  oz_saved_LIBS=$LIBS
+  
+	cat > conftest.$ac_ext <<EOF
+#line 1407 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1418: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${oz_enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -lgmp -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+      
+	cat > conftest.$ac_ext <<EOF
+#line 1432 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1443: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-lgmp $oz_saved_LIBS"
+         oz_add_libs="-lgmp"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 1456 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1467: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-lgmp $oz_saved_LIBS"
+      oz_add_libs="-lgmp"
+      
+	cat > conftest.$ac_ext <<EOF
+#line 1488 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1499: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-lgmp $oz_saved_LIBS"
+      oz_add_libs="-lgmp"
+      
+	cat > conftest.$ac_ext <<EOF
+#line 1526 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1537: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+      
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for mpz_init in -L$p -lgmp""... $ac_c" 1>&6
+echo "configure:1552: checking for mpz_init in -L$p -lgmp" >&5
+         
+  oz_saved_LIBS=$LIBS
+  
+	cat > conftest.$ac_ext <<EOF
+#line 1557 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1568: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  if test "${oz_enable_link_static}" = yes; then
+      oz_add_libs="-Xlinker -Bstatic -lgmp -Xlinker -Bdynamic"
+      LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
+      
+	cat > conftest.$ac_ext <<EOF
+#line 1582 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1593: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS="-lgmp $oz_saved_LIBS"
+         oz_add_libs="-lgmp"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 1606 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1617: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+    else
+      LIBS="-lgmp $oz_saved_LIBS"
+      oz_add_libs="-lgmp"
+      
+	cat > conftest.$ac_ext <<EOF
+#line 1638 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpz_init();
+
+int main() {
+mpz_init()
+; return 0; }
+EOF
+if { (eval echo configure:1649: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+         oz_add_libs=no
+         echo "$ac_t""no" 1>&6
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+       done
+fi
+rm -f conftest*
+    fi
+fi
+rm -f conftest*
+    LDFLAGS=$oz_tmp_ldflags
+    LIBS=$oz_tmp_libs
+    oz_cv_lib_path_ldflags_gmp_mpz_init=$oz_add_ldflags
+    oz_cv_lib_path_libs_gmp_mpz_init=$oz_add_libs
+  fi
+  if test "$oz_add_ldflags" = no; then
+    oz_gmp_lib_found=no
+  else
+    
+  if test "$oz_add_ldflags" != yes && test "$oz_add_ldflags" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_add_ldflags"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="$oz_add_ldflags${LDFLAGS:+ }$LDFLAGS"
+  fi
+
+    
+  if test -n "$oz_add_libs" && test "$oz_add_libs" != yes && test "$oz_add_libs" != no; then
+    LIBS="$oz_add_libs${LIBS:+ }$LIBS"
+  fi
+    oz_gmp_lib_found=yes
+  fi
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_micq" 1>&6
-
-  if test "$oz_cv_enable_contrib_micq" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }micq"
+if test "$oz_gmp_lib_found" = yes; then
+  echo $ac_n "checking gmp version is at least 2""... $ac_c" 1>&6
+echo "configure:1702: checking gmp version is at least 2" >&5
+  if test -z "$oz_cv_gmp_version_ok"; then
+    cat > conftest.$ac_ext <<EOF
+#include <gmp.h>
+TheVersion __GNU_MP_VERSION __GNU_MP_VERSION_MINOR
+EOF
+    oz_tmp=`$CXXCPP $CPPFLAGS conftest.$ac_ext | egrep TheVersion`;
+    rm -f conftest.$ac_ext 2>/dev/null
+    if oz_tmp=`expr "$oz_tmp" : 'TheVersion \(.*\)$'`; then
+      
+  oz_tmp_got="$oz_tmp"
+  oz_tmp_want="2"
+  oz_tmp_IFS="$IFS"
+  IFS="$IFS._"
+  set $oz_tmp_got DONE
+  oz_tmp__ok=yes
+  for oz_tmp_cur in $oz_tmp_want; do
+    if test "$1" = DONE; then
+      break
+    elif test "$oz_tmp_cur" -lt "$1"; then
+      break
+    elif test "$oz_tmp_cur" -gt "$1"; then
+      oz_tmp__ok=no
+      break
+    fi
+    shift
+  done
+  IFS=$oz_tmp_IFS
+  oz_tmp_ok=$oz_tmp__ok
+      test "$oz_tmp_ok" = yes && oz_cv_gmp_version_ok=$oz_tmp_ok
+    else
+      oz_tmp_ok=no
+    fi
+    echo "$ac_t""$oz_tmp_ok" 1>&6
+  else
+    oz_tmp_ok=$oz_cv_gmp_version_ok
+    echo "$ac_t""(cached) $oz_tmp_ok" 1>&6
   fi
-
-
-subdirs="$CONTRIBDIRS"
-
-
-echo $ac_n "checking for --enable-contrib-ri_lp""... $ac_c" 1>&6
-echo "configure:1184: checking for --enable-contrib-ri_lp" >&5
-# Check whether --enable-contrib-ri_lp or --disable-contrib-ri_lp was given.
-if test "${enable_contrib_ri_lp+set}" = set; then
-  enableval="$enable_contrib_ri_lp"
-  oz_cv_enable_contrib_ri_lp=$enableval
-else
-  : ${oz_cv_enable_contrib_ri_lp:=$oz_enable_contrib_ri_lp}
-   : ${oz_cv_enable_contrib_ri_lp:=yes}
+  oz_gmp_version_ok=$oz_tmp_ok
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_ri_lp" 1>&6
-
-  if test "$oz_cv_enable_contrib_ri_lp" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }ri_lp"
-  fi
-
-echo $ac_n "checking for --enable-contrib-davinci""... $ac_c" 1>&6
-echo "configure:1201: checking for --enable-contrib-davinci" >&5
-# Check whether --enable-contrib-davinci or --disable-contrib-davinci was given.
-if test "${enable_contrib_davinci+set}" = set; then
-  enableval="$enable_contrib_davinci"
-  oz_cv_enable_contrib_davinci=$enableval
-else
-  : ${oz_cv_enable_contrib_davinci:=$oz_enable_contrib_davinci}
-   : ${oz_cv_enable_contrib_davinci:=yes}
+if test "$oz_gmp_inc_found" = no; then
+  echo "configure: warning: required GNU MP include file not found" 1>&2
+elif test "$oz_gmp_lib_found" = no; then
+  echo "configure: warning: required GNU MP lib not found" 1>&2
+elif test "$oz_gmp_version_ok" = no; then
+  echo "configure: warning: GNU MP version too old" 1>&2
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_davinci" 1>&6
+if test "$oz_gmp_inc_found"  = no || \
+   test "$oz_gmp_lib_found"  = no || \
+   test "$oz_gmp_version_ok" = no; then
+  { echo "configure: error: 
+The GNU Multiple Precision Arithmetic Library (gmp)
+version 2 or higher is required
+to build the system.  It can be retrieved from:
 
-  if test "$oz_cv_enable_contrib_davinci" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }davinci"
-  fi
+	ftp://ftp.gnu.org/pub/gnu/
 
-echo $ac_n "checking for --enable-contrib-psql""... $ac_c" 1>&6
-echo "configure:1218: checking for --enable-contrib-psql" >&5
-# Check whether --enable-contrib-psql or --disable-contrib-psql was given.
-if test "${enable_contrib_psql+set}" = set; then
-  enableval="$enable_contrib_psql"
-  oz_cv_enable_contrib_psql=$enableval
-else
-  : ${oz_cv_enable_contrib_psql:=$oz_enable_contrib_psql}
-   : ${oz_cv_enable_contrib_psql:=no}
+The latest version at this time is ??? and is available
+packaged as the following archive:
+
+	???
+
+You may find a mirror archive closer to you by consulting:
+
+	http://www.gnu.org/order/ftp.html
+" 1>&2; exit 1; }
 fi
 
-echo "$ac_t""$oz_cv_enable_contrib_psql" 1>&6
 
-  if test "$oz_cv_enable_contrib_psql" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }psql"
-  fi
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "daVinci", so it can be a program name with args.
+set dummy daVinci; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1783: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_DAVINCI'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$DAVINCI" in
+  /*)
+  ac_cv_path_DAVINCI="$DAVINCI" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_DAVINCI="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+DAVINCI="$ac_cv_path_DAVINCI"
+if test -n "$DAVINCI"; then
+  echo "$ac_t""$DAVINCI" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
 
+    DAVINCI=`echo $DAVINCI | sed -e "s|//|/|g"`
+    if test ! -n "$DAVINCI"
+    then
+	DAVINCI=undefined
+	{ echo "configure: error: 
+  
+  Configure is not able to find the program \"daVinci\". 
+  Either it is not in the search path or it is not installed.
+  To obtain a copy check http://www.tzi.de/~davinci/.
+
+" 1>&2; exit 1; }
+    fi
+    
 
 trap '' 1 2 15
 cat > confcache <<\EOF
@@ -1374,7 +1964,6 @@ s%@includedir@%$includedir%g
 s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
-s%@RM@%$RM%g
 s%@SRCDIR@%$SRCDIR%g
 s%@SRCTOP@%$SRCTOP%g
 s%@BUILDTOP@%$BUILDTOP%g
@@ -1386,8 +1975,12 @@ s%@INSTALL_DIR@%$INSTALL_DIR%g
 s%@HOMEURL@%$HOMEURL%g
 s%@HOMECACHE@%$HOMECACHE%g
 s%@OZTOOL@%$OZTOOL%g
-s%@CONTRIBDIRS@%$CONTRIBDIRS%g
-s%@subdirs@%$subdirs%g
+s%@OZC@%$OZC%g
+s%@OZL@%$OZL%g
+s%@OZPLATFORM@%$OZPLATFORM%g
+s%@PLATFORM@%$PLATFORM%g
+s%@CXXCPP@%$CXXCPP%g
+s%@DAVINCI@%$DAVINCI%g
 
 CEOF
 EOF
@@ -1499,104 +2092,6 @@ EOF
 chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
-
-if test "$no_recursion" != yes; then
-
-  # Remove --cache-file and --srcdir arguments so they do not pile up.
-  ac_sub_configure_args=
-  ac_prev=
-  for ac_arg in $ac_configure_args; do
-    if test -n "$ac_prev"; then
-      ac_prev=
-      continue
-    fi
-    case "$ac_arg" in
-    -cache-file | --cache-file | --cache-fil | --cache-fi \
-    | --cache-f | --cache- | --cache | --cach | --cac | --ca | --c)
-      ac_prev=cache_file ;;
-    -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
-    | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* | --c=*)
-      ;;
-    -srcdir | --srcdir | --srcdi | --srcd | --src | --sr)
-      ac_prev=srcdir ;;
-    -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*)
-      ;;
-    *) ac_sub_configure_args="$ac_sub_configure_args $ac_arg" ;;
-    esac
-  done
-
-  for ac_config_dir in $CONTRIBDIRS; do
-
-    # Do not complain, so a configure script can configure whichever
-    # parts of a large source tree are present.
-    if test ! -d $srcdir/$ac_config_dir; then
-      continue
-    fi
-
-    echo configuring in $ac_config_dir
-
-    case "$srcdir" in
-    .) ;;
-    *)
-      if test -d ./$ac_config_dir || mkdir ./$ac_config_dir; then :;
-      else
-        { echo "configure: error: can not create `pwd`/$ac_config_dir" 1>&2; exit 1; }
-      fi
-      ;;
-    esac
-
-    ac_popdir=`pwd`
-    cd $ac_config_dir
-
-      # A "../" for each directory in /$ac_config_dir.
-      ac_dots=`echo $ac_config_dir|sed -e 's%^\./%%' -e 's%[^/]$%&/%' -e 's%[^/]*/%../%g'`
-
-    case "$srcdir" in
-    .) # No --srcdir option.  We are building in place.
-      ac_sub_srcdir=$srcdir ;;
-    /*) # Absolute path.
-      ac_sub_srcdir=$srcdir/$ac_config_dir ;;
-    *) # Relative path.
-      ac_sub_srcdir=$ac_dots$srcdir/$ac_config_dir ;;
-    esac
-
-    # Check for guested configure; otherwise get Cygnus style configure.
-    if test -f $ac_sub_srcdir/configure; then
-      ac_sub_configure=$ac_sub_srcdir/configure
-    elif test -f $ac_sub_srcdir/configure.in; then
-      ac_sub_configure=$ac_configure
-    else
-      echo "configure: warning: no configuration information is in $ac_config_dir" 1>&2
-      ac_sub_configure=
-    fi
-
-    # The recursion is here.
-    if test -n "$ac_sub_configure"; then
-
-      # Make the cache file name correct relative to the subdirectory.
-      case "$cache_file" in
-      /*) ac_sub_cache_file=$cache_file ;;
-      *) # Relative path.
-        ac_sub_cache_file="$ac_dots$cache_file" ;;
-      esac
-  case "$ac_given_INSTALL" in
-        [/$]*) INSTALL="$ac_given_INSTALL" ;;
-        *) INSTALL="$ac_dots$ac_given_INSTALL" ;;
-        esac
-
-      echo "running ${CONFIG_SHELL-/bin/sh} $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir"
-      # The eval makes quoting arguments work.
-      if eval ${CONFIG_SHELL-/bin/sh} $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir
-      then :
-      else
-        { echo "configure: error: $ac_sub_configure failed for $ac_config_dir" 1>&2; exit 1; }
-      fi
-    fi
-
-    cd $ac_popdir
-  done
-fi
-
 
 
 
