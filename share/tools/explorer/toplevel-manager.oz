@@ -31,7 +31,6 @@ local
 	 scale
       
       meth init(Manager Menu Canvas Status ?PackMe)
-	 {System.show title(before Manager)}
 	 TitleName = {Dictionary.get Manager.options.visual title}
 	 Tk.toplevel,tkInit(title:              TitleName
 			    'class':            'OzTools'
