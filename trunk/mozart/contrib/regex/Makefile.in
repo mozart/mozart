@@ -14,7 +14,7 @@ OZTOOL		= @OZTOOL@
 CXXFLAGS	= @CXXFLAGS@
 CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
 		  -I$(BUILDTOP)/platform/emulator \
-		  -I$(PREFIX)/include @CPPFLAGS@
+		  -I$(PREFIX)/include @CPPFLAGS@ @DEFS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
 

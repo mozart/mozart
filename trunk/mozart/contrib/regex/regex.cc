@@ -15,7 +15,14 @@
 
 #include "mozart.h"
 #include <sys/types.h>
-#include <string.h>
+
+#ifndef HAVE_STRDUP
+inline char * strdup(const char *s) {
+  char *ret = new char[strlen(s)+1];
+  strcpy(ret,s);
+  return ret;
+}
+#endif
 
 extern "C" {
 #include <regex.h>
