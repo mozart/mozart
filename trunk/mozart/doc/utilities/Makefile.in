@@ -28,7 +28,6 @@ BINDIR		= $(PREFIX)/bin
 DOCDIR		= $(PREFIX)/share/doc
 ELISPDIR	= $(PREFIX)/share/elisp
 HOMEURL         = @HOMEURL@
-BUILDTOP        = @BUILDTOP@
 
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
