@@ -169,7 +169,7 @@ private:
 public:
   char *getHeader() {return ""; }
   ByteSourceDatum(OZ_Datum d):dat(d),idx(0) {}
-  virtual ~ByteSourceDatum() { free(dat.data); }
+  virtual ~ByteSourceDatum() {}
   OZ_Return getBytes(BYTE*,int&,int&);
   virtual Bool checkChecksum(crc_t i) { return OK; }
 };
