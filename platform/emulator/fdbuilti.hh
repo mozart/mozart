@@ -20,6 +20,7 @@
 #include "builtins.hh"
 #include "fdhook.hh"
 #include "genvar.hh"
+#include "fdprofil.hh"
 
 //-----------------------------------------------------------------------------
 // Debug Macros
@@ -135,6 +136,13 @@ extern int static_index_size[MAXFDBIARGS];
 //-----------------------------------------------------------------------------
 //                         Prototypes of FD-built-ins
 //-----------------------------------------------------------------------------
+
+// fdprof.cc
+OZ_C_proc_proto(BIfdReset);
+OZ_C_proc_proto(BIfdDiscard);
+OZ_C_proc_proto(BIfdGetNext);
+OZ_C_proc_proto(BIfdPrint);
+OZ_C_proc_proto(BIfdAverage);
 
 // fdrel.cc
 OZ_C_proc_proto(BIfdMinimum);
@@ -713,6 +721,8 @@ public:
   }
 
   OZ_Bool entailment(void) {
+    PROFILE_CODE1(FDProfiles.inc_item(no_ent_props);)
+
     if (only_local_vars) {
       processLocal();
     } else {

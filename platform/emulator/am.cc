@@ -607,16 +607,6 @@ void AM::decSolveThreads (Board *bb)
 //  X = Y
 // --> if det Y then ... fi
 
-#ifdef PROFILE_FD
-struct csl_stat_type {
-  unsigned long hs_lo;
-  unsigned long hs_dp;
-  unsigned long bn_lo;
-  unsigned long bn_dp_ms;
-  unsigned long bn_dp_ht;
-} csl_stat = {0,0,0,0,0};
-#endif
-
 SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
                                    SuspList * suspList,
                                    TaggedRef term,
@@ -644,27 +634,25 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
       continue;
     }
 
-#ifdef PROFILE_FD
-    {
-      Board * home_ptr = var->getHome();
-      if (home_ptr == am.currentBoard) {
-        if (susp->getBoard()->getBoardDeref() == am.currentBoard)
-          csl_stat.hs_lo += 1;
-        else
-          csl_stat.hs_dp += 1;
-      } else {
-        Board * b = susp->getBoard()->getBoardDeref();
-        if (b == home_ptr)
-          csl_stat.bn_lo += 1;
-        else if (am.isBetween(b, home_ptr))
-          csl_stat.bn_dp_ht += 1;
-        else
-          csl_stat.bn_dp_ms += 1;
-      }
-    }
-#endif
+PROFILE_CODE1
+  (
+   if (var->getHome() == am.currentBoard) {
+     if (susp->getBoard()->getBoardDeref() == am.currentBoard)
+       FDProfiles.inc_item(from_home_to_home_hits);
+     else
+       FDProfiles.inc_item(from_home_to_deep_hits);
+   } else {
+     Board * b = susp->getBoard()->getBoardDeref();
+     if (b == var->getHome())
+       FDProfiles.inc_item(from_deep_to_home_misses);
+     else if (am.isBetween(b, var->getHome()))
+       FDProfiles.inc_item(from_deep_to_deep_hits);
+     else
+       FDProfiles.inc_item(from_deep_to_deep_misses);
+   }
+   )
 
-    // already propagated susps remain in suspList
+  // already propagated susps remain in suspList
     if (! susp->isPropagated()) {
       if ((suspList->checkCondition(taggedvar, term)) &&
           (susp->wakeUp(var->getHome(), calledBy))) {

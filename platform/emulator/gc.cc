@@ -41,6 +41,7 @@
 #include "stack.hh"
 #include "thread.hh"
 #include "verbose.hh"
+#include "fdprofil.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -1517,6 +1518,9 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   if (verbOut == (FILE *) NULL)
     verbReopen ();
 #endif
+
+  PROFILE_CODE1(FDProfiles.add(); FDVarsTouched.discard();)
+
   if (isGround == (Bool *) NULL) {
     GCMETHMSG(" ********** AM::copyTree **********");
   } else {
