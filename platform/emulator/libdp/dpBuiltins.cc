@@ -76,6 +76,9 @@ void perdioInitLocal()
   // sleep(10);
 #endif
 
+  if(perdioTrigger==0)
+    return;
+
   //
   perdioTrigger = 0;
   initPerdio();
