@@ -111,32 +111,27 @@ local
       meth init(master:M options:O)
 
 	 proc {Okay}
-	    case {Tk.string.toInt {Filter {Update tkReturn(get $)}
-				   Char.isDigit}}
-	    of false then skip elseof I then
-	       {Dictionary.put O hide   {IsHide tkReturnInt($)}==1}
-	       {Dictionary.put O scale  {IsScale tkReturnInt($)}==1}
-	       {Dictionary.put O update I}
-	       {self tkClose}
-	    end
+	    {Dictionary.put O hide   {IsHide tkReturnInt($)}==1}
+	    {Dictionary.put O scale  {IsScale tkReturnInt($)}==1}
+	    {Dictionary.put O update {Update tkGet($)}}
 	 end
 	 
 	 TkTools.dialog,tkInit(master:  M
 			       title:   TitleName#': Drawing'
 			       default: 1
 			       pack:    false
-			       buttons: ['Okay'#Okay 'Cancel'#tkClose])
+			       buttons: ['Okay'#tkClose(Okay)
+					 'Cancel'#tkClose])
 
 	 Drawing  = {New TkTools.textframe tkInit(parent:self
 						  text:  'Drawing')}
 	 IsHide   = {New Tk.variable tkInit({Dictionary.get O hide})}
 	 IsScale  = {New Tk.variable tkInit({Dictionary.get O scale})}
 
-	 Update   = {New Tk.entry tkInit(parent: Drawing.inner
-					 bg:     EntryColor
-					 width:  SmallEntryWidth)}
+	 Update   = {New TkTools.numberentry
+		     tkInit(parent: Drawing.inner
+			    min:1 val:{Dictionary.get O update})}
       in
-	 {Update tk(insert 0 {Dictionary.get O update})}
 	 {Tk.batch [grid({New Tk.checkbutton
 			  tkInit(parent:   Drawing.inner
 				 anchor:   w
@@ -158,8 +153,7 @@ local
 					      anchor: w
 					      text:  ' Solutions')}
 			 row:3 column:2) 
-		    pack(Drawing)
-		    focus(Update)]}
+		    pack(Drawing)]}
 	 DrawingDialog,tkPack
       end
       
