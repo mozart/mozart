@@ -12,6 +12,9 @@
 : ${OZPLATFORM=`$SRCTOP/share/bin/ozplatform`}
 : ${OZPREFIX=/usr/local/oz}
 
+echo Fatal error: ozc.sh should no longer be called
+exit 1
+
 if test -z "$OZEMULATOR"
 then
     for d in \
@@ -36,7 +39,10 @@ fi
 OZINIT=${OZMAINIT}
 export OZINIT
 
-echo "Using OZEMULATOR: $OZEMULATOR"
-echo "Using OZMAFILE: $OZMAFILE"
+if test "x$OZMAKE_VERBOSE" = xyes
+then
+    echo "Using OZEMULATOR: $OZEMULATOR"
+    echo "Using OZMAFILE: $OZMAFILE"
+fi
 
 exec $OZEMULATOR $OZMAFILE -- "$@"
