@@ -405,6 +405,9 @@ define
 			  getDouble            : GetDouble
 			  null                 : Null
 			  freeData             : FreeData
+			  %% Gtk Arg Handling
+			  makeArg              : GOZSignal.makeArg
+			  getArg               : GOZSignal.getArg
 			  %% GDK Event Import
 			  getGdkEvent          : GetGdkEvent
 			  %% GTK Canvas Helper
