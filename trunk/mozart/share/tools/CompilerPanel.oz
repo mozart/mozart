@@ -21,10 +21,8 @@
 
 functor
 import
-   Application(save)
    System(show)
    Error(formatLine msg)
-   FS(value)
    Open(file)
    Pickle(load save)
    Tk
