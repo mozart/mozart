@@ -77,8 +77,8 @@ local
 						 else Self
 						 end)
 	 {BaseEvalDialog.dialog, getCompiler($)
-	  enqueue([setSwitch(debuginfovarnames true)
-		   setSwitch(debuginfocontrol true)])}
+	  enqueue([setSwitch(controlflowinfo true)
+		   setSwitch(staticvarnames true)])}
 
       end
    end
