@@ -104,9 +104,10 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
     Assert(sv!=ov);
     ov->relinkSuspListTo(sv);
     term=makeTaggedRef(termPtr);
-  } else {
+  } else if (isUVar(term)){
     // mm2: problems with fsp_monitorIn, monitorArity,...
     // Assert(ov->isEmptySuspList());
+    term=makeTaggedRef(termPtr);
   }
   oz_var_dispose(ov);
   doBind(varPtr,term);
