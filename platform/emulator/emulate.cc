@@ -505,9 +505,9 @@ void pushContX(TaskStack *stk,
 // ???
 // ------------------------------------------------------------------------
 
-#define SUSP_PC(TermPtr,RegsToSave,PC)		\
-   PushContX(PC,Y,G,X,RegsToSave);		\
-   addSusp(TermPtr,CTT);	\
+#define SUSP_PC(TermPtr,RegsToSave,PC)			\
+   PushContX(PC,Y,G,X,RegsToSave);			\
+   addSusp(TermPtr,CTT);				\
    goto LBLsuspendThread;
 
 
@@ -1291,7 +1291,7 @@ LBLdispatcher:
 	SUSPENDONVARLIST;
 
       case BI_PREEMPT:
-	PushCont(PC+3,Y,G);
+	PushContX(PC+3,Y,G,X,predArity);
 	goto LBLpreemption;
 
       case BI_REPLACEBICALL: 
