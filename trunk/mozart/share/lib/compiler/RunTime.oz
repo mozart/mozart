@@ -23,7 +23,6 @@
 %%%
 
 functor
-
 require
    BootException(raiseDebugCheck: RaiseDebugCheck
 		 taskStackError:  ThreadTaskStack
@@ -39,8 +38,9 @@ require
    BootName(newUnique)
    at 'x-oz://boot/Name'
 
+   BootThread(create)
+   at 'x-oz://boot/Thread'
 prepare
-
    proc {RaiseDebugExtend T1 T2}
       L = {Label T1.debug}
    in
@@ -50,7 +50,7 @@ prepare
 		 loc:   {ThreadLocation}
 		 info:  T2)}}}
    end
-   
+
    local
       proc {DescendArity Ls1 Ls2}
 	 case Ls1 of nil then skip
@@ -84,7 +84,6 @@ prepare
 	 {Match Xs 1 T}
       end
    end
-
 
    ProcValues = env(%% Value
 		    '.': Value.'.'
@@ -120,7 +119,7 @@ prepare
 		    'width': Width
 		    '^': Record.'^'
 		    'tellRecordSize': BootRecord.tellRecordSize
-		    
+
 		    %% Object
 		    'ooPrivate': NewName
 		    '@': Object.'@'
@@ -130,13 +129,16 @@ prepare
 		    'ooGetLock': BootObject.ooGetLock
 		    'class': Object.'class'
 		    'aritySublist': AritySublist
-		    
+
+		    %% Thread
+		    'Thread.create': BootThread.create
+
 		    %% Exception
 		    'Raise': Raise
 		    'RaiseError': Exception.raiseError
 		    'RaiseDebugCheck': RaiseDebugCheck
 		    'RaiseDebugExtend': RaiseDebugExtend
-		    
+
 		    %% Functor
 		    'NewFunctor': Functor.new)
 
@@ -148,19 +150,15 @@ prepare
 
    TokenValues = env('true':  true
 		     'false': false)
-
 import
    Module(manager)
    Core(nameToken variable)
-   
 export
    Literals
    Tokens
    Procs
    ProcValues
-   
 define
-   
    fun {ApplyFunctor FileName F}
       ModMan = {New Module.manager init()}
    in
@@ -168,12 +166,12 @@ define
    end
 
    Literals = LiteralValues
-   
+
    Tokens = {Record.mapInd TokenValues
 	     fun {$ X Value}
 		{New Core.nameToken init(Value true)}
 	     end}
-   
+
    Procs = {Record.mapInd
 	    {AdjoinAt ProcValues 'ApplyFunctor' ApplyFunctor}
 	    proc {$ X Value ?V} PrintName in
