@@ -116,9 +116,19 @@ void Statistics::print(FILE *fd)
 #endif
 
   fprintf(fd,"  Finite Domain Constraints:\n");
-  fprintf(fd,"    Variables created      : %d\n", fdvarsCreated.total);
-  fprintf(fd,"    Propagators created    : %d\n", propagatorsCreated.total);
-  fprintf(fd,"    Propagator invocations : %d\n\n", propagatorsInvoked.total);
+  fprintf(fd,"    Variables created          : %d\n",
+          fdvarsCreated.total);
+  fprintf(fd,"    Propagators created        : %d\n",
+          propagatorsCreated.total);
+  fprintf(fd,"    Propagator invocations     : %d\n",
+          propagatorsInvoked.total);
+  printTime(fd,"    Time spent in propagators  : ", timeForPropagation.total);
+  if (timeForPropagation.total > 0) {
+    fprintf(fd,"\n    Propagator runs per second : %.0lf\n\n",
+            1000*double(propagatorsInvoked.total)/timeForPropagation.total);
+  } else {
+    fprintf(fd,"\n\n");
+  }
 
   fprintf(fd,"******************************\n");
   fprintf(fd,"***   End of Statistics    ***\n");
@@ -172,7 +182,7 @@ static void recSetArg(OZ_Term record, char *feat, unsigned int val)
 /*
  * fill two records of the form
  *
- *        statistics(r:_  g:_  l:_  c:_  h:_  s:_  u:_  e:_)
+ *        statistics(r:_  p:_ g:_  l:_  c:_  h:_  s:_  u:_  e:_)
  *        enum(a:_  c:_  s:_  f:_)
  */
 
