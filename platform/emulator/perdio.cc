@@ -3794,7 +3794,6 @@ void portWait(Thread *th, int queueSize, int restTime, Tertiary *t){
     th->pushCall(BI_portWait,makeTaggedTert(t),
                  makeTaggedSmallInt(tot - PortWaitTimeSlice));
     }
-  RefsArray args = allocateRefsArray(1, NO);
   th->pushCall(BI_Delay,makeTaggedSmallInt(time));
 }
 
