@@ -438,8 +438,8 @@ void Statistics::printInstr()
   for (int i=0; i<PROFILE_INSTR_MAX; i++) {
     sum += instr[i];
     if (instr[i]!=0)
-      printf("%010ud x %s\n",instr[i],CodeArea::opToString[i]);
+      printf("%010lu x %s\n",instr[i],CodeArea::opToString[i]);
   }
-  printf("----------\n%010ud\n",sum);
+  printf("----------\n%010lu\n",sum);
 }
 #endif
