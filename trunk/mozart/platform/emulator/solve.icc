@@ -114,7 +114,7 @@ TaggedRef SolveActor::merge(Board *bb) {
 
 inline
 Board *SolveActor::clone(Board *bb) {
-  ozstat.incSolveClone();
+  ozstat.incSolveCloned();
   Bool testGround;
   Board *copy = (Board *) am.copyTree(solveBoard, &testGround);
   SolveActor *ca = SolveActor::Cast(copy->getActor());
