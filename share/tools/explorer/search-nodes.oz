@@ -57,14 +57,14 @@ local
 	 end
 	 
 	 meth GotoCopyAbove(CurDepthIn ?CurDepthOut
-			    Node ?RevNs CurDistIn ?CurDistOut ?CurCopy)
+			    Node CurDistIn ?CurDistOut ?RevNs ?CurCopy)
 	    !RevNs = {GetIndex @kids Node 1}|RevNr
 	 in
 	    case @copy of !False then
 	       {self.mom GotoCopyAbove(CurDepthIn+1 ?CurDepthOut
-				       self ?RevNr
+				       self
 				       CurDistIn+1 ?CurDistOut
-				       ?CurCopy)}
+				       ?RevNr ?CurCopy)}
 	    elseof TaggedCopy then
 	       RevNr       = nil
 	       CurDistOut  = CurDistIn
@@ -73,12 +73,12 @@ local
 	    end
 	 end
       
-	 meth findDepthAndCopy(?CurDepth ?RevNs ?CurDist ?CurCopy)
+	 meth findDepthAndCopy(?CurDepth ?CurDist ?RevNs ?CurCopy)
 	    case @copy of !False then
 	       {self.mom GotoCopyAbove(1 ?CurDepth
-				       self ?RevNs
+				       self 
 				       1 ?CurDist
-				       ?CurCopy)}
+				       ?RevNs ?CurCopy)}
 	    elseof TaggedCopy then
 	       CurCopy  = {Procedure.clone TaggedCopy.1}
 	       CurDist  = 0

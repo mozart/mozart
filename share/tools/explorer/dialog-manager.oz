@@ -288,33 +288,14 @@ local
 		 buttons: ['Okay'#
 			   proc {$}
 			      GetDist GetCustomDist
-			      GetCustomDepth = {DepthEntry tkReturnInt(get $)}
-			      GetCustomNodes = {NodesEntry tkReturnInt(get $)}
-			      GetDepth = case {DepthVar tkReturnInt($)}
-					 of 0 then ~1
-					 [] 1 then GetCustomDepth
-					 end
-			      GetNodes = case {NodesVar tkReturnInt($)}
-					 of 0 then ~1
-					 [] 1 then GetCustomNodes
-					 end
 			   in
 			      {Dist getDistance(GetDist GetCustomDist)}
 			      case
 				 {IsInt GetDist} andthen
-				 {IsInt GetCustomDist} andthen
-				 {IsInt GetDepth} andthen
-				 {IsInt GetCustomDepth} andthen
-				 {IsInt GetNodes} andthen
-				 {IsInt GetCustomNodes}
+				 {IsInt GetCustomDist}
 			      then
 				 Options = o(dist:        GetDist
-					     customDist:  GetCustomDist
-					     depth:       GetDepth
-					     customDepth: GetCustomDepth
-					     nodes:       GetNodes
-					     customNodes: GetCustomNodes
-					    )
+					     customDist:  GetCustomDist)
 				 {self close}
 			      else true
 			      end
@@ -327,56 +308,9 @@ local
 					    text:     'Search Recomputation'
 					    distance: Prev.dist
 					    custom:   Prev.customDist)}
-	    Stop = {New Tk.frame tkInit(parent: self
-					relief: groove
-					bd:     Border)}
-
-	    Head    = {New Tk.label tkInit(parent: Stop
-					   relief: ridge
-					   bd:     Border
-					   text:   'Search Limits')}
-
-	    Buttons = {New Tk.frame tkInit(parent: Stop)}
-
-	    Depth   = {New Tk.frame tkInit(parent:             Buttons
-					   highlightthickness: 0)}
-	    DepthVar    = {New Tk.variable tkInit(Prev.depth\=~1)}
-	    DepthButton = {New Tk.checkbutton 
-			   tkInit(parent:   Depth
-				  variable: DepthVar
-				  anchor:   w
-				  text:     'Depth')}
-
-	    DepthEntry  = {New Tk.entry
-			   [tkInit(parent:   Depth
-				   back:     EntryColor
-				   width:    SmallEntryWidth)
-			    tk(insert 0 Prev.customDepth)]}
-	    Nodes  = {New Tk.frame tkInit(parent:             Buttons
-					  highlightthickness: 0)}
-	    NodesVar    = {New Tk.variable tkInit(Prev.nodes\=~1)}
-	    NodesButton = {New Tk.checkbutton 
-			   tkInit(parent:   Nodes
-				  variable: NodesVar
-				  anchor:   w
-				  text:     'Nodes')}
-
-	    NodesEntry  = {New Tk.entry
-			   [tkInit(parent:   Nodes
-				   back:     EntryColor
-				   width:    SmallEntryWidth)
-			    tk(insert 0 Prev.customNodes)]}
 	 in
-	    {Tk.batch [pack(NodesButton NodesEntry o(side:left))
-		       pack(DepthButton DepthEntry o(side:left))
-		       pack(Depth Nodes
-			    o(side:top anchor:w padx:Pad pady:Pad fill:both))
-		       pack(Head
-			    o(side:top padx:BigPad pady:BigPad
-			      ipadx:BigPad ipady:BigPad fill:x))
-		       pack(Buttons o(side:left fill:y))
-		       pack(Dist Stop
-			    o(side:top fill:x padx:BigPad pady:BigPad))]}
+	    {Tk.send pack(Dist
+			  o(side:top fill:x padx:BigPad pady:BigPad))}
 	 end
 
       end
@@ -392,17 +326,14 @@ local
 		   buttons: ['Okay'#
 			     proc {$}
 				GetDist GetCustomDist
-				GetKeep = {IsKeep tkReturnInt($)}==1
 			     in
 				{Dist getDistance(GetDist GetCustomDist)}
 				case
 				   {IsInt GetDist} andthen
-				   {IsInt GetCustomDist} andthen
-				   {Det GetKeep}
+				   {IsInt GetCustomDist}
 				then
 				   Options = o(dist:       GetDist
-					       customDist: GetCustomDist
-					       keep:       GetKeep) 
+					       customDist: GetCustomDist)
 				   {self close}
 				else true
 				end
@@ -415,21 +346,9 @@ local
 					    text:   'Information Recomputation'
 					    distance: Prev.dist
 					    custom:   Prev.customDist)}
-	    IsKeep     = {New Tk.variable tkInit(Prev.keep)}
-	    KeepFrame  = {New Tk.frame tkInit(parent: self
-					      relief: groove
-					      border: Border)}
-	    KeepButton = {New Tk.checkbutton
-			  tkInit(parent:   KeepFrame
-				 anchor:   w
-				 variable: IsKeep
-				 text:     'Keep solution information')}
 	 in
-	    {Tk.batch [pack(KeepButton
-			    o(side:top padx:Pad pady:Pad fill:both expand:1))
-		       pack(Dist KeepFrame
-			    o(side:top fill:x padx:BigPad pady:BigPad))
-		       ]}
+	    {Tk.send pack(Dist
+			  o(side:top fill:x padx:BigPad pady:BigPad))}
 	 end
 
       end
@@ -511,16 +430,8 @@ local
 	 Options <- {UpdateOption O recomputation @Options dist Id}
       end
       
-      meth getSearchDistance($)
+      meth getSearchDist($)
 	 @Options.dist
-      end
-
-      meth getSearchDepth($)
-	 @Options.depth
-      end
-
-      meth getSearchNodes($)
-	 @Options.nodes
       end
    end
 
@@ -536,18 +447,11 @@ local
       end
 
       meth setInfoOptions(O)
-	 Options <- {UpdateOption O recomputation
-		     {UpdateOption O solutions @Options
-		      keep Id}
-		     dist Id}
+	 Options <- {UpdateOption O recomputation @Options dist Id}
       end
 
-      meth getInfoDistance($)
+      meth getInfoDist($)
 	 @Options.dist
-      end
-
-      meth getKeepSolutions($)
-	 @Options.keep
       end
 
    end

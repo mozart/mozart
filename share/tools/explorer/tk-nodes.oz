@@ -10,15 +10,15 @@ local
    GetCenterAbove = {NewName}
    UpperSpaceI    = VerSpaceI - CircleWidthI
    UpperSpaceF    = {IntToFloat UpperSpaceI}
-   TagEnd         = v(']')
 
    class NumberNode
       attr number: False
 
       meth getNumber(Scale Font TakeNumber ?N)
 	 case @number==False then
-	    Canvas    = self.canvas
-	    NumberTag = Canvas.manager.numbers
+	    Canvas  = self.canvas
+	    Numbers = Canvas.numbers
+	    Actions = Canvas.actions
 	    X Y Above
 	 in
 	    N = TakeNumber
@@ -34,17 +34,16 @@ local
 			  o(font: Font
 			    text: N
 			    tags: q(NodePrefix#self.suffix
-				    Canvas.actionTag NumberTag
-				    b(Above))))}
+				    Actions Numbers b(Above))))}
 	    end
-	 else
-	    N = @number
+	 else N = @number
 	 end
       end
 
       meth redrawNumber(Scale Font)
-	 Canvas    = self.canvas
-	 NumberTag = Canvas.manager.numbers
+	 Canvas  = self.canvas
+	 Numbers = Canvas.numbers
+	 Actions = Canvas.actions
 	 X Y Above
       in
 	 <<getCenterAbove(X Y Above)>>
@@ -56,8 +55,8 @@ local
 					end}
 		    o(font: Font
 		      text: @number
-		      tags: q(NodePrefix#self.suffix
-			      Canvas.actionTag NumberTag b(Above))))}
+		      tags: q(NodePrefix#self.suffix Numbers Actions
+			      b(Above))))}
       end
 
       meth clearNumber
@@ -122,7 +121,7 @@ local
 	 [] K|Kr then {K purge} {Purge Kr}
 	 end
       end
-      
+     
    in
       class ChoiceNode
 	 from TkNode NumberNode
@@ -160,11 +159,11 @@ local
 	 end
 
       
-	 meth DrawKids(Ks Break MomX MyY Scale Font)
+	 meth DrawKids(Ks Break MomTree MomX MyY Scale Font)
 	    case Ks of nil then true
 	    [] K|Kr then
-	       {K drawTree(Break MomX MyY Scale Font)}
-	       <<DrawKids(Kr Break MomX MyY Scale Font)>>
+	       {K drawTree(Break MomTree MomX MyY Scale Font)}
+	       <<DrawKids(Kr Break MomTree MomX MyY Scale Font)>>
 	    end
 	 end
 	 
@@ -174,7 +173,7 @@ local
 	    {Purge @kids}
 	 end
 	 
-	 meth drawTree(Break MomX MyY Scale Font)
+	 meth drawTree(Break MomTree MomX MyY Scale Font)
 	    case {System.isVar Break} then
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
@@ -185,19 +184,19 @@ local
 	       Canvas      = self.canvas
 	       Suffix      = self.suffix
 	       Node        = !NodePrefix#Suffix
+	       Tree        = !TreePrefix#Suffix
+	       Actions     = Canvas.actions
 	    in
 	       offset <- NewOffset
-	       case self.mom of !False then true else
+	       case self.mom==False then true else
 		  {Canvas tk(crea line
 			     ScaledMomX
 			     ScaledMyY - Scale * UpperSpaceF
 			     ScaledMyX
 			     ScaledMyY - ScaledWidth
-			     o(tag: o(Canvas.tagsVar LinkPrefix#Suffix
-				      TagEnd)
+			     o(tag:   q(LinkPrefix#Suffix MomTree)
 			       width: LinkWidth))}
 	       end
-	       {Canvas.addTag TreePrefix#Suffix}
 	       case @isHidden then
 		  ScaledVerSpace = Scale * VerSpaceF
 		  BottomY        = ScaledMyY + ScaledVerSpace
@@ -210,13 +209,14 @@ local
 			     ScaledMyY + ScaledVerSpace
 			     ScaledMyX + ScaledHorSpace
 			     ScaledMyY + ScaledVerSpace
-			     o(tags:  o(Canvas.tagsVar Node Canvas.actionTag
-					TagEnd)
+			     o(tags:    q(Node Tree Actions)
 			       fill:    case @isSolBelow then
-					   case @choices>0 then StableColor
+					   case @choices>0 then
+					      StableColor
 					   else EntailedColor end
 					else
-					   case @choices>0 then PartialFailedColor
+					   case @choices>0 then
+					      PartialFailedColor
 					   else FailedColor end
 					end
 			       width:   NodeBorderWidth
@@ -229,10 +229,8 @@ local
 				   (ScaledVerSpace - ScaledWidth) / 2.0
 				   o(font: Font
 				     text: N
-				     tags: o(Canvas.tagsVar
-					     Node Canvas.actionTag
-					     Canvas.manager.numbers
-					     TagEnd)))}
+				     tags: q(Node Actions Tree
+					     Canvas.numbers)))}
 		     end
 		  end
 	       else
@@ -244,23 +242,20 @@ local
 			     case @toDo==nil then TkCreaTermOpt
 			     else TkCreaOpt
 			     end
-			     o(tags: o(Canvas.tagsVar
-				       Node Canvas.actionTag TagEnd)))}
+			     o(tags: q(Node Tree Actions)))}
 		  case @number of !False then true elseof N then
 		     case Font==False then true else
 			{Canvas tk(crea text ScaledMyX ScaledMyY
 				   o(font: Font
 				     text: N
-				     tags: o(Canvas.tagsVar
-					     Node Canvas.actionTag
-					     Canvas.manager.numbers
-					     TagEnd)))}
+				     tags: q(Node Tree Actions
+					     Canvas.numbers)))}
 		     end
 		  end
-		  <<ChoiceNode DrawKids(@kids Break MyX MyY+VerSpaceI
+		  <<ChoiceNode DrawKids(@kids Break Tree MyX MyY+VerSpaceI
 					Scale Font)>>
 	       end
-	       {Canvas.skipTag}
+	       {Canvas tk(addtag MomTree withtag Tree)}
 	       isDrawn <- True
 	       isDirty <- False
 	    else
@@ -352,7 +347,7 @@ local
       class FailedNode
 	 from LeafNode
 	 
-	 meth drawTree(Break MomX MyY Scale Font)
+	 meth drawTree(Break MomTree MomX MyY Scale Font)
 	    NewOffset   = @offset.1
 	    MyX         = MomX + NewOffset
 	    ScaledWidth = Scale * RectangleWidthF
@@ -362,6 +357,7 @@ local
 	    Canvas      = self.canvas
 	    Suffix      = self.suffix
 	    Node        = !NodePrefix#Suffix
+	    Tree        = !TreePrefix#Suffix
 	 in
 	    offset <- NewOffset
 	    case self.mom of !False then true else
@@ -370,7 +366,7 @@ local
 			  ScaledMyY - Scale * UpperSpaceF
 			  ScaledMyX
 			  ScaledMyY - ScaledWidth
-			  o(tag: o(Canvas.tagsVar LinkPrefix#Suffix TagEnd)
+			  o(tag: q(LinkPrefix#Suffix MomTree)
 			    width: LinkWidth))}
 	    end
 	    {Canvas tk(crea rectangle
@@ -379,8 +375,7 @@ local
 		       ScaledMyX + ScaledWidth
 		       ScaledMyY + ScaledWidth
 		       TkFailedOpt
-		       o(tags: o(Canvas.tagsVar Node TagEnd))
-		      )}
+		       o(tags: q(Node Tree MomTree)))}
 	    isDrawn <- True
 	 end
 	 
@@ -403,7 +398,7 @@ local
       class UnstableNode
 	 from LeafNode
 	 
-	 meth drawTree(Break MomX MyY Scale Font)
+	 meth drawTree(Break MomTree MomX MyY Scale Font)
 	    NewOffset       = @offset.1
 	    MyX             = MomX + NewOffset
 	    ScaledHalfWidth = Scale * SmallRectangleWidthF
@@ -424,6 +419,7 @@ local
 	    Canvas          = self.canvas
 	    Suffix          = self.suffix
 	    Node            = !NodePrefix#Suffix
+	    Tree            = !TreePrefix#Suffix
 	 in
 	    offset <- NewOffset
 	    case self.mom of !False then true else
@@ -432,14 +428,13 @@ local
 			  ScaledMyY - Scale * UpperSpaceF
 			  ScaledMyX
 			  ScaledMyY - ScaledHalfWidth
-			  o(tag: o(Canvas.tagsVar LinkPrefix#Suffix TagEnd)
+			  o(tag:   q(LinkPrefix#Suffix MomTree)
 			    width: LinkWidth))}
 	    end
 	    {Canvas tk(crea polygon
 		       X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
 		       TkUnstableOpt
-		       o(tags: o(Canvas.tagsVar Node TagEnd))
-		      )}
+		       o(tags: q(Node Tree)))}
 	    isDrawn <- True
 	 end
 	 
@@ -463,7 +458,7 @@ local
 	 class SolvedNode
 	    from LeafNode NumberNode
 	    
-	    meth drawTree(MomX MyY Scale Font TkOpt)
+	    meth drawTree(MomTree MomX MyY Scale Font TkOpt)
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
 	       ScaledWidth = Scale * RhombeWidthF
@@ -473,6 +468,8 @@ local
 	       Canvas      = self.canvas
 	       Suffix      = self.suffix
 	       Node        = !NodePrefix#Suffix
+	       Tree        = !TreePrefix#Suffix
+	       Actions     = Canvas.actions
 	       X0          = ScaledMyX - ScaledWidth
 	       X1          = ScaledMyX
 	       X2          = ScaledMyX + ScaledWidth
@@ -487,22 +484,19 @@ local
 			     ScaledMyY - Scale * UpperSpaceF
 			     ScaledMyX
 			     ScaledMyY - ScaledWidth
-			     o(tag: o(Canvas.tagsVar LinkPrefix#Suffix TagEnd)
+			     o(tag:   q(LinkPrefix#Suffix MomTree)
 			       width: LinkWidth))}
 	       end
 	       {Canvas tk(crea polygon X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1
 			  TkOpt
-			  o(tags: o(Canvas.tagsVar Node
-				    Canvas.actionTag TagEnd)))}
+			  o(tags: q(Node Tree MomTree Actions)))}
 	       case @number of !False then true elseof N then
 		  case Font==False then true else
 		     {Canvas tk(crea text ScaledMyX ScaledMyY
 				o(font: Font
 				  text: N
-				  tags: o(Canvas.tagsVar
-					  Node Canvas.actionTag
-					  Canvas.manager.numbers
-					  TagEnd)))}
+				  tags: q(Node Tree MomTree Actions
+					  Canvas.numbers)))}
 		  end
 	       end
 	       isDrawn <- True
@@ -529,8 +523,9 @@ local
 	 class EntailedNode
 	    from SolvedNode
 	    
-	    meth drawTree(Break MomX MyY Scale Font)
-	       <<SolvedNode drawTree(MomX MyY Scale Font TkEntailedOpt)>>
+	    meth drawTree(Break MomTree MomX MyY Scale Font)
+	       <<SolvedNode drawTree(MomTree MomX MyY Scale Font
+				     TkEntailedOpt)>>
 	    end
 	    
 	 end
@@ -539,8 +534,9 @@ local
 	 class StableNode
 	    from SolvedNode
 
-	    meth drawTree(Break MomX MyY Scale Font)
-	       <<SolvedNode drawTree(MomX MyY Scale Font TkStableOpt)>>
+	    meth drawTree(Break MomTree MomX MyY Scale Font)
+	       <<SolvedNode drawTree(MomTree MomX MyY Scale Font
+				     TkStableOpt)>>
 	    end
 	    
 	 end

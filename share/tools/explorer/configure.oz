@@ -11,15 +11,10 @@ DefLayoutOptions = o(hide:   !False
 		     update: 10)
 
 DefSearchOptions = o(dist:        1
-		     customDist:  5
-		     depth:       ~1
-		     customDepth: 250
-		     nodes:       ~1
-		     customNodes: 5000)
+		     customDist:  5)
 
 DefInfoOptions   = o(dist:       5
-		     customDist: 5
-		     keep:       !True)
+		     customDist: 5)
 
 FactorsToCm      =cTo(i: 2.54
 		      c: 1.00
@@ -41,7 +36,8 @@ BitMap       = '@' # BitMapDir # 'explorer.xbm'
 
 MinSizeX     = 500   CanvasWidth  = 500.0
 MinSizeY     = 300   CanvasHeight = 240.0 
-
+DepthWidth   = 120 
+DepthHeight  = 8
 
 %% Configuration of the scale bar
 IntScaleBase    = 256
@@ -127,6 +123,7 @@ PartialFailedColor   #
 LineColor            #
 BackColor            #
 EntryColor           #
+DepthColor           #
 CursorColor          = case Tk.isColor then
 			  'LightSlateBlue' # % ChoiceColor
 			  'DarkSlateBlue'  # % ChoiceTermColor
@@ -138,6 +135,7 @@ CursorColor          = case Tk.isColor then
 			  black            # % LineColor
 			  white            # % BackColor
 			  wheat            # % EntryColor
+			  wheat            # % DepthColor
 			  gray60             % CursorColor
 		       else
 			  white # % ChoiceColor
@@ -150,6 +148,7 @@ CursorColor          = case Tk.isColor then
 			  black # % LineColor
 			  white # % BackColor
 			  white # % EntryColor
+			  black # % DepthColor
 			  black   % CursorColor 
 		       end
 

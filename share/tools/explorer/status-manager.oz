@@ -29,15 +29,14 @@ local
    class Status
       from Tk.frame
       attr
-	 CurAllowed:       0
-	 CurDepth:         0
+	 MaxDepth:         0
 	 CurNodes:         0
 	 CurSolutions:     0
 	 CurFailures:      0
 	 CurUnstable:      0
 	 BreakFlag:        nil
+	 BreakStatus:      none
 	 BrokenNodes:      nil
-	 IsKilled:         False
 	 IsPackedUnstable: False
 
       feat
@@ -69,15 +68,6 @@ local
 					  text:   {FormatTime 0 0}
 					  font:   BoldStatusFont)}
 
-	 DepthFrame = {New Tk.frame tkInit(parent: self)}
-	 
-	 DepthLabel = {New Tk.label tkInit(parent: DepthFrame
-					   text:   'Depth:'
-					   font:   StatusFont)}
-	 DepthField = {New Tk.label tkInit(parent: DepthFrame
-					   text:   0
-					   font:   BoldStatusFont)}
-
 	 NodeFrame      = {New Tk.frame tkInit(parent: self)}
 	 ChoiceIm       = {New Images.choice init(parent: NodeFrame)}
 	 ChoiceNumber   = {New Tk.label tkInit(parent: NodeFrame
@@ -95,6 +85,14 @@ local
 	 UnstableNumber = {New Tk.label tkInit(parent: NodeFrame
 					       font:   BoldStatusFont
 					       text:   '0')}
+	 DepthFrame = {New Tk.frame tkInit(parent: self)}
+	 
+	 DepthLabel = {New Tk.label tkInit(parent: DepthFrame
+					   text:   'Depth:'
+					   font:   StatusFont)}
+	 DepthField = {New Tk.label tkInit(parent: DepthFrame
+					   text:   0
+					   font:   BoldStatusFont)}
       in
 	 {Tk.batch [pack(TimeLabel  TimeField o(side:left))
 		    pack(DepthLabel DepthField o(side:left))
@@ -123,8 +121,7 @@ local
       end
       
       meth clear
-	 CurAllowed    <- 0
-	 CurDepth      <- 0
+	 MaxDepth      <- 0
 	 CurNodes      <- 0
 	 CurSolutions  <- 0
 	 CurFailures   <- 0
@@ -135,14 +132,8 @@ local
 	 else true end
 	 <<Status update>>
 	 <<Status unbreak>>
+	 <<Status setBAB(False)>>
 	 {self.ChoiceImage clear}
-      end
-
-      meth allow(MaxAllowed)
-	 CurAllowed  <- case MaxAllowed==~1 then ~1
-			else @CurNodes + MaxAllowed
-			end
-	 <<Status unbreak>>
       end
 
       meth hasUnstable($)
@@ -150,18 +141,25 @@ local
       end
       
       meth halt
-	 CurAllowed <- @CurNodes
+	 @BreakFlag = self
+	 BreakStatus <- case @BreakStatus
+			of kill  then kill
+			[] break then break
+			else halt
+			end
       end
 
       meth break
-	 CurAllowed <- @CurNodes
 	 @BreakFlag = self
+	 BreakStatus <- case @BreakStatus
+			of kill  then kill
+			else break
+			end
       end
 
       meth kill
-	 CurAllowed <- @CurNodes
 	 @BreakFlag = self
-	 IsKilled   <- True
+	 BreakStatus <- kill
       end
 
       meth broken(Node)
@@ -175,27 +173,24 @@ local
       
       meth unbreak
 	 BreakFlag   <- _
-	 IsKilled    <- False
+	 BreakStatus <- none
 	 BrokenNodes <- nil
       end
-	 
+
       meth getBreakFlag($)
 	 @BreakFlag
       end
 
-      meth isKilled($)
-	 @IsKilled
+      meth getBreakStatus($)
+	 @BreakStatus
       end
       
-      meth isHalted($)
-	 (@CurAllowed =< @CurNodes) andthen (@CurAllowed \= ~1)
-      end
-
       meth finish
 	 {self.ChoiceImage finish}
       end
       
       meth update
+	 GetDepth     = @MaxDepth
 	 GetNodes     = @CurNodes
 	 GetSolutions = @CurSolutions
 	 GetFailures  = @CurFailures
@@ -210,7 +205,7 @@ local
 	       {Tk.send pack(self.UnstableImage self.Unstable o(side:left))}
 	    end
 	 else true end
-	 {self.Depth    tk(conf(text:@CurDepth))}
+	 {self.Depth    tk(conf(text:GetDepth))}
 	 {self.Choice   tk(conf(text:GetNodes -
 				(GetSolutions+GetFailures+GetUnstable)))}
 	 {self.Solution tk(conf(text:GetSolutions))}
@@ -221,7 +216,7 @@ local
       meth addSolution(Depth)
 	 IncNodes = @CurNodes + 1
       in
-	 CurDepth     <- {Max @CurDepth Depth}
+	 MaxDepth     <- {Max @MaxDepth Depth}
 	 CurSolutions <- @CurSolutions + 1
 	 CurNodes     <- IncNodes
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
@@ -232,7 +227,7 @@ local
       meth addUnstable(Depth)
 	 IncNodes = @CurNodes + 1
       in
-	 CurDepth     <- {Max @CurDepth Depth}
+	 MaxDepth    <- {Max @MaxDepth Depth}
 	 CurUnstable <- @CurUnstable + 1
 	 CurNodes    <- IncNodes
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
@@ -247,7 +242,7 @@ local
       meth addFailed(Depth)
 	 IncNodes = @CurNodes + 1
       in
-	 CurDepth     <- {Max @CurDepth Depth}
+	 MaxDepth    <- {Max @MaxDepth Depth}
 	 CurFailures <- @CurFailures + 1
 	 CurNodes    <- IncNodes
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
@@ -258,7 +253,7 @@ local
 	 IncNodes = @CurNodes + 1
       in
 	 CurNodes <- IncNodes
-	 CurDepth <- {Max @CurDepth Depth}
+	 MaxDepth <- {Max @MaxDepth Depth}
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
 	 else true end
       end
@@ -285,8 +280,10 @@ in
 	 {self.status setTime({FormatTime 0 0})}
       end
 
-      meth start
+      meth start($)
 	 {System.statistics _}
+	 {self.status unbreak}
+	 {self.status getBreakFlag($)}
       end
 
       meth stop
@@ -294,8 +291,18 @@ in
       in
 	 CurTotalTime <- @CurTotalTime + Statistics.r + Statistics.c
 	 CurCopyTime  <- @CurCopyTime  + Statistics.c
+	 {self.status update}
+	 {self.status setTime({FormatTime @CurTotalTime @CurCopyTime})}
       end
 
+      meth getBreakFlag($)
+	 {self.status getBreakFlag($)}
+      end
+
+      meth getBreakStatus($)
+	 {self.status getBreakStatus($)}
+      end
+      
       meth unbreak
 	 {self.status unbreak}
       end
@@ -304,25 +311,12 @@ in
 	 {self.status getBrokenNodes($)}
       end
 
-      meth isKilled($)
-	 {self.status isKilled($)}
-      end
-      
-      meth hasUnstable(?Is)
-	 {self.status hasUnstable(?Is)}
+      meth hasUnstable($)
+	 {self.status hasUnstable($)}
       end
       
       meth finish
 	 {self.status finish}
-      end
-      
-      meth update
-	 {self.status update}
-	 {self.status setTime({FormatTime @CurTotalTime @CurCopyTime})}
-      end
-
-      meth allow(N)
-	 {self.status allow(N)}
       end
 
    end
