@@ -468,7 +468,7 @@ OZ_BI_define(fdp_card, 4, 0)
 
   PropagatorExpect pe;
 
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
+  OZ_EXPECT(pe, 0, expectVectorBoolVar);
   OZ_EXPECT(pe, 1, expectIntVarMinMax);
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
   

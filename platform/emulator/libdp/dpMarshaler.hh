@@ -1,4 +1,3 @@
-
 /* -*- C++ -*-
  *  Authors:
  *    Konstantin Popov <kost@sics.se>
