@@ -108,10 +108,11 @@
     <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
 
     <meta name="latex.table.spec" arg1="table.url.resolution"
-	  arg2="clp{0.5\linewidth}">
+	  arg2="LLP{0.6\linewidth}">
+<!-- arg2="clp{0.5\linewidth}" -->
     <meta name="latex.table.spec" arg1="table.sysmods"
-	  arg2="lp{0.3\linewidth}p{0.55\linewidth}">
-
+	  arg2="LP{0.3\mozartfullwidth}P{0.4\mozartfullwidth}">
+<!-- arg2="lp{0.3\linewidth}p{0.55\linewidth}" -->
     <title/Application Programming/
     <author.Extern to="author.db" key="Denys.Duchier">
     <author.Extern to="author.db" key="Leif.Kornstaedt">
