@@ -949,7 +949,7 @@ void BorrowEntry::moreCredit(){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_ASK_FOR_CREDIT(na->index,myDSite);
   msgC->setImplicitMessageCredit(cS);
-  sendTo(na->site,msgC,3);
+  send(msgC,3);
 }
 
 void BorrowEntry::giveBackCredit(Credit c){

@@ -82,7 +82,7 @@ enum SiteStatus {
   SITE_TEMP
 };
 
-// sendTo return
+// dsite::send return
 #define ACCEPTED       0
 #define PERM_NOT_SENT ~1
 // TEMP_NOT_SENT  >0
