@@ -463,3 +463,21 @@ OZ_Term OZ_mkByteString(char*s,int n) {
   memcpy((void*)bs->getData(),(void*)s,n);
   return oz_makeTaggedExtension(bs);
 }
+
+#include <string.h>
+
+OZ_BI_define(BIByteString_strchr,3,1)
+{
+  oz_declareByteStringIN(0,bs);
+  OZ_declareIntIN(1,OFF);
+  OZ_declareIntIN(2,c);
+  if (c<0 || c>=bs->getWidth())
+    return oz_raise(E_SYSTEM,E_KERNEL,"BitString.strchr",3,
+                    oz_atom("indexOutOfBound"),
+                    OZ_in(0),OZ_in(1));
+  if (c<0 || c>255) oz_typeError(2,"char");
+  char* s1 = (char*) bs->getData();
+  char* s2 = strchr(s1,c);
+  if (s2==NULL) OZ_RETURN(OZ_false());
+  else OZ_RETURN_INT(s2-s1);
+} OZ_BI_end

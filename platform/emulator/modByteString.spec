@@ -1,4 +1,4 @@
-###
+### -*-perl-*-
 ### Authors:
 ###   Denys Duchier <duchier@ps.uni-sb.de>
 ###
@@ -19,8 +19,6 @@
 ### of this file, and for a DISCLAIMER OF ALL
 ### WARRANTIES.
 ###
-
-# -*-perl-*-
 
 #$module_init_fun_name = "ByteString_init";
 
@@ -54,9 +52,14 @@
      'toString' => { in  => ['+byteString'],
                      out => ['+string'],
                      bi  => BIByteString_toString},
+
      'toStringWithTail'
      =>            { in  => ['+byteString','value'],
                      out => ['string'],
-                     bi  => BIByteString_toStringWithTail}
+                     bi  => BIByteString_toStringWithTail},
+
+     'strchr'   => { in  => ['+byteString','+int','+int'],
+                     out => ['+value'],
+                     bi  => BIByteString_strchr}
      );
 1;;
