@@ -114,6 +114,8 @@ void AM::init(int argc,char **argv)
   osInit();
   bigIntInit();
 
+  installingScript = FALSE;
+
   suspendVarList   = makeTaggedNULL();
   aVarUnifyHandler = makeTaggedNULL();
   aVarBindHandler  = makeTaggedNULL();

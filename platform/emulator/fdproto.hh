@@ -104,4 +104,9 @@ OZ_C_proc_proto(sched_cpIterate)
 OZ_C_proc_proto(sched_cpIterateCap)
 OZ_C_proc_proto(sched_disjunctive)
 
+// dummies
+OZ_C_proc_proto(fdp_twice)
+OZ_C_proc_proto(fdp_square)
+OZ_C_proc_proto(fdp_subset)
+
 #endif

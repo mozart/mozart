@@ -25,10 +25,13 @@
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
-                            TaggedRef *tPtr, TaggedRef term,
+Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
+                            TaggedRef * tPtr, TaggedRef term,
                             Bool prop, Bool disp)
 {
+  // TMUELLER
+  //  printf(am.isInstallingScript() ? "installing script\n" : "NOT installing script\n"); fflush(stdout);
+
   TypeOfTerm tTag = tagTypeOf(term);
 
   switch (tTag) {
@@ -71,6 +74,13 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
           // bind - trail - propagate
           Bool varIsLocal =  (prop && am.isLocalSVar(this));
           Bool termIsLocal = (prop && am.isLocalSVar(termVar));
+
+          Bool isNotInstallingScript = !am.isInstallingScript();
+          Bool varIsConstrained = isNotInstallingScript ||
+            (intsct.getSize() < finiteDomain.getSize());
+          Bool termIsConstrained = isNotInstallingScript ||
+            (intsct.getSize() < termDom.getSize());
+
           switch (varIsLocal + 2 * termIsLocal) {
           case TRUE + 2 * TRUE: // var and term are local
             {
@@ -119,29 +129,29 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               if (intsct.getSize() != termDom.getSize()){
                 if (intsct == fd_singleton) {
                   TaggedRef int_var = OZ_int(intsct.getSingleElem());
-                  termVar->propagateUnify(term);
-                  propagateUnify(var);
+                  if (isNotInstallingScript) termVar->propagateUnify(term);
+                  if (varIsConstrained) propagateUnify(var);
                   doBind(vPtr, int_var);
                   am.doBindAndTrail(term, tPtr, int_var);
                   if (disp) dispose();
                 } else {
                   if (intsct == fd_bool) {
                     GenBoolVariable * bvar = becomesBool();
-                    termVar->propagateUnify(term);
-                    bvar->propagateUnify(var);
+                    if (isNotInstallingScript) termVar->propagateUnify(term);
+                    if (varIsConstrained) bvar->propagateUnify(var);
                     am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
                                            bvar, termVar, prop);
                   } else {
                     setDom(intsct);
-                    termVar->propagateUnify(term);
-                    propagateUnify(var);
+                    if (isNotInstallingScript) termVar->propagateUnify(term);
+                    if (varIsConstrained) propagateUnify(var);
                     am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
                                            this, termVar, prop);
                   }
                 }
               } else {
-                termVar->propagateUnify(term);
-                propagateUnify(var);
+                if (isNotInstallingScript) termVar->propagateUnify(term);
+                if (varIsConstrained) propagateUnify(var);
                 relinkSuspListTo(termVar, TRUE);
                 doBind(vPtr, makeTaggedRef(tPtr));
                 if (disp) dispose();
@@ -153,29 +163,29 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               if (intsct.getSize() != finiteDomain.getSize()){
                 if(intsct == fd_singleton) {
                   TaggedRef int_term = OZ_int(intsct.getSingleElem());
-                  propagateUnify(var);
-                  termVar->propagateUnify(term);
+                  if (isNotInstallingScript) propagateUnify(var);
+                  if (termIsConstrained) termVar->propagateUnify(term);
                   doBind(tPtr, int_term);
                   am.doBindAndTrail(var, vPtr, int_term);
                   if (disp) termVar->dispose();
                 } else {
                   if (intsct == fd_bool) {
                     GenBoolVariable * tbvar = termVar->becomesBool();
-                    propagateUnify(var);
-                    tbvar->propagateUnify(term);
+                    if (isNotInstallingScript) propagateUnify(var);
+                    if (termIsConstrained) tbvar->propagateUnify(term);
                     am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
                                            tbvar, this, prop);
                   } else {
                     termVar->setDom(intsct);
-                    propagateUnify(var);
-                    termVar->propagateUnify(term);
+                    if (isNotInstallingScript) propagateUnify(var);
+                    if (termIsConstrained) termVar->propagateUnify(term);
                     am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
                                            termVar, this, prop);
                   }
                 }
               } else {
-                termVar->propagateUnify(term);
-                propagateUnify(var);
+                if (termIsConstrained) termVar->propagateUnify(term);
+                if (isNotInstallingScript) propagateUnify(var);
                 termVar->relinkSuspListTo(this, TRUE);
                 doBind(tPtr, makeTaggedRef(vPtr));
                 if (disp) termVar->dispose();
