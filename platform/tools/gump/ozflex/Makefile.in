@@ -30,7 +30,8 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 YACC = @YACC@
-CC = $(OZTOOL) cc
+
+CC = @CC@
 
 # You normally do not need to modify anything below this point.
 # ------------------------------------------------------------
