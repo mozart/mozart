@@ -52,15 +52,5 @@ void oz_deinstallCurrent()
   am.setCurrent(oz_currentBoard()->getParent());
 }
 
-inline
-void oz_deinstallPath(Board *top)
-{
-  Assert(!top->isCommitted() && !top->isFailed());
-  
-  while (!oz_isCurrentBoard(top)) {
-    oz_deinstallCurrent();
-  }
-}
-
 
 #endif

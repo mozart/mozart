@@ -446,7 +446,7 @@ volatile int use_wake_jmp = 0;
 
 void AM::suspendEngine()
 {
-  oz_deinstallPath(_rootBoard);
+  oz_installPath(_rootBoard);
 
   ozstat.printIdle(stdout);
 
@@ -559,7 +559,7 @@ void AM::checkStatus(Bool block)
     return;
 
   if (block) {
-    oz_deinstallPath(oz_rootBoard());
+    oz_installPath(oz_rootBoard());
     osBlockSignals();
   }
 
