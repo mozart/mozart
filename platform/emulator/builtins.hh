@@ -7,10 +7,6 @@
   State: $State$
   */
 
-// BUILTINs
-// This file specifies the access functions which can be used in
-// user defined builtin functions
-
 #ifndef __BUILTINSH
 #define __BUILTINSH
 
@@ -23,7 +19,6 @@
 #include "term.hh"
 #include "records.hh"
 #include "hashTable.hh"
-#include "gc.hh"
 
 // special builtins known in emulate
 enum BIType {
@@ -35,37 +30,52 @@ enum BIType {
 
 
 #define NONVAR(X,term,tag)  					              \
-   TaggedRef term = X;							      \
-   TypeOfTerm tag;							      \
-   { DEREF(term,_myTermPtr,myTag);                                             \
-     tag = myTag;		                                              \
-     if (isAnyVar(tag)) return SUSPEND;				      \
-   }
+TaggedRef term = X;							      \
+TypeOfTerm tag;								      \
+{ DEREF(term,_myTermPtr,myTag);  	                                      \
+  tag = myTag;		    		                                      \
+  if (isAnyVar(tag)) return SUSPEND;					      \
+}
+
+
+/* -----------------------------------------------------------------------
+ * The following macros are useful when hacking in suspending built-ins:
+ *  --> for FD
+ */
+
+#define OZ_getCArgDeref(N, V, VPTR, VTAG) \
+  OZ_Term V = OZ_getCArg(N); \
+  DEREF(V, VPTR, VTAG);
+
+#define CREATE_SUSP_SELF(S) 						      \
+  Suspension *S = (Suspension *) OZ_makeSuspension(OZ_self, OZ_args, OZ_arity);
+
+#define CREATE_SUSP_SELF_IF(C, S)                                             \
+  Suspension *S=NULL;                                                         \
+  if (C) {                                                                    \
+    S = (Suspension *) OZ_makeSuspension(OZ_self, OZ_args, OZ_arity);         \
+  }
     
-
-#define STRING(FUN,ARG,VAR) 						      \
- char *VAR; 								      \
- {									      \
-   TaggedRef term = args[ARG];						      \
-   DEREF(term,_,tag);							      \
-   if (isAnyVar(term)) return SUSPEND;				      \
-   if ((VAR=getPrintName(term)) == (char *) NULL)				      \
-     { warning(FUN ": arg %d must be string",ARG+1); 			      \
-       return FAILED; }							      \
- }									      \
+#define CREATE_SUSP(S, F, X, A)                                               \
+  Suspension *S = (Suspension *) OZ_makeSuspension(F,X,A);
 
 
 
+#define CREATE_SUSP_IF(C, S, F, X, A)                                         \
+  Suspension *S=NULL;                                                         \
+  if (C) {                                                                    \
+    S = OZ_makeSuspension(F, X ,A); 			  		      \
+  }
 
 
 #define DECLAREBI_USEINLINEREL1(Name,InlineName)			      \
 OZ_C_proc_begin(Name,1)							      \
 {									      \
   OZ_Term arg = OZ_getCArg(0);						      \
-  State state = InlineName(arg);					      	      \
+  State state = InlineName(arg);				      	      \
   if (state == SUSPEND) {						      \
     DEREF(arg,APtr,_1);							      \
-    OZ_Suspension *susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
+    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
     OZ_addSuspension(APtr,susp);					      \
     return PROCEED;							      \
   } else {								      \
@@ -84,7 +94,7 @@ OZ_C_proc_begin(Name,2)							      \
   if (state == SUSPEND) {						      \
     DEREF(arg0,APtr,_1);						      \
     DEREF(arg1,BPtr,_2);						      \
-    OZ_Suspension *susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
+    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
     if (isAnyVar(arg0)) OZ_addSuspension(APtr,susp);			      \
     if (isAnyVar(arg1)) OZ_addSuspension(BPtr,susp);			      \
     return PROCEED;							      \
@@ -105,7 +115,7 @@ OZ_C_proc_begin(Name,2)							      \
   switch (state) {							      \
   case SUSPEND:	{							      \
     DEREF(arg,APtr,_1);							      \
-    OZ_Suspension *susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
+    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
     OZ_addSuspension(APtr,susp);					      \
     return PROCEED;							      \
    }									      \
@@ -133,7 +143,7 @@ OZ_C_proc_begin(Name,3)							      \
   case SUSPEND:	{							      \
     DEREF(arg0,APtr,_1);						      \
     DEREF(arg1,BPtr,_2);						      \
-    OZ_Suspension *susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
+    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
     if (isAnyVar(arg0)) OZ_addSuspension(APtr,susp);			      \
     if (isAnyVar(arg1)) OZ_addSuspension(BPtr,susp);			      \
     return PROCEED;							      \
@@ -163,7 +173,7 @@ OZ_C_proc_begin(Name,4)							      \
     DEREF(arg0,APtr,_1);						      \
     DEREF(arg1,BPtr,_2);						      \
     DEREF(arg2,CPtr,_3);						      \
-    OZ_Suspension *susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
+    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
     if (isAnyVar(arg0)) OZ_addSuspension(APtr,susp);			      \
     if (isAnyVar(arg1)) OZ_addSuspension(BPtr,susp);			      \
     if (isAnyVar(arg2)) OZ_addSuspension(CPtr,susp);			      \
@@ -180,41 +190,30 @@ OZ_C_proc_begin(Name,4)							      \
 OZ_C_proc_end
 
 
-// inits
 BuiltinTabEntry *BIinit();
-BuiltinTabEntry *BIadd(char *name,int arity,BIFun fun,
+BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,
 		       Bool replace = NO, InlineFunOrRel infun=NULL);
 BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t,
 			      Bool replace = NO);
-BuiltinTabEntry *BIreplace(char *name,int arity,BIFun fun);
-
-void BIinitSpecial();
-void BIinitWIO();
-void BIinitDebug();
-void BIinitCore();
-void BIinitFeatures();
-void BIinitFD(void);
-
-extern TaggedRef suspCallHandler;
 
 class BuiltinTabEntry {
   friend class Debugger;
 public:
-  BuiltinTabEntry (Atom *name,int arty,BIFun fn,
+  BuiltinTabEntry (Atom *name,int arty,OZ_CFun fn,
 		   InlineFunOrRel infun=NULL)
   : printname(makeTaggedAtom(name)), arity(arty),fun(fn),
     inlineFun(infun), type(BIDefault)
   {
     Assert(isXAtom(printname));
   }
-  BuiltinTabEntry (char *s,int arty,BIFun fn,
+  BuiltinTabEntry (char *s,int arty,OZ_CFun fn,
 		   InlineFunOrRel infun=NULL)
   : arity(arty),fun(fn), inlineFun(infun), type(BIDefault)
   {
     printname = OZ_stringToTerm(s);
     Assert(isXAtom(printname));
   }
-  BuiltinTabEntry (char *s,int arty,BIFun fn,BIType t,
+  BuiltinTabEntry (char *s,int arty,OZ_CFun fn,BIType t,
 		   InlineFunOrRel infun=NULL)
     : arity(arty),fun(fn), inlineFun(infun), type(t) {
       printname = OZ_stringToTerm(s);
@@ -263,7 +262,7 @@ public:
   }
 
   OZPRINT;
-  BIFun getFun() { return fun; }
+  OZ_CFun getFun() { return fun; }
   int getArity() { return arity; }
   char *getPrintName() { return tagged2Atom(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
@@ -274,7 +273,7 @@ private:
 
   TaggedRef printname; //must be atom
   int arity;
-  BIFun fun;
+  OZ_CFun fun;
   InlineFunOrRel inlineFun;
   BIType type;
 };
@@ -304,7 +303,7 @@ public:
   OZPRINTLONG;
 
   int getArity() { return fun->getArity(); }
-  BIFun getFun() { return fun->getFun(); }
+  OZ_CFun getFun() { return fun->getFun(); }
   char *getPrintName() { return fun->getPrintName(); }
   TaggedRef getName() { return fun->getName(); }
   BIType getType() { return fun->getType(); } 
@@ -344,11 +343,6 @@ public:
 };
 
 
-
-// access to builtin table:
-BuiltinTab &getBuiltinTab();
-
-
 class OneCallBuiltin: public Builtin {
 private:
   Bool seen;
@@ -374,9 +368,6 @@ public:
     {}
   inline RefsArray &getGRegs() { return(gRegs); }
 };
-
-
-State BIexchangeCellInline(TaggedRef c, TaggedRef out, TaggedRef &in);
 
 #endif
 
