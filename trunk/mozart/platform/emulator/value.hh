@@ -2368,6 +2368,7 @@ Bool isLock(TaggedRef term)
 char *toC(OZ_Term);
 TaggedRef reverseC(TaggedRef l);
 TaggedRef appendI(TaggedRef x,TaggedRef y);
+Bool member(TaggedRef elem,TaggedRef list);
 TaggedRef getUniqueName(char *s);
 
 #endif
