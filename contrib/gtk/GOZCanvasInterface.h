@@ -20,8 +20,12 @@
  */
 
 #if defined(__GOZ_CANVAS_H__)
-  {"pointsPut", 3, 0, native_points_put},
+  {"allocateCanvasPoints", 1, 1, native_allocate_canvas_points},
   {"pushVisual", 0, 0, native_push_visual},
   {"popVisual", 0, 0, native_pop_visual},
+  {"newPolygonItem", 3, 1, native_new_polygon_item},
   {"newImageItem", 7, 1, native_new_image_item},
+  {"newTextItem", 7, 1, native_new_text_item},
+  {"newTagItem", 3, 1, native_new_tag_item},
+  {"newSimpleTagItem", 1, 1, native_new_simple_tag_item},
 #endif

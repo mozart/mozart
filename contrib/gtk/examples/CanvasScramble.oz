@@ -141,23 +141,23 @@ define
 	    Y1 = {Int.toFloat (Y * PieceSize)}
 	    Group = {self newItem(Root {{New Canvas.canvasGroup noop}
 					getType($)}
-				  ["x"#X1 "y"#Y1] $)}
+				  ['x'#X1 'y'#Y1] $)}
 	    _     = {self newItem(Group {self rectGetType($)}
-				  ["x1"#0.0 "y1"#0.0
-				   "x2"#{Int.toFloat PieceSize}
-				   "y2"#{Int.toFloat PieceSize}
-				   "fill_color_gdk"#{self getPieceColor(I $)}
-				   "outline_color_gdk"#Black
-				   "width_pixels"#0] $)}
+				  ['x1'#0.0 'y1'#0.0
+				   'x2'#{Int.toFloat PieceSize}
+				   'y2'#{Int.toFloat PieceSize}
+				   'fill_color_gdk'#{self getPieceColor(I $)}
+				   'outline_color_gdk'#Black
+				   'width_pixels'#0] $)}
 	    Text = {self newItem(Group {self textGetType($)}
-				 ["text"#{Int.toString (I + 1)}
-				  "x"#25.0 "y"#25.0 "font"#Font
-				  "anchor"#GTK.'ANCHOR_CENTER'
-				  "fill_color_gdk"#Black] $)}
+				 ['text'#{Int.toString (I + 1)}
+				  'x'#25.0 'y'#25.0 'font'#Font
+				  'anchor'#GTK.'ANCHOR_CENTER'
+				  'fill_color_gdk'#Black] $)}
 	    proc {PieceEvent [Event]}
 	       case {Label Event}
-	       of 'GDK_ENTER_NOTIFY' then {Text set("fill_color_gdk" White)}
-	       [] 'GDK_LEAVE_NOTIFY' then {Text set("fill_color_gdk" Black)}
+	       of 'GDK_ENTER_NOTIFY' then {Text set('fill_color_gdk' White)}
+	       [] 'GDK_LEAVE_NOTIFY' then {Text set('fill_color_gdk' Black)}
 	       [] 'GDK_BUTTON_PRESS' then
 		  Pos = {Dictionary.get PosArr I}
 		  X   = Pos mod 4

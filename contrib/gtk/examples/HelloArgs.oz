@@ -48,7 +48,7 @@ define
    {Colormap allocColor(Black 0 1 _)}
 
    %% Setup canvas
-   MyCanvas = {New Canvas.canvas new}
+   MyCanvas = {New Canvas.canvas new(false)}
    {MyCanvas setUsize(400 400)}
    {MyCanvas setScrollRegion(0.0 0.0 400.0 400.0)}
    %% Make Canvas child of toplevel
@@ -77,12 +77,12 @@ define
 	      " Canvas!"}
    {GTK.freeArg ArgW}
    {GTK.freeArg ArgH}
-   TextItem = ["text"#TextStr
-	       "x"#150.0
-	       "y"#100.0
-	       "font"#
-	       "-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1"
-	       "fill_color_gdk"#Black]
+   TextItem = ['text'#TextStr
+	       'x'#150.0
+	       'y'#100.0
+	       'font'#
+	       '-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1'
+	       'fill_color_gdk'#Black]
 	      
    %% Create our item (member of root group); ignore item object
    _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
