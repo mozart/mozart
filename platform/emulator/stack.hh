@@ -50,7 +50,7 @@ public:
 
   virtual ~Stack() { deallocate(array,size); }
 
-  Bool isEmpty(void) { return (tos <= array) ? OK : NO; }
+  Bool isEmpty(void) { return (tos <= array); }
   StackEntry *ensureFree(int n)
   {
     StackEntry *ret = tos;
