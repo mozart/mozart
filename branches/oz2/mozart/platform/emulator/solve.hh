@@ -49,6 +49,7 @@ public:
   void gcRecurse();
 
   void incThreads() { threads++; }
+  void incThreads(int n) { threads += n; }
   int  decThreads() { Assert (threads > 0); return (--threads); }
   int  getThreads() { return threads; }
 
@@ -58,7 +59,7 @@ public:
 
   void inject(int prio, TaggedRef proc);
   int choose(int left, int right);
-  TaggedRef merge(Board* bb);
+  TaggedRef merge(Board* bb, Bool sibling);
   Board *clone(Board *bb);
   void clearResult(Board *bb);
 
