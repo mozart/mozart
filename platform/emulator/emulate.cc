@@ -57,9 +57,9 @@ extern TaggedRef getSuspHandlerBool(InlineFun2);
 #define SHALLOWFAIL							      \
   if (shallowCP) {							      \
     e->reduceTrailOnFail();						      \
-    ProgramCounter next = getLabelArg(shallowCP+1);			      \
+    ProgramCounter nxt = getLabelArg(shallowCP+1);			      \
     shallowCP = NULL;							      \
-    JUMP(next);								      \
+    JUMP(nxt);								      \
   }
 
 
@@ -1166,17 +1166,17 @@ void engine() {
       switch(res) {
 
       case PROCEED:
-	JUMP( getLabelArg(PC+3) );
+	DISPATCH(5);
 
       case SUSPEND:
         {
-	  suspendOnVar(XPC(2),getPosIntArg(PC+5),
+	  suspendOnVar(XPC(2),getPosIntArg(PC+4),
 		       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
 	  goto LBLcheckEntailment;
 	}
 
       case FAILED:
-	JUMP( getLabelArg(PC+4) );
+	JUMP( getLabelArg(PC+3) );
       }
     }
 
@@ -1190,14 +1190,14 @@ void engine() {
       switch(res) {
 
       case PROCEED:
-	JUMP( getLabelArg(PC+4) );
+	DISPATCH(6);
 
       case SUSPEND:
 	{
 	  TaggedRef A    = XPC(2);
 	  TaggedRef B    = XPC(3);
 	  DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
-	  int argsToSave    = getPosIntArg(PC+6);
+	  int argsToSave    = getPosIntArg(PC+5);
 	  Suspension *susp  =
 	    new Suspension(new SuspContinuation(CBB,
 						GET_CURRENT_PRIORITY(),
@@ -1215,7 +1215,7 @@ void engine() {
 	  goto LBLcheckEntailment;
 	}
       case FAILED:
-	JUMP( getLabelArg(PC+5) );
+	JUMP( getLabelArg(PC+4) );
 
       }
     }
@@ -1225,10 +1225,9 @@ void engine() {
       int numbOfCons = e->trail.chunkSize();
 
       if (numbOfCons == 0) {
-	ProgramCounter lab = getLabelArg(PC+1);
 	e->trail.popMark();
 	shallowCP = NULL;
-	JUMP(lab);
+	DISPATCH(1);
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
@@ -1324,7 +1323,7 @@ void engine() {
    Definition:
     {
       Reg reg                     = getRegArg(PC+1);
-      ProgramCounter next         = getLabelArg(PC+2);
+      ProgramCounter nxt          = getLabelArg(PC+2);
       PrTabEntry *predd           = getPredArg(PC+5);
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+6);
 
@@ -1335,7 +1334,7 @@ void engine() {
       Abstraction *p = new Abstraction (predd, gRegs, new Name(e->currentBoard));
       TaggedRef term = RegAccess(HelpReg1,reg);
       if (!e->fastUnify(term,makeTaggedSRecord(p))) {
-	HANDLE_FAILURE(next,
+	HANDLE_FAILURE(nxt,
 		       message("definition %s/%d = %s",
 			       p->getPrintName(),p->getArity(),tagged2String(term)););
       }
@@ -1357,7 +1356,7 @@ void engine() {
 	  break;
 	}
       }
-      JUMP( next );
+      JUMP(nxt);
     }
 
 // -------------------------------------------------------------------------
@@ -1582,9 +1581,9 @@ void engine() {
 // --- Call: Abstraction
 // -----------------------------------------------------------------------
 
-    TypeOfRecord type = predicate->getType();
+    TypeOfRecord typ = predicate->getType();
 
-    switch (type) {
+    switch (typ) {
     case R_ABSTRACTION:
     case R_OBJECT:
       {
@@ -2051,7 +2050,7 @@ void engine() {
   INSTRUCTION(ELSECLAUSE)
     DISPATCH(1);
 
-  INSTRUCTION(PROCESS)
+  INSTRUCTION(THREAD)
     {
       markDirtyRefsArray(Y);
       ProgramCounter newPC = PC+2;
@@ -2107,9 +2106,6 @@ void engine() {
       DISPATCH(4);
     }
 
-  INSTRUCTION(NOOP)
-    DISPATCH(1);
-
   INSTRUCTION(TESTLABEL1)
   INSTRUCTION(TESTLABEL2)
   INSTRUCTION(TESTLABEL3)
@@ -2121,7 +2117,6 @@ void engine() {
   INSTRUCTION(TEST4)
 
   INSTRUCTION(ENDOFFILE)
-  INSTRUCTION(LABEL)
   INSTRUCTION(ENDDEFINITION)
     warning("emulate: Unimplemented command");
     goto LBLcheckEntailment;
