@@ -1,3 +1,7 @@
 makefile(
-   lib : ['Parser.ozf']
+   lib : ['Parser.ozf'
+	  'ParserFunInObj.ozf'
+	  'ParserUncoord.ozf'
+	  'ParserNS.ozf'
+	 ]
    )
