@@ -118,6 +118,9 @@ a reference to the object.
 <item>If an exception is raised or a handler is invoked
 for an <EM>object</EM>,
 then the attempted object operation cannot be retried.
+This limitation can be bypassed by programming the
+object so that it is known where in which method
+the error was detected.
 </list>
 
 <SECTION><TITLE>Modifications</TITLE>
