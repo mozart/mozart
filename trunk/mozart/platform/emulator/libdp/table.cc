@@ -148,8 +148,8 @@ void OwnerTable::compactify()
   *base=END_FREE;
   int after_last=used_slot+1;
 
-  if(no_used/size >= TABLE_LOW_LIMIT){
-    PD((TABLE,"TABLE:owner compactify no realloc\n"));
+  if((double)no_used/(double)size >= TABLE_LOW_LIMIT){
+    PD((TABLE,"TABLE:owner compactify no realloc"));
     return;}
   int newsize= after_last-no_used < TABLE_BUFFER ? 
     after_last+TABLE_BUFFER : used_slot+1;
