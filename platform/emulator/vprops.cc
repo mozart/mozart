@@ -9,6 +9,7 @@
 // class VirtualProperty.
 //
 
+#include <stdarg.h>
 #include "runtime.hh"
 #include "dictionary.hh"
 #include "fdomn.hh"
@@ -20,9 +21,11 @@ enum EmulatorPropertyIndex {
   PROP_THREADS_RUNNABLE,
   PROP_THREADS_MIN,
   PROP_THREADS_MAX,
+  PROP_THREADS,
   // PRIORITIES
   PROP_PRIORITIES_HIGH,
   PROP_PRIORITIES_MEDIUM,
+  PROP_PRIORITIES,
   // TIME
   PROP_TIME_COPY,
   PROP_TIME_GC,
@@ -33,6 +36,7 @@ enum EmulatorPropertyIndex {
   PROP_TIME_TOTAL,
   PROP_TIME_USER,
   PROP_TIME_DETAILED,
+  PROP_TIME,
   // GC
   PROP_GC_MIN,
   PROP_GC_MAX,
@@ -42,20 +46,24 @@ enum EmulatorPropertyIndex {
   PROP_GC_THRESHOLD,
   PROP_GC_SIZE,
   PROP_GC_ACTIVE,
+  PROP_GC,
   // PRINT
   PROP_PRINT_DEPTH,
   PROP_PRINT_WIDTH,
+  PROP_PRINT,
   // FD
   PROP_FD_VARIABLES,
   PROP_FD_PROPAGATORS,
   PROP_FD_INVOKED,
   PROP_FD_THRESHOLD,
+  PROP_FD,
   // SPACES
   PROP_SPACES_COMMITTED,
   PROP_SPACES_CLONED,
   PROP_SPACES_CREATED,
   PROP_SPACES_FAILED,
   PROP_SPACES_SUCCEEDED,
+  PROP_SPACES,
   // ERRORS
   PROP_ERRORS_LOCATION,
   PROP_ERRORS_DEBUG,
@@ -63,6 +71,7 @@ enum EmulatorPropertyIndex {
   PROP_ERRORS_THREAD,
   PROP_ERRORS_DEPTH,
   PROP_ERRORS_WIDTH,
+  PROP_ERRORS,
   // MESSAGES
   PROP_MESSAGES_GC,
   PROP_MESSAGES_IDLE,
@@ -70,6 +79,7 @@ enum EmulatorPropertyIndex {
   PROP_MESSAGES_FOREIGN,
   PROP_MESSAGES_LOAD,
   PROP_MESSAGES_CACHE,
+  PROP_MESSAGES,
   // MEMORY
   PROP_MEMORY_ATOMS,
   PROP_MEMORY_NAMES,
@@ -77,11 +87,13 @@ enum EmulatorPropertyIndex {
   PROP_MEMORY_FREELIST,
   PROP_MEMORY_CODE,
   PROP_MEMORY_HEAP,
+  PROP_MEMORY,
   // HEAP
   PROP_HEAP_USED,
   // LIMITS
   PROP_LIMITS_INT_MIN,
   PROP_LIMITS_INT_MAX,
+  PROP_LIMITS,
   // ARGV
   PROP_ARGV,
   // MISC
@@ -89,7 +101,6 @@ enum EmulatorPropertyIndex {
   PROP_HOME,
   PROP_OS_NAME,
   PROP_OS_CPU,
-
   // INTERNAL
   PROP_INTERNAL_DEBUG,
   PROP_INTERNAL_SUSPENSION,
@@ -98,6 +109,7 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_DEBUG_PERDIO,
   PROP_INTERNAL_BROWSER,
   PROP_INTERNAL_APPLET,
+  PROP_INTERNAL,
   // this must remain last
   PROP__LAST
 };
@@ -108,6 +120,33 @@ inline OZ_Term OZ_bool(int i) { return i?NameTrue:NameFalse; }
 #define CASE_BOOL(P,L) case P: return OZ_bool(L)
 #define CASE_ATOM(P,L) case P: return OZ_atom(L)
 
+OZ_Arity mkArity(int n,...)
+{
+  va_list(ap);
+  va_start(ap,n);
+  OZ_Term list = nil();
+  for (int i=0;i<n;i++) list = cons(va_arg(ap,OZ_Term),list);
+  va_end(ap);
+  return OZ_makeArity(list);
+}
+
+#define DEFINE_REC(L,A)         \
+static OZ_Term  _Label = 0;     \
+static OZ_Arity _Arity;         \
+if (_Label==0) {                \
+  _Label = oz_atom(L);          \
+  _Arity = mkArity A;           \
+}                               \
+SRecord * _Record =             \
+SRecord::newSRecord(_Label,(Arity*)_Arity);
+
+#define RETURN_REC return makeTaggedSRecord(_Record)
+#define SET_REC(F,V) _Record->setFeature(F,V)
+#define BLOCK_REC(L,A,B) { DEFINE_REC(L,A); B; RETURN_REC; }
+#define CASE_REC(P,L,A,B) case P: BLOCK_REC(L,A,B);
+#define SET_INT(F,I) SET_REC(F,oz_int(I))
+#define SET_BOOL(F,B) SET_REC(F,OZ_bool(B))
+
 OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   switch (prop) {
     // THREADS
@@ -115,9 +154,18 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_THREADS_RUNNABLE,am.getRunnableNumber());
     CASE_INT(PROP_THREADS_MIN,ozconf.stackMinSize / TASKFRAMESIZE);
     CASE_INT(PROP_THREADS_MAX,ozconf.stackMaxSize / TASKFRAMESIZE);
+    CASE_REC(PROP_THREADS,"threads",
+             (4,AtomCreated,AtomRunnable,AtomMin,AtomMax),
+             SET_INT(AtomCreated ,ozstat.createdThreads.total);
+             SET_INT(AtomRunnable,am.getRunnableNumber());
+             SET_INT(AtomMin     ,ozconf.stackMinSize/TASKFRAMESIZE);
+             SET_INT(AtomMax     ,ozconf.stackMaxSize/TASKFRAMESIZE););
     // PRIORITIES
     CASE_INT(PROP_PRIORITIES_HIGH,ozconf.hiMidRatio);
     CASE_INT(PROP_PRIORITIES_MEDIUM,ozconf.midLowRatio);
+    CASE_REC(PROP_PRIORITIES,"priorities",(2,AtomHigh,AtomMedium),
+             SET_INT(AtomHigh,ozconf.hiMidRatio);
+             SET_INT(AtomMedium,ozconf.midLowRatio););
     // TIME
     CASE_INT(PROP_TIME_COPY,ozconf.timeDetailed?ozstat.timeForCopy.total:0);
     CASE_INT(PROP_TIME_GC,ozconf.timeDetailed?ozstat.timeForGC.total:0);
@@ -132,6 +180,31 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_TIME_TOTAL,osTotalTime());
     CASE_INT(PROP_TIME_USER,osUserTime());
     CASE_BOOL(PROP_TIME_DETAILED,ozconf.timeDetailed);
+    CASE_REC(PROP_TIME,"time",
+             (9,AtomCopy,AtomGC,AtomLoad,AtomPropagate,AtomRun,
+              AtomSystem,AtomTotal,AtomUser,AtomDetailed),
+             unsigned int timeNow = osUserTime();
+             unsigned int copy = 0;
+             unsigned int gc   = 0;
+             unsigned int load = 0;
+             unsigned int prop = 0;
+             unsigned int run  = 0;
+             if (ozconf.timeDetailed) {
+               copy = ozstat.timeForCopy.total;
+               gc   = ozstat.timeForGC.total;
+               load = ozstat.timeForLoading.total;
+               prop = ozstat.timeForPropagation.total;
+               run  = timeNow-(copy + gc + load + prop);
+             }
+             SET_INT(AtomCopy,copy);
+             SET_INT(AtomGC,gc);
+             SET_INT(AtomLoad,load);
+             SET_INT(AtomPropagate,prop);
+             SET_INT(AtomRun,run);
+             SET_INT(AtomSystem,osSystemTime());
+             SET_INT(AtomTotal,osTotalTime());
+             SET_INT(AtomUser,timeNow);
+             SET_BOOL(AtomDetailed,ozconf.timeDetailed););
     // GC
     CASE_INT(PROP_GC_MIN,ozconf.heapMinSize*KB);
     CASE_INT(PROP_GC_MAX,ozconf.heapMaxSize*KB);
@@ -141,20 +214,47 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_GC_THRESHOLD,ozconf.heapThreshold*KB);
     CASE_INT(PROP_GC_SIZE,getUsedMemory()*KB);
     CASE_INT(PROP_GC_ACTIVE,ozstat.gcLastActive*KB);
+    CASE_REC(PROP_GC,"gc",
+             (8,AtomMin,AtomMax,AtomFree,AtomTolerance,
+              AtomOn,AtomThreshold,AtomSize,AtomActive),
+             SET_INT(AtomMin,       ozconf.heapMinSize*KB);
+             SET_INT(AtomMax,       ozconf.heapMaxSize*KB);
+             SET_INT(AtomFree,      ozconf.heapFree);
+             SET_INT(AtomTolerance, ozconf.heapTolerance);
+             SET_BOOL(AtomOn,       ozconf.gcFlag);
+             SET_INT(AtomThreshold, ozconf.heapThreshold*KB);
+             SET_INT(AtomSize,      getUsedMemory()*KB);
+             SET_INT(AtomActive,    ozstat.gcLastActive*KB););
     // PRINT
     CASE_INT(PROP_PRINT_WIDTH,ozconf.printDepth);
     CASE_INT(PROP_PRINT_DEPTH,ozconf.printWidth);
+    CASE_REC(PROP_PRINT,"print",(2,AtomDepth,AtomWidth),
+             SET_INT(AtomDepth, ozconf.printDepth);
+             SET_INT(AtomWidth, ozconf.printWidth););
     // FD
     CASE_INT(PROP_FD_VARIABLES,ozstat.fdvarsCreated.total);
     CASE_INT(PROP_FD_PROPAGATORS,ozstat.propagatorsCreated.total);
     CASE_INT(PROP_FD_INVOKED,ozstat.propagatorsInvoked.total);
     CASE_INT(PROP_FD_THRESHOLD,32 * fd_bv_max_high);
+    CASE_REC(PROP_FD,"fd",
+             (4,AtomVariables,AtomPropagators,AtomInvoked,AtomThreshold),
+             SET_INT(AtomVariables,   ozstat.fdvarsCreated.total);
+             SET_INT(AtomPropagators, ozstat.propagatorsCreated.total);
+             SET_INT(AtomInvoked,     ozstat.propagatorsInvoked.total);
+             SET_INT(AtomThreshold,   32 * fd_bv_max_high););
     // SPACES
     CASE_INT(PROP_SPACES_COMMITTED,ozstat.solveAlt.total);
     CASE_INT(PROP_SPACES_CLONED,ozstat.solveCloned.total);
     CASE_INT(PROP_SPACES_CREATED,ozstat.solveCreated.total);
     CASE_INT(PROP_SPACES_FAILED,ozstat.solveFailed.total);
     CASE_INT(PROP_SPACES_SUCCEEDED,ozstat.solveSolved.total);
+    CASE_REC(PROP_SPACES,"spaces",
+             (5,AtomCommitted,AtomCloned,AtomCreated,AtomFailed,AtomSucceeded),
+             SET_INT(AtomCommitted,ozstat.solveAlt.total);
+             SET_INT(AtomCloned,ozstat.solveCloned.total);
+             SET_INT(AtomCreated,ozstat.solveCreated.total);
+             SET_INT(AtomFailed,ozstat.solveFailed.total);
+             SET_INT(AtomSucceeded,ozstat.solveSolved.total););
     // ERRORS
     CASE_BOOL(PROP_ERRORS_LOCATION,ozconf.errorLocation);
     CASE_BOOL(PROP_ERRORS_DEBUG,ozconf.errorDebug);
@@ -162,6 +262,15 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_ERRORS_THREAD,ozconf.errorThreadDepth);
     CASE_INT(PROP_ERRORS_DEPTH,ozconf.errorPrintDepth);
     CASE_INT(PROP_ERRORS_WIDTH,ozconf.errorPrintWidth);
+    CASE_REC(PROP_ERRORS,"errors",
+             (6,AtomLocation,AtomDebug,AtomHints,AtomThread,
+              AtomDepth,AtomWidth),
+             SET_INT(AtomLocation,ozconf.errorLocation);
+             SET_INT(AtomDebug,ozconf.errorDebug);
+             SET_INT(AtomHints,ozconf.errorHints);
+             SET_INT(AtomThread,ozconf.errorThreadDepth);
+             SET_INT(AtomDepth,ozconf.errorPrintDepth);
+             SET_INT(AtomWidth,ozconf.errorPrintWidth););
     // MESSAGES
     CASE_BOOL(PROP_MESSAGES_GC,ozconf.gcVerbosity);
     CASE_BOOL(PROP_MESSAGES_IDLE,ozconf.showIdleMessage);
@@ -169,6 +278,14 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_BOOL(PROP_MESSAGES_FOREIGN,ozconf.showForeignLoad);
     CASE_BOOL(PROP_MESSAGES_LOAD,ozconf.showLoad);
     CASE_BOOL(PROP_MESSAGES_CACHE,ozconf.showCacheLoad);
+    CASE_REC(PROP_MESSAGES,"messages",
+             (6,AtomGC,AtomIdle,AtomFeed,AtomForeign,AtomLoad,AtomCache),
+             SET_INT(AtomGC,ozconf.gcVerbosity);
+             SET_INT(AtomIdle,ozconf.showIdleMessage);
+             SET_INT(AtomFeed,ozconf.showFastLoad);
+             SET_INT(AtomForeign,ozconf.showForeignLoad);
+             SET_INT(AtomLoad,ozconf.showLoad);
+             SET_INT(AtomCache,ozconf.showCacheLoad););
     // MEMORY
     CASE_INT(PROP_MEMORY_ATOMS,ozstat.getAtomMemory());
     CASE_INT(PROP_MEMORY_NAMES,ozstat.getNameMemory());
@@ -176,11 +293,22 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_MEMORY_FREELIST,getMemoryInFreeList());
     CASE_INT(PROP_MEMORY_CODE,CodeArea::totalSize);
     CASE_INT(PROP_MEMORY_HEAP,ozstat.heapUsed.total+getUsedMemory());
+    CASE_REC(PROP_MEMORY,"memory",
+             (6,AtomAtoms,AtomNames,AtomBuiltins,AtomFreelist,
+              AtomCode,AtomHeap),
+             SET_INT(AtomAtoms,ozstat.getAtomMemory());
+             SET_INT(AtomNames,ozstat.getNameMemory());
+             SET_INT(AtomBuiltins,builtinTab.memRequired());
+             SET_INT(AtomFreelist,getMemoryInFreeList());
+             SET_INT(AtomCode,CodeArea::totalSize);
+             SET_INT(AtomHeap,ozstat.heapUsed.total+getUsedMemory()););
     // HEAP
     CASE_INT(PROP_HEAP_USED,getUsedMemory());
     // LIMITS
     CASE_INT(PROP_LIMITS_INT_MIN,OzMinInt);
     CASE_INT(PROP_LIMITS_INT_MAX,OzMaxInt);
+  case PROP_LIMITS:
+    return oz_pair2(makeInt(OzMinInt),makeInt(OzMaxInt));
     // ARGV
   case PROP_ARGV:
     {
@@ -201,7 +329,9 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_INTERNAL_DEBUG_PERDIO,ozconf.debugPerdio);
   CASE_BOOL(PROP_INTERNAL_BROWSER,ozconf.browser);
   CASE_BOOL(PROP_INTERNAL_APPLET,ozconf.applet);
-
+  CASE_REC(PROP_INTERNAL,"internal",(2,AtomBrowser,AtomApplet),
+           SET_BOOL(AtomBrowser,ozconf.browser);
+           SET_BOOL(AtomApplet,ozconf.applet););
   default:
     return 0; // not readable. 0 ok because no OZ_Term==0
   }
@@ -210,6 +340,9 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 #undef CASE_BOOL
 #undef CASE_INT
 #undef CASE_ATOM
+#undef CASE_REC
+#undef SET_INT
+#undef SET_BOOL
 
 #define CHECK_BOOL                      \
 if (OZ_isTrue(val)) VAL = 1;            \
@@ -230,12 +363,51 @@ CHECK_NAT; if (VAL<1 || VAL>100) oz_typeError(1,"Int[1..100]");
 
 #define CASE_PERCENT(P,L) case P: CHECK_PERCENT; L=VAL; return PROCEED;
 
+#define CHECK_REC                               \
+if (!isSRecord(val)){oz_typeError(1,"SRecord");}\
+else VAL=tagged2SRecord(val);
+#define CASE_REC(P,B)                           \
+case P: { SRecord*VAL; CHECK_REC; B; return PROCEED; }
+#define GET_FEAT(F,I) int I = VAL->getIndex(F)
+#define BAD_FEAT(F,T)                           \
+return oz_raise(E_ERROR,E_KERNEL,"putProperty",2,F,oz_atom(T));
+#define DO_INT(F,V,DO)                          \
+{                                               \
+  int _IDX = VAL->getIndex(F);                  \
+  if (_IDX>=0) {                                \
+    OZ_Term _VAL = VAL->getArg(_IDX);           \
+    if (!OZ_isInt(_VAL)) BAD_FEAT(F,"Int");     \
+    int V = OZ_intToC(_VAL);                    \
+    DO;                                         \
+  }                                             \
+}
+#define SET_INT(F,L) DO_INT(F,_TMP,L=_TMP)
+#define DO_BOOL(F,V,DO)                         \
+{                                               \
+  int _IDX = VAL->getIndex(F);                  \
+  if (_IDX>=0) {                                \
+    OZ_Term _VAL = VAL->getArg(_IDX);           \
+    int V;                                      \
+    if (OZ_isTrue(_VAL)) V=1;                   \
+    else if (OZ_isFalse(_VAL)) V=0;             \
+    else BAD_FEAT(F,"Bool");                    \
+    DO;                                         \
+  }                                             \
+}
+#define SET_BOOL(F,L) DO_BOOL(F,_TMP,L=_TMP)
+#define DO_NAT(F,V,DO)                          \
+DO_INT(F,V,if (V<0) oz_typeError(1,"Int>=0"); DO);
+
+#define DO_PERCENT(F,V,DO)                      \
+DO_INT(F,V,if (V<1 || V>100) oz_typeError(1,"Int[1..100]"); DO);
+
 // val is guaranteed to be determined and derefed
 OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
   int VAL;
   switch (prop) {
     // TIME
     CASE_BOOL(PROP_TIME_DETAILED,ozconf.timeDetailed);
+    CASE_REC(PROP_TIME,DO_BOOL(AtomDetailed,X,ozconf.timeDetailed=X););
     // THREADS
     CASE_NAT_DO(PROP_THREADS_MIN,{
       ozconf.stackMinSize=VAL/TASKFRAMESIZE;
@@ -245,9 +417,21 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
       ozconf.stackMaxSize=VAL/TASKFRAMESIZE;
       if (ozconf.stackMinSize > ozconf.stackMaxSize)
         ozconf.stackMinSize = ozconf.stackMaxSize;});
+    CASE_REC(PROP_THREADS,
+             DO_NAT(AtomMin,X,
+                    ozconf.stackMinSize=X/TASKFRAMESIZE;
+                    if (ozconf.stackMinSize > ozconf.stackMaxSize)
+                    ozconf.stackMinSize = ozconf.stackMaxSize;);
+             DO_NAT(AtomMax,X,
+                    ozconf.stackMaxSize=X/TASKFRAMESIZE;
+                    if (ozconf.stackMinSize > ozconf.stackMaxSize)
+                    ozconf.stackMaxSize = ozconf.stackMinSize;););
     // PRIORITIES
     CASE_PERCENT(PROP_PRIORITIES_HIGH,ozconf.hiMidRatio);
     CASE_PERCENT(PROP_PRIORITIES_MEDIUM,ozconf.midLowRatio);
+    CASE_REC(PROP_PRIORITIES,
+             DO_PERCENT(AtomHigh,X,ozconf.hiMidRatio=X;);
+             DO_PERCENT(AtomMedium,X,ozconf.midLowRatio=X;););
     // GC
     CASE_NAT_DO(PROP_GC_MAX,{
       ozconf.heapMaxSize=VAL/KB;
@@ -268,12 +452,32 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_PERCENT(PROP_GC_FREE,ozconf.heapFree);
     CASE_PERCENT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
-
+    CASE_REC(PROP_GC,
+             DO_NAT(AtomMin,X,ozconf.heapMaxSize=X/KB);
+             if (ozconf.heapMinSize > ozconf.heapMaxSize)
+             ozconf.heapMaxSize = ozconf.heapMinSize;
+             DO_NAT(AtomMax,X,ozconf.heapMinSize=X/KB);
+             if (ozconf.heapMinSize > ozconf.heapMaxSize)
+             ozconf.heapMinSize = ozconf.heapMaxSize;
+             if (ozconf.heapMinSize > ozconf.heapThreshold)
+             ozconf.heapThreshold = ozconf.heapMinSize;
+             DO_PERCENT(AtomFree,X,ozconf.heapFree=X);
+             DO_PERCENT(AtomTolerance,X,ozconf.heapTolerance=X);
+             DO_BOOL(AtomOn,X,ozconf.gcFlag=X);
+             if (ozconf.heapThreshold > ozconf.heapMaxSize) {
+               am.setSFlag(StartGC);
+               return BI_PREEMPT;
+             });
     // PRINT
     CASE_NAT(PROP_PRINT_WIDTH,ozconf.printWidth);
     CASE_NAT(PROP_PRINT_DEPTH,ozconf.printDepth);
+    CASE_REC(PROP_PRINT,
+             DO_NAT(AtomWidth,X,ozconf.printWidth=X);
+             DO_NAT(AtomDepth,X,ozconf.printDepth=X););
     // FD
     CASE_NAT_DO(PROP_FD_THRESHOLD,reInitFDs(VAL));
+    CASE_REC(PROP_FD,
+             DO_NAT(AtomThreshold,X,reInitFDs(X)););
     // ERRORS
     CASE_BOOL(PROP_ERRORS_LOCATION,ozconf.errorLocation);
     CASE_BOOL(PROP_ERRORS_HINTS,ozconf.errorHints);
@@ -281,6 +485,13 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_ERRORS_THREAD,ozconf.errorThreadDepth);
     CASE_NAT(PROP_ERRORS_WIDTH,ozconf.errorPrintWidth);
     CASE_NAT(PROP_ERRORS_DEPTH,ozconf.errorPrintDepth);
+    CASE_REC(PROP_ERRORS,
+             DO_BOOL(AtomLocation,X,ozconf.errorLocation=X);
+             DO_BOOL(AtomHints,X,ozconf.errorHints=X);
+             DO_BOOL(AtomDebug,X,ozconf.errorDebug=X);
+             DO_NAT(AtomThread,X,ozconf.errorThreadDepth=X);
+             DO_NAT(AtomWidth,X,ozconf.errorPrintWidth=X);
+             DO_NAT(AtomDepth,X,ozconf.errorPrintDepth=X););
     // MESSAGES
     CASE_BOOL(PROP_MESSAGES_GC,ozconf.gcVerbosity);
     CASE_BOOL(PROP_MESSAGES_IDLE,ozconf.showIdleMessage);
@@ -288,6 +499,13 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_MESSAGES_FOREIGN,ozconf.showForeignLoad);
     CASE_BOOL(PROP_MESSAGES_LOAD,ozconf.showLoad);
     CASE_BOOL(PROP_MESSAGES_CACHE,ozconf.showCacheLoad);
+    CASE_REC(PROP_MESSAGES,
+             DO_BOOL(AtomGC,X,ozconf.gcVerbosity=X);
+             DO_BOOL(AtomIdle,X,ozconf.showIdleMessage=X);
+             DO_BOOL(AtomFeed,X,ozconf.showFastLoad=X);
+             DO_BOOL(AtomForeign,X,ozconf.showForeignLoad=X);
+             DO_BOOL(AtomLoad,X,ozconf.showLoad=X);
+             DO_BOOL(AtomCache,X,ozconf.showCacheLoad=X););
     // INTERNAL
     CASE_BOOL_DO(PROP_INTERNAL_DEBUG,if (VAL) am.unsetSFlag(DebugMode); else am.setSFlag(DebugMode));
     CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
@@ -296,6 +514,16 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_INTERNAL_DEBUG_PERDIO,ozconf.debugPerdio);
     CASE_BOOL(PROP_INTERNAL_BROWSER,ozconf.browser);
     CASE_BOOL(PROP_INTERNAL_APPLET,ozconf.applet);
+    CASE_REC(PROP_INTERNAL,
+             DO_BOOL(AtomDebug,X,
+                     if (X) am.setSFlag(DebugMode);
+                     else   am.unsetSFlag(DebugMode););
+             DO_BOOL(AtomShowSuspension,X,ozconf.showSuspension=X);
+             DO_BOOL(AtomStopOnToplevelFailure,X,ozconf.stopOnToplevelFailure=X);
+             DO_NAT(AtomDebugIP,X,ozconf.debugIP=X);
+             DO_NAT(AtomDebugPerdio,X,ozconf.debugPerdio=X);
+             DO_BOOL(AtomBrowser,X,ozconf.browser=X);
+             DO_BOOL(AtomApplet,X,ozconf.applet=X););
   default:
     return PROP__NOT__WRITABLE;
   }
@@ -442,9 +670,11 @@ void initVirtualProperties()
   VirtualProperty::add("threads.runnable",PROP_THREADS_RUNNABLE);
   VirtualProperty::add("threads.min",PROP_THREADS_MIN);
   VirtualProperty::add("threads.max",PROP_THREADS_MAX);
+  VirtualProperty::add("threads",PROP_THREADS);
   // PRIORITIES
   VirtualProperty::add("priorities.high",PROP_PRIORITIES_HIGH);
   VirtualProperty::add("priorities.medium",PROP_PRIORITIES_MEDIUM);
+  VirtualProperty::add("priorities",PROP_PRIORITIES);
   // TIME
   VirtualProperty::add("time.copy",PROP_TIME_COPY);
   VirtualProperty::add("time.gc",PROP_TIME_GC);
@@ -455,6 +685,7 @@ void initVirtualProperties()
   VirtualProperty::add("time.total",PROP_TIME_TOTAL);
   VirtualProperty::add("time.user",PROP_TIME_USER);
   VirtualProperty::add("time.detailed",PROP_TIME_DETAILED);
+  VirtualProperty::add("time",PROP_TIME);
   // GC
   VirtualProperty::add("gc.min",PROP_GC_MIN);
   VirtualProperty::add("gc.max",PROP_GC_MAX);
@@ -464,20 +695,24 @@ void initVirtualProperties()
   VirtualProperty::add("gc.threshold",PROP_GC_THRESHOLD);
   VirtualProperty::add("gc.size",PROP_GC_SIZE);
   VirtualProperty::add("gc.active",PROP_GC_ACTIVE);
+  VirtualProperty::add("gc",PROP_GC);
   // PRINT
   VirtualProperty::add("print.depth",PROP_PRINT_DEPTH);
   VirtualProperty::add("print.width",PROP_PRINT_WIDTH);
+  VirtualProperty::add("print",PROP_PRINT);
   // FD
   VirtualProperty::add("fd.variables",PROP_FD_VARIABLES);
   VirtualProperty::add("fd.propagators",PROP_FD_PROPAGATORS);
   VirtualProperty::add("fd.invoked",PROP_FD_INVOKED);
   VirtualProperty::add("fd.threshold",PROP_FD_THRESHOLD);
+  VirtualProperty::add("fd",PROP_FD);
   // SPACES
   VirtualProperty::add("spaces.committed",PROP_SPACES_COMMITTED);
   VirtualProperty::add("spaces.cloned",PROP_SPACES_CLONED);
   VirtualProperty::add("spaces.created",PROP_SPACES_CREATED);
   VirtualProperty::add("spaces.failed",PROP_SPACES_FAILED);
   VirtualProperty::add("spaces.succeeded",PROP_SPACES_SUCCEEDED);
+  VirtualProperty::add("spaces",PROP_SPACES);
   // ERRORS
   VirtualProperty::add("errors.location",PROP_ERRORS_LOCATION);
   VirtualProperty::add("errors.debug",PROP_ERRORS_DEBUG);
@@ -485,6 +720,7 @@ void initVirtualProperties()
   VirtualProperty::add("errors.thread",PROP_ERRORS_THREAD);
   VirtualProperty::add("errors.depth",PROP_ERRORS_DEPTH);
   VirtualProperty::add("errors.width",PROP_ERRORS_WIDTH);
+  VirtualProperty::add("errors",PROP_ERRORS);
   // MESSAGES
   VirtualProperty::add("messages.gc",PROP_MESSAGES_GC);
   VirtualProperty::add("messages.idle",PROP_MESSAGES_IDLE);
@@ -492,6 +728,7 @@ void initVirtualProperties()
   VirtualProperty::add("messages.foreign",PROP_MESSAGES_FOREIGN);
   VirtualProperty::add("messages.load",PROP_MESSAGES_LOAD);
   VirtualProperty::add("messages.cache",PROP_MESSAGES_CACHE);
+  VirtualProperty::add("messages",PROP_MESSAGES);
   // MEMORY
   VirtualProperty::add("memory.atoms",PROP_MEMORY_ATOMS);
   VirtualProperty::add("memory.names",PROP_MEMORY_NAMES);
@@ -499,11 +736,13 @@ void initVirtualProperties()
   VirtualProperty::add("memory.freelist",PROP_MEMORY_FREELIST);
   VirtualProperty::add("memory.code",PROP_MEMORY_CODE);
   VirtualProperty::add("memory.heap",PROP_MEMORY_HEAP);
+  VirtualProperty::add("memory",PROP_MEMORY);
   // HEAP
   VirtualProperty::add("heap.used",PROP_HEAP_USED);
   // LIMITS
   VirtualProperty::add("limits.int.min",PROP_LIMITS_INT_MIN);
   VirtualProperty::add("limits.int.max",PROP_LIMITS_INT_MAX);
+  VirtualProperty::add("limits",PROP_LIMITS);
   // ARGV
   VirtualProperty::add("argv",PROP_ARGV);
   // MISC
@@ -519,4 +758,5 @@ void initVirtualProperties()
   VirtualProperty::add("internal.perdio.debug",PROP_INTERNAL_DEBUG_PERDIO);
   VirtualProperty::add("internal.browser",PROP_INTERNAL_BROWSER);
   VirtualProperty::add("internal.applet",PROP_INTERNAL_APPLET);
+  VirtualProperty::add("internal",PROP_INTERNAL);
 }

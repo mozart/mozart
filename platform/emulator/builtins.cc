@@ -5715,203 +5715,203 @@ OZ_C_proc_end
 #define SetBoolArg(a, n) \
   r->setFeature(a, (n) ? NameTrue : NameFalse);
 
-OZ_C_proc_begin(BISystemGetThreads,1) {
-  GetRecord;
-  SetIntArg(AtomCreated,  ozstat.createdThreads.total);
-  SetIntArg(AtomRunnable, am.getRunnableNumber());
-  SetIntArg(AtomMin,      ozconf.stackMinSize / TASKFRAMESIZE);
-  SetIntArg(AtomMax,      ozconf.stackMaxSize / TASKFRAMESIZE);
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetPriorities,1) {
-  GetRecord;
-  SetIntArg(AtomHigh,   ozconf.hiMidRatio);
-  SetIntArg(AtomMedium, ozconf.midLowRatio);
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetTime,1) {
-  GetRecord;
-  unsigned int timeNow = osUserTime();
-
-  unsigned int copy = 0;
-  unsigned int gc   = 0;
-  unsigned int load = 0;
-  unsigned int prop = 0;
-  unsigned int run  = 0;
-
-  if (ozconf.timeDetailed) {
-    copy = ozstat.timeForCopy.total;
-    gc   = ozstat.timeForGC.total;
-    load = ozstat.timeForLoading.total;
-    prop = ozstat.timeForPropagation.total;
-    run  = timeNow-(copy + gc + load + prop);
-  }
-
-  SetIntArg(AtomCopy,      copy);
-  SetIntArg(AtomGC,        gc);
-  SetIntArg(AtomLoad,      load);
-  SetIntArg(AtomPropagate, prop);
-  SetIntArg(AtomRun,       run);
-
-  SetIntArg(AtomSystem,    osSystemTime());
-  SetIntArg(AtomTotal,     osTotalTime());
-  SetIntArg(AtomUser,      timeNow);
-  SetBoolArg(AtomDetailed, ozconf.timeDetailed);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetGC,1) {
-  GetRecord;
-
-  SetIntArg(AtomMin,       ozconf.heapMinSize*KB);
-  SetIntArg(AtomMax,       ozconf.heapMaxSize*KB);
-  SetIntArg(AtomFree,      ozconf.heapFree);
-  SetIntArg(AtomTolerance, ozconf.heapTolerance);
-  SetBoolArg(AtomOn,       ozconf.gcFlag);
-  SetIntArg(AtomThreshold, ozconf.heapThreshold*KB);
-  SetIntArg(AtomSize,      getUsedMemory()*KB);
-  SetIntArg(AtomActive,    ozstat.gcLastActive*KB);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetPrint,1) {
-  GetRecord;
-
-  SetIntArg(AtomDepth, ozconf.printDepth);
-  SetIntArg(AtomWidth, ozconf.printWidth);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetFD,1) {
-  GetRecord;
-
-  SetIntArg(AtomVariables,   ozstat.fdvarsCreated.total);
-  SetIntArg(AtomPropagators, ozstat.propagatorsCreated.total);
-  SetIntArg(AtomInvoked,     ozstat.propagatorsInvoked.total);
-  SetIntArg(AtomThreshold,   32 * fd_bv_max_high);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetSpaces,1) {
-  GetRecord;
-
-  SetIntArg(AtomCommitted, ozstat.solveAlt.total);
-  SetIntArg(AtomCloned,    ozstat.solveCloned.total);
-  SetIntArg(AtomCreated,   ozstat.solveCreated.total);
-  SetIntArg(AtomFailed,    ozstat.solveFailed.total);
-  SetIntArg(AtomSucceeded, ozstat.solveSolved.total);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetErrors,1) {
-  GetRecord;
-
-  SetBoolArg(AtomLocation, ozconf.errorLocation);
-  SetBoolArg(AtomDebug,    ozconf.errorDebug);
-  SetBoolArg(AtomHints,    ozconf.errorHints);
-  SetIntArg(AtomThread,    ozconf.errorThreadDepth);
-  SetIntArg(AtomDepth,     ozconf.errorPrintDepth);
-  SetIntArg(AtomWidth,     ozconf.errorPrintWidth);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetMessages,1) {
-  GetRecord;
-
-  SetBoolArg(AtomGC,      ozconf.gcVerbosity);
-  SetBoolArg(AtomIdle,    ozconf.showIdleMessage);
-  SetBoolArg(AtomFeed,    ozconf.showFastLoad);
-  SetBoolArg(AtomForeign, ozconf.showForeignLoad);
-  SetBoolArg(AtomLoad,    ozconf.showLoad);
-  SetBoolArg(AtomCache,   ozconf.showCacheLoad);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetMemory,1) {
-  GetRecord;
-
-  SetIntArg(AtomAtoms,    ozstat.getAtomMemory());
-  SetIntArg(AtomNames,    ozstat.getNameMemory());
-  SetIntArg(AtomBuiltins, builtinTab.memRequired());
-  SetIntArg(AtomFreelist, getMemoryInFreeList());
-  SetIntArg(AtomCode,     CodeArea::totalSize);
-  SetIntArg(AtomHeap,     ozstat.heapUsed.total+getUsedMemory());
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIheapUsed,1)
-{
-  oz_declareArg(0,out);
-  return OZ_unifyInt(out,getUsedMemory());
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BISystemGetLimits,1) {
-  GetRecord;
-
-  SetTaggedArg(AtomInt, oz_pair2(makeInt(OzMinInt),
-                                 makeInt(OzMaxInt)));
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetArgv,1) {
-  TaggedRef out = nil();
-  for(int i=ozconf.argC-1; i>=0; i--) {
-    out = cons(oz_atom(ozconf.argV[i]),out);
-  }
-  return oz_unify(OZ_getCArg(0),out);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetInternal,1) {
-  GetRecord;
-
-  SetBoolArg(AtomBrowser, ozconf.browser);
-  SetBoolArg(AtomApplet,  ozconf.applet);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemGetStandalone,1) {
-  return oz_unify(OZ_getCArg(0),ozconf.runningUnderEmacs? NameFalse: NameTrue);
-}
-OZ_C_proc_end
+// OZ_C_proc_begin(BISystemGetThreads,1) {
+//   GetRecord;
+//   SetIntArg(AtomCreated,  ozstat.createdThreads.total);
+//   SetIntArg(AtomRunnable, am.getRunnableNumber());
+//   SetIntArg(AtomMin,      ozconf.stackMinSize / TASKFRAMESIZE);
+//   SetIntArg(AtomMax,      ozconf.stackMaxSize / TASKFRAMESIZE);
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetPriorities,1) {
+//   GetRecord;
+//   SetIntArg(AtomHigh,   ozconf.hiMidRatio);
+//   SetIntArg(AtomMedium, ozconf.midLowRatio);
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetTime,1) {
+//   GetRecord;
+//   unsigned int timeNow = osUserTime();
+//
+//   unsigned int copy = 0;
+//   unsigned int gc   = 0;
+//   unsigned int load = 0;
+//   unsigned int prop = 0;
+//   unsigned int run  = 0;
+//
+//   if (ozconf.timeDetailed) {
+//     copy = ozstat.timeForCopy.total;
+//     gc   = ozstat.timeForGC.total;
+//     load = ozstat.timeForLoading.total;
+//     prop = ozstat.timeForPropagation.total;
+//     run  = timeNow-(copy + gc + load + prop);
+//   }
+//
+//   SetIntArg(AtomCopy,      copy);
+//   SetIntArg(AtomGC,        gc);
+//   SetIntArg(AtomLoad,      load);
+//   SetIntArg(AtomPropagate, prop);
+//   SetIntArg(AtomRun,       run);
+//
+//   SetIntArg(AtomSystem,    osSystemTime());
+//   SetIntArg(AtomTotal,     osTotalTime());
+//   SetIntArg(AtomUser,      timeNow);
+//   SetBoolArg(AtomDetailed, ozconf.timeDetailed);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetGC,1) {
+//   GetRecord;
+//
+//   SetIntArg(AtomMin,       ozconf.heapMinSize*KB);
+//   SetIntArg(AtomMax,       ozconf.heapMaxSize*KB);
+//   SetIntArg(AtomFree,      ozconf.heapFree);
+//   SetIntArg(AtomTolerance, ozconf.heapTolerance);
+//   SetBoolArg(AtomOn,       ozconf.gcFlag);
+//   SetIntArg(AtomThreshold, ozconf.heapThreshold*KB);
+//   SetIntArg(AtomSize,      getUsedMemory()*KB);
+//   SetIntArg(AtomActive,    ozstat.gcLastActive*KB);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetPrint,1) {
+//   GetRecord;
+//
+//   SetIntArg(AtomDepth, ozconf.printDepth);
+//   SetIntArg(AtomWidth, ozconf.printWidth);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetFD,1) {
+//   GetRecord;
+//
+//   SetIntArg(AtomVariables,   ozstat.fdvarsCreated.total);
+//   SetIntArg(AtomPropagators, ozstat.propagatorsCreated.total);
+//   SetIntArg(AtomInvoked,     ozstat.propagatorsInvoked.total);
+//   SetIntArg(AtomThreshold,   32 * fd_bv_max_high);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetSpaces,1) {
+//   GetRecord;
+//
+//   SetIntArg(AtomCommitted, ozstat.solveAlt.total);
+//   SetIntArg(AtomCloned,    ozstat.solveCloned.total);
+//   SetIntArg(AtomCreated,   ozstat.solveCreated.total);
+//   SetIntArg(AtomFailed,    ozstat.solveFailed.total);
+//   SetIntArg(AtomSucceeded, ozstat.solveSolved.total);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetErrors,1) {
+//   GetRecord;
+//
+//   SetBoolArg(AtomLocation, ozconf.errorLocation);
+//   SetBoolArg(AtomDebug,    ozconf.errorDebug);
+//   SetBoolArg(AtomHints,    ozconf.errorHints);
+//   SetIntArg(AtomThread,    ozconf.errorThreadDepth);
+//   SetIntArg(AtomDepth,     ozconf.errorPrintDepth);
+//   SetIntArg(AtomWidth,     ozconf.errorPrintWidth);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetMessages,1) {
+//   GetRecord;
+//
+//   SetBoolArg(AtomGC,      ozconf.gcVerbosity);
+//   SetBoolArg(AtomIdle,    ozconf.showIdleMessage);
+//   SetBoolArg(AtomFeed,    ozconf.showFastLoad);
+//   SetBoolArg(AtomForeign, ozconf.showForeignLoad);
+//   SetBoolArg(AtomLoad,    ozconf.showLoad);
+//   SetBoolArg(AtomCache,   ozconf.showCacheLoad);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetMemory,1) {
+//   GetRecord;
+//
+//   SetIntArg(AtomAtoms,    ozstat.getAtomMemory());
+//   SetIntArg(AtomNames,    ozstat.getNameMemory());
+//   SetIntArg(AtomBuiltins, builtinTab.memRequired());
+//   SetIntArg(AtomFreelist, getMemoryInFreeList());
+//   SetIntArg(AtomCode,     CodeArea::totalSize);
+//   SetIntArg(AtomHeap,     ozstat.heapUsed.total+getUsedMemory());
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+//
+// OZ_C_proc_begin(BIheapUsed,1)
+// {
+//   oz_declareArg(0,out);
+//   return OZ_unifyInt(out,getUsedMemory());
+// }
+// OZ_C_proc_end
+//
+//
+// OZ_C_proc_begin(BISystemGetLimits,1) {
+//   GetRecord;
+//
+//   SetTaggedArg(AtomInt, oz_pair2(makeInt(OzMinInt),
+//                               makeInt(OzMaxInt)));
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetArgv,1) {
+//   TaggedRef out = nil();
+//   for(int i=ozconf.argC-1; i>=0; i--) {
+//     out = cons(oz_atom(ozconf.argV[i]),out);
+//   }
+//   return oz_unify(OZ_getCArg(0),out);
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetInternal,1) {
+//   GetRecord;
+//
+//   SetBoolArg(AtomBrowser, ozconf.browser);
+//   SetBoolArg(AtomApplet,  ozconf.applet);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemGetStandalone,1) {
+//   return oz_unify(OZ_getCArg(0),ozconf.runningUnderEmacs? NameFalse: NameTrue);
+// }
+// OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetHome,1) {
   return oz_unifyAtom(OZ_getCArg(0),ozconf.ozHome);
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BISystemGetPlatform,1) {
-  return oz_unify(OZ_getCArg(0),
-                  oz_pair2(oz_atom(ozconf.osname),oz_atom(ozconf.cpu)));
-}
-OZ_C_proc_end
+// OZ_C_proc_begin(BISystemGetPlatform,1) {
+//   return oz_unify(OZ_getCArg(0),
+//                oz_pair2(oz_atom(ozconf.osname),oz_atom(ozconf.cpu)));
+// }
+// OZ_C_proc_end
 
 #undef GetRecord
 #undef SetTaggedArg
@@ -5987,160 +5987,160 @@ OZ_C_proc_begin(BISystemSetTime,1) {
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BISystemSetThreads,1) {
-  LookRecord(t);
-  DoNatFeature(minsize, t, AtomMin);
-  DoNatFeature(maxsize, t, AtomMax);
-
-  SetIfPos(ozconf.stackMaxSize, maxsize, TASKFRAMESIZE);
-  SetIfPos(ozconf.stackMinSize, minsize, TASKFRAMESIZE);
-
-  if (ozconf.stackMinSize > ozconf.stackMaxSize)
-    ozconf.stackMinSize = ozconf.stackMaxSize;
-
-  return PROCEED;
-} OZ_C_proc_end
-
-
-OZ_C_proc_begin(BISystemSetPriorities,1) {
-  LookRecord(t);
-
-  DoPercentFeature(high,   t, AtomHigh);
-  DoPercentFeature(medium, t, AtomMedium);
-
-  SetIfPos(ozconf.hiMidRatio,  high,   1);
-  SetIfPos(ozconf.midLowRatio, medium, 1);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemSetGC,1) {
-  LookRecord(t);
-
-  DoNatFeature(max_size,      t, AtomMax);
-  DoNatFeature(min_size,      t, AtomMin);
-  DoPercentFeature(free,      t, AtomFree);
-  DoPercentFeature(tolerance, t, AtomTolerance);
-  DoBoolFeature(active,       t, AtomOn);
-
-  SetIfPos(ozconf.heapMaxSize,    max_size,  KB);
-  SetIfPos(ozconf.heapMinSize,    min_size,  KB);
-
-  SetIfPos(ozconf.heapFree,       free,      1);
-  SetIfPos(ozconf.heapTolerance,  tolerance, 1);
-  SetIfPos(ozconf.gcFlag,         active,    1);
-
-  if (ozconf.heapMinSize > ozconf.heapMaxSize)
-    ozconf.heapMinSize = ozconf.heapMaxSize;
-
-  if (ozconf.heapMinSize > ozconf.heapThreshold)
-    ozconf.heapThreshold = ozconf.heapMinSize;
-
-  if (ozconf.heapThreshold > ozconf.heapMaxSize) {
-    am.setSFlag(StartGC);
-    return BI_PREEMPT;
-  }
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemSetPrint,1) {
-  LookRecord(t);
-
-  DoNatFeature(width, t, AtomWidth);
-  DoNatFeature(depth, t, AtomDepth);
-
-  SetIfPos(ozconf.printWidth, width, 1);
-  SetIfPos(ozconf.printDepth, depth, 1);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemSetFD,1) {
-  LookRecord(t);
-
-  DoNatFeature(threshold, t, AtomThreshold);
-
-  reInitFDs(threshold);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemSetErrors,1) {
-  LookRecord(t);
-
-  DoBoolFeature(location, t, AtomLocation);
-  DoBoolFeature(hints,    t, AtomHints);
-  DoBoolFeature(debug,    t, AtomDebug);
-  DoNatFeature(thread,    t, AtomThread);
-  DoNatFeature(width,     t, AtomWidth);
-  DoNatFeature(depth,     t, AtomDepth);
-
-  SetIfPos(ozconf.errorThreadDepth, thread,   1);
-  SetIfPos(ozconf.errorLocation,    location, 1);
-  SetIfPos(ozconf.errorDebug,       debug,    1);
-  SetIfPos(ozconf.errorHints,       hints,    1);
-  SetIfPos(ozconf.errorPrintWidth,  width,    1);
-  SetIfPos(ozconf.errorPrintDepth,  depth,    1);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BISystemSetMessages,1) {
-  LookRecord(t);
-
-  DoBoolFeature(gc,      t, AtomGC);
-  DoBoolFeature(idle,    t, AtomIdle);
-  DoBoolFeature(feed,    t, AtomFeed);
-  DoBoolFeature(foreign, t, AtomForeign);
-  DoBoolFeature(load,    t, AtomLoad);
-  DoBoolFeature(cache,   t, AtomCache);
-
-  SetIfPos(ozconf.gcVerbosity,     gc,      1);
-  SetIfPos(ozconf.showIdleMessage, idle,    1);
-  SetIfPos(ozconf.showFastLoad,    feed,    1);
-  SetIfPos(ozconf.showForeignLoad, foreign, 1);
-  SetIfPos(ozconf.showLoad,        load,    1);
-  SetIfPos(ozconf.showCacheLoad,   cache,   1);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BISystemSetInternal,1) {
-  LookRecord(t);
-
-  DoBoolFeature(debugmode,  t, AtomDebug);
-  DoBoolFeature(suspension, t, AtomShowSuspension);
-  DoBoolFeature(stop,       t, AtomStopOnToplevelFailure);
-  DoNatFeature(debugIP,     t, AtomDebugIP);
-  DoNatFeature(debugPerdio, t, AtomDebugPerdio);
-
-  if (!debugmode) {
-    am.unsetSFlag(DebugMode);
-  } else if (debugmode > 0) {
-    am.setSFlag(DebugMode);
-  }
-
-  SetIfPos(ozconf.showSuspension,        suspension, 1);
-  SetIfPos(ozconf.stopOnToplevelFailure, stop,       1);
-  SetIfPos(ozconf.debugIP,               debugIP,    1);
-  SetIfPos(ozconf.debugPerdio,           debugPerdio,1);
-
-  DoBoolFeature(b, t, AtomBrowser);
-  if (b>0) ozconf.browser = b;
-  DoBoolFeature(a, t, AtomApplet);
-  if (a>0) ozconf.applet = a;
-
-  return PROCEED;
-}
-OZ_C_proc_end
+// OZ_C_proc_begin(BISystemSetThreads,1) {
+//   LookRecord(t);
+//   DoNatFeature(minsize, t, AtomMin);
+//   DoNatFeature(maxsize, t, AtomMax);
+//
+//   SetIfPos(ozconf.stackMaxSize, maxsize, TASKFRAMESIZE);
+//   SetIfPos(ozconf.stackMinSize, minsize, TASKFRAMESIZE);
+//
+//   if (ozconf.stackMinSize > ozconf.stackMaxSize)
+//     ozconf.stackMinSize = ozconf.stackMaxSize;
+//
+//   return PROCEED;
+// } OZ_C_proc_end
+//
+//
+// OZ_C_proc_begin(BISystemSetPriorities,1) {
+//   LookRecord(t);
+//
+//   DoPercentFeature(high,   t, AtomHigh);
+//   DoPercentFeature(medium, t, AtomMedium);
+//
+//   SetIfPos(ozconf.hiMidRatio,  high,   1);
+//   SetIfPos(ozconf.midLowRatio, medium, 1);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemSetGC,1) {
+//   LookRecord(t);
+//
+//   DoNatFeature(max_size,      t, AtomMax);
+//   DoNatFeature(min_size,      t, AtomMin);
+//   DoPercentFeature(free,      t, AtomFree);
+//   DoPercentFeature(tolerance, t, AtomTolerance);
+//   DoBoolFeature(active,       t, AtomOn);
+//
+//   SetIfPos(ozconf.heapMaxSize,    max_size,  KB);
+//   SetIfPos(ozconf.heapMinSize,    min_size,  KB);
+//
+//   SetIfPos(ozconf.heapFree,       free,      1);
+//   SetIfPos(ozconf.heapTolerance,  tolerance, 1);
+//   SetIfPos(ozconf.gcFlag,         active,    1);
+//
+//   if (ozconf.heapMinSize > ozconf.heapMaxSize)
+//     ozconf.heapMinSize = ozconf.heapMaxSize;
+//
+//   if (ozconf.heapMinSize > ozconf.heapThreshold)
+//     ozconf.heapThreshold = ozconf.heapMinSize;
+//
+//   if (ozconf.heapThreshold > ozconf.heapMaxSize) {
+//     am.setSFlag(StartGC);
+//     return BI_PREEMPT;
+//   }
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemSetPrint,1) {
+//   LookRecord(t);
+//
+//   DoNatFeature(width, t, AtomWidth);
+//   DoNatFeature(depth, t, AtomDepth);
+//
+//   SetIfPos(ozconf.printWidth, width, 1);
+//   SetIfPos(ozconf.printDepth, depth, 1);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemSetFD,1) {
+//   LookRecord(t);
+//
+//   DoNatFeature(threshold, t, AtomThreshold);
+//
+//   reInitFDs(threshold);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemSetErrors,1) {
+//   LookRecord(t);
+//
+//   DoBoolFeature(location, t, AtomLocation);
+//   DoBoolFeature(hints,    t, AtomHints);
+//   DoBoolFeature(debug,    t, AtomDebug);
+//   DoNatFeature(thread,    t, AtomThread);
+//   DoNatFeature(width,     t, AtomWidth);
+//   DoNatFeature(depth,     t, AtomDepth);
+//
+//   SetIfPos(ozconf.errorThreadDepth, thread,   1);
+//   SetIfPos(ozconf.errorLocation,    location, 1);
+//   SetIfPos(ozconf.errorDebug,       debug,    1);
+//   SetIfPos(ozconf.errorHints,       hints,    1);
+//   SetIfPos(ozconf.errorPrintWidth,  width,    1);
+//   SetIfPos(ozconf.errorPrintDepth,  depth,    1);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+// OZ_C_proc_begin(BISystemSetMessages,1) {
+//   LookRecord(t);
+//
+//   DoBoolFeature(gc,      t, AtomGC);
+//   DoBoolFeature(idle,    t, AtomIdle);
+//   DoBoolFeature(feed,    t, AtomFeed);
+//   DoBoolFeature(foreign, t, AtomForeign);
+//   DoBoolFeature(load,    t, AtomLoad);
+//   DoBoolFeature(cache,   t, AtomCache);
+//
+//   SetIfPos(ozconf.gcVerbosity,     gc,      1);
+//   SetIfPos(ozconf.showIdleMessage, idle,    1);
+//   SetIfPos(ozconf.showFastLoad,    feed,    1);
+//   SetIfPos(ozconf.showForeignLoad, foreign, 1);
+//   SetIfPos(ozconf.showLoad,        load,    1);
+//   SetIfPos(ozconf.showCacheLoad,   cache,   1);
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
+//
+//
+// OZ_C_proc_begin(BISystemSetInternal,1) {
+//   LookRecord(t);
+//
+//   DoBoolFeature(debugmode,  t, AtomDebug);
+//   DoBoolFeature(suspension, t, AtomShowSuspension);
+//   DoBoolFeature(stop,       t, AtomStopOnToplevelFailure);
+//   DoNatFeature(debugIP,     t, AtomDebugIP);
+//   DoNatFeature(debugPerdio, t, AtomDebugPerdio);
+//
+//   if (!debugmode) {
+//     am.unsetSFlag(DebugMode);
+//   } else if (debugmode > 0) {
+//     am.setSFlag(DebugMode);
+//   }
+//
+//   SetIfPos(ozconf.showSuspension,        suspension, 1);
+//   SetIfPos(ozconf.stopOnToplevelFailure, stop,       1);
+//   SetIfPos(ozconf.debugIP,               debugIP,    1);
+//   SetIfPos(ozconf.debugPerdio,           debugPerdio,1);
+//
+//   DoBoolFeature(b, t, AtomBrowser);
+//   if (b>0) ozconf.browser = b;
+//   DoBoolFeature(a, t, AtomApplet);
+//   if (a>0) ozconf.applet = a;
+//
+//   return PROCEED;
+// }
+// OZ_C_proc_end
 
 
 #undef LookRecord
@@ -7526,32 +7526,32 @@ BIspec allSpec[] = {
   {"Show",  1, BIshow,   (IFOR) showInline},
 
   {"System.nbSusps", 2, BIconstraints,          0},
-  {"SystemGetThreads",    1, BISystemGetThreads},
-  {"SystemGetPriorities", 1, BISystemGetPriorities},
-  {"SystemGetTime",       1, BISystemGetTime},
-  {"SystemGetGC",         1, BISystemGetGC},
-  {"SystemGetPrint",      1, BISystemGetPrint},
-  {"SystemGetFD",         1, BISystemGetFD},
-  {"SystemGetSpaces",     1, BISystemGetSpaces},
-  {"SystemGetErrors",     1, BISystemGetErrors},
-  {"SystemGetMessages",   1, BISystemGetMessages},
-  {"SystemGetMemory",     1, BISystemGetMemory},
-  {"SystemGetLimits",     1, BISystemGetLimits},
-  {"SystemGetArgv",       1, BISystemGetArgv},
-  {"SystemGetStandalone", 1, BISystemGetStandalone},
+  //  {"SystemGetThreads",    1, BISystemGetThreads},
+  //  {"SystemGetPriorities", 1, BISystemGetPriorities},
+  //  {"SystemGetTime",       1, BISystemGetTime},
+  //  {"SystemGetGC",         1, BISystemGetGC},
+  //  {"SystemGetPrint",      1, BISystemGetPrint},
+  //  {"SystemGetFD",         1, BISystemGetFD},
+  //  {"SystemGetSpaces",     1, BISystemGetSpaces},
+  //  {"SystemGetErrors",     1, BISystemGetErrors},
+  //  {"SystemGetMessages",   1, BISystemGetMessages},
+  //  {"SystemGetMemory",     1, BISystemGetMemory},
+  //  {"SystemGetLimits",     1, BISystemGetLimits},
+  //  {"SystemGetArgv",       1, BISystemGetArgv},
+  //  {"SystemGetStandalone", 1, BISystemGetStandalone},
   {"SystemGetHome",       1, BISystemGetHome},
-  {"SystemGetPlatform",   1, BISystemGetPlatform},
-  {"SystemGetInternal",   1, BISystemGetInternal},
+  //  {"SystemGetPlatform",   1, BISystemGetPlatform},
+  //  {"SystemGetInternal",   1, BISystemGetInternal},
 
-  {"SystemSetTime",       1, BISystemSetTime},
-  {"SystemSetThreads",    1, BISystemSetThreads},
-  {"SystemSetPriorities", 1, BISystemSetPriorities},
-  {"SystemSetPrint",      1, BISystemSetPrint},
-  {"SystemSetFD",         1, BISystemSetFD},
-  {"SystemSetGC",         1, BISystemSetGC},
-  {"SystemSetErrors",     1, BISystemSetErrors},
-  {"SystemSetMessages",   1, BISystemSetMessages},
-  {"SystemSetInternal",   1, BISystemSetInternal},
+  //  {"SystemSetTime",       1, BISystemSetTime},
+  //  {"SystemSetThreads",    1, BISystemSetThreads},
+  //  {"SystemSetPriorities", 1, BISystemSetPriorities},
+  //  {"SystemSetPrint",      1, BISystemSetPrint},
+  //  {"SystemSetFD",         1, BISystemSetFD},
+  //  {"SystemSetGC",         1, BISystemSetGC},
+  //  {"SystemSetErrors",     1, BISystemSetErrors},
+  //  {"SystemSetMessages",   1, BISystemSetMessages},
+  //  {"SystemSetInternal",   1, BISystemSetInternal},
 
 
   {"onToplevel",1,BIonToplevel},
@@ -7629,7 +7629,7 @@ BIspec allSpec[] = {
   {"System.printError",1,BIprintError},
   {"System.valueToVirtualString",4,BItermToVS},
   {"getTermSize",4,BIgetTermSize},
-  {"heapUsed",1,BIheapUsed},
+  //  {"heapUsed",1,BIheapUsed},
 
   {"foreignFDProps", 1, BIforeignFDProps},
 
