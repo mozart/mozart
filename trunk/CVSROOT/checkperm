@@ -3,7 +3,7 @@
 # this script is invoked by commitinfo and checks if a user
 # has the permission to check into /CVS (mm 980311)
 
-$unwantedPattern="(nobody|ozcvs)";
+$unwantedPattern="(nobody|ozcvs|anoncvs)";
 
 $login = getlogin || (getpwuid($<))[0] || "nobody";
 
