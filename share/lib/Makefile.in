@@ -125,7 +125,7 @@ Standard.ozf: Init.ozc
         $(COMPILE) $< -o $@
 
 # ap dependencies
-Application.ozf: ap/ArgParser.oz
+Application.ozf: ap/ArgParser.oz init/Module.oz init/RURL.oz
 
 # op dependencies
 Open.ozf: op/HtmlTable.oz
