@@ -170,9 +170,6 @@
  * Switches
  */
 
-/* if defined: variables are stored directly in structure */
-#define OPT_VAR_IN_STRUCTURE
-
 /* if defined the builtin print long is available to print detailed
  * informations about values */
 #ifdef MISC_BUILTINS
@@ -216,6 +213,9 @@
 //#define ALLDIFF
 
 //#define MM_DEBUG
+
+// don't create UVAR's
+//#define DEBUG_NO_UVAR
 
 #define DEBUG_PERDIO
 
