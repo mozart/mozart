@@ -103,17 +103,16 @@ enum TypeOfVariable {
   //          has to be converted to an FD variable, which is not
   //          possible.
   OZ_VAR_FAILED         = 5,
-  OZ_VAR_FUTURE         = 6,
-  OZ_VAR_READONLY       = 7,
-  OZ_VAR_READONLY_QUIET = 8,
+  OZ_VAR_READONLY       = 6,
+  OZ_VAR_READONLY_QUIET = 7,
   // group 2:  extensions, notably the distributed variables;
-  OZ_VAR_EXT            = 9,
+  OZ_VAR_EXT            = 8,
   // group 3:  simple variables;
-  OZ_VAR_SIMPLE         = 10,
-  OZ_VAR_SIMPLE_QUIET   = 11,
+  OZ_VAR_SIMPLE         = 9,
+  OZ_VAR_SIMPLE_QUIET   = 10,
   // group 4:  optimized variables are bound to anything else anyway
   //           whenever possible (since they are optimized);
-  OZ_VAR_OPT            = 12
+  OZ_VAR_OPT            = 11
 };
 
 
@@ -395,12 +394,6 @@ Bool oz_var_hasSuspAt(TaggedRef v, Board * b) {
 }
 
 inline
-Future *tagged2Future(TaggedRef t) {
-  Assert(oz_isVar(t) && (tagged2Var(t)->getType() == OZ_VAR_FUTURE));
-  return (Future *) tagged2Var(t);
-}
-
-inline
 SimpleVar *tagged2SimpleVar(TaggedRef t)
 {
   Assert(oz_isVar(t) && ((tagged2Var(t)->getType() == OZ_VAR_SIMPLE) ||
@@ -452,7 +445,6 @@ VarStatus oz_check_var_status(OzVariable *cv)
     return EVAR_STATUS_FREE;
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY:
-  case OZ_VAR_FUTURE:
     return EVAR_STATUS_FUTURE;
   case OZ_VAR_FAILED:
     return EVAR_STATUS_FAILED;

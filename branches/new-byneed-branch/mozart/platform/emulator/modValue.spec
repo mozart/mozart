@@ -128,33 +128,9 @@
 			     out => ['value'],
 			     bi  => BImatchDefault},
 
-     'byNeed'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIbyNeedFuture},
-
-     'byNeedFuture'    	=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIbyNeedFuture},
-
-     'byNeedDot'	=> { in  => ['value','+feature'],
-			     out => ['value'],
-			     BI  => BIbyNeedDot},
-
-     'byNeedFail'	=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIbyNeedFail},
-
      'failedValue'	=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIfailedValue},
-
-     'future'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIfuture},
-
-     '!!'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIfuture},
 
      'readOnly'		=> { in  => ['value'],
 			     out => ['value'],

@@ -246,7 +246,6 @@ class OzFDVariable;
 class OzBoolVariable;
 class OzFSVariable;
 class OzCtVariable;
-class Future;
 class Failed;
 class ReadOnly;
 class SimpleVar;
