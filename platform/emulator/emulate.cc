@@ -2013,34 +2013,54 @@ LBLsuspendThread:
   Case(INLINEDOT)
     {
       TaggedRef feature = getLiteralArg(PC+2);
-      State ret = dotInline(XPC(1),feature,XPC(3));
-      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-      switch(ret) {
-      case PROCEED:
-        DISPATCH(7);
-
-      case SUSPEND:
-        {
-          TaggedRef A=XPC(1);
-          if (shallowCP) {
-            XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
-            e->emptySuspendVarList();
-            e->trail.pushIfVar(A);
-            DISPATCH(7);
+      TaggedRef rec = XPC(1);
+      DEREF(rec,_1,_2);
+      if (isSRecord(rec)) {
+        SRecord *srec = tagged2SRecord(rec);
+        Arity *ar = srec->getTheArity();
+        if (ar==getAdressArg(PC+5)) {
+          XPC(3)=srec->getArg(getPosIntArg(PC+6));
+        } else {
+          int i = srec->getTheArity()->find(tagged2Literal(feature));
+          if (i<0) {
+            goto dotFailed;
           }
-          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
-          e->suspendInline(1,A);
-          CHECK_CURRENT_THREAD;
+          XPC(3) = srec->getArg(i);
+          CodeArea::writeAddress(ar, PC+5);
+          CodeArea::writeInt(i, PC+6);
         }
-
-      case FAILED:
-        SHALLOWFAIL;
-        HF_FAIL2("bi",OZ_CToAtom("."), mkTuple("args",2,feature,XPC(3)));
-      case SLEEP:
-      default:
-        Assert(0);
+        DISPATCH(7);
       }
-     }
+      {
+        State ret = dotInline(XPC(1),feature,XPC(3));
+        LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
+        switch(ret) {
+        case PROCEED: DISPATCH(7);
+        case FAILED:  goto dotFailed;
+
+        case SUSPEND:
+          {
+            TaggedRef A=XPC(1);
+            if (shallowCP) {
+              XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
+              e->emptySuspendVarList();
+              e->trail.pushIfVar(A);
+              DISPATCH(7);
+            }
+            e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+            e->suspendInline(1,A);
+            CHECK_CURRENT_THREAD;
+          }
+
+        case SLEEP:
+        default:
+          Assert(0);
+        }
+      }
+    dotFailed:
+      SHALLOWFAIL;
+      HF_FAIL2("bi",OZ_CToAtom("."), mkTuple("args",2,feature,XPC(3)));
+    }
 
 
   Case(INLINEUPARROW)
