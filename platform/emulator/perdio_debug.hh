@@ -85,7 +85,7 @@ extern void resize_hash();
 #define PERDIO_DEBUG_DO1(INDEX,Y) {if(DV->on(INDEX)) {Y;}}
 
 inline
-void PD(int i,char *format,...)
+void _PD(int i,char *format,...)
 {
   if (DV->on(i)) {
     printf("%s: ",debugTypeStr[i]);
@@ -97,13 +97,14 @@ void PD(int i,char *format,...)
   }
 }
 
+#define PD(Args) _PD Args
+
 #else
 
 #define PERDIO_DEBUG_DO(X)
 #define PERDIO_DEBUG_DO1(INDEX,Y)
 
-inline
-void PD(int i,char *format,...) {}
+#define PD(Args)
 
 #endif
 

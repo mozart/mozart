@@ -59,7 +59,7 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
 
     PerdioVar *rVar = tagged2PerdioVar(rVal);
 
-    PD(PD_VAR,"unify i:%d i:%d",lVar->getIndex(),rVar->getIndex());
+    PD((PD_VAR,"unify i:%d i:%d",lVar->getIndex(),rVar->getIndex()));
 
     if (prop) {
       if (am.isLocalSVar(lVar)) {
