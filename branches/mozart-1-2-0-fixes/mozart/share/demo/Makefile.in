@@ -48,7 +48,8 @@ OZC		= @OZC@
 OZLFLAGS        = 
 OZL		= @OZL@
 
-CYG_BUILDDIR	= $(shell $(SRCTOP)/share/lib/cygpath.sh "$(BUILDDIR)")
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+CYG_BUILDDIR	= $(shell $(CYGPATH) "$(BUILDDIR)")
 
 COMPILE         = $(OZC) $(OZCFLAGS) -b $(CYG_BUILDDIR)/ -c
 ZCOMPILE        = $(COMPILE) -z $(COMPRESSLEVEL)
@@ -97,10 +98,10 @@ $(SYSTEM)/%: %
 #
 
 MT10.ozf: MT10.oz
-	$(COMPILE) -z 9 $< -o $@
+	$(COMPILE) -z 9 $(shell $(CYGPATH) "$<") -o $@
 # Chat Application
 Chat/%.ozf: Chat/%.oz
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 ChatServer.oza: Chat/chat-server.ozf
 	$(LINK) $< -o $@
 ChatClient.oza: Chat/chat-client.ozf Chat/chat-gui.ozf
@@ -108,7 +109,7 @@ ChatClient.oza: Chat/chat-client.ozf Chat/chat-gui.ozf
 
 # JobShop application
 JobShop/%.ozf: JobShop/%.oz
-	$(COMPILE) -b $(CYG_BUILDDIR)/JobShop/ $< -o $@
+	$(COMPILE) -b $(CYG_BUILDDIR)/JobShop/ $(shell $(CYGPATH) "$<") -o $@
 
 JOBSHOP1 = \
 	Examples
@@ -126,7 +127,7 @@ JobShop.oza: $(JOBSHOPFUN2)
 
 # JobShop application
 Cutting/%.ozf: Cutting/%.oz
-	$(COMPILE) -b $(CYG_BUILDDIR)/Cutting/ $< -o $@
+	$(COMPILE) -b $(CYG_BUILDDIR)/Cutting/ $(shell $(CYGPATH) "$<") -o $@
 
 CUTTING = \
 	Configure Script Edit Compute Main
@@ -139,7 +140,7 @@ Cutting.oza: $(CUTTINGFUN)
 
 # Transport application
 Transport/%.ozf: Transport/%.oz
-	$(COMPILE)  -b $(CYG_BUILDDIR)/Transport/ $< -o $@
+	$(COMPILE)  -b $(CYG_BUILDDIR)/Transport/ $(shell $(CYGPATH) "$<") -o $@
 
 TRANSPORT = \
 	AgentAbstractions Agents Configure Country \
@@ -154,7 +155,7 @@ Transport.oza: $(TRANSPORTFUN)
 
 # Dict Client application
 DictClient/%.ozf: DictClient/%.oz
-	$(COMPILE) -b $(CYG_BUILDDIR)/DictClient/ $< -o $@
+	$(COMPILE) -b $(CYG_BUILDDIR)/DictClient/ $(shell $(CYGPATH) "$<") -o $@
 
 DICTCLIENT = Main NetDictionary TkDictionary
 DICTCLIENTFUN = $(DICTCLIENT:%=DictClient/%.ozf)
@@ -165,7 +166,7 @@ DictClient.oza: $(DICTCLIENTFUN)
 
 # JobShop application
 College/%.ozf: College/%.oz
-	$(COMPILE) -DALONEDEMO -b $(CYG_BUILDDIR)/College/ $< -o $@
+	$(COMPILE) -DALONEDEMO -b $(CYG_BUILDDIR)/College/ $(shell $(CYGPATH) "$<") -o $@
 
 COLLEGE = \
 	Main Common Controller Graphics Latex Scheduler
@@ -177,7 +178,7 @@ College.oza: $(COLLEGEFUN)
 
 # Flowers
 Flowers/%.ozf: Flowers/%.oz
-	$(COMPILE) -DALONEDEMO -b $(CYG_BUILDDIR)/College/ $< -o $@
+	$(COMPILE) -DALONEDEMO -b $(CYG_BUILDDIR)/College/ $(shell $(CYGPATH) "$<") -o $@
 
 COLLEGE = \
 	Main Common Controller Graphics Latex Scheduler
@@ -192,22 +193,22 @@ Flowers3d.oza: Flowers/Flowers3d.ozf
 
 #
 DemoUrls.ozf: DemoUrls.oz
-	$(ZCOMPILE) $< -o $@
+	$(ZCOMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: DemoUrls.ozf
 
 $(APPLETS) Transport/Configure.ozf DictClient/TkDictionary.ozf: DemoUrls.ozf
 
 %.oza: %.oz
-	$(ZCOMPILE) $< -o $@
+	$(ZCOMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: %.oz
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 # Last Minute Flights
 
 LMF/%.ozf: LMF/%.oz
-	$(COMPILE) -b $(CYG_BUILDDIR)/LMF/ $< -o $@
+	$(COMPILE) -b $(CYG_BUILDDIR)/LMF/ $(shell $(CYGPATH) "$<") -o $@
 
 LMF1 = \
 	Abstractions HTML Server Book ProcessBook
