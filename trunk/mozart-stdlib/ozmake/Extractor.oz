@@ -179,8 +179,9 @@ define
 			 {Resolve.pickle.getHandlers})}.localize PKG}
 	       in
 		  try
+		     {self trace('trying load')}
 		     try {Pickle.load LOC.1}
-		     catch _ then {Pickler.fromFile LOC.1} end
+		     catch _ then {self trace('trying unpickler')} {Pickler.fromFile LOC.1} end
 		  finally
 		     case LOC of new(F) then
 			try {OS.unlink F} catch _ then skip end
