@@ -40,10 +40,10 @@
 
 class ProxyManagerVar : public ExtVar {
 protected:
-  int index;
+  OB_TIndex index;
   EntityInfo *info;
 public:
-  ProxyManagerVar(Board *bb,int i)
+  ProxyManagerVar(Board *bb, OB_TIndex i)
     : ExtVar(bb), info(NULL), index(i){}
   OZ_Term statusV() = 0;
   VarStatus checkStatusV() = 0;
@@ -59,8 +59,7 @@ public:
   OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);
   OZ_Return addSuspV(TaggedRef *, Suspendable * susp) = 0;
 
-  int getIndex() { return index; }
-  void gcSetIndex(int i);
+  OB_TIndex getIndex() { return (index); }
 
   // for failure
   EntityInfo *getInfo(){return info;}
@@ -79,8 +78,9 @@ private:
   short is_future;
   short is_auto;
 public:
-  ProxyVar(Board *bb, int i,Bool isF) : 
-    ProxyManagerVar(bb,i), binding(0),status(0), is_future(isF),is_auto(FALSE){ }
+  ProxyVar(Board *bb, OB_TIndex i, Bool isF) : 
+    ProxyManagerVar(bb, i),
+    binding(0), status(0), is_future(isF), is_auto(FALSE){ }
 
   void makeAuto(){is_auto=TRUE;}
   Bool isAuto(){return is_auto==1;}
@@ -169,9 +169,9 @@ private:
 protected:
   void sendRedirectToProxies(OZ_Term val, DSite* ackSite);
 public:
-  ManagerVar(OzVariable *ov, int index)
-    :  ProxyManagerVar(ov->getBoardInternal(),index), inform(NULL), 
-       proxies(0) {
+  ManagerVar(OzVariable *ov, OB_TIndex index)
+    :  ProxyManagerVar(ov->getBoardInternal(), index),
+       inform(NULL), proxies(0) {
     // This is for garbage collection purpose only!
     Assert(ov);
     origVar = makeTaggedVar(ov);
@@ -328,7 +328,7 @@ public:
 
 /* ---------------------------------------------------------------------- */
 
-void sendRedirect(DSite*, int, TaggedRef);
+void sendRedirect(DSite*, OB_TIndex, TaggedRef);
 OZ_Term unmarshalVar(MarshalerBuffer*, Bool, Bool);
 Bool triggerVariable(TaggedRef *);
 
@@ -364,7 +364,7 @@ void varPOAdjustForFailure(int,EntityCond,EntityCond);
 void recDeregister(TaggedRef,DSite*);
 
 Bool varCanSend(DSite*);
-void varGetStatus(DSite*, int,TaggedRef);
+void varGetStatus(DSite*, Ext_OB_TIndex, TaggedRef);
 
 #define BAD_BORROW_INDEX (0-1)
 

@@ -50,16 +50,25 @@ Bool globalRedirectFlag=AUT_REG;
    "Unification of distributed variable with term containing resources"
 
 
+//
+//  kost@ GET_ADDR happily compared crocodiles with parrots:
+//  external indexes of proxies with internal indexes for managers.
+//  I guess a comparison of the same two variables should give 
+//  the same results on different hosts, shouldn't it? ;-(
+// 
+//  The OZ_EVAR_MANAGER OTI assignment was like this:
+// OTI=var->getIndex();
+
 // compare NAs
 #define GET_ADDR(var,SD,OTI)						\
-DSite* SD;int OTI;							\
+DSite* SD;Ext_OB_TIndex OTI;						\
 if (var->getIdV()==OZ_EVAR_PROXY) {					\
   NetAddress *na=BT->bi2borrow(var->getIndex())->getNetAddress();	\
   SD=na->site;								\
-  OTI=na->index;							\
+  OTI = na->index;							\
 } else {								\
   SD=myDSite;								\
-  OTI=var->getIndex();							\
+  OTI = OT->entry2extOTI(var->getIndex());				\
 }
 
 // mm2: simplify: first check OTI only if same compare NA
@@ -111,18 +120,6 @@ OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
   return bindV(lPtr,makeTaggedRef(rPtr));
 }
 
-//
-// kost@ : certain versions of gcc (e.g. 2.7.2.3/linux) have problems
-// with an 'inline' version of this function: its usage in
-// 'BorrowEntry::copyBorrow(BorrowEntry* from,int i)' cannot be
-// resolved as in inline one, while a compiled one does not exist
-// either...
-void ProxyManagerVar::gcSetIndex(int i)
-{
-  index =  i;
-}
-
-
 /* --- ProxyVar --- */
 
 OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspendable * susp)
@@ -137,7 +134,7 @@ OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspendable * susp)
 void ProxyVar::gCollectRecurseV(void)
 { 
   PD((GC,"ProxyVar b:%d",getIndex()));
-  Assert(getIndex()!=BAD_BORROW_INDEX);
+  Assert(getIndex() != MakeOB_TIndex((void*) BAD_BORROW_INDEX));
   BT->bi2borrow(getIndex())->gcPO();
   if (binding)
     oz_gCollectTerm(binding,binding);
@@ -239,7 +236,7 @@ void ProxyVar::redoStatus(TaggedRef val, TaggedRef status)
 
 void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
 {
-  int BTI=getIndex();
+  OB_TIndex BTI = getIndex();
   if(status!=0){
     redoStatus(val,status);}
   PD((TABLE,"REDIRECT - borrow entry hit b:%d",BTI));
@@ -256,7 +253,7 @@ void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
 
 void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be) 
 {
-  int BTI=getIndex();
+  OB_TIndex BTI = getIndex();
   if(status!=0){
     redoStatus(binding,status);}
   PD((PD_VAR,"acknowledge"));
@@ -301,20 +298,20 @@ void ManagerVar::gCollectRecurseV(void)
   setInfo(gcEntityInfoInternal(getInfo()));
 }
 
-static void sendAcknowledge(DSite* sd,int OTI){
+static void sendAcknowledge(DSite* sd, OB_TIndex OTI) {
   PD((PD_VAR,"sendAck %s",sd->stringrep()));  
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
-  msgC->put_M_ACKNOWLEDGE(OT->entry2odi(OTI));
+  msgC->put_M_ACKNOWLEDGE(OT->entry2extOTI(OTI));
 
   send(msgC);
 }
 
 // extern
-void sendRedirect(DSite* sd,int OTI,TaggedRef val)
+void sendRedirect(DSite* sd, OB_TIndex OTI, TaggedRef val)
 {
   PD((PD_VAR,"sendRedirect %s",sd->stringrep()));  
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
-  msgC->put_M_REDIRECT(myDSite,OT->entry2odi(OTI),val);
+  msgC->put_M_REDIRECT(myDSite, OT->entry2extOTI(OTI), val);
 
   send(msgC);
 }
@@ -361,7 +358,7 @@ void ManagerVar::sendRedirectToProxies(OZ_Term val, DSite* ackSite)
 
 OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
 {
-  int OTI=getIndex();
+  OB_TIndex OTI = getIndex();
   PD((PD_VAR,"ManagerVar::doBind by thread: %x",oz_currentThread()));
   PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(*lPtr)));
   Bool isLocal = oz_isLocalVar(this);
@@ -391,7 +388,7 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r){
 }
 
 
-void varGetStatus(DSite* site,int OTI, TaggedRef tr)
+void varGetStatus(DSite* site, Ext_OB_TIndex OTI, TaggedRef tr)
 {
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
   msgC->put_M_SENDSTATUS(myDSite,OTI,tr);
@@ -408,7 +405,7 @@ void ProxyVar::receiveStatus(TaggedRef tr)
 
 OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
 {
-  int OTI=getIndex();
+  OB_TIndex OTI = getIndex();
   PD((PD_VAR,"ManagerVar::doBind by thread: %x",oz_currentThread()));
   PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(*lPtr)));
   Bool isLocal = oz_isLocalVar(this);
@@ -446,11 +443,11 @@ void requested(TaggedRef*);
 ManagerVar* globalizeFreeVariable(TaggedRef *tPtr)
 {
   OwnerEntry *oe;
-  int i = OT->newOwner(oe);
+  OB_TIndex i = OT->newOwner(oe);
   PD((GLOBALIZING,"globalize var index:%d",i));
   oe->mkVar(makeTaggedRef(tPtr));
   OzVariable *cv = oz_getNonOptVar(tPtr);
-  ManagerVar *mv = new ManagerVar(cv,i);
+  ManagerVar *mv = new ManagerVar(cv, i);
   mv->setSuspList(cv->unlinkSuspList());
   *tPtr = makeTaggedVar(mv);
   return (mv);
@@ -518,7 +515,7 @@ void ProxyVar::nowGarbage(BorrowEntry* be){
 OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
 {
   OB_Entry *ob;
-  int bi;
+  OB_TIndex bi;
   BYTE ec;
   OZ_Term val1 = unmarshalBorrow(bs, ob, bi, ec);
   
@@ -578,7 +575,7 @@ void sendGetStatus(BorrowEntry *be){
 OZ_Term ProxyVar::statusV()
 {
   if(status ==0){
-    BorrowEntry *be=BT->bi2borrow(getIndex());
+    BorrowEntry *be = BT->bi2borrow(getIndex());
     sendGetStatus(be);
     status= oz_newVariable();}
   return status;
@@ -713,7 +710,7 @@ void ManagerVar::newWatcher(Bool b){
 void ManagerVar::addEntityCond(EntityCond ec){
   if(info==NULL) info= new EntityInfo();
   if(!info->addEntityCond(ec)) return;
-  int i=getIndex();
+  OB_TIndex i = getIndex();
   OwnerEntry* oe=OT->index2entry(i);
   triggerInforms(&inform,oe,ec);
   wakeAll();
@@ -727,7 +724,7 @@ void ManagerVar::subEntityCond(EntityCond ec){
   // Erik
   if (info != NULL) {
     info->subEntityCond(ec);
-    int i=getIndex();
+    OB_TIndex i = getIndex();
     OwnerEntry* oe=OT->index2entry(i);
     triggerInforms(&inform,oe,ec);
   }
@@ -811,7 +808,7 @@ void maybeUnaskVar(BorrowEntry* b){
   case VAR_LAZY:{
     ie = GET_VAR(b, Lazy)->getInfo();
     if(ie==NULL) return;
-    int i = GET_VAR(b, Lazy)->getIndex(); 
+    OB_TIndex i = GET_VAR(b, Lazy)->getIndex(); 
     varAdjustPOForFailure(i,ie->getEntityCond(),ENTITY_NORMAL);
     return;}
   default:

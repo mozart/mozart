@@ -385,12 +385,12 @@ OZ_BI_define(BIsetDGC,2,1)
 {
   OZ_declareTerm(0,entity);
   OZ_declareTerm(1,algorithm);
-  int OTI = -1; 
+  OB_TIndex OTI = (OB_TIndex) -1; 
   if(OZ_isPort(entity) || OZ_isCell(entity) || oz_isLock(entity))
     {
       Tertiary *tert =  (Tertiary*) tagged2Const(entity);
       if (tert->isManager())
-	OTI = tert->getIndex();
+	OTI = MakeOB_TIndex(tert->getTertPointer());
       else
 	OZ_RETURN(oz_atom("not_manager"));
     }
@@ -417,8 +417,8 @@ OZ_BI_define(BIgetDGC,1,1)
       if (tert->isLocal())
 	OZ_RETURN(oz_atom("local_entity"));
       if (tert->isManager()){
-	OZ_RETURN(ownerTable->index2entry(tert->getIndex())->homeRef.extract_info());}
-      OZ_RETURN(borrowTable->bi2borrow(tert->getIndex())->remoteRef.extract_info());
+	OZ_RETURN(ownerTable->index2entry(MakeOB_TIndex(tert->getTertPointer()))->homeRef.extract_info());}
+      OZ_RETURN(borrowTable->bi2borrow(MakeOB_TIndex(tert->getTertPointer()))->remoteRef.extract_info());
     }
   DEREF(entity,e0);
   if(oz_isVarOrRef(entity)){
