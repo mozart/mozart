@@ -1116,3 +1116,26 @@ void printWhere(ostream &stream,ProgramCounter PC)
   }
 }
 #endif
+
+ProgramCounter CodeArea::writeCache(ProgramCounter PC)
+{
+  InlineCache *cache = (InlineCache *) PC;
+  PC = writeInt(0, PC);
+  PC = writeInt(0, PC);
+  cache->invalidate();
+  protectInlineCache(cache);
+  return PC;
+}
+
+void CodeArea::allocateBlock(int sz) 
+{
+  size = sz + 1;
+  codeBlock  = new ByteCode[size]; /* allocation via malloc! */
+  writeOpcode(ENDOFFILE,codeBlock+sz); /* mark the end, so that 
+					* displayCode and friends work */
+  totalSize += size * sizeof(ByteCode);
+  wPtr       = codeBlock;
+  nextBlock  = allBlocks;
+  allBlocks  = this;
+  timeStamp  = time(0);
+}

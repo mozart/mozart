@@ -168,8 +168,10 @@ public:
   static ProgramCounter definitionStart(ProgramCounter from);
   static ProgramCounter definitionEnd(ProgramCounter from);
 
+#ifdef OLD_COMPILER
   /* load statements from "codeFile" until "ENDOFFILE", acknowledge if ok*/
   static Bool load(CompStream *fd, ProgramCounter &newPC);
+#endif
 
 #ifdef THREADED
   static void **globalInstrTable;
@@ -202,6 +204,7 @@ private:
   static void recordInstr(ProgramCounter PC);
 #endif
 
+#ifdef OLD_COMPILER
 // functions
   static int scanChar(CompStream *fd);
   static char *scanString (CompStream *fd);
@@ -228,6 +231,7 @@ private:
   void scanRecordArity(CompStream *fd);
   TaggedRef parseRecordArity (CompStream *fd, int length);
   void scanBuiltinname(CompStream *fd);
+#endif
 
   static ProgramCounter writeWord(ByteCode c, ProgramCounter ptr)  
   { 
