@@ -964,7 +964,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
   
   
   case "$target" in
-    i386-mingw32) 
+    i386-mingw32|i386-mingw32msvc)
 	PLATFORM=win32-i486
 	platform="win32-i486"
 	ozplatform=$platform
@@ -1042,7 +1042,7 @@ fi
 	
     fi
     
-	PLATFORM=`$OZPLATFORM`
+	PLATFORM=`$OZPLATFORM || exit 1`
 	
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -3479,7 +3479,7 @@ else
 #line 3480 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -4457,7 +4457,7 @@ else
 #line 4458 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #include <malloc.h>
@@ -4641,7 +4641,7 @@ else
 #line 4642 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #include <sys/types.h>
@@ -4822,7 +4822,7 @@ else
 #line 4823 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #include <unistd.h>
@@ -8498,7 +8498,7 @@ else
 #line 8499 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #include <sys/types.h>
@@ -8701,7 +8701,7 @@ else
 #line 8702 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #ifdef __GNUC__
@@ -8783,7 +8783,7 @@ else
 #line 8784 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 #ifdef __GNUC__
@@ -8865,7 +8865,7 @@ else
 #line 8866 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 class Tag {
@@ -8906,7 +8906,7 @@ else
 #line 8907 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 class Tag {
@@ -8957,7 +8957,7 @@ else
 #line 8958 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 
 class Tag {
