@@ -394,21 +394,15 @@ char *OZ_literalToC(OZ_Term term)
 
   Literal *a = tagged2Literal(term);
   char *s = a->getPrintName();
-  if (!a->isAtom()) {
-    const int buflen=1000;
-    static char buf[buflen];
-    int len = strlen(s)+20;
-    char *tmp;
-    if (len < buflen) {
-      tmp = buf;
-    } else {
-      tmp = new char[len];
-    }
-    sprintf(tmp,"N:%s-%d",s,a->getSeqNumber());
-    return tmp;
-  } else {
+  if (a->isAtom()) {
     return s;
   }
+  const int buflen=1000;
+  static char buf[buflen];
+  int len = strlen(s)+20;
+  char *tmp = (len < buflen) ? buf : new char[len];
+  sprintf(tmp,"N:%s-%d",s,a->getSeqNumber());
+  return tmp;
 }
 
 
