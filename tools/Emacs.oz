@@ -26,7 +26,7 @@
 functor
 import
    Property(get condGet)
-   System(showInfo valueToVirtualString print)
+   System(showInfo print)
    Error(formatLine msg)
    OS(getEnv stat uName getHostByName tmpnam)
    Open(socket text file)
@@ -49,7 +49,7 @@ define
       fun {V2VS X}
 	 P = {Property.get errors}
       in
-	 {System.valueToVirtualString X P.depth P.width}
+	 {Value.toVirtualString X P.depth P.width}
       end
 
       proc {Trace M}
