@@ -183,7 +183,7 @@ AC_DEFUN(OZ_INIT, [
 
     *)
 	OZ_PATH_PROG(OZPLATFORM,ozplatform)
-	PLATFORM=`$OZPLATFORM`
+	PLATFORM=`$OZPLATFORM || exit 1`
 	OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
     ;;
   esac
