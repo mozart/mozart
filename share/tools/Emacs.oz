@@ -25,13 +25,11 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-declare
-
 fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewEmacs IMPORT}
+   {$ IMPORT}
    \insert 'SP.env'
        = IMPORT.'SP'
    \insert 'OP.env'
