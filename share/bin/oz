@@ -73,6 +73,14 @@ case "$cmd" in
         ;;
 
    ozengine)  # that is the real thing
+        if test "$1" = '--gui'; then
+            OZ_GUI=yes
+            export OZ_GUI
+            shift
+        elif test "$1" = '--nogui'; then
+            unset OZ_GUI
+            shift
+        fi
         if test $# -lt 1
         then
             echo "usage: ozengine <url> <args>" 1>&2;
