@@ -1,8 +1,7 @@
 .SUFFIXES: .el .elc
 
-ELS  = oz.el
-ELCS = $(ELS:.el=.elc)
 ELISPDIR = $(OZHOME)/lib/elisp
+EMACS = emacs-19.34
 all:: help
 
 help:
@@ -11,13 +10,14 @@ help:
 	@echo "	install		{scheidhr,mehl}@dfki.uni-sb.de"
 	@echo ""
 
-install:: $(ELISPDIR) $(ELCS)
-	install -m 444 $(ELS) $(ELCS) $(ELISPDIR)
+install:: $(ELISPDIR) oz.elc
+	$(INSTALLSRC) oz.el $(ELISPDIR)/oz.el
+	$(INSTALL) -m 444 oz.elc $(ELISPDIR)/oz.elc
 
 .el.elc:
 	@echo "(setq byte-compile-compatibility t) \
                (byte-compile-file \"$<\")" > compile.el
-	emacs -q -batch -l compile.el $<
+	$(EMACS) -q -batch -l compile.el $<
 	rm -f compile.el
 
 clean::
