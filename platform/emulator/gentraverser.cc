@@ -151,6 +151,16 @@ void GenTraverser::doit()
 	}
 	break;
 
+      case Co_Array:
+	if (!processArray(t, ct)) {
+	  OzArray *array = (OzArray *) ct;
+	  ensureFree(array->getWidth());
+	  for (int i = array->getHigh(); i >= array->getLow(); i--) {
+	    put(array->getArg(i));
+	  }
+	}
+	break;
+
       case Co_Builtin:
 	processBuiltin(t, ct);
 	break;

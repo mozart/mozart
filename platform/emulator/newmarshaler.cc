@@ -291,10 +291,10 @@ Bool Marshaler::processCell(OZ_Term term, Tertiary *tert)
   if (bs->cloneCells() && tert->isLocal()) {
     marshalDIF(bs, DIF_CLONEDCELL);
     rememberNode(term, bs);
-    return (0);
+    return (NO);
   } else {
     HandleTert("cell",tert,term,DIF_CELL,OK);
-    return (1);
+    return (OK);
   }
 }
 
@@ -417,6 +417,23 @@ Bool Marshaler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
     rememberNode(dictTerm, bs);
     marshalNumber(d->getSize(),bs);
     return (NO);
+  }
+}
+
+Bool Marshaler::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  if (bs->cloneCells()) {
+    OzArray *array = (OzArray *) arrayConst;
+    marshalDIF(bs,DIF_ARRAY);
+    rememberNode(arrayTerm, bs);
+    marshalNumber(array->getLow(),bs);
+    marshalNumber(array->getHigh(),bs);
+    return (NO);
+  } else {
+    processNoGood(arrayTerm, OK);
+    rememberNode(arrayTerm, bs);
+    return (OK);
   }
 }
 
@@ -1070,6 +1087,27 @@ OZ_Term newUnmarshalTermInternal(MsgBuffer *bs)
 	  break;
 	}
 
+      case DIF_ARRAY:
+	{
+#ifndef USE_FAST_UNMARSHALER
+	  int e1,e2,e3;
+	  int refTag = unmarshalRefTagRobust(bs, b, &e1);
+	  int low    = unmarshalNumberRobust(bs, &e2);
+	  int high   = unmarshalNumberRobust(bs, &e3);
+	  if(e1 || e2 || e3) {
+	    (void) b->finish();
+	    return 0;
+	  }
+#else
+	  int refTag = unmarshalRefTag(bs);
+	  int low    = unmarshalNumber(bs);
+	  int high   = unmarshalNumber(bs);
+#endif
+	  Assert(oz_onToplevel());
+	  b->buildArrayRemember(low,high,refTag);
+	  break;
+	}
+
       case DIF_BUILTIN:
 	{
 #ifndef USE_FAST_UNMARSHALER
@@ -1134,15 +1172,6 @@ OZ_Term newUnmarshalTermInternal(MsgBuffer *bs)
 	return 0;
 #else
 	OZD_error("not implemented!"); 
-#endif
-
-      case DIF_ARRAY:
-#ifndef USE_FAST_UNMARSHALER   
-	(void) b->finish();
-	return 0;
-#else
-	OZD_error("not implemented!"); 
-	break;
 #endif
 
 	//
