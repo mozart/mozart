@@ -680,6 +680,7 @@ Handle input and output via the Oz Emulator buffer."
   (or (equal mode-name "Oz")
       (equal mode-name "Oz-Gump")
       (equal mode-name "Oz-Machine")
+      (equal mode-name "Oz-SML")
       (oz-new-buffer)))
 
 (defun oz-halt (force)
