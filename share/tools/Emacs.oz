@@ -40,7 +40,7 @@ body
    TimeoutToUpdateBar = TimeoutToConfigBar
 
    fun {UnknownFile F}
-      F == nofile orelse F == ''
+      F == ''
    end
 
    local
@@ -253,7 +253,7 @@ body
 	 end
 	 meth removeBar()
 	    BarSync <- _ = unit
-	    CompilerInterfaceEmacs, MakeOzBar(nofile 0 0 hide)
+	    CompilerInterfaceEmacs, MakeOzBar('' 0 0 hide)
 	 end
 	 meth MakeOzBar(File Line Column State)
 	    lock @BarLock then
