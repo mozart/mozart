@@ -87,7 +87,11 @@
 
 
   &fset_tutorial 
-  &fset_example
+  &fset_example_steiner
+  &fset_example_hamming
+  &fset_example_binpacking
+  &fset_example_crew
+  &fset_example_golf
 
   <Back>
     <Bib.Extern id="Mueller:98a" to="constraints.bib" key="Mueller:98a">

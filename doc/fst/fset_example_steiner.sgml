@@ -1,6 +1,6 @@
 <!-- ********************************************************************** -->
 
-<Section id="fset.examples.steiner"> <Title/The Steiner Problem/
+<Chapter id="fset.examples.steiner"> <Title/The Steiner Problem/
 
 <Para><Title/Problem Specification./ The ternary Steiner problem of
 order <Math>n</Math> asks for <Math>n(n-1)/6</Math> sets <Math>s_i
@@ -83,5 +83,5 @@ to <Math/54/. This reduction of the search space gives us a speed-up
 of about <Math>7</Math> and reduces the memory consumption by about
 <Math>5.5</Math>.
 
-</Section>
+</Chapter>
 
