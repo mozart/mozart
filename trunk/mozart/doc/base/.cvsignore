@@ -2,3 +2,4 @@ Makefile
 base-html
 base-tex
 latex.db
+*.xml

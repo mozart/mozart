@@ -1,3 +1,4 @@
 Makefile
 cpiref-html
 latex.db
+*.xml
