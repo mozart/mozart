@@ -41,7 +41,7 @@ FSETLIBSRCS =   standard.cc telling.cc \
 
 FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
-all: $(FSETTARGETS)
+all:: $(FSETTARGETS)
 
 fsetlib.so: $(FSETLIBOBJS)
         $(DYNLD) -o $@ $(FSETLIBOBJS)
@@ -49,12 +49,12 @@ fsetlib.so: $(FSETLIBOBJS)
 libfset.a: $(FSETLIBOBJS)
         $(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
-install: @INSTALL_PROP@
+install:: @INSTALL_PROP@
 
 install-prop:
         $(INSTALL_BIN) $(FSETTARGETS) $(bindir)
 
-depend: $(FSETLIBSRCS)
+depend:: $(FSETLIBSRCS)
         $(DEPEND) `for f in $(FSETLIBSRCS); do echo $(FSETDIR)/$$f; done` >> Makefile
 
 realclean::
