@@ -7,4 +7,4 @@ compiler-Env.oz
 *.ozp
 *.ozf
 ozc ozserver ozvsserver functor2env
-stage1 stage2 stage2a stage2b stage3 stage3a stage3b
+stage1 stage2 stage2a stage2b stage3 stage3a stage3b save
