@@ -41,7 +41,7 @@ local
 	    {OT.runnable    set(T.runnable)}
 	    case @InfoVisible then
 	       {OP.high        set(P.high)}
-	       {OP.middle      set(P.middle)}
+	       {OP.medium      set(P.medium)}
 	    else true
 	    end
 	    {OR.run         set(R.run)}
@@ -277,25 +277,25 @@ in
 				stipple: [RunnableStipple])])
 	   frame(text:    'Priorities'
 		 pack:    False
-		 left:    [scale(text:    'High / Middle:'
+		 left:    [scale(text:    'High / Medium:'
 				 state:   {System.get priorities}.high
 				 feature: high
 				 action:  proc {$ N}
 					     {System.set
 					      priorities(high:N)}
 					  end)
-			   scale(text: 'Middle / Low:'
-				 state:   {System.get priorities}.middle
-				 feature: middle
+			   scale(text: 'Medium / Low:'
+				 state:   {System.get priorities}.medium
+				 feature: medium
 				 action:  proc {$ N}
 					     {System.set
-					      priorities(middle:N)}
+					      priorities(medium:N)}
 					  end)]
 		 right:   [button(text: 'Default'
 				  action: proc {$}
 					     {System.set
 					      priorities(high:   10
-							 middle: 10)}
+							 medium: 10)}
 					     {Threads update(nosample)}
 					  end)])
 	   frame(text:    'Runtime'
@@ -395,7 +395,7 @@ in
 						 tolerance: 20)}
 					     {Memory update(nosample)}
 					  end)
-			   button(text:'Middle'
+			   button(text:'Medium'
 				  action: proc {$}
 					     {System.set
 					      gc(max:       16 * MegaByteI
