@@ -102,6 +102,18 @@ inline OZ_Return parseRequestor(OZ_Term requestor,
       if(OZ_isInt(t))
 	comObj=(ComObj *) oz_intToC(t);
       else return OZ_FAILED;
+
+      // The comObj might be returned and not used which is checked with valid,
+      // or it may be reused which is checked by comparing the sites.
+      if(comController->valid(comObj)) {
+	DSite *site=comObj->getSite();
+	if(site==NULL) // this comObj has been reused for accept
+	  return OZ_FAILED;
+	else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site 
+	  return OZ_FAILED;
+	// The right one! Go ahead
+      }
+      else return OZ_FAILED;
     }
     else return OZ_FAILED;
     //    printf("parseR %s %d %s\n",toC(requestor),(int) comObj,siteid);
@@ -214,19 +226,6 @@ OZ_BI_define(BIhandover,3,0){
 //        printf("bef cmp %s %d %s\n",toC(requestor),(int) comObj,siteid);
       if(ret!=OZ_ENTAILED)
 	return ret;
-
-      // The comObj might be returned and not used which is checked with valid,
-      // or it may be reused which is checked by comparing the sites.
-      if(comController->valid(comObj)) {
-	DSite *site=comObj->getSite();
-	if(site==NULL) // this comObj has been reused for accept
-	  return OZ_ENTAILED;
-	else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site 
-	  return OZ_ENTAILED;
-	// The right one! Go ahead
-      }
-      else
-	return OZ_ENTAILED;
     }
 
     TransObj *transObj=(TransObj *) OZ_intToC(t);
@@ -286,19 +285,7 @@ OZ_BI_define(BIconnFailed,2,0) {
   if(ret!=OZ_ENTAILED)
     return ret;
 
-  // The comObj might be returned and not used which is checked with valid,
-  // or it may be reused which is checked by comparing the sites.
-  if(comController->valid(comObj)) {
-    site=comObj->getSite();
-    if(site==NULL) // this comObj has been reused for accept
-      return OZ_ENTAILED;
-    else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site 
-      return OZ_ENTAILED;
-    // The right one! Go ahead
-  }
-  else
-    return OZ_ENTAILED;
-
+  site=comObj->getSite();
   if(oz_eq(reason,oz_atom("perm"))) {
     site->discoveryPerm();
     site->probeFault(PROBE_PERM);
