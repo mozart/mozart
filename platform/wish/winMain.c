@@ -357,9 +357,10 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     ckfree((char *)argvlist);
 
     Tcl_CreateCommand(interp, "puts", PutsCmd,  (ClientData) NULL,
-	    (Tcl_CmdDeleteProc *) NULL);
+		      (Tcl_CmdDeleteProc *) NULL);
 
-    outstream = fdopen(_hdopen((int)GetStdHandle(STD_OUTPUT_HANDLE),O_WRONLY|O_BINARY),
+    outstream = fdopen(_hdopen((int)GetStdHandle(STD_OUTPUT_HANDLE),
+			       O_WRONLY|O_BINARY),
 		       "wb");
     
     setmode(fileno(stdout),O_BINARY);
@@ -383,9 +384,14 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
       }
     }
 
-    fprintf(dbgout,"before mainloop\n"); fflush(dbgout);
+    /* mm: do not show the main window */
+    code = Tcl_Eval(interp, "wm withdraw . ");
+    if (code != TCL_OK) {
+      fprintf(outstream, "w %s\n.\n", interp->result);
+      fflush(outstream); /* added mm */
+    }
+
     Tk_MainLoop();
-    fprintf(dbgout,"after mainloop\n"); fflush(dbgout);
 
     /*
      * Don't exit directly, but rather invoke the Tcl "exit" command.
