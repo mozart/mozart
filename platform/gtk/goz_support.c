@@ -33,7 +33,6 @@
 
 /* Signal ports for event processing */
 OZ_Term signal_port = 0;
-OZ_Term signal_port_sml = 0;
 
 OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
 {
@@ -98,82 +97,6 @@ OZ_BI_define (ozgtk_signal_emit_by_name, 2, 0)
   gtk_signal_emit_by_name(object, name);
   return OZ_ENTAILED;
 } OZ_BI_end
-
-/*****************************************************************************
- * Bruni's Corner
- * Until Thorsten has his own backend he needs these functions
- *****************************************************************************/
-
-/* Just easy cut&paste
- * These functions will be removed anyway when Thorsten does his own backend
- */
-
-OZ_BI_define (ozgtk_allocate_gdk_color, 3, 1)
-{
-  GdkColor *ret = (GdkColor *) malloc(sizeof(GdkColor));
-
-  OZ_declareInt(0, red);
-  OZ_declareInt(1, blue);
-  OZ_declareInt(2, green);
-
-  ret->red   = red;
-  ret->blue  = blue;
-  ret->green = green;
-
-  OZ_out(0) = OZ_makeForeignPointer(ret);
-  return OZ_ENTAILED;
-} OZ_BI_end
-
-OZ_BI_define (ozgtk_free_gdk_color, 1, 0)
-{
-  GOZ_DECLARE_GTKOBJECT(0, object);
-  free(GTK_OBJECT(object));
-  return OZ_ENTAILED;
-} OZ_BI_end
-
-OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
-{
-  OZ_declareTerm (0, port);
-  if (signal_port_sml == 0) {
-    OZ_protect(&signal_port_sml); /* prevent GC of port anchor */
-  }
-  signal_port_sml = port;
-  return OZ_ENTAILED;
-} OZ_BI_end
-
-static void
-signal_marshal_sml (GtkObject * object,
-                    gpointer    oz_id,  /* This pointer holds an guint */
-                    guint       n_args,
-                    GtkArg *    args)
-{
-  OZ_send (signal_port_sml, OZ_int ((guint) oz_id));
-}
-
-OZ_BI_define (ozgtk_signal_connect_sml, 3, 1)
-{
-  /* The callback function will allways be NULL,
-   * we only use our marshaller
-   */
-  guint id;
-  GOZ_DECLARE_GTKOBJECT (0, object);
-  OZ_declareTerm (1, _name); /* No strings for signals but atoms */
-  gchar * name = (gchar *) OZ_atomToC(_name);
-  OZ_declareInt (2, oz_id);
-  id = gtk_signal_connect_full (GTK_OBJECT (object),
-                                name,
-                                NULL,
-                                signal_marshal_sml,
-                                (gpointer) oz_id,
-                                NULL, /* TODO: add a destroy notify function */
-                                FALSE, /* TODO: verify if defaults are correct */
-                                FALSE);
-  OZ_RETURN_INT (id);
-} OZ_BI_end
-
-/*
- * End of Bruni's Corner
- */
 
 /*****************************************************************************
  * Convertions
