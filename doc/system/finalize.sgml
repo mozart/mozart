@@ -51,41 +51,42 @@ when a computational object is no longer referenced. The Oz
 finalization facility was inspired by the article <ref.extern to=
 "ftp://ftp.cs.indiana.edu/pub/scheme-repository/doc/pubs/guardians.ps.gz"
 >Guardians in a Generation-Based Garbage Collector</ref.extern>
-(R. Kent Dybvig, Carl Bruggeman, David Eby, June 1993).
+(R. Kent Dybvig, Carl Bruggeman, David Eby, June 1993).  It is built
+on top of weak dictionaries (<ptr.extern to="ozdoc:base"
+key="section.chunks.weakdictionaries">): each weak dictionary is
+associated with a <em/finalization stream/ on which pairs
+<code/Key#Value/ appear when <code/Value/ becomes unreachable except
+through one or more weak dictionaries.
 <list>
+      <entry/<code/Finalize.guardian/
+      <index/<code/Finalize/<and><code/guardian///
+      <synopsis/<code/{Finalize.guardian ?+{Finalizer} ??{Register}}//
+      <item>This takes as input a 1-ary procedure <code/Finalizer/ and
+returns a 1-ary procedure <code/Register/
+representing a new guardian.  A value <code/X/ can be
+registered in the guardian using:
+<code display/{Register X}/
+Thereafter, when <code/X/ becomes unreachable except through a weak
+dictionary (&eg; a guardian), at the next garbage collection <code/X/
+is removed from the guardian and the following is eventually executed:
+<code display/{Finalizer X}/
+We say eventually because the finalization thread is subject to the
+same fair scheduling as any other thread.  Note that the value ?_{X}
+has still not been garbage collected; only at the next
+garbage collection after the call to ?_{Finalizer} has returned, and
+assuming ?_{Value} is no longer referenced at all, not even by the
+guardian, will it really be garbage collected.
       <entry/<code/Finalize.register/
 <index/<code/Finalize/<and><code/register///
       <synopsis/<code/{Finalize.register ?+{Value} ?+{Handler}}//
-      <item>A ?_{Value} that must be finalized is registered with
-the finalization guardian together with its finalization ?_{Handler}.
-When this ?_{Value} is no longer referenced except by the guardian,
-<code/{?_{Handler} ?_{Value}}/ is eventually executed in a new
-thread.  We say <em/eventually/ because the finalization thread is
-subject to the same fair scheduling as any other thread. Note that
-the ?_{Value} has still not been garbage collected; only at the next
-garbage collection after the call to ?_{Handler} has returned, and
-?_{Value} is no longer referenced at all, not even by the guardian,
-will it really be garbage collected.  It is possible for a ?_{Value} to be
-registered multiple times.  It is also possible for the ?_{Handler} to
-decide to re-register the value.
-	<p>To be more precise: the guardian maintains a list of
-pairs, each consisting of a ?_{Value} and a ?_{Handler}: this is the
-guardian list.  When a garbage collection occurs, the guardian
-determines which values are no longer referenced except through this
-list.  The corresponding pairs are removed from the guardian list and
-put into a finalization list.  This finalization list is then
-processed in a new thread by the finalization handler (see below).
-      <entry/<code/Finalize.setHandler/
-<index/<code/Finalize/<and><code/setHandler///
-      <synopsis><code>{Finalize.setHandler ?+{P/1}}</code></synopsis>
-      <item>This sets the finalization handler.  The default
-finalization handler simply loops through the finalization list and
-invokes <code/{?_{Handler} ?_{Value}}/ for each pair of ?_{Value} and
-?_{Handler} in it.
+      <item>This is a slightly different interface that allows to
+register simultaneously a ?_{Value} and a corresponding finalizer
+procedure ?_{Handler}.  After ?_{Value} becomes otherwise unreachable,
+<code/{?_{Handler} ?_{Value}}/ is eventually executed.
       <entry/<code/Finalize.everyGC/
 <index/<code/Finalize/<and><code/everyGC///
       <synopsis><code>{Finalize.everyGC ?+{P/0}}</code></synopsis>
-      <item>This simply registers a nullary procedure to be invoked
+      <item>This simply registers a 0-ary procedure to be invoked
 after each garbage collection.  Note that you cannot rely on how soon
 after the garbage collection this procedure will really be invoked: it
 is in principle possible that the call may only be scheduled several
