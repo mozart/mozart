@@ -130,7 +130,7 @@ void VSMsgChunkPoolSegmentManagerOwned::markDestroy()
   DebugCode(pool->checkConsistency());
   //
   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
-    if (errno != EIDRM) {
+    if (errno != EIDRM && errno != EINVAL) {
       OZ_error("Virtual Sites: cannot remove the shared memory");
     }
   }
