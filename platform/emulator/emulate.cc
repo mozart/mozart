@@ -279,7 +279,7 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
     if (debugPC != NOCODE) {
-      debugStreamCall(debugPC, def->getPrintName(), arity, arguments);
+      debugStreamCall(debugPC, def->getPrintName(), def->getArity(), arguments);
 /*
       xx= new OzDebug(...,pairlist);
       am.currentTaskStack->pushDebug(xx);
