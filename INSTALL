@@ -4,7 +4,18 @@ CHECKLIST
 
 - write a news announcing the changes from the old to the current version
 
-- cd $(OZSRC)
+- make a new src
+
+mkdir /usr/share/gs/soft/oz-xxx
+cd $!
+cvs get -l Oz
+cvs get Oz/lib
+cvs get Oz/bin
+cvs get Oz/elisp
+cvs get Oz/include
+cvs get Oz/Emulator
+cvs get Oz/Compiler
+cvs get Oz/demo
 
 - install bin/ozplatform in your PATH
 
@@ -31,7 +42,6 @@ CHECKLIST
                 make unixo
 
 - make install
-        make install SUBDIRS=
         bin
         elisp
         ozwish
@@ -39,21 +49,17 @@ CHECKLIST
         Compiler/backend
         Compiler/frontend
         lib
-                make unixo
+        lib/unix.o
         demo
-        demo/doc
+        demo/documentation (copy !)
 
-        man -> ozwish/man
+        make install SUBDIRS= (ANNOUNCE, README, ...)
 
 - test your installation:
 
    $(OZHOME)/bin/oz
 
-cvs get -l Oz
-cvs get Oz/lib
-cvs get Oz/bin
-cvs get Oz/elisp
-cvs get Oz/include
-cvs get Oz/Emulator
-cvs get Oz/Compiler
-cvs get Oz/demo
+- create a new entry in /usr/share/gs/bin/scripts/oz-wrapper
+
+- mkdir dist
+- make dist
