@@ -115,13 +115,14 @@ static long emulatorStartTime = 0;
 fd_set socketFDs;
 static int maxSocket = 0;
 
+#ifdef WINDOWS
+
 inline
 Bool isSocket(int fd)
 {
   return (FD_ISSET(fd,&socketFDs));
 }
 
-#ifdef WINDOWS
 int runningUnderNT()
 {
   static int underNT = -1;
@@ -1448,15 +1449,12 @@ void osStackDump() {}
    dynamic link objects files
    ----------------------------------------------------------------- */
 
-#ifdef _MSC_VER
-#define F_OK 00
-#endif
-
 TaggedRef osDlopen(char *filename, OZ_Term& ret)
 {
   OZ_Term err=NameUnit;
 
 #ifdef HPUX_700
+
   {
     shl_t handle;
     handle = shl_load(filename,
@@ -1468,8 +1466,9 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
     }
     ret = OZ_makeForeignPointer((void*)handle);
   }
-#endif
-#ifdef HAVE_DLOPEN
+
+#elif defined(HAVE_DLOPEN)
+
   {
     // RTLD_GLOBAL is important: it serves the same purpose
     // as -rdynamic for executables: newly loaded objects
@@ -1484,9 +1483,9 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
     }
     ret = OZ_makeForeignPointer(handle);
   }
-#endif
 
-#ifdef WINDOWS
+#elif defined(WINDOWS)
+
   {
     void *handle = (void *)LoadLibrary(filename);
     if (!handle) {
@@ -1507,10 +1506,14 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
 
     ret = OZ_makeForeignPointer(handle);
   }
+
+#else
+
+  goto raise;
+
 #endif
 
   return 0;
-  // return oz_unify(out,ret);
 
 raise:
   return err;
