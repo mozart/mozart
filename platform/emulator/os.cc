@@ -665,12 +665,21 @@ WrappedHandle *WrappedHandle::allHandles = NULL;
 
 int rawread(int fd, void *buf, int sz)
 {
-  if (isSocket(fd))
-    return recv(fd,((char*)buf),sz,0);
+  if (isSocket(fd)) {
+    /* bug workaround: should be done in libdp/network.cc: setting
+     * sockets to non-blocking mode doesn't work under Windows 
+     */
+    if (osTestSelect(fd,SEL_READ) != 1) {
+      WSASetLastError(WSAEWOULDBLOCK);
+      errno = EWOULDBLOCK;
+      return -1;
+    }
 
+    return recv(fd,((char*)buf),sz,0);
+  }
+  
   if (fd < wrappedHDStart)
     return read(fd,buf,sz);
-
 
   HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
@@ -684,18 +693,28 @@ int rawread(int fd, void *buf, int sz)
 
 int rawwrite(int fd, void *buf, int sz)
 {
-  if (isSocket(fd))
+  if (isSocket(fd)) {
+    /* bug workaround: should be done in libdp/network.cc: setting
+     * sockets to non-blocking mode doesn't work under Windows 
+     */
+    if (osTestSelect(fd,SEL_WRITE) != 1) {
+      WSASetLastError(WSAEWOULDBLOCK);
+      errno = EWOULDBLOCK;
+      return -1;
+    }
     return send(fd, (char *)buf, sz, 0);
-
+  }
+  
   if (fd < wrappedHDStart)
     return write(fd,buf,sz);
 
   HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
-
+  
   unsigned int ret;
   if (WriteFile(hd,buf,sz,&ret,0)==FALSE)
-    return -1;
+      return -1;
+
   return ret;
 }
 
