@@ -46,7 +46,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
       Bool isNotInstallingScript = !am.isInstallingScript();
       
       if (prop && (isNotInstallingScript || isLocalVar)) 
-	propagate(var);
+	propagate(var, fs_val);
       
       if (prop && isLocalVar) {
 	doBind(vptr, term);
@@ -204,3 +204,10 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
   }
   return FALSE;
 }
+
+#if defined(OUTLINE)
+#define inline
+#include "fsgenvar.icc"
+#undef inline
+#endif
+
