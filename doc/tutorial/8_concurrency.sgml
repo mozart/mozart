@@ -105,7 +105,7 @@ created thread <<thread {F 3} end>>, resulting in the final list
 <<[1 4 9]>>.
 
 <P>The program shown in <PTR TO="concurrentFib"> is a concurrent
-divide-and-conquer program, which is very inefficient way to compute
+divide-and-conquer program, which is rather inefficient way to compute
 the <EM>Fibonacci</EM> function. This program creates an
 exponential number of threads! See how easy it is to create concurrent
 threads. You may use this program to test how many threads your Oz
@@ -115,6 +115,7 @@ installation can create. Try
 
 <P>while using the panel program in your Oz menu to see the threads.
 If it works, try a larger number.
+The panel is show in <PTR TO="Threads">.
 
 <P><FIGURE ID="concurrentFib" CLASS="Figure">
 <CAPTION>A concurrent Fibonacci function</CAPTION>
@@ -133,14 +134,17 @@ end
 <PICTURE.EXTERN TO="Thread.ps" TYPE="ps" info="-width 400">
 </FIGURE>
 
-
-
 <P>The whole idea of explicit thread creation in Oz is to enable the
 programmer to structure his/her application in a modular
-way.
-<!-- DENYS: on the contrary, we should encourage users to take -->
-<!-- DENYS: full advantage of concurrency.  In Oz, threads are -->
-<!-- DENYS: very very cheap and efficient.  new designs are possible -->
+way. In this respect the Mozart system is excellent. Threads
+are so cheap that can afford to create say 100000 of them.
+As a comparison thread creation in Mozart is about 60 time faster
+than in Java JDK 1.2.
+If concurrency makes an easier structure of you program then
+use it without hesitation. However sequential programs are
+always faster than concurrent programs having the same structure.
+The <<Fib>> program in <PTR TO="concurrentFib"> is faster if
+you remove <<thread ... end>>.
 Therefore, create threads only when the application need it, and
 not because concurrency is fun.
 
