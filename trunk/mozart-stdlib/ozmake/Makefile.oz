@@ -13,7 +13,7 @@ prepare
    RULE_EXISTS = rule(tool:unit file:unit options:nil)
 
    VALID_MAKEFILE_FEATURES = [bin lib doc src depends rules uri mogul author released clean veryclean
-			      blurb info_text info_html subdirs submakefiles requires topics version]
+			      blurb info_text info_html subdirs submakefiles requires categories version]
 
 define
 
@@ -179,14 +179,14 @@ define
 	    end
 	 end
 
-	 %% process topics feature
-	 if {HasFeature R topics} then
-	    if {IsVirtualString R.topics} then
-	       {self set_topics([R.topics])}
-	    elseif {IsList R.topics} andthen {All R.topics IsVirtualString} then
-	       {self set_topics(R.topics)}
+	 %% process categories feature
+	 if {HasFeature R categories} then
+	    if {IsVirtualString R.categories} then
+	       {self set_categories([R.categories])}
+	    elseif {IsList R.categories} andthen {All R.categories IsVirtualString} then
+	       {self set_categories(R.categories)}
 	    else
-	       raise ozmake(makefile:badtopics(R.topics)) end
+	       raise ozmake(makefile:badcategories(R.categories)) end
 	    end
 	 end
 
@@ -502,7 +502,7 @@ define
 	 InfoText  = {self get_info_text($)}
 	 InfoHtml  = {self get_info_html($)}
 	 Requires  = {self get_requires($)}
-	 Topics    = {self get_topics($)}
+	 Categories= {self get_categories($)}
 	 Version   = {self get_version($)}
       in
 	 MAK.bin     := {self get_bin_targets($)}
@@ -523,7 +523,7 @@ define
 	 if InfoText \=unit then MAK.info_text := InfoText  end
 	 if InfoHtml \=unit then MAK.info_html := InfoHtml  end
 	 if Requires \=unit then MAK.requires  := Requires  end
-	 if Topics   \=nil  then MAK.topics    := Topics    end
+	 if Categories\=nil then MAK.categories:= Categories end
 	 if Version  \=unit then MAK.version   := Version   end
 	 MAK.released:= {Utils.dateCurrentToAtom}
 	 %% grab also all the recursive makefiles

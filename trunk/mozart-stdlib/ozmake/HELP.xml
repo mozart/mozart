@@ -32,6 +32,7 @@ graphical interface.</p>
   <usage>ozmake --extract --package=PKG</usage>
   <usage>ozmake --list</usage>
   <usage>ozmake --list --package=MOGUL</usage>
+  <usage>ozmake --config=(set|unset|list) ...</usage>
 </usagelist>
 
 </section>
@@ -426,8 +427,9 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
       <item>no conditions</item>
     </optentry>
     <optentry>
-      <options><opt>--grade=freshen</opt></option>
+      <option><opt>--grade=freshen</opt></option>
       <item>install if the package is newer else do nothing</item>
+    </optentry>
   </optlist>
   </item>
 </optentry>
@@ -536,6 +538,42 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
   <item>
         whether to remove files left over from a previous installation
         of this package
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--exe=( default | yes | no | both | multi )</opt>
+  </option>
+  <default><opt>default</opt></default>
+  <item>
+        the convention on Windows is that executables have a <file>.exe</file>, while
+	on Unix they have no extension.  The <opt>--exe</opt> option allows you to
+	control the conventions used by <tool>ozmake</tool> when installing executables.
+        <optlist>
+          <optentry>
+            <option><opt>--exe=default</opt></option>
+            <item>use the platform's convention</item>
+          </optentry>
+          <optentry>
+            <option><opt>--exe=yes</opt></option>
+            <item>use a <file>.exe</file> extension</item>
+          </optentry>
+          <optentry>
+            <option><opt>--exe=no</opt></option>
+            <item>use no extension</item>
+          </optentry>
+          <optentry>
+            <option><opt>--exe=both</opt></option>
+            <item>install all executables with <file>.exe</file> extension and
+            without</item>
+          </optentry>
+          <optentry>
+            <option><opt>--exe=multi</opt></option>
+            <item>install executable functors for both Unix and Windows.
+            The Unix versions are installed without extension, and the
+	    Windows versions are installed with <file>.exe</file> extension</item>
+          </optentry>
+        </optlist>
   </item>
 </optentry>
 </optlist>
@@ -652,6 +690,27 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
 
 </subsection>
 
+<subsection><title>Config</title>
+
+<usagelist>
+  <usage>ozmake --config=set <meta>OPTIONS</meta></usage>
+  <item>record the given <meta>OPTIONS</meta> in <tool>ozmake</tool>'s
+  configuration database, and use them as defaults in subsequent
+  invocations of <tool>ozmake</tool> unless explicitly
+  overriden on the command line.  For example:
+  <opt>ozmake --config=set --prefix=/usr/local/oz</opt>
+  saves <file>/usr/local/oz</file> as the default value for option
+  <opt>--prefix</opt></item>
+  <usage>ozmake --config=unset <meta>OPT1</meta> ... <meta>OPTn</meta></usage>
+  <item>deletes some entries from the configuration database.  For example:
+  <opt>ozmake --config=unset prefix</opt>
+  removes the default for <opt>--prefix</opt> from the configuration database</item>
+  <usage>ozmake --config=list</usage>
+  <item>lists the contents of <tool>ozmake</tool>'s configuration database</item>
+</usagelist>
+
+</subsection>
+
 </section>
 
 <section><title>MAKEFILE</title>
@@ -696,16 +755,19 @@ recommended except for features <oz>blurb</oz>, <oz>info_text</oz> and
              o( FILE : TOOL(FILE)
                 ...
               )
-          clean    : [ GLOB... ]
-          veryclean: [ GLOB... ]
-          uri      : URI
-          mogul    : MOGUL
-          author   : [ AUTHORS... ]
-          released : DATE
-          blurb    : TEXT
-          info_text: TEXT
-          info_html: TEXT
-          subdirs  : [ DIRS... ]
+          clean     : [ GLOB... ]
+          veryclean : [ GLOB... ]
+          uri       : URI
+          mogul     : MOGUL
+          author    : [ AUTHORS... ]
+          released  : DATE
+          blurb     : TEXT
+          info_text : TEXT
+          info_html : TEXT
+          subdirs   : [ DIRS... ]
+          requires  : [ MOGUL... ]
+          categories: [ CATEGORY... ]
+          version   : VERSION
         )
 </oz.display>
 <p>Features bin, lib and doc list targets to be installed in
@@ -1014,6 +1076,25 @@ mogul id is automatically inherited to subdirectories and the uri is
 automatically extended by appending the name of the subdirectory: thus
 submakefiles can be simpler since they don't need to be concerned with
 package-level features.</p>
+</subsubsection>
+
+<subsubsection><title>requires</title>
+<p>feature <oz>requires</oz> is a list of module URIs or package MOGUL ids.
+These represent the <em>external</em> dependencies of the package.  They are
+not yet used, but eventually <tool>ozmake</tool> will be able to use them to
+automate the recursive installation of other packages required by the one
+you are interested in.</p>
+</subsubsection>
+
+<subsubsection><title>categories</title>
+<p>feature <oz>categories</oz> is a list of MOGUL categories to help
+categorize this package in the MOGUL archive.</p>
+</subsubsection>
+
+<subsubsection><title>version</title>
+<p>feature <oz>version</oz> is used to provide a version string.  This
+is a string that consist of integers separated by single dots, e.g.
+<oz>"2"</oz> or <oz>"3.1.7"</oz>.</p>
 </subsubsection>
 
 </subsection>

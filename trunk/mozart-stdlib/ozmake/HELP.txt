@@ -26,6 +26,7 @@ SYNOPSIS
    ozmake --extract --package=PKG
    ozmake --list
    ozmake --list --package=MOGUL
+   ozmake --config=(set|unset|list) ...
 
 OPTIONS
 
@@ -188,7 +189,7 @@ OPTIONS
    -i, --install
           install targets of the package and updates the package database
 
-   --grade=( none | same | up | down | any )
+   --grade=( none | same | up | down | any | freshen )
           default: none
           what to do if this package is already installed?
 
@@ -209,6 +210,9 @@ OPTIONS
         --grade=any
                 no conditions
 
+        --grade=freshen
+                install if the package is newer else do nothing
+
    -U, --upgrade
           equivalent to --install --grade=up
 
@@ -217,6 +221,9 @@ OPTIONS
 
    -A, --anygrade
           equivalent to --install --grade=any
+
+   -F, --freshen
+          equivalent to --install --grade=freshen
 
    --(no)replacefiles
           default: false
@@ -253,6 +260,30 @@ OPTIONS
           default: false
           whether  to remove files left over from a previous installation
           of this package
+
+   --exe=( default | yes | no | both | multi )
+          default: default
+          the  convention  on  Windows  is  that executables have a .exe,
+          while  on  Unix they have no extension. The --exe option allows
+          you  to  control the conventions used by ozmake when installing
+          executables.
+
+        --exe=default
+                use the platform's convention
+
+        --exe=yes
+                use a .exe extension
+
+        --exe=no
+                use no extension
+
+        --exe=both
+                install all executables with .exe extension and without
+
+        --exe=multi
+                install  executable  functors  for both Unix and Windows.
+                The  Unix  versions  are installed without extension, and
+                the Windows versions are installed with .exe extension
 
   Uninstall
 
@@ -307,6 +338,23 @@ OPTIONS
           default: 70
           assume a line with of N characters
 
+  Config
+
+   ozmake --config=set <OPTIONS>
+          record  the given <OPTIONS> in ozmake's configuration database,
+          and  use  them  as defaults in subsequent invocations of ozmake
+          unless  explicitly  overriden on the command line. For example:
+          ozmake  --config=set --prefix=/usr/local/oz saves /usr/local/oz
+          as the default value for option --prefix
+
+   ozmake --config=unset <OPT1> ... <OPTn>
+          deletes  some  entries  from  the  configuration  database. For
+          example:  ozmake  --config=unset prefix removes the default for
+          --prefix from the configuration database
+
+   ozmake --config=list
+          lists the contents of ozmake's configuration database
+
 MAKEFILE
 
    The  makefile  contains a single Oz record which describes the project
@@ -345,16 +393,19 @@ MAKEFILE
              o( FILE : TOOL(FILE)
                 ...
               )
-          clean    : [ GLOB... ]
-          veryclean: [ GLOB... ]
-          uri      : URI
-          mogul    : MOGUL
-          author   : [ AUTHORS... ]
-          released : DATE
-          blurb    : TEXT
-          info_text: TEXT
-          info_html: TEXT
-          subdirs  : [ DIRS... ]
+          clean     : [ GLOB... ]
+          veryclean : [ GLOB... ]
+          uri       : URI
+          mogul     : MOGUL
+          author    : [ AUTHORS... ]
+          released  : DATE
+          blurb     : TEXT
+          info_text : TEXT
+          info_html : TEXT
+          subdirs   : [ DIRS... ]
+          requires  : [ MOGUL... ]
+          categories: [ CATEGORY... ]
+          version   : VERSION
         )
 
    Features  bin,  lib  and doc list targets to be installed in <BINDIR>,
@@ -553,3 +604,22 @@ MAKEFILE
    extended  by appending the name of the subdirectory: thus submakefiles
    can   be   simpler   since  they  don't  need  to  be  concerned  with
    package-level features.
+
+    requires
+
+   feature  requires is a list of module URIs or package MOGUL ids. These
+   represent  the  external dependencies of the package. They are not yet
+   used,  but  eventually ozmake will be able to use them to automate the
+   recursive  installation  of other packages required by the one you are
+   interested in.
+
+    categories
+
+   feature  categories  is  a list of MOGUL categories to help categorize
+   this package in the MOGUL archive.
+
+    version
+
+   feature  version is used to provide a version string. This is a string
+   that  consist  of  integers  separated  by  single  dots,  e.g. "2" or
+   "3.1.7".

@@ -94,7 +94,7 @@ define
 	 MogulPkgDir : unit
 	 MogulDocDir : unit
 	 MogulDBDir  : unit
-	 Topics      : nil
+	 Categories      : nil
 	 Exe         : default
 	 Makepkgfile : unit
 	 MustExtract : true
@@ -810,8 +810,8 @@ define
 	 @MogulDBDir
       end
 
-      meth set_topics(L) Topics<-L end
-      meth get_topics($) @Topics end
+      meth set_categories(L) Categories<-L end
+      meth get_categories($) @Categories end
 
       meth set_version(V) Version<-V end
       meth get_version($) @Version end
