@@ -7,49 +7,96 @@
 
 local
 
-   HideTree = {NewName}
+   Hide                       = {NewName}
+   UnhideTree                 = {NewName}
+   HideFailed                 = {NewName}
+   UnhideButFailed            = {NewName}
+   UnhideButFailedBelowHidden = {NewName}
    
-   fun {SkipFailed Ns}
-      case Ns of nil then nil
-      [] N|Nr then
-	 case N.kind of failed then {SkipFailed Nr}
-	 else N|{SkipFailed Nr}
-	 end
-      end
-   end
-
-   fun {IsFailedHidable Ns}
-      case Ns of nil then False
-      [] N|Nr then
-	 (N.kind==choose andthen {N isFailedHidable($)})
-	 orelse {IsFailedHidable Nr}
-      end
-   end
-
-   fun {IsUnhidable Ns}
-      case Ns of nil then False
-      [] N|Nr then
-	 (N.kind==choose andthen {N isUnhidable($)})
-	 orelse {IsUnhidable Nr}
-      end
-   end
-
-   proc {HideTreeKids Ks}
+   %%
+   %% Hide all kids
+   %%
+   proc {HideKids Ks}
       case Ks of nil then true
-      [] K|Kr then {K HideTree} {HideTreeKids Kr}
+      [] K|Kr then {K Hide} {HideKids Kr}
       end
    end
-   
+
+   %%
+   %% Unhide all kids
+   %%
+   fun {IsUnhidableKids Ks}
+      case Ks of nil then False
+      [] K|Kr then {K isUnhidable($)} orelse {IsUnhidableKids Kr}
+      end
+   end
+
+   proc {UnhideTreeKids Ks}
+      case Ks of nil then true
+      [] K|Kr then {K UnhideTree} {UnhideTreeKids Kr}
+      end
+   end
+
+   %%
+   %% Hide all failed kids
+   %%
+   fun {IsFailedHidableKids Ks}
+      case Ks of nil then False
+      [] K|Kr then {K isFailedHidable($)} orelse {IsFailedHidableKids Kr}
+      end
+   end
+
+   fun {HideFailedKids Ks}
+      case Ks of nil then False
+      [] K|Kr then IsDirtyKid={K HideFailed($)} in
+	 {HideFailedKids Kr} orelse IsDirtyKid
+      end
+   end
+
+   %%
+   %% Hide all but the failed kids
+   %%
+   fun {IsButFailedUnhidableKids Ks}
+      case Ks of nil then False
+      [] K|Kr then
+	 {K isButFailedUnhidable($)} orelse {IsButFailedUnhidableKids Kr}
+      end
+   end
+				     
+   proc {UnhideButFailedKids Ks}
+      case Ks of nil then true
+      [] K|Kr then {K UnhideButFailed} {UnhideButFailedKids Kr}
+      end
+   end
+
+   proc {UnhideButFailedBelowHiddenKids Ks}
+      case Ks of nil then true
+      [] K|Kr then
+	 {K UnhideButFailedBelowHidden} {UnhideButFailedBelowHiddenKids Kr}
+      end
+   end
+
+   %%
+   %% Hide not yet drawn kids
+   %%
    proc {HideUndrawn Ks}
       case Ks of nil then true
       [] K|Kr then {K hideUndrawn} {HideUndrawn Kr}
       end
    end
-   
+
+   %%
+   %% General invariant:
+   %%  Below a hidden node, all nodes are marked as dirty and undrawn
+   %%
+
    class Inner
       attr
 	 isHidden: False
 
+      %% Mark the path from a node to the root as dirty, such that the layout
+      %% can be updated lateron. If an already dirty node is found, the
+      %% invariant holds that the entire path to the root node is dirty
       meth dirtyUp
 	 case @isDirty then true else
 	    isDirty <- True
@@ -57,9 +104,16 @@ local
 	 end
       end
 
+      %%
+      %% Toggle unhidden/unhidden nodes
+      %%
+      meth isHidable($)
+	 True
+      end
+      
       meth hide
-	 <<deleteTree>>
-	 <<Inner dirtyUp>>
+	 <<TkNodes.choose deleteTree>>
+	 <<Inner          dirtyUp>>
 	 case @isHidden then
 	    isDirty  <- True
 	    isDrawn  <- False
@@ -68,70 +122,50 @@ local
 	    isHidden <- True
 	    isDirty  <- True
 	    isDrawn  <- False
-	    {HideTreeKids @kids}
+	    {HideKids @kids}
 	 end
       end
 
-      meth !HideTree
+      meth !Hide
 	 isDirty  <- True
 	 isDrawn  <- False
 	 shape    <- nil
-	 {HideTreeKids @kids}
+	 %% The invariant guarantees that we do not have to take care
+	 %% of still hidden subtrees
+	 case @isHidden then true else {HideKids @kids} end
       end
-      
-      meth UnhideTreeKids(Ks $)
-	 case Ks of nil then False
-	 [] K|Kr then
-	    case K.kind==choose andthen {K UnhideTree($)} then
-	       isDirty  <- True
-	       <<Inner UnhideTreeKids(Kr _)>>
-	       True
-	    else <<Inner UnhideTreeKids(Kr $)>>
-	    end
-	 end
-      end
-	    
-      meth UnhideTree($)
-	 case @isHidden then
-	    isHidden <- False
-	    isDrawn  <- False
-	    isDirty  <- True
-	    <<deleteTree>>
-	    <<Inner UnhideTreeKids(@kids _)>>
-	    True
-	 else <<Inner UnhideTreeKids(@kids $)>>
-	 end
+
+      %%
+      %% Recursively unhide subtrees
+      %%
+      meth isUnhidable($)
+	 @isHidden orelse {IsUnhidableKids @kids}
       end
       
       meth unhideTree
-	 case <<Inner UnhideTree($)>> then {self.mom dirtyUp}
-	 else true
-	 end
+	 <<Inner UnhideTree>>
+	 {self.mom dirtyUp}
       end
 
-      meth HideFailedKids(Ks $)
-	case Ks of nil then False
-	[] K|Kr then
-	   case K.kind==choose andthen {K HideFailed($)} then
-	      isDirty <- True
-	      <<Inner HideFailedKids(Kr _)>>
-	      True
-	   else <<Inner HideFailedKids(Kr $)>>
-	   end
-	end
+      meth !UnhideTree
+	 isDirty  <- True
+	 case @isHidden then
+	    isHidden <- False
+	    isDrawn  <- False
+	    <<TkNodes.choose deleteTree>>
+	 else true
+	 end
+	 {UnhideTreeKids @kids}
       end
-      
-      meth HideFailed($)
+
+      %%
+      %% Hide failed subtree
+      %%
+      meth isFailedHidable($)
 	 case @isHidden then False
 	 elsecase @choices>0 orelse @isSolBelow then
-	    <<Inner HideFailedKids(@kids $)>>
-	 else
-	    isHidden <- True
-	    <<deleteTree>>
-	    {HideTreeKids @kids}
-	    isDrawn <- False
-	    isDirty <- True
-	    True
+	    {IsFailedHidableKids @kids}
+	 else True
 	 end
       end
 
@@ -141,106 +175,104 @@ local
 	 end
       end
 
-      meth UnhideButFailedKids(Ks $)
-	case Ks of nil then False
-	[] K|Kr then
-	   case K.kind==choose andthen {K UnhideButFailed($)} then
-	      isDirty <- True
-	      <<Inner UnhideButFailedKids(Kr _)>>
-	      True
-	   else <<Inner UnhideButFailedKids(Kr $)>>
-	   end
-	end
-      end
-      
-      meth UnhideButFailed(?IsDirty)
-	 case @choices>0 orelse @isSolBelow then
-	    case @isHidden then
-	       isHidden <- False
-	       isDrawn  <- False
-	       isDirty  <- True
-	       <<deleteTree>>
-	       IsDirty = True
-	       <<Inner UnhideButFailedKids(@kids _)>>
-	    else
-	       <<Inner UnhideButFailedKids(@kids IsDirty)>>
+      meth !HideFailed($)
+	 case @isHidden then False
+	 elsecase @choices>0 orelse @isSolBelow then
+	    case {HideFailedKids @kids} then isDirty <- True  True
+	    else False
 	    end
-	 elsecase @isHidden then
-	    IsDirty=False
 	 else
 	    isHidden <- True
-	    <<deleteTree>>
-	    {HideTreeKids @kids}
-	    isDrawn <- False
-	    isDirty <- True
-	    IsDirty=True
+	    isDrawn  <- False
+	    isDirty  <- True
+	    <<TkNodes.choose deleteTree>>
+	    {HideKids @kids}
+	    True
 	 end
       end
 
-      meth unhideButFailed
-	 case <<Inner UnhideButFailed($)>> then {self.mom dirtyUp}
-	 else true
+      %%
+      %% Unhide all but failed subtrees
+      %%
+      meth isButFailedUnhidable($)
+	 case @isHidden then
+	    @choices>0 orelse @isSolBelow
+	 else {IsButFailedUnhidableKids @kids}
 	 end
       end
       
-      meth isFailedHidable($)
-	 NonFailedKids={SkipFailed @kids}
-      in
-	 case @isHidden then False
-	 else @choices==0 andthen NonFailedKids==nil
-	    orelse {IsFailedHidable NonFailedKids}
+      meth unhideButFailed
+	 <<Inner UnhideButFailed>>
+	 {self.mom dirtyUp}
+      end
+      
+      meth !UnhideButFailed
+	 case @isHidden then
+	    %% Since we know (from the testing routines above) that there is
+	    %% indeed something to unhide we do not have to analyse this node
+	    %% further!
+	    isDrawn <- False
+	    <<TkNodes.choose deleteTree>>
+	    <<Inner UnhideButFailedBelowHidden>>
+	 else
+	    isDirty <- True
+	    {UnhideButFailedKids @kids}
 	 end
       end
 
-      meth isUnhidable($)
-	 @isHidden orelse {IsUnhidable @kids}
+      meth !UnhideButFailedBelowHidden
+	 isDirty <- True
+	 case @choices>0 orelse @isSolBelow then
+	    isHidden <- False
+	    {UnhideButFailedBelowHiddenKids @kids}
+	 else isHidden <- True
+	 end
+      end
+
+      %%
+      %% Hide all not yet drawn nodes
+      %%
+      meth hideUndrawn
+	 case @isDirty then
+	    case @isHidden then true else
+	       case @isDrawn then {HideUndrawn @kids}
+	       else isHidden <- True <<Inner Hide>>
+	       end
+	    end
+	 else true
+	 end
       end
 
       meth isHidden($)
 	 @isHidden
       end
 
-      meth hideUndrawn
-	 case @isDirty then
-	    case @isHidden then true else
-	       case @isDrawn then {HideUndrawn @kids}
-	       else isHidden <- True <<Inner HideTree>>
-	       end
-	    end
-	 else true
-	 end
-      end
-      
    end
 
    class Leaf
-      meth isFailedHidable($)
-	 False
-      end
-      meth isUnhidable($)
-	 False
-      end
-      meth isHidden($)
-	 False
-      end
-      meth hide
-	 true
-      end
-      meth hideFailed
-	 true
-      end
-      meth !HideTree
-	 true
-      end
-      meth hideUndrawn
-	 true
-      end
+      meth isHidable($)            False end
+      meth hide                    true  end
+      meth !Hide                   true  end
+
+      meth isUnhidable($)          False end
+      meth unhide                  true  end
+      meth !UnhideTree             true  end
+
+      meth isFailedHidable($)      False end
+      meth hideFailed              true  end
+      meth !HideFailed($)          False end
+
+      meth isButFailedUnhidable($)     False end
+      meth !UnhideButFailed            true  end
+      meth !UnhideButFailedBelowHidden true  end
+      
+      meth isHidden($)             False end %% JUNK JUNK
+
+      meth hideUndrawn             true  end
    end
 
    class Sentinel
-      meth dirtyUp
-	 true
-      end
+      meth dirtyUp true end
    end
    
 in
