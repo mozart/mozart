@@ -10,7 +10,7 @@ SGMLSRCS = \
         board.sgml bounce.sgml corpus.sgml flights.sgml \
         jobshop.sgml lift.sgml main.sgml queens.sgml \
         transportation.sgml trucks.sgml enable.sgml cutting.sgml \
-        college.sgml flowers.sgml dict-client.sgml
+        college.sgml flowers.sgml dict-client.sgml chat.sgml
 
 HTMLEXTRAFILES = \
         note-gui-l1.gif note-gui-lm1.gif netscape.gif demo.gif

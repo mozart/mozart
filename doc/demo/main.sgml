@@ -62,6 +62,7 @@
 <!ENTITY chapter.board          SYSTEM "board.sgml">
 <!ENTITY chapter.flights        SYSTEM "flights.sgml">
 <!ENTITY chapter.corpus         SYSTEM "corpus.sgml">
+<!ENTITY chapter.chat           SYSTEM "chat.sgml">
 
 <!ENTITY chapter.dict-client    SYSTEM "dict-client.sgml">
 
@@ -94,6 +95,7 @@
     <Meta name="html.split"       value="chapter.board">
     <Meta name="html.split"       value="chapter.flights">
     <Meta name="html.split"       value="chapter.corpus">
+    <Meta name="html.split"       value="chapter.chat">
 
     <Meta name="html.split"       value="chapter.dict-client">
 
@@ -144,6 +146,7 @@
       &chapter.board;
       &chapter.flights;
       &chapter.corpus;
+        &chapter.chat;
     </Part>
 
     <Part id="part.miscellaneous">
@@ -158,3 +161,13 @@
   <Back>
     <Bib.Extern id="FischerKuhn.93" to="demo.bib" key="FischerKuhn.93">
 </BOOK>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
