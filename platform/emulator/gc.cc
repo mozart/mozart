@@ -1162,8 +1162,8 @@ Thread *Thread::gcDeadThread() {
 
   Thread *newThread = (Thread *) gcReallocStatic(this,sizeof(Thread));
 
-  GCDBG_INTOSPACE(am.rootBoardGC());
-  newThread->setBoardInternal(am.rootBoardGC());
+  GCDBG_INTOSPACE(am.rootBoard());
+  newThread->setBoardInternal(am.rootBoard());
 
   storeFwdField(this, newThread);
   setSelf(0);
