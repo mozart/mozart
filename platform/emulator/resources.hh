@@ -9,7 +9,7 @@
  * ### #     # #        #####  #     #    #    #     # #     #    #
  *
  * Whenever you change this file, make sure that you also change the
- * appropriate handbook chapter: system/system.raw!!!!!!!!
+ * appropriate handbook chapter: system/system.raw.
  */
 
 #define COMPILER_TIMEOUT        180 /* seconds */
@@ -20,7 +20,7 @@
 #define PRINT_WIDTH             10
 #define ERROR_PRINT_DEPTH       PRINT_DEPTH
 #define ERROR_PRINT_WIDTH       PRINT_WIDTH
-#define ERROR_THREAD_DEPTH      10
+#define ERROR_THREAD_DEPTH      50
 #define ERROR_LOCATION          1
 #define ERROR_DEBUG             1
 #define ERROR_HINTS             1

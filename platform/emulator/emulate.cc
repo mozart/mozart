@@ -2421,6 +2421,10 @@ LBLdispatcher:
          PushContX(PC,Y,G,X,predArity);
          CTS->pushFrame(auxPC,auxY,auxG);
        }
+#if 0  // don't like that much flickering for now ... -BL
+       if (e->debugmode() && CTT->getTrace())
+         debugStreamUpdate(CTT);
+#endif
        if (e->suspendVarList) {
          e->suspendOnVarList(CTT);
          goto LBLsuspendThread;
