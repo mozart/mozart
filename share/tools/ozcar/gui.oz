@@ -250,12 +250,13 @@ in
 	  proc{$ V}
 	     AT = {ArgType V.2}
 	  in
-	     case CV orelse {Atom.toString V.1}.1 \= 96 then
+	     case V.1 == '' then skip
+	     elsecase CV orelse {Atom.toString V.1}.1 \= 96 then
 		case CP orelse AT \= ProcedureType then
 		   case     AT == UnAllocatedType then skip
 		   elsecase AT == MagicAtom then
 		      {Widget tk(insert 'end'
-				 {PrintF ' '#V.1 EnvVarWidth} # V.2 # NL)}
+				 {PrintF ' ' # V.1 EnvVarWidth} # V.2 # NL)}
 		   else
 		      T = {TagCounter get($)}
 		      Ac = {New Tk.action
