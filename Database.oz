@@ -372,7 +372,7 @@ define
 	 of nil then skip
 	 [] L then Table.provides := {Map L VS2A} end
 	 case {CondSelect E requires nil}
-	 of nil then nil
+	 of nil then skip
 	 [] L then Table.requires := {Map L VS2A} end
 	 case {CondSelect E content_type unit}
 	 of unit then skip
