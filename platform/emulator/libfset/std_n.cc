@@ -254,8 +254,8 @@ OZ_Return FSetUnionNPropagator::propagate(void)
   if (isAllValues) {
     OZ_FSetValue aux(fs_empty);
 
-    for (int i = _vs_size; i--; )
-      aux |= vs[i]->getGlbSet();
+    for (int j = _vs_size; j--; )
+      aux |= vs[j]->getGlbSet();
 
     FailOnInvalid(*s <<= aux);
 
