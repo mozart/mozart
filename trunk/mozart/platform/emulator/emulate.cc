@@ -268,10 +268,6 @@ Bool hookCheckNeeded(AM *e)
   return (e->isSetSFlag());
 }
 
-
-
-
-
 /* macros are faster ! */
 #define emulateHook(e,def,arity,arguments) \
  (hookCheckNeeded(e) && emulateHookOutline(e, def, arity, arguments))
@@ -284,10 +280,11 @@ Bool hookCheckNeeded(AM *e)
  * we have to save as cont address Pred->getPC() and NOT PC
  */
 #define CallDoChecks(Pred,gRegs,IsEx,ContAdr,Arity)			      \
-									      \
-     if (! IsEx) {e->pushTask(CBB,ContAdr,Y,G);}			      \
+     if (! IsEx) {				\
+       e->pushTask(CBB,ContAdr,Y,G);		\
+     }						\
      G = gRegs;								      \
-									      \
+     e->currentThread->checkCompMode(Pred->getCompMode()); \
      if (emulateHook(e,Pred,Arity,X)) {					      \
 	e->pushTaskOutline(CBB,Pred->getPC(),NULL,G,X,Arity);		      \
 	goto LBLschedule;						      \
@@ -321,34 +318,27 @@ Bool hookCheckNeeded(AM *e)
 #define asmLbl(INSTR)
 #endif
 
-#ifdef THREADED
-
-#define INSTRUCTION(INSTR)   INSTR##LBL: asmLbl(INSTR);
+#if defined(WANT_INSTRPROFILE)
+#define INSTRUCTION(INSTR)   INSTR: asmLbl(INSTR); INSTR##LBL
+#else
+#define INSTRUCTION(INSTR)   INSTR: INSTR##LBL
+#endif
 
 /* threaded code broken on linux, leads to memory leek,
  * this is a workaround
  */
-#ifdef LINUX
-#define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
-#else
+#if defined(THREADED) && !defined(LINUX)
+
 // let gcc fill in the delay slot of the "jmp" instruction:
 #define DISPATCH(INC) {							      \
   intlong help = *(PC+INC);						      \
   INCFPC(INC);								      \
   goto* (void*) (help|textBase);					      \
 }
-#endif
 
-#else /* THREADED */
-
+#else /* THREADED && !LINUX */
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
-
-#if defined(WANT_INSTRPROFILE)
-#   define INSTRUCTION(INSTR)   case INSTR: asm(" " #INSTR ":");
-#else
-#   define INSTRUCTION(INSTR)   case INSTR: 
 #endif
-#endif /* THREADED */
 
 #define JUMP(absAdr) PC = absAdr; DISPATCH(0)
 
@@ -464,11 +454,16 @@ void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
   DEREF(A,APtr,ATag);
   Assert(isAnyVar(ATag));
   Suspension *susp;
-  if (am.currentThread->getMode()==ALLSEQMODE) {
+  switch (am.currentThread->getCompMode()) {
+  case ALLSEQMODE:
     am.pushTask(b,PC,Y,G,X,argsToSave);
     susp = new Suspension(am.currentThread);
-  } else {
+    break;
+  case SEQMODE:
+    warning("mixed seq/par not impl\n");
+  case PARMODE:
     susp = new Suspension(b,prio,PC,Y,G,X,argsToSave);
+    break;
   }
   b->incSuspCount();
   taggedBecomesSuspVar(APtr)->addSuspension(susp);
@@ -555,11 +550,16 @@ void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave, Board *b,
 {
   DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
   Suspension *susp;
-  if (am.currentThread->getMode()==ALLSEQMODE) {
+  switch (am.currentThread->getCompMode()) {
+  case ALLSEQMODE:
     am.pushTask(b,PC,Y,G,X,argsToSave);
     susp = new Suspension(am.currentThread);
-  } else {
+    break;
+  case SEQMODE:
+    warning("mixed seq/par not impl\n");
+  case PARMODE:
     susp = new Suspension(b,prio,PC,Y,G,X,argsToSave);
+    break;
   }
   b->incSuspCount();
 
@@ -689,8 +689,9 @@ void engine() {
   
 
 #ifdef THREADED
-#  include "instrtab.hh"
+# include "instrtab.hh"
   CodeArea::globalInstrTable = instrTable;
+# define op (Opcode) -1
 #else
   Opcode op = (Opcode) -1;
 #endif
@@ -744,7 +745,8 @@ void engine() {
 
     TaskStack *taskstack = &e->currentThread->taskStack;
     TaskStackEntry *topCache = taskstack->getTop();
-    TaggedBoard tb = (TaggedBoard) ToInt32(TaskStackPop(topCache-1));
+    TaskStackEntry topElem=TaskStackPop(topCache-1);
+    TaggedBoard tb = (TaggedBoard) ToInt32(topElem);
 
     ContFlag cFlag = getContFlag(tb);
 
@@ -789,7 +791,9 @@ void engine() {
     }
 
     topCache--;
-    if (cFlag == C_MODE) {
+    if (cFlag == C_COMP_MODE) {
+      taskstack->setTop(topCache);
+      e->currentThread->compMode=TaskStack::getCompMode(topElem);
       goto LBLpopTask;;
     }
     tmpBB = getBoard(tb,cFlag)->getBoardDeref();
@@ -993,7 +997,8 @@ void engine() {
 #ifdef LINUX
   goto* (void*) (*PC);
 #endif
-#else
+#endif
+
 #ifdef SLOW_DEBUG_CHECK
   /* These tests make the emulator really sloooooww */
   DebugCheck(blockSignals() == NO,
@@ -1004,8 +1009,10 @@ void engine() {
 
   Assert(!isFreedRefsArray(Y));
 #endif
-  
+
+#ifndef THREADED
   op = CodeArea::getOP(PC);
+#endif
 
 #ifdef RECINSTRFETCH
   CodeArea::recordInstr(PC);
@@ -1016,8 +1023,6 @@ void engine() {
 	      });
 
   switch (op) {
-
-#endif /* THREADED */
 
 // the instructions are classified into groups
 // to find a certain class of instructions search for the String "CLASS:"
@@ -1031,7 +1036,7 @@ void engine() {
 // CLASS: (Fast-) Call/Execute Inline Funs/Rels
 // ------------------------------------------------------------------------
 
-  INSTRUCTION(FASTCALL)
+  case INSTRUCTION(FASTCALL):
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
       INCFPC(2);
@@ -1050,7 +1055,7 @@ void engine() {
     }
 
 
-  INSTRUCTION(FASTTAILCALL)
+  case INSTRUCTION(FASTTAILCALL):
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
@@ -1067,7 +1072,7 @@ void engine() {
       }
     }
 
-  INSTRUCTION(CALLBUILTIN)
+  case INSTRUCTION(CALLBUILTIN):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       OZ_CFun fun = entry->getFun();
@@ -1099,7 +1104,7 @@ void engine() {
     }
 
 
-  INSTRUCTION(INLINEREL1)
+  case INSTRUCTION(INLINEREL1):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
@@ -1119,7 +1124,7 @@ void engine() {
       }
     }
 
-  INSTRUCTION(INLINEREL2)
+  case INSTRUCTION(INLINEREL2):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
@@ -1141,7 +1146,7 @@ void engine() {
       if inline functions fail on toplevel a new variable has to be stored
       into Out
       */
-  INSTRUCTION(INLINEFUN1)
+  case INSTRUCTION(INLINEFUN1):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun1 fun         = (InlineFun1)entry->getInlineFun();
@@ -1161,7 +1166,7 @@ void engine() {
       }
     }
 
-  INSTRUCTION(INLINEFUN2)
+  case INSTRUCTION(INLINEFUN2):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
@@ -1182,7 +1187,7 @@ void engine() {
     }
 
 
-  INSTRUCTION(INLINEFUN3)
+  case INSTRUCTION(INLINEFUN3):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun3 fun = (InlineFun3)entry->getInlineFun();
@@ -1202,7 +1207,7 @@ void engine() {
       }
     }
 
-  INSTRUCTION(INLINEEQEQ)
+  case INSTRUCTION(INLINEEQEQ):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
@@ -1219,7 +1224,7 @@ void engine() {
 // CLASS: Shallow guards stuff
 // ------------------------------------------------------------------------
 
-  INSTRUCTION(SHALLOWGUARD)
+  case INSTRUCTION(SHALLOWGUARD):
     {
       shallowCP = PC;
       inShallowGuard = OK;
@@ -1227,7 +1232,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  INSTRUCTION(SHALLOWTEST1)
+  case INSTRUCTION(SHALLOWTEST1):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
@@ -1241,7 +1246,7 @@ void engine() {
       case SUSPEND:
 	suspendOnVar(XPC(2),getPosIntArg(PC+4),
 		     CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-	if (e->currentThread->getMode() == ALLSEQMODE) {
+	if (e->currentThread->getCompMode() == ALLSEQMODE) {
 	  e->currentThread=0;
 	  goto LBLstart;
 	}
@@ -1249,7 +1254,7 @@ void engine() {
       }
     }
 
-  INSTRUCTION(SHALLOWTEST2)
+  case INSTRUCTION(SHALLOWTEST2):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
@@ -1264,7 +1269,7 @@ void engine() {
       default:
 	suspendShallowTest2(XPC(2),XPC(3),getPosIntArg(PC+5),
 			    CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-	if (e->currentThread->getMode() == ALLSEQMODE) {
+	if (e->currentThread->getCompMode() == ALLSEQMODE) {
 	  e->currentThread=0;
 	  goto LBLstart;
 	}
@@ -1272,7 +1277,7 @@ void engine() {
       }
     }
 
-  INSTRUCTION(SHALLOWTHEN)
+  case INSTRUCTION(SHALLOWTHEN):
     {
       int numbOfCons = e->trail.chunkSize();
 
@@ -1290,18 +1295,23 @@ void engine() {
 
       int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp;
-      if (am.currentThread->getMode()==ALLSEQMODE) {
+      switch (am.currentThread->getCompMode()) {
+      case ALLSEQMODE:
 	am.pushTask(CBB,shallowCP,Y,G,X,argsToSave);
 	susp = new Suspension(am.currentThread);
-      } else {
+	break;
+      case SEQMODE:
+	warning("mixed seq/par not impl\n");
+      case PARMODE:
 	susp=new Suspension(CBB, GET_CURRENT_PRIORITY(),
 			    shallowCP, Y, G, X, argsToSave);
+	break;
       }
       CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
       inShallowGuard = NO;
       shallowCP = NULL;
-      if (e->currentThread->getMode() == ALLSEQMODE) {
+      if (e->currentThread->getCompMode() == ALLSEQMODE) {
 	e->currentThread=0;
 	goto LBLstart;
       }
@@ -1313,7 +1323,7 @@ void engine() {
 // CLASS: Environment
 // -------------------------------------------------------------------------
 
-  INSTRUCTION(ALLOCATEL)
+  case INSTRUCTION(ALLOCATEL):
     {
       int posInt = getPosIntArg(PC+1);
       Assert(posInt > 0);
@@ -1321,18 +1331,18 @@ void engine() {
       DISPATCH(2);
     }
 
-  INSTRUCTION(ALLOCATEL1)  { Y =  allocateY(1); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL2)  { Y =  allocateY(2); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL3)  { Y =  allocateY(3); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL4)  { Y =  allocateY(4); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL5)  { Y =  allocateY(5); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL6)  { Y =  allocateY(6); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL7)  { Y =  allocateY(7); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL8)  { Y =  allocateY(8); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL9)  { Y =  allocateY(9); DISPATCH(1); }
-  INSTRUCTION(ALLOCATEL10) { Y = allocateY(10); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL1):  { Y =  allocateY(1); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL2):  { Y =  allocateY(2); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL3):  { Y =  allocateY(3); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL4):  { Y =  allocateY(4); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL5):  { Y =  allocateY(5); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL6):  { Y =  allocateY(6); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL7):  { Y =  allocateY(7); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL8):  { Y =  allocateY(8); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL9):  { Y =  allocateY(9); DISPATCH(1); }
+  case INSTRUCTION(ALLOCATEL10): { Y = allocateY(10); DISPATCH(1); }
 
-  INSTRUCTION(DEALLOCATEL)
+  case INSTRUCTION(DEALLOCATEL):
     {
       Assert(!isFreedRefsArray(Y));
       if (!isDirtyRefsArray(Y)) {
@@ -1345,22 +1355,22 @@ void engine() {
 // CLASS: CONTROL: FAIL/SUCCESS/RETURN/SAVECONT
 // -------------------------------------------------------------------------
 
-  INSTRUCTION(FAILURE)
+  case INSTRUCTION(FAILURE):
     {
       HF_FAIL(, message("Executing 'false'\n"));
     }
 
 
-  INSTRUCTION(SUCCEED)
+  case INSTRUCTION(SUCCEED):
     DISPATCH(1);
 
-  INSTRUCTION(SAVECONT)
+  case INSTRUCTION(SAVECONT):
     {
       e->pushTask(CBB,getLabelArg(PC+1),Y,G);
       DISPATCH(2);
     }
 
-  INSTRUCTION(RETURN)
+  case INSTRUCTION(RETURN):
   {
     goto LBLcheckEntailment;
   }
@@ -1370,7 +1380,7 @@ void engine() {
 // CLASS: Definition
 // ------------------------------------------------------------------------
 
-  INSTRUCTION(DEFINITION)
+  case INSTRUCTION(DEFINITION):
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter nxt          = getLabelArg(PC+2);
@@ -1408,12 +1418,12 @@ void engine() {
 // CLASS: CONTROL: FENCE/CALL/EXECUTE/SWITCH/BRANCH
 // -------------------------------------------------------------------------
   
-  INSTRUCTION(BRANCH)
+  case INSTRUCTION(BRANCH):
     JUMP( getLabelArg(PC+1) );
 
-  INSTRUCTION(DETX) ONREG(Det,X);
-  INSTRUCTION(DETY) ONREG(Det,Y);
-  INSTRUCTION(DETG) ONREG(Det,G);
+  case INSTRUCTION(DETX): ONREG(Det,X);
+  case INSTRUCTION(DETY): ONREG(Det,Y);
+  case INSTRUCTION(DETG): ONREG(Det,G);
 
   Det:
   {
@@ -1427,7 +1437,7 @@ void engine() {
 
       int argsToSave = getPosIntArg(PC+2);
       suspendOnVar(origTerm,argsToSave,CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-      if (e->currentThread->getMode() == ALLSEQMODE) {
+      if (e->currentThread->getCompMode() == ALLSEQMODE) {
 	e->currentThread=0;
 	goto LBLstart;
       } else {
@@ -1439,13 +1449,13 @@ void engine() {
   };
 
 
-  INSTRUCTION(TAILSENDMSGX) isTailCall = OK; ONREG(SendMethod,X);
-  INSTRUCTION(TAILSENDMSGY) isTailCall = OK; ONREG(SendMethod,Y);
-  INSTRUCTION(TAILSENDMSGG) isTailCall = OK; ONREG(SendMethod,G);
+  case INSTRUCTION(TAILSENDMSGX): isTailCall = OK; ONREG(SendMethod,X);
+  case INSTRUCTION(TAILSENDMSGY): isTailCall = OK; ONREG(SendMethod,Y);
+  case INSTRUCTION(TAILSENDMSGG): isTailCall = OK; ONREG(SendMethod,G);
 
-  INSTRUCTION(SENDMSGX) isTailCall = NO; ONREG(SendMethod,X);
-  INSTRUCTION(SENDMSGY) isTailCall = NO; ONREG(SendMethod,Y);
-  INSTRUCTION(SENDMSGG) isTailCall = NO; ONREG(SendMethod,G);
+  case INSTRUCTION(SENDMSGX): isTailCall = NO; ONREG(SendMethod,X);
+  case INSTRUCTION(SENDMSGY): isTailCall = NO; ONREG(SendMethod,Y);
+  case INSTRUCTION(SENDMSGG): isTailCall = NO; ONREG(SendMethod,G);
 
  SendMethod:
   {
@@ -1479,7 +1489,6 @@ void engine() {
 
     CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity+3);
     Y = NULL; // allocateL(0);
-    e->currentThread->checkMode(def->getMode());
     JUMP(def->getPC());
 
 
@@ -1491,13 +1500,13 @@ void engine() {
   }
 
 
-  INSTRUCTION(TAILAPPLMETHX) isTailCall = OK; ONREG(ApplyMethod,X);
-  INSTRUCTION(TAILAPPLMETHY) isTailCall = OK; ONREG(ApplyMethod,Y);
-  INSTRUCTION(TAILAPPLMETHG) isTailCall = OK; ONREG(ApplyMethod,G);
+  case INSTRUCTION(TAILAPPLMETHX): isTailCall = OK; ONREG(ApplyMethod,X);
+  case INSTRUCTION(TAILAPPLMETHY): isTailCall = OK; ONREG(ApplyMethod,Y);
+  case INSTRUCTION(TAILAPPLMETHG): isTailCall = OK; ONREG(ApplyMethod,G);
 
-  INSTRUCTION(APPLMETHX) isTailCall = NO; ONREG(ApplyMethod,X);
-  INSTRUCTION(APPLMETHY) isTailCall = NO; ONREG(ApplyMethod,Y);
-  INSTRUCTION(APPLMETHG) isTailCall = NO; ONREG(ApplyMethod,G);
+  case INSTRUCTION(APPLMETHX): isTailCall = NO; ONREG(ApplyMethod,X);
+  case INSTRUCTION(APPLMETHY): isTailCall = NO; ONREG(ApplyMethod,Y);
+  case INSTRUCTION(APPLMETHG): isTailCall = NO; ONREG(ApplyMethod,G);
 
  ApplyMethod:
   {
@@ -1517,7 +1526,6 @@ void engine() {
     
     CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity);
     Y = NULL; // allocateL(0);
-    e->currentThread->checkMode(def->getMode());
     JUMP(def->getPC());
 
 
@@ -1540,13 +1548,13 @@ void engine() {
   }
 
 
-  INSTRUCTION(CALLX) isTailCall = NO; ONREG(Call,X);
-  INSTRUCTION(CALLY) isTailCall = NO; ONREG(Call,Y);
-  INSTRUCTION(CALLG) isTailCall = NO; ONREG(Call,G);
+  case INSTRUCTION(CALLX): isTailCall = NO; ONREG(Call,X);
+  case INSTRUCTION(CALLY): isTailCall = NO; ONREG(Call,Y);
+  case INSTRUCTION(CALLG): isTailCall = NO; ONREG(Call,G);
 
-  INSTRUCTION(TAILCALLX) isTailCall = OK; ONREG(Call,X);
-  INSTRUCTION(TAILCALLY) isTailCall = OK; ONREG(Call,Y);
-  INSTRUCTION(TAILCALLG) isTailCall = OK; ONREG(Call,G);
+  case INSTRUCTION(TAILCALLX): isTailCall = OK; ONREG(Call,X);
+  case INSTRUCTION(TAILCALLY): isTailCall = OK; ONREG(Call,Y);
+  case INSTRUCTION(TAILCALLG): isTailCall = OK; ONREG(Call,G);
 
  Call:
    {
@@ -1594,7 +1602,6 @@ void engine() {
 	CallDoChecks(def,def->getGRegs(),isTailCall,PC,def->getArity());
 	Y = NULL; // allocateL(0);
 
-	e->currentThread->checkMode(def->getMode());
 	JUMP(def->getPC());
       }
 
@@ -1905,7 +1912,7 @@ void engine() {
 // --------------------------------------------------------------------------
 
   
-  INSTRUCTION(WAIT)
+  case INSTRUCTION(WAIT):
     {
       Assert(CBB->isWait() && !CBB->isCommitted());
 
@@ -1933,7 +1940,7 @@ void engine() {
     }
 
 
-  INSTRUCTION(WAITTOP)
+  case INSTRUCTION(WAITTOP):
     {
       /* top commit */
       if ( e->entailment() )
@@ -1977,7 +1984,7 @@ void engine() {
       goto LBLsuspendBoardWaitTop;
     }
 
-  INSTRUCTION(ASK)
+  case INSTRUCTION(ASK):
     {
       // entailment ?
       if (e->entailment()) {
@@ -2027,7 +2034,7 @@ void engine() {
 // CLASS: NODES: CREATE/END
 // -------------------------------------------------------------------------
 
-  INSTRUCTION(CREATECOND)
+  case INSTRUCTION(CREATECOND):
     {
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
@@ -2039,7 +2046,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  INSTRUCTION(CREATEOR)
+  case INSTRUCTION(CREATEOR):
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
@@ -2049,7 +2056,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  INSTRUCTION(CREATEENUMOR)
+  case INSTRUCTION(CREATEENUMOR):
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
@@ -2063,7 +2070,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  INSTRUCTION(WAITCLAUSE)
+  case INSTRUCTION(WAITCLAUSE):
     {
       // create a node
       e->setCurrent(new Board(CAA,Bo_Wait),OK);
@@ -2074,7 +2081,7 @@ void engine() {
       DISPATCH(1);
     }
 
-  INSTRUCTION(ASKCLAUSE)
+  case INSTRUCTION(ASKCLAUSE):
     {
       e->setCurrent(new Board(CAA,Bo_Ask),OK);
       CBB->setInstalled();
@@ -2085,10 +2092,10 @@ void engine() {
     }
 
 
-  INSTRUCTION(ELSECLAUSE)
+  case INSTRUCTION(ELSECLAUSE):
     DISPATCH(1);
 
-  INSTRUCTION(THREAD)
+  case INSTRUCTION(THREAD):
     {
       markDirtyRefsArray(Y);
       ProgramCounter newPC = PC+2;
@@ -2112,14 +2119,14 @@ void engine() {
     }
 
 
-  INSTRUCTION(NEXTCLAUSE)
+  case INSTRUCTION(NEXTCLAUSE):
     {
       CAA->nextClause(getLabelArg(PC+1));
       DISPATCH(2);
     }
 
 
-  INSTRUCTION(LASTCLAUSE)
+  case INSTRUCTION(LASTCLAUSE):
     {
       CAA->lastClause();
       DISPATCH(1);
@@ -2129,14 +2136,14 @@ void engine() {
 // CLASS: MISC: ERROR/NOOP/default
 // -------------------------------------------------------------------------
 
-  INSTRUCTION(ERROR)
+  case INSTRUCTION(ERROR):
     {
       error("Emulate: ERROR command executed");
       goto LBLerror;
     }
 
 
-  INSTRUCTION(DEBUGINFO)
+  case INSTRUCTION(DEBUGINFO):
     {
       TaggedRef filename = getLiteralArg(PC+1);
       int line           = smallIntValue(getNumberArg(PC+2));
@@ -2155,29 +2162,27 @@ void engine() {
       DISPATCH(6);
     }
 
-  INSTRUCTION(TESTLABEL1)
-  INSTRUCTION(TESTLABEL2)
-  INSTRUCTION(TESTLABEL3)
-  INSTRUCTION(TESTLABEL4)
+  case INSTRUCTION(TESTLABEL1):
+  case INSTRUCTION(TESTLABEL2):
+  case INSTRUCTION(TESTLABEL3):
+  case INSTRUCTION(TESTLABEL4):
 
-  INSTRUCTION(TEST1)
-  INSTRUCTION(TEST2)
-  INSTRUCTION(TEST3)
-  INSTRUCTION(TEST4)
+  case INSTRUCTION(TEST1):
+  case INSTRUCTION(TEST2):
+  case INSTRUCTION(TEST3):
+  case INSTRUCTION(TEST4):
 
-  INSTRUCTION(ENDOFFILE)
-  INSTRUCTION(ENDDEFINITION)
-  
-  INSTRUCTION(SWITCHCOMPMODE)
-    e->currentThread->switchMode();
+  case INSTRUCTION(ENDOFFILE):
+  case INSTRUCTION(ENDDEFINITION):
+
+  case INSTRUCTION(SWITCHCOMPMODE):
+    // mm2: warning("switchcompmode can not be used\n");
     DISPATCH(1);
 
-#ifndef THREADED
   default:
     warning("emulate instruction: default should never happen");
     break;
-   } /* switch*/
-#endif
+  } /* switch*/
 
 
 // ----------------- end emulate ------------------------------------------

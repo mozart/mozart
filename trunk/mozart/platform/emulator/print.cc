@@ -1270,7 +1270,7 @@ PRINT(TaskStack)
 	  stream << endl;
 	}
 	break;
-      case C_MODE:
+      case C_COMP_MODE:
 	{
 	  stream << "  " << (((int) tb)>>4==SEQMODE?"SEQ":"PAR") << "MODE ";
 	  stream << endl;
@@ -1357,7 +1357,7 @@ PRINTLONG(TaskStack)
       stream << "NERVOUS\n";
       n->print(stream,depth,offset); stream << endl;
       break;
-    case C_MODE:
+    case C_COMP_MODE:
       stream << "  " << (((int) tb)>>4==SEQMODE?"SEQ":"PAR") << "MODE ";
       stream << endl;
       break;
