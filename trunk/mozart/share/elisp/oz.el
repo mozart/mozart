@@ -72,6 +72,21 @@ starts the machine under gdb")
   "The previewer for doc files")
 
 
+(defconst oz-keywords
+   (concat
+    (oz-make-keywords-for-match
+     '(
+       "pred" "proc" "fun"
+       "local" "declare"
+       "if" "or" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro"
+       "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
+       "true" "false"
+       "div" "mod"
+       "not" "process" "in"
+       ))
+    "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
+    ))
+
 (defvar oz-error-string (format "%c" 17)
   "how compiler and engine signal errors")
 
@@ -778,7 +793,7 @@ the GDB commands `cd DIR' and `directory'."
 	       ((looking-at oz-left-pattern)
 		(let ((col (current-column)))
 		  (goto-char (match-end 0))
-		  (if (is-last-in-row)
+		  (if (oz-is-right)
 		      (+ col 2)
 		    (re-search-forward "[^ \t]")
 		    (1- (current-column)))))
@@ -817,7 +832,7 @@ the GDB commands `cd DIR' and `directory'."
 	     ;; we are the first token after '(' '{' ...
 	     (let ((col (current-column)))
 	       (goto-char (match-end 0))
-	       (if (is-last-in-row)
+	       (if (oz-is-right)
 		   (+ col 2)
 		 (re-search-forward "[^ \t]")
 		 (1- (current-column)))))
@@ -933,21 +948,6 @@ the GDB commands `cd DIR' and `directory'."
 ;;------------------------------------------------------------
 
 (require 'font-lock)
-
-(defconst oz-keywords
-   (concat
-    (oz-make-keywords-for-match
-     '(
-       "pred" "proc" "fun"
-       "local" "declare"
-       "if" "or" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro"
-       "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
-       "true" "false"
-       "div" "mod"
-       "not" "process" "in"
-       ))
-    "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
-    ))
 
 
 (defun oz-fontify-buffer()
