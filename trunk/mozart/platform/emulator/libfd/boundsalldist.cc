@@ -22,8 +22,7 @@
  */
 
 /*
- * THIS IS EXPERIMENTAL, IN PARTICULAR THE SORTING AND ALL THAT!
- * AND USES O(n^2) RATHER THAN O(n log n)
+ * THIS IS EXPERIMENTAL AND USES O(n^2) RATHER THAN O(n log n)
  *
  * The algorithm is taken from:
  *   Jean-François Puget, A fast algorithm for the bound consistency 
@@ -160,24 +159,25 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
   // Eliminate singletons
   {
     int elim = 0;
-
-    for (i = 0; i < n; i++) {
-      if (xi[i].min == xi[i].max) {
-	// This is a singleton
-	// Invariant: the mins are sorted descending
-	// That is:  j < i: xi[j].min > xi[i].min: no overlap possible
-	// And:      j > i: xi[i].min > xi[j].min:
-	//   Overlap, iff xi[j].max >= xi[i].min
-	// Strictness, since they have been propagated!
-	for (int j = i+1; j< n; j++) 
-	  if (xi[j].max >= xi[i].min) 
-	    goto next;
-	elim = 1;
-	reg_l[xi[i].pos] = (OZ_Term) NULL;
+    int max  = xi[n-1].max;
+    int pre  = n-1;
+    for (i = n-1; i--; ) {
+      if (xi[i].min > max) {
+	if (pre == i+1) {
+	  elim = 1;
+	  reg_l[xi[i+1].pos] = (OZ_Term) NULL;
+	}
+	pre = i;
+	max = xi[i].max;
+      } else if (xi[i].max > max) {
+	max = xi[i].max;
       }
-    next: ;
     }
-
+    if (pre == 0) {
+      elim = 1;
+      reg_l[xi[0].pos] = (OZ_Term) NULL;
+    }
+    
     if (elim) {
       int f = 0;
       while (reg_l[f]) { f++; }
@@ -189,7 +189,7 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
       }
       n = t;
     }
-
+    
   }
   
   return P.leave();
