@@ -236,6 +236,7 @@ char *OZ_toC(OZ_Term term)
     {
       int value = smallIntValue(term);
       sprintf(TmpBuffer,"%d",value);
+      return ozstrdup(TmpBuffer);
     }
     break;
   case CONST:
@@ -243,6 +244,7 @@ char *OZ_toC(OZ_Term term)
 //    tagged2Const(term)->print(stream,depth,offset);
     break;
   }
+  warning("OZ_toC: failed");
   return ozstrdup("unknown term");
 }
 
