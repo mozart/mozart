@@ -90,7 +90,12 @@ local
 	 meth get(Name $)
 	    Return#Class#Default = Resources.Name
 	 in
-	    case {Tk.Return option(get @Window Name Class)} of nil then Default
+	    case {case Return
+		  of return then
+		     Tk.return
+		  [] returnInt then
+		     Tk.returnInt
+		  end option(get @Window Name Class)} of nil then Default
 	    elseof false then Default
 	    elseof Value then Value
 	    end
