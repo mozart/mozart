@@ -65,8 +65,11 @@ OZ_Term oz_newChunk(OZ_Term val)
 #define oz_newVariable() makeTaggedRef(newTaggedUVar(am.currentBoard))
 
 // stop thread: {Wait v}
-OZ_Return oz_wait(OZ_Term v);
-#define oz_sync(v) unify(v,NameUnit)
+#define oz_currentThread        am.currentThread
+#define oz_stop(th)   am.stopThread(th);
+#define oz_resume(th) am.resumeThread(th);
+
+#define return_stop   return BI_PREEMPT;
 
 /* -----------------------------------------------------------------------
  * # - tuples

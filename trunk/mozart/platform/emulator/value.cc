@@ -40,7 +40,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
   AtomDebugIP, AtomDebugPerdio,
   RecordFailure,
-  E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM;
+  E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
+  BI_Unify;
 
 
 // Some often used constants
@@ -164,6 +165,7 @@ void initLiterals()
   E_OS    = makeTaggedAtom("os");
   E_SYSTEM= makeTaggedAtom("system");
 
+  BI_Unify=makeTaggedConst(builtinTab.find("="));
 }
 
 

@@ -31,12 +31,39 @@ public:
   ProxyList *next;
 public:
   ProxyList(Site* sd,ProxyList *next) :sd(sd),next(next) {}
+
+  USEFREELISTMEMORY;
+
+  void dispose() 
+  {
+    freeListDispose(this,sizeof(ProxyList));
+  }
+  ProxyList *gcProxyList();
+
+};
+
+class PendBinding {
+public:
+  TaggedRef val;
+  Thread *thread;
+  PendBinding *next;
+public:
+  PendBinding() { DebugCheckT(val=4711; thread=0; next=this;) }
+  PendBinding(TaggedRef val,Thread *th,PendBinding *next)
+    : val(val), thread(th), next(next) {}
+  USEFREELISTMEMORY;
+
+  void dispose() 
+  {
+    freeListDispose(this,sizeof(PendBinding));
+  }
+  PendBinding *gcPendBinding();
 };
 
 class PerdioVar: public GenCVariable {
   TaggedPtr tagged;
   union {
-    TaggedRef binding;
+    PendBinding *bindings;
     ProxyList *proxies;
   } u;
 public:
@@ -46,7 +73,7 @@ public:
   }
 
   PerdioVar(int i) : GenCVariable(PerdioVariable) {
-    u.binding=0;
+    u.bindings=0;
     tagged.setType(PV_PROXY);
     tagged.setIndex(i);
   }
@@ -71,9 +98,22 @@ public:
   void primBind(TaggedRef *lPtr,TaggedRef v);
   Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop);
 
-  OZ_Term getVal() { Assert(isProxy()); return u.binding; }
-  int hasVal() { Assert(isProxy()); return u.binding!=0; }
-  void setVal(OZ_Term t) { Assert(isProxy()); u.binding=t; }
+  int hasVal() { Assert(isProxy()); return u.bindings!=0; }
+  void setVal(OZ_Term t) {
+    Assert(isProxy());
+    Assert(u.bindings==0);
+    oz_stop(oz_currentThread);
+    u.bindings=new PendBinding(t,oz_currentThread,0);
+  }
+  void pushVal(OZ_Term t) {
+    Assert(isProxy());
+    Assert(u.bindings!=0);
+    oz_stop(oz_currentThread);
+    u.bindings->next=new PendBinding(t,oz_currentThread,u.bindings->next);
+  }
+  void redirect(OZ_Term val);
+  void acknowledge(OZ_Term *ptr);
+
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
   void gcPerdioVar(void);

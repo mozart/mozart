@@ -226,8 +226,6 @@ void AM::init(int argc,char **argv)
   currentSolveBoard = (Board *) NULL; 
   wasSolveSet = NO; 
 
-  initLiterals();
-
   lastThreadID     = 0L;
   threadStream     = OZ_newVariable();
   threadStreamTail = threadStream;
@@ -246,6 +244,7 @@ void AM::init(int argc,char **argv)
     error("BIinit failed");
     osExit(1);
   }
+  initLiterals();
 
   extern void initTagged();
   initTagged();
@@ -1561,6 +1560,26 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
 
   return th;
 }
+
+#ifdef PERDIO
+void AM::stopThread(Thread *th) {
+  if (th->pStop()==0) {
+    if (th==am.currentThread) {
+      setSFlag(StopThread);
+    }
+    th->stop();
+  }
+}
+
+void AM::resumeThread(Thread *th) {
+  if (th->pCont()==0) {
+    th->cont();
+    if (!th->isDeadThread() && th->isRunnable() && !am.isScheduled(th)) {
+      am.scheduleThread(th);
+    }
+  }
+}
+#endif
 
 #ifdef OUTLINE
 #define inline

@@ -13,8 +13,6 @@
  * TODO
  *
  *   variable protocol:
- *     failure/exception handling
- *     more than one bind request
  *     testing
  *   cell protocol
  *     all
@@ -28,13 +26,15 @@
  *     true, false, unit and others (o-o)
  *     don't work at all?
  *   ip
- *     cache testing
+ *     cache does not work together with close detection
  *     fairness for IO
  *     errors
  *     flow control
+ *     timer
  *   port
  *     close: must fail client?
  *   gen hashtable: if hash value is negative: crash!
+ *   owner table compactify
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
@@ -454,16 +454,7 @@ PendLinkManager *pendLinkManager;
 
 #define INFINITE_CREDIT          -1
 
-/*
-#define START_CREDIT_SIZE        ((1<<31) - 1)
-#define OWNER_GIVE_CREDIT_SIZE   ((1<<15))
-#define BORROW_GIVE_CREDIT_SIZE  ((1<<7))
-#define MIN_BORROW_CREDIT_SIZE   2
-#define MAX_BORROW_CREDIT_SIZE   8 * OWNER_GIVE_CREDIT_SIZE
-#define ASK_CREDIT_SIZE          OWNER_GIVE_CREDIT_SIZE
-
-*/
-
+#ifdef DEBUG_CREDIT
 #define START_CREDIT_SIZE        (256)
 #define OWNER_GIVE_CREDIT_SIZE   (16)
 #define BORROW_GIVE_CREDIT_SIZE  (4)
@@ -471,6 +462,16 @@ PendLinkManager *pendLinkManager;
 #define MAX_BORROW_CREDIT_SIZE   2 * OWNER_GIVE_CREDIT_SIZE
 #define ASK_CREDIT_SIZE          OWNER_GIVE_CREDIT_SIZE
 
+#else
+
+#define START_CREDIT_SIZE        ((1<<31) - 1)
+#define OWNER_GIVE_CREDIT_SIZE   ((1<<15))
+#define BORROW_GIVE_CREDIT_SIZE  ((1<<7))
+#define MIN_BORROW_CREDIT_SIZE   2
+#define MAX_BORROW_CREDIT_SIZE   8 * OWNER_GIVE_CREDIT_SIZE
+#define ASK_CREDIT_SIZE          OWNER_GIVE_CREDIT_SIZE
+
+#endif
 
 #define DEFAULT_OWNER_TABLE_SIZE   100
 #define DEFAULT_BORROW_TABLE_SIZE  100
@@ -819,6 +820,8 @@ void OwnerTable::init(int beg,int end)
 
 void OwnerTable::compactify()  /* TODO - not tested */
 {
+  return; // mm2
+
   Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
   if(size==DEFAULT_OWNER_TABLE_SIZE) return;
   if(no_used/size< TABLE_LOW_LIMIT) return;
@@ -950,15 +953,6 @@ public:
   Bool isPending(){
     Assert(!isFree());
     return(pendLink!=NULL);}
-
-  Bool gcCheck() {
-    Assert(!isFree());
-    if(isMarked()){
-      removeMark();
-      PD(GC,"mark found");
-      return FALSE;}
-    PD(GC,"no mark found");
-    return TRUE;}           // maybe garbage (only if pendLink==NULL); 
 
   inline void copyBorrow(BorrowEntry* from,int i){
     setCredit(from->getCredit());
@@ -1391,7 +1385,7 @@ void BorrowEntry::print() {
   OB_Entry::print();
   NetAddress *na=getNetAddress();
   printf("NA: s:%s o:%d\n",pSite(na->site),na->index);
-  pendLink->print();
+  if (pendLink) pendLink->print();
 }
 
 #ifdef DEBUG_PERDIO
@@ -1554,7 +1548,7 @@ void Tertiary::gcTertiary()
     {
       int i=getIndex();
       borrowTable->getBorrow(i)->makeMark();
-      PD(GC,"relocate borrow:%d old%x new %x",
+      PD(GC,"relocate borrow:%d old %x new %x",
 		    i,borrowTable->getBorrow(i),this);
       borrowTable->getBorrow(i)->mkTertiary(this);
       break;
@@ -1578,7 +1572,7 @@ void OwnerTable::gcOwnerTable()
   int i;
   for(i=1;i<size;i++){
       OwnerEntry* o = ownerTable->getOwner(i);
-      if(!(o->isFree())){
+      if(!o->isFree()) {
 	o->gcPO();
       }
   }
@@ -1586,15 +1580,31 @@ void OwnerTable::gcOwnerTable()
   return;
 }
 
+extern TaggedRef gcTagged1(TaggedRef in);
+
 /* OBSERVE - this must done at the end of other gc */
 void BorrowTable::gcBorrowTable()
 {
   PD(GC,"borrow gc");
   int i;
-  for(i=0;i<size;i++){
-    BorrowEntry *b=borrowTable->getBorrow(i);
-    if(!(b->isFree())){
-      if(b->gcCheck()) borrowTable->maybeFreeBorrowEntry(i);}}
+  for(i=0;i<size;i++) {
+    BorrowEntry *b=getBorrow(i);
+    if (!b->isFree()) {
+      if(b->isMarked()) {
+	b->removeMark();
+	PD(GC,"BT b:%d mark found",i);
+	if (b->isVar()) {
+	  PD(GC,"BT b:%d variable found",i);
+	  b->mkVar(gcTagged1(b->getRef()));
+	} else {
+	  Assert(b->isTertiary());
+	}
+      } else {
+	PD(GC,"BT b:%d no mark found",i);
+	borrowTable->maybeFreeBorrowEntry(i);
+      }
+    }
+  }
   compactify();
   hshtbl->compactify();
 }
@@ -1625,6 +1635,34 @@ void GNameTable::gcGNameTable()
     }
   }
   compactify();
+}
+
+void PerdioVar::gcPerdioVar(void)
+{ 
+  PD(GC,"PerdioVar");
+  int i = getIndex();
+  if (isProxy()) {
+    BorrowEntry *be=borrowTable->getBorrow(i);
+    be->makeMark();
+
+    PendBinding **last = &u.bindings;
+    for (PendBinding *bl = u.bindings; bl; bl = bl->next) {
+      PendBinding *newBL = new PendBinding();
+      gcTagged(bl->val,newBL->val);
+      newBL->thread = bl->thread->gcThread();
+      *last = newBL;
+      last = &newBL->next;
+    }
+    *last=0;
+  } else {
+    ProxyList **last=&u.proxies;
+    for (ProxyList *pl = u.proxies; pl; pl = pl->next) {
+      ProxyList *newPL = new ProxyList(pl->sd,0);
+      *last = newPL;
+      last = &newPL->next;
+    }
+    *last = 0;
+  }
 }
 
 
@@ -2757,11 +2795,7 @@ void siteReceive(ByteStream* bs)
 
       if (pv->hasVal()) {
 	PD(PD_VAR,"REDIRECT while pending");
-	OZ_Return ret = OZ_unify(val,pv->getVal());
-	if (ret!=PROCEED) {
-	  // mm2
-	  OZ_fail("unify redirect value with local binding failed");
-	}
+	pv->redirect(val);
       }
 
       BT->maybeFreeBorrowEntry(pv->getIndex());
@@ -2811,7 +2845,7 @@ void siteReceive(ByteStream* bs)
 
       Assert(be->isVar());
       PerdioVar *pv = be->getVar();
-      pv->primBind(be->getPtr(),pv->getVal());
+      pv->acknowledge(be->getPtr());
       be->mkRef();
 
       BT->maybeFreeBorrowEntry(pv->getIndex());
@@ -2984,12 +3018,43 @@ void sendAcknowledge(Site* sd,int OTI)
   reliableSendFail(sd,bs,FALSE,9);
 }
 
+
+void PerdioVar::acknowledge(OZ_Term *ptr)
+{
+  OZ_Term val=u.bindings->val;
+  primBind(ptr,val);
+  oz_resume(u.bindings->thread);
+
+  PendBinding *tmp=u.bindings->next;
+  u.bindings->dispose();
+  u.bindings=tmp;
+  redirect(val);
+}
+    
+extern TaggedRef BI_Unify;
+
+void PerdioVar::redirect(OZ_Term val) {
+  while (u.bindings) {
+
+    RefsArray args = allocateRefsArray(2,NO);
+    args[0]=val;
+    args[1]=u.bindings->val;
+    u.bindings->thread->pushCall(BI_Unify,args,2);
+    oz_resume(u.bindings->thread);
+
+    PendBinding *tmp=u.bindings->next;
+    u.bindings->dispose();
+    u.bindings=tmp;
+  }
+}
+
+
 void sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite, int OTI)
 {
   while (pl) {
     Site* sd=pl->sd;
     ProxyList *tmp=pl->next;
-    delete pl; 
+    pl->dispose();
     pl = tmp;
 
     if (sd==ackSite) {
@@ -3011,12 +3076,12 @@ void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
     PD(PD_VAR,"bind proxy o:%d v:%s",pv->getIndex(),toC(v));
     Assert(pv->isProxy());
     if (pv->hasVal()) {
-      // mm2: TODO
-      printf("mm2: bind twice not implemented");
+      pv->pushVal(v); // save binding for ack message, ...
+    } else {
+      pv->setVal(v); // save binding for ack message, ...
+      BorrowEntry *be=BT->getBorrow(pv->getIndex());
+      sendSurrender(be,v);
     }
-    pv->setVal(v); // save binding for ack message
-    BorrowEntry *be=BT->getBorrow(pv->getIndex());
-    sendSurrender(be,v);
   }
 }
 

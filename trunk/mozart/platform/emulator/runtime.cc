@@ -11,12 +11,3 @@
 
 #include "runtime.hh"
 
-OZ_Return oz_wait(OZ_Term val)
-{
-  am.suspendBI.proc    = makeTaggedConst(builtinTab.find("Wait"));
-  am.suspendBI.args    = allocateRefsArray(1,NO);
-  am.suspendBI.args[0] = val;
-  am.suspendBI.argsNo  = 1;
-  return BI_NEWCALL;
-}
-
