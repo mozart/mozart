@@ -5842,7 +5842,7 @@ OZ_C_proc_begin(BIprintError,1)
 {
   oz_declareArg(0,t);
   // print popup code for opi
-  if (!am.isStandalone()) printf("\021");
+  if (ozconf.runningUnderEmacs) printf("\021");
   OZ_printVirtualString(t);
   fflush(stdout);
   return PROCEED;
