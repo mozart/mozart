@@ -39,7 +39,7 @@
 // This one is used by the 'Fault' library now;
 OZ_BI_define(BIcloseCon,1,1)
 {
-  OZ_declareIntIN(0,what);
+  OZ_declareInt(0,what);
   OZ_RETURN(oz_int(openclose(what)));
 } OZ_BI_end
 
@@ -115,8 +115,8 @@ int openclose(int Type);
 
 OZ_BI_define(BIstartTmp,2,0)
 {
-  OZ_declareIntIN(0,val);
-  OZ_declareIntIN(1,time);
+  OZ_declareInt(0,val);
+  OZ_declareInt(1,time);
   PD((TCPCACHE,"StartTmp v:%d t:%d",val,time));
   if(openClosedConnection(val)){
     PD((TCPCACHE,"StartTmp; continuing"));

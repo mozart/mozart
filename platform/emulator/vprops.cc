@@ -810,7 +810,7 @@ OZ_Return PutProperty(TaggedRef k,TaggedRef v)
 
 OZ_BI_define(BIgetProperty,1,1)
 {
-  OZ_declareIN(0,key);
+  OZ_declareTerm(0,key);
   OZ_Return status = GetProperty(key,OZ_out(0));
   if (status == PROP__NOT__READABLE)
     return oz_raise(E_ERROR,E_SYSTEM,"getProperty",1,key);
@@ -821,8 +821,8 @@ OZ_BI_define(BIgetProperty,1,1)
 
 OZ_BI_define(BIcondGetProperty,2,1)
 {
-  OZ_declareIN(0,key);
-  OZ_declareIN(1,def);
+  OZ_declareTerm(0,key);
+  OZ_declareTerm(1,def);
   OZ_Return status = GetProperty(key,OZ_out(0));
   if (status == PROP__NOT__READABLE)
     return oz_raise(E_ERROR,E_SYSTEM,"condGetProperty",1,key);
@@ -833,8 +833,8 @@ OZ_BI_define(BIcondGetProperty,2,1)
 
 OZ_BI_define(BIputProperty,2,0)
 {
-  OZ_declareIN(0,key);
-  OZ_declareIN(1,val);
+  OZ_declareTerm(0,key);
+  OZ_declareTerm(1,val);
   OZ_Return status = PutProperty(key,val);
   if (status == PROP__NOT__WRITABLE)
     return oz_raise(E_ERROR,E_SYSTEM,"putProperty",1,key);

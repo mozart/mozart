@@ -448,7 +448,7 @@ OZ_BI_define(BIByteString_toString,1,1)
 OZ_BI_define(BIByteString_toStringWithTail,2,1)
 {
   oz_declareByteStringIN(0,b1);
-  OZ_declareIN(1,list);
+  OZ_declareTerm(1,list);
   int i = b1->getWidth();
   while (i-- > 0) list = oz_cons(oz_int(b1->get(i)),list);
   OZ_RETURN(list);
@@ -472,8 +472,8 @@ inline char* find_char(char*s,int c,int n)
 OZ_BI_define(BIByteString_strchr,3,1)
 {
   oz_declareByteStringIN(0,bs);
-  OZ_declareIntIN(1,OFF);
-  OZ_declareIntIN(2,c);
+  OZ_declareInt(1,OFF);
+  OZ_declareInt(2,c);
   int n = bs->getWidth();
   if (OFF<0 || OFF>=n)
     return oz_raise(E_SYSTEM,E_KERNEL,"BitString.strchr",3,

@@ -723,7 +723,7 @@ OZ_BI_define(BIVSinitServer,1,0)
   //
   key_t msgChunkPoolKey;
   int chunkNumber;
-  OZ_declareVirtualStringIN(0, mbKeyChars);
+  OZ_declareVirtualString(0, mbKeyChars);
   Assert(sizeof(key_t) <= sizeof(int));
   key_t mbKey;
   VSMailboxOwned *mbox;
@@ -871,7 +871,7 @@ OZ_BI_define(BIVSremoveMailbox,1,0)
   initDP();
 
   //
-  OZ_declareVirtualStringIN(0, mbKeyChars);
+  OZ_declareVirtualString(0, mbKeyChars);
   Assert(sizeof(key_t) <= sizeof(int));
   key_t mbKey;
 

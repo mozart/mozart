@@ -40,7 +40,7 @@ OZ_BI_define(BIgetDebugStream,0,1)
 OZ_BI_define(BIthreadUnleash,2,0)
 {
   oz_declareThread(0,thread);
-  OZ_declareIntIN(1,frameId);
+  OZ_declareInt(1,frameId);
 
   if (thread->hasStack())
     thread->getTaskStackRef()->unleash(frameId);
@@ -87,9 +87,9 @@ OZ_BI_define(BIcheckStopped,1,1)
 
 OZ_BI_define(BIbreakpointAt, 3,1)
 {
-  OZ_declareIN    (0,file)
-  OZ_declareIntIN (1,line);
-  OZ_declareIN    (2,what);
+  OZ_declareTerm(0,file)
+  OZ_declareInt(1,line);
+  OZ_declareTerm(2,what);
 
   DEREF(file,_1,_2);
 

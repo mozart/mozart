@@ -175,32 +175,6 @@ extern int       _FUNDECL(OZ_isHeapChunk,(OZ_Term t));
 extern unsigned int _FUNDECL(OZ_getUniqueId,(void));
 
 
-#define OZ_assertList(t)                        \
-  {                                             \
-    OZ_Term var;                                \
-    if (!OZ_isList(t,&var)) {                   \
-      if (var == 0) return FAILED;              \
-      OZ_suspendOn(var);                        \
-    }                                           \
-  }
-
-#define OZ_assertProperString(t)                \
-  {                                             \
-    OZ_Term var;                                \
-    if (!OZ_isProperString(t,&var)) {           \
-      if (var == 0) return FAILED;              \
-      OZ_suspendOn(var);                        \
-    }                                           \
-  }
-#define OZ_assertVirtualString(t)               \
-  {                                             \
-    OZ_Term var;                                \
-    if (!OZ_isVirtualString(t,&var)) {          \
-      if (var == 0) return FAILED;              \
-      OZ_suspendOn(var);                        \
-    }                                           \
-  }
-
 extern OZ_Term _FUNDECL(OZ_termType,(OZ_Term));
 
 /* convert: C from/to Oz datastructure */
@@ -448,91 +422,6 @@ OZ_Return (ozcdecl Name)(OZ_Term _OZ_ARGS[],int _OZ_LOC[]) {    \
 
 #define OZ_BI_end }
 
-#define OZ_declareIN(ARG,VAR) \
-     OZ_Term VAR = OZ_in(ARG);
-
-#define OZ_nonvarIN(ARG)                        \
-{                                               \
-  if (OZ_isVariable(OZ_in(ARG))) {              \
-    OZ_suspendOn(OZ_in(ARG));                   \
-  }                                             \
-}
-
-#define OZ_declareNonvarIN(ARG,VAR)             \
-OZ_Term VAR = OZ_in(ARG);                       \
-{                                               \
-  if (OZ_isVariable(VAR)) {                     \
-    OZ_suspendOn(VAR);                          \
-  }                                             \
-}
-
-#define OZ_declareIntIN(ARG,VAR)                \
- int VAR;                                       \
- OZ_nonvarIN(ARG);                              \
- if (! OZ_isInt(OZ_in(ARG))) {                  \
-   return OZ_typeError(ARG,"Int");              \
- } else {                                       \
-   VAR = OZ_intToC(OZ_in(ARG));                 \
- }
-
-#define OZ_declareFloatIN(ARG,VAR)              \
- double VAR;                                    \
- OZ_nonvarIN(ARG);                              \
- if (! OZ_isFloat(OZ_in(ARG))) {                \
-   return OZ_typeError(ARG,"Float");            \
- } else {                                       \
-   VAR = OZ_floatToC(OZ_in(ARG));               \
- }
-
-
-#define OZ_declareAtomIN(ARG,VAR)               \
- CONST char *VAR;                               \
- OZ_nonvarIN(ARG);                              \
- if (! OZ_isAtom(OZ_in(ARG))) {                 \
-   return OZ_typeError(ARG,"Atom");             \
- } else {                                       \
-   VAR = OZ_atomToC(OZ_in(ARG));                \
- }
-
-#define OZ_declareProperStringIN(ARG,VAR)               \
- char *VAR;                                             \
- {                                                      \
-   OZ_Term OZ_avar;                                     \
-   if (!OZ_isProperString(OZ_in(ARG),&OZ_avar)) {       \
-     if (OZ_avar == 0) {                                \
-       return OZ_typeError(ARG,"ProperString");         \
-     } else {                                           \
-       OZ_suspendOn(OZ_avar);                           \
-     }                                                  \
-   }                                                    \
-   VAR = OZ_stringToC(OZ_in(ARG),0);                    \
- }
-
-#define OZ_declareVirtualStringIN(ARG,VAR)              \
- char *VAR;                                             \
- {                                                      \
-   OZ_Term OZ_avar;                                     \
-   if (!OZ_isVirtualString(OZ_in(ARG),&OZ_avar)) {      \
-     if (OZ_avar == 0) {                                \
-       return OZ_typeError(ARG,"VirtualString");        \
-     } else {                                           \
-       OZ_suspendOn(OZ_avar);                           \
-     }                                                  \
-   }                                                    \
-   VAR = OZ_virtualStringToC(OZ_in(ARG),0);             \
- }
-
-#define OZ_declareForeignPointerIN(ARG,VAR)     \
-void *VAR;                                      \
-{                                               \
-  OZ_declareNonvarIN(ARG,_VAR);         \
-  if (!OZ_isForeignPointer(_VAR)) {             \
-    return OZ_typeError(ARG,"ForeignPointer");  \
-  } else {                                      \
-    VAR = OZ_getForeignPointer(_VAR);           \
-  }                                             \
-}
-
 #define OZ_RETURN(V) return ((OZ_result(V)),PROCEED)
 #define OZ_RETURN_INT(I) OZ_RETURN(OZ_int(I))
 #define OZ_RETURN_ATOM(S) OZ_RETURN(OZ_atom(S))
@@ -550,6 +439,7 @@ OZ_RETURN((X)?OZ_true():OZ_false())
   if (OZ_isVariable(OZ_in(ARG)))                \
     { OZ_suspendOn(OZ_in(ARG)); }               \
 }
+
 
 #define OZ__doTerm(TYPE,ARG,VAR)                \
 TYPE VAR = OZ_in(ARG);

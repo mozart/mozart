@@ -3632,7 +3632,7 @@ OZ_BI_define(BIisForeignPointer,1,1)
 
 OZ_BI_define(BIForeignPointerToInt,1,1)
 {
-  OZ_declareForeignPointerIN(0,handle);
+  OZ_declareForeignPointer(0,handle);
   OZ_RETURN_INT((long)handle);
 } OZ_BI_end
 

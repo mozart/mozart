@@ -1554,7 +1554,7 @@ OZ_BI_define(BItk_getNames,0,3) {
 
 OZ_BI_define(BItk_addGroup,2,1)
 {
-  OZ_nonvarIN(0);
+  OZ_expectDet(0);
   TaggedRef group = oz_deref(OZ_in(0));
 
   if (oz_isCons(group)) {

@@ -398,31 +398,31 @@ OZ_Return saveIt(OZ_Term val, char *filename, char *header,
 
 OZ_BI_define(BIsave,2,0)
 {
-  OZ_declareIN(0,in);
-  OZ_declareVirtualStringIN(1,filename);
+  OZ_declareTerm(0,in);
+  OZ_declareVirtualString(1,filename);
   return saveIt(in,filename,"",0,NO);
 } OZ_BI_end
 
 
 OZ_BI_define(BIsaveCompressed,3,0)
 {
-  OZ_declareIN(0,in);
-  OZ_declareVirtualStringIN(1,filename);
-  oz_declareIntIN(2,complevel);
+  OZ_declareTerm(0,in);
+  OZ_declareVirtualString(1,filename);
+  OZ_declareInt(2,complevel);
   return saveIt(in,filename,"",complevel,NO);
 } OZ_BI_end
 
 
 OZ_BI_define(BIsaveWithHeader,4,0)
 {
-  OZ_declareIN(0,value);
-  OZ_nonvarIN(1);
-  OZ_nonvarIN(2);
-  oz_declareIntIN(3,compressionlevel);
+  OZ_declareTerm(0,value);
+  OZ_expectDet(1);
+  OZ_expectDet(2);
+  OZ_declareInt(3,compressionlevel);
 
-  OZ_declareVirtualStringIN(1,filename);
+  OZ_declareVirtualString(1,filename);
   filename = ozstrdup(filename);
-  OZ_declareVirtualStringIN(2,header);
+  OZ_declareVirtualString(2,header);
 
   OZ_Return ret = saveIt(value,filename,header,compressionlevel,NO);
   free(filename);
@@ -472,7 +472,7 @@ OZ_Return export(OZ_Term t)
 
 OZ_BI_define(BIexport,1,0)
 {
-  OZ_declareIN(0,in);
+  OZ_declareTerm(0,in);
 
   return export(in);
 } OZ_BI_end
@@ -904,19 +904,19 @@ kaboom:
 
 OZ_BI_define(BIurl_localize,1,1)
 {
-  OZ_declareVirtualStringIN(0,url);
+  OZ_declareVirtualString(0,url);
   return URL_get(url,OZ_out(0),URL_LOCALIZE);
 } OZ_BI_end
 
 OZ_BI_define(BIurl_open,1,1)
 {
-  OZ_declareVirtualStringIN(0,url);
+  OZ_declareVirtualString(0,url);
   return URL_get(url,OZ_out(0),URL_OPEN);
 } OZ_BI_end
 
 OZ_BI_define(BIurl_load,1,1)
 {
-  OZ_declareVirtualStringIN(0,url);
+  OZ_declareVirtualString(0,url);
   OZ_Term aux = 0;
   OZ_Return ret = URL_get(url,aux,URL_LOAD);
   if (aux != 0) {
@@ -931,7 +931,7 @@ OZ_BI_define(BIurl_load,1,1)
 
 OZ_BI_define(BIloadWithHeader,1,1)
 {
-  OZ_declareVirtualStringIN(0,url);
+  OZ_declareVirtualString(0,url);
   return URL_get(url,OZ_out(0),URL_LOAD);
 } OZ_BI_end
 
