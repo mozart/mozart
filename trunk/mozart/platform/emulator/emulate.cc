@@ -1043,6 +1043,7 @@ LBLinstallThread:
       {
 	OZ_Propagator *prop = CTT->getPropagator();
 	CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB);
+	CTS = CTT->getTaskStackRef();
 	e->restartThread();
 	HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeaderFunc()))),
 		 prop->getParameters());
@@ -1081,6 +1082,7 @@ LBLinstallThread:
     //
     e->restartThread();
   }
+
 
   //  INVARIANT:
   //  current thread always has a stack, and it might not 
@@ -2175,7 +2177,8 @@ LBLdispatcher:
 	DebugCheckT(CAA = NULL);
 
       LBLpopTaskNoPreempt:
-	TaskStack *taskstack     = CTS;
+	Assert(CTS==CTT->getTaskStackRef());
+	TaskStack *taskstack     = CTS;	
 	TaskStackEntry *topCache = taskstack->getTop();
 	PopFrameNoDecl(topCache,PC,Y,G);
 	taskstack->setTop(topCache);
