@@ -279,6 +279,7 @@ OZ_BI_proto(BIportWait);
 #include "modFloat-if.cc"
 #include "modForeignPointer-if.cc"
 #include "modInt-if.cc"
+#include "modList-if.cc"
 #include "modLiteral-if.cc"
 #include "modLock-if.cc"
 #include "modName-if.cc"
@@ -312,6 +313,7 @@ static ModuleEntry bi_module_table[] = {
   {"Float",             mod_int_Float},
   {"ForeignPointer",    mod_int_ForeignPointer},
   {"Int",               mod_int_Int},
+  {"List",              mod_int_List},
   {"Literal",           mod_int_Literal},
   {"Lock",              mod_int_Lock},
   {"Name",              mod_int_Name},
