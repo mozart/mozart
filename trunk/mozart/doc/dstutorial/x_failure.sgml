@@ -244,28 +244,30 @@ fault state is <<ok>>.
 <P> An object consists of
 an object-record that is a lazy chunk
 and that references
-the object's features,
-a cell, a class, and optionally a lock.
+the object's features, a cell, a class.
 The object-record and the class are
-copied simultaneously.
-This introduces one new failure mode, namely
-if the object-record cannot be fetched.
-The following failure modes are possible:
+copied when requested.
+This means that
+the following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
 <ITEM> Owner site down and
 object-record or state pointer not present
-(<<permFail(type:CL info:owner)>>).
+(<<permFail(type:object info:owner)>>).
 <ITEM> Owner site unreachable and
 object-record or state pointer not present
-(<<tempFail(type:CL info:owner)>>).
+(<<tempFail(type:object info:owner)>>).
 <ITEM> State pointer lost (owner site up)
-(<<permFail(type:CL info:state)>>).
-This failure mode is only for cells.
-If a lock token is lost then the owner recreates it.
+(<<permFail(type:object info:state)>>).
 <ITEM> State pointer unreachable (owner site up)
-(<<tempFail(type:CL info:state)>>).
+(<<tempFail(type:object info:state)>>).
 </LIST>
+There are two new failure modes that
+occur when the object-record is absent.
+These prevent the object
+from being used, so we consider
+these to be simply extra
+cases of <<permFail>> and <<tempFail>>.
 
 <SECTION><TITLE>Fault-tolerant examples</TITLE>
 
