@@ -4,8 +4,7 @@
     The Mozart compiler understands the full syntax of Oz programs.
     Additionally, it also accepts <Def/directives/ in its input.
     A directive can start anywhere on a line and is introduced by a
-    backslash; it always extends until the end of the line.  Directives
-    may be abbreviated to their shortest unique prefix.
+    backslash; it always extends until the end of the line.
   <P>
     Directives come in two flavors.  So-called <Def/compiler directives/
     provide a way to change the compiler's switches, whereas <Def/macro
