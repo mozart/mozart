@@ -702,8 +702,9 @@ dnl *****************************************************************
 
 OZ_ENABLE_NO(virtualsites,[
                    provide support for virtual sites],
-	AC_DEFINE(VIRTUALSITES),
+	AC_DEFINE(VIRTUALSITES)
         AC_MSG_RESULT(yes)
+	,
 	)
 
 dnl *****************************************************************
