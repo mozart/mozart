@@ -1,0 +1,332 @@
+MEP: 1
+Title: MEP Purpose and Guidelines
+Version: $Revision$
+Last-Modified: $Date$
+Author: Denys Duchier <denys.duchier@mozart-oz.org>
+Status: Active
+Type: Informational
+Content-Type: text/x-rst
+Created: 28-Oct-2004
+Post-History:
+
+
+Credits
+=======
+
+The MEP concept is borrowed from Python's [#Python]_ PEPs [#PEPS]_.  Much of
+this document is adapted from PEP-0001 [#PEP1]_ by Barry A. Warsaw, Jeremy
+Hylton, and David Goodger, and from GLEP-0001 [#GLEP1]_ by Grant Goodyear.
+
+What is a MEP?
+==============
+
+MEP stands for "Mozart Enhancement Proposal".  A MEP is a design document
+providing information to the Mozart/Oz community, or describing a new feature
+for Mozart/Oz.  The MEP should provide a concise technical specification of the
+feature and rationale for the feature.
+
+We intend MEPs to be the primary mechanisms for proposing *significant* new
+features, for collecting community input on an issue, and for documenting the
+design decisions that have gone into Mozart/Oz.  The MEP author is responsible
+for building consensus within the community and documenting dissenting opinions.
+
+Because the MEPs are maintained as text files under CVS control, their revision
+history is the historical record of the feature proposal [#CVS]_.
+
+
+Kinds of MEPs
+=============
+
+There are two kinds of MEPs.  A Standards Track MEP describes a new feature or
+implementation for Mozart/Oz.  An Informational MEP describes provides general
+guidelines or information to the Mozart/Oz community, but does not propose a new
+feature.  Informational MEPs do not necessarily represent a Mozart/Oz community
+consensus or recommendation, so users and implementors are free to ignore
+Informational MEPs or follow their advice.
+
+
+MEP Work Flow
+=============
+
+The MEP editors assign MEP numbers and change their status.  The current MEP
+editors are Denys Duchier and Kevin Glynn.  Please send all MEP-related email to
+<mep@mozart-oz.org>
+
+The MEP process begins with a new idea for Mozart/Oz.  It is highly recommended
+that a single MEP contain a single key proposal or new idea.  The more focussed
+the MEP, the more successful it tends to be.  The MEP editors reserve the right
+to reject MEP proposals if they appear too unfocussed or too broad.  If in
+doubt, split your MEP into several well-focussed ones.
+
+Each MEP must have a champion -- someone who writes the MEP using the style and
+format described below, shepherds the discussions in the appropriate forums, and
+attempts to build community consensus around the idea.  The MEP champion
+(a.k.a. Author) should first attempt to ascertain whether the idea is MEP-able.
+Small enhancements or patches often don't need a MEP and can be injected into
+the Mozart/Oz development work flow with an enhancement "bug" submitted to the
+Mozart/Oz bugzilla [#BUGS]_.
+
+The MEP champion then emails the MEP editors <mep@mozart-oz.org> with a proposed
+title and a rough, but fleshed out, draft of the MEP.  This draft must be
+written in MEP style as described below.
+
+If the MEP editor accepts the MEP, he will assign the MEP a number, label it as
+Standards Track (a better name would be nice here -- suggestions?) or
+Informational, give it status "Draft", and create and check-in the initial draft
+of the MEP.  The MEP editors will not unreasonably deny a MEP.  Reasons for
+denying MEP status include duplication of effort, being technically unsound, not
+providing proper motivation or addressing backwards compatibility, or not in
+keeping with Mozart/Oz philosophy.
+
+If a pre-MEP is rejected, the author may elect to take the pre-MEP to the
+hackers@mozart-oz.org mailing list to help flesh it out, gain feedback and
+consensus from the community at large, and improve the MEP for re-submission.
+
+The author of the MEP is then responsible for posting the MEP to the hackers
+mailing list, and marshaling community support for it.  As updates are
+necessary, the MEP author can check in new versions if they have CVS commit
+permissions, or can email new MEP versions to the MEP editors for committing.
+
+Standards Track MEPs consist of two parts, a design document and a reference
+implementation.  The MEP should be reviewed and accepted before a reference
+implementation is begun, unless a reference implementation will aid people in
+studying the MEP.  Standards Track MEPs must include an implementation -- in the
+form of code, patch, or URL to same -- before it can be considered Final.
+
+MEP authors are responsible for collecting community feedback on a MEP before
+submitting it for review.  A MEP that has not been discussed on
+hackers@mozart-oz.org will not be accepted.
+
+Once the authors have completed a MEP, they must inform the MEP editors that it
+is ready for review.  MEPs are reviewed by the Mozart/Oz Board, who may approve
+or reject a MEP outright, or send it back to the author(s) for revision.
+
+For a MEP to be approved it must meet certain minimum criteria.  It must be a
+clear and complete description of the proposed enhancement.  The enhancement
+must represent a net improvement.  The proposed implementation, if applicable,
+must be solid and must not complicate the distribution unduly.  Finally, a
+proposed enhancement must satisfy the philosophy of Mozart/Oz.
+
+Once a MEP has been accepted, the reference implementation must be completed.
+When the reference implementation is complete and accepted, the status will be
+changed to "Final".
+
+A MEP can also be assigned status "Deferred".  The MEP author or editor can
+assign the MEP this status when no progress is being made on the MEP.  Once a
+MEP is deferred, the MEP editor can re-assign it to draft status.
+
+A MEP can also be "Rejected".  Perhaps after all is said and done it was not a
+good idea.  It is still important to have a record of this fact.
+
+MEPs can also be replaced by a different MEP, rendering the original obsolete
+(where version 2 of a policy, for example, might replace version 1).
+
+MEP work flow is as follows::
+
+    Draft -> Accepted -> Final -> Replaced
+      ^
+      +----> Rejected
+      v
+    Deferred
+
+Some Informational MEPs may also have a status of "Active" if they are never
+meant to be completed.  E.g. MEP 1 (this MEP).
+
+
+What belongs in a successful MEP?
+=================================
+
+Each MEP should have the following parts:
+
+1. Preamble -- RFC 822 style headers containing meta-data about the MEP,
+   including the MEP number, a short descriptive title (limited to a maximum of
+   44 characters), the names, and optionally the contact info for each author,
+   etc.
+
+2. Abstract -- a short (~200 word) description of the technical issue being
+   addressed.
+
+3. Motivation -- The motivation is critical for MEPs that want to modify
+   Mozart/Oz functionality.  It should clearly explain why the existing
+   functionality or policy is inadequate to address the problem that the MEP
+   solves.  MEP submissions without sufficient motivation may be rejected
+   outright.
+
+4. Specification -- The technical specification should describe the specific
+   areas of Mozart/Oz that would be touched by this MEP.  If new functionality
+   is being introduced, what packages will that functionality affect?  If new
+   policy, who will be affected?
+
+5. Rationale -- The rationale fleshes out the specification by describing what
+   motivated the design and why particular design decisions were made.  It
+   should describe alternate designs that were considered and related work,
+   e.g. how the feature is supported in other distributions.
+
+   The rationale should provide evidence of consensus within the community and
+   discuss important objections or concerns raised during discussion.
+
+6. Backwards Compatibility -- All MEPs must include a section describing any
+   issues of backwards incompatibilities and their severity.  The MEP must
+   explain how the author proposes to deal with these incompatibilities.  (Even
+   if there are none, this section should be included to clearly state that
+   fact.) MEP submissions without a sufficient backwards compatibility treatise
+   may be rejected outright.
+
+7. Reference Implementation -- The reference implementation must be completed
+   before any MEP is given status "Final", but it need not be completed before
+   the MEP is accepted.  It is better to finish the specification and rationale
+   first and reach consensus on it before writing code or significantly
+   modifying ebuilds.
+
+8. Copyright/public domain -- Each MEP must either be explicitly labelled as
+   placed in the public domain (see this MEP as an example) or licensed under
+   the Open Publication License [#OPL].
+
+
+MEP Formating and Template
+==========================
+
+There are two MEP formats available to authors: plaintext and reStructuredText_
+[#ReSTHOME].
+
+Plaintext MEPs are written in plain ASCII text, contain minimal structural
+markup, and should adhere to a rigid style.  MEP 9 contains a boilerplate
+template [#TXT]_ you can use to get started writing your plaintext MEP.
+
+ReStructuredText_ MEPs allow for rich markup that is still quite easy to read,
+but results in much better-looking and more functional HTML.  MEP 2 contains a
+boilerplate template [#ReST]_ for use with reStructuredText MEPs.
+
+
+MEP Header Preamble
+===================
+
+Each MEP must begin with an RFC 2822 style header preamble.  The headers
+must appear in the following order.  Headers marked with "*" are
+optional and are described below.  All other headers are required. ::
+
+    MEP: <mep number>
+    Title: <mep title>
+    Version: <cvs version string>
+    Last-Modified: <cvs date string>
+    Author: <list of authors' real names and optionally, email addrs>
+  * Discussions-To: <email address>
+    Status: <Draft | Active | Accepted | Deferred | Rejected |
+             Final | Replaced>
+    Type: <Informational | Standards Track>
+  * Content-Type: <text/plain | text/x-rst>
+  * Requires: <mep numbers>
+    Created: <date created on, in dd-mmm-yyyy format>
+    Post-History: <dates of postings to hackers>
+  * Replaces: <mep number>
+  * Replaced-By: <mep number>
+
+The Author header lists the names, and optionally the email addresses
+of all the authors/owners of the MEP.  The format of the Author header
+value must be
+
+    Random J. User <address@dom.ain>
+
+if the email address is included, and just
+
+    Random J. User
+
+if the address is not given.  
+
+If there are multiple authors, each should be on a separate line following RFC
+2822 continuation line conventions.  Note that personal email addresses in MEPs
+will be obscured as a defense against spam harvesters.
+
+While a MEP is in private discussions (usually during the initial Draft phase),
+a Discussions-To header will indicate the mailing list or URL where the MEP is
+being discussed.  No Discussions-To header is necessary if the MEP is being
+discussed privately with the author, or on the hackers mailing list.  Note that
+email addresses in the Discussions-To header will not be obscured.
+
+The Type header specifies the type of MEP: Informational or Standards Track.
+
+The format of a MEP is specified with a Content-Type header, which should read
+"text/plain" for plaintext MEPs and "text/x-rst" for ReStructuredText MEPs.
+
+The Created header records the date that the MEP was assigned a number, while
+Post-History is used to record the dates of when new versions of the MEP are
+posted to hackers.  Both headers should be in dd-mmm-yyyy format, e.g.
+14-Aug-2001.
+
+MEPs may have a Requires header, indicating the MEP numbers that this MEP
+depends on.
+
+MEPs may also have a Replaced-By header indicating that a MEP has been
+rendered obsolete by a later document; the value is the number of the MEP
+that replaces the current document.  The newer MEP must have a Replaces
+header containing the number of the MEP that it rendered obsolete.
+
+
+Reporting MEP Bugs, or Submitting MEP Updates
+=============================================
+
+How you report a bug, or submit a MEP update depends on several factors, such
+as the maturity of the MEP, the preferences of the MEP author, and the
+nature of your comments.  For the early draft stages of the MEP, it's
+probably best to send your comments and changes directly to the MEP author.
+For more mature, or finished MEPs you may want to submit corrections to the
+Mozart/Oz bugzilla [#BUGS]_ so that your changes don't get lost.
+
+When in doubt about where to send your changes, please check first with the
+MEP author and/or MEP editors.
+
+MEP authors who are also Mozart/Oz developers can update the MEPs
+themselves by using "cvs commit" to commit their changes.
+
+
+Transferring MEP Ownership
+==========================
+
+It occasionally becomes necessary to transfer ownership of MEPs to a new
+champion.  In general, we'd like to retain the original author as a co-author
+of the transferred MEP, but that's really up to the original author.  A good
+reason to transfer ownership is because the original author no longer has the
+time or interest in updating it or following through with the MEP process, or
+has fallen off the face of the 'net (i.e. is unreachable or not responding to
+email).  A bad reason to transfer ownership is because you don't agree with
+the direction of the MEP.  We try to build consensus around a MEP, but if
+that's not possible, you can always submit a competing MEP.
+
+If you are interested in assuming ownership of a MEP, send a message asking
+to take over, addressed to both the original author and the MEP editors
+<mep@mozart-oz.org>.  If the original author doesn't respond to email in a
+timely manner, the MEP editors will make a unilateral decision (it's not like
+such decisions can't be reversed :).
+
+
+References and Footnotes
+========================
+
+.. [#PYTHON] http://www.python.org
+
+.. [#PEPS] http://www.python.org/peps
+
+.. [#PEP1] http://www.python.org/peps/pep-0001.html
+
+.. [#GLEP1] http://www.gentoo.org/proj/en/glep/glep-0001.html
+
+.. [#CVS] This historical record is available by the normal CVS commands
+   for retrieving older revisions.
+
+.. [#ReST] MEP 2, Sample ReStructuredText MEP Template, 
+   (http://www.mozart-oz.org/meps/mep-0002.html)
+
+.. [#TXT] MEP 3, Sample Plaintext MEP Template, 
+   (http://www.mozart-oz.org/meps/mep-0003.html)
+
+.. [#BUGS] bugs@mozart-oz.org
+
+.. [#OPL] http://www.opencontent.org/openpub/
+
+.. [#ReSTHOME] http://docutils.sourceforge.net/rst.html
+
+
+Copyright
+=========
+
+This document has been placed in the public domain.
