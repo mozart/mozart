@@ -46,14 +46,16 @@ public:
   RefsArray Y;
   Abstraction *CAP;
   TaggedRef data;
-  RefsArray arguments;
+  int arity;
+  TaggedRef * arguments;
 
   OzDebug(ProgramCounter pc, RefsArray y, Abstraction *cap) {
     PC        = pc;
     Y         = y;
     CAP       = cap;
     data      = makeTaggedNULL();
-    arguments = (RefsArray) NULL;
+    arity     = 0;
+    arguments = (TaggedRef *) NULL;
   }
 
   OzDebug(const OzDebug &d) {
@@ -61,14 +63,20 @@ public:
     Y         = d.Y;
     CAP       = d.CAP;
     data      = d.data;
-    arguments = d.arguments == (RefsArray) NULL ?
-		      (RefsArray) NULL : copyRefsArray(d.arguments);
+    arity     = d.arity;
+    if (d.arity > 0) {
+      arguments = (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * d.arity);
+      for (int i=d.arity; i--; )
+	arguments[i] = d.arguments[i];
+    } else {
+      arguments = (TaggedRef *) NULL;
+    }
   }
 
   void setSingleArgument(TaggedRef x) {
-    arguments = allocateRefsArray(2,NO);
+    arity        = 0;
+    arguments    = (TaggedRef *) freeListMalloc(sizeof(TaggedRef));
     arguments[0] = x;
-    arguments[1] = makeTaggedNULL();
   }
 
   // providing a frameId means that the variable names of the
@@ -81,10 +89,9 @@ public:
 
   OzDebug *gcOzDebug();
 
-  void dispose() 
-  {
-    if (arguments != (RefsArray) NULL)
-      disposeRefsArray(arguments);
+  void dispose() {
+    if (arity > 0)
+      freeListDispose(arguments, arity * sizeof(TaggedRef));
     freeListDispose(this,sizeof(OzDebug));
   }
 };
