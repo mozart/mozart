@@ -51,7 +51,7 @@
 (defvar oz-gnu-emacs
   (string-match "\\`[0-9]+\\(\\.[0-9]+\\)*\\'" emacs-version))
 (defvar oz-lucid-emacs
-  (string-match "\\<Lucid\\>" emacs-version))
+  (string-match "\\<XEmacs\\>\\|\\<Lucid\\>" emacs-version))
 
 
 ;;------------------------------------------------------------
@@ -361,7 +361,7 @@ Positions are returned as a pair ( START . END )."
 (defvar oz-menu
  '(("Oz" nil
     ("Feed Buffer"    oz-feed-buffer t)
-    ("Feed Region"    oz-feed-region (mark))
+    ("Feed Region"    oz-feed-region (mark t))
     ("Feed Line"      oz-feed-line t)
     ("Feed Paragraph" oz-feed-paragraph t)
     ("Feed File"      oz-feed-file t)
@@ -373,32 +373,32 @@ Positions are returned as a pair ( START . END )."
      ("Modules File"       oz-find-modules-file t)
      )
     ("Print" nil
-     ("Region" ps-print-region-with-faces (mark))
+     ("Region" ps-print-region-with-faces (mark t))
      ("Buffer" ps-print-buffer-with-faces t)
      )
     ("Core Syntax" nil
      ("Buffer"    oz-to-coresyntax-buffer t)
-     ("Region"    oz-to-coresyntax-region (mark))
+     ("Region"    oz-to-coresyntax-region (mark t))
      ("Line"      oz-to-coresyntax-line t)
      ("Paragraph" oz-to-coresyntax-paragraph t)
      )
     ("Emulator Code" nil
      ("Buffer"    oz-to-emulatorcode-buffer t)
-     ("Region"    oz-to-emulatorcode-region (mark))
+     ("Region"    oz-to-emulatorcode-region (mark t))
      ("Line"      oz-to-emulatorcode-line t)
      ("Paragraph" oz-to-emulatorcode-paragraph t)
      )
     ("Indent" nil
      ("Line"      oz-indent-line t)
-     ("Region"    oz-indent-region (mark))
+     ("Region"    oz-indent-region (mark t))
      ("Buffer"    oz-indent-buffer t)
      )
     ("Comment" nil
-     ("Comment Region"   oz-comment-region (mark))
-     ("Uncomment Region" oz-uncomment-region (mark))
+     ("Comment Region"   oz-comment-region (mark t))
+     ("Uncomment Region" oz-uncomment-region (mark t))
      )
     ("Browse" nil
-     ("Region" oz-feed-region-browse (mark))
+     ("Region" oz-feed-region-browse (mark t))
      ("Line"   oz-feed-line-browse t)
      )
     ("Panel"          oz-view-panel t)
@@ -749,7 +749,7 @@ Can be selected by \\[oz-other-compiler]."
   "Switch between global and local Oz Emulator or Oz Compiler boot file.
 If SET-COMPILER is non-nil, switch the compiler boot file (via
 \\[oz-other-emulator]); if it is nil, switch the emulator binary
-(via \\[oz-other-compiler])."
+\(via \\[oz-other-compiler])."
   (interactive "P")
   (if set-compiler
       (oz-other-compiler)
@@ -837,7 +837,7 @@ the gdb commands `cd DIR' and `directory'."
 ;;------------------------------------------------------------
 
 (defun oz-zmacs-stuff ()
-  (if oz-lucid-emacs (setq zmacs-region-stays t)))
+  (if (boundp 'zmacs-region-stays) (setq zmacs-region-stays t)))
 
 (defun oz-feed-buffer ()
   "Feed the current buffer to the Oz Compiler."
@@ -1803,14 +1803,14 @@ The first subexpression matches the keyword proper (for fontification).")
 	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches the definition's identifier
-(if it is a variable) and is used for fontification.")
+\(if it is a variable) and is used for fontification.")
 
 (defconst oz-class-matcher
   (concat "\\<class\\([ \t]+\\|[ \t]*!\\)"
 	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching class definitions.
 The second subexpression matches the definition's identifier
-(if it is a variable) and is used for fontification.")
+\(if it is a variable) and is used for fontification.")
 
 (defconst oz-meth-matcher
   (concat "\\<meth\\([ \t]+\\|[ \t]*!\\)"
@@ -1969,14 +1969,14 @@ The first subexpression matches the keyword proper (for fontification).")
 	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching parser or scanner definitions.
 The second subexpression matches the definition's identifier
-(if it is a variable) and is used for fontification.")
+\(if it is a variable) and is used for fontification.")
 
 (defconst oz-gump-lex-matcher
   (concat "\\<lex[ \t]+"
 	  "\\([a-z][A-Za-z0-9_]*\\|'[^'\n]*'\\)[ \t]*=")
   "Regular expression matching lexical abbreviation definitions.
 The first subexpression matches the definition's identifier
-(if it is an atom) and is used for fontification.")
+\(if it is an atom) and is used for fontification.")
 
 (defconst oz-gump-syn-matcher
   (concat "\\<syn[ \t]+"
@@ -2362,7 +2362,8 @@ If it is, then remove it."
 	      ((string-match "\\.ozm$" file-2)
 	       (save-excursion
 		 (set-buffer buf)
-		 (ozm-mode))))))))
+		 (ozm-mode)))))))
+  (oz-zmacs-stuff))
 
 (defun oz-feed-region-browse (start end)
   "Feed the current region to the Oz Compiler.
@@ -2370,7 +2371,8 @@ Assuming it to contain an expression, it is enclosed by an application
 of the procedure Browse."
   (interactive "r")
   (let ((contents (oz-get-region start end)))
-    (oz-send-string (concat "{Browse\n" contents "}"))))
+    (oz-send-string (concat "{Browse\n" contents "}")))
+  (oz-zmacs-stuff))
 
 (defun oz-feed-line-browse (arg)
   "Feed the current line to the Oz Compiler.
