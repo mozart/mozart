@@ -1126,8 +1126,21 @@ fi
   
   
   
+  echo $ac_n "checking for oz version""... $ac_c" 1>&6
+echo "configure:1131: checking for oz version" >&5
+if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+    oz_cv_ozversion=`sh $SRCTOP/OZVERSION`
+fi
+
+echo "$ac_t""$oz_cv_ozversion" 1>&6
+  OZVERSION=$oz_cv_ozversion;
+  
+  
   echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1131: checking for build date" >&5
+echo "configure:1144: checking for build date" >&5
 if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1151,7 +1164,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1155: checking for $ac_word" >&5
+echo "configure:1168: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1204,7 +1217,7 @@ fi
     # Extract the first word of "ozdoc", so it can be a program name with args.
 set dummy ozdoc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1208: checking for $ac_word" >&5
+echo "configure:1221: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZDOC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1250,7 +1263,7 @@ fi
 
 
 echo $ac_n "checking for --with-psgml-dir""... $ac_c" 1>&6
-echo "configure:1254: checking for --with-psgml-dir" >&5
+echo "configure:1267: checking for --with-psgml-dir" >&5
 # Check whether --with-psgml-dir or --without-psgml-dir was given.
 if test "${with_psgml_dir+set}" = set; then
   withval="$with_psgml_dir"
@@ -1271,7 +1284,7 @@ fi
 
 
 echo $ac_n "checking for --with-java-bin""... $ac_c" 1>&6
-echo "configure:1275: checking for --with-java-bin" >&5
+echo "configure:1288: checking for --with-java-bin" >&5
 # Check whether --with-java or --without-java was given.
 if test "${with_java+set}" = set; then
   withval="$with_java"
@@ -1289,7 +1302,7 @@ JAVA_BIN=${oz_java_bin}
 
 
 echo $ac_n "checking for --with-java-threads""... $ac_c" 1>&6
-echo "configure:1293: checking for --with-java-threads" >&5
+echo "configure:1306: checking for --with-java-threads" >&5
 # Check whether --with-java-threads or --without-java-threads was given.
 if test "${with_java_threads+set}" = set; then
   withval="$with_java_threads"
@@ -1302,7 +1315,7 @@ JAVA_THREADS=${oz_java_threads}
 
 
 echo $ac_n "checking for --with-documents""... $ac_c" 1>&6
-echo "configure:1306: checking for --with-documents" >&5
+echo "configure:1319: checking for --with-documents" >&5
 # Check whether --with-documents or --without-documents was given.
 if test "${with_documents+set}" = set; then
   withval="$with_documents"
@@ -1433,7 +1446,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile macro/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1483,6 +1496,7 @@ s%@HOMEURL@%$HOMEURL%g
 s%@HOMECACHE@%$HOMECACHE%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZTOOL@%$OZTOOL%g
+s%@OZVERSION@%$OZVERSION%g
 s%@OZBUILDDATE@%$OZBUILDDATE%g
 s%@PLATFORM@%$PLATFORM%g
 s%@OZENGINE@%$OZENGINE%g
@@ -1534,7 +1548,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile macro/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
