@@ -873,6 +873,7 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     Assert(from->isRef());
     mkRef(from->getRef(),from->getFlags());
   }
+  uOB.credit = from->getCredit();
   netaddr.set(from->netaddr.site,from->netaddr.index);
 }
 

@@ -727,6 +727,9 @@ public:
   void giveBackCredit(Credit c);
   void moreCredit();
 
+  int getCredit(){
+    return uOB.credit;}
+
   void receiveCredit(){
     if(creditSiteIn==NULL){
       addPrimaryCredit(1);
