@@ -32,7 +32,7 @@
 //-----------------------------------------------------------------------------
 
 //#define DEBUG_CONSTRAINT_IR
-//#ifdef DEBUG_CONSTRAINT_IR
+#ifdef DEBUG_CONSTRAINT_IR
 //#define DEBUG_FD_CONSTRREP
 #define DEBUG_FD
 #define DEBUG_FSET
