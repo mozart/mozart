@@ -141,7 +141,7 @@ local
 	     elsecase {IsObject Value} then 'Object'
 	     elsecase {IsPort Value} then 'Port'
 	     elsecase {IsLock Value} then 'Lock'
-	     elsecase {IsPromise Value} then 'Promise'
+	     elsecase {Promise.is Value} then 'Promise'
 	     elsecase {IsChunk Value} then 'Chunk'
 	     elsecase {IsThread Value} then 'Thread'
 	     elsecase {IsSpace Value} then 'Space'
