@@ -3111,8 +3111,17 @@ Case(GETVOID)
     }
 
   Case(CALLPROCEDUREREF)
-      OZ_error("CALLPROCEDUREREF not yet implemented");
-      return T_ERROR;
+    {
+      AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
+      Bool tailcall           =  getPosIntArg(PC+2) & 1;
+
+      if (entry->getAbstr() == 0) {
+        (void) oz_raise(E_ERROR,E_SYSTEM,"inconsistentFastcall",0);
+        RAISE_THREAD;
+      }
+      CodeArea::writeOpcode(tailcall ? FASTTAILCALL : FASTCALL, PC);
+      DISPATCH(0);
+    }
 
   Case(GENFASTCALL)
     {
@@ -3128,8 +3137,34 @@ Case(GETVOID)
     }
 
   Case(CALLCONSTANT)
-      OZ_error("CALLCONSTANT not yet implemented");
-      return T_ERROR;
+    {
+      TaggedRef pred = getTaggedArg(PC+1);
+      int tailcallAndArity  = getPosIntArg(PC+2);
+
+      DEREF(pred,predPtr,_1);
+      if (oz_isVariable(pred)) {
+        SUSP_PC(predPtr,PC);
+      }
+
+      if (oz_isAbstraction(pred)) {
+        CodeArea *code = CodeArea::findBlock(PC);
+        code->unprotect((TaggedRef*)(PC+1));
+        AbstractionEntry *entry = new AbstractionEntry(NO);
+        entry->setPred(tagged2Abstraction(pred));
+        CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);
+        code->writeAbstractionEntry(entry, PC+1);
+        DISPATCH(0);
+      }
+      if (oz_isBuiltin(pred) || oz_isObject(pred)) {
+        isTailCall = tailcallAndArity & 1;
+        if (!isTailCall) PC += 3;
+        predArity = tailcallAndArity >> 1;
+        predicate = tagged2Const(pred);
+        goto LBLcall;
+      }
+      RAISE_APPLY(pred,oz_mklist(OZ_atom("proc or builtin expected.")));
+    }
+
   Case(MARSHALLEDFASTCALL)
     {
       TaggedRef pred = getTaggedArg(PC+1);
@@ -3160,8 +3195,34 @@ Case(GETVOID)
     }
 
   Case(CALLGLOBAL)
-      OZ_error("CALLGLOBAL not yet implemented");
-      return T_ERROR;
+    {
+      TaggedRef pred = Greg(getRegArg(PC+1));
+      int tailcallAndArity  = getPosIntArg(PC+2);
+      Bool tailCall = tailcallAndArity & 1;
+      int arity     = tailcallAndArity >> 1;
+
+      DEREF(pred,predPtr,_1);
+      if (oz_isVariable(pred)) {
+        SUSP_PC(predPtr,PC);
+      }
+
+      if(oz_isAbstraction(pred)) {
+        Abstraction *abstr = tagged2Abstraction(pred);
+        if (abstr->getArity() == arity) {
+          AbstractionEntry *entry = new AbstractionEntry(NO);
+          entry->setPred(abstr);
+          CodeArea *code = CodeArea::findBlock(PC);
+          code->writeAbstractionEntry(entry, PC+1);
+          CodeArea::writeOpcode(tailCall ? FASTTAILCALL : FASTCALL, PC);
+          DISPATCH(0);
+        }
+      }
+
+      CodeArea::writeArity(arity, PC+2);
+      CodeArea::writeOpcode(tailCall ? TAILCALLG : CALLG,PC);
+      DISPATCH(0);
+    }
+
   Case(CALLMETHOD)
       OZ_error("CALLMETHOD not yet implemented");
       return T_ERROR;
