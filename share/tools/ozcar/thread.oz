@@ -75,6 +75,10 @@ in
 	    {ReadLoop self.Stream}
 	 end
       end
+
+      meth getThreadDic($)
+	 self.ThreadDic
+      end
       
       meth readStreamMessage(M)
 	 case {Label M}
