@@ -313,11 +313,11 @@ OZ_Term OZ_makeHeapChunk(int s)
   return makeTaggedConst(hc);
 }
 
-#define NotHeapChunkWarning(T, F, R)                                          \
-if (! OZ_isHeapChunk(T)) {                                                    \
-  OZ_warning("Heap chunk expected in %s. Got 0x%x. Result undetermined.\n",   \
-             #F, T);                                                          \
-  return R;                                                                   \
+#define NotHeapChunkWarning(T, F, R)                                        \
+if (! OZ_isHeapChunk(T)) {                                                  \
+  OZ_warning("Heap chunk expected in %s. Got 0x%x. Result undetermined.\n", \
+             #F, T);                                                        \
+  return R;                                                                 \
 }
 
 int OZ_getHeapChunkSize(TaggedRef t)

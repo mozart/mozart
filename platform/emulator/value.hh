@@ -578,15 +578,19 @@ public:
   ConstTerm *gcConstTerm(void);
   void gcConstRecurse(void);
 
-  void setTagged(TypeOfConst t, void *p) { ctu.tagged = makeTaggedRef((TypeOfTerm)t,p); }
-  ConstTerm(TypeOfConst t)     { setTagged(t,NULL); }
-  TypeOfConst getType() { return (TypeOfConst) tagTypeOf(ctu.tagged); }
+  void setTagged(TypeOfConst t, void *p) {
+    ctu.tagged = makeTaggedRef((TypeOfTerm)t,p);
+  }
+  ConstTerm(TypeOfConst t)  { setTagged(t,NULL); }
+  TypeOfConst getType()     { return (TypeOfConst) tagTypeOf(ctu.tagged); }
   //  TypeOfConst typeOf()  { return getType(); }
   char *getPrintName();
   int getArity();
-  void *getPtr()        { return isNullPtr(ctu.tagged) ? NULL : tagValueOf(ctu.tagged); }
+  void *getPtr() {
+    return isNullPtr(ctu.tagged) ? NULL : tagValueOf(ctu.tagged);
+  }
   void setPtr(void *p)  { setTagged(getType(),p); }
-  TaggedRef *getRef(){return &ctu.tagged;}
+  TaggedRef *getRef()   { return &ctu.tagged; }
 
   OZPRINT;
   OZPRINTLONG;
@@ -610,39 +614,22 @@ public:
 
 
 class Tertiary: public ConstTerm {
-  int32 tagged;
+  TaggedPtr tagged;
 public:
 
-  TertType getTertType()       { return (TertType) (tagged&3); }
-  void setTertType(TertType t) { tagged = (tagged&~3)|(int)t; }
+  TertType getTertType()       { return (TertType) tagged.getType(); }
+  void setTertType(TertType t) { tagged.setType((int) t); }
 
   Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
-    tagged = 0;
     setTertType(t);
     setBoard(b);
   }
 
-  void setIndex(int i) {
-    TertType oldtype = getTertType();
-    tagged = i<<2;
-    setTertType(oldtype);
-  }
+  void setIndex(int i) { tagged.setIndex(i); }
+  int getIndex() { return tagged.getIndex(); }
+  void setPointer (void *p) { Assert(isLocal()); tagged.setPtr(p); }
+  void *getPointer() { Assert(isLocal()); return tagged.getPtr(); }
 
-  int getIndex() { return tagged>>2; }
-
-  void setPointer (void *p)
-  {
-    Assert(isLocal());
-    TertType oldtype = getTertType();
-    tagged = ToInt32(p);
-    setTertType(oldtype);
-  }
-
-  void *getPointer()
-  {
-    Assert(isLocal());
-    return ToPointer(tagged&~3);
-  }
   Bool checkTertiary(TypeOfConst s,TertType t){
     return (s==getType() && t==getTertType());}
 

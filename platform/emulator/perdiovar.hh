@@ -20,10 +20,27 @@
 #include "genvar.hh"
 #include "oz.h"
 
-class PerdioVar: public GenCVariable {
+enum PV_TYPES {
+  PV_MANAGER,
+  PV_PROXY
+};
 
+class PerdioVar: public GenCVariable {
+  TaggedPtr tagged;
 public:
-  PerdioVar(TaggedRef v) : GenCVariable(PerdioVariable) {}
+  PerdioVar() : GenCVariable(PerdioVariable) {
+    tagged.setType(PV_MANAGER);
+  }
+
+  PerdioVar(int i) : GenCVariable(PerdioVariable) {
+    tagged.setType(PV_PROXY);
+    tagged.setIndex(i);
+  }
+
+  Bool isManager() { return tagged.getType()==PV_MANAGER; }
+  Bool isProxy() { return !isManager(); }
+  int getIndex() { return tagged.getIndex(); }
+  void setIndex(int i) { tagged.setIndex(i); }
 
   Bool valid(TaggedRef *varPtr, TaggedRef v);
 
@@ -31,7 +48,6 @@ public:
 
 
   Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop);
-  void bindPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr);
 
   void gcPerdioVar(void);
 };
@@ -43,6 +59,10 @@ Bool isPerdioVar(TaggedRef term)
   return isCVar(term) && (tagged2CVar(term)->getType() == PerdioVariable);
 }
 
-void handleAsk(TaggedRef *dvar, TaggedRef other = makeTaggedNULL());
+inline
+PerdioVar *tagged2PerdioVar(TaggedRef t) {
+  Assert(isPerdioVar(t));
+  return (PerdioVar *) tagged2CVar(t);
+}
 
 #endif

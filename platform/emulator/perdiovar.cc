@@ -16,33 +16,73 @@
 #include "am.hh"
 #include "genvar.hh"
 
-void handleAsk(TaggedRef *pvar, TaggedRef other)
-{
-  Assert(isPerdioVar(*pvar));
-
-  RefsArray args=allocateRefsArray(2,NO);
-  args[0] = makeTaggedRef(pvar);
-  if (other==makeTaggedNULL()) {
-    args[1] = OZ_atom("ask");
-  } else {
-    DEREF(other,otherPtr,_1);
-    if (isPerdioVar(other)) {
-      args[1] = OZ_mkTupleC("askUnify",1,makeTaggedRef(otherPtr));
-    } else {
-      args[1] = OZ_atom("ask");
-    }
-  }
-}
-
 Bool PerdioVar::unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop)
 {
+  warning("unifyPerdioVar: only does local unification: no protocol yet");
+
+  TaggedRef t = *tptr;
+  TaggedRef v = *vptr;
+
+  Assert(! isNotCVar(t));
+
+  if (isCVar(t)) {
+    if (tagged2CVar(t)->getType() != getType()) {
+      warning("PerdioVAR = other CVAR: not implemented");
+      return FALSE;
+    }
+    if (prop) {
+      am.checkSuspensionList(v,pc_std_unif);
+      am.checkSuspensionList(t,pc_std_unif);
+    }
+
+    PerdioVar *term = tagged2PerdioVar(t);
+
+    Bool v_is_local = (prop && am.isLocalSVar(this));
+    Bool t_is_local = (prop && am.isLocalSVar(term));
+    switch (v_is_local + 2 * t_is_local) {
+    case TRUE + 2 * TRUE: // v and t are local
+      if (heapNewer(vptr, tptr)) { // bind v to t
+        relinkSuspListTo(term);
+        doBind(vptr, makeTaggedRef(tptr));
+      } else { // bind t to v
+        term->relinkSuspListTo(this);
+        doBind(tptr, makeTaggedRef(vptr));
+      }
+      return TRUE;
+
+    case TRUE + 2 * FALSE: // v is local and t is global
+      am.doBindAndTrail(t, tptr,makeTaggedRef(vptr));
+      return TRUE;
+
+    case FALSE + 2 * TRUE: // v is global and t is local
+      am.doBindAndTrail(v, vptr,makeTaggedRef(tptr));
+      return TRUE;
+
+    case FALSE + 2 * FALSE: // v and t is global
+      am.doBindAndTrail(v, vptr,makeTaggedRef(tptr));
+      return TRUE;
+
+    default:
+      Assert(0);
+      return FALSE;
+      break;
+    }
+  } else {
+    Assert(!isAnyVar(t));
+    if (prop && am.isLocalSVar(this)) {
+      doBind(vptr,t);
+      return TRUE;
+    } else {
+      if (prop) am.checkSuspensionList(v,pc_std_unif);
+      am.doBindAndTrail(v, vptr,t);
+      return TRUE;
+    }
+  }
 }
 
 Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 {
   Assert(!isRef(v) && !isAnyVar(v));
-
-  handleAsk(varPtr);
 
   return TRUE;
 }

@@ -375,7 +375,7 @@ void *gcRealloc(void *ptr, size_t sz)
 inline
 TaggedRef makeTaggedRefToFromSpace(TaggedRef *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
 /*  DebugGCT(extern MemChunks * from);
   DebugGC(gcing == 0 && !from->inChunkChain ((void *)s),
           error ("making TaggedRef pointing to 'to' space"));
@@ -1340,7 +1340,7 @@ void AVar::gcAVar(void)
 void PerdioVar::gcPerdioVar(void)
 {
   GCMETHMSG("PerdioVar::gc");
-  error("not impl");
+  // nothing todo
 }
 
 DynamicTable* DynamicTable::gc(void)
@@ -1995,7 +1995,7 @@ void ConstTerm::gcConstRecurse()
 
   case Co_Port:
     {
-      Port *p = (Port*) p;
+      Port *p = (Port*) this;
       p->gcTertiary();
       if (!p->isProxy()) {
         PortWithStream *pws = (PortWithStream *) this;

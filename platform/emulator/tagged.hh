@@ -165,8 +165,8 @@ void tagged2Stream(TaggedRef, ostream & = cout, int = 10,int = 0);
 #define CHECK_NONVAR(term) Assert(isRef(term) || !isAnyVar(term))
 #define CHECK_ISVAR(term)  Assert(isAnyVar(term))
 #define CHECK_DEREF(term)  Assert(!isRef(term) && !isAnyVar(term))
-#define CHECK_POINTER(s)   Assert(s != NULL && !(ToInt32(s) & 3) )
-#define CHECK_POINTERLSB(s)   Assert(!(ToInt32(s) & 3) )
+#define CHECK_POINTER(s)   Assert(!(ToInt32(s) & 3))
+#define CHECK_POINTER_N(s)  Assert(s != NULL && !(ToInt32(s) & 3))
 #define CHECK_STRPTR(s)    Assert(s != NULL)
 #define CHECKTAG(Tag)      Assert(tagTypeOf(ref) == Tag)
 
@@ -415,7 +415,7 @@ TaggedRef makeTaggedMisc(int32 s)
 inline
 TaggedRef makeTaggedRef(TaggedRef *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   DebugGC(gcing == 0 && !MemChunks::list->inChunkChain ((void *)s),
           error ("making TaggedRef pointing to 'from' space"));
   return (TaggedRef) ToInt32(s);
@@ -424,41 +424,41 @@ TaggedRef makeTaggedRef(TaggedRef *s)
 inline
 TaggedRef makeTaggedUVar(Board *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(UVAR,s);
 }
 
 inline
 TaggedRef makeTaggedSVar(SVariable *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(SVAR,s);
 }
 
 inline
 TaggedRef makeTaggedCVar(GenCVariable *s) {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(CVAR, s);
 }
 
 inline
 TaggedRef makeTaggedFSetValue(FSetValue * s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(FSETVALUE, s);
 }
 
 inline
 TaggedRef makeTaggedLTuple(LTuple *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(LTUPLE,s);
 }
 
 inline
 TaggedRef makeTaggedSRecord(SRecord *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(SRECORD,s);
 }
 
@@ -466,7 +466,7 @@ TaggedRef makeTaggedSRecord(SRecord *s)
 inline
 TaggedRef makeTaggedLiteral(Literal *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(LITERAL,s);
 }
 
@@ -500,14 +500,14 @@ TaggedRef makeTaggedSmallInt(int32 s)
 inline
 TaggedRef makeTaggedBigInt(BigInt *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(BIGINT,s);
 }
 
 inline
 TaggedRef makeTaggedFloat(Float *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(OZFLOAT,s);
 }
 
@@ -515,14 +515,14 @@ TaggedRef makeTaggedFloat(Float *s)
 inline
 TaggedRef makeTaggedConst(ConstTerm *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(OZCONST,s);
 }
 
 inline
 TaggedRef makeTaggedTert(Tertiary *s)
 {
-  CHECK_POINTER(s);
+  CHECK_POINTER_N(s);
   return makeTaggedRef(OZCONST,s);
 }
 
@@ -793,6 +793,12 @@ void doBind(TaggedRef *p, TaggedRef t)
 }
 
 inline
+void doBindCVar(TaggedRef *p, GenCVariable *cvar)
+{
+  *p = makeTaggedCVar(cvar);
+}
+
+inline
 void unBind(TaggedRef *p, TaggedRef t)
 {
   Assert(isAnyVar(t));
@@ -1003,5 +1009,35 @@ inline
 OZ_Term mkTuple(int from, int to) {
   return OZ_pair2(OZ_int(from), OZ_int(to));
 }
+
+
+/*
+ * using 32 bit for pointer + 2 tag bits
+ */
+class TaggedPtr {
+  int32 tagged;
+public:
+  TaggedPtr()         { tagged = 0; }
+  int *getRef()       { return &tagged; }
+  int getType()       { return (tagged&3); }
+  void setType(int t) { Assert(t >=0 && t <=3); tagged = (tagged&~3)|t; }
+  int getIndex()      { return tagged>>2; }
+  void *getPtr()      { return ToPointer(tagged&~3); }
+
+  void setIndex(int i) {
+    Assert(i>=0 && i < 1<<30);
+    int oldtype = getType();
+    tagged = i<<2;
+    setType(oldtype);
+  }
+
+  void setPtr(void *p) {
+    CHECK_POINTER(p);
+    int oldtype = getType();
+    tagged = ToInt32(p);
+    setType(oldtype);
+  }
+
+};
 
 #endif
