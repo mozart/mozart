@@ -3,12 +3,8 @@
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 %%%
-%%% Contributor:
-%%%   Christian Schulte <schulte@dfki.de>
-%%%
 %%% Copyright:
 %%%   Leif Kornstaedt and Benjamin Lorenz, 1997-1998
-%%%   Christian Schulte, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -144,7 +140,6 @@ define
 	    lastFile: unit lastLine: unit lastColumn: unit
 	 meth init(CompilerObject Host <= unit Print <= System.printInfo)
 	    lock Sock Port in
-	       Listener.'class', init(CompilerObject Serve)
 	       thread
 		  Sock = {New TextSocket server(port: ?Port)}
 	       end
@@ -153,6 +148,7 @@ define
 	       {Print '\'oz-socket '#case Host of unit then ""
 				     else '"'#Host#'" '
 				     end#Port#'\''}
+	       Listener.'class', init(CompilerObject Serve)
 	    end
 	 end
 	 meth close()
