@@ -446,7 +446,7 @@ public:
 
 
   // Returns the old value, or '0' if key was not found;
-  OZ_Term htExchange(OZ_Term key, OZ_Term value) {
+  OZ_Term htExchange(OZ_Term key, OZ_Term value, bool createFlag) {
     Assert(value != (OZ_Term) 0);
     //
     DictNode *np = &table[hash(featureHash(key))];
@@ -454,17 +454,19 @@ public:
 
     //
     if (np->isEmpty()) {
-      np->set(key, value);
-      Assert(!np->isEmpty());
+      if (createFlag) {
+	np->set(key, value);
+	Assert(!np->isEmpty());
 
-      //
-      Assert(entries >= 0);
-      entries++;
-      // slots++;
-      if (entries > maxEntries /* || slots > maxSlots */ )
-	resize();
-      //
-      Assert(htFind(key));
+	//
+	Assert(entries >= 0);
+	entries++;
+	// slots++;
+	if (entries > maxEntries /* || slots > maxSlots */ )
+	  resize();
+	//
+	Assert(htFind(key));
+      }
       return ((OZ_Term) 0);
 
       //
@@ -479,21 +481,23 @@ public:
 
 	  //
 	} else {
-	  // a new colision;
-	  DictNode *newA =
-	    (DictNode *) oz_heapMalloc(2 * sizeof(DictNode));
-	  (void) new (newA) DictNode(*np);
-	  np->setSPtr(newA++);
-	  (void) new (newA++) DictNode(key, value);
-	  np->setEPtr(newA);
+	  if (createFlag) {
+	    // a new colision;
+	    DictNode *newA =
+	      (DictNode *) oz_heapMalloc(2 * sizeof(DictNode));
+	    (void) new (newA) DictNode(*np);
+	    np->setSPtr(newA++);
+	    (void) new (newA++) DictNode(key, value);
+	    np->setEPtr(newA);
 
-	  //
-	  Assert(entries >= 0);
-	  entries++;
-	  if (entries > maxEntries)
-	    resize();
-	  //
-	  Assert(htFind(key));
+	    //
+	    Assert(entries >= 0);
+	    entries++;
+	    if (entries > maxEntries)
+	      resize();
+	    //
+	    Assert(htFind(key));
+	  }
 	  return ((OZ_Term) 0);
 	}
 
@@ -513,28 +517,30 @@ public:
 	  sptr++;
 	} while (sptr < eptr);
 
-	// not found - add another one;
-	sptr = np->getDictNodeSPtr();
-	DictNode *newA = 
-	  (DictNode *) oz_heapMalloc((((char *) eptr) - ((char *) sptr)) +
-				     sizeof(DictNode));
-	//
-	np->setSPtr(newA);
-	// at least two elements are copied;
-	(void) new (newA++) DictNode(*sptr++);
-	do {
+	if (createFlag) {
+	  // not found - add another one;
+	  sptr = np->getDictNodeSPtr();
+	  DictNode *newA = 
+	    (DictNode *) oz_heapMalloc((((char *) eptr) - ((char *) sptr)) +
+				       sizeof(DictNode));
+	  //
+	  np->setSPtr(newA);
+	  // at least two elements are copied;
 	  (void) new (newA++) DictNode(*sptr++);
-	} while (sptr < eptr);
-	(void) new (newA++) DictNode(key, value);
-	np->setEPtr(newA);
+	  do {
+	    (void) new (newA++) DictNode(*sptr++);
+	  } while (sptr < eptr);
+	  (void) new (newA++) DictNode(key, value);
+	  np->setEPtr(newA);
 
-	//
-	Assert(entries >= 0);
-	entries++;
-	if (entries > maxEntries)
-	  resize();
-	//
-	Assert(htFind(key));
+	  //
+	  Assert(entries >= 0);
+	  entries++;
+	  if (entries > maxEntries)
+	    resize();
+	  //
+	  Assert(htFind(key));
+	}
 	return ((OZ_Term) 0);
       }
     }
@@ -671,21 +677,10 @@ public:
     table->htAdd(key, value);
   }
 
-  // kost@ : used anywhere ?
-  void exchange(OZ_Term key, OZ_Term new_val, OZ_Term *old_val) { 
-    *old_val = table->htExchange(key, new_val);
-  }
-
-  // For Dictionary.[cond]Exchange we don't want to add a new element 
-  // if the key isn't preexisting, instead return FAILED.
-  OZ_Return exchangeExisting(OZ_Term key,
-			     OZ_Term new_val, OZ_Term& old_val) {
-    if ((old_val = table->htFind(key)) == (OZ_Term) 0) {
-      return FAILED;
-    } else {
-      setArg(key, new_val);
-      return PROCEED;
-    }
+  // createFlag indicates whether the entry should be created if it
+  // does not already exist
+  bool exchange(OZ_Term key, OZ_Term new_val, OZ_Term& old_val, bool createFlag) {
+    return ((old_val = table->htExchange(key, new_val, createFlag))!=0);
   }
 
   void remove(OZ_Term key) { table->htDel(key); }
