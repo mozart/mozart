@@ -41,7 +41,7 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 
-#include "../include/config.h"
+#include "config.h"
 #include "oz.h"
 #include "types.hh"
 #include "error.hh"
