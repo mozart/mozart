@@ -34,9 +34,9 @@
 #define cerr ozcerr
 
 class ozostream {
-  FILE *fd;
+  int fd;
 public:
-  ozostream(FILE *f) { fd=f;}
+  ozostream(int f) { fd=f;}
   virtual ozostream &operator << (const char *s);
   virtual ozostream &operator << (char c); 
 
@@ -47,9 +47,9 @@ public:
   virtual ozostream &operator<<(ozostream& (*func)(ozostream&)) { 
     return (*func)(*this); }
 
-  virtual ozostream &flush() { fflush(fd); return (*this); }
-  ozostream &ends() { return (*this) << '\0'; }
-  ozostream &endl() { return (*this) << "\n"; }
+  ozostream &flush() { return (*this); }
+  ozostream &ends()  { return (*this) << '\0'; }
+  ozostream &endl()  { return (*this) << "\n"; }
 
   ozostream &operator << (unsigned char c) { return (*this) << (char) c; }
   ozostream &operator << (unsigned int i)  { return (*this) << (long) i; }
@@ -76,7 +76,7 @@ class ozstrstream: public ozostream {
 public:
   virtual ~ozstrstream() { free(string); }
 
-  ozstrstream() : ozostream(0), size(100), cur(0) {
+  ozstrstream() : ozostream(-1), size(100), cur(0) {
     string = (char*) malloc(size*sizeof(char));
   }
 
@@ -87,7 +87,6 @@ public:
 
   ozostream &operator << (const char *s);
   ozostream &operator << (char c)   { set(c); return (*this); }
-  ozostream &flush() { return (*this); }
   ozostream &operator<<(ozostream& (*func)(ozostream&)) { 
     return (*func)(*this); }
 
