@@ -1346,7 +1346,7 @@ feed that many preceding paragraphs as well as the current paragraph."
 
 (if (memq system-type '(ms-dos windows-nt))
     (defun oz-encode-string (s)
-      (encode-code-string string buffer-file-coding-system))
+      (encode-coding-string string buffer-file-coding-system))
   (defun oz-encode-string (s) s))
 
 (defun oz-send-string (string &optional system)
