@@ -84,4 +84,38 @@
 
   </Section>
 
+  <section class=unnumbered>
+    <title/Implementation/
+    <subsection class=unnumbered id=code.cutting.compute>
+      <title/<file/Compute.oz/</title>
+      <para><title><ref.extern to="Cutting/Compute.oz">Source
+File</ref.extern></title>
+<code.extern display to="Cutting/Compute.oz" proglang=oz></para>
+    </subsection>
+    <subsection class=unnumbered id=code.cutting.configure>
+      <title><file/Configure.oz/</title>
+      <para><title><ref.extern to="Cutting/Configure.oz">Source
+File</ref.extern></title>
+<code.extern display to="Cutting/Configure.oz" proglang=oz></para>
+    </subsection>
+    <subsection class=unnumbered id=code.cutting.edit>
+      <title><file/Edit.oz/</title>
+      <para><title><ref.extern to="Cutting/Edit.oz">Source
+File</ref.extern></title>
+<code.extern display to="Cutting/Edit.oz" proglang=oz></para>
+    </subsection>
+    <subsection class=unnumbered id=code.cutting.main>
+      <title><file/Main.oz/</title>
+      <para><title><ref.extern to="Cutting/Main.oz">Source
+File</ref.extern></title>
+<code.extern display to="Cutting/Main.oz" proglang=oz></para>
+    </subsection>
+    <subsection class=unnumbered id=code.cutting.script>
+      <title><file/Script.oz/</title>
+      <para><title><ref.extern to="Cutting/Script.oz">Source
+File</ref.extern></title>
+<code.extern display to="Cutting/Script.oz" proglang=oz></para>
+    </subsection>
+  </section>
+
 </Chapter>
