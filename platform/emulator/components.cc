@@ -134,7 +134,7 @@ public:
     free(buf);
     checkSum = 0;
 
-    for (int k=0; k<sizeof(crc_t); k++) {
+    for (unsigned int k=0; k<sizeof(crc_t); k++) {
       unsigned char c = 0;
       osread(i,&c,1);
       checkSum |=  c<<(k*8);
