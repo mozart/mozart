@@ -1,5 +1,5 @@
 BUILDTOP	= @BUILDTOP@
-BUILDDIR        = $(BUILDTOP)/share/tools
+BUILDDIR	= $(BUILDTOP)/share/tools
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
@@ -18,19 +18,21 @@ INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_DIR	= @INSTALL_DIR@
 
-COMPRESSLEVEL   = @oz_picklecompression@
-COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
+COMPRESSLEVEL	= @oz_picklecompression@
+COMPRESSFLAGS	= -z $(COMPRESSLEVEL)
 
 OZCFLAGS	= $(COMPRESSFLAGS)
 OZC		= @OZC@
 
-OZLFLAGS        = $(COMPRESSFLAGS)
+OZLFLAGS	= $(COMPRESSFLAGS)
 OZL		= @OZL@
 
 LN_S		= @LN_S@
 
-COMPILE		= $(OZC) $(OZCFLAGS) -c
-LINK            = $(OZL) $(OZLFLAGS)
+COMPILENOMODE	= $(OZC) $(OZCFLAGS)
+COMPILE		= $(COMPILENOMODE) -c
+COMPILEEXEC	= $(COMPILENOMODE) -x
+LINK		= $(OZL) $(OZLFLAGS)
 
 COMPILERPANELSRC1 = \
 	CompilerPanelClass.oz
@@ -134,13 +136,14 @@ IMAGES1 = \
 	browserMIcon.xbm browserIcon.xbm stop.xbm
 IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 
+SYSLETS = ozd
 
 .PHONY: all install bootstrap check depend
 .PHONY: install-main install-images install-cache
 .PHONY: clean veryclean distclean tags
 .PHONY: stage1
 
-all: Makefile $(FUNCTORS)
+all: Makefile $(FUNCTORS) $(SYSLETS)
 
 include $(SRCTOP)/share/Makefile.boot
 
@@ -192,19 +195,33 @@ Inspector.ozf: $(INSPECTOROBJS)
 	$(COMPILE) $< -o $@
 
 #---------------------------------------------------------------------
+# Syslets
+#---------------------------------------------------------------------
+
+ozd: ozcar/ozd.oz
+	$(COMPILEEXEC) $< -o $@
+
+#---------------------------------------------------------------------
 # Installation
 #---------------------------------------------------------------------
+
+BINFILES = \
+	$(SYSLETS:%=$(OZBIN)/%)
 
 install: install-main install-images install-cache
 
 install-main: all \
-	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSFUNCTORS)
+	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSFUNCTORS) \
+	$(OZBIN) $(BINFILES)
 
 install-images: \
 	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES) \
 	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
 
-$(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR) $(INSPECTORIMAGESDIR):
+$(OZTOOLS) $(TOOLSDIRS) $(OZBIN):
+	$(INSTALL_DIR) $@
+
+$(IMAGESDIR) $(OZCARIMAGESDIR) $(INSPECTORIMAGESDIR):
 	$(INSTALL_DIR) $@
 
 $(OZTOOLS)/%.oz: %.oz
@@ -215,6 +232,9 @@ $(OZTOOLS)/%.ozf: %.ozf
 
 $(OZTOOLS)/gump/examples/%: gump/examples/%
 	$(INSTALL_FILE) $< $@
+
+$(OZBIN)/%: %
+	$(INSTALL_BIN) $< $@
 
 $(IMAGESDIR)/%: images/%
 	$(INSTALL_FILE) $< $@
