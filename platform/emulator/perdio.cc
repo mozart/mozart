@@ -585,6 +585,11 @@ GName *newGName(PrTabEntry *pr)
 }
 
 
+GName *copyGName(GName *gn)
+{
+  return new GName(*gn);
+}
+
 PrTabEntry *findCodeGName(GName *gn)
 {
   TaggedRef aux = gnameTable->gnameFind(gn);
@@ -2295,7 +2300,7 @@ loop:
       if (aux) {
 	*ret = aux;
       } else {
-	GName *copy = new GName(gname);
+	GName *copy = copyGName(&gname);
 	if (strcmp("",printname)==0) {
 	  aux = OZ_newName();
 	} else {
@@ -2443,7 +2448,7 @@ loop:
       TaggedRef taggedPP = makeTaggedConst(pp);
       *ret = taggedPP;
 
-      GName *copy = new GName(gname);
+      GName *copy = copyGName(&gname);
       gnameTable->gnameAdd(copy,taggedPP);
       pp->setGName(copy);
 
