@@ -53,9 +53,9 @@ enum TypeOfTerm {
   SMALLINT         =  6,   // 0110
   BIGINT           =  7,   // 0111
   OZFLOAT          = 11    // 1011
-// 12 = 1100 unusable \
-//  8 = 1000 unusable  >  recognized as reference
-//  4 = 0100 unusable /
+// 12 = 1100 unusable |
+//  8 = 1000 unusable |-  recognized as reference
+//  4 = 0100 unusable |
 };
 
 // ---------------------------------------------------------------------------
