@@ -505,7 +505,8 @@ SuspContinuation *SuspContinuation::gcCont()
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_SUSPCONT);
   
-  DebugGC(opMode == IN_TC && (!isLocalBoard(node) || !isInTree(node)),
+  DebugGC(opMode == IN_TC && (!isLocalBoard(node->gcGetBoardDeref ()) ||
+			      !isInTree(node->gcGetBoardDeref ())),
 	  error ("non-local board in TC mode is being copied"));
   
   setHeapCell((int *)&pc, GCMARK(ret));
