@@ -522,14 +522,16 @@ int oskill(int pid, int sig)
 int osSystem(char *cmd)
 {
 #ifdef WINDOWS
-#if 0
+  if (!runningUnderNT())
+    return system(cmd);
+
+
+  // RS: don't know why but NT hangs when I use system(3)
+  // this way however output gets lost
   STARTUPINFO si;
-  ZeroMemory(&si,sizeof(si));
+  memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
-  si.dwFlags = STARTF_USESTDHANDLES;
-  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK;
 
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(sa);
@@ -537,12 +539,12 @@ int osSystem(char *cmd)
   sa.bInheritHandle = TRUE;
 
   PROCESS_INFORMATION pinf;
-  BOOL ret = CreateProcess(NULL,cmd,&sa,NULL,TRUE,
-                           0,NULL,NULL,&si,&pinf);
 
-  return (WaitForSingleObject(pinf.hProcess,INFINITE) == WAIT_FAILED) ? 1:0;
-#endif
-  return system(cmd);
+  BOOL ret = CreateProcess(NULL,cmd,&sa,NULL,FALSE,0,NULL,NULL,&si,&pinf);
+
+  return (ret==FALSE ||
+          WaitForSingleObject(pinf.hProcess,INFINITE) == WAIT_FAILED) ? 1:0;
+
 #else
   if (cmd == NULL) {
     return 1;
