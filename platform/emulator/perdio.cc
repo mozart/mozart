@@ -112,7 +112,6 @@ void cellReceiveForward(OwnerEntry*,int,Site*,int);
 void cellReceiveDump(OwnerEntry*,Site *,int);
 void cellSendRemoteRead(BorrowEntry*,int,Site*,TaggedRef);
 void cellSendDump(CellFrame *);
-void cellDoExchange(Tertiary *,TaggedRef,TaggedRef,Thread*);
 OZ_C_proc_proto(BIapply);
 
 
@@ -125,8 +124,17 @@ OwnerTable *ownerTable;
 extern TaggedRef BI_Unify;
 extern TaggedRef BI_Show;
 
-void SiteUnify(TaggedRef val1,TaggedRef val2){
-Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.rootBoard);
+void SiteUnify(TaggedRef val1,TaggedRef val2)
+{
+  TaggedRef aux1 = val1; DEREF(aux1,_1,_2);
+  TaggedRef aux2 = val2; DEREF(aux2,_3,_4);
+
+  if (isUVar(aux1) || isUVar(aux2)) {
+    // cannot fail --> do it in current thread
+    OZ_unify(val1,val2);
+    return;
+  }
+  Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.rootBoard);
 #ifdef PERDIO_DEBUG
   PD((SITE_OP,"SITE_OP: site unify called"));
   if(DV->on(SITE_OP)){
@@ -139,7 +147,8 @@ Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.rootBoard);
   args[0]=val1;
   args[1]=val2;
   th->pushCall(BI_Unify,args,2);
-  am.scheduleThread(th);}
+  am.scheduleThread(th);
+}
 
 /*
  * Message formats
@@ -1952,9 +1961,18 @@ void Tertiary::globalize()
     Object *o = (Object*) this;
     if (o->getGName()==NULL) {
       o->setGName(newGName(makeTaggedConst(this),GNT_OBJECT));
-      Object *cl = o->getOzClass();
-      if (!o->isClass() && cl->getGName()==NULL) {
-	cl->globalize();
+      if (!o->isClass()) {
+	RecOrCell state = o->getState();
+	Assert(!stateIsCell(state));
+	SRecord *r = getRecord(state);
+	Assert(r!=NULL);
+	Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
+	cell->globalize();
+	o->setState(cell);
+	Object *cl = o->getOzClass();
+	if (cl->getGName()==NULL) {
+	  cl->globalize();
+	}
       }
     }
     break;
@@ -2642,20 +2660,23 @@ void unmarshallObject(Object *o, ByteStream *bs)
 {
   SRecord *feat = unmarshallSRecord(bs);
   o->setFreeRecord(feat);
-  o->setState(unmarshallSRecord(bs));
   o->import();
   if (o->isClass()) {
     TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
     o->getClass()->import(tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
 			  isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
 			  tagged2Dictionary(feat->getFeature(NameOoDefaults)));
+  } else {
+    o->setState(tagged2Tert(unmarshallTerm(bs)));
   }
 }
 
 void marshallObject(Site *sd, Object *o, ByteStream *bs, DebtRec *dr)
 {
   marshallSRecord(sd,o->getFreeRecord(),bs,dr);
-  marshallSRecord(sd,o->getState(),bs,dr);
+  if (!o->isClass()) {
+    marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs,dr);
+  }
 }
 
 void marshallTerm(Site *sd, OZ_Term t, ByteStream *bs, DebtRec *dr)
@@ -2844,7 +2865,7 @@ ObjectClass *getClassFromProxy(TaggedRef c)
 
   Assert(isPerdioVar(c));
   Tertiary *tert = tagged2PerdioVar(c)->getTertiary();
-  Assert(tert->getType()==Co_Object);
+  Assert(isObject(tert));
   return ((Object*)tert)->getClass();
 }
 
@@ -3340,7 +3361,7 @@ void siteReceive(ByteStream* bs)
       case M_GET_OBJECT:
       case M_GET_OBJECTANDCLASS:
 	{
-	  Assert(tert->getType()==Co_Object);
+	  Assert(isObject(tert));
 	  Object *o = (Object*) tert;
 	  marshallObject(rsite,o,bs1,debtRec);
 	  if (mt==M_GET_OBJECTANDCLASS) {
@@ -4158,7 +4179,7 @@ void cellSendDump(CellFrame *cf){
 
 /* --------------------- builtin ------------------------------------- */
 
-inline void e_valid(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
+inline void e_valid(CellFrame *cf,TaggedRef old,TaggedRef nw){
   Assert(cf->getState() & Cell_Valid);
   TaggedRef c=cf->getContents();
   cf->setContents(nw);
@@ -4169,19 +4190,46 @@ inline void e_invalid(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
   cf->setState(Cell_Requested);
   cf->setHead(old);
   cf->setContents(nw);
-  oz_stop(th);
-  PendThread* pt=new PendThread(th,(PendThread*)NULL);
   PD((CELL,"CELL: exchange on INVALID o:%d",cf->getOwnerIndex()));
-  cf->setPending(pt);}
+  if (th) {
+    oz_stop(th);
+    PendThread* pt=new PendThread(th,(PendThread*)NULL);
+    cf->setPending(pt);
+  }
+}
 
 inline void e_req(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
   TaggedRef tr=cf->getContents();
   cf->setContents(nw);
-  oz_stop(th);
-  PendThread* pt=new PendThread(th,cf->getPending());
   PD((CELL,"CELL: exchange on REQUESTED o:%d",cf->getOwnerIndex()));
-  cf->setPending(pt);
-  SiteUnify(tr,old);}
+  if (th) {
+    oz_stop(th);
+    PendThread* pt=new PendThread(th,cf->getPending());
+    cf->setPending(pt);
+    SiteUnify(tr,old);
+  }
+}
+
+TaggedRef cellGetContentsFast(Tertiary *c)
+{
+  switch (c->getTertType()) {
+  case Te_Manager:
+    {
+      if(!((CellManager*)c)->isOwnCurrent())
+	return makeTaggedNULL();
+    }
+  // no break here
+  case Te_Frame:
+    {
+      CellFrame *cf=(CellFrame *)c; 
+      if (cf->getState() & Cell_Valid) {
+	return cf->getContents();
+      }
+      break;
+    }
+  }
+  return makeTaggedNULL();
+}
 
 void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
   TertType tt=c->getTertType();
@@ -4196,14 +4244,12 @@ void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
     tt=Te_Frame;}
 
   if(tt==Te_Manager){             // Manager
-    
     CellManager *cm=(CellManager*)c;
     CellFrame *cf=(CellFrame *)c; 
     if(cm->isOwnCurrent()){       
       if(cf->getState() & Cell_Valid){
 	PD((CELL,"Exchange: manager own current- valid"));
-	Assert(cf->getState() & Cell_Valid);
-	e_valid(cf,old,nw,th);
+	e_valid(cf,old,nw);
 	return;}
       Assert(cf->getState() & Cell_Requested);
       PD((CELL,"Exchange: manager own current -requested"));
@@ -4231,7 +4277,7 @@ void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
   Assert(cf->getTertType()==Te_Frame);
   short state=cf->getState();
   if(state & Cell_Valid){
-    e_valid(cf,old,nw,th);
+    e_valid(cf,old,nw);
     return;}
   if(state & Cell_Requested){
     e_req(cf,old,nw,th);
