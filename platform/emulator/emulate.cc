@@ -2252,8 +2252,10 @@ LBLsuspendThread:
         }
       }
 
-      RAISE_BI(OZ_mkTupleC("proc",4,
-                           OZ_CToAtom("`<-`"),makeTaggedSRecord(rec),fea,XPC(2)));
+      DORAISE(OZ_mkTupleC("assignFailure",1,
+                          OZ_mkTupleC("proc",4,
+                                      OZ_CToAtom("`<-`"),
+                                      makeTaggedSRecord(rec),fea,XPC(2))));
     }
 
   Case(INLINEUPARROW)
