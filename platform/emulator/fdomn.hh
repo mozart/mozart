@@ -17,16 +17,8 @@
 #pragma interface
 #endif
 
-/*
-#include "tagged.hh"
-#include "term.hh"
-#include "bignum.hh"
-*/
-
-
 #include "oz.h"
 
-typedef int Bool;
 class ostream;
 
 
@@ -64,12 +56,12 @@ private:
   FDBitVector * provideBitVector(void) const;
   FDIntervals * provideIntervals(int) const;
   int findSize(void) const;
-  Bool isSingleInterval(void) const;
+  OZ_Boolean isSingleInterval(void) const;
   FDBitVector * asBitVector(void) const;
   FDIntervals * asIntervals(void) const;
 
-  Bool isConsistent(void) const;
-  Bool contains(int i) const;
+  OZ_Boolean isConsistent(void) const;
+  OZ_Boolean contains(int i) const;
 public:
   void dispose(void);
   void FiniteDomainInit(void * d);
@@ -103,10 +95,9 @@ public:
   int maxElem(void) const {return max_elem;}
   int singl(void) const;
    
-  Bool isIn(int i) const;
-  FDPropState checkAgainst(FiniteDomain &dom);
+  OZ_Boolean isIn(int i) const;
   OZ_Term getAsList(void) const;
-  Bool next(int i, int &n) const; 
+  OZ_Boolean next(int i, int &n) const; 
   int nextBiggerElem(int v) const;
   int intersectWithBool(void);
   int constrainBool(void);
@@ -125,10 +116,10 @@ public:
   int operator <= (const int);    
   int operator >= (const int);
 
-  Bool operator == (const FDState) const;
-  Bool operator != (const FDState) const;
-  Bool operator == (const int) const;
-  Bool operator != (const int) const;
+  OZ_Boolean operator == (const FDState) const;
+  OZ_Boolean operator != (const FDState) const;
+  OZ_Boolean operator == (const int) const;
+  OZ_Boolean operator != (const int) const;
 
   void print(ostream &, int = 0) const;
   void printLong(ostream &, int = 0) const;

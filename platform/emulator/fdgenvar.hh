@@ -90,6 +90,8 @@ public:
   void propagate(TaggedRef var, FDPropState state,
 		 PropCaller prop_eq = pc_propagator);  
 
+  void propagateUnify(TaggedRef var);  
+
   int getSuspListLength(void) {
     return suspList->length() +
       fdSuspList[fd_det]->length() + fdSuspList[fd_bounds]->length();
