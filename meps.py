@@ -128,7 +128,7 @@ class Headers(Transform):
                     para[:] = [nodes.reference('', date, refuri=cvs_url)]
             elif name == 'content-type':
                 mep_type = para.astext()
-                uri = self.mep_url % 12
+                uri = self.mep_url % 2
                 para[:] = [nodes.reference('', mep_type, refuri=uri)]
             elif name == 'version' and len(body):
                 utils.clean_rcs_keywords(para, self.rcs_keyword_substitutions)

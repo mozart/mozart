@@ -234,7 +234,7 @@ def fixfile(inpath, input_lines, outfile):
             except ValueError, error:
                 v = date
         elif k.lower() in ('content-type',):
-            url = MEPURL % 9
+            url = MEPURL % 3
             mep_type = v or 'text/plain'
             v = '<a href="%s">%s</a> ' % (url, cgi.escape(mep_type))
         else:
