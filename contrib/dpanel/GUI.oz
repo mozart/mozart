@@ -52,12 +52,13 @@ define
          listbox
          InternalHelpFun1
          entryDict
+         entryTag
       attr
          cy:1
          width:18*8
          height:17*8
          action:proc{$ _} skip end
-         lineSize:12
+         lineSize:14
          nextFree:[0]
 
       meth tkInit(...)=M
@@ -71,20 +72,22 @@ define
                                                bg:white
                                                width:@width
                                                height:@height)}
+         self.entryTag = {New Tk.canvasTag tkInit(parent:self.listbox)}
          {self.listbox tkBind(event:'<1>' args: [ int(y)]
                               action: proc{$  CY}
                                          Y={self.listbox tkReturnInt(canvasy CY $)}
                                          Line
                                          Found
                                       in
-                                         {System.show Y}
                                          Line = (Y -5)  div @lineSize
-                                         Found = {Filter {Dictionary.entries self.entryDict}
+                                         {System.show Line}
+                                         Found = {Filter {Dictionary.items self.entryDict}
                                                           fun{$ E}
                                                              E.line == Line
                                                           end}
+                                         {System.show Found}
                                          case Found of [E] then
-                                            {self Action(E)}
+                                            {self Action(E.key)}
                                          else skip end
                                       end)}
 
@@ -151,12 +154,14 @@ define
 
       meth Draw(Ss)
          DC=self.listbox
+         X0 Y0 X1 Y1
       in
          {ForAll Ss proc{$ X}
                        {DC tk(crea text 5 X.line * @lineSize + 5
-                              text:X.text anchor:nw fill:X.fg tags:X.fgtag)}
+                              text:X.text anchor:nw fill:X.fg tags:q(X.fgtag self.entryTag))}
                     end}
-        % {self.listbox tk(configure scrollregion:q(0 1 1000 ))}
+         % [X0 Y0 X1 Y1]={DC tkReturnListInt(bbox self.entryTag $)}
+         {self.listbox tk(configure scrollregion:q(0 0 1000  Y1 + 5 ))}
       end
 
 
