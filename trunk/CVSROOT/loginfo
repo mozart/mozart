@@ -2,13 +2,14 @@ Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller,popow
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
 Oz/Compiler/frontend	mail -s "I have changed %s" mmueller
 Oz/include	mail -s "I have changed %s" scheidhr,tmueller,popow,henz
-Oz/lib		mail -s "I have changed %s" henz,wuertz,popow
+Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,ibach
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz		/usr/share/gs/etc/cvs2news %s
 Misc/papers/ozam 	mail -s "I have changed %s" mehl scheidhr schulte
 Misc/papers/TypeMemo	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Rolls	mail -s "I have changed %s" niehren mmueller
 Oz		mail -s "I have changed %s" mehl
+loginfo		mail -s "I have changed %s" mehl
 Misc/proposals/perdio	mail -s "I have changed %s" schulte smolka vanroy
 Misc/proposals/sfb	mail -s "I have changed %s" mmueller smolka niehren
 Misc/papers/Oz20        mail -s "I have changed %s" mmueller tmueller
