@@ -1,7 +1,7 @@
 <CHAPTER ID="chapter.failure">
   <TITLE>Handling failure</TITLE>
 
-<P> This chapter first introduces the Mozart failure model:
+<P>This chapter first introduces the Mozart failure model:
 what we assume can go wrong with the system
 and how this is reflected in the language entities.
 We then show how to program with this model.
@@ -18,7 +18,7 @@ the fault-tolerant abstractions.
 
 <SECTION><TITLE>Failure model</TITLE>
 
-<P> The failure model is designed to cover the
+<P>The failure model is designed to cover the
 vast majority of failures occurring in the system
 that are due to distribution.
 This consists of
@@ -29,7 +29,7 @@ The system provides mechanisms to be informed of failures
 and to program with language entities that are subject
 to failures.
 
-<P> All failure modes are defined with respect to
+<P>All failure modes are defined with respect to
 a given language entity on a given site.
 For example, one would like to send a message
 to a port from a given site.
@@ -59,7 +59,7 @@ but the site that will do the binding has crashed.
 This fault state can go away if the
 remote problems are temporary.
 </LIST>
-<P> An entity on a site therefore has four
+<P>An entity on a site therefore has four
 basic fault states.
 In the next sections
 we explain how these fault states occur
@@ -75,7 +75,7 @@ will complete and it is usually
 possible to find out something about what the
 problem is, depending on the type of the entity.
 
-<P> A fault state <<F>> different from <<ok>> will
+<P>A fault state <<F>> different from <<ok>> will
 cause the distribution exception <<system(dp(F) ...)>>
 to be raised when an operation is attempted on the entity.
 In most cases the fault state contains more
@@ -97,7 +97,7 @@ and
 
 <SUBSECTION><TITLE>Temporary fault states</TITLE>
 
-<P> The fault state <<tempFail>> exists to allow the
+<P>The fault state <<tempFail>> exists to allow the
 application to react quickly to temporary network problems.
 It is raised by the system as soon as a network problem
 is recognized.
@@ -109,7 +109,7 @@ network connection.
 After the time-out,
 one can be sure that the connection is no longer working.
 
-<P> The purpose of <<tempFail>> is quite different from
+<P>The purpose of <<tempFail>> is quite different from
 a time-out:
 it is to <EM>inform</EM> the application
 of network problems, not to mark the <EM>end</EM> of a connection.
@@ -120,7 +120,7 @@ to another server.
 The <<tempFail>> exceptions will therefore be relatively frequent,
 much more frequent than time-outs.
 
-<P> It is possible for
+<P>It is possible for
 a temporary network failure to be effectively permanent.
 In general, the distinction between the two cannot be made from inside
 the application.
@@ -134,14 +134,14 @@ to continue waiting or not.
 
 <SUBSECTION><TITLE>Eager stateless data</TITLE>
 
-<P> Eager stateless data, namely records, procedures,
+<P>Eager stateless data, namely records, procedures,
 functions, and functors, are
 copied immediately in messages.
 There are no remote references to eager
 stateless data, which are always local to a site.
 So their only possible fault state is <<ok>>.
 
-<P> In future releases, procedures, functions, and functors
+<P>In future releases, procedures, functions, and functors
 will not send their code immediately in the message,
 but will send only their global name.
 Upon arrival, if the code is not present,
@@ -155,7 +155,7 @@ becomes unreachable or crashes.
 
 <SUBSECTION><TITLE>Sited entities</TITLE>
 
-<P> Sited entities can be referenced remotely
+<P>Sited entities can be referenced remotely
 but can only be used on their home site.
 Attempting to use one outside of its home
 site immediately raises an exception.
@@ -164,7 +164,7 @@ So their only possible fault state is <<ok>>.
 
 <SUBSECTION><TITLE>Ports</TITLE>
 
-<P> A port has one owner site
+<P>A port has one owner site
 and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
@@ -172,7 +172,7 @@ The following failure modes are possible:
 <ITEM> Owner site down (<<permFail(type:port)>>).
 <ITEM> Owner site unreachable (<<tempFail(type:port)>>).
 </LIST>
-<P> A port has a single operation, <<Send>>,
+<P>A port has a single operation, <<Send>>,
 which can complete if the fault state is <<ok>>.
 The <<Send>> operation is asynchronous,
 that is, it completes immediately on the
@@ -182,13 +182,13 @@ The fact that it completes on the sender site
 does not imply that it will complete on the owner site.
 This is because the owner site may fail.
 
-<P> We will see later how to build a <<SafeSend>> abstraction
+<P>We will see later how to build a <<SafeSend>> abstraction
 that only completes on the sender site if it completes
 on the owner site.
 
 <SUBSECTION><TITLE>Logic variables</TITLE>
 
-<P> A logic variable has one owner site
+<P>A logic variable has one owner site
 and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
@@ -200,7 +200,7 @@ The following failure modes are possible:
 <ITEM> Some proxy sites unreachable
 (<<remoteProblem(type:variable tempFail:SiteList)>>).
 </LIST>
-<P> (The <<SiteList>> lists the site identifiers
+<P>(The <<SiteList>> lists the site identifiers
 of the problem sites.)
 A logic variable has two operations,
 binding and waiting until bound.
@@ -210,7 +210,7 @@ threads block until their data is available.
 The bind operation will only complete if the
 fault state is <<ok>> or <<remoteProblem>>.
 
-<P> The wait operation will only complete if the
+<P>The wait operation will only complete if the
 fault state is <<ok>>.
 When it completes, this means
 that another proxy has bound the variable.
@@ -221,7 +221,7 @@ at the proxy that should bind the variable.
 Therefore, it is important to detect the
 fault state <<remoteProblem>>.
 
-<P> A common case for variables is the client-server.
+<P>A common case for variables is the client-server.
 The client sends a request containing a variable to the server.
 The server binds the variable to the answer.
 The variable exists only on the client and server sites.
@@ -230,7 +230,7 @@ then it knows that the variable binding will be delayed.
 
 <SUBSECTION><TITLE>Cells and locks</TITLE>
 
-<P> Cells and locks have almost the same failure behavior.
+<P>Cells and locks have almost the same failure behavior.
 A cell or lock has one owner site and a set of proxy sites.
 At any given time instant,
 the cell's state pointer or the lock's token
@@ -249,7 +249,7 @@ If a lock token is lost then the owner recreates it.
 <ITEM> State pointer unreachable (owner site up)
 (<<tempFail(type:CL info:state)>>).
 </LIST>
-<P> (The <<CL>> is <<cell>> or <<lock>>.)
+<P>(The <<CL>> is <<cell>> or <<lock>>.)
 Objects and cells have one primitive operation,
 namely a state update.
 For a cell this operation is called <<Exchange>>.
@@ -258,7 +258,7 @@ fault state is <<ok>>.
 
 <SUBSECTION><TITLE>Objects</TITLE>
 
-<P> An object consists of
+<P>An object consists of
 an object-record that is a lazy chunk
 and that references
 the object's features, a cell, a class.
@@ -289,7 +289,7 @@ to be instances of <<permFail>> and <<tempFail>>.
 
 <SUBSECTION><TITLE>A fault-tolerant hello server</TITLE>
 
-<P> Let's take a fresh look at the hello server.
+<P>Let's take a fresh look at the hello server.
 How can we make it resistant to distribution faults?
 First we specify the client and server behavior.
 The server should
@@ -299,14 +299,14 @@ The client should
 be informed in finite time of a server problem
 by means of a new exception, <<serverError>>.
 
-<P> The system raises exceptions
+<P>The system raises exceptions
 when it tries to do operations
 on entities that have problems.
 All distributed exceptions are of the
 form <<system(dp(C) ...)>> where <<C>> is any fault state
 as defined before except <<ok>>.
 
-<P> Assume that we have two new abstractions.
+<P>Assume that we have two new abstractions.
 <<{SafeSend Prt X}>> sends to a port
 and raises the exception <<serverError>>
 if this is permanently impossible.
@@ -317,7 +317,7 @@ or if the time <<T>> is exceeded.
 We first show how to use these abstractions
 before defining them in our failure model.
 
-<P> With <<SafeSend>> and <<SafeWait>>, we can
+<P>With <<SafeSend>> and <<SafeWait>>, we can
 write the client and the server almost exactly
 as before.
 Let's first write the server:
@@ -342,14 +342,14 @@ end
  "http://www.sics.se/~pvr/hw"}
 >>>
 
-<P> This server does one distributed operation,
+<P>This server does one distributed operation,
 namely the binding <<S="Hello world">>.
 We wrap this binding
 to catch any distributed exception that occurs.
 This allows the server to ignore clients
 with problems and to continue working.
 
-<P> Here's the client:
+<P>Here's the client:
 <<<
 declare Srv
 
@@ -367,7 +367,7 @@ catch serverError then
 end
 >>>
 
-<P> This client does two distributed operations,
+<P>This client does two distributed operations,
 namely a send (inside <<Srv>>), which is replaced by <<SafeSend>>,
 and a wait, which is replaced by <<SafeWait>>.
 If there is a problem sending the
@@ -376,7 +376,7 @@ then the exception <<serverError>> is raised.
 Note that we also catch exceptions during the
 <<Connection.take>> and the <<Pickle.load>>.
 
-<P> <<SafeSend>> is defined as follows:
+<P><<SafeSend>> is defined as follows:
 
 <<<
 proc {SafeSend Prt X}
@@ -395,12 +395,12 @@ proc {SafeSend Prt X}
 end
 >>>
 
-<P> This raises a <<serverError>> if there is
+<P>This raises a <<serverError>> if there is
 a permanent server failure
 and retries indefinitely each 100 ms if there
 is a temporary failure.
 
-<P> <<SafeWait>> is defined as follows:
+<P><<SafeWait>> is defined as follows:
 
 <<<
 declare
@@ -435,7 +435,7 @@ in
 end
 >>>
 
-<P> This raises a <<serverError>> if there is
+<P>This raises a <<serverError>> if there is
 a permanent server failure
 and retries each 100 ms if there is a
 temporary failure.
@@ -444,7 +444,7 @@ are the only two sites on which <<X>> exists.
 Therefore <<remoteProblem(permFail:_ ...)>> means
 that the server has crashed.
 
-<P> To keep the client from blocking 
+<P>To keep the client from blocking 
 indefinitely, it must time out.
 We need a time-out since otherwise a client
 will be stuck when the server drops it like a hot potato.
@@ -452,7 +452,7 @@ The time-out is an argument to <<SafeWait>>.
 
 <SUBSECTION><TITLE>Making fault-tolerant stationary objects</TITLE>
 
-<P> To be useful in practice, 
+<P>To be useful in practice, 
 stationary objects must have well-defined behavior when
 there are faults.
 We propose the following specification for the 
@@ -474,7 +474,7 @@ with the client and then gives up.
 This does not affect the continued execution of the server.
 </LIST>
 
-<P> We present the implementation of <<NewStat>>.
+<P>We present the implementation of <<NewStat>>.
 First <<New>> makes
 an instance of the object
 and then <<MakeStat>> makes it stationary.
@@ -503,14 +503,14 @@ in
 end
 </chunk>
 
-<P> First the client sends its message to the
+<P>First the client sends its message to the
 server together with a synchronizing variable.
 This variable is used to signal
 to the client that the server has
 finished the object call.
 The variable passes an exception
 back to the client if there was one.
-<P> If there is a permanent failure of
+<P>If there is a permanent failure of
 the send, then raise <<remoteObjectError>>.
 If there is a temporary failure of the
 send, then wait 100 ms and try again.
@@ -532,7 +532,7 @@ send, then wait 100 ms and try again.
    end
 </chunk>
 
-<P> Then the client waits for the server
+<P>Then the client waits for the server
 to bind the synchronizing variable.
 If there is a permanent failure, then
 raise the exception.
@@ -557,7 +557,7 @@ wait 100 ms and try again.
    end
 </chunk>
 
-<P> The following two parts implement the server.
+<P>The following two parts implement the server.
 The server runs in its own thread and
 creates a new thread for each client call.
 The server is less tenacious on
