@@ -29,30 +29,25 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    assert:             Assert
 	    qTkClass:           QTkClass
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   QTkButton
+   Register
    
 define
 
-   WidgetType=button
-   Feature=false
-   
    class QTkButton
 
       feat
 	 Return
-	 widgetType:WidgetType
+	 widgetType:button
 	 action
 	 typeInfo:r(all:{Record.adjoin GlobalInitType
 			 r(1:vs
@@ -103,11 +98,11 @@ define
    
       from Tk.button QTkClass
       
-      meth button(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init key] A B}
 	    Tk.button,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 2}
@@ -176,8 +171,8 @@ define
    
    end
 
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:false
-		     qTkButton:QTkButton)}
+   Register=[r(widgetType:button
+	       feature:false
+	       widget:QTkButton)]
 
 end

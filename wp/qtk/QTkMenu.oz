@@ -29,6 +29,7 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    assert:             Assert
 	    execTk:             ExecTk
 	    subtracts:          Subtracts
@@ -39,13 +40,10 @@ import
 	    qTkAction:          QTkAction
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
-
+	    globalUngetType:    GlobalUngetType)
+   
 export
-   WidgetType
-   Feature
-   QTkMenubutton
+   Register
    QTkMenu
    NewMenu
    
@@ -59,7 +57,7 @@ define
 	 Def % Def is itself a correct menu (maybe created by NewMenu
       elseif {Record.is Def} andthen {Label Def}==menu then
 	 Def1={Subtracts Def [handle feature]}
-	 Obj={New {MakeClass QTkMenu Def1} Def1} % Def is a declaration of a menu : menu(...)
+	 Obj={New {MakeClass QTkMenu Def1} {Record.adjoin Def1 Init}} % Def is a declaration of a menu : menu(...)
       in
 	 {CondSelect Def handle _}=Obj
 	 if {HasFeature Def feature} then
@@ -120,11 +118,11 @@ define
 
       from Tk.menubutton QTkClass
 	 
-      meth menubutton(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    {SplitParams M [menu action ipadx ipady] A B}
 	    Tk.menubutton,{Record.adjoin {TkInit {Record.subtract A menu}}
 			   tkInit(padx:{CondSelect B ipadx 2}
@@ -237,7 +235,7 @@ define
 	 
       attr nu
 
-      meth init(...)=M
+      meth !Init(...)=M
 	 lock
 	    self.parent=M.parent
 	    self.toplevel=M.parent.toplevel
@@ -357,9 +355,9 @@ define
 	 Return
 
 	 
-      meth command(...)=M
+      meth !Init(...)=M
 	 lock
-	    MenuEntry,{Record.adjoin M init}
+	    MenuEntry,M
 	    Tk.menuentry.command,{Record.adjoin {Subtracts M [return text nu private]}
 				  tkInit(action:self.toplevel.port#r(self Execute)
 					 accelerator:{MakeAccel self M}
@@ -404,9 +402,9 @@ define
 		    unset:r(nu:unit private:unit)
 		    unget:r(nu:unit private:unit))
 
-      meth separator(...)=M
+      meth !Init(...)=M
 	 lock
-	    MenuEntry,{Record.adjoin M init}
+	    MenuEntry,M
 	    Tk.menuentry.command,{Record.adjoin {Subtracts M [nu private]}
 				  tkInit}
 	 end
@@ -463,9 +461,9 @@ define
 	 TkVar
 
 	 
-      meth checkbutton(...)=M
+      meth !Init(...)=M
 	 lock
-	    MenuEntry,{Record.adjoin M init}
+	    MenuEntry,M
 	    self.TkVar={New Tk.variable tkInit({CondSelect M init false})}
 	    Tk.menuentry.checkbutton,{Record.adjoin {Subtracts M [text return nu private init]}
 				      tkInit(variable:self.TkVar
@@ -575,11 +573,11 @@ define
 	 TkVar
 	 Value
 	 
-      meth radiobutton(...)=M
+      meth !Init(...)=M
 	 lock
 	    A
 	 in
-	    MenuEntry,{Record.adjoin M init}
+	    MenuEntry,M
 	    if {HasFeature M group}==false then
 	       {Exception.raiseError qtk(missingParameter group self.widgetType M)}
 	    end
@@ -699,11 +697,11 @@ define
       attr
 	 Menu
 	 
-      meth cascade(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B Pad
 	 in
-	    MenuEntry,{Record.adjoin M init}
+	    MenuEntry,M
 	    {SplitParams M [menu action text nu private] A B}
 	    Tk.menuentry.cascade,{Record.adjoin A
 				  tkInit(action:{self.action action($)}
@@ -759,7 +757,7 @@ define
 
       from Tk.menu QTkClass
 	 
-      meth menu(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B C
 	 in
@@ -775,14 +773,14 @@ define
 		  {Exception.raiseError qtk(typeError action self.widgetType Err M)}
 	       end 
 	    end
-	    QTkClass,{Record.adjoin A init}
+	    QTkClass,A
 	    Tk.menu,{Record.adjoin A tkInit}
 	    C={Record.toList {Record.subtract B action}}
 	    self.BuildChild=fun{$ I Def}
 			       Lab={Label Def}
-			       R={Subtracts {Record.adjoin Def Lab(parent:self
-								   nu:I
-								   private:r(delete:Delete))} [handle feature]}
+			       R={Subtracts {Record.adjoin Def Init(parent:self
+								    nu:I
+								    private:r(delete:Delete))} [handle feature]}
 			       Obj=case Lab
 				   of cascade then {New {MakeClass MenuCascade Def} R}
 				   else {New MenuObj.{Label Def} R} end
@@ -859,12 +857,12 @@ define
       
    end
    
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkMenubutton:QTkMenubutton)}
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkMenubutton)]
 
    fun{NewMenu M}
-      {New QTkMenu M}
+      {New QTkMenu {Record.adjoin M Init}}
    end
    
 end

@@ -29,21 +29,20 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    mapLabelToObject:   MapLabelToObject
+	    builder:            Builder
 	    qTkClass:           QTkClass
 	    qTkAction:          QTkAction
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
-	    redirector:Redirector
-	    registerWidget:     RegisterWidget)
+	    redirector:         Redirector)
    
 export
-   WidgetType
-   Feature
-   QTkCanvas
+   Register
    
 define
 
@@ -94,11 +93,11 @@ define
 	 
       from Tk.canvas QTkClass
       
-      meth canvas(...)=M
+      meth !Init(...)=M
 	 lock
 	    A
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    {SplitParams M [lrscrollbar tdscrollbar scrollwidth] A _}
 	    Tk.canvas,{TkInit A}
 	 end
@@ -164,7 +163,7 @@ define
 			    text:vs
 			    height:natural)
 		  widgetType:canvasTag
-	       meth init(...)=M
+	       meth !Init(...)=M
 		  lock
 		     QTkClass,M
 		     Tk.canvasTag,{Record.adjoin M tkInit}
@@ -285,7 +284,7 @@ define
 	       end
 	    end
 	 in	    
-	    Tag={New CanvasTag init(parent:self)}.Redirector
+	    Tag={New CanvasTag Init(parent:self)}.Redirector
 	 end
       end
       
@@ -310,7 +309,7 @@ define
 	       {HasFeature M 2} andthen {HasFeature M 3} andthen
 	       {HasFeature M window} then
 	       %% window creation is a bit different
-	       {ExecTk self {Record.adjoinAt M window {MapLabelToObject {Record.adjoinAt M.window parent self}}}}
+	       {ExecTk self {Record.adjoinAt M window {self.toplevel.Builder MapLabelToObject({Record.adjoinAt M.window parent self} $)}}}
 	    else
 	       {ExecTk self M}
 	    end
@@ -349,8 +348,8 @@ define
       
    end
 
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkCanvas:QTkCanvas)}
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkCanvas)]
 
 end

@@ -28,6 +28,7 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    assert:             Assert
 	    execTk:             ExecTk
 	    lastInt:            LastInt
@@ -38,13 +39,10 @@ import
 	    qTkAction:          QTkAction
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   QTkText
+   Register
    
 define
    
@@ -155,11 +153,11 @@ define
 	 
       from Tk.text QTkClass
 	 
-      meth text(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    {SplitParams M [lrscrollbar tdscrollbar scrollwidth init return ipadx ipady] A B}
 	    Tk.text,{Record.subtract
 		     {Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 0}
@@ -417,7 +415,7 @@ define
 				     tabs:unit))
 		  first last
 	 		  
-	       meth init(...)=M
+	       meth !Init(...)=M
 		  lock
 		     self.parent=Self
 		     self.toplevel=Self.toplevel
@@ -497,7 +495,7 @@ define
 	       end
 	    end
 	 in
-	    Tag={New TextTag init(parent:self)}
+	    Tag={New TextTag Init(parent:self)}
 	 end
       end
 
@@ -574,8 +572,8 @@ define
       
    end
 
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkText:QTkText)}
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkText)]
 
 end

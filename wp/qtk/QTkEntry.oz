@@ -29,19 +29,17 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    assert:             Assert
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    qTkClass:           QTkClass
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   QTkEntry
+   Register
    
 define
 
@@ -105,11 +103,11 @@ define
    
       from Tk.entry QTkClass
       
-      meth entry(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    self.Return={CondSelect M return _}
 	    {SplitParams M [init lrscrollbar scrollwidth] A B}
 	    self.TkVar={New Tk.variable tkInit("")}
@@ -190,8 +188,8 @@ define
       
    end
 
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkEntry:QTkEntry)}
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkEntry)]
 
 end

@@ -27,6 +27,7 @@ functor
 
 import
    QTkDevel(execTk:    ExecTk
+	    init:      Init
 	    returnTk:  ReturnTk
 	    subtracts: Subtracts
 	    assert:    Assert
@@ -165,7 +166,7 @@ define
 		    unget:r
 		   )
 			  
-      meth init(...)=M
+      meth !Init(...)=M
 	 lock
 	    {Assert self.widgetType self.typeInfo M}
 	    Tk.image,{Record.adjoin M tkInit}
@@ -230,7 +231,7 @@ define
    end
 
    fun{NewImage R}
-      {New QTkImage {Record.adjoin R init(type:{Label R})}}
+      {New QTkImage {Record.adjoin R Init(type:{Label R})}}
    end
 
    class QTkImageLibrary
@@ -271,7 +272,7 @@ define
 	       end
 	    end
 	 in
-	    I={New LibImage {Record.adjoin {Subtracts R [image name]} init}}
+	    I={New LibImage {Record.adjoin {Subtracts R [image name]} Init}}
 	    {Dictionary.put self.image R.name I}
 	    if {HasFeature M image} then M.image=I else skip end
 	 end

@@ -29,25 +29,19 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    assert:             Assert
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    qTkClass:           QTkClass
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   QTkLabel
+   Register
    
 define
-
-   WidgetType=label
-   Feature=false
-
    
    class QTkLabel
 
@@ -91,11 +85,11 @@ define
    
       from Tk.label QTkClass
       
-      meth label(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init] A B}
 	    Tk.label,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 0}
@@ -183,11 +177,11 @@ define
    
       from Tk.message QTkClass
       
-      meth message(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init] A B}
 	    Tk.message,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 0}
@@ -240,11 +234,11 @@ define
    
    end
 
-   {RegisterWidget r(widgetType:label
-		     feature:false
-		     qTkLabel:QTkLabel)}
-   {RegisterWidget r(widgetType:message
-		     feature:false
-		     qTkMessage:QTkMessage)}
+   Register=[r(widgetType:label
+	       feature:false
+	       widget:QTkLabel)
+	     r(widgetType:message
+	       feature:false
+	       widget:QTkMessage)]
 
 end

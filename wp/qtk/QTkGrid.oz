@@ -28,21 +28,19 @@ functor
 import
    Tk
    QTkDevel(tkInit:             TkInit
+	    init:               Init
 	    mapLabelToObject:   MapLabelToObject
+	    builder:            Builder
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    qTkClass:           QTkClass
-	    propagateLook:      PropagateLook
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget
 	    redirector:         Redirector)
 
 export
-   WidgetType
-   Feature
-   QTkGrid
+   Register
    
 define
 
@@ -83,14 +81,14 @@ define
 			     font:unit)})
       attr Children Pack
 	 
-      meth grid(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B C
 	 in
-	    {Record.partitionInd {Record.adjoin M init}
+	    {Record.partitionInd M
 	     fun{$ I _} {Int.is I} end C A}
 	    B={Record.toList C}
-	    QTkClass,{Record.adjoin A init}
+	    QTkClass,A
 	    Tk.frame,{TkInit A}
 	    %% B contains the structure of
 	    %% creates the children
@@ -142,8 +140,8 @@ define
 				   NC=V
 				end
 			     else
-				NC={MapLabelToObject
-				    {Record.adjoinAt {PropagateLook V} parent self}}
+				NC={self.toplevel.Builder
+				    MapLabelToObject({Record.adjoinAt V parent self} $)}
 				Children<-NC.Redirector|@Children
 			     end
 			     if {IsFree NC} then {Exception.raiseError qtk(badParameter V self.widgetType M)} end
@@ -201,9 +199,9 @@ define
       end
 
    end
-   
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkGrid:QTkGrid)}
+
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkGrid)]
 
 end
