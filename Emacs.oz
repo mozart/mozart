@@ -35,8 +35,8 @@ fun
    \insert 'OP.env'
        = IMPORT.'OP'
 
-   TimeoutToUpdateBar = 430
-   TimeoutToConfigBar = 70
+   TimeoutToUpdateBar = 500
+   TimeoutToConfigBar = 100
 
    S2A = String.toAtom
    fun {VS2A X}
