@@ -7,6 +7,8 @@
 
 local
 
+   \insert shapes-and-images.oz
+
    \insert menu-manager.oz
    
    \insert nodes.oz
