@@ -885,6 +885,19 @@ SuspList * SuspList::gc(Bool tcFlag)
   return (ret);
 }
 
+inline
+void GenCVariable::gc(void)
+{
+  Assert(getType()==FDVariable);
+  switch (getType()){
+  case FDVariable:
+  default:
+    ((GenFDVariable*)this)->gc();
+    break;
+  }
+}
+
+
 // This procedure collects the entry points into heap provided by variables,
 // without copying the tagged reference of the variable itself.
 TaggedRef gcVariable(TaggedRef var)
@@ -996,19 +1009,6 @@ void GenFDVariable::gc(void)
       fdSuspList[i] = fdSuspList[i]->gc(NO);
 }
 
-
-inline
-
-void GenCVariable::gc(void)
-{
-  Assert(getType()==FDVariable);
-  switch (getType()){
-  case FDVariable:
-  default:
-    ((GenFDVariable*)this)->gc();
-    break;
-  }
-}
 
 inline
 Bool updateVar(TaggedRef var)
