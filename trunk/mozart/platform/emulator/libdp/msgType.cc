@@ -75,5 +75,6 @@ char *mess_names[M_LAST] = {
   "unask error",
   "send gate",
   "isdet",
-  "requested"
+  "requested",
+  "send ping"
 };
