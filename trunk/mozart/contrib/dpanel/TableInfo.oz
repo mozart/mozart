@@ -146,7 +146,7 @@ define
 	    Used = 1
 	    {self.colorAlloc get(Site Col Index)}
 	    new <- site(key:Key fg:Col
-			text: Data.index#'   '#Data.type#' used:'#1)|@new 
+			text: Data.index#'   '#Data.type#' exp/imp'#1)|@new 
 	    self.usedCounter.Key:=Used
 	    Table, increment(self.diff Site)
 	 end 
@@ -203,10 +203,8 @@ define
 	     Data = self.table.K
 	     Us = self.usedCounter.K
 	  in
-	     {self.guiSites updateEntry(K Data.index#'   '#Data.type#' used:'#Us)}
+	     {self.guiSites updateEntry(K Data.index#'   '#Data.type#' exp/imp:'#Us)}
 	  end}
-	 
-	 
 	 Table, displayGraph(self.counter self.guiNumber)
 	 Table, displayGraph(self.diff self.guiActive)
       end
