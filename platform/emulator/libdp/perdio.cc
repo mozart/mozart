@@ -389,7 +389,6 @@ void globalizeTert(Tertiary *t)
 /*   Localizing                 should be more localize */
 /**********************************************************************/
 
-// PER-LOOK serves no purpose??
 void Object::localize(){
   setTertType(Te_Local);
   setBoard(oz_currentBoard());
@@ -1218,7 +1217,7 @@ void initDPCore()
   ozconf.perdioFlowBufferSize  =  1000000;
   ozconf.perdioFlowBufferTime  =  1000;
   BI_defer = makeTaggedConst(new Builtin("defer", 0, 0, BIdefer, OK));
-  globalWatcher = NULL; // PER-LOOK
+  globalWatcher = NULL; 
   DeferdEvents = NULL;
   usedTwins = NULL;
 
