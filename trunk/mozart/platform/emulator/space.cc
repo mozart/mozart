@@ -185,7 +185,7 @@ void oz_reduceTrailOnSuspend()
       unBind(refPtr, value);
 
       // value is always global variable, so add always a thread;
-      if (oz_var_addSusp(refPtr,thr)) {
+      if (oz_var_addSusp(refPtr,thr)!=SUSPEND) {
 	Assert(0);
       }
 

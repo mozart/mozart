@@ -1931,12 +1931,16 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
 {
   int ret = oz_unify(val1,val2);
   if (ret == PROCEED) return;
+ loop:
   switch (ret) {
   case SUSPEND:
     {
       Thread *thr = oz_newThreadSuspended();
       thr->pushCall(BI_Unify,val1,val2);
-      if (am.suspendOnVarList(thr)) {
+      ret = am.suspendOnVarList(thr);
+      if (ret == PROCEED) oz_wakeupThread(thr);
+      if (ret != SUSPEND) {
+	am.emptyPreparedCalls();
 	oz_wakeupThread(thr);
       }
       break;

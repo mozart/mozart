@@ -117,7 +117,9 @@ OZ_C_proc_begin(BIgetsBoundB, 2)
   if (isVariableTag(vTag)){
     Thread *thr =
       (Thread *) OZ_makeSuspendedThread (_getsBound_dummyB, OZ_args, OZ_arity);
-    if (oz_var_addSusp(vPtr, thr)) oz_wakeupThread(thr);
+    OZ_Return ret = oz_var_addSusp(vPtr, thr);
+    if (ret == PROCEED) oz_wakeupThread(thr);
+    if (ret != SUSPEND) return ret;
   }
 
   return PROCEED;		// no result yet;

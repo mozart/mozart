@@ -130,13 +130,13 @@ OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode*scp)
   return bind(vPtr,makeTaggedRef(tPtr),scp);
 }
 
-Bool Future::addSusp(TaggedRef *tPtr, Suspension susp, int unstable)
+OZ_Return Future::addSusp(TaggedRef *tPtr, Suspension susp, int unstable)
 {
   if (kick(tPtr)) {
-    return TRUE;
+    return PROCEED;
   }
   addSuspSVar(susp, unstable);
-  return FALSE;
+  return SUSPEND;
 }
 
 void Future::printStream(ostream &out,int depth = 10)
@@ -189,8 +189,8 @@ OZ_BI_define(BIfuture,1,1)
     } else { // optimize: immediately suspend thread
       Thread *thr = oz_newThreadSuspendedInject(bb);
       thr->pushCFun(VarToFuture,args,2);
-      Bool ret = oz_var_addSusp(vPtr, thr);
-      Assert(!ret);
+      OZ_Return ret = oz_var_addSusp(vPtr, thr);
+      Assert(ret==SUSPEND);
     }
     OZ_RETURN(f);
   }
