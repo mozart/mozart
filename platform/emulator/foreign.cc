@@ -1062,14 +1062,16 @@ char *OZ_toC(OZ_Term term, int depth,int width)
 
 int OZ_termGetSize(OZ_Term term, int depth, int width)
 {
-  ostrstream out;
+  ostrstream *out=new ostrstream;
   int old=listWidth;
 
   listWidth = width;
-  value2buffer(out,term,depth);
+  value2buffer(*out,term,depth);
   listWidth = old;
 
-  return (out.pcount ());
+  int ret = out->pcount ();
+  delete out;
+  return ret;
 }
 
 /*
