@@ -260,13 +260,20 @@ char *mess_names[M_LAST] = {
 /*   SECTION 3:: Utility routines                                      */
 /* *********************************************************************/
 
-inline void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI){
+inline void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI)
+{
+  OZ_Term nogoods = bs->getNoGoods();
+  if (!literalEq(nil(),nogoods)) {
+    warning("send message %d contains nogoods: %s",mt,toC(nogoods));
+  }
+
   int ret=toS->sendTo(bs,mt,sS,sI);
   if(ret==ACCEPTED) return;
   if(ret==PERM_NOT_SENT)
     toS->communicationProblem(mt,sS,sI,COMM_FAULT_PERM_NOT_SENT,(FaultInfo) bs);
   else
-    toS->communicationProblem(mt,sS,sI,COMM_FAULT_TEMP_NOT_SENT,ret);}
+    toS->communicationProblem(mt,sS,sI,COMM_FAULT_TEMP_NOT_SENT,ret);
+}
 
 inline Bool SEND_SHORT(Site* s){
   if(s->siteStatus()==PERM_SITE) {return OK;}
@@ -2196,7 +2203,7 @@ inline Bool tokenLostCheckManager(Tertiary *t){
 /* ******************************************************************* */
 
 Tertiary* getOtherTertFromObj(Tertiary* o, Tertiary* lockORcell){
-  Assert(o->getTertType!=Te_Local);
+  Assert(o->getTertType()!=Te_Local);
   Assert(o->getType()==Co_Object);
   Object *object = (Object *) o;
   if(object->getLock()==NULL && object->getLock()==lockORcell)
@@ -3740,8 +3747,16 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   MsgBuffer *bs = msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
   marshal_M_REMOTE_SEND(bs,index,biName,msg);
+  OZ_Term nogoods = bs->getNoGoods();
+  if (!literalEq(nil(),nogoods)) {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"send",2,
+                    oz_atom("nogoods"),
+                    nogoods);
+  }
+
   SendTo(site,bs,M_REMOTE_SEND,site,index);
-  return PROCEED;}
+  return PROCEED;
+}
 
 /**********************************************************************/
 /*   SECTION 24:: Port protocol                                       */
@@ -3792,7 +3807,7 @@ Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCo
       w=*base;}}
   return ret;}
 
-int portSend(Tertiary *p, TaggedRef msg, Thread* th) {
+OZ_Return portSend(Tertiary *p, TaggedRef msg, Thread *th) {
   int pi = p->getIndex();
   BorrowEntry* b=BT->getBorrow(pi);
   NetAddress *na = b->getNetAddress();
@@ -3817,6 +3832,16 @@ int portSend(Tertiary *p, TaggedRef msg, Thread* th) {
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
   marshal_M_PORT_SEND(bs,index,msg);
+
+  OZ_Term nogoods = bs->getNoGoods();
+  if (!literalEq(nil(),nogoods)) {
+    return oz_raise(E_ERROR,OZ_atom("dp"),"portSend",3,
+                    oz_atom("nogoods"),
+                    makeTaggedTert(p),
+                    nogoods);
+  }
+
+  // !!!!!!!! GC bs !!!!!!!
   SendTo(site,bs,M_PORT_SEND,site,index);
   if(wait)
     portWait(th,site->getQueueStatus(dummy), 0, p);

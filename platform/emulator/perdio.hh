@@ -170,7 +170,7 @@ class SendRecvCounter;
 /* ************************************************************************ */
 
 OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg);
-int portSend(Tertiary *p, TaggedRef msg,Thread* t);
+OZ_Return portSend(Tertiary *p, TaggedRef msg,Thread* t);
 void cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
 void cellDoAccess(Tertiary*,TaggedRef);
 void cellAtAccess(Tertiary*,TaggedRef,TaggedRef);

@@ -189,9 +189,15 @@ OZ_Return
 ByteSink::putTerm(OZ_Term in, OZ_Term resources)
 {
   ByteStream* bs=bufferManager->getByteStream();
-  MarshalInfo mi;
-  bs->setMarshalInfo(&mi);
   marshal_M_FILE(bs,PERDIOVERSION,in);
+
+  OZ_Term nogoods = bs->getNoGoods();
+  if (!literalEq(nil(),nogoods)) {
+    return oz_raise(E_ERROR,OZ_atom("dp"),"save",2,
+                    oz_atom("nogoods"),
+                    nogoods);
+  }
+
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
 
@@ -212,7 +218,7 @@ ByteSink::putTerm(OZ_Term in, OZ_Term resources)
   bs->writeCheck();
   bufferManager->freeByteStream(bs);
 
-  return OZ_unify(resources,mi.resources) ? PROCEED : FAILED;
+  return OZ_unify(resources,bs->resources) ? PROCEED : FAILED;
 }
 
 // ===================================================================
@@ -226,7 +232,7 @@ OZ_Return
 ByteSinkFD::putBytes(BYTE*pos,int len)
 {
   if (oswrite(fd,pos,len)<0)
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
                     oz_atom("write"),
                     oz_atom(OZ_unixError(errno)),
                     oz_int(fd));
@@ -242,7 +248,7 @@ ByteSinkFile::allocateBytes(int n)
 {
   fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0)
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
                     oz_atom("open"),
                     oz_atom(OZ_unixError(errno)),
                     oz_atom(filename));
@@ -253,7 +259,7 @@ OZ_Return
 ByteSinkFile::putBytes(BYTE*pos,int len)
 {
   if (oswrite(fd,pos,len)<0)
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
                     oz_atom("write"),
                     oz_atom(OZ_unixError(errno)),
                     oz_atom(filename));
@@ -270,7 +276,7 @@ ByteSinkDatum::allocateBytes(int n)
   dat.size = n;
   dat.data = (char*) malloc(n);
   if (dat.data==0)
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
                     oz_atom("malloc"),
                     oz_atom(OZ_unixError(errno)),
                     oz_atom("datum"));
@@ -372,12 +378,12 @@ ByteSource::getTerm(OZ_Term out)
   if (versiongot) {
     OZ_Term vergot = oz_atom(versiongot);
     delete versiongot;
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"load",3,
                     oz_atom("versionMismatch"),
                     oz_atom(PERDIOVERSION),
                     vergot);
   } else {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"load",1,
                     oz_atom("notComponent"));
   }
 }
@@ -400,7 +406,7 @@ ByteSource::makeByteStream(ByteStream*& stream)
     pos = stream->beginRead(max);
   }
   if (total==0)
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"load",1,
                     oz_atom(emptyMsg()));
   return PROCEED;
 }
@@ -425,7 +431,7 @@ loop:
   got = osread(fd,pos,max);
   if (got < 0) {
     if (errno==EINTR) goto loop;
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"load",2,
                     oz_atom("read"),
                     oz_atom(OZ_unixError(errno)));
   }
@@ -474,7 +480,7 @@ OZ_Return loadFile(char *filename,OZ_Term out)
 {
   int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
   if (fd < 0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+    return oz_raise(E_ERROR,OZ_atom("dp"),"load",3,
                     oz_atom("open"),
                     oz_atom(OZ_unixError(errno)),
                     oz_atom(filename));
