@@ -628,7 +628,11 @@ public:
   }
 
   void introduce(int i, TaggedRef v) {
-    return only_local_vars ? introduceLocal(i, v) : _introduce(i, v);
+    if (only_local_vars) {
+      introduceLocal(i, v);
+    } else {
+      _introduce(i, v);
+    }
   }
 
   OZ_Bool entailment(void) {
