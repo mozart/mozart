@@ -1076,7 +1076,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     smallInt2buffer(out,term);
     break;
   default:
-    out << "<Unknown Tag: " << tag << ">";
+    out << "<Unknown Tag: " << (int) tag << ">";
     break;
   }
 }

@@ -993,8 +993,8 @@ public:
 class Tagged4
 {
 private:
-  static const mask=15;
-  static const bits=4;
+  static const int mask=15;
+  static const int bits=4;
   uint32 tagged;
   void checkTag(int tag) { Assert(tag >= 0 && tag <= mask); }
   void checkVal(int val) { Assert((val & (mask<<(32-bits))) == 0); }
