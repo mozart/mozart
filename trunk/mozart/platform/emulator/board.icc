@@ -46,6 +46,23 @@
 #endif
 
 inline
+int Board::isAdmissible(void) {
+  Assert(!isCommitted());
+  Board * b1 = oz_currentBoard();
+  Board * b2 = this;
+  // Most frequent case
+  if (b2->getParent() == b1)
+    return OK;
+  // Traverse upwards: b2 must not occur on path from b1 to root
+  while (!(b1->isRoot())) {
+    if (b1 == b2)
+      return NO;
+    b1 = b1->getParent();
+  }
+  return OK;
+}
+
+inline
 void Board::addSuspension(Suspendable * susp) {
   suspList = new SuspList(susp, suspList);
 }
