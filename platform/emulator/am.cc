@@ -270,7 +270,7 @@ void AM::init(int argc,char **argv)
   cachedStack  = NULL;
   cachedSelf   = NULL;
   setShallowHeapTop(NULL);
-  setCurrent(_rootBoard,OK);
+  setCurrent(_rootBoard);
 
   lastThreadID    = 0;
   debugMode       = NO;
@@ -371,21 +371,6 @@ void AM::exitOz(int status)
 /* -------------------------------------------------------------------------
  * MISC
  * -------------------------------------------------------------------------*/
-
-#ifdef DEBUG_CHECK
-static Board *oldBoard = (Board *) NULL;
-#endif
-
-void AM::setCurrent(Board *c, Bool checkNotGC)
-{
-  Assert(!c->isCommitted() && !c->isFailed());
-  Assert(!checkNotGC || oz_isCurrentBoard(oldBoard));
-
-  _currentBoard = c;
-  _currentUVarPrototype = makeTaggedUVar(c);
-  DebugCheckT(oldBoard=c);
-
-}
 
 // mm2: missing ifdef VIRTUAL_SITE?
 

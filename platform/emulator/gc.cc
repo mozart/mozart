@@ -1588,7 +1588,7 @@ void AM::gc(int msgLevel) {
   Assert(_rootBoard);
 
   _rootBoard = _rootBoard->gcBoard();   // must go first!
-  setCurrent(_currentBoard->gcBoard(),NO);
+  setCurrent(_currentBoard->gcBoard());
 
   aritytable.gc ();
   threadsPool.doGC();
