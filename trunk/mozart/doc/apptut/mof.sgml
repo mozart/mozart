@@ -93,8 +93,27 @@ end
     <title/Imports/
 
     <p>
-      <<import>> and <<require>> specifications support ??.
+      <<import>> and <<require>> specifications support features and
+      fields. For example, in the main functor for our last minute
+      flight booking system, we could have written the import clause
+      for <<DB>> as follows:
+      <<<DB(add getAll remove)>>>
+    
+    <p>
+      Besides of the documentational advantage of explicitly listing
+      the features, the compiler tries to enforce that only listed
+      features are used for dot access. For example, given the above
+      import clause, the following access
+      <<<DB.addd>>>
+      raises an error during compilation.
 
+    <p>
+      In addition, also variables can be given as fields in the import
+      specification as follows:
+      <<<DB(add:Add getAll:GetAll remove)>>>
+      The variables introduced for the fields interact with dynamic
+      linking as follows: The module is requested as soon as the value
+      for one of the variables is requested.
   
   
 </chapter>
