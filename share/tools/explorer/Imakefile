@@ -8,7 +8,7 @@ LOCALFILES = \
 	action-nodes.oz hide-nodes.oz \
 	bab-nodes.oz layout-nodes.oz \
 	basic-nodes.oz manager.oz \
-	menues.oz menu-manager.oz \
+	menu-manager.oz \
 	move-nodes.oz tk-nodes.oz \
 	configure.oz nodes.oz toplevel-manager.oz \
 	default-actions.oz search-nodes.oz \
