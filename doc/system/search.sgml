@@ -567,14 +567,6 @@ stop
 stops the search engine. The search engine can be restarted by
 <<next>>, <<nextS>>, <<nextP>>, <<last>>, <<lastS>>, and <<lastP>>.
 
-<entry><<close>>
-<index class=module/Search<and>object<and>close/
-<Synopsis>
-<<<
-close
->>>
-<item>
-stops the search engine and closes the object.
 </list>
 </section>
 
