@@ -4645,8 +4645,7 @@ OZ_C_proc_begin(BIlockLock,1)
   }
 
   Tertiary *t=tagged2Tert(lock);
-  switch(t->getTertType()){
-  case Te_Local:{
+  if(t->getTertType()==Te_Local){
     LockLocal *ll=(LockLocal*)t;
     if (!am.onToplevel()) {
       if (!am.isCurrentBoard(GETBOARD(ll))) {
@@ -4654,6 +4653,10 @@ OZ_C_proc_begin(BIlockLock,1)
       }}
     ll->lock(am.currentThread());
     return PROCEED;}
+  if(!am.onToplevel()){
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}    
+    
+  switch(t->getTertType()){
   case Te_Manager:{
     ((LockManager *)t)->lock(am.currentThread());
     return PROCEED;}
@@ -4663,7 +4666,9 @@ OZ_C_proc_begin(BIlockLock,1)
   case Te_Frame:{
     ((LockFrame*)t)->lock(am.currentThread());
     return PROCEED;}
-  }
+  default:
+    Assert(0);}
+
   Assert(0);
   return PROCEED;
 }
@@ -4762,10 +4767,9 @@ OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
   }
   Tertiary *tert=tagged2Tert(rec);
   if(tert->getTertType()!=Te_Local){
-    TaggedRef newVal = oz_newVariable(); /* ATTENTION - clumsy */
-    cellDoAccess(tert,newVal);
-    out = newVal;
-    return PROCEED;} 
+    TaggedRef out = oz_newVariable(); /* ATTENTION - clumsy */
+    cellDoAccess(tert,out);
+    return checkSuspend();}
   CellLocal *cell = (CellLocal*)tert;
   out = cell->getValue();
   return PROCEED;
@@ -4901,26 +4905,95 @@ OZ_C_proc_begin(BIrestop,0)
 }
 OZ_C_proc_end
 
-OZ_Return BIhandlerInstallInline(TaggedRef e, TaggedRef c, TaggedRef p){
-  NONVAR(e,entity);
-  Tertiary *tert = tagged2Tert(entity);
-  if(isLock(entity)){
-    lockInstallHandler(tert,c,p,am.currentThread());
-    return PROCEED;
-  }
-  Assert(0);
-  return PROCEED;
-}
-
-
 OZ_C_proc_begin(BIhandlerInstall,3)
 {
   OZ_Term entity   = OZ_getCArg(0);
   OZ_Term cond     = OZ_getCArg(1);
   OZ_Term proc     = OZ_getCArg(2);  
-  return BIhandlerInstallInline(entity, cond, proc);
+
+  if(isAnyVar(cond)) {return SUSPEND;}
+
+  EntityCond ec;
+  if(cond==AtomPermBlocked) {ec=PERM_BLOCKED;}
+  else{
+    if(cond==AtomTempBlocked) {ec=TEMP_BLOCKED|PERM_BLOCKED;}
+    else {
+      return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
+
+  if(isAnyVar(entity)){
+    return oz_raise(E_ERROR,E_SYSTEM,"handlers on variables not implemented",0);      }
+
+  Tertiary *tert = tagged2Tert(entity);
+  if((tert->getType()!=Co_Cell) && (tert->getType()!=Co_Lock)){
+    return oz_raise(E_ERROR,E_SYSTEM,"handlers on ? not implemented",0);}
+  if(tert->installHandler(ec,proc,am.currentThread())){
+    return PROCEED;}
+  return oz_raise(E_ERROR,E_SYSTEM,"handler already installed",0);
 }
 OZ_C_proc_end
+
+Bool translateWatcherCond(TaggedRef tr,EntityCond &ec){
+  TaggedRef car;
+  TaggedRef cdr=tr;
+  ec=ENTITY_NORMAL;
+
+  while(!isNil(cdr)){
+    if(isAnyVar(cdr)) {
+      return NO;}
+    if(!isCons(cdr)){
+      return NO;
+      return OK;}
+    car=tagged2LTuple(cdr)->getHead();
+    if(isAnyVar(car)) {
+      return NO;}
+    cdr=tagged2LTuple(cdr)->getTail();
+    if(car==AtomPermMe){
+      ec|=PERM_BLOCKED;
+      continue;}
+    if(car==AtomTempMe) {
+      ec |= (TEMP_BLOCKED|PERM_BLOCKED);
+      continue;}
+    if(car==AtomPermAllOthers){
+      ec |= PERM_ALL;
+      continue;}
+    if(car==AtomTempAllOthers){
+      ec |= (TEMP_ALL|PERM_ALL);
+      continue;}
+    if(car==AtomPermSomeOther){
+      ec |= PERM_SOME;
+      continue;}
+    if(car==AtomTempSomeOther){
+      ec |= (TEMP_SOME|PERM_SOME);
+      continue;}
+    return NO;}
+  if(ec==ENTITY_NORMAL) return NO;
+  return ec;}
+
+OZ_C_proc_begin(BIwatcherInstall,3)
+{
+  OZ_Term entity   = OZ_getCArg(0);
+  OZ_Term cond     = OZ_getCArg(1);
+  OZ_Term proc     = OZ_getCArg(2);  
+
+  if(isAnyVar(cond)) {return SUSPEND;}
+
+  EntityCond ec;  
+
+  if(!translateWatcherCond(cond,ec)){
+    return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
+
+  if(isAnyVar(entity)){
+    return oz_raise(E_ERROR,E_SYSTEM,"handlers on variables not implemented",0);      }
+
+  Tertiary *tert = tagged2Tert(entity);
+  if((tert->getType()!=Co_Cell) && (tert->getType()!=Co_Lock)){
+    return oz_raise(E_ERROR,E_SYSTEM,"watchers on ? not implemented",0);}
+  tert->installWatcher(ec,proc);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 /********************************************************************
  *   Dictionaries
  ******************************************************************** */
@@ -7717,8 +7790,9 @@ BIspec allSpec[] = {
   {"Access",          2,BIaccessCell,   (IFOR) BIaccessCellInline},
   {"Assign",          2,BIassignCell,   (IFOR) BIassignCellInline},
 
-  {"perdioRestop",   0, BIrestop,           0},
-  {"InstallHandler", 3, BIhandlerInstall,  (IFOR) BIhandlerInstallInline},
+ {"perdioRestop",   0, BIrestop,          0},
+ {"InstallHandler", 3, BIhandlerInstall,  0},
+ {"InstallWatcher", 3, BIwatcherInstall,  0},
 
   {"IsChar",        2, BIcharIs,	0},
   {"Char.isAlNum",  2, BIcharIsAlNum,	0},
