@@ -105,6 +105,11 @@ an <file/ozwrapperw.bin/ is supplied that launches <file/ozenginew/
 instead of <file/ozengine/.  This option provides a convenient way to
 use this alternative wrapper.
 
+        <entry/<code/--target=unix/, <code/--unix//
+	<entry/<code/--target=windows/, <code/--windows//
+	<item/When creating an executable functor, do it for the specified
+target platform rather than for the current host platform./
+
 	<entry/<code/-z ?{N}/, <code/--compress=?{N}//
 	<item>Pickles may be written in a compressed format.  By
 default they are not compressed. <code/-z ?{N}/ selects a compression
