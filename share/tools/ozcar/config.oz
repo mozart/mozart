@@ -70,8 +70,8 @@ OzcarMessagePrefix     = fun {$}
 			    ThisThread = {Thread.this}
 			 in
 			    'Ozcar[' #
-			    {Thread.id       ThisThread} # '/' #
-			    {Thread.parentId ThisThread} # ']: '
+			    {Debug.getId       ThisThread} # '/' #
+			    {Debug.getParentId ThisThread} # ']: '
 			 end
 OzcarErrorPrefix       = 'Ozcar ERROR: '
 NoThreads              = 'There is no thread attached'

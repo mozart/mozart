@@ -385,7 +385,7 @@ in
 	       elsecase FrameId \= unit then
 		  {OzcarMessage
 		   'getEnv: requesting variables for frame #' # F.nr}
-		  V = {Thread.frameVariables @currentThread FrameId}
+		  V = {Debug.getFrameVariables @currentThread FrameId}
 	       in
 		  case V == unit then %% `FrameId' was an invalid frame id...
 		     NullEnv
@@ -712,12 +712,12 @@ in
       end
 
       meth BlockedStatus(T A)
-	 Gui,status('Thread #' # {Thread.id T} # ' is blocked, ' #
+	 Gui,status('Thread #' # {Debug.getId T} # ' is blocked, ' #
 		    A # ' has no effect')
       end
 
       meth TerminatedStatus(T A)
-	 Gui,status('Thread #' # {Thread.id T} # ' is dead, ' #
+	 Gui,status('Thread #' # {Debug.getId T} # ' is dead, ' #
 		    A # ' has no effect')
       end
 
@@ -777,7 +777,7 @@ in
 
       meth MarkRunning(T)
 	 case {CheckState T} == blocked then skip else
-	    Gui,markNode({Thread.id T} running)
+	    Gui,markNode({Debug.getId T} running)
 	 end
 	 Gui,markStack(inactive)
 	 Gui,markEnv(inactive)
@@ -839,7 +839,7 @@ in
 
 	 elsecase A == StepButtonBitmap then T I in
 	    T = @currentThread
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I StepInto)
 	    [] terminated then Gui,TerminatedStatus(T StepInto)
@@ -857,7 +857,7 @@ in
 
 	 elsecase A == NextButtonBitmap then T I in
 	    T = @currentThread
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I StepOver)
 	    [] terminated then Gui,TerminatedStatus(T StepOver)
@@ -876,7 +876,7 @@ in
 
 	 elsecase A == UnleashButtonBitmap then T I in
 	    T = @currentThread
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I A)
 	    [] terminated then Gui,TerminatedStatus(T A)
@@ -912,7 +912,7 @@ in
 	    T = @currentThread
 	    S = {Thread.state T}
 	    case S == terminated then Gui,TerminatedStatus(T A) else
-	       I         = {Thread.id T}
+	       I         = {Debug.getId T}
 	       ThreadDic = ThreadManager,getThreadDic($)
 	       Stack     = {Dictionary.condGet ThreadDic I nil}
 	    in
@@ -938,12 +938,12 @@ in
 
 	 elsecase A == DetachButtonBitmap then T I in
 	    T = @currentThread
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	    lock UserActionLock then ThreadManager,detach(T I) end
 
 	 elsecase A == TermButtonBitmap then T I in
 	    T = @currentThread
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	    ThreadManager,kill(T I)
 
 	 end

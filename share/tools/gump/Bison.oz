@@ -39,12 +39,12 @@ in
 	 lock L then
 	    case {IsFree BisonModule} then
 	       T = {Thread.this}
-	       RaiseOnBlock = {Thread.getRaiseOnBlock T}
+	       RaiseOnBlock = {Debug.getRaiseOnBlock T}
 	    in
-	       {Thread.setRaiseOnBlock T false}
+	       {Debug.setRaiseOnBlock T false}
 	       BisonModule =
 	       {Foreign.load 'www.ps.uni-sb.de/ozhome/share/gump/ozbison.dl'}
-	       {Thread.setRaiseOnBlock T RaiseOnBlock}
+	       {Debug.setRaiseOnBlock T RaiseOnBlock}
 	    else skip
 	    end
 	 end
@@ -52,3 +52,9 @@ in
       end
    end
 end
+
+
+
+
+
+
