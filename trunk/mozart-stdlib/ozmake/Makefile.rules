@@ -18,3 +18,6 @@ Help.ozf: Help.oz HELP.txt Utils.ozf
 
 clean::
 	-rm -f ozmake
+
+HELP.html: HELP.xml HELP.xsl
+	java -cp XT.jar com.jclark.xsl.sax.Driver HELP.xml HELP.xsl HELP.html
