@@ -177,6 +177,7 @@ void initMemoryManagement(void);
 void deleteChunkChain(char *);
 int inChunkChain(void *, void *);
 void printChunkChain(void *);
+void scanFreeList(void);
 
 #ifndef OUTLINE
 #include "mem.icc"
