@@ -706,7 +706,7 @@ public:
 
   //
   Bool isSafeDict() { return (dictFlags & DictSafeFlag); }
-  void markSafe()   { dictFlags = DictSafeFlag; }
+  void markSafe()   { dictFlags |= DictSafeFlag; }
   //
   DictNode* pairsInArray() { return (table->getPairsInArray()); }
 
