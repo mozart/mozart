@@ -1,0 +1,252 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+TOPDIR		= @TOPDIR@
+
+PREFIX		= @prefix@
+OZDEMO		= $(PREFIX)/demo
+
+SHELL		= @SH@
+RM		= @RM@ -f
+MKDIR		= @MKDIR@
+ECHO		= @ECHO@
+M4		= @M4@
+LN              = @LN@ -s
+
+INSTALL		= @INSTALL@
+INSTALLFILE	= $(INSTALL) -m 444
+INSTALLSRC	= @INSTALLSRC@
+INSTALLDIR	= $(INSTALL) -m 775 -d
+
+OZBATCH		= @OZBATCH@
+OZCA		= $(OZBATCH) -l AP,OP
+
+
+
+HTMLDIRS = \
+	concurrent constraints distributed
+OZHTMLDIRS = $(HTMLDIRS:%=$(OZDEMO)/%)
+
+DEMODIRS = \
+	examples sampler documentation \
+	examples/fd examples/fd/knights examples/fd/queens \
+	examples/grammar examples/grammar/shieber \
+	sampler/constraints
+OZDEMODIRS = $(DEMODIRS:%=$(OZDEMO)/%)
+
+CONSTRAINTS = \
+	job-shop animated-queens # cutting diagnosis 
+
+CONCURRENT = \
+	bounce trucks transport lift
+
+DISTRIBUTED = \
+	board
+
+
+CONSTRAINTWEB  = $(CONSTRAINTS:%=$(OZDEMO)/constraints/%.html)
+CONCURRENTWEB  = $(CONCURRENT:%=$(OZDEMO)/concurrent/%.html)
+DISTRIBUTEDWEB = $(DISTRIBUTED:%=$(OZDEMO)/distributed/%.html)
+
+WEBPAGES = \
+	$(CONSTRAINTWEB) $(CONCURRENTWEB) $(DISTRIBUTEDWEB) \
+	$(OZDEMO)/index.html $(OZDEMO)/demo.css $(OZDEMO)/demo.gif \
+	$(OZDEMO)/install.html $(OZDEMO)/netscape.gif
+
+OZIMG = $(OZDEMO)/images
+IMGDIRS = \
+	animated-queens diagnosis lift transport trucks
+OZIMGDIRS = $(IMGDIRS:%=$(OZIMG)/%)
+
+QUEENSIMGS0 = \
+	large-cross large-gray large-queen large-solid \
+	micro-gray micro-queen micro-solid \
+	middle-cross middle-gray middle-queen middle-solid \
+	small-gray small-queen small-solid \
+	tiny-gray tiny-queen tiny-solid
+DIAGIMGS0 = \
+	and or xor
+LIFTIMGS0 = \
+	downE downF lift liftDown liftUp upE upF
+TRANSPORTIMGS0 = \
+	down \
+	truck_fill_left truck_fill_right \
+	truck_frame_left truck_frame_right \
+	truck_win_left truck_win_right
+TRUCKSIMGS0 = \
+	truck-left truck-right
+
+OZIMAGES = \
+	$(QUEENSIMGS0:%=$(OZIMG)/animated-queens/%.xbm) \
+	$(DIAGIMGS0:%=$(OZIMG)/diagnosis/%.xbm) \
+	$(LIFTIMGS0:%=$(OZIMG)/lift/%.xbm) \
+	$(TRANSPORTIMGS0:%=$(OZIMG)/transport/%.xbm) \
+	$(TRUCKSIMGS0:%=$(OZIMG)/trucks/%.gif)
+
+CONSTRAINTAPPLETS  = $(CONSTRAINTS:%=constraints/%.oza)
+CONCURRENTAPPLETS  = $(CONCURRENT:%=concurrent/%.oza)
+DISTRIBUTEDAPPLETS = $(DISTRIBUTED:%=distributed/%.oza)
+TRAVEL = \
+	distributed/travel/travelserver \
+	distributed/travel/process.cgi \
+	distributed/travel/form.cgi \
+	distributed/travel/tdb.ozc
+
+LOCALAPPLETS = \
+	$(CONSTRAINTAPPLETS) \
+	$(CONCURRENTAPPLETS) \
+	$(DISTRIBUTEDAPPLETS) \
+	$(TRAVEL)
+
+APPLETS = $(LOCALAPPLETS:%=$(OZDEMO)/%)
+
+all: Makefile $(LOCALAPPLETS)
+
+$(OZDEMO) $(OZDEMODIRS) $(OZIMGDIRS):
+	$(INSTALLDIR) $@
+
+$(OZHTMLDIRS):
+	$(INSTALLDIR) $@
+	$(LN) $@/../demo.css $@
+	$(LN) $@/../demo.gif $@
+
+$(OZDEMO)/index.html: index.html
+	$(INSTALLFILE) $< $@
+$(OZDEMO)/install.html: install.html
+	$(INSTALLFILE) $< $@
+$(OZDEMO)/demo.css: demo.css
+	$(INSTALLFILE) $< $@
+$(OZDEMO)/demo.gif: demo.gif
+	$(INSTALLFILE) $< $@
+$(OZDEMO)/netscape.gif: netscape.gif
+	$(INSTALLFILE) $< $@
+
+$(OZDEMO)/constraints/%.html: constraints/%.html
+	$(INSTALLFILE) $< $@
+$(OZDEMO)/concurrent/%.html: concurrent/%.html
+	$(INSTALLFILE) $< $@
+$(OZDEMO)/distributed/%.html: distributed/%.html
+	$(INSTALLFILE) $< $@
+
+#
+# Images
+#
+
+$(OZIMG)/animated-queens/%.xbm: images/animated-queens/%.xbm
+	$(INSTALLSRC) $< $@
+$(OZIMG)/diagnosis/%.xbm: images/diagnosis/%.xbm
+	$(INSTALLSRC) $< $@
+$(OZIMG)/lift/%.xbm: images/lift/%.xbm
+	$(INSTALLSRC) $< $@
+$(OZIMG)/transport/%.xbm: images/transport/%.xbm
+	$(INSTALLSRC) $< $@
+$(OZIMG)/trucks/%.gif: images/trucks/%.gif
+	$(INSTALLFILE) $< $@
+
+$(OZDEMO)/constraints/%.oza: constraints/%.oza
+	$(INSTALLFILE) $< $@
+$(OZDEMO)/concurrent/%.oza: concurrent/%.oza
+	$(INSTALLFILE) $< $@
+$(OZDEMO)/distributed/%.oza: distributed/%.oza
+	$(INSTALLFILE) $< $@
+
+constraints/%.oza: constraints/%.oz
+	(cd constraints && $(OZCA) ../$<)
+concurrent/%.oza: concurrent/%.oz
+	(cd concurrent && $(OZCA) ../$<)
+
+JOBSHOP = \
+	compiler configure duration-tool examples job \
+	main resource-tool scheduler task-board task tools
+constraints/job-shop.oz: $(JOBSHOP:%=constraints/job-shop/%.oz)
+
+TRANSPORT = \
+	agent broker company configure contract \
+	country driver environment frontend germany \
+	makeplan randomizer truck widgets
+
+concurrent/transport.oz: $(TRANSPORT:%=concurrent/transport/%.oz)
+
+distributed/%.oza: distributed/%.oz
+	(cd distributed && $(OZCA) ../$<)
+
+distributed/travel/process.cgi: distributed/travel/make-process.oz
+	(cd distributed/travel && $(OZCA) ../../$<)
+
+distributed/travel/form.cgi: distributed/travel/make-form.oz
+	(cd distributed/travel && $(OZCA) ../../$<)
+
+distributed/travel/travelserver: distributed/travel/make-server.oz
+	(cd distributed/travel && $(OZCA) ../../$<)
+
+distributed/travel/tdb.ozc: distributed/travel/make-database.oz
+	(cd distributed/travel && $(OZCA) ../../$<)
+
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+FDEXAMPLES = \
+	bin-packing bridge-naive bridge cars change \
+	conference configuration donald family fraction \
+	grocery kalotan knights knights/graphics magic-sequence \
+	magic-square map-coloring money multiply photo \
+	pythagoras queens queens/graphics safe srat \
+	tiling warehouses zebra
+
+GREXAMPLES = \
+	hpsg shieber shieber/formalism shieber/grammar
+
+EXAMPLES = \
+	$(FDEXAMPLES:%=$(OZDEMO)/examples/fd/%.oz) \
+	$(GREXAMPLES:%=$(OZDEMO)/examples/grammar/%.oz)
+
+SAMPLER0 = \
+	constraints/animate-bridge constraints/bridge \
+	constraints/draw-photo constraints/gantt constraints/machines \
+	constraints/scheduling-compiler oz
+SAMPLER = $(SAMPLER0:%=$(OZDEMO)/sampler/%.oz)
+
+$(OZDEMO)/examples/fd/%.oz: examples/fd/%.oz
+	$(INSTALLSRC) $< $@
+$(OZDEMO)/examples/grammar/%.oz: examples/grammar/%.oz
+	$(INSTALLSRC) $< $@
+$(OZDEMO)/examples/grammar/shieber/%.oz: examples/grammar/shieber/%.oz
+	$(INSTALLSRC) $< $@
+$(OZDEMO)/sampler/%.oz: sampler/%.oz
+	$(INSTALLSRC) $< $@
+$(OZDEMO)/sampler/constraints/%.oz: sampler/constraints/%.oz
+	$(INSTALLSRC) $< $@
+
+
+.PHONY: all install install-applets install-web
+.PHONY: clean realclean veryclean
+
+install: all install-web install-applets 
+
+install-applets: install-web $(APPLETS)
+
+install-web: \
+	$(OZDEMO) $(OZDEMODIRS) \
+	$(OZIMGDIRS) $(OZIMAGES) \
+	$(OZHTMLDIRS) $(WEBPAGES) \
+	$(EXAMPLES) $(SAMPLER)
+
+clean:
+	$(RM) *~ ./*/*~ ./*/*/*~
+	$(RM) $(LOCALAPPLETS)
+
+realclean: clean
+
+veryclean: realclean
+
+distclean: veryclean
+	$(RM) config.cache config.status config.log
+	$(RM) Makefile
+
+
+
+
+
