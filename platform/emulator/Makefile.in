@@ -70,7 +70,7 @@ CREATEDFILES= \
         marshalcode.cc marshalMsg.cc register.hh oz.c \
         atoms.hh atoms.cc\
         config.h scanner.cc parser.cc \
-        version.cc initffuns.cc \
+        version.cc initffuns.cc copycode.cc opcodes.cc\
         $(MODINTERS)
 
 OTHERSRCS= \
@@ -345,7 +345,7 @@ os.o: os.cc
 # dependencies
 -include Makefile.deps
 
-value.cc: atoms.hh
+value.o: atoms.hh
 
 marshaler.hh marshalMsg.cc: msgFormat.m4
 copycode.cc marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
