@@ -1310,7 +1310,7 @@ define
                IndexSortAs <- {CondSelect M 'sort.as' unit}
                NewM = if {SGML.isOfClass M menu} then
                          {TransformAnds M
-                          fun {$ And} q('class': [menu] And) end}
+                          fun {$ And} span('class': [menu] And) end}
                       elseif {SGML.isOfClass M module} then
                          {TransformAnds M
                           fun {$ And} code(display: inline And) end}
