@@ -10,11 +10,12 @@
 
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
+CYGPATH		= $(SRCDIR)/cygpath.sh
 SRCTOP		= @top_srcdir@
 BUILDDIR	= $(shell pwd)
 BUILDTOP	= $(BUILDDIR)
-PREFIX		= @prefix@
-OZHOME		= @OZHOME@
+PREFIX		= $(shell $(CYGPATH) @prefix@)
+OZHOME		= $(shell $(CYGPATH) @OZHOME@)
 CACHE		= $(PREFIX)/cache
 DOCDIR		= $(PREFIX)/doc
 BINDIR		= $(PREFIX)/bin
@@ -23,9 +24,18 @@ INCDIR		= $(PREFIX)/include
 
 export OZHOME
 
+# moved up because needed early for windows
+OZTOOL		= @VAR_OZTOOL@
+PLATFORM	= $(shell $(OZTOOL) platform)
+ifeq ($(PLATFORM),win32-i486)
+OZLOADSEP=;
+else
+OZLOADSEP=:
+endif
+
 # these additional 2 lines makes it possible to build in a directory
 # different from the source directory
-OZLOAD = prefix=$(SRCDIR)=$(BUILDDIR):root=$(BUILDDIR):root=$(SRCDIR):cache=~/.oz/cache:cache=$(OZHOME)/cache
+OZLOAD = prefix=$(SRCDIR)=$(BUILDDIR)$(OZLOADSEP)root=$(BUILDDIR)$(OZLOADSEP)root=$(SRCDIR)$(OZLOADSEP)cache=~/.oz/cache$(OZLOADSEP)cache=$(OZHOME)/cache
 export OZLOAD
 
 XSLTPROC	= @VAR_XSLTPROC@
@@ -137,11 +147,15 @@ export PKG_METHOD
 # TOOLS
 #=====================================================================
 
-OZTOOL		= @VAR_OZTOOL@
 OZE		= @VAR_OZE@
-OZC		= $(OZE) @VAR_OZC@
-OZL		= $(OZE) @VAR_OZL@
-OZH		= $(OZE) @VAR_OZH@
+ifeq ($(PLATFORM),win32-i486)
+WITH_OZE=
+else
+WITH_OZE=$(OZE)
+endif
+OZC		= $(WITH_OZE) @VAR_OZC@
+OZL		= $(WITH_OZE) @VAR_OZL@
+OZH		= $(WITH_OZE) @VAR_OZH@
 INSTALL		= @VAR_OZINSTALL@
 INSTALL_BIN	= $(INSTALL) -x
 INSTALL_FILE	= $(INSTALL) -f
@@ -150,7 +164,6 @@ CFLAGS		= @CFLAGS@
 OZCFLAGS	= $(PKG_OZCFLAGS)
 OZLFLAGS	= $(PKG_OZLFLAGS)
 OZHFLAGS	= $(PKG_OZHFLAGS)
-PLATFORM	= $(shell $(OZTOOL) platform)
 
 #=====================================================================
 # RECURSIVE PROCESSING AND CLEANING UP
@@ -205,9 +218,9 @@ all.bin	:: $(PKG_INSTALLS_BIN)
 %.o: %.cc
 	$(OZTOOL) c++ $(CFLAGS) $(PKG_CPPFLAGS) $(PKG_CFLAGS) -c $< -o $@
 %.ozf: %.oz
-	$(OZC) $(OZCFLAGS) -c $< -o $@
+	$(OZC) $(OZCFLAGS) -c $(shell $(CYGPATH) $<) -o $@
 %.exe: %.ozf
-	$(OZL) $(OZLFLAGS) -x $< -o $@
+	$(OZL) $(OZLFLAGS) -x $(shell $(CYGPATH) $<) -o $@
 
 #=====================================================================
 # INSTALLATION
