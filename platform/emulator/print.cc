@@ -448,7 +448,7 @@ PRINT(Suspension)
     if (isResistant()) stream << 'R';
     if (isExtSusp()) stream << 'E';
     if (isSurvSusp()) stream << 'S';
-    if (isEqvSusp()) stream << 'V';
+    if (isUnifySusp()) stream << 'U';
     stream << "] -> ";
 
     if (getCont())
