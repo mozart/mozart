@@ -10,6 +10,7 @@ local
 
    class AboutDialog 
       from TkTools.dialog
+      prop final
 
       meth init(master:Master)
 	 TkTools.dialog,tkInit(master:  Master
@@ -34,6 +35,7 @@ local
 
    class ShutdownDialog 
       from TkTools.dialog
+      prop final
 
       meth init(master:Master shut:Shut)
 	 TkTools.dialog,tkInit(master:  Master
@@ -74,6 +76,8 @@ local
       
       class UpdateDialog
 	 from TkTools.dialog
+	 prop final
+	    
 	 meth init(master:Master  options:O)
 	    TkTools.dialog,tkInit(master:  Master
 				  title:   TitleName#': Update'
@@ -116,6 +120,7 @@ local
       
       class HistoryDialog
 	 from TkTools.dialog
+	 prop final
 
 	 meth init(master:Master options:O)
 	    TkTools.dialog,tkInit(master:  Master

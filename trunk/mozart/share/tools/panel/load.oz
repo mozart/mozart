@@ -56,6 +56,8 @@ in
 
    class Load
       from Tk.canvas
+      prop final
+	 
       feat
 	 MinY
 	 BothTag

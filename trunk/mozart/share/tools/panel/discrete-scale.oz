@@ -19,6 +19,7 @@ local
    
    class TickCanvas
       from Tk.canvas
+      prop final
       
       meth init(parent:P width:W ticks:N) = M
 	 TickCanvas,tkInit(parent:             P
@@ -49,7 +50,9 @@ local
    
    class TickScale
       from Tk.scale
+      prop final
       feat Ticks
+	 
       meth init(parent:P ticks:N width:W action: A)
 	 TickScale,tkInit(parent:             P
 			  highlightthickness: 0
@@ -84,6 +87,7 @@ in
 
    class DiscreteScale
       from Tk.frame
+      prop final
 
       feat
 	 Value
