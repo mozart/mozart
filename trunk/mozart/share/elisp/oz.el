@@ -35,12 +35,12 @@
 
 ;; automatically switch into Oz-Mode when loading
 ;; files ending in ".oz"
-(or (assoc "\\.oz\\'" auto-mode-alist)
+(or (assoc "\\.oz$" auto-mode-alist)
     (setq auto-mode-alist
-	  (append '(("/\\.ozrc\\'" . oz-mode)
-		    ("\\.oz\\'" . oz-mode)
-		    ("\\.ozm\\'" . ozm-mode)
-		    ("\\.ozg\\'" . oz-gump-mode))
+	  (append '(("/\\.ozrc$" . oz-mode)
+		    ("\\.oz$" . oz-mode)
+		    ("\\.ozm$" . ozm-mode)
+		    ("\\.ozg$" . oz-gump-mode))
 		  auto-mode-alist)))
 
 
