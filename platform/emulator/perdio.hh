@@ -182,9 +182,9 @@ int perdioInit();
 /* ************************************************************************ */
 
 void gcOwnerTable();
-void gcBorrowTable1();
-void gcBorrowTable2();
-void gcBorrowTable3();
+void gcBorrowTableRoots();
+void gcBorrowTableUnusedFrames();
+void gcBorrowTableFinal();
 void gcFrameToProxy();
 void gcGNameTable();
 void gcGName(GName*);

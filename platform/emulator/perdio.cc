@@ -1323,8 +1323,8 @@ public:
   Bool isGCMarked(){ return (getFlags() & PO_BORROW_GC_MARK); }
   void removeGCMark(){removeFlags(PO_BORROW_GC_MARK);}
 
-  void gcBorrow1(int);
-  void gcBorrow2(int);
+  void gcBorrowRoot(int);
+  void gcBorrowUnusedFrame(int);
 
   void copyBorrow(BorrowEntry* from,int i);
 
@@ -1811,9 +1811,9 @@ public:
     no_used=0;
     hshtbl = new NetHashTable();  }
 
-  void gcBorrowTable1();
-  void gcBorrowTable2();
-  void gcBorrowTable3();
+  void gcBorrowTableRoots();
+  void gcBorrowTableUnusedFrames();
+  void gcBorrowTableFinal();
   void gcFrameToProxy();
 
   BorrowEntry* find(NetAddress *na)  {
@@ -2290,9 +2290,9 @@ void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable){
 /* OBS: ---------- interface to gc.cc ----------*/
 
 void gcOwnerTable()       { ownerTable->gcOwnerTable();}
-void gcBorrowTable3()     { borrowTable->gcBorrowTable3();}
-void gcBorrowTable2()     { borrowTable->gcBorrowTable2();}
-void gcBorrowTable1()     { borrowTable->gcBorrowTable1();}
+void gcBorrowTableFinal() { borrowTable->gcBorrowTableFinal();}
+void gcBorrowTableUnusedFrames() { borrowTable->gcBorrowTableUnusedFrames();}
+void gcBorrowTableRoots() { borrowTable->gcBorrowTableRoots();}
 void gcGNameTable()       { theGNameTable.gcGNameTable();}
 void gcGName(GName* name) { if (name) name->gcGName(); }
 void gcFrameToProxy()     {
@@ -2472,7 +2472,7 @@ void OwnerTable::gcOwnerTable()
   return;
 }
 
-void BorrowEntry::gcBorrow1(int i) {
+void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
     PD((GC,"BT1 b:%d variable found",i));
     PerdioVar *pv=getVar();
@@ -2485,20 +2485,21 @@ void BorrowEntry::gcBorrow1(int i) {
   }
 }
 
-void BorrowTable::gcBorrowTable1()
+void BorrowTable::gcBorrowTableRoots()
 {
   PD((GC,"borrowTable1 gc"));
-  int i;
-  for(i=0;i<size;i++) {
+  for(int i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
-    if (!b->isFree()){
-      if (!b->isGCMarked()) {b->gcBorrow1(i);}}}}
+    if (!b->isFree() && !b->isGCMarked())
+      b->gcBorrowRoot(i);
+  }
+}
 
-void BorrowEntry::gcBorrow2(int i) {
+void BorrowEntry::gcBorrowUnusedFrame(int i) {
   if(isTertiary() && getTertiary()->getTertType()==Te_Frame)
     {u.tert= (Tertiary*) u.tert->gcConstTermSpec();}}
 
-void BorrowTable::gcBorrowTable2()
+void BorrowTable::gcBorrowTableUnusedFrames()
 {
   PD((GC,"borrow gc roots"));
   int i;
@@ -2507,7 +2508,7 @@ void BorrowTable::gcBorrowTable2()
     if(!b->isFree()){
       Assert((b->isVar()) || (b->getTertiary()->getTertType()==Te_Frame) 
 	     || (b->getTertiary()->getTertType()==Te_Proxy));
-      if(!(b->isGCMarked())) {b->gcBorrow2(i);}}}
+      if(!(b->isGCMarked())) {b->gcBorrowUnusedFrame(i);}}}
 }
 
 void BorrowTable::gcFrameToProxy(){
@@ -2517,7 +2518,7 @@ void BorrowTable::gcFrameToProxy(){
     BorrowEntry *b=getBorrow(i);
     if((!b->isFree()) && (!b->isVar())){
       Tertiary *t=b->getTertiary();
-      if(t->getTertType()==Te_Frame){
+      if(t->getTertType()==Te_Frame) {
 	if((t->getType()==Co_Cell) && ((CellFrame*)t)->getState()==Cell_Lock_Invalid){
 	  ((CellFrame*)t)->convertToProxy();}
 	else{
@@ -2535,58 +2536,71 @@ void maybeUnask(BorrowEntry *be){
       sendUnAskError(t,ec);}
     w=w->getNext();}}
 
-extern TaggedRef gcTagged1(TaggedRef in);
 
 /* OBSERVE - this must done at the end of other gc */
-void BorrowTable::gcBorrowTable3(){
-  Tertiary *t;
+void BorrowTable::gcBorrowTableFinal()
+{
   PD((GC,"borrow gc"));
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
-    if (!b->isFree()) {
-      if(b->isVar()){
-	if(b->isGCMarked()) {
-	  b->removeGCMark(); // marks owner site too
-	  PD((GC,"BT b:%d mark variable found",i));}
-	else{
-	  // WORKAROUND BY RS AND CS
-	  if(0 && b->getTertiary()->maybeHasInform()){
-	    maybeUnask(b);}
-	  PD((GC,"BT b:%d unmarked variable found",i));
-	  borrowTable->maybeFreeBorrowEntry(i);}}
-      else{
-	if(b->isGCMarked()){
-	  b->removeGCMark(); // marks owner site too
-	  PD((GC,"BT b:%d mark tertiary found",i));
-	  Assert(b->isTertiary());
-	  Tertiary *t=b->getTertiary();
-	  if(t->getTertType()==Te_Frame){
-	    switch(t->getType()){
-	    case Co_Cell:{
-	      CellFrame *cf=(CellFrame *)t;
-	      if(cf->isAccessBit()){
-		short state=cf->getState();
-		cf->resetAccessBit();
-		if(cf->dumpCandidate()){
-		  cellLockSendDump(b);}}
-	      break;}
-	    case Co_Lock:{
-	      LockFrame *lf=(LockFrame *)t;
-	      if(lf->isAccessBit()){
-		int state=lf->getState();
-		lf->resetAccessBit();
-		if(lf->dumpCandidate()){
-		  cellLockSendDump(b);}}
-	      break;}
-	    default:{
-	      Assert(0);
-	      break;}}}}
-	else{
-	    Assert(b->getTertiary()->getTertType()==Te_Proxy);	    
-	    borrowTable->maybeFreeBorrowEntry(i);}}}}
+    if (b->isFree())
+      continue;
+
+    if(b->isVar()) {
+      if(b->isGCMarked()) {
+	b->removeGCMark(); // marks owner site too
+	PD((GC,"BT b:%d mark variable found",i));
+      } else{
+	PD((GC,"BT b:%d unmarked variable found",i));
+	borrowTable->maybeFreeBorrowEntry(i);
+      }
+    } else {
+      Tertiary *t = b->getTertiary();
+      if(b->isGCMarked()) {
+	b->removeGCMark(); // marks owner site too
+	PD((GC,"BT b:%d mark tertiary found",i));
+
+	// PER PLEASE CHECK
+	if(t->maybeHasInform())
+	  maybeUnask(b);
+
+	if(t->getTertType()==Te_Frame) {
+	  switch(t->getType()){
+	  case Co_Cell:{
+	    CellFrame *cf=(CellFrame *)t;
+	    if(cf->isAccessBit()){
+	      cf->resetAccessBit();
+	      if(cf->dumpCandidate()) {
+		cellLockSendDump(b);
+	      }
+	    }
+	    break;
+	  }
+	  case Co_Lock:{
+	    LockFrame *lf=(LockFrame *)t;
+	    if(lf->isAccessBit()){
+	      lf->resetAccessBit();
+	      if(lf->dumpCandidate()) {
+		cellLockSendDump(b);
+	      }
+	    }
+	    break;
+	  }
+	  default:
+	    Assert(0);
+	    break;
+	  }
+	}
+      } else{
+	Assert(t->getTertType()==Te_Proxy);
+	borrowTable->maybeFreeBorrowEntry(i);
+      }
+    }
+  }
   compactify();
-  hshtbl->compactify();}
+  hshtbl->compactify();
+}
 
 /* OBSERVE - this must be done at the end of other gc */
 void GNameTable::gcGNameTable()
@@ -2627,7 +2641,7 @@ extern void dogcGName(GName *gn);
 
 void gcBorrowNow(int i){
   BorrowEntry *be=borrowTable->getBorrow(i);
-  if (!be->isGCMarked()) { // this condition is necessary gcBorrow1
+  if (!be->isGCMarked()) { // this condition is necessary gcBorrowRoot
     be->makeGCMark();
     be->gcPO();}}
 
