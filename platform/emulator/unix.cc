@@ -1449,6 +1449,16 @@ OZ_BI_define(unix_pipe,2,2)
       }
 #endif
 
+      // the child process should not produce a core file -- otherwise
+      // we get a problem if all core files are just named 'core', because
+      // the emulator's core file gets overwritten immediately by wish's one...
+      struct rlimit rlim;
+      rlim.rlim_cur = 0;
+      rlim.rlim_max = 0;
+      if (setrlimit(RLIMIT_CORE, &rlim) < 0) {
+        RETURN_UNIX_ERROR;
+      }
+
       int i;
       for (i = 0; i < FD_SETSIZE; i++) {
         if (i != sv[1]) {
