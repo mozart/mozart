@@ -1658,6 +1658,7 @@ public:
       int numClosures;
       int numCalled;
       int heapUsed;
+      int samples;
       static PrTabEntry *allPrTabEntries;
       static void printPrTabEntries();
       static void profileReset();)
@@ -1673,7 +1674,7 @@ public:
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
     info = nil();
-    ProfileCode(numClosures=0; numCalled=0; heapUsed = 0;
+    ProfileCode(numClosures=numCalled=heapUsed=samples=0;
                 next=allPrTabEntries; allPrTabEntries=this);
   }
 

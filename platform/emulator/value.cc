@@ -1239,22 +1239,24 @@ PrTabEntry *PrTabEntry::allPrTabEntries = NULL;
 void PrTabEntry::printPrTabEntries()
 {
   PrTabEntry *aux = allPrTabEntries;
-  int heapTotal = 0, callsTotal = 0;
+  int heapTotal = 0, callsTotal = 0, samplesTotal = 0;
   while(aux) {
-    heapTotal  += aux->heapUsed;
-    callsTotal += aux->numCalled;
-    if (aux->numClosures || aux->numCalled || aux->heapUsed) {
+    heapTotal    += aux->heapUsed;
+    callsTotal   += aux->numCalled;
+    samplesTotal += aux->samples;
+    if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
       char *name = ozstrdup(toC(aux->printname)); // cannot have 2 toC in one line
-      printf("%20s Created: %5d Called: %6d %s(%d), Heap: %5d KB\n",
-	     name,aux->numClosures,aux->numCalled,
-	     toC(aux->fileName),aux->lineno,aux->heapUsed/KB);
+      printf("%20.20s Created: %5d Called: %6d Heap: %5d KB, Samples: %5d %s(%d)\n",
+	     name,aux->numClosures,aux->numCalled,aux->heapUsed/KB,
+	     aux->samples,toC(aux->fileName),aux->lineno);
       delete name;
     }
     aux = aux->next;
   }
 
   printf("\n=============================================================\n\n");
-  printf("    Total calls: %d, total heap: %d KB\n\n",callsTotal,heapTotal/KB);
+  printf("    Total calls: %d, total heap: %d KB, samples: %d\n\n",
+	 callsTotal,heapTotal/KB,samplesTotal);
 }
 
 
@@ -1265,6 +1267,7 @@ void PrTabEntry::profileReset()
     aux->numClosures = 0;
     aux->numCalled   = 0;
     aux->heapUsed    = 0;
+    aux->samples     = 0;
     aux = aux->next;
   }
 }
