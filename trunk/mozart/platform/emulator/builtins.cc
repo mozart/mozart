@@ -1227,84 +1227,6 @@ OZ_Return MonitorArityPropagator::run(void)
 
 
 
-// {HasFeatureNow X F ?B}: B is boolean with truth value "X has feature F".
-// X must be undetermined record and F must be feature.
-// Non-monotonic built-in.
-OZ_C_proc_begin(BIhasFeatureNow, 3)
-{
-    OZ_Term origterm = OZ_getCArg(0);
-    OZ_Term origfea = OZ_getCArg(1);
-    OZ_Term term = OZ_getCArg(0);
-    OZ_Term fea = OZ_getCArg(1);
-    OZ_Term out = OZ_getCArg(2);
-	
-    DEREF(fea,  feaPtr,  feaTag);
-    DEREF(term, termPtr, termTag);
-
-    if (isAnyVar(feaTag)) {
-        switch (termTag) {
-        case LTUPLE:
-        case SRECORD:
-        case LITERAL:
-        case SVAR:
-        case UVAR:
-            OZ_suspendOn(origfea);
-        case CVAR:
-            switch (tagged2CVar(term)->getType()) {
-            case FDVariable:
-            case BoolVariable:
-                TypeErrorT(0,"Record");
-            default:
-                OZ_suspendOn(origfea);
-            }
-        default:
-            TypeErrorT(0,"Record");
-
-        }
-    }
-    if (!isFeature(fea)) TypeErrorT(1,"Feature");
-
-    switch (termTag) {
-    case LITERAL:
-        return OZ_unify(out,NameFalse);
-    case LTUPLE:
-      {
-        if (!isSmallInt(fea)) return OZ_unify(out,NameFalse);
-        int feaval=smallIntValue(fea);
-        if (feaval==1 || feaval==2) return OZ_unify(out,NameTrue);
-        return OZ_unify(out,NameFalse);
-      }
-    case SRECORD:
-        if (tagged2SRecord(term)->getFeature(fea)!=makeTaggedNULL())
-            return OZ_unify(out,NameTrue);
-        else
-            return OZ_unify(out,NameFalse);
-    case UVAR:
-    case SVAR:
-        OZ_suspendOn(origterm);
-    case CVAR:
-	switch (tagged2CVar(term)->getType()) {
-	case OFSVariable:
-          {
-            GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-            if (ofsvar->getFeatureValue(fea)!=makeTaggedNULL())
-                return OZ_unify(out,NameTrue);
-            else
-                return OZ_unify(out,NameFalse);
-          }
-	case FDVariable:
-	case BoolVariable:
-	    TypeErrorT(0,"Record");
-	default:
-	    OZ_suspendOn(origterm);
-	}
-    default:
-        TypeErrorT(0,"Record");
-    }
-}
-OZ_C_proc_end
-
-
 
 // Create new thread on suspension:
 OZ_Return uparrowInline(TaggedRef, TaggedRef, TaggedRef&);
@@ -5504,6 +5426,7 @@ OZ_C_proc_begin(BIdelay,1) {
   
   if (isAnyVar(var_tag)) {
     am.addSuspendVarList(var_ptr);
+    OZ_args[0] = makeTaggedSmallInt(-1);
     return SUSPEND;
   }
   return PROCEED;
@@ -6878,35 +6801,6 @@ OZ_C_proc_end
 
 
 
-OZ_C_proc_begin(BIsetClosed,1)
-{
-  OZ_Term obj = OZ_getCArg(0);
-
-  DEREF(obj,objPtr,_2);
-  if (isAnyVar(obj)) OZ_suspendOn(OZ_getCArg(0));
-  if (!isObject(obj)) TypeErrorT(0,"Object");
-  Object *oo = (Object *)tagged2Const(obj);
-  if (oo->isClosed()) return PROCEED;
-  OZ_suspendOn(oo->attachThread());
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIisClosed,2)
-{
-  OZ_Term tobj = OZ_getCArg(0);
-  DEREF(tobj,_1,_2);  
-  if (isAnyVar(tobj)) OZ_suspendOn(OZ_getCArg(0));
-  if (!isObject(tobj)) TypeErrorT(0,"Object");
-
-  Object *obj = (Object *) tagged2Const(tobj);
-
-  return OZ_unify(OZ_getCArg(1),
-		  obj->isClosed() ? NameTrue : NameFalse);
-}
-OZ_C_proc_end
-
-
 OZ_C_proc_begin(BIgetOONames,5)
 {
   if (OZ_unify(OZ_getCArg(0),NameOoAttr)       &&
@@ -7208,7 +7102,6 @@ BIspec allSpec2[] = {
 
   {"monitorArity",   3, BImonitorArity,   0},
   {"tellRecordSize", 3, BIsystemTellSize, 0},
-  {"hasFeatureNow",  3, BIhasFeatureNow,  0},
   {"recordCIsVarB",  2, BIisRecordCVarB,  0},
 
   {".",            3,BIdot,              (IFOR) dotInline},
@@ -7262,7 +7155,7 @@ BIspec allSpec2[] = {
   {"getLingRefFd",   1, BIgetLingRefFd,		0},
   {"getLingEof",     1, BIgetLingEof,		0},
   {"getOzEof",       1, BIgetLingEof,		0},
-  {"System.constraints", 2, BIconstraints,		0},
+  {"System.nbSusps", 2, BIconstraints,		0},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
@@ -7348,7 +7241,7 @@ BIspec allSpec2[] = {
   {"traceOff",    0, BItraceOff},
   {"Debug.displayCode", 2, BIdisplayCode},
 
-  {"System_getPrintName",2,BIgetPrintName},
+  {"System.printName",2,BIgetPrintName},
 
   {"ozparser_parse",2,ozparser_parse},
   {"ozparser_init",0,ozparser_init},
@@ -7378,8 +7271,6 @@ BIspec allSpec2[] = {
   {"getOONames",       5,BIgetOONames, 	       0},
   {"getSelf",          1,BIgetSelf,            0},
   {"setSelf",          1,BIsetSelf,            0},
-  {"isClosed",         2,BIisClosed,           0},
-  {"setClosed",        1,BIsetClosed,          0},
 
   {"Space.new",           2, BInewSpace,        0},
   {"IsSpace",             2, BIisSpace,         0},
