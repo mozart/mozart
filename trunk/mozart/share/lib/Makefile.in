@@ -41,7 +41,7 @@ OZ_LOAD		= root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\:
 export OZ_LOAD
 COMPILE		= $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
 EXEC		= $(OZBATCH) $(OZFLAGS)
-EXECWITHSTD	= $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz
+EXECWITHSTD	= $(OZBATCH) $(OZFLAGS) -l AP,SP,OP --include=DumpIntro.oz
 OZMA		= $(OZBATCH) $(OZFLAGS) --ozma
 
 OZVERSION	= $(TOPDIR)/OZVERSION
@@ -77,7 +77,7 @@ APSRC = $(APSRC1:%.oz=AP/%.oz) AP.oz
 CPSRC1 = Search.oz FD.oz FS.oz
 CPSRC = $(CPSRC1:%=CP/%) CP.oz
 
-DPSRC1 = Site.oz Connection.oz agenda.oz remote.oz server.oz
+DPSRC1 = Site.oz Connection.oz Remote.oz agenda.oz remote.oz server.oz
 DPSRC = $(DPSRC1:%=DP/%) DP.oz
 
 WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
@@ -183,7 +183,7 @@ COMPONENTS = \
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 
-BINFILES = $(OZBIN)/ozbatch
+BINFILES = $(OZBIN)/ozbatch $(OZBIN)/ozserver
 
 BITMAPS1 = \
 	mini-dec.xbm mini-inc.xbm \
@@ -202,7 +202,7 @@ OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
 .PHONY: all install clean realclean veryclean tags
 
-all: Makefile $(TYPS) $(TYCS) $(COMPONENTS) ozbatch
+all: Makefile $(TYPS) $(TYCS) $(COMPONENTS) ozbatch ozserver
 
 ozbatch.ozm: MakeAssembly.oz \
 	$(STANDARDSRC) Base.env Standard.env \
@@ -216,6 +216,10 @@ ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
 	SP.ozc SP.env OP.ozc OP.env \
 	AP.ozc AP.env
 	$(EXECWITHSTD) MakeBatch.oz
+
+ozserver: MakeOzServer.oz $(DUMPINTRO) \
+	SP.env OP.env DP.env
+	$(EXECWITHSTD) MakeOzServer.oz
 
 Base.ozc: Standard.ozc
 	@$(ECHO) > /dev/null
@@ -231,7 +235,8 @@ install: all \
 clean:
 	$(RM) *~ *.bak
 	$(RM) compiler-Version.oz compiler-Opcodes.oz ozcar-version.oz
-	$(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS) ozbatch
+	$(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS) 
+	$(RM) ozbatch ozserver
 	$(RM) TAGS
 	$(RM) -r tyc
 
@@ -268,6 +273,9 @@ $(OZLIB)/%.tyc: tyc/%.tyc
 	$(INSTALLFILE) $< $@
 
 $(OZBIN)/ozbatch: ozbatch
+	$(INSTALLPRG) $< $@
+
+$(OZBIN)/ozserver: ozserver
 	$(INSTALLPRG) $< $@
 
 %.typ: %.env
