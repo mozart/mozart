@@ -924,7 +924,7 @@ AC_DEFUN(OZ_PATH_PROG, [
     oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
     AC_PATH_PROG($1,$2,,$oz_for)
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) $1=`echo $$1 | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$$1"
