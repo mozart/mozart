@@ -266,7 +266,7 @@ OZ_Return OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
   Bool suspNotAdded = TRUE;
 
   for (int i = OZ_arity; i--; )
-    if (!OZ_isSingleValue(OZ_getCArg(i))) {
+    if (!OZ_isSingleValue(OZ_args[i])) {
       OZ_addThread(OZ_args[i], thr);
       suspNotAdded = FALSE;
     }
