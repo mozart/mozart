@@ -66,6 +66,11 @@ public:
     return table->getKeys();
   }
 
+  TaggedRef toRecord(TaggedRef lbl)
+  {
+    return table->toRecord(lbl);
+  }
+
   OZPRINT;
   OZPRINTLONG;
 };

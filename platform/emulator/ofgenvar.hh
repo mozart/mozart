@@ -271,6 +271,9 @@ public:
     // Allocate & return _unsorted_ list containing all features:
     TaggedRef getKeys();
 
+    // Convert table to Literal, SRecord or LTuple
+    TaggedRef toRecord(TaggedRef lbl);
+
 private:
     dt_index fullhash(TaggedRef id);
 };
@@ -318,12 +321,19 @@ public:
         dynamictable=DynamicTable::newDynamicTable(size);
     }
 
-    // GenOFSVariable(TaggedRef lbl)
-    // : GenCVariable(OFSVariable) {
-    //  Assert(isLiteral(lbl));
-    //  label=lbl;
-    //  dynamictable=DynamicTable::newDynamicTable();
-    // }
+    GenOFSVariable(TaggedRef lbl)
+    : GenCVariable(OFSVariable) {
+        Assert(isLiteral(lbl));
+        label=lbl;
+        dynamictable=DynamicTable::newDynamicTable();
+    }
+
+    GenOFSVariable(TaggedRef lbl, dt_index size)
+    : GenCVariable(OFSVariable) {
+        Assert(isLiteral(lbl));
+        label=lbl;
+        dynamictable=DynamicTable::newDynamicTable(size);
+    }
 
     // Methods relevant for term copying (gc and solve)
     void gc(void);
@@ -395,8 +405,8 @@ public:
         dynamictable=dynamictable->remove(feature);
     }
 
-    // Used in conjunction with addFeatureValue to propagate suspensions:
-    void propagateFeature(void) {
+    // Used to propagate suspensions (addFeatureValue, getLabel don't do it):
+    void propagateOFS(void) {
       /* third argument must be ignored --> use AtomNil */
       propagate(makeTaggedCVar(this), suspList, pc_propagator);
     }

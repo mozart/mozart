@@ -399,6 +399,27 @@ Bool DynamicTable::hasExtraFeatures(Arity *recordArity) {
 }
 
 
+// Convert dynamic table to Literal, SRecord, or LTuple:
+TaggedRef DynamicTable::toRecord(TaggedRef lbl)
+{
+    if (numelem==0)
+        return lbl;
+    else {
+        TaggedRef alist=getArityList();
+        Arity *arity=aritytable.find(alist);
+        SRecord *newrec = SRecord::newSRecord(lbl,arity);
+        for (dt_index i=0; i<size; i++) {
+            if (table[i].value!=makeTaggedNULL()) {
+                Bool ok=newrec->setFeature(table[i].ident,table[i].value);
+                Assert(ok);
+            }
+        }
+        return newrec->normalize();
+    }
+}
+
+
+
 //-------------------------------------------------------------------------
 //                               for class GenOFSVariable
 //-------------------------------------------------------------------------
@@ -807,7 +828,6 @@ TaggedRef GenOFSVariable::getArityList()
 {
     return dynamictable->getArityList();
 }
-
 
 /* add a suspension, that is only woken up, when we get bound */
 void GenOFSVariable::addDetSusp (Thread *thr)
