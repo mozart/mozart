@@ -155,7 +155,7 @@ goz_ozterm_to_gtkarg(OZ_Term term)
   GtkArg arg;
   int    len;
 
-  if (! OZ_isTuple (term)) {
+  if (! OZ_isCons (term)) {
     OZ_typeError (0, "expecting tuple of the form Name|Value");
   }
 
