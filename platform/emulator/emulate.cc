@@ -11,7 +11,7 @@
   ------------------------------------------------------------------------
 */
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma implementation "emulate.hh"
 #endif
 
@@ -482,8 +482,9 @@ void AM::suspendOnVarList(Suspension *susp)
 
 Thread *AM::getJob()
 {
-  int size=currentThread->TaskStack::getSeqSize();
-  if (size == -1) {
+  int size;
+  if (!currentThread->hasJobs() ||
+      (size=currentThread->TaskStack::getSeqSize()) == -1) {
     if (currentThread == rootThread) {
       rootThread=newThread(currentThread->getPriority(),rootBoard);
       checkToplevel();
@@ -1044,6 +1045,10 @@ void engine()
     case C_JOB:
       {
 	taskstack->setTop(topCache);
+	Bool hasJobs = TaskStack::getJobFlagFromEntry(topElem);
+	if (!hasJobs){
+	  e->currentThread->unsetHasJobs();
+	}
 	goto LBLpopTask;
       }
     case C_XCONT:
