@@ -710,7 +710,7 @@ OZ_C_ioproc_begin(unix_read,5)
 
   char *buf = (char *) malloc(maxx+1);
 
-  WRAPCALL(read(fd, buf, maxx), ret, outN);
+  WRAPCALL(osread(fd, buf, maxx), ret, outN);
 
   OZ_Term hd = openbuff2list(ret, buf, outTail);
 
@@ -1385,6 +1385,10 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
 }
 OZ_C_proc_end
 
+#endif   /* WINDOWS */
+#endif   /* OS2 */
+
+
 const int maxArgv = 100;
 static char* argv[maxArgv];
 
@@ -1451,6 +1455,47 @@ OZ_C_ioproc_begin(unix_pipe,4)
     argl = tl;
   }
 
+#ifdef WINDOWS
+  int pid = 0, sock = 0;
+
+  STARTUPINFO si;
+  SECURITY_ATTRIBUTES sa;
+  ZeroMemory(&si,sizeof(si));
+  si.cb = sizeof(si);
+  sa.nLength = sizeof(sa);
+  sa.lpSecurityDescriptor = NULL;
+  sa.bInheritHandle = TRUE;
+  PROCESS_INFORMATION pinf;
+
+  HANDLE rh, wh, dupOut, dupIn;
+  BOOL ret = CreatePipe(&rh,&wh,&sa,0);
+  ret = DuplicateHandle(GetCurrentProcess(), wh,
+                        GetCurrentProcess(), &dupOut, 0, TRUE,
+                        DUPLICATE_SAME_ACCESS);
+  ret = DuplicateHandle(GetCurrentProcess(), rh,
+                        GetCurrentProcess(), &dupIn, 0, TRUE,
+                        DUPLICATE_SAME_ACCESS);
+  si.hStdOutput = dupOut;
+  si.hStdInput = dupIn;
+  si.dwFlags = STARTF_USESTDHANDLES;
+
+  char buf[10000];
+  buf[0] = '\0';
+  {
+    int i;
+    for (i=0; i<argno ; i++) {
+      strcat(buf,argv[i]);
+    }
+  }
+  printf("Executing: %s\n",buf);
+  ret = CreateProcess(NULL,buf,&sa,NULL,TRUE,CREATE_NEW_CONSOLE,
+                      NULL,NULL,&si,&pinf);
+
+  int rfd = _hdopen((int)rh,O_RDONLY|O_BINARY);
+  int wfd = _hdopen((int)wh,O_WRONLY|O_BINARY);
+
+#else  /* !WINDOWS */
+
   int sv[2];
   WRAPCALL(socketpair(PF_UNIX,SOCK_STREAM,0,sv),ret,rpid);
 
@@ -1472,27 +1517,25 @@ OZ_C_ioproc_begin(unix_pipe,4)
         RETURN_UNIX_ERROR(rpid);
       }
     }
-    break;
+    return FAILED;
   case -1:
     RETURN_UNIX_ERROR(rpid);
   default: // parent
-    close(sv[1]);
-
-    int i;
-    for (i=1 ; i<argno ; i++)
-      free(argv[i]);
-
-    return OZ_unifyInt(rpid,pid) == PROCEED
-      && OZ_unifyInt(rsock,sv[0]) == PROCEED ? PROCEED : FAILED;
+    break;
   }
+  close(sv[1]);
 
-  return FAILED;
+  int sock = sv[0];
+#endif
+
+  int i;
+  for (i=1 ; i<argno ; i++)
+    free(argv[i]);
+
+  return OZ_unifyInt(rpid,pid) == PROCEED
+    && OZ_unifyInt(rsock,sock) == PROCEED ? PROCEED : FAILED;
 }
 OZ_C_proc_end
-#endif   /* WINDOWS */
-#endif   /* OS2 */
-
-
 
 static OZ_Term mkAliasList(char **alias)
 {
@@ -1752,7 +1795,6 @@ NotAvail("sendToUnix",5,unix_sendToUnix);
 NotAvail("connectUnix",3,unix_connectUnix);
 NotAvail("acceptUnix",3,unix_acceptUnix);
 NotAvail("receiveFromUnix",7,unix_receiveFromUnix);
-NotAvail("pipe",4,unix_pipe);
 NotAvail("tempName",3,unix_tempName);
 NotAvail("wait",2,unix_wait);
 NotAvail("getServByName",3,unix_getServByName);
