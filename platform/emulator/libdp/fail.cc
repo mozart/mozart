@@ -369,6 +369,7 @@ void Watcher::invokeInjector(TaggedRef t,EntityCond ec,TaggedRef controlvar,Thre
   Assert(!isFired());
   th->pushCall(proc, t,listifyWatcherCond(ec));
   ControlVarResume(controlvar);
+  //ControlVarApply(controlvar,t,listifyWatcherCond(ec));
 }
 
 /**********************************************************************/
@@ -974,7 +975,7 @@ EntityCond translateWatcherCond(TaggedRef tr){
 }
 
 #define DerefVarTest(tt) { \
-  if(oz_isVariable(tt)){OZ_suspendOn(tt);} \
+  if(OZ_isVariable(tt)){OZ_suspendOn(tt);} \
   tt=oz_deref(tt);}
 
 OZ_Return translateWatcherConds(TaggedRef tr,EntityCond &ec){
