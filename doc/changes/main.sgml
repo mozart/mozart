@@ -69,6 +69,9 @@
     <Meta name="html.split"       value="chapter.m101">
     <Meta name="html.split"       value="chapter.m100">
 
+    <Meta name="html.split"       value="section.m130.changes">
+    <Meta name="html.split"       value="section.m130.fixes">
+
     <Meta name="html.split"       value="section.m121.important">
     <Meta name="html.split"       value="section.m121.changes">
     <Meta name="html.split"       value="section.m121.fixes">
@@ -92,97 +95,137 @@
     <Meta name=status value=revised>
     <Title/Changes/
     <Abstract>
-      This documents gives a brief overview of the
-changes between different Mozart versions. In
-particular, it lists the changes from
-      Oz 2.0 (and its implementation DFKI Oz) to Oz 3.0 (and its
-      implementation Mozart).
+      This documents gives a brief overview of the changes between different Mozart versions.
     </Abstract>
   <Body>
 
   <chapter id="chapter.m130">
     <title/Mozart 1.3.0/
-    <p>Mozart 1.3.0 is still under development.
 
-    <section id="sec.m130.byneed">
-      <title/Redesign of by-need synchronization/
-      <p>The by-need synchronization mechanism has been completely
-      redesigned and reimplemented.  It now applies to all kinds of
-      variables, and does not make use of futures.  The term <q/future/
-      now only refers to read-only views of logic variables.
-      Here is a summary of the changes in the language.
-      <list>
-	<item>Each variable has a <Def/need/ status: it can be <q/needed/
-	  or <q/not needed/.  A needed variable triggers all by-need
-	  computations associated to it (see below).  The need status of
-	  a variable can be queried with the function <<IsNeeded>>.</item>
-	<item>The status of a variable changes monotonically: it can 
-	  only go from <q/not needed/ to <q/needed/.  This change is
-	  triggered by a demanding statement, such as <<{Wait ?_{X}}>>.
-	  Currently only free variables and futures can be <q/not needed/.
-	  Kinded variables are needed by default.  All values are needed
-	  by convention.</item>
-	<item>A by-need computation is simply a computation that
-	  synchronizes on the need of a variable.  This is provided by the
-	  statement <<{WaitNeeded ?_{X}}>>, which blocks until&nbsp;?_{X} is
-	  needed.  The procedure <<ByNeed>> has been redefined in terms of
-	  <<WaitNeeded>> and no longer uses futures.  Lazy functions use
-	  the new <<ByNeed>>.</item>
-	<item>As before, futures are created with the statement
-	  <<?_{X}=!!?_{Y}>>, which makes ?_{X} a read-only view of&nbsp;?_{Y}.
-	  If ?_{X} becomes needed, ?_{Y} is automatically made needed.
-	  This allows to protect a by-need computation from binding attempts.
-	  The procedure <<ByNeedFuture>> provides this combination, together
-	  with failed values (see below) for reporting exceptions.</item>
-	<item>Failed values are no longer considered futures, hence the term
-	  <q/failed future/ should be avoided.  They are created with the
-	  primitive <<Value.failed>>, and have the status <<failed>>
-	  (returned by <<Value.status>>).</item>
-      </list>
+    <p>
+        Mozart 1.3.0 is both the development and maintenance
+        release. The changes in the language, Mozart libraries and the
+        implementation are summarized in the following sections.
+    </p>
 
-    <section id="sec.m130.base">
-      <title/The Oz Base Environment/
-      <p>
-      <list>
-         <item>Added <<Array.exchange>>, <<Dictionary.exchange>>,
-	       <<WeakDictionary.exchange>>, <<Dictionary.condExchange>>,
-	       and <<WeakDictionary.condExchange>>.
-      </list>
+    <section id="section.m130.changes">
+      <title/Changes in Oz, Mozart libraries and UI/
 
-    <section id="sec.m130.uniform">
-      <title/Uniform State Operators/
-      <p> Mutable operators (Cells, Object Attributes, Dictionary/Array 
-          Entries) can now be updated with the <<:=>> operator and
-          the current value retrieved with the <<@>> operator.
-          More details in <ptr.extern to="ozdoc:base" key="chapter.infix">.
+      <subsection id="sec.m130.byneed">
+        <title/Redesign of by-need synchronization/
+        <p>The by-need synchronization mechanism has been completely
+        redesigned and reimplemented.  It now applies to all kinds of
+        variables, and does not make use of futures.  The term <q/future/
+        now only refers to read-only views of logic variables.
+        Here is a summary of the changes in the language.
+        <list>
+  	<item>Each variable has a <Def/need/ status: it can be <q/needed/
+  	  or <q/not needed/.  A needed variable triggers all by-need
+  	  computations associated to it (see below).  The need status of
+  	  a variable can be queried with the function <<IsNeeded>>.</item>
+  	<item>The status of a variable changes monotonically: it can 
+  	  only go from <q/not needed/ to <q/needed/.  This change is
+  	  triggered by a demanding statement, such as <<{Wait ?_{X}}>>.
+  	  Currently only free variables and futures can be <q/not needed/.
+  	  Kinded variables are needed by default.  All values are needed
+  	  by convention.</item>
+  	<item>A by-need computation is simply a computation that
+  	  synchronizes on the need of a variable.  This is provided by the
+  	  statement <<{WaitNeeded ?_{X}}>>, which blocks until&nbsp;?_{X} is
+  	  needed.  The procedure <<ByNeed>> has been redefined in terms of
+  	  <<WaitNeeded>> and no longer uses futures.  Lazy functions use
+  	  the new <<ByNeed>>.</item>
+  	<item>As before, futures are created with the statement
+  	  <<?_{X}=!!?_{Y}>>, which makes ?_{X} a read-only view of&nbsp;?_{Y}.
+  	  If ?_{X} becomes needed, ?_{Y} is automatically made needed.
+  	  This allows to protect a by-need computation from binding attempts.
+  	  The procedure <<ByNeedFuture>> provides this combination, together
+  	  with failed values (see below) for reporting exceptions.</item>
+  	<item>Failed values are no longer considered futures, hence the term
+  	  <q/failed future/ should be avoided.  They are created with the
+  	  primitive <<Value.failed>>, and have the status <<failed>>
+  	  (returned by <<Value.status>>).</item>
+        </list>
 
-    <section id="sec.m130.ozcar">
-      <title/Ozcar/
-      <p>
-      <list>
-	<item>The Ozcar manual has been largely reworked for improved precision
-	  and readability.  Ozcar itself has been extended by the ability
-	  to debug threads remotely.  This feature also supports the debugging
-	  of distributed applications.
-      </list>
+      <subsection id="sec.m130.uniform">
+        <title/Uniform state operators/
+        <p>
+          Mutable operators (Cells, Object Attributes,
+          Dictionary/Array Entries) can now be updated with the <<:=>>
+          operator and the current value retrieved with the <<@>>
+          operator.  More details in <ptr.extern to="ozdoc:base"
+          key="chapter.infix">.
+        </p>
 
-    <section id="sec.m130.gc">
-      <title/Garbage Collection/
-      <p>Entries in thread stacks and closures that are no longer
-         reachable are now garbage collected.
+      <subsection id="sec.m130.base">
+        <title/The Oz Base environment/
+        <p>
+          Added <<Array.exchange>>, <<Dictionary.exchange>>,
+          <<WeakDictionary.exchange>>, <<Dictionary.condExchange>>,
+          and <<WeakDictionary.condExchange>>.
+        </p>
 
-    <section id="sec.m130.windows">
-      <title/Windows/
-      <p>changes and fixes that concern the Windows platform:
-      <list>
-	<item>Mozart is now buildable with <code proglang=sh/gcc/ version
-              3 and upwards. <code proglang=sh/oztool/ now reverts to 
-             <code proglang=sh/gcc/ and <code proglang=sh/g++/ as default 
-           when invoked with the
-	  <code proglang=sh/-gnu/ option.  This can be configured as
-	  described in <ptr.extern to="ozdoc:tools" key="section.oztool-env">.
-        <item>The Windows distribution is now built with <code proglang=sh/gcc 3.x/.
-      </list>
+      <subsection id="sec.m130.ozcar">
+        <title/Ozcar/
+        <p>
+  	  The Ozcar manual has been largely reworked for improved
+          precision
+  	  and readability.  Ozcar itself has been extended by the ability
+  	  to debug threads remotely.  This feature also supports the debugging
+  	  of distributed applications.
+        </p>
+
+      <subsection id="sec.m130.windows">
+        <title/Windows/
+        <p>changes and fixes that concern the Windows platform:
+        <list>
+  	<item>Mozart is now buildable with <code proglang=sh/gcc/ version
+                3 and upwards. <code proglang=sh/oztool/ now reverts to 
+               <code proglang=sh/gcc/ and <code proglang=sh/g++/ as default 
+             when invoked with the
+  	  <code proglang=sh/-gnu/ option.  This can be configured as
+  	  described in <ptr.extern to="ozdoc:tools" key="section.oztool-env">.
+          <item>The Windows distribution is now built with <code proglang=sh/gcc 3.x/.
+        </list>
+
+    <section id="section.m130.fixes">
+      <title/Changes in the implementation that affect usability and performance/
+
+      <subsection id="sec.m130.gc">
+        <title/Garbage collection/
+        <p>
+          Entries in thread stacks and closures that are no longer
+          reachable are now garbage collected.
+        </p>
+
+      <subsection><title/Oz dictionaries/
+        <p>
+          The implementation of Oz dictionaries has been replaced. In
+          particular, the new implementation can efficiently handle
+          lookups for absent entries (when it is necessary to confirm
+          that an entity is not in the dictionary), and can handle
+          subsequent numeric keys space-efficiently.
+        </p>
+
+      <subsection><title/Performance of the distribution subsystem/
+        <p>
+          The distribution subsystem and the distribution's marshaler
+          have been analyzed and tuned in order to achieve high
+          throughput between Mozart processes.
+        </p>
+
+      <subsection><title/Pickling Format/
+        <p>
+          The pickling format has been incompatibly changed for the
+          sake of space and run-time efficiency.
+        </p>
+
+      <subsection><title/Bugs../
+        <p>
+          In general, we tried to keep up with the bug reports. There
+          were too many of them to list them all here..
+        </p>
+
   </chapter>
 
   <chapter id="chapter.m125">

@@ -133,6 +133,18 @@
           <Td/The distribution version. Only ozengines with the same version can communicate./
         </Tr>
         <Tr>
+          <Td/<<clockTick>>/
+          <Td/no/
+          <Td/integer/
+          <Td/The distribution subsystem is activated at least every <<clockTick>> milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<bufferSize>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/The size of the output and input buffers in bytes. For throughput-bound applications it should be large enough to keep the network utilized between invocations of the distribution subsystem./
+        </Tr>
+        <Tr>
           <Td/<<probeInterval>>/
           <Td/yes/
           <Td/integer/
@@ -567,6 +579,7 @@
                 <Tr><Th/<<'netbsd-m68k'>>/   <Th/<<'netbsd'>>/ <Th/<<'m68k'>>/</Tr>
                 <Tr><Th/<<'netbsd-sparc'>>/  <Th/<<'netbsd'>>/ <Th/<<'sparc'>>/</Tr>
                 <Tr><Th/<<'openbsd-i486'>>/  <Th/<<'openbsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'openbsd-sparc>>/  <Th/<<'openbsd'>>/ <Th/<<'sparc>>/</Tr>
                 <Tr><Th/<<'osf1-alpha'>>/    <Th/<<'osf1'>>/ <Th/<<'alpha'>>/</Tr>
                 <Tr><Th/<<'powermac-darwin'>>/    <Th/<<'powermac'>>/ <Th/<<'darwin'>>/</Tr>
                 <Tr><Th/<<'solaris-i486'>>/  <Th/<<'solaris'>>/ <Th/<<'i486'>>/</Tr>
