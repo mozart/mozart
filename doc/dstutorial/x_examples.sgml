@@ -552,29 +552,33 @@ active computations at each priority level.
 <SECTION><TITLE>Practical tips</TITLE>
 
 <P>This section gives some practical programming tips to
-improve the network performance of distributed applications.
+improve the network performance of distributed applications:
+avoiding sending data that is not used at the destination
+and avoiding sending classes when sending objects across
+the network.
 
-<SUBSECTION><TITLE>Partial evaluation</TITLE>
+<SUBSECTION><TITLE>Avoiding sending useless data</TITLE>
 
-<P>When sending procedures over the network, one should check
-that they don't contain calculations that could have been done
+<P>When sending a procedure over the network, be sure
+that it doesn't contain calculations that could have been done
 on the original site.
 For example, the following code sends the procedure <<P>>
-to object <<D>>:
+to remote object <<D>>:
 <<<
 declare
-R=big(a:1 b:2 c:3)   % A very big record
-proc {P X} X=R.c end % Procedure that uses record field c
-{D addentry(P)}      % Send P to D, where it is executed
+R={MakeTuple big 100000}  % A very, very big record
+proc {P X} X=R.2710 end   % Procedure that uses record field 2710
+{D addentry(P)}           % Send P to D, where it is executed
 >>>
 <P>If <<D>> executes <<P>>, then the big record <<R>>
-is transferred to <<D>>'s site where the field <<c>>
+is transferred to <<D>>'s site where field <<2710>>
 is extracted.
+With 100,000 fields, this means 400KB is sent over the network!
 Much better is to extract the field before sending <<P>>:
 <<<
 declare
-R=big(a:1 b:2 c:3)
-F=R.c                % Extract field c before sending
+R={MakeTuple big 100000}
+F=R.2710                  % Extract field 2710 before sending
 proc {P X} X=F end
 {D addentry(P)}
 >>>
@@ -583,8 +587,45 @@ This technique is a kind of partial evaluation.
 It is useful for almost any Oz entity,
 for example procedures, functions, classes, and functors.
 
-<SUBSECTION><TITLE>Recognizing the same entity</TITLE>
+<SUBSECTION><TITLE>Avoiding sending classes</TITLE>
 
-<P>The binary of a collaborative tool will be downloaded to many sites.
+<P>When sending an object across the network, it is
+good to make sure that the object's class exists at
+the destination site.
+This avoids sending the class code across the network.
+Let's see how this works in the case of a collaborative tool.
+Two sites have identical binaries of this tool, which they
+are running.  The two sites send objects back and forth.
+Here's how to write the application:
+<<<
+declare
+class C
+   % ... lots of class code comes here
+end
+functor
+define
+   Obj={New C init}
+   % ... code for the collaborative tool
+end
+>>>
+<P>This creates the class <<C>> for the functor to
+reference.
+This means that all copies of the binary with this
+functor will reference the <EM>same</EM> class,
+so that an object arriving at a site will recognize
+the <EM>same</EM> class as its class on the original site.
+
+<P>Here's how <EM>not</EM> to write the application:
+<<<
+functor
+define
+   class C
+      % ... lots of class code comes here
+   end
+   Obj={New C init}
+   % ... code for the collaborative tool
+end
+>>>
+<P>Do you see why?
 
 </CHAPTER>
