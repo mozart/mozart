@@ -744,16 +744,6 @@ int rawwrite(int fd, void *buf, int sz)
 
 #endif
 
-static
-int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
-{
-  struct timeval timeout;
-  timeout.tv_sec = 0;
-  timeout.tv_usec = 0;
-  return select(nfds,readfds,writefds,NULL,&timeout);
-}
-
-
 /* under windows FD_SET is not idempotent */
 #define OZ_FD_SET(i,fds) if (!FD_ISSET(i,fds)) { FD_SET(i,fds); }
 #define OZ_FD_CLR(i,fds) if (FD_ISSET(i,fds))  { FD_CLR(i,fds); }
@@ -1269,7 +1259,8 @@ int osTestSelect(int fd, int mode)
     struct timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
-    int ret = nonBlockSelect(fd+1, readFDs, writeFDs);
+    int ret = select(fd+1, readFDs, writeFDs, NULL, &timeout);
+
     if (ret >= 0 || ossockerrno() != EINTR) {
       return ret;
     }

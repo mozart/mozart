@@ -114,14 +114,12 @@ int oz_io_awake(int, void *var)
   return 1;
 }
 
-int oz_io_select(int fd, int mode,TaggedRef l,TaggedRef r)
+//  The 'l' and 'r' terms are unified at earliest during the next i/o
+//  handling, even if there is some data available immediately.
+int oz_io_select(int fd, int mode, TaggedRef l, TaggedRef r)
 {
   if (!oz_onToplevel()) {
     OZ_warning("select only on toplevel");
-    return OK;
-  }
-  if (osTestSelect(fd,mode)==1) {
-    OZ_unifyInThread(l,r);
     return OK;
   }
   IONode *ion = findIONode(fd);

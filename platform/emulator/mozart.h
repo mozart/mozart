@@ -332,9 +332,16 @@ _FUNDECL(int ,OZ_onToplevel,());
 
 /* IO */
 
+/*
+  OZ_*Select functions will unify the terms at earliest during the
+  next i/o handling, even if there is some data available immediately
+  (that is, they do not perform yet another 'select()' on their own).
+ */
+
 _FUNDECL(OZ_Return ,OZ_readSelect,(int, OZ_Term, OZ_Term));
 _FUNDECL(OZ_Return ,OZ_writeSelect,(int, OZ_Term, OZ_Term));
 _FUNDECL(OZ_Return ,OZ_acceptSelect,(int, OZ_Term, OZ_Term));
+
 _FUNDECL(void      ,OZ_deSelect,(int));
 
 /*

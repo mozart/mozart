@@ -526,6 +526,8 @@ redo:
 wait_select:
   TaggedRef var = oz_newVariable();
 
+  // Right now we cannot write to tk_fd. So, no additional 'select()'
+  // is needed: just suspend until next I/O handling;
   (void) oz_io_select(tk_fd, SEL_WRITE, NameUnit, var);
   DEREF(var, var_ptr);
   Assert(!oz_isRef(var));
