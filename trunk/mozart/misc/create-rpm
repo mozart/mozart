@@ -165,7 +165,7 @@ Copyright: Free
 Vendor: Mozart Consortium
 Url: http://www.mozart-oz.org/
 Group: Development/Languages
-Packager: Konstantin Popov <kost@sics.se>
+Packager: Christian Schulte <schulte@ps.uni-sb.de>
 Icon: mozart.xpm
 
 Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${SRCTAR}
