@@ -201,8 +201,26 @@ synchronous <EM>exceptions</EM> on language entities.
 That is, attempting to perform operations
 on entities with faults will
 either block or raise an exception without doing the operation.
-This fault detection can be enabled either on a per-site
-level or a per-thread level.
+The fault detection can be enabled separately on each of two levels:
+a per-site level or a per-thread level
+(see <ptr to="levels">).
+
+<P>Exceptions can be enabled on logic variables,
+ports, objects, cells, and locks.
+All other entities, e.g., records, procedures, classes,
+and functors, cannot have enabled exceptions.
+Attempting to enable an exception on such an
+entity is allowed but does nothing.
+If a logic variable is bound to a nonvariable
+entity that has no enabled exceptions,
+then the variable's enabled exceptions will be
+transferred to the entity.
+Otherwise, they are discarded.
+If two logic variables are bound together,
+then the result has the enabled exceptions
+of one of the original variables.
+Which one is not specified.
+The enabled exceptions of the other are discarded.
 
 <P>The advanced model allows to install or
 deinstall <EM>handlers</EM> and <EM>watchers</EM>
@@ -213,7 +231,8 @@ Handlers are invoked synchronously (when attempting
 to perform an operation) and watchers are
 invoked asynchronously (in their own thread as
 soon as the fault state is known).
-The advanced model is explained after the basic model.
+The advanced model is explained in
+<ptr to="advanced.model">.
 
 <SUBSECTION><TITLE>Enabling exceptions on faults</TITLE>
 
@@ -257,7 +276,8 @@ The <<Level>> is <<site>>, <<'thread'(this)>>
 (for an arbitrary thread identifier <<T>>).<NOTE
 FOOT>Since <<thread>> is already used as a keyword in the language,
 it has to be quoted to make it an atom.</NOTE>
-More information on levels is given below.
+More information on levels is given in
+<ptr to="levels">.
 
 <ENTRY> <<fun {Fault.disable Entity Level}>>
 <ITEM> disables
@@ -343,7 +363,7 @@ object-record is fetched over the network, which might fail.
 
 </LIST>
 
-<SUBSECTION><TITLE>Levels of fault detection</TITLE>
+<SUBSECTION id="levels"><TITLE>Levels of fault detection</TITLE>
 
 <P>There are three levels of fault detection, namely
 default site-based, site-based, and thread-based.
@@ -358,7 +378,7 @@ particular site.
 Finally, the most fine-grained is 
 thread-based, which detects the fault for a
 specific entity when an operation
-operation is attempted in a particular thread.
+is attempted in a particular thread.
 
 <P>The site-based and thread-based levels have to
 be enabled specifically for a given entity.
@@ -398,10 +418,10 @@ if the <<tempFail>> state goes away.
 <SUBSECTION><TITLE>Levels and sitedness</TITLE>
 
 <P>The <<Fault>> module has both sited and unsited operations.
-Enabling or setting the default at the site level
-is <EM>sited</EM>.
-This protects the site attempts to remotely change
-its settings.
+Both setting the default and enabling at the site level
+are <EM>sited</EM>.
+This protects the site from remote attempts
+to change its settings.
 Enabling at the thread level is <EM>unsited</EM>.
 This allows fault-tolerant abstractions to be network-transparent,
 i.e., when passed to another site they continue to work.
@@ -411,14 +431,16 @@ i.e., when passed to another site they continue to work.
 will only work on the home site of the <<Fault>> module.
 A procedure containing these calls may be passed around
 the network at will, and executed anywhere.
-However, any attempt to execute either of the
-above two calls on another site will raise an exception.
+However, any attempt to execute either call
+on a site different from the <<Fault>> module's
+home site will raise an exception.<NOTE
+FOOT>Note that each site has its own <<Fault>> module.</NOTE>
 The calls <<{Fault.enable E thread(T) ...}>> 
 and <<{Fault.install E thread(T) ...}>> will work anywhere.
 A procedure containing these calls may be passed around
 the network at will, and will work correctly anywhere.
 
-<SECTION><TITLE>Advanced model</TITLE>
+<SECTION id="advanced.model"><TITLE>Advanced model</TITLE>
 
 <P>The basic model lets you set up the system to
 raise an exception when an operation is attempted
@@ -428,7 +450,7 @@ user-defined procedure</EM>.
 Furthermore, the advanced model can call
 the procedure <EM>synchronously</EM>,
 i.e., when an operation is attempted,
-and <EM>asynchronously</EM>, i.e.,
+or <EM>asynchronously</EM>, i.e.,
 as soon as the fault is known, even
 if no operation is attempted.
 In the synchronous case,
