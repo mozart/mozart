@@ -82,7 +82,7 @@ in
 	 Menu = self.menu
       in
 	 Menu =
-	 {TkTools.menubar self.toplevel
+	 {TkTools.menubar self.toplevel self.toplevel
 	  [menubutton(text: 'Explorer'
 		      menu: [command(label:   'About'
 				     action:  self # about
