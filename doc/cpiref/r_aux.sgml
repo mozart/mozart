@@ -230,6 +230,20 @@ set value which is represented by an instance of the class
 <<OZ_FSetValue>> can take. The value returned is <math/134\;217\;726/.
 
 
+<Entry class="function"><<OZ_fsetValue>>
+<Index class=proglang><<OZ_fsetValue>></Index>
+<Synopsis> <<OZ_Term OZ_fsetValue(OZ_FSetValue * fsv);>>
+
+<Item> This function converts the finite set value <<fsv>> to the
+corresponding <<OZ_Term>>.
+
+<Entry class="function"><<OZ_fsetValueToC>>
+<Index class=proglang><<OZ_fsetValueToC>></Index>
+<Synopsis> <<OZ_FSetValue * OZ_fsetValueToC(OZ_Term fsv);>>
+
+<Item> This function converts <<fsv>>, referring to a finite set
+value, to a pointer to the finite set value.
+
 <Entry class="function"><<OZ_vectorSize>>
 <Index class=proglang><<OZ_vectorSize>></Index>
 <Synopsis> <<int OZ_vectorSize(OZ_Term t);>>
