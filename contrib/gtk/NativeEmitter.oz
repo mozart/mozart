@@ -528,7 +528,15 @@ define
                               end
                   AccName   = {ToS {Util.downTranslate Name}#
                                "get_field_"#FieldName}
-                  FieldType = {ToS Field#Ptrs}
+                  FieldTypR = {ToS Field#Ptrs}
+                  FieldType = if {Util.checkPrefix "const " FieldTypR}
+                              then {Util.cutPrefix "const " FieldTypR}
+                              else FieldTypR
+                              end
+                  Cast      = if {Util.checkPrefix "const " FieldTypR}
+                              then "("#FieldType#")"
+                              else ""
+                              end
                   ResType   = if Ptrs == nil
                               then {CoreResultType FieldType @types}
                               elsecase FieldType
@@ -560,7 +568,8 @@ define
                      TextFile, putS({ToS {Util.indent 1}#FieldType#Star#
                                      "ret;"})
                      TextFile, putS({ToS {Util.indent 1}#
-                                     "ret = "#MemOp#"Arg0->"#FieldName#";"})
+                                     "ret = "#Cast#
+                                     MemOp#"Arg0->"#FieldName#";"})
                      TextFile, putS({ToS {Util.indent 1}#"OZ_out(0) = "#
                                      ResType#"(ret);"})
                   end

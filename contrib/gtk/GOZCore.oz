@@ -51,6 +51,7 @@ define
 
    WrapPointer   = {NewName}
    UnwrapPointer = {NewName}
+   CloseObject   = {NewName}
 
    %% Obtain Pointer from Oz Object or Pointer (Easy)
    fun {ObjectToPointer Object}
@@ -71,23 +72,24 @@ define
       %% Add freshly created objects to table
       %% Used by oz-side-called object constructors
       proc {RegisterObject Pointer Object}
-         %% Increase Reference count by one if GTK/GTKCanvas Object
-         if {Object isManagedObject($)}
-         then {GtkNative.gtkObjectRef Pointer}
+         %% Increase Reference count by one if applicable
+         try
+            {Object ref}
+         catch _ then
+            {Object ref(_)}
          end
          {WeakDictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
       end
 
       %% Loosing the last Oz reference
-      %% possibly enables Gtk collection
+      %% possibly enables Gdk/Gtk collection
       thread
          proc {Finalize Stream}
             case Stream
             of (_#Object)|Sr then
-               %% Decrease Reference count by one if applicable
-               if {Object isManagedObject($)}
-               then {GtkNative.gtkObjectUnref {Object UnwrapPointer($)}}
-               end
+               %% Decreases Reference count by one if applicable
+               %% and removes all registered Handlers
+               {Object CloseObject}
                {Finalize Sr}
             [] nil then skip
             end
@@ -133,7 +135,7 @@ define
                          fun {$ OzClass}
                             case OzClass
                             of 'Gdk'(...)    then false
-                               %% Not implemented unter Windows
+                               %% Not implemented under Windows
                             [] 'Gtk'(socket) then false
                             [] _             then true
                             end
@@ -174,8 +176,10 @@ define
             Key    = {ForeignPointer.toInt Pointer}
          in
             %% Increase Reference count by one if applicable
-            if {Object isManagedObject($)}
-            then {GtkNative.gtkObjectRef Pointer}
+            try
+               {Object ref}
+            catch _ then
+               {Object ref(_)}
             end
             {WeakDictionary.put ObjectTable Key Object}
             Object
@@ -198,7 +202,7 @@ define
             end
          end
       end
-      %% Pointer Translation (necessary for GDK Events and GLists)
+      %% Pointer Translation (necessary for GLists)
       %% Tries to map incoming pointer to an existing object
       fun {TranslatePointer Pointer}
          %% TODO: Rationale for this
@@ -250,8 +254,8 @@ define
    fun {AllocDouble InVal}
       {GOZSignal.allocDouble InVal}
    end
-   fun {AllocColor Red Blue Green}
-      {GOZSignal.allocColor Red Blue Green}
+   fun {AllocColor Red Green Blue}
+      {GOZSignal.allocColor Red Green Blue}
    end
 
    fun {GetInt V}
@@ -276,32 +280,36 @@ define
       fun {Id X}
          X
       end
-      fun {RGP X}
-         %% TODO: To be checked
-         {TranslatePointer X}
+      fun {RGW X}
+         {PointerToObject GDK.window X}
+      end
+      fun {RGT X}
+         {PointerToObject GDK.rectangle X}
       end
       fun {ITB X}
          X == 1
       end
 
-      ExposeFs     = [window#RGP send#ITB area#RGP count#Id]
-      MotionFs     = [window#RGP send#ITB time#Id x#Id y#Id
+      ExposeFs     = [window#RGW send#ITB area#RGT count#Id]
+      MotionFs     = [window#RGW send#ITB time#Id x#Id y#Id
                       pressure#Id xtilt#Id ytilt#Id state#Id
                       is_hint#Id source#Id deveceid#Id x_root#Id y_root#Id]
-      ButtonFs     = [window#RGP send#ITB time#Id x#Id y#Id
+      ButtonFs     = [window#RGW send#ITB time#Id x#Id y#Id
                       pressure#Id xtilt#Id ytilt#Id state#Id
                       button#Id source#Id deveceid#Id x_root#Id y_root#Id]
-      KeyFs        = [window#RGP send#ITB time#Id state#Id
+      KeyFs        = [window#RGW send#ITB time#Id state#Id
                       keyval#Id length#Id string#Id]
-      CrossingFs   = [window#RGP send#ITB subwindow#RGP time#Id
+      CrossingFs   = [window#RGW send#ITB subwindow#RGW time#Id
                       x#Id y#Id x_root#Id y_root#Id
                       mode#Id detail#Id focus#ITB state#Id]
-      FocusFs      = [window#RGP send#ITB hasFocus#ITB]
-      ConfigureFs  = [window#RGP send#ITB x#Id y#Id width#Id height#Id]
-      VisibilityFs = [window#RGP send#ITB state#Id]
+      FocusFs      = [window#RGW send#ITB hasFocus#ITB]
+      ConfigureFs  = [window#RGW send#ITB x#Id y#Id width#Id height#Id]
+      VisibilityFs = [window#RGW send#ITB state#Id]
+
+      fun {First X#_} X end
 
       fun {MakeEvent Label FeatS Event}
-         GdkEvent = {Record.make Label {Map FeatS fun {$ X#_} X end}}
+         GdkEvent = {Record.make Label {Map FeatS First}}
       in
          {List.forAllInd FeatS
           proc {$ I X#F} GdkEvent.X = {F Event.I} end} GdkEvent
@@ -398,26 +406,28 @@ define
       meth addToObjectTable
          {RegisterObject @object self}
       end
-      meth isManagedObject($)
-         true
-      end
-      meth close
-         %% Removal of OZ Handlers is sufficient
-         %% (due to destroy handling below)
+      meth !CloseObject
+         %% This method is called from the Finalisation
+         %% Handler to remove all registered Handlers
+         %% This is because a handler might be connected to several widgets
+         %% We only remove Handler from dictionary since the Gtk finalizer
+         %% disconnects all signals automaticly.
          {ForAll @signals proc {$ SignalId}
                              {Dispatcher unregisterHandler(SignalId)}
                           end}
-         %% Nothing to be done here because
-         %% Object will eventually show up on finalisation stream
+         signals <- nil
+         {self unref}
+      end
+      meth ref
+         %% Presume unmanaged Object
+         skip
+      end
+      meth unref
+         %% Presume unmanaged Object
+         skip
       end
       meth getType($)
          unit
-      end
-   end
-
-   class GdkOzBase from OzBase
-      meth isManagedObject($)
-         false
       end
    end
 
@@ -432,16 +442,33 @@ define
       [] string(Val)   then Val
       [] pointer(Val)  then Val
       [] object(Val)   then {PointerToObject auto Val}
+         %% GTK Object which are not GTK Objects also need special care
+      [] accel(Val)    then {PointerToObject GTK.accelGroup Val}
+      [] style(Val)    then {PointerToObject GTK.style Val}
          %% GDK Events need special care
       [] event(Val)    then {GetGdkEvent Val}
       [] color(Val)    then {PointerToObject GDK.color Val}
       [] context(Val)  then {PointerToObject GDK.colorContext Val}
       [] map(Val)      then {PointerToObject GDK.colormap Val}
+      [] cursor(Val)   then {PointerToObject GDK.cursor Val}
+      [] drag(Val)     then {PointerToObject GDK.dragContext Val}
       [] drawable(Val) then {PointerToObject GDK.drawable Val}
       [] font(Val)     then {PointerToObject GDK.font Val}
       [] gc(Val)       then {PointerToObject GDK.gc Val}
       [] image(Val)    then {PointerToObject GDK.image Val}
+      [] visual(Val)   then {PointerToObject GDK.visual Val}
       [] window(Val)   then {PointerToObject GDK.window Val}
+      end
+   end
+
+   proc {ConvertArgs Args ?R}
+      case Args
+      of Arg|Ar then
+         NewR
+      in
+         R = {ConvertArgument Arg}|NewR
+         {ConvertArgs Ar NewR}
+      [] nil then R = nil
       end
    end
 
@@ -520,10 +547,11 @@ define
                case Stream
                of Event|Tail then
                   Id   = Event.1
+                  %% Todo: Check for optimisations
                   Data = {Record.toList Event}.2
                in
                   case {Dictionary.condGet @handlerDict Id EmptyHandler}
-                  of Handler then {Handler {Map Data ConvertArgument} _}
+                  of Handler then {Handler {ConvertArgs Data} _}
                   end
                   DispatcherObject, Dispatch(Tail)
                [] _ then skip
@@ -564,6 +592,7 @@ define
                           null                 : Null
                           freeData             : FreeData
                           %% Gtk Arg Handling
+                          makeEmptyArg         : GOZSignal.makeEmptyArg
                           makeArg              : GOZSignal.makeArg
                           getArg               : GetArg
                           %% String Handling
@@ -573,13 +602,15 @@ define
                           allocStrArr          : GOZSignal.allocStrArr
                           makeStrArr           : GOZSignal.makeStrArr
                           getStrArr            : GOZSignal.getStrArr
+                          %% Color Array Handling
+                          makeColorArr         : GOZSignal.makeColorArr
+                          getColorList         : GOZSignal.getColorList
                           %% GDK Event Import
                           getGdkEvent          : GetGdkEvent
                           %% GTK Canvas Helper
                           pointsPut            : PointsPut
-                          %% Gdk/Gtk OzBase Class
+                          %% OzBase Class
                           ozBase               : OzBase
-                          gdkOzBase            : GdkOzBase
                           %% Termination Function
                           exit                 : Exit)
 

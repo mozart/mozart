@@ -39,9 +39,7 @@ define
          %% Caution: At this time, the underlying GTK object
          %% Caution: has been destroyed already
          %% Caution: Destruction also includes all attached child objects.
-         %% Caution: This event is solely intended to do OZ side
-         %% Caution: cleanup via calling close
-         {self close}
+         %% Caution: This event is solely intended to do OZ side cleanups.
          {Application.exit 0}
       end
    end

@@ -23,7 +23,7 @@ local
    AssignArgs = {NewName}
    MakePoints = {NewName}
 in
-   class OzCanvasBase from GtkLayout
+   class OzCanvasBase from GTK.layout
       meth !MakePoints(Points I Ps $)
          case Ps
          of (X#Y)|Pr then
