@@ -3429,6 +3429,14 @@ OZ_BI_define(BIdictionaryMarkSafe,1,0)
 } OZ_BI_end
 
 
+OZ_BI_define(BIdictionaryMarkCache,1,0)
+{
+  oz_declareDictionaryIN(0,dict);
+  dict->markCache();
+  return PROCEED;
+} OZ_BI_end
+
+
 OZ_BI_define(BIdictionaryEntries,1,1)
 {
   oz_declareDictionaryIN(0,dict);

@@ -79,5 +79,9 @@
      'markSafe' => { in  => ['+dictionary'],
                      out => [],
                      BI  => BIdictionaryMarkSafe},
+
+     'markCache'=> { in  => ['+dictionary'],
+                     out => [],
+                     BI  => BIdictionaryMarkCache},
      );;
 1;;
