@@ -79,7 +79,7 @@ end
 <P>Another implementation is using an object as shown below to
 implement a lock. Notice the use of the construct:
 
-<<<Old = lck &lt;- New>>>
+<<<Old = lck := New>>>
 
 <P>Similar to the Exchange operation on cells, this is an atomic
 exchange on an object attribute.
@@ -91,7 +91,7 @@ class SimpleLock
    meth 'lock'(Code)
      Old New in
      try 
-        Old = lck &lt;- New
+        Old = lck := New
         {Wait Old} {Code}
      finally New= unit end
    end
@@ -122,10 +122,10 @@ class ReentrantLock from SimpleLock
       else
 	 proc {Code1}
 	    try
-	       Current &lt;- ThisThread
+	       Current := ThisThread
 	       {Code}
 	    finally
-	       Current &lt;- unit
+	       Current := unit
 	    end
 	 end
       in
@@ -168,9 +168,9 @@ the initial value of the array elements.
 
 <ITEM><<{Array.high +A ?L}>> returns the higher index.
 
-<ITEM><<{Get +A +I ?R}>> returns <<A[I]>> in <<R>>.
+<ITEM><<R:=A.I>> returns <<A[I]>> in <<R>>.
 
-<ITEM><<{Put +A +I X}>> assigns <<X>> to the entry <<A[I]>>.
+<ITEM><<A.I:=X>> assigns <<X>> to the entry <<A[I]>>.
 
 </LIST>
 
@@ -188,15 +188,15 @@ L = {NewLock}
 proc {Switch A}
    {For {Array.low A} {Array.high A} 1
     proc {$ I} 
-       X = {Get A I} in
-       if X<0 then {Put A I ~X}
-       elseif X == 0  then {Put A I zero} end
+       X := A.I in
+       if X<0 then A.I := ~X
+       elseif X == 0  then A.I := zero end
        {Delay 100}
     end}
 end
 proc {Zero A}
    {For {Array.low A} {Array.high A} 1
-    proc {$ I} {Put A I 0} {Delay 100} end}
+    proc {$ I} A.I := 0 {Delay 100} end}
 end   
 >>>
 </FIGURE>
@@ -208,7 +208,7 @@ local X Y in
    thread {Zero A} X = unit end  
    thread {Switch A} Y = X end 
    {Wait Y} 
-   {For 1 10 1 proc {$ I} {Browse {Get A I}} end} 
+   {For 1 10 1 proc {$ I} {Browse A.I} end} 
 end
 >>>
 
@@ -230,7 +230,7 @@ local X Y in
       Y = X 
    end 
    {Wait Y} 
-   {For 1 10 1 proc {$ I} {Browse {Get A I}} end} 
+   {For 1 10 1 proc {$ I} {Browse  A.I} end} 
 end
 >>>
 
@@ -331,13 +331,13 @@ class Channel from BaseObject
    prop locking
    attr f r
    meth init
-      X in f &lt;- X r &lt;- X
+      X in f := X r := X
    end
    meth put(I)
-      X in lock @r=I|X r&lt;-X end
+      X in lock @r=I|X r:=X end
    end
    meth get(?I)
-      X in lock @f=I|X f&lt;-X end {Wait I}
+      X in lock @f=I|X f:=X end {Wait I}
    end
 end
 >>>
@@ -382,16 +382,16 @@ class UnitBufferM
    attr item empty psignal csignal
    prop locking
    meth init
-      empty &lt;- true
-      psignal &lt;- {New Event init}
-      csignal &lt;- {New Event init}
+      empty := true
+      psignal := {New Event init}
+      csignal := {New Event init}
    end
    meth put(I)
       X in
       lock
 	 if @empty then
-	    item &lt;- I
-	    empty &lt;- false
+	    item := I
+	    empty := false
 	    X = yes
 	    {@csignal notify}
 	 else X = no end
@@ -406,7 +406,7 @@ class UnitBufferM
       lock
 	 if {Not @empty} then
 	    I = @item
-	    empty &lt;- true
+	    empty := true
 	    {@psignal notify}
 	    X = yes
 	 else X = no end
@@ -446,8 +446,8 @@ a simple definition. No locking is needed directly.
 class UnitBuffer from BaseObject
    attr prodq buffer
    meth init
-      buffer &lt;- {New Channel init}
-      prodq &lt;- {New Event init}
+      buffer := {New Channel init}
+      prodq := {New Event init}
       {@prodq notify}
    end
    meth put(I)
@@ -471,8 +471,8 @@ changed.
 class BoundedBuffer from UnitBuffer
    attr prodq buffer
    meth init(N)
-      buffer &lt;- {New Channel init}
-      prodq &lt;- {New Event init}
+      buffer := {New Channel init}
+      prodq := {New Event init}
       {For 1 N 1 proc {$ _} {@prodq notify} end}
    end
 end      

@@ -140,13 +140,13 @@ define
       attr canvas y:0 vscroll hscroll tag:0 selfPort entry quit
       meth init(SelfPort)
          Tk.toplevel,tkInit
-         selfPort <- SelfPort
-         canvas <- {New Tk.canvas
+         selfPort := SelfPort
+         canvas := {New Tk.canvas
                     tkInit(parent:self bg:ivory width:400 height:300)}
-         vscroll <- {New Tk.scrollbar tkInit(parent:self orient:v)}
-         hscroll <- {New Tk.scrollbar tkInit(parent:self orient:h)}
-         entry   <- {New Tk.entry     tkInit(parent:self)}
-         quit    <- {New Tk.button    tkInit(parent:self text:'Quit'
+         vscroll := {New Tk.scrollbar tkInit(parent:self orient:v)}
+         hscroll := {New Tk.scrollbar tkInit(parent:self orient:h)}
+         entry   := {New Tk.entry     tkInit(parent:self)}
+         quit    := {New Tk.button    tkInit(parent:self text:'Quit'
                                              action:proc{$} {Exit 0} end)}
          {Tk.addYScrollbar @canvas @vscroll}
          {Tk.addXScrollbar @canvas @hscroll}
@@ -166,7 +166,7 @@ define
          local
             [X1 Y1 X2 Y2] = {@canvas tkReturnListInt(bbox all $)}
          in
-            y<-Y2
+            y:=Y2
             {@canvas tk(configure scrollregion:q(X1 Y1 X2 Y2))}
          end
       end

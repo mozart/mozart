@@ -824,7 +824,7 @@ E={New Tk.entry tkInit(parent:W width:20)}
 L ={New class $ from Tk.listener
            attr red:0 green:0 blue:0
            meth bg(C I)
-              C <- I {F tk(configure bg:c(@red @green @blue))}
+              C := I {F tk(configure bg:c(@red @green @blue))}
            end
         end tkInit}
 F ={New Tk.frame tkInit(parent:W height:2#c)}
@@ -1115,13 +1115,13 @@ class HelpListener from Tk.listener
       cancel: unit
       popup:  unit
    meth init(parent:P text:T)
-      popup <- {MakePopup P T}
+      popup := {MakePopup P T}
       Tk.listener,tkInit
    end
    meth enter
       C
    in
-      cancel <- C
+      cancel := C
       thread A={Alarm 1000} in
          {WaitOr C A}
          if {IsDet A} then W={@popup} in

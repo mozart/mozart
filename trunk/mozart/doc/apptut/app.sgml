@@ -39,13 +39,13 @@ define
                   prop locking
                   attr i:0
                   meth init(I <= 0)
-                     lock i <- I end
+                     lock i := I end
                   end
                   meth get($)
                      lock @i end
                   end
                   meth inc($)
-                     lock I=@i+1 in i <- I I end
+                     lock I=@i+1 in i := I I end
                   end
                end init()}
    
