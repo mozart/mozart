@@ -131,7 +131,7 @@ local
 	    IsPackedUnstable <- False 
 	 else true end
 	 <<Status update>>
-	 <<Status unbreak>>
+	 <<Status start>>
 	 <<Status setBAB(False)>>
 	 {self.ChoiceImage clear}
       end
@@ -171,10 +171,14 @@ local
 	 BrokenNodes <- nil
       end
       
-      meth unbreak
+      meth start
 	 BreakFlag   <- _
 	 BreakStatus <- none
 	 BrokenNodes <- nil
+      end
+
+      meth unbreak
+	 BreakFlag   <- _
       end
 
       meth getBreakFlag($)
@@ -282,7 +286,7 @@ in
 
       meth start($)
 	 {System.statistics _}
-	 {self.status unbreak}
+	 {self.status start}
 	 {self.status getBreakFlag($)}
       end
 
