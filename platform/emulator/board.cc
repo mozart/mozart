@@ -86,7 +86,7 @@ enum BoardFlags {
   Bo_Failed     = 1<<7,
   Bo_Committed  = 1<<8,
   Bo_Discarded  = 1<<9,
-  Bo_Waiting    = 1<<10,
+  Bo_Waiting    = 1<<10
 };
 
 Board *Board::Root;
@@ -136,13 +136,13 @@ Board *Board::GetRoot()
   return Root;
 }
 
-Board::Board(Actor *a,int type)
+Board::Board(Actor *a,int typ)
 : ConstTerm(Co_Board)
 {
-  DebugCheck(!a && type!=Bo_Root,error("Board::Board"));
-  DebugCheck(type!=Bo_Root && type!=Bo_Ask && type!=Bo_Wait,
+  DebugCheck(!a && typ!=Bo_Root,error("Board::Board"));
+  DebugCheck(typ!=Bo_Root && typ!=Bo_Ask && typ!=Bo_Wait,
              error("Board::Board"));
-  flags=type;
+  flags=typ;
   if (a) {
     a->addChild(this);
   }

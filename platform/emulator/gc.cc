@@ -1384,26 +1384,28 @@ TaskStack *TaskStack::gc()
       break;
 
     case C_CFUNC_CONT:
-      // Continuation to continue at c codeaddress
-      newBB = bb->gc();
-      if (!newBB) {
-        pop(); // BIFun
-        pop(); // Suspension
-        pop(); // x regs
+      {
+        // Continuation to continue at c codeaddress
+        newBB = bb->gc();
+        if (!newBB) {
+          pop(); // BIFun
+          pop(); // Suspension
+          pop(); // x regs
+          break;
+        } // if
+
+        newStack->gcQueue(setContFlag(newBB,cFlag));
+
+        newStack->gcQueue(pop()); // BIFun
+
+        Suspension* susp = (Suspension*) pop();
+        newStack->gcQueue(susp->gc(NO));
+
+        ra = (RefsArray) pop();
+        newStack->gcQueue(gcRefsArray(ra));
+
         break;
-      } // if
-
-      newStack->gcQueue(setContFlag(newBB,cFlag));
-
-      newStack->gcQueue(pop()); // BIFun
-
-      Suspension* susp = (Suspension*) pop();
-      newStack->gcQueue(susp->gc(NO));
-
-      ra = (RefsArray) pop();
-      newStack->gcQueue(gcRefsArray(ra));
-
-      break;
+      }
 
     default:
       error("Unexpected case in TaskStack::gc().");

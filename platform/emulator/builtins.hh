@@ -107,11 +107,12 @@ OZ_C_proc_begin(Name,2)                                                       \
   OZ_Term arg = OZ_getCArg(0);                                                \
   State state = InlineName(arg,help);                                         \
   switch (state) {                                                            \
-  case SUSPEND:                                                               \
+  case SUSPEND: {                                                             \
     DEREF(arg,APtr,_1);                                                       \
     OZ_Suspension *susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);         \
     OZ_addSuspension(APtr,susp);                                              \
     return PROCEED;                                                           \
+   }                                                                          \
   case FAILED:                                                                \
     return FAILED;                                                            \
   case PROCEED:                                                               \
@@ -133,13 +134,14 @@ OZ_C_proc_begin(Name,3)                                                       \
   OZ_Term arg1 = OZ_getCArg(1);                                               \
   State state=InlineName(arg0,arg1,help);                                     \
   switch (state) {                                                            \
-  case SUSPEND:                                                               \
+  case SUSPEND: {                                                             \
     DEREF(arg0,APtr,_1);                                                      \
     DEREF(arg1,BPtr,_2);                                                      \
     OZ_Suspension *susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);         \
     if (isAnyVar(arg0)) OZ_addSuspension(APtr,susp);                          \
     if (isAnyVar(arg1)) OZ_addSuspension(BPtr,susp);                          \
     return PROCEED;                                                           \
+    }                                                                         \
   case FAILED:                                                                \
     return state;                                                             \
   case PROCEED:                                                               \
@@ -161,7 +163,7 @@ OZ_C_proc_begin(Name,4)                                                       \
   OZ_Term arg2 = OZ_getCArg(2);                                               \
   State state=InlineName(arg0,arg1,arg2,help);                                \
   switch (state) {                                                            \
-  case SUSPEND:                                                               \
+  case SUSPEND: {                                                             \
     DEREF(arg0,APtr,_1);                                                      \
     DEREF(arg1,BPtr,_2);                                                      \
     DEREF(arg2,CPtr,_3);                                                      \
@@ -170,6 +172,7 @@ OZ_C_proc_begin(Name,4)                                                       \
     if (isAnyVar(arg1)) OZ_addSuspension(BPtr,susp);                          \
     if (isAnyVar(arg2)) OZ_addSuspension(CPtr,susp);                          \
     return PROCEED;                                                           \
+    }                                                                         \
   case FAILED:                                                                \
     return state;                                                             \
   case PROCEED:                                                               \
