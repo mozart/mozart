@@ -402,7 +402,7 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --with-gmp)
 AC_ARG_WITH(gmp,
-	[--with-gmp=<dir>   search gmp library and header in <dir> (default: yes)])
+	[--with-gmp=<dir>   search gmp library and header in <dir> (default: yes)],with_gmp=$withval,with_gmp=yes)
 	    
 if test "$with_gmp" != no
 then
