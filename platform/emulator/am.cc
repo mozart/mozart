@@ -316,7 +316,7 @@ void AM::init(int argc,char **argv)
 
 #ifndef MODULES_LINK_STATIC
 
-    char * libname = "/libozma.so";
+    char * libname = "/ozma.so";
     int n = strlen(ozconf.emuhome);
     char * libfile = new char[n + strlen(libname)];
 
