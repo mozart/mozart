@@ -1,0 +1,43 @@
+OZDOC = ozdoc
+OZDOCFLAGS = 
+
+DOCDIR		= /www/mozart/compiler
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+SGMLSRCS = \
+	compiler.sgml
+OZSRCS = \
+	QuietInterface.oz EmacsInterface.oz CompilerPanel.oz
+
+.PHONY: all install clean veryclean distclean
+
+all: compiler-html
+
+Makefile: Makefile.in config.status
+	./config.status
+
+compiler-html: $(OZGSRCS) $(SGMLSRCS)
+	$(OZDOC) $(OZDOCFLAGS) --in=compiler.sgml --out=$@ --type=html-stylesheets
+
+compiler-tex: $(OZGSRCS) $(SGMLSRCS)
+	$(OZDOC) $(OZDOCFLAGS) --in=compiler.sgml --out=compiler-tex --type=latex
+
+install: compiler-html $(DOCDIR)
+	cp -p compiler-html/* $(DOCDIR)
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+
+clean:
+	-rm -rf compiler-html
+	-rm -rf compiler-tex
+	-rm -f *~
+
+veryclean: clean
+
+distclean: veryclean
+	-rm -f Makefile config.status config.cache config.log
