@@ -179,7 +179,8 @@ public:           /* TODO overload new - delete with free list handlers */
 
 void PendEntry::send(){
   int ret=reliableSend0(site,bs);  /* TODO: delayed sending?? */
-  Assert(ret==0);}
+  Assert(ret==PROCEED); // TODO
+}
 
 class PendLink {
   Credit debt;
@@ -678,7 +679,7 @@ void BorrowEntry::moreCredit(){
   marshallMySite(bs);
   PERDIO_DEBUG2(MSG_SENT,"ASK_FOR_CREDIT sd:%d,index:%d",site,index);
   int ret= reliableSend0(site,bs);
-  Assert(ret==0);
+  Assert(ret==PROCEED); // TODO
   delete bs;}
 
 void BorrowEntry::giveBackCredit(Credit c){
@@ -692,7 +693,7 @@ void BorrowEntry::giveBackCredit(Credit c){
   PERDIO_DEBUG3(MSG_SENT,"OWNER_CREDIT sd:%d,index:%d,credit:%d",
                 site,index,credit);
   int ret= reliableSend0(site,bs);
-  Assert(ret==0);
+  Assert(ret==PROCEED); // TODO
   delete bs;}
 
 void BorrowEntry::freeBorrowEntry(){
@@ -1527,7 +1528,7 @@ void siteReceive(char *msg,int len)
       marshallCredit(c,bs1);
       PERDIO_DEBUG1(MSG_SENT,"BORROW_CREDIT %d",c);
       int ret=reliableSend0(rsite,bs1);
-      Assert(ret==0); /* TODO */
+      Assert(ret==PROCEED); // TODO
       delete bs1;
       break;
     }
@@ -1574,7 +1575,13 @@ void domarshallTerm(OZ_Term t, ByteStream *bs)
 
 inline
 int reliableSend0(int sd, ByteStream *bs){
-  return reliableSend(sd,bs->getPtr(),bs->getLen());}
+  int ret=reliableSend(sd,bs->getPtr(),bs->getLen());
+  if (ret != 0) {
+    return OZ_raiseC("ip",2,OZ_atom("send"),
+                     OZ_atom(OZ_unixError(lastIpError())));
+  }
+  return PROCEED;
+}
 
 
 /* engine-interface */
@@ -1598,7 +1605,6 @@ int remoteSend(PortProxy *p, TaggedRef msg) {
   if(pe==NULL){
     if(debtRec->isEmpty()){
       int ret = reliableSend0(site,bs);
-      Assert(ret == 0);
       delete bs;
       return ret;}
     PERDIO_DEBUG(DEBT_SEC,"remoteSend");
@@ -1618,8 +1624,8 @@ int sitesend(int sd,OZ_Term t){
   if(debtRec->isEmpty()){
     int ret = reliableSend0(sd,bs);
     delete bs;
-    Assert(ret == 0);
-    return ret;}
+    return ret;
+  }
   PendEntry *pe;
   pe=new PendEntry(bs,sd);
   debtRec->handler(pe);
@@ -1636,11 +1642,11 @@ OZ_C_proc_begin(BIreliableSend,2)
   OZ_declareIntArg(0,sd);
   OZ_declareArg(1,value);
 
-  if(sitesend(sd,value)==0) {
+  int ret = sitesend(sd,value);
+  if (ret == PROCEED) {
     PERDIO_DEBUG(SEND_DONE,"reliable send");
-    return PROCEED;}
-
-  return OZ_raise(OZ_mkTupleC("reliableSend",1,OZ_int(lastError())));
+  }
+  return ret;
 }
 OZ_C_proc_end
 
@@ -1677,12 +1683,13 @@ OZ_C_proc_begin(BIstartSite,2)
   OZ_declareArg(1,stream);
 
   if (ozport!=0) {
-    return OZ_raise(OZ_mkTupleC("startSite",1,OZ_atom("twice")));
+    return OZ_raise(OZ_mkTupleC("perdio",1,OZ_atom("site already started")));
   }
   ozport = makeTaggedConst(new PortWithStream(am.rootBoard, stream));
   if (ipInit(p,siteReceive) < 0) {
     ozport=0;
-    return OZ_raise(OZ_mkTupleC("startSite",1,OZ_atom("ipInit")));
+    return OZ_raiseC("ip",2,OZ_atom("ip init failed"),
+                     OZ_atom(OZ_unixError(lastIpError())));
   }
   return PROCEED;
 }

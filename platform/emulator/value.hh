@@ -1063,6 +1063,7 @@ public:
 };
 
 TaggedRef sortlist(TaggedRef list,int len);
+TaggedRef mkRecord(TaggedRef label,SRecordArity ff);
 
 inline
 Bool isRecord(TaggedRef term) {

@@ -150,4 +150,7 @@ class IHashTable {
   Bool disentailed(GenCVariable *var, TaggedRef *varPtr);
 };
 
+ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
+                                   IHashTable *table, TaggedRef *&sP);
+
 #endif

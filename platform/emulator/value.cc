@@ -453,6 +453,17 @@ void bigIntInit()
  * SRecord
  *=================================================================== */
 
+/*
+ * make an record
+ *  the subtrees are initialized with new variables
+ */
+TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
+{
+  SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
+  srecord->initArgs(am.currentUVarPrototype);
+  return makeTaggedSRecord(srecord);
+}
+
 /************************************************************************/
 /*                      Useful Stuff: Lists                             */
 /************************************************************************/

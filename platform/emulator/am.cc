@@ -120,6 +120,7 @@ void AM::init(int argc,char **argv)
   aVarUnifyHandler = makeTaggedNULL();
   aVarBindHandler  = makeTaggedNULL();
   dVarHandler      = makeTaggedNULL();
+  methApplHdl      = makeTaggedNULL();
 
   char *compilerName = OzCompiler;
 
