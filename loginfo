@@ -1,6 +1,5 @@
 Hydra	mail -s "I have changed %s" mehl,scheidhr,tmueller
 Hydra/Compiler   mail -s "I have changed %s" henz
-Oz	mail -s "I have changed %s" mehl
 Oz/lib	mail -s "I have changed %s" henz,wuertz
 Oz/lib/browser	mail -s "I have changed %s" latz
 Oz/handbook	mail -s "I have changed %s" scheidhr
