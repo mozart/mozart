@@ -122,37 +122,32 @@ local
 	     'Array'#Green 'Dictionary'#Green 'Port'#Green 'Lock'#Green
 	     'Thread'#Orange 'Space'#Orange]
 
-   proc {SetColor TextWidget PrintName Value ColorDict}
-      case {IsDet Value} then Type C in
-	 case {IsInt Value} then 'Int'
-	 elsecase {IsFloat Value} then 'Float'
-	 elsecase {IsAtom Value} then 'Atom'
-	 elsecase {IsName Value} then 'Name'
-	 elsecase {IsTuple Value} then 'Tuple'
-	 elsecase {IsRecord Value} then 'Record'
-	 elsecase {IsBuiltin Value} then 'Builtin'
-	 elsecase {IsProcedure Value} then 'Procedure'
-	 elsecase {IsCell Value} then 'Cell'
-	 elsecase {IsArray Value} then 'Array'
-	 elsecase {IsDictionary Value} then 'Dictionary'
-	 elsecase {IsClass Value} then 'Class'
-	 elsecase {IsObject Value} then 'Object'
-	 elsecase {IsPort Value} then 'Port'
-	 elsecase {IsLock Value} then 'Lock'
-	 elsecase {IsChunk Value} then 'Chunk'
-	 elsecase {IsThread Value} then 'Thread'
-	 elsecase {IsSpace Value} then 'Space'
-	 end = Type
-	 C = {Dictionary.get ColorDict Type}
-	 {TextWidget tk(tag configure q(PrintName) foreground: C)}
-      else C in
-	 C = {Dictionary.get ColorDict 'Undetermined'}
-	 {TextWidget tk(tag configure q(PrintName) foreground: C)}
-	 thread
-	    {Wait Value}
-	    {SetColor TextWidget PrintName Value ColorDict}
-	 end
-      end
+   fun {SetColor TextWidget PrintName Value ColorDict} C in
+      C = case {IsDet Value} then Type in
+	     case {IsInt Value} then 'Int'
+	     elsecase {IsFloat Value} then 'Float'
+	     elsecase {IsAtom Value} then 'Atom'
+	     elsecase {IsName Value} then 'Name'
+	     elsecase {IsTuple Value} then 'Tuple'
+	     elsecase {IsRecord Value} then 'Record'
+	     elsecase {IsBuiltin Value} then 'Builtin'
+	     elsecase {IsProcedure Value} then 'Procedure'
+	     elsecase {IsCell Value} then 'Cell'
+	     elsecase {IsArray Value} then 'Array'
+	     elsecase {IsDictionary Value} then 'Dictionary'
+	     elsecase {IsClass Value} then 'Class'
+	     elsecase {IsObject Value} then 'Object'
+	     elsecase {IsPort Value} then 'Port'
+	     elsecase {IsLock Value} then 'Lock'
+	     elsecase {IsChunk Value} then 'Chunk'
+	     elsecase {IsThread Value} then 'Thread'
+	     elsecase {IsSpace Value} then 'Space'
+	     end = Type
+	     {Dictionary.get ColorDict Type}
+	  else
+	     {Dictionary.get ColorDict 'Undetermined'}
+	  end
+      o(TextWidget tag configure q(PrintName) foreground: C)
    end
 
    InstallNewColors    = {NewName}
@@ -439,8 +434,8 @@ local
 					   width: SourceWidth
 					   height: SourceHeight
 					   wrap: SourceWrap)}
-	 {self.Source tk(insert p(1 0) VS)}
-	 {self.Source tk(configure state: disabled)}
+	 {Tk.batch [o(self.Source insert p(1 0) VS)
+		    o(self.Source configure state: disabled)]}
 	 Scrollbar = {New Tk.scrollbar tkInit(parent: SourceFrame)}
 	 {Tk.addYScrollbar self.Source Scrollbar}
 	 self.TheVS = VS
@@ -649,7 +644,7 @@ in
 		  @QueryIdsTl = Id|X
 		  QueryIdsTl <- X
 		  {self.ClearQueueButton tk(configure state: normal)}
-	       [] runQuery(Id M) then Pos in
+	       [] runQuery(Id M) then Pos VS in
 		  QueryIdsHd <- {RemoveQuery @QueryIdsHd Id 0 ?Pos}
 		  case {IsFree @QueryIdsHd} then
 		     {self.ClearQueueButton tk(configure state: disabled)}
@@ -661,15 +656,17 @@ in
 		     {self.DequeueQueryButton tk(configure state: disabled)}
 		  else skip
 		  end
-		  {self.CurrentQuery tk(configure state: normal)}
-		  {self.CurrentQuery tk(insert '0' {FormatQuery Id M})}
-		  {self.CurrentQuery tk(configure state: disabled)}
+		  VS = {FormatQuery Id M}
+		  {Tk.batch [o(self.CurrentQuery configure state: normal)
+			     o(self.CurrentQuery insert '0' VS)
+			     o(self.CurrentQuery configure state: disabled)]}
 	       [] removeQuery(Id) then Pos in
 		  QueryIdsHd <- {RemoveQuery @QueryIdsHd Id 0 ?Pos}
 		  case Pos == ~1 then
-		     {self.CurrentQuery tk(configure state: normal)}
-		     {self.CurrentQuery tk(delete '0' 'end')}
-		     {self.CurrentQuery tk(configure state: disabled)}
+		     {Tk.batch
+		      [o(self.CurrentQuery configure state: normal)
+		       o(self.CurrentQuery delete '0' 'end')
+		       o(self.CurrentQuery configure state: disabled)]}
 		  else
 		     {self.QueryList tk(delete Pos)}
 		     case {self.QueryList tkReturnListInt(curselection $)}
@@ -731,33 +728,37 @@ in
 	 [] nil then skip
 	 end
       end
-      meth ShowInfo(VS Coord <= unit)
-	 {self.Text tk(configure state: normal)}
+      meth ShowInfo(VS Coord <= unit) Begin Middle End in
+	 End = [o(self.Text configure state: disabled)]
+	 Middle =
+	 case {self.ScrollToBottom tkReturnInt($)} == 1 then
+	    o(self.Text see 'end')|End
+	 else End
+	 end
+	 Begin =
+	 o(self.Text configure state: normal)|
 	 case Coord == unit then
-	    {self.Text tk(insert 'end' VS)}
+	    o(self.Text insert 'end' VS)|Middle
 	 else File Line Column in
 	    case Coord of pos(F L C) then File = F Line = L Column = C
 	    [] pos(F L C _ _ _) then File = F Line = L Column = C
 	    [] posNoDebug(F L C) then File = F Line = L Column = C
 	    end
 	    case File of 'nofile' then
-	       {self.Text tk(insert 'end' VS)}
+	       o(self.Text insert 'end' VS)|Middle
 	    else Tag Action in
 	       Tag = @ErrorTagCounter
 	       ErrorTagCounter <- Tag + 1
-	       {self.Text tk(insert 'end' VS Tag)}
 	       Action = {New Tk.action
 			 tkInit(parent: self.Text
 				action: (Compiler.genericInterface, getPort($)#
 					 Goto(File Line Column)))}
-	       {self.Text tk(tag bind Tag '<1>' Action)}
+	       o(self.Text insert 'end' VS Tag)|
+	       o(self.Text tag bind Tag '<1>' Action)|
+	       Middle
 	    end
 	 end
-	 {self.Text tk(configure state: disabled)}
-	 case {self.ScrollToBottom tkReturnInt($)} == 1 then
-	    {self.Text tk(see 'end')}
-	 else skip
-	 end
+	 {Tk.batch Begin}
       end
 
       meth addAction(ActionName Proc)
@@ -844,6 +845,9 @@ in
 						variable: self.SystemVariables
 						action: {MkAction
 							 RedisplayEnv()})
+				    command(label: 'Update environment'
+					    action: {MkAction
+						     RedisplayEnv()})
 				    command(label: 'Configure colors ...'
 					    feature: colors
 					    action: {MkAction
@@ -1362,19 +1366,20 @@ in
 	 {Print {String.toAtom {VirtualString.toString VS}}}
       end
       meth ClearInfo()
-	 {self.Text tk(configure state: normal)}
-	 {self.Text tk(delete p(1 0) 'end')}
-	 {self.Text tk(configure state: disabled)}
-	 {self.Text tk(see 'end')}
+	 {Tk.batch [o(self.Text configure state: normal)
+		    o(self.Text delete p(1 0) 'end')
+		    o(self.Text configure state: disabled)
+		    o(self.Text see 'end')]}
 	 {For 0 @ErrorTagCounter - 1 1
 	  proc {$ I} {self.Text tk(tag delete I)} end}
 	 ErrorTagCounter <- 0
       end
 
       meth RedisplayEnv()
-	 PrintNames Count NCols Rows RowArray MessagesWidth NCharsInCol
-	 NewEnvDisplay
+	 Fraction PrintNames Count NCols Rows RowArray MessagesWidth
+	 NCharsInCol NewEnvDisplay RemoveTags AddNewTags
       in
+	 Fraction = {self.EnvDisplay tkReturnList(yview $)}.1
 	 case {self.SystemVariables tkReturnInt($)} == 1 then
 	    PrintNames = {Sort {Dictionary.keys @ValueDict} Value.'<'}
 	 else
@@ -1414,18 +1419,14 @@ in
 	 NewEnvDisplay =
 	 {ForThread Rows - 1 1 ~1 fun {$ In I} {Get RowArray I}#'\n'#In end
 	 {Get RowArray Rows}}
-	 {self.EnvDisplay tk(configure state: normal)}
-	 {self.EnvDisplay tk(delete p(1 0) 'end')}
-	 {self.EnvDisplay tk(insert p(1 0) NewEnvDisplay)}
-	 {self.EnvDisplay tk(configure state: disabled)}
-	 {ForAll {Dictionary.keys @TagDict}
-	  proc {$ Tag} {self.EnvDisplay tk(tag delete Tag)} end}
+	 RemoveTags = {Map {Dictionary.keys @TagDict}
+		       fun {$ Tag} o(self.EnvDisplay tag delete Tag) end}
 	 TagDict <- {NewDictionary}
+	 _#_#AddNewTags =
 	 {FoldL PrintNames
-	  fun {$ N#C PrintName} Ind1 Ind2 Action1 Action2 in
+	  fun {$ N#C#Tickles PrintName} Ind1 Ind2 Action1 Action2 NewTickles in
 	     Ind1 = p(N C)
 	     Ind2 = p(N C + NCharsInCol)
-	     {self.EnvDisplay tk(tag add q(PrintName) Ind1 Ind2)}
 	     Action1 = {New Tk.action
 			tkInit(parent: self.EnvDisplay
 			       action: (Compiler.genericInterface, getPort($)#
@@ -1434,29 +1435,40 @@ in
 			tkInit(parent: self.EnvDisplay
 			       action: (Compiler.genericInterface, getPort($)#
 					ExecuteEnv(PrintName)))}
-	     {self.EnvDisplay tk(tag bind q(PrintName) '<1>' Action1)}
-	     {self.EnvDisplay tk(tag bind q(PrintName) '<Double-1>' Action2)}
+	     NewTickles =
+	     o(self.EnvDisplay tag add q(PrintName) Ind1 Ind2)|
+	     o(self.EnvDisplay tag bind q(PrintName) '<1>' Action1)|
+	     o(self.EnvDisplay tag bind q(PrintName) '<Double-1>' Action2)|
 	     case @ColoringIsEnabled then
 		{SetColor self.EnvDisplay PrintName
-		 {Dictionary.get @ValueDict PrintName} self.ColorDict}
-	     else skip
+		 {Dictionary.get @ValueDict PrintName} self.ColorDict}|Tickles
+	     else Tickles
 	     end
 	     {Dictionary.put @TagDict PrintName Ind1#Ind2#Action1#Action2}
-	     case N < Rows then (N + 1)#C
-	     else 1#(C + NCharsInCol + 1)
+	     case N < Rows then (N + 1)#C#NewTickles
+	     else 1#(C + NCharsInCol + 1)#NewTickles
 	     end
-	  end 1#0 _#_}
-	 case {Dictionary.member @ValueDict @EnvSelection} then
-	    case Tk.isColor then
-	       {self.EnvDisplay tk(tag configure q(@EnvSelection)
-				   background: wheat)}
-	    else
-	       {self.EnvDisplay tk(tag configure q(@EnvSelection)
-				   foreground: white background: black)}
-	    end
-	 else
-	    EnvSelection <- ''
-	 end
+	  end 1#0#(o(self.EnvDisplay configure state: disabled)|
+		   case {Dictionary.member @ValueDict @EnvSelection} then
+		      case Tk.isColor then
+			 [o(self.EnvDisplay tag configure q(@EnvSelection)
+			    background: wheat)
+			  o(self.EnvDisplay yview moveto Fraction)]
+		      else
+			 [o(self.EnvDisplay tag configure q(@EnvSelection)
+			    foreground: white background: black)
+			  o(self.EnvDisplay yview moveto Fraction)]
+		      end
+		   else
+		      EnvSelection <- ''
+		      [o(self.EnvDisplay yview moveto Fraction)]
+		   end)}
+	 {Tk.batch {Append
+		    [o(self.EnvDisplay configure state: normal)
+		     o(self.EnvDisplay delete p(1 0) 'end')]
+		    {Append RemoveTags
+		     o(self.EnvDisplay insert p(1 0) NewEnvDisplay)|
+		     AddNewTags}}}
       end
       meth ConfigureColors()
 	 {New ColorConfigurationDialog
@@ -1467,32 +1479,33 @@ in
       meth !InstallNewColors(Colors IsEnabled)
 	 {ForAll Colors proc {$ T#C} {Dictionary.put self.ColorDict T C} end}
 	 ColoringIsEnabled <- IsEnabled
-	 case IsEnabled then
-	    {ForAll {Dictionary.entries @ValueDict}
-	     proc {$ PrintName#Value}
-		{SetColor self.EnvDisplay PrintName Value self.ColorDict}
-	     end}
-	 else
-	    {ForAll {Dictionary.entries @ValueDict}
-	     proc {$ PrintName#_}
-		{self.EnvDisplay
-		 tk(tag configure q(PrintName) foreground: black)}
-	     end}
-	 end
+	 {Tk.batch
+	  {Map {Dictionary.entries @ValueDict}
+	   case IsEnabled then
+	      fun {$ PrintName#Value}
+		 {SetColor self.EnvDisplay PrintName Value self.ColorDict}
+	      end
+	   else
+	      fun {$ PrintName#_}
+		 o(self.EnvDisplay tag configure q(PrintName)
+		   foreground: black)
+	      end
+	   end}}
       end
       meth SelectEnv(PrintName)
 	 case @EnvSelection of '' then skip
 	 elseof PrintName then Ind1 Ind2 Action1 Action2 in
-	    {self.EnvDisplay tk(tag delete q(PrintName))}
 	    {Dictionary.get @TagDict PrintName Ind1#Ind2#Action1#Action2}
-	    {self.EnvDisplay tk(tag add q(PrintName) Ind1 Ind2)}
-	    {self.EnvDisplay tk(tag bind q(PrintName) '<1>' Action1)}
-	    {self.EnvDisplay tk(tag bind q(PrintName) '<Double-1>' Action2)}
-	    case @ColoringIsEnabled then
-	       {SetColor self.EnvDisplay PrintName
-		{Dictionary.get @ValueDict PrintName} self.ColorDict}
-	    else skip
-	    end
+	    {Tk.batch
+	     o(self.EnvDisplay tag delete q(PrintName))|
+	     o(self.EnvDisplay tag add q(PrintName) Ind1 Ind2)|
+	     o(self.EnvDisplay tag bind q(PrintName) '<1>' Action1)|
+	     o(self.EnvDisplay tag bind q(PrintName) '<Double-1>' Action2)|
+	     case @ColoringIsEnabled then
+		[{SetColor self.EnvDisplay PrintName
+		  {Dictionary.get @ValueDict PrintName} self.ColorDict}]
+	     else nil
+	     end}
 	 end
 	 case Tk.isColor then
 	    {self.EnvDisplay tk(tag configure q(PrintName) background: wheat)}
@@ -1500,8 +1513,8 @@ in
 	    {self.EnvDisplay tk(tag configure q(PrintName)
 				foreground: white background: black)}
 	 end
-	 {self.EditedVariable tk(delete '0' 'end')}
-	 {self.EditedVariable tk(insert '0' q(PrintName))}
+	 {Tk.batch [o(self.EditedVariable delete '0' 'end')
+		    o(self.EditedVariable insert '0' q(PrintName))]}
 	 EnvSelection <- PrintName
       end
       meth ExecuteEnv(PrintName)
