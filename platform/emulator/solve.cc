@@ -268,7 +268,7 @@ Bool SolveActor::checkExtSuspList ()
 
 SolveActor::SolveActor (Board *bb, int prio, TaggedRef resTR, TaggedRef guiTR)
  : Actor (Ac_Solve, bb, prio), result (resTR), guidance (guiTR),
-   boardToInstall(NULL), suspList (NULL), threads (1)
+   boardToInstall(NULL), suspList (NULL), threads (1), stable_sl(NULL)
 {
   solveBoard = NULL;
   solveVar= makeTaggedNULL();
@@ -299,6 +299,20 @@ void SolveActor::printDebugKP(void)
   cout << "threads=" << threads << endl;
   suspList->print(cout);
   cout.flush();
+}
+
+
+Bool SolveActor::stable_wake(void) {
+  if (stable_sl) {
+    stable_sl = stable_sl->stable_wake();
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+void SolveActor::add_stable_susp(Suspension * s) {
+  stable_sl = new SuspList(s, stable_sl);
 }
 
 // ------------------------------------------------------------------------

@@ -2360,7 +2360,21 @@ void engine() {
           HF_NOMSG;
         }
       } else {
-        // 'stabe' (stuck) or enumeration;
+        // 'stable' (stuck) or enumeration;
+
+        // wake up propagators to be woken up on stablity
+        if (solveAA->stable_wake()) {
+
+          solveAA->incThreads();
+          e->pushCFun(solveBB, AM::SolveActorWaker);
+
+          LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+                            goto LBLfailure;);
+        }
+
+        if (e->isStableSolve(solveAA) == NO)
+          goto LBLpopTask;
+
         WaitActor *wa = solveAA->getDisWaitActor ();
 
         if (wa == (WaitActor *) NULL) {
