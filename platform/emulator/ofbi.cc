@@ -664,7 +664,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
         OZ_EXPECT(pe, 0, expectRecordVar);
         OZ_EXPECT(pe, 1, expectVar);
 
-        TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
+        TaggedRef uvar=oz_newVar(home);
         return pe.impose(
             new MonitorArityPropagator(rec,kill,feattail,uvar,uvar),
             OZ_getMediumPrio(),
@@ -702,7 +702,7 @@ OZ_Return MonitorArityPropagator::propagate(void)
         // The home board of uvar must be taken from outside propFeat!
         // Get the home board for any new variables:
         Board* home=tagged2VarHome(tmptail);
-        TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
+        TaggedRef uvar=oz_newVar(home);
         FH=uvar;
         FT=uvar;
     } else {

@@ -35,6 +35,12 @@
 #include "board.hh"
 #include "variable.hh"
 
+#ifdef OUTLINE
+#define inline
+#include "solve.icc"
+#undef inline
+#endif
+
 /*
  * class SolveActor:
  *    solve actor;
@@ -94,9 +100,9 @@ TaggedRef SolveActor::genUnstable(TaggedRef arg) {
 SolveActor::SolveActor(Board *bb)
  : Actor (Ac_Solve, bb), cpb(NULL), suspList (NULL), threads (0),
    nonMonoSuspList(NULL) {
-  result     = makeTaggedRef(newTaggedUVar(bb));
+  result     = oz_newVar(bb);
   solveBoard = new Board(this, Bo_Solve);
-  solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
+  solveVar   = oz_newVar(solveBoard);
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
   copy_start  = (int32 *) NULL;
@@ -161,9 +167,3 @@ void SolveActor::mergeNonMonoSuspListWith(OrderedSuspList * p)
 }
 
 //-----------------------------------------------------------------------------
-
-#ifdef OUTLINE
-#define inline
-#include "solve.icc"
-#undef inline
-#endif

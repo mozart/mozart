@@ -35,6 +35,7 @@
 #endif
 
 #include "board.hh"
+#include "am.hh"
 
 /* ------------------------------------------------------------------------
  * class SolveActor
@@ -115,7 +116,7 @@ void SolveActor::clearResult(Board* bb) {
   if (OZ_isVariable(result))
     return;
 
-  result = makeTaggedRef(newTaggedUVar(bb));
+  result = oz_newVar(bb);
 }
 
 #ifdef DEBUG_THREADCOUNT
