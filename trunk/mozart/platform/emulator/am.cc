@@ -256,7 +256,6 @@ void AM::init(int argc,char **argv)
   (void) engine(OK);
 
   initFDs();
-  initCPI();
 
   initMemoryManagement();
 
@@ -288,6 +287,7 @@ void AM::init(int argc,char **argv)
 
   // builtins
   initLiterals();
+  initCPI();
 
   DBG_STEP_ATOM   = (Atom *) tagged2Literal(AtomDebugStep);
   DBG_NOSTEP_ATOM = (Atom *) tagged2Literal(AtomDebugNoStep);
