@@ -52,7 +52,7 @@ INSTALL_SRC= 	@INSTALL_SRC@
 INSTALL_BIN=	$(INSTALL) -m 555
 INSTALL_FILE=	$(INSTALL) -m 444
 
-STATIC_MODULELIBS= -L. -lwif -lfd -lschedule -lfset -lparser
+STATIC_MODULELIBS= -L. -lWif -lFDP -lSchedule -lFSP -lParser -lozma
 LIBS=		   @LIBS@
 LDFLAGS=	   @LDFLAGS@ $(CUSR)
 
