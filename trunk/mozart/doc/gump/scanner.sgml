@@ -348,7 +348,9 @@
 	    <Entry>Holes in the rule set.
 	    <Item>
 	      For some input (in some mode), no true prefix is matched by
-	      any rule.
+	      any rule.  Due to the underlying implementation using &flex;,
+	      this will result in the error message
+	      <Code display/"-s option given but default rule can be matched"/
 	    <Entry>Completely covered rules.
 	    <Item>
 	      A rule&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
