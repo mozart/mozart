@@ -27,26 +27,20 @@ define
    RunSync = {NewCell unit}
    OpenNetInfo=GUI.openNetInfo
 
-   WD
    proc {Start} O N
       proc{GCLineDraw}
-         thread
-            {ForAll {NewWeakDictionary $ WD}
-             proc{$ gc#N}
-                lock MainLock then
-                   if {Not {IsFree {Access RunSync}}} then
-                      {GUI.oactive   divider(col:darkred)}
-                      {GUI.sactivity divider(col:darkred)}
-                      {GUI.bactive   divider(col:darkred)}
-                      {GUI.onumber   divider(col:darkred)}
-                      {GUI.srtt   divider(col:darkred)}
-                      {GUI.bnumber   divider(col:darkred)}
-                   end
-                   WD.gc:=N
-                end
-             end}
-         end
-         WD.gc:={NewName}
+         {Finalize.everyGC proc{$}
+                              lock MainLock then
+                                 if {Not {IsFree {Access RunSync}}} then
+                                    {GUI.oactive   divider(col:darkred)}
+                                    {GUI.sactivity divider(col:darkred)}
+                                    {GUI.bactive   divider(col:darkred)}
+                                    {GUI.onumber   divider(col:darkred)}
+                                    {GUI.srtt   divider(col:darkred)}
+                                    {GUI.bnumber   divider(col:darkred)}
+                                 end
+                              end
+                           end}
       end
    in
       {Exchange Running O N}
