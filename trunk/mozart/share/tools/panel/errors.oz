@@ -1,6 +1,6 @@
 %%%
 %%% Authors:
-%%%   Christian Schulte (schulte@dfki.de)
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
 %%%
 %%% Contributors:
 %%%   Martin Mueller <mmueller@ps.uni-sb.de>

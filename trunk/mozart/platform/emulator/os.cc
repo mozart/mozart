@@ -4,7 +4,7 @@
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
- *    Christian Schulte (schulte@dfki.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Copyright:
  *    Organization or Person (Year(s))

@@ -3,7 +3,7 @@
  *    Joerg Wuertz (wuertz@dfki.de)
  * 
  *  Contributors:
- *    Christian Schulte (schulte@dfki.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  * 
  *  Copyright:

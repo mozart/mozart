@@ -4,7 +4,7 @@
  *    Peter van Roy (pvr@info.ucl.ac.be)
  * 
  *  Contributors:
- *    Christian Schulte (schulte@dfki.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Copyright:
  *    Ralf Scheidhauer, 1997

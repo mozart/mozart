@@ -2,7 +2,7 @@
 ### Authors:
 ###   Denys Duchier <duchier@ps.uni-sb.de>
 ###   Michael Mehl <mehl@dfki.de>
-###   Christian Schulte <schulte@dfki.de>
+###   Christian Schulte <schulte@ps.uni-sb.de>
 ###
 ### Copyright:
 ###   Denys Duchier, 1998
