@@ -63,6 +63,7 @@
 
 class SVariable {
 friend TaggedRef gcVariable(TaggedRef);
+  friend void processUpdateStack(void);
 protected:
   SuspList *suspList;
   Board *home;
@@ -89,6 +90,8 @@ public:
   SuspList *getSuspList() { return suspList; }
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }
+
+  SVariable * gc();
 
   void setStoreFlag(void) {
     suspList = (SuspList *) (((long) suspList) | STORE_FLAG);
