@@ -111,7 +111,7 @@ local
 	 RaiseOnBlock = {Debug.getRaiseOnBlock T}
 	 {Debug.setRaiseOnBlock T false}
 	 try
-	    P = {New TextPipe init(cmd: PLATFORMDIR#'/flex.exe'
+	    P = {New TextPipe init(cmd: {OZFLEX}
 				   args: ['-Cem' FlexFile])}
 	    {P getAll(?Ss)}
 	    {P close()}
@@ -140,16 +140,14 @@ local
 	    case {InvokeFlex FlexFile Rep} of 0 then
 	       {Rep startSubPhase('compiling scanner')}
 	       if {OS.system
-		   %'g++ -fno-rtti -O3 '#
-		   'oztool c++ -O3 '#
-		   '-I'#{Property.get 'oz.home'}#'/include -I'#INCLUDEDIR#
+		   {OZTOOL}#' c++ -O3 '#{OZTOOLINC}#
 		   ' -c '#{MakeFileName T ".C"}#
 		   ' -o '#{MakeFileName T ".o"}} \= 0
 	       then
 		  {Rep error(kind: 'system error'
 			     msg: 'invocation of g++ failed')}
 		  stop
-	       elseif {OS.system 'ozdynld '#
+	       elseif {OS.system {OZTOOL}#' ld '#
 		       {MakeFileName T ".o"}#' -o '#
 		       {MakeFileName T ".so"}#'-'#PLATFORM#' -lc'} \= 0
 	       then
