@@ -6385,8 +6385,10 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &va
   }
   
   old = makeTaggedRef(newTaggedUVar(am.currentBoard));
-  //cellDoAccess(getCell(state),old);
-  cellDoExchange(getCell(state),old,old,am.currentThread);
+  if (am.isToplevel())
+    cellDoExchange(getCell(state),old,old,oz_currentThread);
+  else
+    cellDoAccess(getCell(state),old);
   if (!isAnyVar(deref(old)))
     return tagged2SRecord(deref(old));
 
