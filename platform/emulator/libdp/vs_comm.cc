@@ -296,10 +296,12 @@ void VirtualSite::drop()
     //
     while (isNotEmpty()) {
       VSMessage *vsm = dequeue();
+      /* tmueller
       site->communicationProblem(vsm->getMessageType(),
                                  vsm->getSite(), vsm->getStoreIndex(),
                                  COMM_FAULT_PERM_NOT_SENT,
                                  (FaultInfo) vsm->getMarshalerBuffer());
+      */
       fmp->dispose(vsm);
     }
   }
