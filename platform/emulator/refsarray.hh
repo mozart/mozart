@@ -73,9 +73,12 @@ public:
   RefsArray * sClone(void);
 
   static RefsArray * allocate(int n, Bool init=OK) {
-    Assert(n > 0);
-    RefsArray * ra = (RefsArray *) oz_freeListMalloc(sizeof(RefsArray) +
-						     (n-1)*sizeof(TaggedRef));
+    Assert(n >= 0);
+    // The following assertion makes sure the 'malloc' is called with
+    // a positive integer in the case of n == 0;
+    Assert(sizeof(RefsArray) > sizeof(TaggedRef));
+    RefsArray * ra = (RefsArray *)
+      oz_freeListMalloc(sizeof(RefsArray) + (n-1)*sizeof(TaggedRef));
     ra->setLen(n);
     if (init) {
       register TaggedRef nvr = NameVoidRegister;
@@ -90,6 +93,7 @@ public:
       case  3: ra->_a[2] = nvr;
       case  2: ra->_a[1] = nvr;
       case  1: ra->_a[0] = nvr;
+      case  0:
 	break;
       default:
 	for (int i = n; i--; ) 
