@@ -1,16 +1,31 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh">
+
 <!-- Abbreviations -->
 <!ENTITY OPI "OPI">
 
 <!-- Processing Instructions -->
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY eg PI "eg">
 
 ]>
 
-<Book>
+<Book proglang=elisp>
   <Front>
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.intro">
+    <Meta name="html.split" value="chapter.start">
+    <Meta name="html.split" value="chapter.editing">
+    <Meta name="html.split" value="chapter.running">
+    <Meta name="html.split" value="chapter.tools">
+    <Meta name="html.split" value="chapter.gdb">
+    <Meta name="html.split" value="chapter.internals">
+    <Meta name="html.split.bib" value="">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Oz Programming Interface/
@@ -23,16 +38,16 @@
 	running Mozart's development tools.
     </Abstract>
   <Body>
-    <Chapter>
+    <Chapter id="chapter.intro">
       <Title/Introduction/
       <P>
 	The Mozart Programming System provides a powerful environment for
 	the development of software systems, called the <Q/Oz Programming
 	Interface/ (&OPI;).  The &OPI; is built around the extensible Emacs
-	editor and runs (at least) under GNU Emacs Version&nbsp;19.28 or
-	greater and XEmacs in Versions&nbsp;19.14 or greater.  Its main
+	editor and runs (at least) under GNU Emacs, Version&nbsp;19.28 or
+	greater, and XEmacs, Version&nbsp;19.14 or greater.  Its main
 	features are:
-      <Para><Title/Features/
+      <Para class=apropos><Title/Features/
 	<List>
 	  <Entry>Editing Oz code.
 	  <Item>
@@ -47,7 +62,7 @@
 	    <P.silent><!--**-->
 	      The &OPI; handles input to and output from a Mozart sub-process,
 	      providing a convenient interface for the interactive use of the
-	      Mozart system and explorative programming.
+	      Mozart system and for explorative programming.
 	  <Entry>Starting Mozart's development tools.
 	  <Item>
 	    <P.silent><!--**-->
@@ -57,62 +72,227 @@
 	      the source file being debugged.
 	  <!--** it also will allow to invoke online documentation -->
 	</List>
-      <Para><Title/The Manual's Structure/
-	This manual is structured as follows.  First, <Ptr to="chapter.general"
-	> will give an overview about the general integration of the &OPI;
+      <Para class=apropos><Title/The Manual's Structure/
+	This manual is structured as follows.  First, <Ptr to="chapter.start">
+	will give an overview about the general integration of the &OPI;
 	into the standard framework provided by Emacsen<Note foot><Q/Emacsen/
 	is the plural of <Q/Emacs/.  This term is used in this manual when the
 	described feature applies to both GNU Emacs and XEmacs.</Note>.  Then
 	will follow <Ptr to="chapter.editing">, <Ptr to="chapter.running"> and
 	<Ptr to="chapter.tools">, dedicated to the three main points mentioned
-	above respectively.
-      <Para><Title/Learning Emacs/
+	above respectively.  <Ptr to="chapter.gdb"> details how to run Mozart
+	under <Name type=tool/gdb/.  Finally, <Ptr to="chapter.internals">
+	documents some internal functions of the &OPI; that might be useful
+	for users who want to write their own editing functions.
+      <Para class=apropos><Title/Learning Emacs/
 	In order to exploit the power of the &OPI; you will have to get
 	some acquaintance with Emacs.  A good place to start is the Emacs
 	on-line tutorial, available from the Emacs Help menu.  This manual
-	will assume some familiarity with the general workings of Emacsen.
-    <Chapter id="chapter.general">
-      <Title/General Emacs Features of the &OPI;/
+	will assume some familiarity with the general editing commands of
+	Emacsen.
+      <Section class=unnumbered>
+	<Title/Acknowledgements/
 	<P>
-<!--** the .emacs file, running from the shell, running from Emacs,
-convention: variables and functions start with oz-;
-C-h v: if the description starts with a "*", then it's meant for the
-user to set (also: M-x set-variable, M-x customize-variable);
-C-h f: if there's a description, then it's meant for the user to use;
-oz-mode, oz-gump-mode, ozm-mode, auto-save-alist/autoload, C-h m,
-menu bar menu, buffer menu in XEmacs, M-x customize in Emacs 20,
-oz-change-title, oz-frame-title, oz-pc-keys, oz-new-buffer,
-oz-previous-buffer, oz-next-buffer -->
+	  The Oz Programming Interface of the Mozart system is an
+	  extension and partial redesign of the Oz Programming Interface
+	  of DFKI Oz, Versions 1.1 and&nbsp;2.0.  Credit has to go to the
+	  following people:
+	  <List>
+	    <Item>
+	      <P.silent><!--**-->
+		Michael Mehl, for initially providing editing support
+		(indentation, fontification),
+	    <Item>
+	      <P.silent><!--**-->
+		Ralf Scheidhauer, for running Oz as a sub-process,
+	    <Item>
+	      <P.silent><!--**-->
+		Benjamin Lorenz, for the interaction with the Oz debugger,
+	    <Item>
+	      <P.silent><!--**-->
+		Jochen Dörre, for initially providing Oz expression
+		editing commands and jumping to compiler error messages.
+	  </List>
+	  Leif Kornstaedt is the person now responsible for the entirety
+	  of Mozart's &OPI;.  Please address any remarks to him.
+    <Chapter id="chapter.start">
+      <Title/Getting Started/
+      <Section>
+	<Title/Starting the &OPI; in the Unix Environment/
+	  <P>
+	    The easiest way to start the &OPI; is to type the following
+	    command at the shell prompt<Note foot>The percent sign
+	    (<Samp/%/) represents the shell prompt; it is not part of
+	    the command.</Note>:
+	    <Code display proglang=sh
+	      >% oz <Var type=grammar/emacs args/</Code>
+	    This starts up an Emacs process, passing to it all arguments
+	    given on the command line, creates a new buffer named <Name
+	    type=buffer/Oz/, and runs Mozart as a sub-process.
+	  <Para class=apropos><Title/Which Emacs to Use/
+	    The command used to invoke Emacs is determined through the
+	    following steps:
+	    <List enum>
+	      <Item>
+		<P.silent><!--**-->
+		  If the environment variable <Var type=env/OZEMACS/ is
+		  set, its contents is used.
+	      <Item>
+		<P.silent><!--**-->
+		  Else, if a command named <File/emacs/ is found in the
+		  <Var type=env/PATH/, this is used.
+	      <Item>
+		<P.silent><!--**-->
+		  Else, if a command named <File/xemacs/ is found in the
+		  <Var type=env/PATH/, this is used.
+	      <Item>
+		<P.silent><!--**-->
+		  Else, if a command named <File/lemacs/ is found in the
+		  <Var type=env/PATH/, this is used.
+	    </List>
+      <Section>
+	<Title/Starting the &OPI; Under Windows/
+	  <P>
+	    The installation procedure will have created a program group
+	    for the Mozart system.  The &OPI; is started by launching the
+	    <Name type=program/Mozart/ item.
+      <Section>
+	<Title/Starting the &OPI; From Within Emacs/
+	  <P>
+	    You can also configure your Emacs so that you can use all of
+	    the &OPI;'s functionality without using the <File/oz/ script.
+	    Here's what you would typically add to your Emacs startup file
+	    (usually called <File>~/.emacs</File> under Unix or <File
+	    >C:\_emacs</File> under Windows):
+	    <Code.Extern display to="oz.el">
+      <Section>
+	<Title/The Oz and Oz-Gump Major Modes/
+	  <P>
+	    All of the &OPI;'s functions are accessible in the following two
+	    major modes:
+	    <List>
+	      <Entry class=command><<oz-mode>>
+	      <Item>
+		<P.silent><!--**-->
+		  This is the major mode for editing Oz code.  Loading a file
+		  with extension <File/.oz/ automatically puts a buffer into
+		  Oz mode.  You can identify a buffer is in Oz mode by the
+		  string <Samp/Oz/ in its mode line.
+	      <Entry class=command><<oz-gump-mode>>
+	      <Item>
+		<P.silent><!--**-->
+		  This is the major mode for editing Oz code with embedded
+		  Gump specifications&nbsp;<Ptr to="kornstaedt96">.  Loading
+		  a file with extension <File/.ozg/ automatically puts a
+		  buffer in Oz-Gump mode.  You can identify a buffer is in
+		  Oz-Gump mode by the string <Samp/Oz-Gump/ in its mode line.
+	    </List>
+	  <Para class=apropos><Title/Oz Mode Hook/
+	    To both of these, the following hook applies.
+	    <List>
+	      <Entry class=variable><<oz-mode-hook>>
+	      <Item>
+		<P.silent><!--**-->
+		  This variable contains a list of functions that are
+		  run when either Oz mode or Oz-Gump mode is activated.
+		  These functions are applied without arguments.  Change
+		  using Emacs functions <<add-hook>> and <<remove-hook>>.
+	    </List>
+      <Section>
+	<Title/Inspecting the &OPI;'s Commands and Variables/
+	  <Para class=apropos><Title/The Oz Menu/
+	    The Oz major modes add a menu to the menu bar called <Samp/Oz/
+	    (see <Ptr to="figure.menu">); in XEmacs, this menu is also
+	    accessible by pressing the right mouse button in an Oz buffer.
+	    Many of the commands described in the next chapters are accessible
+	    through this menu.
+	    <Figure float id="figure.menu" class=figure>
+	      <Caption>The Oz Menu.</Caption>
+	      <P><!--**-->
+		<Picture.Extern GIF display to="menu.gif">
+	    </Figure>
+	  <Para class=apropos><Title/Key Bindings/
+	    A short description of the current major mode and its key
+	    bindings can be obtained through Emacs' <Key/M-x describe-mode/
+	    (usually bound to <Key/C-h m/).
+	  <Para class=apropos><Title/Emacs Conventions/
+	    The Oz modes conform to the following Emacs conventions:
+	    <List>
+	      <Item>
+		<P.silent><!--**-->
+		  Nearly all functions and variables start with
+		  <<oz-&ellipsis>>.
+	      <Item>
+		<P.silent><!--**-->
+		  If the documentation string of a variable starts with an
+		  asterisk, then its value is meant for the user to modify
+		  at will.  The documentation string of a variable can be
+		  inspected with <Key/M-x describe-variable/ (<Key/C-h v/).
+	      <Item>
+		<P.silent><!--**-->
+		  If a function has a documentation string, then it is
+		  meant for the user to use directly if she so wishes.
+		  Inspect the documentation string of a function with
+		  <Key/M-x describe-function/ (<Key/C-h f/); if a command
+		  is bound to a key, you can examine its documentation
+		  string with <Key/M-x describe-key/ (<Key/C-h k/).
+	    </List>
+	  <Para class=apropos><Title/Customization/
+	    New Emacsen offer a feature called <Def/customization/, which
+	    serves the purpose of setting some variables pertaining to a
+	    mode in a structured way.  You can access this feature by
+	    <Key/M-x customize/; look at the group <Name type=buffer
+	    /Programming/&slash;<Name type=buffer/Languages/&slash;<Name
+	    type=buffer/Oz/.  You can also access this group directly via
+	    <Key/M-x customize RET oz/.
+<!--** oz-pc-keys -->
     <Chapter id="chapter.editing">
       <Title/Editing Oz Code/
-	<P>
-<!--** oz-auto-indent, oz-indent-chars, oz-pedantic-spaces, abbrevs
-(see ~kornstae/.emacs), oz-remove-annoying-spaces, oz-electric-terminate-line,
-oz-indent-*, forward-oz-expr, backward-oz-expr, mark-oz-expr,
-transpose-oz-exprs, kill-oz-expr, backward-kill-oz-expr, oz-fill-paragraph,
-the three levels of fontification, oz-fontify-buffer, oz-(un)comment-region,
-oz-to-{coresyntax,emulatorcode}-* -->
+      <P>
+<!--**
+ Managing Oz buffers
+ - oz-new-buffer.  Note: a buffer without associated file name, so
+   quitting Emacs will kill this buffer without warning
+ - oz-previous-buffer, oz-next-buffer
+ Indentation
+ - TAB, RET, DEL, oz-auto-indent, oz-indent-chars, oz-electric-terminate-line,
+   oz-indent-line, oz-indent-region, indent-oz-expr
+ Fontification
+ - oz-pedantic-spaces, oz-remove-annoying-spaces, the three levels of
+   fontification, oz-fontify-buffer
+ Comments
+ - oz-fill-paragraph, oz-comment-region, oz-uncomment-region
+ Block Commands
+ - forward-oz-expr, backward-oz-expr, mark-oz-expr, transpose-oz-exprs,
+   kill-or-expr, backward-kill-oz-expr, oz-beginning-of-defun, oz-end-of-defun
+ Abbreviation Expansion
+ - see ~/.emacs
+-->
     <Chapter id="chapter.running">
       <Title/Running Mozart from the &OPI;/
-	<P>
-<!--** variable oz-home, oz-prepend-line, oz-other-buffer-size,
-oz-popup-on-error-t, oz-halt-timeout, oz-emulator,
+      <P>
+<!--** oz-change-title, oz-frame-title, variable oz-home, oz-prepend-line,
+oz-other-buffer-size, oz-popup-on-error-t, oz-halt-timeout, oz-emulator,
 oz-components-path, oz-root-functor, run-oz, oz-halt, oz-set-other,
 oz-set-emulator, oz-set-components, oz-other, oz-other-emulator,
 oz-other-components, oz-feed-*, oz-send-string, oz-toggle-*,
-oz-feed-*-browse, oz-mouse-goto-error, oz-goto-next-error -->
+oz-feed-*-browse, oz-mouse-goto-error, oz-goto-next-error,
+{Property.get argv} always returns nil, oz-to-{coresyntax,emulatorcode}-*
+-->
     <Chapter id="chapter.tools">
       <Title/Interacting with Mozart's Development Tools/
-	<P>
+      <P>
 <!--** oz-debug-{start,stop}, oz-breakpoint-key-set etc,
 oz-profiler-{start,stop}, oz-bar-remove, oz-view-panel, oz-compiler-panel -->
     <Chapter id="chapter.gdb">
       <Title/Running Mozart under gdb/
-	<P>
+      <P>
 <!--** oz-gdb-autostart, oz-emulator, oz-gdb -->
     <Chapter id="chapter.internals">
       <Title/Internal Functions/
+      <P>
 <!--** oz-forward-keyword, oz-backward-keyword, oz-is-quoted,
 oz-backward-begin, oz-backward-paren, oz-forward-end, oz-forward-paren -->
-
+  <Back>
+    <Bib.Extern id="kornstaedt96" to="../gump/gump.bib" key="kornstaedt96">
 </Book>
