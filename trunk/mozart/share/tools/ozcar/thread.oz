@@ -61,8 +61,19 @@ in
 	 end
       end
 
-      meth checkMe %% to be improved... :-)
-	 Gui,doStatus('I am doing well, thanks!')
+      meth checkMe
+	 T = @currentThread
+      in
+	 case T == undef then
+	    Gui,doStatus('There is no thread selected')
+	 else
+	    I = {Thread.id T}
+	    R = case {Dbg.checkStopped T} then stopped else running end
+	    S = {Thread.state T}
+	 in
+	    Gui,doStatus('Currently selected thread: #' # I #
+			 ' (' # R # ' / ' # S # ')')
+	 end
       end
       
       meth getThreadDic($)
@@ -437,8 +448,11 @@ in
 	 case I == 1 then skip else
 	    Stack = {Dget self.ThreadDic I}
 	    T     = {Stack getThread($)}
-	    S     = case {Dbg.checkStopped T} then
-		       {Thread.state T} else running end
+	    S     = local X = {Thread.state T} in
+		       case     {Dbg.checkStopped T} then X
+		       elsecase X == terminated      then X
+		       else                               running end
+		    end
 	 in
 	    currentThread <- T
 	    currentStack  <- Stack
