@@ -775,15 +775,14 @@ Bool checkAtom(const char *s)
         && strcmp(t, "end") && strcmp(t, "export")? OK: NO;
   case 'f':
     return strcmp(t, "false") && strcmp(t, "feat")
-        && strcmp(t, "finally") && strcmp(t, "from")
-        && strcmp(t, "fun") && strcmp(t, "functor")
-        && strcmp(t, "fail")? OK: NO;
+        && strcmp(t, "finally") && strcmp(t, "for")
+        && strcmp(t, "from") && strcmp(t, "fun")
+        && strcmp(t, "functor") && strcmp(t, "fail")? OK: NO;
   case 'i':
     return strcmp(t, "if") && strcmp(t, "import")
         && strcmp(t, "in")? OK: NO;
   case 'l':
-    return strcmp(t, "local") && strcmp(t, "lock")
-      && strcmp(t, "loop")? OK: NO;
+    return strcmp(t, "local") && strcmp(t, "lock");
   case 'm':
     return strcmp(t, "meth") && strcmp(t, "mod")? OK: NO;
   case 'n':
