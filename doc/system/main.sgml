@@ -97,6 +97,10 @@
 <!ENTITY chapter.tk       SYSTEM "tk.sgml">
 <!ENTITY chapter.tktools  SYSTEM "tktools.sgml">
 
+<!-- Misc -->
+
+<!ENTITY chapter.objectsupport SYSTEM "object.sgml">
+
 ]>
 
 
@@ -190,6 +194,9 @@
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">
 
+    <!-- Misc -->
+
+    <Meta name="html.split"       value="chapter.objectsupport">
 
     <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
@@ -249,6 +256,11 @@
     &chapter.tktools;
   </Part>
 
+  <Part id="Part.Misc">
+    <Title/Miscellaneous/
+    &chapter.objectsupport;
+  </Part>
+
   <Back>
     <Bib.Extern id="LEWINE.91"   to="system.bib" key="LEWINE:91"> 
     <Bib.Extern id="Explorer.97" to="system.bib" key="Explorer.97"> 
@@ -258,5 +270,6 @@
     <Bib.Extern id="Wuertz.96b" to="system.bib" key="Wuertz.96b"> 
     <Bib.Extern id="Wuertz.96c" to="system.bib" key="Wuertz.96c"> 
     <Bib.Extern id="Muellermueller.wlp.97" to="system.bib" key="Muellermueller.wlp.97"> 
+    <Bib.Extern id="Ousterhout.94" to="system.bib" key="Ousterhout.94"> 
 
 </BOOK>

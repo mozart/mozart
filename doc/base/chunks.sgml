@@ -456,63 +456,6 @@ end>>>
 	    does nothing.  It is defined as <<meth noop() skip end>>.
 	</List>
 
-<!-- Do not delete, I still need it Christian!
-    <SubSection class=unnumbered>
-      <Title/Classes for Master&slash;Slave Behaviour/
-      <P>
-	<Index class=tails/<<Object>><And><<master>>/
-	An instance ?_{MasterO} of class <<Object.master>> becomes
-	a <Def/master/ of an <<Object.slave>> object when the latter
-	receives the message <<becomeSlave(?_{MasterO})>>.
-      <Para class=apropos><Title/Methods for Masters/
-	<List>
-	  <Entry><<init>>
-	    <Index/<<Object>><And><<master>><And><<init>>/
-	  <Synopsis>
-	    <<init()>>
-	  <Item>
-	    initialization; mandatory for internal reasons.
-
-	  <Entry><<getSlaves>>
-	    <Index/<<Object>><And><<master>><And><<getSlaves>>/
-	  <Synopsis>
-	    <<getSlaves(??{SlaveOs})>>
-	  <Item>
-	    binds ?_{SlavesOs} to the list of current slaves.
-	</List>
-      <P>
-	<Index class=tails/<<Object>><And><<slave>>/
-	An instance of <<Object.slave>> becomes a <Def/slave/ of an
-	<<Object.master>> object ?_{MasterO} when it receives the message
-	<<becomeSlave(?_{MasterO})>>.
-      <Para class=apropos><Title/Methods for Slaves/
-	<List>
-	  <Entry><<becomeSlave>>
-	    <Index/<<Object>><And><<slave>><And><<becomeSlave>>/
-	  <Synopsis>
-	    <<becomeSlave(?+{MasterO})>>
-	  <Item>
-	    makes <<self>> become a slave of ?_{MasterO}.  <<self>> must
-	    not yet be a slave of any object, else the error exception
-	    <<object(slaveNotFree)>> is raised.
-
-	  <Entry><<isFree>>
-	    <Index/<<Object>><And><<slave>><And><<isFree>>/
-	  <Synopsis>
-	    <<isFree(??{B})>>
-	  <Item>
-	    tests whether <<self>> is not the slave of any object.
-
-	  <Entry><<free>>
-	    <Index/<<Object>><And><<slave>><And><<free>>/
-	  <Synopsis>
-	    <<free()>>
-	  <Item>
-	    frees <<self>>.  <<self>> must be the slave of some object,
-	    else the error exception <<object(slaveAlreadyFree)>> is
-	    raised.
-	</List>
--->
   <Section id="section.chunks.functors">
     <Title/Functors/
     <P>
