@@ -32,7 +32,7 @@ defaults(dirs:
 	     'System'
 	     'Error' 'ErrorRegistry' 'Debug' 'Finalize' 'Foreign'
 	     'Fault' 'Connection' 'Remote' 'VirtualSite'
-	     'Open' 'Pickle'
+	     'Open'
 	     'Tk' 'TkTools'
 	     'Compiler'
 	     'Misc']
