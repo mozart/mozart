@@ -22,7 +22,10 @@ import
    Emacs   
    History
 
+\ifdef DEBUG
    System
+\endif
+   
    Error
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
@@ -119,20 +122,41 @@ define
       DaVin = {New DaVinci.daVinciClass init(Stream)}
       Hist  = {New History.historyClass init}
    in
-{System.show 'Collecting space'}
+\ifdef DEBUG
+      {System.show 'Collecting space'}
+\endif
+      
       {CC collect(Root)}
-{System.show 'Getting vars'}
+\ifdef DEBUG
+      {System.show 'Getting vars'}
+\endif
+      
       AllVars = {CC get_vars($)}
-{System.show 'Getting constraints'}
+\ifdef DEBUG
+      {System.show 'Getting constraints'}
+\endif
+      
       AllConstrs = {CC get_props($)}
-{System.show 'Adding action'}
+\ifdef DEBUG
+      {System.show 'Adding action'}
+\endif
+      
       {Hist add_action(ConstrGraph.make AllConstrs)}
-{System.show 'Constructing Graph'}
+\ifdef DEBUG
+      {System.show 'Constructing Graph'}
+\endif
+      
       Result = {ConstrGraph.make Hist AllConstrs}
 %      Result = {ParamGraph.make Hist AllVars}
-{System.show 'Drawing graph'}
+\ifdef DEBUG
+      {System.show 'Drawing graph'}
+\endif
+      
       {DaVin graph(Result.graph)}
-{System.show 'Done and looping'}
+\ifdef DEBUG
+      {System.show 'Done and looping'}
+\endif
+      
       {Loop Hist DaVin Stream AllVars AllConstrs Result}
    end
 
