@@ -326,88 +326,55 @@ define
 	    packages: {Dictionary.toRecord o PTable})
       end
       %%
+      meth ozmake_get(T E S)
+	 case {E getSlot(S $)}
+	 of unit then skip
+	 [] V then
+	    if S==id then
+	       T.mogul := {VS2A V}
+	    else
+	       T.S := {VS2A V}
+	    end
+	 end
+      end
+      meth ozmake_getl(T E S)
+	 case {E getSlot(S $)}
+	 of unit then skip
+	 [] nil then skip
+	 [] V then T.S := {Map V VS2A} end
+      end
       meth OzmakeContact(E $)
 	 Table = {NewDictionary}
       in
-	 case {CondSelect E content_type unit}
-	 of unit then skip
-	 [] S then Table.content_type := {VS2A S} end
-	 case {CondSelect E body unit}
-	 of unit then skip
-	 [] S then Table.body := {VS2A S} end
-	 case {CondSelect E id unit}
-	 of unit then skip
-	 [] S then Table.mogul := {VS2A S} end
-	 case {CondSelect E url unit}
-	 of unit then skip
-	 [] S then Table.url := {VS2A S} end
-	 case {CondSelect E email unit}
-	 of unit then skip
-	 [] S then Table.url := {VS2A S} end
-	 case {CondSelect E www unit}
-	 of unit then skip
-	 [] S then Table.www := {VS2A S} end
-	 case {CondSelect E name unit}
-	 of unit then skip
-	 [] S then Table.name := {VS2A S} end
-	 case {CondSelect E name_for_index unit}
-	 of unit then skip
-	 [] S then Table.name_for_index := {VS2A S} end
+	 {self ozmake_get(Table E content_type)}
+	 {self ozmake_get(Table E body)}
+	 {self ozmake_get(Table E id)}
+	 {self ozmake_get(Table E url)}
+	 {self ozmake_get(Table E email)}
+	 {self ozmake_get(Table E www)}
+	 {self ozmake_get(Table E name)}
+	 {self ozmake_get(Table E name_for_index)}
 	 {Dictionary.toRecord contact Table}
       end
       %%
       meth OzmakePackage(E $)
 	 Table = {NewDictionary}
       in
-	 case {CondSelect E id unit}
-	 of unit then skip
-	 [] S then Table.mogul := {VS2A S} end
-	 case {CondSelect E url unit}
-	 of unit then skip
-	 [] S then Table.url := {VS2A S} end
-	 case {CondSelect E blurb unit}
-	 of unit then skip
-	 [] S then Table.blurb := {VS2A S} end
-	 case {CondSelect E provides nil}
-	 of nil then skip
-	 [] L then Table.provides := {Map L VS2A} end
-	 case {CondSelect E requires nil}
-	 of nil then skip
-	 [] L then Table.requires := {Map L VS2A} end
-	 case {CondSelect E content_type unit}
-	 of unit then skip
-	 [] S then Table.content_type := {VS2A S} end
-	 case {CondSelect E url_pkg unit}
-	 of unit then skip
-	 [] L then Table.url_pkg := {Map L VS2A} end
-	 case {CondSelect E url_doc unit}
-	 of unit then skip
-	 [] L then Table.url_doc := {Map L VS2A} end
-	 case {CondSelect E body nil}
-	 of nil then skip
-	 [] S then Table.body := {VS2A S} end
-	 case {CondSelect E author nil}
-	 of nil then skip
-	 [] L then Table.author := {Map L VS2A} end
-	 case {CondSelect E contact nil}
-	 of nil then skip
-	 [] unit then skip
-	 [] L then Table.contact := {Map L VS2A} end
-	 case {CondSelect E keywords nil}
-	 of nil then skip
-	 [] L then Table.keywords := {Map L VS2A} end
-	 case {CondSelect E categories nil}
-	 of nil then skip
-	 [] L then Table.categories := {Map L VS2A} end
-	 case {CondSelect E url_doc_extra nil}
-	 of nil then skip
-	 [] L then Table.url_doc_extra := {Map L VS2A} end
-	 case {CondSelect E title nil}
-	 of nil then skip
-	 [] S then Table.title := {VS2A S} end
-	 case {CondSelect E version nil}
-	 of nil then skip
-	 [] S then Table.version := {VS2A S} end
+	 {self ozmake_get(Table E id)}
+	 {self ozmake_get(Table E url)}
+	 {self ozmake_get(Table E blurb)}
+	 {self ozmake_getl(Table E provides)}
+	 {self ozmake_getl(Table E requires)}
+	 {self ozmake_get(Table E content_type)}
+	 {self ozmake_getl(Table E url_pkg)}
+	 {self ozmake_getl(Table E url_doc)}
+	 {self ozmake_get(Table E body)}
+	 {self ozmake_getl(Table E author)}
+	 {self ozmake_getl(Table E keywords)}
+	 {self ozmake_getl(Table E categories)}
+	 {self ozmake_getl(Table E url_doc_extra)}
+	 {self ozmake_get(Table E title)}
+	 {self ozmake_get(Table E version)}
 	 {Dictionary.toRecord package Table}
       end
    end
