@@ -116,8 +116,8 @@ in
 	     {OPICompiler enqueue(mergeEnv(Env))}
 	  end
 
-	  {New CompilerInterfaceEmacs init(OPICompiler) _}
-	  {{`Builtin` setOPICompiler 1} OPICompiler}
+	  {{`Builtin` setOPICompiler 1}
+	   {New CompilerInterfaceEmacs init(OPICompiler)}}
 
 	  local
 	     OZVERSION = {System.property.get 'oz.version'}
