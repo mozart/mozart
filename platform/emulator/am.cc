@@ -300,9 +300,7 @@ void AM::suspendEngine()
 
   ozstat.printIdle(stdout);
 
-  if (osBlockSignals() == NO) {
-    DebugCheckT(warning("suspendEngine: there are blocked signals"));
-  }
+  osBlockSignals(OK);
 
   while (1) {
 

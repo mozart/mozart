@@ -1463,8 +1463,7 @@ void engine()
 
 #ifdef SLOW_DEBUG_CHECK
   /* These tests make the emulator really sloooooww */
-  DebugCheck(osBlockSignals() == NO,
-             error("signalmask not zero"));
+  osBlockSignals(OK);
   DebugCheckT(osUnblockSignals());
   DebugCheck ((e->currentSolveBoard != CBB->getSolveBoard ()),
               error ("am.currentSolveBoard and real solve board mismatch"));
@@ -2027,7 +2026,7 @@ void engine()
     TaggedRef origObject   = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object       = origObject;
     int arity              = getPosIntArg(PC+3);
-    Abstraction *def;
+    Abstraction *def       = NULL;
 
     PC = isTailCall ? 0 : PC+4;
 
