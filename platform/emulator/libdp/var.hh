@@ -1,6 +1,7 @@
 /*
  *  Authors:
  *    Michael Mehl (mehl@dfki.de)
+ *    Per Brand (perbrand@sics.se)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -63,6 +64,10 @@ public:
   EntityInfo *getInfo(){return info;}
   EntityCond *getEntityCond(); 
   void setInfo(EntityInfo* ei){info=ei;}
+  Bool errorIgnore(){
+    if(info==NULL) return TRUE;
+    if(info->getEntityCond()==ENTITY_NORMAL) return TRUE;
+    return FALSE;}
 };
 
 class ProxyVar : public ProxyManagerVar {
@@ -103,12 +108,8 @@ public:
   void probeFault(int);
   void newWatcher(Bool);
 
-  Bool errorIgnore(){
-    if(info==NULL) return TRUE;
-    if(info->getEntityCond()==ENTITY_NORMAL) return TRUE;
-    return FALSE;}
 
-  Bool failurePreemption();
+  Bool failurePreemption(TaggedRef);
   void wakeAll();
 
   TaggedRef getTaggedRef();
@@ -231,6 +232,8 @@ public:
   void subEntityCond(EntityCond);
   void newWatcher(Bool);
   TaggedRef getTaggedRef();
+  Bool failurePreemption(TaggedRef);
+  void wakeAll();
 };
 
 inline
@@ -286,12 +289,15 @@ EntityCond varGetEntityCond(TaggedRef*);
 
 void maybeUnaskVar(BorrowEntry*);
 Bool errorIgnoreVar(BorrowEntry*);
-Bool varFailurePreemption(TaggedRef t,EntityInfo*, Bool&);
+Bool varFailurePreemption(TaggedRef t,EntityInfo*, Bool&,TaggedRef);
 void varPOAdjustForFailure(int,EntityCond,EntityCond);
 
 void recDeregister(TaggedRef,DSite*);
 
 Bool varCanSend(DSite*);
+
+#define BAD_BORROW_INDEX (0-1)
+
 #endif
 
 

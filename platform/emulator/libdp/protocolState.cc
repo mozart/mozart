@@ -7,7 +7,7 @@
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -42,7 +42,7 @@
 /**********************************************************************/
 
 inline Bool tokenLostCheckProxy(Tertiary*t){ 
-  if(getEntityCond(t) & PERM_ME){
+  if(getEntityCond(t) & PERM_FAIL){
     PD((WEIRD,"lost token found BUT cannot recover"));
     return TRUE;}
   return FALSE;}
@@ -59,7 +59,7 @@ inline void receiveGet_InterestOK(OwnerEntry* oe,DSite* toS,Tertiary* t){
 
 inline void receiveGet_TokenLost(OwnerEntry* oe,DSite* toS,Tertiary* t){  
   PD((ERROR_DET,"TOKEN_LOST message bouncing"));
-  sendTellError(oe,toS,t->getIndex(),(PERM_BLOCKED|PERM_ME|PERM_SOME),true);
+  sendTellError(oe,toS,t->getIndex(),(PERM_FAIL|PERM_ALL|PERM_SOME),true);
   return;}
 
 /**********************************************************************/
