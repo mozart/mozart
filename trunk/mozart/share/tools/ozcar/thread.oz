@@ -277,6 +277,7 @@ in
 	    Gui,status(I S)
 	    Gui,selectNode(I)
 	    Gui,displayTree
+	    Gui,printEnv(frame:0)  % clear environment windows
 	    
 	    case S == terminated then
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
