@@ -260,6 +260,8 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, unsigned int hlen,
   ByteStream* bs = bufferManager->getByteStream();
   if (textmode)
     bs->setTextmode();
+  if (cloneCells)
+    bs->setCloneCells();
   saveTerm(bs, in);
 
   bs->beginWrite();
