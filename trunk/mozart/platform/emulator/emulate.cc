@@ -2033,7 +2033,10 @@ Case(GETVOID)
     {
       COUNT(inlinecalls);
 
-      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef A = XPC(1);
+
+    retryINLINEMINUS1:
+      TypeOfTerm tagA = tagTypeOf(A);
 
       if (isSmallIntTag(tagA)) {
 	/* INTDEP */
@@ -2042,6 +2045,11 @@ Case(GETVOID)
 	  XPC(2) = res;
 	  DISPATCH(3);
 	}
+      }
+
+      if (oz_isRef(tagA)) {
+	A = oz_deref(A);
+	goto retryINLINEMINUS1;
       }
 
       auxTaggedA = XPC(1);
@@ -2057,7 +2065,10 @@ Case(GETVOID)
     {
       COUNT(inlinecalls);
 
-      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef A = XPC(1); 
+
+    retryINLINEPLUS1:
+      TypeOfTerm tagA = tagTypeOf(A);
 
       if (isSmallIntTag(tagA)) {
 	/* INTDEP */
@@ -2066,6 +2077,11 @@ Case(GETVOID)
 	  XPC(2) = res;
 	  DISPATCH(3);
 	}
+      }
+
+      if (oz_isRef(tagA)) {
+	A = oz_deref(A);
+	goto retryINLINEPLUS1;
       }
 
       auxTaggedA = XPC(1);
