@@ -46,6 +46,24 @@ srcdira=`(cd $srcdir; pwd)`
 AC_SUBST(srcdira)
 
 dnl *****************************************************************
+dnl platform
+dnl *****************************************************************
+
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
+
+case $platform in
+    win32*)
+	OZLOADSEP=';'
+	;;
+    *)
+	OZLOADSEP=':'
+	;;
+esac
+
+AC_SUBST(OZLOADSEP)
+
+dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
