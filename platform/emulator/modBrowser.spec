@@ -30,27 +30,30 @@ $module_init_fun_name = "browser_init";
                              BI  => BIgetsBoundB},
 
     'addr'              => { in  => ['value'],
-                             out => ['+int'],
+                             out => ['int'],
                              BI  => BIaddr},
 
     'varSpace'          => { in  => ['value'],
-                             out => ['+int'],
+                             out => ['int'],
                              BI  => BIvarSpace},
 
     'recordCIsVarB'     => { in  => ['value'],
-                             out => ['+bool'],
+                             out => ['bool'],
                              BI  => BIisRecordVarB},
 
     'chunkWidth'        => { in  => ['+chunk'],
-                             out => ['+int'],
+                             out => ['int'],
                              BI  => BIchunkWidth},
 
     'chunkArity'        => { in  => ['+chunk'],
-                             out => ['+[feature]'],
+                             out => ['[feature]'],
                              BI  => BIchunkArityBrowser},
 
     'getTermSize'       => { in  => ['value','+int','+int'],
-                             out => ['+int'],
+                             out => ['int'],
                              BI  => BIgetTermSize},
 
+    'procLoc'           => { in  => ['value'],
+                             out => ['atom','int','int'],
+                             BI  => BIprocLoc},
  );
