@@ -27,50 +27,60 @@
 #ifndef __FDDEBUG_HH__
 #define __FDDEBUG_HH__
 
-#ifdef DEBUG_CHECK
-// #define DEBUG_FD_CONSTRREP
+#include "resources.hh"
+
+//-----------------------------------------------------------------------------
+
+#ifdef DEBUG_CONSTRAINT_IR
+//#define DEBUG_FD_CONSTRREP
 #define DEBUG_FD
 #define DEBUG_FSET
-// #define DEBUG_FSET_CONSTRREP
+#define DEBUG_FSET_CONSTRREP
 #endif
 
-extern ostream * cpi_cout;
+extern FILE * _fdomn_file, * _fset_file;
 
+#define TO_FSET_FILE
+//#define TO_FD_FILE
 
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD_CONSTRREP)
+//-----------------------------------------------------------------------------
+#ifdef DEBUG_FD_CONSTRREP
+#define AssertFD(C) \
+if (!(C)) OZ_error("AssertFD '%s' failed at %s:%d.", #C, __FILE__, __LINE__);
 
-#  define DEBUG_FD_IR(COND, CODE) if (COND || 1) { *cpi_cout << CODE << flush;}
-
-
-#  define AssertFD(C) \
-if (!(C)) OZ_error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__);
-
-#  define DebugCodeFD(C) C
+#define _DEBUG_FD_IR(CODE) { print_to_fdfile CODE ; }
+#define DEBUG_FD_IR(CODE) _DEBUG_FD_IR(CODE)
+#define DebugCodeFD(C) C
 
 #else
 
-
-#  define DEBUG_FD_IR(COND, CODE)
-
-#  define AssertFD(C)
-#  define DebugCodeFD(C)
+#define _DEBUG_FD_IR(CODE)
+#define DEBUG_FD_IR(CODE)
+#define AssertFD(C)
+#define DebugCodeFD(C)
 
 #endif
 
+//-----------------------------------------------------------------------------
 
 #ifdef DEBUG_FSET_CONSTRREP
 
-#define _DEBUG_FSETIR(CODE) (*cpi_cout) << CODE << flush;
-#define DEBUG_FSETIR(CODE) _DEBUG_FSETIR(CODE)
+#define AssertFS(C) \
+if (!(C)) OZ_error("AssertFS '%s' failed at %s:%d.", #C, __FILE__, __LINE__);
+
+#define _DEBUG_FSET_IR(CODE) { print_to_fsfile CODE ; }
+#define DEBUG_FSET_IR(CODE) _DEBUG_FSET_IR(CODE)
 #define FSDEBUG(X) //{ X; }
 
 #else
 
-#define _DEBUG_FSETIR(CODE)
-#define DEBUG_FSETIR(CODE)
+#define AssertFS(C)
+#define _DEBUG_FSET_IR(CODE)
+#define DEBUG_FSET_IR(CODE)
 #define FSDEBUG(X)
 
-#endif /* DEBUG_FSET */
+#endif
 
+//-----------------------------------------------------------------------------
 
 #endif

@@ -25,6 +25,7 @@
  */
 
 #include "cpi.hh"
+#include "fddebug.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -41,7 +42,7 @@ ostream * init_cpi_cout(char * n) {
     cerr << endl << "Cannot open '" << n << "' for output."
          << endl << flush;
 
-  return new ozostream(cpi_fileout);
+  return new ostream(cpi_fileout);
 }
 
 ostream *cpi_cout = init_cpi_cout("/tmp/cpi_debug.out");

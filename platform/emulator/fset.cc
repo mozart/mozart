@@ -30,15 +30,29 @@
 #endif
 
 #include "ozostream.hh"
-#include "fddebug.hh"
 #include "fset.hh"
 #include "tagged.hh"
 #include "value.hh"
-#include "fddebug.hh"
-#include "fdomn.hh"
 
 //*****************************************************************************
+#include <stdarg.h>
 
+void print_to_fsfile (const char *format, ...)
+{
+  va_list ap;
+  va_start(ap, format);
+  vfprintf(_fset_file, format, ap);
+  fflush(_fset_file);
+  va_end(ap);
+}
+
+#ifdef TO_FSET_FILE
+FILE * _fset_file = fopen("/tmp/fset_ir_debug_file.oz", "w+");
+#else
+FILE * _fset_file = stdout;
+#endif
+
+//*****************************************************************************
 
 #ifdef OUTLINE
 #define inline
@@ -299,17 +313,31 @@ void printBits(ostream &o, int high, const int * bv, int neg = 0, int other=0)
 
   Bool flag = FALSE;
 
+#ifdef DEBUG_FSET_CONSTRREP
+  if (len == 0) {
+    o << "nil";
+    return;
+  }
+  o << '[';
+#else
   o << '{';
+#endif
   for (int i = 0; i < len; i += 1) {
     if (flag) o << ' '; else flag = TRUE;
     o << fd_bv_left_conv[i];
-    if (fd_bv_left_conv[i] != fd_bv_right_conv[i])
-      if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i])
+    if (fd_bv_left_conv[i] != fd_bv_right_conv[i]) {
+      if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i]) {
         o << ' ' << fd_bv_right_conv[i];
-      else
+      } else {
         o << '#' << fd_bv_right_conv[i];
+      }
+    }
   }
+#ifdef DEBUG_FSET_CONSTRREP
+  o << ']';
+#else
   o << '}';
+#endif
 }
 
 // for conversions:
@@ -811,18 +839,21 @@ OZ_Boolean FSetValue::unify(OZ_Term t)
 ostream &FSetValue::print2stream(ostream &o) const
 {
 #ifdef BIGFSET
-  if (_normal)
+  if (_normal) {
     printBits(o, fset_high, _in, 0, _other);
-  else
-    o << _IN.toString();
+  } else {
+    ((const OZ_FiniteDomainImpl *) &_IN)->print(o, 0);
+  }
 #else
   printBits(o, fset_high, _in);
 #endif
+#ifndef DEBUG_FSET_CONSTRREP
   o << '#' << _card;
+#endif
   return o;
 }
 
-void FSetValue::print(ostream &stream, int depth, int offset)
+void FSetValue::print(ostream &stream, int depth, int offset) const
 {
   print2stream(stream);
 }
@@ -1825,10 +1856,11 @@ inline
 void FSetConstraint::printGlb(ostream &o) const
 {
 #ifdef BIGFSET
-  if (_normal)
+  if (_normal) {
     printBits(o, fset_high, _in, 0, _otherin);
-  else
-    o << _IN.toString();
+  } else {
+    ((const OZ_FiniteDomainImpl *) &_IN)->print(o, 0);
+  }
 #else
   printBits(o, fset_high, _in);
 #endif
@@ -1840,9 +1872,10 @@ void FSetConstraint::printLub(ostream &o) const
 #ifdef BIGFSET
   if (_normal) {
     printBits(o, fset_high, _not_in, 1, _otherout);
+  } else {
+    OZ_FiniteDomain tmp = ~_OUT;
+    ((const OZ_FiniteDomainImpl *) &tmp)->print(o, 0);
   }
-  else
-    o << (~_OUT).toString();
 #else
   printBits(o, fset_high, _not_in, 1);
 #endif
@@ -1851,16 +1884,23 @@ void FSetConstraint::printLub(ostream &o) const
 
 ostream &FSetConstraint::print(ostream &o) const
 {
+#ifndef DEBUG_FSET_CONSTRREP
   o << "{";
+#endif
   printGlb(o);
+#ifndef DEBUG_FSET_CONSTRREP
   o << "..";
+#else
+  o << " ";
+#endif
   printLub(o);
+#ifndef DEBUG_FSET_CONSTRREP
   o << "}#";
   if (_card_min == _card_max)
     o << _card_min;
   else
     o << '{' << _card_min << '#' << _card_max << '}';
-
+#endif
   return o;
 }
 
@@ -1893,8 +1933,7 @@ OZ_Boolean FSetConstraint::normalize(void)
         _card_min = -1;
         goto end;
       }
-  }
-  else { // !_normal
+  } else { // !_normal
     if ((_IN & _OUT).getSize() != 0) {
       _card_min = -1;
       goto end;
@@ -1909,11 +1948,12 @@ OZ_Boolean FSetConstraint::normalize(void)
 
   if (_normal) {
     _known_in = findBitsSet(fset_high, _in);
-    if (_otherin) _known_in += size_of_other;
+    if (_otherin)
+      _known_in += size_of_other;
     _known_not_in = findBitsSet(fset_high, _not_in);
-    if (_otherout) _known_not_in += size_of_other;
-  }
-  else { // extended
+    if (_otherout)
+      _known_not_in += size_of_other;
+  } else { // extended
     _known_in = _IN.getSize();
     _known_not_in = _OUT.getSize();
   }
@@ -1939,8 +1979,7 @@ OZ_Boolean FSetConstraint::normalize(void)
        for (int i=fset_high; i--; )
          _not_in[i] = ~_in[i];
        _otherout = !_otherin;
-     }
-     else {
+     } else {
        _OUT = ~_IN;
        maybeToNormal();
      }
@@ -1951,8 +1990,7 @@ OZ_Boolean FSetConstraint::normalize(void)
        for (int i=fset_high; i--; )
          _in[i] = ~_not_in[i];
        _otherin = !_otherout;
-     }
-     else {
+     } else {
        _IN = ~_OUT;
        maybeToNormal();
      }
@@ -2001,8 +2039,11 @@ OZ_Boolean FSetConstraint::normalize(void)
 #endif
 
   retval = OZ_TRUE;
+
 end:
-  DEBUG_FSETIR(*this << endl);
+  DEBUG_FSET_IR(("%s %s}\n",
+                 this->toString(), (retval == OZ_TRUE ? "true" : "false")));
+
   FSDEBUG(printf("fsc::normalize returns %d and ", retval); DP());
   return retval;
 }
@@ -2010,7 +2051,7 @@ end:
 
 OZ_Boolean FSetConstraint::valid(const FSetValue &fs) const
 {
-  DEBUG_FSETIR("( " << *this << " valid " << fs << " ) = ");
+  DEBUG_FSET_IR(("{FSIR.'valid' %s %s ", this->toString(), fs.toString()));
 
   FSDEBUG(printf("fsc::valid(fsv) "); DP(); fs.DP("fs"));
 
@@ -2059,19 +2100,19 @@ OZ_Boolean FSetConstraint::valid(const FSetValue &fs) const
     }
 #endif
     FSDEBUG(printf("valid: true\n"));
-    DEBUG_FSETIR("TRUE" << endl);
+    DEBUG_FSET_IR(("true}\n"));
     return OZ_TRUE;
   }
 failure:
   FSDEBUG(printf("valid: false\n"));
-  DEBUG_FSETIR("FALSE" << endl);
+  DEBUG_FSET_IR(("false}\n"));
   return OZ_FALSE;
 }
 
 
 FSetConstraint FSetConstraint::unify(const FSetConstraint &y) const
 {
-  DEBUG_FSETIR("( " << *this << " unify " << y << " ) = ");
+  DEBUG_FSET_IR(("{FSIR.'unify' %s %s ", this->toString(), y.toString()));
 
   FSetConstraint z;
 
@@ -2135,7 +2176,7 @@ FSetConstraint FSetConstraint::unify(const FSetConstraint &y) const
   return z;
 
 failure:
-  DEBUG_FSETIR("FALSE" << endl);
+  DEBUG_FSET_IR(("%s %s}\n", z.toString(), "false"));
   z._card_min = -1;
   FSDEBUG(printf("unify: false\n"));
   return z;
@@ -2144,12 +2185,13 @@ failure:
 
 OZ_Boolean FSetConstraint::isWeakerThan(FSetConstraint const &y) const
 {
-  DEBUG_FSETIR("( " << *this << " IS WEAKER THAN " << y << " ) = ");
+  DEBUG_FSET_IR(("{FSIR.'isWeakerThan' %s %s ",
+                 this->toString(), y.toString()));
   FSDEBUG(printf("fsc::isweakerthan(fsc)\n"); DP(); y.DP("y"));
   OZ_Boolean ret_val = ((_known_in < y._known_in) ||
                         (_known_not_in < y._known_not_in) ||
                         (getCardSize() > y.getCardSize()));
-  DEBUG_FSETIR((ret_val ? "TRUE" : "FALSE") << endl);
+  DEBUG_FSET_IR(("%s}\n", (ret_val ? "true" : "false")));
   FSDEBUG(printf("isweakerthan: %d\n", ret_val));
   return ret_val;
 }
@@ -2160,14 +2202,23 @@ OZ_Boolean FSetConstraint::isIn(int i) const
   FSDEBUG(printf("fsc::isin(%d) ", i); DP());
 #ifdef BIGFSET
 
+  DEBUG_FSET_IR(("{FSIR.'isIn' %s %d ", this->toString(), i));
+
+  OZ_Boolean r = OZ_FALSE;
+
   if (_normal) {
-    if (i < 32 * fset_high)
-      return testBit(_in, i);
-    else
-      return (i <= fs_sup && _otherin);
+    if (i < 32 * fset_high) {
+      r = testBit(_in, i);
+    } else {
+      r = (i <= fs_sup && _otherin);
+    }
+  } else {
+    r = _IN.isIn(i);
   }
-  else
-    return _IN.isIn(i);
+
+  DEBUG_FSET_IR(("%s}\n", (r ? "true" : "false")));
+
+  return r;
 #else
   return testBit(_in, i);
 #endif
@@ -2178,16 +2229,23 @@ OZ_Boolean FSetConstraint::isNotIn(int i) const
 {
   FSDEBUG(printf("fsc::isnotin(%d) ", i); DP());
 #ifdef BIGFSET
+  DEBUG_FSET_IR(("{FSIR.'isNotIn' %s %d ", this->toString(), i));
+
+  OZ_Boolean r = OZ_FALSE;
 
   if (_normal) {
-    if (i < 32*fset_high)
-      return testBit(_not_in, i);
-    else
-      return (i <= fs_sup && _otherout); // well, semantics. 'i is in _not_in'
+    if (i < 32*fset_high) {
+      r =  testBit(_not_in, i);
+    } else {
+      r = (i <= fs_sup && _otherout); // well, semantics. 'i is in _not_in'
+    }
+  } else {
+    r = _OUT.isIn(i);
   }
-  else
-    return _OUT.isIn(i);
 
+  DEBUG_FSET_IR(("%s}\n", (r ? "true" : "false")));
+
+  return r;
 #else
   return testBit(_not_in, i);
 #endif
@@ -2196,8 +2254,15 @@ OZ_Boolean FSetConstraint::isNotIn(int i) const
 inline
 OZ_Boolean FSetConstraint::isEmpty(void) const
 {
+  DEBUG_FSET_IR(("{FSIR.'isEmpty' %s ", this->toString()));
+
   FSDEBUG(printf("fsc::isempty "); DP());
-  return isValue() && (_card_min == 0);
+
+  OZ_Boolean r = (isValue() && (_card_min == 0));
+
+  DEBUG_FSET_IR(("%s}\n", (r ? "true" : "false")));
+
+  return r;
 }
 
 inline
@@ -2205,7 +2270,13 @@ OZ_Boolean FSetConstraint::isFull(void) const
 {
   FSDEBUG(printf("fsc::isfull "); DP());
 #ifdef BIGFSET
-  return isValue() && (_card_min == (fs_sup + 1));
+  DEBUG_FSET_IR(("{FSIR.'isFull' %s ", this->toString()));
+
+  OZ_Boolean r = (isValue() && (_card_min == (fs_sup + 1)));
+
+  DEBUG_FSET_IR(("%s}\n", (r ? "true" : "false")));
+
+  return r;
 #else
   return isValue() && (_card_min == (32*fset_high));
 #endif
@@ -2214,7 +2285,9 @@ OZ_Boolean FSetConstraint::isFull(void) const
 inline
 OZ_Boolean FSetConstraint::isSubsumedBy(const FSetConstraint &y) const
 {
-  DEBUG_FSETIR(*this << " IS SUBSUMED BY " << y << " = ");
+  DEBUG_FSET_IR(("{FSIR.'isSubsumedBy' %s %s ",
+                 this->toString(), y.toString()));
+
   FSDEBUG(printf("fsc::issubsumed "); DP(); y.DP("y"));
 #ifdef BIGFSET
 
@@ -2222,22 +2295,25 @@ OZ_Boolean FSetConstraint::isSubsumedBy(const FSetConstraint &y) const
     // All elements known to included in _x_ have to in _y_
     if (_normal) {
       if (y._normal) {
-        if (_otherin & !y._otherin) goto end;
-        for (int i = fset_high; i--; )
-          if (_in[i] & ~y._in[i]) goto end;
-      }
-      else {
+        if (_otherin & !y._otherin)
+          goto end;
+        for (int i = fset_high; i--; ) {
+          if (_in[i] & ~y._in[i])
+            goto end;
+        }
+      } else {
         set_Auxin(_in, _otherin);
-        if ((_Auxin & y._IN).getSize() < _known_in) goto end;
+        if ((_Auxin & y._IN).getSize() < _known_in)
+          goto end;
       }
-    }
-    else {
+    } else {
       if (y._normal) {
         set_Auxin(y._in, y._otherin);
-        if ((_IN & _Auxin).getSize() < _known_in) goto end;
-      }
-      else {
-        if ((_IN & y._IN).getSize() < _known_in) goto end;
+        if ((_IN & _Auxin).getSize() < _known_in)
+          goto end;
+      } else {
+        if ((_IN & y._IN).getSize() < _known_in)
+          goto end;
       }
     }
   } else if (y.isValue()) {
@@ -2248,26 +2324,30 @@ OZ_Boolean FSetConstraint::isSubsumedBy(const FSetConstraint &y) const
 
     if (_normal) {
       if (y._normal) {
-        if (!_otherout & y._otherout) goto end;
-        for (int i = fset_high; i--; )
-          if (~_not_in[i] & y._not_in[i]) goto end;
-      }
-      else {
+        if (!_otherout & y._otherout)
+          goto end;
+        for (int i = fset_high; i--; ) {
+          if (~_not_in[i] & y._not_in[i])
+            goto end;
+        }
+      } else {
         set_Auxout(_not_in, _otherout);
-        if ((~_Auxout & y._OUT).getSize()) goto end;
+        if ((~_Auxout & y._OUT).getSize())
+          goto end;
       }
-    }
-    else {
+    } else {
       if (y._normal) {
         set_Auxout(y._not_in, y._otherout);
-        if ((~_OUT & _Auxout).getSize()) goto end;
-      }
-      else {
-        if ((~_OUT & y._OUT).getSize()) goto end;
+        if ((~_OUT & _Auxout).getSize())
+          goto end;
+      } else {
+        if ((~_OUT & y._OUT).getSize())
+          goto end;
       }
     }
+  } else {
+    goto end;
   }
-  else goto end;
 
 #else // normal fsets
   if (isValue()) {
@@ -2286,11 +2366,11 @@ OZ_Boolean FSetConstraint::isSubsumedBy(const FSetConstraint &y) const
     goto end;
   }
 #endif
-  DEBUG_FSETIR("TRUE" << endl);
+  DEBUG_FSET_IR(("true}\n"));
   FSDEBUG(printf("issubsumed: true\n"));
   return OZ_TRUE;
 end:
-  DEBUG_FSETIR("FALSE" << endl);
+  DEBUG_FSET_IR(("false}\n"));
   FSDEBUG(printf("issubsumed: false\n"));
   return OZ_FALSE;
 }
@@ -2368,7 +2448,8 @@ OZ_Term FSetConstraint::getCardTuple(void) const
 inline
 OZ_Boolean FSetConstraint::putCard(int min_card, int max_card)
 {
-  DEBUG_FSETIR(*this << " putCard [" << min_card << ',' << max_card << "] = ");
+  DEBUG_FSET_IR(("{FSIR.'putCard' %s %d %d ",
+                 this->toString(), min_card, max_card));
 
   _card_min = max(min_card, _card_min);
   _card_max = min(max_card, _card_max);
@@ -2379,7 +2460,7 @@ OZ_Boolean FSetConstraint::putCard(int min_card, int max_card)
 inline
 FSetConstraint FSetConstraint::operator - (void) const
 {
-  DEBUG_FSETIR("( - " << *this << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator -u' %s ", this->toString()));
 
   FSetConstraint z;
   FSDEBUG(printf("fsc::op-() "); DP());
@@ -2387,6 +2468,7 @@ FSetConstraint FSetConstraint::operator - (void) const
 #ifdef BIGFSET
   if (_card_min == -1) {
     z._card_min = -1;
+    DEBUG_FSET_IR(("%s %s}\n", z.toString(), "false"));
     return z;
   }
 
@@ -2394,12 +2476,11 @@ FSetConstraint FSetConstraint::operator - (void) const
     z._normal = true;
     z._otherin = _otherout;
     z._otherout = _otherin;
-    for (int i=fset_high; i--; ) {
+    for (int i = fset_high; i--; ) {
       z._in[i] = _not_in[i];
       z._not_in[i] = _in[i];
     }
-  }
-  else {
+  } else {
     z._normal = false;
     z._IN = _OUT;
     z._OUT = _IN;
@@ -2411,7 +2492,7 @@ FSetConstraint FSetConstraint::operator - (void) const
     z._not_in[i] = _in[i];
   }
 #endif
-end:
+ end:
   z.normalize();
   FSDEBUG(printf("op- -> "); z.DP("z"));
   return z;
@@ -2420,24 +2501,28 @@ end:
 inline
 OZ_Boolean FSetConstraint::operator += (int i)
 {
-  DEBUG_FSETIR('(' << *this << " += " << i << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator +=' %s %d ", this->toString(), i));
   FSDEBUG(printf("fsc::+=(%d) ", i); DP());
+
 #ifdef BIGFSET
 
-  if (i < 0 || i > fs_sup) return OZ_TRUE;
+  if (i < 0 || i > fs_sup) {
+    DEBUG_FSET_IR(("%s %s}\n", this->toString(), "true"));
+    return OZ_TRUE;
+  }
   if (_normal) {
-    if (i < 32 * fset_high)
+    if (i < 32 * fset_high) {
       setBit(_in, i);
-    else {
-      if (_otherin)
+    } else {
+      if (_otherin) {
+        DEBUG_FSET_IR(("%s %s}\n", this->toString(), "true"));
         return OZ_TRUE;
-      else {
+      } else {
         toExtended();
         _IN += i;
       }
     }
-  }
-  else {
+  } else {
     _IN += i;
   }
 #else
@@ -2453,24 +2538,28 @@ OZ_Boolean FSetConstraint::operator += (int i)
 inline
 OZ_Boolean FSetConstraint::operator -= (int i)
 {
-  DEBUG_FSETIR('(' << *this << " -= " << i << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator -=' %s %d ", this->toString(), i));
   FSDEBUG(printf("fsc::-=(%d) ", i); DP());
+
 #ifdef BIGFSET
 
-  if (i < 0 || i > fs_sup) return OZ_TRUE;
+  if (i < 0 || i > fs_sup) {
+    DEBUG_FSET_IR(("%s %s}\n", this->toString(), "true"));
+    return OZ_TRUE;
+  }
   if (_normal) {
-    if (i < 32 * fset_high)
+    if (i < 32 * fset_high) {
       setBit(_not_in, i);
-    else {
-      if (_otherout)
+    } else {
+      if (_otherout) {
+        DEBUG_FSET_IR(("%s %s}\n", this->toString(), "true"));
         return OZ_TRUE;
-      else {
+      } else {
         toExtended();
         _OUT += i;
       }
     }
-  }
-  else {
+  } else {
     _OUT += i;
   }
 #else
@@ -2486,7 +2575,8 @@ OZ_Boolean FSetConstraint::operator -= (int i)
 inline
 OZ_Boolean FSetConstraint::operator <<= (const FSetConstraint& y)
 {
-  DEBUG_FSETIR('(' << *this << " <<= " << y << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator <<=' %s %s ",
+                 this->toString(), y.toString()));
 
   FSDEBUG(printf("fsc::<<= "); DP(); y.DP("y"));
 
@@ -2509,21 +2599,18 @@ OZ_Boolean FSetConstraint::operator <<= (const FSetConstraint& y)
         _in[i] |= y._in[i];
         _not_in[i] |= y._not_in[i];
       }
-    }
-    else {
+    } else {
       toExtended();
       _IN = _IN | y._IN;
       _OUT = _OUT | y._OUT;
     }
-  }
-  else {
+  } else {
     if (y._normal) {
       set_Auxin(y._in, y._otherin);
       set_Auxout(y._not_in, y._otherout);
       _IN = _IN | _Auxin;
       _OUT = _OUT | _Auxout;
-    }
-    else {
+    } else {
       _IN = _IN | y._IN;
       _OUT = _OUT | y._OUT;
     }
@@ -2542,11 +2629,11 @@ OZ_Boolean FSetConstraint::operator <<= (const FSetConstraint& y)
 }
 
 inline
-OZ_Boolean FSetConstraint::operator % (const FSetConstraint& y)
+OZ_Boolean FSetConstraint::operator % (const FSetConstraint &y)
 {
   // new operator; means: not equal
 
-  DEBUG_FSETIR('(' << *this << " % " << y << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator %%' %s %s ", this->toString(), y.toString()));
 
   FSDEBUG(printf("fsc::op percent "); DP(); y.DP());
 
@@ -2607,27 +2694,25 @@ OZ_Boolean FSetConstraint::operator <= (const FSetConstraint &y)
   // since _*this_ is subsumed by _y_, _*this_ must contain at least
   // the amount of negative information as _y_ does
 
-  DEBUG_FSETIR('(' << *this << " <= " << y << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator <=' %s %s ", this->toString(), y.toString()));
   FSDEBUG(printf("fsc::op<=(fsc) "); DP(); y.DP("y"));
 
 #ifdef BIGFSET
   if (_normal) {
     if (y._normal) {
       _otherout |= y._otherout;
-      for (int i = fset_high; i--; )
+      for (int i = fset_high; i--; ) {
         _not_in[i] |= y._not_in[i];
-    }
-    else {
+      }
+    } else {
       toExtended();
       _OUT = _OUT | y._OUT;
     }
-  }
-  else {
+  } else {
     if (y._normal) {
       set_Auxout(y._not_in, y._otherout);
       _OUT = _OUT | _Auxout;
-    }
-    else {
+    } else {
       _OUT = _OUT | y._OUT;
     }
   }
@@ -2648,7 +2733,7 @@ OZ_Boolean FSetConstraint::operator >= (const FSetConstraint &y)
   // since _*this_ subsumes _y_, _*this_ must contain at least
   // the amount of positive information a _y_ does
 
-  DEBUG_FSETIR('(' << *this << " >= " << y << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator >=' %s %s ", this->toString(), y.toString()));
 
   FSDEBUG(printf("fsc::>= "); DP(); y.DP("y"));
 
@@ -2659,18 +2744,15 @@ OZ_Boolean FSetConstraint::operator >= (const FSetConstraint &y)
       _otherin |= y._otherin;
       for (int i=fset_high; i--; )
         _in[i] |= y._in[i];
-    }
-    else {
+    } else {
       toExtended();
       _IN = _IN | y._IN;
     }
-  }
-  else {
+  } else {
     if (y._normal) {
       set_Auxin(y._in, y._otherin);
       _IN = _IN | _Auxin;
-    }
-    else {
+    } else {
       _IN = _IN | y._IN;
     }
   }
@@ -2689,27 +2771,25 @@ OZ_Boolean FSetConstraint::operator >= (const FSetConstraint &y)
 inline
 OZ_Boolean FSetConstraint::operator != (const FSetConstraint &y)
 {
-  DEBUG_FSETIR('(' << *this << " != " << y << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator !=' %s %s ", this->toString(), y.toString()));
   FSDEBUG(printf("fsc::!= "); DP(); y.DP("y"));
 
 #ifdef BIGFSET
   if (_normal) {
     if (y._normal) {
       _otherout |= y._otherin;
-      for (int i=fset_high; i--; )
+      for (int i=fset_high; i--; ) {
         _not_in[i] |= y._in[i];
-    }
-    else {
+      }
+    } else {
       toExtended();
       _OUT = _OUT | y._IN;
     }
-  }
-  else {
+  } else {
     if (y._normal) {
       set_Auxin(y._in, y._otherin);
       _OUT = _OUT | _Auxin;
-    }
-    else {
+    } else {
       _OUT = _OUT | y._IN;
     }
   }
@@ -2725,33 +2805,45 @@ OZ_Boolean FSetConstraint::operator != (const FSetConstraint &y)
 inline
 OZ_Boolean FSetConstraint::operator == (const FSetConstraint &y) const
 {
-  DEBUG_FSETIR('(' << *this << " == " << y << ") = ");
+  DEBUG_FSET_IR(("{FSIR.'operator ==' %s %s ", this->toString(), y.toString()));
 
   FSDEBUG(printf("fsc::== "); DP(); y.DP("y"));
 
   if (_card_min != y._card_min ||
       _card_max != y._card_max ||
       _known_not_in != y._known_not_in ||
-      _known_in != y._known_in)
-    return OZ_FALSE;
+      _known_in != y._known_in) {
 
+        DEBUG_FSET_IR(("false}\n"));
+
+        return OZ_FALSE;
+      }
 #ifdef BIGFSET
 
-  if (_normal != y._normal)
+  if (_normal != y._normal) {
+    DEBUG_FSET_IR(("false}\n"));
     return OZ_FALSE;
+  }
 
   if (_normal) {
-    if ((_otherin != y._otherin) || (_otherout != y._otherout))
+    if ((_otherin != y._otherin) || (_otherout != y._otherout)) {
+      DEBUG_FSET_IR(("false}\n"));
       return OZ_FALSE;
-    for (int i = fset_high; i--; )
-      if (_in[i] != y._in[i] || _not_in[i] != y._not_in[i])
+    }
+    for (int i = fset_high; i--; ) {
+      if (_in[i] != y._in[i] || _not_in[i] != y._not_in[i]) {
+        DEBUG_FSET_IR(("false}\n"));
         return OZ_FALSE;
-  }
-  else {
+      }
+    }
+  } else {
     // equal sizes ensured above; additionally: size-idempotent intersection
     if (((_IN & y._IN).getSize() != _known_in) ||
-        ((_OUT & y._OUT).getSize() != _known_not_in))
-      return OZ_FALSE;
+        ((_OUT & y._OUT).getSize() != _known_not_in)) {
+          DEBUG_FSET_IR(("false}\n"));
+
+          return OZ_FALSE;
+        }
   }
 #else
   for (int i = fset_high; i--; )
@@ -2759,13 +2851,14 @@ OZ_Boolean FSetConstraint::operator == (const FSetConstraint &y) const
       return OZ_FALSE;
 #endif
   FSDEBUG(printf("op==: true\n"));
+  DEBUG_FSET_IR(("true}\n"));
   return OZ_TRUE;
 }
 
 inline
 FSetConstraint FSetConstraint::operator & (const FSetConstraint& y) const
 {
-  DEBUG_FSETIR(*this << " & " << y << " = ");
+  DEBUG_FSET_IR(("{FSIR.'operator &' %s %s ", this->toString(), y.toString()));
 
   FSetConstraint z;
 
@@ -2773,6 +2866,7 @@ FSetConstraint FSetConstraint::operator & (const FSetConstraint& y) const
 
   if (!isValid() || !y.isValid()) {
     z._card_min = -1;
+    DEBUG_FSET_IR(("%s %s}\n", z.toString(), "false"));
     return z;
   }
 #ifdef BIGFSET
@@ -2785,24 +2879,21 @@ FSetConstraint FSetConstraint::operator & (const FSetConstraint& y) const
         z._in[i] =_in[i] & y._in[i];
         z._not_in[i] = _not_in[i] | y._not_in[i];
       }
-    }
-    else {
+    } else {
       z._normal = false;
       set_Auxin(_in, _otherin);
       set_Auxout(_not_in, _otherout);
       z._IN = _Auxin & y._IN;
       z._OUT = _Auxout | y._OUT;
     }
-  }
-  else {
+  } else {
     if (y._normal) {
       z._normal = false;
       set_Auxin(y._in, y._otherin);
       set_Auxout(y._not_in, y._otherout);
       z._IN = _IN & _Auxin;
       z._OUT = _OUT | _Auxout;
-    }
-    else {
+    } else {
       z._normal = false;
       z._IN = _IN & y._IN;
       z._OUT = _OUT | y._OUT;
@@ -2829,13 +2920,14 @@ end:
 inline
 FSetConstraint FSetConstraint::operator | (const FSetConstraint& y) const
 {
-  DEBUG_FSETIR(*this << " | " << y << " = ");
+  DEBUG_FSET_IR(("{FSIR.'operator |' %s %s ", this->toString(), y.toString()));
 
   FSetConstraint z;
 
   FSDEBUG(printf("fsc::|(fsc) "); DP(); y.DP("y"));
 
   if (!isValid() || !y.isValid()) {
+    DEBUG_FSET_IR(("%s %s}\n", z.toString(), "false"));
     z._card_min = -1;
     return z;
   }
@@ -2850,24 +2942,21 @@ FSetConstraint FSetConstraint::operator | (const FSetConstraint& y) const
         z._in[i] = _in[i] | y._in[i];
         z._not_in[i] = _not_in[i] & y._not_in[i];
       }
-    }
-    else {
+    } else {
       z._normal = false;
       set_Auxin(_in, _otherin);
       set_Auxout(_not_in, _otherout);
       z._IN = _Auxin | y._IN;
       z._OUT = _Auxout & y._OUT;
     }
-  }
-  else {
+  } else {
     if (y._normal) {
       z._normal = false;
       set_Auxin(y._in, y._otherin);
       set_Auxout(y._not_in, y._otherout);
       z._IN = _IN | _Auxin;
       z._OUT = _OUT & _Auxout;
-    }
-    else {
+    } else {
       z._normal = false;
       z._IN = _IN | y._IN;
       z._OUT = _OUT & y._OUT;
@@ -2894,7 +2983,7 @@ end:
 inline
 FSetConstraint FSetConstraint::operator - (const FSetConstraint& y) const
 {
-  DEBUG_FSETIR(*this << " - " << y << " = ");
+  DEBUG_FSET_IR(("{FSIR.'operator -' %s %s ", this->toString(), y.toString()));
 
   FSDEBUG(printf("fsc::-(fsc) "); DP(); y.DP("y"));
 
@@ -2902,6 +2991,7 @@ FSetConstraint FSetConstraint::operator - (const FSetConstraint& y) const
 
   if (!isValid() || !y.isValid()) {
     z._card_min = -1;
+    DEBUG_FSET_IR(("%s %s}\n", z.toString(), "false"));
     return z;
   }
 #ifdef BIGFSET
@@ -2914,24 +3004,21 @@ FSetConstraint FSetConstraint::operator - (const FSetConstraint& y) const
         z._in[i] = _in[i] & y._not_in[i];
         z._not_in[i] = _not_in[i] | y._in[i];
       }
-    }
-    else {
+    } else {
       z._normal = false;
       set_Auxin(_in, _otherin);
       set_Auxout(_not_in, _otherout);
       z._IN = _Auxin & y._OUT;
       z._OUT = _Auxout | y._IN;
     }
-  }
-  else {
+  } else {
     if (y._normal) {
       z._normal = false;
       set_Auxin(y._in, y._otherin);
       set_Auxout(y._not_in, y._otherout);
       z._IN = _IN & _Auxout;
       z._OUT = _OUT | _Auxin;
-    }
-    else {
+    } else {
       z._normal = false;
       z._IN = _IN & y._OUT;
       z._OUT = _OUT | y._IN;
@@ -2953,8 +3040,6 @@ FSetConstraint FSetConstraint::operator - (const FSetConstraint& y) const
 end:
   FSDEBUG(z.DP("z"));
   z.normalize();
-
-  DEBUG_FSETIR(z << endl << flush);
   return z;
 }
 
@@ -3094,7 +3179,9 @@ OZ_Boolean FSetConstraint::operator >= (const int ii)
   FSDEBUG(printf("fsc::op>=(%d) ", ii); DP());
 
 #ifdef BIGFSET
-  if (ii == 0) return normalize(); // frequent special case
+  if (ii == 0) {
+    return normalize(); // frequent special case
+  }
   if (_normal) {
     if (ii < 32*fset_high) {
       int lower_word = div32(ii), lower_bit = mod32(ii);
@@ -3102,15 +3189,13 @@ OZ_Boolean FSetConstraint::operator >= (const int ii)
       for (int i = 0; i < lower_word; i += 1)
         _not_in[i] = ~0;
       _not_in[lower_word] |= ~toTheUpperEnd[lower_bit];
-    }
-    else {
+    } else {
       toExtended();
       _Auxout.initRange(0, max(ii-1, 0));
       _OUT = _OUT | _Auxout;
       maybeToNormal();
     }
-  }
-  else {
+  } else {
     _Auxout.initRange(0, max(ii-1, 0));
     _OUT = _OUT | _Auxout;
   }
@@ -3132,7 +3217,9 @@ OZ_Boolean FSetConstraint::operator <= (const int ii)
   FSDEBUG(printf("fsc::op<=(%d) ", ii); DP());
 
 #ifdef BIGFSET
-  if (ii == fs_sup) return normalize(); // frequent special case.
+  if (ii == fs_sup) {
+    return normalize(); // frequent special case.
+  }
   if (_normal) {
     if (ii < 32*fset_high) {
       int upper_word = div32(ii), upper_bit = mod32(ii);
@@ -3433,12 +3520,21 @@ OZ_FSetValue OZ_FSetValue::operator - (void) const
   return CASTCONSTTHIS->operator - ();
 }
 
-char * OZ_FSetValue::toString()
+char * OZ_FSetValue::toString() const
 {
   static ozstrstream str;
   str.reset();
-  CASTTHIS->print(str);
+  const FSetValue * tmp = (const FSetValue *) this;
+  tmp->print(str);
+
+#ifdef DEBUG_FSET_CONSTRREP
+  static ozstrstream tmp_str;
+  tmp_str.reset();
+  tmp_str << "fset_val(" << str.str() << ")" << flush;
+  return tmp_str.str();
+#else
   return str.str();
+#endif
 }
 
 void OZ_FSetValue::copyExtension() {
@@ -3756,12 +3852,21 @@ int OZ_FSetConstraint::getUnknownNextLargerElem(int i) const
   //return getUnknownSet().getNextLargerElem(i);
 }
 
-char * OZ_FSetConstraint::toString()
+char * OZ_FSetConstraint::toString() const
 {
   static ozstrstream str;
   str.reset();
-  CASTTHIS->print(str);
+  const FSetConstraint * tmp = (const FSetConstraint *) this;
+  tmp->print(str);
+
+#ifdef DEBUG_FSET_CONSTRREP
+  static ozstrstream tmp_str;
+  tmp_str.reset();
+  tmp_str << "fset(" << str.str() << ")" << flush;
+  return tmp_str.str();
+#else
   return str.str();
+#endif
 }
 
 OZ_Boolean OZ_FSetConstraint::operator <= (const int i)

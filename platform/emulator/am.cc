@@ -94,11 +94,17 @@ void printBanner()
 #ifdef DEBUG_GC
           " DEBUG_GC"
 #endif
+#ifdef DEBUG_FD_CONSTRREP
+          " DEBUG_FD_CONSTRREP"
+#endif
 #ifdef DEBUG_FD
           " DEBUG_FD"
 #endif
 #ifdef DEBUG_FSET
           " DEBUG_FSET"
+#endif
+#ifdef DEBUG_FSET_CONSTRREP
+          " DEBUG_FSET_CONSTRREP"
 #endif
 #ifdef RECINSTRFETCH
           " RECINSTRFETCH=%d", RECINSTRFETCH

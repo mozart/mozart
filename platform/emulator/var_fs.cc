@@ -55,15 +55,7 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term)
   Assert(!oz_isRef(term));
   if (!oz_isFSetValue(term)) return FAILED;
 
-#ifdef DEBUG_FSUNIFY
-  (*cpi_cout) << "fsunify(value): (" << _fset.toString() << " = "
-              << *((FSetValue *)tagged2FSetValue(term)) << " )";
-#endif
-
   if (! ((FSetConstraint *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(term))) {
-#ifdef DEBUG_FSUNIFY
-    (*cpi_cout) << "false" << endl << flush;
-#endif
     return FALSE;
   }
 
@@ -80,10 +72,6 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term)
     DoBindAndTrail(vptr, term);
   }
 
-#ifdef DEBUG_FSUNIFY
-  (*cpi_cout) << " -> " <<  _fset.toString();
-  (*cpi_cout) << toC(*vptr) << " true" << endl << flush;
-#endif
   return TRUE;
 }
 
@@ -94,9 +82,6 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr)
   OzVariable *cv=tagged2CVar(term);
   if (cv->getType() != OZ_VAR_FS) {
   f:
-#ifdef DEBUG_FSUNIFY
-    (*cpi_cout) << "false" << endl << flush;
-#endif
     return FALSE;
   }
 
@@ -105,16 +90,9 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr)
   OZ_FSetConstraint * fset = (OZ_FSetConstraint *) &getSet();
   OZ_FSetConstraint new_fset;
 
-#ifdef DEBUG_FSUNIFY
-  (*cpi_cout) << "fsunify(var): (" << *fset << " = " << *t_fset << " )";
-#endif
   new_fset = ((FSetConstraint *) t_fset)->unify(*(FSetConstraint *) fset);
   if (new_fset.getCardMin() == -1)
     goto f;
-
-#ifdef DEBUG_FSUNIFY
-  (*cpi_cout) << " -> " << new_fset << " " << new_fset.isValue();
-#endif
 
   Bool var_is_local  = oz_isLocalVar(this);
   Bool term_is_local = oz_isLocalVar(term_var);
@@ -244,21 +222,11 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr)
     break;
   } // switch (varIsLocal + 2 * termIsLocal)
 
-#ifdef DEBUG_FSUNIFY
-  (*cpi_cout) << toC(*vptr) << " true" << endl << flush;
-#endif
   return TRUE;
 }
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 {
-#ifdef DEBUG_TELLCONSTRAINTS
-  cout << "tellBasicConstraint - in - : ";
-  oz_print(v);
-  if (fs) cout << " , " << *fs;
-  cout << endl <<flush;
-#endif
-
   DEREF(v, vptr, vtag);
 
   if (fs && !((FSetConstraint *) fs)->isValid())

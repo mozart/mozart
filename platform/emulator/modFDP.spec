@@ -229,6 +229,10 @@ $module_init_fun_name = "fdp_init";
                      out => [],
                      bi  => fdp_disjointC},
 
+ 'tasksOverlap'=> { in  => ['int','+int','int','+int','int'],
+                     out => [],
+                     bi  => fdp_tasksOverlap},
+
  'distance'     => { in  => ['int','int','+atom','int'],
                      out => [],
                      bi  => fdp_distance},

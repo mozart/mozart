@@ -1012,7 +1012,7 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
 static
 void fset2buffer(ostream &out, OZ_FSetValue * fs)
 {
-  out << fs->toString();
+  out << ((const OZ_FSetValue *) fs)->toString();
 }
 
 // genvar.cc
