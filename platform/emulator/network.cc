@@ -1604,9 +1604,13 @@ case WKUPTMP:
   return FALSE;}
 
 
-void openclose(int Type){
-  if(Type) tcpCache->closeConnections();
-  else tcpCache->openConnections();}
+int openclose(int Type){
+  int state = 0;
+  if(tcpCache->openCon) state = 1;
+  if(Type){
+    if(state) tcpCache->closeConnections();
+    else tcpCache->openConnections();}
+  return state;}
 
 
 /***********************************************************/

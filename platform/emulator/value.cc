@@ -74,7 +74,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomPerm, AtomTemp,AtomTempHome,AtomTempForeign,
   AtomPermHome,AtomPermForeign,
   AtomContinue, AtomRetry,
-  AtomYes,AtomNo,AtomPerSite,AtomPerThread,
+  AtomYes,AtomNo,AtomPerSite,AtomPerThread,AtomAll,AtomAny,
   AtomHandler,AtomWatcher,
 
   RecordFailure,
@@ -249,6 +249,8 @@ void initLiterals()
   AtomPerThread               = makeTaggedAtom("perThread");
   AtomHandler                 = makeTaggedAtom("handler");
   AtomWatcher                 = makeTaggedAtom("watcher");
+  AtomAny                     = makeTaggedAtom("any");
+  AtomAll                     = makeTaggedAtom("all");
 
   RecordFailure = OZ_record(OZ_atom("failure"),
                             OZ_cons(OZ_atom("debug"),OZ_nil()));
