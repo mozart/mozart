@@ -2,7 +2,7 @@
 #define __WEAKDICT__HH__
 
 #include "base.hh"
-#include "dictionary.hh"
+#include "var_of.hh"
 #include "extension.hh"
 
 extern void gDropWeakDictionaries(void);

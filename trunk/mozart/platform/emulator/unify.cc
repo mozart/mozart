@@ -343,7 +343,7 @@ loop:
 	goto next;
       break;
     case Co_BigInt:
-      if (bigIntEq(term1,term2))
+      if (oz_isBigInt(term2) && bigIntEq(term1,term2))
 	goto next;
       break;
     default:

@@ -104,6 +104,7 @@ public:
   void setOthers(int value) { flagsAndOthers = getFlags()|(value<<sizeOfLitFlags); }
 
   Bool isName()         { return (getFlags()&Lit_isName); }
+  int isNameAsInt()     { return (getFlags()&Lit_isName); }
   Bool isNamedName()    { return (getFlags()&Lit_isNamedName); }
   Bool isUniqueName()   { return (getFlags()&Lit_isUniqueName); }
   Bool isCopyableName() { return (getFlags()&Lit_isCopyableName); }
@@ -126,7 +127,7 @@ public:
   static Atom *newAtom(const char *str);
   const char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
-  unsigned int hash() { return ToInt32(this)>>4; }
+  unsigned int hash() { return (ToInt32(this) >> LTAG_BITS); }
 };
 
 /* This one goes onto the heap */
@@ -236,24 +237,33 @@ Bool oz_isBool(TaggedRef term) {
 
 /*
  * atomcmp(a,b) is used to construct the arity lists of records.
- * It returns: 0   if   a == b
- *            -1   if   a < b
- *             1   if   a > b
+ *
+ * It returns: 0        if a == b
+ *             negative if a < b
+ *             positive if a > b
+ * 
+ * So taht 
+ *
+ *   NAMES < ATOMS
+ * 
+ * and both names and atoms are compared lexigraphically, and names
+ * with equal print names are compared according to their "sequential
+ * numbers".
  */
 
 inline
 int atomcmp(Literal *a, Literal *b)
 {
-  if (a==b) return 0;
+  int res;
 
-  if (a->isName() != b->isName()) return a->isName() ? -1 : 1;
-
-  int res = strcmp(a->getPrintName(), b->getPrintName());
-  if (res < 0) return -1;
-  if (res > 0) return  1;
-
+  if (a == b) return 0;
+  res = b->isNameAsInt() - a->isNameAsInt();
+  if (res != 0) return (res);
+  res = strcmp(a->getPrintName(), b->getPrintName());
+  if (res != 0) return (res);
   Assert(a->isName() && b->isName());
-  return (((Name*)a)->getSeqNumber() < ((Name*)b)->getSeqNumber()) ? -1 : 1;
+  res = ((Name *) a)->getSeqNumber() - ((Name *) b)->getSeqNumber();
+  return (res);
 }
 
 // see codearea.cc
@@ -309,9 +319,8 @@ Bool smallIntLE(TaggedRef A, TaggedRef B)
 inline
 unsigned int smallIntHash(TaggedRef n)
 {
-  return ((int)n)>>LTAG_BITS;
+  return (((unsigned int) n) >> LTAG_BITS);
 }
-
 
 inline
 Bool smallIntEq(TaggedRef a, TaggedRef b)
@@ -320,21 +329,22 @@ Bool smallIntEq(TaggedRef a, TaggedRef b)
   return (a == b);
 }
 
+inline
+Bool smallIntCmp(TaggedRef a, TaggedRef b)
+{
+  Assert(oz_isSmallInt(a) || oz_isSmallInt(b));
+  return ((int) a - (int) b);
+}
+
 #else
 
 #define smallIntLess(A,B) (((int) (A)) < ((int) (B)))
 #define smallIntLE(A,B)   (((int) (A)) <= ((int) (B)))
-#define smallIntHash(A)   (((int) (A)) >> LTAG_BITS)
-#define smallIntEq(A,B)   ((A)==(B))
+#define smallIntEq(A,B)   ((A) == (B))
+#define smallIntHash(A)   (((unsigned int) (A)) >> LTAG_BITS)
+#define smallIntCmp(A,B)  (((int) (A)) - ((int) (B)))
 
 #endif
-
-inline
-Bool smallIntCmp(TaggedRef a, TaggedRef b)
-{
-  Assert(oz_isSmallInt(a) && oz_isSmallInt(b));
-  return smallIntLess(a,b) ? -1 : (smallIntEq(a,b) ? 0 : 1);
-}
 
 
 /*===================================================================
@@ -739,7 +749,10 @@ public:
     mpz_clear(&value);
     oz_freeListDispose(this,sizeof(BigInt));
   }
-/* make a small int if <Big> fits into it, else return big int */   
+
+  // Make a small int if <Big> fits into it, else return big int.
+  // That is, no BigInt should be representable as a SmallInt!
+  // Or, differently put, BigInt != SmallInt for any BigInt, SmallInt;
   TaggedRef shrink(void) {
     TaggedRef ret;
     // kost@ : having 'omi' is the GMP kludge: 'mpz_cmp_si' is a macro
@@ -816,7 +829,7 @@ public:
   int stringLength()      { return mpz_sizeinbase(&value,10)+2; }
   void getString(char *s) { mpz_get_str(s,10,&value); }
 
-  unsigned int hash()              { return 75; } // all BigInt hash to same value
+  unsigned int hash()     { return 75; } // all BigInt hash to same value
   BigInt * gCollect(void);
 };
 
@@ -892,12 +905,8 @@ TaggedRef oz_unsignedInt(unsigned int i)
     return makeTaggedSmallInt(i);
 }
 
-inline
-Bool bigIntEq(TaggedRef a, TaggedRef b)
-{
-  return oz_isBigInt(a) && oz_isBigInt(b)
-    && tagged2BigInt(a)->equal(tagged2BigInt(b));
-}
+// Both 'a' and 'b' must be BigInt"s;
+Bool bigIntEq(TaggedRef a, TaggedRef b);
 
 inline
 Bool oz_numberEq(TaggedRef a, TaggedRef b) {
@@ -1064,50 +1073,66 @@ Bool oz_isFeature(TaggedRef f) {
 ; 
 }
 
-int featureEqOutline(TaggedRef a, TaggedRef b);
-
 inline
 int featureEq(TaggedRef a,TaggedRef b) {
   Assert(oz_isFeature(a) && oz_isFeature(b));
-  return a == b || featureEqOutline(a,b);
+  return (a == b ||
+	  (oz_isBigInt(a) && oz_isBigInt(b) && bigIntEq(a, b)));
 }
 
 /*
- * for sorting the arity one needs to have a total order
+ * For sorting the arity one needs to have a total order
  *
- * SMALLINT < BIGINT < LITERAL
- * return 0: if equal
- *       -1: a<b
- *        1: a>b
+ *   (SMALLINT, BIGINT) < LITERAL
+ *
+ * returns 0:        if equal
+ *         negative: if a<b
+ *         positive: if a>b
+ *
+ * NOTE: it should not be e.g.
+ *  
+ *   SMALLINT < BIGINT < LITERAL
+ *
+ * because SmallInt"s can be different in size on different platforms;
+ * 
  */
 inline
 int featureCmp(TaggedRef a, TaggedRef b) {
   Assert(oz_isFeature(a) && oz_isFeature(b));
 
-  if (oz_isSmallInt(a)) {
-    if (oz_isSmallInt(b))
-      return smallIntCmp(a,b);
-    if (oz_isLiteral(b))
-      return -1;
-    Assert(oz_isConst(b));
-    return -tagged2BigInt(b)->cmp(tagged2SmallInt(a));
-  }
-  
-  if (oz_isConst(a)) {
-    if (oz_isSmallInt(b)) 
-      return tagged2BigInt(a)->cmp(tagged2SmallInt(b));
-    if (oz_isConst(b))
-      return tagged2BigInt(a)->cmp(tagged2BigInt(b));
-    Assert(oz_isLiteral(b));
-    return -1;
-  }
-  
-  Assert(oz_isLiteral(a));
+  switch (tagged2ltag(a)) {
+  case LTAG_LITERAL:
+    if (oz_isLiteral(b)) {
+      return (atomcmp(tagged2Literal(a), tagged2Literal(b)));
+    } else {
+      return (1);
+    }
 
-  if (oz_isLiteral(b)) 
-    return atomcmp(tagged2Literal(a),tagged2Literal(b));
-  
-  return 1;
+  case LTAG_SMALLINT:
+    switch (tagged2ltag(b)) {
+    case LTAG_LITERAL:
+      return (-1);
+    case LTAG_SMALLINT:
+      return (smallIntCmp(a, b));
+    default:
+      Assert(oz_isBigInt(b));
+      return (-tagged2BigInt(b)->cmp(tagged2SmallInt(a)));
+    }
+
+  default:
+    Assert(oz_isBigInt(a));
+    switch (tagged2ltag(b)) {
+    case LTAG_LITERAL:
+      return (-1);
+    case LTAG_SMALLINT:
+      return (tagged2BigInt(a)->cmp(tagged2SmallInt(b)));
+    default:
+      Assert(oz_isBigInt(b));
+      return (tagged2BigInt(a)->cmp(tagged2BigInt(b)));
+    }
+  }
+
+  Assert(0);
 }
 
 
@@ -1118,11 +1143,13 @@ int featureCmp(TaggedRef a, TaggedRef b) {
 inline
 unsigned int featureHash(TaggedRef a) {
   Assert(oz_isFeature(a));
-  if (oz_isLiteral(a)) {
+  switch (tagged2ltag(a)) {
+  case LTAG_LITERAL:
     return tagged2Literal(a)->hash();
-  } else if (oz_isSmallInt(a)) {
+  case LTAG_SMALLINT:
     return smallIntHash(a);
-  } else {
+  default:
+    Assert(oz_isBigInt(a));
     return tagged2BigInt(a)->hash();
   }
 }

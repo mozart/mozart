@@ -358,12 +358,12 @@ inline
 unsigned int AddressHashTable::primeHashFunc(void *i)
 {
   Assert(sizeof(unsigned int)*8 == 32);
-  return ((((unsigned int) i) * ((unsigned int) 0x9e419355)) >> rsBits);
+  return ((((unsigned int) i) * ((unsigned int) 0x9e6d5541)) >> rsBits);
 }
 inline
 unsigned int AddressHashTable::incHashFunc(void *i)
 {
-  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e419355);
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e6d5541);
   // has to be odd (in order the hash table covering be complete);
   return (((m << slsBits) >> rsBits) | 0x1);
 }
@@ -405,7 +405,7 @@ void AddressHashTable::htAdd(void *k, void *val)
   //
   Assert(k != htEmpty);
   Assert(val != htEmpty);
-  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e419355);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e6d5541);
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(k));
   unsigned int ikey = 0;
@@ -443,7 +443,7 @@ void AddressHashTable::htAdd(void *k, void *val)
 
 void *AddressHashTable::htFind(void *k)
 {
-  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e419355);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e6d5541);
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(k));
   unsigned int ikey = 0;
@@ -616,12 +616,12 @@ inline
 unsigned int AddressHashTableO1Reset::primeHashFunc(void *i)
 {
   Assert(sizeof(unsigned int)*8 == 32);
-  return ((((unsigned int) i) * ((unsigned int) 0x9e419355)) >> rsBits);
+  return ((((unsigned int) i) * ((unsigned int) 0x9e6d5541)) >> rsBits);
 }
 inline
 unsigned int AddressHashTableO1Reset::incHashFunc(void *i)
 {
-  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e419355);
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e6d5541);
   // has to be odd (in order the hash table covering be complete);
   return (((m << slsBits) >> rsBits) | 0x1);
 }
@@ -633,7 +633,7 @@ void AddressHashTableO1Reset::htAdd(void *k, void *val)
 
   //
   Assert(val != htEmpty);
-  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e419355);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e6d5541);
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(k));
   unsigned int ikey = 0;
@@ -673,7 +673,7 @@ void AddressHashTableO1Reset::htAdd(void *k, void *val)
 //
 void* AddressHashTableO1Reset::htFind(void *k)
 {
-  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e419355);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e6d5541);
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(k));
   unsigned int ikey = 0;

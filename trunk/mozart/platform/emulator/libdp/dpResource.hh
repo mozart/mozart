@@ -39,7 +39,7 @@
 /*  Defines                                                 */
 /************************************************************/
 
-#define RESOURCE_HASH_TABLE_DEFAULT_SIZE 25
+#define RESOURCE_HASH_TABLE_DEFAULT_SIZE 5
 #define RESOURCE_NOT_IN_TABLE 0-1
 
 /************************************************************/
@@ -89,7 +89,8 @@ public:
 //
 class ResourceHashTable: public GenDistEntryTable<RHTNode> {
 public:
-  ResourceHashTable(int i) : GenDistEntryTable<RHTNode>(i) {}
+  ResourceHashTable(int sizeAsPowerOf2)
+    : GenDistEntryTable<RHTNode>(sizeAsPowerOf2) {}
   ~ResourceHashTable() {}
 
   //
