@@ -3154,6 +3154,7 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
     switch (tag1) {
     case SRECORD:
     case LITERAL:
+    case LTUPLE:
       out = t1;
       return PROCEED;
     case UVAR:
@@ -3270,14 +3271,13 @@ OZ_C_proc_begin(BIadjoinAt,4)
   case LTUPLE:
   case SRECORD:
     {
-      SRecord *rec1 = makeRecord(rec);
       if (isAnyVar(tag1)) {
 	OZ_suspendOn(makeTaggedRef(feaPtr));
       }
       if (!isFeature(tag1)) {
 	oz_typeError(1,"Feature");
       }
-      return OZ_unify(out,rec1->adjoinAt(fea,value));
+      return OZ_unify(out,makeRecord(rec)->adjoinAt(fea,value));
     }
 
   case UVAR:

@@ -906,7 +906,7 @@ TaggedRef SRecord::adjoinAt(TaggedRef feature, TaggedRef value)
   if (getIndex(feature) != -1) {
     SRecord *newrec = newSRecord(this);
     newrec->setFeature(feature,value);
-    return makeTaggedSRecord(newrec);
+    return newrec->normalize();
   } else {
     TaggedRef oldArityList = getArityList();
     TaggedRef newArityList = insert(feature,oldArityList);
@@ -932,17 +932,6 @@ TaggedRef SRecord::adjoin(SRecord* hrecord)
   TaggedRef list1 = this->getArityList();
   TaggedRef list2 = hrecord->getArityList();
 
-  // optimize case that left record is literal
-  if (isNil(list1)) {
-  overwrite:
-    return makeTaggedSRecord(newSRecord(hrecord));
-  }
-
-  // optimize case that right record is literal
-  if (isNil(list2)) {
-    return makeTaggedSRecord(this->replaceLabel(hrecord->getLabel()));
-  }
-
   // adjoin arities
   TaggedRef newArityList = merge(list1,list2);
   Arity *newArity = aritytable.find(newArityList);
@@ -952,10 +941,10 @@ TaggedRef SRecord::adjoin(SRecord* hrecord)
   // optimize case that right record completely overwrites left side.
   if (hrecord->isTuple()) {
     if (newArity->isTuple() && hrecord->getWidth() == newArity->getWidth()) {
-      goto overwrite;
+      return SRecord::newSRecord(hrecord)->normalize();
     }
   } else if (newArity == hrecord->getRecordArity()) {
-    goto overwrite;
+    return makeTaggedSRecord(SRecord::newSRecord(hrecord));
   }
 
   // copy left record to new record
