@@ -43,7 +43,6 @@ install: $(LIB_TARGETS)
 #
 
 DaVinci.ozf: $(OZFNCTS)
-	echo $(DAVINCI)
 	$(OZL) DaVinciObject.ozf -o $@
 
 $(LIB_DIR)/DaVinci.ozf: DaVinci.ozf
