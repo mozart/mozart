@@ -14,21 +14,20 @@
 #ifndef __FSAUX_HH__
 #define __FSAUX_HH__
 
-//#define OZ_DEBUG
 //#define DEBUG_INDICES
 
 //-----------------------------------------------------------------------------
 // debug macros
 
 #ifdef DEBUG_FSET
-#define OZ_DEBUG
+//#define OZ_DEBUG
 #endif
 
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
 extern "C" void oz_fsetdebugprint(char *format ...);
 #define _OZ_DEBUGPRINT(C) oz_fsetdebugprint C
-#define OZ_DEBUGPRINT(C) /*_OZ_DEBUGPRINT(C) */
+#define OZ_DEBUGPRINT(C) /* _OZ_DEBUGPRINT(C) */
 #define OZ_ASSERT(C)                                    \
   if (! (C)) {                                          \
     fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",    \
@@ -36,7 +35,7 @@ extern "C" void oz_fsetdebugprint(char *format ...);
     fflush(stderr);                                     \
   }
 #define _OZ_DEBUGRETURNPRINT(X) __debugReturnPrint(X)
-#define OZ_DEBUGRETURNPRINT(X) X /* _OZ_DEBUGRETURNPRINT(X) */
+#define OZ_DEBUGRETURNPRINT(X) X /*_OZ_DEBUGRETURNPRINT(X) */
 inline
 OZ_Return __debugReturnPrint(OZ_Return r)
 {

@@ -28,7 +28,7 @@
 extern "C" void oz_debugprint(char *format ...);
 
 #define _OZ_DEBUGPRINT(C) oz_debugprint C
-#define OZ_DEBUGPRINT(C) _OZ_DEBUGPRINT(C)
+#define OZ_DEBUGPRINT(C) /* _OZ_DEBUGPRINT(C) */
 #define OZ_ASSERT(C)                                    \
   if (! (C)) {                                          \
     fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",    \
