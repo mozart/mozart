@@ -300,7 +300,11 @@ and
 <<Procedure>>, <<Port>>, <<Cell>>, and <<Lock>>
 (operations on common entities).
 
-<P> All system modules are sited.
+<P> We call <EM>resource</EM> any module
+that is either a system module
+or that imports directly or
+indirectly from a system module.
+All resources are sited.
 The reason is that
 they contain state, which is
 either part of the emulator or
@@ -308,10 +312,6 @@ external to the Mozart process.
 Access to this state 
 is limited to the machine hosting
 the Mozart process.
-We call <EM>resource</EM> any module
-that is either a system module
-or that imports directly or
-indirectly from a system module.
 Some commonly-used system modules are
 <<Tk>> and <<Browser>> (access to system graphics),
 <<Connection>> and <<Remote>> (access to site-specific distributed operations),
@@ -321,6 +321,7 @@ Some commonly-used system modules are
 <<OS>> and <<Property>> (access to the OS and emulator),
 and so forth.
 
+<P>
 
 <SUBSECTION><TITLE>Bringing it all together</TITLE>
 
