@@ -66,7 +66,8 @@ int toTheUpperEnd[32] = {
 
 int fd_bv_max_high, fd_bv_max_elem, fd_bv_conv_max_high;
 int * fd_bv_left_conv, * fd_bv_right_conv;
-intptr fd_iv_left_sort[FDOMNINITSIZE], fd_iv_right_sort[FDOMNINITSIZE];
+intptr fd_iv_ptr_sort[FDOMNINITSIZE];
+int fd_iv_left_sort[FDOMNINITSIZE], fd_iv_right_sort[FDOMNINITSIZE];
 
 const unsigned int maxByte     = 0xff;
 const unsigned int maxHalfWord = 0xffff;
@@ -1348,31 +1349,48 @@ int OZ_FiniteDomainImpl::simplify(int list_len,
                                   int * list_left,
                                   int * list_right)
 {
+
   // producing list of sorted pointers in terms of this list
   int i;
+
   for (i = list_len; i--; ) {
-    fd_iv_left_sort[i] = list_left + i;
+    fd_iv_ptr_sort[i] = list_left + i;
   }
-  qsort(fd_iv_left_sort, list_len, sizeof(int **), intcompare);
-  for (i = 0; i < list_len; i++) {
-    fd_iv_right_sort[i] = list_right + (fd_iv_left_sort[i]-list_left);
+  qsort(fd_iv_ptr_sort, list_len, sizeof(int **), intcompare);
+
+  // copy sorted arrays (copy needed, otherwise overwriting might occur!)
+  for (i = list_len; i--; ) {
+    fd_iv_left_sort[i]  = *fd_iv_ptr_sort[i];
+    fd_iv_right_sort[i] = *(list_right + (fd_iv_ptr_sort[i]-list_left));
   }
 
-  // finding adjacent and overlapping intervals
-  int len, p;
-  for (len = 0, p = 0; p < list_len; len += 1) {
-    if (p > len) {
-      *fd_iv_left_sort[len] = *fd_iv_left_sort[p];
-      *fd_iv_right_sort[len] = *fd_iv_right_sort[p];
+
+  // Invariant:
+  //   (list_left[0],list_right[0]) ... (list_left[len],list_right[len])
+  //   are disjoint, with dist > 1 intervals
+
+  int len = 0;
+  list_left[len]  = fd_iv_left_sort[len];
+  list_right[len] = fd_iv_right_sort[len];
+
+  for (i = 1; i < list_len; i++) {
+    // does it overlap or is next?
+    if (list_right[len] >= fd_iv_left_sort[i]-1) {
+      // do not take over, just do union (keep in mind that left is sorted)
+      list_right[len] = max(list_right[len],fd_iv_right_sort[i]);
+    } else {
+      // just copy
+      len++;
+      list_left[len]  = fd_iv_left_sort[i];
+      list_right[len] = fd_iv_right_sort[i];
     }
-    while (++p < list_len && *fd_iv_right_sort[len] >= *fd_iv_left_sort[p]-1)
-      if (*fd_iv_right_sort[p] > *fd_iv_right_sort[len])
-        *fd_iv_right_sort[len] = *fd_iv_right_sort[p];
   }
 
-  for (i = 0; i < len; i++) {
-    list_left[i]  = *fd_iv_left_sort[i];
-    list_right[i] = *fd_iv_right_sort[i];
+  len++;
+
+  // Assert the invariant
+  for (i = 1; i < len; i++) {
+    Assert(list_right[i-1] <= list_left[i]);
   }
 
   return len;
@@ -1757,6 +1775,7 @@ int OZ_FiniteDomainImpl::operator <= (const int leq)
       if (size > 0) max_elem = bv->findMaxElem();
     } else if (leq <= fd_sup) {
       FDIntervals * iv = get_iv();
+
       size = (*iv <= leq);
       if (size > 0) max_elem = iv->findMaxElem();
       if (max_elem <= fd_bv_max_elem) {
