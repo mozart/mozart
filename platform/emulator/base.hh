@@ -461,8 +461,7 @@ Bool oz_protect(TaggedRef *);
 Bool oz_unprotect(TaggedRef *);
 
 void OZ_collectHeapTerm(TaggedRef &, TaggedRef &);
-void OZ_collectLocalHeapBlock(TaggedRef *, TaggedRef *, int);
-void OZ_updateLocalHeapTerm(TaggedRef &);
+void OZ_collectHeapBlock(TaggedRef *, TaggedRef *, int);
 void * OZ_hrealloc(void *, size_t);
 
 // builtins.cc
