@@ -368,8 +368,8 @@ outerLoop2:
       case CALLMETHOD:
       case GENCALL:
 	{
-	  GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
-	  ISREAD_TO(getWidth(gci->arity));
+	  CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC+1);
+	  ISREAD_TO(getWidth(cmi->arity));
 	  BREAK;
 	}
 

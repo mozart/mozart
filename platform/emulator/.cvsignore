@@ -1,16 +1,16 @@
-solaris-sparc netbsd-sparc linux-i486 netbsd-i486
+solaris-sparc linux-i486
 config.h version.cc text2pickle.exe
 Makefile Makefile.rules Makefile.vars Makefile.deps
 conf.h OZCONF.h
 oztool.sh
-instrtab.hh  opcodes.hh optostr.hh
+instrtab.hh opcodes.hh optostr.hh
 opcodes.cc
 copycode.cc
 ozlib.lnk
 mozart.c
 initffuns.cc
 components.cc
-marshaler.hh
+newmarshalcode.cc
 marshalMsg.cc
 atoms.hh atoms.cc
 config.status
@@ -22,3 +22,4 @@ perdio.cc
 .gdbinit
 i386-mingw32-oztool
 vc50.pdb
+
