@@ -21,7 +21,7 @@ GenBoolVariable * GenFDVariable::becomesBool(void) {
   relinkSuspListToItself();
   setType(BoolVariable); 
   
-  finiteDomain.dispose();
+  finiteDomain.disposeExtension();
     // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
   //    freeListDispose(((char *)this) + sizeof(GenCVariable), 
   //		    sizeof(GenFDVariable) - sizeof(GenCVariable));
@@ -30,7 +30,7 @@ GenBoolVariable * GenFDVariable::becomesBool(void) {
 
 inline
 void GenFDVariable::dispose(void) {
-  finiteDomain.dispose();
+  finiteDomain.disposeExtension();
   fdSuspList[fd_det]->disposeList();
   fdSuspList[fd_bounds]->disposeList();
   suspList->disposeList();
