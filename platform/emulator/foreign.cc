@@ -1363,7 +1363,14 @@ void OZ_printVirtualString(OZ_Term term)
   } else if (isInt(t)) {
     OZ_printInt(t);
   } else if (isFloat(t)) {
-    OZ_printFloat(t);
+    char *s=toC(t);
+    char *p=s;
+    while (*p) {
+      if (*p == '~') 
+	*p='-';
+      p++;
+    }
+    printf("%s",s);
   } else {
     if (!isPair(t)) {
       OZ_warning("OZ_printVirtualString: no virtual string: %s",toC(term));
