@@ -1,5 +1,15 @@
 usage: ozmake OPTIONS TARGETS
 
+ozmake is a tool for building Mozart-based projects and for creating
+and installing Mozart packages.  It was inspired by the Unix tools
+`make' and `rpm', but is much, much simpler and specialized for
+Mozart-based software development and deployment.
+
+ozmake must currently be invoked from a shell, but it will eventually
+acquire additionally an optional, user-friendly graphical interface.
+
+SYNOPSIS
+
         ozmake --help
         ozmake [--build]
         ozmake [--build] FILES...
@@ -244,9 +254,11 @@ and implicitly that it should be compiled from the Oz source file
 Foo.oz.
 
 There are many more features which can occur in the makefile and they
-are all optional.  All values, suchs as files, should be given as
-virtual string; atoms are recommended except for features blurb,
-info_text and info_html, where strings are recommended.
+are all optional.  If you omit all the features, you only get the
+defaults and you don't even need a makefile.  All values, suchs as
+files, should be given as virtual string; atoms are recommended except
+for features blurb, info_text and info_html, where strings are
+recommended.
 
         makefile(
           bin      : [ FILES... ]
