@@ -1,0 +1,42 @@
+PREFIX          = @prefix@
+SRCDIR          = @srcdir@
+PLATFORM        = @PLATFORM@
+BINDIR          = $(PREFIX)/bin
+SHELL           = @SH@
+RM              = @RM@ -f
+INSTALL         = @INSTALL@
+INSTALL_DIR     = $(SRCDIR)/../mkinstalldirs
+INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_OTHER   = $(INSTALL) -m 444
+
+SCRIPTS = oz ozplatform oz.wish ozdynld
+LINKS   = oz- ozc ozsa ozcs ozsac oz.compiler oz.emulator ozdo \
+          ozemacs ozdemo oze oznc
+
+all:
+
+install: $(BINDIR)
+        $(INSTALL_BIN) $(SCRIPTS) $(BINDIR)
+        @set -x; cd $(BINDIR);\
+        for file in $(LINKS); \
+        do\
+           rm -f $$file; \
+           ln -s oz $$file; \
+        done
+
+$(BINDIR):
+        $(INSTALL_DIR) $<
+
+ozdemo.exe: oz.exe
+        cp oz.exe ozdemo.exe
+
+
+win-install:: setup.exe oz.exe ozdemo.exe ozsaw.exe ozsa.exe ozsac.exe
+        cp setup.exe oz.exe ozdemo.exe $(PREFIX)
+        cp ozsaw.exe ozsa.exe ozsac.exe $(PREFIX)/platform/$(PLATFORM)
+
+clean:
+        rm -f *.exe *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp
+
+distclean:
+        $(RM) Makefile config.cache config.log config.status
