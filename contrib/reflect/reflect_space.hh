@@ -90,10 +90,12 @@ public:
     DEBUGPRINT(("TableClass::add -- in --"));
 
     int i = (int) htFind((intlong) k);
+    DEBUGPRINT(("TableClass::add -- htFind --"));
     is_reflected = ((i != (int) htEmpty) && (i >= 0));
     if (i != (int) htEmpty) {
       return abs(i)-1;
     }
+    DEBUGPRINT(("TableClass::add -- after loop --"));
     id_counter -= 1;
     htAdd((intlong) k, (void *) id_counter);
     DEBUGPRINT(("TableClass::add -- out --"));
