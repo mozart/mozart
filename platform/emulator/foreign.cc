@@ -793,7 +793,7 @@ inline
 void feature2buffer(ostream &out, SRecord *sr, OZ_Term fea, int depth)
 {
   value2buffer(out,fea);
-  out << ":";
+  out << ':';
   value2buffer(out,sr->getFeature(fea),depth);
 }
 
@@ -930,7 +930,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
   // Output the Atoms first, in order:
   for (ai=0; ai<nAtomOrInt; ai++) {
     value2buffer(out,arr[ai],0);
-    out << ":";
+    out << ':';
     value2buffer(out,lookup(arr[ai]),depth);
     out << ' ';
   }
@@ -940,7 +940,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
     tmpval=table[di].value;
     if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
       value2buffer(out,tmplit,0);
-      out << ":";
+      out << ':';
       value2buffer(out,tmpval,depth);
       out << ' ';
     }
