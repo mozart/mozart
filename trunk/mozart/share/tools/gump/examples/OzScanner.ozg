@@ -1095,7 +1095,7 @@ in
 	 OzScanner, ConvertPseudoChars(S1 @col ?S2)
 	 OzScanner, setParseErrorCoords()
 	 OzScanner, UpdateCoordinates(S1)
-	 OzScanner, pt('VARIABLE()' {String.toAtom S2})
+	 OzScanner, pt('VARIABLE()' {String.toAtom S2} GS, getLength($))
       end
 
       lex <{atom}>
