@@ -28,10 +28,8 @@ Thu Oct 23 01:33:12 MET DST 1997
 Bei Tastatur-Selektion von Stackframes, die gerade nicht angezeigt werden,
 scrollt das Stackwidget nicht
 
-Thu Oct 23 11:25:58 MET DST 1997
-{System.get errors}.'thread' sollte nicht die maschinenabhaengige
-Parsetiefe des Threadstacks sein, sondern die Anzahl der erzeugten
-Frames
-
 Thu Oct 23 12:09:18 MET DST 1997
 reset optional auch ohne kill anbieten
+
+Mon Oct 27 17:51:41 MET 1997
+unmarshalling of code does not preserve breakpoint information
