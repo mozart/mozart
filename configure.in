@@ -77,7 +77,7 @@ AC_MSG_RESULT($GTK_CFLAGS)
 AC_SUBST(GTK_CFLAGS)
 
 AC_MSG_CHECKING([for options to filter from gtk c flags])
-OZ_FILTER_CFLAGS(GTK_CFLAGS)
+OZ_FILTER_CPPFLAGS(GTK_CFLAGS)
 AC_MSG_RESULT(keeping: $GTK_CFLAGS)
 
 AC_MSG_CHECKING(gtk lib flags)
@@ -97,7 +97,7 @@ if test -n "$IMLIB_CONFIG"; then
    AC_MSG_RESULT($IMLIB_CFLAGS)
 
    AC_MSG_CHECKING([for options to filter from imlib c flags])
-   OZ_FILTER_CFLAGS(IMLIB_CFLAGS)
+   OZ_FILTER_CPPFLAGS(IMLIB_CFLAGS)
    AC_MSG_RESULT(keeping: $IMLIB_CFLAGS)
 
    AC_MSG_CHECKING(imlib lib flags)
@@ -117,7 +117,7 @@ if test -n "$LIBART_CONFIG"; then
    AC_MSG_RESULT($LIBART_CFLAGS)
 
    AC_MSG_CHECKING([for options to filter from libart c flags])
-   OZ_FILTER_CFLAGS(LIBART_CFLAGS)
+   OZ_FILTER_CPPFLAGS(LIBART_CFLAGS)
    AC_MSG_RESULT(keeping: $LIBART_CFLAGS)
 
    AC_MSG_CHECKING(libart lib flags)

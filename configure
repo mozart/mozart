@@ -1919,23 +1919,31 @@ echo "configure:1917: checking for options to filter from gtk c flags" >&5
    oz_accu=
    oz_sav_CPPFLAGS="$CPPFLAGS"
    for oz_opt in $oz_tmp; do
-     CPPFLAGS="$oz_opt"
-     cat > conftest.$ac_ext <<EOF
-#line 1925 "configure"
+     case $oz_opt in
+     -I*)
+       CPPFLAGS="$oz_opt"
+       cat > conftest.$ac_ext <<EOF
+#line 1927 "configure"
 #include "confdefs.h"
 
-int main() {
-
-; return 0; }
 EOF
-if { (eval echo configure:1932: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:1932: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
   rm -rf conftest*
   oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}"
 else
+  echo "$ac_err" >&5
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
 fi
 rm -f conftest*
+       ;;
+     *)
+       oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}"
+       ;;
+     esac
    done
    CPPFLAGS="$oz_sav_CPPFLAGS"
    GTK_CFLAGS="$oz_accu"
@@ -1943,7 +1951,7 @@ rm -f conftest*
 echo "$ac_t""keeping: $GTK_CFLAGS" 1>&6
 
 echo $ac_n "checking gtk lib flags""... $ac_c" 1>&6
-echo "configure:1947: checking gtk lib flags" >&5
+echo "configure:1955: checking gtk lib flags" >&5
 if test -z "`${GTKCONFIG} --libs 2>&1 1>/dev/null`"; then
    GTK_LIBS=`${GTKCONFIG} --libs`
 fi
@@ -1953,7 +1961,7 @@ echo "$ac_t""$GTK_LIBS" 1>&6
 # Extract the first word of "imlib-config", so it can be a program name with args.
 set dummy imlib-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1957: checking for $ac_word" >&5
+echo "configure:1965: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_IMLIB_CONFIG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1987,36 +1995,44 @@ fi
 
 if test -n "$IMLIB_CONFIG"; then
    echo $ac_n "checking imlib c flags""... $ac_c" 1>&6
-echo "configure:1991: checking imlib c flags" >&5
+echo "configure:1999: checking imlib c flags" >&5
    if test -z "`${IMLIB_CONFIG} --cflags 2>&1 1>/dev/null`"; then
      IMLIB_CFLAGS=`${IMLIB_CONFIG} --cflags`
    fi
    echo "$ac_t""$IMLIB_CFLAGS" 1>&6
 
    echo $ac_n "checking for options to filter from imlib c flags""... $ac_c" 1>&6
-echo "configure:1998: checking for options to filter from imlib c flags" >&5
+echo "configure:2006: checking for options to filter from imlib c flags" >&5
    
    oz_tmp="$IMLIB_CFLAGS"
    oz_accu=
    oz_sav_CPPFLAGS="$CPPFLAGS"
    for oz_opt in $oz_tmp; do
-     CPPFLAGS="$oz_opt"
-     cat > conftest.$ac_ext <<EOF
-#line 2006 "configure"
+     case $oz_opt in
+     -I*)
+       CPPFLAGS="$oz_opt"
+       cat > conftest.$ac_ext <<EOF
+#line 2016 "configure"
 #include "confdefs.h"
 
-int main() {
-
-; return 0; }
 EOF
-if { (eval echo configure:2013: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:2021: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
   rm -rf conftest*
   oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}"
 else
+  echo "$ac_err" >&5
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
 fi
 rm -f conftest*
+       ;;
+     *)
+       oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}"
+       ;;
+     esac
    done
    CPPFLAGS="$oz_sav_CPPFLAGS"
    IMLIB_CFLAGS="$oz_accu"
@@ -2024,7 +2040,7 @@ rm -f conftest*
    echo "$ac_t""keeping: $IMLIB_CFLAGS" 1>&6
 
    echo $ac_n "checking imlib lib flags""... $ac_c" 1>&6
-echo "configure:2028: checking imlib lib flags" >&5
+echo "configure:2044: checking imlib lib flags" >&5
    if test -z "`${IMLIB_CONFIG} --libs 2>&1 1>/dev/null`"; then
      IMLIB_LIBS=`${IMLIB_CONFIG} --libs`
    fi
@@ -2036,7 +2052,7 @@ fi
 # Extract the first word of "libart-config", so it can be a program name with args.
 set dummy libart-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2040: checking for $ac_word" >&5
+echo "configure:2056: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_LIBART_CONFIG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2070,34 +2086,42 @@ fi
 
 if test -n "$LIBART_CONFIG"; then
    echo $ac_n "checking libart c flags""... $ac_c" 1>&6
-echo "configure:2074: checking libart c flags" >&5
+echo "configure:2090: checking libart c flags" >&5
    LIBART_CFLAGS=`${LIBART_CONFIG} --cflags`
    echo "$ac_t""$LIBART_CFLAGS" 1>&6
 
    echo $ac_n "checking for options to filter from libart c flags""... $ac_c" 1>&6
-echo "configure:2079: checking for options to filter from libart c flags" >&5
+echo "configure:2095: checking for options to filter from libart c flags" >&5
    
    oz_tmp="$LIBART_CFLAGS"
    oz_accu=
    oz_sav_CPPFLAGS="$CPPFLAGS"
    for oz_opt in $oz_tmp; do
-     CPPFLAGS="$oz_opt"
-     cat > conftest.$ac_ext <<EOF
-#line 2087 "configure"
+     case $oz_opt in
+     -I*)
+       CPPFLAGS="$oz_opt"
+       cat > conftest.$ac_ext <<EOF
+#line 2105 "configure"
 #include "confdefs.h"
 
-int main() {
-
-; return 0; }
 EOF
-if { (eval echo configure:2094: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:2110: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
   rm -rf conftest*
   oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}"
 else
+  echo "$ac_err" >&5
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
 fi
 rm -f conftest*
+       ;;
+     *)
+       oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}"
+       ;;
+     esac
    done
    CPPFLAGS="$oz_sav_CPPFLAGS"
    LIBART_CFLAGS="$oz_accu"
@@ -2105,7 +2129,7 @@ rm -f conftest*
    echo "$ac_t""keeping: $LIBART_CFLAGS" 1>&6
 
    echo $ac_n "checking libart lib flags""... $ac_c" 1>&6
-echo "configure:2109: checking libart lib flags" >&5
+echo "configure:2133: checking libart lib flags" >&5
    LIBART_LIBS=`${LIBART_CONFIG} --libs`
    echo "$ac_t""$LIBART_LIBS" 1>&6
 fi
@@ -2113,7 +2137,7 @@ fi
 
 
 echo $ac_n "checking for GTK+ version""... $ac_c" 1>&6
-echo "configure:2117: checking for GTK+ version" >&5
+echo "configure:2141: checking for GTK+ version" >&5
 GTKVERSION=`$GTKCONFIG --version`
 case $GTKVERSION in
   1.2.*)
@@ -2133,7 +2157,7 @@ LIBS="$IMLIB_LIBS $LIBART_LIBS -lart_lgpl -lgdk_imlib $GTKLIBS $LIBS"
 
 EXPLICIT_CANVAS=no
 echo $ac_n "checking for --with-gtk-canvas-dir""... $ac_c" 1>&6
-echo "configure:2137: checking for --with-gtk-canvas-dir" >&5
+echo "configure:2161: checking for --with-gtk-canvas-dir" >&5
 # Check whether --with-gtk_canvas_dir or --without-gtk_canvas_dir was given.
 if test "${with_gtk_canvas_dir+set}" = set; then
   withval="$with_gtk_canvas_dir"
@@ -2149,12 +2173,12 @@ fi
 
 
 echo $ac_n "checking for gtk-canvas.h""... $ac_c" 1>&6
-echo "configure:2153: checking for gtk-canvas.h" >&5
+echo "configure:2177: checking for gtk-canvas.h" >&5
 if test "$EXPLICIT_CANVAS" = no; then
    CANVASDIR="/NONE"
    
   echo $ac_n "checking for gtk-canvas.h""... $ac_c" 1>&6
-echo "configure:2158: checking for gtk-canvas.h" >&5
+echo "configure:2182: checking for gtk-canvas.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_gtk_canvas_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2165,12 +2189,12 @@ else
       for oz_tmp in $oz_inc_path; do
 	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
 	cat > conftest.$ac_ext <<EOF
-#line 2169 "configure"
+#line 2193 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2174: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2198: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2187,12 +2211,12 @@ rm -f conftest*
       CPPFLAGS=$oz_tmp_cppflags
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 2191 "configure"
+#line 2215 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2196: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2220: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2235,7 +2259,7 @@ echo "$ac_t""$oz_cv_header_gtk_canvas_h" 1>&6
      oz_inc_path="$oz_inc_path /usr/local/include"
      
   echo $ac_n "checking for gtk-canvas.h""... $ac_c" 1>&6
-echo "configure:2239: checking for gtk-canvas.h" >&5
+echo "configure:2263: checking for gtk-canvas.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_gtk_canvas_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2246,12 +2270,12 @@ else
       for oz_tmp in $oz_inc_path; do
 	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
 	cat > conftest.$ac_ext <<EOF
-#line 2250 "configure"
+#line 2274 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2255: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2279: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2268,12 +2292,12 @@ rm -f conftest*
       CPPFLAGS=$oz_tmp_cppflags
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 2272 "configure"
+#line 2296 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2277: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2301: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2321,7 +2345,7 @@ else
    CPPFLAGS="-I$CANVASDIR/include $CPPFLAGS"
    
   echo $ac_n "checking for gtk-canvas.h""... $ac_c" 1>&6
-echo "configure:2325: checking for gtk-canvas.h" >&5
+echo "configure:2349: checking for gtk-canvas.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_gtk_canvas_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2332,12 +2356,12 @@ else
       for oz_tmp in $oz_inc_path; do
 	CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
 	cat > conftest.$ac_ext <<EOF
-#line 2336 "configure"
+#line 2360 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2341: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2365: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2354,12 +2378,12 @@ rm -f conftest*
       CPPFLAGS=$oz_tmp_cppflags
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 2358 "configure"
+#line 2382 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2363: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2387: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2412,7 +2436,7 @@ if test "$EXPLICIT_CANVAS" = no; then
    
   if test -n "$oz_cv_lib_path_ldflags_gtk_canvas_gtk_canvas_new"; then
     echo $ac_n "checking for library gtk-canvas""... $ac_c" 1>&6
-echo "configure:2416: checking for library gtk-canvas" >&5
+echo "configure:2440: checking for library gtk-canvas" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_gtk_canvas_gtk_canvas_new
     oz_add_libs=$oz_cv_lib_path_libs_gtk_canvas_gtk_canvas_new
     if test "$oz_add_ldflags" = no; then
@@ -2436,12 +2460,12 @@ echo "configure:2416: checking for library gtk-canvas" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for gtk_canvas_new in -lgtk-canvas (default)""... $ac_c" 1>&6
-echo "configure:2440: checking for gtk_canvas_new in -lgtk-canvas (default)" >&5
+echo "configure:2464: checking for gtk_canvas_new in -lgtk-canvas (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 2445 "configure"
+#line 2469 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2452,7 +2476,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:2456: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2480: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -2465,30 +2489,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 2470 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:2481: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-       oz_add_ldflags=yes
-      
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 2494 "configure"
 #include "confdefs.h"
@@ -2510,18 +2510,11 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-            oz_add_libs=no
-            echo "$ac_t""no" 1>&6
-       for p in $oz_lib_path; do
-         LDFLAGS="-L$p $oz_tmp_ldflags"
-         echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
-echo "configure:2520: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
          
-  oz_saved_LIBS=$LIBS
-  
 	cat > conftest.$ac_ext <<EOF
-#line 2525 "configure"
+#line 2518 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2532,7 +2525,38 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:2536: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2529: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+      
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
+echo "configure:2544: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+         
+  oz_saved_LIBS=$LIBS
+  
+	cat > conftest.$ac_ext <<EOF
+#line 2549 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:2560: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2545,30 +2569,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 2550 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:2561: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-            oz_add_ldflags="-L$p"
-            break
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 2574 "configure"
 #include "confdefs.h"
@@ -2590,6 +2590,30 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 2598 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:2609: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
   LIBS=$oz_saved_LIBS
             oz_add_libs=no
             echo "$ac_t""no" 1>&6
@@ -2602,7 +2626,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2606 "configure"
+#line 2630 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2613,7 +2637,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:2617: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2641: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2640,7 +2664,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2644 "configure"
+#line 2668 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2651,7 +2675,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:2655: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2679: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -2666,12 +2690,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
-echo "configure:2670: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+echo "configure:2694: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 2675 "configure"
+#line 2699 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2682,7 +2706,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:2686: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2710: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2695,30 +2719,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 2700 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:2711: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-            oz_add_ldflags="-L$p"
-            break
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 2724 "configure"
 #include "confdefs.h"
@@ -2740,6 +2740,30 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 2748 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:2759: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
   LIBS=$oz_saved_LIBS
             oz_add_libs=no
             echo "$ac_t""no" 1>&6
@@ -2752,7 +2776,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2756 "configure"
+#line 2780 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2763,7 +2787,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:2767: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2791: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2797,7 +2821,7 @@ rm -f conftest*
      
   if test -n "$oz_cv_lib_path_ldflags_gtk_canvas_gtk_canvas_new"; then
     echo $ac_n "checking for library gtk-canvas""... $ac_c" 1>&6
-echo "configure:2801: checking for library gtk-canvas" >&5
+echo "configure:2825: checking for library gtk-canvas" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_gtk_canvas_gtk_canvas_new
     oz_add_libs=$oz_cv_lib_path_libs_gtk_canvas_gtk_canvas_new
     if test "$oz_add_ldflags" = no; then
@@ -2821,12 +2845,12 @@ echo "configure:2801: checking for library gtk-canvas" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for gtk_canvas_new in -lgtk-canvas (default)""... $ac_c" 1>&6
-echo "configure:2825: checking for gtk_canvas_new in -lgtk-canvas (default)" >&5
+echo "configure:2849: checking for gtk_canvas_new in -lgtk-canvas (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 2830 "configure"
+#line 2854 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2837,7 +2861,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:2841: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2865: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -2850,30 +2874,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 2855 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:2866: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-       oz_add_ldflags=yes
-      
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 2879 "configure"
 #include "confdefs.h"
@@ -2895,18 +2895,11 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-            oz_add_libs=no
-            echo "$ac_t""no" 1>&6
-       for p in $oz_lib_path; do
-         LDFLAGS="-L$p $oz_tmp_ldflags"
-         echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
-echo "configure:2905: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
          
-  oz_saved_LIBS=$LIBS
-  
 	cat > conftest.$ac_ext <<EOF
-#line 2910 "configure"
+#line 2903 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2917,7 +2910,38 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:2921: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2914: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+      
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
+echo "configure:2929: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+         
+  oz_saved_LIBS=$LIBS
+  
+	cat > conftest.$ac_ext <<EOF
+#line 2934 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:2945: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -2930,30 +2954,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 2935 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:2946: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-            oz_add_ldflags="-L$p"
-            break
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 2959 "configure"
 #include "confdefs.h"
@@ -2975,6 +2975,30 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 2983 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:2994: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
   LIBS=$oz_saved_LIBS
             oz_add_libs=no
             echo "$ac_t""no" 1>&6
@@ -2987,7 +3011,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 2991 "configure"
+#line 3015 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -2998,7 +3022,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3002: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3026: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -3025,7 +3049,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 3029 "configure"
+#line 3053 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3036,7 +3060,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3040: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3064: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -3051,12 +3075,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
-echo "configure:3055: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+echo "configure:3079: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 3060 "configure"
+#line 3084 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3067,7 +3091,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3071: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3095: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -3080,30 +3104,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 3085 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:3096: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-            oz_add_ldflags="-L$p"
-            break
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 3109 "configure"
 #include "confdefs.h"
@@ -3125,6 +3125,30 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 3133 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:3144: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
   LIBS=$oz_saved_LIBS
             oz_add_libs=no
             echo "$ac_t""no" 1>&6
@@ -3137,7 +3161,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 3141 "configure"
+#line 3165 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3148,7 +3172,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3152: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3176: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -3223,7 +3247,7 @@ else
    
   if test -n "$oz_cv_lib_path_ldflags_gtk_canvas_gtk_canvas_new"; then
     echo $ac_n "checking for library gtk-canvas""... $ac_c" 1>&6
-echo "configure:3227: checking for library gtk-canvas" >&5
+echo "configure:3251: checking for library gtk-canvas" >&5
     oz_add_ldflags=$oz_cv_lib_path_ldflags_gtk_canvas_gtk_canvas_new
     oz_add_libs=$oz_cv_lib_path_libs_gtk_canvas_gtk_canvas_new
     if test "$oz_add_ldflags" = no; then
@@ -3247,12 +3271,12 @@ echo "configure:3227: checking for library gtk-canvas" >&5
     oz_add_ldflags=no
     oz_add_libs=no
     echo $ac_n "checking for gtk_canvas_new in -lgtk-canvas (default)""... $ac_c" 1>&6
-echo "configure:3251: checking for gtk_canvas_new in -lgtk-canvas (default)" >&5
+echo "configure:3275: checking for gtk_canvas_new in -lgtk-canvas (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 3256 "configure"
+#line 3280 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3263,7 +3287,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3267: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3291: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -3276,30 +3300,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 3281 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:3292: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-       oz_add_ldflags=yes
-      
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 3305 "configure"
 #include "confdefs.h"
@@ -3321,18 +3321,11 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS=$oz_saved_LIBS
-            oz_add_libs=no
-            echo "$ac_t""no" 1>&6
-       for p in $oz_lib_path; do
-         LDFLAGS="-L$p $oz_tmp_ldflags"
-         echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
-echo "configure:3331: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
          
-  oz_saved_LIBS=$LIBS
-  
 	cat > conftest.$ac_ext <<EOF
-#line 3336 "configure"
+#line 3329 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3343,7 +3336,38 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3347: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3340: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+       oz_add_ldflags=yes
+      
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  LIBS=$oz_saved_LIBS
+            oz_add_libs=no
+            echo "$ac_t""no" 1>&6
+       for p in $oz_lib_path; do
+         LDFLAGS="-L$p $oz_tmp_ldflags"
+         echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
+echo "configure:3355: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+         
+  oz_saved_LIBS=$LIBS
+  
+	cat > conftest.$ac_ext <<EOF
+#line 3360 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:3371: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -3356,30 +3380,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 3361 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:3372: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-            oz_add_ldflags="-L$p"
-            break
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 3385 "configure"
 #include "confdefs.h"
@@ -3401,6 +3401,30 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 3409 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:3420: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
   LIBS=$oz_saved_LIBS
             oz_add_libs=no
             echo "$ac_t""no" 1>&6
@@ -3413,7 +3437,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 3417 "configure"
+#line 3441 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3424,7 +3448,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3428: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3452: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -3451,7 +3475,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 3455 "configure"
+#line 3479 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3462,7 +3486,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3466: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3490: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
        oz_add_ldflags=yes
@@ -3477,12 +3501,12 @@ else
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
          echo $ac_n "checking for gtk_canvas_new in -L$p -lgtk-canvas""... $ac_c" 1>&6
-echo "configure:3481: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
+echo "configure:3505: checking for gtk_canvas_new in -L$p -lgtk-canvas" >&5
          
   oz_saved_LIBS=$LIBS
   
 	cat > conftest.$ac_ext <<EOF
-#line 3486 "configure"
+#line 3510 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3493,7 +3517,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3497: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3521: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
@@ -3506,30 +3530,6 @@ else
       oz_add_libs="-Xlinker -Bstatic -lgtk-canvas -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
-	cat > conftest.$ac_ext <<EOF
-#line 3511 "configure"
-#include "confdefs.h"
-#ifdef __cplusplus
-extern "C"
-#endif
-char gtk_canvas_new();
-
-int main() {
-gtk_canvas_new()
-; return 0; }
-EOF
-if { (eval echo configure:3522: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  echo "$ac_t""yes" 1>&6
-            oz_add_ldflags="-L$p"
-            break
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  LIBS="-lgtk-canvas $oz_saved_LIBS"
-         oz_add_libs="-lgtk-canvas"
-         
 	cat > conftest.$ac_ext <<EOF
 #line 3535 "configure"
 #include "confdefs.h"
@@ -3551,6 +3551,30 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
+  LIBS="-lgtk-canvas $oz_saved_LIBS"
+         oz_add_libs="-lgtk-canvas"
+         
+	cat > conftest.$ac_ext <<EOF
+#line 3559 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C"
+#endif
+char gtk_canvas_new();
+
+int main() {
+gtk_canvas_new()
+; return 0; }
+EOF
+if { (eval echo configure:3570: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+            oz_add_ldflags="-L$p"
+            break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
   LIBS=$oz_saved_LIBS
             oz_add_libs=no
             echo "$ac_t""no" 1>&6
@@ -3563,7 +3587,7 @@ rm -f conftest*
       oz_add_libs="-lgtk-canvas"
       
 	cat > conftest.$ac_ext <<EOF
-#line 3567 "configure"
+#line 3591 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C"
@@ -3574,7 +3598,7 @@ int main() {
 gtk_canvas_new()
 ; return 0; }
 EOF
-if { (eval echo configure:3578: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3602: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
             oz_add_ldflags="-L$p"
