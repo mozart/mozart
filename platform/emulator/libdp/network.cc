@@ -898,7 +898,7 @@ public:
 
   void setWriteConnection(WriteConnection *r);
   void setReadConnection(ReadConnection *r);
-
+  void clearReadConnection(){readConnection = NULL;}
 
   void queueMessage(int size){
     Assert(totalMsgSize >=0);
@@ -2833,7 +2833,7 @@ int tcpPreReadHandler(int fd,void *r0){
     return 0;
   }
   old = si->getRemoteSite()->getReadConnection();
-  if(old!=NULL){old->remoteSite = NULL; old->close();}
+  if(old!=NULL){ old->remoteSite->clearReadConnection();old->remoteSite = NULL; old->close();}
 
   // To be sure that we have a writeConnection if the other peer is
   // behind a firewall we close all open atempts from that site until
