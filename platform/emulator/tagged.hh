@@ -473,10 +473,10 @@ TaggedRef makeTaggedLiteral(Literal *s)
 }
 
 inline
-TaggedRef makeTaggedPromise(TaggedRef *s)
+TaggedRef makeTaggedPromise(Promise *p)
 {
-  CHECK_POINTER_N(s);
-  return makeTaggedRef2p(PROMISE,s);
+  CHECK_POINTER_N(p);
+  return makeTaggedRef2p(PROMISE,p);
 }
 
 inline
@@ -680,11 +680,11 @@ Literal *tagged2Literal(TaggedRef ref)
 }
 
 inline
-TaggedRef *tagged2Promise(TaggedRef ref)
+Promise *tagged2Promise(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(PROMISE);
-  return (TaggedRef *) tagValueOf2(PROMISE,ref);
+  return (Promise *) tagValueOf2(PROMISE,ref);
 }
 
 inline

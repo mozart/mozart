@@ -165,7 +165,7 @@ PrTabEntry *checkPTE(PrTabEntry *pte, HashTable *ht)
   CheckHT(PrTabEntry *,pte);
   
   aux = new PrTabEntry (pte->getName(),checkSRA(pte->getMethodArity(),ht),
-			pte->getFileName(), pte->getLine(),pte->copyOnce);
+			pte->getFileName(), pte->getLine(),pte->getFlags());
   ht->htAdd(ToInt32(pte),aux);
   return aux;
 }

@@ -1567,6 +1567,9 @@ int getWidth(OZ_Term term)
 
 /* Internal representation of Oz classes */
 
+#define CLASS_LOCKING 0x1
+#define CLASS_NATIVE  0x2
+
 class ObjectClass: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
@@ -1574,24 +1577,27 @@ private:
   SRecord *unfreeFeatures;
   OzDictionary *fastMethods;
   OzDictionary *defaultMethods;
-  Bool locking;
+  int flags;
 public:
   USEHEAPMEMORY;
   OZPRINTLONG;
   NO_DEFAULT_CONSTRUCTORS(ObjectClass);
 
   ObjectClass(SRecord *feat,OzDictionary *fm,SRecord *uf,OzDictionary *dm,
-	      Bool lck, Board *b)
+	      Bool lck, Bool native, Board *b)
     : ConstTermWithHome(b,Co_Class)
   {
     features       = feat;
     fastMethods    = fm;
     unfreeFeatures = uf;
     defaultMethods = dm;
-    locking        = lck;
+    flags          = 0;
+    if (lck)    flags |= CLASS_LOCKING;
+    if (native) flags |= CLASS_NATIVE;
   }
 
-  Bool supportsLocking() { return locking; }
+  int supportsLocking() { return flags&CLASS_LOCKING; }
+  int isNative()        { return flags&CLASS_NATIVE; }
 
   OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
@@ -1624,7 +1630,7 @@ public:
     fastMethods    = fm;
     unfreeFeatures = uf;
     defaultMethods = dm;
-    locking        = l;
+    if (l) flags |= CLASS_LOCKING;
   }
 
   TaggedRef getArityList();
@@ -2005,6 +2011,9 @@ extern DbgInfo *allDbgInfos;
 // ---------------------------------------------
 
 
+#define PR_COPYONCE 0x1
+#define PR_NATIVE   0x2
+
 class PrTabEntry {
 private:
   TaggedRef printname;
@@ -2013,9 +2022,9 @@ private:
   TaggedRef fileName;
   int lineno;
   TaggedRef info;
+  int flags;
 
 public:
-  Bool copyOnce; // for functors
   PrTabEntry *next;
   unsigned int numClosures, numCalled, heapUsed, samples, lastHeap;
   static PrTabEntry *allPrTabEntries;
@@ -2029,8 +2038,8 @@ public:
   OZPRINT;
   NO_DEFAULT_CONSTRUCTORS(PrTabEntry);
   PrTabEntry (TaggedRef name, SRecordArity arityInit,
-	      TaggedRef file, int line, Bool co)
-  : printname(name), fileName(file), lineno(line)
+	      TaggedRef file, int line, int fl)
+  : printname(name), fileName(file), lineno(line), flags(fl)
   {
     Assert(oz_isLiteral(name));
     methodArity = arityInit;
@@ -2039,7 +2048,6 @@ public:
     PC = NOCODE;
     info = nil();
     numClosures = numCalled = heapUsed = samples = lastHeap = 0;
-    copyOnce = co;
     next = allPrTabEntries;     
     allPrTabEntries = this;
   }
@@ -2055,7 +2063,11 @@ public:
 
   void setInfo(TaggedRef t) { info = t; }
   TaggedRef getInfo()       { return info; }
-  
+
+  int getFlags()   { return flags; }
+  int isNative()   { return flags&PR_NATIVE; }
+  int isCopyOnce() { return flags&PR_COPYONCE; }
+
   void patchFileAndLine();
 
   void gcPrTabEntry();
