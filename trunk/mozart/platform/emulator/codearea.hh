@@ -70,7 +70,7 @@ class CodeAreaList {
 };
 
 #ifdef THREADED
-  typedef void* AdressOpcode;
+  typedef unsigned int32 AdressOpcode;
 #else
   typedef Opcode AdressOpcode; 
 #endif
