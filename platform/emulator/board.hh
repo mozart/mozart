@@ -16,6 +16,10 @@
 #pragma interface
 #endif
 
+#ifdef OUTLINE
+#define inline
+#endif
+
 struct Equation {
 friend class Script;
 private:
@@ -59,7 +63,7 @@ private:
 enum BoardFlags {
   Bo_Ask	= 0x0001,
   Bo_Wait	= 0x0002,
-  Bo_Solve      = 0x0004,
+  Bo_Solve	= 0x0004,
   Bo_Root	= 0x0008,
   Bo_Installed	= 0x0010,
   Bo_Nervous	= 0x0020,
@@ -68,7 +72,7 @@ enum BoardFlags {
   Bo_Failed	= 0x0100,
   Bo_Committed	= 0x0200,
   Bo_Waiting    = 0x0800,
-  Bo_Reflected  = 0x1000,	// for debugging of solve combinator;
+  Bo_Reflected 	= 0x1000,       // for debugging of solve combinator;
   Bo_NervousSolve= 0x2000
 };
 
@@ -135,7 +139,7 @@ public:
   Bool isReflected () { return ((flags & Bo_Reflected) ? OK : NO); }
   void newScript(int size);
   void setBody(ProgramCounter p,RefsArray y,
-		       RefsArray g,RefsArray x,int i);
+	       RefsArray g,RefsArray x,int i);
   void setInstalled() { flags |= Bo_Installed; }
   void setNervous() { flags |= Bo_Nervous; }
   void setFailed() { flags |= Bo_Failed; }
@@ -155,7 +159,9 @@ public:
   Bool isFailureInBody ();
 };
 
-#ifndef OUTLINE
+#ifdef OUTLINE
+#undef inline
+#else
 #include "actor.hh"
 #include "board.icc"
 #endif

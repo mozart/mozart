@@ -170,7 +170,7 @@ extern void OZ_free _PROTOTYPE((char *));
 extern void OZ_warning _PROTOTYPE((char * ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
-char *OZ_unixError _PROTOTYPE((int errno));
+char *OZ_unixError _PROTOTYPE((int err));
 
 /* check for toplevel */
 extern int OZ_onToplevel ();

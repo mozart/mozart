@@ -19,7 +19,6 @@
 #if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline
 #include "fdomn.icc"
-#undef inline
 #endif
 
 
