@@ -39,6 +39,7 @@ void OZ_Ct::operator delete(void * p, size_t s)
   freeListDispose(p, s);
 }
 
+#ifndef TMUELLER
 void * OZ_CtVar::operator new(size_t s)
 {
   return CpiHeap.alloc(s);
@@ -48,6 +49,7 @@ void OZ_CtVar::operator delete(void * p, size_t s)
 {
   // deliberately left empty
 }
+
 
 #ifdef __GNUC__
 void * OZ_CtVar::operator new[](size_t s)
@@ -59,6 +61,7 @@ void OZ_CtVar::operator delete[](void * p, size_t s)
 {
   // deliberately left empty
 }
+#endif
 #endif
 
 #ifdef TMUELLER
