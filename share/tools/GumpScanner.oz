@@ -2,8 +2,12 @@
 %%% Author:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
+%%% Contributor:
+%%%   Christian Schulte <schulte@dfki.de>
+%%%
 %%% Copyright:
-%%%   Leif Kornstaedt, 1998
+%%%   Leif Kornstaedt, 1997
+%%%   Christian Schulte, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -19,6 +23,25 @@
 %%% WARRANTIES.
 %%%
 
+\ifdef LILO
+
+functor $
+
+import
+   SP.{Foreign  = 'Foreign'
+       Finalize = 'Finalize'}
+
+export
+   'GumpScanner': GumpScanner
+
+body
+
+   \insert gump/GumpScannerClass
+
+end
+
+\else
+
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
    = IMPORT.'SP'
@@ -30,3 +53,5 @@ in
       \insert GumpScanner.env
    end
 end
+
+\endif
