@@ -40,6 +40,7 @@
 #undef NETBSD
 #undef FREEBSD
 #undef IRIX
+#undef OS2
 
 #undef I486
 #undef SPARC
