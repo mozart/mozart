@@ -161,6 +161,14 @@ extern int _FUNDECL(OZ_isString,(OZ_Term, OZ_Term *));
 extern int _FUNDECL(OZ_isProperString,(OZ_Term, OZ_Term *));
 extern int _FUNDECL(OZ_isVirtualString,(OZ_Term, OZ_Term *));
 
+/* heap chunks */
+
+extern OZ_Term   _FUNDECL(OZ_makeHeapChunk,(int s));
+extern void *    _FUNDECL(OZ_getHeapChunkData,(OZ_Term t));
+extern int       _FUNDECL(OZ_getHeapChunkSize,(OZ_Term t));
+extern int       _FUNDECL(OZ_isHeapChunk,(OZ_Term t));
+
+
 #define OZ_assertList(t)                        \
   {                                             \
     OZ_Term var;                                \
