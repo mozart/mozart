@@ -1264,28 +1264,45 @@ define
                       SEQ([a(name: Label PCDATA(N#'. '))
                            OzDocToHTML, Batch(M.1 1 $)]))
       end
-      meth Index(M Ands $) L in
-         case {CondSelect M id unit} of unit then
-            ToGenerate <- L|@ToGenerate
-         elseof X then HTML in
-            L = X
-            HTML = SEQ({List.foldRTail Ands
-                        fun {$ _#A|Ar In}
-                           A|case Ar of _|_ then PCDATA(', ')
-                             else EMPTY
-                             end|In
-                        end nil})
-            OzDocToHTML, ID(L @IdxNode HTML)
+      meth Index(M Ands $) SeeHTML in
+         if {SGML.isOfClass M tails} orelse {HasFeature M id} then L in
+            SeeHTML = SEQ({List.foldRTail Ands
+                           fun {$ A|Ar In}
+                              case A of _#X then X else A end|
+                              case Ar of _|_ then PCDATA(', ')
+                              else EMPTY
+                              end|In
+                           end nil})
+            case {CondSelect M id unit} of unit then
+               ToGenerate <- L|@ToGenerate
+            elseof X then
+               L = X
+               OzDocToHTML, ID(X @IdxNode SeeHTML)
+            end
+            if {SGML.isOfClass M tails} then
+               OzDocToHTML, IndexTails(Ands.2 [Ands.1] L SeeHTML)
+            end
          end
-         case {CondSelect M see unit} of unit then
+         case {CondSelect M see unit} of unit then L in
+            ToGenerate <- L|@ToGenerate
             {@MyIndexer enter(Ands a(href: @CurrentNode#"#"#L
                                      PCDATA('here')))}   %--**
+            a(name: L)
          elseof X then Node HTML in
             OzDocToHTML, ID(X ?Node ?HTML)
             {@MyIndexer enter(Ands SEQ([PCDATA('see ')
                                         a(href: Node#"#"#X HTML)]))}
+            EMPTY
          end
-         a(name: L)
+      end
+      meth IndexTails(Ands Prefix L HTML)
+         case Ands of A|Ar then
+            {@MyIndexer enter({Append Ands Prefix}
+                              SEQ([PCDATA('see ')
+                                   a(href: @IdxNode#"#"#L HTML)]))}
+            OzDocToHTML, IndexTails(Ar {Append Prefix [A]} L HTML)
+         [] nil then skip
+         end
       end
       meth FormatAuthors($)
          case @Authors of nil then ""
