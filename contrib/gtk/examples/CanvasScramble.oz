@@ -33,16 +33,8 @@ define
    Font = "-adobe-helvetica-bold-r-normal--24-240-75-75-p-138-iso8859-1"
 
    %% Setup the Colors
-   %% 1. Obtain the system colormap
-   %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors,
-   %5    non-writeable and with best-match
-   %% 4. Use colors black and white
-   Colormap = {New GDK.colormap getSystem}
-   Black    = {New GDK.color new(0 0 0)}
-   White    = {New GDK.color new(65535 65535 65535)}
-   {Colormap allocColor(Black 0 1 _)}
-   {Colormap allocColor(White 0 1 _)}
+   Black = {GDK.makeColor '#000000'}
+   White = {GDK.makeColor '#FFFFFF'}
 
    fun {IsEmpty ItemArr I}
       case {Dictionary.get ItemArr I}
@@ -96,13 +88,10 @@ define
          R      = ((4 - X) * 255) div 4
          G      = ((4 - Y) * 255) div 4
          B      = 128
-         Color  = {New GDK.color new(R G B)}
-         ColStr = {VirtualString.toString
+         ColStr = {VirtualString.toAtom
                    "#"#{MakeHex R}#{MakeHex G}#{MakeHex B}}
       in
-         {{New GDK.color noop} parse(ColStr Color _)}
-         {Colormap allocColor(Color 0 1 _)}
-         Color
+         {GDK.makeColor ColStr}
       end
       meth checkVictory(I $)
          if I < 15
@@ -303,11 +292,7 @@ define
          {Notebook appendPage(Scramble {New GTK.label new("Fifteen")})}
       end
       meth deleteEvent(Args)
-         %% CAUTION: At this time, the underlying objects has been destroyed.
-         %% CAUTION: This event is solely intended for oz side cleanup code.
-         %% CAUTION: If you want eager finalisation of object wrappers then
-         %% CAUTION: connect the delete event handler using a procedure
-         %% CAUTION: rather than a object method.
+         {self gtkClose}
          {Application.exit 0}
       end
    end

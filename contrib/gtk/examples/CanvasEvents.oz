@@ -113,11 +113,13 @@ define
       end
    end
    {RectItem signalConnect('event' ItemEvent _)}
+   %% Allow RectItem to receive key events
+   {RectItem grabFocus}
 
    %% Create a Polygon item(member of root group); ignore Item Object
-   PolyItemPars =["points"#[20#20 380#200 20#380]
-                  "fill_color_gdk"#Black
-                  "width_pixels"#2]
+   PolyItemPars =['points'#[20 20 380 200 20 380]
+                  'fill_color_gdk'#Black
+                  'width_pixels'#2]
    _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas lineGetType($)}
                          PolyItemPars $)}
 

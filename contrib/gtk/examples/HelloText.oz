@@ -35,16 +35,8 @@ define
    end
 
    %% Set up the Colors
-   %% 1. Obtain the system colormap
-   %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors,
-   %%    non-writeable and with best-match
-   %% 4. Use color black
-   Colormap = {New GDK.colormap getSystem}
-   Black    = {New GDK.color new(0 0 0)}
-   White    = {New GDK.color new(65535 65535 65535)}
-   {Colormap allocColor(Black 0 1 _)}
-   {Colormap allocColor(White 0 1 _)}
+   Black = {GDK.makeColor '#000000'}
+   White = {GDK.makeColor '#FFFFFF'}
 
    %% Create TextWidget class
    class MyText from GTK.text
