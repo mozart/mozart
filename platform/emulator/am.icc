@@ -238,7 +238,7 @@ Board *ConstTermWithHome::getBoard() {
 inline
 Board *Tertiary::getBoardInternal()
 {
-  return getTertType() == Te_Local ? (Board*)getPointer() : am.rootBoard;
+  return isLocal() ? (Board*)getPointer() : am.rootBoard;
 }
 
 inline
