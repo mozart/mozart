@@ -159,7 +159,7 @@ the output is a mathematical function of the input arguments.
 <ITEM>I tend to use procedures in most of the other cases,
 i.e. multiple outputs or nonfunctional definition due to stateful data
 types or nondeterministic definitions<NOTE FOOT>In fact, in those
-cases the use of the object-oriented style of Oz is most appropriate/NOTE>.
+cases the use of the object-oriented style of Oz is most appropriate</NOTE>.
 
 <ITEM>One may relax the previous rule and use functions when there is
 a clear direction of information-flow although the definition is not
