@@ -484,13 +484,12 @@ in
       end
       
       meth close
-	 UrObject,close
 	 {self.explorer ManagerClosed}
 	 case @root of false then skip elseof Root then
 	    {Root close}
 	 end
-	 Manager,clearDialogs
-	 ToplevelManager,close
+	 Manager,         clearDialogs
+	 ToplevelManager, close
       end
 
    end
