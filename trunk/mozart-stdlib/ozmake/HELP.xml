@@ -341,17 +341,17 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
   <option>
     <opt>--includedir DIR</opt>
     <opt>-I DIR</opt>
-    <item>tell the C++ compiler to additionally search
-    <file>DIR</file> for include files</item>
   </option>
+  <item>tell the C++ compiler to additionally search
+  <file>DIR</file> for include files</item>
 </optentry>
 <optentry>
   <option>
     <opt>--librarydir DIR</opt>
     <opt>-L DIR</opt>
-    <item>tell the C++ linker to additionally search
-    <file>DIR</file> for libraries</item>
   </option>
+  <item>tell the C++ linker to additionally search
+  <file>DIR</file> for libraries</item>
 </optentry>
 </optlist>
 
@@ -790,13 +790,13 @@ compiler), <tool>ld</tool> (C++ linker).  The default rules are:</p>
         <dentry>
           <dleft><oz>include(DIR)</oz></dleft>
           <dright>Similar to the usual C++ compiler option
-          <code>-IDIR</code>. <oz>DIR</oz> is a virtual
+          <oz>-IDIR</oz>. <oz>DIR</oz> is a virtual
           string</dright>
         </dentry>
         <dentry>
           <dleft><oz>'define'(MAC)</oz></dleft>
           <dright>Similar to the usual C++ compiler option
-          <code>-DMAC</code>. <oz>MAC</oz> is a virtual
+          <oz>-DMAC</oz>. <oz>MAC</oz> is a virtual
           string</dright>
         </dentry>
       </dlist>
@@ -809,7 +809,7 @@ compiler), <tool>ld</tool> (C++ linker).  The default rules are:</p>
         <dentry>
           <dleft><oz>library(DIR)</oz></dleft>
           <dright>Similar to the usual C++ linker option
-          <code>-lDIR</code>. <oz>DIR</oz> is a virtual
+          <oz>-lDIR</oz>. <oz>DIR</oz> is a virtual
           string</dright>
         </dentry>
       </dlist>
