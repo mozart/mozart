@@ -4,7 +4,7 @@ EMACS = emacs
 
 FUNCTORS = \
 	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf \
-	OzDocToHTML.ozf OzDocToLaTeX.ozf
+	OzDocToHTML.ozf
 SYSLET = ozdoc
 ELCS = ozdoc.elc
 
