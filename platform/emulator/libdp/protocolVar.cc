@@ -41,18 +41,20 @@ OZ_Return sendRedirectToProxies(OldPerdioVar *pv, OZ_Term val,
 {
   ProxyList *pl = pv->getProxies();
   OwnerEntry *oe = OT->getOwner(OTI);
-  do {
-    DSite* sd = pl->sd;
-    if (sd==ackSite) {
-      sendAcknowledge(sd,OTI);
-    } else {
-      OZ_Return ret = sendRedirect(sd,OTI,val);
-      if (ret != PROCEED) return ret;
-    }
-    ProxyList *tmp = pl->next;
-    pl->dispose();
-    pl = tmp;
-  } while (pl);
+  if (pl) { // perdio vars are not yet localized again
+    do {
+      DSite* sd = pl->sd;
+      if (sd==ackSite) {
+	sendAcknowledge(sd,OTI);
+      } else {
+	OZ_Return ret = sendRedirect(sd,OTI,val);
+	if (ret != PROCEED) return ret;
+      }
+      ProxyList *tmp = pl->next;
+      pl->dispose();
+      pl = tmp;
+    } while (pl);
+  }
   return PROCEED;
 }
 
