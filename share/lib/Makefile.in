@@ -226,7 +226,6 @@ Open.ozf: op/HtmlTable.oz
 Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
 TkTools.ozf: DefaultURL.ozf
 
-# gtk dependencies
 # gtk dependencies and rules
 GTKSPECS   = $(VPATH)/gtk/gtk/*.spec
 GDKSPECS   = $(VPATH)/gtk/gdk/*.spec
