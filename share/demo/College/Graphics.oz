@@ -53,52 +53,51 @@ define
    proc {GetEarliest Until Ind Lecture Canvas Day NewUntil}
       if Ind > RoomLimit then
 	 fail
-      else if Until.Ind =< Lecture.start then
-	      {Canvas
-	       tk(crea rectangle
-		  ((Lecture.start-1) mod 36)*Quarter+Roff
-		  (Day-1)*DayHeight+HeightLecture*(Ind-1)+TimeLineY
-		  (((Lecture.start-1) mod 36)+(Lecture.dur))*Quarter+Roff
-		  (Day-1)*DayHeight+HeightLecture*(Ind)+TimeLineY
-		  fill:Colors.{String.toAtom
-			       [{Atom.toString Lecture.name}.1]})}
-	      case Lecture.size of big
-	      then {Canvas tk(crea line
-			      (((Lecture.start-1) mod 36)+
-			       (Lecture.dur))*Quarter+RoomMarkOffset*2+Roff
-			      (Day-1)*DayHeight+HeightLecture*(Ind-1)+
-			      TimeLineY
-			      (((Lecture.start-1) mod 36)+
-			       (Lecture.dur))*Quarter+RoomMarkOffset*2+Roff
-			      (Day-1)*DayHeight+HeightLecture*(Ind)+
-			      TimeLineY)}
-	      else skip
-	      end
-	      if  Lecture.size==big orelse Lecture.size==small then 
-		 {Canvas tk(crea line
-			    (((Lecture.start-1) mod 36)+
-			     (Lecture.dur))*Quarter+RoomMarkOffset+Roff
-			    (Day-1)*DayHeight+HeightLecture*(Ind-1)+
-			    TimeLineY
-			    (((Lecture.start-1) mod 36)+
-			     (Lecture.dur))*Quarter+RoomMarkOffset+Roff
-			    (Day-1)*DayHeight+HeightLecture*(Ind)+
-			    TimeLineY) }
-	      else skip
-	      end
-	      {Canvas
-	       tk(crea text
-		  ((Lecture.start-1) mod 36)*Quarter+XOff+Roff
-		  (Day-1)*DayHeight+HeightLecture*(Ind-1)+YOff+TimeLineY
-		  text : Lecture.name
-		  anchor:w
-		  font:Font)}
-	      NewUntil = {AdjoinAt Until Ind Lecture.start+Lecture.dur}
+      elseif Until.Ind =< Lecture.start then
+	 {Canvas
+	  tk(crea rectangle
+	     ((Lecture.start-1) mod 36)*Quarter+Roff
+	     (Day-1)*DayHeight+HeightLecture*(Ind-1)+TimeLineY
+	     (((Lecture.start-1) mod 36)+(Lecture.dur))*Quarter+Roff
+	     (Day-1)*DayHeight+HeightLecture*(Ind)+TimeLineY
+	     fill:Colors.{String.toAtom
+			  [{Atom.toString Lecture.name}.1]})}
+	 case Lecture.size of big
+	 then {Canvas tk(crea line
+			 (((Lecture.start-1) mod 36)+
+			  (Lecture.dur))*Quarter+RoomMarkOffset*2+Roff
+			 (Day-1)*DayHeight+HeightLecture*(Ind-1)+
+			 TimeLineY
+			 (((Lecture.start-1) mod 36)+
+			  (Lecture.dur))*Quarter+RoomMarkOffset*2+Roff
+			 (Day-1)*DayHeight+HeightLecture*(Ind)+
+			 TimeLineY)}
+	 else skip
+	 end
+	 if  Lecture.size==big orelse Lecture.size==small then 
+	    {Canvas tk(crea line
+		       (((Lecture.start-1) mod 36)+
+			(Lecture.dur))*Quarter+RoomMarkOffset+Roff
+		       (Day-1)*DayHeight+HeightLecture*(Ind-1)+
+		       TimeLineY
+		       (((Lecture.start-1) mod 36)+
+			(Lecture.dur))*Quarter+RoomMarkOffset+Roff
+		       (Day-1)*DayHeight+HeightLecture*(Ind)+
+		       TimeLineY) }
+	 else skip
+	 end
+	 {Canvas
+	  tk(crea text
+	     ((Lecture.start-1) mod 36)*Quarter+XOff+Roff
+	     (Day-1)*DayHeight+HeightLecture*(Ind-1)+YOff+TimeLineY
+	     text : Lecture.name
+	     anchor:w
+	     font:Font)}
+	 NewUntil = {AdjoinAt Until Ind Lecture.start+Lecture.dur}
 	   else {GetEarliest Until Ind+1 Lecture Canvas Day NewUntil}
-	   end
       end
    end
-
+   
    proc {DoDisplay SortedLectures Day Canvas Until}
       case SortedLectures of nil then skip
       [] L|Lr then
@@ -118,12 +117,12 @@ define
       W = {New Tk.toplevel tkInit(parent:Parent background:CanvasColor)} 
       {Tk.send wm(title W
 		  " Katholische Hochschule fuer Soziale Arbeit -- Wintersemester 1995/96 ")}
-      Canvas = {New Tk.canvas tkInit(parent:W %background:CanvasColor
-				     width:CanvasWidth
-				     height:CanvasHeight)}
-      WeekDays = {New Tk.canvas tkInit(parent:W %background:CanvasColor
-				       width:WeekDaysWidth
-				       height:CanvasHeight)}
+      Canvas = {New Tk.canvas tkInit(parent: W 
+				     width:  CanvasWidth
+				     height: CanvasHeight)}
+      WeekDays = {New Tk.canvas tkInit(parent: W
+				       width:  WeekDaysWidth
+				       height: CanvasHeight)}
 
       {List.forAllInd ['Monday' 'Tuesday' 'Wednesday' 'Thursday' 'Friday']
        proc {$ Ind Day}

@@ -32,11 +32,15 @@
 
 functor
 
+export
+
+   ControllerLabel
+   
 import
 
    Controller(controller: TheController)
    
 define
 
-   {TheController}
+   ControllerLabel = {TheController}
 end
