@@ -350,16 +350,19 @@ Compiler buffer")
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\\ "." table)
-    (modify-syntax-entry ?/ "." table)
-    (modify-syntax-entry ?* "." table)
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
     (modify-syntax-entry ?= "." table)
-    (modify-syntax-entry ?% "<" table)
     (modify-syntax-entry ?< "." table)
     (modify-syntax-entry ?> "." table)
-    (modify-syntax-entry ?\' "\"" table)
-    (setq oz-mode-syntax-table table)))
+;    (modify-syntax-entry ?\' "\"" table)
+    (modify-syntax-entry ?\n ">   " table)
+    (modify-syntax-entry ?\f ">   " table)
+    (modify-syntax-entry ?\% "<   " table)
+    (modify-syntax-entry ?/ ". 14" table)
+    (modify-syntax-entry ?* ". 23" table)
+    (setq oz-mode-syntax-table table)
+    (set-syntax-table oz-mode-syntax-table)))
 
 (define-abbrev-table 'oz-mode-abbrev-table ())
 
@@ -378,8 +381,8 @@ Compiler buffer")
   (setq comment-start "%")
   (make-local-variable 'comment-start-skip)
   (setq comment-start-skip "%+ *")
-  (make-local-variable 'after-change-function)
-  (setq after-change-function 'oz-after-change-function)
+;  (make-local-variable 'after-change-function)
+;  (setq after-change-function 'oz-after-change-function)
 ;  (make-local-variable 'comment-column)
 ;  (setq comment-column 48)
 ;  (make-local-variable 'comment-indent-hook)
@@ -441,6 +444,21 @@ if that value is non-nil."
   (oz-mode-variables)
   (if oz-lucid
    (set-buffer-menubar (append current-menubar oz-menubar)))
+
+  ; font lock stuff
+  (make-local-variable 'comment-start)
+  (make-local-variable 'comment-end)
+  (setq comment-start "%")
+  (setq comment-start "/* ")
+; (setq comment-end "")
+  (setq comment-end " */")
+  (make-local-variable 'comment-start-skip)
+  (setq comment-start-skip "/\\*+ *\\|% *")
+
+  (setq font-lock-keywords (list oz-keywords))
+
+  (font-lock-mode t)
+  (font-lock-fontify-buffer)
   (run-hooks 'oz-mode-hook))
 
 ;;------------------------------------------------------------
@@ -957,46 +975,7 @@ the GDB commands `cd DIR' and `directory'."
 ;; Fontification
 ;;------------------------------------------------------------
 
-(defun oz-change-match-face (face beg end)
-  (if oz-gnu19 (overlay-put (make-extent beg end) 'face face))
-  (if oz-lucid (set-extent-face (make-extent beg end) face))
-  )
-
-(if oz-gnu19
-    (progn
-
-;; stolen from "cl-extra.el": map-overlays
-      (defun map-extents (cl-func &optional cl-buffer cl-start cl-end cl-arg)
-	(or cl-buffer (setq cl-buffer (current-buffer)))
-	;; This alternate algorithm fails to find zero-length overlays.
-	(let ((cl-mark (save-excursion (set-buffer cl-buffer)
-				       (copy-marker (or cl-start (point-min)))))
-	      (cl-mark2 (and cl-end (save-excursion (set-buffer cl-buffer)
-						    (copy-marker cl-end))))
-	      cl-pos cl-ovl)
-	  (while (save-excursion
-		   (and (setq cl-pos (marker-position cl-mark))
-			(< cl-pos (or cl-mark2 (point-max)))
-			(progn
-			  (set-buffer cl-buffer)
-			  (setq cl-ovl (overlays-at cl-pos))
-			  (set-marker cl-mark (next-overlay-change cl-pos)))))
-	    (while (and cl-ovl
-			(or (/= (overlay-start (car cl-ovl)) cl-pos)
-			    (not (and (funcall cl-func (car cl-ovl) cl-arg)
-				      (set-marker cl-mark nil)))))
-	      (setq cl-ovl (cdr cl-ovl))))
-	  (set-marker cl-mark nil) (if cl-mark2 (set-marker cl-mark2 nil))))
-      ))
-
-
-(defun oz-delete-extents (from to)
-  (if (< from to)
-      (map-extents '(lambda(ext unused)
-		      (delete-extent ext))
-		   nil from to)))
-
-(defconst ozKeywords
+(defconst oz-keywords
    (concat
     (oz-make-keywords-for-match
      '(
@@ -1012,66 +991,14 @@ the GDB commands `cd DIR' and `directory'."
     ))
 
 
-(defun oz-fontify-keywords(beg end)
-  (save-excursion
-    (goto-char beg)
-    (while (re-search-forward ozKeywords end t)
-      (oz-change-match-face 'oz-bold (match-beginning 0) (match-end 0)))))
-
-(defun oz-fontify-comments(beg end)
-  (save-excursion
-    (goto-char beg)
-    (while  (condition-case () (re-search-forward "%\\|/\\*" end t) (error nil))
-      (let ((beg (match-beginning 0))
-	    (end))
-	(if (= (preceding-char) 37)   ; == "%" ?
-	    (re-search-forward "$")
-	  (re-search-forward "\\*/" end t))
-	(setq end (or (match-end 0) end))
-      ;; delete extents within comment
-	(oz-delete-extents beg end)
-	(oz-change-match-face 'oz-italic beg end)))))
-
-
-
 (defun oz-fontify-buffer()
   (interactive)
-  (oz-fontify-region (point-min) (point-max) t))
+  (font-lock-fontify-buffer))
 
 
-(defun oz-after-change-function(beg end len)
-  (interactive)
-  (save-match-data
-    (oz-fontify-line)))
+(defun oz-fontify-region(beg end)
+  (font-lock-fontify-region beg end))
 
-
-(defun oz-fontify-line()
-  (interactive)
-  (save-excursion
-    (beginning-of-line)
-    (let ((start (point)))
-      (end-of-line)
-      (oz-fontify-region start (point)))))
-
-
-(defun oz-fontify-region(beg end &optional verbose)
-  (if (null beg) (setq beg (mark)))
-  (if (null end) (setq beg (point)))
-  (if (equal mode-name "Oz")
-      (let ((old-case case-fold-search))
-	;; search case dependent:
-	(setq case-fold-search nil)
-	(unwind-protect
-	    (save-excursion
-	      (if verbose (message "fontifying... (cleaning)"))
-	      (oz-delete-extents beg end)
-	      (if verbose (message "fontifying... (keywords)"))
-	      (oz-fontify-keywords beg end)
-	      (if verbose (message "fontifying... (comments)"))
-	      (oz-fontify-comments beg end))
-	  (setq case-fold-search old-case))
-	(message ""))))
-   
 
 (defun oz-fontify(&optional arg)
   (interactive "P")
@@ -1079,8 +1006,6 @@ the GDB commands `cd DIR' and `directory'."
   (recenter arg)
   (oz-fontify-buffer))
 
-
-(add-hook 'find-file-hooks 'oz-fontify-buffer)
 
 ;;------------------------------------------------------------
 ;; Filtering process output
