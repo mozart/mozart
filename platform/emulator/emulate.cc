@@ -9,6 +9,9 @@
 
   Changes:
   $Log$
+  Revision 1.340  1996/07/04 12:05:21  mehl
+  testing Log
+
   Revision 1.339  1996/07/04 12:04:50  mehl
   testing Log
 
@@ -28,7 +31,6 @@
 #include "genvar.hh"
 #include "dictionary.hh"
 #include "fdhook.hh"
-
 
 /*
  * Object stuff
