@@ -263,9 +263,11 @@ public:
   void pushSolve();
   void pushLocal();
 
+ private:
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term, Bool prop);
-  void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop);
+ public:
+
   void checkSuspensionList(TaggedRef taggedvar,
                            PropCaller calledBy = pc_propagator);
   Bool hasOFSSuspension(SuspList *suspList);
