@@ -21,6 +21,7 @@
 
 functor prop once
 import
+   Property(get)
    Open(pipe text file)
    OS(tmpnam unlink)
    ErrorRegistry(put)
@@ -142,7 +143,8 @@ body
          File <- FileVS
          ErrFile <- {OS.tmpnam}
          Pipe <- {New TextPipe init(cmd: 'nsgmls'
-                                    args: ['-ccatalog' &-|&f|@ErrFile
+                                    args: ['-c'#{Property.get 'oz.home'}#
+                                           '/share/doc/catalog' &-|&f|@ErrFile
                                            FileVS])}
          Attributes <- nil
          Children <- nil
