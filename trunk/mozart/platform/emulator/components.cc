@@ -77,7 +77,7 @@ class ByteSource {
 public:
   virtual OZ_Return maybeSkipHeader();
   virtual OZ_Return getBytes(BYTE*,int&,int&);
-  virtual OZ_Return getTerm(OZ_Term,OZ_Term);
+  virtual OZ_Return getTerm(OZ_Term);
   virtual OZ_Return makeByteStream(ByteStream*&);
   virtual char*     emptyMsg();
 };
@@ -116,7 +116,7 @@ public:
 
 class ByteSink {
 public:
-  virtual OZ_Return putTerm(OZ_Term,OZ_Term,OZ_Term,OZ_Term,OZ_Term);
+  virtual OZ_Return putTerm(OZ_Term,OZ_Term);
   virtual OZ_Return putBytes(BYTE*,int);
   virtual OZ_Return allocateBytes(int);
   virtual OZ_Return maybeSaveHeader(ByteStream*);
@@ -181,14 +181,10 @@ ByteSink::allocateBytes(int n)
 }
 
 OZ_Return
-ByteSink::putTerm(OZ_Term in,
-		  OZ_Term url,
-		  OZ_Term dosave,
-		  OZ_Term urls,
-		  OZ_Term resources)
+ByteSink::putTerm(OZ_Term in, OZ_Term resources)
 {
   ByteStream* bs=bufferManager->getByteStream();
-  MarshalInfo mi(dosave,urls,url);
+  MarshalInfo mi;
   bs->setMarshalInfo(&mi);
   marshal_M_FILE(bs,PERDIOVERSION,in);
   bs->beginWrite();
@@ -210,9 +206,6 @@ ByteSink::putTerm(OZ_Term in,
   }
   bs->writeCheck();
   bufferManager->freeByteStream(bs);
-
-  if (!literalEq(deref(urls),NameUnit) && !OZ_unify(urls,mi.urlsFound))
-    return FAILED;
 
   return OZ_unify(resources,mi.resources) ? PROCEED : FAILED;
 }
@@ -294,21 +287,17 @@ ByteSinkDatum::maybeSaveHeader(ByteStream*)
   return PROCEED;
 }
 
-OZ_Return saveFile(OZ_Term in,char *filename,OZ_Term url, 
-		   OZ_Term dosave, OZ_Term urls,
-		   OZ_Term resources)
+OZ_Return saveFile(OZ_Term in,char *filename,OZ_Term resources)
 {
   ByteSinkFile sink(filename);
-  return sink.putTerm(in,url,dosave,urls,resources);
+  return sink.putTerm(in,resources);
 }
 
 OZ_Return
-saveDatum(OZ_Term in,OZ_Datum& dat,OZ_Term url, 
-	  OZ_Term dosave, OZ_Term urls,
-	  OZ_Term resources)
+saveDatum(OZ_Term in,OZ_Datum& dat,OZ_Term resources)
 {
   ByteSinkDatum sink;
-  OZ_Return result = sink.putTerm(in,url,dosave,urls,resources);
+  OZ_Return result = sink.putTerm(in,resources);
   if (result==PROCEED) dat=sink.dat;
   else {
     if (sink.dat.data!=0) free(sink.dat.data);
@@ -316,35 +305,24 @@ saveDatum(OZ_Term in,OZ_Datum& dat,OZ_Term url,
   return result;
 }
 
-OZ_C_proc_begin(BIsmartSave,6)
+OZ_C_proc_begin(BIsmartSave,3)
 {
   if(!perdioInit()) return FAILED;
+
   OZ_declareArg(0,in);
-  OZ_declareNonvarArg(2,urlSave); urlSave = deref(urlSave);
-  OZ_declareNonvarArg(3,dosave);
-  OZ_declareArg(4,urls);
-  OZ_declareArg(5,resources);
-
-  OZ_Term url;
-  if (literalEq(urlSave,NameUnit)) {
-    url = urlSave;
-  } else {
-    OZ_declareVirtualStringArg(2,urlSaveAux);
-    url=OZ_atom(urlSaveAux);
-  }
-
+  OZ_declareArg(2,resources);
   OZ_declareVirtualStringArg(1,filename);
 
-  return saveFile(in,filename,url,dosave,urls,resources);
+  return saveFile(in,filename,resources);
 }
 OZ_C_proc_end
 
-int loadURL(TaggedRef url, OZ_Term out, OZ_Term triggerVar, Thread *th)
+int loadURL(TaggedRef url, OZ_Term out, Thread *th)
 {
   Literal *lit = tagged2Literal(url);
   Assert(lit->isAtom());
   const char *s=lit->getPrintName();
-  return loadURL(s,out,triggerVar,th);
+  return loadURL(s,out,th);
 }
 
 
@@ -374,7 +352,7 @@ ByteSource::emptyMsg()
 }
 
 OZ_Return
-ByteSource::getTerm(OZ_Term out,OZ_Term triggerVar)
+ByteSource::getTerm(OZ_Term out)
 {
   OZ_Return result = maybeSkipHeader();
   if (result!=PROCEED) return result;
@@ -394,10 +372,6 @@ ByteSource::getTerm(OZ_Term out,OZ_Term triggerVar)
     stream->afterInterpret();    
     bufferManager->freeByteStream(stream);
     delete versiongot;    
-    if (triggerVar && OZ_isVariable(triggerVar)) {
-      return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
-		      oz_atom("novaluefound"),triggerVar);
-    }
     return oz_unify(val,out);}    
       
   bufferManager->dumpByteStream(stream);
@@ -485,19 +459,19 @@ ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
   return PROCEED;
 }
 
-OZ_Return loadDatum(OZ_Datum dat,OZ_Term out,OZ_Term triggerVar)
+OZ_Return loadDatum(OZ_Datum dat,OZ_Term out)
 {
   ByteSourceDatum src(dat,TRUE);
-  return src.getTerm(out,triggerVar);
+  return src.getTerm(out);
 }
 
-OZ_Return loadFD(int fd, OZ_Term out,OZ_Term triggerVar)
+OZ_Return loadFD(int fd, OZ_Term out)
 {
   ByteSourceFD src(fd,TRUE);
-  return src.getTerm(out,triggerVar);
+  return src.getTerm(out);
 }
 
-OZ_Return loadFile(char *filename,OZ_Term out,OZ_Term triggerVar)
+OZ_Return loadFile(char *filename,OZ_Term out)
 {
   int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
   if (fd < 0) {
@@ -506,7 +480,7 @@ OZ_Return loadFile(char *filename,OZ_Term out,OZ_Term triggerVar)
 		    oz_atom(OZ_unixError(errno)),
 		    oz_atom(filename));
   }
-  return loadFD(fd,out,triggerVar);
+  return loadFD(fd,out);
 }
 
 
@@ -524,10 +498,10 @@ public:
   int pid;
   char *file;
   char *url;
-  TaggedRef thread, out,trigger;
+  TaggedRef thread, out;
   Bool load;
 
-  PipeInfo(int f, int p, char *tmpf, char *u, TaggedRef o, Thread *t, TaggedRef var, Bool ld):
+  PipeInfo(int f, int p, char *tmpf, char *u, TaggedRef o, Thread *t, Bool ld):
     fd(f), pid(p), file(tmpf), out(o), load(ld)
   {
     Assert(t);
@@ -535,12 +509,9 @@ public:
     url = ozstrdup(u);
     OZ_protect(&thread); 
     OZ_protect(&out); 
-    trigger=var;
-    OZ_protect(&trigger); 
   }
   ~PipeInfo() { 
     OZ_unprotect(&thread); 
-    OZ_unprotect(&trigger); 
     OZ_unprotect(&out); 
     delete url;
   }
@@ -590,7 +561,7 @@ int pipeHandler(int, PipeInfo *pi)
       }
       
       other = oz_newVariable();
-      OZ_Return aux = loadFD(fd,other,pi->trigger);
+      OZ_Return aux = loadFD(fd,other);
       if (aux==RAISE) {
 	threadRaise(th, am.getExceptionValue());
 	goto exit;
@@ -640,7 +611,7 @@ unsigned __stdcall fetchThread(void *p)
 
 
 
-void getURL(char *url, TaggedRef out, TaggedRef trigger,Bool load, Thread *th)
+void getURL(char *url, TaggedRef out, Bool load, Thread *th)
 {
   char *tmpfile = newTempFile();
 
@@ -691,7 +662,7 @@ void getURL(char *url, TaggedRef out, TaggedRef trigger,Bool load, Thread *th)
   int rfd = fds[0];
 #endif
 
-  PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,th,trigger,load);
+  PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,th,load);
   oz_suspendOnNet(th);
   OZ_registerReadHandler(rfd,pipeHandler,pi);
 }
@@ -734,7 +705,7 @@ init_cache_path()
   OZ_Cache_Path = OZ_mkTuple(OZ_atom("cache"),1,OZ_atom(buffer));
 }
     
-int loadURL(const char *url0, OZ_Term out, OZ_Term triggerVar, Thread *th)
+int loadURL(const char *url0, OZ_Term out, Thread *th)
 {
   if (ozconf.showLoad)
     message("Loading %s\n",url0);
@@ -753,9 +724,8 @@ int loadURL(const char *url0, OZ_Term out, OZ_Term triggerVar, Thread *th)
   // record the original symbolic dependency.  Only url is
   // translated to obtain the actual location.
 
-  currentURL=oz_atom(url);
   if (url_map!=0) {
-    OZ_Term oldURL=currentURL;
+    OZ_Term oldURL=oz_atom(url);
     OZ_Term newURL;
     int notTooMany = 100;
     while ((newURL=OZ_subtree(url_map,oldURL))) {
@@ -772,8 +742,7 @@ int loadURL(const char *url0, OZ_Term out, OZ_Term triggerVar, Thread *th)
   }
 
   if (strchr(url,':')==NULL) { // no prefix --> local file name
-    //currentURL = oz_atom(url);
-    return loadFile(url,out,triggerVar);
+    return loadFile(url,out);
   }
 
   // check local caches
@@ -793,7 +762,7 @@ int loadURL(const char *url0, OZ_Term out, OZ_Term triggerVar, Thread *th)
     if (find_file(OZ_Cache_Path,buffer,path)==0) {
       if (ozconf.showCacheLoad)
 	message("Loading %s\n*** from cache %s\n",url,path);
-      return loadFile(path,out,triggerVar);
+      return loadFile(path,out);
     }
   fall_through:;
   }
@@ -804,14 +773,13 @@ int loadURL(const char *url0, OZ_Term out, OZ_Term triggerVar, Thread *th)
       const char *prefix = "file:";
       if (strncmp(url,prefix,strlen(prefix))!=0) goto bomb;
 
-      //currentURL = oz_atom(url);
       char *filename = url+strlen(prefix);
-      return loadFile(filename,out,triggerVar);
+      return loadFile(filename,out);
     }
   }
 
 bomb:
-  getURL(url,out,triggerVar,OK,th);
+  getURL(url,out,OK,th);
   return BI_PREEMPT;
 }
 
@@ -822,7 +790,7 @@ OZ_C_proc_begin(BIload,2)
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
 
-  return loadURL(url,out,makeTaggedNULL(),am.currentThread());
+  return loadURL(url,out,am.currentThread());
 }
 OZ_C_proc_end
 
@@ -833,7 +801,7 @@ OZ_C_proc_begin(BIWget,2)
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
 
-  getURL(url,out,NO,makeTaggedNULL(), am.currentThread());
+  getURL(url,out,NO,am.currentThread());
 
   return BI_PREEMPT;
 }
@@ -842,20 +810,20 @@ OZ_C_proc_end
 
 OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)
 {
-  return saveDatum(t,*d,OZ_unit(),OZ_nil(),OZ_unit(),OZ_nil());
+  return saveDatum(t,*d,OZ_nil());
 }
 
 
 OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 {
-  return loadDatum(d,t,0);
+  return loadDatum(d,t);
 }
 
 
 
 
 BIspec componentsSpec[] = {
-  {"smartSave",    6, BIsmartSave, 0},
+  {"smartSave",    3, BIsmartSave, 0},
   {"load",         2, BIload, 0},
 
   {"getCachePath",1,BIgetCachePath,0},
