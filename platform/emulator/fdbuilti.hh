@@ -1010,6 +1010,9 @@ public:
 
 //-----------------------------------------------------------------------------
 
+OZ_Bool checkDomDescr(TaggedRef descr,
+		      OZ_CFun cfun, OZ_Term * args, int arity,
+		      int expect = 3);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdbuilti.icc"
