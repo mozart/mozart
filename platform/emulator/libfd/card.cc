@@ -133,7 +133,7 @@ OZ_Return LinEqBPropagator::run(void)
   int dom_size = 0, i;
 
   for (i = sz; i--; ) {
-    x[i].readLocal(reg_x[i]);
+    x[i].readEncap(reg_x[i]);
     dom_size += x[i]->getSize();
     flag_txl[i] = flag_txu[i] = OZ_TRUE;
   }
@@ -218,7 +218,7 @@ OZ_Return LinLessEqBPropagator::run(void)
   int i;
 
   for (i = sz; i--; ) {
-    x[i].readLocal(reg_x[i]);
+    x[i].readEncap(reg_x[i]);
     flag_txl[i] = flag_txu[i] = OZ_TRUE;
   }
 
@@ -271,7 +271,7 @@ OZ_Return LinNotEqBPropagator::run(void)
   int dom_size = 0, i;
 
   for (i = sz; i--; ) {
-    x[i].readLocal(reg_x[i]);
+    x[i].readEncap(reg_x[i]);
     dom_size += x[i]->getSize();
     flag_txl[i] = flag_txu[i] = OZ_TRUE;
   }
