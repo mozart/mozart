@@ -6,8 +6,20 @@
 ###
 ###	bidecl.perl -ctable
 ###		generates the table of builtins for the emulator
+###	bidecl.perl -cdecl
+###		generates the extern declarations for the above table
 ###	bidecl.perl -oztable
 ###		generates the table of builtins for the Oz compiler
+###
+### ADDITIONAL OPTIONS
+###
+###	-include M1,M2,...,Mn
+###	-exclude M1,M2,...,Mn
+###
+###		include (resp. exclude) only these modules. by default
+###	all modules are included.  Only one of these options may be
+###	present (actually there can be several of them as long as they
+###	are all -include or all -exclude.  Their arguments are unioned).
 ###
 ### Each entry has the form: 'NAME' => { ... }, where 'NAME' is the
 ### string by which the builtin is known to the emulator.  The associative
@@ -66,6 +78,7 @@
 ###
 ### COMPLEX   ::= [SIMPLE]		(list of SIMPLE)
 ###		| [SIMPLE#SIMPLE]	(list of pairs of SIMPLE)
+###		|  SIMPLE#SIMPLE	(pair or SIMPLE)
 ###
 ### determinacy annotations for subtypes of complex types are not yet
 ### supported.
@@ -90,11 +103,19 @@
 ###
 ### ifdef => MACRO, indicates that the entry for this builtin in the
 ### emulator's table should be bracketed by #ifdef MACRO ... #endif.
+### Actually MACRO can be of the form M1,M2,...,Mn in which case there
+### will be n bracketing, one for each macro M1 to Mn.
+###
+### ifndef => M1,...,Mn is similar for #ifndef ... #endif.  both ifdef
+### and ifndef may be present.
 ###
 ### doesNotReturn => 1, indicates that the builtin does not return and
 ### therefore that the code following it will never be executed.  For
 ### example 'raise'.
 ###
+### module => M, indicates that the builtin belongs to module M.  This
+### permits selective inclusion or exclusion through command line options
+### -include or -exclude.
 
 $builtins = {
     '/'		=> { in  => ['+float','+float'],
@@ -1020,7 +1041,7 @@ $builtins = {
 			     BI  => BIfindFunction},
 
     'dlLoad'		=> { in  => ['+virtualString'],
-			     out => ['+foreignPointer','+record'],
+			     out => ['+foreignPointer#record'],
 			     BI  => BIdlLoad},
 
     # miscellaneous system things
@@ -1688,7 +1709,7 @@ $builtins = {
 
     'storeCache'	=> { in  => ['+int','+value'],
 			     out => [],
-			     BI  => BIstoreCache}
+			     BI  => BIstoreCache},
 
     #-----------------------------------------------------------------
     # FD
@@ -2162,323 +2183,467 @@ $builtins = {
 ###			     out => [],
 ###			     bi  => BIfdDistribute},
 
-};
+    #-----------------------------------------------------------------
+    # METAVAR
+    #-----------------------------------------------------------------
 
-### USED THIS TO VERIFY THAT I WAS PRODUCING THE SAME TABLE AS WAS
-### ORIGINALLY IN BUILTINS.CC
-### @foo = (
-### "/",
-### "*",
-### "div",
-### "mod",
-### "-",
-### "+",
-### "Max",
-### "Min",
-### "<",
-### "=<",
-### ">",
-### ">=",
-### "=<Rel",
-### "<Rel",
-### ">=Rel",
-### ">Rel",
-### "~",
-### "+1",
-### "-1",
-### "Exp",
-### "Log",
-### "Sqrt",
-### "Sin",
-### "Asin",
-### "Cos",
-### "Acos",
-### "Tan",
-### "Atan",
-### "Ceil",
-### "Floor",
-### "Abs",
-### "Round",
-### "Atan2",
-### "fPow",
-### "IntToFloat",
-### "FloatToInt",
-### "IntToString",
-### "FloatToString",
-### "StringToInt",
-### "StringToFloat",
-### "String.isInt",
-### "String.isFloat",
-### "String.isAtom",
-### "IsArray",
-### "NewArray",
-### "Array.high",
-### "Array.low",
-### "Get",
-### "Put",
-### "NewDictionary",
-### "IsDictionary",
-### "Dictionary.isEmpty",
-### "Dictionary.get",
-### "Dictionary.condGet",
-### "Dictionary.put",
-### "Dictionary.condPut",
-### "Dictionary.exchange",
-### "Dictionary.condExchange",
-### "Dictionary.remove",
-### "Dictionary.removeAll",
-### "Dictionary.member",
-### "Dictionary.keys",
-### "Dictionary.entries",
-### "Dictionary.items",
-### "Dictionary.clone",
-### "Dictionary.markSafe",
-### "NewLock",
-### "Lock",
-### "Unlock",
-### "NewPort",
-### "Send",
-### "NewCell",
-### "Exchange",
-### "Access",
-### "Assign",
-### "probe",
-### "perdioRestop",
-### "crash",
-### "InstallHandler",
-### "InstallWatcher",
-### "IsChar",
-### "Char.isAlNum",
-### "Char.isAlpha",
-### "Char.isCntrl",
-### "Char.isDigit",
-### "Char.isGraph",
-### "Char.isLower",
-### "Char.isPrint",
-### "Char.isPunct",
-### "Char.isSpace",
-### "Char.isUpper",
-### "Char.isXDigit",
-### "Char.toLower",
-### "Char.toUpper",
-### "Char.toAtom",
-### "Char.type",
-### "Adjoin",
-### "AdjoinList",
-### "record",
-### "Arity",
-### "AdjoinAt",
-### "IsNumber",
-### "IsInt"   ,
-### "IsFloat" ,
-### "IsRecord",
-### "IsTuple",
-### "IsLiteral",
-### "IsLock",
-### "IsCell",
-### "IsPort",
-### "IsProcedure",
-### "IsName",
-### "IsAtom",
-### "IsBool",
-### "IsUnit",
-### "IsChunk",
-### "IsRecordC",
-### "IsObject",
-### "IsString",
-### "IsVirtualString",
-### "IsFree",
-### "IsKinded",
-### "IsDet",
-### "isNumberRel",
-### "isIntRel"   ,
-### "isFloatRel" ,
-### "isRecordRel",
-### "isTupleRel",
-### "isLiteralRel",
-### "isCellRel",
-### "isPortRel",
-### "isProcedureRel",
-### "isNameRel",
-### "isAtomRel",
-### "isLockRel",
-### "isBoolRel",
-### "isUnitRel",
-### "isChunkRel",
-### "isRecordCRel",
-### "isObjectRel",
-### "IsFreeRel",
-### "IsKindedRel",
-### "IsDetRel",
-### "Wait",
-### "WaitOr",
-### "virtualStringLength",
-### "Length",
-### "Not",
-### "And",
-### "Or",
-### "Type.ofValue",
-### "Value.status",
-### "procedureEnvironment",
-### "getProcInfo",
-### "setProcInfo",
-### "getProcNames",
-### "setProcNames",
-### "getProcPos",
-### "MakeTuple",
-### "Label",
-### "hasLabel",
-### "ProcedureArity",
-### "TellRecord",
-### "WidthC",
-### "monitorArity",
-### "tellRecordSize",
-### "recordCIsVarB",
-### ".",
-### "^",
-### "HasFeature",
-### "CondSelect",
-### "Width",
-### "AtomToString",
-### "StringToAtom",
-### "NewChunk",
-### "chunkArity",
-### "chunkWidth",
-### "recordWidth",
-### "NewName",
-### "NewUniqueName",
-### "==",
-### "\\\\=",
-### "==Rel",
-### "\\\\=Rel",
-### "dlOpen",
-### "dlClose",
-### "findFunction",
-### "dlLoad",
-### "shutdown",
-### "Alarm",
-### "Delay",
-### "System.gcDo",
-### "System.apply",
-### "System.eq",
-### "=",
-### "fail",
-### "nop",
-### "deepFeed",
-### "getsBound",
-### "getsBoundB",
-### "setAbstractionTabDefaultEntry",
-### "showBuiltins",
-### "Print",
-### "Show",
-### "System.nbSusps",
-### "onToplevel",
-### "addr",
-### "Debug.mode",
-### "Debug.getStream",
-### "Debug.setStepFlag",
-### "Debug.setTraceFlag",
-### "Debug.checkStopped",
-### "Debug.prepareDumpThreads",
-### "Debug.dumpThreads",
-### "Debug.listThreads",
-### "Debug.breakpointAt",
-### "Debug.breakpoint",
-### "Debug.displayCode",
-### "Debug.procedureCode",
-### "Debug.procedureCoord",
-### "Debug.livenessX",
-### "index2Tagged",
-### "time2localTime",
-### "Thread.is",
-### "Thread.id",
-### "Thread.setId",
-### "Thread.parentId",
-### "Thread.this",
-### "Thread.suspend",
-### "Thread.unleash",
-### "Thread.resume",
-### "Thread.injectException",
-### "Thread.preempt",
-### "Thread.setPriority",
-### "Thread.getPriority",
-### "Thread.isSuspended",
-### "Thread.state",
-### "Thread.setRaiseOnBlock",
-### "Thread.getRaiseOnBlock",
-### "Thread.taskStack",
-### "Thread.frameVariables",
-### "Thread.location",
-### "Debug.print",
-### "Debug.printLong",
-### "statisticsReset",
-### "statisticsPrint",
-### "statisticsPrintProcs",
-### "statisticsGetProcs",
-### "setProfileMode",
-### "instructionsPrint",
-### "biPrint",
-### "halt",
-### "System.printName",
-### "System.printInfo",
-### "System.printError",
-### "System.valueToVirtualString",
-### "getTermSize",
-### "foreignFDProps",
-### "@",
-### "<-",
-### "copyRecord",
-### "makeClass",
-### ",",
-### "send",
-### "getClass",
-### "ooGetLock",
-### "newObject",
-### "New",
-### "setSelf",
-### "ooExch",
-### "Space.new",
-### "IsSpace",
-### "Space.ask",
-### "Space.askVerbose",
-### "Space.merge",
-### "Space.clone",
-### "Space.commit",
-### "Space.inject",
-### "biExceptionHandler",
-### "setDefaultExceptionHandler",
-### "getDefaultExceptionHandler",
-### "raise",
-### "raiseError",
-### "raiseDebug",
-### "setOPICompiler",
-### "getOPICompiler",
-### "isBuiltin",
-### "getBuiltinName",
-### "nameVariable",
-### "newNamedName",
-### "isUniqueName",
-### "generateAbstractionTableID",
-### "concatenateAtomAndInt",
-### "RegSet.new",
-### "RegSet.copy",
-### "RegSet.adjoin",
-### "RegSet.remove",
-### "RegSet.member",
-### "RegSet.union",
-### "RegSet.intersect",
-### "RegSet.subtract",
-### "RegSet.toList",
-### "RegSet.complementToList",
-### "ozparser_parseFile",
-### "ozparser_parseVirtualString",
-### "ozparser_fileExists",
-### "copyCode",
-### "Finalize.register",
-### "Finalize.setHandler",
-### "GetCloneDiff",
-### "SystemRegistry",
-### "ServiceRegistry");
+    'metaIsVar'		=> { in  => ['value'],
+			     out => [],
+			     BI  => BImetaIsVar,
+			     module=>'metavar'},
+
+    'metaIsVarB'	=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => BImetaIsVarB,
+			     module=>'metavar'},
+
+    'metaWatchVar'	=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BImetaWatchVar,
+			     module=>'metavar'},
+
+    'metaWatchVarB'	=> { in  => ['value','value','+bool'],
+			     out => [],
+			     BI  => BImetaWatchVarB,
+			     module=>'metavar'},
+
+    'metaGetDataAsAtom'	=> { in  => ['value','atom'],
+			     out => [],
+			     BI  => BImetaGetDataAsAtom,
+			     module=>'metavar'},
+
+    'metaGetNameAsAtom'	=> { in  => ['value','atom'],
+			     out => [],
+			     BI  => BImetaGetNameAsAtom,
+			     module=>'metavar'},
+
+    'metaGetStrength'	=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BImetaGetStrength,
+			     module=>'metavar'},
+
+    #-----------------------------------------------------------------
+    # AVAR
+    #-----------------------------------------------------------------
+
+    'isAVarB'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => BIisAVarB,
+			     module=>'avar'},
+
+    'newAVar'		=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BInewAVar,
+			     module=>'avar'},
+
+    'readAVar'		=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIreadAVar,
+			     module=>'avar'},
+
+    'aVarHandler'	=> { in  => ['+procedure','+procedure'],
+			     out => [],
+			     BI  => BIaVarHandler,
+			     module=>'avar'},
+
+    '==='		=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIaVarBind,
+			     module=>'avar'},
+
+    #-----------------------------------------------------------------
+    # PERDIOVAR
+    #-----------------------------------------------------------------
+
+    'PerdioVar.is'	=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => PerdioVar_is,
+			     module=>'perdiovar'},
+
+    #-----------------------------------------------------------------
+    # UNIX
+    #-----------------------------------------------------------------
+
+    'OS.getDir'		=> { in  => ['+virtualString'],
+			     out => ['+value'],
+			     BI  => unix_getDir,
+			     module=>'os'},
+
+    'OS.stat'		=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => unix_stat,
+			     module=>'os'},
+
+    'OS.getCWD'		=> { in  => [],
+			     out => ['+atom'],
+			     BI  => unix_getCWD,
+			     module=>'os'},
+
+    'OS.open'		=> { in  => ['+virtualString','+[atom]','+[atom]'],
+			     out => ['+int'],
+			     BI  => unix_open,
+			     module=>'os'},
+
+    'OS.fileDesc'	=> { in  => ['+atom'],
+			     out => ['+int'],
+			     BI  => unix_fileDesc,
+			     module=>'os'},
+
+    'OS.close'		=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_close,
+			     module=>'os'},
+
+    'OS.write'		=> { in  => ['+int','+virtualString'],
+			     out => ['+int'],
+			     BI  => unix_write,
+			     module=>'os'},
+
+    'OS.read'		=> { in  => ['+int','+int','value','value','int'],
+			     out => [],
+			     BI  => unix_read,
+			     module=>'os'},
+
+    'OS.lSeek'		=> { in  => ['+int','+int','+atom'],
+			     out => ['+int'],
+			     BI  => unix_lSeek,
+			     module=>'os'},
+
+    'OS.unlink'		=> { in  => ['+virtualString'],
+			     out => [],
+			     BI  => unix_unlink,
+			     module=>'os'},
+
+    'OS.readSelect'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_readSelect,
+			     module=>'os'},
+
+    'OS.writeSelect'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_writeSelect,
+			     module=>'os'},
+
+    'OS.acceptSelect'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_acceptSelect,
+			     module=>'os'},
+
+    'OS.deSelect'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_deSelect,
+			     module=>'os'},
+
+    'OS.system'		=> { in  => ['+virtualString'],
+			     out => ['+int'],
+			     BI  => unix_system,
+			     module=>'os'},
+
+    'OS.getEnv'		=> { in  => ['+virtualString'],
+			     out => ['+string'],
+			     BI  => unix_getEnv,
+			     module=>'os'},
+
+    'OS.putEnv'		=> { in  => ['+virtualString','+virtualString'],
+			     out => [],
+			     BI  => unix_putEnv,
+			     module=>'os'},
+
+    'OS.time'		=> { in  => [],
+			     out => ['+int'],
+			     BI  => unix_time,
+			     module=>'os'},
+
+    'OS.gmTime'		=> { in  => [],
+			     out => ['+record'],
+			     BI  => unix_gmTime,
+			     module=>'os'},
+
+    'OS.localTime'	=> { in  => [],
+			     out => ['+record'],
+			     BI  => unix_localTime,
+			     module=>'os'},
+
+    'OS.srand'		=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_srand,
+			     module=>'os'},
+
+    'OS.rand'		=> { in  => [],
+			     out => ['+int'],
+			     BI  => unix_rand,
+			     module=>'os'},
+
+    'OS.randLimits'	=> { in  => [],
+			     out => ['+int','+int'],
+			     BI  => unix_randLimits,
+			     module=>'os'},
+
+    'OS.socket'		=> { in  => ['+atom','+atom','+virtualString'],
+			     out => ['+int'],
+			     BI  => unix_socket,
+			     module=>'os'},
+
+    'OS.bind'		=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => unix_bindInet,
+			     module=>'os'},
+
+    'OS.listen'		=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => unix_listen,
+			     module=>'os'},
+
+    'OS.connect'	=> { in  => ['+int','+virtualString','+int'],
+			     out => [],
+			     BI  => unix_connectInet,
+			     module=>'os'},
+
+    'OS.accept'		=> { in  => ['+int'],
+			     out => ['+int','+string','+int'],
+			     BI  => unix_acceptInet,
+			     module=>'os'},
+
+    'OS.shutDown'	=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => unix_shutDown,
+			     module=>'os'},
+
+    'OS.send'		=> { in  => ['+int','+virtualString','+[atom]'],
+			     out => ['+int'],
+			     BI  => unix_send,
+			     module=>'os'},
+
+    'OS.sendTo'		=> { in  => ['+int','+virtualString','+[atom]',
+				     '+virtualString','+int'],
+			     out => ['+int'],
+			     BI  => unix_sendToInet,
+			     module=>'os'},
+
+    'OS.receiveFrom'	=> { in  => ['+int','+int','+[atom]','value','value'],
+			     out => ['+string','+int','+int'],
+			     BI  => unix_receiveFromInet,
+			     module=>'os'},
+
+    'OS.getSockName'	=> { in  => ['+int'],
+			     out => ['+int'],
+			     BI  => unix_getSockName,
+			     module=>'os'},
+
+    'OS.getHostByName'	=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => unix_getHostByName,
+			     module=>'os'},
+
+    'OS.pipe'		=> { in  => ['+virtualString','value'],
+			     out => ['+int','+int#int'],
+			     BI  => unix_pipe,
+			     module=>'os'},
+
+    'OS.tmpnam'		=> { in  => [],
+			     out => ['+string'],
+			     BI  => unix_tmpnam,
+			     module=>'os'},
+
+    'OS.wait'		=> { in  => [],
+			     out => ['+int','+int'],
+			     BI  => unix_wait,
+			     module=>'os'},
+
+    'OS.getServByName'	=> { in  => ['+virtualString','+virtualString'],
+			     out => ['+int'],
+			     BI  => unix_getServByName,
+			     module=>'os'},
+
+    'OS.uName'		=> { in  => [],
+			     out => ['+record'],
+			     BI  => unix_uName,
+			     module=>'os'},
+
+    'OS.getpwnam'	=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => unix_getpwnam,
+			     module=>'os'},
+
+    #-----------------------------------------------------------------
+    # TCL_TK
+    #-----------------------------------------------------------------
+
+    'getTclNames'	=> { in  => [],
+			     out => ['value','value','value'],
+			     BI  => BIgetTclNames,
+			     module=>'tcl_tk'},
+
+    'initTclSession'	=> { in  => ['value','value','value'],
+			     out => ['value'],
+			     BI  => BIinitTclSession,
+			     module=>'tcl_tk'},
+
+    'closeTclSession'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIcloseTclSession,
+			     module=>'tcl_tk'},
+
+    'Tk.send'		=> { in  => ['value','!value'],
+			     out => [],
+			     BI  => BItclWrite,
+			     module=>'tcl_tk'},
+
+    'tclWriteReturn'	=> { in  => ['!value','value','value','value'],
+			     out => [],
+			     BI  => BItclWriteReturn,
+			     module=>'tcl_tk'},
+
+    'tclWriteReturnMess'=> { in  => ['!value','value','value','value','value'],
+			     out => [],
+			     BI  => BItclWriteReturnMess,
+			     module=>'tcl_tk'},
+
+    'Tk.batch'		=> { in  => ['value','!value'],
+			     out => [],
+			     BI  => BItclWriteBatch,
+			     module=>'tcl_tk'},
+
+    'tclWriteTuple'	=> { in  => ['value','!value','value'],
+			     out => [],
+			     BI  => BItclWriteTuple,
+			     module=>'tcl_tk'},
+
+    'tclWriteTagTuple'	=> { in  => ['value','!value','value','value'],
+			     out => [],
+			     BI  => BItclWriteTagTuple,
+			     module=>'tcl_tk'},
+
+    'tclWriteFilter'	=> { in  => ['value','!value','value','value',
+				     'value','value'],
+			     out => [],
+			     BI  => BItclWriteFilter,
+			     module=>'tcl_tk'},
+
+    'tclClose'		=> { in  => ['value','!value','value'],
+			     out => [],
+			     BI  => BItclClose,
+			     module=>'tcl_tk'},
+
+    'tclCloseWeb'	=> { in  => ['value','!value'],
+			     out => [],
+			     BI  => BItclCloseWeb,
+			     module=>'tcl_tk'},
+
+    'addFastGroup'	=> { in  => ['+value','value'],
+			     out => ['value'],
+			     BI  => BIaddFastGroup,
+			     module=>'tcl_tk'},
+
+    'delFastGroup'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIdelFastGroup,
+			     module=>'tcl_tk'},
+
+    'getFastGroup'	=> { in  => ['+value'],
+			     out => ['+value'],
+			     BI  => BIgetFastGroup,
+			     module=>'tcl_tk'},
+
+    'delAllFastGroup'	=> { in  => ['+value'],
+			     out => ['+value'],
+			     BI  => BIdelAllFastGroup,
+			     module=>'tcl_tk'},
+
+    'genTopName'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgenTopName,
+			     module=>'tcl_tk'},
+
+    'genWidgetName'	=> { in  => ['value','value'],
+			     out => ['value'],
+			     BI  => BIgenWidgetName,
+			     module=>'tcl_tk'},
+
+    'genTagName'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgenTagName,
+			     module=>'tcl_tk'},
+
+    'genVarName'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgenVarName,
+			     module=>'tcl_tk'},
+
+    'genImageName'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgenImageName,
+			     module=>'tcl_tk'},
+
+    #-----------------------------------------------------------------
+    # PERDIO
+    #-----------------------------------------------------------------
+
+    'dvset'		=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => BIdvset,
+			     ifdef=>DEBUG_PERDIO,
+			     module=>'perdio'},
+
+    'NetCloseCon'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => BIcloseCon,
+			     module=>'perdio'},
+
+    'startTmp'		=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => BIstartTmp,
+			     module=>'perdio'},
+
+    'siteStatistics'	=> { in  => [],
+			     out => ['+[value]'],
+			     BI  => BIsiteStatistics,
+			     module=>'perdio'},
+
+    'printBorrowTable'	=> { in  => [],
+			     out => [],
+			     BI  => BIprintBorrowTable,
+			     module=>'perdio'},
+
+    'printOwnerTable'	=> { in  => [],
+			     out => [],
+			     BI  => BIprintOwnerTable,
+			     module=>'perdio'},
+
+    #-----------------------------------------------------------------
+    # LAZY
+    #-----------------------------------------------------------------
+
+    'Lazy.new'		=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BILazyNew,
+			     module=>'lazy'},
+
+    'Lazy.is'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => BILazyIs,
+			     module=>'lazy'},
+
+    #-----------------------------------------------------------------
+    # VPROPS
+    #-----------------------------------------------------------------
+
+    'GetProperty'	=> { in  => ['+literal'],
+			     out => ['value'],
+			     BI  => BIgetProperty,
+			     module=>'vprop'},
+
+    'CondGetProperty'	=> { in  => ['+literal','value'],
+			     out => ['value'],
+			     BI  => BIcondGetProperty,
+			     module=>'vprop'},
+
+    'PutProperty'	=> { in  => ['+literal','value'],
+			     out => [],
+			     BI  => BIputProperty,
+			     module=>'vprop'},
+
+};
 
 # this is the function that converts these descriptions to
 # an array of declarations appropriate for the emulator
@@ -2486,6 +2651,7 @@ $builtins = {
 sub CTABLE {
     my ($key,$info);
     while (($key,$info) = each %$builtins) {
+	next unless &included($info);
 	my $arity = @{$info->{in}} + @{$info->{out}};
 	my $BI = $info->{BI};
 	my @ifdef  = split(/\,/,$info->{ifdef});
@@ -2526,6 +2692,7 @@ sub argspec {
 
     if    ($spec =~ /^\[(.+)\#(.+)\]$/) { $typ="list(pair($1 $2))"; }
     elsif ($spec =~ /^\[(.+)\]$/      ) { $typ="list($1)"; }
+    elsif ($spec =~ /^(.+)\#(.+)$/    ) { $typ="pair($1 $2)"; }
     else                                { $typ=$spec; }
 
     return ($mod,$det,$typ);
@@ -2540,6 +2707,7 @@ my $style = 0;
 sub OZTABLE {
     my ($key,$info);
     while (($key,$info) = each %$builtins) {
+	next unless &included($info);
 	my (@imods,@idets,@ityps,$spec,$destroys);
 	foreach $spec (@{$info->{in}}) {
 	    my ($mod,$det,$typ) = &argspec($spec);
@@ -2606,15 +2774,46 @@ sub OZTABLE {
 sub CDECL {
     my ($key,$info,$bi);
     while (($key,$info) = each %$builtins) {
+	next unless &included($info);
 	$bi = $info->{bi} || $info->{BI};
 	print "OZ_C_proc_proto($bi);\n";
     }
 }
 
-my ($option) = @ARGV;
+my %include = ();
+my %exclude = ();
+my $includeall = 0;
 
-if    ($option eq '-ctable' ) { &CTABLE; }
-elsif ($option eq '-cdecl'  ) { &CDECL; }
-elsif ($option eq '-oztable') { &OZTABLE; }
-else { die "unrecognized options: $option"; }
+sub included {
+    my $info = shift;
+    my $module = $info->{module} || 'oz';
+    return 1 if $includeall;
+    return 0 if $exclude{$module};
+    return 1 if $include{$module};
+}
 
+my ($option,$choice,@include,@exclude);
+
+while (@ARGV) {
+    $option = shift;
+    if    ($option eq '-ctable' ) { $choice='ctable';  }
+    elsif ($option eq '-cdecl'  ) { $choice='cdecl';   }
+    elsif ($option eq '-oztable') { $choice='oztable'; }
+    elsif ($option eq '-include') { push @include,split(/\,/,shift); }
+    elsif ($option eq '-exclude') { push @exclude,split(/\,/,shift); }
+    else { die "unrecognized option: $option"; }
+}
+
+if (@include!=0 && @exclude!=0) {
+    die "cannot have both -include and -exclude";
+}
+
+foreach $option (@include) { $include{$option} = 1; }
+foreach $option (@exclude) { $exclude{$option} = 1; }
+
+$includeall = 1 if @include==0 && @exclude==0;
+
+if    ($choice eq 'ctable' ) { &CTABLE;  }
+elsif ($choice eq 'cdecl'  ) { &CDECL;   }
+elsif ($choice eq 'oztable') { &OZTABLE; }
+else { die "must specify one of: -ctable -cdecl -oztable"; }

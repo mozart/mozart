@@ -746,12 +746,12 @@ OZ_BI_define(BIputProperty,2,0)
   else return status;
 } OZ_BI_end
 
-static BIspec vpropSpecs[] = {
-  {"GetProperty"    , 2, BIgetProperty    , 0},
-  {"CondGetProperty", 3, BIcondGetProperty, 0},
-  {"PutProperty"    , 2, BIputProperty    , 0},
-  {0,0,0,0},
-};
+// static BIspec vpropSpecs[] = {
+//   {"GetProperty"    , 2, BIgetProperty    , 0},
+//   {"CondGetProperty", 3, BIcondGetProperty, 0},
+//   {"PutProperty"    , 2, BIputProperty    , 0},
+//   {0,0,0,0},
+// };
 
 void initVirtualProperties()
 {
@@ -765,7 +765,7 @@ void initVirtualProperties()
     dict->setArg(oz_atom("platform"),oz_pairAA(ozconf.osname,ozconf.cpu));
     dict->setArg(oz_atom("oz.home"),oz_atom(ozconf.ozHome));
   }
-  BIaddSpec(vpropSpecs);
+  // BIaddSpec(vpropSpecs);
   // THREADS
   VirtualProperty::add("threads.created",PROP_THREADS_CREATED);
   VirtualProperty::add("threads.runnable",PROP_THREADS_RUNNABLE);
