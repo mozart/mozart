@@ -531,6 +531,10 @@ define
 		  FieldType = {ToS Field#Ptrs}
 		  ResType   = if Ptrs == nil
 			      then {CoreResultType FieldType @types}
+			      elsecase FieldType
+			      of "GList*" then "GOZ_makeGList"
+			      [] "char*"  then "OZ_string"
+			      [] "gchar*" then "OZ_string"
 			      else "OZ_makeForeignPointer"
 			      end
 	       in
