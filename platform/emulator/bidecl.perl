@@ -1738,6 +1738,10 @@ $builtins = {
                              out => [],
                              BI  => BIstoreGRegRef},
 
+    'storeLocation'     => { in  => ['+int','+list#list'],
+                             out => [],
+                             BI  => BIstoreLocation},
+
     'storeCache'        => { in  => ['+int','+value'],
                              out => [],
                              BI  => BIstoreCache},

@@ -51,31 +51,16 @@ p printStack()
 p board->printDebug()
 p board->printLongDebug()
 
+----------------------------
+
+gdb: debug bootstrapping:
+
+cd ~/Oz/lib
+
+set env OZ_LOAD "root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./"
+
+r -init '' -b ~/Oz/lib/ozbatch.ozm -a ~/Oz/lib/DumpInitial.oz
+
+r -init './Init.ozc' -b ~/Oz/lib/ozbatch.ozm -a --include=DumpIntro.oz -c -l AP OPI.oz -o OPI.ozc
+
 -----------------------------
-
-Keywords:
-
-class Script:
-  the script stored in boards
-
-class Atom:
-  Oz literal (XAtom,XName (XDynName, XOptName)
-
-XAtom:
-  Oz atom
-
-XName:
-  Oz name
-
-XDynName:
-  dynamic name: not optimized by compiler
-
-XOptName:
-  optimized name: used like an atom
-
-garbage collection:
-  two primary phases:
-    gc: copy structure & record forward pointer & push me to the pointer stack
-    gcRecurse: update the fields of structure
-
-  after that copy left-over variables

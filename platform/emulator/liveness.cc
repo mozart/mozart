@@ -33,16 +33,24 @@
 #define GETREGARG(pc)   getRegArg(pc)
 #endif
 
-#define ISREAD(i)       { if (i<maxX && xUsage[i]==0) xUsage[i]=1; }
+#define ISREAD(i) { int _i=(i); if (_i<maxX && xUsage[_i]==0) xUsage[_i]=1; }
 
-#define ISREAD_TO(args) { for (int _i=0;_i<args; _i++) { ISREAD(_i); } }
+#define ISREAD_TO(args) { for (int _j=0;_j<args; _j++) { ISREAD(_j); } }
 
 #define ISWRITE(i)                                      \
 {                                                       \
-  if (i<maxX && xUsage[i]==0) {                         \
-    current->writer=new Writer(i,current->writer);      \
-    xUsage[i]=-1;                                       \
+  int _i = (i);                                         \
+  if (_i<maxX && xUsage[_i]==0) {                       \
+    current->writer=new Writer(_i,current->writer);     \
+    xUsage[_i]=-1;                                      \
   }                                                     \
+}
+
+#define ISLOC(bi,loc)                                                   \
+{                                                                       \
+  for (int _j=0;_j<bi->getInArity(); _j++) { ISREAD(loc->in(_j)); }     \
+  for (int _j=0;_j<bi->getOutArity(); _j++) { ISWRITE(loc->out(_j));    \
+  }                                                                     \
 }
 
 #define BREAK           current->pcEnd = PC; goto outerLoop;
@@ -204,6 +212,15 @@ outerLoop2:
         ISREAD_TO(getPosIntArg(PC+2));
         break;
 
+      case CALLBI:
+        ISLOC(GetBI(PC+1),GetLoc(PC+2));
+        break;
+
+      case TESTBI:
+        ISLOC(GetBI(PC+1),GetLoc(PC+2));
+        PUSH(getLabelArg(PC+3));
+        break;
+
       case INLINEREL3:
         ISREAD(GETREGARG(PC+4));
         // fall through
@@ -286,6 +303,14 @@ outerLoop2:
         ISREAD(GETREGARG(PC+1));
         ISREAD(GETREGARG(PC+2));
         PUSH(getLabelArg(PC+3));
+        break;
+
+      case TESTLE:
+      case TESTLT:
+        ISREAD(GETREGARG(PC+1));
+        ISREAD(GETREGARG(PC+2));
+        ISWRITE(GETREGARG(PC+3));
+        PUSH(getLabelArg(PC+4));
         break;
 
       case SHALLOWTEST2:

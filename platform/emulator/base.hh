@@ -249,6 +249,7 @@ class BorrowTable;
 class Site;
 
 class Builtin;
+class OZ_Location;
 
 class FiniteDomain;
 
@@ -322,6 +323,10 @@ void version();
 // see emulate.cc
 int engine(Bool);
 void scheduler();
+
+#ifdef OZMA
+    extern "C" TaggedRef ozma_readProc(const char *filename);
+#endif
 
 // return code of the emulator
 enum ThreadReturn {

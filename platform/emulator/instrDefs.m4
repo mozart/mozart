@@ -44,6 +44,7 @@ CONST(`RecordAritySize',   PointerSize)
 CONST(`GenCallInfoSize',   PointerSize)
 CONST(`ApplMethInfoSize',  PointerSize)
 CONST(`GRegRefSize',       PointerSize)
+CONST(`LocationSize',      PointerSize)
 CONST(`CacheSize',         DoubleWordSize)
 
 dnl   how the old compiler encodes different registers
@@ -280,6 +281,18 @@ instruction(inlineDot,readArg(XRegisterIndex),Feature,
                         writeArg(XRegisterIndex),NLiveRegs,Cache)
 instruction(inlineUparrow,readArg(XRegisterIndex),readArg(XRegisterIndex),
                         writeArg(XRegisterIndex),NLiveRegs)
+
+instruction(callBI,Builtinname,Location,NLiveRegs)
+
+instruction(testBI,Builtinname,Location,Label,NLiveRegs)
+instruction(testLT,readArg(XRegisterIndex),
+                   readArg(XRegisterIndex),
+                   writeArg(XRegisterIndex),
+                   Label,NLiveRegs)
+instruction(testLE,readArg(XRegisterIndex),
+                   readArg(XRegisterIndex),
+                   writeArg(XRegisterIndex),
+                   Label,NLiveRegs)
 
 instructionsUnneededForNewCompiler
 

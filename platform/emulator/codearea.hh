@@ -162,7 +162,8 @@ public:
                                 TaggedRef &predName);
 
   /* with one argument it means that we need the code till the "query"  */
-  static void display (ProgramCounter from, int size = 1, FILE* = stderr);
+  static void display (ProgramCounter from, int size = 1, FILE* = stderr,
+                       ProgramCounter to=NOCODE);
   static int livenessX(ProgramCounter from, TaggedRef *X=0,int n=0);
 
   static ProgramCounter definitionStart(ProgramCounter from);
@@ -372,6 +373,8 @@ inline void printNameTab()
 #define getAdressArg(PC)  (ToPointer(getWord(PC)))
 #define getPredArg(PC)   ((PrTabEntry *) getAdressArg(PC))
 #define getLabelArg(PC)  ((int) getWord(PC))
+#define GetLoc(PC)       ((OZ_Location*) getAdressArg(PC))
+#define GetBI(PC)        ((Builtin*) getAdressArg(PC))
 
 
 void displayCode(ProgramCounter from, int ssize);

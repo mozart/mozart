@@ -275,11 +275,10 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy)
   HashTable *ht = new HashTable(HT_INTKEY,100);
 
   // copy alist into ht
-  TaggedRef one = OZ_int(1), two = OZ_int(2);
   while(OZ_isCons(alist)) {
     TaggedRef pair = OZ_head(alist);
-    TaggedRef key = deref(OZ_subtree(pair,one));
-    TaggedRef value = deref(OZ_subtree(pair,two));
+    TaggedRef key = deref(oz_left(deref(pair)));
+    TaggedRef value = deref(oz_right(deref(pair)));
     if (OZ_isForeignPointer(key))
       ht->htAdd(ToInt32(OZ_getForeignPointer(key)),
                 OZ_getForeignPointer(value));

@@ -24,12 +24,14 @@
  *
  */
 
+changequote([[,]])
+
 #include "am.hh"
 
 define(readArg,$1)
 define(writeArg,$1)
 define(instruction,
-        `ifelse(numOfRegs($2,$3,$4),1,
+        [[ifelse(numOfRegs($2,$3,$4),1,
                     case TOUPPER($1)X:
                     case TOUPPER($1)Y:
                     case TOUPPER($1)G:,
@@ -52,10 +54,10 @@ define(instruction,
            opAction($7)
            opAction($8)
            opAction($9)
-          break;')
+          break;]])
 
 define(opAction,
-`ifelse($1,Number,marshalTerm(getTaggedArg(PC++),bs);,
+[[ifelse($1,Number,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Literal,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Feature,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Constant,marshalTerm(getTaggedArg(PC++),bs);,
@@ -80,7 +82,8 @@ define(opAction,
         $1,GenCallInfo,marshalGenCallInfo((GenCallInfoClass*)getAdressArg(PC++),bs);,
         $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
         $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
-        $1,Cache,PC += CacheSize;)')
+        $1,Location,marshalLocation((OZ_Location*)getAdressArg(PC++),bs);,
+        $1,Cache,PC += CacheSize;)]])
 
 
 inline
@@ -103,6 +106,19 @@ void marshalGRegRef(AssRegArray *gregs,MsgBuffer *bs)
 
   for (int i = 0; i < nGRegs; i++) {
     int out = ((*gregs)[i].number<<2) | (int)(*gregs)[i].kind;
+    marshalNumber(out,bs);
+  }
+}
+
+void marshalLocation(OZ_Location *loc,MsgBuffer *bs)
+{
+  int inAr = loc->getInArity();
+  int outAr = loc->getInArity();
+  marshalNumber(inAr,bs);
+  marshalNumber(outAr,bs);
+
+  for (int i = 0; i < inAr+outAr; i++) {
+    int out = loc->get(i);
     marshalNumber(out,bs);
   }
 }
@@ -237,7 +253,9 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     PD((MARSHAL,"op put %d",op));
     switch(op) {
 
-    include(EMUDIR/instrDefs.m4)
+      changequote(`,') dnl '
+      include(EMUDIR/instrDefs.m4)
+      changequote([[,]])
 
     default: Assert(0); break;
     }
@@ -305,11 +323,11 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
 
 
 
-undefine(`opAction')
-undefine(`marshaling')
+undefine([[opAction]])
+undefine([[marshaling]])
 
 define(opAction,
-`ifelse($1,Number,PC=unmarshalTagged(PC,bs);,
+[[ifelse($1,Number,PC=unmarshalTagged(PC,bs);,
         $1,Literal,PC=unmarshalTagged(PC,bs);,
         $1,Feature,PC=unmarshalTagged(PC,bs);,
         $1,Constant,PC=unmarshalTagged(PC,bs);,
@@ -334,7 +352,8 @@ define(opAction,
         $1,GenCallInfo,PC=unmarshalGenCallInfo(PC,bs);,
         $1,ApplMethInfo,PC=unmarshalApplMethInfo(PC,bs);,
         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
-        $1,Cache,PC=unmarshalCache(PC,bs);)')
+        $1,Location,PC=unmarshalLocation(PC,bs);,
+        $1,Cache,PC=unmarshalCache(PC,bs);)]])
 
 
 inline
@@ -370,7 +389,7 @@ ProgramCounter unmarshalBuiltin(ProgramCounter PC, MsgBuffer *bs)
   Builtin *found = (Builtin *)builtinTab.htFind(biName);
 
   if (found == htEmpty) {
-    warning("`builtin'(%s) not found", biName);
+    warning("[[builtin]](%s) not found", biName);
     found = (Builtin *)builtinTab.htFind("fail");
   }
   return writeAddress(found,PC);
@@ -406,6 +425,20 @@ ProgramCounter unmarshalGRegRef(ProgramCounter PC,MsgBuffer *bs)
   }
 
   return writeAddress(gregs,PC);
+}
+
+ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
+{
+  int inAr = unmarshalNumber(bs);
+  int outAr = unmarshalNumber(bs);
+  OZ_Location *loc = OZ_Location::newLocation(inAr,outAr);
+
+  for (int i = 0; i < inAr+outAr; i++) {
+    int n = unmarshalNumber(bs);
+    loc->set(i,n);
+  }
+
+  return writeAddress(loc,PC);
 }
 
 
@@ -573,10 +606,13 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 
     switch(op) {
 
+      changequote(`,') dnl '
       include(EMUDIR/instrDefs.m4)
+      changequote([[,]])
 
     default: Assert(0); break;
     }
+    // if (!discard) { displayCode(lastPC,1); }
   }
 
   Assert(discard==OK || CodeArea::getOpcode(start)==DEFINITION ||
