@@ -42,13 +42,12 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
   setSuspList(am.checkSuspensionList(this, getSuspList(), pc_std_unif));
 
   TaggedRef vv=oz_deref(v);
-  if (oz_isVariable(vv)) {
-    Assert(isPerdioVar(vv));
-    PerdioVar *pv=tagged2PerdioVar(vv);
-    if (pv==this) return;
-    pv->setSuspList(am.checkSuspensionList(pv, pv->getSuspList(),
+  if (isSVar(vv)) {
+    SVariable *sv=tagged2SVar(vv);
+    if (sv==this) return;
+    sv->setSuspList(am.checkSuspensionList(sv, sv->getSuspList(),
 					   pc_std_unif));
-    relinkSuspListTo(pv);
+    relinkSuspListTo(sv);
   }
   doBind(lPtr, v);
   if (isObjectClassNotAvail()) {
