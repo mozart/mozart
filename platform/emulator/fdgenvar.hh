@@ -38,14 +38,14 @@ private:
   SuspList * fdSuspList[fd_any];
   
 public:  
-  GenFDVariable(FiniteDomain &fd, TaggedRef pn = AtomVoid)
-  : GenCVariable(FDVariable, pn) {
+  GenFDVariable(FiniteDomain &fd)
+  : GenCVariable(FDVariable) {
     finiteDomain = fd;
     fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
   }
 
-  GenFDVariable(TaggedRef pn = AtomVoid)
-  : GenCVariable(FDVariable, pn) {
+  GenFDVariable()
+  : GenCVariable(FDVariable) {
     finiteDomain.setFull();
     fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
   }

@@ -10,7 +10,7 @@
 */
 
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(NOPRAGMA)
 #pragma implementation "fdgenvar.hh"
 #endif
 
@@ -190,8 +190,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	    doBindAndTrail(var, vPtr, int_val);
 	    doBindAndTrail(term, tPtr, TaggedRef(vPtr));
 	  } else {
-	    TaggedRef pn = tagged2CVar(var)->getName();
-	    TaggedRef * var_val = newTaggedCVar(new GenFDVariable(intsct, pn));
+	    TaggedRef * var_val = newTaggedCVar(new GenFDVariable(intsct));
 	    if (prop) {
 	      propagate(var, l_dom, TaggedRef(var_val), pc_cv_unif);
 	      termVar->propagate(term, r_dom, TaggedRef(var_val), pc_cv_unif);
