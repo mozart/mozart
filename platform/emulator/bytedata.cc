@@ -113,7 +113,7 @@ int BitData::card() {
 // -------------------------------------------------------------------
 
 OZ_Term BitString::typeV() {
-  return oz_atom("bitstring");
+  return oz_atom("bitString");
 }
 
 OZ_Return BitString::eqV(OZ_Term t) {
@@ -308,7 +308,7 @@ Bool ByteData::equal(ByteData *s) {
 // -------------------------------------------------------------------
 
 OZ_Term ByteString::typeV() {
-  return oz_atom("bytestring");
+  return oz_atom("byteString");
 }
 
 OZ_Return ByteString::eqV(OZ_Term t) {
