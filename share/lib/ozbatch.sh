@@ -6,6 +6,7 @@
 #
 
 : ${SRCDIR=.}
+: ${OZMAFILE=$SRCDIR/ozbatch.ozm}
 : ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
 
 if test -z "$OZ_EMULATOR_DIR"
@@ -27,4 +28,4 @@ fi
 OZINIT=${OZMAINIT}
 export OZINIT
 
-exec $OZEMULATOR $OZQUIET $OZMA_LIB -b $SRCDIR/ozbatch.ozm -a "$@"
+exec $OZEMULATOR $OZQUIET $OZMA_LIB -b $OZMAFILE -a "$@"
