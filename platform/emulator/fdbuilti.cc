@@ -276,6 +276,7 @@ void BIfdHeadManager::addPropagator (int i, Thread *thr, OZ_FDPropState target)
   } 
 }
 
+#ifdef PRINT_LONG
 void BIfdHeadManager::printDebug(void) {
   for (int i = 0; i < curr_num_of_items; i += 1)
     printDebug(i);
@@ -287,6 +288,7 @@ void BIfdHeadManager::printDebug(int i) {
        << ", vartag=" << pm_term_type2string(bifdhm_vartag[i])
        << ", coeff=" << bifdhm_coeff[i] << endl << flush;
 }
+#endif
 
 BIfdBodyManager::BIfdBodyManager(int s) { 
   DebugCodeFD(backup_count = 0);
@@ -1055,6 +1057,7 @@ OZ_Boolean BIfdBodyManager::_unifiedVars(void)
   
 }
 
+#ifdef PRINT_LONG
 void BIfdBodyManager::printDebug(void) {
   for (int i = 0; i < curr_num_of_vars; i += 1)
     printDebug(i);
@@ -1095,6 +1098,7 @@ void BIfdBodyManager::printTerm(int i) {
     cout << endl << flush;
   }
 }
+#endif
 
 
 #ifdef DEBUG_STABLE
