@@ -21,6 +21,7 @@
  *
  */
 
+#include "distribute.hh"
 #include "builtins.hh"
 #include "var_base.hh"
 #include "var_fd.hh"
@@ -66,9 +67,14 @@ int getConstraints(TaggedRef var) {
 
 OZ_C_proc_proto(BIfdTellConstraint);
 
-TaggedRef BI_tell = makeTaggedConst(new  Builtin("FD.distributeTELL", 2, 0,
-                                                 BIfdTellConstraint, OK));
+TaggedRef BI_DistributeTell;
 
+
+void fd_dist_init(void) {
+  BI_DistributeTell = makeTaggedConst(new
+                                      Builtin("FD.distribute (tell)",2,0,
+                                              BIfdTellConstraint, OK));
+}
 
 inline
 void tell_dom(Board * bb, const TaggedRef a, const TaggedRef b) {
@@ -77,7 +83,7 @@ void tell_dom(Board * bb, const TaggedRef a, const TaggedRef b) {
   args[1] = a;
 
   Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_tell,args,2);
+  t->pushCall(BI_DistributeTell,args,2);
 }
 
 class FdDistributor : public Distributor {
