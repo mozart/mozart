@@ -154,6 +154,7 @@ void AM::init(int argc,char **argv)
   init_cmem();
   ozconf.init();
   osInit();
+  ozstat.init();
   AssRegArray::init();
 
   defaultExceptionHdl = makeTaggedNULL();
