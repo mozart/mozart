@@ -42,7 +42,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth,
        AtomHeap, AtomDebugIP, AtomDebugPerdio,
   RecordFailure,
-  E_ERROR, E_KERNEL, E_OBJECT, E_OPEN, E_TK, E_UNIX, E_SYSTEM
+  E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM
 ;
 
 /*===================================================================
