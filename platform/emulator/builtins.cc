@@ -744,7 +744,7 @@ OZ_C_proc_begin(BIrecordTell,2)
       }
     case FDVariable:
     case BoolVariable:
-      return FAILED;
+      TypeErrorT(0,"Literal");
     default:
       OZ_suspendOn (makeTaggedRef(labelPtr));
     }
@@ -764,6 +764,7 @@ OZ_C_proc_begin(BIrecordTell,2)
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
     }
+    TypeErrorT(0,"Record");
     // else fall through to creation case
   case UVAR:
   case SVAR:
