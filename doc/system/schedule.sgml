@@ -97,7 +97,7 @@ times is given.
 Then 
 <<<
 Dur   = dur(a:4 b:6 c:7 d:7 e:4)
-Start = {FD.record start [a b c d e]}
+Start = {FD.record start [a b c d e] 0#FD.sup}
 Tasks = (a#b#c)#(d#e)
 {Schedule.serializedDisj Tasks Start Dur}
 >>>
@@ -308,7 +308,7 @@ Provided that no limit on the start times of the tasks are given, the
 following
 <<<
 Tasks = tasks([a b] [c d e])
-Start = {FD.record start [a b c d e]}
+Start = {FD.record start [a b c d e] 0#FD.sup}
 Dur   = dur(a:5 b:2 c:7 d:4 e:9)
 Use   = use(a:5 b:3 c:2 d:3 e:5)
 Cap   = cap(5 2)
