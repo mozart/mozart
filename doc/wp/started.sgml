@@ -49,10 +49,19 @@
         <Caption/Our first graphical application./
 	<Table class=dyptic>
 	  <TR>
-	    <TD><Picture.Extern to="lower.gif" type=gif>
-	    <TD><Picture.Extern to="upper.gif" type=gif>
+	    <TD>
+               <picture.choice>
+                 <Picture.Extern to="lower.gif" type=gif>
+                 <Picture.Extern to="pictures/started/lower.eps" type=ps>
+               </picture.choice>
+	    <TD>
+               <picture.choice>
+                 <Picture.Extern to="upper.gif" type=gif>
+                 <Picture.Extern to="pictures/started/upper.eps" type=ps>
+               </picture.choice>
 	</Table>
       </Figure>
+
 
     <P>
       The program for the small graphical application is concerned
