@@ -18,7 +18,7 @@ define
       end
    end
    %%
-   proc {Rmdir F}
+   fun {Rmdir F}
       {ShellCommand 'rmdir '#F}
    end
 %    %%
