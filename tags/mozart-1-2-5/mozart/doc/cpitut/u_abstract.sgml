@@ -1,0 +1,70 @@
+<Abstract>
+
+<P.silent> This tutorial provides the knowledge to go beyond the
+built-in constraint capabilities of &moz3;. This tutorial is
+complemented by <Ptr.Extern to="ozdoc:cpiref">.
+
+<Para class=apropos><Title/Motivation/ A major design goal of Oz is to
+provide for a wide range of applications the right level of
+programming abstractions. Though &moz3 features a full-fledged finite
+domain and finite set constraint solver providing for the
+functionality required to solve combinatorial problems efficiently, it
+is often desirable to implement constraints in &cpp;. There may be
+several reasons to do so, as for example, that a given algorithm
+requires destructively updateable data structures or an already
+existing &cpp; library shall be used.  Consequently, we opened the
+constraint solver of &moz3; by adding a &ccpp; interface for
+implementing so-called <Em/constraint propagators/. Hereby, a
+constraint propagator is the implementation of a constraint. Further,
+it may be desirable to have a constraint system available that is not
+provided by &moz3; and one wants to implement it from scratch. Even
+such cases can be handled by the &ccpp; interface. Finally, the
+integration of linear (integer) programming solvers is explained which
+are standard means in Operations Research to tackle certain
+combinatorial problem classes.
+
+<Para class=apropos><Title/Structure of the Manual/ The user manual
+consists of three parts:
+
+<List Enum>
+
+<Item> The first part explains how to implement various
+propagators. It starts with a propagator for the constraint
+<Math>x+y=z</Math> over finite domains and introduces the tools and
+techniques needed. This propagator will be refined such that it is
+able to detect equal variables and reduces to a more specialised
+propagator. Then a functionally nestable version of the addition
+propagator will be derived. We go on with a propagator that can deal
+with vectors of variables. As example serves the so-called
+<Em/element/ constraint. The implementation of a propagator using
+finite set and finite domain constraints is explained next. Finally
+more advanced topics, like the implementation of reified constraints,
+are discussed. 
+
+<P><Em/Note that it is not the intention of this manual to provide
+sophisticated algorithms/.
+
+<Item> The second part explains the implementation of constraint
+systems from scratch, &ie;, not only the propagators of a certain
+constraint system but also the basic constraints. As example,
+constraints over real intervals are implemented.
+
+<Item> The third part explains the integration and usage of linear
+programming solvers like CPLEX <Ptr to="cplex"> and LP_SOLVE <Ptr
+to="lp_solve"> from within &moz3;. To demonstrate the benefits of
+jointly using propagation-based and linear programming-based solvers
+knapsack problems are tackled.
+
+</List>
+
+<Para class=apropos><Title/Prerequisites/ The reader is supposed to
+have a working knowledge in the &ccpp; programming language and to be
+familiar with constraint-based problem solving techniques in Oz. An
+excellent supplementary text book on &cpp; is <ptr to="murray">.
+Constraint-based problem solving techniques in Oz are explained in
+<Ptr.Extern to="ozdoc:fdt"> &resp; <Ptr.Extern to="ozdoc:fst">. The
+&cpi; uses the <Em/native functor/ interface of &moz3;. Have a look at
+<Ptr.Extern to="ozdoc:apptut" key="part.foreign.extensions"> &resp;
+<Ptr.Extern to="ozdoc:foreign"> for details.
+
+</Abstract>

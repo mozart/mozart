@@ -1,0 +1,3 @@
+Creating a source release:
+
+ozmake -cp mozart-stdlib-`date '+%Y%m%d'`.src.pkg -v

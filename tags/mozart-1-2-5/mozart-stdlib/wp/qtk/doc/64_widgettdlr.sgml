@@ -1,0 +1,146 @@
+<section ID="chapter.widgets.tdlr">
+  <TITLE>Td and lr widgets</title>
+<p>
+<picture.extern to="tdlr.gif" type=gif>
+
+<<<local
+   Desc=td(label(text:"1")
+	   label(text:"2")
+	   label(text:"3"))
+in
+   {{QTk.build Desc} show}
+end
+>>>
+
+
+
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+<<td>> and <<lr>> are frames, ie rectangular areas of a window. Their primary purpose is to act as spacers or containers for complex widget layouts. The only features of a frame are its background color and an optional 3-D border to make the frame appear raised or sunken. <<td>> places the widgets top-down, while <<lr>> places them left to right. <<newline>> allows widgets to be placed on a grid structure. <<continue>> makes widgets span several rows or columns. See <ptr to="basics.geometry"> for further details.
+</P>
+<subsection> <title>Parameter List</title><p>
+
+<subsubsection><title>Specific Parameters</title><p>
+<ref to="chapter.widgets.tdlr.class">class</ref>
+<ref to="chapter.widgets.tdlr.colormap">colormap</ref>
+<ref to="chapter.widgets.tdlr.container">container</ref>
+<ref to="chapter.widgets.tdlr.height">height</ref>
+<ref to="chapter.widgets.tdlr.n">n</ref>
+<ref to="chapter.widgets.tdlr.visual">visual</ref>
+<ref to="chapter.widgets.tdlr.width">width</ref>
+
+<subsubsection><title>Non Specific Parameters</title><p>
+<ref to="chapter.widgets.tdlr.param_background">background</ref>
+<ref to="chapter.widgets.tdlr.param_borderwidth">borderwidth</ref>
+<ref to="chapter.widgets.tdlr.param_cursor">cursor</ref>
+<ref to="chapter.widgets.tdlr.param_feature">feature</ref>
+<ref to="chapter.widgets.tdlr.param_glue">glue</ref>
+<ref to="chapter.widgets.tdlr.param_handle">handle</ref>
+<ref to="chapter.widgets.tdlr.param_highlightbackground">highlightbackground</ref>
+<ref to="chapter.widgets.tdlr.param_highlightcolor">highlightcolor</ref>
+<ref to="chapter.widgets.tdlr.param_highlightthickness">highlightthickness</ref>
+<ref to="chapter.widgets.tdlr.param_look">look</ref>
+<ref to="chapter.widgets.tdlr.param_padx">padx</ref>
+<ref to="chapter.widgets.tdlr.param_pady">pady</ref>
+<ref to="chapter.widgets.tdlr.param_relief">relief</ref>
+<ref to="chapter.widgets.tdlr.param_takefocus">takefocus</ref>
+<ref to="chapter.widgets.tdlr.param_tooltips">tooltips</ref>
+
+<subsection><title>Method List</title><p>
+
+<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order just above <<W>>; this could end up either raising
+or lowering the widget.
+
+<para><title>bind</title><p><<bind(event:E action:A args:LA append:AP)>>: Specifies an action <<LA>> to execute when the event <<E>> is triggered.
+<list>
+<item> Actions can be specified either as a procedure, a pair <<Port#Message>> or a pair <<Object#Method>> (see <ptr to="basics.otherevents">). 
+<item> Events are strings (see <ptr to="misc.events.names">). 
+<item> The list of arguments <<LA>> specifies supplementary information to pass to the action, like the key code of a keypress, or the mouse coordinates of a mouse button click (see <ptr to="misc.events.args">). If <<LA>> if not specified, <<nil>> is assumed.
+<item> The boolean <<append>> parameter specifies if the binding overrides the previous binding for this event, or adds a supplementary action. If not specified, <<false>> is assumed.
+</LIST>
+
+<para><title>get</title><p><<get(parameter1:Variable1 ... parameterX:VariableX)>>: Obtains the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<VariableX>> must be free variables that will receive the current value of the parameters.
+
+<para><title>getFocus</title><p><<getFocus(force:B)>>: if <<B>> is <<false>> (or by default):  if the application currently has the input focus on the widget's display, this command resets the input focus for the widget's display to the widget. If the application doesn't currently have the input focus on the widget's display, the widget will be remembered as the focus for its top-level; the next time the focus arrives at the top-level, it will be redirected it to the widget. If <<B>> is <<true>>: sets the focus of the widget's display to the widget, even if the application doesn't currently have the input focus for the display. This command should be used sparingly, if at all. In normal usage, an application should not claim the focus for itself; instead, it should wait for the window manager to give it the focus. <<B>> must be a boolean.
+
+<para><title>getGrabStatus</title><p><<getGrabStatus(1:V)>>: Binds <<V>> to the atom <<none>> if there is no grab on the widget, to the atom <<local>> if there is a local grab and to <<global>> if there is a global grab. <<V>> must be a free variable.
+
+<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order just below <<W>>; this could end up either raising
+or lowering the widget. 
+
+<para><title>releaseGrab</title><p><<releaseGrab>>: Releases the grab on the widget if there is one, otherwise does nothing.
+
+<para><title>set</title><p><<set(parameter1:value1 ... parameterX:valueX)>>: Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.
+
+<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will be reported to other applications as if the grab had never occurred. A global grab locks out all applications on the screen, so that only the given subtree of the grabbing application will be sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
+
+<para><title>winfo</title><p><<winfo(parameter1:value1 ... parameterX:valueX)>>: This commands works like the <<get>> method, but for window-related information. For more details, see <ptr to="misc.winfo">.
+
+<subsection><title>Detailed Parameters List</title><p>
+
+<para id="chapter.widgets.tdlr.class"><title>class</title><p><<class:VS>>: Specifies a class for the window. This class will be used when querying the option database for the window's other options, and it will also be used later for other purposes such as bindings. This option can be specified at creation time only. <<VS>> must be a virtual string.
+
+<para id="chapter.widgets.tdlr.colormap"><title>colormap</title><p><<colormap:V>>: Specifies a colormap to use for the window. The value may be either the atom <<new>>, in which case a new colormap is created for the window and its children, or the handle of another window (which must be on the same screen and have the same visual as this widget), in which case the new window will use the colormap from the specified window. If the colormap option is not specified, the new window uses the same colormap as its parent. This option can be specified at creation time only.
+
+<para id="chapter.widgets.tdlr.container"><title>container</title><p><<container:B>>: Specifies if this window will be used as a container in which some other application will be embedded or not. The window will support the appropriate window manager protocols forthings like geometry requests. The window should not have any children of its own in this application. This option can be specified at creation time only.
+
+<para id="chapter.widgets.tdlr.height"><title>height</title><p><<height:P>>: Specifies the desired height for the window. If this option is less than or equal to zero then the window will not request any size at all. <<P>> must be a valid screen distance (see <ptr to="misc.distance">).
+
+<para id="chapter.widgets.tdlr.n"><title>n</title><p><<n:...>>: With <<n>> starting at <<1>> and going up one by one. Can take four different forms:
+
+<LIST>
+
+<ITEM> <<n:R>>: Specifies a widget to place inside the frame. <<R>> must be a record describing a widget.
+
+<ITEM> <<n:newline>>: For <<td>> (resp. <<lr>>), jumps to the next line (resp. column) so that all widgets placed on several lines (resp. columns) are vertically (resp. horizontally) aligned.
+
+<ITEM> <<n:continue>>: Spans the previous widget (if any) one more line or column. Normally, all widgets share the available space equally: two labels glued <<nswe>> in a single frame will have the same width and height. By continuing a widget, you can force it to act as if he was taking the space of two or more widgets. For example, continuing the first label will make him take 2/3 of the width (or height), leaving the rest for the second label.
+
+<ITEM> <<n:empty>>: Leaves an empty blank space.
+</LIST>
+Note that <<newline>>, <<continue>> and <<empty>> are <EM>not</EM> widgets and therefore can't be glued and don't have a handle. These parameters can be specified at creation time only. If you need windows that change their widgets dynamically, use the <<placeholder>> widget (see <ptr to="chapter.widgets.placeholder">).
+
+<para id="chapter.widgets.tdlr.param_background"><title>background</title><p><<background:C>>: or <<bg:C>>: Specifies the normal background color to use when displaying the widget. <<C>> must be a valid color (see <ptr to="misc.color">).
+
+<para id="chapter.widgets.tdlr.param_borderwidth"><title>borderwidth</title><p><<borderwidth:P>>: Specifies a non-negative value indicating the width of the 3-D border to draw around the outside of the widget (if such a border is
+    being drawn; the <<relief>> option typically determines this). The value may also be used when drawing 3-D effects in the interior of
+    the widget. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).
+
+<para id="chapter.widgets.tdlr.param_cursor"><title>cursor</title><p><<cursor:A>>: Specifies the mouse cursor to be used for the widget. <<A>> must be a valid cursor (see  <ptr to="misc.cursor">)
+
+<para id="chapter.widgets.tdlr.param_feature"><title>feature</title><p><<feature:A>>: Specifies a feature name for the container object to reference the object controlling this widget. For more details, see <ptr to="basics.interaction">. <<A>> must be an atom.
+
+<para id="chapter.widgets.tdlr.param_glue"><title>glue</title><p><<glue:A>>: Specifies how a widget must fit in its own available place. <<A>> must be an atom that is any combination of <<n>>, <<s>>, <<w>> and <<e>>. If a direction is specified, the corresponding border is glued to its neighbor or border of the frame if there is no neighbor. If a direction is not specified, the corresponding border if such that the widget takes just the width or height it needs to draw itself. If none of opposite directions is specified, the widget is centered. For more details, see <ptr to="basics.geometry">.
+
+<para id="chapter.widgets.tdlr.param_handle"><title>handle</title><p><<handle:V>>: Specifies a variable to reference the object controlling this widget. This variable is bound when the window is built. For more details, see <ptr to="basics.interaction">. <<V>> must be a free variable.
+
+<para id="chapter.widgets.tdlr.param_highlightbackground"><title>highlightbackground</title><p><<highlightbackground:C>>: Specifies the color to display in the traversal highlight region when the widget does not have the input focus.  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tdlr.param_highlightcolor"><title>highlightcolor</title><p><<highlightcolor:C>>: Specifies the color to use for the traversal highlight rectangle that is drawn around the widget when it has the input focus. <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tdlr.param_highlightthickness"><title>highlightthickness</title><p><<highlightthickness:P>>: Specifies a non-negative value indicating the width of the highlight rectangle to draw around the outside of the widget when it has
+    the input focus. If the value is zero, no focus highlight is drawn
+    around the widget. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).
+
+<para id="chapter.widgets.tdlr.param_look"><title>look</title><p><<look:L>>: Specifies a look to use for the widget. A look specifies default values for the parameters of widgets. This parameter can be specified at creation time only. Moreover changing a look will not change the appearance of widgets that are already displayed with that look. See <ptr to="misc.look"> for more details.
+
+<para id="chapter.widgets.tdlr.param_padx"><title>padx</title><p><<padx:P>>: Specifies how much horizontal external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
+
+<para id="chapter.widgets.tdlr.param_pady"><title>pady</title><p><<pady:P>>: Specifies how much vertical external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
+
+<para id="chapter.widgets.tdlr.param_relief"><title>relief</title><p><<relief:A>>: Specifies the 3-D effect desired for the widget.  Must be one of these atoms: <<raised>>, <<sunken>>, <<flat>>, <<ridge>>, <<solid>> or <<groove>>. The value
+    indicates how the interior of the widget should appear relative to its exterior; for example, <<raised>> means the interior of the widget
+    should appear to protrude from the screen, relative to the exterior of the widget. 
+
+<para id="chapter.widgets.tdlr.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
+
+<para id="chapter.widgets.tdlr.param_tooltips"><title>tooltips</title><p><<tooltips:VS>>: Specifies a tooltip for the widget. A tooltip is a small message that appears when the mouse cursor if left still over the widget for a while. If <<VS>> is set to <<nil>>, no tooltip will appear at all. <<VS>> must be a virtual string.
+
+<para id="chapter.widgets.tdlr.visual"><title>visual</title><p><<visual:A>>: Specifies visual information for the new window. <<A>> must be one of the following atoms: <<directcolor>>, <<grayscale>>, <<greyscale>>, <<pseudocolor>>, <<staticcolor>>, <<staticgray>>, <<staticgrey>>, or <<truecolor>>. If this option is not specified, the new window will use the same visual as its parent. This option can be specified at creation time only.
+
+<para id="chapter.widgets.tdlr.width"><title>width</title><p><<width:P>>: Specifies the desired width for the window. If this option is less than or equal to zero then the window will not request any size at all. <<P>> must be a valid screen distance (see <ptr to="misc.distance">).
+
+
+
+</section>

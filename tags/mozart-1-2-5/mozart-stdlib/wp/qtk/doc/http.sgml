@@ -1,0 +1,128 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+ 
+
+<!-- Extension to the DTD -->
+<!ENTITY amp "&">
+<!ENTITY alfa "ALFA">
+<!ENTITY lambda "LAMBDA">
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!ENTITY introduction		SYSTEM	"1_introduction.sgml">
+<!ENTITY prototyper             SYSTEM  "1bis_prototyper.sgml">
+<!ENTITY example                SYSTEM  "2_example.sgml">
+<!ENTITY basics                 SYSTEM  "3_basics.sgml">
+<!ENTITY widgets                SYSTEM  "4_widgets.sgml">
+<!ENTITY widgetbutton           SYSTEM  "41_widgetbutton.sgml">
+<!ENTITY widgetcanvas           SYSTEM  "42_widgetcanvas.sgml">
+<!ENTITY widgetcheckbutton      SYSTEM  "43_widgetcheckbutton.sgml">
+<!ENTITY widgetdropdownlistbox  SYSTEM  "44_widgetdropdownlistbox.sgml">
+<!ENTITY widgetentry            SYSTEM  "45_widgetentry.sgml">
+<!ENTITY widgetlabel            SYSTEM  "46_widgetlabel.sgml">
+<!ENTITY widgetlistbox          SYSTEM  "47_widgetlistbox.sgml">
+<!ENTITY widgetline             SYSTEM  "48_widgetline.sgml">
+<!ENTITY widgetrubberframe      SYSTEM  "49_widgetrubberframe.sgml">
+<!ENTITY widgetscale            SYSTEM  "50_widgetscale.sgml">
+<!ENTITY widgetscrollbar        SYSTEM  "51_widgetscrollbar.sgml">
+<!ENTITY widgetspace            SYSTEM  "52_widgetspace.sgml">
+<!ENTITY widgetmenubutton       SYSTEM  "53_widgetmenubutton.sgml">
+<!ENTITY widgetmessage          SYSTEM  "54_widgetmessage.sgml">
+<!ENTITY widgetnumberentry      SYSTEM  "55_widgetnumberentry.sgml">
+<!ENTITY widgetpanel            SYSTEM  "56_widgetpanel.sgml">
+<!ENTITY widgetplaceholder      SYSTEM  "57_widgetplaceholder.sgml">
+<!ENTITY widgetradiobutton      SYSTEM  "58_widgetradiobutton.sgml">
+<!ENTITY widgetscrollframe      SYSTEM  "59_widgetscrollframe.sgml">
+<!ENTITY widgettbbutton         SYSTEM  "60_widgettbbutton.sgml">
+<!ENTITY widgettbcheckbutton    SYSTEM  "61_widgettbcheckbutton.sgml">
+<!ENTITY widgettbradiobutton    SYSTEM  "62_widgettbradiobutton.sgml">
+<!ENTITY widgettext             SYSTEM  "63_widgettext.sgml">
+<!ENTITY widgettdlr             SYSTEM  "64_widgettdlr.sgml">
+<!ENTITY widgettoplevel         SYSTEM  "65_widgettoplevel.sgml">
+<!ENTITY widgetgrid             SYSTEM  "66_widgetgrid.sgml">
+<!ENTITY misc                   SYSTEM  "5_misc.sgml">
+<!ENTITY stddialog              SYSTEM  "6_stddialog.sgml">
+<!ENTITY advanced               SYSTEM  "7_advanced.sgml">
+
+
+<!-- Abbreviations -->
+<!ENTITY dot "." -- to distinguish it from periods -->
+
+<!-- Processing Instructions -->
+<!ENTITY eg PI "eg">
+<!ENTITY ie PI "ie">
+<!ENTITY nbsp PI "nbsp">
+<!entity resp PI "resp">
+]>
+
+<BOOK PROGLANG=OZ>
+  <FRONT>
+    <!-- Splitting the document into different HTML nodes -->
+
+    <Meta name="html.split.bib" value="">
+    <Meta name="html.split" value="chapter.introduction">
+    <Meta name="html.split" value="chapter.prototyper">
+    <Meta name="html.split" value="chapter.example">
+    <Meta name="html.split" value="chapter.basics">
+    <Meta name="html.split" value="chapter.widgets">
+    <Meta name="html.split" value="chapter.misc">
+    <Meta name="html.split" value="chapter.widgets.button">
+    <Meta name="html.split" value="chapter.widgets.canvas">
+    <Meta name="html.split" value="chapter.widgets.checkbutton">
+    <Meta name="html.split" value="chapter.widgets.dropdownlistbox">
+    <Meta name="html.split" value="chapter.widgets.entry">
+    <Meta name="html.split" value="chapter.widgets.label">
+    <Meta name="html.split" value="chapter.widgets.listbox">
+    <Meta name="html.split" value="chapter.widgets.line">
+    <Meta name="html.split" value="chapter.widgets.rubberframe">
+    <Meta name="html.split" value="chapter.widgets.scale">
+    <Meta name="html.split" value="chapter.widgets.scrollbar">
+    <Meta name="html.split" value="chapter.widgets.space">
+    <Meta name="html.split" value="chapter.widgets.menubutton">
+    <Meta name="html.split" value="chapter.widgets.message">
+    <Meta name="html.split" value="chapter.widgets.numberentry">
+    <Meta name="html.split" value="chapter.widgets.panel">
+    <Meta name="html.split" value="chapter.widgets.placeholder">
+    <Meta name="html.split" value="chapter.widgets.radiobutton">
+    <Meta name="html.split" value="chapter.widgets.scrollframe">
+    <Meta name="html.split" value="chapter.widgets.tbbutton">
+    <Meta name="html.split" value="chapter.widgets.tbcheckbutton">
+    <Meta name="html.split" value="chapter.widgets.tbradiobutton">
+    <Meta name="html.split" value="chapter.widgets.text">
+    <Meta name="html.split" value="chapter.widgets.tdlr">
+    <Meta name="html.split" value="chapter.widgets.grid">
+    <Meta name="html.split" value="chapter.widgets.toplevel">
+    <Meta name="html.split" value="misc.color">
+    <Meta name="html.split" value="misc.bitmap">
+    <Meta name="html.split" value="misc.image">
+    <Meta name="html.split" value="misc.imagelibrary">
+    <Meta name="html.split" value="misc.distance">
+    <Meta name="html.split" value="misc.cursor">
+    <Meta name="html.split" value="misc.font">
+    <Meta name="html.split" value="misc.winfo">
+    <Meta name="html.split" value="misc.menu">
+    <Meta name="html.split" value="misc.events">
+    <Meta name="html.split" value="misc.reference">
+    <Meta name="html.split" value="chapter.advanced">
+    <Meta name="html.split" value="chapter.stddialog">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+
+    <TITLE>QTk - Graphic User Interface Design for Oz</TITLE>
+    <Author>Donatien Grolaux</Author>
+    <!--Author.Extern to="author.db" key="Donatien.Grolaux"-->
+   
+  <BODY>
+   &introduction;
+   &prototyper;
+   &example;
+   &basics;
+   &advanced;
+   &stddialog;
+   &widgets;
+   &misc;
+  </BODY> 
+ 
+</BOOK>

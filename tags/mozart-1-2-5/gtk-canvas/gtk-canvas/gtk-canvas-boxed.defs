@@ -1,0 +1,15 @@
+; -*- scheme -*-
+
+; These definitions here cause the creation of some new GTK_TYPE_* ids
+; The code doesn't benefit most C programs directly, but is very useful
+; for language bindings.
+
+;; Maybe this should be defined in a gdk_imlib specific library -- but
+;; gdk_imlib has no gtk+ code in it.
+(define-boxed GdkImlibImage
+)
+
+;; An array of points used by GtkCanvasLine and GtkCanvasPolygon
+(define-boxed GtkCanvasPoints
+)
+

@@ -1,0 +1,140 @@
+#
+#  Authors:
+#    Christian Schulte <schulte@ps.uni-sb.de>
+# 
+#  Copyright:
+#    Christian Schulte, 1998
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+# 
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+BUILDTOP	= @BUILDTOP@
+BUILDDIR        = $(BUILDTOP)/share/demo
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+SRCTOP		= @SRCTOP@
+HOMEURL         = @HOMEURL@
+PLATFORM	= @PLATFORM@
+
+PREFIX		= @prefix@
+OZEX		= $(PREFIX)/examples
+
+SHELL		= /bin/sh
+LN_S            = @LN_S@
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+
+OZCFLAGS        = 
+OZC		= @OZC@
+
+OZLFLAGS        = 
+OZL		= @OZL@
+
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+
+COMPILE         = $(OZC) $(OZCFLAGS) -b $(BUILDDIR)/ -c
+ZCOMPILE        = $(COMPILE) -z 9
+
+@SET_MAKE@
+
+FUNCTORS = \
+	Knights.ozf Queens.ozf
+
+all: $(FUNCTORS)
+
+%.ozf: fd/graphics/%.oz
+	$(ZCOMPILE) $(shell $(CYGPATH) "$<") -o $@ 
+
+
+EXFUNCTORS = \
+	$(FUNCTORS:%=$(OZEX)/fd/graphics/%)
+
+EXDIRS = \
+	sampler sampler/constraints \
+	fd grammar grammar/shieber \
+	fd/graphics
+
+
+OZEXDIRS = $(EXDIRS:%=$(OZEX)/%)
+
+
+$(OZEX) $(OZEXDIRS):
+	$(INSTALL_DIR) $@
+
+FD = \
+	bin-packing bridge cars change \
+	conference configuration donald family fraction \
+	grocery kalotan knights magic-sequence \
+	magic-square map-coloring money multiply photo \
+	pythagoras queens safe srat golomb \
+	warehouses zebra graphics/Knights graphics/Queens
+
+GR = \
+	hpsg shieber shieber/formalism shieber/grammar
+
+EXAMPLES = \
+	$(FD:%=$(OZEX)/fd/%.oz) \
+	$(GR:%=$(OZEX)/grammar/%.oz)
+
+SAMPLER0 = \
+	constraints/animate-bridge constraints/bridge \
+	constraints/draw-photo constraints/abz6 \
+	constraints/scheduling-compiler constraints oz
+SAMPLER = $(SAMPLER0:%=$(OZEX)/sampler/%.oz)
+
+$(OZEX)/fd/%.oz: fd/%.oz
+	$(INSTALL_FILE) $< $@
+$(OZEX)/fd/graphics/%.ozf: %.ozf
+	$(INSTALL_FILE) $< $@
+$(OZEX)/fd/graphics/%.oz: fd/graphics/%.oz
+	$(INSTALL_FILE) $< $@
+$(OZEX)/grammar/%.oz: grammar/%.oz
+	$(INSTALL_FILE) $< $@
+$(OZEX)/grammar/shieber/%.oz: grammar/shieber/%.oz
+	$(INSTALL_FILE) $< $@
+$(OZEX)/sampler/%.oz: sampler/%.oz
+	$(INSTALL_FILE) $< $@
+$(OZEX)/sampler/constraints/%.oz: sampler/constraints/%.oz
+	$(INSTALL_FILE) $< $@
+
+
+.PHONY: all install clean veryclean distclean bootstrap check depend
+
+install: all $(OZEX) $(OZEXDIRS) $(SAMPLER) $(EXAMPLES) $(EXFUNCTORS)
+
+clean:
+	-rm -f *~ ./*/*~ ./*/*/*~
+
+veryclean: clean
+	-rm -f $(FUNCTORS)
+
+distclean: veryclean
+	-rm -f Makefile
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap:
+	$(MAKE) boot-all
+
+check:
+
+depend:

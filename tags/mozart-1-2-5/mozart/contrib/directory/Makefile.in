@@ -1,0 +1,117 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+PLATFORM	= @PLATFORM@
+LIB_DIR		= $(PREFIX)/contrib/directory
+HOMEURL         = @HOMEURL@
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/directory
+
+OZC		= @OZC@
+OZL		= @OZL@
+COMPILE		= $(OZC) -c
+OZTOOL		= @OZTOOL@
+CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
+		  -I$(BUILDTOP)/platform/emulator \
+		  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS	= @CXXFLAGS@
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
+
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+
+RM		= rm -f
+
+LIBS     	= 
+
+CXXFLAGS   	+= -UDEBUG
+
+CXX      	= $(OZTOOL) c++
+LD       	= $(OZTOOL) ld
+
+OZDEPEND 	= $(OZC) -c -M
+
+#----------------------------------------------------------------------
+# Sources and targets
+#----------------------------------------------------------------------
+
+OZSRCS  	= ExampleDirectory.oz
+
+OZFNCTS		= $(OZSRCS:.oz=.ozf) 
+
+TARGETS		= ExampleDirectory.oz ExampleDirectory.ozf
+LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
+NEW_TARGETS	= $(TARGETS:%=$(NEWCACHEDIR)/%)
+
+.PHONY: depend clean distclean bootstrap
+.PRECIOUS: %.o 
+
+all:     $(TARGETS)
+install: $(NEWCACHEDIR) $(NEW_TARGETS)
+
+$(LIB_DIR) $(NEWCACHEDIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_DIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
+
+$(LIB_DIR)/%.oz: %.oz
+	$(INSTALL_LIB) $< $@
+
+$(NEWCACHEDIR)/%: %
+	$(INSTALL_LIB) $< $@
+
+#----------------------------------------------------------------------
+# Oz part
+#----------------------------------------------------------------------
+
+%.ozf: %.oz 
+	$(OZC) -c $(shell $(CYGPATH) "$<") -o $@ 
+
+%.ozf: %.ozg 
+	$(OZC) -c --gump $(shell $(CYGPATH) "$<") -o $@ 
+
+#----------------------------------------------------------------------
+# Maintenance
+#----------------------------------------------------------------------
+
+depend: Makefile $(OZSRCS)
+	$(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) > Makefile.deps
+
+clean veryclean: 
+	$(RM) *.ozf
+	$(RM) *.o
+	$(RM) *.so-$(PLATFORM)
+	$(RM) *.so
+	$(RM) *.l
+	$(RM) *.C
+	$(RM) *~
+
+distclean: clean
+	$(RM) config.* Makefile*
+
+include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#----------------------------------------------------------------------
+# Automatic Makefile update
+#----------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+#----------------------------------------------------------------------
+# Dependencies
+#----------------------------------------------------------------------
+-include Makefile.deps

@@ -1,0 +1,54 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1999
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id=chapter.convert proglang=sh>
+  <Title/Conversion of Pickles: <code/convertTextPickle//
+  <p>
+    If you had saved data structures into pickles with Mozart&nbsp;1.0.1,
+    then you'll want to use them in newer releases of Mozart as well.
+    The format of pickles has changed after 1.0.1, however.  This command
+    line utility can help you to convert pickles.  Concerning limitations
+    and how to overcome them, please refer to the <Ref.Extern
+    to="ozdoc:contrib" key="chapter.compat"/compat/ module.
+    <List>
+      <Entry/<<--help>>, <<-h>>, <<-?>>/
+      <Item>
+	Display information on legal options, then exit.
+
+      <Entry/<<--in=?{file}>>, <<-i ?{file}>>/
+      <Item>
+	Select the file from which to read a text pickle in old format.
+
+      <Entry/<<--out=?{file}>>, <<-o ?{file}>>/
+      <Item>
+	Select the file to which to write the converted pickle in new format.
+    </List>
+</Chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../apptut/chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

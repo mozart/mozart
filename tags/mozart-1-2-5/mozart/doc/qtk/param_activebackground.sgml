@@ -1,0 +1,4 @@
+<ITEM> <<activebackground:C>> : Specifies background color to use when drawing active elements. An element (a widget or portion of a widget) is active if the mouse
+    cursor is positioned over the element and pressing a mouse button will cause some action to occur. For some elements on Windows and Macintosh systems, the active color will only be used while mouse button 1 is
+    pressed over the element. <<C>> must be a valid color (see <ptr to="misc.color">)
+

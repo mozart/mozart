@@ -1,0 +1,141 @@
+<!--
+  - Authors:
+  -   Thorsten Brunklaus  <brunklaus@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Thorsten Brunklaus, 2001
+  -   Leif Kornstaedt, 2001
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.basics">
+  <Title/GTK+ Basics/
+  <P>
+    GTK+ is organized into visual units called <Def/widgets/.  Some widget
+    classes are defined by refinement of some parent widget class using
+    inheritance.  Therefore, GTK+ has an object-oriented organization and
+    maps nicely to the Oz object system.
+  <Para class=apropos><Title/Overview/
+    The general steps to create a GTK+ widget are:
+    <List>
+      <Item>Instantiate a widget object using the appropriate constructor.
+      <Item>Connect appropriate handlers to all signals and events we wish
+	to react to.
+      <Item>Set attributes of the widget.
+      <Item>Pack the widget into a container.
+      <Item>Make the widget visible.
+    </List>
+  <Section>
+    <Title/Widget Creation/
+    <P>
+      A widget object is created by instantiating a widget class.
+      The constructors are the methods starting with <<new>>; some
+      widget classes have multiple constructors.  For example,
+<<<Button = {New GTK.button
+	  newWithLabel("Hello, World!")}>>>
+      creates a new object for a button labelled <<"Hello, World!">>.
+    <P>
+      Object creation yields a freshly created widget object whose attributes
+      are set to reasonable default values.  (It will not appear on the screen
+      until it has been packed into a container which then is made visible.)
+      The operations on the widget and its parent classes are available
+      through the object's methods.
+  <Section>
+    <Title/Signals and Callbacks/
+    <P>
+      GTK+ is event-driven, which means that when an event occurs, control
+      is passed to the appropriate procedure or method.
+    <Para class=apropos><Title/Signals/
+      Events in GTK+ are implemented through <Def/signals/.  (Note that
+      these signals are unrelated to Unix system signals.)  When an event
+      occurs, such as the press of a mouse button, the appropriate signal
+      will be <Def/emitted/ by the corresponding widget.  Some signals
+      are common to all widget classes, such as <<'delete-event'>>, while
+      others are widget-specific, such as <<'toggled'>> for a toggle button.
+    <Para class=apropos><Title/Connecting Handlers/
+      The <<signalConnect>> method allows to catch signals and cause invocation
+      of actions.  For instance,
+      <<<{?_{Widget} signalConnect(?_{Signal} ?_{Callback} ??{Id})}>>>
+      causes ?_{Callback} to be invoked each time that the signal named
+      ?_{Signal} is emitted on ?_{Widget}.  ?_{Id} is a unique identifier
+      which can be used to manually emit the signal or to remove the handler.
+    <Para class=apropos><Title/Callbacks/
+      ?_{Callback} can be either a unary procedure or the label of a unary
+      method.  Thus, callbacks are either defined as a procedure:
+<<<proc {MyCallback Args}
+   &ellipsis; /* Computations */ &ellipsis;
+end>>>
+      or as a method:
+<<<meth myCallback(Args)
+   &ellipsis; /* Computations */ &ellipsis;
+end>>>
+      where <<Args>> is a list of the arguments associated with the signal.
+    <Para class=apropos><Title/Low-level Events/
+      In addition to the high-level signals described above, there is a set
+      of events that reflect the X Window System event mechanism (simulated
+      non-X platforms such as Windows).  These can be caught using the special
+      signal <<'event'>>.  For more details, see <Ptr to="chapter.reference">.
+  <Section>
+    <Title/Widget Attributes/
+    <P>
+      GTK+ widgets organize their data using <Def/attributes/.  Some attributes
+      are read-only, others are mutable.  The latter allow for the widget to
+      be reconfigured after creation.
+    <P>
+      Attributes are named by strings and have an associated (typed) value.
+      Many widgets define accessors for commonly used attributes, but in
+      general they can be read using the <<get>> method and written to using
+      the <<set>> method.  Trying to access a non-existing attribute yields
+      an error.
+  <Section>
+    <Title/Containers/
+    <P>
+      Widgets are laid out on the screen using so-called containers.
+      Container widgets themselves usually do not provide any visible
+      information, but display their child widgets according to a built-in
+      strategy.  For example, an <<hBox>> container will align its children
+      horizontally on the screen.  A container can contain other container
+      widgets.
+    <P>
+      GTK+ provides a variety of different container types covering the
+      <Q/daily/ needs, which all are descendants of the <<GTK.container>>
+      class.  In the case of our <Q/hello world/ example, the <<GTK.window>>
+      class is the container the button is assigned to.
+    <Para class=apropos><Title/Bins/
+      <<GTK.window>> is a subclass of <<GTK.bin>>, which is the superclass
+      of all containers accepting at most one child.  Bins do not do any
+      layouting.  If our window had contained more than one child, we would
+      have needed to create another container to lay out the children, which
+      would then have been the window's single child.
+  <Section>
+    <Title/Visibility/
+    <P>
+      The last step to start working with widgets on the screen is to make
+      them visible.  This can be done manually by a bottom-up traversal of the
+      container tree and calling each container's <<show>> Method.  This is
+      what the topmost container's <<showAll>> method does automatically.
+    <P>
+      With few exceptions, signals emitted by a widget are only caught while
+      it remains visible.
+  <Section>
+    <Title/Error Handling/
+    <P>
+      GTK+ widgets do a lot of error-checking internally, but errors are
+      just reported to the screen instead of being raised as an Oz exception.
+      Errors discovered in the language binding's code are reported as
+      exceptions.
+</Chapter>

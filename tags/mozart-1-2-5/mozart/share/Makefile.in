@@ -1,0 +1,23 @@
+@SET_MAKE@
+
+SUBDIRS = @SHAREDIRS@
+
+.PHONY: bootstrap all install clean distclean veryclean check depend
+
+all::
+
+bootstrap all install clean veryclean depend distclean check::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+	  then true; \
+	  else exit 1; \
+	  fi; \
+	done
+
+clean veryclean distclean::
+	-rm -f *~
+
+distclean::
+	-rm -f Makefile config.log config.status config.cache
+	-rm -f $(SUBDIRS:%=%/Makefile)

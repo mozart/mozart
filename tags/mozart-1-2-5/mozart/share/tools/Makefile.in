@@ -1,0 +1,317 @@
+BUILDTOP	= @BUILDTOP@
+BUILDDIR	= $(BUILDTOP)/share/tools
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+SRCTOP		= @SRCTOP@
+HOMEURL         = @HOMEURL@
+PREFIX		= @prefix@
+PLATFORM	= @PLATFORM@
+
+OZBIN		= $(PREFIX)/bin
+OZEX		= $(PREFIX)/examples
+OZEXGUMP	= $(OZEX)/gump
+OZLOADSEP	= @OZLOADSEP@
+
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+CYG_SRCDIR	= $(shell $(CYGPATH) $(SRCDIR))
+export OZPATH	= .$(OZLOADSEP)$(CYG_SRCDIR)
+CACHEDIR	= $(PREFIX)/cache/x-oz/system
+
+SHELL		= /bin/sh
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+COMPRESSLEVEL	= @oz_picklecompression@
+COMPRESSFLAGS	= -z $(COMPRESSLEVEL)
+
+OZCFLAGS	= $(COMPRESSFLAGS)
+OZC		= @OZC@
+
+OZLFLAGS	= $(COMPRESSFLAGS)
+OZL		= @OZL@
+
+EXE_EXT		= @EXE_EXT@
+
+COMPILENOMODE	= $(OZC) $(OZCFLAGS)
+COMPILE		= $(COMPILENOMODE) -c
+COMPILEEXEC	= $(COMPILENOMODE) -x @OZEXECFILE@
+LINK		= $(OZL) $(OZLFLAGS)
+
+COMPILERPANELSRC1 = \
+	CompilerPanelClass.oz
+COMPILERPANELSRC = $(COMPILERPANELSRC1:%=compilerPanel/%) CompilerPanel.oz
+
+PANELSRC1 = \
+	configure.oz load.oz make-notes.oz runtime-bar.oz top.oz \
+	main.oz dialogs.oz errors.oz
+PANELSRC = $(PANELSRC1:%=panel/%) Panel.oz
+
+DISTRIBUTIONPANELSRC1 = \
+	GUI.oz Main.oz MessageInfo.oz SiteInfo.oz \
+	Widgets.oz Colour.oz FieldDisplay.oz Graph.oz NetInfo.oz TableInfo.oz \
+	AdvancedListBox.oz TitleGraph.oz DistributionPanel.oz
+DISTRIBUTIONPANELSRC = $(DISTRIBUTIONPANELSRC1:%=dpanel/%)
+DISTRIBUTIONPANELOBJS = $(DISTRIBUTIONPANELSRC1:%.oz=%.ozf)
+
+BROWSERSRC1 = \
+	XResources.oz browserObject.oz browserTerm.oz \
+	bufsAndStreams.oz constants.oz controlObject.oz core.oz \
+	errors.oz managerObject.oz reflect.oz repManager.oz \
+	store.oz tcl-interface.oz termObject.oz \
+	termsStore.oz windowManager.oz
+BROWSERSRC = $(BROWSERSRC1:%=browser/%) Browser.oz
+
+EXPLORERSRC1 = \
+	main.oz misc.oz action-nodes.oz hide-nodes.oz \
+	layout-nodes.oz manager.oz \
+	menu-manager.oz move-nodes.oz tk-nodes.oz \
+	configure-static.oz configure-dynamic.oz \
+	combine-nodes.oz nodes.oz toplevel-manager.oz \
+	default-actions.oz search-nodes.oz stat-nodes.oz \
+	statistics-balloon.oz \
+	dialog-manager.oz shapes-and-images.oz status-manager.oz \
+	errors.oz
+EXPLORERSRC = $(EXPLORERSRC1:%=explorer/%) Explorer.oz
+
+EMACSSRC = Emacs.oz
+
+OZCARSRC1 = \
+	prelude.oz string.oz tk.oz config.oz help.oz tree.oz thread.oz \
+	stack.oz source.oz menu.oz dialog.oz gui.oz ozcar.oz
+OZCARSRC = $(OZCARSRC1:%=ozcar/%) Ozcar.oz
+
+OZCARIMAGESDIR = $(CACHEDIR)/images/ozcar
+OZCARIMAGES1 = \
+	step.xbm next.xbm unleash.xbm stop.xbm detach.xbm term.xbm 
+OZCARIMAGES = $(OZCARIMAGES1:%=$(OZCARIMAGESDIR)/%)
+
+PROFILERSRC1 = \
+	prof-gui.oz prof-prelude.oz prof-tk.oz \
+	prof-config.oz prof-help.oz profiler.oz \
+	prof-dialog.oz prof-menu.oz prof-string.oz
+PROFILERSRC = $(PROFILERSRC1:%=profiler/%) Profiler.oz
+
+GUMPSRC1 = Bison.oz Main.oz Output.oz ParserGenerator.oz ScannerGenerator.oz
+GUMPSRC = $(GUMPSRC1:%=gump/%) Gump.oz
+
+GUMPSCANNERSRC1 = GumpScannerClass.oz Errors.oz
+GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=gump/%) GumpScanner.oz
+
+GUMPPARSERSRC1 = GumpParserClass.oz
+GUMPPARSERSRC = $(GUMPPARSERSRC1:%=gump/%) GumpParser.oz
+
+PRODUCTIONTEMPLATESSRC1 = ProductionTemplates.ozg
+PRODUCTIONTEMPLATESSRC = $(PRODUCTIONTEMPLATESSRC1:%=gump/%) \
+	ProductionTemplates.oz
+
+GUMPEXAMPLEFILES = \
+	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
+	OzParser.ozg OzScanner.ozg OzFrontend.oz
+
+INSPECTORTOPSRC = \
+	InspectorOptions Reflection InspectorMain TreeWidget
+INSPECTORTREEWIDGETSRC = \
+	CreateObjects LayoutObjects DrawObjects \
+        TreeNodes StoreListener GraphicSupport \
+	RelationManager Helper
+
+INSPECTORTOPOBJS = \
+	$(INSPECTORTOPSRC:%=%.ozf)
+INSPECTORTREEWIDGETOBJS = \
+	$(INSPECTORTREEWIDGETSRC:%=%.ozf)
+INSPECTOROBJS = \
+	$(INSPECTORTOPOBJS) \
+	$(INSPECTORTREEWIDGETOBJS)
+
+INSPECTORTOPDEPSRC0 = \
+	FrameManager OptionsGUI
+INSPECTORTOPDEPSRC = \
+	$(INSPECTORTOPDEPSRC0:%=inspector/%.oz)
+
+INSPECTORTWCODEPSRC0 = \
+	CreateObjects              \
+	create/SimpleCreateObjects \
+	create/ContCreateObjects
+INSPECTORTWCODEPSRC = \
+	$(INSPECTORTWCODEPSRC0:%=inspector/treewidget/%.oz)
+
+INSPECTORTWLODEPSRC0 = \
+	LayoutObjects               \
+	layout/SimpleLayoutObjects  \
+	layout/ContLayoutObjects
+INSPECTORTWLODEPSRC = \
+	$(INSPECTORTWLODEPSRC0:%=inspector/treewidget/%.oz)
+
+INSPECTORTWDODEPSRC0 = \
+	DrawObjects            \
+	draw/SimpleDrawObjects \
+	draw/ContDrawObjects
+INSPECTORTWDODEPSRC = $(INSPECTORTWDODEPSRC0:%=inspector/treewidget/%.oz)
+
+INSPECTORIMAGESDIR = $(CACHEDIR)/images/inspector
+INSPECTORIMAGES1 = \
+	depth.xbm width.xbm stop.xbm sep.xbm
+INSPECTORIMAGES = $(INSPECTORIMAGES1:%=$(INSPECTORIMAGESDIR)/%)
+
+EXAMPLEFILES = $(GUMPEXAMPLEFILES:%=$(OZEXGUMP)/%)
+
+FUNCTORS = \
+	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
+	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
+	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf \
+	EvalDialog.ozf Inspector.ozf OPIServer.ozf DistributionPanel.ozf \
+	DistributionPanelSrc.ozf
+
+TOOLSFUNCTORS = $(FUNCTORS:%=$(CACHEDIR)/%)
+
+IMAGES1 = \
+	compiler.xbm compilermask.xbm \
+	lines-lr.xbm lines-rl.xbm grid-25.xbm grid-50.xbm \
+	browserMIcon.xbm browserIcon.xbm stop.xbm
+IMAGESDIR = $(CACHEDIR)/images
+IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
+
+SYSLETS0 = ozd
+SYSLETS = $(SYSLETS0:%=%$(EXE_EXT))
+
+.PHONY: all install bootstrap check depend
+.PHONY: install-main install-cache
+.PHONY: clean veryclean distclean tags
+
+all: Makefile $(FUNCTORS) $(SYSLETS)
+
+include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Components
+#---------------------------------------------------------------------
+
+%.ozf: %.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+
+EvalDialog.ozf: EvalDialog.oz
+
+OPI.ozf: OPI.oz
+
+OPIEnv.ozf: OPIEnv.oz
+
+CompilerPanel.ozf: $(COMPILERPANELSRC)
+
+Panel.ozf: $(PANELSRC)
+
+Browser.ozf: $(BROWSERSRC)
+
+Explorer.ozf: $(EXPLORERSRC)
+
+Emacs.ozf: $(EMACSSRC)
+
+Ozcar.ozf: $(OZCARSRC)
+
+Profiler.ozf: $(PROFILERSRC)
+
+Gump.ozf: $(GUMPSRC) $(SRCTOP)/share/lib/compiler/TupleSyntax.oz \
+	$(SRCTOP)/share/lib/compiler/FormatStrings.oz
+
+GumpScanner.ozf: $(GUMPSCANNERSRC)
+
+GumpParser.ozf: $(GUMPPARSERSRC)
+
+ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
+
+CreateObjects.ozf: $(INSPECTORTWCODEPSRC)
+LayoutObjects.ozf: $(INSPECTORTWLODEPSRC)
+DrawObjects.ozf:   $(INSPECTORTWDODEPSRC)
+TreeWidget.ozf:    $(INSPECTORTREEWIDGETOBJS)
+InspectorMain.ozf: $(INSPECTORTOPDEPSRC)
+
+%.ozf: inspector/treewidget/%.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+%.ozf: inspector/%.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+Inspector.ozf: $(INSPECTOROBJS)
+	$(LINK) InspectorMain.ozf -o $@
+
+%.ozf: dpanel/%.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+DistributionPanelSrc.ozf: $(DISTRIBUTIONPANELSRC1:%=%f)
+	$(LINK) Main.ozf -o $@
+
+#---------------------------------------------------------------------
+# Syslets
+#---------------------------------------------------------------------
+
+ozd$(EXE_EXT): ozcar/ozd.oz
+	$(COMPILEEXEC) $(shell $(CYGPATH) "$<") -o $@
+
+#---------------------------------------------------------------------
+# Installation
+#---------------------------------------------------------------------
+
+BINFILES = \
+	$(SYSLETS:%=$(OZBIN)/%)
+
+install: install-main install-cache
+
+install-main: all \
+	$(OZBIN) $(BINFILES) \
+	$(OZEX) $(OZEXGUMP) $(EXAMPLEFILES)
+
+$(OZBIN) $(OZEX) $(OZEXGUMP):
+	$(INSTALL_DIR) $@
+
+$(OZBIN)/%: %
+	$(INSTALL_BIN) $< $@
+
+$(OZEXGUMP)/%: gump/examples/%
+	$(INSTALL_FILE) $< $@
+
+install-cache: \
+	$(CACHEDIR) $(IMAGESDIR) \
+	$(TOOLSFUNCTORS) $(IMAGES) \
+	$(OZCARIMAGESDIR) $(OZCARIMAGES) \
+	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
+
+$(CACHEDIR) $(IMAGESDIR) $(OZCARIMAGESDIR) $(INSPECTORIMAGESDIR):
+	$(INSTALL_DIR) $@
+
+$(CACHEDIR)/%: %
+	$(INSTALL_FILE) $< $@
+
+$(OZCARIMAGESDIR)/%: ozcar/images/%
+	$(INSTALL_FILE) $< $@
+
+$(INSPECTORIMAGESDIR)/%: inspector/images/%
+	$(INSTALL_FILE) $< $@
+
+#---------------------------------------------------------------------
+# Cleaning up
+#---------------------------------------------------------------------
+
+clean:
+	rm -f *~ *.bak ./*/*~ ./*/*/*~ ./*/*.bak ./*/*/*.bak
+	rm -f $(FUNCTORS) $(INSPECTOROBJS) $(DISTRIBUTIONPANELOBJS) $(SYSLETS)
+
+veryclean: clean
+	rm -f -r TAGS
+
+distclean: veryclean
+	@echo To really make distclean, please use \"cd ..\; make distclean\".
+
+#---------------------------------------------------------------------
+# Testing Components Locally
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+check:
+
+depend:
