@@ -553,7 +553,7 @@ the GDB commands `cd DIR' and `directory'."
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false"
        "div" "mod" "andthen" "orelse"
-       "not" "thread" "in"
+       "not" "thread" "seq" "in"
        "dis"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
@@ -569,7 +569,7 @@ the GDB commands `cd DIR' and `directory'."
 		   "local"
 		   "if" "or" "OR" "case"
 		   "class" "create" "meth" "extern"
-		   "not" "thread"
+		   "not" "thread" "seq"
 		   "dis"
 		   )))
 
