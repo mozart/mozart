@@ -85,7 +85,7 @@ void Statistics::print(FILE *fd) {
   fprintf(fd, ".\n\n  Process resources consumed:");
   printTime(fd,"\n    User time is ", utime);
   printTime(fd,".\n    System time is ", systime);
-  printMem(fd,".\n    Size is ", ToInt32(sbrk(0)));
+  printMem(fd,".\n    Size is ", ToInt32(sbrk(0))-mallocBase);
   fprintf(fd, ".\n\n");
 
 #ifdef PROFILE
@@ -202,7 +202,10 @@ int Statistics::Statistics_gcSoFar = 0;
 
 void Statistics::initGcMsg(int level)
 {
-  if (level > 0) printf("Heap garbage collection");
+  if (level > 0) {
+    printf("Heap garbage collection");
+    fflush(stdout);
+  }
 
   gc_level = level;
   gc_utime = usertime();
