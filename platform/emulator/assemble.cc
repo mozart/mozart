@@ -83,6 +83,16 @@ OZ_C_proc_begin(BIstoreInt,2)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIstoreReg,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareIntArg(1,i);
+  code->writeReg(i);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BIstoreOp,2)
 {
   declareCodeBlock(0,code);
@@ -345,6 +355,7 @@ BIspec biSpec[] = {
   {"makeProc",         3, BImakeProc,         0},
   {"storeOp",          2, BIstoreOp,          0},
   {"storeInt",         2, BIstoreInt,         0},
+  {"storeReg",         2, BIstoreReg,         0},
   {"storeTagged",      2, BIstoreTagged,      0},
   {"storeBuiltinname", 2, BIstoreBuiltinname, 0},
   {"storeLabel",       2, BIstoreLabel,       0},
