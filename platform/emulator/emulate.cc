@@ -2008,144 +2008,150 @@ LBLkillThread:
 // --- Call: Abstraction
 // -----------------------------------------------------------------------
 
-    TypeOfConst typ = predicate->getType();
+     {
+       TypeOfConst typ = predicate->getType();
 
-    switch (typ) {
-    case Co_Abstraction:
-    case Co_Object:
-      {
-	Abstraction *def;
-	if (typ==Co_Object) {
-	  /* {Obj Msg} --> {Obj Msg Methods Self} */
-	  Object *o = (Object*) predicate;
-	  if (o->getIsClass()) {
-	    HF_WARN(message("classes cannot be applied\n"),);
-	  }
-	  if (predArity != 1) {
-	    HF_WARN(message("Object application: expect one argument, got: %d\n",predArity),);
-	  }
-	  def = o->getAbstraction();
-	  X[predArity++] = o->getSlowMethods();
-	  X[predArity++] = makeTaggedConst(predicate);
-	} else {
-	  def = (Abstraction *) predicate;
-	}
-	CheckArity(predArity, def->getArity(), def, PC);
-	if (!isTailCall) { CallPushCont(PC); }
-	CallDoChecks(def,def->getGRegs(),def->getArity());
-	Y = NULL; // allocateL(0);
-
-	JUMP(def->getPC());
-      }
+       switch (typ) {
+       case Co_Abstraction:
+       case Co_Object:
+	 {
+	   Abstraction *def;
+	   if (typ==Co_Object) {
+	     /* {Obj Msg} --> {Obj Msg Methods Self} */
+	     Object *o = (Object*) predicate;
+	     if (o->getIsClass()) {
+	       HF_WARN(message("classes cannot be applied\n"),);
+	     }
+	     if (predArity != 1) {
+	       HF_WARN(message("Object application: expect one argument, got: %d\n",predArity),);
+	     }
+	     def = o->getAbstraction();
+	     X[predArity++] = o->getSlowMethods();
+	     X[predArity++] = makeTaggedConst(predicate);
+	   } else {
+	     def = (Abstraction *) predicate;
+	   }
+	   CheckArity(predArity, def->getArity(), def, PC);
+	   if (!isTailCall) { CallPushCont(PC); }
+	   CallDoChecks(def,def->getGRegs(),def->getArity());
+	   Y = NULL; // allocateL(0);
+	   
+	   JUMP(def->getPC());
+	 }
 
 
 // -----------------------------------------------------------------------
 // --- Call: Builtin
 // -----------------------------------------------------------------------
-    case Co_Builtin:
-      {
-	bi = (Builtin *) predicate;
+       case Co_Builtin:
+	 {
+	   bi = (Builtin *) predicate;
+	   
+	   CheckArity(predArity, bi->getArity(),bi,PC);
+	   
+	   switch (bi->getType()) {
+	     
+	   case BIraise:
+	     goto LBLraise;
+	   case BIsolve:
+	     { isEatWaits = NO; isSolveDebug = NO; goto LBLBIsolve; }
+	   case BIsolveEatWait:
+	     { isEatWaits = OK; isSolveDebug = NO; goto LBLBIsolve; }
+	   case BIsolveDebug:
+	     { isEatWaits = NO; isSolveDebug = OK; goto LBLBIsolve; }
+	   case BIsolveDebugEatWait:
+	     { isEatWaits = OK; isSolveDebug = OK; goto LBLBIsolve; }
+	   case BIsolveCont:    goto LBLBIsolveCont;
+	   case BIsolved:       goto LBLBIsolved;
+	     
+	   case BIDefault:
+	     {
+	       LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
-	CheckArity(predArity, bi->getArity(),bi,PC);
+	       if (e->isSetSFlag(DebugMode)) {
+		 enterCall(CBB,bi,predArity,X);
+	       }
 
-	switch (bi->getType()) {
+	       OZ_Bool res = bi->getFun()(predArity, X);
+	       if (e->isSetSFlag(DebugMode)) {
+		 exitBuiltin(res,bi,predArity,X);
+	       }
 
-	case BIraise:
-	LBLraise:
-	  {
-	    TaggedRef exception = X[0];
-	    if (!e->isToplevel()) {
-	      warning("raise only allowed on toplevel (yet)");
-	      if (isTailCall) {
-		goto LBLpopTask;
-	      }
-	      JUMP(PC);
-	    }
-	    isTailCall = OK;
-	    if (e->currentThread == NULL) {
-	      predicate = NULL;
-	    } else {
-	      predicate = e->currentThread->findExceptionHandler();
-	    }
-	    if (predicate == NULL) {
-	      warning("no exception handler found for: %s",OZ_toC(exception));
-	      goto LBLpopTask;
-	    }
-	    /* exception is already in X[0], but should somehow be reflected !!! */
-	    goto LBLcall;
-	  }
-
-	case BIsolve:
-	  { isEatWaits = NO; isSolveDebug = NO; goto LBLBIsolve; }
-	case BIsolveEatWait:
-	  { isEatWaits = OK; isSolveDebug = NO; goto LBLBIsolve; }
-	case BIsolveDebug:
-	  { isEatWaits = NO; isSolveDebug = OK; goto LBLBIsolve; }
-	case BIsolveDebugEatWait:
-	  { isEatWaits = OK; isSolveDebug = OK; goto LBLBIsolve; }
-	case BIsolveCont:    goto LBLBIsolveCont;
-	case BIsolved:       goto LBLBIsolved;
-
-	case BIDefault:
-	  {
-	    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-
-	    if (e->isSetSFlag(DebugMode)) {
-	      enterCall(CBB,bi,predArity,X);
-	    }
-
-	    OZ_Bool res = bi->getFun()(predArity, X);
-	    if (e->isSetSFlag(DebugMode)) {
-	      exitBuiltin(res,bi,predArity,X);
-	    }
-
-	    switch (res) {
+	       switch (res) {
 	    
-	    case SUSPEND:
-	      //killPropagatedCurrentTaskSusp();
-	      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
+	       case SUSPEND:
+		 //killPropagatedCurrentTaskSusp();
+		 LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
-	      predicate = bi->getSuspHandler();
-	      if (!predicate) {
-		if (!isTailCall) e->pushTaskOutline(PC,Y,G);
-		e->pushCFun(bi->getFun(),X,predArity);
-		Suspension *susp=e->mkSuspension();
-		e->suspendOnVarList(susp);
-		CHECK_CURRENT_THREAD;
-	      }
-	      goto LBLcall; 
-	    case FAILED:
-	      //killPropagatedCurrentTaskSusp();
-	      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
-	      LOCAL_PROPAGATION(localPropStore.reset());
-	    localHack0:
-	      HF_FAIL(applFailure(bi), printArgs(X,predArity));
-	    case SLEEP: // no break
-	      reviveCurrentTaskSusp();
-	    case PROCEED:
-	      killPropagatedCurrentTaskSusp();
-	      LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+		 predicate = bi->getSuspHandler();
+		 if (!predicate) {
+		   if (!isTailCall) e->pushTaskOutline(PC,Y,G);
+		   e->pushCFun(bi->getFun(),X,predArity);
+		   Suspension *susp=e->mkSuspension();
+		   e->suspendOnVarList(susp);
+		   CHECK_CURRENT_THREAD;
+		 }
+		 goto LBLcall; 
+	       case FAILED:
+		 //killPropagatedCurrentTaskSusp();
+		 LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
+		 LOCAL_PROPAGATION(localPropStore.reset());
+	       localHack0:
+		 HF_FAIL(applFailure(bi), printArgs(X,predArity));
+	       case SLEEP: // no break
+		 reviveCurrentTaskSusp();
+	       case PROCEED:
+		 killPropagatedCurrentTaskSusp();
+		 LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 				   goto localHack0;);
-	      if (isTailCall) {
-		goto LBLpopTask;
-	      }
-	      JUMP(PC);
-	    default:
-	      error("builtin: bad return value");
-	      goto LBLerror;
-	    }
-	  }
-	default:
-	  break;
+		 if (isTailCall) {
+		   goto LBLpopTask;
+		 }
+		 JUMP(PC);
+	       default:
+		 error("builtin: bad return value");
+		 goto LBLerror;
+	       }
+	     }
+	   default:
+	     break;
+	   }
+	   error("emulate: call: builtin %s not correctly specified",
+		 bi->getPrintName());
+	   goto LBLerror;
+	 } // end builtin
+       default:
+	 HF_WARN(applFailure(makeTaggedConst(predicate)), );
+       } // end switch on type of predicate
+     }
+
+// ------------------------------------------------------------------------
+// --- Call: Builtin: raise
+// ------------------------------------------------------------------------
+    
+   LBLraise:
+     {
+      TaggedRef exception = X[0];
+      if (!e->isToplevel()) {
+	warning("raise only allowed on toplevel (yet)");
+	if (isTailCall) {
+	  goto LBLpopTask;
 	}
-	error("emulate: call: builtin %s not correctly specified",
-	      bi->getPrintName());
-	goto LBLerror;
-      } // end builtin
-    default:
-      HF_WARN(applFailure(makeTaggedConst(predicate)),
-		      );
-    } // end switch on type of predicate
+	JUMP(PC);
+      }
+      isTailCall = OK;
+      if (e->currentThread == NULL) {
+	predicate = NULL;
+      } else {
+	predicate = e->currentThread->findExceptionHandler();
+      }
+      if (predicate == NULL) {
+	warning("no exception handler found for: %s",OZ_toC(exception));
+	goto LBLpopTask;
+      }
+      /* exception is already in X[0], but should somehow be reflected !!! */
+      goto LBLcall;
+    }
 
 // ------------------------------------------------------------------------
 // --- Call: Builtin: solve
