@@ -46,17 +46,14 @@ the module <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/,
 which has the following three operations:
 <LIST>
-<ITEM> <<{Connection.offer X T}>> creates a ticket <<T>>
-for <<X>>, which can be any language entity.
+<ITEM> <<{Connection.offer X T}>> creates
+a ticket <<T>> for <<X>>, which can be any language entity.
 The ticket can be taken just once.
 Attempting to
 take a ticket more than once will raise an exception.
-<ITEM> <<{Connection.offerMultiple X T C}>> creates
-a ticket <<T>> and a zero-argument close procedure <<C>> for <<X>>.
-The ticket can be taken any number
-of times until it is closed by executing <<{C}>>.
-Attempting to take a ticket after it is closed
-will raise an exception.
+<ITEM> <<{Connection.offerUnlimited X T}>> creates
+a ticket <<T>> for <<X>>, which can be any language entity.
+The ticket can be taken any number of times.
 <ITEM> <<{Connection.take T X}>> creates a reference <<X>>
 when given a valid ticket in <<T>>.
 The <<X>> refers to exactly the same language entity
@@ -70,13 +67,12 @@ then there is network communication between the two sites.
 as follows:
 
 <<<
-declare Stream Tkt Cls in
-{Connection.offerMultiple Stream Tkt Cls}
+declare Stream Tkt in
+{Connection.offerUnlimited Stream Tkt}
 {Show Tkt}
 >>>
 
-<P>The ticket is returned in <<Tkt>> and the
-close procedure in <<Cls>>.
+<P>The ticket is returned in <<Tkt>>.
 Application 1 then publishes the value of <<Tkt>> somewhere so that
 other applications can access it.
 Our example uses <<Show>> to display
@@ -247,7 +243,7 @@ proc {Srv X}
 end
 
 % Make server available through given URL:
-{Pickle.save {Connection.offerMultiple Srv} "http://www.sics.se/~pvr/hw"}
+{Pickle.save {Connection.offerUnlimited Srv} "http://www.sics.se/~pvr/hw"}
 >>>
 <P>All the above must be executed on the server site.
 Later on we will show how a client can create a
