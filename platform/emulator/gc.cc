@@ -1102,8 +1102,6 @@ Thread *Thread::gcDeadThread()
   newThread->item.threadBody=0;
 
   storeForward (&item.threadBody, newThread);
-
-  gcTagged(name,newThread->name);
   setSelf(getSelf()->gcObject());
 
   return (newThread);
@@ -1159,7 +1157,6 @@ void Thread::gcRecurse ()
     error ("Unknown type of a runnable thread?\n");
   }
 
-  gcTagged(name,name);
   setSelf(getSelf()->gcObject());
 
   gcTertiary();
