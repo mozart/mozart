@@ -6,6 +6,7 @@ import
 export
    Open
    ReOpen
+%   OpenNetInfo
    ssites:SSites
    sactivity:SActive
    srtt:SRTT
@@ -80,9 +81,9 @@ define
 				      in
 					 Line = (Y -5)  div @lineSize
 					 Found = {Filter {Dictionary.items self.entryDict}
-							  fun{$ E}
-							     E.line == Line
-							  end}
+						  fun{$ E}
+						     E.line == Line
+						  end}
 					 case Found of [E] then
 					    {self Action(E.key)}
 					 else skip end 
@@ -186,117 +187,120 @@ define
    proc{ReOpen}
       {Toplevel tkShow}
    end
-	       
+
    proc{Open  RunSync}
       T=Toplevel={New Widgets.toplevel tkInit(title:"Distribution Panel"
-						 delete:proc{$}
-							   {T tkHide}
-							   {Exchange RunSync unit _}
-							end)}
-	 CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:1000 height:190)}
-	 SiteF OwnerF BorrowF NetInfoF
-      in
-	 %% Site frame
-	 SiteF={New Tk.frame tkInit(parent:CardF)}
-	 SSites={New SiteList tkInit(parent:SiteF)}
-	 SActive={New TitleGraph tkInit(parent:SiteF
-					title:"#Activity/s"
-					miny:1.0
-					maxy:11.0
-					dim:''
-					fill:false)}
-	 SRTT={New TitleGraph tkInit(parent:SiteF
-				     title:"Last RTT (ms)"
+					      delete:proc{$}
+							{T tkHide}
+							{Exchange RunSync unit _}
+						     end)}
+      CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:1000 height:190)}
+      SiteF OwnerF BorrowF NetInfoF
+%      proc{!OpenNetInfo}
+%	 {CardF addCard(id:4 title:" Net Info " frame:NetInfoF)}     
+%      end
+   in
+      %% Site frame
+      SiteF={New Tk.frame tkInit(parent:CardF)}
+      SSites={New SiteList tkInit(parent:SiteF)}
+      SActive={New TitleGraph tkInit(parent:SiteF
+				     title:"Message exchange per sample period"
 				     miny:1.0
 				     maxy:11.0
 				     dim:''
 				     fill:false)}
-   
-	 %% Owner frame
-	 OwnerF={New Tk.frame tkInit(parent:CardF)}
-	 OSites={New SiteList tkInit(parent:OwnerF)}
-	 OActive={New TitleGraph tkInit(parent:OwnerF
-					title:"#Active/s"
-					miny:1.0
-					maxy:11.0
-					dim:''
-					fill:true)}
-	 ONumber={New TitleGraph tkInit(parent:OwnerF
-					title:"#Entities/s"
-					miny:1.0
-					maxy:11.0
-					dim:''
-					fill:true)}
-   
-
-	 %% Borrow frame
-	 BorrowF={New Tk.frame tkInit(parent:CardF)}
-	 BSites={New SiteList tkInit(parent:BorrowF)}
-	 BActive={New TitleGraph tkInit(parent:BorrowF
-					title:"#Active/s"
-					miny:1.0
-					maxy:11.0
-					dim:''
-					fill:true)}
-	 BNumber={New TitleGraph tkInit(parent:BorrowF
-					title:"#Entities/s"
-					miny:1.0
-					maxy:11.0
-					dim:''
-					fill:true)}
-   
-	 %% Net info frame
-	 NetInfoF={New Tk.frame tkInit(parent:CardF)}
-	 NIList={New SiteList tkInit(parent:NetInfoF)}
-	 NINumber={New TitleGraph tkInit(parent:NetInfoF
-					 title:"Number"
-					 miny:1.0
-					 maxy:11.0
-					 dim:''
-					 fill:false)}
-	 NIByte={New TitleGraph tkInit(parent:NetInfoF
-				       title:"Byte"
-				       miny:1.0
-				       maxy:11.0
-				       dim:''
-				       fill:true)}
-   
-
-	 {Tk.batch [grid(SSites	row:0 column:0 sticky:news)
-		    grid(SActive	row:0 column:1 sticky:news)
-		    grid(SRTT   	row:0 column:2 sticky:news) 
-
-		    grid(OSites	row:0 column:0 sticky:news)
-		    grid(OActive	 row:0 column:1 sticky:news)
-		    grid(ONumber	row:0 column:2 sticky:news) 
-
-		    grid(BSites	row:0 column:0 sticky:news)
-		    grid(BActive	row:0 column:1 sticky:news)
-		    grid(BNumber	row:0 column:2 sticky:news) 
-
-		    grid(NIList	row:0 column:0 sticky:news)
-		    grid(NINumber	row:0 column:1 sticky:news)
-		    grid(NIByte	row:0 column:2 sticky:news) 
-		 
-		    grid(columnconfigure SiteF 0 weight:1)
-		    grid(columnconfigure OwnerF 0 weight:1)
-		    grid(columnconfigure BorrowF 0 weight:1)
-		    grid(columnconfigure NetInfoF 0 weight:1)
-
-		    grid(rowconfigure SiteF 0 weight:1)
-		    grid(rowconfigure OwnerF 0 weight:1)
-		    grid(rowconfigure BorrowF 0 weight:1)
-		    grid(rowconfigure NetInfoF 0 weight:1)
-		   ]}
-
-	 {CardF addCard(id:1 title:" Site Info " frame:SiteF)}
-	 {CardF addCard(id:2 title:" Owner Info " frame:OwnerF)}
-	 {CardF addCard(id:3 title:" Borrow Info " frame:BorrowF)}
-	 {CardF addCard(id:4 title:" Net Info " frame:NetInfoF)}
+      SRTT={New TitleGraph tkInit(parent:SiteF
+				  title:"Last RTT (ms)"
+				  miny:1.0
+				  maxy:11.0
+				  dim:''
+				  fill:false)}
       
-	 {Tk.batch [grid(columnconfigure T 0 weight:1)
-		    grid(rowconfigure T 0 weight:1)
-		    grid(CardF row:0 column:0 sticky:news)]}
+      %% Owner frame
+      OwnerF={New Tk.frame tkInit(parent:CardF)}
+      OSites={New SiteList tkInit(parent:OwnerF)}
+      OActive={New TitleGraph tkInit(parent:OwnerF
+				     title:"Activity"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
+      ONumber={New TitleGraph tkInit(parent:OwnerF
+				     title:"Number of Entities"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
+   
+
+      %% Borrow frame
+      BorrowF={New Tk.frame tkInit(parent:CardF)}
+      BSites={New SiteList tkInit(parent:BorrowF)}
+      BActive={New TitleGraph tkInit(parent:BorrowF
+				     title:"Activity"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
+      BNumber={New TitleGraph tkInit(parent:BorrowF
+				     title:"Number of Entities"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:true)}
+   
+      %% Net info frame
+      NetInfoF={New Tk.frame tkInit(parent:CardF)}
+      NIList={New SiteList tkInit(parent:NetInfoF)}
+      NINumber={New TitleGraph tkInit(parent:NetInfoF
+				      title:"Number"
+				      miny:1.0
+				      maxy:11.0
+				      dim:''
+				      fill:false)}
+      NIByte={New TitleGraph tkInit(parent:NetInfoF
+				    title:"Byte"
+				    miny:1.0
+				    maxy:11.0
+				    dim:''
+				    fill:true)}
+   
+
+      {Tk.batch [grid(SSites	row:0 column:0 sticky:news)
+		 grid(SActive	row:0 column:1 sticky:news)
+		 grid(SRTT   	row:0 column:2 sticky:news) 
+
+		 grid(OSites	row:0 column:0 sticky:news)
+		 grid(OActive	 row:0 column:1 sticky:news)
+		 grid(ONumber	row:0 column:2 sticky:news) 
+
+		 grid(BSites	row:0 column:0 sticky:news)
+		 grid(BActive	row:0 column:1 sticky:news)
+		 grid(BNumber	row:0 column:2 sticky:news) 
+
+		 grid(NIList	row:0 column:0 sticky:news)
+		 grid(NINumber	row:0 column:1 sticky:news)
+		 grid(NIByte	row:0 column:2 sticky:news) 
+		 
+		 grid(columnconfigure SiteF 0 weight:1)
+		 grid(columnconfigure OwnerF 0 weight:1)
+		 grid(columnconfigure BorrowF 0 weight:1)
+		 grid(columnconfigure NetInfoF 0 weight:1)
+
+		 grid(rowconfigure SiteF 0 weight:1)
+		 grid(rowconfigure OwnerF 0 weight:1)
+		 grid(rowconfigure BorrowF 0 weight:1)
+		 grid(rowconfigure NetInfoF 0 weight:1)
+		]}
+
+      {CardF addCard(id:1 title:" Remote communication " frame:SiteF)}
+      {CardF addCard(id:2 title:" Exported entities " frame:OwnerF)}
+      {CardF addCard(id:3 title:" Imported entities " frame:BorrowF)}
+%	 {CardF addCard(id:4 title:" Net Info " frame:NetInfoF)}
+      
+      {Tk.batch [grid(columnconfigure T 0 weight:1)
+		 grid(rowconfigure T 0 weight:1)
+		 grid(CardF row:0 column:0 sticky:news)]}
    end
 end
 
