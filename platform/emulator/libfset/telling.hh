@@ -14,37 +14,37 @@
 
 #include "fsstd.hh"
 
-class TellIsInPropagator : public Propagator_S_D {
+class IncludePropagator : public Propagator_S_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFun header;
 public:
-  TellIsInPropagator(OZ_Term s, OZ_Term d)
+  IncludePropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
   
   virtual OZ_Return propagate(void);
   
   virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+    return header;
   }
 };
 
-class TellIsNotInPropagator : public Propagator_S_D {
+class ExcludePropagator : public Propagator_S_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFun header;
 public:
-  TellIsNotInPropagator(OZ_Term s, OZ_Term d)
+  ExcludePropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
 
   virtual OZ_Return propagate(void);
   
   virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+    return header;
   }
 };
 
 class FSetCardPropagator : public Propagator_S_D {
 private:
-  static OZ_CFun spawner;
+  static OZ_CFun header;
 public:
   FSetCardPropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
@@ -52,7 +52,7 @@ public:
   virtual OZ_Return propagate(void);
   
   virtual OZ_CFun getHeaderFunc(void) const {
-    return spawner;
+    return header;
   }
 };
 

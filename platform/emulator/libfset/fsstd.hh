@@ -1,3 +1,18 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __FSSTD_HH__
+#define __FSSTD_HH__
+
+#include "fsstd.hh"
 #include "fsaux.hh"
 
 //-----------------------------------------------------------------------------
@@ -112,3 +127,28 @@ public:
   }
 };
 
+//-----------------------------------------------------------------------------
+
+class Propagator_S_D_D : public Propagator_S_D {
+protected:
+  OZ_Term _r;
+public:
+  Propagator_S_D_D(OZ_Term s, OZ_Term d, OZ_Term r) 
+    : _r(r), Propagator_S_D(s, d) {}
+  
+  virtual size_t sizeOf(void) {
+    return sizeof(Propagator_S_D_D);
+  }
+  virtual void updateHeapRefs(OZ_Boolean _d) {
+    OZ_updateHeapTerm(_r);
+    Propagator_S_D::updateHeapRefs(_d);
+  }
+  virtual OZ_Term getParameters(void) const {
+    return OZ_cons(_s, OZ_cons(_d, OZ_cons(_r, OZ_nil())));
+  }
+};
+
+#endif /* __FSSTD_HH__ */
+
+//-----------------------------------------------------------------------------
+// eof
