@@ -8,17 +8,27 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% some helpers
+
 S2A = String.toAtom  %% string to atom
 fun {VS2A X}         %% virtual string to atom
    {S2A {VirtualString.toString X}}
 end
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = 'Jun 25 1997'
+
+Version                = 'Jul 6 1997'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
+
+Platform               = local
+			    X#Y = {System.get platform}
+			 in
+			    {VS2A X#'-'#Y}
+			 end
+WindowsPlatform        = 'win32-i486'
 
 NameOfRalf             = 'Ralf Scheidhauer'
 NameOfBenni            = 'Benjamin Lorenz'
@@ -41,6 +51,7 @@ ProfilerErrorPrefix    = 'Profiler ERROR: '
 
 DotEnd                 = '.end'
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
@@ -61,45 +72,66 @@ PadYButton             = 3
 
 ScrollbarWidth         = 10
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Fonts
 %%
-SmallFont              = '6x13'
-SmallBoldFont          = '6x13bold'
-DefaultFont            = '7x13'
-BoldFont               = '7x13bold'
+
+SmallFont
+SmallBoldFont
+DefaultFont
+BoldFont
+
+case Platform == WindowsPlatform then
+   SmallFont           = '-*-courier-medium-r-*-*-12-*-*-*-*-*-*-*'
+   SmallBoldFont       = '-*-courier-bold-r-*-*-12-*-*-*-*-*-*-*'
+   DefaultFont         = SmallFont
+   BoldFont            = SmallBoldFont
+else
+   SmallFont           = '6x13'
+   SmallBoldFont       = '6x13bold'
+   DefaultFont         = '7x13'
+   BoldFont            = '7x13bold'
+end
+
 ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
 TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
 StatusFont             = TitleFont
 HelpTitleFont          = '-adobe-helvetica-bold-r-*-*-18-*-*-*-*-*-*-*'
 HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files
 %%
+
 HomeDir                = {VS2A {OS.getEnv 'HOME'} # '/'}
 
-OzUnixPath             = {OS.getEnv 'OZPATH'}
+OzRawPath              = {OS.getEnv 'OZPATH'}
+FieldSeparator         = case Platform == WindowsPlatform then &; else &: end
 OzPath
+
 local
-   fun {PathList UnixPath} % UnixPath must be of type string
+   fun {PathList RawPath} % RawPath must be of type string
       H T P in
-      {List.takeDropWhile UnixPath fun {$ C} C \= &: end H T}
+      {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
       P = {VS2A H#'/'}
       case T == nil then P|nil
       else P|{PathList T.2}
       end
    end
 in
-   OzPath = {PathList OzUnixPath}
+   OzPath = {PathList OzRawPath}
 end
 
 BitMapDir              = {System.get home} # '/lib/bitmaps/'
 BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Miscellaneous
 %%
+
 TextCursor             = left_ptr
 
 HelpEvent              = '<3>'
@@ -108,6 +140,7 @@ PrintDepth             = 2  % for System.valueToVirtualString
 PrintWidth             = 3
 
 TimeoutToStatus        = 210
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff
@@ -118,7 +151,7 @@ DefaultForeground
 SelectedBackground
 SelectedForeground
 
-case Tk.isColor then
+case Tk.isColor andthen Platform \= WindowsPlatform then
    DefaultBackground       = '#f0f0f0'
    DefaultForeground       = black
    SelectedBackground      = '#7070c0'
@@ -129,6 +162,7 @@ else
    SelectedBackground      = black
    SelectedForeground      = white
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% the config object to read/write changeable options
