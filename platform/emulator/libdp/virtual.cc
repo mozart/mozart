@@ -1,11 +1,13 @@
 /*
  *  Authors:
- *    Konstantin Popov, Per Brand
+ *    Konstantin Popov <kost@sics.se>
+ *    Per Brand <perbrand@sics.se>
  *
  *  Contributors:
  *
  *  Copyright:
- *    Konstantin Popov, Per Brand 1997-1998
+ *    1997-1998 Konstantin Popov
+ *    1997 Per Brand
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -57,7 +59,7 @@ static VSMsgBufferImported *myVSMsgBufferImported;
 static VSFreeMessagePool freeMessagePool;
 
 //
-// Virtual sites we know about;
+// Virtual sites we (thus, virtual sites comm layer) know about;
 static VSRegister vsRegister;
 
 //
@@ -77,6 +79,18 @@ static VSSiteQueue vsSiteQueue;
 static VSMailboxManagerOwned *myVSMailboxManager;
 static VSMsgChunkPoolManagerOwned *myVSChunksPoolManager;
 static VSMsgChunkPoolManagerImported *importedVSChunksPoolManager;
+
+//
+// Resource manager for virtual sites comm layer.
+// This guy keeps track of failed/satisfied create/map shm page
+// requests; this information is used
+static
+VSResourceManager vsResourceManager;
+
+//
+// 'vsTable' maps indexes to virtual sites. This mapping gives a
+// receiver site the message's source site.
+static VSTable vsTable(VS_VSTABLE_SIZE);
 
 //
 // By now we need four tasks (MAXTASKS?):
@@ -128,7 +142,9 @@ DebugVSMsgs(VSSendRecvCounter vsSRCounter;);
 //
 VirtualSite* createVirtualSiteImpl(DSite* s)
 {
-  VirtualSite *vs = new VirtualSite(s, &freeMessagePool, &vsSiteQueue);
+  VirtualSite *vs =
+    new VirtualSite(s, &freeMessagePool, &vsSiteQueue,
+                    &vsResourceManager, importedVSChunksPoolManager);
   vsRegister.registerVS(vs);
   return (vs);
 }
@@ -189,26 +205,26 @@ MonitorReturn demonitorQueue_VirtualSiteImpl(VirtualSite* vs)
 }
 
 //
-ProbeReturn
-installProbe_VirtualSiteImpl(VirtualSite *vs, ProbeType pt, int frequency)
-{
-  Assert(frequency > 0);
-  return (vsProbingObject.installProbe(vs, pt, frequency));
-}
+// ProbeReturn
+// installProbe_VirtualSiteImpl(VirtualSite *vs, ProbeType pt, int frequency)
+// {
+//   Assert(frequency > 0);
+//   return (vsProbingObject.installProbe(vs, pt, frequency));
+// }
 
 //
-ProbeReturn deinstallProbe_VirtualSiteImpl(VirtualSite *vs, ProbeType pt)
-{
-  return (vsProbingObject.deinstallProbe(vs, pt));
-}
+// ProbeReturn deinstallProbe_VirtualSiteImpl(VirtualSite *vs, ProbeType pt)
+// {
+//   return (vsProbingObject.deinstallProbe(vs, pt));
+// }
 
 //
-ProbeReturn
-probeStatus_VirtualSiteImpl(VirtualSite *vs,
-                            ProbeType &pt, int &frequncey, void* &storePtr)
-{
-  return (PROBE_NONEXISTENT);
-}
+// ProbeReturn
+// probeStatus_VirtualSiteImpl(VirtualSite *vs,
+//                          ProbeType &pt, int &frequncey, void* &storePtr)
+// {
+//   return (PROBE_NONEXISTENT);
+// }
 
 //
 // A virtual site should not be given up now since there are no
@@ -227,12 +243,13 @@ void discoveryPerm_VirtualSiteImpl(VirtualSite *vs)
   vsRegister.retractVS(vs);
   myVSChunksPoolManager->retractRegisteredSite(vs);
   vs->drop();
+  vsTable.drop(vs);
   delete vs;
 }
 
 //
 // This method gives us a virtual sites message buffer without
-// header;
+// the header;
 static inline
 VSMsgBufferOwned* getBasicVirtualMsgBufferImpl(DSite* site)
 {
@@ -241,9 +258,6 @@ VSMsgBufferOwned* getBasicVirtualMsgBufferImpl(DSite* site)
     new (voidBUF) VSMsgBufferOwned(myVSChunksPoolManager, site);
   return (buf);
 }
-
-//
-static VSMsgHeaderOwned vsStdMsgHeader(VS_M_PERDIO);
 
 //
 // The non-interface method: a virtual message buffer that is not
@@ -255,49 +269,76 @@ MsgBuffer* getCoreVirtualMsgBuffer(DSite* site)
 }
 
 //
-// The interface method: a message buffer for perdio messages;
-MsgBuffer* getVirtualMsgBufferImpl(DSite* site)
+// The header is decomposed by the 'readVSMessges';
+static inline
+void putVSMsgHeader(VSMsgBufferOwned *buf, VSMsgType type, DSite *dest)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(site);
-  vsStdMsgHeader.marshal(buf);
+  Assert(sizeof(BYTE) > ((int) VS_M_LAST)/256);
+  buf->put(type);
 
   //
+  // Normally we know our 'vsTable' index at the remote site, but as
+  // long as no corresponding 'VS_M_YOUR_INDEX_HERE' is not received the
+  // 'myDSite' is sent (see also comments for 'VirtualSite::vsIndex');
+  VirtualSite *vs = dest->getVirtualSite();
+  int vsIndex = vs->getVSIndex();
+  if (vsIndex >= 0) {
+    marshalNumber((unsigned int) vsIndex, buf); // why bother with shorts?
+  } else {
+    // '-1' takes some place but the whole thing happens at least seldom;
+    marshalNumber((unsigned int) -1, buf);
+    myDSite->marshalDSite(buf);
+  }
+}
+
+//
+// The interface method: a message buffer for perdio messages;
+MsgBuffer* getVirtualMsgBufferImpl(DSite* dest)
+{
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  putVSMsgHeader(buf, VS_M_PERDIO, dest);
   return (buf);                 // upcast (actually, even 2 steps);
 }
 
 //
 // Virtual sites methods;
 //
-// Internal message types - those that are not handled by (passed to)
-// the perdio layer but processed internally;
-static VSMsgHeaderOwned vsInitMsgHeader(VS_M_INIT_VS);
-static VSMsgHeaderOwned vsSiteIsAliveMsgHeader(VS_M_SITE_IS_ALIVE);
-static VSMsgHeaderOwned vsSiteAliveMsgHeader(VS_M_SITE_ALIVE);
-static VSMsgHeaderOwned vsUnusedShmIdMsgHeader(VS_M_UNUSED_SHMID);
 
 //
+// 'init' message does not contain the header (it does not need to nor
+// it can since the destination site is unknown (an may be even is not
+// existing yet));
 VSMsgBufferOwned* composeVSInitMsg()
 {
   VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl((DSite *) 0);
-  vsInitMsgHeader.marshal(buf);
+  //
+  Assert(sizeof(BYTE) > ((int) VS_M_LAST)/256);
+  buf->put(VS_M_INIT_VS);
+  //
   myDSite->marshalDSite(buf);
   return (buf);
 }
 
 //
-VSMsgBufferOwned* composeVSSiteIsAliveMsg(DSite *s)
+// It contains the destination site, so that site can compare itself
+// with the marshaled site and report an error if they mismatch;
+VSMsgBufferOwned* composeVSSiteIsAliveMsg(DSite *dest)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(s);
-  vsSiteIsAliveMsgHeader.marshal(buf);
-  myDSite->marshalDSite(buf);
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  //
+  putVSMsgHeader(buf, VS_M_SITE_IS_ALIVE, dest);
+  dest->marshalDSite(buf);
+  //
   return (buf);
 }
 
 //
-VSMsgBufferOwned* composeVSSiteAliveMsg(DSite *s, VirtualSite *vs)
+VSMsgBufferOwned* composeVSSiteAliveMsg(DSite *dest, VirtualSite *vs)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(s);
-  vsSiteAliveMsgHeader.marshal(buf);
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  //
+  putVSMsgHeader(buf, VS_M_SITE_ALIVE, dest);
+  //
   myDSite->marshalDSite(buf);
   // 'alive ack' message contains also a list of ipc keys - of
   // shared memory segments of the chunk pool;
@@ -306,22 +347,45 @@ VSMsgBufferOwned* composeVSSiteAliveMsg(DSite *s, VirtualSite *vs)
 }
 
 //
-VSMsgBufferOwned* composeVSUnusedShmIdMsg(DSite *s, key_t shmid)
+VSMsgBufferOwned* composeVSSiteDeadMsg(DSite *dest, DSite *ds)
+{
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  //
+  putVSMsgHeader(buf, VS_M_SITE_DEAD, dest);
+  ds->marshalDSite(buf);
+  //
+  return (buf);
+}
+
+//
+VSMsgBufferOwned* composeVSYourIndexHereMsg(DSite *dest, int index)
+{
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  //
+  putVSMsgHeader(buf, VS_M_YOUR_INDEX_HERE, dest);
+  //
+  marshalNumber((unsigned int) index, buf);
+  return (buf);
+}
+
+//
+VSMsgBufferOwned* composeVSUnusedShmIdMsg(DSite *dest, key_t shmid)
 {
   Assert(sizeof(key_t) <= sizeof(unsigned int));
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(s);
-  vsUnusedShmIdMsgHeader.marshal(buf);
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  //
+  putVSMsgHeader(buf, VS_M_UNUSED_SHMID, dest);
+  //
   myDSite->marshalDSite(buf);
   marshalNumber((unsigned int) shmid, buf);
   return (buf);
 }
 
 //
-// Unmarshaling the "vs" header;
 VSMsgType getVSMsgType(VSMsgBufferImported *mb)
 {
-  VSMsgHeaderImported vsMsgHeader(mb);
-  return (vsMsgHeader.getMsgType());
+  Assert(sizeof(BYTE) > ((int) VS_M_LAST)/256);
+  return ((VSMsgType) mb->get());
 }
 
 //
@@ -331,9 +395,9 @@ void decomposeVSInitMsg(VSMsgBuffer *mb, DSite* &s)
 }
 
 //
-void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, DSite* &s)
+void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, DSite* &src)
 {
-  s = unmarshalDSite(mb);
+  src = unmarshalDSite(mb);
 }
 
 //
@@ -343,6 +407,35 @@ void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs)
   Assert(s->virtualComm());
   vs = s->getVirtualSite();
   vs->unmarshalResources(mb);
+}
+
+//
+// 'dvs' may be zero - when the site has been recognized locally as
+// dead and GC'ed after that;
+void decomposeVSSiteDeadMsg(VSMsgBuffer *mb, DSite* &ds, VirtualSite* &dvs)
+{
+  // Note that the 's' is not marked in the stream as 'PERM',
+  // so we can get here both 'PERM' and alive sites;
+  ds = unmarshalDSite(mb);
+  Assert(ds->virtualComm());
+  //
+  if (ds->isPerm()) {
+    dvs = (VirtualSite *) 0;
+  } else if (ds->isConnected()) {
+    dvs = ds->getVirtualSite();
+    // must be logically connected in this case:
+    Assert(dvs);
+    // however, it may be physically disconnected, of course;
+  } else {
+    // both logically and physically disconnected - we won't connect,
+    // so virtual site won't contain any useful "resources" info;
+    dvs = (VirtualSite *) 0;
+  }
+}
+
+void decomposeVSYourIndexHereMsg(VSMsgBuffer *mb, int &index)
+{
+  index = (int) unmarshalNumber(mb);
 }
 
 //
@@ -375,12 +468,17 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
   while (mbox->isNotEmpty() && msgs) {
     key_t msgChunkPoolKey;
     int chunkNumber;
-    VSMsgType msgType;
 
     //
     msgs--;
     if (mbox->dequeue(msgChunkPoolKey, chunkNumber)) {
       // got a message;
+      VSMsgType msgType;
+      // sender's index, virtual and DSite;
+      int vsIndex;
+      VirtualSite *sVS;
+      DSite *sS;
+
       //
       myVSMsgBufferImported = new (myVSMsgBufferImported)
         VSMsgBufferImported(importedVSChunksPoolManager,
@@ -390,6 +488,10 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 
       //
       if (myVSMsgBufferImported->isVoid()) {
+        // We cannot do much here, since it's not even known where the
+        // message came from. However, we *must* guarantee that this
+        // message loss is NOT due to resource problems; otherwise the
+        // PERDIO layer will be confused;
         myVSMsgBufferImported->dropVoid();
         myVSMsgBufferImported->cleanup();
         // next message (if any could be processed??)
@@ -399,67 +501,143 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       msgType = getVSMsgType(myVSMsgBufferImported);
 
       //
-      if (msgType == VS_M_PERDIO) {
-        DebugVSMsgs(vsSRCounter.recv(););
-        msgReceived(myVSMsgBufferImported);
-      } else {
+      // Take the site info out of the stream:
+      vsIndex = (int) unmarshalNumber(myVSMsgBufferImported);
+      if (vsIndex >= 0) {
+        sVS = vsTable[vsIndex];
+        sS = sVS->getSite();
         //
-        switch (msgType) {
-        case VS_M_INVALID:
-          OZ_error("readVSMessages: M_INVALID message???");
-          break;
+        myVSMsgBufferImported->setSite(sS);
+        myVSMsgBufferImported->setKeysRegister(sVS->getKeysRegister());
+        vsResourceManager.startMsgReceived(sVS);
+      } else {
+        sS = unmarshalDSite(myVSMsgBufferImported);
+        sVS = sS->getVirtualSite();
+        //
+        // Exactly in this order: first, complete the initializing the
+        // message buffer, notify the resource manager that we are
+        // unmarshalling a message, and then - compose the 'your index
+        // here' message:
+        myVSMsgBufferImported->setSite(sS);
+        myVSMsgBufferImported->setKeysRegister(sVS->getKeysRegister());
+        vsResourceManager.startMsgReceived(sVS);
 
-        case VS_M_INIT_VS:
-          OZ_error("readVSMessages: VS_M_INIT_VS is not expected here.");
-          break;
-
-        case VS_M_SITE_IS_ALIVE:
-          {
-            DSite *s;
-            VirtualSite *vs;
-
-            //
-            decomposeVSSiteIsAliveMsg(myVSMsgBufferImported, s);
-            vs = s->getVirtualSite();
-            Assert(vs);
-
-            //
-            VSMsgBufferOwned *bs = composeVSSiteAliveMsg(s, vs);
-            if (sendTo_VirtualSite(vs, bs, /* messageType */ M_NONE,
+        //
+        // Now, assign the index and send it out:
+        int vsIndex = vsTable.put(sVS);
+        //
+        VSMsgBufferOwned *bs = composeVSYourIndexHereMsg(sS, vsIndex);
+        if (sendTo_VirtualSiteImpl(sVS, bs, /* messageType */ M_NONE,
                                    /* storeSite */ (DSite *) 0,
                                    /* storeIndex */ 0) != ACCEPTED)
-              OZ_error("readVSMessages: unable to send 'site_alive' message?");
-            break;
+          OZ_error("readVSMessages: unable to send 'your index here' msg?");
+      }
+
+      //
+      switch (msgType) {
+
+      case VS_M_PERDIO:
+        //
+        DebugVSMsgs(vsSRCounter.recv(););
+        msgReceived(myVSMsgBufferImported);
+        break;
+
+      case VS_M_INVALID:
+        OZ_error("readVSMessages: M_INVALID message???");
+        break;
+
+      case VS_M_INIT_VS:
+        OZ_error("readVSMessages: VS_M_INIT_VS is not expected here.");
+        break;
+
+      case VS_M_SITE_IS_ALIVE:
+        {
+          DSite *myS;
+          //
+          // 'myS' is supposed to be 'myDSite' - otherwise it is dead;
+          decomposeVSSiteIsAliveMsg(myVSMsgBufferImported, myS);
+
+          //
+          if (myS == myDSite) {
+            VSMsgBufferOwned *bs = composeVSSiteAliveMsg(sS, sVS);
+            if (sendTo_VirtualSiteImpl(sVS, bs, /* messageType */ M_NONE,
+                                       /* storeSite */ (DSite *) 0,
+                                       /* storeIndex */ 0) != ACCEPTED)
+              OZ_error("readVSMessages: unable to send 'site alive' msg?");
+
+            //
+          } else {
+            // The site 'myS' is dead: there cann't be two distinct
+            // processes with the same pid. Pid"s are the same because
+            // of the mailboxes naming scheme - two keys can be equal
+            // only if their sites' pid"s are equal.
+            VSMsgBufferOwned *bs = composeVSSiteDeadMsg(sS, myS);
+            if (!myS->isPerm() && myS->isConnected()) {
+              VirtualSite *vs = myS->getVirtualSite();
+              Assert(vs);
+              vs->killResources();
+            }
+            myS->discoveryPerm();
+            // if (vsProbingObject.isProbed(myS))
+            myS->probeFault(PROBE_PERM);
           }
 
-        case VS_M_SITE_ALIVE:
-          {
-            DSite *s;
-            VirtualSite *vs;
-            decomposeVSSiteAliveMsg(myVSMsgBufferImported, s, vs);
-            s->siteAlive();
-            break;
-          }
-
-        case VS_M_UNUSED_SHMID:
-          {
-            DSite *s;
-            key_t shmid;
-            decomposeVSUnusedShmIdMsg(myVSMsgBufferImported, s, shmid);
-            importedVSChunksPoolManager->removeSegmentManager(shmid);
-            break;
-          }
-
-        default:
-          OZ_error("readVSMessages: unknown 'vs' message type!");
           break;
         }
+
+      case VS_M_SITE_ALIVE:
+        {
+          DSite *s;
+          VirtualSite *vs;
+          decomposeVSSiteAliveMsg(myVSMsgBufferImported, s, vs);
+          s->siteAlive();
+          break;
+        }
+
+      case VS_M_SITE_DEAD:
+        {
+          DSite *ds;
+          VirtualSite *dvs;
+          decomposeVSSiteDeadMsg(myVSMsgBufferImported, ds, dvs);
+          // effectively dead;
+          if (dvs)
+            dvs->killResources();
+          ds->discoveryPerm();
+          // if (vsProbingObject.isProbed(ds))
+          ds->probeFault(PROBE_PERM);
+        }
+
+      case VS_M_YOUR_INDEX_HERE:
+        {
+          int index;
+          decomposeVSYourIndexHereMsg(myVSMsgBufferImported, index);
+          sVS->setVSIndex(index);
+          break;
+        }
+
+      case VS_M_UNUSED_SHMID:
+        {
+          DSite *s;
+          key_t shmid;
+          decomposeVSUnusedShmIdMsg(myVSMsgBufferImported, s, shmid);
+          importedVSChunksPoolManager->removeSegmentManager(shmid);
+          // kill the segment from the virtual site's 'keys' register:
+          sVS->dropSegManager(shmid);
+          break;
+        }
+
+      default:
+        OZ_error("readVSMessages: unknown 'vs' message type!");
+        break;
       }
 
       //
       myVSMsgBufferImported->unmarshalEnd();
       myVSMsgBufferImported->releaseChunks();
       myVSMsgBufferImported->cleanup();
+
+      //
+      vsResourceManager.finishMsgReceived();
     } else {
       // is locked - then let's try to read later;
       return (FALSE);
@@ -514,6 +692,10 @@ static Bool processMessageQueue(unsigned long clock, void *sqi)
     //
     vs = sq->getNext();
   }
+
+  //
+  if (sq->isEmpty())
+    am.setMinimalTaskInterval(sqi, 0);
 
   //
   return (ready);
@@ -586,7 +768,7 @@ void virtualSitesExitImpl()
 
   //
   if (myVSChunksPoolManager) {
-    //    am.removeTask(myVSChunksPoolManager, checkGCMsgChunks);
+    am.removeTask(myVSChunksPoolManager, checkGCMsgChunks);
     delete myVSChunksPoolManager;
     myVSChunksPoolManager = (VSMsgChunkPoolManagerOwned *) 0;
   }
@@ -605,16 +787,20 @@ void virtualSitesExitImpl()
 
   //
   // Kill those virtual sites registered locally that are slaves
-  // (i.e. whose mailboxes have been created here):
-  VirtualSite *vs = vsRegister.getFirst();
-  while (vs) {
-    if (vs->isSlave()) {
-      int pid = vs->getVSPid();
-      if (pid)
-        (void) oskill(pid, SIGTERM);
-    }
-    vs = vsRegister.getNext();
-  }
+  // (i.e. whose mailboxes have been created here). Note that
+  // 'isSlave()' is not complete: it returns 'NO' for disconnected
+  // slaves;
+// kost: don't kill anybody because we well may have 'detached'
+//       compute (remote) servers;
+//   VirtualSite *vs = vsRegister.getFirst();
+//   while (vs) {
+//     if (vs->isSlave()) {
+//       int pid = vs->getVSPid();
+//       if (pid)
+//      (void) oskill(pid, SIGTERM);
+//     }
+//     vs = vsRegister.getNext();
+//   }
 
   //
   // Try to kill all the mailboxes created locally (mailboxes of
@@ -644,9 +830,9 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   siteStatus_VirtualSite = siteStatus_VirtualSiteImpl;
   monitorQueue_VirtualSite = monitorQueue_VirtualSiteImpl;
   demonitorQueue_VirtualSite = demonitorQueue_VirtualSiteImpl;
-  installProbe_VirtualSite = installProbe_VirtualSiteImpl;
-  deinstallProbe_VirtualSite = deinstallProbe_VirtualSiteImpl;
-  probeStatus_VirtualSite = probeStatus_VirtualSiteImpl;
+  // installProbe_VirtualSite = installProbe_VirtualSiteImpl;
+  // deinstallProbe_VirtualSite = deinstallProbe_VirtualSiteImpl;
+  // probeStatus_VirtualSite = probeStatus_VirtualSiteImpl;
   giveUp_VirtualSite = giveUp_VirtualSiteImpl;
   discoveryPerm_VirtualSite = discoveryPerm_VirtualSiteImpl;
   getVirtualMsgBuffer = getVirtualMsgBufferImpl;
@@ -667,19 +853,45 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 
     //
     mbm = new VSMailboxManagerCreated(VS_MAILBOX_SIZE);
+    if (mbm->isVoid()) {
+      delete mbm;
+      message("Virtual sites: cannot allocate a shm page!");
+      message("Please ask your system administrator to enable");
+      message("the shared memory facility/increase system limits.");
+      return oz_raise(E_ERROR, E_SYSTEM, "BIVSnewMailbox: cannot create", 0);
+    }
+    //
     myMBoxKey = mbm->getSHMKey();
     mbm->unmap();
     delete mbm;
     DebugCode(mbm = (VSMailboxManagerCreated *) 0);
 
-    myVSMailboxManager = new VSMailboxManagerOwned(myMBoxKey);
+    //
+    myVSMailboxManager =
+      new VSMailboxManagerOwned(myMBoxKey, &vsResourceManager);
+    if (myVSMailboxManager->isVoid()) {
+      delete myVSMailboxManager;
+      message("Virtual sites: cannot attach a shm page!");
+      message("Please ask your system administrator to increase");
+      message("the number of shared memory pages allowed.");
+      return oz_raise(E_ERROR, E_SYSTEM, "BIVSnewMailbox: cannot attach", 0);
+    }
+
+    //
     myVSChunksPoolManager =
-      new VSMsgChunkPoolManagerOwned(VS_CHUNK_SIZE, VS_CHUNKS_NUM,
+      new VSMsgChunkPoolManagerOwned(&vsResourceManager,
+                                     VS_CHUNK_SIZE, VS_CHUNKS_NUM,
                                      VS_REGISTER_HT_SIZE);
     importedVSChunksPoolManager =
-      new VSMsgChunkPoolManagerImported(VS_REGISTER_HT_SIZE);
+      new VSMsgChunkPoolManagerImported(&vsResourceManager,
+                                        VS_REGISTER_HT_SIZE);
     myVSMsgBufferImported =
       (VSMsgBufferImported *) malloc(sizeof(VSMsgBufferImported));
+
+    //
+    vsResourceManager.init(&vsRegister,
+                           myVSChunksPoolManager,
+                           importedVSChunksPoolManager);
 
     //
     vi = new VirtualInfo(myDSite, myVSMailboxManager->getSHMKey());
@@ -690,21 +902,49 @@ OZ_BI_define(BIVSnewMailbox,0,1)
     if (!am.registerTask((void *) myVSMailboxManager->getMailbox(),
                          checkVSMessages, readVSMessages))
       OZ_error("virtual sites: unable to register a task");
+    // This task is actually not needed - only if the implementation
+    // is buggy and thus some messages are lost;
+    am.setMinimalTaskInterval((void *) myVSMailboxManager->getMailbox(),
+                              CHECKMAIL_INTERVAL);
+
     if (!am.registerTask((void *) &vsSiteQueue,
                          checkMessageQueue, processMessageQueue))
       OZ_error("virtual sites: unable to register a task");
+    // 'vsSiteQueue' gets pretty short interval, but only in case
+    // when delayed messages emerge;
+
     if (!am.registerTask((void *) &vsProbingObject,
                          checkProbes, processProbes))
       OZ_error("virtual sites: unable to register a task");
+    // (if the install/deinstall probes business is re-enabled again then
+    // this 'setMinimalTaskInterval' should be removed);
+    am.setMinimalTaskInterval((void *) &vsProbingObject, PROBE_INTERVAL);
+
     if (!am.registerTask((void *) myVSChunksPoolManager,
                          checkGCMsgChunks, processGCMsgChunks))
       OZ_error("virtual sites: unable to register a task");
+    // This should be a pretty large interval;
+    am.setMinimalTaskInterval((void *) myVSChunksPoolManager,
+                              VS_SEGS_MAXPHASE_MS);
   }
 
   //
-  // The 'VSMailboxManager' always creates a proper object (or crashes
-  // the system if it can't);
   mbm = new VSMailboxManagerCreated(VS_MAILBOX_SIZE);
+  if (mbm->isVoid()) {
+    delete mbm;
+    (void) vsResourceManager.doResourceGC(VS_RM_NewMbox, VS_RM_Create,
+                                          VS_RM_Block);
+    // next, and last try:
+    mbm = new VSMailboxManagerCreated(VS_MAILBOX_SIZE);
+    if (mbm->isVoid()) {
+      delete mbm;
+      message("Virtual sites: cannot attach a shm page!");
+      message("Please ask your system administrator to increase");
+      message("the number of shared memory pages allowed.");
+      return oz_raise(E_ERROR, E_SYSTEM, "BIVSnewMailbox: cannot create", 0);
+    }
+  }
+  //
   slavesRegister.add(mbm->getSHMKey());
 
   //
@@ -759,9 +999,9 @@ OZ_BI_define(BIVSinitServer,1,0)
   siteStatus_VirtualSite = siteStatus_VirtualSiteImpl;
   monitorQueue_VirtualSite = monitorQueue_VirtualSiteImpl;
   demonitorQueue_VirtualSite = demonitorQueue_VirtualSiteImpl;
-  installProbe_VirtualSite = installProbe_VirtualSiteImpl;
-  deinstallProbe_VirtualSite = deinstallProbe_VirtualSiteImpl;
-  probeStatus_VirtualSite = probeStatus_VirtualSiteImpl;
+  // installProbe_VirtualSite = installProbe_VirtualSiteImpl;
+  // deinstallProbe_VirtualSite = deinstallProbe_VirtualSiteImpl;
+  // probeStatus_VirtualSite = probeStatus_VirtualSiteImpl;
   giveUp_VirtualSite = giveUp_VirtualSiteImpl;
   discoveryPerm_VirtualSite = discoveryPerm_VirtualSiteImpl;
   getVirtualMsgBuffer = getVirtualMsgBufferImpl;
@@ -772,7 +1012,7 @@ OZ_BI_define(BIVSinitServer,1,0)
   //
 #ifdef DEBUG_CHECK
 //   fprintf(stdout, "*** Sleeping for 10 secs - hook it up (pid %d)!\n",
-//        getpid());
+//        osgetpid());
 //   fflush(stdout);
 //   sleep(10);                 // IMHO more than enough;
 #endif
@@ -783,23 +1023,33 @@ OZ_BI_define(BIVSinitServer,1,0)
     return oz_raise(E_ERROR,E_SYSTEM,"VSinitServer: invalid arg",0);
 
   //
-  // new process group - otherwise failed virtual sites will kill
-  // the whole virtual site group ;-)
-  if (setpgid(0, 0))
-    OZ_error("failed to form a new process group");
-
-  //
   if (myVSMailboxManager)
     return oz_raise(E_ERROR,E_SYSTEM,"VSinitServer again",0);
 
   //
   // We know here the id of the mailbox, so let's fetch it:
-  myVSMailboxManager = new VSMailboxManagerOwned(mbKey);
+  myVSMailboxManager = new VSMailboxManagerOwned(mbKey, &vsResourceManager);
+  if (myVSMailboxManager->isVoid()) {
+    delete myVSMailboxManager;
+    message("Virtual sites: cannot attach a shm page!");
+    message("Please ask your system administrator to enable");
+    message("the shared memory facility/increase system limits.");
+    return oz_raise(E_ERROR, E_SYSTEM, "BIVSnewMailbox: cannot attach", 0);
+  }
+
+  //
   myVSChunksPoolManager =
-    new VSMsgChunkPoolManagerOwned(VS_CHUNK_SIZE, VS_CHUNKS_NUM,
+    new VSMsgChunkPoolManagerOwned(&vsResourceManager,
+                                   VS_CHUNK_SIZE, VS_CHUNKS_NUM,
                                    VS_REGISTER_HT_SIZE);
   importedVSChunksPoolManager =
-    new VSMsgChunkPoolManagerImported(VS_REGISTER_HT_SIZE);
+    new VSMsgChunkPoolManagerImported(&vsResourceManager,
+                                      VS_REGISTER_HT_SIZE);
+
+  //
+  vsResourceManager.init(&vsRegister,
+                         myVSChunksPoolManager,
+                         importedVSChunksPoolManager);
 
   //
   // Now, let's process the initialization message (M_INIT_VS).
@@ -831,12 +1081,13 @@ OZ_BI_define(BIVSinitServer,1,0)
     myVSMsgBufferImported->dropVoid();
     myVSMsgBufferImported->cleanup();
     // "exit hook" should clean up everthing...
-    return oz_raise(E_ERROR,E_SYSTEM,"noInitMessage",1,
+    return oz_raise(E_ERROR, E_SYSTEM, "VS: no init message", 1,
                     oz_atom(mbKeyChars));
   }
   //
   msgType = getVSMsgType(myVSMsgBufferImported);
-  Assert(msgType == VS_M_INIT_VS);
+  if (msgType != VS_M_INIT_VS)
+    OZ_error("Virtual sites: malformed init message");
 
   //
   // The father's virtual site is registered during
@@ -865,19 +1116,24 @@ OZ_BI_define(BIVSinitServer,1,0)
   myVSMsgBufferImported->cleanup();
 
   //
-  // Install the 'read-from-virtual-sites' & 'delayed-write' handlers;
+  // (see the comments in BIVSnewMailbox;)
   if (!am.registerTask((void *) myVSMailboxManager->getMailbox(),
                        checkVSMessages, readVSMessages))
       OZ_error("virtual sites: unable to register a task");
+  am.setMinimalTaskInterval((void *) myVSMailboxManager->getMailbox(),
+                            CHECKMAIL_INTERVAL);
   if (!am.registerTask((void *) &vsSiteQueue,
                        checkMessageQueue, processMessageQueue))
       OZ_error("virtual sites: unable to register a task");
   if (!am.registerTask((void *) &vsProbingObject,
                        checkProbes, processProbes))
       OZ_error("virtual sites: unable to register a task");
+  am.setMinimalTaskInterval((void *) &vsProbingObject, PROBE_INTERVAL);
   if (!am.registerTask((void *) myVSChunksPoolManager,
                        checkGCMsgChunks, processGCMsgChunks))
       OZ_error("virtual sites: unable to register a task");
+  am.setMinimalTaskInterval((void *) myVSChunksPoolManager,
+                            VS_SEGS_MAXPHASE_MS);
 
   //
   return (PROCEED);

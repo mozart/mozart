@@ -2354,6 +2354,10 @@ retry:
   fd=ossocket(PF_INET,SOCK_STREAM,0);
   if (fd < 0) {
     if(ossockerrno()==ENOBUFS) return IP_TIMER;
+    if (ossockerrno() == EINTR) {
+      bigtries--;
+      goto retry;
+    }
     NETWORK_ERROR(("system:socket %d\n",ossockerrno()));}
   addr.sin_port = htons(port);
 

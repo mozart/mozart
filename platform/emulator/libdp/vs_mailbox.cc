@@ -27,9 +27,13 @@
 #pragma implementation "vs_mailbox.hh"
 #endif
 
-#include "vs_mailbox.hh"
+#include "base.hh"
+#include "dpBase.hh"
 
 #ifdef VIRTUALSITES
+
+#include "vs_mailbox.hh"
+#include "vs_comm.hh"
 
 #include <errno.h>
 #include <sys/stat.h>
@@ -42,52 +46,100 @@
 key_t vsTypeToKey(int type);
 
 //
-VSMailboxManagerOwned::VSMailboxManagerOwned(key_t shmkeyIn)
+VSMailboxManagerOwned::VSMailboxManagerOwned(key_t shmkeyIn,
+                                             VSResourceManager* vsRMin)
+  : VSMailboxManager(shmkeyIn), vsRM(vsRMin)
 {
-  //
-  shmkey = shmkeyIn;
-  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
-    OZ_error("Virtual Sites: failed to get the shared memory page");
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
-    OZ_error("Virtual Sites:: failed to attach the shared-memory page");
-#ifdef TRACE_MAILBOXES
-  fprintf(stdout, "*** mailbox obtained 0x%X (pid %d)\n",
-          shmkey, getpid());
-  fflush(stdout);
+#ifdef VS_DEBUG_RESOURCES
+  if (!vsRM->canAllocate()) {
+    mem = (void *) 0;
+    DebugCode(mbox = (VSMailboxOwned *) 0);
+    DebugCode(memSize = -1);
+#if defined(SOLARIS)
+    lERRNO = EMFILE;
+#else
+    lERRNO = ENOMEM;
+#endif
+    return;
+  }
 #endif
 
   //
-  // We cannot mark it for destruction right here, since then it
-  // cannot be accessed by any other process:
-  // markDestroy();
+  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0) {
+    mem = (void *) 0;
+    DebugCode(mbox = (VSMailboxOwned *) 0);
+    DebugCode(memSize = -1);
+    lERRNO = errno;
+  } else if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1) {
+    mem = (void *) 0;
+    DebugCode(mbox = (VSMailboxOwned *) 0);
+    DebugCode(memSize = -1);
+    lERRNO = errno;
+  } else {
+    vsRM->shmPageMapped();
+#ifdef TRACE_MAILBOXES
+    fprintf(stdout, "*** mailbox obtained 0x%X (pid %d)\n",
+            shmkey, osgetpid());
+    fflush(stdout);
+#endif
 
-  //
-  mbox = (VSMailboxOwned *) mem;
-  mbox->init(osgetpid());
-  //
-  memSize = mbox->getMemSize();
+    //
+    // We cannot mark it for destruction right here, since then it
+    // cannot be accessed by any other process:
+    // markDestroy();
+
+    //
+    mbox = (VSMailboxOwned *) mem;
+    mbox->init(osgetpid());
+    //
+    memSize = mbox->getMemSize();
+  }
 }
 
 //
-VSMailboxManagerImported::VSMailboxManagerImported(key_t shmkeyIn)
+VSMailboxManagerImported::VSMailboxManagerImported(key_t shmkeyIn,
+                                                   VSResourceManager *vsRMin)
+  : VSMailboxManager(shmkeyIn), vsRM(vsRMin)
 {
-  //
-  shmkey = shmkeyIn;
-  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
-    OZ_error("Virtual Sites: failed to get the shared memory page");
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
-    OZ_error("Virtual Sites:: failed to attach the shared-memory page");
-#ifdef TRACE_MAILBOXES
-  fprintf(stdout, "*** mailbox attached 0x%X (pid %d)\n",
-          shmkey, getpid());
-  fflush(stdout);
+#ifdef VS_DEBUG_RESOURCES
+  if (!vsRM->canAllocate()) {
+    mem = (void *) 0;
+    DebugCode(mbox = (VSMailboxImported *) 0);
+    DebugCode(memSize = -1);
+#if defined(SOLARIS)
+    lERRNO = EMFILE;
+#else
+    lERRNO = ENOMEM;
+#endif
+    return;
+  }
 #endif
 
   //
-  mbox = (VSMailboxImported *) mem;
-  mbox->init();
-  //
-  memSize = mbox->getMemSize();
+  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0) {
+    mem = (void *) 0;
+    DebugCode(mbox = (VSMailboxImported *) 0);
+    DebugCode(memSize = -1);
+    lERRNO = errno;
+  } else if ((mem = shmat(shmid, (char *) 0, 0)) == (void *) -1) {
+    mem = (void *) 0;
+    DebugCode(mbox = (VSMailboxImported *) 0);
+    DebugCode(memSize = -1);
+    lERRNO = errno;
+  } else {
+    vsRM->shmPageMapped();
+#ifdef TRACE_MAILBOXES
+    fprintf(stdout, "*** mailbox attached 0x%X (pid %d)\n",
+            shmkey, osgetpid());
+    fflush(stdout);
+#endif
+
+    //
+    mbox = (VSMailboxImported *) mem;
+    mbox->init();
+    //
+    memSize = mbox->getMemSize();
+  }
 }
 
 //
@@ -108,25 +160,36 @@ VSMailboxManagerCreated::VSMailboxManagerCreated(int memSizeIn)
   //
   shmkey = vsTypeToKey(VS_MAILBOX_KEY);
   if ((int) (shmid = shmget(shmkey, memSizeIn,
-                            (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
-    OZ_error("Virtual Sites: failed to allocate a shared memory page");
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
-    OZ_error("Virtual Sites:: failed to attach a shared-memory page");
-
-  //
-  mbox = (VSMailboxCreated *) mem;
-  mbox->init(memSize, msgsNum);
+                            (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0) {
+    mem = (void *) 0;
+    DebugCode(mbox = (VSMailboxCreated *) 0);
+    DebugCode(memSize = -1);
+    lERRNO = errno;
+  } else if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1) {
+    (void) shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0);
+    DebugCode(shmid = -1);
+    mem = (void *) 0;
+    DebugCode(mbox = (VSMailboxCreated *) 0);
+    DebugCode(memSize = -1);
+    lERRNO = errno;
+  } else {
+    //
+    mbox = (VSMailboxCreated *) mem;
+    mbox->init(memSize, msgsNum);
+  }
 }
 
 //
 void VSMailboxManagerOwned::unmap()
 {
-  if (shmdt((char *) mem) < 0) {
-    OZ_error("Virtual Sites: can't detach the shared memory.");
+  if (!isVoid()) {
+    vsRM->shmPageUnmapped();
+    if (shmdt((char *) mem) < 0)
+      OZ_error("Virtual Sites: can't detach the shared memory.");
   }
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** unmap owned mailbox 0x%X (pid %d)\n",
-          shmkey, getpid());
+          shmkey, osgetpid());
   fflush(stdout);
 #endif
   DebugCode(mbox = (VSMailboxOwned *) 0);
@@ -137,12 +200,14 @@ void VSMailboxManagerOwned::unmap()
 //
 void VSMailboxManagerImported::unmap()
 {
-  if (shmdt((char *) mem) < 0) {
-    OZ_error("Virtual Sites: can't detach the shared memory.");
+  if (!isVoid()) {
+    vsRM->shmPageUnmapped();
+    if (shmdt((char *) mem) < 0)
+      OZ_error("Virtual Sites: can't detach the shared memory.");
   }
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** unmap imported mailbox 0x%X (pid %d)\n",
-          shmkey, getpid());
+          shmkey, osgetpid());
   fflush(stdout);
 #endif
   DebugCode(mbox = (VSMailboxImported *) 0);
@@ -173,7 +238,7 @@ void VSMailboxManagerOwned::markDestroy()
   }
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** mailbox removed 0x%X (pid %d)\n",
-          shmkey, getpid());
+          shmkey, osgetpid());
   fflush(stdout);
 #endif
 }
@@ -200,7 +265,7 @@ void markDestroy(key_t shmkey)
   (void) shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0);
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** mailbox killed 0x%X (pid %d)\n",
-          shmkey, getpid());
+          shmkey, osgetpid());
   fflush(stdout);
 #endif
 }

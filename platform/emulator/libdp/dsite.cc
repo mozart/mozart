@@ -39,7 +39,6 @@
 #include "dsite.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
-#include "vs_comm.hh"
 #include "genhashtbl.hh"
 
 #define SITE_CUTOFF           100

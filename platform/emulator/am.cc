@@ -415,7 +415,6 @@ void AM::handleTasks()
   Bool ready = TRUE;
 
   //
-  osClrWatchedFD(fileno(stderr), SEL_WRITE);
   unsetSFlag(TasksReady);
 
   //
@@ -430,10 +429,8 @@ void AM::handleTasks()
   }
 
   //
-  if (!ready) {
+  if (!ready)
     setSFlag(TasksReady);
-    osWatchFD(fileno(stderr), SEL_WRITE);
-  }
 }
 
 // a variable that is set to 0 or to a pointer to a procedure
@@ -456,6 +453,14 @@ void (*oz_child_handle)() = 0;
 // * where to longjmp to is stored in global variable wake_jmp
 // * whether to longjmp is indicated by global variable use_wake_jmp
 
+//
+// kost@ : once again, about critical sections and race conditions.
+// Now the race condition is avoided for *all* signals using the
+// scheme i used previously for SIGUSR2 (exploited by e.g. virtual
+// sites): the generic signal handler adds 'stderr' to the list of
+// FD"s watched for output, which is *normally* always available and
+// thus 'select()' will not block.
+
 #ifdef WINDOWS
 jmp_buf wake_jmp;
 #define sigsetjmp(X,Y) setjmp(X)
@@ -469,12 +474,13 @@ void AM::suspendEngine()
 {
   oz_deinstallPath(_rootBoard);
 
+  //
 #ifdef DEBUG_THREADCOUNT
   printf("(AM::suspendEngine LTQs=%d) ", existingLTQs); fflush(stdout);
 #endif
-
   ozstat.printIdle(stdout);
 
+  //
   osBlockSignals(OK);
 
   //
@@ -485,6 +491,13 @@ void AM::suspendEngine()
   osSetAlarmTimer(0);
 
   while (1) {
+
+    //
+    // kost@ : drop 'stderr' from the mask: 'select' must fall through
+    // only when some signals will be delivered since
+    // 'osBlockSignals()' above (which can happen after
+    // 'osUnblockSignals()' below);
+    osClrWatchedFD(fileno(stderr), SEL_WRITE);
 
     checkStatus(NO);
 
@@ -578,13 +591,16 @@ void AM::checkStatus(Bool block)
   if (isSetSFlag(IOReady))
     oz_io_handle();
 
-  if (isSetSFlag(TasksReady))
-    handleTasks();
-
   if (isSetSFlag(SigPending)) {
     pushSignalHandlers();
     unsetSFlag(SigPending);
   }
+
+  // kost@: first check signals, then handle tasks! Otherwise
+  // e.g. 'usr2' can be disregarded;
+  if (isSetSFlag(TasksReady))
+    handleTasks();
+
   if (isSetSFlag(ChildReady)) {
     unsetSFlag(ChildReady);
     if (oz_child_handle!=0) (*oz_child_handle)();
@@ -596,12 +612,12 @@ void AM::checkStatus(Bool block)
 
 //
 // mm2: VIRTUAL_SITES?
-// kost@ : not only (e.g. managing tcp/ip connections' cache).
+// kost@ : not only (also managing tcp/ip connections' cache and
+// ports' flow control).
 //
 void AM::setMinimalTaskInterval(void *arg, unsigned int ms)
 {
   unsigned int accMinTime = 0;
-  Assert(!ms || ms >= (CLOCK_TICK/1000));
 
   //
   for (int i = 0; i < MAXTASKS; i++) {
@@ -686,10 +702,8 @@ void AM::checkTasks()
     }
   }
 
-  if (tasks) {
+  if (tasks)
     setSFlag(TasksReady);
-    osWatchFD(fileno(stderr), SEL_WRITE);
-  }
 }
 
 /* -------------------------------------------------------------------------
@@ -859,18 +873,10 @@ unsigned int AM::waitTime()
   unsigned int nu = nextUser();
 
   //
-  // kost@ : --> EK: this should be replaced by 'setMinimalTaskInterval()';
-#if defined(SLOWNET)
-  sleepTime = CLOCK_TICK/1000;
-#else
   if (taskMinInterval)
     sleepTime = nu ? min(nu, taskMinInterval) : taskMinInterval;
   else
     sleepTime = nu;
-
-  // don't sleep less than 'CLOCK_TICK/1000' ms;
-  sleepTime = sleepTime ? max(sleepTime, CLOCK_TICK/1000) : 0;
-#endif
 
   //
   return (sleepTime);

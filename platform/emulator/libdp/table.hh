@@ -146,7 +146,7 @@ public:
   Bool isRef()                { return type==PO_Ref; }
   Bool isVar()                { return type==PO_Var; }
   Bool isFree()               { return type==PO_Free; }
-  void setFree()              { type = PO_Free; }
+  void setFree()              { type = PO_Free; DebugCode(u.tert=(Tertiary*)0xfebc5d4d); }
   void unsetFree()            { DebugCode(type=(PO_TYPE)4712); }
   Bool initialized()          { DebugCode(return type!=(PO_TYPE)4712);return TRUE;}
 

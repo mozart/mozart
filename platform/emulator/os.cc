@@ -414,6 +414,8 @@ void genericHandler(int sig)
 
   aux->pending = OK;
   am.setSFlag(SigPending);
+  // kost@ : see comments in front of 'AM::suspendEngine()';
+  osWatchFD(fileno(stderr), SEL_WRITE);
 
 exit:
   osUnblockSignals();

@@ -149,19 +149,22 @@ error include resources.hh before mozart.h
 
 //
 // Tasks manager;
-// Minimal frequency in ms. Rounded up to the 'CLOCK_TICK' value;
-// A minimal frequency of '0' means there is no minimal frequency;
+// Minimal frequency in ms.  A minimal frequency of '0' means there is
+// no minimal frequency;
 #define DEFAULT_MIN_INTERVAL   0
 
 //
 // Distributed Oz - general;
-#define PROBE_INTERVAL      1000 /* ms */
 #define FLOW_BUFFER_SiZE    1000000
 #define FLOW_BUFFER_TIME    1000
 #define PERDIO_TIMEOUT      30000 /* ms */
 
 //
 // Distributed Oz - virtual sites
+#define PROBE_INTERVAL      1000 /* ms */
+#define CHECKMAIL_INTERVAL  1000 /* ms */
+#define SITEQUEUE_INTERVAL  10 /* ms */
+//
 #define PERDIO_ID       0xa3
 // 128k mailbox (messages 8bytes; so 16k messages);
 #define VS_MAILBOX_SIZE (128*1024)
@@ -170,6 +173,8 @@ error include resources.hh before mozart.h
 #define VS_CHUNKS_NUM   256
 // 12,5% fill-up for 32 sites?
 #define VS_REGISTER_HT_SIZE   256
+#define VS_VSTABLE_SIZE       16
+#define VS_KEYSREG_SIZE       16
 //
 // Wait time for "ping" probing. Note that this time should be
 // considerably larger than 'PROBE_INTERVAL', since ping messages
@@ -180,10 +185,19 @@ error include resources.hh before mozart.h
 // GCing of chunk pool' segments - see vs_msgbuffer.*;
 #define VS_MSGCHUNKS_USAGE         3
 #define VS_SEGS_MAXIDLE_PHASES     5
-// A new allocation phase starts at most after 'VS_SEGS_MAXPHASE_SECS'
+// ... but during "burst scavenging" done by the resource manager:
+// cleanup as much as possible...
+#define VS_MSGCHUNKS_USAGE_GC      1
+#define VS_SEGS_MAXIDLE_PHASES_GC  0
+// A new allocation phase starts at most after 'VS_SEGS_MAXPHASE_MS'
 // (or, in other words, GC takes places at most every XXX ms,
 // regardless whether it's needed or not);
 #define VS_SEGS_MAXPHASE_MS        60000
+// Whenever we are trying to allocate and/or map a shared memory page
+// and nothing that can be reclaimed is found, we try to wait for
+// 'VS_RESOURCE_WAIT' secs 'VS_WAIT_ROUNDS' times:
+#define VS_RESOURCE_WAIT           1
+#define VS_WAIT_ROUNDS             60
 
 /*
  * Switches
@@ -201,7 +215,7 @@ error include resources.hh before mozart.h
 /* all debug switches for the emulator */
 #ifdef DEBUG_EMULATOR
 
-#define DEBUG_CHECK     // enable assertions
+#define DEBUG_CHECK // enable assertions
 
 /* always define debug print for debugging */
 #define DEBUG_PRINT

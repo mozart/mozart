@@ -30,62 +30,258 @@
 #pragma implementation "vs_lock.hh"
 #endif
 
-#include "am.hh"
+#include "base.hh"
+#include "dpBase.hh"
 
 #ifdef VIRTUALSITES
 
+#include "am.hh"
 #include "vs_comm.hh"
 #include "virtual.hh"
 
-
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 //
+// Currently all the parameters are ignored: resource manager
+// works until a shm page is reclaimed (or raises an error if that
+// take too long);
+Bool VSResourceManager::doResourceGC(VS_RM_Source source,
+                                     VS_RM_Reason reason,
+                                     VS_RM_GCMode gcmode)
+{
+  int wasMapped = mapped;
+  int rounds = 0;
+  // 'minShmPages' is the minimal number of pages we need to have
+  // allocated (see comments below);
+  int minShmPages;
+
+  // being in a non-idle state means that's a recursive call;
+  if (state != VS_RM_idle)
+    return (OK);                // speculative;
+
+  //
+  // There are (a) 1 own mailbox, (b) at least 1 own msg buffer
+  // segment, (c) may be peer's mailbox, (d) may be peer's msg
+  // buffers. So, at least 2:
+  minShmPages = 2;              // min own configuration;
+  if (peerSite) {
+    minShmPages++;              // peer's mailbox and msg buffers;
+    minShmPages += peerSite->getKeysRegister()->getSize();
+  }
+  //
+  Assert(mapped >= minShmPages);
+  // If the limit is already reached, just bail out
+  if (mapped == minShmPages)
+    return (NO);
+
+  //
+  Assert(state == VS_RM_idle);
+  state = VS_RM_scavenge;       // start with plain scavenging;
+
+  //
+  while (mapped >= wasMapped) {
+    //
+    switch (state) {
+
+    case VS_RM_scavenge:
+      myCPM->scavenge();
+      state = VS_RM_unmapMBufs;
+      break;                    // switch
+
+    case VS_RM_unmapMBufs:
+      {
+        //
+        // Every time we get here the process starts with another
+        // virtual site (a next one wrt the order in the register);
+        int vsRegSize = vsRegister->getSize();
+        Assert(vsRegSize);              // how it can happen???
+        if (currentStart > vsRegSize)
+          currentStart = 0;
+
+        //
+        VirtualSite *vs = vsRegister->getNth(currentStart++);
+        while (vs && vsRegSize) {
+          // don't try to unmap anything from a site we are receiving
+          // a message;
+          if (vs != peerSite) {
+            //
+            // shmid"s are taken in a round-robin fashion: we try to
+            // continue from a place we've been last time (if there is
+            // any, of course);
+            VSSegKeysRegister* vsSKR = vs->getKeysRegister();
+            if (!vsSKR->canGetNext())
+              vsSKR->startSeq();
+
+            //
+            key_t shmid = vsSKR->getNext();
+            while (shmid != (key_t) -1) {
+              impCPM->removeSegmentManager(shmid);
+              vs->dropSegManager(shmid);
+
+              //
+              // actually, that should be always the case:
+              if (mapped < wasMapped)
+                break;          // while
+              shmid = vsSKR->getNext();
+            }
+
+            //
+            if (mapped < wasMapped)
+              break;            // while
+          }
+
+          //
+          vs = vsRegister->getNextCircular();
+          vsRegSize--;
+        }
+
+        //
+        state = VS_RM_scavengeBurst;
+        break;                  // switch
+      }
+
+    case VS_RM_scavengeBurst:
+      myCPM->scavenge();
+      state = VS_RM_disconnect;
+      break;                    // switch
+
+    case VS_RM_disconnect:
+      {
+        //
+        int vsRegSize = vsRegister->getSize();
+        Assert(vsRegSize);              // how it can happen???
+        if (currentStart > vsRegSize)
+          currentStart = 0;
+
+        //
+        VirtualSite *vs = vsRegister->getNth(currentStart++);
+        while (vs && vsRegSize) {
+          if (vs != peerSite && vs->isConnected())
+            vs->disconnect();
+          //
+          // actually, should be always the case;
+          if (mapped < wasMapped)
+            break;              // while
+
+          //
+          vs = vsRegister->getNextCircular();
+          vsRegSize--;
+        }
+
+        //
+        state = VS_RM_wait;
+        break;                  // switch
+      }
+
+    case VS_RM_wait:
+      OZ_warning("Virtual sites: stalling because of lack of resources...");
+      rounds++;
+      if (rounds > VS_WAIT_ROUNDS) {
+        OZ_warning("Virtual sites: cannot reclaim a resource!");
+        state = VS_RM_idle;
+        return (NO);
+      } else {
+        ossleep(VS_RESOURCE_WAIT);
+        state = VS_RM_scavenge;
+      }
+      break;
+
+    default:
+      OZ_error("Virtual sites: illegal resource manager's state");
+    }
+  }
+
+  //
+  state = VS_RM_idle;
+  return (OK);
+}
+
+//
+//
 void VirtualSite::connect()
 {
   //
-  if (mboxMgr == (VSMailboxManagerImported *) 0) {
-    if (isSetVSFlag(VS_PENDING_UNMAP_MBOX)) {
-      clearVSFlag(VS_PENDING_UNMAP_MBOX);
-    } else {
+  Assert(!isConnected());
+  switch (getSiteStatus()) {
+
+  case SITE_TEMP: OZ_error("A virtual site temporarily unreachable???");
+  case SITE_PERM: break;
+
+  case SITE_OK:
+    {
       //
-      // Creation of a mailbox manager includes mapping the mailbox
-      // into our address space (that is, a "write" connection is
-      // established;
+      // Creation of a mailbox manager includes mapping the mailbox into
+      // our address space (in terms of the "network" transport layer, a
+      // "write" connection is established);
       key_t mboxKey = site->getVirtualInfo()->getMailboxKey();
-      mboxMgr = new VSMailboxManagerImported(mboxKey);
+      mboxMgr = new VSMailboxManagerImported(mboxKey, vsRM);
+
+      //
+      if (mboxMgr->isVoid()) {
+        // upgrade the status of:
+        switch (mboxMgr->getErrno()) {
+
+#if defined(SOLARIS)
+        case EMFILE:
+#else
+          // Linux, in turn, can handle apparently as many shm pages
+          // as needed until their total size does not hit the process
+          // size limitation (i'm not sure - that's a guess);
+#endif
+        case ENOMEM:
+          // resources problem - do GC & just remain unconnected (with
+          // the hope that the next step will be successful);
+          (void) vsRM->doResourceGC(VS_RM_Mailbox, VS_RM_Attach, VS_RM_Block);
+          break;
+
+        default:
+          // we cann't handle all other problems;
+          status = SITE_PERM;
+          break;
+        }
+
+        //
+        delete mboxMgr;
+        mboxMgr = (VSMailboxManagerImported *) 0;
+        Assert(!isConnected());
+      } else {
+        Assert(isConnected());
+      }
+      break;
     }
+
+  default:
+    OZ_error("wrong virtual site status!");
   }
 }
 
 //
 //
-VirtualSite::VirtualSite(DSite *s,
-                         VSFreeMessagePool *fmpIn,
-                         VSSiteQueue *sqIn)
+VirtualSite::VirtualSite(DSite *s, VSFreeMessagePool *fmpIn,
+                         VSSiteQueue *sqIn, VSResourceManager* vsRMin,
+                         VSMsgChunkPoolManagerImported *cpmImpIn)
   : VSRegisterNode(this), VSSiteQueueNode(this),
-    site(s), status(SITE_OK), vsStatus(0),
+    site(s), vsIndex(-1), status(SITE_OK), vsStatus(0),
     isAliveSent(0), aliveAck(0),
     probeAllCnt(0), probePermCnt(0),
-    fmp(fmpIn), sq(sqIn),
+    vsRM(vsRMin), cpmImp(cpmImpIn), fmp(fmpIn), sq(sqIn),
     mboxMgr((VSMailboxManagerImported *) 0),
-    segKeysNum(0), segKeysArraySize(0), segKeys((key_t *) 0)
+    segKeysNum(0), segKeysArraySize(0), segKeys((key_t *) 0),
+    keysRegister(VS_KEYSREG_SIZE)
 {
-  connect();
+  // not connected originally;
 }
 
 //
 void VirtualSite::disconnect()
 {
-  if (isNotEmpty()) {
-    setVSFlag(VS_PENDING_UNMAP_MBOX);
-  } else {
-    mboxMgr->unmap();
-    delete mboxMgr;
-    clearVSFlag(VS_PENDING_UNMAP_MBOX);
-    mboxMgr = (VSMailboxManagerImported *) 0;
-  }
+  Assert(isConnected());
+  gcResources();                // unmap msgbuffers' shm pages;
+  mboxMgr->unmap();             // this op can be done always;
+  delete mboxMgr;
+  mboxMgr = (VSMailboxManagerImported *) 0;
 }
 
 //
@@ -110,13 +306,13 @@ void VirtualSite::drop()
 
   //
   // should result in unmapping:
-  disconnect();
+  if (isConnected()) disconnect();
+  // both assertions are supposed to be equivalent:
+  Assert(!isConnected());
   Assert(mboxMgr == (VSMailboxManagerImported *) 0);
 
   //
-  // 'SITE_PERM' is redundant - used for consistency checks only;
   status = SITE_PERM;
-  Assert(!isSetVSFlag(VS_PENDING_UNMAP_MBOX));
 
   //
   DebugCode(segKeysNum = 0;);
@@ -139,34 +335,57 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
   Assert(mb->getSite()->virtualComm());
 
   //
+  // Let's TRY to connect if it isn't yet (this can fail).
+  // 'connect()' updates eventually the status of the VS;
+  if (!isConnected()) connect();
+
+  //
   //
   switch (getSiteStatus()) {
-  case SITE_TEMP: OZ_error("A virtual site temporarily down???");
-  case SITE_PERM: OZ_error("Attempt to send to a 'perm' virtual site!");
+    // temporary problems are hidden by the VS comm layer:
+  case SITE_TEMP:
+    OZ_error("A virtual site temporarily unreachable???");
+    return (PERM_NOT_SENT);
+
+  case SITE_PERM:
+    return (PERM_NOT_SENT);
+
   case SITE_OK:
     //
     // First, let's try to deliver it *now*.
     // If it fails, a message (job) for delayed delivery is created;
-    Assert(mboxMgr);            // must be already connected;
-    VSMailboxImported *mbox = mboxMgr->getMailbox();
-    VirtualInfo *myVI = myDSite->getVirtualInfo();
+    VSMailboxImported *mbox;
+    VirtualInfo *myVI;
+    //
+    if (isConnected())
+      mbox = mboxMgr->getMailbox();
+    DebugCode(else mbox = (VSMailboxImported *) -1;);
+    myVI = myDSite->getVirtualInfo();
 
     //
-    //
-    if (isNotEmpty() || !mbox->enqueue(mb->getFirstChunkSHMKey(),
-                                       mb->getFirstChunkNum())) {
+    // In either of the cases (note - the first one means we had
+    // problems with mapping the memory page right before!);
+    if (!isConnected () ||
+        isNotEmpty() ||
+        !mbox->enqueue(mb->getFirstChunkSHMKey(),
+                       mb->getFirstChunkNum())) {
       // The queue wasn't empty, or failed to enqueue it inline - then
-      // create a job which will try to do that later;
+      // create a job that will try to do that later;
       VSMessage *voidM = fmp->allocate();
       VSMessage *m = new (voidM) VSMessage(mb, mt, storeSite, storeIndex);
 
       //
       // These queues are checked and processed on regular intervals
       // (OS' alarms);
-      if (isEmpty())
+      if (isEmpty()) {
+        Bool wasEmptySQ = sq->isEmpty();
         sq->enqueue(this);
+        if (wasEmptySQ)
+          am.setMinimalTaskInterval((void *) sq, SITEQUEUE_INTERVAL);
+      }
       enqueue(m);
 
+      //
       // Note that there is no 'TEMP_NOT_SENT' now;
     } else {
       mb->passChunks();
@@ -183,18 +402,21 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
 //
 // ... retry to send it with (it takes an unsent message, compared to
 // 'sendTo()'). It says 'TRUE' if we got it;
-Bool VirtualSite::tryToSendToAgain(VSMessage *vsm,
-                                  FreeListDataManager<VSMsgBufferOwned> *freeMBs)
+Bool
+VirtualSite::tryToSendToAgain(VSMessage *vsm,
+                              FreeListDataManager<VSMsgBufferOwned> *freeMBs)
 {
+  //
+  if (!isConnected()) connect();
+
   //
   //
   switch (getSiteStatus()) {
   case SITE_TEMP:
-    OZ_error("A virtual site temporarily down???");
+    OZ_error("A virtual site temporarily unreachable???");
     return (TRUE);
 
   case SITE_PERM:
-    OZ_error("Attempt to re-send to a 'perm' virtual site!");
     return (PERM_NOT_SENT);
 
   case SITE_OK:
@@ -202,13 +424,19 @@ Bool VirtualSite::tryToSendToAgain(VSMessage *vsm,
       //
       // First, let's try to deliver it *now*.
       // If it fails, a message (job) for delayed delivery is created;
-      VSMsgBufferOwned *mb = vsm->getMsgBuffer();
-      VSMailboxImported *mbox = mboxMgr->getMailbox();
-      VirtualInfo *myVI = myDSite->getVirtualInfo();
+      VSMsgBufferOwned *mb;
+      VSMailboxImported *mbox;
+      VirtualInfo *myVI;
 
       //
-      if (mbox->enqueue(mb->getFirstChunkSHMKey(),
-                        mb->getFirstChunkNum())) {
+      mb = vsm->getMsgBuffer();
+      if (isConnected())
+        mbox = mboxMgr->getMailbox();
+      myVI = myDSite->getVirtualInfo();
+
+      //
+      if (isConnected() && mbox->enqueue(mb->getFirstChunkSHMKey(),
+                                         mb->getFirstChunkNum())) {
         vsm->retractVSMsgQueueNode();
         fmp->dispose(vsm);
         mb->passChunks();
@@ -276,13 +504,24 @@ void VirtualSite::unmarshalResources(MsgBuffer *mb)
 }
 
 //
-void VirtualSite::gcResources(VSMsgChunkPoolManagerImported *cpm)
+void VirtualSite::gcResources()
 {
-  for (int i = 0; i < segKeysNum; i++) {
-    markDestroy(segKeys[i]);
-    // ... aka got an 'VS_M_UNUSED_SHMID' message:
-    cpm->removeSegmentManager(segKeys[i]);
+  keysRegister.startSeq();
+  key_t shmid = keysRegister.getNext();
+  while (shmid != (key_t) -1) {
+    cpmImp->removeSegmentManager(shmid);
+    shmid = keysRegister.getNext();
   }
+}
+//
+// ... yet mark all the known shmid"s dead (if they were not killed
+// already by the owner itself or even some other contacting with it
+// site);
+void VirtualSite::killResources()
+{
+  gcResources();
+  for (int i = 0; i < segKeysNum; i++)
+    markDestroy(segKeys[i]);
 }
 
 //
@@ -377,6 +616,11 @@ VSProbingObject::VSProbingObject(int size, VSRegister *vsRegisterIn)
 // Note we cannot ignore probe types even though there is only type
 // of problems - the permanent one. This is because the perdio layer
 // can ask for different probes separately;
+//
+// kost@ : if the 'installProbe()'/'deinstallProbe()' business is going
+// to be re-enabled, then 'am.setMinimalTaskInterval()' in virtual.cc
+// should be removed;
+/*
 ProbeReturn VSProbingObject::installProbe(VirtualSite *vs,
                                           ProbeType pt, int frequency)
 {
@@ -414,8 +658,10 @@ ProbeReturn VSProbingObject::installProbe(VirtualSite *vs,
   //
   return (PROBE_INSTALLED);
 }
+*/
 
 //
+/*
 ProbeReturn VSProbingObject::deinstallProbe(VirtualSite *vs, ProbeType pt)
 {
   ProbeReturn ret;
@@ -462,10 +708,7 @@ ProbeReturn VSProbingObject::deinstallProbe(VirtualSite *vs, ProbeType pt)
   //
   return (ret);
 }
-
-#ifdef DEBUG_CHECK
-#define VS_PROBING_BELIEVE_OK
-#endif
+*/
 
 //
 Bool VSProbingObject::processProbes(unsigned long clock,
@@ -477,23 +720,26 @@ Bool VSProbingObject::processProbes(unsigned long clock,
   vs = vsRegister->getFirst();
   while (vs) {
     DSite *s = vs->getSite();
-    //
-    if (s->isConnected()) {
-      int pid;
+    Assert(s->isConnected());
 
-      //
-      pid = vs->getVSPid();
+    //
+    // We would do this check always, even when the site is physically
+    // disconnected, but - unfortunately - its pid is not known in
+    // that case;
+    if (vs->isConnected()) {
+      int pid = vs->getVSPid();
       if (pid) {
         // delete zombie;
         (void) waitpid(pid, (int *) 0, WNOHANG);
         if (oskill(pid, 0)) {
           // no such process;
-          vs->gcResources(cpm);
+          vs->killResources();
           s->discoveryPerm();
-          if (check(s)) {
-            Assert(vs->hasProbesAll() || vs->hasProbesPerm());
-            s->probeFault(PROBE_PERM);
-          }
+          // kost@ : we don't check now whether the site is registered
+          // for probing:
+          // if (check(s)) {
+          // Assert(vs->hasProbesAll() || vs->hasProbesPerm());
+          s->probeFault(PROBE_PERM);
         }
       }
     }
@@ -508,36 +754,35 @@ Bool VSProbingObject::processProbes(unsigned long clock,
     vs = vsRegister->getFirst();
     while (vs) {
       DSite *s = vs->getSite();
-      //
-      if (s->isConnected()) {
-        int pid;
+      Assert(s->isConnected());
 
+      //
+      if (vs->isConnected()) {
         //
         // First check old pings;
-#ifndef VS_PROBING_BELIEVE_OK
         if (vs->getTimeIsAliveSent() >= lastPing &&
             vs->getTimeIsAliveSent() > vs->getTimeAliveAck()) {
-#else
-        if (0) {
-#endif // VS_PROBING_BELIEVE_OK
-          // effectively dead;
-          vs->gcResources(cpm);
-          s->discoveryPerm();
-          if (check(s))
-            s->probeFault(PROBE_PERM);
+          // kost@ : TODO: being here means we have a temporary
+          // problem (either the site is just slow, or it is spinning
+          // due to a bug, or it is being traced (debugged));
+          ;
+
+          //
         } else {
+          //
           // if it seems to be alive, init a new round...
           VSMsgBufferOwned *mb = composeVSSiteIsAliveMsg(s);
           if (sendTo_VirtualSiteImpl(vs, mb, /* messageType */ M_NONE,
                                      /* storeSite */ (DSite *) 0,
                                      /* storeIndex */ 0) != ACCEPTED) {
-            vs->gcResources(cpm);
+            vs->killResources();
             s->discoveryPerm();
-            if (check(s)) {
-              Assert(vs->hasProbesAll() || vs->hasProbesPerm());
-              s->probeFault(PROBE_PERM);
-            }
+            // if (check(s)) {
+            // Assert(vs->hasProbesAll() || vs->hasProbesPerm());
+            s->probeFault(PROBE_PERM);
           }
+
+          //
           vs->setTimeIsAliveSent(clock);
         }
       }

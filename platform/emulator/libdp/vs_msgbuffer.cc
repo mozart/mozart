@@ -57,8 +57,7 @@ static unsigned int seq_num = 0;
 //
 key_t vsTypeToKey(int type)
 {
-  // type is allowed to be 4 bits;
-  Assert(!(type & ~0xf));
+  Assert(!(type & ~VS_KEYTYPE_MASK));
   Assert(VS_KEYTYPE_SIZE + VS_SEQ_SIZE + VS_PID_SIZE == 32);
   Assert(sizeof(key_t) >= (int) sizeof(int32));
   Assert(seq_num < (int) (1 << VS_SEQ_SIZE));
@@ -95,46 +94,80 @@ void VSMsgChunkPoolSegmentOwned::init(key_t shmkeyIn,
 
 //
 VSMsgChunkPoolSegmentManagerOwned::
-VSMsgChunkPoolSegmentManagerOwned(int chunkSizeIn, int chunksNumIn,
+VSMsgChunkPoolSegmentManagerOwned(VSResourceManager *vsRMin,
+                                  int chunkSizeIn, int chunksNumIn,
                                   int regInitSize)
-  : fs(chunksNumIn), phaseNumber(0), importersRegister(regInitSize)
+  : vsRM(vsRMin),
+    fs(chunksNumIn), phaseNumber(0), importersRegister(regInitSize)
 {
   chunkSize = chunkSizeIn;
   chunksNum = chunksNumIn;
 
-  //
-  // Get&attach a shared memory page;
-  shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
-  if ((int) (shmid = shmget(shmkey, chunkSizeIn*chunksNumIn,
-                            (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
-    OZ_error("Virtual Sites: failed to allocate a shared memory page");
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
-    OZ_error("Virtual Sites:: failed to attach a shared-memory page");
-  //
-#ifdef TRACE_SEGMENTS
-  fprintf(stdout, "*** segment created 0x%X (pid %d)\n",
-          shmkey, getpid());
-  fflush(stdout);
+#ifdef VS_DEBUG_RESOURCES
+  if (!vsRM->canAllocate()) {
+    setVoid();
+#if defined(SOLARIS)
+    lERRNO = EMFILE;
+#else
+    lERRNO = ENOMEM;
+#endif
+    DebugCode(pool = (VSMsgChunkPoolSegmentOwned *) -1;);
+    DebugCode(chunks = (VSMsgChunkOwned *) -1;);
+    return;
+  }
 #endif
 
   //
-  // We cannot mark it for destruction right here, since then it
-  // cannot be accessed by any other process ("key already
-  // destroyed");
-  // markDestroy();
+  // Get&attach a shared memory page;
+repeat:
+  shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
 
   //
-  // The first chunk is used for the "pool" object, and the rest -
-  // for "VSMsgChunk" objects;
-  pool = (VSMsgChunkPoolSegmentOwned *) mem;
-  pool->init(shmkey, chunkSizeIn, chunksNumIn);
-  chunks = (VSMsgChunkOwned *) mem;
-  // Chunks are initialized lazily - prior usage;
+  if ((int) (shmid = shmget(shmkey, chunkSizeIn*chunksNumIn,
+                            (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0) {
+    setVoid();
+    lERRNO = errno;
+    DebugCode(pool = (VSMsgChunkPoolSegmentOwned *) -1;);
+    DebugCode(chunks = (VSMsgChunkOwned *) -1;);
+    Assert(isVoid());           // check 'isVoid()' itself;
+  } else if ((mem = shmat(shmid, (char *) 0, 0)) == (void *) -1) {
+    (void) shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0);
+    DebugCode(shmid = -1);
+    setVoid();
+    lERRNO = errno;
+    DebugCode(pool = (VSMsgChunkPoolSegmentOwned *) -1;);
+    DebugCode(chunks = (VSMsgChunkOwned *) -1;);
+    Assert(isVoid());           // check 'isVoid()' itself;
+  } else {
+    vsRM->shmPageMapped();
+    //
+#ifdef TRACE_SEGMENTS
+    fprintf(stdout, "*** segment created 0x%X (pid %d)\n",
+            shmkey, osgetpid());
+    fflush(stdout);
+#endif
 
-  //
-  for (int i = 1; i < chunksNum; i++) {
-    DebugCode(getChunkAddr(i)->freeDebug(chunkSize););
-    fs.push(i);
+    //
+    // We cannot mark it for destruction right here, since then it
+    // cannot be accessed by any other process ("key already
+    // destroyed");
+    // markDestroy();
+
+    //
+    // The first chunk is used for the "pool" object, and the rest -
+    // for "VSMsgChunk" objects;
+    pool = (VSMsgChunkPoolSegmentOwned *) mem;
+    pool->init(shmkey, chunkSizeIn, chunksNumIn);
+    chunks = (VSMsgChunkOwned *) mem;
+    // Chunks are initialized lazily - prior usage;
+
+    //
+    for (int i = 1; i < chunksNum; i++) {
+      DebugCode(getChunkAddr(i)->freeDebug(chunkSize););
+      fs.push(i);
+    }
+    Assert(isEmpty());          // to check 'isEmpty()' itself;
+    Assert(!isVoid());          // check 'isVoid()' itself;
   }
 }
 
@@ -151,18 +184,21 @@ void VSMsgChunkPoolSegmentManagerOwned::markDestroy()
 }
 
 //
-// Send out 'M_UNUSED_ID' messages.  This method and the destuctor
+// Send out 'M_UNUSED_ID' messages.  This method and the destructor
 // must be separated - otherwise we will not be able to delete all
-// segments (one is needed to send 'M_UNUSED_ID' messages);
-// Note also that *before* broadcasting the page must be deleted,
-// thus making importation of it impossible;
+// segments (one is needed to send 'M_UNUSED_ID' messages); Note also
+// that *before* broadcasting the page must be deleted, thus making
+// importation of it impossible;
 void VSMsgChunkPoolSegmentManagerOwned::deleteAndBroadcast()
 {
   //
+  // kost@ it CAN be empty: (a) scavenging not done (that is, it IS empty
+  // but not with this test, and (b) termination - we don't care...
+  // Assert(isEmpty());
   DebugCode(pool->checkConsistency());
 #ifdef TRACE_SEGMENTS
   fprintf(stdout, "*** segment destroyed 0x%X (pid %d)\n",
-          getSHMKey(), getpid());
+          getSHMKey(), osgetpid());
   fflush(stdout);
 #endif
 
@@ -175,11 +211,10 @@ void VSMsgChunkPoolSegmentManagerOwned::deleteAndBroadcast()
     DSite *site = vs->getSite();
     key_t key = getSHMKey();
     VSMsgBufferOwned *mb = composeVSUnusedShmIdMsg(site, key);
-    if (sendTo_VirtualSiteImpl(vs, mb,  /* messageType */ M_NONE,
-                               /* storeSite */ (DSite *) 0,
-                               /* storeIndex */ 0) != ACCEPTED) {
-      OZ_error("Unable to send 'M_UNUSED_ID' message to a virtual site!");
-    }
+    // 'sendTo' may be noop if the site is already disconnected;
+    (void) sendTo_VirtualSiteImpl(vs, mb,  /* messageType */ M_NONE,
+                                  /* storeSite */ (DSite *) 0,
+                                  /* storeIndex */ 0);
     //
     vs = importersRegister.getNext();
   }
@@ -189,8 +224,10 @@ void VSMsgChunkPoolSegmentManagerOwned::deleteAndBroadcast()
 VSMsgChunkPoolSegmentManagerOwned::~VSMsgChunkPoolSegmentManagerOwned()
 {
   //
-  if (shmdt((char *) mem) < 0) {
-    OZ_error("Virtual Sites: can't detach the shared memory.");
+  if (!isVoid()) {
+    vsRM->shmPageUnmapped();
+    if (shmdt((char *) mem) < 0)
+      OZ_error("Virtual Sites: can't detach the shared memory.");
   }
 
   //
@@ -223,39 +260,62 @@ int VSMsgChunkPoolSegmentManagerOwned::scavenge()
 }
 
 //
-VSMsgChunkPoolSegmentManagerImported::VSMsgChunkPoolSegmentManagerImported(key_t shmkeyIn)
+VSMsgChunkPoolSegmentManagerImported::VSMsgChunkPoolSegmentManagerImported(VSResourceManager *vsRMin, key_t shmkeyIn)
+  : VSMsgChunkPoolSegmentManager(shmkeyIn), vsRM(vsRMin)
 {
-  shmkey = shmkeyIn;
+#ifdef VS_DEBUG_RESOURCES
+  if (!vsRM->canAllocate()) {
+    setVoid();
+#if defined(SOLARIS)
+    lERRNO = EMFILE;
+#else
+    lERRNO = ENOMEM;
+#endif
+    DebugCode(chunks = (VSMsgChunkImported *) -1;);
+    DebugCode(chunkSize = chunksNum = -1;);
+    return;
+  }
+#endif
+
   //
   // we don't know in advance how large it is - so just try to swallow
   // the page "as is";
   if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0) {
     // A missing shared memory page means that its owner is dead;
     // 'pool' must be set to '-1' - used by 'isVoid';
-    pool = (VSMsgChunkPoolSegmentImported *) -1;
-    chunks = (VSMsgChunkImported *) -1;
-    chunkSize = chunksNum = -1;
-    return;
-  }
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
-    OZ_error("Virtual Sites:: failed to attach a shared-memory page");
-  //
+    setVoid();
+    lERRNO = errno;
+    DebugCode(chunks = (VSMsgChunkImported *) -1;);
+    DebugCode(chunkSize = chunksNum = -1;);
+    Assert(isVoid());
+  } else if ((mem = shmat(shmid, (char *) 0, 0)) == (void *) -1) {
+    setVoid();
+    lERRNO = errno;
+    DebugCode(chunks = (VSMsgChunkImported *) -1;);
+    DebugCode(chunkSize = chunksNum = -1;);
+    Assert(isVoid());
+  } else {
+    vsRM->shmPageMapped();
 #ifdef TRACE_SEGMENTS
-  fprintf(stdout, "*** segment attached 0x%X (pid %d)\n",
-          shmkey, getpid());
-  fflush(stdout);
+    fprintf(stdout, "*** segment attached 0x%X (pid %d)\n",
+            shmkey, osgetpid());
+    fflush(stdout);
 #endif
 
-  // locations;
-  pool = (VSMsgChunkPoolSegmentImported *) mem; // initialized by the owner;
-  pool->init(shmkeyIn);          // actually empty;
-  chunks = (VSMsgChunkImported *) mem;
+    //
+    // locations;
+    // initialized by the owner;
+    pool = (VSMsgChunkPoolSegmentImported *) mem;
+    pool->init(shmkeyIn);       // actually empty;
+    chunks = (VSMsgChunkImported *) mem;
 
-  // Borrow data from the 'VSMsgChunkPoolSegment' object
-  // This information is necessary for debugging only (like checking
-  // whether a chunk really belongs to the pool);
-  chunkSize = pool->getChunkSize();
-  chunksNum = pool->getChunksNum();
+    // Borrow data from the 'VSMsgChunkPoolSegment' object
+    // This information is necessary for debugging only (like checking
+    // whether a chunk really belongs to the pool);
+    chunkSize = pool->getChunkSize();
+    chunksNum = pool->getChunksNum();
+    Assert(!isVoid());
+  }
 }
 
 //
@@ -265,13 +325,15 @@ VSMsgChunkPoolSegmentManagerImported::~VSMsgChunkPoolSegmentManagerImported()
   //
 #ifdef TRACE_SEGMENTS
   fprintf(stdout, "*** segment detached 0x%X (pid %d)\n",
-          shmkey, getpid());
+          shmkey, osgetpid());
   fflush(stdout);
 #endif
 
   //
-  if (isNotVoid() && shmdt((char *) mem) < 0) {
-    OZ_error("Virtual Sites: can't detach the shared memory.");
+  if (!isVoid()) {
+    vsRM->shmPageUnmapped();
+    if (shmdt((char *) mem) < 0)
+      OZ_error("Virtual Sites: can't detach the shared memory.");
   }
 
   //
@@ -390,16 +452,27 @@ VirtualSite* VSSegmentImportersRegister::getNext()
 
 //
 // Just one segment is created originally;
-VSMsgChunkPoolManagerOwned::VSMsgChunkPoolManagerOwned(int chunkSizeIn,
+VSMsgChunkPoolManagerOwned::VSMsgChunkPoolManagerOwned(VSResourceManager *vsRMin,
+                                                       int chunkSizeIn,
                                                        int chunksNumIn,
                                                        int sizeIn)
-  : chunkSize(chunkSizeIn), chunksNum(chunksNumIn),
+  : vsRM(vsRMin), chunkSize(chunkSizeIn), chunksNum(chunksNumIn),
     currentSegMgrIndex(0), toBeUsedSegments(1), phaseNumber(0)
 {
   lastGC = am.getEmulatorClock();
   VSMsgChunkPoolSegmentManagerOwned *fsm =
-    new VSMsgChunkPoolSegmentManagerOwned(chunkSizeIn, chunksNumIn, sizeIn);
-  push(fsm);
+    new VSMsgChunkPoolSegmentManagerOwned(vsRM,
+                                          chunkSizeIn, chunksNumIn, sizeIn);
+  if (fsm->isVoid()) {
+    // We will not be able obviously to do anything when there are
+    // resource problems right from the beginning;
+    message("Virtual sites: cannot allocate a shm page!");
+    message("Please ask your system administrator to increase");
+    message("the number of shared memory pages allowed.");
+    am.exitOz(-1);
+  } else {
+    push(fsm);
+  }
 }
 
 //
@@ -418,6 +491,81 @@ VSMsgChunkPoolManagerOwned::~VSMsgChunkPoolManagerOwned()
 }
 
 //
+VSMsgChunkPoolSegmentManagerOwned*
+VSMsgChunkPoolManagerOwned::allocateSegmentManager()
+{
+  // we don't have one left over from the past - get it now;
+  VSMsgChunkPoolSegmentManagerOwned *fsm =
+    new VSMsgChunkPoolSegmentManagerOwned(vsRM,
+                                          VS_CHUNK_SIZE,
+                                          VS_CHUNKS_NUM,
+                                          VS_REGISTER_HT_SIZE);
+
+  //
+  if (fsm->isVoid()) {
+    delete fsm;
+
+    //
+    // Hopefully, we'll get something out of this.
+    // ('VS_RM_Block' means don't return without a page
+    // reclaimed. Terminate the process if nothing can be
+    // found within a reasonable amount of time (see
+    // resource.hh - 'VS_RESOURCE_WAIT' and
+    // 'VS_WAIT_ROUNDS'));
+    //
+    // Observe also that all the manager's control parameters
+    // ('toBeUsedSegments', etc.) can change after this point
+    // (since resource manager can decide to do scavenging on
+    // its own );
+    (void) vsRM->doResourceGC(VS_RM_OwnSeg, VS_RM_Attach, VS_RM_Block);
+
+    //
+    // 'doResourceGC()' can perform scavenging, in which case free
+    // chunks can appear in already allocated pages, and in any case
+    // the 'currentSegMgrIndex' would be reset:
+    while (currentSegMgrIndex < getSize()) {
+      fsm = get(currentSegMgrIndex);
+      if (fsm->getAvailChunksNum())
+        break;
+    }
+
+    //
+    if (currentSegMgrIndex >= getSize()) {
+      // being here means no free chunks have been reclaimed, thus we
+      // still have to allocate a new page:
+      //
+      fsm = new VSMsgChunkPoolSegmentManagerOwned(vsRM,
+                                                  VS_CHUNK_SIZE,
+                                                  VS_CHUNKS_NUM,
+                                                  VS_REGISTER_HT_SIZE);
+
+      //
+      // If the allocation fails again, then it means that we
+      // have reached some system-wide limits we cannot object
+      // against (that's aka "virtual memory exhausted") - we
+      // bail out;
+      if (fsm->isVoid()) {
+        message("Virtual sites: cannot allocate a shm page!");
+        message("Please ask your system administrator to increase");
+        message("the number of shared memory pages allowed.");
+        am.exitOz(-1);
+        return ((VSMsgChunkPoolSegmentManagerOwned *) 0);
+      }
+      //
+      push(fsm);
+    }
+    // else 'fsm' is a segment manager with free chunk(s);
+  } else {
+    Assert(!fsm->isVoid());
+    push(fsm);
+  }
+
+  //
+  Assert(fsm == get(currentSegMgrIndex));
+  return (fsm);
+}
+
+//
 //
 void VSMsgChunkPoolManagerOwned::scavenge()
 {
@@ -426,10 +574,10 @@ void VSMsgChunkPoolManagerOwned::scavenge()
   int usedSegments;
   // An upper limit for the number of messages that can be sent out
   // during scavenging;
-  int maxMessages = 0, maxSegmentsMessages;
+  int maxMessages = 0;
 
   //
-  // Reset the number *before* any "M_UNUSED_ID' could be ever
+  // Reset the number *before* any 'M_UNUSED_ID' could be ever
   // composed;
   currentSegMgrIndex = 0;
 
@@ -439,32 +587,39 @@ void VSMsgChunkPoolManagerOwned::scavenge()
     chunks = chunks + fsm->scavenge();
     // For each segment, each registered (for it) site could get a
     // M_UNUSED_ID message:
-    maxMessages = maxMessages + fsm->getNumOfRegisteredSites();
+    if (chunks == 0)
+      maxMessages = maxMessages + fsm->getNumOfRegisteredSites();
   }
 
   //
-  // (elapsed number of segments - if they'd fully packed;)
-  usedSegments = chunks/chunksNum + 1;
-  toBeUsedSegments = usedSegments * VS_MSGCHUNKS_USAGE;
+  // There must be enough room for sending 'M_UNUSED_ID' messages:
+  chunks = chunks + maxMessages; // each messages takes a chunk;
 
   //
-  maxSegmentsMessages = maxMessages/chunksNum + 1;
-  // It should not happen that during GCing of segments (next
-  // paragraph) a segment is removed that is used for the GCing itself
-  // ('M_UNUSED_ID' messages). If there are more free segments than
-  // 'maxSegmentsMessages', it will not happen:
-  if (maxSegmentsMessages > toBeUsedSegments - usedSegments)
-    // i.e. needed segments > free segments among those that will
-    // survive GC - then set the new border;
-    toBeUsedSegments = maxSegmentsMessages + usedSegments;
+  // (elapsed number of segments - if they'd be fully packed;)
+  usedSegments = chunks/chunksNum + 1;
+  // Resource manager can decide to trim allocated pages as strong
+  // as possible (by means of "usage factor");
+  toBeUsedSegments = usedSegments * vsRM->getVSMsgChunksUsage();
+  // 'toBeUsedSegments' can be in no case less than necessary for
+  // 'M_UNUSED_ID' messages (that's essential since "chunks usage" can
+  // be actually zero):
+  toBeUsedSegments = max(toBeUsedSegments, (maxMessages/chunksNum + 1));
+
+  //
+  // Resource manager can define "max idle phases" to be 0, thus all
+  // the free pages will be purged;
+  const int maxidle = vsRM->getVSSegsMaxIdlePhases();
 
   //
   // Don't try to reclaim segments that are to be used in the
   // following allocation phase;
   for (int i = totalSegments-1; i >= toBeUsedSegments; i--) {
     //
+    // ... Neither try to reclaim currently busy (non-empty) segments:
     VSMsgChunkPoolSegmentManagerOwned *fsm = get(i);
-    if (fsm->getPhaseNumber() + VS_SEGS_MAXIDLE_PHASES < phaseNumber) {
+    if (fsm->isEmpty() &&
+        fsm->getPhaseNumber() + maxidle <= phaseNumber) {
       VSMsgChunkPoolSegmentManagerOwned *sm = pop();
 
       //
@@ -472,6 +627,9 @@ void VSMsgChunkPoolManagerOwned::scavenge()
       fsm->deleteAndBroadcast();
       delete fsm;
     } else {
+      // That's it: cannot proceed further right now. However, this
+      // delays reclaiming of free segments if they happen to be
+      // "below" a non-free one.
       break;
     }
   }
@@ -553,6 +711,54 @@ void VSChunkPoolRegister::remove(key_t key)
     //
     aux = htFindNext(aux, hvalue);
   }
+}
+
+//
+VSMsgChunkPoolSegmentManagerImported*
+VSChunkPoolRegister::handleVoid(key_t key,
+                                VSMsgChunkPoolSegmentManagerImported *aux)
+{
+  switch (aux->getErrno()) {
+
+#if defined(SOLARIS)
+  case EMFILE:
+#endif
+  case ENOMEM:
+    // resources problem - let's try to get a page free;
+    (void) vsRM->doResourceGC(VS_RM_ImpSeg, VS_RM_Attach, VS_RM_Block);
+
+    //
+    delete aux;
+    aux = new VSMsgChunkPoolSegmentManagerImported(vsRM, key);
+    if (aux->isVoid()) {
+      switch (aux->getErrno()) {
+      case EMFILE:
+        message("Virtual sites: cannot attach a shm page!");
+        message("Please ask your system administrator to increase");
+        message("the number of shared memory pages allowed.");
+        am.exitOz(-1);
+
+      default:
+        // ... now a non-resource problem - proceed with it;
+        break;
+      }
+
+      //
+      delete aux;
+      aux = (VSMsgChunkPoolSegmentManagerImported *) 0;
+    }
+    // here 'aux' can be a complete (non-void) segment manager;
+    break;
+
+  default:
+    // there is no such shared memory page;
+    delete aux;
+    aux = (VSMsgChunkPoolSegmentManagerImported *) 0;
+    break;
+  }
+
+  //
+  return (aux);
 }
 
 //
