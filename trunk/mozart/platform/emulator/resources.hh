@@ -270,7 +270,11 @@ error include resources.hh before mozart.h
 #define INLINE inline
 #endif
 
-
+#ifdef DEBUG_CHECK
+#define OZD_error(s) OZ_error(s)
+#else
+#define OZD_error(s)
+#endif
 
 /*
  *
