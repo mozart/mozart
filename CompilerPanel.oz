@@ -32,6 +32,8 @@ fun instantiate {$ IMPORT}
    = IMPORT.'Compiler'
    \insert 'Browser.env'
    = IMPORT.'Browser'
+   \insert 'Emacs.env'
+   = IMPORT.'Emacs'
 in
    local
       \insert compiler/CompilerPanelClass
