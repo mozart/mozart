@@ -68,7 +68,8 @@ proc {Srv X}
    {SafeSend Prt X}
 end
                                         
-{Pickle.save {Connection_many Srv} "http://www.sics.se/~pvr/hw"}
+{Pickle.save {Connection.offerUnlimited Srv} 
+             "/usr/staff/pvr/public_html/hw"}
 >>>
 
 <P>This server does one distributed operation,
@@ -84,7 +85,7 @@ declare Srv
 
 try X in
    try
-      Srv={Connection.take {Pickle.load "http://www.sics.se/~pvr/hw"}}
+      Srv={Connection.take {Pickle.load "http://www.info.ucl.ac.be/~pvr/hw"}}
    catch _ then raise serverError end
    end
    
@@ -984,7 +985,8 @@ meth broadcastCrashEvent(CrashID)
 end
 >>>
 
-<P>The procedure <<MakeNewClient>> has to be changed
+<P>In the old method <<getMakeNewClient>>,
+the procedure <<MakeNewClient>> has to be changed
 to call <<NewSafeStat>> instead of <<NewStat>>:
 <<<
 meth getMakeNewClient(MakeNewClient)
