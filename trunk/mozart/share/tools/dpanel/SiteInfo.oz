@@ -232,6 +232,7 @@ define
 	 ActiveSites
       attr
 	 Generation
+	 notStarted:true
 	 
       meth init(SD)
 	 self.sd = SD
@@ -258,15 +259,25 @@ define
 
       meth display(I <= none)
 	 AS
+	 SSTtmp
 	 SST
       in
 	 lock
 	    Generation<-(@Generation + 1) mod 100
 	    if I == none then
-	       SST = {DPStatistics.siteStatistics}
+	       SSTtmp = {DPStatistics.siteStatistics}
 	    else
-	       SST = I
+	       SSTtmp  = I
 	    end
+	    
+	    %% Mine should be first in the list.
+	    if @notStarted then
+	       SST = {List.sort SSTtmp fun{$ S1 _} S1.state == mine end}
+	       notStarted <- false 
+	    else
+	       SST = SSTtmp
+	    end
+	    
 	    SiteInfo,Update(active:AS site_stats:SST)
 	    SiteInfo,activeSites(AS)
 	 end

@@ -2,6 +2,7 @@ functor
 import
    Main(server:Mserver open:Mopen openNetInfo:MnetInfo)  at 'x-oz://system/DistributionPanelSrc.ozf'
    DPStatistics(siteStatistics) at 'x-oz://boot/DPStatistics'
+   Error
 export
    Open
    OpenNetInfo
@@ -26,7 +27,15 @@ define
 	 self.site = site(ip:Site.ip port:Site.port pid:Site.pid)
 	 self.serverPort = ServerPort
 	 {Send self.serverPort connecting(P self.site Site.siteid)}
-	 thread {ForAll S self} end
+	 thread
+	    %% If the dpClient should fail
+	    %% print the exception to stdout
+	    try
+	       {ForAll S self}
+	    catch X then
+	       {Error.printException  X}
+	    end
+	 end
       end
 
       meth connected
