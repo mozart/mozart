@@ -21,8 +21,8 @@ error messages obtained from the compiler's interface.
 <code display proglang=sh/ozc -x ozc-client.oz -o ozc-client.exe/
 and can be invoked with:
 <code display proglang=sh/ozc-client.exe --url=?{URL} --in=?{InFile} --out=?{OutFile}/
-It load the compile server's ticket from ?{URL}, uses it to obtain the
-forward procedure, applies it to the textual contents of ?{InFile} and
+It loads the compile server's ticket from ?{URL}, uses it to obtain the
+forwarding procedure, applies it to the textual contents of ?{InFile} and
 saves the returned functor value in ?{OutFile}.  Note that we convert
 the string (&ie; list) representation of the file's contents to a byte
 string for more efficient transmission; this is not necessary, but
