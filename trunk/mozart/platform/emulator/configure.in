@@ -41,6 +41,9 @@ AC_INIT(base.hh)
 
 OZ_INIT
 
+BUILDTOP=`cd ../.. && pwd`
+AC_SUBST(BUILDTOP)
+
 AC_LANG_CPLUSPLUS
 
 dnl *****************************************************************
@@ -655,7 +658,7 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules libfd/Makefile libfset/Makefile)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libfd/Makefile libfset/Makefile CONF.h:CONF.in)
 
 errprint(ifdef([OZ_INIT],
  [],
