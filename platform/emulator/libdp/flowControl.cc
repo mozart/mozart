@@ -40,6 +40,15 @@
 #include "flowControl.hh"
 #include "var.hh"
 
+// GARBAGE COLLECTION HACK
+inline
+void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
+  if (frm)
+    OZ_collectHeapTerm(frm,to);
+  else
+    to=frm;
+}
+
 FlowControler *flowControler;
 
 void FlowControler::addElement(TaggedRef e){
@@ -110,7 +119,7 @@ void FlowControler::wakeUpExecute(unsigned int t){
 void FlowControler::gcEntries(){
  FlowControlElement *ptr = first;
     while(ptr!=NULL){
-      OZ_collectHeapTerm(ptr->ele, ptr->ele);
+      OZ_collectHeapTermUnsafe(ptr->ele, ptr->ele);
       if(ptr->kind == FLOW_VAR){
         ptr->site->makeGCMarkSite();}
       ptr = ptr->next;}}

@@ -41,6 +41,15 @@
 
 #include "os.hh"
 
+// GARBAGE COLLECTION HACK
+inline
+void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
+  if (frm)
+    OZ_collectHeapTerm(frm,to);
+  else
+    to=frm;
+}
+
 int NetHashTable::hashFunc(NetAddress *na){
   unsigned char *p = (unsigned char*) na;
   int i;
@@ -1127,7 +1136,7 @@ void OB_Entry::gcPO() {
   } else {
     Assert(isRef() || isVar());
     PD((GC,"OT var/ref"));
-    OZ_collectHeapTerm(u.ref,u.ref);}
+    OZ_collectHeapTermUnsafe(u.ref,u.ref);}
 }
 
 Bool withinBorrowTable(int i){
