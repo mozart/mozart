@@ -206,16 +206,17 @@ dnl OZ_CHECK_VERSION(OK,GOT,WANT)
 dnl
 dnl GOT and WANT consist of integers separated by single periods, e.g.
 dnl 23.1 or 3.5.7, and OK is set to yes or no according to whether
-dnl GOT >= WANT with respect to the obvious ordering.
+dnl GOT >= WANT with respect to the obvious ordering.  To accomodate
+dnl such program as perl, we also permit `_' and `-' instead of `.'
 dnl
 dnl for example
 dnl	OZ_CHECK_VERSION(OK,$VERSION,2.5.4)
 dnl sets OK to yes or no, according to whether $VERSION is greater
 dnl than 2.5.4
 dnl
-dnl IFS="$IFS." gives me the implicit break at periods in both the
-dnl `set' and the `for' statements.  Actually I am now using
-dnl `.' and `_' for breaks (to accommodate perl).
+dnl Note that we now support having one letter at the end: this
+dnl interpreted as a "beta" version.  Thus 1.3.23c is less that
+dnl 1.3.23, but more than 1.3.23a.
 dnl
 dnl `set $oz_tmp_got DONE' results in the component integers being
 dnl assigned to positional parameters $1, $2 etc... DONE marks the
@@ -228,26 +229,61 @@ dnl
 dnl Note that if GOT is empty the test succeeds (so don't do it)
 dnl ------------------------------------------------------------------
 
+AC_DEFUN(OZ_PREPARE_VERSION,[
+  oz_tmp="$[$1]"
+changequote(<,>)
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+changequote([,])
+  [$1]=$oz_tmp])
+
 AC_DEFUN(OZ_CHECK_VERSION,[
   oz_tmp_got="[$2]"
   oz_tmp_want="[$3]"
-  oz_tmp_IFS="$IFS"
-  IFS="$IFS._-"
-  oz_tmp_got=`echo $oz_tmp_got`
-  oz_tmp_want=`echo $oz_tmp_want`
+  OZ_PREPARE_VERSION(oz_tmp_got)
+  OZ_PREPARE_VERSION(oz_tmp_want)
   set $oz_tmp_got DONE
-  IFS=""
-  IFS="$oz_tmp_IFS"
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
-    if test "$[1]" = DONE; then
-      break
-    elif test "$oz_tmp_cur" -lt "$[1]"; then
-      break
-    elif test "$oz_tmp_cur" -gt "$[1]"; then
-      oz_tmp__ok=no
-      break
-    fi
+    case $oz_tmp_cur in
+      DONE)
+         case $[1] in
+           [a-z]) oz_tmp__ok=no;;
+           *);;
+         esac
+         break
+         ;;
+      [a-z])
+         case $[1] in
+           DONE) break;;
+           [a-z])
+              if test `expr $oz_tmp_cur '<=' $[1]` -eq 0; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+           *) break
+           ;;
+         esac
+         ;;
+      *)
+         case $[1] in
+           DONE) oz_tmp__ok=no
+             break
+             ;;
+           [a-z]) oz_tmp__ok=no
+             break
+             ;;
+           *) if test "$oz_tmp_cur" -lt "$[1]"; then
+                break
+              elif test "$oz_tmp_cur" -gt "$[1]"; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+         esac
+         ;;
+    esac
     [shift]
   done
   [$1]=$oz_tmp__ok])
@@ -269,17 +305,17 @@ AC_DEFUN(OZ_PROG_VERSION_CHECK,[
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 changequote(<,>)
-    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*\)'`
+    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*[a-z]\?\)'`
     # if that failed: we look at the end of the first line
     if test -z "$oz_tmp_version"; then
       oz_tmp_IFS="$IFS"
       IFS='
 '
       for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*\)$'`
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*[a-z]\?\)$'`
 	# else try to match the entire first line
 	if test -z "$oz_tmp_version"; then
-	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*\)$'`
+	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*[a-z]\?\)$'`
 	fi
 	break
       done

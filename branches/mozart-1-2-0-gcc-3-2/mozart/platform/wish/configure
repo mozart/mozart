@@ -1551,17 +1551,17 @@ echo "configure:1549: checking $CC version is at least 2.7" >&5
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 
-    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*\)'`
+    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*[a-z]\?\)'`
     # if that failed: we look at the end of the first line
     if test -z "$oz_tmp_version"; then
       oz_tmp_IFS="$IFS"
       IFS='
 '
       for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*\)$'`
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*[a-z]\?\)$'`
 	# else try to match the entire first line
 	if test -z "$oz_tmp_version"; then
-	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*\)$'`
+	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*[a-z]\?\)$'`
 	fi
 	break
       done
@@ -1572,23 +1572,62 @@ echo "configure:1549: checking $CC version is at least 2.7" >&5
       
   oz_tmp_got="$oz_tmp_version"
   oz_tmp_want="2.7"
-  oz_tmp_IFS="$IFS"
-  IFS="$IFS._-"
-  oz_tmp_got=`echo $oz_tmp_got`
-  oz_tmp_want=`echo $oz_tmp_want`
+  
+  oz_tmp="$oz_tmp_got"
+
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+
+  oz_tmp_got=$oz_tmp
+  
+  oz_tmp="$oz_tmp_want"
+
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+
+  oz_tmp_want=$oz_tmp
   set $oz_tmp_got DONE
-  IFS=""
-  IFS="$oz_tmp_IFS"
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
-    if test "$1" = DONE; then
-      break
-    elif test "$oz_tmp_cur" -lt "$1"; then
-      break
-    elif test "$oz_tmp_cur" -gt "$1"; then
-      oz_tmp__ok=no
-      break
-    fi
+    case $oz_tmp_cur in
+      DONE)
+         case $1 in
+           a-z) oz_tmp__ok=no;;
+           *);;
+         esac
+         break
+         ;;
+      a-z)
+         case $1 in
+           DONE) break;;
+           a-z)
+              if test `expr $oz_tmp_cur '<=' $1` -eq 0; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+           *) break
+           ;;
+         esac
+         ;;
+      *)
+         case $1 in
+           DONE) oz_tmp__ok=no
+             break
+             ;;
+           a-z) oz_tmp__ok=no
+             break
+             ;;
+           *) if test "$oz_tmp_cur" -lt "$1"; then
+                break
+              elif test "$oz_tmp_cur" -gt "$1"; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+         esac
+         ;;
+    esac
     shift
   done
   oz_tmp_ok=$oz_tmp__ok
@@ -1639,7 +1678,7 @@ You may find a mirror archive closer to you by consulting:
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking cc compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:1643: checking cc compiler option $ozm_opt" >&5
+echo "configure:1682: checking cc compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1670,7 +1709,7 @@ fi
     ;;
     esac
     echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1674: checking how to run the C preprocessor" >&5
+echo "configure:1713: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1685,13 +1724,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1689 "configure"
+#line 1728 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1695: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1734: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1702,13 +1741,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1706 "configure"
+#line 1745 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1712: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1751: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1719,13 +1758,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 1723 "configure"
+#line 1762 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1729: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1768: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1757,23 +1796,23 @@ echo "$ac_t""$CPP" 1>&6
   else
     
   echo $ac_n "checking for C compiler""... $ac_c" 1>&6
-echo "configure:1761: checking for C compiler" >&5
+echo "configure:1800: checking for C compiler" >&5
   CC=$oz_cv_CC
   echo "$ac_t""(cached) $CC" 1>&6
     
   echo $ac_n "checking whether we are using GNU C""... $ac_c" 1>&6
-echo "configure:1766: checking whether we are using GNU C" >&5
+echo "configure:1805: checking whether we are using GNU C" >&5
   GCC=$oz_cv_GCC
   echo "$ac_t""(cached) $GCC" 1>&6
     
   echo $ac_n "checking for C preprocessor""... $ac_c" 1>&6
-echo "configure:1771: checking for C preprocessor" >&5
+echo "configure:1810: checking for C preprocessor" >&5
   CPP=$oz_cv_CPP
   echo "$ac_t""(cached) $CPP" 1>&6
     if test "${CFLAGS+set}" != set ; then
       
   echo $ac_n "checking for default CFLAGS""... $ac_c" 1>&6
-echo "configure:1777: checking for default CFLAGS" >&5
+echo "configure:1816: checking for default CFLAGS" >&5
   CFLAGS=$oz_cv_CFLAGS
   echo "$ac_t""(cached) $CFLAGS" 1>&6
     fi
@@ -1799,7 +1838,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1803: checking for $ac_word" >&5
+echo "configure:1842: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_CXX'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1831,7 +1870,7 @@ test -n "$CXX" || CXX="gcc"
 
 
 echo $ac_n "checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works""... $ac_c" 1>&6
-echo "configure:1835: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works" >&5
+echo "configure:1874: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works" >&5
 
 ac_ext=C
 # CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
@@ -1842,12 +1881,12 @@ cross_compiling=$ac_cv_prog_cxx_cross
 
 cat > conftest.$ac_ext << EOF
 
-#line 1846 "configure"
+#line 1885 "configure"
 #include "confdefs.h"
 
 int main(){return(0);}
 EOF
-if { (eval echo configure:1851: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1890: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   ac_cv_prog_cxx_works=yes
   # If we can't run a trivial program, we are probably using a cross compiler.
   if (./conftest; exit) 2>/dev/null; then
@@ -1873,12 +1912,12 @@ if test $ac_cv_prog_cxx_works = no; then
   { echo "configure: error: installation or configuration problem: C++ compiler cannot create executables." 1>&2; exit 1; }
 fi
 echo $ac_n "checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler""... $ac_c" 1>&6
-echo "configure:1877: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler" >&5
+echo "configure:1916: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler" >&5
 echo "$ac_t""$ac_cv_prog_cxx_cross" 1>&6
 cross_compiling=$ac_cv_prog_cxx_cross
 
 echo $ac_n "checking whether we are using GNU C++""... $ac_c" 1>&6
-echo "configure:1882: checking whether we are using GNU C++" >&5
+echo "configure:1921: checking whether we are using GNU C++" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_gxx'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1887,7 +1926,7 @@ else
   yes;
 #endif
 EOF
-if { ac_try='${CXX-g++} -E conftest.C'; { (eval echo configure:1891: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
+if { ac_try='${CXX-g++} -E conftest.C'; { (eval echo configure:1930: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
   ac_cv_prog_gxx=yes
 else
   ac_cv_prog_gxx=no
@@ -1906,7 +1945,7 @@ ac_test_CXXFLAGS="${CXXFLAGS+set}"
 ac_save_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS=
 echo $ac_n "checking whether ${CXX-g++} accepts -g""... $ac_c" 1>&6
-echo "configure:1910: checking whether ${CXX-g++} accepts -g" >&5
+echo "configure:1949: checking whether ${CXX-g++} accepts -g" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_cxx_g'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1944,23 +1983,23 @@ fi
 	else
 	  
   echo $ac_n "checking $CXX version is at least 2.7""... $ac_c" 1>&6
-echo "configure:1948: checking $CXX version is at least 2.7" >&5
+echo "configure:1987: checking $CXX version is at least 2.7" >&5
   oz_tmp_ok=no
   if oz_tmp_version1=`$CXX -dumpversion || $CXX --version 2>/dev/null`; then
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 
-    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*\)'`
+    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*[a-z]\?\)'`
     # if that failed: we look at the end of the first line
     if test -z "$oz_tmp_version"; then
       oz_tmp_IFS="$IFS"
       IFS='
 '
       for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*\)$'`
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*[a-z]\?\)$'`
 	# else try to match the entire first line
 	if test -z "$oz_tmp_version"; then
-	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*\)$'`
+	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*[a-z]\?\)$'`
 	fi
 	break
       done
@@ -1971,23 +2010,62 @@ echo "configure:1948: checking $CXX version is at least 2.7" >&5
       
   oz_tmp_got="$oz_tmp_version"
   oz_tmp_want="2.7"
-  oz_tmp_IFS="$IFS"
-  IFS="$IFS._-"
-  oz_tmp_got=`echo $oz_tmp_got`
-  oz_tmp_want=`echo $oz_tmp_want`
+  
+  oz_tmp="$oz_tmp_got"
+
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+
+  oz_tmp_got=$oz_tmp
+  
+  oz_tmp="$oz_tmp_want"
+
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+
+  oz_tmp_want=$oz_tmp
   set $oz_tmp_got DONE
-  IFS=""
-  IFS="$oz_tmp_IFS"
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
-    if test "$1" = DONE; then
-      break
-    elif test "$oz_tmp_cur" -lt "$1"; then
-      break
-    elif test "$oz_tmp_cur" -gt "$1"; then
-      oz_tmp__ok=no
-      break
-    fi
+    case $oz_tmp_cur in
+      DONE)
+         case $1 in
+           a-z) oz_tmp__ok=no;;
+           *);;
+         esac
+         break
+         ;;
+      a-z)
+         case $1 in
+           DONE) break;;
+           a-z)
+              if test `expr $oz_tmp_cur '<=' $1` -eq 0; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+           *) break
+           ;;
+         esac
+         ;;
+      *)
+         case $1 in
+           DONE) oz_tmp__ok=no
+             break
+             ;;
+           a-z) oz_tmp__ok=no
+             break
+             ;;
+           *) if test "$oz_tmp_cur" -lt "$1"; then
+                break
+              elif test "$oz_tmp_cur" -gt "$1"; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+         esac
+         ;;
+    esac
     shift
   done
   oz_tmp_ok=$oz_tmp__ok
@@ -2038,7 +2116,7 @@ You may find a mirror archive closer to you by consulting:
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2042: checking c++ compiler option $ozm_opt" >&5
+echo "configure:2120: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2069,7 +2147,7 @@ fi
     ;;
     esac
     echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
-echo "configure:2073: checking how to run the C++ preprocessor" >&5
+echo "configure:2151: checking how to run the C++ preprocessor" >&5
 if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2082,12 +2160,12 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
   CXXCPP="${CXX-g++} -E"
   cat > conftest.$ac_ext <<EOF
-#line 2086 "configure"
+#line 2164 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2091: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2169: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -2119,23 +2197,23 @@ echo "$ac_t""$CXXCPP" 1>&6
   else
     
   echo $ac_n "checking for C++ compiler""... $ac_c" 1>&6
-echo "configure:2123: checking for C++ compiler" >&5
+echo "configure:2201: checking for C++ compiler" >&5
   CXX=$oz_cv_CXX
   echo "$ac_t""(cached) $CXX" 1>&6
     
   echo $ac_n "checking whether we are using GNU C++""... $ac_c" 1>&6
-echo "configure:2128: checking whether we are using GNU C++" >&5
+echo "configure:2206: checking whether we are using GNU C++" >&5
   GXX=$oz_cv_GXX
   echo "$ac_t""(cached) $GXX" 1>&6
     
   echo $ac_n "checking for C++ preprocessor""... $ac_c" 1>&6
-echo "configure:2133: checking for C++ preprocessor" >&5
+echo "configure:2211: checking for C++ preprocessor" >&5
   CXXCPP=$oz_cv_CXXCPP
   echo "$ac_t""(cached) $CXXCPP" 1>&6
     if test "${CXXFLAGS+set}" != set; then
       
   echo $ac_n "checking for default CXXFLAGS""... $ac_c" 1>&6
-echo "configure:2139: checking for default CXXFLAGS" >&5
+echo "configure:2217: checking for default CXXFLAGS" >&5
   CFLAGS=$oz_cv_CFLAGS
   echo "$ac_t""(cached) $CFLAGS" 1>&6
     fi
@@ -2144,7 +2222,7 @@ echo "configure:2139: checking for default CXXFLAGS" >&5
   
 
 echo $ac_n "checking whether ln -s works""... $ac_c" 1>&6
-echo "configure:2148: checking whether ln -s works" >&5
+echo "configure:2226: checking whether ln -s works" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_LN_S'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2178,7 +2256,7 @@ case "$platform" in
 	for i in tcl83.dll tk83.dll msvcrt.dll; do
 	  dll=$WINDLLDIR/$i
 	  echo $ac_n "checking for DLL $dll""... $ac_c" 1>&6
-echo "configure:2182: checking for DLL $dll" >&5
+echo "configure:2260: checking for DLL $dll" >&5
 	  if test -f $dll
 	  then echo "$ac_t""yes" 1>&6
 	  else { echo "configure: error: required DLL $dll not found" 1>&2; exit 1; }
@@ -2201,7 +2279,7 @@ esac
 
 
 echo $ac_n "checking whether to build with AquaTk""... $ac_c" 1>&6
-echo "configure:2205: checking whether to build with AquaTk" >&5
+echo "configure:2283: checking whether to build with AquaTk" >&5
 # Check whether --with-tk-aqua or --without-tk-aqua was given.
 if test "${with_tk_aqua+set}" = set; then
   withval="$with_tk_aqua"
@@ -2216,12 +2294,12 @@ echo "$ac_t""$oztmp" 1>&6
 
 
 : ${oz_tcltk_search="$WITH_TCLTK $WITH_TCLTK/lib  $prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
-: ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.3 /usr/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/lib/tcl8.2 /usr/local/lib/tcl8.0 /usr/lib/tcl8.0"}
-: ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.3 /usr/lib/tk8.3 /usr/local/lib/tk8.2 /usr/lib/tk8.2 /usr/local/lib/tk8.0 /usr/lib/tk8.0"}
+: ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.4 /usr/lib/tcl8.4 /usr/local/lib/tcl8.3 /usr/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/lib/tcl8.2 /usr/local/lib/tcl8.0 /usr/lib/tcl8.0"}
+: ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.4 /usr/lib/tk8.4 /usr/local/lib/tk8.3 /usr/lib/tk8.3 /usr/local/lib/tk8.2 /usr/lib/tk8.2 /usr/local/lib/tk8.0 /usr/lib/tk8.0"}
 
 
 echo $ac_n "checking for tclConfig.sh""... $ac_c" 1>&6
-echo "configure:2225: checking for tclConfig.sh" >&5
+echo "configure:2303: checking for tclConfig.sh" >&5
 # Check whether --with-tcl or --without-tcl was given.
 if test "${with_tcl+set}" = set; then
   withval="$with_tcl"
@@ -2260,7 +2338,7 @@ echo "$ac_t""$TCL_LIB_DIR/tclConfig.sh" 1>&6
 
 
 echo $ac_n "checking for tkConfig.sh""... $ac_c" 1>&6
-echo "configure:2264: checking for tkConfig.sh" >&5
+echo "configure:2342: checking for tkConfig.sh" >&5
 # Check whether --with-tk or --without-tk was given.
 if test "${with_tk+set}" = set; then
   withval="$with_tk"
@@ -2308,7 +2386,7 @@ if test "$GCC" = yes; then
 	    for ozm_opt in $oz_for
 	    do
 		echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2312: checking c++ compiler option $ozm_opt" >&5
+echo "configure:2390: checking c++ compiler option $ozm_opt" >&5
 		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2333,7 +2411,7 @@ fi
 	
 if test -n "$PERMISSIVEOPT"; then
 echo $ac_n "checking whether we need -fpermissive for Xlib.h""... $ac_c" 1>&6
-echo "configure:2337: checking whether we need -fpermissive for Xlib.h" >&5
+echo "configure:2415: checking whether we need -fpermissive for Xlib.h" >&5
 if eval "test \"`echo '$''{'ac_cv_xlib_permissive'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2348,7 +2426,7 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
 
   cat > conftest.$ac_ext <<EOF
-#line 2352 "configure"
+#line 2430 "configure"
 #include "confdefs.h"
 
 #include <X11/Xlib.h>
@@ -2359,7 +2437,7 @@ void foo() {}
 
 ; return 0; }
 EOF
-if { (eval echo configure:2363: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2441: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   
   ac_cv_xlib_permissive=no
@@ -2392,7 +2470,7 @@ fi
 
 
 echo $ac_n "checking for Tcl public headers""... $ac_c" 1>&6
-echo "configure:2396: checking for Tcl public headers" >&5
+echo "configure:2474: checking for Tcl public headers" >&5
 
 # Check whether --with-tclinclude or --without-tclinclude was given.
 if test "${with_tclinclude+set}" = set; then
@@ -2429,7 +2507,7 @@ fi
 
 
 echo $ac_n "checking for Tk public headers""... $ac_c" 1>&6
-echo "configure:2433: checking for Tk public headers" >&5
+echo "configure:2511: checking for Tk public headers" >&5
 
 # Check whether --with-tkinclude or --without-tkinclude was given.
 if test "${with_tkinclude+set}" = set; then
@@ -2469,7 +2547,7 @@ fi
 
 
     echo $ac_n "checking for --enable-copy-tcl-libs""... $ac_c" 1>&6
-echo "configure:2473: checking for --enable-copy-tcl-libs" >&5
+echo "configure:2551: checking for --enable-copy-tcl-libs" >&5
     # Check whether --enable-copy-tcl-libs or --disable-copy-tcl-libs was given.
 if test "${enable_copy_tcl_libs+set}" = set; then
   enableval="$enable_copy_tcl_libs"

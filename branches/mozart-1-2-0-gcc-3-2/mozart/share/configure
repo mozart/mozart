@@ -3608,23 +3608,62 @@ EOF
       
   oz_tmp_got="$oz_tmp"
   oz_tmp_want="2"
-  oz_tmp_IFS="$IFS"
-  IFS="$IFS._-"
-  oz_tmp_got=`echo $oz_tmp_got`
-  oz_tmp_want=`echo $oz_tmp_want`
+  
+  oz_tmp="$oz_tmp_got"
+
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+
+  oz_tmp_got=$oz_tmp
+  
+  oz_tmp="$oz_tmp_want"
+
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+
+  oz_tmp_want=$oz_tmp
   set $oz_tmp_got DONE
-  IFS=""
-  IFS="$oz_tmp_IFS"
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
-    if test "$1" = DONE; then
-      break
-    elif test "$oz_tmp_cur" -lt "$1"; then
-      break
-    elif test "$oz_tmp_cur" -gt "$1"; then
-      oz_tmp__ok=no
-      break
-    fi
+    case $oz_tmp_cur in
+      DONE)
+         case $1 in
+           a-z) oz_tmp__ok=no;;
+           *);;
+         esac
+         break
+         ;;
+      a-z)
+         case $1 in
+           DONE) break;;
+           a-z)
+              if test `expr $oz_tmp_cur '<=' $1` -eq 0; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+           *) break
+           ;;
+         esac
+         ;;
+      *)
+         case $1 in
+           DONE) oz_tmp__ok=no
+             break
+             ;;
+           a-z) oz_tmp__ok=no
+             break
+             ;;
+           *) if test "$oz_tmp_cur" -lt "$1"; then
+                break
+              elif test "$oz_tmp_cur" -gt "$1"; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+         esac
+         ;;
+    esac
     shift
   done
   oz_tmp_ok=$oz_tmp__ok
@@ -3678,7 +3717,7 @@ fi
 
 
     echo $ac_n "checking for --enable-qtk""... $ac_c" 1>&6
-echo "configure:3682: checking for --enable-qtk" >&5
+echo "configure:3721: checking for --enable-qtk" >&5
     # Check whether --enable-qtk or --disable-qtk was given.
 if test "${enable_qtk+set}" = set; then
   enableval="$enable_qtk"
