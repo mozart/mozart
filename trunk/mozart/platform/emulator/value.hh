@@ -1866,6 +1866,7 @@ private:
                    // default: unit --> no replacements
 
 public:
+  Bool copyOnce; // for functors
   PrTabEntry *next;
   unsigned int numClosures, numCalled, heapUsed, samples, lastHeap;
   static PrTabEntry *allPrTabEntries;
@@ -1875,7 +1876,7 @@ public:
 
   ProgramCounter PC;
 
-  PrTabEntry (TaggedRef name, SRecordArity arityInit,TaggedRef file, int line)
+  PrTabEntry (TaggedRef name,SRecordArity arityInit,TaggedRef file,int line,Bool co)
   : printname(name), fileName(file), lineno(line)
   {
     Assert(isLiteral(name));
@@ -1885,7 +1886,8 @@ public:
     PC = NOCODE;
     info = nil();
     names = NameUnit;
-    numClosures = numCalled = heapUsed = samples = lastHeap =0;
+    numClosures = numCalled = heapUsed = samples = lastHeap = 0;
+    copyOnce = co;
     next = allPrTabEntries;     
     allPrTabEntries = this;
   }

@@ -1,0 +1,324 @@
+/* -*- C++ -*-
+ *  Authors:
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $_Date$ by $_Author$
+ *    $_Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     $MOZARTURL$
+ * 
+ *  See the file "LICENSE" or
+ *     $LICENSEURL$
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+
+#include "copycode.hh"
+#include "runtime.hh"
+#include "am.hh"
+#include "indexing.hh"
+
+define(readArg,$1)
+define(writeArg,$1)
+define(instruction,
+	`ifelse(numOfRegs($2,$3,$4),1,
+                    case TOUPPER($1)X: 
+		    case TOUPPER($1)Y: 
+		    case TOUPPER($1)G:,
+	 numOfRegs($2,$3,$4),2,
+            case TOUPPER($1)XX:
+            case TOUPPER($1)XY:
+            case TOUPPER($1)XG:
+            case TOUPPER($1)YX:
+            case TOUPPER($1)YY:
+            case TOUPPER($1)YG:
+            case TOUPPER($1)GX:
+            case TOUPPER($1)GY:
+            case TOUPPER($1)GG:,
+         case TOUPPER($1):)
+	   opAction($2)
+	   opAction($3)
+	   opAction($4)
+	   opAction($5)
+	   opAction($6)
+	   opAction($7)
+	   opAction($8)
+	   opAction($9)
+	  break;')
+
+define(opAction,
+`ifelse($1,Literal, handleLiteral(PC++,ht);,
+        $1,Feature, handleLiteral(PC++,ht);,
+        $1,Constant,handleLiteral(PC,ht);PC++;,
+        $1,RecordArity, handleRecordArity(PC++,ht);,
+        $1,PredicateRef,handlePredicateRef(PC++,ht);,
+        $1,PredId,  handlePredId(PC++,ht);,
+        $1,HashTableRef, handleHashTable(PC++,ht);,
+        $1,GenCallInfo,handleGenCallInfo(PC++,ht);,
+        $1,ApplMethInfo,handleApplMethInfo(PC++,ht);,
+        $1,,,
+        PC++;)')
+
+
+
+
+#define CheckHT(Type,Val)			\
+  Type aux = (Type)ht->htFind(ToInt32(Val));	\
+  if ((uint32)ToInt32(aux) != ToInt32(htEmpty))	\
+    return aux;
+
+static
+TaggedRef checkTagged(TaggedRef t, HashTable *ht)
+{
+  CheckHT(TaggedRef,t);
+  return t;
+}
+
+static
+Literal *checkLiteral(Literal *l, HashTable *ht)
+{
+  return tagged2Literal(deref(checkTagged(makeTaggedLiteral(l),ht)));
+}
+
+
+static
+void handleLiteral(ProgramCounter PC, HashTable *ht)
+{
+  CodeArea::writeTagged(checkTagged(getTaggedArg(PC),ht),PC);
+}
+
+
+
+GenCallInfoClass *checkGCI(GenCallInfoClass *gci, HashTable *ht)
+{
+  TaggedRef newname = checkTagged(gci->mn,ht);
+
+  // GCIs are deleted after use, so always make a copy
+  // if (newname == gci->mn)
+  //   return gci;
+
+  CheckHT(GenCallInfoClass *,gci);
+  
+  aux = new GenCallInfoClass(gci->regIndex,gci->isMethAppl,newname, 
+			     gci->isTailCall,gci->arity);
+  ht->htAdd(ToInt32(gci),aux);
+  return aux;
+}
+
+
+static
+void handleGenCallInfo(ProgramCounter PC, HashTable *ht)
+{
+  GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC);
+  CodeArea::writeAddress(checkGCI(gci,ht),PC);
+}
+
+
+
+static
+SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
+{
+  if (sraIsTuple(sra))
+    return sra;
+
+  CheckHT(SRecordArity,sra);
+
+  TaggedRef list = getRecordArity(sra)->getList();
+  TaggedRef newlist = nil();
+  while(isCons(list)) {
+    newlist = cons(checkTagged(head(list),ht),newlist);
+    list = tail(list);
+  }
+
+  aux = mkRecordArity(aritytable.find(newlist));
+  ht->htAdd(sra,ToPointer(aux));
+  return aux;
+}
+
+
+PrTabEntry *checkPTE(PrTabEntry *pte, HashTable *ht)
+{
+  CheckHT(PrTabEntry *,pte);
+  
+  aux = new PrTabEntry (pte->getName(),checkSRA(pte->getMethodArity(),ht),
+			pte->getFileName(), pte->getLine(),pte->copyOnce);
+  ht->htAdd(ToInt32(pte),aux);
+  return aux;
+}
+
+
+static
+void handlePredId(ProgramCounter PC, HashTable *ht)
+{
+  CodeArea::writeAddress(checkPTE(getPredArg(PC),ht),PC);
+}
+
+
+ApplMethInfoClass *checkAMI(ApplMethInfoClass *ami, HashTable *ht)
+{
+  CheckHT(ApplMethInfoClass *,ami);
+  
+  aux = new ApplMethInfoClass(checkTagged(ami->methName,ht),checkSRA(ami->arity,ht));
+
+  ht->htAdd(ToInt32(ami),aux);
+  return aux;
+}
+
+
+static
+void handleApplMethInfo(ProgramCounter PC, HashTable *ht)
+{
+  CodeArea::writeAddress(checkAMI((ApplMethInfoClass*) getAdressArg(PC),ht),PC);
+}
+
+
+
+
+/* the compiler stores AbstractionEntries as ints */
+
+TaggedRef checkAE(AbstractionEntry *ae, HashTable *ht)
+{
+  TaggedRef aet = oz_int((ToInt32(ae)));
+  CheckHT(TaggedRef,ae);
+  return aet;
+}
+
+
+static
+void handlePredicateRef(ProgramCounter PC, HashTable *ht)
+{
+  int i = OZ_intToC(checkAE((AbstractionEntry*) getAdressArg(PC),ht));
+  CodeArea::writeAddress(ToPointer(i),PC);
+}
+
+
+
+
+
+static
+void handleRecordArity(ProgramCounter PC, HashTable *ht)
+{
+  SRecordArity ff = checkSRA((SRecordArity) getAdressArg(PC), ht);
+  CodeArea::writeSRecordArity(ff, PC);
+}
+
+
+static
+void handleHashTable(ProgramCounter PC, HashTable *ht)
+{
+  IHashTable *table    = (IHashTable *) getAdressArg(PC);
+  int sz = table->size;
+  IHashTable *newtable = new IHashTable(sz,table->elseLabel);
+
+	
+  newtable->addList(table->listLabel);
+  newtable->addVar(table->varLabel);
+
+  int entries = table->numentries;
+
+  if (table->literalTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->literalTable[i];
+      while(aux) {
+	entries--;
+	newtable->add(checkLiteral(aux->getLiteral(),ht),aux->getLabel());
+	aux = aux->getNext();
+      }
+    }
+  }
+
+  if (table->numberTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->numberTable[i];
+      while(aux) {
+	entries--;
+	newtable->add(aux->getNumber(),aux->getLabel());
+	aux = aux->getNext();
+      }
+    }
+  }
+
+  if (table->functorTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->functorTable[i];
+      while(aux) {
+	entries--;
+        SRecordArity sra;
+        Literal *label = aux->getFunctor(sra);
+	newtable->add(checkLiteral(label,ht),checkSRA(sra,ht),aux->getLabel());
+	aux = aux->getNext();
+      }
+    }
+  }
+
+  Assert(entries==0);
+  CodeArea::writeIHashTable(newtable, PC);
+}
+
+
+
+
+
+ProgramCounter copyCode(ProgramCounter start, OzDictionary *dict, Bool makecopy)
+{
+  HashTable *ht = new HashTable(HT_INTKEY,100);
+
+  // copy dict into ht
+  int i = dict->getFirst();
+  i = dict->getNext(i);
+  while(i != -1) {
+    ht->htAdd(dict->getKey(i),ToPointer(dict->getValue(i)));
+    i = dict->getNext(i);
+  }
+
+  int sizeOfDef = sizeOf(DEFINITION);
+  start -= sizeOfDef; // copy DEFINITION instructions as well (for debugging)
+
+  Reg reg;
+  int nxt;
+  PrTabEntry *pred;
+  TaggedRef file,line,column,predName;
+  CodeArea::getDefinitionArgs(start,reg,nxt,file,line,column,predName);
+
+  int size = nxt;
+  ProgramCounter ret;
+
+  if (makecopy) {
+    ret = new ByteCode[size];  
+    memcpy(ret,start,size*sizeof(ByteCode));
+  } else {
+    ret = start;
+  }
+  
+  ProgramCounter PC = start;
+
+  ProgramCounter ende = start+size;
+
+  while (PC<ende) {
+    ProgramCounter oldPC = PC;
+    Opcode op = CodeArea::getOpcode(PC++);
+
+    switch(op) {
+
+    include(EMUDIR/instrDefs.m4)
+
+    default: Assert(0); break;
+    }
+
+    displayCode(oldPC,1);
+  }
+
+  delete ht;
+  return ret+sizeOfDef;
+}

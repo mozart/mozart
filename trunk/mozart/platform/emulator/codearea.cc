@@ -872,11 +872,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	int next;
 	TaggedRef file, line, column, predName;
 	getDefinitionArgs(PC,reg,next,file,line,column,predName);
+	PrTabEntry *predd = getPredArg(PC+3);
 	AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
 	AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
 	fprintf(ofile,"(x(%d) %d pid(%s ",reg,next,toC(predName));
 	fprintf(ofile,"_ %s ",toC(file));
-	fprintf(ofile,"%s) %p ",toC(line),predEntry);
+	fprintf(ofile,"%s %d) %p ",toC(line),predd->copyOnce,predEntry);
 
 	int size = list->getSize();
 	if (size == 0)
