@@ -55,7 +55,9 @@ enum DEBUGType {
   CONTENTS,
   SPECIAL,
   PD_VAR,
-
+  CELL,
+  SITE_OP,     // 40
+  MSG_QUEUED, 
   LAST
 };
 
@@ -106,3 +108,5 @@ void PD(int i,char *format,...) {}
 #endif 
 
 #endif
+
+

@@ -41,7 +41,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomDebugIP, AtomDebugPerdio,
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-  BI_Unify, BI_send;
+  BI_Unify,BI_Show,BI_send;
 
 
 // Some often used constants
@@ -164,6 +164,7 @@ void initLiterals()
   E_SYSTEM= makeTaggedAtom("system");
 
   BI_Unify=makeTaggedConst(builtinTab.find("="));
+  BI_Show=makeTaggedConst(builtinTab.find("Show"));
   BI_send=makeTaggedConst(builtinTab.find("Send"));
 }
 

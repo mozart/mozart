@@ -48,7 +48,7 @@
 
 #define oz_sendPort(p,v) sendPort(p,v)
 
-#define oz_newCell(val) makeTaggedConst(new Cell(am.currentBoard, (val)))
+#define oz_newCell(val) makeTaggedConst(new CellLocal(am.currentBoard, (val)))
   // access, assign
 
 #define oz_float(f)     makeTaggedFloat((f))
