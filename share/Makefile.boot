@@ -50,6 +50,6 @@ STAGE1_LIB=$(BUILDLIB)/stage1
 STAGE1_TOOLS=$(BUILDTOOLS)/stage1
 stage1-%:
         $(MAKE) $* \
-        OZ_LOAD=root=.:prefix=$(URL)=$(STAGE1_LIB):prefix=/=/:= \
+        OZ_LOAD=root=.:prefix=$(URL)=$(STAGE1_LIB):prefix=$(URL)/tools=.:prefix=/=/:= \
         OZINIT=$(STAGE1_LIB)/lib/Init.ozp \
         OZC=$(STAGE1_LIB)/bin/ozc
