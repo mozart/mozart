@@ -621,6 +621,7 @@ define
 	       case @MyLaTeXToGIF of unit then skip
 	       elseof O then
 		  {O process({Dictionary.condGet @Meta 'latex.package' nil}
+			     {Dictionary.condGet @Meta 'latex.input' nil}
 			     @Reporter)}
 	       end
 	       {@MyThumbnails process(@Reporter)}
