@@ -59,7 +59,6 @@ public:
   int heapMinSize;
   int heapFree;
   int heapTolerance;
-  int heapBlockSize;
 
   int stackMinSize;
   int stackMaxSize;
@@ -68,7 +67,6 @@ public:
 
   int hiMidRatio;
   int midLowRatio;
-  // int timeSlice; use TIME_SLICE directly, so we save a costly div in AM::restartThread()
 
   int debugIP;
   int debugPerdio;
@@ -82,15 +80,12 @@ public:
   int perdioFlowBufferTime;
   
 
-  int numToplevelVars;
-
   int dumpCore;
 
   int runningUnderEmacs;
 
   char *ozHome;
   char *osname, *cpu;
-  char *ozPath;
 
   char *emuexe;
   char *emuhome;

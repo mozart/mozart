@@ -100,8 +100,6 @@
 #define ONLY_FUTURES		0
 #define STOP_ON_TOPLEVEL_FAILURE	0
 
-#define OZ_PATH		".:/usr/local/oz/lib"
-
 #define GC_FLAG		1
 #define GC_VERBOSITY	0
 #define CODE_GC_CYLES	5

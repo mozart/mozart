@@ -36,33 +36,7 @@
 
 ConfigData ozconf;
 
-
-/*
- * read an integer environment variable or use a default
- */
-inline
-int getenvDefault(char *envvar, int def)
-{
-  char *s = getenv(envvar);
-  if (s) {
-    int ret = atoi(s);
-#ifdef DEBUG
-    fprintf(stderr,"Using %s=%d\n", envvar, ret);
-#endif
-    return ret;
-  }
-  return def;
-}
-
-inline
-char *getenvDefault(char *envvar, char *def) {
-  char *s = getenv(envvar);
-  return s ? s : def;
-}
-
 void ConfigData::init() {
-  ozHome		= getenvDefault("OZHOME","unknown");
-  ozPath		= OZ_PATH;
   printDepth		= PRINT_DEPTH;
   printWidth		= PRINT_WIDTH;
   errorPrintDepth	= ERROR_PRINT_DEPTH;
@@ -90,8 +64,6 @@ void ConfigData::init() {
   heapFree              = HEAPFREE;
   heapTolerance         = HEAPTOLERANCE;
   heapThreshold         = INITIALHEAPTHRESHOLD;
-  numToplevelVars       = getenvDefault("OZTOPLEVELVARS",NUM_TOPLEVEL_VARS);
-  heapBlockSize         = getenvDefault("OZHEAPBLOCKSIZE",HEAPBLOCKSIZE);
 
   timeDetailed          = TIMEDETAILED;
 
