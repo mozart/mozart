@@ -17,6 +17,16 @@ listed here will be removed in future releases.
 
 <P>The limitations are:
 <list>
+<item>The <<Remote>> module does not work under Windows.
+Furthermore, on Solaris the number of virtual sites that a machine
+can create is limited by the system-wide limit on the number of
+shared memory pages.  Under Solaris, the default is
+six shared pages per process and 100 system-wide.
+This limit can be changed (this requires rebooting the machine).
+The default value of six results in poor
+performance if there are more than
+three virtual sites connected together.
+
 <item>Threads, dictionaries, arrays, and spaces are sited,
 even though they are in base modules.
 In future releases, they will be made unsited.
@@ -28,6 +38,18 @@ is converted to a <em>future</em>.
 The future will be bound when the constrained
 variable becomes determined.
 
+<item>The distributed garbage collection
+algorithm reclaims all unused entities
+except those forming a reference cycle
+that exists on at least two different owner sites
+(a <EM>cross-site cycle</EM>).
+For example, if two sites each own an object
+that references the other,
+then they will never be reclaimed.
+It is up to the programmer to break the cycle
+by updating one of the objects to no longer
+reference the other.
+
 <item>The code of functions, procedures, classes, and functors
 (but not objects) is always inserted in messages,
 even if the code is already present at the destination.
@@ -36,6 +58,11 @@ across the network only
 if it is not present on the destination site.
 In both current and future releases, at most a single copy
 of the code can exist per site.
+
+<item>If a site crashes that has references to entities created on
+other sites, then these entities are not garbage-collected.
+Future releases will incorporate a lease-based or similar
+technique to recover such entities.
 
 <item>The fault state <<tempFail>> is indicated only after
 a long delay.
