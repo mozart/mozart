@@ -129,7 +129,7 @@ end>>>
         <Table>
           <Tr><Th>C Type<Th>Oz Type
           <Tr><Td proglang=c><<gint>>, <<guint>>, <<glong>>, <<gulong>><Td>int
-          <Tr><Td proglang=c><<gboolean>><Td><<0>> and <<1>>
+          <Tr><Td proglang=c><<gboolean>><Td><<false>> and <<true>>
           <Tr><Td proglang=c><<gchar>>, <<guchar>><Td>int
           <Tr><Td proglang=c><<gfloat>>, <<gdouble>><Td>float
           <Tr><Td>enumerations, flags<Td>integer
