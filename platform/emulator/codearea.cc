@@ -1546,15 +1546,16 @@ ProgramCounter CodeArea::writeCache(ProgramCounter PC) {
   return PC;
 }
 
-void CodeArea::allocateBlock(int sz)  {
+void CodeArea::allocateBlock(int sz)
+{
   size = sz + 1;
   codeBlock  = new ByteCode[size]; /* allocation via malloc! */
-  // Important for garbage collection
-  for (int i = size; i--; )
-    codeBlock[i] = 0;
-  writeOpcode(ENDOFFILE,codeBlock+sz); /* mark the end, so that 
-					* displayCode and friends work */
-  Assert(getOpcode(codeBlock+sz) == 0);
+  ProgramCounter ptr = codeBlock;
+  const ProgramCounter end = codeBlock + size;
+  while (ptr < end)
+    // kost@ : whatever opcode representation is used:
+    ptr = writeOpcode(ENDOFFILE, ptr);
+  Assert(getOpcode(codeBlock+sz) == ENDOFFILE);
   wPtr       = codeBlock;
   nextBlock  = allBlocks;
   allBlocks  = this;

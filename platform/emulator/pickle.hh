@@ -143,8 +143,8 @@ const int ozValuesBAPickles = 1024;
 //
 // These are the 'CodeAreaProcessor'"s for the pickling and plain
 // traversing of code areas:
-Bool pickleCode(GenTraverser *m, void *arg);
-Bool traverseCode(GenTraverser *m, void *arg);
+Bool pickleCode(GenTraverser *m, GTAbstractEntity *arg);
+Bool traverseCode(GenTraverser *m, GTAbstractEntity *arg);
 
 //
 extern Pickler pickler;
