@@ -475,13 +475,20 @@ OZ_C_proc_begin(BImetaWatchVar, 2)
 OZ_C_proc_end
 
 
+static
+BIspec biSpec[] = {
+  {"metaIsVar", 1, BImetaIsVar},
+  {"metaWatchVar", 2, BImetaWatchVar},
+  {"metaGetDataAsAtom", 2, BImetaGetDataAsAtom},
+  {"metaGetNameAsAtom", 2, BImetaGetNameAsAtom},
+  {"metaGetStrength", 2, BImetaGetStrength},
+  {0,0,0,0,0}
+};
+
+
 void BIinitMeta(void)
 {
-  BIadd("metaIsVar", 1, BImetaIsVar);
-  BIadd("metaWatchVar", 2, BImetaWatchVar);
-  BIadd("metaGetDataAsAtom", 2, BImetaGetDataAsAtom);
-  BIadd("metaGetNameAsAtom", 2, BImetaGetNameAsAtom);
-  BIadd("metaGetStrength", 2, BImetaGetStrength);
+  BIaddSpec(biSpec);
 }
 
 #if defined(OUTLINE)
