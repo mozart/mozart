@@ -483,7 +483,7 @@ void AM::suspendOnVarList(Suspension *susp)
 Thread *AM::getJob()
 {
   int size=currentThread->TaskStack::getSeqSize();
-  if (size == 0) {
+  if (size == -1) {
     if (currentThread == rootThread) {
       rootThread=newThread(currentThread->getPriority(),rootBoard);
       checkToplevel();
