@@ -36,6 +36,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include "sort.hh"
 
 /*===================================================================
  * global names and atoms
@@ -687,42 +688,44 @@ Bool isSorted(TaggedRef list)
   
 }
 
+inline
+Bool order_taggedref_by_feat(const TaggedRef& a, const TaggedRef& b) {
+  return featureCmp(a,b) <= 0;
+}
+
 // mm2: optimize for already sorted list! (see isSorted)
 // sort list using quicksort and duplicants
 TaggedRef sortlist(TaggedRef list,int len)
 {
-  NEW_TEMP_ARRAY(TaggedRef*, r, len);
-    
-  // put pointers to elems of list in array r
-  TaggedRef tmp = list;
-  int i = 0;
-  Assert(!oz_isRef(tmp));
-  while (oz_isLTuple(tmp)) {
-    r[i++] = tagged2LTuple(tmp)->getRef();
-    tmp = oz_tail(tmp);
-    Assert(!oz_isRef(tmp));
-  }
-    
-  // sort array r using quicksort
-  quicksort(r, r + (len - 1));
+  // put elements into array
+  NEW_TEMP_ARRAY(TaggedRef, r, len);
 
-  // remove possible duplicate entries 
-  TaggedRef pElem = list;
-  TaggedRef cElem = tagged2LTuple(list)->getTail();
-  int p = 0, c = 1;
-  Assert(!oz_isRef(cElem));
-  while (oz_isLTuple(cElem)) {
-    LTuple* cElemPtr = tagged2LTuple(cElem); 
-    if (featureEq(*r[p], *r[c])) {
-      tagged2LTuple(pElem)->setTail(cElemPtr->getTail());
-    } else {
-      pElem = cElem;
-      p = c;
-    }
-    c += 1;
-    cElem = cElemPtr->getTail();
-    Assert(!oz_isRef(cElem));
-  } // while
+  // put pointers to elems of list in array r
+  TaggedRef l = list;
+  int i;
+  for (i = 0; i < len; i++) {
+    r[i] = tagged2LTuple(l)->getHead();
+    l = tagged2LTuple(l)->getTail();
+  }
+
+  // sort array of elements 
+  fastsort<TaggedRef,order_taggedref_by_feat>(r,len);
+
+  // remove duplicates
+  int j = 1;
+  for (i = 1; i < len; i++)
+    if (!featureEq(r[i-1],r[i]))
+      r[j++] = r[i];
+  
+  // write back elements
+  l = list;
+  Assert(j > 0);
+  for (i = 0; i < j-1; i++) {
+    tagged2LTuple(l)->setHead(r[i]);
+    l = tagged2LTuple(l)->getTail();
+  }
+  tagged2LTuple(l)->setHead(r[j-1]);
+  tagged2LTuple(l)->setTail(oz_nil());
 
   DELETE_TEMP_ARRAY(r);
   return list;
