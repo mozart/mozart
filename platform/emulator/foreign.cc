@@ -957,6 +957,18 @@ char *OZ_toC(OZ_Term term, int depth,int width)
   return tmpString;
 }
 
+int OZ_termGetSize(OZ_Term term, int depth, int width)
+{
+  ostrstream out;
+  int old=listWidth;
+
+  listWidth = width;
+  value2buffer(out,term,depth);
+  listWidth = old;
+
+  return (out.pcount ());
+}
+
 /*
  * Atoms
  */
