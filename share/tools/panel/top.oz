@@ -655,8 +655,8 @@ in
       meth setSlice
 	 S = (LoadWidth * @UpdateTime) div @HistoryRange
       in
-	 {self.memory.usage.load    slice(S)}
-	 {self.threads.threads.load slice(S)}
+	 {self.memory.options.usage.load    slice(S)}
+	 {self.threads.options.threads.load slice(S)}
       end
 
       meth setHistory(H)
