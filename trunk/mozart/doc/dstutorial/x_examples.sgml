@@ -311,7 +311,7 @@ independently of the object's class.
 
 <SUBSECTION id="making.stationary.objects"><TITLE>Making stationary objects</TITLE>
 
-<index/stationary object/definition/
+<index/stationary object<and>definition/
 <index/object<and>stationary/
 <P>Stationary entities are a very important abstraction.
 Mozart provides two operations to
