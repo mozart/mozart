@@ -9,14 +9,14 @@ local
 
    class ChoiceNode
 
-      meth Create(Control CurDepth CurSearchDist InfoDist $)
+      meth Create(Space Control CurDepth CurSearchDist InfoDist $)
 	 case Control
 	 of failed then
 	    {New self.classes.failed init(self CurDepth)}
-	 [] solved(_ S) then
+	 [] succeeded(S) then
 	    isSolBelow <- True
-	    {New self.classes.S init(self CurDepth Control)}
-	 [] choice(_ _) then
+	    {New self.classes.S init(self CurDepth Space)}
+	 [] alternatives(N) then
 	    choices  <- @choices + 1
 	    {New self.classes.choice
 	     init(self CurDepth
@@ -24,23 +24,23 @@ local
 		  elsecase CurSearchDist of 0 then transient
 		  else False
 		  end
-		  Control)}
-	 [] unstable(_) then
+		  Space Control)}
+	 [] blocked(_) then
 	    choices <- @choices + 1
 	    {self.canvas.manager.status halt}
-	    {New self.classes.unstable
-	     init(self CurDepth CurSearchDist InfoDist Control)}
+	    {New self.classes.blocked
+	     init(self CurDepth CurSearchDist InfoDist Space Control)}
 	 end
       end
 
-      meth wake(Node CurDepth CurSearchDist InfoDist Control)
+      meth wake(Node CurDepth CurSearchDist InfoDist Space Control)
 	 choices  <- @choices - 1
 	 isDirty  <- True
 	 <<replaceKid(Node
-		      <<Create(Control CurDepth CurSearchDist InfoDist $)>>)>>
+		      <<Create(Space Control CurDepth CurSearchDist InfoDist $)>>)>>
 	 {Node close}
 	 case self.mom of !False then true elseof Mom then
-	    {Mom leaveNode({Label Control}==solved True @choices==0)}
+	    {Mom leaveNode({Label Control}==succeeded True @choices==0)}
 	 end
       end
       
@@ -50,10 +50,10 @@ local
 	 UseNs UseCopy
       in
 	 case @toDo
-	 of P#1#MaxAlt then
+	 of S#1#MaxAlt then
 	    toDo          <- 2#MaxAlt
 	    UseNs          = [1]
-	    UseCopy        = P
+	    UseCopy        = S
 	    NextSearchDist = CurSearchDist - 1
 	    NextNs         = 1|CurNs
 	 [] NextAlt#MaxAlt then
@@ -67,21 +67,22 @@ local
 				      copy <- False
 				      CurCopy
 				   [] persistent then
-				      {Procedure.clone CurCopy}
+				      {Space.clone CurCopy}
 				   end
 	       else
 		  NextSearchDist = CurSearchDist - 1
-		  UseCopy        = {Procedure.clone CurCopy}
+		  UseCopy        = {Space.clone CurCopy}
 	       end
 	    else
 	       toDo          <- NextAlt+1#MaxAlt
-	       UseCopy        = {Procedure.clone CurCopy}
+	       UseCopy        = {Space.clone CurCopy}
 	       NextSearchDist = CurSearchDist - 1
 	    end
 	    UseNs = NextNs = NextAlt|CurNs
 	 end
-         Information = {Solve UseCopy {Reverse UseNs}}
-	 NewNode     = <<ChoiceNode Create(Information CurDepth+1
+	 {Misc.recompute UseCopy UseNs}
+         Information = {Space.ask UseCopy}
+	 NewNode     = <<ChoiceNode Create(UseCopy Information CurDepth+1
 					   NextSearchDist InfoDist $)>> 
 	 isDirty <- True
 	 <<addKid(NewNode)>>
@@ -128,11 +129,11 @@ local
 			     ?NextSearchDist ?NextNs
 			     ?Information ?NewNode)>>
 	    case Information
-	    of solved(_ _) then
+	    of succeeded(_) then
 	       Sol         = NewNode
 	       IsDirty     = True
 	       DecChoices  = @choices==0
-	    [] choice(_ _) then
+	    [] alternatives(_) then
 	       SolBelow DecChoicesBelow
 	    in
 	       {NewNode Next(Break CurDepth+1 InfoDist
@@ -237,7 +238,7 @@ local
 	    <<findDepthAndCopy(?CurDepth ?CurSearchDist ?CurNs ?CurCopy)>>
 	    <<ChoiceNode Add(CurDepth InfoDist CurSearchDist CurNs CurCopy
 			     _ _ ?Info ?NewNode)>>
-	    Sol = case {Label Info}==solved then NewNode else False end
+	    Sol = case {Label Info}==succeeded then NewNode else False end
 	    case self.mom of !False then true elseof Mom then
 	       {Mom leaveNode(Sol\=False True @choices==0)}
 	    end
@@ -253,7 +254,7 @@ local
       end
    end
 
-   class SolvedNode
+   class SucceededNode
       meth next(_ _ _ $)
 	 False
       end
@@ -270,7 +271,7 @@ local
       
 in
    
-   DfNodes = c(choice: ChoiceNode
-	       solved: SolvedNode)
+   DfNodes = c(choice:    ChoiceNode
+	       succeeded: SucceededNode)
 
 end

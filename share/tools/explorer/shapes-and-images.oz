@@ -37,7 +37,7 @@ local
    end
 
 
-   fun {UnstableShape ScaledMyX ScaledMyY Scale}
+   fun {BlockedShape ScaledMyX ScaledMyY Scale}
       ScaledHalfWidth = Scale * SmallRectangleWidthF
       ScaledFullWidth = Scale * RectangleWidthF
       X0          = ScaledMyX - ScaledFullWidth
@@ -54,7 +54,7 @@ local
       o(polygon X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2)
    end
 
-   fun {SolvedShape ScaledMyX ScaledMyY Scale}
+   fun {SucceededShape ScaledMyX ScaledMyY Scale}
       ScaledWidth = Scale * RhombeWidthF
       X0          = ScaledMyX - ScaledWidth
       X1          = !ScaledMyX
@@ -116,10 +116,10 @@ local
 	 end
       end
 
-      class SolvedImage from Image
+      class SucceededImage from Image
 	 meth init(parent:Parent)
 	    <<Image init(parent: Parent
-			 tcl:    o({SolvedShape ImageCenter ImageCenter
+			 tcl:    o({SucceededShape ImageCenter ImageCenter
 				    ImageScale}
 				   o(fill:    EntailedColor
 				     outline: LineColor
@@ -127,12 +127,12 @@ local
 	 end
       end
 
-      class UnstableImage from Image
+      class BlockedImage from Image
 	 meth init(parent:Parent)
 	    <<Image init(parent: Parent
-			 tcl:    o({UnstableShape ImageCenter ImageCenter
+			 tcl:    o({BlockedShape ImageCenter ImageCenter
 				    ImageScale}
-				   o(fill:    UnstableColor
+				   o(fill:    BlockedColor
 				     outline: LineColor
 				     width:   NodeBorderWidth)))>>
 	 end
@@ -142,16 +142,16 @@ local
    
 in
 
-   Images = images(solved:   SolvedImage
-		   unstable: UnstableImage
-		   choice:   ChoiceImage
-		   failed:   FailedImage)
+   Images = images(succeeded: SucceededImage
+		   blocked:   BlockedImage
+		   choice:    ChoiceImage
+		   failed:    FailedImage)
 
-   Shapes = shapes(solved:   SolvedShape
-		   unstable: UnstableShape
-		   choice:   ChoiceShape
-		   failed:   FailedShape
-		   hidden:   HiddenShape)
+   Shapes = shapes(succeeded: SucceededShape
+		   blocked:   BlockedShape
+		   choice:    ChoiceShape
+		   failed:    FailedShape
+		   hidden:    HiddenShape)
 
 end
 

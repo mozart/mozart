@@ -7,20 +7,7 @@
 
 local
 
-   class Solved
-
-      meth getInfo($)
-	 %% If this method is invoked, then no solution is stored, and
-	 %% it cannot be the root node, since the root node is treated
-	 %% specially in <nodes.oz>
-	 CurNs CurCopy
-      in
-	 <<findPathAndCopy(?CurNs ?CurCopy)>>
-	 case {Solve CurCopy CurNs}
-	 of solved(P _) then P
-	 else False
-	 end
-      end
+   class Succeeded
 
       meth isInSubtree(CurX Depth FindX $)
 	 Depth==0 andthen CurX+@offset>FindX
@@ -31,7 +18,7 @@ local
       end
    end
 
-   class FailedOrUnstable
+   class FailedOrBlocked
 
       meth isInSubtree(CurX Depth FindX $)
 	 Depth==0 andthen CurX+@offset>FindX
@@ -50,16 +37,6 @@ local
       end
    in
       class Choice
-
-	 meth getInfo($)
-	    CurNs CurCopy
-	 in
-	    <<findPathAndCopy(?CurNs ?CurCopy)>>
-	    case {Solve CurCopy CurNs}
-	    of choice(P _) then P
-	    else False
-	    end
-	 end
 
 	 meth FindKids(Ks Depth CurX FindX $)
 	    !Ks=K|Kr
@@ -98,9 +75,9 @@ local
    
 in
 
-   ActionNodes=c(solved:   Solved
-		 failed:   FailedOrUnstable
-		 unstable: FailedOrUnstable
-		 choice:   Choice)
+   ActionNodes=c(succeeded: Succeeded
+		 failed:    FailedOrBlocked
+		 blocked:   FailedOrBlocked
+		 choice:    Choice)
 
 end

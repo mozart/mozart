@@ -18,8 +18,6 @@ local
    \insert dialog-manager.oz
 
    \insert status-manager.oz
-
-   Solve = Search.combinator.debug
    
 in
 
@@ -122,8 +120,8 @@ in
 	 case {@root isFinished($)} then
 	    <<StatusManager finish>>
 	 else true end
-	 case CurNode.kind==failed orelse CurNode.kind==unstable then
-	    %% Can only happen if there is a single failed or unstable node
+	 case CurNode.kind==failed orelse CurNode.kind==blocked then
+	    %% Can only happen if there is a single failed or blocked node
 	    <<MenuManager disable([move([top cur])
 				   nodes(stat)])>>
 	 else
@@ -142,7 +140,7 @@ in
 	       <<MenuManager disable(move([prevSol nextSol]))>>
 	    end
 	    %% Search
-	    case <<StatusManager hasUnstable($)>> then
+	    case <<StatusManager hasBlocked($)>> then
 	       <<MenuManager disable(search([next all step]))>>
 	    else
 	       <<MenuManager state({CurNode isNextPossible($)}
@@ -163,7 +161,7 @@ in
 	       <<MenuManager state({CurNode isFailedHidable($)}
 				   hide(failed))>>
 	       <<MenuManager state(CurNode.kind==choice orelse
-				   CurNode.kind==solved
+				   CurNode.kind==succeeded
 				   nodes(stat))>>
 	    end
 	    %% Bring cursor to front
@@ -272,7 +270,7 @@ in
 	 PutCursor = case Cursor==False then
 			case Sol==False then @curNode
 			else
-			   case @IsBAB then PrevBABSol <- {Sol getInfo($)}
+			   case @IsBAB then PrevBABSol <- {Sol getSol($)}
 			   else true
 			   end
 			   Sol
@@ -320,7 +318,7 @@ in
 		   end
       in
 	 case Sol\=False andthen <<StatusManager getBreakStatus($)>>==none then
-	    case @IsBAB then PrevBABSol <- {Sol getInfo($)}
+	    case @IsBAB then PrevBABSol <- {Sol getSol($)}
 	    else true
 	    end
 	    case NoSol==1 then
@@ -404,7 +402,7 @@ in
 	    of !False then true
 	    elseof Handler then
 	       Number = <<Manager getNumber(RealNode $)>>
-	       Info   = {RealNode getInfo($)}
+	       Info   = {RealNode findSpace($)}
 	    in
 	       case Info==False then
 		  <<DialogManager
@@ -445,8 +443,8 @@ in
 	    <<Manager busy>>
 	    CurNumber = <<ToplevelManager getNumber(CurNode $)>>
 	    CmpNumber = <<ToplevelManager getNumber(CmpNode $)>>
-	    CurInfo   = {CurNode getInfo($)}
-	    CmpInfo   = {CmpNode getInfo($)}
+	    CurInfo   = {CurNode findSpace($)}
+	    CmpInfo   = {CmpNode findSpace($)}
 	    Handler   = {self.cmpAction get($)}
 	 in
 	    case CmpInfo==False orelse CurInfo==False then
@@ -471,12 +469,12 @@ in
 	    case Mom of !False then <<Manager reset>>
 	    else
 	       <<Manager busy>>
-	       case @IsBAB andthen {Label Control}==solved then
+	       case @IsBAB andthen {Label Control}==succeeded then
 		  PrevBABSol <- Control.1
 	       else true
 	       end
 	       <<StatusManager start(_)>>
-	       {self.status removeUnstable}
+	       {self.status removeBlocked}
 	       {Mom Message}
 	       <<Manager setCursor(@curNode)>>
 	    end

@@ -116,9 +116,9 @@ ShadeScale          = case Tk.isColor then 1.05 else 1.10 end
 ChoiceColor          #
 ChoiceTermColor      #
 EntailedColor        #
-StableColor          #
+SuspendedColor          #
 FailedColor          #
-UnstableColor        #
+BlockedColor        #
 PartialFailedColor   #
 LineColor            #
 BackColor            #
@@ -128,9 +128,9 @@ CursorColor          = case Tk.isColor then
 			  'LightSlateBlue' # % ChoiceColor
 			  'DarkSlateBlue'  # % ChoiceTermColor
 			  'MediumSeaGreen' # % EntailedColor
-			  'DarkSeaGreen'   # % StableColor
+			  'DarkSeaGreen'   # % SuspendedColor
 			  'firebrick2'     # % FailedColor
-			  'orange'         # % UnstableColor
+			  'orange'         # % BlockedColor
 			  'purple1'        # % PartialFailedColor
 			  black            # % LineColor
 			  white            # % BackColor
@@ -141,9 +141,9 @@ CursorColor          = case Tk.isColor then
 			  white # % ChoiceColor
 			  white # % ChoiceTermColor
 			  white # % EntailedColor
-			  white # % StableColor
+			  white # % SuspendedColor
 			  white # % FailedColor
-			  white # % UnstableColor
+			  white # % BlockedColor
 			  white # % PartialFailedColor
 			  black # % LineColor
 			  white # % BackColor

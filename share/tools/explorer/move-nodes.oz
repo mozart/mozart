@@ -31,7 +31,7 @@ local
 	 case Ns of nil then False
 	 [] N|Nr then
 	    case N.kind
-	    of solved then N
+	    of succeeded then N
 	    [] choice then
 	       case {N NextSolBelow($)} of !False then {FindNextSolBelow Nr}
 	       elseof Sol then Sol
@@ -45,7 +45,7 @@ local
 	 case Ns of nil then False
 	 [] N|Nr then
 	    case N.kind
-	    of solved then N
+	    of succeeded then N
 	    [] choice then
 	       case {N PrevSolBelow($)} of !False then {FindPrevSolBelow Nr}
 	       elseof Sol then Sol
@@ -179,7 +179,7 @@ local
 	 	 
       end
 
-      class SolvedNode
+      class SucceededNode
 	 meth nextSol($)
 	    case self.mom of !False then False
 	    elseof Mom then {Mom NextSol(self $)}
@@ -208,7 +208,7 @@ local
 
       end
    
-      class FailedOrUnstableNode
+      class FailedOrBlockedNode
 
       	 meth back($)
 	    case self.mom of !False then False
@@ -231,9 +231,9 @@ local
    
 in
 
-   MoveNodes = classes(choice:   ChoiceNode
-		       solved:   SolvedNode
-		       failed:   FailedOrUnstableNode
-		       unstable: FailedOrUnstableNode)
+   MoveNodes = classes(choice:    ChoiceNode
+		       succeeded: SucceededNode
+		       failed:    FailedOrBlockedNode
+		       blocked:   FailedOrBlockedNode)
 		       
 end
