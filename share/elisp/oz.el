@@ -65,7 +65,7 @@ starts the emulator under gdb")
 ;(defvar oz-wait-for-compiler 5
 ;  "Wait between startup of compiler and engine")
 
-(defvar oz-home (concat (or (getenv "OZHOME") "/usr/share/gs/soft/oz") "/")
+(defvar oz-home (concat (or (getenv "OZHOME") "/usr/share/gs/Oz") "/")
   "The directory where oz is installed")
 
 (defvar oz-doc-dir (concat oz-home "doc/chapters/")
@@ -407,7 +407,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       t
     (setenv "OZ_PI" "1")
     (setenv "OZPLATFORM" "sunos-sparc")
-    (setenv "OZHOME" (or (getenv "OZHOME") "/usr/share/gs/soft/oz"))
+    (setenv "OZHOME" (or (getenv "OZHOME") "/usr/share/gs/Oz"))
     (setenv "OZPATH" 
 	    (concat (or (getenv "OZPATH") ".") ":"
 		    (getenv "OZHOME") "/lib:"
