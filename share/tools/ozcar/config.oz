@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.1.3 (Mar 97)'
+Version                = '1.1.4 (Mar 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -248,7 +248,11 @@ SourceTextForeground    = black
 SourceTextInvForeground = white
 SourceTextBackground    = white
 
-
+%% this is for the Emacs scrollbar function
+ColorMeaning            = cm(ScrollbarApplColor    : 'runnable'
+			     ScrollbarBlockedColor : 'blocked'
+			     ScrollbarStackColor   : 'stack')
+			     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% the config object to read/write changeable options
 %% first, some initial values... (read from a config file someday?)
