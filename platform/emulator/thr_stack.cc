@@ -264,14 +264,15 @@ void TaskStack::printTaskStack(int depth)
   }
 
   Frame *auxtos = getTop();
-  while (auxtos != NULL && depth > 0) {
+  while (auxtos != NULL && (depth == -1 || depth > 0)) {
     GetFrame(auxtos,PC,Y,G);
     if (PC==C_EMPTY_STACK) {
       message("\n");
       return;
     }
     CodeArea::printDef(PC);
-    depth--;
+    if (depth != -1)
+      depth--;
   }
   if (depth == 0)
     message("\t...\n");
@@ -283,11 +284,12 @@ TaggedRef TaskStack::getTaskStack(Thread *tt, Bool verbose, int depth) {
 
   TaggedRef out = nil();
   Frame *auxtos = getTop();
-  while (auxtos != NULL && depth > 0) {
+  while (auxtos != NULL && (depth > 0 || depth == -1)) {
     TaggedRef frameRec = frameToRecord(auxtos,tt,verbose);
     if (frameRec != makeTaggedNULL()) {
       out = cons(frameRec,out);
-      depth--;
+      if (depth != -1)
+        depth--;
     }
   }
 
