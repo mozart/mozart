@@ -17,7 +17,6 @@ EntryFrame ::= entry(kind: Kind
                      line: int
                      column: int
                      'PC': int
-                     time: int
                      name: atom
                      data: value
                      args: [value]
