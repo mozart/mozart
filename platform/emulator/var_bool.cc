@@ -33,7 +33,7 @@
 #include "var_fd.hh"
 #include "unify.hh"
 
-OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
+OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term)
 {
   Assert(!oz_isRef(term));
   if (!oz_isSmallInt(term)) return FAILED;
@@ -50,7 +50,7 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
   printf("bool-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
 #endif
 
-  if (scp==0 && (isNotInstallingScript || isLocalVar)) propagate();
+  if (!am.inEqEq() && (isNotInstallingScript || isLocalVar)) propagate();
 
   if (oz_isLocalVar(this)) {
     DoBind(vPtr, term);
@@ -68,8 +68,7 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
-                                ByteCode *scp)
+OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
 {
 #ifdef SCRIPTDEBUG
   printf(am.isInstallingScript()
@@ -153,7 +152,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
             = new OzBoolVariable(oz_currentBoard());
           TaggedRef * var_val = newTaggedCVar(bool_var);
 
-          if (scp==0) {
+          if (!am.inEqEq()) {
             propagate(pc_cv_unif);
             termvar->propagate(pc_cv_unif);
           }
@@ -272,7 +271,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
 
           if (intsct != -1){
             TaggedRef int_val = newSmallInt(intsct);
-            if (scp==0) {
+            if (!am.inEqEq()) {
               propagate(pc_cv_unif);
               termvar->propagate(fd_prop_singl, pc_cv_unif);
             }
@@ -282,7 +281,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
             OzBoolVariable * bool_var
               = new OzBoolVariable(oz_currentBoard());
             TaggedRef * var_val = newTaggedCVar(bool_var);
-            if (scp==0) {
+            if (!am.inEqEq()) {
               propagate(pc_cv_unif);
               termvar->propagate(fd_prop_bounds, pc_cv_unif);
             }

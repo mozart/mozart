@@ -268,7 +268,7 @@ void AM::init(int argc,char **argv)
   _currentBoard = NULL;
   cachedStack  = NULL;
   cachedSelf   = NULL;
-  setShallowHeapTop(NULL);
+  setInEqEq(FALSE);
   setCurrent(_rootBoard);
 
   lastThreadID    = 0;

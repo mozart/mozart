@@ -108,8 +108,8 @@ public:
 
   void installPropagators(OzFDVariable *);
 
-  OZ_Return bind(TaggedRef *, TaggedRef, ByteCode *);
-  OZ_Return unify(TaggedRef *, TaggedRef *, ByteCode *);
+  OZ_Return bind(TaggedRef *, TaggedRef);
+  OZ_Return unify(TaggedRef *, TaggedRef *);
 
   void printStream(ostream &out,int depth = 10) {
     out << getDom().toString();

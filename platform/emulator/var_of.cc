@@ -51,7 +51,7 @@ Bool hasOFSSuspension(SuspList * suspList)
   return FALSE;
 }
 
-OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
+OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
 {
   Assert(!oz_isRef(term));
   TaggedRef bindInRecordCaseHack = term;
@@ -71,14 +71,14 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
       else DoBindAndTrail(vPtr, term);
 
       // Unify the labels:
-      if (!oz_unify(term,label,scp)) return FALSE; // mm_u
+      if (!oz_unify(term,label)) return FALSE; // mm_u
 
       // Update the OFS suspensions:
       if (vLoc) addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
 
       // Propagate changes to the suspensions:
       // (this routine is actually OzVariable::propagate)
-      if (scp==0) propagate(suspList, pc_cv_unif);
+      if (!am.inEqEq()) propagate(suspList, pc_cv_unif);
 
       // Take care of linking suspensions
       if (!vLoc) {
@@ -124,15 +124,15 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
       else DoBindAndTrail(vPtr, bindInRecordCaseHack);
 
       // Unify the labels:
-      if (!oz_unify(AtomCons,label,scp)) return FALSE; // mm_u
+      if (!oz_unify(AtomCons,label)) return FALSE; // mm_u
 
       // Unify corresponding feature values:
-      if (arg1 && !oz_unify(termLTup->getHead(),arg1,scp)) return FALSE; // mm_u
-      if (arg2 && !oz_unify(termLTup->getTail(),arg2,scp)) return FALSE; // mm_u
+      if (arg1 && !oz_unify(termLTup->getHead(),arg1)) return FALSE; // mm_u
+      if (arg2 && !oz_unify(termLTup->getTail(),arg2)) return FALSE; // mm_u
 
       // Propagate changes to the suspensions:
       // (this routine is actually OzVariable::propagate)
-      if (scp==0) propagate(suspList, pc_cv_unif);
+      if (!am.inEqEq()) propagate(suspList, pc_cv_unif);
       return TRUE;
     }
 
@@ -173,7 +173,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
     else DoBindAndTrail(vPtr, bindInRecordCaseHack);
 
     // Unify the labels:
-    if (!oz_unify(termSRec->getLabel(),label,scp))  // mm_u
+    if (!oz_unify(termSRec->getLabel(),label))  // mm_u
       { pairs->free(); return FALSE; }
 
     // Unify corresponding feature values:
@@ -181,7 +181,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
     TaggedRef t1, t2;
     while (p->getpair(t1, t2)) {
       Assert(!p->isempty());
-      if (oz_unify(t1, t2,scp)) { // mm_u
+      if (oz_unify(t1, t2)) { // mm_u
         // Unification successful
       } else {
         // Unification failed
@@ -197,7 +197,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
 
     // Propagate changes to the suspensions:
     // (this routine is actually OzVariable::propagate)
-    if (scp==0) propagate(suspList, pc_cv_unif);
+    if (!am.inEqEq()) propagate(suspList, pc_cv_unif);
 
     // Take care of linking suspensions
     if (!vLoc) {
@@ -214,7 +214,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
 }
 
 // (Arguments are dereferenced)
-OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
+OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
 {
   // var - var unification
   TaggedRef var = *vPtr;
@@ -346,7 +346,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
   } else Assert(FALSE);
 
   // Unify the labels:
-  if (!oz_unify(termVar->label,label,scp))  // mm_u
+  if (!oz_unify(termVar->label,label))  // mm_u
     { pairs->free(); return FALSE; }
   // Must be literal or variable:
   TaggedRef tmp=label;
@@ -362,7 +362,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
   TaggedRef t1, t2;
   while (p->getpair(t1, t2)) {
     Assert(!p->isempty());
-    if (oz_unify(t1, t2, scp)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?  // mm_u
+    if (oz_unify(t1, t2)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?  // mm_u
       // Unification successful
     } else {
       // Unification failed
@@ -378,7 +378,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
 
   // Propagate changes to the suspensions:
   // (this routine is actually OzVariable::propagate)
-  if (scp==0) {
+  if (!am.inEqEq()) {
     propagate(suspList, pc_cv_unif);
     termVar->propagate(termVar->suspList, pc_cv_unif);
   }
@@ -403,7 +403,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
       termVar->relinkSuspListTo(this);
     }
   } else if (!vLoc && !tLoc) {
-    if (scp==0) {
+    if (!am.inEqEq()) {
       // Suspension* susp=new Suspension(am.currentBoard);
       // Assert(susp!=NULL);
       // termVar->addSuspension(susp);

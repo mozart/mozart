@@ -33,7 +33,7 @@
 #include "builtins.hh"
 #include "unify.hh"
 
-OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
+OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
 {
   // bind temporarily to avoid looping in unification on cyclic terms
   OZ_Term trail = *vptr;
@@ -51,7 +51,7 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
     Bool isLocalVar = oz_isLocalVar(this);
     Bool isNotInstallingScript = !am.isInstallingScript();
 
-    if (scp == 0 && (isNotInstallingScript || isLocalVar)) {
+    if (!am.inEqEq() && (isNotInstallingScript || isLocalVar)) {
       propagateUnify();
     }
     if (isLocalVar) {
@@ -69,7 +69,7 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 // (preferably `OzCtVariable' of the right kind. Unification is
 // implemented such, that `OzCtVariable's of the sam ekind are
 // compatible with each other.
-OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
+OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr)
 {
   Assert(vptr);
 
@@ -204,7 +204,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
       if (new_constr->isValue()){
         // `new_constr' designates a value
         OZ_Term new_value = new_constr->toValue();
-        if (scp == 0) {
+        if (!am.inEqEq()) {
           if (var_is_constrained)
             propagateUnify();
           if (term_is_constrained)
@@ -216,7 +216,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
         OzCtVariable * cv = new OzCtVariable(new_constr, getDefinition(),
                                              oz_currentBoard());
         OZ_Term * cvar = newTaggedCVar(cv);
-        if (scp == 0) {
+        if (!am.inEqEq()) {
           if (var_is_constrained)
             propagateUnify();
           if (term_is_constrained)

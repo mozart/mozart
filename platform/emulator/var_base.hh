@@ -240,9 +240,9 @@ public:
 OzVariable *oz_getVar(TaggedRef *v);
 
 Bool oz_var_valid(OzVariable*,TaggedRef*,TaggedRef);
-OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*, ByteCode* = 0);
-OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef, ByteCode* = 0);
-OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef, ByteCode* = 0);
+OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*);
+OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef);
+OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_addSusp(TaggedRef*, Suspension, int = TRUE);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);

@@ -31,7 +31,7 @@
 #include "var_simple.hh"
 #include "unify.hh"
 
-OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
+OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t)
 {
   oz_bindVar(this,vPtr, t);
   return PROCEED;
@@ -40,7 +40,7 @@ OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 // from marshaler.cc
 OZ_Return export(OZ_Term t);
 
-OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr, ByteCode* scp)
+OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr)
 {
   // mm2
   if (isExported()) {
