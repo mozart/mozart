@@ -14,21 +14,40 @@
 
 #include "tagged.hh"
 
-char * TypeOfTermString[16] = {
-  "REF", // 0
-  "UVAR", // 1
-  "LTUPLE", // 2
-  "SMALLINT", //3
-  "REF", // 4
-  "CVAR", // 5
-  "STUPLE", // 6
-  "BIGINT", // 7
-  "REF", // 8
-  "SVAR", // 9
-  "CONST", // 10
-  "FLOAT", // 11
-  "REF", // 12
-  "UNUSEDVARIABLE", // 13
-  "SRECORD", // 14
-  "ATOM", // 15
-};
+char *TypeOfTermString[2<<tagSize];
+
+
+void initTagged()
+{
+  void *p = (void *) malloc(100);
+  void *p1 = tagValueOf(makeTaggedMisc(p));
+  if (p != p1) {
+    fprintf(stderr,"\n*******\nError, wrong configuration\n");
+    fprintf(stderr,"Try defining\n\n");
+    fprintf(stderr,"\t const int mallocBase = 0x%x;\n\n",
+	    (int)p - (int)p1);
+    fprintf(stderr,"in \"tagged.hh\"\n\n");
+    exit(1);
+  }
+
+  free(p);
+
+  char **tts = TypeOfTermString;
+  
+  tts[0]        = "REF";       //  0
+  tts[UVAR]     = "UVAR";      //  1
+  tts[LTUPLE]   = "LTUPLE";    //  2
+  tts[SMALLINT] = "SMALLINT";  //  3
+  tts[4]        = "REF";       //  4
+  tts[CVAR]     = "CVAR";      //  5
+  tts[STUPLE]   = "STUPLE";    //  6
+  tts[BIGINT]   = "BIGINT";    //  7
+  tts[8]        = "REF";       //  8
+  tts[SVAR]     = "SVAR";      //  9
+  tts[CONST]    = "CONST";     // 10
+  tts[FLOAT]    = "FLOAT";     // 11
+  tts[12]       = "REF";       // 12
+  tts[GCTAG]    = "GCTAG";     // 13
+  tts[SRECORD]  = "SRECORD";   // 14
+  tts[LITERAL]  = "ATOM";      // 15
+}
