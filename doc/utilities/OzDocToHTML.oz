@@ -155,6 +155,7 @@ define
 
    class OzDocToHTML
       attr
+         Align: ' align=justify'
          % fontification:
          IsColor: unit
          MyFontifier: unit
@@ -477,14 +478,14 @@ define
             % Paragraphs
             %-----------------------------------------------------------
             [] p then
-               Out <- @Out#'<P>\n'
+               Out <- @Out#'<P'#@Align#'>\n'
                OzDocToHTML, Batch(M 1)
                Out <- @Out#'</P>\n'
             [] para then
                %--** check for class=apropos?
                Out <- @Out#'<P class=margin>'
                OzDocToHTML, Batch(M.1=title(...) 1)
-               Out <- @Out#'</P>\n<P>\n'
+               Out <- @Out#'</P>\n<P'#@Align#'>\n'
                OzDocToHTML, Batch(M 2)
                Out <- @Out#'</P>\n'
             [] 'div' then
@@ -507,7 +508,7 @@ define
                   InDescription <- true
                   OzDocToHTML, Batch(M 1)
                   InDescription <- X
-                  Out <- @Out#'</DL><P>\n'
+                  Out <- @Out#'</DL><P'#@Align#'>\n'
                elseif {HasFeature M enum} then X in
                   %--** should the type be predefined so that HTML and
                   %--** LaTeX and HTML versions match? (type="[1aAiI]")
@@ -519,7 +520,7 @@ define
                   InDescription <- false
                   OzDocToHTML, Batch(M 1)
                   InDescription <- X
-                  Out <- @Out#'</OL><P>\n'
+                  Out <- @Out#'</OL><P'#@Align#'>\n'
                elseif {HasFeature M n} then
                   {Exception.raiseError
                    ozDoc(sgmlToHTML illegalAttributes M)}
@@ -529,7 +530,7 @@ define
                   InDescription <- false
                   OzDocToHTML, Batch(M 1)
                   InDescription <- X
-                  Out <- @Out#'</UL><P>\n'
+                  Out <- @Out#'</UL><P'#@Align#'>\n'
                end
             [] entry then
                Out <- @Out#'<DT>'
@@ -569,7 +570,7 @@ define
                    ozDoc(sgmlToHTML unsupportedMathNotation M)}   %--**
                end
                case Display of display then
-                  Out <- @Out#'</BLOCKQUOTE><P>'
+                  Out <- @Out#'</BLOCKQUOTE><P'#@Align#'>'
                [] inline then skip
                end
             [] 'math.extern' then
@@ -597,7 +598,7 @@ define
                end
                OzDocToHTML, BatchCode(M 1)
                case M.display of display then
-                  Out <- @Out#'</BLOCKQUOTE><P>'
+                  Out <- @Out#'</BLOCKQUOTE><P'#@Align#'>'
                [] inline then skip
                end
             [] 'code.extern' then
@@ -615,7 +616,7 @@ define
                   Out <- @Out#'</BLOCKQUOTE>'
                [] inline then skip
                end
-               Out <- @Out#'<P>'
+               Out <- @Out#'<P'#@Align#'>'
             [] var then
                case M.type of prog then
                   Out <- @Out#"<CODE>"
@@ -745,7 +746,7 @@ define
                   GrammarAltIndent <- 6
                end
                OzDocToHTML, Batch(M 2)
-               Out <- @Out#'</PRE><P>\n'
+               Out <- @Out#'</PRE><P'#@Align#'>\n'
             [] 'grammar.head' then
                {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
             [] 'grammar.alt' then
@@ -775,7 +776,7 @@ define
                end
                Out <- @Out#'</P><TABLE align=center border=1>\n'
                OzDocToHTML, Batch(Mr 1)
-               Out <- @Out#'</TABLE><P>\n'
+               Out <- @Out#'</TABLE><P'#@Align#'>\n'
             [] tr then
                Out <- @Out#'<TR>\n'
                OzDocToHTML, Batch(M 1)
@@ -946,7 +947,7 @@ define
          OzDocToHTML, Batch(Mr2 1)
          case Caption of unit then skip
          else
-            Out <- @Out#'<P><STRONG>'#Number#':</STRONG> '
+            Out <- @Out#'<P'#@Align#'><STRONG>'#Number#':</STRONG> '
             OzDocToHTML, Batch(Caption.1 1)
             Out <- @Out#'</P>'
             OzDocToHTML, Batch(Caption 2)
