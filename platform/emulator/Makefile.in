@@ -385,12 +385,12 @@ lib-all:
 lib-%:
 	OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
 	cd $(LIBDIR) && \
-	$(MAKE) `echo "$@"|sed "s/lib-//g"`
+	$(MAKE) $*
 
 test-%:
 	OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
 	cd $(TESTDIR) && \
-	$(MAKE) `echo "$@"|sed "s/test-//g"`
+	$(MAKE) $*
 
 check-all: oz.emulator.bin
 	$(MAKE) test
