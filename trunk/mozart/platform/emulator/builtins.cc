@@ -6147,7 +6147,7 @@ OZ_C_proc_begin(BISystemGetGC,1) {
   SetIntArg(AtomThreshold, ozconf.heapThreshold*KB);
   SetIntArg(AtomSize,      getUsedMemory()*KB);
   SetIntArg(AtomActive,    ozstat.gcLastActive*KB);
-
+  
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6172,6 +6172,7 @@ OZ_C_proc_begin(BISystemGetFD,1) {
 		       ((int) (1000*double(ozstat.propagatorsInvoked.total)/
 			       ozstat.timeForPropagation.total)) :
 		       0));
+  SetIntArg(AtomThreshold,     32 * fd_bv_max_high);
   
   return PROCEED;
 }
@@ -6223,6 +6224,7 @@ OZ_C_proc_begin(BISystemGetMemory,1) {
   SetIntArg(AtomBuiltins, builtinTab.memRequired());
   SetIntArg(AtomFreelist, getMemoryInFreeList());
   SetIntArg(AtomCode,     CodeArea::totalSize);
+  SetIntArg(AtomHeap,     ozstat.heapUsed.total+getUsedMemory());
 
   return PROCEED;
 }
@@ -6377,6 +6379,17 @@ OZ_C_proc_begin(BISystemSetPrint,1) {
 
   SetIfPos(ozconf.printWidth, width, 1);
   SetIfPos(ozconf.printDepth, depth, 1);
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemSetFD,1) {
+  LookRecord(t);
+
+  DoNatFeature(threshold, t, AtomThreshold);
+  
+  reInitFDs(threshold);
 
   return PROCEED;
 }
@@ -7423,6 +7436,7 @@ BIspec allSpec2[] = {
 
   {"SystemSetPriorities", 1, BISystemSetPriorities},
   {"SystemSetPrint",      1, BISystemSetPrint},
+  {"SystemSetFD",         1, BISystemSetFD},
   {"SystemSetGC",         1, BISystemSetGC},
   {"SystemSetErrors",     1, BISystemSetErrors},
   {"SystemSetMessages",   1, BISystemSetMessages},

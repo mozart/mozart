@@ -1218,6 +1218,7 @@ BIspec fdSpec[] = {
   {"firstFail", 2, fdtest_firstFail},
   {"taskIntervalsProof", 5, sched_taskIntervalsProof},
   {"spawnLess", 2, fdtest_spawnLess},
+  {"dplus", 3, fdtest_plus},
 
 #endif
 #ifdef DEBUG_STABLE

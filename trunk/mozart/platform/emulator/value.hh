@@ -38,7 +38,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomLocation, AtomMiddle, AtomNames, AtomOn, AtomPropagate, 
        AtomPropagators, AtomRun, AtomRunnable, AtomRuns, AtomShowSuspension, 
        AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
-       AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth;
+       AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth,
+       AtomHeap;
 
 /*===================================================================
  * Literal
