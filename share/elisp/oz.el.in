@@ -195,18 +195,18 @@ and that no command will be bound to C-c followed by a letter."
      "fOz Emulator binary: ")
 
 (eval-and-compile
-  (eval '(defcustom oz-components-path
+  (eval '(defcustom oz-functor-path
 	   (or (getenv "OZ_LOAD")
 	       (concat "prefix=@HOMEURL@/share/="
 		       "~/mozart/share/lib/:"
 		       "prefix=@HOMEURL@/share/="
 		       "~/mozart/share/tools/:"
 		       "cache=~/.oz/cache:cache=" (oz-home) "/cache"))
-	   "*Search path for the Oz Components (used by \\[oz-other])."
+	   "*Search path for the Oz functors (used by \\[oz-other])."
 	   :type 'string
 	   :group 'oz)))
-(put 'oz-components-path 'variable-interactive
-     "sOz components search path: ")
+(put 'oz-functor-path 'variable-interactive
+     "sOz functor search path: ")
 
 (eval-and-compile
   (eval '(defcustom oz-root-functor
@@ -784,14 +784,14 @@ If FORCE is non-nil, kill it immediately."
 ;;}}}
 ;;{{{ Testing Locally and Support for GDB
 
-(defun oz-set-other (set-components)
-  "Set the value of environment variables OZEMULATOR or OZ_LOAD.
-If SET-COMPONENTS is non-nil, set the Components search path (can also
-be done via \\[oz-set-components]); if it is nil, set the emulator
+(defun oz-set-other (set-functor-path)
+  "Set the value of environment variables OZEMULATOR resp. OZ_LOAD.
+If SET-FUNCTOR-PATH is non-nil, set the functor search path (can also
+be done via \\[oz-set-functor-path]); if it is nil, set the emulator
 binary (can also be done via \\[oz-set-emulator])."
   (interactive "P")
-  (if set-components
-      (call-interactively 'oz-set-components)
+  (if set-functor-path
+      (call-interactively 'oz-set-functor-path)
     (oz-set-emulator)))
 
 (defun oz-set-emulator ()
@@ -807,22 +807,22 @@ Can be selected by \\[oz-other-emulator]."
   (if (getenv "OZEMULATOR")
       (setenv "OZEMULATOR" oz-emulator)))
 
-(defun oz-set-components (arg)
-  "Set the value of variable `oz-components-path'.
-Can be selected by \\[oz-other-components]."
-  (interactive "sOz components search path: ")
-  (setq oz-components-path arg)
+(defun oz-set-functor-path (arg)
+  "Set the value of variable `oz-functor-path'.
+Can be selected by \\[oz-other-functor-path]."
+  (interactive "sOz functor search path: ")
+  (setq oz-functor-path arg)
   (if (getenv "OZ_LOAD")
-      (setenv "OZ_LOAD" oz-components-path)))
+      (setenv "OZ_LOAD" oz-functor-path)))
 
-(defun oz-other (set-components)
-  "Toggle between global and local Oz Emulator or Oz Components.
-If SET-COMPONENTS is non-nil, toggle the Components search path (via
-\\[oz-other-components]); if it is nil, toggle the emulator binary
+(defun oz-other (set-functor-path)
+  "Toggle between global and local Oz Emulator resp. Oz functors.
+If SET-FUNCTOR-PATH is non-nil, toggle the functor search path (via
+\\[oz-other-functor-path]); if it is nil, toggle the emulator binary
 \(via \\[oz-other-emulator])."
   (interactive "P")
-  (if set-components
-      (oz-other-components)
+  (if set-functor-path
+      (oz-other-functor-path)
     (oz-other-emulator)))
 
 (defun oz-other-emulator ()
@@ -837,17 +837,17 @@ see \\[oz-set-emulator]."
 	 (setenv "OZEMULATOR" oz-emulator)
 	 (message "Oz Emulator: %s" oz-emulator))))
 
-(defun oz-other-components ()
-  "Toggle between global and local Oz Components search path.
-The local components are given by the user option `oz-components-path';
-see \\[oz-set-components]."
+(defun oz-other-functor-path ()
+  "Toggle between global and local Oz functor search path.
+The local functors are given by the user option `oz-functor-path';
+see \\[oz-set-functor-path]."
   (interactive)
   (cond ((getenv "OZ_LOAD")
 	 (setenv "OZ_LOAD" nil)
-	 (message "Oz Components search path: global"))
+	 (message "Oz functor search path: global"))
 	(t
-	 (setenv "OZ_LOAD" oz-components-path)
-	 (message "Oz Components search path: %s" oz-components-path))))
+	 (setenv "OZ_LOAD" oz-functor-path)
+	 (message "Oz functor search path: %s" oz-functor-path))))
 
 (defun oz-gdb ()
   "Toggle debugging of the Oz Emulator with gdb.
