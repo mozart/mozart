@@ -1039,18 +1039,18 @@ compiled using a default set of switches."
   "[][(){}]")
 
 (defconst oz-any-pattern
-  (concat "\\<\\(attr\\|body\\|case\\|catch\\|class\\|choice\\|condis\\|"
-	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|export\\|"
-	  "feat\\|finally\\|from\\|fun\\|functor\\|if\\|in\\|import\\|"
-	  "local\\|lock\\|meth\\|not\\|of\\|or\\|proc\\|prop\\|raise\\|"
-	  "then\\|thread\\|try\\|with\\)\\>\\|\\[\\]\\|"
+  (concat "\\<\\(attr\\|body\\|case\\|catch\\|class\\|choice\\|cond\\|"
+	  "condis\\|declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|"
+	  "end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|if\\|"
+	  "in\\|import\\|local\\|lock\\|meth\\|not\\|of\\|or\\|proc\\|"
+	  "prop\\|raise\\|then\\|thread\\|try\\|with\\)\\>\\|\\[\\]\\|"
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
-  (concat "\\<\\(attr\\|body\\|case\\|catch\\|class\\|choice\\|condis\\|"
-	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|export\\|"
-	  "feat\\|finally\\|from\\|fun\\|functor\\|if\\|in\\|import\\|"
-	  "lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|or\\|"
-	  "parser\\|proc\\|prod\\|prop\\|raise\\|scanner\\|syn\\|"
+  (concat "\\<\\(attr\\|body\\|case\\|catch\\|class\\|choice\\|cond\\|"
+	  "condis\\|declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|"
+	  "end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|if\\|"
+	  "in\\|import\\|lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|"
+	  "or\\|parser\\|proc\\|prod\\|prop\\|raise\\|scanner\\|syn\\|"
 	  "then\\|thread\\|token\\|try\\|with\\)\\>\\|=>\\|\\[\\]\\|"
 	  "//\\|" oz-left-or-right-pattern))
 
