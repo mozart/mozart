@@ -281,7 +281,7 @@ public:
 // mm2: not inlined
 OzVariable *oz_getVar(TaggedRef *v);
 
-Bool oz_var_valid(OzVariable*,TaggedRef*,TaggedRef);
+Bool oz_var_valid(OzVariable*,TaggedRef);
 OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*);
 OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);

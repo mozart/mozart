@@ -192,15 +192,13 @@ static ThreadReturn debugExit(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
 #define DoSwitchOnTerm(indexTerm,table)                                 \
       TaggedRef term = indexTerm;                                       \
       DEREF(term,termPtr,_2);                                           \
-                                                                        \
       if (oz_isLTuple(term)) {                                          \
-        int offset = table->listLabel;                                  \
-        if (!offset) offset = table->elseLabel;                         \
+        Assert(table->listLabel);                                       \
         sPointer = tagged2LTuple(term)->getRef();                       \
-        JUMPRELATIVE(offset);                                           \
+        JUMPRELATIVE(table->listLabel);                                 \
       } else {                                                          \
         TaggedRef *sp = sPointer;                                       \
-        int offset = switchOnTermOutline(term,termPtr,table,sp);        \
+        int offset = table->switchOnTerm(term,sp);                      \
         sPointer = sp;                                                  \
         if (offset) {                                                   \
           JUMPRELATIVE(offset);                                         \
@@ -1074,7 +1072,7 @@ LBLdispatcher:
     DEREF(term,termPtr,tag);
     if (oz_isVariable(term)) {
       if (oz_isCVar(term) &&
-          !oz_var_valid(tagged2CVar(term),termPtr,atm)) {
+          !oz_var_valid(tagged2CVar(term),atm)) {
         // fail
         JUMPRELATIVE( getLabelArg(PC+3) );
       }
@@ -1135,7 +1133,7 @@ LBLdispatcher:
 
     if (oz_isVariable(term)) {
       if (oz_isKinded(term) &&
-          !oz_var_valid(tagged2CVar(term),termPtr,i)) {
+          !oz_var_valid(tagged2CVar(term),i)) {
         // fail
         JUMPRELATIVE( getLabelArg(PC+3) );
       }
