@@ -137,12 +137,14 @@ void AM::init(int argc,char **argv)
 
   installingScript = FALSE;
 
-  suspendVarList   = makeTaggedNULL();
-  aVarUnifyHandler = makeTaggedNULL();
-  aVarBindHandler  = makeTaggedNULL();
-  methApplHdl      = makeTaggedNULL();
-  sendHdl          = makeTaggedNULL();
-  newHdl           = makeTaggedNULL();
+  suspendVarList          = makeTaggedNULL();
+  aVarUnifyHandler        = makeTaggedNULL();
+  aVarBindHandler         = makeTaggedNULL();
+  methApplHdl             = makeTaggedNULL();
+  sendHdl                 = makeTaggedNULL();
+  newHdl                  = makeTaggedNULL();
+  defaultExceptionHandler = makeTaggedNULL();
+  opiCompiler             = makeTaggedNULL();
 
   char *compilerName = OzCompiler;
 
@@ -313,8 +315,6 @@ void AM::init(int argc,char **argv)
   toplevelVarsCount = 0;
 
   toplevelVars[0] = makeTaggedConst(entry);
-
-  defaultExceptionHandler = 0;
 
   ioNodes = new IONode[osOpenMax()];
 
