@@ -64,6 +64,8 @@ public:
   void setCommitted() { flags |= Ac_Committed; }
   void setGround() { flags |= Ac_Ground; }
   void unsetGround() { flags &= ~Ac_Ground; }
+
+  void discardActor() { setCommitted(); }
 };
 
 // ------------------------------------------------------------------------

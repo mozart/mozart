@@ -1778,7 +1778,9 @@ void AM::resumeThread(Thread *th) {
 
 Board *rootBoard() { return am.rootBoard; }
 
+
 OZ_C_proc_proto(BIfail);     // builtins.cc
+
 int AM::commit(Board *bb, Thread *tt)
 {
   Assert(!currentBoard->isCommitted());
@@ -1819,8 +1821,10 @@ int AM::commit(Board *bb, Thread *tt)
     DebugCheckT(aw->setThread(0));
   }
 
-  tt->getTaskStackRef()->pushCont(cont->getPC(),cont->getY(),cont->getG());
-  if (cont->getX()) tt->getTaskStackRef()->pushX(cont->getX());
+  TaskStack *ts = tt->getTaskStackRef();
+  ts->discardActor();
+  ts->pushCont(cont->getPC(),cont->getY(),cont->getG());
+  if (cont->getX()) ts->pushX(cont->getX());
 
   return 1;
 }
