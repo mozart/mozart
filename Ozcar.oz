@@ -25,35 +25,27 @@
 %%%
 
 functor
-
 require
    DefaultURL(homeUrl)
    URL(make resolve toAtom)
-
 prepare
    BitmapUrl = {URL.toAtom {URL.resolve DefaultURL.homeUrl
                             {URL.make 'images/ozcar/'}}}
-
 import
-   System
-   Property
+   Browser(browse)
+   Debug at 'x-oz://boot/Debug'
+   Emacs(getOPI condSend)
+   Error
    FD
    FS
+   Property
+   System
    Tk
    TkTools
-   Error
-
-   Browser(browse)
-
-   Emacs(getOPI condSend)
-
-   Debug at 'x-oz://boot/Debug'
-
 export
    'object': Ozcar
    'open':   OpenOzcar
    'close':  CloseOzcar
-
 define
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
@@ -78,5 +70,4 @@ define
    proc {CloseOzcar}
       {Ozcar off}
    end
-
 end

@@ -319,8 +319,8 @@ ConfigEnvSystemVariables   = false  %% show system variables in Env Windows?
 ConfigEnvPrintTypes        = true   %% use Ozcar's own type printer?
 ConfigUpdateEnv            = true   %% update env windows after each step?
 
-RunningWithOPI             = {Emacs.getOPI} \= false
-ConfigUseEmacsBar          = RunningWithOPI  % use Emacs?
+EmacsInterface             = {Emacs.getOPI}
+ConfigUseEmacsBar          = true   %% use Emacs?
 
 PrintWidth
 PrintDepth
@@ -353,12 +353,14 @@ Config =
        printDepth:             PrintDepth
        timeoutToSwitch:        TimeoutToSwitch
        timeoutToUpdateEnv:     TimeoutToUpdateEnv
+       emacsInterface:         EmacsInterface
 
     meth init
        D = {Dictionary.new}
     in
        {Dictionary.put D timeoutToSwitch unit}
        {Dictionary.put D timeoutToUpdateEnv unit}
+       {Dictionary.put D emacsInterface unit}
        self.ConfAllowed = D
     end
 
