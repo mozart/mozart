@@ -104,6 +104,7 @@ You may find a mirror archive closer to you by consulting:
 ])
 fi
 
+AC_CHECK_FUNCS(strdup)
 OZ_CHECK_LIB_PATH(regex,regcomp)
 
 AC_OUTPUT(Makefile)
