@@ -3,7 +3,7 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
-   Global(localDB mogulDB readDB)
+   Global(localDB mogulDB localDB)
    ActionInstall(install:Install)
    ActionInfo(view)
    System(show:Show)
@@ -149,15 +149,13 @@ define
 			     action:{self.parent.toplevel newAction(self#select(I) $)})}
 	       end
 	    end
-	    proc{Loop I L}
-	       case L
-	       of X|Xs then
-		  {CreateNode I X.id}
-		  {Loop I+1 Xs}
-	       else skip end
-	    end
 	 in
-	    {Loop 1 @info.info}
+	    for
+	       X in @info.info
+	       I in 1 ; I+1
+	    do
+	       {CreateNode I X.id}
+	    end
 	 end
 	 %%
 	 %% 
@@ -404,7 +402,7 @@ define
       end
 
       meth displayInstalled
-	 {@data display(r(info:{Global.readDB} title:"Installed package"))}
+	 {@data display(r(info:Global.localDB title:"Installed package"))}
       end
 
       meth displayMogul

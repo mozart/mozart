@@ -4,26 +4,11 @@ export
    Make
    MakeFrom
 import
-   URL(toVirtualStringExtended make isAbsolute)
-   Resolve(expand)
    ZFile at 'zfile.so{native}'
-   OS(stat unlink)
+   OS(unlink)
    Open(file)
-   FileUtils(withSlash:WithSlash fullName:FullName exists:Exists)
+   Path(make) at 'x-ozlib://duchier/sp/Path.ozf'
 define
-   fun {Encode F}
-      case F
-      of nil  then nil
-      [] &#|T then &%|&2|&3|{Encode T}
-      [] &{|T then &%|&7|&b|{Encode T}
-      []  H|T then        H|{Encode T}
-      end
-   end
-   fun {Expand F}
-      {URL.toVirtualStringExtended
-       {Resolve.expand {Encode {VirtualString.toString F}}}
-       o(full:true raw:true)}
-   end
 
    fun {Int2Bytes N}
       B1 = N mod 256
@@ -98,36 +83,36 @@ define
    
    proc {MakeFrom File Files Home}
 
-      fun {FileInfo File}
-	 F = {FullName {Expand File} Home}
-	 R = {OS.stat F}
-      in
-	 {Adjoin r(path:{Expand File}
-		   fullpath:F) R}
-      end
-      
-      F = {Expand File}
-      Infos = {Map Files FileInfo}
-      Z = {ZFile.open F "wb9"}
+      HOME  = {{Path.make Home} toBase($)}
+      FILE  = {{Path.make File} expand($)}
+      FILES = {Map Files
+	       fun {$ F}
+		  F#{{HOME resolve(F $)} expand($)}
+	       end}
+      INFOS = {Map FILES
+	       fun {$ F#P}
+		  {Adjoin
+		   r(path:F fullpath:{P toString($)})
+		   {P stat($)}}
+	       end}
+      Z = {ZFile.open {FILE toString($)} "wb9"}
    in
       %% write how many files:
-      {WriteInt Z {Length Files}}
+      {WriteInt Z {Length FILES}}
       %% write info for each file
-      {ForAll Infos
-       proc {$ Info}
-	  % file name
-	  {WriteString Z Info.path}
-	  % file size
-	  {WriteInt Z Info.size}
-       end}
+      for Info in INFOS do
+	 %% file name
+	 {WriteString Z Info.path}
+	 %% file size
+	 {WriteInt    Z Info.size}
+      end
       {ZFile.flush Z}
       %% write each file
-      {ForAll Infos
-       proc {$ Info}
-	  {WriteFile Z Info.fullpath}
-       end}
+      for Info in INFOS do
+	 {WriteFile Z Info.fullpath}
+      end
       {ZFile.finish Z}
-      {ZFile.close Z}
+      {ZFile.close  Z}
    end
 
 
@@ -185,7 +170,7 @@ define
 	 F = @toc.{VirtualString.toAtom From}
       in
 	 {ZFile.seek @zfile F.offset 0}
-	 if {Exists To} then {OS.unlink To} end
+	 try {OS.unlink To} catch _ then skip end
 	 {ReadFile @zfile F.size To}
       end	 
       meth ls($) {Arity @toc} end

@@ -5,7 +5,7 @@ import
    OS(unlink tmpnam)
    Archive('class')
    Global(fileMftPkl    : FILEMFTPKL
-	  readDB        : READDB
+	  localDB       : LOCALDB
 	  args          : Args
 	  dirPrefix     : DirPrefix
 	  pathLocalDB   : PATHLOCALDB)
@@ -17,7 +17,6 @@ import
    Pickle(load save)
 define
    fun {Install Package Force}
-      LOCALDB={READDB}
       PackageResult = {Resolve.localize Package}
       A
    in
