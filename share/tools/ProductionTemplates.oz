@@ -19,7 +19,10 @@
 %%% WARRANTIES.
 %%%
 
-local
+functor
+export
+   Default
+prepare
    HasErrors = {NewCell false}
 
    AST = {Compiler.parseOzFile 'gump/ProductionTemplates.ozg'
@@ -38,12 +41,7 @@ local
    case AST of [fSynTopLevelProductionTemplates(_)] then skip
    else {Exception.raiseError gump(noProductionTemplates AST)}
    end
-in
-   functor
-   export
-      Default
-   define
-      [fSynTopLevelProductionTemplates(Default)] = AST
-   end
+define
+   [fSynTopLevelProductionTemplates(Default)] = AST
 end
 
