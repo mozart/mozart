@@ -2848,7 +2848,7 @@ LBLsuspendThread:
        Group *gr = e->currentThread ? e->currentThread->getGroup() : 0;
        TaggedRef pred = gr ? gr->getExceptionHandler() : 0;
 
-       if (!pred) {
+       if (!pred || !isProcedure(pred)) {
          pred = e->defaultExceptionHandler;
        }
 
@@ -2858,7 +2858,7 @@ LBLsuspendThread:
        argsArray[0]=X[0];
        argsArray[1]=e->dbgGetSpaces();
        argsArray[2]=traceBack;
-       tt->pushCall(deref(pred),argsArray,3);
+       tt->pushCall(pred,argsArray,3);
 
        e->currentThread=(Thread *) NULL;
        goto LBLstart;
