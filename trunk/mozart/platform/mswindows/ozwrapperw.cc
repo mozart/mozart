@@ -31,6 +31,5 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
 {
   publishPid();
 
-  //--** hack for windows 98: gobble stdout/stderr
   return createProcess(makeCmdLine(true));
 }
