@@ -6812,7 +6812,7 @@ OZ_C_proc_begin(BIsetSelf,1)
   if (!isObject(obj)) {
     TypeErrorT(0,"Object");
   }
-  am.setSelf(tagged2Object(obj));
+  am.changeSelf(tagged2Object(obj));
   return PROCEED;
 }
 OZ_C_proc_end
