@@ -3772,8 +3772,8 @@ Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCo
   Bool ret=FALSE;
   while(w!=NULL){
     if((!w->isTriggered(ec)) ||
-       ((w->isHandler()) && (th != w->getThread()) &&
-        (DefaultThread != w->getThread()))){
+       ((w->isHandler()) && ((th != w->getThread()) ||
+        (DefaultThread == w->getThread())))){
       base= &(w->next);
       w=*base;}
     else{
@@ -5797,7 +5797,8 @@ void Site::probeFault(ProbeReturn pr){
     Assert(be!=NULL);
     if(be->isTertiary()){
       Tertiary *tr=be->getTertiary();
-      if(tr->hasWatchers()||tr->getEntityCond()!=ENTITY_NORMAL){
+      if((be->getSite() == this && tr->hasWatchers()) ||
+         tr->getEntityCond()!=ENTITY_NORMAL){
         tr->proxyProbeFault(pr);}}}
   return;}
 
