@@ -137,7 +137,7 @@ if (FORCE_ALL || COND) { \
 //-----------------------------------------------------------------------------
 // Global Variables relenvant for FD Built-ins
 
-extern float static_coeff_float[MAXFDBIARGS];
+extern double static_coeff_double[MAXFDBIARGS];
 extern int static_coeff_int[MAXFDBIARGS];
 extern Bool static_sign_bit[MAXFDBIARGS];
 extern TaggedRef static_var[MAXFDBIARGS];
@@ -147,8 +147,8 @@ extern Bool static_bool_a[MAXFDBIARGS];
 extern Bool static_bool_b[MAXFDBIARGS];
 extern int static_int_a[MAXFDBIARGS];
 extern int static_int_b[MAXFDBIARGS];
-extern float static_float_a[MAXFDBIARGS];
-extern float static_float_b[MAXFDBIARGS];
+extern double static_double_a[MAXFDBIARGS];
+extern double static_double_b[MAXFDBIARGS];
 extern int static_index_offset[MAXFDBIARGS];
 extern int static_index_size[MAXFDBIARGS];
 
@@ -539,9 +539,9 @@ void getSignbit(int i, int n) {
 }
 
 inline
-void getFloatCoeff(int i, TaggedRef v) {
+void getDoubleCoeff(int i, TaggedRef v) {
   int n =  smallIntValue(deref(v));
-  static_coeff_float[i] = (float) n;
+  static_coeff_double[i] = (double) n;
   getSignbit(i, n);
 }
 
@@ -771,7 +771,7 @@ private:
   }
   Bool addAnySuspToTouchedGlobalVars(void);
   int simplifyBody(int ts, STuple &a, STuple &x,
-                   Bool sign_bits[], float coeffs[]);
+                   Bool sign_bits[], double coeffs[]);
   void _propagate_unify_cd(int clauses, int variables, STuple &st);
 
   enum {cache_slot_size = 4};
@@ -963,14 +963,14 @@ public:
     return EntailFD;
   }
 
-  int simplifyOnUnify(STuple &a, Bool sign_bits[], float coeffs[], STuple &x) {
+  int simplifyOnUnify(STuple &a, Bool sign_bits[], double coeffs[], STuple &x) {
     if (isUnifyCurrentTaskSusp())
       curr_num_of_vars =
         simplifyBody(curr_num_of_vars, a, x, sign_bits, coeffs);
     return curr_num_of_vars;
   }
 
-  int simplifyOnUnify(int ts, STuple &a, Bool sign_bits[], float coeffs[],
+  int simplifyOnUnify(int ts, STuple &a, Bool sign_bits[], double coeffs[],
                       STuple &x) {
     if (isUnifyCurrentTaskSusp()) {
       Assert(curr_num_of_vars >= ts);

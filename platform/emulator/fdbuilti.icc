@@ -206,7 +206,7 @@ void BIfdBodyManager::introduceLocal(int i, TaggedRef v)
 
 inline
 int BIfdBodyManager::initCache(void) {
-  int num_of_slots = int(ceil(float(curr_num_of_vars)/float(cache_slot_size)));
+  int num_of_slots = int(ceil(double(curr_num_of_vars)/double(cache_slot_size)));
   cache_from[0] = 0;
 
   int i;
