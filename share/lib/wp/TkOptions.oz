@@ -35,7 +35,7 @@ local
     '*OzTools*Scrollbar*borderWidth'
     '*OzTools*Scale*borderWidth'
     '*OzTools*Listbox*borderWidth'
-    
+
     '*OzTools*Button*highlightThickness'
     '*OzTools*Checkbutton*highlightThickness'
     '*OzTools*Radiobutton*highlightThickness'
@@ -46,16 +46,16 @@ local
     '*OzTools*Scrollbar*highlightThickness'
     '*OzTools*Scale*highlightThickness'
     '*OzTools*Listbox*highlightThickness'
-    
+
     '*OzTools*activeBorderWidth'
     '*OzTools*selectBorderWidth'
-    
+
     '*OzTools*MenuFrame*borderWidth'
-    
+
     '*TkFDialog*borderWidth'
     '*TkFDialog*activeBorderWidth'
     '*TkFDialog*selectBorderWidth']
-   
+
 in
 
    {TkBatch {Map BorderOptionsList
@@ -81,7 +81,7 @@ in
 	     in
 		option(add Pattern Value widgetDefault)
 	     end}}
-   
+
 end
 
 
@@ -102,14 +102,11 @@ in
 	     in
 		option(add Pattern Value widgetDefault)
 	     end}}
-   
+
 end
 
 
-%% this removes some additional bindings which Motif doesn't
-%% have. Unfortunately, it also disables some of the more useful key
-%% bindings...
-
+%% change some class bindings
 {TkBatch [bind('Checkbutton' '<Return>' '')
 	  bind('Radiobutton' '<Return>' '')
 	  bind('Entry' '<Control-u>' '%W delete 0 end')]}
@@ -133,4 +130,3 @@ in
    else skip
    end
 end
-
