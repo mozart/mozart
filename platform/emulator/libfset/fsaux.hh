@@ -31,6 +31,8 @@
 
 //#define DEBUG_INDICES
 
+//#define FSET_HIGH
+
 //-----------------------------------------------------------------------------
 // debug macros
 //#define OZ_DEBUG
@@ -43,7 +45,7 @@
 #define OZ_NONDEBUGCODE(C)
 extern "C" void oz_fsetdebugprint(char *format ...);
 #define _OZ_DEBUGPRINT(C) oz_fsetdebugprint C
-#define OZ_DEBUGPRINT(C) /* _OZ_DEBUGPRINT(C) */
+#define OZ_DEBUGPRINT(C) /*_OZ_DEBUGPRINT(C)*/
 #define OZ_ASSERT(C)                                    \
   if (! (C)) {                                          \
     fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",    \
@@ -81,7 +83,7 @@ OZ_Return __debugReturnPrint(OZ_Return r)
 #define _OZ_DEBUGPRINTTHIS(string)              \
    _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
 
-#define OZ_DEBUGPRINTTHIS(string) /* _OZ_DEBUGPRINTTHIS(string) */
+#define OZ_DEBUGPRINTTHIS(string) _OZ_DEBUGPRINTTHIS(string)
 
 //-----------------------------------------------------------------------------
 

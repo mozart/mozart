@@ -29,6 +29,7 @@
 
 #include "fsstd.hh"
 
+#ifdef FSET_HIGH
 class BitVector {
 private:
   int _bits[fset_high];
@@ -38,25 +39,34 @@ public:
       _bits[i] = 0;
   }
   int isIn(const int i) {
-    return (i < 0 || i >= 32 * fset_high)
+    return (i < 0 || i >= fsethigh32)
       ? 0
       : (_bits[i >> 5] & (1 << (i & 0x1f)));
   }
   BitVector &operator += (const int i) {
-    if (0 <= i && i < 32 * fset_high)
+    if (0 <= i && i < fsethigh32)
       _bits[i >> 5] |= (1 << (i & 0x1f));
     return *this;
   }
 };
+#endif
 
 class MonitorInPropagator : public OZ_Propagator {
 private:
+#ifdef FSET_HIGH
   BitVector _in_sofar;
+#else
+  OZ_FSetValue _in_sofar;
+#endif
   OZ_Term _fsetvar, _stream;
   static OZ_CFunHeader header;
 public:
   MonitorInPropagator(OZ_Term fsetvar, OZ_Term stream)
+#ifdef FSET_HIGH
     : _fsetvar(fsetvar) , _stream(stream) { }
+#else
+    : _fsetvar(fsetvar) , _stream(stream), _in_sofar(fs_empty) { }
+#endif
   virtual size_t sizeOf(void) { return sizeof(MonitorInPropagator); }
   virtual void updateHeapRefs(OZ_Boolean) {
     OZ_updateHeapTerm(_stream);

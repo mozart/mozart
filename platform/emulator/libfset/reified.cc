@@ -61,8 +61,8 @@ OZ_Return IncludeRPropagator::propagate(void)
   if (*r == fd_singl) {
     r.leave();
     return replaceBy((r->getSingleElem() == 1)
-                     ? (OZ_Propagator*) new IncludePropagator(_s, _d)
-                     : (OZ_Propagator*) new ExcludePropagator(_s, _d));
+                     ? (OZ_Propagator *) new IncludePropagator(_s, _d)
+                     : (OZ_Propagator *) new ExcludePropagator(_s, _d));
   }
 
   int r_val = 0;
@@ -73,15 +73,21 @@ OZ_Return IncludeRPropagator::propagate(void)
   d.readEncap(_d);
 
   {
-    FailOnEmpty(*d <= (32 * fset_high - 1));
+    FailOnEmpty(*d <= (fsethigh32 - 1));
 
     if (*d == fd_singl) {
       FailOnInvalid(*s += d->getSingleElem());
     } else {
 
-      for (int i = 32 * fset_high; i --; )
+      // all elements which are known _not_ to be in `s' are not in `d'
+#ifdef FSET_HIGH
+      for (int i = fsethigh32; i --; )
         if (s->isNotIn(i))
           FailOnEmpty(*d -= i);
+#else
+      OZ_FiniteDomain not_in(s->getNotInSet());
+      FailOnEmpty(*d -= not_in);
+#endif
 
       if (*d == fd_singl)
         FailOnInvalid(*s += d->getSingleElem());
@@ -224,7 +230,7 @@ OZ_Return BoundsPropagator::propagate(void)
   }
 
   if (d->getMinElem() > 0 ||
-      s->getGlbSet().getCard() > 0 ||
+      s->getGlbCard() > 0 ||
       *r == 1) {
     OZ_DEBUGPRINT(("a\n"));
     FailOnEmpty(*d &= _d_ub);
@@ -232,7 +238,7 @@ OZ_Return BoundsPropagator::propagate(void)
     FailOnInvalid(s->putCard(_s_ub_card, _s_ub_card));
     retval = OZ_ENTAILED;
   } else if (d->getMaxElem() < _d_ub ||
-             s->getLubSet().getCard() < _s_ub_card ||
+             s->getLubCard() < _s_ub_card ||
              *r == 0) {
     OZ_DEBUGPRINT(("b\n"));
     FailOnEmpty(*d &= 0);
@@ -318,7 +324,7 @@ OZ_Return BoundsNPropagator::propagate(void)
 
   for (i = _size; i--; ) {
     if (d[i]->getMinElem() > 0 ||
-        s[i]->getGlbSet().getCard() > 0 ||
+        s[i]->getGlbCard() > 0 ||
         *r[i] == 1) {
       OZ_DEBUGPRINT(("a\n"));
       FailOnEmpty(*d[i] &= _d_ub[i]);
@@ -326,7 +332,7 @@ OZ_Return BoundsNPropagator::propagate(void)
       FailOnInvalid(s[i]->putCard(_s_ub.s_ub_card[i], _s_ub.s_ub_card[i]));
       left -= 1;
     } else if (d[i]->getMaxElem() < _d_ub[i] ||
-               s[i]->getLubSet().getCard() < _s_ub.s_ub_card[i] ||
+               s[i]->getLubCard() < _s_ub.s_ub_card[i] ||
                *r[i] == 0) {
       OZ_DEBUGPRINT(("b\n"));
       FailOnEmpty(*d[i] &= 0);
