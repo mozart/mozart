@@ -313,10 +313,10 @@ class B from A ... end
 method should have a unique label and is defined only in one class in
 the hierarchy. Hence, class <<C>> in the following example is not
 valid because the two methods labeled <<m>> remains.
-<!-- DENYS: this example makes no sense to me -->
+
 <<<
-class A meth m(...) ... end end
-class B meth m(...) ... end end
+class A1 meth m(...) ... end end
+class B1 meth m(...) ... end end
 class B from B1 end
 class A from A1 end
 class C from A B end
@@ -326,11 +326,10 @@ class C from A B end
 <CAPTION>Illegal class hierarchy in method <<m>></CAPTION>
 <PICTURE.EXTERN TO="image57.gif" TYPE=gif>
 </FIGURE>
-<!-- Figure 28 -->
 
 
-<P>Whereas the class <<C>> below is valid, and the method <<m>> that
-is available in <<C>> is that of <<B>>.
+<P>Also the class <<C>> below is invalid, and two methods <<m>> are
+is available in <<C>>.
 
 <<<
 class A meth m(...) ... end end
@@ -352,17 +351,13 @@ caches, at execution time.
 
 <ITEM>In general, to use multiple inheritance correctly, one has to
 understand the total inheritance hierarchy, which is sometimes worth
-the effort.
+the effort. This is important when there is a shared common ancestor.
 
-<ITEM>I do not like the existence of any overriding rule that depends
-on the order of classes in the <<from>> construct. So I would consider
-the latter example as invalid as the former one. The reason is that if
-you take <<A>> and <<B>> in the later example, and refine them to get
-the first example your working program will suddenly cease to work.
+<ITEM> Oz restricts multiple inheritance is a way that most
+the problems with it do not occur.
 
-<ITEM>If there is a method-name conflict between immediate super
-classes, I would define the method locally to overrides the
-conflict-causing methods.
+<ITEM>Oz forces the programming methodology that when a method-name conflict 
+between immediate super classes occur, one has to define the method locally to overrides the conflict-causing methods.
 
 <ITEM>There is another problem with multiple inheritance when sibling
 super-classes share (directly or indirectly) a common ancestor-class
