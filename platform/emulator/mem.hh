@@ -269,4 +269,7 @@ unsigned int getUsedMemory(void);
 unsigned int getUsedMemoryBytes(void);
 #endif
 
+void * freeListMallocOutline(size_t chunk_size);
+void freeListDisposeOutline(void *addr, size_t chunk_size);
+
 #endif

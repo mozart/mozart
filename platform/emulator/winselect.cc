@@ -120,7 +120,7 @@ IOChannel *lookupChannel(int fd)
   return aux;
 }
 
-unsigned __stdcall readerThread(void *arg)
+DWORD __stdcall readerThread(void *arg)
 {
   IOChannel *sr = (IOChannel *)arg;
 
@@ -129,7 +129,7 @@ unsigned __stdcall readerThread(void *arg)
 
     HANDLE hd = WrappedHandle::find(sr->fd)->hd;
     Assert(hd!=0);
-    unsigned int ret;
+    DWORD ret;
     if (ReadFile(hd,&sr->chr, sizeof(char),&ret,0)==FALSE) {
       if (ERROR_BROKEN_PIPE==GetLastError()) // mimic Unix behaviour
         ret = 0;
@@ -179,7 +179,7 @@ Bool createReader(int fd)
   ResetEvent(sr->char_avail);
   ResetEvent(sr->char_consumed);
 
-  unsigned thrid;
+  DWORD thrid;
   sr->thrd = CreateThread(0,10000,&readerThread,sr,0,&thrid);
   if (sr->thrd != 0) {
     return OK;
@@ -264,7 +264,7 @@ public:
 };
 
 
-unsigned __stdcall selectThread(void *arg)
+DWORD __stdcall selectThread(void *arg)
 {
   SelectInfo *si = (SelectInfo *) arg;
 
@@ -334,7 +334,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
     ResetEvent(si->event);
     wait_hnd[nh++] = si->event;
     si->timeout = wait;
-    unsigned tid;
+    DWORD tid;
     HANDLE ret = CreateThread(NULL,10000,&selectThread,si,0,&tid);
     Assert(ret!=0);
     CloseHandle(ret);

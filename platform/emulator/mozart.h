@@ -47,8 +47,10 @@
 #define OZWIN
 #elif defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
 #define ozcdecl __cdecl
+#ifndef WINDOWS_EMULATOR
 #undef  ozdeclspec
 #define ozdeclspec __declspec( dllexport )
+#endif
 #define OZWIN
 #else
 #define ozcdecl
@@ -416,9 +418,9 @@ _FUNDECL(OZ_Return ,OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
    */
 
 #ifdef __cplusplus
-#define OZ_BI_proto(Name)  extern "C" OZ_Return (ozcdecl Name)(OZ_Term [],int [])
+#define OZ_BI_proto(Name)  extern "C" ozdeclspec OZ_Return (ozcdecl Name)(OZ_Term [],int [])
 #else
-#define OZ_BI_proto(Name)  extern OZ_Return (ozcdecl Name)()
+#define OZ_BI_proto(Name)  extern ozdeclspec OZ_Return (ozcdecl Name)()
 #endif
 
 #define OZ_ID_MAP 0

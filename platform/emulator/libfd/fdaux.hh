@@ -426,16 +426,10 @@ void vectorToLinear(OZ_Term, int &, OZ_Term &);
 
 #ifdef __GNUC__
 #define USE_GCCALLOCA
-#else
-#ifdef __XXWATCOMC__
+#elif defined(_MSC_VER)
 #define USE_INTVAR_NEW
 #else
-#ifdef _MSC_VER
 #define USE_TEMPLATE_ARRAY
-#else
-#define USE_TEMPLATE_ARRAY
-#endif
-#endif
 #endif
 
 

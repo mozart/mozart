@@ -91,13 +91,13 @@ failure:
 static OZ_FDIntVar * xx;
 static int * dd;
 
-static int compareDescRel(const int &a, const int &b) {
-  if (xx[a]->getMinElem() > xx[b]->getMinElem()) return 1;
+static int compareDescRel(const int *a, const int *b) {
+  if (xx[*a]->getMinElem() > xx[*b]->getMinElem()) return 1;
   else return 0;
 }
 
-static int compareAscDue(const int &a, const int &b) {
-  if (xx[a]->getMaxElem() + dd[a] < xx[b]->getMaxElem() + dd[b])
+static int compareAscDue(const int *a, const int *b) {
+  if (xx[*a]->getMaxElem() + dd[*a] < xx[*b]->getMaxElem() + dd[*b])
     return 1;
   else return 0;
 }
@@ -118,16 +118,16 @@ of equal elements is not the same on different systems
 */
 template <class T>
 void myqsort(T * my, int left, int right,
-             int (*compar)(const T &a, const T &b))
+             int (*compar)(const T *a, const T *b))
 {
   register int i = left, j = right;
   int middle = (left + right) / 2;
   T x = my[middle];
 
   do {
-    while((*compar)(my[i], x) && (i < right)) i++;
+    while((*compar)(my+i, &x) && (i < right)) i++;
 
-    while((*compar)(x, my[j]) && j > left) j--;
+    while((*compar)(&x, my+j) && j > left) j--;
 
     if (i <= j) {
       T aux = my[i];
@@ -142,8 +142,8 @@ void myqsort(T * my, int left, int right,
   if (i < right) myqsort(my, i, right, compar);
 }
 
-int compareDurs(const StartDurTerms &a, const StartDurTerms &b) {
-  if ( a.dur > b.dur) return 1;
+int compareDurs(const StartDurTerms *a, const StartDurTerms *b) {
+  if ( a->dur > b->dur) return 1;
   else return 0;
 }
 
@@ -155,8 +155,8 @@ struct StartDurUseTerms {
   int use;
 };
 
-int compareDursUse(const StartDurUseTerms &a, const StartDurUseTerms &b) {
-  if (a.dur * a.use > b.dur * b.use)
+int compareDursUse(const StartDurUseTerms *a, const StartDurUseTerms *b) {
+  if (a->dur * a->use > b->dur * b->use)
     return 1;
   else return 0;
 }
@@ -321,6 +321,9 @@ OZ_Return CPIteratePropagator::propagate(void)
   DECL_DYN_ARRAY(int, forCompSet0Up, ts);
   DECL_DYN_ARRAY(int, forCompSet0Down, ts);
   DECL_DYN_ARRAY(int, outSide, ts);
+
+  /* Windows defines this in some of its headers ... */
+#undef MinMax
 
   DECL_DYN_ARRAY(Min_max, MinMax, ts);
   for (i=ts; i--;){
@@ -865,14 +868,14 @@ struct Interval {
   int left, right, use;
 };
 
-int ozcdecl CompareIntervals(const Interval &Int1, const Interval &Int2)
+int ozcdecl CompareIntervals(const Interval *Int1, const Interval *Int2)
 {
-  int left1 = Int1.left;
-  int left2 = Int2.left;
+  int left1 = Int1->left;
+  int left2 = Int2->left;
   if (left1 >= left2) return 0;
   else {
     if (left1 == left2) {
-      if (Int1.right < Int2.right) return 1;
+      if (Int1->right < Int2->right) return 1;
       else return 0;
     }
     else return 1;
@@ -888,8 +891,8 @@ inline int EnergyFunct(int t1, int t2, int dura, int usea, int ra, int da)
                               t2 - da + dura))));
 }
 
-int ozcdecl CompareBounds(const int &Int1, const int &Int2) {
-  if (Int1 < Int2) return 1;
+int ozcdecl CompareBounds(const int *Int1, const int *Int2) {
+  if (*Int1 < *Int2) return 1;
   else return 0;
 }
 

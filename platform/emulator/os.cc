@@ -81,7 +81,11 @@ extern "C" int dlclose(void *);
 
 #ifdef WINDOWS
 #include <time.h>
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #include <sys/time.h>
+#endif
 #include <process.h>
 
 #else
@@ -129,8 +133,11 @@ int runningUnderNT()
   return underNT;
 }
 
-
+#ifdef __GNUC__
 typedef long long verylong;
+#else
+typedef long verylong;
+#endif
 
 verylong fileTimeToMS(FILETIME *ft)
 {
@@ -665,7 +672,7 @@ int rawread(int fd, void *buf, int sz)
 
   HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
-  unsigned int ret;
+  DWORD ret;
   if (ReadFile(hd,buf,sz,&ret,0)==FALSE)
     return -1;
 
@@ -684,7 +691,7 @@ int rawwrite(int fd, void *buf, int sz)
   HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
 
-  unsigned int ret;
+  DWORD ret;
   if (WriteFile(hd,buf,sz,&ret,0)==FALSE)
       return -1;
 
@@ -738,7 +745,7 @@ void registerSocket(int fd)
 
 #ifdef WINDOWS
 
-unsigned __stdcall timerFun(void *p)
+DWORD __stdcall timerFun(void *p)
 {
   TimerThread *ti = (TimerThread*) p;
   /* make sure that this thread is not mixed with others */
@@ -757,7 +764,7 @@ unsigned __stdcall timerFun(void *p)
 TimerThread::TimerThread(int w)
 {
   wait = w;
-  unsigned tid;
+  DWORD tid;
   thrd = CreateThread(NULL,10000,&timerFun,this,0,&tid);
   if (thrd==NULL) {
     ozpwarning("osSetAlarmTimer(start thread)");
@@ -1002,7 +1009,7 @@ int osdup(int fd)
   return fd==STDIN_FILENO ? wrappedStdin : fd;
 }
 
-unsigned __stdcall watchParentThread(void *arg)
+DWORD __stdcall watchParentThread(void *arg)
 {
   HANDLE handle = (HANDLE) arg;
   DWORD ret = WaitForSingleObject(handle,INFINITE);
@@ -1033,7 +1040,7 @@ void watchParent()
   if (handle==0) {
     OZ_warning("OpenProcess(%d) failed",pid);
   } else {
-    unsigned thrid;
+    DWORD thrid;
     CreateThread(0,0,watchParentThread,handle,0,&thrid);
   }
 }
@@ -1617,7 +1624,7 @@ TaggedRef osDlopen(char *filename, void **hdl)
     return oz_int(GetLastError());
   }
 
-  FARPROC linkff = (FARPROC) osDlsym(handle, "OZ_linkFF");
+  int (*linkff)(char*,void**) = (int (*)(char*,void**)) osDlsym(handle, "OZ_linkFF");
   if (linkff==0) {
     return oz_atom("OZ_linkFF not found, maybe not exported from DLL?");
   }
@@ -1679,4 +1686,202 @@ void *osDlsym(void *h, const char *name)
   }
   return ret;
 }
+#endif
+
+/* readdir and friends for MSVC++:
+ * stolen from egcs distribution */
+
+#ifdef _MSC_VER
+
+#define SUFFIX  "*"
+#define SLASH   "\\"
+
+
+DIR* opendir(const char* szPath)
+{
+        DIR* nd;
+        struct stat statDir;
+
+        errno = 0;
+
+        if (!szPath)
+        {
+                errno = EFAULT;
+                return (DIR*) 0;
+        }
+
+        if (szPath[0] == '\0')
+        {
+                errno = ENOTDIR;
+                return (DIR*) 0;
+        }
+
+        /* Attempt to determine if the given path really is a directory. */
+        if (stat (szPath, &statDir))
+        {
+                /* Error, stat should have set an error value. */
+                return (DIR*) 0;
+        }
+
+        if (!S_ISDIR(statDir.st_mode))
+        {
+                /* Error, stat reports not a directory. */
+                errno = ENOTDIR;
+                return (DIR*) 0;
+        }
+
+        /* Allocate enough space to store DIR structure and the complete
+         * directory path given. */
+        nd = (DIR*) malloc (sizeof(DIR) + strlen(szPath) + strlen(SLASH) +
+                strlen(SUFFIX));
+
+        if (!nd)
+        {
+                /* Error, out of memory. */
+                errno = ENOMEM;
+                return (DIR*) 0;
+        }
+
+        /* Create the search expression. */
+        strcpy(nd->dd_name, szPath);
+
+        /* Add on a slash if the path does not end with one. */
+        if (nd->dd_name[0] != '\0' &&
+            nd->dd_name[strlen(nd->dd_name)-1] != '/' &&
+            nd->dd_name[strlen(nd->dd_name)-1] != '\\')
+        {
+                strcat(nd->dd_name, SLASH);
+        }
+
+        /* Add on the search pattern */
+        strcat(nd->dd_name, SUFFIX);
+
+        /* Initialize handle to -1 so that a premature closedir doesn't try
+         * to call _findclose on it. */
+        nd->dd_handle = -1;
+
+        /* Initialize the status. */
+        nd->dd_stat = 0;
+
+        /* Initialize the dirent structure. ino and reclen are invalid under
+         * Win32, and name simply points at the appropriate part of the
+         * findfirst_t structure. */
+        nd->dd_dir.d_ino = 0;
+        nd->dd_dir.d_reclen = 0;
+        nd->dd_dir.d_namlen = 0;
+        nd->dd_dir.d_name = nd->dd_dta.name;
+
+        return nd;
+}
+
+
+/*
+ * readdir
+ *
+ * Return a pointer to a dirent structure filled with the information on the
+ * next entry in the directory.
+ */
+struct dirent *
+readdir( DIR *dirp )
+{
+        errno = 0;
+
+        /* Check for valid DIR struct. */
+        if (!dirp)
+        {
+                errno = EFAULT;
+                return (struct dirent*) 0;
+        }
+
+        if (dirp->dd_dir.d_name != dirp->dd_dta.name)
+        {
+                /* The structure does not seem to be set up correctly. */
+                errno = EINVAL;
+                return (struct dirent*) 0;
+        }
+
+        if (dirp->dd_stat < 0)
+        {
+                /* We have already returned all files in the directory
+                 * (or the structure has an invalid dd_stat). */
+                return (struct dirent *) 0;
+        }
+        else if (dirp->dd_stat == 0)
+        {
+                /* We haven't started the search yet. */
+                /* Start the search */
+                dirp->dd_handle = _findfirst(dirp->dd_name, &(dirp->dd_dta));
+
+                if (dirp->dd_handle == -1)
+                {
+                        /* Whoops! Seems there are no files in that
+                         * directory. */
+                        dirp->dd_stat = -1;
+                }
+                else
+                {
+                        dirp->dd_stat = 1;
+                }
+        }
+        else
+        {
+                /* Get the next search entry. */
+                if (_findnext(dirp->dd_handle, &(dirp->dd_dta)))
+                {
+                        /* We are off the end or otherwise error. */
+                        _findclose (dirp->dd_handle);
+                        dirp->dd_handle = -1;
+                        dirp->dd_stat = -1;
+                }
+                else
+                {
+                        /* Update the status to indicate the correct
+                         * number. */
+                        dirp->dd_stat++;
+                }
+        }
+
+        if (dirp->dd_stat > 0)
+        {
+                /* Successfully got an entry. Everything about the file is
+                 * already appropriately filled in except the length of the
+                 * file name. */
+                dirp->dd_dir.d_namlen = strlen(dirp->dd_dir.d_name);
+                return &dirp->dd_dir;
+        }
+
+        return (struct dirent*) 0;
+}
+
+
+/*
+ * closedir
+ *
+ * Frees up resources allocated by opendir.
+ */
+int
+closedir (DIR* dirp)
+{
+        int     rc;
+
+        errno = 0;
+        rc = 0;
+
+        if (!dirp)
+        {
+                errno = EFAULT;
+                return -1;
+        }
+
+        if (dirp->dd_handle != -1)
+        {
+                rc = _findclose(dirp->dd_handle);
+        }
+
+        /* Delete the dir structure. */
+        free (dirp);
+
+        return rc;
+}
+
 #endif
