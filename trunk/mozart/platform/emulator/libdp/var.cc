@@ -486,7 +486,7 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
   return globalizeFreeVariable(tPtr,*tPtr);}
   
 // Returning 'NO' means we are going to proceed with 'marshal bomb';
-Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs) {
+Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs,GenTraverser * gt) {
   const TaggedRef var = *tPtr;
   if (oz_isManagerVar(var)) {
     if (!bs->globalize()) return TRUE;
@@ -496,7 +496,7 @@ Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs) {
     oz_getProxyVar(var)->marshal(bs);
   } else if (oz_isObjectVar(var)) {
     Assert(bs->globalize());
-    oz_getObjectVar(var)->marshal(bs);
+    oz_getObjectVar(var)->marshal(bs,gt);
   } else if (oz_isFree(var) || isFuture(var)) {
     if (!bs->globalize()) return TRUE;
     globalizeFreeVariable(tPtr,var)->marshal(bs);

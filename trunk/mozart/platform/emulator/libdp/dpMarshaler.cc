@@ -39,6 +39,7 @@
 #include "dpMarshaler.hh"
 #include "dpInterface.hh"
 #include "marshaler.hh"
+#include "gentraverser.hh"
 #include "var.hh"
 #include "gname.hh"
 #include "state.hh"
@@ -191,13 +192,16 @@ void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs){
   marshalFullObjectAndClass(o, bs);
   refTrail->unwind();}
 
-void marshalObjectImpl(Object *o, MsgBuffer *bs, GName *gnclass)
+void marshalObjectImpl(Object *o, MsgBuffer *bs, GName *gnclass, GenTraverser *gt)
 {
   if (marshalTertiaryImpl(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
   Assert(o->getGName1());
   marshalGName(globalizeConst(o,bs),bs);
   marshalGName(gnclass,bs);
-  trailCycleOutLine(o,bs);
+  if (gt)
+    gt->rememberNode(makeTaggedConst(o),bs);
+  else
+    trailCycleOutLine(o,bs);
 }
 
 void unmarshalObject(ObjectFields *o, MsgBuffer *bs){
@@ -254,15 +258,15 @@ void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
 /*   interface to Oz-core                                  */
 /* *********************************************************************/
 
-void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs) 
+void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs, GenTraverser *gt) 
 {
   PD((MARSHAL,"object"));
   Object *o = (Object*) t;
-  Assert(o->getType() == Co_Object);
+  Assert(isObject(o));
 
   ObjectClass *oc = o->getClass();
   globalizeConst(o,bs);
-  marshalObjectImpl(o,bs,globalizeConst(oc,bs));}
+  marshalObjectImpl(o,bs,globalizeConst(oc,bs),gt);}
 
 Bool marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
 {

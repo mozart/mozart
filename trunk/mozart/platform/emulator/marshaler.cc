@@ -348,28 +348,23 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     {
       OzDictionary *d = (OzDictionary *) t;
 
-      if (!d->isSafeDict() && !d->isCacheDict()) {
+      if (!d->isSafeDict()) {
 	goto bomb;
       }
 
       marshalDIF(bs,DIF_DICT);
 
-      if (d->isCacheDict()) {
-	trailCycle(d,bs);
-	marshalNumber(~1,bs);
-      } else {
-	int size = d->getSize();
-	trailCycle(d,bs);
-	marshalNumber(size,bs);
-	
-	int i = d->getFirst();
+      int size = d->getSize();
+      trailCycle(d,bs);
+      marshalNumber(size,bs);
+      
+      int i = d->getFirst();
+      i = d->getNext(i);
+      while(i>=0) {
+	marshalTerm(d->getKey(i),bs);
+	marshalTerm(d->getValue(i),bs);
 	i = d->getNext(i);
-	while(i>=0) {
-	  marshalTerm(d->getKey(i),bs);
-	  marshalTerm(d->getValue(i),bs);
-	  i = d->getNext(i);
-	  size--;
-	}
+	size--;
       }
       return;
     }
@@ -439,7 +434,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       if(o->getClass()->isSited()) 
 	goto bomb;
       if (!bs->globalize()) return;
-      (*marshalObject)(t, bs);
+      (*marshalObject)(t, bs, NULL);
       return;
     }
 
@@ -605,7 +600,7 @@ loop:
   case UVAR:
     // FUT
   case CVAR:
-    if (!bs->visit(makeTaggedRef(tPtr)) || (*marshalVariable)(tPtr, bs))
+    if (!bs->visit(makeTaggedRef(tPtr)) || (*marshalVariable)(tPtr, bs, NULL))
       break;
     t=makeTaggedRef(tPtr);
     goto bomb;
@@ -635,11 +630,6 @@ void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
   OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
   *ret = makeTaggedConst(aux);
   gotRef(*ret,refTag);
-
-  if (size < 0) {
-    aux->markCache();
-    return;
-  }
 
   aux->markSafe();
   
