@@ -2093,7 +2093,7 @@ void OZ_send(OZ_Term port, OZ_Term val)
 
 // mm2: this is not longer needed in Oz 3.0, but for compatibility with
 // modules compiled for Oz 2.0 OZ_raiseA has to be defined
-extern OZ_Return OZ_raiseA(char*, int, int);
+extern "C" OZ_Return OZ_raiseA(char*, int, int);
 OZ_Return OZ_raiseA(char *name, int was, int shouldBe)
 {
   return oz_raise(E_ERROR,E_SYSTEM,"inconsistentArity",3,
