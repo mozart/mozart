@@ -60,10 +60,8 @@ AC_PATH_PROG(glibpath, glib-config)
 AC_MSG_CHECKING(for Glib compile flags)
 GLIB_CFLAGS=`$glibpath --cflags`
 GLIB_LIBS=`$glibpath --libs`
-GLIB_HDRS=`$glibpath --prefix`/include
 CFLAGS="$CFLAGS $GLIB_CFLAGS"
 LIBS="$LIBS $GLIB_LIBS"
-AC_SUBST(GLIB_HDRS)
 AC_MSG_RESULT(ok)
 
 dnl *********************************************************************
@@ -74,10 +72,12 @@ AC_PATH_PROG(gtkpath, gtk-config)
 AC_MSG_CHECKING(for Gtk compile flags)
 GTK_CFLAGS=`$gtkpath --cflags`
 GTK_LIBS=`$gtkpath --libs`
-GTK_HDRS=`$gtkpath --prefix`/include
+GTK_HDRS=`$gtkpath --prefix`/include/gtk
+GDK_HDRS=`$gtkpath --prefix`/include/gdk
 CFLAGS="$CFLAGS $GTK_CFLAGS"
 LIBS="$LIBS $GTK_LIBS"
 AC_SUBST(GTK_HDRS)
+AC_SUBST(GDK_HDRS)
 AC_MSG_RESULT(ok)
 
 dnl *****************************************************************
