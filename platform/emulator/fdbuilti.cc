@@ -142,8 +142,7 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
 }
 
 
-void BIfdHeadManager::addResSusp(int i, Suspension * susp,
-                                 FDPropState target, Bool eqlist)
+void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
 {
   DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
 
@@ -153,15 +152,11 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp,
     return;
   } else if (tag == CVAR) {
     addSuspFDVar(bifdhm_var[i], new SuspList(susp, NULL), target);
-    if (eqlist)
-      addSuspFDVar(bifdhm_var[i], new SuspList(susp, NULL), fd_eqvar);
   } else if (tag == UVAR) {
     if (bifdhm_var[i] != *bifdhm_varptr[i]) return;
     if (am.isLocalUVar(bifdhm_var[i])) {
       TaggedRef * taggedfdvar = newTaggedCVar(new GenFDVariable());
       addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), target);
-      if (eqlist)
-        addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), fd_eqvar);
       doBind(bifdhm_varptr[i], TaggedRef(taggedfdvar));
     } else {
       addSuspUVar(bifdhm_varptr[i], new SuspList(susp, NULL));
@@ -174,8 +169,6 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp,
       am.checkSuspensionList(bifdhm_var[i], makeTaggedRef(taggedfdvar), NULL);
       fdvar->setSuspList(tagged2SVar(bifdhm_var[i])->getSuspList());
       addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), target);
-      if (eqlist)
-        addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), fd_eqvar);
       doBind(bifdhm_varptr[i], TaggedRef(taggedfdvar));
     } else {
       addSuspSVar(bifdhm_var[i], new SuspList(susp, NULL));
@@ -589,10 +582,8 @@ int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
   return to;
 } // simplifyBody
 
-Bool BIfdBodyManager::unifiedVars(void)
+Bool BIfdBodyManager::_unifiedVars(void)
 {
-  if (! isUnifyCurrentTaskSusp()) return FALSE;
-
   Bool ret = FALSE;
 
   // 1st pass: mark occ of var and break if you find already touched var

@@ -279,17 +279,13 @@ OZ_C_proc_proto(BIfdIsIntB_body);
 //-----------------------------------------------------------------------------
 
 OZ_Bool genericHead_a_x_c(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                          OZ_CFun BI_body, FDPropState target_list,
-                          Bool eq_list);
+                          OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_a_x_c_y(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                            OZ_CFun BI_body, FDPropState target_list,
-                            Bool eq_list);
-
+                            OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_a_x_c_nl(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                             OZ_CFun BI_body, FDPropState target_list,
-                             Bool eq_list);
+                             OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_x_y_z(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
                           OZ_CFun BI_body, Bool nestable,
@@ -299,34 +295,27 @@ OZ_Bool genericHead_x_y_z_det_x_or_y(int OZ_arity, OZ_Term OZ_args[],
                                      OZ_CFun OZ_self, OZ_CFun BI_body);
 
 OZ_Bool genericHead_x(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                      OZ_CFun BI_body, FDPropState target_list, Bool eq_list);
+                      OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_x_y_c(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                          OZ_CFun BI_body, FDPropState target_list,
-                          Bool eq_list);
+                          OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_x_y(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                        OZ_CFun BI_body, FDPropState target_list, Bool eq_list,
+                        OZ_CFun BI_body, FDPropState target_list,
                         Bool nestable = FALSE);
 
 
 OZ_Bool genericHead_x_y_z_z(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                          OZ_CFun BI_body,
-                          FDPropState target_list,
-                            Bool eq_list);
+                          OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_a_x_c_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                          OZ_CFun BI_body, FDPropState target_list,
-                            Bool eq_list);
+                          OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_x_c_d(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                          OZ_CFun BI_body, FDPropState target_list,
-                          Bool eq_list);
+                          OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_x_D_d(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-                          OZ_CFun BI_body,
-                          FDPropState target_list,
-                          Bool eq_list);
+                          OZ_CFun BI_body, FDPropState target_list);
 
 //-----------------------------------------------------------------------------
 // Auxiliary stuff
@@ -499,14 +488,14 @@ public:
                     TaggedRef tagged_xtc, int &s,
                     OZ_CFun func, RefsArray xregs, int arity);
 
-  void addResSusp(int i, Suspension * susp, FDPropState target, Bool eqlist);
+  void addResSusp(int i, Suspension * susp, FDPropState target);
   void addForIntSusp(int i, Suspension * susp);
   void addForFDishSusp(int i, Suspension * susp);
   Bool addForXorYdet(OZ_CFun func, RefsArray xregs, int arity);
 
-  void addResSusps(Suspension * susp, FDPropState target, Bool eqlist) {
+  void addResSusps(Suspension * susp, FDPropState target) {
     for (int i = curr_num_of_items; i--; )
-      addResSusp(i, susp, target, eqlist);
+      addResSusp(i, susp, target);
   }
   void addForIntSusps(Suspension * susp) {
     for (int i = curr_num_of_items; i--; )
@@ -693,14 +682,18 @@ public:
     return curr_num_of_vars;
   }
 
-  Bool unifiedVars(void);
+  Bool _unifiedVars(void);
+  Bool unifiedVars(void) {
+    if (! isUnifyCurrentTaskSusp()) return FALSE;
+    return _unifiedVars();
+  }
 
   Bool areIdentVar(int a, int b) {
     DebugCheck((a < 0 || a >= curr_num_of_vars) ||
                (b < 0 || b >= curr_num_of_vars),
                error("index overflow."));
-    return (bifdbm_varptr[a] == bifdbm_varptr[b] &&
-            isAnyVar(bifdbm_vartag[a]));
+    if (! isUnifyCurrentTaskSusp()) return FALSE;
+    return bifdbm_varptr[a] == bifdbm_varptr[b] && isAnyVar(bifdbm_vartag[a]);
   }
 
   FiniteDomainPtr * getDoms(void) {return bifdbm_dom;}

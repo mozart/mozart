@@ -152,7 +152,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutLe, 2)
 {
-  ExpectedTypes("FDishSmallInt");
+  ExpectedTypes("FDish,SmallInt");
 
   OZ_getCArgDeref(1, n, nptr, ntag);
 
