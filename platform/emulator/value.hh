@@ -72,8 +72,9 @@ public:
   int getOthers() { return flagsAndOthers>>sizeOfLitFlags; }
   void setOthers(int value) { flagsAndOthers = getFlags()|(value<<sizeOfLitFlags); }
 
-  Bool isName()     { return (getFlags()&Lit_isName); }
-  Bool isAtom()     { return !isName(); }
+  Bool isName()      { return (getFlags()&Lit_isName); }
+  Bool isNamedName() { return (getFlags()&Lit_isNamedName); }
+  Bool isAtom()      { return !isName(); }
 
   Literal() { Assert(0); }
 
@@ -1302,6 +1303,7 @@ public:
   void setClass(ObjectClass *c) { aclass = ToInt32(c); }
 
   OzLock *getLock() { return (OzLock*)ToPointer(flagsAndLock&ObjFlagMask); }
+  OzLock *setLock(OzLock *l) { flagsAndLock |= ToInt32(l); }
 
   ObjectClass *getClass() { return (ObjectClass*) ToPointer(aclass); }
 
