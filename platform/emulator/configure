@@ -3335,7 +3335,7 @@ if test "${enable_threaded+set}" = set; then
   :
 fi
 
-    : ${enable_threaded=yes}
+    : ${oz_enable_threaded=yes}
     if test -n "${enable_threaded}"; then
         oz_enable_threaded=$enable_threaded
     fi
@@ -3360,7 +3360,7 @@ if test "${enable_fastreg+set}" = set; then
   :
 fi
 
-    : ${enable_fastreg=yes}
+    : ${oz_enable_fastreg=yes}
     if test -n "${enable_fastreg}"; then
         oz_enable_fastreg=$enable_fastreg
     fi
@@ -3385,7 +3385,7 @@ if test "${enable_regopt+set}" = set; then
   :
 fi
 
-    : ${enable_regopt=yes}
+    : ${oz_enable_regopt=yes}
     if test -n "${enable_regopt}"; then
         oz_enable_regopt=$enable_regopt
     fi
@@ -3410,7 +3410,7 @@ if test "${enable_modules_static+set}" = set; then
   :
 fi
 
-    : ${enable_modules_static=no}
+    : ${oz_enable_modules_static=no}
     if test -n "${enable_modules_static}"; then
         oz_enable_modules_static=$enable_modules_static
     fi
@@ -3504,7 +3504,7 @@ if test "${enable_virtualsites+set}" = set; then
   :
 fi
 
-    : ${enable_virtualsites=no}
+    : ${oz_enable_virtualsites=no}
     if test -n "${enable_virtualsites}"; then
         oz_enable_virtualsites=$enable_virtualsites
     fi
@@ -3530,7 +3530,7 @@ if test "${enable_miscbuiltins+set}" = set; then
   :
 fi
 
-    : ${enable_miscbuiltins=no}
+    : ${oz_enable_miscbuiltins=no}
     if test -n "${enable_miscbuiltins}"; then
         oz_enable_miscbuiltins=$enable_miscbuiltins
     fi
