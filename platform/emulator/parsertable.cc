@@ -25,7 +25,7 @@
 #include "conf.h"
 #endif
 
-#include "builtins.hh"
+#include "oz.h"
 
 /*
  * The builtin table

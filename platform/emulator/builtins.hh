@@ -29,83 +29,265 @@
 #ifndef __BUILTINSH
 #define __BUILTINSH
 
-#ifdef INTERFACE
-#pragma interface
-#endif
+/********************************************************************
+ * Macros
+ ******************************************************************** */
 
-#include "base.hh"
-#include "oz.h"
-#include "oz_cpi.hh"
-#include "gc.hh"
+#define NONVAR(X,term)				\
+TaggedRef term = X;				\
+{ DEREF(term,_myTermPtr,_myTag);		\
+  if (isVariableTag(_myTag)) return SUSPEND;	\
+}
 
-// exported functions
-Builtin *BIinit();
-void threadRaise(Thread *th,OZ_Term E,int debug=0);
-TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I);
-extern OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
-extern OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea,
-				       TaggedRef &out);
-OZ_Return BIarityInline(TaggedRef, TaggedRef &);
-OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
-			     Bool recordFlag);
-
-// -----------------------------------------------------------------------
-// propagators
-
-class WidthPropagator : public OZ_Propagator {
-private:
-  static OZ_PropagatorProfile profile;
-protected:
-  OZ_Term rawrec, rawwid;
-public:
-  WidthPropagator(OZ_Term r, OZ_Term w)
-    : rawrec(r), rawwid(w) {}
-
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_collectHeapTerm(rawrec,rawrec);
-    OZ_collectHeapTerm(rawwid,rawwid);
-  }
-  virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
-  virtual OZ_Return propagate(void);
-  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
-  virtual OZ_Term getParameters(void) const { return OZ_nil(); }
-};
-
-class MonitorArityPropagator : public OZ_Propagator {
-private:
-  static OZ_PropagatorProfile profile;
-protected:
-  OZ_Term X, K, L, FH, FT;
-public:
-  MonitorArityPropagator(OZ_Term X1, OZ_Term K1, OZ_Term L1,
-                         OZ_Term FH1, OZ_Term FT1)
-    : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
-
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_collectHeapTerm(X,X);
-    OZ_collectHeapTerm(K,K);
-    OZ_collectHeapTerm(L,L);
-    OZ_collectHeapTerm(FH,FH);
-    OZ_collectHeapTerm(FT,FT);
-  }
-  virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
-  virtual OZ_Return propagate(void);
-  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
-  virtual OZ_Term getParameters(void) const { return OZ_nil(); }
-  
-  TaggedRef getX(void) { return X; }
-  TaggedRef getK(void) { return K; }
-  TaggedRef getFH(void) { return FH; }
-  TaggedRef getFT(void) { return FT; }
-  void setFH(TaggedRef FH1) { FH=FH1; }
-};
+// Suspend on free variables
+#define SUSPEND_ON_FREE_VAR(X,term,tag)		\
+TaggedRef term = X;				\
+TypeOfTerm tag;					\
+{ DEREF(term,_myTermPtr,myTag);			\
+  tag = myTag;					\
+  if (oz_isFree(term)) return SUSPEND;		\
+}
 
 
-// -----------------------------------------------------------------------
-// arithmetics
+#define OZ_DECLAREBI_USEINLINEREL1(Name,InlineName)	\
+OZ_BI_define(Name,1,0)					\
+{							\
+  oz_declareIN(0,arg1);					\
+  OZ_Return state = InlineName(arg1);			\
+  if (state == SUSPEND)	{				\
+    oz_suspendOn(arg1);					\
+  } else {						\
+    return state;					\
+  }							\
+} OZ_BI_end
 
-OZ_Return BIminusOrPlus(Bool callPlus,TaggedRef A, TaggedRef B, TaggedRef &out);
-OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B);
+#define OZ_DECLAREBI_USEINLINEREL2(Name,InlineName)	\
+OZ_BI_define(Name,2,0)					\
+{							\
+  oz_declareIN(0,arg0);					\
+  oz_declareIN(1,arg1);					\
+  OZ_Return state = InlineName(arg0,arg1);		\
+  if (state == SUSPEND) {				\
+    oz_suspendOn2(arg0,arg1);				\
+  } else {						\
+    return state;					\
+  }							\
+} OZ_BI_end
+
+#define OZ_DECLAREBI_USEINLINEREL3(Name,InlineName)	\
+OZ_BI_define(Name,3,0)					\
+{							\
+  oz_declareIN(0,arg0);					\
+  oz_declareIN(1,arg1);					\
+  oz_declareIN(2,arg2);					\
+  OZ_Return state = InlineName(arg0,arg1,arg2);		\
+  if (state == SUSPEND) {				\
+    oz_suspendOn3(arg0,arg1,arg2);			\
+  } else {						\
+    return state;					\
+  }							\
+} OZ_BI_end
+
+#define OZ_DECLAREBI_USEINLINEFUN1(Name,InlineName)	\
+OZ_BI_define(Name,1,1)					\
+{							\
+  OZ_Term aux=0;					\
+  oz_declareIN(0,arg1);					\
+  OZ_Return state = InlineName(arg1,aux);		\
+  OZ_result(aux);					\
+  if (state==SUSPEND) {					\
+    oz_suspendOn(arg1);					\
+  } else {						\
+    return state;					\
+  }							\
+} OZ_BI_end
+
+#define OZ_DECLAREBI_USEINLINEFUN3(Name,InlineName)	\
+OZ_BI_define(Name,3,1)					\
+{							\
+  OZ_Term aux=0;					\
+  oz_declareIN(0,arg0);					\
+  oz_declareIN(1,arg1);					\
+  oz_declareIN(2,arg2);					\
+  OZ_Return state=InlineName(arg0,arg1,arg2,aux);	\
+  OZ_result(aux);					\
+  if (state==SUSPEND) {					\
+    oz_suspendOn3(arg0,arg1,arg2);			\
+  } else {						\
+    return state;					\
+  }							\
+} OZ_BI_end
+
+
+#define OZ_DECLAREBOOLFUN1(BIfun,irel)		\
+OZ_BI_define(BIfun,1,1)				\
+{						\
+  OZ_Return r = irel(OZ_in(0));			\
+  switch (r) {					\
+  case PROCEED: OZ_RETURN(NameTrue);		\
+  case FAILED : OZ_RETURN(NameFalse);		\
+  case SUSPEND: oz_suspendOn(OZ_in(0));		\
+  default     : return r;			\
+  }						\
+} OZ_BI_end
+
+#define OZ_DECLAREBI_USEINLINEFUN2(Name,InlineName)	\
+OZ_BI_define(Name,2,1)					\
+{							\
+  OZ_Term aux=0;					\
+  oz_declareIN(0,arg0);					\
+  oz_declareIN(1,arg1);					\
+  OZ_Return state=InlineName(arg0,arg1,aux);		\
+  OZ_result(aux);					\
+  if (state==SUSPEND) {					\
+    oz_suspendOn2(arg0,arg1);				\
+  } else {						\
+    return state;					\
+  }							\
+} OZ_BI_end
+
+
+
+/* -----------------------------------------------------------------------
+ * argument declaration for builtins
+ * -----------------------------------------------------------------------*/
+
+#define oz_declareArg(ARG,VAR)			\
+register OZ_Term VAR = OZ_args[ARG];		\
+
+
+#define oz_declareIN(ARG,VAR)			\
+register OZ_Term VAR = OZ_in(ARG);		\
+
+
+#define oz_declareDerefArg(ARG,VAR)		\
+oz_declareArg(ARG,VAR);				\
+DEREF(VAR,VAR ## Ptr,VAR ## Tag);		\
+
+
+#define oz_declareDerefIN(ARG,VAR)		\
+oz_declareIN(ARG,VAR);				\
+DEREF(VAR,VAR ## Ptr,VAR ## Tag);		\
+
+
+#define oz_declareNonvarArg(ARG,VAR)		\
+oz_declareDerefArg(ARG,VAR);			\
+{						\
+  if (oz_isVariable(VAR)) {			\
+    oz_suspendOnPtr(VAR ## Ptr);		\
+  }						\
+}
+
+#define oz_declareNonvarIN(ARG,VAR)		\
+oz_declareDerefIN(ARG,VAR);			\
+{						\
+  if (oz_isVariable(VAR)) {			\
+    oz_suspendOnPtr(VAR ## Ptr);		\
+  }						\
+}
+
+#define oz_declareTypeArg(ARG,VAR,TT,TYPE)	\
+TT VAR;						\
+{						\
+  oz_declareNonvarArg(ARG,_VAR);		\
+  if (!oz_is ## TYPE(_VAR)) {			\
+    oz_typeError(ARG, #TYPE);			\
+  } else {					\
+    VAR = oz_ ## TYPE ## ToC(_VAR);		\
+  }						\
+}
+
+#define oz_declareTypeIN(ARG,VAR,TT,TYPE)	\
+TT VAR;						\
+{						\
+  oz_declareNonvarIN(ARG,_VAR);		\
+  if (!oz_is ## TYPE(_VAR)) {			\
+    oz_typeError(ARG, #TYPE);			\
+  } else {					\
+    VAR = oz_ ## TYPE ## ToC(_VAR);		\
+  }						\
+}
+
+#define oz_declareIntArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,int,Int)
+#define oz_declareFloatArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,double,Float)
+#define oz_declareAtomArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,const char*,Atom)
+#define oz_declareThreadArg(ARG,VAR) \
+ oz_declareTypeArg(ARG,VAR,Thread*,Thread)
+#define oz_declareDictionaryArg(ARG,VAR) \
+ oz_declareTypeArg(ARG,VAR,OzDictionary*,Dictionary)
+
+#define oz_declareIntIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,int,Int)
+#define oz_declareFloatIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,double,Float)
+#define oz_declareAtomIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,const char*,Atom)
+#define oz_declareThreadIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,Thread*,Thread)
+#define oz_declareDictionaryIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,OzDictionary*,Dictionary)
+#define oz_declareSRecordIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,SRecord*,SRecord)
+#define oz_declareSTupleIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,SRecord*,STuple)
+
+
+#define oz_declareProperStringArg(ARG,VAR)			\
+char *VAR;							\
+{								\
+  oz_declareArg(ARG,_VAR1);					\
+  OZ_Term _VAR2;						\
+  if (!OZ_isProperString(_VAR1,&_VAR2)) {			\
+    if (!_VAR2) {						\
+      oz_typeError(ARG,"ProperString");				\
+    } else {							\
+      oz_suspendOn(_VAR2);					\
+    }								\
+  }								\
+  VAR = OZ_stringToC(_VAR1);					\
+}
+
+#define oz_declareProperStringIN(ARG,VAR)			\
+char *VAR;							\
+{								\
+  oz_declareIN(ARG,_VAR1);					\
+  OZ_Term _VAR2;						\
+  if (!OZ_isProperString(_VAR1,&_VAR2)) {			\
+    if (!_VAR2) {						\
+      oz_typeError(ARG,"ProperString");				\
+    } else {							\
+      oz_suspendOn(_VAR2);					\
+    }								\
+  }								\
+  VAR = OZ_stringToC(_VAR1);					\
+}
+
+#define oz_declareVirtualStringArg(ARG,VAR)	\
+char *VAR;					\
+{						\
+  oz_declareArg(ARG,_VAR1);			\
+  OZ_Term _VAR2;				\
+  if (!OZ_isVirtualString(_VAR1,&_VAR2)) {	\
+    if (!_VAR2) {				\
+      oz_typeError(ARG,"VirtualString");	\
+    } else {					\
+      oz_suspendOn(_VAR2);			\
+    }						\
+  }						\
+  VAR = OZ_virtualStringToC(_VAR1);		\
+}
+
+#define oz_declareVirtualStringIN(ARG,VAR)	\
+char *VAR;					\
+{						\
+  oz_declareIN(ARG,_VAR1);			\
+  OZ_Term _VAR2;				\
+  if (!OZ_isVirtualString(_VAR1,&_VAR2)) {	\
+    if (!_VAR2) {				\
+      oz_typeError(ARG,"VirtualString");	\
+    } else {					\
+      oz_suspendOn(_VAR2);			\
+    }						\
+  }						\
+  VAR = OZ_virtualStringToC(_VAR1);		\
+}
 
 #endif
 
