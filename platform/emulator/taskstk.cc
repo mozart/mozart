@@ -385,8 +385,7 @@ void TaskStack::checkLiveness(RefsArray X) {
   pushFrame(auxPC,auxY,auxG);
   int n=getRefsArraySize(X);
   int m=CodeArea::livenessX(auxPC,X,n);
-  if (n!=m) {
-    if (m>n) printf("#######################\n");
+  if (m>n) {
     printf("TaskStack: checkLiveness(%p): unused X detected: %d of %d\n",
 	   auxPC,m,n);
   }

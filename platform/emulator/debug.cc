@@ -278,15 +278,13 @@ OZ_BI_define(BIprocedureCoord, 1,1)
   if (definitionPC != NOCODE) {
     Reg reg;
     int next;
-    TaggedRef file, line, column, predName;
-    CodeArea::getDefinitionArgs(definitionPC,reg,next,file,line,column,
-				predName);
+    TaggedRef pos, predName;
+    CodeArea::getDefinitionArgs(definitionPC,reg,next,pos,predName);
     TaggedRef pairlist =
-      cons(OZ_pairA("file",file),
-	   cons(OZ_pairA("line",line),
-		cons(OZ_pairAI("PC",ToInt32(definitionPC)),nil())));
-    if (column != makeTaggedNULL())
-      pairlist = cons(OZ_pairA("column",column),pairlist);
+      cons(OZ_pairA("file",OZ_getArg(pos,0)),
+	   cons(OZ_pairA("line",OZ_getArg(pos,1)),
+		cons(OZ_pairA("column",OZ_getArg(pos,2)),
+		     cons(OZ_pairAI("PC",ToInt32(definitionPC)),nil()))));
     OZ_RETURN(OZ_recordInit(OZ_atom("def"), pairlist));
   } else   // should never happen
     OZ_RETURN(NameUnit);

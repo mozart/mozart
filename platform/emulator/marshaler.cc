@@ -667,6 +667,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       ProgramCounter pc = pp->getPC();
       int gs = pp->getPred()->getGSize();
       marshalNumber(gs,bs);
+      marshalNumber(pp->getPred()->getMaxX(),bs);
       trailCycle(t->getCycleRef(),bs);
       for (int i=0; i<gs; i++) {
 	marshalTerm(pp->getG(i),bs);
@@ -1211,9 +1212,11 @@ loop:
       OZ_Term name  = unmarshalTerm(bs);
       int arity     = unmarshalNumber(bs);
       int gsize     = unmarshalNumber(bs);
+      int maxX      = unmarshalNumber(bs);
 
       if (gname) {
-	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0,NO);
+	PrTabEntry *pr = new PrTabEntry(name,mkTupleWidth(arity),0,nil(),
+					maxX);
 	Assert(am.onToplevel());
 	pr->setGSize(gsize);
 	Abstraction *pp = Abstraction::newAbstraction(pr,am.currentBoard());
@@ -1434,11 +1437,7 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t){
   //  }
   if (minordiff)
     return NO;
-  buf->unmarshallingOld = (minordiff!=0);
   t=unmarshalTerm(buf);
-  if (minordiff) {
-    warning("unmarshalling old component(%s), needs resaving",toC(t));
-  }
   buf->unmarshalEnd();
   refTrail->unwind();
   PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->siteStringrep()));

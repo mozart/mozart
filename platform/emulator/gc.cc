@@ -1994,6 +1994,7 @@ void PrTabEntry::gcPrTabEntry()
 {
   if (this == NULL) return;
 
+  // mm2: this does not work: it may be called many times ...
   OZ_collectHeapTerm(info,info);
 }
 

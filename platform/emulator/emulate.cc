@@ -288,8 +288,7 @@ void deallocateY(RefsArray a)
 	if (offset) {							\
 	  JUMPRELATIVE(offset);						\
 	} else {							\
-	  int argsToSave = getPosIntArg(PC+3);				\
-	  SUSP_PC(termPtr,argsToSave,PC);				\
+	  SUSP_PC(termPtr,PC);						\
 	}								\
       }
 
@@ -490,16 +489,16 @@ Bool AM::hookCheckNeeded()
 #define ChangeSelf(obj)				\
       e->changeSelf(obj);
 
-#define PushCont(PC,Y,CAP)  CTS->pushCont(PC,Y,CAP);
-#define PushContX(PC,Y,CAP,X,n)  pushContX(CTS,PC,Y,CAP,X,n)
+#define PushCont(_PC)  CTS->pushCont(_PC,Y,CAP);
+#define PushContX(_PC) pushContX(CTS,_PC,Y,CAP,X);
 
 // outlined:
 void pushContX(TaskStack *stk, 
 	       ProgramCounter pc,RefsArray y,Abstraction *cap,
-	       RefsArray x, int n)
+	       RefsArray x)
 {
   stk->pushCont(pc,y,cap); 
-  stk->pushX(x,n);
+  stk->pushX(x,cap->getPred()->getMaxX());
 }
 
 
@@ -510,7 +509,7 @@ void pushContX(TaskStack *stk,
 #define CallDoChecks(Pred)						    \
      Y = NULL;								    \
      CAP = Pred;							    \
-     emulateHookCall(e,PushContX(Pred->getPC(),NULL,CAP,X,Pred->getArity()));
+     emulateHookCall(e,PushContX(Pred->getPC()));
 
 // load a continuation into the machine registers PC,Y,CAP,X
 #define LOADCONT(cont)				\
@@ -661,20 +660,20 @@ void pushContX(TaskStack *stk,
 #define GetSPointerWrite(ptr) (TaggedRef*)(((long)ptr)-1)
 
 #ifdef DEBUG_LIVENESS
-extern void checkLiveness(ProgramCounter PC, int n, TaggedRef *X, int max);
-#define CheckLiveness(PC,n) checkLiveness(PC,n,X,NumberOfXRegisters)
+extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);
+#define CheckLiveness(PC) checkLiveness(PC,X,CAP->getPred()->getMaxX())
 #else
-#define CheckLiveness(PC,n)
+#define CheckLiveness(PC)
 #endif
 
 // ------------------------------------------------------------------------
 // ???
 // ------------------------------------------------------------------------
 
-#define SUSP_PC(TermPtr,RegsToSave,PC)		\
-   CheckLiveness(PC,RegsToSave);		\
-   PushContX(PC,Y,CAP,X,RegsToSave);		\
-   addSuspPtr(TermPtr,CTT);			\
+#define SUSP_PC(TermPtr,PC)		\
+   CheckLiveness(PC);			\
+   PushContX(PC);			\
+   addSuspPtr(TermPtr,CTT);		\
    return T_SUSPEND;
 
 
@@ -898,8 +897,6 @@ int engine(Bool init)
   ConstTerm *predicate;	    NoReg(predicate);
   int predArity;    	    NoReg(predArity);
 
-  int argsToSave;  // replace bi call
-
   // optimized arithmetic and special cases for unification
   OZ_Return tmpRet;  NoReg(tmpRet); 
 
@@ -988,7 +985,7 @@ LBLdispatcher:
 
   Case(FASTCALL)
     {
-      PushCont(PC+3,Y,CAP);   // PC+3 goes into a temp var (mm2)
+      PushCont(PC+3);   // PC+3 goes into a temp var (mm2)
       // goto LBLFastTailCall; // is not optimized away (mm2)
     }
 
@@ -1024,23 +1021,22 @@ LBLdispatcher:
       bi->incCounter();
 #endif
       int res = bi->getFun()(X,loc->mapping());
-      if (res == PROCEED) { DISPATCH(4); }
+      if (res == PROCEED) { DISPATCH(3); }
       switch (res) {
       case FAILED:	  HF_BI_NEW(bi,loc);
       case RAISE:	  RAISE_THREAD;
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 	 
       case SUSPEND:
-	PushContX(PC,Y,CAP,X,getPosIntArg(PC+3));
+	PushContX(PC);
 	SUSPENDONVARLIST;
 
       case BI_PREEMPT:
-	PushContX(PC+4,Y,CAP,X,loc->max(getPosIntArg(PC+3)));
+	PushContX(PC+3);
 	return T_PREEMPT;
 
       case BI_REPLACEBICALL: 
-	argsToSave = loc->max(getPosIntArg(PC+3));
-	PC += 4;
+	PC += 3;
 	goto LBLreplaceBICall;
 
       case SLEEP:
@@ -1065,7 +1061,7 @@ LBLdispatcher:
       int ret = bi->getFun()(X,loc->mapping());
       if (ret==PROCEED) {
 	if (literalEq(X[loc->out(0)],oz_true())) {
-	  DISPATCH(5);
+	  DISPATCH(4);
 	} else {
 	  JUMPRELATIVE(getLabelArg(PC+3));
 	}
@@ -1076,7 +1072,7 @@ LBLdispatcher:
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 	 
       case SUSPEND:
-	PushContX(PC,Y,CAP,X,loc->max(getPosIntArg(PC+4)));
+	PushContX(PC);
 	SUSPENDONVARLIST;
 
       case BI_PREEMPT:
@@ -1098,12 +1094,12 @@ LBLdispatcher:
       
       if ( isSmallIntTag(tagA) && isSmallIntTag(tagB) ) {
 	XPC(3) = makeInt(smallIntValue(A) - smallIntValue(B));
-	DISPATCH(5);
+	DISPATCH(4);
       } 
       
       if (isFloatTag(tagA) && isFloatTag(tagB)) {
 	XPC(3) = oz_float(floatValue(A) - floatValue(B));
-	DISPATCH(5);
+	DISPATCH(4);
       }
             
       auxTaggedA = XPC(1);
@@ -1124,12 +1120,12 @@ LBLdispatcher:
       
       if ( isSmallIntTag(tagA) && isSmallIntTag(tagB) ) {
 	XPC(3) = makeInt(smallIntValue(A) + smallIntValue(B));
-	DISPATCH(5);
+	DISPATCH(4);
       } 
       
       if (isFloatTag(tagA) && isFloatTag(tagB)) {
 	XPC(3) = oz_float(floatValue(A) + floatValue(B));
-	DISPATCH(5);
+	DISPATCH(4);
       }
             
       auxTaggedA = XPC(1);
@@ -1152,7 +1148,7 @@ LBLdispatcher:
 	int res = (int)A - (1<<tagSize);
 	if ((int)A > res) {
 	  XPC(2) = res;
-	  DISPATCH(4);
+	  DISPATCH(3);
 	}
       }
 
@@ -1176,7 +1172,7 @@ LBLdispatcher:
 	int res = (int)A + (1<<tagSize);
 	if ((int)A < res) {
 	  XPC(2) = res;
-	  DISPATCH(4);
+	  DISPATCH(3);
 	}
       }
 
@@ -1193,7 +1189,7 @@ LBLdispatcher:
   LBLhandlePlusMinus:
   {
       switch(tmpRet) {
-      case PROCEED:       DISPATCH(auxInt+1);
+      case PROCEED:       DISPATCH(auxInt);
       case BI_TYPE_ERROR: RAISE_TYPE1_FUN(auxString, 
 					  cons(auxTaggedA,cons(auxTaggedB,nil())));
 
@@ -1204,8 +1200,8 @@ LBLdispatcher:
 	    e->trail.pushIfVar(auxTaggedB);
 	    goto LBLsuspendShallow;
 	  }
-	  CheckLiveness(PC,getPosIntArg(PC+auxInt));
-	  PushContX(PC,Y,CAP,X,getPosIntArg(PC+auxInt));
+	  CheckLiveness(PC);
+	  PushContX(PC);
 	  suspendInline(CTT,auxTaggedA,auxTaggedB);
 	  return T_SUSPEND;
 	}
@@ -1216,22 +1212,23 @@ LBLdispatcher:
   Case(INLINEDOT)
     {
       COUNT(inlinedots);
-      TaggedRef feature = getLiteralArg(PC+2);
       TaggedRef rec = XPC(1);
       DEREF(rec,_1,_2);
       if (oz_isSRecord(rec)) {
 	SRecord *srec = tagged2SRecord(rec);
-	int index = ((InlineCache*)(PC+5))->lookup(srec,feature);
+	TaggedRef feature = getLiteralArg(PC+2);
+	int index = ((InlineCache*)(PC+4))->lookup(srec,feature);
 	if (index<0) {
 	  (void) oz_raise(E_ERROR,E_KERNEL,".", 2, XPC(1), feature);
 	  RAISE_THREAD;
 	}
 	XPC(3) = srec->getArg(index);
-	DISPATCH(7);	
+	DISPATCH(6);	
       }
       {
+	TaggedRef feature = getLiteralArg(PC+2);
 	OZ_Return res = dotInline(XPC(1),feature,XPC(3));
-	if (res==PROCEED) { DISPATCH(7); }
+	if (res==PROCEED) { DISPATCH(6); }
 
 	switch(res) {
 	case SUSPEND:
@@ -1241,8 +1238,8 @@ LBLdispatcher:
 	      e->trail.pushIfVar(A);
 	      goto LBLsuspendShallow;
 	    }
-	    CheckLiveness(PC,getPosIntArg(PC+4));
-	    PushContX(PC,Y,CAP,X,getPosIntArg(PC+4));
+	    CheckLiveness(PC);
+	    PushContX(PC);
 	    suspendInline(CTT,A);
 	    return T_SUSPEND;
 	  }
@@ -1271,18 +1268,17 @@ LBLdispatcher:
       if (stateIsCell(state)) {
 	rec = getState(state,NO,fea,XPC(2));
 	if (rec==NULL) {
-	  argsToSave = MaxToSave(2,3);
-	  PC += 6;
+	  PC += 5;
 	  goto LBLreplaceBICall;
 	}
       } else {
 	rec = getRecord(state);
       }
       Assert(rec!=NULL);
-      int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
+      int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
 	XPC(2) = rec->getArg(index);
-	DISPATCH(6);
+	DISPATCH(5);
       }
       (void) oz_raise(E_ERROR,E_OBJECT,"@",2,makeTaggedSRecord(rec),fea);
       RAISE_THREAD;
@@ -1305,19 +1301,18 @@ LBLdispatcher:
       if (stateIsCell(state)) {
 	rec = getState(state,OK,fea,XPC(2));
 	if (rec==NULL) {
-	  argsToSave = getPosIntArg(PC+3);
-	  PC += 6;
+	  PC += 5;
 	  goto LBLreplaceBICall;
 	}
       } else {
 	rec = getRecord(state);
       }
       Assert(rec!=NULL);
-      int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
+      int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
 	Assert(oz_isRef(*rec->getRef(index)) || !oz_isVariable(*rec->getRef(index)));
 	rec->setArg(index,XPC(2));
-	DISPATCH(6);
+	DISPATCH(5);
       }
       
       (void) oz_raise(E_ERROR,E_OBJECT,"<-",3,
@@ -1329,13 +1324,13 @@ LBLdispatcher:
     {
       switch(uparrowInlineBlocking(XPC(1),XPC(2),XPC(3))) {
       case PROCEED:
-	DISPATCH(5);
+	DISPATCH(4);
 
       case SUSPEND:
 	  Assert(!shallowCP);
 	  OZ_suspendOnInternal2(XPC(1),XPC(2));
-	  CheckLiveness(PC,getPosIntArg(PC+4));
-	  PushContX(PC,Y,CAP,X,getPosIntArg(PC+4));
+	  CheckLiveness(PC);
+	  PushContX(PC);
 	  SUSPENDONVARLIST;
 
       case FAILED:
@@ -1364,11 +1359,11 @@ LBLdispatcher:
       shallowCP = PC;
       e->shallowHeapTop = heapTop;
       e->trail.pushMark();
-      DISPATCH(3);
+      DISPATCH(2);
     }
 
 #define LT_IF(T) if (T) THEN_CASE else ELSE_CASE
-#define THEN_CASE { XPC(3)=oz_true(); DISPATCH(6); }
+#define THEN_CASE { XPC(3)=oz_true(); DISPATCH(5); }
 #define ELSE_CASE { XPC(3)=oz_false(); JUMPRELATIVE(getLabelArg(PC+4)); }
 
   Case(TESTLT)
@@ -1408,8 +1403,8 @@ LBLdispatcher:
 	
       case SUSPEND:
 	{
-	  CheckLiveness(PC,getPosIntArg(PC+5));
-	  PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
+	  CheckLiveness(PC);
+	  PushContX(PC);
 	  suspendInline(CTT,XPC(1),XPC(2));
 	  return T_SUSPEND;
 	}
@@ -1465,9 +1460,8 @@ LBLdispatcher:
     LBLsuspendShallow:
       {
 	e->emptySuspendVarList(); // mm2: done twice
-	int argsToSave = getPosIntArg(shallowCP+2);
-	CheckLiveness(shallowCP,argsToSave);
-	PushContX(shallowCP,Y,CAP,X,argsToSave);
+	CheckLiveness(shallowCP);
+	PushContX(shallowCP);
 	shallowCP = NULL;
 	e->shallowHeapTop = NULL;
 	e->reduceTrailOnShallow();
@@ -1531,7 +1525,7 @@ LBLdispatcher:
     DISPATCH(1);
 
   Case(EXHANDLER)
-    PushCont(PC+2,Y,CAP);
+    PushCont(PC+2);
     e->currentThread()->pushCatch();
     JUMPRELATIVE(getLabelArg(PC+1));
 
@@ -1548,11 +1542,10 @@ LBLdispatcher:
 {
   int lbl = getLabelArg(PC+1);
   TaggedRef aux      = XPC(2);
-  int toSave         = getPosIntArg(PC+3);
   
   DEREF(aux,auxPtr,_1);
   if (oz_isVariable(aux)) {
-    SUSP_PC(auxPtr,toSave,PC);}
+    SUSP_PC(auxPtr,PC);}
   
   if (!oz_isLock(aux)) {
     /* arghhhhhhhhhh! fucking exceptions (RS) */
@@ -1579,7 +1572,10 @@ LBLdispatcher:
     goto no_lock;}
 
   if(!e->onToplevel()){
-    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));}    
+    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
+    // mm2: missing
+    RAISE_THREAD;
+  }
   
   switch(t->getTertType()){
   case Te_Frame:{
@@ -1597,19 +1593,18 @@ LBLdispatcher:
     Assert(0);}
   
   got_lock:
-    PushCont(PC+lbl,Y,CAP);
+    PushCont(PC+lbl);
     CTS->pushLock(t);
-    DISPATCH(4);
+    DISPATCH(3);
   
   has_lock:
-    PushCont(PC+lbl,Y,CAP);
-    DISPATCH(4);
+    PushCont(PC+lbl);
+    DISPATCH(3);
   
   no_lock:
-    PushCont(PC+lbl,Y,CAP);
+    PushCont(PC+lbl);
     CTS->pushLock(t);
-    argsToSave = toSave;
-    PC += 4;
+    PC += 3;
     goto LBLreplaceBICall;
   }
 
@@ -1661,12 +1656,13 @@ LBLdispatcher:
 	RAISE_THREAD;
       }
 
-      if (isTailCall) {
+      if (isTailCall) { // was DEFINITIONCOPY?
 	TaggedRef list = oz_deref(Xreg(reg));
 	ProgramCounter preddPC = predd->PC;
 	Bool copyOnce = predd->isCopyOnce();
 	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
-			       predd->getFileName(), predd->getLine(), NO);
+			       predd->getPos(), nil(), // mm2: inherit native?
+			       predd->getMaxX());
 	predd->PC = copyCode(preddPC,list,copyOnce==NO);
 	predd->setGSize(size);
       }
@@ -1715,10 +1711,6 @@ LBLdispatcher:
     TaggedRef object   = origObj;
     SRecordArity arity = (SRecordArity) getAdressArg(PC+3);
 
-    /* compiler ensures: if object is in X[n], then n == arity+1,
-     * so in case we have to suspend we save one additional argument */
-    Assert(HelpReg!=X || getWidth(arity)==regToInt(getRegArg(PC+2)));
-
     DEREF(object,objectPtr,_2);
     if (oz_isObject(object)) {
       Object *obj      = tagged2Object(object);
@@ -1727,7 +1719,7 @@ LBLdispatcher:
 	goto bombSend;
       }
 
-      if (!isTailCall) PushCont(PC+6,Y,CAP);
+      if (!isTailCall) PushCont(PC+6);
       ChangeSelf(obj);
       CallDoChecks(def);
       COUNT(sendmsg);
@@ -1735,7 +1727,7 @@ LBLdispatcher:
     }
 
     if (oz_isVariable(object)) {
-      SUSP_PC(objectPtr,getWidth(arity)+1,PC);
+      SUSP_PC(objectPtr,PC);
     }
 
     if (oz_isProcedure(object)) 
@@ -1785,7 +1777,7 @@ LBLdispatcher:
       goto bombApply;
     }
     
-    if (!isTailCall) { PushCont(PC,Y,CAP); }
+    if (!isTailCall) { PushCont(PC); }
     COUNT(applmeth);
     CallDoChecks(def);
     JUMPABSOLUTE(def->getPC());
@@ -1824,7 +1816,7 @@ LBLdispatcher:
          Abstraction *def = tagged2Abstraction(taggedPredicate);
 	 PrTabEntry *pte = def->getPred();
          CheckArity(pte->getArity(), taggedPredicate);
-         if (!isTailCall) { PushCont(PC+3,Y,CAP); }
+         if (!isTailCall) { PushCont(PC+3); }
          CallDoChecks(def);
          JUMPABSOLUTE(pte->getPC());
        }
@@ -1834,7 +1826,7 @@ LBLdispatcher:
 	   /* compiler ensures: if pred is in X[n], then n == arity+1,
 	    * so we save one additional argument */
 	   Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
-	   SUSP_PC(predPtr,predArity+1,PC);
+	   SUSP_PC(predPtr,PC);
 	 }
 	 RAISE_APPLY(taggedPredicate,OZ_toList(predArity,X));
        }
@@ -1872,7 +1864,7 @@ LBLdispatcher:
 	   def = (Abstraction *) predicate;
 	 }
 	 CheckArity(def->getArity(), makeTaggedConst(def));
-	 if (!isTailCall) { PushCont(PC,Y,CAP); }
+	 if (!isTailCall) { PushCont(PC); }
        
 	 CallDoChecks(def);
 	 JUMPABSOLUTE(def->getPC());
@@ -1897,7 +1889,7 @@ LBLdispatcher:
 	    
        case SUSPEND:
 	 {
-	   if (!isTailCall) PushCont(PC,Y,CAP);
+	   if (!isTailCall) PushCont(PC);
 
 	   CTT->pushCall(makeTaggedConst(bi),X,predArity);
 	   SUSPENDONVARLIST;
@@ -1916,7 +1908,7 @@ LBLdispatcher:
 
        case BI_PREEMPT:
 	 if (!isTailCall) {
-	   PushCont(PC,Y,CAP);
+	   PushCont(PC);
 	 }
 	 return T_PREEMPT;
 	 
@@ -1924,7 +1916,6 @@ LBLdispatcher:
 	if (isTailCall) {
 	  PC=NOCODE;
 	}
-	argsToSave = predArity;
 	goto LBLreplaceBICall;
 
        default: Assert(0);
@@ -1937,7 +1928,7 @@ LBLdispatcher:
    LBLreplaceBICall:
      {
        if (PC != NOCODE) {
-	 PushContX(PC,Y,CAP,X,argsToSave);
+	 PushContX(PC);
        }
 
        e->pushPreparedCalls();
@@ -2065,19 +2056,18 @@ LBLdispatcher:
   Case(CREATECOND)
     {
       ProgramCounter elsePC = PC+getLabelArg(PC+1);
-      int argsToSave = getPosIntArg(PC+2);
 
       CAA = new AskActor(CBB,CTT,
 			 elsePC ? elsePC : NOCODE,
-			 NOCODE, Y, CAP, X, argsToSave);
+			 NOCODE, Y, CAP, X, CAP->getPred()->getMaxX());
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
-      DISPATCH(3);
+      DISPATCH(2);
     }
 
   Case(CREATEOR)
     {
-      CAA = new WaitActor(CBB, CTT, NOCODE, Y, CAP, X, 0, NO);
+      CAA = new WaitActor(CBB, CTT, NOCODE, Y, CAP, NO);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
@@ -2088,7 +2078,7 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CTT, NOCODE, Y, CAP, X, 0, NO);
+      CAA = new WaitActor(bb, CTT, NOCODE, Y, CAP, NO);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
@@ -2105,7 +2095,7 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CTT, NOCODE, Y, CAP, X, 0, OK);
+      CAA = new WaitActor(bb, CTT, NOCODE, Y, CAP, OK);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
@@ -2176,32 +2166,6 @@ LBLdispatcher:
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
 
       tt->getTaskStackRef()->pushCont(newPC,newY,CAP);
-      tt->setSelf(e->getSelf());
-      tt->setAbstr(ozstat.currAbstr);
-
-      e->scheduleThread (tt);
-
-      JUMPRELATIVE(contPC);
-    }
-
-  Case(THREADX)
-    {
-      ProgramCounter newPC = PC+2;
-      int n = getPosIntArg(PC+1);
-      int contPC = getLabelArg(PC+2);
-
-      int prio = CPP;
-
-      if (prio > DEFAULT_PRIORITY) {
-	prio = DEFAULT_PRIORITY;
-      }
-
-      Thread *tt = e->mkRunnableThreadOPT(prio,CBB);
-
-      COUNT(numThreads);
-
-      tt->getTaskStackRef()->pushCont(newPC,0,CAP);
-      tt->getTaskStackRef()->pushX(X,n);
       tt->setSelf(e->getSelf());
       tt->setAbstr(ozstat.currAbstr);
 
@@ -2354,7 +2318,6 @@ LBLdispatcher:
        case BI_TYPE_ERROR: RAISE_TYPE(builtinTab.getEntry((void *) biFun));
 
        case BI_REPLACEBICALL: 
-	 argsToSave=predArity;
 	 PC = NOCODE;
 	 goto LBLreplaceBICall;
 
@@ -2467,13 +2430,13 @@ LBLdispatcher:
 	    literalEq(kind,AtomDebugCallF)) {
 	  // save abstraction and arguments:
 	  int arity = -1;
-	  switch (CodeArea::getOpcode(PC+6)) {
+	  switch (CodeArea::getOpcode(PC+5)) {
 	  case CALLBI:
 	    {
-	      Builtin *bi = GetBI(PC+7);
+	      Builtin *bi = GetBI(PC+6);
 	      dbg->data = makeTaggedConst(bi);
 	      int iarity = bi->getInArity(), oarity = bi->getOutArity();
-	      int *map = GetLoc(PC+8)->mapping();
+	      int *map = GetLoc(PC+7)->mapping();
 	      dbg->arguments = allocateRefsArray(iarity+oarity+1,NO);
 	      int i;
 	      for (i = 0; i < iarity; i++)
@@ -2485,29 +2448,29 @@ LBLdispatcher:
 	    }
 	    break;
 	  case CALLX:
-	    dbg->data = Xreg(getRegArg(PC+7));
-	    arity = getPosIntArg(PC+8);
+	    dbg->data = Xreg(getRegArg(PC+6));
+	    arity = getPosIntArg(PC+7);
 	    break;
 	  case CALLY:
-	    dbg->data = Yreg(getRegArg(PC+7));
-	    arity = getPosIntArg(PC+8);
+	    dbg->data = Yreg(getRegArg(PC+6));
+	    arity = getPosIntArg(PC+7);
 	    break;
 	  case CALLG:
-	    dbg->data = Greg(getRegArg(PC+7));
-	    arity = getPosIntArg(PC+8);
+	    dbg->data = Greg(getRegArg(PC+6));
+	    arity = getPosIntArg(PC+7);
 	    break;
 	  case GENFASTCALL:
 	  case FASTCALL:
 	    {
 	      Abstraction *abstr =
-		((AbstractionEntry *) getAdressArg(PC+7))->getAbstr();
+		((AbstractionEntry *) getAdressArg(PC+6))->getAbstr();
 	      dbg->data = makeTaggedConst(abstr);
 	      arity = abstr->getArity();
 	    }
 	    break;
 	  case MARSHALLEDFASTCALL:
-	    dbg->data = getTaggedArg(PC+7);
-	    arity = getPosIntArg(PC+8) >> 1;
+	    dbg->data = getTaggedArg(PC+6);
+	    arity = getPosIntArg(PC+7) >> 1;
 	    break;
 	  default:
 	    break;
@@ -2522,9 +2485,9 @@ LBLdispatcher:
 	} else if (literalEq(kind,AtomDebugLockC) ||
 		   literalEq(kind,AtomDebugLockF)) {
 	  // save the lock:
-	  switch (CodeArea::getOpcode(PC+6)) {
+	  switch (CodeArea::getOpcode(PC+5)) {
 	  case LOCKTHREAD:
-	    dbg->data = Xreg(getRegArg(PC+8));
+	    dbg->data = Xreg(getRegArg(PC+7));
 	    break;
 	  default:
 	    break;
@@ -2532,14 +2495,14 @@ LBLdispatcher:
 	} else if (literalEq(kind,AtomDebugCondC) ||
 		   literalEq(kind,AtomDebugCondF)) {
 	  // look whether we can determine the arbiter:
-	  switch (CodeArea::getOpcode(PC+6)) {
+	  switch (CodeArea::getOpcode(PC+5)) {
 	  case TESTLITERALX:
 	  case TESTNUMBERX:
 	  case TESTRECORDX:
 	  case TESTLISTX:
 	  case TESTBOOLX:
 	  case MATCHX:
-	    dbg->data = Xreg(getRegArg(PC+7));
+	    dbg->data = Xreg(getRegArg(PC+6));
 	    break;
 	  case TESTLITERALY:
 	  case TESTNUMBERY:
@@ -2547,7 +2510,7 @@ LBLdispatcher:
 	  case TESTLISTY:
 	  case TESTBOOLY:
 	  case MATCHY:
-	    dbg->data = Yreg(getRegArg(PC+7));
+	    dbg->data = Yreg(getRegArg(PC+6));
 	    break;
 	  case TESTLITERALG:
 	  case TESTNUMBERG:
@@ -2555,7 +2518,7 @@ LBLdispatcher:
 	  case TESTLISTG:
 	  case TESTBOOLG:
 	  case MATCHG:
-	    dbg->data = Greg(getRegArg(PC+7));
+	    dbg->data = Greg(getRegArg(PC+6));
 	    break;
 	  default:
 	    break;
@@ -2565,16 +2528,15 @@ LBLdispatcher:
 	if (CTT->getStep()) {
 	  CTT->pushDebug(dbg,DBG_STEP);
 	  debugStreamEntry(dbg,CTT->getTaskStackRef()->getFrameId());
-	  int regsToSave = getPosIntArg(PC+5);
-	  INCFPC(6);
-	  PushContX(PC,Y,CAP,X,regsToSave);
+	  INCFPC(5);
+	  PushContX(PC);
 	  return T_PREEMPT;
 	} else {
 	  CTT->pushDebug(dbg,DBG_NOSTEP);
 	}
       }
 
-      DISPATCH(6);
+      DISPATCH(5);
     }
 
   Case(DEBUGEXIT)
@@ -2590,10 +2552,10 @@ LBLdispatcher:
 	if (dothis != DBG_EXIT
 	    && (literalEq(getLiteralArg(PC+4),AtomDebugCallC) ||
 		literalEq(getLiteralArg(PC+4),AtomDebugCallF))
-	    && CodeArea::getOpcode(dbg->PC+6) == CALLBI) {
-	  Builtin *bi = GetBI(dbg->PC+7);
+	    && CodeArea::getOpcode(dbg->PC+5) == CALLBI) {
+	  Builtin *bi = GetBI(dbg->PC+6);
 	  int iarity = bi->getInArity(), oarity = bi->getOutArity();
-	  int *map = GetLoc(dbg->PC+8)->mapping();
+	  int *map = GetLoc(dbg->PC+7)->mapping();
 	  if (oarity)
 	    if (dbg->arguments[iarity] != makeTaggedNULL())
 	      for (int i = 0; i < oarity; i++) {
@@ -2611,14 +2573,14 @@ LBLdispatcher:
 	  dbg->PC = PC;
 	  CTT->pushDebug(dbg,DBG_EXIT);
 	  debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
-	  PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
+	  PushContX(PC);
 	  return T_PREEMPT;
 	}
 
 	dbg->dispose();
       }
 
-      DISPATCH(6);
+      DISPATCH(5);
     }
 
   Case(GENFASTCALL)
@@ -2641,7 +2603,7 @@ LBLdispatcher:
 
       DEREF(pred,predPtr,_1);
       if (oz_isVariable(pred)) {
-	SUSP_PC(predPtr,tailcallAndArity>>1,PC);
+	SUSP_PC(predPtr,PC);
       }
 
       if (oz_isAbstraction(pred)) {
@@ -2671,7 +2633,7 @@ LBLdispatcher:
       TaggedRef pred = CAP->getG(gci->regIndex);
       DEREF(pred,predPtr,_1);
       if (oz_isVariable(pred)) {
-	SUSP_PC(predPtr,getWidth(gci->arity),PC);
+	SUSP_PC(predPtr,PC);
       }
 
       if (genCallInfo(gci,pred,PC,X)) {
@@ -2784,11 +2746,9 @@ LBLdispatcher:
     }
     switch (tmpRet) {
     case BI_REPLACEBICALL:
-      argsToSave=CodeArea::livenessX(PC,X);
       goto LBLreplaceBICall;
     case SUSPEND:
-      argsToSave=CodeArea::livenessX(PC,X);
-      PushContX(PC,Y,CAP,X,argsToSave);
+      PushContX(PC);
       SUSPENDONVARLIST;
     case RAISE:
       RAISE_THREAD;
