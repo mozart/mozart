@@ -49,6 +49,7 @@ private:
   static OZ_CFun spawner;
 public:
   FirstsLasts(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
+  ~FirstsLasts();
   virtual size_t sizeOf(void) { return sizeof(FirstsLasts); }
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return run(void);

@@ -107,7 +107,7 @@ FirstsLasts::FirstsLasts(OZ_Term tasks, OZ_Term start,
 // DESTRUCTOR
 //////////
 
-FirstsLasts::~FirstsLasts(void)
+FirstsLasts::~FirstsLasts()
 {
 
   if (int(reg_durs[-1]) == 0) {

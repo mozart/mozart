@@ -5292,13 +5292,14 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
     message("Linking files\n %s\n",ofiles[0]);
   }
 
-  void *handle = (void *)LoadLibrary(ofiles[0]);
-  if (handle==NULL) {
-    OZ_warning("failed in linkObjectFiles: %d",GetLastError());
-    goto raise;
+  {
+    void *handle = (void *)LoadLibrary(ofiles[0]);
+    if (handle==NULL) {
+      OZ_warning("failed in linkObjectFiles: %d",GetLastError());
+      goto raise;
+    }
+    return OZ_unifyInt(out,ToInt32(handle));
   }
-  return OZ_unifyInt(out,ToInt32(handle));
-
 #endif
   return PROCEED;
 

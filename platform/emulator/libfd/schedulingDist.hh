@@ -54,6 +54,7 @@ private:
   static OZ_CFun spawner;
 public:
   TaskIntervalsProof(OZ_Term, OZ_Term, OZ_Term, OZ_Term, int);
+  ~TaskIntervalsProof(void);
   virtual size_t sizeOf(void) { return sizeof(TaskIntervalsProof); }
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return run(void);
