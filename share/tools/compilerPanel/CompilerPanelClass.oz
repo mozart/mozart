@@ -22,12 +22,12 @@
 local
    local
       proc {EscapeVariableChar Hd C|Cr Tl}
-	 case Cr of nil then Hd = C|Tl   % terminating quote
-	 elsecase C == &` orelse C == &\\ then Hd = &\\|C|Tl
-	 elsecase C < 10 then Hd = &\\|&x|&0|(&0 + C)|Tl
-	 elsecase C < 16 then Hd = &\\|&x|&0|(&A + C - 10)|Tl
-	 elsecase C < 26 then Hd = &\\|&x|&1|(&0 + C - 16)|Tl
-	 elsecase C < 32 then Hd = &\\|&x|&1|(&A + C - 26)|Tl
+	 if Cr == nil then Hd = C|Tl   % terminating quote
+	 elseif C == &` orelse C == &\\ then Hd = &\\|C|Tl
+	 elseif C < 10 then Hd = &\\|&x|&0|(&0 + C)|Tl
+	 elseif C < 16 then Hd = &\\|&x|&0|(&A + C - 10)|Tl
+	 elseif C < 26 then Hd = &\\|&x|&1|(&0 + C - 16)|Tl
+	 elseif C < 32 then Hd = &\\|&x|&1|(&A + C - 26)|Tl
 	 else Hd = C|Tl
 	 end
       end
@@ -48,7 +48,7 @@ local
 		   return#'Foreground'#black
 		compilerTextBackground:
 		   (return#'Background'#
-		    case Tk.isColor then c(239 239 239) else white end)
+		    if Tk.isColor then c(239 239 239) else white end)
 		compilerVSEntryWidth:
 		   returnInt#'Width'#40
 		compilerVSEntryHeight:
@@ -97,8 +97,9 @@ local
    Blue = c(0 0 191)
    Cyan = c(0 127 191)
    Green = c(0 191 0)
+   HotPink = c(255 105 180)
 
-   Colors = ['Undetermined'#Gray
+   Colors = ['Undetermined'#Gray 'Unknown'#HotPink
 	     'Int'#Red 'Float'#Red 'Atom'#Red 'Name'#Red
 	     'Record'#Magenta 'Tuple'#Magenta
 	     'Procedure'#Black
@@ -112,27 +113,28 @@ local
 	     'Finite Set Value'#Red 'Foreign Pointer'#Red]
 
    fun {SetColor TextWidget PrintName Value ColorDict} C in
-      C = case {IsDet Value} then Type in
-	     case {IsInt Value} then 'Int'
-	     elsecase {IsFloat Value} then 'Float'
-	     elsecase {IsAtom Value} then 'Atom'
-	     elsecase {IsName Value} then 'Name'
-	     elsecase {IsTuple Value} then 'Tuple'
-	     elsecase {IsRecord Value} then 'Record'
-	     elsecase {IsProcedure Value} then 'Procedure'
-	     elsecase {IsCell Value} then 'Cell'
-	     elsecase {IsArray Value} then 'Array'
-	     elsecase {BitArray.is Value} then 'Bit Array'
-	     elsecase {IsDictionary Value} then 'Dictionary'
-	     elsecase {IsClass Value} then 'Class'
-	     elsecase {IsObject Value} then 'Object'
-	     elsecase {IsPort Value} then 'Port'
-	     elsecase {IsLock Value} then 'Lock'
-	     elsecase {IsChunk Value} then 'Chunk'
-	     elsecase {IsThread Value} then 'Thread'
-	     elsecase {IsSpace Value} then 'Space'
-	     elsecase {FS.value.is Value} then 'Finite Set Value'
-	     elsecase {ForeignPointer.is Value} then 'Foreign Pointer'
+      C = if {IsDet Value} then Type in
+	     if {IsInt Value} then 'Int'
+	     elseif {IsFloat Value} then 'Float'
+	     elseif {IsAtom Value} then 'Atom'
+	     elseif {IsName Value} then 'Name'
+	     elseif {IsTuple Value} then 'Tuple'
+	     elseif {IsRecord Value} then 'Record'
+	     elseif {IsProcedure Value} then 'Procedure'
+	     elseif {IsCell Value} then 'Cell'
+	     elseif {IsArray Value} then 'Array'
+	     elseif {BitArray.is Value} then 'Bit Array'
+	     elseif {IsDictionary Value} then 'Dictionary'
+	     elseif {IsClass Value} then 'Class'
+	     elseif {IsObject Value} then 'Object'
+	     elseif {IsPort Value} then 'Port'
+	     elseif {IsLock Value} then 'Lock'
+	     elseif {IsChunk Value} then 'Chunk'
+	     elseif {IsThread Value} then 'Thread'
+	     elseif {IsSpace Value} then 'Space'
+	     elseif {FS.value.is Value} then 'Finite Set Value'
+	     elseif {ForeignPointer.is Value} then 'Foreign Pointer'
+	     else 'Unknown'
 	     end = Type
 	     {Dictionary.get ColorDict Type}
 	  else
@@ -445,7 +447,7 @@ local
 	 {Tk.return tk_getSaveFile(parent: self
 				   title: 'Oz Compiler Panel: Save Source Text'
 				   filetypes: q(q('All Files' '*')))}
-	 case FileName == "" then skip
+	 if FileName == "" then skip
 	 else File in
 	    File = {New Open.file init(name: FileName
 				       flags: [write create truncate])}
@@ -472,27 +474,27 @@ local
 	       end
 	    [] &\\ then
 	       case Sr of S1|Sr then
-		  case {HasFeature Oct S1} then
+		  if {HasFeature Oct S1} then
 		     case Sr of S2|S3|Sr then
-			case {HasFeature Oct S2} andthen {HasFeature Oct S3}
+			if {HasFeature Oct S2} andthen {HasFeature Oct S3}
 			then C in
 			   C = Oct.S1 * 0100 + Oct.S2 * 010 + Oct.S3
-			   case {IsChar C} then C|{QuotedToPrintName Sr}
+			   if {IsChar C} then C|{QuotedToPrintName Sr}
 			   else raise notAPrintName end
 			   end
 			else raise notAPrintName end
 			end
 		     else raise notAPrintName end
 		     end
-		  elsecase S1 == &x orelse S1 == &X then
+		  elseif S1 == &x orelse S1 == &X then
 		     case Sr of S2|S3|Sr then
-			case {HasFeature Hex S2} andthen {HasFeature Hex S3}
+			if {HasFeature Hex S2} andthen {HasFeature Hex S3}
 			then (Hex.S2 * 0x10 + Hex.S3)|{QuotedToPrintName Sr}
 			else raise notAPrintName end
 			end
 		     else raise notAPrintName end
 		     end
-		  elsecase {HasFeature Escapes S1} then
+		  elseif {HasFeature Escapes S1} then
 		     Escapes.S1|{QuotedToPrintName Sr}
 		  else raise notAPrintName end
 		  end
@@ -507,8 +509,8 @@ local
    in
       fun {StringToPrintName S}
 	 case S of S1|Sr then
-	    case S1 of &` then {String.toAtom &`|{QuotedToPrintName Sr}}
-	    elsecase {Char.isUpper S1}
+	    if S1 == &` then {String.toAtom &`|{QuotedToPrintName Sr}}
+	    elseif {Char.isUpper S1}
 	       andthen {All Sr fun {$ C} {Char.isAlNum C} orelse C == &_ end}
 	    then {String.toAtom S}
 	    else raise notAPrintName end
@@ -519,7 +521,7 @@ local
    end
 
    fun {MakeSpaces N}
-      case N =< 0 then ""
+      if N =< 0 then ""
       else & |{MakeSpaces N - 1}
       end
    end
@@ -577,8 +579,8 @@ local
    end
 
    fun {RemoveQuery Hd Id I ?Pos}
-      case {IsDet Hd} then
-	 case Hd.1 == Id then
+      if {IsDet Hd} then
+	 if Hd.1 == Id then
 	    Pos = I
 	    Hd.2
 	 else
@@ -590,7 +592,7 @@ local
       end
    end
 in
-   class CompilerPanel from Compiler.genericInterface
+   class CompilerPanel from Listener.'class'
       prop locking final
       attr
 	 ErrorTagCounter: 0
@@ -600,7 +602,6 @@ in
       feat
 	 isClosed
 	 TopLevel ToGray InterruptMenuItem InterruptButton
-	 %--** SuspendButton
 	 DequeueQueryButton ClearQueueButton
 	 SystemVariables ColorDict
 	 Actions ActionVariable ActionDict NColsInEnv
@@ -614,121 +615,128 @@ in
       %%
 
       meth init(CompilerObject Iconified <= false)
-	 Compiler.genericInterface, init(CompilerObject Serve)
+	 Listener.'class', init(CompilerObject Serve)
 	 CompilerPanel, DoInit(Iconified)
       end
       meth close()
 	 thread   % so that we don't kill ourselves ;-)
 	    lock
 	       self.isClosed = unit
-	       Compiler.genericInterface, close()
+	       Listener.'class', close()
 	       {self.TopLevel tkClose()}
 	    end
 	 end
       end
+      meth enqueue(M)
+	 {Listener.'class', getNarrator($) enqueue(M)}
+      end
       meth Serve(Ms)
-	 case {IsDet self.isClosed} then skip
-	 elsecase Ms of M|Mr then
-	    lock
-	       case M of newQuery(Id M) then X in
-		  {self.QueryList tk(insert 'end' {FormatQuery Id M})}
-		  @QueryIdsTl = Id|X
-		  QueryIdsTl <- X
-		  {self.ClearQueueButton tk(configure state: normal)}
-	       [] runQuery(Id M) then Pos VS in
-		  QueryIdsHd <- {RemoveQuery @QueryIdsHd Id 0 ?Pos}
-		  case {IsFree @QueryIdsHd} then
-		     {self.ClearQueueButton tk(configure state: disabled)}
-		  else skip
-		  end
-		  {self.QueryList tk(delete Pos)}
-		  case {self.QueryList tkReturnListInt(curselection $)}
-		  of nil then
-		     {self.DequeueQueryButton tk(configure state: disabled)}
-		  else skip
-		  end
-		  VS = {FormatQuery Id M}
-		  {Tk.batch [o(self.CurrentQuery configure state: normal)
-			     o(self.CurrentQuery insert '0' VS)
-			     o(self.CurrentQuery configure state: disabled)]}
-	       [] removeQuery(Id) then Pos in
-		  QueryIdsHd <- {RemoveQuery @QueryIdsHd Id 0 ?Pos}
-		  case Pos == ~1 then
-		     {Tk.batch
-		      [o(self.CurrentQuery configure state: normal)
-		       o(self.CurrentQuery delete '0' 'end')
-		       o(self.CurrentQuery configure state: disabled)]}
-		  else
+	 if {IsDet self.isClosed} then skip
+	 else
+	    case Ms of M|Mr then
+	       lock
+		  case M of newQuery(Id M) then X in
+		     {self.QueryList tk(insert 'end' {FormatQuery Id M})}
+		     @QueryIdsTl = Id|X
+		     QueryIdsTl <- X
+		     {self.ClearQueueButton tk(configure state: normal)}
+		  [] runQuery(Id M) then Pos VS in
+		     QueryIdsHd <- {RemoveQuery @QueryIdsHd Id 0 ?Pos}
+		     if {IsFree @QueryIdsHd} then
+			{self.ClearQueueButton tk(configure state: disabled)}
+		     else skip
+		     end
 		     {self.QueryList tk(delete Pos)}
 		     case {self.QueryList tkReturnListInt(curselection $)}
 		     of nil then
 			{self.DequeueQueryButton tk(configure state: disabled)}
 		     else skip
 		     end
-		     case {IsFree @QueryIdsHd} then
-			{self.ClearQueueButton tk(configure state: disabled)}
+		     VS = {FormatQuery Id M}
+		     {Tk.batch [o(self.CurrentQuery configure state: normal)
+				o(self.CurrentQuery insert '0' VS)
+				o(self.CurrentQuery configure
+				  state: disabled)]}
+		  [] removeQuery(Id) then Pos in
+		     QueryIdsHd <- {RemoveQuery @QueryIdsHd Id 0 ?Pos}
+		     if Pos == ~1 then
+			{Tk.batch
+			 [o(self.CurrentQuery configure state: normal)
+			  o(self.CurrentQuery delete '0' 'end')
+			  o(self.CurrentQuery configure state: disabled)]}
+		     else
+			{self.QueryList tk(delete Pos)}
+			case {self.QueryList tkReturnListInt(curselection $)}
+			of nil then
+			   {self.DequeueQueryButton tk(configure
+						       state: disabled)}
+			else skip
+			end
+			if {IsFree @QueryIdsHd} then
+			   {self.ClearQueueButton tk(configure
+						     state: disabled)}
+			else skip
+			end
+		     end
+		  [] busy() then
+		     CompilerPanel, SetWidgetsState(self.ToGray disabled)
+		     {self.InterruptButton tk(configure state: normal)}
+		     {self.InterruptMenuItem tk(entryconfigure state: normal)}
+		  [] idle() then
+		     CompilerPanel, SetWidgetsState(self.ToGray normal)
+		     {self.InterruptButton tk(configure state: disabled)}
+		     {self.InterruptMenuItem tk(entryconfigure
+						state: disabled)}
+		  [] switch(SwitchName B) then
+		     if {HasFeature self.SwitchRec SwitchName} then
+			{self.SwitchRec.SwitchName tkSet(B)}
 		     else skip
 		     end
-		  end
-	       [] busy() then
-		  CompilerPanel, SetWidgetsState(self.ToGray disabled)
-		  {self.InterruptButton tk(configure state: normal)}
-		  %--** {self.SuspendButton tk(configure state: normal)}
-		  {self.InterruptMenuItem tk(entryconfigure state: normal)}
-	       [] idle() then
-		  CompilerPanel, SetWidgetsState(self.ToGray normal)
-		  {self.InterruptButton tk(configure state: disabled)}
-		  %--** {self.SuspendButton tk(configure state: disabled)}
-		  {self.InterruptMenuItem tk(entryconfigure state: disabled)}
-	       [] switch(SwitchName B) then
-		  case {HasFeature self.SwitchRec SwitchName} then
-		     {self.SwitchRec.SwitchName tkSet(B)}
-		  else skip
-		  end
-	       [] switches(Rec) then
-		  {Record.forAllInd self.SwitchRec
-		   proc {$ SwitchName Variable}
-		      {Variable tkSet(Rec.SwitchName)}
-		   end}
-	       [] maxNumberOfErrors(N) then
-		  case N =< 0 then
-		     {self.HasMaxErrorsEnabled tkSet(false)}
-		  else
-		     {self.HasMaxErrorsEnabled tkSet(true)}
-		     {self.MaxNumberOfErrors tkSet(N)}
-		  end
-	       [] env(Env) then
-		  CachedEnv <- Env
-		  CompilerPanel, RedisplayEnv()
-	       [] info(VS) then
-		  CompilerPanel, ShowInfo(VS)
-	       [] info(VS Coord) then
-		  CompilerPanel, ShowInfo(VS Coord)
-	       [] message(Record Coord) then VSCell State in
-		  case {Label Record} of error then
+		  [] switches(Rec) then
+		     {Record.forAllInd self.SwitchRec
+		      proc {$ SwitchName Variable}
+			 {Variable tkSet(Rec.SwitchName)}
+		      end}
+		  [] maxNumberOfErrors(N) then
+		     if N =< 0 then
+			{self.HasMaxErrorsEnabled tkSet(false)}
+		     else
+			{self.HasMaxErrorsEnabled tkSet(true)}
+			{self.MaxNumberOfErrors tkSet(N)}
+		     end
+		  [] env(Env) then
+		     CachedEnv <- Env
+		     CompilerPanel, RedisplayEnv()
+		  [] info(VS) then
+		     CompilerPanel, ShowInfo(VS)
+		  [] info(VS Coord) then
+		     CompilerPanel, ShowInfo(VS Coord)
+		  [] message(Record Coord) then VSCell State in
+		     case {Label Record} of error then
+			{self.Book toTop(self.Messages)}
+		     else skip
+		     end
+		     VSCell = {NewCell ""}
+		     {Error.msg
+		      proc {$ X}
+			 {Assign VSCell {Access VSCell}#{Error.formatLine X}}
+		      end
+		      Record}
+		     State = case {Label Record} of error then blocked
+			     else runnable
+			     end
+		     CompilerPanel, ShowInfo({Access VSCell} Coord State)
+		  [] displaySource(Title _ VS) then
+		     {New SourceWindow init(self.TopLevel Title VS) _}
+		  [] attention() then skip
 		     {self.Book toTop(self.Messages)}
-		  else skip
+		  [] pong() then skip
+		  [] insert(_ _) then skip
+		  else {self M}
 		  end
-		  VSCell = {NewCell ""}
-		  {Error.msg
-		   proc {$ X}
-		      {Assign VSCell {Access VSCell}#{Error.formatLine X}}
-		   end
-		   Record}
-		  State = case {Label Record} of error then blocked
-			  else runnable
-			  end
-		  CompilerPanel, ShowInfo({Access VSCell} Coord State)
-	       [] displaySource(Title _ VS) then
-		  {New SourceWindow init(self.TopLevel Title VS) _}
-	       [] attention() then skip
-		  {self.Book toTop(self.Messages)}
-	       [] pong() then skip
-	       [] insert(_ _) then skip
-	       else {self M}
 	       end
+	       CompilerPanel, Serve(Mr)
 	    end
-	    CompilerPanel, Serve(Mr)
 	 end
       end
       meth SetWidgetsState(Widgets State)
@@ -741,7 +749,7 @@ in
       meth ShowInfo(VS Coord <= unit State <= runnable) Begin Middle End in
 	 End = [o(self.Text configure state: disabled)]
 	 Middle =
-	 case {self.ScrollToBottom tkReturnInt($)} == 1 then
+	 if {self.ScrollToBottom tkReturnInt($)} == 1 then
 	    o(self.Text see 'end')|End
 	 else End
 	 end
@@ -757,7 +765,7 @@ in
 	       ErrorTagCounter <- Tag + 1
 	       Action = {New Tk.action
 			 tkInit(parent: self.Text
-				action: (Compiler.genericInterface, getPort($)#
+				action: (Listener.'class', getPort($)#
 					 Goto(File Line Column State)))}
 	       o(self.Text insert 'end' VS Tag)|
 	       o(self.Text tag bind Tag '<1>' Action)|
@@ -769,7 +777,7 @@ in
 
       meth addAction(ActionName Proc)
 	 lock
-	    case {IsDet self.isClosed} then skip
+	    if {IsDet self.isClosed} then skip
 	    else
 	       ActionCount <- @ActionCount + 1
 	       {New Tk.menuentry.radiobutton
@@ -789,7 +797,7 @@ in
 
       meth DoInit(Iconified)
 	 fun {MkAction M}
-	    Compiler.genericInterface, getPort($)#M
+	    Listener.'class', getPort($)#M
 	 end
 
 	 self.TopLevel = {New Tk.toplevel
@@ -867,7 +875,7 @@ in
 			     menu: [command(label: 'About ...'
 					    action: {MkAction
 						     AboutDialog()})])]}
-	 case Tk.isColor then skip
+	 if Tk.isColor then skip
 	 else {Menu.options.colors tk(entryconfigure state: disabled)}
 	 end
 
@@ -1221,9 +1229,6 @@ in
 					   text: 'Dequeue query'
 					   state: disabled
 					   action: {MkAction DequeueQuery()})}
-%--**	 self.SuspendButton = {New Tk.checkbutton
-%--**			       tkInit(parent: QueueControlFrame
-%--**				      text: 'Suspend')}
 	 self.ClearQueueButton = {New Tk.button
 				  tkInit(parent: QueueControlFrame
 					 text: 'Clear queue'
@@ -1275,11 +1280,10 @@ in
 			 side: left fill: both expand: true)
 		    grid(QueueControlFrame row: 3 column: 1 columnspan: 2
 			 sticky: nsew)
-		    pack(%--** self.SuspendButton
-			 self.DequeueQueryButton self.ClearQueueButton
+		    pack(self.DequeueQueryButton self.ClearQueueButton
 			 side: left fill: x expand: true)
 		    update(idletasks)]}
-	 case Iconified then
+	 if Iconified then
 	    {Tk.send wm(iconify self.TopLevel)}
 	 else
 	    {Tk.send wm(deiconify self.TopLevel)}
@@ -1346,42 +1350,40 @@ in
 				   title: 'Oz Compiler Panel: Feed File'
 				   filetypes: q(q('Oz Source Files' q('.oz'))
 						q('All Files' '*')))}
-	 case FileName == "" then skip
+	 if FileName == "" then skip
 	 else
-	    Compiler.genericInterface, enqueue(feedFile(FileName))
+	    CompilerPanel, enqueue(feedFile(FileName))
 	 end
       end
       meth FeedVirtualString()
 	 {New VSEntryDialog
-	  init(self.TopLevel Compiler.genericInterface, getPort($)
+	  init(self.TopLevel Listener.'class', getPort($)
 	       @LastFeededVS) _}
       end
       meth !DoFeedVirtualString(VS)
-	 case {IsDet self.isClosed} then skip
+	 if {IsDet self.isClosed} then skip
 	 else
 	    LastFeededVS <- VS
-	    Compiler.genericInterface, enqueue(feedVirtualString(VS))
+	    CompilerPanel, enqueue(feedVirtualString(VS))
 	 end
       end
       meth DequeueQuery()
 	 case {self.QueryList tkReturnListInt(curselection $)}
 	 of [N] then
-	    {Compiler.genericInterface, getNarrator($)
+	    {Listener.'class', getNarrator($)
 	     dequeue({Nth @QueryIdsHd N + 1})}
 	 else skip
 	 end
       end
       meth Interrupt()
-	 {Compiler.genericInterface, getNarrator($) interrupt()}
+	 {Listener.'class', getNarrator($) interrupt()}
       end
       meth Reset()
 	 CompilerPanel, ClearTaskQueue()
 	 CompilerPanel, Interrupt()
-	 %--** CompilerPanel, ClearInfo()
-	 %--** {self.Compiler init()}
       end
       meth ClearTaskQueue()
-	 {Compiler.genericInterface, getNarrator($) clearQueue()}
+	 {Listener.'class', getNarrator($) clearQueue()}
       end
       meth AboutDialog()
 	 Dialog = {New TkTools.dialog tkInit(master: self.TopLevel
@@ -1437,7 +1439,7 @@ in
 	      S = {VirtualString.toString
 		   {PrintNameToVirtualString PrintName}}
 	      Len = {Length S}
-	      case Len > NCharsInCol then
+	      if Len > NCharsInCol then
 		 {List.take S NCharsInCol - 3}#"..."
 	      else
 		 S#{MakeSpaces NCharsInCol - Len}
@@ -1445,7 +1447,7 @@ in
 	   end}
 	  fun {$ Sp#N S}
 	     {Put RowArray N {Get RowArray N}#Sp#S}
-	     case N < Rows then Sp#(N + 1)
+	     if N < Rows then Sp#(N + 1)
 	     else ' '#1
 	     end
 	  end ''#1 _#_}
@@ -1462,28 +1464,28 @@ in
 	     Ind2 = p(N C + NCharsInCol)
 	     Action1 = {New Tk.action
 			tkInit(parent: self.EnvDisplay
-			       action: (Compiler.genericInterface, getPort($)#
+			       action: (Listener.'class', getPort($)#
 					SelectEnv(PrintName)))}
 	     Action2 = {New Tk.action
 			tkInit(parent: self.EnvDisplay
-			       action: (Compiler.genericInterface, getPort($)#
+			       action: (Listener.'class', getPort($)#
 					ExecuteEnv(PrintName)))}
 	     NewTickles =
 	     o(self.EnvDisplay tag add q(PrintName) Ind1 Ind2)|
 	     o(self.EnvDisplay tag bind q(PrintName) '<1>' Action1)|
 	     o(self.EnvDisplay tag bind q(PrintName) '<Double-1>' Action2)|
-	     case @ColoringIsEnabled then
+	     if @ColoringIsEnabled then
 		{SetColor self.EnvDisplay PrintName @CachedEnv.PrintName
 		 self.ColorDict}|Tickles
 	     else Tickles
 	     end
 	     {Dictionary.put @TagDict PrintName Ind1#Ind2#Action1#Action2}
-	     case N < Rows then (N + 1)#C#NewTickles
+	     if N < Rows then (N + 1)#C#NewTickles
 	     else 1#(C + NCharsInCol + 1)#NewTickles
 	     end
 	  end 1#0#(o(self.EnvDisplay configure state: disabled)|
-		   case {HasFeature @CachedEnv @EnvSelection} then
-		      case Tk.isColor then
+		   if {HasFeature @CachedEnv @EnvSelection} then
+		      if Tk.isColor then
 			 [o(self.EnvDisplay tag configure q(@EnvSelection)
 			    background: wheat)
 			  o(self.EnvDisplay yview moveto Fraction)]
@@ -1505,7 +1507,7 @@ in
       end
       meth ConfigureColors()
 	 {New ColorConfigurationDialog
-	  init(self.TopLevel Compiler.genericInterface, getPort($)
+	  init(self.TopLevel Listener.'class', getPort($)
 	       {Map Colors fun {$ T#_} T#{Dictionary.get self.ColorDict T} end}
 	       @ColoringIsEnabled) _}
       end
@@ -1513,7 +1515,7 @@ in
 	 {ForAll Colors proc {$ T#C} {Dictionary.put self.ColorDict T C} end}
 	 ColoringIsEnabled <- IsEnabled
 	 {Tk.batch
-	  case IsEnabled then
+	  if IsEnabled then
 	     {Map {Record.toListInd @CachedEnv}
 	      fun {$ PrintName#Value}
 		 {SetColor self.EnvDisplay PrintName Value self.ColorDict}
@@ -1535,13 +1537,13 @@ in
 	     o(self.EnvDisplay tag add q(PrintName) Ind1 Ind2)|
 	     o(self.EnvDisplay tag bind q(PrintName) '<1>' Action1)|
 	     o(self.EnvDisplay tag bind q(PrintName) '<Double-1>' Action2)|
-	     case @ColoringIsEnabled then
+	     if @ColoringIsEnabled then
 		[{SetColor self.EnvDisplay PrintName @CachedEnv.PrintName
 		  self.ColorDict}]
 	     else nil
 	     end}
 	 end
-	 case Tk.isColor then
+	 if Tk.isColor then
 	    {self.EnvDisplay tk(tag configure q(PrintName) background: wheat)}
 	 else
 	    {self.EnvDisplay tk(tag configure q(PrintName)
@@ -1559,9 +1561,9 @@ in
       end
       meth RemoveVariable() PrintName in
 	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
-	 case {HasFeature @CachedEnv PrintName} then
+	 if {HasFeature @CachedEnv PrintName} then
 	    %--** the above is an insufficient test, but workable for now
-	    Compiler.genericInterface, enqueue(removeFromEnv(PrintName))
+	    CompilerPanel, enqueue(removeFromEnv(PrintName))
 	 else
 	    {New TkTools.error
 	     tkInit(master: self.TopLevel
@@ -1570,9 +1572,9 @@ in
       end
       meth PickleVariable() PrintName in
 	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
-	 case {HasFeature @CachedEnv PrintName} then Value in
+	 if {HasFeature @CachedEnv PrintName} then Value in
 	    Value = @CachedEnv.PrintName
-	    {Send Compiler.genericInterface, getPort($)
+	    {Send Listener.'class', getPort($)
 	     DoPickleVariable(Value)}
 	 else
 	    {New TkTools.error
@@ -1588,7 +1590,7 @@ in
 				      q(q('Oz Pickles'
 					  q(UrlDefaults.pickle))
 					q('All Files' '*')))}
-	 case FileName == "" then skip
+	 if FileName == "" then skip
 	 else {Pickle.save Value FileName}
 	 end
       end
@@ -1597,7 +1599,7 @@ in
 	 try PrintName in
 	    PrintName = {StringToPrintName S}
 	    {New URLEntryDialog
-	     init(self.TopLevel Compiler.genericInterface, getPort($)
+	     init(self.TopLevel Listener.'class', getPort($)
 		  PrintName @LastURL) _}
 	 catch notAPrintName then
 	    {New TkTools.error
@@ -1614,14 +1616,13 @@ in
 	     tkInit(master: self.TopLevel
 		    text: 'Unpickle failed for URL "'#URL#'"') _}
 	 end
-	 Compiler.genericInterface,
-	 enqueue(mergeEnv(env(PrintName: Value)))
+	 CompilerPanel, enqueue(mergeEnv(env(PrintName: Value)))
       end
       meth CreateSyslet() PrintName in
 	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
-	 case {HasFeature @CachedEnv PrintName} then Value in
+	 if {HasFeature @CachedEnv PrintName} then Value in
 	    Value = @CachedEnv.PrintName
-	    {Send Compiler.genericInterface, getPort($) DoCreateSyslet(Value)}
+	    {Send Listener.'class', getPort($) DoCreateSyslet(Value)}
 	 else
 	    {New TkTools.error
 	     tkInit(master: self.TopLevel
@@ -1636,33 +1637,33 @@ in
 				      q(q('Oz Pickles'
 					  q(UrlDefaults.pickle))
 					q('All Files' '*')))}
-	 case FileName == "" then skip
+	 if FileName == "" then skip
 	 else {Application.save FileName Value}
 	 end
       end
 
       meth Switch(SwitchName)
-	 case {self.SwitchRec.SwitchName tkReturnInt($)} == 1 then
+	 if {self.SwitchRec.SwitchName tkReturnInt($)} == 1 then
 	    {self.SwitchRec.SwitchName tkSet(false)}
-	    Compiler.genericInterface, enqueue(setSwitch(SwitchName true))
+	    CompilerPanel, enqueue(setSwitch(SwitchName true))
 	 else
 	    {self.SwitchRec.SwitchName tkSet(true)}
-	    Compiler.genericInterface, enqueue(setSwitch(SwitchName false))
+	    CompilerPanel, enqueue(setSwitch(SwitchName false))
 	 end
       end
       meth SetMaxErrorsCheck()
-	 case {self.HasMaxErrorsEnabled tkReturnInt($)} == 1 then N in
+	 if {self.HasMaxErrorsEnabled tkReturnInt($)} == 1 then N in
 	    {self.MaxNumberOfErrors tkReturnInt(?N)}
-	    Compiler.genericInterface, enqueue(setMaxNumberOfErrors(N))
+	    CompilerPanel, enqueue(setMaxNumberOfErrors(N))
 	 else
-	    Compiler.genericInterface, enqueue(setMaxNumberOfErrors(~1))
+	    CompilerPanel, enqueue(setMaxNumberOfErrors(~1))
 	 end
       end
       meth SetMaxErrorsCount(N)
-	 case {self.HasMaxErrorsEnabled tkReturnInt($)} == 1 then
-	    Compiler.genericInterface, enqueue(setMaxNumberOfErrors(N))
+	 if {self.HasMaxErrorsEnabled tkReturnInt($)} == 1 then
+	    CompilerPanel, enqueue(setMaxNumberOfErrors(N))
 	 else
-	    Compiler.genericInterface, enqueue(setMaxNumberOfErrors(~1))
+	    CompilerPanel, enqueue(setMaxNumberOfErrors(~1))
 	 end
       end
    end
