@@ -257,6 +257,8 @@ in
 					     feature: history)])
 		  ]
 		  nil}
+	 {Menu.panel.menu   tk(conf tearoff:False)}
+	 {Menu.options.menu tk(conf tearoff:False)}
 	 Frame = {New Tk.frame tkInit(parent: EventFrame
 				      highlightthickness: 0
 				      bd:                 4)}
