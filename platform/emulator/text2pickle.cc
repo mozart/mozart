@@ -28,7 +28,6 @@ void error(const char *format, ...)
 
 /************************************************************/
 
-int xx=0;
 class MsgBuffer {
   FILE *fd;
   int mode;
@@ -36,7 +35,7 @@ class MsgBuffer {
 public:
   MsgBuffer(FILE *f, int m): fd(f), mode(m) {}
   int textmode()   { return mode!=0; }
-  void put(char c) { xx++; fputc(c,fd); }
+  void put(char c) { fputc(c,fd); }
 };
 
 
