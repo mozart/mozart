@@ -1620,11 +1620,11 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   if (space->isMerged())
     return raiseKernel("spaceMerged",1,tagged_space);
 
-  if (am.isBelow(am.currentBoard,space->getSolveBoard()->derefBoard()))
-    return raiseKernel("spaceSuper",1,tagged_space);
-
   if (space->isFailed())
     return FAILED;
+
+  if (am.isBelow(am.currentBoard,space->getSolveBoard()->derefBoard()))
+    return raiseKernel("spaceSuper",1,tagged_space);
 
   Board *CBB = am.currentBoard;
 
