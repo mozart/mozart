@@ -27,6 +27,10 @@
 #ifndef __VAR_OBJ__HH__
 #define __VAR_OBJ__HH__
 
+#if defined(INTERFACE)
+#pragma interface
+#endif
+
 #include "dpBase.hh"
 #include "var_ext.hh"
 
@@ -61,8 +65,8 @@ public:
   }
 
   int getIdV() { return OZ_EVAR_OBJECT; }
-  OZ_Term statusV() { return OZ_atom("unknown"); }
-  OZ_Term isDetV() { return OZ_true(); }
+  OZ_Term statusV();
+  VarStatus checkStatusV();
   Bool addSuspV(TaggedRef *v, Suspension susp, int unstable);
   Bool validV(TaggedRef v) { return FALSE; }
   ExtVar *gcV() { return new ObjectVar(*this); }

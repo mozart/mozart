@@ -635,22 +635,19 @@ void msgReceived(MsgBuffer* bs)
       break;
     }
 
-  case M_ISDET:
+  case M_GETSTATUS:
     {
       int OTI;
       TaggedRef v;
-      unmarshal_M_ISDET(bs,OTI,v);
-      PD((MSG_RECEIVED,"M_ISDET index:%d val:%s",OTI,toC(v)));
+      unmarshal_M_GETSTATUS(bs,OTI,v);
+      PD((MSG_RECEIVED,"M_GETSTATUS index:%d val:%s",OTI,toC(v)));
       OwnerEntry *oe = receiveAtOwner(OTI);
-      // RS: please recheck: !oe->isVar does not mean its determined
-      //     may be bound to other var.
-      SiteUnify(v,oe->isVar()?OZ_false():OZ_true());
+      SiteUnify(v,oz_status(oe->getValue()));
       break;
     }
 
   case M_ACKNOWLEDGE:
     {
-      
       DSite* sd;
       int si;
       unmarshal_M_ACKNOWLEDGE(bs,sd,si);
