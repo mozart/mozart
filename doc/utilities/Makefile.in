@@ -58,9 +58,11 @@ DOCFILES = $(DOCDIR)/html.bst
 ELISPFILES = $(ELS:%=$(ELISPDIR)/%) $(ELCS:%=$(ELISPDIR)/%)
 CSSFILES = $(CSSDIR)/ozdoc.css $(CSSDIR)/page.gif
 
-.PHONY: bootstrap all clean veryclean distclean
+.PHONY: bootstrap all clean veryclean distclean quick
 
 all: $(FUNCTORS) $(SYSLETS) $(ELCS)
+
+quick:
 
 include $(SRCTOP)/share/Makefile.boot
 
