@@ -39,6 +39,7 @@ BUILDTOP=`cd ../.. && pwd`
 AC_SUBST(BUILDTOP)
 
 AC_PROG_CC
+AC_PROG_CPP
 
 AC_PROG_LN_S
 
@@ -64,10 +65,28 @@ dnl *****************************************************************
 dnl Checks for libraries.
 dnl *****************************************************************
 
+# intl is required when linking statically
+AC_CHECK_LIB(intl, dgettext)
 AC_CHECK_LIB(nsl, gethostbyaddr)
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(m, fabs)
 AC_CHECK_LIB(dl, dlopen)
+
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
+
+AC_ARG_ENABLE(link-static,
+  [--enable-link-static  link libraries statically (default=no)])
+
+AC_MSG_CHECKING(whether to link libraries statically)
+
+if test "${enable_link_static}" = yes; then
+    AC_MSG_RESULT(yes)
+else
+   AC_MSG_RESULT(no)
+fi
+
 
 dnl *****************************************************************
 dnl *** X11
@@ -105,15 +124,17 @@ fi
 : ${oz_x11_lib_dir=/usr/X11R6/lib}
 : ${oz_x11_inc_dir=/usr/X11R6/include}
 
-AC_MSG_RESULT(trying \"-L$oz_x11_lib_dir -I$oz_x11_inc_dir\")
+: ${oz_inc_path="/usr/local/include /usr/X11R6/include /usr/X11/include /opt/X11R6/include /opt/X11/include"}
+: ${oz_lib_path="/usr/local/lib /opt/X11/lib /usr/X11/lib /usr/X11R6/lib /opt/X11R6/lib"}
 
-CPPFLAGS="-I$oz_x11_inc_dir $CPPFLAGS"
-AC_CHECK_HEADER(X11/Xlib.h,,
+oz_inc_path="$oz_x11_inc_dir $oz_inc_path"
+oz_lib_path="$oz_x11_lib_dir $oz_lib_path"
+
+OZ_CHECK_HEADER_PATH(X11/Xlib.h,,
         AC_MSG_ERROR(required X include files not found))
 
-LDFLAGS="-L$oz_x11_lib_dir $LDFLAGS"
-AC_CHECK_LIB(X11, XOpenDisplay, ,
-        AC_MSG_ERROR(required lib "-lX11" not found))
+OZ_CHECK_LIB_PATH(X11, XOpenDisplay,,
+        AC_MSG_ERROR(required lib X11 not found))
 
 dnl *****************************************************************
 dnl *** Tcl/Tk
@@ -162,15 +183,14 @@ fi
 : ${oz_tcl_inc_dir=/usr/include}
 : ${oz_tcl_lib_tcl_dir=/usr/lib/tcl8.0}
 
-AC_MSG_RESULT(trying \"-L$oz_tcl_lib_dir -I$oz_tcl_inc_dir\")
+oz_inc_path="$oz_tcl_inc_dir $oz_inc_path"
+oz_lib_path="$oz_tcl_lib_dir $oz_inc_path"
 
-CPPFLAGS="-I$oz_tcl_inc_dir $CPPFLAGS"
-AC_CHECK_HEADER(tcl.h,,
+OZ_CHECK_HEADER_PATH(tcl.h,,
         AC_MSG_ERROR(required tcl.h include file not found))
 
-LDFLAGS="-L$oz_tcl_lib_dir $LDFLAGS"
-AC_CHECK_LIB(tcl8.0, Tcl_Init, ,
-        [AC_CHECK_LIB(tcl, Tcl_Init, ,
+OZ_CHECK_LIB_PATH(tcl8.0, Tcl_Init, ,
+        [OZ_CHECK_LIB_PATH(tcl, Tcl_Init, ,
             [AC_MSG_ERROR(required lib "-ltcl/tcl8.0" not found)])])
 
 #AC_CHECK_LIB(tcl, Tcl_Init, ,
@@ -220,15 +240,14 @@ fi
 : ${oz_tk_inc_dir=$oz_tcl_inc_dir}
 : ${oz_tk_lib_tcl_dir=/usr/lib/tk8.0}
 
-AC_MSG_RESULT(trying \"-L$oz_tk_lib_dir -I$oz_tk_inc_dir\")
+oz_inc_path="$oz_tk_inc_dir $oz_inc_path"
+oz_lib_path="$oz_tk_lib_dir $oz_inc_path"
 
-CPPFLAGS="-I$oz_tk_inc_dir $CPPFLAGS"
-AC_CHECK_HEADER(tk.h,,
+OZ_CHECK_HEADER_PATH(tk.h,,
         AC_MSG_ERROR(required tk.h include file not found))
 
-LDFLAGS="-L$oz_tk_lib_dir $LDFLAGS"
-AC_CHECK_LIB(tk8.0, Tk_Init, ,
-        [AC_CHECK_LIB(tk, Tk_Init, ,
+OZ_CHECK_LIB_PATH(tk8.0, Tk_Init, ,
+        [OZ_CHECK_LIB_PATH(tk, Tk_Init, ,
             [AC_MSG_ERROR(required lib "-ltk/tk8.0" not found)])])
 
 AC_SUBST(oz_tk_lib_tcl_dir)
