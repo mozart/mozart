@@ -485,14 +485,17 @@ define
 
       meth !S_messageAck(id:Id mid:Mid) Sender C in
          {WriteLog "Message ("#Mid#") has been read by "#Id}
-         try
-            Sender={DB getSender( mid: Mid sender:$)}
-            C={DB getClient(id: Sender client:$)}
-            {C messageAck(id:Id mid:Mid) "Couldn't send messageAck("#Mid#") to sender"}
-         catch _ then {WriteLog "Couldn't send messageAck("#Mid#") from "#Id#" to sender"} end
-
-         if {DB messageAck(id:Id mid:Mid read:$)} then
-            {self S_removeMessage(mid:Mid)}
+         thread M=Mid in
+            try
+               Sender={DB getSender( mid: M sender:$)}
+               C={DB getClient(id: Sender client:$)}
+               {C messageAck(id:Id mid:M) "Couldn't send messageAck("#M#") to sender"}
+            catch _ then {WriteLog "Couldn't send messageAck("#M#") from "#Id#" to sender"} end
+         end
+         thread M=Mid in
+            if {DB messageAck(id:Id mid:M read:$)} then
+               {self S_removeMessage(mid:M)}
+            end
          end
       end
 
@@ -746,6 +749,17 @@ define
          in
             {Delay 6000}
             {Loop}
+         end
+
+         thread
+            proc{SaveLoop}
+               {Delay 300000}
+               {DB saveAll(dir: Args.dbdir)}
+               {WriteLog "Autosave\n"}
+               {SaveLoop}
+            end
+         in
+            {SaveLoop}
          end
       end
 

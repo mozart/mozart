@@ -27,6 +27,7 @@ functor
 import
    Pickle(save load)
    System
+   OS(stat)
 export
    db: InvokeDB
    getID:GetNewID
@@ -34,11 +35,48 @@ define
    Counter={NewCell 0}
    AppCounter={NewCell 0}
    InstCounter={NewCell 0}
+   DB_extension=".icq"
    DB InvokeDB
 
    fun{GetNewID} O N in
       {Exchange Counter O N}
       N=O+1
+   end
+
+   fun{FileTimeStamp File} Time1 Time2 in
+      try
+         Time1 = {OS.stat File#"1"#DB_extension}.mtime
+      catch _ then Time1 = 0 end
+      try
+         Time2 = {OS.stat File#"2"#DB_extension}.mtime
+      catch _ then Time2 = 0 end
+      file(1:Time1 2:Time2)
+   end
+
+   fun{OldestFile File}
+      Time={FileTimeStamp File}
+   in
+      if Time.2 > Time.1 then
+         File#"1"#DB_extension
+      else
+         File#"2"#DB_extension
+      end
+   end
+
+   fun{NewestFiles File}
+      Time={FileTimeStamp File}
+   in
+      if Time.1 == 0 then
+         if Time.2 == 0 then nil
+         else [File#"2"#DB_extension] end
+      elseif Time.2 == 0 then
+         [File#"1"#DB_extension]
+      elseif Time.2 > Time.1 then
+         [ File#"2"#DB_extension
+           File#"1"#DB_extension]
+      else
+         [File#"1"#DB_extension  File#"2"#DB_extension]
+      end
    end
 
    fun{GetAppID} O N in
@@ -71,25 +109,38 @@ define
    MsgLock = {NewLock}
 
    proc { SaveMessID File }
-      {Pickle.save messageID(id: {Access Counter}) File}
+      {Pickle.save messageID(id: {Access Counter}) {OldestFile File}}
+   end
+
+   fun{LoadCounter Files}
+      fun{LoadValue F}
+         {Pickle.load F}.id
+      end
+      fun{Load Files A}
+         if Files == nil then A
+         else
+            V F|Fs = Files
+         in
+            try
+               V={LoadValue F}
+            catch _ then V={Load Fs 0} end
+            V
+         end
+      end
+   in
+      {Load Files 0}
    end
 
    proc { LoadMessID File }
-      {Assign Counter
-       try
-          {Pickle.load File}.id
-       catch _ then 0 end }
+      {Assign Counter {LoadCounter {NewestFiles File}}}
    end
 
    proc { SaveAppID File }
-      {Pickle.save appID(id: {Access AppCounter}) File}
+      {Pickle.save appID(id: {Access AppCounter}) {OldestFile File}}
    end
 
    proc { LoadAppID File }
-      {Assign AppCounter
-       try
-          {Pickle.load File}.id
-       catch _ then 0 end }
+      {Assign AppCounter {LoadCounter {NewestFiles File}}}
    end
 
    fun { ToLowerString Value }
@@ -159,18 +210,43 @@ define
 
       meth saveToDisk( file: F )
          lock
-            {Pickle.save {self toRecord(record: $)} F}
+            {Pickle.save {self toRecord(record: $)} {OldestFile F}}
          end
       end
 
-      meth loadFromDisk( file:F )
-         lock R in
-            try
-               R = {Pickle.load F}
+      meth loadFromDisk( file:File )
+         fun{LoadPickleS Files}
+            fun{LoadValue F}
+               try
+                  {Pickle.load {VirtualString.toString F}}
+               catch _ then ~1 end
+            end
+
+            fun{Load Files A}
+               if Files == nil then A
+               else
+                  V F|Fs = Files
+               in
+                  V={LoadValue F}
+                  if V==~1 then  {Load Fs A}
+                  else V end
+               end
+            end
+         in
+            {Load Files nil}
+         end
+      in
+         lock
+            R = {LoadPickleS {NewestFiles File}}
+         in
+            if R\=nil then
                {Record.forAll R proc {$ O}
                                    {self O}
                                 end}
-            catch _ then {System.showInfo "Warning: Couldn't find database: "#self.type} end
+            else
+               {System.showInfo
+                "Warning: Couldn't find database: "#self.type}
+            end
          end
       end
    end
@@ -580,12 +656,12 @@ define
       meth saveAll( dir: PATH)
          lock
             {self makeBackup}
-            {self.membersDB saveToDisk( file: PATH#members#'.icq' ) }
-            {self.friendsDB saveToDisk( file: PATH#friends#'.icq' ) }
-            {self.messageDB saveToDisk( file: PATH#message#'.icq' ) }
-            {self.applicationDB saveToDisk( file: PATH#application#'.icq')}
-            {SaveMessID PATH#id#'.icq' }
-            {SaveAppID PATH#appid#'.icq' }
+            {self.membersDB saveToDisk( file: PATH#members) }
+            {self.friendsDB saveToDisk( file: PATH#friends) }
+            {self.messageDB saveToDisk( file: PATH#message) }
+            {self.applicationDB saveToDisk( file: PATH#application)}
+            {SaveMessID PATH#id }
+            {SaveAppID PATH#appid }
          end
       end
 
@@ -609,12 +685,12 @@ define
 
       meth loadAll( dir: PATH)
          lock
-            {self.membersDB loadFromDisk( file: PATH#members#'.icq' ) }
-            {self.friendsDB loadFromDisk( file: PATH#friends#'.icq' ) }
-            {self.messageDB loadFromDisk( file: PATH#message#'.icq' ) }
-            {self.applicationDB loadFromDisk( file: PATH#application#'.icq')}
-            {LoadMessID PATH#id#'.icq'}
-            {LoadAppID PATH#appid#'.icq'}
+            {self.membersDB loadFromDisk( file: PATH#members ) }
+            {self.friendsDB loadFromDisk( file: PATH#friends ) }
+            {self.messageDB loadFromDisk( file: PATH#message ) }
+            {self.applicationDB loadFromDisk( file: PATH#application)}
+            {LoadMessID PATH#id}
+            {LoadAppID PATH#appid}
             {self buildNotifyTable}
          end
       end
