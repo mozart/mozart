@@ -1206,6 +1206,7 @@ BIspec fdSpec[] = {
   {"fdp_disjointC", 5, fdp_disjointC},
   {"fdp_distance", 4, fdp_distance},
   {"sched_cpIterate", 2, sched_cpIterate},
+  {"sched_cpIterateCap", 4, sched_cpIterateCap},
   {"sched_disjunctive", 2, sched_disjunctive},
 #endif
 #ifdef DEBUG_STABLE
@@ -1214,6 +1215,7 @@ BIspec fdSpec[] = {
 #endif
   // Distribution builtins: fddist.cc
   {"fddistribute", 5, BIfdDistribute},
+  {"fdgetCandidates", 5, BIfdGetCandidates},
   {"fddistributeMinPairs", 5, BIfdDistributeMinPairs},
   {"fddistributeTaskIntervals", 7, BIfdDistributeTaskIntervals},
   {"fddistributeTaskIntervalsOpt", 7, BIfdDistributeTaskIntervalsOpt},
