@@ -893,13 +893,13 @@ PRINT(Board)
 
   stream << "Board @" << this << " [";
 
-  if (isInstalled()) stream << 'I';
-  if (isNervous())   stream << 'N';
-  if (isWaitTop())   stream << 'T';
-  if (isPathMark())  stream << 'P';
-  if (isFailed())    stream << 'F';
-  if (isCommitted()) stream << 'C';
-  if (isWaiting())   stream << 'W';
+  if (isInstalled())    stream << 'I';
+  if (isNervous())      stream << 'N';
+  if (isWaitTop())      stream << 'T';
+  if (isMarkedGlobal()) stream << 'G';
+  if (isFailed())       stream << 'F';
+  if (isCommitted())    stream << 'C';
+  if (isWaiting())      stream << 'W';
 
   stream << " #" << suspCount;
   stream << ']';

@@ -64,14 +64,14 @@ CXXSRCS = \
         dictionary.cc stack.cc susplist.cc\
         cpbag.cc tagged.cc value.cc\
         cont.cc ozconfig.cc trail.cc\
-        foreign.cc gc.cc\
+        foreign.cc \
         compiler.cc ofgenvar.cc genhashtbl.cc\
         ozostream.cc runtime.cc unix.cc\
         tcl_tk.cc metavar.cc perdio.cc\
         urlc.cc iso-ctype.cc hashtbl.cc\
         os.cc emulate.cc builtins.cc\
         components.cc network.cc virtual.cc\
-        comm.cc marshaler.cc liveness.cc
+        comm.cc marshaler.cc liveness.cc gc.cc
 
 FDSRCS =\
         fdbuilti.cc fdomn.cc fdcore.cc\
@@ -87,7 +87,7 @@ FSETSRCS =\
 
 SRCS1 = $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) @PEANUTS@ main.cc
 
-SRCS = $(SRCS1) $(CREATEDSRCS)
+SRCS = $(CREATEDSRCS) $(SRCS1)
 
 OBJS = $(SRCS:.cc=.o)
 
