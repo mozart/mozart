@@ -94,9 +94,10 @@ class CodeArea {
 
  protected:
   ByteCode *codeBlock;    /* a block of abstract machine code */
-  int size;               /* size of thie block */
+  int size;               /* size of this block */
   CodeArea *nextBlock;
-  ProgramCounter wPtr;       /* write pointer for the code block */
+  ProgramCounter wPtr;    /* write pointer for the code block */
+  time_t timeStamp;       /* feed time */
 #define CheckWPtr Assert(wPtr < codeBlock+size)
 
   static CodeArea *allBlocks;
@@ -105,6 +106,18 @@ class CodeArea {
   static void init(void **instrtab);
 
 public:
+  static time_t findTimeStamp(ProgramCounter PC)
+  {
+
+    CodeArea *aux = allBlocks;
+    while (aux) {
+      if (aux->codeBlock<=PC && PC<aux->codeBlock+aux->size)
+        return aux->timeStamp;
+      aux = aux->nextBlock;
+    }
+    return (time_t) 0;
+  }
+
   ByteCode *getStart() { return codeBlock; }
   static AbstractionTable abstractionTab;
   static int totalSize; /* total size of code allocated in bytes */
