@@ -102,7 +102,12 @@ SPAN.chunktitle A:link    { color: slateblue; }
 SPAN.chunktitle A:visited { color: slateblue; }
 
 SPAN.entrycategory {
-  color:red;
+  color:white;
   position:absolute;
   left:50pt;
+  font-weight:bold;
+}
+
+SPAN.entrycategorybracket {
+  display:none;
 }
