@@ -13,6 +13,7 @@ SRCTOP          = @SRCTOP@
 SUBDIRS         = ozflex ozbison
 
 RM              = @RM@ -f
+LNS             = @LN_S@
 DYNLD           = @DYNLD@
 CXX             = @CXX@
 CPPFLAGS        = -I$(SRCDIR) -I. -I$(SRCTOP)/platform/emulator @CPPFLAGS@
@@ -66,14 +67,25 @@ install: all \
 $(SHAREDIR) $(PLATFORMDIR) $(INCDIR):
         $(MKINSTALLDIRS) $@
 
-$(SHAREDIR)/GumpScanner.so-$(PLATFORM): GumpScanner.so
-        $(INSTALLFILE) $< $@
+$(SHAREDIR)/GumpScanner.so-$(PLATFORM): $(PLATFORMDIR)/GumpScanner.so
+        $(RM) $(SHAREDIR)/GumpScanner.so-$(PLATFORM)
+        (cd $(SHAREDIR) && \
+         $(LNS) ../platform/$(PLATFORM)/GumpScanner.so \
+                GumpScanner.so-$(PLATFORM))
 
-$(SHAREDIR)/ozbison.so-$(PLATFORM): ozbison/ozbison.so
-        $(INSTALLFILE) $< $@
+$(SHAREDIR)/ozbison.so-$(PLATFORM): $(PLATFORMDIR)/ozbison.so
+        $(RM) $(SHAREDIR)/ozbison.so-$(PLATFORM)
+        (cd $(SHAREDIR) && \
+         $(LNS) ../platform/$(PLATFORM)/ozbison.so ozbison.so-$(PLATFORM))
 
 $(PLATFORMDIR)/oz.flex.bin: ozflex/flex
         $(INSTALLPRG) $< $@
+
+$(PLATFORMDIR)/GumpScanner.so: GumpScanner.so
+        $(INSTALLFILE) $< $@
+
+$(PLATFORMDIR)/ozbison.so: ozbison/ozbison.so
+        $(INSTALLFILE) $< $@
 
 $(INCDIR)/%: %
         $(INSTALLFILE) $< $@
