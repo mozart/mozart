@@ -25,7 +25,7 @@ define
       attr db rootID rootURL reports verbose nerrors
 	 indent wget css mogulDIR mogulURL provided
 	 categories categoriesURL packages Authors mogulTOP
-	 ignoreID ignoreURL manifest
+	 ignoreID ignoreURL
       meth init
 	 db      <- unit
 	 rootID  <- {NormalizeID 'mogul' 'mogul:/'}
@@ -46,7 +46,6 @@ define
 	 mogulTOP<- '/~'#{OS.getEnv 'USER'}#'/mogul'
 	 ignoreID<-nil
 	 ignoreURL<-nil
-	 manifest<-{NewDictionary}
       end
       meth indent indent<-'  '#@indent end
       meth dedent
@@ -150,6 +149,9 @@ define
       end
       meth get_infodir($)
 	 {RelativeTo @mogulDIR 'info'}
+      end
+      meth get_uploaddir($)
+	 {RelativeTo @mogulDIR 'upload'}
       end
       meth 'wget'(V) wget<-V end
       meth get_wget($) @wget end
@@ -421,24 +423,6 @@ define
 		9}
 	    catch mogul(...)=E then
 	       Admin,addReport(M E)
-	    end
-	 end
-      end
-      %%
-      meth addToManifest(Filename)
-	 @manifest.{VirtualString.toAtom Filename} := unit
-      end
-      meth 'save-manifest'(V)
-	 if V then
-	    File = {New Open.file init(name:@mogulTOP#'/pkg/MANIFEST'
-				       flags:[write create truncate])}
-	 in
-	    try
-	       for F in {Sort {Dictionary.keys @manifest} Value.'<'} do
-		  {File write(vs:F#'\n')}
-	       end
-	    finally
-	       try {File close} catch _ then skip end
 	    end
 	 end
       end

@@ -7,14 +7,14 @@ import
 export
    WgetPkg WgetDoc
 define
-   proc {WgetPkg PkgUrl PkgDir PkgFile}
+   proc {WgetPkg PkgUrl PkgDir}
       if {Manager ignoreURL(PkgUrl $)} then
 	 {Manager trace('Ignoring URL '#PkgUrl)}
       else
 	 {MkDir PkgDir}
 	 Cmd = {Manager get_wget($)}
 	 #if {Manager is_verbose($)} then ' -v' else ' -nv' end
-	 #' -N -nH -nd -P "'#PkgDir#'" "'#PkgUrl#'" -O "'#(PkgDir#'/'#PkgFile)#'"'
+	 #' -N -nH -nd -P "'#PkgDir#'" "'#PkgUrl#'"'
       in
 	 {Manager trace(Cmd)}
 	 try

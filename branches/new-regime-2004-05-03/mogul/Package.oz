@@ -60,7 +60,7 @@ define
       meth extern_slots($)
 	 [id pid url blurb provides requires content_type
 	  url_pkg url_doc body author contact keywords
-	  categories url_doc_extra title version]
+	  format categories url_doc_extra title version]
       end
       meth printOut(Margin Out DB)
 	 {Out write(vs:Margin#' '#@id#' (package)\n')}
@@ -78,6 +78,18 @@ define
       meth get_id_as_rel_path($)
 	 {Manager id_to_relurl(@id $)}
       end
+      meth get_this_uploaddir($)
+	 Format = if @format==nil orelse @format==unit then 'xxx' else @format end
+	 Platform = 'source' % currently
+	 Version = if @version==unit then '0' else @version end
+      in
+	 {VirtualString.toString
+	  {URL.toString
+	   {URL.resolve
+	    {URL.toBase {Manager get_uploaddir($)}}
+	    {self get_id_as_rel_path($)}}}
+	  #'/__'#Format#'__'#Platform#'__'#Version}
+      end
       meth get_this_pkgdir($)
 	 {URL.toString
 	  {URL.resolve
@@ -85,7 +97,7 @@ define
 	   {self get_id_as_rel_path($)}}}
       end
       %% here, we compute a new style pkg file name
-      meth get_this_pkgname($ format:FMT<=unit)
+      meth get_this_pkgname_uploaded($ format:FMT<=unit)
 	 Main = {Manager id_to_package_name(@id $)}
 	 Format = if FMT\=unit then FMT
 		  elseif @format==nil orelse @format==unit
@@ -93,48 +105,24 @@ define
 	 Platform = 'source' % currently
 	 Version = if @version==unit then '0' else @version end
       in
-	 Main#'__'#Format#'__'#Platform#'__'#Version#'.pkg'
+	 Main#'__'#Format#'__'#Platform#'__'#Version#'.uploaded'
       end
       meth UpdatePkg(U DB)
 	 M = {Regex.search RE_PROVIDES U}
 	 U2 = {Regex.group 2 M U}
-	 U3 = {URL.make U}
-	 N = case {Reverse U3.path}
-	     of nil|D|_ then D
-	     [] D|_ then D
-	     end
-	 IsPKG = case {Reverse N}
-		 of &g|&k|&p|&.|_ then true
-		 else false end
-	 FormatIsKnown = @format\=nil andthen @format\=unit
-	 File = if IsPKG then
-		   {self get_this_pkgname($)}
-		else N end
-	 Dir = {self get_this_pkgdir($)}
-	 RDir = {self get_id_as_rel_path($)}
+	 Dir = {self get_this_uploaddir($)}
       in
 	 {Manager trace('Downloading pkg '#U2)}
 	 try
-	    {Wget.wgetPkg U2 Dir File}
-	    if IsPKG then
-	       if FormatIsKnown then
-		  {Manager addToManifest(RDir#'/'#File)}
-	       else
-		  FMT = {self determineFormat(Dir#'/'#File $)}
-		  FileFinal = {self get_this_pkgname($ format:FMT)}
-		  Cmd = 'mv '#Dir#'/'#File#' '#Dir#'/'#FileFinal
-	       in
-		  {Manager trace(Cmd)}
-		  {OS.system Cmd _}
-		  {Manager addToManifest(RDir#'/'#FileFinal)}
-	       end
-	    end
+	    {Wget.wgetPkg U2 Dir}
 	 catch mogul(...)=E then
 	    {Manager addReport(update_pub_pkg(@id) E)}
 	 end
       end
       %% determine whether the package stored in File is in the current
       %% format (1.2.5 or 1.3.0)
+      %% this is now already obsolete because it will be done by an external
+      %% tool.
       meth determineFormat(File $)
 	 {Manager trace('--> determining format')}
 	 Format = if {OS.system {Property.get 'oz.home'}#'/bin/'#
