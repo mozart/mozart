@@ -75,7 +75,6 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   for (i = clauses; i--; ) {
     TaggedRef bi = makeTaggedRef(&b[i]);
     DEREF(bi, bi_ptr, bi_tag);
-    //mm2
     Assert(isUVar(bi));
     GenFDVariable * fdvar = new GenFDVariable(oz_currentBoard());
     fdvar->getDom().initRange(0, OZ_intToC(p[i]) + 2);

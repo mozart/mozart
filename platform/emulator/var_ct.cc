@@ -410,7 +410,7 @@ OZ_C_proc_begin(BIGetCtVarConstraintAsAtom, 2)
   } else if (isGenCtVar(var, vartag)) {
     return OZ_unify(oz_atom(((GenCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)),
                     OZ_getCArg(1));
-  } else if (oz_isFree(var)) {
+  } else if (oz_isNonKinded(var)) {
     OZ_addThread(makeTaggedRef(varptr),
                  OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;
@@ -432,7 +432,7 @@ OZ_C_proc_begin(BIGetCtVarNameAsAtom, 2)
     return
       OZ_unify(oz_atom(((GenCtVariable*)tagged2CVar(var))->getDefinition()->getName()),
                OZ_getCArg(1));
-  } else if (oz_isFree(var)) {
+  } else if (oz_isNonKinded(var)) {
     OZ_addThread(makeTaggedRef(varptr),
                  OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
     return PROCEED;

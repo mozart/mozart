@@ -222,10 +222,38 @@ public:
   }
 };
 
+/**** Low-level utilities ****/
 
-Bool isGenOFSVar(TaggedRef term);
-Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag);
-GenOFSVariable *tagged2GenOFSVar(TaggedRef term);
+inline
+Bool cvarIsOFSvar(TaggedRef term)
+{
+    return (tagged2CVar(term)->getType() == OFSVariable);
+}
+
+inline
+Bool isGenOFSVar(TaggedRef term)
+{
+    GCDEBUG(term);
+    return isCVar(term) && cvarIsOFSvar(term);
+}
+
+inline
+Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag)
+{
+    GCDEBUG(term);
+    return isCVar(tag) && cvarIsOFSvar(term);
+}
+
+inline
+GenOFSVariable* tagged2GenOFSVar(TaggedRef term)
+{
+    GCDEBUG(term);
+#ifdef DEBUG_OFS
+    if(isGenOFSVar(term) == NO)
+        error("ofs variable expected");
+#endif
+    return (GenOFSVariable*) tagged2CVar(term);
+}
 
 inline
 void addSuspOFSVar(TaggedRef v, Suspension susp)

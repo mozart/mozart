@@ -253,7 +253,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
     }
-    if (!oz_isFree(t)) oz_typeError(3,"Record");
+    if (oz_isKinded(t)) oz_typeError(3,"Record");
     // else fall through to creation case
   case UVAR:
     // FUT
@@ -340,7 +340,7 @@ OZ_BI_define(BIrecordTell,2,0)
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
     }
-    if (!oz_isFree(t)) oz_typeError(0,"Record");
+    if (oz_isKinded(t)) oz_typeError(0,"Record");
     // else fall through to creation case
   case UVAR:
     // FUT
@@ -445,9 +445,9 @@ OZ_C_proc_begin(BIwidthC, 2)
         break;
     }
     case CVAR:
-        if (!oz_isFree(wid) && tagged2CVar(wid)->getType()!=FDVariable)
-          return FAILED;
-        break;
+      if (oz_isKinded(wid) && tagged2CVar(wid)->getType()!=FDVariable)
+        return FAILED;
+      break;
     case OZCONST:
       if (!oz_isBigInt(wid)) return FAILED;
       break;

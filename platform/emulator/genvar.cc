@@ -99,3 +99,8 @@ int oz_cv_getSuspListLength(GenCVariable *cv)
   default:              return cv->getSuspListLengthS();
   }
 }
+
+VariableStatus _oz_statusPerdioVar(PerdioVar *pv)
+{
+  return pv->status();
+}

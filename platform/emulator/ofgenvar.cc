@@ -458,35 +458,4 @@ TaggedRef GenOFSVariable::getArityList()
 
 
 
-/**** Low-level utilities ****/
-
-/* For eventual inlining (in similar manner to fdgenvar.icc): */
-
-Bool cvarIsOFSvar(TaggedRef term)
-{
-    return (tagged2CVar(term)->getType() == OFSVariable);
-}
-
-Bool isGenOFSVar(TaggedRef term)
-{
-    GCDEBUG(term);
-    return isCVar(term) && cvarIsOFSvar(term);
-}
-
-Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag)
-{
-    GCDEBUG(term);
-    return isCVar(tag) && cvarIsOFSvar(term);
-}
-
-GenOFSVariable* tagged2GenOFSVar(TaggedRef term)
-{
-    GCDEBUG(term);
-#ifdef DEBUG_OFS
-    if(isGenOFSVar(term) == NO)
-        error("ofs variable expected");
-#endif
-    return (GenOFSVariable*) tagged2CVar(term);
-}
-
 // ---------------------------------------------------------------------

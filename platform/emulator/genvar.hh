@@ -73,6 +73,13 @@ enum TypeOfGenCVariable {
   OZ_VAR_EXTENTED
 };
 
+enum VariableStatus {
+  OZ_FREE,
+  OZ_FUTURE,
+  OZ_KINDED,
+  OZ_OTHER
+};
+
 #ifdef DEBUG_CHECK
 #define OZ_VAR_INVALID ((TypeOfGenCVariable) -1)
 #endif
@@ -155,8 +162,10 @@ public:
  * Kinded/Free
  * ------------------------------------------------------------------------- */
 
+VariableStatus _oz_statusPerdioVar(PerdioVar *cv);
+
 inline
-Bool oz_cv_isKinded(GenCVariable *cv)
+VariableStatus oz_cv_status(GenCVariable *cv)
 {
   switch (cv->getType()) {
   case FDVariable:
@@ -164,18 +173,42 @@ Bool oz_cv_isKinded(GenCVariable *cv)
   case OFSVariable:
   case FSetVariable:
   case CtVariable:
-    return true;
-    // mm2: handle ExtVar???
+    return OZ_KINDED;
+  case OZ_VAR_SIMPLE:
+    return OZ_FREE;
+  case OZ_VAR_FUTURE:
+    return OZ_FUTURE;
+  case PerdioVariable:
+    return _oz_statusPerdioVar((PerdioVar*)cv);
   default:
-    return false;
+    return OZ_OTHER;
   }
 }
 
-// isKinded <=> !isFree
+// isKinded || isFree || isFuture || isOther
 inline
 int oz_isFree(TaggedRef r)
 {
-  return oz_isVariable(r) && (!isCVar(r) || !oz_cv_isKinded(tagged2CVar(r)));
+  return isUVar(r) || (isCVar(r) && oz_cv_status(tagged2CVar(r))==OZ_FREE);
+}
+
+inline
+int oz_isKinded(TaggedRef r)
+{
+  return isCVar(r) && oz_cv_status(tagged2CVar(r))==OZ_KINDED;
+}
+
+inline
+int oz_isNonKinded(TaggedRef r)
+{
+  return oz_isVariable(r) && !oz_isKinded(r);
+}
+
+
+inline
+int oz_isFuture(TaggedRef r)
+{
+  return isCVar(r) && oz_cv_status(tagged2CVar(r))==OZ_FUTURE;
 }
 
 Bool oz_cv_valid(GenCVariable *,TaggedRef *,TaggedRef);

@@ -221,13 +221,16 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
     return offset;
   }
 
-  if (oz_isFree(term)) {
-    return 0;
+  if (oz_isVariable(term)) {
+    if (!oz_isKinded(term)) {
+      return 0;
+    }
+
+    if (isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
+      return 0;
+    }
   }
 
-  if (isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
-    return 0;
-  }
-
+  // fail
   return offset;
 }
