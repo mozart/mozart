@@ -164,16 +164,32 @@ OZ_Term Future::inspect()
   return OZ_mkTupleC("future", 1, k);
 }
 
+inline Bool Future::isFailed()
+{
+  return function && oz_isTuple(function) && oz_eq(OZ_label(function),AtomFail);
+}
+
 // this builtin/propagator is only internally available
 OZ_BI_define(BIvarToFuture,2,0)
 {
-  OZ_Term v = OZ_in(0);
-  v = oz_safeDeref(v);
-  if (oz_isRef(v)) {
-    oz_suspendOn(v);
+  oz_declareDerefIN(0,v);
+  if (oz_isVarOrRef(v)) {
+    if (oz_isFuture(v)) {
+      if (((Future*)tagged2Var(v))->isFailed()) {
+        v = makeTaggedRef(vPtr);
+        goto bind_fut;
+      }
+      else {
+        ((Future*)tagged2Var(v))->addSuspSVar(oz_currentThread());
+        return SUSPEND;
+      }
+    }
+    else {
+      oz_suspendOnPtr(vPtr);
+    }
   }
-  OZ_Term f = OZ_in(1);
-  DEREF(f,fPtr);
+ bind_fut:
+  oz_declareDerefIN(1,f);
   oz_bindFuture(fPtr,v);
   return PROCEED;
 } OZ_BI_end
