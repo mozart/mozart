@@ -3,6 +3,12 @@
 
 local
 
+   proc {PrepareBlockedThread T}
+      {Dbg.contflag T false}
+      {Dbg.stepmode T true}
+      {Thread.suspend T}
+   end
+
    fun {AppOK Name}
       ({Cget stepRecordBuiltin}  orelse Name \= 'record')
       andthen
@@ -203,9 +209,7 @@ in
 	    end
 	    
 	 [] block(thr:T#I file:F line:L name:N args:A builtin:B time:Time) then
-	    E = ThreadManager,Exists(I $)
-	 in
-	    case E then
+	    case ThreadManager,Exists(I $) then
 	       StackObj = {Dget self.ThreadDic I}
 	       Ack
 	    in
@@ -216,9 +220,7 @@ in
 		  case Ack == ok then
 		     lock
 			{OzcarMessage '...yes!'}
-			{Dbg.contflag T false}
-			{Dbg.stepmode T true}
-			{Thread.suspend T}
+			{PrepareBlockedThread T}
 			ThreadManager,block(thr:T id:I file:F line:L name:N
 					    args:A builtin:B time:Time)
 		     end
@@ -231,7 +233,15 @@ in
 		  {Delay 20}
 	       end
 	    else
-	       {OzcarError UnknownSuspThread}
+	       {OzcarMessage WaitForThread}
+	       {Delay TimeoutToBlock} % thread should soon be added
+	       case ThreadManager,Exists(I $) then
+		  {PrepareBlockedThread T}
+		  ThreadManager,block(thr:T id:I file:F line:L name:N
+				      args:A builtin:B time:Time)
+	       else
+		  {OzcarError UnknownSuspThread}
+	       end
 	    end
 	    
 	 [] cont(thr:T#I) then

@@ -484,18 +484,27 @@ in
 	 W = self.StackText
       in
 	 {OzcarMessage 'printing complete stack (#' # I # '/' # Depth # ')'}
-	 case I == 0 then
+	 case I == 0 then   % clear stack and env windows; reset title
 	    {W title(StackTitle)}
 	    Gui,Clear(W)
 	    Gui,Disable(W)
-	    Gui,printEnv(frame:0)
+	    Gui,clearEnv
 	 else
 	    {W title(AltStackTitle # I)}
 	    lock
 	       Gui,Clear(W)
-	       case Depth == 0 then
+	       case Depth == 0 then   % empty stack? let's see...
+		  case {Dbg.taskstack @currentThread 1} == nil then
+		     Gui,Append(W ' The stack is empty.')  % yes, empty!
+		  else                     % no, some fragments are there...
+		     Gui,Append(W
+				' There is not enough information to\n' #
+				' display the stack here.\n\n' #
+				' Try \'Browse\' from' #
+				' the \'Stack\' menu instead.')
+		  end
 		  Gui,Disable(W)
-		  Gui,printEnv(frame:0)
+		  Gui,clearEnv
 	       else
 		  Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
 		  {ForAll Frames
@@ -516,6 +525,10 @@ in
 
       meth clearStack
 	 Gui,printStack(id:0 frames:nil depth:0)
+      end
+      
+      meth clearEnv
+	 Gui,printEnv(frame:0)
       end
       
       meth selectNode(I)
@@ -577,7 +590,9 @@ in
 
       meth action(A)
 	 lock
-	    {OzcarMessage 'action:' # A}
+	    case {IsName A} then skip else
+	       {OzcarMessage 'action:' # A}
+	    end
 	    
 	    case A
 	    of !ResetAction then
@@ -692,7 +707,10 @@ in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
 	       else
-		  {Browse {Dbg.taskstack T MaxStackBrowseSize}}
+		  S = {Filter {Dbg.taskstack T MaxStackBrowseSize}
+		       fun {$ F} {Label F} \= debug end}
+	       in
+		  {Browse S}
 	       end
 	    end
 	 end
