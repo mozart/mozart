@@ -216,9 +216,11 @@ protected:
     return (descr_type)ToInt32(andPointer(descr,3));
   }
   FDIntervals * get_iv(void) const {
+    Assert(getType() == iv_descr);
     return (FDIntervals *)andPointer(descr,~3); 
   }
   FDBitVector * get_bv(void) const {
+    Assert(getType() == bv_descr);
     return (FDBitVector *)andPointer(descr,~3);
   }
 
