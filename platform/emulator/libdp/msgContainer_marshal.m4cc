@@ -205,7 +205,7 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
 
   clearFlag(MSG_HAS_UNMARSHALCONT);
   for(int i=0;i<MAX_NOF_FIELDS;i++) {
-    if(msgFields[i].ft!=FT_NONE && !bb->frameCanGet(1)) {
+    if(msgFields[i].ft!=FT_NONE && !bb->canGetInFrame(1)) {
       setFlag(MSG_HAS_UNMARSHALCONT); 
     }
     else {

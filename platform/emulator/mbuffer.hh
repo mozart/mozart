@@ -62,33 +62,33 @@ protected:
   BYTE* posMB;
   BYTE* endMB;
 
+  // The idea is that since 'get()'/'put()' have to be fast (inlined,
+  // non-virtual), the buffer operates on a set of contiguous memory
+  // chunks that are accessed using these:
   virtual BYTE getNext() = 0;
   virtual void putNext(BYTE) = 0;
 
   //
 public: 
-  virtual void marshalBegin() = 0;	
+  virtual void marshalBegin() = 0;
   virtual void marshalEnd() = 0;
   virtual void unmarshalBegin() = 0;
   virtual void unmarshalEnd() = 0;
 
-  // NON-virtual!
+  //
   BYTE get() {
     Assert(getDebug());
-    if (posMB==endMB)          // AN, Why ==, that leaves the last byte
-      return getNext();
+    if (posMB > endMB)
+      return (getNext());
     else
-      // DebugCode((*maybeDebugBufferGet)(*posMB););
       return (*posMB++);
   }
   void put(BYTE b) {
-    Assert(posMB != 0);		// kost@ : used before for weird stuff!
     Assert(putDebug());
     if (posMB > endMB)
       putNext(b);
     else
-      // DebugCode((*maybeDebugBufferPut)(b););
-      *posMB++=b;
+      *posMB++ = b;
   }
 
   // 
@@ -96,8 +96,8 @@ public:
   // 'maybeDebugBuffer{Put,Get}()'), then one HAS to declare virtual
   // 'putDebug()' methods here, and define them in corresponding
   // subclasses!! No "dpInterface" methods here!!!
-  virtual Bool putDebug() {return true;};
-  virtual Bool getDebug() {return true;};
+  virtual Bool putDebug() { return (TRUE); }
+  virtual Bool getDebug() { return (TRUE); }
 };
 
 #endif // __MBUFFER_HH

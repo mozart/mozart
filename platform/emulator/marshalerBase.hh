@@ -458,62 +458,10 @@ GName* unmarshalGNameRobust(TaggedRef*,MarshalerBuffer*,int*);
 #endif
 
 //
-// Memory management for arguments of marshaler's
-// 'BinaryAreaProcessor' and builder's 'OzValueProcessor'.
-//
-#define NMMM_SIZE	16
-//
-class NMMemoryManager {
-  static int32* freelist[NMMM_SIZE];
-
-  //
-public:
-
-  //
-  void operator delete(void *obj, size_t size) {
-    int index = size / sizeof(int32);
-    Assert(index);		// must contain at least one word;
-    Assert(index * sizeof(int32) == size);
-    Assert(index < NMMM_SIZE);
-    //
-    *((int32 **) obj) = freelist[index];
-    freelist[index] = (int32 *) obj;
-  }
-
-  // must be empty;
-  NMMemoryManager() {}
-  ~NMMemoryManager() {}
-
-  //
-  static void init() {
-    for (int i = 0; i < NMMM_SIZE; i++)
-      freelist[i] = (int32 *) 0;
-  }
-
-  //
-  void *operator new(size_t size) {
-    int index = size / sizeof(int32);
-    int32 *ptr;
-    Assert(index);		// must contain at least one word;
-    Assert(index * sizeof(int32) == size);
-    Assert(index < NMMM_SIZE);
-
-    //
-    ptr = freelist[index];
-    if (ptr) {
-      freelist[index] = (int32 *) *ptr;
-      return (ptr);
-    } else {
-      return (malloc(size));
-    }
-  }
-};
-
-//
 // 'CodeAreaProcessor' argument: keeps the location of a code area
 // being processed;
 class MarshalerCodeAreaDescriptor : public GTAbstractEntity,
-				    public NMMemoryManager {
+				    public CppObjMemory {
 protected:
   ProgramCounter start, end, current;
 public:
@@ -536,7 +484,7 @@ public:
 
 //
 class BuilderCodeAreaDescriptor : public GTAbstractEntity,
-				  public NMMemoryManager {
+				  public CppObjMemory {
 protected:
   ProgramCounter start, end, current;
   CodeArea *code;
@@ -572,7 +520,7 @@ ProgramCounter unmarshalCache(ProgramCounter PC, CodeArea *code);
 // descriptor of an entry used for the 'Builder::getOzValue()' task
 // keeps table, label and may be a record arity list.
 class HashTableEntryDesc : public GTAbstractEntity,
-			   public NMMemoryManager {
+			   public CppObjMemory {
 private:
   IHashTable *table;
   int label;

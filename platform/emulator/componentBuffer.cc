@@ -1,12 +1,16 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Some ANONYMOUS folks - introduction;
+ *      kost@ : lazy enough to trace all the contributors.
+ *              I suspect the anonymity was deliberate.. the coding style
+ *              was IMHO beyond obscurity, on the edge of obfuscation ;-[
+ *              There is no way I could not put my signature under it.
+ *    Konstantin Popov <kost@sics.se> - re-implementation
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Konstantin Popov 2001
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -24,472 +28,287 @@
  *
  */
 
+#if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "componentBuffer.hh"
+#endif
 
+#include "componentBuffer.hh"
 
-#define BYTEBUFFER_CUTOFF 100
-#define BYTEBUFFER_SIZE   2048
-#define BYTESTREAM_CUTOFF 40
+PickleBuffer::PickleBuffer()
+{
+  DebugCode(pbState = PB_None;);
+  DebugCode(pmbState = PMB_None;);
+  DebugCode(first = last = (CByteBuffer *) 0;);
+  DebugCode(lastChunkSize = -1;);
+  DebugCode(current = (CByteBuffer *) -1;);
+  DebugCode(posMB = endMB = (BYTE *) -1;);
+}
 
-class ByteBuffer{
-  friend class CByteBufferManager;
-  friend class ByteStream;
-  friend class BufferManager;
-  
-protected:
-  BYTE buf[BYTEBUFFER_SIZE];
-  ByteBuffer *next;
+PickleBuffer::~PickleBuffer()
+{
+  DebugCode(pbState = PB_Invalid;);
+  DebugCode(pmbState = PMB_Invalid;);
+  DebugCode(lastChunkSize = -1;);
+  DebugCode(first = last = current = (CByteBuffer *) -1;);
+  DebugCode(posMB = endMB = (BYTE *) -1;);
+}
 
-public: 
-  ByteBuffer(){}
-  
-  BYTE *head(){return buf;}
-  BYTE *tail(){return buf+BYTEBUFFER_SIZE-1;}
-  void init() {next=NULL;}
-};
+void PickleBuffer::loadBegin()
+{
+  Assert(pbState == PB_None);
+  DebugCode(pbState = PB_Load;);
+  Assert(first == (CByteBuffer *) 0);
+  Assert(last == (CByteBuffer *) 0);
+  Assert(lastChunkSize == -1);
+}
 
-class CByteBufferManager: public FreeListManager {
-public:
-  CByteBufferManager():FreeListManager(BYTEBUFFER_CUTOFF){}
-  ByteBuffer *newByteBuffer();
-  void deleteByteBuffer(ByteBuffer*);
-};
+void PickleBuffer::loadEnd()
+{
+  Assert(pbState == PB_Load);
+  DebugCode(pbState = PB_None;);
+}
 
-enum ByteStreamType{
-  BS_None,
-  BS_Marshal,
-  BS_Write,
-  BS_Read,
-  BS_Unmarshal
-};
-
-
-class ByteStream: public PickleBuffer {
-  friend class ByteStreamManager;
-  friend class CompBufferManager;
-  ByteBuffer *first; 
-
-  ByteBuffer *last;
-  BYTE *pos; 
-  BYTE *curpos;
-  BYTE *endpos; 
-  int totlen;  /* include header */
-  int type;
-
+BYTE* PickleBuffer::allocateFirst(int &size)
+{
+  Assert(pbState == PB_Load);
+  Assert(pmbState == PMB_None);
+  DebugCode(pmbState = PMB_ReadingChunk;);
+  Assert(first == (CByteBuffer *) 0);
+  Assert(last == (CByteBuffer *) 0);
   //
-public:  
-  int availableSpace(){
-    Assert(last!=NULL);
-    if(endpos==NULL) return 0;
-    Assert(within(endpos,last));
-    return last->tail()-endpos+1;}
-
-  ByteBuffer *beforeLast(){
-    Assert(first!=last);
-    ByteBuffer *bb=first;
-    while(bb->next!=last){bb=bb->next;}
-    return bb;}
-
-  Bool within(BYTE *p,ByteBuffer *bb){
-    if(p<bb->head()) return FALSE;
-    if(p>bb->tail()) return FALSE;  
-    return TRUE;}
-
-  void removeFirst();
-  void removeSingle();
-  ByteBuffer* getAnother();
-  void getSingle(){
-    Assert(first==NULL);
-    Assert(last==NULL);
-    ByteBuffer *bb=getAnother();
-    first=bb;
-    last=bb;}
-
-  /* marshal */
-  /* read  endpos=first free slotpos (if NULL then last is full)
-           pos= first BYTE of unhandled message 
-
-     after read endpos updated */
-     
-  
-  BYTE* initForRead(int&);
-  BYTE* beginRead(int&);
-  void afterRead(int);
-
-  /* interface pos=first BYTE curpos=last BYTE (may be in different buffers)
-     between curpos and endpos BYTES in next message */
-
-  void beforeInterpret(int);
-  void afterInterpret();
-  BYTE getInRead();
-  int interLen(); /* used for debugging only */
-  /* write  pos=first to write  endpos= first free slot */
-
-  void beginWrite(); /* putting end packet header */
-  int getTotLen(){return totlen;}  
-
-  void sentFirst(){
-    Assert(type==BS_Write);
-    if(first==last){
-      removeSingle();
-      return;}
-    removeFirst();
-    pos=first->head();}
-  
-  int getWriteLen(){
-    Assert(type==BS_Write);
-    Assert(first!=NULL);
-    if(first==last && endpos!=NULL) {return endpos-pos;}
-    return first->tail()-pos+1;}
-
-  BYTE* getWritePos() {Assert(type==BS_Write);return pos;}
-
-  void incPosAfterWrite(int i){
-    Assert(type==BS_Write);
-    Assert(within(pos,first));
-    Assert(pos+i<=first->tail());
-    pos +=i;}
-
-  int calcTotLen(){
-    Assert(type==BS_Write);
-    if(first==last){
-      if(endpos!=NULL){return endpos-pos;}
-      return first->tail()-pos+1;}
-    else{
-      int i=first->tail()-pos+1;
-      ByteBuffer *bb=first->next;
-      while(bb->next!=NULL){
-	i+=BYTEBUFFER_SIZE;
-	bb=bb->next;}
-      Assert(bb==last);
-      if(endpos==NULL){return i+BYTEBUFFER_SIZE;}
-      return i+endpos-last->head();}}
-
-  unsigned long crc()
-  {
-    unsigned long crc = init_crc();
-    
-    if(first==last){
-      int len = (endpos!=NULL) ? (endpos-pos) : first->tail()-pos+1;
-      return update_crc(crc,pos,len);
-    } else {
-      crc = update_crc(crc,pos,first->tail()-pos+1);
-      ByteBuffer *bb=first->next;
-      while(bb->next!=NULL){
-	crc = update_crc(crc,bb->head(),BYTEBUFFER_SIZE);
-	bb = bb->next;
-      }
-      Assert(bb==last);
-      int len = (endpos==NULL) ? BYTEBUFFER_SIZE : endpos-last->head();
-      return update_crc(crc,last->head(),len);
-    }
-  }
-
-  void writeCheck(){
-    Assert(type==BS_Write);
-    Assert(first==NULL);
-    Assert(last==NULL); 
-    return;}
-
-  int no_bufs(){
-    int i=0;
-    ByteBuffer *bb=first;
-    while(bb!=NULL){
-      i++;
-      bb=bb->next;}
-    return i;}
-
-  void dumpByteBuffers();
-
-      
-
-  /* init */
-
-  void *operator new(size_t chunk_size) {
-    return (::new char[chunk_size]); }
-  void* operator new(size_t, void *place) { return (place); }
-
-  ByteStream() {
-    type = BS_None;
-    first = last = (ByteBuffer *) 0; 
-    pos = (BYTE *) 0; 
-  }
-
-  void setVersion(int major, int minor) {
-    // perdioMajor = major;
-    // perdioMinor = minor;
-  }
-
-  /* marshal    beg:first->head()  pos=next free slot OR null */
-                   /* INTERFACE  pos=first->head()  endpos= first free slot */
-  void marshalBegin();
-
-  void putNext(BYTE b){
-    Assert(type==BS_Marshal);
-    Assert(posMB==endMB+1);
-    ByteBuffer *bb=getAnother();
-    last->next=bb;
-    last=bb;
-    totlen += BYTEBUFFER_SIZE;
-    posMB=bb->head();
-    endMB=bb->tail();
-    *posMB++=b;
-    return;}
-
-  void marshalEnd(){
-    Assert(type==BS_Marshal);
-    endpos=posMB;
-    pos=first->head();
-    if(endpos==NULL) {totlen +=BYTEBUFFER_SIZE;}
-    else {totlen +=endpos-last->head();}
-    type=BS_None;}
-
-  /* unmarshal pos=first unread BYTE curpos last unread BYTE */
-
-  void unmarshalBegin(){
-    type=BS_Unmarshal;
-    Assert(within(pos,first));
-    if(first==last) {
-      Assert(within(curpos,first));
-      Assert(curpos>=pos);}
-    // PB else {Assert(within(curpos,last));}
-    posMB=pos;
-    if(within(curpos,first)) {
-      endMB=curpos;}
-    else{
-      endMB=first->tail();}
-    pos=NULL;}
-
-  BYTE getNext(){
-    Assert(type==BS_Unmarshal);
-    Assert(posMB!=NULL);
-    if(posMB==curpos){
-      posMB=NULL;
-      markEnd();
-      Assert(first==last);
-      return *curpos;}
-    if(posMB==first->tail()){
-      BYTE ch;
-      Assert(first!=last);
-      ch=*posMB;
-      removeFirst();
-      posMB=first->head();
-      if(within(curpos,first)) {
-	endMB=curpos;}
-      else{
-	endMB=first->tail();}
-      return ch;}
-    Assert(0);
-    return 0;}
-
-  void unmarshalEnd(){
-    Assert(type==BS_Unmarshal);    
-    type=BS_None;
-    Assert(pos==NULL);}
-};
-
-
-class ByteStreamManager: public FreeListManager {
-public:
-  ByteStreamManager():FreeListManager(BYTESTREAM_CUTOFF){}
-  ByteStream *newByteStream();
-  void deleteByteStream(ByteStream *);
-};
-
-class CompBufferManager {
-private:
-public:
-  CByteBufferManager *byteBufM;
-  ByteStreamManager *byteStreamM;
-
-  CompBufferManager(){
-    byteBufM = new CByteBufferManager();
-    byteStreamM= new ByteStreamManager();}
-
-  ByteStream *getByteStream();
-
-  void freeByteStream(ByteStream *bs);
-  ByteStream* newByteStream();
-  void deleteByteStream(ByteStream* bs);
-
-  ByteBuffer* getByteBuffer();
-  void freeByteBuffer(ByteBuffer *bb);
-  void dumpByteStream(ByteStream *);
-};
-
-CompBufferManager *bufferManager= new CompBufferManager();
-
-/* **********************************************************************
- *                  BYTE STREAM
- * ********************************************************************** */
-
-/* ByteBufferManger */
-
-inline ByteBuffer* CByteBufferManager::newByteBuffer(){
-  FreeListEntry *f=getOne();
-  ByteBuffer *bb;
-  if(f==NULL) {bb=new ByteBuffer();}
-  else{GenCast(f,FreeListEntry*,bb,ByteBuffer*);}
-  return bb;}
-
-inline  void CByteBufferManager::deleteByteBuffer(ByteBuffer* bb){
-  FreeListEntry *f;
-  GenCast(bb,ByteBuffer*,f,FreeListEntry*);
-  if(putOne(f)) return;
-  delete bb;
-  return;}
-
-
-/* CompBufferManager */
-
-inline ByteStream* ByteStreamManager::newByteStream(){
-  FreeListEntry *f=getOne();
-  ByteStream *bs;
-  if(f==NULL) { return new ByteStream();}
-  GenCast(f,FreeListEntry*,bs,ByteStream*);
-  bs = new ((void *) bs) ByteStream;
-  return bs;}
-
-inline  void ByteStreamManager::deleteByteStream(ByteStream* bs){
-  FreeListEntry *f;
-  GenCast(bs,ByteStream*,f,FreeListEntry*);
-  if(putOne(f)) return;
-  delete bs;
-  return;}
-
-/* ByteStream */
-
-void ByteStream::removeFirst(){
-  Assert(first!=last);
-  ByteBuffer *bb=first;
-  first=bb->next;
-  bufferManager->freeByteBuffer(bb);}
-
-void ByteStream::removeSingle(){
-  Assert(first==last);    
-  bufferManager->freeByteBuffer(first);
-  first=last=NULL;}
-
-ByteBuffer *ByteStream::getAnother(){
-  return(bufferManager->getByteBuffer());}
-
-void ByteStream::marshalBegin(){
-  Assert(type==BS_None);
-  Assert(first==NULL);
-  Assert(last==NULL);
-  first=getAnother();
-  last=first;
-  totlen= 0;
-  type=BS_Marshal;
-  posMB=first->head()+tcpHeaderSize;
-  endMB=first->tail();
-  pos=NULL;
+  first = last = new CByteBuffer;
+  size = first->size();
+  return (first->head());
 }
 
-void ByteStream::dumpByteBuffers(){
-  while(first!=last) {
-    removeFirst();
+BYTE* PickleBuffer::allocateNext(int &size)
+{
+  Assert(pbState == PB_Load);
+  Assert(pmbState == PMB_None);
+  DebugCode(pmbState = PMB_ReadingChunk;);
+  Assert(first != (CByteBuffer *) 0);
+  Assert(last != (CByteBuffer *) 0);
+  Assert(last->getNext() == (CByteBuffer *) 0);
+  //
+  CByteBuffer *nb = new CByteBuffer;
+  last->setNext(nb);
+  last = nb;
+  size = nb->size();
+  return (nb->head());
+}
+
+void PickleBuffer::chunkRead(int sizeReadIn)
+{
+  Assert(pbState == PB_Load);
+  Assert(pmbState == PMB_ReadingChunk);
+  DebugCode(pmbState = PMB_None;);
+  // always for the last recorded chunk:
+  lastChunkSize = sizeReadIn;
+}
+
+void PickleBuffer::saveBegin()
+{
+  Assert(pbState == PB_None);
+  DebugCode(pbState = PB_Save;);
+}
+
+void PickleBuffer::saveEnd()
+{
+  Assert(pbState == PB_Save);
+  DebugCode(pbState = PB_None;);
+}
+
+BYTE* PickleBuffer::unlinkFirst(int &size)
+{
+  Assert(pbState == PB_Save);
+  Assert(pmbState == PMB_None);
+  DebugCode(pmbState = PMB_WritingChunk;);
+  Assert(first != (CByteBuffer *) -1);
+  current = first;
+  if (current == last) 
+    size = lastChunkSize;
+  else
+    size = current->size();
+  return (current->head());
+}
+
+BYTE* PickleBuffer::unlinkNext(int &size)
+{
+  Assert(pbState == PB_Save);
+  Assert(pmbState == PMB_None);
+  Assert(current != (CByteBuffer *) -1);
+  if (current) {
+    DebugCode(pmbState = PMB_WritingChunk;);
+    if (current == last) 
+      size = lastChunkSize;
+    else
+      size = current->size();
+    return (current->head());
+  } else {
+    DebugCode(current = (CByteBuffer *) -1;);
+    DebugCode(size = -1;);
+    return ((BYTE *) 0);
   }
-  removeSingle();
+  Assert(0);
 }
 
-/* BufferManager */
-
-ByteStream* CompBufferManager::getByteStream(){
-  ByteStream *bs=byteStreamM->newByteStream();
-  bs = new (bs) ByteStream();
-  return bs;}
-
-void CompBufferManager::freeByteStream(ByteStream *bs){
-  if(bs->first!=NULL){
-    Assert(bs->first==bs->last);
-    byteBufM->deleteByteBuffer(bs->last);}
-  byteStreamM->deleteByteStream(bs);}
-
-ByteBuffer* CompBufferManager::getByteBuffer(){
-  ByteBuffer *bb=byteBufM->newByteBuffer();
-  bb->init();
-  return bb;}
-
-void CompBufferManager::dumpByteStream(ByteStream *bs){
-  bs->dumpByteBuffers();
-  freeByteStream(bs);}
-
-void CompBufferManager::freeByteBuffer(ByteBuffer* bb){
-  byteBufM->deleteByteBuffer(bb);}
-
-
-void ByteStream::beforeInterpret(int len){
-  if(pos==NULL) {return;} /* read only header for close message*/
-  Assert(type==BS_None);
-  Assert(within(pos,first));
-  Assert(len<=0);
-  if(endpos==NULL){
-    curpos=last->tail()+len;}
-  else{
-    curpos=endpos+len-1;}}
-
-
-BYTE* ByteStream::initForRead(int &len){
-  Assert(type==BS_None);
-  pos=first->head();
-  endpos=first->head();
-  len=BYTEBUFFER_SIZE;
-  type=BS_Read;
-  return endpos;}
-
-BYTE* ByteStream::beginRead(int &len){
-  Assert(type==BS_None);
-  type=BS_Read;
-  if(endpos==NULL){
-    if(pos==NULL){
-      pos=first->head();
-      endpos=first->head();
-      len=BYTEBUFFER_SIZE;
-      return endpos;}
-    Assert(within(pos,first));    
-    ByteBuffer *bb=bufferManager->getByteBuffer();
-    last->next=bb;
-    last=bb;
-    len=BYTEBUFFER_SIZE;
-    endpos=last->head();
-    return endpos;}
-  if(pos==NULL){pos=endpos;}
-  else{Assert(within(pos,first));}
-  len=last->tail()-endpos+1;
-  Assert(len<BYTEBUFFER_SIZE);
-  return endpos;}
-
-void ByteStream::afterInterpret(){
-  Assert(first==last);
-  Assert(first!=NULL);
-  pos=curpos+1;
-  // PB Assert(within(curpos,last));
+void PickleBuffer::chunkWritten()
+{
+  Assert(pbState == PB_Save);
+  Assert(pmbState == PMB_WritingChunk);
+  DebugCode(pmbState = PMB_None;);
+  Assert(current != (CByteBuffer *) -1);
+  CByteBuffer *nb = current->getNext();
+  delete current;
+  current = nb;
 }
 
-void ByteStream::afterRead(int len){
-  Assert(type==BS_Read);
-  Assert(len<=BYTEBUFFER_SIZE);
-  Assert(availableSpace()>=len);
-  Assert(within(endpos,last));  
-  type=BS_None;
-  if(endpos+len-1==last->tail()){endpos=NULL;}
-  else{endpos=endpos+len;}}
+BYTE* PickleBuffer::accessFirst(int &size)
+{
+  Assert(pbState == PB_Save);
+  Assert(pmbState == PMB_None);
+  DebugCode(pmbState = PMB_AccessingChunk;);
+  Assert(first != (CByteBuffer *) -1);
+  current = first;
+  if (current == last) 
+    size = lastChunkSize;
+  else
+    size = current->size();
+  return (current->head());
+}
 
-#define FILE_HEADER 0
+BYTE* PickleBuffer::accessNext(int &size)
+{
+  Assert(pbState == PB_Save);
+  Assert(pmbState == PMB_None);
+  Assert(current != (CByteBuffer *) -1);
+  if (current) {
+    DebugCode(pmbState = PMB_AccessingChunk;);
+    if (current == last) 
+      size = lastChunkSize;
+    else
+      size = current->size();
+    return (current->head());
+  } else {
+    DebugCode(current = (CByteBuffer *) -1;);
+    DebugCode(size = -1);
+    return ((BYTE *) 0);
+  }
+  Assert(0);
+}
 
-inline BYTE *int2net(BYTE *buf,int i){ 
-  for (int k=0; k<4; k++) { 
-    *buf++ = i & 0xFF; 
-    i = i>>8;}
-  return buf;}
+void PickleBuffer::chunkDone()
+{
+  Assert(pbState == PB_Save);
+  Assert(pmbState == PMB_AccessingChunk);
+  DebugCode(pmbState = PMB_None;);
+  Assert(current != (CByteBuffer *) -1);
+  current = current->getNext();
+}
 
-void ByteStream::beginWrite(){
-  Assert(type==BS_None);
-  Assert(first!=NULL);
-  BYTE* thispos= first->head();
-  *thispos++=FILE_HEADER;
-  type=BS_Write;
-  int2net(thispos,totlen);}
+void PickleBuffer::marshalBegin()
+{
+  Assert(pbState == PB_None);
+  DebugCode(pbState = PB_Marshal;);
+  Assert(posMB == (BYTE *) -1);
+  Assert(endMB == (BYTE *) -1);
+  Assert(first == (CByteBuffer *) 0);
+  Assert(last == (CByteBuffer *) 0);
+  //
+  first = last = new CByteBuffer;
+  posMB = first->head();
+  endMB = first->tail();
+}
 
+void PickleBuffer::marshalEnd()
+{
+  Assert(pbState == PB_Marshal);
+  DebugCode(pbState = PB_None;);
+  Assert(lastChunkSize == -1);
+  //
+  lastChunkSize = posMB - last->head();
+  DebugCode(posMB = (BYTE *) -1;);
+  DebugCode(endMB = (BYTE *) -1;);
+}
 
+void PickleBuffer::unmarshalBegin()
+{
+  Assert(pbState == PB_None);
+  DebugCode(pbState = PB_Unmarshal;);
+  Assert(posMB == (BYTE *) -1);
+  Assert(endMB == (BYTE *) -1);
+  Assert(first != (CByteBuffer *) 0);
+  Assert(last != (CByteBuffer *) 0);
+  //
+  current = first;
+  posMB = current->head();
+  // In debug mode, insist that the last chunk contains exactly as
+  // many bytes as have been read:
+#if defined(DEBUG_CHECK)
+  if (current == last) 
+    endMB = posMB + lastChunkSize;
+  else
+    endMB = current->tail();
+#else
+  endMB = current->tail();
+#endif
+}
 
+void PickleBuffer::unmarshalEnd()
+{
+  Assert(pbState == PB_Unmarshal);
+  DebugCode(pbState = PB_None;);
+  Assert(posMB == last->head() + lastChunkSize);
+  DebugCode(posMB = (BYTE *) -1;);
+  DebugCode(endMB = (BYTE *) -1;);
+}
+
+BYTE PickleBuffer::getNext()
+{
+  Assert(pbState == PB_Unmarshal);
+  //
+  current = current->getNext();
+#if defined(DEBUG_CHECK)
+  Assert(current);
+#else
+  // In real life, allocate another chunk, init it, and pretend it's
+  // fine.  (a) shouldn't happen because there a crc check, and (b)
+  // unmarshaler should recognize that the data is bogus and bail out.
+  if (current == (CByteBuffer *) 0) {
+    current = new CByteBuffer;
+    last->setNext(current);
+    last = current;
+    BYTE *ptr = current->head();
+    BYTE *end = current->tail();
+    while (ptr <= end) 
+      *ptr++ = (BYTE) 0;
+  }
+#endif
+
+  posMB = current->head();
+  // In debug mode, insist that the last chunk contains exactly as
+  // many bytes as have been read:
+#if defined(DEBUG_CHECK)
+  if (current == last) 
+    endMB = posMB + lastChunkSize;
+  else
+    endMB = current->tail();
+#else
+  endMB = current->tail();
+#endif
+  return (*posMB++);
+}
+
+void PickleBuffer::putNext(BYTE b)
+{
+  Assert(pbState == PB_Marshal);
+  Assert(lastChunkSize == -1);
+  //
+  CByteBuffer *nb = new CByteBuffer;
+  last->setNext(nb);
+  last = nb;
+  posMB = nb->head();
+  endMB = nb->tail();
+  Assert(nb->size() > 0);
+  *posMB++ = b;
+}
