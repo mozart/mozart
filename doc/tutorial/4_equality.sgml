@@ -135,7 +135,7 @@ when it tries to equate <<a>> and <<b>>.
 
 
 <SECTION><TITLE>Equality test operator <<==>></TITLE>
-<P>The basic procedure <<Value.'==' X Y R}>> tries to test whether <<X>>
+<P>The basic procedure <<{Value.'==' X Y R}>> tries to test whether <<X>>
 and <<Y>> are equal or not, and returns the result in <<R>>.
 
 <LIST>
