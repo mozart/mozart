@@ -118,7 +118,7 @@ in
 		     B
 		  end}
 	    SortLabel = {New Tk.label tkInit(parent: self.ButtonFrame
-					     text:   'Sort By:'
+					     text:   SortButtonText
 					     pady:   PadYButton
 					     font:   ButtonFont
 					     borderwidth: SmallBorderSize)}
@@ -133,8 +133,10 @@ in
 						borderwidth: SmallBorderSize
 					       )}
 	 in
-	    {self.SortBox tkBind(event:  '<1>'
-				 action: self # PrintSortMenu)}
+	    {ForAll [tkBind(event:  '<1>'
+			    action: self # PrintSortMenu)
+		     tkBind(event:  HelpEvent
+			    action: self # help(SortButtonText))] self.SortBox}
 	    {Tk.batch [pack(b(Bs) side:left  padx:1)
 		       pack(self.SortBox SortLabel side:right padx:3)
 		      ]}
@@ -217,7 +219,7 @@ in
 			       font:   DefaultFont
 			       bg:     DefaultBackground)}
 	 {self.GenText tkBind(event:  HelpEvent
-			      action: self # help(BarTextTitle))}
+			      action: self # help(GenTextTitle))}
 	 
 	 {Tk.batch [grid(self.BarCanvas  row:3 column:0 sticky:nswe rowspan:2)
 		    grid(self.BarText    row:3 column:1 sticky:nswe)

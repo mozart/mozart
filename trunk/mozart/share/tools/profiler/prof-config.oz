@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = 'Jun 22 1997'
+Version                = 'Jun 25 1997'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
@@ -29,6 +29,7 @@ GenTextTitle           = 'Summary'
 
 UpdateButtonText       = ' update'
 ResetButtonText        = ' reset'
+SortButtonText         = 'Sort By:'
 
 ProfilerMessagePrefix  = fun {$}
                             'Profiler[' # {Thread.id {Thread.this}} # ']: '
