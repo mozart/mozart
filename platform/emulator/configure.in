@@ -43,6 +43,8 @@ AC_INIT(base.hh)
 
 OZ_INIT
 
+dnl kost@ : defaults
+oz_enable_modules_static=no
 
 dnl *****************************************************************
 dnl additional tests
@@ -301,11 +303,6 @@ oz_warn=$oz_a
 OZ_CXX_OPTIONS($oz_warn_error,oz_a)
 oz_warn_error=$oz_a
 
-if test "$oz_enable_modules_static" != "yes" ; then 
-    OZ_CXX_OPTIONS(-fpic,CDYNOPT)
-fi
-AC_SUBST(CDYNOPT)
-
 dnl *****************************************************************
 dnl Try to link system libraries statically
 dnl *****************************************************************
@@ -540,18 +537,25 @@ OZ_ENABLE(regopt,[   register optimization],yes,
 	AC_DEFINE(REGOPT)
 	)
 
-OZ_ENABLE(modules-static,[ link modules statically],no,
+OZ_ENABLE(modules-static,[ link modules statically],$oz_enable_modules_static,
+        oz_enable_modules_static=yes
         AC_MSG_RESULT(yes (-DMODULES_LINK_STATIC))
 	AC_DEFINE(MODULES_LINK_STATIC)
 	STATIC_MODULES="\$(MODULE_NAMES)"
 	DYNAMIC_MODULES=""
 	,
+        oz_enable_modules_static=no
         AC_MSG_RESULT(no (-UMODULES_LINK_STATIC))
 	STATIC_MODULES=""
 	DYNAMIC_MODULES="\$(MODULE_NAMES)"
 	)
 AC_SUBST(STATIC_MODULES)
 AC_SUBST(DYNAMIC_MODULES)
+
+if test "$oz_enable_modules_static" != "yes" ; then 
+    OZ_CXX_OPTIONS(-fpic,CDYNOPT)
+fi
+AC_SUBST(CDYNOPT)
 
 dnl *****************************************************************
 dnl malloc
