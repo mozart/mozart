@@ -445,11 +445,12 @@ Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
 
 Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
 {
-  COUNT(totalUnify);
   int argSize;
   RefsArray args1, args2;
 
 start:
+  COUNT(totalUnify);
+
   DEREFPTR(term1,termPtr1,tag1);
   DEREFPTR(term2,termPtr2,tag2);
 
@@ -479,6 +480,8 @@ start:
 
  /*************/
  var_nonvar:
+
+  COUNT(varNonvarUnify);
 
   if (isCVar(tag1)) {
     return tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, prop);
@@ -525,6 +528,8 @@ start:
 
  /*************/
  nonvar_nonvar:
+
+  COUNT(nonvarNonvarUnify);
 
   if (tag1 != tag2) {
     return NO;

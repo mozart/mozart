@@ -60,6 +60,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
 
   if (!isAnyVar(term2)) {
     if (proto == term1 && prop) {
+      COUNT(varNonvarUnify);
       doBind(term1Ptr,term2);
       goto exit;
     }
@@ -67,6 +68,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
       goto exit;
     }
   } else if (!isAnyVar(term1) && proto==term2 && prop) {
+    COUNT(varNonvarUnify);
     doBind(term2Ptr,term1);
     goto exit;
   }
