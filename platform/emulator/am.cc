@@ -143,12 +143,12 @@ void AM::init(int argc,char **argv)
 
   char *tmp;
   if ((tmp = getenv("OZPATH"))) {
-    am.conf.ozPath = tmp;
-    am.conf.linkPath = tmp;
+    conf.ozPath = tmp;
+    conf.linkPath = tmp;
   }
 
   if ((tmp = getenv("OZLINKPATH"))) {
-    am.conf.linkPath = tmp;
+    conf.linkPath = tmp;
   }
 
   char *comPath = NULL;  // path name where to create AF_UNIX socket
@@ -831,6 +831,12 @@ void AM::pushDebug(Board *n, SRecord *def, int arity, RefsArray args)
   n->addSuspension();
   ensureTaskStack();
   currentTaskStack->pushDebug(n, new OzDebug(def,arity,args));
+}
+
+void AM::pushTaskOutline(Board *n,ProgramCounter pc,
+			 RefsArray y,RefsArray g,RefsArray x,int i)
+{
+  pushTask(n, pc, y, g, x, i);
 }
 
 #ifdef OUTLINE
