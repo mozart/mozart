@@ -25,12 +25,7 @@ include ../Makefile.vars
 
 VPATH		= @srcdir@
 FSETDIR		= @srcdir@
-FSETINCS	= -I..
-CFLAGS		+= $(FSETINCS)
-CPPFLAGS	+= $(FSETINCS)
-CXXFLAGS	+= $(FSETINCS)
-DEPEND		+= $(FSETINCS)
-
+CPPFLAGS	+= -I..
 FSETTARGETS	= @FSETTARGETS@
 
 FSETLIBSRCS =	standard.cc telling.cc \
