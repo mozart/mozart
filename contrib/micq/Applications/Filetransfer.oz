@@ -94,7 +94,7 @@ define
 	 else  A Ds={GetData 1024} in
 	    if Ds\=nil then
 	       N=O+1
-	       {Send P Ds#A}
+	       {Send P {VirtualString.toByteString Ds}#A}
 	       thread L={Length Ds} O N in
 		  {Wait A}
 		  {Progress L}
@@ -150,9 +150,8 @@ define
    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %% Receiving
    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   proc{ReceiveFile File P Meta} S SaveData CloseFile in
+   proc{ReceiveFile File P Meta} SaveData CloseFile in
       Meta={NewName}
-      P={NewPort S}
       thread
 	 proc{OpenWindow SetSize CloseWindow Progress}
 	    T={New Tk.toplevel tkInit(title:"Saving File")}
@@ -185,20 +184,20 @@ define
       in
 	 {SaveFile File SaveData CloseFile}
 	 {OpenWindow SetSize CloseWindow Progress}
-	 try
-	    {ForAll S proc{$ X}
-			 if X.1==Meta then
-			    if X.2==done then
-			       raise done end
-			    elseif {Label X.2}==size then
-			       {SetSize X.2.1}
-			    end
-			 else 
-			    {SaveData X.1}
-			    X.2=unit
-			    {Progress {Length X.1}}
-			 end
-		      end}
+	 try	    
+	    {ForAll {NewPort $ P} proc{$ X}
+				     if X.1==Meta then
+					if X.2==done then
+					   raise done end
+					elseif {Label X.2}==size then
+					   {SetSize X.2.1}
+					end
+				     else Ss={ByteString.toString X.1} in
+					{SaveData Ss}
+					X.2=unit
+					{Progress {Length Ss}}
+				     end
+				  end}
 	 catch done then skip end
 	 {CloseWindow}
 	 {CloseFile}
