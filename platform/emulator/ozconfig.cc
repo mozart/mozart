@@ -107,6 +107,7 @@ void ConfigData::init() {
 #endif
 
   runningUnderEmacs     = 0;
+  browser               = 0;
 
   debugPerdio = 0;
   debugIP = 0;
@@ -135,3 +136,4 @@ void ConfigData::init() {
   }
 
 }
+
