@@ -782,7 +782,7 @@ Propagator * imposed_propagator;
 int is_active = 1;
 
 int OZ_CPIVar::_first_run = 0;
-OZ_Term OZ_CPIVar::_vars_removed = OZ_nil();
+OZ_Term OZ_CPIVar::_vars_removed;
 
 OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 {
