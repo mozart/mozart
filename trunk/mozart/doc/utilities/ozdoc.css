@@ -14,11 +14,11 @@ DIV.maxi {
 }
 
 BODY, P, H1, H2, H3, H4, TH, TD, A {
-  font-family: sans-serif;
+  font-family: verdana,arial,helvetica,sans-serif;
 }
 
 PRE, CODE, KBD, SPAN.key, SPAN.buffer {
-  font-family: courier, monospace;
+  font-family: andale,courier,monospace;
 }
 
 P {
