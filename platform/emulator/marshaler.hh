@@ -60,10 +60,6 @@ extern RefTrail *refTrail;
 
 void initMarshaler();
 
-// message routines provided by marshaler
-
-Bool unmarshal_SPEC(MsgBuffer*, char* &,OZ_Term&);
-
 // the names of the difs for statistics 
 
 enum {
@@ -135,7 +131,7 @@ public:
 
 inline int unmarshalRefTag(MsgBuffer *bs)
 {
-  return bs->oldFormat() ? -1 : unmarshalNumber(bs);
+  return unmarshalNumber(bs);
 }
 
 inline void gotRef(MsgBuffer *bs, TaggedRef val, int index)

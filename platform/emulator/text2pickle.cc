@@ -236,7 +236,7 @@ char *skipHeader(FILE *in)
     if (c==PERDIOMAGICSTART)
       break;
   }
-  setBuf(i++,nextchar(in));  // skip DIF_PRIMARY
+  setBuf(i++,nextchar(in));  // skip second PERDIOMAGICSTART
   setBuf(i,0);
   return strdup(buf);
 }
@@ -533,10 +533,9 @@ TaggedPair *unpickle(FILE *in)
   val.string = strdup(scanString(in));
   AddPair(lastPair,tag,val);
 
-  char *major;
-  int minordiff;
-  splitversion(val.string,major,minordiff);
-  if (minordiff < 0) {
+  int major, minor;
+  int aux = sscanf(val.string,"%d#%d",&major,&minor);
+  if (aux !=2 && strcmp(val.string,"3.0.10#15")!=0) { // hard coded old version
     error("Version too new. Got: '%s', expected: '%s'.\n",val.string,PERDIOVERSION);
   }
 

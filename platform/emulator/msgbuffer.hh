@@ -37,7 +37,6 @@
 #include "dpInterface.hh"
 
 #define MSGFLAG_TEXTMODE  0x1
-#define MSGFLAG_OLDFORMAT 0x2
 
 class MsgBuffer {
 private:
@@ -59,6 +58,9 @@ public:
   virtual void unmarshalBegin()=0;
   virtual void unmarshalEnd()=0;
 
+  virtual void getVersion(int *major, int *minor) { 
+    *major = PERDIOMAJOR; *minor = PERDIOMINOR; } 
+
   virtual void init() { 
     nogoods   = oz_nil();
     flags     = 0;
@@ -66,9 +68,6 @@ public:
 
   void setTextmode() { flags |= MSGFLAG_TEXTMODE; }
   Bool textmode()    { return (flags&MSGFLAG_TEXTMODE); }
-
-  void setOldFormat() { flags |= MSGFLAG_OLDFORMAT; }
-  Bool oldFormat()    { return (flags&MSGFLAG_OLDFORMAT); }
 
   // NON-virtual!
   BYTE get(){
