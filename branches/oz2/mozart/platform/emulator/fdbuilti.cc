@@ -1207,12 +1207,8 @@ BIspec fdSpec[] = {
   {"fdp_square", 2, fdp_square},
   {"fdp_subset", 2, fdp_subset},
 
-  {"counter", 2, fdtest_counter},
-  {"firstFail", 2, fdtest_firstFail},
   {"sched_taskIntervalsProof", 5, sched_taskIntervalsProof},
   {"sched_firstsLasts", 5, sched_firstsLasts},
-  {"spawnLess", 2, fdtest_spawnLess},
-  {"dplus", 3, fdtest_plus},
 
 #endif
 #ifdef DEBUG_STABLE
