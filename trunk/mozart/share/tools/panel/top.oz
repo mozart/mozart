@@ -627,19 +627,23 @@ in
       end
       
       meth enter
-	 MouseInside <- true
-	 case @RequireMouse then
-	    PanelTop,stop
-	            ,delay
-	 else skip
+	 case self,isClosed($) then skip else
+	    MouseInside <- true
+	    case @RequireMouse then
+	       PanelTop,stop
+		       ,delay
+	    else skip
+	    end
 	 end
       end
 
       meth leave
-	 MouseInside <- false
-	 case @RequireMouse then
-	    PanelTop,stop
-	 else skip
+	 case self,isClosed($) then skip else
+	    MouseInside <- false
+	    case @RequireMouse then
+	       PanelTop,stop
+	    else skip
+	    end
 	 end
       end
       
@@ -716,7 +720,6 @@ in
       end
       
       meth close
-	 UrObject,close
 	 Tk.toplevel,close
 	 {self.manager PanelTopClosed}
       end
