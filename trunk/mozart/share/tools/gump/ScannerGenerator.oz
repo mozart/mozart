@@ -60,36 +60,111 @@ local
       end
    end
 
-   fun {CompileScanner Flex T Rep}
-      case Flex of noLexer then noLexer
-      else FlexFile = {MakeFileName T ".l"} in
-	 {Rep startSubPhase('writing flex input file')}
-	 {WriteVSFile Flex FlexFile}
-	 {Rep startSubPhase('generating scanner tables')}
-	 if {OS.system PLATFORMDIR#'/oz.flex.bin -Cem '#FlexFile} \= 0
-	 then
-	    {Rep error(kind: 'system error'
-		       msg: 'invocation of oz.flex.bin failed')}
-	    stop
+   local
+      proc {GetCoord S ?Coord ?Msg} FileName Rest1 in
+	 {List.takeDropWhile S fun {$ C} C \= &: end ?FileName ?Rest1}
+	 case Rest1 of nil then
+	    Coord = unit
+	    Msg = S
+	 elseof &:|Rest2 then Column in
+	    {List.takeDropWhile Rest2 fun {$ C} C \= &: end ?Column &:|& |Msg}
+	    Coord = pos({String.toAtom FileName} {String.toInt Column} ~1)
+	 end
+      end
+
+      fun {OutputMessages S|Sr Rep}
+	 case S of C|&:|R then
+	    case C of &W then Coord Msg in
+	       {GetCoord R ?Coord ?Msg}
+	       {Rep warn(coord: Coord
+			 kind: 'scanner generator warning'
+			 msg: Msg)}
+	       {OutputMessages Sr Rep}
+	    [] &E then Coord Msg in
+	       {GetCoord R ?Coord ?Msg}
+	       {Rep error(coord: Coord
+			  kind: 'scanner generator error'
+			  msg: Msg)}
+	       {OutputMessages Sr Rep}
+	    [] &X then
+	       Sr = nil
+	       {String.toInt R}
+	    end
 	 else
-	    {Rep startSubPhase('compiling scanner')}
-	    if {OS.system
-		'g++ -fno-rtti -O3 '#
-		'-I'#{Property.get 'oz.home'}#'/include -I'#INCLUDEDIR#
-		' -c '#{MakeFileName T ".C"}#
-		' -o '#{MakeFileName T ".o"}} \= 0
-	    then
-	       {Rep error(kind: 'system error'
-			  msg: 'invocation of g++ failed')}
+	    {Rep warn(kind: 'scanner generator' msg: S)}
+	    {OutputMessages Sr Rep}
+	 end
+      end
+
+      class TextPipe from Open.text Open.pipe
+	 prop final
+	 meth getAll($)
+	    case Open.text, getS($) of false then nil
+	    elseof S then
+	       S|TextPipe, getAll($)
+	    end
+	 end
+      end
+
+      fun {InvokeFlex FlexFile Rep} T RaiseOnBlock P Ss in
+	 T = {Thread.this}
+	 RaiseOnBlock = {Debug.getRaiseOnBlock T}
+	 {Debug.setRaiseOnBlock T false}
+	 try
+	    P = {New TextPipe init(cmd: PLATFORMDIR#'/oz.flex.bin'
+				   args: ['-Cem' FlexFile])}
+	    {P getAll(?Ss)}
+	    {P close()}
+	    try
+	       {OutputMessages Ss Rep}
+	    catch _ then
+	       {Rep error(kind: 'scanner generator error'
+			  msg: 'unrecognized output from flex'
+			  items: {Map Ss fun {$ S} line(S) end})}
+	       1
+	    end
+	 catch _ then
+	    {Rep error(kind: 'scanner generator'
+		       msg: 'invocation of oz.flex.bin failed')}
+	 finally
+	    {Debug.setRaiseOnBlock T RaiseOnBlock}
+	 end
+      end
+   in
+      fun {CompileScanner Flex T Rep}
+	 case Flex of noLexer then noLexer
+	 else FlexFile = {MakeFileName T ".l"} in
+	    {Rep startSubPhase('writing flex input file')}
+	    {WriteVSFile Flex FlexFile}
+	    {Rep startSubPhase('generating scanner tables')}
+	    case {InvokeFlex FlexFile Rep} of 0 then
+	       {Rep startSubPhase('compiling scanner')}
+	       if {OS.system
+		   'g++ -fno-rtti -O3 '#
+		   '-I'#{Property.get 'oz.home'}#'/include -I'#INCLUDEDIR#
+		   ' -c '#{MakeFileName T ".C"}#
+		   ' -o '#{MakeFileName T ".o"}} \= 0
+	       then
+		  {Rep error(kind: 'system error'
+			     msg: 'invocation of g++ failed')}
+		  stop
+	       elseif {OS.system 'ozdynld '#
+		       {MakeFileName T ".o"}#' -o '#
+		       {MakeFileName T ".so"}#'-'#PLATFORM#' -lc'} \= 0
+	       then
+		  {Rep error(kind: 'system error'
+			     msg: 'invocation of ozdynld failed')}
+		  stop
+	       else continue
+	       end
+	    elseof I then
+	       if {Rep hasSeenError($)} then skip
+	       else
+		  {Rep error(kind: 'system error'
+			     msg: 'invocation of oz.flex.bin failed'
+			     items: [hint(l: 'Exit code' m: I)])}
+	       end
 	       stop
-	    elseif {OS.system 'ozdynld '#
-		    {MakeFileName T ".o"}#' -o '#
-		    {MakeFileName T ".so"}#'-'#PLATFORM#' -lc'} \= 0
-	    then
-	       {Rep error(kind: 'system error'
-			  msg: 'invocation of ozdynld failed')}
-	       stop
-	    else continue
 	    end
 	 end
       end
