@@ -170,7 +170,7 @@
     <Meta name=latex.package value="pst-node">
     <Meta name=latex.package value="epsfig">
 
-    <Meta name=latex.input   value="fdt.tex">
+    <Meta name=latex.input   value="fdt-utils.tex">
 
     <Title/Finite Domain Constraint Programming in &Oz;. A Tutorial./
       <Author.Extern to="author.db" key="Christian.Schulte">
