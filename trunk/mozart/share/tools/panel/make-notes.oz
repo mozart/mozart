@@ -86,7 +86,7 @@ local
 
    class Scale
       from Tk.scale
-      attr Saved: Unit
+      attr Saved:0
       meth init(parent:P range:R action:A state:S)
 	 <<Tk.scale tkInit(parent:    P
 			   length:    200
@@ -97,6 +97,7 @@ local
 			   action: self # noop
 			       width:     8
 			       showvalue: True)>>
+	 Saved <- S
 	 <<Tk.scale tk(set S)>>
 	 <<Tk.scale tkAction(proc {$ X}
 				{A {Tk.string.toInt X}}
@@ -107,6 +108,9 @@ local
 	    Saved <- N
 	    <<Scale tk(set N)>>
 	 end
+      end
+      meth get($)
+	 @Saved
       end
    end
    

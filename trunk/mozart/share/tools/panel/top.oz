@@ -279,13 +279,15 @@ in
 				 state:   {System.get priorities}.high
 				 feature: high
 				 action:  proc {$ N}
-					     true
+					     {System.set
+					      priorities(high:N)}
 					  end)
 			   scale(text: 'Middle relative to Low:'
 				 state:   {System.get priorities}.middle
 				 feature: middle
 				 action:  proc {$ N}
-					     true
+					     {System.set
+					      priorities(middle:N)}
 					  end)]
 		 right:   [button(text: 'Default'
 				  action: proc {$}
@@ -332,7 +334,13 @@ in
 				 feature: maxSize
 				 state:   {System.get gc}.max div MegaByteI
 				 action:  proc {$ N}
-					     {System.set
+					     S = Memory.options.
+					            parameter.minSize
+					  in
+					     case {S get($)}>N then
+						{S set(N)}
+					     else true end
+					     {System.set 
 					      gc(max: N * MegaByteI)}
 					  end)
 			   scale(text:    'Minimal Size:'
@@ -341,6 +349,12 @@ in
 				 feature: minSize
 				 state:   {System.get gc}.min div MegaByteI
 				 action:  proc {$ N}
+					     S = Memory.options.
+					            parameter.maxSize
+					  in
+					     case {S get($)}<N then
+						{S set(N)}
+					     else true end
 					     {System.set
 					      gc(min: N * MegaByteI)}
 					  end)
