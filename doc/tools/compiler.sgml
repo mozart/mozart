@@ -23,7 +23,7 @@ modes selected by the options below:
 <code/?{FILE}.oz/, then pickles the resulting value into the output
 file, <code/?{FILE}.ozf/ by default./
 
-        <entry/<code/-e/, <code/--feedtoemulator//
+        <entry/<code/-e/, <code/--execute//
         <synopsis/<code/ozc -e &ellipsis; ?{FILE}.oz &ellipsis;//
         <item/Compiles and executes the statement in file
 <code/?{FILE}.oz/.  This is the default mode of operation./
