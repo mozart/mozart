@@ -201,8 +201,19 @@ in
 	    else skip end
 	 end
       end
-	 
+
       meth scrollbar(file:F line:L color:C what:What<=appl ack:Ack<=unit)
+	 SourceManager,EmacsScrollbar(file:F line:L color:C what:What ack:Ack)
+      end
+      
+      meth EmacsScrollbar(file:F line:L color:C what:What ack:Ack)
+	 case {IsDet Ack} then skip else Ack = unit end
+         case {UnknownFile F} then skip else
+            {Show {VS2A 'oz-arrow ' # {LookupFile F} # ' ' # L}}
+         end
+      end
+      
+      meth OzScrollbar(file:F line:L color:C what:What ack:Ack)
 	 case {UnknownFile F} then
 	    SourceManager,EraseScrollbar(What)
 	 else
