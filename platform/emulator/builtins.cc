@@ -7729,6 +7729,9 @@ BuiltinTabEntry *BIinit()
     return bi;
 
   BIaddSpec(allSpec);
+  BI_Unify=makeTaggedConst(builtinTab.find("="));
+  BI_Show=makeTaggedConst(builtinTab.find("Show"));
+  BI_send=makeTaggedConst(builtinTab.find("Send"));
 
   BIinitAssembler();
 
@@ -7742,6 +7745,7 @@ BuiltinTabEntry *BIinit()
   BIinitTclTk();
 
   BIinitPerdio();
+  BI_restop=makeTaggedConst(builtinTab.find("perdioRestop"));
 
   BIinitLazy();
 

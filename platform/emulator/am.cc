@@ -392,12 +392,12 @@ void AM::init(int argc,char **argv)
   toplevelQueue = (Toplevel *) NULL;
 
   // builtins
+  initLiterals();
   BuiltinTabEntry *entry = BIinit();
   if (!entry) {
     error("BIinit failed");
     osExit(1);
   }
-  initLiterals();
 
   extern void initTagged();
   initTagged();

@@ -236,10 +236,6 @@ void initLiterals()
   E_OS    = makeTaggedAtom("os");
   E_SYSTEM= makeTaggedAtom("system");
 
-  BI_Unify=makeTaggedConst(builtinTab.find("="));
-  BI_Show=makeTaggedConst(builtinTab.find("Show"));
-  BI_send=makeTaggedConst(builtinTab.find("Send"));
-  BI_restop=makeTaggedConst(builtinTab.find("perdioRestop"));
 }
 
 /*===================================================================
