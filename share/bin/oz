@@ -35,6 +35,7 @@ then
   export OZHOME
 else
   $doecho "Using Oz directory: $OZHOME"
+  export OZHOME
 fi
 
 # determine machine architecture and OS version
