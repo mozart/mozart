@@ -61,7 +61,7 @@ struct msgField {
 
 //
 class MsgContainer {
-  friend MsgContainerManager;
+  friend class MsgContainerManager;
 private:
   MessageType mt;
   int flags;
