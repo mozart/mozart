@@ -1677,7 +1677,7 @@ LBLdispatcher:
       Object *self = e->getSelf();
       SRecord *rec = self->getState();
       
-      if (e->currentBoard != self->getBoard()) {
+      if (!e->isToplevel() && e->currentBoard != self->getBoard()) {
 	(void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
 	goto LBLraise;
       }
