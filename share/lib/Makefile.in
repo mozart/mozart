@@ -99,7 +99,7 @@ INITSRC = $(INITSRC1:%=init/%) Init.oz \
         ../url-defaults.oz ../functor-defaults.oz
 
 Init.ozf: URL.ozf $(INITSRC)
-        $(COMPILE) -l URL=URL.ozf Init.oz -o Init.ozf
+        $(COMPILE) Init.oz -o Init.ozf
 
 #---------------------------------------------------------------------
 # Base
@@ -129,28 +129,35 @@ $(FUNCTORS): Base.ozf
 
 %.ozf: sp/%.oz Base.ozf
         $(COMPILE) $< -o $@
+
 %.ozf: op/%.oz Base.ozf
         $(COMPILE) $< -o $@
+
 %.ozf: ap/%.oz Base.ozf
         $(COMPILE) $< -o $@
-FD.ozf: cp/FD.oz CpSupport.ozf Base.ozf
-        $(COMPILE) -l CpSupport $< -o $@
-FS.ozf: cp/FS.oz CpSupport.ozf Base.ozf
-        $(COMPILE) -l CpSupport $< -o $@
-Schedule.ozf: cp/Schedule.oz CpSupport.ozf Base.ozf
-        $(COMPILE) -l CpSupport $< -o $@
-%.ozf: cp/%.oz Base.ozf
+
+Search.ozf: cp/Search.oz Base.ozf
         $(COMPILE) $< -o $@
+CpSupport.ozf: cp/CpSupport.oz Base.ozf
+        $(COMPILE) $< -o $@
+%.ozf: cp/%.oz CpSupport.ozf Base.ozf
+        $(COMPILE) $< -o $@
+
 %.ozf: dp/%.oz Base.ozf
         $(COMPILE) $< -o $@
+
 %.ozf: wp/%.oz Base.ozf
         $(COMPILE) $< -o $@
+
 %.ozf: misc/%.oz Base.ozf
         $(COMPILE) $< -o $@
+
 %.ozf: %.oz Base.ozf
         $(COMPILE) $< -o $@
+
 %.ozf: compiler/%.oz Base.ozf
         $(COMPILE) $< -o $@
+
 %.ozf: support/%.oz Base.ozf
         $(COMPILE) $< -o $@
 
@@ -212,8 +219,7 @@ Core.ozf: compiler/Core.oz compiler/Annotate.oz
 
 StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
         Search.ozf FD.ozf FS.ozf
-        $(COMPILE) -l Search=Search.ozf,FD=FD.ozf,FS=FS.ozf \
-        compiler/StaticAnalysis.oz -o $@
+        $(COMPILE) compiler/StaticAnalysis.oz -o $@
 
 CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
 
@@ -225,8 +231,8 @@ Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
         compiler/Abstractions.oz compiler/Errors.oz \
         compiler-Version.oz Base.ozf
 
-RunTime.ozf: compiler/RunTime.oz Base.ozf BaseBuiltins.ozf
-        $(COMPILE) -l BaseBuiltins $< -o $@
+RunTime.ozf: compiler/RunTime.oz Base.ozf
+        $(COMPILE) $< -o $@
 
 Compiler.ozf: $(FUNFUNCTORS) ozar
         $(OZENGINE) ozar $(COMPRESSFLAGS) --in=Main.ozf --out=Compiler.ozf
@@ -348,7 +354,7 @@ boot-all:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=root=.:prefix=/=/:prefix=$(URL)/share/=./:=
+                OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=./:=
 
 STAGE1=./stage1
 STAGE2=./stage2
