@@ -895,20 +895,6 @@ LBLdispatcher:
       DISPATCH(2);
     }
 
-  Case(SETSELF)
-    {
-      TaggedRef term = XPC(1);
-      if (oz_isRef(term)) {
-        DEREF(term,termPtr,tag);
-        if (oz_isVariable(term)) {
-          SUSP_PC(termPtr,PC);
-        }
-      }
-      ChangeSelf(tagged2Object(term));
-      DISPATCH(2);
-    }
-
-
   Case(SETSELFG)
     {
       TaggedRef term = Greg(getRegArg(PC+1));
@@ -1075,7 +1061,6 @@ LBLdispatcher:
       DISPATCH(2);
     }
 
-  Case(SETPREDICATEREF)
   Case(SETPROCEDUREREF)
     {
       *sPointer++ = OZ_makeForeignPointer(getAdressArg(PC+1));
@@ -2939,7 +2924,7 @@ Case(GETVOID)
             dbg->arity = getPosIntArg(PC+7);
             copyArgs = OK;
             break;
-          case GENFASTCALL:
+          case CALLPROCEDUREREF:
           case FASTCALL:
             {
               Abstraction *abstr =
@@ -2949,7 +2934,7 @@ Case(GETVOID)
               copyArgs = OK;
             }
             break;
-          case MARSHALLEDFASTCALL:
+          case CALLCONSTANT:
             dbg->data = getTaggedArg(PC+6);
             dbg->arity = getPosIntArg(PC+7) >> 1;
             copyArgs = OK;
@@ -3094,49 +3079,7 @@ Case(GETVOID)
       DISPATCH(0);
     }
 
-  Case(GENFASTCALL)
-    {
-      AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-      Bool tailcall           =  getPosIntArg(PC+2) & 1;
-
-      if (entry->getAbstr() == 0) {
-        (void) oz_raise(E_ERROR,E_SYSTEM,"inconsistentFastcall",0);
-        RAISE_THREAD;
-      }
-      CodeArea::writeOpcode(tailcall ? FASTTAILCALL : FASTCALL, PC);
-      DISPATCH(0);
-    }
-
   Case(CALLCONSTANT)
-    {
-      TaggedRef pred = getTaggedArg(PC+1);
-      int tailcallAndArity  = getPosIntArg(PC+2);
-
-      DEREF(pred,predPtr,_1);
-      if (oz_isVariable(pred)) {
-        SUSP_PC(predPtr,PC);
-      }
-
-      if (oz_isAbstraction(pred)) {
-        CodeArea *code = CodeArea::findBlock(PC);
-        code->unprotect((TaggedRef*)(PC+1));
-        AbstractionEntry *entry = new AbstractionEntry(NO);
-        entry->setPred(tagged2Abstraction(pred));
-        CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);
-        code->writeAbstractionEntry(entry, PC+1);
-        DISPATCH(0);
-      }
-      if (oz_isBuiltin(pred) || oz_isObject(pred)) {
-        isTailCall = tailcallAndArity & 1;
-        if (!isTailCall) PC += 3;
-        predArity = tailcallAndArity >> 1;
-        predicate = tagged2Const(pred);
-        goto LBLcall;
-      }
-      RAISE_APPLY(pred,oz_mklist(OZ_atom("proc or builtin expected.")));
-    }
-
-  Case(MARSHALLEDFASTCALL)
     {
       TaggedRef pred = getTaggedArg(PC+1);
       int tailcallAndArity  = getPosIntArg(PC+2);
@@ -3189,10 +3132,6 @@ Case(GETVOID)
       CodeArea::writeOpcode(tailCall ? TAILCALLG : CALLG,PC);
       DISPATCH(0);
     }
-
-  Case(GENCALL)
-      OZ_error("GENCALL is gone");
-      return T_ERROR;
 
   Case(CALLMETHOD)
     {

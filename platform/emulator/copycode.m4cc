@@ -63,7 +63,7 @@ define(opAction,
         $1,Constant,handleLiteral(PC,ht,code);PC++;,
         $1,Number,handleLiteral(PC,ht,code);PC++;,
         $1,RecordArity, handleRecordArity(PC++,ht);,
-        $1,PredicateRef,handlePredicateRef(PC++,ht,code);,
+        $1,ProcedureRef,handleProcedureRef(PC++,ht,code);,
         $1,PredId,  handlePredId(PC++,ht);,
         $1,HashTableRef, handleHashTable(PC++,ht);,
         $1,CallMethodInfo,handleCallMethodInfo(PC++,ht);,
@@ -190,7 +190,7 @@ AbstractionEntry *checkAE(AbstractionEntry *ae, HashTable *ht)
 
 
 static
-void handlePredicateRef(ProgramCounter PC, HashTable *ht, CodeArea *code)
+void handleProcedureRef(ProgramCounter PC, HashTable *ht, CodeArea *code)
 {
   AbstractionEntry *ae = checkAE((AbstractionEntry*) getAdressArg(PC),ht);
   code->writeAbstractionEntry(ae,PC);

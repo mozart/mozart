@@ -25,8 +25,8 @@ instruction(skip)
 dnl   Reg x ContAddr
 dnl       x (PrintName x Arity x FileName x LineNum x Flags x NLiveRegs)
 dnl       x AbstractionEntry x AssRegArray
-instruction(definition,writeArg(XRegisterIndex),Label,PredId,PredicateRef,GRegRef)
-instruction(definitionCopy,writeArg(XRegisterIndex),Label,PredId,PredicateRef,GRegRef)
+instruction(definition,writeArg(XRegisterIndex),Label,PredId,ProcedureRef,GRegRef)
+instruction(definitionCopy,writeArg(XRegisterIndex),Label,PredId,ProcedureRef,GRegRef)
 instruction(endDefinition,Label)
 
 instruction(moveXX,readArg(XRegisterIndex),writeArg(XRegisterIndex))
@@ -68,8 +68,7 @@ instruction(setVariableX,writeArg(XRegisterIndex))
 instruction(setVariableY,writeArg(YRegisterIndex))
 instruction(setValue,readArg(Register))
 instruction(setConstant,Constant)
-instruction(setPredicateRef,PredicateRef)
-instruction(setProcedureRef,PredicateRef)
+instruction(setProcedureRef,ProcedureRef)
 instruction(setVoid,Count)
 
 instruction(getRecord,Literal,RecordArity,readArg(Register))
@@ -116,12 +115,11 @@ instruction(deAllocateL8)
 instruction(deAllocateL9)
 instruction(deAllocateL10)
 
-dnl   NOTE: The instructions genCall, call, tailCall, marshalledFastCall,
-dnl   genFastCall, fastCall and fastTailCall must all have the same size
-dnl   due to self-modifying code.
+dnl   NOTE: The instructions callMethod, call, tailCall, callConstant,
+dnl   callProcedureRef, fastCall and fastTailCall must all have the
+dnl   same size due to self-modifying code.
 
 instruction(callMethod,CallMethodInfo,Arity)
-instruction(genCall,Dummy,Dummy)
 instruction(callGlobal,readArg(GRegisterIndex),ArityAndIsTail)
 instruction(call,readArg(Register),Arity)
 instruction(tailCallX,readArg(XRegisterIndex),Arity)
@@ -130,22 +128,19 @@ instruction(tailCallG,readArg(GRegisterIndex),Arity)
 dnl   first argument is a TaggedRef pointing to a procedure proxy;
 dnl   second argument is 2 * arity + (is_tailcall? 1: 0)
 instruction(callConstant,Constant,ArityAndIsTail)
-instruction(marshalledFastCall,Constant,ArityAndIsTail)
 
 dnl   second argument is a flag: non-zero iff tailcall
-instruction(callProcedureRef,PredicateRef,ArityAndIsTail)
-instruction(genFastCall,PredicateRef,ArityAndIsTail)
+instruction(callProcedureRef,ProcedureRef,ArityAndIsTail)
 
 dnl   second argument is dummy argument
-instruction(fastCall,PredicateRef,Dummy)
-instruction(fastTailCall,PredicateRef,Dummy)
+instruction(fastCall,ProcedureRef,Dummy)
+instruction(fastTailCall,ProcedureRef,Dummy)
 
 dnl   instructions for objects
 instruction(sendMsg,Literal,readArg(Register),RecordArity,Cache)
 instruction(tailSendMsg,Literal,readArg(Register),RecordArity,Cache)
 
 instruction(getSelf,writeArg(XRegisterIndex))
-instruction(setSelf,readArg(XRegisterIndex))
 instruction(setSelfG,readArg(GRegisterIndex))
 instruction(lockThread,Label,readArg(XRegisterIndex))
 instruction(inlineAt,Feature,writeArg(XRegisterIndex),Cache)
