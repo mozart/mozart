@@ -565,14 +565,34 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case TESTRECORDX:
     case TESTRECORDY:
     case TESTRECORDG:
-      error("done by Leif");
-      DISPATCH();
+      {
+	TaggedRef tagged = getTaggedArg(PC+2);
+	fprintf(ofile, "(%d %s ", regToInt(getRegArg(PC+1)), toC(tagged));
+	SRecordArity sra = (SRecordArity) getAdressArg(PC+3);
+	if (sraIsTuple(sra))
+	  fprintf(ofile, "%d", getTupleWidth(sra));
+	else
+	  fprintf(ofile, "%s", toC(sraGetArityList(sra)));
+	fprintf(ofile, " %p %p %d)\n",
+		computeLabelArg(PC,PC+4),
+		computeLabelArg(PC,PC+5),
+		getPosIntArg(PC+6));
+	DISPATCH();
+      }
 
     case TESTLISTX:
     case TESTLISTY:
     case TESTLISTG:
-      error("done by Leif");
-      DISPATCH();
+      {
+	TaggedRef tagged = getTaggedArg(PC+2);
+	fprintf(ofile,
+		"(%d %p %p %d)\n",
+		regToInt(getRegArg(PC+1)),
+		computeLabelArg(PC,PC+2),
+		computeLabelArg(PC,PC+3),
+		getPosIntArg(PC+4));
+	DISPATCH();
+      }
 
     case TESTBOOLX:
     case TESTBOOLY:
