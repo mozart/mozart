@@ -12,8 +12,8 @@ cmd=`basename $howcalled`
 
 # keep quiet on emacs and standalone systems
 case "$cmd" in
-   ozemacs|ozsa) doecho=true ;;
-   *)            doecho=echo ;;
+   ozemacs|ozsa|ozdo) doecho=true ;;
+   *)                 doecho=echo ;;
 esac
 
 
