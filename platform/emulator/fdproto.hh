@@ -131,7 +131,9 @@ OZ_C_proc_proto(fsp_intersection)
 OZ_C_proc_proto(fsp_union)
 OZ_C_proc_proto(fsp_subsume)
 OZ_C_proc_proto(fsp_disjoint)
-OZ_C_proc_proto(fsp_min)
 OZ_C_proc_proto(fsp_monitorIn)
-
+OZ_C_proc_proto(fsp_min)
+OZ_C_proc_proto(fsp_max)
+OZ_C_proc_proto(fsp_convex)
+OZ_C_proc_proto(fsp_diff)
 #endif
