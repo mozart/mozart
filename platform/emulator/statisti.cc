@@ -72,6 +72,15 @@ void printMem(FILE *fd,char *s,double m)
   fprintf(fd,"%.1lf MB",m/workaroundForBugInGCC2);
 }
 
+ProfileCode(
+void Statistics::heapAlloced(int sz) 
+{ 
+  COUNT1(totalAllocated,sz);
+  if (currAbstr) 
+    currAbstr->getPred()->heapUsed += sz;
+}
+)
+
 int Statistics::getAtomMemory() {
   return CodeArea::atomTab.memRequired(sizeof(Literal));
 }
@@ -239,6 +248,8 @@ void Statistics::initCount() {
   nonoptbicalls=nonoptsendmsg=0;
   numNewName=numNewNamedName=0;
   numThreads=0;
+
+  currAbstr = NULL;
 
   PrTabEntry::profileReset();
 }

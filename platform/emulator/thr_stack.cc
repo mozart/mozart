@@ -82,6 +82,8 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
     } else if (PC==C_SET_SELF_Ptr) { 
       Object *newSelf = (Object*)Y;
       am.setSelf(newSelf);
+    } else if (PC==C_SET_ABSTR_Ptr) { 
+      ProfileCode(ozstat.leaveCall((Abstraction*)Y));
     }
     if (out) {
       if (verbose) {
@@ -122,3 +124,11 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
   return FALSE;
 }
 
+
+void TaskStack::saveAbstr()
+{
+  ProfileCode(
+	      pushAbstr(ozstat.currAbstr);
+	      ozstat.currAbstr = NULL;
+        )
+}
