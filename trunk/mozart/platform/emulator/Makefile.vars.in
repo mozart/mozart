@@ -51,9 +51,6 @@ INSTALL_DIR= 	@INSTALL_DIR@
 INSTALL_BIN=	$(INSTALL) -m 555
 INSTALL_FILE=	$(INSTALL) -m 444
 
-STATIC_MODULELIBS= -L. -lWif -lFDP -lSchedule -lFSP -lParser \
-	-lozma -lCompilerSupport -lBrowser -lDebug
-LIBS=		   @LIBS@
 LDFLAGS=	   @LDFLAGS@ $(CUSR)
 
 DEFS=		@DEFS@
