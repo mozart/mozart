@@ -26,14 +26,14 @@
 
 Suspendable * (*suspendableSCloneSuspendableDynamic)(Suspendable *);
 
-class OzThread: public OZ_SituatedExtension {
+class OzThread: public OZ_Extension {
 public:
 
 private:
   Thread *thread;
 public:
   OzThread(Thread *thread)
-    : OZ_SituatedExtension(GETBOARD(thread)), thread(thread) {}
+    : OZ_Extension(GETBOARD(thread)), thread(thread) {}
 
   virtual
   int getIdV() { return OZ_E_THREAD; }

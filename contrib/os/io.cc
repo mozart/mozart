@@ -9,12 +9,12 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 
-class FileDescriptor: public OZ_SituatedExtension {
+class FileDescriptor: public OZ_Extension {
 public:
   int fd;
-  FileDescriptor(int FD):OZ_SituatedExtension(),fd(FD){}
+  FileDescriptor(int FD):OZ_Extension(),fd(FD){}
   FileDescriptor(FileDescriptor&);
-  // Situated Extension
+  // Extension
   static int id;
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("fileDescriptor"); }
@@ -29,7 +29,7 @@ public:
 };
 
 //
-// Situated Extension
+// Extension
 //
 
 int FileDescriptor::id;

@@ -7,7 +7,7 @@
 
 extern void gCollectWeakDictionaries(void);
 
-class WeakDictionary : public OZ_SituatedExtension {
+class WeakDictionary : public OZ_Extension {
 private:
   DynamicTable *table;
   OZ_Term stream;
@@ -16,9 +16,9 @@ private:
 public:
   WeakDictionary();
   WeakDictionary(DynamicTable*t,OZ_Term s)
-    : OZ_SituatedExtension(),table(t),stream(s) {}
+    : OZ_Extension(),table(t),stream(s) {}
   WeakDictionary(OZ_Term srm)
-    : OZ_SituatedExtension(),stream(srm)
+    : OZ_Extension(),stream(srm)
     {
       table = DynamicTable::newDynamicTable(DictDefaultSize);
     }
