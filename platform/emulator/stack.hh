@@ -15,6 +15,8 @@
 #endif
 
 #include <stdio.h>
+#include <unistd.h>
+#include <malloc.h>
 
 #include "error.h"
 #include "types.hh"
@@ -36,14 +38,14 @@ protected:
   virtual void resize(int newSize);
 
   // memory management: default via malloc/free
-  virtual StackEntry *allocate(int n);
   virtual void deallocate(StackEntry *p, int n);
   virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
 
 public:
 
-  Stack(int sz = 10000);
-  virtual ~Stack() { deallocate(array,size*sizeof(StackEntry)); }
+  Stack(int sz = 10000, void *(*allocfun)(size_t t) = malloc);
+
+  virtual ~Stack() { deallocate(array,size); }
 
   Bool empty(void) { return (tos <= array) ? OK : NO; }
 

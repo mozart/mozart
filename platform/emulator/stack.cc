@@ -28,10 +28,10 @@ void Stack::resize(int newSize)
 }
 
 
-Stack::Stack(int sz)
+Stack::Stack(int sz, void *(*allocfun)(size_t t))
 {
   size = sz;
-  array = allocate(size);
+  array = (StackEntry*) allocfun(size*sizeof(StackEntry));
   if(!array)
     error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
   tos = array;
@@ -39,11 +39,6 @@ Stack::Stack(int sz)
 }
 
 
-
-StackEntry *Stack::allocate(int n)
-{
-  return (StackEntry *) malloc(sizeof(StackEntry) * n);
-}
 
 void Stack::deallocate(StackEntry *p, int n)
 {
