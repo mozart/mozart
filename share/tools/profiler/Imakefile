@@ -3,7 +3,7 @@
 
 
 OZLIB     = $(OZHOME)/lib
-PROFILER   = $(OZLIB)/profiler
+PROFILER  = $(OZLIB)/profiler
 
 
 LOCALFILES = \
@@ -14,7 +14,10 @@ LOCALFILES = \
 
 LIBFILES = ${LOCALFILES:%.oz=$(PROFILER)/%.oz}
 
-all::
+all::   ../Profiler.oz
+
+../Profiler.oz:: $(LOCALFILES)
+	touch ../Profiler.oz
 
 clean::
 	rm -f *~ *.oz?
