@@ -217,10 +217,9 @@ public:
 
 inline ByteBuffer* ByteBufferManager::newByteBuffer(){
   FreeListEntry *f=getOne();
-  if(f==NULL) {return new ByteBuffer();}
   ByteBuffer *bb;
-  GenCast(f,FreeListEntry*,bb,ByteBuffer*);
-  bb->init();
+  if(f==NULL) {bb=new ByteBuffer();}
+  else{GenCast(f,FreeListEntry*,bb,ByteBuffer*);}
   return bb;}
 
 inline  void ByteBufferManager::deleteByteBuffer(ByteBuffer* bb){
@@ -236,10 +235,8 @@ inline  void ByteBufferManager::deleteByteBuffer(ByteBuffer* bb){
 inline ByteStream* ByteStreamManager::newByteStream(){
   FreeListEntry *f=getOne();
   ByteStream *bs;
-  if(f==NULL) {bs=new ByteStream();}
-  else {GenCast(f,FreeListEntry*,bs,ByteStream*);}
-  ByteBuffer *bb=bufferManager->getByteBuffer();
-  bs->init();
+  if(f==NULL) { return new ByteStream();}
+  GenCast(f,FreeListEntry*,bs,ByteStream*);
   return bs;}
 
 inline  void ByteStreamManager::deleteByteStream(ByteStream* bs){
@@ -267,6 +264,8 @@ ByteBuffer *ByteStream::getAnother(){
 
 void ByteStream::marshalBegin(){
   PERDIO_DEBUG(MARSHALL_BE,"MARSHAL_BE marshal begin");
+  Assert(first==NULL);
+  Assert(last==NULL);
   first=getAnother();
   last=first;
   totlen= 0;
@@ -287,7 +286,7 @@ void BufferManager::freeByteStream(ByteStream *bs){
 
 ByteBuffer* BufferManager::getByteBuffer(){
   ByteBuffer *bb=byteBufM->newByteBuffer();
-  bb->next=NULL;
+  bb->init();
   return bb;}
 
 void BufferManager::freeByteBuffer(ByteBuffer* bb){
@@ -2637,8 +2636,8 @@ void siteReceive(ByteStream* bs)
         globals[i] = unmarshallTerm(bs);
       }
 
-      bs->unmarshalEnd();
       ProgramCounter PC = sendCode ? unmarshallCode(bs) : NOCODE;
+      bs->unmarshalEnd();
       pp->localize(globals,PC);
       break;
     }
@@ -3096,7 +3095,7 @@ void BIinitPerdio()
   gnameTable = new GNameTable();
 #ifdef DEBUG_PERDIO
   printf("dvset \n");
-  dvset(0);
+  dvset(3);
 #endif
 }
 
