@@ -7,11 +7,9 @@
 ///  Extensive modifications by Leif Kornstaedt <kornstae@ps.uni-sb.de>
 
 #include <string.h>
-#ifndef WINDOWS
 #include <pwd.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#endif
 
 #include "../include/config.h"
 #include "oz.h"
