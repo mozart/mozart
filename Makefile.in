@@ -171,15 +171,18 @@ oz-win::
 	( cd $(PREFIX)/..; \
 	  $(TAR) cf - oz/include oz/share \
 		   oz/LICENSE \
-		   oz/winbin \
+		   oz/platform/winbin \
+		   oz/doc \
                    oz/platform/win32-i486/?*.exe \
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/wish \
-                   oz/platform/win32-i486/tcldoc \
          ) | $(TAR) xf -
 	$(INSTALL_DIR) $(WINCACHEDIR)/share
 	$(INSTALL_DIR) $(WINCACHEDIR)/bin
 	mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
 	mv $(WINCACHEDIR)/share/Init.ozf oz/share
-	mv oz/winbin oz/bin
+	for i in ozc ozd ozl; do \
+	  cat oz/platform/winbin/ozwrapper.exe $(PREFIX)/bin/$$i > oz/platform/winbin/$$i.exe;\
+        done
+	mv oz/platform/winbin oz/bin
 	mv oz oz3
