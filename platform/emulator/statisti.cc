@@ -138,7 +138,8 @@ Statistics::Statistics()
 {
   reset();
 
-  heapAllocated = 0;
+  heapAllocated = 0.0;
+  sumHeap = 0.0;
   timeForGC = 0;
   timeForCopy = 0;
   timeForLoading = 0;
@@ -215,7 +216,7 @@ void Statistics::printGcMsg(void)
   gc_utime = usertime() - gc_utime;
   timeForGC += gc_utime;
   heapAllocated += (gc_usedMem - getUsedMemory()*KB);
-
+  sumHeap += (gc_usedMem - getUsedMemory()*KB);
   if (gc_level > 0) {
     printMem(stdout, " disposed ", gc_usedMem - getUsedMemory()*KB);
     printf(" in %d msec.\n", gc_utime);

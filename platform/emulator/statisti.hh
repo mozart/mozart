@@ -43,6 +43,7 @@ public:
   int getGCTime() { return sumTimeForGC+timeForGC; }
   int getCopyTime() { return sumTimeForCopy+timeForCopy; }
   int getLoadingTime() { return sumTimeForLoading+timeForLoading; }
+  double getSumHeap() { return sumHeap+timeForGC; }
 
 #ifdef PROFILE
   int allocateCounter, deallocateCounter, procCounter,
@@ -69,7 +70,7 @@ public:
   
   unsigned int timeForGC;
   unsigned int timeForCopy;
-  double heapAllocated;
+  double heapAllocated,sumHeap;
   unsigned int timeForLoading;
   unsigned int timeSinceLastIdle;
 
