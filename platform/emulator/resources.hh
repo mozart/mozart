@@ -264,3 +264,5 @@
  * Whenever you change this file, make sure that you also change the
  * appropriate handbook chapter: system/system.raw!!!!!!!!
  */
+
+#define PICKLE2TEXTHACK 1

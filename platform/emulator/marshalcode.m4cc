@@ -66,13 +66,13 @@ define(opAction,
         $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,YRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,Arity,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
-        $1,Label,marshalLabel(getLabelArg(PC++),bs);,
+        $1,Label,marshalLabel(instrstart,getLabelArg(PC++),bs);,
         $1,Count,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,ArityAndIsTail,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Dummy,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,PredicateRef,marshalPredicateRef((AbstractionEntry*) getAdressArg(PC++),bs);,
         $1,PredId,marshalPredId((PrTabEntry*)getAdressArg(PC++),bs);,
-        $1,HashTableRef,marshalHashTableRef(start,(IHashTable *)getAdressArg(PC++),bs);,
+        $1,HashTableRef,marshalHashTableRef(instrstart,(IHashTable *)getAdressArg(PC++),bs);,
         $1,RecordArity,marshalRecordArity((SRecordArity) getAdressArg(PC++),bs);,
         $1,GenCallInfo,marshalGenCallInfo((GenCallInfoClass*)getAdressArg(PC++),bs);,
         $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
@@ -86,13 +86,6 @@ void marshalBuiltin(Builtin *entry,MsgBuffer *bs)
 {
   marshalTerm(makeTaggedConst(entry),bs);
 }
-
-inline
-void marshalLabel(int lbl, MsgBuffer *bs)
-{
-  marshalNumber(lbl,bs);
-}
-
 
 void marshalGRegRef(AssRegArray *gregs,MsgBuffer *bs)
 {
@@ -206,12 +199,6 @@ void marshalApplMethInfo(ApplMethInfoClass *ami,MsgBuffer *bs)
 
 
 
-void marshalOpCode(Opcode op, MsgBuffer *bs)
-{
-  bs->put(op);
-}
-
-
 void marshalCode(ProgramCounter start, MsgBuffer *bs)
 {
   start -= sizeOf(DEFINITION);
@@ -226,13 +213,15 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
 
   int codesize = (ende-start)*sizeof(ByteCode);
 
-  marshalNumber(codesize,bs);
+
+  marshalCodeStart(codesize,bs);
   PD((MARSHAL,"codesize %d",codesize));
 
   ProgramCounter PC = start;
 
   while (PC<ende) {
 
+    ProgramCounter instrstart = PC;
     Opcode op = CodeArea::getOpcode(PC++);
 
     if (op==GENFASTCALL) {
@@ -243,7 +232,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
       if (!entry->copyable) {
         PD((MARSHAL,"marshalledfastcall"));
-        marshalOpCode(MARSHALLEDFASTCALL,bs);
+        marshalOpCode(instrstart,MARSHALLEDFASTCALL,bs);
         Abstraction *abstr = entry->getAbstr();
         marshalTerm(makeTaggedConst(abstr),bs);
         Bool istailcall = (op==FASTTAILCALL);
@@ -254,7 +243,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
       }
     }
 
-    marshalOpCode(op,bs);
+    marshalOpCode(instrstart,op,bs);
     PD((MARSHAL,"op put %d",op));
     switch(op) {
 
@@ -266,7 +255,8 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     }
   }
 
-  marshalOpCode(ENDOFFILE,bs);
+  marshalOpCode(PC,ENDOFFILE,bs);
+  marshalCodeEnd(PC,bs);
   PD((MARSHAL,"end of file put %d"));
 }
 
@@ -276,8 +266,8 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
 {
   int sz = table->size;
   marshalNumber(sz,bs);
-  marshalLabel(table->elseLabel,bs);
-  marshalLabel(table->listLabel,bs);
+  marshalLabel(start,table->elseLabel,bs);
+  marshalLabel(start,table->listLabel,bs);
 
   int entries = table->numentries;
   marshalNumber(entries,bs);
@@ -288,7 +278,7 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
       while(aux) {
         entries--;
         marshalNumber(ATOMTAG,bs);
-        marshalLabel(aux->getLabel(),bs);
+        marshalLabel(start,aux->getLabel(),bs);
         marshalTerm(makeTaggedLiteral(aux->getLiteral()),bs);
         aux = aux->getNext();
       }
@@ -301,7 +291,7 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
       while(aux) {
         entries--;
         marshalNumber(NUMBERTAG,bs);
-        marshalLabel(aux->getLabel(),bs);
+        marshalLabel(start,aux->getLabel(),bs);
         marshalTerm(aux->getNumber(),bs);
         aux = aux->getNext();
       }
@@ -314,7 +304,7 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
       while(aux) {
         entries--;
         marshalNumber(RECORDTAG,bs);
-        marshalLabel(aux->getLabel(),bs);
+        marshalLabel(start,aux->getLabel(),bs);
         SRecordArity sra;
         Literal *label = aux->getFunctor(sra);
         marshalTerm(makeTaggedLiteral(label),bs);

@@ -477,7 +477,7 @@ int BaseSite::hashPrimary(){
 
 void Site :: marshalPSite(MsgBuffer *buf){
   PD((MARSHAL,"Psite"));
-  buf->put((flags & PERM_SITE)? DIF_SITE_PERM: DIF_PASSIVE);
+  marshalDIF(buf,(flags & PERM_SITE)? DIF_SITE_PERM: DIF_PASSIVE);
   marshalBaseSite(buf);}
 
 #ifdef VIRTUALSITES
@@ -508,19 +508,19 @@ void Site::marshalSite(MsgBuffer *buf){
   PD((MARSHAL,"Site"));
   unsigned int type=getType();
   if(type & PERM_SITE){
-    buf->put(DIF_SITE_PERM);
+    marshalDIF(buf,DIF_SITE_PERM);
     marshalBaseSite(buf);
     return;}
   if (type & VIRTUAL_INFO) {
     // A site with a virtual info can be also remote (in the case of a
     // site in a remote virtual site group);
     VirtualInfo *vi = getVirtualInfo();
-    buf->put(DIF_SITE_VI);
+    marshalDIF(buf,DIF_SITE_VI);
     marshalBaseSite(buf);
     marshalVirtualInfo(vi,buf);
     return;}
   Assert((type & REMOTE_SITE) || (this==mySite) );
-  buf->put(DIF_SITE);
+  marshalDIF(buf,DIF_SITE);
   marshalBaseSite(buf);
   return;}
 

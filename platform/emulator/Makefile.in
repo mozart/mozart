@@ -39,7 +39,7 @@ DYNAMIC_MODULETARGETS = $(MODULE_NAMES:%=%.so)
 
 INCS            = -I. -I$(SRCDIR)
 M4_D            = -DEMUDIR=$(SRCDIR)
-TARGETS         = @TARGETS@
+TARGETS         = @TARGETS@ text2pickle
 MODULETARGETS   = @MODULETARGETS@
 MODULEINSTALL   = @MODULEINSTALL@
 SUBDIRS         = libfd libfset
@@ -54,7 +54,7 @@ MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
 CREATEDOTHERS= \
-        instrtab.hh opcodes.hh optostr.hh marshaler.hh\
+        instrtab.hh opcodes.hh marshaler.hh\
         marshalcode.cc marshalMsg.cc register.hh oz.c \
         atoms.hh \
         config.h scanner.cc parser.cc \
@@ -107,6 +107,9 @@ CPISRCS=\
 
 FSETSRCS=\
         fset.cc fsetcore.cc fsgenvar.cc
+
+TEXT2PICKLESRCS= text2pickle.cc opcodes.cc
+TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
 
 SRCS1=  $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) @PEANUTS@ main.cc
 
@@ -181,6 +184,9 @@ first: $(CREATEDFILES) $(SRCS)
          echo 'moving ...' && \
          rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
          rm -f $$tmp
+
+text2pickle: $(TEXT2PICKLEOBJS)
+        $(LD) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
 install:: install-bin install-inc $(MODULEINSTALL)
 
@@ -274,7 +280,7 @@ os.o: os.cc
 value.cc: atoms.hh
 
 marshaler.hh marshalMsg.cc: msgFormat.m4
-copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
+copycode.cc marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
 
 marshaler.o: marshalcode.cc
 
