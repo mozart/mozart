@@ -360,7 +360,7 @@ in
 	    {Dbg.trace T false}
 	    {Thread.terminate T}
 	    case Select then
-	       Gui,status(TerminateMessage # I # TerminateMessage2)
+	       Gui,doStatus(TerminateMessage # I # TerminateMessage2)
 	    else skip end
 	    ThreadManager,remove(T I kill Select)
 	 end
@@ -386,7 +386,7 @@ in
 	    {Dbg.trace T false}      %% thread is not traced anymore
 	    {Dbg.stepmode T false}   %% no step mode, run as you like!
 	    {Thread.resume T}        %% run, run to freedom!! :-)
-	    Gui,status(ForgetMessage # I # ForgetMessage2)
+	    Gui,doStatus(ForgetMessage # I # ForgetMessage2)
 	    ThreadManager,remove(T I kill)
 	 end
       end
