@@ -266,14 +266,14 @@ define(M4INSTRTWOREGS,``''
 		   STuple *stuple = STuple::newSTuple(label,arity);
 
 		   if (isCVar(term)) {
-		     if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
-						  makeTaggedSTuple(stuple), STUPLE)) {
+		     if (tagged2CVar(term)->unify(termPtr, term, NULL,
+						  makeTaggedSTuple(stuple), OK)) {
 		       DISPATCH(4);
 		     }
 
 		   } else {
 
-		     e->bindToNonvar(termPtr, term,makeTaggedSTuple(stuple));
+		     e->bindToNonvar(termPtr, term,makeTaggedSTuple(stuple),OK);
 
 		     sPointer = stuple->getRef();
 		     mode = WRITE;
@@ -311,15 +311,15 @@ define(M4INSTRTWOREGS,``''
 		   SRecord *srecord = new SRecord(ff,label,am.currentUVarPrototype); // fill w/unb. var.
 		   if(isCVar(term) == OK){
                      TaggedRef srecordRef=makeTaggedSRecord(srecord);
-		     if(tagged2CVar(term)->unify(termPtr, term, tag,
-                                                 &srecordRef, srecordRef, SRECORD)) {
+		     if(tagged2CVar(term)->unify(termPtr, term, 
+                                                 &srecordRef, srecordRef, OK)) {
 		       sPointer = srecord->getRef();
 		       mode = READ;
 		       DISPATCH(4);
 		     }
 		   } else {
 
-		     e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord));
+		     e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),OK);
 		     
 		     sPointer = srecord->getRef();
 		     mode = WRITE;
@@ -399,7 +399,7 @@ define(M4INSTRTWOREGS,``''
 		 DEREF(term,termPtr,tag);
 
 		 if (isNotCVar(tag)) {
-		   e->bindToNonvar(termPtr, term, atm);
+		   e->bindToNonvar(termPtr, term, atm, OK);
 		   DISPATCH(3);
 		 }
 		 
@@ -408,8 +408,7 @@ define(M4INSTRTWOREGS,``''
 		 }
 
 		 if (isCVar(term) &&
-		     tagged2CVar(term)->unify(termPtr, term, tag,
-					      NULL, atm, ATOM)) {
+		     tagged2CVar(term)->unify(termPtr, term, NULL, atm, OK)) {
 		   DISPATCH(3);
 		 }
 
@@ -432,7 +431,7 @@ define(M4INSTRTWOREGS,``''
 		 DEREF(term,termPtr,tag);
 
 		 if (isNotCVar(tag)) {
-		   e->bind(termPtr, term, &i);
+		   e->bind(termPtr, term, &i, OK);
 		   DISPATCH(3);
 		 }
 		 
@@ -441,8 +440,7 @@ define(M4INSTRTWOREGS,``''
 		 }
 
 		 if (isCVar(term) &&
-		     tagged2CVar(term)->unify(termPtr, term, tag,
-					      NULL, i, tagTypeOf(i))) {
+		     tagged2CVar(term)->unify(termPtr,term,NULL,i,OK)) {
 		   DISPATCH(3);
 		 }
 
@@ -470,12 +468,12 @@ define(M4INSTRTWOREGS,``''
 		   LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
 
 		   if (isCVar(term) == OK) {
-		     if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
-						  makeTaggedLTuple(ltuple), LTUPLE)) {
+		     if (tagged2CVar(term)->unify(termPtr, term, NULL,
+						  makeTaggedLTuple(ltuple), OK)) {
 		       DISPATCH(4);
 		     }
 		   } else {
-		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
+		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple), OK);
 		     Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
 
 		     DISPATCH(4);
@@ -514,8 +512,8 @@ define(M4INSTRTWOREGS,``''
 		 if(isAnyVar(term)) {
 		   LTuple *ltuple = new LTuple();
 		   if (isCVar(term) == OK) {
-		     if(tagged2CVar(term)->unify(termPtr, term, tag, NULL,
-						 makeTaggedLTuple(ltuple), LTUPLE)) {
+		     if(tagged2CVar(term)->unify(termPtr, term, NULL,
+						 makeTaggedLTuple(ltuple), OK)) {
 		       DISPATCH(2);
 		     }
 		   } else {
@@ -523,7 +521,7 @@ define(M4INSTRTWOREGS,``''
 		     e->fastUnify(termPtr?makeTaggedRef(termPtr):term,
 				  makeTaggedLTuple(ltuple));
 #else
-		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
+		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),OK);
 #endif
 		     sPointer = ltuple->getRef();
 		     mode = WRITE;
