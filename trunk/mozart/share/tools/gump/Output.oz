@@ -24,26 +24,6 @@
 %%
 
 local
-   local
-      proc {EscapeVariableChar Hd C|Cr Tl}
-	 case Cr of nil then Hd = C|Tl   % terminating quote
-	 elsecase C == &` orelse C == &\\ then Hd = &\\|C|Tl
-	 elsecase C < 10 then Hd = &\\|&x|&0|(&0 + C)|Tl
-	 elsecase C < 16 then Hd = &\\|&x|&0|(&A + C - 10)|Tl
-	 elsecase C < 26 then Hd = &\\|&x|&1|(&0 + C - 16)|Tl
-	 elsecase C < 32 then Hd = &\\|&x|&1|(&A + C - 26)|Tl
-	 else Hd = C|Tl
-	 end
-      end
-   in
-      fun {PrintNameToVirtualString PrintName}
-	 case {Atom.toString PrintName} of &`|Sr then
-	    &`|{FoldLTail Sr EscapeVariableChar $ nil}
-	 else PrintName
-	 end
-      end
-   end
-
    fun {ButLast Xs}
       case Xs of [_] then nil
       elseof X|Xr then X|{ButLast Xr}
@@ -56,7 +36,7 @@ local
    PU = format(push)
    PO = format(pop)
    GL = format(glue(" "))
-   fun {LI Xs Sep} format(list(Xs Sep)) end
+   fun {LI Xs Sep} list(Xs Sep) end
 
    fun {OzBlock Ex}
       case Ex of fLocal(S T _) then PU#{Oz S 0}#EX#NL#'in'#IN#NL#{Oz T 0}#PO
@@ -97,8 +77,8 @@ local
       [] fSkip(_) then 'skip'
       [] fFail(_) then 'fail'
       [] fAssign(S T _) then {DoOutput {Oz S 201}#' <- '#{Oz T 200} P 200}
-      [] fAtom(X _) then {System.valueToVirtualString X 0 0}
-      [] fVar(X _) then {PrintNameToVirtualString X}
+      [] fAtom(X _) then oz(X)
+      [] fVar(X _) then pn(X)
       [] fEscape(V _) then '!'#{OutputOz V}
       [] fWildcard(_) then '_'
       [] fRecord(L Ts) then
