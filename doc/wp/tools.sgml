@@ -261,7 +261,7 @@ F={New Tk.frame tkInit(parent:W width:10#c height:5#c bg:ivory)}
       features.  For instance, to disable the <Q class=menu/About test/ entry
       is possible with
 <chunk class=anonymous><title/entryconfigure/
-{Bar.test.about tk(entryconfigure state:disabled)}
+{B.test.about tk(entryconfigure state:disabled)}
 </chunk>
 
     <P>
@@ -269,7 +269,7 @@ F={New Tk.frame tkInit(parent:W width:10#c height:5#c bg:ivory)}
       under the feature <<menu>>.  For instance the first tear off entry from
       the <Q class=menu/Test/ menu can be removed with
 <chunk class=anonymous><title/menu tearoff/
-{Bar.test.menu tk(configure tearoff:false)}
+{B.test.menu tk(configure tearoff:false)}
 </chunk>
 
     <P>
