@@ -74,7 +74,6 @@ int  globalOSWriteCounter = 0;
 int  globalOSReadCounter = 0;
 int  globalContCounter = 0;
 
-OZ_Term defaultAcceptProcedure = 0;
 OZ_Term defaultConnectionProcedure = 0;
 
 FILE *logfile=stdout;

@@ -123,11 +123,9 @@ void setTransport(OZ_Term);
 OZ_Term getTransport();
 
 // ERIK
-// These are the pointers to the default Accept and Connect procedures.
 // The pointers are set by InitIPconnection in dpMiscModule.cc and
 // read by the connection stub and initIP in connection.cc.
 
-extern OZ_Term defaultAcceptProcedure;
 extern OZ_Term defaultConnectionProcedure;
 extern OZ_Term ConnectPortStream;
 extern OZ_Term ConnectPort;
