@@ -6,7 +6,7 @@ SRCDIR = @srcdir@
 WHAT = foreign
 MAIN = foreign.sgml
 SGMLSRCS = foreign.bib
-HTMLEXTRAFILES = danger.gif
+HTMLEXTRASUPPORTFILES = danger.gif
 OZDOCHTMLFLAGS = --autoindex
 
 include ../Makefile.common
