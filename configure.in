@@ -26,11 +26,22 @@ OZ_PROG_BISON
 
 dnl Check for preprocessor
 AC_PATH_PROG(CPP, cpp)
-if test -z $CPP; then
+if test -z "$CPP"; then
   AC_MSG_ERROR(unable to find preprocessor)
-else
-AC_MSG_RESULT($CPP)
 fi
+
+AC_MSG_CHECKING([for tricky preprocessor options])
+if test "${GXX}" = yes; then
+   echo > oz_conftest.c
+   if test -z "`${CPP} -undef -D__GNUC__ -std=c99 oz_conftest.c 2>&1 1>/dev/null`"; then
+      MOZART_GTK_CPPFLAGS="-undef -D__GNUC__ -std=c99"
+   else
+      MOZART_GTK_CPPFLAGS=
+   fi
+   rm -f oz_conftest.c
+fi
+AC_MSG_RESULT($MOZART_GTK_CPPFLAGS)
+AC_SUBST(MOZART_GTK_CPPFLAGS)
 
 dnl Check for the GTK+ config tool
 AC_PATH_PROG(GTKCONFIG, gtk-config)
