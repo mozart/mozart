@@ -177,6 +177,18 @@ OZ_C_proc_begin(Name,4)                                                       \
 }                                                                             \
 OZ_C_proc_end
 
+#define DECLAREBOOLFUN1(BIfun,BIifun,BIirel)                                  \
+State BIifun(TaggedRef val, TaggedRef &out)                                   \
+{                                                                             \
+  State state = BIirel(val);                                                  \
+  switch(state) {                                                             \
+  case PROCEED: out = NameTrue; break;                                        \
+  case FAILED:  out = NameFalse; break;                                       \
+  default: break;                                                             \
+  }                                                                           \
+  return state;                                                               \
+}                                                                             \
+DECLAREBI_USEINLINEFUN1(BIfun,BIifun);
 
 BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,
