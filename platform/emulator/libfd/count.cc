@@ -28,11 +28,11 @@ OZ_C_proc_begin(fdp_exactly, 3)
   OZ_EXPECT(pe, 1, expectVectorIntVarAny);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.spawn(new ExactlyPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ExactlyPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return ExactlyPropagator::run(void)
+OZ_Return ExactlyPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
 
@@ -102,11 +102,11 @@ OZ_C_proc_begin(fdp_atLeast, 3)
   OZ_EXPECT(pe, 1, expectVectorIntVarAny);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.spawn(new AtLeastPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new AtLeastPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return AtLeastPropagator::run(void)
+OZ_Return AtLeastPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
 
@@ -169,11 +169,11 @@ OZ_C_proc_begin(fdp_atMost, 3)
   OZ_EXPECT(pe, 1, expectVectorIntVarAny);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.spawn(new AtMostPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new AtMostPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return AtMostPropagator::run(void)
+OZ_Return AtMostPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return PROCEED;
 
@@ -236,11 +236,11 @@ OZ_C_proc_begin(fdp_element, 3)
   OZ_EXPECT(pe, 1, expectVectorInt);
   OZ_EXPECT(pe, 2, expectIntVarAny);
 
-  return pe.spawn(new ElementPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ElementPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
-OZ_Return ElementPropagator::run(void)
+OZ_Return ElementPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return FAILED;
 

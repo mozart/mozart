@@ -460,8 +460,8 @@ OZ_Return OZ_Expect::fail(void)
 // member function to spawn a propagator
 //*****************************************************************************
 
-OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
-			   OZ_PropagatorFlags flags)
+OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
+			    OZ_PropagatorFlags flags)
 {
 // do initial run with dummy thread
 

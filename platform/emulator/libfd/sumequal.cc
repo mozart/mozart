@@ -12,7 +12,7 @@
 
 //=============================================================================
 
-OZ_Return LinEqPropagator::run(void)
+OZ_Return LinEqPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
 

@@ -9,9 +9,9 @@ public:
   FSetIntersectionPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_S_S_S(x, y, z) {}
 
-  virtual OZ_Return run(void);
+  virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getSpawner(void) const {
+  virtual OZ_CFun getHeaderFunc(void) const {
     return spawner;
   }
 };
@@ -23,9 +23,9 @@ public:
   FSetUnionPropagator(OZ_Term x, OZ_Term y, OZ_Term z)
     : Propagator_S_S_S(x, y, z) {}
 
-  virtual OZ_Return run(void);
+  virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getSpawner(void) const {
+  virtual OZ_CFun getHeaderFunc(void) const {
     return spawner;
   }
 };
@@ -37,9 +37,9 @@ public:
   FSetSubsumePropagator(OZ_Term x, OZ_Term y)
     : Propagator_S_S(x, y) {}
 
-  virtual OZ_Return run(void);
+  virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getSpawner(void) const {
+  virtual OZ_CFun getHeaderFunc(void) const {
     return spawner;
   }
 };
@@ -51,9 +51,9 @@ public:
   FSetDisjointPropagator(OZ_Term x, OZ_Term y)
     : Propagator_S_S(x, y) {}
 
-  virtual OZ_Return run(void);
+  virtual OZ_Return propagate(void);
   
-  virtual OZ_CFun getSpawner(void) const {
+  virtual OZ_CFun getHeaderFunc(void) const {
     return spawner;
   }
 };

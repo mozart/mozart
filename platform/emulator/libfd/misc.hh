@@ -17,9 +17,9 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(Counter); }
   virtual void updateHeapRefs(OZ_Boolean) { OZ_updateHeapTerm(s); }
-  virtual OZ_Return run(void); 
-  virtual OZ_Term getArguments(void) const { RETURN_LIST2(OZ_int(c), s); }
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void); 
+  virtual OZ_Term getParameters(void) const { RETURN_LIST2(OZ_int(c), s); }
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 
@@ -34,9 +34,9 @@ public:
   FirstFail(OZ_Term, OZ_Term);
   virtual size_t sizeOf(void) { return sizeof(FirstFail); }
   virtual void updateHeapRefs(OZ_Boolean);
-  virtual OZ_Return run(void); 
-  virtual OZ_Term getArguments(void) const { RETURN_LIST2(OZ_int(size), stream); }
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void); 
+  virtual OZ_Term getParameters(void) const { RETURN_LIST2(OZ_int(size), stream); }
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -52,9 +52,9 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(SpawnLess); }
   virtual void updateHeapRefs(OZ_Boolean) { OZ_updateHeapTerm(a); OZ_updateHeapTerm(b); }
-  virtual OZ_Return run(void); 
-  virtual OZ_Term getArguments(void) const { RETURN_LIST2(a, b); }
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return propagate(void); 
+  virtual OZ_Term getParameters(void) const { RETURN_LIST2(a, b); }
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 //-----------------------------------------------------------------------------
@@ -69,11 +69,11 @@ public:
   
   virtual size_t sizeOf(void) { return sizeof(Less); }
 
-  OZ_Term getArguments(void) const { RETURN_LIST2(_x, _y);}
+  OZ_Term getParameters(void) const { RETURN_LIST2(_x, _y);}
   
-  virtual OZ_CFun getSpawner(void) const { return SpawnLess::spawner; }
+  virtual OZ_CFun getHeaderFunc(void) const { return SpawnLess::spawner; }
   
-  virtual OZ_Return run(void);
+  virtual OZ_Return propagate(void);
 };
 
 

@@ -174,7 +174,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
       if (bb) {
 	// if propagator suspends on external variable then keep its
 	// thread in the list to avoid stability
-	if (extParameters(thr->getPropagator()->getArguments(), solveBoard)) {
+	if (extParameters(thr->getPropagator()->getParameters(), solveBoard)) {
 #ifdef DEBUG_PROP_STABILTY_TEST
 	  cout << "\tExt parameter found!" << endl << flush;
 #endif

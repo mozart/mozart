@@ -9,6 +9,8 @@
 class ExtendedExpect : public OZ_Expect
 { 
  public:
+  OZ_expect_t expectIntVarAny(OZ_Term t)
+   {return expectIntVar(t);}
   OZ_expect_t expectIntVarSingl(OZ_Term t)
    {return expectIntVar(t, fd_prop_singl);}
   OZ_expect_t expectIntVarMinMax(OZ_Term t)
@@ -16,7 +18,7 @@ class ExtendedExpect : public OZ_Expect
   OZ_expect_t expectVectorInt(OZ_Term t)
    {return expectVector(t, &expectInt);}
   OZ_expect_t expectVectorIntVarAny(OZ_Term t)
-   {return expectVector(t, &expectIntVarAny);}
+   {return expectVector(t, (OZ_ExpectMeth) &expectIntVarAny);}
   OZ_expect_t expectVectorIntVarSingl(OZ_Term t)
    {return expectVector(t, (OZ_ExpectMeth) &expectIntVarSingl);}
   OZ_expect_t expectVectorIntVarMinMax(OZ_Term t)
@@ -39,7 +41,7 @@ class SumACProp : public OZ_Propagator
     OZ_getOzTermVector(x, _x);
     c=0;
    }
-  virtual OZ_Return run(void);
+  virtual OZ_Return propagate(void);
   virtual size_t sizeOf(void) {return sizeof(SumACProp);}
   virtual void updateHeapRefs(OZ_Boolean)
    {
@@ -56,7 +58,7 @@ class SumACProp : public OZ_Propagator
     _a=new_a;
     _x=new_x;
    }
-  virtual OZ_Term getArguments(void) const 
+  virtual OZ_Term getParameters(void) const 
    { 
     OZ_Term _a_list=OZ_nil(),_x_list=OZ_nil();
     for(int i=size;i--;) 
@@ -66,7 +68,7 @@ class SumACProp : public OZ_Propagator
      }
     return OZ_cons(_a_list, OZ_cons(_x_list, OZ_cons(_d, OZ_nil())));
    }
-  virtual OZ_CFun getSpawner(void) const {return spawner;}
+  virtual OZ_CFun getHeaderFunc(void) const {return spawner;}
   friend int simplify(int*,int*,OZ_Term*,OZ_Term,int*);
 };
 
@@ -111,7 +113,7 @@ int simplify(int *size,int *a,OZ_Term *x,OZ_Term d,int *c)
 }
 
 
-OZ_Return SumACProp::run(void)
+OZ_Return SumACProp::propagate(void)
 {
  int summax,summin,axmax,axmin,dmax,dmin,dpos,i,j,k,dummy;
  double bound1,bound2;
@@ -282,7 +284,7 @@ OZ_C_proc_begin(fdtest_sumac, 3)
     OZ_vectorSize(OZ_args[0])!=OZ_vectorSize(OZ_args[1]))
   return pe.fail();
 
- return pe.spawn(new SumACProp(OZ_args[0],OZ_args[1],OZ_args[2]));
+ return pe.impose(new SumACProp(OZ_args[0],OZ_args[1],OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -305,13 +307,13 @@ OZ_C_proc_begin(fdtest_spawnLess, 2)
   OZ_EXPECT(pe, 0, expectIntVarAny);
   OZ_EXPECT(pe, 1, expectIntVarAny);
 
-  return pe.spawn(new SpawnLess(OZ_args[0], OZ_args[1]));
+  return pe.impose(new SpawnLess(OZ_args[0], OZ_args[1]));
 }
 OZ_C_proc_end
 
 OZ_CFun SpawnLess::spawner = fdtest_spawnLess;
 
-OZ_Return SpawnLess::run(void) 
+OZ_Return SpawnLess::propagate(void) 
 {
   cout << "spawn less count down: " << c << endl << flush;
 
@@ -319,9 +321,9 @@ OZ_Return SpawnLess::run(void)
 
   if (!c) {
     cout << "Spawning less!!!" << endl << flush;
-    addSpawn(fd_prop_bounds, a);
-    addSpawn(fd_prop_bounds, b);
-    spawn(new Less(a, b));
+    addImpose(fd_prop_bounds, a);
+    addImpose(fd_prop_bounds, b);
+    impose(new Less(a, b));
     return ENTAILED;
   }
 
@@ -329,7 +331,7 @@ OZ_Return SpawnLess::run(void)
 }
 
 
-OZ_Return Less::run(void)
+OZ_Return Less::propagate(void)
 {
   OZ_DEBUGPRINT("in " << *this);
   
@@ -364,13 +366,13 @@ OZ_C_proc_begin(fdtest_counter, 2)
   OZ_EXPECT(pe, 0, expectInt);
   OZ_EXPECT(pe, 1, expectStream);
 
-  return pe.spawn(new Counter(OZ_args[0], OZ_args[1]));
+  return pe.impose(new Counter(OZ_args[0], OZ_args[1]));
 }
 OZ_C_proc_end
 
 OZ_CFun Counter::spawner = fdtest_counter;
 
-OZ_Return Counter::run(void) 
+OZ_Return Counter::propagate(void) 
 {
   OZ_DEBUGPRINT("in " << *this);
 
@@ -399,7 +401,7 @@ OZ_Return Counter::run(void)
 	if (OZ_isSmallInt(e_0)) {
 	  c = OZ_intToC(OZ_getArg(e, 0));
 	} else if (OZ_isVariable(e_0)) {
-	  postOn(e_0);
+	  imposeOn(e_0);
 	  return SLEEP;
 	} else {
 	  goto failure;
@@ -443,7 +445,7 @@ OZ_C_proc_begin(fdtest_firstFail, 2)
 
   OZ_EXPECT(pe, 1, expectStream);
 
-  return pe.spawn(new FirstFail(OZ_args[0], OZ_args[1]));
+  return pe.impose(new FirstFail(OZ_args[0], OZ_args[1]));
 }
 OZ_C_proc_end
 
@@ -462,7 +464,7 @@ void FirstFail::updateHeapRefs(OZ_Boolean)
 
 OZ_CFun FirstFail::spawner = fdtest_firstFail;
 
-OZ_Return FirstFail::run(void) 
+OZ_Return FirstFail::propagate(void) 
 {
   OZ_DEBUGPRINT("in " << *this);
 
@@ -544,7 +546,7 @@ private:
 public:
   DPlusPropagator(OZ_Term a, OZ_Term b, OZ_Term c) 
    : _x(a), _y(b), _z(c) {}
-  virtual OZ_Return run(void);
+  virtual OZ_Return propagate(void);
 
   virtual size_t sizeOf(void) { 
     return sizeof(DPlusPropagator); 
@@ -552,10 +554,10 @@ public:
   virtual void updateHeapRefs(OZ_Boolean) { 
     OZ_updateHeapTerm(_x); OZ_updateHeapTerm(_y); OZ_updateHeapTerm(_z);
   } 
-  virtual OZ_Term getArguments(void) const {
+  virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x, OZ_cons(_y, OZ_cons(_z, OZ_nil())));
   }
-  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
 
 
@@ -565,11 +567,11 @@ OZ_C_proc_begin(fdtest_plus, 3)
 
   OZ_Expect pe;
 
-  OZ_EXPECT(pe, 0, expectIntVarAny);
-  OZ_EXPECT(pe, 1, expectIntVarAny);
-  OZ_EXPECT(pe, 2, expectIntVarAny);
+  OZ_EXPECT(pe, 0, expectIntVar);
+  OZ_EXPECT(pe, 1, expectIntVar);
+  OZ_EXPECT(pe, 2, expectIntVar);
 
-  return pe.spawn(new DPlusPropagator(OZ_args[0], 
+  return pe.impose(new DPlusPropagator(OZ_args[0], 
 				      OZ_args[1], 
 				      OZ_args[2]));
 }
@@ -577,7 +579,7 @@ OZ_C_proc_end
 
 OZ_CFun DPlusPropagator::spawner = fdtest_plus;
 
-OZ_Return DPlusPropagator::run(void)
+OZ_Return DPlusPropagator::propagate(void)
 {
   OZ_FDIntVar x(_x), y(_y), z(_z);
   PropagatorController_V_V_V P(x, y, z);
