@@ -32,7 +32,6 @@ require
          addFriends:S_addFriends
          removeFriend:S_removeFriend
          %getFriends:S_getFriends
-         setStatus:S_setStatus
          %searchFriends:S_searchFriends
          %login:S_login
          updateSettings:S_updateSettings
@@ -685,11 +684,22 @@ define
       end
    end
 
-   proc{AddApp As} O N in
-      {Exchange Applications O N}
-
-      N={Append As O}
+   proc{AddApp As}
+      fun{CheckId Lst A}
+         if Lst == nil then false
+         else L|Ls=Lst in
+            if L.id == A.id then true
+            else {CheckId Ls A} end
+         end
+      end
+   in
+      {ForAll As proc {$ A} O N in
+                    {Exchange Applications O N}
+                    if {CheckId O A} then N = O
+                    else  N={Append O [A]} end
+                 end}
    end
+
    proc{RemoveApp Id} O N in
       {Exchange Applications O N}
       N={Filter O fun {$ X} X.id\=Id end}
@@ -752,16 +762,23 @@ define
    proc{Friends F}
       lock CLock then
          {ForAll F.online proc{$ X}
-                             if  {Dictionary.member DB X.id} then skip else
+                             if  {Dictionary.member DB X.id} then
+                                M=notify(id:X.id online:X.online)
+                             in
+                                {ChangeStatus M}
+                             else
                                 {Online add(id:X.id name:X.name)}
-
                                 if X.online==away then E={Dictionary.get DB X.id} in
                                    {E.widget away()}
                                 end
                              end
                           end}
          {ForAll F.offline proc{$ X}
-                              if  {Dictionary.member DB X.id} then skip else
+                              if  {Dictionary.member DB X.id} then
+                                 M=notify(id:X.id online:X.online)
+                              in
+                                {ChangeStatus M}
+                              else
                                  {Offline add(id:X.id name:X.name)}
                               end
                            end}
@@ -936,15 +953,15 @@ define
          B=proc{$}
               {Popup ["Online"#proc{$}
                                   {StatusV tkSet('Online')}
-                                  {Server S_setStatus(id:ClientID online:online)}
+                                  {Client setStatus(online:online)}
                                end
                       "Away"#proc{$}
                                 {StatusV tkSet('Away')}
-                                {Server S_setStatus(id:ClientID online:away)}
+                                {Client setStatus(online:away)}
                              end
                       "Offline/Disconnected"#proc{$}
                                                 {StatusV tkSet('Offline')}
-                                                {Server S_setStatus(id:ClientID online:offline)}
+                                                {Client setStatus(online:offline)}
                                              end
                      ] T}
            end
