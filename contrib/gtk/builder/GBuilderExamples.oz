@@ -36,7 +36,7 @@ define
          case Row of unit|Cells then
             {MakeRow Cells I J + 1 Rest}
          [] Cell|Cells then
-            attach(left: I right: I + 1 top: J bottom: J + 1
+            attach(left: I top: J
                    xpadding: 5 ypadding: 5 Cell)|
             {MakeRow Cells I J + 1 Rest}
          [] nil then Rest
@@ -123,46 +123,46 @@ define
       table(nRows: 5 nColumns: 3
             columnSpacing: 5 rowSpacing: 5
             homogeneous: true
-            attach(left: 0 right: 3 top: 0 bottom: 1
+            attach(left: 0 right: 3 top: 0
                    label(handle: Label))
             %% buttons
-            attach(left: 0 right: 1 top: 1 bottom: 2
+            attach(left: 0 top: 1
                    xoptions: nil yoptions: nil
                    {MakeButton normal})
-            attach(left: 1 right: 2 top: 1 bottom: 2
+            attach(left: 1 top: 1
                    xoptions: nil yoptions: nil
                    {MakeButton half})
-            attach(left: 2 right: 3 top: 1 bottom: 2
+            attach(left: 2 top: 1
                    xoptions: nil yoptions: nil
                    {MakeButton none})
             %% toggle buttons
-            attach(left: 0 right: 1 top: 2 bottom: 3
+            attach(left: 0 top: 2
                    xoptions: nil yoptions: nil
                    {MakeToggleButton normal})
-            attach(left: 1 right: 2 top: 2 bottom: 3
+            attach(left: 1 top: 2
                    xoptions: nil yoptions: nil
                    {MakeToggleButton half})
-            attach(left: 2 right: 3 top: 2 bottom: 3
+            attach(left: 2 top: 2
                    xoptions: nil yoptions: nil
                    {MakeToggleButton none})
             %% check buttons
-            attach(left: 0 right: 1 top: 3 bottom: 4
+            attach(left: 0 top: 3
                    xoptions: nil yoptions: nil
                    {MakeCheckButton normal})
-            attach(left: 1 right: 2 top: 3 bottom: 4
+            attach(left: 1 top: 3
                    xoptions: nil yoptions: nil
                    {MakeCheckButton half})
-            attach(left: 2 right: 3 top: 3 bottom: 4
+            attach(left: 2 top: 3
                    xoptions: nil yoptions: nil
                    {MakeCheckButton none})
             %% radio buttons
-            attach(left: 0 right: 1 top: 4 bottom: 5
+            attach(left: 0 top: 4
                    xoptions: nil yoptions: nil
                    {MakeRadioButton normal handle(Group)})
-            attach(left: 1 right: 2 top: 4 bottom: 5
+            attach(left: 1 top: 4
                    xoptions: nil yoptions: nil
                    {MakeRadioButton half group(Group)})
-            attach(left: 2 right: 3 top: 4 bottom: 5
+            attach(left: 2 top: 4
                    xoptions: nil yoptions: nil
                    {MakeRadioButton none group(Group)}))
    end
@@ -172,8 +172,8 @@ define
             day: {OS.localTime}.mDay)
 
    local
-      fun {MakeFrame L R T B Shadow XAlign YAlign}
-         attach(left: L right: R top: T bottom: B
+      fun {MakeFrame L T Shadow XAlign YAlign}
+         attach(left: L top: T
                 frame(label: Shadow
                       shadow: Shadow
                       labelXalign: XAlign
@@ -186,18 +186,18 @@ define
             columnSpacing: 5 rowSpacing: 5
             homogeneous: true
             borderWidth: 5
-            {MakeFrame 0 1 0 1 'in' 0.0 0.5}
-            {MakeFrame 1 2 0 1 'out' 0.0 0.5}
-            {MakeFrame 2 3 0 1 'etchedIn' 0.0 0.5}
-            {MakeFrame 3 4 0 1 'etchedOut' 0.0 0.5}
-            {MakeFrame 0 1 1 2 'in' 1.0 0.0}
-            {MakeFrame 1 2 1 2 'out' 1.0 0.0}
-            {MakeFrame 2 3 1 2 'etchedIn' 1.0 0.0}
-            {MakeFrame 3 4 1 2 'etchedOut' 1.0 0.0}
-            {MakeFrame 0 1 2 3 'in' 0.5 1.0}
-            {MakeFrame 1 2 2 3 'out' 0.5 1.0}
-            {MakeFrame 2 3 2 3 'etchedIn' 0.5 1.0}
-            {MakeFrame 3 4 2 3 'etchedOut' 0.5 1.0})
+            {MakeFrame 0 0 'in' 0.0 0.5}
+            {MakeFrame 1 0 'out' 0.0 0.5}
+            {MakeFrame 2 0 'etchedIn' 0.0 0.5}
+            {MakeFrame 3 0 'etchedOut' 0.0 0.5}
+            {MakeFrame 0 1 'in' 1.0 0.0}
+            {MakeFrame 1 1 'out' 1.0 0.0}
+            {MakeFrame 2 1 'etchedIn' 1.0 0.0}
+            {MakeFrame 3 1 'etchedOut' 1.0 0.0}
+            {MakeFrame 0 2 'in' 0.5 1.0}
+            {MakeFrame 1 2 'out' 0.5 1.0}
+            {MakeFrame 2 2 'etchedIn' 0.5 1.0}
+            {MakeFrame 3 2 'etchedOut' 0.5 1.0})
    end
 
    proc {LoadFile Filename ?Contents}
@@ -231,20 +231,20 @@ define
    in
       EditableDesc =
       table(nRows: 4 nColumns: 2
-            attach(left: 0 right: 1 top: 0 bottom: 1 yoptions: nil
+            attach(left: 0 top: 0 yoptions: nil
                    label(label: 'Username: '
                          xalign: 0.0))
-            attach(left: 1 right: 2 top: 0 bottom: 1 yoptions: nil
+            attach(left: 1 top: 0 yoptions: nil
                    entry(visibility: true))
-            attach(left: 0 right: 1 top: 1 bottom: 2 yoptions: nil
+            attach(left: 0 top: 1 yoptions: nil
                    label(label: 'Password: '
                          xalign: 0.0))
-            attach(left: 1 right: 2 top: 1 bottom: 2 yoptions: nil
+            attach(left: 1 top: 1 yoptions: nil
                    entry(visibility: false))
-            attach(left: 0 right: 2 top: 2 bottom: 3
+            attach(left: 0 right: 2 top: 2
                    text(editable: true
                         handle: Text))
-            attach(left: 0 right: 2 top: 3 bottom: 4 yoptions: nil
+            attach(left: 0 right: 2 top: 3 yoptions: nil
                    button(label: 'Open file'
                           clicked: LoadFileAction)))
    end
