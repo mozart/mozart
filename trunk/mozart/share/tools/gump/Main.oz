@@ -24,7 +24,8 @@ local
       OZHOME = {Property.get 'oz.home'}
       X#Y    = {Property.get platform}
    in
-      PLATFORMDIR = OZHOME#'/platform/'#X#'-'#Y
+      PLATFORM = X#'-'#Y
+      PLATFORMDIR = OZHOME#'/platform/'#PLATFORM
       INCLUDEDIR = OZHOME#'/include'
    end
 
