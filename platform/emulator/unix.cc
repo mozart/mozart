@@ -132,7 +132,7 @@ while ((RET = CALL) < 0) {                          \
 { RETURN_ANY_ERROR(OUT,errno,ozStrerror(errno),"unix"); }
 
 
-#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX_I486) || defined(HPUX_700) || defined(IRIX5_MIPS)
+#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX_I486) || defined(HPUX_700) || defined(IRIX5_MIPS) || defined(AIX3_RS6000)
 
 static char* h_strerror(const int err) {
   switch (err) {
@@ -1661,6 +1661,9 @@ OZ_C_proc_end
 #ifndef RAND_MAX
 #ifdef SUNOS_SPARC
 #define RAND_MAX ((1<<31)-1)
+#else
+#ifdef AIX3_RS6000
+#   define RAND_MAX     32767
 #else
 ... fill in RAND_MAX ...
 #endif
