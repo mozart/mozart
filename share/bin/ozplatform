@@ -18,9 +18,8 @@ case $system in
     s390\ Linux\ *)	OZARCH=linux-s390
     ;;
     #-----------------------------------------------------------------
-    # I am turning off the following since they have not been confirmed
-    #armv4l\ Linux\ *)	OZARCH=linux-arm
-    #;;
+    armv4l\ Linux\ *)	OZARCH=linux-arm
+    ;;
     #parisc32\ Linux\ *)	OZARCH=linux-hppa32
     #;;
     # so far: userspace is 32 bits on linux-parisc / hppa
