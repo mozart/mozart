@@ -102,9 +102,6 @@ private:
   } u;
   Script script;
   Board * gcField; // Will go away, when new propagator model is active
-#ifdef PROP_MERGING
-  PropagatorQueue * pq;
-#endif
 
 public:
   NO_DEFAULT_CONSTRUCTORS(Board)
@@ -125,12 +122,6 @@ public:
 
   void unsetInstalled()  { flags &= ~Bo_Installed;  }
   void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
-
-#ifdef PROP_MERGING
-  PropagatorQueue * getPropQueue() {
-    return pq;
-  }
-#endif
 
   Bool gcIsMarked(void);
   void gcMark(Board *);

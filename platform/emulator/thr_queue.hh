@@ -95,13 +95,6 @@ public:
   }
   OZPRINT;
 
-#ifdef PROP_MERGING
-  void merge(ThreadQueueImpl * tq) {
-    while (!tq->isEmpty())
-      enqueue(tq->dequeue());
-  }
-#endif
-
   int getRunnableNumber();
   void deleteThread(Thread *th);
 
