@@ -510,6 +510,12 @@ if that value is non-nil."
     (setq end (point))
     (cons beg end)))
 
+(defvar oz-temp-counter 0)
+
+(defun oz-make-temp-name(name)
+  (setq oz-temp-counter (+ 1 oz-temp-counter))
+  (format "%s%d" (make-temp-name name) oz-temp-counter))
+
 (defvar oz-pretty-file (oz-make-temp-name "/tmp/ozpretty") "")
 
 (defun oz-pi-buffer()
@@ -529,9 +535,11 @@ if that value is non-nil."
    (shell-command-on-region start end (concat "cat > " oz-pretty-file))
    (message "")
    (oz-pi-file oz-pretty-file)
-   (let ((buf (generate-new-buffer "*Oz intermediate*")))
+   (sleep-for 2)
+   (let ((buf (get-buffer-create "*Oz Kernel Code*")))
      (save-excursion
        (set-buffer buf)
+       (delete-region (point-min) (point-max))
        (insert-file-contents (concat oz-pretty-file ".i"))
        (display-buffer buf t))))
 
@@ -571,13 +579,16 @@ if that value is non-nil."
 
 (defun oz-hide-errors()
   (interactive)
-  (if (get-buffer "*Oz Errors*")
-      (let ((show-machine (or (get-buffer-window "*Oz Machine*")
-			      (get-buffer-window "*Oz Compiler*")
-			      (get-buffer-window "*Oz Errors*"))))
-	(delete-windows-on "*Oz Errors*")
-	(if (and oz-machine-visible show-machine)
-	    (oz-show-buffer "*Oz Machine*")))))
+  (let ((show-machine (or (get-buffer-window "*Oz Machine*")
+			  (get-buffer-window "*Oz Kernel Code*")
+			  (get-buffer-window "*Oz Compiler*")
+			  (get-buffer-window "*Oz Errors*"))))
+    (if (get-buffer "*Oz Errors*") 
+	(delete-windows-on "*Oz Errors*"))
+    (if (get-buffer "*Oz Kernel Code*") 
+	(delete-windows-on "*Oz Kernel Code*"))
+    (if (and oz-machine-visible show-machine)
+	(oz-show-buffer "*Oz Machine*"))))
 
 
 
@@ -1246,8 +1257,3 @@ if that value is non-nil."
 
 
 
-(defvar oz-temp-counter 0)
-
-(defun oz-make-temp-name(name)
-  (setq oz-temp-counter (+ 1 oz-temp-counter))
-  (format "%s%d" (make-temp-name name) oz-temp-counter))
