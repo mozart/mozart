@@ -1090,9 +1090,10 @@ define
             HTML = table('class': [nav] border: 1 align: center
                          tr(td(a(href: Node#"#"#Label PCDATA('Next >>')))))
             OzDocToHTML, DoThreading(Rest)
+         elseof nav(HTML)|(Rest=nav(_)|_) then
+            HTML = EMPTY   %--** when does this happen?
+            OzDocToHTML, DoThreading(Rest)
          elseof nil then skip
-         else
-            {ForAll Ts proc {$ nav(HTML)} HTML = EMPTY end}
          end
       end
       meth PrepareNode(M ?X ?HTML)
