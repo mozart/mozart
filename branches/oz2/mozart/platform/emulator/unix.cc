@@ -144,7 +144,7 @@ int unixIsCons(OZ_Term list, OZ_Term *hd, OZ_Term *tl) {
 #define WRAPCALL(CALL, RET) \
 int RET;                                     \
 while ((RET = CALL) < 0) {                   \
-  if (errno != EINTR) { RETURN_UNIX_ERROR; } \
+  if (ossockerrno() != EINTR) { RETURN_UNIX_ERROR; } \
 }
 
 
@@ -158,7 +158,7 @@ int raiseUnixError(int n, char * e, char * g) {
 
 // return upon unix-error
 #define RETURN_UNIX_ERROR \
-{ return raiseUnixError(errno, OZ_unixError(errno), "os"); }
+{ return raiseUnixError(ossockerrno(), OZ_unixError(ossockerrno()), "os"); }
 
 
 #if defined(ULTRIX_MIPS) || defined(OS2_I486)
@@ -189,7 +189,7 @@ static char* h_strerror(const int err) {
 }
 
 #define RETURN_NET_ERROR \
-{ return raiseUnixError(h_errno, h_strerror(errno), "host"); }
+{ return raiseUnixError(h_errno, h_strerror(h_errno), "host"); }
 
 
 #endif
