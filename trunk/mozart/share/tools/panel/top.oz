@@ -284,21 +284,26 @@ in
 	    Threads =
 	    {MakePage ThreadPage 'Threads' Book self true
 	     [frame(text:    'Runtime'
+		    feature: runtime
 		    left:
 		       [time(text:    'Run:'
+			     feature: run
 			     color:   TimeColors.run
 			     stipple: TimeStipple.run)
-			time(text:    'Garbage collection:'
-			     color:   TimeColors.gc
+			time(text:    'Garbage Collection:'
 			     feature: gc
+			     color:   TimeColors.gc
 			     stipple: TimeStipple.gc)
 			time(text:    'Copy:'
+			     feature: copy
 			     color:   TimeColors.copy
 			     stipple: TimeStipple.copy)
 			time(text:    'Propagation:'
+			     feature: propagation
 			     color:   TimeColors.'prop'
 			     stipple: TimeStipple.'prop')
 			time(text:    'Load:'
+			     feature: load
 			     color:   TimeColors.load
 			     stipple: TimeStipple.load)]
 		    right:
@@ -309,9 +314,12 @@ in
 			     miny:    1.0)
 			timebar(feature: timebar)])
 	      frame(text:    'Threads'
+		    feature: threads
 		    left:
-		       [number(text:    'Created:')
+		       [number(text:    'Created:'
+			       feature: created)
 			number(text:    'Runnable:'
+			       feature: runnable
 			       color:   RunnableColor
 			       stipple: RunnableStipple)]
 		    right:
@@ -319,41 +327,45 @@ in
 			     colors:  [RunnableColor]
 			     stipple: [RunnableStipple])])
 	      frame(text:    'Priorities'
+		    feature: priorities
 		    pack:    false
 		    left:
 		       [scale(text:    'High / Medium:'
-			      state:   {System.get priorities}.high
 			      feature: high
+			      state:   {System.get priorities}.high
 			      action:  proc {$ N}
 					  {System.set priorities(high:N)}
 				       end)
 			scale(text:    'Medium / Low:'
-			      state:   {System.get priorities}.medium
 			      feature: medium
+			      state:   {System.get priorities}.medium
 			      action:  proc {$ N}
 					  {System.set priorities(medium:N)}
 				       end)]
 		    right:
-		       [button(text: 'Default'
-			       action: proc {$}
-					  {System.set priorities(high:   10
-								 medium: 10)}
-					  {self update(false)}
-				       end)])]}
+		       [button(text:    'Default'
+			       feature: default
+			       action:  proc {$}
+					   {System.set priorities(high:   10
+								  medium: 10)}
+					   {self update(false)}
+					end)])]}
 	    Memory =
 	    {MakePage MemoryPage 'Memory' Book self true
 	     [frame(text:    'Heap Usage'
 		    feature: usage
 		    left:
 		       [size(text:    'Threshold:'
+			     feature: threshold
 			     color:   ThresholdColor
 			     stipple: ThresholdStipple)
 			size(text:    'Size:'
+			     feature: size
 			     color:   SizeColor
 			     stipple: SizeStipple)
-			size(text:    'Active size:'
-			     color:   ActiveColor
+			size(text:    'Active Size:'
 			     feature: active
+			     color:   ActiveColor
 			     stipple: ActiveStipple)]
 		    right:
 		       [load(feature: load
@@ -366,10 +378,10 @@ in
 		    feature: parameter
 		    pack:    false
 		    left:
-		       [scale(text:    'Maximal size limit:'
+		       [scale(text:    'Maximal Size Limit:'
+			      feature: maxSize
 			      range:   1#1024
 			      dim:     'MB'
-			      feature: maxSize
 			      state:   local MS={System.get gc}.max in
 					  case MS=<0 then 1024
 					  else MS div MegaByteI
@@ -382,10 +394,10 @@ in
 					  else skip end
 					  {System.set gc(max: N * MegaByteI)}
 				       end)
-			scale(text:    'Minimal size limit:'
+			scale(text:    'Minimal Size Limit:'
+			      feature: minSize
 			      range:   1#1024
 			      dim:     'MB'
-			      feature: minSize
 			      state:   {System.get gc}.min div MegaByteI
 			      action:  proc {$ N}
 					  S = Memory.options.parameter.maxSize
@@ -395,12 +407,14 @@ in
 					  {System.set gc(min: N * MegaByteI)}
 				       end)
 			scale(text:    'Free:'
+			      feature: free
 			      state:   {System.get gc}.free
 			      action:  proc {$ N}
 					  {System.set gc(free: N)}
 				       end
 			      dim:     '%')
 			scale(text:    'Tolerance:'
+			      feature: tolerance	    
 			      dim:     '%'
 			      state:   {System.get gc}.tolerance
 			      action:  proc {$ N}
@@ -408,53 +422,57 @@ in
 				       end)]
 	            right:
 		       [button(text:   'Small'
-			       action: proc {$}
-					  {System.set
-					   gc(max:       4 * MegaByteI
-					      min:       1 * MegaByteI
-					      free:      75
-					      tolerance: 20)}
-					  {self update(false)}
-				       end)
-			button(text:'Medium'
-			       action: proc {$}
-					  {System.set
-					   gc(max:       16 * MegaByteI
-					      min:       2  * MegaByteI
-					      free:      80
-					      tolerance: 15)}
-					  {self update(false)}
-				       end)
-			button(text:'Large'
-			       action: proc {$}
-					  {System.set
-					   gc(max:       64 * MegaByteI
-					      min:       8 * MegaByteI
-					      free:      90
-					      tolerance: 10)}
-					  {self update(false)}
-				       end)])
+			       feature: small	   
+			       action:  proc {$}
+					   {System.set
+					    gc(max:       4 * MegaByteI
+					       min:       1 * MegaByteI
+					       free:      75
+					       tolerance: 20)}
+					   {self update(false)}
+					end)
+			button(text:    'Medium'
+			       feature: medium
+			       action:  proc {$}
+					   {System.set
+					    gc(max:       16 * MegaByteI
+					       min:       2  * MegaByteI
+					       free:      80
+					       tolerance: 15)}
+					   {self update(false)}
+					end)
+			button(text:    'Large'
+			       feature: large
+			       action:  proc {$}
+					   {System.set
+					    gc(max:       64 * MegaByteI
+					       min:       8 * MegaByteI
+					       free:      90
+					       tolerance: 10)}
+					   {self update(false)}
+					end)])
 	      frame(text:    'Heap Parameters'
 		    feature: showParameter
 		    left:
-		       [size(text:    'Maximal size limit:'
+		       [size(text:    'Maximal Size Limit:'
 			     feature: maxSize
 			     dim:     'MB')
-			size(text:    'Minimal size limit:'
+			size(text:    'Minimal Size Limit:'
 			     feature: minSize
 			     dim:     'MB')]
-		    right:
-		       nil)
+		    right: nil)
 	      frame(text:    'Garbage Collector'
 		    feature: gc
 		    pack:    false
 		    left:
 		       [checkbutton(text:   'Active'
+				    feature: active
 				    state:  {System.get gc}.on
 				    action: proc {$ OnOff}
 					       {System.set gc(on:OnOff)}
 					    end)]
 		    right:   [button(text: 'Invoke'
+				     feature: invoke
 				     action: proc {$}
 						{System.gcDo}
 					     end)])]}
@@ -462,19 +480,25 @@ in
 	     {MakePage PsPage 'Problem Solving' Book self true
 	      [frame(text:    'Finite Domain Constraints'
 		     feature: fd
-		     left:    [number(text: 'Variables created:'
+		     left:    [number(text: 'Variables Created:'
 				      feature: var)
-			       number(text:    'Propagators created:'
+			       number(text:    'Propagators Created:'
 				      feature: propc)
-			       number(text:    'Propagators invoked:'
+			       number(text:    'Propagators Invoked:'
 				      feature: propi)]
 		     right:   nil)
 	       frame(text:    'Spaces'
-		     left:    [number(text: 'Created:')
-			       number(text: 'Cloned:')
-			       number(text: 'Failed:')
-			       number(text: 'Succeeded:')
-			       number(text: 'Committed:')]
+		     feature: spaces
+		     left:    [number(text:    'Created:'
+				      feature: created)
+			       number(text:    'Cloned:'
+				      feature: cloned)
+			       number(text:    'Committed:'
+				      feature: committed)
+			       number(text:    'Failed:'
+				      feature: failed)
+			       number(text:    'Succeeded:'
+				      feature: succeeded)]
 		     right:   nil)]}
 	     OPI =
 	     {MakePage OpiPage 'Programming Interface' Book self false
@@ -487,84 +511,89 @@ in
 				     action: proc {$ B}
 						{System.set messages(idle:B)}
 					     end)
-			 checkbutton(text:    'Garbage collection'
+			 checkbutton(text:    'Garbage Collection'
 				     feature: gc
 				     state:  {System.get messages}.gc
 				     action: proc {$ B}
 						{System.set messages(gc:B)}
 					     end)]
 		     right:
-			[button(text:  'Default'
-				action: proc {$}
-					   {System.set messages(idle: false
-								gc:   true)}
-					   {self update(false)}
-					end)])
+			[button(text:    'Default'
+				feature: default
+				action:  proc {$}
+					    {System.set messages(idle: false
+								 gc:   true)}
+					    {self update(false)}
+					 end)])
 	       frame(text:    'Output'
+		     feature: output
 		     left:
-			[entry(text:    'Maximal print width:'
+			[entry(text:    'Maximal Print Width:'
 			       feature: width
 			       action:  proc {$ N}
 					   {System.set print(width: N)}
 					end
 			       top:     self)
-			 entry(text:    'Maximal print depth:'
+			 entry(text:    'Maximal Print Depth:'
 			       feature: depth
 			       action:  proc {$ N}
 					   {System.set print(depth: N)}
 					end
 			       top:     self)]
 		     right:
-			[button(text:  'Default'
-				action: proc {$}
-					   {System.set print(width: 10
-							     depth: 2)}
-					   {self update(false)}
-					end)])
+			[button(text:    'Default'
+				feature: default
+				action:  proc {$}
+					    {System.set print(width: 10
+							      depth: 2)}
+					    {self update(false)}
+					 end)])
 	       frame(text:    'Errors'
+		     feature: errors
 		     left:
-			[checkbutton(text:    'Show location'
+			[checkbutton(text:    'Show Location'
 				     feature: location
-				     state:  {System.get errors}.location
+				     state:   {System.get errors}.location
 				     action:  proc {$ B}
 						 {System.set
 						  errors(location:B)}
 					      end)
-			 checkbutton(text: 'Show hints'
-				     state:  {System.get errors}.hints
+			 checkbutton(text:    'Show Hints'
+				     feature: hints
+				     state:   {System.get errors}.hints
 				     action:  proc {$ B}
 						 {System.set errors(hints:B)}
-					      end
-				     feature: hints)
-			 entry(text:    'Maximal tasks:'
+					      end)
+			 entry(text:    'Maximal Tasks:'
 			       feature: 'thread'
 			       action:  proc {$ N}
 					   {System.set errors('thread': N)}
 					end
 			       top:     self)
-			 entry(text:    'Maximal print depth:'
+			 entry(text:    'Maximal Print Depth:'
 			       feature: depth
 			       action:  proc {$ N}
 					   {System.set errors(depth: N)}
 					end
 			       top:     self)
-			 entry(text:    'Maximal print width:'
+			 entry(text:    'Maximal Print Width:'
 			       feature: width
 			       action:  proc {$ N}
 					   {System.set errors(width: N)}
 					end
 			       top:     self)]
 		     right:
-			[button(text:   'Default'
-				action: proc {$}
-					   {System.set
-					    errors('thread': 10
-						   location: true
-						   hints:    true
-						   width:    10
-						   depth:    2)}
-					   {self update(false)}
-					end)])]}
+			[button(text:    'Default'
+				feature: default
+				action:  proc {$}
+					    {System.set
+					     errors('thread': 10
+					            location: true
+					            hints:    true
+						    width:    10
+						    depth:    2)}
+					    {self update(false)}
+					 end)])]}
          in
 	    {Tk.batch [pack(Menu side:top fill:x)
 		       pack(Book)
