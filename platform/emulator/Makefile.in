@@ -182,7 +182,7 @@ ozma-p.yy: ozma-p.m4yy
         $(M4) $< > $@
 
 config.h: $(TOPDIR)/include/config.m4h
-        $(M4) -DOZVERSION="$(OZVERSION)" -DOZINCDIR=$(TOPDIR)/include $< > $@
+        $(M4) -DOZVERSION=\"$(OZVERSION)\" -DOZINCDIR=$(TOPDIR)/include $< > $@
 
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
