@@ -130,7 +130,7 @@ void dpExitImpl();
 
 void SiteUnify(TaggedRef, TaggedRef);
 
-void localizeTertiary(Tertiary*);
+Bool localizeTertiary(Tertiary*);
 Bool isTertiaryPending(Tertiary*);
 void dpExitWithTimer(unsigned int);
 

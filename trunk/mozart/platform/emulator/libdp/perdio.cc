@@ -417,20 +417,23 @@ void localizePort(Tertiary*t){
   t->setBoard(am.currentBoard());
   return;}
 
-void localizeTertiary(Tertiary*t){
+Bool localizeTertiary(Tertiary*t){
   Assert(t->getTertType()==Te_Manager);
   switch(t->getType()){
   case Co_Lock:
     localizeLock(t);
-    return;
+    return OK;
   case Co_Cell:
     localizeCell(t);
-    return;
+    return OK;
   case Co_Port:
     localizePort(t);
-    return;
+    return OK;
+  case Co_Object:
+    return NO;
   default:
     Assert(0);
+    return NO;
   }
 }
     
