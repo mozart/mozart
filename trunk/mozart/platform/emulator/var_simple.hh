@@ -31,19 +31,19 @@
 #pragma interface
 #endif
 
-#include "genvar.hh"
+#include "var_base.hh"
 
-class SimpleVar: public GenCVariable {
+class SimpleVar: public OzVariable {
 private:
   // OZ_Term future;
 public:
-  SimpleVar(Board *bb) : GenCVariable(OZ_VAR_SIMPLE,bb) {}
+  SimpleVar(Board *bb) : OzVariable(OZ_VAR_SIMPLE,bb) {}
 
   OZ_Return bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp);
   OZ_Return unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp);
 
   OZ_Return valid(TaggedRef /* val */) { return OK; }
-  GenCVariable* gc() { return new SimpleVar(*this); }
+  OzVariable* gc() { return new SimpleVar(*this); }
   void gcRecurse() {}
 
   void dispose(void) { freeListDispose(this, sizeof(SimpleVar)); }
@@ -65,7 +65,7 @@ Bool isSimpleVar(TaggedRef term)
   return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_SIMPLE);
 }
 
-GenCVariable *uvar2SimpleVar(TaggedRef *v);
+OzVariable *uvar2SimpleVar(TaggedRef *v);
 
 inline
 SimpleVar *tagged2SimpleVar(TaggedRef t) {

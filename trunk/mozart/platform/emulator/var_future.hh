@@ -31,23 +31,23 @@
 #pragma interface
 #endif
 
-#include "genvar.hh"
+#include "var_base.hh"
 #include "value.hh"
 
-class Future: public GenCVariable {
+class Future: public OzVariable {
 private:
   OZ_Term function;
 
   void kick(TaggedRef *);
 public:
-  Future(Board *bb) : GenCVariable(OZ_VAR_FUTURE,bb), function(0) {}
+  Future(Board *bb) : OzVariable(OZ_VAR_FUTURE,bb), function(0) {}
   Future(OZ_Term function,Board *bb)
-    : GenCVariable(OZ_VAR_FUTURE,bb), function(function) {}
+    : OzVariable(OZ_VAR_FUTURE,bb), function(function) {}
   OZ_Return unify(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
   OZ_Return valid(TaggedRef /* val */) {
     return TRUE;
   }
-  GenCVariable* gc() { return new Future(*this); }
+  OzVariable* gc() { return new Future(*this); }
   void gcRecurse()   {
     if (function) {
       OZ_collectHeapTerm(function,function);

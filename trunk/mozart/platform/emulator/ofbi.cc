@@ -27,8 +27,8 @@
  */
 
 #include <math.h>
-#include "ofgenvar.hh"
-#include "fdgenvar.hh"
+#include "var_of.hh"
+#include "var_fd.hh"
 #include "builtins.hh"
 #include "fdomn.hh"
 
@@ -197,7 +197,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
     dt_index numFeats=smallIntValue(tNumFeats);
     dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
 			     : (int)ceil((double)numFeats/FILLFACTOR));
-    GenOFSVariable *newofsvar=new GenOFSVariable(label,size,oz_currentBoard());
+    OzOFVariable *newofsvar=new OzOFVariable(label,size,oz_currentBoard());
     OZ_Return ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 			  makeTaggedRef(tPtr));
     Assert(ok==PROCEED); // mm2
@@ -215,14 +215,14 @@ OZ_BI_define(BIsystemTellSize,3,0)
     oz_suspendOn (makeTaggedRef(labelPtr));
   case CVAR:
     switch (tagged2CVar(label)->getType()) {
-    case OFSVariable:
+    case OZ_VAR_OF:
       {
-        GenOFSVariable *ofsvar=tagged2GenOFSVar(label);
+        OzOFVariable *ofsvar=tagged2GenOFSVar(label);
         if (ofsvar->getWidth()>0) return FAILED; 
 	oz_suspendOn (makeTaggedRef(labelPtr));
       }
-    case FDVariable:
-    case BoolVariable:
+    case OZ_VAR_FD:
+    case OZ_VAR_BOOL:
       oz_typeError(0,"Literal");
     default:
       oz_suspendOn (makeTaggedRef(labelPtr));
@@ -242,7 +242,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
   case SRECORD:
     return literalEq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
   case CVAR:
-    if (tagged2CVar(t)->getType()==OFSVariable) {
+    if (tagged2CVar(t)->getType()==OZ_VAR_OF) {
        OZ_Return ret=oz_unify(tagged2GenOFSVar(t)->getLabel(),label);
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
@@ -259,8 +259,8 @@ OZ_BI_define(BIsystemTellSize,3,0)
       dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
                                                      : (int)ceil((double)numFeats/FILLFACTOR));
       // Create newofsvar with unbound variable as label & given initial size:
-      GenOFSVariable *newofsvar
-	=new GenOFSVariable(label,size,oz_currentBoard());
+      OzOFVariable *newofsvar
+	=new OzOFVariable(label,size,oz_currentBoard());
       // Unify newofsvar and term:
       Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		       makeTaggedRef(tPtr));
@@ -285,7 +285,7 @@ OZ_BI_define(BIrecordTell,2,0)
 
   /* most probable case first */
   if (isLiteralTag(labelTag) && oz_isFree(t)) {
-    GenOFSVariable *newofsvar=new GenOFSVariable(label,oz_currentBoard());
+    OzOFVariable *newofsvar=new OzOFVariable(label,oz_currentBoard());
     Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		     makeTaggedRef(tPtr));
     Assert(ok==PROCEED); // mm2
@@ -303,14 +303,14 @@ OZ_BI_define(BIrecordTell,2,0)
     oz_suspendOn (makeTaggedRef(labelPtr));
   case CVAR:
     switch (tagged2CVar(label)->getType()) {
-    case OFSVariable:
+    case OZ_VAR_OF:
       {
-        GenOFSVariable *ofsvar=tagged2GenOFSVar(label);
+        OzOFVariable *ofsvar=tagged2GenOFSVar(label);
         if (ofsvar->getWidth()>0) return FAILED;
         oz_suspendOn (makeTaggedRef(labelPtr));
       }
-    case FDVariable:
-    case BoolVariable:
+    case OZ_VAR_FD:
+    case OZ_VAR_BOOL:
       oz_typeError(0,"Literal");
     default:
       oz_suspendOn (makeTaggedRef(labelPtr));
@@ -329,7 +329,7 @@ OZ_BI_define(BIrecordTell,2,0)
   case SRECORD:
     return literalEq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
   case CVAR:
-    if (tagged2CVar(t)->getType()==OFSVariable) {
+    if (tagged2CVar(t)->getType()==OZ_VAR_OF) {
        OZ_Return ret=oz_unify(tagged2GenOFSVar(t)->getLabel(),label);
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
@@ -340,7 +340,7 @@ OZ_BI_define(BIrecordTell,2,0)
     // FUT
     {
       // Create newofsvar with unbound variable as label & given initial size:
-      GenOFSVariable *newofsvar=new GenOFSVariable(label,oz_currentBoard());
+      OzOFVariable *newofsvar=new OzOFVariable(label,oz_currentBoard());
       // Unify newofsvar and term:
       Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		       makeTaggedRef(tPtr));
@@ -366,10 +366,10 @@ OZ_BI_define(BIisRecordCB,1,1)
     OZ_RETURN(NameTrue);
   case CVAR:
     switch (tagged2CVar(t)->getType()) {
-    case OFSVariable:
+    case OZ_VAR_OF:
       OZ_RETURN(NameTrue);
-    case FDVariable:
-    case BoolVariable:
+    case OZ_VAR_FD:
+    case OZ_VAR_BOOL:
       OZ_RETURN(NameFalse);
     default:
       oz_suspendOnPtr(tPtr);
@@ -409,10 +409,10 @@ OZ_C_proc_begin(BIwidthC, 2)
       oz_suspendOn(rawrec);
     case CVAR:
       switch (tagged2CVar(rec)->getType()) {
-      case OFSVariable:
+      case OZ_VAR_OF:
           break;
-      case FDVariable:
-      case BoolVariable:
+      case OZ_VAR_FD:
+      case OZ_VAR_BOOL:
           oz_typeError(0,"Record");
       default:
           oz_suspendOn(rawrec);
@@ -432,14 +432,14 @@ OZ_C_proc_begin(BIwidthC, 2)
       // FUT
     {
         // Create new fdvar:
-        GenFDVariable *fdvar=new GenFDVariable(oz_currentBoard()); // Variable with maximal domain
+        OzFDVariable *fdvar=new OzFDVariable(oz_currentBoard()); // Variable with maximal domain
         // Unify fdvar and wid:
         Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(fdvar)),rawwid);
         Assert(ok==PROCEED); // mm2
         break;
     }
     case CVAR:
-      if (oz_isKinded(wid) && tagged2CVar(wid)->getType()!=FDVariable)
+      if (oz_isKinded(wid) && tagged2CVar(wid)->getType()!=OZ_VAR_FD)
 	return FAILED;
       break;
     case OZCONST:
@@ -497,7 +497,7 @@ OZ_Return WidthPropagator::propagate(void)
         recwidth=(recTag==SRECORD) ? tagged2SRecord(rec)->getWidth() :
                  ((recTag==LTUPLE) ? 2 : 0);
         if (isGenFDVar(wid)) {
-            // GenFDVariable *fdwid=tagged2GenFDVar(wid);
+            // OzFDVariable *fdwid=tagged2GenFDVar(wid);
             // res=fdwid->setSingleton(recwidth);
 	  Bool res=oz_unify(makeTaggedSmallInt(recwidth),rawwid); // mm2
 	  if (!res) { result = FAILED; break; }
@@ -515,9 +515,9 @@ OZ_Return WidthPropagator::propagate(void)
     }
     case CVAR:
     {
-        Assert(tagged2CVar(rec)->getType() == OFSVariable);
+        Assert(tagged2CVar(rec)->getType() == OZ_VAR_OF);
         // 1. Impose width constraint
-        GenOFSVariable *recvar=tagged2GenOFSVar(rec);
+        OzOFVariable *recvar=tagged2GenOFSVar(rec);
         recwidth=recvar->getWidth(); // current actual width of record
         if (isGenFDVar(wid)) {
             // Build fd with domain recwidth..fd_sup:
@@ -525,7 +525,7 @@ OZ_Return WidthPropagator::propagate(void)
             slice.initRange(recwidth,fd_sup);
             OZ_FiniteDomain &dom = tagged2GenFDVar(wid)->getDom();
             if (dom.getSize() > (dom & slice).getSize()) { 
-                GenFDVariable *fdcon=new GenFDVariable(slice,oz_currentBoard());
+                OzFDVariable *fdcon=new OzFDVariable(slice,oz_currentBoard());
                 Bool res=oz_unify(makeTaggedRef(newTaggedCVar(fdcon)),rawwid); // mm2
                 // No loc/glob handling: res=(fdwid>=recwidth);
                 if (!res) { result = FAILED; break; }
@@ -544,7 +544,7 @@ OZ_Return WidthPropagator::propagate(void)
         int goodsize,value;
         DEREF(wid,_3,newwidTag);
         if (isGenFDVar(wid)) {
-            GenFDVariable *newfdwid=tagged2GenFDVar(wid);
+            OzFDVariable *newfdwid=tagged2GenFDVar(wid);
             goodsize=(newfdwid->getDom().getSize())==1;
             value=newfdwid->getDom().getMinElem();
         } else if (isSmallIntTag(newwidTag)) {
@@ -626,10 +626,10 @@ OZ_C_proc_begin(BImonitorArity, 3)
         oz_suspendOn(rec);
     case CVAR:
         switch (tagged2CVar(tmprec)->getType()) {
-        case OFSVariable:
+        case OZ_VAR_OF:
             break;
-        case FDVariable:
-        case BoolVariable:
+        case OZ_VAR_FD:
+        case OZ_VAR_BOOL:
             oz_typeError(0,"Record");
         default:
             oz_suspendOn(rec);
@@ -757,9 +757,9 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
     // mm2
     // optimize the most common case: adding or reading a feature
     if (isCVar(termTag) &&
-	tagged2CVar(term)->getType()==OFSVariable &&
+	tagged2CVar(term)->getType()==OZ_VAR_OF &&
 	oz_isFeature(fea)) {
-      GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+      OzOFVariable *ofsvar=tagged2GenOFSVar(term);
 
       TaggedRef t=ofsvar->getFeatureValue(fea);
       if (t!=makeTaggedNULL()) {
@@ -780,8 +780,8 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
 
     // Wait until Y is a feature:
     if (isVariableTag(feaTag)) {
-      if (isCVar(feaTag) && tagged2CVar(fea)->getType()==OFSVariable) {
-	GenOFSVariable *ofsvar=tagged2GenOFSVar(fea);
+      if (isCVar(feaTag) && tagged2CVar(fea)->getType()==OZ_VAR_OF) {
+	OzOFVariable *ofsvar=tagged2GenOFSVar(fea);
 	if (ofsvar->getWidth()>0) goto typeError2;
       }
       if (!oz_isVariable(term) && !oz_isRecord(term)) goto typeError2;
@@ -791,7 +791,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
       } else {
 	if (oz_isFree(term)) {
 	  // Create newofsvar with unbound variable as label:
-	  GenOFSVariable *newofsvar=new GenOFSVariable(oz_currentBoard());
+	  OzOFVariable *newofsvar=new OzOFVariable(oz_currentBoard());
 	  // Unify newofsvar and term:
 	  Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 			   makeTaggedRef(termPtr));
@@ -818,8 +818,8 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
     Assert(term!=makeTaggedNULL());
     switch (termTag) {
     case CVAR:
-      if (tagged2CVar(term)->getType() == OFSVariable) {
-        GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+      if (tagged2CVar(term)->getType() == OZ_VAR_OF) {
+        OzOFVariable *ofsvar=tagged2GenOFSVar(term);
         TaggedRef t=ofsvar->getFeatureValue(fea);
         if (t!=makeTaggedNULL()) {
             // Feature exists
@@ -838,8 +838,8 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
                 out=uvar;
             } else {
                 // Create newofsvar:
-                GenOFSVariable *newofsvar
-		  =new GenOFSVariable(oz_currentBoard());
+                OzOFVariable *newofsvar
+		  =new OzOFVariable(oz_currentBoard());
                 // Add feature to newofsvar:
                 TaggedRef uvar=oz_newVariable();
                 Bool ok1=newofsvar->addFeatureValue(fea,uvar);
@@ -858,7 +858,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
       // FUT
       {
         // Create newofsvar:
-        GenOFSVariable *newofsvar=new GenOFSVariable(oz_currentBoard());
+        OzOFVariable *newofsvar=new OzOFVariable(oz_currentBoard());
         // Add feature to newofsvar:
         TaggedRef uvar=oz_newVariable();
 	Bool ok1=newofsvar->addFeatureValue(fea,uvar);

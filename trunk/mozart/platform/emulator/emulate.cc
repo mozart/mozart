@@ -42,7 +42,7 @@
 #include "builtins.hh"
 #include "indexing.hh"
 
-#include "allgenvar.hh"
+#include "var_all.hh"
 #include "dictionary.hh"
 #include "marshaler.hh"
 #include "copycode.hh"

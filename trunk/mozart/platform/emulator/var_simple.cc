@@ -24,11 +24,11 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "simplevar.hh"
+#if defined(INTERFACE)
+#pragma implementation "var_simple.hh"
 #endif
 
-#include "simplevar.hh"
+#include "var_simple.hh"
 #include "am.hh"
 #include "marshaler.hh"
 
@@ -50,7 +50,7 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 
   if (oz_isRef(t)) {
     TaggedRef *tPtr=tagged2Ref(t);
-    GenCVariable *tv=tagged2CVar(*tPtr);
+    OzVariable *tv=tagged2CVar(*tPtr);
     if (tv->getType()==OZ_VAR_SIMPLE
 	&& oz_isBelow(GETBOARD(tv),GETBOARD(this))
 #ifdef VAR_BIND_NEWER
@@ -72,9 +72,9 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
   return PROCEED;
 }
 
-GenCVariable *uvar2SimpleVar(TaggedRef *v)
+OzVariable *uvar2SimpleVar(TaggedRef *v)
 {
-  GenCVariable *sv = new SimpleVar(tagged2VarHome(*v));
+  OzVariable *sv = new SimpleVar(tagged2VarHome(*v));
   *v = makeTaggedCVar(sv);
   return sv;
 }

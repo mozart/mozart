@@ -34,7 +34,7 @@
 #include "codearea.hh"
 #include "indexing.hh"
 
-#include "genvar.hh"
+#include "var_base.hh"
 #include "controlvar.hh"
 #include "gc.hh"
 #include "dictionary.hh"
@@ -45,7 +45,7 @@
 #include "msgbuffer.hh"
 #include "builtins.hh"
 #include "os.hh"
-#include "simplevar.hh"
+#include "var_simple.hh"
 
 #ifndef WINDOWS
 #include <sys/types.h>
@@ -464,7 +464,7 @@ OZ_Return export(OZ_Term t)
     while (!oz_isNil(vars)) {
       OZ_Term t = oz_head(vars);
       DEREF(t,tPtr,_2);
-      if (isSimpleVar(t)) {
+      if (isSimpleVar(t)) { // mm2 use abstraction
 	tagged2SimpleVar(t)->markExported();
       } else if (isUVar(t)) {
 	uvar2SimpleVar(tPtr);

@@ -33,7 +33,7 @@
 
 #include "solve.hh"
 #include "board.hh"
-#include "variable.hh"
+#include "var_base.hh"
 
 #ifdef OUTLINE
 #include "solve.icc"

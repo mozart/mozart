@@ -44,7 +44,7 @@
 //-------------------------------------------------------------------------
 
 // A simple class implementing list of pairs of terms,
-// used as a utility by DynamicTable and GenOFSVariable.
+// used as a utility by DynamicTable and OzOFVariable.
 
 
 class Pair {
@@ -130,7 +130,7 @@ public:
 // can be expanded when it becomes too full and reduced when it becomes too empty
 // (recovering memory), while keeping amortized constant-time insertion/deletion.
 // Several operations (merge, srecordcheck) are added to facilitate unification of
-// GenOFSVariables, which are built on top of a DynamicTable.
+// OzOFVariables, which are built on top of a DynamicTable.
 
 // Three possibilities for an entry:
 // ident: fea value: val   filled entry
