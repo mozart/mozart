@@ -311,31 +311,80 @@ end>>>
 	To illustrate the functionality, consider the following program
 	which calculates the faculty:
 <<<
-declare
-fun {Fac N}
-   case N < 2 then 1 else
-      N * {Fac N-1}
+local
+   fun {Fac N}
+      if N < 2 then 1 else
+	 N * {Fac N-1}
+      end
    end
+in
+   {Show {Fac 5}}
 end
 >>>
+	Suppose you already pressed the <picture.extern inline
+	gif to="step.gif"> some times, so that there was build
+	a nice stack already, and that you have marked stack frame 5
+	by clicking on it. What you will see is something like this:
+
 	<figure class="picture">
 	<caption/Before the action unleash 5/
 	  <p><picture.extern gif to="fac1.gif">
 	</figure>
+
+	You decide to directly compute the value of <<{Fac 3}>>, so
+	what Ozcar needs to do is to continue the thread's execution
+	until stack frame 5 is just to be removed from the stack. Unleash 5,
+	activated by clicking on the <picture.extern inline
+	gif to="unleash.gif"> button, does exactly this:
+
 	<figure class="picture">
 	<caption/After the action unleash 5/
 	  <p><picture.extern gif to="fac2.gif">
 	</figure>
-
 	<section>
 	<title/Breakpoints/
 	<p>
+	Single stepping is nice, but often somewhat inconvenient, because
+	you need a lot of steps until the interesting section of
+	your program is reached. Breakpoints help you here. Ozcar supports
+	two flavours of them: static and dynamic ones.
 	<subsection>
 	<title/Static Breakpoints/
 	<p>
+	Let's assume you need to debug the base case of the recursion.
+	This can easily be achieved by inserting a special breakpoint
+	procedure, like this:
+<<<
+local
+   fun {Fac N}
+      if N < 2 then {Ozcar.breakpoint} 1 else
+	 N * {Fac N-1}
+      end
+   end
+in
+   {Show {Fac 5}}
+end
+>>>
+	After feeding the code and pressing the <picture.extern inline
+	gif to="unleash.gif"> button two times, you are directly at the
+	desired position.
+
+	Static breakpoints are useful if you want the breakpoint to
+	survive multiple invokations of the mozart system. They
+	are inserted before you feed your code. On the other
+	hand, you might decide to insert a breakpoint after you
+	feeded the code. Then you need dynamic breakpoints.
 	<subsection>
 	<title/Dynamic Breakpoints/
 	<p>
+	This flavour of breakpoints can be set directly from Emacs: You
+	position the cursor on the line and column where you want to
+	change breakpoint information and press (<Key/C-x space/)
+	to set or (<Key/C-u C-x space/) to delete a breakpoint.
+	<p>
+	Unfortunately, there is no information yet about all currently
+	defined dynamic breakpoints. You just have to keep them in mind.
+	This might be changed in the future.
       <Chapter>
 	<title/Environment Inspectation/
 	<p>
@@ -345,6 +394,31 @@ end
 	<section>
 	<title/Execution of Statements/
 	<p>
+      <Chapter>
+	<title/Exceptions/
+	<p>
+<<<
+local
+   proc {Check X}
+      case X
+      of foo then {Show 'This is a foo'}
+      [] bar then {Show 'This is a bar'}
+      end
+   end
+in
+   {Check foobar}
+end
+>>>
+	<figure class="picture">
+	<caption/An unhandled exception has been raised/
+	  <p><picture.extern gif to="exception.gif">
+	</figure>
+
+	<figure class="picture">
+	<caption/Emacs shows the exact position where the error occured/
+	  <p><picture.extern gif to="exception-emacs.gif">
+	</figure>
+
       <Chapter>
       <title/Reference Section/
 	<p>
