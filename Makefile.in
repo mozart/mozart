@@ -134,10 +134,8 @@ Makefile: Makefile.in ./config.status
 
 install:: $(ALLFILES)
 
-# $(ALLFILES): $(PREFIX)/% : % $(PREFIX)
-
-$(ALLFILES): $(FILES)
-	$(INSTALL_FILE) $(FILES) $(PREFIX)
+$(ALLFILES): $(PREFIX)/% : % $(PREFIX)
+	$(INSTALL_FILE) $< $@
 
 $(DISTDIR):
 	$(INSTALL_DIR) $@
