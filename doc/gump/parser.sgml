@@ -696,7 +696,8 @@
                 <TD>create the <File/.simplified/ file with the BNF version
                   of the grammar
               <TR>
-                <TD><Code><Span class=ignore>\switch +</Span>verbose</Code>
+                <TD><Code><Span class=ignore>\switch +</Span
+                  >gumpparserverbose</Code>
                 <TD>create the <File/.output/ file with the Bison verbose
                   output
             </Table>
