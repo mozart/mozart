@@ -361,6 +361,7 @@ starts the emulator under gdb")
     ("Halt Oz"  . oz-halt)
     ("-----")
     ("Debugger" . oz-debug-start)
+    ("Profiler" . oz-profiler-start)
     ))
 
   "The contents of the Oz menu")
@@ -369,6 +370,20 @@ starts the emulator under gdb")
   "Load the definitions for communication from Oz to Emacs" t)
 
 (oz-make-menu oz-menu)
+
+;;------------------------------------------------------------
+;; Profiler stuff
+;;------------------------------------------------------------
+
+(defun oz-profiler-start ()
+  "Start the profiler."
+  (interactive)
+  (oz-send-string "{Profiler on}"))
+
+(defun oz-profiler-stop ()
+  "Stop the profiler."
+  (interactive)
+  (oz-send-string "{Profiler off}"))
 
 ;;------------------------------------------------------------
 ;; Debugger stuff
@@ -1219,7 +1234,7 @@ the GDB commands `cd DIR' and `directory'."
 	(define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
 	(define-key map "\C-c\C-b\C-r"  'oz-feed-region-browse)
 	)
-    (define-key map "\C-c\C-f"     'oz-feed-file)
+    (define-key map "\C-c\C-f\C-f" 'oz-feed-file)
     (define-key map "\M-\C-m"      'oz-feed-buffer)
     (define-key map "\M-r"         'oz-feed-region)
     (define-key map "\M-l"         'oz-feed-line)
@@ -1235,6 +1250,10 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
     (define-key map [M-S-mouse-1]  'oz-breakpoint-mouse-set)
     (define-key map [M-S-mouse-3]  'oz-breakpoint-mouse-delete)
+
+    (define-key map "\C-c\C-f\C-r" 'oz-profiler-start)
+    (define-key map "\C-c\C-f\C-h" 'oz-profiler-stop)
+
     )
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
