@@ -133,11 +133,11 @@ in
 	  [MB(text: 'Help'
 	      menu:
 		 [C(label:   'Thread Tree'
-		    state:   disabled)
+		    action:  self # helpThreadTree)
 		  C(label:   'Stack'
-		    state:   disabled)
+		    action:  self # helpStack)
 		  C(label:   'Environment'
-		    state:   disabled)
+		    action:  self # helpEnv)
 		  CC(label:  'Breakpoints'
 		     menu:
 			[C(label:  'static'
