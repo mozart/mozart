@@ -30,6 +30,8 @@
                                '((1 font-lock-keyword-face)
                                  (2 font-lock-variable-name-face))))))
 
+(setq font-lock-maximum-decoration t)
+
 (defvar ozdoc-face-to-tag-alist
   '((font-lock-comment-face       . comment)
     (font-lock-keyword-face       . keyword)
