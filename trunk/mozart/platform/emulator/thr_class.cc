@@ -62,25 +62,6 @@
      */
 
 /*
- * the mode is 3, if all tasks on the thread have seq mode
- */
-void Thread::setCompMode(int newMode) {
-  Assert((compMode&1) != newMode);
-  Assert(SEQMODE==1 && PARMODE==0);
-  if (TaskStack::isEmpty()) {
-    if (newMode == SEQMODE) {
-      compMode=ALLSEQMODE;
-    } else {
-      compMode=newMode;
-    }
-  } else {
-    TaskStack::pushCompMode(compMode);
-    compMode=newMode;
-  }
-}
-
-
-/*
  * check if a thread's board is below a failed board
  */
 Bool Thread::isBelowFailed(Board *top)
@@ -113,9 +94,6 @@ Bool Thread::discardLocalTasks()
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
     switch (cFlag){
-    case C_COMP_MODE:
-      compMode=TaskStack::getCompMode(entry);
-      break;
     case C_LOCAL:
     case C_SOLVE:
       TaskStack::setTop(tos);
