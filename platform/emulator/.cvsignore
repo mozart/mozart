@@ -7,7 +7,7 @@ opcodes.cc
 copycode.cc
 scanner.cc parser.cc parser.hh
 ozlib.lnk
-oz.c
+mozart.c
 initffuns.cc
 components.cc
 marshalcode.cc
