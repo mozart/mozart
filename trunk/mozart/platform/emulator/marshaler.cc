@@ -958,7 +958,7 @@ loop:
     }
   case DIF_ARRAY:
     {
-      warning("unmarshal array not impl");  // mm2
+      OZ_warning("unmarshal array not impl");  // mm2
       return;
     }
   case DIF_BUILTIN:
@@ -968,13 +968,13 @@ loop:
       Builtin * found = string2Builtin(name);
 
       if (!found) {
-	warning("Builtin '%s' not in table.", name);
+	OZ_warning("Builtin '%s' not in table.", name);
 	*ret = oz_nil();
 	return;
       }
 
       if (found->isNative()) {
-	warning("Unpickling sited builtin: '%s'", name);
+	OZ_warning("Unpickling sited builtin: '%s'", name);
       }
 
       *ret = makeTaggedConst(found);

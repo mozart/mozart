@@ -393,7 +393,7 @@ OZ_Term getBuiltin_oz(const char*Name)
     (tagged2Dictionary(dictionary_of_builtins)
      ->getArg(oz_atom(Name),val) == PROCEED)
     ? val :
-    (warning("[builtin not found: %s]\n",Name),0);
+    (OZ_warning("[builtin not found: %s]\n",Name),0);
 }
 
 Builtin* getBuiltin_c(const char*Name)
@@ -408,7 +408,7 @@ Builtin* atom2Builtin(TaggedRef a) {
   return (tagged2Dictionary(dictionary_of_builtins)
 	  ->getArg(a,val) == PROCEED)
     ? tagged2Builtin(val) :
-    (warning("[builtin not found: %s]\n",OZ_atomToC(a)),
+    (OZ_warning("[builtin not found: %s]\n",OZ_atomToC(a)),
      ((Builtin*) 0));
 }
 

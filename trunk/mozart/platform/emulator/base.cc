@@ -84,21 +84,6 @@ void error(const char *format, ...)
 #endif
 }
 
-void warning(const char *format, ...)
-{
-  va_list ap;
-
-  va_start(ap,format);
-
-  prefixWarning();
-
-  fprintf (stderr, "*** Warning: ");
-  vfprintf(stderr,format,ap);
-  fprintf (stderr, "\n");
-
-  va_end(ap);
-}
-
 void OZ_warning(const char *format, ...)
 {
   va_list ap;
@@ -121,7 +106,7 @@ void ozperror(const char *msg)
 
 void ozpwarning(const char *msg)
 {
-  warning("UNIX ERROR: %s: %s",msg,OZ_unixError(errno));
+  OZ_warning("UNIX ERROR: %s: %s",msg,OZ_unixError(errno));
 }
 
 

@@ -583,7 +583,7 @@ OZ_Return WidthPropagator::propagate(void)
     }
     default:
       // mm2: type error ?
-      warning("unexpected bad first argument to widthC");
+      OZ_warning("unexpected bad first argument to widthC");
       result=FAILED;
     }
 

@@ -4589,14 +4589,14 @@ OZ_DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 
 OZ_BI_define(BIfunReturn,1,0) 
 {
-  warning("funReturn should never be called");
+  OZ_warning("funReturn should never be called");
   return PROCEED;
 } OZ_BI_end
 
 
 OZ_BI_define(BIgetReturn,0,1) 
 {
-  warning("getReturn should never be called");
+  OZ_warning("getReturn should never be called");
   return PROCEED;
 } OZ_BI_end
 
