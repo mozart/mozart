@@ -87,6 +87,22 @@
                                   out => [],
                                   BI  => BIprintDPTables},
 
+     'setDGC'                => { in  => ['value', '+atom'],
+                                  out => ['bool'],
+                                  BI  => BIsetDGC},
+
+
+     'getDGC'                => { in  => ['value'],
+                                  out => ['+record'],
+                                  BI  => BIgetDGC},
+
+     'printDPTables'         => { in  => [],
+                                  out => [],
+                                  BI  => BIprintDPTables},
+
+
+
+
      'createLogFile'         => { in  => ['+string'],
                                   out => [],
                                   BI  => BIcreateLogFile}
