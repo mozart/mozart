@@ -53,6 +53,9 @@ void printPercent(FILE *fd,char *s,unsigned int t,unsigned int total)
   }
 }
 
+int workaroundForBugInGCC1 = KB;
+int workaroundForBugInGCC2 = MB;
+
 static
 void printMem(FILE *fd,char *s,double m)
 {
@@ -62,11 +65,11 @@ void printMem(FILE *fd,char *s,double m)
     return;
   }
   if (m < MB) {
-    fprintf(fd,"%.1lf kB",m/KB);
+    fprintf(fd,"%.1lf kB",m/workaroundForBugInGCC1);
     return;
   }
   
-  fprintf(fd,"%.1lf MB",m/MB);
+  fprintf(fd,"%.1lf MB",m/workaroundForBugInGCC2);
 }
 
 void Statistics::print(FILE *fd)

@@ -67,6 +67,14 @@ IOChannel *lookupChannel(int fd)
   return aux;
 }
 
+int fileTimeToMS(FILETIME *ft)
+{
+  //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/10000)<<32)
+  //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/16*625)<<32)
+  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime<<28)/625);
+}
+
+
 unsigned __stdcall readerThread(void *arg)
 {
   IOChannel *sr = (IOChannel *)arg;
@@ -140,9 +148,9 @@ Bool createReader(int fd, Bool doAcceptSelect)
   ResetEvent(sr->char_consumed);
 
   unsigned thrid;
-  sr->thrd = _beginthreadex(NULL,0,
-			    doAcceptSelect ? &acceptThread : &readerThread,
-			    sr,0,&thrid);
+  sr->thrd = (HANDLE) _beginthreadex(0,0,
+				     doAcceptSelect ? &acceptThread : &readerThread,
+				     sr,0,&thrid);
   if (sr->thrd != 0) {
     maxfd = max(fd+1,maxfd);
     return OK;
