@@ -255,7 +255,7 @@ OZ_Term OwnerTable::extract_info(){
   }
   return OZ_recordInit(oz_atom("ot"),
            oz_cons(oz_pairAI("size", size),
-	   oz_cons(oz_pairAI("localized", localized),
+	   oz_cons(oz_pairAI("localized", getLocalized()),
            oz_cons(oz_pairA("list", list), oz_nil()))));
 }
 

@@ -212,7 +212,7 @@ define
 	 Table, update(Data)
 	 if Localized > 0 then Old I in
 	    {Dictionary.get self.diff Key Old#I}
-	    {Dictionary.put self.diff Key Old+1#I}
+	    {Dictionary.put self.diff Key Old+Localized#I}
 	 end
       end
       
