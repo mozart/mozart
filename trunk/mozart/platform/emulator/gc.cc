@@ -109,26 +109,16 @@ DebugCheckT(MemChunks *from);
   MemChunks::list->print();						      \
 }
 
-/* assert that P is in from-space or that P is NULL */
 #   define INFROMSPACE(P)						      \
-  if (opMode == IN_GC && P != NULL && !from->inChunkChain((void*)P)) {	      \
-    error("not in from-space: 0x%x %d", P, __LINE__);			      \
-  }
+  Assert(opMode==IN_TC || P==NULL || from->inChunkChain((void*)P))
 
-/* assert that P is not in to-space or that P is NULL */
+
 #   define NOTINTOSPACE(P)						      \
-  if (opMode == IN_GC && P != NULL					      \
-      && MemChunks::list->inChunkChain((void*)P)) {			      \
-    error("in to-space 0x%x %d", P, __LINE__);				      \
-  }
+  Assert(opMode==IN_TC || P==NULL || !MemChunks::list->inChunkChain((void*)P))
 
 
-/* assert that P is in to-space or that P is NULL */
 #   define INTOSPACE(P)                                                       \
-  if (opMode == IN_GC && P != NULL					      \
-      && !MemChunks::list->inChunkChain((void*)P)) {			      \
-    error("not in to-space 0x%x %d", P, __LINE__);			      \
-  }
+  Assert(opMode==IN_TC || P==NULL || MemChunks::list->inChunkChain((void*)P));
 
 #else // CHECKSPACE
 #   define INITCHECKSPACE
@@ -1062,7 +1052,7 @@ Thread *Thread::gcThread ()
 
   // 
   //  Note that runnable threads can be also counted 
-  // in solve actors (for stabilittty check), and, therefore, 
+  // in solve actors (for stability check), and, therefore, 
   // might not just dissappear!
   if (isSuspended () && !((getBoard())->gcIsAlive ())) {
     return ((Thread *) NULL);
@@ -1109,30 +1099,32 @@ void Thread::gcRecurse ()
 {
   GCMETHMSG("Thread::gcRecurse");
 
-  Board *newBoard = getBoardInternal()->gcBoard ();
-  if (!newBoard) {
-    // 
-    //  The following assertion holds because suspended threads
-    // which home board is dead are filtered out during 
-    // 'Thread::gcThread ()';
-    Assert (isRunnable ());
-
-    // 
-    //  Actually, there are two cases: for runnable threads with 
-    // a taskstack, and without it (note that the last case covers 
-    // also the GC'ing of propagators);
-    Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
-    setBoard(notificationBoard->gcBoard());
-
-    getBoard()->incSuspCount ();
-
-    //
-    //  Convert the thread to a 'wakeup' type, and just throw away
-    // the body;
-    setWakeUpTypeGC ();
-    item.threadBody = (RunnableThreadBody *) NULL;
-  } else {
-    setBoard(newBoard);
+  if (isLocal()) {
+    Board *newBoard = getBoardInternal()->gcBoard ();
+    if (!newBoard) {
+      // 
+      //  The following assertion holds because suspended threads
+      // which home board is dead are filtered out during 
+      // 'Thread::gcThread ()';
+      Assert (isRunnable ());
+      
+      // 
+      //  Actually, there are two cases: for runnable threads with 
+      // a taskstack, and without it (note that the last case covers 
+      // also the GC'ing of propagators);
+      Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
+      setBoard(notificationBoard->gcBoard());
+      
+      getBoard()->incSuspCount ();
+      
+      //
+      //  Convert the thread to a 'wakeup' type, and just throw away
+      // the body;
+      setWakeUpTypeGC ();
+      item.threadBody = (RunnableThreadBody *) NULL;
+    } else {
+      setBoard(newBoard);
+    }
   }
 
   //
@@ -2400,6 +2392,8 @@ Bool Board::gcIsAlive()
 Board * Board::gcBoard()
 {
   GCMETHMSG("Board::gcBoard");
+  INFROMSPACE(this);
+
   if (!this) return 0;
 
   Board *bb = this->derefBoard();
