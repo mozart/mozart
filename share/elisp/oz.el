@@ -590,7 +590,7 @@ the GDB commands `cd DIR' and `directory'."
 		   "local"
 		   "if" "or" "OR" "case"
 		   "class" "create" "meth" "extern"
-		   "not" "thread" "jobs" "conc"
+		   "not" "thread" "job" "conc"
 		   "condis"
 		   )))
 
