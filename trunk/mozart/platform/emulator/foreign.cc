@@ -11,10 +11,13 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
+#include <strstream.h>
 
 #include "oz.h"
 
 #include "am.hh"
+
+#include "ofgenvar.hh"
 
 #include "StringBuffer.hh"
 
@@ -684,7 +687,7 @@ inline
 void feature2buffer(SRecord *sr, OZ_Term fea, int depth)
 {
   value2buffer(fea);
-  TmpBuffer.put(':');
+  TmpBuffer.put2(':',' ');
   value2buffer(sr->getFeature(fea),depth);
 }
 
@@ -745,6 +748,109 @@ void list2buffer(LTuple *list,int depth)
   TmpBuffer.put_string(",,,|,,,");
 }
 
+
+// Non-Name Features are output in alphanumeric order (ints before atoms):
+void DynamicTable::ofs2buffer(int depth)
+{
+  // Count Atoms & Names in dynamictable:
+  TaggedRef tmplit,tmpval;
+  dt_index di;
+  long ai;
+  long nAtomOrInt=0;
+  long nName=0;
+  for (di=0; di<size; di++) {
+    tmplit=table[di].ident;
+    tmpval=table[di].value;
+    if (tmpval) { 
+      CHECK_DEREF(tmplit);
+      if (isAtom(tmplit)||isInt(tmplit)) nAtomOrInt++; else nName++;
+    }
+  }
+  // Allocate array on heap, put Atoms in array:
+  TaggedRef *arr = new TaggedRef[nAtomOrInt+1]; // +1 since nAtomOrInt may be zero
+  for (ai=0,di=0; di<size; di++) {
+    tmplit=table[di].ident;
+    tmpval=table[di].value;
+    if (tmpval!=makeTaggedNULL() && (isAtom(tmplit)||isInt(tmplit)))
+      arr[ai++]=tmplit;
+  }
+  // Sort the Atoms according to printName:
+  inplace_quicksort(arr, arr+(nAtomOrInt-1));
+
+  // Output the Atoms first, in order:
+  for (ai=0; ai<nAtomOrInt; ai++) {
+    value2buffer(arr[ai],0);
+    TmpBuffer.put2(':',' ');
+    value2buffer(lookup(arr[ai]),depth);
+    TmpBuffer.put(' ');
+  }
+  // Output the Names last, unordered:
+  for (di=0; di<size; di++) {
+    tmplit=table[di].ident;
+    tmpval=table[di].value;
+    if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
+      value2buffer(tmplit,0);
+      TmpBuffer.put2(':',' ');
+      value2buffer(tmpval,depth);
+      TmpBuffer.put(' ');
+    }
+  }
+  // Deallocate array:
+  delete arr;
+}
+
+static
+void cvar2buffer(char *s,GenCVariable *cv,int depth)
+{
+  switch(cv->getType()){
+  case FDVariable:
+    {
+      TmpBuffer.put_string(s);
+      ostrstream buf;
+      buf << ((GenFDVariable *) cv)->getDom() << '\0';
+      TmpBuffer.put_string(buf.str());
+      break;
+    }
+
+  case BoolVariable:
+    {
+      TmpBuffer.put_string(s);
+      TmpBuffer.put_string("{0#1}");
+      break;
+    }
+
+  case OFSVariable:
+    {
+      GenOFSVariable* ofs = (GenOFSVariable *) cv;
+      value2buffer(ofs->getLabel(),0);
+      TmpBuffer.put('(');
+      if (depth > 0) {
+	ofs->getTable()->ofs2buffer(depth-1);
+      } else {
+	TmpBuffer.put_string(",,, ");
+	break;
+      }
+      TmpBuffer.put_string("...)");
+      break;
+   }
+
+  case MetaVariable:
+    {
+      TmpBuffer.put_string(s);
+      // TmpBuffer.print_string(((GenMetaVariable *)cv)->toString(0));
+      break;
+    }
+  case AVAR:
+    {
+      TmpBuffer.put_string(s);
+      break;
+    }
+  default:
+    Assert(0);
+    break;
+  }
+}
+
 static
 void value2buffer(OZ_Term term, int depth)
 {
@@ -755,17 +861,23 @@ void value2buffer(OZ_Term term, int depth)
     DEREF(term,termPtr,tag);
     switch(tag) {
     case UVAR:
-      TmpBuffer.put('_');
-      break;
     case SVAR:
-    case CVAR:
       {
-	char *s = getVarName(term);
+	char *s = getVarName(makeTaggedRef(termPtr));
 	if (!*s) {
 	  TmpBuffer.put('_');
 	} else {
 	  TmpBuffer.put_string(s);
 	}
+      }
+      break;
+    case CVAR:
+      {
+	char *s = getVarName(makeTaggedRef(termPtr));
+	if (!*s) {
+	  s = "_";
+	}
+	if (isCVar(tag)) { cvar2buffer(s,tagged2CVar(term),depth); }
       }
       break;
     case SRECORD:
