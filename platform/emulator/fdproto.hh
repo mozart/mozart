@@ -102,6 +102,7 @@ OZ_C_proc_proto(sched_cumulativeTI)
 OZ_C_proc_proto(sched_cpIterateCapUp)
 OZ_C_proc_proto(sched_taskIntervals)
 OZ_C_proc_proto(sched_disjunctive)
+OZ_C_proc_proto(sched_disjunctiveStream)
 OZ_C_proc_proto(sched_taskIntervalsProof)
 OZ_C_proc_proto(sched_firstsLasts)
 

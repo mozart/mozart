@@ -1206,6 +1206,7 @@ BIspec fdSpec[] = {
   {"sched_cpIterateCapUp", 5, sched_cpIterateCapUp},
   {"sched_taskIntervals", 3, sched_taskIntervals},
   {"sched_disjunctive", 3, sched_disjunctive},
+  {"sched_disjunctiveStream", 3, sched_disjunctiveStream},
   // dummies
   {"fdp_twice", 2, fdp_twice},
   {"fdp_square", 2, fdp_square},
