@@ -44,7 +44,7 @@ import
 	     quietInterface}
 
    DebugSupport
-      from 'x-oz-boot:Debug'
+      from 'x-oz://boot/Debug'
    
 export
    'Ozcar': Ozcar
