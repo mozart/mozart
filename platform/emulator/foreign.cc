@@ -894,13 +894,26 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
 }
 
 static
-void cvar2buffer(ostream &out, char *s,GenCVariable *cv,int depth)
+void fset2buffer(ostream &out, FSetValue * fs)
+{
+  out << *fs;
+}
+
+static
+void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
 {
   switch(cv->getType()){
   case FDVariable:
     {
       out << s;
       out << ((GenFDVariable *) cv)->getDom();
+      break;
+    }
+
+  case FSetVariable:
+    {
+      out << s;
+      out << ((GenFSetVariable *) cv)->getSet();
       break;
     }
 
@@ -972,6 +985,9 @@ void value2buffer(ostream &out, OZ_Term term, int depth)
         }
         if (isCVar(tag)) { cvar2buffer(out, s,tagged2CVar(term),depth); }
       }
+      break;
+    case FSETVALUE:
+      fset2buffer(out, tagged2FSetValue(term));
       break;
     case SRECORD:
       record2buffer(out,tagged2SRecord(term),depth);

@@ -29,7 +29,7 @@
 #include "dllist.hh"
 
 #include "genvar.hh"
-#include "ofgenvar.hh"
+
 #include "fdhook.hh"
 #include "fdprofil.hh"
 
@@ -1205,6 +1205,9 @@ void GenCVariable::gc(void)
   case DVAR:
     ((DVar *) this)->gcDVar();
     break;
+  case FSetVariable:
+    ((GenFSetVariable *) this)->gc();
+    break;
   default:
     Assert(0);
   }
@@ -1312,6 +1315,15 @@ void GenFDVariable::gc(void)
     fdSuspList[i] = fdSuspList[i]->gc();
 }
 
+void GenFSetVariable::gc(void)
+{
+  GCMETHMSG("GenFSetVariable::gc");
+}
+
+FSetValue * FSetValue::gc(void)
+{
+  return (FSetValue *) gcRealloc(this, sizeof(*this));
+}
 
 void GenMetaVariable::gc(void)
 {
@@ -1435,6 +1447,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   switch (auxTermTag) {
 
   case SMALLINT: toTerm = auxTerm; break;
+  case FSETVALUE: toTerm = makeTaggedFSetValue(tagged2FSetValue(auxTerm)->gc()); break;
   case LITERAL:  toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc()); break;
   case LTUPLE:   toTerm = makeTaggedLTuple(tagged2LTuple(auxTerm)->gc()); break;
   case SRECORD:  toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord()); break;

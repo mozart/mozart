@@ -46,7 +46,7 @@ enum TypeOfTerm {
   GCTAG            =  13,  // 1101    --> !!! isAnyVar(GCTAG) = 1 !!!
 
   LTUPLE           =  2,   // 0010
-  FREE             = 14,   // 1110
+  FSETVALUE        = 14,   // 1110
   SRECORD          =  3,   // 0011
 
   LITERAL          = 15,   // 1111
@@ -275,6 +275,17 @@ Bool isNotCVar(TaggedRef term) {
 
 
 inline
+Bool isFSetValue(TypeOfTerm tag) {
+  return tag == FSETVALUE;
+}
+
+inline
+Bool isFSetValue(TaggedRef term) {
+  GCDEBUG(term);
+  return isFSetValue(tagTypeOf(term));
+}
+
+inline
 Bool isLiteral(TypeOfTerm tag) {
   return tag == LITERAL;
 }
@@ -414,6 +425,13 @@ inline
 TaggedRef makeTaggedCVar(GenCVariable *s) {
   CHECK_POINTER(s);
   return makeTaggedRef(CVAR, s);
+}
+
+inline
+TaggedRef makeTaggedFSetValue(FSetValue * s)
+{
+  CHECK_POINTER(s);
+  return makeTaggedRef(FSETVALUE, s);
 }
 
 inline
@@ -581,6 +599,14 @@ Board *tagged2VarHome(TaggedRef ref)
   GCDEBUG(ref);
   CHECKTAG(UVAR);
   return (Board *) tagValueOf(UVAR,ref);
+}
+
+inline
+FSetValue *tagged2FSetValue(TaggedRef ref)
+{
+  GCDEBUG(ref);
+  CHECKTAG(FSETVALUE);
+  return (FSetValue *) tagValueOf(FSETVALUE,ref);
 }
 
 inline

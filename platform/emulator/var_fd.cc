@@ -27,7 +27,8 @@
 // implicitely relinked.)
 Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
                             TaggedRef * tPtr, TaggedRef term,
-                            Bool prop, Bool disp)
+                            Bool prop, /* propagate */
+                            Bool disp  /* dispose */ )
 {
 #ifdef SCRIPTDEBUG
   printf(am.isInstallingScript() ? "fd installing script\n" : "fd NOT installing script\n"); fflush(stdout);
@@ -275,14 +276,11 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
   return FALSE;
 } // GenFDVariable::unify
 
-
-
 Bool GenFDVariable::valid(TaggedRef val)
 {
   Assert(!isRef(val));
   return (isSmallInt(val) && finiteDomain.isIn(OZ_intToC(val)));
 }
-
 
 void GenFDVariable::relinkSuspListTo(GenBoolVariable * lv, Bool reset_local)
 {
