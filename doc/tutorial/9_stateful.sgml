@@ -251,37 +251,69 @@ J = {NewCell 0}
 <P>Ports described in <ptr to=section.stateful.port> can be
 implemented by chunks and
 cells in a secure way, i.e. as an abstract data type that cannot be
-forged. The following program shows an implementation of Ports.
-
-<P><FIGURE ID="portCellChunk" CLASS="Figure">
-<CAPTION>Implementation of Ports by Cells and Chunks</CAPTION>
-<<<
-declare NewPort IsPort Send in
-local
-   Port = {NewName} %New Oz name
-in
-   fun {NewPort S}
-      C = {NewCell S}
-      {NewChunk port(Port:C)}
-   end
-   fun {IsPort ?P}
-      {ChunkHasFeature Port} %Checks a chunk feature
-   end
-   proc {Send P M}
-      Ms Mr in
-      {Exchange P.Port Ms Mr}
-      Ms = M|Mr
-   end
-end
->>>
-</FIGURE>
-
-<P>Initially an Oz-name is created locally, which is accessible only
+forged. The program in <ptr to="portCellChunk"> shows an implementation
+of Ports.
+Initially an Oz-name is created locally, which is accessible only
 by the Port operations. A port is created as a chunk that has one
 component, which is a cell. The cell is initialized to the stream
 associated with the port. The type test <<IsPort>> is done by checking
 the feature <<Port>>. Sending a message to a port results in updating
 the stream atomically, and updating the cell to point to the tail of
 the stream.
+
+<P><FIGURE ID="portCellChunk" CLASS="Figure">
+<CAPTION>Implementation of Ports by Cells and Chunks</CAPTION>
+<<<
+declare Port in
+local
+   PortTag = {NewName} %New Oz name
+   fun {NewPort S}
+      C = {NewCell S} in
+      {NewChunk port(PortTag:C)}
+   end
+   fun {IsPort ?P}
+      {Chunk.hasFeature P PortTag} %Checks a chunk feature
+   end
+   proc {Send P M}
+      Ms Mr in
+      {Exchange P.PortTag Ms Mr}
+      Ms = M|Mr
+   end
+in Port = port(new:NewPort
+               is:IsPort
+               send:Send)
+end
+>>>
+<p> The implementation in <ptr to="portCellChunk"> does not protect
+the stream of the port. Protection of the stream is done using
+future as follows.
+</FIGURE>
+
+<P><FIGURE ID="portCellChunkF" CLASS="Figure">
+<CAPTION>Implementation of Ports by Cells and Chunks</CAPTION>
+<<<
+declare Port in
+local
+   PortTag = {NewName} %New Oz name
+   fun {NewPort FS}
+      S C = {NewCell S} in
+      FS = !!S  % Create a future
+      {NewChunk port(PortTag:C)}
+   end
+   fun {IsPort ?P}
+      {Chunk.hasFeature P PortTag} %Checks a chunk feature
+   end
+   proc {Send P M}
+      Ms Mr in
+      {Exchange P.PortTag Ms Mr}
+      Ms = M|!!Mr
+   end
+in Port = port(new:NewPort
+               is:IsPort
+               send:Send)
+end
+>>>
+</FIGURE>
+
 
 </CHAPTER>
