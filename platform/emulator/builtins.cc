@@ -4647,12 +4647,12 @@ OZ_C_proc_begin(BIunlockLock,1)
     ((LockLocal*)t)->unlock();
     return PROCEED;}
   case Te_Manager:{
-    ((LockManager*)t)->unlock();
+    ((LockManager*)t)->unlock(am.currentThread());
     return PROCEED;}
   case Te_Proxy:{
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}
   case Te_Frame:{
-    ((LockFrame*)t)->unlock();
+    ((LockFrame*)t)->unlock(am.currentThread());
     return PROCEED;}
   }
   Assert(0);
@@ -4854,6 +4854,37 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
 DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
 
 
+// ---------------------------------------------------------------------
+// Perdio stuff
+// ---------------------------------------------------------------------
+
+OZ_C_proc_begin(BIrestop,0)
+{
+  oz_suspendOnNet(am.currentThread());
+  return BI_PREEMPT;
+}
+OZ_C_proc_end
+
+OZ_Return BIhandlerInstallInline(TaggedRef e, TaggedRef c, TaggedRef p){
+  NONVAR(e,entity);
+  Tertiary *tert = tagged2Tert(entity);
+  if(isLock(entity)){
+    lockInstallHandler(tert,c,p,am.currentThread());
+    return PROCEED;
+  }
+  Assert(0);
+  return PROCEED;
+}
+
+
+OZ_C_proc_begin(BIhandlerInstall,3)
+{
+  OZ_Term entity   = OZ_getCArg(0);
+  OZ_Term cond     = OZ_getCArg(1);
+  OZ_Term proc     = OZ_getCArg(2);
+  return BIhandlerInstallInline(entity, cond, proc);
+}
+OZ_C_proc_end
 /********************************************************************
  *   Dictionaries
  ******************************************************************** */
@@ -7620,6 +7651,9 @@ BIspec allSpec[] = {
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
   {"Access",          2,BIaccessCell,   (IFOR) BIaccessCellInline},
   {"Assign",          2,BIassignCell,   (IFOR) BIassignCellInline},
+
+  {"perdioRestop",   0, BIrestop,           0},
+  {"InstallHandler", 3, BIhandlerInstall,  (IFOR) BIhandlerInstallInline},
 
   {"IsChar",        2, BIcharIs,        0},
   {"Char.isAlNum",  2, BIcharIsAlNum,   0},
