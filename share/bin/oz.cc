@@ -75,8 +75,7 @@ char *getEmacsHome(char *path)
   MessageBox(NULL,
              "When you start Oz for the first time,\nyou have to specify where the Emacs binary resides.\n",
              "Cannot find Emacs",
-             MB_OK | MB_TASKMODAL | MB_SETFOREGROUND |
-             MB_ICONINFORMATION);
+             MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 
   BOOL ret = getFileName(buf);
   if (ret == FALSE)
@@ -112,9 +111,10 @@ void ozSetenv(const char *var, const char *value)
 }
 
 
+/* Todo: version should not be wired. */
 char *reg_path = "SOFTWARE\\DFKI\\Oz\\" OZVERSION;
 
-char *getRegistry(char *var)
+char *getRegistry(char *path, char *var)
 {
   DWORD value_type = REG_SZ;
   DWORD buf_size = MAX_PATH;
@@ -122,7 +122,9 @@ char *getRegistry(char *var)
   int rc = 0;
 
   HKEY hk;
-  if (RegOpenKey(HKEY_LOCAL_MACHINE, reg_path, &hk) != ERROR_SUCCESS)
+  if (RegOpenKey(HKEY_LOCAL_MACHINE,
+                 path,
+                 &hk) != ERROR_SUCCESS)
     goto end;
 
   if (RegQueryValueEx(hk,
@@ -141,11 +143,18 @@ char *getRegistry(char *var)
   return rc==1 ? strdup(buf) : NULL;
 }
 
+char *getRegistry(char *var)
+{
+  return getRegistry(reg_path,var);
+}
+
 int setRegistry(char *var, const char *value)
 {
   HKEY hk;
 
-  int ret = RegCreateKey(HKEY_LOCAL_MACHINE, reg_path, &hk);
+  int ret = RegCreateKey(HKEY_LOCAL_MACHINE,
+                         reg_path,
+                         &hk);
   if (ret != ERROR_SUCCESS)
     return 0;
 
@@ -168,6 +177,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
         LPSTR lpszCmdLine, int nCmdShow)
 {
   char buffer[5000];
+
   char *ozhome = getenv("OZHOME");
 
   if (ozhome == NULL) {
@@ -210,7 +220,9 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
    * Emacs
    */
   char *ehome = getenv("EMACSHOME");
-  if (ehome==NULL && (ehome=getRegistry("EMACSHOME"))==NULL) {
+  if (ehome==NULL &&
+      (ehome=getRegistry("EMACSHOME"))==NULL &&
+      (ehome=getRegistry("SOFTWARE\\GNU\\Emacs\\","emacs_dir"))==NULL) {
   getehome:
     ehome = getEmacsHome(buffer);
     if (ehome == NULL)
@@ -220,7 +232,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   }
 
   normalizePath(ehome);
-  sprintf(buffer,"%s/bin/emacs.exe",ehome);
+  sprintf(buffer,"%s/bin/runemacs.exe",ehome);
   char *ebin = strdup(buffer);
 
   if (access(ebin,X_OK)) {
@@ -258,20 +270,22 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   PROCESS_INFORMATION pinf;
 
+  sprintf(buffer,"%s/platform/%s/ozemulator.exe -f %s/demo/rundemo",
+          ozhome,ozplatform,ozhome+2);
   if (stricmp(progname,"oz.exe")==0) {
     sprintf(buffer,"%s -l %s/lib/elisp/oz.elc -f run-oz",
             ebin,ozhome);
   } else if (stricmp(progname,"ozemacs.exe")==0) {
     sprintf(buffer,"%s",ebin);
   } else if (stricmp(progname,"ozdemo.exe")==0) {
-    sprintf(buffer,"ozemulator.exe -E -quiet -f %s/demo/rundemo -a ",
-            ozhome);
+    sprintf(buffer,"%s/platform/%s/ozemulator.exe -f %s/demo/rundemo",
+            ozhome,ozplatform,ozhome);
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
   }
 
   BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
-                           DETACHED_PROCESS,NULL,NULL,&si,&pinf);
+                           0,NULL,NULL,&si,&pinf);
 
   if (ret!=TRUE) {
     OzPanic(1,"Cannot start Oz.\nError = %d.",errno);
