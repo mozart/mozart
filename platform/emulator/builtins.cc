@@ -1232,17 +1232,11 @@ OZ_Return eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out);
 OZ_BI_define(BIneqB,2,1)
 {
   return neqInline(OZ_in(0),OZ_in(1),OZ_out(0));
-    //  OZ_Term help;
-    //  OZ_Return ret=neqInline(OZ_getCArg(0),OZ_getCArg(1),help);
-    //  return ret==PROCEED ? oz_unify(help,OZ_getCArg(2)) : ret;
 } OZ_BI_end
 
 OZ_BI_define(BIeqB,2,1)
 {
   return eqeqInline(OZ_in(0),OZ_in(1),OZ_out(0));
-  //  OZ_Term help;
-  //  OZ_Return ret=eqeqInline(OZ_getCArg(0),OZ_getCArg(1),help);
-  //  return ret==PROCEED ? oz_unify(help,OZ_getCArg(2)): ret;
 } OZ_BI_end
 
 
@@ -1257,7 +1251,6 @@ OZ_Return eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
     return PROCEED;
   case BI_REPLACEBICALL:
     return (BI_REPLACEBICALL);
-    // case SUSPEND:
   default:
     return SUSPEND;
   }

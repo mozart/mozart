@@ -117,7 +117,8 @@ OZ_C_proc_begin(fdp_minimum, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new MinimumPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
@@ -158,7 +159,8 @@ OZ_C_proc_begin(fdp_maximum, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new MaximumPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
@@ -199,7 +201,8 @@ OZ_C_proc_begin(fdp_inter, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarAny, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarAny, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new IntersectionPropagator(OZ_args[0], OZ_args[1],
                                               OZ_args[2]));
@@ -236,7 +239,8 @@ OZ_C_proc_begin(fdp_union, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarAny, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarAny, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new UnionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }

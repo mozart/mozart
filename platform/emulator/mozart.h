@@ -373,15 +373,6 @@ _FUNDECL(void      ,OZ_addThread,(OZ_Term, OZ_Thread));
 _FUNDECL(void      ,OZ_pushCFun,(OZ_Thread,OZ_CFun,OZ_Term *,int));
 _FUNDECL(void      ,OZ_pushCall,(OZ_Thread,OZ_Term,OZ_Term *,int));
 
-#define OZ_makeSelfSuspendedThread() \
-  OZ_makeSuspendedThread(OZ_self, OZ_args,OZ_arity)
-
-/* for example
-   OZ_Thread s = OZ_makeSuspendedThread(BIplus,OZ_args,OZ_arity);
-   OZ_addThread(t1,s);
-   OZ_addThread(t2,s);
-   */
-
 _FUNDECL(OZ_Return ,OZ_suspendOnInternal,(OZ_Term));
 _FUNDECL(OZ_Return ,OZ_suspendOnInternal2,(OZ_Term,OZ_Term));
 _FUNDECL(OZ_Return ,OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));

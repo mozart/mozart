@@ -39,7 +39,8 @@ OZ_C_proc_begin(fdp_conj, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new ConjunctionPropagator(OZ_args[0],
                                              OZ_args[1],
@@ -110,7 +111,8 @@ OZ_C_proc_begin(fdp_disj, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new DisjunctionPropagator(OZ_args[0],
                                              OZ_args[1],
@@ -171,7 +173,8 @@ OZ_C_proc_begin(fdp_exor, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new XDisjunctionPropagator(OZ_args[0],
                                               OZ_args[1],
@@ -232,7 +235,8 @@ OZ_C_proc_begin(fdp_impl, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new ImplicationPropagator(OZ_args[0],
                                              OZ_args[1],
@@ -293,7 +297,8 @@ OZ_C_proc_begin(fdp_equi, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new EquivalencePropagator(OZ_args[0],
                                              OZ_args[1],
@@ -353,7 +358,8 @@ OZ_C_proc_begin(fdp_nega, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectBoolVar, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1)
+    return pe.suspend();
 
   return pe.impose(new NegationPropagator(OZ_args[0], OZ_args[1]));
 }

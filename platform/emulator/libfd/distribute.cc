@@ -65,7 +65,7 @@ int getConstraints(TaggedRef var) {
 }
 
 
-OZ_C_proc_proto(BIfdTellConstraint);
+OZ_BI_proto(BIfdTellConstraint);
 
 TaggedRef BI_DistributeTell;
 

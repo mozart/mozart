@@ -39,8 +39,6 @@
 extern "C" {
 #endif
 
-#define OZ_C_proc_proto(Name)   OZ_BI_proto(Name)
-
 #define OZ_C_proc_begin(Name,arity)                                       \
 OZ_BI_proto(Name);                                                        \
 FUNDECL(OZ_Return,Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {      \
@@ -57,93 +55,6 @@ FUNDECL(OZ_Return,Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {      \
 
 /* access arguments */
 #define OZ_getCArg(N) OZ_args[N]
-
-/* useful macros and functions (mm 9.2.93) */
-
-#define OZ_declareArg(ARG,VAR) \
-     OZ_Term VAR = OZ_getCArg(ARG);
-
-#define OZ_nonvarArg(ARG)                       \
-{                                               \
-  if (OZ_isVariable(OZ_getCArg(ARG))) {         \
-    OZ_suspendOn(OZ_getCArg(ARG));              \
-  }                                             \
-}
-
-#define OZ_declareNonvarArg(ARG,VAR)            \
-OZ_Term VAR = OZ_getCArg(ARG);                  \
-{                                               \
-  if (OZ_isVariable(VAR)) {                     \
-    OZ_suspendOn(VAR);                          \
-  }                                             \
-}
-
-#define OZ_declareIntArg(ARG,VAR)               \
- int VAR;                                       \
- OZ_nonvarArg(ARG);                             \
- if (! OZ_isInt(OZ_getCArg(ARG))) {             \
-   return OZ_typeError(ARG,"Int");              \
- } else {                                       \
-   VAR = OZ_intToC(OZ_getCArg(ARG));            \
- }
-
-#define OZ_declareFloatArg(ARG,VAR)             \
- double VAR;                                    \
- OZ_nonvarArg(ARG);                             \
- if (! OZ_isFloat(OZ_getCArg(ARG))) {           \
-   return OZ_typeError(ARG,"Float");            \
- } else {                                       \
-   VAR = OZ_floatToC(OZ_getCArg(ARG));          \
- }
-
-
-#define OZ_declareAtomArg(ARG,VAR)              \
- OZ_CONST char *VAR;                            \
- OZ_nonvarArg(ARG);                             \
- if (! OZ_isAtom(OZ_getCArg(ARG))) {            \
-   return OZ_typeError(ARG,"Atom");             \
- } else {                                       \
-   VAR = OZ_atomToC(OZ_getCArg(ARG));           \
- }
-
-#define OZ_declareProperStringArg(ARG,VAR)              \
- char *VAR;                                             \
- {                                                      \
-   OZ_Term OZ_avar;                                     \
-   if (!OZ_isProperString(OZ_getCArg(ARG),&OZ_avar)) {  \
-     if (OZ_avar == 0) {                                \
-       return OZ_typeError(ARG,"ProperString");         \
-     } else {                                           \
-       OZ_suspendOn(OZ_avar);                           \
-     }                                                  \
-   }                                                    \
-   VAR = OZ_stringToC(OZ_getCArg(ARG),0);                       \
- }
-
-#define OZ_declareVirtualStringArg(ARG,VAR)             \
- char *VAR;                                             \
- {                                                      \
-   OZ_Term OZ_avar;                                     \
-   if (!OZ_isVirtualString(OZ_getCArg(ARG),&OZ_avar)) { \
-     if (OZ_avar == 0) {                                \
-       return OZ_typeError(ARG,"VirtualString");        \
-     } else {                                           \
-       OZ_suspendOn(OZ_avar);                           \
-     }                                                  \
-   }                                                    \
-   VAR = OZ_virtualStringToC(OZ_getCArg(ARG),0);                \
- }
-
-#define OZ_declareForeignPointerArg(ARG,VAR)    \
-void *VAR;                                      \
-{                                               \
-  OZ_declareNonvarArg(ARG,_VAR);                \
-  if (!OZ_isForeignPointer(_VAR)) {             \
-    return OZ_typeError(ARG,"ForeignPointer");  \
-  } else {                                      \
-    VAR = OZ_getForeignPointer(_VAR);           \
-  }                                             \
-}
 
 #if defined(__cplusplus)
 }
@@ -174,7 +85,7 @@ void *VAR;                                      \
       O.fail();                                                                 \
       return OZ_typeErrorCPI(expectedType, A, "");                              \
     } else if (O.isSuspending(r) || O.isExceptional(r))                         \
-      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));       \
+      return O.suspend(); \
   }
 
 #define OZ_EXPECT(O, P, F)  _OZ_EXPECT(O, P, OZ_args[P], F)
@@ -188,7 +99,7 @@ void *VAR;                                      \
     } else if (O.isSuspending(r)) {                                             \
       SC += 1;                                                                  \
     } else if (O.isExceptional(r)) {                                            \
-      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));       \
+      return O.suspend(); \
     }                                                                           \
   }
 
@@ -923,7 +834,7 @@ public:
   OZ_expect_t expectGenCtVar(OZ_Term, OZ_CtDefinition *, OZ_CtWakeUp);
 
   OZ_Return impose(OZ_Propagator * p);
-  OZ_Return suspend(OZ_Thread); // blocks if argument is `NULL'
+  OZ_Return suspend(void);
   OZ_Return fail(void);
   OZ_Boolean isSuspending(OZ_expect_t r) {
     return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
