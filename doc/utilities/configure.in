@@ -22,7 +22,7 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(ozdoc.el)
+AC_INIT(OzDocToHTML.oz)
 OZ_INIT
 OZ_PATH_PROG(OZENGINE,ozengine)
 OZ_PATH_PROG(OZC,ozc)
