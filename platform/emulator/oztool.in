@@ -1,0 +1,27 @@
+#! /bin/sh
+#
+# oztool c++ ...        invokes the right c++ compiler with the right options
+# oztool cc  ...        same for the c compiler
+# oztool ld  ...        creates DLLs
+
+: ${OZHOME="/usr/local/oz"}
+: ${OZDYNLD="$OZHOME/bin/ozdynld"}
+
+: ${oztool_cxx="@OZTOOL_CXX@"}
+: ${oztool_cc="cc"}
+: ${oztool_ld="$OZDYNLD"}
+
+cmd=$1
+shift
+
+case "$cmd" in
+  c++) cmd=$oztool_cxx ;;
+  cc ) cmd=$oztool_cc  ;;
+  ld ) cmd=$oztool_ld  ;;
+  *  )
+  echo "oztool: unknown command $cmd" 1>&2
+  exit 1
+  ;;
+esac
+
+exec $cmd "$@"
