@@ -61,7 +61,7 @@ $(DOCDIR)/.htaccess: .htaccess
         $(INSTALL_FILE) $< $@
 
 $(DOCDIR)/idx/index.html: idx/index.html
-        $(INSTALL_FILE) $< $@ &&
+        $(INSTALL_FILE) $< $@ && \
         $(INSTALL_DIR) $(DOCDIR)/idx && \
         (cd idx && for i in *; do \
         $(INSTALL_FILE) $$i $(DOCDIR)/idx/$$i || exit 1; done)
