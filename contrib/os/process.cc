@@ -209,6 +209,14 @@ void process_child_handler()
   PDEBUG(cerr << "[END] Process Child Handler" << endl;)
 }
 
+#ifdef DENYS_EVENTS
+OZ_BI_define(process_handler,0,0)
+{
+  process_child_handler();
+  return PROCEED;
+} OZ_BI_end
+#endif
+
 OZ_BI_define(process_dropDead,0,0)
 {
   OZ_Term l1 = all_processes;
@@ -249,7 +257,9 @@ OZ_BI_define(process_kill,2,0)
   return PROCEED;
 } OZ_BI_end
 
+#ifndef DENYS_EVENTS
 extern void (*oz_child_handle)();
+#endif
 
 extern "C"
 {
@@ -261,12 +271,17 @@ extern "C"
       {"dropDead"	,0,0,process_dropDead},
       {"status"		,1,1,process_status},
       {"kill"		,2,0,process_kill},
+#ifdef DENYS_EVENTS
+      {"handler"	,0,0,process_handler},
+#endif
       {0,0,0,0}
     };
     Process::id = oz_newUniqueId();
     all_processes = OZ_nil();
     OZ_protect(&all_processes);
+#ifndef DENYS_EVENTS
     oz_child_handle = process_child_handler;
+#endif
     return i_table;
   }
 } /* extern "C" */
