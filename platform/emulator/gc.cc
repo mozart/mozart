@@ -1692,30 +1692,25 @@ void TaskStack::gcRecurse()
   TaskStackEntry *savedTop=oldstack->getTop();
 
   while (!oldstack->isEmpty()) {
-    TaskStackEntry oldEntry=oldstack->pop();
-    ContFlag cFlag = (ContFlag) oldEntry;
-    gcQueue((TaskStackEntry) cFlag);
+    TaskStackEntry oldEntry = oldstack->pop();
+    ContFlag cFlag = getContFlag(ToInt32(oldEntry));
+    gcQueue(oldEntry);
 
     switch (cFlag){
 
-    case C_NERVOUS:
-      break;
-    case C_SOLVE:
-      break;
-    case C_LOCAL:
-      break;
-
-    case C_COMP_MODE:
-      break;
+    case C_NERVOUS:   break;
+    case C_SOLVE:     break;
+    case C_LOCAL:     break;
+    case C_COMP_MODE: break;
 
     case C_CONT:
-      gcQueue(oldstack->pop());                           // PC
+      // PC is already queued
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // G
       break;
 
     case C_XCONT:
-      gcQueue(oldstack->pop());                           // PC
+      // PC is already queued
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // G
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // X

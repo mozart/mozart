@@ -1098,7 +1098,7 @@ void engine()
     TaskStack *taskstack = &e->currentThread->taskStack;
     TaskStackEntry *topCache = taskstack->getTop();
     TaskStackEntry topElem=TaskStackPop(topCache-1);
-    ContFlag cFlag = (ContFlag) (ToInt32(topElem) & 0xf);
+    ContFlag cFlag = getContFlag(ToInt32(topElem));
 
 
     /* RS: Optimize most probable case:
@@ -1108,10 +1108,10 @@ void engine()
      */
     if (cFlag == C_CONT) {
       Assert(!taskstack->isEmpty(topElem));
-      PC = (ProgramCounter) TaskStackPop(topCache-2);
-      Y = (RefsArray) TaskStackPop(topCache-3);
-      G = (RefsArray) TaskStackPop(topCache-4);
-      taskstack->setTop(topCache-4);
+      PC = getPC(C_CONT,ToInt32(topElem));
+      Y = (RefsArray) TaskStackPop(topCache-2);
+      G = (RefsArray) TaskStackPop(topCache-3);
+      taskstack->setTop(topCache-3);
       goto LBLemulate;
     }
 
@@ -1126,9 +1126,9 @@ void engine()
       e->currentThread->compMode=TaskStack::getCompMode(topElem);
       goto LBLpopTask;
     case C_XCONT:
-      PC = (ProgramCounter) TaskStackPop(--topCache);
-      Y = (RefsArray) TaskStackPop(--topCache);
-      G = (RefsArray) TaskStackPop(--topCache);
+      PC = getPC(C_CONT,ToInt32(topElem));
+      Y  = (RefsArray) TaskStackPop(--topCache);
+      G  = (RefsArray) TaskStackPop(--topCache);
       {
         RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
         XSize = getRefsArraySize(tmpX);

@@ -36,6 +36,33 @@ enum ContFlag {
 };
 
 
+
+/* for C_CONT and C_XCONT we combine
+ * the ContFlag with the PC
+ */
+
+typedef TaggedRef TaggedPC;
+
+inline
+TaggedPC makeTaggedPC(ContFlag f, ProgramCounter pc)
+{
+  return makeTaggedRef((TypeOfTerm)f,pc);
+}
+
+inline
+ProgramCounter getPC(ContFlag f,TaggedPC tpc)
+{
+  return (ProgramCounter) tagValueOf((TypeOfTerm)f,tpc);
+}
+
+inline
+ContFlag getContFlag(TaggedPC tpc)
+{
+  return (ContFlag) tagTypeOf(tpc);
+}
+
+
+
 typedef StackEntry TaskStackEntry;
 
 /* The bottom of the TaskStack contains a special element: emptyTaskStackEntry
@@ -98,24 +125,13 @@ public:
     ensureFree(3);
 
     push(i>0 ? copyRefsArray(x, i) : NULL, NO);
-    push((TaskStackEntry) pred, NO);
-    push((TaskStackEntry) ToPointer(C_CALL_CONT), NO);
+    push(pred, NO);
+    push(ToPointer(C_CALL_CONT), NO);
   }
 
-  void pushNervous()
-  {
-    push((TaskStackEntry) ToPointer(C_NERVOUS));
-  }
-
-  void pushSolve()
-  {
-    push((TaskStackEntry) ToPointer(C_SOLVE));
-  }
-
-  void pushLocal()
-  {
-    push((TaskStackEntry) ToPointer(C_LOCAL));
-  }
+  void pushNervous() { push(ToPointer(C_NERVOUS)); }
+  void pushSolve()   { push(ToPointer(C_SOLVE)); }
+  void pushLocal()   { push(ToPointer(C_LOCAL)); }
 
   void pushCFunCont(OZ_CFun f, Suspension* s,
                     RefsArray  x, int i, Bool copy)
@@ -126,9 +142,9 @@ public:
 
     Assert(MemChunks::areRegsInHeap(x, i));
     push(i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL, NO);
-    push((TaskStackEntry) s, NO);
-    push((TaskStackEntry) f, NO);
-    push((TaskStackEntry) ToPointer(C_CFUNC_CONT), NO);
+    push(s, NO);
+    push((TaskStackEntry)f,NO);
+    push(ToPointer(C_CFUNC_CONT), NO);
   }
 
 
@@ -139,7 +155,7 @@ public:
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
     /* cache top of stack in register since gcc does not do it */
-    TaskStackEntry *newTop = ensureFree(5);
+    TaskStackEntry *newTop = ensureFree(3);
 
     Assert(MemChunks::areRegsInHeap(x,i));
     Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
@@ -148,20 +164,19 @@ public:
     if (i > 0) { *newTop++ = copy ? copyRefsArray(x,i) : x; }
     *newTop     = g;
     *(newTop+1) = y;
-    *(newTop+2) = pc;
-    *(newTop+3) = (TaskStackEntry) ToPointer(i>0 ? C_XCONT : C_CONT);
+    *(newTop+2) = ToPointer(makeTaggedPC(i>0 ? C_XCONT : C_CONT, pc));
 
-    tos = newTop + 4;
+    tos = newTop + 3;
   }
 
   void pushDebug(OzDebug *deb)
   {
     push(deb);
-    push((TaskStackEntry) ToPointer(C_DEBUG_CONT));
+    push(ToPointer(C_DEBUG_CONT));
   }
 
   static TaskStackEntry makeCompMode(int mode) {
-    return (TaskStackEntry) ToPointer((mode<<4) | C_COMP_MODE);
+    return ToPointer((mode<<4) | C_COMP_MODE);
   }
   static int getCompMode(TaskStackEntry e) {
     return (ToInt32(e)>>4);
