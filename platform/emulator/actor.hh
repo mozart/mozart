@@ -150,7 +150,8 @@ public:
   int getChildCount() { return childCount; };
   Bool hasOneChild() { return ((childCount == 1 && !hasNext()) ? OK : NO); }
   Bool hasNoChilds() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
-  int selectChildren(int l, int r);
+  int selectOrFailChildren(int l, int r);
+  int selectOrFailChild(int i);
 
   void dispose(void);
  
