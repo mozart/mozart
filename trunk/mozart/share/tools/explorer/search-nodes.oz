@@ -19,7 +19,7 @@ local
    
       proc {ReDo S Is}
 	 case Is of nil then skip
-	 [] I|Ir then {ReDo S Ir} {Space.choose S I}
+	 [] I|Ir then {ReDo S Ir} {Space.commit S I}
 	 end
       end
 
@@ -113,7 +113,7 @@ local
 	       I={GetIndex @kids Node 1}
 	    in
 	       case I>N then false
-	       else {Space.choose FindCopy I} FindCopy
+	       else {Space.commit FindCopy I} FindCopy
 	       end
 	    else false
 	    end
