@@ -177,6 +177,12 @@ AC_DEFUN(OZ_CONTRIB_INIT,[
 AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
     OZ_CONTRIB_INIT
     AC_PROG_CXX
+    if test "${GXX}" = yes; then
+      CXXAVOID="-fno-rtti -fno-exceptions"
+    else
+      CXXAVOID=
+    fi
+    AC_SUBST(CXXAVOID)
     AC_PROG_CXXCPP
     AC_LANG_CPLUSPLUS
     OZ_PATH_PROG(OZDYNLD,ozdynld)
