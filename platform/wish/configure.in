@@ -2,12 +2,15 @@ dnl -*- sh -*-
 dnl
 dnl  Authors:
 dnl    Michael Mehl (mehl@dfki.de)
+dnl    Christian Schulte <schulte@ps.uni-sb.de>
 dnl
 dnl  Contributors:
-dnl    optional, Contributor's name (Contributor's email address)
+dnl    Marco Kuhlmann <kuhlmann@ps.uni-sb.de>
 dnl
 dnl  Copyright:
 dnl    Michael Mehl (1997)
+dnl    Marco Kuhlmann, 2001
+dnl    Christian Schulte, 2000
 dnl
 dnl  Last change:
 dnl    $Date$ by $Author$
@@ -154,6 +157,64 @@ AC_SUBST(TK_PREFIX)
 AC_SUBST(TK_LIBS)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_XINCLUDES)
+
+dnl *****************************************************************
+dnl where to look for the public header files
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for Tcl public headers)
+
+AC_ARG_WITH(tclinclude, [ --with-tclinclude      directory containing the public Tcl header files.], with_tclinclude=${withval})
+
+if test x"${with_tclinclude}" != x ; then
+    if test -f "${with_tclinclude}/tcl.h" ; then
+      TCL_INCLUDES=${with_tclinclude}
+    else
+      AC_MSG_ERROR([${with_tclinclude} directory does not contain Tcl public header file tcl.h])
+    fi
+else
+    for i in $TCL_PREFIX/include $TCL_PREFIX/include/tcl$TCL_VERSION ; do
+        if test -f "$i/tcl.h" ; then
+            TCL_INCLUDES=$i
+          break
+      fi
+    done
+fi
+
+if test x"$TCL_INCLUDES" = x ; then
+    AC_MSG_ERROR(tcl.h not found.  Please specify its location with --with-tclinclude.)
+else
+    AC_MSG_RESULT($TCL_INCLUDES)
+fi
+
+AC_SUBST(TCL_INCLUDES)
+
+AC_MSG_CHECKING(for Tk public headers)
+
+AC_ARG_WITH(tkinclude, [ --with-tkinclude      directory containing the public Tk header files.], with_tkinclude=${withval})
+
+if test x"${with_tkinclude}" != x ; then
+    if test -f "${with_tkinclude}/tk.h" ; then
+      TK_INCLUDES=${with_tkinclude}
+    else
+      AC_MSG_ERROR([${with_tkinclude} directory does not contain Tk public header file tk.h])
+    fi
+else
+    for i in $TK_PREFIX/include $TK_PREFIX/include/tcl$TK_VERSION ; do
+        if test -f "$i/tk.h" ; then
+          TK_INCLUDES=$i
+          break
+      fi
+    done
+fi
+
+if test x"$TK_INCLUDES" = x ; then
+    AC_MSG_ERROR(tk.h not found.  Please specify its location with --with-tkinclude.)
+else
+    AC_MSG_RESULT($TK_INCLUDES)
+fi
+
+AC_SUBST(TK_INCLUDES)
 
 
 dnl *****************************************************************
