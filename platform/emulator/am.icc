@@ -98,16 +98,6 @@ void AM::deinstallPath(Board *top)
   }
 }
 
-inline
-Bool AM::entailment ()
-{
-  return (!currentBoard->hasSuspension()
-	  // First test: no subtrees;
-	  && trail.isEmptyChunk()
-	  // second test: is this node stable?
-	  );
-}
-
 #define ShallowCheckLocal(ptr)						\
    if (shallowHeapTop) return reallyHeapNever(ptr,shallowHeapTop);
 
