@@ -54,8 +54,7 @@ SPAN.variablename { color: #B8860B; }
 SPAN.reference    { color: #5F9EA0; }
 
 DIV.footnote {
-  text-indent: -1.5em;
-  margin-left: 3em;
+  text-indent: 1em;
 }
 
 A:link {
