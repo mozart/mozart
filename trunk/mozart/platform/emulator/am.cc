@@ -315,7 +315,7 @@ void AM::suspendEngine()
       handleIO();
     }
     
-    if (!threadQueueIsEmpty()) {
+    if (!threadQueuesAreEmpty()) {
       break;
     }
 
@@ -1170,10 +1170,9 @@ void AM::handleIO()
 
 	numbOfFDs--;
 
-	if ((ioNodes[index].handler[mode]) &&
-	    (ioNodes[index].handler[mode])(
-			  index,
-			  ioNodes[index].readwritepair[mode])) {
+	Assert(ioNodes[index].handler[mode]);
+	if ((ioNodes[index].handler[mode])
+	    (index, ioNodes[index].readwritepair[mode])) {
 	  ioNodes[index].readwritepair[mode] = makeTaggedNULL();
 	  ioNodes[index].handler[mode] = 0;
 	  osClrWatchedFD(index,mode);
