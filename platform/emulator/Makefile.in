@@ -144,9 +144,6 @@ depend:: $(CREATEDFILES) $(SRCS)
 
 tags::  $(CREATEDFILES) version.cc
 
-clean+: clean
-        $(RM) $(TARGETS)
-
 clean::
         $(RM) gmon.out  fetchedInstr.dump verb_out.txt
 
@@ -198,12 +195,14 @@ include Makefile.rules
 # all/realclean should be after make in subdirs (see Makefiles.rules)
 all:: $(TARGETS)
 
-realclean::
+clean+:
         $(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
                 ozlib.lnk *.exe *.map *.imp *.sym \
                 ozma.hh \
-                $(CREATEDFILES) TAGS \
-                conf.h config.cache config.log config.status \
+                $(CREATEDFILES) TAGS
+
+realclean:: clean+
+        $(RM) conf.h config.cache config.log config.status \
                 Makefile.rules Makefile.vars
 
 # dependencies
