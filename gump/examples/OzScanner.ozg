@@ -916,7 +916,6 @@ in
       lex <in>          OzScanner, pt1('in' 2)       end
       lex <of>          OzScanner, pt1('of' 2)       end
       lex <then>        OzScanner, pt1('then' 4)     end
-      lex <with>        OzScanner, pt1('with' 4)     end
 
       lex <else/\(>     OzScanner, pt1('else' 4)     end
       lex <elseof/\(>   OzScanner, pt1('elseof' 6)   end
@@ -924,7 +923,6 @@ in
       lex <in/\(>       OzScanner, pt1('in' 2)       end
       lex <of/\(>       OzScanner, pt1('of' 2)       end
       lex <then/\(>     OzScanner, pt1('then' 4)     end
-      lex <with/\(>     OzScanner, pt1('with' 4)     end
 
       lex <andthen>     C in OzScanner, getCoordinates(?C) OzScanner, pt('andthen' C 7)  end
       lex <at>          C in OzScanner, getCoordinates(?C) OzScanner, pt('at' C 2)       end

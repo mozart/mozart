@@ -84,7 +84,7 @@ parser OzParser from GP
       'false' 'false()' 'feat' 'finally' 'from' 'fun' 'functor' 'if' 'in'
       'import' 'local' 'lock' 'meth' 'not' 'of' 'or' 'proc' 'prop' 'prepare'
       'raise' 'require' 'self' 'skip' 'then' 'thread' 'true' 'true()' 'try'
-      'unit' 'unit()' 'with'
+      'unit' 'unit()'
 
       '=': rightAssoc(100)
       '<-': rightAssoc(200)
@@ -241,8 +241,6 @@ parser OzParser from GP
       => fTry(S Catch Finally C)
    [] 'raise'(C) InSequence(S) 'end'
       => fRaise(S C)
-   [] 'raise'(C) InSequence(S1) 'with' InSequence(S2) 'end'
-      => fRaiseWith(S1 S2 C)
    [] 'skip'(C) => fSkip(C)
    [] 'fail'(C) => fFail(C)
    [] 'not'(C1) InSequence(S) 'end'(C2)
