@@ -68,7 +68,6 @@ TaggedRef SolveActor::genSolved() {
   ozstat.incSolveSolved();
   SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
 
-  Assert(solveBoard->isSolve());
   stuple->setArg(0, AtomEntailed);
   
   return makeTaggedSRecord(stuple);
@@ -77,7 +76,6 @@ TaggedRef SolveActor::genSolved() {
 TaggedRef SolveActor::genStuck() {
   SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
   
-  Assert(solveBoard->isSolve());
   stuple->setArg(0, AtomSuspended);
   return makeTaggedSRecord(stuple);
 }
@@ -106,7 +104,7 @@ SolveActor::SolveActor(Board *bb)
  : Actor (bb), bag(NULL), suspList (NULL), threads (0), 
    nonMonoSuspList(NULL) {
   result     = oz_newVar(bb);
-  solveBoard = new Board(this, Bo_Solve);
+  solveBoard = new Board(this, 0);
   solveVar   = oz_newVar(solveBoard);
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
@@ -241,15 +239,16 @@ OZ_Term oz_solve_merge(SolveActor *solveActor, Board *bb, int sibling)
   
   Assert(oz_isCurrentBoard(bb));
   
-  if (bb->isSolve()) {
+  if (!bb->isRoot()) {
     SolveActor *sa = SolveActor::Cast(bb->getActor());
     sa->mergeDistributors(solveActor->getBag());
 
     if (sibling)
       sa->incThreads(solveActor->getThreads());
+
+    solveActor->mergeNonMono(bb);
   }
 
-  solveActor->mergeNonMono(am.currentSolveBoard());
 
   return solveActor->getSolveVar();
 }
@@ -620,16 +619,16 @@ OZ_BI_define(BIregisterSpace, 1, 1) {
 
   Board * bb = oz_currentBoard();
 
-  if (bb->isSolve()) {
+  if (bb->isRoot()) {
+    OZ_out(0) = oz_newVar(bb);
+  } else {
     SolveActor * sa = (SolveActor *) bb->getActor();
-
+    
     BaseDistributor * bd = new BaseDistributor(bb,i);
 
     sa->addDistributor(bd);
 
     OZ_out(0) = bd->getVar();
-  } else {
-    OZ_out(0) = oz_newVar(bb);
   }
 
   return BI_PREEMPT;

@@ -40,7 +40,6 @@ void debugStreamReady(Thread*);
 
 // from space.cc
 int oz_incSolveThreads(Board *bb);
-DebugCode(Bool oz_isInSolveDebug(Board *bb);)
 void oz_removeExtThread(Thread *tt);
 
 
@@ -55,19 +54,16 @@ Thread * _newThread(int prio, Board *bb) {
 }
 
 inline
-Thread * oz_newThread(int prio=DEFAULT_PRIORITY)
-{
-  Board *bb=oz_currentBoard();
+Thread * oz_newThread(int prio=DEFAULT_PRIORITY) {
+  Board *bb  = oz_currentBoard();
   Thread *tt = _newThread(prio,bb);
+
   tt->markRunnable();
 
-  if (am.isBelowSolveBoard()) {
-    int inSolve=oz_incSolveThreads(bb);
-    Assert(inSolve);
-    tt->setInSolve();
-  } else {
-    Assert(!oz_isInSolveDebug(bb));
+  if (!bb->isRoot()) {
+    oz_incSolveThreads(bb);
   }
+  
   am.threadsPool.scheduleThread(tt);
   return tt;
 }
@@ -89,10 +85,8 @@ Thread * oz_newThreadInject(Board *bb,int prio=DEFAULT_PRIORITY)
   Thread *tt = _newThread(prio,bb);
   tt->markRunnable();
 
-  int inSolve = oz_incSolveThreads(bb);
-  if (inSolve) {
-    tt->setInSolve();
-  }
+  oz_incSolveThreads(bb);
+
   am.threadsPool.scheduleThread(tt);
   return tt;
 }
@@ -175,17 +169,17 @@ void oz_wakeupThreadOPT(Thread *tt)
   Assert(oz_isCurrentBoard(GETBOARD(tt)) || tt->isExtThread() ||
 	 oz_isCurrentBoard(GETBOARD(tt)->getParent()));
 
-  if (am.isBelowSolveBoard() || tt->isExtThread()) {
-    Assert(oz_isInSolveDebug(GETBOARD(tt)));
+  if (!(GETBOARD(tt))->isRoot() || tt->isExtThread()) {
     oz_incSolveThreads(GETBOARD(tt));
-    tt->setInSolve();
+    
     if (tt->wasExtThread()) {
       oz_removeExtThread(tt);
     }
+    
     tt->clearExtThread();
-  } else {
-    Assert(!oz_isInSolveDebug(GETBOARD(tt)));
-  }
+    
+  } 
+
 }
 
 inline 
@@ -195,7 +189,7 @@ void oz_wakeupThread(Thread *tt)
   
   int inSolve = oz_incSolveThreads(GETBOARD(tt));
   if (inSolve) {
-    tt->setInSolve();
+
     if (tt->wasExtThread()) {
       oz_removeExtThread(tt);
     }

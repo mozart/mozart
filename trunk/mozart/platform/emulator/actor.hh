@@ -31,7 +31,6 @@
 #define __ACTORH
 
 #include "mem.hh"
-#include "base.hh"
 
 // ------------------------------------------------------------------------
 //  all 'proper' actors; 
@@ -63,7 +62,6 @@ public:
   Actor * gcGetFwd(void);
 
   Bool isCommitted() { return flags & Ac_Committed; }
-  Bool isSolve()     { return OK; }
 
   void setCommittedActor() { flags |= Ac_Committed; }
 
@@ -77,3 +75,4 @@ public:
 };
 
 #endif
+
