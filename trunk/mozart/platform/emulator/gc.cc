@@ -685,6 +685,8 @@ SRecord *SRecord::gcSRecord()
   switch(getType()) {
 
   case R_ABSTRACTION:
+    if (opMode == IN_TC && isLocalBoard (((Abstraction *) this)->getBoard ()) == NO)
+      return this;
     sz = sizeof(Abstraction);
     DebugGCT(if (opMode == IN_GC) INTOSPACE(((Abstraction *) this)->name););
     break;
@@ -692,6 +694,8 @@ SRecord *SRecord::gcSRecord()
     sz = sizeof(Object);
     break;
   case R_CELL:
+    if (opMode == IN_TC && isLocalBoard (((Cell *) this)->getBoard ()) == NO)
+      return this;
     sz = sizeof(Cell);
     break;
   case R_CHUNK:
