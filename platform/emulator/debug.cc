@@ -55,6 +55,7 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
   int line, abspos;
   time_t feedtime;
 
+  am.currentThread->startStepMode();
   am.currentThread->deleteContFlag();
 
   if (debugPC == NOCODE) {
