@@ -42,8 +42,15 @@ define
       #"m(["
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_prop(PropId P.name#" ("#Location#")" $)}
-      #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
-      #MenuAllReachablePs
+
+      #"menu_entry(\"scg<"#P.id
+      #">\",\"Single propagator graph of "#P.name
+      #if LocP == unit then ""
+       else " ("#LocP.file#":"#LocP.line#")"
+       end 
+      #"\")"
+
+      #","#MenuAllReachablePs
       
       #if AllPs == nil then ""
        else
@@ -53,17 +60,11 @@ define
 			else L#'|'#R
 			end
 	    end ""}
-	  #">\",\"Constraint graph of constraints reachable by that variable at event ["#Event#"]\")"
+	  #">\",\"Propagator graph of propagators reachable by that variable at event ["#Event#"]\")"
 	  
        end
 
-      #",menu_entry(\"scg<"#P.id
-      #">\",\"Single Constraint graph of "#P.name
-      #if LocP == unit then ""
-       else " ("#LocP.file#":"#LocP.line#")"
-       end 
-      #"\")"
-
+      #",menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
 
       #"])],[]))))"
    end
@@ -92,19 +93,20 @@ define
 
       #"m(["
       #{Hist insert_menu($)}
-      #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
-      #MenuAllReachablePs
-
       #if Filtered == nil then ""
        else
-	  ",menu_entry(\"cg<"#Filtered.1
+	  "menu_entry(\"cg<"#Filtered.1
 	  #{FoldL Filtered.2
 	    fun {$ L R} if R == nil then L
 			else L#'|'#R
 			end
 	    end ""}
-	  #">\",\"Constraint graph of constraints reachable by that variable at event ["#Event#"]\")"
+	  #">\",\"Propagator graph of propagators reachable by that variable at event ["#Event#"]\"),"
        end
+
+      #MenuAllReachablePs
+      #",menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
+
 
       #"])],["#PropsOnEvent#"]))))"
    end
@@ -122,7 +124,8 @@ define
    fun {Make VarTable PropTable Hist V}
       [VarId] = {FS.reflect.lowerBoundList V}
       ReflV = VarTable.VarId
-      VarStr = ReflV.nameconstraint
+      VarStr = {Hist get_sol_var(VarId $)}
+      #ReflV.nameconstraint
 \ifdef SHOW_ID
       #" ["#VarId#"]"
 \endif            
@@ -131,13 +134,13 @@ define
       MenuAllReachablePs =
       if ReachablePs == nil then ""
       else
-	 ",menu_entry(\"cg<"#ReachablePs.1
+	 "menu_entry(\"cg<"#ReachablePs.1
 	 #{FoldL ReachablePs.2
 	   fun {$ L R} if R == nil then L
 		       else L#'|'#R
 		       end
 	   end ""}
-	 #">\",\"Constraint graph of constraints reachable by that variable\")"
+	 #">\",\"Propagator graph of propagators reachable by that variable\")"
       end
    in
       {Hist reset_mark}
@@ -150,10 +153,11 @@ define
 	      #"m(["
 	      #{Hist insert_menu($)}
 	      #{Hist insert_menu_mark_param(VarId VarStr $)}
-	      #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
-	      #",menu_entry(\"vg<solvar>\",\"Variable graph of solution variables\")"
-	      #",menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
-	      #MenuAllReachablePs
+	      #"menu_entry(\"vg<solvar>\",\"Variable graph of only root variables\")"
+	      #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
+	      #",blank"
+	      #","#MenuAllReachablePs
+	      #",menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
 	      #"])"
 	      #"],["
 	      #{MakeEventEdges
