@@ -70,8 +70,6 @@ void sendToEngine(char *s)
 int
 PutsCmd(ClientData clientData, Tcl_Interp *inter, int argc, char **argv)
 {
-    char *fileId;
-
     int i = 1;
     int newline = 1;
     if ((argc >= 2) && (strcmp(argv[1], "-nonewline") == 0)) {
@@ -85,11 +83,8 @@ PutsCmd(ClientData clientData, Tcl_Interp *inter, int argc, char **argv)
         return TCL_ERROR;
     }
 
-    if (i == (argc-1)) {
-        fileId = "stdout";
-    } else {
-        fileId = argv[i];
-        i++;
+    if (i != (argc-1)) {
+      i++;
     }
 
     sendToEngine(argv[i]);
@@ -98,7 +93,6 @@ PutsCmd(ClientData clientData, Tcl_Interp *inter, int argc, char **argv)
     }
 
     DebugCode(fprintf(dbgout,"********puts(%d):\n%s\n",inter,argv[i]); fflush(dbgout));
-
     return TCL_OK;
 }
 
@@ -235,7 +229,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
     /*
      * Invoke application-specific initialization.
      */
-
     if (Tcl_Init(interp) == TCL_ERROR ||
         Tk_Init(interp) == TCL_ERROR) {
       WishPanic("Tcl_Init failed: %s\n", interp->result);
@@ -280,6 +273,15 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
       WishPanic("socket creation failed: %d, %d, %d\n",
                 outstream, WSAGetLastError(),addr.sin_port);
     }
+
+    close(0);
+    close(1);
+    close(2);
+
+    Tcl_Channel chin  = Tcl_MakeFileChannel((HANDLE)outstream,TCL_READABLE|TCL_WRITABLE);
+    Tcl_SetStdChannel(chin,TCL_STDIN);
+    Tcl_SetStdChannel(chin,TCL_STDOUT);
+    Tcl_SetStdChannel(chin,TCL_STDERR);
 
     /* mm: do not show the main window */
     int code = Tcl_GlobalEval(interp, "wm withdraw . ");
@@ -404,10 +406,11 @@ static DWORD __stdcall readerThread(void *arg)
                 count, ri->fd,WSAGetLastError());
     }
 
-    DebugCode(fprintf(dbgin,"\n### read done: %d\n",count); fflush(dbgin));
-
     used += count;
     buffer[used] = 0;
+
+    DebugCode(fprintf(dbgin,"\n### xxread done: %d\n%s\n",count,buffer); fflush(dbgin));
+
     if ((buffer[used-1] != '\n') && (buffer[used-1] != ';') ||
         !Tcl_CommandComplete(buffer) ||
         used >=2 && buffer[used-2] == '\\')
