@@ -1,0 +1,117 @@
+% Copyright (c) by Denys Duchier, April 1996, Universitaet des Saarlandes
+\ProvidesPackage{oz2tex}
+
+% OZ CODE DISPLAY ENVIRONMENT
+
+\newlength{\oztexdisplaytopsep}
+\newlength{\oztexleftmargin}
+\setlength{\oztexdisplaytopsep}{4.5pt plus 2pt minus 0.5pt}
+\setlength{\oztexleftmargin}{0pt}
+\newenvironment{oz2texdisplay}
+  {\begin{list}{}{\topsep\oztexdisplaytopsep
+   \parsep\z@\partopsep\z@\leftmargin\oztexleftmargin
+   \rightmargin\z@}\ozfont\item[]}
+  {\end{list}}
+
+%\newlength{\tabone}
+
+\newcommand{\ozdefault}{pcr}
+\DeclareRobustCommand{\ozfamily}{%
+  \not@math@alphabet \ozfamily \ozmath \fontfamily \ozdefault \selectfont}
+\DeclareRobustCommand{\ozfontsize}{\small}
+\DeclareRobustCommand{\ozfont}{\normalfont\ozfontsize\ozfamily}
+\DeclareRobustCommand{\ozkeyfont}{\normalfont\ozfontsize\ozfamily\upshape\bfseries}
+\DeclareRobustCommand{\ozcommentfont}{\normalfont\ozfontsize\ozfamily\itshape}
+\DeclareRobustCommand{\ozquotefont}{\normalfont\ozfontsize\ozfamily\bfseries}
+
+\newcommand{\copies@zero}[1]{}
+\newcommand{\copies@one}[1]{#1}
+\newcommand{\copies@two}[1]{#1#1}
+\newcommand{\copies@three}[1]{#1#1#1}
+\newcommand{\copies@four}[1]{#1#1#1#1}
+\newcommand{\copies@five}[1]{#1#1#1#1#1}
+\newcommand{\@ncopies}[1]{%
+  \ifcase#1
+	\expandafter\copies@zero
+  \or	\expandafter\copies@one
+  \or	\expandafter\copies@two
+  \or	\expandafter\copies@three
+  \or	\expandafter\copies@four
+  \or	\expandafter\copies@five
+  \else \def\@tempa{\@@ncopies{#1}}\expandafter\@tempa\fi}
+\newcommand{\@@ncopies}[2]{%
+  \@tempcnta#1\relax
+  \@temptokena{}%
+  \@whilenum\@tempcnta>\z@\do{%
+	\advance\@tempcnta\m@ne
+	\expandafter\@temptokena
+	\expandafter{\the\@temptokena#2}}%
+  \the\@temptokena}
+
+\newcommand{\OzHmode}{\leavevmode}
+\DeclareRobustCommand{\OzSpace}[1]{\OzHmode\@ncopies{#1}{{\ }}}
+\newcommand{\newozchar}[1]{%
+  \expandafter\newcommand
+  \csname ozchar\string#1\endcsname}
+\newcommand{\renewozchar}[1]{%
+  \expandafter\renewcommand
+  \csname ozchar\string#1\endcsname}
+\DeclareRobustCommand{\OzChar}[1]{\OzHmode
+  \@ifundefined{ozchar\string#1}%
+	{\char`#1}%
+	{\@nameuse{ozchar\string#1}}}
+\newcommand{\OzFwdQuote}{\OzHmode{\ozquotefont\symbol{19}}}
+\newcommand{\OzBwdQuote}{\OzHmode{\ozquotefont\symbol{18}}}
+\newozchar{\'}{\OzFwdQuote}
+\newozchar{\`}{\OzBwdQuote}
+
+\DeclareRobustCommand{\OzKeyword}[1]{\OzHmode{\ozkeyfont#1}}
+\DeclareRobustCommand{\OzFwd}[1]{\OzFwdQuote#1\OzFwdQuote}
+\DeclareRobustCommand{\OzBwd}[1]{\OzBwdQuote#1\OzBwdQuote}
+\DeclareRobustCommand{\OzString}[1]{\OzHmode"#1"}
+
+\DeclareRobustCommand{\OzInline}[1]{\ifmmode\expandafter\mbox\fi
+  {\ozfont\let\OzEol\space#1}}
+
+\DeclareRobustCommand{\OzComment}[1]{\OzHmode{\ozcommentfont/*#1*/}}
+\DeclareRobustCommand{\OzEolComment}[1]{%
+	\OzHmode{\ozcommentfont\OzChar\%#1}\OzEol}
+\DeclareRobustCommand{\OzEol}{\leavevmode\par}
+
+\DeclareRobustCommand{\OzBox}[1]{\OzHmode{\ozfont\let\OzEol\space#1}}
+\DeclareRobustCommand{\OzBsl}{\OzChar\\}
+
+\newcommand{\oz@docspecials}[1]{%
+    \def\^{#1\^}%
+    \def\%{#1\%}%
+    \def\{{#1\{}%
+    \def\}{#1\}}%
+    \def\&{#1\&}%
+    \def\~{#1\~}%
+}
+
+\newcommand{\defcoperator}[2]{%
+  \begingroup
+    \oz@docspecials\string
+    \expandafter\gdef\csname coperator#1\endcsname{#2}%
+  \endgroup}
+
+\DeclareRobustCommand{\OzOp}[1]{\OzHmode
+  \begingroup
+    \oz@docspecials\string
+    \@ifundefined{coperator#1}%
+	{\oz@docspecials\OzChar#1}%
+	{\@nameuse{coperator#1}}%
+  \endgroup}
+
+\DeclareRobustCommand{\OzMacro}[2]{%
+  \OzChar\#\OzSpace{#1}\OzKeyword{#2}}
+\DeclareRobustCommand{\CEolComment}[1]{{%
+  \ozcommentfont//#1}\OzEol}
+
+\newenvironment{c2texdisplay}
+  {\begin{oz2texdisplay}\let\OzEolComment\CEolComment}
+  {\end{oz2texdisplay}}
+
+\DeclareRobustCommand{\CInline}[1]{\ifmmode\expandafter\mbox\fi
+  {\ozfont\let\OzEol\space\let\OzEolComment\CEolComment#1}}

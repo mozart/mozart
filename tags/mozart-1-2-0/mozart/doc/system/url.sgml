@@ -1,0 +1,221 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+  <Chapter id="Chapter.URLURL">
+    <Title/Referring To Distributed Entities: <<URL>>/ <p>In the age
+of the <em/World Wide Web/, resources needed by a running system don't
+just reside in files, they reside at URLs.  The <code/URL/ module
+provides an interface for creating and manipulating URLs as
+data-structures.  It fully conforms to URI syntax as defined in
+RFC&nbsp;2396 <ref.extern
+to="ftp://ftp.isi.edu/in-notes/rfc2396.txt">Uniform Resource
+Identifiers (URI): Generic Syntax</ref.extern> by T.&nbsp;Berners-Lee,
+R.&nbsp;Fielding, and L.&nbsp;Masinter (August 1998), and passes all
+5 test suites published by Roy Fielding.</p>
+    <p>The only derogations to said specification were made to
+accommodate Windows-style filenames: (1) a prefix of the form
+?{C}<samp/:/ where ?{C} is a single character is
+interpreted as Windows-style device notation rather than as a uri
+scheme -- in practice, this is a compatible extension since there are
+no legal single character schemes, (2) path segments may indifferently
+be separated by <samp>/</samp> or <samp/\/; this too is compatible
+since non-separator forward and backward slashes ought to be otherwise
+<em/escape encoded/.</P>
+    <p>There is additionally a further experimental extension: all
+urls may be suffixed by a string of the form "{foo=a,bar=b}".  This
+adds an <em/info/ record to the parsed representation of the url.
+Here, this record would be <code/info(foo:a bar:b)/.  Thus properties
+can be attached to urls.  For example, we may indicate that a url
+denotes a native functor thus:
+<file>file:/foo/bar/baz.so{native}</file>.  Here <code/{native}/ is
+equivalent to <code/{native=}/, &ie; the info record is
+<code/info(native:'')/.</p>
+    <section><title/Examples/
+<p>Here are a few examples of conversions from url vstrings to url
+records. Return values are displayed following the function call.
+<list>
+	<entry><code>{URL.make "http://www.mozart-oz.org/home-1.1.0/share/FD.ozf"}</code></entry>
+<item><code display>
+url(
+   absolute  : true 
+   authority : "www.mozart-oz.org" 
+   device    : unit 
+   fragment  : unit 
+   info      : unit 
+   path      : ["home-1.1.0" "share" "FD.ozf"] 
+   query     : unit 
+   scheme    : "http")
+</code>
+The <code/absolute/ feature has value <code/true/ to indicate that the
+path is absolute &ie; began with a slash.  The <code/path/ feature is
+simply the list of path components, as strings.</item>
+	<entry><code>{URL.make "foo/bar/"}</code>
+	<item><code display>url(
+   absolute  : false 
+   authority : unit 
+   device    : unit 
+   fragment  : unit 
+   info      : unit 
+   path      : ["foo" "bar" nil] 
+   query     : unit 
+   scheme    : unit)</code>
+The above illustrates a relative url: the <code/absolute/ feature has
+value <code/false/.  Note that the trailing slash
+results in the empty component <code/nil/.
+	<entry><code>{URL.make "c:\\foo\\bar"}</code>
+	<item><code display>url(
+   absolute  : true 
+   authority : unit 
+   device    : &amp;c
+   fragment  : unit 
+   info      : unit 
+   path      : ["foo" "bar"] 
+   query     : unit 
+   scheme    : unit)</code>
+Here the leading <samp/c:/ was parsed as a Windows-style device
+notation and the backslashes as component separators.
+	<entry><code>{URL.make "foo.so{native}"}</code>
+<item><code display>url(
+   absolute  : false 
+   authority : unit 
+   device    : unit 
+   fragment  : unit 
+   info      : info(native:nil) 
+   path      : ["foo.so"] 
+   query     : unit 
+   scheme    : unit)</code>
+The <code/{native}/ annotation is entered into the <code/info/
+feature.
+      </list>
+    <section><title/Interface/
+      <p><list>
+	  <entry/<code/URL.make/
+<index/<code/URL/<and><code/make///
+	<synopsis/<code/{URL.make ?+{VR} ??{UrlR}}//
+	<item>Parses virtual string ?_{VR} as a url, according to the
+proposed uri syntax modulo Windows-motivated derogations (see above).
+Local filename syntax is a special case of scheme-less uri.  The parsed
+representation of a url is a non-empty record whose features hold the
+various parts of the url, it has the form <code/url(...)/.  We speak
+of url records and url vstrings: the former being the parsed
+representation of the latter.  A url record must be non-empty to
+distinguish it from the url vstring consisting of the atom
+<code/url/.  The empty url record can be written &eg;
+<code/url(unit)/.  ?_{VR} may also be a url record, in which case it
+is simply returned.</item>
+
+      <entry/<code/URL.is/
+<index/<code/URL/<and><code/is///
+      <synopsis/<code/{URL.is ?+{X}}//
+      <item>Returns <code/true/ iff ?_{X} is a non-empty record
+labeled with <code/url/.</item>
+
+      <entry/<code/URL.toVirtualString/
+<index/<code/URL/<and><code/toVirtualString///
+      <synopsis/<code/{URL.toVirtualString ?+{VR} ??{V}}//
+      <item>?_{VR} may be a url record or a virtual string.  The corresponding
+normalized vstring representation is returned. #?_{FRAGMENT} and
+{?_{INFO}} segments are not included (see below).  This is appropriate
+for retrieval since fragment and info sections are meant for
+client-side usage.</item>
+
+      <entry/<code/URL.toVirtualStringExtended/
+<index/<code/URL/<and><code/toVirtualStringExtended///
+      <synopsis/<code/{URL.toVirtualStringExtended ?+{VR} ?+{HowR} ??{V}}//
+      <item>Similar to the above, but ?_{HowR} is a record with
+optional boolean features <code/full/, <code/cache/, and <code/raw/.
+<code/full:true/ indicates that #?{FRAGMENT} and {?{INFO}} sections
+should be included if present.  <code/cache:true/ requests that
+cache-style syntax be used (see <ptr to="Chapter.Resolve">): the
+<samp/:/ following the scheme and the <samp>//</samp> preceding the
+authority are both replaced by single <samp>/</samp>.  <code/raw:true/
+indicates that no escape encoding should take place; this is useful
+e.g. for Windows filenames that may contain spaces or other characters
+illegal in URIs.</item>
+
+      <entry/<code/URL.toString/
+<index/<code/URL/<and><code/toString///
+      <synopsis/<code/{URL.toString ?+{VR} ??{S}}//
+      <item>Calls <code/URL.toVirtualString/ and converts the result to a
+string.
+
+      <entry/<code/URL.toAtom/
+<index/<code/URL/<and><code/toAtom///
+      <synopsis/<code/{URL.toAtom ?+{VR} ??{A}}//
+      <item>Calls <code/URL.toVirtualString/ and converts the result to an
+atom.
+      <entry/<code/URL.resolve/
+<index/<code/URL/<and><code/resolve///
+      <synopsis/<code/{URL.resolve ?+{BaseVR} ?+{RelVR} ??{UrlR}}//
+      <item>?_{BaseVR} and ?_{RelVR} are url records or vstrings.  ?_{RelVR}
+is resolved relative to ?_{BaseVR} and a new url record is returned with
+the appropriate fields filled in.
+
+	  <entry/<code/URL.normalizePath/
+<index/<code/URL/<and><code/normalizePath///
+	  <synopsis/<code/{URL.normalizePath ?+{Xs} ??{Ys}}//
+	  <item>Given a list ?_{Xs} of string components (see
+<code/path/ feature of a url record),
+returns a list ?_{Ys} that results from normalizing ?_{Xs}.
+Normalization is the process of eliminating occurrences of path
+components <file/./ and <file/../ by interpreting them relative to the
+stack of path components.  A leading <file/./ is preserved because
+<file>./foo</file> and <file/foo/ should be treated differently: the
+first one is an absolute path anchored in the current directory,
+whereas the second one is relative.
+
+	  <entry/<code/URL.isAbsolute/
+<index/<code/URL/<and><code/isAbsolute///
+	  <entry/<code/URL.isRelative/
+<index/<code/URL/<and><code/isRelative///
+	  <synopsis/<code/{URL.isAbsolute ?+{VR} ??{B}}//
+	  <synopsis/<code/{URL.isRelative ?+{VR} ??{B}}//
+	  <item>A url is considered absolute if (1) it has a
+<code/scheme/, or (2) it has a <code/device/, or (3) its <code/path/
+started with <samp>/</samp>, <samp/~/ (user home directory notation),
+<samp/./ (current directory), or <samp/../ (parent directory).  For
+example, <file>~rob/foo/baz</file> is absolute.
+
+	  <entry/<code/URL.toBase/
+<index/<code/URL/<and><code/toBase///
+	  <synopsis/<code/{URL.toBase ?+{VR} ??{UrlR}}//
+	  <item>Turns a url vstring or record into a url record that
+can safely be used as a base for <code/URL.resolve/ without loosing
+its last component.  Basically, it makes sure that there is a slash at
+the end.
+    </list>
+  </Chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

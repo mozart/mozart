@@ -1,0 +1,13 @@
+AC_INIT(sgml)
+AC_PROG_MAKE_SET
+OZ_CONTRIB_INIT
+AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
+SUBDIRS="code sgml"
+AC_SUBST(SUBDIRS)
+AC_OUTPUT(Makefile code/Makefile sgml/Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

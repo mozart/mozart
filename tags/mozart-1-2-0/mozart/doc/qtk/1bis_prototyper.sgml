@@ -1,0 +1,14 @@
+<CHAPTER ID="chapter.prototyper">
+  <TITLE>The Prototyper application</TITLE>
+<p>
+The Prototyper application is an application that displays Oz code and commentary about this code. Clicking the Run button executes the Oz code. This code can be edited and the edited code can be executed on the fly. The Prototyper proposes a list of topics of interest for QTk. 
+
+<figure id="figure.picture100">
+<caption>Prototyper Snapshot</caption>
+<picture.extern to="picture100.gif" type=gif>
+
+All basic functionalities of QTk and all avalaible widgets are described. It is a nice way of discovering QTk to play with the Prototyper for a while.
+
+
+
+</CHAPTER>
