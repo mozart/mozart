@@ -6828,11 +6828,10 @@ OZ_C_proc_begin(BImakeClass,6)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIcomma,2) {
-  TaggedRef cl = deref(OZ_getCArg(0));
-
-  if (isAnyVar(cl)) 
-    return SUSPEND;
+OZ_C_proc_begin(BIcomma,2) 
+{
+  oz_declareNonvarArg(0,cl);
+  cl = deref(cl);
 
   if (!isClass(cl)) {
     oz_typeError(0,"Class");
@@ -6850,11 +6849,10 @@ OZ_C_proc_begin(BIcomma,2) {
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIsend,3) {
-  TaggedRef cl = deref(OZ_getCArg(1));
-
-  if (isAnyVar(cl)) 
-    return SUSPEND;
+OZ_C_proc_begin(BIsend,3) 
+{
+  oz_declareNonvarArg(1,cl);
+  cl = deref(cl);
 
   if (!isClass(cl)) {
     oz_typeError(0,"Class");
@@ -6978,11 +6976,10 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
 
 
-OZ_C_proc_begin(BINew,3) {
-  TaggedRef cl = deref(OZ_getCArg(0));
-
-  if (isAnyVar(cl)) 
-    return SUSPEND;
+OZ_C_proc_begin(BINew,3) 
+{
+  oz_declareNonvarArg(0,cl);
+  cl = deref(cl);
 
   if (!isClass(cl)) {
     oz_typeError(0,"Class");
