@@ -195,32 +195,7 @@ void gcEntityInfoStub(Tertiary *t)
 }
 
 // exit hook;
-void dpExitStub()
-{
-  if (!(*isPerdioInitialized)())
-    return;
-
-  // the following steps should be performed some
-  // where inside libdp:
-  //   1. send back credits (make borrow table empty)
-  //   2. check threads suspended on perdio events
-  //   3. check owner table empty
-
-  oz_deinstallPath(oz_rootBoard());
-
-  osSetAlarmTimer(0);
-
-  unsigned sleepTime = 100; // time in ms to wait before exiting
-                             // maybe some of the handlers should call osExit??
-  while (sleepTime>0) {
-    unsigned long idle_start = osTotalTime();
-    osUnblockSignals();
-    osBlockSelect(sleepTime);
-    osBlockSignals(NO);
-    sleepTime = (osTotalTime() - idle_start);
-    oz_io_handle();
-  }
-}
+void dpExitStub() {;}
 
 
 // Debug stuff;

@@ -84,6 +84,8 @@ void ConfigData::init() {
   maxUdpPacket = MAX_UDP_PACKET;
   tcpPacketSize = TCP_PACKET_SIZE;
 
+  closetime = DEFAULT_CLOSE_TIME;
+
   /* set osname and cpu */
   /* "ozplatform" (defined in version.cc) has the form <osname-cpu>, 
    * so split it up */
