@@ -285,6 +285,21 @@ OZ_expect_t OZ_Expect::expectInt(OZ_Term t)
   return expectFail();
 }
 
+OZ_expect_t OZ_Expect::expectFloat(OZ_Term t)
+{
+  Assert(oz_isRef(t) || !oz_isVariable(t));
+
+  DEREF(t, tptr, ttag);
+
+  if (isFloatTag(ttag)) {
+    return expectProceed(1, 1);
+  } else if (isVariableTag(ttag)) {
+    addSuspend(tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
 //*****************************************************************************
 // member functions related to finite set constraints
 //*****************************************************************************
@@ -418,6 +433,21 @@ OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t)
   return expectFail();
 }
 
+OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t, OZ_Term * one_of)
+{
+  OZ_expect_t r = expectLiteral(t);
+
+  if (r.accepted == 1 && r.size == 1) {
+    OZ_Term td = oz_deref(t);
+    for (int i = 0; one_of[i] != (OZ_Term) 0; i += 1) {
+      if (td == one_of[i])
+        return expectProceed(1, 1);
+    }
+    return expectFail();
+  }
+  return r;
+}
+
 OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t,
                                           OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
 {
@@ -443,6 +473,31 @@ OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t,
     }
     return expectProceed(width + 1, acc);
 
+  } else if (isVariableTag(ttag)) {
+    addSuspend(tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
+OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t, OZ_Term * ar)
+{
+  Assert(oz_isRef(t) || !oz_isVariable(t));
+
+  DEREF(t, tptr, ttag);
+
+  if (isLiteralTag(ttag) && *ar == (OZ_Term) 0) { // subsumes nil
+    return expectProceed(1, 1);
+  } else if (oz_isSRecord(t) && !tagged2SRecord(t)->isTuple()) {
+    SRecord & tuple = *tagged2SRecord(t);
+
+    int i;
+
+    for (i = 0; ar[i] != (OZ_Term) 0; i += 1)
+      if (OZ_subtree(t, ar[i]) == (OZ_Term) 0)
+        return expectFail();
+
+    return expectProceed(i + 1, i + 1);
   } else if (isVariableTag(ttag)) {
     addSuspend(tptr);
     return expectSuspend(1, 0);
