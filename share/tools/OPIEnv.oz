@@ -28,8 +28,12 @@
 functor
 import
    Module(manager)
+   Compiler(engine)
 export
-   full: Env
+   base: BaseEnv
+   system: SystemEnv
+   shortcuts: ShortCutsEnv
+   full: FullEnv
 require
    DefaultURL(functorNames: Modules)
 prepare
@@ -64,24 +68,29 @@ prepare
       end
    end
 define
-   ModMan = {New Module.manager init}
+   CompilerObject = {New Compiler.engine init()}
+   BaseEnv = {CompilerObject enqueue(getEnv($))}
+
+   ModMan = {New Module.manager init()}
 
    %% Get system modules
    SystemEnv = {List.toRecord env
 		{Map Modules
 		 fun {$ ModName}
-		    ModName#{ModMan link(name:ModName $)}
+		    ModName#{ModMan link(name: ModName $)}
 		 end}}
 
    %% Provide shortcuts
-   Env = {FoldL ShortCuts
-	  fun {$ Env SC}
-	     Module = {ModMan link(name:{Label SC} $)}
-	     ExtraEnv = {Record.map SC
-			 fun lazy {$ Fs}
-			    {Dots Module Fs}
-			 end}
-	  in
-	     {Adjoin Env ExtraEnv}
-	  end SystemEnv}
+   ShortCutsEnv = {FoldL ShortCuts
+		   fun {$ Env SC}
+		      Module = {ModMan link(name:{Label SC} $)}
+		      ExtraEnv = {Record.map SC
+				  fun lazy {$ Fs}
+				     {Dots Module Fs}
+				  end}
+		   in
+		      {Adjoin Env ExtraEnv}
+		   end env()}
+
+   FullEnv = {Adjoin {Adjoin BaseEnv SystemEnv} ShortCutsEnv}
 end
