@@ -509,6 +509,8 @@ case $enable_opt in
         AC_MSG_RESULT(rsprofile (-DRS_PROFILE))
 	AC_DEFINE(RS_PROFILE)
         OZ_CXX_OPTIONS("-O", COPT)
+	oz_enable_miscbuiltins="yes"
+	oz_enable_threaded="no"
 	;;
     yes|o*)
 	AC_MSG_RESULT(optimize)
