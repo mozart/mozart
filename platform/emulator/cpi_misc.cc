@@ -80,7 +80,7 @@ void OZ_hfreeChars(char * is, int n)
 }
 
 #define FDTAG 		    OZCONST
-#define MAKETAGGEDINDEX(I)  makeTaggedRef(FDTAG,(int32) (I<<2))
+#define MAKETAGGEDINDEX(I)  makeTaggedRef2i(FDTAG,(int32) (I<<2))
 #define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
 
 #ifdef GAGA

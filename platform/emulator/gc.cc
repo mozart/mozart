@@ -406,7 +406,7 @@ typedef TaggedRef TypedPtr;
 inline
 TypedPtr makeTypedPtr(void *ptr, TypeOfPtr tag)
 {
-  return makeTaggedRef((TypeOfTerm) tag, ptr);
+  return makeTaggedRef2p((TypeOfTerm) tag, ptr);
 }
 
 inline
@@ -472,10 +472,10 @@ static SavedPtrStack savedPtrStack;
 /* 
  * set: only used in conjunction with the function setHeapCell ???
  */
-inline int32  GCMARK(void *S)    { return makeTaggedRef(GCTAG,S); }
-inline int32  GCMARK(int32 S)    { return makeTaggedRef(GCTAG,S); }
+inline int32  GCMARK(void *S)    { return makeTaggedRef2p(GCTAG,S); }
+inline int32  GCMARK(int32 S)    { return makeTaggedRef2i(GCTAG,S); }
 
-inline void *GCUNMARK(int32 S)   { return tagValueOf(GCTAG,S); }
+inline void *GCUNMARK(int32 S)   { return tagValueOf2(GCTAG,S); }
 inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
 /*

@@ -64,8 +64,8 @@ enum TypeOfTerm {
 
 typedef TaggedRef *TaggedRefPtr;
 
-const int tagSize = 4;
-const int tagMask = 0xF;
+#define tagSize 4
+#define tagMask 0xF
 
 
 // ------------------------------------------------------
@@ -86,63 +86,75 @@ extern int gcing;
 
 #define TaggedToPointer(t) ((void*) (mallocBase|t))
 
+
+#ifdef LARGEADRESSES
+#define _tagValueOf(ref)         TaggedToPointer((ref >> (tagSize-2))&~3)
+#define _tagValueOfVerbatim(ref) ((void*)((ref >> (tagSize-2))&~3))
+#define _makeTaggedRef2(tag,i)   ((i << (tagSize-2)) | tag)
+
+#else
+#define _tagValueOf(ref)         TaggedToPointer(ref >> tagSize)
+#define _tagValueOfVerbatim(ref) (ref >> tagSize)
+#define _makeTaggedRef2(tag,i)   ((i << tagSize) | (tag))
+
+#endif
+
+#define _isNullPtr(p)             ((p&~(tagMask)) == 0)
+#define _makeTaggedRef(s)         ((TaggedRef) ToInt32(s))
+#define _makeTaggedRef2i(tag,ptr) _makeTaggedRef2(tag,(int32)ToInt32(ptr))
+
+
+#ifdef DEBUG_CHECK
 inline
 void *tagValueOf(TaggedRef ref) 
 { 
   GCDEBUG(ref);
-#ifdef LARGEADRESSES
-  return TaggedToPointer((ref >> (tagSize-2))&~3);
-#else
-  return TaggedToPointer(ref >> tagSize);
-#endif
+  return _tagValueOf(ref);
 }
 
 inline
 void *tagValueOfVerbatim(TaggedRef ref) 
 { 
   GCDEBUG(ref);
-#ifdef LARGEADRESSES
-  return (void *) ((ref >> (tagSize-2))&~3);
-#else
-  return (void *) (ref >> tagSize);
-#endif
+  return _tagValueOfVerbatim(ref);
 }
 
-inline
-Bool isNullPtr(TaggedRef p)
-{
-  return (p&~(tagMask)) == 0;
-}
-
-inline
-TaggedRef makeTaggedRef(TypeOfTerm tag, int32 i)
-{
-#ifdef LARGEADRESSES
-  Assert((i&3) == 0);
-  return (i << (tagSize-2)) | tag;
-#else
-  return (i << tagSize) | tag;
-#endif
-}
-
-inline
-TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
-{
-  return makeTaggedRef(tag,(int32)ToInt32(ptr));
-}
-
-
-#ifdef DEBUG_CHECK
 inline
 TypeOfTerm tagTypeOf(TaggedRef ref) 
 { 
   GCDEBUG(ref);
   return _tagTypeOf(ref);
 }
-#else
-#define tagTypeOf(ref) _tagTypeOf(ref)
-#endif
 
+inline
+TaggedRef makeTaggedRef2i(TypeOfTerm tag, int32 i)
+{
+#ifdef LARGEADRESSES
+  Assert((i&3) == 0);
+#endif
+  return _makeTaggedRef2(tag,i);
+}
+
+inline
+TaggedRef makeTaggedRef2p(TypeOfTerm tag, void *ptr)
+{
+  return _makeTaggedRef2i(tag,ptr);
+}
+
+inline
+Bool isNullPtr(TaggedRef p) { return _isNullPtr(p); }
+
+#else
+
+#define tagValueOf(ref)         _tagValueOf(ref)
+#define tagValueOfVerbatim(ref) _tagValueOfVerbatim(ref)
+#define tagTypeOf(ref)          _tagTypeOf(ref)
+#define makeTaggedRef2i(tag,i)  _makeTaggedRef2(tag,i)
+#define makeTaggedRef2p(tag,i)  _makeTaggedRef2i(tag,i)
+#define isNullPtr(p)            _isNullPtr(p)
+#define makeTaggedRef(s)        _makeTaggedRef(s)
+
+#endif
 
 
 // ---------------------------------------------------------------------------
@@ -235,6 +247,16 @@ Bool isCVar(TaggedRef term) {
 #define _isLTuple(val)  (((TaggedRef) val&13)==0)      /* mask = 1101 */
 
 #ifdef DEBUG_CHECK
+
+inline
+TaggedRef makeTaggedRef(TaggedRef *s)
+{
+  CHECK_POINTER_N(s);
+  DebugGC(gcing == 0 && !MemChunks::list->inChunkChain ((void *)s),
+	  error ("making TaggedRef pointing to 'from' space"));
+  return _makeTaggedRef(s);
+}
+
 
 inline Bool isLTuple(TypeOfTerm tag) { return _isLTuple(tag);}
 
@@ -391,72 +413,60 @@ Bool isConst(TaggedRef term) {
 inline
 TaggedRef makeTaggedNULL()
 {
-  return makeTaggedRef((TypeOfTerm)0,(void*)NULL);
-}
-#else
-#define makeTaggedNULL() ((TaggedRef) 0)
-#endif
-
-inline
-TaggedRef makeTaggedMisc(void *s)
-{
-  return makeTaggedRef((TypeOfTerm)0,s);
+  return makeTaggedRef2p((TypeOfTerm)0,(void*)NULL);
 }
 
 inline
-TaggedRef makeTaggedMisc(int32 s)
+TaggedRef makeTaggedMiscp(void *s)
 {
-  return makeTaggedRef((TypeOfTerm)0,s);
+  return makeTaggedRef2p((TypeOfTerm)0,s);
 }
 
 inline
-TaggedRef makeTaggedRef(TaggedRef *s)
+TaggedRef makeTaggedMisci(int32 s)
 {
-  CHECK_POINTER_N(s);
-  DebugGC(gcing == 0 && !MemChunks::list->inChunkChain ((void *)s),
-	  error ("making TaggedRef pointing to 'from' space"));
-  return (TaggedRef) ToInt32(s);
+  return makeTaggedRef2i((TypeOfTerm)0,s);
 }
 
 inline
 TaggedRef makeTaggedUVar(Board *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(UVAR,s);
+  return makeTaggedRef2p(UVAR,s);
 }
 
 inline
 TaggedRef makeTaggedSVar(SVariable *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(SVAR,s);
+  return makeTaggedRef2p(SVAR,s);
 }
 
 inline
 TaggedRef makeTaggedCVar(GenCVariable *s) {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(CVAR, s);
+  return makeTaggedRef2p(CVAR, s);
 }
 
 inline
 TaggedRef makeTaggedFSetValue(OZ_FSetValue * s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(FSETVALUE, s);
+  return makeTaggedRef2p(FSETVALUE, s);
 }
 
 inline
 TaggedRef makeTaggedLTuple(LTuple *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(LTUPLE,s);
+  return makeTaggedRef2p(LTUPLE,s);
 }
 
 inline
 TaggedRef makeTaggedSRecord(SRecord *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(SRECORD,s);
+  return makeTaggedRef2p(SRECORD,s);
 }
 
 
@@ -464,16 +474,7 @@ inline
 TaggedRef makeTaggedLiteral(Literal *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(LITERAL,s);
-}
-
-extern Literal *addToAtomTab(char *str);
-extern Literal *addToNameTab(char *str);
-inline
-TaggedRef makeTaggedAtom(char *s)
-{
-  CHECK_STRPTR(s);
-  return makeTaggedLiteral(addToAtomTab(s));
+  return makeTaggedRef2p(LITERAL,s);
 }
 
 inline
@@ -484,7 +485,7 @@ TaggedRef makeTaggedSmallInt(int32 s)
    * contain a pointer in the value part */
   return (s << tagSize) | SMALLINT;
 #else
-  return makeTaggedRef(SMALLINT,(void*)s);
+  return makeTaggedRef2p(SMALLINT,(void*)s);
 #endif
 }
 
@@ -492,14 +493,14 @@ inline
 TaggedRef makeTaggedBigInt(BigInt *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(BIGINT,s);
+  return makeTaggedRef2p(BIGINT,s);
 }
 
 inline
 TaggedRef makeTaggedFloat(Float *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(OZFLOAT,s);
+  return makeTaggedRef2p(OZFLOAT,s);
 }
 
 
@@ -507,14 +508,50 @@ inline
 TaggedRef makeTaggedConst(ConstTerm *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(OZCONST,s);
+  return makeTaggedRef2p(OZCONST,s);
 }
 
 inline
 TaggedRef makeTaggedTert(Tertiary *s)
 {
   CHECK_POINTER_N(s);
-  return makeTaggedRef(OZCONST,s);
+  return makeTaggedRef2p(OZCONST,s);
+}
+
+#else
+
+#define makeTaggedNULL()       ((TaggedRef) 0)
+#define makeTaggedMiscp(s)     makeTaggedRef2p((TypeOfTerm)0,s)
+#define makeTaggedMisci(s)     makeTaggedRef2i((TypeOfTerm)0,s)
+#define makeTaggedUVar(s)      makeTaggedRef2p(UVAR,s)
+#define makeTaggedSVar(s)      makeTaggedRef2p(SVAR,s)
+#define makeTaggedCVar(s)      makeTaggedRef2p(CVAR,s)
+#define makeTaggedFSetValue(s) makeTaggedRef2p(FSETVALUE,s)
+#define makeTaggedLTuple(s)    makeTaggedRef2p(LTUPLE,s)
+#define makeTaggedSRecord(s)   makeTaggedRef2p(SRECORD,s)
+#define makeTaggedLiteral(s)   makeTaggedRef2p(LITERAL,s)
+#define makeTaggedBigInt(s)    makeTaggedRef2p(BIGINT,s)
+#define makeTaggedFloat(s)     makeTaggedRef2p(OZFLOAT,s)
+#define makeTaggedConst(s)     makeTaggedRef2p(OZCONST,s)
+#define makeTaggedTert(s)      makeTaggedRef2p(OZCONST,s)
+
+#ifdef LARGEADRESSES
+#define makeTaggedSmallInt(s) ((s << tagSize) | SMALLINT)
+#else
+#define makeTaggedSmallInt(s) makeTaggedRef2p(SMALLINT,(void*)s);
+#endif
+
+
+#endif
+
+
+extern Literal *addToAtomTab(char *str);
+extern Literal *addToNameTab(char *str);
+inline
+TaggedRef makeTaggedAtom(char *s)
+{
+  CHECK_STRPTR(s);
+  return makeTaggedLiteral(addToAtomTab(s));
 }
 
 // getArg() and the like may never return variables
@@ -579,7 +616,7 @@ TaggedRef derefStepBack(TaggedRef *ptr, TaggedRef val)
 
 
 inline
-void *tagValueOf(TypeOfTerm tag, TaggedRef ref) 
+void *tagValueOf2(TypeOfTerm tag, TaggedRef ref) 
 {
   GCDEBUG(ref);
 #ifdef LARGEADRESSES
@@ -611,7 +648,7 @@ Board *tagged2VarHome(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(UVAR);
-  return (Board *) tagValueOf(UVAR,ref);
+  return (Board *) tagValueOf2(UVAR,ref);
 }
 
 inline
@@ -619,7 +656,7 @@ OZ_FSetValue *tagged2FSetValue(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(FSETVALUE);
-  return (OZ_FSetValue *) tagValueOf(FSETVALUE,ref);
+  return (OZ_FSetValue *) tagValueOf2(FSETVALUE,ref);
 }
 
 inline
@@ -627,7 +664,7 @@ SRecord *tagged2SRecord(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(SRECORD);
-  return (SRecord *) tagValueOf(SRECORD,ref);
+  return (SRecord *) tagValueOf2(SRECORD,ref);
 }
 
 inline
@@ -635,7 +672,7 @@ LTuple *tagged2LTuple(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(LTUPLE);
-  return (LTuple *) tagValueOf(LTUPLE,ref);
+  return (LTuple *) tagValueOf2(LTUPLE,ref);
 }
 
 inline
@@ -643,7 +680,7 @@ Literal *tagged2Literal(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(LITERAL);
-  return (Literal *) tagValueOf(LITERAL,ref);
+  return (Literal *) tagValueOf2(LITERAL,ref);
 }
 
 inline
@@ -651,7 +688,7 @@ Float *tagged2Float(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(OZFLOAT);
-  return (Float *) tagValueOf(OZFLOAT,ref);
+  return (Float *) tagValueOf2(OZFLOAT,ref);
 }
 
 inline
@@ -659,7 +696,7 @@ BigInt *tagged2BigInt(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(BIGINT);
-  return (BigInt *) tagValueOf(BIGINT,ref);
+  return (BigInt *) tagValueOf2(BIGINT,ref);
 }
 
 
@@ -668,7 +705,7 @@ ConstTerm *tagged2Const(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(OZCONST);
-  return (ConstTerm *) tagValueOf(OZCONST,ref);
+  return (ConstTerm *) tagValueOf2(OZCONST,ref);
 }
 
 inline
@@ -676,7 +713,7 @@ Tertiary *tagged2Tert(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(OZCONST);
-  return (Tertiary*) tagValueOf(OZCONST,ref);
+  return (Tertiary*) tagValueOf2(OZCONST,ref);
 }
 
 inline
@@ -684,7 +721,7 @@ SVariable *tagged2SVar(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(SVAR);
-  return (SVariable *) tagValueOf(SVAR,ref);
+  return (SVariable *) tagValueOf2(SVAR,ref);
 }
 
 
@@ -692,14 +729,14 @@ inline
 SVariable *taggedCVar2SVar(TaggedRef ref) {
   GCDEBUG(ref);
   CHECKTAG(CVAR);
-  return (SVariable *) tagValueOf(CVAR,ref);
+  return (SVariable *) tagValueOf2(CVAR,ref);
 }
 
 inline
 GenCVariable *tagged2CVar(TaggedRef ref) {
   GCDEBUG(ref);
   CHECKTAG(CVAR);
-  return (GenCVariable *) tagValueOf(CVAR,ref);
+  return (GenCVariable *) tagValueOf2(CVAR,ref);
 }
 
 

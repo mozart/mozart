@@ -340,7 +340,7 @@ Bool floatEq(TaggedRef a, TaggedRef b)
 }
 
 inline
-TaggedRef makeTaggedFloat(double i)
+TaggedRef newTaggedFloat(double i)
 {
   return makeTaggedFloat(Float::newFloat(i));
 }
@@ -636,7 +636,7 @@ public:
   void gcConstRecurse(void);
 
   void setTagged(TypeOfConst t, void *p) {
-    ctu.tagged = makeTaggedRef((TypeOfTerm)t,p);
+    ctu.tagged = makeTaggedRef2p((TypeOfTerm)t,p);
   }
   ConstTerm(TypeOfConst t)  { setTagged(t,NULL); }
   TypeOfConst getType()     { return (TypeOfConst) tagTypeOf(ctu.tagged); }
