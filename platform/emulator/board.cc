@@ -329,6 +329,16 @@ void Board::clearSuspList(Suspendable * killSusp) {
  */
 
 void Board::checkStability(void) {
+  Assert(!isRoot());
+
+  Assert(!isFailed() && !isCommitted());
+
+  Board * pb = getParent();
+
+  if (decThreads() != 0) {
+    pb->decSolveThreads();
+    return;
+  }
 
   if (isStable()) {
     Assert(am.trail.isEmptyChunk());
@@ -336,7 +346,7 @@ void Board::checkStability(void) {
     // check for nonmonotonic propagators
     scheduleNonMono();
     if (!isStable())
-      return;
+      goto exit;
 
     // Check whether there are registered distributors
     Distributor * d = getDistributor();
@@ -348,7 +358,7 @@ void Board::checkStability(void) {
       if (n == 1) {
         // Is the distributor unary?
         d->commit(this,1,1);
-        return;
+        goto exit;
       } else {
         // don't decrement counter of parent board!
         am.trail.popMark();
@@ -357,7 +367,7 @@ void Board::checkStability(void) {
         int ret = oz_unify(getStatus(), genAlt(n));
         Assert(ret==PROCEED);
 
-        return;
+        goto exit;
       }
 
     }
@@ -371,7 +381,7 @@ void Board::checkStability(void) {
     // VIOLATED ASSERTION!!!! CS-SPECIAL
     //   Assert(ret==PROCEED);
 
-    return;
+    goto exit;
   }
 
   if (getThreads() == 0) {
@@ -386,11 +396,14 @@ void Board::checkStability(void) {
 
     int ret = oz_unify(status, genBlocked(newVar));
     Assert(ret==PROCEED);
-    return;
+    goto exit;
   }
 
   oz_deinstallCurrent();
-  return;
+
+ exit:
+
+  pb->decSolveThreads();
 }
 
 void Board::fail(Thread * ct) {
