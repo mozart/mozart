@@ -537,6 +537,22 @@ extern OZ_Return _FUNDECL(OZ_suspendMetaProp,(OZ_CFun, OZ_Term *, int));
 
 #define OZ_MetaPropSuspend OZ_suspendMetaProp(OZ_self, OZ_args, OZ_arity)
 
+
+// Perdio related things
+
+struct OZ_Datum {
+  char *data;  /* NULL on error */
+  int size;    /* contain error code */
+};
+
+
+#define OZ_DATUM_UNKNOWNERROR -1
+#define OZ_DATUM_OUTOFMEMORY  -2
+
+extern OZ_Return _FUNDECL(OZ_valueToDatum,(OZ_Term t, OZ_Datum *d));
+extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum *d,OZ_Term *t));
+
+
 #ifdef __cplusplus
 }
 #endif

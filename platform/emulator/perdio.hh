@@ -294,6 +294,9 @@ public:
     return i;}
 
   void dumpByteBuffers();
+
+  static ByteStream *makeByteStream(OZ_Datum *d);
+  void getDatum(OZ_Datum *d) ;
 };
 
 class ByteStreamManager: public FreeListManager {
