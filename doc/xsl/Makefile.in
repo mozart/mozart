@@ -11,7 +11,7 @@ HOMEURL         = @HOMEURL@
 
 .PHONY: all quick bootstrap check install clean veryclean distclean depend bootquick
 
-all bootstrap:: TeX.class ID.class
+all bootstrap:: TeX.class ID.class Msg.class
 
 bootquick::
 
