@@ -138,30 +138,17 @@ OZ_BI_define(BIdeepFeed,2,0)
 
   CellLocal *cell = (CellLocal*)tagged2Tert(c);
 
-  Board *savedNode = am.currentBoard();
-  Board *home1 = GETBOARD(cell);
+  Board * bb = GETBOARD(cell);
+  TaggedRef newVar = oz_newVar(bb);
 
-  switch (oz_installPath(home1)) {
-  case INST_FAILED:
-  case INST_REJECTED:
-    OZ_error("deep: install");
-  case INST_OK:
-    break;
-  }
+  RefsArray args = allocateRefsArray(2, NO);
+  args[0] = cell->exchangeValue(newVar);
+  args[1] = oz_cons(val,newVar);
 
-  TaggedRef newVar = oz_newVariable();
-  TaggedRef old = cell->exchangeValue(newVar);
-  OZ_Return ret = oz_unify(old,oz_cons(val,newVar));
+  Thread * t = oz_newThreadInject(bb);
+  t->pushCall(BI_Unify,args,2);
 
-  switch (oz_installPath(savedNode)) {
-  case INST_FAILED:
-  case INST_REJECTED:
-    OZ_error("deep: install back");
-  case INST_OK:
-    break;
-  }
-
-  return ret;
+  return PROCEED;
 } OZ_BI_end
 
 OZ_BI_define(BIchunkArityBrowser,1,1)
