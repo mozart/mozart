@@ -200,6 +200,7 @@
 \newcommand{\multiexplain@arg}[2]{%
   \ignorespaces#1&\ignorespaces#2}
 \newlength{\@labelsep}
+\newbox\explain@box
 \newenvironment{multiexplain}[1]
   {\trivlist
    \setlength{\labelwidth}{\leftmarginwidth}%
