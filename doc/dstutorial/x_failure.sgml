@@ -407,8 +407,9 @@ declare
 local
    proc {InnerSafeWait X Time}
       try
-         {WaitOr X Time}
-         if {IsDet Time} then raise serverError end end
+         cond {Wait X} then skip
+         [] {Wait Time} then raise serverError end
+         end
       catch system(dp(C) ...) then
          case C
          of permFail(...) then
