@@ -93,7 +93,7 @@ export OZMAKE_COPYALWAYS	= no
 export OZMAKE_VERBOSE		= no
 
 SPSRC   = Error ErrorFormatters Finalize Service $(DENYS_SPSRCS)
-OPSRC   = Open
+OPSRC   = Open ZlibIO
 APSRC   = Application
 CPSRC1  = Search FD FS Combinator RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
