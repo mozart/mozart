@@ -50,7 +50,6 @@ CXX     = $(OZTOOL) c++
 
 DEPEND   = $(CXX) $(CFLAGS) -MM
 
-#LD = ozdynld
 LD = $(OZTOOL) ld
 
 
