@@ -1910,6 +1910,84 @@ OZ_C_proc_end
 
 
 
+// {HasFeatureNow X F ?B}: B is boolean with truth value "X has feature F".
+// X must be undetermined record and F must be feature.
+// Non-monotonic built-in.
+OZ_C_proc_begin(BIhasFeatureNow, 3)
+{
+    OZ_Term origterm = OZ_getCArg(0);
+    OZ_Term origfea = OZ_getCArg(1);
+    OZ_Term term = OZ_getCArg(0);
+    OZ_Term fea = OZ_getCArg(1);
+    OZ_Term out = OZ_getCArg(2);
+
+    DEREF(fea,  feaPtr,  feaTag);
+    DEREF(term, termPtr, termTag);
+
+    if (isAnyVar(feaTag)) {
+        switch (termTag) {
+        case LTUPLE:
+        case SRECORD:
+        case LITERAL:
+        case SVAR:
+        case UVAR:
+            OZ_suspendOn(origfea);
+        case CVAR:
+            switch (tagged2CVar(term)->getType()) {
+            case FDVariable:
+            case BoolVariable:
+                TypeErrorT(0,"Record");
+            default:
+                OZ_suspendOn(origfea);
+            }
+        default:
+            TypeErrorT(0,"Record");
+
+        }
+    }
+    if (!isFeature(fea)) TypeErrorT(1,"Feature");
+
+    switch (termTag) {
+    case LITERAL:
+        return OZ_unify(out,NameFalse);
+    case LTUPLE:
+      {
+        if (!isSmallInt(fea)) return OZ_unify(out,NameFalse);
+        int feaval=smallIntValue(fea);
+        if (feaval==1 || feaval==2) return OZ_unify(out,NameTrue);
+        return OZ_unify(out,NameFalse);
+      }
+    case SRECORD:
+        if (tagged2SRecord(term)->getFeature(fea)!=makeTaggedNULL())
+            return OZ_unify(out,NameTrue);
+        else
+            return OZ_unify(out,NameFalse);
+    case UVAR:
+    case SVAR:
+        OZ_suspendOn(origterm);
+    case CVAR:
+        switch (tagged2CVar(term)->getType()) {
+        case OFSVariable:
+          {
+            GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+            if (ofsvar->getFeatureValue(fea)!=makeTaggedNULL())
+                return OZ_unify(out,NameTrue);
+            else
+                return OZ_unify(out,NameFalse);
+          }
+        case FDVariable:
+        case BoolVariable:
+            TypeErrorT(0,"Record");
+        default:
+            OZ_suspendOn(origterm);
+        }
+    default:
+        TypeErrorT(0,"Record");
+    }
+}
+OZ_C_proc_end
+
+
 
 // Create new thread on suspension:
 OZ_Return uparrowInline(TaggedRef, TaggedRef, TaggedRef&);
@@ -1962,16 +2040,11 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
     // Wait until Y is a feature:
     if (isNotCVar(feaTag)) suspFlag=TRUE;
     if (isCVar(feaTag)) {
-        switch (tagged2CVar(fea)->getType()) {
-        case OFSVariable:
-          {
+        suspFlag=TRUE;
+        if (tagged2CVar(fea)->getType()==OFSVariable) {
             GenOFSVariable *ofsvar=tagged2GenOFSVar(fea);
-            if (ofsvar->getWidth()>0) return FAILED;
-            suspFlag=TRUE;
-          }
-        default:
-            return FAILED;
-      }
+            if (ofsvar->getWidth()>0) goto typeError2;
+        }
     }
     if (suspFlag) {
         if (blocking) {
@@ -6946,9 +7019,10 @@ BIspec allSpec2[] = {
   {"TellRecord",  2, BIrecordTell,      0},
   {"WidthC",      2, BIwidthC,          0},
 
-  {"recordCIsVarB",2, BIisRecordCVarB,  0},
-  {"monitorArity", 3, BImonitorArity,   0},
-  {"tellRecordSize", 3, BIsystemTellSize,       0},
+  {"monitorArity",   3, BImonitorArity,   0},
+  {"tellRecordSize", 3, BIsystemTellSize, 0},
+  {"hasFeatureNow",  3, BIhasFeatureNow,  0},
+  {"recordCIsVarB",  2, BIisRecordCVarB,  0},
 
   // These eight will go away in a few days: (when Martin H. has opt. the object system)
   // (their C definitions except for subtreeInline should go away also at that time)
