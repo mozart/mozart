@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(NOPRAGMA)
 #pragma implementation "statisti.hh"
 #endif
 

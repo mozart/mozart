@@ -22,7 +22,7 @@
 
 */
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(NOPRAGMA)
 #pragma implementation "taskstk.hh"
 #endif
 
