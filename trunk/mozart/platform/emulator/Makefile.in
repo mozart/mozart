@@ -248,26 +248,22 @@ depend: $(CREATEDFILES) $(SRCS)
 		$(CREATEDSRCS) >> Makefile
 	for d in $(SUBDIRS); do (cd $$d; $(MAKE) depend); done
 
-tags:	$(CREATEDFILES) version.cc
-	etags --regex='/OZ_C[^(]+([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
-	*c *h */*c */*h
+tags::	$(CREATEDFILES) version.cc
 
 clean+:	clean
 	$(RM) $(TARGETS)
 
-clean:
-	$(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt
+clean::
 	for d in $(SUBDIRS); do (cd $$d; $(MAKE) clean); done
+	$(RM) gmon.out  fetchedInstr.dump verb_out.txt
 
-realclean: clean
+realclean::
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) realclean); done
 	$(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
 		ozma-s.cc ozma-p.cc ozma.hh \
 		ozlib.lnk *.exe *.map *.imp *.sym *.so \
 		$(CREATEDFILES) TAGS \
-		conf.h Makefile config.cache config.log config.status
-	for d in $(SUBDIRS); do (cd $$d; $(MAKE) realclean); done
-
-veryclean: realclean
+		conf.h config.cache config.log config.status
 
 ozlib.lnk: oz.h
 	grep FUNDECL oz.h | grep -v typedef | grep -v define | \
@@ -309,24 +305,7 @@ ozma-p.yy: ozma-p.m4yy
 #os.o: os.cc
 #	$(CXX) $(CXXFLAGS) -w -c $< -o $@
 
-.SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
-
-.cc.s:
-	$(CXX) $(CXXFLAGS) -S -o $@ $<
-
-.cc.E:
-	$(CXXCPP) $(CPPFLAGS) -o $@ $<
-
-.m4cc.cc:
-	$(M4_S) $< > $@
-
-.m4hh.hh:
-	$(M4_S) $< > $@
-
-@tmphack_target@:
-	$(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && \
-		rcp /tmp/$$$$.o @tmphack_host@:`pwd`/$@; \
-		rm -f /tmp/$$$$.o
+include $(OZDIR)/Makefile.rules
 
 # dependencies
 marshaler.hh marshalMsg.cc: $(OZDIR)/msgFormat.m4
