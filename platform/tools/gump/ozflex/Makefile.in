@@ -15,11 +15,13 @@
 # additional info.
 
 BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
 CFLAGS          = @CFLAGS@
 CPPFLAGS        = @CPPFLAGS@
 DEFS            = @DEFS@
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@
+OZTOOL          = @OZTOOL@
 
 FLEX = flex
 
@@ -28,7 +30,7 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 YACC = @YACC@
-CC = @CC@
+CC = $(OZTOOL) cc
 
 # You normally do not need to modify anything below this point.
 # ------------------------------------------------------------
@@ -59,6 +61,8 @@ PERF_REPORT = -p
 
 all: $(FLEX)
         strip $(FLEX)
+include $(SRCTOP)/share/Makefile.boot
+bootstrap: cboot-all
 
 $(FLEX): $(OBJECTS) $(FLEXLIB)
         $(CC) $(CFLAGS) -o $(FLEX) $(LDFLAGS) $(OBJECTS) $(FLEXLIB) $(LIBS)

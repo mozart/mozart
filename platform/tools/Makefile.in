@@ -1,9 +1,11 @@
 @SET_MAKE@
 SUBDIRS = gump
+SRCTOP  = @SRCTOP@
+BUILDTOP= @BUILDTOP@
 
 .PHONY: all install clean veryclean depend distclean check
 all::
-all bootstrap install clean veryclean depend distclean check::
+all install clean veryclean depend distclean check::
         dirs="$(SUBDIRS)"; \
         for i in $$dirs; do \
           if (cd $$i && $(MAKE) $@); \
@@ -11,6 +13,8 @@ all bootstrap install clean veryclean depend distclean check::
           else exit 1; \
           fi; \
         done
+include $(SRCTOP)/share/Makefile.boot
+bootstrap: cboot-all
 
 clean veryclean distclean:: local-clean
 local-clean:
