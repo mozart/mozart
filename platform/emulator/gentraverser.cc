@@ -436,6 +436,22 @@ repeat:
         GetNextBTFrameArg1(frame, int, memoIndex);
         set(recTerm, memoIndex);
         doMemo = NO;
+        if (isGCTaggedInt(value)) {
+          // fprintf(stdout, " non-existing value (%d)!\n",
+          //         getGCTaggedInt(value));
+          //
+          // That must be the same slot: a missing value (i.e. we see
+          // here 'GC' TaggedRef) can occur only when an intermediate
+          // task (like this one) matches a 'DIF_REF' token from the
+          // stream for the same (currently only record) term.
+          // Observe, there is no place for recursion etc., thus, only
+          // one term may miss in the table, and that one must be
+          // 'memoIndex'.
+          Assert(memoIndex == getGCTaggedInt(value));
+          value = recTerm;
+        }
+      } else {
+        Assert(!isGCTaggedInt(value));
       }
       DiscardBT2Frames(frame);
 
