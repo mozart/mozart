@@ -148,7 +148,8 @@ end>>>
       <Ref.Extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/wingtk.tar.gz"><File>libraries</File></Ref.Extern>.
       After downloading and extracting the archive,
       edit the gtk-config and imlib-config files
-      in the freshly created bin directory to match your setup.
+      in the freshly created bin directory to match your setup. Make sure
+      this binary directory is within your path.
       Afterwards, using the cvs sources you should be able to compile the
       binding.
     <P>
