@@ -80,6 +80,7 @@ define
     "   OzBase     = GOZCore.ozBase"
     "   P2O        = GOZCore.pointerToObject"
     "   O2P        = GOZCore.objectToPointer"
+    "   ImportList = GOZCore.importList"
     "   GetEvent   = GOZCore.getGdkEvent"
     "   class OzColorBase from OzBase"
     "      meth new(R G B)"
@@ -96,9 +97,11 @@ define
     "   O2P        = GOZCore.objectToPointer"
     "   ExportList = GOZCore.exportList"
     "   ImportList = GOZCore.importList"
-    "   GC         = GDK.gC"
-    "   Color      = GDK.color"
-    "   Font       = GDK.font"
+    "   GdkWindow  = GDK.window"
+    "   GdkGC      = GDK.gC"
+    "   GdkColor   = GDK.color"
+    "   GdkFont    = GDK.font"
+    "   GdkImage   = GDK.image"
     "   \\insert 'GTKFIELDS.oz'"
    ]
    
@@ -107,11 +110,11 @@ define
     "   P2O          = GOZCore.pointerToObject"
     "   O2P          = GOZCore.objectToPointer"
     "   ImportList   = GOZCore.importList"
-    "   Widget       = GTK.widget"
-    "   Layout       = GTK.layout"
-    "   Object       = GTK.object"
-    "   GC           = GDK.gC"
-    "   ColorContext = GDK.colorContext"
+    "   GtkWidget    = GTK.widget"
+    "   GtkLayout    = GTK.layout"
+    "   GtkObject    = GTK.object"
+    "   GdkGC        = GDK.gC"
+    "   GdkColorContext = GDK.colorContext"
     "  \\insert 'GTKCANVASFIELDS.oz'"
     "   \\insert 'OzCanvasBase.oz'"
    ]
@@ -133,8 +136,20 @@ define
 	 [] _   then true
 	 end
       end
-      meth className(Class $)
-	 {Dictionary.get @classes Class}
+      meth className(Class Prefix $)
+	 NameS = {Util.toString Class}
+	 Space = if {Util.checkPrefix "GtkCanvas" NameS}
+		 then "GtkCanvas"
+		 elseif {Util.checkPrefix "Gtk" NameS}
+		 then "Gtk"
+		 else "Gdk"
+		 end
+	 RawName = {Dictionary.get @classes Class}
+      in
+	 if Prefix == Space
+	 then RawName
+	 else {Util.toString Space#RawName}
+	 end
       end
    end
 
@@ -342,6 +357,7 @@ define
 	 classes    %% Class Dictionary
 	 module     %% Module Name
 	 stdPrefix  %% Standard Prefix (Gtk, Gdk)
+	 impPrefix  %% Import Prefix (Gtk, Gdk, GtkCanvas)
 	 enumPrefix %% Enum Prefix (GTK_, GDK_)
 	 filePrep   %% FilePrepend
 	 initStub   %% File Init Stub
@@ -353,6 +369,7 @@ define
 	 @classes    = {Dictionary.new}
 	 @module     = "GtkNative"
 	 @stdPrefix  = "Gtk"
+	 @impPrefix  = "Gtk"
 	 @enumPrefix = "GTK_"
 	 @filePrep   = GtkFilePrepend
 	 @initStub   = GtkInitStub
@@ -615,7 +632,7 @@ define
 	    elseif {IsBasicType @allTypes TypeS}
 	    then nil
 	    elseif {ClassReg member(TypeA $)}
-	    then "{P2O "#{ClassReg className(TypeA $)}#" "
+	    then "{P2O "#{ClassReg className(TypeA @impPrefix $)}#" "
 	    else nil %% Former Pointer Registration is no longer necessary
 	    end
 	 [] _ then nil
@@ -694,7 +711,8 @@ define
       end
    end
 
-   GdkClassList = ["GdkColor" "GdkColorContext" "GdkColor" "GdkColormap"
+   GdkClassList = ["GdkWindow"
+		   "GdkColor" "GdkColorContext" "GdkColor" "GdkColormap"
 		   "GdkDrawable" "GdkFont" "GdkGC" "GdkImage" "GdkImlib"]
    
    class GdkClasses from GtkClasses
@@ -705,6 +723,7 @@ define
 	 @classes    = {Dictionary.new}
 	 @module     = "GdkNative"
 	 @stdPrefix  = "Gdk"
+	 @impPrefix  = "Gdk"
 	 @enumPrefix = "GDK_"
 	 @filePrep   = GdkFilePrepend
 	 @initStub   = GdkInitStub
@@ -743,6 +762,7 @@ define
 	 @classes    = {Dictionary.new}
 	 @module     = "GtkCanvasNative"
 	 @stdPrefix  = "Gtk"
+	 @impPrefix  = "GtkCanvas"
 	 @enumPrefix = "GTK_"
 	 @filePrep   = CanvasFilePrepend
 	 @initStub   = CanvasInitStub
@@ -788,6 +808,7 @@ define
       meth init(Types Class Name)
 	 @module     = "GtkFieldNative"
 	 @stdPrefix  = "Gtk"
+	 @impPrefix  = "Gtk"
 	 @filePrep   = FieldFilePrepend
 	 @first      = true
 	 GtkFieldClasses, emit(Types Name Class)
@@ -876,12 +897,13 @@ define
 			else TypeRaw
 			end
 	    TypeA     = {Util.toAtom TypeS}
+	    S         = @impPrefix
 	    Convert = if TypeS == "GList*"
 			then "ImportList "
 			elseif {IsBasicType @types TypeS}
 			then nil
 			elseif {ClassReg member(TypeA $)}
-			then "P2O "#{ClassReg className(TypeA $)}#" "
+		        then "P2O "#{ClassReg className(TypeA S $)}#" "
 			else nil
 			end
 	    OStr      = if Convert == nil then nil else "{" end
@@ -897,6 +919,7 @@ define
       meth init(Types Class Name)
 	 @module     = "GdkFieldNative"
 	 @stdPrefix  = "Gdk"
+	 @impPrefix  = "Gdk"
 	 @filePrep   = FieldFilePrepend
 	 @first      = false
 	 GtkFieldClasses, emit(Types Name Class)
@@ -907,6 +930,7 @@ define
       meth init(Types Class Name)
 	 @module     = "GtkCanvasFieldNative"
 	 @stdPrefix  = "Gtk"
+	 @impPrefix  = "GtkCanvas"
 	 @filePrep   = FieldFilePrepend
 	 @first      = true
 	 GtkFieldClasses, emit(Types Name Class)
