@@ -268,7 +268,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class PEL_Propagator {
-  friend PEL_PersistentEngine;
+  friend class PEL_PersistentEngine;
 private:
   enum _fnct_flags { _none= 0, _dead = 1, _scheduled = 2} _flags;
   static int _last_i;
