@@ -110,10 +110,20 @@ define
 	 {Raise error} unit
       elseof CharMap then Rest in
 	 Rest = {List.dropWhile S Char.isSpace}
-	 case Rest of C2|Rest1 then
+	 case Rest of &\\|&i|Rest1 then
+	    case {CondSelect CharMap &i unit} of unit then
+	       {Raise error} unit
+	    elseof NewC then NewC|{CopyBraceLevel Rest1 1}
+	    end
+	 elseof C2|Rest1 then
 	    case {CondSelect CharMap C2 unit} of unit then
 	       case Rest of &{|C3|&}|Rest2 then
 		  case {CondSelect CharMap C3 unit} of unit then
+		     {Raise error} unit
+		  elseof NewC then NewC|{CopyBraceLevel Rest2 1}
+		  end
+	       elseof &{|&\\|&i|&}|Rest2 then
+		  case {CondSelect CharMap &i unit} of unit then
 		     {Raise error} unit
 		  elseof NewC then NewC|{CopyBraceLevel Rest2 1}
 		  end
