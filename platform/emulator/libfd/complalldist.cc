@@ -408,7 +408,7 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
     forall(n, B) {
       if (g.indeg(n->e) > 1) {
         overlap = true;
-        exit;
+        break;
       }
     }
   
