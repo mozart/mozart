@@ -48,7 +48,7 @@ AC_SUBST(PSGML)
 AC_SUBST(CED)
 AC_SUBST(SUBDIRS)
 AC_CONFIG_SUBDIRS(utilities)
-AC_OUTPUT(Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile functors/Makefile apptut/Makefile ap/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile gump/Makefile ozdoc/Makefile constraints/Makefile contrib/Makefile vm/Makefile)
+AC_OUTPUT(Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile functors/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile gump/Makefile ozdoc/Makefile constraints/Makefile contrib/Makefile vm/Makefile)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
