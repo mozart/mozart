@@ -14,7 +14,6 @@
 #endif
 
 #include <ctype.h>
-#include <strstream.h>
 
 #include "actor.hh"
 #include "am.hh"
@@ -28,6 +27,7 @@
 #include "misc.hh"
 #include "records.hh"
 #include "taskstk.hh"
+#include "term.hh"
 #include "thread.hh"
 #include "objects.hh"
 
