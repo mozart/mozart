@@ -10,4 +10,5 @@ Misc/papers/TypeMemo	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Rolls	mail -s "I have changed %s" niehren mmueller
 Oz		mail -s "I have changed %s" mehl
 Misc/proposals/perdio	mail -s "I have changed %s" schulte smolka vanroy
+Misc/proposals/sfb	mail -s "I have changed %s" mmueller smolka niehren
 Misc/papers/Oz20        mail -s "I have changed %s" mmueller tmueller
