@@ -90,9 +90,9 @@
 				     out => ['+int'],
 				     BI  => BIgetOpcode},
 
-    'getInstructionSize'	=> { in  => ['+atom'],
-				     out => ['+int'],
-				     BI  => BIgetInstructionSize},
+    'getInstructionSizes'	=> { in  => [],
+				     out => ['+record'],
+				     BI  => BIgetInstructionSizes},
 
     'addDebugInfo'		=> { in  => ['+foreignPointer','+atom','+int'],
 				     out => [],
