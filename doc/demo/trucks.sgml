@@ -23,11 +23,14 @@
 
 <Chapter id="chapter.trucks">
     <Title/Truck Race/
+    <Author.Extern to="author.db" key="Martin.Mueller">
+    <Author.Extern to="author.db" key="Christian.Schulte">
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/Trucks.oza"/Start Applet/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+        <Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   </P>
 
@@ -36,5 +39,16 @@
       it. The truck can be speeded up by clicking with the middle
       mouse button or slowed down with the rightmost mouse button.
     </P>
+
+  <section class=unnumbered id="section.trucks.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.trucks>
+      <title>Root functor: <file/Trucks.oz/</title>
+      <para><title><ref.extern to="Trucks.oz">Source
+File</ref.extern></title>
+<code.extern display to="Trucks.oz" proglang=oz></para>
+    </subsection>
+
 
 </Chapter>

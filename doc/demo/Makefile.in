@@ -9,31 +9,75 @@ PERL = perl
 SGMLSRCS = \
         board.sgml bounce.sgml \
         jobshop.sgml lift.sgml main.sgml queens.sgml \
-        transportation.sgml trucks.sgml enable.sgml cutting.sgml \
+        transportation.sgml trucks.sgml cutting.sgml \
         college.sgml flowers.sgml dict-client.sgml chat.sgml
 
 HTMLEXTRAFILES = \
-        note-gui-l1.gif note-gui-lm1.gif netscape.gif demo.gif
+        note-gui-l1.gif note-gui-lm1.gif demo.gif
 
 OZDOCHTMLFLAGS = --autoindex
 
-all:: cutting.code
-quick:: cutting.code
+all:: code
+quick:: code
 
 include ../Makefile.common
 
-SRC_CUTTING = Compute.oz Configure.oz Edit.oz Main.oz Script.oz
+ALL_SRC = \
+        AnimatedQueens.oz Bounce.oz Trucks.oz Lift.oz Board.oz
 
-cutting.code: Cutting $(addprefix Cutting/,$(SRC_CUTTING))
+SRC_JOBSHOP = \
+        Examples.oz Main.oz Scheduler.oz Compiler.oz TaskBoard.oz \
+        Tools.oz Configure.oz
+
+SRC_CUTTING = \
+        Compute.oz Configure.oz Edit.oz Main.oz Script.oz
+
+SRC_TRANSPORT = \
+        AgentAbstractions.oz Agents.oz Configure.oz Country.oz \
+        Dialogs.oz Germany.oz Main.oz Plan.oz \
+        Randomizer.oz Widgets.oz
+
+SUBDIRS = \
+        Cutting JobShop Transport
+
+code: $(SUBDIRS) \
+        $(ALL_SRC) \
+        $(addprefix Cutting/,$(SRC_CUTTING)) \
+        $(addprefix Transport/,$(SRC_TRANSPORT)) \
+        $(addprefix JobShop/,$(SRC_JOBSHOP))
+
 Cutting:
         mkdir Cutting
-Cutting/%: $(SRCTOP)/share/demo/Cutting/%
+Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
+        $(PERL) $(SRCDIR)/offwithhishead $< > $@
+JobShop:
+        mkdir JobShop
+JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz
+        $(PERL) $(SRCDIR)/offwithhishead $< > $@
+Transport:
+        mkdir Transport
+Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz
+        $(PERL) $(SRCDIR)/offwithhishead $< > $@
+%.oz: $(SRCTOP)/share/demo/%.oz
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
 
-install:: $(DOCDIR)/Cutting $(addprefix $(DOCDIR)/Cutting/,$(SRC_CUTTING))
-$(DOCDIR)/Cutting:
-        $(INSTALL_DIR) $@
-$(DOCDIR)/Cutting/%: $(SRCTOP)/share/demo/Cutting/%
+install:: $(SUBDIRS:%=$(DOCDIR)/%) \
+        $(ALL_SRC:%=$(DOCDIR)/%) \
+        $(addprefix $(DOCDIR)/Cutting/,$(SRC_CUTTING)) \
+        $(addprefix $(DOCDIR)/Transport/,$(SRC_TRANSPORT)) \
+        $(addprefix $(DOCDIR)/JobShop/,$(SRC_JOBSHOP))
+
+
+$(DOCDIR)/Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
         $(INSTALL_FILE) $< $@
+$(DOCDIR)/JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz
+        $(INSTALL_FILE) $< $@
+$(DOCDIR)/Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz
+        $(INSTALL_FILE) $< $@
+$(DOCDIR)/%.oz: $(SRCTOP)/share/demo/%.oz
+        $(INSTALL_FILE) $< $@
+$(DOCDIR)/%:
+        $(INSTALL_DIR) $@
+
 clean::
         -rm -rf Cutting

@@ -22,12 +22,13 @@
 
 <Chapter id="chapter.dict-client">
   <Title/A Client for the DICT Protocol/
+  <Author.Extern to="author.db" key="Leif.Kornstaedt">
   <P>
     <List class=linkmenu>
       <Item>
-        <Ref.Extern to="applets/DictClient.oza"/Start Applet/
+        <Ref.extern to="applets/DictClient.oza"/Start Applet/
       <Item>
-        <Ref to="appendix.enable"/How to enable Applets/
+        <Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   <P>
     The Dictionary Server Protocol (DICT) is a TCP transaction based

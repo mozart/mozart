@@ -23,11 +23,15 @@
 
 <Chapter id="chapter.college">
     <Title/College Timetabling/
+    <Author.Extern to="author.db" key="Martin.Henz">
+    <Author.Extern to="author.db" key="Joerg.Wuertz">
+
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/College.oza"/Start Applet/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+        <Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   </P>
 

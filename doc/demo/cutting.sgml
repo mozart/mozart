@@ -22,12 +22,14 @@
   -->
 
 <Chapter id="chapter.cutting">
-    <Title/Cutting Glass Plates/
+  <Title/Cutting Glass Plates/
+  <Author.Extern to="author.db" key="Christian.Schulte">
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/Cutting.oza"/Start Applet/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+        <Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   </P>
 
@@ -98,48 +100,39 @@
     <title/Implementation/
 
     <subsection class=unnumbered id=code.cutting.main>
-      <title><file/Main.oz/</title>
+      <title>Root functor: <file/Main.oz/</title>
       <para><title><ref.extern to="Cutting/Main.oz">Source
 File</ref.extern></title>
 <code.extern display to="Cutting/Main.oz" proglang=oz></para>
-      <p>
-        The demo's root functor.
     </subsection>
 
     <subsection class=unnumbered id=code.cutting.script>
-      <title><file/Script.oz/</title>
+      <title>Constraint script: <file/Script.oz/</title>
       <para><title><ref.extern to="Cutting/Script.oz">Source
 File</ref.extern></title>
 <code.extern display to="Cutting/Script.oz" proglang=oz></para>
-      <p>
-        Script that programs the constraint problem to be solved.
     </subsection>
 
     <subsection class=unnumbered id=code.cutting.edit>
-      <title><file/Edit.oz/</title>
+      <title>Graphical interface for editing: <file/Edit.oz/</title>
       <para><title><ref.extern to="Cutting/Edit.oz">Source
 File</ref.extern></title>
 <code.extern display to="Cutting/Edit.oz" proglang=oz></para>
-      <p>
-        Graphical interface for editing.
     </subsection>
 
     <subsection class=unnumbered id=code.cutting.compute>
-      <title/<file/Compute.oz/</title>
+      <title/Graphical interface for computing solutions: <file/Compute.oz/</title>
       <para><title><ref.extern to="Cutting/Compute.oz">Source
 File</ref.extern></title>
 <code.extern display to="Cutting/Compute.oz" proglang=oz></para>
-      <p>
-        Graphical interface for computing solutions.
+
     </subsection>
 
     <subsection class=unnumbered id=code.cutting.configure>
-      <title><file/Configure.oz/</title>
+      <title>Default parameters: <file/Configure.oz/</title>
       <para><title><ref.extern to="Cutting/Configure.oz">Source
 File</ref.extern></title>
 <code.extern display to="Cutting/Configure.oz" proglang=oz></para>
-      <p>
-        Default parameters for colors, fonts, and so on.
     </subsection>
 
 
