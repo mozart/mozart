@@ -23,7 +23,7 @@ INSTALLPRG      = $(INSTALL) -m 555
 INSTALLSRC      = @INSTALLSRC@
 INSTALLDIR      = $(INSTALL) -m 775 -d
 
-PERL            = @PERL@
+PERL            = perl
 ENV2TYPE        = $(PERL) @ENV2TYPE@
 
 OZFLAGS         =
@@ -40,9 +40,8 @@ OZMA            = $(OZBATCH) $(OZFLAGS) -DOZM --ozma
 export SRCDIR
 export OZLIB
 export OZMAINIT = Init.ozc
-export OZMAFILE = ozbatch.ozm
-export OZ_EMULATOR_DIR = @OZ_EMULATOR_DIR@
-export OZPATH = .:compiler:ozcar:$SRCDIR
+export OZMAFILE = $(SRCDIR)/ozbatch.ozm
+export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 OZ_NOLOAD =
 export OZ_LIB = $(OZLIB)
@@ -278,6 +277,7 @@ veryclean: realclean
 distclean: veryclean
         $(RM) confdefs.h config.cache config.status config.log
         $(RM) Makefile
+        $(RM) env
 
 $(OZLIB) $(OZLIBDIRS) $(BITMAPDIR) $(OZCARBITMAPDIR) $(OZBIN):
         $(INSTALLDIR) $@
@@ -321,6 +321,9 @@ tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
 
 %.ozc:
         $(COMPILE) $*
+
+%.ozm:
+        $(OZMA) -o $@ $*
 
 Init.ozc: $(DUMPINTRO) $(INITSRC)
         OZMAINIT="" $(COMPILE) Init.oz
@@ -440,9 +443,13 @@ tags:
         $(ALLSRCS)
 
 bootstrap:
-        $(MAKE) Init.ozc ozbatch CP.ozc Compiler.ozc Gump.ozc \
+        $(MAKE) Init.ozc CP.ozc Compiler.ozc Gump.ozc \
                 OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=. OZ_NOLOAD="="
-        $(MAKE) all OZBATCH=./ozbatch OZ_LIB=. OZ_NOLOAD="=" OZINIT=./Init.ozc
+        $(MAKE) ozbatch \
+                OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=. OZ_NOLOAD="=" \
+                OZHOME=$(PREFIX)
+        $(MAKE) all \
+                OZBATCH=./ozbatch OZ_LIB=. OZ_NOLOAD="=" OZINIT=./Init.ozc
 
 #
 # testing components locally

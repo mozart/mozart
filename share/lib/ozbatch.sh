@@ -9,25 +9,25 @@
 : ${OZMAFILE=$SRCDIR/ozbatch.ozm}
 : ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
 
-if test -z "$OZ_EMULATOR_DIR"
+if test -z "$OZEMULATOR"
 then
-    for d in ../Emulator ../Emulator/$OZPLATFORM \
-            /usr/local/oz/platform/$OZPLATFORM
+    for d in /usr/local/oz/platform/$OZPLATFORM \
+        $SRCDIR/../Emulator $SRCDIR/../Emulator/$OZPLATFORM \
+
     do
-        if test -r $d/ozma.so && test -x $d/oz.emulator.bin
+        if test -x $d/oz.emulator.bin
         then
-            OZ_EMULATOR_DIR=$d
+            OZEMULATOR=$d/oz.emulator.bin
             break
         fi
     done
 fi
 
-: ${OZEMULATOR=$OZ_EMULATOR_DIR/oz.emulator.bin}
-: ${OZMA_LIB="-B $OZ_EMULATOR_DIR/ozma.so"}
 : ${OZQUIET=-quiet}
 OZINIT=${OZMAINIT}
 export OZINIT
 
+echo "Using OZEMULATOR: $OZEMULATOR"
 echo "Using OZMAFILE: $OZMAFILE"
 
-exec $OZEMULATOR $OZQUIET $OZMA_LIB -b $OZMAFILE -a "$@"
+exec $OZEMULATOR $OZQUIET -b $OZMAFILE -a "$@"
