@@ -819,7 +819,7 @@ else
   ;;
   *)
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in ../../bin $path$ac_dummy; do
+  for ac_dir in ../../bin $prefix/bin $path$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
       ac_cv_path_DYNLD="$ac_dir/$ac_word"
@@ -851,7 +851,7 @@ else
   ;;
   *)
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in ../../bin $path$ac_dummy; do
+  for ac_dir in ../../bin $prefix/bin $path$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
       ac_cv_path_PLATFORM="$ac_dir/$ac_word"
@@ -883,7 +883,7 @@ else
   ;;
   *)
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in ../../bin $path$ac_dummy; do
+  for ac_dir in ../../bin ../../lib $prefix/bin $path$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
       ac_cv_path_OZBATCH="$ac_dir/$ac_word"
