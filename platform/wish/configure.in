@@ -122,6 +122,52 @@ dnl *****************************************************************
 dnl *** Tcl/Tk
 dnl *****************************************************************
 
+AC_MSG_CHECKING(for --with-tcl)
+AC_ARG_WITH(tcl,
+    [--with-tcl=<dir>
+        search tcl library and header in <dir> (default: NONE)])
+
+if test -n "${with_tcl}"
+then
+    oz_tcl_lib_dir=$with_tcl
+    oz_tcl_inc_dir=$with_tcl
+fi
+
+AC_ARG_WITH(tcl_lib,
+    [--with-tcl-lib=<dir>
+        search tcl library in <dir> (default: /usr/local/lib)])
+
+if test -n "${with_tcl_lib}"
+then
+    oz_tcl_lib_dir=$with_tcl_lib
+fi
+
+AC_ARG_WITH(tcl_include,
+    [--with-tcl-include=<dir>
+        search tcl header in <dir> (default: /usr/local/include)])
+
+if test -n "${with_tcl_include}"
+then
+    oz_tcl_inc_dir=$with_tcl_include
+fi
+
+: ${oz_tcl_lib_dir=/usr/local/lib}
+: ${oz_tcl_inc_dir=/usr/local/include}
+
+AC_MSG_RESULT(trying \"-L$oz_tcl_lib_dir -I$oz_tcl_inc_dir\")
+
+CPPFLAGS="-I$oz_tcl_inc_dir $CPPFLAGS"
+AC_CHECK_HEADER(tcl.h,,
+	AC_MSG_ERROR(required tcl.h include file not found))
+
+LDFLAGS="-L$oz_tcl_lib_dir $LDFLAGS"
+AC_CHECK_LIB(tcl, Tcl_Init, ,
+	AC_MSG_ERROR(required lib "-ltcl" not found))
+
+
+
+
+
 AC_MSG_CHECKING(for --with-tk)
 AC_ARG_WITH(tk,
     [--with-tk=<dir>
@@ -135,7 +181,7 @@ fi
 
 AC_ARG_WITH(tk_lib,
     [--with-tk-lib=<dir>
-        search tk library in <dir> (default: /usr/local/lib)])
+        search tk library in <dir> (default: oz_tcl_lib_dir)])
 
 if test -n "${with_tk_lib}"
 then
@@ -144,28 +190,23 @@ fi
 
 AC_ARG_WITH(tk_include,
     [--with-tk-include=<dir>
-        search tk header in <dir> (default: /usr/local/include)])
+        search tk header in <dir> (default: oz_tcl_inc_dir)])
 
 if test -n "${with_tk_include}"
 then
     oz_tk_inc_dir=$with_tk_include
 fi
 
-: ${oz_tk_lib_dir=/usr/local/lib}
-: ${oz_tk_inc_dir=/usr/local/include}
+: ${oz_tk_lib_dir=$oz_tcl_lib_dir}
+: ${oz_tk_inc_dir=$oz_tcl_inc_dir}
 
 AC_MSG_RESULT(trying \"-L$oz_tk_lib_dir -I$oz_tk_inc_dir\")
 
 CPPFLAGS="-I$oz_tk_inc_dir $CPPFLAGS"
-AC_CHECK_HEADER(tcl.h,,
-	AC_MSG_ERROR(required tcl.h include file not found))
 AC_CHECK_HEADER(tk.h,,
 	AC_MSG_ERROR(required tk.h include file not found))
 
 LDFLAGS="-L$oz_tk_lib_dir $LDFLAGS"
-AC_CHECK_LIB(tcl, Tcl_Init, ,
-	AC_MSG_ERROR(required lib "-ltcl" not found))
-
 AC_CHECK_LIB(tk, Tk_Init, ,
 	AC_MSG_ERROR(required lib "-ltk" not found))
 
