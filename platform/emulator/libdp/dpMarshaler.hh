@@ -849,33 +849,29 @@ void marshalVarObject(ByteBuffer *bs, int BTI, GName *gnobj, GName *gnclass);
 
 // var.cc
 OZ_Term
-#ifdef USE_FAST_UNMARSHALER   
-unmarshalBorrow(MarshalerBuffer *bs, OB_Entry *&ob, int &bi);
-#else
 unmarshalBorrowRobust(MarshalerBuffer *bs,
-		      OB_Entry *&ob, int &bi, int *error);
-#endif
+		      OB_Entry *&ob, int &bi, BYTE &ec, int *error);
 
 void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi);
 void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
-			   Credit &c);
+			   RRinstance *&c);
 void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
-			    int oti, Credit c);
+			    int oti, RRinstance *c,BYTE ec);
 void discardBorrowHeadSaved(DSite *ms, int oti,
-			    Credit credit);
+			    RRinstance *credit);
 void marshalToOwner(MarshalerBuffer *bs, int bi);
 void saveMarshalToOwner(int bi, int &oti,
-			Credit &c);
-void marshalToOwnerSaved(MarshalerBuffer *bs,Credit c,
+			RRinstance *&c);
+void marshalToOwnerSaved(MarshalerBuffer *bs,RRinstance *c,
 			 int oti);
 inline
-void discardToOwnerSaved(DSite *ms, int oti,Credit c) {
+void discardToOwnerSaved(DSite *ms, int oti,RRinstance *c) {
   discardBorrowHeadSaved(ms, oti, c);
 }
 void marshalOwnHead(MarshalerBuffer *bs, int tag, int i);
-void saveMarshalOwnHead(int oti, Credit &c);
-void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, Credit c);
-void discardOwnHeadSaved(int oti, Credit c);
+void saveMarshalOwnHead(int oti, RRinstance *&c);
+void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, RRinstance *c);
+void discardOwnHeadSaved(int oti, RRinstance *c);
 
 //
 void marshalTertiary(ByteBuffer *bs, Tertiary *t, MarshalTag tag);
@@ -895,7 +891,7 @@ void marshalSPP(MarshalerBuffer *bs, TaggedRef entity, Bool trail);
 //
 // The maximal sizes for the marshal* routines are defined as follows:
 // aux:
-#define MCreditMaxSize MNumberMaxSize 
+#define MCreditMaxSize MNumberMaxSize*6 
 #define MBaseSiteMaxSize (3*MNumberMaxSize + MShortMaxSize)
 #define MDSiteMaxSize (DIFMaxSize + MBaseSiteMaxSize)
 #define MBorrowHeadMaxSize (2*DIFMaxSize + 2*MDSiteMaxSize + MNumberMaxSize + MCreditMaxSize)
