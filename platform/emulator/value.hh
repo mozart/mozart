@@ -23,7 +23,9 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomEntailed, AtomSuspended, AtomBlocked,
        AtomEmpty, AtomUpper, AtomLower, AtomDigit,
        AtomCharSpace, AtomPunct, AtomOther,
-       NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown;
+       NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
+       AtomMin, AtomMax, AtomMid,
+       AtomNaive, AtomSize, AtomConstraints;
 
 /*===================================================================
  * Literal

@@ -79,7 +79,7 @@ public:
   int initBool(void);
 
   OZ_Boolean isIn(int i) const;
-  OZ_Boolean next(int i, int &n) const;
+  int next(int i) const;
   int nextBiggerElem(int v) const;
 
   OZ_Boolean operator != (const OZ_FDState) const;

@@ -199,11 +199,10 @@ OZ_Boolean FDIntervals::contains(int i) const
 }
 
 inline
-OZ_Boolean FDIntervals::next(int i, int &n) const
+int FDIntervals::next(int i) const
 {
   if (contains(i)) {
-    n = i;
-    return OZ_FALSE;
+    return i;
   }
 
   int j;
@@ -214,13 +213,7 @@ OZ_Boolean FDIntervals::next(int i, int &n) const
 
   int l = i_arr[j].right, r = i_arr[j + 1].left;
 
-  if ((r - i) == (i - l)) {
-    n = l;
-    return OZ_TRUE;
-  } else {
-    n = ((r - i) < (i - l)) ? r : l;
-    return OZ_FALSE;
-  }
+  return ((r - i) >= (i - l)) ? l : r;
 }
 
 inline
@@ -726,12 +719,10 @@ int FDBitVector::nextBiggerElem(int v, int max_elem) const
 }
 
 inline
-OZ_Boolean FDBitVector::next(int i, int &n) const
+int FDBitVector::next(int i) const
 {
-  if (contains(i)) {
-    n = i;
-    return OZ_FALSE;
-  }
+  if (contains(i))
+    return i;
 
   // find lower neighbour
   int lb = mod32(i), lw = div32(i), ub = lb;
@@ -751,13 +742,7 @@ OZ_Boolean FDBitVector::next(int i, int &n) const
   for (; ub < 32 && !(b_arr[uw] & (1 << ub)); ub++);
   int u = 32 * uw + ub;
 
-  if (u - i == i - l) {
-    n = l;
-    return OZ_TRUE;
-  }
-
-  n = (u - i < i - l) ? u : l;
-  return OZ_FALSE;
+  return (u - i < i - l) ? u : l;
 }
 
 inline
@@ -1423,24 +1408,21 @@ int OZ_FiniteDomainImpl::nextBiggerElem(int v) const
 }
 
 inline
-OZ_Boolean OZ_FiniteDomainImpl::next(int i, int &n) const
+int OZ_FiniteDomainImpl::next(int i) const
 {
   if (i <= min_elem) {
-    n = min_elem;
-    return OZ_FALSE;
+    return min_elem;
   } else if (i >= max_elem) {
-    n = max_elem;
-    return OZ_FALSE;
+    return max_elem;
   }
 
   descr_type type = getType();
   if (type == fd_descr) {
-    n = i;
-    return OZ_FALSE;
+    return i;
   } else if (type == bv_descr) {
-    return get_bv()->next(i, n);
+    return get_bv()->next(i);
   } else {
-    return get_iv()->next(i, n);
+    return get_iv()->next(i);
   }
 }
 
@@ -1971,9 +1953,9 @@ OZ_Term OZ_FiniteDomain::getAsList(void) const
   return CASTTHIS->getAsList();
 }
 
-OZ_Boolean OZ_FiniteDomain::next(int i, int &n) const
+int OZ_FiniteDomain::next(int i) const
 {
-  return CASTTHIS->next(i, n);
+  return CASTTHIS->next(i);
 }
 
 int OZ_FiniteDomain::nextBiggerElem(int v) const

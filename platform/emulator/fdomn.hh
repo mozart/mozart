@@ -79,7 +79,7 @@ public:
   void initList(int list_len, int * list_left, int * list_right);
   void init(int l, int r) {i_arr[0].left = l; i_arr[0].right = r;}
   int nextBiggerElem(int v, int upper) const;
-  OZ_Boolean next(int i, int &n) const;
+  int next(int i) const;
   OZ_Term getAsList(void) const;
   FDIntervals * copy(void);
   int operator <= (const int);
@@ -148,7 +148,7 @@ public:
   int findMaxElem(void);
   void initList(int list_len, int * list_left, int * list_right);
   int nextBiggerElem(int v, int upper) const;
-  OZ_Boolean next(int i, int &n) const;
+  int next(int i) const;
   OZ_Term getAsList(void) const;
   FDBitVector * copy(void);
   int operator <= (const int);
@@ -225,7 +225,7 @@ public:
   int singl(void) const;
 
   OZ_Term getAsList(void) const;
-  OZ_Boolean next(int i, int &n) const;
+  int next(int i) const;
   int nextBiggerElem(int v) const;
   int intersectWithBool(void);
   int constrainBool(void);

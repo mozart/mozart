@@ -1696,10 +1696,10 @@ BIspec fdSpec[] = {
   {"fdIsVarB", 2, BIisFdVarB},
   {"fdGetLimits", 2, BIgetFDLimits},
   {"fdGetMin", 2, BIfdMin},
+  {"fdGetMid", 2, BIfdMid},
   {"fdGetMax", 2, BIfdMax},
   {"fdGetDom", 2, BIfdGetAsList},
   {"fdGetCard", 2, BIfdGetCardinality},
-  {"fdNextTo", 3, BIfdNextTo},
 
   {"fdPutLe", 2, BIfdPutLe},
   {"fdPutGe", 2, BIfdPutGe},
@@ -1945,6 +1945,9 @@ BIspec fdSpec[] = {
   {"debugStable", 0, debugStable},
   {"resetStable", 0, resetStable},
 #endif
+  // Distribution builtins: fddist.cc
+  {"fddistribute", 5, BIfdDistribute},
+
   {0,0,0,0}
 };
 
