@@ -530,6 +530,93 @@ OZ_Return widthInline(TaggedRef term, TaggedRef &out) {
 
 OZ_DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 
+OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
+  DEREF(fea, _1,feaTag);
+  DEREF(term, _2, termTag);
+
+  if (isVariableTag(feaTag)) {
+    switch (termTag) {
+    case LTUPLE:
+    case SRECORD:
+    case UVAR:
+      return SUSPEND;
+    case CVAR:
+      switch (tagged2CVar(term)->getType()) {
+      case OZ_VAR_FD:
+      case OZ_VAR_BOOL:
+      case OZ_VAR_FS:
+          goto typeError0;
+      default:
+          return SUSPEND;
+      }
+    case LITERAL:
+      goto typeError0;
+    default:
+      if (oz_isChunk(term)) return SUSPEND;
+      goto typeError0;
+    }
+  }
+
+  if (!oz_isFeature(fea)) goto typeError1;
+
+  switch (termTag) {
+  case LTUPLE:
+  case SRECORD:
+    goto raise;
+    
+  case UVAR:
+    return SUSPEND;
+
+  case CVAR:
+    switch (tagged2CVar(term)->getType()) {
+    case OZ_VAR_OF:
+    case OZ_VAR_FD:
+    case OZ_VAR_BOOL:
+    case OZ_VAR_FS:
+      goto typeError0;
+    default:
+      return SUSPEND;
+    }
+
+  case LITERAL: goto raise;
+
+  case EXT:
+    {
+      return oz_tagged2Extension(term)->putFeatureV(fea,val);
+    }
+  default:
+    if (oz_isChunk(term)) {
+      switch (tagged2Const(term)->getType()) {
+      case Co_Chunk:
+      case Co_Object:
+      case Co_Class:
+	goto raise;
+      case Co_Array:
+	{
+	  OZ_Return arrayPutInline(TaggedRef,TaggedRef,TaggedRef);
+	  return arrayPutInline(term,fea,val);
+	}
+      case Co_Dictionary:
+	{
+	  extern OZ_Return dictionaryPutInline(TaggedRef,TaggedRef,TaggedRef);
+	  return dictionaryPutInline(term,fea,val);
+	}
+      default:
+	goto raise;
+      }
+    }
+
+    goto typeError0;
+  }
+typeError0:
+  oz_typeError(0,"Record or Chunk");
+typeError1:
+  oz_typeError(1,"Feature");
+raise:
+  return oz_raise(E_ERROR,E_KERNEL,":=",3,term,fea,val);
+}
+
+OZ_DECLAREBI_USEINLINEREL3(BIdotAssign,genericSet)
 
 // ---------------------------------------------------------------------
 // Unit
