@@ -60,9 +60,6 @@
 #include "solve.hh"
 #include "oz_cpi.hh"
 #include "dictionary.hh"
-#include "find-alive-entry.hh"
-
-#include "builtins.hh"
 
 /********************************************************************
  * `builtin`

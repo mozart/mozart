@@ -32,8 +32,6 @@
 #include "runtime.hh"
 #include "gc.hh"
 #include "dictionary.hh"
-#include "find-alive-entry.hh"
-
 
 TaggedRef
   WifAtomTclOption, WifAtomTclList, WifAtomTclPosition,
@@ -1379,6 +1377,21 @@ OZ_Return WIF::close_hierarchy(Object * o) {
 
 }
 
+inline
+TaggedRef findAliveEntry(TaggedRef group) {
+  group = oz_deref(group);
+
+  while (oz_isCons(group)) {
+      TaggedRef ahead = oz_deref(oz_head(group));
+
+      if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
+        return group;
+
+      group = oz_deref(oz_tail(group));
+  }
+
+  return group;
+}
 
 OZ_BI_define(BIwif_close,2,0) {
 
