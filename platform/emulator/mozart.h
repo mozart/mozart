@@ -729,11 +729,11 @@ OZ_expectRecType(ARG,"VirtualString",OZ_isVirtualString);
  */
 
 #define OZ_declareRecType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
-OZ_expectRecType(ARG,MSG,COERCE);		\
+OZ_expectRecType(ARG,MSG,CHECK);		\
 TYPE VAR = COERCE(OZ_in(ARG));
 
 #define OZ_setRecType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
-OZ_expectRecType(ARG,MSG,COERCE);		\
+OZ_expectRecType(ARG,MSG,CHECK);		\
 VAR = COERCE(OZ_in(ARG));
 
 #define oz_str2c(t) OZ_stringToC(t,0)
