@@ -262,7 +262,7 @@ public:
       Assert(first!=last);
       ch=*pos;
       removeFirst();
-      PD(BUFFER,"bytebuffer dumped UnMarshall: %d",no_bufs);
+      PD(BUFFER,"bytebuffer dumped UnMarshall: %d",no_bufs());
       pos=first->head();
       return ch;}
     return *pos++;}
