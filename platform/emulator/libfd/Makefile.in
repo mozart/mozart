@@ -26,7 +26,7 @@ include ../Makefile.vars
 BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
-INCS		= -I. -I$(SRCDIR)/.. -I..
+INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I..
 
 FDLIBSRCS = fdaux.cc prop_fncts.cc prop_engine.cc \
 	    fdinit.cc fdtable.cc \
