@@ -465,7 +465,7 @@ components.o: componentBuffer.cc
 #${srcdir}/configure: configure.in
 #	cd ${srcdir} && autoconf -l ..
 
-conf.h: conf.h.in
+conf-others.h: conf-others.h.in
 	./config.status
 
 Makefile: Makefile.in
@@ -538,7 +538,7 @@ veryclean::
 		$(CREATEDFILES) TAGS Makefile.deps
 
 distclean::
-	-rm -f OZCONF.h conf.h config.cache config.log config.status \
+	-rm -f OZCONF.h conf-others.h config.cache config.log config.status \
 		Makefile.rules Makefile.vars Makefile makefile oztool.sh .gdbinit
 
 
