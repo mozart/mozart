@@ -56,9 +56,9 @@
 			      out => [],
 			      BI  => BI_prop_lpq},
 
-     'byNeedAssign'	 => { in  => ['value', 'value'],
+     'bindFuture'	 => { in  => ['value', 'value'],
 			      out => [],
-			      BI  => BIbyNeedAssign},
+			      BI  => BIbindFuture},
 
      'waitStatus'	 => { in  => ['value', 'value'],
 			      out => ['value'],

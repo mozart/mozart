@@ -58,7 +58,7 @@ void bindfut(Board * bb, const TaggedRef a, const TaggedRef b) {
   args[1] = b;
 
   Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_ByNeedAssign,args,2);
+  t->pushCall(BI_bindFuture,args,2);
 }
 
 
@@ -515,59 +515,6 @@ OZ_BI_define(BIdiscardSpace, 1, 0) {
 } OZ_BI_end
   
 
-OZ_BI_define(BIsendFromSpace, 2, 1) {
-  oz_declareNonvarIN(0,prt);
-  if (!oz_isPort(prt)) {
-    oz_typeError(0,"Port");
-  }
-  TaggedRef x = OZ_in(1);
-
-  Board * prt_home = tagged2Port(prt)->getBoardInternal()->derefBoard();
-
-  /*
-   * Check wether situatedness is okay!
-   *
-   */
-
-  if (prt_home != oz_currentBoard()) {
-    TaggedRef f,b;
-
-    prt_home->checkSituatedness(&x,&f,&b);
-
-    if (!oz_eq(b,AtomNil)) {
-      // There is at least a bad guy!
-      return oz_raise(E_ERROR,E_KERNEL,"spaceSituatedness",1,b);
-    }
-    
-    if (!oz_eq(f,AtomNil)) {
-      // There is at least a future, suspend!
-      do {
-	Assert(oz_isCons(f));
-	TaggedRef h = oz_head(f);
-	Assert(oz_isRef(h));
-	TaggedRef * f_ptr = tagged2Ref(h);
-	Assert(isCVar(*f_ptr));
-	Assert(tagged2CVar(*f_ptr)->getType() == OZ_VAR_FUTURE);
-	am.addSuspendVarList(f_ptr);
-	f = oz_tail(f);
-      } while (!oz_eq(f,AtomNil));
-      return SUSPEND;
-    }
-  }
-
-  TaggedRef f = oz_newVar(prt_home);
-
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = prt;
-  args[1] = oz_pair2(x,f);
-
-  Thread * t = oz_newThreadInject(prt_home);
-  t->pushCall(BI_send,args,2);
-
-  OZ_RETURN(f);
-} OZ_BI_end
-  
-
 #ifdef CS_PROFILE
 
 TaggedRef Board::getCloneDiff(void) {
@@ -629,12 +576,16 @@ OZ_BI_define(BIgetCloneDiff, 1,1) {
 extern void (*OZ_sCloneBlockDynamic)(OZ_Term *,OZ_Term *,const int);
 extern Suspendable * (*suspendableSCloneSuspendableDynamic)(Suspendable *);
 extern Suspendable * suspendableSCloneSuspendable(Suspendable *);
+extern OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);
+extern OZ_Return OZ_checkSituatednessDynamic(Board *,TaggedRef *);
 
 void space_init(void) {
   OZ_sCloneBlockDynamic = 
     &OZ_sCloneBlock;
   suspendableSCloneSuspendableDynamic =
     &suspendableSCloneSuspendable;
+  OZ_checkSituatedness = 
+    &OZ_checkSituatednessDynamic;
 }
 
 #ifndef MODULES_LINK_STATIC
