@@ -380,7 +380,7 @@ void oz_disposeSuspendedThread(Thread *tt)
 //
 //  It marks also the thread as dead;
 INLINE
-void oz_disposeRunnableThread(Thread *tt)
+void AM::oz_disposeRunnableThread(Thread *tt)
 {
 #ifdef DEBUG_THREADCOUNT
   if (tt->isLPQThread())
