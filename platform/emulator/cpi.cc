@@ -122,6 +122,28 @@ void OZ_CPIVar::set_vars_removed(void) {
   _vars_removed = oz_nil();
 }
 
+void * OZ_CPIVar::operator new(size_t s)
+{
+  return CpiHeap.alloc(s);
+}
+
+void OZ_CPIVar::operator delete(void * p, size_t s)
+{
+  // deliberately left empty
+}
+
+#ifdef __GNUC__
+void * OZ_CPIVar::operator new[](size_t s)
+{
+  return CpiHeap.alloc(s);
+}
+
+void OZ_CPIVar::operator delete[](void * p, size_t s)
+{
+  // deliberately left empty
+}
+#endif
+
 #endif
 
 // End of File
