@@ -27,7 +27,7 @@ define
       meth check_keys(Keys)
 	 for K in Keys do
 	    if {Not {self member(K $)}} then
-	       {Exception.raiseError mogul(missing_key(K))}
+	       {Exception.raiseError ozpm(missing_key(K))}
 	    end
 	 end
       end
