@@ -1,6 +1,6 @@
 functor
 import
-   Open
+   IO @ 'x-oz://contrib/os/io'
 export
    program : Program
    catalog : Catalog
@@ -19,7 +19,6 @@ define
    CaseFold= casefold(get:proc{$ X} {Access ParamCaseFold X} end
                       set:proc{$ X} {Assign ParamCaseFold X} end)
 
-   class TextPipe from Open.pipe Open.text end
    ToLower = Char.toLower
    ToUpper = Char.toUpper
 
@@ -69,8 +68,8 @@ define
       end
    end
 
-   fun {GetEvent Output CaseNormalize}
-      case {Output getS($)} of false then false
+   fun {GetEvent NextLine CaseNormalize}
+      case {NextLine} of false then false
       [] C|L then
          case C
          of &( then '('( {MakeName  L CaseNormalize})
@@ -158,11 +157,25 @@ define
    end
 
    fun {MakeEventGenerator Cmd Args CaseNormalize}
-      Output = {New TextPipe init(cmd:Cmd args:Args)}
-      fun {Loop}
-         {GetEvent Output CaseNormalize}
+      ERR = {IO.pipe}
+      OUT = {IO.run read(Cmd Args stderr:ERR.write)}
+      {IO.close ERR.write}
+      TEXT= {NewCell {IO.readAsString OUT}}
+      fun {NextLine}
+         if {Access TEXT}==nil then false else
+            Prefix Suffix
+         in
+            {String.token {Access TEXT} &\n Prefix Suffix}
+            {Assign TEXT Suffix}
+            Prefix
+         end
       end
-   in Loop end
+      fun {Loop}
+         {GetEvent NextLine CaseNormalize}
+      end
+   in event(error:{IO.readAsString ERR.read}
+            get:Loop)
+   end
 
    fun {Parse NextEvent CaseNormalize}
       DocElem
@@ -249,6 +262,7 @@ define
          [] 'C' then raise done end
          [] 'i' then skip
          [] 'e' then skip
+         [] false then raise done end %with error
          end
          {Loop}
       end
@@ -267,7 +281,8 @@ define
    class SgmlParser
       meth init skip end
       meth process(Files Document
-                   program:P<=unit catalog:C<=unit casefold:F<=unit)
+                   program:P<=unit catalog:C<=unit casefold:F<=none
+                   error:ERR<=_ )
          Pgm = case P of unit then {Access ParamProgram} else P end
          Cat = case C of unit then {Access ParamCatalog} else C end
          Fld = case F of unit then {Access ParamCaseFold}else F end
@@ -276,10 +291,10 @@ define
          of none  then CaseFoldNone
          [] upper then CaseFoldUpper
          [] lower then CaseFoldLower end
+         event(error:!ERR get:GET)
+         = {MakeEventGenerator Pgm '-c'#Cat|Files CaseNormalize}
       in
-         {Parse
-          {MakeEventGenerator Pgm '-c'#Cat|Files CaseNormalize}
-          CaseNormalize Document}
+         {Parse GET CaseNormalize Document}
       end
    end
 
