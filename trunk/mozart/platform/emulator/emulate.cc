@@ -84,6 +84,18 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
   OZ_putArg(e,2,args);
 }
 
+inline
+TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
+  OZ_Term d = OZ_record(AtomD,
+			oz_cons(AtomInfo,
+				oz_cons(AtomStack, oz_nil())));
+  OZ_putSubtree(d, AtomStack, traceBack);
+  OZ_putSubtree(d, AtomInfo,  info);
+  
+  return OZ_adjoinAt(val, AtomDebug, d);
+}
+
+
 #define RAISE_TYPE1(fun,args)				\
   enrichTypeException(e->exception.value,fun,args);	\
   RAISE_THREAD;
@@ -449,13 +461,13 @@ Bool hookCheckNeeded()
 
 #define RAISE_THREAD_NO_PC			\
   e->exception.pc=NOCODE;			\
-  return T_RAISE;
+  goto LBLraise;
 
 #define RAISE_THREAD				\
   e->exception.pc=PC;				\
   e->exception.y=Y;				\
   e->exception.cap=CAP;				\
-  return T_RAISE;
+  goto LBLraise;
 
 
 /* macros are faster ! */
@@ -3375,15 +3387,72 @@ Case(GETVOID)
     }
   }
 
+
+  /*
+   * Raise exception
+   *
+   */
+
+ LBLraise:
+  {
+    Bool foundHdl;
+    Thread *ct = CTT;
+
+    if (e->exception.debug) {
+      OZ_Term traceBack;
+      foundHdl =
+	ct->getTaskStackRef()->findCatch(ct,
+					 e->exception.pc,
+					 e->exception.y, 
+					 e->exception.cap,
+					 &traceBack,
+					 e->debugmode());
+	
+      e->exception.value = formatError(e->exception.info,
+				       e->exception.value,
+				       traceBack);
+    } else {
+      foundHdl = ct->getTaskStackRef()->findCatch(ct);
+    }
+      
+    if (foundHdl) {
+      if (e->debugmode() && ct->isTrace())
+	debugStreamUpdate(ct);
+      e->xRegs[0] = e->exception.value;
+      goto LBLpopTaskNoPreempt;
+    }
+      
+    if (!CBB->isRoot() &&
+	OZ_eq(OZ_label(e->exception.value),AtomFailure)) {
+      return T_FAILURE;
+    }
+
+    if (e->debugmode()) {
+      ct->setTrace();
+      ct->setStep();
+      debugStreamException(ct,e->exception.value);
+      return T_PREEMPT;
+    }
+
+    if (e->defaultExceptionHdl) {
+      ct->pushCall(e->defaultExceptionHdl,e->exception.value);
+    } else {
+      prefixError();
+      fprintf(stderr,
+	      "Exception raised:\n   %s\n",
+	      OZ_toC(e->exception.value,100,100));
+      fflush(stderr);
+    }
+
+    goto LBLpopTaskNoPreempt;
+  }
+
+
   Assert(0);
   return T_ERROR;
 
 } // end engine
 
-
-// ------------------------------------------------------------------------
-// *** FAILURE
-// ------------------------------------------------------------------------
 
 
 #undef ONREG
