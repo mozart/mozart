@@ -418,7 +418,7 @@ void ResourceExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
 Bool ResourceExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
 {
   rememberTerm(cellTerm);
-  if (isResource(cellTerm))
+  if (isResource(cellTerm) && !cloneCells())
     addResource(cellTerm);
   return (TRUE);
 }
