@@ -5,6 +5,16 @@
 The introduction of linear programming solvers in Oz is based on
 real-interval constraints introduced in <Ptr to="ct.casestudy">.
 
+<P> The modules <<LP>> and <<RI>> are provided as contribution (being
+part of the &moz3; distribution) and can be accessed either by
+<<<declare [LP RI] = {Module.link ['x-oz://contrib/LP' 'x-oz://contrib/RI']}>>
+ or by
+<<<
+import RI @ 'x-oz://contrib/RI'
+       LP @ 'x-oz://contrib/LP'>>>
+as part of a functor definition.
+
+
 <P>
 Linear programming solver (LP solver) handle problems of the following
 kind <Ptr to="Chvantal:83">:

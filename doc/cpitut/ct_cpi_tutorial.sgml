@@ -459,6 +459,13 @@ constraint is inconsistent with the constraint store.
     <Title/The Reference of the Implemented Real-Interval Constraint
     Solver/
 
+<P> The module <<RI>> is provided as contribution (being part of the
+&moz3; distribution) and can be accessed either by
+<<<declare [RI] = {Module.link ['x-oz://contrib/RI']}>>
+or by
+<<<import RI @ 'x-oz://contrib/RI'>>>
+as part of a functor definition.
+
 <P>
 <List>
 
