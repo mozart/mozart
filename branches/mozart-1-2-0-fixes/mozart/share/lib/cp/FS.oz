@@ -309,7 +309,7 @@ define
       end
 
       fun {RRobinFun Spec}
-	 if Spec then fun {$ _|T} T end
+	 if Spec then fun {$ H|T} {Append T [H]} end
 	 else fun {$ L} L end
 	 end
       end
