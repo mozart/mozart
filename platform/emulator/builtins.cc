@@ -809,7 +809,7 @@ State labelInline(TaggedRef term, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
 
 
-// Used by BIwidthC and BIpropWidth built-ins
+     // Used by BIwidthC and BIpropWidth built-ins
 // {PropWidth X W} where X is OFS and W is FD width.
 // Assume: X is OFS or SRECORD or LITERAL.
 // Assume: W is FD or SMALLINT or BIGINT.
@@ -859,10 +859,14 @@ OZ_Bool internPropWidth(TaggedRef rawrec, TaggedRef rawwid)
             // Build fd with domain recwidth..fd_sup:
             OZ_FiniteDomain slice=new OZ_FiniteDomain();
             slice.init(recwidth,fd_sup);
-            GenFDVariable *fdcon=new GenFDVariable(slice);
-            res=am.unify(makeTaggedRef(newTaggedCVar(fdcon)),rawwid);
-            // No loc/glob handling: res=(fdwid>=recwidth);
-            if (res==FAILED) { result = FAILED; break; }
+
+	    OZ_FiniteDomain &dom = tagged2GenFDVar(wid)->getDom();
+	    if (dom.getSize() > (dom & slice).getSize()) { 
+	        GenFDVariable *fdcon=new GenFDVariable(slice);
+	        res=am.unify(makeTaggedRef(newTaggedCVar(fdcon)),rawwid);
+                // No loc/glob handling: res=(fdwid>=recwidth);
+	        if (res==FAILED) { result = FAILED; break; }
+	    }
         } else if (isSmallInt(widTag)) {
             int intwid=smallIntValue(wid);
             if (recwidth>intwid) { result = FAILED; break; }
