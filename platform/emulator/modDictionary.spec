@@ -88,5 +88,9 @@
                      out => ['+record'],
                      BI  => BIdictionaryToRecord},
 
+     'waitOr'   => { in  => ['+dictionary'],
+                     out => ['+feature'],
+                     BI  => BIdictionaryWaitOr},
+
      );;
 1;;

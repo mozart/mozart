@@ -68,19 +68,24 @@ void oz_checkStability()
       if (d->getAlternatives() == 1) {
         // Is the distributor unary?
         d->commit(solveBB,1,1);
+
+        am.trail.popMark();
+        oz_currentBoard()->unsetInstalled();
+        am.setCurrent(oz_currentBoard()->getParent());
+
+        return;
+      } else {
+        // don't decrement counter of parent board!
+        am.trail.popMark();
+        oz_currentBoard()->unsetInstalled();
+        am.setCurrent(oz_currentBoard()->getParent());
+
+        int ret = oz_unify(solveAA->getResult(),
+                           solveAA->genChoice(d->getAlternatives()));
+        Assert(ret==PROCEED);
+
         return;
       }
-
-      // give back number of clauses
-      am.trail.popMark();
-      oz_currentBoard()->unsetInstalled();
-      am.setCurrent(oz_currentBoard()->getParent());
-
-      // don't decrement counter of parent board!
-      int ret = oz_unify(solveAA->getResult(),
-                         solveAA->genChoice(d->getAlternatives()));
-      Assert(ret==PROCEED);
-      return;
 
     }
 
