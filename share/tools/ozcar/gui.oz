@@ -371,11 +371,11 @@ in
 	    in
 	       case SavedVars \= unit then
 		  {OzcarMessage
-		   'getEnv: using saved variables of frame #' # FrameId}
+		   'getEnv: using saved variables of frame #' # F.nr}
 		  SavedVars
 	       elsecase FrameId \= unit then
 		  {OzcarMessage
-		   'getEnv: requesting variables for frame #' # FrameId}
+		   'getEnv: requesting variables for frame #' # F.nr}
 		  V = {Thread.frameVariables @currentThread FrameId}
 	       in
 		  case V == unit then %% `FrameId' was an invalid frame id...
