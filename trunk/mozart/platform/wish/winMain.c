@@ -9,6 +9,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#ifdef __WATCOMC__
 #pragma aux (cdecl) Tk_MainWindow;
 #pragma aux (cdecl) Tcl_AppendResult;
 #pragma aux (cdecl) Tcl_CreateCommand;
@@ -39,6 +40,11 @@
 #pragma aux (cdecl) PutsCmd;
 #pragma aux (cdecl) idleProc;
 #pragma aux (cdecl) asyncHandler;
+#endif
+
+#ifdef _MSC_VER
+#define _hdopen(file,flags) _open_osfhandle(file,flags)
+#endif
 
 #include <windows.h>
 #include <stdio.h>
@@ -53,7 +59,7 @@
 #undef Tk_MainWindow
 
 static void cdecl WishPanic(char *x,...);
-static unsigned __stdcall readerThread();
+static unsigned __stdcall readerThread(void *arg);
 static int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code);
 
 extern void cdecl Tk_MainLoop();
@@ -494,7 +500,7 @@ static unsigned __stdcall readerThread(void *arg)
     Tcl_AsyncMark(ri->ash);
 
     /* wake up toplevel */
-    PostThreadMessage(ri->toplevelThread,WM_NULL,NULL,NULL);
+    PostThreadMessage(ri->toplevelThread,WM_NULL,0,0);
 
     if (WaitForSingleObject(ri->event, INFINITE) != WAIT_OBJECT_0)
       WishPanic("readerThread: wait failed");
