@@ -233,6 +233,7 @@ The information the panel displays is described in
           <td>Minimal Size</td>
           <td>Minimal heap size.</td>
         </tr>
+        <tr>
           <td>Free</td>
           <td>Gives the percentage of free heap memory after garbage
         collection. For example, a value of $75$ means that
