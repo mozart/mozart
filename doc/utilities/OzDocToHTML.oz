@@ -274,6 +274,8 @@ define
 	 ChunkDefinitions: unit ChunkLinks: unit
 	 % for Ref.Extern and Ptr.Extern:
 	 MyCrossReferencer: unit
+	 XRefDir: unit
+	 IndexDBName: unit
 	 % for Table:
 	 TableCols: unit
 	 TableRow: unit
@@ -320,6 +322,8 @@ define
 	       MyCrossReferencer <- {New CrossReferencer.'class'
 				     init(Args.'xrefdir' Args.'xreftree'
 					  Args.'xrefdb' @Reporter)}
+	       XRefDir <- Args.'xrefdir'
+	       IndexDBName <- Args.'indexdb'
 	       CurrentNode <- 'index.html'
 	       NavigationPanel <- N
 	       NodeCounter <- 0
@@ -591,7 +595,8 @@ define
 			      Threading <- sect(@CurrentNode Label)|@Threading
 			      HTML = SEQ([HTML1
 					  h1(a(name: Label Title))
-					  {@MyIndexer process($)}])
+					  {@MyIndexer
+					   process(@IndexDBName @XRefDir $)}])
 			      WhereNow <- WhereBefore
 			      OzDocToHTML, FinishNode(Title X HTML $)
 			   end
@@ -1922,7 +1927,8 @@ define
 	 end
 	 ToGenerate <- L2|@ToGenerate
 	 case {CondSelect M see unit} of unit then
-	    {@MyIndexer enter(L Ands a(href: @CurrentNode#"#"#L2 @WhereNow.1))}
+	    {@MyIndexer enter(L Ands a(href: @CurrentNode#"#"#L2 @WhereNow.1)
+			      {CondSelect M 'class' nil})}
 	 elseof X then Node HTML in
 	    OzDocToHTML, ID(X ?Node ?HTML)
 	    {@MyIndexer enter(L Ands SEQ([PCDATA('see ')
@@ -1930,7 +1936,7 @@ define
 					  PCDATA(' (')
 					  a(href: @CurrentNode#"#"#L2
 					    @WhereNow.1)
-					  PCDATA(')')]))}
+					  PCDATA(')')]) [see])}
 	 end
 	 a(name: L2)
       end
@@ -1942,7 +1948,7 @@ define
 				   PCDATA(' (')
 				   a(href: @CurrentNode#"#"#L2
 				     @WhereNow.1)
-				   PCDATA(')')]))}
+				   PCDATA(')')]) [generated])}
 	    OzDocToHTML, IndexTails(Ar {Append Prefix [A]} L HTML L2)
 	 [] nil then skip
 	 end
