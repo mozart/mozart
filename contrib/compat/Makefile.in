@@ -19,8 +19,8 @@ INSTALL_BIN     = $(INSTALL) -m 555
 
 TARGETS         = TextPickle.ozf convertTextPickle
 LIB_TARGETS     = $(LIB_DIR)/TextPickle.ozf \
-                  $(LIB_DIR)/TextPickleScanner.so-$(PLATFORM) \
-                  $(BIN_DIR)/convertTextPickle
+                  $(LIB_DIR)/TextPickleScanner.so-$(PLATFORM)
+BIN_TARGETS     = $(BIN_DIR)/convertTextPickle
 
 .PHONY: all install clean veryclean distclean bootstrap depend
 
@@ -29,9 +29,9 @@ LIB_TARGETS     = $(LIB_DIR)/TextPickle.ozf \
 
 all: $(TARGETS)
 
-install: $(LIB_DIR) $(LIB_TARGETS) $(BIN_TARGETS)
+install: $(LIB_DIR) $(LIB_TARGETS) $(BIN_DIR) $(BIN_TARGETS)
 
-$(LIB_DIR):
+$(LIB_DIR) $(BIN_DIR):
         $(INSTALL_DIR) $@
 
 $(LIB_DIR)/%.ozf: %.ozf
