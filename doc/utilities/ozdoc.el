@@ -88,14 +88,14 @@ STRING should be given if the last search was by `string-match' on STRING."
     (if color-or-tag-name
 	(if iscolor
 	    (ozdoc-target-insert-string
-	     (concat "<font color=\"" color-or-tag-name "\">"))
+	     (concat "<FONT color=\"" color-or-tag-name "\">"))
 	  (ozdoc-target-insert-string
 	   (concat "<" color-or-tag-name ">"))))
     (ozdoc-target-insert-string
      (ozdoc-htmlize-protect (buffer-substring start end)))
     (if color-or-tag-name
 	(if iscolor
-	    (ozdoc-target-insert-string "</font>")
+	    (ozdoc-target-insert-string "</FONT>")
 	  (ozdoc-target-insert-string
 	   (concat "</" color-or-tag-name ">"))))))
 
