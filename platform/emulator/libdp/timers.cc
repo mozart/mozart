@@ -29,8 +29,8 @@
 
 #define TIMER_RES 1000
 
-static Bool timers_checkTimers(unsigned long time,void *timers);
-static Bool timers_wakeUpTimers(unsigned long time,void *timers);
+static Bool timers_checkTimers(LongTime *time,void *timers);
+static Bool timers_wakeUpTimers(LongTime *time,void *timers);
 
 #define TimerElement_CUTOFF 200
 class TimerElementManager: public FreeListManager {
@@ -103,9 +103,10 @@ void Timers::setTimer(TimerElement *&te,int timeToWait,
   //  printf("timer (re)set for te %x proc %x arg %x this %x\n",te,proc,arg,this);
   //  printf("st %x;%x %d\n",arg,proc,timeToWait);
   // Only if te is NULL a new one needs to be inserted...
+  Assert(!(te!=NULL && elems==NULL));
   if(te==NULL) {
     te=timerElementManager->getTimerElement();
-
+    
     if(elems==NULL) {
       elems=te;
       if(!am.registerTask((void*) this, 
@@ -114,7 +115,7 @@ void Timers::setTimer(TimerElement *&te,int timeToWait,
 	return;
       }
       am.setMinimalTaskInterval((void *) this,TIMER_RES);
-      prevtime=am.getEmulatorClock();
+      prevtime=*(am.getEmulatorClock());
     }
     else {
       te->next=elems;
@@ -124,7 +125,7 @@ void Timers::setTimer(TimerElement *&te,int timeToWait,
     
   te->timeToWait=timeToWait;
   // Must add the time allready passed since prevtime was set
-  te->timeLeft=timeToWait+am.getEmulatorClock()-prevtime;
+  te->timeLeft=timeToWait+(*am.getEmulatorClock()-prevtime);
   te->proc=proc;
   te->arg=arg;
 
@@ -142,23 +143,42 @@ void Timers::clearTimer(TimerElement *&te) {
   }
 }
 
-Bool Timers::checkTimers(unsigned long time) {
-  int timepassed=time-prevtime;
-  TimerElement *cur=elems;
+Bool Timers::checkTimers(LongTime *time) {
+  int timepassed=*time-prevtime;
+  TimerElement *cur;
 
-  while(cur!=NULL) {
-    if(cur->proc!=NULL&&cur->timeLeft<=timepassed)
-      return TRUE;
-    cur=cur->next;
+  PD((TCP_INTERFACE,"Time to check timers at %s (since last %d)",
+      am.getEmulatorClock()->toString(),timepassed));
+
+  // Remove any invalidated timers at the beginning
+  while(elems!=NULL && elems->proc==NULL) {
+    cur=elems; 
+    elems=elems->next;
+    timerElementManager->deleteTimerElement(cur);
+  }
+  if(elems==NULL) {
+    PD((TCP_INTERFACE,"No more timers, removing timer task"));
+    am.setMinimalTaskInterval((void *) this,0); // Wakeup no longer needed
+    am.removeTask((void*) this, timers_checkTimers);
+    minint=-1;
+  }
+  else {
+    // Check if at least one timer needs to be woken
+    cur=elems;
+    while(cur!=NULL) {
+      if(cur->proc!=NULL&&cur->timeLeft<=timepassed)
+	return TRUE;
+      cur=cur->next;
+    }
   }
   return FALSE;
 }
    
-Bool Timers::wakeUpTimers(unsigned long time) {
-  int timepassed=time-prevtime;
-  prevtime=time;
-  PD((TCP_INTERFACE,"Time to wake up timers at %d (since last %d)",
-      am.getEmulatorClock(),timepassed));
+Bool Timers::wakeUpTimers(LongTime *time) {
+  int timepassed=*time-prevtime;
+  prevtime=*time;
+  PD((TCP_INTERFACE,"Time to wake up timers at %s (since last %d)",
+      am.getEmulatorClock()->toString(),timepassed));
 
   TimerElement *cur=elems;
   TimerElement *prev;
@@ -212,11 +232,11 @@ Bool Timers::wakeUpTimers(unsigned long time) {
   return TRUE; // Allways done for now to taskhandler
 }
 
-static Bool timers_checkTimers(unsigned long time,void *timers) {
+static Bool timers_checkTimers(LongTime *time,void *timers) {
   return ((Timers *) timers)->checkTimers(time);
 }
 
-static Bool timers_wakeUpTimers(unsigned long time,void *timers) {
+static Bool timers_wakeUpTimers(LongTime *time,void *timers) {
   return ((Timers *) timers)->wakeUpTimers(time);
 }
 
