@@ -6,7 +6,5 @@ WHAT = releasing
 WHATCLASS=misc
 PRINTNAME=Releasing
 MAIN = main.sgml
-SGMLSRCS =
-HTMLEXTRAFILES =
 
 include ../Makefile.common
