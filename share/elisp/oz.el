@@ -1103,13 +1103,9 @@ the GDB commands `cd DIR' and `directory'."
 
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (if oz-lucid
-      (progn
-	;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
-	(define-key map [(control c) (control h)] 'oz-halt)
-	(define-key map [(control c) (control m)]   'oz-toggle-emulator))
-    (define-key map "\C-c\C-h"    'oz-halt)
-    (define-key map "\C-c\C-m"    'oz-toggle-emulator))
-
+      ;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
+      (define-key map [(control c) (control h)] 'oz-halt)
+    (define-key map "\C-c\C-h"    'oz-halt))
   (define-key map "\C-c\C-e"    'oz-toggle-emulator)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
