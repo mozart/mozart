@@ -41,14 +41,10 @@ local
 	    else
 	       case {Label Z} == builtin then
 		  {P I {S2F I 0 enter X.file X.line
-			Y.1.2.1 Z.name Z.args
-			case {HasFeature X vars} then X.vars else nil end
-			true}}
+			Y.1.2.1 Z.name Z.args {CondSelect X vars nil} true}}
 	       else
 		  {P I {S2F I Y.1.1 enter X.file X.line
-			Y.1.2.1 Z.name Y.1.2.2
-			case {HasFeature X vars} then X.vars else nil end
-			false}}
+			Y.1.2.1 Z.name Y.1.2.2 {CondSelect X vars nil} false}}
 	       end
 	       {DoStackForAllInd Z|T I+1 P}
 	    end

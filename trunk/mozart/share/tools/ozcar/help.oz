@@ -124,8 +124,7 @@ local
 
    class OzcarHelp from HelpDialog
       meth init(master:Master topic:Topic)
-	 self.topic # self.help =
-	 try {Dget HelpDict Topic} catch system(...) then NoTopic # NoHelp end
+	 self.topic # self.help = {DcondGet HelpDict Topic NoTopic#NoHelp}
 	 HelpDialog,init(master:Master)
       end
    end

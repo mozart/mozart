@@ -5,11 +5,7 @@ local
 
    local
       fun {IsPerhapsList Xs}
-	 case Xs of _|Xr then
-	    case Xr of _|_ then true else Xr==nil end
-	 else
-	    Xs==nil
-	 end
+	 case Xs of _|_ then true else false end
       end
    in
       fun {IsDefList X}
@@ -50,8 +46,8 @@ local
 	 elsecase {IsCell X}       then CellType
 	 elsecase {IsClass X}      then ClassType
 	 elsecase {IsDictionary X} then DictionaryType
-	 elsecase {IsFloat X}      then FloatType
-	 elsecase {IsInt X}        then MagicAtom
+	 elsecase {IsFloat X}      then {V2VS X} %NoAction
+	 elsecase {IsInt X}        then X %NoAction
 	 elsecase {IsUnit  X}      then UnitType
 	 elsecase {IsName X}       then NameType
 	 elsecase {IsLock X}       then LockType
@@ -118,6 +114,12 @@ in
 	 EnvSync    : _
 	 ScrollSync : _
 	 StatusSync : _
+
+	 LastClicked : nil
+
+      meth lastValue($)
+	 try @LastClicked catch failure(...) then _ end
+      end
       
       meth init
 	 %% create the main window, but delay showing it
@@ -270,14 +272,16 @@ in
 	     elsecase CV orelse {Atom.toString V.1}.1 \= 96 then
 		case CP orelse AT \= ProcedureType then
 		   case     AT == UnAllocatedType then skip
-		   elsecase AT == MagicAtom then
+		   elsecase AT == NoAction then
 		      {Widget tk(insert 'end'
 				 {PrintF ' ' # V.1 EnvVarWidth} # V.2 # NL)}
 		   else
 		      T = {TagCounter get($)}
 		      Ac = {New Tk.action
 			    tkInit(parent: Widget
-				   action: proc {$} {Browse V.2} end)}
+				   action: proc {$}
+					      {Browse V.2} LastClicked <- V.2
+					   end)}
 		   in
 		      {ForAll [tk(insert 'end' {PrintF ' ' # V.1 EnvVarWidth})
 			       tk(insert 'end' AT # NL T)
@@ -448,7 +452,7 @@ in
 	    
 	    {ForAll FrameArgs
 	     proc {$ Arg}
-		case Arg.1 == MagicAtom then
+		case Arg.1 == NoAction then
 		   {W tk(insert LineEnd ' ' # Arg.2 LineTag)}
 		else
 		   ArgTag    = {TagCounter get($)}
@@ -457,7 +461,7 @@ in
 		    tkInit(parent: W
 			   action: proc {$}
 				      {Lck set}
-				      {Browse Arg.2}
+				      {Browse Arg.2} LastClicked <- Arg.2
 				      {Delay 150}
 				      {Lck unset}
 				   end)}
