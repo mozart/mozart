@@ -365,6 +365,7 @@ Bool hookCheckNeeded(AM *e)
 
 #define INSTALLPATH(bb)                                                       \
   if (CBB != bb) {                                                            \
+    LOCAL_PROPAGATION(Suspension * tmp = currentTaskSusp;)                    \
     switch (e->installPath(bb)) {                                             \
     case INST_REJECTED:                                                       \
       currentTaskSusp = NULL;                                                 \
@@ -373,6 +374,7 @@ Bool hookCheckNeeded(AM *e)
       currentTaskSusp = NULL;                                                 \
       goto LBLfailure;                                                        \
     case INST_OK:                                                             \
+      LOCAL_PROPAGATION(currentTaskSusp = tmp;)                               \
       break;                                                                  \
     }                                                                         \
   }
@@ -521,7 +523,6 @@ void engine() {
 // ------------------------------------------------------------------------
 // *** Global Variables
 // ------------------------------------------------------------------------
-
   register ProgramCounter PC   Into(i0) = 0;
   register TaggedRef *sPointer Into(i1) = NULL;
   register AMModus mode        Into(i2);
@@ -796,6 +797,7 @@ void engine() {
         DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
                      fsb->isReflected () == OK),
                     error ("activity under reduced solve actor"));
+
         goto LBLTaskCFuncCont;
       default:
         error("engine: POPTASK: unexpected task found.");
@@ -829,7 +831,6 @@ void engine() {
     goto LBLcheckEntailment;
 
   LBLTaskCFuncCont:
-
     tmpBB->removeSuspension();
 
     if (currentTaskSusp != NULL && currentTaskSusp->isDead()) {
@@ -1782,7 +1783,7 @@ void engine() {
          boardToInstall->setCommitted (CBB);
 #ifdef DEBUG_CHECK
          if ( !e->installScript (boardToInstall->getScriptRef ()) ) {
-           LOCAL_PROPAGATION(HF_FAIL(,,));
+           LOCAL_PROPAGATION(HF_FAIL(,));
            // error ("installScript has failed in solveCont");
            message("installScript has failed in solveCont (0x%x to 0x%x)\n",
                     (void *) boardToInstall, (void *) solveBB);
