@@ -176,7 +176,7 @@ proc {Assert Conclusion}
    end
 end
 </chunk>
-Asserting a rule consist of creating an agent to recognize it.  The
+Asserting a rule consists of creating an agent to recognize it.  The
 agent is equipped with (1) an index (2) a predicate.  The index
 indicates which premise literal to recognize next; it starts from
 <code/N/, the last one, and decreases down to 1.  The predicate
@@ -269,9 +269,68 @@ a(one two)|a(two three)|a(one three)|_&lt;Future&gt;
 
   <section>
     <title/Synchronization/
-
-    <!-- explain the short-circuit technique for
-synchronizing on the termination of a collection of threads -->
+    <p>In Oz, synchronization is done on data and typically takes the
+form of waiting for a variable to become instantiated.  Furthermore,
+this happens automatically: every operation that requires
+<em/determined/ data will suspend until this data becomes determined.
+For example, this is why you can write:
+<code display/{ForAll Messages Process}/
+where <code/Messages/ is a stream whose tail only incrementally
+becomes instantiated with new messages.  The <code/ForAll/ operation
+suspends when it reaches the uninstantiated tail of the stream, and
+resumes automatically when further messages become available.</p>
+    <p>If you need to synchronize explicitly on a variable <code/X/,
+you may write:
+<code display/{Wait X}/
+which suspends this thread until <code/X/ becomes determined.</p>
+    <p>The truth is actually much more general: a conditional suspends
+until its condition can be decided, one way or the other.  What makes
+this possible is the fact that the information in the <em/constraint
+store/ increases monotonically.  A conditional suspends until its
+condition is <em/entailed/ by the store (implied), or <em/disentailed/
+(its negation is implied).  Thus, the <code/Wait/ operation mentioned
+above can (almost) be coded as follows:
+<code display>
+proc {Wait X}
+   if X==a then skip else skip end
+end
+</code>
+This suspends until it can be decided whether or not <code/X/ is equal
+to <code/a/.  I said <q/almost/ because in between being free and
+determined, a variable may be kinded (&ie; its type is known), and the
+code above does not account for this possibility.</p>
+    <subsection>
+      <title/The Short-Circuit Technique/
+      <p>The short-circuit technique is the standard means of
+programming an n-way rendez-vous in concurrent constraint programming.
+The problem is the following: given n concurrent threads, how to
+synchronize on the fact that they have all terminated?  The idea is to
+have a <em/determined/ termination token, and to require that each
+thread, when it terminates, passes the token that it got from
+its left neighbour to its right neightbour.  When the termination
+token really arrives at the <em/rightmost/ end, we know that all
+threads have terminated.</p>
+      <p>For example, in the example below, we create <code/Token0/
+with value <code/unit/, and then each thread, when it terminates,
+passes the token on to the next thread.  When the value <code/unit/
+reaches <code/Token5/, we know that all threads have terminated.
+<code display>
+local Token0 Token1 Token2 Token3 Token4 Token5 in
+    Token0 = unit
+    thread ... Token1=Token0 end
+    thread ... Token2=Token1 end
+    thread ... Token3=Token2 end
+    thread ... Token4=Token3 end
+    thread ... Token5=Token4 end
+in
+    %% synchronize on the termination of all 5 threads
+    {Wait Token5}
+end
+</code>
+This technique was used in <ptr to=death.in.oz>.  Of course it can be
+used for any arbitrary n-way rendez-vous, and not exclusively for
+synchronizing on the termination of a collection of threads.</p>
+    </subsection>
   </section>
 
 <!-- lazy programming: prime numbers -->

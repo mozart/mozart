@@ -72,7 +72,7 @@ would not be realistic or even conceivable in other languages.
 Whenever you need to perform an operation asynchronously you simply
 spawn a new thread.  You can design your application as a collection
 of concurrent objects or agents, etc&etc;</p>
-  <section class=unnumbered>
+  <section class=unnumbered id=death.in.oz>
     <title/Death by Concurrency in Oz/
 <p>Here is the code of the Oz application used in the benchmark above:
 <code.extern display to="death.oz"></p>

@@ -47,7 +47,8 @@ define
     end}
 end
 </chunk>
-The server can be compiled as follows:
+The server (<ref.extern to="chat-server.oz"/source in
+<file/chat-server.oz//) can be compiled as follows:
 <code display proglang=sh/ozc -x chat-server.oz/
 and invoked as follows:
 <code display proglang=sh/chat-server --ticketfile ?{FILE}/
@@ -56,7 +57,7 @@ and invoked as follows:
   <section>
     <title/Chat Client/
     <p>The client consists of 2 agents: (1) a user interface agent and
-(2) a news reader.
+(2) a message stream processor.
 <chunk><title/Chat Client/
 functor
 import
@@ -74,15 +75,32 @@ define
    <chunk.ref/Chat Client: process message stream/
 end
 </chunk>
+The client obtains the stream of messages from the server by sending a
+<code/connect(...)/ message.  It then forwards every message on that
+stream to its internal <code/SelfPort/.  The user interface will also
+direct messages to this internal port.
 <chunk><title/Chat Client: obtain and process message stream/
 thread
    {ForAll {Port.send NewsPort connect($)}
     proc {$ Msg} {Port.send SelfPort Msg} end}
 end
 </chunk>
+When creating the user interface, we supply it with the internal
+<code/SelfPort/ so that it may also post internal messages.  In this
+simplistic implementation, the user interface simply posts messages of
+the form <code/say(?{String})/ to request that this ?{String} be
+posted to the global chat message stream.
 <chunk><title/Chat Client: create user interface agent/
 Chat = {New Viewer.chatWindow init(SelfPort)}
 </chunk>
+Finally, here is where we process all messages on the internal stream.
+A <code/msg(FROM TEXT)/ message is formatted and shown in the chat
+window.  A <code/say(TEXT)/ message is transformed into
+<code/msg(NAME TEXT)/, where <code/NAME/ identifies the user, and
+posted to the
+global chat stream; actually <code/TEXT/ is additionally converted into
+the more compact byte string representation for more efficient
+transmission.
 <chunk><title/Chat Client: process message stream/
 NAME = Args.name
 {ForAll {Port.new $ SelfPort}
@@ -94,10 +112,23 @@ NAME = Args.name
     else skip end
  end}
 </chunk>
+The client (<ref.extern to="chat-client.oz"/source in
+<file/chat-client.oz//) can be compiled as follows:
+<code display proglang=sh/ozc -x chat-client.oz/
+and invoked as follows:
+<code display proglang=sh/chat-client --name ?{USER} --url ?{URL}/
+</p>
   </section>
   <section>
     <title/Graphical User Interface/
-    <p>
+    <p>The user interface is always what requires the most code.  We
+won't go through the details here (but see the Window Programming
+Tutorial for extensive information), but merely point out that the
+<code/@entry/ widget is asked to respond to a <kbd/Return/ keypress,
+by invoking the <code/post/ method.  The latter posts a
+<code/say(?{Text})/ message to the internal port, where ?{Text} is the
+text of the entry as typed by the user.  This text is then deleted and
+the entry can be reused to compose and submit another message.
 <chunk><title/Chat GUI/
 functor
 import
