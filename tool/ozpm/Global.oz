@@ -5,6 +5,8 @@ import
    Pickle(load save)
    Path(make) at 'x-ozlib://duchier/sp/Path.ozf'
    Database('class')
+   QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
+   
 export
    Args
    %% file   : file name (no path)
@@ -27,6 +29,7 @@ export
    background       : BackgroundColor
    getParent        : GetParent
    getLabel         : GetLabel
+   getImage         : GetImage
    
 define
    FILEPKGDFT       = 'ozpm.dsc'
@@ -127,6 +130,8 @@ define
 	 {List.take VS {Length VS}-1}
       end
    end	       
-   
+   fun{GetImage Name}
+      {QTk.newImage photo(file:Name#".gif")}
+   end
    
 end

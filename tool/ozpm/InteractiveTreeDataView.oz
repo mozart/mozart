@@ -3,7 +3,8 @@ functor
 import
    Global(background : Background
 	  getParent  : GetParent
-	  getLabel   : GetLabel)
+	  getLabel   : GetLabel
+	  getImage   : GetImage)
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
    Tree(treeNode:TreeNode)
    
@@ -14,11 +15,11 @@ export
 define
    
 
-   PackageIcon={QTk.newImage photo(file:"package_small.gif")}
-   InstalledPackageIcon={QTk.newImage photo(file:"installed_package_small.gif")}
-   InstallablePackageIcon={QTk.newImage photo(file:"installable_package_small.gif")}
-   FolderIcon={QTk.newImage photo(file:"folder_small.gif")}
-   FolderOpenIcon={QTk.newImage photo(file:"folder_open_small.gif")}
+   PackageIcon={GetImage 'package_small'}
+   InstalledPackageIcon={GetImage 'installed_package_small'}
+   InstallablePackageIcon={GetImage 'installable_package_small'}
+   FolderIcon={GetImage 'folder_small'}
+   FolderOpenIcon={GetImage 'folder_open_small'}
 
 
    class TreeDataView
