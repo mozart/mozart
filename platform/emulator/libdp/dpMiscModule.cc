@@ -115,36 +115,6 @@ OZ_BI_define(BIclose,1,0)
   return PROCEED;
 } OZ_BI_end
 
-//
-// kost@: temporary (?) builtin for comparing performances of
-// marshalling/unmarshalling stuff. It takes a data structure to be
-// tested and a number of times to repeat. Before loop it does it once
-// and checks correctness of the operation;
-//
-// Here is essentially a copy of builtin's 'oz_eqeq()':
-inline
-Bool oz_eqeq(TaggedRef Ain,TaggedRef Bin)
-{
-  // simulate a shallow guard
-  am.trail.pushMark();
-  am.setInEqEq(TRUE);
-  OZ_Return ret = oz_unify(Ain,Bin);
-  am.setInEqEq(FALSE);
-
-  if (ret == PROCEED) {
-    if (am.trail.isEmptyChunk()) {
-      am.trail.popMark();
-      return (OK);
-    }
-
-    am.trail.unwindEqEq();
-    return (NO);
-  }
-
-  am.trail.unwindFailed();
-  return (NO);
-}
-
 /*
  * The builtin table
  */

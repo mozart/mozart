@@ -1138,22 +1138,22 @@ inline
 OZ_Return oz_eqeq(TaggedRef Ain,TaggedRef Bin)
 {
   // simulate a shallow guard
-  am.trail.pushMark();
+  trail.pushMark();
   am.setInEqEq(TRUE);
   OZ_Return ret = oz_unify(Ain,Bin);
   am.setInEqEq(FALSE);
 
   if (ret == PROCEED) {
-    if (am.trail.isEmptyChunk()) {
-      am.trail.popMark();
+    if (trail.isEmptyChunk()) {
+      trail.popMark();
       return PROCEED;
     }
 
-    am.trail.unwindEqEq();
+    trail.unwindEqEq();
     return SUSPEND;
   }
 
-  am.trail.unwindFailed();
+  trail.unwindFailed();
   return ret;
 }
 

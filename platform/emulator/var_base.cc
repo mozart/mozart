@@ -30,6 +30,7 @@
 #pragma implementation "var_base.hh"
 #endif
 
+#include "trail.hh"
 #include "var_base.hh"
 #include "var_fs.hh"
 #include "var_fd.hh"
@@ -103,21 +104,20 @@ OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   return FAILED;
 }
 
-OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp, int unstable)
-{
+OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp) {
   OzVariable *ov=oz_getVar(v);
   switch(ov->getType()) {
   case OZ_VAR_FUTURE:
-    return ((Future *) ov)->addSusp(v, susp, unstable);
+    return ((Future *) ov)->addSusp(v, susp);
   case OZ_VAR_EXT:
-    return ((ExtVar *) ov)->addSuspV(v, susp, unstable);
+    return ((ExtVar *) ov)->addSuspV(v, susp);
   case OZ_VAR_SIMPLE:
     if (ozconf.useFutures || susp->isNoBlock()) {
       return oz_raise(E_ERROR, E_KERNEL, "block", 1, makeTaggedRef(v));
     }
     // fall through
   default:
-    ov->addSuspSVar(susp,unstable);
+    ov->addSuspSVar(susp);
     return SUSPEND;
   }
 }
@@ -218,6 +218,8 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
   }
 }
 
+extern void oz_forceWakeUp(SuspList **);
+
 /*
  * This is the definitive casting table
  *
@@ -245,28 +247,11 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
 #define VARTP(T1,T2) ((T1<<3)|T2)
 #define VTP(T1,T2)   VARTP(OZ_VAR_ ## T1, OZ_VAR_ ## T2)
 
-// #define VAR_CAST_DEBUG
-
-#ifdef VAR_CAST_DEBUG
-
-static char * VCTN[] = {
-  "EXT", "SIMPLE", "FUTURE", "BOOL", "FD", "OF", "FS", "CT"
-};
-
-#endif
-
 
 OZ_Return oz_var_cast(TaggedRef * & fp, Board * fb, TypeOfVariable tt) {
   OzVariable * fv = tagged2CVar(*fp);
 
   TypeOfVariable ft = fv->getType();
-
-#ifdef VAR_CAST_DEBUG
-
-  if (ft != tt)
-    printf("Variable casting: %s ---> %s\n", VCTN[(int) ft], VCTN[(int) tt]);
-
-#endif
 
   OzVariable * tv;
 
@@ -306,13 +291,19 @@ OZ_Return oz_var_cast(TaggedRef * & fp, Board * fb, TypeOfVariable tt) {
     return PROCEED;
   }
 
-  OZ_Return ret = oz_var_bind(fv, fp, makeTaggedRef(newTaggedCVar(tv)));
+  if (am.inEqEq()) {
+    (void) oz_var_bind(fv, fp, makeTaggedRef(newTaggedCVar(tv)));
+  } else {
+    oz_forceWakeUp(fv->getSuspListRef());
+    *fp = makeTaggedRef(newTaggedCVar(tv));
+
+  }
 
   Assert(oz_isRef(*fp));
 
   fp = tagged2Ref(*fp);
 
-  return ret;
+  return PROCEED;
 }
 
 #undef VTP
@@ -354,7 +345,7 @@ void castGlobalVar(OZ_Term * varptr_left, OZ_Term * varptr_right)
 void constrainGlobalVar(OZ_Term * varptr, OZ_FiniteDomain & fd)
 {
   DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar(fd)\n"));
-  am.trail.pushVariable(varptr);
+  trail.pushVariable(varptr);
   OzFDVariable * fdvar = (OzFDVariable *) tagged2CVar(*varptr);
   fdvar->setDom(fd);
 }
@@ -362,7 +353,7 @@ void constrainGlobalVar(OZ_Term * varptr, OZ_FiniteDomain & fd)
 void constrainGlobalVar(OZ_Term * varptr, OZ_FSetConstraint &fs)
 {
   DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar(fs)\n"));
-  am.trail.pushVariable(varptr);
+  trail.pushVariable(varptr);
   OzFSVariable * fsvar = (OzFSVariable *) tagged2CVar(*varptr);
   fsvar->setSet(fs);
 }
@@ -370,7 +361,7 @@ void constrainGlobalVar(OZ_Term * varptr, OZ_FSetConstraint &fs)
 void constrainGlobalVar(OZ_Term * varptr, OZ_Ct * ct)
 {
   DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar(ct)\n"));
-  am.trail.pushVariable(varptr);
+  trail.pushVariable(varptr);
   OzCtVariable * ctvar = (OzCtVariable *) tagged2CVar(*varptr);
   ctvar->copyConstraint(ct);
 }
@@ -378,7 +369,7 @@ void constrainGlobalVar(OZ_Term * varptr, OZ_Ct * ct)
 void constrainGlobalVar(OZ_Term * varptr, DynamicTable * dt)
 {
   DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar(of)\n"));
-  am.trail.pushVariable(varptr);
+  trail.pushVariable(varptr);
   OzOFVariable * ofvar = (OzOFVariable *) tagged2CVar(*varptr);
   ofvar->dynamictable = dt->copyDynamicTable();
 }

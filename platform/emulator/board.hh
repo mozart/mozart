@@ -39,8 +39,6 @@
 #include "suspendable.hh"
 #include "susp_queue.hh"
 #include "pointer-marks.hh"
-#include "trail.hh"
-
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 

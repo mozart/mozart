@@ -31,6 +31,8 @@
 #include "var_base.hh"
 #include "thr_int.hh"
 
+Trail trail;
+
 /*
  * Pushing
  *
@@ -180,7 +182,7 @@ TaggedRef Trail::unwind(Board * b) {
 
         if (hasNoRunnable && oz_isVariable(vv) && !oz_var_hasSuspAt(vv,b)) {
           AssureThread;
-          oz_var_addSusp(vvPtr,t,NO);  // !!! Makes space *not* unstable !!!
+          oz_var_addSusp(vvPtr,t);
         }
 
         unBind(refPtr, value);

@@ -31,7 +31,6 @@
 #define __AMH
 
 #include "base.hh"
-#include "trail.hh"
 #include "thr_pool.hh"
 #include "value.hh"
 
@@ -292,7 +291,6 @@ public:
 
 public:
   ThreadsPool threadsPool;
-  Trail trail;
 
 public:
 

@@ -98,12 +98,12 @@ void sendRequest(MessageType mt,BorrowEntry *be)
   SendTo(na->site,bs,mt,na->site,na->index);
 }
 
-OZ_Return ObjectVar::addSuspV(TaggedRef * v, Suspendable * susp, int unstable)
+OZ_Return ObjectVar::addSuspV(TaggedRef * v, Suspendable * susp)
 {
   if(!errorIgnore()){
     if(failurePreemption()) return BI_REPLACEBICALL;}
 
-  addSuspSVar(susp, unstable);
+  addSuspSVar(susp);
   if (!requested) {
     requested = 1;
     MessageType mt = M_GET_OBJECT;

@@ -28,8 +28,6 @@
  *
  */
 
-// Solver
-
 #ifndef __BOARD_ICC_
 #define __BOARD_ICC_
 
@@ -37,9 +35,10 @@
 #pragma interface
 #endif
 
+#include "am.hh"
 #include "susplist.hh"
 #include "value.hh"
-#include "am.hh"
+#include "trail.hh"
 #include "var_base.hh"
 
 #ifdef OUTLINE
@@ -136,7 +135,7 @@ Bool Board::isStable(void) {
   if (getThreads() != 0)
     return NO;
 
-  if (oz_isCurrentBoard(this) && !am.trail.isEmptyChunk())
+  if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
     return NO;
 
   if (isEmptySuspList())

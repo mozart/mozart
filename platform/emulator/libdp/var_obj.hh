@@ -78,7 +78,7 @@ public:
   int getIdV() { return OZ_EVAR_OBJECT; }
   OZ_Term statusV();
   VarStatus checkStatusV();
-  OZ_Return addSuspV(TaggedRef *v, Suspendable * susp, int unstable);
+  OZ_Return addSuspV(TaggedRef *v, Suspendable * susp);
   Bool validV(TaggedRef v) { return FALSE; }
   OzVariable * gCollectV() { return new ObjectVar(*this); }
   OzVariable * sCloneV() { Assert(0); return NULL; }

@@ -172,6 +172,69 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 }
 
 
+
+inline
+Bool Suspendable::_wakeupAll(void) {
+  // Returns OK, if suspension can go away
+  // This can happen, if either the suspension is dead
+  // or gets woken
+
+  if (isDead())
+    return OK;
+
+  if (!isRunnable()) {
+
+    if (isThread()) {
+
+      oz_wakeupThread(SuspToThread(this));
+
+    } else {
+
+      setRunnable();
+
+      Board * sb = getBoardInternal()->derefBoard();
+
+      if (isNMO() && !oz_onToplevel()) {
+        sb->addToNonMono(SuspToPropagator(this));
+      } else {
+        sb->addToLPQ(SuspToPropagator(this));
+      }
+
+    }
+  }
+
+  return isThread();
+
+}
+
+
+void oz_forceWakeUp(SuspList ** suspList) {
+
+  if (am.inEqEq())
+    return;
+
+  SuspList ** p  = suspList;
+
+  SuspList * sl = *suspList;
+
+  while (sl) {
+
+    SuspList ** n = sl->getNextRef();
+
+    if (sl->getSuspendable()->_wakeupAll()) {
+      *p = *n;
+      sl->dispose();
+      sl = *p;
+    } else {
+      sl = *n;
+      p  = n;
+    }
+
+
+  }
+
+}
+
 inline
 Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
   if (isDead())
