@@ -51,6 +51,7 @@
 	((string-match "\\<running\\>" s) "running")
 	((string-match "\\<halted\\>" s) "halted")
 	((string-match "\\<booting\\>" s) "booting")
+;	( t s)))
 	( t "???")))
 
 
@@ -314,7 +315,7 @@ for example
 	      ["buffer"      oz-print-buffer t]
 	      ["region"      oz-print-region t]
 	      )
-	     ("Kernel Syntax"
+	     ("Core Syntax"
 	      ["buffer"      oz-ks-buffer t]
 	      ["region"      oz-ks-region t]
 	      ["line"        oz-ks-line   t]
@@ -362,9 +363,9 @@ for example
 		(Show/hide\ compiler  . oz-toggle-compiler-window)
 		(Show/hide\ machine   . oz-toggle-machine-window)
 		(Show/hide\ errors    . oz-toggle-errors)
-		(Kernel\ Syntax\ Buffer . oz-ks-buffer)
-		(Kernel\ Syntax\ Region . oz-ks-region)
-		(Kernel\ Syntax\ Line   . oz-ks-line)
+		(Core\ Syntax\ Buffer . oz-ks-buffer)
+		(Core\ Syntax\ Region . oz-ks-region)
+		(Core\ Syntax\ Line   . oz-ks-line)
 		(Show\ Documentation  . oz-doc)
 		(Start\ Oz            . run-oz)
 		(Halt\ Oz             . halt-oz)
@@ -558,7 +559,7 @@ the GDB commands `cd DIR' and `directory'."
    (message "")
    (oz-ks-file oz-pretty-file)
    (sleep-for 2)
-   (let ((buf (get-buffer-create "*Oz Kernel Syntax*")))
+   (let ((buf (get-buffer-create "*Oz Core Syntax*")))
      (save-excursion
        (set-buffer buf)
        (delete-region (point-min) (point-max))
@@ -629,13 +630,13 @@ the GDB commands `cd DIR' and `directory'."
   (interactive)
   (setq oz-errors-found nil)
   (let ((show-machine (or (get-buffer-window "*Oz Machine*")
-			  (get-buffer-window "*Oz Kernel Syntax*")
+			  (get-buffer-window "*Oz Core Syntax*")
 			  (get-buffer-window "*Oz Compiler*")
 			  (get-buffer-window "*Oz Errors*"))))
     (if (get-buffer "*Oz Errors*") 
 	(delete-windows-on "*Oz Errors*"))
-    (if (get-buffer "*Oz Kernel Syntax*") 
-	(delete-windows-on "*Oz Kernel Syntax*"))
+    (if (get-buffer "*Oz Core Syntax*") 
+	(delete-windows-on "*Oz Core Syntax*"))
     (if (and oz-machine-visible show-machine)
 	(oz-show-buffer "*Oz Machine*"))))
 
