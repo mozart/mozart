@@ -1040,7 +1040,7 @@
 	  <Item>
 	    When the rule is applied to a subtree, the latter is replaced
 	    by the subtree specified by the right-hand side.  This may
-	    contain variables written as <<X>>, <<Y>>, or&nbsp;<<Z>> not
+	    contain variables written as ?_{X}, ?_{Y}, or&nbsp;?_{Z} not
 	    appearing in the left-hand side:  These variables are supposed
 	    to be fresh such that no capturing can occur.
 	  <Entry/Optionally, a side condition./
@@ -1125,24 +1125,24 @@
 	    (or expression).  Furthermore, we call a position&nbsp;?{p}
 	    in a given statement&nbsp;?{S} a <Def/pattern position/ iff the
 	    following holds:  If the subterm at position&nbsp;?{p} of&nbsp;?{S}
-	    is replaced by a fresh variable&nbsp;<<X>>, then <<X>> <Math/\in/
-	    ?{PV}(?{S}[<<X>>/?{p}]).
+	    is replaced by a fresh variable&nbsp;?_{X}, then ?_{X} <Math/\in/
+	    ?{PV}(?{S}[?_{X}/?{p}]).
 	    <Table>
 	      <TR>
 		<TH/?{D}/
 		<TH/?{PV}(?{D})/
-	      <TR>
-		<TD/<<(?{S})>>/
-		<TD/?{PV}(?{S})/
-	      <TR>
-		<TD/<<(?{D} in ?{S})>>/
-		<TD/?{PV}(?{S}) - ?{PV}(?{D})/
 	      <TR>
 		<TD/<<?{D1} ?{D2}>>/
 		<TD/?{PV}(?{D1}) <Math/\cup/ ?{PV}(?{D2})/
 	      <TR>
 		<TD/<<?{x}>>/
 		<TD/{?{x}}/
+	      <TR>
+		<TD/<<(?{S})>>/
+		<TD/?{PV}(?{S})/
+	      <TR>
+		<TD/<<(?{D} in ?{S})>>/
+		<TD/?{PV}(?{S}) - ?{PV}(?{D})/
 	      <TR>
 		<TD/<<local ?{D} in ?{S} end>>/
 		<TD/?{PV}(?{S}) - ?{PV}(?{D})/
@@ -1170,14 +1170,14 @@
 		<TH/?{E}/
 		<TH/?{PV}(?{E})/
 	      <TR>
+		<TD/<<?{x}>>/
+		<TD/{?{x}}/
+	      <TR>
 		<TD/<<(?{E})>>/
 		<TD/?{PV}(?{E})/
 	      <TR>
 		<TD/<<(?{D} in >>[ ?{S} ]<< ?{E})>>/
 		<TD/(?{PV}(?{S}) <Math/\cup/ ?{PV}(?{E})) - ?{PV}(?{D})/
-	      <TR>
-		<TD/<<?{x}>>/
-		<TD/{?{x}}/
 	      <TR>
 		<TD/<<local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
 		<TD/(?{PV}(?{S}) <Math/\cup/ ?{PV}(?{E})) - ?{PV}(?{D})/
@@ -1189,8 +1189,8 @@
 		<TD/?{PV}(?{E1}) <Math/\cup/ &ellipsis;
 		  <Math/\cup/ ?{PV}(?{En})/
 	      <TR>
-		<TD/<<?{E1}|?{E2}]>>/
-		<TD/?{PV}(?{E2}) <Math/\cup/ ?{PV}(?{E2})/
+		<TD/<<?{E1}|?{E2}>>/
+		<TD/?{PV}(?{E1}) <Math/\cup/ ?{PV}(?{E2})/
 	      <TR>
 		<TD/<<?{E1}#&ellipsis;#?{En}>>/
 		<TD/?{PV}(?{E1}) <Math/\cup/ &ellipsis;
@@ -1209,15 +1209,15 @@
 	      <Rewrite.To/<<local ?{x1} &ellipsis; ?{xn} in ?{D'} ?{S} end>>/
 	      <Rewrite.Condition/if ?{D} is not a sequence of distinct
 		variables and where {?{x1}, &ellipsis;, ?{xn}} = ?{PV}(?{D})
-		and ?{D'} is ?{D} with singleton variables and escapes
-		removed./
+		and ?{D'} is ?{D} with singleton variables and escapes in
+		pattern position removed./
 	    </Rewrite>
 	    <Rewrite>?={statement}
 	      <Rewrite.From/<<?{x} = local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
 	      <Rewrite.To
-/<<local X in
-   X = ?{x}
-   local ?{D} in >>[ ?{S} ]<< X = ?{E} end
+/<<local ?_{X} in
+   ?_{X} = ?{x}
+   local ?{D} in >>[ ?{S} ]<< ?_{X} = ?{E} end
 end>>/
 	    </Rewrite>
 	<SubSection class=unnumbered>
@@ -1240,13 +1240,29 @@ end>>/
    ?{SE}
 end>>/
 	      <Rewrite.To
-/<<local X in
-   X = ?{E}
-   proc &ellipsis; {X ?{P1} &ellipsis; ?{Pn}}
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   proc &ellipsis; {?_{X} ?{P1} &ellipsis; ?{Pn}}
       ?{SE}
    end
 end>>/
 	      <Rewrite.Condition/if ?{E} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement} ?={expression}
+	      <Rewrite.From
+/<<fun &ellipsis; lazy &ellipsis; {?{E1} ?{P1} &ellipsis; ?{Pn}}
+   ?{E2}
+end>>/
+	      <Rewrite.To
+/<<fun &ellipsis; {?{E1} ?_{X1} &ellipsis; ?_{X}?{n}}
+   {`Value.byNeed`
+    fun {$}
+       case ?_{X1}#&ellipsis;#?_{X}?{n} of ?{P1}#&ellipsis;#?{Pn} then ?{E2}
+       end
+    end}
+end>>/
+	      <Rewrite.Condition/where all occurrences of <<lazy>> are
+		removed from the procedure flags./
 	    </Rewrite>
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From
@@ -1258,23 +1274,8 @@ end>>/
    ?{E2}
 end>>/
 	      <Rewrite.Condition/if no&nbsp;<<$>> occurs in
-		?{P1} &ellipsis; ?{Pn}./
-	    </Rewrite>
-	    <Rewrite>?={statement} ?={expression}
-	      <Rewrite.From
-/<<fun &ellipsis; lazy &ellipsis; {?{E1} ?{P1} &ellipsis; ?{Pn}}
-   ?{E2}
-end>>/
-	      <Rewrite.To
-/<<fun &ellipsis; {?{E1} ?{X1} &ellipsis; ?{Xn}}
-   {`Value.byNeed`
-    fun {$}
-       case X1#&ellipsis;#X?{n} of ?{P1}#&ellipsis;#?{Pn} then ?{E2}
-       end
-    end}
-end>>/
-	      <Rewrite.Condition/where all occurrences of <<lazy>> are
-		removed from the procedure flags./
+		?{P1} &ellipsis; ?{Pn} and no <<lazy>> occurs
+		in the procedure flags./
 	    </Rewrite>
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From
@@ -1283,13 +1284,13 @@ end>>/
 end>>/
 	      <Rewrite.To
 /<<proc &ellipsis; {?{E1} ?{P1} &ellipsis; ?{Pk'} &ellipsis; ?{Pn}}
-   X = ?{E2}
+   ?_{X} = ?{E2}
 end>>/
 	      <Rewrite.Condition/if <<$>> occurs in&nbsp;?{Pk} and no
 		other&nbsp;<<$>> occurs in ?{P1} &ellipsis; ?{Pn} and no
 		<<lazy>> occurs in the procedure flags.  ?{Pk'}&nbsp;is
 		the result of replacing the&nbsp;<<$>> in&nbsp;?{Pk}
-		by&nbsp;<<X>>./
+		by&nbsp;?_{X}./
 	    </Rewrite>
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From
@@ -1297,8 +1298,8 @@ end>>/
    ?{S}
 end>>/
 	      <Rewrite.To
-/<<proc &ellipsis; {?{E} X1 &ellipsis; X?{n}}
-   case X1#&ellipsis;#X?{n} of ?{P1}#&ellipsis;#?{Pn} then ?{S}
+/<<proc &ellipsis; {?{E} ?_{X1} &ellipsis; ?_{X}?{n}}
+   case ?_{X1}#&ellipsis;#?_{X}?{n} of ?{P1}#&ellipsis;#?{Pn} then ?{S}
    end
 end>>/
 	      <Rewrite.Condition/if ?{P1} &ellipsis; ?{Pn} are not distinct
@@ -1318,16 +1319,16 @@ end>>/
 	    <Rewrite>?={statement}
 	      <Rewrite.From/<<{?{E1} &ellipsis; ?{Ek} &ellipsis; ?{En}}>>/
 	      <Rewrite.To
-/<<local X in
-   X = ?{Ek}
-   {?{E1} &ellipsis; X &ellipsis; ?{En}}
+/<<local ?_{X} in
+   ?_{X} = ?{Ek}
+   {?{E1} &ellipsis; ?_{X} &ellipsis; ?{En}}
 end>>/
 	      <Rewrite.Condition/if ?{Ek} is no variable and all ?{Ei} with
 		?{i} &lt; ?{k} are variables./
 	    </Rewrite>
 	    <Rewrite>?={statement}
 	      <Rewrite.From/<<?{x} = {?{E} ?{E1} &ellipsis; ?{En}}>>/
-	      <Rewrite.To/<<{?{E} ?{E1} &ellipsis; ?{En} X}>>/
+	      <Rewrite.To/<<{?{E} ?{E1} &ellipsis; ?{En} ?{x}}>>/
 	      <Rewrite.Condition/if no <<$>> occurs in ?{E1} &ellipsis; ?{En}
 		in pattern position./
 	    </Rewrite>
@@ -1378,9 +1379,9 @@ end>>/
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From/<<case ?{E} of &ellipsis; end>>/
 	      <Rewrite.To
-/<<local X in
-   X = E
-   case X of &ellipsis; end
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   case ?_{X} of &ellipsis; end
 end>>/
 	      <Rewrite.Condition/if ?{E} is no variable./
 	    </Rewrite>
@@ -1403,9 +1404,9 @@ end>>/
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From/<<lock ?{E} then ?{SE} end>>/
 	      <Rewrite.To
-/<<local X in
-   X = ?{E}
-   lock X then ?{SE} end
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   lock ?_{X} then ?{SE} end
 end>>/
 	      <Rewrite.Condition/if ?{E} is no variable./
 	    </Rewrite>
@@ -1431,10 +1432,10 @@ catch ?{C1} [] &ellipsis; [] ?{Cn}
 end>>/
 	      <Rewrite.To
 /<<try ?{SE1}
-catch X then
-   case X of ?{C1} [] &ellipsis; [] ?{Cn}
+catch ?_{X} then
+   case ?_{X} of ?{C1} [] &ellipsis; [] ?{Cn}
    else
-      raise X end
+      raise ?_{X} end
    end
 <Span//>>[ <<finally ?{S}>> ]<Code><Span//
 end>>/
@@ -1442,20 +1443,20 @@ end>>/
 		does not have the form <<?{x} then ?{SE2}>>./
 	    </Rewrite>
 	  <P>
-	    In the following rule, the intermediate variable&nbsp;<<Y>>
+	    In the following rule, the intermediate variable&nbsp;?_{X}
 	    ensures that ?{x} is only bound iff evaluation of ?{E} does
 	    not raise an exception.
 	    <Rewrite>?={statement}
 	      <Rewrite.From
 /<<?{x} = try ?{E}
-    <Span//>>[ <<catch ?{x} then ?{E}>> ]<Code><Span//
+    <Span//>>[ <<catch ?{y} then ?{E}>> ]<Code><Span//
     <Span//>>[ <<finally ?{S}>> ]<Code><Span//
     end>>/
 	      <Rewrite.To
-/<<try Y in
-   Y = ?{E}
-   ?{y} = Y
-<Span//>>[ <<catch ?{x} then ?{y} = ?{E}>> ]<Code><Span//
+/<<try ?_{X} in
+   ?_{X} = ?{E}
+   ?{x} = ?_{X}
+<Span//>>[ <<catch ?{y} then ?{x} = ?{E}>> ]<Code><Span//
 <Span//>>[ <<finally ?{S}>> ]<Code><Span//
 end>>/
 	    </Rewrite>
@@ -1465,15 +1466,15 @@ end>>/
 finally ?{S}
 end>>/
 	      <Rewrite.To
-/<<local X in
-   X = try
+/<<local ?_{X} in
+   ?_{X} = try
 	  try &ellipsis; end
 	  unit
-       catch Y then ex(Y)
+       catch ?_{Y} then ex(?_{Y})
        end
    ?{S}
-   case X of ex(Z) then
-      raise Z end
+   case ?_{X} of ex(?_{Z}) then
+      raise ?_{Z} end
    else skip
    end
 end>>/
@@ -1496,12 +1497,12 @@ end>>/
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From/<<raise ?{E1} with ?{E2} end>>/
 	      <Rewrite.To
-/<<local X in
-   X = ?{E1}
-   if {`RaiseDebugCheck` X} then
-      raise {`RaiseDebugExtend` X ?{E2}} end
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   if {`RaiseDebugCheck` ?_{X}} then
+      raise {`RaiseDebugExtend` ?_{X} ?{E2}} end
    else
-      raise X end
+      raise ?_{X} end
    end
 end>>/
 	    </Rewrite>
@@ -1512,9 +1513,9 @@ end>>/
 	    <Rewrite>?={statement}
 	      <Rewrite.From/?{E1} = ?{E2}/
 	      <Rewrite.To
-/<<local X in
-   X = ?{E1}
-   X = ?{E2}
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   ?_{X} = ?{E2}
 end>>/
 	      <Rewrite.Condition/if ?{E1} is no variable./
 	    </Rewrite>
@@ -1599,11 +1600,11 @@ end
 	  <P>
 	    <Rewrite>?={expression}
 	      <Rewrite.From/<<_>>/
-	      <Rewrite.To/<<local X in X end>>/
+	      <Rewrite.To/<<local ?_{X} in ?_{X} end>>/
 	    </Rewrite>
 	    <Rewrite>?={pattern}
 	      <Rewrite.From/<<_>>/
-	      <Rewrite.To/<<X>>/
+	      <Rewrite.To/<<?_{X}>>/
 	    </Rewrite>
 	<SubSection class=unnumbered>
 	  <Title/Named Constants/
@@ -1741,9 +1742,9 @@ end>>/
 	    <Rewrite>?={expression}
 	      <Rewrite.From/<<lock ?{E} end>>/
 	      <Rewrite.To
-/<<local X in
-   lock X = ?{E} end
-   X
+/<<local ?_{X} in
+   lock ?_{X} = ?{E} end
+   ?_{X}
 end>>/
 	    </Rewrite>
 	<SubSection class=unnumbered>
