@@ -69,13 +69,8 @@
 
 
 #define _cacReallocStatic        sCloneReallocStatic
-#define _cacStoreFwdMark         sCloneStoreFwdMark
-#define _cacStoreFwdNoMark       sCloneStoreFwdNoMark
 
 #define _cacRefsArray            sCloneRefsArray
-#define _cacRefsArrayIsMarked    sCloneRefsArrayIsMarked
-#define _cacRefsArrayMark        sCloneRefsArrayMark
-#define _cacRefsArrayUnmark      sCloneRefsArrayUnmark
 
 #include "cac.cc"
 

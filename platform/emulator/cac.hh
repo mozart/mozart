@@ -102,7 +102,7 @@ public:
   CacStack() : Stack(1024, Stack_WithMalloc) {}
   ~CacStack() {}
 
-  void push(void * ptr, TypeOfPtr type, Bool check = NO) {
+  void push(void * ptr, TypeOfPtr type) {
     Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) type, ptr));
   }
 
@@ -121,13 +121,3 @@ public:
 };
 
 extern CacStack cacStack;
-
-inline
-void cacSuspList(SuspList ** sl, Bool check) {
-  cacStack.push(sl, PTR_SUSPLIST, check);
-}
-
-inline
-void cacLocalSuspList(Board * bb, SuspList ** sl, int n) {
-  cacStack.pushLocalSuspList(bb, sl, n);
-}

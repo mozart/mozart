@@ -248,9 +248,9 @@ public:
   CpTrail() : Stack(1024, Stack_WithMalloc) {}
   ~CpTrail() {}
 
-  void save(int * p, Bool check) {
+  void save(int * p) {
     // Save content and address
-    ensureFree(2); // ALways check for now ;-(
+    ensureFree(2);
     push((StackEntry) *p, NO);
     push((StackEntry) p,  NO);
   }
@@ -265,6 +265,12 @@ public:
 };
 
 static CpTrail cpTrail;
+
+#define CPTRAIL(p) cpTrail.save(((int *) p))
+
+#else
+
+#define CPTRAIL(p)
 
 #endif
 
@@ -286,30 +292,18 @@ if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
  * into a structure in the from-space.
  *
  */
-inline
-void _cacStoreFwdNoMark(int32* fromPtr, void *newValue, Bool check) {
-#ifdef S_CLONE
-  cpTrail.save(fromPtr,check);
-#else
-  GCDBG_INFROMSPACE(fromPtr);
-#endif
+#define STOREFWDNOMARK(fromPtr, newValue)  \
+  CPTRAIL(fromPtr);                        \
+  *((int32 *) fromPtr) = ToInt32(newValue);
 
-  *fromPtr = ToInt32(newValue);
-}
+#define STOREFWDMARK(fromPtr, newValue)   \
+  CPTRAIL(fromPtr);                       \
+  *((int32 *) fromPtr) = GCMARK(newValue);
 
-inline
-void _cacStoreFwdMark(int32* fromPtr, void *newValue, Bool check) {
-#ifdef S_CLONE
-  cpTrail.save(fromPtr,check);
-#else
-  GCDBG_INFROMSPACE(fromPtr);
-#endif
+#define STOREFWDFIELD(d,t)                 \
+  STOREFWDNOMARK(d->cacGetMarkField(), t); \
+  d->cacMark(t);
 
-  *fromPtr = GCMARK(newValue);
-}
-
-#define storeFwdField(d,t,c) \
-  _cacStoreFwdNoMark((int32*) d->cacGetMarkField(), t, c); d->cacMark(t);
 
 #ifdef G_COLLECT
 
@@ -445,20 +439,13 @@ CacStack cacStack;
 
 #define RAGCTag (1<<31)
 
-inline
-Bool _cacRefsArrayIsMarked(RefsArray r) {
-  return (r[-1]&RAGCTag);
-}
+#define RefsArrayIsMarked(r) (r[-1]&RAGCTag)
 
-inline
-void _cacRefsArrayMark(RefsArray r, void *ptr) {
-  _cacStoreFwdNoMark((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),OK);
-}
+#define RefsArrayMark(r,ptr) \
+  STOREFWDNOMARK((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag));
 
-inline
-RefsArray _cacRefsArrayUnmark(RefsArray r) {
-  return (RefsArray) ToPointer(r[-1]&(~(RAGCTag)|mallocBase));
-}
+#define RefsArrayUnmark(r) \
+ ((RefsArray) ToPointer(r[-1]&(~(RAGCTag)|mallocBase)))
 
 inline
 RefsArray _cacRefsArray(RefsArray r) {
@@ -467,8 +454,8 @@ RefsArray _cacRefsArray(RefsArray r) {
 
   GCDBG_NOTINTOSPACE(r);
 
-  if (_cacRefsArrayIsMarked(r)) {
-    return _cacRefsArrayUnmark(r);
+  if (RefsArrayIsMarked(r)) {
+    return RefsArrayUnmark(r);
   }
 
   Assert(!isFreedRefsArray(r));
@@ -477,7 +464,7 @@ RefsArray _cacRefsArray(RefsArray r) {
 
   RefsArray aux = allocateRefsArray(sz,NO);
 
-  _cacRefsArrayMark(r,aux);
+  RefsArrayMark(r,aux);
 
   OZ_cacBlock(r, aux, sz);
 
@@ -514,9 +501,7 @@ int NEEDSCOPYING(Board * bb) {
 inline
 void Board::_cacMark(Board * fwd) {
   Assert(!cacIsMarked());
-#ifdef S_CLONE
-  cpTrail.save((int32 *) &parentAndFlags, NO);
-#endif
+  CPTRAIL((int32 *) &parentAndFlags);
   parentAndFlags.set((void *) fwd, BoTag_MarkTwo);
 }
 
@@ -584,7 +569,7 @@ Name *Name::_cacName() {
 
     Name *aux = (Name*) _cacReallocStatic(this,sizeof(Name));
 
-    _cacStoreFwdMark(&homeOrGName, aux, NO);
+    STOREFWDMARK(&homeOrGName, aux);
 
 #ifdef G_COLLECT
     if (gn) {
@@ -627,9 +612,7 @@ Object * Object::_cacObject(void) {
 inline
 void OzVariable::_cacMark(TaggedRef * fwd) {
   Assert(!cacIsMarked());
-#ifdef S_CLONE
-  cpTrail.save((int32 *) &suspList, NO);
-#endif
+  CPTRAIL((int32 *) &suspList);
   suspList = (SuspList *) MarkPointer(fwd,1);
 }
 
@@ -637,7 +620,7 @@ inline
 void OzFDVariable::_cac(Board * bb) {
   ((OZ_FiniteDomainImpl *) &finiteDomain)->copyExtension();
 
-  cacLocalSuspList(bb, &(fdSuspList[0]), fd_prop_any);
+  cacStack.pushLocalSuspList(bb, &(fdSuspList[0]), fd_prop_any);
 }
 
 inline
@@ -647,7 +630,7 @@ void OzFSVariable::_cac(Board * bb) {
   _fset.copyExtension();
 #endif
 
-  cacLocalSuspList(bb, &(fsSuspList[0]), fs_prop_any);
+  cacStack.pushLocalSuspList(bb, &(fsSuspList[0]), fs_prop_any);
 }
 
 inline
@@ -662,7 +645,7 @@ void OzCtVariable::_cac(Board * bb) {
     new_susp_lists[i] = _susp_lists[0];
   _susp_lists = new_susp_lists;
   // collect
-  cacLocalSuspList(bb, _susp_lists, noOfSuspLists);
+  cacStack.pushLocalSuspList(bb, _susp_lists, noOfSuspLists);
 
 }
 
@@ -719,7 +702,7 @@ OzVariable * OzVariable::_cacVarInline(void) {
   }
 
   to->setHome(bb);
-  cacSuspList(&(to->suspList),NO);
+  cacStack.push(&(to->suspList), PTR_SUSPLIST);
 
   return to;
 
@@ -864,7 +847,7 @@ SRecord *SRecord::_cacSRecord() {
   ret->label       = label;
   ret->recordArity = recordArity;
 
-  _cacStoreFwdMark((int32*)&label, ret, NO);
+  STOREFWDMARK(&label, ret);
 
   cacStack.push(this, PTR_SRECORD);
 
@@ -912,9 +895,7 @@ TaggedRef _cacExtension(TaggedRef term) {
 
   int32 *fromPtr = (int32*)ex;
 
-#ifdef S_CLONE
-  cpTrail.save(fromPtr,NO);
-#endif
+  CPTRAIL(fromPtr);
 
   *fromPtr = ToInt32(ret)|1;
 
@@ -1114,7 +1095,7 @@ void gCollect_finalize()
 
 #endif
 
-void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
+void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
 
   /*
    * Reserve space on the various stacks
@@ -1126,67 +1107,12 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
 
   varFix.ensureFree(sz);
 
-  /*
-   *  - REF*, GCTAG, SMALLINT, FSETVALUE, OZFLOAT:
-   *     no entry:                               0
-   *  - LITERAL:
-   *     board:                                  1
-   *  - EXT:
-   *     board, entry                            2
-   *  - LTUPLE, SRECORD:
-   *     entry                                   1
-   *  - UVAR:
-   *     board:                                  1
-   *  - CVAR:
-   *     entry, board, susplist, loc. susplist:  5
-   *  - OZCONST:
-   *     UNBOUNDED for arbitray calls, so it must
-   *     check locally!
-   *     for local calls in this routine, at most:
-   *     entry, board, board:                    3
-   *
-   *
-   * conservative estimate: 5 entries
-   *
-   * DOES NOT WORK YET, BECAUSE OF UNSOLCITED ENTRIES INTO
-   * GC ROUTINES
-   *
-   */
+  register TaggedRef * f = frm - 1;
+  register TaggedRef * t = to - 1;
 
-  // cacStack.ensureFree(sz * 5);
-
-#ifdef S_CLONE
-
-  /*
-   * copying trail:
-   *  - REF*, GCTAG, SMALLINT, FSETVALUE, OZFLOAT, LTUPLE:
-   *     no entry:                               0
-   *  - LITERAL:
-   *     entry, board:                           2
-   *  - EXT:
-   *     board, entry                            2
-   *  - SRECORD:
-   *     entry                                   1
-   *  - UVAR:
-   *     entry, board:                           2
-   *  - CVAR:
-   *     entry, board:                           2
-   *  - OZCONST:
-   *    entry, board, board:                     3
-   *
-   * conservative estimate: 3 entries
-   *
-   * DOES NOT WORK YET, BECAUSE OF UNSOLCITED ENTRIES INTO
-   * GC ROUTINES
-   *
-   */
-
-  // cpTrail.ensureFree(sz * 2 * 3);
-
-#endif
-
-  for (int i=sz; i--; ) {
-    TaggedRef aux = frm[i];
+  while (sz > 0) {
+    sz--; f++; t++;
+    TaggedRef aux = *f;
 
     switch (tagTypeOf(aux)) {
 
@@ -1224,12 +1150,12 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
             Board * bb = tagged2VarHome(aux);
 
             if (!NEEDSCOPYING(bb)) {
-              to[i] = makeTaggedRef(aux_ptr);
+              *t = makeTaggedRef(aux_ptr);
             } else {
               bb = bb->_cacBoard();
 
               Assert(bb);
-              varFix.defer(aux_ptr, &to[i]);
+              varFix.defer(aux_ptr, t);
             }
 
           }
@@ -1241,17 +1167,17 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
 
             if (cv->cacIsMarked()) {
               Assert(tagTypeOf(*(cv->cacGetFwd())) == CVAR);
-              to[i] = makeTaggedRef(cv->cacGetFwd());
+              *t = makeTaggedRef(cv->cacGetFwd());
             } else if (NEEDSCOPYING(cv->getBoardInternal())) {
               OzVariable *new_cv=cv->_cacVarInline();
 
               Assert(new_cv);
 
               TaggedRef * var_ptr = newTaggedCVar(new_cv);
-              to[i] = makeTaggedRef(var_ptr);
+              *t = makeTaggedRef(var_ptr);
               cv->_cacMark(var_ptr);
             } else {
-              to[i] = makeTaggedRef(aux_ptr);
+              *t = makeTaggedRef(aux_ptr);
             }
           }
           break;
@@ -1262,7 +1188,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
       break;
 
     case GCTAG: DO_GCTAG:
-      to[i] = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
+      *t = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
       // This can lead to not shortened ref chains together with
       // the CONS forwarding: if a CONS cell is collected, then every
       // reference to the first element becomes a ref. May try this:
@@ -1270,43 +1196,43 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
       break;
 
     case SMALLINT: DO_SMALLINT:
-      to[i] = aux;
+      *t = aux;
       break;
 
     case FSETVALUE: DO_FSETVALUE:
 #ifdef G_COLLECT
-      to[i] = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gCollect());
+      *t = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gCollect());
 #else
-      to[i] = aux;
+      *t = aux;
 #endif
       break;
 
     case LITERAL: DO_LITERAL:
-      to[i] = makeTaggedLiteral(tagged2Literal(aux)->_cac());
+      *t = makeTaggedLiteral(tagged2Literal(aux)->_cac());
       break;
 
     case EXT: DO_EXT:
-      to[i] = _cacExtension(aux);
+      *t = _cacExtension(aux);
       break;
 
     case LTUPLE: DO_LTUPLE:
-      to[i] = makeTaggedLTuple(tagged2LTuple(aux)->_cac());
+      *t = makeTaggedLTuple(tagged2LTuple(aux)->_cac());
       break;
 
     case SRECORD: DO_SRECORD:
-      to[i] = makeTaggedSRecord(tagged2SRecord(aux)->_cacSRecord());
+      *t = makeTaggedSRecord(tagged2SRecord(aux)->_cacSRecord());
       break;
 
     case OZFLOAT: DO_OZFLOAT:
 #ifdef G_COLLECT
-      to[i] = makeTaggedFloat(tagged2Float(aux)->gCollect());
+      *t = makeTaggedFloat(tagged2Float(aux)->gCollect());
 #else
-      to[i] = aux;
+      *t = aux;
 #endif
       break;
 
     case OZCONST: DO_OZCONST:
-      to[i] = makeTaggedConst(tagged2Const(aux)->_cacConstTerm());
+      *t = makeTaggedConst(tagged2Const(aux)->_cacConstTerm());
       break;
 
     case UNUSED_VAR:  // FUT
@@ -1322,12 +1248,12 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
         if (NEEDSCOPYING(bb)) {
           bb = bb->_cacBoard();
           Assert(bb);
-          to[i] = makeTaggedUVar(bb);
+          *t = makeTaggedUVar(bb);
         } else {
-          frm[i] = makeTaggedRef(&to[i]);
-          to[i]  = aux;
+          *f = makeTaggedRef(t);
+          *t = aux;
         }
-        _cacStoreFwdMark((int32 *)&frm[i], &to[i], NO);
+        STOREFWDMARK(f, t);
       }
       break;
 
@@ -1337,19 +1263,19 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
 
         if (cv->cacIsMarked()) {
           Assert(tagTypeOf(*(cv->cacGetFwd())) == CVAR);
-          to[i] = makeTaggedRef(cv->cacGetFwd());
+          *t = makeTaggedRef(cv->cacGetFwd());
         } else if (NEEDSCOPYING(cv->getBoardInternal())) {
-          to[i] = makeTaggedCVar(cv->_cacVarInline());
-          cv->_cacMark(&to[i]);
+          *t = makeTaggedCVar(cv->_cacVarInline());
+          cv->_cacMark(t);
         } else {
           // We cannot copy the variable, but we have already copied
           // their taggedref, so we change the original variable to a ref
           // of the copy.
           // After pushing on the update stack the
           // the original variable is replaced by a reference!
-          frm[i] = makeTaggedRef(&to[i]);
-          to[i]  = aux;
-          _cacStoreFwdMark((int32*) &frm[i], &to[i], NO);
+          *f = makeTaggedRef(t);
+          *t = aux;
+          STOREFWDMARK(f, t);
         }
 
       }
@@ -1495,7 +1421,7 @@ void VarFix::_cacFix(void) {
     Assert(tagTypeOf(aux) == UVAR || tagTypeOf(aux) == GCTAG);
 
     *to = makeTaggedRef(to_ptr);
-    _cacStoreFwdMark((int32 *) aux_ptr, to_ptr, OK);
+    STOREFWDMARK(aux_ptr, to_ptr);
 
   } while (!isEmpty());
 
@@ -1954,7 +1880,7 @@ ConstTerm *ConstTerm::_cacConstTerm() {
   case Co_BigInt:
 #ifdef G_COLLECT
     ret = ((BigInt *) this)->gCollect();
-    storeFwdField(this, ret, OK);
+    STOREFWDFIELD(this, ret);
     return ret;
 #else
     return this;
@@ -1963,7 +1889,7 @@ ConstTerm *ConstTerm::_cacConstTerm() {
   case Co_Foreign_Pointer:
 #ifdef G_COLLECT
     ret = (ConstTerm *) _cacReallocStatic(this,sizeof(ForeignPointer));
-    storeFwdField(this, ret, OK);
+    STOREFWDFIELD(this, ret);
     return ret;
 #else
     return this;
@@ -1972,7 +1898,7 @@ ConstTerm *ConstTerm::_cacConstTerm() {
   case Co_Resource:
 #ifdef G_COLLECT
     ret = (*gCollectDistResource)(this);
-    storeFwdField(this, ret, OK);
+    STOREFWDFIELD(this, ret);
     return ret;
 #else
     return this;
@@ -2081,13 +2007,13 @@ ConstTerm *ConstTerm::_cacConstTerm() {
   cacStack.push(ret,PTR_CONSTTERM);
  const_tertiary_nopush:
   ((Tertiary *) ret)->_cacTertiary();
-  storeFwdField(this, ret, OK);
+  STOREFWDFIELD(this, ret);
   return ret;
 
  const_withhome:
   ((ConstTermWithHome *) ret)->_cacConstTermWithHome();
   cacStack.push(ret,PTR_CONSTTERM);
-  storeFwdField(this, ret, OK);
+  STOREFWDFIELD(this, ret);
   return ret;
 
 }
@@ -2254,7 +2180,7 @@ Suspendable * Suspendable::_cacSuspendableInline(void) {
   }
 
   to->flags = flags;
-  storeFwdField(this, to, OK);
+  STOREFWDFIELD(this, to);
 
   return to;
 }
@@ -2289,7 +2215,7 @@ Propagator * Propagator::_cacLocalInline(Board * bb) {
 
   to->flags = flags;
 
-  storeFwdField(this, to, OK);
+  STOREFWDFIELD(this, to);
 
   Assert(to->isPropagator());
 
@@ -2360,9 +2286,7 @@ void SuspQueue::_cac(void) {
 
   SuspList * head = last->getNext();
 
-#ifdef S_CLONE
-  cpTrail.save((int32 *) last->getNextRef(),OK);
-#endif
+  CPTRAIL((int32 *) last->getNextRef());
 
   last->setNext(NULL);
 
@@ -2420,9 +2344,9 @@ void Board::_cacRecurse() {
   oz_cacTerm(rootVar,rootVar);
   oz_cacTerm(status,status);
 
-  cacSuspList(&suspList,OK);
+  cacStack.push(&suspList, PTR_SUSPLIST);
   setDistBag(getDistBag()->_cac());
-  cacSuspList((SuspList **) &nonMonoSuspList,OK);
+  cacStack.push((SuspList **) &nonMonoSuspList, PTR_SUSPLIST);
 
 #ifdef CS_PROFILE
 #ifdef G_COLLECT
@@ -2463,7 +2387,7 @@ void LTuple::_cacRecurse() {
   if (!oz_isLTuple(aux) || tagged2LTuple(aux) != this) {
     frm->args[0] = to->args[0];
     oz_cacTerm(frm->args[0], to->args[0]);
-    _cacStoreFwdMark((int32 *)frm->args, to->args, OK);
+    STOREFWDMARK(frm->args, to->args);
   } else {
     to->args[0] = makeTaggedLTuple((LTuple *) to);
   }
@@ -2492,7 +2416,7 @@ void LTuple::_cacRecurse() {
 
     oz_cacTerm(frm->args[0], to->args[0]);
 
-    _cacStoreFwdMark((int32 *)frm->args, to->args, OK);
+    STOREFWDMARK(frm->args, to->args);
 
   }
 

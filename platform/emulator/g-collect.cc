@@ -68,13 +68,8 @@
 #define _cacPendThreadEmul       gCollectPendThreadEmul
 
 #define _cacReallocStatic        gCollectReallocStatic
-#define _cacStoreFwdMark         gCollectStoreFwdMark
-#define _cacStoreFwdNoMark       gCollectStoreFwdNoMark
 
 #define _cacRefsArray            gCollectRefsArray
-#define _cacRefsArrayIsMarked    gCollectRefsArrayIsMarked
-#define _cacRefsArrayMark        gCollectRefsArrayMark
-#define _cacRefsArrayUnmark      gCollectRefsArrayUnmark
 
 #define _cacSuspList             gCollectSuspList
 #define _cacLocalSuspList        gCollectLocalSuspList
