@@ -66,15 +66,27 @@
 
     'newPredicateRef'           => { in  => [],
                                      out => ['+foreignPointer'],
-                                     BI  => BInewPredicateRef},
+                                     BI  => BInewProcedureRef},
+
+    'newProcedureRef'           => { in  => [],
+                                     out => ['+foreignPointer'],
+                                     BI  => BInewProcedureRef},
 
     'newCopyablePredicateRef'   => { in  => [],
                                      out => ['+foreignPointer'],
-                                     BI  => BInewCopyablePredicateRef},
+                                     BI  => BInewCopyableProcedureRef},
+
+    'newCopyableProcedureRef'   => { in  => [],
+                                     out => ['+foreignPointer'],
+                                     BI  => BInewCopyableProcedureRef},
 
     'isCopyablePredicateRef'    => { in  => ['+foreignPointer'],
                                      out => ['+bool'],
-                                     BI  => BIisCopyablePredicateRef},
+                                     BI  => BIisCopyableProcedureRef},
+
+    'isCopyableProcedureRef'    => { in  => ['+foreignPointer'],
+                                     out => ['+bool'],
+                                     BI  => BIisCopyableProcedureRef},
 
     'isLocalDet'                => { in  => ['+value'],
                                      out => ['+bool'],
@@ -137,7 +149,11 @@
 
     'storePredicateRef'         => { in  => ['+foreignPointer','+value'],
                                      out => [],
-                                     BI  => BIstorePredicateRef},
+                                     BI  => BIstoreProcedureRef},
+
+    'storeProcedureRef'         => { in  => ['+foreignPointer','+value'],
+                                     out => [],
+                                     BI  => BIstoreProcedureRef},
 
     'storePredId'               => { in  => ['+foreignPointer','+atom',
                                              '+value','+record',
