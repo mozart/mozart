@@ -3,6 +3,7 @@
  *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *    Denys Duchier (duchier@ps.uni-sb.de)
  * 
  *  Copyright:
