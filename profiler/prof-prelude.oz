@@ -21,6 +21,14 @@ end
 
 StatusHelp = {NewName}
 
+proc {Compile VS}
+   case {Compiler.getOPICompiler} of false then
+      skip
+   elseof CompilerObject then
+      {CompilerObject feedVirtualString(VS)}
+   end
+end
+
 fun {UnknownFile F}
    F == nofile orelse F == ''
 end
