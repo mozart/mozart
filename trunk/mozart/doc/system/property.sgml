@@ -592,6 +592,13 @@
       <Table id="table.prop.print">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
+          <Td/<<verbose>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether printing values includes verbose information on
+           variables. Used for all printing routines./
+        </Tr>
+        <Tr>
           <Td/<<width>>/
           <Td/yes/
           <Td/<<Int>>/
