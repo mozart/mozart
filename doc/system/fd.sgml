@@ -1697,7 +1697,7 @@ Is equivalent to (for a list of variables <<Xs>>):
 <<<proc {FD.assign ValA Xs}
    for X in Xs do
       {Space.waitStable}
-      X = {FD.reflect.A X}
+      X = {FD.reflect.ValA X}
    end
 end>>>
 </list>
