@@ -27,7 +27,9 @@
 
 #include <limits.h>
 
+#if defined(INTERFACE)
 #pragma implementation "count.hh"
+#endif
 
 #include "count.hh"
 #include "auxcomp.hh"

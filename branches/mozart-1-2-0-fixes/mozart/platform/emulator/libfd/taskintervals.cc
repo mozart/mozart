@@ -560,22 +560,27 @@ struct Interval {
 };
 
 
-inline
-Bool compareDursUse(const StartDurUseTerms &a, const StartDurUseTerms &b) {
-  return a.dur * a.use > b.dur * b.use;
-}
+class Order_StartDurUseTerms_By_CompareDursUse {
+public:
+  Bool operator()(const StartDurUseTerms& a, const StartDurUseTerms& b) {
+    return a.dur * a.use > b.dur * b.use;
+  }
+};
 
-inline
-Bool compareIntervals(const Interval &i1, const Interval &i2)  {
-  return ((i1.left < i2.left) ||
-	  (i1.left == i2.left) && (i1.right < i2.right));
-}
+class Order_Interval_By_CompareIntervals {
+public:
+  Bool operator()(const Interval& i1, const Interval& i2) {
+    return ((i1.left < i2.left) ||
+	    (i1.left == i2.left) && (i1.right < i2.right));
+  }
+};
 
-
-inline
-Bool compareBounds(const int &i, const int &j) {
-  return i<j;
-}
+class Order_Int_By_CompareBounds {
+public:
+  Bool operator()(const int& i, const int& j) {
+    return i<j;
+  }
+};
 
 CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks, 
 						   OZ_Term starts, 
@@ -603,7 +608,9 @@ CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  fastsort<StartDurUseTerms,compareDursUse>(&sdu[0], reg_sz);
+
+  Order_StartDurUseTerms_By_CompareDursUse lt;
+  fastsort(&sdu[0], reg_sz, lt);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sdu[i].start;
@@ -999,7 +1006,8 @@ capLoop:
     //////////
     // sort the intervals lexicographically
     //////////
-    fastsort<Interval,compareIntervals>(&Intervals[0], interval_nb);
+    Order_Interval_By_CompareIntervals lt;
+    fastsort(&Intervals[0], interval_nb, lt);
 
     //////////
     // compute the set of all bounds of intervals
@@ -1015,7 +1023,9 @@ capLoop:
     //////////
     // sort the bounds in ascending order
     //////////
-    fastsort<int,compareBounds>(&IntervalBounds[0], double_nb);
+    
+    Order_Int_By_CompareBounds blt;
+    fastsort(&IntervalBounds[0], double_nb, blt);
 
     //////////
     // compute the set of intervals, for which there is exclusion

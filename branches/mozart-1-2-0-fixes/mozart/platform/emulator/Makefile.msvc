@@ -1,4 +1,4 @@
-WINDIR=C:/cygwin/home/schulte/fixes/packages
+WINDIR=C:/cygwin/home/bruni/devel/mozart/packages
 
 # at SICS use
 #WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486
@@ -16,8 +16,8 @@ CXX  = cl
 
 
 DEFS = -DWINDOWS -DWINDOWS_EMULATOR -DHAVE_CONFIG_H
-INCS =  -Ic:\programme\micros~2\vc98\include -I$(WINDIR)/include -I.
-LHOME = $(WINDIR)/lib
+INCS =  -Ic:\programme\micros~2\vc98\include -I$(WINDIR)/msvc/include -I$(WINDIR)/include -I.
+LHOME = $(WINDIR)/msvc/lib
 LIBS = $(LHOME)/zlib.lib $(LHOME)/gmp.lib
 
 
@@ -55,7 +55,7 @@ SRCS= \
 	var_of.cc ofs-bi.cc\
 	fdomn.cc fdcore.cc \
 	var_fd.cc var_bool.cc\
-	cpi.cc cpi_fd.cc cpi_prop.cc \
+	cpi.cc cpi_fd.cc cpi_prop.cc cpi_filter.cc \
 	cpi_fs.cc cpi_expect.cc cpi_misc.cc \
 	cpi_stream.cc cpi_profile.cc cpi_ct.cc \
 	var_ct.cc \
@@ -96,12 +96,15 @@ SRCS= \
 	libdp/tcpConnection.cc libdp/transObj.cc \
 	libdp/dpStatisticsModule.cc    libdp/pidModule.cc       libdp/vs_comm.cc\
 	libdp/dpResource.cc      libdp/port.cc            libdp/vs_interface.cc\
-	libdp/dsite.cc           libdp/protocolCredit.cc  libdp/vs_mailbox.cc\
+	libdp/dsite.cc           libdp/vs_mailbox.cc\
 	libdp/fail.cc            libdp/protocolFail.cc    libdp/vs_msgbuffer.cc\
 	libdp/faultModule.cc     libdp/protocolState.cc\
-	libdp/flowControl.cc     libdp/state.cc \
-	libdp/creditHandler.cc libdp/prioQueues.cc \
-	byteBuffer.cc win32.cc 
+	libdp/state.cc \
+	libdp/prioQueues.cc \
+        libdp/protocolCredit.cc \
+        libdp/creditHandler.cc \
+        libdp/flowControl.cc \
+	byteBuffer.cc win32.cc
 
 OBJS=   $(SRCS:.cc=.obj)
 
@@ -118,7 +121,5 @@ all: emulator.dll
 emulator.dll: $(OBJS)
 	$(CXX) $(COPT) $(OBJS) $(LIBS) -LD wsock32.lib advapi32.lib -Feemulator.dll
 
-
-
-
-
+#dependencies
+-include Makefile.deps
