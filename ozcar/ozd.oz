@@ -156,6 +156,8 @@ define
             in
                if OZRC \= false andthen {FileExists OZRC} then
                   {E enqueue(feedFile(OZRC))}
+               elseif {FileExists {Property.get 'oz.dotoz'}#'/ozrc'} then
+                  {E enqueue(feedFile({Property.get 'oz.dotoz'}#'/ozrc'))}
                elseif {FileExists HOME#'/.oz/ozrc'} then
                   {E enqueue(feedFile(HOME#'/.oz/ozrc'))}
                elseif {FileExists HOME#'/.ozrc'} then   % note: deprecated
