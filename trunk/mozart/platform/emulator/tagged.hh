@@ -841,6 +841,19 @@ RefsArray allocateRefsArray(int n, Bool init=OK)
 }
 
 inline
+RefsArray allocateRefsArray(int n, TaggedRef initRef)
+{
+  Assert(n > 0);
+  RefsArray a = ((RefsArray) freeListMalloc((n+1) * sizeof(TaggedRef)));
+  a += 1;
+  // Initialize with given TaggedRef:
+  setRefsArraySize(a,n);
+  for(int i = n-1; i >= 0; i--) 
+    a[i] = initRef;
+  return a;  
+}
+
+inline
 void disposeRefsArray(RefsArray a)
 {
   if (a) {
