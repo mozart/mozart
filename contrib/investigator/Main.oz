@@ -23,6 +23,7 @@ import
    History
 
    System
+   Error
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
    
@@ -35,6 +36,9 @@ define
 	 {MakeAction Hist DaVin Stream C AllVars AllConstrs Result}
       [] node_selections_labels([cn(C)]) then
 	 {MakeAction Hist DaVin Stream cn(C) AllVars AllConstrs Result}	 
+      [] error(...) then
+	 {Error.printException Stream.1}
+	 {Loop Hist DaVin Stream.2 AllVars AllConstrs Result}
       else
 	 {Loop Hist DaVin Stream.2 AllVars AllConstrs Result}
       end 
