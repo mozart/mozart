@@ -65,7 +65,7 @@ public:
   }
 
   Propagator * gcPropagator(void);
-  void gcRecurse(void);
+  void gcRecurse(Propagator *);
 
   OZ_NonMonotonic::order_t getOrder(void) {
     return _p->getOrder();

@@ -189,8 +189,7 @@ enum TypeOfPtr {
   PTR_LTUPLE,
   PTR_SRECORD,
   PTR_BOARD,
-  PTR_THREAD,
-  PTR_PROPAGATOR,
+  PTR_SUSPLIST,
   PTR_CVAR,
   PTR_CONSTTERM,
   PTR_EXTENSION
@@ -664,69 +663,6 @@ Object *Object::gcObject() {
 }
 
 
-inline
-void Propagator::gcRecurse(void) {
-  setBoardInternal(getBoardInternal()->gcBoard());
-
-  Assert(getBoardInternal());
-
-  _p = _p->gc();
-
-  _p->updateHeapRefs(isInGc);
-}
-
-inline
-Suspendable * Suspendable::gcSuspendable(void) {
-  Assert(this);
-
-  if (isGcMarked())
-    return gcGetFwd();
-
-  if (isDead())
-    return (Suspendable *) NULL;
-
-  Suspendable * to;
-
-  if (!getBoardInternal()->gcIsAlive()) {
-
-    if (!isRunnable())
-      return (Suspendable *) NULL;
-
-    if (!isThread())
-      return (Suspendable *) NULL;
-
-    to = (Suspendable *) gcReallocStatic(this, sizeof(Thread));
-    to->setVeryDead();
-
-    gcStack.push(to, PTR_THREAD);
-
-  } else {
-    Assert(isInGc || !isRunnable());
-
-    if (isThread()) {
-      to = (Suspendable *) gcReallocStatic(this, sizeof(Thread));
-
-      gcStack.push(to, PTR_THREAD);
-    } else {
-      to = (Suspendable *) gcReallocStatic(this, sizeof(Propagator));
-
-      gcStack.push(to, PTR_PROPAGATOR);
-    }
-  }
-
-  storeFwdField(this, to);
-
-  return to;
-}
-
-Propagator * Propagator::gcPropagator(void) {
-  return SuspToPropagator(gcSuspendable());
-}
-
-Thread * Thread::gcThread(void) {
-  return this ? SuspToThread(gcSuspendable()) : this;
-}
-
 /*
  *  We reverse the order of the list, but this should be no problem.
  *
@@ -736,7 +672,14 @@ Thread * Thread::gcThread(void) {
  */
 
 inline
-SuspList * SuspList::gc(void) {
+void gcSuspList(SuspList ** sl) {
+  if (*sl) {
+    gcStack.push(sl, PTR_SUSPLIST);
+  }
+}
+
+inline
+SuspList * SuspList::gcRecurse(void) {
   SuspList * ret = NULL;
 
   for (SuspList * help = this; help != NULL; help = help->getNext()) {
@@ -766,7 +709,7 @@ void OzFDVariable::gc(void) {
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
 
   for (int i = fd_prop_any; i--; )
-    fdSuspList[i] = fdSuspList[i]->gc();
+    gcSuspList(&(fdSuspList[i]));
 }
 
 inline
@@ -777,7 +720,7 @@ void OzFSVariable::gc(void) {
 #endif
 
   for (int i = fs_prop_any; i--; )
-    fsSuspList[i] = fsSuspList[i]->gc();
+    gcSuspList(&(fsSuspList[i]));
 }
 
 inline
@@ -789,7 +732,7 @@ void OzCtVariable::gc(void) {
     heapMalloc(sizeof(SuspList *) * noOfSuspLists);
   // collect
   for (int i = noOfSuspLists; i--; )
-    _susp_lists[i] = _susp_lists[i]->gc();
+    gcSuspList(&(_susp_lists[i] ));
 
 }
 
@@ -849,7 +792,7 @@ OzVariable * OzVariable::gcVar(void) {
 
  nopush:
 
-  to->suspList = to->suspList->gc();
+  gcSuspList(&(to->suspList));
   to->setHome(to->getHome1()->gcBoard());
 
   return to;
@@ -2318,34 +2261,81 @@ Board* Board::gcGetNotificationBoard() {
   }
 }
 
+inline
+void Thread::gcRecurse(Thread * fr) {
+  taskStack = fr->taskStack->gc();
+  abstr     = fr->abstr;
+  id        = fr->id;
+}
 
 inline
-void Thread::gcRecurse() {
+void Propagator::gcRecurse(Propagator * fr) {
+  _p = fr->_p->gc();
 
-  if (isVeryDead()) {
-
-    // The following assertion holds because suspended threads
-    // which home board is dead are filtered out during
-    // 'Thread::gcThread ()';
-    Assert(isRunnable());
-
-    unsetVeryDead();
-
-    Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
-
-    setBoardInternal(notificationBoard->gcBoard());
-
-    taskStack = new TaskStack(ozconf.stackMinSize);
-    getBoardInternal()->incSuspCount();
-
-    pushCall(BI_skip,0,0);
-
-  } else {
-    setBoardInternal(getBoardInternal()->gcBoard());
-    taskStack = taskStack->gc();
-  }
+  _p->updateHeapRefs(isInGc);
 
 }
+
+inline
+Suspendable * Suspendable::gcSuspendable(void) {
+  Assert(this);
+
+  if (isGcMarked())
+    return gcGetFwd();
+
+  if (isDead())
+    return (Suspendable *) NULL;
+
+  Suspendable * to;
+
+  if (getBoardInternal()->gcIsAlive()) {
+    Assert(isInGc || !isRunnable());
+
+    if (isThread()) {
+      to = (Suspendable *) freeListMalloc(sizeof(Thread));
+
+      ((Thread *) to)->gcRecurse(SuspToThread(this));
+
+    } else {
+      to = (Suspendable *) freeListMalloc(sizeof(Propagator));
+
+      ((Propagator *) to)->gcRecurse(SuspToPropagator(this));
+
+    }
+
+    to->setBoardInternal(getBoardInternal()->gcBoard());
+
+  } else if (isThread()) {
+
+    to = (Suspendable *) gcReallocStatic(this, sizeof(Thread));
+
+    Board * nb = getBoardInternal()->gcGetNotificationBoard()->gcBoard();
+
+    ((Thread *) to)->setTaskStack(new TaskStack(ozconf.stackMinSize));
+
+    nb->incSuspCount();
+
+    ((Thread *) to)->pushCall(BI_skip,0,0);
+
+    to->setBoardInternal(nb);
+  } else {
+    return NULL;
+  }
+
+  to->flags = flags;
+  storeFwdField(this, to);
+
+  return to;
+}
+
+Propagator * Propagator::gcPropagator(void) {
+  return SuspToPropagator(gcSuspendable());
+}
+
+Thread * Thread::gcThread(void) {
+  return this ? SuspToThread(gcSuspendable()) : this;
+}
+
 
 
 /****************************************************************************
@@ -2389,7 +2379,7 @@ void Board::gcRecurse() {
 
   OZ_collectHeapTerm(status,status);
 
-  suspList         = suspList->gc();
+  gcSuspList(&suspList);
   setDistBag(getDistBag()->gc());
   nonMonoSuspList  = nonMonoSuspList->gc();
 
@@ -2490,12 +2480,8 @@ void GcStack::recurse(void) {
       ((Board *) ptr)->gcRecurse();
       break;
 
-    case PTR_THREAD:
-      ((Thread *) ptr)->gcRecurse();
-      break;
-
-    case PTR_PROPAGATOR:
-      ((Propagator *) ptr)->gcRecurse();
+    case PTR_SUSPLIST:
+      *((SuspList **) ptr) = (*((SuspList **) ptr))->gcRecurse();
       break;
 
     case PTR_CVAR:

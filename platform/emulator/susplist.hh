@@ -78,7 +78,8 @@ public:
   int length(void);
   int lengthProp(void);
 
-  SuspList * gc(void);
+  SuspList * gcRecurse(void);
+
   OZPRINTLONG;
 
 
