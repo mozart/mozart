@@ -1287,7 +1287,7 @@ define
                                    OzDocToHTML, Batch(M 1 $)))
                EMPTY
             [] 'grammar' then
-               'div'(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+               BLOCK('div'(COMMON: @Common OzDocToHTML, Batch(M 1 $)))
             %-----------------------------------------------------------
             % Tables
             %-----------------------------------------------------------
