@@ -26,7 +26,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
        NameOoDefaultVar,NameOoRequiredArg,
        NameUnit,
-       AtomKinded, AtomDet, AtomRecord, 
+       AtomKinded, AtomDet, AtomRecord, AtomFSet, 
        // Atoms for System.get and System.set
        AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomCommitted, 
        AtomMoreInfo, AtomTotal,

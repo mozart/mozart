@@ -16,24 +16,52 @@
 #pragma interface
 #endif
 
+//-----------------------------------------------------------------------------
+
+inline
+GenFSetVariable * tagged2GenFSetVar(OZ_Term term)
+{
+  GCDEBUG(term);
+  return (GenFSetVariable *) tagged2CVar(term);
+}
+
+inline
+OZ_FSetConstraint * unpatchReified(OZ_Term t) 
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t) && isGenFSetVar(t));
+  GenFSetVariable * fsv = tagged2GenFSetVar(t);
+  
+  fsv->unpatchReified();
+  return fsv->getReifiedPatch();
+}
+
 inline
 void GenFSetVariable::propagate(OZ_Term var, OZ_FSetPropState state,
 				PropCaller prop_eq)
 {
   if (prop_eq == pc_propagator) {
     switch (state) {
-    case fs_val  : // no break
-      for (int i = fs_any; i--; )
-	GenCVariable::propagate(var, fsSuspList[i], prop_eq);
-    case fs_lub: case fs_glb:// no break
+    case fs_prop_val  : // no break
+      for (int i = fs_prop_any; i--; )
+	if (fsSuspList[i])
+	  GenCVariable::propagate(var, fsSuspList[i], prop_eq);
+    case fs_prop_lub: case fs_prop_glb:
       if (fsSuspList[state])
 	GenCVariable::propagate(var, fsSuspList[state], prop_eq);
+      break;
+    case fs_prop_bounds:
+      if (fsSuspList[fs_prop_lub])
+	GenCVariable::propagate(var, fsSuspList[fs_prop_lub], prop_eq);
+      if (fsSuspList[fs_prop_glb])
+	GenCVariable::propagate(var, fsSuspList[fs_prop_glb], prop_eq);
+      break;      
     default:
       break;
     }
   } else {
-    for (int i = fs_any; i--; )
-      GenCVariable::propagate(var, fsSuspList[i], prop_eq);
+    for (int i = fs_prop_any; i--; )
+      if (fsSuspList[i])
+	GenCVariable::propagate(var, fsSuspList[i], prop_eq);
   }
   if (suspList) 
     GenCVariable::propagate(var, suspList, prop_eq);
@@ -41,7 +69,84 @@ void GenFSetVariable::propagate(OZ_Term var, OZ_FSetPropState state,
 
 inline 
 void GenFSetVariable::propagateUnify(TaggedRef var) { 
-  propagate(var, fs_val, pc_cv_unif); 
+  propagate(var, fs_prop_val, pc_cv_unif); 
 }
 
-#endif
+inline
+Bool isGenFSetVar(TaggedRef term)
+{
+  GCDEBUG(term);
+  return isCVar(term) && (tagged2CVar(term)->getType() == FSetVariable);
+}
+
+inline
+Bool isGenFSetVar(TaggedRef term, TypeOfTerm tag)
+{
+  GCDEBUG(term);
+  Assert(tag == tagTypeOf(term));
+  return isCVar(tag) && (tagged2CVar(term)->getType() == FSetVariable);
+}
+
+inline
+void GenFSetVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
+{
+  if (isFSetValue(*trPtr)) return;
+
+  Assert(this == tagged2SuspVar(*trPtr));
+
+  OZ_Term set_val = makeTaggedFSetValue(new OZ_FSetValue(_fset));
+
+  propagate(*trPtr, fs_prop_val);
+  doBind(trPtr, set_val);
+  dispose();
+}
+
+inline
+void GenFSetVariable::installPropagators(GenFSetVariable * glob_var,
+					 Board * glob_home)
+{
+  for (int i = 0; i < fs_prop_any; i += 1)
+    fsSuspList[i] = ::installPropagators(fsSuspList[i],
+					 glob_var->fsSuspList[i],
+					 glob_home);
+}
+
+
+inline
+void addSuspFSetVar(OZ_Term v, Thread * el, OZ_FSetPropState list_index)
+{
+  GenFSetVariable * fsv = tagged2GenFSetVar(v);
+
+  switch (list_index) {
+  case fs_prop_val:
+    fsv->fsSuspList[fs_prop_val] = addSuspToList(fsv->fsSuspList[fs_prop_val], el,
+					    fsv->home);
+    break;
+  case fs_prop_bounds:
+    fsv->fsSuspList[fs_prop_glb] = addSuspToList(fsv->fsSuspList[fs_prop_glb], el,
+					    fsv->home);
+    fsv->fsSuspList[fs_prop_lub] = addSuspToList(fsv->fsSuspList[fs_prop_lub], el,
+					    fsv->home);
+    break;
+  case fs_prop_glb:
+    fsv->fsSuspList[fs_prop_glb] = addSuspToList(fsv->fsSuspList[fs_prop_glb], el,
+					    fsv->home);
+    break;
+  case fs_prop_lub:
+    fsv->fsSuspList[fs_prop_lub] = addSuspToList(fsv->fsSuspList[fs_prop_lub], el,
+					    fsv->home);
+    break;
+  case fs_prop_any:
+    fsv->suspList = addSuspToList(fsv->suspList, el, fsv->home);
+    break;
+  default:
+    error("list index out of range.");
+    break;
+  }
+}
+
+#endif /* __fsgenvar_icc__ */
+
+// end of file
+//-----------------------------------------------------------------------------
+

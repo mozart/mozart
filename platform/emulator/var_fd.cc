@@ -49,7 +49,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 #endif
 
       if (prop && (isNotInstallingScript || isLocalVar)) 
-	propagate(var, fd_singl);
+	propagate(var, fd_prop_singl);
 
       if (prop && isLocalVar) {
 	doBind(vPtr, term);
@@ -95,7 +95,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 #ifdef SCRIPTDEBUG
 	      printf("fd-fd local local\n"); fflush(stdout);
 #endif
-	      if (intsct == fd_singleton) {
+	      if (intsct == fd_singl) {
 		TaggedRef int_var = OZ_int(intsct.getSingleElem());
 		termVar->propagateUnify(term);
 		propagateUnify(var);
@@ -141,7 +141,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	      printf("fd-fd local global\n"); fflush(stdout);
 #endif
 	      if (intsct.getSize() != termDom.getSize()){
-		if (intsct == fd_singleton) {
+		if (intsct == fd_singl) {
 		  TaggedRef int_var = OZ_int(intsct.getSingleElem());
 		  if (isNotInstallingScript) termVar->propagateUnify(term);
 		  if (varIsConstrained) propagateUnify(var);
@@ -178,7 +178,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	      printf("fd-fd global local\n"); fflush(stdout);
 #endif
 	      if (intsct.getSize() != finiteDomain.getSize()){
-		if(intsct == fd_singleton) {
+		if(intsct == fd_singl) {
 		  TaggedRef int_term = OZ_int(intsct.getSingleElem());
 		  if (isNotInstallingScript) propagateUnify(var);
 		  if (termIsConstrained) termVar->propagateUnify(term);
@@ -214,7 +214,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 #ifdef SCRIPTDEBUG
 	      printf("fd-fd global global\n"); fflush(stdout);
 #endif
-	      if (intsct == fd_singleton){
+	      if (intsct == fd_singl){
 		TaggedRef int_val = OZ_int(intsct.getSingleElem());
 		if (prop) {
 		  propagateUnify(var);
@@ -282,7 +282,7 @@ Bool GenFDVariable::valid(TaggedRef val)
 void GenFDVariable::relinkSuspListTo(GenBoolVariable * lv, Bool reset_local)
 {
   GenCVariable::relinkSuspListTo(lv, reset_local); // any
-  for (int i = 0; i < fd_any; i += 1)
+  for (int i = 0; i < fd_prop_any; i += 1)
     fdSuspList[i] =
       fdSuspList[i]->appendToAndUnlink(lv->suspList, reset_local);
 }
@@ -290,7 +290,7 @@ void GenFDVariable::relinkSuspListTo(GenBoolVariable * lv, Bool reset_local)
 
 void GenFDVariable::relinkSuspListToItself(Bool reset_local)
 {
-  for (int i = 0; i < fd_any; i += 1)
+  for (int i = 0; i < fd_prop_any; i += 1)
     fdSuspList[i]->appendToAndUnlink(suspList, reset_local);
 }
 
@@ -301,7 +301,7 @@ void GenFDVariable::becomesBoolVarAndPropagate(TaggedRef * trPtr)
 
   Assert(this == tagged2SuspVar(*trPtr));
 
-  propagate(*trPtr, fd_bounds);
+  propagate(*trPtr, fd_prop_bounds);
   becomesBool();
 }
 
@@ -312,12 +312,13 @@ int GenFDVariable::intersectWithBool(void)
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 {
-  /*
+#ifdef DEBUG_TELLCONSTRAINTS
   cout << "tellBasicConstraint - in - : ";
   taggedPrint(v);
   if (fd) cout << " , " << *fd;
   cout << endl <<flush;
-  */
+#endif
+
   DEREF(v, vptr, vtag);
 
   if (fd && (*fd == fd_empty))
@@ -368,27 +369,27 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
     GenFDVariable * fdvar = tagged2GenFDVar(v);
     OZ_FiniteDomain dom = (fdvar->getDom() & *fd);
-
-    if (dom == fd_empty)
+    
+    if (dom == fd_empty) 
       goto failed;
 
     if (dom.getSize() == fdvar->getDom().getSize()) 
       goto proceed;
 
-    if (dom == fd_singleton) {
+    if (dom == fd_singl) {
       if (am.isLocalCVar(v)) {
 	fdvar->getDom() = dom;
 	fdvar->becomesSmallIntAndPropagate(vptr);
       } else {
 	int singl = dom.getSingleElem();
-	fdvar->propagate(v, fd_singl);
+	fdvar->propagate(v, fd_prop_singl);
 	am.doBindAndTrail(v, vptr, OZ_int(singl));
       }
     } else if (dom == fd_bool) {
       if (am.isLocalCVar(v)) {
 	fdvar->becomesBoolVarAndPropagate(vptr);
       } else {
-	fdvar->propagate(v, fd_bounds);
+	fdvar->propagate(v, fd_prop_bounds);
 	GenBoolVariable * newboolvar = new GenBoolVariable();
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
 	am.doBindAndTrailAndIP(v, vptr,
@@ -397,7 +398,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 			       OZ_FALSE);
       }
     } else {
-      fdvar->propagate(v, fd_bounds);
+      fdvar->propagate(v, fd_prop_bounds);
       if (am.isLocalCVar(v)) {
 	fdvar->getDom() = dom;
       } else {
@@ -427,7 +428,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     }
     goto proceed;
 // tell finite domain constraint to integer, i.e. check for compatibility
-  } else if (isSmallInt(v)) {
+  } else if (isSmallInt(vtag)) {
     if (! fd) goto proceed;
     
     if (fd->isIn(smallIntValue(v)))
@@ -439,12 +440,14 @@ failed:
   return FAILED;
 
 proceed:
-  /*
+
+#ifdef DEBUG_TELLCONSTRAINTS
   cout << "tellBasicConstraint - out - : ";
   if (vptr) taggedPrint(*vptr); else taggedPrint(v);
   if (fd) cout << " , " << *fd;
   cout << endl <<flush;
-  */
+#endif
+
   return PROCEED;
 }
 

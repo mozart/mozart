@@ -439,7 +439,7 @@ TaggedRef makeTaggedCVar(GenCVariable *s) {
 }
 
 inline
-TaggedRef makeTaggedFSetValue(FSetValue * s)
+TaggedRef makeTaggedFSetValue(OZ_FSetValue * s)
 {
   CHECK_POINTER_N(s);
   return makeTaggedRef(FSETVALUE, s);
@@ -621,11 +621,11 @@ Board *tagged2VarHome(TaggedRef ref)
 }
 
 inline
-FSetValue *tagged2FSetValue(TaggedRef ref)
+OZ_FSetValue *tagged2FSetValue(TaggedRef ref)
 {
   GCDEBUG(ref);
   CHECKTAG(FSETVALUE);
-  return (FSetValue *) tagValueOf(FSETVALUE,ref);
+  return (OZ_FSetValue *) tagValueOf(FSETVALUE,ref);
 }
 
 inline

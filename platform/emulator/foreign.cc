@@ -281,6 +281,10 @@ OZ_Term OZ_termType(OZ_Term term)
     return oz_atom("space");
   }
 
+  if (isFSetValue(term)) {
+    return oz_atom("fset");
+  }
+
   OZ_warning("OZ_termType: unknown type\n");
   return 0;
 }
@@ -982,7 +986,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
 }
 
 static
-void fset2buffer(ostream &out, FSetValue * fs) 
+void fset2buffer(ostream &out, OZ_FSetValue * fs) 
 {
   out << *fs;
 }

@@ -239,7 +239,7 @@ Propagator_VI_VD_I::Propagator_VI_VD_I(OZ_Term a, OZ_Term x, OZ_Term d,
 
   if (is_lin) {
     reg_x = vectorToOzTerms(x, d, reg_sz);
-    reg_a = reg_a = vectorToInts1(a, reg_sz);
+    reg_a = vectorToInts1(a, reg_sz);
     
     for (int i = 0; i < reg_sz; i += 1) {
       OZ_FDIntVar xv; // no initialising constructor 'cause it uses method ask

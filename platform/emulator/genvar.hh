@@ -23,6 +23,8 @@
 #pragma interface
 #endif
 
+//#define DEBUG_TELLCONSTRAINTS
+
 //-----------------------------------------------------------------------------
 //                       Generic Constrained Variable
 //-----------------------------------------------------------------------------
@@ -35,7 +37,8 @@ enum TypeOfGenCVariable {
   BoolVariable,
   FSetVariable,
   AVAR,
-  PerdioVariable
+  PerdioVariable,
+  NonGenCVariable
 };
 
 #define GenVarCheckType(t)				\
@@ -46,13 +49,17 @@ enum TypeOfGenCVariable {
 class GenCVariable: public SVariable {
 
 friend class GenFDVariable;
+friend class GenFSetVariable;
 
 private:
   union {
     TypeOfGenCVariable var_type;
     OZ_FiniteDomain *patchDomain;
+    OZ_FSetConstraint *patchFSet;
   } u;
 
+  enum u_mask_t {u_fd=0, u_bool=1, u_fset=2, u_ri=3, u_mask=3};
+   
 protected:
   
   void propagate(TaggedRef, SuspList * &, PropCaller);
@@ -101,18 +108,23 @@ public:
 
   // needed to catch multiply occuring reified vars in propagators
   void patchReified(OZ_FiniteDomain * d, Bool isBool) { 
-    u.patchDomain =  d; 
-    if (isBool)
-      u.patchDomain =  (OZ_FiniteDomain*) ToPointer(ToInt32(u.patchDomain) | 1);
+    u.patchDomain = d; 
+    if (isBool) {
+      u.patchDomain =  
+	(OZ_FiniteDomain*) ToPointer(ToInt32(u.patchDomain) | u_bool);
+    }
     setReifiedFlag();
   }
   void unpatchReified(Bool isBool) { 
     setType(isBool ? BoolVariable : FDVariable); 
     resetReifiedFlag();
   }
-  OZ_Boolean isBoolPatched(void) { return (u.var_type & 1); }
+  OZ_Boolean isBoolPatched(void) { return (u.var_type & u_mask) == u_bool; }
+  OZ_Boolean isFDPatched(void) { return (u.var_type & u_mask) == u_fd; }
+  OZ_Boolean isFSetPatched(void) { return (u.var_type & u_mask) == u_fset; }
+  OZ_Boolean isRIPatched(void) { return (u.var_type & u_mask) == u_ri; }
   OZ_FiniteDomain * getReifiedPatch(void) { 
-    return (OZ_FiniteDomain *)  (u.var_type & ~1); 
+    return (OZ_FiniteDomain *)  (u.var_type & ~u_mask); 
   }
 };
 
