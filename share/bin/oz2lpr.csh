@@ -43,14 +43,9 @@ if ($status) then
   continue
 endif
 
-echo "\documentstyle[11pt,dina4,fancyheadings]{article}\
+echo "\documentstyle[11pt,dina4]{article}\
 \include{oz2tex_preamble}\
-\pagestyle{fancyplain}\
-\lhead{\fancyplain{}{$file}}\
-\rhead{\fancyplain{}{\thepage}}\
-\rfoot{\today}\
-\cfoot{}\
-\lfoot{}\
+\pagestyle{empty}\
 \begin{document}\
 \input{/tmp/$ozfile.tex}\
 \end{document}\
