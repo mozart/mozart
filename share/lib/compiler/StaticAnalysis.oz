@@ -538,8 +538,6 @@ local
 	    '<-'           : doAssignAccess
 	    '@'            : doAssignAccess
 	    'builtin'      : doBuiltin
-	    'getTrue'      : doGetTrue
-	    'getFalse'     : doGetFalse
 	    'And'          : doAnd
 	    'Or'           : doOr
 	    'Not'          : doNot
@@ -2271,25 +2269,7 @@ local
 	    else skip end
 	 end
       end
-      
-      meth doGetTrue(Ctrl)
-	 BndVO = {Nth @actualArgs 1}
-	 Token = {New Core.nameToken
-		  init({BndVO getPrintName($)} `true` true)}
-      in
-	 {BndVO unifyVal(Ctrl Token)}
-	 self.codeGenMakeEquateLiteral = {Token getValue($)}
-      end
 
-      meth doGetFalse(Ctrl)
-	 BndVO = {Nth @actualArgs 1}
-	 Token = {New Core.nameToken
-		  init({BndVO getPrintName($)} `false` true)}
-      in
-	 {BndVO unifyVal(Ctrl Token)}
-	 self.codeGenMakeEquateLiteral = {Token getValue($)}
-      end
-      
       meth doAnd(Ctrl)
 	 BVO1 = {Nth @actualArgs 1}
 	 BVO2 = {Nth @actualArgs 2}
