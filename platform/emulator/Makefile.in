@@ -202,6 +202,13 @@ ALLSRCS= $(SRCS) \
 	$(PROFILESRCS) $(OSTIMESRCS) \
 	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
+ALLOBJS= $(OBJS) \
+	$(TKOBJS) $(COMPILERSUPPORTOBJS) $(BROWSEROBJS) \
+	$(SPACEOPOBJS) $(FDBOBJS) $(FSBOBJS) $(CTBOBJS) \
+	$(RECORDCOBJS) $(COMPATOBJS) $(WIN32OBJS) $(SYSTEMOBJS) \
+	$(PROFILEOBJS) $(OSTIMEOBJS) \
+	$(DEBUGOBJS) $(TEXT2PICKLEOBJS)
+
 ############################################################################
 ### TARGETS
 ############################################################################
@@ -349,7 +356,7 @@ emulator.exe: $(PRGDEP)
 
 emulator.dll: $(PRGDEP)
 	$(DLLTOOL) --as $(AS) --output-def emulator0.def \
-	--output-lib libemulator.a --dllname $@ $(OBJS) && \
+	--output-lib libemulator.a --dllname $@ $(ALLOBJS) && \
 	(echo 'LIBRARY emulator.dll'; \
 	 tail +2 emulator0.def | sed 's/ @.*//g') > emulator.def && \
 	tail +3 emulator.def | \
