@@ -1758,8 +1758,9 @@ update:
   case SMALLINT: 
     break;
 
-  case FSETVALUE: 
-    to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc()); 
+  case FSETVALUE:
+    if (opMode == IN_GC)
+      to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc()); 
     break;
     
   case LITERAL:  
