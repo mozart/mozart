@@ -5,9 +5,10 @@
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
  *    Konstantin Popov (kost@sics.se)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Ralf Scheidhauer, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -687,14 +688,10 @@ char *getMemFromOS(size_t sz) {
     int newSize = (heapTotalSize * 3) / 2;
 
     if (ozconf.runningUnderEmacs) {
-      printf("\n\n*** Heap maxsize exceeded. Increase from %d to %d? (y/n) ",
+      printf("\n*** Heap Max Size exceeded. Increasing from %d to %d.\n",
 	     ozconf.heapMaxSize,newSize);
       prefixError();
       fflush(stdout);
-      char buf[1000];
-      
-      if (osfgets(buf, 1000, stdin) == 0 || buf[0] == 'n') 
-	am.exitOz(1);
     }
 
     ozconf.heapMaxSize = newSize;
@@ -721,8 +718,6 @@ char *getMemFromOS(size_t sz) {
 
   heapTop = heapEnd+thisBlockSz;
 
-  // message("heapTop: %p\n",heapTop);
-
   void *aux = tagValueOf(makeTaggedMiscp(heapTop));
   if (aux != heapTop) {
     OZ_warning("Oz address space exhausted: %p != %p\n", aux, heapTop);
@@ -731,9 +726,6 @@ char *getMemFromOS(size_t sz) {
   
   MemChunks::list = new MemChunks(heapEnd,MemChunks::list,thisBlockSz);
   
-  //  DebugCheck(heapTotalSize > thisBlockSz/KB,
-  //message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
-
 #ifdef CS_PROFILE
   across_chunks = OK;
 #endif
