@@ -1,0 +1,89 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.cutting">
+    <Title/Cutting Glass Plates/
+
+  <P>
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/Cutting.oza"/Start Applet/
+      <Item><Ref to="appendix.enable"/How to enable Applets/
+    </List>
+  </P>
+
+  <P>
+    This small demo allows to <Ref to="section.cutting.edit"/edit/
+    cutting problems and to 
+    <Ref to="section.cutting.compute"/compute/
+    a solution for the edited problem.
+  </P>
+     
+  <Section class=unnumbered id="section.cutting.problem">
+    <Title/The Problem/
+
+    <P>
+      Given a number of small glass plates that must be cut from a
+      large target glass plate. Additionally, cuts can only be
+      straight and must cut the entire remaining plate. 
+      Cuts must alternate between x and y direction. The first
+      cut must be in y direction.
+    </P>
+
+  </Section>
+
+  <Section class=unnumbered id="section.cutting.edit">
+    <Title/Edit/
+
+    <P>
+      The number entries allow to enter the number of glass plates
+      that are to be cut from the target plate. Both x- and y-size of
+      the target plate can be edited by the lower number entries as
+      well.
+    </P>
+
+    <P>
+      The status window gives suggestions on whether all glass plates
+      can be cut from the target plate.
+    </P>
+
+  </Section>
+
+
+  <Section class=unnumbered id="section.cutting.compute">
+    <Title/Compute/
+
+    <P>
+      The number entries allow to enter the number of glass plates
+      that are to be cut from the target plate. Both x- and y-size of
+      the target plate can be edited by the lower number entries as
+      well.
+    </P>
+
+    <P>
+      The status window gives suggestions on whether all glass plates
+      can be cut from the target plate.
+    </P>
+
+  </Section>
+
+</Chapter>
