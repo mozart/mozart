@@ -70,7 +70,7 @@ local
 	 TimeFrame = {New Tk.frame tkInit(parent: self)}
 	 
 	 TimeLabel = {New Tk.label tkInit(parent: TimeFrame
-					  text:   'Searchtime:'
+					  text:   'Time:'
 					  font:   StatusFont)}
 	 TimeField = {New Tk.label tkInit(parent: TimeFrame
 					  text:   {FormatTime 0 0}
