@@ -323,6 +323,7 @@ OZ_Term OZ_CStringToFloat(char *s)
   replChar(help,'~','-');
   char *end;
   OZ_Float res = strtod(help,&end);
+  free(help);
   if (*end != '\0') {
     OZ_warning("CStringToCFloat(%s): couldn't parse the end of %s",s,end);
   }
