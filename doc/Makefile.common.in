@@ -101,10 +101,26 @@ $(WHAT).tex: $(WHAT).xml
 
 TEXINPUTS       = $(shell echo $$TEXINPUTS)
 OZTEXINPUTS     = $(SRCDIR):$(TEXINPUTS)
+BSTINPUTS       = $(shell echo $$BSTINPUTS)
+OZBSTINPUTS     = .:$(SRCDIR):$(BSTINPUTS)
+BIBINPUTS       = $(shell echo $$BIBINPUTS)
+OZBIBINPUTS     = .:$(SRCDIR):$(BIBINPUTS)
 
-$(WHAT).dvi: $(WHAT).tex
+$(WHAT).dvi: $(WHAT).tex pspics
         TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
+        TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
+        -TEXINPUTS=$(OZTEXINPUTS) BSTINPUTS=$(OZBSTINPUTS) BIBINPUTS=$(OZBIBINPUTS) bibtex $*
+        TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
+        -TEXINPUTS=$(OZTEXINPUTS) BSTINPUTS=$(OZBSTINPUTS) BIBINPUTS=$(OZBIBINPUTS) bibtex $*
         TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
 $(WHAT).ps: $(WHAT).dvi
         TEXINPUTS=$(OZTEXINPUTS) dvips $< -o $@
 ps: $(WHAT).ps
+$(WHAT).pics: $(WHAT).xml
+        java -oss10000000 -classpath $(CLASSPATH):$(OZCLASSPATH)  com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozpic.xml $@
+pspics: $(WHAT).pics
+        for f in `cat $(WHAT).pics`; do $(MAKE) $$f.ps; done
+%.gif.ps: %.gif
+        giftopnm $< | pnmtops -noturn > $@
+%.gif.ps: pictures/%.gif
+        giftopnm $< | pnmtops -noturn > $@
