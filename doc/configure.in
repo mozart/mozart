@@ -82,6 +82,15 @@ then
 else
    SUBDIRS="utilities ${oz_doc_dirs}"
 fi
+
+OZ_ENABLE(qtk,[QTk QUI Builder],no,QTK_ENABLED=yes,QTK_ENABLED=no)
+AC_SUBST(QTK_ENABLED)
+
+if test "$QTK_ENABLED" = yes;
+then
+  SUBDIRS="$SUBDIRS qtk"
+fi
+
 AC_SUBST(SUBDIRS)
 
 AC_CONFIG_SUBDIRS(utilities chm)
