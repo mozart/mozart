@@ -43,29 +43,18 @@
 // 0x1000. Flags up to 0x1000 and above 0x1000 should not be mixed, 
 // because then three instructions are required (for testing, i mean);
 enum ThreadFlag {
-  T_null     = 0x000000,  // no flag is set;
-  T_dead     = 0x000001,  // the thread is dead;
-  T_runnable = 0x000002,  // the thread is runnable;
-  T_stack    = 0x000004,  // it has an (allocated) stack;
-  T_catch    = 0x000008,  // has or has had an exception handler
-  T_ext      = 0x000020,  // an external suspension wrt current search problem
-  T_tag      = 0x000040,  // used to avoid duplication of threads
-  T_lpq      = 0x000080,  // designates local thread queue
-
-  T_noblock  = 0x000100,  // if this thread blocks, raise an exception
-
+  T_dead     = 0x001,  // the thread is dead;
+  T_runnable = 0x002,  // the thread is runnable;
+  T_catch    = 0x004,  // has or has had an exception handler
+  T_ext      = 0x008,  // an external suspension wrt current search problem
+  T_tag      = 0x010,  // used to avoid duplication of threads
+  T_lpq      = 0x020,  // designates local thread queue
+  T_noblock  = 0x040,  // if this thread blocks, raise an exception
   // debugger
-  T_G_trace  = 0x010000,   // thread is being traced
-  T_G_step   = 0x020000,   // step mode turned on
-  T_G_stop   = 0x040000,   // no permission to run
-
-  T_max      = 0x800000    // MAXIMAL FLAG;
+  T_G_trace  = 0x080,   // thread is being traced
+  T_G_step   = 0x100,   // step mode turned on
+  T_G_stop   = 0x200,   // no permission to run
 };
-
-
-#define  S_TYPE_MASK  T_stack
-#define  S_WAKEUP     T_null
-#define  S_RTHREAD    T_stack
 
 
 class RunnableThreadBody {
@@ -86,10 +75,6 @@ public:
     taskStack.init();
   }
 };
-
-union ThreadBodyItem {
-  RunnableThreadBody *threadBody;
-};  
 
 
 //  Every thread can be in the following states - 
@@ -127,22 +112,15 @@ private:
 
   unsigned int id;              // unique identity for debugging
   PrTabEntry *abstr;            // for profiler
-  ThreadBodyItem item;		// NULL if it's a deep 'unify' suspension;
+  RunnableThreadBody *threadBody;
 public:
   NO_DEFAULT_CONSTRUCTORS(Thread)
   Thread(int flags, int prio, Board *bb, int id)
-    : board(bb), id(id)
+    : board(bb), id(id), abstr(0), self(0), threadBody(0)
   {
     state.flags = flags;
-    state.pri = prio;
-
-    item.threadBody = 0;
-
-    setAbstr(NULL);
-    setSelf(NULL);
-
-    if (flags & T_stack)
-      ozstat.createdThreads.incf();
+    state.pri   = prio;
+    ozstat.createdThreads.incf();
   }
 
   USEHEAPMEMORY;
@@ -152,7 +130,6 @@ public:
   void setBoardInternal(Board *bb) { board = bb; }
 
   Thread *gcThread();
-  Thread *gcThreadInline();
   Thread *gcDeadThread();
   void gcRecurse();
 
@@ -166,7 +143,7 @@ public:
 
   void freeThreadBodyInternal() {
     Assert(isDeadThread());
-    item.threadBody = 0;
+    threadBody = 0;
   }
 
   void markDeadThread() { 
@@ -193,8 +170,8 @@ public:
     return (state.flags & T_tag);
   }
 
-  void setBody(RunnableThreadBody *rb) { item.threadBody=rb; }
-  RunnableThreadBody *getBody()        { return item.threadBody; }
+  void setBody(RunnableThreadBody *rb) { threadBody=rb; }
+  RunnableThreadBody *getBody()        { return threadBody; }
 
   unsigned int getID() { return id; }
   void setID(unsigned int newId) { id = newId; }
@@ -283,25 +260,25 @@ public:
   
   void reInit() {  // for the root thread only;
     setRunnable();
-    item.threadBody->reInit();
+    threadBody->reInit();
   }
 
   TaggedRef getStreamTail();
   void setStreamTail(TaggedRef v);
 
   void pushLPQ(Board * sb) {
-    item.threadBody->taskStack.pushLPQ(sb);
+    threadBody->taskStack.pushLPQ(sb);
   }
   void pushDebug(OzDebug *dbg, OzDebugDoit dothis) {
-    item.threadBody->taskStack.pushDebug(dbg,dothis);
+    threadBody->taskStack.pushDebug(dbg,dothis);
   }
   void popDebug(OzDebug *&dbg, OzDebugDoit &dothis) {
-    PopFrame(&item.threadBody->taskStack,pc,y,cap);
+    PopFrame(&threadBody->taskStack,pc,y,cap);
     if (pc == C_DEBUG_CONT_Ptr) {
       dbg = (OzDebug *) y;
       dothis = (OzDebugDoit) (int) cap;
     } else {
-      item.threadBody->taskStack.restoreFrame();
+      threadBody->taskStack.restoreFrame();
       dbg = (OzDebug *) NULL;
       dothis = DBG_EXIT;
     }
@@ -309,42 +286,34 @@ public:
   void pushCall(TaggedRef pred, TaggedRef arg0=0, TaggedRef arg1=0, 
 		TaggedRef arg2=0, TaggedRef arg3=0, TaggedRef arg4=0)
   {
-    item.threadBody->taskStack.pushCall(pred, arg0,arg1,arg2,arg3,arg4);
+    threadBody->taskStack.pushCall(pred, arg0,arg1,arg2,arg3,arg4);
   }
 
   void pushCall(TaggedRef pred, RefsArray  x, int n) {
-    item.threadBody->taskStack.pushCall(pred, x, n);
+    threadBody->taskStack.pushCall(pred, x, n);
   }
   void pushCallNoCopy(TaggedRef pred, RefsArray  x) {
-    item.threadBody->taskStack.pushCallNoCopy(pred, x);
+    threadBody->taskStack.pushCallNoCopy(pred, x);
   }
   void pushCFun(OZ_CFun f, RefsArray  x, int n) {
-    item.threadBody->taskStack.pushCFun(f, x, n);
+    threadBody->taskStack.pushCFun(f, x, n);
   }
 
   Bool hasCatchFlag() { return (state.flags & T_catch); }
   void setCatchFlag() { state.flags = state.flags|T_catch; }
   void pushCatch() {
     setCatchFlag();
-    item.threadBody->taskStack.pushCatch();
+    threadBody->taskStack.pushCatch();
   }
 
   Bool isEmpty() {
-    return item.threadBody->taskStack.isEmpty();
+    return threadBody->taskStack.isEmpty();
   }
 
-  void printTaskStack(int depth) {
-    if (!isDeadThread()) {
-      item.threadBody->taskStack.printTaskStack(depth);
-    } else {
-      message("\tEMPTY\n");
-      message("\n");
-    }
-  }
-
+  void printTaskStack(int);
 
   TaskStack *getTaskStackRef() {
-    return &(item.threadBody->taskStack);
+    return &(threadBody->taskStack);
   }
 
 

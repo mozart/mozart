@@ -50,10 +50,6 @@ private:
   OZ_FiniteDomain * store_patch;
 
 public:  
-  OzBoolVariable(DummyClass *)
-    : OzVariable(OZ_VAR_BOOL,(DummyClass*)0)
-  {
-  }
   OzBoolVariable(Board *bb) : OzVariable(OZ_VAR_BOOL,bb)
   {
     ozstat.fdvarsCreated.incf();
@@ -70,7 +66,6 @@ public:
     return fdv;
   }
   // methods relevant for term copying (gc and solve)
-  void gc(OzBoolVariable *);
   inline void dispose(void);
   
   // is X=val still valid, i.e. is val an smallint and either 0 or 1.

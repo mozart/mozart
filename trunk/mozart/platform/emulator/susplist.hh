@@ -51,7 +51,7 @@ private:
   SuspList * _next;
 public:
   USEFREELISTMEMORY;
-  SuspList * gc();
+  SuspList * gc(int);
   OZPRINTLONG;
 
   NO_DEFAULT_CONSTRUCTORS(SuspList);
