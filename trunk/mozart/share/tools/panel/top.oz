@@ -72,7 +72,7 @@ local
       in
 	 {Tk.send case @InfoVisible then pack(forget O.priorities.frame)
 		  else pack(O.priorities.frame
-			    after:O.threads.frame side:top fill:x)
+			    after:O.threads.frame side:top fill:x padx:3)
 		  end}
 	 InfoVisible <- {Not @InfoVisible}
       end
