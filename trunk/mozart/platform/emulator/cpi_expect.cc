@@ -591,7 +591,6 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     int width = tuple.getWidth(), acc = 1;
 
     for (int i = width; i--; ) {
-      //mm2: use tagged2Ref
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(&tuple[i]));
       if (r.accepted == -1) {
 	return r;
@@ -607,7 +606,6 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     
     do {
       len += 1;
-      //mm2: use tagged2Ref
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(tagged2LTuple(t)->getRefHead()));
       
       if (r.accepted == -1) {
@@ -623,6 +621,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     if (oz_isNil(t)) {
       return expectProceed(len, acc);
     } else if (isVariableTag(ttag)) {
+      Assert(tptr);
       addSuspend(tptr);
       return expectSuspend(len+1, acc);
     } 
